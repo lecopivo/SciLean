@@ -1,0 +1,161 @@
+* Library/programming language for numerical software that formalizes the underlining mathematics using Lean programming language.
+
+  Expected benefit of doing so:
+    - optimizations base on underlining mathematics
+    - code transformation such as automatic differentiation
+    - increase re-usability by abstracting over core mathematics
+    - improved code readability
+
+** Long Term Goal
+
+   - Write finite element code where the energy/action can be written down like on paper and the final cede can be differentiated with respect to almost anything like domain, stiffness parameters, initial conditions etc.
+
+   - Support compilation to GPU and CPU.
+
+** Mid term Goal
+
+   - Semi-automatic differentiation and optimization tools.
+   - Inline C++ compiler to write efficient low level code.
+   - Formalize and wrap OpenVDB, NanoVDB, Houdini, Eigen primitives.
+   - Node based editor in Houdini.
+
+** Short Term Goal
+
+   My first goal is to write couple of simple ODE solvers maybe some simple finite difference solvers. The main things to focus on:
+     - compare performance to hand written C++ code
+     - attempt at semi-automatic differentiation of energy/lagrangian
+
+*** TODO Sims [/]
+
+**** TODO Harmonic Oscillator [3/6]
+
+     - [X] Lean implementation
+     - [X] C++ implementation
+     - [X] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO Pendulum [1/6]
+
+     - [X] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO N-Body Simulation [1/6]
+
+     - [X] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO N-Pendulum [/]
+
+     - [ ] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO 1D Wave Equation on Circle [1/6]
+     
+     - [X] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO 2D Wave Equation on Torus [/]
+     
+     - [ ] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+*** TODO Lean Framework
+
+    List stuff that needs to be added to the basic lean framework
+
+    - [ ] Inline c++ compiler based on SKICB - everything gets passed by value, no borrowing/const X&
+    - [ ] Binders for linear solvers
+     
+* Links
+
+** Articles
+
+*** Main   
+
+    - [[https://arxiv.org/abs/2007.08017][λₛ: Computable Semantics for Differentiable Programming with Higher-Order Functions and Datatypes, 2021]]
+    - [[https://arxiv.org/abs/1910.00935][DiffTaichi: Differentiable Programming for Physical Simulation, 2020]]
+
+*** Other
+
+    - [[https://core.ac.uk/download/pdf/82396223.pdf][The Differential Lambda-Calculus, 2003]]
+    - [[https://dl.acm.org/doi/10.1145/1330017.1330018][Reverse-mode AD in a functional framework: Lambda the Ultimate Backpropagator, 2008]]      
+    - [[https://arxiv.org/abs/1806.02136][Efficient differentiable programming in a functional array-processing language, 2018]]
+    - [[https://proceedings.neurips.cc/paper/2018/hash/0a1bf96b7165e962e90cb14648c9462d-Abstract.html][Computing Higher Order Derivatives of Matrix and Tensor Expressions, 2018]]
+    - [[https://arxiv.org/abs/1804.00746][The Simple Essence of Automatic Differentiation (Extended version), 2018]]
+    - [[https://openreview.net/forum?id=ryxuz9SzDB][The Differentiable Curry, 2019]]
+    - [[https://arxiv.org/abs/1907.07587][A Differentiable Programming System to Bridge Machine Learning and Scientific Computing, 2019]]
+
+*** Math Foundation
+
+    - [[https://www.mat.univie.ac.at/~kriegl/Skripten/apbook.pdf][The Convenient Setting of Global Analysis, 2008]]
+    - [[https://www.ams.org/books/surv/185/surv185-endmatter.pdf][Diffeology, 2013]]
+
+*** Lean
+    
+    - [[https://arxiv.org/abs/2001.10490][Beyond Notations: Hygienic Macro Expansion for Theorem Proving Languages, 2020]]
+    - [[https://pp.ipd.kit.edu/uploads/publikationen/demoura21lean4.pdf][The Lean 4 Theorem Prover and Programming Language, 2021]]
+
+    - [[https://arxiv.org/abs/1908.05647][Counting Immutable Beans: Reference Counting Optimized for Purely Functional Programming, 2019]]
+    - [[https://www.microsoft.com/en-us/research/uploads/prod/2020/11/perceus-tr-v1.pdf][Perceus: Garbage Free Reference Counting with Reuse, 2020]]      
+
+**** Video
+     
+     - [[https://www.youtube.com/watch?v=UeGvhfW1v9M][Lean Together 2021: An overview of Lean 4]]
+     - [[https://www.youtube.com/watch?v=hxQ1vvhYN_U][Lean Together 2021: Metaprogramming in Lean 4]]
+    
+*** Categorical Formalism      
+    
+    - [[https://www.sciencedirect.com/science/article/pii/0167642387900207][The categorical abstract machine, 1987]]
+    - [[http://www.cs.man.ac.uk/~david/categories/book/book.pdf][Computational Category Theory, 1988]]
+    - [[https://www.springer.com/gp/book/9780817636548][Categorical Combinators, Sequential Algorithms, and Functional Programming, 1993]]
+    - [[https://www.math.mcgill.ca/rags/difftl/MSCS-Differential_Categories.pdf][Differential categories, 2006]]
+    - [[https://arxiv.org/abs/1006.3140][A convenient differential category, 2010]]
+
+*** Presentations
+
+    - [[http://www.math.mcgill.ca/rags/JAC/Poster/poster2-JAC-Apr13-handout-6up.pdf][A categorical description of the essential structure of differential calculus, 2013]]
+    - [[http://www.appliedcategorytheory.org/wp-content/uploads/2017/09/Jason-Morton-An-approach-to-computational-category-theory.pdf][An approach to computational category theory, 2015]]
+    - [[https://andrejbauer.github.io/domains-floc-2018/slides/Matthijs-Kammar-Staton.pdf][Diffeological Spaces and Denotational Semantics for Differential Programming, 2018]]
+
+** People
+
+   - [[http://www.math.mcgill.ca/rags/JAC/Poster/poster2-JAC-Apr13-handout-6up.pdf][R A G Seely]]
+   - [[http://conal.net/][Conan Elliott]]
+   - [[https://bartoszmilewski.com/][Bartosz Milewski]]
+   - [[http://www.jasonmorton.com/][Jason Morton]]
+   - [[https://www.ben-sherman.net/][Ben Sherman]] - author of λₛ
+
+*** others
+
+    - [[https://www.linkedin.com/in/david-sankel-94059841][David Sankel]] 
+      A guy writing Reflection TS proposal, but why is he interesting is that he developed some visual functional programming language similar to Houdini as he mentioned in [[https://cppcast.com/david-sankel-reflection-ts/][CppCast]].
+
+** Software
+
+   - [[http://hackage.haskell.org/package/subhask][subhask]]
+   - [[http://hackage.haskell.org/package/linearmap-category][linearmap-category]]
+   - [[https://github.com/jasonmorton/Cateno][Cateno]]
+   - [[https://fluxml.ai/Zygote.jl/latest/][Zygote]]
+* Library to write numerical software using formal methods
