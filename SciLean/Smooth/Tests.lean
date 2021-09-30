@@ -35,3 +35,10 @@ def rtest3 : δ (λ x : ℝ => x * x * x) x dx = (dx * x + x * dx) * x + x * x *
 def rtest4 : δ (λ x : ℝ => x * (x * x) * x) x dx = (dx * (x * x) + x * (dx * x + x * dx)) * x + x * (x * x) * dx := by rmlamlet; simp; done
 end
 
+section 
+variable (f : X → X) (c : ℝ → X) [IsDiff f] [IsDiff c]
+variable (t : ℝ) 
+def ddtest1 : ⅆ (comp f c) t = δ f (c t) (ⅆ c t) := by simp; done
+def ddtest2 : ⅆ (comp f (comp f c)) t = δ f (f (c t)) (δ f (c t) (ⅆ c t)) := by simp; done
+def ddtest3 : ⅆ (comp (comp f f) c) t = δ f (f (c t)) (δ f (c t) (ⅆ c t)) := by simp; done
+end

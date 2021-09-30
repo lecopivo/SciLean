@@ -97,10 +97,10 @@ prefix:1024 "δ" => differential
 
 axiom differential.definition {X Y} (f : X → Y) [Vec X] [Vec Y] [IsDiff f] : δ f = convenient.differential f IsDiff.is_diff
 
-abbrev derivative {X}   (f : ℝ → X) [Vec X] : ℝ → X := swap (δ f) 1
-abbrev gradient {X} (f : X → ℝ) [Hilbert X] : X → X := comp dual (δ f)
-abbrev tangent_map {X Y} (f : X → Y) [Vec X] [Vec Y] : X×X → Y×Y := uncurry $ λ x dx => (f x, δ f x dx)
-abbrev backprop {X Y} (f : X → Y) [Hilbert X] [Hilbert Y] : X → Y×(Y→X) := λ x => (f x, †(δ f x))
+@[simp] def derivative {X}   (f : ℝ → X) [Vec X] : ℝ → X := swap (δ f) 1
+@[simp] def gradient {X} (f : X → ℝ) [Hilbert X] : X → X := comp dual (δ f)
+@[simp] def tangent_map {X Y} (f : X → Y) [Vec X] [Vec Y] : X×X → Y×Y := uncurry $ λ x dx => (f x, δ f x dx)
+@[simp] def backprop {X Y} (f : X → Y) [Hilbert X] [Hilbert Y] : X → Y×(Y→X) := λ x => (f x, †(δ f x))
 
 prefix:1024 "∇" => gradient
 prefix:1024 "ⅆ" => derivative
