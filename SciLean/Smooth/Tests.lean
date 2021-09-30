@@ -42,3 +42,12 @@ def ddtest1 : ⅆ (comp f c) t = δ f (c t) (ⅆ c t) := by simp; done
 def ddtest2 : ⅆ (comp f (comp f c)) t = δ f (f (c t)) (δ f (c t) (ⅆ c t)) := by simp; done
 def ddtest3 : ⅆ (comp (comp f f) c) t = δ f (f (c t)) (δ f (c t) (ⅆ c t)) := by simp; done
 end
+
+
+section 
+variable (x dx y : U)
+def htest1 : δ (λ x => ⟨x, y⟩) x dx = ⟨dx, y⟩ := by rmlamlet; simp; done
+def htest2 : δ (λ x => ⟨x, x⟩) x dx = ⟨dx, x⟩ + ⟨x, dx⟩ := by rmlamlet; simp; done
+def htest3 : δ (λ x => ⟨x, ⟨x,x⟩*x⟩) x dx = ⟨dx, ⟨x,x⟩*x⟩ + ⟨x, dx⟩ := by rmlamlet; simp; done
+
+end

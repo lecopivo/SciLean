@@ -161,4 +161,5 @@
    - [[https://github.com/jasonmorton/Cateno][Cateno]]
    - [[https://fluxml.ai/Zygote.jl/latest/][Zygote]]
    - [[https://github.com/mila-iqia/myia][Myia]]
-
+   - [[https://github.com/tum-pbs/PhiFlow][PhiFlow]]
+   - [[https://github.com/yuanming-hu/difftaichi][DiffTaichi]]
