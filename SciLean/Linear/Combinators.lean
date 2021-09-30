@@ -1,7 +1,7 @@
 import SciLean.Linear.Basic
 
-variable {α β γ : Type _}
-variable {X : Type u} {Y : Type u} {Z : Type w} [Vec X] [Vec Y] [Vec Z]
+variable {α β γ : Type}
+variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 --  ___    _         _   _ _
 -- |_ _|__| |___ _ _| |_(_) |_ _  _
@@ -49,5 +49,29 @@ instance (f : Y → Z) (g : X → Y) [IsLin f] [IsLin g] : IsLin (comp f g) := s
 
 instance : IsLin (@subs α β Z) := sorry
 instance (f : α → Y → Z) [∀ a, IsLin (f a)]: IsLin (@subs α Y Z f) := sorry
+
+--- For (subs f g) to be linear, f has to be a sum of two linear functions.
+--- There are 8 different ways of writting a sum of two functions - the whole trouble is with identity 
+--- x + y
+instance (g : X → X) [IsLin g] : IsLin (subs HAdd.hAdd g) := sorry
+--- y + x
+instance (g : X → X) [IsLin g] : IsLin (subs (swap HAdd.hAdd) g) := sorry
+-- f x + y
+instance (f : X → Y) (g : X → Y) [IsLin f] [IsLin g] : IsLin (subs (comp HAdd.hAdd f) g) := sorry
+-- x + f y
+instance (f : Y → X) (g : X → Y) [IsLin f] [IsLin g] : IsLin (subs (swap (comp comp HAdd.hAdd) f) g) := sorry
+-- f y + x
+instance (f : Y → X) (g : X → Y) [IsLin f] [IsLin g] : IsLin (subs (swap (comp HAdd.hAdd f)) g) := sorry
+-- y + f x
+instance (f : X → Y) (g : X → Y) [IsLin f] [IsLin g] : IsLin (subs (comp (swap HAdd.hAdd) f) g) := sorry
+-- f x + f' y
+instance (f : X → Z) (f' : Y → Z) (g : X → Y) [IsLin f] [IsLin f'] [IsLin g] : IsLin (subs (swap (comp comp (comp HAdd.hAdd f)) f') g) := sorry
+-- f' y + f x
+instance (f : X → Z) (f' : Y → Z) (g : X → Y) [IsLin f] [IsLin f'] [IsLin g] : IsLin (subs (comp (swap (comp HAdd.hAdd f')) f) g) := sorry
+
+
+
+--- 
+-- instance  (f : Y → X → Z) (g : X → Y) [IsLin (subs (swap f) g)] : IsLin (subs (comp f g) id) := sorry
 
 

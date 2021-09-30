@@ -5,6 +5,7 @@ abbrev ℝ := Real
 
 def Float.toReal (x : Float) : Real := x
 
+
 namespace Real
 
   def toFloat (x : Real) : Float := x
@@ -40,3 +41,4 @@ namespace Real
 
 end Real
 
+instance : OfNat ℝ n   := ⟨Float.ofNat n⟩

@@ -1,7 +1,7 @@
 import SciLean.Prelude 
 
-variable {α β γ : Type _} 
-variable {X : Type u} {Y : Type u} {Z : Type w} [Vec X] [Vec Y] [Vec Z]
+variable {α β γ : Type} 
+variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 instance differential_is_linear (f : X → Y) (x : X) [IsDiff f] : IsLin (δ f x) := sorry
 

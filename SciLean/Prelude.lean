@@ -5,6 +5,7 @@ import SciLean.Algebra
 --  / __|___ _ __ | |__(_)_ _  __ _| |_ ___ _ _ ___
 -- | (__/ _ \ '  \| '_ \ | ' \/ _` |  _/ _ \ '_(_-<
 --  \___\___/_|_|_|_.__/_|_||_\__,_|\__\___/_| /__/
+
 section Combinators
 
    variable {X : Type u}
@@ -63,16 +64,14 @@ def adjoint {U V} (f : U → V) [Hilbert U] [Hilbert V] := dual ∘ (pullback f)
 prefix:1024 "†" => adjoint
 
 
---   ___         _   _
---  / __|___ _ _| |_(_)_ _ _  _ ___ _  _ ___
--- | (__/ _ \ ' \  _| | ' \ || / _ \ || (_-<
---  \___\___/_||_\__|_|_||_\_,_\___/\_,_/__/
---- Define continuity. This is probably continouity w.r.t. to locally convex topology on Vec (note: Vec will be Convenient Vector Space)
-def is_cont_at {X Y} [Vec X] [Vec Y] (f : X → Y) (x : X) : Prop := sorry  
+--    _    __  __ _
+--   /_\  / _|/ _(_)_ _  ___
+--  / _ \|  _|  _| | ' \/ -_)
+-- /_/ \_\_| |_| |_|_||_\___|
 
-class IsCont {U V} [Vec U] [Vec V] (f : U → V) : Prop := (is_cont : ∀ x, is_cont_at f x)
+class IsAff {U V} [Vec U] [Vec V] (f : U → V) : Prop := (is_affine : IsLin (f - const U (f 0)))
 
-instance {X Y} (f : X → Y) [Vec X] [Vec Y] [IsCont f] : FetchProof IsCont f := by constructor; assumption
+instance {X Y} (f : X → Y) [Vec X] [Vec Y] [IsAff f] : FetchProof IsAff f := by constructor; assumption
 
 --  ___                _   _
 -- / __|_ __  ___  ___| |_| |_
@@ -98,8 +97,25 @@ abbrev gradient {X} (f : X → ℝ) [Hilbert X] : X → X := dual ∘ δ f
 prefix:1024 "∇" => gradient
 prefix:1024 "ⅆ" => derivative
 
--- class IsDiffeo {X Y} (f : X → Y) [Vec X] [Vec Y] extends IsDiff f, IsInv f where
---   (inv_jac : ∀ x, IsInv (δ f x))
+--   ___         _   _
+--  / __|___ _ _| |_(_)_ _ _  _ ___ _  _ ___
+-- | (__/ _ \ ' \  _| | ' \ || / _ \ || (_-<
+--  \___\___/_||_\__|_|_||_\_,_\___/\_,_/__/
+--- Define continuity. This is probably continouity w.r.t. to locally convex topology on Vec (note: Vec will be Convenient Vector Space)
+def is_cont_at {X Y} [Vec X] [Vec Y] (f : X → Y) (x : X) : Prop := sorry  
+
+class IsCont {U V} [Vec U] [Vec V] (f : U → V) : Prop := (is_cont : ∀ x, is_cont_at f x)
+
+instance {X Y} (f : X → Y) [Vec X] [Vec Y] [IsCont f] : FetchProof IsCont f := by constructor; assumption
+
+--  ___      ____
+-- |_ _|___ |_  /___ _ _ ___
+--  | |(_-<  / // -_) '_/ _ \
+-- |___/__/ /___\___|_| \___/
+
+class IsZero {X} [Vec X] (x : X) : Prop := (is_zero : x = 0)
+
+instance {X} [Vec X] (x : X) [IsZero x] : FetchProof IsZero x := by constructor; assumption
 
 --  _    _       _ _
 -- | |  (_)_ __ (_) |_
