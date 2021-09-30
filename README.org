@@ -2,7 +2,8 @@
 
   Expected benefit of doing so:
     - optimizations base on underlining mathematics
-    - code transformation such as automatic differentiation
+    - code transformation such as automatic differentiation or inversion
+    - high level control of limiting processes like discretization and solver steps
     - increase re-usability by abstracting over core mathematics
     - improved code readability
 
@@ -104,6 +105,7 @@
     - [[https://arxiv.org/abs/1806.02136][Efficient differentiable programming in a functional array-processing language, 2018]]
     - [[https://proceedings.neurips.cc/paper/2018/hash/0a1bf96b7165e962e90cb14648c9462d-Abstract.html][Computing Higher Order Derivatives of Matrix and Tensor Expressions, 2018]]
     - [[https://arxiv.org/abs/1804.00746][The Simple Essence of Automatic Differentiation (Extended version), 2018]]
+    - [[https://arxiv.org/abs/1810.11530][Automatic differentiation in ML: Where we are and where we should be going, 2018]]
     - [[https://openreview.net/forum?id=ryxuz9SzDB][The Differentiable Curry, 2019]]
     - [[https://arxiv.org/abs/1907.07587][A Differentiable Programming System to Bridge Machine Learning and Scientific Computing, 2019]]
 
@@ -158,4 +160,5 @@
    - [[http://hackage.haskell.org/package/linearmap-category][linearmap-category]]
    - [[https://github.com/jasonmorton/Cateno][Cateno]]
    - [[https://fluxml.ai/Zygote.jl/latest/][Zygote]]
-* Library to write numerical software using formal methods
+   - [[https://github.com/mila-iqia/myia][Myia]]
+
