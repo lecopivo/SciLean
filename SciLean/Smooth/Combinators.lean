@@ -75,6 +75,6 @@ instance (f : X → Y → Z) (g : X → Y) [IsDiff f] [∀ x, IsDiff (f x)] [IsD
 
 @[simp] def subs.differential_1 (f df : α → β → Z) : δ subs f df = subs df := sorry
 @[simp] def subs.differential_2 (f : α → Y → Z) (g dg : α → Y) (a : α) [IsDiff (f a)] : δ (subs f) g dg a = δ (f a) (g a) (dg a) := sorry
-@[simp] def subs.differential_3 (f : X → Y → Z) (g : X → Y) (x dx : X) [IsDiff f] [IsDiff (f x)] [IsDiff g] : δ (subs f g) x dx = δ f x dx (g u) + δ (f x) (g x) (δ g x dx) := sorry
+@[simp] def subs.differential_3 (f : X → Y → Z) (g : X → Y) (x dx : X) [IsDiff f] [IsDiff (f x)] [IsDiff g] : δ (subs f g) x dx = δ f x dx (g x) + δ (f x) (g x) (δ g x dx) := sorry
 
 

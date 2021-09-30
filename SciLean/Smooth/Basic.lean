@@ -22,6 +22,9 @@ instance (f : X → Y) [IsDiff f] [IsInv f] [∀ x, IsInv (δ f x)] : IsDiff f�
 section Arithmetics
 
   -- Differentiation of multiplication should be infered by linearity
+  instance : IsDiff (HMul.hMul : ℝ → X → X) := sorry
+  instance (r : ℝ) : IsDiff (HMul.hMul r : X → X) := sorry
+
 
   instance : IsDiff (HAdd.hAdd : X → X → X) := sorry
   instance (x : X) : IsDiff (HAdd.hAdd x : X → X) := sorry

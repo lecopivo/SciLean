@@ -1,10 +1,13 @@
--- import SciLean.Linear.Basic
+import SciLean.Linear.Basic
+import SciLean.Linear.Combinators
+import SciLean.Invert
+
 
 -- -- set_option trace.Meta.synthInstance true
 -- -- set_option synthInstance.maxHeartbeats 500
 
--- instance {U} (u : U) [Hilbert U] : IsLin (Inner.inner u) := sorry
--- instance {U} (u : U) [Hilbert U] : IsLin (swap Inner.inner u) := sorry
+variable {α β γ : Type}
+variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 
 -- def adjoint {U V} : (U → V) → (V → U) := sorry
 

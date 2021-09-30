@@ -10,16 +10,20 @@ section Combinators
 
    variable {X : Type u}
 
-   @[simp] def const (Y : Type v) (x : X) (y : Y) := x
+   def const (Y : Type v) (x : X) (y : Y) := x
 
    variable {Y : Type v} {Z : Type w}
 
-   @[simp] def comp (f : Y→Z) (g : X→Y) (x : X) := f (g x)
-   @[simp] def swap (f : X→Y→Z) (y : Y) (x : X) := f x y
-   @[simp] def subs (f : X→Y→Z) (g : X→Y) (x : X) := (f x) (g x)
+   def comp (f : Y→Z) (g : X→Y) (x : X) := f (g x)
+   def swap (f : X→Y→Z) (y : Y) (x : X) := f x y
+   def subs (f : X→Y→Z) (g : X→Y) (x : X) := (f x) (g x)
 
+   @[simp] def const.reduce (Y : Type v) (x : X) (y : Y) : const Y x y = x  := by simp[const]
+   @[simp] def comp.reduce (f : Y→Z) (g : X→Y) (x : X) : (comp f g x) = f (g x) := by simp[comp]
+   @[simp] def swap.reduce (f : X→Y→Z) (y : Y) (x : X) : (swap f y x) = f x y := by simp[swap]
+   @[simp] def subs.reduce (f : X→Y→Z) (g : X→Y) (x : X) : (subs f g x) = (f x) (g x) := by simp[subs]
 
-   -- Reduction in Type Class resolution for proof automation
+   -- Reduction of basic combinators in Type Class resolution for proof automation
    class FetchProof {α} (P : α → Prop) (a : α) where
       (fetch_proof : P a)
 
@@ -29,6 +33,8 @@ section Combinators
    instance (P : Z → Prop) (f : Y → Z) (g : X → Y) (x : X) [FetchProof P (f (g x))] : P (comp f g x) := by simp; apply FetchProof.fetch_proof
    instance (P : Z → Prop) (f : X → Y → Z) (g : X → Y) (x : X) [FetchProof P ((f x) (g x))] : P (subs f g x) := by simp; apply FetchProof.fetch_proof
 
+   abbrev curry (f : X × Y → Z) (x : X) (y : Y) : Z := f (x,y)
+   abbrev uncurry (f : X → Y → Z) (p : X×Y) : Z := f p.1 p.2
 
 end Combinators
 
@@ -92,10 +98,14 @@ prefix:1024 "δ" => differential
 axiom differential.definition {X Y} (f : X → Y) [Vec X] [Vec Y] [IsDiff f] : δ f = convenient.differential f IsDiff.is_diff
 
 abbrev derivative {X}   (f : ℝ → X) [Vec X] : ℝ → X := swap (δ f) 1
-abbrev gradient {X} (f : X → ℝ) [Hilbert X] : X → X := dual ∘ δ f
+abbrev gradient {X} (f : X → ℝ) [Hilbert X] : X → X := comp dual (δ f)
+abbrev tangent_map {X Y} (f : X → Y) [Vec X] [Vec Y] : X×X → Y×Y := uncurry $ λ x dx => (f x, δ f x dx)
+abbrev backprop {X Y} (f : X → Y) [Hilbert X] [Hilbert Y] : X → Y×(Y→X) := λ x => (f x, †(δ f x))
 
 prefix:1024 "∇" => gradient
 prefix:1024 "ⅆ" => derivative
+prefix:1024 "𝕋" => tangent_map
+
 
 --   ___         _   _
 --  / __|___ _ _| |_(_)_ _ _  _ ___ _  _ ___
@@ -117,10 +127,20 @@ class IsZero {X} [Vec X] (x : X) : Prop := (is_zero : x = 0)
 
 instance {X} [Vec X] (x : X) [IsZero x] : FetchProof IsZero x := by constructor; assumption
 
+--  _  _          ____
+-- | \| |___ _ _ |_  /___ _ _ ___
+-- | .` / _ \ ' \ / // -_) '_/ _ \
+-- |_|\_\___/_||_/___\___|_| \___/
+
+class NonZero {X} [Vec X] (x : X) : Prop := (non_zero : x ≠ 0)
+
+instance {X} [Vec X] (x : X) [NonZero x] : FetchProof NonZero x := by constructor; assumption
+
 --  _    _       _ _
 -- | |  (_)_ __ (_) |_
 -- | |__| | '  \| |  _|
 -- |____|_|_|_|_|_|\__|
+
 def has_limit {X} (lim : Nat → X) [Vec X] : Prop := sorry
 
 class HasLim {X} [Vec X] (lim : Nat → X) : Prop := (has_lim : has_limit lim)
