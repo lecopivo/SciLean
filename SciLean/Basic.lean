@@ -24,7 +24,7 @@ def Prod.fmap {α : Type u} {α' : Type u'} {β : Type v} {β' : Type v'} (f : �
 class Inv (α : Type u) where
   inv : α → α
 
-postfix:100 "⁻¹" => Inv.inv
+-- postfix:100 "⁻¹" => Inv.inv
 
 class Norm (α : Type) where
   norm : α → Float
@@ -91,7 +91,7 @@ section ProductOperations
   instance {α β γ} [HDiv α γ α] [HDiv β γ β] : HDiv (α×β) γ (α×β) := ⟨λ p c => (p.1/c, p.2/c)⟩
 
   instance [Neg α] [Neg β] : Neg (α × β) := ⟨λ p => (-p.1, -p.2)⟩
-  instance [Inv α] [Inv β] : Inv (α × β) := ⟨λ p => (p.1⁻¹, p.2⁻¹)⟩
+  instance [Inv α] [Inv β] : Inv (α × β) := ⟨λ p => (Inv.inv p.1, Inv.inv p.2)⟩
 
   instance [Zero α] [Zero β] : Zero (α × β) := ⟨(zero, zero)⟩
   instance [One α] [One β] : One (α × β) := ⟨(one, one)⟩
@@ -111,7 +111,7 @@ section FunctionOperations
   instance [HMul γ β β] : HMul γ (α → β) (α → β) := ⟨λ s f => λ a => s * (f a)⟩
 
   instance [Neg β] : Neg (α → β) := ⟨λ f => λ a => - f a⟩
-  instance [Inv β] : Inv (α → β) := ⟨λ f => λ a => (f a)⁻¹⟩
+  instance [Inv β] : Inv (α → β) := ⟨λ f => λ a => Inv.inv (f a)⟩
 
   instance [Zero β] : Zero (α → β) := ⟨λ _ => zero⟩
   instance [One β] : One (α → β) := ⟨λ _ => one⟩

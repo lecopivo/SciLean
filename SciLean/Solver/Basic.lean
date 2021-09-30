@@ -7,6 +7,10 @@ inductive SolverParm where
   | float (f : Float) : SolverParm
   | string (s : String) : SolverParm  
 
+
+--- Add another argument
+--- Solver (impl : α) (spec : α) 
+--- Then we will be able to provide a theorem that running the Solver in an appropriate limit provides give spec
 inductive Solver : Type _  → Type _
   | pure {α : Type u} (a : α) : Solver α
   | limit {α β : Type u} (lim : Nat → α) (f : α → Solver β) (tag : SolverTag) (help : String) : Solver β
