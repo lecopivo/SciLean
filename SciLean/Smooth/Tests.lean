@@ -35,6 +35,7 @@ def rtest3 : δ (λ x : ℝ => x * x * x) x dx = (dx * x + x * dx) * x + x * x *
 def rtest4 : δ (λ x : ℝ => x * (x * x) * x) x dx = (dx * (x * x) + x * (dx * x + x * dx)) * x + x * (x * x) * dx := by rmlamlet; simp; done
 end
 
+
 section 
 variable (f : X → X) (c : ℝ → X) [IsDiff f] [IsDiff c]
 variable (t : ℝ) 
@@ -48,6 +49,25 @@ section
 variable (x dx y : U)
 def htest1 : δ (λ x => ⟨x, y⟩) x dx = ⟨dx, y⟩ := by rmlamlet; simp; done
 def htest2 : δ (λ x => ⟨x, x⟩) x dx = ⟨dx, x⟩ + ⟨x, dx⟩ := by rmlamlet; simp; done
-def htest3 : δ (λ x => ⟨x, ⟨x,x⟩*x⟩) x dx = ⟨dx, ⟨x,x⟩*x⟩ + ⟨x, dx⟩ := by rmlamlet; simp; done
+def htest3 : δ (λ x => ⟨x, ⟨x,x⟩*x⟩) x dx = ⟨dx,⟨x,x⟩*x⟩ + ⟨x,(⟨dx,x⟩+⟨x,dx⟩)*x + ⟨x,x⟩*dx⟩:= by rmlamlet; simp; done
+end
 
+
+section 
+def dual_intro (f : U → ℝ) : dual f = dual (λ v => f v) := by simp
+
+@[simp] def dual_add (f g : U → ℝ) [IsLin f] [IsLin g] : dual (subs (comp HAdd.hAdd f) g) = dual f + dual g := sorry
+@[simp] def dual_inner_1 (x : U) : dual (swap Inner.inner x) = x := sorry
+@[simp] def dual_inner_2 (x : U) : dual (Inner.inner x) = x := sorry
+
+
+def dual_1 (x y z : ℝ) : (((x + y) * (z : ℝ)) : ℝ) = x * z + y * z := sorry
+def dual_2 (x y z : ℝ) : z * (x + y) = z * x + z * y := sorry
+def dual_3 (x y z : U) : ⟨x + y, z⟩ = ⟨x, z⟩ + ⟨y, z⟩ := sorry
+def dual_4 (x y z : U) : ⟨x, y+z⟩ = ⟨x, y⟩ + ⟨y, z⟩ := sorry
+
+variable (x dx y : U)
+def gtest1 : ∇ (λ x => ⟨x, y⟩) x = y := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rmlamlet; simp; done
+def gtest2 : ∇ (λ x => ⟨x, x⟩) x = x + x := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rmlamlet; simp; done
+def gtest3 : ∇ (λ x => ⟨x, x⟩*⟨x, x⟩) x = (⟨x,x⟩ : ℝ) * x + (⟨x,x⟩:ℝ)*x + (⟨x,x⟩:ℝ)*x + (⟨x,x⟩:ℝ)*x := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rw [dual_1]; done
 end
