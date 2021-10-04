@@ -28,11 +28,11 @@ section
 
 variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 
-variable (f : Y → Z) (g : X → Y) (A : Y ⇀ Z) (B : X ⇀ Y) [IsLin f] [IsLin g] 
+variable (f : Y → Z) (g : X → Y) (A : Y ⊸ Z) (B : X ⊸ Y) [IsLin f] [IsLin g] 
 
 -- def map1 : X ⇀ X := (λₗ x : X => x)
 -- def map2 : X ⇀ X := (λₗ x : X => x + x)
 -- def map3 : X ⇀ Y := (λₗ x : X => B x)
--- def map4 : X ⇀ Z := (λₗ x : X => f (B x))
+-- def map4 : X ⇀ Z := (λₗ x : X => f (B x))q
 
 end

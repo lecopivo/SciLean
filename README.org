@@ -26,18 +26,63 @@
      - compare performance to hand written C++ code
      - attempt at semi-automatic differentiation of energy/lagrangian
 
+*** TODO Lean Framework
+
+   Implement these to in the order to get these examples working:
+     1. Harmonic Oscilator
+     2. Pendulum
+     3. NBody
+     4. NPendulum in 2D
+     5. NPendulum in 3D
+     6. 1D wave equation
+     7. 2D wave equation
+
+**** TODO Categories [/]
+     - [ ] Implement `IsSmooth` - just duplicate IsDiff and add axiom that differential of smooth is smooth
+     - [ ] Implement `IsLInv` `IsRInv`
+     - [ ] experiment with `extends` keyword to chain categories properly and test if `IsInv` can be written just as an extension of `IsLInv` and `IsRInv`
+     - [ ] Define Hom for categories and pick arrows
+       - Lin:    ⊸   \-o
+       - Smooth: ⟿  \r~3	 
+       - Dif:    ⇝   \r~2
+       - Cont:   ↦  \r6
+       - Diffeo: ↭  \lr5
+       - RInv:   ↠  \r23
+       - LInv:   ↪  \r8
+       - Inv:    ↔  \lr
+     - [ ] internalized combinators
+     - [ ] extract smooth/linear/... symbol - this will create appropriate morphism
+     - [ ] modify remove lambda let to work with morphisms
+     - [ ] Specialized notation =λₛ= for morphisms
+     - [ ] Implement =IsCont= 
+     - [ ] Add =IsDiffeo= a category of diffeomorphisms
+
+**** TODO Computations [/]
+
+     - [ ] add simple algebraic simplification, probably based on https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/New.20attribute.20to.20mark.20theorems
+     - [ ] add =autodiff=,  =autodual=, =autograd= tactics
+     - [ ] fix `remove lambda let` to work properly with `let` such that for loops are correctly abstracted
+     - [ ] Add basic real functions like =sin, cos, exp= and their derivatives and inverses
+     - [ ] =Vector T n= fixed sized array of type T
+     - [ ] =Tensor #[n1, n2, n3]= fast float array to hold data - probably column major
+     - [ ] =Vec2, Vec3, Vec4= simple fixed size vectors
+     - [ ] =Mat2, Mat3, Mat4= simple fixed size matrices
+
+**** TODO Solver class [/]
+
+     - [ ] add tactics =solver_check= and =solver_assumtion=
+     - [ ] add tactic =lift_limit=
+     - [ ] add tactic =finish_impl=
+     - [ ] implement =assemble=
+
+**** TODO Variational calculus [/]
+
+     - [ ] Figure out how to deal with adjoint and dual in case of integrals
+     - [ ] Automatize duality on integrals
+     
 *** TODO Sims [/]
 
-**** TODO Harmonic Oscillator [3/6]
-
-     - [X] Lean implementation
-     - [X] C++ implementation
-     - [X] measure performance and create nice comparison
-     - [ ] Hamiltonian formulation
-     - [ ] Lagrangian formulation
-     - [ ] Action formulation
-
-**** TODO Pendulum [1/6]
+**** TODO Harmonic Oscillator [1/6]
 
      - [X] Lean implementation
      - [ ] C++ implementation
@@ -46,9 +91,18 @@
      - [ ] Lagrangian formulation
      - [ ] Action formulation
 
-**** TODO N-Body Simulation [1/6]
+**** TODO Pendulum [0/6]
 
-     - [X] Lean implementation
+     - [ ] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO N-Body Simulation [0/6]
+
+     - [ ] Lean implementation
      - [ ] C++ implementation
      - [ ] measure performance and create nice comparison
      - [ ] Hamiltonian formulation
@@ -64,9 +118,9 @@
      - [ ] Lagrangian formulation
      - [ ] Action formulation
 
-**** TODO 1D Wave Equation on Circle [1/6]
+**** TODO 1D Wave Equation on Circle [0/6]
      
-     - [X] Lean implementation
+     - [ ] Lean implementation
      - [ ] C++ implementation
      - [ ] measure performance and create nice comparison
      - [ ] Hamiltonian formulation
@@ -82,13 +136,6 @@
      - [ ] Lagrangian formulation
      - [ ] Action formulation
 
-*** TODO Lean Framework
-
-    List stuff that needs to be added to the basic lean framework
-
-    - [ ] Inline c++ compiler based on SKICB - everything gets passed by value, no borrowing/const X&
-    - [ ] Binders for linear solvers
-     
 * Links
 
 ** Articles
