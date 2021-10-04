@@ -20,6 +20,15 @@ section CommonVectorSpaces
   variable {α β : Type u}
   variable {U V} [Vec U] [Vec V]
 
+  instance : HMul ℝ PUnit PUnit := ⟨λ x y => PUnit.unit⟩
+  instance : Vec PUnit :=
+  {
+    add_assoc := sorry,
+    add_comm := sorry,
+    add_zero := sorry,
+    zero_add := sorry
+  }
+
   instance : Vec ℝ :=
   {
     add_assoc := sorry,
@@ -87,6 +96,16 @@ section CommonHilbertSpaces
     inner_add := sorry,
     inner_mul := sorry
   } 
+
+  instance : Inner PUnit := ⟨λ x y => 0⟩
+  instance : Hilbert PUnit := 
+  {
+    inner_symm := sorry,
+    inner_pos := sorry,
+    inner_add := sorry,
+    inner_mul := sorry
+  } 
+
 
   -- @[simp] def inner_on_reals (x y : ℝ) : ⟨x, y⟩ = x * y := by simp[Inner.inner]
 

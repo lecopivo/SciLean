@@ -1,4 +1,4 @@
-import SciLean.Basic
+import SciLean.Prelude
 
 abbrev SolverTag := String
 
@@ -81,3 +81,20 @@ namespace Solver
   -- end Parm
   
 end Solver
+
+
+
+inductive SolverSpec : (α : Type _)  → (spec : α) → Type _
+  | pure {α : Type u} (impl : α) : SolverSpec α impl
+  | limit {α X : Type u} {spec : α} [Vec X] (l : Nat → X) (f : X → α) (impl : (n : Nat) → SolverSpec α (f (l n))) (n : Nat) (h : spec = f (limit l)) (tag : SolverTag) (help : String) : SolverSpec α spec
+  | check {α : Type u} {spec : α} {P : Prop} [Decidable P] (impl : P → SolverSpec α spec) (help : String) : SolverSpec α spec
+  | assumption {α : Type u} {spec : α} {P : Prop} (impl : P → SolverSpec α spec) (help : String) : SolverSpec α spec
+  -- | profile {α β : Type u} {spec speca : α} {specb : α → β} (x : SolverSpec α speca) (f : (a : α) → SolverSpec β (specb a)) (help : String) : SolverSpec β spec
+  -- | bind {α β : Type u} {speca : α} {spec : β} (a : SolverSpec α speca) (f : α → SolverSpec β spec) : SolverSpec β spec
+  -- | something {α β : Type u} {spec : α → β}
+  -- | pair {α β γ : Type u} (val : SolverSpec α) (val' : SolverSpec β) (f : α → β → γ) : SolverSpec γ
+
+def SpecImpl {α} (a : α) := SolverSpec α a
+
+def run {α} {spec : α} : SolverSpec α spec → IO α := sorry
+def run! {α} {spec : α} : SolverSpec α spec → α := sorry

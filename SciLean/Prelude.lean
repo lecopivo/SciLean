@@ -1,5 +1,6 @@
 --- these will be hopefully defined in mathlib
 import SciLean.Algebra
+import SciLean.Meta
 
 --   ___           _    _           _
 --  / __|___ _ __ | |__(_)_ _  __ _| |_ ___ _ _ ___
@@ -23,7 +24,8 @@ section Combinators
    @[simp] def swap.reduce (f : X→Y→Z) (y : Y) (x : X) : (swap f y x) = f x y := by simp[swap]
    @[simp] def subs.reduce (f : X→Y→Z) (g : X→Y) (x : X) : (subs f g x) = (f x) (g x) := by simp[subs]
 
-   -- Reduction of basic combinators in Type Class resolution for proof automation
+   -- Reduction of basic combinators in Type Class resolution 
+   -- This is crucial in proof automation
    class FetchProof {α} (P : α → Prop) (a : α) where
       (fetch_proof : P a)
 
@@ -38,74 +40,75 @@ section Combinators
 
 end Combinators
 
+
 --  ___                 _   _ _    _
 -- |_ _|_ ___ _____ _ _| |_(_) |__| |___
 --  | || ' \ V / -_) '_|  _| | '_ \ / -_)
 -- |___|_||_\_/\___|_|  \__|_|_.__/_\___|
+-- Implementing this as `class IsInv f extends IsLInv f, IsRInv f` would break proof automation.
+-- We want to automatize `IsInv f → IsRInv f` and `IsInv f → IsLInv f`
+-- Adding automatization for `IsRInv f ∧ IsLinv f → IsInv f` would likely cause an infinite loop in type class resolution
 class IsInv {X Y} (f : X → Y) : Prop := 
   (inj : ∀ x y, f x = f y → x = y)
   (surj : ∀ y, ∃ x, f x = y)
 
 instance {X Y} (f : X → Y) [IsInv f] : FetchProof IsInv f := by constructor; assumption
 
-def inverse {U V} : (U → V) → (V → U) := sorry
-postfix:1024 "⁻¹" => inverse
+--  ___ _      _   _     ___                 _   _ _    _
+-- | _ (_)__ _| |_| |_  |_ _|_ ___ _____ _ _| |_(_) |__| |___
+-- |   / / _` | ' \  _|  | || ' \ V / -_) '_|  _| | '_ \ / -_)
+-- |_|_\_\__, |_||_\__| |___|_||_\_/\___|_|  \__|_|_.__/_\___|
+--       |___/
+class IsRInv {X Y} (f : X → Y) : Prop := 
+  (surj : ∀ y, ∃ x, f x = y)
 
-axiom inverse.definition {U V} (f : U → V) (u : U) (v : V) [IsInv f] : f u = v → f⁻¹ v = u
+instance {X Y} (f : X → Y) [IsRInv f] : FetchProof IsRInv f := by constructor; assumption
+
+--  _         __ _     ___                 _   _ _    _
+-- | |   ___ / _| |_  |_ _|_ ___ _____ _ _| |_(_) |__| |___
+-- | |__/ -_)  _|  _|  | || ' \ V / -_) '_|  _| | '_ \ / -_)
+-- |____\___|_|  \__| |___|_||_\_/\___|_|  \__|_|_.__/_\___|
+class IsLInv {X Y} (f : X → Y) : Prop := 
+  (inj : ∀ x y, f x = f y → x = y)
+
+instance {X Y} (f : X → Y) [IsLInv f] : FetchProof IsLInv f := by constructor; assumption
 
 --  _    _
 -- | |  (_)_ _  ___ __ _ _ _
 -- | |__| | ' \/ -_) _` | '_|
 -- |____|_|_||_\___\__,_|_|
-class IsLin {U V} [Vec U] [Vec V] (f : U → V)  : Prop :=
+class IsLin {U V} [Vec U] [Vec V] (f : U → V) : Prop :=
   ( add : ∀ x y, f (x + y) = f x + f y )
   ( mul : ∀ (s : ℝ) x, f (s*x) = s * (f x) )
 
-instance {X Y} (f : X → Y) [Vec X] [Vec Y] [IsLin f] : FetchProof IsLin f := by constructor; assumption
-
-def dual {U} [Hilbert U] := (Inner.inner : U → U → ℝ)⁻¹
-def pullback {U V} (f : U → V) : (V → ℝ) → (U → ℝ) := λ v' u => v' (f u)
-def adjoint {U V} (f : U → V) [Hilbert U] [Hilbert V] := dual ∘ (pullback f) ∘ inner
-
-prefix:1024 "†" => adjoint
-
-
---    _    __  __ _
---   /_\  / _|/ _(_)_ _  ___
---  / _ \|  _|  _| | ' \/ -_)
--- /_/ \_\_| |_| |_|_||_\___|
-
-class IsAff {U V} [Vec U] [Vec V] (f : U → V) : Prop := (is_affine : IsLin (f - const U (f 0)))
-
-instance {X Y} (f : X → Y) [Vec X] [Vec Y] [IsAff f] : FetchProof IsAff f := by constructor; assumption
+instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsLin f] : FetchProof IsLin f := by constructor; assumption
 
 --  ___                _   _
 -- / __|_ __  ___  ___| |_| |_
 -- \__ \ '  \/ _ \/ _ \  _| ' \
 -- |___/_|_|_\___/\___/\__|_||_|
+--- We need formalization of Convenient Vector Spaces: https://en.wikipedia.org/wiki/Convenient_vector_space
+def convenient.is_smooth {X Y} (f : X → Y) [Vec X] [Vec Y] : Prop := sorry  -- conveniently differentiable function
 
+class IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_diff : convenient.is_smooth f)
+
+instance {X Y} (f : X → Y) [Vec X] [Vec Y] [IsSmooth f] : FetchProof IsSmooth f := by constructor; assumption
+
+def SmoothMap (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsSmooth f }
+
+--  ___  _  __  __                 _   _      _    _
+-- |   \(_)/ _|/ _|___ _ _ ___ _ _| |_(_)__ _| |__| |___
+-- | |) | |  _|  _/ -_) '_/ -_) ' \  _| / _` | '_ \ / -_)
+-- |___/|_|_| |_| \___|_| \___|_||_\__|_\__,_|_.__/_\___|
+-- Only one time differentiable functions
 --- We need formalization of Convenient Vector Spaces: https://en.wikipedia.org/wiki/Convenient_vector_space
 def convenient.is_diff_at {X Y} (f : X → Y) (x : X) [Vec X] [Vec Y] : Prop := sorry  -- conveniently differentiable function
-def convenient.differential {X Y} (f : X → Y) [Vec X] [Vec Y] (h : ∀ x, convenient.is_diff_at f x) : (X → X → Y) := sorry
 
 class IsDiff {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_diff : ∀ x, convenient.is_diff_at f x)
 
 instance {X Y} (f : X → Y) [Vec X] [Vec Y] [IsDiff f] : FetchProof IsDiff f := by constructor; assumption
 
-def differential {X Y} (f : X → Y) [Vec X] [Vec Y] : (X → X → Y) := sorry
-prefix:1024 "δ" => differential
-
-axiom differential.definition {X Y} (f : X → Y) [Vec X] [Vec Y] [IsDiff f] : δ f = convenient.differential f IsDiff.is_diff
-
-@[simp] def derivative {X}   (f : ℝ → X) [Vec X] : ℝ → X := swap (δ f) 1
-@[simp] def gradient {X} (f : X → ℝ) [Hilbert X] : X → X := comp dual (δ f)
-@[simp] def tangent_map {X Y} (f : X → Y) [Vec X] [Vec Y] : X×X → Y×Y := uncurry $ λ x dx => (f x, δ f x dx)
-@[simp] def backprop {X Y} (f : X → Y) [Hilbert X] [Hilbert Y] : X → Y×(Y→X) := λ x => (f x, †(δ f x))
-
-prefix:1024 "∇" => gradient
-prefix:1024 "ⅆ" => derivative
-prefix:1024 "𝕋" => tangent_map
-
+def DiffMap (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsDiff f }
 
 --   ___         _   _
 --  / __|___ _ _| |_(_)_ _ _  _ ___ _  _ ___
@@ -136,6 +139,43 @@ class NonZero {X} [Vec X] (x : X) : Prop := (non_zero : x ≠ 0)
 
 instance {X} [Vec X] (x : X) [NonZero x] : FetchProof NonZero x := by constructor; assumption
 
+--  ___        _ _   _
+-- | _ \___ __(_) |_(_)_ _____
+-- |  _/ _ (_-< |  _| \ V / -_)
+-- |_| \___/__/_|\__|_|\_/\___|
+
+class IsPos (x : ℝ) : Prop := (is_positive : x > 0)
+
+instance (x : ℝ) [IsPos x] : FetchProof IsPos x := by constructor; assumption
+
+--   ___                             ___             _   _
+--  / _ \ _ __  __ _ __ _ _  _ ___  | __|  _ _ _  __| |_(_)___ _ _  ___
+-- | (_) | '_ \/ _` / _` | || / -_) | _| || | ' \/ _|  _| / _ \ ' \(_-<
+--  \___/| .__/\__,_\__, |\_,_\___| |_| \_,_|_||_\__|\__|_\___/_||_/__/
+--       |_|           |_|
+
+--  ___
+-- |_ _|_ ___ _____ _ _ ___ ___
+--  | || ' \ V / -_) '_(_-</ -_)
+-- |___|_||_\_/\___|_| /__/\___|
+
+def inverse {U V} : (U → V) → (V → U) := sorry
+postfix:1024 "⁻¹" => inverse
+
+axiom inverse.definition {U V} (f : U → V) (u : U) (v : V) [IsInv f] : (∀ u, f⁻¹ (f u) = u) ∧ (∀ v, f (f⁻¹ v) = v)
+
+--  ___  _  __  __                 _   _      _
+-- |   \(_)/ _|/ _|___ _ _ ___ _ _| |_(_)__ _| |
+-- | |) | |  _|  _/ -_) '_/ -_) ' \  _| / _` | |
+-- |___/|_|_| |_| \___|_| \___|_||_\__|_\__,_|_|
+
+def differential {X Y} (f : X → Y) [Vec X] [Vec Y] : (X → X → Y) := sorry
+prefix:1024 "δ" => differential
+
+--- We need formalization of Convenient Vector Spaces: https://en.wikipedia.org/wiki/Convenient_vector_space
+def convenient.differential {X Y}  [Vec X] [Vec Y] (f : X → Y) (x dx : X) (h : convenient.is_diff_at f x) : Y := sorry
+axiom differential.definition {X Y} [Vec X] [Vec Y] (f : X → Y) [IsDiff f] (x dx : X) : δ f x dx = convenient.differential f x dx (IsDiff.is_diff x)
+
 --  _    _       _ _
 -- | |  (_)_ __ (_) |_
 -- | |__| | '  \| |  _|
@@ -143,21 +183,19 @@ instance {X} [Vec X] (x : X) [NonZero x] : FetchProof NonZero x := by constructo
 
 def has_limit {X} (lim : Nat → X) [Vec X] : Prop := sorry
 
-class HasLim {X} [Vec X] (lim : Nat → X) : Prop := (has_lim : has_limit lim)
-
-instance {X} [Vec X] (lim : Nat → X) [HasLim lim] : FetchProof HasLim lim := by constructor; assumption
-
 def limit {X} (lim : Nat → X) [Vec X] : X := sorry
 
+-- Maybe we will add this proof automation 
+-- class HasLim {X} [Vec X] (lim : Nat → X) : Prop := (has_lim : has_limit lim)
+-- instance {X} [Vec X] (lim : Nat → X) [HasLim lim] : FetchProof HasLim lim := by constructor; assumption
 
 --   ___  ___  ___   ___      _
 --  / _ \|   \| __| / __| ___| |_ _____
 -- | (_) | |) | _|  \__ \/ _ \ \ V / -_)
 --  \___/|___/|___| |___/\___/_|\_/\___|
-def ode_solve {X} (f : X → X) (x₀ : X) (t : ℝ) [Vec X] : X := sorry
+def ode_solve {X} (f : X → X) (t : ℝ) (x₀ : X) [Vec X] : X := sorry
 
-instance ode_solve.is_diff {X} (f : X → X) (x₀ : X) [Vec X] [IsCont f] : IsDiff (ode_solve f x₀) := sorry
-@[simp] axiom ode_solve.definition {X} (f : X → X) (x₀ : X) (t dt : ℝ) [Vec X] [IsCont f] : δ (ode_solve f x₀) t dt = dt * f (ode_solve f x₀ t)
+@[simp] axiom ode_solve.definition {X} [Vec X] (f : X → X) (t dt : ℝ) (x₀ : X) [IsCont f] : δ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
 
 --  ___     _                     _
 -- |_ _|_ _| |_ ___ __ _ _ _ __ _| |_ ___
@@ -168,10 +206,22 @@ def integrate {X} (f : ℝ → X) (a b : ℝ) [Vec X] : X := sorry
 
 prefix:1024 "∫" => integrate
 
-instance {X} (a : ℝ) (f : ℝ → X) [Vec X] [IsCont f] : IsDiff (∫ f a) := sorry
 axiom integrate.swap_limit {X} (a b : ℝ) (f : ℝ → X) [Vec X] [IsCont f] : (∫ f a b = - ∫ f b a)
-@[simp] axiom integrate.definition {X} (a t dt : ℝ) (f : ℝ → X) [Vec X] [IsCont f] : δ (∫ f a) t dt  = dt * (f t)
+@[simp] axiom integrate.definition {X} (a t dt : ℝ) (f : ℝ → X) [Vec X] [IsCont f] : δ (∫ f) a t dt = dt * (f t)
 
+--  ___            _
+-- |   \ _  _ __ _| |
+-- | |) | || / _` | |
+-- |___/ \_,_\__,_|_|
+
+def dual {U} [Vec U] : (U → ℝ) → U := sorry
+
+axiom dual.definition_hilbert {U} [Hilbert U] (f : U → ℝ) [IsLin f] : dual f = (inverse inner) f 
+
+def dual' {U I} [Vec U] [Vec I] : (U → I) → U := sorry
+
+axiom dual'.definition_hilbert {U} [Hilbert U] (u : U) : dual' (λ v => ⟨u, v⟩) = u
+axiom dual'.definition_integral {U} [Hilbert U] (f : ℝ → U) [IsCont f] : dual' (λ (g : ℝ → U) => ∫ (λ t => ⟨f t, g t⟩)) = f
 
 --    _            __  __ _
 --   /_\  _ _ __ _|  \/  (_)_ _
@@ -190,3 +240,38 @@ def argmin {X} (f : X → ℝ) : X := sorry
 
 axiom argmin.definition {X} (f : X → ℝ) (x : X) [HasArgMin f] : x = argmin f → is_unique_minimum f x
 
+
+--  ___          _            _    ___                     _
+-- |   \ ___ _ _(_)_ _____ __| |  / _ \ _ __  ___ _ _ __ _| |_ ___ _ _ ___
+-- | |) / -_) '_| \ V / -_) _` | | (_) | '_ \/ -_) '_/ _` |  _/ _ \ '_(_-<
+-- |___/\___|_| |_|\_/\___\__,_|  \___/| .__/\___|_| \__,_|\__\___/_| /__/
+--                                     |_|
+-- Usefull very common operators derived from opaque ones.
+-- They deserve their own reduction rules 
+
+
+--    _      _  _     _     _
+--   /_\  __| |(_)___(_)_ _| |_
+--  / _ \/ _` || / _ \ | ' \  _|
+-- /_/ \_\__,_|/ \___/_|_||_\__|
+--           |__/
+
+def pullback {U V} (f : U → V) : (V → ℝ) → (U → ℝ) := λ v' u => v' (f u)
+def adjoint {U V} (f : U → V) [Hilbert U] [Hilbert V] := dual ∘ (pullback f) ∘ inner
+
+prefix:1024 "†" => adjoint
+
+--   ___             _     _____                       _     __  __
+--  / __|_ _ __ _ __| |   |_   _|_ _ _ _  __ _ ___ _ _| |_  |  \/  |__ _ _ __
+-- | (_ | '_/ _` / _` |_    | |/ _` | ' \/ _` / -_) ' \  _| | |\/| / _` | '_ \_
+--  \___|_| \__,_\__,_( )   |_|\__,_|_||_\__, \___|_||_\__| |_|  |_\__,_| .__( )
+--                    |/                 |___/                          |_|  |/
+
+@[simp] def derivative {X} [Vec X] (f : ℝ → X) : ℝ → X := swap (δ f) 1
+@[simp] def gradient {X} [Vec X] (f : X → ℝ) : X → X := comp dual (δ f)
+@[simp] def tangent_map {X Y} [Vec X] [Vec Y] (f : X → Y) : X×X → Y×Y := uncurry $ λ x dx => (f x, δ f x dx)
+@[simp] def backprop {X Y} [Hilbert X] [Hilbert Y] (f : X → Y) : X → Y×(Y→X) := λ x => (f x, †(δ f x))
+
+prefix:1024 "∇" => gradient
+prefix:1024 "ⅆ" => derivative
+prefix:1024 "𝕋" => tangent_map

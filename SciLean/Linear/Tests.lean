@@ -1,11 +1,10 @@
-import SciLean.Linear.Basic
-import SciLean.Linear.Combinators
-import SciLean.Linear.Adjoint
+import SciLean.Linear
 
 -- import SciLean.Affine.Combinators
 -- import SciLean.IsZero.Basic
 import SciLean.Meta
 
+section
 variable {α β γ : Type} 
 variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {U : Type} {V : Type} {W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
@@ -22,3 +21,18 @@ theorem test9  : IsLin λ u : X => u + ((3 : ℝ) * u + u) + u := by rmlamlet; i
 theorem test10 (A : X → X) [IsLin A] : IsLin λ u : X => (u + ((u + A u) + (10 : ℝ)*u) + u) + u := by rmlamlet; infer_instance
 theorem test11 (A : X → X) (B : X → X) [IsLin A] [IsLin B] : IsLin λ x => A x + B (A (B x) + B x) := by rmlamlet; infer_instance
 
+end
+
+
+section 
+
+variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
+
+variable (f : Y → Z) (g : X → Y) (A : Y ⇀ Z) (B : X ⇀ Y) [IsLin f] [IsLin g] 
+
+-- def map1 : X ⇀ X := (λₗ x : X => x)
+-- def map2 : X ⇀ X := (λₗ x : X => x + x)
+-- def map3 : X ⇀ Y := (λₗ x : X => B x)
+-- def map4 : X ⇀ Z := (λₗ x : X => f (B x))
+
+end

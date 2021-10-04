@@ -41,4 +41,4 @@ namespace Real
 
 end Real
 
-instance : OfNat ℝ n   := ⟨Float.ofNat n⟩
+instance : OfNat ℝ n := ⟨Float.ofNat n⟩

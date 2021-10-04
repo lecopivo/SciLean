@@ -6,7 +6,8 @@ open Lean
 open Lean.Meta
 open Lean.Elab.Tactic
 
-def extractfvar (e : Expr) (v : Expr) : MetaM Expr := do
+def extractfvar (e : Expr) (v : Expr) (lctx : LocalContext) : MetaM Expr := do
+withLCtx lctx #[] do
 let V ← inferType v
 let fvarid ← v.fvarId!
 let E ← inferType e
@@ -16,26 +17,35 @@ match e with
   | Expr.app f x _ => 
     match (f.containsFVar fvarid), (x.containsFVar fvarid) with
       | false, false => mkAppM `const #[V, e]
-      | false, true => if (x==v) then f else mkAppM `comp #[f, (← extractfvar x v)]
-      | true, false => mkAppM `swap #[(← extractfvar f v), x]
-      | true, true => mkAppM `subs #[(← extractfvar f v), (← extractfvar x v)]
+      | false, true => if (x==v) then f else mkAppM `comp #[f, (← extractfvar x v lctx)]
+      | true, false => mkAppM `swap #[(← extractfvar f v lctx), x]
+      | true, true => mkAppM `subs #[(← extractfvar f v lctx), (← extractfvar x v lctx)]
   | e => e    
 
-partial def removelambdalet (e : Expr) : MetaM Expr :=
+partial def removelambdalet (e : Expr) (lctx : LocalContext) : MetaM Expr :=
+withLCtx lctx #[] do
 match e with
- | Expr.app f x _ => do mkApp (← removelambdalet f) (← removelambdalet x)
- | Expr.lam .. => lambdaTelescope e fun xs b => do 
+ | Expr.app f x _ => do mkApp (← removelambdalet f lctx) (← removelambdalet x lctx)
+ | Expr.lam .. => lambdaTelescope e fun xs b => do
    let xs := xs.reverse
-   let mut b ← removelambdalet b
+   let mut b ← removelambdalet b (← getLCtx)
+   let B ← inferType b
    for x in xs do
-     b ← extractfvar b x
+     -- if ¬(B.containsFVar x.fvarId!) then
+     b ← extractfvar b x (← getLCtx)
+     -- else
+     --   b ← mkLambdaFVars #[x] b
    pure b
- -- | Expr.letE name t v b _ => do
- --     let x ← mkFVar (← mkFreshFVarId)
- --     let b ← b.instantiate #[x]
- --     let b ← extractfvar b x -- This is the problem! x does not really have a type :(
- --     let v ← removelambdalet v
- --     mkApp b v
+ | Expr.letE n t v b _ => do
+     let lctx ← getLCtx
+     let fvarId ← mkFreshFVarId
+     let lctx := lctx.mkLetDecl fvarId n t v
+     let fvar := mkFVar fvarId
+     let b ← b.instantiate #[fvar]
+     let b ← removelambdalet b lctx
+     let b ← extractfvar b fvar lctx
+     let v ← removelambdalet v lctx
+     mkApp b v
  | e' => e'
 
 syntax (name := rmlamlet) "rmlamlet" : tactic
@@ -45,7 +55,7 @@ def rmlamletCore (mvarId : MVarId) : MetaM (List MVarId) :=
     let tag      ← getMVarTag mvarId
     let target   ← getMVarType mvarId
     let u        ← getLevel target
-    let targetNew ← (removelambdalet target)
+    let targetNew ← (removelambdalet target (← getLCtx))
     let mvarNew  ← mkFreshExprSyntheticOpaqueMVar targetNew tag
     let eq       ← mkEq target targetNew
     let eqMvar  ← mkFreshExprSyntheticOpaqueMVar eq
@@ -60,4 +70,6 @@ def rmlamletCore (mvarId : MVarId) : MetaM (List MVarId) :=
           let todos ← rmlamletCore mainGoal 
           setGoals todos
           pure ()
+
+
 

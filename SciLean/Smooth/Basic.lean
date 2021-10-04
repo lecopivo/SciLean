@@ -35,3 +35,16 @@ section Arithmetics
 end Arithmetics
 
 
+--------------
+--  ___                _   _      __  __
+-- / __|_ __  ___  ___| |_| |_   |  \/  |__ _ _ __ ___
+-- \__ \ '  \/ _ \/ _ \  _| ' \  | |\/| / _` | '_ (_-<
+-- |___/_|_|_\___/\___/\__|_||_| |_|  |_\__,_| .__/__/
+--                                           |_|
+ -- define (X ⇀ Y) 
+--- define (X ⤳ Y) 
+--- define (X ⟿ Y)
+
+
+--- auto_proof := by simp; rmlamlet; infer_instance
+--- Totaly do λₛ (f : Y ⟿ Z) (g : X ⟿ Y) (x : X), f (g x) = ⟨ λ (f : Y → Z) => ⟨ λ (g : X → Y) => ⟨λ x : X => f (g x) , by auto_proof⟩ , by auto_proof⟩, by auto_proof⟩ 

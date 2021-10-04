@@ -18,6 +18,17 @@ instance : Zero Float := ⟨0.0⟩
 instance : One Nat := ⟨1⟩
 instance : One Float := ⟨1.0⟩
 
+section UnitOperations
+
+  instance : Add PUnit := ⟨λ x y => PUnit.unit⟩
+  instance : Sub PUnit := ⟨λ x y => PUnit.unit⟩
+  instance : Mul PUnit := ⟨λ x y => PUnit.unit⟩
+  instance : Neg PUnit := ⟨λ x => PUnit.unit⟩
+  
+  instance : Zero PUnit := ⟨PUnit.unit⟩
+ 
+end UnitOperations
+
 section ProductOperations
 
   variable {α : Type u} {β : Type v} {γ : Type w}
