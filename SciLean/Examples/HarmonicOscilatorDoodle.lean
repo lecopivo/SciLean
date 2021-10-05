@@ -23,10 +23,10 @@ def impl_intro {X Y : Type} (f : X → Y) : Impl f = Impl (λ x => f x) := by si
 set_option synthInstance.maxHeartbeats 5000
 set_option synthInstance.maxSize 1000
 
-def solver (m k : ℝ) (steps : Nat) : SpecImpl (ode_solve (HamiltonianSystem (H m k))) :=
+def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by 
   -- solver_check (m>0) "Mass has to be nonzero." 
-
+  
   simp [HamiltonianSystem, H, symp, uncurry];
   rmlamlet; rw [diff_intro]; simp; rmlamlet; rw [comp_dual_intro]; simp; -- autograd    
   -- algebraic_simplify

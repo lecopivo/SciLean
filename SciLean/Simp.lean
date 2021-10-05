@@ -17,6 +17,7 @@ variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 @[simp] theorem prod_sum (x x' : X) (y y' : Y) : (x, y) + (x', y') = (x + x', y + y') := sorry
 
+
 -- @[simp] theorem real_nat_mul (n m : Nat) : ((OfNat.ofNat n) : ℝ) * ((OfNat.ofNat m) : ℝ) = (( (m*n)) : ℝ) := sorry
 
 

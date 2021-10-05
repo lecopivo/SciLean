@@ -5,9 +5,10 @@ import SciLean.Smooth
 import SciLean.Invert
 
 import SciLean.Solver
-import SciLean.Meta
+import SciLean.Tactic
+-- import SciLean.Meta
 
-import SciLean.Simp
+import SciLean.ODE.Basic
 
 import SciLean.Math.Basic
 

@@ -1,8 +1,4 @@
-import SciLean.Linear
-
--- import SciLean.Affine.Combinators
--- import SciLean.IsZero.Basic
-import SciLean.Meta
+import SciLean.Basic
 
 section
 variable {α β γ : Type} 

@@ -1,17 +1,19 @@
--- import Lean
--- import Lean.Meta.Basic
--- import Lean.Elab.Tactic.Basic
-
 -- import SciLean.Solver.Basic
+-- set_option synthInstance.maxHeartbeats 10000
 
--- open Lean 
--- open Lean.Meta
--- open Lean.Elab.Tactic
+import Lean
+import Lean.Meta.Basic
+import Lean.Elab.Tactic.Basic
 
--- --- Add an assumption 
--- syntax (name := solver_assume) "solver_assume" notFollowedBy("|") (colGt term:max)* : tactic
--- --- Add a runtime check
--- syntax (name := solver_check) "solver_check" notFollowedBy("|") (colGt term:max)* : tactic
+open Lean 
+open Lean.Meta
+open Lean.Elab.Tactic
+
+
+--- Add an assumption 
+syntax (name := solver_assume) "solver_assume" notFollowedBy("|") (colGt term:max)* : tactic
+--- Add a runtime check
+syntax (name := solver_check) "solver_check" notFollowedBy("|") (colGt term:max)* : tactic
 
 -- --- Solve the current Prop goal by adding it to the list of assumptions/promisses
 -- syntax (name := assume_this) "assume_this" notFollowedBy("|") (colGt term:max)* : tactic
@@ -23,67 +25,53 @@
 
 -- syntax (name := print_main_goal) "print_main_goal" notFollowedBy("|") : tactic
 
--- def Syntax.mkStrLit (str : String) : Syntax := Syntax.node strLitKind #[mkAtom ("\"" ++ str ++ "\"")]
+def Syntax.mkStrLit (str : String) : Syntax := Syntax.node strLitKind #[mkAtom ("\"" ++ str ++ "\"")]
 
--- def solverAssumeCore (mvarId : MVarId) (prop msg : Expr) : MetaM (List MVarId) :=
---   withMVarContext mvarId do
---     let tag    ← getMVarTag mvarId
---     let target ← getMVarType mvarId
+inductive assumeOrCheck where | assume | check 
+
+def solverAssumeCheckCore (mvarId : MVarId) (prop msg : Expr) (type : assumeOrCheck) : MetaM (List MVarId) :=
+  withMVarContext mvarId do
+    let tag    ← getMVarTag mvarId
+    let target ← getMVarType mvarId
     
---     let newTarget ← mkForall Name.anonymous BinderInfo.default prop target
---     let newMVarId  ← mkFreshExprSyntheticOpaqueMVar newTarget tag
+    let newTarget ← mkForall Name.anonymous BinderInfo.default prop target
+    let newMVarId  ← mkFreshExprSyntheticOpaqueMVar newTarget tag
 
---     assignExprMVar mvarId (← mkAppM `Solver.promise #[newMVarId, msg])
+    match type with
+      | assumeOrCheck.assume => assignExprMVar mvarId (← mkAppM `Solver.assumption #[newMVarId, msg])
+      | assumeOrCheck.check  => assignExprMVar mvarId (← mkAppM `Solver.check #[newMVarId, msg])
 
---     return [newMVarId.mvarId!]
+    return [newMVarId.mvarId!]
 
--- @[tactic solver_assume] def tacticSolverAssume : Tactic
--- | `(tactic| solver_assume $prop:term $msg:term $h:term) => do 
---             let mainGoal ← getMainGoal  
---             let p ← elabTerm prop none true
---             let m ← elabTerm msg none true
---             setGoals (← solverAssumeCore mainGoal p m)
---             evalTactic (← `(tactic| intro $h:term))
--- | `(tactic| solver_assume $prop:term $msg:term) => do
---             evalTactic (← `(tactic| solver_assume $prop:term $msg:term h))
--- | `(tactic| solver_assume $prop:term) => do
---             let msg := Syntax.mkStrLit (toString prop.prettyPrint)
---             evalTactic (← `(tactic| solver_assume $prop:term $msg h))
--- | _ => Lean.Elab.throwUnsupportedSyntax
+@[tactic solver_assume] def tacticSolverAssume : Tactic
+| `(tactic| solver_assume $prop:term $msg:term $h:term) => do 
+            let mainGoal ← getMainGoal  
+            let p ← elabTerm prop none true
+            let m ← elabTerm msg none true
+            setGoals (← solverAssumeCheckCore mainGoal p m assumeOrCheck.assume)
+            evalTactic (← `(tactic| intro $h:term))
+| `(tactic| solver_assume $prop:term $msg:term) => do
+            evalTactic (← `(tactic| solver_assume $prop:term $msg:term h))
+| `(tactic| solver_assume $prop:term) => do
+            let msg := Syntax.mkStrLit (toString prop.prettyPrint)
+            evalTactic (← `(tactic| solver_assume $prop:term $msg h))
+| _ => Lean.Elab.throwUnsupportedSyntax
 
--- -- | _ => do 
--- --           let mainGoal ← getMainGoal
--- --           let todos ← solverAssumeCore mainGoal 
--- --           setGoals todos
--- --           pure ()
 
--- def solverCheckCore (mvarId : MVarId) (prop msg : Expr) : MetaM (List MVarId) :=
---   withMVarContext mvarId do
---     let tag    ← getMVarTag mvarId
---     let target ← getMVarType mvarId
+@[tactic solver_check] def tacticSolverCheck : Tactic
+| `(tactic| solver_check $prop:term $msg:term $h:term) => do 
+            let mainGoal ← getMainGoal  
+            let p ← elabTerm prop none true
+            let m ← elabTerm msg none true
+            setGoals (← solverAssumeCheckCore mainGoal p m assumeOrCheck.check)
+            evalTactic (← `(tactic| intro $h:term))
+| `(tactic| solver_check $prop:term $msg:term) => do
+            evalTactic (← `(tactic| solver_check $prop:term $msg:term h))
+| `(tactic| solver_check $prop:term) => do
+            let msg := Syntax.mkStrLit (toString prop.prettyPrint)
+            evalTactic (← `(tactic| solver_check $prop:term $msg h))
+| _ => Lean.Elab.throwUnsupportedSyntax
 
---     let newTarget ← mkForall Name.anonymous BinderInfo.default prop target
---     let newMVarId  ← mkFreshExprSyntheticOpaqueMVar newTarget tag
-
---     assignExprMVar mvarId (← mkAppM `Solver.check #[newMVarId, msg])
-
---     return [newMVarId.mvarId!]
-
--- @[tactic solver_check] def tacticSolverCheck : Tactic
--- | `(tactic| solver_check $prop:term $msg:term $h:term) => do 
---             let mainGoal ← getMainGoal  
---             let p ← elabTerm prop none true
---             let m ← elabTerm msg none true
---             setGoals (← solverCheckCore mainGoal p m)
---             evalTactic (← `(tactic| intro $h:term))
--- | `(tactic| solver_check $prop:term $msg:term) => do 
---             evalTactic (← `(tactic| solver_check $prop:term $msg:term h))
--- | `(tactic| solver_check $prop:term) => do 
---             let msg := Syntax.mkStrLit (toString prop.prettyPrint)
---             evalTactic (← `(tactic| solver_check $prop:term $msg:term))
--- | _ => Lean.Elab.throwUnsupportedSyntax
-
--- #check Syntax
 
 -- def printGoal (mvarId : MVarId)  : MetaM Unit :=
 --   withMVarContext mvarId do

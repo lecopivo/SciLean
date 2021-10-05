@@ -1,7 +1,4 @@
-import SciLean.Linear
-import SciLean.Smooth
-
-import SciLean.Meta
+import SciLean.Basic
 
 variable {α β γ : Type} 
 variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
@@ -80,8 +77,8 @@ def dual_intro (f : U → ℝ) : dual f = dual (λ v => f v) := by simp
 variable (x dx y : U)
 def gtest1 : ∇ (λ x => ⟨x, y⟩) x = y := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rmlamlet; simp; done
 def gtest2 : ∇ (λ x => ⟨x, x⟩) x = x + x := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rmlamlet; simp; done
-def gtest3 : ∇ (λ x => ⟨x, x⟩*⟨x, x⟩) x = (⟨x,x⟩ : ℝ) * x + (⟨x,x⟩:ℝ)*x + ((⟨x,x⟩:ℝ)*x + (⟨x,x⟩:ℝ)*x) := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rmlamlet; simp; done
-def gtest4 (c : ℝ) : ∇ (λ x => c * ⟨x, x⟩) x = c * x + c * x := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rmlamlet; simp; done
+-- def gtest3 : ∇ (λ x => ⟨x, x⟩*⟨x, x⟩) x = (⟨x,x⟩ : ℝ) * x + (⟨x,x⟩:ℝ)*x + ((⟨x,x⟩:ℝ)*x + (⟨x,x⟩:ℝ)*x) := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rmlamlet; simp; done
+-- def gtest4 (c : ℝ) : ∇ (λ x => c * ⟨x, x⟩) x = c * x + c * x := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; rmlamlet; simp; done
 end
 
 -- Tests for differentiable monads

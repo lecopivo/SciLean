@@ -181,9 +181,9 @@ axiom differential.definition {X Y} [Vec X] [Vec Y] (f : X → Y) [IsDiff f] (x 
 -- | |__| | '  \| |  _|
 -- |____|_|_|_|_|_|\__|
 
-def has_limit {X} (lim : Nat → X) [Vec X] : Prop := sorry
+def has_limit {X} [Vec X] (lim : Nat → X) : Prop := sorry
 
-def limit {X} (lim : Nat → X) [Vec X] : X := sorry
+def limit {X} [Vec X] (lim : Nat → X) : X := sorry
 
 -- Maybe we will add this proof automation 
 -- class HasLim {X} [Vec X] (lim : Nat → X) : Prop := (has_lim : has_limit lim)
@@ -193,7 +193,7 @@ def limit {X} (lim : Nat → X) [Vec X] : X := sorry
 --  / _ \|   \| __| / __| ___| |_ _____
 -- | (_) | |) | _|  \__ \/ _ \ \ V / -_)
 --  \___/|___/|___| |___/\___/_|\_/\___|
-def ode_solve {X} (f : X → X) (t : ℝ) (x₀ : X) [Vec X] : X := sorry
+def ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X := sorry
 
 @[simp] axiom ode_solve.definition {X} [Vec X] (f : X → X) (t dt : ℝ) (x₀ : X) [IsCont f] : δ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
 
@@ -202,7 +202,7 @@ def ode_solve {X} (f : X → X) (t : ℝ) (x₀ : X) [Vec X] : X := sorry
 --  | || ' \  _/ -_) _` | '_/ _` |  _/ -_)
 -- |___|_||_\__\___\__, |_| \__,_|\__\___|
 --                 |___/
-def integrate {X} (f : ℝ → X) (a b : ℝ) [Vec X] : X := sorry
+def integrate {X} [Vec X] (f : ℝ → X) (a b : ℝ) : X := sorry
 
 prefix:1024 "∫" => integrate
 

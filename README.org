@@ -42,14 +42,14 @@
      - [ ] Implement `IsLInv` `IsRInv`
      - [ ] experiment with `extends` keyword to chain categories properly and test if `IsInv` can be written just as an extension of `IsLInv` and `IsRInv`
      - [ ] Define Hom for categories and pick arrows
-       - Lin:    ⊸   \-o
-       - Smooth: ⟿  \r~3	 
-       - Dif:    ⇝   \r~2
-       - Cont:   ↦  \r6
-       - Diffeo: ↭  \lr5
-       - RInv:   ↠  \r23
-       - LInv:   ↪  \r8
-       - Inv:    ↔  \lr
+       - Lin:    ⊸  --o  \-o     
+       - Smooth: ⟿ ~~>  \r~3	 
+       - Dif:    ⇝ -~>  \r~2
+       - Cont:   ↦ -->  \r6
+       - Diffeo: ↭ <~>  \lr5
+       - RInv:   ↠ ->> \r23
+       - LInv:   ↪  >-> \r8
+       - Inv:    ↔  <-> \lr
      - [ ] internalized combinators
      - [ ] extract smooth/linear/... symbol - this will create appropriate morphism
      - [ ] modify remove lambda let to work with morphisms
@@ -57,10 +57,12 @@
      - [ ] Implement =IsCont= 
      - [ ] Add =IsDiffeo= a category of diffeomorphisms
 
-**** TODO Computations [/]
+**** TODO Computations [1/8]
 
      - [ ] add simple algebraic simplification, probably based on https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/New.20attribute.20to.20mark.20theorems
-     - [ ] add =autodiff=,  =autodual=, =autograd= tactics
+       after attempt 1: What the link suggest does not work :(
+     - [X] add =autodiff=, =autograd= tactics
+     - [ ] add =autodual= tactic
      - [ ] fix `remove lambda let` to work properly with `let` such that for loops are correctly abstracted
      - [ ] Add basic real functions like =sin, cos, exp= and their derivatives and inverses
      - [ ] =Vector T n= fixed sized array of type T
@@ -68,9 +70,9 @@
      - [ ] =Vec2, Vec3, Vec4= simple fixed size vectors
      - [ ] =Mat2, Mat3, Mat4= simple fixed size matrices
 
-**** TODO Solver class [/]
+**** TODO Solver class [1/4]
 
-     - [ ] add tactics =solver_check= and =solver_assumtion=
+     - [X] add tactics =solver_check= and =solver_assumtion=
      - [ ] add tactic =lift_limit=
      - [ ] add tactic =finish_impl=
      - [ ] implement =assemble=
