@@ -159,10 +159,11 @@ instance (x : ℝ) [IsPos x] : FetchProof IsPos x := by constructor; assumption
 --  | || ' \ V / -_) '_(_-</ -_)
 -- |___|_||_\_/\___|_| /__/\___|
 
-def inverse {U V} [Inhabited U] : (U → V) → (V → U) := sorry
+-- add [Inhabited U]
+def inverse {U V} : (U → V) → (V → U) := sorry
 postfix:1024 "⁻¹" => inverse
 
-axiom inverse.definition {U V} [Inhabited U] (f : U → V) (u : U) (v : V) [IsInv f] : (∀ u, f⁻¹ (f u) = u) ∧ (∀ v, f (f⁻¹ v) = v)
+axiom inverse.definition {U V} (f : U → V) (u : U) (v : V) [IsInv f] : (∀ u, f⁻¹ (f u) = u) ∧ (∀ v, f (f⁻¹ v) = v)
 
 --  ___  _  __  __                 _   _      _
 -- |   \(_)/ _|/ _|___ _ _ ___ _ _| |_(_)__ _| |
