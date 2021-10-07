@@ -12,15 +12,15 @@ def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k
 by
   solver_check (m.toFloat>0) "Mass has to be nonzero."
   
-  simp [HamiltonianSystem, H, symp, uncurry]
+  simp [HamiltonianSystem, symp, uncurry, H, gradient]
   autograd
 
   rw [ode_solve_fixed_dt forward_euler_step]
---   lift_limit steps "Number of ODE solver steps."
-
+  lift_limit -- steps "Number of ODE solver steps."
+  
   admit
---   finish_impl
 
+--   finish_impl
 
 -- def main : IO Unit :=
 
@@ -36,4 +36,3 @@ by
 --   let (x,p) := evolve t (x₀, p₀)
   
 --   IO.println s!"In {t} seconds the harmonic oscillator evolved from ({x₀}, {p₀}) to ({x},{p})."
-

@@ -22,7 +22,7 @@ section Combinators
    @[simp] def const.reduce (Y : Type v) (x : X) (y : Y) : const Y x y = x  := by simp[const]
    @[simp] def comp.reduce (f : Y→Z) (g : X→Y) (x : X) : (comp f g x) = f (g x) := by simp[comp]
    @[simp] def swap.reduce (f : X→Y→Z) (y : Y) (x : X) : (swap f y x) = f x y := by simp[swap]
-   @[simp] def subs.reduce (f : X→Y→Z) (g : X→Y) (x : X) : (subs f g x) = (f x) (g x) := by simp[subs]
+   @[simp] def subs.reduce (f : X→Y→Z) (g : X→Y) (x : X) : (subs f g x) = let x' := x; (f x') (g x') := by simp[subs]
 
    -- Reduction of basic combinators in Type Class resolution 
    -- This is crucial in proof automation
@@ -269,9 +269,9 @@ prefix:1024 "†" => adjoint
 --                    |/                 |___/                          |_|  |/
 
 @[simp] def derivative {X} [Vec X] (f : ℝ → X) : ℝ → X := swap (δ f) 1
-@[simp] def gradient {X} [Vec X] (f : X → ℝ) : X → X := comp dual (δ f)
-@[simp] def tangent_map {X Y} [Vec X] [Vec Y] (f : X → Y) : X×X → Y×Y := uncurry $ λ x dx => (f x, δ f x dx)
-@[simp] def backprop {X Y} [Hilbert X] [Hilbert Y] (f : X → Y) : X → Y×(Y→X) := λ x => (f x, †(δ f x))
+def gradient {X} [Vec X] (f : X → ℝ) : X → X := comp dual (δ f)
+def tangent_map {X Y} [Vec X] [Vec Y] (f : X → Y) : X×X → Y×Y := uncurry $ λ x dx => (f x, δ f x dx)
+def backprop {X Y} [Hilbert X] [Hilbert Y] (f : X → Y) : X → Y×(Y→X) := λ x => (f x, †(δ f x))
 
 prefix:1024 "∇" => gradient
 prefix:1024 "ⅆ" => derivative

@@ -53,15 +53,17 @@
      - [ ] internalized combinators
      - [ ] extract smooth/linear/... symbol - this will create appropriate morphism
      - [ ] modify remove lambda let to work with morphisms
-     - [ ] Specialized notation =λₛ= for morphisms
+     - [ ] Specialized notation =λₛ= for morphisms, maybe also ascii version as =fun (x : X) ~~> (f x)= or =fun (v : V) --o (A v)=
      - [ ] Implement =IsCont= 
      - [ ] Add =IsDiffeo= a category of diffeomorphisms
 
 **** TODO Computations [1/8]
 
-     - [ ] add simple algebraic simplification, probably based on https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/New.20attribute.20to.20mark.20theorems
-       after attempt 1: What the link suggest does not work :(
+     - [ ] add simple algebraic simplification, probably based on this [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/New.20attribute.20to.20mark.20theorems][zulip chat]]
+        - Attempt 1: What the link suggest does not work naively in my case :(
      - [X] add =autodiff=, =autograd= tactics
+     - [ ] make =rmlamlet= work in conv mode
+     - [ ] rewrite =autodiff= and =autograd= to use conv mode
      - [ ] add =autodual= tactic
      - [ ] fix `remove lambda let` to work properly with `let` such that for loops are correctly abstracted
      - [ ] Add basic real functions like =sin, cos, exp= and their derivatives and inverses
@@ -70,18 +72,32 @@
      - [ ] =Vec2, Vec3, Vec4= simple fixed size vectors
      - [ ] =Mat2, Mat3, Mat4= simple fixed size matrices
 
-**** TODO Solver class [1/4]
+**** TODO Solver class [1/5]
 
      - [X] add tactics =solver_check= and =solver_assumtion=
      - [ ] add tactic =lift_limit=
-     - [ ] add tactic =finish_impl=
+     - [ ] add tactic =finish_impl= probably just `apply Solver.pure`
+     - [ ] check computability in =finish_impl=
+           The approach is probably to replace every free variables in the target expression by their instance of `Inhabited`. For this use =Expr.replaceFVar=
+
+           If the target is a function, synthesize all arguments with `Inhabited` and apply them.
+
+	   Finally I need to figure out how to test if an expression can be evaluated.
+	   
      - [ ] implement =assemble=
 
 **** TODO Variational calculus [/]
 
      - [ ] Figure out how to deal with adjoint and dual in case of integrals
      - [ ] Automatize duality on integrals
-     
+
+**** TODO External Linear algebra [/]
+
+     - [ ] do a simple experiment to bind some C/C++ linear solver
+       look into this [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/C.20FFI.20usage][zulip thread]] for info and links
+     - [ ] try wrapping Thrust vector into [[https://github.com/leanprover/lean4/blob/b742f0005f7d96b94260bf2052fb50526f3d6b06/src/include/lean/lean.h#L282][=lean_external_object=]]
+       
+
 *** TODO Sims [/]
 
 **** TODO Harmonic Oscillator [1/6]
