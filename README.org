@@ -72,10 +72,15 @@
      - [ ] =Vec2, Vec3, Vec4= simple fixed size vectors
      - [ ] =Mat2, Mat3, Mat4= simple fixed size matrices
 
-**** TODO Solver class [1/5]
+**** TODO Solver class [2/8]
 
      - [X] add tactics =solver_check= and =solver_assumtion=
-     - [ ] add tactic =lift_limit=
+     - [X] add tactic =lift_limit=
+     - [ ] add tactic =assume_this=
+     - [ ] add tactic =check_this=
+     - [ ] refine =lift_limit=
+           It should automatically call =assume_this= for assuming lifting of the limit
+	   Based on how lift_limit currently works it should call one iteration of beta-reduction.
      - [ ] add tactic =finish_impl= probably just `apply Solver.pure`
      - [ ] check computability in =finish_impl=
            The approach is probably to replace every free variables in the target expression by their instance of `Inhabited`. For this use =Expr.replaceFVar=
