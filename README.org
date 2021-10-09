@@ -60,7 +60,7 @@
 **** TODO Computations [1/8]
 
      - [ ] add simple algebraic simplification, probably based on this [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/New.20attribute.20to.20mark.20theorems][zulip chat]]
-        - Attempt 1: What the link suggest does not work naively in my case :(
+       - Attempt 1: What the link suggest does not work naively in my case :(
      - [X] add =autodiff=, =autograd= tactics
      - [ ] make =rmlamlet= work in conv mode
      - [ ] rewrite =autodiff= and =autograd= to use conv mode
@@ -76,6 +76,7 @@
 
      - [X] add tactics =solver_check= and =solver_assumtion=
      - [X] add tactic =lift_limit=
+     - [ ] rewrite =Impl= based on [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Working.20with.20constants/near/256707931][Mario's answer]]
      - [ ] add tactic =assume_this=
      - [ ] add tactic =check_this=
      - [ ] refine =lift_limit=

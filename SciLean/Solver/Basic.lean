@@ -18,6 +18,29 @@ inductive Impl : {α : Type _}  → (spec : α) → Type _
   | assumption {α : Type u} {spec : α} {P : Prop} 
           (impl : P → Impl spec) 
           (help : String) : Impl spec
+
+-- This is a weaker version of Impl that does not have the specification.
+-- Unfortunatelly, I'm having some problems executing programs created using Impl :( 
+-- So I'm struck with ImplNoSpec for now
+inductive ImplNoSpec : Type _ → Type _
+  | pure  {α : Type u} 
+          (impl : α) : ImplNoSpec α
+
+  | limit {α : Type u} [Vec α] 
+          (lim_spec : Nat → α) 
+          (n : Nat) 
+          (impl : ImplNoSpec α) 
+          (help : String) : ImplNoSpec α
+
+  | check {α : Type u} {P : Prop} [Decidable P] 
+          (impl : P → ImplNoSpec α) 
+          (help : String) : ImplNoSpec α
+
+  | assumption {α : Type u} {P : Prop} 
+          (impl : P → ImplNoSpec α) 
+          (help : String) : ImplNoSpec α
+
+
   -- | profile {α β : Type u} {spec speca : α} {specb : α → β} (x : Solver α speca) (f : (a : α) → Solver β (specb a)) (help : String) : Solver β spec
   -- | bind {α β : Type u} {speca : α} {spec : β} (a : Solver α speca) (f : α → Solver β spec) : Solver β spec
   -- | something {α β : Type u} {spec : α → β}

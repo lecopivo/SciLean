@@ -35,14 +35,21 @@ by
 
   finish_impl
 
-def foo_impl : Impl (δ (λ x : ℝ => x*x)) :=
+def square_grad : Impl (∇ (λ x : ℝ => x*x)) :=
 by
   simp [gradient]
-  autodiff
+  autograd
   
   finish_impl
 
-def main : IO Unit := do
+
+-- def foo_th : foo_impl.assemble! = λ x : ℝ => 1 * x + x * 1 :=
+-- by
+--   simp [Impl.assemble!, foo_impl]
+--   funext x
+--   simp [Impl.assemble!]
+
+def harmonic_oscillator_main : IO Unit := do
 
   let steps := 10
   let m := 1.0
@@ -59,13 +66,9 @@ def main : IO Unit := do
   let p₀ := (0.0, 0.0)
   -- let (x,p) := evolve t (x₀, p₀)
 
-  let y := foo t t
+  let y := foo t
   
   -- IO.println s!"In {t} seconds the harmonic oscillator evolved from ({x₀}, {p₀}) to ({x},{p})."
   IO.println s!"Time change of harmonic oscillator at state ({x₀}, {p₀}) is {y}."
 
-#eval main
-
-def foo := foo_impl.assemble!
-
-#eval (foo 1.0 2.0)
+#eval harmonic_oscillator_main
