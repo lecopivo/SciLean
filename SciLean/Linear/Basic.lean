@@ -12,11 +12,18 @@ instance (y : Y) [IsZero y] : IsLin (swap Prod.mk y : X → X × Y) := sorry
 -- Multiplication
 instance : IsLin (HMul.hMul : ℝ → X → X) := sorry
 instance (s : ℝ) : IsLin (HMul.hMul s : X → X) := sorry
-instance (s : ℝ) : IsLin (HMul.hMul s : ℝ → ℝ) := sorry
+-- instance (s : ℝ) : IsLin (HMul.hMul s : ℝ → ℝ) := sorry
+
+-- Negation
+instance : IsLin (Neg.neg : X → X) := sorry
 
 -- Addition - only adding a zero is linear
 instance (x : X) [IsZero x] : IsLin (HAdd.hAdd x : X → X) := sorry 
 instance (x : X) [IsZero x] : IsLin (swap HAdd.hAdd x : X → X) := sorry 
+
+-- Subtraction - only subracting a zero or from zero is linear
+instance (x : X) [IsZero x] : IsLin (HSub.hSub x : X → X) := sorry 
+instance (x : X) [IsZero x] : IsLin (swap HSub.hSub x : X → X) := sorry 
 
 -- Constantly zero map is linear
 instance (f : X → Y) [IsZero f] : IsLin f := sorry

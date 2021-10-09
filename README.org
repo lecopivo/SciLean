@@ -57,12 +57,12 @@
      - [ ] Implement =IsCont= 
      - [ ] Add =IsDiffeo= a category of diffeomorphisms
 
-**** TODO Computations [1/8]
+**** TODO Computations [2/11]
 
      - [ ] add simple algebraic simplification, probably based on this [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/New.20attribute.20to.20mark.20theorems][zulip chat]]
        - Attempt 1: What the link suggest does not work naively in my case :(
      - [X] add =autodiff=, =autograd= tactics
-     - [ ] make =rmlamlet= work in conv mode
+     - [X] make =rmlamlet= work in conv mode
      - [ ] rewrite =autodiff= and =autograd= to use conv mode
      - [ ] add =autodual= tactic
      - [ ] fix `remove lambda let` to work properly with `let` such that for loops are correctly abstracted

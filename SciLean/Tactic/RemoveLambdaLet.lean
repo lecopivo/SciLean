@@ -2,6 +2,14 @@ import Lean
 import Lean.Meta.Basic
 import Lean.Elab.Tactic.Basic
 
+import SciLean.Prelude
+
+import Lean.Elab.Tactic.Conv.Basic
+
+namespace Lean.Elab.Tactic.Conv
+open Meta
+
+
 open Lean 
 open Lean.Meta
 open Lean.Elab.Tactic
@@ -70,6 +78,67 @@ def rmlamletCore (mvarId : MVarId) : MetaM (List MVarId) :=
           let todos ← rmlamletCore mainGoal 
           setGoals todos
           pure ()
+
+syntax (name := conv_rmlamlet) "rmlamlet" : conv
+
+@[tactic conv_rmlamlet] def tacticConvRemoveLambdaLet : Tactic := 
+fun stx => withMainContext do
+          let lhs ← instantiateMVars (← getLhs)
+          changeLhs (← removelambdalet lhs (← getLCtx))
+          pure ()
+
+
+-- syntax (name := print_goal) "print_goal" : conv
+
+-- @[tactic print_goal] def tacticPrintGoal : Tactic := 
+-- fun stx => withMainContext do
+--           let mainGoal ← getMainGoal
+--           withMVarContext mainGoal do
+--             let (lhs, rhs) ← getLhsRhsCore mainGoal
+--             let lhs ← instantiateMVars lhs
+--             let rhs ← instantiateMVars rhs
+--             IO.println s!"Goal: {← getMVarType (← getMainGoal)}"
+--             IO.println s!"lhs & rhs: {lhs} | {rhs}"
+--             pure ()
+
+
+-- syntax (name := print_lhs) "print_lhs" : conv
+
+-- @[tactic print_lhs] def tacticPrintLhs : Tactic := 
+-- fun stx => withMainContext do
+--           changeLhs (← instantiateMVars (← getLhs))
+--           IO.println s!"Lhs: {← instantiateMVars (← getLhs)}"
+--           pure ()
+
+
+-- syntax (name := print_rhs) "print_rhs" : conv
+
+-- @[tactic print_rhs] def tacticPrintRhs : Tactic := 
+-- fun stx => withMainContext do 
+--           IO.println s!"Rhs: {← instantiateMVars (← getRhs)}"
+--           pure ()
+
+
+
+-- def test : id (id (λ x : Nat => id (id x))) = λ x => x := by
+
+--   conv =>
+--     print_lhs
+--     lhs
+--     print_lhs
+--     enter [1,1]
+--     print_lhs
+--     rmlamlet
+--     enter [x]
+--     simp
+--     print_lhs
+--     print_rhs
+--     print_goal
+--   done
+
+  
+  
+    
 
 
 

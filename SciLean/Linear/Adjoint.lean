@@ -15,6 +15,8 @@ instance (f : X → Y) [IsLin f] : IsLin (†f) := sorry
 @[simp] def adjoint_inner_1 (f : X → Y) [IsLin f] (x : X) (y : Y) : ⟨†f y, x⟩ = ⟨y, f x⟩ := sorry
 @[simp] def adjoint_inner_2 (f : X → Y) [IsLin f] (x : X) (y : Y) : ⟨x, †f y⟩ = ⟨f x, y⟩ := sorry
 
+@[simp] def dual_of_zero : dual (const X (0 : ℝ)) = 0 := sorry
+
 @[simp] def dual_on_reals (f : ℝ → ℝ) [IsLin f] : dual f = f 1 := sorry
 
 @[simp] def innefr_of_dualla (f : X → ℝ) (x : X) [IsLin f] : ⟨dual f, x⟩ = f x := sorry

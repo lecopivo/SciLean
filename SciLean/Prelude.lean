@@ -170,11 +170,11 @@ axiom inverse.definition {U V} (f : U → V) (u : U) (v : V) [IsInv f] : (∀ u,
 -- | |) | |  _|  _/ -_) '_/ -_) ' \  _| / _` | |
 -- |___/|_|_| |_| \___|_| \___|_||_\__|_\__,_|_|
 
-def differential {X Y} (f : X → Y) [Vec X] [Vec Y] : (X → X → Y) := sorry
+def differential {X Y} [Vec X] [Vec Y] (f : X → Y) : (X → X → Y) := sorry
 prefix:1024 "δ" => differential
 
 --- We need formalization of Convenient Vector Spaces: https://en.wikipedia.org/wiki/Convenient_vector_space
-def convenient.differential {X Y}  [Vec X] [Vec Y] (f : X → Y) (x dx : X) (h : convenient.is_diff_at f x) : Y := sorry
+def convenient.differential {X Y} [Vec X] [Vec Y] (f : X → Y) (x dx : X) (h : convenient.is_diff_at f x) : Y := sorry
 axiom differential.definition {X Y} [Vec X] [Vec Y] (f : X → Y) [IsDiff f] (x dx : X) : δ f x dx = convenient.differential f x dx (IsDiff.is_diff x)
 
 --  _    _       _ _
@@ -207,8 +207,8 @@ def integrate {X} [Vec X] (f : ℝ → X) (a b : ℝ) : X := sorry
 
 prefix:1024 "∫" => integrate
 
-axiom integrate.swap_limit {X} (a b : ℝ) (f : ℝ → X) [Vec X] [IsCont f] : (∫ f a b = - ∫ f b a)
-@[simp] axiom integrate.definition {X} (a t dt : ℝ) (f : ℝ → X) [Vec X] [IsCont f] : δ (∫ f) a t dt = dt * (f t)
+axiom integrate.swap_limit {X} [Vec X] (a b : ℝ) (f : ℝ → X) [IsCont f] : (∫ f a b = - ∫ f b a)
+@[simp] axiom integrate.definition {X} [Vec X] (a t dt : ℝ) (f : ℝ → X) [IsCont f] : δ (∫ f) a t dt = dt * (f t)
 
 --  ___            _
 -- |   \ _  _ __ _| |
@@ -258,7 +258,7 @@ axiom argmin.definition {X} (f : X → ℝ) (x : X) [HasArgMin f] : x = argmin f
 --           |__/
 
 def pullback {U V} (f : U → V) : (V → ℝ) → (U → ℝ) := λ v' u => v' (f u)
-def adjoint {U V} (f : U → V) [Hilbert U] [Hilbert V] := dual ∘ (pullback f) ∘ inner
+def adjoint {U V} [Hilbert U] [Hilbert V] (f : U → V) := dual ∘ (pullback f) ∘ inner
 
 prefix:1024 "†" => adjoint
 

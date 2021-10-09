@@ -25,19 +25,19 @@ namespace Real
 
   instance : Field ℝ := sorry
 
-  def sqrt := Float.sqrt
+  -- def sqrt := Float.sqrt
 
-  def sin := Float.sin
-  def cos := Float.cos
-  def tan := Float.tan
-  def atan := Float.atan
-  def atan2 := Float.atan2
+  -- def sin : ℝ → ℝ := Float.sin
+  -- def cos : ℝ → ℝ := Float.cos
+  -- def tan := Float.tan
+  -- def atan := Float.atan
+  -- def atan2 := Float.atan2
 
-  def exp := Float.exp
-  def exp2 := Float.exp2
-  def log := Float.log
-  def log2 := Float.log2
-  def log10 := Float.log10
+  -- def exp := Float.exp
+  -- def exp2 := Float.exp2
+  -- def log := Float.log
+  -- def log2 := Float.log2
+  -- def log10 := Float.log10
 
 end Real
 

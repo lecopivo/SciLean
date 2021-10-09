@@ -10,19 +10,19 @@ def H (m k : ℝ) (x p : V) := 1/(2*m) * ⟨p,p⟩ + k/2 * ⟨x, x⟩
 
 def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by
-  impl_check (m.toFloat>0) "Mass has to be nonzero."
-  
+  impl_check (m.toFloat>0) "Mass has to be non zero."
+    
   simp [HamiltonianSystem, symp, uncurry, H, gradient]
   autograd
 
-  rw [ode_solve_fixed_dt forward_euler_step]
+  rw [ode_solve_fixed_dt runge_kutta4_step]
   lift_limit steps "Number of ODE solver steps."; admit; simp
-
+  
   finish_impl
 
 def harmonic_oscillator_main : IO Unit := do
 
-  let steps := 10
+  let steps := 100
   let m := 1.0
   let k := 10.0
 

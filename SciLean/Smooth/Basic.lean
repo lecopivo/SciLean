@@ -25,12 +25,17 @@ section Arithmetics
   instance : IsDiff (HMul.hMul : ℝ → X → X) := sorry
   instance (r : ℝ) : IsDiff (HMul.hMul r : X → X) := sorry
 
-
   instance : IsDiff (HAdd.hAdd : X → X → X) := sorry
   instance (x : X) : IsDiff (HAdd.hAdd x : X → X) := sorry
 
   @[simp] def HAdd.hAdd.differential_1 (x dx y : X) : δ HAdd.hAdd x dx y = dx := sorry
   @[simp] def HAdd.hAdd.differential_2 (x y dy : X) : δ (HAdd.hAdd x ) y dy = dy := sorry
+
+  instance : IsDiff (HSub.hSub : X → X → X) := sorry
+  instance (x : X) : IsDiff (HSub.hSub x : X → X) := sorry
+
+  @[simp] def HSub.hSub.differential_1 (x dx y : X) : δ HSub.hSub x dx y = dx := sorry
+  @[simp] def HSub.hSub.differential_2 (x y dy : X) : δ (HSub.hSub x) y dy = -dy := sorry
 
 end Arithmetics
 

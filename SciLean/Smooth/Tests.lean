@@ -1,9 +1,11 @@
 import SciLean.Basic
 
+set_option synthInstance.maxHeartbeats 50000
+set_option synthInstance.maxSize 10000
+
 variable {α β γ : Type} 
 variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {U : Type} {V : Type} {W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
-
 
 section 
 variable (c d : ℝ) (x dx : X) (y z : X)
