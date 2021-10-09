@@ -43,18 +43,19 @@ def liftLimitCore (mvarId : MVarId) (N msg : Expr) : MetaM (List MVarId) :=
     let tag      ← getMVarTag mvarId
     let target   ← getMVarType mvarId
 
-    -- Check if target is actually `Impl`
+    -- Check if target is actually `Impl spec`
     let spec := target.getAppArgs[1]
-    let lim_spec ← getlimit spec N
-    let new_spec ← (mkApp lim_spec N)
-    let new_target ← mkAppM `Impl #[new_spec]
+    let lim ← getlimit spec N
+
+    let new_spec := (mkApp lim N)
+    let new_target ← mkAppM `Impl #[mkApp lim N]
     let new_mvar  ← mkFreshExprSyntheticOpaqueMVar new_target tag
-    let eq       ← mkEq spec (← mkAppM `limit #[lim_spec])
+    let eq       ← mkEq spec (← mkAppM `limit #[lim])
     let eq_mvar  ← mkFreshExprSyntheticOpaqueMVar eq
 
-    assignExprMVar mvarId (← mkAppM `Impl.limit #[lim_spec, N, new_mvar, eq_mvar, msg])
+    assignExprMVar mvarId (← mkAppM `ImplSpec.limit #[lim, N, new_mvar, msg, eq_mvar])
 
-    return [eq_mvar.mvarId!, new_mvar.mvarId!, mvarId]  
+    return [eq_mvar.mvarId!, new_mvar.mvarId!]  
 
 syntax (name := lift_limit) "lift_limit" (colGt term:max)* : tactic
 

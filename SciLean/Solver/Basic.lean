@@ -1,66 +1,70 @@
 import SciLean.Prelude
 
-inductive Impl : {α : Type _}  → (spec : α) → Type _
-  | pure  {α : Type u} 
-          (impl : α) : Impl impl
+-- Think about `spec` as: if `h : spec a` then `a` satisfies the specification
+--
+-- Note: Originally `spec` had type `α` and was the non-computable function specifying our program.
+-- However, this caused some problems with runtime. Using `α → Prop` deletes the spec from runtime
+-- and it no longer caused some odd non-computability issues.
+inductive ImplSpec {α : Type _} : (spec : α → Prop) → Type _
+  | pure  {spec : α → Prop}
+          (impl : α) 
+          : spec impl → ImplSpec spec
 
-  | limit {α : Type u} {spec : α} [Vec α] 
-          (lim_spec : Nat → α) 
-          (n : Nat) 
-          (impl : Impl (lim_spec n)) 
-          (h : spec = limit lim_spec) 
-          (help : String) : Impl spec
+  | limit {spec : α → Prop} [Vec α]
+          (l : Nat → α)
+          (n : Nat)
+          (impl : ImplSpec (Eq (l n)))
+          (help : String) 
+          : spec (limit l) → ImplSpec spec
 
-  | check {α : Type u} {spec : α} {P : Prop} [Decidable P] 
-          (impl : P → Impl spec) 
-          (help : String) : Impl spec
+  | check {spec : α → Prop} 
+          {P : Prop} [Decidable P]
+          (impl : P → ImplSpec spec)
+          (help : String) 
+          : ImplSpec spec
 
-  | assumption {α : Type u} {spec : α} {P : Prop} 
-          (impl : P → Impl spec) 
-          (help : String) : Impl spec
+  | assumption {spec : α → Prop}
+          {P : Prop}
+          (impl : P → ImplSpec spec)
+          (help : String) 
+          : ImplSpec spec
 
--- This is a weaker version of Impl that does not have the specification.
--- Unfortunatelly, I'm having some problems executing programs created using Impl :( 
--- So I'm struck with ImplNoSpec for now
-inductive ImplNoSpec : Type _ → Type _
-  | pure  {α : Type u} 
-          (impl : α) : ImplNoSpec α
-
-  | limit {α : Type u} [Vec α] 
-          (lim_spec : Nat → α) 
-          (n : Nat) 
-          (impl : ImplNoSpec α) 
-          (help : String) : ImplNoSpec α
-
-  | check {α : Type u} {P : Prop} [Decidable P] 
-          (impl : P → ImplNoSpec α) 
-          (help : String) : ImplNoSpec α
-
-  | assumption {α : Type u} {P : Prop} 
-          (impl : P → ImplNoSpec α) 
-          (help : String) : ImplNoSpec α
-
+--- These other constructors might be usefull down the line, mainly to turn Solver into a monad. Maybe it is a monad already, but profiling might be really usefull.
 
   -- | profile {α β : Type u} {spec speca : α} {specb : α → β} (x : Solver α speca) (f : (a : α) → Solver β (specb a)) (help : String) : Solver β spec
   -- | bind {α β : Type u} {speca : α} {spec : β} (a : Solver α speca) (f : α → Solver β spec) : Solver β spec
   -- | something {α β : Type u} {spec : α → β}
   -- | pair {α β γ : Type u} (val : Solver α) (val' : Solver β) (f : α → β → γ) : Solver γ
 
-namespace Impl
+namespace ImplSpec
 
-  def assemble {α} {spec : α} : Impl spec → IO α 
-    | pure impl => impl
+  def assemble {α} {pred : α → Prop} : ImplSpec pred → IO α
+    | pure impl _ => impl
     | limit _ _ impl _ _ => impl.assemble
     | @check _ _ _ dec impl help => 
-       match dec with
-         | isFalse h => throw (IO.userError s!"Failed check: {help}")
-         | isTrue  h => (impl h).assemble
+        match dec with
+          | isTrue h => (impl h).assemble
+          | isFalse _ => throw (IO.userError s!"Failed check: {help}")
     | assumption impl _ => (impl sorry).assemble
-
-  def assemble! {α} {spec : α} : Impl spec → α 
-    | pure impl => impl
+  
+  def assemble! {α} {pred : α → Prop} : ImplSpec pred → α
+    | pure impl _ => impl
     | limit _ _ impl _ _ => impl.assemble!
-    | @check _ _ _ dec impl help => (impl sorry).assemble!
+    | check impl _ => (impl sorry).assemble!
     | assumption impl _ => (impl sorry).assemble!
 
+end ImplSpec
+
+def Impl {α} (a : α) := ImplSpec (Eq a)
+def implspec_to_impl {α}  (a : α) : ImplSpec (Eq a) = Impl a := by rfl
+-- def finish_impl {α} [Inhabited α] {a : α} : Impl a := ImplSpec.pure a (by rfl)
+
+
+namespace Impl
+
+  variable {a}
+
+  def assemble {a : α} (impl : Impl a) : IO α := ImplSpec.assemble impl
+  def assemble! {a : α} (impl : Impl a) : α := ImplSpec.assemble! impl
+  
 end Impl

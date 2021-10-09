@@ -38,8 +38,8 @@ def implAssumeCheckCore (mvarId : MVarId) (prop msg : Expr) (type : assumeOrChec
     let newMVarId  ← mkFreshExprSyntheticOpaqueMVar newTarget tag
 
     match type with
-      | assumeOrCheck.assume => assignExprMVar mvarId (← mkAppM `Impl.assumption #[newMVarId, msg])
-      | assumeOrCheck.check  => assignExprMVar mvarId (← mkAppM `Impl.check #[newMVarId, msg])
+      | assumeOrCheck.assume => assignExprMVar mvarId (← mkAppM `ImplSpec.assumption #[newMVarId, msg])
+      | assumeOrCheck.check  => assignExprMVar mvarId (← mkAppM `ImplSpec.check #[newMVarId, msg])
 
     return [newMVarId.mvarId!]
 
