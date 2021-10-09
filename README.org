@@ -72,11 +72,11 @@
      - [ ] =Vec2, Vec3, Vec4= simple fixed size vectors
      - [ ] =Mat2, Mat3, Mat4= simple fixed size matrices
 
-**** TODO Solver class [2/8]
+**** TODO Solver class [3/9]
 
      - [X] add tactics =solver_check= and =solver_assumtion=
      - [X] add tactic =lift_limit=
-     - [ ] rewrite =Impl= based on [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Working.20with.20constants/near/256707931][Mario's answer]]
+     - [X] rewrite =Impl= based on [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Working.20with.20constants/near/256707931][Mario's answer]]
      - [ ] add tactic =assume_this=
      - [ ] add tactic =check_this=
      - [ ] refine =lift_limit=
@@ -106,12 +106,12 @@
 
 *** TODO Sims [/]
 
-**** TODO Harmonic Oscillator [1/6]
+**** TODO Harmonic Oscillator [2/6]
 
      - [X] Lean implementation
      - [ ] C++ implementation
      - [ ] measure performance and create nice comparison
-     - [ ] Hamiltonian formulation
+     - [X] Hamiltonian formulation
      - [ ] Lagrangian formulation
      - [ ] Action formulation
 
