@@ -20,7 +20,9 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 @[simp] theorem pair_mul (r : ℝ) (x : X) (y : Y) : (r * x, r * y) = r * (x, y) := sorry
 
-@[simp] theorem inner_mul (r : ℝ) (x y : U) : ⟨r * x, r * y⟩ = (r*r) * ⟨x,y⟩ := sorry
+@[simp] theorem inner_mul_1 (r : ℝ) (x y : U) : ⟨r * x, y⟩ = r * ⟨x,y⟩ := sorry
+@[simp] theorem inner_mul_2 (r : ℝ) (x y : U) : ⟨x, r * y⟩ = r * ⟨x,y⟩ := sorry
+
 @[simp] theorem inner_prod (u u' : U) (v v' : V) : ⟨(u,v), (u',v')⟩ = ⟨u,u'⟩ + ⟨v,v'⟩ := sorry
 @[simp] theorem inner_real (x y : ℝ) : ⟨x, y⟩ = x * y := sorry
 

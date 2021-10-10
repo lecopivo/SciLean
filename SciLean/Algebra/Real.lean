@@ -25,20 +25,26 @@ namespace Real
 
   instance : Field ℝ := sorry
 
-  -- def sqrt := Float.sqrt
-
-  -- def sin : ℝ → ℝ := Float.sin
-  -- def cos : ℝ → ℝ := Float.cos
-  -- def tan := Float.tan
-  -- def atan := Float.atan
-  -- def atan2 := Float.atan2
-
-  -- def exp := Float.exp
-  -- def exp2 := Float.exp2
-  -- def log := Float.log
-  -- def log2 := Float.log2
-  -- def log10 := Float.log10
-
 end Real
 
 instance : OfNat ℝ n := ⟨Float.ofNat n⟩
+
+
+
+namespace Math
+
+  def sqrt : ℝ → ℝ := Float.sqrt
+
+  def sin : ℝ → ℝ := Float.sin
+  def cos : ℝ → ℝ := Float.cos
+  def tan : ℝ → ℝ := Float.tan
+  def atan : ℝ → ℝ := Float.atan
+  def atan2 : ℝ → ℝ → ℝ := Float.atan2
+
+  def exp : ℝ → ℝ := Float.exp
+  def exp2 : ℝ → ℝ := Float.exp2
+  def log : ℝ → ℝ := Float.log
+  def log2 : ℝ → ℝ := Float.log2
+  def log10 : ℝ → ℝ := Float.log10
+
+end Math

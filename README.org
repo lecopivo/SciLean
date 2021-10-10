@@ -99,6 +99,8 @@
 
 **** TODO External Linear algebra [/]
 
+     On using external C code: [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Style.20for.20using.20external.20code][zulip thread]]
+
      - [ ] do a simple experiment to bind some C/C++ linear solver
        look into this [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/C.20FFI.20usage][zulip thread]] for info and links
      - [ ] try wrapping Thrust vector into [[https://github.com/leanprover/lean4/blob/b742f0005f7d96b94260bf2052fb50526f3d6b06/src/include/lean/lean.h#L282][=lean_external_object=]]

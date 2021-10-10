@@ -1,7 +1,6 @@
 import SciLean.Basic
 import SciLean.Mechanics
 
-
 set_option synthInstance.maxHeartbeats 50000
 set_option synthInstance.maxSize 10000
 
@@ -82,20 +81,53 @@ by
     pattern (differential _ _)
     . pattern (differential _ _ _)
       enter [dω]; simp
-    
+
   conv =>
     enter [1, θ, ω, 1, dw]
     rmlamlet
     simp
-    
-  conv => 
-    enter [1, θ, ω]
-    rmlamlet
-    simp
-  
   .
-  
 
   finish_impl
 
   
+def solver_3 (m k l : ℝ) (steps : Nat) : Impl (λ x v : Q => δ(∇((L m k l) x)) v) :=
+by
+  simp [gradient]
+  conv  =>
+    enter [1,x,v]
+    pattern (differential _)
+    enter [v,1]
+    pattern (L _ _ _ _)
+    simp [L, L']
+    enter [ω,1]
+    pattern (differential _ _ _)
+    simp [parm]
+    rmlamlet
+    simp
+
+  conv =>
+    enter [1,x,v,1,2]
+    rmlamlet
+    enter [x,dx]
+    simp
+    enter [2]
+    
+  conv =>
+    enter [1,x,v,1,u]
+    simp
+    rmlamlet
+    simp
+
+  conv =>
+    enter [1,x,v]
+    enter [p]
+    rmlamlet
+    simp
+  
+  finish_impl
+
+
+def test2 : (Function.comp id id) = λ x : Nat => x := by
+  conv in (Function.comp _) =>      --- error: 'pattern' conv tactic failed, pattern was not found
+    simp

@@ -7,6 +7,8 @@ import SciLean.Invert
 import SciLean.Solver
 import SciLean.Tactic
 
+import SciLean.Data
+
 import SciLean.Simp
 
 import SciLean.ODE.Basic

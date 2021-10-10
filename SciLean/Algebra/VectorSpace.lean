@@ -64,7 +64,7 @@ class Inner (α : Type u) where
   (inner : α → α → ℝ)
 
 macro "⟨" t:term "," s:term "⟩" : term => `(Inner.inner $t $s)
-macro "∥" t:term "∥" : term => `(Real.sqrt ⟨$t, $t⟩)
+macro "∥" t:term "∥" : term => `(Math.sqrt ⟨$t, $t⟩)
 
 class Hilbert (U : Type u) extends Inner U, Vec U :=
   (inner_symm : ∀ x y : U, ⟨x, y⟩ = ⟨y, x⟩)
@@ -105,9 +105,6 @@ section CommonHilbertSpaces
     inner_add := sorry,
     inner_mul := sorry
   } 
-
-
-  -- @[simp] def inner_on_reals (x y : ℝ) : ⟨x, y⟩ = x * y := by simp[Inner.inner]
 
   variable {U V} [Hilbert U] [Hilbert V]
   instance : Inner (U×V) := ⟨λ x y => ⟨x.1, y.1⟩ + ⟨x.2, y.2⟩⟩
