@@ -7,12 +7,12 @@ def HamiltonianSystem {V} [Hilbert V] (H : V → V → ℝ) : V×V → V×V :=
     let dHdp := ∇(H x) p
     (dHdp, -dHdx)
 
-def LagrangianSystem {V} [Hilbert V] (L : V → V → ℝ) : V×V → V×V :=
+def LagrangianSystem {V} [Vec V] (L : V → V → ℝ) : V×V → V×V :=
   uncurry $ 
   λ x v : V => 
-    let inverse_mass_matrix := (δ(∇(L x)) v)⁻¹
-    let potential_force := ∇(swap L v) x
-    let geometry_force  := - ∇(δ L x v) v
+    let inverse_mass_matrix : V → V := (δ(∇(L x)) v)⁻¹
+    let potential_force : V := ∇(swap L v) x
+    let geometry_force : V := - ∇(δ L x v) v
     (v, inverse_mass_matrix (potential_force + geometry_force))
 
 def LagrangianToHamiltonian {V} [Hilbert V] (L : V → V → ℝ) : V → V → ℝ := 

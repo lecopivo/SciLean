@@ -17,6 +17,7 @@ instance : IsLin (id : X → X) := sorry
 --  \___\___/_||_/__/\__\__,_|_||_\__|
 
 instance : IsLin (const β : X → β → X) := sorry
+instance : IsLin (const Y (0 : X) : Y → X) := sorry
 
 --  ___
 -- / __|_ __ ____ _ _ __

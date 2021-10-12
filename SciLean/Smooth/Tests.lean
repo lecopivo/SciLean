@@ -51,6 +51,7 @@ end
 
 section 
 variable (x dx y : U)
+
 -- def gtest1 : ∇ (λ x => ⟨x, y⟩) x = y := by autograd done
 -- def gtest2 : ∇ (λ x => ⟨x, x⟩) x = x + x := by autograd done
 -- def gtest3 : ∇ (λ x => ⟨x, x⟩*⟨x, x⟩) x = (⟨x,x⟩ : ℝ) * x + (⟨x,x⟩:ℝ)*x + ((⟨x,x⟩:ℝ)*x + (⟨x,x⟩:ℝ)*x) := by rmlamlet; simp[gradient]; rw[dual_intro]; simp; autodiff done

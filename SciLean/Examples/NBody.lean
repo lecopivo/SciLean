@@ -6,7 +6,8 @@ set_option synthInstance.maxSize 10000
 
 def G : ℝ := 1.0
 
-def T {n : Nat} (m : NDVector [n]) (v : NDVector [3, n]) : ℝ :=
+def T {n : Nat} (m : NDVector [n]) (v : NDVector [3, n]) : ℝ := 
+-- ∑ i, (m.get i)/2 * ∥v.getVec3 i∥²
 do
   let mut energy : ℝ := 0
   for i in [0:n] do
@@ -17,6 +18,7 @@ do
 
 
 def V {n : Nat} (m : NDVector [n]) (x : NDVector [3, n]) : ℝ :=
+-- (1/2) * ∑ i j, G*(m.get i)*(m.get j) * 1/∥x.getVec3 i - x.getVec3 j∥
 do
   let mut energy : ℝ := 0 
   for i in [0:n] do

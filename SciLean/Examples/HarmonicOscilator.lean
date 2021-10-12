@@ -12,7 +12,7 @@ def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k
 by
   impl_check (m.toFloat>0) "Mass has to be non zero."
     
-  simp [HamiltonianSystem, symp, uncurry, H, gradient]
+  simp [HamiltonianSystem, uncurry, H, gradient];
   autograd
 
   rw [ode_solve_fixed_dt runge_kutta4_step]

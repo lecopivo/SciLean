@@ -1,3 +1,4 @@
+import SciLean.Tactic.Basic
 import SciLean.Tactic.RemoveLambdaLet
 import SciLean.Tactic.Autoalgebra
 import SciLean.Tactic.Autodiff

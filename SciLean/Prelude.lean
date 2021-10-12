@@ -40,6 +40,7 @@ section Combinators
 
 end Combinators
 
+infixr:90 " • "  => comp
 
 --  ___                 _   _ _    _
 -- |_ _|_ ___ _____ _ _| |_(_) |__| |___

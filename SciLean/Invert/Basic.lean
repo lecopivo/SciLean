@@ -3,8 +3,8 @@ import SciLean.Prelude
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 
-@[simp] def inverse_inverse_1 (f : α → β) (a : α) [IsInv f] : f⁻¹ (f a) = a := sorry
-@[simp] def inverse_inverse_2 (f : α → β) (a : α) [IsInv f] : f (f⁻¹ b) = b := sorry
+-- @[simp] def inverse_inverse_1 (f : α → β) (a : α) [IsInv f] : f⁻¹ (f a) = a := sorry
+-- @[simp] def inverse_inverse_2 (f : α → β) (a : α) [IsInv f] : f (f⁻¹ b) = b := sorry
 
 def prove_inverse (f : α → β) (a : α) (b : β) [IsInv f] : b = f a → f⁻¹ b = a := sorry
 

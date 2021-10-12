@@ -13,6 +13,8 @@ namespace NDVector
 
   variable {dims : List Nat}
 
+  abbrev N := dims.product
+
   @[inline]
   def rank (v : NDVector dims) : Nat := dims.length
 
@@ -21,36 +23,42 @@ namespace NDVector
 
   @[inline]
   def size (v : NDVector dims) : Nat := dims.product
-  
+
   -- get using linear index
   def lget! (v : NDVector dims) (i : Nat) : ℝ := v.data.get! i
 
   -- get using linear index
   def lset! (v : NDVector dims) (i : Nat) (val : ℝ) : NDVector dims := ⟨v.data.set! i val, sorry⟩
 
-  def map (f : ℝ → ℝ) (v : NDVector dims) : NDVector dims := 
+  -- TODO: @[extern ndvector_map]  -  is it worth it? 
+  def mapIdx (f : Nat → ℝ → ℝ) (v : NDVector dims) : NDVector dims := 
   do
     let mut v := v
     for i in [0:v.size] do
       let val := v.lget! i
-      v := v.lset! i (f val)
+      v := v.lset! i (f i val)
     v
 
-  def map₂ (f : ℝ → ℝ → ℝ) (u v : NDVector dims) : NDVector dims := 
-  do
-    let mut u := u
-    for i in [0:v.size] do
-      let val₁ := u.lget! i
-      let val₂ := v.lget! i
-      u := u.lset! i (f val₁ val₂)
-    u
+  def map (f : ℝ → ℝ) (v : NDVector dims) : NDVector dims := mapIdx (λ i => f) v
 
-  def foldl (v : NDVector dims) (f : ℝ → ℝ → ℝ) (init : ℝ) : ℝ :=
+  -- This should have specialized implementation in C to handle reference counting in the most efficient way
+  -- i.e. modify `v` in place if possible
+  -- if `u` and `v` are the same, and ref counter is 2 then you can modify it in place too.
+  -- TODO: @[extern ndvector_map2]
+  def map₂ (f : ℝ → ℝ → ℝ) (u v : NDVector dims) : NDVector dims := mapIdx (λ i ui => f ui (v.lget! i)) u
+
+  def foldIdx {n : Nat} {α} (f : Fin n → α → α) (a₀ : α) : α :=
   do
-    let mut x := init
-    for i in [0:v.size] do
-      x := f x (v.lget! i)
-    x
+    let mut a := a₀
+    for i in [0:n] do
+      a := (f ⟨i, sorry⟩ a)
+    a
+  
+  def foldlIdx (f : Nat → ℝ → ℝ → ℝ) (v : NDVector dims) (init : ℝ) : ℝ :=
+    let F : Fin v.size → ℝ → ℝ := λ i y => f i y (v.lget! i)
+    foldIdx F init
+
+  def foldl (f : ℝ → ℝ → ℝ) (v : NDVector dims) (init : ℝ) : ℝ := foldlIdx (λ i => f) v init
   
   section Operations
     
@@ -96,7 +104,7 @@ namespace NDVector
   end VectorSpace
 
 
-  section FunctionProps
+  section FunctionProperties
 
     -- Linear Get
     instance : IsLin (lget! : NDVector dims → Nat → ℝ) := sorry
@@ -118,13 +126,64 @@ namespace NDVector
     @[simp]
     def map_differential_2 (f : ℝ → ℝ) [IsDiff f] (v dv : NDVector dims) : δ (map f) v dv = map₂ (δ f) v dv := sorry
 
+    -- Map₂
+    instance : IsLin (map₂ : (ℝ → ℝ → ℝ) → NDVector dims → NDVector dims → NDVector dims) := sorry
+    instance (f : ℝ → ℝ → ℝ) [IsDiff f] : IsDiff (map₂ f : NDVector dims → NDVector dims → NDVector dims) := sorry
+    instance (f : ℝ → ℝ → ℝ) [∀ x, IsDiff (f x)] : IsDiff (map₂ f u : NDVector dims → NDVector dims) := sorry
+      
+    @[simp] 
+    def map2_differential_2 (f : ℝ → ℝ → ℝ) (u du v : NDVector dims) [IsDiff f] 
+      : δ (map₂ f) u du v = mapIdx (λ i ui => δ f ui (du.lget! i) (v.lget! i)) u := sorry
+
+    @[simp] 
+    def map2_differential_3 (f : ℝ → ℝ → ℝ) (u v dv : NDVector dims) [∀ x, IsDiff (f x)] 
+      : δ (map₂ f) u v dv = mapIdx (λ i vi => δ (f (u.lget! i)) vi (dv.lget! i)) v := sorry
     
+    -- FoldlIdx
+    -- once morphisms are in place
+    -- instance : IsDiff ((comp foldlIdx coe) : (Nat → ℝ ⟿ ℝ → ℝ) → NDVector dims → ℝ → ℝ) := sorry
+    instance (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] [∀ i y, IsDiff (f i y)] : IsDiff (foldlIdx f : NDVector dims → ℝ → ℝ) := sorry
+    instance (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] (v : NDVector dims) : IsDiff (foldlIdx f v : ℝ → ℝ) := sorry
 
+    @[simp]
+    def foldlIdx_differential_1 (f df : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] (v : NDVector dims) (init : ℝ) 
+      : δ foldlIdx f df v init
+        =
+        (let F := 
+           λ (i : Fin v.size) (ydy : ℝ × ℝ) => 
+             let y := ydy.1
+             let dy := ydy.2
+             let vi := v.lget! i
+             (f i y vi, δ (f i) y dy vi + df i y vi)
+         (foldIdx F (init, 0)).2) := sorry
 
-  end FunctionProps
+    @[simp]
+    def foldlIdx_differential_2 (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] [∀ i y, IsDiff (f i y)] (v dv : NDVector dims) (init : ℝ) 
+      : δ (foldlIdx f) v dv init
+        =
+        (let F := 
+           λ (i : Fin v.size) (ydy : ℝ × ℝ) => 
+             let y := ydy.1
+             let dy := ydy.2
+             let vi := v.lget! i
+             let dvi := dv.lget! i
+             (f i y vi, δ (f i) y dy vi + δ (f i y) vi dvi)
+         (foldIdx F (init, 0)).2) := sorry
+
+    @[simp]
+    def foldlIdx_differential_3 (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] (v: NDVector dims) (init dinit : ℝ) 
+      : δ (foldlIdx f v) init dinit
+        =
+        (let F := 
+           λ (i : Fin v.size) (ydy : ℝ × ℝ) => 
+             let y := ydy.1
+             let dy := ydy.2
+             let vi := v.lget! i
+             (f i y vi, δ (f i) y dy vi)
+         (foldIdx F (init, dinit)).2) := sorry
+
+  end FunctionProperties
     
-  --  map₂ -- this might require specialized C implementation to handle reference conting properly
-
   --  def getVec2 (v : NDVector [2, n]) (i : Nat) : Vec2 := 
   --  def getVec3 (v : NDVector [3, n]) (i : Nat) : Vec3 := 
   --  def getVec4 (v : NDVector [4, n]) (i : Nat) : Vec4 := 

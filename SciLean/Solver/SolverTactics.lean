@@ -23,7 +23,7 @@ syntax (name := impl_check) "impl_check" notFollowedBy("|") (colGt term:max)* : 
 -- --- Focus on a subexpression to implement
 -- syntax (name := impl) "impl" notFollowedBy("|") (colGt term:max)* : tactic
 
--- syntax (name := print_main_goal) "print_main_goal" notFollowedBy("|") : tactic
+syntax (name := print_main_goal) "print_main_goal" notFollowedBy("|") : tactic
 
 def Syntax.mkStrLit (str : String) : Syntax := Syntax.node strLitKind #[mkAtom ("\"" ++ str ++ "\"")]
 
@@ -73,18 +73,18 @@ def implAssumeCheckCore (mvarId : MVarId) (prop msg : Expr) (type : assumeOrChec
 | _ => Lean.Elab.throwUnsupportedSyntax
 
 
--- def printGoal (mvarId : MVarId)  : MetaM Unit :=
---   withMVarContext mvarId do
---     let tag    ← getMVarTag mvarId
---     let target ← getMVarType mvarId
+def printGoal (mvarId : MVarId)  : MetaM Unit :=
+  withMVarContext mvarId do
+    let tag    ← getMVarTag mvarId
+    let target ← getMVarType mvarId
 
---     IO.println s!"{target}"
+    IO.println s!"{target}"
 
 
--- @[tactic print_main_goal] def tacticPrintMainGoal : Tactic
--- | _ =>  do 
---         let mainGoal ← getMainGoal  
---         printGoal mainGoal
+@[tactic print_main_goal] def tacticPrintMainGoal : Tactic
+| _ =>  do 
+        let mainGoal ← getMainGoal  
+        printGoal mainGoal
 
 
 -- def assumeThisCore (propMVarId implMVarId : MVarId) (msg : Expr) : MetaM (List MVarId) := do
