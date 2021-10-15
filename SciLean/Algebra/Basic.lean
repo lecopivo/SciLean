@@ -70,3 +70,15 @@ section FunctionOperations
   instance [One β] : One (α → β) := ⟨λ _ => 1⟩
 
 end FunctionOperations
+
+
+
+def sum {n α} [Zero α] [Add α] (f : Fin n → α) : α := do
+  let mut r := 0 
+  for i in [0:n] do
+    r := r + f ⟨i, sorry⟩
+  r
+
+macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `sum xs b
+
+

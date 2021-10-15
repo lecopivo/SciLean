@@ -35,6 +35,14 @@ section Combinators
    instance (P : Z → Prop) (f : Y → Z) (g : X → Y) (x : X) [FetchProof P (f (g x))] : P (comp f g x) := by simp; apply FetchProof.fetch_proof
    instance (P : Z → Prop) (f : X → Y → Z) (g : X → Y) (x : X) [FetchProof P ((f x) (g x))] : P (subs f g x) := by simp; apply FetchProof.fetch_proof
 
+   -- Extra arguments reduction -- is this enough?
+   variable {α : Type _}
+   instance (P : Z → Prop) (f : X → Y → α → Z) (x : X) (y : Y) (a : α) [FetchProof P (f x y a)] : P (swap f y x a) := by simp; apply FetchProof.fetch_proof
+   instance (P : Z → Prop) (f : Y → α → Z) (g : X → Y) (x : X) (a : α) [FetchProof P (f (g x) a)] : P (comp f g x a) := by simp; apply FetchProof.fetch_proof
+   instance (P : Z → Prop) (f : X → Y → α → Z) (g : X → Y) (x : X) (a : α) [FetchProof P ((f x) (g x) a)] : P (subs f g x a) := by simp; apply FetchProof.fetch_proof
+
+
+
    abbrev curry (f : X × Y → Z) (x : X) (y : Y) : Z := f (x,y)
    abbrev uncurry (f : X → Y → Z) (p : X×Y) : Z := f p.1 p.2
 

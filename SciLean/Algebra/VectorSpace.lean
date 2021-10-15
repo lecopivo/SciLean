@@ -116,4 +116,13 @@ section CommonHilbertSpaces
     inner_mul := sorry
   } 
 
+  instance {n} : Inner (Fin n → U) := ⟨λ f g => ∑ i, ⟨f i, g i⟩⟩
+  instance : Hilbert (Fin n → U) := 
+  {
+    inner_symm := sorry,
+    inner_pos := sorry,
+    inner_add := sorry,
+    inner_mul := sorry
+  } 
+
 end CommonHilbertSpaces 

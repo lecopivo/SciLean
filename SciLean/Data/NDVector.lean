@@ -1,5 +1,6 @@
 import SciLean.Prelude
 
+-- @[reducible]
 def List.product {α} [Mul α] [Inhabited α] (l : List α) : α := 
   match l with
     | nil => arbitrary
@@ -24,11 +25,18 @@ namespace NDVector
   @[inline]
   def size (v : NDVector dims) : Nat := dims.product
 
-  -- get using linear index
-  def lget! (v : NDVector dims) (i : Nat) : ℝ := v.data.get! i
+  -- linear index make
+  def lmk (f : (Fin dims.product) → ℝ) : NDVector dims := ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f ⟨i.1, sorry⟩)⟩, sorry⟩
 
   -- get using linear index
+  def lget! (v : NDVector dims) (i : Nat) : ℝ := v.data.get! i
+  def lget (v : NDVector dims) (i : Fin dims.product) : ℝ := v.data.get ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ 
+
+  -- set using linear index
   def lset! (v : NDVector dims) (i : Nat) (val : ℝ) : NDVector dims := ⟨v.data.set! i val, sorry⟩
+
+  -- set using linear index
+  def lset (v : NDVector dims) (i : Fin dims.product) (val : ℝ) : NDVector dims := ⟨v.data.set ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ val, sorry⟩
 
   -- TODO: @[extern ndvector_map]  -  is it worth it? 
   def mapIdx (f : Nat → ℝ → ℝ) (v : NDVector dims) : NDVector dims := 
@@ -108,16 +116,28 @@ namespace NDVector
 
     -- Linear Get
     instance : IsLin (lget! : NDVector dims → Nat → ℝ) := sorry
+    instance : IsLin (lget : NDVector dims → Fin dims.product → ℝ) := sorry
+
+    @[simp] def lget_adjoint : adjoint (lget : NDVector dims → Fin dims.product → ℝ) = lmk := sorry
 
     -- Linear Set
     instance : IsDiff (lset! : NDVector dims → Nat → ℝ → NDVector dims) := sorry
     instance (v : NDVector dims) (i : Nat) : IsDiff (lset! v i : ℝ → NDVector dims) := sorry
+
+    instance : IsDiff (lset : NDVector dims → Fin dims.product → ℝ → NDVector dims) := sorry
+    instance (v : NDVector dims) (i : Fin dims.product) : IsDiff (lset v i : ℝ → NDVector dims) := sorry
   
     @[simp]
-    def lset_differential_1 (v dv : NDVector dims) (i : Nat) (x : ℝ) : δ lset! v dv i x = lset! dv i 0 := sorry
+    def lset!_differential_1 (v dv : NDVector dims) (i : Nat) (x : ℝ) : δ lset! v dv i x = lset! dv i 0 := sorry
 
     @[simp]
-    def lset_differential_2 (v : NDVector dims) (i : Nat) (x dx : ℝ) : δ (lset! v i) x dx = lset! 0 i dx := sorry
+    def lset!_differential_2 (v : NDVector dims) (i : Nat) (x dx : ℝ) : δ (lset! v i) x dx = lset! 0 i dx := sorry
+
+    @[simp]
+    def lset_differential_1 (v dv : NDVector dims) (i : Fin dims.product) (x : ℝ) : δ lset v dv i x = lset! dv i 0 := sorry
+
+    @[simp]
+    def lset_differential_2 (v : NDVector dims) (i : Fin dims.product) (x dx : ℝ) : δ (lset v i) x dx = lset! 0 i dx := sorry
 
     -- Map
     instance : IsLin (map : (ℝ → ℝ) → NDVector dims → NDVector dims) := sorry
