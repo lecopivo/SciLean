@@ -12,6 +12,7 @@ namespace Real
   instance : ToString Real := ⟨λ x => x.toFloat.toString⟩
   
   instance : LT Real := ⟨λ x y => x.toFloat < y.toFloat⟩
+  instance : LE Real := ⟨λ x y => x.toFloat ≤ y.toFloat⟩
   instance : OfScientific Real := instOfScientificFloat
   
   instance : Add Real := ⟨λ x y => x.toFloat + y.toFloat⟩

@@ -235,19 +235,36 @@ prefix:1024 "∫" => integrate
 axiom integrate.swap_limit {X} [Vec X] (a b : ℝ) (f : ℝ → X) [IsCont f] : (∫ f a b = - ∫ f b a)
 @[simp] axiom integrate.definition {X} [Vec X] (a t dt : ℝ) (f : ℝ → X) [IsCont f] : δ (∫ f) a t dt = dt * (f t)
 
---  ___            _
--- |   \ _  _ __ _| |
--- | |) | || / _` | |
--- |___/ \_,_\__,_|_|
 
-def dual {U} [Vec U] : (U → ℝ) → U := sorry
+--    _      _  _     _     _
+--   /_\  __| |(_)___(_)_ _| |_
+--  / _ \/ _` || / _ \ | ' \  _|
+-- /_/ \_\__,_|/ \___/_|_||_\__|
+--           |__/
+-- maybe call it involution 
+-- What about consistency? Trivial definition of `adjoint f = 0` does not satisfy following axioms ...
+def adjoint {X Y} [Vec X] [Vec Y] : (X → Y) → (Y → X) := sorry
 
-axiom dual.definition_hilbert {U} [Hilbert U] (f : U → ℝ) [IsLin f] : dual f = (inverse inner) f 
+postfix:1024 "†" => adjoint
 
-def dual' {U I} [Vec U] [Vec I] : (U → I) → U := sorry
+--- Definition of *-algebroid - mix of grupoid and *-algebra - looks like someone used this term before :) https://arxiv.org/abs/1904.06594
+--- C* algebra wiki: https://en.wikipedia.org/wiki/C*-algebra
+axiom adjoint.definition_id {X Y} [Vec X] [Vec Y] (A : X → Y) [IsLin A]
+      : A†† = A
+axiom adjoint.definition_add {X Y} [Vec X] [Vec Y]  (A B : X → Y) [IsLin A] [IsLin B]
+      : (A + B)† = (A† + B†)
+axiom adjoint.definition_mul {X Y} [Vec X] [Vec Y] (A : X → Y) [IsLin A] (c : ℝ)
+      : (c*A)† = c*(A†)
+axiom adjoint.definition_comp {X Y Z} [Vec X] [Vec Y] [Vec Z] (A : Y → Z) (B : X → Y) [IsLin A] [IsLin B]
+      : (A ∘ B)† = (B† ∘ A†)
+-- don't make `adjoint.definition_comp` @[simp]! we prefer our own `comp` to `Function.comp` as our comp is not abbrev
 
-axiom dual'.definition_hilbert {U} [Hilbert U] (u : U) : dual' (λ v => ⟨u, v⟩) = u
-axiom dual'.definition_integral {U} [Hilbert U] (f : ℝ → U) [IsCont f] : dual' (λ (g : ℝ → U) => ∫ (λ t => ⟨f t, g t⟩)) = f
+--- What is the relation of this to the last property of C*-algebra?  ∥A† ∘ A∥ = ∥A†∥ ∥A∥
+--- The thing is that I do not have a definition of ∥A∥. Making it requires morhisms, i.e. (A : X ⊸ Y) for X, Y Hilbert
+axiom adjoint.definition_hilbert {U V} [Hilbert U] [Hilbert V] (A : U → V) [IsLin A] (u : U) (v : V) 
+      : ⟨A u, v⟩ = ⟨u, A† v⟩
+
+abbrev dual {U V} [Vec U] [Vec V] [One V] (f : U → V) : U := (adjoint f) 1
 
 --    _            __  __ _
 --   /_\  _ _ __ _|  \/  (_)_ _
@@ -275,28 +292,16 @@ axiom argmin.definition {X} (f : X → ℝ) (x : X) [HasArgMin f] : x = argmin f
 -- Usefull very common operators derived from opaque ones.
 -- They deserve their own reduction rules 
 
-
---    _      _  _     _     _
---   /_\  __| |(_)___(_)_ _| |_
---  / _ \/ _` || / _ \ | ' \  _|
--- /_/ \_\__,_|/ \___/_|_||_\__|
---           |__/
-
-def pullback {U V} (f : U → V) : (V → ℝ) → (U → ℝ) := λ v' u => v' (f u)
-def adjoint {U V} [Hilbert U] [Hilbert V] (f : U → V) := dual ∘ (pullback f) ∘ inner
-
-prefix:1024 "†" => adjoint
-
 --   ___             _     _____                       _     __  __
 --  / __|_ _ __ _ __| |   |_   _|_ _ _ _  __ _ ___ _ _| |_  |  \/  |__ _ _ __
 -- | (_ | '_/ _` / _` |_    | |/ _` | ' \/ _` / -_) ' \  _| | |\/| / _` | '_ \_
 --  \___|_| \__,_\__,_( )   |_|\__,_|_||_\__, \___|_||_\__| |_|  |_\__,_| .__( )
 --                    |/                 |___/                          |_|  |/
 
-@[simp] def derivative {X} [Vec X] (f : ℝ → X) : ℝ → X := swap (δ f) 1
-def gradient {X} [Vec X] (f : X → ℝ) : X → X := comp dual (δ f)
-def tangent_map {X Y} [Vec X] [Vec Y] (f : X → Y) : X×X → Y×Y := uncurry $ λ x dx => (f x, δ f x dx)
-def backprop {X Y} [Hilbert X] [Hilbert Y] (f : X → Y) : X → Y×(Y→X) := λ x => (f x, †(δ f x))
+def derivative {X} [Vec X] (f : ℝ → X) : ℝ → X := λ t => (δ f t 1)
+def gradient {X} [Vec X] (f : X → ℝ) : X → X   := λ x => dual (δ f x)
+def tangent_map {X Y} [Vec X] [Vec Y] (f : X → Y) : X×X → Y×Y := λ (x, dx) => (f x, δ f x dx)
+def backprop {X Y} [Hilbert X] [Hilbert Y] (f : X → Y) : X → Y×(Y→X) := λ x => (f x, (δ f x)†)
 
 prefix:1024 "∇" => gradient
 prefix:1024 "ⅆ" => derivative

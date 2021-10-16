@@ -7,13 +7,13 @@ import SciLean.Invert
 -- -- set_option synthInstance.maxHeartbeats 500
 
 variable {α β γ : Type}
-variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
+variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
-instance (f : X → Y) [IsLin f] : IsLin (†f) := sorry
+instance (f : X → Y) [IsLin f] : IsLin (f†) := sorry
 
-@[simp] def adjoint_inner_1 (f : X → Y) [IsLin f] (x : X) (y : Y) : ⟨†f y, x⟩ = ⟨y, f x⟩ := sorry
-@[simp] def adjoint_inner_2 (f : X → Y) [IsLin f] (x : X) (y : Y) : ⟨x, †f y⟩ = ⟨f x, y⟩ := sorry
+@[simp] def adjoint_inner_1 (f : U → V) [IsLin f] (u : U) (v : V) : ⟨f† v, u⟩ = ⟨v, f u⟩ := sorry
+@[simp] def adjoint_inner_2 (f : U → V) [IsLin f] (u : U) (v : V) : ⟨u, f† v⟩ = ⟨f u, v⟩ := sorry
 
 @[simp] def diag_adjoint {n} (f : Fin n → X) : adjoint diag f = λ i j => if (i==j) then f i else 0 := sorry
 

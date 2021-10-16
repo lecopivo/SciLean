@@ -2,6 +2,7 @@ import SciLean.Linear.Basic
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
+variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 --  ___    _         _   _ _
 -- |_ _|__| |___ _ _| |_(_) |_ _  _
@@ -11,6 +12,12 @@ variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 instance : IsLin (id : X → X) := sorry
 
+@[simp] def id_adjoint : (id : X → X)† = id := sorry 
+---  id† = id†
+---  id† ∘ id = id†    // apply † -> adjoint.definition_comp -> twice adjoint.definition_id
+---  id† ∘ id = id     // apply (f ∘ id) = f
+---  id† = id
+
 --   ___             _            _
 --  / __|___ _ _  __| |_ __ _ _ _| |_
 -- | (__/ _ \ ' \(_-<  _/ _` | ' \  _|
@@ -18,6 +25,13 @@ instance : IsLin (id : X → X) := sorry
 
 instance : IsLin (const β : X → β → X) := sorry
 instance : IsLin (const Y (0 : X) : Y → X) := sorry
+
+@[simp] def const_adjoint_1_sum {n} : (const (Fin n) : X → (Fin n) → X)† = sum := sorry 
+-- TODO: State this withou mentioning u and f explicitely. 
+@[simp] def const_adjoint_1_hilbert [Hilbert (β → U)] (f : β → U) (u : U): ⟨u, (const β)† f⟩ = ⟨const β u, f⟩ := sorry 
+-- What should `const_adjoint_1` it be in general? 
+
+@[simp] def const_adjoint_2 : (const Y 0)† = (const X 0) := sorry -- proof? probably something involving adjoint.definition_mul
 
 --  ___
 -- / __|_ __ ____ _ _ __
@@ -29,10 +43,11 @@ instance : IsLin (@swap α β Z) := sorry
 instance (f : α → Y → Z) [∀ a, IsLin (f a)] : IsLin (swap f) := sorry
 instance (f : X → β → Z) (b : β) [IsLin f] : IsLin (swap f b) := sorry
 
--- -- reduction instances
--- instance (f : β → X → Y) (g : α → β) (a : α)  [IsLin (f (g a))] : IsLin (comp f g a) := sorry
--- -- Is this one really necessary??
--- instance (f : β → γ → X → Y) (g : α → β) (a : α) (c : γ)  [IsLin (f (g a) c)] : IsLin (comp f g a c) := sorry 
+@[simp] def swap_adjoint_1 : (@swap α β Z)† = swap := sorry -- probably similar proof to identity
+-- @[simp] def swap_adjoint_2 : (swap f)† = ...   -- I dont think we can say anything in general
+
+ -- Is this really true??? 
+@[simp] def swap_adjoint_3 (f : X → β → Z) (b : β) [IsLin f] : (swap f b)† = comp f† (const β) := sorry
 
 --   ___                        _ _   _
 --  / __|___ _ __  _ __  ___ __(_) |_(_)___ _ _

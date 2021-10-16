@@ -71,8 +71,6 @@ section FunctionOperations
 
 end FunctionOperations
 
-
-
 def sum {n α} [Zero α] [Add α] (f : Fin n → α) : α := do
   let mut r := 0 
   for i in [0:n] do

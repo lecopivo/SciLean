@@ -105,7 +105,7 @@ namespace NDVector
 
     instance : Hilbert (NDVector dims) := 
     {
-      inner_symm := sorry,
+      inner_sym := sorry,
       inner_pos := sorry,
       inner_add := sorry,
       inner_mul := sorry
