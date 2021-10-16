@@ -43,36 +43,24 @@ instance : IsLin (@comp α β Z) := sorry
 instance (f : Y → Z) [IsLin f] : IsLin (@comp α _ _ f) := sorry
 instance (f : Y → Z) (g : X → Y) [IsLin f] [IsLin g] : IsLin (comp f g) := sorry
 
---  ___      _       _   _ _        _   _
--- / __|_  _| |__ __| |_(_) |_ _  _| |_(_)___ _ _
--- \__ \ || | '_ (_-<  _| |  _| || |  _| / _ \ ' \
--- |___/\_,_|_.__/__/\__|_|\__|\_,_|\__|_\___/_||_|
+--  ___  _                         _
+-- |   \(_)__ _ __ _ ___ _ _  __ _| |
+-- | |) | / _` / _` / _ \ ' \/ _` | |
+-- |___/|_\__,_\__, \___/_||_\__,_|_|
+--             |___/
 
-instance : IsLin (@subs α β Z) := sorry
-instance (f : α → Y → Z) [∀ a, IsLin (f a)]: IsLin (@subs α Y Z f) := sorry
+instance : IsLin (@diag α Y) := sorry
 
---- For (subs f g) to be linear, f has to be a sum of two linear functions.
---- There are 8 different ways of writting a sum of two functions - the whole trouble is with identity 
---- x + y
-instance (g : X → X) [IsLin g] : IsLin (subs HAdd.hAdd g) := sorry
---- y + x
-instance (g : X → X) [IsLin g] : IsLin (subs (swap HAdd.hAdd) g) := sorry
--- f x + y
-instance (f : X → Y) (g : X → Y) [IsLin f] [IsLin g] : IsLin (subs (comp HAdd.hAdd f) g) := sorry
--- x + f y
-instance (f : Y → X) (g : X → Y) [IsLin f] [IsLin g] : IsLin (subs (swap (comp comp HAdd.hAdd) f) g) := sorry
--- f y + x
-instance (f : Y → X) (g : X → Y) [IsLin f] [IsLin g] : IsLin (subs (swap (comp HAdd.hAdd f)) g) := sorry
--- y + f x
-instance (f : X → Y) (g : X → Y) [IsLin f] [IsLin g] : IsLin (subs (comp (swap HAdd.hAdd) f) g) := sorry
--- f x + f' y
-instance (f : X → Z) (f' : Y → Z) (g : X → Y) [IsLin f] [IsLin f'] [IsLin g] : IsLin (subs (swap (comp comp (comp HAdd.hAdd f)) f') g) := sorry
--- f' y + f x
-instance (f : X → Z) (f' : Y → Z) (g : X → Y) [IsLin f] [IsLin f'] [IsLin g] : IsLin (subs (comp (swap (comp HAdd.hAdd f')) f) g) := sorry
+-- instance (f : X → X → Y) [only if f = A x + B x where A B are linear]: IsLin (diag f) := sorry
+instance : IsLin (diag (HAdd.hAdd : X → X → X)) := sorry
 
+instance (f : X → X) [IsLin f] : IsLin (diag (HAdd.hAdd • f : X → X → X)) := sorry
+instance (f : X → X) [IsLin f] : IsLin (diag (comp (swap comp f) HAdd.hAdd : X → X → X)) := sorry
 
+-- arghh getting a bit compilcated :( 
+instance (f g : X → Y) [IsLin f] [IsLin g] : IsLin (diag (comp (swap comp f) (HAdd.hAdd • g) : X → X → Y)) := sorry
 
---- 
--- instance  (f : Y → X → Z) (g : X → Y) [IsLin (subs (swap f) g)] : IsLin (subs (comp f g) id) := sorry
+-- Rebracketed version. It does not seem to be needed right now. Will it bite back?
+-- instance (f g : X → Y) [IsLin f] [IsLin g] : IsLin (diag ((comp (swap comp f) HAdd.hAdd) • g : X → X → Y)) := sorry
 
 

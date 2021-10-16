@@ -17,12 +17,24 @@ section Combinators
 
    def comp (f : Y→Z) (g : X→Y) (x : X) := f (g x)
    def swap (f : X→Y→Z) (y : Y) (x : X) := f x y
-   def subs (f : X→Y→Z) (g : X→Y) (x : X) := (f x) (g x)
+   def diag (f : X→X→Y) (x : X) := (f x x)
 
-   @[simp] def const.reduce (Y : Type v) (x : X) (y : Y) : const Y x y = x  := by simp[const]
-   @[simp] def comp.reduce (f : Y→Z) (g : X→Y) (x : X) : (comp f g x) = f (g x) := by simp[comp]
-   @[simp] def swap.reduce (f : X→Y→Z) (y : Y) (x : X) : (swap f y x) = f x y := by simp[swap]
-   @[simp] def subs.reduce (f : X→Y→Z) (g : X→Y) (x : X) : (subs f g x) = let x' := x; (f x') (g x') := by simp[subs]
+   -- very usefull but much harder to reason about then diag 
+   abbrev subs (f : X→Y→Z) (g : X→Y) : X → Z := diag (comp (swap comp g) f)
+   -- abbrev subs (f : X→Y→Z) (g : X→Y) (x : X) : Z := (f x) (g x)
+
+   -- def subs : (X→Y→Z) → (X→Y) → (X→Z) := (swap (comp (comp diag) (comp comp (swap comp))))
+
+   -- (comp diag (comp comp (swap comp) g) f)
+   -- comp (comp f) (diag (comp (swap comp g))
+
+   @[simp] def const_reduce (Y : Type v) (x : X) (y : Y) : const Y x y = x  := by simp[const]
+   @[simp] def comp_reduce (f : Y→Z) (g : X→Y) (x : X) : (comp f g x) = f (g x) := by simp[comp]
+   @[simp] def swap_reduce (f : X→Y→Z) (y : Y) (x : X) : (swap f y x) = f x y := by simp[swap]
+   @[simp] def diag_reduce (f : X→X→Y) (x : X) : (diag f x) = f x x := by simp[diag]
+
+
+   @[simp] def subs_reduce (f : X→Y→Z) (g : X→Y) (x : X) : (subs f g x) = (f x) (g x) := by simp[subs] done
 
    -- Reduction of basic combinators in Type Class resolution 
    -- This is crucial in proof automation
@@ -33,19 +45,22 @@ section Combinators
    instance (P : X → Prop) (x : X) (y : Y) [FetchProof P x] : P (const Y x y) := by simp; apply FetchProof.fetch_proof
    instance (P : Z → Prop) (f : X → Y → Z) (x : X) (y : Y) [FetchProof P (f x y)] : P (swap f y x) := by simp; apply FetchProof.fetch_proof
    instance (P : Z → Prop) (f : Y → Z) (g : X → Y) (x : X) [FetchProof P (f (g x))] : P (comp f g x) := by simp; apply FetchProof.fetch_proof
-   instance (P : Z → Prop) (f : X → Y → Z) (g : X → Y) (x : X) [FetchProof P ((f x) (g x))] : P (subs f g x) := by simp; apply FetchProof.fetch_proof
+   -- instance (P : Z → Prop) (f : X → Y → Z) (g : X → Y) (x : X) [FetchProof P ((f x) (g x))] : P (subs f g x) := by simp; apply FetchProof.fetch_proof
+   instance (P : Y → Prop) (f : X → X → Y) (x : X) [FetchProof P (f x x)] : P (diag f x) := by simp; apply FetchProof.fetch_proof
+
 
    -- Extra arguments reduction -- is this enough?
    variable {α : Type _}
    instance (P : Z → Prop) (f : X → Y → α → Z) (x : X) (y : Y) (a : α) [FetchProof P (f x y a)] : P (swap f y x a) := by simp; apply FetchProof.fetch_proof
    instance (P : Z → Prop) (f : Y → α → Z) (g : X → Y) (x : X) (a : α) [FetchProof P (f (g x) a)] : P (comp f g x a) := by simp; apply FetchProof.fetch_proof
-   instance (P : Z → Prop) (f : X → Y → α → Z) (g : X → Y) (x : X) (a : α) [FetchProof P ((f x) (g x) a)] : P (subs f g x a) := by simp; apply FetchProof.fetch_proof
+   -- instance (P : Z → Prop) (f : X → Y → α → Z) (g : X → Y) (x : X) (a : α) [FetchProof P ((f x) (g x) a)] : P (subs f g x a) := by simp; apply FetchProof.fetch_proof
+   instance (P : Y → Prop) (f : X → X → α → Y) (x : X) (a : α) [FetchProof P (f x x a)] : P (diag f x a) := by simp; apply FetchProof.fetch_proof
 
 
-
-   abbrev curry (f : X × Y → Z) (x : X) (y : Y) : Z := f (x,y)
-   abbrev uncurry (f : X → Y → Z) (p : X×Y) : Z := f p.1 p.2
-
+   -- abbrev curry (f : X × Y → Z) (x : X) (y : Y) : Z := f (x,y)
+   abbrev curry : (X × Y → Z) → (X → Y → Z) := (swap (comp comp comp) Prod.mk)
+   abbrev uncurry : (X → Y → Z) → (X × Y → Z) := (swap (comp subs (swap comp Prod.fst)) Prod.snd)
+ 
 end Combinators
 
 infixr:90 " • "  => comp
@@ -114,6 +129,7 @@ def SmoothMap (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsSmooth f }
 def convenient.is_diff_at {X Y} (f : X → Y) (x : X) [Vec X] [Vec Y] : Prop := sorry  -- conveniently differentiable function
 
 class IsDiff {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_diff : ∀ x, convenient.is_diff_at f x)
+class IsDiffAt {X Y} [Vec X] [Vec Y] (f : X → Y) (x : X) : Prop := (is_diff : convenient.is_diff_at f x)
 
 instance {X Y} (f : X → Y) [Vec X] [Vec Y] [IsDiff f] : FetchProof IsDiff f := by constructor; assumption
 

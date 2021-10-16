@@ -1,5 +1,7 @@
 import SciLean.Basic
 
+namespace Linear.Tests
+
 section
 variable {α β γ : Type} 
 variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]

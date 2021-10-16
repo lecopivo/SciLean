@@ -27,7 +27,11 @@ match e with
       | false, false => mkAppM `const #[V, e]
       | false, true => if (x==v) then f else mkAppM `comp #[f, (← extractfvar x v lctx)]
       | true, false => mkAppM `swap #[(← extractfvar f v lctx), x]
-      | true, true => mkAppM `subs #[(← extractfvar f v lctx), (← extractfvar x v lctx)]
+      | true, true => -- mkAppM `subs #[(← extractfvar f v lctx), (← extractfvar x v lctx)]
+                      if (x==v) then 
+                        mkAppM `diag #[(← extractfvar f v lctx)]
+                      else
+                        mkAppM `subs #[(← extractfvar f v lctx), (← extractfvar x v lctx)]
   | e => e    
 
 partial def removelambdalet (e : Expr) (lctx : LocalContext) : MetaM Expr :=

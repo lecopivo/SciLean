@@ -32,6 +32,8 @@ namespace NDVector
   def lget! (v : NDVector dims) (i : Nat) : ℝ := v.data.get! i
   def lget (v : NDVector dims) (i : Fin dims.product) : ℝ := v.data.get ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ 
 
+  abbrev getOp {dims} (self : NDVector dims) (idx : Fin dims.product) : ℝ := self.lget idx
+
   -- set using linear index
   def lset! (v : NDVector dims) (i : Nat) (val : ℝ) : NDVector dims := ⟨v.data.set! i val, sorry⟩
 

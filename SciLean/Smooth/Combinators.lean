@@ -1,7 +1,7 @@
 import SciLean.Smooth.Basic
 
 variable {α β γ : Type} 
-variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
+variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 
 --  ___    _         _   _ _
 -- |_ _|__| |___ _ _| |_(_) |_ _  _
@@ -48,22 +48,47 @@ instance : IsDiff (comp : (β → Z) → (α → β) → (α → Z)) := sorry
 instance (f : Y → Z) [IsDiff f] : IsDiff (comp f : (α → Y) → (α → Z)) := sorry
 instance (f : Y → Z) (g : X → Y) [IsDiff f] [IsDiff g] : IsDiff (comp f g) := sorry
 
+
+-- What is the role of these????
+instance (f : Y → α → Z) (g : X → Y) (a : α) [IsDiff g] [IsDiff (swap f a)] 
+         : IsDiff (swap (comp f g) a) := sorry
+instance (f : β → Y → Z) [∀ b, IsDiff (f b)] 
+         : IsDiff ((swap (comp comp (swap comp)) f) : (α → Y) → β → (α → Z)) := sorry
+
+
 @[simp] def comp.differential_1 (f df : β → Z) : δ (@comp α _ _) f df = comp df := sorry
 @[simp] def comp.differential_2 (f : Y → Z) (g dg : α → Y) (a : α) [IsDiff f] : δ (comp f) g dg a = δ f (g a) (dg a) := sorry
 @[simp] def comp.differential_3 (f : Y → Z) (g : X → Y) (x dx : X) [IsDiff f] [IsDiff g] : δ (comp f g) x dx = δ f (g x) (δ g x dx) := sorry
 
 
---  ___      _       _   _ _        _   _
--- / __|_  _| |__ __| |_(_) |_ _  _| |_(_)___ _ _
--- \__ \ || | '_ (_-<  _| |  _| || |  _| / _ \ ' \
--- |___/\_,_|_.__/__/\__|_|\__|\_,_|\__|_\___/_||_|
-
-instance : IsDiff (@subs α β Z) := sorry
-instance (f : α → Y → Z) [∀ a, IsDiff (f a)]: IsDiff (@subs α Y Z f) := sorry
-instance (f : X → Y → Z) (g : X → Y) [IsDiff f] [∀ x, IsDiff (f x)] [IsDiff g] : IsDiff (subs f g) := sorry
-
-@[simp] def subs.differential_1 (f df : α → β → Z) : δ subs f df = subs df := sorry
-@[simp] def subs.differential_2 (f : α → Y → Z) (g dg : α → Y) (a : α) [IsDiff (f a)] : δ (subs f) g dg a = δ (f a) (g a) (dg a) := sorry
-@[simp] def subs.differential_3 (f : X → Y → Z) (g : X → Y) (x dx : X) [IsDiff f] [IsDiff (f x)] [IsDiff g] : δ (subs f g) x dx = δ f x dx (g x) + δ (f x) (g x) (δ g x dx) := sorry
+@[simp] def comp_swap_differential_1 (f : Y → α → Z) (g : X → Y) (x dx : X) (a : α) [IsDiff g] [IsDiff (swap f a)]
+        : δ (swap (comp f g) a) x dx = δ f (g x) (δ g x dx) a := sorry
+@[simp] def comp_swap_differential_2 (f : β → Y → Z) (g dg : α → Y) (a : α) (b : β) [IsDiff (f b)] 
+        : δ (swap (comp comp (swap comp)) f) g dg b a = δ (f b) (g a) (dg a) := sorry
 
 
+-- --  ___      _       _   _ _        _   _
+-- -- / __|_  _| |__ __| |_(_) |_ _  _| |_(_)___ _ _
+-- -- \__ \ || | '_ (_-<  _| |  _| || |  _| / _ \ ' \
+-- -- |___/\_,_|_.__/__/\__|_|\__|\_,_|\__|_\___/_||_|
+
+-- instance : IsDiff (@subs α β Z) := sorry
+-- instance (f : α → Y → Z) [∀ a, IsDiff (f a)]: IsDiff (@subs α Y Z f) := sorry
+-- instance (f : X → Y → Z) (g : X → Y) [IsDiff f] [∀ x, IsDiff (f x)] [IsDiff g] : IsDiff (subs f g) := sorry
+
+-- @[simp] def subs.differential_1 (f df : α → β → Z) : δ subs f df = subs df := sorry
+-- @[simp] def subs.differential_2 (f : α → Y → Z) (g dg : α → Y) (a : α) [IsDiff (f a)] : δ (subs f) g dg a = δ (f a) (g a) (dg a) := sorry
+-- @[simp] def subs.differential_3 (f : X → Y → Z) (g : X → Y) (x dx : X) [IsDiff f] [IsDiff (f x)] [IsDiff g] : δ (subs f g) x dx = δ f x dx (g x) + δ (f x) (g x) (δ g x dx) := sorry
+
+
+--  ___  _                         _
+-- |   \(_)__ _ __ _ ___ _ _  __ _| |
+-- | |) | / _` / _` / _ \ ' \/ _` | |
+-- |___/|_\__,_\__, \___/_||_\__,_|_|
+--             |___/
+
+instance : IsDiff (@diag α Y) := sorry
+instance (f : X → X → Y) [IsDiff f] [∀ x, IsDiff (f x)] : IsDiff (diag f) := sorry
+
+@[simp] def diag.differential_1 (f df : α → α → Y) : δ diag f df = diag df := sorry
+@[simp] def diag.differential_2 (f : X → X → Y) (x dx : X) : δ (diag f) x dx = (δ f) x dx x + δ (f x) x dx := sorry
