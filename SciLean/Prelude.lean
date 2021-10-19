@@ -1,6 +1,9 @@
 --- these will be hopefully defined in mathlib
 import SciLean.Algebra
 import SciLean.Meta
+import Init.Classical
+
+#check Nat
 
 --   ___           _    _           _
 --  / __|___ _ __ | |__(_)_ _  __ _| |_ ___ _ _ ___
@@ -23,6 +26,7 @@ section Combinators
    abbrev subs (f : X→Y→Z) (g : X→Y) : X → Z := diag (comp (swap comp g) f)
    -- abbrev subs (f : X→Y→Z) (g : X→Y) (x : X) : Z := (f x) (g x)
 
+   -- This should be correct but `simp` is buggy now :( and connot prove it
    -- def subs : (X→Y→Z) → (X→Y) → (X→Z) := (swap (comp (comp diag) (comp comp (swap comp))))
 
    -- (comp diag (comp comp (swap comp) g) f)
@@ -32,7 +36,6 @@ section Combinators
    @[simp] def comp_reduce (f : Y→Z) (g : X→Y) (x : X) : (comp f g x) = f (g x) := by simp[comp]
    @[simp] def swap_reduce (f : X→Y→Z) (y : Y) (x : X) : (swap f y x) = f x y := by simp[swap]
    @[simp] def diag_reduce (f : X→X→Y) (x : X) : (diag f x) = f x x := by simp[diag]
-
 
    @[simp] def subs_reduce (f : X→Y→Z) (g : X→Y) (x : X) : (subs f g x) = (f x) (g x) := by simp[subs] done
 
@@ -186,7 +189,7 @@ instance (x : ℝ) [IsPos x] : FetchProof IsPos x := by constructor; assumption
 
 -- add [Inhabited U]
 def inverse {U V} : (U → V) → (V → U) := sorry
-postfix:1024 "⁻¹" => inverse
+postfix:max "⁻¹" => inverse
 
 axiom inverse.definition {U V} (f : U → V) (u : U) (v : V) [IsInv f] : (∀ u, f⁻¹ (f u) = u) ∧ (∀ v, f (f⁻¹ v) = v)
 
@@ -196,7 +199,7 @@ axiom inverse.definition {U V} (f : U → V) (u : U) (v : V) [IsInv f] : (∀ u,
 -- |___/|_|_| |_| \___|_| \___|_||_\__|_\__,_|_|
 
 def differential {X Y} [Vec X] [Vec Y] (f : X → Y) : (X → X → Y) := sorry
-prefix:1024 "δ" => differential
+prefix:max "δ" => differential
 
 --- We need formalization of Convenient Vector Spaces: https://en.wikipedia.org/wiki/Convenient_vector_space
 def convenient.differential {X Y} [Vec X] [Vec Y] (f : X → Y) (x dx : X) (h : convenient.is_diff_at f x) : Y := sorry
@@ -204,7 +207,7 @@ axiom differential.definition {X Y} [Vec X] [Vec Y] (f : X → Y) [IsDiff f] (x 
 
 --  _    _       _ _
 -- | |  (_)_ __ (_) |_
--- | |__| | '  \| |  _|
+-- | |__| | '  \| |  _| 
 -- |____|_|_|_|_|_|\__|
 
 def has_limit {X} [Vec X] (lim : Nat → X) : Prop := sorry
@@ -230,22 +233,20 @@ def ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X := sorry
 --                 |___/
 def integrate {X} [Vec X] (f : ℝ → X) (a b : ℝ) : X := sorry
 
-prefix:1024 "∫" => integrate
+prefix:max "∫" => integrate
 
 axiom integrate.swap_limit {X} [Vec X] (a b : ℝ) (f : ℝ → X) [IsCont f] : (∫ f a b = - ∫ f b a)
 @[simp] axiom integrate.definition {X} [Vec X] (a t dt : ℝ) (f : ℝ → X) [IsCont f] : δ (∫ f) a t dt = dt * (f t)
-
 
 --    _      _  _     _     _
 --   /_\  __| |(_)___(_)_ _| |_
 --  / _ \/ _` || / _ \ | ' \  _|
 -- /_/ \_\__,_|/ \___/_|_||_\__|
 --           |__/
--- maybe call it involution 
--- What about consistency? Trivial definition of `adjoint f = 0` does not satisfy following axioms ...
+
 def adjoint {X Y} [Vec X] [Vec Y] : (X → Y) → (Y → X) := sorry
 
-postfix:1024 "†" => adjoint
+postfix:max "†" => adjoint
 
 --- Definition of *-algebroid - mix of grupoid and *-algebra - looks like someone used this term before :) https://arxiv.org/abs/1904.06594
 --- C* algebra wiki: https://en.wikipedia.org/wiki/C*-algebra
@@ -299,7 +300,7 @@ axiom argmin.definition {X} (f : X → ℝ) (x : X) [HasArgMin f] : x = argmin f
 --                    |/                 |___/                          |_|  |/
 
 def derivative {X} [Vec X] (f : ℝ → X) : ℝ → X := λ t => (δ f t 1)
-def gradient {X} [Vec X] (f : X → ℝ) : X → X   := λ x => dual (δ f x)
+def gradient {X} [Vec X] (f : X → ℝ)   : X → X := λ x => dual (δ f x)
 def tangent_map {X Y} [Vec X] [Vec Y] (f : X → Y) : X×X → Y×Y := λ (x, dx) => (f x, δ f x dx)
 def backprop {X Y} [Hilbert X] [Hilbert Y] (f : X → Y) : X → Y×(Y→X) := λ x => (f x, (δ f x)†)
 

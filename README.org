@@ -41,6 +41,42 @@
      6. 1D wave equation
      7. 2D wave equation
 
+**** Reorganization
+
+***** Mathlib
+      Everything that will hopefully be in mathlib one day
+
+***** Categories
+      This contains all categories and basic proof automation in those categories.
+        - proofs for algebraic operations
+	- proofs for combinators
+	- Hom and morphisms
+
+****** Cat - common interface for all categories
+****** Lin
+****** Smooth
+****** Diff
+****** Cont
+****** Set
+****** Inv
+     
+****** Others - no immediate plan to do these
+        - LInv - is it a category?
+	- RInv - is it a category?
+        - Difeo - This needs diffeology to have internalized Hom
+
+***** Operators
+      This contains basic operators proofs about them and simplification identities
+
+****** adjoint
+****** sum
+****** differential operators
+        differential, gradient, tangent_map, back_prop
+****** limit
+****** invert -- basic properties and possible approximations
+****** integral -- basic properties and possible approximations
+****** ode_solve -- basic properties and possible approximations
+	
 **** TODO Categories [/]
      - [ ] Implement `IsSmooth` - just duplicate IsDiff and add axiom that differential of smooth is smooth
      - [ ] Implement `IsLInv` `IsRInv`

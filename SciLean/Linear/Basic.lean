@@ -32,8 +32,8 @@ instance (f : X → Y) [IsZero f] : IsLin f := sorry
 
 variable {U : Type u} {V : Type v} {W : Type w} [Hilbert U] [Hilbert V] [Hilbert W]
 
-instance : IsLin (Inner.inner : U → U → ℝ) := sorry
-instance (u : U) : IsLin (Inner.inner u : U → ℝ) := sorry
+-- instance : IsLin (Inner.inner : U → U → ℝ) := sorry
+-- instance (u : U) : IsLin (Inner.inner u : U → ℝ) := sorry
 
 
 

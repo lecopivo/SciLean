@@ -9,7 +9,7 @@ class SemiInner (X : Type u) : Type (u+1) where
   integrable_domain : Type
   domain            : integrable_domain   -- proof that `integrable_domain` is nonempty
   semi_inner     : X → X → integrable_domain → ℝ
-  loc_integrable : X → Prop
+  -- loc_integrable : X → Prop
   test_function  : integrable_domain → X → Prop
 
 -- export SemiInner (integrable_domain semi_inner loc_integrable test_function domain)
@@ -42,7 +42,7 @@ namespace SemiInner
     integrable_domain := Unit
     domain            := Unit.unit
     semi_inner        := λ x y _ => x * y
-    loc_integrable    := λ _ => True
+    -- loc_integrable    := λ _ => True
     test_function     := λ _ _ => True
   }
 
@@ -51,7 +51,7 @@ namespace SemiInner
     integrable_domain := Unit
     domain            := Unit.unit
     semi_inner        := λ x y _ => 0
-    loc_integrable    := λ _ => True
+    -- loc_integrable    := λ _ => True
     test_function     := λ _ _ => True
   }
 
@@ -60,7 +60,7 @@ namespace SemiInner
     integrable_domain := integrable_domain X × integrable_domain Y
     domain         := (arbitrary, arbitrary)
     semi_inner     := λ (x,y) (x',y') (D,E) => (x,x')_[D] + (y,y')_[E]
-    loc_integrable := λ (x,y) => loc_integrable x ∧ loc_integrable y
+    -- loc_integrable := λ (x,y) => loc_integrable x ∧ loc_integrable y
     test_function  := λ (D,E) (x,y) => test_function D x ∧ test_function E y
   }
 
@@ -69,7 +69,7 @@ namespace SemiInner
     integrable_domain := Nat × integrable_domain X
     domain            := (0, arbitrary)
     semi_inner        := λ f g (n, D) => ∑ i : Fin n, (f i, g i)_[D]
-    loc_integrable    := λ f => ∀ i, loc_integrable (f i)
+    -- loc_integrable    := λ f => ∀ i, loc_integrable (f i)
     test_function     := λ (n, D) f => ∀ i, if (i < n) then (test_function D (f i)) else ((f i) = 0)
   }
 
@@ -79,7 +79,7 @@ namespace SemiInner
     integrable_domain := integrable_domain X
     domain            := arbitrary
     semi_inner        := λ f g D => ∑ i : Fin n, (f i, g i)_[D]
-    loc_integrable    := λ f => ∀ i, loc_integrable (f i)
+    -- loc_integrable    := λ f => ∀ i, loc_integrable (f i)
     test_function     := λ D f => ∀ i, test_function D (f i)
   }
 
@@ -107,8 +107,8 @@ class SemiHilbert (X : Type u) extends SemiInner X, Vec X where
   semi_inner_mul : ∀ (x y : X) (r : ℝ) D, (r*x,y)_[D] = r*(x,y)_[D]
   semi_inner_sym : ∀ (x y : X) D, (x,y)_[D] = (y,x)_[D]
   semi_inner_pos : ∀ (x : X) D, ((x,x)_[D]) ≥ (0 : ℝ)
-  semi_inner_ext : ∀ (x : X), loc_integrable x → ((x = 0) ↔ (∀ D (y : X) (h : test_function D y), (x,y)_[D] = 0))
-
+  -- semi_inner_ext : ∀ (x : X), loc_integrable x → ((x = 0) ↔ (∀ D (y : X) (h : test_function D y), (x,y)_[D] = 0))
+  semi_inner_ext : ∀ (x : X), ((x = 0) ↔ (∀ D (y : X) (h : test_function D y), (x,y)_[D] = 0))
 
 
 namespace SemiHilbert 
@@ -125,7 +125,7 @@ end SemiHilbert
 
 class Hilbert (U : Type u) extends SemiHilbert U where
   domain_unique : ∀ D, D = domain
-  all_integrable : ∀ x, loc_integrable x
+  -- all_integrable : ∀ x, loc_integrable x
   all_test_fun   : ∀ x, test_function domain x
 
 section Hilbert
@@ -143,41 +143,41 @@ end Hilbert
 
 section CommonHilbertSpaces
 
-  instance : Inner ℝ := ⟨λ x y => x*y⟩
-  instance : Hilbert ℝ := 
-  {
-    inner_sym := sorry,
-    inner_pos := sorry,
-    inner_add := sorry,
-    inner_mul := sorry
-  } 
+  -- instance : Inner ℝ := ⟨λ x y => x*y⟩
+  -- instance : Hilbert ℝ := 
+  -- {
+  --   inner_sym := sorry,
+  --   inner_pos := sorry,
+  --   inner_add := sorry,
+  --   inner_mul := sorry
+  -- } 
 
-  instance : Inner PUnit := ⟨λ x y => 0⟩
-  instance : Hilbert PUnit := 
-  {
-    inner_sym := sorry,
-    inner_pos := sorry,
-    inner_add := sorry,
-    inner_mul := sorry
-  } 
+  -- instance : Inner PUnit := ⟨λ x y => 0⟩
+  -- instance : Hilbert PUnit := 
+  -- {
+  --   inner_sym := sorry,
+  --   inner_pos := sorry,
+  --   inner_add := sorry,
+  --   inner_mul := sorry
+  -- } 
 
-  variable {U V} [Hilbert U] [Hilbert V]
-  instance : Inner (U×V) := ⟨λ x y => ⟨x.1, y.1⟩ + ⟨x.2, y.2⟩⟩
-  instance : Hilbert (U×V) := 
-  {
-    inner_sym := sorry,
-    inner_pos := sorry,
-    inner_add := sorry,
-    inner_mul := sorry
-  } 
+  -- variable {U V} [Hilbert U] [Hilbert V]
+  -- instance : Inner (U×V) := ⟨λ x y => ⟨x.1, y.1⟩ + ⟨x.2, y.2⟩⟩
+  -- instance : Hilbert (U×V) := 
+  -- {
+  --   inner_sym := sorry,
+  --   inner_pos := sorry,
+  --   inner_add := sorry,
+  --   inner_mul := sorry
+  -- } 
 
-  instance {n} : Inner (Fin n → U) := ⟨λ f g => ∑ i, ⟨f i, g i⟩⟩
-  instance : Hilbert (Fin n → U) := 
-  {
-    inner_sym := sorry,
-    inner_pos := sorry,
-    inner_add := sorry,
-    inner_mul := sorry
-  } 
+  -- instance {n} : Inner (Fin n → U) := ⟨λ f g => ∑ i, ⟨f i, g i⟩⟩
+  -- instance : Hilbert (Fin n → U) := 
+  -- {
+  --   inner_sym := sorry,
+  --   inner_pos := sorry,
+  --   inner_add := sorry,
+  --   inner_mul := sorry
+  -- } 
 
 end CommonHilbertSpaces 
