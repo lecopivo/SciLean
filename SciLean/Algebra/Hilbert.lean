@@ -113,7 +113,11 @@ class SemiHilbert (X : Type u) extends SemiInner X, Vec X where
 
 namespace SemiHilbert 
 
-  -- U×V, Nat → U, Fin n → U are SemiHilbert
+  instance : SemiHilbert ℝ := sorry
+  instance : SemiHilbert PUnit := sorry
+  instance (X : Type u) (Y : Type v) [SemiHilbert X] [SemiHilbert Y] : SemiHilbert (X × Y) := sorry
+  instance (X : Type u) [SemiHilbert X] : SemiHilbert (Nat → X) := sorry
+  instance {n} (X : Type u) [SemiHilbert X] : SemiHilbert (Fin n → X) := sorry
 
 end SemiHilbert 
 
@@ -133,15 +137,20 @@ section Hilbert
 variable {U} [Hilbert U]
 
 def inner (u v : U) := ⟨u, v⟩
-def inner.ext (u v : U) : (∀ w, ⟨u, w⟩ = ⟨v, w⟩) → (u = v) := sorry
+theorem inner.ext (u v : U) : (∀ w, ⟨u, w⟩ = ⟨v, w⟩) → (u = v) := sorry
 
-def inner.add (u v w : U)  : ⟨u + v, w⟩ = ⟨u, w⟩ + ⟨v, w⟩ := sorry
-def inner.mul (u v : U) (c : ℝ)  : ⟨c * u, v⟩ = c * ⟨u, v⟩ := sorry
-def inner.sym (u v : U)  : ⟨u, v⟩ = ⟨v, u⟩ := sorry
+theorem inner.add (u v w : U)  : ⟨u + v, w⟩ = ⟨u, w⟩ + ⟨v, w⟩ := sorry
+theorem inner.mul (u v : U) (c : ℝ)  : ⟨c * u, v⟩ = c * ⟨u, v⟩ := sorry
+theorem inner.sym (u v : U)  : ⟨u, v⟩ = ⟨v, u⟩ := sorry
 
 end Hilbert
 
-section CommonHilbertSpaces
+namespace Hilbert
+
+  instance : Hilbert ℝ := sorry
+  instance : Hilbert PUnit := sorry
+  instance (X : Type u) (Y : Type v) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) := sorry
+  instance {n} (X : Type u) [Hilbert X] : Hilbert (Fin n → X) := sorry
 
   -- instance : Inner ℝ := ⟨λ x y => x*y⟩
   -- instance : Hilbert ℝ := 
@@ -180,4 +189,6 @@ section CommonHilbertSpaces
   --   inner_mul := sorry
   -- } 
 
-end CommonHilbertSpaces 
+end Hilbert 
+
+

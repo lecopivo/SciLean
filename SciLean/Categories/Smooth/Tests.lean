@@ -49,7 +49,6 @@ namespace maintests
   def test27 (f : X → X → α → Y) (a : α) [IsSmooth (λ x y => f x y a)] [∀ x, IsSmooth (λ y => f x y a)] : IsSmooth (λ x => f (h x) x a) := by infer_instance
   def test28 : IsSmooth (λ (x : X) => G' (h x) z w) := by infer_instance
 
-
 end maintests
 
 namespace combtests
