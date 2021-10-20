@@ -1,7 +1,7 @@
 import SciLean.Categories.Smooth
 
--- set_option synthInstance.maxHeartbeats 500
--- set_option synthInstance.maxSize 100
+set_option synthInstance.maxHeartbeats 5000
+set_option synthInstance.maxSize 1000
 
 namespace SciLean.Smooth.Tests
 
@@ -57,6 +57,6 @@ variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 theorem test1 (f : X → X) [IsSmooth f] : IsSmooth ((f ∘ f) ∘ (f ∘ (f ∘ f))) := by infer_instance
 theorem test2 (f : β → X → Y) (g : α → β) (a : α) [IsSmooth (f (g a))] : IsSmooth ((f ∘ g) a) := by infer_instance
-theorem test3 (y : X) (A : X → X) (B : X → X) [IsSmooth A] [IsSmooth B] : IsSmooth λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
+-- theorem test3 (y : X) (A : X → X) (B : X → X) [IsSmooth A] [IsSmooth B] : IsSmooth λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
  
 end combtests

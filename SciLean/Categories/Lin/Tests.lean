@@ -43,6 +43,11 @@ namespace maintests
   def test26 : IsLin (λ (h : X → X) (x : X) => H' a b (h x)) := by infer_instance
   def test27 (f : X → X → α → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 xx.2 a)] : IsLin (λ x => f (h x) x a) := by infer_instance
 
+
+  -- set_option trace.Meta.synthInstance true
+  -- def test29 (f : X → Y → Z) (y : Y) [IsLin (λ xy : X×Y => f xy.1 xy.2)] : IsLin (λ x => f x y) := by infer_instance
+  -- set_option trace.Meta.synthInstance false
+
 end maintests
 
 namespace combtests
@@ -50,7 +55,7 @@ variable {α β γ : Type}
 variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 theorem test1 (f : X → X) [IsLin f] : IsLin ((f ∘ f) ∘ (f ∘ (f ∘ f))) := by infer_instance
-theorem test2 (f : β → X → Y) (g : α → β) (a : α) [IsLin (f (g a))] : IsLin (comp f g a) := by infer_instance
+theorem test2 (f : β → X → Y) (g : α → β) (a : α) [IsLin (f (g a))] : IsLin ((f ∘ g) a) := by infer_instance
 theorem test3 (y : X) (A : X → X) (B : X → X) [IsLin A] [IsLin B] : IsLin λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
  
 end combtests

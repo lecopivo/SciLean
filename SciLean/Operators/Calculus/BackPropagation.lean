@@ -21,22 +21,22 @@ by
   simp[backprop]; conv in (δ _ _) => enter [dx]
   simp; done
 
---- Can we formulte this? (V→W) is not a Hilber space so (δ f)† does not make much sense.
 -- @[simp]
 -- theorem backprop_of_uncurried_linear_1 (f : U → V → W) [IsLin (λ xy : U×V => f xy.1 xy.2)]
---     (x : U)
---     : 𝓑 f x = (λ y => f x y, λ (y : Y) => f xdx.2 0) :=
+--     (x : U) (y : V)
+--     : 𝓑 (λ x => f x y) x = (f x y, (λ x => f x 0)†) :=
 -- by 
---   induction xdx; simp[backprop]; funext y; simp; done
+--   simp[backprop]; conv in (δ _ _) => enter [dx]
+--   simp; done
 
-@[simp]
-theorem backprop_of_uncurried_linear_2 
-        (f : U → V → W) [IsLin (λ xy : U×V => f xy.1 xy.2)]
-        (x : U) (y : V)
-        : 𝓑 (f x) y = (f x y, (f 0)†) :=
-by
-   simp[backprop]; conv in (δ _ _) => enter [dy]
-   simp; done
+-- @[simp]
+-- theorem backprop_of_uncurried_linear_2 
+--         (f : U → V → W) [IsLin (λ xy : U×V => f xy.1 xy.2)]
+--         (x : U) (y : V)
+--         : 𝓑 (f x) y = (f x y, (f 0)†) :=
+-- by
+--    simp[backprop]; conv in (δ _ _) => enter [dy]
+--    simp; done
 
 -- @[simp] 
 -- theorem backprop_of_id

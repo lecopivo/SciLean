@@ -1,7 +1,7 @@
 import SciLean.Basic
 
-set_option synthInstance.maxHeartbeats 50000
-set_option synthInstance.maxSize 10000
+-- set_option synthInstance.maxHeartbeats 500
+-- set_option synthInstance.maxSize 100
 
 variable {α β γ : Type} 
 variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
