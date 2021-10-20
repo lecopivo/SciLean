@@ -77,4 +77,3 @@ by
 -- theorem tangent_map_of_composition_3 (fdf : (β → Z)×(β → Z))
 --     : 𝓣 (λ (f : β → Z) (g : α → β) (a : α) => f (g a)) = ...
 
-
