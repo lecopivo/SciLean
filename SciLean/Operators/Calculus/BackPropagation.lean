@@ -51,19 +51,19 @@ by
 --   funext x; simp[id]; done
 
 -- -- TODO: Change IsSmooth to IsDiff
--- @[simp] 
--- theorem backprop_of_composition_1 (f : Y → Z) [IsSmooth f] (g : X → Y) [IsSmooth g]
---     : 𝓣 (λ x => f (g x)) = (λ xdx => 𝓣 f (𝓣 g xdx)) := 
--- by
---   funext xdx; induction xdx; simp[backprop]; done
+@[simp] 
+theorem backprop_of_composition_1 (f : V → W) [IsSmooth f] (g : U → V) [IsSmooth g]
+    : 𝓑 (λ x => f (g x)) = (λ x => (𝓑 f • 𝓑 g) x) := 
+by
+  funext x; simp[backprop, Function.comp, backcomp]; conv in (δ _ _) => enter [dx]
+  simp; done
 
 -- -- TODO: Change IsSmooth to IsDiff
--- @[simp] 
--- theorem backprop_of_composition_1_alt (f : Y → Z) [IsSmooth f] (g : X → Y) [IsSmooth g]
---     : 𝓣 (f ∘ g) = (𝓣 f ∘ 𝓣 g) := 
--- by
---   funext xdx; induction xdx; simp[backprop, Function.comp]; done
-
+@[simp] 
+theorem backprop_of_composition_1_alt (f : V → W) [IsSmooth f] (g : U → V) [IsSmooth g]
+    : 𝓑 (f ∘ g) = (𝓑 f • 𝓑 g) := 
+by
+  simp[Function.comp]; done
 
 -- -- TODO: Change IsSmooth to IsDiff
 -- -- TODO: Isn't there a better form of this?
