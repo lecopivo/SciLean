@@ -282,3 +282,4 @@
    - [[https://github.com/mila-iqia/myia][Myia]]
    - [[https://github.com/tum-pbs/PhiFlow][PhiFlow]]
    - [[https://github.com/yuanming-hu/difftaichi][DiffTaichi]]
+   - [[https://halide-lang.org/][Halide]]
