@@ -55,19 +55,19 @@ end ProductOperations
 
 section FunctionOperations
 
-  variable {α : Type u} {β : Type v} {γ : Type w}
+  variable {α : Type u} {β : (a : α) → Type v} {γ : Type w}
+  
+  instance [∀ a, Add (β a)] : Add ((a : α) → β a) := ⟨λ f g => λ a => f a + g a⟩
+  instance [∀ a, Sub (β a)] : Sub ((a : α) → β a) := ⟨λ f g => λ a => f a - g a⟩
+  instance [∀ a, Mul (β a)] : Mul ((a : α) → β a) := ⟨λ f g => λ a => f a * g a⟩
+  instance [∀ a, Div (β a)] : Div ((a : α) → β a) := ⟨λ f g => λ a => f a / g a⟩
 
-  instance [Add β] : Add (α → β) := ⟨λ f g => λ a => f a + g a⟩
-  instance [Sub β] : Sub (α → β) := ⟨λ f g => λ a => f a - g a⟩
-  instance [Mul β] : Mul (α → β) := ⟨λ f g => λ a => f a * g a⟩
-  instance [Div β] : Div (α → β) := ⟨λ f g => λ a => f a / g a⟩
+  instance [∀ a, HMul γ (β a) (β a)] : HMul γ ((a : α) → β a) ((a : α) → β a) := ⟨λ c f => λ a => c * (f a)⟩
 
-  instance [HMul γ β β] : HMul γ (α → β) (α → β) := ⟨λ s f => λ a => s * (f a)⟩
+  instance [∀ a, Neg (β a)] : Neg ((a : α) → β a) := ⟨λ f => λ a => - f a⟩
 
-  instance [Neg β] : Neg (α → β) := ⟨λ f => λ a => - f a⟩
-
-  instance [Zero β] : Zero (α → β) := ⟨λ _ => 0⟩
-  instance [One β] : One (α → β) := ⟨λ _ => 1⟩
+  instance [∀ a, Zero (β a)] : Zero ((a : α) → β a) := ⟨λ _ => 0⟩
+  instance [∀ a, One (β a)] : One ((a : α) → β a) := ⟨λ _ => 1⟩
 
 end FunctionOperations
 

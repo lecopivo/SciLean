@@ -1,4 +1,3 @@
-import SciLean.Operators.Calculus.Basic
 import SciLean.Operators.Calculus.Differential
 
 namespace SciLean.BackPropagation
@@ -6,7 +5,6 @@ namespace SciLean.BackPropagation
 variable {α β γ α' β': Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
-
 
 instance (f : U → V) [IsSmooth f] : IsSmooth (𝓑 f) := sorry
 
@@ -19,7 +17,7 @@ theorem backprop_of_linear
         : 𝓑 f x = (f x, f†) := 
 by 
   simp[backprop]; conv in (δ _ _) => enter [dx]
-  simp; done
+  done
 
 -- @[simp]
 -- theorem backprop_of_uncurried_linear_1 (f : U → V → W) [IsLin (λ xy : U×V => f xy.1 xy.2)]
@@ -42,7 +40,7 @@ by
 -- theorem backprop_of_id
 --     : 𝓣 (λ (x : X) => x) = (λ xdx => xdx) := 
 -- by 
---   funext xdx; simp; done
+--   funext xdx; simp; done  
 
 -- @[simp] 
 -- theorem backprop_of_id'
@@ -56,7 +54,7 @@ theorem backprop_of_composition_1 (f : V → W) [IsSmooth f] (g : U → V) [IsSm
     : 𝓑 (λ x => f (g x)) = (λ x => (𝓑 f • 𝓑 g) x) := 
 by
   funext x; simp[backprop, Function.comp, backcomp]; conv in (δ _ _) => enter [dx]
-  simp; done
+  done
 
 -- -- TODO: Change IsSmooth to IsDiff
 @[simp] 

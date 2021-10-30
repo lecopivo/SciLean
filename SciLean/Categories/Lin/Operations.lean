@@ -14,7 +14,3 @@ instance : IsLin (λ (r : ℝ) (x : X) => r*x) := sorry
 instance (r : ℝ) : IsLin (λ (x : X) => r*x) := sorry
 instance : IsLin (λ x : X => -x) := sorry
 
--- Basic operations with functions
-instance (f : Y → Z) [IsLin f] (g : X → Y) [IsLin g] : IsLin (f ∘ g) := 
-by 
-  simp[Function.comp] infer_instance done

@@ -1,4 +1,3 @@
-import SciLean.Operators.Calculus.Basic
 import SciLean.Operators.Calculus.Differential
 
 namespace SciLean.TangentMap

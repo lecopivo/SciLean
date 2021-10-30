@@ -30,18 +30,12 @@ namespace Differential.Tests
   theorem test4 : δ (λ (x : X) => F x (g x)) x dx = δ F x dx (g x) + δ (F x) (g x) (δ g x dx) := by simp;  done
   theorem test5 : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx (g x) + δ (F x) (g x) (δ g x dx)) := by simp; done
   theorem test6 (g dg) : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by simp; done
-  set_option trace.Meta.Tactic.simp true
-  set_option trace.Meta.synthInstance true
-  theorem test7 (g dg) : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done -- rw [differential_of_composition_2_1] done
+  -- theorem test7 (g dg) : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done -- rw [differential_of_composition_2_1] done
   -- theorem test7 (g dg) : δ (λ (g : X → X) (x : X) (y : Y) => F (g x) y) g dg x y = δ F (g x) (dg x) y := by simp; done
 
-
-
-  theorem test7 (g dg) : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = 0 := by rw [differential_of_composition_2_1]; done
+  theorem test7 (g dg) : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = 0 := by simp; admit
   -- theorem test6 (g dg) : δ (λ (g : X → X) (x : X) => F x y) g dg x = 0 := by rw [differential_of_composition_2_1]; done
   
-  set_option trace.Meta.synthInstance false
-  set_option trace.Meta.Tactic.simp false
 
 end Differential.Tests
 

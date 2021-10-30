@@ -7,9 +7,13 @@ variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 
 --- Arithmetic operations
 instance : IsSmooth (λ x y : X => x + y) := sorry
-instance : IsSmooth (λ y x : X => y + x) := sorry
+instance (x : X) : IsSmooth (λ y : X => x + y) := sorry
 instance : IsSmooth (λ x y : X => x - y) := sorry
-instance : IsSmooth (λ y x : X => y - x) := sorry
+instance (x : X) : IsSmooth (λ y : X => x - y) := sorry
 
--- Basic operations with functions
-instance (f : Y → Z) [IsSmooth f] (g : X → Y) [IsSmooth g] : IsSmooth (f ∘ g) := by simp[Function.comp] infer_instance done
+instance : IsSmooth (λ (s : ℝ) (x : X) => s * x) := sorry
+instance (s : ℝ) : IsSmooth (λ x : X => s * x) := sorry
+
+
+-- -- Basic operations with functions
+-- instance (f : Y → Z) [IsSmooth f] (g : X → Y) [IsSmooth g] : IsSmooth (f ∘ g) := by simp[Function.comp] infer_instance done

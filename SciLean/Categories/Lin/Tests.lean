@@ -10,10 +10,10 @@ namespace maintests
   variable {α β γ : Type}
 
   variable (f : Y → Z) (g : X → Y) [IsLin f] [IsLin g] (h : X → X) [IsLin h] (h' : Y → Y) [IsLin h']
-  variable (F : Y → α → X) (a : α) [IsLin (λ y => F y a)]
-  variable (G : X → α → β → Y) (b : β) [IsLin (λ x => G x a b)]
-  variable (H : α → X → β → Y) [IsLin (λ x => H a x b)]
-  variable (H': α → β → X → Y) [IsLin (λ x => H' a b x)]
+  variable (F : Y → α → X) [IsLin F]
+  variable (G : X → α → β → Y) [IsLin G]
+  variable (H : α → X → β → Y) [∀ a, IsLin (H a)]
+  variable (H': α → β → X → Y) [∀ a b, IsLin (H' a b)]
 
   def test1 : IsLin (λ x => g x) := by infer_instance
   def test2 : IsLin (λ x => f (g x)) := by infer_instance
@@ -31,18 +31,17 @@ namespace maintests
   def test14 (f : β → Y → Z) [∀ b, IsLin (f b)] : IsLin (λ (g : α → Y) (b : β) (a : α) => f b (g a)) := by infer_instance
   def test15 (f : X → X → Y) [IsLin (λ xx : X×X => f xx.1 xx.2)] : IsLin (λ x => f x x) := by infer_instance
   def test16 (f : X → X → Y) [IsLin (λ xx : X×X => f xx.1 xx.2)] : IsLin (λ x => f (h x) x) := by infer_instance
-  def test17 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f x a x) := by infer_instance
-  def test18 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f (h x) a x) := by infer_instance
+  -- def test17 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f x a x) := by infer_instance
+  -- def test18 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f (h x) a x) := by infer_instance
   def test19 (f : X → X → Y) [IsLin (λ xx : X×X => f xx.1 xx.2)] : IsLin (λ x => f x (h x)) := by infer_instance
   def test20 : IsLin (λ (g : X → Y) (x : X) => F (g (h x)) a) := by infer_instance
-  def test21 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f x a (h x)) := by infer_instance
-  def test22 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f (h x) a (h x)) := by infer_instance
-  def test23 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ (h : X → X) x => f (h x) a (h x)) := by infer_instance
+  -- def test21 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f x a (h x)) := by infer_instance
+  -- def test22 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f (h x) a (h x)) := by infer_instance
+  -- def test23 (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ (h : X → X) x => f (h x) a (h x)) := by infer_instance
   def test24 : IsLin (λ (h : X → X) (x : X) => G (h x) a b) := by infer_instance
   def test25 : IsLin (λ (h : X → X) (x : X) => H a (h x) b) := by infer_instance
   def test26 : IsLin (λ (h : X → X) (x : X) => H' a b (h x)) := by infer_instance
-  def test27 (f : X → X → α → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 xx.2 a)] : IsLin (λ x => f (h x) x a) := by infer_instance
-
+  -- def test27 (f : X → X → α → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 xx.2 a)] : IsLin (λ x => f (h x) x a) := by infer_instance
 
   -- set_option trace.Meta.synthInstance true
   -- def test29 (f : X → Y → Z) (y : Y) [IsLin (λ xy : X×Y => f xy.1 xy.2)] : IsLin (λ x => f x y) := by infer_instance

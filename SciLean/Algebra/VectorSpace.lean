@@ -17,8 +17,9 @@ class Vec (U : Type u) extends Add U, Sub U, HMul ℝ U U, Neg U, Zero U :=
 
 section CommonVectorSpaces
 
-  variable {α β : Type u}
+  variable {α β ι : Type u}
   variable {U V} [Vec U] [Vec V]
+  variable {E : ι → Type v}
 
   instance : HMul ℝ PUnit PUnit := ⟨λ x y => PUnit.unit⟩
   instance : Vec PUnit :=
@@ -37,14 +38,22 @@ section CommonVectorSpaces
     zero_add := sorry
   }
 
-  instance : Vec (α → U) :=   {
+  instance [Vec U] : Vec (α → U) :=   {
     add_assoc := sorry,
     add_comm := sorry,
     add_zero := sorry,
     zero_add := sorry
   }
 
-  instance : Vec (U × V) :=   {
+  instance [∀ i, Add (E i)] [∀ i, Vec (E i)] : Vec ((i : ι) → E i) := 
+  {
+    add_assoc := sorry,
+    add_comm := sorry,
+    add_zero := sorry,
+    zero_add := sorry
+  }
+
+  instance [Vec U] [Vec V] : Vec (U × V) :=   {
     add_assoc := sorry,
     add_comm := sorry,
     add_zero := sorry,
