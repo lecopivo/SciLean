@@ -283,3 +283,4 @@
    - [[https://github.com/tum-pbs/PhiFlow][PhiFlow]]
    - [[https://github.com/yuanming-hu/difftaichi][DiffTaichi]]
    - [[https://halide-lang.org/][Halide]]
+   - [[https://github.com/dselsam/certigrad][Certigrad]]

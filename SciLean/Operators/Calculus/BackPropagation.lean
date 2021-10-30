@@ -36,17 +36,6 @@ by
 --    simp[backprop]; conv in (δ _ _) => enter [dy]
 --    simp; done
 
--- @[simp] 
--- theorem backprop_of_id
---     : 𝓣 (λ (x : X) => x) = (λ xdx => xdx) := 
--- by 
---   funext xdx; simp; done  
-
--- @[simp] 
--- theorem backprop_of_id'
---     : 𝓣 (id : X → X) = id := 
--- by 
---   funext x; simp[id]; done
 
 -- -- TODO: Change IsSmooth to IsDiff
 @[simp] 

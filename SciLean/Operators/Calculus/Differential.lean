@@ -3,7 +3,9 @@ import SciLean.Operators.Calculus.Basic
 namespace SciLean.Differential
 
 variable {α β γ : Type}
+variable {β1 β2 β3 β4 : Type}
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
+variable {Y1 Y2 Y3 Y4 : Type} [Vec Y1] [Vec Y2] [Vec Y3] [Vec Y4]
 
 instance (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
 -- TODO: Change IsSmooth to IsDiff
@@ -39,28 +41,15 @@ theorem differential_of_id'  (x dx : X)
 
 -- TODO: Change IsSmooth to IsDiff
 @[simp] 
-theorem differential_of_composition_1 (f : Y → Z) [IsSmooth f] (g : X → Y) [IsSmooth g] (x dx : X)
+theorem differential_of_composition_1 (f : Y → Z) (g : X → Y) (x dx : X)
+        [IsSmooth f] [IsSmooth g]
         : δ (λ x => f (g x)) x dx = δ f (g x) (δ g x dx) := sorry
 
 -- TODO: Change IsSmooth to IsDiff
--- Probably not necessary
--- @[simp] 
--- theorem differential_of_composition_1_alt (f : Y → Z) [IsSmooth f] (g : X → Y) [IsSmooth g] (x dx : X)
---         : δ (f∘g) x dx = δ f (g x) (δ g x dx) := by simp[Function.comp]
-
--- TODO: Change IsSmooth to IsDiff
 @[simp] 
-theorem differential_of_composition_2 (f : Y → Z) [IsSmooth f] (g dg : α → Y) (a : α)
+theorem differential_of_composition_2 (f : Y → Z) (g dg : α → Y) (a : α)
+        [IsSmooth f]
         : δ (λ (g : α → Y) (a : α) => f (g a)) g dg a = δ f (g a) (dg a) := sorry
-
-
--- @[simp] 
--- theorem asdfasdf (f : X → Y → Z) [IsSmooth f] (x dx : X) (y : Y)
---         : δ (λ x => f x y) x dx = δ f x dx y := sorry
-
--- @[simp] 
-theorem differential_of_composition_2_1 (f : Y → β → Z) (b : β) [IsSmooth (λ y => f y b)] (g dg : α → Y) (a : α)
-        : δ (λ (g : α → Y) (a : α) => f (g a) b) g dg a = δ f (g a) (dg a) b := sorry
 
 -- TODO: Change IsSmooth to IsDiff
 @[simp] 
@@ -76,14 +65,19 @@ theorem differential_of_composition_3 (f df : β → Z) (g : α → β) (a : α)
 
 
 @[simp] 
-theorem differential_of_subs_1 (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-        (g : X → Y) [IsSmooth g]
+theorem differential_of_diag_1 (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2)
+        [IsSmooth f] [∀ y1, IsSmooth (f y1)] [IsSmooth g1] [IsSmooth g2]
         (x dx : X)
-        : δ (λ (x : X) => f x (g x)) x dx = δ f x dx (g x) + δ (f x) (g x) (δ g x dx) := sorry
-
+        : δ (λ (x : X) => f (g1 x) (g2 x)) x dx = δ f (g1 x) (δ g1 x dx) (g2 x) + δ (f (g1 x)) (g2 x) (δ g2 x dx) := sorry
 
 @[simp] 
-theorem differential_of_subs_2 (f : α → Y → Z) [∀ a, IsSmooth (f a)]
-        (g dg : α → Y) (a : α)
-        : δ (λ g (a : α) => f a (g a)) g dg a = δ (f a) (g a) (dg a) := sorry
+theorem differential_of_diag_2 (f : Y1 → β2 → Z) (g2 : α → β2)
+        [IsSmooth f]
+        (g dg a)
+        : δ (λ  (g1 : α → Y1) a => f (g1 a) (g2 a)) g dg a = δ f (g a) (dg a) (g2 a) := sorry
 
+@[simp] 
+theorem differential_of_diag_3 (f : β1 → Y2 → Z) (g1 : α → β1)
+        [∀ y1, IsSmooth (f y1)] 
+        (g dg a)
+        : δ (λ (g2 : α → Y2) a => f (g1 a) (g2 a)) g dg a = δ (f (g1 a)) (g a) (dg a) := sorry

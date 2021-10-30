@@ -66,8 +66,6 @@ def backcomp (f : β → γ×(γ→β)) (g : α → β×(β→α)) : α → γ×
 infixr:90 " • "  => backcomp
 
 
-
-
 --- Maybe add other operators based on: 
 --- "The simple essence of automatic differentiation" 
 --- https://arxiv.org/abs/1804.00746
