@@ -1,4 +1,4 @@
 [package]
 name = "SciLean"
 version = "0.1"
-lean_version = "mylean4"
+lean_version = "from-source"

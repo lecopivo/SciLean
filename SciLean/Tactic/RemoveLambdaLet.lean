@@ -131,7 +131,7 @@ fun stx => withMainContext do
 --     lhs
 --     print_lhs
 --     enter [1,1]
---     print_lhs
+--     print_lhsv
 --     rmlamlet
 --     enter [x]
 --     simp
