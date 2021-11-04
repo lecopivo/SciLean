@@ -58,3 +58,12 @@ theorem test2 (f : β → X → Y) (g : α → β) (a : α) [IsLin (f (g a))] : 
 theorem test3 (y : X) (A : X → X) (B : X → X) [IsLin A] [IsLin B] : IsLin λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
  
 end combtests
+
+namespace hilbert
+
+variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
+
+example (d) : IsLin λ (u v : U) => (u, v)_[d] := by infer_instance
+example : IsLin λ u : U => ⟨u,u'⟩ := by infer_instance
+
+end hilbert 

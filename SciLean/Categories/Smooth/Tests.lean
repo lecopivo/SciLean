@@ -61,6 +61,11 @@ namespace maintests
 
   example (f : X → X) [IsSmooth f] : IsSmooth (λ (g : X → X) x => f (f (g x))) := by infer_instance
 
+  example (f : X → X → β → Y) [IsSmooth f] [∀ x, IsSmooth (f x)] (b) : IsSmooth (λ x => f x x b) := by infer_instance
+  example (f : X → X → β → Y) [IsSmooth f] [∀ x, IsSmooth (f x)] : IsSmooth (λ x b => f x x b) := by infer_instance
+  example (f : X → X → β → Y) [IsLin f] [∀ x, IsLin (f x)] (b) : IsSmooth (λ x => f x x b) := by infer_instance
+  example (f : X → X → β → Y) [IsLin f] [∀ x, IsLin (f x)] : IsSmooth (λ x b => f x x b) := by infer_instance
+
 end maintests
 
 namespace foldtest
@@ -126,3 +131,14 @@ theorem test2 (f : β → X → Y) (g : α → β) (a : α) [IsSmooth (f (g a))]
 theorem test3 (y : X) (A : X → X) (B : X → X) [IsSmooth A] [IsSmooth B] : IsSmooth λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
 example (y : X) (A : X → X) (B : X → X) [IsSmooth A] [IsSmooth B] : IsSmooth (λ x : X => x + x) := by infer_instance
 end combtests
+
+
+namespace hilbert 
+
+variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
+
+example : IsSmooth λ (u v : U) (d) => (u,v)_[d] := by infer_instance
+example (u) : IsSmooth λ (v : U) (d) => (u,v)_[d] := by infer_instance
+example : IsSmooth λ (u : U) (d) => (u,u)_[d] := by infer_instance
+
+end hilbert 

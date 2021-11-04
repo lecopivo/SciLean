@@ -1,5 +1,8 @@
 import SciLean.Algebra
 
+namespace SciLean
+
+variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
@@ -35,7 +38,8 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 @[simp] theorem prod_sum (x x' : X) (y y' : Y) : (x, y) + (x', y') = (x + x', y + y') := sorry
 
-
--- @[simp] theorem real_nat_mul (n m : Nat) : ((OfNat.ofNat n) : ℝ) * ((OfNat.ofNat m) : ℝ) = (( (m*n)) : ℝ) := sorry
+@[simp] theorem func_add_eval (f g : α → X) (a : α) : (f + g) a = f a + g a := by simp[HAdd.hAdd,Add.add]; done
+@[simp] theorem func_sub_eval (f g : α → X) (a : α) : (f - g) a = f a - g a := by simp[HSub.hSub,Sub.sub]; done
+@[simp] theorem func_mul_eval (f : α → X) (a : α) (c : ℝ) : (c*f) a = c * (f a) := by simp[HMul.hMul,Mul.mul]; done
 
 

@@ -27,12 +27,13 @@ instance {X} [SemiInner X] : Inhabited (SemiInner.integrable_domain X) := ⟨Sem
 -- syntax:60 "(" term:60 " , " term:61 ")_[" term:62 "]" : term
 -- macro_rules | `(($x,$y)_[$i]) => `(SemiInner.semi_inner $x $y $i)
 
---- TODO: Make sure preceences are correct!!!
-notation:100 "(" x:60 ", " y:61 ")_[" i:62 "]" => SemiInner.semi_inner x y i 
-
 -- Semi inner product on canonical domain. 
 -- This is usefull for Hilbert spaces where there is only one domain.
 notation:100 "⟨" x:60 ", " y:61 "⟩" => SemiInner.semi_inner x y SemiInner.domain
+
+--- TODO: Make sure preceences are correct!!!
+notation:100 "(" x:60 ", " y:61 ")_[" i:62 "]" => SemiInner.semi_inner x y i 
+
 notation:120 "∥" x:80 "∥"  => Math.sqrt (SemiInner.semi_inner x x SemiInner.domain)
 
 namespace SemiInner

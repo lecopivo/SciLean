@@ -10,8 +10,6 @@ abbrev V := ℝ × ℝ
 
 def H (m k : ℝ) (x p : V) := 1/(2*m) * ⟨p,p⟩ + k/2 * ⟨x, x⟩
 
-set_option trace.Meta.Tactic.simp true
-
 def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by
   simp [HamiltonianSystem, H];

@@ -1,4 +1,5 @@
 import SciLean.Operators.Calculus
+import SciLean.Simp
 
 namespace SciLean
 
@@ -18,44 +19,27 @@ namespace Differential.Tests
 
   variable (x dx : X) (y dy : Y) (z dz : Z)
 
-  example : IsSmooth (λ (g : X → Y) (x : X) => f3 (F x (g x))) := by infer_instance; done
-  example : IsSmooth (λ (g : X → X) (x : X) => F (g x) y) := by infer_instance; done
+  example : IsSmooth (λ (g : X → Y) (x : X) => f3 (F x (g x))) := by infer_instance done
+  example : IsSmooth (λ (g : X → X) (x : X) => F (g x) y) := by infer_instance done
 
-  example : δ (λ x => x) x dx = dx := by simp; done
-  example : δ (λ x => f (g x)) x dx = δ f (g x) (δ g x dx) := by simp; done
-  example : δ (λ x => f (g (f1 x))) x dx = δ f (g (f1 x)) (δ g (f1 x) (δ f1 x dx)) := by simp; done
-  example : δ (λ (x : X) => F x (g x)) x dx = δ F x dx (g x) + δ (F x) (g x) (δ g x dx) := by simp;  done
-  example : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx (g x) + δ (F x) (g x) (δ g x dx)) := by simp; done
-  example (g dg) : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by simp; done
-  example (g dg) : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp; done 
+  example : δ (λ x => x) x dx = dx := by simp done
+  example : δ (λ x => f (g x)) x dx = δ f (g x) (δ g x dx) := by simp done
+  example : δ (λ x => f (g (f1 x))) x dx = δ f (g (f1 x)) (δ g (f1 x) (δ f1 x dx)) := by simp done
+  example : δ (λ (x : X) => F x (g x)) x dx = δ F x dx (g x) + δ (F x) (g x) (δ g x dx) := by simp  done
+  example : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx (g x) + δ (F x) (g x) (δ g x dx)) := by simp done
 
+  example g dg x : δ (λ (g : X → Y) => f (g x)) g dg = δ f (g x) (dg x) := by simp done
+  example g dg x : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by simp done
+  example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
+  example g dg x : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = δ F (g x) (dg x) y := by simp done
 
-  -- rw [differential_of_composition_2_1] done
-  -- theorem test7 (g dg) : δ (λ (g : X → X) (x : X) (y : Y) => F (g x) y) g dg x y = δ F (g x) (dg x) y := by simp; done
-
-  example (g dg) : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = 0 := by simp; admit
-  -- theorem test6 (g dg) : δ (λ (g : X → X) (x : X) => F x y) g dg x = 0 := by rw [differential_of_composition_2_1]; done
-
-
-
-  example : δ (λ x => x + x) x dx = dx + dx := by simp; done
-  example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr*r + r*dr + dr := by simp; done
-  example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = dr*r + r*dr + dr := by simp; done
-
-  instance : IsLin (λ u v : U => (u, v)_[SemiInner.domain]) := sorry
-  instance (d) : IsLin λ u : U => (u, v)_[d] := sorry
-  instance (d u) : IsLin (λ v : U => (u, v)_[d]) := sorry
-
-  
+  example : δ (λ x => x + x) x dx = dx + dx := by simp done
+  example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr*r + (r + 1)*dr := by simp done
+  example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + (r * r + 1) * dr := by simp done
 
   variable (u du u' : U) (v dv : V)
-  example : IsLin λ u : U => ⟨u,u'⟩ := by infer_instance
-  example : IsSmooth λ (u v : U) (d) => (u,v)_[d] := by infer_instance
-  example (u) : IsSmooth λ (v : U) (d) => (u,v)_[d] := by infer_instance
-  example : IsSmooth λ (u : U) (d) => (u,u)_[d] := by infer_instance
-  example : δ (λ u : U => ⟨u,u'⟩) u du = ⟨du,u'⟩ := by simp; done
-  set_option trace.Meta.Tactic.simp true
-  example : δ (λ u : U => ⟨u,u⟩) u du = ⟨u, du⟩ + ⟨du,u⟩ := by simp; done
-
+  example : δ (λ u : U => ⟨u,u'⟩) u du = ⟨du,u'⟩ := by simp done
+  example : δ (λ u : U => ⟨u, u⟩) u du = ⟨du, u⟩ + ⟨u, du⟩ := by simp done
+  example : δ (λ u : U => ⟨⟨u,u⟩*u, u⟩) u du = (⟨du,u⟩ + ⟨u,du⟩)*⟨u,u⟩ + ⟨u,u⟩*(⟨du,u⟩ + ⟨u,du⟩) := by simp done
 end Differential.Tests
 
