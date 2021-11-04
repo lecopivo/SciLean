@@ -1,4 +1,6 @@
-import SciLean.Prelude
+import SciLean.Operators
+
+namespace SciLean
 
 -- Think about `spec` as: if `h : spec a` then `a` satisfies the specification
 --

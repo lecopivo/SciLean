@@ -15,21 +15,16 @@ instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
 theorem differential_of_linear (f : X → Y) [IsLin f] (x dx : X)
         : δ f x dx = f dx := sorry
 
--- @[simp] 
--- theorem differential_of_uncurried_linear_1 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] 
---         (x dx : X) (y : Y)
---         : δ f x dx y = f dx 0 := sorry
+@[simp] 
+theorem differential_of_uncurried_linear_1 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] 
+        (x dx : X) (y : Y)
+        : δ f x dx y = f dx 0 := sorry
 
--- @[simp] 
--- theorem differential_of_uncurried_linear_2 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] 
---         (x : X) (y dy : Y)
---         : δ (f x) y dy = f 0 dy := sorry
+@[simp] 
+theorem differential_of_uncurried_linear_2 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] 
+        (x : X) (y dy : Y)
+        : δ (f x) y dy = f 0 dy := sorry
 
---- This should follow from something else I think
--- @[simp] 
--- theorem differential_of_uncurried_linear_3 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] 
---         (x dx: X) (y : Y)
---         : δ (λ x => f x y) x dx = f dx 0 := sorry
 
 @[simp] 
 theorem differential_of_id (x dx : X)
@@ -55,6 +50,11 @@ theorem differential_of_composition_2 (f : Y → Z) (g dg : α → Y) (a : α)
 @[simp] 
 theorem differential_of_composition_3 (f df : β → Z) (g : α → β) (a : α)
         : δ (λ (f : β → Z) (g : α → β) (a : α) => f (g a)) f df g a = df (g a) := by simp
+
+@[simp] 
+theorem differential_of_parm (f : X → β → Z) [IsSmooth f]
+        (x dx: X) (b : β)
+        : δ (λ x => f x b) x dx = δ f x dx b := sorry
 
 -- @[simp] 
 -- theorem differential_of_diag (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]

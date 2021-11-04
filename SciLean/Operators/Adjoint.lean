@@ -4,15 +4,15 @@ import Init.Classical
 
 namespace SciLean
 
-variable {X Y : Type} [Hilbert X] [Hilbert Y] 
+variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 
 def adjoint_definition (f : X → Y) (h : IsLin f) (y : Y) 
     : ∃ (x' : X), ∀ x, ⟨x', x⟩ = ⟨y, (f x)⟩ := sorry
 
-noncomputable 
-def adjoint (f : X → Y) (y : Y) : X := 
+noncomputable
+def adjoint (f : X → Y) (y : Y) : X :=
     match Classical.propDecidable (IsLin f) with
-      | isTrue  h =>  Classical.choose (adjoint_definition f h y)
+      | isTrue  h => Classical.choose (adjoint_definition f h y)
       | _ => (0 : X)
 
 postfix:max "†" => adjoint
@@ -20,8 +20,6 @@ postfix:max "†" => adjoint
 namespace Adjoint
 
   instance (f : X → Y) [IsLin f] : IsLin f† := sorry
-
-  variable {Z : Type} [Hilbert Z]
 
   @[simp]
   def adjoint_of_adjoint (f : X → Y) [IsLin f] : f†† = f := sorry

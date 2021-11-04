@@ -1,19 +1,21 @@
-import SciLean.Prelude
-
-import SciLean.Linear
-import SciLean.Smooth
-import SciLean.Invert
-
+import SciLean.Categories
+import SciLean.Operators
 import SciLean.Solver
-import SciLean.Tactic
 
-import SciLean.Data
+-- import SciLean.Linear
+-- import SciLean.Smooth
+-- import SciLean.Invert
 
-import SciLean.Simp
+-- import SciLean.Solver
+-- import SciLean.Tactic
 
-import SciLean.ODE.Basic
+-- import SciLean.Data
 
-import SciLean.Math.Basic
+-- import SciLean.Simp
+
+-- import SciLean.ODE.Basic
+
+-- import SciLean.Math.Basic
 
 -- def sum {n α} [Zero α] [Add α] (f : Fin n → α) : α := do
 --   let mut r := zero 

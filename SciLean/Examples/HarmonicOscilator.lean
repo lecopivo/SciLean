@@ -1,24 +1,41 @@
 import SciLean.Basic
 import SciLean.Mechanics
 
-set_option synthInstance.maxHeartbeats 5000
-set_option synthInstance.maxSize 1000
+namespace SciLean
+
+-- set_option synthInstance.maxHeartbeats 5000
+-- set_option synthInstance.maxSize 1000
 
 abbrev V := ℝ × ℝ
 
 def H (m k : ℝ) (x p : V) := 1/(2*m) * ⟨p,p⟩ + k/2 * ⟨x, x⟩
 
--- def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k))) :=
--- by
---   impl_check (m.toFloat>0) "Mass has to be non zero."
-    
---   simp [HamiltonianSystem, uncurry, H, gradient];
---   autograd
+set_option trace.Meta.Tactic.simp true
 
---   rw [ode_solve_fixed_dt runge_kutta4_step]
---   lift_limit steps "Number of ODE solver steps."; admit; simp
+def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k))) :=
+by
+  simp [HamiltonianSystem, H];
   
---   finish_impl
+  conv in (∇ _) =>
+    simp[gradient]
+    conv  =>
+      pattern (δ _)
+      enter [x,dx]
+      simp 
+
+  
+  admit
+
+
+  -- impl_check (m.toFloat>0) "Mass has to be non zero."
+  
+  -- simp [HamiltonianSystem, uncurry, H, gradient];
+  -- autograd
+
+  -- rw [ode_solve_fixed_dt runge_kutta4_step]
+  -- lift_limit steps "Number of ODE solver steps."; admit; simp
+  
+  -- finish_impl
 
 -- def harmonic_oscillator_main : IO Unit := do
 

@@ -16,6 +16,9 @@ def eval {α} {β : α → Sort v} : (a : α) → ((a' : α) → (β a')) → (�
 def const : α → β → α := λ a b => a
 
 @[reducible]
+def swap : (α → β → γ) → (β → α → γ) := λ f b a => f a b
+
+@[reducible]
 def comp : (β → γ) → (α → β) → (α → γ) := λ f g a => f (g a)
 
 @[reducible]

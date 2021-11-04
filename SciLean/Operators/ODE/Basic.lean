@@ -1,5 +1,13 @@
-import SciLean.Categories
-import SciLean.Operators
+import SciLean.Operators.Calculus
+import SciLean.Operators.Limit
+
+namespace SciLean
+
+def ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X := sorry
+
+-- @[simp] axiom ode_solve.definition {X} [Vec X] (f : X → X) (t dt : ℝ) (x₀ : X) [IsCont f] : δ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
+
+
 
 variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 
@@ -11,10 +19,8 @@ do
     x := (stepper Δt f) x
   x
 
-
 --- This requires some conditions on the function ... or just add the conclusion as an assumption
-def ode_solve_fixed_dt (stepper : ℝ → (X → X) → (X → X)) : ode_solve =  limit (λ n => ode_solve_fixed_dt_impl n stepper) := sorry
-
+def ode_solve_fixed_dt (stepper : ℝ → (X → X) → (X → X)) : ode_solve = limit (λ n => ode_solve_fixed_dt_impl n stepper) := sorry
 
 --  ___ _
 -- / __| |_ ___ _ __ _ __  ___ _ _ ___

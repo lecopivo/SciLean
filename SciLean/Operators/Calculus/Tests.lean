@@ -6,6 +6,7 @@ namespace Differential.Tests
 
   variable {α β γ : Type}
   variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
+  variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
   variable (f : Y → Z) [IsSmooth f]
   variable (g : X → Y) [IsSmooth g]
@@ -34,7 +35,27 @@ namespace Differential.Tests
 
   example (g dg) : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = 0 := by simp; admit
   -- theorem test6 (g dg) : δ (λ (g : X → X) (x : X) => F x y) g dg x = 0 := by rw [differential_of_composition_2_1]; done
+
+
+
+  example : δ (λ x => x + x) x dx = dx + dx := by simp; done
+  example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr*r + r*dr + dr := by simp; done
+  example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = dr*r + r*dr + dr := by simp; done
+
+  instance : IsLin (λ u v : U => (u, v)_[SemiInner.domain]) := sorry
+  instance (d) : IsLin λ u : U => (u, v)_[d] := sorry
+  instance (d u) : IsLin (λ v : U => (u, v)_[d]) := sorry
+
   
+
+  variable (u du u' : U) (v dv : V)
+  example : IsLin λ u : U => ⟨u,u'⟩ := by infer_instance
+  example : IsSmooth λ (u v : U) (d) => (u,v)_[d] := by infer_instance
+  example (u) : IsSmooth λ (v : U) (d) => (u,v)_[d] := by infer_instance
+  example : IsSmooth λ (u : U) (d) => (u,u)_[d] := by infer_instance
+  example : δ (λ u : U => ⟨u,u'⟩) u du = ⟨du,u'⟩ := by simp; done
+  set_option trace.Meta.Tactic.simp true
+  example : δ (λ u : U => ⟨u,u⟩) u du = ⟨u, du⟩ + ⟨du,u⟩ := by simp; done
 
 end Differential.Tests
 

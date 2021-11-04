@@ -17,7 +17,7 @@ theorem backprop_of_linear
         : 𝓑 f x = (f x, f†) := 
 by 
   simp[backprop]; conv in (δ _ _) => enter [dx]
-  done
+  simp; done
 
 -- @[simp]
 -- theorem backprop_of_uncurried_linear_1 (f : U → V → W) [IsLin (λ xy : U×V => f xy.1 xy.2)]
@@ -43,7 +43,7 @@ theorem backprop_of_composition_1 (f : V → W) [IsSmooth f] (g : U → V) [IsSm
     : 𝓑 (λ x => f (g x)) = (λ x => (𝓑 f • 𝓑 g) x) := 
 by
   funext x; simp[backprop, Function.comp, backcomp]; conv in (δ _ _) => enter [dx]
-  done
+  simp; done
 
 -- -- TODO: Change IsSmooth to IsDiff
 @[simp] 

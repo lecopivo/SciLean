@@ -268,6 +268,13 @@
    - [[http://www.jasonmorton.com/][Jason Morton]]
    - [[https://www.ben-sherman.net/][Ben Sherman]] - author of λₛ
 
+
+   - Contact Mike Izbicki - he wants to do what I want to do
+     see https://www.reddit.com/r/haskell/comments/cfjmya/noob_questionootl_what_happened_to_subhask/euax5dr/
+   - contact Justus Sagemüller - he might be interested too
+     https://github.com/leftaroundabout
+   - contact Philip Zucker - he might be interested too
+     http://www.philipzucker.com/about/
 *** others
 
     - [[https://www.linkedin.com/in/david-sankel-94059841][David Sankel]] 
