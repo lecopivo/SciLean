@@ -33,6 +33,15 @@ theorem differential_of_id (x dx : X)
 theorem differential_of_id'  (x dx : X)
         : δ (id) x dx = dx := by simp[id]
 
+@[simp] 
+theorem differential_of_constant (y x dx : X)
+        : δ (λ x => y) x dx = 0 := sorry
+
+-- For some reason this theorem is usefull even though it is already solvable by simp
+@[simp]
+theorem differential_of_parm (f : X → β → Y) [IsSmooth f] (x dx)
+        : δ (λ x => f x b) x dx = δ f x dx b := sorry
+
 -- TODO: Change IsSmooth to IsDiff
 @[simp] 
 theorem differential_of_composition_1 (f : Y → Z) (g : X → Y) (x dx : X)
@@ -53,7 +62,7 @@ theorem differential_of_composition_3 (f df : β → Z) (g : α → β) (a : α)
 -- can have weaker assumption, [IsSmooth (λ y => f y b)]
 @[simp]
 theorem differential_of_composition_fix_parm_1 (f : Y → β → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] (x dx b) 
-        : δ (λ x => f (g x) b) x dx = δ f (g x) (δ g x dx) b := sorry
+        : δ (λ x => f (g x) b) x dx = δ f (g x) (δ g x dx) b := by simp
 
 @[simp]
 theorem differential_of_composition_fix_parm_2 (f : Y → β → Z) [IsSmooth f] (a b) (g dg : α → Y)
@@ -84,11 +93,3 @@ theorem differential_of_diag_3 (f : β1 → Y2 → Z) (g1 : α → β1)
         [∀ y1, IsSmooth (f y1)] 
         (g dg a)
         : δ (λ (g2 : α → Y2) a => f (g1 a) (g2 a)) g dg a = δ (f (g1 a)) (g a) (dg a) := sorry
-
--- For some reason this theorem is usefull even though it is already solvable by simp
-@[simp]
-theorem differential_of_parm (f : X → β → Y) [IsSmooth f] (x dx)
-        : δ (λ x => f x b) x dx = δ f x dx b := by simp; done
-
-
-

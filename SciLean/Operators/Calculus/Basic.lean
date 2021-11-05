@@ -39,18 +39,17 @@ def gradient (f : U → ℝ) : U → U := λ x => (δ f x)† 1
 prefix:max "∇" => gradient
 
 
------------------
--- Tangent Map --
------------------
+------------------
+-- Forward mode --
+------------------
 noncomputable 
 def tangent_map (f : X → Y) : X×X → Y×Y := λ (x,dx) => (f x, δ f x dx)
 
 prefix:max "𝓣" => tangent_map
 
-
------------------
--- Tangent Map --
------------------
+------------------
+-- Reverse Mode --
+------------------
 noncomputable 
 def backprop (f : U → V) : U → V×(V→U) := λ x => (f x, (δ f x)†)
 
@@ -69,3 +68,8 @@ infixr:90 " • "  => backcomp
 --- Maybe add other operators based on: 
 --- "The simple essence of automatic differentiation" 
 --- https://arxiv.org/abs/1804.00746
+
+noncomputable 
+def tangent_map_2 (f : X → Y) : X×X×X → Y×Y×Y := λ (x,dx,ddx) => (f x, δ f x dx, δ (δ f) x dx dx)
+
+prefix:max "𝓓" => tangent_map_2

@@ -52,7 +52,7 @@ by
 theorem tangent_map_of_composition_1 (f : Y → Z) [IsSmooth f] (g : X → Y) [IsSmooth g]
     : 𝓣 (λ x => f (g x)) = (λ xdx => 𝓣 f (𝓣 g xdx)) := 
 by
-  funext xdx; induction xdx; simp[tangent_map]; done
+  funext (x,dx); simp[tangent_map]; done
 
 -- TODO: Change IsSmooth to IsDiff
 @[simp] 
@@ -60,7 +60,6 @@ theorem tangent_map_of_composition_1_alt (f : Y → Z) [IsSmooth f] (g : X → Y
     : 𝓣 (f ∘ g) = (𝓣 f ∘ 𝓣 g) := 
 by
   funext xdx; induction xdx; simp[tangent_map, Function.comp]; done
-
 
 -- TODO: Change IsSmooth to IsDiff
 -- TODO: Isn't there a better form of this?

@@ -33,6 +33,7 @@ namespace Differential.Tests
   example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
   example g dg x : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = δ F (g x) (dg x) y := by simp done
 
+  example (y x dx : X) : δ (λ x : X => y) x dx = 0 := by simp done
   example : δ (λ x => x + x) x dx = dx + dx := by simp done
   example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr*r + (r + 1)*dr := by simp done
   example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + (r * r + 1) * dr := by simp done
@@ -41,5 +42,6 @@ namespace Differential.Tests
   example : δ (λ u : U => ⟨u,u'⟩) u du = ⟨du,u'⟩ := by simp done
   example : δ (λ u : U => ⟨u, u⟩) u du = ⟨du, u⟩ + ⟨u, du⟩ := by simp done
   example : δ (λ u : U => ⟨⟨u,u⟩*u, u⟩) u du = (⟨du,u⟩ + ⟨u,du⟩)*⟨u,u⟩ + ⟨u,u⟩*(⟨du,u⟩ + ⟨u,du⟩) := by simp done
+  example (v : U) (m k : ℝ) : δ (λ u : U => (1/(2*m))*⟨u,u⟩ + (k/2)*⟨v,v⟩) u du = (1/(2*m))*(⟨du,u⟩ + ⟨u,du⟩) := by simp done
 end Differential.Tests
 

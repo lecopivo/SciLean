@@ -17,7 +17,7 @@ def adjoint (f : X → Y) (y : Y) : X :=
 
 postfix:max "†" => adjoint
 
-namespace Adjoint
+-- namespace Adjoint
 
   instance (f : X → Y) [IsLin f] : IsLin f† := sorry
 
@@ -44,6 +44,12 @@ namespace Adjoint
   def adjoint_of_composition (f : Y → Z) [IsLin f] (g : X → Y) [IsLin g] 
       : (f∘g)† = g† ∘ f† := sorry
 
+  @[simp]
+  def adjoint_of_inner_1 (x : X) (s : ℝ) : (λ y : X => ⟨y, x⟩)† s = s * x := sorry
+
+  @[simp]
+  def adjoint_of_inner_2 (x : X) (s : ℝ) : (λ y : X => ⟨x, y⟩)† s = s * x := sorry
+
   variable (f g : X → Y) 
   variable (r : ℝ)
 
@@ -51,12 +57,69 @@ namespace Adjoint
   def adjoint_of_add [IsLin f] [IsLin g] : (f + g)† = f† + g† := sorry
 
   @[simp]
-  def adjoint_of_sub [IsLin f] [IsLin g] : (f - g)† = f† - g† := sorry
+  def adjoint_of_add_alt [IsLin f] [IsLin g] : (λ x => f x + g x)† = (λ y => f† y + g† y) := sorry
 
   @[simp]
-  def adjoint_of_hmul [IsLin f] : (r*f)† = r*f† := sorry
+  def adjoint_of_sub [IsLin f] [IsLin g] : (f - g)† = f† - g† := sorry
+
+  -- @[simp]
+  -- def adjoint_of_hmul [IsLin f] : (r*f)† = r*f† := sorry
+
+  @[simp]
+  def adjoint_of_hmul : (HMul.hMul r : X → X)† = HMul.hMul r := sorry
+
+
+  @[simp]
+  def adjoint_of_hmul_alt (f : X → Y) [IsLin f] (r : ℝ) : (λ x => r*(f x))† = (λ y => r*(f† y)) := sorry
 
   @[simp]
   def adjoint_of_neg [IsLin f] : (-f)† = -f† := sorry
 
-end Adjoint
+
+  example [IsLin f] [IsLin g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp
+
+  example (y : Y) (r : ℝ) : (λ x => ⟨x,y⟩)† r = r*y := by simp
+
+  -- example (y : X) (r : ℝ)  : (λ x => ⟨x,y⟩ + ⟨y,x⟩)† r = 2*r*y := by simp; done
+
+  -- example (r : ℝ) (f : X → Y) [IsLin f] 
+  --         : (λ x : X => r*(f x))† = λ y => r*(f† y) := 
+  -- by
+  --   simp
+  --   funext y
+  --   simp[Function.comp]
+  --   done
+
+  -- example (r : ℝ) (f : α → X → X → Unit → Y) (a : α) [IsLin (f a)] [∀ x, IsLin (f a x)] (x' : X) 
+  --         : (λ x : X => r*(f a x' x () + f a x x' ()))† = 0 := 
+  -- by
+  --   simp
+
+  -- example (r : ℝ) (x' : X)
+  --         : (λ x : X => r*((λ x'' => ⟨x', x''⟩) x))† = 0 := 
+  -- by
+  --   simp
+
+
+  -- example (r : ℝ) : IsLin (HMul.hMul r : ℝ → ℝ) := by infer_instance
+
+  -- set_option trace.Meta.Tactic.simp true
+  -- set_option trace.Meta.synthInstance true
+  -- -- set_option trace.Meta.isDefEq true
+
+  -- example (r : ℝ) (x' : X)
+  --         : ((HMul.hMul r : ℝ → ℝ) ∘ (λ x => ⟨x', x⟩))† = 0 := 
+  -- by
+  --   simp
+
+  --   done
+
+
+  --   conv in (adjoint _) =>
+  --     -- rw [adjoint_of_hmul_alt];
+  --     enter [1,x,2]
+      
+  --     done
+
+
+-- end Adjoint

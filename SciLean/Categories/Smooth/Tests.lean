@@ -1,4 +1,4 @@
-import SciLean.Categories.Smooth
+import SciLean.Basic
 
 set_option synthInstance.maxHeartbeats 5000
 set_option synthInstance.maxSize 1000
@@ -140,5 +140,8 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 example : IsSmooth λ (u v : U) (d) => (u,v)_[d] := by infer_instance
 example (u) : IsSmooth λ (v : U) (d) => (u,v)_[d] := by infer_instance
 example : IsSmooth λ (u : U) (d) => (u,u)_[d] := by infer_instance
+example : IsSmooth λ (u : U) => SemiInner.semi_inner u u := by infer_instance
+-- why is this failing?
+-- example : IsSmooth λ (u : ℝ × ℝ) => SemiInner.semi_inner u u := by infer_instance
 
-end hilbert 
+end hilbert                    

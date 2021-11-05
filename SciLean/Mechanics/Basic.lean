@@ -3,7 +3,6 @@ import SciLean.Operators
 namespace SciLean
 
 noncomputable
-
 def HamiltonianSystem {V} [Hilbert V] (H : V → V → ℝ) : V×V → V×V := 
   uncurry $
   λ x p : V =>

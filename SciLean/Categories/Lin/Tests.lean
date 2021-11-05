@@ -66,4 +66,15 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 example (d) : IsLin λ (u v : U) => (u, v)_[d] := by infer_instance
 example : IsLin λ u : U => ⟨u,u'⟩ := by infer_instance
 
+
+-- example (v : ℝ×ℝ) : IsLin (λ u : ℝ×ℝ => ⟨u, v⟩) := by infer_instance
+
+-- set_option trace.Meta.synthInstance.tryResolve false
+-- set_option trace.Meta.synthInstance.generate false
+example : SemiInner ℝ := by infer_instance
+example : Hilbert ℝ := by infer_instance
+example : IsLin (SemiInner.semi_inner : U → U → _ → ℝ) := by infer_instance
+example : IsLin (SemiInner.semi_inner : ℝ → ℝ → _ → ℝ) := by infer_instance
+example : IsLin (SemiInner.semi_inner : ℝ×ℝ → ℝ×ℝ → _ → ℝ) := by infer_instance
+
 end hilbert 

@@ -19,7 +19,7 @@ instance {X} [SemiInner X] : Inhabited (SemiInner.integrable_domain X) := ⟨Sem
 -- abbrev IntDom (X : Type u) [SemiInner X] := SemiInner.integrable_domain X
 
 -- class LocInt {X : Type u} [SemiInner X] (x : X) : Prop where
---   proof : SemiInner.loc_integrable x
+--   proof : SemiInner.loc_integrable x 
 
 -- class TestFun {X : Type u} [SemiInner X] (i : IntDom X) (x : X) : Prop where
 --   proof : SemiInner.test_function i x
@@ -103,7 +103,7 @@ end SemiInner
 -- |___/\___|_|_|_|_| |_||_|_|_|_.__/\___|_|  \__| |___/ .__/\__,_\__\___|
 --                                                     |_|
 
-class SemiHilbert (X : Type u) extends SemiInner X, Vec X where
+class SemiHilbert (X : Type u)  extends SemiInner X, Vec X where
   semi_inner_add : ∀ (x y z : X) D, (x + y, z)_[D] = (x,z)_[D] + (y,z)_[D]
   semi_inner_mul : ∀ (x y : X) (r : ℝ) D, (r*x,y)_[D] = r*(x,y)_[D]
   semi_inner_sym : ∀ (x y : X) D, (x,y)_[D] = (y,x)_[D]
@@ -114,11 +114,50 @@ class SemiHilbert (X : Type u) extends SemiInner X, Vec X where
 
 namespace SemiHilbert 
 
-  instance : SemiHilbert ℝ := sorry
-  instance : SemiHilbert PUnit := sorry
-  instance (X : Type u) (Y : Type v) [SemiHilbert X] [SemiHilbert Y] : SemiHilbert (X × Y) := sorry
-  instance (X : Type u) [SemiHilbert X] : SemiHilbert (Nat → X) := sorry
-  instance {n} (X : Type u) [SemiHilbert X] : SemiHilbert (Fin n → X) := sorry
+  instance : SemiHilbert ℝ := 
+  {
+    semi_inner_add := sorry
+    semi_inner_mul := sorry
+    semi_inner_sym := sorry
+    semi_inner_pos := sorry
+    semi_inner_ext := sorry
+  }
+  instance : SemiHilbert PUnit := 
+  {
+    semi_inner_add := sorry
+    semi_inner_mul := sorry
+    semi_inner_sym := sorry
+    semi_inner_pos := sorry
+    semi_inner_ext := sorry
+  }
+
+  instance (X : Type u) (Y : Type v) [SemiHilbert X] [SemiHilbert Y] : SemiHilbert (X × Y) := 
+  {
+    semi_inner_add := sorry
+    semi_inner_mul := sorry
+    semi_inner_sym := sorry
+    semi_inner_pos := sorry
+    semi_inner_ext := sorry
+  }
+
+  instance (X : Type u) [SemiHilbert X] : SemiHilbert (Nat → X) := 
+  {
+    semi_inner_add := sorry
+    semi_inner_mul := sorry
+    semi_inner_sym := sorry
+    semi_inner_pos := sorry
+    semi_inner_ext := sorry
+  }
+
+  instance {n} (X : Type u) [SemiHilbert X] : SemiHilbert (Fin n → X) := 
+  {
+    semi_inner_add := sorry
+    semi_inner_mul := sorry
+    semi_inner_sym := sorry
+    semi_inner_pos := sorry
+    semi_inner_ext := sorry
+  }
+
 
 end SemiHilbert 
 
@@ -148,10 +187,29 @@ end Hilbert
 
 namespace Hilbert
 
-  instance : Hilbert ℝ := sorry
-  instance : Hilbert PUnit := sorry
-  instance (X : Type u) (Y : Type v) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) := sorry
-  instance {n} (X : Type u) [Hilbert X] : Hilbert (Fin n → X) := sorry
+  instance : Hilbert ℝ := 
+  {
+    domain_unique := sorry
+    all_test_fun := sorry
+  }
+  instance : Hilbert PUnit :=
+  {
+    domain_unique := sorry
+    all_test_fun := sorry
+  }
+
+  instance (X : Type u) (Y : Type v) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) :=
+  {
+    domain_unique := sorry
+    all_test_fun := sorry
+  }
+
+  instance {n} (X : Type u) [Hilbert X] : Hilbert (Fin n → X) :=
+  {
+    domain_unique := sorry
+    all_test_fun := sorry
+  }
+
 
   -- instance : Inner ℝ := ⟨λ x y => x*y⟩
   -- instance : Hilbert ℝ := 

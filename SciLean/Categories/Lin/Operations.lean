@@ -11,9 +11,13 @@ instance : IsLin (λ x : X×X => x.1+x.2) := sorry
 instance : IsLin (λ x : X×X => Add.add x.1 x.2) := sorry
 instance : IsLin (λ x : X×X => x.1-x.2) := sorry
 instance : IsLin (λ x : X×X => Sub.sub x.1 x.2) := sorry
-instance : IsLin (λ (r : ℝ) (x : X) => r*x) := sorry
-instance (r : ℝ) : IsLin (λ (x : X) => r*x) := sorry
+
+-- instance : IsLin (λ (r : ℝ) (x : X) => r*x) := sorry
+-- instance (r : ℝ) : IsLin (λ (x : X) => r*x) := sorry
+instance : IsLin (HMul.hMul : ℝ → X → X) := sorry
+instance (r : ℝ) : IsLin (HMul.hMul r : X → X) := sorry
+
 instance : IsLin (λ x : X => -x) := sorry
 
-instance : IsLin (λ u : U => SemiInner.semi_inner u) := sorry
-instance (u) : IsLin (λ v : U => SemiInner.semi_inner u v) := sorry
+instance : IsLin (SemiInner.semi_inner : U → U → _ → ℝ) := sorry
+instance (u : U) : IsLin (SemiInner.semi_inner u) := sorry
