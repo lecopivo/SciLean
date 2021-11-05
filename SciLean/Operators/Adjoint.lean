@@ -1,4 +1,5 @@
 import SciLean.Categories.Lin
+import SciLean.Simp
 
 import Init.Classical
 
@@ -17,7 +18,7 @@ def adjoint (f : X → Y) (y : Y) : X :=
 
 postfix:max "†" => adjoint
 
--- namespace Adjoint
+namespace Adjoint
 
   instance (f : X → Y) [IsLin f] : IsLin f† := sorry
 
@@ -80,46 +81,14 @@ postfix:max "†" => adjoint
 
   example (y : Y) (r : ℝ) : (λ x => ⟨x,y⟩)† r = r*y := by simp
 
-  -- example (y : X) (r : ℝ)  : (λ x => ⟨x,y⟩ + ⟨y,x⟩)† r = 2*r*y := by simp; done
+  example (y : X) (r : ℝ) : (λ x => ⟨x,y⟩ + ⟨y,x⟩)† r = 2*r*y := by simp; done
 
-  -- example (r : ℝ) (f : X → Y) [IsLin f] 
-  --         : (λ x : X => r*(f x))† = λ y => r*(f† y) := 
-  -- by
-  --   simp
-  --   funext y
-  --   simp[Function.comp]
-  --   done
-
-  -- example (r : ℝ) (f : α → X → X → Unit → Y) (a : α) [IsLin (f a)] [∀ x, IsLin (f a x)] (x' : X) 
-  --         : (λ x : X => r*(f a x' x () + f a x x' ()))† = 0 := 
-  -- by
-  --   simp
-
-  -- example (r : ℝ) (x' : X)
-  --         : (λ x : X => r*((λ x'' => ⟨x', x''⟩) x))† = 0 := 
-  -- by
-  --   simp
+  example (r : ℝ) (x' : X)
+          : (λ x : X => r*((λ x'' => ⟨x', x''⟩) x))† = λ s => r * s * x' := 
+  by
+    simp; funext s; simp[Function.comp]
 
 
-  -- example (r : ℝ) : IsLin (HMul.hMul r : ℝ → ℝ) := by infer_instance
 
-  -- set_option trace.Meta.Tactic.simp true
-  -- set_option trace.Meta.synthInstance true
-  -- -- set_option trace.Meta.isDefEq true
+end Adjoint
 
-  -- example (r : ℝ) (x' : X)
-  --         : ((HMul.hMul r : ℝ → ℝ) ∘ (λ x => ⟨x', x⟩))† = 0 := 
-  -- by
-  --   simp
-
-  --   done
-
-
-  --   conv in (adjoint _) =>
-  --     -- rw [adjoint_of_hmul_alt];
-  --     enter [1,x,2]
-      
-  --     done
-
-
--- end Adjoint
