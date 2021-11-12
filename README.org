@@ -1,15 +1,31 @@
+
 * SciLean: Scientific computing assistant
 
-  Framework for scientific computing such as solving differential equations, optimization or machine learning written in proof assistant [[http://leanprover.github.io/][Lean]]. Using a proof assistant allows us formalize underlining mathematics and benefits of doing so are:
+  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. It is a functional programming language that can also formalize mathematics and we believe that this can offer us number of key benefits:
 
-    - code transformation such as automatic differentiation or inversion
-    - high code re-usability by abstracting over the core mathematics
-    - high level control of limiting processes like discretization resolution or number of optimization steps
-    - optimizations based on the underlining mathematics
+    - Code transformation and optimization guided by formalization of underlining mathematics, like automatic differentiation or execution scheduling.
+    - Split of *what* to compute and *how* to compute. Allowing to focus on optimisations after the program is already working as intended.
+    - Embracing non-computabke nature of certain functions. Functions like integral or limit are inherently non-computabke, allowing to work with these can help us to easily express 'what' are we computing before we decide 'how'.
+    - High level control over  approximations. Numerical algorithms usually compute desired answer only to a certain degree of precision. We provide set of high level tools to work with programs that only approximate non-computabke functions.
+    - Catalogization of numerical methods. Lean programing language is mainly used as a theorem prover and a huge efforts has been made to formalize basic mathematics.
 
   Lean on its own is already very fast functional language, but it can also easily use external C implementation of certain functions allowing for example fast operations on tensors.
 
   Note: Even though we are using a proof assistant, our main goal is not to build bug free, provably correct software. Our focus are those bullets stated above and we do not shy from slightly breaking the rules of the formal system to build executable code. To be more explicit, and example of this is floating point arithmetic. Proving anything about it extremely hard, being strict about it we would not be able to build anything meaningful. Thus any formal guaranties of our framework hold for an idealized machine capable of computation with real numbers.
+
+*** Inspiration comes mainly from these languages
+
+**** Mathematica
+     Mathematica that at its hearth is a symbolic system with set of rewrite rules. Or system, because it formalizes mathematics, allows us to work also with symbolic representations of program but those rewrite rules can be conditioned on mathematical properties of those expressions involved
+
+**** Halide
+     Halide is a DSL language for computations over tensors, it popularized the split of what and how method. However, it is restricted to tensors, we aim to be data agnostic on the highest level and work with vector spaces or another algebraic data structures. Of course, specialized techniques for tensors, graphs or sparse voxel grids will be hopefully embedded inside of our framework at some point
+
+**** Julia
+     Julia is a promising new language for numerical computing. That unfortunately still lags behind the popularity of Python, but one of the big success of Julia is its meta programming ability, that provides unparalleled opportunity for code optimizations, like directly writing GPU kernels inside of Julia. We are using Lean, that is also its own meta language but we believe that the ability of formalizing mathematics will allow us guide write optimization automation beyond what is possible in Julia.
+
+**** Python
+     ... some maybe not so nice words about Python ...
 
 ** Long Term Goal
 
