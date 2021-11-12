@@ -1,5 +1,6 @@
 import SciLean.Categories
 import SciLean.Operators
+import SciLean.Data
 import SciLean.Simp
 import SciLean.Solver
 

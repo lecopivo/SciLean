@@ -1,10 +1,11 @@
-import SciLean.Prelude
+import SciLean.Operators
 
--- @[reducible]
 def List.product {α} [Mul α] [Inhabited α] (l : List α) : α := 
   match l with
     | nil => arbitrary
     | head::tail => head * tail.product
+
+namespace SciLean
 
 structure NDVector (dims : List Nat) where
   (data : FloatArray)
@@ -95,20 +96,27 @@ namespace NDVector
       zero_add := sorry
     }
 
-    instance : Inner (NDVector dims) := 
-      ⟨λ u v =>
-        do
-          let mut r : ℝ := 0
-          for i in [0:u.size] do
-            r := r + (u.lget! i) * (v.lget! i)
-          r⟩
+    instance : SemiInner (NDVector dims) := 
+    {
+      integrable_domain := Unit
+      domain := ()
+      semi_inner := λ u v _ => ∑ i, u[i] * v[i]
+      test_function := λ _ u => True
+    }
+
+    instance : SemiHilbert (NDVector dims) := 
+    {
+      semi_inner_sym := sorry,
+      semi_inner_pos := sorry,
+      semi_inner_add := sorry,
+      semi_inner_mul := sorry
+      semi_inner_ext := sorry
+    }
 
     instance : Hilbert (NDVector dims) := 
     {
-      inner_sym := sorry,
-      inner_pos := sorry,
-      inner_add := sorry,
-      inner_mul := sorry
+      domain_unique := sorry
+      all_test_fun := sorry
     }
 
   end VectorSpace
@@ -117,17 +125,17 @@ namespace NDVector
   section FunctionProperties
 
     -- Linear Get
-    instance : IsLin (lget! : NDVector dims → Nat → ℝ) := sorry
-    instance : IsLin (lget : NDVector dims → Fin dims.product → ℝ) := sorry
+    instance : IsLin (lget! : NDVector dims → _ → ℝ) := sorry
+    instance : IsLin (lget : NDVector dims → _ → ℝ) := sorry
 
-    @[simp] def lget_adjoint : adjoint (lget : NDVector dims → Fin dims.product → ℝ) = lmk := sorry
+    @[simp] def lget_adjoint : adjoint (lget : NDVector dims → _ → ℝ) = lmk := sorry
 
-    -- Linear Set
-    instance : IsDiff (lset! : NDVector dims → Nat → ℝ → NDVector dims) := sorry
-    instance (v : NDVector dims) (i : Nat) : IsDiff (lset! v i : ℝ → NDVector dims) := sorry
+    -- Linear Set - it is only affine and not liean as lget
+    instance : IsSmooth (lset! : NDVector dims → Nat → ℝ → NDVector dims) := sorry
+    instance (v : NDVector dims) (i : Nat) : IsSmooth (lset! v i : ℝ → NDVector dims) := sorry
 
-    instance : IsDiff (lset : NDVector dims → Fin dims.product → ℝ → NDVector dims) := sorry
-    instance (v : NDVector dims) (i : Fin dims.product) : IsDiff (lset v i : ℝ → NDVector dims) := sorry
+    instance : IsSmooth (lset : NDVector dims → Fin dims.product → ℝ → NDVector dims) := sorry
+    instance (v : NDVector dims) (i : Fin dims.product) : IsSmooth (lset v i : ℝ → NDVector dims) := sorry
   
     @[simp]
     def lset!_differential_1 (v dv : NDVector dims) (i : Nat) (x : ℝ) : δ lset! v dv i x = lset! dv i 0 := sorry
@@ -143,32 +151,32 @@ namespace NDVector
 
     -- Map
     instance : IsLin (map : (ℝ → ℝ) → NDVector dims → NDVector dims) := sorry
-    instance (f : ℝ → ℝ) [IsDiff f] : IsDiff (map f : NDVector dims → NDVector dims) := sorry
+    instance (f : ℝ → ℝ) [IsSmooth f] : IsSmooth (map f : NDVector dims → NDVector dims) := sorry
 
     @[simp]
-    def map_differential_2 (f : ℝ → ℝ) [IsDiff f] (v dv : NDVector dims) : δ (map f) v dv = map₂ (δ f) v dv := sorry
+    def map_differential_2 (f : ℝ → ℝ) [IsSmooth f] (v dv : NDVector dims) : δ (map f) v dv = map₂ (δ f) v dv := sorry
 
     -- Map₂
     instance : IsLin (map₂ : (ℝ → ℝ → ℝ) → NDVector dims → NDVector dims → NDVector dims) := sorry
-    instance (f : ℝ → ℝ → ℝ) [IsDiff f] : IsDiff (map₂ f : NDVector dims → NDVector dims → NDVector dims) := sorry
-    instance (f : ℝ → ℝ → ℝ) [∀ x, IsDiff (f x)] : IsDiff (map₂ f u : NDVector dims → NDVector dims) := sorry
+    instance (f : ℝ → ℝ → ℝ) [IsSmooth f] : IsSmooth (map₂ f : NDVector dims → NDVector dims → NDVector dims) := sorry
+    instance (f : ℝ → ℝ → ℝ) [∀ x, IsSmooth (f x)] : IsSmooth (map₂ f u : NDVector dims → NDVector dims) := sorry
       
     @[simp] 
-    def map2_differential_2 (f : ℝ → ℝ → ℝ) (u du v : NDVector dims) [IsDiff f] 
+    def map2_differential_2 (f : ℝ → ℝ → ℝ) (u du v : NDVector dims) [IsSmooth f] 
       : δ (map₂ f) u du v = mapIdx (λ i ui => δ f ui (du.lget! i) (v.lget! i)) u := sorry
 
     @[simp] 
-    def map2_differential_3 (f : ℝ → ℝ → ℝ) (u v dv : NDVector dims) [∀ x, IsDiff (f x)] 
+    def map2_differential_3 (f : ℝ → ℝ → ℝ) (u v dv : NDVector dims) [∀ x, IsSmooth (f x)] 
       : δ (map₂ f) u v dv = mapIdx (λ i vi => δ (f (u.lget! i)) vi (dv.lget! i)) v := sorry
     
     -- FoldlIdx
     -- once morphisms are in place
-    -- instance : IsDiff ((comp foldlIdx coe) : (Nat → ℝ ⟿ ℝ → ℝ) → NDVector dims → ℝ → ℝ) := sorry
-    instance (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] [∀ i y, IsDiff (f i y)] : IsDiff (foldlIdx f : NDVector dims → ℝ → ℝ) := sorry
-    instance (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] (v : NDVector dims) : IsDiff (foldlIdx f v : ℝ → ℝ) := sorry
+    -- instance : IsSmooth ((comp foldlIdx coe) : (Nat → ℝ ⟿ ℝ → ℝ) → NDVector dims → ℝ → ℝ) := sorry
+    instance (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] [∀ i y, IsSmooth (f i y)] : IsSmooth (foldlIdx f : NDVector dims → ℝ → ℝ) := sorry
+    instance (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] (v : NDVector dims) : IsSmooth (foldlIdx f v : ℝ → ℝ) := sorry
 
     @[simp]
-    def foldlIdx_differential_1 (f df : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] (v : NDVector dims) (init : ℝ) 
+    def foldlIdx_differential_1 (f df : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] (v : NDVector dims) (init : ℝ) 
       : δ foldlIdx f df v init
         =
         (let F := 
@@ -180,7 +188,7 @@ namespace NDVector
          (foldIdx F (init, 0)).2) := sorry
 
     @[simp]
-    def foldlIdx_differential_2 (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] [∀ i y, IsDiff (f i y)] (v dv : NDVector dims) (init : ℝ) 
+    def foldlIdx_differential_2 (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] [∀ i y, IsSmooth (f i y)] (v dv : NDVector dims) (init : ℝ) 
       : δ (foldlIdx f) v dv init
         =
         (let F := 
@@ -193,7 +201,7 @@ namespace NDVector
          (foldIdx F (init, 0)).2) := sorry
 
     @[simp]
-    def foldlIdx_differential_3 (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsDiff (f i)] (v: NDVector dims) (init dinit : ℝ) 
+    def foldlIdx_differential_3 (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] (v: NDVector dims) (init dinit : ℝ) 
       : δ (foldlIdx f v) init dinit
         =
         (let F := 
@@ -213,8 +221,10 @@ namespace NDVector
   --  def getMat2 (v : NDVector [2, 2, n]) (i : Nat) : Mat2 := 
   --  def getMat3 (v : NDVector [3, 3, n]) (i : Nat) : Mat3 := 
   --  def getMat4 (v : NDVector [4, 4, n]) (i : Nat) : Mat4 := 
-
 end NDVector
 
 abbrev Vector (n : Nat) := NDVector [n]
 abbrev Matrix (n m : Nat) := NDVector [n, m]
+
+
+

@@ -5,12 +5,14 @@ import SciLean.Algebra.VectorSpace
 -- \__ \/ -_) '  \| |  | || ' \| ' \/ -_) '_| |  _/ '_/ _ \/ _` | || / _|  _|
 -- |___/\___|_|_|_|_| |___|_||_|_||_\___|_|   |_| |_| \___/\__,_|\_,_\__|\__|
 
-class SemiInner (X : Type u) : Type (u+1) where
+class SemiInner (X : Type u) where
   integrable_domain : Type
   domain            : integrable_domain   -- proof that `integrable_domain` is nonempty
   semi_inner     : X → X → integrable_domain → ℝ
   -- loc_integrable : X → Prop
   test_function  : integrable_domain → X → Prop
+
+attribute [reducible] SemiInner
 
 -- export SemiInner (integrable_domain semi_inner loc_integrable test_function domain)
 
@@ -103,7 +105,7 @@ end SemiInner
 -- |___/\___|_|_|_|_| |_||_|_|_|_.__/\___|_|  \__| |___/ .__/\__,_\__\___|
 --                                                     |_|
 
-class SemiHilbert (X : Type u)  extends SemiInner X, Vec X where
+class SemiHilbert (X : Type u) extends Vec X, SemiInner X : Type (u+1) where
   semi_inner_add : ∀ (x y z : X) D, (x + y, z)_[D] = (x,z)_[D] + (y,z)_[D]
   semi_inner_mul : ∀ (x y : X) (r : ℝ) D, (r*x,y)_[D] = r*(x,y)_[D]
   semi_inner_sym : ∀ (x y : X) D, (x,y)_[D] = (y,x)_[D]
@@ -111,6 +113,7 @@ class SemiHilbert (X : Type u)  extends SemiInner X, Vec X where
   -- semi_inner_ext : ∀ (x : X), loc_integrable x → ((x = 0) ↔ (∀ D (y : X) (h : test_function D y), (x,y)_[D] = 0))
   semi_inner_ext : ∀ (x : X), ((x = 0) ↔ (∀ D (y : X) (h : test_function D y), (x,y)_[D] = 0))
 
+attribute [reducible] SemiHilbert
 
 namespace SemiHilbert 
 
@@ -167,10 +170,12 @@ end SemiHilbert
 -- |_||_|_|_|_.__/\___|_|  \__| |___/ .__/\__,_\__\___|
 --                                  |_|
 
-class Hilbert (U : Type u) extends SemiHilbert U where
+class Hilbert (U : Type u) extends SemiHilbert U  where
   domain_unique : ∀ D, D = domain
   -- all_integrable : ∀ x, loc_integrable x
   all_test_fun   : ∀ x, test_function domain x
+
+attribute [reducible] Hilbert
 
 section Hilbert
 

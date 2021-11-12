@@ -78,5 +78,3 @@ def sum {n α} [Zero α] [Add α] (f : Fin n → α) : α := do
   r
 
 macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `sum xs b
-
-

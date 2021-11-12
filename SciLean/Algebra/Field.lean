@@ -12,5 +12,5 @@ class Field (F : Type u) extends Add F, Sub F, Mul F, Div F, Neg F, One F, Zero 
   (one_mul : ∀ x : F, 1 * x = x)
   --- ...
 
-attribute [simp] Field.add_zero Field.zero_add Field.one_mul Field.mul_one 
+-- attribute [simp] Field.add_zero Field.zero_add Field.one_mul Field.mul_one 
 

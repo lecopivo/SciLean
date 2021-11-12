@@ -34,13 +34,17 @@ theorem differential_of_id'  (x dx : X)
         : δ (id) x dx = dx := by simp[id]
 
 @[simp] 
-theorem differential_of_constant (y x dx : X)
+theorem differential_of_constant (x dx : X) (y : Y)
         : δ (λ x => y) x dx = 0 := sorry
 
 -- For some reason this theorem is usefull even though it is already solvable by simp
 @[simp]
 theorem differential_of_parm (f : X → β → Y) [IsSmooth f] (x dx)
         : δ (λ x => f x b) x dx = δ f x dx b := sorry
+
+-- @[simp]
+-- theorem differential_of_parm_rev (f : X → β → Y) (x dx : X) (b : β) [IsSmooth f] 
+--         : δ f x dx b = δ (λ x => f x b) x dx := sorry
 
 -- TODO: Change IsSmooth to IsDiff
 @[simp] 
@@ -93,3 +97,17 @@ theorem differential_of_diag_3 (f : β1 → Y2 → Z) (g1 : α → β1)
         [∀ y1, IsSmooth (f y1)] 
         (g dg a)
         : δ (λ (g2 : α → Y2) a => f (g1 a) (g2 a)) g dg a = δ (f (g1 a)) (g a) (dg a) := sorry
+
+
+@[simp] 
+theorem differential_of_diag_parm_1 (f : Y1 → Y2 → β → Z) (g1 : X → Y1) (g2 : X → Y2)
+        [IsSmooth f] [∀ y1, IsSmooth (f y1)] [IsSmooth g1] [IsSmooth g2]
+        (x dx : X) (b : β)
+        : δ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) x dx b = δ f (g1 x) (δ g1 x dx) (g2 x) b + δ (f (g1 x)) (g2 x) (δ g2 x dx) b := sorry
+
+
+@[simp]
+theorem differential_of_diag_parm_2 (f : Y1 → Y2 → Z) (g1 : X → β → Y1) (g2 : X → β → Y2)
+        [IsSmooth f] [∀ y1, IsSmooth (f y1)] [IsSmooth g1] [IsSmooth g2]
+        (x dx : X) (b : β)
+        : δ (λ (x : X) (b : β) => f (g1 x b) (g2 x b)) x dx b = δ f (g1 x b) (δ g1 x dx b) (g2 x b) + δ (f (g1 x b)) (g2 x b) (δ g2 x dx b) := sorry 

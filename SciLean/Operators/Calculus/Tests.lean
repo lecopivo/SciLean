@@ -1,5 +1,7 @@
-import SciLean.Operators.Calculus
-import SciLean.Simp
+import SciLean.Basic
+-- import SciLean.Simp
+
+set_option synthInstance.maxHeartbeats 5000
 
 namespace SciLean
 
@@ -29,8 +31,8 @@ namespace Differential.Tests
   example : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx (g x) + δ (F x) (g x) (δ g x dx)) := by simp done
 
   example g dg x : δ (λ (g : X → Y) => f (g x)) g dg = δ f (g x) (dg x) := by simp done
-  example g dg x : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by simp done
-  example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
+  -- example g dg x : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by simp done
+  -- example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
   example g dg x : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = δ F (g x) (dg x) y := by simp done
 
   example (y x dx : X) : δ (λ x : X => y) x dx = 0 := by simp done
@@ -43,5 +45,33 @@ namespace Differential.Tests
   example : δ (λ u : U => ⟨u, u⟩) u du = ⟨du, u⟩ + ⟨u, du⟩ := by simp done
   example : δ (λ u : U => ⟨⟨u,u⟩*u, u⟩) u du = (⟨du,u⟩ + ⟨u,du⟩)*⟨u,u⟩ + ⟨u,u⟩*(⟨du,u⟩ + ⟨u,du⟩) := by simp done
   example (v : U) (m k : ℝ) : δ (λ u : U => (1/(2*m))*⟨u,u⟩ + (k/2)*⟨v,v⟩) u du = (1/(2*m))*(⟨du,u⟩ + ⟨u,du⟩) := by simp done
+
+  section GradientTests
+
+  end GradientTests
+
+  section DifferentiatingSums
+
+    example : IsLin (sum : (Fin n → X) → X) := by infer_instance
+    example : IsLin (λ (x : NDVector [n]) i => x.lget i) := by infer_instance
+
+    example (x dx : NDVector [n]) : δ (λ x => ∑ i, x[i]) x dx = ∑ i, dx[i] := by simp done
+    example (x dx : NDVector [n]) : δ (λ x => ∑ i, 2*x[i]) x dx = ∑ i, 2*dx[i] := by simp done
+    example (x dx : NDVector [n]) : δ (λ x => (∑ i, x[i]*x[i])) x dx = ∑ i, dx[i]*x[i] + x[i]*dx[i] := 
+    by
+      simp
+      conv =>
+        pattern (δ _)
+        enter [x,dx,j]
+        simp
+      done
+
+  end DifferentiatingSums
+
+
 end Differential.Tests
+
+
+
+
 

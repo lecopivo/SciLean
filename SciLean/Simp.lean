@@ -42,4 +42,3 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 @[simp] theorem func_sub_eval (f g : α → X) (a : α) : (f - g) a = f a - g a := by simp[HSub.hSub,Sub.sub]; done
 @[simp] theorem func_mul_eval (f : α → X) (a : α) (c : ℝ) : (c*f) a = c * (f a) := by simp[HMul.hMul,Mul.mul]; done
 
-

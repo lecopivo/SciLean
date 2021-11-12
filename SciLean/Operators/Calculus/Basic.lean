@@ -20,7 +20,6 @@ def differential (f : X → Y) (x dx : X) : Y :=
 
 prefix:max "δ" => differential
 
-
 ----------------
 -- Derivative --
 ----------------
@@ -32,9 +31,9 @@ prefix:max "ⅆ" => derivative
 
 --------------
 -- Gradient --
---------------
-noncomputable 
-def gradient (f : U → ℝ) : U → U := λ x => (δ f x)† 1
+-------------- 
+noncomputable
+abbrev gradient (f : U → ℝ) : U → U := λ x => (δ f x)† 1
 
 prefix:max "∇" => gradient
 
