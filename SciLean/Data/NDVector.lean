@@ -124,6 +124,12 @@ namespace NDVector
 
   section FunctionProperties
 
+    @[simp]
+    theorem lmk_of_lget (x : NDVector dims) : lmk (λ i => x.lget i) = x := sorry
+
+    @[simp]
+    theorem lmk_of_getOp (x : NDVector dims) : lmk (λ i => x[i]) = x := sorry
+
     -- Linear Get
     instance : IsLin (lget! : NDVector dims → _ → ℝ) := sorry
     instance : IsLin (lget : NDVector dims → _ → ℝ) := sorry

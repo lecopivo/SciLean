@@ -66,12 +66,47 @@ namespace Differential.Tests
         simp
       done
 
+    example (x : NDVector [n]) : ∇ (λ x => ∑ i, x[i]) x = NDVector.lmk (λ i => 1) := 
+    by 
+      conv =>
+        pattern (gradient _)
+        simp [gradient]
+        conv => 
+          enter [x,1,dx]
+          simp
+        simp
+      done
+
+    example (x : NDVector [n]) : ∇ (λ x => ∑ i, x[i]*x[i]) x = (2:ℝ)*x :=
+    by
+      conv =>
+        pattern (∇ _)
+        simp [gradient]
+        conv =>
+          enter [x,1,dx]
+          simp
+          conv =>
+            pattern (δ _)
+            enter [x,dx,i]
+            simp
+        simp
+      done
+
+    example (x : NDVector [n]) (a : Fin _) : ∇ (λ x => ∑ i, x[i]*x[i-a]) x = (2:ℝ)*x :=
+    by
+      conv =>
+        pattern (∇ _)
+        simp [gradient]
+        conv =>
+          enter [x,1,dx]
+          simp
+          conv =>
+            pattern (δ _)
+            enter [x,dx,i]
+            simp
+        simp
+      admit
+
   end DifferentiatingSums
 
-
 end Differential.Tests
-
-
-
-
-

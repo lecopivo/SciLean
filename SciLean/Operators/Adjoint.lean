@@ -75,6 +75,10 @@ namespace Adjoint
   def adjoint_of_add_args [IsLin f] [IsLin g] : (λ x => f x + g x)† = (λ y => f† y + g† y) := sorry
 
   @[simp]
+  def adjoint_of_add_args2 (f g : X → Fin n → Y) [IsLin f] [IsLin g] 
+      : (λ x i => f x i + g x i)† = (λ x i => f x i)† + (λ x i => g x i)† := sorry
+
+  @[simp]
   def adjoint_of_sub [IsLin f] [IsLin g] : (f - g)† = f† - g† := sorry
 
   @[simp]
@@ -87,7 +91,13 @@ namespace Adjoint
   def adjoint_of_hmul_2 (x) : (λ r => r*x)† = (λ y => ⟨x, y⟩) := sorry
 
   @[simp]
-  def adjoint_of_hmul_2' (f : X → ℝ) [IsLin f] (y : Y) : (λ x => (f x)*y)† = (λ y' => f† (⟨y,y'⟩)) := sorry
+  def adjoint_of_hmul_2' (f : X → ℝ) [IsLin f] (y : Y) : (λ x => (f x)*y)† = f† ∘ (λ y' => ⟨y,y'⟩) := sorry
+
+  @[simp]
+  def adjoint_of_hmul_2_parm (f : X → Fin i → ℝ) [IsLin f] (y : Fin i → Y) : (λ x i => (f x i)*(y i))† = f† ∘ (λ y' i => ⟨y i,y' i⟩) := sorry
+
+  @[simp]
+  def adjoint_of_hmul_1_parm (f : X → Fin i → Y) [IsLin f] (r : Fin i → ℝ) : (λ x i => (r i)*(f x i))† = f† ∘ (λ y' i => (r i)*(y' i)) := sorry
 
   @[simp]
   def adjoint_of_neg : (Neg.neg : X → X)† = Neg.neg := sorry

@@ -310,6 +310,7 @@
    - [[http://simit-lang.org/][Simit]]
    - [[https://github.com/apple/swift/blob/main/docs/DifferentiableProgramming.md][differentiable programming in Swift]]
    - [[https://github.com/psg-mit/smooth][Smooth]]
+   - [[https://web.archive.org/web/20170924065701/http://www.digi-area.com/Mathematica/atlas/][Atlas 2 for Mathematica]]
 
 *** Vaguely related software
 

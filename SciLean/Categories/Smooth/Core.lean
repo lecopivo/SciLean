@@ -25,4 +25,3 @@ instance swap (f : α → Y → Z) [∀ a, IsSmooth (f a)] : IsSmooth (λ y a =>
 instance parm (f : X → β → Z) [IsSmooth f] (b : β) : IsSmooth (λ x => f x b) := sorry
 instance comp (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] : IsSmooth (f ∘ g) := sorry
 instance diag (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [IsSmooth f] [∀ y1, IsSmooth (f y1)] : IsSmooth (λ x => f (g1 x) (g2 x)) := sorry
-
