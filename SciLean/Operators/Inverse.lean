@@ -40,7 +40,6 @@ namespace Inverse
   def inverse_of_comp_arg1 (f : β1 → β2 → γ) (g1 : α → β1) (b2 : β2) [IsInv (λ b1 => f b1 b2)] [IsInv g1]
       : (λ a => f (g1 a) b2)⁻¹ = g1⁻¹ ∘ (λ b1 => f b1 b2)⁻¹ := sorry
 
-
   -------------------------------------------------------------------------
 
   instance {X} [Vec X] (y : X) : IsInv (λ x => x + y) := sorry
@@ -85,8 +84,6 @@ namespace Inverse
   @[simp]
   def inverse_of_neg {X} [Vec X]
       : (λ (x : X) => -x)⁻¹ = (λ (x : X) => -x) := sorry
-
-  instance (f : β → γ) (g : α → β) [IsInv f] [IsInv g] : IsInv (f ∘ g) := sorry
 
   example {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsInv f] (y' : Y) 
           : (λ x => - (f x) + y')⁻¹ = (λ y => f⁻¹ (-(y - y'))) := by simp
