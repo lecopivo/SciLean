@@ -19,7 +19,6 @@ namespace Inverse
   variable {β1 β1}
   variable [Inhabited α] [Inhabited β] [Inhabited γ] [Inhabited β1] [Inhabited β2]
 
-
   @[simp]
   def inverse_of_inverse (f : α → β) [IsInv f] 
       : (f⁻¹)⁻¹ = f := sorry
