@@ -101,9 +101,7 @@ namespace Adjoint
   def adjoint_of_sub : (λ x : X×X => Sub.sub x.1 x.2)† = (λ x => (x,-x)) := sorry
 
   @[simp]
-  def adjoint_of_add' [IsLin f] [IsLin g] : (f + g)† = f† + g† := 
-  by 
-    simp [HAdd.hAdd, Add.add]
+  def adjoint_of_add' [IsLin f] [IsLin g] : (f + g)† = f† + g† := by simp [HAdd.hAdd, Add.add]
 
   @[simp]
   def adjoint_of_add_args [IsLin f] [IsLin g] : (λ x => f x + g x)† = (λ y => f† y + g† y) := by simp
@@ -112,54 +110,44 @@ namespace Adjoint
   def adjoint_of_add_args2 (f g : X → Fin n → Y) [IsLin f] [IsLin g] 
       : (λ x i => f x i + g x i)† = (λ x i => f x i)† + (λ x i => g x i)† := by funext z; simp
 
-  -- @[simp]
-  -- def adjoint_of_sub' [IsLin f] [IsLin g] : (f - g)† = f† - g† := by funext y; simp[HSub.hSub, Sub.sub]
+  @[simp]
+  def adjoint_of_sub_of_fun [IsLin f] [IsLin g] : (f - g)† = f† - g† := sorry -- by funext y; simp[HSub.hSub, Sub.sub]
 
   -- @[simp]
   -- def adjoint_of_sub_args [IsLin f] [IsLin g] : (λ x => f x - g x)† = λ y => f† y - g† y := by funext y; simp
 
-  @[simp]
-  def adjoint_of_hmul_2 : (HMul.hMul r : X → X)† = HMul.hMul r := sorry
-  @[simp]
-  def adjoint_of_hmul_2_parm (f : X → Fin i → Y) [IsLin f] (r : Fin i → ℝ) : (λ x i => (r i)*(f x i))† = f† ∘ (λ y' i => (r i)*(y' i)) := by simp
 
   @[simp]
-  def adjoint_of_hmul_1 (f : X → ℝ) [IsLin f] (y : Y) : (λ x => (f x)*y)† = f† ∘ (λ y' => ⟨y,y'⟩) := by simp
+  def adjoint_of_hmul_1 (f : X → ℝ) [IsLin f] (y : Y) : (λ x => (f x)*y)† = f† ∘ (λ y' => ⟨y,y'⟩) := sorry
   @[simp]
   def adjoint_of_hmul_1_parm (f : X → Fin i → ℝ) [IsLin f] (y : Fin i → Y) : (λ x i => (f x i)*(y i))† = f† ∘ (λ y' i => ⟨y i,y' i⟩) := sorry
-
-
   -- Unfortunatelly this theorem is not sufficient because `adjoint_of_composition_arg` is dangerous
   -- @[simp]
-  -- def adjoint_of_hmul_2' (x) : (λ r => r*x)† = (λ y => ⟨x, y⟩) := by simp
+  -- def adjoint_of_hmul_1 (x) : (λ r => r*x)† = (λ y => ⟨x, y⟩) := by simp
+
+  @[simp]
+  def adjoint_of_hmul_2 : (HMul.hMul r : X → X)† = HMul.hMul r := sorry
+
+  @[simp]
+  def adjoint_of_hmul_of_fun [IsLin f] : (r*f)† = r*f† := sorry -- by funext y; simp[HMul.hMul, Mul.mul]
+  @[simp]
+  def adjoint_of_hmul_of_fun_alt [IsLin f] (r : ℝ) : (λ x => r*(f x))† = (λ y => r*(f† y)) := sorry -- by funext y; simp
+
+  @[simp]
+  def adjoint_of_neg : (Neg.neg : X → X)† = Neg.neg := sorry
+  @[simp]
+  def adjoint_of_neg_of_fun [IsLin f] : (-f)† = -(f†) := sorry -- by funext y; simp[Neg.neg]
 
 
+  example [IsLin f] [IsLin g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp done
 
+  example (y : Y) (r : ℝ) : (λ x => ⟨x,y⟩)† r = r*y := by simp 
 
+  example (y : X) (r : ℝ) : (λ x => ⟨x,y⟩ + ⟨y,x⟩)† r = 2*r*y := by simp; done
 
-
-
-  -- @[simp]
-  -- def adjoint_of_neg : (Neg.neg : X → X)† = Neg.neg := sorry
-
-  -- @[simp]
-  -- def adjoint_of_neg' [IsLin f] : (-f)† = -(f†) := by funext y; simp[Neg.neg]
-
-  -- @[simp]
-  -- def adjoint_of_hmul [IsLin f] : (r*f)† = r*f† := sorry
-
-  -- @[simp]
-  -- def adjoint_of_hmul_alt (f : X → Y) [IsLin f] (r : ℝ) : (λ x => r*(f x))† = (λ y => r*(f† y)) := sorry
-
-  -- example [IsLin f] [IsLin g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp done
-
-  -- example (y : Y) (r : ℝ) : (λ x => ⟨x,y⟩)† r = r*y := by simp
-
-  -- example (y : X) (r : ℝ) : (λ x => ⟨x,y⟩ + ⟨y,x⟩)† r = 2*r*y := by simp; done
-
-  -- example (r : ℝ) (x' : X)
-  --         : (λ x : X => r*((λ x'' => ⟨x', x''⟩) x))† = λ s => r * s * x' := 
-  -- by
-  --   simp; funext s; simp[Function.comp]
+  example (r : ℝ) (x' : X)
+          : (λ x : X => r*((λ x'' => ⟨x', x''⟩) x))† = λ s => r * s * x' := 
+  by
+    simp; funext s; simp[Function.comp]
 
 end Adjoint
