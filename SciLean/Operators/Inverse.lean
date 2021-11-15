@@ -34,6 +34,7 @@ namespace Inverse
       : (f ∘ g)⁻¹ = g⁻¹ ∘ f⁻¹ := sorry
 
   -- This is a dangerous theorem that can rewrite itself and cause simp to loop indefinitely
+  -- For now, we try to live without this theorem. The consequence is that stating inverse of functions in the first arguemtnst has to be stated in a bit more complicated way. See for example `inverse_of_add_arg1` vs `inverse_of_add_arg2`.
   -- @[simp 1000000]
   -- def inverse_of_comp_parm (f : β1 → β2 → γ) (g1 : α → β1) (b2 : β2) [IsInv (λ b1 => f b1 b2)] [IsInv g1]
   --     : (λ a => f (g1 a) b2)⁻¹ = g1⁻¹ ∘ (λ b1 => f b1 b2)⁻¹ := sorry
