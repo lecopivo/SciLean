@@ -61,9 +61,9 @@ namespace Adjoint
       : (λ x i => (f (g1 i) (g2 x i)))† = g2† ∘ (λ z i => (f (g1 i))† (z i)) := sorry
 
   -- Unfortunatelly this theorem is dangerous and causes simp to loop indefinitely
-  @[simp 1000000] 
-  def adjoint_of_composition_arg (f : Y → β → Z) (b : β) [IsLin (λ y => f y b)] (g : X → Y) [IsLin g] 
-      : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
+  -- @[simp 1000000] 
+  -- def adjoint_of_composition_arg (f : Y → β → Z) (b : β) [IsLin (λ y => f y b)] (g : X → Y) [IsLin g] 
+  --     : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
 
   @[simp]
   def adjoint_of_inner_1 (x : X) (s : ℝ) : (λ y : X => ⟨y, x⟩)† s = s * x := sorry
@@ -90,54 +90,43 @@ namespace Adjoint
 
   @[simp]
   def adjoint_of_hadd : (λ x : X×X => x.1 + x.2)† = (λ x => (x,x)) := sorry
-
   @[simp]
   def adjoint_of_add : (λ x : X×X => Add.add x.1 x.2)† = (λ x => (x,x)) := sorry
-
   @[simp]
-  def adjoint_of_hsub : (λ x : X×X => x.1 - x.2)† = (λ x => (x,-x)) := sorry
-
+  def adjoint_of_add_of_fun [IsLin f] [IsLin g] : (f + g)† = f† + g† := by simp [HAdd.hAdd, Add.add]
   @[simp]
-  def adjoint_of_sub : (λ x : X×X => Sub.sub x.1 x.2)† = (λ x => (x,-x)) := sorry
-
+  def adjoint_of_add_of_fun_arg [IsLin f] [IsLin g] : (λ x => f x + g x)† = (λ y => f† y + g† y) := by simp
   @[simp]
-  def adjoint_of_add' [IsLin f] [IsLin g] : (f + g)† = f† + g† := by simp [HAdd.hAdd, Add.add]
-
-  @[simp]
-  def adjoint_of_add_args [IsLin f] [IsLin g] : (λ x => f x + g x)† = (λ y => f† y + g† y) := by simp
-
-  @[simp]
-  def adjoint_of_add_args2 (f g : X → Fin n → Y) [IsLin f] [IsLin g] 
+  def adjoint_of_add_of_fun_arg_parm (f g : X → Fin n → Y) [IsLin f] [IsLin g] 
       : (λ x i => f x i + g x i)† = (λ x i => f x i)† + (λ x i => g x i)† := by funext z; simp
 
   @[simp]
-  def adjoint_of_sub_of_fun [IsLin f] [IsLin g] : (f - g)† = f† - g† := sorry -- by funext y; simp[HSub.hSub, Sub.sub]
-
+  def adjoint_of_hsub : (λ x : X×X => x.1 - x.2)† = (λ x => (x,-x)) := sorry
   @[simp]
-  def adjoint_of_sub_of_fun_args [IsLin f] [IsLin g] : (λ x => f x - g x)† = λ y => f† y - g† y := by funext y; simp[pmap, uncurry]; done
-
+  def adjoint_of_sub : (λ x : X×X => Sub.sub x.1 x.2)† = (λ x => (x,-x)) := sorry
+  @[simp]
+  def adjoint_of_sub_of_fun [IsLin f] [IsLin g] : (f - g)† = f† - g† := sorry -- by funext y; simp[HSub.hSub, Sub.sub]
+  @[simp]
+  def adjoint_of_sub_of_fun_arg [IsLin f] [IsLin g] : (λ x => f x - g x)† = λ y => f† y - g† y := sorry -- by funext y; simp[pmap, uncurry]; done
+  @[simp]
+  def adjoint_of_sub_of_fun_arg_parm (f g : X → Fin n → Y) [IsLin f] [IsLin g] 
+      : (λ x i => f x i - g x i)† = (λ x i => f x i)† - (λ x i => g x i)† := sorry -- by funext z; simp[pmap, uncurry]; done
 
   @[simp]
   def adjoint_of_hmul_1 (f : X → ℝ) [IsLin f] (y : Y) : (λ x => (f x)*y)† = f† ∘ (λ y' => ⟨y,y'⟩) := sorry
   @[simp]
   def adjoint_of_hmul_1_parm (f : X → Fin i → ℝ) [IsLin f] (y : Fin i → Y) : (λ x i => (f x i)*(y i))† = f† ∘ (λ y' i => ⟨y i,y' i⟩) := sorry
-  -- Unfortunatelly this theorem is not sufficient because `adjoint_of_composition_arg` is dangerous
-  -- @[simp]
-  -- def adjoint_of_hmul_1 (x) : (λ r => r*x)† = (λ y => ⟨x, y⟩) := by simp
-
   @[simp]
   def adjoint_of_hmul_2 : (HMul.hMul r : X → X)† = HMul.hMul r := sorry
-
   @[simp]
   def adjoint_of_hmul_of_fun [IsLin f] : (r*f)† = r*f† := sorry -- by funext y; simp[HMul.hMul, Mul.mul]
   @[simp]
-  def adjoint_of_hmul_of_fun_alt [IsLin f] (r : ℝ) : (λ x => r*(f x))† = (λ y => r*(f† y)) := sorry -- by funext y; simp
+  def adjoint_of_hmul_of_fun_arg [IsLin f] (r : ℝ) : (λ x => r*(f x))† = (λ y => r*(f† y)) := sorry -- by funext y; simp
 
   @[simp]
   def adjoint_of_neg : (Neg.neg : X → X)† = Neg.neg := sorry
   @[simp]
   def adjoint_of_neg_of_fun [IsLin f] : (-f)† = -(f†) := sorry -- by funext y; simp[Neg.neg]
-
 
   example [IsLin f] [IsLin g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp done
 
@@ -148,6 +137,6 @@ namespace Adjoint
   example (r : ℝ) (x' : X)
           : (λ x : X => r*((λ x'' => ⟨x', x''⟩) x))† = λ s => r * s * x' := 
   by
-    simp; funext s; simp[Function.comp]
+    simp; funext s; simp; done
 
 end Adjoint

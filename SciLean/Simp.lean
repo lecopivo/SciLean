@@ -37,9 +37,11 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 @[simp] theorem smul_smul_mul (a b : ℝ) (x : X) : a * (b * x) = (a*b) * x := sorry
 
 @[simp] theorem prod_sum (x x' : X) (y y' : Y) : (x, y) + (x', y') = (x + x', y + y') := sorry
+@[simp] theorem prod_fst_hmul (x : X) (y : Y) (r : ℝ) : (r*(x,y)).fst = r*x := sorry
+@[simp] theorem prod_snd_hmul (x : X) (y : Y) (r : ℝ) : (r*(x,y)).snd = r*y := sorry
 
 @[simp] theorem func_add_eval (f g : α → X) (a : α) : (f + g) a = f a + g a := by simp[HAdd.hAdd,Add.add]; done
 @[simp] theorem func_sub_eval (f g : α → X) (a : α) : (f - g) a = f a - g a := by simp[HSub.hSub,Sub.sub]; done
 @[simp] theorem func_mul_eval (f : α → X) (a : α) (c : ℝ) : (c*f) a = c * (f a) := by simp[HMul.hMul,Mul.mul]; done
 
-@[simp] theorem composition_eval {α β γ} (f : β → γ) (g : α → β) (a : α) : (f ∘ g) a = f (g a) := by simp
+@[simp] theorem comp_eval' {α β γ} (f : β → γ) (g : α → β) (a : α) : (f ∘ g) a = f (g a) := by simp
