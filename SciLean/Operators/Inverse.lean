@@ -23,29 +23,28 @@ namespace Inverse
   def inverse_of_inverse (f : α → β) [IsInv f] 
       : (f⁻¹)⁻¹ = f := sorry
   
-  @[simp]
-  def inverse_of_id 
-      : (id : α → α)⁻¹ = id := sorry
 
+  instance : IsInv (λ a : α => a) := sorry
   @[simp]
-  def inverse_of_id' 
+  def inverse_of_id
       : (λ a : α => a)⁻¹ = id := sorry
 
   @[simp]
   def inverse_of_comp (f : β → γ) (g : α → β) [IsInv f] [IsInv g]
       : (f ∘ g)⁻¹ = g⁻¹ ∘ f⁻¹ := sorry
 
-  @[simp]
-  def inverse_of_comp_arg1 (f : β1 → β2 → γ) (g1 : α → β1) (b2 : β2) [IsInv (λ b1 => f b1 b2)] [IsInv g1]
-      : (λ a => f (g1 a) b2)⁻¹ = g1⁻¹ ∘ (λ b1 => f b1 b2)⁻¹ := sorry
+  -- This is a dangerous theorem that can rewrite itself and cause simp to loop indefinitely
+  -- @[simp 1000000]
+  -- def inverse_of_comp_parm (f : β1 → β2 → γ) (g1 : α → β1) (b2 : β2) [IsInv (λ b1 => f b1 b2)] [IsInv g1]
+  --     : (λ a => f (g1 a) b2)⁻¹ = g1⁻¹ ∘ (λ b1 => f b1 b2)⁻¹ := sorry
 
   -------------------------------------------------------------------------
 
   instance {X} [Vec X] (y : X) : IsInv (λ x => x + y) := sorry
 
   @[simp]
-  def inverse_of_add_arg1 {X} [Vec X] (y : X)
-      : (λ x => x + y)⁻¹ = (λ x => x - y) := sorry
+  def inverse_of_add_arg1 {X} [Vec X] (y : X) (f : α → X) [IsInv f]
+      : (λ a => (f a) + y)⁻¹ = f⁻¹ ∘ (λ x => x - y) := sorry
 
   instance {X} [Vec X] (x : X) : IsInv (λ y => x + y) := sorry
 
@@ -53,12 +52,11 @@ namespace Inverse
   def inverse_of_add_arg2 {X} [Vec X] (x : X)
       : (λ y => x + y)⁻¹ = (λ y => -x + y) := sorry
 
-
   instance {X} [Vec X] (y : X) : IsInv (λ x => x - y) := sorry
 
   @[simp]
-  def inverse_of_sub_arg1 {X} [Vec X] (y : X)
-      : (λ x => x - y)⁻¹ = (λ x => x + y) := sorry
+  def inverse_of_sub_arg1 {X} [Vec X] (y : X) (f : α → X) [IsInv f]
+      : (λ a => (f x) - y)⁻¹ = f⁻¹ ∘ (λ x => x + y) := sorry
 
   instance {X} [Vec X] (x : X) : IsInv (λ y => x - y) := sorry
 
@@ -69,8 +67,8 @@ namespace Inverse
   instance (s : ℝ) [NonZero s] : IsInv (λ (r : ℝ)  => r*s) := sorry
 
   @[simp]
-  def inverse_of_mul_arg1 (s : ℝ) [NonZero s]
-      : (λ (r : ℝ) => r*s)⁻¹ = (λ r => r/s) := sorry
+  def inverse_of_mul_arg1 (s : ℝ) [NonZero s] (f : α → ℝ) [IsInv f]
+      : (λ a => (f a)*s)⁻¹ = f⁻¹ ∘ (λ r => r/s) := sorry
 
   instance {X} [Vec X] (r : ℝ) [NonZero r] : IsInv (λ (x : X)  => r*x) := sorry
 
@@ -85,6 +83,8 @@ namespace Inverse
       : (λ (x : X) => -x)⁻¹ = (λ (x : X) => -x) := sorry
 
   example {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsInv f] (y' : Y) 
-          : (λ x => - (f x) + y')⁻¹ = (λ y => f⁻¹ (-(y - y'))) := by simp
+          : (λ x => - (f x) + y')⁻¹ = (λ y => f⁻¹ (-(y - y'))) :=
+  by
+    simp
 
 end Inverse

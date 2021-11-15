@@ -61,9 +61,9 @@ namespace Adjoint
       : (λ x i => (f (g1 i) (g2 x i)))† = g2† ∘ (λ z i => (f (g1 i))† (z i)) := sorry
 
   -- Unfortunatelly this theorem is dangerous and causes simp to loop indefinitely
-  -- @[simp] 
-  -- def adjoint_of_composition_arg (f : Y → β → Z) (b : β) [IsLin (λ y => f y b)] (g : X → Y) [IsLin g] 
-  --     : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
+  @[simp 1000000] 
+  def adjoint_of_composition_arg (f : Y → β → Z) (b : β) [IsLin (λ y => f y b)] (g : X → Y) [IsLin g] 
+      : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
 
   @[simp]
   def adjoint_of_inner_1 (x : X) (s : ℝ) : (λ y : X => ⟨y, x⟩)† s = s * x := sorry
@@ -113,8 +113,8 @@ namespace Adjoint
   @[simp]
   def adjoint_of_sub_of_fun [IsLin f] [IsLin g] : (f - g)† = f† - g† := sorry -- by funext y; simp[HSub.hSub, Sub.sub]
 
-  -- @[simp]
-  -- def adjoint_of_sub_args [IsLin f] [IsLin g] : (λ x => f x - g x)† = λ y => f† y - g† y := by funext y; simp
+  @[simp]
+  def adjoint_of_sub_of_fun_args [IsLin f] [IsLin g] : (λ x => f x - g x)† = λ y => f† y - g† y := by funext y; simp[pmap, uncurry]; done
 
 
   @[simp]
