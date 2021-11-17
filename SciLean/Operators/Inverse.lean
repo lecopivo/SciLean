@@ -42,27 +42,43 @@ namespace Inverse
   -------------------------------------------------------------------------
 
   instance {X} [Vec X] (y : X) : IsInv (λ x => x + y) := sorry
+  instance {n} (y : Fin n) : IsInv (λ x => x + y) := sorry
 
   @[simp]
   def inverse_of_add_arg1 {X} [Vec X] (y : X) (f : α → X) [IsInv f]
       : (λ a => (f a) + y)⁻¹ = f⁻¹ ∘ (λ x => x - y) := sorry
+  @[simp]
+  def inverse_of_add_arg1_fin {n} [NonZero n] (y : Fin n) (f : Fin n → Fin n) [IsInv f]
+      : (λ a => (f a) + y)⁻¹ = f⁻¹ ∘ (λ x => x - y) := sorry
 
   instance {X} [Vec X] (x : X) : IsInv (λ y => x + y) := sorry
+  instance {n} (x : Fin n) : IsInv (λ y => x + y) := sorry
 
   @[simp]
   def inverse_of_add_arg2 {X} [Vec X] (x : X)
       : (λ y => x + y)⁻¹ = (λ y => -x + y) := sorry
+  @[simp]
+  def inverse_of_add_arg2_fin {n} [NonZero n] (x : Fin n)
+      : (λ y => x + y)⁻¹ = (λ y => -x + y) := sorry
 
   instance {X} [Vec X] (y : X) : IsInv (λ x => x - y) := sorry
+  instance (y : Fin n) : IsInv (λ x => x - y) := sorry
 
   @[simp]
   def inverse_of_sub_arg1 {X} [Vec X] (y : X) (f : α → X) [IsInv f]
-      : (λ a => (f x) - y)⁻¹ = f⁻¹ ∘ (λ x => x + y) := sorry
+      : (λ a => (f a) - y)⁻¹ = f⁻¹ ∘ (λ x => x + y) := sorry
+  @[simp]
+  def inverse_of_sub_arg1_fin {n} [NonZero n] (y : Fin n) (f : Fin n → Fin n) [IsInv f]
+      : (λ a => (f a) - y)⁻¹ = f⁻¹ ∘ (λ x => x + y) := sorry
 
   instance {X} [Vec X] (x : X) : IsInv (λ y => x - y) := sorry
+  instance (x : Fin n) : IsInv (λ y => x - y) := sorry
 
   @[simp]
   def inverse_of_sub_arg2 {X} [Vec X] (x : X)
+      : (λ y => x - y)⁻¹ = (λ y => x - y) := sorry
+  @[simp]
+  def inverse_of_sub_arg2_fin {n} [NonZero n] (x : Fin n)
       : (λ y => x - y)⁻¹ = (λ y => x - y) := sorry
 
   instance (s : ℝ) [NonZero s] : IsInv (λ (r : ℝ)  => r*s) := sorry

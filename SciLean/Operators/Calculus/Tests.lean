@@ -105,7 +105,18 @@ namespace Differential.Tests
             enter [x,dx,i]
             simp
         simp
+      simp
       admit
+
+
+    set_option trace.Meta.Tactic.simp true
+    example (a : Fin _) : (fun (x : NDVector [n]) i => x[i - a])† = 0 := 
+    by
+      simp
+
+
+    set_option trace.Meta.Tactic.simp false
+
 
   end DifferentiatingSums
 

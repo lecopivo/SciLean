@@ -9,4 +9,4 @@ instance (x y : ℝ) [IsPos x] [NonNeg y] : NonZero (x + y) := sorry
 instance (x y : ℝ) [NonNeg x] [IsPos y] : NonZero (x + y) := sorry
 instance (x y : ℝ) [IsPos x] [IsPos y] : IsPos (x + y) := ⟨⟩
 
-
+instance [NonZero n] : Inhabited (Fin n) := ⟨⟨0, sorry⟩⟩

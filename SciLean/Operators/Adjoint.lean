@@ -1,4 +1,6 @@
 import SciLean.Categories
+import SciLean.Operators.Inverse
+import SciLean.Operators.Sum
 import SciLean.Simp
 
 import Init.Classical
@@ -66,10 +68,10 @@ namespace Adjoint
   --     : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
 
   @[simp]
-  def adjoint_of_inner_1 (x : X) (s : ℝ) : (λ y : X => ⟨y, x⟩)† s = s * x := sorry
+  def adjoint_of_inner_1 (f : X → Y) [IsLin f] (y : Y) : (λ x : X => ⟨f x, y⟩)† = (λ (s : ℝ) => s * f† y) := sorry
 
   @[simp]
-  def adjoint_of_inner_2 (x : X) (s : ℝ) : (λ y : X => ⟨x, y⟩)† s = s * x := sorry
+  def adjoint_of_inner_2 (f : X → Y) [IsLin f] (y : Y) : (λ x : X => ⟨y, f x⟩)† = (λ (s : ℝ) => s * f† y) := sorry
 
   @[simp]
   def adjoint_of_diag {Y1 Y2 : Type} [Hilbert Y1] [Hilbert Y2]
@@ -83,10 +85,13 @@ namespace Adjoint
       [IsLin (uncurry f)] [IsLin g1] [IsLin g2]
       : (λ x i => f (g1 x i) (g2 x i))† = (uncurry HAdd.hAdd) ∘ (pmap g1† g2†) ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) ∘ (comp (uncurry f)†) := sorry
 
+  @[simp]
+  def adjoint_of_pullback {n} [NonZero n]
+      (g : Fin n → Fin n) [IsInv g]
+      : (λ (f : Fin n → X) => f ∘ g)† = (λ f => f ∘ g⁻¹) := sorry
+
   variable (f g : X → Y) 
   variable (r : ℝ)
-
-  example {X} [Vec X] : IsLin (uncurry HAdd.hAdd : X×X → X) := by infer_instance
 
   @[simp]
   def adjoint_of_hadd : (λ x : X×X => x.1 + x.2)† = (λ x => (x,x)) := sorry
@@ -135,8 +140,18 @@ namespace Adjoint
   example (y : X) (r : ℝ) : (λ x => ⟨x,y⟩ + ⟨y,x⟩)† r = 2*r*y := by simp; done
 
   example (r : ℝ) (x' : X)
-          : (λ x : X => r*((λ x'' => ⟨x', x''⟩) x))† = λ s => r * s * x' := 
+          : (λ x : X => r*((λ x'' => ⟨x', x''⟩) x))† = λ s => r * s * x' :=
   by
-    simp; funext s; simp; done
+    simp; done
+
+  example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) 
+          : (λ (g : Fin n → ℝ) => sum (λ i => (f i) * (g (i+c))))† (1 : ℝ) = (fun i => f (i - c)) := by simp; done
+
+  example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) 
+          : (λ (g : Fin n → ℝ) => ⟨f, λ i => (g (i+c))⟩)† (1 : ℝ) = (fun i => f (i - c)) := by simp; done
+
+  example : IsLin (λ (g : Fin n → ℝ) => (λ i => g (i+c))) := by infer_instance
+
+  example {n} [NonZero n] (c : Fin n) : (λ (g : Fin n → ℝ) => (λ i => g (i+c)))† = (fun f x => f (x - c)) := by simp; done
 
 end Adjoint

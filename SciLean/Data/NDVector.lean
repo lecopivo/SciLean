@@ -134,7 +134,14 @@ namespace NDVector
     instance : IsLin (lget! : NDVector dims → _ → ℝ) := sorry
     instance : IsLin (lget : NDVector dims → _ → ℝ) := sorry
 
-    @[simp] def lget_adjoint : adjoint (lget : NDVector dims → _ → ℝ) = lmk := sorry
+
+    @[simp] def lget_adjoint' : adjoint (lget : NDVector dims → _ → ℝ) = lmk := sorry
+
+    @[simp] 
+    def lget_adjoint_args {X} [Hilbert X] [NonZero dims.product]
+        (f : X → NDVector dims) [IsLin f] 
+        (g : Fin dims.product → Fin dims.product) [IsInv g]
+        : (λ x i => lget (f x) (g i))† = (f† ∘ lmk ∘ (λ h => h ∘ g⁻¹)) := sorry
 
     -- Linear Set - it is only affine and not liean as lget
     instance : IsSmooth (lset! : NDVector dims → Nat → ℝ → NDVector dims) := sorry

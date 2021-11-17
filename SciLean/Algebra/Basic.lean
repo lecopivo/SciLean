@@ -4,6 +4,12 @@ class Zero (α : Type u) where
 class One (α : Type u) where
   one : α
 
+instance : Neg (Fin n) :=
+  ⟨λ x =>
+     match n, x with
+       | 0, x => x
+       | (n+1), x => 0 - x⟩
+
 instance instOfNatZero [Zero α] : OfNat α (nat_lit 0) where
   ofNat := Zero.zero
 

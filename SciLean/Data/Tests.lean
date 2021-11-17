@@ -31,23 +31,8 @@ section NDVector
       pattern (δ _)
       enter [x,dx]
       simp
-
+    simp
     admit
-
-  -- noncomputable 
-  -- def foo {U} [Hilbert U] (u : U) : U := u
-
-  -- @[simp]
-  -- theorem hohoh {X} [Vec X] (x : X) : (2 : ℝ) * x = x := sorry
-
-  -- #check gradient
-
-  -- example (x : ℝ) :  (δ (λ (x : ℝ) => x) (x + x))† 1  = x :=
-  -- by
-  --   conv in (δ _) => enter [x,dx]
-  --   simp
-    
-  --   admit
 
   example (x) : gradient (λ (x : ℝ) => x) x = 1 :=
   by 
@@ -94,7 +79,7 @@ section NDVector
       conv =>
         enter[x,1,dx]
         simp
-    simp[Function.comp] 
+    simp[Function.comp]
     admit
 
 end NDVector

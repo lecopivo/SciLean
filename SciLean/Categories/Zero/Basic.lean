@@ -2,10 +2,10 @@ import SciLean.Algebra
 
 namespace SciLean
 
-class IsZero {X} [Vec X] (x : X) : Prop where
+class IsZero {X} [Zero X] (x : X) : Prop where
   is_zero : x = 0
 
-class NonZero {X} [Vec X] (x : X) : Prop where
+class NonZero {X} [Zero X] (x : X) : Prop where
   non_zero : x ≠ 0
 
 class NonNeg (x : ℝ) : Prop where
