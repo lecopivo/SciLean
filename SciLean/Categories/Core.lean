@@ -2,6 +2,7 @@ namespace SciLean
 
 @[reducible]
 def id : α → α := λ a => a
+@[simp] theorem id_eval (a : α) : id a = a := by simp
 
 @[reducible]
 def curry : (α × β → γ) → (α → β → γ) := λ f a b => f (a,b) 

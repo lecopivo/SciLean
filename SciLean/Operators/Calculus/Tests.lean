@@ -108,10 +108,37 @@ namespace Differential.Tests
       simp
       admit
 
-    example {dims} (a : Fin _) [NonZero dims.product] : (fun (x : NDVector dims) i => x[i - a])† = λ x => (NDVector.lmk λ i => x (i+a)) := 
+    example {dims} (a : Fin _) [NonZero dims.product] : (λ (x : NDVector dims) i => x[i - a])† = λ x => (NDVector.lmk λ i => x (i+a)) := 
     by
       simp
 
+    example {n} [NonZero n] (a : Fin n) : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i+a) - f i)*(f (i+a) - f i)) = 0 := 
+    by
+      conv =>
+        pattern (∇ _)
+        simp [gradient]
+        conv =>
+          enter [x,1,dx]
+          simp
+          conv =>
+            pattern (δ _)
+            enter [x,dx,i]
+            simp
+        enter [f,i]; simp -- autoadjoint
+      simp
+      admit
+
+    
+    example {n} (a : Fin n) : IsLin (λ (x : Fin n → ℝ) i => (x (i + a) - x i)) := by infer_instance
+
+    example  {n} (a : Fin n) [NonZero n] : (fun (x : Fin n → ℝ) i => x (i + a))† = (fun x i => x (i - a)) := 
+    by
+      conv => 
+        pattern (adjoint _)
+        enter [x,i]
+        simp
+      done
+    
   end DifferentiatingSums
 
 end Differential.Tests

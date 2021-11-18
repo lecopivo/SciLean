@@ -97,6 +97,12 @@ namespace Adjoint
       (g : Fin n → Fin n) [IsInv g]
       : (λ (f : Fin n → X) => f ∘ g)† = (λ f => f ∘ g⁻¹) := sorry
 
+  @[simp]
+  def adjoint_of_pullback_arg {n} [NonZero n]
+      (g : Fin n → Fin n) [IsInv g]
+      : (λ (f : Fin n → X) i => f (g i))† = (λ f => f ∘ g⁻¹) := by simp
+
+
   variable (f g : X → Y) 
   variable (r : ℝ)
 
@@ -127,7 +133,8 @@ namespace Adjoint
   @[simp]
   def adjoint_of_hmul_1 (f : X → ℝ) [IsLin f] (y : Y) : (λ x => (f x)*y)† = f† ∘ (λ y' => ⟨y,y'⟩) := sorry
   @[simp]
-  def adjoint_of_hmul_1_parm (f : X → Fin i → ℝ) [IsLin f] (y : Fin i → Y) : (λ x i => (f x i)*(y i))† = f† ∘ (λ y' i => ⟨y i,y' i⟩) := sorry
+  def adjoint_of_hmul_1_parm (f : X → Fin i → ℝ) [IsLin f] (y : Fin i → Y) 
+      : (λ x i => (f x i)*(y i))† = f† ∘ (λ y' i => ⟨y i,y' i⟩) := sorry
   @[simp]
   def adjoint_of_hmul_2 : (HMul.hMul r : X → X)† = HMul.hMul r := sorry
   @[simp]

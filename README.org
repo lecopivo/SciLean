@@ -244,6 +244,8 @@
     - [[https://openreview.net/forum?id=ryxuz9SzDB][The Differentiable Curry, 2019]]
     - [[https://arxiv.org/abs/1907.07587][A Differentiable Programming System to Bridge Machine Learning and Scientific Computing, 2019]]
 
+    - [[https://arxiv.org/abs/1802.04730][Tensor Comprehensions: Framework-Agnostic High-Performance Machine Learning Abstractions]]
+
 *** Math Foundation
 
     - [[https://www.mat.univie.ac.at/~kriegl/Skripten/apbook.pdf][The Convenient Setting of Global Analysis, 2008]]
@@ -311,6 +313,7 @@
    - [[https://github.com/apple/swift/blob/main/docs/DifferentiableProgramming.md][differentiable programming in Swift]]
    - [[https://github.com/psg-mit/smooth][Smooth]]
    - [[https://web.archive.org/web/20170924065701/http://www.digi-area.com/Mathematica/atlas/][Atlas 2 for Mathematica]]
+   - [[https://enzyme.mit.edu/][Enzyme]]
 
 *** Vaguely related software
 
