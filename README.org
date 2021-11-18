@@ -315,3 +315,8 @@
 *** Vaguely related software
 
     - [[https://github.com/enso-org/enso][Enso]] - hybrid visual & textual programming language
+
+** Some relevant Zulip discussions:
+
+   - [[https://leanprover.zulipchat.com/#narrow/stream/113488-general/topic/Extraction.20replacing.20reals.20with.20float.3F][Extraction replacing reals with float?]]
+   - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Fast.20inline.20compiler.20for.20numerical.20computing][Fast inline compiler for numerical computing]]

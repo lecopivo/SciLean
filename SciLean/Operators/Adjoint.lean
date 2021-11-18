@@ -54,6 +54,13 @@ namespace Adjoint
   def adjoint_of_parm {n} (f : X → Fin n → Y) (i : Fin n) [IsLin f]
       : (λ x => f x i)† = (λ y => f† (λ j => (kron i j)*y)) := sorry
 
+  @[simp]
+  def adjoint_of_arg {n} [NonZero n] 
+      (f : Y → Fin n → Z) [IsLin f]
+      (g1 : X → Y) [IsLin g1]
+      (g2 : Fin n → Fin n) [IsInv g2]
+      : (λ x i => f (g1 x) (g2 i))† = g1† ∘ f† ∘ (λ h => h ∘ g2⁻¹) := sorry
+
   @[simp] 
   def adjoint_of_composition (f : Y → Z) [IsLin f] (g : X → Y) [IsLin g] 
       : (f∘g)† = g† ∘ f† := sorry

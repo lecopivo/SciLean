@@ -108,15 +108,9 @@ namespace Differential.Tests
       simp
       admit
 
-
-    set_option trace.Meta.Tactic.simp true
-    example (a : Fin _) : (fun (x : NDVector [n]) i => x[i - a])† = 0 := 
+    example {dims} (a : Fin _) [NonZero dims.product] : (fun (x : NDVector dims) i => x[i - a])† = λ x => (NDVector.lmk λ i => x (i+a)) := 
     by
       simp
-
-
-    set_option trace.Meta.Tactic.simp false
-
 
   end DifferentiatingSums
 
