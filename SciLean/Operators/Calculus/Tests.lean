@@ -129,7 +129,7 @@ namespace Differential.Tests
       --- algebraic simplification is needed!
       admit
 
-    example {n} [NonZero n] : ∇ (λ (f : Fin n → ℝ) => ∑ i, (1/2)*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*f) :=
+    example {n} [NonZero n] : ∇ (λ (f : Fin n → ℝ) => ∑ i, (1/2)*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*(1/2)*f) :=
     by
       conv =>
         pattern (∇ _)
