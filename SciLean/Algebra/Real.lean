@@ -38,9 +38,11 @@ namespace Real
   instance : Mul Real := ⟨λ x y => x.toFloat * y.toFloat⟩
   instance : Div Real := ⟨λ x y => x.toFloat / y.toFloat⟩
   instance : Neg Real := ⟨λ x => (-x : Float)⟩
-  
-  instance : One Real := ⟨(1.0 : Float)⟩
-  instance : Zero Real := ⟨(0.0 : Float)⟩
+
+  instance : Zero Real := ⟨Float.ofNat 0⟩  
+  instance : One Real  := ⟨Float.ofNat 1⟩
+  instance : OfNat ℝ n := ⟨Float.ofNat n⟩
+  instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
   instance : HPow Real Real Real := ⟨Math.pow⟩
 
@@ -58,5 +60,5 @@ namespace Real
 
 end Real
 
-instance : OfNat ℝ n := ⟨Float.ofNat n⟩
+
 

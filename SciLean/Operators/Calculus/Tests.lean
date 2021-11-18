@@ -31,8 +31,8 @@ namespace Differential.Tests
   example : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx (g x) + δ (F x) (g x) (δ g x dx)) := by simp done
 
   example g dg x : δ (λ (g : X → Y) => f (g x)) g dg = δ f (g x) (dg x) := by simp done
-  -- example g dg x : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by simp done
-  -- example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
+  example g dg x : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by simp done
+  example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
   example g dg x : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = δ F (g x) (dg x) y := by simp done
 
   example (y x dx : X) : δ (λ x : X => y) x dx = 0 := by simp done
@@ -126,9 +126,26 @@ namespace Differential.Tests
             simp
         enter [f,i]; simp -- autoadjoint
       simp
+      --- algebraic simplification is needed!
       admit
 
+    example {n} [NonZero n] : ∇ (λ (f : Fin n → ℝ) => ∑ i, (1/2)*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*f) :=
+    by
+      conv =>
+        pattern (∇ _)
+        simp [gradient]
+        conv =>
+          enter [x,1,dx]
+          simp
+          conv =>
+            pattern (δ _)
+            enter [x,dx,i]
+            simp
+        enter [f,i]; simp
+      done
     
+    example (f : Fin n → ℝ) (i : Fin n) : 0 * f i = 0 := by simp; done
+
     example {n} (a : Fin n) : IsLin (λ (x : Fin n → ℝ) i => (x (i + a) - x i)) := by infer_instance
 
     example  {n} (a : Fin n) [NonZero n] : (fun (x : Fin n → ℝ) i => x (i + a))† = (fun x i => x (i - a)) := 

@@ -12,6 +12,11 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 @[simp] theorem sub_zero (x : X) : x - 0 = x := sorry
 @[simp] theorem zero_sub (x : X) : 0 - x = -x := sorry
 
+@[simp] theorem zero_mul (x : X) : (0:ℝ)*x = (0 : X) := sorry
+@[simp] theorem mul_zero (r : ℝ) : r*(0:ℝ) = (0 : ℝ) := sorry
+
+@[simp] theorem zero_eval [Zero β] : (0 : α → β) a = 0 := by simp[Zero.zero,OfNat.ofNat]; done
+
 @[simp] theorem mul_one (x : ℝ) : x * 1 = x := sorry
 @[simp] theorem one_mul (x : X) : (1:ℝ) * x = x := sorry
 

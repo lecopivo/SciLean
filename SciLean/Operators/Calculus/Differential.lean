@@ -12,6 +12,16 @@ instance (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
 instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
 
 @[simp] 
+theorem differential_at_zero (f : X → Y) [IsSmooth f] (x : X)
+        : δ f x 0 = 0 := sorry
+
+-- Maybe this one two? Because we cannot have simp theorem stating `f 0 = 0` for linear `f`.
+-- This is a simp theorem with variable head and that is not allowed.
+-- @[simp] 
+-- theorem differential_at_zero_comp (f : Y → Z) [IsSmooth f] (y : Y) (g : X → Y) [IsLin g]
+--         : δ f y (g 0) = 0 := sorry
+
+@[simp] 
 theorem differential_of_linear (f : X → Y) [IsLin f] (x dx : X)
         : δ f x dx = f dx := sorry
 
