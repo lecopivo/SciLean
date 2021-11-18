@@ -7,5 +7,6 @@ namespace Lean.Parser.Tactic.Conv
   macro_rules
     | `(conv| repeat' $seq) => `(conv| first | ($seq); repeat' $seq | no_op)
 
+
 end Lean.Parser.Tactic.Conv
 

@@ -1,9 +1,18 @@
 import SciLean.Basic
 -- import SciLean.Simp
+import SciLean.Tactic.Basic
 
 set_option synthInstance.maxHeartbeats 5000
 
 namespace SciLean
+
+macro "autodiff"    : conv => `(repeat' (conv => pattern (δ _); repeat' ext; simp))
+macro "autoadjoint" : conv => `(repeat' (conv => pattern (adjoint _); repeat' ext; simp))
+macro "autograd   " : conv => `(conv => pattern (∇ _); simp[gradient]; autodiff; autoadjoint; simp)
+
+macro "autodiff"    : tactic => `(conv => autodiff)
+macro "autoadjoint" : tactic => `(conv => autoadjoint)
+macro "autograd   " : tactic => `(conv => autograd)
 
 namespace Differential.Tests
 
@@ -57,104 +66,29 @@ namespace Differential.Tests
 
     example (x dx : NDVector [n]) : δ (λ x => ∑ i, x[i]) x dx = ∑ i, dx[i] := by simp done
     example (x dx : NDVector [n]) : δ (λ x => ∑ i, 2*x[i]) x dx = ∑ i, 2*dx[i] := by simp done
-    example (x dx : NDVector [n]) : δ (λ x => (∑ i, x[i]*x[i])) x dx = ∑ i, dx[i]*x[i] + x[i]*dx[i] := 
-    by
-      simp
-      conv =>
-        pattern (δ _)
-        enter [x,dx,j]
-        simp
-      done
+    example (x dx : NDVector [n]) : δ (λ x => (∑ i, x[i]*x[i])) x dx = ∑ i, dx[i]*x[i] + x[i]*dx[i] := by autodiff done
+    example (x : NDVector [n]) : ∇ (λ x => ∑ i, x[i]) x = NDVector.lmk (λ i => 1) := by autograd done
+    example (x : NDVector [n]) : ∇ (λ x => ∑ i, x[i]*x[i]) x = (2:ℝ)*x := by autograd done
 
-    example (x : NDVector [n]) : ∇ (λ x => ∑ i, x[i]) x = NDVector.lmk (λ i => 1) := 
-    by 
-      conv =>
-        pattern (gradient _)
-        simp [gradient]
-        conv => 
-          enter [x,1,dx]
-          simp
-        simp
-      done
-
-    example (x : NDVector [n]) : ∇ (λ x => ∑ i, x[i]*x[i]) x = (2:ℝ)*x :=
-    by
-      conv =>
-        pattern (∇ _)
-        simp [gradient]
-        conv =>
-          enter [x,1,dx]
-          simp
-          conv =>
-            pattern (δ _)
-            enter [x,dx,i]
-            simp
-        simp
-      done
 
     example (x : NDVector [n]) (a : Fin _) : ∇ (λ x => ∑ i, x[i]*x[i-a]) x = (2:ℝ)*x :=
     by
-      conv =>
-        pattern (∇ _)
-        simp [gradient]
-        conv =>
-          enter [x,1,dx]
-          simp
-          conv =>
-            pattern (δ _)
-            enter [x,dx,i]
-            simp
-        simp
-      simp
+      autograd
       admit
 
-    example {dims} (a : Fin _) [NonZero dims.product] : (λ (x : NDVector dims) i => x[i - a])† = λ x => (NDVector.lmk λ i => x (i+a)) := 
-    by
-      simp
 
-    example {n} [NonZero n] (a : Fin n) : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i+a) - f i)*(f (i+a) - f i)) = 0 := 
-    by
-      conv =>
-        pattern (∇ _)
-        simp [gradient]
-        conv =>
-          enter [x,1,dx]
-          simp
-          conv =>
-            pattern (δ _)
-            enter [x,dx,i]
-            simp
-        enter [f,i]; simp -- autoadjoint
-      simp
-      --- algebraic simplification is needed!
-      admit
+    example {n} [NonZero n] (a : Fin n) 
+            : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i+a) - f i)*(f (i+a) - f i)) 
+              = 
+                (λ (f : Fin n → ℝ) i => 2 * (f (i - a + a) - f (i - a) - (f (i + a) - f i))) := 
+    by autograd done
 
-    example {n} [NonZero n] : ∇ (λ (f : Fin n → ℝ) => ∑ i, (1/2)*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*(1/2)*f) :=
-    by
-      conv =>
-        pattern (∇ _)
-        simp [gradient]
-        conv =>
-          enter [x,1,dx]
-          simp
-          conv =>
-            pattern (δ _)
-            enter [x,dx,i]
-            simp
-        enter [f,i]; simp
-      done
+    example {n} [NonZero n] : ∇ (λ (f : Fin n → ℝ) => ∑ i, (1/2)*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*(1/2)*f) := 
+    by autograd done
     
-    example (f : Fin n → ℝ) (i : Fin n) : 0 * f i = 0 := by simp; done
-
-    example {n} (a : Fin n) : IsLin (λ (x : Fin n → ℝ) i => (x (i + a) - x i)) := by infer_instance
-
-    example  {n} (a : Fin n) [NonZero n] : (fun (x : Fin n → ℝ) i => x (i + a))† = (fun x i => x (i - a)) := 
-    by
-      conv => 
-        pattern (adjoint _)
-        enter [x,i]
-        simp
-      done
+    -- move to tests about adjoints
+    example {dims} (a : Fin _) [NonZero dims.product] : (λ (x : NDVector dims) i => x[i - a])† = λ x => (NDVector.lmk λ i => x (i+a)) := by simp done
+    example {n} (a : Fin n) [NonZero n] : (fun (x : Fin n → ℝ) i => x (i + a))† = (fun x i => x (i - a)) := by simp done
     
   end DifferentiatingSums
 
