@@ -76,7 +76,7 @@ theorem differential_of_composition_3 (f df : β → Z) (g : α → β) (a : α)
 -- can have weaker assumption, [IsSmooth (λ y => f y b)]
 @[simp]
 theorem differential_of_composition_fix_parm_1 (f : Y → β → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] (x dx b) 
-        : δ (λ x => f (g x) b) x dx = δ f (g x) (δ g x dx) b := by simp
+        : δ (λ x => f (g x) b) x dx = δ f (g x) (δ g x dx) b := sorry
 
 @[simp]
 theorem differential_of_composition_fix_parm_2 (f : Y → β → Z) [IsSmooth f] (a b) (g dg : α → Y)

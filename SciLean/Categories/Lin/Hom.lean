@@ -18,41 +18,55 @@ namespace Hom
   variable (g : X → Y) [IsLin g]
   variable (r : ℝ)
 
-  -- instance : IsLin (f + g) :=
-  -- by 
-  --   conv => 
-  --     enter [1,x]
-  --     simp[HAdd.hAdd, Add.add]
-  --   infer_instance
+  instance : IsLin (f + g) :=
+  by 
+    conv => 
+      enter [1,x]
+      simp[HAdd.hAdd, Add.add]
+    infer_instance; done
 
-  -- instance : IsLin (f - g) :=
-  -- by 
-  --   conv => 
-  --     enter [1,x]
-  --     simp[HSub.hSub, Sub.sub]
-  --   infer_instance
+  instance : IsLin (f - g) :=
+  by 
+    conv => 
+      enter [1,x]
+      simp[HSub.hSub, Sub.sub]
+    infer_instance; done
 
-  -- instance : IsLin (r*f) :=
-  -- by 
-  --   conv => 
-  --     enter [1,x]
-  --     simp[HMul.hMul]
-  --   infer_instance
+  instance : IsLin (r*f) :=
+  by 
+    conv => 
+      enter [1,x]
+      simp[HMul.hMul]
+    infer_instance; done
 
-  -- instance : IsLin (-f) :=
-  -- by
-  --   conv =>
-  --     enter [1,x]
-  --     simp[Neg.neg]
-  --   infer_instance
+  instance : IsLin (-f) :=
+  by
+    conv =>
+      enter [1,x]
+      simp[Neg.neg]
+    infer_instance; done
 
-  -- instance : Add (X ⊸ Y) := ⟨λ f g => ⟨f.1 + g.1, by infer_instance⟩⟩
-  -- instance : Sub (X ⊸ Y) := ⟨λ f g => ⟨f.1 - g.1, by infer_instance⟩⟩
-  -- instance : HMul ℝ (X ⊸ Y) (X ⊸ Y) := ⟨λ r f => ⟨r * f.1, by infer_instance⟩⟩
-  -- instance : Neg (X ⊸ Y) := ⟨λ f => ⟨-f.1, by infer_instance⟩⟩
+  instance : IsLin (0 : X → Y) :=
+  by 
+    conv => 
+      enter[1]
+      simp[OfNat.ofNat]
+      simp[Zero.zero]
+    infer_instance; done
 
+  instance : Zero (X ⊸ Y) := ⟨⟨0, by infer_instance⟩⟩
+  instance : Add (X ⊸ Y) := ⟨λ f g => ⟨f.1 + g.1, by infer_instance⟩⟩
+  instance : Sub (X ⊸ Y) := ⟨λ f g => ⟨f.1 - g.1, by infer_instance⟩⟩
+  instance : HMul ℝ (X ⊸ Y) (X ⊸ Y) := ⟨λ r f => ⟨r * f.1, by infer_instance⟩⟩
+  instance : Neg (X ⊸ Y) := ⟨λ f => ⟨-f.1, by infer_instance⟩⟩
 
-  instance : Vec (X ⊸ Y) := sorry
+  instance : Vec (X ⊸ Y) :=
+  {
+    add_assoc := sorry,
+    add_comm := sorry,
+    add_zero := sorry,
+    zero_add := sorry
+  }
   
 
 end Hom

@@ -1,5 +1,6 @@
-import SciLean.Categories.Smooth.Basic
+import SciLean.Categories.Smooth.Core
 
+open Function
 namespace SciLean.Smooth
 
 variable {α β γ : Type} 
@@ -10,24 +11,15 @@ instance : IsSmooth (id : X → X) := by infer_instance
 
 -- const
 instance : IsSmooth (const β : X → β → X) := by infer_instance
-instance (x : X) : IsSmooth (const Y x : Y → X) := sorry
+instance (x : X) : IsSmooth (const Y x : Y → X) := by simp[const]; infer_instance
 
 -- swap
 instance : IsSmooth (swap : (α → β → Z) → (β → α → Z)) := by infer_instance 
-instance (f : α → Y → Z) [∀ a, IsSmooth (f a)] : IsSmooth (swap f) := sorry
-instance (f : X → β → Z) (b : β) [IsSmooth f] : IsSmooth (swap f b) := sorry
+instance (f : α → Y → Z) [∀ a, IsSmooth (f a)] : IsSmooth (swap f) := by simp[swap] infer_instance
+instance (f : X → β → Z) (b : β) [IsSmooth f] : IsSmooth (swap f b) := by simp[swap] infer_instance
 
 -- comp
 instance : IsSmooth (comp : (β → Z) → (α → β) → (α → Z)) := by infer_instance  
-instance (f : Y → Z) [IsSmooth f] : IsSmooth (comp f : (α → Y) → (α → Z)) := sorry
-instance (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] : IsSmooth (comp f g) := sorry
+instance (f : Y → Z) [IsSmooth f] : IsSmooth (comp f : (α → Y) → (α → Z)) := by simp[comp] infer_instance
+instance (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] : IsSmooth (comp f g) := by simp[comp] infer_instance
 
--- What is the role of these????
-instance (f : Y → α → Z) (g : X → Y) (a : α) [IsSmooth g] [IsSmooth (swap f a)] 
-         : IsSmooth (swap (comp f g) a) := sorry
-instance (f : β → Y → Z) [∀ b, IsSmooth (f b)] 
-         : IsSmooth ((swap (comp comp (swap comp)) f) : (α → Y) → β → (α → Z)) := sorry
-
--- diag
-instance : IsSmooth (@diag α Y) := by infer_instance 
-instance (f : X → X → Y) [IsSmooth f] [∀ x, IsSmooth (f x)] : IsSmooth (diag f) := sorry

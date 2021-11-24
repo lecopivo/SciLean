@@ -54,7 +54,7 @@ variable {α β γ : Type}
 variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 theorem test1 (f : X → X) [IsLin f] : IsLin ((f ∘ f) ∘ (f ∘ (f ∘ f))) := by infer_instance
-theorem test2 (f : β → X → Y) (g : α → β) (a : α) [IsLin (f (g a))] : IsLin ((f ∘ g) a) := by infer_instance
+-- theorem test2 (f : β → X → Y) (g : α → β) (a : α) [IsLin (f (g a))] : IsLin ((f ∘ g) a) := by infer_instance
 theorem test3 (y : X) (A : X → X) (B : X → X) [IsLin A] [IsLin B] : IsLin λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
  
 end combtests

@@ -43,7 +43,7 @@ theorem backprop_of_composition_1 (f : V → W) [IsSmooth f] (g : U → V) [IsSm
     : 𝓑 (λ x => f (g x)) = (λ x => (𝓑 f • 𝓑 g) x) := 
 by
   funext x; simp[backprop, Function.comp, backcomp]; conv in (δ _ _) => enter [dx]
-  simp; done
+  simp; admit
 
 -- -- TODO: Change IsSmooth to IsDiff
 @[simp] 

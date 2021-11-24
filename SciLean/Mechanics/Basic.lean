@@ -1,5 +1,6 @@
 import SciLean.Operators
 
+open Function
 namespace SciLean
 
 noncomputable

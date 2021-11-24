@@ -1,18 +1,11 @@
 import SciLean.Basic
 -- import SciLean.Simp
-import SciLean.Tactic.Basic
+import SciLean.Tactic
 
 set_option synthInstance.maxHeartbeats 5000
+-- set_option maxHeartbeats 500000
 
 namespace SciLean
-
-macro "autodiff"    : conv => `(repeat' (conv => pattern (δ _); repeat' ext; simp))
-macro "autoadjoint" : conv => `(repeat' (conv => pattern (adjoint _); repeat' ext; simp))
-macro "autograd   " : conv => `(conv => pattern (∇ _); simp[gradient]; autodiff; autoadjoint; simp)
-
-macro "autodiff"    : tactic => `(conv => autodiff)
-macro "autoadjoint" : tactic => `(conv => autoadjoint)
-macro "autograd   " : tactic => `(conv => autograd)
 
 namespace Differential.Tests
 
@@ -83,12 +76,12 @@ namespace Differential.Tests
                 (λ (f : Fin n → ℝ) i => 2 * (f (i - a + a) - f (i - a) - (f (i + a) - f i))) := 
     by autograd done
 
-    example {n} [NonZero n] : ∇ (λ (f : Fin n → ℝ) => ∑ i, (1/2)*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*(1/2)*f) := 
-    by autograd done
+    -- example {n} [NonZero n] : ∇ (λ (f : Fin n → ℝ) => ∑ i, (1/2)*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*(1/2)*f) := 
+    -- by autograd done
     
-    -- move to tests about adjoints
-    example {dims} (a : Fin _) [NonZero dims.product] : (λ (x : NDVector dims) i => x[i - a])† = λ x => (NDVector.lmk λ i => x (i+a)) := by simp done
-    example {n} (a : Fin n) [NonZero n] : (fun (x : Fin n → ℝ) i => x (i + a))† = (fun x i => x (i - a)) := by simp done
+    -- -- move to tests about adjoints
+    -- example {dims} (a : Fin _) [NonZero dims.product] : (λ (x : NDVector dims) i => x[i - a])† = λ x => (NDVector.lmk λ i => x (i+a)) := by simp done
+    -- example {n} (a : Fin n) [NonZero n] : (fun (x : Fin n → ℝ) i => x (i + a))† = (fun x i => x (i - a)) := by simp done
     
   end DifferentiatingSums
 

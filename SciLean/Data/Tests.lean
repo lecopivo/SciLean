@@ -4,7 +4,7 @@ import SciLean.Basic
 -- open Lean
 -- open Lean.Meta
 
--- set_option synthInstance.maxHeartbeats 5000
+set_option synthInstance.maxHeartbeats 5000
 -- set_option synthInstance.maxSize 1000
 
 -- set_option trace.Meta.Tactic.simp true
@@ -24,6 +24,8 @@ section NDVector
 
   example : Vec (NDVector dims) := by infer_instance
   example : Hilbert (NDVector dims) := by infer_instance
+
+  example : (λ x : NDVector dims => sum fun i => getOp x i)† 1 = (lmk fun i => 1) := by simp done
 
   example : adjoint (δ (λ (x : NDVector dims) => x[i]) x) 1 = 0 := 
   by 
@@ -79,7 +81,7 @@ section NDVector
       conv =>
         enter[x,1,dx]
         simp
-    simp[Function.comp]
+    simp
     admit
 
 end NDVector
