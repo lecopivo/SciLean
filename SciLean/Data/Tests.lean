@@ -1,4 +1,5 @@
 import SciLean.Basic
+import SciLean.Tactic
 -- import Lean
 
 -- open Lean
@@ -25,64 +26,14 @@ section NDVector
   example : Vec (NDVector dims) := by infer_instance
   example : Hilbert (NDVector dims) := by infer_instance
 
-  example : (λ x : NDVector dims => sum fun i => getOp x i)† 1 = (lmk fun i => 1) := by simp done
+  example : (λ x : NDVector dims => sum fun i => getOp x i)† 1 = (lmk fun i => 1) := by autoadjoint done
+  example (a : Fin _) [NonZero dims.product] : (fun (x : NDVector dims) i => x[i - a])† = (fun x => lmk fun i => x (i + a)) := by autoadjoint done
+  example (x : NDVector dims) (i) : (fun (y : NDVector dims) => y[i] * x[i])† 1 = (lmk (λ j => (kron i j) * x[i])) := by autoadjoint simp done
 
-  example : adjoint (δ (λ (x : NDVector dims) => x[i]) x) 1 = 0 := 
-  by 
-    conv => 
-      pattern (δ _)
-      enter [x,dx]
-      simp
-    simp
-    admit
-
-  example (x) : gradient (λ (x : ℝ) => x) x = 1 :=
-  by 
-    conv =>
-      pattern (gradient _)
-      simp[gradient]
-      conv =>
-        enter [x,1,dx]
-        simp
-    simp done
-
-  example : ∇ (λ (x : NDVector dims) => x[i]) x = 0 := 
-  by
-    conv =>
-      pattern (∇ _)
-      simp[gradient]
-      conv =>
-        pattern (δ _)
-        enter [x,dx]
-        simp
-    simp[getOp]
-    admit
-
-  example {dims} (i) (x : NDVector dims) : ∇ (λ (x : NDVector dims) => x[i]) x = lmk (kron i) := 
-  by
-    conv =>
-      pattern (∇ _)
-      simp[gradient]
-      conv =>
-        enter[x,1,dx]
-        simp
-    simp done
-
-  example (x : NDVector dims) (i) : (fun (y : NDVector dims) => y[i] * x[i])† 1 = (lmk (λ j => (kron i j) * x[i])) :=
-  by
-    simp
-    done
-
-  example {dims} (i) (x : NDVector dims) : ∇ (λ (x : NDVector dims) => x[i]*x[i]) x = lmk (kron i) := 
-  by
-    conv =>
-      pattern (∇ _)
-      simp[gradient]
-      conv =>
-        enter[x,1,dx]
-        simp
-    simp
-    admit
+  example (x) : gradient (λ (x : ℝ) => x) x = 1 := by autograd done
+  example : ∇ (λ (x : NDVector dims) => x[i]) x = (lmk fun j => kron i j) := by autograd done
+  example {dims} (i) (x : NDVector dims) : ∇ (λ (x : NDVector dims) => x[i]) x = lmk (kron i) := by autograd done
+  example {dims} (i) (x : NDVector dims) : ∇ (λ (x : NDVector dims) => x[i]*x[i]) x = ((2 : ℝ) * lmk fun j => kron i j * x[i]) := by autograd done
 
 end NDVector
 
