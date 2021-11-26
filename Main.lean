@@ -6,6 +6,5 @@ import SciLean.Data.Tests
 import SciLean.Basic
 import SciLean.Examples 
 
-def main : IO Unit :=
+def main : IO Unit := do
   IO.println "Hello, world!"
-

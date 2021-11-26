@@ -1,9 +1,11 @@
 import SciLean.Basic
 
+namespace SciLean
+
 def conv311 {n m} (k : Nat) (x : NDVector [3,n,m]) (w : NDVector [3,1,1,k]) : NDVector [n,m,k] := sorry
 def conv33  {n m} (k : Nat) (l : Nat) (x : NDVector [n,m,k]) (w : NDVector [3,3,k*l]) : NDVector [n,m,k*l] := sorry
 
-def fully_connected {dims} (n : Nat) (x : NDVector dims) (w : NDVector [dims.product, n]) : NDVector [n] := sorry
+def fully_connected {dims} (n : Nat) (x : NDVector dims) (w : NDVector [n, dims.product]) (b : NDVector [n]) : NDVector [n] := NDVector.lmk λ i => ∑ j, w[i,j] * x[j] + b[i]
 
 def relu (ε : ℝ) (x : ℝ) : ℝ := (Math.sqrt (x*x + ε*ε) + x)/2
 
