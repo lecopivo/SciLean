@@ -20,26 +20,15 @@ namespace NDArray
 
 end NDArray
 
+-- Do I want to have rank as explicit argument of `A` ?? 
 --- Type A is a NDArray with densions dims and value type T
-class NDArray (A : Type u) (T : Type v) (dims : Array Nat)  where 
-  elem : A → NDArray.Index dims → T     -- get and element
-  emk : (NDArray.Index dims → T) → A   -- elementa wise make
-
---- Automatically infering T and dims based on A
-class NDArrayData (A : Type u) where
-  T : Type v
-  dims : Array Nat
-
--- Is this good idea?
-@[reducible] 
-instance (A : Type u) (T : Type v) (dims : Array Nat) [NDArray A T dims] : NDArrayData A := ⟨T, dims⟩
-
-attribute [reducible, inline] NDArrayData.T NDArrayData.dims
+class NDArray (A : Type v → Array Nat → Type u) where 
+  get {T dims} : A T dims → NDArray.Index dims → T     -- get and element
+  -- emk {T dims} : (NDArray.Index dims → T) → A T dims   -- element wise make
 
 namespace NDArray
 
   namespace Index
-
     def toIndex1 (i1 : Fin n1) : Index #[n1] 
     | Fin.mk 0 _ => i1
 
@@ -62,70 +51,83 @@ namespace NDArray
 
   end Index
 
-  @[reducible]
-  abbrev scalarOf {A} (a : A) [NDArrayData A] := NDArrayData.T A
-
-  @[reducible]
-  abbrev dimsOf {A} (a : A) [NDArrayData A] := NDArrayData.dims A
-
-  @[reducible]
-  abbrev get {A} [NDArrayData A] [NDArray A (NDArrayData.T A) (NDArrayData.dims A)] (a : A) := @elem _ (scalarOf a) (dimsOf a) _ a
-
-  -- macro a:term noWs "[[" i:term "]]" : term =>
-  --   `(elem (T := scalarOf $a) (dims := dimsOf $a) $a $i)
-  
   -- This can be turned into one macro once we have general toIndexₙ
   macro a:term noWs "[" i1:term "]" : term =>
-    `(elem (T := scalarOf $a) (dims := dimsOf $a) $a (Index.toIndex1 $i1))
+    `(get $a (Index.toIndex1 $i1))
 
   macro a:term noWs "[" i1:term "," i2:term "]" : term =>
-    `(elem (T := scalarOf $a) (dims := dimsOf $a) $a (Index.toIndex2 $i1 $i2))
+    `(get $a (Index.toIndex2 $i1 $i2))
 
   macro a:term noWs "[" i1:term "," i2:term "," i3:term "]" : term =>
-    `(elem (T := scalarOf $a) (dims := dimsOf $a) $a (Index.toIndex3 $i1 $i2 $i3))
+    `(get $a (Index.toIndex3 $i1 $i2 $i3))
 
   macro a:term noWs "[" i1:term "," i2:term "," i3:term "," i4:term "]" : term =>
-    `(elem (T := scalarOf $a) (dims := dimsOf $a) $a (Index.toIndex4 $i1 $i2 $i3 $i4))
-
+    `(get $a (Index.toIndex4 $i1 $i2 $i3 $i4))
   
   -- Make NDArray from an arbitrary type
   -- Mainly used to create an array from lambdas like (λ i j k => f i j k)
-  section CustomMk
-    class CustomMk (A : Type u) (α : Type w) where customMk : α → A
-
-    variable {A : Type u} {T : Type v}
-  
-    instance [NDArray A T #[n]] : CustomMk A (Fin n → T) :=
-             ⟨λ f => NDArray.emk (λ i : Index #[n] => f (i ⟨0, by simp[Array.size, List.length] done⟩))⟩
-    instance [NDArray A T #[n1, n2]] : CustomMk A (Fin n1 → Fin n2 → T) := 
-             ⟨λ f => NDArray.emk (λ i : Index #[n1, n2] => f (i ⟨0, by simp[Array.size, List.length] done⟩) 
-                                                             (i ⟨1, by simp[Array.size, List.length] done⟩))⟩
-    instance [NDArray A T #[n1, n2, n3]] : CustomMk A (Fin n1 → Fin n2 → Fin n3 → T) := 
-             ⟨λ f => NDArray.emk (λ i : Index #[n1, n2, n3] => f (i ⟨0, by simp[Array.size, List.length] done⟩) 
-                                                                 (i ⟨1, by simp[Array.size, List.length] done⟩) 
-                                                                 (i ⟨2, by simp[Array.size, List.length] done⟩))⟩
-    instance [NDArray A T #[n1, n2, n3, n4]] : CustomMk A (Fin n1 → Fin n2 → Fin n3 → Fin n4 → T) := 
-             ⟨λ f => NDArray.emk (λ i : Index #[n1, n2, n3, n4] => f (i ⟨0, by simp[Array.size, List.length] done⟩) 
-                                                                     (i ⟨1, by simp[Array.size, List.length] done⟩) 
-                                                                     (i ⟨2, by simp[Array.size, List.length] done⟩)
-                                                                     (i ⟨3, by simp[Array.size, List.length] done⟩))⟩
-    --- ... and so on ...
-  
-    def cmk [CustomMk A α] (a : α) : A := CustomMk.customMk a
-
-  end CustomMk
-
 
   section Operations
 
-    class HasMap {T dims} (A : Type u) [NDArray A T dims] where
-      map : (T → T) → (A → A)
-      is_map : ∀ (f : T → T) (a : A) i, (f (get a i) = get (map f a) i)
+    -- Has map for function satisfying predicate P. 
+    -- This is mainly usefull for sparse matrices requiring (∀ i, (f i 0) = 0)
+    -- i.e. pmap is not allowed to change the sparsity pattern
+    class HasPMapIdx (A T) (P : {dims : Array Nat} → (Index dims → T → T) → Prop) [NDArray A] where
+      pmap {dims} : (f : Index dims → T → T) → (P f) → (A T dims → A T dims)
+      is_pmap {dims} : ∀ (f : Index dims → T → T) (h : P f) (a : A T dims) i, (f i (get a i) = get (pmap f h a) i)
 
-    class HasMap₂ (A : Type u) (T : Type v) where
-      map₂ : (T → T) → (A → A → A)
+    class HasMapIdx (A T) [NDArray A] extends HasPMapIdx A T (λ _ => True)
+
+    def mapIdx {A T dims} [NDArray A] [HasMapIdx A T] 
+               (f : Index dims → T → T) (a : A T dims) : A T dims
+               := HasPMapIdx.pmap (P := (λ _ => True)) f True.intro a
+
+    @[inline]
+    def map {A T dims} [NDArray A] [HasMapIdx A T] 
+            (f : T → T) (a : A T dims) : A T dims
+            := mapIdx (λ _ => f) a
+
+    -- Map that preserves zeroes, usefull for sparse matrices
+    class HasZMapIdx (A T) [Zero T] [NDArray A] extends HasPMapIdx A T (λ f => ∀ i, f i 0 = (0 : T))
+    def zmapIdx {A T dims} [Zero T] [NDArray A] [HasZMapIdx A T] 
+                (f : Index dims → T → T) (h : ∀ i, f i 0 = (0 : T)) (a : A T dims) : A T dims
+                := HasPMapIdx.pmap (P := (λ f => ∀ i, f i 0 = (0 : T))) f h a
+
+
+    class HasEMk (A) [NDArray A] where
+      emk {T dims} : (Index dims → T) → A T dims   -- element wise make
+      is_emk {T dims} : ∀ (f : Index dims → T) i, get (emk f) i = f i
+
+    def emk {A T dims} [NDArray A] [HasEMk A] : (Index dims → T) → A T dims := HasEMk.emk
 
   end Operations
+
+
+  section CustomMk
+    class CustomMk (α : Type w) (A : Type v → Array Nat → Type u) (T dims) where customMk : α → A T dims
+
+    variable {A T} [NDArray A] [HasEMk A]
+    instance : CustomMk (Fin n → T) A T #[n] :=
+             ⟨λ f => emk (λ i : Index #[n] => f (i ⟨0, by simp[Array.size, List.length] done⟩))⟩
+    instance : CustomMk (Fin n1 → Fin n2 → T) A T #[n1,n2] := 
+             ⟨λ f => emk (λ i : Index #[n1, n2] => f (i ⟨0, by simp[Array.size, List.length] done⟩) 
+                                                             (i ⟨1, by simp[Array.size, List.length] done⟩))⟩
+    instance : CustomMk (Fin n1 → Fin n2 → Fin n3 → T) A T #[n1,n2,n3] := 
+             ⟨λ f => emk (λ i : Index #[n1, n2, n3] => f (i ⟨0, by simp[Array.size, List.length] done⟩) 
+                                                                 (i ⟨1, by simp[Array.size, List.length] done⟩) 
+                                                                 (i ⟨2, by simp[Array.size, List.length] done⟩))⟩
+    instance : CustomMk (Fin n1 → Fin n2 → Fin n3 → Fin n4 → T) A T #[n1,n2,n3,n4] := 
+             ⟨λ f => emk (λ i : Index #[n1, n2, n3, n4] => f (i ⟨0, by simp[Array.size, List.length] done⟩) 
+                                                                     (i ⟨1, by simp[Array.size, List.length] done⟩) 
+                                                                     (i ⟨2, by simp[Array.size, List.length] done⟩)
+                                                                     (i ⟨3, by simp[Array.size, List.length] done⟩))⟩
+
+    --- ... and so on ...
+  
+    def cmk {α A T dims} [CustomMk α A T dims] (a : α) : A T dims := CustomMk.customMk a
+
+  end CustomMk
+
 
 end NDArray
 
@@ -133,41 +135,29 @@ section Test
 
     open NDArray
 
-    constant ℝ : Type
-    instance : Add ℝ := sorry
-    instance : Mul ℝ := sorry
-    instance : Sub ℝ := sorry
-    instance : Zero ℝ := sorry
-    constant V1 : Type
-    constant V2 : Type
-    constant V3 : Type
-    constant V4 : Type
-    instance : NDArray V1 ℝ #[4] := sorry
-    instance : NDArray V2 ℝ #[4,4] := sorry
-    instance : NDArray V3 ℝ #[4,4,4] := sorry
-    instance : NDArray V4 ℝ #[4,4,4,4] := sorry
+    variable {ℝ : Type} [Add ℝ] [Mul ℝ] [Sub ℝ] [Zero ℝ]
+    variable {V : Type → Array Nat → Type} [NDArray V] [HasEMk V]
 
-    def transpose (A : V2) : V2       := cmk λ i j => A[j,i]
-    def col (A : V2) (j : Fin 4) : V1 := cmk λ i => A[i,j]
-    def row (A : V2) (i : Fin 4) : V1 := cmk λ j => A[i,j]
-    def trace (A : V2) : ℝ            := ∑ i, A[i,i]
-    def mul (A B : V2) : V2           := cmk (λ i j => ∑ k, A[i,k]*B[k,j])
+    def transpose (A : V ℝ #[n,m]) : V ℝ #[m,n]  := cmk λ i j => A[j,i]
+    def col (A : V ℝ #[n,m]) (j : Fin m) : V ℝ #[n] := cmk λ i => A[i,j]
+    def row (A : V ℝ #[n,m]) (i : Fin n) : V ℝ #[m] := cmk λ j => A[i,j]
+    def mul (A : V ℝ #[n,m]) (B : V ℝ #[m,k]) : V ℝ #[n,k] := cmk (λ i j => ∑ k, A[i,k]*B[k,j])
 
-    variable [Inhabited V2] [Inhabited V3] [Inhabited V4]
-    constant D₁ : V1 → V2
-    constant D₂ : V2 → V3 
-    constant D₃ : V3 → V4
+    variable [∀ dims, Inhabited (V ℝ dims)]
+    constant D₂ : (V ℝ #[n,m]) → (V ℝ #[n,m,4])
+    constant D₃ : (V ℝ #[n,m,k]) → (V ℝ #[n,m,k,4])
 
     -- General Relativity formulas
     -- https://en.wikipedia.org/wiki/List_of_formulas_in_Riemannian_geometry
 
-    def Γ₁ (g : V2) : V3 := cmk λ c a b => (D₂ g)[c,a,b] + (D₂ g)[c,b,a] - (D₂ g)[a,b,c]
-    def Γ₂ (g : V2) : V3 := cmk λ k i j => ∑ l, g[k,l]*(Γ₁ g)[l,i,j]
-    def R (g : V2) : V4 := cmk λ i j k l => let Γ : V3 := Γ₂ g
+    variable (g : V ℝ #[4,4])
+
+    def Γ₁ : V ℝ #[4,4,4] := cmk λ c a b => (D₂ g)[c,a,b] + (D₂ g)[c,b,a] - (D₂ g)[a,b,c]
+    def Γ₂ : V ℝ #[4,4,4] := cmk λ k i j => ∑ l, g[k,l]*(Γ₁ g)[l,i,j]
+    def R  : V ℝ #[4,4,4,4] := cmk λ i j k l => let Γ := Γ₂ g
                                             (D₃ Γ)[l,i,k,j] + (D₃ Γ)[l,j,k,i] + ∑ p, (Γ[p,i,k] * Γ[l,j,p] - Γ[p,j,k] - Γ[l,i,p])
-    def 𝓡 (g : V2) : V2 := cmk λ i k => ∑ j, (R g)[i,j,k,j]
-    def SR (g : V2) : ℝ := ∑ i k, g[i,k] * (𝓡 g)[i,k]
-    def G (g : V2) : V2 := cmk λ i k => (𝓡 g)[i,k] - (SR g) * g[i,k]
+    def 𝓡  : V ℝ #[4,4] := cmk λ i k => ∑ j, (R g)[i,j,k,j]
+    def SR : ℝ := ∑ i k, g[i,k] * (𝓡 g)[i,k]
+    def G  : V ℝ #[4,4] := cmk λ i k => (𝓡 g)[i,k] - (SR g) * g[i,k]
 
 end Test
-

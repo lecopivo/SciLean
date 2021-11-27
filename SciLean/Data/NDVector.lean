@@ -1,97 +1,51 @@
 import SciLean.Operators
+-- import SciLean.NDArray
 
-def List.product (l : List Nat) : Nat := 
-  match l with
-    | nil => 1
-    | head::tail => head * tail.product
+def Array.product (l : Array Nat) : Nat := do
+  let mut prod := 1
+  for i in [0:l.size] do
+    prod := prod * l[i]
+  prod
 
 namespace SciLean
 
-structure NDVector (dims : List Nat) where
+def Index (dims : Array Nat) := (d : Fin dims.size) → Fin (dims[d])
+
+namespace Index
+
+  inductive Order where | ColumnMajor | RowMajor
+
+  def toLinear {dims} (index : Index dims) (order := Order.ColumnMajor) : Fin dims.product := sorry
+  def fromLinear (dims : Array Nat) (i : Fin dims.product) (order := Order.ColumnMajor) : Index dims := sorry
+
+end Index
+
+structure NDVector (dims : Array Nat) (order := Index.Order.ColumnMajor) where
   (data : FloatArray)
   (h_size : data.size = dims.product)
 
 namespace NDVector
 
-  variable {dims : List Nat}
+  variable {dims : Array Nat}
 
-  -- abbrev N := dims.product
-
-  @[inline]
-  def rank (v : NDVector dims) : Nat := dims.length
-
-  @[inline]
-  def dim (v : NDVector dims) (i : Nat) : Nat := dims.get! i
-
-  @[inline]
-  def size (v : NDVector dims) : Nat := dims.product
-
-  -- linear index make
+  -- Access by linear index make
   def lmk (f : (Fin dims.product) → ℝ) : NDVector dims := ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f ⟨i.1, sorry⟩)⟩, sorry⟩
+  def lget  {order} (v : NDVector dims (order := order)) (i : Fin dims.product) : ℝ := v.data.get ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ 
+  def lget! {order} (v : NDVector dims (order := order)) (i : Nat) : ℝ := v.data.get! i
+  def lset  {order} (v : NDVector dims (order := order)) (i : Fin dims.product) (val : ℝ) : NDVector dims (order := order) := ⟨v.data.set ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ val, sorry⟩
+  def lset! {order} (v : NDVector dims (order := order)) (i : Nat) (val : ℝ) : NDVector dims (order := order) := ⟨v.data.set! i val, sorry⟩
 
-  -- get using linear index
-  def lget! (v : NDVector dims) (i : Nat) : ℝ := v.data.get! i
-  def lget (v : NDVector dims) (i : Fin dims.product) : ℝ := v.data.get ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ 
+  def emk (f : Index dims → ℝ) (order := Index.Order.ColumnMajor) : NDVector dims (order := order) 
+          := ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f (Index.fromLinear dims ⟨i, sorry⟩ (order := order)))⟩, sorry⟩
+  def get {order} (v : NDVector dims (order := order)) (index : Index dims) : ℝ 
+          := v.lget (Index.toLinear index (order := order))
+  def set {order} (v : NDVector dims (order := order)) (index : Index dims) (val : ℝ) : NDVector dims (order := order) 
+          := v.lset (Index.toLinear index (order := order)) val
+    
 
-  abbrev getOp {dims} (self : NDVector dims) (idx : Fin dims.product) : ℝ := self.lget idx
+end NDVector
 
-  -- multi index
-  def Index (dims : List Nat) := (d : Fin dims.length) → Fin (dims.get d.1 d.2)
-  def Index.toLinear (index : Index dims) : Fin dims.product := 
-  do 
-    let N := dims.length
-    let mut i : Nat := 0
-    for d' in [1:N] do
-      let d := N-d'
-      i := index ⟨d, sorry⟩ * dims.get! (d-1)
-    i := i + index ⟨0, sorry⟩
-    ⟨i, sorry⟩
-  def Index.fromLinear (dims : List Nat) (i : Fin dims.product) : Index dims := sorry
-  
-  def get (v : NDVector dims) (i : Index dims) := v.lget i.toLinear
-
-  def Index.toIndex1 {n1 : Nat} (i1 : Fin n1) : Index [n1]
-  | Fin.mk 0 h => i1
-
-  def Index.toIndex2 {n1 n2 : Nat} (i1 : Fin n1) (i2 : Fin n2) : Index [n1,n2]
-  | Fin.mk 0 h => i1
-  | Fin.mk 1 h => i2
-
-  def Index.toIndex3 {n1 n2 n3 : Nat} (i1 : Fin n1) (i2 : Fin n2) (i3 : Fin n3) : Index [n1,n2,n3]
-  | Fin.mk 0 h => i1
-  | Fin.mk 1 h => i2
-  | Fin.mk 2 h => i3
-
-  -- Make tensor from arbitrary type - mainly used to create from lambdas like (λ i j k => f i j k)
-  class CustomMk (dims : List Nat) (α : Type) where customMk : α → NDVector dims
-
-  instance : CustomMk [n] (Fin n → ℝ) := 
-           ⟨λ f => lmk (λ i =>
-                          let index := Index.fromLinear [n] i
-                          f (index ⟨0, by simp⟩))⟩
-  instance : CustomMk [n1,n2] (Fin n1 → Fin n2 → ℝ) := 
-           ⟨λ f => lmk (λ i => 
-                          let index := Index.fromLinear [n1,n2] i
-                          f (index ⟨0, by simp⟩) (index ⟨1, by simp⟩))⟩
-  instance : CustomMk [n1,n2,n3] (Fin n1 → Fin n2 → Fin n3 → ℝ) := 
-           ⟨λ f => lmk (λ i => 
-                          let index := Index.fromLinear [n1,n2,n3] i
-                          f (index ⟨0, by simp⟩) (index ⟨1, by simp⟩) (index ⟨2, by simp⟩))⟩
-
-  def cmk {α : Type} 
-
-  macro v:term noWs "[" i1:term "]" : term =>
-    `(NDVector.get $v (Index.toIndex1 $i1))
-
-  macro v:term noWs "[" i1:term "," i2:term "]" : term =>
-    `(NDVector.get $v (Index.toIndex2 $i1 $i2))
-
-  macro v:term noWs "[" i1:term "," i2:term "," i3:term "]" : term =>
-    `(NDVector.get $v (Index.toIndex3 $i1 $i2 $i3))
-
-  variable (v : NDVector [2,3]) (T : NDVector [2,3,5]) (A : NDVector [n,m]) (x : NDVector [m])
-
-  #check λ i => ∑ j, A[i,j] * x[j]
+  -- abbrev getOp {dims} (self : NDVector dims) (idx : Fin dims.product) : ℝ := self.lget idx
 
   -- def fully_connected {dims} (n : Nat) (x : NDVector dims) (w : NDVector [n, dims.product]) (b : NDVector [n]) : NDVector [n] := NDVector.lmk λ (i : Fin n) => ∑ j, w[i,j] * x[j] + b[i]
 

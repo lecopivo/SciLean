@@ -52,30 +52,30 @@ namespace Differential.Tests
 
   end GradientTests
 
-  section DifferentiatingSums
+  -- section DifferentiatingSums
 
-    open NDVector
-    example : IsLin (sum : (Fin n → X) → X) := by infer_instance
-    example : IsLin (λ (x : NDVector [n]) i => x.lget i) := by infer_instance
+  --   open NDVector
+  --   example : IsLin (sum : (Fin n → X) → X) := by infer_instance
+  --   -- example : IsLin (λ (x : NDVector [n]) i => x.lget i) := by infer_instance
 
-    variable {dims} (x dx : NDVector dims) [NonZero dims.product] (a : Fin dims.product) 
+  --   variable {dims} (x dx : NDVector dims) [NonZero dims.product] (a : Fin dims.product) 
 
-    example : δ (λ x => ∑ i, x[i]) x dx = ∑ i, dx[i] := by simp done
-    example : δ (λ x => ∑ i, 2*x[i]) x dx = ∑ i, 2*dx[i] := by simp done
-    example : δ (λ x => (∑ i, x[i]*x[i])) x dx = ∑ i, dx[i]*x[i] + x[i]*dx[i] := by autodiff done
-    example : ∇ (λ x => ∑ i, x[i]) x = lmk (λ i => 1) := by autograd done
-    example : ∇ (λ x => ∑ i, x[i]*x[i]) x = (2:ℝ)*x := by autograd done
+  --   example : δ (λ x => ∑ i, x[i]) x dx = ∑ i, dx[i] := by simp done
+  --   example : δ (λ x => ∑ i, 2*x[i]) x dx = ∑ i, 2*dx[i] := by simp done
+  --   example : δ (λ x => (∑ i, x[i]*x[i])) x dx = ∑ i, dx[i]*x[i] + x[i]*dx[i] := by autodiff done
+  --   example : ∇ (λ x => ∑ i, x[i]) x = lmk (λ i => 1) := by autograd done
+  --   example : ∇ (λ x => ∑ i, x[i]*x[i]) x = (2:ℝ)*x := by autograd done
 
-    example : ∇ (λ x => ∑ i, x[i]*x[i-a]) x = ((lmk λ i => x[i-a]) + (lmk λ i => x[i+a])) := by autograd done
-    -- example : ∇ (λ x => ∑ i, (x[i+a] - x[i])*(x[i+a] - x[i])) x = 0 := by autograd done -- Needs some more sophisticated simplifications
+  --   example : ∇ (λ x => ∑ i, x[i]*x[i-a]) x = ((lmk λ i => x[i-a]) + (lmk λ i => x[i+a])) := by autograd done
+  --   -- example : ∇ (λ x => ∑ i, (x[i+a] - x[i])*(x[i+a] - x[i])) x = 0 := by autograd done -- Needs some more sophisticated simplifications
 
-    variable {n : Nat} [NonZero n] (a : Fin n)
+  --   variable {n : Nat} [NonZero n] (a : Fin n)
 
-    example : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i+a) - f i)*(f (i+a) - f i)) 
-              = 
-              (λ (f : Fin n → ℝ) i => 2 * (f (i - a + a) - f (i - a) - (f (i + a) - f i))) := by autograd done
-    example (c : ℝ) : ∇ (λ (f : Fin n → ℝ) => ∑ i, c*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*c*f) := by autograd done
+  --   example : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i+a) - f i)*(f (i+a) - f i)) 
+  --             = 
+  --             (λ (f : Fin n → ℝ) i => 2 * (f (i - a + a) - f (i - a) - (f (i + a) - f i))) := by autograd done
+  --   example (c : ℝ) : ∇ (λ (f : Fin n → ℝ) => ∑ i, c*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*c*f) := by autograd done
     
-  end DifferentiatingSums
+  -- end DifferentiatingSums
 
 end Differential.Tests
