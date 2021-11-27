@@ -1,4 +1,5 @@
 
+-- Some auxiliary definitions
 class Zero (α : Type u) where
   zero : α
 
@@ -13,12 +14,6 @@ def sum {n α} [Zero α] [Add α] (f : Fin n → α) : α := do
 
 macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `sum xs b
 
-def Array.product (l : Array Nat) : Nat := do
-  let mut prod := 1
-  for i in [0:l.size] do
-    prod := prod * l[i]
-  prod
-
 namespace NDArray
 
   def Index (dims : Array Nat) := (d : Fin dims.size) → Fin (dims[d])
@@ -27,7 +22,7 @@ end NDArray
 
 --- Type A is a NDArray with densions dims and value type T
 class NDArray (A : Type u) (T : Type v) (dims : Array Nat)  where 
-  get : A → NDArray.Index dims → T     -- get and element
+  elem : A → NDArray.Index dims → T     -- get and element
   emk : (NDArray.Index dims → T) → A   -- elementa wise make
 
 --- Automatically infering T and dims based on A
@@ -36,25 +31,14 @@ class NDArrayData (A : Type u) where
   dims : Array Nat
 
 -- Is this good idea?
+@[reducible] 
 instance (A : Type u) (T : Type v) (dims : Array Nat) [NDArray A T dims] : NDArrayData A := ⟨T, dims⟩
 
 attribute [reducible, inline] NDArrayData.T NDArrayData.dims
 
 namespace NDArray
 
-  -- variable {A : Type u} {T : Type v} {dims : Array Nat}
-  -- variable [NDArray A]
-
   namespace Index
-
-    variable {dims : Array Nat}
-
-    -- TODO
-    -- https://en.wikipedia.org/wiki/Row-_and_column-major_order#Address_calculation_in_general
-    def toRowLinear : Index dims → Fin dims.product := sorry -- i_n + N_{n} * (i_{n-1} + ...)
-    def toColLinear : Index dims → Fin dims.product := sorry -- i1 + N1 * (i2 + ...)
-    def fromRowLinear (dims : Array Nat) (i : Fin dims.product) : Index dims := sorry
-    def fromColLinear (dims : Array Nat) (i : Fin dims.product) : Index dims := sorry
 
     def toIndex1 (i1 : Fin n1) : Index #[n1] 
     | Fin.mk 0 _ => i1
@@ -68,54 +52,15 @@ namespace NDArray
     | Fin.mk 1 _ => i2
     | Fin.mk 2 _ => i3
 
+    def toIndex4 (i1 : Fin n1) (i2 : Fin n2) (i3 : Fin n3) (i4 : Fin n4) : Index #[n1, n2, n3, n4] 
+    | Fin.mk 0 _ => i1
+    | Fin.mk 1 _ => i2
+    | Fin.mk 2 _ => i3
+    | Fin.mk 3 _ => i4
+
     -- How to generalize?
 
   end Index
-
-  section CommonNDArrays
-
-    variable {α : Type} 
-
-    instance : NDArray (Fin n → α) α #[n] :=
-    {
-      get := λ f index => f (index ⟨0, by simp[Array.size, List.length] done⟩)
-      emk := λ f i => f (Index.toIndex1 i)
-    }
-
-    instance : NDArrayData (Fin n → α) :=
-    {
-      T := α
-      dims := #[n]
-    }
-    
-    instance : NDArray (Fin n1 → Fin n2 → α) α #[n1,n2] :=
-    {
-      get := λ f index => f (index ⟨0, by simp[Array.size, List.length] done⟩)
-                            (index ⟨1, by simp[Array.size, List.length] done⟩)
-      emk := λ f i1 i2 => f (Index.toIndex2 i1 i2)
-    }
-
-    instance : NDArrayData (Fin n1 → Fin n2 → α) :=
-    {
-      T := α
-      dims := #[n1,n2]
-    }
-  
-    instance : NDArray (Fin n1 → Fin n2 → Fin n3 → α) α #[n1,n2,n3] :=
-    {
-      get := λ f index => f (index ⟨0, by simp[Array.size, List.length] done⟩)
-                            (index ⟨1, by simp[Array.size, List.length] done⟩)
-                            (index ⟨2, by simp[Array.size, List.length] done⟩)
-      emk := λ f i1 i2 i3 => f (Index.toIndex3 i1 i2 i3)
-    }
-
-    instance : NDArrayData (Fin n1 → Fin n2 → Fin n3 → α) :=
-    {
-      T := α
-      dims := #[n1, n2, n3]
-    }
-  
-  end CommonNDArrays
 
   @[reducible]
   abbrev scalarOf {A} (a : A) [NDArrayData A] := NDArrayData.T A
@@ -123,19 +68,29 @@ namespace NDArray
   @[reducible]
   abbrev dimsOf {A} (a : A) [NDArrayData A] := NDArrayData.dims A
 
+  @[reducible]
+  abbrev get {A} [NDArrayData A] [NDArray A (NDArrayData.T A) (NDArrayData.dims A)] (a : A) := @elem _ (scalarOf a) (dimsOf a) _ a
+
+  -- macro a:term noWs "[[" i:term "]]" : term =>
+  --   `(elem (T := scalarOf $a) (dims := dimsOf $a) $a $i)
+  
+  -- This can be turned into one macro once we have general toIndexₙ
   macro a:term noWs "[" i1:term "]" : term =>
-    `(@NDArray.get _ (scalarOf $a) (dimsOf $a) _ $a (Index.toIndex1 $i1))
+    `(elem (T := scalarOf $a) (dims := dimsOf $a) $a (Index.toIndex1 $i1))
 
   macro a:term noWs "[" i1:term "," i2:term "]" : term =>
-    `(@NDArray.get _ (scalarOf $a) (dimsOf $a) _ $a (Index.toIndex2 $i1 $i2))
+    `(elem (T := scalarOf $a) (dims := dimsOf $a) $a (Index.toIndex2 $i1 $i2))
 
   macro a:term noWs "[" i1:term "," i2:term "," i3:term "]" : term =>
-    `(@NDArray.get _ (scalarOf $a) (dimsOf $a) _ $a (Index.toIndex3 $i1 $i2 $i3))
+    `(elem (T := scalarOf $a) (dims := dimsOf $a) $a (Index.toIndex3 $i1 $i2 $i3))
 
-  -- how to generalize?
+  macro a:term noWs "[" i1:term "," i2:term "," i3:term "," i4:term "]" : term =>
+    `(elem (T := scalarOf $a) (dims := dimsOf $a) $a (Index.toIndex4 $i1 $i2 $i3 $i4))
+
   
+  -- Make NDArray from an arbitrary type
+  -- Mainly used to create an array from lambdas like (λ i j k => f i j k)
   section CustomMk
-    -- Make NDArray from an arbitrary type - mainly used to create from lambdas like (λ i j k => f i j k)
     class CustomMk (A : Type u) (α : Type w) where customMk : α → A
 
     variable {A : Type u} {T : Type v}
@@ -149,77 +104,70 @@ namespace NDArray
              ⟨λ f => NDArray.emk (λ i : Index #[n1, n2, n3] => f (i ⟨0, by simp[Array.size, List.length] done⟩) 
                                                                  (i ⟨1, by simp[Array.size, List.length] done⟩) 
                                                                  (i ⟨2, by simp[Array.size, List.length] done⟩))⟩
+    instance [NDArray A T #[n1, n2, n3, n4]] : CustomMk A (Fin n1 → Fin n2 → Fin n3 → Fin n4 → T) := 
+             ⟨λ f => NDArray.emk (λ i : Index #[n1, n2, n3, n4] => f (i ⟨0, by simp[Array.size, List.length] done⟩) 
+                                                                     (i ⟨1, by simp[Array.size, List.length] done⟩) 
+                                                                     (i ⟨2, by simp[Array.size, List.length] done⟩)
+                                                                     (i ⟨3, by simp[Array.size, List.length] done⟩))⟩
     --- ... and so on ...
   
     def cmk [CustomMk A α] (a : α) : A := CustomMk.customMk a
 
   end CustomMk
 
-  -- section Operations
 
-  --   constant T' : Type
-  --   constant B : Type
-  --   constant C : Type
-  --   variable  {dims : Array Nat}
-  --   instance asdf : HasElements B := ⟨T'⟩
+  section Operations
 
-  --   #check asdf
+    class HasMap {T dims} (A : Type u) [NDArray A T dims] where
+      map : (T → T) → (A → A)
+      is_map : ∀ (f : T → T) (a : A) i, (f (get a i) = get (map f a) i)
 
-  --   variable [NDArray A T dims] [NDArray B T dims] [NDArray C T dims]
+    class HasMap₂ (A : Type u) (T : Type v) where
+      map₂ : (T → T) → (A → A → A)
 
-  --   variable (a : A) (id : Index dims)
-
-  --   instance [Add T] : Add A := ⟨λ a b => ((NDArray.emk λ (id : Index dims) => ((NDArray.get a id) + (NDArray.get b id) : T)))⟩
-
-  --   section Mul
-
-  --   variable [Add T] [Mul T] [Zero T] [NDArray A T #[n,k]] [NDArray B T #[k,m]] [NDArray C T #[n,m]]
-  --   variable (a : A) (b : B) (c : C) (i : Fin n) (j : Fin m) (l : Fin k)
-    
-
-  --   #check HasElements.elementType
-
-  --   set_option trace.Meta.synthInstance true in
-  --   #check (HasElements.elementType B)
-
-  --   -- #check b[i,l]
-
-  --   -- #check (λ (i : Fin n) (j : Fin m) => ∑ l, (a[i,l] * b[l,j] : T))
-
-  --   -- instance [Add T] [Mul T] [NDArray A T #[n,m]] [NDArray B T #[k,m]] [NDArray C T #[n,m]] : HMul A B C := 
-  --   --          ⟨λ a b => ((NDArray.cmk λ i j => ∑ l, a[i,l]*b[l,j]))⟩
-
-  --   end Mul
-
-  --   #check Nat
-
-  -- end Operations
-
+  end Operations
 
 end NDArray
 
 section Test
 
-    -- constant A : Type
-    -- constant B : Type
-    -- constant T : Type
-    -- def n := 9
-    -- def m := 10
-    -- def k := 11
+    open NDArray
 
-    variable {n m k : Nat}
-    variable (T : Type) [Add T] [Mul T] [Zero T]
-    variable (A : Type) [NDArray A T #[n,k]]
-    variable (B : Type) [NDArray B T #[k,m]]
-    variable (C : Type) [NDArray C T #[n,m]]
-    variable (D : Type) [NDArray D T #[n,n]]
-    variable (a : A) (b : B) (d : D) (i : Fin n) (j : Fin m) (l : Fin k)
+    constant ℝ : Type
+    instance : Add ℝ := sorry
+    instance : Mul ℝ := sorry
+    instance : Sub ℝ := sorry
+    instance : Zero ℝ := sorry
+    constant V1 : Type
+    constant V2 : Type
+    constant V3 : Type
+    constant V4 : Type
+    instance : NDArray V1 ℝ #[4] := sorry
+    instance : NDArray V2 ℝ #[4,4] := sorry
+    instance : NDArray V3 ℝ #[4,4,4] := sorry
+    instance : NDArray V4 ℝ #[4,4,4,4] := sorry
 
-    #check ((NDArray.cmk (λ i j => ∑ l, a[i,l] * b[l,j])) : C) -- create a*b with C type storage
-    #check λ j => a[i,j]
-    #check (a[i,·])
-    #check (a[·,·])
-    #check (a[·,l])
-    #check (λ i => d[i,i])
+    def transpose (A : V2) : V2       := cmk λ i j => A[j,i]
+    def col (A : V2) (j : Fin 4) : V1 := cmk λ i => A[i,j]
+    def row (A : V2) (i : Fin 4) : V1 := cmk λ j => A[i,j]
+    def trace (A : V2) : ℝ            := ∑ i, A[i,i]
+    def mul (A B : V2) : V2           := cmk (λ i j => ∑ k, A[i,k]*B[k,j])
+
+    variable [Inhabited V2] [Inhabited V3] [Inhabited V4]
+    constant D₁ : V1 → V2
+    constant D₂ : V2 → V3 
+    constant D₃ : V3 → V4
+
+    -- General Relativity formulas
+    -- https://en.wikipedia.org/wiki/List_of_formulas_in_Riemannian_geometry
+
+    def Γ₁ (g : V2) : V3 := cmk λ c a b => (D₂ g)[c,a,b] + (D₂ g)[c,b,a] - (D₂ g)[a,b,c]
+    def Γ₂ (g : V2) : V3 := cmk λ k i j => ∑ l, g[k,l]*(Γ₁ g)[l,i,j]
+    def R (g : V2) : V4 := cmk λ i j k l => let Γ : V3 := Γ₂ g
+                                            (D₃ Γ)[l,i,k,j] + (D₃ Γ)[l,j,k,i] + ∑ p, (Γ[p,i,k] * Γ[l,j,p] - Γ[p,j,k] - Γ[l,i,p])
+    def 𝓡 (g : V2) : V2 := cmk λ i k => ∑ j, (R g)[i,j,k,j]
+    def SR (g : V2) : ℝ := ∑ i k, g[i,k] * (𝓡 g)[i,k]
+    def G (g : V2) : V2 := cmk λ i k => (𝓡 g)[i,k] - (SR g) * g[i,k]
 
 end Test
+
