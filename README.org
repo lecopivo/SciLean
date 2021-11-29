@@ -314,6 +314,8 @@
    - [[https://github.com/psg-mit/smooth][Smooth]]
    - [[https://web.archive.org/web/20170924065701/http://www.digi-area.com/Mathematica/atlas/][Atlas 2 for Mathematica]]
    - [[https://enzyme.mit.edu/][Enzyme]]
+   - [[https://github.com/google-research/dex-lang][Dex]]
+   - [[https://futhark-lang.org/][furthark]]
 
 *** Vaguely related software
 
@@ -324,3 +326,5 @@
    - [[https://leanprover.zulipchat.com/#narrow/stream/113488-general/topic/Extraction.20replacing.20reals.20with.20float.3F][Extraction replacing reals with float?]]
    - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Fast.20inline.20compiler.20for.20numerical.20computing][Fast inline compiler for numerical computing]]
    - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Lean4.20and.20multidimensional.20arrays][Lean4 and multidimensional arrays]]
+   - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Interface.20for.20multi-dimensional.20arrays][Interface for multi-dimensional arrays]]
+

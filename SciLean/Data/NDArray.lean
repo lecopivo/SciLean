@@ -1,19 +1,6 @@
+import SciLean.Algebra
 
 -- Some auxiliary definitions
-class Zero (α : Type u) where
-  zero : α
-
-instance instOfNatZero [Zero α] : OfNat α (nat_lit 0) where
-  ofNat := Zero.zero
-
-def sum {n α} [Zero α] [Add α] (f : Fin n → α) : α := do
-  let mut r := 0
-  for i in [0:n] do
-    r := r + f ⟨i, sorry⟩
-  r
-
-macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `sum xs b
-
 namespace NDArray
 
   def Index (dims : Array Nat) := (d : Fin dims.size) → Fin (dims[d])
@@ -142,6 +129,8 @@ section Test
     def col (A : V ℝ #[n,m]) (j : Fin m) : V ℝ #[n] := cmk λ i => A[i,j]
     def row (A : V ℝ #[n,m]) (i : Fin n) : V ℝ #[m] := cmk λ j => A[i,j]
     def mul (A : V ℝ #[n,m]) (B : V ℝ #[m,k]) : V ℝ #[n,k] := cmk (λ i j => ∑ k, A[i,k]*B[k,j])
+    def vec_mul (A : V ℝ #[n,m]) (x : V ℝ #[m]) : V ℝ #[n] := cmk (λ i => ∑ j, A[i,j]*x[j])
+    def abstr (A : V ℝ #[n,m]) := (A[·,·])
 
     variable [∀ dims, Inhabited (V ℝ dims)]
     constant D₂ : (V ℝ #[n,m]) → (V ℝ #[n,m,4])

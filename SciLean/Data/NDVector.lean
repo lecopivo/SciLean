@@ -1,5 +1,6 @@
 import SciLean.Operators
--- import SciLean.NDArray
+
+import SciLean.Data.Container
 
 def Array.product (l : Array Nat) : Nat := do
   let mut prod := 1
@@ -26,24 +27,63 @@ structure NDVector (dims : Array Nat) (order := Index.Order.ColumnMajor) where
 
 namespace NDVector
 
-  variable {dims : Array Nat}
+  variable {dims : Array Nat} {order} (v : NDVector dims (order := order))
 
   -- Access by linear index make
-  def lmk (f : (Fin dims.product) → ℝ) : NDVector dims := ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f ⟨i.1, sorry⟩)⟩, sorry⟩
-  def lget  {order} (v : NDVector dims (order := order)) (i : Fin dims.product) : ℝ := v.data.get ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ 
-  def lget! {order} (v : NDVector dims (order := order)) (i : Nat) : ℝ := v.data.get! i
-  def lset  {order} (v : NDVector dims (order := order)) (i : Fin dims.product) (val : ℝ) : NDVector dims (order := order) := ⟨v.data.set ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ val, sorry⟩
-  def lset! {order} (v : NDVector dims (order := order)) (i : Nat) (val : ℝ) : NDVector dims (order := order) := ⟨v.data.set! i val, sorry⟩
+  def lintro (f : (Fin dims.product) → ℝ) : NDVector dims 
+      := ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f ⟨i.1, sorry⟩)⟩, sorry⟩
+  def lget  (i : Fin dims.product) : ℝ := v.data.get ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ 
+  def lget! (i : Nat) : ℝ := v.data.get! i
+  def lset  (i : Fin dims.product) (val : ℝ) : NDVector dims (order := order) 
+      := ⟨v.data.set ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ val, sorry⟩
+  def lset! (i : Nat) (val : ℝ) : NDVector dims (order := order) := ⟨v.data.set! i val, sorry⟩
+      
+  instance : Cont (NDVector dims (order := order)) (Index dims) ℝ :=
+  {
+    toFun := λ v index => v.lget (Index.toLinear index (order := order))
+  }
 
-  def emk (f : Index dims → ℝ) (order := Index.Order.ColumnMajor) : NDVector dims (order := order) 
-          := ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f (Index.fromLinear dims ⟨i, sorry⟩ (order := order)))⟩, sorry⟩
-  def get {order} (v : NDVector dims (order := order)) (index : Index dims) : ℝ 
-          := v.lget (Index.toLinear index (order := order))
-  def set {order} (v : NDVector dims (order := order)) (index : Index dims) (val : ℝ) : NDVector dims (order := order) 
-          := v.lset (Index.toLinear index (order := order)) val
-    
+  instance : Cont.Intro (NDVector dims (order := order)) (Index dims) ℝ :=
+  {
+    intro := λ f => ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f (Index.fromLinear dims ⟨i, sorry⟩ (order := order)))⟩, sorry⟩
+    valid := sorry
+  }
+
+  instance : Cont.Set (NDVector dims (order := order)) (Index dims) ℝ := 
+  {
+    set := λ v index val => v.lset (Index.toLinear index (order := order)) val
+    valid := sorry
+  }
+
+  instance : Cont.MapIdx (NDVector dims (order := order)) (Index dims) ℝ := 
+  {
+    mapIdx := λ f v => Cont.intro (λ id => f id (v[id]))
+    valid := sorry
+  }
+
+  instance : Cont.Map (NDVector dims (order := order)) (Index dims) ℝ := 
+  {
+    map := λ f v => Cont.mapIdx (λ _ x => f x) v
+    valid := sorry
+  }
+
+  instance : Cont.Map₂ (NDVector dims (order := order)) (Index dims) ℝ := 
+  {
+    map₂ := λ f u v => Cont.mapIdx (λ id x => f x (v[id])) u
+    valid := sorry
+  }
+
 
 end NDVector
+
+
+variable {dims} (v u : NDVector dims)
+
+#check (v + u)
+
+def add (u v : NDVector dims) : NDVector dims := u + v
+
+#check add
 
   -- abbrev getOp {dims} (self : NDVector dims) (idx : Fin dims.product) : ℝ := self.lget idx
 
