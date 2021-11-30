@@ -107,10 +107,6 @@ namespace Cont
        valid : ∀ f i, (intro f)[i] = f i
 
      export Intro (intro)
-     -- def intro {C : Type u}
-     --     [ContData C] [Cont C (indexOf C) (valueOf C)] [Intro C (indexOf C) (valueOf C)]
-     --     (f : (indexOf C) → (valueOf C)) : C
-     --     := Intro.intro f
 
      instance {C ι α} [Cont C ι α] [Intro C] : Coe (ι ↦ α) C := ⟨λ f => intro f⟩
   
@@ -120,34 +116,18 @@ namespace Cont
                         (∀ j, j ≠ i → (set c i a)[j] = c[j])
 
      export Set (set)
-     -- def set {C : Type u}
-     --     [ContData C] [Cont C (indexOf C) (valueOf C)] [Set C (indexOf C) (valueOf C)]
-     --     (c : C) (i : indexOf C) (a : valueOf C) : C
-     --     := Set.set c i a
 
      class MapIdx (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
        mapIdx : ((indexOf C) → (valueOf C) → (valueOf C)) → C → C
        valid : ∀ f c i, (mapIdx f c)[i] = f i (c[i])
 
      export MapIdx (mapIdx)
-     -- def mapIdx {C : Type u}
-     --     [ContData C] 
-     --     [Cont C (indexOf C) (valueOf C)] 
-     --     [MapIdx C (indexOf C) (valueOf C)]
-     --     (f : (indexOf C) → (valueOf C) → (valueOf C) ) (c : C) : C
-     --     := MapIdx.mapIdx f c
 
      class Map (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
        map : ((valueOf C) → (valueOf C)) → C → C
        valid : ∀ f c i, (map f c)[i] = f (c[i])
 
      export Map (map)
-     -- def map {C : Type u}
-     --     [ContData C] 
-     --     [Cont C (indexOf C) (valueOf C)] 
-     --     [Map C (indexOf C) (valueOf C)]
-     --     (f : (valueOf C) → (valueOf C) ) (c : C) : C
-     --     := Map.map ((indexOf C) := (indexOf C)) f c
 
      -- map₂ can be done with mapIdx, but with map₂ we can reuse memore more efficiently
      -- Also we do want MapIdx for sparse data structures
@@ -156,11 +136,6 @@ namespace Cont
        valid : ∀ f c d i, (map₂ f c d)[i] = f (c[i]) (d[i])
 
      export Map₂ (map₂)
-     -- def map₂ {C : Type u} [ContData C] 
-     --     [Cont C (indexOf C) (valueOf C)] 
-     --     [Map₂ C (indexOf C) (valueOf C)]
-     --     (f : (valueOf C) → (valueOf C) → (valueOf C)) (c d : C) : C
-     --     := Map₂.map₂ ((indexOf C) := (indexOf C)) f c d
 
      -- Some containers can have infinite(effectively) index set `(indexOf C)` but only finite many indices actually hold a value
      -- Prime example is OpenVDB/NanoVDB but sparse matrices also qualify for this
@@ -188,11 +163,6 @@ namespace Cont
        add_zero := sorry,
        zero_add := sorry
      }
-
-     -- variable [Cont C ι α] [Intro C ι α]
-
-     -- variable (c d : C)
-     -- #check (c + d)
 
   end VectorSpace
 
@@ -249,3 +219,5 @@ variable {n m} (F : toindexOf [n,m,n] ↦ Nat)
 --   nonempty : 0 < types.size
 
 end Cont.Tests
+
+
