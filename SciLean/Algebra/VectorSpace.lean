@@ -63,3 +63,6 @@ section CommonVectorSpaces
 end CommonVectorSpaces
 
 
+def average {n α} [Vec α] (f : Fin n → α) : α := ((1 : ℝ)/(n.toFloat.toReal)) * (sum f)
+
+macro "∑'" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `average xs b

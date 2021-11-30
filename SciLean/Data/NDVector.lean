@@ -81,7 +81,7 @@ variable {dims} (v u : NDVector dims)
 
 #check (v + u)
 
-def add (u v : NDVector dims) : NDVector dims := u + v
+def add (u v : NDVector dims) : NDVector dims := (Cont.intro (u + v))
 
 #check add
 
