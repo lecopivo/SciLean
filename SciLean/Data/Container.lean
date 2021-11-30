@@ -1,11 +1,7 @@
-namespace SciLean
+import SciLean.Algebra
+import SciLean.Std.Enumtype
 
-class Fintype (α : Type u) where
-  n : Nat
-  fromFin : Fin n → α
-  toFin : α → Fin n
-  to_from : ∀ i, toFin (fromFin i) = i
-  from_to : ∀ a, fromFin (toFin a) = a
+namespace SciLean
 
 --- Container `C` with index set `ι` and element type `α`
 class Cont (C : Type u) (ι : Type v) (α : Type w) where
@@ -13,36 +9,48 @@ class Cont (C : Type u) (ι : Type v) (α : Type w) where
 
 --- Automatically infering T and dims based on A
 class ContData (C : Type u) where
-  indexType : Type v
-  valueType : Type w
+  indexOf : Type v
+  valueOf : Type w
 
 -- Is this good idea?
 @[reducible] 
 instance (C : Type u) (ι : Type v) (α : Type w) [Cont C ι α] : ContData C := ⟨ι, α⟩
 
-attribute [reducible, inline] ContData.indexType ContData.valueType
+attribute [reducible, inline] ContData.indexOf ContData.valueOf
 
 namespace Cont
 
   -- Function that should be interpreted as a container
   def ContFun (α β) := α → β
   infix:34 " ↦ " => ContFun
-
+  
   def toCont (f : α → β) : α ↦ β := f
   instance (ι : Type v) (α : Type w) : Cont (ι ↦ α) ι α := ⟨λ f => f⟩
+  -- TODO: support `cont (i,j) => f i j`
+  macro "cont" xs:Lean.explicitBinders "=> " b:term : term => Lean.expandExplicitBinders `Cont.toCont xs b
+
+  export ContData (indexOf valueOf)
 
   -- Maybe not a good idea
   -- instance (ι : Type v) (α : Type w) : Cont (ι → α) ι α := ⟨λ f => f⟩
 
   @[reducible]
-  abbrev indexOf {C} (c : C) [ContData C] := ContData.indexType C
+  abbrev get {C} [ContData C] [Cont C (indexOf C) (valueOf C)] (c : C) := @toFun _ (indexOf C) (valueOf C) _ c
 
-  @[reducible]
-  abbrev valueOf {C} (c : C) [ContData C] := ContData.valueType C
-
-  @[reducible]
-  abbrev get {C} [ContData C] [Cont C (ContData.indexType C) (ContData.valueType C)] (c : C) := @toFun _ (indexOf c) (valueOf c) _ c
-
+  --- TODO:
+  --  Merge all those macros into one
+  --
+  --  Add slicing notation:
+  --      1. f[:]  ==  f[:₀]  ==  cont i => f[i]  : ι ↦ α       
+  --      2. f[:,:]  ==  cont (i,j) => f[i,j]  : ι₀ × ι₁ ↦ α 
+  --      2. f[:₀,:₁]  ==  cont i j => f[i,j]  : ι₀ ↦ ι₁ ↦ α 
+  --      3. f[:₁,:₀]  ==  cont j i => f[i,j]  : ι₁ ↦ ι₀ ↦ α 
+  --      4. f[:,:₁,:]  ==  cont (i,j) k => f[i,k,j] : ι₀ × ι₂ ↦ ι₁ ↦ α
+  -- 
+  --  For indices that are Fintype add ranged notation
+  --      1. f[a:b]  == cont i : Range a b => f[(coe (Range a b) ι i)]   : Range a b ↦ α
+  --      2. f[a:b,:]  == cont (i,j) : (Range a b) × ι₁ => f[(coe (Range a b) ι i),j]  : (Range a b)×ι₁ ↦ α
+  --      3. f[a:b,:₁]  == cont (i,j) : (Range a b) ι₁ => f[(coe (Range a b) ι i),j]  : (Range a b) ↦ ι₁ ↦ α
   macro c:term noWs "[" i1:term"]" : term =>
     `(get $c $i1)
 
@@ -64,6 +72,7 @@ namespace Cont
        variable {C' : Type u'} {α' : Type w'} [Cont C' ι α']
 
        instance [HAdd α α' β] : HAdd C C' (ι ↦ β) := ⟨λ c c' => λ i => c[i] + c'[i]⟩
+       instance [HSub α α' β] : HSub C C' (ι ↦ β) := ⟨λ c c' => λ i => c[i] - c'[i]⟩
 
      end ElementWise
 
@@ -93,86 +102,103 @@ namespace Cont
 
   section ExtraOperations
 
-     class Intro (C : Type u) (ι : Type v) (α : Type w) [Cont C ι α] where
-       intro : (ι → α) → C
+     class Intro (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
+       intro : (indexOf C → valueOf C) → C
        valid : ∀ f i, (intro f)[i] = f i
 
      export Intro (intro)
+     -- def intro {C : Type u}
+     --     [ContData C] [Cont C (indexOf C) (valueOf C)] [Intro C (indexOf C) (valueOf C)]
+     --     (f : (indexOf C) → (valueOf C)) : C
+     --     := Intro.intro f
 
-     -- instance {C ι α} [Cont C ι α] [Intro C ι α] : Coe (ι ↦ α) C := ⟨λ f => intro f⟩
+     instance {C ι α} [Cont C ι α] [Intro C] : Coe (ι ↦ α) C := ⟨λ f => intro f⟩
   
-     class Set (C : Type u) (ι : Type v) (α : Type w) [Cont C ι α] where
-       set : C → ι → α → C
+     class Set (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
+       set : C → (indexOf C) → (valueOf C) → C
        valid : ∀ c i a, ((set c i a)[i] = a) ∧ 
                         (∀ j, j ≠ i → (set c i a)[j] = c[j])
 
      export Set (set)
+     -- def set {C : Type u}
+     --     [ContData C] [Cont C (indexOf C) (valueOf C)] [Set C (indexOf C) (valueOf C)]
+     --     (c : C) (i : indexOf C) (a : valueOf C) : C
+     --     := Set.set c i a
 
-     class MapIdx (C : Type u) (ι : Type v) (α : Type w) [Cont C ι α] where
-       mapIdx : (ι → α → α) → C → C
+     class MapIdx (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
+       mapIdx : ((indexOf C) → (valueOf C) → (valueOf C)) → C → C
        valid : ∀ f c i, (mapIdx f c)[i] = f i (c[i])
 
-     def mapIdx {C : Type u}
-         [ContData C] 
-         [Cont C (ContData.indexType C) (ContData.valueType C)] 
-         [MapIdx C (ContData.indexType C) (ContData.valueType C)]
-         (f : (ContData.indexType C) → (ContData.valueType C) → (ContData.valueType C) ) (c : C) : C
-         := MapIdx.mapIdx f c
+     export MapIdx (mapIdx)
+     -- def mapIdx {C : Type u}
+     --     [ContData C] 
+     --     [Cont C (indexOf C) (valueOf C)] 
+     --     [MapIdx C (indexOf C) (valueOf C)]
+     --     (f : (indexOf C) → (valueOf C) → (valueOf C) ) (c : C) : C
+     --     := MapIdx.mapIdx f c
 
-     class Map (C : Type u) (ι : Type v) (α : Type w) [Cont C ι α] where
-       map : (α → α) → C → C
+     class Map (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
+       map : ((valueOf C) → (valueOf C)) → C → C
        valid : ∀ f c i, (map f c)[i] = f (c[i])
 
-     def map {C : Type u}
-         [ContData C] 
-         [Cont C (ContData.indexType C) (ContData.valueType C)] 
-         [Map C (ContData.indexType C) (ContData.valueType C)]
-         (f : (ContData.valueType C) → (ContData.valueType C) ) (c : C) : C
-         := Map.map (ι := (ContData.indexType C)) f c
+     export Map (map)
+     -- def map {C : Type u}
+     --     [ContData C] 
+     --     [Cont C (indexOf C) (valueOf C)] 
+     --     [Map C (indexOf C) (valueOf C)]
+     --     (f : (valueOf C) → (valueOf C) ) (c : C) : C
+     --     := Map.map ((indexOf C) := (indexOf C)) f c
 
      -- map₂ can be done with mapIdx, but with map₂ we can reuse memore more efficiently
-     class Map₂ (C : Type u) (ι : Type v) (α : Type w) [Cont C ι α] where
-       map₂ : (α → α → α) → C → C → C
+     -- Also we do want MapIdx for sparse data structures
+     class Map₂ (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
+       map₂ : ((valueOf C) → (valueOf C) → (valueOf C)) → C → C → C
        valid : ∀ f c d i, (map₂ f c d)[i] = f (c[i]) (d[i])
 
-     def map₂ {C : Type u} [ContData C] 
-         [Cont C (ContData.indexType C) (ContData.valueType C)] 
-         [Map₂ C (ContData.indexType C) (ContData.valueType C)]
-         (f : (ContData.valueType C) → (ContData.valueType C) → (ContData.valueType C)) (c d : C) : C
-         := Map₂.map₂ (ι := (ContData.indexType C)) f c d
+     export Map₂ (map₂)
+     -- def map₂ {C : Type u} [ContData C] 
+     --     [Cont C (indexOf C) (valueOf C)] 
+     --     [Map₂ C (indexOf C) (valueOf C)]
+     --     (f : (valueOf C) → (valueOf C) → (valueOf C)) (c d : C) : C
+     --     := Map₂.map₂ ((indexOf C) := (indexOf C)) f c d
 
-     -- Some containers can have infinite(effectively) index set `ι` but only finite many indices actually hold a value
+     -- Some containers can have infinite(effectively) index set `(indexOf C)` but only finite many indices actually hold a value
      -- Prime example is OpenVDB/NanoVDB but sparse matrices also qualify for this
-     class Active (C : Type u) (ι : Type v) (α : Type w) [Cont C ι α] where
-       active : C → ι → Bool
-       finite : (c : C) → Fintype {i : ι // active c i = true }
+     class Active (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
+       active : C → (indexOf C) → Bool
+       finite : (c : C) → Enumtype {i : (indexOf C) // active c i = true }
+
+     -- Add ActiveMapIdx -- runs map only over active indices
 
   end ExtraOperations
 
-  -- necassary to define vector space
-  section HomogenousOperations
+  section VectorSpace
 
      variable {C : Type u} {ι : Type v} {α : Type w}
-     variable [Cont C ι α] [Intro C ι α] [Map C ι α] [Map₂ C ι α]
 
-     instance [Add α] : Add C := ⟨λ c d => map₂ (λ x y => x + y) c d⟩
-     instance [Sub α] : Sub C := ⟨λ c d => map₂ (λ x y => x - y) c d⟩
-     instance [Mul α] : Mul C := ⟨λ c d => map₂ (λ x y => x * y) c d⟩
-     instance [Div α] : Div C := ⟨λ c d => map₂ (λ x y => x / y) c d⟩
+     instance [ContData C] [Cont C (indexOf C) (valueOf C)] [Vec (valueOf C)] [Intro C] : Vec C :=
+     {
+       add := λ c d => intro (c + d)
+       sub := λ c d => intro (c - d)
+       neg := λ c => intro (λ i => -c[i])
+       zero := intro (λ _ => 0)
+       hMul := λ s c => intro (s * c)
+       add_assoc := sorry,
+       add_comm := sorry,
+       add_zero := sorry,
+       zero_add := sorry
+     }
 
-     instance [HMul α β α] : HMul C β C := ⟨λ c b => map (λ x => x * b) c⟩
-     instance [HMul β α α] : HMul β C C := ⟨λ b c => map (λ x => b * x) c⟩
+     -- variable [Cont C ι α] [Intro C ι α]
 
-     instance [Neg α] : Neg C := ⟨λ c => map (λ x => -x) c⟩
+     -- variable (c d : C)
+     -- #check (c + d)
 
-     -- instance [Zero α] : Zero C := ⟨intro λ _ => 0⟩
-
-  end HomogenousOperations
+  end VectorSpace
 
 end Cont
 
-
-namespace Tests
+namespace Cont.Tests
 
 variable (f : Fin 3 × Fin 2 ↦ Nat) (g : Fin 2 × Fin 5 ↦ Nat) (h : Fin 3 × Fin 5 ↦ Nat)
 variable (r s : Nat)
@@ -185,12 +211,13 @@ variable (r s : Nat)
 
 #check f + f
 #check r * f * g + s * h
+-- #check cont (i,j) => f[j,i]
 
 @[reducible]
-abbrev toIndexType : List Nat → Type 
+abbrev toindexOf : List Nat → Type 
 | [] => Unit
 | [n] => Fin n
-| n :: ns => Fin n × toIndexType ns
+| n :: ns => Fin n × toindexOf ns
 
 def List.product (l : List Nat) : Nat := do
   let a := l.toArray
@@ -199,18 +226,20 @@ def List.product (l : List Nat) : Nat := do
     prod := prod * a[i]
   prod
 
--- def toLinear : (l : List Nat) → toIndexType l → Nat
+-- def toLinear : (l : List Nat) → toindexOf l → Nat
 -- | [], index => 0
 -- | [n], index => 0
 -- | (n :: ns), index => (Prod.fst index) * toLinear ns (Prod.snd index)
 
 
-example : (Fin 3 × Fin 2) = toIndexType [3,2] := by rfl
 
-variable {n m} (F : toIndexType [n,m,n] ↦ Nat) 
+example : (Fin 3 × Fin 2) = toindexOf [3,2] := by rfl
+
+variable {n m} (F : toindexOf [n,m,n] ↦ Nat) 
 
 #check λ i j k => (F[i,j,k] : Nat)
-#check ((3,2,0) : toIndexType [3,2,4])
+#check (cont i j k => F[i,j,k])
+#check ((3,2,0) : toindexOf [3,2,4])
 
 #check λ i j => (F[i,j,·])
 
@@ -219,4 +248,4 @@ variable {n m} (F : toIndexType [n,m,n] ↦ Nat)
 --   funs : Array (String × Fin (types.size) × (Array (Fin types.size)))   --- (name, argument types, output type)
 --   nonempty : 0 < types.size
 
-end Tests
+end Cont.Tests

@@ -43,31 +43,31 @@ namespace NDVector
     toFun := λ v index => v.lget (Index.toLinear index (order := order))
   }
 
-  instance : Cont.Intro (NDVector dims (order := order)) (Index dims) ℝ :=
+  instance : Cont.Intro (NDVector dims (order := order)) :=
   {
     intro := λ f => ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f (Index.fromLinear dims ⟨i, sorry⟩ (order := order)))⟩, sorry⟩
     valid := sorry
   }
 
-  instance : Cont.Set (NDVector dims (order := order)) (Index dims) ℝ := 
+  instance : Cont.Set (NDVector dims (order := order)) := 
   {
     set := λ v index val => v.lset (Index.toLinear index (order := order)) val
     valid := sorry
   }
 
-  instance : Cont.MapIdx (NDVector dims (order := order)) (Index dims) ℝ := 
+  instance : Cont.MapIdx (NDVector dims (order := order)) := 
   {
     mapIdx := λ f v => Cont.intro (λ id => f id (v[id]))
     valid := sorry
   }
 
-  instance : Cont.Map (NDVector dims (order := order)) (Index dims) ℝ := 
+  instance : Cont.Map (NDVector dims (order := order)) := 
   {
     map := λ f v => Cont.mapIdx (λ _ x => f x) v
     valid := sorry
   }
 
-  instance : Cont.Map₂ (NDVector dims (order := order)) (Index dims) ℝ := 
+  instance : Cont.Map₂ (NDVector dims (order := order)) := 
   {
     map₂ := λ f u v => Cont.mapIdx (λ id x => f x (v[id])) u
     valid := sorry

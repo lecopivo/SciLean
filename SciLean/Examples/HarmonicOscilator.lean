@@ -1,5 +1,6 @@
 import SciLean.Basic
 import SciLean.Mechanics
+import SciLean.Tactic
 
 open Function
 namespace SciLean
@@ -11,7 +12,7 @@ def V := ℝ × ℝ × ℝ
 instance : Hilbert V := by simp[V]; infer_instance
 -- unfortunatelly defining `V` as `abbrev V := ℝ × ℝ` breaks typeclass system and some function cannot be proven smooth anymore :(
 
-def H (m k : ℝ) (x p : V) := (1/(2*m)) * ⟨p,p⟩ + k/2 * ⟨x, x⟩
+def H (m k : ℝ) (x p : V) := 1/(2*m) * ⟨p,p⟩ + k/2 * ⟨x, x⟩
 
 example (m k : ℝ) (x p dp : V) : δ (H m k x) p dp = 1/(2*m) * (⟨dp,p⟩ + ⟨p,dp⟩) := 
 by
@@ -37,21 +38,9 @@ def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k
 by
   simp [HamiltonianSystem, H, swap];
   
-  conv in (∇ _) =>
-    simp[gradient]
-    conv  =>
-      pattern (δ _)
-      enter [x,dx]
-      simp
-    simp[Function.comp]
+  autograd
+  -- autograd -- TODO: there is some problem with 1/(2*m) ...
 
-  conv in (∇ _) =>
-    simp[gradient]
-    conv  =>
-      pattern (δ _)
-      enter [x,dx]
-      simp
-    simp[Function.comp]
 
   admit
 
