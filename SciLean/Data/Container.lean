@@ -130,8 +130,7 @@ namespace Cont
   section VectorSpace
 
      variable {C : Type u} 
-     variable  [ContData C] [Cont C (indexOf C) (valueOf C)] [Vec (valueOf C)] [Intro C]
-
+     variable [ContData C] [Cont C (indexOf C) (valueOf C)] [Vec (valueOf C)] [Intro C]
 
      instance instContVecAdd : Add C := ⟨λ c d => intro (λ i => c[i] + d[i])⟩
      instance instContVecSub : Sub C := ⟨λ c d => intro (λ i => c[i] - d[i])⟩
@@ -148,15 +147,12 @@ namespace Cont
        zero_add := sorry
      }
 
-     -- @[reducible]
-     -- instance (priority := high) instContVecHMul' : HMul ℝ C (indexOf C ↦ valueOf C) := ⟨λ s c => (cont i => s * c[i])⟩
-
      section VectorOperations
 
        variable {C} [ContData C] [Cont C (indexOf C) (valueOf C)] [Vec (valueOf C)] [Intro C]
        
        -- Unfold definition's of vector oprations back
-       -- This way we can get fast saxpy stype operations i.e.`s*x+y` transforms to `intro λ i => s*x[i] + y[i]`
+       -- This way we can get fast saxpy type operations i.e.`s*x+y` transforms to `intro λ i => s*x[i] + y[i]`
        -- We specify class instances directly to prevent crazy TC searches.
        @[simp] theorem add_norm (c d : C) : HAdd.hAdd (self := instHAdd) c d = intro (λ i => c[i] + d[i]) := by rfl
        @[simp] theorem sub_norm (c d : C) : HSub.hSub (self := instHSub) c d = intro (λ i => c[i] - d[i]) := by rfl
@@ -179,7 +175,6 @@ namespace Cont
      end VectorOperations
 
   end VectorSpace
-
 
   -- This provides something like Eigen's expression templates
   section LazyOperations
@@ -210,8 +205,8 @@ namespace Cont
 
      section Broadcasting
 
-       variable {ι : Type v}
-       variable {C : Type u} {α : Type w} [Cont C ι α]
+       variable {C : Type u} {ι : Type v} {α : Type w} [Cont C ι α]
+       -- variable {C : Type u} [ContData C] [Cont C (indexOf C) (valueOf C)] [Intro C]
 
        -- Thise two can lead to ambiquous notation, we prefer the later
        -- i.e. The class `HAdd C (ι ↦ α) (ι ↦ ι ↦ α)` class has two different instance that are not equal!!!
@@ -226,12 +221,32 @@ namespace Cont
        instance [HSub α β α] : HSub C (ι ↦ β) (ι ↦ α) := ⟨λ c b i => c[i]-b[i]⟩
        instance [HSub β α α] : HSub (ι ↦ β) C (ι ↦ α) := ⟨λ b c i => b[i]-c[i]⟩
 
+       -- We need to set higher priority to override instance `instContVecHMul : HMul ℝ C C`
+       -- For some reason setting `low` priority on `instContVecHMul` does not work. 
+       -- Not sure why is that and I simple mwe did not reproduce it ...
+       instance (priority := mid+1) [HMul α β α] : HMul C β (ι ↦ α) := ⟨λ c b i => c[i]*b⟩
+       instance (priority := mid+1) [HMul β α α] : HMul β C (ι ↦ α) := ⟨λ b c i => b*c[i]⟩
+       instance (priority := mid+2) [HMul α β α] : HMul C (ι ↦ β) (ι ↦ α) := ⟨λ c b i => c[i]*b[i]⟩
+       instance (priority := mid+2) [HMul β α α] : HMul (ι ↦ β) C (ι ↦ α) := ⟨λ b c i => b[i]*c[i]⟩
 
-       -- We need to set higher priority to override `HMul ℝ C C` from `Vec C`
-       instance (priority := high) [Mul α] : HMul α C (ι ↦ α) := ⟨λ a c i => a*c[i]⟩ 
-       instance [Mul α] : HMul C α (ι ↦ α) := ⟨λ c a i => c[i]*a⟩
+       instance (priority := low) [Div α] : HDiv C α (ι ↦ α) := ⟨λ c a i => c[i]/a⟩
+       instance (priority := low) [Div α] : HDiv α C (ι ↦ α) := ⟨λ a c i => a/c[i]⟩
+       instance [HDiv α β α] : HDiv C (ι ↦ β) (ι ↦ α) := ⟨λ c b i => c[i]/b[i]⟩
+       instance [HDiv β α α] : HDiv (ι ↦ β) C (ι ↦ α) := ⟨λ b c i => b[i]/c[i]⟩       
 
      end Broadcasting
+
+     -- Testing that arithmetic operations work which ever way we declare `Cont`
+     section DeclType1
+       variable {C : Type u} [ContData C] [Cont C (indexOf C) (valueOf C)] [Vec (valueOf C)] [Intro C]
+       example (c d : C) : (indexOf C) ↦ (valueOf C) := c + d
+       example (c : C) : (indexOf C) ↦ (valueOf C) := ((1 : ℝ)*c) 
+     end DeclType1
+     section DeclType2
+       variable {C : Type u} {α : Type w} {ι : Type v} [Cont C ι α] [Vec α] [Intro C]
+       example (c d : C) : ι ↦ α := c + d
+       example (c : C) : ι ↦ α := ((1 : ℝ)*c)
+     end DeclType2
 
      variable (A : Fin n × Fin m ↦ ℝ)
      -- variable {ι α : Type} (norm : (ι → α) → α)
@@ -278,7 +293,11 @@ namespace Cont
      -- example : (cont i j => M[i,j]) - (∑' j, cont i => M[i,j]) = (cont i j => M[i,j] - ∑' j', M[j,j']) := NOT TRUE
 
 
-
+     -- normalize columns
+     example : Fin n × Fin m ↦ ℝ := λ (i,j) => A[i,j] / ∥λ i' => A[i',j]∥
+     -- example : A[:₁,:₀] / (cont j => ∥A[:,j]∥) = (λ (i,j) => A[i,j] / Math.sqrt (∑ i', A[i',j]*A[i',j])) := by rfl
+     example : (cont j i => A[i,j]) / (cont j => ∥λ i => A[i,j]∥) = (cont j i => A[i,j] / ∥λ i' => A[i',j]∥) := sorry
+     -- example : M[:₁,:₀] / (cont j => ∥A[:,j]∥) = (λ (i,j) => A[i,j] / Math.sqrt (∑ i', A[i',j]*A[i',j])) := by rfl
   --      2. normalize of columns:  A[:₀,:₁] / (cont j, ∥A[:,j]∥) 
   --      1. ((A[:₁,:₀] - (∑ j, A[:,j]))[:₁,:₀])[:,:]
 
