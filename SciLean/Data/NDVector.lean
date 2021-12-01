@@ -1,290 +1,77 @@
 import SciLean.Operators
-
 import SciLean.Data.Container
-
-def Array.product (l : Array Nat) : Nat := do
-  let mut prod := 1
-  for i in [0:l.size] do
-    prod := prod * l[i]
-  prod
 
 namespace SciLean
 
-def Index (dims : Array Nat) := (d : Fin dims.size) → Fin (dims[d])
-
-namespace Index
-
-  inductive Order where | ColumnMajor | RowMajor
-
-  def toLinear {dims} (index : Index dims) (order := Order.ColumnMajor) : Fin dims.product := sorry
-  def fromLinear (dims : Array Nat) (i : Fin dims.product) (order := Order.ColumnMajor) : Index dims := sorry
-
-end Index
-
-structure NDVector (dims : Array Nat) (order := Index.Order.ColumnMajor) where
+structure NDVector (ι : Type u) [Enumtype ι] where
   (data : FloatArray)
-  (h_size : data.size = dims.product)
+  (h_size : data.size = numOf ι)
 
 namespace NDVector
 
-  variable {dims : Array Nat} {order} (v : NDVector dims (order := order))
+  open Enumtype
 
-  -- Access by linear index make
-  def lintro (f : (Fin dims.product) → ℝ) : NDVector dims 
-      := ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f ⟨i.1, sorry⟩)⟩, sorry⟩
-  def lget  (i : Fin dims.product) : ℝ := v.data.get ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ 
+  variable {ι} [Enumtype ι] (v : NDVector ι)
+          
+  def lget  (i : Fin (numOf ι)) : ℝ := v.data.get ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ 
   def lget! (i : Nat) : ℝ := v.data.get! i
-  def lset  (i : Fin dims.product) (val : ℝ) : NDVector dims (order := order) 
+  def lset  (i : Fin (numOf ι)) (val : ℝ) : NDVector ι
       := ⟨v.data.set ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ val, sorry⟩
-  def lset! (i : Nat) (val : ℝ) : NDVector dims (order := order) := ⟨v.data.set! i val, sorry⟩
+  def lset! (i : Nat) (val : ℝ) : NDVector ι := ⟨v.data.set! i val, sorry⟩
       
-  instance : Cont (NDVector dims (order := order)) (Index dims) ℝ :=
+  instance : Cont (NDVector ι) ι ℝ :=
   {
-    toFun := λ v index => v.lget (Index.toLinear index (order := order))
+    toFun := λ v index => v.lget (toFin index)
   }
 
-  instance : Cont.Intro (NDVector dims (order := order)) :=
+  variable [ForIn Id (Range ι) (ι × Nat)]
+
+  instance instIntroNDVector : Cont.Intro (NDVector ι) :=
   {
-    intro := λ f => ⟨⟨(mkArray dims.product 0).mapIdx (λ i _ => f (Index.fromLinear dims ⟨i, sorry⟩ (order := order)))⟩, sorry⟩
+    intro := λ f => do
+               let mut arr := FloatArray.mkEmpty (numOf ι)
+               for (i,li) in fullRange ι do
+                 arr := arr.set! li (f i)
+               ⟨arr, sorry⟩
     valid := sorry
   }
 
-  instance : Cont.Set (NDVector dims (order := order)) := 
+  -- to get `v.map` notation
+  -- TODO: Why do I have to assign the class manually? 
+  -- BUD:  I think it might be potentially a bug.
+  abbrev intro (f : ι → ℝ) : NDVector ι := Cont.intro (self := instIntroNDVector) f
+
+  instance : Cont.Set (NDVector ι) := 
   {
-    set := λ v index val => v.lset (Index.toLinear index (order := order)) val
+    set := λ v index val => v.lset (toFin index) val
     valid := sorry
   }
 
-  instance : Cont.MapIdx (NDVector dims (order := order)) := 
+  -- to get `v.set` notation
+  abbrev set (v : NDVector ι) (id val) := Cont.set v id val
+
+  instance instMapIdxNDVector : Cont.MapIdx (NDVector ι) := 
   {
-    mapIdx := λ f v => Cont.intro (λ id => f id (v[id]))
+    mapIdx := λ f v₀ => do
+                let mut v := v₀
+                for (i,li) in fullRange ι do
+                  v := v.lset! li (f i (v.lget! li))
+                v
     valid := sorry
   }
 
-  instance : Cont.Map (NDVector dims (order := order)) := 
+  -- to get `v.map` notation
+  abbrev mapIdx (f : ι → ℝ → ℝ) (v : NDVector ι) : NDVector ι := Cont.mapIdx (self := instMapIdxNDVector) f v
+
+  instance : Cont.Map (NDVector ι) := 
   {
-    map := λ f v => Cont.mapIdx (λ _ x => f x) v
+    map := λ f v => mapIdx (λ _ x => f x) v
     valid := sorry
   }
 
-  -- instance : Cont.Map₂ (NDVector dims (order := order)) := 
-  -- {
-  --   map₂ := λ f u v => Cont.mapIdx (λ id x => f x (v[id])) u
-  --   valid := sorry
-  -- }
+  abbrev map (f : ℝ → ℝ) (v : NDVector ι) : NDVector ι := Cont.map (self := instMapNDVector) f v
 
 
 end NDVector
-
-
-variable {dims} (v u : NDVector dims)
-
-#check (v + u)
-
-def add (u v : NDVector dims) : NDVector dims := (Cont.intro (u + v))
-
-#check add
-
-  -- abbrev getOp {dims} (self : NDVector dims) (idx : Fin dims.product) : ℝ := self.lget idx
-
-  -- def fully_connected {dims} (n : Nat) (x : NDVector dims) (w : NDVector [n, dims.product]) (b : NDVector [n]) : NDVector [n] := NDVector.lmk λ (i : Fin n) => ∑ j, w[i,j] * x[j] + b[i]
-
---   -- set using linear index
---   def lset! (v : NDVector dims) (i : Nat) (val : ℝ) : NDVector dims := ⟨v.data.set! i val, sorry⟩
-
---   -- set using linear index
---   def lset (v : NDVector dims) (i : Fin dims.product) (val : ℝ) : NDVector dims := ⟨v.data.set ⟨i.1, by rw [v.h_size]; apply i.2; done⟩ val, sorry⟩
-
---   -- TODO: @[extern ndvector_map]  -  is it worth it? 
---   def mapIdx (f : Nat → ℝ → ℝ) (v : NDVector dims) : NDVector dims := 
---   do
---     let mut v := v
---     for i in [0:v.size] do
---       let val := v.lget! i
---       v := v.lset! i (f i val)
---     v
-
---   def map (f : ℝ → ℝ) (v : NDVector dims) : NDVector dims := mapIdx (λ i => f) v
-
---   -- This should have specialized implementation in C to handle reference counting in the most efficient way
---   -- i.e. modify `v` in place if possible
---   -- if `u` and `v` are the same, and ref counter is 2 then you can modify it in place too.
---   -- TODO: @[extern ndvector_map2]
---   def map₂ (f : ℝ → ℝ → ℝ) (u v : NDVector dims) : NDVector dims := mapIdx (λ i ui => f ui (v.lget! i)) u
-
---   def foldIdx {n : Nat} {α} (f : Fin n → α → α) (a₀ : α) : α :=
---   do
---     let mut a := a₀
---     for i in [0:n] do
---       a := (f ⟨i, sorry⟩ a)
---     a
-  
---   def foldlIdx (f : Nat → ℝ → ℝ → ℝ) (v : NDVector dims) (init : ℝ) : ℝ :=
---     let F : Fin v.size → ℝ → ℝ := λ i y => f i y (v.lget! i)
---     foldIdx F init
-
---   def foldl (f : ℝ → ℝ → ℝ) (v : NDVector dims) (init : ℝ) : ℝ := foldlIdx (λ i => f) v init
-  
---   section Operations
-    
---     instance : Add (NDVector dims) := ⟨λ u v => map₂ (λ x y => x + y) u v⟩
---     instance : Sub (NDVector dims) := ⟨λ u v => map₂ (λ x y => x - y) u v⟩
-
---     instance : HMul ℝ (NDVector dims) (NDVector dims) := ⟨λ r v => map (λ x => r * x) v⟩
-
---     instance : Neg (NDVector dims) := ⟨λ v => map (λ x => -x) v⟩
-
---     -- This is slow as it creates intermediary (Array Float)
---     instance : Zero (NDVector dims) := ⟨⟨mkArray dims.product 0⟩, (by simp[FloatArray.size])⟩
-
---   end Operations
-
-
---   section VectorSpace
-
---     instance : Vec (NDVector dims) := 
---     {
---       add_assoc := sorry,
---       add_comm := sorry,
---       add_zero := sorry,
---       zero_add := sorry
---     }
-
---     instance : SemiInner (NDVector dims) := 
---     {
---       integrable_domain := Unit
---       domain := ()
---       semi_inner := λ u v _ => ∑ i, u[i] * v[i]
---       test_function := λ _ u => True
---     }
-
---     instance : SemiHilbert (NDVector dims) := 
---     {
---       semi_inner_sym := sorry,
---       semi_inner_pos := sorry,
---       semi_inner_add := sorry,
---       semi_inner_mul := sorry
---       semi_inner_ext := sorry
---     }
-
---     instance : Hilbert (NDVector dims) := 
---     {
---       domain_unique := sorry
---       all_test_fun := sorry
---     }
-
---   end VectorSpace
-
-
---   section FunctionProperties
-
---     @[simp]
---     theorem lmk_of_lget (x : NDVector dims) : lmk (λ i => x.lget i) = x := sorry
-
---     @[simp]
---     theorem lmk_of_getOp (x : NDVector dims) : lmk (λ i => x[i]) = x := sorry
-
---     -- Linear Get
---     instance : IsLin (lget! : NDVector dims → _ → ℝ) := sorry
---     instance : IsLin (lget : NDVector dims → _ → ℝ) := sorry
-
---     @[simp] def lget_adjoint : adjoint (lget : NDVector dims → _ → ℝ) = lmk := sorry
-
---     -- Linear Set - it is only affine and not liean as lget
---     instance : IsSmooth (lset! : NDVector dims → Nat → ℝ → NDVector dims) := sorry
---     instance (v : NDVector dims) (i : Nat) : IsSmooth (lset! v i : ℝ → NDVector dims) := sorry
-
---     instance : IsSmooth (lset : NDVector dims → Fin dims.product → ℝ → NDVector dims) := sorry
---     instance (v : NDVector dims) (i : Fin dims.product) : IsSmooth (lset v i : ℝ → NDVector dims) := sorry
-  
---     @[simp]
---     def lset!_differential_1 (v dv : NDVector dims) (i : Nat) (x : ℝ) : δ lset! v dv i x = lset! dv i 0 := sorry
-
---     @[simp]
---     def lset!_differential_2 (v : NDVector dims) (i : Nat) (x dx : ℝ) : δ (lset! v i) x dx = lset! 0 i dx := sorry
-
---     @[simp]
---     def lset_differential_1 (v dv : NDVector dims) (i : Fin dims.product) (x : ℝ) : δ lset v dv i x = lset! dv i 0 := sorry
-
---     @[simp]
---     def lset_differential_2 (v : NDVector dims) (i : Fin dims.product) (x dx : ℝ) : δ (lset v i) x dx = lset! 0 i dx := sorry
-
---     -- Map
---     instance : IsLin (map : (ℝ → ℝ) → NDVector dims → NDVector dims) := sorry
---     instance (f : ℝ → ℝ) [IsSmooth f] : IsSmooth (map f : NDVector dims → NDVector dims) := sorry
-
---     @[simp]
---     def map_differential_2 (f : ℝ → ℝ) [IsSmooth f] (v dv : NDVector dims) : δ (map f) v dv = map₂ (δ f) v dv := sorry
-
---     -- Map₂
---     instance : IsLin (map₂ : (ℝ → ℝ → ℝ) → NDVector dims → NDVector dims → NDVector dims) := sorry
---     instance (f : ℝ → ℝ → ℝ) [IsSmooth f] : IsSmooth (map₂ f : NDVector dims → NDVector dims → NDVector dims) := sorry
---     instance (f : ℝ → ℝ → ℝ) [∀ x, IsSmooth (f x)] : IsSmooth (map₂ f u : NDVector dims → NDVector dims) := sorry
-      
---     @[simp] 
---     def map2_differential_2 (f : ℝ → ℝ → ℝ) (u du v : NDVector dims) [IsSmooth f] 
---       : δ (map₂ f) u du v = mapIdx (λ i ui => δ f ui (du.lget! i) (v.lget! i)) u := sorry
-
---     @[simp] 
---     def map2_differential_3 (f : ℝ → ℝ → ℝ) (u v dv : NDVector dims) [∀ x, IsSmooth (f x)] 
---       : δ (map₂ f) u v dv = mapIdx (λ i vi => δ (f (u.lget! i)) vi (dv.lget! i)) v := sorry
-    
---     -- FoldlIdx
---     -- once morphisms are in place
---     -- instance : IsSmooth ((comp foldlIdx coe) : (Nat → ℝ ⟿ ℝ → ℝ) → NDVector dims → ℝ → ℝ) := sorry
---     instance (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] [∀ i y, IsSmooth (f i y)] : IsSmooth (foldlIdx f : NDVector dims → ℝ → ℝ) := sorry
---     instance (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] (v : NDVector dims) : IsSmooth (foldlIdx f v : ℝ → ℝ) := sorry
-
---     @[simp]
---     def foldlIdx_differential_1 (f df : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] (v : NDVector dims) (init : ℝ) 
---       : δ foldlIdx f df v init
---         =
---         (let F := 
---            λ (i : Fin v.size) (ydy : ℝ × ℝ) => 
---              let y := ydy.1
---              let dy := ydy.2
---              let vi := v.lget! i
---              (f i y vi, δ (f i) y dy vi + df i y vi)
---          (foldIdx F (init, 0)).2) := sorry
-
---     @[simp]
---     def foldlIdx_differential_2 (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] [∀ i y, IsSmooth (f i y)] (v dv : NDVector dims) (init : ℝ) 
---       : δ (foldlIdx f) v dv init
---         =
---         (let F := 
---            λ (i : Fin v.size) (ydy : ℝ × ℝ) => 
---              let y := ydy.1
---              let dy := ydy.2
---              let vi := v.lget! i
---              let dvi := dv.lget! i
---              (f i y vi, δ (f i) y dy vi + δ (f i y) vi dvi)
---          (foldIdx F (init, 0)).2) := sorry
-
---     @[simp]
---     def foldlIdx_differential_3 (f : Nat → ℝ → ℝ → ℝ) [∀ i, IsSmooth (f i)] (v: NDVector dims) (init dinit : ℝ) 
---       : δ (foldlIdx f v) init dinit
---         =
---         (let F := 
---            λ (i : Fin v.size) (ydy : ℝ × ℝ) => 
---              let y := ydy.1
---              let dy := ydy.2
---              let vi := v.lget! i
---              (f i y vi, δ (f i) y dy vi)
---          (foldIdx F (init, dinit)).2) := sorry
-
---   end FunctionProperties
-    
---   --  def getVec2 (v : NDVector [2, n]) (i : Nat) : Vec2 := 
---   --  def getVec3 (v : NDVector [3, n]) (i : Nat) : Vec3 := 
---   --  def getVec4 (v : NDVector [4, n]) (i : Nat) : Vec4 := 
-
---   --  def getMat2 (v : NDVector [2, 2, n]) (i : Nat) : Mat2 := 
---   --  def getMat3 (v : NDVector [3, 3, n]) (i : Nat) : Mat3 := 
---   --  def getMat4 (v : NDVector [4, 4, n]) (i : Nat) : Mat4 := 
--- end NDVector
-
--- abbrev Vector (n : Nat) := NDVector [n]
--- abbrev Matrix (n m : Nat) := NDVector [n, m]
-
 
 
