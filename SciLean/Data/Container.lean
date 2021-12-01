@@ -7,7 +7,7 @@ namespace SciLean
 class Cont (C : Type u) (ι : Type v) (α : Type w) where
   toFun : C → ι → α
 
---- Automatically infering T and dims based on A
+--- Automatically infering `ι` and `α` based on C
 class ContData (C : Type u) where
   indexOf : Type v
   valueOf : Type w
@@ -44,29 +44,36 @@ namespace Cont
   --  Merge all those macros into one
   --
   --  Add slicing notation:
-  --      1. f[:]  ==  f[:₀]  ==  cont i => f[i]  : ι ↦ α       
-  --      2. f[:,:]  ==  cont (i,j) => f[i,j]  : ι₀ × ι₁ ↦ α 
+  --      1. f[:]    ==  f[:₀]  ==  cont     i => f[i]    : ι ↦ α       
+  --      2. f[:,:]             ==  cont (i,j) => f[i,j]  : ι₀ × ι₁ ↦ α 
   --  Curry notation:  
-  --      3. f[:₀,:₁]  ==  cont i j => f[i,j]  : ι₀ ↦ ι₁ ↦ α   where  f : ι₀ × ι₁ ↦ α 
-  --      4. f[:₁,:₀]  ==  cont j i => f[i,j]  : ι₁ ↦ ι₀ ↦ α   where  f : ι₀ × ι₁ ↦ α 
+  --      3. f[:₀,:₁]   ==  cont     i j => f[i,j]   : ι₀ ↦ ι₁ ↦ α       where  f : ι₀ × ι₁ ↦ α 
+  --      4. f[:₁,:₀]   ==  cont     j i => f[i,j]   : ι₁ ↦ ι₀ ↦ α       where  f : ι₀ × ι₁ ↦ α 
   --      5. f[:,:₁,:]  ==  cont (i,j) k => f[i,k,j] : ι₀ × ι₂ ↦ ι₁ ↦ α  where  f : ι₀ × ι₁ × ι₂ ↦ α 
   --  Uncurry notation:
   --      5. f[:][:]  == cont (i,j) => f[i][j]  :  ι₀ × ι₁ ↦ α       where  f : ι₀ ↦ ι₁ ↦ α 
   -- 
   --  Common examples:  (mean: ∑' == 1/n * ∑) (norm: ∥ ∥)
-  --      1. average of columns:  (∑' j, A[:,j])
-  --      2. normalize of columns:  A[:₀,:₁] / (cont j, ∥A[:,j]∥) 
-  --      1. ((A[:₁,:₀] - (∑ j, A[:,j]))[:₁,:₀])[:,:]
+  --      1. average of columns:    (∑' j, A[:,j])(A[:₀,:₁] - ∑ j', A[:,j'])[:,:]
+  --      2. center columns:         (A[:₀,:₁] - ∑ j', A[:,j'])[:,:]
+  --      3. normalize of columns:  ((A[:₁,:₀] / (cont j, ∥A[:,j]∥))[:₁,:₀])[:,:]
+  --         The core operation (A[:₁,:₀] / (cont j, ∥A[:,j]∥) produces `B : ι₁ ↦ ι₀ ↦ α`. Uncurrying back to `ι₀ × ι₁ ↦ α` is the awful (`B[:₁,:₀])[:,:]`
   --  
   --  Corner/Odd cases: 
-  --        1. curry and uncurry:  (f[:₀,:₁])[:,:] == cont (k,l) => (cont i j => f[i,j])[k,l] == f
-  --        2. not the same as 1:  f[:₀,:₁][:,:] == cont (i,j,k) l => f[i,l][j,k]
-  --        3. transpose:          (f[:₁,:₀])[:,:] == cont (k,l) => (cont j i => f[i,j])[k,l] == transpose f
+  --        1. curry and uncurry:  (f[:₀,:₁])[:,:]  ==  cont (k,l)     => (cont i j => f[i,j])[k,l]  ==  f
+  --        2. not the same as 1:   f[:₀,:₁] [:,:]  ==  cont (i,j,k) l => f[i,l][j,k]                !=  f
+  --        3. transpose:          (f[:₁,:₀])[:,:]  ==  cont (k,l)     => (cont j i => f[i,j])[k,l]  ==  transpose f
+  --        4. uncurry:             f[:][:]         ==  cont (i,j)     => f[i][j]
+  --        5. curry:               f[:₀,:₁]        ==  cont i j       => f[i,j]
+  --        6. identity:            f[:]            ==  cont i         => f[i]
+  --        7. identity:           (f[:])[:]        ==  cont i         => (cont j => f[j])[i]
   -- 
-  --  For indices that are Enumtype add ranged notation
-  --      1. f[a:b]  == cont i : Range a b => f[(coe (Range a b) ι i)]   : Range a b ↦ α
-  --      2. f[a:b,:]  == cont (i,j) : (Range a b) × ι₁ => f[(coe (Range a b) ι i),j]  : (Range a b)×ι₁ ↦ α
-  --      3. f[a:b,:₁]  == cont (i,j) : (Range a b) ι₁ => f[(coe (Range a b) ι i),j]  : (Range a b) ↦ ι₁ ↦ α
+  --  For indices that are Enumtype add ranged notation  
+  --      1. f[a:b]     == cont     i : Fin (dist a b)      => f[offset a i]   : Fin (dist a b) ↦ α
+  --      2. f[a:b,:]   == cont (i,j) : Fin (dist a b) × ι₁ => f[offset a i, j]  : Fin (dist a b)×ι₁ ↦ α
+  --      3. f[a:b,:₁]  == cont     (i: Fin (dist a b)) j   => f[offset a i, j]  : Fin (dist a b) ↦ ι₁ ↦ α
+  --      where (dist a b)   := (toFin b).1 - (toFin a).1
+  --            (offset a i) := fromFin (i.1 + (toFin a).1)
 
   macro c:term noWs "[" i1:term"]" : term =>
     `(get $c $i1)
@@ -81,6 +88,12 @@ namespace Cont
     `(get $c ($i1,$i2,$i3,$i4))
 
   section ExtraOperations
+
+     -- Here we use formulation with [ContData C] [Cont C (indexOf C) (valueOf C)]
+     -- instead of [Cont C ι α]
+     --
+     -- This way, for example, `Intro.intro` needs to infer only `C` and does not have to infer `ι` and ‵α`
+     -- Plus when declaring instance you can just write, for example, `instance {T} : Intro T`.
 
      class Intro (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
        intro : (indexOf C → valueOf C) → C
@@ -149,7 +162,9 @@ namespace Cont
 
      section VectorOperations
 
-       variable {C} [ContData C] [Cont C (indexOf C) (valueOf C)] [Vec (valueOf C)] [Intro C]
+       -- variable {C} [ContData C] [Cont C (indexOf C) (valueOf C)] [Vec (valueOf C)] [Intro C]
+       variable {C : Type u} {ι : Type v} {α : Type w} [Cont C ι α] [Intro C] [Vec α]
+
        
        -- Unfold definition's of vector oprations back
        -- This way we can get fast saxpy type operations i.e.`s*x+y` transforms to `intro λ i => s*x[i] + y[i]`
@@ -160,8 +175,8 @@ namespace Cont
        @[simp] theorem hmul_norm (s : ℝ) (c : C) : HMul.hMul (self := instContVecHMul) s c = intro (cont i => s * c[i]) := by rfl
        @[simp] theorem zero_norm : (Zero.zero (self := instContVecZero) : C) = intro (λ _ => 0) := by rfl
 
-       @[simp] theorem get_intro (f : (indexOf C) ↦ (valueOf C)) : (intro f : C)[i] = f i := by apply Intro.valid; done
-       @[simp] theorem get_contFun {ι : Type v} {α : Type w} {i : ι} (f : ι ↦ α) : f[i] = f i := by rfl
+       @[simp] theorem get_intro (f : ι ↦ α) : (intro f : C)[i] = f i := by apply Intro.valid; done
+       @[simp] theorem get_contFun {i : ι} (f : ι ↦ α) : f[i] = f i := by rfl
 
        section tests
          abbrev xpy {X} [Vec X] (x y : X) := x + y
@@ -184,10 +199,17 @@ namespace Cont
        variable {C : Type u} {α : Type w} [Cont C ι α]
        variable {C' : Type u'} {α' : Type w'} [Cont C' ι α']
 
+       -- instance : Cont C (indexOf (self := instContData C ι α) C) (valueOf (self := instContData C ι α) C) := sorry
+
        instance [HAdd α α' β] : HAdd C C' (ι ↦ β) := ⟨λ c c' => λ i => c[i] + c'[i]⟩
        instance [HSub α α' β] : HSub C C' (ι ↦ β) := ⟨λ c c' => λ i => c[i] - c'[i]⟩
        instance [HMul α α' β] : HMul C C' (ι ↦ β) := ⟨λ c c' => λ i => c[i] * c'[i]⟩
        instance [HDiv α α' β] : HDiv C C' (ι ↦ β) := ⟨λ c c' => λ i => c[i] / c'[i]⟩
+
+       @[simp] theorem elwise_hadd_apply [HAdd α α' β] (c : C) (c' : C') (i) : (c + c')[i] = c[i] + c'[i] := by simp[HAdd.hAdd] done
+       @[simp] theorem elwise_hsub_apply [HSub α α' β] (c : C) (c' : C') (i) : (c - c')[i] = c[i] - c'[i] := by simp[HSub.hSub] done
+       @[simp] theorem elwise_hmul_apply [HMul α α' β] (c : C) (c' : C') (i) : (c * c')[i] = c[i] * c'[i] := by simp[HMul.hMul] done
+       @[simp] theorem elwise_hdiv_apply [HDiv α α' β] (c : C) (c' : C') (i) : (c / c')[i] = c[i] / c'[i] := by simp[HDiv.hDiv] done
 
      end ElementWise
 
@@ -201,12 +223,18 @@ namespace Cont
                 : HMul C C' (ι × μ ↦ β) 
                 := ⟨λ c c' (i,j) => ∑ k, c[i,fromFin k] * c'[fromFin k,j]⟩
 
+       @[simp] theorem hmul_apply [HMul α α' β] [Add β] [Zero β] [Enumtype κ]
+                       (c : C) (c' : C')
+                       : (c*c')[i,j] = ∑ k, c[i,fromFin k] * c'[fromFin k,j]
+                       := by simp[HMul.hMul,Mul.mul] done
+
      end Mul
 
      section Broadcasting
 
-       variable {C : Type u} {ι : Type v} {α : Type w} [Cont C ι α]
+       -- still not sure how to state theorems and instances about `Cont`
        -- variable {C : Type u} [ContData C] [Cont C (indexOf C) (valueOf C)] [Intro C]
+       variable {C : Type u} {ι : Type v} {α : Type w} [Cont C ι α]
 
        -- Thise two can lead to ambiquous notation, we prefer the later
        -- i.e. The class `HAdd C (ι ↦ α) (ι ↦ ι ↦ α)` class has two different instance that are not equal!!!
@@ -232,7 +260,27 @@ namespace Cont
        instance (priority := low) [Div α] : HDiv C α (ι ↦ α) := ⟨λ c a i => c[i]/a⟩
        instance (priority := low) [Div α] : HDiv α C (ι ↦ α) := ⟨λ a c i => a/c[i]⟩
        instance [HDiv α β α] : HDiv C (ι ↦ β) (ι ↦ α) := ⟨λ c b i => c[i]/b[i]⟩
-       instance [HDiv β α α] : HDiv (ι ↦ β) C (ι ↦ α) := ⟨λ b c i => b[i]/c[i]⟩       
+       instance [HDiv β α α] : HDiv (ι ↦ β) C (ι ↦ α) := ⟨λ b c i => b[i]/c[i]⟩    
+
+       @[simp] theorem hadd_apply_1 [Add α] (c : C) (a : α) (i) : (c + a)[i] = c[i] + a := by simp[HAdd.hAdd] done
+       @[simp] theorem hadd_apply_2 [Add α] (c : C) (a : α) (i) : (a + c)[i] = a + c[i] := by simp[HAdd.hAdd] done
+       @[simp] theorem hadd_apply_3 [HAdd α β α] (c : C) (b : ι ↦ β) (i) : (c + b)[i] = c[i] + b[i] := by simp[HAdd.hAdd] done
+       @[simp] theorem hadd_apply_4 [HAdd β α α] (c : C) (b : ι ↦ β) (i) : (b + c)[i] = b[i] + c[i] := by simp[HAdd.hAdd] done
+
+       @[simp] theorem hsub_apply_1 [Sub α] (c : C) (a : α) (i) : (c - a)[i] = c[i] - a := by simp[HSub.hSub] done
+       @[simp] theorem hsub_apply_2 [Sub α] (c : C) (a : α) (i) : (a - c)[i] = a - c[i] := by simp[HSub.hSub] done
+       @[simp] theorem hsub_apply_3 [HSub α β α] (c : C) (b : ι ↦ β) (i) : (c - b)[i] = c[i] - b[i] := by simp[HSub.hSub] done
+       @[simp] theorem hsub_apply_4 [HSub β α α] (c : C) (b : ι ↦ β) (i) : (b - c)[i] = b[i] - c[i] := by simp[HSub.hSub] done
+
+       @[simp] theorem hmul_apply_1 [Mul α] (c : C) (a : α) (i) : (c * a)[i] = c[i] * a := by simp[HMul.hMul] done
+       @[simp] theorem hmul_apply_2 [Mul α] (c : C) (a : α) (i) : (a * c)[i] = a * c[i] := by simp[HMul.hMul] done
+       @[simp] theorem hmul_apply_3 [HMul α β α] (c : C) (b : ι ↦ β) (i) : (c * b)[i] = c[i] * b[i] := by simp[HMul.hMul] done
+       @[simp] theorem hmul_apply_4 [HMul β α α] (c : C) (b : ι ↦ β) (i) : (b * c)[i] = b[i] * c[i] := by simp[HMul.hMul] done
+
+       @[simp] theorem hdiv_apply_1 [Div α] (c : C) (a : α) (i) : (c / a)[i] = c[i] / a := by simp[HDiv.hDiv] done
+       @[simp] theorem hdiv_apply_2 [Div α] (c : C) (a : α) (i) : (a / c)[i] = a / c[i] := by simp[HDiv.hDiv] done
+       @[simp] theorem hdiv_apply_3 [HDiv α β α] (c : C) (b : ι ↦ β) (i) : (c / b)[i] = c[i] / b[i] := by simp[HDiv.hDiv] done
+       @[simp] theorem hdiv_apply_4 [HDiv β α α] (c : C) (b : ι ↦ β) (i) : (b / c)[i] = b[i] / c[i] := by simp[HDiv.hDiv] done
 
      end Broadcasting
 
@@ -298,12 +346,74 @@ namespace Cont
      -- example : A[:₁,:₀] / (cont j => ∥A[:,j]∥) = (λ (i,j) => A[i,j] / Math.sqrt (∑ i', A[i',j]*A[i',j])) := by rfl
      example : (cont j i => A[i,j]) / (cont j => ∥λ i => A[i,j]∥) = (cont j i => A[i,j] / ∥λ i' => A[i',j]∥) := sorry
      -- example : M[:₁,:₀] / (cont j => ∥A[:,j]∥) = (λ (i,j) => A[i,j] / Math.sqrt (∑ i', A[i',j]*A[i',j])) := by rfl
-  --      2. normalize of columns:  A[:₀,:₁] / (cont j, ∥A[:,j]∥) 
-  --      1. ((A[:₁,:₀] - (∑ j, A[:,j]))[:₁,:₀])[:,:]
-
 
   end LazyOperations
 
+
+  section ForNotation
+
+    -- notation:  
+    --      for (a,i,li) in F do
+    --          ..                        
+    -- where a is value at 
+    instance {m} [Monad m] {n} {α : Type w} : ForIn m (Fin n ↦ α) (α × Fin n × Nat) :=
+    {
+      forIn := λ F init f => do
+                 let mut val := init
+                 for i in [0:n] do
+                   let i' := ⟨i, sorry⟩
+                   match (← f (F[i'], i',i'.1) val) with
+                     | ForInStep.done d => return d
+                     | ForInStep.yield d => val ← d
+                 pure val
+    }
+
+    --- How to ensure that I'm traversing in the same order as `Enumtype.fromFin` ??
+    --  It would be usefull to have access to proof that the linear index really corresponds to the structured index
+    instance {m} [Monad m] {α : Type w} {ι κ} [Enumtype ι] [Enumtype κ] 
+             [ForIn m (ι ↦ α) (α × ι × Nat)]
+             [ForIn m (κ ↦ ι ↦ α) ((ι ↦ α) × κ × Nat)] 
+             : ForIn m (ι × κ ↦ α) (α × (ι × κ) × Nat) :=
+    {
+      forIn := λ F init f => do
+                 let mut val := init
+                 for (col, j, lj) in (cont j i => F[i,j]) do
+                   let offset := (Enumtype.num ι) * lj 
+                   for (a, i, li) in col do
+                     match (← f (a, (i,j), li + offset) val) with
+                       | ForInStep.done d => return d
+                       | ForInStep.yield d => val ← d
+                 pure val
+    }
+
+    instance {m} [Monad m] {α : Type w} {ι κ} [Enumtype ι] [Enumtype κ] 
+             [ForIn m (κ ↦ α) (α × κ × Nat)]
+             [ForIn m (ι ↦ κ ↦ α) ((κ ↦ α) × ι × Nat)] 
+             : ForIn m (ι ×ᵣ κ ↦ α) (α × (ι ×ᵣ κ) × Nat) :=
+    {
+      forIn := λ F init f => do
+                 let mut val := init
+                 for (row, i, li) in (cont i j => F[i,j]) do
+                   let offset := (Enumtype.num κ) * li 
+                   for (a, j, lj) in row do
+                     match (← f (a, (i,j), lj + offset) val) with
+                       | ForInStep.done d => return d
+                       | ForInStep.yield d => val ← d
+                 pure val
+    }    
+
+    -- def test : IO Unit := do
+    --     let mut val : Nat := 0
+    --     for (a,(i,j,k),li) in (cont i : Fin 3 ×ᵣ Fin 5 ×ᵣ Fin 2 => ()) do
+    --        val := val + li
+    --        IO.println s!"(i,j,k) = ({i},{j},{k})  |  li = {li}  |  a = {a}  |  val = {val}"
+    --     IO.println s!"val = {val}"
+
+    -- #eval test
+
+
+
+  end ForNotation
 
 end Cont
 
