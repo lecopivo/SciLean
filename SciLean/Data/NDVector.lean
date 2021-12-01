@@ -67,11 +67,11 @@ namespace NDVector
     valid := sorry
   }
 
-  instance : Cont.Map₂ (NDVector dims (order := order)) := 
-  {
-    map₂ := λ f u v => Cont.mapIdx (λ id x => f x (v[id])) u
-    valid := sorry
-  }
+  -- instance : Cont.Map₂ (NDVector dims (order := order)) := 
+  -- {
+  --   map₂ := λ f u v => Cont.mapIdx (λ id x => f x (v[id])) u
+  --   valid := sorry
+  -- }
 
 
 end NDVector

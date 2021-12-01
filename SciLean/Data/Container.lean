@@ -42,6 +42,10 @@ namespace Cont
 
   --- TODO:
   --  Merge all those macros into one
+  -- 
+  --  Element assignment:
+  --      1. f[i] := x    ==   f := f.set i x
+  --      2. f[i] += x    ==   f := f.set i (f[i] + x)
   --
   --  Add slicing notation:
   --      1. f[:]    ==  f[:₀]  ==  cont     i => f[i]    : ι ↦ α       
@@ -124,11 +128,12 @@ namespace Cont
 
      -- map₂ can be done with mapIdx, but with map₂ we can reuse memore more efficiently
      -- Also we do want MapIdx for sparse data structures
-     class Map₂ (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
-       map₂ : ((valueOf C) → (valueOf C) → (valueOf C)) → C → C → C
-       valid : ∀ f c d i, (map₂ f c d)[i] = f (c[i]) (d[i])
+     -- Edit: On second thought Map₂ is maybe not too important.
+     -- class Map₂ (C : Type u) [ContData C] [Cont C (indexOf C) (valueOf C)] where
+     --   map₂ : ((valueOf C) → (valueOf C) → (valueOf C)) → C → C → C
+     --   valid : ∀ f c d i, (map₂ f c d)[i] = f (c[i]) (d[i])
 
-     export Map₂ (map₂)
+     -- export Map₂ (map₂)
 
      -- Some containers can have infinite(effectively) index set `(indexOf C)` but only finite many indices actually hold a value
      -- Prime example is OpenVDB/NanoVDB but sparse matrices also qualify for this
@@ -355,63 +360,28 @@ namespace Cont
     -- notation:  
     --      for (a,i,li) in F do
     --          ..                        
-    -- where a is value at 
-    instance {m} [Monad m] {n} {α : Type w} : ForIn m (Fin n ↦ α) (α × Fin n × Nat) :=
+    open Enumtype in
+    instance {m} [Monad m] {ι} {α : Type w} [Enumtype ι] [ForIn m (Range ι) (ι × Nat)]
+             : ForIn m (ι ↦ α) (α × ι × Nat) :=
     {
       forIn := λ F init f => do
                  let mut val := init
-                 for i in [0:n] do
-                   let i' := ⟨i, sorry⟩
-                   match (← f (F[i'], i',i'.1) val) with
-                     | ForInStep.done d => return d
-                     | ForInStep.yield d => val ← d
-                 pure val
+                 for (i,li) in fullRange ι do
+                   match (← f (F[i], i, li) val) with
+                   | ForInStep.done d => return d
+                   | ForInStep.yield d => val ← d
+                 pure init
     }
 
-    --- How to ensure that I'm traversing in the same order as `Enumtype.fromFin` ??
-    --  It would be usefull to have access to proof that the linear index really corresponds to the structured index
-    instance {m} [Monad m] {α : Type w} {ι κ} [Enumtype ι] [Enumtype κ] 
-             [ForIn m (ι ↦ α) (α × ι × Nat)]
-             [ForIn m (κ ↦ ι ↦ α) ((ι ↦ α) × κ × Nat)] 
-             : ForIn m (ι × κ ↦ α) (α × (ι × κ) × Nat) :=
-    {
-      forIn := λ F init f => do
-                 let mut val := init
-                 for (col, j, lj) in (cont j i => F[i,j]) do
-                   let offset := (Enumtype.num ι) * lj 
-                   for (a, i, li) in col do
-                     match (← f (a, (i,j), li + offset) val) with
-                       | ForInStep.done d => return d
-                       | ForInStep.yield d => val ← d
-                 pure val
-    }
+  
+    def test : IO Unit := do
+        let mut val : Nat := 0
+        for (a,i,li) in (cont i : Fin 2 ×ᵣ Fin 3 ×ᵣ Fin 4 => ()) do 
+           val := val + li
+           IO.println s!"i = {i}  |  li = {li}  |  a = {a}  |  val = {val}"
+        IO.println s!"val = {val}"
 
-    instance {m} [Monad m] {α : Type w} {ι κ} [Enumtype ι] [Enumtype κ] 
-             [ForIn m (κ ↦ α) (α × κ × Nat)]
-             [ForIn m (ι ↦ κ ↦ α) ((κ ↦ α) × ι × Nat)] 
-             : ForIn m (ι ×ᵣ κ ↦ α) (α × (ι ×ᵣ κ) × Nat) :=
-    {
-      forIn := λ F init f => do
-                 let mut val := init
-                 for (row, i, li) in (cont i j => F[i,j]) do
-                   let offset := (Enumtype.num κ) * li 
-                   for (a, j, lj) in row do
-                     match (← f (a, (i,j), lj + offset) val) with
-                       | ForInStep.done d => return d
-                       | ForInStep.yield d => val ← d
-                 pure val
-    }    
-
-    -- def test : IO Unit := do
-    --     let mut val : Nat := 0
-    --     for (a,(i,j,k),li) in (cont i : Fin 3 ×ᵣ Fin 5 ×ᵣ Fin 2 => ()) do
-    --        val := val + li
-    --        IO.println s!"(i,j,k) = ({i},{j},{k})  |  li = {li}  |  a = {a}  |  val = {val}"
-    --     IO.println s!"val = {val}"
-
-    -- #eval test
-
-
+    #eval test
 
   end ForNotation
 

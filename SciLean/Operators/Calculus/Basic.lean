@@ -1,3 +1,4 @@
+import Lean
 import SciLean.Categories
 import SciLean.Operators.Adjoint
 
@@ -17,6 +18,31 @@ def differential (f : X → Y) (x dx : X) : Y :=
     match Classical.propDecidable (IsSmooth f) with
       | isTrue  h => sorry
       | _ => (0 : Y)
+
+-- noncomputable
+-- def Smooth.diff (f : X ⟿ Y) : (X ⟿ X ⊸ Y) := ⟨λ x => ⟨λ dx => differential f.1 x dx, sorry⟩, sorry⟩
+-- Can we have unified 
+
+-- class Differential (Hom : Type → Type → Type) (X Y : Type) where
+--   diff (f : Hom X Y) : (Hom X (Hom X Y))
+
+-- attribute [reducible] Differential.diff
+
+-- @[reducible]
+-- noncomputable
+-- instance instNormalDiff : Differential (λ X Y : Type => X → Y) X Y:=
+-- {
+--   diff := (differential : (X → Y) → X → X → Y)
+-- }
+
+-- @[reducible]
+-- noncomputable
+-- instance instSmoothDiff : Differential (λ X Y : Type => X ⟿ Y) X Y:=
+-- {
+--   diff := λ f => Smooth.diff f
+-- }
+
+-- #check Differential.
 
 prefix:max "δ" => differential
 

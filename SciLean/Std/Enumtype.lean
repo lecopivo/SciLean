@@ -4,13 +4,13 @@ namespace SciLean
 
 -- Enumerable type
 class Enumtype (α : Type u) where
-  num : Nat
-  fromFin : Fin num → α
-  toFin : α → Fin num
+  numOf : Nat
+  fromFin : Fin numOf → α
+  toFin : α → Fin numOf
   to_from : ∀ i, toFin (fromFin i) = i
   from_to : ∀ a, fromFin (toFin a) = a
 
-export Enumtype (fromFin toFin)
+export Enumtype (numOf fromFin toFin)
 
 namespace Enumtype
 
@@ -22,128 +22,124 @@ namespace Enumtype
 -- I will stick with Fortran style colum major as in the future I will probably wrap Eigen library that is column-major.
 instance [Enumtype α] [Enumtype β] : Enumtype (α × β) :=
 {
-   num := num α * num β
-   fromFin := λ i => (fromFin ⟨i.1 % num α, sorry⟩, fromFin ⟨i.1 / num α, sorry⟩)
-   toFin   := λ (a,b) => ⟨(toFin a).1 + (num α) * (toFin b).1, sorry⟩
-   to_from := sorry
-   from_to := sorry
-}
-
--- Marking product to be stored in row-major order
-def RowProd (α β) := α × β
-infixr:35 " ×ᵣ "  => RowProd
-
-instance [Enumtype α] [Enumtype β] : Enumtype (α ×ᵣ β) :=
-{
-   num := num α * num β
-   fromFin := λ i => (fromFin ⟨i.1 % num β, sorry⟩, fromFin ⟨i.1 / num β, sorry⟩)
-   toFin   := λ (a,b) => ⟨(toFin b).1 + (num β) * (toFin a).1, sorry⟩
+   numOf := numOf α * numOf β
+   fromFin := λ i => (fromFin ⟨i.1 % numOf α, sorry⟩, fromFin ⟨i.1 / numOf α, sorry⟩)
+   toFin   := λ (a,b) => ⟨(toFin a).1 + (numOf α) * (toFin b).1, sorry⟩
    to_from := sorry
    from_to := sorry
 }
 
 instance [Enumtype α] [Enumtype β] : Enumtype (α → β) :=
 {
-  num := (num β)^(num α)
-  fromFin := λ i a => fromFin (⟨i.1 / ((num β)^(toFin a).1) % (num β), sorry⟩)
-  toFin   := λ f => ⟨∑ i : Fin (num α), (i |> fromFin |> f |> toFin).1 * (num β)^i.1, sorry⟩
+  numOf := (numOf β)^(numOf α)
+  fromFin := λ i a => fromFin (⟨i.1 / ((numOf β)^(toFin a).1) % (numOf β), sorry⟩)
+  toFin   := λ f => ⟨∑ i : Fin (numOf α), (i |> fromFin |> f |> toFin).1 * (numOf β)^i.1, sorry⟩
   to_from := sorry
   from_to := sorry
 }
 
 instance : Enumtype (Fin n) :=
 {
-  num := n
+  numOf := n
   fromFin := id
   toFin := id
   to_from := by intro _; simp done
   from_to := by intro _; simp done
 }
 
--- Preform fold based on the linearization in Enumtype
-def seqForIdxM {ι} [Enumtype ι] {m} [Monad m] 
-               (f : ι → Fin (num ι) → m Unit) : m Unit :=
-do 
-  for i in [0:num ι] do
-    let i' := ⟨i, sorry⟩
-    let id := fromFin ⟨i, sorry⟩
-    f id i'
-  ()
-  
-class For (ι : Type u) [Enumtype ι] where
-  forIdxM {m} [Monad m] (f : ι → Fin (num ι) → m Unit) : m Unit
-  valid : @seqForIdxM ι _ = @forIdxM
+-- TODO: Somehow add this to the for loop. 
+-- Having a proof about the compatibility of the index and linear index.
+structure ValidLinIndex {ι} [Enumtype ι] (i : ι) (li : Nat) : Type where
+  valid : li = (toFin i).1
 
-instance {n} : For (Fin n) :=
+-- A range is `some (first, last)` where last is !included! to the range
+-- if an empty range then it is `none`
+def Range (α : Type u) [Enumtype α] := Option (α × α)
+def range {α} [Enumtype α] (s e : α) : Range α := some (s,e)
+
+instance (α : Type u) [Enumtype α] [ToString α] : ToString (Range α) := 
+  ⟨λ r => 
+    match r with
+      | none => "[:]"
+      | some (s,e) => s!"[{s}:{e}]"⟩
+
+def fullRange (α : Type u) [Enumtype α] : Range α :=
+    match (numOf α) with
+      | 0 => none
+      | n+1 => some (fromFin ⟨0, sorry⟩, fromFin ⟨n, sorry⟩)
+
+instance {m} [Monad m] {n}
+         : ForIn m (Range (Fin n)) (Fin n × Nat) :=
 {
-  forIdxM := seqForIdxM
-  valid := by rfl
+  forIn := λ r init f => 
+             match r with
+               | none => init
+               | some (s,e) => do
+                 let mut val := init
+                 for i in [s.1:e.1+1] do
+                   match (← f (⟨i,sorry⟩, i) val) with
+                     | ForInStep.done d => return d
+                     | ForInStep.yield d => val ← d
+                 pure val
 }
 
-instance {ι κ} [Enumtype ι] [Enumtype κ] [For ι] [For κ] : For (ι × κ) :=
+-- Colum-major ordering, i.e. the inner loop runs over ι
+instance {m} [Monad m] [Enumtype ι] [Enumtype κ]
+         [ForIn m (Range ι) (ι × Nat)]
+         [ForIn m (Range κ) (κ × Nat)]
+         : ForIn m (Range (ι × κ)) ((ι × κ) × Nat) :=
 {
-  forIdxM := λ {m} [Monad m] 
-               (f : ι × κ → Fin (num (ι×κ)) → m Unit) =>
-               do
-                 let col := λ (j : κ) (lj : Fin (num κ)) =>
-                              let offset := (num ι) * lj.1
-                              For.forIdxM (λ i li => f (i,j) ⟨li.1 + offset, sorry⟩)
-                 For.forIdxM col
-  valid := sorry
+  forIn := λ r init f => 
+             match r with 
+               | none => init
+               | some ((is,js),(ie,je)) => do
+                 let mut val := init
+                 for (j,lj) in (range js je) do
+                   let offset := (numOf ι) * lj
+                   for (i,li) in (range is ie) do
+                     match (← f ((i,j), li + offset) val) with
+                       | ForInStep.done d => return d
+                       | ForInStep.yield d => val ← d
+                 pure val
 }
 
--- Preform fold based on the linearization in Enumtype
-def seqFoldIdxM {ι} [Enumtype ι] {α β m} [Monad m] 
-                (f : ι → Fin (num ι) → α) (op : ι → Fin (num ι) → α → β → m β) (b₀ : β) : m β :=
-do 
-  let mut b := b₀
-  for i in [0:num ι] do
-    let i' := ⟨i, sorry⟩
-    let id := fromFin i'
-    b ← (op id i' (f id i') b)
-  b  
 
---- Specialized fold function 
--- Maybe I want to include linear index to `op` and `f` as it can be usually computed incrementaly
--- and quite often getting an element with linear index is the fastest way
--- it might not be effective to call fromFin all the time for complicated indices!
-class Fold (ι : Type u) [Enumtype ι] where
-  foldIdxM {α β m} [Monad m] (f : ι → Fin (num ι) → α) (op : ι → Fin (num ι) → α → β → m β) (b₀ : β) : m β
-  valid : @seqFoldIdxM ι _ = @foldIdxM
+-- Marking product to be stored in row-major order
+def RowProd (α β) := α × β
+infixr:35 " ×ᵣ "  => RowProd
 
+instance [ToString α] [ToString β] : ToString (α ×ᵣ β) := ⟨λ (a,b) => s!"({a},{b})"⟩
 
-instance {n} : Fold (Fin n) :=
+instance [Enumtype α] [Enumtype β] : Enumtype (α ×ᵣ β) :=
 {
-  foldIdxM := seqFoldIdxM
-  valid := by rfl
+   numOf := numOf α * numOf β
+   fromFin := λ i => (fromFin ⟨i.1 / numOf β, sorry⟩, fromFin ⟨i.1 % numOf β, sorry⟩)
+   toFin   := λ (a,b) => ⟨(toFin b).1 + (numOf β) * (toFin a).1, sorry⟩
+   to_from := sorry
+   from_to := sorry
 }
 
--- TODO: Support row-major ordering!
-instance {ι κ} [Enumtype ι] [Enumtype κ] [Fold ι] [Fold κ] : Fold (ι × κ) :=
+-- Row-major ordering, i.e. the inner loop runs over κ
+instance {m} [Monad m] [Enumtype ι] [Enumtype κ]
+         [ForIn m (Range ι) (ι × Nat)]
+         [ForIn m (Range κ) (κ × Nat)]
+         : ForIn m (Range (ι ×ᵣ κ)) ((ι ×ᵣ κ) × Nat) :=
 {
-  foldIdxM := λ {α β m} [Monad m] 
-                (f : ι × κ → Fin (num (ι×κ)) → α) 
-                (op : ι × κ → Fin (num (ι×κ)) → α → β → m β) (b₀ : β) => 
-                do
-                  let col := λ (j : κ) (lj : Fin (num κ)) (b : β) => 
-                               let offset := (num ι) * lj.1
-                               Fold.foldIdxM (λ i li =>  f (i,j) ⟨li.1 + offset, sorry⟩) 
-                                             (λ i li => op (i,j) ⟨li.1 + offset, sorry⟩) b
-                  let op' := λ (j : κ) (lj : Fin (num κ)) (col : β → m β) (b : β) => col b
-                  Fold.foldIdxM col op' b₀
-  valid := sorry
+  forIn := λ r init f =>
+             match r with 
+               | none => init
+               | some ((is,js),(ie,je)) => do
+                 let mut val := init
+                 for (i,li) in (range is ie) do
+                   let offset := (numOf κ) * li
+                   for (j,lj) in (range js je) do
+                     match (← f ((i,j), lj + offset) val) with
+                       | ForInStep.done d => return d
+                       | ForInStep.yield d => val ← d
+                 pure val
 }
 
-open Fold (foldIdxM) 
-
-variable {ι} [Enumtype ι] [Fold ι]
-
-def foldIdx {α β} (f : ι → Fin (num ι) → α) (op : ι → Fin (num ι) → α → β → β) (b₀ : β) : β 
-            := (Fold.foldIdxM f op b₀ : Id β)
-
- 
 example : (236 : Fin 1000) = (toFin ((6 : Fin 10), (3 : Fin 10), (2 : Fin 10))) := by rfl
 example : (3,5,8) = (fromFin (853 : Fin 1000) : Fin 10 × Fin 10 × Fin 10) := by rfl
 example : (⟨1023,sorry⟩ : Fin (2^10)) = (toFin (λ i : Fin 10 => (1 : Fin 2))) := by rfl
-example : 61 = (foldIdx (λ ((i,j) : Fin 4 × Fin 10) _ => i.1) (λ _ _ a b => a + b) 1) := by rfl
 
