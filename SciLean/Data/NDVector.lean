@@ -74,4 +74,5 @@ namespace NDVector
 
 end NDVector
 
-
+abbrev Matrix (n m : Nat) := NDVector (Fin n × Fin m)
+abbrev Vector (n : Nat) := NDVector (Fin n)

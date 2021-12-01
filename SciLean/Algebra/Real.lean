@@ -44,6 +44,11 @@ namespace Real
   instance : OfNat ℝ n := ⟨Float.ofNat n⟩
   instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
+  def natPow (r : ℝ) : Nat → ℝ
+  | 0 => 1
+  | n+1 => r * natPow r n
+
+  instance : Pow ℝ Nat := ⟨natPow⟩
   instance : HPow Real Real Real := ⟨Math.pow⟩
 
   instance : Field ℝ := 

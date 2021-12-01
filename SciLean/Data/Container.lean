@@ -385,5 +385,29 @@ namespace Cont
 
   end ForNotation
 
+
+  -- View of a container if usefull if you want to modify a sub set of a container and still refer to it as a container
+  section ContainerView
+
+    def ContView {κ} (C : Type u) [ContData C] (tr : κ → (indexOf C)) := C
+    def view   {κ} {C} [ContData C] (c : C) (tr : κ → (indexOf C)) : ContView C tr := c
+    def unview {κ} {C} [ContData C] {tr : κ → (indexOf C)} (c : ContView C tr) : C := c
+
+    instance {C ι α κ} [Cont C ι α] (tr : κ → ι) : Cont (ContView C tr) κ α :=
+    {
+      toFun := λ c j => (unview c)[tr j]
+    }
+  
+    instance {C ι α κ} [Cont C ι α] (tr : κ → ι) [Set C] : Set (ContView C tr) :=
+    {
+      set := λ c j a => view (set (unview c) (tr j) a) tr
+      valid := sorry
+    }
+    
+
+  end ContainerView
+
 end Cont
+
+
 

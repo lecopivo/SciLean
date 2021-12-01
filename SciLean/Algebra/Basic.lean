@@ -1,3 +1,4 @@
+import SciLean.Std.Enumtype
 
 class Zero (α : Type u) where
   zero : α
@@ -78,10 +79,11 @@ section FunctionOperations
 end FunctionOperations
 
 --- TODO: Do sum over any Enumtype
-def sum {n α} [Zero α] [Add α] (f : Fin n → α) : α := do
-  let mut r := 0 
-  for i in [0:n] do
-    r := r + f ⟨i, sorry⟩
+open SciLean Enumtype in
+def sum {α} [Zero α] [Add α] {ι} [Enumtype ι] [ForIn Id (Range ι) (ι × Nat)] (f : ι → α) : α := do
+  let mut r : α := 0 
+  for (i, li) in fullRange ι do
+    r := r + (f i)
   r
 
 macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `sum xs b

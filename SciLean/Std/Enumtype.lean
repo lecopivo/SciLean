@@ -1,5 +1,3 @@
-import SciLean.Algebra
-
 namespace SciLean
 
 -- Enumerable type
@@ -29,14 +27,14 @@ instance [Enumtype α] [Enumtype β] : Enumtype (α × β) :=
    from_to := sorry
 }
 
-instance [Enumtype α] [Enumtype β] : Enumtype (α → β) :=
-{
-  numOf := (numOf β)^(numOf α)
-  fromFin := λ i a => fromFin (⟨i.1 / ((numOf β)^(toFin a).1) % (numOf β), sorry⟩)
-  toFin   := λ f => ⟨∑ i : Fin (numOf α), (i |> fromFin |> f |> toFin).1 * (numOf β)^i.1, sorry⟩
-  to_from := sorry
-  from_to := sorry
-}
+-- instance [Enumtype α] [Enumtype β] : Enumtype (α → β) :=
+-- {
+--   numOf := (numOf β)^(numOf α)
+--   fromFin := λ i a => fromFin (⟨i.1 / ((numOf β)^(toFin a).1) % (numOf β), sorry⟩)
+--   toFin   := λ f => ⟨∑ i : Fin (numOf α), (i |> fromFin |> f |> toFin).1 * (numOf β)^i.1, sorry⟩
+--   to_from := sorry
+--   from_to := sorry
+-- }
 
 instance : Enumtype (Fin n) :=
 {
@@ -139,7 +137,7 @@ instance {m} [Monad m] [Enumtype ι] [Enumtype κ]
                  pure val
 }
 
-example : (236 : Fin 1000) = (toFin ((6 : Fin 10), (3 : Fin 10), (2 : Fin 10))) := by rfl
-example : (3,5,8) = (fromFin (853 : Fin 1000) : Fin 10 × Fin 10 × Fin 10) := by rfl
-example : (⟨1023,sorry⟩ : Fin (2^10)) = (toFin (λ i : Fin 10 => (1 : Fin 2))) := by rfl
+-- example : (236 : Fin 1000) = (toFin ((6 : Fin 10), (3 : Fin 10), (2 : Fin 10))) := by rfl
+-- example : (3,5,8) = (fromFin (853 : Fin 1000) : Fin 10 × Fin 10 × Fin 10) := by rfl
+-- example : (⟨1023,sorry⟩ : Fin (2^10)) = (toFin (λ i : Fin 10 => (1 : Fin 2))) := by rfl
 
