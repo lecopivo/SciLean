@@ -7,7 +7,7 @@ class Enumtype (α : Type u) extends Iterable α where
   fromFin : Fin numOf → α
   toFin : α → Fin numOf
 
-  --- toFin and fromFin are compatible with Iterable structure
+  --- Data compatibility of Enumtype and Iterable
   first_fromFin :
     match numOf with
       | 0 => True
@@ -39,7 +39,6 @@ namespace Enumtype
     next_toFin    := sorry
   }
 
-
   --- Row-major 
   instance [Enumtype α] [Enumtype β] : Enumtype (α × β) :=
   {
@@ -64,26 +63,33 @@ namespace Enumtype
      next_toFin    := sorry
   }
 
-  -- TODO: Somehow add this to the for loop. 
-  -- Having a proof about the compatibility of the index and linear index.
-  structure ValidLinIndex {ι} [Enumtype ι] (i : ι) (li : Nat) : Type where
-    valid : li = (toFin i).1
-
-  -- A range is `some (first, last)` where last is !included! to the range
-  -- if an empty range then it is `none`
+  -- This is closed range! Includes last element!
   def Range (α : Type u) [Enumtype α] := Option (α × α)
   def range {α} [Enumtype α] (s e : α) : Range α := some (s,e)
+
+  --- Should we have `×` or `×ₗ` there?
+  instance [Enumtype ι] [Enumtype κ] : HMul (Range ι) (Range κ) (Range (ι × κ)) :=
+    ⟨λ I J =>
+       match I, J with
+         | (some (is,ie)), (some (js,je)) => some ((is,js), (ie,je))
+         | _, _ => none⟩
 
   instance (α : Type u) [Enumtype α] [ToString α] : ToString (Range α) := 
     ⟨λ r => 
       match r with
-        | none => "[:]"
+        | none => "[]"
         | some (s,e) => s!"[{s}:{e}]"⟩
 
   def fullRange (α : Type u) [Enumtype α] : Range α :=
       match (numOf α) with
         | 0 => none
         | n+1 => some (fromFin ⟨0, sorry⟩, fromFin ⟨n, sorry⟩)
+
+
+  -- TODO: Somehow add this to the for loop. 
+  -- Having a proof about the compatibility of the index and linear index would be nice.
+  structure ValidLinIndex {ι} [Enumtype ι] (i : ι) (li : Nat) : Type where
+    valid : li = (toFin i).1
 
   instance {m} [Monad m] {n}
            : ForIn m (Range (Fin n)) (Fin n × Nat) :=
@@ -99,7 +105,6 @@ namespace Enumtype
                        | ForInStep.yield d => val ← d
                    pure val
   }
-
 
   -- Row-major ordering, i.e. the inner loop runs over κ
   instance {m} [Monad m] [Enumtype ι] [Enumtype κ]

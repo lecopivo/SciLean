@@ -407,7 +407,7 @@ namespace Cont
   end ForNotation
 
 
-  -- View of a container if usefull if you want to modify a sub set of a container and still refer to it as a container
+  -- View of a container if usefull if you want to modify a subset of a container and still refer to it as a container
   section ContainerView
 
     def ContView {κ} (C : Type u) [ContData C] (tr : κ → (indexOf C)) := C
@@ -424,7 +424,6 @@ namespace Cont
       set := λ c j a => view (set (unview c) (tr j) a) tr
       valid := sorry
     }
-    
 
   end ContainerView
 

@@ -4,12 +4,6 @@
 class Iterable (ι : Type u) where
   first    : Option ι  
   next     : ι → Option ι
-  -- TODO: valid : You can reach every element by next
-  --- In Lean we cannot write an infinite loops
-  --- We need to have an upper bound to guarantee termination
-  --- TODO: Maybe a different mechanism for showing finiteness?
-  --- For all practical purposes this can be always be set to USize.size but prooving stuff might be difficult
-  upperBound : Nat   
   -- TODO: valid : "traverses the whole type" i.e. every element is reachable by `next`
   -- This can be stated as an existence of a bijection between `ι` and `Fin n` for suitable `n`
   decEq : DecidableEq ι
@@ -29,13 +23,16 @@ namespace Iterable
 
   variable {ι} [Iterable ι]
 
+  def next! : Option ι → Option ι 
+    | none => none
+    | some i => next i
+
   instance : DecidableEq ι := Iterable.decEq
 
   instance : Iterable (Fin n) :=
   {
     first := match n with | 0 => none | _ => some !0
     next  := λ i => if (i.1+1<n) then some !(i.1+1) else none
-    upperBound := n
     decEq := by infer_instance
   }
 
@@ -55,7 +52,6 @@ namespace Iterable
         match (next i), first with
           | (some i'), (some js) => some (i', js)
           | _, _ => none
-    upperBound := (upperBound ι) * (upperBound κ)
     decEq := by infer_instance
   }
   
@@ -64,7 +60,10 @@ namespace Iterable
 
   -- This range might be confusing because if `<` is defined on `ι`
   -- then the range (i,j) for `i>j` is not empty but equivalent to (i,pastLast)
-  abbrev Range (ι : Type u) [Iterable ι] := Option (ι × Option ι)
+  def LinRange (ι : Type u) [Iterable ι] := Option (ι × Option ι)
+
+  def Range (ι : Type u) [Iterable ι] := Option (ι × Option ι)
+  instance {κ} [Iterable κ] : HMul (Range ι) (Range κ) (Range (ι × κ)) := ⟨sorry⟩
 
   -- Alternative way to define a range 
   -- inductive Range' (ι : Type u) [Iterable ι] where
@@ -73,13 +72,16 @@ namespace Iterable
   -- | half (fst : ι) : Range' ι
   -- | interval (fst lst : ι) : Range' ι
   
-  def fullRange (ι : Type u) [Iterable ι] : Range ι := 
+  def fullRange (ι : Type u) [Iterable ι] : LinRange ι := 
     match first with 
       | some fst => some (fst, none) 
       | none => none
 
+  --- This is not good! 
+  --- We should have special for (Fin n) and then for products `×` `×ₗ` as in Enumtype
+  --- Maybe provide a LinRange
   instance {m} [Monad m] {ι} [Iterable ι]
-           : ForIn m (Range ι) ι :=
+           : ForIn m (LinRange ι) ι :=
   {
     forIn := λ r init f => do
       match r with
@@ -87,7 +89,8 @@ namespace Iterable
         | some (s, e) => do
           let mut val := init
           let mut it := s
-          for i in [0:(upperBound ι)] do
+          -- Doing maximum of USize.size should be enough for any practical purposes
+          for i in [0:USize.size] do
             match (← f it val) with
               | ForInStep.done val' => return val'
               | ForInStep.yield val' => 
@@ -131,7 +134,6 @@ namespace Iterable
         match first, (next j) with
           | (some is), (some j') => some (is, j')
           | _, _ => none
-    upperBound := (upperBound ι) * (upperBound κ)
     decEq := by simp[ColProd] infer_instance
   }
   
