@@ -376,12 +376,33 @@ namespace Cont
   
     def test : IO Unit := do
         let mut val : Nat := 0
-        for (a,i,li) in (cont i : Fin 2 ×ᵣ Fin 3 ×ᵣ Fin 4 => ()) do 
+        for (a,i,li) in (cont i : Fin 2 × Fin 3 × Fin 4 => ()) do 
            val := val + li
            IO.println s!"i = {i}  |  li = {li}  |  a = {a}  |  val = {val}"
         IO.println s!"val = {val}"
 
     #eval test
+
+    def test2 : IO Unit := do
+        let mut val : Nat := 0
+        for (a,i,li) in (cont i : Fin 2 ×ₗ Fin 3 ×ₗ Fin 4 => ()) do 
+           val := val + li
+           IO.println s!"i = {i}  |  li = {li}  |  a = {a}  |  val = {val}"
+        IO.println s!"val = {val}"
+
+    #eval test2
+
+    
+    def r : Enumtype.Range (Fin 10 × Fin 10) := some ((!5,!0),(!9,!4))
+  
+    def test4 : IO Unit := do
+        let mut val : Nat := 0
+        for (i,li) in r do 
+           IO.println s!"i = {i}  |  li = {li} "
+
+    #eval test4
+
+
 
   end ForNotation
 
