@@ -33,7 +33,7 @@ namespace Cont
   macro "cont" xs:Lean.explicitBinders "=> " b:term : term => Lean.expandExplicitBinders `Cont.toCont xs b
 
   export ContData (indexOf valueOf)
-
+  
   -- Maybe not a good idea
   -- instance (ι : Type v) (α : Type w) : Cont (ι → α) ι α := ⟨λ f => f⟩
 
@@ -356,6 +356,10 @@ namespace Cont
 
 
   section ForNotation
+
+    -- Usefull for modifying a container as we want to run only over indices and not values
+    open Enumtype in 
+    def allIdx {C} (c : C) [ContData C] [Enumtype (indexOf C)] : Range (indexOf C) := fullRange (indexOf C)
 
     -- notation:  
     --      for (a,i,li) in F do

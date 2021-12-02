@@ -31,7 +31,7 @@ namespace NDVector
     intro := λ f => do
                let mut arr := FloatArray.mkEmpty (numOf ι)
                for (i,li) in fullRange ι do
-                 arr := arr.set! li (f i)
+                 arr := arr.push (f i)
                ⟨arr, sorry⟩
     valid := sorry
   }
@@ -71,8 +71,79 @@ namespace NDVector
 
   abbrev map (f : ℝ → ℝ) (v : NDVector ι) : NDVector ι := Cont.map (self := instMapNDVector) f v
 
-
+  open Enumtype Cont in
+  instance {m} [Monad m] 
+           {C} [ContData C] [Cont C (indexOf C) (valueOf C)]
+           [Enumtype (indexOf C)] [ForIn m (Range (indexOf C)) ((indexOf C) × Nat)]
+           : ForIn m C ((valueOf C) × (indexOf C) × Nat) :=
+  {
+    forIn := λ F init f => do
+      let mut val := init
+      for (i,li) in fullRange (indexOf C) do
+        match (← f (F[i], i, li) val) with
+          | ForInStep.done d => return d
+          | ForInStep.yield d => val ← d
+      pure init
+  }
+ 
 end NDVector
 
-abbrev Matrix (n m : Nat) := NDVector (Fin n × Fin m)
 abbrev Vector (n : Nat) := NDVector (Fin n)
+abbrev Matrix (n m : Nat) := NDVector (Fin n × Fin m)
+abbrev RowMatrix (n m : Nat) := NDVector (Fin n × Fin m)
+abbrev ColMatrix (n m : Nat) := NDVector (Fin n ×ₗ Fin m)
+
+
+-- TODO: Define tensor with notation `Tensor [n1,n2,n3]`
+-- @[reducible]
+-- abbrev Tensor.indexOf (l : List Nat) :=
+--   match l with
+--     | [] => Fin 0
+--     | [n] => Fin n
+--     | n::ns => Fin n × (indexOf ns)
+-- instance (l : List Nat) : Enumtype (Tensor.indexOf l) := HOW TO DO THIS??
+-- abbrev Tensor (dims : List Nat) := NDVector (Tensor.indexOf dims)
+         
+
+open Cont
+open Enumtype
+
+#check IO.Ref
+
+#eval ((do 
+  let mut m : Matrix 4 4 := intro λ (i,j) => j.1.toFloat
+  
+  m := m.lset! 0 42
+  IO.println s!"m[0,0] = {m[0,0]}"
+
+  -- This will keep the old version of `m` 
+  -- To keep a mutable reference you need to use IO.Ref
+  let f := λ i j => m[i,j]
+
+  let ref_m ← IO.mkRef m
+
+  let g : _ → _ → IO _  := λ (i j : Fin 4) => 
+  do
+    let m' ← ref_m.get
+    m'[i,j]
+    
+  for (i, li) in allIdx m do
+    m := set m i (li.toFloat : ℝ) 
+
+  -- I want notation: 
+  -- for (a, i, li) in m do
+  --   a := f i
+
+  -- !!! This is a trap !!!
+  -- It does not change `m`!
+  -- for (a, i, li) in m do
+  --   m := set m i (li.toFloat : ℝ) 
+
+  IO.println ""
+
+  for (a,i,li) in m do
+    IO.println s!"i = {i}  | li = {li}  |  a = {a}  |  f = {f i.1 i.2}  |  g = {← (g i.1 i.2)}"
+  
+
+  IO.println ""
+) : IO Unit)
