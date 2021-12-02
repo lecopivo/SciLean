@@ -91,6 +91,7 @@ namespace Cont
   macro c:term noWs "[" i1:term "," i2:term "," i3:term "," i4:term "]" : term =>
     `(get $c ($i1,$i2,$i3,$i4))
 
+
   section ExtraOperations
 
      -- Here we use formulation with [ContData C] [Cont C (indexOf C) (valueOf C)]
@@ -417,6 +418,12 @@ namespace Cont
     def ContView {κ} (C : Type u) [ContData C] (tr : κ → (indexOf C)) := C
     def view   {κ} {C} [ContData C] (c : C) (tr : κ → (indexOf C)) : ContView C tr := c
     def unview {κ} {C} [ContData C] {tr : κ → (indexOf C)} (c : ContView C tr) : C := c
+
+    instance {κ} (C : Type u) [ContData C] (tr : κ → (indexOf C)) : ContData (ContView C tr) :=
+    {
+      indexOf := κ
+      valueOf := (valueOf C)
+    }
 
     instance {C ι α κ} [Cont C ι α] (tr : κ → ι) : Cont (ContView C tr) κ α :=
     {

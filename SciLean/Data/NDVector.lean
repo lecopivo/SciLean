@@ -73,14 +73,15 @@ namespace NDVector
 
   open Enumtype Cont in
   instance {m} [Monad m] 
-           {C} [ContData C] [Cont C (indexOf C) (valueOf C)]
-           [Enumtype (indexOf C)] [ForIn m (Range (indexOf C)) ((indexOf C) × Nat)]
-           : ForIn m C ((valueOf C) × (indexOf C) × Nat) :=
+           [Enumtype ι] [ForIn m (Range ι) (ι × Nat)]
+           : ForIn m (NDVector ι) (ℝ × ι × Nat) :=
   {
-    forIn := λ F init f => do
+    forIn := λ v init f => do
       let mut val := init
-      for (i,li) in fullRange (indexOf C) do
-        match (← f (F[i], i, li) val) with
+      for (i,li) in fullRange ι do
+        -- Here we are using linear index to acces the container
+        -- Not sure if it is worth it ... 
+        match (← f (v.lget! li, i, li) val) with
           | ForInStep.done d => return d
           | ForInStep.yield d => val ← d
       pure init
@@ -92,6 +93,10 @@ abbrev Vector (n : Nat) := NDVector (Fin n)
 abbrev Matrix (n m : Nat) := NDVector (Fin n × Fin m)
 abbrev RowMatrix (n m : Nat) := NDVector (Fin n × Fin m)
 abbrev ColMatrix (n m : Nat) := NDVector (Fin n ×ₗ Fin m)
+
+-- macro 
+-- abbrev Tensor3 (n m k : Nat) := NDVector (Fin n × Fin m × Fin k)
+-- abbrev Tensor4 (n m k : Nat) := NDVector (Fin n × Fin m × Fin k)
 
 
 -- TODO: Define tensor with notation `Tensor [n1,n2,n3]`
