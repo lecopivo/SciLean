@@ -1,3 +1,4 @@
+import SciLean.Prelude
 import SciLean.Categories
 import SciLean.Operators.Inverse
 import SciLean.Operators.Sum
@@ -5,7 +6,7 @@ import SciLean.Simp
 
 import Init.Classical
 
-set_option synthInstance.maxHeartbeats 5000
+-- set_option synthInstance.maxHeartbeats 5000
 
 open Function
 namespace SciLean

@@ -1,9 +1,5 @@
-import SciLean.Std.Enumtype
-
-class Zero (α : Type u) where
-  zero : α
-class One (α : Type u) where
-  one : α
+import Mathlib.Data.Iterable
+-- import SciLean.Std.Enumtype
 
 instance : Neg (Fin n) :=
   ⟨λ x =>
@@ -11,11 +7,7 @@ instance : Neg (Fin n) :=
        | 0, x => x
        | (n+1), x => 0 - x⟩
 
-instance instOfNatZero [Zero α] : OfNat α (nat_lit 0) where
-  ofNat := Zero.zero
-
-instance instOfNatOne [One α] : OfNat α (nat_lit 1) where
-  ofNat := One.one
+example (x : Fin n) : x = -x := sorry
 
 instance [Zero α] : Inhabited α := ⟨0⟩
 instance [One α] : Inhabited α := ⟨1⟩
@@ -77,13 +69,3 @@ section FunctionOperations
   instance [∀ a, One (β a)] : One ((a : α) → β a) := ⟨λ _ => 1⟩
 
 end FunctionOperations
-
---- TODO: Do sum over any Enumtype
-open SciLean Enumtype in
-def sum {α} [Zero α] [Add α] {ι} [Enumtype ι] [ForIn Id (Range ι) (ι × Nat)] (f : ι → α) : α := do
-  let mut r : α := 0 
-  for (i, li) in fullRange ι do
-    r := r + (f i)
-  r
-
-macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `sum xs b

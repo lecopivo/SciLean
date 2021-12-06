@@ -1,6 +1,5 @@
 import SciLean.Algebra.Real
 
-
 -- __   __      _             ___
 -- \ \ / /__ __| |_ ___ _ _  / __|_ __  __ _ __ ___
 --  \ V / -_) _|  _/ _ \ '_| \__ \ '_ \/ _` / _/ -_)
@@ -63,6 +62,3 @@ section CommonVectorSpaces
 end CommonVectorSpaces
 
 
-def average {n α} [Vec α] (f : Fin n → α) : α := ((1 : ℝ)/(n.toFloat.toReal)) * (sum f)
-
-macro "∑'" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `average xs b
