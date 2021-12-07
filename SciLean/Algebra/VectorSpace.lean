@@ -7,7 +7,7 @@ import SciLean.Algebra.Real
 --                               |_|
 -- At the and we will use Convenient Vector Space. It is a special kind of topological vector space
 
-class Vec (U : Type u) extends Add U, Sub U, HMul ℝ U U, Neg U, Zero U :=
+class Vec (U : Type u)  extends Add U, Sub U, HMul ℝ U U, Neg U, Zero U :=
   (add_assoc : ∀ x y z : U, (x + y) + z = x + (y + z))
   (add_comm : ∀ x y : U, x + y = y + x)
   (add_zero : ∀ x : U, x + 0 = x)

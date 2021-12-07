@@ -7,10 +7,10 @@ variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 
 def Hom (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsLin f}
 
-infixr:25 "⊸" => Hom
+infixr:25 " ⊸ " => Hom
 
 instance {X Y} [Vec X] [Vec Y] : CoeFun (X ⊸ Y) (λ _ => X → Y) := ⟨λ f => f.1⟩
-instance {X Y} [Vec X] [Vec Y] (f : X ⊸ Y) : IsLin (f : X → Y) := by apply f.2
+instance (priority := high) {X Y} [Vec X] [Vec Y] (f : X ⊸ Y) : IsLin (f : X → Y) := by apply f.2
 
 namespace Hom
 
@@ -67,7 +67,20 @@ namespace Hom
     add_zero := sorry,
     zero_add := sorry
   }
-  
+
+  -- instance (X Y) [FinEnumVec X] [SemiHilbert Y S] : SemiHilbert (X ⊸ Y) s 
+
+  def mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsLin f] : X ⊸ Y := ⟨f, sorry⟩
+
+  macro "fun" xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `Lin.Hom.mk xs b
+  macro "λ" xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `Lin.Hom.mk xs b
+
+  instance (f : X → (Y → Z)) [IsLin f] [∀ x, IsLin (f x)] : IsLin (λ x => Hom.mk (f x)) := sorry
+
+  #check (Hom.mk (λ (x : X) => Hom.mk (λ (r : ℝ) => r * x)) : X ⊸ (ℝ ⊸ X))
+  #check ((fun (x : X) ⊸ x))
+  #check ((fun (x : X) (r : ℝ) ⊸ r*x))
+  #check ((λ (x : X) (r : ℝ) ⊸ r*x))
 
 end Hom
 

@@ -5,7 +5,6 @@ namespace SciLean.Lin
 
 variable {α β γ : Type} 
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W] 
 
 --- Arithmetic operations
 instance : IsLin (λ x : X×X => x.1+x.2) := sorry
@@ -23,5 +22,6 @@ instance (r : ℝ) : IsLin (λ (x : X) => r*x) := sorry
 
 instance : IsLin (λ x : X => -x) := sorry
 
-instance : IsLin (SemiInner.semi_inner : U → U → _ → ℝ) := sorry
-instance (u : U) : IsLin (SemiInner.semi_inner u) := sorry
+variable (U Dom) [SemiHilbert U Dom]
+instance  : IsLin (⟪·, ·⟫ : U → U → Dom → ℝ) := sorry
+instance (u : U) : IsLin (⟪u, ·⟫ ) := sorry

@@ -1,89 +1,64 @@
- import SciLean.Algebra.VectorSpace
+import Mathlib.Data.Enumtype
+
+import SciLean.Algebra.VectorSpace
+
+namespace SciLean
 
 --  ___            _   ___                     ___             _         _
 -- / __| ___ _ __ (_) |_ _|_ _  _ _  ___ _ _  | _ \_ _ ___  __| |_  _ __| |_
 -- \__ \/ -_) '  \| |  | || ' \| ' \/ -_) '_| |  _/ '_/ _ \/ _` | || / _|  _|
 -- |___/\___|_|_|_|_| |___|_||_|_||_\___|_|   |_| |_| \___/\__,_|\_,_\__|\__|
 
-class SemiInner (X : Type u) where
-  integrable_domain : Type
-  domain            : integrable_domain   -- proof that `integrable_domain` is nonempty
-  semi_inner     : X → X → integrable_domain → ℝ
-  -- loc_integrable : X → Prop
-  test_function  : integrable_domain → X → Prop
+-- Signature of a SemiInner product
+-- structure SemiInner.Signature where
+--   Dom  : Type -- domain      
+--   Dom' : Type -- usuall of type `D → ℝ` (or isomorphic to it) excep in the case of D = Unit then D' is just ℝ
+--   eval   : Dom' → Dom → ℝ
+-- attribute [reducible]  SemiInner.Signature.Dom'  SemiInner.Signature.Dom  SemiInner.Signature.eval
 
-attribute [reducible] SemiInner
+class SemiInner (X : Type u) (Dom : Type v) where
+  semiInner     : X → X → Dom → ℝ
+  testFunction  : Dom → X → Prop
 
--- export SemiInner (integrable_domain semi_inner loc_integrable test_function domain)
+class SemiInnerTrait (X : Type u) where
+  domOf : Type v
+attribute [reducible] SemiInnerTrait.domOf
 
-instance {X} [SemiInner X] : Inhabited (SemiInner.integrable_domain X) := ⟨SemiInner.domain⟩
+@[reducible]
+instance {X S} [SemiInner X S] : SemiInnerTrait X := ⟨S⟩
 
--- abbrev IntDom (X : Type u) [SemiInner X] := SemiInner.integrable_domain X
 
--- class LocInt {X : Type u} [SemiInner X] (x : X) : Prop where
---   proof : SemiInner.loc_integrable x 
+abbrev semiInner {X : Type u} [SemiInnerTrait X] [inst : SemiInner X (SemiInnerTrait.domOf X)] 
+       := SemiInner.semiInner (self := inst) 
 
--- class TestFun {X : Type u} [SemiInner X] (i : IntDom X) (x : X) : Prop where
---   proof : SemiInner.test_function i x
+-- How to set up priorities correctly? 
+notation "⟪" x ", " y "⟫" => semiInner x y  
 
--- syntax:60 "(" term:60 " , " term:61 ")_[" term:62 "]" : term
--- macro_rules | `(($x,$y)_[$i]) => `(SemiInner.semi_inner $x $y $i)
-
--- Semi inner product on canonical domain. 
--- This is usefull for Hilbert spaces where there is only one domain.
-notation:100 "⟨" x:60 ", " y:61 "⟩" => SemiInner.semi_inner x y SemiInner.domain
-
---- TODO: Make sure preceences are correct!!!
-notation:100 "(" x:60 ", " y:61 ")_[" i:62 "]" => SemiInner.semi_inner x y i 
-
-notation:120 "∥" x:80 "∥"  => Math.sqrt (SemiInner.semi_inner x x SemiInner.domain)
+-- Not sure if I want this coercion, it is a bit overkill
+-- instance : Coe (Unit → ℝ) ℝ := ⟨λ f => f ()⟩
+notation "∥" x "∥"  => Math.sqrt (SemiInner.semiInner (Dom := Unit) x x ())
 
 namespace SemiInner
 
-  instance : SemiInner ℝ :=
+  export SemiInnerTrait (domOf)
+
+  
+  instance : SemiInner ℝ Unit :=
   {
-    integrable_domain := Unit
-    domain            := Unit.unit
-    semi_inner        := λ x y _ => x * y
-    -- loc_integrable    := λ _ => True
-    test_function     := λ _ _ => True
+    semiInner    := λ x y _ => x * y
+    testFunction := λ _ _ => True
   }
 
-  instance : SemiInner PUnit :=
-  {
-    integrable_domain := Unit
-    domain            := Unit.unit
-    semi_inner        := λ x y _ => 0
-    -- loc_integrable    := λ _ => True
-    test_function     := λ _ _ => True
-  }
-
-  instance (X : Type u) (Y : Type v) [SemiInner X] [SemiInner Y] : SemiInner (X × Y) :=
+  instance (X Y Dom) [SemiInner X Dom] [SemiInner Y Dom] : SemiInner (X × Y) Dom :=
   { 
-    integrable_domain := integrable_domain X × integrable_domain Y
-    domain         := (arbitrary, arbitrary)
-    semi_inner     := λ (x,y) (x',y') (D,E) => (x,x')_[D] + (y,y')_[E]
-    -- loc_integrable := λ (x,y) => loc_integrable x ∧ loc_integrable y
-    test_function  := λ (D,E) (x,y) => test_function D x ∧ test_function E y
+    semiInner     := λ (x,y) (x',y') => ⟪x,x'⟫ + ⟪y,y'⟫
+    testFunction  := λ D (x,y) => testFunction D x ∧ testFunction D y
   }
 
-  instance (X : Type u) [SemiInner X] [Zero X] : SemiInner (Nat → X) :=
+  instance (ι X Dom) [SemiInner X Dom] [Zero X] [Enumtype ι] : SemiInner (ι → X) Dom :=
   {
-    integrable_domain := Nat × integrable_domain X
-    domain            := (0, arbitrary)
-    semi_inner        := λ f g (n, D) => ∑ i : Fin n, (f i, g i)_[D]
-    -- loc_integrable    := λ f => ∀ i, loc_integrable (f i)
-    test_function     := λ (n, D) f => ∀ i, if (i < n) then (test_function D (f i)) else ((f i) = 0)
-  }
-
-  --- Add dependent type version ...
-  instance {n} (X : Type u) [SemiInner X] [Zero X] : SemiInner (Fin n → X) :=
-  {
-    integrable_domain := integrable_domain X
-    domain            := arbitrary
-    semi_inner        := λ f g D => ∑ i : Fin n, (f i, g i)_[D]
-    -- loc_integrable    := λ f => ∀ i, loc_integrable (f i)
-    test_function     := λ D f => ∀ i, test_function D (f i)
+    semiInner    := λ f g => ∑ i, ⟪f i, g i⟫
+    testFunction := λ D f => ∀ i, testFunction D (f i)
   }
 
   -- for this we need integral and derivative these will be defined in Prelude
@@ -105,27 +80,23 @@ end SemiInner
 -- |___/\___|_|_|_|_| |_||_|_|_|_.__/\___|_|  \__| |___/ .__/\__,_\__\___|
 --                                                     |_|
 
-class SemiHilbert (X : Type u) extends Vec X, SemiInner X : Type (u+1) where
-  semi_inner_add : ∀ (x y z : X) D, (x + y, z)_[D] = (x,z)_[D] + (y,z)_[D]
-  semi_inner_mul : ∀ (x y : X) (r : ℝ) D, (r*x,y)_[D] = r*(x,y)_[D]
-  semi_inner_sym : ∀ (x y : X) D, (x,y)_[D] = (y,x)_[D]
-  semi_inner_pos : ∀ (x : X) D, ((x,x)_[D]) ≥ (0 : ℝ)
-  -- semi_inner_ext : ∀ (x : X), loc_integrable x → ((x = 0) ↔ (∀ D (y : X) (h : test_function D y), (x,y)_[D] = 0))
-  semi_inner_ext : ∀ (x : X), ((x = 0) ↔ (∀ D (y : X) (h : test_function D y), (x,y)_[D] = 0))
 
-attribute [reducible] SemiHilbert
+class SemiHilbert (X : Type u) (Dom : Type v) extends Vec X, SemiInner X Dom  where
+  semi_inner_add : ∀ (x y z : X),     ⟪x + y, z⟫ = ⟪x,z⟫ + ⟪y,z⟫
+  semi_inner_mul : ∀ (x y : X) (r : ℝ),  ⟪r*x,y⟫ = r*⟪x,y⟫
+  semi_inner_sym : ∀ (x y : X),            ⟪x,y⟫ = ⟪y,x⟫
+  semi_inner_pos : ∀ (x : X) D, (⟪x,x⟫ D) ≥ (0 : ℝ)
+  semi_inner_ext : ∀ (x : X), ((x = 0) ↔ (∀ D (x' : X) (h : testFunction D x'), ⟪x,x'⟫ D = 0))
+  -- Add test functions form a subspace
+
+class Hilbert (X : Type u) extends SemiHilbert X Unit
+
 
 namespace SemiHilbert 
 
-  instance : SemiHilbert ℝ := 
-  {
-    semi_inner_add := sorry
-    semi_inner_mul := sorry
-    semi_inner_sym := sorry
-    semi_inner_pos := sorry
-    semi_inner_ext := sorry
-  }
-  instance : SemiHilbert PUnit := 
+  open SemiInner
+
+  instance : SemiHilbert ℝ Unit := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -134,7 +105,7 @@ namespace SemiHilbert
     semi_inner_ext := sorry
   }
 
-  instance (X : Type u) (Y : Type v) [SemiHilbert X] [SemiHilbert Y] : SemiHilbert (X × Y) := 
+  instance (X Y Dom) [SemiHilbert X Dom] [SemiHilbert Y Dom] : SemiHilbert (X × Y) Dom := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -143,7 +114,7 @@ namespace SemiHilbert
     semi_inner_ext := sorry
   }
 
-  instance (X : Type u) [SemiHilbert X] : SemiHilbert (Nat → X) := 
+  instance (ι : Type) (X Dom )[SemiHilbert X Dom] [Enumtype ι] : SemiHilbert (ι → X) Dom := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -151,108 +122,5 @@ namespace SemiHilbert
     semi_inner_pos := sorry
     semi_inner_ext := sorry
   }
-
-  instance {n} (X : Type u) [SemiHilbert X] : SemiHilbert (Fin n → X) := 
-  {
-    semi_inner_add := sorry
-    semi_inner_mul := sorry
-    semi_inner_sym := sorry
-    semi_inner_pos := sorry
-    semi_inner_ext := sorry
-  }
-
 
 end SemiHilbert 
-
---  _  _ _ _ _             _     ___
--- | || (_) | |__  ___ _ _| |_  / __|_ __  __ _ __ ___
--- | __ | | | '_ \/ -_) '_|  _| \__ \ '_ \/ _` / _/ -_)
--- |_||_|_|_|_.__/\___|_|  \__| |___/ .__/\__,_\__\___|
---                                  |_|
-
-class Hilbert (U : Type u) extends SemiHilbert U  where
-  domain_unique : ∀ D, D = domain
-  -- all_integrable : ∀ x, loc_integrable x
-  all_test_fun   : ∀ x, test_function domain x
-
-attribute [reducible] Hilbert
-
-section Hilbert
-
-variable {U} [Hilbert U]
-
-def inner (u v : U) := ⟨u, v⟩
-theorem inner.ext (u v : U) : (∀ w, ⟨u, w⟩ = ⟨v, w⟩) → (u = v) := sorry
-
-theorem inner.add (u v w : U)  : ⟨u + v, w⟩ = ⟨u, w⟩ + ⟨v, w⟩ := sorry
-theorem inner.mul (u v : U) (c : ℝ)  : ⟨c * u, v⟩ = c * ⟨u, v⟩ := sorry
-theorem inner.sym (u v : U)  : ⟨u, v⟩ = ⟨v, u⟩ := sorry
-
-end Hilbert
-
-namespace Hilbert
-
-  instance : Hilbert ℝ := 
-  {
-    domain_unique := sorry
-    all_test_fun := sorry
-  }
-  instance : Hilbert PUnit :=
-  {
-    domain_unique := sorry
-    all_test_fun := sorry
-  }
-
-  instance (X : Type u) (Y : Type v) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) :=
-  {
-    domain_unique := sorry
-    all_test_fun := sorry
-  }
-
-  instance {n} (X : Type u) [Hilbert X] : Hilbert (Fin n → X) :=
-  {
-    domain_unique := sorry
-    all_test_fun := sorry
-  }
-
-
-  -- instance : Inner ℝ := ⟨λ x y => x*y⟩
-  -- instance : Hilbert ℝ := 
-  -- {
-  --   inner_sym := sorry,
-  --   inner_pos := sorry,
-  --   inner_add := sorry,
-  --   inner_mul := sorry
-  -- } 
-
-  -- instance : Inner PUnit := ⟨λ x y => 0⟩
-  -- instance : Hilbert PUnit := 
-  -- {
-  --   inner_sym := sorry,
-  --   inner_pos := sorry,
-  --   inner_add := sorry,
-  --   inner_mul := sorry
-  -- } 
-
-  -- variable {U V} [Hilbert U] [Hilbert V]
-  -- instance : Inner (U×V) := ⟨λ x y => ⟨x.1, y.1⟩ + ⟨x.2, y.2⟩⟩
-  -- instance : Hilbert (U×V) := 
-  -- {
-  --   inner_sym := sorry,
-  --   inner_pos := sorry,
-  --   inner_add := sorry,
-  --   inner_mul := sorry
-  -- } 
-
-  -- instance {n} : Inner (Fin n → U) := ⟨λ f g => ∑ i, ⟨f i, g i⟩⟩
-  -- instance : Hilbert (Fin n → U) := 
-  -- {
-  --   inner_sym := sorry,
-  --   inner_pos := sorry,
-  --   inner_add := sorry,
-  --   inner_mul := sorry
-  -- } 
-
-end Hilbert 
-
-

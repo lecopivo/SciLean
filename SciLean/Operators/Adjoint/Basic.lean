@@ -6,22 +6,22 @@ import SciLean.Simp
 
 import Init.Classical
 
--- set_option synthInstance.maxHeartbeats 5000
-
-open Function
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
+variable {X Y Z Dom : Type} [SemiHilbert X Dom] [SemiHilbert Y Dom] [SemiHilbert Z Dom]
 
-def adjoint_definition (f : X → Y) (h : IsLin f) (y : Y) 
-    : ∃ (x' : X), ∀ x, ⟨x', x⟩ = ⟨y, (f x)⟩ := sorry
+prefix:max "𝓘" => SemiInnerTrait.domOf 
+
+class HasAdjoint {X Y} [SemiInnerTrait X] [SemiHilbert X (𝓘 X)] [SemiHilbert Y (𝓘 X)] (f : X → Y) : Prop  where
+  hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (D : 𝓘 X), 
+                 SemiInner.testFunction D x → ⟪f' y, x⟫ = ⟪y, f x⟫
 
 noncomputable
-def adjoint (f : X → Y) (y : Y) : X :=
-    match Classical.propDecidable (IsLin f) with
-      | isTrue  h => Classical.choose (adjoint_definition f h y)
-      | _ => (0 : X)
+def adjoint {X Y} [SemiInnerTrait X] [SemiHilbert X (𝓘 X) ] [SemiHilbert Y (𝓘 X)] (f : X → Y) : Y → X :=
+    match Classical.propDecidable (HasAdjoint f) with
+      | isTrue  h => Classical.choose (HasAdjoint.hasAdjoint (self := h))
+      | _ => (0 : Y → X)
 
 postfix:max "†" => adjoint
 
@@ -76,14 +76,18 @@ namespace Adjoint
   -- def adjoint_of_composition_arg (f : Y → β → Z) (b : β) [IsLin (λ y => f y b)] (g : X → Y) [IsLin g] 
   --     : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
 
+  open Function
+
+  variable {Y1 Y2 : Type} [SemiHilbert Y1 Dom] [SemiHilbert Y2 Dom]
+
   @[simp]
-  theorem adjoint_of_diag {Y1 Y2 : Type} [Hilbert Y1] [Hilbert Y2]
+  theorem adjoint_of_diag 
       (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
       [IsLin (λ yy : Y1 × Y2 => f yy.1 yy.2)] [IsLin g1] [IsLin g2]
       : (λ x => f (g1 x) (g2 x))† = (uncurry HAdd.hAdd) ∘ (pmap g1† g2†) ∘ (uncurry f)† := sorry
 
   @[simp]
-  theorem adjoint_of_diag_arg {Y1 Y2 : Type} [Hilbert Y1] [Hilbert Y2]
+  theorem adjoint_of_diag_arg
       (f : Y1 → Y2 → Z) (g1 : X → Fin n → Y1) (g2 : X → Fin n → Y2)
       [IsLin (λ yy : Y1 × Y2 => f yy.1 yy.2)] [IsLin g1] [IsLin g2]
       : (λ x i => f (g1 x i) (g2 x i))† = (uncurry HAdd.hAdd) ∘ (pmap g1† g2†) ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) ∘ (comp (uncurry f)†) := sorry

@@ -6,6 +6,11 @@ variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
+variable (u : U)
+variable (r : ℝ)
+
+#check ⟪u,u⟫
+
 @[simp] theorem add_zero (x : X) : x + 0 = x := sorry
 @[simp] theorem zero_add (x : X) : 0 + x = x := sorry
 
@@ -31,11 +36,11 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 @[simp] theorem pair_mul (r : ℝ) (x : X) (y : Y) : (r * x, r * y) = r * (x, y) := sorry
 
-@[simp] theorem inner_mul_1 (r : ℝ) (x y : U) : ⟨r * x, y⟩ = r * ⟨x,y⟩ := sorry
-@[simp] theorem inner_mul_2 (r : ℝ) (x y : U) : ⟨x, r * y⟩ = r * ⟨x,y⟩ := sorry
+@[simp] theorem inner_mul_1 (r : ℝ) (x y : U) : ⟪r * x, y⟫ = r * ⟪x,y⟫ := sorry
+@[simp] theorem inner_mul_2 (r : ℝ) (x y : U) : ⟪x, r * y⟫ = r * ⟪x,y⟫ := sorry
 
-@[simp] theorem inner_prod (u u' : U) (v v' : V) : ⟨(u,v), (u',v')⟩ = ⟨u,u'⟩ + ⟨v,v'⟩ := sorry
-@[simp] theorem inner_real (x y : ℝ) : ⟨x, y⟩ = x * y := sorry
+@[simp] theorem inner_prod (u u' : U) (v v' : V) : ⟪(u,v), (u',v')⟫ = ⟪u,u'⟫ + ⟪v,v'⟫ := sorry
+@[simp] theorem inner_real (x y : ℝ) : ⟪x, y⟫ () = x * y := sorry
 
 @[simp] theorem add_same_1 (a b : ℝ) (x : X) : a*x + b*x = (a+b)*x := sorry
 @[simp] theorem add_same_2 (a : ℝ) (x : X) : a*x + x = (a+1)*x := sorry
