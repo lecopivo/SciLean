@@ -53,6 +53,23 @@ namespace Hom
 
   instance : Vec (X ⟿ Y) := sorry
 
+  abbrev mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : X ⟿ Y := ⟨f, by infer_instance⟩
+
+  -- Right now, I prefer this notation
+  macro "fun" xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
+  macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
+
+  -- alternative notation
+  -- I will decide on one after some use
+  macro "funₛ" xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
+  macro "λₛ"   xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
+
+  instance (f : X → (Y → Z)) [IsSmooth f] [∀ x, IsSmooth (f x)] : IsSmooth (λ x => Hom.mk (f x)) := sorry
+  example : X ⟿ X := fun (x : X) ⟿ x
+  example : X ⟿ ℝ ⟿ X := fun (x : X) (r : ℝ) ⟿ r*x
+  example : X ⟿ ℝ ⟿ X := λ (x : X) (r : ℝ) ⟿ r*x
+
+
 end Hom
 
 

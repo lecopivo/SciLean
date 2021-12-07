@@ -1,5 +1,7 @@
 import SciLean.Categories
 
+-- import Mathlib.Algebra.Group.Basic
+
 import Init.Classical
 
 namespace SciLean
@@ -27,7 +29,6 @@ namespace Inverse
   def inverse_of_id
       : (λ a : α => a)⁻¹ = id := sorry
 
-
   @[simp]
   def inverse_of_comp (f : β → γ) (g : α → β) [IsInv f] [IsInv g]
       : (λ x => f (g x))⁻¹ = g⁻¹ ∘ f⁻¹ := sorry
@@ -37,20 +38,25 @@ namespace Inverse
       : (f ∘ g)⁻¹ = g⁻¹ ∘ f⁻¹ := sorry
 
   -- This is a dangerous theorem that can rewrite itself and cause simp to loop indefinitely
-  -- For now, we try to live without this theorem. The consequence is that stating inverse of functions in the first arguemtnst has to be stated in a bit more complicated way. See for example `inverse_of_add_arg1` vs `inverse_of_add_arg2`.
-  -- @[simp 1000000]
-  -- def inverse_of_comp_parm (f : β1 → β2 → γ) (g1 : α → β1) (b2 : β2) [IsInv (λ b1 => f b1 b2)] [IsInv g1]
-  --     : (λ a => f (g1 a) b2)⁻¹ = g1⁻¹ ∘ (λ b1 => f b1 b2)⁻¹ := sorry
+  -- Therefore we will define tactic `autoinvert := repeat (simp; rw[inverse_of_comp_parm]; simp)`
+  def inverse_of_comp_parm (f : β1 → β2 → γ) (g1 : α → β1) (b2 : β2) [IsInv (λ b1 => f b1 b2)] [IsInv g1]
+      : (λ a => f (g1 a) b2)⁻¹ = g1⁻¹ ∘ (λ b1 => f b1 b2)⁻¹ := sorry
 
   -------------------------------------------------------------------------
 
   @[simp]
+  def inverse_of_add_arg1_simple {X} [Vec X] (y : X)
+      : (λ x => x + y)⁻¹ = (λ x => x - y) := sorry
+
+  @[simp]
   def inverse_of_add_arg1 {X} [Vec X] (y : X) (f : α → X) [IsInv f]
-      : (λ a => (f a) + y)⁻¹ = f⁻¹ ∘ (λ x => x - y) := sorry
+      : (λ a => (f a) + y)⁻¹ = f⁻¹ ∘ (λ x => x - y) :=
+  by 
+    repeat (simp; rw[inverse_of_comp_parm]; simp) done
+      
   @[simp]
   def inverse_of_add_arg1_fin {n} [NonZero n] (y : Fin n) (f : Fin n → Fin n) [IsInv f]
       : (λ a => (f a) + y)⁻¹ = f⁻¹ ∘ (λ x => x - y) := sorry
-
 
   @[simp]
   def inverse_of_add_arg2 {X} [Vec X] (x : X)

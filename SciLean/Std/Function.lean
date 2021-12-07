@@ -33,4 +33,14 @@ def fmap {E : α → Sort u} {F : α → Sort v} (f : (a : α) → E a → F a)
 def pmap : (α → γ) → (β → δ) → (α×β → γ×δ) := λ f g ac => (f ac.1, g ac.2)
 @[simp] theorem pmap_apply (f : α → γ) (g : β → δ) (ab : α×β) : pmap f g ab = (f ab.1, g ab.2) := rfl
 
-end Function
+
+  section CombinatorIdentities
+
+  @[simp]
+  def comp_id (f : α → β) : f ∘ id = f := by funext x; simp done
+
+  @[simp]
+  def id_comp (f : α → β) : id ∘ f = f := by funext x; simp done
+
+  end CombinatorIdentities
+

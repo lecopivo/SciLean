@@ -71,10 +71,9 @@ namespace Adjoint
   theorem adjoint_of_comp_arg1 {n} [NonZero n] (g : Fin n → Fin n) [IsInv g]
       : (λ (f : Fin n → X) i => f (g i))† = (λ f => f ∘ g⁻¹) := sorry
 
-  -- Unfortunatelly this theorem is dangerous and causes simp to loop indefinitely
-  -- @[simp 1000000] 
-  -- def adjoint_of_composition_arg (f : Y → β → Z) (b : β) [IsLin (λ y => f y b)] (g : X → Y) [IsLin g] 
-  --     : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
+  -- Unfortunatelly this theorem is dangerous and causes simp to loop indefinitely if used in simp
+  def adjoint_of_composition_arg (f : Y → β → Z) (b : β) [IsLin (λ y => f y b)] (g : X → Y) [IsLin g] 
+      : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
 
   open Function
 

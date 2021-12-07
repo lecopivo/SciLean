@@ -5,11 +5,12 @@ namespace SciLean.Lin
 variable {α β γ : Type} 
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 
-def Hom (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsLin f}
+abbrev Hom (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsLin f}
 
 infixr:25 " ⊸ " => Hom
 
 instance {X Y} [Vec X] [Vec Y] : CoeFun (X ⊸ Y) (λ _ => X → Y) := ⟨λ f => f.1⟩
+
 instance (priority := high) {X Y} [Vec X] [Vec Y] (f : X ⊸ Y) : IsLin (f : X → Y) := by apply f.2
 
 namespace Hom
@@ -70,20 +71,38 @@ namespace Hom
 
   -- instance (X Y) [FinEnumVec X] [SemiHilbert Y S] : SemiHilbert (X ⊸ Y) s 
 
-  def mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsLin f] : X ⊸ Y := ⟨f, sorry⟩
+  abbrev mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsLin f] : X ⊸ Y := ⟨f, by infer_instance⟩
 
-  macro "fun" xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `Lin.Hom.mk xs b
-  macro "λ" xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `Lin.Hom.mk xs b
+  -- Right now, I prefer this notation
+  macro "fun" xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `SciLean.Lin.Hom.mk  xs b
+  macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `SciLean.Lin.Hom.mk  xs b
+
+  -- alternative notation
+  -- I will decide on one after some use
+  macro "funₗ" xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `Lin.Hom.mk  xs b
+  macro "λₗ"   xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `Lin.Hom.mk  xs b
+
+  -- Another option would be
+  -- λ (x : X)ₗ (r)ₗ => r*x  -- t
+
 
   instance (f : X → (Y → Z)) [IsLin f] [∀ x, IsLin (f x)] : IsLin (λ x => Hom.mk (f x)) := sorry
+  example : X ⊸ X := fun (x : X) ⊸ x
+  example : X ⊸ ℝ ⊸ X := fun (x : X) (r : ℝ) ⊸ r*x
+  example : X ⊸ ℝ ⊸ X :=   λ (x : X) (r : ℝ) ⊸ r*x
 
-  #check (Hom.mk (λ (x : X) => Hom.mk (λ (r : ℝ) => r * x)) : X ⊸ (ℝ ⊸ X))
-  #check ((fun (x : X) ⊸ x))
-  #check ((fun (x : X) (r : ℝ) ⊸ r*x))
-  #check ((λ (x : X) (r : ℝ) ⊸ r*x))
+
+  -- instance : Coe (X → Y ⊸ Z) (X → Y → Z) := ⟨λ f x => f x⟩
+  -- instance : IsLin (λ (f : X → Y ⊸ Z) => (f : X → Y → Z)) := sorry
+
+  -- instance : IsLin (Subtype.val : (X ⊸ Y) → (X → Y)) := sorry
+  
+  instance : Coe (X ⊸ Y ⊸ Z) (X ⊸ Y → Z) := ⟨(λ f => λ (x : X) ⊸ f x)⟩
+  -- set_option synthInstance.maxHeartbeats 773
+  -- instance : IsLin (λ (f : X ⊸ Y ⊸ Z) => (f : X ⊸ Y → Z)) := by infer_instance --- This needs 773 heartbeats ... why?
+
+  -- Can we infer this automatically? 
+  -- set_option synthInstance.maxHeartbeats 2500
+  -- instance {X Y Z W} [Vec X] [Vec Y] [Vec Z] [Vec W] : Coe (X ⊸ Y ⊸ Z ⊸ W) (X ⊸ Y → Z → W) := ⟨λ f => λ (x : X) ⊸ f x⟩
 
 end Hom
-
-
-
-

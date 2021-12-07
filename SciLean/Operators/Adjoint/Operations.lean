@@ -52,7 +52,6 @@ namespace Adjoint
   @[simp]
   theorem adjoint_of_neg_of_fun [IsLin f] : (-f)† = -(f†) := sorry -- by funext y; simp[Neg.neg]
 
-
   @[simp]
   theorem adjoint_of_inner_1 (f : X → Y) [IsLin f] (y : Y) : (λ x : X => ⟨f x, y⟩)† = (λ (s : ℝ) => s * f† y) := sorry
   @[simp]

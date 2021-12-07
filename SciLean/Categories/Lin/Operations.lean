@@ -22,6 +22,9 @@ instance (r : ℝ) : IsLin (λ (x : X) => r*x) := sorry
 
 instance : IsLin (λ x : X => -x) := sorry
 
+instance {X} [Vec X] (P : X → Prop) [Vec {x : X // P x}] : IsLin (Subtype.val : {x : X // P x} → X) := sorry
+
 variable (U Dom) [SemiHilbert U Dom]
 instance  : IsLin (⟪·, ·⟫ : U → U → Dom → ℝ) := sorry
 instance (u : U) : IsLin (⟪u, ·⟫ ) := sorry
+
