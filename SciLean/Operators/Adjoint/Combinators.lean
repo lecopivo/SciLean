@@ -1,9 +1,10 @@
 import SciLean.Operators.Adjoint.Basic
 
 open Function
+namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
+variable {X Y Z Dom : Type} [SemiHilbert X Dom] [SemiHilbert Y Dom] [SemiHilbert Z Dom]
 
 namespace SciLean.Adjoint
 

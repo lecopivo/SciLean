@@ -4,7 +4,7 @@ open Function
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
+variable {X Y Z : Type}  [Hilbert X] [Hilbert Y] [Hilbert Z]
 
 namespace Adjoint
 
@@ -16,7 +16,7 @@ namespace Adjoint
   @[simp]
   theorem adjoint_of_add : (λ x : X×X => Add.add x.1 x.2)† = (λ x => (x,x)) := sorry
   @[simp]
-  theorem adjoint_of_add_of_fun [IsLin f] [IsLin g] : (f + g)† = f† + g† := by simp[HAdd.hAdd, Add.add]; funext a; simp
+  theorem adjoint_of_add_of_fun [IsLin f] [IsLin g] :   (f + g)† = f† + g† := by simp[HAdd.hAdd, Add.add]; funext a; simp
   @[simp]
   theorem adjoint_of_add_of_fun_arg [IsLin f] [IsLin g] : (λ x => f x + g x)† = (λ y => f† y + g† y) := by simp[HAdd.hAdd, Add.add]; funext a; simp
   @[simp]

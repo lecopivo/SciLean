@@ -13,9 +13,15 @@ variable {X Y Z Dom : Type} [SemiHilbert X Dom] [SemiHilbert Y Dom] [SemiHilbert
 
 prefix:max "𝓘" => SemiInnerTrait.domOf 
 
-class HasAdjoint {X Y} [SemiInnerTrait X] [SemiHilbert X (𝓘 X)] [SemiHilbert Y (𝓘 X)] (f : X → Y) : Prop  where
+--- Notes on the definition:
+---       1. Existence is postulated because we do not work with complete vector spaces
+---       2. condition `testFunction D x` is there to prove uniquness of adjoint
+---       3. condition `testFunction D y` is there to prove f†† = f
+---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
+class HasAdjoint {X Y} [SemiInnerTrait X] [SemiHilbert X (𝓘 X)] [sy : SemiHilbert Y (𝓘 X)] (f : X → Y) : Prop  where
   hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (D : 𝓘 X), 
-                 SemiInner.testFunction D x → ⟪f' y, x⟫ = ⟪y, f x⟫
+                 (testFunction D x ∨ testFunction D y → ⟪f' y, x⟫ = ⟪y, f x⟫)
+  preservesTestFun : ∀ (x : X) (D : 𝓘 X), testFunction D x → testFunction D (f x)
 
 noncomputable
 def adjoint {X Y} [SemiInnerTrait X] [SemiHilbert X (𝓘 X) ] [SemiHilbert Y (𝓘 X)] (f : X → Y) : Y → X :=
@@ -27,22 +33,22 @@ postfix:max "†" => adjoint
 
 namespace Adjoint
 
-  instance (f : X → Y) [IsLin f] : IsLin f† := sorry
+  instance (f : X → Y) [IsLin f] [HasAdjoint f] : IsLin f† := sorry
 
   @[simp]
-  theorem adjoint_of_adjoint (f : X → Y) [IsLin f] : f†† = f := sorry
+  theorem adjoint_of_adjoint (f : X → Y) [HasAdjoint f] : f†† = f := sorry
 
   @[simp] 
   theorem adjoint_of_id
       : (λ x : X => x)† = id := sorry
 
   @[simp]
-  theorem adjoint_of_const {n}
-      : (λ (x : X) (i : Fin n) => x)† = sum := sorry
+  theorem adjoint_of_const {ι} [Enumtype ι]
+      : (λ (x : X) (i : ι) => x)† = sum := sorry
 
   @[simp]
-  theorem adjoint_of_sum {n}
-      : (sum)† = (λ (x : X) (i : Fin n) => x) := sorry
+  theorem adjoint_of_sum {ι} [Enumtype ι]
+      : (sum)† = (λ (x : X) (i : ι) => x) := sorry
 
   @[simp]
   theorem adjoint_of_swap {n m}

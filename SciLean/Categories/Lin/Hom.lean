@@ -61,13 +61,17 @@ namespace Hom
   instance : HMul ℝ (X ⊸ Y) (X ⊸ Y) := ⟨λ r f => ⟨r * f.1, by infer_instance⟩⟩
   instance : Neg (X ⊸ Y) := ⟨λ f => ⟨-f.1, by infer_instance⟩⟩
 
-  instance : Vec (X ⊸ Y) :=
-  {
-    add_assoc := sorry,
-    add_comm := sorry,
-    add_zero := sorry,
-    zero_add := sorry
-  }
+  instance : AddSemigroup (X ⊸ Y) := AddSemigroup.mk sorry
+  instance : AddMonoid (X ⊸ Y)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
+  instance : SubNegMonoid (X ⊸ Y) := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
+  instance : AddGroup (X ⊸ Y)     := AddGroup.mk sorry
+  instance : AddCommGroup (X ⊸ Y) := AddCommGroup.mk sorry
+
+  instance : MulAction ℝ (X ⊸ Y) := MulAction.mk sorry sorry
+  instance : DistribMulAction ℝ (X ⊸ Y) := DistribMulAction.mk sorry sorry
+  instance : Module ℝ (X ⊸ Y) := Module.mk sorry sorry
+
+  instance : Vec (X ⊸ Y) := Vec.mk
 
   -- instance (X Y) [FinEnumVec X] [SemiHilbert Y S] : SemiHilbert (X ⊸ Y) s 
 
@@ -91,13 +95,17 @@ namespace Hom
   example : X ⊸ ℝ ⊸ X := fun (x : X) (r : ℝ) ⊸ r*x
   example : X ⊸ ℝ ⊸ X :=   λ (x : X) (r : ℝ) ⊸ r*x
 
+  -- probably a bad idea
+  -- instance {X Y Y' Z'} [Vec X] [Vec Y] [CoeFun Y (λ _ => Y' → Z')] : CoeFun (X ⊸ Y) (λ _ => X → Y' → Z') := ⟨λ f x => f.1 x⟩
+  -- example : X → ℝ → X := λ (x : X) (r : ℝ) ⊸ r*x
+
 
   -- instance : Coe (X → Y ⊸ Z) (X → Y → Z) := ⟨λ f x => f x⟩
   -- instance : IsLin (λ (f : X → Y ⊸ Z) => (f : X → Y → Z)) := sorry
 
   -- instance : IsLin (Subtype.val : (X ⊸ Y) → (X → Y)) := sorry
   
-  instance : Coe (X ⊸ Y ⊸ Z) (X ⊸ Y → Z) := ⟨(λ f => λ (x : X) ⊸ f x)⟩
+  -- instance : Coe (X ⊸ Y ⊸ Z) (X ⊸ Y → Z) := ⟨(λ f => λ (x : X) ⊸ f x)⟩
   -- set_option synthInstance.maxHeartbeats 773
   -- instance : IsLin (λ (f : X ⊸ Y ⊸ Z) => (f : X ⊸ Y → Z)) := by infer_instance --- This needs 773 heartbeats ... why?
 

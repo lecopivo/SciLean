@@ -2,6 +2,8 @@ import SciLean.Categories.Lin
 
 namespace SciLean.Lin.Tests
 
+set_option synthInstance.maxHeartbeats 5000
+
 variable {α β γ : Type} 
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 

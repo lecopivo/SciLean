@@ -22,7 +22,11 @@ class SemiInner (X : Type u) (Dom : Type v) where
 
 class SemiInnerTrait (X : Type u) where
   domOf : Type v
+
 attribute [reducible] SemiInnerTrait.domOf
+
+open SemiInnerTrait in
+def testFunction {X Dom} (D : Dom) (x : X) [SemiInner X Dom] : Prop := SemiInner.testFunction D x
 
 @[reducible]
 instance {X S} [SemiInner X S] : SemiInnerTrait X := ⟨S⟩

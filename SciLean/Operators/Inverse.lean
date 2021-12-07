@@ -1,6 +1,9 @@
 import SciLean.Categories
+import SciLean.Tactic.Basic
 
--- import Mathlib.Algebra.Group.Basic
+import Mathlib.Algebra.Group.Basic
+import Mathlib.Tactic.Basic
+import Mathlib.Tactic.Ring
 
 import Init.Classical
 
@@ -20,6 +23,9 @@ namespace Inverse
 
   variable {β1 β1}
   variable [Inhabited α] [Inhabited β] [Inhabited γ] [Inhabited β1] [Inhabited β2]
+
+  theorem inverse_ext (f : α → β) : (∀ x, g (f x) = x) → (∀ y, f (g y) = y) → (f⁻¹ = g) := sorry
+  macro  "inverse_ext" : tactic => `(apply inverse_ext)
 
   @[simp]
   def inverse_of_inverse (f : α → β) [IsInv f] 
@@ -42,28 +48,31 @@ namespace Inverse
   def inverse_of_comp_parm (f : β1 → β2 → γ) (g1 : α → β1) (b2 : β2) [IsInv (λ b1 => f b1 b2)] [IsInv g1]
       : (λ a => f (g1 a) b2)⁻¹ = g1⁻¹ ∘ (λ b1 => f b1 b2)⁻¹ := sorry
 
+
+  -------------------------------------------------------------------------
+
+  macro "autoinvert" : conv => `(repeat' (conv => pattern (inverse _); simp; rw[inverse_of_comp_parm]; simp))
+  macro "autoinvert" : tactic => `(conv => autoinvert)
+
   -------------------------------------------------------------------------
 
   @[simp]
-  def inverse_of_add_arg1_simple {X} [Vec X] (y : X)
-      : (λ x => x + y)⁻¹ = (λ x => x - y) := sorry
+  def inverse_of_add_arg1 {X} [AddGroup X] (y : X)
+      : (λ x => x + y)⁻¹ = (λ x => x - y) :=
+  by
+    inverse_ext
+    intro x; rw [SubNegMonoid.sub_eq_add_neg]; simp
+    intro x; rw [SubNegMonoid.sub_eq_add_neg, add_assoc, add_left_neg]; simp
+    done -- ugh what a chore ... I want `abel`
 
   @[simp]
-  def inverse_of_add_arg1 {X} [Vec X] (y : X) (f : α → X) [IsInv f]
-      : (λ a => (f a) + y)⁻¹ = f⁻¹ ∘ (λ x => x - y) :=
-  by 
-    repeat (simp; rw[inverse_of_comp_parm]; simp) done
-      
-  @[simp]
-  def inverse_of_add_arg1_fin {n} [NonZero n] (y : Fin n) (f : Fin n → Fin n) [IsInv f]
-      : (λ a => (f a) + y)⁻¹ = f⁻¹ ∘ (λ x => x - y) := sorry
-
-  @[simp]
-  def inverse_of_add_arg2 {X} [Vec X] (x : X)
-      : (λ y => x + y)⁻¹ = (λ y => -x + y) := sorry
-  @[simp]
-  def inverse_of_add_arg2_fin {n} [NonZero n] (x : Fin n)
-      : (λ y => x + y)⁻¹ = (λ y => -x + y) := sorry
+  def inverse_of_add_arg2 {X} [AddGroup X] (x : X)
+      : (λ y => x + y)⁻¹ = (λ y => -x + y) := 
+  by
+    inverse_ext
+    intro y; rw [← add_assoc, add_left_neg]; simp
+    intro y; rw [← add_assoc, add_right_neg]; simp
+    done  --- ugh what a chore again ... I want `abal` :( :(
 
   @[simp]
   def inverse_of_sub_arg1 {X} [Vec X] (y : X) (f : α → X) [IsInv f]

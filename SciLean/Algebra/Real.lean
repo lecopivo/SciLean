@@ -1,4 +1,4 @@
-import SciLean.Algebra.Field
+import Mathlib.Algebra.Field.Basic
 
 def Real := Float
 abbrev ℝ := Real
@@ -41,26 +41,63 @@ namespace Real
 
   instance : Zero Real := ⟨Float.ofNat 0⟩  
   instance : One Real  := ⟨Float.ofNat 1⟩
-  instance : OfNat ℝ n := ⟨Float.ofNat n⟩
-  instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
+  -- instance : OfNat ℝ n := ⟨Float.ofNat n⟩
+  -- instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
-  def natPow (r : ℝ) : Nat → ℝ
-  | 0 => 1
-  | n+1 => r * natPow r n
+  -- def natPow (r : ℝ) : Nat → ℝ
+  -- | 0 => 1
+  -- | n+1 => r * natPow r n
 
-  instance : Pow ℝ Nat := ⟨natPow⟩
+  -- instance : Pow ℝ Nat := ⟨natPow⟩
   instance : HPow Real Real Real := ⟨Math.pow⟩
+
+  instance : Inv ℝ := ⟨λ x => 1/x⟩
+  instance : Numeric ℝ := ⟨λ n => n.toFloat⟩
+
+
+  instance : HPow Real Int Real := sorry
+
+--   instance (n : Nat) : OfNat ℝ n := ⟨n.toFloat⟩
+
+-- class Numeric (α : Type u) where
+--   ofNat : Nat → α
+
+
+--   instance : Ring ℝ := 
+-- {
+-- }
 
   instance : Field ℝ := 
   {
-    add_assoc := sorry
-    add_comm := sorry
+    -- by admit
+    mul_assoc := sorry
     add_zero := sorry
     zero_add := sorry
-    mul_assoc := sorry
-    mul_comm := sorry
-    mul_one := sorry
+    add_assoc := sorry
+    add_comm := sorry
+    nsmul_zero' := sorry
+    nsmul_succ' := sorry
+    zero_mul := sorry
+    mul_zero := sorry
     one_mul := sorry
+    mul_one := sorry
+    npow_zero' := sorry
+    npow_succ' := sorry
+    mul_add := sorry
+    add_mul := sorry
+    ofNat_succ := sorry
+    sub_eq_add_neg := sorry
+    gsmul_zero' := sorry
+    gsmul_succ' := sorry
+    gsmul_neg' := sorry
+    add_left_neg := sorry
+    mul_comm := sorry
+    exists_pair_ne := sorry
+    div_eq_mul_inv := sorry
+    mul_inv_cancel := sorry
+    inv_zero := sorry
+    hpow_succ := sorry
+    hpow_neg := sorry
   }
 
 end Real

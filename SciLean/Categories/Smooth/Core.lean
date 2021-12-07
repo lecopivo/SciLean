@@ -18,7 +18,7 @@ instance (f : X × Y → Z) (x : X) [IsSmooth f] : IsSmooth (curry f x) := sorry
 instance (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)] : IsSmooth (uncurry f) := sorry
 
 -- fmap
-instance fmap_is_smooth (f : (i : ι) → E i → F i) [∀ a, IsSmooth (f a)] : IsSmooth (fmap f) := sorry
+-- instance fmap_is_smooth (f : (i : ι) → E i → F i) [∀ a, IsSmooth (f a)] : IsSmooth (fmap f) := sorry
 
 instance id_is_smooth : IsSmooth λ x : X => x := sorry
 instance const_is_smooth (x : X) : IsSmooth λ y : Y => x := sorry

@@ -1,3 +1,5 @@
+import Mathlib.Init.Function
+
 namespace Function
 
 -- id already exists ... not in Function namespace though
@@ -11,17 +13,18 @@ def eval {α} {β : α → Sort v} : (a : α) → ((a' : α) → (β a')) → (�
 @[simp] theorem eval_apply {β : α → Sort v} (a : α) (f : (a' : α) → (β a')): eval a f = f a := rfl
 
 -- There is already function called flip that does this ... not in Function namespace though
-@[inline]
-def swap : (α → β → γ) → (β → α → γ) := λ f b a => f a b
-@[simp] theorem swap_apply (f : α → β → γ) : swap f b a = f a b := rfl
+-- #check swap
+-- @[inline]
+-- def swap : (α → β → γ) → (β → α → γ) := λ f b a => f a b
+-- @[simp] theorem swap_apply (f : α → β → γ) : swap f b a = f a b := rfl
 
-@[inline]
-def curry : (α × β → γ) → (α → β → γ) := λ f a b => f (a,b) 
-@[simp] theorem curry_apply (f : α × β → γ) (a : α) (b : β) : curry f a b = f (a,b) := rfl
+-- @[inline]
+-- def curry : (α × β → γ) → (α → β → γ) := λ f a b => f (a,b) 
+-- @[simp] theorem curry_apply (f : α × β → γ) (a : α) (b : β) : curry f a b = f (a,b) := rfl
 
-@[inline]
-def uncurry : (α → β → γ) → (α × β → γ) := λ f ab => f ab.1 ab.2
-@[simp] theorem uncurry_apply (f : α → β → γ) (ab : α × β) : uncurry f ab = f ab.1 ab.2 := rfl
+-- @[inline]
+-- def uncurry : (α → β → γ) → (α × β → γ) := λ f ab => f ab.1 ab.2
+-- @[simp] theorem uncurry_apply (f : α → β → γ) (ab : α × β) : uncurry f ab = f ab.1 ab.2 := rfl
 
 @[inline]
 def fmap {E : α → Sort u} {F : α → Sort v} (f : (a : α) → E a → F a) 
