@@ -90,10 +90,17 @@ namespace Adjoint
 
   section Core
 
-    instance id_has_adjoint : HasAdjoint λ x : X => x := sorry
-    instance const_zero_has_adjoint : HasAdjoint (λ x : X => (0 : Y)) := sorry
+    instance id_has_adjoint 
+      : HasAdjoint λ x : X => x := sorry
 
-    instance comp_has_adjoint (f : Y → Z) (g : X → Y) [HasAdjoint f] [HasAdjoint g] : HasAdjoint (λ x => f (g x)) := sorry
+    instance const_zero_has_adjoint 
+      : HasAdjoint (λ x : X => (0 : Y)) := sorry
+
+    instance comp_has_adjoint 
+      (f : Y → Z) (g : X → Y) 
+      [HasAdjoint f] [HasAdjoint g] 
+      : 
+        HasAdjoint (λ x => f (g x)) := sorry
 
     -- instance diag_has_adjoint (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2] : HasAdjoint (λ x => f (g1 x) (g2 x)) := sorry
     -- instance diag_parm_has_adjoint (f : Y1 → Y2 → Z) (g1 : X → α → Y1) (g2 : X → α → Y2) [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2] : HasAdjoint (λ x a => f (g1 x a) (g2 x a)) := sorry
@@ -110,11 +117,11 @@ namespace Adjoint
 
   @[simp] 
   theorem adjoint_of_id
-      : (λ x : X => x)† = id := sorry
+    : (λ x : X => x)† = id := sorry
 
   @[simp]
   theorem adjoint_of_const {ι} [Enumtype ι]
-      : (λ (x : X) (i : ι) => x)† = sum := sorry
+    : (λ (x : X) (i : ι) => x)† = sum := sorry
 
 
   -- This is unfortunatelly not true with current definition of adjoint
@@ -124,11 +131,11 @@ namespace Adjoint
 
   @[simp]
   theorem adjoint_of_sum {ι} [Enumtype ι]
-      : (sum)† = (λ (x : X) (i : ι) => x) := sorry
+    : (sum)† = (λ (x : X) (i : ι) => x) := sorry
 
   @[simp]
   theorem adjoint_of_swap {ι κ} [Enumtype ι] [Enumtype κ]
-      : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
+    : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
 
   @[simp]
   theorem adjoint_of_parm {ι : Type} [Enumtype ι] 
@@ -139,12 +146,12 @@ namespace Adjoint
 
   @[simp]
   theorem adjoint_of_arg {n} [NonZero n] 
-      (f : Y → Fin n → Z) [HasAdjoint f]
-      (g1 : X → Y) [HasAdjoint g1]
-      (g2 : Fin n → Fin n) [IsInv g2]
-      : 
-        (λ x i => f (g1 x) (g2 i))† = g1† ∘ f† ∘ (λ h => h ∘ g2⁻¹) 
-      := sorry
+    (f : Y → Fin n → Z) [HasAdjoint f]
+    (g1 : X → Y) [HasAdjoint g1]
+    (g2 : Fin n → Fin n) [IsInv g2]
+    : 
+      (λ x i => f (g1 x) (g2 i))† = g1† ∘ f† ∘ (λ h => h ∘ g2⁻¹) 
+    := sorry
 
   @[simp] 
   theorem adjoint_of_comp 
@@ -191,10 +198,21 @@ namespace Adjoint
   by
     admit
 
+  -- This one is dangerous too
+  @[simp]
+  theorem adjoint_of_comp_arg_1 {ι} [Enumtype ι]
+    (f : Y → β → Z) (g1 : X → ι → Y) (g2 : ι → β)
+    [∀ b, HasAdjoint (λ y : Y => f y b)] [HasAdjoint g1] 
+    : 
+      (λ x i => f (g1 x i) (g2 i))† 
+      = 
+      g1† ∘ (λ h i => (λ y => f y (g2 i))† (h i)) 
+    := sorry
+
 
   open Function
 
-  variable {Y1 Y2 ι : Type} [SemiHilbert Y1 Dom] [SemiHilbert Y2 Dom] [Enumtype ι]
+  variable {Y1 Y2 ι} [SemiHilbert Y1 Dom] [SemiHilbert Y2 Dom] [Enumtype ι]
 
   @[simp]
   theorem adjoint_of_diag 
@@ -221,17 +239,6 @@ namespace Adjoint
       ∘ (Prod.map g1† g2†) 
       ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) 
       ∘ (comp (uncurry f)†) 
-    := sorry
-
-  -- This one is dangerous too
-  @[simp]
-  theorem adjoint_of_diag_arg_1 
-    (f : Y → β → Z) (g1 : X → ι → Y) (g2 : ι → β)
-    [∀ b, HasAdjoint (λ y : Y => f y b)] [HasAdjoint g1] 
-    : 
-      (λ x i => f (g1 x i) (g2 i))† 
-      = 
-      g1† ∘ (λ h i => (λ y => f y (g2 i))† (h i)) 
     := sorry
 
   --------------------------------------------------------------------------------------------
