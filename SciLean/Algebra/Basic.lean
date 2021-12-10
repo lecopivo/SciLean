@@ -1,22 +1,26 @@
+import Mathlib
+
 import SciLean.Mathlib.Data.Pi
 import Mathlib.Data.Iterable
 -- import SciLean.Std.Enumtype
 
-instance : Neg (Fin n) :=
-  ⟨λ x =>
-     match n, x with
-       | 0, x => x
-       | (n+1), x => 0 - x⟩
+-- instance : Neg (Fin n) :=
+--   ⟨λ x =>
+--      match n, x with
+--        | 0, x => x
+--        | (n+1), x => 0 - x⟩
+
+-- instance (priority := low) {X} [Zero X] : Inhabited X := ⟨0⟩
+-- instance (priority := low) {X} [One X] : Inhabited X := ⟨1⟩
 
 example (x : Fin n) : x = -x := sorry
 
-instance [Zero α] : Inhabited α := ⟨0⟩
-instance [One α] : Inhabited α := ⟨1⟩
+-- instance {X} [Zero X] : Inhabited X := ⟨0⟩
 
-instance : Zero Nat := ⟨0⟩
-instance : Zero Float := ⟨0.0⟩
-instance : One Nat := ⟨1⟩
-instance : One Float := ⟨1.0⟩
+-- instance : Zero Nat := by infer_instance
+-- instance : Zero Float := by infer_instance
+-- instance : One Nat := by infer_instance
+-- instance : One Float := by infer_instance
 
 section UnitOperations
 
@@ -28,6 +32,7 @@ section UnitOperations
   instance : Zero PUnit := ⟨PUnit.unit⟩
  
 end UnitOperations
+
 
 section ProductOperations
 

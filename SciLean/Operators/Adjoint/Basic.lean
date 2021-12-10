@@ -2,9 +2,11 @@ import SciLean.Prelude
 import SciLean.Categories
 import SciLean.Operators.Inverse
 import SciLean.Operators.Sum
+
 import SciLean.Simp
 
-import Init.Classical
+
+-- import Init.Classical
 
 namespace SciLean
 
@@ -90,6 +92,7 @@ namespace Adjoint
   theorem adjoint_of_const {ι} [Enumtype ι]
       : (λ (x : X) (i : ι) => x)† = sum := sorry
 
+
   -- This is unfortunatelly not true with current definition of adjoint
   -- @[simp]
   -- theorem adjoint_of_const_on_real [SemiInnerTrait X] [SemiHilbert X (𝓘 X)]
@@ -130,9 +133,14 @@ namespace Adjoint
   theorem adjoint_of_comp_parm (f : Y → β → Z) (b : β) [HasAdjoint (λ y => f y b)] (g : X → Y) [HasAdjoint g] 
       : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
 
+  -- @[simp]
+  theorem adjoint_of_comp_parm' (f : Y → β → γ → Z) (c) (b : β) [HasAdjoint (λ y => f y b c)] (g : X → Y) [HasAdjoint g] 
+      : (λ x => f (g x) b c)† = g† ∘ (λ y => f y b c)† := sorry
+
+
   open Function
 
-  variable {Y1 Y2 : Type} [SemiHilbert Y1 Dom] [SemiHilbert Y2 Dom]
+  variable {Y1 Y2 ι : Type} [SemiHilbert Y1 Dom] [SemiHilbert Y2 Dom] [Enumtype ι]
 
   @[simp]
   theorem adjoint_of_diag 
@@ -142,14 +150,20 @@ namespace Adjoint
 
   @[simp]
   theorem adjoint_of_diag_arg
-      (f : Y1 → Y2 → Z) (g1 : X → Fin n → Y1) (g2 : X → Fin n → Y2)
+      (f : Y1 → Y2 → Z) (g1 : X → ι → Y1) (g2 : X → ι → Y2)
       [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2]
-      : (λ x i => f (g1 x i) (g2 x i))† = (uncurry HAdd.hAdd) ∘ (pmap g1† g2†) ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) ∘ (comp (uncurry f)†) := sorry
+      : (λ x i => f (g1 x i) (g2 x i))† = (uncurry HAdd.hAdd) ∘ (Prod.map g1† g2†) ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) ∘ (comp (uncurry f)†) := sorry
 
+  -- This one is dangerous too
+  @[simp]
+  theorem adjoint_of_diag_arg_1 
+      (f : Y → β → Z) (g1 : X → ι → Y) (g2 : ι → β)
+      [∀ b, HasAdjoint (λ y : Y => f y b)] [HasAdjoint g1] 
+      : (λ x i => f (g1 x i) (g2 i))† = g1† ∘ (λ h i => (λ y => f y (g2 i))† (h i)) := sorry
 
   --------------------------------------------------------------------------------------------
 
-  macro "autoadjoint" : conv => `(repeat' (conv => pattern (inverse _); simp; rw[adjoint_of_comp_parm]; simp))
+  macro "autoadjoint" : conv => `(repeat' (conv => pattern (adjoint _); simp; rw[adjoint_of_comp_parm]; simp)) -- add rw[adjoint_of_comp_parm]
   macro "autoadjoint" : tactic => `(conv => autoadjoint)
 
   --------------------------------------------------------------------------------------------

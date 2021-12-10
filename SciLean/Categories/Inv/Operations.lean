@@ -21,6 +21,7 @@ instance {X} [Vec X] (x : X) : IsInv (λ y => x - y) := sorry
 instance (x : Fin n) : IsInv (λ y => x - y) := sorry
 
 instance (s : ℝ) [NonZero s] : IsInv (λ (r : ℝ)  => r*s) := sorry
+
 instance {X} [Vec X] (r : ℝ) [NonZero r] : IsInv (λ (x : X)  => r*x) := sorry
 
 instance {X} [Vec X] : IsInv (λ (x : X) => -x) := sorry

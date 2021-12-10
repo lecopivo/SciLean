@@ -56,8 +56,12 @@ namespace Inverse
 
   -------------------------------------------------------------------------
 
+  variable {X Y} 
+  variable [Inhabited X] [AddGroup X]
+  variable [Inhabited Y] [AddGroup Y]
+
   @[simp]
-  def inverse_of_add_arg1 {X} [AddGroup X] (y : X)
+  def inverse_of_add_arg1 (y : X)
       : (λ x => x + y)⁻¹ = (λ x => x - y) :=
   by
     inverse_ext
@@ -66,7 +70,7 @@ namespace Inverse
     done -- ugh what a chore ... I want `abel`
 
   @[simp]
-  def inverse_of_add_arg2 {X} [AddGroup X] (x : X)
+  def inverse_of_add_arg2 (x : X)
       : (λ y => x + y)⁻¹ = (λ y => -x + y) := 
   by
     inverse_ext
@@ -75,30 +79,24 @@ namespace Inverse
     done  --- ugh what a chore again ... I want `abal` :( :(
 
   @[simp]
-  def inverse_of_sub_arg1 {X} [Vec X] (y : X) (f : α → X) [IsInv f]
-      : (λ a => (f a) - y)⁻¹ = f⁻¹ ∘ (λ x => x + y) := sorry
-  @[simp]
-  def inverse_of_sub_arg1_fin {n} [NonZero n] (y : Fin n) (f : Fin n → Fin n) [IsInv f]
+  def inverse_of_sub_arg1 (y : X) (f : α → X) [IsInv f]
       : (λ a => (f a) - y)⁻¹ = f⁻¹ ∘ (λ x => x + y) := sorry
 
   @[simp]
-  def inverse_of_sub_arg2 {X} [Vec X] (x : X)
-      : (λ y => x - y)⁻¹ = (λ y => x - y) := sorry
-  @[simp]
-  def inverse_of_sub_arg2_fin {n} [NonZero n] (x : Fin n)
+  def inverse_of_sub_arg2 (x : X)
       : (λ y => x - y)⁻¹ = (λ y => x - y) := sorry
 
   @[simp]
   def inverse_of_mul_arg1 (s : ℝ) [NonZero s] (f : α → ℝ) [IsInv f]
       : (λ a => (f a)*s)⁻¹ = f⁻¹ ∘ (λ r => r/s) := sorry
 
-  @[simp]
-  def inverse_of_mul_arg2 {X} [Vec X] (r : ℝ) [NonZero r]
-      : (λ (x : X) => r*x)⁻¹ = (λ (x : X) => (1/r)*x) := sorry
+  -- @[simp]
+  -- def inverse_of_mul_arg2 {X} [Vec X] (r : ℝ) [NonZero r]
+  --     : (λ (x : X) => r*x)⁻¹ = (λ (x : X) => (1/r)*x) := sorry
   
-  @[simp]
-  def inverse_of_neg {X} [Vec X]
-      : (λ (x : X) => -x)⁻¹ = (λ (x : X) => -x) := sorry
+  -- @[simp]
+  -- def inverse_of_neg {X} [Vec X]
+  --     : (λ (x : X) => -x)⁻¹ = (λ (x : X) => -x) := sorry
 
   -- example {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsInv f] (y' : Y) 
   --         : (λ x => - (f x) + y')⁻¹ = (λ y => f⁻¹ (-(y - y'))) :=

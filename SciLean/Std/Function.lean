@@ -8,9 +8,9 @@ namespace Function
 
 -- comp already exists
 
-@[inline]
-def eval {α} {β : α → Sort v} : (a : α) → ((a' : α) → (β a')) → (β a) := λ a f => f a
-@[simp] theorem eval_apply {β : α → Sort v} (a : α) (f : (a' : α) → (β a')): eval a f = f a := rfl
+-- @[inline]
+-- def eval {α} {β : α → Sort v} : (a : α) → ((a' : α) → (β a')) → (β a) := λ a f => f a
+-- @[simp] theorem eval_apply {β : α → Sort v} (a : α) (f : (a' : α) → (β a')): eval a f = f a := rfl
 
 -- There is already function called flip that does this ... not in Function namespace though
 -- #check swap

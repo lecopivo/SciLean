@@ -1,33 +1,34 @@
 import SciLean.Algebra
 
+import Mathlib.Data.Prod
+import Mathlib.Logic.Function.Basic
+
 namespace SciLean
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
+variable {U V W Dom : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 variable (u : U)
 variable (r : ℝ)
 
-#check ⟪u,u⟫
-
-@[simp] theorem add_zero (x : X) : x + 0 = x := sorry
-@[simp] theorem zero_add (x : X) : 0 + x = x := sorry
+@[simp] theorem add_zero (x : X) : x + 0 = x := by simp
+@[simp] theorem zero_add (x : X) : 0 + x = x := by simp 
 
 @[simp] theorem sub_zero (x : X) : x - 0 = x := sorry
 @[simp] theorem zero_sub (x : X) : 0 - x = -x := sorry
 
-@[simp] theorem zero_mul (x : X) : (0:ℝ)*x = (0 : X) := sorry
-@[simp] theorem mul_zero (r : ℝ) : r*(0:ℝ) = (0 : ℝ) := sorry
+@[simp] theorem zero_mul (x : X) : (0 : ℝ)*x = (0 : X) := sorry
+-- @[simp] theorem mul_zero (r : ℝ) : r*(0:ℝ) = (0 : ℝ) := by simp
 
 @[simp] theorem zero_eval [Zero β] : (0 : α → β) a = 0 := by simp[Zero.zero,OfNat.ofNat]; done
 
-@[simp] theorem mul_one (x : ℝ) : x * 1 = x := sorry
+-- @[simp] theorem mul_one (x : ℝ) : x * 1 = x := by simp
 @[simp] theorem one_mul (x : X) : (1:ℝ) * x = x := sorry
 
-@[simp] theorem neg_neg (x : X) : - - x = x := sorry
+-- @[simp] theorem neg_neg (x : X) : - - x = x := by simp
 
-@[simp] theorem neg_sub (x y : X) : x - (-y) = x + y := sorry
+@[simp] theorem neg_sub (x y : X) : x - (-y) = x + y := sorry 
 @[simp] theorem add_neg (x y : X) : x + (-y) = x - y := sorry
 
 @[simp] theorem mul_neg_neg (r : ℝ) (x : X) : (-r) * (-x) = r * x := sorry
@@ -53,6 +54,8 @@ variable (r : ℝ)
 @[simp] theorem prod_fst_hmul (x : X) (y : Y) (r : ℝ) : (r*(x,y)).fst = r*x := sorry
 @[simp] theorem prod_snd_hmul (x : X) (y : Y) (r : ℝ) : (r*(x,y)).snd = r*y := sorry
 
-@[simp] theorem func_add_eval (f g : α → X) (a : α) : (f + g) a = f a + g a := by simp[HAdd.hAdd,Add.add]; done
-@[simp] theorem func_sub_eval (f g : α → X) (a : α) : (f - g) a = f a - g a := by simp[HSub.hSub,Sub.sub]; done
-@[simp] theorem func_mul_eval (f : α → X) (a : α) (c : ℝ) : (c*f) a = c * (f a) := by simp[HMul.hMul,Mul.mul]; done
+
+@[simp] theorem add_normalize [Add α] (a b : α) : Add.add a b = a + b := by simp[HAdd.hAdd] done
+@[simp] theorem sub_normalize [Sub α] (a b : α) : Sub.sub a b = a - b := by simp[HSub.hSub] done
+@[simp] theorem mul_normalize [Mul α] (a b : α) : Mul.mul a b = a * b := by simp[HMul.hMul] done
+@[simp] theorem div_normalize [Div α] (a b : α) : Div.div a b = a / b := by simp[HDiv.hDiv] done

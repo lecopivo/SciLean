@@ -38,7 +38,7 @@ abbrev semiInner {X : Type u} [SemiInnerTrait X] [inst : SemiInner X (SemiInnerT
 notation "⟪" x ", " y "⟫" => semiInner x y  
 
 -- Not sure if I want this coercion, it is a bit overkill
--- instance : Coe (Unit → ℝ) ℝ := ⟨λ f => f ()⟩
+instance : Coe (Unit → ℝ) ℝ := ⟨λ f => f ()⟩
 notation "∥" x "∥"  => Math.sqrt (SemiInner.semiInner (Dom := Unit) x x ())
 
 namespace SemiInner
@@ -83,7 +83,6 @@ end SemiInner
 -- |___/\___|_|_|_|_| |_||_|_|_|_.__/\___|_|  \__| |___/ .__/\__,_\__\___|
 --                                                     |_|
 
-
 class SemiHilbert (X : Type u) (Dom : Type v) extends Vec X, SemiInner X Dom  where
   semi_inner_add : ∀ (x y z : X),     ⟪x + y, z⟫ = ⟪x,z⟫ + ⟪y,z⟫
   semi_inner_mul : ∀ (x y : X) (r : ℝ),  ⟪r*x,y⟫ = r*⟪x,y⟫
@@ -92,7 +91,7 @@ class SemiHilbert (X : Type u) (Dom : Type v) extends Vec X, SemiInner X Dom  wh
   semi_inner_ext : ∀ (x : X), ((x = 0) ↔ (∀ D (x' : X) (h : testFunction D x'), ⟪x,x'⟫ D = 0))
   -- Add test functions form a subspace
 
-class Hilbert (X : Type u) extends SemiHilbert X Unit
+abbrev Hilbert (X : Type u) := SemiHilbert X Unit
 
 
 namespace SemiHilbert 
@@ -108,6 +107,8 @@ namespace SemiHilbert
     semi_inner_ext := sorry
   }
 
+  -- instance : Hilbert ℝ := by infer_instance
+
   instance (X Y Dom) [SemiHilbert X Dom] [SemiHilbert Y Dom] : SemiHilbert (X × Y) Dom := 
   {
     semi_inner_add := sorry
@@ -117,7 +118,7 @@ namespace SemiHilbert
     semi_inner_ext := sorry
   }
 
-  instance (ι : Type) (X Dom ) [SemiHilbert X Dom] [Enumtype ι] : SemiHilbert (ι → X) Dom := 
+  instance (ι : Type u) (X Dom ) [SemiHilbert X Dom] [Enumtype ι] : SemiHilbert (ι → X) Dom := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
