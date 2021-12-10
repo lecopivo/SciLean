@@ -3,10 +3,7 @@ import SciLean.Categories
 
 namespace SciLean
 
-instance {n X} [Vec X] : IsLin (Iterable.sum : (Fin n → X) → X) := sorry
+instance {X ι} [Vec X] [Iterable ι] : IsLin (Iterable.sum : (ι → X) → X) := sorry
 
 @[inline] 
-def kron {n} (i j : Fin n) : ℝ := if (i==j) then 1 else 0
-
-
-
+def kron {ι} (i j : ι) [DecidableEq ι] : ℝ := if (i==j) then 1 else 0

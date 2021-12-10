@@ -31,7 +31,6 @@ def testFunction {X Dom} (D : Dom) (x : X) [SemiInner X Dom] : Prop := SemiInner
 @[reducible]
 instance {X S} [SemiInner X S] : SemiInnerTrait X := ⟨S⟩
 
-
 abbrev semiInner {X : Type u} [SemiInnerTrait X] [inst : SemiInner X (SemiInnerTrait.domOf X)] 
        := SemiInner.semiInner (self := inst) 
 
@@ -118,7 +117,7 @@ namespace SemiHilbert
     semi_inner_ext := sorry
   }
 
-  instance (ι : Type) (X Dom )[SemiHilbert X Dom] [Enumtype ι] : SemiHilbert (ι → X) Dom := 
+  instance (ι : Type) (X Dom ) [SemiHilbert X Dom] [Enumtype ι] : SemiHilbert (ι → X) Dom := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry

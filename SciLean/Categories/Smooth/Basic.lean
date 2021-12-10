@@ -1,15 +1,13 @@
-import SciLean.Algebra
--- import SciLean.Categories.Basic
+import SciLean.Mathlib.Convenient.Basic
 import SciLean.Categories.Lin
 
 namespace SciLean
 
 variable {X Y} [Vec X] [Vec Y]
 
--- Move this to Mathlib
-def convenient.is_smooth (f : X → Y) : Prop := sorry
+open SciLean.Mathlib.Convenient
 
-class IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_diff : convenient.is_smooth f)
+class IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_smooth : is_smooth f)
 
 -- instance (f : X → Y) [IsSmooth f] : FetchProof IsSmooth f := by constructor; assumption
 

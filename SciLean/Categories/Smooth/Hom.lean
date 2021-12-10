@@ -7,7 +7,7 @@ variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 
 def Hom (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsSmooth f}
 
-infixr:25 "⟿" => Hom
+infixr:25 " ⟿ " => Hom
 
 instance {X Y} [Vec X] [Vec Y] : CoeFun (X ⟿ Y) (λ _ => X → Y) := ⟨λ f => f.1⟩
 instance {X Y} [Vec X] [Vec Y] (f : X ⟿ Y) : IsSmooth (f : X → Y) := by apply f.2
@@ -63,6 +63,13 @@ namespace Hom
   instance : Module ℝ (X ⟿ Y) := Module.mk sorry sorry
 
   instance : Vec (X ⟿ Y) := Vec.mk
+  
+  open SemiInnerTrait in
+  instance [SemiInnerTrait X] [SemiInner X (domOf X)] : SemiInner (ℝ ⟿ X) ((ℝ × ℝ) × (domOf X)) :=
+  {
+    semiInner := λ f g ((a,b),D) => Mathlib.Convenient.integrate a b (λ t => ⟪f t, g t⟫ D) sorry
+    testFunction := sorry  -- TODO: define test functions on an interval - Probably functions with compact support strictly inside of (a,b). Alternatively, all defivatives vanish at a and b
+  }
 
   abbrev mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : X ⟿ Y := ⟨f, by infer_instance⟩
 
@@ -82,6 +89,9 @@ namespace Hom
   example : X ⟿ ℝ → X := λ (x : X) (r : ℝ) ⟿ r*x
   example : X → ℝ ⟿ X := λ (x : X) (r : ℝ) ⟿ r*x
 
+  variable (x : X)
+
+  #check λ (x : X) => (λ (t : ℝ) ⟿ x)
 
   -- This instance is probably a bad idea ... but I'm not sure
   -- instance {X Y Y' Z'} [Vec X] [Vec Y] [CoeFun Y (λ _ => Y' → Z')] : CoeFun (X ⟿ Y) (λ _ => X → Y' → Z') := ⟨λ f x => f.1 x⟩

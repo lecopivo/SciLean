@@ -317,6 +317,8 @@
    - [[https://github.com/google-research/dex-lang][Dex]]
    - [[https://futhark-lang.org/][furthark]]
 
+   - [[https://github.com/kztk-m/sparcl][Sparcl]] - partially-invertible computation
+
 *** Vaguely related software
 
     - [[https://github.com/enso-org/enso][Enso]] - hybrid visual & textual programming language

@@ -4,19 +4,22 @@ open Function
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type}  [Hilbert X] [Hilbert Y] [Hilbert Z]
+variable {X Y Z Dom : Type}  [SemiHilbert X Dom] [SemiHilbert Y Dom] [SemiHilbert Z Dom]
 
 namespace Adjoint
 
   variable (f g : X → Y) 
   variable (r : ℝ)
 
+  instance : HasAdjoint (λ x : X×X => x.1 + x.2) := sorry
   @[simp]
   theorem adjoint_of_hadd : (λ x : X×X => x.1 + x.2)† = (λ x => (x,x)) := sorry
+
   @[simp]
-  theorem adjoint_of_add : (λ x : X×X => Add.add x.1 x.2)† = (λ x => (x,x)) := sorry
+  theorem add_normalize [Add α] (a b : α) : Add.add a b = a + b := by simp[HAdd.hAdd] done
+
   @[simp]
-  theorem adjoint_of_add_of_fun [IsLin f] [IsLin g] :   (f + g)† = f† + g† := by simp[HAdd.hAdd, Add.add]; funext a; simp
+  theorem adjoint_of_add_of_fun [HasAdjoint f] [HasAdjoint g] : (f + g)† = f† + g† := by simp[HAdd.hAdd, Add.add]; funext a; simp[uncurry]; done
   @[simp]
   theorem adjoint_of_add_of_fun_arg [IsLin f] [IsLin g] : (λ x => f x + g x)† = (λ y => f† y + g† y) := by simp[HAdd.hAdd, Add.add]; funext a; simp
   @[simp]
