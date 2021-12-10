@@ -37,21 +37,44 @@ namespace Adjoint
 
   @[simp]
   theorem inner_adjoint_fst_right_test
-          (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] : (h : testFunction D x) → ⟪f† y, x⟫ D = ⟪y, f x⟫ D := sorry
+    (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] 
+    : 
+      (h : testFunction D x) 
+      → ⟪f† y, x⟫ D = ⟪y, f x⟫ D
+    := sorry
+
   @[simp]
   theorem inner_adjoint_fst_left_test
-          (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] : (h : testFunction D y) → ⟪f† y, x⟫ D = ⟪y, f x⟫ D := sorry
+    (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] 
+    : 
+      (h : testFunction D y) 
+      → ⟪f† y, x⟫ D = ⟪y, f x⟫ D 
+    := sorry
+
   @[simp]
   theorem inner_adjoint_snd_right_test 
-          (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] : (h : testFunction D x) → ⟪x, f† y⟫ D = ⟪f x, y⟫ D := sorry
+    (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] 
+    : 
+      (h : testFunction D x) 
+      → ⟪x, f† y⟫ D = ⟪f x, y⟫ D 
+    := sorry
+
   @[simp]
   theorem inner_adjoint_snd_left_test
-          (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] : (h : testFunction D y) → ⟪x, f† y⟫ D = ⟪f x, y⟫ D := sorry
+    (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] 
+    : 
+      (h : testFunction D y) 
+      → ⟪x, f† y⟫ D = ⟪f x, y⟫ D 
+    := sorry
 
   theorem inner_ext {X} [SemiInnerTrait X] [SemiHilbert X (𝓘 X)] (x y : X) 
-    : (∀ (x' : X) (D : 𝓘 X), testFunction D x' → (⟪x, x'⟫ D) = (⟪y, x'⟫ D)) → (x = y) := sorry 
+    : 
+      (∀ (x' : X) (D : 𝓘 X), testFunction D x' → (⟪x, x'⟫ D) = (⟪y, x'⟫ D)) 
+      → (x = y)
+    := sorry 
 
-  -- TODO: This needs some refinement as currnetly you need to write a semicolon after `inner_ext` if you do not want to specify all arguments
+  -- TODO: This needs some refinement as currnetly you need to write a semicolon
+  --       after `inner_ext` if you do not want to specify all arguments
   syntax "inner_ext" (ident)? (ident)? (ident)? : tactic
   macro_rules
     | `(tactic| inner_ext ) => `(tactic| inner_ext ϕ D h)
@@ -59,7 +82,8 @@ namespace Adjoint
     | `(tactic| inner_ext $x $D) => `(tactic| inner_ext $x $D h)
     | `(tactic| inner_ext $x $D $h) => `(tactic| apply inner_ext; intro $x $D $h)
 
-  -- Having adjoint actually implies linearity. The converse is not true in our scenario, Convenient Vector spaces, as we do not have Riesz representation theorem.
+  -- Having adjoint actually implies linearity. The converse is not true in our 
+  -- scenario, Convenient Vector spaces, as we do not have Riesz representation theorem.
   instance (f : X → Y) [HasAdjoint f] : IsLin f := sorry
   instance (f : X → Y) [HasAdjoint f] : IsLin f† := sorry
   instance (f : X → Y) [HasAdjoint f] : HasAdjoint f† := sorry
@@ -107,35 +131,65 @@ namespace Adjoint
       : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
 
   @[simp]
-  theorem adjoint_of_parm {ι : Type} (f : X → ι → Y) (i : ι) [Enumtype ι] [HasAdjoint f] 
-      : (λ x => f x i)† = (λ y => f† (λ j => (kron i j)*y)) := sorry
+  theorem adjoint_of_parm {ι : Type} [Enumtype ι] 
+    (f : X → ι → Y) (i : ι) [HasAdjoint f] 
+    : 
+      (λ x => f x i)† = (λ y => f† (λ j => (kron i j)*y)) 
+    := sorry
 
   @[simp]
   theorem adjoint_of_arg {n} [NonZero n] 
       (f : Y → Fin n → Z) [HasAdjoint f]
       (g1 : X → Y) [HasAdjoint g1]
       (g2 : Fin n → Fin n) [IsInv g2]
-      : (λ x i => f (g1 x) (g2 i))† = g1† ∘ f† ∘ (λ h => h ∘ g2⁻¹) := sorry
+      : 
+        (λ x i => f (g1 x) (g2 i))† = g1† ∘ f† ∘ (λ h => h ∘ g2⁻¹) 
+      := sorry
 
   @[simp] 
-  theorem adjoint_of_comp (f : Y → Z) [HasAdjoint f] (g : X → Y) [HasAdjoint g] 
-      : (λ x => f (g x))† = g† ∘ f† := sorry
+  theorem adjoint_of_comp 
+    (f : Y → Z) (g : X → Y) [HasAdjoint f] [HasAdjoint g] 
+    : 
+      (λ x => f (g x))† = g† ∘ f† 
+    := sorry
 
   @[simp] 
-  theorem adjoint_of_comp_arg {n} (f : β → Y → Z) [∀ b, HasAdjoint (f b)] (g1 : Fin n → β) (g2 : X → Fin n → Y) [HasAdjoint g2] 
-      : (λ x i => (f (g1 i) (g2 x i)))† = g2† ∘ (λ z i => (f (g1 i))† (z i)) := sorry
+  theorem adjoint_of_comp_arg {ι} [Enumtype ι]
+    (f : β → Y → Z) (g1 : ι → β) (g2 : X → ι → Y) 
+    [∀ b, HasAdjoint (f b)] [HasAdjoint g2] 
+    : 
+      (λ x i => (f (g1 i) (g2 x i)))† = g2† ∘ (λ z i => (f (g1 i))† (z i)) 
+    := sorry
 
   @[simp]
-  theorem adjoint_of_pullback {ι κ} [Enumtype ι] [Enumtype κ] [Inhabited ι] (g : ι → κ) [IsInv g]
-      : (λ (f : κ → X) i => f (g i))† = (λ f => f ∘ g⁻¹) := sorry
+  theorem adjoint_of_pullback {ι κ} [Enumtype ι] [Enumtype κ] [Inhabited ι] 
+    (g : ι → κ) [IsInv g]
+    : 
+      (λ (f : κ → X) i => f (g i))† = (λ f => f ∘ g⁻¹) 
+    := 
+  by 
+    admit
 
-  -- Unfortunatelly this theorem is dangerous and causes simp to loop indefinitely if used in simp
-  theorem adjoint_of_comp_parm (f : Y → β → Z) (b : β) [HasAdjoint (λ y => f y b)] (g : X → Y) [HasAdjoint g] 
-      : (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† := sorry
+  -- Unfortunatelly this theorem is dangerous and causes simp to loop 
+  -- indefinitely if used in simp
+  theorem adjoint_of_comp_parm 
+    (f : Y → β → Z) (g : X → Y) (b : β) 
+    [HasAdjoint (λ y => f y b)] [HasAdjoint g] 
+    : 
+      (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† 
+    := 
+  by 
+    admit
 
   -- @[simp]
-  theorem adjoint_of_comp_parm' (f : Y → β → γ → Z) (c) (b : β) [HasAdjoint (λ y => f y b c)] (g : X → Y) [HasAdjoint g] 
-      : (λ x => f (g x) b c)† = g† ∘ (λ y => f y b c)† := sorry
+  theorem adjoint_of_comp_parm' 
+    (f : Y → β → γ → Z) (g : X → Y) (b c) 
+    [HasAdjoint (λ y => f y b c)] [HasAdjoint g] 
+    : 
+      (λ x => f (g x) b c)† = g† ∘ (λ y => f y b c)† 
+    := 
+  by
+    admit
 
 
   open Function
@@ -144,22 +198,41 @@ namespace Adjoint
 
   @[simp]
   theorem adjoint_of_diag 
-      (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
-      [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2]
-      : (λ x => f (g1 x) (g2 x))† = (uncurry HAdd.hAdd) ∘ (Prod.map g1† g2†) ∘ (uncurry f)† := sorry
+    (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
+    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
+    [HasAdjoint g1] [HasAdjoint g2]
+    : 
+      (λ x => f (g1 x) (g2 x))†
+      = 
+      (uncurry HAdd.hAdd) ∘ (Prod.map g1† g2†) ∘ (uncurry f)† 
+    := 
+  by 
+    admit
 
   @[simp]
   theorem adjoint_of_diag_arg
-      (f : Y1 → Y2 → Z) (g1 : X → ι → Y1) (g2 : X → ι → Y2)
-      [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2]
-      : (λ x i => f (g1 x i) (g2 x i))† = (uncurry HAdd.hAdd) ∘ (Prod.map g1† g2†) ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) ∘ (comp (uncurry f)†) := sorry
+    (f : Y1 → Y2 → Z) (g1 : X → ι → Y1) (g2 : X → ι → Y2)
+    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
+    [HasAdjoint g1] [HasAdjoint g2]
+    : 
+      (λ x i => f (g1 x i) (g2 x i))† 
+      = 
+      (uncurry HAdd.hAdd) 
+      ∘ (Prod.map g1† g2†) 
+      ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) 
+      ∘ (comp (uncurry f)†) 
+    := sorry
 
   -- This one is dangerous too
   @[simp]
   theorem adjoint_of_diag_arg_1 
-      (f : Y → β → Z) (g1 : X → ι → Y) (g2 : ι → β)
-      [∀ b, HasAdjoint (λ y : Y => f y b)] [HasAdjoint g1] 
-      : (λ x i => f (g1 x i) (g2 i))† = g1† ∘ (λ h i => (λ y => f y (g2 i))† (h i)) := sorry
+    (f : Y → β → Z) (g1 : X → ι → Y) (g2 : ι → β)
+    [∀ b, HasAdjoint (λ y : Y => f y b)] [HasAdjoint g1] 
+    : 
+      (λ x i => f (g1 x i) (g2 i))† 
+      = 
+      g1† ∘ (λ h i => (λ y => f y (g2 i))† (h i)) 
+    := sorry
 
   --------------------------------------------------------------------------------------------
 
