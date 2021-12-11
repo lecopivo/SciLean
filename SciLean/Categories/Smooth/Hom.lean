@@ -82,7 +82,38 @@ namespace Hom
   macro "funₛ" xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
   macro "λₛ"   xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
 
-  instance (f : X → (Y → Z)) [IsSmooth f] [∀ x, IsSmooth (f x)] : IsSmooth (λ x => Hom.mk (f x)) := sorry
+  -- Any system in this??? We are basically just restricting a function
+  -- to a linear subspace. This does not change the fact if it is 
+  -- differentiable or linear.
+  instance (f : X → (Y → Z)) [IsSmooth f] [∀ x, IsSmooth (f x)] 
+    : IsSmooth (λ x => (λ y ⟿ f x y)) := sorry
+
+  instance (f : X → Y → Z → W) 
+    [IsSmooth f] [∀ x, IsSmooth (f x)] [∀ x y, IsSmooth (f x y)] 
+    : 
+      IsSmooth (λ x => (λ y z ⟿ f x y z)) := sorry
+
+  instance (f : X → Y → Z) 
+    [IsSmooth f] [∀ x, IsLin (f x)]
+    : 
+      IsSmooth (λ x => (λ y ⊸ f x y)) := sorry
+
+  instance (f : X → Y → Z) 
+    [IsLin f] [∀ x, IsSmooth (f x)]
+    : 
+      IsLin (λ x => (λ y ⟿ f x y)) := sorry
+
+
+  instance (f : X → Y → Z → W) 
+    [IsSmooth f] [∀ x, IsSmooth (f x)] [∀ x y, IsLin (f x y)]
+    : 
+      IsSmooth (λ x => (λ y ⟿ λ z ⊸ f x y z)) := sorry
+
+  instance (f : X → Y → Z → W) 
+    [IsLin f] [∀ x, IsSmooth (f x)] [∀ x y, IsLin (f x y)]
+    : 
+      IsLin (λ x => (λ y ⟿ λ z ⊸ f x y z)) := sorry
+
   example : X ⟿ X := fun (x : X) ⟿ x
   example : X ⟿ ℝ ⟿ X := fun (x : X) (r : ℝ) ⟿ r*x
   example : X ⟿ ℝ ⟿ X := λ (x : X) (r : ℝ) ⟿ r*x
@@ -98,6 +129,7 @@ namespace Hom
   -- example : X → ℝ → X := λ (x : X) (r : ℝ) ⟿ r*x
 
 end Hom
+
 
 
 

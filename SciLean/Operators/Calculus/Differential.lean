@@ -1,15 +1,11 @@
 import SciLean.Operators.Calculus.Basic
 
-namespace SciLean.Differential
+namespace SciLean.Smooth
 
 variable {α β γ : Type}
 variable {β1 β2 β3 β4 : Type}
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 variable {Y1 Y2 Y3 Y4 : Type} [Vec Y1] [Vec Y2] [Vec Y3] [Vec Y4]
-
-instance (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
--- TODO: Change IsSmooth to IsDiff
-instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
 
 @[simp] 
 theorem differential_at_zero (f : X → Y) [IsSmooth f] (x : X)
@@ -121,3 +117,33 @@ theorem differential_of_diag_parm_2 (f : Y1 → Y2 → Z) (g1 : X → β → Y1)
         [IsSmooth f] [∀ y1, IsSmooth (f y1)] [IsSmooth g1] [IsSmooth g2]
         (x dx : X) (b : β)
         : δ (λ (x : X) (b : β) => f (g1 x b) (g2 x b)) x dx b = δ f (g1 x b) (δ g1 x dx b) (g2 x b) + δ (f (g1 x b)) (g2 x b) (δ g2 x dx b) := sorry 
+
+
+-- variable (X Y : Type) [Vec X] [Vec Y]
+
+set_option synthInstance.maxHeartbeats 50000
+
+instance : IsLin (λ (f : X ⟿ Y) => δ f.1) := sorry
+instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
+instance (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
+
+noncomputable
+def diff := λ (f : X ⟿ Y) ⊸ (λ x ⟿ λ dx ⊸ δ f.1 x dx)
+
+noncomputable
+def derivative:= λ (f : ℝ ⟿ Y) ⊸ (λ x ⟿ (δ f.1 x (1 : ℝ)))
+
+
+-- instance : HasAdjoint (diff (X := ℝ) (Y := ℝ)).1  := sorry
+
+-- @[simp]
+-- theorem diff_adjoint : diff† = 
+
+#check λ (f : X ⟿ Y) ⟿ (λ x dx ⟿ δ f.1 x dx)
+#check λ (f : X ⟿ Y) ⊸ (λ x ⟿ λ dx ⊸ δ f.1 x dx)
+
+#check Smooth.Hom.mk
+instance : IsSmooth (λ (f : X ⟿ Y) => f.1) := by infer_instance
+                   
+
+

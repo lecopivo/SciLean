@@ -73,3 +73,6 @@ namespace Adjoint
   theorem adjoint_of_inner_1' {X Y : Type} [Hilbert X] [Hilbert Y] (f : X → Y) [HasAdjoint f] (y : Y) : (λ x : X => ⟪f x, y⟫ ())† = (λ (s : ℝ) => s * f† y) := by funext r; autoadjoint; simp; admit
   @[simp]
   theorem adjoint_of_inner_2' {X Y : Type} [Hilbert X] [Hilbert Y] (f : X → Y) [HasAdjoint f] (y : Y) : (λ x : X => ⟪y, f x⟫ ())† = (λ (s : ℝ) => s * f† y) := by sorry
+
+
+  
