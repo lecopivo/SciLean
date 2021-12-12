@@ -41,7 +41,7 @@ variable (r : ℝ)
 @[simp] theorem inner_mul_2 (r : ℝ) (x y : U) : ⟪x, r * y⟫ = r * ⟪x,y⟫ := sorry
 
 @[simp] theorem inner_prod (u u' : U) (v v' : V) : ⟪(u,v), (u',v')⟫ = ⟪u,u'⟫ + ⟪v,v'⟫ := sorry
-@[simp] theorem inner_real (x y : ℝ) : ⟪x, y⟫ () = x * y := sorry
+@[simp] theorem inner_real (x y : ℝ) : ⟪x, y⟫ = x * y := sorry
 
 @[simp] theorem add_same_1 (a b : ℝ) (x : X) : a*x + b*x = (a+b)*x := sorry
 @[simp] theorem add_same_2 (a : ℝ) (x : X) : a*x + x = (a+1)*x := sorry

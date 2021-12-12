@@ -10,23 +10,31 @@ import SciLean.Simp
 
 namespace SciLean
 
-variable {α β γ : Type}
-variable {X Y Z Dom : Type} [SemiHilbert X Dom] [SemiHilbert Y Dom] [SemiHilbert Z Dom]
 
-prefix:max "𝓘" => SemiInnerTrait.domOf 
+prefix:max "𝓘" => SemiInner.Signature.Dom
+
+open SemiInner
 
 --- Notes on the definition:
 ---       1. Existence is postulated because we do not work with complete vector spaces
 ---       2. condition `testFunction D x` is there to prove uniquness of adjoint
 ---       3. condition `testFunction D y` is there to prove f†† = f
 ---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
-class HasAdjoint {X Y} [SemiInnerTrait X] [SemiHilbert X (𝓘 X)] [sy : SemiHilbert Y (𝓘 X)] (f : X → Y) : Prop  where
-  hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (D : 𝓘 X), 
-                 (testFunction D x ∨ testFunction D y → ⟪f' y, x⟫ = ⟪y, f x⟫)
-  preservesTestFun : ∀ (x : X) (D : 𝓘 X), testFunction D x → testFunction D (f x)
+
+class HasAdjoint {X Y} [Trait X] [Signature (sigOf X)] [Vec (sigOf X)] 
+  [SemiHilbert X (sigOf X)] [sy : SemiHilbert Y (sigOf X)] (f : X → Y) : Prop  
+  where
+    hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (D : 𝓘 (sigOf X)), 
+                   (testFunction D x ∨ testFunction D y → ⟪f' y, x⟫ = ⟪y, f x⟫)
+    preservesTestFun : ∀ (x : X) (D : 𝓘 (sigOf X)), testFunction D x → testFunction D (f x)
 
 noncomputable
-def adjoint {X Y} [SemiInnerTrait X] [SemiHilbert X (𝓘 X) ] [SemiHilbert Y (𝓘 X)] (f : X → Y) : Y → X :=
+def adjoint {X Y} [Trait X] [Signature (sigOf X)] [Vec (sigOf X)] 
+    [SemiHilbert X (sigOf X) ] [SemiHilbert Y (sigOf X)] 
+    (f : X → Y) 
+    : 
+      Y → X 
+    :=
     match Classical.propDecidable (HasAdjoint f) with
       | isTrue  h => Classical.choose (HasAdjoint.hasAdjoint (self := h))
       | _ => (0 : Y → X)
@@ -35,41 +43,44 @@ postfix:max "†" => adjoint
 
 namespace Adjoint
 
+  variable {α β γ : Type}
+  variable {X Y Z S : Type} [SemiInner.Signature S] [Vec S] [SemiHilbert X S] [SemiHilbert Y S] [SemiHilbert Z S]
+
   @[simp]
   theorem inner_adjoint_fst_right_test
-    (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (D : 𝓘 S) [HasAdjoint f] 
     : 
       (h : testFunction D x) 
-      → ⟪f† y, x⟫ D = ⟪y, f x⟫ D
+      → ⟪f† y, x⟫ = ⟪y, f x⟫
     := sorry
 
   @[simp]
   theorem inner_adjoint_fst_left_test
-    (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (D : 𝓘 S) [HasAdjoint f] 
     : 
       (h : testFunction D y) 
-      → ⟪f† y, x⟫ D = ⟪y, f x⟫ D 
+      → ⟪f† y, x⟫ = ⟪y, f x⟫ 
     := sorry
 
   @[simp]
   theorem inner_adjoint_snd_right_test 
-    (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (D : 𝓘 S) [HasAdjoint f] 
     : 
       (h : testFunction D x) 
-      → ⟪x, f† y⟫ D = ⟪f x, y⟫ D 
+      → ⟪x, f† y⟫ = ⟪f x, y⟫ 
     := sorry
 
   @[simp]
   theorem inner_adjoint_snd_left_test
-    (f : X → Y) (x : X) (y : Y) (D : Dom) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (D : 𝓘 S) [HasAdjoint f] 
     : 
       (h : testFunction D y) 
-      → ⟪x, f† y⟫ D = ⟪f x, y⟫ D 
+      → ⟪x, f† y⟫ = ⟪f x, y⟫
     := sorry
 
-  theorem inner_ext {X} [SemiInnerTrait X] [SemiHilbert X (𝓘 X)] (x y : X) 
+  theorem inner_ext {X} [Trait X] [Signature (sigOf X)] [Vec (sigOf X)] [SemiHilbert X (sigOf X)] (x y : X) 
     : 
-      (∀ (x' : X) (D : 𝓘 X), testFunction D x' → (⟪x, x'⟫ D) = (⟪y, x'⟫ D)) 
+      (∀ (x' : X) (D : 𝓘 (sigOf X)), testFunction D x' → ⟪x, x'⟫ = ⟪y, x'⟫)
       → (x = y)
     := sorry 
 
@@ -129,9 +140,9 @@ namespace Adjoint
   -- theorem adjoint_of_const_on_real [SemiInnerTrait X] [SemiHilbert X (𝓘 X)]
   --     : (λ (x : X) => (λ (t : ℝ) ⟿ x))† = integral := sorry
 
-  @[simp]
-  theorem adjoint_of_sum {ι} [Enumtype ι]
-    : (sum)† = (λ (x : X) (i : ι) => x) := sorry
+  -- @[simp]
+  -- theorem adjoint_of_sum {ι} [Enumtype ι]
+  --   : (sum)† = (λ (x : X) (i : ι) => x) := sorry
 
   @[simp]
   theorem adjoint_of_swap {ι κ} [Enumtype ι] [Enumtype κ]
@@ -212,7 +223,7 @@ namespace Adjoint
 
   open Function
 
-  variable {Y1 Y2 ι} [SemiHilbert Y1 Dom] [SemiHilbert Y2 Dom] [Enumtype ι]
+  variable {Y1 Y2 ι} [SemiHilbert Y1 S] [SemiHilbert Y2 S] [Enumtype ι]
 
   @[simp]
   theorem adjoint_of_diag 

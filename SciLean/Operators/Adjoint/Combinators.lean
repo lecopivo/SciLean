@@ -3,8 +3,12 @@ import SciLean.Operators.Adjoint.Basic
 open Function
 namespace SciLean
 
+open SemiInner
+
 variable {α β γ : Type}
-variable {X Y Z Dom : Type} [SemiHilbert X Dom] [SemiHilbert Y Dom] [SemiHilbert Z Dom]
+variable {X Y Z S : Type} 
+variable [Signature S] [Vec S]
+variable [SemiHilbert X S] [SemiHilbert Y S] [SemiHilbert Z S]
 
 namespace SciLean.Adjoint
 

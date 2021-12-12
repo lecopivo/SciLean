@@ -9,58 +9,72 @@ namespace SciLean
 -- \__ \/ -_) '  \| |  | || ' \| ' \/ -_) '_| |  _/ '_/ _ \/ _` | || / _|  _|
 -- |___/\___|_|_|_|_| |___|_||_|_||_\___|_|   |_| |_| \___/\__,_|\_,_\__|\__|
 
--- Signature of a SemiInner product
--- structure SemiInner.Signature where
---   Dom  : Type -- domain      
---   Dom' : Type -- usuall of type `D → ℝ` (or isomorphic to it) excep in the case of D = Unit then D' is just ℝ
---   eval   : Dom' → Dom → ℝ
--- attribute [reducible]  SemiInner.Signature.Dom'  SemiInner.Signature.Dom  SemiInner.Signature.eval
+namespace SemiInner 
 
-class SemiInner (X : Type u) (Dom : Type v) where
-  semiInner     : X → X → Dom → ℝ
-  testFunction  : Dom → X → Prop
+  class Signature (S : Type u) where
+    Dom : Type v
+    eval : S → Dom → ℝ
 
-class SemiInnerTrait (X : Type u) where
-  domOf : Type v
+  class Trait (X : Type u) where
+    sigOf : Type v
 
-attribute [reducible] SemiInnerTrait.domOf
+  -- attribute [reducible] SignatureDom.Dom
+  attribute [reducible] Trait.sigOf
 
-open SemiInnerTrait in
-def testFunction {X Dom} (D : Dom) (x : X) [SemiInner X Dom] : Prop := SemiInner.testFunction D x
+end SemiInner
 
-@[reducible]
-instance {X S} [SemiInner X S] : SemiInnerTrait X := ⟨S⟩
-
-abbrev semiInner {X : Type u} [SemiInnerTrait X] [inst : SemiInner X (SemiInnerTrait.domOf X)] 
-       := SemiInner.semiInner (self := inst) 
-
--- How to set up priorities correctly? 
-notation "⟪" x ", " y "⟫" => semiInner x y  
-
--- Not sure if I want this coercion, it is a bit overkill
-instance : Coe (Unit → ℝ) ℝ := ⟨λ f => f ()⟩
-notation "∥" x "∥"  => Math.sqrt (SemiInner.semiInner (Dom := Unit) x x ())
+open SemiInner in
+class SemiInner (X : Type u) (S : Type v) [Signature S] where  
+  semi_inner : X → X → S
+  testFunction : Signature.Dom S → X → Prop
 
 namespace SemiInner
 
-  export SemiInnerTrait (domOf)
+  @[reducible]
+  instance {X S} [Signature S] [SemiInner X S] : Trait X := ⟨S⟩
 
-  
-  instance : SemiInner ℝ Unit :=
+  export Trait (sigOf)
+
+  -- @[reducible]
+  -- abbrev domOf (X) [SemiInnerTrait X] [inst : SemiInner X (sigOf X)] 
+  --   := SignatureDom.Dom (sigOf X)
+
+  -- def testFunction {X S} [SemiInner X S]
+  --   (D : domOf X) (x : X) : Prop 
+  --   := SemiInner.testFunctionProp D x
+
+  abbrev semiInner {X : Type u} [Trait X] [Signature (sigOf X)]
+    [inst : SemiInner X (sigOf X)] 
+    := SemiInner.semi_inner (self := inst) 
+
+  -- How to set up priorities correctly? 
+  notation "⟪" x ", " y "⟫" => semiInner x y  
+
+  -- Not sure if I want this coercion, it is a bit overkill
+  instance : Coe (Unit → ℝ) ℝ := ⟨λ f => f ()⟩
+  notation "∥" x "∥"  => Math.sqrt (SemiInner.semiInner (S := Unit) x x ())
+
+  instance : Signature ℝ :=
   {
-    semiInner    := λ x y _ => x * y
+    Dom  := Unit
+    eval := λ r _ => r  
+  }
+
+  instance : SemiInner ℝ ℝ :=
+  {
+    semi_inner       := λ x y => x * y
     testFunction := λ _ _ => True
   }
 
-  instance (X Y Dom) [SemiInner X Dom] [SemiInner Y Dom] : SemiInner (X × Y) Dom :=
+  instance (X Y S) [Vec S] [Signature S] [SemiInner X S] [SemiInner Y S] : SemiInner (X × Y) S :=
   { 
-    semiInner     := λ (x,y) (x',y') => ⟪x,x'⟫ + ⟪y,y'⟫
+    semi_inner        := λ (x,y) (x',y') => ⟪x,x'⟫ + ⟪y,y'⟫
     testFunction  := λ D (x,y) => testFunction D x ∧ testFunction D y
   }
 
-  instance (ι X Dom) [SemiInner X Dom] [Zero X] [Enumtype ι] : SemiInner (ι → X) Dom :=
+  instance (ι X S) [Vec S] [Signature S] [SemiInner X S] [Enumtype ι] : SemiInner (ι → X) S :=
   {
-    semiInner    := λ f g => ∑ i, ⟪f i, g i⟫
+    semi_inner       := λ f g => ∑ i, ⟪f i, g i⟫
     testFunction := λ D f => ∀ i, testFunction D (f i)
   }
 
@@ -69,7 +83,7 @@ namespace SemiInner
   -- def integral {X : Type u} [Vec X] (a b : ℝ) (f : ℝ → X) (h : is_continuous f) : X := sorry
   -- instance (X : Type u) [SemiInner X] [Vec X] : SemiInner (ℝ → X) := 
   -- {
-  --   integrable_domain := (ℝ×ℝ) × integrable_domain X
+  --   integrable_Sain := (ℝ×ℝ) × integrable_Sain X
   --   semi_inner         := λ (f g : ℝ → X) ((a,b), i) => integral a b (λ t => (f t, g t)_[i])
   --   loc_integrable := is_continuous f
   --   test_function := is_smooth f ∧ zero_gradients_at a f ∧ zero_gradients_at b f
@@ -83,22 +97,25 @@ end SemiInner
 -- |___/\___|_|_|_|_| |_||_|_|_|_.__/\___|_|  \__| |___/ .__/\__,_\__\___|
 --                                                     |_|
 
-class SemiHilbert (X : Type u) (Dom : Type v) extends Vec X, SemiInner X Dom  where
+open SemiInner Signature in
+class SemiHilbert (X : Type u) (S : Type v) [Signature S] [Vec S] extends Vec X, SemiInner X S where
   semi_inner_add : ∀ (x y z : X),     ⟪x + y, z⟫ = ⟪x,z⟫ + ⟪y,z⟫
   semi_inner_mul : ∀ (x y : X) (r : ℝ),  ⟪r*x,y⟫ = r*⟪x,y⟫
   semi_inner_sym : ∀ (x y : X),            ⟪x,y⟫ = ⟪y,x⟫
-  semi_inner_pos : ∀ (x : X) D, (⟪x,x⟫ D) ≥ (0 : ℝ)
-  semi_inner_ext : ∀ (x : X), ((x = 0) ↔ (∀ D (x' : X) (h : testFunction D x'), ⟪x,x'⟫ D = 0))
+  semi_inner_pos : ∀ (x : X) D, (eval ⟪x,x⟫ D) ≥ (0 : ℝ)
+  semi_inner_ext : ∀ (x : X), 
+                     ((x = 0) 
+                      ↔ 
+                      (∀ D (x' : X) (h : testFunction D x'), eval ⟪x,x'⟫ D = 0))
   -- Add test functions form a subspace
 
-abbrev Hilbert (X : Type u) := SemiHilbert X Unit
-
+abbrev Hilbert (X : Type u) := SemiHilbert X ℝ
 
 namespace SemiHilbert 
 
   open SemiInner
 
-  instance : SemiHilbert ℝ Unit := 
+  instance : SemiHilbert ℝ ℝ := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -109,7 +126,8 @@ namespace SemiHilbert
 
   -- instance : Hilbert ℝ := by infer_instance
 
-  instance (X Y Dom) [SemiHilbert X Dom] [SemiHilbert Y Dom] : SemiHilbert (X × Y) Dom := 
+  instance (X Y S) [Signature S] [Vec S] [SemiHilbert X S] [SemiHilbert Y S] 
+    : SemiHilbert (X × Y) S := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -118,7 +136,8 @@ namespace SemiHilbert
     semi_inner_ext := sorry
   }
 
-  instance (ι : Type u) (X Dom ) [SemiHilbert X Dom] [Enumtype ι] : SemiHilbert (ι → X) Dom := 
+  instance (ι : Type u) (X S) [Signature S] [Vec S] [SemiHilbert X S] [Enumtype ι] 
+    : SemiHilbert (ι → X) S := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry

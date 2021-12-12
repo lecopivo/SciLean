@@ -63,11 +63,18 @@ namespace Hom
   instance : Module ℝ (X ⟿ Y) := Module.mk sorry sorry
 
   instance : Vec (X ⟿ Y) := Vec.mk
-  
-  open SemiInnerTrait in
-  instance [SemiInnerTrait X] [SemiInner X (domOf X)] : SemiInner (ℝ ⟿ X) ((ℝ × ℝ) × (domOf X)) :=
+
+  open SemiInner Signature in
+  instance (S) [Signature S] : Signature ((ℝ × ℝ) → S) :=
   {
-    semiInner := λ f g ((a,b),D) => Mathlib.Convenient.integrate a b (λ t => ⟪f t, g t⟫ D) sorry
+    Dom := (ℝ × ℝ) × (Dom S)
+    eval := λ f (I, D) => eval (f I) D
+  }
+  
+  open SemiInner in
+  instance (X S) [Signature S] [Vec S] [SemiInner X S] [Vec X] : SemiInner (ℝ ⟿ X) ((ℝ × ℝ) → S) :=
+  {
+    semi_inner := λ f g (a,b) => Mathlib.Convenient.integrate a b (λ t => ⟪f t, g t⟫) sorry
     testFunction := sorry  -- TODO: define test functions on an interval - Probably functions with compact support strictly inside of (a,b). Alternatively, all defivatives vanish at a and b
   }
 
@@ -114,10 +121,11 @@ namespace Hom
     : 
       IsLin (λ x => (λ y ⟿ λ z ⊸ f x y z)) := sorry
 
+  -- set_option synthInstance.maxHeartbeats 50000
   example : X ⟿ X := fun (x : X) ⟿ x
   example : X ⟿ ℝ ⟿ X := fun (x : X) (r : ℝ) ⟿ r*x
   example : X ⟿ ℝ ⟿ X := λ (x : X) (r : ℝ) ⟿ r*x
-  example : X ⟿ ℝ → X := λ (x : X) (r : ℝ) ⟿ r*x
+  -- example : X ⟿ ℝ → X := λ (x : X) (r : ℝ) ⟿ r*x
   example : X → ℝ ⟿ X := λ (x : X) (r : ℝ) ⟿ r*x
 
   variable (x : X)

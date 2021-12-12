@@ -5,8 +5,12 @@ import SciLean.Simp
 open Function
 namespace SciLean
 
+open SemiInner
+
 variable {α β γ : Type}
-variable {X Y Z Dom : Type}  [SemiHilbert X Dom] [SemiHilbert Y Dom] [SemiHilbert Z Dom]
+variable {X Y Z S : Type} 
+variable [Signature S] [Vec S]
+variable [SemiHilbert X S] [SemiHilbert Y S] [SemiHilbert Z S]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
 namespace Adjoint
@@ -18,6 +22,8 @@ namespace Adjoint
   instance : HasAdjoint (λ x : X×X => x.1 + x.2) := sorry
   @[simp]
   theorem adjoint_of_hadd : (λ x : X×X => x.1 + x.2)† = (λ x => (x,x)) := sorry
+
+  set_option trace.Meta.synthInstance true in
   @[simp]
   theorem adjoint_of_add_of_fun [HasAdjoint f] [HasAdjoint g] : (f + g)† = f† + g† := by funext a; simp[HAdd.hAdd, Add.add]; done
   @[simp]
