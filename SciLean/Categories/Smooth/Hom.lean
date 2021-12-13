@@ -85,8 +85,8 @@ namespace Hom
   @[reducible] instance {X} [Trait X] [Vec X] : Trait (ℝ ⟿ X) := 
     ⟨(Trait.sig X).addInterval⟩
 
-  open SemiInner in
-  example {X} [Trait X] [Vec X] [SemiInner X] [Vec (Trait.sig X).R] : SemiInner (ℝ ⟿ X) := SemiInner.mk
+  -- open SemiInner in
+  -- example {X} [Trait X] [Vec X] [SemiInner X] [Vec (Trait.sig X).R] : SemiInner (ℝ ⟿ X) := SemiInner.mk
 
   abbrev mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : X ⟿ Y := ⟨f, by infer_instance⟩
 

@@ -55,9 +55,9 @@ section AutoCompleteS
 
 
   -- these might be dangerouds
-  @[reducible] instance {X} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert' X (Trait.sig X)] : SemiHilbert X := SemiHilbert.mk (X := X)
+  -- @[reducible] instance {X} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert' X (Trait.sig X)] : SemiHilbert X := SemiHilbert.mk (X := X)
   @[reducible] instance {X S} [SemiInner' X S] : Trait X := ⟨S⟩
-  @[reducible] instance {X} [Trait X] [SemiInner' X (Trait.sig X)] : SemiInner X := SemiInner.mk
+  -- @[reducible] instance {X} [Trait X] [SemiInner' X (Trait.sig X)] : SemiInner X := SemiInner.mk
 
 
 end AutoCompleteS
@@ -83,9 +83,9 @@ namespace Adjoint
   -- set_option synthInstance.maxHeartbeats 5000
                 
   example : SemiHilbert' X (Trait.sig X) := by infer_instance
-  example : SemiHilbert X := by infer_instance
-  example : SemiHilbert Y := by infer_instance
-  example : SemiHilbert Z := by infer_instance
+  -- example : SemiHilbert X := by infer_instance
+  -- example : SemiHilbert Y := by infer_instance
+  -- example : SemiHilbert Z := by infer_instance
 
 
   @[simp]
@@ -120,7 +120,7 @@ namespace Adjoint
       → ⟪x, f† y⟫ = ⟪f x, y⟫
     := sorry
 
-  theorem inner_ext {X} [Trait X] [Vec (Trait.sig X).R] [SemiInner X]  (x y : X)
+  theorem inner_ext {X} [Trait X] [Vec (Trait.sig X).R] [SemiInner' X (Trait.sig X)]  (x y : X)
     : 
       (∀ (x' : X) (D : (Trait.sig X).D), testFunction D x' → ⟪x, x'⟫ = ⟪y, x'⟫)
        → (x = y)

@@ -84,21 +84,21 @@ theorem test2 : IsSmooth (λ x => x |> f) := by infer_instance
 theorem test3 : IsSmooth (λ x => x |> f |> f) := by infer_instance
 theorem test4 : IsSmooth (λ (g : X → X) x => f (g x)) := by infer_instance
 theorem test5 : IsSmooth (λ (g : X → X) x => g (f x)) := by infer_instance
--- theorem test6 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g) := by infer_instance
+theorem test6 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g) := by infer_instance
 theorem test7 : IsSmooth (λ (g : X → X) x => f (f (g x))) := by infer_instance
 theorem test8 : IsSmooth (λ (g : X → X) x => f (g (f x))) := by infer_instance
--- theorem test9 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f) := by infer_instance
+theorem test9 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f) := by infer_instance
 theorem test10 : IsSmooth (λ (g : X → X) x => g (f (f x))) := by infer_instance
--- theorem test11 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g) := by infer_instance
--- theorem test12 : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g) := by infer_instance
--- theorem test13 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g) := by infer_instance
+theorem test11 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g) := by infer_instance
+theorem test12 : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g) := by infer_instance
+theorem test13 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g) := by infer_instance
 theorem test14 : IsSmooth (λ (g : X → X) x => x |> g |> f |> f |> f) := by infer_instance
 theorem test15 : IsSmooth (λ (g : X → X) x => x |> f |> g |> f |> f) := by infer_instance
--- theorem test16 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f |> f) := by infer_instance
+theorem test16 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f |> f) := by infer_instance
 theorem test17 : IsSmooth (λ (g : X → X) x => x |> f |> f |> g |> f) := by infer_instance
--- theorem test18 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g |> f) := by infer_instance
--- theorem test19 : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g |> f) := by infer_instance
--- theorem test20 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g |> f) := by infer_instance
+theorem test18 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g |> f) := by infer_instance
+theorem test19 : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g |> f) := by infer_instance
+theorem test20 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g |> f) := by infer_instance
 theorem test21 : IsSmooth (λ (g : X → X) x => x |> f |> f |> f |> g) := by infer_instance
 
 end foldtest
