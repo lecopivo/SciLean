@@ -5,7 +5,7 @@ namespace SciLean.Smooth
 variable {α β γ : Type} 
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 
-def Hom (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsSmooth f}
+abbrev Hom (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsSmooth f}
 
 infixr:25 " ⟿ " => Hom
 
