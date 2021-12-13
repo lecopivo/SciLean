@@ -1,6 +1,5 @@
 import SciLean.Algebra
 
-
 namespace SciLean.Mathlib.Convenient
 
   variable {X Y} [Vec X] [Vec Y]

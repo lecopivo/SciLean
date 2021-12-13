@@ -1,9 +1,9 @@
-import SciLean.Categories
-import SciLean.Tactic.Basic
-
 import Mathlib.Algebra.Group.Basic
 import Mathlib.Tactic.Basic
 import Mathlib.Tactic.Ring
+
+import SciLean.Categories
+import SciLean.Tactic.Basic
 
 import Init.Classical
 

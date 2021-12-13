@@ -1,5 +1,6 @@
-import SciLean.Mathlib.Data.ColProd
 import Mathlib.Algebra.Group.Defs
+
+import SciLean.Mathlib.Data.ColProd
 
 -- `first` is `Option ι` because we want `Fin n`, in particular `Fin 0`, to be Iterable.
 -- I do not like it and we might want to define a new `Fin n` where `n` is a true natural number i.e. positive integers
@@ -136,11 +137,11 @@ namespace Iterable
 
   -- It is important to fetch a new instance of `UpperBoundUnsafe` at call site.
   -- That way we are likely to fetch an instance of `UpperBound` if available
-  def sum {α} [Zero α] [Add α] {ι} [Iterable ι] [UpperBoundUnsafe ι] (f : ι → α) : α := do
+  def sum {α} [Zero α] [Add α] {ι} [Iterable ι] [UpperBoundUnsafe ι] (f : ι → α) : α := ((do
     let mut r : α := 0 
     for i in fullRange ι do
       r := r + (f i)
-    r
+    r) : Id α)
 
   macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `Iterable.sum xs b
 

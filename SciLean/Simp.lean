@@ -1,7 +1,7 @@
-import SciLean.Algebra
-
 import Mathlib.Data.Prod
 import Mathlib.Logic.Function.Basic
+
+import SciLean.Algebra
 
 namespace SciLean
 

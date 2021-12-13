@@ -17,7 +17,7 @@ namespace SciLean.Adjoint.Tests
   example (r : ℝ) (x' : X) : (λ x : X => r*((λ x'' => ⟪x', x''⟫) x))† = λ s => r * s * x' := by simp funext s; simp done
   example : (λ (x : Fin n → ℝ) => sum λ i => x i)† 1 = (λ i => (1 : ℝ)) := by simp done
   example {n : Nat} (a : Fin n) [NonZero n] : (λ (f : Fin n → ℝ) i => f (i - a))† = (λ (f : Fin n → ℝ) x => f (x + a)) := by simp funext f x; simp done
-  set_option trace.Meta.Tactic.simp true in
+  -- set_option trace.Meta.Tactic.simp true in
   example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) 
           : (λ (g : Fin n → ℝ) => sum (λ i => (f i) * (g (i+c))))† (1 : ℝ) = (fun i => f (i - c)) := by simp admit
   -- example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) 

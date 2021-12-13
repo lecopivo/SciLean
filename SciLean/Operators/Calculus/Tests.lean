@@ -43,10 +43,11 @@ namespace Differential.Tests
   example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + (r * r + 1) * dr := by simp done
 
   variable (u du u' : U) (v dv : V)
-  example : δ (λ u : U => ⟨u,u'⟩) u du = ⟨du,u'⟩ := by simp done
-  example : δ (λ u : U => ⟨u, u⟩) u du = ⟨du, u⟩ + ⟨u, du⟩ := by simp done
-  example : δ (λ u : U => ⟨⟨u,u⟩*u, u⟩) u du = (⟨du,u⟩ + ⟨u,du⟩)*⟨u,u⟩ + ⟨u,u⟩*(⟨du,u⟩ + ⟨u,du⟩) := by simp done
-  example (v : U) (m k : ℝ) : δ (λ u : U => (1/(2*m))*⟨u,u⟩ + (k/2)*⟨v,v⟩) u du = (1/(2*m))*(⟨du,u⟩ + ⟨u,du⟩) := by simp done
+  -- example : δ (λ u : U => ⟨u,u'⟩) u du = ⟨du,u'⟩ := by simp done
+  -- example : δ (λ u : U => ⟨u, u⟩) u du = ⟨du, u⟩ + ⟨u, du⟩ := by simp done
+  -- example : δ (λ u : U => ⟨⟨u,u⟩*u, u⟩) u du = (⟨du,u⟩ + ⟨u,du⟩)*⟨u,u⟩ + ⟨u,u⟩*(⟨du,u⟩ + ⟨u,du⟩) := by
+  -- simp done
+  -- example (v : U) (m k : ℝ) : δ (λ u : U => (1/(2*m))*⟨u,u⟩ + (k/2)*⟨v,v⟩) u du = (1/(2*m))*(⟨du,u⟩ + ⟨u,du⟩) := by simp done
 
   section GradientTests
 
