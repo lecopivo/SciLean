@@ -43,6 +43,7 @@ namespace maintests
   -- def test21 (f : X → α → X → Y) (a : α) [IsSmooth (λ x y => f x a y)] [∀ x, IsSmooth (λ y => f x a y)] : IsSmooth (λ x => f x a (h x)) := by infer_instance
   -- def test22 (f : X → α → X → Y) (a : α) [IsSmooth (λ x y => f x a y)] [∀ x, IsSmooth (λ y => f x a y)] : IsSmooth (λ x => f (h x) a (h x)) := by infer_instance
   -- def test23 (f : X → α → X → Y) (a : α) [IsSmooth (λ x y => f x a y)] [∀ x, IsSmooth (λ y => f x a y)] : IsSmooth (λ (h : X → X) x => f (h x) a (h x)) := by infer_instance
+  -- set_option trace.Meta.synthInstance true in
   example : IsSmooth (λ (h : X → X) (x : X) => G (h x) a b) := by infer_instance
   example : IsSmooth (λ (h : X → X) (x : X) => H a (h x) b) := by infer_instance
   example : IsSmooth (λ (h : X → X) (x : X) => H' a b (h x)) := by infer_instance

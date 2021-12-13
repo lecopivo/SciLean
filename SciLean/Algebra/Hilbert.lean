@@ -113,7 +113,7 @@ end SemiInner
 section SemiHilbert
 open SemiInner
 
-class SemiHilbert' (X : Type u) (S : Signature) [Vec S.R] extends SemiInner' X S, Vec X where
+class SemiHilbert' (X : Type u) (S : Signature) [outParam $ Vec S.R] extends SemiInner' X S, Vec X where
   semi_inner_add : ∀ (x y z : X),     ⟪S| x + y, z⟫ = ⟪S| x,z⟫ + ⟪S| y,z⟫
   semi_inner_mul : ∀ (x y : X) (r : ℝ),  ⟪S| r*x,y⟫ = r*⟪S| x,y⟫
   semi_inner_sym : ∀ (x y : X),            ⟪S| x,y⟫ = ⟪S| y,x⟫
@@ -136,7 +136,7 @@ abbrev Hilbert (X : Type u) := SemiHilbert' X SemiInner.RealSig
 
 -- I really do not understand why is this necessary ... I think it is a bug
 -- reported here: https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Odd.20type.20class.20failure
-instance {X} [SemiHilbert' X SemiInner.RealSig] : Vec X := SemiHilbert'.toVec SemiInner.RealSig
+-- instance {X} [SemiHilbert' X SemiInner.RealSig] : Vec X := SemiHilbert'.toVec SemiInner.RealSig
 -- Alternatively we can change [Vec S.R] to [outParam $ Vec S.R] 
 -- but this causes some timeouts somewhere else ...
 

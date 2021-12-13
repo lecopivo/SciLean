@@ -139,7 +139,7 @@ def derivative:= λ (f : ℝ ⟿ Y) ⊸ (λ x ⟿ (δ f.1 x (1 : ℝ)))
 -- @[simp]
 -- theorem diff_adjoint : diff† = 
 
-#check λ (f : X ⟿ Y) ⟿ (λ x dx ⟿ δ f.1 x dx)
+-- #check λ (f : X ⟿ Y) ⟿ (λ x dx ⟿ δ f.1 x dx)
 #check λ (f : X ⟿ Y) ⊸ (λ x ⟿ λ dx ⊸ δ f.1 x dx)
 
 #check Smooth.Hom.mk
