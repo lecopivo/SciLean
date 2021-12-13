@@ -1,7 +1,7 @@
 import SciLean.Algebra.Real
 import SciLean.Algebra.Basic
 
-import Mathlib.Algebra.Module.Basic
+import SciLean.Mathlib.Algebra.Module.Basic
 
 -- __   __      _             ___
 -- \ \ / /__ __| |_ ___ _ _  / __|_ __  __ _ __ ___

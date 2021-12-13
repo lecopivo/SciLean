@@ -1,6 +1,6 @@
 import Mathlib.Init.Set
-import Mathlib.Data.Enumtype
 
+import SciLean.Mathlib.Data.Enumtype
 import SciLean.Algebra.Hilbert
 
 namespace SciLean

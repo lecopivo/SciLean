@@ -1,7 +1,7 @@
 import Mathlib
 
 import SciLean.Mathlib.Data.Pi
-import Mathlib.Data.Iterable
+import SciLean.Mathlib.Data.Iterable
 -- import SciLean.Std.Enumtype
 
 -- instance : Neg (Fin n) :=

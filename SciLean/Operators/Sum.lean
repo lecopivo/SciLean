@@ -1,4 +1,4 @@
-import Mathlib.Data.Iterable
+import SciLean.Mathlib.Data.Iterable
 import SciLean.Categories
 
 namespace SciLean
