@@ -85,19 +85,16 @@ namespace Hom
   @[reducible] instance {X} [Trait X] [Vec X] : Trait (ℝ ⟿ X) := 
     ⟨(Trait.sig X).addInterval⟩
 
-  -- open SemiInner in
-  -- example {X} [Trait X] [Vec X] [SemiInner X] [Vec (Trait.sig X).R] : SemiInner (ℝ ⟿ X) := SemiInner.mk
-
-  abbrev mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : X ⟿ Y := ⟨f, by infer_instance⟩
+  abbrev mk {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : X ⟿ Y := ⟨f, by infer_instance⟩
 
   -- Right now, I prefer this notation
-  macro "fun" xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
-  macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
+  macro "fun" xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk xs b
+  macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk xs b
 
   -- alternative notation
   -- I will decide on one after some use
-  macro "funₛ" xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
-  macro "λₛ"   xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk  xs b
+  macro "funₛ" xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk xs b
+  macro "λₛ"   xs:Lean.explicitBinders " => " b:term : term => Lean.expandExplicitBinders `SciLean.Smooth.Hom.mk xs b
 
   -- Any system in this??? We are basically just restricting a function
   -- to a linear subspace. This does not change the fact if it is 
@@ -120,7 +117,6 @@ namespace Hom
     : 
       IsLin (λ x => (λ y ⟿ f x y)) := sorry
 
-
   instance (f : X → Y → Z → W) 
     [IsSmooth f] [∀ x, IsSmooth (f x)] [∀ x y, IsLin (f x y)]
     : 
@@ -135,7 +131,7 @@ namespace Hom
   example : X ⟿ X := fun (x : X) ⟿ x
   example : X ⟿ ℝ ⟿ X := fun (x : X) (r : ℝ) ⟿ r*x
   example : X ⟿ ℝ ⟿ X := λ (x : X) (r : ℝ) ⟿ r*x
-  -- example : X ⟿ ℝ → X := λ (x : X) (r : ℝ) ⟿ r*x
+  example : X ⟿ ℝ → X := λ (x : X) (r : ℝ) ⟿ r*x
   example : X → ℝ ⟿ X := λ (x : X) (r : ℝ) ⟿ r*x
 
   variable (x : X)

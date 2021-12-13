@@ -13,7 +13,3 @@ instance (x : X) : IsSmooth (λ y : X => x - y) := sorry
 
 instance : IsSmooth (λ (s : ℝ) (x : X) => s * x) := sorry
 instance (s : ℝ) : IsSmooth (λ x : X => s * x) := sorry
-
-
--- -- Basic operations with functions
--- instance (f : Y → Z) [IsSmooth f] (g : X → Y) [IsSmooth g] : IsSmooth (f ∘ g) := by simp[Function.comp] infer_instance done
