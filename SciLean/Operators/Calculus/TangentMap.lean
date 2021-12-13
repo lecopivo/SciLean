@@ -69,7 +69,7 @@ set_option synthInstance.maxHeartbeats 5000
 theorem tangent_map_of_composition_2 (f : Y → Z) [IsSmooth f] (gdg : (α → Y)×(α → Y))
     : 𝓣 (λ (g : α → Y) (a : α) => f (g a)) gdg = (λ a => f (gdg.1 a), λ a => δ f (gdg.1 a) (gdg.2 a)) := 
 by  
-  simp[tangent_map]; induction gdg; simp; funext a; simp; done
+  simp[tangent_map]; done
 
 -- TODO: Change IsSmooth to IsDiff
 -- composition is already linear in `f` so probably no need for this other then short-circuiting 
