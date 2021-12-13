@@ -12,14 +12,14 @@ def V := ℝ × ℝ × ℝ
 instance : Hilbert V := by simp[V]; infer_instance
 -- unfortunatelly defining `V` as `abbrev V := ℝ × ℝ` breaks typeclass system and some function cannot be proven smooth anymore :(
 
-def H (m k : ℝ) (x p : V) := 1/(2*m) * ⟨p,p⟩ + k/2 * ⟨x, x⟩
+def H (m k : ℝ) (x p : V) := 1/(2*m) * ⟪p,p⟫ + k/2 * ⟪x, x⟫
 
-example (m k : ℝ) (x p dp : V) : δ (H m k x) p dp = 1/(2*m) * (⟨dp,p⟩ + ⟨p,dp⟩) := 
+example (m k : ℝ) (x p dp : V) : δ (H m k x) p dp = 1/(2*m) * (⟪dp,p⟫ + ⟪p,dp⟫) := 
 by
-  simp[H]
+  delta H
   done
 
-example (p : V) : IsLin (λ dx => 1/2*(⟨dx,p⟩ + ⟨p,dx⟩)) := by infer_instance
+example (p : V) : IsLin (λ dx => 1/2*(⟪dx,p⟫ + ⟪p,dx⟫) := by infer_instance
 
 example : Vec V := by infer_instance
 

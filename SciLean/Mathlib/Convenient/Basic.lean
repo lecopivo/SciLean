@@ -7,6 +7,6 @@ namespace SciLean.Mathlib.Convenient
 
   def is_smooth (f : X → Y) : Prop := sorry
 
-  def integrate (a b : ℝ) (f : ℝ → X) (h : is_smooth f) : X := sorry
+  def integrate [Vec X] (a b : ℝ) (f : ℝ → X) (h : is_smooth f) : X := sorry
   
 end SciLean.Mathlib.Convenient

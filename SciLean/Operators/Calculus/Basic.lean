@@ -8,7 +8,7 @@ namespace SciLean
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
+variable {U V W : Type} {S} [Vec S.R] [SemiHilbert' U S] [SemiHilbert' V S] [SemiHilbert' W S]
 
 ------------------
 -- Differential --
@@ -59,7 +59,7 @@ prefix:max "ⅆ" => derivative
 -- Gradient --
 -------------- 
 noncomputable
-abbrev gradient (f : U → ℝ) : U → U := λ x => (δ f x)† 1
+abbrev gradient [Hilbert U] (f : U → ℝ) : U → U := λ x => (δ f x)† 1
 
 prefix:max "∇" => gradient
 
@@ -76,7 +76,9 @@ prefix:max "𝓣" => tangent_map
 -- Reverse Mode --
 ------------------
 noncomputable 
-def backprop (f : U → V) : U → V×(V→U) := λ x => (f x, (δ f x)†)
+def backprop {U V} [PairTrait U V] [Vec (sig U V).R] 
+  [SemiHilbert' U (sig U V)] [SemiHilbert' V (sig U V)]
+  (f : U → V) : U → V×(V→U) := λ x => (f x, (δ f x)†)
 
 prefix:max "𝓑" => backprop
 

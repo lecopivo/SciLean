@@ -5,50 +5,92 @@ import SciLean.Operators.Sum
 
 import SciLean.Simp
 
-
 -- import Init.Classical
 
 namespace SciLean
 
-
 prefix:max "𝓘" => SemiInner.Signature.Dom
-
-open SemiInner
 
 --- Notes on the definition:
 ---       1. Existence is postulated because we do not work with complete vector spaces
 ---       2. condition `testFunction D x` is there to prove uniquness of adjoint
 ---       3. condition `testFunction D y` is there to prove f†† = f
 ---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
-
-class HasAdjoint {X Y} [Trait X] [Signature (sigOf X)] [Vec (sigOf X)] 
-  [SemiHilbert X (sigOf X)] [sy : SemiHilbert Y (sigOf X)] (f : X → Y) : Prop  
+open SemiInner SemiInner' in
+class HasAdjoint' {X Y} (S) [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] (f : X → Y) : Prop  
   where
-    hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (D : 𝓘 (sigOf X)), 
-                   (testFunction D x ∨ testFunction D y → ⟪f' y, x⟫ = ⟪y, f x⟫)
-    preservesTestFun : ∀ (x : X) (D : 𝓘 (sigOf X)), testFunction D x → testFunction D (f x)
+    hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (D : S.D), 
+                   (testFunction D x ∨ testFunction D y) → ⟪S| f' y, x⟫ = ⟪S| y, f x⟫
+    preservesTestFun : ∀ (x : X) (D : S.D), testFunction D x → testFunction D (f x)
 
+open SemiInner in
 noncomputable
-def adjoint {X Y} [Trait X] [Signature (sigOf X)] [Vec (sigOf X)] 
-    [SemiHilbert X (sigOf X) ] [SemiHilbert Y (sigOf X)] 
-    (f : X → Y) 
+def adjoint' {X Y} (S) [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] 
+    (f : X → Y)
     : 
       Y → X 
     :=
-    match Classical.propDecidable (HasAdjoint f) with
-      | isTrue  h => Classical.choose (HasAdjoint.hasAdjoint (self := h))
+    match Classical.propDecidable (HasAdjoint' S f) with
+      | isTrue  h => Classical.choose (HasAdjoint'.hasAdjoint (self := h))
       | _ => (0 : Y → X)
+
+section AutoCompleteS
+
+  open SemiInner
+
+  class PairTrait (X Y : Type) where
+    sig : Signature
+
+  export PairTrait (sig)
+  attribute [reducible] PairTrait.sig
+
+  @[reducible] instance {X Y} [Trait X] : PairTrait X Y := ⟨Trait.sig X⟩
+  @[reducible] instance {X Y} [Trait Y] : PairTrait X Y := ⟨Trait.sig Y⟩
+
+  variable {X Y} [PairTrait X Y] [Vec (sig X Y).R] [SemiHilbert' X (sig X Y)] [SemiHilbert' Y (sig X Y)] 
+  noncomputable
+  abbrev adjoint (f : X → Y) := adjoint' (sig X Y) f
+
+  abbrev HasAdjoint (f : X → Y) := HasAdjoint' (sig X Y) f
+
+
+  -- these might be dangerouds
+  @[reducible] instance {X} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert' X (Trait.sig X)] : SemiHilbert X := SemiHilbert.mk (X := X)
+  @[reducible] instance {X S} [SemiInner' X S] : Trait X := ⟨S⟩
+  @[reducible] instance {X} [Trait X] [SemiInner' X (Trait.sig X)] : SemiInner X := SemiInner.mk
+
+
+end AutoCompleteS
 
 postfix:max "†" => adjoint
 
 namespace Adjoint
 
+  open SemiInner SemiInner'
+
   variable {α β γ : Type}
-  variable {X Y Z S : Type} [SemiInner.Signature S] [Vec S] [SemiHilbert X S] [SemiHilbert Y S] [SemiHilbert Z S]
+  variable {X Y Z: Type} {S} [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] [SemiHilbert' Z S]
+
+  example : Trait X := by infer_instance
+  example : Trait Y := by infer_instance
+  example : Trait Z := by infer_instance
+  example : PairTrait X Y := by infer_instance
+
+
+  -- open SemiInner in
+  -- instance {X S} [SemiHilbert' X (Trait.sig X)] : Vec (Trait.sig X).R := ⟨S⟩
+  
+  -- set_option synthInstance.maxHeartbeats 5000
+                
+  example : SemiHilbert' X (Trait.sig X) := by infer_instance
+  example : SemiHilbert X := by infer_instance
+  example : SemiHilbert Y := by infer_instance
+  example : SemiHilbert Z := by infer_instance
+
 
   @[simp]
   theorem inner_adjoint_fst_right_test
-    (f : X → Y) (x : X) (y : Y) (D : 𝓘 S) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (D : S.D) [HasAdjoint f] 
     : 
       (h : testFunction D x) 
       → ⟪f† y, x⟫ = ⟪y, f x⟫
@@ -56,7 +98,7 @@ namespace Adjoint
 
   @[simp]
   theorem inner_adjoint_fst_left_test
-    (f : X → Y) (x : X) (y : Y) (D : 𝓘 S) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (D : S.D) [HasAdjoint f] 
     : 
       (h : testFunction D y) 
       → ⟪f† y, x⟫ = ⟪y, f x⟫ 
@@ -64,7 +106,7 @@ namespace Adjoint
 
   @[simp]
   theorem inner_adjoint_snd_right_test 
-    (f : X → Y) (x : X) (y : Y) (D : 𝓘 S) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (D : S.D) [HasAdjoint f] 
     : 
       (h : testFunction D x) 
       → ⟪x, f† y⟫ = ⟪f x, y⟫ 
@@ -72,16 +114,16 @@ namespace Adjoint
 
   @[simp]
   theorem inner_adjoint_snd_left_test
-    (f : X → Y) (x : X) (y : Y) (D : 𝓘 S) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (D : S.D) [HasAdjoint f] 
     : 
       (h : testFunction D y) 
       → ⟪x, f† y⟫ = ⟪f x, y⟫
     := sorry
 
-  theorem inner_ext {X} [Trait X] [Signature (sigOf X)] [Vec (sigOf X)] [SemiHilbert X (sigOf X)] (x y : X) 
+  theorem inner_ext {X} [Trait X] [Vec (Trait.sig X).R] [SemiInner X]  (x y : X)
     : 
-      (∀ (x' : X) (D : 𝓘 (sigOf X)), testFunction D x' → ⟪x, x'⟫ = ⟪y, x'⟫)
-      → (x = y)
+      (∀ (x' : X) (D : (Trait.sig X).D), testFunction D x' → ⟪x, x'⟫ = ⟪y, x'⟫)
+       → (x = y)
     := sorry 
 
   -- TODO: This needs some refinement as currnetly you need to write a semicolon
@@ -96,8 +138,8 @@ namespace Adjoint
   -- Having adjoint actually implies linearity. The converse is not true in our 
   -- scenario, Convenient Vector spaces, as we do not have Riesz representation theorem.
   instance (f : X → Y) [HasAdjoint f] : IsLin f := sorry
-  instance (f : X → Y) [HasAdjoint f] : IsLin f† := sorry
-  instance (f : X → Y) [HasAdjoint f] : HasAdjoint f† := sorry
+  instance (f : X → Y) [HasAdjoint f] : IsLin (f†) := sorry
+  instance (f : X → Y) [HasAdjoint f] : HasAdjoint (f†) := sorry
 
   section Core
 
@@ -106,6 +148,9 @@ namespace Adjoint
 
     instance const_zero_has_adjoint 
       : HasAdjoint (λ x : X => (0 : Y)) := sorry
+
+    instance parm_has_adjoint {ι} [Enumtype ι] 
+      : HasAdjoint (λ (x : X) (i : ι) => x) := sorry
 
     instance comp_has_adjoint 
       (f : Y → Z) (g : X → Y) 
@@ -121,54 +166,70 @@ namespace Adjoint
   @[simp]
   theorem adjoint_of_adjoint (f : X → Y) [HasAdjoint f] : f†† = f := 
   by
-    funext x
+    funext x 
     inner_ext;
+    -- apply inner_ext (S := S); intros;
     simp (discharger := assumption)
     done
 
   @[simp] 
   theorem adjoint_of_id
-    : (λ x : X => x)† = id := sorry
+    : adjoint (λ x : X => x) = id := 
+  by
+    funext x; inner_ext; simp (discharger := assumption); done
+
 
   @[simp]
   theorem adjoint_of_const {ι} [Enumtype ι]
-    : (λ (x : X) (i : ι) => x)† = sum := sorry
+    : (λ (x : X) (i : ι) => x)† = sum := 
+  by
+    funext x; inner_ext;
+    simp (discharger := assumption);
+    simp[semiInner', semiInner]
+    -- now just propagete sum inside and we are done
+    admit
 
+  example {ι} [Enumtype ι]
+    : (λ (x : X) (i : ι) => x)† = sum := by simp
 
   -- This is unfortunatelly not true with current definition of adjoint
   -- @[simp]
   -- theorem adjoint_of_const_on_real [SemiInnerTrait X] [SemiHilbert X (𝓘 X)]
   --     : (λ (x : X) => (λ (t : ℝ) ⟿ x))† = integral := sorry
 
-  -- @[simp]
-  -- theorem adjoint_of_sum {ι} [Enumtype ι]
-  --   : (sum)† = (λ (x : X) (i : ι) => x) := sorry
+  instance {ι} [Enumtype ι] : HasAdjoint (sum : (ι → X) → X) := sorry
+
+  @[simp] theorem adjoint_of_sum {ι} [Enumtype ι]
+    : (sum : (ι → X) → X)† = (λ (x : X) (i : ι) => x) := sorry
+
+  example {ι} [Enumtype ι]
+    : (λ x : ι → X => sum x)† = (λ (x : X) (i : ι) => x) := by simp done
 
   @[simp]
   theorem adjoint_of_swap {ι κ} [Enumtype ι] [Enumtype κ]
     : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
 
   @[simp]
-  theorem adjoint_of_parm {ι : Type} [Enumtype ι] 
+  theorem adjoint_of_parm {ι} [Enumtype ι] 
     (f : X → ι → Y) (i : ι) [HasAdjoint f] 
     : 
       (λ x => f x i)† = (λ y => f† (λ j => (kron i j)*y)) 
     := sorry
 
   @[simp]
-  theorem adjoint_of_arg {n} [NonZero n] 
-    (f : Y → Fin n → Z) [HasAdjoint f]
+  theorem adjoint_of_arg {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι]
+    (f : Y → κ → Z) [HasAdjoint f]
     (g1 : X → Y) [HasAdjoint g1]
-    (g2 : Fin n → Fin n) [IsInv g2]
+    (g2 : ι → κ) [IsInv g2]
     : 
-      (λ x i => f (g1 x) (g2 i))† = g1† ∘ f† ∘ (λ h => h ∘ g2⁻¹) 
+      adjoint (λ x i => f (g1 x) (g2 i)) = (adjoint g1) ∘ (adjoint f) ∘ (λ h => h ∘ g2⁻¹) 
     := sorry
 
   @[simp] 
   theorem adjoint_of_comp 
     (f : Y → Z) (g : X → Y) [HasAdjoint f] [HasAdjoint g] 
     : 
-      (λ x => f (g x))† = g† ∘ f† 
+      (adjoint (λ x => f (g x))) = (adjoint g) ∘ (adjoint f)
     := sorry
 
   @[simp] 
@@ -176,14 +237,14 @@ namespace Adjoint
     (f : β → Y → Z) (g1 : ι → β) (g2 : X → ι → Y) 
     [∀ b, HasAdjoint (f b)] [HasAdjoint g2] 
     : 
-      (λ x i => (f (g1 i) (g2 x i)))† = g2† ∘ (λ z i => (f (g1 i))† (z i)) 
+      (adjoint (λ x i => (f (g1 i) (g2 x i)))) = (adjoint g2) ∘ (λ z i => adjoint (f (g1 i)) (z i)) 
     := sorry
 
   @[simp]
-  theorem adjoint_of_pullback {ι κ} [Enumtype ι] [Enumtype κ] [Inhabited ι] 
+  theorem adjoint_of_pullback {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι] 
     (g : ι → κ) [IsInv g]
     : 
-      (λ (f : κ → X) i => f (g i))† = (λ f => f ∘ g⁻¹) 
+      adjoint (λ (f : κ → X) i => f (g i)) = (λ f => f ∘ g⁻¹) 
     := 
   by 
     admit
@@ -194,7 +255,7 @@ namespace Adjoint
     (f : Y → β → Z) (g : X → Y) (b : β) 
     [HasAdjoint (λ y => f y b)] [HasAdjoint g] 
     : 
-      (λ x => f (g x) b)† = g† ∘ (λ y => f y b)† 
+      adjoint (λ x => f (g x) b) = adjoint g ∘ adjoint (λ y => f y b)
     := 
   by 
     admit
@@ -204,7 +265,7 @@ namespace Adjoint
     (f : Y → β → γ → Z) (g : X → Y) (b c) 
     [HasAdjoint (λ y => f y b c)] [HasAdjoint g] 
     : 
-      (λ x => f (g x) b c)† = g† ∘ (λ y => f y b c)† 
+      adjoint (λ x => f (g x) b c) = adjoint g ∘ adjoint (λ y => f y b c)
     := 
   by
     admit
@@ -215,15 +276,15 @@ namespace Adjoint
     (f : Y → β → Z) (g1 : X → ι → Y) (g2 : ι → β)
     [∀ b, HasAdjoint (λ y : Y => f y b)] [HasAdjoint g1] 
     : 
-      (λ x i => f (g1 x i) (g2 i))† 
+      adjoint (λ x i => f (g1 x i) (g2 i))
       = 
-      g1† ∘ (λ h i => (λ y => f y (g2 i))† (h i)) 
+      adjoint g1 ∘ (λ h i => adjoint (λ y => f y (g2 i)) (h i)) 
     := sorry
 
 
   open Function
 
-  variable {Y1 Y2 ι} [SemiHilbert Y1 S] [SemiHilbert Y2 S] [Enumtype ι]
+  variable {Y1 Y2} {ι : Type} [SemiHilbert' Y1 S] [SemiHilbert' Y2 S] [Enumtype ι]
 
   @[simp]
   theorem adjoint_of_diag 
@@ -231,9 +292,9 @@ namespace Adjoint
     [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     [HasAdjoint g1] [HasAdjoint g2]
     : 
-      (λ x => f (g1 x) (g2 x))†
+      adjoint (λ x => f (g1 x) (g2 x))
       = 
-      (uncurry HAdd.hAdd) ∘ (Prod.map g1† g2†) ∘ (uncurry f)† 
+      (uncurry HAdd.hAdd) ∘ (Prod.map (adjoint g1) (adjoint g2)) ∘ adjoint (uncurry f)
     := 
   by 
     admit
@@ -244,12 +305,12 @@ namespace Adjoint
     [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     [HasAdjoint g1] [HasAdjoint g2]
     : 
-      (λ x i => f (g1 x i) (g2 x i))† 
+      adjoint (λ x i => f (g1 x i) (g2 x i))
       = 
       (uncurry HAdd.hAdd) 
-      ∘ (Prod.map g1† g2†) 
+      ∘ (Prod.map (adjoint g1) (adjoint g2)) 
       ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) 
-      ∘ (comp (uncurry f)†) 
+      ∘ (comp (adjoint (uncurry f))) 
     := sorry
 
   --------------------------------------------------------------------------------------------

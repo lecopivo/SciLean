@@ -64,19 +64,29 @@ namespace Hom
 
   instance : Vec (X ⟿ Y) := Vec.mk
 
-  open SemiInner Signature in
-  instance (S) [Signature S] : Signature ((ℝ × ℝ) → S) :=
+
+  -- instance {X} [Vec X] [Trait X] : Trait (ℝ ⟿ X) :=
+  -- {
+  --   sig := ⟨(ℝ × ℝ) → (Trait.sig X).R, 
+  --           (ℝ × ℝ) × (Trait.sig X).D,
+  --           λ f (I, d) =>  (Trait.sig X).eval (f I) d⟩
+  -- }
+
+  open SemiInner 
+
+  instance {X S} [Vec X] [SemiInner' X S] [Vec S.R]
+    : SemiInner' (ℝ ⟿ X) S.addInterval :=
   {
-    Dom := (ℝ × ℝ) × (Dom S)
-    eval := λ f (I, D) => eval (f I) D
+    semiInner := λ f g (a,b) => 
+      Mathlib.Convenient.integrate a b (λ t => ⟪S| f t, g t⟫) sorry
+    testFunction := sorry -- TODO: define test functions on an interval - Probably functions with compact support strictly inside of (a,b). Alternatively, all defivatives vanish at a and b
   }
-  
   open SemiInner in
-  instance (X S) [Signature S] [Vec S] [SemiInner X S] [Vec X] : SemiInner (ℝ ⟿ X) ((ℝ × ℝ) → S) :=
-  {
-    semi_inner := λ f g (a,b) => Mathlib.Convenient.integrate a b (λ t => ⟪f t, g t⟫) sorry
-    testFunction := sorry  -- TODO: define test functions on an interval - Probably functions with compact support strictly inside of (a,b). Alternatively, all defivatives vanish at a and b
-  }
+  @[reducible] instance {X} [Trait X] [Vec X] : Trait (ℝ ⟿ X) := 
+    ⟨(Trait.sig X).addInterval⟩
+
+  open SemiInner in
+  example {X} [Trait X] [Vec X] [SemiInner X] [Vec (Trait.sig X).R] : SemiInner (ℝ ⟿ X) := SemiInner.mk
 
   abbrev mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : X ⟿ Y := ⟨f, by infer_instance⟩
 

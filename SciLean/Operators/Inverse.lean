@@ -12,17 +12,17 @@ namespace SciLean
 variable {α β γ}
 
 noncomputable
-def inverse [Inhabited α] (f : α → β) (b : β)  : α :=
+def inverse [n : Nonempty α] (f : α → β) (b : β)  : α :=
     match Classical.propDecidable (IsInv f) with
       | isTrue h => Classical.choose ((@IsInv.is_inv _ _ f h).2 b)
-      | _ => arbitrary
+      | _ => Classical.choice n
 
 postfix:max "⁻¹" => inverse
 
 namespace Inverse
 
   variable {β1 β1}
-  variable [Inhabited α] [Inhabited β] [Inhabited γ] [Inhabited β1] [Inhabited β2]
+  variable [Nonempty α] [Nonempty β] [Nonempty γ] [Nonempty β1] [Nonempty β2]
 
   theorem inverse_ext (f : α → β) : (∀ x, g (f x) = x) → (∀ y, f (g y) = y) → (f⁻¹ = g) := sorry
   macro  "inverse_ext" : tactic => `(apply inverse_ext)
@@ -57,8 +57,8 @@ namespace Inverse
   -------------------------------------------------------------------------
 
   variable {X Y} 
-  variable [Inhabited X] [AddGroup X]
-  variable [Inhabited Y] [AddGroup Y]
+  variable [Nonempty X] [AddGroup X]
+  variable [Nonempty Y] [AddGroup Y]
 
   @[simp]
   def inverse_of_add_arg1 (y : X)

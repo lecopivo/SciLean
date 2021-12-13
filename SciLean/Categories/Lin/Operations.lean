@@ -26,7 +26,9 @@ instance {X} [Vec X] (P : X → Prop) [Vec {x : X // P x}] : IsLin (Subtype.val 
 
 open SemiInner
 
-variable (U S) [Signature S] [Vec S] [SemiHilbert U S]
-instance : IsLin (⟪·, ·⟫ : U → U → S) := sorry
-instance (u : U) : IsLin (⟪u, ·⟫ ) := sorry
+variable (U S) [Vec S.R] [SemiHilbert' U S]
+instance : IsLin (⟪S| ·, ·⟫ : U → U → S.R) := sorry
+variable (V) [Trait V] [Vec (Trait.sig V).R] [SemiHilbert V]
+instance : IsLin (⟪ ·, ·⟫ : V → V → (Trait.sig V).R) := by infer_instance
+instance (u : U) : IsLin (⟪S| u, ·⟫ ) := sorry
 

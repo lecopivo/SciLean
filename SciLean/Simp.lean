@@ -7,7 +7,7 @@ namespace SciLean
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-variable {U V W Dom : Type} [Hilbert U] [Hilbert V] [Hilbert W]
+variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 variable (u : U)
 variable (r : ℝ)
@@ -35,7 +35,7 @@ variable (r : ℝ)
 @[simp] theorem mul_neg_1 (r : ℝ) (x : X) : (-r) * x = -(r * x) := sorry
 @[simp] theorem mul_neg_2 (r : ℝ) (x : X) : r * (-x) = -(r * x) := sorry
 
-@[simp] theorem pair_mul (r : ℝ) (x : X) (y : Y) : (r * x, r * y) = r * (x, y) := sorry
+@[simp] theorem pair_mul (r : ℝ) (x : X) (y : Y) : r * (x, y) = (r * x, r * y) := sorry
 
 @[simp] theorem inner_mul_1 (r : ℝ) (x y : U) : ⟪r * x, y⟫ = r * ⟪x,y⟫ := sorry
 @[simp] theorem inner_mul_2 (r : ℝ) (x y : U) : ⟪x, r * y⟫ = r * ⟪x,y⟫ := sorry
@@ -53,7 +53,6 @@ variable (r : ℝ)
 @[simp] theorem prod_sum (x x' : X) (y y' : Y) : (x, y) + (x', y') = (x + x', y + y') := sorry
 @[simp] theorem prod_fst_hmul (x : X) (y : Y) (r : ℝ) : (r*(x,y)).fst = r*x := sorry
 @[simp] theorem prod_snd_hmul (x : X) (y : Y) (r : ℝ) : (r*(x,y)).snd = r*y := sorry
-
 
 @[simp] theorem add_normalize [Add α] (a b : α) : Add.add a b = a + b := by simp[HAdd.hAdd] done
 @[simp] theorem sub_normalize [Sub α] (a b : α) : Sub.sub a b = a - b := by simp[HSub.hSub] done

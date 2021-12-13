@@ -2,7 +2,7 @@ import SciLean.Basic
 -- import SciLean.Simp
 import SciLean.Tactic
 
-set_option synthInstance.maxHeartbeats 5000
+set_option synthInstance.maxHeartbeats 50000
 -- set_option maxHeartbeats 500000
 
 namespace SciLean

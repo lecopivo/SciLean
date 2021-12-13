@@ -1,6 +1,6 @@
 import SciLean.Basic
 
-set_option synthInstance.maxHeartbeats 5000
+set_option synthInstance.maxHeartbeats 50000
 set_option synthInstance.maxSize 1000
 
 namespace SciLean.Smooth.Tests
