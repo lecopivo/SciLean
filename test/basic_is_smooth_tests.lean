@@ -54,7 +54,6 @@ namespace maintests
   --         : IsSmooth ((swap (comp comp (swap comp)) f) : (α → Y) → β → (α → Z)) := by simp[swap,comp]; infer_instance
 
 
-
   example (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] : IsSmooth (f ∘ g) := by infer_instance
   example (g : α → β) : IsSmooth (λ (f : β → Z) (a : α) => (f (g a))) := by infer_instance
   example (f : Y → β → Z) (g : X → Y) (b : β) [IsSmooth f] [IsSmooth g] : IsSmooth (λ x => f (g x) d) := by infer_instance
@@ -81,27 +80,27 @@ variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 variable (f : X → X) [IsSmooth f]
 
-theorem test1 : IsSmooth (λ x => f x) := by infer_instance
-theorem test2 : IsSmooth (λ x => x |> f) := by infer_instance
-theorem test3 : IsSmooth (λ x => x |> f |> f) := by infer_instance
-theorem test4 : IsSmooth (λ (g : X → X) x => f (g x)) := by infer_instance
-theorem test5 : IsSmooth (λ (g : X → X) x => g (f x)) := by infer_instance
-theorem test6 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g) := by infer_instance
-theorem test7 : IsSmooth (λ (g : X → X) x => f (f (g x))) := by infer_instance
-theorem test8 : IsSmooth (λ (g : X → X) x => f (g (f x))) := by infer_instance
-theorem test9 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f) := by infer_instance
-theorem test10 : IsSmooth (λ (g : X → X) x => g (f (f x))) := by infer_instance
-theorem test11 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g) := by infer_instance
-theorem test12 : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g) := by infer_instance
-theorem test13 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g) := by infer_instance
-theorem test14 : IsSmooth (λ (g : X → X) x => x |> g |> f |> f |> f) := by infer_instance
-theorem test15 : IsSmooth (λ (g : X → X) x => x |> f |> g |> f |> f) := by infer_instance
-theorem test16 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f |> f) := by infer_instance
-theorem test17 : IsSmooth (λ (g : X → X) x => x |> f |> f |> g |> f) := by infer_instance
-theorem test18 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g |> f) := by infer_instance
-theorem test19 : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g |> f) := by infer_instance
-theorem test20 : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g |> f) := by infer_instance
-theorem test21 : IsSmooth (λ (g : X → X) x => x |> f |> f |> f |> g) := by infer_instance
+example : IsSmooth (λ x => f x) := by infer_instance
+example : IsSmooth (λ x => x |> f) := by infer_instance
+example : IsSmooth (λ x => x |> f |> f) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => f (g x)) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => g (f x)) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => f (f (g x))) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => f (g (f x))) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => g (f (f x))) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => x |> g |> f |> f |> f) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => x |> f |> g |> f |> f) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f |> f) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => x |> f |> f |> g |> f) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g |> f) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g |> f) := by infer_instance
+example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g |> f) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => x |> f |> f |> f |> g) := by infer_instance
 
 end foldtest
 
@@ -113,18 +112,18 @@ variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 variable (f : X → X → X) [IsSmooth f] [∀ x, IsSmooth (f x)]
 
-theorem test1 : IsSmooth (λ x => f x x) := by infer_instance
-theorem test2 : IsSmooth (λ x => f (f x x) x) := by infer_instance
-theorem test3 : IsSmooth (λ x => f x (f x x)) := by infer_instance
-theorem test4 : IsSmooth (λ x => f (f x x) (f x x)) := by infer_instance
-theorem test5 : IsSmooth (λ x => f (f (f x x) x) x) := by infer_instance
-theorem test6 : IsSmooth (λ x => f (f x (f x x)) x) := by infer_instance
-theorem test7 : IsSmooth (λ x => f x (f (f x x) x)) := by infer_instance
-theorem test8 : IsSmooth (λ x => f x (f x (f x x))) := by infer_instance
+example : IsSmooth (λ x => f x x) := by infer_instance
+example : IsSmooth (λ x => f (f x x) x) := by infer_instance
+example : IsSmooth (λ x => f x (f x x)) := by infer_instance
+example : IsSmooth (λ x => f (f x x) (f x x)) := by infer_instance
+example : IsSmooth (λ x => f (f (f x x) x) x) := by infer_instance
+example : IsSmooth (λ x => f (f x (f x x)) x) := by infer_instance
+example : IsSmooth (λ x => f x (f (f x x) x)) := by infer_instance
+example : IsSmooth (λ x => f x (f x (f x x))) := by infer_instance
 
-theorem test10 : IsSmooth (λ (g : X → X) x => f (g x) x) := by infer_instance
-theorem test11 : IsSmooth (λ (g : X → X) x => f x (g x)) := by infer_instance
-theorem test12 : IsSmooth (λ (g : X → X) x => f x (g x)) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => f (g x) x) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => f x (g x)) := by infer_instance
+example : IsSmooth (λ (g : X → X) x => f x (g x)) := by infer_instance
 
 end forktest
 
@@ -138,14 +137,3 @@ namespace combtests
   example (y : X) (A : X → X) (B : X → X) [IsSmooth A] [IsSmooth B] : IsSmooth (λ x : X => x + x) := by infer_instance
 end combtests
 
-namespace hilbert 
-
-  variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
-
-  -- example : IsSmooth λ (u v : U) => ⟪u,v⟫ := by infer_instance
-  example (u) : IsSmooth λ (v : U) => ⟪u,v⟫:= by infer_instance
-  -- example : IsSmooth λ (u : U)  => ⟪u,u⟫ := by infer_instance
-  -- why is this failing?
-  -- example : IsSmooth λ (u : ℝ × ℝ) => SemiInner.semi_inner u u := by infer_instance
-
-end hilbert                    
