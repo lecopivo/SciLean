@@ -93,13 +93,13 @@ namespace Differential.Tests
 
     -- @[simp] theorem zero_app {α β : Type} [Numerics β] {a : α} : (0 : α → β) a = (0 : β) := sorry
 
-    -- set_option maxHeartbeats 50000
+    -- set_option maxHeartbeats 100000
 
-    -- set_option trace.Meta.whnf true in
-    example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t) + (f t)) f df = λ t => (df t) * (f t) + (f t + 1) * (df t) :=
-    by
-      autodiff
-      done
+    -- -- set_option trace.Meta.whnf true in
+    -- example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t) + (f t)) f df = λ t => (df t) * (f t) + (f t + 1) * (df t) :=
+    -- by
+    --   autodiff
+    --   done
 
 
     -- example : δ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, (f t) * (f t))) f df = 0 := by

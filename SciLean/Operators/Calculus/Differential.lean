@@ -127,11 +127,19 @@ instance : IsLin (λ (f : X ⟿ Y) => δ f.1) := sorry
 instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
 instance (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
 
+instance {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) (x dx : X) 
+  [IsSmooth f] [h : ∀ x, IsSmooth (f x)] : IsSmooth (δ f x dx) := sorry
+
 noncomputable
 def diff := λ (f : X ⟿ Y) ⊸ (λ x ⟿ λ dx ⊸ δ f.1 x dx)
 
 noncomputable
 def derivative:= λ (f : ℝ ⟿ Y) ⊸ (λ x ⟿ (δ f.1 x (1 : ℝ)))
+
+
+@[simp] 
+theorem differential_of_parm_morph {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) (x dx : X) [IsSmooth f] [h : ∀ x, IsSmooth (f x)] 
+  : δ (λ x => (⟨f x, h x⟩ : Y ⟿ Z)) x dx = (⟨δ f x dx, by infer_instance⟩ : Y ⟿ Z) := sorry
 
 
 -- instance : HasAdjoint (diff (X := ℝ) (Y := ℝ)).1  := sorry
