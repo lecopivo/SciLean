@@ -1,9 +1,9 @@
 import SciLean.Mathlib.Algebra.Field.Basic
 
-def Real := Float
-abbrev ℝ := Real
+def ℝ := Float
+-- abbrev ℝ := ℝ
 
-def Float.toReal (x : Float) : Real := x
+def Float.toReal (x : Float) : ℝ := x
 
 namespace Math
 
@@ -24,23 +24,23 @@ namespace Math
 
 end Math
 
-namespace Real
+namespace ℝ
 
-  def toFloat (x : Real) : Float := x
-  instance : ToString Real := ⟨λ x => x.toFloat.toString⟩
+  def toFloat (x : ℝ) : Float := x
+  instance : ToString ℝ := ⟨λ x => x.toFloat.toString⟩
   
-  instance : LT Real := ⟨λ x y => x.toFloat < y.toFloat⟩
-  instance : LE Real := ⟨λ x y => x.toFloat ≤ y.toFloat⟩
-  instance : OfScientific Real := instOfScientificFloat
+  instance : LT ℝ := ⟨λ x y => x.toFloat < y.toFloat⟩
+  instance : LE ℝ := ⟨λ x y => x.toFloat ≤ y.toFloat⟩
+  instance : OfScientific ℝ := instOfScientificFloat
   
-  instance : Add Real := ⟨λ x y => x.toFloat + y.toFloat⟩
-  instance : Sub Real := ⟨λ x y => x.toFloat - y.toFloat⟩
-  instance : Mul Real := ⟨λ x y => x.toFloat * y.toFloat⟩
-  instance : Div Real := ⟨λ x y => x.toFloat / y.toFloat⟩
-  instance : Neg Real := ⟨λ x => (-x : Float)⟩
+  instance : Add ℝ := ⟨λ x y => x.toFloat + y.toFloat⟩
+  instance : Sub ℝ := ⟨λ x y => x.toFloat - y.toFloat⟩
+  instance : Mul ℝ := ⟨λ x y => x.toFloat * y.toFloat⟩
+  instance : Div ℝ := ⟨λ x y => x.toFloat / y.toFloat⟩
+  instance : Neg ℝ := ⟨λ x => (-x : Float)⟩
 
-  instance : Zero Real := ⟨Float.ofNat 0⟩  
-  instance : One Real  := ⟨Float.ofNat 1⟩
+  -- instance : Zero ℝ := ⟨Float.ofNat 0⟩  
+  -- instance : One ℝ  := ⟨Float.ofNat 1⟩
   -- instance : OfNat ℝ n := ⟨Float.ofNat n⟩
   -- instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
@@ -49,13 +49,12 @@ namespace Real
   -- | n+1 => r * natPow r n
 
   -- instance : Pow ℝ Nat := ⟨natPow⟩
-  instance : HPow Real Real Real := ⟨Math.pow⟩
+  instance : HPow ℝ ℝ ℝ := ⟨Math.pow⟩
 
-  instance : Inv ℝ := ⟨λ x => 1/x⟩
   instance : Numeric ℝ := ⟨λ n => n.toFloat⟩
+  instance : Inv ℝ := ⟨λ x => 1/x⟩
 
-
-  instance : HPow Real Int Real := sorry
+  instance : HPow ℝ Int ℝ := sorry
 
 --   instance (n : Nat) : OfNat ℝ n := ⟨n.toFloat⟩
 
@@ -100,7 +99,7 @@ namespace Real
     hpow_neg := sorry
   }
 
-end Real
+end ℝ
 
 
 

@@ -25,7 +25,7 @@ class HasAdjoint' {X Y} (S) [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] (f :
 
 open SemiInner in
 noncomputable
-def adjoint' {X Y} (S) [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] 
+constant adjoint' {X Y} (S) [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] 
     (f : X → Y)
     : 
       Y → X 

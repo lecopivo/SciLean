@@ -13,8 +13,9 @@ variable {U V W : Type} {S} [Vec S.R] [SemiHilbert' U S] [SemiHilbert' V S] [Sem
 ------------------
 -- Differential --
 ------------------
+-- @[irreducible] -- this does not work work as intended and I switched to `constant`
 noncomputable 
-def differential (f : X → Y) (x dx : X) : Y := 
+constant differential (f : X → Y) (x dx : X) : Y := 
     match Classical.propDecidable (IsSmooth f) with
       | isTrue  h => sorry
       | _ => (0 : Y)

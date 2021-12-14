@@ -71,11 +71,11 @@ namespace Differential.Tests
   --   example : ∇ (λ x => ∑ i, x[i]*x[i-a]) x = ((lmk λ i => x[i-a]) + (lmk λ i => x[i+a])) := by autograd done
   --   -- example : ∇ (λ x => ∑ i, (x[i+a] - x[i])*(x[i+a] - x[i])) x = 0 := by autograd done -- Needs some more sophisticated simplifications
 
-  --   variable {n : Nat} [NonZero n] (a : Fin n)
+    -- variable {n : Nat} [NonZero n] (a : Fin n)
 
-  --   example : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i+a) - f i)*(f (i+a) - f i)) 
-  --             = 
-  --             (λ (f : Fin n → ℝ) i => 2 * (f (i - a + a) - f (i - a) - (f (i + a) - f i))) := by autograd done
+    -- example : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i+a) - f i)*(f (i+a) - f i)) 
+    --           = 
+    --           (λ (f : Fin n → ℝ) i => 2 * (f (i - a + a) - f (i - a) - (f (i + a) - f i))) := by autograd done
   --   example (c : ℝ) : ∇ (λ (f : Fin n → ℝ) => ∑ i, c*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*c*f) := by autograd done
     
   -- end DifferentiatingSums
@@ -87,12 +87,20 @@ namespace Differential.Tests
     example : δ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, f t)) f df = ∫ t, df t := by
       simp[mkIntegral] done
     
-    example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t)) f df = 0 :=
+    example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t)) f df = λ t => (df t) * (f t) + (f t) * (df t) :=
     by
-      
-      funext t
-      simp
-      admit  
+      simp done
+
+    -- @[simp] theorem zero_app {α β : Type} [Numerics β] {a : α} : (0 : α → β) a = (0 : β) := sorry
+
+    -- set_option maxHeartbeats 50000
+
+    -- set_option trace.Meta.whnf true in
+    example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t) + (f t)) f df = λ t => (df t) * (f t) + (f t + 1) * (df t) :=
+    by
+      autodiff
+      done
+
 
     -- example : δ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, (f t) * (f t))) f df = 0 := by
     --   simp[mkIntegral]

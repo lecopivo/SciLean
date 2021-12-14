@@ -65,7 +65,7 @@ namespace SemiInner
   notation "⟪" S "|" x ", " y "⟫" => SemiInner'.semiInner (S := S) x y  
   notation "⟪" x ", " y "⟫" => semiInner' x y  
 
-  notation "∥" x "∥"  => Math.sqrt (SemiInner'.semiInner (S := Unit) x x ())
+  notation "∥" x "∥"  => Math.sqrt (⟪x,x⟫)
 
   abbrev RealSig : Signature := ⟨ℝ, Unit, λ r _ => r⟩
   -- instance : Vec RealSig.R := by simp[RealSig] infer_instance done
