@@ -57,8 +57,11 @@ namespace maintests
   set_option synthInstance.maxHeartbeats 500
 
   set_option synthInstance.maxHeartbeats 50000
+  set_option trace.Meta.synthInstance true in
+  example : IsSmooth (λ (h : X → X) (x : X) => G (h x)) := by infer_instance
   example : IsSmooth (λ (h : X → X) (x : X) => G (h x) a b) := by infer_instance
   set_option synthInstance.maxHeartbeats 500
+
 
 end maintests
 
@@ -125,4 +128,6 @@ namespace combtests
   example (y : X) (A : X → X) (B : X → X) [IsSmooth A] [IsSmooth B] : IsSmooth λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
   example (y : X) (A : X → X) (B : X → X) [IsSmooth A] [IsSmooth B] : IsSmooth (λ x : X => x + x) := by infer_instance
 end combtests
+
+
 
