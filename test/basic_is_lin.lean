@@ -82,5 +82,3 @@ variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 end hilbert 
 
-
-#check SciLean.Lin.instIsLinSwap_1

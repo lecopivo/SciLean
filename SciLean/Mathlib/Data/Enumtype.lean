@@ -157,23 +157,34 @@ namespace Enumtype
                    pure val
   }
 
-  section Examples
 
-    def ri : Enumtype.Range (Fin 10) := some (5,9)
-    def rj : Enumtype.Range (Fin 10) := some (0,4)
-    def r  := ri * rj
-    def rCol : Enumtype.Range (Fin 10 ×ₗ Fin 10) := ri * rj
+  -- It is important to fetch a new instance of `UpperBoundUnsafe` at call site.
+  -- That way we are likely to fetch an instance of `UpperBound` if available
+  def sum {α} [Zero α] [Add α] {ι} [Enumtype ι] (f : ι → α) : α := ((do
+    let mut r : α := 0 
+    for i in Iterable.fullRange ι do
+      r := r + (f i)
+    r) : Id α)
 
-    def test1 : IO Unit := 
-    do
-      IO.println "Row Major ordering:"
-      for (index,linearindex) in r do 
-        IO.println s!"index = {index}  |  linearindex = {linearindex} "
-      IO.println ""
-      IO.println "Col Major ordering:"
-      for (index,linearindex) in rCol do 
-        IO.println s!"index = {index}  |  linearindex = {linearindex} "
+  macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `Enumtype.sum xs b
 
-    #eval test1
+  -- section Examples
+
+  --   def ri : Enumtype.Range (Fin 10) := some (5,9)
+  --   def rj : Enumtype.Range (Fin 10) := some (0,4)
+  --   def r  := ri * rj
+  --   def rCol : Enumtype.Range (Fin 10 ×ₗ Fin 10) := ri * rj
+
+  --   def test1 : IO Unit := 
+  --   do
+  --     IO.println "Row Major ordering:"
+  --     for (index,linearindex) in r do 
+  --       IO.println s!"index = {index}  |  linearindex = {linearindex} "
+  --     IO.println ""
+  --     IO.println "Col Major ordering:"
+  --     for (index,linearindex) in rCol do 
+  --       IO.println s!"index = {index}  |  linearindex = {linearindex} "
+
+  --   #eval test1
   
-  end Examples
+  -- end Examples

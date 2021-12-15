@@ -21,3 +21,15 @@ example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n)
 -- example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) 
 --         : (λ (g : Fin n → ℝ) => ⟨f, λ i => (g (i+c))⟩)† (1 : ℝ) = (fun i => f (i - c)) := by  simp admit
 example {n} [NonZero n] (c : Fin n) : (λ (g : Fin n → ℝ) => (λ i => g (i+c)))† = (fun f x => f (x - c)) := by autoadjoint admit
+
+instance (y : ℝ) : HasAdjoint (λ x : ℝ => x * y) := by infer_instance done
+instance (y : ℝ) : HasAdjoint (λ x : ℝ => y * x) := by infer_instance done
+instance (y : ℝ) : (λ x : ℝ => x * y)† 1 = y := by simp done
+instance (y : ℝ) : (λ x : ℝ => y * x)† 1 = y := by simp done
+
+instance {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i) := by infer_instance done
+instance {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => f i * df i) := by infer_instance done
+instance {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i * f i) := by infer_instance done
+instance {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i * f i + f i * df i) := by infer_instance done
+
+example {ι} [Enumtype ι] (f : ι → ℝ) : (fun df : ι → ℝ => ∑ i, df i * f i + f i * df i)† 1 = (2 : ℝ) * f := by simp done

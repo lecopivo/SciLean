@@ -26,7 +26,11 @@ instance {X} [Vec X] (P : X → Prop) [Vec {x : X // P x}] : IsLin (Subtype.val 
 
 open SemiInner
 
-variable (U S) [Vec S.R] [SemiHilbert' U S]
-instance : IsLin (⟪S| ·, ·⟫ : U → U → S.R) := sorry
-instance (u : U) : IsLin (⟪S| u, ·⟫ ) := sorry
+variable (V R D : Type) (eval) [Vec R] [SemiHilbert' V ⟨R,D,eval⟩]
+instance : IsLin (SemiInner'.semiInner (S := ⟨R,D,eval⟩) : V → V → R) := sorry
+instance (u : V) : IsLin (SemiInner'.semiInner (S := ⟨R,D,eval⟩) u : V → R) := sorry
 
+
+-- variable (U : Type) {S} [Vec S.R] [SemiHilbert' U S]
+-- instance : IsLin (⟪S| ·, ·⟫ : U → U → S.R) := by infer_instance
+-- instance (u : U) : IsLin (⟪S| u, ·⟫ ) := by infer_instance

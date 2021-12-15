@@ -135,15 +135,15 @@ namespace Iterable
           pure val
   }
 
-  -- It is important to fetch a new instance of `UpperBoundUnsafe` at call site.
-  -- That way we are likely to fetch an instance of `UpperBound` if available
-  def sum {α} [Zero α] [Add α] {ι} [Iterable ι] [UpperBoundUnsafe ι] (f : ι → α) : α := ((do
-    let mut r : α := 0 
-    for i in fullRange ι do
-      r := r + (f i)
-    r) : Id α)
+  -- -- It is important to fetch a new instance of `UpperBoundUnsafe` at call site.
+  -- -- That way we are likely to fetch an instance of `UpperBound` if available
+  -- def sum {α} [Zero α] [Add α] {ι} [Iterable ι] [outParam $ UpperBoundUnsafe ι] (f : ι → α) : α := ((do
+  --   let mut r : α := 0 
+  --   for i in fullRange ι do
+  --     r := r + (f i)
+  --   r) : Id α)
 
-  macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `Iterable.sum xs b
+  -- macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `Iterable.sum xs b
 
   
   --- TODO: Add ForIn over Range

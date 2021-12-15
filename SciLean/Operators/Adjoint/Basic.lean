@@ -53,12 +53,10 @@ section AutoCompleteS
 
   abbrev HasAdjoint (f : X → Y) := HasAdjoint' (sig X Y) f
 
-
   -- these might be dangerouds
   -- @[reducible] instance {X} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert' X (Trait.sig X)] : SemiHilbert X := SemiHilbert.mk (X := X)
   @[reducible] instance {X S} [SemiInner' X S] : Trait X := ⟨S⟩
   -- @[reducible] instance {X} [Trait X] [SemiInner' X (Trait.sig X)] : SemiInner X := SemiInner.mk
-
 
 end AutoCompleteS
 
@@ -270,15 +268,41 @@ namespace Adjoint
   by
     admit
 
+  instance {ι} [Enumtype ι]
+    (f : Y → β → Z) (g1 : X → ι → Y) (g2 : ι → β)
+    [∀ b, HasAdjoint (λ y : Y => f y b)] [HasAdjoint g1] 
+    :
+      HasAdjoint (λ x i => f (g1 x i) (g2 i)) 
+    := sorry
+
   -- This one is dangerous too
   @[simp]
   theorem adjoint_of_comp_arg_1 {ι} [Enumtype ι]
     (f : Y → β → Z) (g1 : X → ι → Y) (g2 : ι → β)
     [∀ b, HasAdjoint (λ y : Y => f y b)] [HasAdjoint g1] 
     : 
-      adjoint (λ x i => f (g1 x i) (g2 i))
+      (λ x i => f (g1 x i) (g2 i))†
       = 
-      adjoint g1 ∘ (λ h i => adjoint (λ y => f y (g2 i)) (h i)) 
+      g1† ∘ (λ h i => (λ y => f y (g2 i))† (h i)) 
+    := sorry
+
+
+  instance {ι} [Enumtype ι]
+    (f : β → Y → Z) (g1 : ι → β) (g2 : X → ι → Y)
+    [∀ b, HasAdjoint (f b)] [HasAdjoint g2] 
+    :
+      HasAdjoint (λ x i => f (g1 i) (g2 x i)) 
+    := sorry
+
+  -- This one is dangerous too
+  @[simp]
+  theorem adjoint_of_comp_arg_2 {ι} [Enumtype ι]
+    (f : β → Y → Z) (g1 : ι → β) (g2 : X → ι → Y)
+    [∀ b, HasAdjoint (f b)] [HasAdjoint g2] 
+    : 
+      (λ x i => f (g1 i) (g2 x i))†
+      = 
+      g2† ∘ (λ h i => (f (g1 i))† (h i)) 
     := sorry
 
 
@@ -286,18 +310,36 @@ namespace Adjoint
 
   variable {Y1 Y2} {ι : Type} [SemiHilbert' Y1 S] [SemiHilbert' Y2 S] [Enumtype ι]
 
+  instance (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
+    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
+    [HasAdjoint g1] [HasAdjoint g2]
+    : 
+      HasAdjoint (λ x => f (g1 x) (g2 x))
+    := sorry
+
+
   @[simp]
   theorem adjoint_of_diag 
     (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
     [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     [HasAdjoint g1] [HasAdjoint g2]
     : 
-      adjoint (λ x => f (g1 x) (g2 x))
+      (λ x => f (g1 x) (g2 x))†
       = 
-      (uncurry HAdd.hAdd) ∘ (Prod.map (adjoint g1) (adjoint g2)) ∘ adjoint (uncurry f)
+      (uncurry HAdd.hAdd) 
+      ∘ (Prod.map g1† g2†) 
+      ∘ (uncurry f)†
     := 
   by 
     admit
+
+  instance
+    (f : Y1 → Y2 → Z) (g1 : X → ι → Y1) (g2 : X → ι → Y2)
+    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
+    [HasAdjoint g1] [HasAdjoint g2]
+    : 
+      HasAdjoint (λ x i => f (g1 x i) (g2 x i))
+    := sorry
 
   @[simp]
   theorem adjoint_of_diag_arg
@@ -305,12 +347,12 @@ namespace Adjoint
     [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     [HasAdjoint g1] [HasAdjoint g2]
     : 
-      adjoint (λ x i => f (g1 x i) (g2 x i))
+      (λ x i => f (g1 x i) (g2 x i))†
       = 
       (uncurry HAdd.hAdd) 
-      ∘ (Prod.map (adjoint g1) (adjoint g2)) 
+      ∘ (Prod.map g1† g2†) 
       ∘ (λ f => (λ i => (f i).1, λ i => (f i).2)) 
-      ∘ (comp (adjoint (uncurry f))) 
+      ∘ (comp (uncurry f)†) 
     := sorry
 
   --------------------------------------------------------------------------------------------
