@@ -123,7 +123,7 @@ theorem differential_of_diag_parm_2 (f : Y1 → Y2 → Z) (g1 : X → β → Y1)
 
 -- variable (X Y : Type) [Vec X] [Vec Y]
 
-set_option synthInstance.maxHeartbeats 50000
+set_option synthInstance.maxHeartbeats 5000
 
 instance : IsLin (λ (f : X ⟿ Y) => δ f.1) := sorry
 instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry

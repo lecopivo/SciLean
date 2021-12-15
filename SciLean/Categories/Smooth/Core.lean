@@ -22,7 +22,7 @@ instance (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)] : IsSmooth (un
 
 instance id_is_smooth : IsSmooth λ x : X => x := sorry
 instance const_is_smooth (x : X) : IsSmooth λ y : Y => x := sorry
-instance swap_is_smooth (f : α → Y → Z) [∀ a, IsSmooth (f a)] : IsSmooth (λ y a => f a y) := sorry
+instance (priority := low) swap_is_smooth (f : α → Y → Z) [∀ a, IsSmooth (f a)] : IsSmooth (λ y a => f a y) := sorry
 instance parm_is_smooth (f : X → β → Z) [IsSmooth f] (b : β) : IsSmooth (λ x => f x b) := sorry
 instance comp_is_smooth (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] : IsSmooth (λ x => f (g x)) := sorry
 instance diag_is_smooth (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [IsSmooth f] [∀ y1, IsSmooth (f y1)] : IsSmooth (λ x => f (g1 x) (g2 x)) := sorry
