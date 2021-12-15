@@ -7,17 +7,47 @@ variable {α β γ : Type}
 variable {X Y Z : Type} {S} [Vec S.R] [Hilbert X] [Hilbert Y] [Hilbert Z]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
--- set_option synthInstance.maxHeartbeats 500
+example (y z : X) [Hilbert X] 
+  : 
+    ∇ (λ x : X => ⟪x,y⟫) z = y 
+  := by autograd done
 
-example (y z : X) [Hilbert X] : ∇ (λ x : X => ⟪x,y⟫) z = y := by autograd done
-example (y : X)   [Hilbert X] : ∇ (λ x : X => ⟪x,x⟫) y = (2 : ℝ) * y := by autograd done
-example (g : ι → ℝ) : ∇ (λ (f : ι → ℝ) => ∑ i, f i) g = (λ _ => (1 : ℝ)) := by autograd done
-example (g : ι → ℝ) : ∇ (λ (f : ι → ℝ) => ∑ i, (42 : ℝ) * f i) g = (λ _ => (42 : ℝ)) := by autograd done
+example (y : X) [Hilbert X] 
+  : 
+    ∇ (λ x : X => ⟪x,x⟫) y = (2 : ℝ) * y 
+  := by autograd done
+
+example (g : ι → ℝ) 
+  : 
+    ∇ (λ (f : ι → ℝ) => ∑ i, f i) g 
+    = 
+    (λ _ => (1 : ℝ)) 
+  := by autograd done
+
+example {n} (g : Fin n → ℝ) [NonZero n] 
+  : 
+    ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i)) g 
+    = 
+    (λ i => g (i - 1) + g (i + 1)) 
+  := 
+by 
+  simp[gradient]; autodiff; simp; funext i; simp; done
+
+example {n} (g : Fin n → ℝ) [NonZero n] 
+  : 
+    ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1) - f i)*(f (i + 1) - f i)) g 
+    = 
+    (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
+  := 
+by 
+  simp[gradient]; autodiff; simp; funext i; simp; done
 
 set_option synthInstance.maxHeartbeats 1000
+example (g : ι → ℝ) : ∇ (λ (f : ι → ℝ) => ∑ i, (42 : ℝ) * f i) g = (λ _ => (42 : ℝ)) := by autograd done
 example (g : ι → ℝ) : ∇ (λ (f : ι → ℝ) => ∑ i, (f i)*(f i)) g = (2 : ℝ) * g := 
 by 
   simp[gradient]; autodiff; simp; done
+
 
 
   --   example : δ (λ x => ∑ i, x[i]) x dx = ∑ i, dx[i] := by simp done

@@ -214,6 +214,14 @@ namespace Adjoint
       (λ x => f x i)† = (λ y => f† (λ j => (kron i j)*y)) 
     := sorry
 
+  instance {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι]
+    (f : Y → κ → Z) [HasAdjoint f]
+    (g1 : X → Y) [HasAdjoint g1]
+    (g2 : ι → κ) [IsInv g2]
+    :
+      HasAdjoint (λ x i => f (g1 x) (g2 i))
+    := sorry
+
   @[simp]
   theorem adjoint_of_arg {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι]
     (f : Y → κ → Z) [HasAdjoint f]
@@ -230,12 +238,11 @@ namespace Adjoint
       (adjoint (λ x => f (g x))) = (adjoint g) ∘ (adjoint f)
     := sorry
 
-  @[simp] 
-  theorem adjoint_of_comp_arg {ι} [Enumtype ι]
-    (f : β → Y → Z) (g1 : ι → β) (g2 : X → ι → Y) 
-    [∀ b, HasAdjoint (f b)] [HasAdjoint g2] 
+
+  instance {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι] 
+    (g : ι → κ) [IsInv g]
     : 
-      (adjoint (λ x i => (f (g1 i) (g2 x i)))) = (adjoint g2) ∘ (λ z i => adjoint (f (g1 i)) (z i)) 
+      HasAdjoint (λ (f : κ → X) i => f (g i))
     := sorry
 
   @[simp]
@@ -247,6 +254,13 @@ namespace Adjoint
   by 
     admit
 
+  instance 
+    (f : Y → β → Z) (g : X → Y) (b : β) 
+    [HasAdjoint (λ y => f y b)] [HasAdjoint g] 
+    : 
+      HasAdjoint (λ x => f (g x) b) 
+    := sorry
+
   -- Unfortunatelly this theorem is dangerous and causes simp to loop 
   -- indefinitely if used in simp
   theorem adjoint_of_comp_parm 
@@ -257,6 +271,12 @@ namespace Adjoint
     := 
   by 
     admit
+
+  instance (f : Y → β → γ → Z) (g : X → Y) (b c) 
+    [HasAdjoint (λ y => f y b c)] [HasAdjoint g] 
+    : 
+      HasAdjoint (λ x => f (g x) b c)
+    := sorry
 
   -- @[simp]
   theorem adjoint_of_comp_parm' 
