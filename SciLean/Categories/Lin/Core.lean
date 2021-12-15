@@ -19,5 +19,5 @@ instance diag_is_lin (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [IsLi
 instance diag_parm_is_lin (f : Y1 → Y2 → Z) (g1 : X → α → Y1) (g2 : X → α → Y2) [IsLin (λ yy : Y1 × Y2 => f yy.1 yy.2)] [IsLin g1] [IsLin g2] : IsLin (λ x a => f (g1 x a) (g2 x a)) := sorry
 
 -- uncurry variants of diag 
-instance diag_uncurry_is_lin (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [IsLin (uncurry f)] [IsLin g1] [IsLin g2] : IsLin (λ x => f (g1 x) (g2 x)) := sorry
-instance diag_parm_uncurry_is_lin (f : Y1 → Y2 → Z) (g1 : X → α → Y1) (g2 : X → α → Y2) [IsLin (uncurry f)] [IsLin g1] [IsLin g2] : IsLin (λ x a => f (g1 x a) (g2 x a)) := sorry
+-- instance diag_uncurry_is_lin (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [IsLin (uncurry f)] [IsLin g1] [IsLin g2] : IsLin (λ x => f (g1 x) (g2 x)) := sorry
+-- instance diag_parm_uncurry_is_lin (f : Y1 → Y2 → Z) (g1 : X → α → Y1) (g2 : X → α → Y2) [IsLin (uncurry f)] [IsLin g1] [IsLin g2] : IsLin (λ x a => f (g1 x a) (g2 x a)) := sorry
