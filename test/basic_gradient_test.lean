@@ -31,7 +31,17 @@ example {n} (g : Fin n → ℝ) [NonZero n]
     (λ i => g (i - 1) + g (i + 1)) 
   := 
 by 
-  simp[gradient]; autodiff; simp; funext i; simp; done
+  autograd done
+
+-- TODO: Move this somewhere else
+instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥^2) := sorry
+@[simp] theorem differential_of_squared_norm {X} [Hilbert X] : δ (λ x : X => ∥x∥^2) = λ x dx : X => 2*⟪x, dx⟫:= sorry
+
+example {X} [Hilbert X] (x : X) 
+  : 
+    ∇ (λ x : X => ∥x∥^2) x = (2 : ℝ) * x 
+  := 
+by autograd done
 
 example {n} (g : Fin n → ℝ) [NonZero n] 
   : 
@@ -39,15 +49,21 @@ example {n} (g : Fin n → ℝ) [NonZero n]
     = 
     (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
   := 
-by 
-  simp[gradient]; autodiff; simp; funext i; simp; done
+by autograd; funext i; simp; done
 
 set_option synthInstance.maxHeartbeats 1000
-example (g : ι → ℝ) : ∇ (λ (f : ι → ℝ) => ∑ i, (42 : ℝ) * f i) g = (λ _ => (42 : ℝ)) := by autograd done
-example (g : ι → ℝ) : ∇ (λ (f : ι → ℝ) => ∑ i, (f i)*(f i)) g = (2 : ℝ) * g := 
-by 
-  simp[gradient]; autodiff; simp; done
+example (g : ι → ℝ) 
+  : 
+    ∇ (λ (f : ι → ℝ) => ∑ i, (42 : ℝ) * f i) g 
+    = 
+    (λ _ => (42 : ℝ)) 
+  := by autograd done
 
+example (g : ι → ℝ) 
+  : 
+    ∇ (λ (f : ι → ℝ) => ∑ i, (f i)*(f i)) g = (2 : ℝ) * g 
+  := 
+by autograd; done
 
 
   --   example : δ (λ x => ∑ i, x[i]) x dx = ∑ i, dx[i] := by simp done
