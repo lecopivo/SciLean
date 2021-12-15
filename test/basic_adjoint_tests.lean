@@ -24,8 +24,8 @@ example {n} [NonZero n] (c : Fin n) : (λ (g : Fin n → ℝ) => (λ i => g (i+c
 
 instance (y : ℝ) : HasAdjoint (λ x : ℝ => x * y) := by infer_instance done
 instance (y : ℝ) : HasAdjoint (λ x : ℝ => y * x) := by infer_instance done
-instance (y : ℝ) : (λ x : ℝ => x * y)† 1 = y := by simp done
-instance (y : ℝ) : (λ x : ℝ => y * x)† 1 = y := by simp done
+example (y : ℝ) : (λ x : ℝ => x * y)† 1 = y := by simp done
+example (y : ℝ) : (λ x : ℝ => y * x)† 1 = y := by simp done
 
 set_option synthInstance.maxHeartbeats 5000
 instance {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i) := by infer_instance done

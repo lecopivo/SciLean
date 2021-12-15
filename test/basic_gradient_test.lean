@@ -45,7 +45,7 @@ by autograd done
 
 example {n} (g : Fin n → ℝ) [NonZero n] 
   : 
-    ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1) - f i)*(f (i + 1) - f i)) g 
+    ∇ (λ (f : Fin n → ℝ) => ∑ i, ∥(f (i + 1) - f i)∥^2) g 
     = 
     (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
   := 
