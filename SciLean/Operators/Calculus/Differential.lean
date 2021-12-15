@@ -65,9 +65,11 @@ theorem differential_of_composition_2 (f : Y → Z) (g dg : α → Y)
         : δ (λ (g : α → Y) (a : α) => f (g a)) g dg = λ a => δ f (g a) (dg a) := sorry
 
 -- TODO: Change IsSmooth to IsDiff
+set_option synthInstance.maxHeartbeats 5000
 @[simp] 
 theorem differential_of_composition_3 (f df : β → Z)
         : δ (λ (f : β → Z) (g : α → β) (a : α) => f (g a)) f df = λ (g : α → β) a => df (g a) := by simp
+set_option synthInstance.maxHeartbeats 500
 
 -- can have weaker assumption, [IsSmooth (λ y => f y b)]
 @[simp]
