@@ -86,10 +86,17 @@ namespace Differential.Tests
 
     example : δ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, f t)) f df = ∫ t, df t := by
       simp[mkIntegral] done
-    
+
+    instance : IsLin (Subtype.val : (X ⟿ Y) → (X → Y)) := by infer_instance
+
+    @[simp high] theorem differential_of_hom_subtype {X Y} [Vec X] [Vec Y] : δ (Subtype.val : (X ⟿ Y) → (X → Y)) = λ f df => df.1 := sorry
+
     example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t)) f df = λ t => (df t) * (f t) + (f t) * (df t) :=
     by
-      simp done
+      autodiff done
+      done
+
+
 
     -- @[simp] theorem zero_app {α β : Type} [Numerics β] {a : α} : (0 : α → β) a = (0 : β) := sorry
 

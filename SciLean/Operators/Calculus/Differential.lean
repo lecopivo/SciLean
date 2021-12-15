@@ -17,23 +17,24 @@ theorem differential_at_zero (f : X → Y) [IsSmooth f] (x : X)
 -- theorem differential_at_zero_comp (f : Y → Z) [IsSmooth f] (y : Y) (g : X → Y) [IsLin g]
 --         : δ f y (g 0) = 0 := sorry
 
-@[simp] 
-theorem differential_of_linear (f : X → Y) [IsLin f] (x dx : X)
+@[simp high] 
+theorem differential_of_id 
+        : δ (λ x : X => x) = λ x dx => dx := sorry
+
+@[simp low] 
+theorem  differential_of_linear (f : X → Y) [IsLin f] (x dx : X)
         : δ f x dx = f dx := sorry
 
-@[simp] 
+@[simp low] 
 theorem differential_of_uncurried_linear_1 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] 
         (x dx : X) 
         : δ f x dx = λ y : Y => f dx 0 := sorry
 
-@[simp] 
+@[simp low] 
 theorem differential_of_uncurried_linear_2 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] 
         (x : X) (y dy : Y)
         : δ (f x) y dy = f 0 dy := sorry
 
-@[simp] 
-theorem differential_of_id (x dx : X)
-        : δ (λ x => x) x dx = dx := by simp
 
 @[simp] 
 theorem differential_of_id'  (x dx : X)
@@ -62,7 +63,7 @@ theorem differential_of_composition_1 (f : Y → Z) (g : X → Y) (x dx : X)
 @[simp] 
 theorem differential_of_composition_2 (f : Y → Z) (g dg : α → Y)
         [IsSmooth f]
-        : δ (λ (g : α → Y) (a : α) => f (g a)) g dg = λ a => δ f (g a) (dg a) := sorry
+        : δ (λ (g : α → Y) (a : α) => f (g a)) g dg = λ a => δ f (g a) (dg a) := sorry 
 
 -- TODO: Change IsSmooth to IsDiff
 set_option synthInstance.maxHeartbeats 5000

@@ -38,10 +38,6 @@ namespace maintests
   example (f : β → Y → Z) [∀ b, IsLin (f b)] : IsLin (λ (g : α → Y) (b : β) (a : α) => f b (g a)) := by infer_instance
   example : IsLin (λ (h : X → X) (x : X) => H' a b (h x)) := by infer_instance
   example (f : X → X → α → Y) [∀ a, IsLin (λ xx : X×X => f xx.1 xx.2 a)] (a : α) : IsLin (λ x => f (h x) x a) := by infer_instance
-  set_option synthInstance.maxHeartbeats 500
-
-  set_option synthInstance.maxHeartbeats 50000
-  -- set_option trace.Meta.synthInstance true in
   example : IsLin (λ (h : X → X) (x : X) => G (h x) a b) := by infer_instance
   set_option synthInstance.maxHeartbeats 500
 

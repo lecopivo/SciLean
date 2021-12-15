@@ -5,7 +5,7 @@ import SciLean.Tactic
 open Function
 namespace SciLean
 
-set_option synthInstance.maxHeartbeats 500000
+set_option synthInstance.maxHeartbeats 50000
 set_option synthInstance.maxSize 1000
 
 def V := ℝ × ℝ × ℝ
