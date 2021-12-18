@@ -33,6 +33,13 @@ namespace Iterable
 
   instance : DecidableEq ι := Iterable.decEq
 
+  instance : Iterable Unit :=
+  {
+    first := some Unit.unit
+    next  := λ i => none
+    decEq := by infer_instance
+  }
+
   instance : Iterable (Fin n) :=
   {
     first := match n with | 0 => none | _ => some ⟨0,sorry⟩

@@ -33,6 +33,17 @@ namespace Enumtype
     valid := sorry
   }
 
+  instance : Enumtype Unit :=
+  {
+    numOf   := 1
+    fromFin := λ _ => Unit.unit
+    toFin   := λ _ => 0
+    
+    first_fromFin := sorry
+    next_fromFin  := sorry
+    next_toFin    := sorry
+  }
+
   instance : Enumtype (Fin n) :=
   {
     numOf := n
