@@ -1,3 +1,5 @@
+import SciLean.Algebra.FinEnumVec
+
 import SciLean.Categories.Lin.Operations
 
 namespace SciLean.Lin
@@ -72,6 +74,31 @@ namespace Hom
   instance : Module ℝ (X ⊸ Y) := Module.mk sorry sorry
 
   instance : Vec (X ⊸ Y) := Vec.mk
+
+  open SemiInner'
+
+  instance {X Y S} [outParam $ Vec S.R] [FinEnumVec X] [SemiInner' Y S] [Vec Y]
+    : SemiInner' (X ⊸ Y) S :=
+  {
+    semiInner := λ f g => ∑ i, ⟪S| f (𝔼 i), g (𝔼 i)⟫
+    testFunction := λ D f => ∀ i, testFunction D (f (𝔼 i))
+  }
+
+  instance {X Y S} [outParam $ Vec S.R] [FinEnumVec X] [SemiHilbert' Y S] 
+    : SemiHilbert' (X ⊸ Y) S :=
+  {
+    semi_inner_add := sorry
+    semi_inner_mul := sorry
+    semi_inner_sym := sorry
+    semi_inner_pos := sorry
+    semi_inner_ext := sorry
+  }
+
+  -- TODO: Figure out why does signature does not get infered here automatically??
+  instance {X} [FinEnumVec X] : Hilbert (X ⊸ ℝ) := by apply (@instSemiHilbert'Hom X ℝ SemiInner.RealSig)
+  
+  -- open SemiInner in
+  -- @[reducible] instance {X Y} [Trait Y] [Vec X] [Vec Y] : Trait (X ⊸ Y) := ⟨Trait.sig Y⟩
 
   -- instance (X Y) [FinEnumVec X] [SemiHilbert Y S] : SemiHilbert (X ⊸ Y) s 
 

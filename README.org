@@ -244,6 +244,8 @@
     - [[https://openreview.net/forum?id=ryxuz9SzDB][The Differentiable Curry, 2019]]
     - [[https://arxiv.org/abs/1907.07587][A Differentiable Programming System to Bridge Machine Learning and Scientific Computing, 2019]]
 
+    - [[https://arxiv.org/abs/1911.04523][A Simple Differentiable Programming Language, 2020]]
+
     - [[https://arxiv.org/abs/1802.04730][Tensor Comprehensions: Framework-Agnostic High-Performance Machine Learning Abstractions]]
 
 *** Math Foundation

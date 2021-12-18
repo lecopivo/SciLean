@@ -21,6 +21,9 @@ example : δ (λ x => f (g x)) x dx = δ f (g x) (δ g x dx) := by simp done
 example : δ (λ x => f (g (f1 x))) x dx = δ f (g (f1 x)) (δ g (f1 x) (δ f1 x dx)) := by simp done
 example (y x dx : X) : δ (λ x : X => y) x dx = 0 := by simp done
 example : δ (λ x => x + x) x dx = dx + dx := by simp done
+
+-- The class search somehow starts looking for SemiHilbert and FinEnumVec for some reason :(
+set_option synthInstance.maxHeartbeats 550 
 example : δ (λ (x : X) => F x (g x)) x dx = δ F x dx (g x) + δ (F x) (g x) (δ g x dx) := by simp  done
 example : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx (g x) + δ (F x) (g x) (δ g x dx)) := by simp done
 example g dg x : δ (λ (g : X → Y) => f (g x)) g dg = δ f (g x) (dg x) := by simp done

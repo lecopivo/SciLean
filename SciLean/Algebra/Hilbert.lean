@@ -140,10 +140,6 @@ abbrev Hilbert (X : Type u) := SemiHilbert' X SemiInner.RealSig
 -- Alternatively we can change [Vec S.R] to [outParam $ Vec S.R] 
 -- but this causes some timeouts somewhere else ...
 
-variable {X} [Hilbert X] (x y : X) (r s : ℝ)
-
-#check r * x
-
 namespace SemiHilbert 
 
   open SemiInner
