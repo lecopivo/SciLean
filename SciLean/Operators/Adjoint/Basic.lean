@@ -16,63 +16,76 @@ prefix:max "𝓘" => SemiInner.Signature.Dom
 ---       2. condition `testFunction D x` is there to prove uniquness of adjoint
 ---       3. condition `testFunction D y` is there to prove f†† = f
 ---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
-open SemiInner SemiInner' in
-class HasAdjoint' {X Y} (S) [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] (f : X → Y) : Prop  
+open SemiInner in
+class HasAdjoint' {X Y} (R D e) [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] (f : X → Y) : Prop  
   where
-    hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (D : S.D), 
-                   (testFunction D x ∨ testFunction D y) → ⟪S| f' y, x⟫ = ⟪S| y, f x⟫
-    preservesTestFun : ∀ (x : X) (D : S.D), testFunction D x → testFunction D (f x)
+    hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (d : D), 
+                   (testFunction e d x ∨ testFunction e d y) → ⟪e| f' y, x⟫ = ⟪e| y, f x⟫
+    preservesTestFun : ∀ (x : X) (d : D), testFunction e d x → testFunction e d (f x)
 
 open SemiInner in
 noncomputable
-constant adjoint' {X Y} (S) [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] 
+constant adjoint' {X Y} (R D e) [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] 
     (f : X → Y)
     : 
       Y → X 
     :=
-    match Classical.propDecidable (HasAdjoint' S f) with
+    match Classical.propDecidable (HasAdjoint' R D e f) with
       | isTrue  h => Classical.choose (HasAdjoint'.hasAdjoint (self := h))
       | _ => (0 : Y → X)
 
-section AutoCompleteS
+-- section AutoCompleteS
 
-  open SemiInner
+--   open SemiInner
 
-  class PairTrait (X Y : Type) where
-    sig : Signature
+--   class PairTrait (X Y : Type) where
+--     sig : Signature
 
-  export PairTrait (sig)
-  attribute [reducible] PairTrait.sig
+--   export PairTrait (sig)
+--   attribute [reducible] PairTrait.sig
 
-  @[reducible] instance {X Y} [Trait X] : PairTrait X Y := ⟨Trait.sig X⟩
-  @[reducible] instance {X Y} [Trait Y] : PairTrait X Y := ⟨Trait.sig Y⟩
+--   @[reducible] instance {X Y} [Trait X] : PairTrait X Y := ⟨Trait.sig X⟩
+--   @[reducible] instance {X Y} [Trait Y] : PairTrait X Y := ⟨Trait.sig Y⟩
 
-  variable {X Y} [PairTrait X Y] [Vec (sig X Y).R] [SemiHilbert' X (sig X Y)] [SemiHilbert' Y (sig X Y)] 
-  noncomputable
-  abbrev adjoint (f : X → Y) := adjoint' (sig X Y) f
+--   variable {X Y} [PairTrait X Y] [Vec (sig X Y).R] [SemiHilbert' X (sig X Y)] [SemiHilbert' Y (sig X Y)] 
+--   noncomputable
+--   abbrev adjoint (f : X → Y) := adjoint' (sig X Y) f
 
-  abbrev HasAdjoint (f : X → Y) := HasAdjoint' (sig X Y) f
+--   abbrev HasAdjoint (f : X → Y) := HasAdjoint' (sig X Y) f
 
-  -- these might be dangerouds
-  -- @[reducible] instance {X} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert' X (Trait.sig X)] : SemiHilbert X := SemiHilbert.mk (X := X)
-  @[reducible] instance {X S} [SemiInner' X S] : Trait X := ⟨S⟩
-  -- @[reducible] instance {X} [Trait X] [SemiInner' X (Trait.sig X)] : SemiInner X := SemiInner.mk
+--   -- these might be dangerouds
+--   -- @[reducible] instance {X} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert' X (Trait.sig X)] : SemiHilbert X := SemiHilbert.mk (X := X)
+--   @[reducible] instance {X S} [SemiInner' X S] : Trait X := ⟨S⟩
+--   -- @[reducible] instance {X} [Trait X] [SemiInner' X (Trait.sig X)] : SemiInner X := SemiInner.mk
 
-end AutoCompleteS
+-- end AutoCompleteS
+
+open SemiInner in
+abbrev HasAdjoint {X Y} [Trait₂ X Y] [Vec (Trait₂.R X Y)]
+  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval)] 
+  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval)] 
+  (f : X → Y) := HasAdjoint' (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval) f
+
+open SemiInner in
+noncomputable
+abbrev adjoint {X Y} [Trait₂ X Y] [Vec (Trait₂.R X Y)]
+  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval)] 
+  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval)] 
+  (f : X → Y) := adjoint' (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval) f
 
 postfix:max "†" => adjoint
 
 namespace Adjoint
 
-  open SemiInner SemiInner'
+  open SemiInner
 
   variable {α β γ : Type}
-  variable {X Y Z: Type} {S} [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] [SemiHilbert' Z S]
+  variable {X Y Z: Type} {R D e} [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
 
   example : Trait X := by infer_instance
   example : Trait Y := by infer_instance
   example : Trait Z := by infer_instance
-  example : PairTrait X Y := by infer_instance
+  -- example : PairTrait X Y := by infer_instance
 
 
   -- open SemiInner in
@@ -80,7 +93,7 @@ namespace Adjoint
   
   -- set_option synthInstance.maxHeartbeats 5000
                 
-  example : SemiHilbert' X (Trait.sig X) := by infer_instance
+  -- example : SemiHilbert' X (Trait.sig X) := by infer_instance
   -- example : SemiHilbert X := by infer_instance
   -- example : SemiHilbert Y := by infer_instance
   -- example : SemiHilbert Z := by infer_instance
@@ -88,39 +101,39 @@ namespace Adjoint
 
   @[simp]
   theorem inner_adjoint_fst_right_test
-    (f : X → Y) (x : X) (y : Y) (D : S.D) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction D x) 
+      (h : testFunction e d x) 
       → ⟪f† y, x⟫ = ⟪y, f x⟫
     := sorry
 
   @[simp]
   theorem inner_adjoint_fst_left_test
-    (f : X → Y) (x : X) (y : Y) (D : S.D) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction D y) 
+      (h : testFunction e d y) 
       → ⟪f† y, x⟫ = ⟪y, f x⟫ 
     := sorry
 
   @[simp]
   theorem inner_adjoint_snd_right_test 
-    (f : X → Y) (x : X) (y : Y) (D : S.D) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction D x) 
+      (h : testFunction e d x) 
       → ⟪x, f† y⟫ = ⟪f x, y⟫ 
     := sorry
 
   @[simp]
   theorem inner_adjoint_snd_left_test
-    (f : X → Y) (x : X) (y : Y) (D : S.D) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction D y) 
+      (h : testFunction e d y) 
       → ⟪x, f† y⟫ = ⟪f x, y⟫
     := sorry
 
-  theorem inner_ext {X} [Trait X] [Vec (Trait.sig X).R] [SemiInner' X (Trait.sig X)]  (x y : X)
+  theorem inner_ext {X} [Trait X] [Vec (Trait.R X)] [SemiInner X (Trait.R X) (Trait.D X) (Trait.eval)]  (x y : X)
     : 
-      (∀ (x' : X) (D : (Trait.sig X).D), testFunction D x' → ⟪x, x'⟫ = ⟪y, x'⟫)
+      (∀ (x' : X) (D : (Trait.D X)), testFunction Trait.eval D x' → ⟪x, x'⟫ = ⟪y, x'⟫)
        → (x = y)
     := sorry 
 
@@ -161,14 +174,20 @@ namespace Adjoint
 
   end Core
 
+  set_option trace.Meta.Tactic.simp true in
   @[simp]
   theorem adjoint_of_adjoint (f : X → Y) [HasAdjoint f] : f†† = f := 
   by
     funext x 
     inner_ext;
-    -- apply inner_ext (S := S); intros;
-    simp (discharger := assumption)
-    done
+    rw [inner_adjoint_fst_right_test]
+    admit
+    admit
+
+    -- delta SemiInner.semiInner'
+    -- -- apply inner_ext (S := S); intros;
+    -- simp (discharger := assumption)
+    -- done
 
   @[simp] 
   theorem adjoint_of_id

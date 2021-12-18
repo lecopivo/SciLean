@@ -72,18 +72,45 @@ namespace Hom
   --           λ f (I, d) =>  (Trait.sig X).eval (f I) d⟩
   -- }
 
-  open SemiInner 
 
-  instance {X S} [Vec X] [SemiInner' X S] [Vec S.R]
-    : SemiInner' (ℝ ⟿ X) S.addInterval :=
+  instance {X R D e} [Vec X] [Vec R] [SemiInner X R D e]
+    : SemiInner (ℝ ⟿ X) (ℝ × ℝ → R) ((ℝ × ℝ) × D) (λ r (I,D) => e (r I) D) :=
   {
     semiInner := λ f g (a,b) => 
-      Mathlib.Convenient.integrate a b (λ t => ⟪S| f t, g t⟫) sorry
+      Mathlib.Convenient.integrate a b (λ t => ⟪e| f t, g t⟫) sorry
     testFunction := sorry -- TODO: define test functions on an interval - Probably functions with compact support strictly inside of (a,b). Alternatively, all defivatives vanish at a and b
   }
-  open SemiInner in
-  @[reducible] instance {X} [Trait X] [Vec X] : Trait (ℝ ⟿ X) := 
-    ⟨(Trait.sig X).addInterval⟩
+
+  @[reducible] instance {X} [SemiInner.Trait X] [Vec X] : SemiInner.Trait (ℝ ⟿ X) := 
+    ⟨ℝ × ℝ → (SemiInner.Trait.R X),
+     (ℝ × ℝ) × (SemiInner.Trait.D X),
+     (λ r (I,D) => SemiInner.Trait.eval (r I) D)⟩
+
+  instance {X R D e} [Vec R] [SemiHilbert X R D e]
+    : SemiHilbert (ℝ ⟿ X) (ℝ × ℝ → R) ((ℝ × ℝ) × D) (λ r (I,D) => e (r I) D) :=
+  {
+    semi_inner_add := sorry
+    semi_inner_mul := sorry
+    semi_inner_sym := sorry
+    semi_inner_pos := sorry
+    semi_inner_ext := sorry
+  }
+
+  -- variable {X Y Z : Type} [Hilbert Y]
+
+  -- example : SemiHilbert' (ℝ ⟿ Y) (SemiInner.Trait.sig (ℝ ⟿ Y)) := 
+  -- by
+  --   apply instSemiHilbert'Homℝ; done
+
+  -- example : SemiInner' (ℝ ⟿ Y) (SemiInner.Trait.sig (ℝ ⟿ Y)) := 
+  -- by
+  --   apply instSemiInner'Homℝ; done
+
+  -- set_option trace.Meta.synthInstance true in
+  -- example : SemiInner' (ℝ ⟿ Y) (SemiInner.Trait.sig (ℝ ⟿ Y)) := 
+  -- by
+  --   infer_instance done
+
 
   abbrev mk {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : X ⟿ Y := ⟨f, by infer_instance⟩
 

@@ -40,7 +40,7 @@ variable (r : ℝ)
 @[simp] theorem inner_mul_1 (r : ℝ) (x y : U) : ⟪r * x, y⟫ = r * ⟪x,y⟫ := sorry
 @[simp] theorem inner_mul_2 (r : ℝ) (x y : U) : ⟪x, r * y⟫ = r * ⟪x,y⟫ := sorry
 
-@[simp] theorem inner_prod (u u' : U) (v v' : V) : ⟪(u,v), (u',v')⟫ = ⟪u,u'⟫ + ⟪v,v'⟫ := sorry
+-- @[simp] theorem inner_prod (u u' : U) (v v' : V) : ⟪(u,v), (u',v')⟫ = ⟪u,u'⟫ + ⟪v,v'⟫ := sorry
 @[simp] theorem inner_real (x y : ℝ) : ⟪x, y⟫ = x * y := sorry
 @[simp] theorem square_sqrt_square (x : ℝ) : (Math.sqrt (x * x))^2 = x * x := sorry
 

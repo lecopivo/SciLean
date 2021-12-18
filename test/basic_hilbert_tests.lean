@@ -18,12 +18,18 @@ example {X' : Type} [SemiHilbert' X' SemiInner.RealSig] : IsLin (SemiInner.semiI
 
 example {X Y R D eval} [Vec R] [FinEnumVec X] [SemiInner' Y ⟨R,D,eval⟩] [Vec Y]
   : SemiInner' (X ⊸ Y) ⟨R,D,eval⟩ := by infer_instance
+
 example {X Y R D eval} [Vec R] [FinEnumVec X] [SemiHilbert' Y ⟨R,D,eval⟩] 
   : SemiHilbert' (X ⊸ Y) ⟨R,D,eval⟩ := by infer_instance
+
 example {X Y S} [Vec S.R] [FinEnumVec X] [SemiInner' Y S] [Vec Y] : SemiInner' (X ⊸ Y) S := by infer_instance
+example {X Y S} [Vec S.R] [FinEnumVec X] [SemiHilbert' Y S]       : SemiHilbert' (X ⊸ Y) S := by infer_instance
+
+example {X Y} [FinEnumVec X] [Hilbert Y] : Hilbert (X ⊸ Y) := by infer_instance
+example {Y}                  [Hilbert Y] : Hilbert (ℝ ⊸ Y) := by infer_instance
+
 example {X} [FinEnumVec X] : SemiInner' (X ⊸ ℝ) SemiInner.RealSig := by infer_instance
-example {X Y S} [Vec S.R] [FinEnumVec X] [SemiHilbert' Y S] : SemiHilbert' (X ⊸ Y) S := by infer_instance
-example {X} [FinEnumVec X] : Hilbert (X ⊸ ℝ) := by infer_instance
+example {X} [FinEnumVec X] : Hilbert    (X ⊸ ℝ)                   := by infer_instance
 
 -- example {X} [FinEnumVec X] : SemiInner' (X ⊸ ℝ) (SemiInner.RealSig) := by infer_instance
 -- example {X} [FinEnumVec X] : Hilbert (X ⊸ ℝ) := by infer_instance

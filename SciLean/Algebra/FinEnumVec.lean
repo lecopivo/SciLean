@@ -46,7 +46,7 @@ end FinEnumBasis
 --     However, when programming objects are usually stored in containers
 --     and these containers are indexed, so there is natural basis.
 --     Why no to pick the orthonormal inner product on this basis?
-class FinEnumVec (X : Type u) extends SemiHilbert' X SemiInner.RealSig, FinEnumBasis X where
+class FinEnumVec (X : Type u) extends SemiHilbert X ℝ Unit (λ r _ => r), FinEnumBasis X where
   is_orthonormal : ∀ i j, ⟪(𝔼 i : X), (𝔼 j : X)⟫ = if i == j then (1 : ℝ) else (0 : ℝ)
   
 namespace FinEnumVec
@@ -56,7 +56,7 @@ namespace FinEnumVec
     is_orthonormal := 
     by
       intro i j
-      simp [FinEnumBasis.basis, SemiInner.semiInner', SemiInner'.semiInner]
+      simp [FinEnumBasis.basis, SemiInner.semiInner, SemiInner.semiInner']
       induction i; induction j; simp; done
   }
 

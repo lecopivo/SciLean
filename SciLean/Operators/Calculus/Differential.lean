@@ -156,5 +156,17 @@ theorem differential_of_parm_morph {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y 
 #check Smooth.Hom.mk
 instance : IsSmooth (λ (f : X ⟿ Y) => f.1) := by infer_instance
                    
+section aa
+variable {X Y Z : Type} [FinEnumVec X] [Hilbert Y] {S} [Vec S.R] [SemiHilbert' Z S]
+example : SemiInner.Trait (ℝ ⊸ Y) := by infer_instance
+example : Hilbert (ℝ ⊸ Y) := by infer_instance
+example : SemiInner.Trait (ℝ ⟿ Y) := by infer_instance
+example : SemiInner.Trait Y := by infer_instance
+example : SemiInner.Trait.sig (ℝ ⟿ Y) = SemiInner.RealSig.addInterval := by rfl
 
-
+-- set_option trace.Meta.synthInstance true in
+-- example : SemiHilbert' (ℝ ⟿ Y) (SemiInner.Trait.sig (ℝ ⟿ Y)) := by infer_instance
+-- example : SemiHilbert' (ℝ ⟿ Y) (SemiInner.RealSig.addInterval) := by infer_instance
+-- example : SemiHilbert' (ℝ ⟿ Z) S.addInterval := by infer_instance
+-- #check  ((λ (f : ℝ ⟿ Y) => λ x ⟿ λ dx ⊸ δ f.1 x dx))†
+end aa
