@@ -84,6 +84,35 @@ namespace Iterable
   -- Iterators on `ι ×ₗ κ` respects `<`
   instance [IterableLt ι] [IterableLt κ] : IterableLt (ι ×ₗ κ) := ⟨sorry⟩
 
+
+  instance [Iterable ι] [Iterable κ]
+           : Iterable (ι ⊕ κ) :=
+  {
+    first := 
+      match (first : Option ι) with
+        | some i => some $ Sum.inl i
+        | none =>
+        match (first : Option κ) with
+          | some j => some $ Sum.inr j
+          | none => none
+
+    next := λ ij =>
+      match ij with
+        | Sum.inl i => 
+          match (next i) with
+            | some i' => some $ Sum.inl i'
+            | none    => 
+              match (first : Option κ) with
+                | some j => some $ Sum.inr j
+                | none   => none
+        | Sum.inr j => 
+          match (next j) with
+            | some j' => some $ Sum.inr j'
+            | none    => none
+         
+    decEq := by infer_instance
+  }
+
   -- This range might be confusing because if `<` is defined on `ι`
   -- then the range (i,j) for `i>j` is not empty but equivalent to (i,pastLast)
   def LinRange (ι : Type u) [Iterable ι] := Option (ι × Option ι)

@@ -68,6 +68,23 @@ namespace Enumtype
      next_toFin    := sorry
   }
 
+  instance [Enumtype α] [Enumtype β] : Enumtype (α ⊕ β) := 
+  {
+    numOf := numOf α + numOf β
+    fromFin := λ i => 
+      if i < numOf α 
+      then Sum.inl $ fromFin ⟨i.1, sorry⟩ 
+      else Sum.inr $ fromFin ⟨i.1 - numOf α, sorry⟩
+    toFin := λ ab => 
+      match ab with
+      | Sum.inl a => ⟨(toFin a).1, sorry⟩
+      | Sum.inr b => ⟨(toFin b).1 + numOf α, sorry⟩
+
+    first_fromFin := sorry
+    next_fromFin  := sorry
+    next_toFin    := sorry
+  }
+
   -- TODO: Add LinRange as for Iterable
 
   -- This is closed range! Includes last element!
