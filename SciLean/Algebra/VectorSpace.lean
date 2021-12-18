@@ -3,6 +3,8 @@ import SciLean.Algebra.Basic
 
 import SciLean.Mathlib.Algebra.Module.Basic
 
+namespace SciLean
+
 -- __   __      _             ___
 -- \ \ / /__ __| |_ ___ _ _  / __|_ __  __ _ __ ___
 --  \ V / -_) _|  _/ _ \ '_| \__ \ '_ \/ _` / _/ -_)
