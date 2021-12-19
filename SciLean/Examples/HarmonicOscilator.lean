@@ -9,10 +9,10 @@ set_option synthInstance.maxHeartbeats 50000
 set_option synthInstance.maxSize 1000
 
 def V := ℝ × ℝ × ℝ
-instance : Hilbert V := by simp[V]; infer_instance
+-- instance : Hilbert V := by simp[V]; infer_instance
 -- unfortunatelly defining `V` as `abbrev V := ℝ × ℝ` breaks typeclass system and some function cannot be proven smooth anymore :(
 
-def H (m k : ℝ) (x p : V) := ⟪p,p⟫ + ⟪x, x⟫
+-- def H (m k : ℝ) (x p : V) := ⟪p,p⟫ + ⟪x, x⟫
 
 -- set_option maxHeartbeats 1000000
 

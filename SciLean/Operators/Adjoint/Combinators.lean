@@ -6,8 +6,8 @@ namespace SciLean
 open SemiInner
 
 variable {α β γ : Type}
-variable {X Y Z : Type} {S}
-variable [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] [SemiHilbert' Z S]
+variable {X Y Z : Type} {R D e}
+variable [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
 
 namespace SciLean.Adjoint
 

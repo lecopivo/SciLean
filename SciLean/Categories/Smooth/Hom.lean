@@ -77,14 +77,14 @@ namespace Hom
     : SemiInner (ℝ ⟿ X) (ℝ × ℝ → R) ((ℝ × ℝ) × D) (λ r (I,D) => e (r I) D) :=
   {
     semiInner := λ f g (a,b) => 
-      Mathlib.Convenient.integrate a b (λ t => ⟪e| f t, g t⟫) sorry
+      Mathlib.Convenient.integrate a b (λ t => ⟪f t, g t⟫) sorry
     testFunction := sorry -- TODO: define test functions on an interval - Probably functions with compact support strictly inside of (a,b). Alternatively, all defivatives vanish at a and b
   }
 
-  @[reducible] instance {X} [SemiInner.Trait X] [Vec X] : SemiInner.Trait (ℝ ⟿ X) := 
-    ⟨ℝ × ℝ → (SemiInner.Trait.R X),
-     (ℝ × ℝ) × (SemiInner.Trait.D X),
-     (λ r (I,D) => SemiInner.Trait.eval (r I) D)⟩
+  -- @[reducible] instance {X} [SemiInner.Trait X] [Vec X] : SemiInner.Trait (ℝ ⟿ X) := 
+  --   ⟨ℝ × ℝ → (SemiInner.Trait.R X),
+  --    (ℝ × ℝ) × (SemiInner.Trait.D X),
+  --    (λ r (I,D) => SemiInner.Trait.eval (r I) D)⟩
 
   instance {X R D e} [Vec R] [SemiHilbert X R D e]
     : SemiHilbert (ℝ ⟿ X) (ℝ × ℝ → R) ((ℝ × ℝ) × D) (λ r (I,D) => e (r I) D) :=

@@ -66,11 +66,9 @@ theorem differential_of_composition_2 (f : Y → Z) (g dg : α → Y)
         : δ (λ (g : α → Y) (a : α) => f (g a)) g dg = λ a => δ f (g a) (dg a) := sorry 
 
 -- TODO: Change IsSmooth to IsDiff
-set_option synthInstance.maxHeartbeats 5000
 @[simp] 
 theorem differential_of_composition_3 (f df : β → Z)
-        : δ (λ (f : β → Z) (g : α → β) (a : α) => f (g a)) f df = λ (g : α → β) a => df (g a) := by simp
-set_option synthInstance.maxHeartbeats 500
+        : δ (λ (f : β → Z) (g : α → β) (a : α) => f (g a)) f df = λ (g : α → β) a => df (g a) := sorry
 
 -- can have weaker assumption, [IsSmooth (λ y => f y b)]
 @[simp]
@@ -136,8 +134,8 @@ instance {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) (x dx : X)
 noncomputable
 def diff := λ (f : X ⟿ Y) ⊸ (λ x ⟿ λ dx ⊸ δ f.1 x dx)
 
-noncomputable
-def derivative:= λ (f : ℝ ⟿ Y) ⊸ (λ x ⟿ (δ f.1 x (1 : ℝ)))
+-- noncomputable
+-- def derivative := λ (f : ℝ ⟿ Y) ⊸ (λ x ⟿ (δ f.1 x (1 : ℝ)))
 
 
 @[simp] 
@@ -154,19 +152,19 @@ theorem differential_of_parm_morph {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y 
 #check λ (f : X ⟿ Y) ⊸ (λ x ⟿ λ dx ⊸ δ f.1 x dx)
 
 #check Smooth.Hom.mk
-instance : IsSmooth (λ (f : X ⟿ Y) => f.1) := by infer_instance
+-- instance : IsSmooth (λ (f : X ⟿ Y) => f.1) := by infer_instance
                    
-section aa
-variable {X Y Z : Type} [FinEnumVec X] [Hilbert Y] {S} [Vec S.R] [SemiHilbert' Z S]
-example : SemiInner.Trait (ℝ ⊸ Y) := by infer_instance
-example : Hilbert (ℝ ⊸ Y) := by infer_instance
-example : SemiInner.Trait (ℝ ⟿ Y) := by infer_instance
-example : SemiInner.Trait Y := by infer_instance
-example : SemiInner.Trait.sig (ℝ ⟿ Y) = SemiInner.RealSig.addInterval := by rfl
+-- section aa
+-- variable {X Y Z : Type} [FinEnumVec X] [Hilbert Y] {S} [Vec S.R] [SemiHilbert' Z S]
+-- example : SemiInner.Trait (ℝ ⊸ Y) := by infer_instance
+-- example : Hilbert (ℝ ⊸ Y) := by infer_instance
+-- example : SemiInner.Trait (ℝ ⟿ Y) := by infer_instance
+-- example : SemiInner.Trait Y := by infer_instance
+-- example : SemiInner.Trait.sig (ℝ ⟿ Y) = SemiInner.RealSig.addInterval := by rfl
 
--- set_option trace.Meta.synthInstance true in
--- example : SemiHilbert' (ℝ ⟿ Y) (SemiInner.Trait.sig (ℝ ⟿ Y)) := by infer_instance
--- example : SemiHilbert' (ℝ ⟿ Y) (SemiInner.RealSig.addInterval) := by infer_instance
--- example : SemiHilbert' (ℝ ⟿ Z) S.addInterval := by infer_instance
--- #check  ((λ (f : ℝ ⟿ Y) => λ x ⟿ λ dx ⊸ δ f.1 x dx))†
-end aa
+-- -- set_option trace.Meta.synthInstance true in
+-- -- example : SemiHilbert' (ℝ ⟿ Y) (SemiInner.Trait.sig (ℝ ⟿ Y)) := by infer_instance
+-- -- example : SemiHilbert' (ℝ ⟿ Y) (SemiInner.RealSig.addInterval) := by infer_instance
+-- -- example : SemiHilbert' (ℝ ⟿ Z) S.addInterval := by infer_instance
+-- -- #check  ((λ (f : ℝ ⟿ Y) => λ x ⟿ λ dx ⊸ δ f.1 x dx))†
+-- end aa

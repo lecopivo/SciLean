@@ -80,8 +80,8 @@ namespace Hom
   instance {X Y R D e} [Vec R] [FinEnumVec X] [SemiInner Y R D e] [Vec Y]
     : SemiInner (X ⊸ Y) R D e :=
   {
-    semiInner := λ f g => ∑ i, ⟪e| f (𝔼 i), g (𝔼 i)⟫
-    testFunction := λ D f => ∀ i, testFunction e D (f (𝔼 i))
+    semiInner := λ f g => ∑ i, ⟪f (𝔼 i), g (𝔼 i)⟫
+    testFunction := λ D f => ∀ i, testFunction D (f (𝔼 i))
   }
 
   instance {X Y R D e} [Vec R] [FinEnumVec X] [SemiHilbert Y R D e] 
@@ -94,14 +94,13 @@ namespace Hom
     semi_inner_ext := sorry
   }
 
-  open SemiInner
-  @[reducible]
-  instance {X Y} [FinEnumVec X] [Vec Y] [Trait Y] [SemiInner Y (Trait.R Y) (Trait.D Y) Trait.eval] 
-    : Trait (X ⊸ Y) := ⟨Trait.R Y, Trait.D Y, Trait.eval⟩
-
+  -- open SemiInner
+  -- @[reducible]
+  -- instance {X Y} [FinEnumVec X] [Vec Y] [Trait Y] [SemiInner Y (Trait.R Y) (Trait.D Y) Trait.eval] 
+  --   : Trait (X ⊸ Y) := ⟨Trait.R Y, Trait.D Y, Trait.eval⟩
 
   -- TODO: Figure out why does signature does not get infered here automatically??
-  example : SemiInner.Trait ℝ := by infer_instance
+  -- example : SemiInner.Trait ℝ := by infer_instance
   example : Hilbert ℝ := by infer_instance
   example : SemiHilbert ℝ ℝ Unit (λ r _ => r) := by infer_instance
 

@@ -10,6 +10,7 @@ variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 -- id
 instance : IsLin (id : X → X) := by simp[id]; infer_instance; done
 
+-- set_option synthInstance.maxHeartbeats 50000
 -- const
 instance : IsLin (const β : X → β → X) := by simp[const]; infer_instance; done
 instance : IsLin (const Y (0 : X) : Y → X) := by simp[const]; infer_instance; done

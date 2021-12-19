@@ -4,7 +4,7 @@ namespace SciLean.BackPropagation
 
 variable {α β γ α' β': Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-variable {U V W : Type} {S} [Vec S.R] [SemiHilbert' U S] [SemiHilbert' V S] [SemiHilbert' W S]
+variable {U V W : Type} {R D e} [Vec R] [SemiHilbert U R D e] [SemiHilbert V R D e] [SemiHilbert W R D e]
 
 instance (f : U → V) [IsSmooth f] : IsSmooth (𝓑 f) := sorry
 
@@ -43,9 +43,9 @@ theorem backprop_of_composition_1
         (f : V → W) (g : U → V) 
         [IsSmooth g] [IsSmooth f]
     : 𝓑 (λ x => f (g x)) = (λ x => (𝓑 f • 𝓑 g) x) := 
-by
-  funext x; simp[backprop, backcomp]; conv in (δ _ _) => enter [dx]
-  simp admit
+by sorry
+  -- funext x; simp[backprop, backcomp]; conv in (δ _ _) => enter [dx]
+  -- simp admit
 
 -- -- TODO: Change IsSmooth to IsDiff
 @[simp] 

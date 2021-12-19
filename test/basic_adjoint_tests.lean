@@ -9,6 +9,9 @@ open SciLean
 variable {α β γ : Type}
 variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 
+example (f : Y → Z) (g : X → Y) (z : Z) [HasAdjoint f] [HasAdjoint g] : (f ∘ g)† z = g† (f† z) := by simp done
+set_option trace.Meta.Tactic.simp true in
+set_option trace.Meta.synthInstance true in
 example (f g : X → Y) [HasAdjoint f] [HasAdjoint g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp done
 example (y : Y) (r : ℝ) : (λ x => ⟪x,y⟫)† r = r*y := by simp done
 example (y : X) (r : ℝ) : (λ x => ⟪x,y⟫ + ⟪y,x⟫)† r = 2*r*y := by simp done

@@ -8,7 +8,7 @@ namespace SciLean
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-variable {U V W : Type} {S} [Vec S.R] [SemiHilbert' U S] [SemiHilbert' V S] [SemiHilbert' W S]
+variable {U V W : Type} {R D e} [Vec R] [SemiHilbert U R D e] [SemiHilbert V R D e] [SemiHilbert W R D e]
 
 ------------------
 -- Differential --
@@ -77,9 +77,8 @@ prefix:max "𝓣" => tangent_map
 -- Reverse Mode --
 ------------------
 noncomputable 
-def backprop {U V} [PairTrait U V] [Vec (sig U V).R] 
-  [SemiHilbert' U (sig U V)] [SemiHilbert' V (sig U V)]
-  (f : U → V) : U → V×(V→U) := λ x => (f x, (δ f x)†)
+def backprop 
+  (f : U → V) : U → V × (V → U) := λ x => (f x, (δ f x)†)
 
 prefix:max "𝓑" => backprop
 

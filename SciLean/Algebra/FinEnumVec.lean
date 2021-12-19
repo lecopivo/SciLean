@@ -56,7 +56,7 @@ namespace FinEnumVec
     is_orthonormal := 
     by
       intro i j
-      simp [FinEnumBasis.basis, SemiInner.semiInner, SemiInner.semiInner']
+      simp [FinEnumBasis.basis, SemiInner.semiInner]
       induction i; induction j; simp; done
   }
 

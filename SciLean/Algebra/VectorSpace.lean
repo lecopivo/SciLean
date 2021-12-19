@@ -49,8 +49,8 @@ section CommonVectorSpaces
   instance {A} [AddCommGroup A] : AddCommGroup (α → A) := AddCommGroup.mk sorry
 
   instance {α β} {γ : Type w} [Monoid α] [MulAction α β] : MulAction α (γ → β) := MulAction.mk sorry sorry
-  instance {M A} [Monoid M] [AddMonoid A] [DistribMulAction M A] : DistribMulAction M (α → A) := DistribMulAction.mk sorry sorry
-  instance {R M} [Semiring R] [AddCommGroup M] [Module R M] : Module R (α → M) := Module.mk sorry sorry
+  instance {A M} [AddMonoid A] [Monoid M] [DistribMulAction M A] : DistribMulAction M (α → A) := DistribMulAction.mk sorry sorry
+  instance {M R} [AddCommGroup M] [Semiring R] [Module R M] : Module R (α → M) := Module.mk sorry sorry
 
   set_option synthInstance.maxHeartbeats 5000
   instance [Vec U] : Vec (α → U) := Vec.mk
@@ -63,8 +63,8 @@ section CommonVectorSpaces
   instance {A B} [AddCommGroup A] [AddCommGroup B] : AddCommGroup (A × B) := AddCommGroup.mk sorry
 
   instance {α β β'} [Monoid α] [MulAction α β] [MulAction α β'] : MulAction α (β × β') := MulAction.mk sorry sorry
-  instance {M A B} [Monoid M] [AddMonoid A] [DistribMulAction M A] [AddMonoid B] [DistribMulAction M B] : DistribMulAction M (A × B) := DistribMulAction.mk sorry sorry
-  instance {R M N} [Semiring R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N] : Module R (M × N) := Module.mk sorry sorry
+  instance {A B M} [AddMonoid B] [AddMonoid A] [Monoid M] [DistribMulAction M A]  [DistribMulAction M B] : DistribMulAction M (A × B) := DistribMulAction.mk sorry sorry
+  instance {M N R} [AddCommGroup M] [AddCommGroup N] [Semiring R] [Module R M] [Module R N] : Module R (M × N) := Module.mk sorry sorry
 
   set_option synthInstance.maxHeartbeats 5000
   instance [Vec U] [Vec V] : Vec (U × V) := Vec.mk

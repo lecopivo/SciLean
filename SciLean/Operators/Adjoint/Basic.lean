@@ -17,21 +17,21 @@ prefix:max "𝓘" => SemiInner.Signature.Dom
 ---       3. condition `testFunction D y` is there to prove f†† = f
 ---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
 open SemiInner in
-class HasAdjoint' {X Y} (R D e) [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] (f : X → Y) : Prop  
+class HasAdjoint {X Y} (f : X → Y) {R : outParam $ Type v} {D e} [outParam $ Vec R] [outParam $ SemiHilbert X R D e] [outParam $ SemiHilbert Y R D e] : Prop  
   where
     hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (d : D), 
-                   (testFunction e d x ∨ testFunction e d y) → ⟪e| f' y, x⟫ = ⟪e| y, f x⟫
-    preservesTestFun : ∀ (x : X) (d : D), testFunction e d x → testFunction e d (f x)
+                   (testFunction d x ∨ testFunction d y) → ⟪f' y, x⟫ = ⟪y, f x⟫
+    preservesTestFun : ∀ (x : X) (d : D), testFunction d x → testFunction d (f x)
 
 open SemiInner in
 noncomputable
-constant adjoint' {X Y} (R D e) [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] 
-    (f : X → Y)
+constant adjoint {X Y} 
+    (f : X → Y) {R : outParam $ Type v} {D e} [outParam $ Vec R] [outParam $ SemiHilbert X R D e] [outParam $ SemiHilbert Y R D e] 
     : 
       Y → X 
     :=
-    match Classical.propDecidable (HasAdjoint' R D e f) with
-      | isTrue  h => Classical.choose (HasAdjoint'.hasAdjoint (self := h))
+    match Classical.propDecidable (HasAdjoint (R := R) f) with
+      | isTrue  h => Classical.choose (HasAdjoint.hasAdjoint (self := h))
       | _ => (0 : Y → X)
 
 -- section AutoCompleteS
@@ -60,19 +60,6 @@ constant adjoint' {X Y} (R D e) [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D
 
 -- end AutoCompleteS
 
-open SemiInner in
-abbrev HasAdjoint {X Y} [Trait₂ X Y] [Vec (Trait₂.R X Y)]
-  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval)] 
-  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval)] 
-  (f : X → Y) := HasAdjoint' (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval) f
-
-open SemiInner in
-noncomputable
-abbrev adjoint {X Y} [Trait₂ X Y] [Vec (Trait₂.R X Y)]
-  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval)] 
-  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval)] 
-  (f : X → Y) := adjoint' (Trait₂.R X Y) (Trait₂.D X Y) (Trait₂.eval) f
-
 postfix:max "†" => adjoint
 
 namespace Adjoint
@@ -82,10 +69,9 @@ namespace Adjoint
   variable {α β γ : Type}
   variable {X Y Z: Type} {R D e} [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
 
-  example : Trait X := by infer_instance
-  example : Trait Y := by infer_instance
-  example : Trait Z := by infer_instance
-  -- example : PairTrait X Y := by infer_instance
+  variable (f : X → Y) (x : X) (y : Y) [HasAdjoint (R := R) f]
+
+  #check ⟪f† y, x⟫ = ⟪y, f x⟫
 
 
   -- open SemiInner in
@@ -103,7 +89,7 @@ namespace Adjoint
   theorem inner_adjoint_fst_right_test
     (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction e d x) 
+      (h : testFunction d x) 
       → ⟪f† y, x⟫ = ⟪y, f x⟫
     := sorry
 
@@ -111,7 +97,7 @@ namespace Adjoint
   theorem inner_adjoint_fst_left_test
     (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction e d y) 
+      (h : testFunction d y) 
       → ⟪f† y, x⟫ = ⟪y, f x⟫ 
     := sorry
 
@@ -119,7 +105,7 @@ namespace Adjoint
   theorem inner_adjoint_snd_right_test 
     (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction e d x) 
+      (h : testFunction d x) 
       → ⟪x, f† y⟫ = ⟪f x, y⟫ 
     := sorry
 
@@ -127,13 +113,13 @@ namespace Adjoint
   theorem inner_adjoint_snd_left_test
     (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction e d y) 
+      (h : testFunction d y) 
       → ⟪x, f† y⟫ = ⟪f x, y⟫
     := sorry
 
-  theorem inner_ext {X} [Trait X] [Vec (Trait.R X)] [SemiInner X (Trait.R X) (Trait.D X) (Trait.eval)]  (x y : X)
+  theorem inner_ext {X} (x y : X) (R :  (Type v)) (D :  (Type w)) (e :  (R → D → ℝ)) [outParam $ Vec R] [outParam $ SemiHilbert X R D e] 
     : 
-      (∀ (x' : X) (D : (Trait.D X)), testFunction Trait.eval D x' → ⟪x, x'⟫ = ⟪y, x'⟫)
+      (∀ (x' : X) (d : D), testFunction d x' → ⟪x, x'⟫ = ⟪y, x'⟫)
        → (x = y)
     := sorry 
 
@@ -177,12 +163,10 @@ namespace Adjoint
   set_option trace.Meta.Tactic.simp true in
   @[simp]
   theorem adjoint_of_adjoint (f : X → Y) [HasAdjoint f] : f†† = f := 
-  by
-    funext x 
-    inner_ext;
-    rw [inner_adjoint_fst_right_test]
-    admit
-    admit
+  by sorry
+    -- funext x 
+    -- inner_ext;
+    -- simp done
 
     -- delta SemiInner.semiInner'
     -- -- apply inner_ext (S := S); intros;
@@ -192,19 +176,19 @@ namespace Adjoint
   @[simp] 
   theorem adjoint_of_id
     : adjoint (λ x : X => x) = id := 
-  by
-    funext x; inner_ext; simp (discharger := assumption); done
+  by sorry
+    -- funext x; inner_ext; simp (discharger := assumption); done
 
 
   @[simp]
   theorem adjoint_of_const {ι} [Enumtype ι]
     : (λ (x : X) (i : ι) => x)† = sum := 
-  by
-    funext x; inner_ext;
-    simp (discharger := assumption);
-    simp[semiInner', semiInner]
-    -- now just propagete sum inside and we are done
-    admit
+  by sorry
+    -- funext x; inner_ext;
+    -- simp (discharger := assumption);
+    -- simp[semiInner', semiInner]
+    -- -- now just propagete sum inside and we are done
+    -- admit
 
   example {ι} [Enumtype ι]
     : (λ (x : X) (i : ι) => x)† = sum := by simp
@@ -222,9 +206,9 @@ namespace Adjoint
   example {ι} [Enumtype ι]
     : (λ x : ι → X => sum x)† = (λ (x : X) (i : ι) => x) := by simp done
 
-  @[simp]
-  theorem adjoint_of_swap {ι κ} [Enumtype ι] [Enumtype κ]
-    : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
+  -- @[simp]
+  -- theorem adjoint_of_swap {ι κ} [Enumtype ι] [Enumtype κ]
+  --   : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
 
   @[simp]
   theorem adjoint_of_parm {ι} [Enumtype ι] 
@@ -347,7 +331,7 @@ namespace Adjoint
 
   open Function
 
-  variable {Y1 Y2} {ι : Type} [SemiHilbert' Y1 S] [SemiHilbert' Y2 S] [Enumtype ι]
+  variable {Y1 Y2} {ι : Type} [SemiHilbert Y1 R D e] [SemiHilbert Y2 R D e] [Enumtype ι]
 
   instance (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
     [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
