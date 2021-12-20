@@ -4,41 +4,32 @@ import SciLean.Tactic
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} {S} [Vec S.R] [SemiHilbert' X S] [SemiHilbert' Y S] [SemiHilbert' Z S]
+variable {X Y Z : Type} {R D e} [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
 variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 example : SemiInner.Trait X := by infer_instance
-example : IsLin (SemiInner.semiInner' : X → X → _) := by infer_instance done
-example : IsLin (λ x y : X => ⟪S|x, y⟫) := by infer_instance done
-example : IsLin (SemiInner'.semiInner : X → X → S.R) := by infer_instance done
+example : IsLin (SemiInner.semiInner : X → X → _) := by infer_instance done
+example : IsLin (λ x y : X => ⟪x, y⟫) := by infer_instance done
+example : IsLin (SemiInner.semiInner : X → X → R) := by infer_instance done
 example : IsLin (λ x y : X => ⟪x, y⟫) := by infer_instance done
 example (x : X) : IsLin (λ y : X => ⟪x, y⟫) := by infer_instance done
-example {X' : Type} [SemiHilbert' X' SemiInner.RealSig] : IsLin (SemiInner.semiInner' : X' → X' → _) := by infer_instance
+example {X' : Type} [SemiHilbert X' ℝ Unit (λ r _ => r)] : IsLin (SemiInner.semiInner : X' → X' → ℝ) := by infer_instance
 
 
-example {X Y R D eval} [Vec R] [FinEnumVec X] [SemiInner' Y ⟨R,D,eval⟩] [Vec Y]
-  : SemiInner' (X ⊸ Y) ⟨R,D,eval⟩ := by infer_instance
+example {X Y R D eval} [Vec R] [FinEnumVec X] [SemiInner Y R D eval] [Vec Y]
+  : SemiInner (X ⊸ Y) R D eval := by infer_instance
 
-example {X Y R D eval} [Vec R] [FinEnumVec X] [SemiHilbert' Y ⟨R,D,eval⟩] 
-  : SemiHilbert' (X ⊸ Y) ⟨R,D,eval⟩ := by infer_instance
+example {X Y R D eval} [Vec R] [FinEnumVec X] [SemiHilbert Y R D eval] 
+  : SemiHilbert (X ⊸ Y) R D eval := by infer_instance
 
-example {X Y S} [Vec S.R] [FinEnumVec X] [SemiInner' Y S] [Vec Y] : SemiInner' (X ⊸ Y) S := by infer_instance
-example {X Y S} [Vec S.R] [FinEnumVec X] [SemiHilbert' Y S]       : SemiHilbert' (X ⊸ Y) S := by infer_instance
+example {X Y R D e} [Vec R] [FinEnumVec X] [SemiInner Y R D e] [Vec Y] : SemiInner (X ⊸ Y) R D e := by infer_instance
+example {X Y R D e} [Vec R] [FinEnumVec X] [SemiHilbert Y R D e]       : SemiHilbert (X ⊸ Y) R D e := by infer_instance
 
 example {X Y} [FinEnumVec X] [Hilbert Y] : Hilbert (X ⊸ Y) := by infer_instance
 example {Y}                  [Hilbert Y] : Hilbert (ℝ ⊸ Y) := by infer_instance
 
-example {X} [FinEnumVec X] : SemiInner' (X ⊸ ℝ) SemiInner.RealSig := by infer_instance
-example {X} [FinEnumVec X] : Hilbert    (X ⊸ ℝ)                   := by infer_instance
-
--- example {X} [FinEnumVec X] : SemiInner' (X ⊸ ℝ) (SemiInner.RealSig) := by infer_instance
--- example {X} [FinEnumVec X] : Hilbert (X ⊸ ℝ) := by infer_instance
-
--- by apply Lin.instIsLinSemiInnerArrowArrow; done
-
--- #check Lin.instIsLinSemiInnerArrowArrow
-
-
+-- example {X} [FinEnumVec X] : SemiInner (X ⊸ ℝ) ℝ Unit (λ r _ => r) := by infer_instance
+-- example {X} [FinEnumVec X] : Hilbert    (X ⊸ ℝ)                     := by infer_instance
 
 
 -- This was a problem at some point

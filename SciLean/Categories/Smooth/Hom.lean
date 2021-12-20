@@ -86,7 +86,7 @@ namespace Hom
   --    (ℝ × ℝ) × (SemiInner.Trait.D X),
   --    (λ r (I,D) => SemiInner.Trait.eval (r I) D)⟩
 
-  instance {X R D e} [Vec R] [SemiHilbert X R D e]
+  instance {X R D e} [SemiInner.Trait X] [Vec R] [SemiHilbert X R D e]
     : SemiHilbert (ℝ ⟿ X) (ℝ × ℝ → R) ((ℝ × ℝ) × D) (λ r (I,D) => e (r I) D) :=
   {
     semi_inner_add := sorry

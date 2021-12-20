@@ -17,20 +17,26 @@ prefix:max "𝓘" => SemiInner.Signature.Dom
 ---       3. condition `testFunction D y` is there to prove f†† = f
 ---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
 open SemiInner in
-class HasAdjoint {X Y} (f : X → Y) {R : outParam $ Type v} {D e} [outParam $ Vec R] [outParam $ SemiHilbert X R D e] [outParam $ SemiHilbert Y R D e] : Prop  
+class HasAdjoint {X Y} (f : X → Y) 
+  [Trait₂ X Y] [Vec (Trait₂.R X Y)] 
+  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
+  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] : Prop  
   where
-    hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (d : D), 
-                   (testFunction d x ∨ testFunction d y) → ⟪f' y, x⟫ = ⟪y, f x⟫
-    preservesTestFun : ∀ (x : X) (d : D), testFunction d x → testFunction d (f x)
+    hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (d : (Trait₂.D X Y)), 
+                   (testFunction' d x ∨ testFunction' d y) → ⟪f' y, x⟫ = ⟪y, f x⟫
+    preservesTestFun : ∀ (x : X) (d : (Trait₂.D X Y)), testFunction' d x → testFunction' d (f x)
 
 open SemiInner in
 noncomputable
 constant adjoint {X Y} 
-    (f : X → Y) {R : outParam $ Type v} {D e} [outParam $ Vec R] [outParam $ SemiHilbert X R D e] [outParam $ SemiHilbert Y R D e] 
+    (f : X → Y) 
+    [Trait₂ X Y] [Vec (Trait₂.R X Y)] 
+    [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
+    [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval]
     : 
       Y → X 
     :=
-    match Classical.propDecidable (HasAdjoint (R := R) f) with
+    match Classical.propDecidable (HasAdjoint f) with
       | isTrue  h => Classical.choose (HasAdjoint.hasAdjoint (self := h))
       | _ => (0 : Y → X)
 
@@ -69,7 +75,7 @@ namespace Adjoint
   variable {α β γ : Type}
   variable {X Y Z: Type} {R D e} [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
 
-  variable (f : X → Y) (x : X) (y : Y) [HasAdjoint (R := R) f]
+  variable (f : X → Y) (x : X) (y : Y) [HasAdjoint f]
 
   #check ⟪f† y, x⟫ = ⟪y, f x⟫
 
@@ -89,7 +95,7 @@ namespace Adjoint
   theorem inner_adjoint_fst_right_test
     (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction d x) 
+      (h : testFunction' d x) 
       → ⟪f† y, x⟫ = ⟪y, f x⟫
     := sorry
 
@@ -97,7 +103,7 @@ namespace Adjoint
   theorem inner_adjoint_fst_left_test
     (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction d y) 
+      (h : testFunction' d y) 
       → ⟪f† y, x⟫ = ⟪y, f x⟫ 
     := sorry
 
@@ -105,7 +111,7 @@ namespace Adjoint
   theorem inner_adjoint_snd_right_test 
     (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction d x) 
+      (h : testFunction' d x) 
       → ⟪x, f† y⟫ = ⟪f x, y⟫ 
     := sorry
 
@@ -113,13 +119,13 @@ namespace Adjoint
   theorem inner_adjoint_snd_left_test
     (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
     : 
-      (h : testFunction d y) 
+      (h : testFunction' d y) 
       → ⟪x, f† y⟫ = ⟪f x, y⟫
     := sorry
 
-  theorem inner_ext {X} (x y : X) (R :  (Type v)) (D :  (Type w)) (e :  (R → D → ℝ)) [outParam $ Vec R] [outParam $ SemiHilbert X R D e] 
+  theorem inner_ext {X} (x y : X)  [Trait X] [Vec (Trait.R X)] [SemiHilbert X (Trait.R X) (Trait.D X) Trait.eval] 
     : 
-      (∀ (x' : X) (d : D), testFunction d x' → ⟪x, x'⟫ = ⟪y, x'⟫)
+      (∀ (x' : X) (d : (Trait.D X)), testFunction' d x' → ⟪x, x'⟫ = ⟪y, x'⟫)
        → (x = y)
     := sorry 
 
@@ -160,35 +166,30 @@ namespace Adjoint
 
   end Core
 
-  set_option trace.Meta.Tactic.simp true in
   @[simp]
   theorem adjoint_of_adjoint (f : X → Y) [HasAdjoint f] : f†† = f := 
-  by sorry
-    -- funext x 
-    -- inner_ext;
-    -- simp done
-
-    -- delta SemiInner.semiInner'
-    -- -- apply inner_ext (S := S); intros;
-    -- simp (discharger := assumption)
-    -- done
+  by 
+    funext x 
+    inner_ext;
+    simp (discharger := assumption)
+    done
 
   @[simp] 
   theorem adjoint_of_id
     : adjoint (λ x : X => x) = id := 
-  by sorry
-    -- funext x; inner_ext; simp (discharger := assumption); done
+  by 
+    funext x; inner_ext; simp (discharger := assumption); done
 
 
   @[simp]
   theorem adjoint_of_const {ι} [Enumtype ι]
     : (λ (x : X) (i : ι) => x)† = sum := 
-  by sorry
-    -- funext x; inner_ext;
-    -- simp (discharger := assumption);
-    -- simp[semiInner', semiInner]
-    -- -- now just propagete sum inside and we are done
-    -- admit
+  by 
+    funext x; inner_ext;
+    simp (discharger := assumption);
+    simp[semiInner, semiInner]
+    -- now just propagete sum inside and we are done
+    admit
 
   example {ι} [Enumtype ι]
     : (λ (x : X) (i : ι) => x)† = sum := by simp
@@ -206,9 +207,9 @@ namespace Adjoint
   example {ι} [Enumtype ι]
     : (λ x : ι → X => sum x)† = (λ (x : X) (i : ι) => x) := by simp done
 
-  -- @[simp]
-  -- theorem adjoint_of_swap {ι κ} [Enumtype ι] [Enumtype κ]
-  --   : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
+  @[simp]
+  theorem adjoint_of_swap {ι κ} [Enumtype ι] [Enumtype κ]
+    : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
 
   @[simp]
   theorem adjoint_of_parm {ι} [Enumtype ι] 

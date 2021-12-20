@@ -10,11 +10,12 @@ variable {α β γ : Type}
 variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 
 example (f : Y → Z) (g : X → Y) (z : Z) [HasAdjoint f] [HasAdjoint g] : (f ∘ g)† z = g† (f† z) := by simp done
-set_option trace.Meta.Tactic.simp true in
-set_option trace.Meta.synthInstance true in
 example (f g : X → Y) [HasAdjoint f] [HasAdjoint g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp done
 example (y : Y) (r : ℝ) : (λ x => ⟪x,y⟫)† r = r*y := by simp done
+
+set_option trace.Meta.Tactic.simp true in
 example (y : X) (r : ℝ) : (λ x => ⟪x,y⟫ + ⟪y,x⟫)† r = 2*r*y := by simp done
+
 example (r : ℝ) (x' : X) : (λ x : X => r*((λ x'' => ⟪x', x''⟫) x))† = λ s => r * s * x' := by simp funext s; simp done
 example : (λ (x : Fin n → ℝ) => sum λ i => x i)† 1 = (λ i => (1 : ℝ)) := by simp done
 example {n : Nat} (a : Fin n) [NonZero n] : (λ (f : Fin n → ℝ) i => f (i - a))† = (λ (f : Fin n → ℝ) x => f (x + a)) := by simp funext f x; simp done

@@ -77,14 +77,14 @@ namespace Hom
 
   open SemiInner
 
-  instance {X Y R D e} [Vec R] [FinEnumVec X] [SemiInner Y R D e] [Vec Y]
+  instance {X Y R D e} [FinEnumVec X] [Vec R] [SemiInner Y R D e] [Vec Y]
     : SemiInner (X ⊸ Y) R D e :=
   {
     semiInner := λ f g => ∑ i, ⟪f (𝔼 i), g (𝔼 i)⟫
-    testFunction := λ D f => ∀ i, testFunction D (f (𝔼 i))
+    testFunction := λ D f => ∀ i, testFunction' D (f (𝔼 i))
   }
 
-  instance {X Y R D e} [Vec R] [FinEnumVec X] [SemiHilbert Y R D e] 
+  instance {X Y R D e} [FinEnumVec X] [Trait Y] [Vec R] [SemiHilbert Y R D e] 
     : SemiHilbert (X ⊸ Y) R D e :=
   {
     semi_inner_add := sorry
@@ -103,6 +103,7 @@ namespace Hom
   -- example : SemiInner.Trait ℝ := by infer_instance
   example : Hilbert ℝ := by infer_instance
   example : SemiHilbert ℝ ℝ Unit (λ r _ => r) := by infer_instance
+
 
   -- set_option trace.Meta.isDefEq true in
   -- instance {X} [FinEnumVec X] : SemiHilbert (X ⊸ ℝ) ℝ Unit (λ r _ => r) := by apply instSemiHilbertHom

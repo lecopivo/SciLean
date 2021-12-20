@@ -4,7 +4,7 @@ import SciLean.Tactic
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} {S} [Vec S.R] [Hilbert X] [Hilbert Y] [Hilbert Z]
+variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
 example (y z : X) [Hilbert X] 

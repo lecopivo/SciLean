@@ -76,8 +76,11 @@ prefix:max "𝓣" => tangent_map
 ------------------
 -- Reverse Mode --
 ------------------
+open SemiInner in
 noncomputable 
-def backprop 
+def backprop {U V} [Trait₂ U V] [Vec (Trait₂.R U V)] 
+  [SemiHilbert U (Trait₂.R U V) (Trait₂.D U V) Trait₂.eval]
+  [SemiHilbert V (Trait₂.R U V) (Trait₂.D U V) Trait₂.eval]
   (f : U → V) : U → V × (V → U) := λ x => (f x, (δ f x)†)
 
 prefix:max "𝓑" => backprop

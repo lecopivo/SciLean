@@ -21,29 +21,25 @@ namespace Adjoint
   instance : HasAdjoint (λ x : X×X => x.1 + x.2) := sorry
   @[simp]
   theorem adjoint_of_hadd : adjoint (λ x : X×X => x.1 + x.2) = (λ x => (x,x)) := sorry
-
-  -- set_option synthInstance.maxHeartbeats 5000 in
-  -- set_option trace.Meta.Tactic.simp true in
-  -- set_option trace.Meta.synthInstance true in
   @[simp]
-  theorem adjoint_of_add_of_fun [HasAdjoint f] [HasAdjoint g] : adjoint (f + g) = adjoint f + adjoint g := sorry --by funext a; simp[HAdd.hAdd, Add.add]; done
+  theorem adjoint_of_add_of_fun [HasAdjoint f] [HasAdjoint g] : adjoint (f + g) = adjoint f + adjoint g := by funext a; simp[HAdd.hAdd, Add.add]; done
   @[simp]
-  theorem adjoint_of_add_of_fun_arg [HasAdjoint f] [HasAdjoint g] : adjoint (λ x => f x + g x) = (λ y => adjoint f y + adjoint g y) := sorry --by funext a; simp; done
+  theorem adjoint_of_add_of_fun_arg [HasAdjoint f] [HasAdjoint g] : adjoint (λ x => f x + g x) = (λ y => adjoint f y + adjoint g y) := by funext a; simp; done
   @[simp]
   theorem adjoint_of_add_of_fun_arg_parm (f g : X → ι → Y) [HasAdjoint f] [HasAdjoint g]
-      : adjoint (λ x i => f x i + g x i) = adjoint (λ x i => f x i) + adjoint (λ x i => g x i) := sorry -- by funext z; simp; done
+      : adjoint (λ x i => f x i + g x i) = adjoint (λ x i => f x i) + adjoint (λ x i => g x i) := by funext z; simp; done
 
   --- Subtraction
   instance : HasAdjoint (λ x : X×X => x.1 - x.2) := sorry
   @[simp]
   theorem adjoint_of_hsub : adjoint (λ x : X×X => x.1 - x.2) = (λ x => (x,-x)) := sorry
   @[simp]
-  theorem adjoint_of_sub_of_fun [HasAdjoint f] [HasAdjoint g] : adjoint (f - g) = adjoint f - adjoint g := sorry -- by funext a; simp[HSub.hSub, Sub.sub]; admit -- almost done
+  theorem adjoint_of_sub_of_fun [HasAdjoint f] [HasAdjoint g] : adjoint (f - g) = adjoint f - adjoint g := by funext a; simp[HSub.hSub, Sub.sub]; admit -- almost done
   @[simp]
-  theorem adjoint_of_sub_of_fun_arg [HasAdjoint f] [HasAdjoint g] : adjoint (λ x => f x - g x) = λ y => adjoint f y - adjoint g y := sorry -- by funext a; simp; admit -- almost done
+  theorem adjoint_of_sub_of_fun_arg [HasAdjoint f] [HasAdjoint g] : adjoint (λ x => f x - g x) = λ y => adjoint f y - adjoint g y := by funext a; simp; admit -- almost done
   @[simp]
   theorem adjoint_of_sub_of_fun_arg_parm (f g : X → Fin n → Y) [HasAdjoint f] [HasAdjoint g]
-      : adjoint (λ x i => f x i - g x i) = adjoint (λ x i => f x i) - adjoint (λ x i => g x i) := sorry -- by funext z; simp; admit
+      : adjoint (λ x i => f x i - g x i) = adjoint (λ x i => f x i) - adjoint (λ x i => g x i) := by funext z; simp; admit
 
   --- Multiplication
   instance (r : ℝ) : HasAdjoint (λ x : X => r * x) := sorry
@@ -66,7 +62,7 @@ namespace Adjoint
   @[simp]
   theorem adjoint_of_neg : adjoint (Neg.neg : X → X) = Neg.neg := sorry
   @[simp]
-  theorem adjoint_of_neg_of_fun [HasAdjoint f] : adjoint (-f) = -(adjoint f) := sorry -- by funext y; simp[Neg.neg]
+  theorem adjoint_of_neg_of_fun [HasAdjoint f] : adjoint (-f) = -(adjoint f) := sorry --by funext y; simp[Neg.neg]
 
 
   instance {X} [Hilbert X] (y : X) : HasAdjoint (λ x : X => ⟪x, y⟫) := sorry
