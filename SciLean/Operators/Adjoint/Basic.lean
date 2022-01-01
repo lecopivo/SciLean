@@ -30,8 +30,8 @@ open SemiInner in
 @[reducible] abbrev HasAdjoint {X Y} 
   [Trait₂ X Y] 
   [Vec (Trait₂.R X Y)] 
-  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
-  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
+  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval]
+  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval]
   (f : X → Y) 
   : Prop 
   := HasAdjoint' (R := (Trait₂.R X Y)) (D := (Trait₂.D X Y)) (e := (Trait₂.eval)) f
@@ -345,8 +345,8 @@ namespace Adjoint
   variable {Y1 Y2} {ι : Type} [SemiHilbert Y1 R D e] [SemiHilbert Y2 R D e] [Enumtype ι]
 
   instance (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
-    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     [HasAdjoint g1] [HasAdjoint g2]
+    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     : 
       HasAdjoint (λ x => f (g1 x) (g2 x))
     := sorry
@@ -355,8 +355,8 @@ namespace Adjoint
   @[simp]
   theorem adjoint_of_diag 
     (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
-    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     [HasAdjoint g1] [HasAdjoint g2]
+    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     : 
       (λ x => f (g1 x) (g2 x))†
       = 
@@ -369,8 +369,8 @@ namespace Adjoint
 
   instance
     (f : Y1 → Y2 → Z) (g1 : X → ι → Y1) (g2 : X → ι → Y2)
-    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     [HasAdjoint g1] [HasAdjoint g2]
+    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     : 
       HasAdjoint (λ x i => f (g1 x i) (g2 x i))
     := sorry
@@ -378,8 +378,8 @@ namespace Adjoint
   @[simp]
   theorem adjoint_of_diag_arg
     (f : Y1 → Y2 → Z) (g1 : X → ι → Y1) (g2 : X → ι → Y2)
-    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     [HasAdjoint g1] [HasAdjoint g2]
+    [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
     : 
       (λ x i => f (g1 x i) (g2 x i))†
       = 
