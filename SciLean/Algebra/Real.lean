@@ -66,14 +66,25 @@ namespace ℝ
 -- {
 -- }
 
-  instance : Field ℝ := 
+  instance : AddSemigroup ℝ :=
   {
-    -- by admit
+    add_assoc := sorry
+  }
+
+  instance : AddCommSemigroup ℝ :=
+  {
+    add_comm := sorry
+  }
+
+  instance : Semigroup ℝ :=
+  {
     mul_assoc := sorry
+  }
+
+  instance : Semiring ℝ := 
+  {
     add_zero := sorry
     zero_add := sorry
-    add_assoc := sorry
-    add_comm := sorry
     nsmul_zero' := sorry
     nsmul_succ' := sorry
     zero_mul := sorry
@@ -85,19 +96,66 @@ namespace ℝ
     mul_add := sorry
     add_mul := sorry
     ofNat_succ := sorry
+  }
+
+  instance : Ring ℝ :=
+  {
     sub_eq_add_neg := sorry
     gsmul_zero' := sorry
     gsmul_succ' := sorry
     gsmul_neg' := sorry
     add_left_neg := sorry
+  }
+
+  instance : CommRing ℝ := 
+  {
     mul_comm := sorry
+  }
+
+  instance : Nontrivial ℝ :=
+  {
     exists_pair_ne := sorry
-    div_eq_mul_inv := sorry
+  }
+  
+
+  instance : Field ℝ := 
+  {
+    div_eq_mul_inv := sorry 
     mul_inv_cancel := sorry
     inv_zero := sorry
     hpow_succ := sorry
     hpow_neg := sorry
   }
+  --   -- by admit
+  --   mul_assoc := sorry
+  --   add_zero := sorry
+  --   zero_add := sorry
+  --   add_assoc := sorry
+  --   add_comm := sorry
+  --   nsmul_zero' := sorry
+  --   nsmul_succ' := sorry
+  --   zero_mul := sorry
+  --   mul_zero := sorry
+  --   one_mul := sorry
+  --   mul_one := sorry
+  --   npow_zero' := sorry
+  --   npow_succ' := sorry
+  --   mul_add := sorry
+  --   add_mul := sorry
+  --   ofNat_succ := sorry
+  --   sub_eq_add_neg := sorry
+  --   gsmul_zero' := sorry
+  --   gsmul_succ' := sorry
+  --   gsmul_neg' := sorry
+  --   add_left_neg := sorry
+  --   mul_comm := sorry
+  --   exists_pair_ne := sorry
+  --   div_eq_mul_inv := sorry
+  --   mul_inv_cancel := sorry
+  --   inv_zero := sorry
+  --   hpow_succ := sorry
+  --   hpow_neg := sorry
+  -- }
 
 end ℝ
 

@@ -30,7 +30,7 @@ class SemiInner (X : Type u) (R : outParam $ Type v) (D : outParam $ Type w) (ev
 
 namespace SemiInner
 
-  @[reducible] instance (X R D e) [SemiInner X R D e] : Trait X := ⟨R, D, e⟩
+  @[reducible] instance (X) (R : Type u) (D : Type v) (e : R → D → ℝ) [SemiInner X R D e] : Trait X := ⟨R, D, e⟩
 
   -- open SemiInner in
   -- abbrev semiInner' {X : Type u} [Trait X] [SemiInner X (Trait.R X) (Trait.D X) Trait.eval] : X → X → (Trait.R X)
@@ -84,7 +84,7 @@ end SemiInner
 
 --   (R : outParam (Type v)) (D : outParam (Type w)) (e : outParam (R → D → ℝ))
 open SemiInner in
-class SemiHilbert (X) (R D e) [outParam $ Vec R] extends Vec X, SemiInner X R D e where
+class SemiHilbert (X) (R : Type u) (D : Type v) (e : outParam $ R → D → ℝ) [outParam $ Vec R] extends Vec X, SemiInner X R D e where
   semi_inner_add : ∀ (x y z : X),      ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫
   semi_inner_mul : ∀ (x y : X) (r : ℝ),  ⟪r*x, y⟫ = r*⟪x, y⟫
   semi_inner_sym : ∀ (x y : X),            ⟪x, y⟫ = ⟪y, x⟫
@@ -99,12 +99,11 @@ abbrev Hilbert (X : Type u) := SemiHilbert X ℝ Unit (λ r _ => r)
 -- @[reducible] instance {X} [Hilbert X] : SemiInner.Trait X := by infer_instance
 -- @[reducible] instance {X R D e} [SemiInner X R D e] : SemiInner.Trait X := by infer_instance
 
-
 namespace SemiHilbert 
 
   open SemiInner
 
-  instance : SemiHilbert ℝ ℝ Unit (λ r _ => r) := 
+  instance : Hilbert ℝ := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry

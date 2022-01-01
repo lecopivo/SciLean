@@ -17,27 +17,37 @@ prefix:max "𝓘" => SemiInner.Signature.Dom
 ---       3. condition `testFunction D y` is there to prove f†† = f
 ---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
 open SemiInner in
-class HasAdjoint {X Y} (f : X → Y) 
-  [Trait₂ X Y] [Vec (Trait₂.R X Y)] 
-  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
-  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] : Prop  
+class HasAdjoint' {X Y}
+  {R D e} [outParam $ Vec R] [outParam $ SemiHilbert X R D e] [outParam $ SemiHilbert Y R D e] (f : X → Y) : Prop  
   where
     hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (d : (Trait₂.D X Y)), 
                    (testFunction' d x ∨ testFunction' d y) → ⟪f' y, x⟫ = ⟪y, f x⟫
     preservesTestFun : ∀ (x : X) (d : (Trait₂.D X Y)), testFunction' d x → testFunction' d (f x)
 
+-- TODO: Understand why the argument (f : X → Y) has to be at the last position
+-- otherwise I'm getting some odd errors when working with reals
+open SemiInner in
+@[reducible] abbrev HasAdjoint {X Y} 
+  [Trait₂ X Y] 
+  [Vec (Trait₂.R X Y)] 
+  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
+  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
+  (f : X → Y) 
+  : Prop 
+  := HasAdjoint' (R := (Trait₂.R X Y)) (D := (Trait₂.D X Y)) (e := (Trait₂.eval)) f
+
 open SemiInner in
 noncomputable
 constant adjoint {X Y} 
-    (f : X → Y) 
     [Trait₂ X Y] [Vec (Trait₂.R X Y)] 
     [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
     [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval]
+    (f : X → Y) 
     : 
       Y → X 
     :=
     match Classical.propDecidable (HasAdjoint f) with
-      | isTrue  h => Classical.choose (HasAdjoint.hasAdjoint (self := h))
+      | isTrue  h => Classical.choose (HasAdjoint'.hasAdjoint (self := h))
       | _ => (0 : Y → X)
 
 -- section AutoCompleteS

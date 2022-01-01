@@ -31,13 +31,13 @@ section CommonVectorSpaces
   --   zero_add := sorry
   -- }
 
-  example {X} [Field X] : AddCommGroup X := by infer_instance
+  -- example {X} [Field X] : AddCommGroup X := by infer_instance
 
   instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
   instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
   instance : Module ℝ ℝ := Module.mk sorry sorry
-  instance : Vec ℝ := Vec.mk
-  instance (priority := high) [Vec U] : HMul ℝ U U := by infer_instance
+  @[reducible] instance : Vec ℝ := Vec.mk
+  -- instance (priority := high) [Vec U] : HMul ℝ U U := by infer_instance
 
   
 

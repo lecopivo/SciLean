@@ -68,9 +68,9 @@ namespace Adjoint
   instance {X} [Hilbert X] (y : X) : HasAdjoint (λ x : X => ⟪x, y⟫) := sorry
   instance {X} [Hilbert X] (x : X) : HasAdjoint (λ y : X => ⟪x, y⟫) := sorry
   @[simp]
-  theorem adjoint_of_inner_1 {X} [Hilbert X] (y : X) : adjoint (λ x : X => ⟪x, y⟫) = (λ (s : ℝ) => s * y) := sorry
+  theorem adjoint_of_inner_1 {X} [Hilbert X] (y : X) : (λ x : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * y) := sorry
   @[simp]
-  theorem adjoint_of_inner_2 {X} [Hilbert X] (x : X) : adjoint (λ y : X => ⟪x, y⟫) = (λ (s : ℝ) => s * x) := sorry
+  theorem adjoint_of_inner_2 {X} [Hilbert X] (x : X) : (λ y : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * x) := sorry
 
   @[simp]
   theorem adjoint_of_inner_1' {X Y : Type} [Hilbert X] [Hilbert Y] (f : X → Y) [HasAdjoint f] (y : Y) : adjoint (λ x : X => ⟪f x, y⟫) = (λ (s : ℝ) => s * (adjoint f) y) := by sorry -- funext r; autoadjoint; simp; admit
