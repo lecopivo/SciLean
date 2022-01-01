@@ -81,12 +81,12 @@ namespace Prism
   def Face.ofFace {P n m} {f : Face P n} (g : Face (f.toPrism) m) : Face P m
     := ofFace' f g (by rfl)
 
-  def first (P : Prism) (n : Nat) : Option (Face P n) :=
+  def Face.first (P : Prism) (n : Nat) : Option (Face P n) :=
     match P, n with
-    | point, 0 => some Face.point
-    | point, _ => none
-    | cone P', 0 => Face.tip P'
-    | cone P', n'+1 => 
+    | Prism.point, 0 => some Face.point
+    | Prism.point, _ => none
+    | Prism.cone P', 0 => Face.tip P'
+    | Prism.cone P', n'+1 => 
       match first P' n' with
       | some f => some (Face.cone f)
       | none => none
@@ -133,12 +133,11 @@ namespace Prism
 
   instance {P n} : Iterable (Face P n) :=
   {
-    first := first P n
+    first := Face.first P n
     next := Face.next
     decEq := by infer_instance
   }
   
-
   def Face.toFin {P n} (f : Face P n) : Fin (P.faceCount n) := 
     match P, n, f with
     | _, _, point => ⟨0, sorry⟩
@@ -192,12 +191,12 @@ namespace Prism
 
   #eval (
     (do
-      let mut it := first prism 2
+      let mut it := Face.first prism 2
       for i in [0:100] do
         match it with
         | some f => do
           IO.print s!"{f.toFin}: "
-          let mut jt := first f.toPrism 0
+          let mut jt := Face.first f.toPrism 0
           for j in [0:100] do
             match jt with
             | some g => 
