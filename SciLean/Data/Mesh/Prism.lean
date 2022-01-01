@@ -150,9 +150,38 @@ namespace Prism
       ⟨(∑ i : Fin n', (P'.faceCount i)*(Q'.faceCount (n-i)))
        + f'.toFin.1 + g'.toFin.1 * (P'.faceCount n'), sorry⟩
       
-  def Face.fromFin (P : Prism) (n : Nat) (i : Fin (P.faceCount n)) : Face P n := sorry
+  def Face.fromFin (P : Prism) (n : Nat) (i : Fin (P.faceCount n)) : Face P n := 
+    match P, n, i with
+    | Prism.point, 0, _ => point
+    | Prism.cone P', 0, _ => 
+      if i.1=0 then 
+        tip _ 
+      else 
+        base (fromFin P' 0 ⟨i.1-1, sorry⟩)
+    | Prism.cone P', n'+1, _ => 
+      let offset := P'.faceCount n'
+      if i.1 < offset then 
+        cone (fromFin P' n' ⟨i.1, sorry⟩)
+      else 
+        base (fromFin P' (n'+1) ⟨i.1 - offset, sorry⟩)
+    | Prism.prod P' Q', n, _=> Id.run do
+      let mut offset := 0
+      for j in [0:n+1] do
+        let pfc := (P'.faceCount j)
+        let qfc := (Q'.faceCount (n-j))
+        let jcount := pfc * qfc
+        if i.1 < offset + jcount then
+          let i' := (i.1 - offset) % pfc
+          let j' := (i.1 - offset) / pfc
+          let r  := (prod (fromFin P' j ⟨i', sorry⟩) 
+                          (fromFin Q' (n-j) ⟨j', sorry⟩))
+          return ((sorry : j+(n-j)=n) ▸ r)
+        else
+          offset := offset + jcount
+          continue
+      sorry
+      -- panic! "This should be unreachable!"
 
-#check Nat
   def segment  := cone point
   def triangle := cone segment
   def square   := prod segment segment
@@ -200,7 +229,6 @@ namespace Prism
   -- embedding map from a face to prism
   def Face.embed {P n} (f : Face P n) : f.toPrism.E → P.E := sorry
 
-  
 
   -- order preserving map from one prism to another prism
   -- Should include pure inclusions like Face but also collapses
