@@ -24,46 +24,51 @@ example (g : ι → ℝ)
     (λ _ => (1 : ℝ)) 
   := by autograd done
 
-example {n} (g : Fin n → ℝ) [NonZero n] 
+set_option synthInstance.maxHeartbeats 5000
+
+example {n} (g : Fin n → ℝ) [NonZero n] (c : Fin n)
   : 
-    ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i)) g 
+    ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + c))*(f i)) g 
     = 
-    (λ i => g (i - 1) + g (i + 1)) 
+    (λ i => g (i - c) + g (i + c)) 
   := 
 by 
   autograd done
 
--- TODO: Move this somewhere else
-instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥^2) := sorry
-@[simp] theorem differential_of_squared_norm {X} [Hilbert X] : δ (λ x : X => ∥x∥^2) = λ x dx : X => 2*⟪x, dx⟫:= sorry
 
-example {X} [Hilbert X] (x : X) 
-  : 
-    ∇ (λ x : X => ∥x∥^2) x = (2 : ℝ) * x 
-  := 
-by autograd done
+-- notation "∥" x "∥" => ⟪x, x⟫
 
-example {n} (g : Fin n → ℝ) [NonZero n] 
-  : 
-    ∇ (λ (f : Fin n → ℝ) => ∑ i, ∥(f (i + 1) - f i)∥^2) g 
-    = 
-    (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
-  := 
-by autograd; funext i; simp; done
+-- -- TODO: Move this somewhere else
+-- instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥^2) := sorry
+-- @[simp] theorem differential_of_squared_norm {X} [Hilbert X] : δ (λ x : X => ∥x∥^2) = λ x dx : X => 2*⟪x, dx⟫:= sorry
 
-set_option synthInstance.maxHeartbeats 1000
-example (g : ι → ℝ) 
-  : 
-    ∇ (λ (f : ι → ℝ) => ∑ i, (42 : ℝ) * f i) g 
-    = 
-    (λ _ => (42 : ℝ)) 
-  := by autograd done
+-- example {X} [Hilbert X] (x : X) 
+--   : 
+--     ∇ (λ x : X => ∥x∥^2) x = (2 : ℝ) * x 
+--   := 
+-- by autograd done
 
-example (g : ι → ℝ) 
-  : 
-    ∇ (λ (f : ι → ℝ) => ∑ i, (f i)*(f i)) g = (2 : ℝ) * g 
-  := 
-by autograd; done
+-- example {n} (g : Fin n → ℝ) [NonZero n] 
+--   : 
+--     ∇ (λ (f : Fin n → ℝ) => ∑ i, ∥(f (i + 1) - f i)∥^2) g 
+--     = 
+--     (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
+--   := 
+-- by autograd; funext i; simp; done
+
+-- set_option synthInstance.maxHeartbeats 1000
+-- example (g : ι → ℝ) 
+--   : 
+--     ∇ (λ (f : ι → ℝ) => ∑ i, (42 : ℝ) * f i) g 
+--     = 
+--     (λ _ => (42 : ℝ)) 
+--   := by autograd done
+
+-- example (g : ι → ℝ) 
+--   : 
+--     ∇ (λ (f : ι → ℝ) => ∑ i, (f i)*(f i)) g = (2 : ℝ) * g 
+--   := 
+-- by autograd; done
 
 
   --   example : δ (λ x => ∑ i, x[i]) x dx = ∑ i, dx[i] := by simp done
