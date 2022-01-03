@@ -1,17 +1,14 @@
 
 * SciLean: Scientific computing assistant
 
-  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. It is a functional programming language that can also formalize mathematics and we believe that this can offer us number of key benefits:
+  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. Lean is an expressive functional programming language that allows to formalize the mathematics behind these computations. This can offer several benefits: 
 
-    - Code transformation and optimization guided by formalization of underlining mathematics, like automatic differentiation or execution scheduling.
-    - Split of *what* to compute and *how* to compute. Allowing to focus on optimisations after the program is already working as intended.
-    - Embracing non-computabke nature of certain functions. Functions like integral or limit are inherently non-computabke, allowing to work with these can help us to easily express 'what' are we computing before we decide 'how'.
-    - High level control over  approximations. Numerical algorithms usually compute desired answer only to a certain degree of precision. We provide set of high level tools to work with programs that only approximate non-computabke functions.
-    - Catalogization of numerical methods. Lean programing language is mainly used as a theorem prover and a huge efforts has been made to formalize basic mathematics.
+    - Code transformation and optimization guided by formalization of underlining mathematics, like automatic differentiation, algebraic simplification, fine control of used approximations or execution scheduling.
+    - First class symbolic computation. Any function can be purely symbolic, functions like `gradient`, `integral` or `limit` are inherently non-computable. However, they carry meaning what the program should be doing and we provide tools to manipulate them or approximate them with actually computable function.
+    - Code generation based on formal specification. Many problems any scientific computing or machine learning can be stated very easily e.g. find a minimizer of a function. We then provide tools how to turn such specification into a runnable code satisfying the specification, usually in an appropriate limit of used approximations.
+    - Catalogization of numerical methods.
 
-  Lean on its own is already very fast functional language, but it can also easily use external C implementation of certain functions allowing for example fast operations on tensors.
-
-  Note: Even though we are using a proof assistant, our main goal is not to build bug free, provably correct software. Our focus are those bullets stated above and we do not shy from slightly breaking the rules of the formal system to build executable code. To be more explicit, and example of this is floating point arithmetic. Proving anything about it extremely hard, being strict about it we would not be able to build anything meaningful. Thus any formal guaranties of our framework hold for an idealized machine capable of computation with real numbers.
+  In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerfull and extensible library for scientific computing.
 
 *** Inspiration comes mainly from these languages
 
@@ -23,9 +20,6 @@
 
 **** Julia
      Julia is a promising new language for numerical computing. That unfortunately still lags behind the popularity of Python, but one of the big success of Julia is its meta programming ability, that provides unparalleled opportunity for code optimizations, like directly writing GPU kernels inside of Julia. We are using Lean, that is also its own meta language but we believe that the ability of formalizing mathematics will allow us guide write optimization automation beyond what is possible in Julia.
-
-**** Python
-     ... some maybe not so nice words about Python ...
 
 ** Long Term Goal
 
