@@ -38,7 +38,7 @@ open SemiInner in
 
 open SemiInner in
 noncomputable
-constant adjoint {X Y} 
+def adjoint {X Y} 
     [Trait₂ X Y] [Vec (Trait₂.R X Y)] 
     [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
     [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval]
@@ -201,9 +201,6 @@ namespace Adjoint
     -- now just propagete sum inside and we are done
     admit
 
-  example {ι} [Enumtype ι]
-    : (λ (x : X) (i : ι) => x)† = sum := by simp
-
   -- This is unfortunatelly not true with current definition of adjoint
   -- @[simp]
   -- theorem adjoint_of_const_on_real [SemiInnerTrait X] [SemiHilbert X (𝓘 X)]
@@ -214,19 +211,31 @@ namespace Adjoint
   @[simp] theorem adjoint_of_sum {ι} [Enumtype ι]
     : (sum : (ι → X) → X)† = (λ (x : X) (i : ι) => x) := sorry
 
-  example {ι} [Enumtype ι]
-    : (λ x : ι → X => sum x)† = (λ (x : X) (i : ι) => x) := by simp done
-
-  @[simp]
-  theorem adjoint_of_swap {ι κ} [Enumtype ι] [Enumtype κ]
-    : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
-
   @[simp]
   theorem adjoint_of_parm {ι} [Enumtype ι] 
     (f : X → ι → Y) (i : ι) [HasAdjoint f] 
     : 
       (λ x => f x i)† = (λ y => f† (λ j => (kron i j)*y)) 
     := sorry
+
+  instance {ι} [Enumtype ι]
+      (f : ι → X → Y)
+      [∀ i, HasAdjoint (f i)]
+      :
+        HasAdjoint (λ x i => f i x)   
+      := sorry
+
+  @[simp]
+  theorem adjoint_of_swap {ι} [Enumtype ι]
+      (f : ι → X → Y)
+      [∀ i, HasAdjoint (f i)]
+      :
+        (λ x i => f i x)† = (λ (y : ι → Y) => ∑ i, (f i)† (y i))
+      := sorry
+
+  @[simp]
+  theorem adjoint_of_swap' {ι κ} [Enumtype ι] [Enumtype κ]
+    : (λ (f : ι → κ → Y) => (λ j i => f i j))† = λ f i j => f j i := sorry
 
   instance {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι]
     (f : Y → κ → Z) [HasAdjoint f]
@@ -389,9 +398,26 @@ namespace Adjoint
       ∘ (comp (uncurry f)†) 
     := sorry
 
+  instance {ι κ} [Enumtype ι] [Enumtype κ]
+      (f : ι → X → Y) (h : ι → κ)
+      [∀ i, HasAdjoint (f i)] [IsInv h]
+      :
+        HasAdjoint (λ (x : κ → X) i => f i (x (h i)))
+      := sorry
+
+  @[simp]
+  theorem adjoint_of_swap_pullback {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι]
+      (f : ι → X → Y) (h : ι → κ)
+      [∀ i, HasAdjoint (f i)] [IsInv h]
+      :
+        (λ (x : κ → X) i => f i (x (h i)))† 
+        = 
+        (λ y j => (f (h⁻¹ j))† (y (h⁻¹ j)))
+      := sorry
+
   --------------------------------------------------------------------------------------------
 
-  macro "autoadjoint" : conv => `(repeat' (conv => pattern (adjoint _); simp; rw[adjoint_of_comp_parm]; simp)) -- add rw[adjoint_of_comp_parm]
+  macro "autoadjoint" : conv => `(repeat' (conv => pattern (adjoint _); simp; rw[adjoint_of_comp_parm]; simp))
   macro "autoadjoint" : tactic => `(conv => autoadjoint)
 
   --------------------------------------------------------------------------------------------

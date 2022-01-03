@@ -331,4 +331,4 @@
    - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Fast.20inline.20compiler.20for.20numerical.20computing][Fast inline compiler for numerical computing]]
    - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Lean4.20and.20multidimensional.20arrays][Lean4 and multidimensional arrays]]
    - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Interface.20for.20multi-dimensional.20arrays][Interface for multi-dimensional arrays]]
-
+   - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Treating.20.60Float.60.20as.20reals.2C.20inconsistent.3F][Treating `Float` as reals, inconsistent?]]

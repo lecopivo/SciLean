@@ -44,6 +44,10 @@ namespace Adjoint
   --- Multiplication
   instance (r : ℝ) : HasAdjoint (λ x : X => r * x) := sorry
   instance {X} [Hilbert X] (x : X) : HasAdjoint (λ r : ℝ => r * x) := sorry
+  -- TODO: Figure out why the following instance is necessary to prove:
+  -- example : ∀ y, HasAdjoint (λ x : ℝ => y * x) := by infer_instance
+  -- oddly enought moving `y` before the colon makes it work
+  instance (r : ℝ) : HasAdjoint (λ x : ℝ => r * x) := sorry
 
   @[simp]
   theorem adjoint_of_hmul_1 {X} [Hilbert X] (x : X) : adjoint (λ r : ℝ => r * x ) = (λ y => ⟪x, y⟫) := sorry

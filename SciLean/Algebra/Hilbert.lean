@@ -84,7 +84,7 @@ end SemiInner
 
 --   (R : outParam (Type v)) (D : outParam (Type w)) (e : outParam (R → D → ℝ))
 open SemiInner in
-class SemiHilbert (X) (R : Type u) (D : Type v) (e : outParam $ R → D → ℝ) [outParam $ Vec R] extends Vec X, SemiInner X R D e where
+class SemiHilbert (X) (R : Type u) (D : Type v) (e : R → D → ℝ) [outParam $ Vec R] extends Vec X, SemiInner X R D e where
   semi_inner_add : ∀ (x y z : X),      ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫
   semi_inner_mul : ∀ (x y : X) (r : ℝ),  ⟪r*x, y⟫ = r*⟪x, y⟫
   semi_inner_sym : ∀ (x y : X),            ⟪x, y⟫ = ⟪y, x⟫
