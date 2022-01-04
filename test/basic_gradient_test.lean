@@ -26,35 +26,38 @@ example (g : ι → ℝ)
 
 set_option synthInstance.maxHeartbeats 5000
 
-example {n} (g : Fin n → ℝ) [NonZero n] (c : Fin n)
+example {n} (g : Fin n → ℝ) [NonZero n]
   : 
-    ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + c))*(f i)) g 
+    ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i)) g 
     = 
-    (λ i => g (i - c) + g (i + c)) 
+    (λ i => g (i - 1) + g (i + 1)) 
   := 
 by 
   autograd done
 
 
--- notation "∥" x "∥" => ⟪x, x⟫
+def norm {X} [Hilbert X] (x : X) := Math.sqrt ⟪x, x⟫
 
--- -- TODO: Move this somewhere else
--- instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥^2) := sorry
--- @[simp] theorem differential_of_squared_norm {X} [Hilbert X] : δ (λ x : X => ∥x∥^2) = λ x dx : X => 2*⟪x, dx⟫:= sorry
+notation "∥" x "∥" => norm x
 
--- example {X} [Hilbert X] (x : X) 
---   : 
---     ∇ (λ x : X => ∥x∥^2) x = (2 : ℝ) * x 
---   := 
--- by autograd done
+-- TODO: Move this somewhere else
+instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥^2) := sorry
+@[simp] theorem differential_of_squared_norm {X} [Hilbert X] : δ (λ x : X => ∥x∥^2) = λ x dx : X => 2*⟪x, dx⟫:= sorry
 
--- example {n} (g : Fin n → ℝ) [NonZero n] 
---   : 
---     ∇ (λ (f : Fin n → ℝ) => ∑ i, ∥(f (i + 1) - f i)∥^2) g 
---     = 
---     (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
---   := 
--- by autograd; funext i; simp; done
+example {X} [Hilbert X] (x : X) 
+  : 
+    ∇ (λ x : X => ∥x∥^2) x = (2 : ℝ) * x 
+  := 
+by autograd done
+
+example {n} (g : Fin n → ℝ) [NonZero n]
+  : 
+    ∇ (λ (f : Fin n → ℝ) => ∑ i, ⟪(f (i + 1) - f i), (f (i + 1) - f i)⟫) g 
+    = 
+    (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
+  := 
+by 
+  autograd; funext i; simp; done
 
 -- set_option synthInstance.maxHeartbeats 1000
 -- example (g : ι → ℝ) 
