@@ -441,23 +441,27 @@ end FreeAlgebra
 
 namespace Polynomials
 
+
+  notation " 𝓟[ " V " , " K " ] " => Polynomials V K
+  notation " 𝓟[ " V " ] "         => Polynomials V ℝ
+
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
 
   open Symbolic.Algebra
 
-  instance : Add (Polynomials V K) := 
+  instance : Add 𝓟[V, K] := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
 
-  instance : Sub (Polynomials V K) := 
+  instance : Sub 𝓟[V, K] := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
 
-  instance : Mul (Polynomials V K) := 
+  instance : Mul 𝓟[V, K] := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' * y') sorry sorry x y⟩
 
-  instance : Neg (Polynomials V K) := 
+  instance : Neg 𝓟[V, K] := 
     ⟨λ x => Quot.mk _ <| Quot.lift (λ x' => - x') sorry x⟩
 
-  instance : HMul K (Polynomials V K) (Polynomials V K) := 
+  instance : HMul K 𝓟[V, K] 𝓟[V, K] := 
     ⟨λ a x => Quot.mk _ <| Quot.lift (λ x' => a * x') sorry x⟩
 
   variable [ToString V] [ToString K] 
@@ -467,7 +471,7 @@ namespace Polynomials
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"x[{v}]"
+    | var v => s!"x⟦{v}⟧"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} * {toString y}"
@@ -485,10 +489,26 @@ namespace Polynomials
 
   instance {R} [CommRing R] : CoeFun (Polynomials (Fin 1) R) (λ _ => R → R) := ⟨λ p x => p.toVal λ _ => x⟩
 
+
+  def Polynomials.var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomials ι K 
+    := Quot.mk _ (Expr.var i)
+
+  instance {V} {K} [Add K] [Mul K] [One K] : Zero (Polynomials V K) := ⟨Quot.mk _ Expr.zero⟩
+  instance {V} {K} [Add K] [Mul K] [One K] : One (Polynomials V K) := ⟨Quot.mk _ Expr.one⟩
+
+  notation " x⟦ " i " , " K " ⟧ " => Polynomials.var (K := K) i
+  notation " x⟦ " i " ⟧ " => Polynomials.var i
+
+  #check x⟦1⟧ * x⟦0⟧
+  #eval x⟦1⟧ * x⟦0⟧
+
 end Polynomials
 
 
 namespace AntiPolynomials
+
+  notation " Λ[ " V " , " K " ] " => AntiPolynomials V K
+  notation " Λ[ " V " ] "         => AntiPolynomials V ℝ
 
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
 
@@ -513,7 +533,7 @@ namespace AntiPolynomials
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"dx[{v}]"
+    | var v => s!"dx⟦{v}⟧"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} ∧ {toString y}"
@@ -536,6 +556,15 @@ namespace AntiPolynomials
 
   -- def PᵣΛₖ (ι) (r k : Nat) := AntiPolynomials ι (Polynomials ι ℝ) -- polyhomials
   -- def 𝓒Λₖ (X : Type) (k : Nat) [FinEnumVec X] := AntiPolynomials (FinEnumBasis.index X) (X ⟿ ℝ)   -- smoot
+
+  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : AntiPolynomials ι K 
+    := Quot.mk _ (Expr.var i)
+
+  notation " dx⟦ " i " , " K " ⟧ " => AntiPolynomials.var (K := K) i
+  notation " dx⟦ " i " ⟧ " => AntiPolynomials.var i
+
+  #eval  dx⟦0⟧ ∧ dx⟦1⟧
+  #check dx⟦0⟧ ∧ dx⟦1⟧
 
 end AntiPolynomials
 

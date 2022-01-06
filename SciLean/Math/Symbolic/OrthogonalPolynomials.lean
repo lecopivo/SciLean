@@ -9,15 +9,8 @@ open Polynomials Algebra
 
 #check (0 : Fin 1)
 
-open Algebra in
-def Polynomials.var {ι} (i : ι) : Polynomials ι ℝ := Quot.mk _ (Expr.var i)
 
-instance {V} {K} [Add K] [Mul K] [One K] : Zero (Polynomials V K) := ⟨Quot.mk _ Expr.zero⟩
-instance {V} {K} [Add K] [Mul K] [One K] : One (Polynomials V K) := ⟨Quot.mk _ Expr.one⟩
-
-notation "x⟦" i "⟧" => Polynomials.var i
-
-def Legendre.rec (n : Nat) : (Polynomials (Fin 1) ℝ) × (Polynomials (Fin 1) ℝ) :=
+def Legendre.rec (n : Nat) : 𝓟[Fin 1] × 𝓟[Fin 1] :=
   match n with
   | 0 => (1, 0)
   | 1 => (x⟦0⟧, 1)
@@ -29,7 +22,7 @@ def Legendre.rec (n : Nat) : (Polynomials (Fin 1) ℝ) × (Polynomials (Fin 1) �
 
 def Legendre (n : Nat) := (Legendre.rec n).1
 
-def Hermite.rec (n : Nat) : (Polynomials (Fin 1) ℝ) × (Polynomials (Fin 1) ℝ) :=
+def Hermite.rec (n : Nat) : 𝓟[Fin 1] × 𝓟[Fin 1] :=
   match n with
   | 0 => (1, 0)
   | 1 => (x⟦0⟧, 1)
