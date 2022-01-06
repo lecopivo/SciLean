@@ -111,6 +111,8 @@ namespace Expr
       | - x' => expand ((-a) * x')
       | x' => a * (expand x')
 
+  -- Sorts variables using bubble sort
+  -- Assumes expr is already in expanded form.
   partial def sort_vars {V K} [LT V] [∀ a b : V, Decidable (a < b)] (e : Expr V K) : Expr V K :=
     match e with
     | x * var b =>
@@ -130,33 +132,39 @@ namespace Expr
     | smul a x => smul a (sort_vars x)
     | x => x
 
-  -- This does not work as I would hope
-  partial def reduce {V K} [Mul K] (e : Expr V K) : Expr V K := 
-    match e with
-    | 0 + x => reduce $ x
-    | x + 0 => reduce $ x
-    | 1 * x => reduce $ x
-    | x * 1 => reduce $ x
-    | var v => var v
-    | - - x => reduce x
-    | x + (y + z) => reduce $ reduce (x + y) + z
-    | x * (y * z) => reduce $ reduce (x * y) * z
-    | x * (y + z) => reduce $ reduce (x * y) + reduce (x * z)
-    | (x + y) * z => reduce $ reduce (x * z) + reduce (y * z)
-    -- | (smul a (smul b x)) => reduce $ (a*b) * reduce x
-    -- | (smul a x * y) => reduce $ a * reduce (reduce x * y)
-    -- | (x * smul b y) => reduce $ b * reduce (reduce x * y)
-    | x + y => reduce x + reduce y
-    | x * y => reduce x * reduce y
-    | - x => - reduce x
-    | e => e
+  -- -- This does not work as I would hope
+  -- partial def reduce {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K := 
+  --   match e with
+  --   | 0 + x => reduce $ x
+  --   | x + 0 => reduce $ x
+  --   | 1 * x => reduce $ x
+  --   | x * 1 => reduce $ x
+  --   | var v => var v
+  --   | - - x => reduce x
+  --   | x + (y + z) => reduce $ reduce (x + y) + reduce z
+  --   | x * (y * z) => reduce $ reduce (x * y) * reduce z
+  --   | (x + y) * z => reduce $ reduce (x * z) + reduce (y * z)
+  --   | x * (y + z) => reduce $ reduce (x * y) + reduce (x * z)
+  --   | smul a (smul b x) => reduce $ (a*b) * reduce x
+  --   | smul a x * y => reduce $ a * reduce (x * y)
+  --   | x * smul b y => reduce $ b * reduce (x * y)
+  --   | smul a (x + y) => reduce $ a * reduce x + a * reduce y
+  --   | smul a (-x) => reduce $ (-a) * reduce x
+  --   | - smul a x => reduce $ (-a) * reduce x
+  --   | (- x) * y => reduce $ - reduce (x * y)
+  --   | x * (- y) => reduce $ - reduce (x * y)
+  --   | x + y => reduce x + reduce y
+  --   | x * y => reduce x * reduce y
+  --   | smul a x => smul a (reduce x)
+  --   | - x => - reduce x
+  --   | e => e
 
   open Expr in
   def toString {V K} [ToString V] [ToString K] (e : Expr V K): String :=
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"x[{v}]"
+    | var v => s!"⟦{v}⟧"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} * {toString y}"
@@ -168,9 +176,10 @@ namespace Expr
   def y : Expr Int Int := var 1
   def z : Expr Int Int := var 2
 
+  #eval ((y + x * (x + y))).expand
   #eval (((2 : Int) * x + (3 : Int) * y + - x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand
+  #eval (((2 : Int) * x + (3 : Int) * y + - z * x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand
   #eval (((2 : Int) * x + (3 : Int) * y + - z * x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand.sort_vars
-  #eval (((2 : Int) * x + (3 : Int) * y + x * (x + y)) * ((5 : Int) * y + (7 : Int) * x)).reduce
 
 end Expr
 
@@ -255,7 +264,7 @@ namespace FreeAlgebra
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"x[{v}]"
+    | var v => s!"⟦{v}⟧"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} * {toString y}"
@@ -302,7 +311,7 @@ namespace Polynomials
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"x[{v}]"
+    | var v => s!"⟦{v}⟧"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} * {toString y}"
@@ -349,7 +358,7 @@ namespace AntiPolynomials
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"x[{v}]"
+    | var v => s!"⟦{v}⟧"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} ∧ {toString y}"
