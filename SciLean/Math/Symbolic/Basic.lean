@@ -490,7 +490,7 @@ namespace Polynomials
   instance {R} [CommRing R] : CoeFun (Polynomials (Fin 1) R) (λ _ => R → R) := ⟨λ p x => p.toVal λ _ => x⟩
 
 
-  def Polynomials.var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomials ι K 
+  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomials ι K 
     := Quot.mk _ (Expr.var i)
 
   instance {V} {K} [Add K] [Mul K] [One K] : Zero (Polynomials V K) := ⟨Quot.mk _ Expr.zero⟩
