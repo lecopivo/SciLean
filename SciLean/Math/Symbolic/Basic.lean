@@ -1,10 +1,8 @@
-import Mathlib
-
 import SciLean.Categories
 
 namespace SciLean
 
-namespace Symbolic.Algebra
+namespace Symbolic
 
 inductive Expr (V : Type) (K : Type) where
 | zero : Expr V K
@@ -24,6 +22,12 @@ structure Monomial (V K : Type) where
   vars  : List V
   -- vars  : List (V × Nat) -- maybe include powers
 
+open Expr in
+def Monomial.toExpr {V K} (m : Monomial V K) : Expr V K :=
+  match m.vars with
+  | [] => zero
+  | x :: xs => smul m.coeff $ xs.foldl (λ x v => mul x (var v)) (var x)
+
 instance {V K} [One K] : Inhabited (Monomial V K) := ⟨1, []⟩
 
 def Monomial.toString {V K} [ToString V] [ToString K] (m : Monomial V K) : String := 
@@ -32,21 +36,46 @@ def Monomial.toString {V K} [ToString V] [ToString K] (m : Monomial V K) : Strin
 inductive Comparison : Type where 
   | lt | eq | gt
 
+open Comparison in
+instance : ToString Comparison :=
+  ⟨λ c => match c with | lt => "lt" | eq => "eq" | gt => "gt"⟩
+          
+
 def List.decGradedLexComparison {α}
   [LT α] [∀ a b : α, Decidable (a < b)] [DecidableEq α]
   (l1 l2 : List α) : Comparison
   :=
-  match l1, l2 with
-  | x1 :: xs1, x2 :: xs2 => 
-   if x1 == x2 then
-     decGradedLexComparison xs1 xs2
-   else if x1 < x2 then
-     Comparison.lt
-   else 
-     Comparison.gt
-   | [], x2 :: xs2 => Comparison.lt
-   | x1 :: xs1 , [] => Comparison.gt
-   | [], [] => Comparison.eq
+    match l1, l2 with
+    | x1 :: xs1, x2 :: xs2 => 
+     if x1 == x2 then
+       decGradedLexComparison xs1 xs2
+     else 
+       let n1 := xs1.length 
+       let n2 := xs2.length
+       if n1 == n2 then
+         if x1 < x2 then
+           Comparison.lt
+         else
+           Comparison.gt 
+       else if n1 < n2 then
+         Comparison.lt
+       else 
+         Comparison.gt
+     | [], x2 :: xs2 => Comparison.lt
+     | x1 :: xs1 , [] => Comparison.gt
+     | [], [] => Comparison.eq
+
+open Comparison in
+def List.decGradedLexLt {α}
+  [LT α] [∀ a b : α, Decidable (a < b)] [DecidableEq α]
+  (l1 l2 : List α) : Bool
+  :=
+  match List.decGradedLexComparison l1 l2 with
+  | eq => false
+  | lt => true
+  | gt => false
+
+#eval #[[1], [0,0], [0,1]].qsort List.decGradedLexLt
     
 def Monomial.decComparison {V K}
   [LT V] [∀ x y : V, Decidable (x < y)] [DecidableEq V]
@@ -69,7 +98,7 @@ def Monomial.decLt {V K}
   [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
   (m1 m2 : Monomial V K) : Bool
   :=
-  match decComparison m1 m1 with
+  match decComparison m1 m2 with
   | Comparison.lt => true
   | _ => false
 
@@ -78,7 +107,7 @@ def Monomial.decEq {V K}
   [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
   (m1 m2 : Monomial V K) : Bool
   :=
-  match decComparison m1 m1 with
+  match decComparison m1 m2 with
   | Comparison.eq => true
   | _ => false
 
@@ -187,36 +216,50 @@ namespace Expr
       m
     | smul a x => x.expand_to_monomials.map λ m => ⟨a*m.coeff, m.vars⟩
 
-  partial def expand {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K := 
-    match e with
-    | 0 => zero
-    | 1 => one 
-    | var v => var v
-    | - (- x) => (expand x)
-    | - (smul a x) => expand ((-a) * x)
-    | - x => - (expand x)
-    | x + y => 
-      match (expand x), (expand y) with
-      | x', y' + y'' => expand ((x' + y') + y'')
-      | x', y' => x' + y'
-    | x * y => 
-      match (expand x), (expand y) with
-      | x' + x'', y' + y'' => expand (x' * y' + x' * y'' + x'' * y' + x'' * y'')
-      | x', y' + y'' => expand (x' * y' + x' * y'')
-      | x' + x'', y' => expand (x' * y' + x'' * y')
-      | x', y' * y'' => expand ((x' * y') * y'')
-      | smul a x', smul b y' => expand ((a*b) * (x' * y'))
-      | smul a x', y' => expand (a * (x' * y'))
-      | x', smul a y' => expand (a * (x' * y'))
-      | x', neg y' => expand $ neg $ expand (x' * y')
-      | neg x', y' => expand $ neg $ expand (x' * y')
-      | x', y' => x' * y'
-    | smul a x => 
-      match (expand x) with
-      | x' + x'' => expand (a * x' + a * x'')
-      | smul b x' => expand ((a*b) * x')
-      | - x' => expand ((-a) * x')
-      | x' => a * (expand x')
+  def expand {V K} [One K] [Neg K] [Mul K] 
+    [LT V] [∀ x y : V, Decidable (x < y)] [DecidableEq V]
+    [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
+    (e : Expr V K) : (Expr V K) 
+    := 
+    Id.run do
+      let m := e.expand_to_monomials
+      let m := m.qsort Monomial.decLt
+
+      let mut e' : Expr V K := m[0].toExpr
+      for i in [1:m.size] do
+        e' := e' + m[i].toExpr
+      e'
+
+  -- partial def expand {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K := 
+  --   match e with
+  --   | 0 => zero
+  --   | 1 => one 
+  --   | var v => var v
+  --   | - (- x) => (expand x)
+  --   | - (smul a x) => expand ((-a) * x)
+  --   | - x => - (expand x)
+  --   | x + y => 
+  --     match (expand x), (expand y) with
+  --     | x', y' + y'' => expand ((x' + y') + y'')
+  --     | x', y' => x' + y'
+  --   | x * y => 
+  --     match (expand x), (expand y) with
+  --     | x' + x'', y' + y'' => expand (x' * y' + x' * y'' + x'' * y' + x'' * y'')
+  --     | x', y' + y'' => expand (x' * y' + x' * y'')
+  --     | x' + x'', y' => expand (x' * y' + x'' * y')
+  --     | x', y' * y'' => expand ((x' * y') * y'')
+  --     | smul a x', smul b y' => expand ((a*b) * (x' * y'))
+  --     | smul a x', y' => expand (a * (x' * y'))
+  --     | x', smul a y' => expand (a * (x' * y'))
+  --     | x', neg y' => expand $ neg $ expand (x' * y')
+  --     | neg x', y' => expand $ neg $ expand (x' * y')
+  --     | x', y' => x' * y'
+  --   | smul a x => 
+  --     match (expand x) with
+  --     | x' + x'' => expand (a * x' + a * x'')
+  --     | smul b x' => expand ((a*b) * x')
+  --     | - x' => expand ((-a) * x')
+  --     | x' => a * (expand x')
 
   -- Sorts variables using bubble sort
   -- Assumes expr is already in expanded form.
@@ -313,14 +356,15 @@ namespace Expr
   #eval ((y + x * (x + y))).expand
   #eval (((2 : Int) * x + (3 : Int) * y + - x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand
   #eval (((2 : Int) * x + (3 : Int) * y + - z * x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand
-  #eval (((2 : Int) * x + (3 : Int) * y + - z * x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand.sort_vars
+  -- #eval (((2 : Int) * x + (3 : Int) * y + - z * x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand.sort_vars
 
   #eval ((y + x * (x + y))).expand_to_monomials
+  #eval ((y + x * (x + y))).expand_to_monomials.qsort Monomial.decLt
   #eval (((2 : Int) * x + (3 : Int) * y + - x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand_to_monomials
 
 end Expr
 
-end Symbolic.Algebra
+end Symbolic
 
 def Quot.lift_arg2 {X Y} {r : X → X → Prop} (f : X → X → Y) (h : ∀ x y y', r y y' → f x y = f x y') : X → Quot r → Y
   := (λ x => Quot.lift (f x) (h x))
@@ -333,13 +377,13 @@ def Quot.lift₂ {X Y} {r : X → X → Prop} (f : X → X → Y)
     Quot.lift (Quot.lift_arg2 f h) h' x y)
 
 section BasicDefinitions 
-  open Symbolic.Algebra Expr
+  open Symbolic Expr
 
   variable (V : Type) (K : Type) [Add K] [Mul K] [One K]
   -- 
-  def FreeAlgebra := Quot
-    (λ x y : Expr V K =>
-      (EqAlgebra x y))
+  -- def FreeAlgebra := Quot
+  --   (λ x y : Expr V K =>
+  --     (EqAlgebra x y))
 
   def Polynomials := Quot
     (λ x y : Expr V K =>
@@ -387,68 +431,6 @@ section BasicDefinitions
 end BasicDefinitions
 
 
-namespace FreeAlgebra
-  variable {V : Type} {K : Type} [Add K] [Mul K] [One K] [Neg K]
-
-  open Symbolic.Algebra
-
-  instance : Add (FreeAlgebra V K) :=
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (
-      λ x y => match x, y with
-        | 0, y => y
-        | x, 0 => x
-        | x, y => x + y
-      ) sorry sorry x y⟩
-
-  open Expr in
-  instance : Mul (FreeAlgebra V K) :=
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (
-       λ x y => match x, y with
-         | 1, y => y
-         | x, 1 => x
-         | smul a x, smul b y => (a*b) * (x*y)
-         | smul a x, neg y => (-a) * (x*y)
-         | neg x, smul b y => (-b) * (x*y)
-         | neg x, neg y => x*y
-         | smul a x, y => a * (x*y)
-         | x, smul b y => b * (x*y)
-         | neg x, y => neg (x*y)
-         | x, neg y => neg (x*y)
-         | x, y => x*y
-       ) sorry sorry x y⟩
-
-  instance : Neg (FreeAlgebra V K) :=
-    ⟨λ x => Quot.mk _ <| Quot.lift (Expr.neg) sorry x⟩
-
-  instance : HMul K (FreeAlgebra V K) (FreeAlgebra V K) :=
-    ⟨λ a x => Quot.mk _ <| Quot.lift (Expr.smul a) sorry x⟩
-
-  variable [ToString V] [ToString K]
-
-  open Expr in
-  def toString (e : Expr V K): String :=
-    match e with
-    | zero => "0"
-    | one  => "1"
-    | var v => s!"x[{v}]"
-    | neg x => s!"- {toString x}"
-    | add x y => s!"({toString x} + {toString y})"
-    | mul x y => s!"{toString x} * {toString y}"
-    | smul a x => s!"{a} {toString x}"
-
-  -- The string actually depends on the represenative element, thus it has to be hidden behind an opaque constant
-  -- The sorry here is impossible to be proven
-  constant toString' (p : FreeAlgebra V K)  : String :=
-    Quot.lift (λ e : Expr V K => toString e) sorry p
-
-  instance : ToString (FreeAlgebra V K) := ⟨toString'⟩
-
-  def toVal {R} [CommRing R] (p : FreeAlgebra V R) (vars : V → R) : R :=
-    Quot.lift (λ e => e.toVal vars) sorry p
-
-end FreeAlgebra
-
-
 namespace Polynomials
 
 
@@ -463,7 +445,7 @@ namespace Polynomials
 
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
 
-  open Symbolic.Algebra
+  open Symbolic
 
   instance : Add 𝓢𝓟[V, K] := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
@@ -528,7 +510,7 @@ namespace AntiPolynomials
 
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
 
-  open Symbolic.Algebra
+  open Symbolic
 
   instance : Add (AntiPolynomials V K) := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩
@@ -589,7 +571,7 @@ namespace TensorAlgebra
 
   variable {V : Type} {K : Type} [Add V] [Add K] [Mul K] [One K] [HMul K V V]
 
-  open Symbolic.Algebra
+  open Symbolic
 
   instance : Add (TensorAlgebra V K) := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩
@@ -635,7 +617,7 @@ namespace ExteriorAlgebra
 
   variable {V : Type} {K : Type} [Add V] [Add K] [Mul K] [One K] [HMul K V V]
 
-  open Symbolic.Algebra
+  open Symbolic
 
   instance : Add (ExteriorAlgebra V K) := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩

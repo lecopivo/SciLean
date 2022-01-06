@@ -7,7 +7,7 @@ class FinEnumBasis (X : Type u) where
   index : Type 
   enumtype : Enumtype index
   basis : index → X
-  proj  : index → X → ℝ
+  proj  : index → X → ℝ  -- fast projection onto basis vectors
 
 attribute [instance]  FinEnumBasis.enumtype
 
