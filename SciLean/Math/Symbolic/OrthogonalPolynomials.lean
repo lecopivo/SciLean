@@ -7,10 +7,7 @@ namespace SciLean.Symbolic
 open Polynomials Algebra
 
 
-#check (0 : Fin 1)
-
-
-def Legendre.rec (n : Nat) : 𝓟[Fin 1] × 𝓟[Fin 1] :=
+def Legendre.rec (n : Nat) : 𝓢𝓟[Fin 1] × 𝓢𝓟[Fin 1] :=
   match n with
   | 0 => (1, 0)
   | 1 => (x⟦0⟧, 1)
@@ -22,7 +19,7 @@ def Legendre.rec (n : Nat) : 𝓟[Fin 1] × 𝓟[Fin 1] :=
 
 def Legendre (n : Nat) := (Legendre.rec n).1
 
-def Hermite.rec (n : Nat) : 𝓟[Fin 1] × 𝓟[Fin 1] :=
+def Hermite.rec (n : Nat) : 𝓢𝓟[Fin 1] × 𝓢𝓟[Fin 1] :=
   match n with
   | 0 => (1, 0)
   | 1 => (x⟦0⟧, 1)

@@ -2,11 +2,12 @@ import SciLean.Algebra.Hilbert
 
 namespace SciLean
 
--- Finite explicit basis
+-- Finite explicit basis -- maybe over a ring? And then have `proj : index → X → K`
 class FinEnumBasis (X : Type u) where
   index : Type 
   enumtype : Enumtype index
   basis : index → X
+  proj  : index → X → ℝ
 
 attribute [instance]  FinEnumBasis.enumtype
 
@@ -25,6 +26,7 @@ namespace FinEnumBasis
     index := Unit
     enumtype := by infer_instance
     basis := λ _ => 1
+    proj  := λ _ x => x
   }
 
   instance {X Y} [FinEnumBasis X] [FinEnumBasis Y] [Zero X] [Zero Y] : FinEnumBasis (X × Y) := 
@@ -35,6 +37,10 @@ namespace FinEnumBasis
                match i with
                  | Sum.inl ix => (𝔼 ix, 0)
                  | Sum.inr iy => (0, 𝔼 iy)
+    proj := λ i x =>
+      match i with
+      | Sum.inl ix => proj ix x.1
+      | Sum.inr iy => proj iy x.2
   }
 
 end FinEnumBasis
@@ -48,6 +54,7 @@ end FinEnumBasis
 --     Why no to pick the orthonormal inner product on this basis?
 class FinEnumVec (X : Type u) extends SemiHilbert X ℝ Unit (λ r _ => r), FinEnumBasis X where
   is_orthonormal : ∀ i j, ⟪(𝔼 i : X), (𝔼 j : X)⟫ = if i == j then (1 : ℝ) else (0 : ℝ)
+  inner_proj : ∀ i x, ⟪(𝔼 i : X), x⟫ = FinEnumBasis.proj i x
   
 namespace FinEnumVec
 
@@ -58,6 +65,11 @@ namespace FinEnumVec
       intro i j
       simp [FinEnumBasis.basis, SemiInner.semiInner]
       induction i; induction j; simp; done
+    inner_proj := 
+    by
+      intro i x
+      simp [FinEnumBasis.basis, FinEnumBasis.proj, SemiInner.semiInner]
+      done
   }
 
 

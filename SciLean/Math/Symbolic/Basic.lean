@@ -351,6 +351,16 @@ section BasicDefinitions
       (EqAlgebra x y) ∨
       (EqAntiCommutative x y))
 
+  def Polynomial (V : Type) (K : Type) [FinEnumBasis V] [Add K] [Mul K] [One K] := Quot
+    (λ x y : Expr (FinEnumBasis.index V) K =>
+      (EqAlgebra x y) ∨
+      (EqCommutative x y))
+
+  def AltPolynomial (V : Type) (K : Type) [FinEnumBasis V] [Add K] [Mul K] [One K] := Quot
+    (λ x y : Expr (FinEnumBasis.index V) K =>
+      (EqAlgebra x y) ∨
+      (EqAntiCommutative x y))
+
   variable [Add V] [HMul K V V]
 
   -- Vector space structure of V is compatible with the algebra
@@ -442,26 +452,32 @@ end FreeAlgebra
 namespace Polynomials
 
 
-  notation " 𝓟[ " V " , " K " ] " => Polynomials V K
-  notation " 𝓟[ " V " ] "         => Polynomials V ℝ
+  notation " 𝓢𝓟[" V ", " K "] " => Polynomials V K
+  notation " 𝓢𝓟[" V " ] "         => Polynomials V ℝ
+
+  notation " 𝓟[" V ", " K "] " => Polynomial V K
+  notation " 𝓟[" V "] "         => Polynomial V ℝ
+  
+  #check 𝓟[ℝ]
+  #check 𝓟[ℝ×ℝ×ℝ]
 
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
 
   open Symbolic.Algebra
 
-  instance : Add 𝓟[V, K] := 
+  instance : Add 𝓢𝓟[V, K] := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
 
-  instance : Sub 𝓟[V, K] := 
+  instance : Sub 𝓢𝓟[V, K] := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
 
-  instance : Mul 𝓟[V, K] := 
+  instance : Mul 𝓢𝓟[V, K] := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' * y') sorry sorry x y⟩
 
-  instance : Neg 𝓟[V, K] := 
+  instance : Neg 𝓢𝓟[V, K] := 
     ⟨λ x => Quot.mk _ <| Quot.lift (λ x' => - x') sorry x⟩
 
-  instance : HMul K 𝓟[V, K] 𝓟[V, K] := 
+  instance : HMul K 𝓢𝓟[V, K] 𝓢𝓟[V, K] := 
     ⟨λ a x => Quot.mk _ <| Quot.lift (λ x' => a * x') sorry x⟩
 
   variable [ToString V] [ToString K] 
@@ -496,8 +512,8 @@ namespace Polynomials
   instance {V} {K} [Add K] [Mul K] [One K] : Zero (Polynomials V K) := ⟨Quot.mk _ Expr.zero⟩
   instance {V} {K} [Add K] [Mul K] [One K] : One (Polynomials V K) := ⟨Quot.mk _ Expr.one⟩
 
-  notation " x⟦ " i " , " K " ⟧ " => Polynomials.var (K := K) i
-  notation " x⟦ " i " ⟧ " => Polynomials.var i
+  notation " x⟦" i ", " K "⟧ " => Polynomials.var (K := K) i
+  notation " x⟦" i "⟧ " => Polynomials.var i
 
   #check x⟦1⟧ * x⟦0⟧
   #eval x⟦1⟧ * x⟦0⟧
@@ -507,8 +523,8 @@ end Polynomials
 
 namespace AntiPolynomials
 
-  notation " Λ[ " V " , " K " ] " => AntiPolynomials V K
-  notation " Λ[ " V " ] "         => AntiPolynomials V ℝ
+  notation " 𝓢𝓐[ " V " , " K " ] " => AntiPolynomials V K
+  notation " 𝓢𝓐[ " V " ] "         => AntiPolynomials V ℝ
 
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
 
