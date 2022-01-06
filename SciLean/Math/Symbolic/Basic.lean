@@ -80,11 +80,13 @@ namespace Expr
    | mul x y => (rank x) + (rank y)
    | smul a x => rank x
 
-  partial def expand {V K} [Mul K] (e : Expr V K) : Expr V K := 
+  partial def expand {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K := 
     match e with
     | 0 => zero
     | 1  => one 
     | var v => var v
+    | - (- x) => (expand x)
+    | - (smul a x) => expand ((-a) * x)
     | - x => - (expand x)
     | x + y => 
       match (expand x), (expand y) with
@@ -99,12 +101,34 @@ namespace Expr
       | smul a x', smul b y' => expand ((a*b) * (x' * y'))
       | smul a x', y' => expand (a * (x' * y'))
       | x', smul a y' => expand (a * (x' * y'))
+      | x', neg y' => expand $ neg $ expand (x' * y')
+      | neg x', y' => expand $ neg $ expand (x' * y')
       | x', y' => x' * y'
     | smul a x => 
       match (expand x) with
       | x' + x'' => expand (a * x' + a * x'')
       | smul b x' => expand ((a*b) * x')
+      | - x' => expand ((-a) * x')
       | x' => a * (expand x')
+
+  partial def sort_vars {V K} [LT V] [∀ a b : V, Decidable (a < b)] (e : Expr V K) : Expr V K :=
+    match e with
+    | x * var b =>
+      match (sort_vars x) with
+      | x' * var a => 
+        if a < b 
+        then x' * var a * var b
+        else (sort_vars (x' * var b)) * var a
+      | var a => 
+        if a < b 
+        then var a * var b
+        else var b * var a
+      | x' => x' * var b
+    | x * y => sort_vars ((sort_vars x) * y)
+    | - x => - sort_vars x
+    | x + y => sort_vars x + sort_vars y
+    | smul a x => smul a (sort_vars x)
+    | x => x
 
   -- This does not work as I would hope
   partial def reduce {V K} [Mul K] (e : Expr V K) : Expr V K := 
@@ -140,11 +164,13 @@ namespace Expr
 
   instance {V K} [ToString V] [ToString K] : ToString (Expr V K) := ⟨toString⟩
 
-  def x : Expr Nat Nat := var 0
-  def y : Expr Nat Nat := var 1
+  def x : Expr Int Int := var 0
+  def y : Expr Int Int := var 1
+  def z : Expr Int Int := var 2
 
-  #eval (((2 : Nat) * x + (3 : Nat) * y + x * (x + y)) * ((5 : Nat) * y + (7 : Nat) * x)).expand
-  #eval (((2 : Nat) * x + (3 : Nat) * y + x * (x + y)) * ((5 : Nat) * y + (7 : Nat) * x)).reduce
+  #eval (((2 : Int) * x + (3 : Int) * y + - x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand
+  #eval (((2 : Int) * x + (3 : Int) * y + - z * x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand.sort_vars
+  #eval (((2 : Int) * x + (3 : Int) * y + x * (x + y)) * ((5 : Int) * y + (7 : Int) * x)).reduce
 
 end Expr
 
@@ -210,19 +236,19 @@ namespace FreeAlgebra
 
   open Symbolic.Algebra
 
-  instance : Add (FreeAlgebra V K) := 
+  instance : Add (FreeAlgebra V K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩
 
-  instance : Mul (FreeAlgebra V K) := 
+  instance : Mul (FreeAlgebra V K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.mul) sorry sorry x y⟩
 
-  instance : Neg (FreeAlgebra V K) := 
+  instance : Neg (FreeAlgebra V K) :=
     ⟨λ x => Quot.mk _ <| Quot.lift (Expr.neg) sorry x⟩
 
-  instance : HMul K (FreeAlgebra V K) (FreeAlgebra V K) := 
+  instance : HMul K (FreeAlgebra V K) (FreeAlgebra V K) :=
     ⟨λ a x => Quot.mk _ <| Quot.lift (Expr.smul a) sorry x⟩
 
-  variable [ToString V] [ToString K] 
+  variable [ToString V] [ToString K]
 
   open Expr in
   def toString (e : Expr V K): String :=
