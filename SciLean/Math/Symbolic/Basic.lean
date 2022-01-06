@@ -20,7 +20,17 @@ inductive Expr (V : Type) (K : Type) where
 structure Monomial (V K : Type) where
   coeff : K
   vars  : List V
-  -- vars  : List (V × Nat) -- maybe include powers
+
+structure SMonomial (V K : Type) [Enumtype V] where
+  coeff : K
+  powers : {a : Array Nat // a.size = Enumtype.numOf V}
+
+-- do radix sort and count the number of occurences
+def Monomial.toSMonomial {V K} [Enumtype V] (m : Monomial V K)  : SMonomial V K := sorry
+def SMonomial.toMonomial {V K} [Enumtype V] (m : SMonomial V K) : Monomial V K := sorry
+
+def Monomial.symReduce {V K} (m : Monomial V K) : Monomial V K := sorry
+def Monomial.altReduce {V K} (m : Monomial V K) : Monomial V K := sorry
 
 open Expr in
 def Monomial.toExpr {V K} (m : Monomial V K) : Expr V K :=
@@ -40,7 +50,6 @@ open Comparison in
 instance : ToString Comparison :=
   ⟨λ c => match c with | lt => "lt" | eq => "eq" | gt => "gt"⟩
           
-
 def List.decGradedLexComparison {α}
   [LT α] [∀ a b : α, Decidable (a < b)] [DecidableEq α]
   (l1 l2 : List α) : Comparison

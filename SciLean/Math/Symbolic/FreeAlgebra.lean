@@ -24,10 +24,10 @@ namespace FreeAlgebra
       match e with
       | zero => "0"
       | one  => "1"
-      | var v => s!"⟦{v}⟧"
+      | var v => s!"e⟦{v}⟧"
       | neg x => s!"- {toString x}"
       | add x y => s!"({toString x} + {toString y})"
-      | mul x y => s!"{toString x} {toString y}"
+      | mul x y => s!"{toString x} ⊗ {toString y}"
       | smul a x => s!"{a} {toString x}"
 
     -- Operations normalizing arithmetics on K and scalar multiplication
@@ -112,11 +112,11 @@ namespace FreeAlgebra
 
   notation " 𝓕[" V ", " K "] " => FreeAlgebra V K
   notation " 𝓕[" V "] "        => FreeAlgebra V ℝ
-  notation " ⟦" v ", " K "⟧ "  => var v (K := K)
-  notation " ⟦" v "⟧ "         => var v
+  notation " e⟦" v ", " K "⟧ "  => var v (K := K)
+  notation " e⟦" v "⟧ "         => var v
 
-  #eval (2 : ℝ) * ⟦0⟧ * ((3 : ℝ) * ((1: ℝ) * ⟦1⟧ + (2 : ℝ) * ⟦-3⟧))
-  #eval (((⟦0⟧ + ⟦1⟧) * ⟦0⟧ + ⟦1⟧) * ⟦2⟧)
+  #eval (2 : ℝ) * e⟦0⟧ * ((3 : ℝ) * ((1: ℝ) * e⟦1⟧ + (2 : ℝ) * e⟦-3⟧))
+  #eval (((e⟦0⟧ + e⟦1⟧) * e⟦0⟧ + e⟦1⟧) * e⟦2⟧)
 
 end FreeAlgebra
 
