@@ -144,7 +144,6 @@ namespace Expr
   def y : Expr Nat Nat := var 1
 
   #eval (((2 : Nat) * x + (3 : Nat) * y + x * (x + y)) * ((5 : Nat) * y + (7 : Nat) * x)).expand
-
   #eval (((2 : Nat) * x + (3 : Nat) * y + x * (x + y)) * ((5 : Nat) * y + (7 : Nat) * x)).reduce
 
 end Expr
@@ -160,7 +159,6 @@ def Quot.lift₂ {X Y} {r : X → X → Prop} (f : X → X → Y)
   : Quot r → Quot r → Y := 
   (λ x y =>
     Quot.lift (Quot.lift_arg2 f h) h' x y)
-
 
 section BasicDefinitions 
   open Symbolic.Algebra Expr
@@ -206,6 +204,7 @@ section BasicDefinitions
 
 end BasicDefinitions
 
+
 namespace FreeAlgebra
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
 
@@ -250,6 +249,7 @@ namespace FreeAlgebra
     Quot.lift (λ e => e.rank) sorry p
 
 end FreeAlgebra
+
 
 namespace Polynomials
 
@@ -345,6 +345,7 @@ namespace AntiPolynomials
   #eval (3 : Int) * x ∧ y + (5 : Int) * x + x ∧ x
 
 end AntiPolynomials
+
 
 namespace TensorAlgebra
 
