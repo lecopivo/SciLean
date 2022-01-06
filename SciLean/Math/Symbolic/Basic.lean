@@ -80,6 +80,25 @@ namespace Expr
    | mul x y => (rank x) + (rank y)
    | smul a x => rank x
 
+  inductive is_homogenous {V K} : Nat → Expr V K → Prop where
+    | one  : is_homogenous 0 one
+    | zero (n) : is_homogenous n zero
+    | var (v : V) : is_homogenous 1 (var v)
+    | neg (x : Expr V K) (n) (h : is_homogenous n x) : is_homogenous n (- x)
+    | add (x y : Expr V K) (n) (hx : is_homogenous n x) (hy : is_homogenous n y) : is_homogenous n (x + y)
+    | mul (x y : Expr V K) (k l) (hx : is_homogenous k x) (hy : is_homogenous l y) : is_homogenous (k+l) (x * y)
+    | smul a (x : Expr V K) (n) (h : is_homogenous n x) : is_homogenous n (a * x)
+
+  def max_rank {V K} [DecidableEq V] (e : Expr V K) (v : V) : Nat :=
+    match e with
+    | one => 0
+    | zero => 0
+    | var v' => if v == v' then 1 else 0
+    | neg x => x.max_rank v
+    | add x y => max (x.max_rank v) (y.max_rank v)
+    | mul x y => (x.max_rank v) * (y.max_rank v)
+    | smul a x => x.max_rank v
+
   partial def expand {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K := 
     match e with
     | 0 => zero
@@ -158,7 +177,7 @@ namespace Expr
   --   | smul a x => smul a (reduce x)
   --   | - x => - reduce x
   --   | e => e
-
+ 
   open Expr in
   def toString {V K} [ToString V] [ToString K] (e : Expr V K): String :=
     match e with
