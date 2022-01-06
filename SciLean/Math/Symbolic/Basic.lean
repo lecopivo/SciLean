@@ -164,7 +164,7 @@ namespace Expr
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"⟦{v}⟧"
+    | var v => s!"x[{v}]"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} * {toString y}"
@@ -264,7 +264,7 @@ namespace FreeAlgebra
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"⟦{v}⟧"
+    | var v => s!"x[{v}]"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} * {toString y}"
@@ -311,7 +311,7 @@ namespace Polynomials
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"⟦{v}⟧"
+    | var v => s!"x[{v}]"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} * {toString y}"
@@ -358,7 +358,7 @@ namespace AntiPolynomials
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"⟦{v}⟧"
+    | var v => s!"x[{v}]"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} ∧ {toString y}"
