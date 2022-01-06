@@ -112,8 +112,8 @@ namespace FreeAlgebra
 
   notation " 𝓕[" V ", " K "] " => FreeAlgebra V K
   notation " 𝓕[" V "] "        => FreeAlgebra V ℝ
-  notation " e⟦" v ", " K "⟧ "  => var v (K := K)
-  notation " e⟦" v "⟧ "         => var v
+  notation " e⟦" v ", " K "⟧ " => var v (K := K)
+  notation " e⟦" v "⟧ "        => var v
 
   #eval (2 : ℝ) * e⟦0⟧ * ((3 : ℝ) * ((1: ℝ) * e⟦1⟧ + (2 : ℝ) * e⟦-3⟧))
   #eval (((e⟦0⟧ + e⟦1⟧) * e⟦0⟧ + e⟦1⟧) * e⟦2⟧)

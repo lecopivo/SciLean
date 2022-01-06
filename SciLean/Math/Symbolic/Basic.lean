@@ -394,7 +394,7 @@ section BasicDefinitions
   --   (λ x y : Expr V K =>
   --     (EqAlgebra x y))
 
-  def Polynomials := Quot
+  def Polynomial := Quot
     (λ x y : Expr V K =>
       (EqAlgebra x y) ∨
       (EqCommutative x y))
@@ -404,10 +404,10 @@ section BasicDefinitions
       (EqAlgebra x y) ∨
       (EqAntiCommutative x y))
 
-  def Polynomial (V : Type) (K : Type) [FinEnumBasis V] [Add K] [Mul K] [One K] := Quot
-    (λ x y : Expr (FinEnumBasis.index V) K =>
-      (EqAlgebra x y) ∨
-      (EqCommutative x y))
+  -- def Polynomial (V : Type) (K : Type) [FinEnumBasis V] [Add K] [Mul K] [One K] := Quot
+  --   (λ x y : Expr (FinEnumBasis.index V) K =>
+  --     (EqAlgebra x y) ∨
+  --     (EqCommutative x y))
 
   def AltPolynomial (V : Type) (K : Type) [FinEnumBasis V] [Add K] [Mul K] [One K] := Quot
     (λ x y : Expr (FinEnumBasis.index V) K =>
@@ -440,41 +440,40 @@ section BasicDefinitions
 end BasicDefinitions
 
 
-namespace Polynomials
+namespace Polynomial
 
+  notation " 𝓢𝓟[" ι ", " K "] " => Polynomial ι K
+  notation " 𝓢𝓟[" ι " ] "       => Polynomial ι ℝ
 
-  notation " 𝓢𝓟[" V ", " K "] " => Polynomials V K
-  notation " 𝓢𝓟[" V " ] "         => Polynomials V ℝ
-
-  notation " 𝓟[" V ", " K "] " => Polynomial V K
-  notation " 𝓟[" V "] "         => Polynomial V ℝ
+  notation " 𝓟[" V ", " K "] " => Polynomial (FinEnumBasis.index V) K
+  notation " 𝓟[" V "] "        => Polynomial (FinEnumBasis.index V) ℝ
   
   #check 𝓟[ℝ]
   #check 𝓟[ℝ×ℝ×ℝ]
 
-  variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
+  variable {ι : Type} {K : Type} [Add K] [Mul K] [One K]
 
   open Symbolic
 
-  instance : Add 𝓢𝓟[V, K] := 
+  instance : Add (Polynomial ι K) := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
 
-  instance : Sub 𝓢𝓟[V, K] := 
+  instance : Sub (Polynomial ι K) := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
 
-  instance : Mul 𝓢𝓟[V, K] := 
+  instance : Mul (Polynomial ι K) := 
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' * y') sorry sorry x y⟩
 
-  instance : Neg 𝓢𝓟[V, K] := 
+  instance : Neg (Polynomial ι K) := 
     ⟨λ x => Quot.mk _ <| Quot.lift (λ x' => - x') sorry x⟩
 
-  instance : HMul K 𝓢𝓟[V, K] 𝓢𝓟[V, K] := 
+  instance : HMul K (Polynomial ι K) (Polynomial ι K) := 
     ⟨λ a x => Quot.mk _ <| Quot.lift (λ x' => a * x') sorry x⟩
 
-  variable [ToString V] [ToString K] 
+  variable [ToString ι] [ToString K] 
 
   open Expr in
-  def toString (e : Expr V K): String :=
+  def toString (e : Expr ι K): String :=
     match e with
     | zero => "0"
     | one  => "1"
@@ -486,36 +485,40 @@ namespace Polynomials
 
   -- The string actually depends on the represenative element, thus it has to be hidden behind an opaque constant
   -- The sorry here is impossible to be proven
-  constant toString' (p : Polynomials V K)  : String :=
-    Quot.lift (λ e : Expr V K => toString e) sorry p
+  constant toString' (p : Polynomial ι K)  : String :=
+    Quot.lift (λ e : Expr ι K => toString e) sorry p
 
-  instance : ToString (Polynomials V K) := ⟨toString'⟩
+  instance : ToString (Polynomial ι K) := ⟨toString'⟩
 
-  def toVal {R} [CommRing R] (p : Polynomials V R) (vars : V → R) : R :=
+  def toVal {R} [CommRing R] (p : Polynomial ι R) (vars : ι → R) : R :=
     Quot.lift (λ e => e.toVal vars) sorry p
 
-  instance {R} [CommRing R] : CoeFun (Polynomials (Fin 1) R) (λ _ => R → R) := ⟨λ p x => p.toVal λ _ => x⟩
+  instance {R} [CommRing R] : CoeFun (Polynomial (Fin 1) R) (λ _ => R → R) 
+    := ⟨λ p x => p.toVal λ _ => x⟩
+  instance {X} [FinEnumBasis X] : CoeFun (Polynomial (FinEnumBasis.index X) ℝ) (λ _ => X → ℝ) 
+    := ⟨λ p x => p.toVal λ i => FinEnumBasis.proj i x⟩
 
-
-  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomials ι K 
+  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomial ι K 
     := Quot.mk _ (Expr.var i)
 
-  instance {V} {K} [Add K] [Mul K] [One K] : Zero (Polynomials V K) := ⟨Quot.mk _ Expr.zero⟩
-  instance {V} {K} [Add K] [Mul K] [One K] : One (Polynomials V K) := ⟨Quot.mk _ Expr.one⟩
+  instance {ι} {K} [Add K] [Mul K] [One K] : Zero (Polynomial ι K) := ⟨Quot.mk _ Expr.zero⟩
+  instance {ι} {K} [Add K] [Mul K] [One K] : One (Polynomial ι K) := ⟨Quot.mk _ Expr.one⟩
 
-  notation " x⟦" i ", " K "⟧ " => Polynomials.var (K := K) i
-  notation " x⟦" i "⟧ " => Polynomials.var i
+  notation " x⟦" i ", " K "⟧ " => Polynomial.var (K := K) i
+  notation " x⟦" i "⟧ " => Polynomial.var i
 
   #check x⟦1⟧ * x⟦0⟧
   #eval x⟦1⟧ * x⟦0⟧
 
-end Polynomials
+  #check 𝓟[ℝ×ℝ]
+
+end Polynomial
 
 
 namespace AntiPolynomials
 
-  notation " 𝓢𝓐[ " V " , " K " ] " => AntiPolynomials V K
-  notation " 𝓢𝓐[ " V " ] "         => AntiPolynomials V ℝ
+  notation " 𝓢𝓐[" ι ", " K "] " => AntiPolynomials ι K
+  notation " 𝓢𝓐[" ι "] "        => AntiPolynomials ι ℝ
 
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
 
