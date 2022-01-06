@@ -1,5 +1,7 @@
 import Mathlib
 
+import SciLean.Categories
+
 namespace SciLean
 
 namespace Symbolic.Algebra
@@ -12,6 +14,75 @@ inductive Expr (V : Type) (K : Type) where
 | add (a b : Expr V K) : Expr V K
 | mul (p q : Expr V K) : Expr V K
 | smul (a : K) (p : Expr V K) : Expr V K
+-- This complicate things but allows working with polynomials with very high degree.
+-- This is currently not important.
+-- | pow (p : Expr V K) (n : Int) : Expr V K
+-- | sub (a b : Expr' V K) : Expr' V K
+
+structure Monomial (V K : Type) where
+  coeff : K
+  vars  : List V
+  -- vars  : List (V × Nat) -- maybe include powers
+
+instance {V K} [One K] : Inhabited (Monomial V K) := ⟨1, []⟩
+
+def Monomial.toString {V K} [ToString V] [ToString K] (m : Monomial V K) : String := 
+  s!"{m.coeff} " ++ ((m.vars.map λ v => s!" x[{v}]") |> String.join)
+
+inductive Comparison : Type where 
+  | lt | eq | gt
+
+def List.decGradedLexComparison {α}
+  [LT α] [∀ a b : α, Decidable (a < b)] [DecidableEq α]
+  (l1 l2 : List α) : Comparison
+  :=
+  match l1, l2 with
+  | x1 :: xs1, x2 :: xs2 => 
+   if x1 == x2 then
+     decGradedLexComparison xs1 xs2
+   else if x1 < x2 then
+     Comparison.lt
+   else 
+     Comparison.gt
+   | [], x2 :: xs2 => Comparison.lt
+   | x1 :: xs1 , [] => Comparison.gt
+   | [], [] => Comparison.eq
+    
+def Monomial.decComparison {V K}
+  [LT V] [∀ x y : V, Decidable (x < y)] [DecidableEq V]
+  [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
+  (m1 m2 : Monomial V K) : Comparison 
+  := 
+  match List.decGradedLexComparison m1.vars m2.vars with
+  | Comparison.eq => 
+    if m1.coeff == m2.coeff then
+      Comparison.eq
+    else if m1.coeff < m2.coeff then
+      Comparison.lt
+    else
+      Comparison.gt
+  | Comparison.lt => Comparison.lt
+  | Comparison.gt => Comparison.gt
+
+def Monomial.decLt {V K}
+  [LT V] [∀ x y : V, Decidable (x < y)] [DecidableEq V]
+  [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
+  (m1 m2 : Monomial V K) : Bool
+  :=
+  match decComparison m1 m1 with
+  | Comparison.lt => true
+  | _ => false
+
+def Monomial.decEq {V K}
+  [LT V] [∀ x y : V, Decidable (x < y)] [DecidableEq V]
+  [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
+  (m1 m2 : Monomial V K) : Bool
+  :=
+  match decComparison m1 m1 with
+  | Comparison.eq => true
+  | _ => false
+
+instance {V K} [ToString V] [ToString K] : ToString (Monomial V K) := ⟨λ m => m.toString⟩
 
 namespace Expr
 
@@ -70,15 +141,25 @@ namespace Expr
     | mul x y => (x.toVal vars) * (y.toVal vars)
     | smul a x => a * (x.toVal vars)
 
-  def rank {V K} (e : Expr V K) : Nat :=
-   match e with
-   | zero => 0
-   | one  => 0
-   | var v => 1
-   | neg x => rank x
-   | add x y => max (rank x) (rank y)
-   | mul x y => (rank x) + (rank y)
-   | smul a x => rank x
+  def min_rank {V K} (e : Expr V K) : Nat :=
+    match e with
+    | zero => 0
+    | one  => 0
+    | var v => 1
+    | neg x => min_rank x
+    | add x y => min (min_rank x) (min_rank y)
+    | mul x y => (min_rank x) + (min_rank y)
+    | smul a x => min_rank x
+
+  def max_rank {V K} (e : Expr V K) : Nat :=
+    match e with
+    | zero => 0
+    | one  => 0
+    | var v => 1
+    | neg x => max_rank x
+    | add x y => max (max_rank x) (max_rank y)
+    | mul x y => (max_rank x) + (max_rank y)
+    | smul a x => max_rank x
 
   inductive is_homogenous {V K} : Nat → Expr V K → Prop where
     | one  : is_homogenous 0 one
@@ -89,20 +170,27 @@ namespace Expr
     | mul (x y : Expr V K) (k l) (hx : is_homogenous k x) (hy : is_homogenous l y) : is_homogenous (k+l) (x * y)
     | smul a (x : Expr V K) (n) (h : is_homogenous n x) : is_homogenous n (a * x)
 
-  def max_rank {V K} [DecidableEq V] (e : Expr V K) (v : V) : Nat :=
+  def expand_to_monomials {V K} [One K] [Neg K] [Mul K] (e : Expr V K) : Array (Monomial V K) :=
     match e with
-    | one => 0
-    | zero => 0
-    | var v' => if v == v' then 1 else 0
-    | neg x => x.max_rank v
-    | add x y => max (x.max_rank v) (y.max_rank v)
-    | mul x y => (x.max_rank v) * (y.max_rank v)
-    | smul a x => x.max_rank v
+    | 0 => #[]
+    | 1 => #[⟨1, []⟩]
+    | var v => #[⟨1, [v]⟩]
+    | neg x => x.expand_to_monomials.map λ m => ⟨-m.coeff, m.vars⟩
+    | add x y => x.expand_to_monomials.append y.expand_to_monomials
+    | mul x y => Id.run do
+      let mx := x.expand_to_monomials
+      let my := y.expand_to_monomials
+      let mut m : Array (Monomial V K) := Array.mkEmpty (mx.size * my.size)
+      for i in [0:mx.size] do
+        for j in [0:my.size] do
+          m := m.push ⟨mx[i].coeff * my[j].coeff, mx[i].vars.append my[j].vars⟩
+      m
+    | smul a x => x.expand_to_monomials.map λ m => ⟨a*m.coeff, m.vars⟩
 
   partial def expand {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K := 
     match e with
     | 0 => zero
-    | 1  => one 
+    | 1 => one 
     | var v => var v
     | - (- x) => (expand x)
     | - (smul a x) => expand ((-a) * x)
@@ -177,6 +265,32 @@ namespace Expr
   --   | smul a x => smul a (reduce x)
   --   | - x => - reduce x
   --   | e => e
+
+  def simplify {V K} [Zero K] [DecidableEq K] (e : Expr V K) : Expr V K :=
+    match e with
+    | 0 * x => 0
+    | x * 0 => 0
+    | 1 * x => x
+    | x * 1 => x
+    | smul a 0 => 0
+    | x + y => simplify x + simplify y
+    | x * y => simplify x * simplify y
+    | smul a x => if a == 0 then 0 else smul a (simplify x)
+    | x => x
+  
+
+  --- expand all brackes, factor `smul` from products,  
+  def algebra_norm_form {V K} (e : Expr V K) : Expr V K := sorry
+
+
+  def diff {V K} (e : Expr V K) (v : V) [DecidableEq V] : Expr V K :=
+    match e with
+    | var v' => if v == v' then 1 else 0
+    | - x => - x.diff v
+    | x + y => x.diff v + y.diff v
+    | x * y => x.diff v * y + x * y.diff v
+    | smul a x => a * x.diff v
+    | _ => 0
  
   open Expr in
   def toString {V K} [ToString V] [ToString K] (e : Expr V K): String :=
@@ -189,6 +303,7 @@ namespace Expr
     | mul x y => s!"{toString x} * {toString y}"
     | smul a x => s!"{a} {toString x}"
 
+
   instance {V K} [ToString V] [ToString K] : ToString (Expr V K) := ⟨toString⟩
 
   def x : Expr Int Int := var 0
@@ -199,6 +314,9 @@ namespace Expr
   #eval (((2 : Int) * x + (3 : Int) * y + - x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand
   #eval (((2 : Int) * x + (3 : Int) * y + - z * x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand
   #eval (((2 : Int) * x + (3 : Int) * y + - z * x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand.sort_vars
+
+  #eval ((y + x * (x + y))).expand_to_monomials
+  #eval (((2 : Int) * x + (3 : Int) * y + - x * (- x + y)) * ((5 : Int) * y + (7 : Int) * - x)).expand_to_monomials
 
 end Expr
 
@@ -260,15 +378,34 @@ end BasicDefinitions
 
 
 namespace FreeAlgebra
-  variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
+  variable {V : Type} {K : Type} [Add K] [Mul K] [One K] [Neg K]
 
   open Symbolic.Algebra
 
   instance : Add (FreeAlgebra V K) :=
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩
+    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (
+      λ x y => match x, y with
+        | 0, y => y
+        | x, 0 => x
+        | x, y => x + y
+      ) sorry sorry x y⟩
 
+  open Expr in
   instance : Mul (FreeAlgebra V K) :=
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.mul) sorry sorry x y⟩
+    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (
+       λ x y => match x, y with
+         | 1, y => y
+         | x, 1 => x
+         | smul a x, smul b y => (a*b) * (x*y)
+         | smul a x, neg y => (-a) * (x*y)
+         | neg x, smul b y => (-b) * (x*y)
+         | neg x, neg y => x*y
+         | smul a x, y => a * (x*y)
+         | x, smul b y => b * (x*y)
+         | neg x, y => neg (x*y)
+         | x, neg y => neg (x*y)
+         | x, y => x*y
+       ) sorry sorry x y⟩
 
   instance : Neg (FreeAlgebra V K) :=
     ⟨λ x => Quot.mk _ <| Quot.lift (Expr.neg) sorry x⟩
@@ -299,9 +436,6 @@ namespace FreeAlgebra
   def toVal {R} [CommRing R] (p : FreeAlgebra V R) (vars : V → R) : R :=
     Quot.lift (λ e => e.toVal vars) sorry p
 
-  def rank (p : FreeAlgebra V K) : Nat :=
-    Quot.lift (λ e => e.rank) sorry p
-
 end FreeAlgebra
 
 
@@ -312,16 +446,19 @@ namespace Polynomials
   open Symbolic.Algebra
 
   instance : Add (Polynomials V K) := 
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩
+    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
+
+  instance : Sub (Polynomials V K) := 
+    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
 
   instance : Mul (Polynomials V K) := 
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.mul) sorry sorry x y⟩
+    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' * y') sorry sorry x y⟩
 
   instance : Neg (Polynomials V K) := 
-    ⟨λ x => Quot.mk _ <| Quot.lift (Expr.neg) sorry x⟩
+    ⟨λ x => Quot.mk _ <| Quot.lift (λ x' => - x') sorry x⟩
 
   instance : HMul K (Polynomials V K) (Polynomials V K) := 
-    ⟨λ a x => Quot.mk _ <| Quot.lift (Expr.smul a) sorry x⟩
+    ⟨λ a x => Quot.mk _ <| Quot.lift (λ x' => a * x') sorry x⟩
 
   variable [ToString V] [ToString K] 
 
@@ -346,8 +483,7 @@ namespace Polynomials
   def toVal {R} [CommRing R] (p : Polynomials V R) (vars : V → R) : R :=
     Quot.lift (λ e => e.toVal vars) sorry p
 
-  def degree (p : Polynomials V K) : Nat :=
-    Quot.lift (λ e => e.rank) sorry p
+  instance {R} [CommRing R] : CoeFun (Polynomials (Fin 1) R) (λ _ => R → R) := ⟨λ p x => p.toVal λ _ => x⟩
 
 end Polynomials
 
@@ -377,7 +513,7 @@ namespace AntiPolynomials
     match e with
     | zero => "0"
     | one  => "1"
-    | var v => s!"x[{v}]"
+    | var v => s!"dx[{v}]"
     | neg x => s!"- {toString x}"
     | add x y => s!"({toString x} + {toString y})"
     | mul x y => s!"{toString x} ∧ {toString y}"
@@ -393,10 +529,13 @@ namespace AntiPolynomials
   -- TODO: How to do this? we have to somehow check for zero terms of the form `x ∧ x` and not count them
   def rank (p : AntiPolynomials V K) : Nat := sorry
 
-  def x : AntiPolynomials Nat Int := Quot.mk _ (Expr.var 0)
-  def y : AntiPolynomials Nat Int := Quot.mk _ (Expr.var 1)
+  def dx : AntiPolynomials Nat Int := Quot.mk _ (Expr.var 0)
+  def dy : AntiPolynomials Nat Int := Quot.mk _ (Expr.var 1)
 
-  #eval (3 : Int) * x ∧ y + (5 : Int) * x + x ∧ x
+  #eval ((3 : Int) * dx ∧ dy + (5 : Int) * dx + dx ∧ (dx + dy)) ∧ dy
+
+  -- def PᵣΛₖ (ι) (r k : Nat) := AntiPolynomials ι (Polynomials ι ℝ) -- polyhomials
+  -- def 𝓒Λₖ (X : Type) (k : Nat) [FinEnumVec X] := AntiPolynomials (FinEnumBasis.index X) (X ⟿ ℝ)   -- smoot
 
 end AntiPolynomials
 
@@ -438,9 +577,6 @@ namespace TensorAlgebra
     Quot.lift (λ e : Expr V K => toString e) sorry p
 
   instance : ToString (TensorAlgebra V K) := ⟨toString'⟩
-
-  def rank (p : TensorAlgebra V K) : Nat :=
-    Quot.lift (λ e => e.rank) sorry p
 
   def x : TensorAlgebra Int Int := Quot.mk _ (Expr.var 0)
   def y : TensorAlgebra Int Int := Quot.mk _ (Expr.var 1)
@@ -492,5 +628,7 @@ namespace ExteriorAlgebra
   def y : ExteriorAlgebra Int Int := Quot.mk _ (Expr.var 1)
 
   #eval (3 : Int) * x ∧ y + (5 : Int) * x
+
+  -- def 𝓒Λₖ (X : Type) (k : Nat) [FinEnumVec X] := ExteriorAlgebra X (X ⟿ ℝ)   -- smoot
 
 end ExteriorAlgebra
