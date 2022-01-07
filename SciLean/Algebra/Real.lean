@@ -32,11 +32,15 @@ namespace ℝ
   instance : LT ℝ := ⟨λ x y => x.toFloat < y.toFloat⟩
   instance : LE ℝ := ⟨λ x y => x.toFloat ≤ y.toFloat⟩
   instance : OfScientific ℝ := instOfScientificFloat
+
+  instance (x y : ℝ) : Decidable (x < y) := by simp[ℝ] infer_instance done
+  -- this kind of breaks with NaNs but I want to make sure that we never get them as division by zero is zero
+  instance (x y : ℝ) : Decidable (x = y) := if (x < y) ∨ (y < x) then isFalse (sorry : x≠y) else isTrue (sorry : x=y)
   
   instance : Add ℝ := ⟨λ x y => x.toFloat + y.toFloat⟩
   instance : Sub ℝ := ⟨λ x y => x.toFloat - y.toFloat⟩
   instance : Mul ℝ := ⟨λ x y => x.toFloat * y.toFloat⟩
-  instance : Div ℝ := ⟨λ x y => x.toFloat / y.toFloat⟩
+  instance : Div ℝ := ⟨λ x y => if y = 0.0 then 0.0 else x.toFloat / y.toFloat⟩
   instance : Neg ℝ := ⟨λ x => (-x : Float)⟩
 
   -- instance : Zero ℝ := ⟨Float.ofNat 0⟩  

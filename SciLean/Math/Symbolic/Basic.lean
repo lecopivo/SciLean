@@ -29,9 +29,6 @@ structure SMonomial (V K : Type) [Enumtype V] where
 def Monomial.toSMonomial {V K} [Enumtype V] (m : Monomial V K)  : SMonomial V K := sorry
 def SMonomial.toMonomial {V K} [Enumtype V] (m : SMonomial V K) : Monomial V K := sorry
 
-def Monomial.symReduce {V K} (m : Monomial V K) : Monomial V K := sorry
-def Monomial.altReduce {V K} (m : Monomial V K) : Monomial V K := sorry
-
 open Expr in
 def Monomial.toExpr {V K} (m : Monomial V K) : Expr V K :=
   match m.vars with
@@ -119,6 +116,11 @@ def Monomial.decEq {V K}
   match decComparison m1 m2 with
   | Comparison.eq => true
   | _ => false
+
+def Monomial.symReduce {ι K} [LT ι] [∀ i j : ι, Decidable (i < j)] [Inhabited ι]
+  (m : Monomial ι K) : Monomial ι K := 
+  ⟨m.coeff, (m.vars.toArray.qsort (λ i j => i < j)).toList⟩
+def Monomial.altReduce {V K} (m : Monomial V K) : Monomial V K := sorry
 
 instance {V K} [ToString V] [ToString K] : ToString (Monomial V K) := ⟨λ m => m.toString⟩
 
@@ -394,11 +396,6 @@ section BasicDefinitions
   --   (λ x y : Expr V K =>
   --     (EqAlgebra x y))
 
-  def Polynomial := Quot
-    (λ x y : Expr V K =>
-      (EqAlgebra x y) ∨
-      (EqCommutative x y))
-
   def AntiPolynomials := Quot
     (λ x y : Expr V K =>
       (EqAlgebra x y) ∨
@@ -438,145 +435,6 @@ section BasicDefinitions
   infixl:75 " ∧ " => OuterMul.omul
 
 end BasicDefinitions
-
-
-namespace Polynomial
-
-  notation " 𝓢𝓟[" ι ", " K "] " => Polynomial ι K
-  notation " 𝓢𝓟[" ι " ] "       => Polynomial ι ℝ
-
-  notation " 𝓟[" V ", " K "] " => Polynomial (FinEnumBasis.index V) K
-  notation " 𝓟[" V "] "        => Polynomial (FinEnumBasis.index V) ℝ
-  
-  #check 𝓟[ℝ]
-  #check 𝓟[ℝ×ℝ×ℝ]
-
-  variable {ι : Type} {K : Type} [Add K] [Mul K] [One K]
-
-  open Symbolic
-
-  instance : Add (Polynomial ι K) := 
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
-
-  instance : Sub (Polynomial ι K) := 
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' + y') sorry sorry x y⟩
-
-  instance : Mul (Polynomial ι K) := 
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x' y' => x' * y') sorry sorry x y⟩
-
-  instance : Neg (Polynomial ι K) := 
-    ⟨λ x => Quot.mk _ <| Quot.lift (λ x' => - x') sorry x⟩
-
-  instance : HMul K (Polynomial ι K) (Polynomial ι K) := 
-    ⟨λ a x => Quot.mk _ <| Quot.lift (λ x' => a * x') sorry x⟩
-
-  variable [ToString ι] [ToString K] 
-
-  open Expr in
-  def toString (e : Expr ι K): String :=
-    match e with
-    | zero => "0"
-    | one  => "1"
-    | var v => s!"x⟦{v}⟧"
-    | neg x => s!"- {toString x}"
-    | add x y => s!"({toString x} + {toString y})"
-    | mul x y => s!"{toString x} * {toString y}"
-    | smul a x => s!"{a} {toString x}"
-
-  -- The string actually depends on the represenative element, thus it has to be hidden behind an opaque constant
-  -- The sorry here is impossible to be proven
-  constant toString' (p : Polynomial ι K)  : String :=
-    Quot.lift (λ e : Expr ι K => toString e) sorry p
-
-  instance : ToString (Polynomial ι K) := ⟨toString'⟩
-
-  def toVal {R} [CommRing R] (p : Polynomial ι R) (vars : ι → R) : R :=
-    Quot.lift (λ e => e.toVal vars) sorry p
-
-  instance {R} [CommRing R] : CoeFun (Polynomial (Fin 1) R) (λ _ => R → R) 
-    := ⟨λ p x => p.toVal λ _ => x⟩
-  instance {X} [FinEnumBasis X] : CoeFun (Polynomial (FinEnumBasis.index X) ℝ) (λ _ => X → ℝ) 
-    := ⟨λ p x => p.toVal λ i => FinEnumBasis.proj i x⟩
-
-  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomial ι K 
-    := Quot.mk _ (Expr.var i)
-
-  instance {ι} {K} [Add K] [Mul K] [One K] : Zero (Polynomial ι K) := ⟨Quot.mk _ Expr.zero⟩
-  instance {ι} {K} [Add K] [Mul K] [One K] : One (Polynomial ι K) := ⟨Quot.mk _ Expr.one⟩
-
-  notation " x⟦" i ", " K "⟧ " => Polynomial.var (K := K) i
-  notation " x⟦" i "⟧ " => Polynomial.var i
-
-  #check x⟦1⟧ * x⟦0⟧
-  #eval x⟦1⟧ * x⟦0⟧
-
-  #check 𝓟[ℝ×ℝ]
-
-end Polynomial
-
-
-namespace AntiPolynomials
-
-  notation " 𝓢𝓐[" ι ", " K "] " => AntiPolynomials ι K
-  notation " 𝓢𝓐[" ι "] "        => AntiPolynomials ι ℝ
-
-  variable {V : Type} {K : Type} [Add K] [Mul K] [One K]
-
-  open Symbolic
-
-  instance : Add (AntiPolynomials V K) := 
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩
-
-  instance : OuterMul (AntiPolynomials V K) := 
-    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.mul) sorry sorry x y⟩
-
-  instance : Neg (AntiPolynomials V K) := 
-    ⟨λ x => Quot.mk _ <| Quot.lift (Expr.neg) sorry x⟩
-
-  instance : HMul K (AntiPolynomials V K) (AntiPolynomials V K) := 
-    ⟨λ a x => Quot.mk _ <| Quot.lift (Expr.smul a) sorry x⟩
-
-  variable [ToString V] [ToString K] 
-
-  open Expr in
-  def toString (e : Expr V K): String :=
-    match e with
-    | zero => "0"
-    | one  => "1"
-    | var v => s!"dx⟦{v}⟧"
-    | neg x => s!"- {toString x}"
-    | add x y => s!"({toString x} + {toString y})"
-    | mul x y => s!"{toString x} ∧ {toString y}"
-    | smul a x => s!"{a} {toString x}"
-
-  -- The string actually depends on the represenative element, thus it has to be hidden behind an opaque constant
-  -- The sorry here is impossible to be proven
-  constant toString' (p : AntiPolynomials V K)  : String :=
-    Quot.lift (λ e : Expr V K => toString e) sorry p
-
-  instance : ToString (AntiPolynomials V K) := ⟨toString'⟩
-
-  -- TODO: How to do this? we have to somehow check for zero terms of the form `x ∧ x` and not count them
-  def rank (p : AntiPolynomials V K) : Nat := sorry
-
-  def dx : AntiPolynomials Nat Int := Quot.mk _ (Expr.var 0)
-  def dy : AntiPolynomials Nat Int := Quot.mk _ (Expr.var 1)
-
-  #eval ((3 : Int) * dx ∧ dy + (5 : Int) * dx + dx ∧ (dx + dy)) ∧ dy
-
-  -- def PᵣΛₖ (ι) (r k : Nat) := AntiPolynomials ι (Polynomials ι ℝ) -- polyhomials
-  -- def 𝓒Λₖ (X : Type) (k : Nat) [FinEnumVec X] := AntiPolynomials (FinEnumBasis.index X) (X ⟿ ℝ)   -- smoot
-
-  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : AntiPolynomials ι K 
-    := Quot.mk _ (Expr.var i)
-
-  notation " dx⟦ " i " , " K " ⟧ " => AntiPolynomials.var (K := K) i
-  notation " dx⟦ " i " ⟧ " => AntiPolynomials.var i
-
-  #eval  dx⟦0⟧ ∧ dx⟦1⟧
-  #check dx⟦0⟧ ∧ dx⟦1⟧
-
-end AntiPolynomials
 
 
 namespace TensorAlgebra

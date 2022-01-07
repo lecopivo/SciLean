@@ -9,5 +9,6 @@ export Enumtype (sum)
 --- much nicer then writing ⟨i, sorry⟩
 macro:max "!" noWs t:term : term => `(⟨$t, sorry⟩)
 
+notation "!?" P => (sorry : P)
 
 

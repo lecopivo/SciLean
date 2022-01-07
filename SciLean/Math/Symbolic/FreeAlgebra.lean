@@ -6,9 +6,9 @@ namespace SciLean
 
 open Symbolic
 
-variable (V : Type) (K : Type) [Add K] [Mul K] [One K]
-
-def FreeAlgebra := Quot
+def FreeAlgebra (V : Type) (K : Type) [Add K] [Mul K] [One K] [Neg K]
+  := 
+  Quot
   (λ x y : Expr V K =>
     (Expr.EqAlgebra x y))
 
@@ -78,7 +78,6 @@ namespace FreeAlgebra
 
   end Expr
 
-
   instance : Add (FreeAlgebra V K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ Expr.add sorry sorry x y⟩
 
@@ -107,16 +106,30 @@ namespace FreeAlgebra
   def toVal {R} [Ring R] (p : FreeAlgebra V R) (vars : V → R) : R :=
     Quot.lift (λ e => e.toVal vars) sorry p
 
-  def var {V} (v : V) (K := ℝ) [Add K] [Mul K] [One K] : FreeAlgebra V K 
+  def var {V} (v : V) (K := ℝ) [Add K] [Mul K] [One K] [Neg K] : FreeAlgebra V K
     := Quot.mk _ (Expr.var v)
 
-  notation " 𝓕[" V ", " K "] " => FreeAlgebra V K
-  notation " 𝓕[" V "] "        => FreeAlgebra V ℝ
+  def expand {ι}
+    [LT ι] [∀ i j : ι, Decidable (i < j)] [DecidableEq ι]
+    [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
+    (x : FreeAlgebra ι K) : FreeAlgebra ι K :=
+    Quot.mk _ <|
+    Quot.lift Expr.expand sorry x
+
+  notation " 𝓕[" ι ", " K "] " => FreeAlgebra ι K
+  notation " 𝓕[" ι "] "        => FreeAlgebra ι ℝ
+  notation " 𝓣[" V "] "        => FreeAlgebra (FinEnumBasis.index V) ℝ
+
   notation " e⟦" v ", " K "⟧ " => var v (K := K)
   notation " e⟦" v "⟧ "        => var v
 
-  #eval (2 : ℝ) * e⟦0⟧ * ((3 : ℝ) * ((1: ℝ) * e⟦1⟧ + (2 : ℝ) * e⟦-3⟧))
-  #eval (((e⟦0⟧ + e⟦1⟧) * e⟦0⟧ + e⟦1⟧) * e⟦2⟧)
+  def x := (2 : ℝ) * e⟦0⟧ * ((3 : ℝ) * ((1: ℝ) * e⟦1⟧ + (2 : ℝ) * e⟦-3⟧))
+  def y := (((e⟦0⟧ + e⟦1⟧) * e⟦0⟧ + e⟦1⟧) * e⟦2⟧)
+
+  #eval x
+  #eval x.expand
+  #eval y
+  #eval y.expand
 
 end FreeAlgebra
 
