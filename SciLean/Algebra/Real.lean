@@ -48,6 +48,10 @@ namespace ℝ
   -- instance : OfNat ℝ n := ⟨Float.ofNat n⟩
   -- instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
+  -- This should override 2.0 interperting as a Float
+  @[defaultInstance mid+1]
+  instance (priority := high) : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
+
   -- def natPow (r : ℝ) : Nat → ℝ
   -- | 0 => 1
   -- | n+1 => r * natPow r n
