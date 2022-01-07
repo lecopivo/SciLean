@@ -46,9 +46,17 @@ namespace Hom
       simp[Neg.neg]
     infer_instance
 
+  instance (f g : X → ℝ) [IsSmooth f] [IsSmooth g] : IsSmooth (f * g) :=
+  by
+    conv =>
+      enter [1,x]
+      simp
+    infer_instance
+
   instance : Zero (X ⟿ Y) := ⟨⟨0, by infer_instance⟩⟩
-  instance : Add (X ⟿ Y) := ⟨λ f g => ⟨f.1 + g.1, by infer_instance⟩⟩
-  instance : Sub (X ⟿ Y) := ⟨λ f g => ⟨f.1 - g.1, by infer_instance⟩⟩
+  instance : Add (X ⟿ Y) := ⟨λ f g => ⟨f + g, by infer_instance⟩⟩
+  instance : Sub (X ⟿ Y) := ⟨λ f g => ⟨f - g, by infer_instance⟩⟩
+  instance : Mul (X ⟿ ℝ) := ⟨λ f g => ⟨f * g, by infer_instance⟩⟩
   instance : HMul ℝ (X ⟿ Y) (X ⟿ Y) := ⟨λ r f => ⟨r * f.1, by infer_instance⟩⟩
   instance : Neg (X ⟿ Y) := ⟨λ f => ⟨-f.1, by infer_instance⟩⟩
 
