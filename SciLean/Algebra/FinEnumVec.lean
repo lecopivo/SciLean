@@ -2,6 +2,43 @@ import SciLean.Algebra.Hilbert
 
 namespace SciLean
 
+class Basis (X : Type u) (ι : Type v) (K : Type w) where
+  basis : ι → X
+  proj  : ι → X → K
+
+namespace Basis
+
+  class Trait (X : Type u) where
+    Index : Type v
+    Coeff : Type w
+
+  attribute [reducible] Trait.Index Trait.Coeff
+
+  @[reducible] instance (X : Type u) (ι : Type v) (K : Type w) [Basis X ι K] : Trait X := ⟨ι, K⟩
+
+  instance : Basis ℝ Unit ℝ := 
+  {
+    basis := λ _ => 1
+    proj  := λ _ x => x
+  }
+
+  abbrev basis' {X} [Trait X] [Basis X (Trait.Index X) (Trait.Coeff X)]
+    (i : (Trait.Index X)) : X := Basis.basis (Trait.Coeff X) i
+
+  instance {X Y ι κ K} [Basis X ι K] [Basis Y κ K] [Zero X] [Zero Y] : Basis (X × Y) (ι ⊕ κ) K := 
+  {
+    basis := λ i =>
+               match i with
+                 | Sum.inl ix => (basis' ix, 0)
+                 | Sum.inr iy => (0, basis' iy)
+    proj := λ i x =>
+      match i with
+      | Sum.inl ix => proj ix x.1
+      | Sum.inr iy => proj iy x.2
+  }
+
+end Basis
+
 -- Finite explicit basis -- maybe over a ring? And then have `proj : index → X → K`
 class FinEnumBasis (X : Type u) where
   index : Type 
