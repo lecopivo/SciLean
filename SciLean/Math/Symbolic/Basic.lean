@@ -605,24 +605,83 @@ structure FreeMonoid (X : Type) where
 instance {X} : Mul (FreeMonoid X) := ⟨λ x y => ⟨x.1.append y.1⟩⟩
 instance {X} : One (FreeMonoid X) := ⟨⟨[]⟩⟩
 
+inductive FreeMonoid.Lt {X} [LT X] : FreeMonoid X → FreeMonoid X → Prop  where
+  | grading  {xs ys : FreeMonoid X}
+             (h : xs.1.length < ys.1.length) : Lt xs ys
+  | lex_head {x y : X} {xs ys : FreeMonoid X}
+             (h : x < y) (h' : xs.1.length = ys.1.length) 
+             : Lt ⟨x :: xs.1⟩ ⟨y :: ys.1⟩
+  | lex_tail {x : X} {xs ys : FreeMonoid X} (h : Lt xs ys) 
+             : Lt ⟨x :: xs.1⟩ ⟨x :: ys.1⟩
+
+instance {X} [LT X] : LT (FreeMonoid X) := ⟨FreeMonoid.Lt⟩
+instance {X} [LT X] : LE (FreeMonoid X) := ⟨λ x y => x = y ∨ x < y⟩
+
+inductive DecComparison {X : Type u} [LT X] (x y : X) where
+  | cpEq (h : x = y) : DecComparison x y
+  | cpLt (h : x < y) : DecComparison x y
+  | cpGt (h : x > y) : DecComparison x y
+
+export DecComparison (cpEq cpLt cpGt)
+
+class DecComp (X : Type u) [LT X] where
+  compare (x y : X) : DecComparison x y
+
+abbrev compare {X} [LT X] [DecComp X] (x y : X) : DecComparison x y := DecComp.compare x y
+
+instance : DecComp Nat :=
+  ⟨λ x y =>
+    if h : x = y 
+    then cpEq h
+    else if h : x < y
+    then cpLt h
+    else cpGt sorry⟩ -- use total order
+
+instance : DecComp Int :=
+  ⟨λ x y =>
+    if h : x = y 
+    then cpEq h
+    else if h : x < y
+    then cpLt h
+    else cpGt sorry⟩ -- use total order
+
+def FreeMonoid.compare {X} [LT X] [DecComp X] (x y : List X) : DecComparison (X := FreeMonoid X) ⟨x⟩ ⟨y⟩ :=
+  match x, y with
+  | [], [] => cpEq rfl
+  | x :: xs, [] => cpGt sorry
+  | [], y :: ys => cpLt sorry
+  | x' :: xs, y' :: ys =>
+    match DecComp.compare x' y' with
+    | cpEq h => 
+      match compare xs ys with
+      | cpEq h' => cpEq sorry  -- here is maybe aproblem, as I'm not sure if `⟨x⟩ = ⟨y⟩ → x = y`
+      | cpLt h' => cpLt sorry
+      | cpGt h' => cpGt sorry
+    | cpLt h => 
+      match DecComp.compare xs.length ys.length with
+      | cpEq h' => cpLt (FreeMonoid.Lt.lex_head h h')
+      | cpLt h' => cpLt sorry
+      | cpGt h' => cpGt sorry
+    | cpGt h =>
+      match DecComp.compare xs.length ys.length with
+      | cpEq h' => cpGt sorry
+      | cpLt h' => cpLt sorry
+      | cpGt h' => cpGt sorry
+
+instance {X} [LT X] [DecComp X] : DecComp (FreeMonoid X) := ⟨λ x y => FreeMonoid.compare x.1 y.1⟩
+  
 -- sorts variables assuming:
 --   1. x * y = y * x
-def FreeMonoid.symSort {X} 
-  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
-  (m : FreeMonoid X) : FreeMonoid X := sorry
+def FreeMonoid.symSort {X} [Ord X] (m : FreeMonoid X) 
+  : FreeMonoid X := sorry
 
-theorem FreeMonoid.symSortIdmp {X} 
-  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
-  (m : FreeMonoid X) 
-  : 
-  m.symSort.symSort = m.symSort := sorry
+theorem FreeMonoid.symSortIdmp {X} [Ord X] (m : FreeMonoid X) 
+  : m.symSort.symSort = m.symSort := sorry
 
 -- sorts variables assuming:
 --   1. x * y = - y * x 
 --   2. x * x = sig x
-def FreeMonoid.altSort {X K}
-  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
-  [Mul K] [One K] [Neg K]
+def FreeMonoid.altSort {X K} [LT X] [DecComp X] [Mul K] [One K] [Neg K]
   (m : FreeMonoid X) (sig : X → K) : K × FreeMonoid X := sorry
 
 -- maybe rename to `StrictlySorted`
@@ -633,19 +692,26 @@ inductive FreeMonoid.AltSorted {X} [LT X] : FreeMonoid X → Prop where
         (h : AltSorted (⟨[y]⟩*m)) 
         (lt  : x < y) : AltSorted (⟨[x,y]⟩*m)
 
-theorem FreeMonoid.altSortIdmpCoef {X K}
-  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
-  [Mul K] [One K] [Neg K]
+theorem FreeMonoid.altSortIdmpCoef {X K} [LT X] [DecComp X] [Mul K] [One K] [Neg K]
   (m : FreeMonoid X) (sig : X → K)
   :
   (((m.altSort sig).2.altSort sig).1 = 1) := sorry
 
-theorem FreeMonoid.altSortIdmpVars {X K}
-  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
-  [Mul K] [One K] [Neg K]
+theorem FreeMonoid.altSortIdmpVars {X K} [LT X] [DecComp X] [Mul K] [One K] [Neg K]
   (m : FreeMonoid X) (sig : X → K)
   :
   (((m.altSort sig).2.altSort sig).2 = (m.altSort sig).2) := sorry
+
+
+class Coef (X : Type) (K : outParam $ Type) [outParam $ Monoid K] [outParam $ MulAction K X] where
+  coef : X → K
+  base : X → X
+  coef_base : ∀ x, coef (base x) = 1
+  smul_coef : ∀ (a : K) (x : X), coef (a * x) = a * coef x
+  coef_base_ext : ∀ x, ((coef x = coef y) ∧ (base x = base y)) ↔ (x = y)
+
+class Rank (X : Type) where 
+  rank : X → Int
 
 namespace SymMonomial
 
@@ -714,62 +780,302 @@ namespace SymMonomial
 
 end SymMonomial
 
-structure AltMonomial.Repr (X : Type) (K : Type) (sig : X → K) where
-  coef : K
-  vars : FreeMonoid X
+namespace AltMonomial
 
-variable {X K sig} 
-         [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
-         [Mul K] [Zero K] [One K] [Neg K]
-         [DecidableEq K]
+  structure Repr (X : Type) (K : Type) (sig : X → K) where
+    coef : K
+    vars : FreeMonoid X
 
-def AltMonomial.Repr.NormForm (m : AltMonomial.Repr X K sig) : Prop :=
-  ((m.coef = 0) ∧ (m.vars = 1)) 
-  ∨
-  ((m.coef ≠ 0) ∧ m.vars.AltSorted)
+  namespace Repr
 
-def AltMonomial.NormRepr (X : Type) (K : Type) (sig : X → K) [LT X] [Zero K] 
-  := { x : Repr X K sig // x.NormForm }
+    variable {X K sig} [LT X] [DecComp X]
+             [Mul K] [Zero K] [One K] [Neg K]
 
-def AltMonomial.Repr.normalize (x : AltMonomial.Repr X K sig) : AltMonomial.NormRepr X K sig
-  := let (a', x') := x.vars.altSort sig
-     if x.coef = 0 ∨ a' = 0 
-     then ⟨⟨0, 1⟩, sorry⟩
-     else ⟨⟨x.coef * a', x'⟩, sorry⟩
+    instance : Mul (Repr X K sig) := 
+      ⟨λ x y => ⟨x.coef * y.coef, x.vars * y.vars⟩⟩
+    instance : HMul K (Repr X K sig) (Repr X K sig) := 
+      ⟨λ a x => ⟨a * x.coef, x.vars⟩⟩
+    instance [Neg K] : Neg (Repr X K sig) := 
+      ⟨λ x => ⟨-x.coef, x.vars⟩⟩
 
-instance : Mul (AltMonomial.Repr X K sig) := 
-  ⟨λ x y => ⟨x.coef * y.coef, x.vars * y.vars⟩⟩
+    instance : Zero (Repr X K sig) := ⟨⟨0,1⟩⟩
+    instance : One  (Repr X K sig) := ⟨⟨1,1⟩⟩
 
-open AltMonomial.Repr in
-instance : Mul (AltMonomial.NormRepr X K sig) := 
-  ⟨λ x y => normalize (x.1 * y.1)⟩
+    def RedForm (m : Repr X K sig) : Prop :=
+      ((m.coef = 0) ∧ (m.vars = 1))
+      ∨ 
+      ((m.coef ≠ 0) ∧ (m.vars.AltSorted))
 
-instance : Zero (AltMonomial.Repr X K sig) := ⟨⟨0,1⟩⟩
-instance : One  (AltMonomial.Repr X K sig) := ⟨⟨1,1⟩⟩
+    abbrev RedRepr (X K sig) [LT X] [Zero K] 
+      := {x' : Repr X K sig // x'.RedForm} 
 
-instance : Zero (AltMonomial.NormRepr X K sig) := ⟨⟨0, sorry⟩⟩
-instance : One  (AltMonomial.NormRepr X K sig) := ⟨⟨1, sorry⟩⟩
+    def reduce (x : Repr X K sig) : RedRepr X K sig
+      := let (a', x') := x.vars.altSort sig
+         !⟨x.coef * a', x'⟩
 
-def AltMonomial.NormRepr.beq (x y : AltMonomial.NormRepr X K sig)
-  : Bool := 
-  (x.1.coef = y.1.coef) ∧ (x.1.vars.1 = y.1.vars.1)
+    theorem reduceIdmp (x : Repr X K sig)
+      : x.reduce.1.reduce = x.reduce
+      := sorry
 
-def AltMonomial (X : Type) (K : Type) (sig : X → K)
-  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
-  [Mul K] [Zero K] [One K] [Neg K] [DecidableEq K]
-  := Quot (λ x y : AltMonomial.NormRepr X K sig => (x.beq y) = true)
+    def NormForm (m : Repr X K sig) : Prop :=
+      ((m.coef = 0) ∧ (m.vars = 1))
+      ∨ 
+      ((m.coef ≠ 0) ∧ (m.vars.AltSorted))
 
-instance : DecidableEq (AltMonomial X K sig) :=
-  λ x y =>
-  Quot.lift₂
-  (λ x y =>
-     match x.beq y with
-     | true  => isTrue sorry
-     | false => isFalse sorry)
-  sorry sorry x y
+    abbrev NormRepr (X K sig) [LT X] [Zero K] 
+      := {x' : Repr X K sig // x'.NormForm} 
 
-def AltMonomial.mul (x y : AltMonomial X K sig) : AltMonomial X K sig
-  := Quot.mk _ <| Quot.lift₂ (λ x y => x * y) sorry sorry x y
+    def normalize (x : Repr X K sig) [DecidableEq K] : NormRepr X K sig
+      := let y := x.reduce.1
+         if y.coef = 0
+         then !⟨0, 1⟩
+         else !y
 
+    theorem normalizeIdmp (x : Repr X K sig) [DecidableEq K]
+      : x.normalize.1.normalize = x.normalize
+      := sorry
+
+    def Eq (x y : Repr X K sig) : Prop :=
+      let x' := x.reduce.1
+      let y' := y.reduce.1
+      ((x'.coef = 0) ∧ (y'.coef = 0))
+      ∨
+      (x' = y')
+
+    def RedEq  (x y :  RedRepr X K sig) : Prop := Eq x.1 y.1
+    def NormEq (x y : NormRepr X K sig) : Prop := Eq x.1 y.1
+
+  end Repr
+
+end AltMonomial
+
+#check AltMonomial.Repr.RedEq
+
+abbrev AltMonomial (X : Type) (K : Type) (sig : X → K)
+  [LT X] [DecComp X] [Mul K] [Zero K] [One K] [Neg K]
+  := Quot λ x y : AltMonomial.Repr.RedRepr X K sig => AltMonomial.Repr.RedEq x y
+
+namespace AltMonomial
+
+  variable {X K} {sig}
+           [LT X] [DecComp X]
+           [CommMonoid K] [Zero K] [Neg K]
+
+  -- def beq (x y : AltMonomial X K sig)
+  --   : Bool := 
+  --   (x.1.coef = y.1.coef) ∧ (x.1.vars.1 = y.1.vars.1)
+
+  -- instance : DecidableEq (AltMonomial X K sig) := 
+  --   (λ x y =>
+  --      match x.beq y with
+  --      | true  => isTrue sorry
+  --      | false => isFalse sorry)
+
+  instance : Mul (AltMonomial X K sig) := 
+    ⟨λ x y => 
+      Quot.mk _ <| Quot.lift₂ 
+      (λ x y => Repr.reduce (x.1 * y.1)) 
+      sorry sorry x y⟩
+
+  instance : HMul K (AltMonomial X K sig) (AltMonomial X K sig) := 
+    ⟨λ a x => 
+      Quot.mk _ <| Quot.lift
+      (λ x => !⟨a * x.1.coef, x.1.vars⟩) -- No need for reduction here
+      sorry x⟩
+
+  instance : Zero (AltMonomial X K sig) := ⟨Quot.mk _ !0⟩
+  instance : One  (AltMonomial X K sig) := ⟨Quot.mk _ !1⟩
+
+  -- Define `AltMonoid`
+  instance : Monoid (AltMonomial X K sig) := 
+  {
+    mul_assoc := sorry  -- I think for this we need K to be commutative monoid
+    mul_one := sorry
+    one_mul := sorry
+    npow_zero' := sorry
+    npow_succ' := sorry
+  }
+
+  instance : MulAction K (AltMonomial X K sig) :=
+  {
+    one_smul := sorry
+    mul_smul := sorry
+  }
+
+  def coef (x : AltMonomial X K sig) : K :=
+    Quot.lift (λ x => x.1.coef) sorry x
+
+  def base (x : AltMonomial X K sig) [DecidableEq K] : AltMonomial X K sig :=
+    Quot.mk _ <| Quot.lift
+      (λ x => 
+        if x.1.coef = (0 : K)
+        then !⟨1,1⟩
+        else !⟨1,x.1.vars⟩) sorry x
+
+  instance [DecidableEq K] : Coef (AltMonomial X K sig) K :=
+  {
+    coef := λ x => x.coef
+    base := λ x => x.base
+    coef_base := sorry
+    smul_coef := sorry
+    coef_base_ext := sorry
+  }
+
+  -- Graded Lexicographical ordering - not a total order
+  instance : LT (AltMonomial X K sig) :=
+    ⟨λ x y =>
+      Quot.lift₂ (λ x y => (y.1.coef ≠ 0) ∧ (x.1.vars < y.1.vars)) sorry sorry x y⟩
+
+  -- Graded Lexicographical ordering - not a total order
+  instance : LE (AltMonomial X K sig) :=
+    ⟨λ x y =>
+      Quot.lift₂ (λ x y => x.1.vars ≤ y.1.vars) sorry sorry x y⟩
+
+  -- We can compare monoials based on rank
+  -- But we can get only `less or *equal*` as we cannot determine 
+  -- zero monomial without decidable equality on K
+  def rankLe (x y : AltMonomial X K sig) : Bool :=
+    Quot.lift₂ 
+      (λ x y => 
+        match compare (X := FreeMonoid X) x.1.vars y.1.vars with
+        | cpEq _ => true
+        | cpLt _ => true
+        | cpGt _ => false
+      ) sorry sorry x y
+
+  def rankLt (x y : AltMonomial X K sig) [DecidableEq K] : Bool :=
+    Quot.lift₂ 
+      (λ x y => 
+        match compare (X := FreeMonoid X) x.1.vars y.1.vars with
+        | cpEq _ => if y.1.coef = 0 then false else true
+        | cpLt _ => true
+        | cpGt _ => false
+      ) sorry sorry x y
+
+
+  -- instance [LT X] [LT K] : LT (AltMonomial X K sig) := sorry
+
+  -- instance [LT X] [LT K] : LT (AltMonomial X K sig) := sorry
+
+  -- abbrev coef (x : (AltMonomial X K sig)) : K := Coef.coef x
+  -- abbrev base (x : (AltMonomial X K sig)) : (AltMonomial X K sig) := Coef.base x
+
+end AltMonomial
+
+namespace Algebra
+
+  inductive Repr (X : Type) (K : Type) where
+  | mon (x : X) : Repr X K
+  | add (xs : List (Repr X K)) : Repr X K
+  | mul (xs : List (Repr X K)) : Repr X K
+  | smul (a : K) (x : Repr X K) : Repr X K
+
+  instance {X K} [Zero X] : Zero (Repr X K) := ⟨Repr.mon 0⟩
+  instance {X K} [One X]  : One  (Repr X K) := ⟨Repr.mon 1⟩
+
+  open Repr in
+  partial def reduce {X K} (xs : Repr X K) [HMul K X X] [Mul X] [Mul K] [Zero X] [One X] : Repr X K :=
+    match xs with
+    | add [] => mon 0
+    | mul [] => mon 1
+    | smul a (mon x) => mon (a * x)
+    | smul a (smul b x) => reduce (smul (a*b) x)
+    | add [x] => reduce x
+    | mul [x] => reduce x
+    | mul (mon x :: mon y :: xs) => reduce (mul (mon (x * y) :: xs))
+    | add (add xs :: ys) => 
+      match reduce (add xs), reduce (add ys) with
+      | add xs, add ys => add (xs.append ys)
+      | add xs, y => add (xs.append [y])
+      | x, add ys => add (x :: ys)
+      | x, y => add [x, y]
+    | mul (mul xs :: ys) => 
+      match reduce (add xs), reduce (add ys) with
+      | add xs, add ys => add (xs.append ys)
+      | add xs, y => add (xs.append [y])
+      | x, add ys => add (x :: ys)
+      | x, y => add [x, y]
+    | x => x
+  
+
+  def Repr.isMon {X K} (x : Repr X K) : Bool :=
+  match x with
+  | mon _ => true
+  | _ => false
+
+  def Repr.isAdd {X K} (x : Repr X K) : Bool :=
+  match x with
+  | add _ => true
+  | _ => false
+
+  def Repr.isMul {X K} (x : Repr X K) : Bool :=
+  match x with
+  | add _ => true
+  | _ => false
+
+  -- inductive Repr'.RedForm {X K} [One X] [Zero X] : List Repr' X K → Prop where
+  -- | mon_id (x : X) : RedForm ([mon x])
+  -- | mul_list (x : Repr X K)
+  --            (xs : List (Repr X K))
+  --            (h : xs ≠ [] ∨ xs 
+  -- | add_red (x : (Repr X K))
+  --           (xs : List (Repr X K))
+  --           (h : xs ≠ []) 
+  --           (h' : x ≠ 0 ∨ xs ≠ [0])
+  --           (h'' : )
+  --           -- addition is non tirivial
+  --           (h : xs.size > 2)
+  --           -- elements must be reduced, non-zero and can't be addition
+  --           (h' : ∀ i : Fin xs.size, 
+  --                 let xi := xs.get i
+  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (¬ xi.isAdd)) 
+  --           : RedForm (add xs)
+  
+  -- inductive Repr.RedForm {X K} [One X] [Zero X] : Repr X K → Prop where
+  -- | mon_id (x : X) : RedForm (mon x)
+  -- | add_red (xs : Array (Repr X K)) 
+  --           -- addition is non tirivial
+  --           (h : xs.size > 2)
+  --           -- elements must be reduced, non-zero and can't be addition
+  --           (h' : ∀ i : Fin xs.size, 
+  --                 let xi := xs.get i
+  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (¬ xi.isAdd)) 
+  --           : RedForm (add xs)
+  -- | mul_red (xs : Array (Repr X K)) 
+  --           -- product is non trivial
+  --           (h : xs.size > 2)
+  --           -- every element of a product should be reduced
+  --           -- and can't be zero or one
+  --           (h' : ∀ i, let xi := xs.get i 
+  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (xi ≠ 1)) 
+  --           -- consecutive elements can be monomials
+  --           (h' : ∀ i : Fin (xs.size - 1), 
+  --                 let xi      := xs.get !i.1
+  --                 let xi_succ := xs.get !(i.1+1)
+  --                 ¬(xi.isMon ∧ xi_succ.isMon))
+  --           : RedForm (mul xs)
+  -- | smul_red (a : K) (x : Repr X K)
+  --            (h : RedForm x)
+  --            -- scalar multiplication can be only over addition
+  --            (h' : x.isAdd)
+  --            : RedForm (smul a x)
+
+  def Repr.reduce {X K} [Ring K] [Monoid X] : Repr X K → Repr X K 
+  | add zero x => reduce x
+  | add x zero => reduce x
+  | mul (mon x) (mon y) => mon (x * y)
+  | add 
+  | mul x (mon 1) => reduce x
+  | x => x
+
+  -- open Repr in
+  -- inductive NormRepr {X K} [One X] [Zero X] : Repr X K → Prop where
+  -- | zero_id : NormRepr zero
+  -- | mon_id (x : X) : NormRepr (mon x)
+  -- | add_lassoc (x : Repr X K) (y : X) (h : NormRepr x) 
+  --              (h' : x ≠ zero) (h'' : y ≠ 0) : NormRepr (add x (mon y))
+    
+
+end Algebra
 
 end NewApproach
