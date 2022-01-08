@@ -813,7 +813,8 @@ namespace AltMonomial
       := let (a', x') := x.vars.altSort sig
          !⟨x.coef * a', x'⟩
 
-    theorem reduceIdmp (x : Repr X K sig)
+    theorem reduceIdmp {X K sig} [LT X] [DecComp X] [CommMonoid K] [Zero K] [Neg K]
+      (x : Repr X K sig)
       : x.reduce.1.reduce = x.reduce
       := sorry
 
@@ -970,18 +971,18 @@ namespace Algebra
   | mul (xs : List (Repr X K)) : Repr X K
   | smul (a : K) (x : Repr X K) : Repr X K
 
-  instance {X K} [Zero X] : Zero (Repr X K) := ⟨Repr.mon 0⟩
-  instance {X K} [One X]  : One  (Repr X K) := ⟨Repr.mon 1⟩
+  instance {X K} [Zero X] : Zero (Repr X K) := ⟨Repr.add []⟩
+  instance {X K} [One X]  : One  (Repr X K) := ⟨Repr.mul []⟩
 
   open Repr in
   partial def reduce {X K} (xs : Repr X K) [HMul K X X] [Mul X] [Mul K] [Zero X] [One X] : Repr X K :=
     match xs with
-    | add [] => mon 0
-    | mul [] => mon 1
     | smul a (mon x) => mon (a * x)
     | smul a (smul b x) => reduce (smul (a*b) x)
     | add [x] => reduce x
+    | add (0 :: xs) => reduce (add xs)
     | mul [x] => reduce x
+    | mul (1 :: xs) => reduce (mul xs)
     | mul (mon x :: mon y :: xs) => reduce (mul (mon (x * y) :: xs))
     | add (add xs :: ys) => 
       match reduce (add xs), reduce (add ys) with
@@ -997,7 +998,6 @@ namespace Algebra
       | x, y => add [x, y]
     | x => x
   
-
   def Repr.isMon {X K} (x : Repr X K) : Bool :=
   match x with
   | mon _ => true
