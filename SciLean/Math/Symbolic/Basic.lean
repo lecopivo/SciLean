@@ -702,7 +702,6 @@ theorem FreeMonoid.altSortIdmpVars {X K} [LT X] [DecComp X] [Mul K] [One K] [Neg
   :
   (((m.altSort sig).2.altSort sig).2 = (m.altSort sig).2) := sorry
 
-
 class Coef (X : Type) (K : outParam $ Type) [outParam $ Monoid K] [outParam $ MulAction K X] where
   coef : X → K
   base : X → X
@@ -975,27 +974,31 @@ namespace Algebra
   instance {X K} [One X]  : One  (Repr X K) := ⟨Repr.mul []⟩
 
   open Repr in
-  partial def reduce {X K} (xs : Repr X K) [HMul K X X] [Mul X] [Mul K] [Zero X] [One X] : Repr X K :=
-    match xs with
+  partial def reduce {X K} (x : Repr X K) [HMul K X X] [Mul X] [Mul K] [Zero X] [One X] : Repr X K :=
+    match x with
     | smul a (mon x) => mon (a * x)
     | smul a (smul b x) => reduce (smul (a*b) x)
     | add [x] => reduce x
     | add (0 :: xs) => reduce (add xs)
     | mul [x] => reduce x
     | mul (1 :: xs) => reduce (mul xs)
-    | mul (mon x :: mon y :: xs) => reduce (mul (mon (x * y) :: xs))
-    | add (add xs :: ys) => 
-      match reduce (add xs), reduce (add ys) with
-      | add xs, add ys => add (xs.append ys)
-      | add xs, y => add (xs.append [y])
-      | x, add ys => add (x :: ys)
-      | x, y => add [x, y]
-    | mul (mul xs :: ys) => 
-      match reduce (add xs), reduce (add ys) with
-      | add xs, add ys => add (xs.append ys)
-      | add xs, y => add (xs.append [y])
-      | x, add ys => add (x :: ys)
-      | x, y => add [x, y]
+    | mul (mon x :: xs) => 
+      match reduce (mul xs) with
+      | mul (mon y :: xs') => reduce (mul (mon (x * y) :: xs))
+      | smul a x' => reduce (mul [mon (a * x), x'])
+      | xs' => mul [mon x, xs']
+    | add (add xs :: ys) => reduce (add (xs.append ys))
+    | mul (mul xs :: ys) => reduce (mul (xs.append ys))
+    | add (x :: xs) =>
+      match reduce (add xs) with
+      | 0 => x
+      | add xs' => add (x :: xs')
+      | xs' => add [x, xs']
+    | mul (x :: xs) =>
+      match reduce (mul xs) with
+      | 1 => x
+      | mul xs' => mul (x :: xs')
+      | xs' => mul [x, xs']
     | x => x
   
   def Repr.isMon {X K} (x : Repr X K) : Bool :=
@@ -1060,13 +1063,13 @@ namespace Algebra
   --            (h' : x.isAdd)
   --            : RedForm (smul a x)
 
-  def Repr.reduce {X K} [Ring K] [Monoid X] : Repr X K → Repr X K 
-  | add zero x => reduce x
-  | add x zero => reduce x
-  | mul (mon x) (mon y) => mon (x * y)
-  | add 
-  | mul x (mon 1) => reduce x
-  | x => x
+  -- def Repr.reduce {X K} [Ring K] [Monoid X] : Repr X K → Repr X K 
+  -- | add zero x => reduce x
+  -- | add x zero => reduce x
+  -- | mul (mon x) (mon y) => mon (x * y)
+  -- | add 
+  -- | mul x (mon 1) => reduce x
+
 
   -- open Repr in
   -- inductive NormRepr {X K} [One X] [Zero X] : Repr X K → Prop where
