@@ -516,7 +516,7 @@ namespace NewApproach
 
 -- used for symmetric polynomials
 structure FreeAbelRepr where
-  FreeAbelReprs : Array Int
+  coef : Array Int
 
 instance : Add FreeAbelRepr := 
   ⟨λ a b => Id.run do
@@ -557,10 +557,14 @@ def FreeAbelRepr.toString (a : FreeAbelRepr) (s op : String) : String := Id.run 
   let mut r := ""
   for i in [0:a.1.size] do
     if a.1[i] ≠ 0 then
+      let xi := 
+        if a.1[i] = 1 
+        then s!"{s}⟦{i}⟧" 
+        else s!"{s}⟦{i}⟧^{a.1[i]}" 
       if r = "" then 
-        r := s!"{s}⟦{i}⟧"
+        r := xi
       else 
-        r := s!"{r} {op} {s}⟦{i}⟧"
+        r := s!"{r} {op} {xi}"
   if r = "" then
     "1"
   else
@@ -604,5 +608,12 @@ instance : Inv Monomial := ⟨λ x : FreeAbel => (- x : FreeAbel)⟩
 instance : One Monomial := ⟨(0 : FreeAbel)⟩
 
 
+structure FreeMonoid (X : Type) where
+  vars : List X
+
+instance {X} : Mul (FreeMonoid X) := ⟨λ x y => ⟨x.1.append y.1⟩⟩
+instance {X} : One (FreeMonoid X) := ⟨⟨[]⟩⟩
+
+-- def FreeMonoid.sort
 
 end NewApproach
