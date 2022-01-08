@@ -35,11 +35,12 @@ def Monomial.toExpr {V K} (m : Monomial V K) : Expr V K :=
   | [] => zero
   | x :: xs => smul m.coeff $ xs.foldl (λ x v => mul x (var v)) (var x)
 
-instance {V K} [One K] : Inhabited (Monomial V K) := ⟨1, []⟩
+instance {V K} [Zero K] : Inhabited (Monomial V K) := ⟨0, []⟩
 
 def Monomial.toString {V K} [ToString V] [ToString K] (m : Monomial V K) : String := 
   s!"{m.coeff} " ++ ((m.vars.map λ v => s!" x[{v}]") |> String.join)
 
+-- TODO: Move this somewhere 
 inductive Comparison : Type where 
   | lt | eq | gt
 
@@ -120,7 +121,7 @@ def Monomial.decEq {V K}
 def Monomial.symReduce {ι K} [LT ι] [∀ i j : ι, Decidable (i < j)] [Inhabited ι]
   (m : Monomial ι K) : Monomial ι K := 
   ⟨m.coeff, (m.vars.toArray.qsort (λ i j => i < j)).toList⟩
-def Monomial.altReduce {V K} (m : Monomial V K) : Monomial V K := sorry
+
 
 instance {V K} [ToString V] [ToString K] : ToString (Monomial V K) := ⟨λ m => m.toString⟩
 
@@ -210,7 +211,7 @@ namespace Expr
     | mul (x y : Expr V K) (k l) (hx : is_homogenous k x) (hy : is_homogenous l y) : is_homogenous (k+l) (x * y)
     | smul a (x : Expr V K) (n) (h : is_homogenous n x) : is_homogenous n (a * x)
 
-  def expand_to_monomials {V K} [One K] [Neg K] [Mul K] (e : Expr V K) : Array (Monomial V K) :=
+  def expand_to_monomials {V K} [One K] [Zero K] [Neg K] [Mul K] (e : Expr V K) : Array (Monomial V K) :=
     match e with
     | 0 => #[]
     | 1 => #[⟨1, []⟩]
@@ -227,14 +228,11 @@ namespace Expr
       m
     | smul a x => x.expand_to_monomials.map λ m => ⟨a*m.coeff, m.vars⟩
 
-  def expand {V K} [One K] [Neg K] [Mul K] 
-    [LT V] [∀ x y : V, Decidable (x < y)] [DecidableEq V]
-    [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
+  def expand {V K} [One K] [Zero K] [Neg K] [Mul K] 
     (e : Expr V K) : (Expr V K) 
     := 
     Id.run do
       let m := e.expand_to_monomials
-      let m := m.qsort Monomial.decLt
 
       let mut e' : Expr V K := m[0].toExpr
       for i in [1:m.size] do
@@ -326,6 +324,8 @@ namespace Expr
     | x * 0 => 0
     | 1 * x => x
     | x * 1 => x
+    | 0 + x => x
+    | x + 0 => x
     | smul a 0 => 0
     | x + y => simplify x + simplify y
     | x * y => simplify x * simplify y
@@ -391,25 +391,6 @@ section BasicDefinitions
   open Symbolic Expr
 
   variable (V : Type) (K : Type) [Add K] [Mul K] [One K]
-  -- 
-  -- def FreeAlgebra := Quot
-  --   (λ x y : Expr V K =>
-  --     (EqAlgebra x y))
-
-  def AntiPolynomials := Quot
-    (λ x y : Expr V K =>
-      (EqAlgebra x y) ∨
-      (EqAntiCommutative x y))
-
-  -- def Polynomial (V : Type) (K : Type) [FinEnumBasis V] [Add K] [Mul K] [One K] := Quot
-  --   (λ x y : Expr (FinEnumBasis.index V) K =>
-  --     (EqAlgebra x y) ∨
-  --     (EqCommutative x y))
-
-  def AltPolynomial (V : Type) (K : Type) [FinEnumBasis V] [Add K] [Mul K] [One K] := Quot
-    (λ x y : Expr (FinEnumBasis.index V) K =>
-      (EqAlgebra x y) ∨
-      (EqAntiCommutative x y))
 
   variable [Add V] [HMul K V V]
 
@@ -529,3 +510,99 @@ namespace ExteriorAlgebra
   -- def 𝓒Λₖ (X : Type) (k : Nat) [FinEnumVec X] := ExteriorAlgebra X (X ⟿ ℝ)   -- smoot
 
 end ExteriorAlgebra
+
+
+namespace NewApproach
+
+-- used for symmetric polynomials
+structure FreeAbelRepr where
+  FreeAbelReprs : Array Int
+
+instance : Add FreeAbelRepr := 
+  ⟨λ a b => Id.run do
+    let mut r : Array Int := #[]
+    if a.1.size > b.1.size then
+      r := a.1
+    else
+      r := b.1
+    for i in [0,min a.1.size b.1.size] do
+        r := r.set (!i) (a.1[i] + b.1[i])
+    ⟨r⟩⟩
+
+instance : Sub FreeAbelRepr := 
+  ⟨λ a b => Id.run do
+    let mut r : Array Int := #[]
+    if a.1.size > b.1.size then
+      r := a.1
+    else
+      r := b.1
+    for i in [0,min a.1.size b.1.size] do
+        r := r.set (!i) (a.1[i] - b.1[i])
+    ⟨r⟩⟩
+
+instance : Neg FreeAbelRepr := 
+  ⟨λ a => ⟨a.1.map λ ai => -ai⟩⟩
+
+instance : Zero FreeAbelRepr := ⟨⟨#[]⟩⟩
+
+def FreeAbelRepr.decEq (a b : FreeAbelRepr) := Id.run do
+  let mut r := true
+  for i in [0:max a.1.size b.1.size] do
+    r := r ∧ (a.1[i] == b.1[i])
+  r
+
+def FreeAbelRepr.Eq (a b : FreeAbelRepr) : Prop := (∀ i, a.1[i] = b.1[i])
+
+def FreeAbelRepr.toString (a : FreeAbelRepr) (s op : String) : String := Id.run do
+  let mut r := ""
+  for i in [0:a.1.size] do
+    if a.1[i] ≠ 0 then
+      if r = "" then 
+        r := s!"{s}⟦{i}⟧"
+      else 
+        r := s!"{r} {op} {s}⟦{i}⟧"
+  if r = "" then
+    "1"
+  else
+    r
+
+def FreeAbel := Quot FreeAbelRepr.Eq
+
+instance : Add FreeAbel :=
+  ⟨Quot.lift₂ 
+    (λ x y : FreeAbelRepr => Quot.mk _ (x + y)) sorry sorry⟩
+
+instance : Sub FreeAbel :=
+  ⟨Quot.lift₂ 
+    (λ x y : FreeAbelRepr => Quot.mk _ (x - y)) sorry sorry⟩
+
+instance : Neg FreeAbel :=
+  ⟨Quot.lift 
+    (λ x : FreeAbelRepr => Quot.mk _ (-x)) sorry⟩
+
+instance : Zero FreeAbel := ⟨Quot.mk _ 0⟩
+
+def FreeAbel.decEq (a b : FreeAbel) : Bool :=
+  Quot.lift₂ 
+    (λ x y => x.decEq y) 
+    sorry sorry 
+    a b
+
+instance : DecidableEq FreeAbel :=
+  λ a b : FreeAbel => 
+    if a.decEq b then
+      isTrue sorry
+    else
+      isFalse sorry
+
+
+def Monomial := FreeAbel
+
+instance : Mul Monomial := ⟨λ x y : FreeAbel => x + y⟩
+instance : Div Monomial := ⟨λ x y : FreeAbel => x - y⟩
+instance : Inv Monomial := ⟨λ x : FreeAbel => (- x : FreeAbel)⟩
+instance : One Monomial := ⟨(0 : FreeAbel)⟩
+
+
+
+end NewApproach

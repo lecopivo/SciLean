@@ -1,0 +1,53 @@
+* First release
+
+ - basic simulations from classical mechanics
+ - basic variational calculus
+
+* Machine learning
+
+ - table interface
+ - back propagation
+ - simple fully connected network
+
+* CPU & GPU compiling
+
+  - separate repo [[https://github.com/lecopivo/lean4-karray][lean-karray]]
+
+* Houdini integration
+
+  - Basic data transfer
+    - Make detail glob attribute holding lean data
+    - NArray <-> Houdini Volume
+    - Prismatic mesh <-> Houdini geometry
+    - NArray <-> Geometry attributes
+
+  - Basic wrangle node
+
+* Mesh
+
+  - Prism
+  - Prismatic mesh
+    - preshear on Prism
+    - generalization of [[https://en.wikipedia.org/wiki/Delta_set][delta set]]
+  - product of meshes
+
+* Runtime symbolic module
+
+  - working with polynomials, differential forms, tensor products
+
+* Finite Element
+
+  - define finite element over Prism
+  - define global finite element space
+  - system assembly
+
+* Function lifting
+
+  - If I have function (f : X -> Y) and (
+
+* Invertible programming
+
+  - investigate more how to generate inverses
+  - define left and right inverses
+  - watch out for [[https://en.wikipedia.org/wiki/Axiom_of_choice#In_constructive_mathematics][axiom of choice]]
+  - array modification

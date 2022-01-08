@@ -60,6 +60,9 @@ namespace Hom
   instance : HMul ℝ (X ⟿ Y) (X ⟿ Y) := ⟨λ r f => ⟨r * f.1, by infer_instance⟩⟩
   instance : Neg (X ⟿ Y) := ⟨λ f => ⟨-f.1, by infer_instance⟩⟩
 
+  instance : Zero (X ⟿ Y) := ⟨⟨λ x => 0, by infer_instance⟩⟩
+  instance : One (X ⟿ ℝ) := ⟨⟨λ x => 1.0, by infer_instance⟩⟩
+
   instance : AddSemigroup (X ⟿ Y) := AddSemigroup.mk sorry
   instance : AddMonoid (X ⟿ Y)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
   instance : SubNegMonoid (X ⟿ Y) := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
@@ -71,7 +74,6 @@ namespace Hom
   instance : Module ℝ (X ⟿ Y) := Module.mk sorry sorry
 
   instance : Vec (X ⟿ Y) := Vec.mk
-
 
   -- instance {X} [Vec X] [Trait X] : Trait (ℝ ⟿ X) :=
   -- {

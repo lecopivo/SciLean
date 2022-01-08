@@ -1,4 +1,5 @@
 import SciLean.Math.Symbolic.Basic
+import SciLean.Math.Symbolic.Monomial
 import SciLean.Math.Symbolic.FreeAlgebra
 
 namespace SciLean
@@ -14,7 +15,7 @@ def Polynomial := Quot
 
 namespace Polynomial
 
-  variable {ι : Type} {K : Type} [Add K] [Mul K] [One K] [Neg K]
+  variable {ι : Type} {K : Type} [Add K] [Mul K] [One K] [Zero K] [Neg K]
 
   namespace Expr 
 
@@ -32,13 +33,13 @@ namespace Polynomial
 
   end Expr
 
+
   notation " 𝓢𝓟[" ι ", " K "] " => Polynomial ι K
   notation " 𝓢𝓟[" ι " ] "       => Polynomial ι ℝ
   
   -- I should define FinEnumBasis over some set/ring
   -- notation " 𝓟[" V ", " K "] " => Polynomial (FinEnumBasis.index V) K
-  notation " 𝓟[" V "] "        => Polynomial (FinEnumBasis.index V) ℝ
-
+  notation " 𝓟[" V "] " => Polynomial (Basis.Trait.Index V) (Basis.Trait.Coeff V)
 
   instance : Add (Polynomial ι K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ FreeAlgebra.Expr.add sorry sorry x y⟩
@@ -77,30 +78,37 @@ namespace Polynomial
   def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomial ι K 
     := Quot.mk _ (Expr.var i)
 
-  def expand {ι} [Inhabited ι]
+  def expand {ι} [Zero K]
     [LT ι] [∀ i j : ι, Decidable (i < j)] [DecidableEq ι]
     [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
     (x : Polynomial ι K) : Polynomial ι K :=
     Quot.mk _ <|
     Quot.lift 
-      (λ e =>
-       Id.run do
-        let m := e.expand_to_monomials.map λ m => m.symReduce
-        let m := m.qsort Monomial.decLt
-
-        let mut e' : Expr ι K := m[0].toExpr
-        for i in [1:m.size] do
-          e' := e' + m[i].toExpr
-        e'
-      )
+      (λ e => e.expand)
       sorry x
+
+  def simplify {ι} [Inhabited ι]
+    [LT ι] [∀ i j : ι, Decidable (i < j)] [DecidableEq ι]
+    [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
+    (x : Polynomial ι K) : Polynomial ι K :=
+    Quot.mk _ <| Quot.lift 
+      (λ e =>
+         e |> Expr.expand_to_monomials
+           |> Array.map Monomial.symReduce
+           |> (Array.qsort · Monomial.decLt)
+           |> Monomial.together
+           |> Expr.simplify
+      ) sorry x
 
   notation " x⟦" i ", " K "⟧ " => Polynomial.var (K := K) i
   notation " x⟦" i "⟧ " => Polynomial.var i
 
-  #check x⟦1⟧ * x⟦0⟧
-  #eval expand (x⟦1⟧ * x⟦0⟧ * ((5 : ℝ) * x⟦1⟧ * x⟦-1⟧ + 1))
+  #eval x⟦1⟧ * x⟦0⟧ * ((5 : ℝ) * x⟦1⟧ * x⟦-1⟧ + 1) |> expand
+  #eval x⟦1⟧ * x⟦0⟧ * ((5 : ℝ) * x⟦1⟧ * x⟦-1⟧ + 1) + x⟦0⟧ * x⟦1⟧ |> simplify
 
   #check 𝓟[ℝ×ℝ]
+
+  #eval 1.4 * x⟦2⟧ * ((3.0 + 4.0) * x⟦0⟧ + x⟦0⟧) |> expand
+  #eval 1.4 * x⟦2⟧ * ((3.0 + 4.0) * x⟦0⟧ + x⟦0⟧) |> simplify
 
 end Polynomial

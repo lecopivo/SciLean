@@ -1,4 +1,5 @@
 import SciLean.Math.Symbolic.Basic
+import SciLean.Math.Symbolic.Monomial
 
 --- TODO: rename `V` to `I` or `ι` as it is clear it is an index set not a module
 
@@ -109,12 +110,26 @@ namespace FreeAlgebra
   def var {V} (v : V) (K := ℝ) [Add K] [Mul K] [One K] [Neg K] : FreeAlgebra V K
     := Quot.mk _ (Expr.var v)
 
-  def expand {ι}
+  def expand {ι} [Zero K]
+    (x : FreeAlgebra ι K) : FreeAlgebra ι K :=
+    Quot.mk _ <|
+    Quot.lift Expr.expand sorry x
+
+  open Symbolic.Expr Monomial in
+  def simplify {ι} [Zero K]  [Inhabited K]
     [LT ι] [∀ i j : ι, Decidable (i < j)] [DecidableEq ι]
     [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
     (x : FreeAlgebra ι K) : FreeAlgebra ι K :=
     Quot.mk _ <|
-    Quot.lift Expr.expand sorry x
+    Quot.lift 
+      (λ e : Expr ι K =>
+         e |> expand_to_monomials
+           |> (Array.qsort · Monomial.decLt)
+           |> together
+           |> Expr.simplify
+      )
+      sorry x
+
 
   notation " 𝓕[" ι ", " K "] " => FreeAlgebra ι K
   notation " 𝓕[" ι "] "        => FreeAlgebra ι ℝ
