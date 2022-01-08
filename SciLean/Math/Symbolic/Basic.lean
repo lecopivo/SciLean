@@ -599,21 +599,177 @@ instance : DecidableEq FreeAbel :=
     else
       isFalse sorry
 
-
-def Monomial := FreeAbel
-
-instance : Mul Monomial := ⟨λ x y : FreeAbel => x + y⟩
-instance : Div Monomial := ⟨λ x y : FreeAbel => x - y⟩
-instance : Inv Monomial := ⟨λ x : FreeAbel => (- x : FreeAbel)⟩
-instance : One Monomial := ⟨(0 : FreeAbel)⟩
-
-
 structure FreeMonoid (X : Type) where
   vars : List X
 
 instance {X} : Mul (FreeMonoid X) := ⟨λ x y => ⟨x.1.append y.1⟩⟩
 instance {X} : One (FreeMonoid X) := ⟨⟨[]⟩⟩
 
--- def FreeMonoid.sort
+-- sorts variables assuming:
+--   1. x * y = y * x
+def FreeMonoid.symSort {X} 
+  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
+  (m : FreeMonoid X) : FreeMonoid X := sorry
+
+theorem FreeMonoid.symSortIdmp {X} 
+  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
+  (m : FreeMonoid X) 
+  : 
+  m.symSort.symSort = m.symSort := sorry
+
+-- sorts variables assuming:
+--   1. x * y = - y * x 
+--   2. x * x = sig x
+def FreeMonoid.altSort {X K}
+  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
+  [Mul K] [One K] [Neg K]
+  (m : FreeMonoid X) (sig : X → K) : K × FreeMonoid X := sorry
+
+-- maybe rename to `StrictlySorted`
+inductive FreeMonoid.AltSorted {X} [LT X] : FreeMonoid X → Prop where
+  | one : AltSorted 1
+  | var (x : X) : AltSorted (⟨[x]⟩)
+  | mul (x y : X) (m : FreeMonoid X) 
+        (h : AltSorted (⟨[y]⟩*m)) 
+        (lt  : x < y) : AltSorted (⟨[x,y]⟩*m)
+
+theorem FreeMonoid.altSortIdmpCoef {X K}
+  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
+  [Mul K] [One K] [Neg K]
+  (m : FreeMonoid X) (sig : X → K)
+  :
+  (((m.altSort sig).2.altSort sig).1 = 1) := sorry
+
+theorem FreeMonoid.altSortIdmpVars {X K}
+  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
+  [Mul K] [One K] [Neg K]
+  (m : FreeMonoid X) (sig : X → K)
+  :
+  (((m.altSort sig).2.altSort sig).2 = (m.altSort sig).2) := sorry
+
+namespace SymMonomial
+
+structure Repr (X : Type) (K : Type) [Enumtype X] where
+  coef : K
+  vars : FreeAbel  -- maybe fix the size of variable here
+
+variable {X K} [Enumtype X] [DecidableEq K] [Zero K] [One K] [Mul K]
+
+instance [One K] : One (Repr X K) := ⟨⟨1, (0 : FreeAbel)⟩⟩
+instance [Zero K] : Zero (Repr X K) := ⟨⟨0, (0 : FreeAbel)⟩⟩
+
+instance : Mul (Repr X K) := 
+  ⟨λ x y => 
+    if (x.coef = 0) ∨ (y.coef = 0) 
+    then 0
+    else ⟨x.coef * y.coef , x.vars + y.vars⟩⟩
+
+instance [Div K] : Div (Repr X K) := 
+  ⟨λ x y => 
+    if (x.coef = 0) ∨ (y.coef = 0) 
+    then 0
+    else ⟨x.coef / y.coef , x.vars - y.vars⟩⟩
+
+instance [Inv K] : Inv (Repr X K) := 
+  ⟨λ x => 
+     if x.coef = 0 
+     then 0
+     else ⟨x.coef⁻¹, -x.vars⟩⟩
+
+instance : HMul K (Repr X K) (Repr X K) := 
+  ⟨λ a x => 
+    if a = 0 ∨ x.coef = 0
+    then 0
+    else ⟨a * x.coef, x.vars⟩⟩
+
+def Repr.Eq (x y : Repr X K) : Prop := 
+  ((x.coef = 0) ∧ (y.coef = 0)) 
+  ∨ 
+  (x = y)
+
+end SymMonomial
+
+def SymMonomial (X : Type) (K : Type) [Enumtype X] [Zero K] := 
+  Quot (SymMonomial.Repr.Eq (X := X) (K := K))
+
+namespace SymMonomial
+
+  variable {X K} [Enumtype X] [DecidableEq K] [Zero K] [One K] [Mul K]
+
+  instance : One  (SymMonomial X K) := ⟨Quot.mk _ 1⟩
+  instance : Zero (SymMonomial X K) := ⟨Quot.mk _ 0⟩
+
+  instance : Mul (SymMonomial X K) := 
+    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x y => x * y) sorry sorry x y⟩
+
+  instance [Div K] : Div (SymMonomial X K) := 
+    ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x y => x / y) sorry sorry x y⟩
+
+  instance [Inv K] : Inv (SymMonomial X K) := 
+    ⟨λ x => Quot.mk _ <| Quot.lift (λ x => x⁻¹) sorry x⟩
+
+  instance : HMul K (SymMonomial X K) (SymMonomial X K) := 
+    ⟨λ a x => Quot.mk _ <| Quot.lift
+      (λ x => a * x) sorry x⟩
+
+end SymMonomial
+
+structure AltMonomial.Repr (X : Type) (K : Type) (sig : X → K) where
+  coef : K
+  vars : FreeMonoid X
+
+variable {X K sig} 
+         [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
+         [Mul K] [Zero K] [One K] [Neg K]
+         [DecidableEq K]
+
+def AltMonomial.Repr.NormForm (m : AltMonomial.Repr X K sig) : Prop :=
+  ((m.coef = 0) ∧ (m.vars = 1)) 
+  ∨
+  ((m.coef ≠ 0) ∧ m.vars.AltSorted)
+
+def AltMonomial.NormRepr (X : Type) (K : Type) (sig : X → K) [LT X] [Zero K] 
+  := { x : Repr X K sig // x.NormForm }
+
+def AltMonomial.Repr.normalize (x : AltMonomial.Repr X K sig) : AltMonomial.NormRepr X K sig
+  := let (a', x') := x.vars.altSort sig
+     if x.coef = 0 ∨ a' = 0 
+     then ⟨⟨0, 1⟩, sorry⟩
+     else ⟨⟨x.coef * a', x'⟩, sorry⟩
+
+instance : Mul (AltMonomial.Repr X K sig) := 
+  ⟨λ x y => ⟨x.coef * y.coef, x.vars * y.vars⟩⟩
+
+open AltMonomial.Repr in
+instance : Mul (AltMonomial.NormRepr X K sig) := 
+  ⟨λ x y => normalize (x.1 * y.1)⟩
+
+instance : Zero (AltMonomial.Repr X K sig) := ⟨⟨0,1⟩⟩
+instance : One  (AltMonomial.Repr X K sig) := ⟨⟨1,1⟩⟩
+
+instance : Zero (AltMonomial.NormRepr X K sig) := ⟨⟨0, sorry⟩⟩
+instance : One  (AltMonomial.NormRepr X K sig) := ⟨⟨1, sorry⟩⟩
+
+def AltMonomial.NormRepr.beq (x y : AltMonomial.NormRepr X K sig)
+  : Bool := 
+  (x.1.coef = y.1.coef) ∧ (x.1.vars.1 = y.1.vars.1)
+
+def AltMonomial (X : Type) (K : Type) (sig : X → K)
+  [LT X] [∀ x y : X, Decidable (x < y)] [DecidableEq X]
+  [Mul K] [Zero K] [One K] [Neg K] [DecidableEq K]
+  := Quot (λ x y : AltMonomial.NormRepr X K sig => (x.beq y) = true)
+
+instance : DecidableEq (AltMonomial X K sig) :=
+  λ x y =>
+  Quot.lift₂
+  (λ x y =>
+     match x.beq y with
+     | true  => isTrue sorry
+     | false => isFalse sorry)
+  sorry sorry x y
+
+def AltMonomial.mul (x y : AltMonomial X K sig) : AltMonomial X K sig
+  := Quot.mk _ <| Quot.lift₂ (λ x y => x * y) sorry sorry x y
+
 
 end NewApproach
