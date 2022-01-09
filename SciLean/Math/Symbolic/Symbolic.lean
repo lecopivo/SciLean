@@ -6,26 +6,22 @@ class Symbolic {Repr : Type} (R : Repr → Repr → Prop) where
 
 namespace Symbolic
 
-  def SHom {Repr Repr'}
+  structure SHom {Repr Repr'}
     (R  : Repr  → Repr  → Prop) [Symbolic R]
     (R' : Repr' → Repr' → Prop) [Symbolic R']
-    (f : Repr → Repr') :=
-    (∀ x y : Repr, R x y → R' (f x) (f y))
-    ∧
-    (∀ x : Repr, (RedForm R x → RedForm R' (f x))
-                 ∧
-                 (NormForm R x → NormForm R' (f x)))
+    (f : Repr → Repr') : Prop where
+       is_hom : ∀ x y : Repr, R x y → R' (f x) (f y)
+       preserve_red  : ∀ x : Repr, RedForm R x → RedForm R' (f x)
+       preserve_norm : ∀ x : Repr, NormForm R x → NormForm R' (f x)
 
-  def SHom₂ {Repr Repr' Repr''}
+  structure SHom₂ {Repr Repr' Repr''}
     (R : Repr → Repr → Prop) [Symbolic R]
     (R' : Repr' → Repr' → Prop) [Symbolic R']
     (R'' : Repr'' → Repr'' → Prop) [Symbolic R'']
-    (f : Repr → Repr' → Repr'') :=
-    (∀ (x y : Repr) (x' y' : Repr'), R x y → R' x' y' → R'' (f x x') (f y y'))
-    ∧
-    (∀ x x', (RedForm R x → RedForm R' x' → RedForm R'' (f x x'))
-             ∧
-             (NormForm R x → NormForm R' x' → NormForm R'' (f x x')))
+    (f : Repr → Repr' → Repr'') : Prop where 
+      is_hom₂ : ∀ (x y : Repr) (x' y' : Repr'), R x y → R' x' y' → R'' (f x x') (f y y')
+      preserve_red  : ∀ x x', RedForm R x → RedForm R' x' → RedForm R'' (f x x')
+      preserve_norm : ∀ x x', NormForm R x → NormForm R' x' → NormForm R'' (f x x')
 
   class SReduce {Repr} (R : Repr → Repr → Prop) [Symbolic R] where
     reduce : Repr → Repr
@@ -80,14 +76,14 @@ namespace Symbolic
     def liftHom (f : Repr → Repr') (h : SHom R R' f) (x : SRepr R) : SRepr R' := 
       match x with
       | raw x => raw (f x)
-      | red  x h' => red  (f x) ((h.2 x).1 h')
-      | norm x h' => norm (f x) ((h.2 x).2 h')
+      | red  x h' => red  (f x) (h.preserve_red x h')
+      | norm x h' => norm (f x) (h.preserve_norm x h')
 
     def liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f) 
       (x : SRepr R) (y : SRepr R') : SRepr R'' :=
       match x, y with
-      | red x hx,  red y hy  => red  (f x y) ((h.2 x y).1 hx hy)
-      | norm x hx, norm y hy => norm (f x y) ((h.2 x y).2 hx hy)
+      | red x hx,  red y hy  => red  (f x y) (h.preserve_red  x y hx hy)
+      | norm x hx, norm y hy => norm (f x y) (h.preserve_norm x y hx hy)
       | x, y => raw (f x.repr y.repr)
 
     def reduce (x : SRepr R) [SReduce R] : SRepr R :=
@@ -110,13 +106,35 @@ namespace Symbolic
   variable {Repr'} {R' : Repr' → Repr' → Prop} [Symbolic R']
   variable {Repr''} {R'' : Repr'' → Repr'' → Prop} [Symbolic R'']
 
+  def SQuot.lift {α : Sort u} (f : Repr → α) (h : ∀ x x' : Repr, R x x' → f x = f x')
+    : SQuot R → α
+    := Quot.lift (λ x => f x.repr) 
+         (by intros a b
+             induction a
+             repeat(
+               induction b
+               repeat(
+                 simp[SRepr.repr]
+                 apply h)))
+
   def SQuot.liftHom (f : Repr → Repr') (h : SHom R R' f) 
     : SQuot R → SQuot R'
-    := λ x => Quot.mk _ <| Quot.lift (λ x' => SRepr.liftHom f h x') sorry x
+    := Quot.lift (λ x' => Quot.mk _ (SRepr.liftHom f h x')) 
+        (by intro a b req
+            apply Quot.sound
+            induction a
+            repeat 
+              (induction b
+               repeat 
+                 (simp[SRepr.repr, SRepr.liftHom]
+                  simp[SRepr.repr] at req
+                  apply h.is_hom
+                  assumption))
+            done)
 
   def SQuot.liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f) 
     : SQuot R → SQuot R' → SQuot R''
-    := λ x y =>  Quot.mk _ <| Quot.lift (λ x' => Quot.lift (SRepr.liftHom₂ f h x') sorry) sorry x y
+    := Quot.lift (λ x' => Quot.lift (λ y' => Quot.mk _ (SRepr.liftHom₂ f h x' y')) sorry) sorry
 
   instance [SReduce R] : Reduce (SQuot R) :=
   {
@@ -129,7 +147,6 @@ namespace Symbolic
     normalize := SQuot.liftHom (SNormalize.normalize R) sorry
     id_normalize := sorry
   }
-  
 
   -- variable {Repr : Type} {RedForm : Repr → Prop} {NormForm : Repr → Prop}
 
