@@ -26,7 +26,7 @@ by
 
 def harmonic_oscillator_main : IO Unit := do
 
-  let steps := 100
+  let steps := 1
   let m := 1.0
   let k := 10.0
 
@@ -35,8 +35,16 @@ def harmonic_oscillator_main : IO Unit := do
   let t := 1.0
   let x₀ := (1.0, 0.5)
   let p₀ := (0.0, 0.0)
-  let (x,p) := evolve t (x₀, p₀)
-  
-  IO.println s!"In {t} seconds the harmonic oscillator evolved from ({x₀}, {p₀}) to ({x},{p})."
+  let mut (x,p) := (x₀, p₀)
 
+  for i in [0:40] do
+  
+    (x, p) := evolve 0.03 (x, p)
+
+    -- print
+    for (j : Nat) in [0:20] do
+      if j < 10*(x.1+1) then
+        IO.print "o"
+    IO.println ""
+  
 #eval harmonic_oscillator_main

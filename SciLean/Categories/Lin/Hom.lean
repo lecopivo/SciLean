@@ -77,22 +77,22 @@ namespace Hom
 
   open SemiInner
 
-  instance {X Y R D e} [FinEnumVec X] [Vec R] [SemiInner Y R D e] [Vec Y]
-    : SemiInner (X ⊸ Y) R D e :=
-  {
-    semiInner := λ f g => ∑ i, ⟪f (𝔼 i), g (𝔼 i)⟫
-    testFunction := λ D f => ∀ i, testFunction' D (f (𝔼 i))
-  }
+  -- instance {X Y R D e ι} [Enumtype ι] [Basis X ι ℝ] [FinVec X ι] [Vec R] [SemiInner Y R D e] [Vec Y]
+  --   : SemiInner (X ⊸ Y) R D e :=
+  -- {
+  --   semiInner := λ f g => ∑ i, ⟪f (𝔼 i), g (𝔼 i)⟫
+  --   testFunction := λ D f => ∀ i, testFunction' D (f (𝔼 i))
+  -- }
 
-  instance {X Y R D e} [FinEnumVec X] [Trait Y] [Vec R] [SemiHilbert Y R D e] 
-    : SemiHilbert (X ⊸ Y) R D e :=
-  {
-    semi_inner_add := sorry
-    semi_inner_mul := sorry
-    semi_inner_sym := sorry
-    semi_inner_pos := sorry
-    semi_inner_ext := sorry
-  }
+  -- instance {X Y R D e ι} [Enumtype ι] [Basis X ι ℝ] [FinVec X ι] [Trait Y] [Vec R] [SemiHilbert Y R D e] 
+  --   : SemiHilbert (X ⊸ Y) R D e :=
+  -- {
+  --   semi_inner_add := sorry
+  --   semi_inner_mul := sorry
+  --   semi_inner_sym := sorry
+  --   semi_inner_pos := sorry
+  --   semi_inner_ext := sorry
+  -- }
 
   -- open SemiInner
   -- @[reducible]
