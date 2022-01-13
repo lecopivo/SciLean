@@ -6,7 +6,7 @@ namespace SciLean
 
 abbrev V := ℝ × ℝ
 
-def H (m k : ℝ) (x p : V) := (2/m) * ⟪p,p⟫ + 2*k * ⟪x, x⟫
+def H (m k : ℝ) (x p : V) := (1/(2*m)) * ⟪p,p⟫ + k/2 * ⟪x, x⟫
 
 def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by
@@ -39,7 +39,7 @@ def harmonic_oscillator_main : IO Unit := do
 
   for i in [0:40] do
   
-    (x, p) := evolve 0.03 (x, p)
+    (x, p) := evolve 0.1 (x, p)
 
     -- print
     for (j : Nat) in [0:20] do
