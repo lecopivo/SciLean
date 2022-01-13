@@ -39,8 +39,6 @@ section CommonVectorSpaces
   @[reducible] instance : Vec ℝ := Vec.mk
   -- instance (priority := high) [Vec U] : HMul ℝ U U := by infer_instance
 
-  
-
   -- instance {A} [AddCommGroup A] : AddCommGroup (α → A) := AddCommGroup.mk sorry
   instance {A} [AddSemigroup A] : AddSemigroup (α → A) := AddSemigroup.mk sorry
   instance {A} [AddMonoid A]    : AddMonoid (α → A)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry

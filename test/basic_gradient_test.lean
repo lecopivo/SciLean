@@ -42,7 +42,8 @@ notation "∥" x "∥" => norm x
 
 -- TODO: Move this somewhere else
 instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥^2) := sorry
-@[simp] theorem differential_of_squared_norm {X} [Hilbert X] : δ (λ x : X => ∥x∥^2) = λ x dx : X => 2*⟪x, dx⟫:= sorry
+@[simp] theorem differential_of_squared_norm {X} [Hilbert X] 
+  : δ (λ x : X => ∥x∥^2) = λ x dx : X => 2*⟪x, dx⟫ := sorry
 
 example {X} [Hilbert X] (x : X) 
   : 

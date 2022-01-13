@@ -122,6 +122,17 @@ theorem differential_of_diag_parm_2 (f : Y1 → Y2 → Z) (g1 : X → β → Y1)
 
 -- variable (X Y : Type) [Vec X] [Vec Y]
 
+instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥²) := by simp[SemiInner.normSqr]; infer_instance done
+
+@[simp] theorem differential_of_squared_norm {X} [Hilbert X] 
+  : δ (λ x : X => ∥x∥²) = λ x dx : X => 2*⟪x, dx⟫ := 
+by
+  simp[SemiInner.normSqr]
+  funext x dx
+  simp
+  admit -- adlmost done
+
+
 set_option synthInstance.maxHeartbeats 5000
 
 instance : IsLin (λ (f : X ⟿ Y) => δ f.1) := sorry

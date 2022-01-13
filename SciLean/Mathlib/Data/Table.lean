@@ -173,11 +173,11 @@ namespace Table
        -- Unfold definition's of vector oprations back
        -- This way we can get fast saxpy type operations i.e.`s*x+y` transforms to `intro λ i => s*x[i] + y[i]`
        -- We specify class instances directly to prevent crazy TC searches.
-       @[simp] theorem add_norm [Add (Value C)] (c d : C) : HAdd.hAdd (self := instHAdd) c d = intro (λ i => c[i] + d[i]) := by rfl
-       @[simp] theorem sub_norm [Sub (Value C)] (c d : C) : HSub.hSub (self := instHSub) c d = intro (λ i => c[i] - d[i]) := by rfl
-       @[simp] theorem neg_norm [Neg (Value C)] (c : C) : Neg.neg (self := instTableNeg) c = intro (λ i => -c[i]) := by rfl
-       @[simp] theorem hmul_norm {α} [HMul α (Value C) (Value C)] (a : α) (c : C) : HMul.hMul (self := instTableHMul) a c = intro (table i => a * c[i]) := by rfl
-       @[simp] theorem zero_norm [Zero (Value C)]: (Zero.zero (self := instTableZero) : C) = intro (λ _ => 0) := by rfl
+       -- @[simp] theorem add_norm [Add (Value C)] (c d : C) : HAdd.hAdd (self := instHAdd) c d = intro (λ i => c[i] + d[i]) := by rfl
+       -- @[simp] theorem sub_norm [Sub (Value C)] (c d : C) : HSub.hSub (self := instHSub) c d = intro (λ i => c[i] - d[i]) := by rfl
+       -- @[simp] theorem neg_norm [Neg (Value C)] (c : C) : Neg.neg (self := instTableNeg) c = intro (λ i => -c[i]) := by rfl
+       -- @[simp] theorem hmul_norm {α} [HMul α (Value C) (Value C)] (a : α) (c : C) : HMul.hMul (self := instTableHMul) a c = intro (table i => a * c[i]) := by rfl
+       -- @[simp] theorem zero_norm [Zero (Value C)]: (Zero.zero (self := instTableZero) : C) = intro (λ _ => 0) := by rfl
 
      end UnfoldOperations
 
@@ -438,9 +438,9 @@ namespace Table
     abbrev saxsrypnz (s r : S) (x y z: X) := s*x - r*y + (-z)
 
     variable {α} [Add (Value C)] [Sub (Value C)] [Neg (Value C)] [HMul α (Value C) (Value C)]
-    example (x y : C) : xpy x y = intro (λ i => x[i] + y[i]) := by simp done
-    example (s : α) (x y : C) : saxpy s x y = intro (λ i => s*x[i] + y[i]) := by simp done
-    example (s r : α) (x y z  : C) : saxsrypnz s r x y z = intro (λ i => s*x[i] - r*y[i] + -z[i]) := by simp done
+    -- example (x y : C) : xpy x y = intro (λ i => x[i] + y[i]) := by simp done
+    -- example (s : α) (x y : C) : saxpy s x y = intro (λ i => s*x[i] + y[i]) := by simp done
+    -- example (s r : α) (x y z  : C) : saxsrypnz s r x y z = intro (λ i => s*x[i] - r*y[i] + -z[i]) := by simp done
   end TestBLASOperations
 
 

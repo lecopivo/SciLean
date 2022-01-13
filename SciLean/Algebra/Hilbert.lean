@@ -46,6 +46,10 @@ namespace SemiInner
 
   notation "⟪" x ", " y "⟫" => semiInner x y 
 
+  def normSqr {X}[Trait X] [inst : SemiInner X (Trait.R X) (Trait.D X) Trait.eval] (x : X) := ⟪x, x⟫
+
+  notation "∥" x "∥²" => normSqr x
+
   -- @[reducible] instance : Trait ℝ := ⟨ℝ, Unit, λ r _ => r⟩
 
   -- Reals

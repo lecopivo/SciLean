@@ -6,7 +6,7 @@ namespace SciLean
 
 abbrev V := ℝ × ℝ
 
-def H (m k : ℝ) (x p : V) := (1/(2*m)) * ⟪p,p⟫ + k/2 * ⟪x, x⟫
+def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
 
 def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by
