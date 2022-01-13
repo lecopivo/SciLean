@@ -30,10 +30,28 @@
     - preshear on Prism
     - generalization of [[https://en.wikipedia.org/wiki/Delta_set][delta set]]
   - product of meshes
-
+  
 * Runtime symbolic module
 
   - working with polynomials, differential forms, tensor products
+
+**  Goal is to get isomophisms:
+    
+    𝓟[U×V, K] ≅ 𝓟[U, 𝓟[V, K]]
+    
+  - Using these isomorphisms we can get polynomial to a form 𝓟[ℝ, K] and on that we can define HornerForm is K has HornerForm
+
+  - In some sense these ismorphisms must be true:
+
+    𝓐[U×V, K] ≅ 𝓐[U, 𝓐[V, K]]
+    
+    𝓐[U×V, 𝓟[U×V]] ≅ 𝓐[U, 𝓟[U, 𝓐[V, 𝓟[V]]]]
+
+    Is this the most efficient way to evaluate differential forms?
+    
+    Define right and left smul for algebras! Then I should be able to do
+
+    𝓐[U×V, K] ≅ 𝓐[U, 𝓐[V, K]]
 
 * Finite Element
 
@@ -41,9 +59,15 @@
   - define global finite element space
   - system assembly
 
-* Function lifting
+* Approximating Spaces
 
-  - If I have function (f : X -> Y) and (
+  - Define abstract interface for a type to approximate another type
+  - will be usefull for creating finite elements, hybrid methods
+    or finite elements
+
+* Manifolds through Quot
+
+  - If I have a projection on vector space X. There is quite reasonable definition of smooth math on the quotient.
 
 * Invertible programming
 

@@ -1,3 +1,6 @@
+import Mathlib
+import SciLean.Mathlib.Algebra.Module.Basic
+
 class Symbolic {Repr : Type} (R : Repr → Repr → Prop) where
   RedForm  : Repr → Prop 
   NormForm : Repr → Prop
@@ -5,6 +8,32 @@ class Symbolic {Repr : Type} (R : Repr → Repr → Prop) where
   R_norm  : ∀ x y, R x y → NormForm x → NormForm y → x = y
 
 namespace Symbolic
+
+
+  -- define Hom     -- preserves relation
+  -- define RedHom  -- preserving RefForm
+  -- define NormHom -- preserving RefForm
+  -- define their Hom₂ variants
+  section Hom 
+    variable {Repr Repr'}
+      (R  : Repr  → Repr  → Prop) [Symbolic R]
+      (R' : Repr' → Repr' → Prop) [Symbolic R']
+      (f : Repr → Repr')
+
+    structure Hom : Prop where
+      is_hom : ∀ x y : Repr, R x y → R' (f x) (f y)
+
+    structure RedHom : Prop where
+      is_hom : ∀ x y : Repr, R x y → R' (f x) (f y)
+      preserve_red  : ∀ x : Repr, RedForm R x → RedForm R' (f x)
+
+    structure NormHom : Prop where
+      is_hom : ∀ x y : Repr, R x y → R' (f x) (f y)
+      preserve_red  : ∀ x : Repr, RedForm R x → RedForm R' (f x)
+      preserve_norm : ∀ x : Repr, NormForm R x → NormForm R' (f x)
+
+  end Hom
+
 
   structure SHom {Repr Repr'}
     (R  : Repr  → Repr  → Prop) [Symbolic R]
@@ -60,6 +89,17 @@ namespace Symbolic
       | red  x _ => x
       | norm x _ => x
 
+    -- instance : Coe (SRepr R) Repr := ⟨λ x => x.repr⟩
+
+    @[simp]
+    theorem raw_repr (x : Repr) : (raw x : SRepr R).repr = x := by simp[repr] done
+
+    @[simp]
+    theorem red_repr (x : Repr) (h : RedForm R x) : (red x h : SRepr R).repr = x := by simp[repr] done
+
+    @[simp]
+    theorem norm_repr (x : Repr) (h : NormForm R x) : (norm x h : SRepr R).repr = x := by simp[repr] done
+
     def isReduced (x : SRepr R) : Bool :=
       match x with
       | raw x => false
@@ -73,11 +113,24 @@ namespace Symbolic
     variable {Repr' } {R'  : Repr'  → Repr'  → Prop} [Symbolic R']
     variable {Repr''} {R'' : Repr'' → Repr'' → Prop} [Symbolic R'']
 
+    def lift (f : Repr → Repr') (x : SRepr R) : SRepr R' := raw (f x.repr)
+
+    def lift₂ (f : Repr → Repr' → Repr'') (x : SRepr R) (x' : SRepr R') : SRepr R'' :=
+      raw (f x.repr x'.repr)
+
     def liftHom (f : Repr → Repr') (h : SHom R R' f) (x : SRepr R) : SRepr R' := 
       match x with
       | raw x => raw (f x)
       | red  x h' => red  (f x) (h.preserve_red x h')
       | norm x h' => norm (f x) (h.preserve_norm x h')
+
+    @[simp] 
+    theorem lift_hom_repr (f : Repr → Repr') (h : SHom R R' f) (x : SRepr R)
+      : (liftHom f h x).repr = f x.repr
+      := 
+      by induction x 
+         repeat simp[liftHom]
+         done
 
     def liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f) 
       (x : SRepr R) (y : SRepr R') : SRepr R'' :=
@@ -106,6 +159,13 @@ namespace Symbolic
   variable {Repr'} {R' : Repr' → Repr' → Prop} [Symbolic R']
   variable {Repr''} {R'' : Repr'' → Repr'' → Prop} [Symbolic R'']
 
+  -- Not sure about these two with the coercion from SRepr to Repr
+  def SQuot.mk  (x : SRepr R) : SQuot R := Quot.mk _ x
+  def SQuot.rmk (x : Repr)    : SQuot R := Quot.mk _ (SRepr.raw x)
+
+  def SQuot.mkRed  (x : Repr) (h : RedForm R x)  : SQuot R := Quot.mk _ (SRepr.red  x h)
+  def SQuot.mkNorm (x : Repr) (h : NormForm R x) : SQuot R := Quot.mk _ (SRepr.norm x h)
+
   def SQuot.lift {α : Sort u} (f : Repr → α) (h : ∀ x x' : Repr, R x x' → f x = f x')
     : SQuot R → α
     := Quot.lift (λ x => f x.repr) 
@@ -117,6 +177,10 @@ namespace Symbolic
                  simp[SRepr.repr]
                  apply h)))
 
+  def SQuot.slift {α : Sort u} (f : SRepr R → α) (h : ∀ x x' : SRepr R, R x.repr x'.repr → f x = f x')
+    : SQuot R → α
+    := Quot.lift (λ x => f x) h
+
   def SQuot.liftHom (f : Repr → Repr') (h : SHom R R' f) 
     : SQuot R → SQuot R'
     := Quot.lift (λ x' => Quot.mk _ (SRepr.liftHom f h x')) 
@@ -126,11 +190,20 @@ namespace Symbolic
             repeat 
               (induction b
                repeat 
-                 (simp[SRepr.repr, SRepr.liftHom]
-                  simp[SRepr.repr] at req
+                 (simp at req
                   apply h.is_hom
                   assumption))
             done)
+
+  def SQuot.lift₂ (f : Repr → Repr' → Repr'')
+      (h : ∀ (x y : Repr) (x' y' : Repr'), R x y → R' x' y' → R'' (f x x') (f y y'))
+      : SQuot R → SQuot R' → SQuot R''
+      := Quot.lift (λ x' => Quot.lift (λ y' => Quot.mk _ (SRepr.lift₂ f x' y')) sorry) sorry
+
+  def SQuot.slift₂ (f : SRepr R → SRepr R' → SRepr R'')
+      (h : ∀ (x y : SRepr R) (x' y' : SRepr R'), R x.repr y.repr → R' x'.repr y'.repr → R'' (f x x').repr (f y y').repr)
+      : SQuot R → SQuot R' → SQuot R''
+      := Quot.lift (λ x' => Quot.lift (λ y' => Quot.mk _ (f x' y')) sorry) sorry
 
   def SQuot.liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f) 
     : SQuot R → SQuot R' → SQuot R''
@@ -138,15 +211,17 @@ namespace Symbolic
 
   instance [SReduce R] : Reduce (SQuot R) :=
   {
-    reduce := SQuot.liftHom (SReduce.reduce R) sorry
+    reduce := SQuot.slift (λ x => Quot.mk _ x.reduce) sorry
     id_reduce := sorry
   }
 
   instance [SNormalize R] : Normalize (SQuot R) :=
   {
-    normalize := SQuot.liftHom (SNormalize.normalize R) sorry
+    normalize := SQuot.slift (λ x => Quot.mk _ x.normalize) sorry
     id_normalize := sorry
   }
+
+  
 
   -- variable {Repr : Type} {RedForm : Repr → Prop} {NormForm : Repr → Prop}
 
@@ -235,8 +310,6 @@ namespace Symbolic
 
 end Symbolic
 
-
-
 inductive List.Sorted {X : Type u} [LE X] : List X → Prop where
 | empty : Sorted []
 | singl (x : X) : Sorted [x]
@@ -250,14 +323,119 @@ inductive List.StrictlySorted {X : Type u} [LT X] : List X → Prop where
         (h' : StrictlySorted (y :: ys)) 
         : StrictlySorted (x :: y :: ys)
 
-namespace SymmMonoid
+structure FreeMonoid (X : Type u) where
+  vars : List X
 
-  structure Repr (X : Type u) where
-    vars : List X
+namespace FreeMonoid
 
-  def RedForm {X : Type u} [LE X] (x : Repr X) := x.1.Sorted
+  instance {X} : Mul (FreeMonoid X) := ⟨λ x y => ⟨x.1.append y.1⟩⟩
+  instance {X} : One (FreeMonoid X) := ⟨⟨[]⟩⟩
 
-  abbrev NormForm
+  def rank {X} (x : FreeMonoid X) : Nat := x.1.length
+
+  inductive SymmMonoidEq {X} : FreeMonoid X → FreeMonoid X → Prop where
+    | mul_comm (x y : FreeMonoid X) : SymmMonoidEq (x*y) (y*x)
+
+end FreeMonoid
 
 
-end SymmMonoid
+namespace Monomial 
+
+  structure Repr (X : Type u) (K : Type v) where
+    coef : K
+    base : FreeMonoid X
+
+  instance {X K} [Mul K] : Mul (Repr X K) := 
+    ⟨λ x y => ⟨x.coef * y.coef, x.base * y.base⟩⟩
+  instance {X K} [Mul K] : HMul K (Repr X K) (Repr X K) := 
+    ⟨λ a x => ⟨a * x.coef, x.base⟩⟩
+
+  def Repr.rank {X K} (x : Repr X K) : Nat := x.base.rank
+
+  inductive SymMonomialEq {X K : Type} [One K] [Neg K] [Mul K] [HPow K Nat K] : Repr X K → Repr X K → Prop where
+    | refl (x : Repr X K) : SymMonomialEq x x
+    | mul_comm (x y : Repr X K) : SymMonomialEq (x * y) (y * x)
+
+  inductive AltMonomialEq {X K : Type} [One K] [Neg K] [Mul K] [HPow K Nat K] : Repr X K → Repr X K → Prop where
+    | refl (x : Repr X K) : AltMonomialEq x x
+    | mul_alt (x y : Repr X K) : AltMonomialEq (x * y) ((-1 : K)^(x.rank + y.rank) * y * x)
+
+  instance {X K} [LT X] [CommRing K] : Symbolic (SymMonomialEq (X := X) (K := K)) :=
+  {
+    RedForm  := λ x => x.base.1.StrictlySorted
+    NormForm := λ x => (x.base.1.StrictlySorted) ∧ (x.coef = 0 → x.base.1 = [])
+    norm_red := λ x h => h.left
+    R_norm   := sorry -- this is probably hard as I need CommRing for it
+  }
+
+  instance {X K} [LT X] [CommRing K] : Symbolic (AltMonomialEq (X := X) (K := K)) :=
+  {
+    RedForm  := λ x => x.base.1.StrictlySorted
+    NormForm := λ x => (x.base.1.StrictlySorted) ∧ (x.coef = 0 → x.base.1 = [])
+    norm_red := λ x h => h.left
+    R_norm   := sorry -- this is probably hard as I need CommRing for it
+  }
+
+end Monomial 
+
+
+open Symbolic Monomial in
+def SymMonomial (X K) [LT X] [CommRing K] := SQuot (SymMonomialEq (X := X) (K := K))
+
+open Symbolic Monomial in
+def AltMonomial (X K) [LT X] [CommRing K] := SQuot (AltMonomialEq (X := X) (K := K))
+
+inductive DecComparison {X : Type u} [LT X] (x y : X) where
+  | cpEq (h : x = y) : DecComparison x y
+  | cpLt (h : x < y) : DecComparison x y
+  | cpGt (h : x > y) : DecComparison x y
+
+export DecComparison (cpEq cpLt cpGt)
+
+class DecCompar (X : Type u) [LT X] where
+  compare (x y : X) : DecComparison x y
+
+abbrev compare {X} [LT X] [DecCompar X] (x y : X) : DecComparison x y := DecCompar.compare x y
+
+namespace AltMonomial
+  open Symbolic
+
+  variable {X K} [LT X] [DecCompar X] [CommRing K]
+
+  instance [DecCompar X] : Reduce (AltMonomial X K) :=
+  {
+    reduce := sorry  
+    id_reduce := sorry
+  }
+
+  instance [DecCompar X] [DecidableEq K] : Normalize (AltMonomial X K) :=
+  {
+    normalize := sorry  
+    id_normalize := sorry
+  }
+
+  -- TODO: change these definitions 
+  --       add reduction
+  instance : Mul  (AltMonomial X K) := ⟨λ x' y' => (SQuot.lift₂ (λ x y => (x * y)) sorry) x' y' |> Reduce.reduce⟩
+  instance [Mul K] : HMul K (AltMonomial X K) (AltMonomial X K) := ⟨λ c => SQuot.lift (λ x => SQuot.rmk (c * x)) sorry⟩
+  instance : One  (AltMonomial X K) := ⟨SQuot.mkNorm ⟨1,1⟩ sorry⟩
+  instance : Zero (AltMonomial X K) := ⟨SQuot.mkNorm ⟨0,1⟩ sorry⟩
+
+
+  instance : Monoid (AltMonomial X K) :=
+  {
+    mul_assoc := sorry
+    mul_one := sorry
+    one_mul := sorry
+    npow_zero' := sorry
+    npow_succ' := sorry
+  }
+
+  instance : MulAction K (AltMonomial X K) :=
+  {
+    one_smul := sorry
+    mul_smul := sorry
+  }
+
+end AltMonomial
+
