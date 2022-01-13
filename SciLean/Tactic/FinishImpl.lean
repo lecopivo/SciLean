@@ -31,5 +31,5 @@ syntax (name := finish_impl) "finish_impl" (colGt term:max)* : tactic
 | `(tactic| finish_impl) => do 
           -- let mainGoal ← getMainGoal
           -- Check if `mainGoal` is in the form of `Impl a` and test if `a` is computable
-          evalTactic (← `(tactic| apply ImplSpec.pure _ (by rfl)))
+          evalTactic (← `(tactic| apply SciLean.ImplSpec.pure _ (by rfl)))
 | _ => Lean.Elab.throwUnsupportedSyntax

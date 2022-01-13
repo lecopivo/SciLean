@@ -25,7 +25,7 @@ syntax (name := impl_check) "impl_check" notFollowedBy("|") (colGt term:max)* : 
 
 syntax (name := print_main_goal) "print_main_goal" notFollowedBy("|") : tactic
 
-def Syntax.mkStrLit (str : String) : Syntax := Syntax.node strLitKind #[mkAtom ("\"" ++ str ++ "\"")]
+def Syntax.mkStrLit (str : String) : Syntax := Syntax.node arbitrary strLitKind #[mkAtom ("\"" ++ str ++ "\"")]
 
 inductive assumeOrCheck where | assume | check 
 
@@ -38,8 +38,8 @@ def implAssumeCheckCore (mvarId : MVarId) (prop msg : Expr) (type : assumeOrChec
     let newMVarId  ← mkFreshExprSyntheticOpaqueMVar newTarget tag
 
     match type with
-      | assumeOrCheck.assume => assignExprMVar mvarId (← mkAppM `ImplSpec.assumption #[newMVarId, msg])
-      | assumeOrCheck.check  => assignExprMVar mvarId (← mkAppM `ImplSpec.check #[newMVarId, msg])
+      | assumeOrCheck.assume => assignExprMVar mvarId (← mkAppM `SciLean.ImplSpec.assumption #[newMVarId, msg])
+      | assumeOrCheck.check  => assignExprMVar mvarId (← mkAppM `SciLean.ImplSpec.check #[newMVarId, msg])
 
     return [newMVarId.mvarId!]
 

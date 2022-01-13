@@ -12,15 +12,16 @@ def ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X := sorry
 variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 
 def ode_solve_fixed_dt_impl (n : Nat) (stepper : ℝ → (X → X) → (X → X)) (f : X → X) (t : ℝ) (x₀ : X) : X := 
-((do
+Id.run do
   let Δt := t/(n.toFloat.toReal)
   let mut x := x₀
   for i in [0:n] do
     x := (stepper Δt f) x
-  x) : Id X)
+  x
 
 --- This requires some conditions on the function ... or just add the conclusion as an assumption
-def ode_solve_fixed_dt (stepper : ℝ → (X → X) → (X → X)) : ode_solve = limit (λ n => ode_solve_fixed_dt_impl n stepper) := sorry
+def ode_solve_fixed_dt (stepper : ℝ → (X → X) → (X → X)) 
+  : ode_solve = limit (λ n => ode_solve_fixed_dt_impl n stepper) := sorry
 
 --  ___ _
 -- / __| |_ ___ _ __ _ __  ___ _ _ ___

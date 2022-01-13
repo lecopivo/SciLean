@@ -26,7 +26,7 @@ def getlimit (e : Expr) (N : Expr) : MetaM Expr := do
   -- let lim_spec : IO.Ref Expr ← IO.mkRef arbitrary
   let test := (λ e : Expr => 
                    match e.getAppFn.constName? with
-                     | some name => name == `limit
+                     | some name => name == `SciLean.limit
                      | none => false)
   let replace := (λ e : Expr => 
                     do
@@ -48,12 +48,12 @@ def liftLimitCore (mvarId : MVarId) (N msg : Expr) : MetaM (List MVarId) :=
     let lim ← getlimit spec N
 
     let new_spec := (mkApp lim N)
-    let new_target ← mkAppM `Impl #[mkApp lim N]
+    let new_target ← mkAppM `SciLean.Impl #[mkApp lim N]
     let new_mvar  ← mkFreshExprSyntheticOpaqueMVar new_target tag
-    let eq       ← mkEq spec (← mkAppM `limit #[lim])
+    let eq       ← mkEq spec (← mkAppM `SciLean.limit #[lim])
     let eq_mvar  ← mkFreshExprSyntheticOpaqueMVar eq
 
-    assignExprMVar mvarId (← mkAppM `ImplSpec.limit #[lim, N, new_mvar, msg, eq_mvar])
+    assignExprMVar mvarId (← mkAppM `SciLean.ImplSpec.limit #[lim, N, new_mvar, msg, eq_mvar])
 
     return [eq_mvar.mvarId!, new_mvar.mvarId!]  
 

@@ -1,1 +1,1 @@
-import SciLean.Data.NDVector
+import SciLean.Data.RealPow
