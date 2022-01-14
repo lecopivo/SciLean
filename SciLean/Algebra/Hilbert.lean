@@ -11,7 +11,7 @@ namespace SemiInner
     D : Type w
     eval : R → D → ℝ
 
-  class Trait₂ (X Y : Type u) where
+  class Trait₂ (X : Type u) (Y : Type u') where
     R : Type v
     D : Type w
     eval : R → D → ℝ
@@ -21,6 +21,12 @@ namespace SemiInner
 
   @[reducible] instance {X Y} [Trait X] : Trait₂ X Y := ⟨Trait.R X, Trait.D X, Trait.eval⟩
   @[reducible] instance {X Y} [Trait Y] : Trait₂ X Y := ⟨Trait.R Y, Trait.D Y, Trait.eval⟩
+
+  class Guard (X : Type u) 
+  class Guard₂ (X : Type u) (Y : Type u')
+
+  instance {X} [Trait X] : Guard X := ⟨⟩
+  instance {X Y} [Trait₂ X Y] : Guard₂ X Y := ⟨⟩
 
 end SemiInner
 

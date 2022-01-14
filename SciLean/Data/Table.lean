@@ -1,11 +1,14 @@
-import SciLean.Categories
 import SciLean.Mathlib.Data.Table
+
+import SciLean.Categories
+import SciLean.Operators
 
 namespace SciLean
 
 open Table
 
-variable {C : Type u} [Trait C] [Table C (Index C) (Value C)] [Table.Intro C]
+section VectorSpace
+variable {C : Type u} [Trait C] [Table C (Index C) (Value C)] [Intro C]
 
 -- Vector Space
 instance [AddSemigroup (Value C)] : AddSemigroup C := AddSemigroup.mk sorry
@@ -19,24 +22,30 @@ instance [Monoid β] [MulAction β (Value C)] : MulAction β C := MulAction.mk s
 instance {M} [AddMonoid (Value C)] [Monoid M] [DistribMulAction M (Value C)] : DistribMulAction M C := DistribMulAction.mk sorry sorry
 instance {R} [AddCommGroup (Value C)] [Semiring R] [Module R (Value C)] : Module R C := Module.mk sorry sorry
 
-set_option synthInstance.maxHeartbeats 5000
+set_option synthInstance.maxHeartbeats 3000 in
 instance [Vec (Value C)] : Vec C := Vec.mk
-set_option synthInstance.maxHeartbeats 500
 
+end VectorSpace
 
-open Table in
-instance {C} [Trait C] [Table C (Index C) (Value C)] [Enumtype (Index C)] 
-  [SemiInner (Value C) ℝ Unit (λ r _ => r)]
-  : SemiInner C ℝ Unit (λ r _ => r) :=
+----------------------------------------------------------------------
+
+--  {R : outParam $ Type u} {D : outParam $ Type v} {e : outParam $ R → D → ℝ}
+instance {C} [Trait C] 
+  [Table C (Index C) (Value C)] 
+  {R D e}
+  [SemiInner (Value C) R D e] 
+  [Zero R] [Add R] [Enumtype (Index C)] 
+  : SemiInner C R D e :=
 {
   semiInner := λ x y => (∑ i, ⟪x[i], y[i]⟫)
   testFunction := λ _ _ => True
 }
 
-open Table in
-instance {C} [Trait C] [Table C (Index C) (Value C)] [Enumtype (Index C)] [Intro C]
-  [Hilbert (Value C)]
-  : Hilbert C :=
+instance {C : outParam $ Type u} {R D e} [Trait C] [SemiInner.Trait (Value C)] 
+  [Table C (Index C) (Value C)] [Intro C]
+  [Vec R] [SemiHilbert (Value C) R D e]
+  [Enumtype (Index C)] 
+  : SemiHilbert C R D e :=
 {
   semi_inner_add := sorry
   semi_inner_mul := sorry
@@ -44,4 +53,68 @@ instance {C} [Trait C] [Table C (Index C) (Value C)] [Enumtype (Index C)] [Intro
   semi_inner_pos := sorry
   semi_inner_ext := sorry
 }
+
+-- #check SciLean.instSemiInner
+-- #check SciLean.instSemiHilbert
+-- #check SciLean.SemiHilbert.instSemiHilbertArrow
+
+example {C R D e} [Trait C] [Table C (Index C) (Value C)] [Enumtype (Index C)] [Intro C]
+  [Vec R] [SemiHilbert (Value C) R D e]
+  : SemiInner C R D e := by infer_instance
+
+example {C R D e} 
+  [Trait C] [Table C (Index C) (Value C)] [Intro C] [Enumtype (Index C)]
+  [Vec R] [SemiHilbert (Value C) R D e]
+  : SemiHilbert C R D e := by infer_instance
  
+---------------------------------------------------------------------
+
+
+variable {C} [Trait C] [Table C (Index C) (Value C)] [Table.Intro C]
+
+instance (i : (Index C)) [Vec ( Value C)] : IsLin (λ c : C => c[i]) := sorry
+instance [Vec (Value C)] : IsLin (λ (c : C) (i : (Index C))  => c[i]) := sorry
+
+instance {R D e} (i : (Index C)) [Vec R] [SemiHilbert (Value C) R D e] [Enumtype (Index C)] 
+  : HasAdjoint (λ c : C => c[i]) := sorry
+
+example {R D e} (i : (Index C)) [Vec R] [SemiHilbert (Value C) R D e] [Enumtype (Index C)] 
+  : HasAdjoint ((λ c : C => c[i])†) := by infer_instance
+example {R D e} (i : (Index C)) [Vec R] [SemiHilbert (Value C) R D e] [Enumtype (Index C)] 
+  : HasAdjoint ((λ c : C => c[i])††) := by infer_instance
+
+
+  -- apply Adjoint.instHasAdjointAdjoint
+
+
+-- set_option trace.Meta.synthInstance true in
+-- -- set_option synthInstance.maxHeartbeats 5000 in
+-- @[simp]
+-- theorem adjoint_of_table_get {R D e}
+--   (i : (Index C)) 
+--   [Vec R] [SemiHilbert (Value C) R D e] 
+--   [Enumtype (Index C)] 
+--   : (λ (c : C) (i : Index C) => c[i])† = intro :=
+-- by 
+--   apply Adjoint.inner_ext
+  
+
+
+
+-- set_option trace.Meta.Tactic.simp true in
+-- @[simp]
+-- theorem adjoint_of_table_get_at_i {R D e} (i : (Index C)) [Vec R] [SemiHilbert (Value C) R D e] [Enumtype (Index C)]
+--   (f : C → Value C) [HasAdjoint f]
+--   : f† = 0 :=  -- (λ c : C => c[i])† = λ a => intro (λ j => (kron i j) * a) :=
+-- by
+--   funext a
+--   inner_ext ϕ D h;
+--   simp (discharger := assumption)
+--   rw[(SciLean.Adjoint.inner_adjoint_fst_left_test _ a ϕ D h)]
+--   simp
+--   simp
+--   simp
+
+
+
+

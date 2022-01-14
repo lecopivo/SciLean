@@ -1,7 +1,7 @@
 import SciLean.Basic
 import SciLean.Mechanics
 
-set_option synthInstance.maxHeartbeats 50000
+set_option synthInstance.maxHeartbeats 5000
 
 open Function
 namespace SciLean

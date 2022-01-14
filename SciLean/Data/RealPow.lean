@@ -23,7 +23,7 @@ def u : (ℝ^(2 : Nat)) := ^[-2.0,2.0]
 
 #eval u[(1 : Fin 2)]
 #eval (u + u : ℝ^(2 : Nat))
-#eval 2*⟪u, u⟫
+-- #eval 2*⟪u, u⟫
 
 
 open Table Trait
@@ -31,6 +31,6 @@ example : Table.Trait (ℝ^(2 : Nat)) := by infer_instance
 example : Table (ℝ^(2 : Nat)) (Index (ℝ^(2 : Nat))) (Value (ℝ^(2 : Nat))) := by infer_instance
 example : Enumtype (Index (ℝ^(2 : Nat))) := by infer_instance
 example : SemiInner (Value (ℝ^(2 : Nat))) ℝ Unit (λ r _ => r) := by infer_instance
-example : SemiInner (ℝ^(2 : Nat)) ℝ Unit (λ r _ => r) := by infer_instance
-example : SemiInner.Trait (ℝ^(2 : Nat)) := by infer_instance
+-- example : SemiInner (ℝ^(2 : Nat)) ℝ Unit (λ r _ => r) := by infer_instance
+-- example : SemiInner.Trait (ℝ^(2 : Nat)) := by infer_instance
 

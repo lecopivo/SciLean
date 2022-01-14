@@ -133,7 +133,7 @@ namespace Adjoint
       → ⟪x, f† y⟫ = ⟪f x, y⟫
     := sorry
 
-  theorem inner_ext {X} (x y : X)  [Trait X] [Vec (Trait.R X)] [SemiHilbert X (Trait.R X) (Trait.D X) Trait.eval] 
+  theorem inner_ext {X} (x y : X) [Trait X] [Vec (Trait.R X)] [SemiHilbert X (Trait.R X) (Trait.D X) Trait.eval] 
     : 
       (∀ (x' : X) (d : (Trait.D X)), testFunction' d x' → ⟪x, x'⟫ = ⟪y, x'⟫)
        → (x = y)
