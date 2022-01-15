@@ -2,7 +2,7 @@
 * SciLean: Scientific computing assistant
 
 
-  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. This library is in an extremely early stage of development and at its current stage is just a proof of concept how Lean can be used for scientific computing.
+  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. This library is in an *extremely early stage of development* and at its current stage is just a proof of concept how Lean can be used for scientific computing.
 
 Lean is an expressive functional programming language that allows to formalize the mathematics behind these computations. This can offer several benefits:
 
@@ -18,9 +18,13 @@ Lean is an expressive functional programming language that allows to formalize t
   The idea behind this library is can be most easily demonstrated on an example. We will run simulation of a harmonic oscillator.
 
   Harmonic oscillator is defined by its Hamiltonian. In Lean this can done with 
-#+begin_src 
+#+begin_src
 def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
 #+end_src
+
+```
+def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
+```
 
 
 *** Inspiration comes mainly from these languages
