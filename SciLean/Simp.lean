@@ -32,8 +32,8 @@ variable (r : ℝ)
 @[simp] theorem add_neg (x y : X) : x + (-y) = x - y := sorry
 
 @[simp] theorem mul_neg_neg (r : ℝ) (x : X) : (-r) * (-x) = r * x := sorry
-@[simp] theorem mul_neg_1 (r : ℝ) (x : X) : (-r) * x = -(r * x) := sorry
-@[simp] theorem mul_neg_2 (r : ℝ) (x : X) : r * (-x) = -(r * x) := sorry
+-- @[simp] theorem mul_neg_1 (r : ℝ) (x : X) : (-r) * x = -(r * x) := sorry
+-- @[simp] theorem mul_neg_2 (r : ℝ) (x : X) : r * (-x) = -(r * x) := sorry
 
 @[simp] theorem pair_mul (r : ℝ) (x : X) (y : Y) : r * (x, y) = (r * x, r * y) := sorry
 
@@ -49,7 +49,7 @@ variable (r : ℝ)
 @[simp] theorem add_same_3 (a : ℝ) (x : X) : x + a*x = (1+a)*x := sorry
 @[simp] theorem add_same_4 (x : X) : x + x = (2:ℝ)*x := sorry
 
-@[simp] theorem smul_smul_mul (a b : ℝ) (x : X) : a * (b * x) = (a*b) * x := sorry
+-- @[simp] theorem smul_smul_mul (a b : ℝ) (x : X) : a * (b * x) = (a*b) * x := sorry
 
 @[simp] theorem prod_sum (x x' : X) (y y' : Y) : (x, y) + (x', y') = (x + x', y + y') := sorry
 @[simp] theorem prod_fst_hmul (x : X) (y : Y) (r : ℝ) : (r*(x,y)).fst = r*x := sorry

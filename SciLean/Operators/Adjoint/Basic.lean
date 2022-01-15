@@ -231,7 +231,14 @@ namespace Adjoint
       [∀ i, HasAdjoint (f i)]
       :
         (λ x i => f i x)† = (λ (y : ι → Y) => ∑ i, (f i)† (y i))
-      := sorry
+      := 
+  by
+    funext x
+    inner_ext;
+    simp (discharger := assumption);
+    -- propagate sum outside of ⟪·,·⟫, move (f i)† on ϕ
+    -- expand defitions of ⟪·,·⟫ and it should be done
+    admit
 
   @[simp]
   theorem adjoint_of_swap' {ι κ} [Enumtype ι] [Enumtype κ]

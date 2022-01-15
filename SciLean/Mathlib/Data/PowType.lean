@@ -40,49 +40,81 @@ class PowType (X : Type) (n : Nat) where
 
 notation X "^" n => PowType.powType X n
 
-abbrev PowType.powType.get {X n} [PowType X n] (x : X^n) (i : Fin n) : X := PowType.get x i
-abbrev PowType.powType.set {X n} [PowType X n] (x : X^n) (i : Fin n) (xi : X) : X^n := PowType.set x i xi
+namespace PowType.powType
 
--- instance {X} [PowType X 1] : Coe (X^1) X := ⟨λ x => x.get 0⟩
--- instance {X} [PowType X 0] : Coe (X^(0:Nat)) Unit := ⟨λ x => ()⟩
+  abbrev get {X n} [PowType X n] (x : X^n) (i : Fin n) : X := PowType.get x i
+  abbrev set {X n} [PowType X n] (x : X^n) (i : Fin n) (xi : X) : X^n := PowType.set x i xi
 
-def PowType.powType.mapIdx {X n} [PowType X n] (x : X^n) (f : Fin n → X → X) : X^n :=
-  Id.run do
-  let mut x' := x
-  for i in [0:n] do
-    let i := ⟨i, sorry⟩
-    x' := set x' i (f i (get x' i))
-  x'
+  -- instance {X} [PowType X 1] : Coe (X^1) X := ⟨λ x => x.get 0⟩
+  -- instance {X} [PowType X 0] : Coe (X^(0:Nat)) Unit := ⟨λ x => ()⟩
 
-def PowType.powType.map {X n} [PowType X n] (x : X^n) (f : X → X) : X^n := 
-  x.mapIdx λ i xi => f xi
+  def mapIdx {X n} [PowType X n] (x : X^n) (f : Fin n → X → X) : X^n :=
+    Id.run do
+    let mut x' := x
+    for i in [0:n] do
+      let i := ⟨i, sorry⟩
+      x' := set x' i (f i (get x' i))
+    x'
 
-instance {X n} [PowType X n] : Table (X^n) (Fin n) X := 
-  ⟨λ x i => x.get i⟩
+  def map {X n} [PowType X n] (x : X^n) (f : X → X) : X^n := 
+    x.mapIdx λ i xi => f xi
 
-instance {X n} [PowType X n] : Table.Intro (X^n):= 
-  ⟨λ f => PowType.intro f, sorry⟩
+  instance {X n} [PowType X n] : Table (X^n) (Fin n) X := 
+    ⟨λ x i => x.get i⟩
 
-instance {X n} [PowType X n] : Table.Set (X^n):= 
-  ⟨λ v i x => v.set i x, sorry⟩
+  instance {X n} [PowType X n] : Table.Intro (X^n):= 
+    ⟨λ f => PowType.intro f, sorry⟩
 
-instance {X n} [PowType X n] : Table.MapIdx (X^n):= 
-  ⟨λ f v => v.mapIdx f, sorry⟩
+  instance {X n} [PowType X n] : Table.Set (X^n):= 
+    ⟨λ v i x => v.set i x, sorry⟩
 
-instance {X n} [PowType X n] : Table.Map (X^n):= 
-  ⟨λ f v => v.map f, sorry⟩
+  instance {X n} [PowType X n] : Table.MapIdx (X^n):= 
+    ⟨λ f v => v.mapIdx f, sorry⟩
 
-def PowType.powType.concat {X n m} [PowType X n] [PowType X m] [PowType X (n+m)] : (X^n) → (X^m) → X^(n+m) :=
-  λ x y => PowType.intro λ i => 
-    if i < n then
-      x.get ⟨i, sorry⟩
-    else
-      y.get ⟨i.1-n, sorry⟩
+  instance {X n} [PowType X n] : Table.Map (X^n):= 
+    ⟨λ f v => v.map f, sorry⟩
 
-def PowType.powType.split {X N} (n : Fin N) [PowType X N] [PowType X n] [PowType X (N-n)] : (X^N) → (X^n) × (X^(N-n)) :=
-  λ x => 
-    (PowType.intro λ i => x.get ⟨i.1, sorry⟩, 
-     PowType.intro λ i => x.get ⟨i.1 + n, sorry⟩)
+  section TableOpConversion
+
+    variable {X n} [PowType X n]
+
+    @[simp]
+    theorem powtype_get_to_table_get (u : X^n) (i : Fin n)
+      : u.get i = u[i] := by simp[Table.get, Table.toFun] done
+
+    @[simp]
+    theorem table_set_to_powtype_set (u : X^n) (i : Fin n) (xi : X)
+      : Table.set u i xi = u.set i xi := by simp[Table.set, Table.toFun] done
+
+    @[simp]
+    theorem table_map_to_powtype_set (u : X^n) (i : Fin n) (xi : X)
+      : Table.set u i xi = u.set i xi := by simp[Table.set, Table.toFun] done
+
+  end TableOpConversion
+
+  def concat {X n m} [PowType X n] [PowType X m] [PowType X (n+m)] : (X^n) → (X^m) → X^(n+m) :=
+    λ x y => PowType.intro λ i => 
+      if i < n then
+        x.get ⟨i, sorry⟩
+      else
+        y.get ⟨i.1-n, sorry⟩
+
+  def split {X N} (n : Fin N) [PowType X N] [PowType X n] [PowType X (N-n)] : (X^N) → (X^n) × (X^(N-n)) :=
+    λ x => 
+      (PowType.intro λ i => x.get ⟨i.1, sorry⟩, 
+       PowType.intro λ i => x.get ⟨i.1 + n, sorry⟩)
+
+  instance {X n} [ToString X] [PowType X n] : ToString (X^n) :=
+    ⟨λ x => 
+      if n == 0 then
+        "^[]"
+      else Id.run do
+        let mut s : String := "^[" ++ toString (x.get ⟨0, sorry⟩)
+        for i in [1:n] do
+          s := s ++ ", " ++ toString (x.get ⟨i, sorry⟩)
+        s ++ "]"⟩
+
+end PowType.powType
 
 def List.toPowType {X} (l : List X) [PowType X l.length] : X^l.length :=
   PowType.intro λ i => l.toArray.get ⟨i.1, sorry⟩
@@ -92,15 +124,6 @@ syntax "^[" sepBy(term, ", ") "]" : term
 macro_rules
   | `(^[ $elems,* ]) => `(List.toPowType [ $elems,* ])
 
-instance {X n} [ToString X] [PowType X n] : ToString (X^n) :=
-  ⟨λ x => 
-    if n == 0 then
-      "^[]"
-    else Id.run do
-      let mut s : String := "^[" ++ toString (x.get ⟨0, sorry⟩)
-      for i in [1:n] do
-        s := s ++ ", " ++ toString (x.get ⟨i, sorry⟩)
-      s ++ "]"⟩
 
 -- instance {X} (n : Nat) [PowType X n] [Add X] : Add (X^n) :=
 --   ⟨λ x y => x.mapIdx λ i xi => xi + y.get i⟩

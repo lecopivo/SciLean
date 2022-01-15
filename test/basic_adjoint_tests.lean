@@ -16,7 +16,7 @@ example (f g : X → Y) [HasAdjoint f] [HasAdjoint g] (y : Y) : (λ x => f x + g
 example (y : Y) (r : ℝ) 
   : (λ x => ⟪x,y⟫)† r = r*y := by simp done
 example (y : X) (r : ℝ) 
-  : (λ x => ⟪x,y⟫ + ⟪y,x⟫)† r = 2*r*y := by simp done
+  : (λ x => ⟪x,y⟫ + ⟪y,x⟫)† r = (2 : ℝ)*(r*y) := by simp done
 example (r : ℝ) (x' : X) 
   : (λ x : X => r*((λ x'' => ⟪x', x''⟫) x))† = λ s => r * s * x' := by simp funext s; simp done
 

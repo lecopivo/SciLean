@@ -142,10 +142,11 @@ namespace Table
 
   section BasicIdentities
 
-    variable {C : Type u} 
-    variable [Trait C] [Table C (Index C) (Value C)] [Intro C]
+    variable {C : Type u} {ι : Type v} {α : Type w}
+    variable [Table C ι α] [Intro C]
 
-    @[simp] theorem get_intro (f : (Index C) ↦ (Value C)) : (intro f : C)[i] = f i := by apply Intro.valid; done
+    @[simp] theorem get_intro (f : Index C → Value C) : (intro f)[i] = f i := by apply Intro.valid; done
+    @[simp] theorem intro_get (c : C) : intro (λ i => c[i]) = c := sorry
     @[simp] theorem get_tableFun {ι : Type v} {α : Type w} (i : ι) (f : ι ↦ α) : f[i] = f i := by rfl
 
   end BasicIdentities
@@ -163,23 +164,40 @@ namespace Table
 
      -- TODO: Add instances for different algebraic structures like Group
 
-     -- This section is probably a bit tableroversial as we probably do not want those theorems inside of `simp` tactic
+     -- This section is probably a bit controversial as we probably do not want those theorems inside of `simp` tactic
      -- They should be used in a specialized tactic optimizing algebraic expressions with tables
      section UnfoldOperations
 
        -- variable {C} [Trait C] [Table C (Index C) (Value C)] [Vec (Value C)] [Intro C]
-       variable [Trait C] [Table C (Index C) (Value C)] [Intro C]
+       -- variable [Trait C] [Table C (Index C) (Value C)] [Intro C]
        
        -- Unfold definition's of vector oprations back
        -- This way we can get fast saxpy type operations i.e.`s*x+y` transforms to `intro λ i => s*x[i] + y[i]`
        -- We specify class instances directly to prevent crazy TC searches.
-       -- @[simp] theorem add_norm [Add (Value C)] (c d : C) : HAdd.hAdd (self := instHAdd) c d = intro (λ i => c[i] + d[i]) := by rfl
-       -- @[simp] theorem sub_norm [Sub (Value C)] (c d : C) : HSub.hSub (self := instHSub) c d = intro (λ i => c[i] - d[i]) := by rfl
-       -- @[simp] theorem neg_norm [Neg (Value C)] (c : C) : Neg.neg (self := instTableNeg) c = intro (λ i => -c[i]) := by rfl
-       -- @[simp] theorem hmul_norm {α} [HMul α (Value C) (Value C)] (a : α) (c : C) : HMul.hMul (self := instTableHMul) a c = intro (table i => a * c[i]) := by rfl
-       -- @[simp] theorem zero_norm [Zero (Value C)]: (Zero.zero (self := instTableZero) : C) = intro (λ _ => 0) := by rfl
+       theorem add_norm [Add (Value C)] (c d : C) : HAdd.hAdd (self := instHAdd) c d = intro (λ i => c[i] + d[i]) := by rfl
+       theorem sub_norm [Sub (Value C)] (c d : C) : HSub.hSub (self := instHSub) c d = intro (λ i => c[i] - d[i]) := by rfl
+       theorem neg_norm [Neg (Value C)] (c : C) : Neg.neg (self := instTableNeg) c = intro (λ i => -c[i]) := by rfl
+       theorem hmul_norm {α} [HMul α (Value C) (Value C)] (a : α) (c : C) : HMul.hMul (self := instTableHMul) a c = intro (table i => a * c[i]) := by rfl
+       theorem zero_norm [Zero (Value C)]: (Zero.zero (self := instTableZero) : C) = intro (λ _ => 0) := by rfl
 
      end UnfoldOperations
+
+     section UnfoldOperations'
+
+       theorem add_norm' {C ι α} [Table C ι α] [Intro C] [Add α] (c d : C) 
+         : HAdd.hAdd (self := instHAdd) c d = intro (λ i => c[i] + d[i]) := by rfl
+
+       -- @[simp]
+       -- theorem sub_norm' {C ι α} [Table C ι α] [Intro C] [Sub α] (c d : C) 
+       --   : HSub.hSub (self := instHSub) c d = intro (λ i => c[i] - d[i]) := by rfl
+
+       -- theorem neg_norm' {C ι α} [Table C ι α] [Intro C] [Neg α] (c : C) 
+       --   : Neg.neg (self := instTableNeg) c = intro (λ i => -c[i]) := by rfl
+
+       -- theorem hmul_norm' {α} [HMul α (Value C) (Value C)] (a : α) (c : C) : HMul.hMul (self := instTableHMul) a c = intro (table i => a * c[i]) := by rfl
+       -- theorem zero_norm' [Zero (Value C)]: (Zero.zero (self := instTableZero) : C) = intro (λ _ => 0) := by rfl
+
+     end UnfoldOperations'
 
   end AlgebraicOperations
 

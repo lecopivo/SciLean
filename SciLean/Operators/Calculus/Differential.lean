@@ -80,11 +80,15 @@ theorem differential_of_composition_fix_parm_2 (f : Y → β → Z) [IsSmooth f]
         : δ (λ (g : α → Y) a => f (g a) b) g dg = λ a => δ f (g a) (dg a) b := sorry
 
 @[simp]
-theorem differential_of_composition_parm_1 (f : Y → β → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] (x dx) 
+theorem differential_of_composition_parm_1 (f : β → Y → Z) (g : β → X → Y) [∀ b, IsSmooth (f b)] [∀ b, IsSmooth (g b)] (x dx b) 
+        : δ (λ x b => f b (g b x)) x dx b = δ (f b) (g b x) (δ (g b) x dx) := sorry
+
+@[simp]
+theorem differential_of_composition_parm_2 (f : Y → β → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] (x dx) 
         : δ (λ x b => f (g x) b) x dx = λ b => δ f (g x) (δ g x dx) b := sorry
 
 @[simp]
-theorem differential_of_composition_parm_2 (f : Y → β → Z) [IsSmooth f] (g dg : α → Y)
+theorem differential_of_composition_parm_3 (f : Y → β → Z) [IsSmooth f] (g dg : α → Y)
         : δ (λ (g : α → Y) a b => f (g a) b) g dg = λ a b => δ f (g a) (dg a) b := sorry
 
 @[simp] 
