@@ -13,7 +13,7 @@ Lean is an expressive functional programming language that allows to formalize t
 
   In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerfull and extensible library for scientific computing.
 
-* Installation and running examples and tests
+* Installation and running examples/tests
 
 As we are using Lean programming language, you need Lean's version manager =elan=. Follow its installation follow these [[https://github.com/leanprover/elan#installation][instructions]].
 
@@ -24,11 +24,6 @@ cd SciLean
 lake build
 #+end_src
 
-To run tests:
-#+begin_src
-lake run tests
-#+end_src
-
 To run examples:
 #+begin_src
 lake env lean --run examples/HarmonicOscilator.lean 
@@ -36,7 +31,10 @@ lake env lean --run examples/WaveEquation.lean
 #+end_src
 Other examples in =examples= directory do not currently work.
 
-
+To run tests:
+#+begin_src
+lake run tests
+#+end_src
 
 * Example: Simulation of harmonic oscillator
 
@@ -73,6 +71,7 @@ finish_impl
 
   Let's start with a warning! This code is not meant to be consumes as it is but it should be read interactively in a text editor, see the following animation:
 
+  [[file:anim.gif]]
 
   On the right side you can see what is our current goal based on the position of the cursor. At the beginning, the goal is =Impl (ode_solve (HamiltonianSystem (H m k)))= as we have defined =solver= function.
 
