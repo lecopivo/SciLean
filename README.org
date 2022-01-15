@@ -1,8 +1,8 @@
 
-* SciLean: Scientific computing assistant
+* SciLean: Scientific Computing Assistant
 
 
-  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. This library is in an *extremely early stage of development* and at its current stage is just a proof of concept how Lean can be used for scientific computing.
+  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. This library is in an *extremely early stage of development* and at its current stage is just a proof of concept on how Lean can be used for scientific computing.
 
 Lean is an expressive functional programming language that allows to formalize the mathematics behind these computations. This can offer several benefits:
 
@@ -13,7 +13,7 @@ Lean is an expressive functional programming language that allows to formalize t
 
   In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerfull and extensible library for scientific computing.
 
-* Example: simulation of harmonic oscillator
+* Example: Simulation of harmonic oscillator
 
   The idea behind this library is can be most easily demonstrated on an example. We will create a program simulating of a harmonic oscillator.
 
@@ -29,7 +29,7 @@ def solver (m k : ℝ) (steps : Nat)
 #+end_src
   The above code declares a function =solver= taking mass =m=, spring stiffness =k= and number of steps =steps=. The type of the function =solver= is an implementation of ODE solver of Hamiltonian system given by Hamiltonian =(H m k)=. This means that it is a function taking =(t, x, p)= and producing state =(x, p)= by approximately evolving the specified Hamiltonian system. Furthermore, it has compiler checked guarantee that as you increase the number of =steps= the function output converges to the correct answer(not completely true but good enough explanation for now).
 
-  The last three dots =...= is place where the actual definition of the =solver= goes. This is a place where we completely diverge from traditional programming languages and where the word ~assistant~ from the title comes in. We do not tell computer what to do step by step but we guide it on how to transform the formal specification into an executable code. This sounds way to abstract, here is the actual code:
+  The last three dots =...= is the place where the actual definition of the =solver= goes. This is a place where we completely diverge from traditional programming languages and where the word ~assistant~ from the title comes in. We do not tell computer what to do step by step but we guide it on how to transform the formal specification into an executable code. This sounds way to abstract, here is the actual code:
 #+begin_src
 def solver (m k : ℝ) (steps : Nat)
 : Impl (ode_solve (HamiltonianSystem (H m k))) :=
@@ -59,7 +59,7 @@ fun x p => (gradient (H m k x) p, -gradient (fun x => H m k x p) x))
 #+end_src
   These are exactly [[https://en.wikipedia.org/wiki/Hamiltonian_mechanics#From_Euler-Lagrange_equation_to_Hamilton's_equations][Hamilton's equations of motion]]. The first term =gradient (H m k x) p= is derivative of Hamiltonian w.r.t. to momentum and the second term =gradient (fun x => H m k x p) x= it derivative of Hamiltonian w.r.t. to position.
 
-  Thus after also expanding =H= we call =autograd= twice to eliminate both =gradient= functions.
+  Thus after expanding =H= as well we call =autograd= twice to eliminate both =gradient= functions.
 
   The =gradient= function is purely symbolic. A term like =gradient f= just tells us we want to have a program that computes the gradient of a function =f=. Our task in the interactive mode is to eliminate every occurrence of =gradient f= (or any other purely symbolic function) and replace it with an actually computable function. This can be done through symbolic differentiation, automatic differentiation(like forward or backward mode differentiation) or approximate it with finite differences.
 
@@ -68,7 +68,33 @@ fun x p => (gradient (H m k x) p, -gradient (fun x => H m k x p) x))
 rw [ode_solve_fixed_dt runge_kutta4_step]
 #+end_src
 
-  At this point the goal is still saying that we are implementing the original goal =Impl (ode_solve (HamiltonianSystem (H m k)))= in a limit of infinite number of RK-4 steps. 
+  At this point the goal is still saying that we are implementing the original goal =Impl (ode_solve (HamiltonianSystem (H m k)))= in a limit of infinite number of ODE integrator steps. The next line just accepts the fact that we can not compute the answer exactly and pick a concrete number of steps:
+#+begin_src
+lift_limit steps "Number of ODE solver steps."; admit; simp
+#+end_src
+
+The last line =finish_impl= states we are done. Lean checks if all purely symbolic function have been eliminated and the actually executable code can be generated.
+
+See the full [[https://github.com/lecopivo/SciLean/blob/master/examples/HarmonicOscilator.lean][example]] to see how the set up initial conditions and how the function =solver= is actually used. To execute this example, run:
+#+begin_src
+lake env lean --run examples/HarmonicOscilator.lean 
+#+end_src
+from the project root directory.
+
+The simulation of harmonic oscillator is not very interesting. The great thing about SciLean is that we can simply change the definition of Hamiltonian and get simulation of way more interesting systems. The Hamiltonian for wave equation(discretized in space) is:
+#+begin_src
+def H (m k : ℝ) (x p : ℝ^n) := 
+  let Δx := (1 : ℝ)/(n : ℝ)
+  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²)lake env lean --run 
+#+end_src
+The rest of the code can stay the same. Running this example:
+#+begin_src
+lake env lean --run examples/WaveEquation.lean
+#+end_src
+produces the following animation:
+[[file:wave.gif]]
+
+
 
 *** Inspiration comes mainly from these languages
 
