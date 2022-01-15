@@ -3,8 +3,7 @@ import SciLean.Mechanics
 
 set_option synthInstance.maxHeartbeats 5000
 
-open Function
-namespace SciLean
+open Function SciLean
 
 variable (n : Nat) [NonZero n]
 
@@ -26,22 +25,21 @@ by
     
   finish_impl
 
+def main : IO Unit := do
 
-def wave_equation_main : IO Unit := do
-
-  let steps := 1
+  let substeps := 1
   let m := 1.0
   let k := 100000.0
 
   let N : Nat := 100
-  let evolve ← (solver N m k steps).assemble
+  let evolve ← (solver N m k substeps).assemble
 
   let t := 1.0
   let x₀ : (ℝ^N) := Table.intro λ (i : Fin N) => (Math.sin ((i : ℝ)/10))
   let p₀ : (ℝ^N) := Table.intro λ i => (0 : ℝ)
   let mut (x,p) := (x₀, p₀)
 
-  for i in [0:1000] do
+  for i in [0:300] do
   
     (x, p) := evolve 0.1 (x, p)
 
@@ -56,6 +54,5 @@ def wave_equation_main : IO Unit := do
           IO.print "."
 
       IO.println ""
-  
-#eval wave_equation_main
+
 

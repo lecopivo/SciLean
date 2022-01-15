@@ -1,8 +1,7 @@
 import SciLean.Basic
 import SciLean.Mechanics
 
-open Function
-namespace SciLean
+open Function SciLean
 
 abbrev V := ℝ × ℝ
 
@@ -24,13 +23,13 @@ by
     
   finish_impl
 
-def harmonic_oscillator_main : IO Unit := do
+def main : IO Unit := do
 
-  let steps := 1
+  let substeps := 1
   let m := 1.0
   let k := 10.0
 
-  let evolve ← (solver m k steps).assemble
+  let evolve ← (solver m k substeps).assemble
 
   let t := 1.0
   let x₀ := (1.0, 0.5)
@@ -47,4 +46,3 @@ def harmonic_oscillator_main : IO Unit := do
         IO.print "o"
     IO.println ""
   
-#eval harmonic_oscillator_main
