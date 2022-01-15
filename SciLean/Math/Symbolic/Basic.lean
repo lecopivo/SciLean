@@ -922,31 +922,31 @@ namespace AltMonomial
   }
 
   -- Graded Lexicographical ordering - not a total order
-  instance : LT (AltMonomial X K sig) :=
-    ⟨λ x y =>
-      Quot.lift₂ (λ x y => (y.1.coef = 0 → x.1.coef = 0) ∧ (x.1.vars < y.1.vars)) sorry sorry x y⟩
+  -- instance : LT (AltMonomial X K sig) :=
+  --   ⟨λ x y =>
+  --     Quot.lift₂ (λ x y => (y.1.coef = 0 → x.1.coef = 0) ∧ (x.1.vars < y.1.vars)) sorry sorry x y⟩
 
-  -- Graded Lexicographical ordering - not a total order
-  instance : LE (AltMonomial X K sig) :=
-    ⟨λ x y =>
-      Quot.lift₂ (λ x y => (y.1.coef = 0 → x.1.coef = 0) ∧ x.1.vars ≤ y.1.vars) sorry sorry x y⟩
+  -- -- Graded Lexicographical ordering - not a total order
+  -- instance : LE (AltMonomial X K sig) :=
+  --   ⟨λ x y =>
+  --     Quot.lift₂ (λ x y => (y.1.coef = 0 → x.1.coef = 0) ∧ x.1.vars ≤ y.1.vars) sorry sorry x y⟩
 
   -- We can compare monoials based on rank
   -- But we can get only `less or *equal*` as we cannot determine 
   -- zero monomial without decidable equality on K
-  def rankLe (x y : AltMonomial X K sig) [DecidableEq K] : Bool :=
-    Quot.lift₂ 
-      (λ x y =>
-        if x.1.coeff = 0 
-        then true
-        else if x.2.coeff = 0
-        then false
-        else
-        match compare (X := FreeMonoid X) x.1.vars y.1.vars with
-        | cpEq _ => true
-        | cpLt _ => true
-        | cpGt _ => false
-      ) sorry sorry x y
+  -- def rankLe (x y : AltMonomial X K sig) [DecidableEq K] : Bool :=
+  --   Quot.lift₂ 
+  --     (λ x y =>
+  --       if x.1.coeff = 0 
+  --       then true
+  --       else if x.2.coeff = 0
+  --       then false
+  --       else
+  --       match compare (X := FreeMonoid X) x.1.vars y.1.vars with
+  --       | cpEq _ => true
+  --       | cpLt _ => true
+  --       | cpGt _ => false
+  --     ) sorry sorry x y
 
   -- def rankLt (x y : AltMonomial X K sig) [DecidableEq K] : Bool :=
   --   Quot.lift₂ 

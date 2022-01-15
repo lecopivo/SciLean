@@ -14,3 +14,5 @@ class NonNeg (x : ℝ) : Prop where
 class IsPos (x : ℝ) extends NonZero x, NonNeg x
 
 instance {X} [Vec X] : IsZero (0 : X) := ⟨by rfl⟩
+instance (n : Nat) : NonZero (n+1) := ⟨by simp⟩
+

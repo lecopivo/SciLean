@@ -1,11 +1,9 @@
 import SciLean.Math.Symbolic.Basic
-
+import SciLean.Math.Symbolic.Polynomial
 
 namespace SciLean.Symbolic
 
-
 open Polynomials Algebra
-
 
 def Legendre.rec (n : Nat) : 𝓢𝓟[Fin 1] × 𝓢𝓟[Fin 1] :=
   match n with

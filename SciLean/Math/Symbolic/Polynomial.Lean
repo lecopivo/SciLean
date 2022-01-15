@@ -72,8 +72,8 @@ namespace Polynomial
 
   instance {R} [CommRing R] : CoeFun (Polynomial (Fin 1) R) (λ _ => R → R) 
     := ⟨λ p x => p.toVal λ _ => x⟩
-  instance {X} [FinEnumBasis X] : CoeFun (Polynomial (FinEnumBasis.index X) ℝ) (λ _ => X → ℝ) 
-    := ⟨λ p x => p.toVal λ i => FinEnumBasis.proj i x⟩
+  -- instance {X} [FinEnumBasis X] : CoeFun (Polynomial (Basis.index X) ℝ) (λ _ => X → ℝ) 
+  --   := ⟨λ p x => p.toVal λ i => FinEnumBasis.proj i x⟩
 
   def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomial ι K 
     := Quot.mk _ (Expr.var i)

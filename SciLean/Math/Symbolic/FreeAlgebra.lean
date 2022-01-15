@@ -133,7 +133,7 @@ namespace FreeAlgebra
 
   notation " 𝓕[" ι ", " K "] " => FreeAlgebra ι K
   notation " 𝓕[" ι "] "        => FreeAlgebra ι ℝ
-  notation " 𝓣[" V "] "        => FreeAlgebra (FinEnumBasis.index V) ℝ
+  -- notation " 𝓣[" V "] "        => FreeAlgebra (Basis.index V) ℝ
 
   notation " e⟦" v ", " K "⟧ " => var v (K := K)
   notation " e⟦" v "⟧ "        => var v
