@@ -1,9 +1,10 @@
 
 * SciLean: Scientific computing assistant
 
-  
 
-  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. Lean is an expressive functional programming language that allows to formalize the mathematics behind these computations. This can offer several benefits:
+  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [[http://leanprover.github.io/][Lean]]. This library is in an extremely early stage of development and at its current stage is just a proof of concept how Lean can be used for scientific computing.
+
+Lean is an expressive functional programming language that allows to formalize the mathematics behind these computations. This can offer several benefits:
 
     - Code transformation and optimization guided by formalization of underlining mathematics, like automatic differentiation, algebraic simplification, fine control of used approximations or execution scheduling.
     - First class symbolic computation. Any function can be purely symbolic, functions like `gradient`, `integral` or `limit` are inherently non-computable. However, they carry meaning what the program should be doing and we provide tools to manipulate them or approximate them with actually computable function.
@@ -11,6 +12,16 @@
     - Catalogization of numerical methods.
 
   In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerfull and extensible library for scientific computing.
+
+* Example: simulation of harmonic oscillator
+
+  The idea behind this library is can be most easily demonstrated on an example. We will run simulation of a harmonic oscillator.
+
+  Harmonic oscillator is defined by its Hamiltonian. In Lean this can done with 
+#+begin_src 
+def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
+#+end_src
+
 
 *** Inspiration comes mainly from these languages
 
