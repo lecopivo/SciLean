@@ -20,31 +20,6 @@ constant differential (f : X → Y) (x dx : X) : Y :=
       | isTrue  h => sorry
       | _ => (0 : Y)
 
--- noncomputable
--- def Smooth.diff (f : X ⟿ Y) : (X ⟿ X ⊸ Y) := ⟨λ x => ⟨λ dx => differential f.1 x dx, sorry⟩, sorry⟩
--- Can we have unified 
-
--- class Differential (Hom : Type → Type → Type) (X Y : Type) where
---   diff (f : Hom X Y) : (Hom X (Hom X Y))
-
--- attribute [reducible] Differential.diff
-
--- @[reducible]
--- noncomputable
--- instance instNormalDiff : Differential (λ X Y : Type => X → Y) X Y:=
--- {
---   diff := (differential : (X → Y) → X → X → Y)
--- }
-
--- @[reducible]
--- noncomputable
--- instance instSmoothDiff : Differential (λ X Y : Type => X ⟿ Y) X Y:=
--- {
---   diff := λ f => Smooth.diff f
--- }
-
--- #check Differential.
-
 prefix:max "δ" => differential
 
 ----------------
@@ -69,37 +44,27 @@ prefix:max "∇" => gradient
 -- Forward mode --
 ------------------
 noncomputable 
-def tangent_map (f : X → Y) : X×X → Y×Y := λ (x,dx) => (f x, δ f x dx)
+def forward_diff (f : X → Y) : X×X → Y×Y := λ (x,dx) => (f x, δ f x dx)
 
-prefix:max "𝓣" => tangent_map
+prefix:max "𝓣" => forward_diff
 
 ------------------
 -- Reverse Mode --
 ------------------
 open SemiInner in
 noncomputable 
-def backprop {U V} [Trait₂ U V] [Vec (Trait₂.R U V)] 
+def reverse_diff {U V} [Trait₂ U V] [Vec (Trait₂.R U V)] 
   [SemiHilbert U (Trait₂.R U V) (Trait₂.D U V) Trait₂.eval]
   [SemiHilbert V (Trait₂.R U V) (Trait₂.D U V) Trait₂.eval]
   (f : U → V) : U → V × (V → U) := λ x => (f x, (δ f x)†)
 
-prefix:max "𝓑" => backprop
+prefix:max "𝓑" => reverse_diff
 
 -- special composition for backpropagation such that 𝓑(f ∘ g) = 𝓑f • 𝓑g
-def backcomp (f : β → γ×(γ→β)) (g : α → β×(β→α)) : α → γ×(γ → α) := 
+def reverse_comp (f : β → γ×(γ→β)) (g : α → β×(β→α)) : α → γ×(γ → α) := 
     λ a => 
         let (b, B) := g a
         let (c, C) := f b
         (c, B ∘ C)
 
-infixr:90 " • "  => backcomp
-
-
---- Maybe add other operators based on: 
---- "The simple essence of automatic differentiation" 
---- https://arxiv.org/abs/1804.00746
-
-noncomputable 
-def tangent_map_2 (f : X → Y) : X×X×X → Y×Y×Y := λ (x,dx,ddx) => (f x, δ f x dx, δ (δ f) x dx dx)
-
-prefix:max "𝓓" => tangent_map_2
+infixr:90 " • "  => reverse_comp

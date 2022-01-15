@@ -142,6 +142,7 @@ set_option synthInstance.maxHeartbeats 5000
 instance : IsLin (λ (f : X ⟿ Y) => δ f.1) := sorry
 instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
 instance (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
+instance {U V : Type} {R D e} [Vec R] [SemiHilbert U R D e] [SemiHilbert V R D e] (f : U → V) (u : U) [IsSmooth f] : HasAdjoint (δ f u) := sorry
 
 instance {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) (x dx : X) 
   [IsSmooth f] [h : ∀ x, IsSmooth (f x)] : IsSmooth (δ f x dx) := sorry
