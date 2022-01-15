@@ -11,7 +11,7 @@ def solver (m k : ℝ) (steps : Nat)
   : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by
   -- Unfold Hamiltonian definition and compute gradients
-  simp[HamiltonianSystem, H];
+  simp[HamiltonianSystem, H]
   autograd
   autograd
 

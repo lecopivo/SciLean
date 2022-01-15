@@ -15,17 +15,60 @@ Lean is an expressive functional programming language that allows to formalize t
 
 * Example: simulation of harmonic oscillator
 
-  The idea behind this library is can be most easily demonstrated on an example. We will run simulation of a harmonic oscillator.
+  The idea behind this library is can be most easily demonstrated on an example. We will create a program simulating of a harmonic oscillator.
 
-  Harmonic oscillator is defined by its Hamiltonian. In Lean this can done with 
+  Harmonic oscillator is defined by its energy/Hamiltonian. Lean allows us to write down the energy in very familiar form:
 #+begin_src
 def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
 #+end_src
 
-```
-def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
-```
+  One of the main novelties of SciLean is that it allows us to formally state our goal i.e. simulation of harmonic oscillator:
+#+begin_src
+def solver (m k : ℝ) (steps : Nat)
+  : Impl (ode_solve (HamiltonianSystem (H m k))) := ...
+#+end_src
+  The above code declares a function =solver= taking mass =m=, spring stiffness =k= and number of steps =steps=. The type of the function =solver= is an implementation of ODE solver of Hamiltonian system given by Hamiltonian =(H m k)=. This means that it is a function taking =(t, x, p)= and producing state =(x, p)= by approximately evolving the specified Hamiltonian system. Furthermore, it has compiler checked guarantee that as you increase the number of =steps= the function output converges to the correct answer(not completely true but good enough explanation for now).
 
+  The last three dots =...= is place where the actual definition of the =solver= goes. This is a place where we completely diverge from traditional programming languages and where the word ~assistant~ from the title comes in. We do not tell computer what to do step by step but we guide it on how to transform the formal specification into an executable code. This sounds way to abstract, here is the actual code:
+#+begin_src
+def solver (m k : ℝ) (steps : Nat)
+: Impl (ode_solve (HamiltonianSystem (H m k))) :=
+by
+-- Unfold Hamiltonian definition and compute gradients
+simp[HamiltonianSystem, H];
+autograd
+autograd
+
+-- Apply RK4 method
+rw [ode_solve_fixed_dt runge_kutta4_step]
+lift_limit steps "Number of ODE solver steps."; admit; simp
+
+finish_impl
+#+end_src
+
+  Let's start with a warning! This code is not meant to be consumes as it is but it should be read interactively in a text editor, see the following animation:
+
+
+  On the right side you can see what is our current goal based on the position of the cursor. At the beginning, the goal is =Impl (ode_solve (HamiltonianSystem (H m k)))= as we have defined =solver= function.
+
+  In the next step, we expand the definition of =HamiltonianSystem= and =H=. This allows us to proceed to symbolic differentiation step.
+
+  Let's pause for a bit. If we expand only =HamiltonianSystem=, the goal would contain:
+#+begin_src
+fun x p => (gradient (H m k x) p, -gradient (fun x => H m k x p) x))
+#+end_src
+  These are exactly [[https://en.wikipedia.org/wiki/Hamiltonian_mechanics#From_Euler-Lagrange_equation_to_Hamilton's_equations][Hamilton's equations of motion]]. The first term =gradient (H m k x) p= is derivative of Hamiltonian w.r.t. to momentum and the second term =gradient (fun x => H m k x p) x= it derivative of Hamiltonian w.r.t. to position.
+
+  Thus after also expanding =H= we call =autograd= twice to eliminate both =gradient= functions.
+
+  The =gradient= function is purely symbolic. A term like =gradient f= just tells us we want to have a program that computes the gradient of a function =f=. Our task in the interactive mode is to eliminate every occurrence of =gradient f= (or any other purely symbolic function) and replace it with an actually computable function. This can be done through symbolic differentiation, automatic differentiation(like forward or backward mode differentiation) or approximate it with finite differences.
+
+  The second purely symbolic function in our specification is =ode_solve=. We have to decide which ODE integration scheme we want to use. Let's pick fixed time step Runge-Kutta 4:  
+#+begin_src
+rw [ode_solve_fixed_dt runge_kutta4_step]
+#+end_src
+
+  At this point the goal is still saying that we are implementing the original goal =Impl (ode_solve (HamiltonianSystem (H m k)))= in a limit of infinite number of RK-4 steps. 
 
 *** Inspiration comes mainly from these languages
 
