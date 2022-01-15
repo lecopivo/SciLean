@@ -13,9 +13,34 @@ Lean is an expressive functional programming language that allows to formalize t
 
   In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerfull and extensible library for scientific computing.
 
+* Installation and running examples and tests
+
+As we are using Lean programming language, you need Lean's version manager =elan=. Follow its installation follow these [[https://github.com/leanprover/elan#installation][instructions]].
+
+Getting and building SciLean simply:
+#+begin_src
+git clone https://github.com/lecopivo/SciLean.git
+cd SciLean
+lake build
+#+end_src
+
+To run tests:
+#+begin_src
+lake run tests
+#+end_src
+
+To run examples:
+#+begin_src
+lake env lean --run examples/HarmonicOscilator.lean 
+lake env lean --run examples/WaveEquation.lean 
+#+end_src
+Other examples in =examples= directory do not currently work.
+
+
+
 * Example: Simulation of harmonic oscillator
 
-  The idea behind this library is can be most easily demonstrated on an example. We will create a program simulating of a harmonic oscillator.
+  The idea behind this library is can be most easily demonstrated on an example. We will create simulation of a harmonic oscillator, full [[https://github.com/lecopivo/SciLean/blob/master/examples/HarmonicOscilator.lean][example]].
 
   Harmonic oscillator is defined by its energy/Hamiltonian. Lean allows us to write down the energy in very familiar form:
 #+begin_src
@@ -87,10 +112,10 @@ def H (m k : ℝ) (x p : ℝ^n) :=
   let Δx := (1 : ℝ)/(n : ℝ)
   (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²)
 #+end_src
-The rest of the code can stay the same. Running this example:
+The rest of the code can stay the same. Running this [[https://github.com/lecopivo/SciLean/blob/master/examples/WaveEquation.lean][example]]:
 #+begin_src
 lake env lean --run examples/WaveEquation.lean
 #+end_src
-produces the following animation:
+Produces the following animation:
 [[file:wave.gif]]
 
