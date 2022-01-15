@@ -182,7 +182,7 @@ namespace Table
 
      end UnfoldOperations
 
-     section UnfoldOperations'
+     section UnfoldOperationsOnIntro
 
        theorem add_norm' {C ι α} [Table C ι α] [Intro C] [Add α] (c d : C) 
          : HAdd.hAdd (self := instHAdd) c d = intro (λ i => c[i] + d[i]) := by rfl
@@ -197,7 +197,7 @@ namespace Table
        -- theorem hmul_norm' {α} [HMul α (Value C) (Value C)] (a : α) (c : C) : HMul.hMul (self := instTableHMul) a c = intro (table i => a * c[i]) := by rfl
        -- theorem zero_norm' [Zero (Value C)]: (Zero.zero (self := instTableZero) : C) = intro (λ _ => 0) := by rfl
 
-     end UnfoldOperations'
+     end UnfoldOperationsOnIntro
 
   end AlgebraicOperations
 

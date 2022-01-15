@@ -7,6 +7,28 @@ namespace SciLean.Table
 
 open Table
 
+
+@[simp]
+theorem sum_intro {C ι κ α}
+  (f : ι → κ → α) [Table C κ α] [Table.Intro C] [Vec α] [Enumtype ι]
+  : (∑ i, (Table.intro (f i) : C)) = (Table.intro (∑ i, f i) : C)
+  := 
+by
+  admit
+
+@[simp]
+theorem add_intro {C ι α} [Table C ι α]
+  (f g : ι → α) [Table.Intro C] [Vec α] 
+  : 
+    HAdd.hAdd (self := instHAdd) (Table.intro λ i : ι => f i : C) 
+                                 (Table.intro λ i : ι => g i : C) 
+    = 
+    (Table.intro λ i => f i + g i : C)
+  := 
+by
+  admit
+
+
 -- section VectorSpace
 -- variable {C : Type u} [Trait C] [Table C (Index C) (Value C)] [Intro C]
 
