@@ -85,7 +85,7 @@ The simulation of harmonic oscillator is not very interesting. The great thing a
 #+begin_src
 def H (m k : ℝ) (x p : ℝ^n) := 
   let Δx := (1 : ℝ)/(n : ℝ)
-  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²)lake env lean --run 
+  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²)
 #+end_src
 The rest of the code can stay the same. Running this example:
 #+begin_src
@@ -94,15 +94,3 @@ lake env lean --run examples/WaveEquation.lean
 produces the following animation:
 [[file:wave.gif]]
 
-
-
-*** Inspiration comes mainly from these languages
-
-**** Mathematica
-     Mathematica that at its hearth is a symbolic system with set of rewrite rules. Or system, because it formalizes mathematics, allows us to work also with symbolic representations of program but those rewrite rules can be conditioned on mathematical properties of those expressions involved
-
-**** Halide
-     Halide is a DSL language for computations over tensors, it popularized the split of what and how method. However, it is restricted to tensors, we aim to be data agnostic on the highest level and work with vector spaces or another algebraic data structures. Of course, specialized techniques for tensors, graphs or sparse voxel grids will be hopefully embedded inside of our framework at some point
-
-**** Julia
-     Julia is a promising new language for numerical computing. That unfortunately still lags behind the popularity of Python, but one of the big success of Julia is its meta programming ability, that provides unparalleled opportunity for code optimizations, like directly writing GPU kernels inside of Julia. We are using Lean, that is also its own meta language but we believe that the ability of formalizing mathematics will allow us guide write optimization automation beyond what is possible in Julia.

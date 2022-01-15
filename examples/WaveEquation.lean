@@ -2,6 +2,7 @@ import SciLean.Basic
 import SciLean.Mechanics
 
 set_option synthInstance.maxHeartbeats 5000
+set_option maxHeartbeats 500000
 
 open Function SciLean
 
@@ -9,7 +10,7 @@ variable (n : Nat) [NonZero n]
 
 def H (m k : ℝ) (x p : ℝ^n) := 
   let Δx := (1 : ℝ)/(n : ℝ)
-  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²)  -- + 2 * k * (∑ i, ∥(∥x[i] - x[i-1]∥² - 0.01)∥²)
+  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²) -- + 2 * k * (∑ i, ∥(∥x[i] - x[i-1]∥² - 0.01)∥²)
 
 -- set_option trace.Meta.isDefEq true in
 def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H n m k))) :=
