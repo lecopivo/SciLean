@@ -8,7 +8,6 @@ def ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X := sorry
 -- @[simp] axiom ode_solve.definition {X} [Vec X] (f : X → X) (t dt : ℝ) (x₀ : X) [IsCont f] : δ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
 
 
-
 variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 
 def ode_solve_fixed_dt_impl (n : Nat) (stepper : ℝ → (X → X) → (X → X)) (f : X → X) (t : ℝ) (x₀ : X) : X := 
