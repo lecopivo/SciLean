@@ -15,7 +15,7 @@ def H (m k : ℝ) (x p : ℝ^n) :=
 def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H n m k))) :=
 by
   -- Unfold Hamiltonian definition and compute gradients
-  simp[HamiltonianSystem, H, swap];
+  simp[HamiltonianSystem, H]
   autograd
   autograd
 

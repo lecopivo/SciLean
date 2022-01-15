@@ -1,0 +1,291 @@
+* Goals
+** Long Term Goal
+
+   - Write finite element code where the energy/action can be written down like on paper and the final cede can be differentiated with respect to almost anything like domain, stiffness parameters, initial conditions etc.
+
+   - Support compilation to GPU and CPU.
+
+** Mid term Goal
+
+   - Semi-automatic differentiation and optimization tools.
+   - Inline C++ compiler to write efficient low level code.
+   - Formalize and wrap OpenVDB, NanoVDB, Houdini, Eigen primitives.
+   - Node based editor in Houdini.
+
+** Short Term Goal
+
+   My first goal is to write couple of simple ODE solvers maybe some simple finite difference solvers. The main things to focus on:
+     - compare performance to hand written C++ code
+     - attempt at semi-automatic differentiation of energy/lagrangian
+
+*** TODO Lean Framework
+
+   Implement these to in the order to get these examples working:
+     1. Harmonic Oscilator
+     2. Pendulum
+     3. NBody
+     4. NPendulum in 2D
+     5. NPendulum in 3D
+     6. 1D wave equation
+     7. 2D wave equation
+
+**** Reorganization
+
+***** Mathlib
+      Everything that will hopefully be in mathlib one day
+
+***** Categories
+      This contains all categories and basic proof automation in those categories.
+        - proofs for algebraic operations
+	- proofs for combinators
+	- Hom and morphisms
+
+****** Cat - common interface for all categories
+****** Lin
+****** Smooth
+****** Diff
+****** Cont
+****** Set
+****** Inv
+     
+****** Others - no immediate plan to do these
+        - LInv - is it a category?
+	- RInv - is it a category?
+        - Difeo - This needs diffeology to have internalized Hom
+
+***** Operators
+      This contains basic operators proofs about them and simplification identities
+
+****** adjoint
+****** sum
+****** differential operators
+        differential, gradient, tangent_map, back_prop
+****** limit
+****** invert -- basic properties and possible approximations
+****** integral -- basic properties and possible approximations
+****** ode_solve -- basic properties and possible approximations
+	
+**** TODO Categories [/]
+     - [ ] Implement `IsSmooth` - just duplicate IsDiff and add axiom that differential of smooth is smooth
+     - [ ] Implement `IsLInv` `IsRInv`
+     - [ ] experiment with `extends` keyword to chain categories properly and test if `IsInv` can be written just as an extension of `IsLInv` and `IsRInv`
+     - [ ] Define Hom for categories and pick arrows
+       - Lin:    ⊸  --o  \-o     
+       - Smooth: ⟿ ~~>  \r~3	 
+       - Dif:    ⇝ -~>  \r~2
+       - Cont:   ↦ -->  \r6
+       - Diffeo: ↭ <~>  \lr5
+       - RInv:   ↠ ->> \r23
+       - LInv:   ↪  >-> \r8
+       - Inv:    ↔  <-> \lr
+     - [ ] internalized combinators
+     - [ ] extract smooth/linear/... symbol - this will create appropriate morphism
+     - [ ] modify remove lambda let to work with morphisms
+     - [ ] Specialized notation =λₛ= for morphisms, maybe also ascii version as =fun (x : X) ~~> (f x)= or =fun (v : V) --o (A v)=
+     - [ ] Implement =IsCont= 
+     - [ ] Add =IsDiffeo= a category of diffeomorphisms
+
+**** TODO Computations [2/11]
+
+     - [ ] add simple algebraic simplification, probably based on this [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/New.20attribute.20to.20mark.20theorems][zulip chat]]
+       - Attempt 1: What the link suggest does not work naively in my case :(
+     - [X] add =autodiff=, =autograd= tactics
+     - [X] make =rmlamlet= work in conv mode
+     - [ ] rewrite =autodiff= and =autograd= to use conv mode
+     - [ ] add =autodual= tactic
+     - [ ] fix `remove lambda let` to work properly with `let` such that for loops are correctly abstracted
+     - [ ] Add basic real functions like =sin, cos, exp= and their derivatives and inverses
+     - [ ] =Vector T n= fixed sized array of type T
+     - [ ] =Tensor #[n1, n2, n3]= fast float array to hold data - probably column major
+     - [ ] =Vec2, Vec3, Vec4= simple fixed size vectors
+     - [ ] =Mat2, Mat3, Mat4= simple fixed size matrices
+
+**** TODO Solver class [3/9]
+
+     - [X] add tactics =solver_check= and =solver_assumtion=
+     - [X] add tactic =lift_limit=
+     - [X] rewrite =Impl= based on [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Working.20with.20constants/near/256707931][Mario's answer]]
+     - [ ] add tactic =assume_this=
+     - [ ] add tactic =check_this=
+     - [ ] refine =lift_limit=
+           It should automatically call =assume_this= for assuming lifting of the limit
+	   Based on how lift_limit currently works it should call one iteration of beta-reduction.
+     - [ ] add tactic =finish_impl= probably just `apply Solver.pure`
+     - [ ] check computability in =finish_impl=
+           The approach is probably to replace every free variables in the target expression by their instance of `Inhabited`. For this use =Expr.replaceFVar=
+
+           If the target is a function, synthesize all arguments with `Inhabited` and apply them.
+
+	   Finally I need to figure out how to test if an expression can be evaluated.
+	   
+     - [ ] implement =assemble=
+
+**** TODO Variational calculus [/]
+
+     - [ ] Figure out how to deal with adjoint and dual in case of integrals
+     - [ ] Automatize duality on integrals
+
+**** TODO External Linear algebra [/]
+
+     On using external C code: [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Style.20for.20using.20external.20code][zulip thread]]
+
+     [[https://github.com/leanprover/lean4/tree/66fcfcce3716774dacbd35e1ea0f5c75356df311/tests/compiler/foreign][Example]] on how to use =lean_external_object=
+
+     - [ ] do a simple experiment to bind some C/C++ linear solver
+       look into this [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/C.20FFI.20usage][zulip thread]] for info and links
+     - [ ] try wrapping Thrust vector into [[https://github.com/leanprover/lean4/blob/b742f0005f7d96b94260bf2052fb50526f3d6b06/src/include/lean/lean.h#L282][=lean_external_object=]]
+       
+
+*** TODO Sims [/]
+
+**** TODO Harmonic Oscillator [2/6]
+
+     - [X] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [X] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO Pendulum [0/6]
+
+     - [ ] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO N-Body Simulation [0/6]
+
+     - [ ] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO N-Pendulum [/]
+
+     - [ ] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO 1D Wave Equation on Circle [0/6]
+     
+     - [ ] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+**** TODO 2D Wave Equation on Torus [/]
+     
+     - [ ] Lean implementation
+     - [ ] C++ implementation
+     - [ ] measure performance and create nice comparison
+     - [ ] Hamiltonian formulation
+     - [ ] Lagrangian formulation
+     - [ ] Action formulation
+
+** Notes on Lean
+
+   - When cursor is places at the end of `repeat rw[thrm]` the goal shows only *one* rewrite as repeat didn't work. This is confusing.
+     
+* Links
+
+** Articles
+
+*** Main   
+
+    - [[https://arxiv.org/abs/2007.08017][λₛ: Computable Semantics for Differentiable Programming with Higher-Order Functions and Datatypes, 2021]]
+    - [[https://arxiv.org/abs/1910.00935][DiffTaichi: Differentiable Programming for Physical Simulation, 2020]]
+
+*** Other
+
+    - [[https://core.ac.uk/download/pdf/82396223.pdf][The Differential Lambda-Calculus, 2003]]
+    - [[https://dl.acm.org/doi/10.1145/1330017.1330018][Reverse-mode AD in a functional framework: Lambda the Ultimate Backpropagator, 2008]]      
+    - [[https://arxiv.org/abs/1806.02136][Efficient differentiable programming in a functional array-processing language, 2018]]
+    - [[https://proceedings.neurips.cc/paper/2018/hash/0a1bf96b7165e962e90cb14648c9462d-Abstract.html][Computing Higher Order Derivatives of Matrix and Tensor Expressions, 2018]]
+    - [[https://arxiv.org/abs/1804.00746][The Simple Essence of Automatic Differentiation (Extended version), 2018]]
+    - [[https://arxiv.org/abs/1810.11530][Automatic differentiation in ML: Where we are and where we should be going, 2018]]
+    - [[https://openreview.net/forum?id=ryxuz9SzDB][The Differentiable Curry, 2019]]
+    - [[https://arxiv.org/abs/1907.07587][A Differentiable Programming System to Bridge Machine Learning and Scientific Computing, 2019]]
+
+    - [[https://arxiv.org/abs/1911.04523][A Simple Differentiable Programming Language, 2020]]
+
+    - [[https://arxiv.org/abs/1802.04730][Tensor Comprehensions: Framework-Agnostic High-Performance Machine Learning Abstractions]]
+
+*** Math Foundation
+
+    - [[https://www.mat.univie.ac.at/~kriegl/Skripten/apbook.pdf][The Convenient Setting of Global Analysis, 2008]]
+    - [[https://www.ams.org/books/surv/185/surv185-endmatter.pdf][Diffeology, 2013]]
+
+*** Lean
+    
+    - [[https://arxiv.org/abs/2001.10490][Beyond Notations: Hygienic Macro Expansion for Theorem Proving Languages, 2020]]
+    - [[https://pp.ipd.kit.edu/uploads/publikationen/demoura21lean4.pdf][The Lean 4 Theorem Prover and Programming Language, 2021]]
+
+    - [[https://arxiv.org/abs/1908.05647][Counting Immutable Beans: Reference Counting Optimized for Purely Functional Programming, 2019]]
+    - [[https://www.microsoft.com/en-us/research/uploads/prod/2020/11/perceus-tr-v1.pdf][Perceus: Garbage Free Reference Counting with Reuse, 2020]]      
+
+**** Video
+     
+     - [[https://www.youtube.com/watch?v=UeGvhfW1v9M][Lean Together 2021: An overview of Lean 4]]
+     - [[https://www.youtube.com/watch?v=hxQ1vvhYN_U][Lean Together 2021: Metaprogramming in Lean 4]]
+    
+*** Categorical Formalism      
+    
+    - [[https://www.sciencedirect.com/science/article/pii/0167642387900207][The categorical abstract machine, 1987]]
+    - [[http://www.cs.man.ac.uk/~david/categories/book/book.pdf][Computational Category Theory, 1988]]
+    - [[https://www.springer.com/gp/book/9780817636548][Categorical Combinators, Sequential Algorithms, and Functional Programming, 1993]]
+    - [[https://www.math.mcgill.ca/rags/difftl/MSCS-Differential_Categories.pdf][Differential categories, 2006]]
+    - [[https://arxiv.org/abs/1006.3140][A convenient differential category, 2010]]
+
+*** Presentations
+
+    - [[http://www.math.mcgill.ca/rags/JAC/Poster/poster2-JAC-Apr13-handout-6up.pdf][A categorical description of the essential structure of differential calculus, 2013]]
+    - [[http://www.appliedcategorytheory.org/wp-content/uploads/2017/09/Jason-Morton-An-approach-to-computational-category-theory.pdf][An approach to computational category theory, 2015]]
+    - [[https://andrejbauer.github.io/domains-floc-2018/slides/Matthijs-Kammar-Staton.pdf][Diffeological Spaces and Denotational Semantics for Differential Programming, 2018]]
+
+*** others
+
+    - [[https://www.linkedin.com/in/david-sankel-94059841][David Sankel]] 
+      A guy writing Reflection TS proposal, but why is he interesting is that he developed some visual functional programming language similar to Houdini as he mentioned in [[https://cppcast.com/david-sankel-reflection-ts/][CppCast]].
+
+** Software
+
+   - [[http://hackage.haskell.org/package/subhask][subhask]]
+   - [[http://hackage.haskell.org/package/linearmap-category][linearmap-category]]
+   - [[https://github.com/jasonmorton/Cateno][Cateno]]
+   - [[https://fluxml.ai/Zygote.jl/latest/][Zygote]]
+   - [[https://github.com/mila-iqia/myia][Myia]]
+   - [[https://github.com/tum-pbs/PhiFlow][PhiFlow]]
+   - [[https://github.com/yuanming-hu/difftaichi][DiffTaichi]]
+   - [[https://halide-lang.org/][Halide]]
+   - [[https://github.com/dselsam/certigrad][Certigrad]]
+   - [[http://simit-lang.org/][Simit]]
+   - [[https://github.com/apple/swift/blob/main/docs/DifferentiableProgramming.md][differentiable programming in Swift]]
+   - [[https://github.com/psg-mit/smooth][Smooth]]
+   - [[https://web.archive.org/web/20170924065701/http://www.digi-area.com/Mathematica/atlas/][Atlas 2 for Mathematica]]
+   - [[https://enzyme.mit.edu/][Enzyme]]
+   - [[https://github.com/google-research/dex-lang][Dex]]
+   - [[https://futhark-lang.org/][furthark]]
+
+   - [[https://github.com/kztk-m/sparcl][Sparcl]] - partially-invertible computation
+
+*** Vaguely related software
+
+    - [[https://github.com/enso-org/enso][Enso]] - hybrid visual & textual programming language
+
+** Some relevant Zulip discussions:
+
+   - [[https://leanprover.zulipchat.com/#narrow/stream/113488-general/topic/Extraction.20replacing.20reals.20with.20float.3F][Extraction replacing reals with float?]]
+   - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Fast.20inline.20compiler.20for.20numerical.20computing][Fast inline compiler for numerical computing]]
+   - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Lean4.20and.20multidimensional.20arrays][Lean4 and multidimensional arrays]]
+   - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Interface.20for.20multi-dimensional.20arrays][Interface for multi-dimensional arrays]]
+   - [[https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Treating.20.60Float.60.20as.20reals.2C.20inconsistent.3F][Treating `Float` as reals, inconsistent?]]

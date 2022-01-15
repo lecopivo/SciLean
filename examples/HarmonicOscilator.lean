@@ -1,26 +1,24 @@
 import SciLean.Basic
 import SciLean.Mechanics
 
-open Function SciLean
+open SciLean
 
 abbrev V := ℝ × ℝ
 
 def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
 
-def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m k))) :=
+def solver (m k : ℝ) (steps : Nat)
+  : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by
   -- Unfold Hamiltonian definition and compute gradients
-  simp[HamiltonianSystem, H, swap];
+  simp[HamiltonianSystem, H];
   autograd
   autograd
-  
-  -- Adds a runtime check
-  impl_check (m>0) "Mass has to be non zero."
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
   lift_limit steps "Number of ODE solver steps."; admit; simp
-    
+  
   finish_impl
 
 def main : IO Unit := do

@@ -7,7 +7,7 @@ noncomputable
 def HamiltonianSystem {V} [Hilbert V] (H : V → V → ℝ) : V×V → V×V := 
   uncurry $
   λ x p : V =>
-    let dHdx := ∇(swap H p) x
+    let dHdx := ∇(λ x => H x p) x
     let dHdp := ∇(H x) p
     (dHdp, -dHdx)
 
