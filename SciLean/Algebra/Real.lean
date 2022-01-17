@@ -62,7 +62,11 @@ namespace ℝ
   instance : Numeric ℝ := ⟨λ n => n.toFloat⟩
   instance : Inv ℝ := ⟨λ x => 1/x⟩
 
-  instance : HPow ℝ Int ℝ := sorry
+  instance : HPow ℝ ℤ ℝ := 
+  ⟨λ x n => 
+    match n with
+    | Int.ofNat   k => x^(k : ℝ)
+    | Int.negSucc k => x^(-(k+1) : ℝ)⟩
 
 --   instance (n : Nat) : OfNat ℝ n := ⟨n.toFloat⟩
 
