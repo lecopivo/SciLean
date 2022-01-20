@@ -275,6 +275,7 @@
    - [[https://enzyme.mit.edu/][Enzyme]]
    - [[https://github.com/google-research/dex-lang][Dex]]
    - [[https://futhark-lang.org/][furthark]]
+   - [[https://iheartla.github.io/][I❤️LA]]
 
    - [[https://github.com/kztk-m/sparcl][Sparcl]] - partially-invertible computation
 
