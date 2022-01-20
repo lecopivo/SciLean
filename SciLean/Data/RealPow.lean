@@ -18,7 +18,6 @@ instance (n : Nat) : PowType ℝ n :=
   ext := sorry
 }
 
-
 -- following should be generalized for any table but I'm having some issues with TC
 
 instance (n : Nat) : AddSemigroup (ℝ^n) := AddSemigroup.mk sorry
@@ -93,3 +92,67 @@ example : SemiInner (Value (ℝ^(2 : Nat))) ℝ Unit (λ r _ => r) := by infer_i
 example : SemiInner (ℝ^(2 : Nat)) ℝ Unit (λ r _ => r) := by infer_instance
 example : SemiInner.Trait (ℝ^(2 : Nat)) := by infer_instance
 
+------------- (ℝ^m)^n   R[i][j]
+
+instance (n m : Nat) : PowType (ℝ^m) n := 
+{
+  powType := {a : FloatArray // a.size = n * m}
+  intro := λ f => Id.run do
+    let mut x := FloatArray.mkEmpty (n*m)
+    for i in [0:n] do
+      let xi := (f !i)
+      for j in [0:m] do
+        x := x.push (xi[!j])
+    !x
+  get := λ x i => 
+    PowType.intro λ j => x.1.get !(i.1*m + j.1)
+  set := λ x i xi => Id.run do
+    let mut x := x.1
+    let offset := i.1*m
+    for j in [0:m] do
+      x := x.set (!(j + offset)) (xi[!j])
+    !x
+  ext := sorry
+}
+
+variable (n m : Nat)
+
+
+-- following should be generalized for any table but I'm having some issues with TC
+
+instance (n m : Nat) : AddSemigroup ((ℝ^m)^n) := AddSemigroup.mk sorry
+instance (n m : Nat) : AddMonoid ((ℝ^m)^n)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
+instance (n m : Nat) : AddCommMonoid ((ℝ^m)^n) := AddCommMonoid.mk sorry
+instance (n m : Nat) : SubNegMonoid ((ℝ^m)^n) := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
+instance (n m : Nat) : AddGroup ((ℝ^m)^n)     := AddGroup.mk sorry
+instance (n m : Nat) : AddCommGroup ((ℝ^m)^n) := AddCommGroup.mk sorry
+
+set_option synthInstance.maxHeartbeats 3000 in
+instance (n m : Nat) : MulAction ℝ ((ℝ^m)^n) := MulAction.mk sorry sorry
+instance (n m : Nat) : DistribMulAction ℝ ((ℝ^m)^n) := DistribMulAction.mk sorry sorry
+instance (n m : Nat) : Module ℝ ((ℝ^m)^n) := Module.mk sorry sorry
+
+instance (n m : Nat)  : Vec ((ℝ^m)^n) := Vec.mk
+
+instance (n m : Nat) : SemiInner ((ℝ^m)^n) ℝ Unit (λ r _ => r) :=
+{
+  semiInner := λ x y => ∑ i, ⟪x[i], y[i]⟫
+  testFunction := λ _ _ => True
+}
+
+instance (n m : Nat) : Hilbert ((ℝ^m)^n) :=
+{
+  semi_inner_add := sorry
+  semi_inner_mul := sorry
+  semi_inner_sym := sorry
+  semi_inner_pos := sorry
+  semi_inner_ext := sorry
+}
+
+instance (n m : Nat) (i : Fin n)  : IsLin (λ c : (ℝ^m)^n => c[i]) := sorry
+instance (n m : Nat) : IsLin (λ (c : (ℝ^m)^n) (i : Fin n)  => c[i]) := sorry
+
+instance (n m : Nat) 
+  : HasAdjoint (λ (c : (ℝ^m)^n) (i : Fin n) => c[i]) := sorry
+instance (n m : Nat) (i : Fin n)
+  : HasAdjoint (λ c : (ℝ^m)^n => c[i]) := sorry
