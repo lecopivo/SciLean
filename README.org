@@ -15,7 +15,7 @@ Lean is an expressive functional programming language that allows to formalize t
 
 * Installation and running examples/tests
 
-As we are using Lean programming language, you need Lean's version manager =elan=. Follow its installation follow these [[https://github.com/leanprover/elan#installation][instructions]].
+As we are using Lean programming language, you need Lean's version manager =elan=. Follow its installation [[https://github.com/leanprover/elan#installation][instructions]].
 
 Getting and building SciLean simply:
 #+begin_src
@@ -69,7 +69,7 @@ lift_limit steps "Number of ODE solver steps."; admit; simp
 finish_impl
 #+end_src
 
-  Let's start with a warning! This code is not meant to be consumes as it is but it should be read interactively in a text editor, see the following animation:
+  Let's start with a warning! This code is not meant to be consumed as it is but it should be read interactively in a text editor, see the following animation:
 
   [[file:anim.gif]]
 
