@@ -70,7 +70,7 @@ instance (n : Nat) (i : Fin n)
 
 @[simp]                         
 theorem adjoint_of_Rn_get (n : Nat)
-  : (λ (u : ℝ^n) i => u[i])† = Table.intro :=
+  : (λ (u : ℝ^n) i => u[i])† = PowType.intro :=
 by 
   funext x;
   inner_ext;
@@ -85,10 +85,6 @@ def u : (ℝ^(2 : Nat)) := ^[-2.0,2.0]
 #eval 2*⟪u, u⟫
 
 open Table Trait
-example : Table.Trait (ℝ^(2 : Nat)) := by infer_instance
-example : Table (ℝ^(2 : Nat)) (Index (ℝ^(2 : Nat))) (Value (ℝ^(2 : Nat))) := by infer_instance
-example : Enumtype (Index (ℝ^(2 : Nat))) := by infer_instance
-example : SemiInner (Value (ℝ^(2 : Nat))) ℝ Unit (λ r _ => r) := by infer_instance
 example : SemiInner (ℝ^(2 : Nat)) ℝ Unit (λ r _ => r) := by infer_instance
 example : SemiInner.Trait (ℝ^(2 : Nat)) := by infer_instance
 

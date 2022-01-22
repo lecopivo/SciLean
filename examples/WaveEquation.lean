@@ -36,8 +36,8 @@ def main : IO Unit := do
   let evolve ← (solver N m k substeps).assemble
 
   let t := 1.0
-  let x₀ : (ℝ^N) := Table.intro λ (i : Fin N) => (Math.sin ((i : ℝ)/10))
-  let p₀ : (ℝ^N) := Table.intro λ i => (0 : ℝ)
+  let x₀ : (ℝ^N) := PowType.intro λ (i : Fin N) => (Math.sin ((i : ℝ)/10))
+  let p₀ : (ℝ^N) := PowType.intro λ i => (0 : ℝ)
   let mut (x,p) := (x₀, p₀)
 
   for i in [0:300] do
