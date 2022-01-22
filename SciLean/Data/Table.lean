@@ -29,25 +29,25 @@ by
   admit
 
 
--- section VectorSpace
--- variable {C : Type u} [Trait C] [Table C (Index C) (Value C)] [Intro C]
+section VectorSpace
+variable {C : Type u} [Trait C] [Table C (Index C) (Value C)] [Intro C]
 
 -- Vector Space
--- instance [AddSemigroup (Value C)] : AddSemigroup C := AddSemigroup.mk sorry
--- instance [AddMonoid (Value C)]    : AddMonoid C    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
--- instance [AddCommMonoid (Value C)] : AddCommMonoid C := AddCommMonoid.mk sorry
--- instance [SubNegMonoid (Value C)] : SubNegMonoid C := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
--- instance [AddGroup (Value C)]     : AddGroup C     := AddGroup.mk sorry
--- instance [AddCommGroup (Value C)] : AddCommGroup C := AddCommGroup.mk sorry
+instance [AddSemigroup (Value C)] : AddSemigroup C := AddSemigroup.mk sorry
+instance [AddMonoid (Value C)]    : AddMonoid C    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
+instance [AddCommMonoid (Value C)] : AddCommMonoid C := AddCommMonoid.mk sorry
+instance [SubNegMonoid (Value C)] : SubNegMonoid C := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
+instance [AddGroup (Value C)]     : AddGroup C     := AddGroup.mk sorry
+instance [AddCommGroup (Value C)] : AddCommGroup C := AddCommGroup.mk sorry
 
--- instance [Monoid β] [MulAction β (Value C)] : MulAction β C := MulAction.mk sorry sorry
--- instance {M} [AddMonoid (Value C)] [Monoid M] [DistribMulAction M (Value C)] : DistribMulAction M C := DistribMulAction.mk sorry sorry
--- instance {R} [AddCommGroup (Value C)] [Semiring R] [Module R (Value C)] : Module R C := Module.mk sorry sorry
+instance [Monoid β] [MulAction β (Value C)] : MulAction β C := MulAction.mk sorry sorry
+instance {M} [AddMonoid (Value C)] [Monoid M] [DistribMulAction M (Value C)] : DistribMulAction M C := DistribMulAction.mk sorry sorry
+instance {R} [AddCommGroup (Value C)] [Semiring R] [Module R (Value C)] : Module R C := Module.mk sorry sorry
 
--- set_option synthInstance.maxHeartbeats 3000 in
--- instance [Vec (Value C)] : Vec C := Vec.mk
+set_option synthInstance.maxHeartbeats 3000 in
+instance [Vec (Value C)] : Vec C := Vec.mk
 
--- end VectorSpace
+end VectorSpace
 
 ----------------------------------------------------------------------
 
@@ -76,29 +76,29 @@ by
 -- }
 
 
--- instance {C} [Trait C] 
---   [Table C (Index C) (Value C)] 
---   [SemiInner (Value C) ℝ Unit (λ r _ => r)] 
---   [Enumtype (Index C)] 
---   : SemiInner C ℝ Unit (λ r _ => r) :=
--- {
---   semiInner := λ x y => (∑ i, ⟪x[i], y[i]⟫)
---   testFunction := λ _ _ => True
--- }
+instance {C} [Trait C] 
+  [Table C (Index C) (Value C)] 
+  [SemiInner (Value C) ℝ Unit (λ r _ => r)] 
+  [Enumtype (Index C)] 
+  : SemiInner C ℝ Unit (λ r _ => r) :=
+{
+  semiInner := λ x y => (∑ i, ⟪x[i], y[i]⟫)
+  testFunction := λ _ _ => True
+}
 
 
--- instance {C} [Trait C]
---   [Table C (Index C) (Value C)] [Intro C]
---   [SemiInner.Trait (Value C)] [Hilbert (Value C)]
---   [Enumtype (Index C)] 
---   : Hilbert C :=
--- {
---   semi_inner_add := sorry
---   semi_inner_mul := sorry
---   semi_inner_sym := sorry
---   semi_inner_pos := sorry
---   semi_inner_ext := sorry
--- }
+instance {C} [Trait C]
+  [Table C (Index C) (Value C)] [Intro C]
+  [SemiInner.Trait (Value C)] [Hilbert (Value C)]
+  [Enumtype (Index C)] 
+  : Hilbert C :=
+{
+  semi_inner_add := sorry
+  semi_inner_mul := sorry
+  semi_inner_sym := sorry
+  semi_inner_pos := sorry
+  semi_inner_ext := sorry
+}
 
 -- #check SciLean.instSemiInner
 -- #check SciLean.instSemiHilbert
@@ -116,7 +116,7 @@ by
 -- ---------------------------------------------------------------------
 
 
--- variable {C} [Trait C] [Table C (Index C) (Value C)] [Table.Intro C]
+variable {C} [Trait C] [Table C (Index C) (Value C)] [Table.Intro C]
 
 -- instance (i : (Index C)) [Vec ( Value C)] : IsLin (λ c : C => c[i]) := sorry
 -- instance [Vec (Value C)] : IsLin (λ (c : C) (i : (Index C))  => c[i]) := sorry
@@ -134,15 +134,16 @@ by
 
 
 
--- set_option trace.Meta.synthInstance true in
--- @[simp]
--- theorem adjoint_of_table_get
---   (i : (Index C)) 
---   [Hilbert (Value C)] 
---   [Enumtype (Index C)] 
---   : (λ (c : C) (i : Index C) => c[i])† = intro :=
--- by 
---   apply Adjoint.inner_ext
+set_option trace.Meta.synthInstance true in
+set_option synthInstance.maxHeartbeats 200 in
+@[simp]
+theorem adjoint_of_table_get
+  (i : (Index C)) 
+  [Hilbert (Value C)] 
+  [Enumtype (Index C)] 
+  : (λ (c : C) (i : Index C) => c[i])† = intro :=
+by 
+  apply Adjoint.inner_ext
 
 
 
