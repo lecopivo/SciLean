@@ -424,7 +424,11 @@ namespace Adjoint
 
   --------------------------------------------------------------------------------------------
 
-  macro "autoadjoint" : conv => `(repeat' (conv => pattern (adjoint _); simp; rw[adjoint_of_comp_parm]; simp))
+  macro "autoadjoint" : conv => `(repeat' (conv => 
+                                            pattern (adjoint _)
+                                            simp
+                                            rw[adjoint_of_comp_parm]
+                                            simp))
   macro "autoadjoint" : tactic => `(conv => autoadjoint)
 
   --------------------------------------------------------------------------------------------

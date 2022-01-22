@@ -37,6 +37,9 @@ example (y : ℝ)
 example (y : ℝ) 
   : (λ x : ℝ => y * x)† 1 = y := by simp done
 
+example (a b : ℝ) (x : X)
+  : (λ dx : X => a * ⟪x, dx⟫ * b)† 1 = a * b * x := by autoadjoint; simp done -- FIXME!
+
 set_option synthInstance.maxHeartbeats 5000
 example 
   : (λ (x : Fin n → ℝ) => sum λ i => x i)† 1 = (λ i => (1 : ℝ)) := by simp done
