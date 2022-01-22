@@ -1,6 +1,8 @@
 import SciLean.Basic
 import SciLean.Mechanics
 
+set_option synthInstance.maxHeartbeats 5000
+
 open SciLean
 
 abbrev V := ℝ × ℝ
