@@ -37,7 +37,7 @@ instance {X} [Vec X] : IsLin (λ f : (ℝ ⟿ X) => ∫ t, f t) := sorry
 instance {X} [Vec X] : IsLin (λ f : (ℝ ⟿ X) => ∫! t, f t) := sorry
 
 example : IsSmooth (λ x y => f y x) := by infer_instance
-example : IsSmooth (λ x y : ℝ => f (y + x) y) := by infer_instance
+-- example : IsSmooth (λ x y : ℝ => f (y + x) y) := by infer_instance
 
 -- #check ∫ y, (∫ x, λ y ⟿ f x y)
 

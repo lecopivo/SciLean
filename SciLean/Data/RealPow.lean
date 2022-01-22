@@ -1,6 +1,7 @@
 import SciLean.Mathlib.Data.PowType
 import SciLean.Categories
-import SciLean.Data.Table
+import SciLean.Operators
+-- import SciLean.Data.Table
 
 namespace SciLean
 
@@ -84,7 +85,6 @@ def u : (ℝ^(2 : Nat)) := ^[-2.0,2.0]
 #eval (u + u : ℝ^(2 : Nat))
 #eval 2*⟪u, u⟫
 
-open Table Trait
 example : SemiInner (ℝ^(2 : Nat)) ℝ Unit (λ r _ => r) := by infer_instance
 example : SemiInner.Trait (ℝ^(2 : Nat)) := by infer_instance
 
