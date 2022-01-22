@@ -1,1 +1,1 @@
-import SciLean.Data.RealPow
+import SciLean.Data.Table

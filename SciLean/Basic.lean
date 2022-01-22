@@ -1,9 +1,9 @@
 import SciLean.Categories
 import SciLean.Operators
 import SciLean.Data
-import SciLean.Simp
-import SciLean.Solver
-import SciLean.Tactic
+-- import SciLean.Simp
+-- import SciLean.Solver
+-- import SciLean.Tactic
 
 -- import SciLean.Linear
 -- import SciLean.Smooth
