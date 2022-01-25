@@ -1,51 +1,143 @@
-import SciLean.Basic
-import SciLean.Mechanics
+import SciLean.Categories
+-- import SciLean.Mechanics
 
-namespace SciLean
+open SciLean
 
-set_option synthInstance.maxHeartbeats 5000
-set_option synthInstance.maxSize 1000
+set_option synthInstance.maxHeartbeats 50000
+set_option maxHeartbeats 500000
 
-def G : ℝ := 1.0
+-- variable {X} [Hilbert X]
 
-def NDVector.getVec3 {n} (v : NDVector [3,n]) (i : Fin n) : ℝ×ℝ×ℝ := (v[⟨3*i+0, sorry⟩], v[⟨3*i+1, sorry⟩], v[⟨3*i+2, sorry⟩])
+-- instance (ε : ℝ) [NonZero ε] (α : ℝ) : IsSmooth (λ x : X => (∥x∥² + ε^2)^α) := sorry
 
+-- @[simp]
+-- theorem eps_norm.diff {X} [Hilbert X] (ε : ℝ) [NonZero ε] (α : ℝ)
+--   : δ (λ x : X => (∥x∥² + ε^2)^α) = λ x dx : X => 2 * α * ((∥x∥² + ε^2)^(α-1)) * ⟪x, dx⟫
+--   := sorry
 
-def T {n : Nat} (m : NDVector [n]) (p : NDVector [3, n]) : ℝ := 
-    ∑ i, (1/(2*m[i])) * ∥p.getVec3 ⟨i,sorry⟩∥^(2:ℝ)
-
-def V {n : Nat} (m : NDVector [n]) (x : NDVector [3, n]) : ℝ :=
-(1/2) * ∑ i j, G*(m[i])*(m[j]) * 1/∥(x.getVec3 ⟨i,sorry⟩ - x.getVec3 ⟨j,sorry⟩)∥
-
-def H {n} (m : NDVector [n]) (x p : NDVector [3, n]) := T m p - V m x
-
-
--- def Tgrad {n} (m : NDVector [n]) : Impl (∇ (T m)) := 
--- by
---   conv =>
---     enter [1]
---     simp [T]
-    
-    
-
-def solver {n} (m : NDVector [n]) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H m))) := 
-by  
-  conv => 
-    enter [1,1]
-    simp[HamiltonianSystem, H, T, V]
-
-    conv =>
-      pattern (∇ _)
-      simp[gradient]
-      conv => 
-        pattern (δ _)
-        enter [x,dx]
-        
+-- @[simp]
+-- theorem eps_norm.grad {X} [Hilbert X] (ε : ℝ) [NonZero ε] (α : ℝ)
+--   : ∇ (λ x : X => (∥x∥² + ε^2)^α) = λ x : X => 2 * α * ((∥x∥² + ε^2)^(α-1)) * x
+--   := by funext x; autograd; done
 
 
+-- def ϕ (ε : ℝ) (α : ℝ) (x : X) := (∥x∥² + ε^2)^α
+-- instance (ε : ℝ) [NonZero ε] (α : ℝ) : IsSmooth (λ x : X => ϕ ε α x) := by simp[ϕ] infer_instance done
+
+-- @[simp]
+-- theorem ϕ.diff (ε : ℝ) [NonZero ε] (α : ℝ) 
+--   : δ (ϕ ε α) = λ x dx : X => 2 * α * (ϕ ε (α-1) x) * ⟪x, dx⟫  
+--   := by simp[ϕ] done
+
+-- @[simp]
+-- theorem ϕ.grad (ε : ℝ) [NonZero ε] (α : ℝ) 
+--   : ∇ (ϕ ε α) = λ x : X => 2 * α * (ϕ ε (α-1) x) * x
+--   := by simp[ϕ] done
+
+-- #check SciLean.SemiHilbert.instSemiHilbertArrow
+
+-- def H (n : Nat) (ε : ℝ) (m k : ℝ) (x p : (ℝ^(3:ℕ)^n)) := ∥p∥² + ∑ i j, ϕ ε (-1) (x[i] - x[j])
+--   -- (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²) -- + (4*k) * (∑ i, ∥(∥x[i] - x[i-1]∥² - 0.01)∥²)
+
+
+-- variable (n : Nat) (x : (ℝ^(3:ℕ))^n) (i j : Fin n) (u : ℝ^n)
+
+-- example : SemiInner.Trait (ℝ^(3:ℕ)) := by infer_instance
+-- #check (∥x[i] + x[j]∥²)
+-- #check (u + u)
+
+
+constant foo {X Y} : (X → Y) → (X → Y) := id
+
+theorem  foo_apply {X Y} [Vec X] [Vec Y] (f : X → Y) [IsLin f] (x dx : X)
+        : foo f x = f x := sorry
+
+open SemiInner in
+def norm {X} [Trait X] [inst : SemiInner X (Trait.R X) (Trait.D X) Trait.eval] (x : X) : Trait.R X := sorry
+
+def sum' {n} {α : Type} (f : Fin n → α) : α := sorry
+
+
+set_option trace.Meta.synthInstance true in
+example (x) : (foo λ (x : Fin n → ℝ) (j : Fin n) => sum' λ i => norm (x i)) x = 0 := 
+by 
+  rw [foo_apply]
   admit
-  
-  
-  
 
-  
+-- set_option trace.Meta.synthInstance true in
+-- set_option trace.Meta.Tactic.simp true in
+-- def V.diff (n : Nat) [NonZero n] (ε : ℝ) [NonZero ε] (m k : ℝ) 
+-- -- : Impl (δ λ x : (ℝ^(3:ℕ)^n) => ∑ i j, ϕ ε (-1) (x[i] - x[j])) := 
+-- : Impl (δ λ x : ((ℝ^(3:ℕ))^n) => ∑ i j, ∥x[i] - x[j]∥²) := 
+-- by
+--   conv in (δ _) =>
+--     enter [x,dx]
+--     simp
+--   admit
+--   done
+
+-- set_option trace.Meta.isDefEq true in
+-- set_option trace.Meta.Tactic.simp true in
+-- def solver (n : Nat) [NonZero n] (ε : ℝ) [NonZero ε] (m k : ℝ) (steps : Nat) 
+-- : Impl (ode_solve (HamiltonianSystem (H n ε m k))) :=
+-- by
+--   -- Unfold Hamiltonian definition and compute gradients
+--   simp[HamiltonianSystem, H]
+--   autograd
+--   conv in (gradient _) =>
+--     simp[gradient]
+--     conv =>
+--       pattern (δ _)
+--       enter [x, dx]
+--       simp (config := { singlePass := true })
+--       simp (config := { singlePass := true })
+    
+
+
+  -- -- Apply RK4 method
+  -- rw [ode_solve_fixed_dt runge_kutta4_step]
+  -- lift_limit steps "Number of ODE solver steps."; admit; simp
+    
+  -- finish_impl
+  -- admit
+  -- done
+
+
+-- def main : IO Unit := do
+--   IO.println s!"Hello Houdini!"
+--   IO.println s!"Current time: {← Hou.time}" 
+--   let t : ℝ ← Hou.time
+
+--   let m ← Hou.getDetailR 0 "mass"
+--   let k ← Hou.getDetailR 0 "stiffness"
+--   let substeps := 1
+--   let N : Nat := (← Hou.npoints 0).toNat
+
+--   IO.println s!"mass: {m} stiffness: {k}"
+
+--   let evolve ← (solver N m k substeps).assemble
+
+--   let mut X : ℝ^N ← PowType.intro λ i => 0
+--   let mut V : ℝ^N ← PowType.intro λ i => 0
+
+--   -- load points
+--   for (i : Nat) in [0:N] do 
+--     let x ← Hou.getPointV3 0 "P" i
+--     let v ← Hou.getPointV3 0 "v" i
+--     X := X.set ⟨i,sorry⟩ (x[(1 : Fin 3)])
+--     V := V.set ⟨i,sorry⟩ (v[(1 : Fin 3)])
+
+--   let (X',V') := evolve (1.0/24.0) (X,V)
+
+--   for (i : Nat) in [0:N] do 
+--     let mut x ← Hou.getPointV3 0 "P" i
+--     let mut v ← Hou.getPointV3 0 "v" i
+--     x := x.set 1 (X'[!i])
+--     v := v.set 1 (V'[!i])
+--     Hou.setPointV3 "P" i x
+--     Hou.setPointV3 "v" i v
+
+--   IO.println ""
+
+
+
