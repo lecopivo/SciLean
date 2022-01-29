@@ -1,5 +1,5 @@
 import SciLean.Mathlib.Data.Enumtype
-import SciLean.Algebra.Real
+import SciLean.Algebra
 
 namespace SciLean
 
@@ -209,24 +209,39 @@ namespace Prism
     ) : IO Unit)
 
   -- Natural embedding space
-  def E : (P : Prism) → Type
+  def 𝔼 : (P : Prism) → Type
     | point => Unit
-    | cone P' => ℝ × P'.E
-    | prod P' Q' => P'.E × Q'.E
+    | cone P' => ℝ × P'.𝔼
+    | prod P' Q' => P'.𝔼 × Q'.𝔼
+
+  instance E.Vec (P : Prism) : Vec P.𝔼 :=
+    match P with
+    | point => by simp[𝔼]; infer_instance done
+    | cone P => by simp[𝔼]; apply (@instVecProd _ _ (by infer_instance) (Vec P)); done
+    | prod P Q => by simp[𝔼]; apply (@instVecProd _ _ (Vec P) (Vec Q)); done
 
   def pointCount (P : Prism) : Nat := P.faceCount 0
 
-  def pos' {P : Prism} : Face P 0 → P.E := sorry
+  def barycenter (P : Prism) : P.𝔼 :=
+    match P with
+    | point => 0
+    | cone P' => 
+      let w := (1.0 : ℝ)/(P.pointCount : ℝ)
+      (w, (1-w)*P'.barycenter)
+    | prod P Q =>
+      (P.barycenter, Q.barycenter)
+
+  def pos' {P : Prism} : Face P 0 → P.𝔼 := sorry
   -- def pos {P : Prism} : Fin (P.pointCount) → ℝ^P.dim := sorry
 
   -- def toRn : {P : Prism} → P.E → ℝ^P.dim := sorry
   -- def fromRn : {P : Prism} → ℝ^P.dim → P.E := sorry
 
-  def barycentricCoord' {P : Prism} : Face P 0 → P.E → ℝ := sorry
+  def barycentricCoord' {P : Prism} : Face P 0 → P.𝔼 → ℝ := sorry
   -- def barycentricCoord {P : Prism} : Fin (P.pointCount) → ℝ^P.dim → ℝ := sorry
 
   -- embedding map from a face to prism
-  def Face.embed {P n} (f : Face P n) : f.toPrism.E → P.E := sorry
+  def Face.embed {P n} (f : Face P n) : f.toPrism.𝔼 → P.𝔼 := sorry
 
 
   -- order preserving map from one prism to another prism
@@ -243,3 +258,7 @@ namespace Prism
     | prod {P Q : Prism} (f : Morph P) (g : Morph Q) : Morph (prod P Q)
 
   -- Face if Morph not containing collapses and shifts
+
+
+
+  -- DOP P deg
