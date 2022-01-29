@@ -31,155 +31,198 @@ namespace Prism
     | cone P' => 1 + P'.dim
     | prod P' Q' => P'.dim + Q'.dim
 
-  inductive Face : Prism → Nat → Type where
-    | point : Face point 0
-    | tip (P : Prism) : Face (cone P) 0
-    | cone {n} {P : Prism} (f : Face P n) : Face (cone P) (n+1)
-    | base {n} {P : Prism} (f : Face P n) : Face (cone P) n
-    | prod {n m} {P Q : Prism} (f : Face P n) (g : Face Q m) 
-      : Face (prod P Q) (n + m)
+  inductive Face : Prism → Type where
+    | point : Face point
+    | tip (P : Prism) : Face (cone P)
+    | cone {P : Prism} (f : Face P) : Face (cone P)
+    | base {P : Prism} (f : Face P) : Face (cone P)
+    | prod {P Q : Prism} (f : Face P) (g : Face Q) 
+      : Face (prod P Q)
 
-  def Face.beq {P n} (f g : Face P n) : Bool :=
-    match P, n, f, g with
-    | _, _, point, point => true
-    | _, _, tip _, tip _ => true
-    | _, _, cone f, cone g => beq f g
-    | _, _, base f, base g => beq f g
-    | Prism.prod P' Q', _, prod f f', g => sorry -- TODO: This needs to be completed!!!
-    | _, _, _, _ => false
+  namespace Face
 
-  instance {P n} : DecidableEq (Face P n) :=
-    λ f g =>
-      if f.beq g then (isTrue sorry) else (isFalse sorry)
+    def beq {P} (f g : Face P) : Bool :=
+      match P, f, g with
+      | _, point, point => true
+      | _, tip _, tip _ => true
+      | _, cone f, cone g => beq f g
+      | _, base f, base g => beq f g
+      | Prism.prod P' Q', prod f f', prod g g' => beq f g ∧ beq f' g'
+      | _, _, _ => false
 
-  def Face.toPrism {P n} (f : Face P n) : Prism :=
-    match f with
-    | point => Prism.point
-    | tip P  => Prism.point
-    | cone f => Prism.cone f.toPrism
-    | base f => f.toPrism
-    | prod f g => Prism.prod f.toPrism g.toPrism
+    instance {P} : DecidableEq (Face P) :=
+      λ f g =>
+        if f.beq g then (isTrue sorry) else (isFalse sorry)
 
-  def Face.ofFace' {P Q : Prism} {n m : Nat} 
-    (f : Face P n) (g : Face Q m) (h : f.toPrism = Q) 
-    : Face P m 
-    :=
-      match f, g, h with 
-      |   point,   point, _ => point
-      |  tip P',   point, _ => tip P'
-      | cone f',   tip _, _ => tip _
-      | cone f', cone g', h => 
-        cone (ofFace' f' g' (by simp[toPrism] at h; apply h))
-      | cone f', base g', h => 
-        base (ofFace' f' g' (by simp[toPrism] at h; apply h))
-      | base f',      g', h => 
-        base (ofFace' f' g' (by simp[toPrism] at h; apply h))
-      | prod f' f'', prod g' g'', h => 
-        prod (ofFace' f' g' (by simp[toPrism] at h; apply h.1)) 
-             (ofFace' f'' g'' (by simp[toPrism] at h; apply h.2))
+    def toPrism {P} (f : Face P) : Prism :=
+      match f with
+      | point => Prism.point
+      | tip P  => Prism.point
+      | cone f => Prism.cone f.toPrism
+      | base f => f.toPrism
+      | prod f g => Prism.prod f.toPrism g.toPrism
 
-  def Face.ofFace {P n m} {f : Face P n} (g : Face (f.toPrism) m) : Face P m
-    := ofFace' f g (by rfl)
+    def dim {P} (f : Face P) : Nat := f.toPrism.dim
 
-  def Face.first (P : Prism) (n : Nat) : Option (Face P n) :=
-    match P, n with
-    | Prism.point, 0 => some Face.point
-    | Prism.point, _ => none
-    | Prism.cone P', 0 => Face.tip P'
-    | Prism.cone P', n'+1 => 
-      match first P' n' with
-      | some f => some (Face.cone f)
-      | none => none
-    | Prism.prod P' Q', n =>
-      Id.run do
-      for i in [0:n+1] do
-        match first P' i, first Q' (n-i) with
-        | some f', some g' =>
-          return (some ((sorry : i+(n-i)=n) ▸ Face.prod f' g'))
-        | _, _ => continue
-      none
+    def ofFace' {P Q : Prism}
+      (f : Face P) (g : Face Q) (h : f.toPrism = Q) 
+      : Face P
+      :=
+        match f, g, h with 
+        |   point,   point, _ => point
+        |  tip P',   point, _ => tip P'
+        | cone f',   tip _, _ => tip _
+        | cone f', cone g', h => 
+          cone (ofFace' f' g' (by simp[toPrism] at h; apply h))
+        | cone f', base g', h => 
+          base (ofFace' f' g' (by simp[toPrism] at h; apply h))
+        | base f',      g', h => 
+          base (ofFace' f' g' (by simp[toPrism] at h; apply h))
+        | prod f' f'', prod g' g'', h => 
+          prod (ofFace' f' g' (by simp[toPrism] at h; apply h.1)) 
+               (ofFace' f'' g'' (by simp[toPrism] at h; apply h.2))
 
-  def Face.next {P n} (f : Face P n) : Option (Face P n) := 
-    match P, n, f with
-    | Prism.point, 0, point => none
-    | Prism.cone P', 0, tip _ => 
-      match first P' 0 with
-      | some f' => some (base f')
-      | none => none
-    | Prism.cone P', n'+1, cone f' => 
-      match next f' with
-      | some f'' => some (cone f'')
-      | none => 
-        match first P' (n'+1) with
-        | some f'' => some (base f'')
+    def ofFace {P} {f : Face P} (g : Face (f.toPrism)) : Face P
+      := ofFace' f g (by rfl)
+
+    -- First face of give dimension `n`
+    def first (P : Prism) (n : Nat) : Option (Face P) :=
+      match P, n with
+      | Prism.point, 0 => some point
+      | Prism.point, _ => none
+      | Prism.cone P', 0 => some (tip P')
+      | Prism.cone P', n'+1 => 
+        match first P' n' with
+        | some f => some $ (cone f)
         | none => none
-    | Prism.cone P', _, base f' => 
-      match next f' with
-      | some f'' => some (base f'')
-      | none => none
-    | _, _, @prod n' m' P' Q' f' g' => 
-      match next f' with
-      | some f'' => some (prod f'' g')
-      | none => 
-        match first P' n', next g' with
-        | some f'', some g'' => some (prod f'' g'')
-        | _, _ => 
-          match m' with
-          | 0 => none
-          | m''+1 => 
-            match first P' (n'+1), first Q' m'' with
-            | some f'', some g'' => some ((sorry : (n'+1)+m'' = n'+(m''+1)) ▸ prod f'' g'')
-            | _, _ => none
+      | Prism.prod P' Q', n =>
+        Id.run do
+        for i in [0:n+1] do
+          match first P' i, first Q' (n-i) with
+          | some f', some g' =>
+            return some $ (prod f' g')
+          | _, _ => continue
+        none
 
-  instance {P n} : Iterable (Face P n) :=
-  {
-    first := Face.first P n
-    next := Face.next
-    decEq := by infer_instance
-  }
-  
-  def Face.toFin {P n} (f : Face P n) : Fin (P.faceCount n) := 
-    match P, n, f with
-    | _, _, point => ⟨0, sorry⟩
-    | _, _, tip _ => ⟨0, sorry⟩
-    | _, _, cone f' => ⟨f'.toFin.1, sorry⟩
-    | Prism.cone P', 0, base f' => ⟨1+f'.toFin.1, sorry⟩
-    | Prism.cone P', n'+1, base f' => ⟨(P'.faceCount n')+f'.toFin.1, sorry⟩
-    | _, _, @prod n' m' P' Q' f' g' => 
-      ⟨(∑ i : Fin n', (P'.faceCount i)*(Q'.faceCount (n-i)))
-       + f'.toFin.1 + g'.toFin.1 * (P'.faceCount n'), sorry⟩
-      
-  def Face.fromFin (P : Prism) (n : Nat) (i : Fin (P.faceCount n)) : Face P n := 
-    match P, n, i with
-    | Prism.point, 0, _ => point
-    | Prism.cone P', 0, _ => 
-      if i.1=0 then 
-        tip _ 
-      else 
-        base (fromFin P' 0 ⟨i.1-1, sorry⟩)
-    | Prism.cone P', n'+1, _ => 
-      let offset := P'.faceCount n'
-      if i.1 < offset then 
-        cone (fromFin P' n' ⟨i.1, sorry⟩)
-      else 
-        base (fromFin P' (n'+1) ⟨i.1 - offset, sorry⟩)
-    | Prism.prod P' Q', n, _=> Id.run do
-      let mut offset := 0
-      for j in [0:n+1] do
-        let pfc := (P'.faceCount j)
-        let qfc := (Q'.faceCount (n-j))
-        let jcount := pfc * qfc
-        if i.1 < offset + jcount then
-          let i' := (i.1 - offset) % pfc
-          let j' := (i.1 - offset) / pfc
-          let r  := (prod (fromFin P' j ⟨i', sorry⟩) 
-                          (fromFin Q' (n-j) ⟨j', sorry⟩))
-          return ((sorry : j+(n-j)=n) ▸ r)
-        else
-          offset := offset + jcount
-          continue
-      sorry
-      -- panic! "This should be unreachable!"
+    -- Next face of the same dimension
+    def next {P} (f : Face P) : Option (Face P) := 
+      match P, f.dim, f with
+      | Prism.point, 0, point => none
+      | Prism.cone P', 0, tip _ => 
+        match first P' 0 with
+        | some f' => some $ base f'
+        | none => none
+      | Prism.cone P', n'+1, cone f' => 
+        match next f' with
+        | some f'' => some $ cone f''
+        | none => 
+          match first P' (n'+1) with
+          | some f'' => some $ base f''
+          | none => none
+      | Prism.cone P', n', base f' => 
+        match next f' with
+        | some f'' => some $ base f''
+        | none => none
+      | _, _, @prod P' Q' f' g' => 
+        match next f' with
+        | some f'' => some $ prod f'' g'
+        | none => 
+          match first P' f'.dim, next g' with
+          | some f'', some g'' => some $ Face.prod f'' g''
+          | _, _ => 
+            match g'.dim with
+            | 0 => none
+            | m''+1 => 
+              match first P' (f'.dim+1), first Q' m'' with
+              | some f'', some g'' => some $ Face.prod f'' g''
+              | _, _ => none
+      | _, _, _ => none -- this should be unreachable!
+
+    instance {P} : Iterable (Face P) :=
+    {
+      first := first P 0
+      next := λ f =>
+        match next f with
+        | some f' => some f'
+        | none => 
+          match first P (f.dim + 1) with
+          | some f' => some f'
+          | none => none
+      decEq := by infer_instance
+    }
+
+    -- Give index of a face amog face of the same dimension
+    def toFin {P} (f : Face P) : Fin (P.faceCount f.dim) := 
+      match P, f.dim, f with
+      | _, _, point => ⟨0, sorry⟩
+      | _, _, tip _ => ⟨0, sorry⟩
+      | _, _, cone f' => ⟨f'.toFin.1, sorry⟩
+      | Prism.cone P', 0, base f' => ⟨1+f'.toFin.1, sorry⟩
+      | Prism.cone P', n'+1, base f' => ⟨(P'.faceCount n')+f'.toFin.1, sorry⟩
+      | _, _, @prod P' Q' f' g' => 
+        ⟨(∑ i : Fin f'.dim, (P'.faceCount i)*(Q'.faceCount (f.dim-i)))
+         + f'.toFin.1 + g'.toFin.1 * (P'.faceCount f'.dim), sorry⟩
+
+  end Face
+
+  def NFace (P : Prism) (n : Nat) := {f : Face P // f.dim = n}
+
+  namespace NFace
+
+    instance {P} : DecidableEq (NFace P n) := by simp[NFace] infer_instance done
+
+    def first {P n} : Option (NFace P n) :=
+      match Face.first P n with
+      | some f' => some !f'
+      | none => none
+
+    def next {P n} (f : NFace P n) : Option (NFace P n) :=
+      match f.1.next with
+      | some f' => some !f'
+      | none => none
+
+    instance {P n} : Iterable (NFace P n) :=
+    {
+      first := first
+      next := next
+      decEq := by infer_instance
+    }
+
+    def toFin {P n} (f : NFace P n) : Fin (P.faceCount n) := (f.2 ▸ f.1.toFin)
+
+    -- def Face.fromFin (P : Prism) (n : Nat) (i : Fin (P.faceCount n)) : Face P n := 
+    --   match P, n, i with
+    --   | Prism.point, 0, _ => point
+    --   | Prism.cone P', 0, _ => 
+    --     if i.1=0 then 
+    --       tip _ 
+    --     else 
+    --       base (fromFin P' 0 ⟨i.1-1, sorry⟩)
+    --   | Prism.cone P', n'+1, _ => 
+    --     let offset := P'.faceCount n'
+    --     if i.1 < offset then 
+    --       cone (fromFin P' n' ⟨i.1, sorry⟩)
+    --     else 
+    --       base (fromFin P' (n'+1) ⟨i.1 - offset, sorry⟩)
+    --   | Prism.prod P' Q', n, _=> Id.run do
+    --     let mut offset := 0
+    --     for j in [0:n+1] do
+    --       let pfc := (P'.faceCount j)
+    --       let qfc := (Q'.faceCount (n-j))
+    --       let jcount := pfc * qfc
+    --       if i.1 < offset + jcount then
+    --         let i' := (i.1 - offset) % pfc
+    --         let j' := (i.1 - offset) / pfc
+    --         let r  := (prod (fromFin P' j ⟨i', sorry⟩) 
+    --                         (fromFin Q' (n-j) ⟨j', sorry⟩))
+    --         return ((sorry : j+(n-j)=n) ▸ r)
+    --       else
+    --         offset := offset + jcount
+    --         continue
+    --     sorry
+    --     -- panic! "This should be unreachable!"
+
+  end NFace
 
   def segment  := cone point
   def triangle := cone segment
@@ -231,17 +274,17 @@ namespace Prism
     | prod P Q =>
       (P.barycenter, Q.barycenter)
 
-  def pos' {P : Prism} : Face P 0 → P.𝔼 := sorry
+  def pos' {P : Prism} : NFace P 0 → P.𝔼 := sorry
   -- def pos {P : Prism} : Fin (P.pointCount) → ℝ^P.dim := sorry
 
   -- def toRn : {P : Prism} → P.E → ℝ^P.dim := sorry
   -- def fromRn : {P : Prism} → ℝ^P.dim → P.E := sorry
 
-  def barycentricCoord' {P : Prism} : Face P 0 → P.𝔼 → ℝ := sorry
+  def barycentricCoord' {P : Prism} : NFace P 0 → P.𝔼 → ℝ := sorry
   -- def barycentricCoord {P : Prism} : Fin (P.pointCount) → ℝ^P.dim → ℝ := sorry
 
   -- embedding map from a face to prism
-  def Face.embed {P n} (f : Face P n) : f.toPrism.𝔼 → P.𝔼 := sorry
+  def Face.embed {P} (f : Face P) : f.toPrism.𝔼 → P.𝔼 := sorry
 
 
   -- order preserving map from one prism to another prism
