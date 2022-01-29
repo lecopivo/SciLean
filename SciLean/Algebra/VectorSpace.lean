@@ -68,6 +68,22 @@ section CommonVectorSpaces
   instance [Vec U] [Vec V] : Vec (U × V) := Vec.mk
   set_option synthInstance.maxHeartbeats 500
 
+
+  instance : AddSemigroup Unit := AddSemigroup.mk sorry
+  instance : AddMonoid Unit    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
+  instance : SubNegMonoid Unit := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
+  instance : AddGroup Unit     := AddGroup.mk sorry
+  instance : AddCommGroup Unit := AddCommGroup.mk sorry
+
+  instance {α} [Monoid α] : MulAction α Unit := MulAction.mk sorry sorry
+  instance {M} [Monoid M] : DistribMulAction M Unit := DistribMulAction.mk sorry sorry
+  instance {R} [Semiring R] : Module R Unit := Module.mk sorry sorry
+
+  set_option synthInstance.maxHeartbeats 50000
+  instance : Vec Unit := Vec.mk
+  set_option synthInstance.maxHeartbeats 500
+
+
 end CommonVectorSpaces
 
 
