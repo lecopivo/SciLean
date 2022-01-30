@@ -3,7 +3,7 @@ import SciLean.Data.Mesh.Prism
 namespace SciLean.Prism
 
   -- Lagrangian DOFs of a given degree and a prism
-  inductive LagDOF : Prism → Nat → Type where
+  inductive LagDOF : (P : Prism) → (deg : Nat) → Type where
     | point (deg : Nat) : LagDOF point deg -- point has only one dof of any degree
     | cone (P : Prism) (deg : Nat) (i : Fin (deg+1)) (dof : LagDOF P i.1) : LagDOF (cone P) deg
     | prod (P Q : Prism) (deg : Nat) (dofP : LagDOF P deg) (dofQ : LagDOF Q deg) : LagDOF (prod P Q) deg
@@ -25,7 +25,7 @@ namespace SciLean.Prism
       λ f g => if f.beq g then (isTrue sorry) else (isFalse sorry)
 
     -- Given a DOF on a face of a prism return dof rel to the prism
-    def ofFace {P} {n deg : Nat} {f : Face P n} (dof : LagDOF f.toPrism deg) : LagDOF P deg := sorry
+    def ofFace {P} {deg : Nat} {f : Face P} (dof : LagDOF f.toPrism deg) : LagDOF P deg := sorry
 
     def zeroDOF (P : Prism) : LagDOF P 0 :=
       match P with
@@ -75,3 +75,6 @@ namespace SciLean.Prism
         | _, prod P Q deg dofP dofQ => 
           (dofP.toPos, dofQ.toPos)
 
+
+
+  end LagDOF

@@ -82,8 +82,17 @@ namespace Prism
           prod (ofFace' f' g' (by simp[toPrism] at h; apply h.1)) 
                (ofFace' f'' g'' (by simp[toPrism] at h; apply h.2))
 
-    def ofFace {P} {f : Face P} (g : Face (f.toPrism)) : Face P
+    def ofFace {P} {f : Face P} (g : Face f.toPrism) : Face P
       := ofFace' f g (by rfl)
+
+    example {P} (f : Face P) (g : Face f.toPrism) : Face P := ofFace g
+    -- TODO: Fix this, g.ofFace get interpreted as `ofFace (f := g)`
+    -- example {P} (f : Face P) (g : Face f.toPrism) : Face P := g.ofFace
+
+    @[simp]
+    theorem toPrism_ofFace {P} {f : Face P} (g : Face f.toPrism) 
+      : Face.toPrism (Face.ofFace g) = Face.toPrism g
+      := sorry
 
     -- First face of give dimension `n`
     def first (P : Prism) (n : Nat) : Option (Face P) :=
@@ -274,13 +283,23 @@ namespace Prism
     | prod P Q =>
       (P.barycenter, Q.barycenter)
 
-  def pos' {P : Prism} : NFace P 0 → P.𝔼 := sorry
+  def pos {P : Prism} : NFace P 0 → P.𝔼 := sorry
   -- def pos {P : Prism} : Fin (P.pointCount) → ℝ^P.dim := sorry
 
   -- def toRn : {P : Prism} → P.E → ℝ^P.dim := sorry
   -- def fromRn : {P : Prism} → ℝ^P.dim → P.E := sorry
 
-  def barycentricCoord' {P : Prism} : NFace P 0 → P.𝔼 → ℝ := sorry
+  def barycentricCoord {P : Prism} (p : NFace P 0) (x : P.𝔼) : ℝ := 
+    match P, p, x with
+    | point, _, _ => 0
+    | cone P', ⟨Face.tip _, _⟩, (t, x') => t
+    | cone P', ⟨Face.base p', _⟩, (t, x') => 
+      t * (barycentricCoord (!p' : NFace P' 0) x')
+    | prod P Q, ⟨Face.prod p q, _⟩, (x, y) => 
+      (barycentricCoord (!p : NFace P 0) x) * 
+      (barycentricCoord (!q : NFace Q 0) y)
+    | _, _, _ => 0 -- This should be unreachable!
+
   -- def barycentricCoord {P : Prism} : Fin (P.pointCount) → ℝ^P.dim → ℝ := sorry
 
   -- embedding map from a face to prism
