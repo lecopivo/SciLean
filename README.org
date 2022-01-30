@@ -119,4 +119,5 @@ Produces the following animation:
 [[file:wave.gif]]
 
 Or when nicely rendered:
+
 [[file:wavering.gif]]
