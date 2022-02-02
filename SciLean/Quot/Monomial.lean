@@ -11,7 +11,73 @@ export DecComparison (cpEq cpLt cpGt)
 class DecCompar (X : Type u) [LT X] where
   compare (x y : X) : DecComparison x y
 
+instance [LT α] [DecidableEq α] [∀ a b : α, Decidable (a < b)] : DecCompar α :=
+{
+  compare := λ x y =>
+    if h : x = y 
+    then cpEq h
+    else if h : x < y
+    then cpLt h
+    else cpGt sorry
+}
+
+-- instance [LT ι] [Enumtype ι] : DecCompar ι := sorry
+
+instance : DecCompar ℕ :=
+{
+  compare := λ x y =>
+    if h : x = y 
+    then cpEq h
+    else if h : x < y
+    then cpLt h
+    else cpGt sorry
+}
+
 abbrev compare {X} [LT X] [DecCompar X] (x y : X) : DecComparison x y := DecCompar.compare x y
+
+partial def Nat.toSubscript (n : ℕ) : String := 
+  let rec impl (k : ℕ) : String :=
+    if k≠0 then
+      match k%10 with
+      | 0 => impl (k/10) ++ "₀"
+      | 1 => impl (k/10) ++ "₁"
+      | 2 => impl (k/10) ++ "₂"
+      | 3 => impl (k/10) ++ "₃"
+      | 4 => impl (k/10) ++ "₄"
+      | 5 => impl (k/10) ++ "₅"
+      | 6 => impl (k/10) ++ "₆"
+      | 7 => impl (k/10) ++ "₇"
+      | 8 => impl (k/10) ++ "₈"
+      | 9 => impl (k/10) ++ "₉"
+      | _ => ""
+    else
+      ""
+  if n=0 then 
+    "₀"
+  else
+    impl n
+
+partial def Nat.toSupscript (n : ℕ) : String := 
+  let rec impl (k : ℕ) : String :=
+    if k≠0 then
+      match k%10 with
+      | 0 => impl (k/10) ++ "⁰"
+      | 1 => impl (k/10) ++ "¹"
+      | 2 => impl (k/10) ++ "²"
+      | 3 => impl (k/10) ++ "³"
+      | 4 => impl (k/10) ++ "⁴"
+      | 5 => impl (k/10) ++ "⁵"
+      | 6 => impl (k/10) ++ "⁶"
+      | 7 => impl (k/10) ++ "⁷"
+      | 8 => impl (k/10) ++ "⁸"
+      | 9 => impl (k/10) ++ "⁹"
+      | _ => ""
+    else
+      ""
+  if n=0 then 
+    "₀"
+  else
+    impl n
 
 inductive List.Sorted {X : Type u} [LT X] : List X → Prop where
 | empty : Sorted []
@@ -27,20 +93,20 @@ inductive List.StrictlySorted {X : Type u} [LT X] : List X → Prop where
         : StrictlySorted (x :: y :: ys)
 
 
---- Sorts list and returns the number of transpositions
-partial def List.bubblesortTransNum {α} [LT α] [DecCompar α] (l : List α) : List α × ℕ :=
+--- Sorts list and returns the number of transpositions, bool indicates repeated element
+partial def List.bubblesortTransNum {α} [LT α] [DecCompar α] (l : List α) : List α × ℕ × Bool :=
   match l with
-  | [] => ([], 0)
+  | [] => ([], 0, false)
   | x :: xs => 
     match xs.bubblesortTransNum with
-    | ([], n) => ([x], n)
-    | (y :: ys, n) => 
+    | ([], n, b) => ([x], n, b)
+    | (y :: ys, n, b) => 
       match compare x y with
-      | cpEq h => (x :: y :: ys, n)
-      | cpLt h => (x :: y :: ys, n)
+      | cpEq h => (x :: y :: ys, n, true)
+      | cpLt h => (x :: y :: ys, n, b)
       | cpGt h => 
-        let (xys, n') := (x :: ys).bubblesortTransNum
-        (y :: xys, n + n' + 1)
+        let (xys, n', b') := (x :: ys).bubblesortTransNum
+        (y :: xys, n + n' + 1, b ∨ b')
 
 def List.bubblesort {α} [LT α] [DecCompar α] (l : List α) : List α 
   := l.bubblesortTransNum.1
@@ -59,36 +125,45 @@ def napply (f : α → α) (n : ℕ) (a : α) : α :=
 
 export Rank (rank)
 
+
+class Monomial (M) (K : Type v) (X : Type u) extends HMul K M M, Mul M where
+  intro : K → X → M
+  base : M → X
+  coef : M → K
+
 namespace Monomial 
 
-  structure Repr (X : Type u) (K : Type v) where
+  structure Repr (K : Type v) (X : Type u) where
     coef : K
     base : FreeMonoid X
 
-  instance {X K} [Mul K] [Mul X] : Mul (Repr X K) := 
+  instance {K X} [ToString K] [ToString X] : ToString (Repr K X) :=
+   ⟨λ x => s!"{x.coef}*{x.base}"⟩
+
+  instance {K X} [Mul K] [Mul X] : Mul (Repr K X) := 
     ⟨λ x y => ⟨x.coef * y.coef, x.base * y.base⟩⟩
 
-  instance {X K} [Mul K] : HMul K (Repr X K) (Repr X K) := 
+  instance {K X} [Mul K] : HMul K (Repr K X) (Repr K X) := 
     ⟨λ a x => ⟨a * x.coef, x.base⟩⟩
-  instance {X K} [Mul K] : HMul (Repr X K) K (Repr X K) := 
+  instance {K X} [Mul K] : HMul (Repr K X) K (Repr K X) := 
     ⟨λ x a => ⟨x.coef * a, x.base⟩⟩
 
-  -- def Repr.rank {X K} (x : Repr X K) : Nat := x.base.rank
+  -- def Repr.rank {K X} (x : Repr K X) : Nat := x.base.rank
 
   -- Makes only multiplication on X 
-  inductive Eq (X K) [Zero K] : Repr X K → Repr X K → Prop where
-    | refl (x : Repr X K) : Eq X K x x
-    | zero_coeff (x y : FreeMonoid X) : Eq X K ⟨0, x⟩ ⟨0, y⟩
+  inductive FreeEq (K X) [Zero K] : Repr K X → Repr K X → Prop where
+    | refl (x : Repr K X) : FreeEq K X x x
+    | zero_coeff (x y : FreeMonoid X) : FreeEq K X ⟨0, x⟩ ⟨0, y⟩
 
-  inductive SymEq (X K) [Zero K] : Repr X K → Repr X K → Prop where
-    | eq (x y : Repr X K) (h : Eq X K x y) : SymEq X K x y
-    | sym_mul (c : K) (x y : FreeMonoid X) : SymEq X K ⟨c, x * y⟩ ⟨c, y * x⟩
+  inductive SymEq (K X) [Zero K] : Repr K X → Repr K X → Prop where
+    | eq (x y : Repr K X) (h : FreeEq K X x y) : SymEq K X x y
+    | sym_mul (c : K) (x y : FreeMonoid X) : SymEq K X ⟨c, x * y⟩ ⟨c, y * x⟩
 
-  inductive AltEq (X K) [Zero K] [Neg K] : Repr X K → Repr X K → Prop where
-    | eq (x y : Repr X K) (h : Eq X K x y) : AltEq X K x y
-    | alt_mul (c : K) (x y : FreeMonoid X) : AltEq X K ⟨c, x * y⟩ ⟨napply Neg.neg (x.rank * y.rank) c, y * x⟩
+  inductive AltEq (K X) [Zero K] [Neg K] : Repr K X → Repr K X → Prop where
+    | eq (x y : Repr K X) (h : FreeEq K X x y) : AltEq K X x y
+    | alt_mul (c : K) (x y : FreeMonoid X) : AltEq K X ⟨c, x * y⟩ ⟨napply Neg.neg (x.rank * y.rank) c, y * x⟩
 
-  instance {X K} [Zero K] [One X] : QForm (Eq X K) :=
+  instance {K X} [Zero K] : QForm (FreeEq K X) :=
   {
     RedForm := λ _ => True
     NormForm := λ x => (x.coef = 0 → x.base = 1)
@@ -96,7 +171,7 @@ namespace Monomial
     norm_eq := sorry
   }
 
-  instance {X K} [One X] [LT X] [Zero K] : QForm (SymEq X K) :=
+  instance {K X} [LT X] [Zero K] : QForm (SymEq K X) :=
   {
     RedForm := λ x => x.base.1.Sorted
     NormForm := λ x => x.base.1.Sorted ∧ (x.coef = 0 → x.base = 1)
@@ -104,7 +179,7 @@ namespace Monomial
     norm_eq := sorry
   }
 
-  instance {X K} [One X] [LT X] [Zero K] [Neg K] : QForm (AltEq X K) :=
+  instance {K X} [LT X] [Zero K] [Neg K] : QForm (AltEq K X) :=
   {
     RedForm := λ x => x.base.1.StrictlySorted
     NormForm := λ x => x.base.1.StrictlySorted ∧ (x.coef = 0 → x.base = 1)
@@ -112,7 +187,7 @@ namespace Monomial
     norm_eq := sorry
   }
 
-  instance {X K} [One X ] [Zero K] [Reduce K] : QReduce (Eq X K) :=
+  instance {K X} [Zero K] [Reduce K] : QReduce (FreeEq K X) :=
   {
     reduce := λ x => ⟨reduce x.coef, x.base⟩
     is_reduce := sorry
@@ -120,7 +195,7 @@ namespace Monomial
     preserve_norm := sorry
   }
 
-  instance {X K} [One X] [LT X] [DecCompar X] [Zero K] [Reduce K] : QReduce (SymEq X K) :=
+  instance {K X} [LT X] [DecCompar X] [Zero K] [Reduce K] : QReduce (SymEq K X) :=
   {
     reduce := λ x => ⟨reduce x.coef, ⟨x.base.1.bubblesort⟩⟩
     is_reduce := sorry
@@ -129,25 +204,30 @@ namespace Monomial
   }
 
   -- TODO: Check for repeated element in monomial
-  -- instance {X K} [One X] [LT X] [DecCompar X] [Zero K] [Neg K] [Reduce K] : QReduce (AltEq X K) :=
-  -- {
-  --   reduce := λ x => 
-  --     let (b, n) := x.base.1.bubblesortTransNum
-  --     let c := if n%2==0 then x.coef else -x.coef
-  --     ⟨c, ⟨b⟩⟩
-  --   is_reduce := sorry
-  --   eq_reduce := sorry
-  --   preserve_norm := sorry
-  -- }
-
-  instance {X K} [Zero K] [One X] [DecidableEq K] : QNormalize (Eq X K) :=
+  instance {K X} [LT X] [DecCompar X] [Zero K] [Neg K] [Reduce K] : QReduce (AltEq K X) :=
   {
-    normalize := λ x => if x.coef = 0 then ⟨0, 1⟩ else x
+    reduce := λ x =>
+      let (xb, n, b) := x.base.1.bubblesortTransNum
+      if b then
+        ⟨0, 1⟩
+      else
+        let c := reduce <| if n%2==0 then x.coef else -x.coef
+        ⟨c, ⟨xb⟩⟩
+    is_reduce := sorry
+    eq_reduce := sorry
+    preserve_norm := sorry
+  }
+
+  instance {K X} [DecidableEq K] [Zero K] [Normalize K] : QNormalize (FreeEq K X) :=
+  {
+    normalize := λ x => 
+      let c := normalize x.coef
+      if c = 0 then ⟨0, 1⟩ else ⟨c, x.base⟩
     is_normalize := sorry
     eq_normalize := sorry
   }
 
-  instance {X K} [Zero K] [One X] [LT X] [DecCompar X] [Zero K] [Normalize K] [DecidableEq K] : QNormalize (SymEq X K) :=
+  instance {K X} [LT X] [DecCompar X] [DecidableEq K] [Zero K] [Normalize K] : QNormalize (SymEq K X) :=
   {
     normalize := λ x => 
       let c := normalize x.coef
@@ -158,93 +238,183 @@ namespace Monomial
   }
 
   -- TODO: Check for repeated element in monomial
-  -- instance {X K} [Zero K] [One X] [LT X] [DecCompar X] [Zero K] [Neg K] [Normalize K] [DecidableEq K] : QNormalize (AltEq X K) :=
-  -- {
-  --   normalize := λ x => 
-  --     let (b,n) := x.base.1.bubblesortTransNum
-  --     let c := normalize x.coef
-  --     let c := if (n%2 == 0) then c else -c
-  --     if c = 0 then ⟨0, 1⟩ else ⟨c, ⟨b⟩⟩
-  --   is_normalize := sorry
-  --   eq_normalize := sorry
-  -- }
+  instance {K X} [LT X] [DecCompar X] [DecidableEq K] [Zero K] [Neg K] [Normalize K] : QNormalize (AltEq K X) :=
+  {
+    normalize := λ x => 
+      let (xb, n, b) := x.base.1.bubblesortTransNum
+      if b then 
+        ⟨0, 1⟩
+      else
+        let c := normalize x.coef
+        let c := if (n%2 == 0) then c else -c
+        if c = 0 then ⟨0, 1⟩ else ⟨c, ⟨xb⟩⟩
+    is_normalize := sorry
+    eq_normalize := sorry
+  }
 
 end Monomial 
   
-abbrev Monomial (X : Type u) (K : Type v) [Monoid X] [Ring K] := 
-  Quot' (Monomial.Eq X K)
+def FreeMonomial (K : Type v) (X : Type u) [Zero K] := 
+  Quot' (Monomial.FreeEq K X)
 
-abbrev SymMonomial (X : Type u) (K : Type v) [Monoid X] [LT X] [Ring K] := 
-  Quot' (Monomial.SymEq X K)
+def SymMonomial (K : Type v) (X : Type u) [LT X] [Zero K] := 
+  Quot' (Monomial.SymEq K X)
 
-abbrev AltMonomial (X : Type u) (K : Type v) [Monoid X] [LT X] [Ring K]:= 
-  Quot' (Monomial.AltEq X K)
+def AltMonomial (K : Type v) (X : Type u) [LT X] [Neg K] [Zero K]:= 
+  Quot' (Monomial.AltEq K X)
 
-namespace Monomial
-
+namespace FreeMonomial
   open Monomial
 
-  variable {X K} {S : Rel $ Repr X K} [QForm S]
+  variable {K X} [Zero K] [Mul K] [DecidableEq K] [Reduce K] [Normalize K]  --[QNormalize (FreeEq K X)]
 
-  def coef [QNormalize S] (x : Quot' S) : K := x.nrepr.coef
-  def base [QNormalize S] (x : Quot' S) : FreeMonoid X := x.nrepr.base
+  instance (c : K) : IsQHom (FreeEq K X) (FreeEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance (c : K) : IsQHomR (FreeEq K X) (FreeEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance : HMul K (FreeMonomial K X) (FreeMonomial K X) :=
+  ⟨
+    λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
+  ⟩
 
-  variable (m : Monomial Nat Int)
+  instance : IsQHom₂ (FreeEq K X) (FreeEq K X) (FreeEq K X) 
+    (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
+  instance : Mul (FreeMonomial K X) :=
+  ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
 
-  #check coef m
-  #check base m
-  #check m.repr
-           
+  instance : Monomial (FreeMonomial K X) K (FreeMonoid X) :=
+  {
+    intro := λ k x => ⟦QRepr.raw ⟨k, x⟩⟧
+    base := λ m => m.nrepr.base
+    coef := λ m => m.nrepr.coef
+  }
 
-end Monomial
-
-
-
-namespace Algebra 
-
-  -- M monomials  
-  -- K ring
-  inductive Repr (M K : Type u) : Type u where
-  | mon (m : M) : Repr M K
-  | add (x y : Repr M K) : Repr M K
-  | mul (x y : Repr M K) : Repr M K
-  | lmul (c : K) (x : Repr M K) : Repr M K
-  -- | rmul (x : Repr M K) (c : K) : Repr M K
-
-  instance {M K} : Mul (Repr M K) := ⟨λ x y => Repr.mul x y⟩
-  instance {M K} : Add (Repr M K) := ⟨λ x y => Repr.add x y⟩
-  instance {M K} : HMul K (Repr M K) (Repr M K) := ⟨λ x y => Repr.lmul x y⟩
-  -- instance {M K} : HMul (Repr M K) K (Repr M K) := ⟨λ x y => Repr.rmul x y⟩
-    
-  open Repr in
-  partial def reduce {M K} [HMul K M M] [Mul M] [Zero M] [DecidableEq M] [Mul K] (x : Repr M K) : Repr M K
+  def toString [ToString X] [ToString K] 
+    (mul smul : String) (m : FreeMonomial K X) : String
     := 
-    match x with
-    | x * y => 
-      match reduce x, reduce y with
-      | mon x, mon y => mon (x*y)
-      | x, y' * y'' => reduce $ x * y' * y''
-      | x, y => x * y
-    | lmul c x => 
-      match reduce x with
-      | mon x => mon (c*x)
-      | x * y => reduce (c*x)*y
-      | lmul d x => (c*d)*x
-      | x => c * x
-    | x + y =>
-      match reduce x, reduce y with
-      | mon x, y => if x=0 then y else (mon x) + y
-      | x, mon y => if y=0 then x else x + (mon y)
-      | x, y' + y'' => reduce $ (x + y') + y''
-      | x, y => x + y
-    | x => x
-         
-    -- | x * ((mon y) * (mon z)) => reduce $ x * mon (y*z)
-    -- | x * (y * z) => reduce $ (x * y) * z
-    -- | x => x
-    
+  Id.run do
+    let m' := m.nrepr
+    let mut s := s!"{m'.coef}{smul}{m'.base.toString mul}"
+    s
 
-  #check ((1 * 2) * 3)
+  instance [ToString X] [ToString K] : ToString (FreeMonomial K X) 
+    := ⟨λ m => m.toString "⊗" "*"⟩
+
+  instance [QReduce (FreeEq K X)] : Reduce (FreeMonomial K X) := Quot'.instReduceQuot'
+  instance [QNormalize (FreeEq K X)] : Normalize (FreeMonomial K X) := Quot'.instNormalizeQuot'
+
+end FreeMonomial
+
+namespace SymMonomial
+  open Monomial
+
+  variable {K X} [LT X] [DecCompar X] [DecidableEq K] [Zero K] [Mul K] [Reduce K] [Normalize K] -- [QNormalize (SymEq K X)]
+
+  instance (c : K) : IsQHom (SymEq K X) (SymEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance (c : K) : IsQHomR (SymEq K X) (SymEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance : HMul K (SymMonomial K X) (SymMonomial K X) :=
+  ⟨
+    λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
+  ⟩
+
+  instance : IsQHom₂ (SymEq K X) (SymEq K X) (SymEq K X) 
+    (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
+  instance : Mul (SymMonomial K X) :=
+  ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
+
+  instance : Monomial (SymMonomial K X) K (FreeMonoid X) :=
+  {
+    intro := λ k x => ⟦QRepr.raw ⟨k, x⟩⟧
+    base := λ m => m.nrepr.base
+    coef := λ m => m.nrepr.coef
+  }
+
+  def toString [ToString X] [ToString K] 
+    (mul smul : String) (m : SymMonomial K X) : String
+    := 
+  Id.run do
+    let m' := m.nrepr
+    let mut s := s!"{m'.coef}{smul}{m'.base.toString mul}"
+    s
+
+  instance [ToString X] [ToString K] : ToString (SymMonomial K X) 
+    := ⟨λ m => m.toString "*" "*"⟩
+
+  instance [QReduce (SymEq K X)] : Reduce (SymMonomial K X) := Quot'.instReduceQuot'
+  instance [QNormalize (SymEq K X)] : Normalize (SymMonomial K X) := Quot'.instNormalizeQuot'
+
+end SymMonomial
+
+namespace AltMonomial
+  open Monomial
+
+  variable {K X} [LT X] [DecCompar X] [Zero K] [Neg K] [Mul K] [Normalize K] [DecidableEq K] -- [QNormalize (AltEq K X)] 
+
+  instance (c : K) : IsQHom (AltEq K X) (AltEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance (c : K) : IsQHomR (AltEq K X) (AltEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance : HMul K (AltMonomial K X) (AltMonomial K X) :=
+  ⟨
+    λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
+  ⟩
+
+  instance : IsQHom₂ (AltEq K X) (AltEq K X) (AltEq K X) 
+    (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
+  instance : Mul (AltMonomial K X) :=
+  ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
+
+  instance : Monomial (AltMonomial K X) K (FreeMonoid X) :=
+  {
+    intro := λ k x =>  ⟦QRepr.raw ⟨k, x⟩⟧
+    base := λ m => m.nrepr.base
+    coef := λ m => m.nrepr.coef
+  }
+
+  def toString [ToString X] [ToString K] 
+    (mul smul : String) (m : AltMonomial K X) : String
+    := 
+  Id.run do
+    let m' := m.nrepr
+    let mut s := s!"{m'.coef}{smul}{m'.base.toString mul}"
+    s
+
+  instance [ToString X] [ToString K] : ToString (AltMonomial K X) 
+    := ⟨λ m => m.toString "∧" "*"⟩
+
+  instance [ToString K] : ToString (AltMonomial K Nat) 
+    := ⟨λ m => m.toString "∧" "*"⟩
 
 
-end Algebra
+  instance [QReduce (AltEq K X)] : Reduce (AltMonomial K X) := Quot'.instReduceQuot'
+  instance [QNormalize (AltEq K X)] : Normalize (AltMonomial K X) := Quot'.instNormalizeQuot'
+
+end AltMonomial
+
+#eval ( (10 : ℕ).toSubscript)
+
+def m : FreeMonomial Int Nat := ⟦QRepr.raw ⟨1, ⟨[0,2,0,3]⟩⟩⟧
+def p : SymMonomial Int Nat := ⟦QRepr.raw ⟨1, ⟨[0,2,0,3]⟩⟩⟧
+def w : AltMonomial Int Nat := ⟦QRepr.raw ⟨2, ⟨[1,0,3]⟩⟩⟧
+def w' : AltMonomial Int Nat := ⟦QRepr.raw ⟨0, ⟨[5,2]⟩⟩⟧
+def w'' : AltMonomial Int Nat := ⟦QRepr.raw ⟨3, ⟨[5,2]⟩⟩⟧
+
+#check Quot'.instNormalizeQuot'.normalize
+
+#eval m
+#eval p
+#eval w.toDebugString
+#eval w*w''
+#eval w |> Quot'.instNormalizeQuot'.normalize |>.toDebugString
+#eval w |> normalize |>.toDebugString
+#eval w'.toDebugString
+#eval (w' |> reduce).toDebugString
+#eval (w' |> normalize).toDebugString
+
+
+#eval (w*w').toDebugString
+#eval (w*w' |> reduce).toDebugString
+#eval (w*w' |> normalize).toDebugString
+
+
+
+
+-- 𝔁[0] 𝓭𝔁[] 𝓮[0] 
+
+

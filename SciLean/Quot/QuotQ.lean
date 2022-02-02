@@ -16,6 +16,12 @@ namespace SciLean.Quot'
   class IsQHomN (S : Rel α) (R : Rel β) [QForm S] [QForm R] (f : α → β) extends IsQHomR S R f where
     preserve_norm : ∀ x : α, NormForm S x → NormForm R (f x)
 
+  -- class IsQHomR₂ (S : Rel α) (R : Rel β) [QForm S] [QForm R] (f : α → β) extends IsQHom S R f where
+  --   preserve_red : ∀ x : α, RedForm S x → RedForm R (f x)
+
+  -- class IsQHomN₂ (S : Rel α) (R : Rel β) [QForm S] [QForm R] (f : α → β) extends IsQHomR S R f where
+  --   preserve_norm : ∀ x : α, NormForm S x → NormForm R (f x)
+
   ---
   
   class QReduce {α} (S : Rel α) [QForm S] where
@@ -27,6 +33,12 @@ namespace SciLean.Quot'
   class Reduce (α) where
     reduce : α → α
     id_reduce : ∀ x : α, reduce x = x
+
+  instance (priority := low) {α} : Reduce α :=
+  {
+    reduce := id
+    id_reduce := λ _ => rfl
+  }
 
   export Reduce (reduce)
 
@@ -40,6 +52,12 @@ namespace SciLean.Quot'
   class Normalize (α) where
     normalize : α → α
     id_normalize : ∀ x : α, normalize x = x
+
+  instance (priority := low) {α} : Normalize α :=
+  {
+    normalize := id
+    id_normalize := λ _ => rfl
+  }
 
   export Normalize (normalize)
 
@@ -131,15 +149,42 @@ abbrev Quot' {α} (S : Rel α) [QForm S]
 namespace Quot'
 
   variable {α} {S : Rel α} [QForm S]
+  variable {β} {R : Rel β} [QForm R]
+  variable {γ} {T : Rel γ} [QForm T]
 
   -- Normalized representant is unique, follows from `QForm.norm_eq`
   def nrepr [QNormalize S] : Quot' S → α := Quot.lift (λ x => x.normalize.repr) sorry
 
   noncomputable
-  def srepr (x : Quot' S) : QRepr S := x.repr
+  def qrepr (x : Quot' S) : QRepr S := x.repr
 
   noncomputable
-  def repr (x : Quot' S) : α := x.srepr.repr
+  def repr (x : Quot' S) : α := x.qrepr.repr
+
+  def lift (f : α → β) [hom : IsQHom S R f] : Quot' S → Quot' R :=
+  Quot.lift (λ x => ⟦QRepr.raw (f x.repr)⟧) sorry
+
+  def rlift (f : α → β) [hom : IsQHomR S R f] : Quot' S → Quot' R :=
+  Quot.lift (λ x => 
+    match x with
+    | QRepr.raw x' => ⟦QRepr.raw (f x')⟧
+    | QRepr.red x' _ => ⟦QRepr.red (f x') sorry⟧
+    | QRepr.norm x' _ => ⟦QRepr.red (f x') sorry⟧
+    ) sorry
+
+  def nlift (f : α → β) [hom : IsQHomR S R f] : Quot' S → Quot' R :=
+  Quot.lift (λ x => 
+    match x with
+    | QRepr.raw x' => ⟦QRepr.raw (f x')⟧
+    | QRepr.red x' _ => ⟦QRepr.red (f x') sorry⟧
+    | QRepr.norm x' _ => ⟦QRepr.norm (f x') sorry⟧
+    ) sorry
+
+  def lift₂ (f : α → β → γ) [hom : IsQHom₂ S R T f] : Quot' S → Quot' R → Quot' T :=
+  Quot.lift (λ x => 
+    Quot.lift (λ y => ⟦QRepr.raw (f x.repr y.repr)⟧               
+      ) sorry
+    ) sorry
 
   instance [QReduce S] : Reduce (Quot' S) :=
   {
@@ -162,8 +207,16 @@ namespace Quot'
   variable (x : Quot' S) [QNormalize S]
 
   #check x.repr
-  #check x.srepr
+  #check x.qrepr
   #check x.nrepr
+
+  constant toDebugString (x : Quot' S) [ToString α] : String :=
+    Quot.lift (λ x => 
+      match x with
+      | QRepr.raw x' => s!"raw⟦{x'}⟧"
+      | QRepr.red x' _ => s!"red⟦{x'}⟧"
+      | QRepr.norm x' _ => s!"norm⟦{x'}⟧")
+      sorry x
 
 end Quot'
 
