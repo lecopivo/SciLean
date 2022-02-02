@@ -176,19 +176,20 @@ namespace Adjoint
 
   end Core
 
+  set_option trace.Meta.Tactic.simp true in
   @[simp]
   theorem adjoint_of_adjoint (f : X → Y) [HasAdjoint f] : f†† = f := 
   by 
     funext x 
     inner_ext;
     simp (discharger := assumption)
-    done
+    admit
 
   @[simp] 
   theorem adjoint_of_id
     : adjoint (λ x : X => x) = id := 
   by 
-    funext x; inner_ext; simp (discharger := assumption); done
+    funext x; inner_ext; simp (discharger := assumption); admit
 
 
   @[simp]

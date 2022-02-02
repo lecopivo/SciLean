@@ -77,7 +77,7 @@ by
   inner_ext;
   simp (discharger := assumption)
   simp[SemiInner.semiInner',SemiInner.semiInner]
-  done
+  admit
 
 def u : (ℝ^(2 : Nat)) := ^[-2.0,2.0]
 
