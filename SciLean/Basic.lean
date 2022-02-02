@@ -4,6 +4,7 @@ import SciLean.Data
 import SciLean.Simp
 import SciLean.Solver
 import SciLean.Tactic
+import SciLean.Quot
 
 -- import SciLean.Linear
 -- import SciLean.Smooth

@@ -21,7 +21,6 @@ namespace Algebra
 
   namespace Repr
 
-  set_option trace.Meta.synthInstance true in
   partial def reduce {M K X} [Monomial M K X] [DecidableEq M] [Mul K] --[Monomial M X K]
     (x : Repr M K X) : Repr M K X
     := 
