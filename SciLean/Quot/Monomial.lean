@@ -133,37 +133,37 @@ class Monomial (M) (K : Type v) (X : Type u) extends HMul K M M, Mul M where
 
 namespace Monomial 
 
-  structure Repr (K : Type v) (X : Type u) where
+  structure Repr (K : Type v) (ι : Type u) where
     coef : K
-    base : FreeMonoid X
+    base : FreeMonoid ι
 
-  instance {K X} [ToString K] [ToString X] : ToString (Repr K X) :=
+  instance {K ι} [ToString K] [ToString ι] : ToString (Repr K ι) :=
    ⟨λ x => s!"{x.coef}*{x.base}"⟩
 
-  instance {K X} [Mul K] [Mul X] : Mul (Repr K X) := 
+  instance {K ι} [Mul K] : Mul (Repr K ι) := 
     ⟨λ x y => ⟨x.coef * y.coef, x.base * y.base⟩⟩
 
-  instance {K X} [Mul K] : HMul K (Repr K X) (Repr K X) := 
+  instance {K ι} [Mul K] : HMul K (Repr K ι) (Repr K ι) := 
     ⟨λ a x => ⟨a * x.coef, x.base⟩⟩
-  instance {K X} [Mul K] : HMul (Repr K X) K (Repr K X) := 
+  instance {K ι} [Mul K] : HMul (Repr K ι) K (Repr K ι) := 
     ⟨λ x a => ⟨x.coef * a, x.base⟩⟩
 
   -- def Repr.rank {K X} (x : Repr K X) : Nat := x.base.rank
 
   -- Makes only multiplication on X 
-  inductive FreeEq (K X) [Zero K] : Repr K X → Repr K X → Prop where
-    | refl (x : Repr K X) : FreeEq K X x x
-    | zero_coeff (x y : FreeMonoid X) : FreeEq K X ⟨0, x⟩ ⟨0, y⟩
+  inductive FreeEq (K ι) [Zero K] : Repr K ι → Repr K ι → Prop where
+    | refl (x : Repr K ι) : FreeEq K ι x x
+    | zero_coeff (x y : FreeMonoid ι) : FreeEq K ι ⟨0, x⟩ ⟨0, y⟩
 
-  inductive SymEq (K X) [Zero K] : Repr K X → Repr K X → Prop where
-    | eq (x y : Repr K X) (h : FreeEq K X x y) : SymEq K X x y
-    | sym_mul (c : K) (x y : FreeMonoid X) : SymEq K X ⟨c, x * y⟩ ⟨c, y * x⟩
+  inductive SymEq (K ι) [Zero K] : Repr K ι → Repr K ι → Prop where
+    | eq (x y : Repr K ι) (h : FreeEq K ι x y) : SymEq K ι x y
+    | sym_mul (c : K) (x y : FreeMonoid ι) : SymEq K ι ⟨c, x * y⟩ ⟨c, y * x⟩
 
-  inductive AltEq (K X) [Zero K] [Neg K] : Repr K X → Repr K X → Prop where
-    | eq (x y : Repr K X) (h : FreeEq K X x y) : AltEq K X x y
-    | alt_mul (c : K) (x y : FreeMonoid X) : AltEq K X ⟨c, x * y⟩ ⟨napply Neg.neg (x.rank * y.rank) c, y * x⟩
+  inductive AltEq (K ι) [Zero K] [Neg K] : Repr K ι → Repr K ι → Prop where
+    | eq (x y : Repr K ι) (h : FreeEq K ι x y) : AltEq K ι x y
+    | alt_mul (c : K) (x y : FreeMonoid ι) : AltEq K ι ⟨c, x * y⟩ ⟨napply Neg.neg (x.rank * y.rank) c, y * x⟩
 
-  instance {K X} [Zero K] : QForm (FreeEq K X) :=
+  instance {K ι} [Zero K] : QForm (FreeEq K ι) :=
   {
     RedForm := λ _ => True
     NormForm := λ x => (x.coef = 0 → x.base = 1)
@@ -171,7 +171,7 @@ namespace Monomial
     norm_eq := sorry
   }
 
-  instance {K X} [LT X] [Zero K] : QForm (SymEq K X) :=
+  instance {K ι} [LT ι] [Zero K] : QForm (SymEq K ι) :=
   {
     RedForm := λ x => x.base.1.Sorted
     NormForm := λ x => x.base.1.Sorted ∧ (x.coef = 0 → x.base = 1)
@@ -179,7 +179,7 @@ namespace Monomial
     norm_eq := sorry
   }
 
-  instance {K X} [LT X] [Zero K] [Neg K] : QForm (AltEq K X) :=
+  instance {K ι} [LT ι] [Zero K] [Neg K] : QForm (AltEq K ι) :=
   {
     RedForm := λ x => x.base.1.StrictlySorted
     NormForm := λ x => x.base.1.StrictlySorted ∧ (x.coef = 0 → x.base = 1)
@@ -187,7 +187,7 @@ namespace Monomial
     norm_eq := sorry
   }
 
-  instance {K X} [Zero K] [Reduce K] : QReduce (FreeEq K X) :=
+  instance {K ι} [Zero K] [Reduce K] : QReduce (FreeEq K ι) :=
   {
     reduce := λ x => ⟨reduce x.coef, x.base⟩
     is_reduce := sorry
@@ -195,7 +195,7 @@ namespace Monomial
     preserve_norm := sorry
   }
 
-  instance {K X} [LT X] [DecCompar X] [Zero K] [Reduce K] : QReduce (SymEq K X) :=
+  instance {K ι} [LT ι] [DecCompar ι] [Zero K] [Reduce K] : QReduce (SymEq K ι) :=
   {
     reduce := λ x => ⟨reduce x.coef, ⟨x.base.1.bubblesort⟩⟩
     is_reduce := sorry
@@ -204,7 +204,7 @@ namespace Monomial
   }
 
   -- TODO: Check for repeated element in monomial
-  instance {K X} [LT X] [DecCompar X] [Zero K] [Neg K] [Reduce K] : QReduce (AltEq K X) :=
+  instance {K ι} [LT ι] [DecCompar ι] [Zero K] [Neg K] [Reduce K] : QReduce (AltEq K ι) :=
   {
     reduce := λ x =>
       let (xb, n, b) := x.base.1.bubblesortTransNum
@@ -218,7 +218,7 @@ namespace Monomial
     preserve_norm := sorry
   }
 
-  instance {K X} [DecidableEq K] [Zero K] [Normalize K] : QNormalize (FreeEq K X) :=
+  instance {K ι} [DecidableEq K] [Zero K] [Normalize K] : QNormalize (FreeEq K ι) :=
   {
     normalize := λ x => 
       let c := normalize x.coef
@@ -227,7 +227,7 @@ namespace Monomial
     eq_normalize := sorry
   }
 
-  instance {K X} [LT X] [DecCompar X] [DecidableEq K] [Zero K] [Normalize K] : QNormalize (SymEq K X) :=
+  instance {K ι} [LT ι] [DecCompar ι] [DecidableEq K] [Zero K] [Normalize K] : QNormalize (SymEq K ι) :=
   {
     normalize := λ x => 
       let c := normalize x.coef
@@ -238,7 +238,7 @@ namespace Monomial
   }
 
   -- TODO: Check for repeated element in monomial
-  instance {K X} [LT X] [DecCompar X] [DecidableEq K] [Zero K] [Neg K] [Normalize K] : QNormalize (AltEq K X) :=
+  instance {K ι} [LT ι] [DecCompar ι] [DecidableEq K] [Zero K] [Neg K] [Normalize K] : QNormalize (AltEq K ι) :=
   {
     normalize := λ x => 
       let (xb, n, b) := x.base.1.bubblesortTransNum
@@ -254,136 +254,136 @@ namespace Monomial
 
 end Monomial 
   
-def FreeMonomial (K : Type v) (X : Type u) [Zero K] := 
-  Quot' (Monomial.FreeEq K X)
+def FreeMonomial (K : Type v) (ι : Type u) [Zero K] := 
+  Quot' (Monomial.FreeEq K ι)
 
-def SymMonomial (K : Type v) (X : Type u) [LT X] [Zero K] := 
-  Quot' (Monomial.SymEq K X)
+def SymMonomial (K : Type v) (ι : Type u) [LT ι] [Zero K] := 
+  Quot' (Monomial.SymEq K ι)
 
-def AltMonomial (K : Type v) (X : Type u) [LT X] [Neg K] [Zero K]:= 
-  Quot' (Monomial.AltEq K X)
+def AltMonomial (K : Type v) (ι : Type u) [LT ι] [Neg K] [Zero K]:= 
+  Quot' (Monomial.AltEq K ι)
 
 namespace FreeMonomial
   open Monomial
 
-  variable {K X} [Zero K] [Mul K] [DecidableEq K] [Reduce K] [Normalize K]  --[QNormalize (FreeEq K X)]
+  variable {K ι} [Zero K] [Mul K] [DecidableEq K] [Reduce K] [Normalize K]  --[QNormalize (FreeEq K X)]
 
-  instance (c : K) : IsQHom (FreeEq K X) (FreeEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance (c : K) : IsQHomR (FreeEq K X) (FreeEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance : HMul K (FreeMonomial K X) (FreeMonomial K X) :=
+  instance (c : K) : IsQHom (FreeEq K ι) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance (c : K) : IsQHomR (FreeEq K ι) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance : HMul K (FreeMonomial K ι) (FreeMonomial K ι) :=
   ⟨
     λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
   ⟩
 
-  instance : IsQHom₂ (FreeEq K X) (FreeEq K X) (FreeEq K X) 
+  instance : IsQHom₂ (FreeEq K ι) (FreeEq K ι) (FreeEq K ι) 
     (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
-  instance : Mul (FreeMonomial K X) :=
+  instance : Mul (FreeMonomial K ι) :=
   ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
 
-  instance : Monomial (FreeMonomial K X) K (FreeMonoid X) :=
+  instance : Monomial (FreeMonomial K ι) K (FreeMonoid ι) :=
   {
     intro := λ k x => ⟦QRepr.raw ⟨k, x⟩⟧
     base := λ m => m.nrepr.base
     coef := λ m => m.nrepr.coef
   }
 
-  def toString [ToString X] [ToString K] 
-    (mul smul : String) (m : FreeMonomial K X) : String
+  def toString [ToString ι] [ToString K] 
+    (mul smul : String) (m : FreeMonomial K ι) : String
     := 
   Id.run do
     let m' := m.nrepr
     let mut s := s!"{m'.coef}{smul}{m'.base.toString mul}"
     s
 
-  instance [ToString X] [ToString K] : ToString (FreeMonomial K X) 
+  instance [ToString ι] [ToString K] : ToString (FreeMonomial K ι) 
     := ⟨λ m => m.toString "⊗" "*"⟩
 
-  instance [QReduce (FreeEq K X)] : Reduce (FreeMonomial K X) := Quot'.instReduceQuot'
-  instance [QNormalize (FreeEq K X)] : Normalize (FreeMonomial K X) := Quot'.instNormalizeQuot'
+  instance [QReduce (FreeEq K ι)] : Reduce (FreeMonomial K ι) := Quot'.instReduceQuot'
+  instance [QNormalize (FreeEq K ι)] : Normalize (FreeMonomial K ι) := Quot'.instNormalizeQuot'
 
 end FreeMonomial
 
 namespace SymMonomial
   open Monomial
 
-  variable {K X} [LT X] [DecCompar X] [DecidableEq K] [Zero K] [Mul K] [Reduce K] [Normalize K] -- [QNormalize (SymEq K X)]
+  variable {K ι} [LT ι] [DecCompar ι] [DecidableEq K] [Zero K] [Mul K] [Reduce K] [Normalize K] -- [QNormalize (SymEq K ι)]
 
-  instance (c : K) : IsQHom (SymEq K X) (SymEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance (c : K) : IsQHomR (SymEq K X) (SymEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance : HMul K (SymMonomial K X) (SymMonomial K X) :=
+  instance (c : K) : IsQHom (SymEq K ι) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance (c : K) : IsQHomR (SymEq K ι) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance : HMul K (SymMonomial K ι) (SymMonomial K ι) :=
   ⟨
     λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
   ⟩
 
-  instance : IsQHom₂ (SymEq K X) (SymEq K X) (SymEq K X) 
+  instance : IsQHom₂ (SymEq K ι) (SymEq K ι) (SymEq K ι) 
     (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
-  instance : Mul (SymMonomial K X) :=
+  instance : Mul (SymMonomial K ι) :=
   ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
 
-  instance : Monomial (SymMonomial K X) K (FreeMonoid X) :=
+  instance : Monomial (SymMonomial K ι) K (FreeMonoid ι) :=
   {
     intro := λ k x => ⟦QRepr.raw ⟨k, x⟩⟧
     base := λ m => m.nrepr.base
     coef := λ m => m.nrepr.coef
   }
 
-  def toString [ToString X] [ToString K] 
-    (mul smul : String) (m : SymMonomial K X) : String
+  def toString [ToString ι] [ToString K] 
+    (mul smul : String) (m : SymMonomial K ι) : String
     := 
   Id.run do
     let m' := m.nrepr
     let mut s := s!"{m'.coef}{smul}{m'.base.toString mul}"
     s
 
-  instance [ToString X] [ToString K] : ToString (SymMonomial K X) 
+  instance [ToString ι] [ToString K] : ToString (SymMonomial K ι) 
     := ⟨λ m => m.toString "*" "*"⟩
 
-  instance [QReduce (SymEq K X)] : Reduce (SymMonomial K X) := Quot'.instReduceQuot'
-  instance [QNormalize (SymEq K X)] : Normalize (SymMonomial K X) := Quot'.instNormalizeQuot'
+  instance [QReduce (SymEq K ι)] : Reduce (SymMonomial K ι) := Quot'.instReduceQuot'
+  instance [QNormalize (SymEq K ι)] : Normalize (SymMonomial K ι) := Quot'.instNormalizeQuot'
 
 end SymMonomial
 
 namespace AltMonomial
   open Monomial
 
-  variable {K X} [LT X] [DecCompar X] [Zero K] [Neg K] [Mul K] [Normalize K] [DecidableEq K] -- [QNormalize (AltEq K X)] 
+  variable {K ι} [LT ι] [DecCompar ι] [Zero K] [Neg K] [Mul K] [Normalize K] [DecidableEq K] -- [QNormalize (AltEq K ι)] 
 
-  instance (c : K) : IsQHom (AltEq K X) (AltEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance (c : K) : IsQHomR (AltEq K X) (AltEq K X) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance : HMul K (AltMonomial K X) (AltMonomial K X) :=
+  instance (c : K) : IsQHom (AltEq K ι) (AltEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance (c : K) : IsQHomR (AltEq K ι) (AltEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance : HMul K (AltMonomial K ι) (AltMonomial K ι) :=
   ⟨
     λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
   ⟩
 
-  instance : IsQHom₂ (AltEq K X) (AltEq K X) (AltEq K X) 
+  instance : IsQHom₂ (AltEq K ι) (AltEq K ι) (AltEq K ι) 
     (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
-  instance : Mul (AltMonomial K X) :=
+  instance : Mul (AltMonomial K ι) :=
   ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
 
-  instance : Monomial (AltMonomial K X) K (FreeMonoid X) :=
+  instance : Monomial (AltMonomial K ι) K (FreeMonoid ι) :=
   {
     intro := λ k x =>  ⟦QRepr.raw ⟨k, x⟩⟧
     base := λ m => m.nrepr.base
     coef := λ m => m.nrepr.coef
   }
 
-  def toString [ToString X] [ToString K] 
-    (mul smul : String) (m : AltMonomial K X) : String
+  def toString [ToString ι] [ToString K] 
+    (mul smul : String) (m : AltMonomial K ι) : String
     := 
   Id.run do
     let m' := m.nrepr
     let mut s := s!"{m'.coef}{smul}{m'.base.toString mul}"
     s
 
-  instance [ToString X] [ToString K] : ToString (AltMonomial K X) 
+  instance [ToString ι] [ToString K] : ToString (AltMonomial K ι) 
     := ⟨λ m => m.toString "∧" "*"⟩
 
   instance [ToString K] : ToString (AltMonomial K Nat) 
     := ⟨λ m => m.toString "∧" "*"⟩
 
 
-  instance [QReduce (AltEq K X)] : Reduce (AltMonomial K X) := Quot'.instReduceQuot'
-  instance [QNormalize (AltEq K X)] : Normalize (AltMonomial K X) := Quot'.instNormalizeQuot'
+  instance [QReduce (AltEq K ι)] : Reduce (AltMonomial K ι) := Quot'.instReduceQuot'
+  instance [QNormalize (AltEq K ι)] : Normalize (AltMonomial K ι) := Quot'.instNormalizeQuot'
 
 end AltMonomial
 
