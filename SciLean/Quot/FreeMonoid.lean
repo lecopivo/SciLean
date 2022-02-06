@@ -44,6 +44,7 @@ instance {X} [LT X] [DecidableCp X] (x y : X) : Decidable (x < y) :=
   | cpLt h => isTrue h
   | _ => isFalse sorry
 
+
 namespace SciLean
 
 structure FreeMonoid (X : Type u) where

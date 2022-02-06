@@ -1,49 +1,5 @@
 import SciLean.Quot.FreeMonoid
 import SciLean.Quot.QuotQ
-
-partial def Nat.toSubscript (n : ℕ) : String := 
-  let rec impl (k : ℕ) : String :=
-    if k≠0 then
-      match k%10 with
-      | 0 => impl (k/10) ++ "₀"
-      | 1 => impl (k/10) ++ "₁"
-      | 2 => impl (k/10) ++ "₂"
-      | 3 => impl (k/10) ++ "₃"
-      | 4 => impl (k/10) ++ "₄"
-      | 5 => impl (k/10) ++ "₅"
-      | 6 => impl (k/10) ++ "₆"
-      | 7 => impl (k/10) ++ "₇"
-      | 8 => impl (k/10) ++ "₈"
-      | 9 => impl (k/10) ++ "₉"
-      | _ => ""
-    else
-      ""
-  if n=0 then 
-    "₀"
-  else
-    impl n
-
-partial def Nat.toSupscript (n : ℕ) : String := 
-  let rec impl (k : ℕ) : String :=
-    if k≠0 then
-      match k%10 with
-      | 0 => impl (k/10) ++ "⁰"
-      | 1 => impl (k/10) ++ "¹"
-      | 2 => impl (k/10) ++ "²"
-      | 3 => impl (k/10) ++ "³"
-      | 4 => impl (k/10) ++ "⁴"
-      | 5 => impl (k/10) ++ "⁵"
-      | 6 => impl (k/10) ++ "⁶"
-      | 7 => impl (k/10) ++ "⁷"
-      | 8 => impl (k/10) ++ "⁸"
-      | 9 => impl (k/10) ++ "⁹"
-      | _ => ""
-    else
-      ""
-  if n=0 then 
-    "₀"
-  else
-    impl n
  
 inductive List.Sorted {X : Type u} [LT X] : List X → Prop where
 | empty : Sorted []
@@ -57,7 +13,6 @@ inductive List.StrictlySorted {X : Type u} [LT X] : List X → Prop where
 | head  (x y : X) (ys : List X) (h : x < y) 
         (h' : StrictlySorted (y :: ys)) 
         : StrictlySorted (x :: y :: ys)
-
 
 --- Sorts list and returns the number of transpositions, bool indicates repeated element
 partial def List.bubblesortTransNum {α} [LT α] [DecidableCp α] (l : List α) : List α × ℕ × Bool :=
@@ -131,91 +86,107 @@ namespace Monomial
 
   instance {K ι} [Zero K] : QForm (FreeEq K ι) :=
   {
-    RedForm := λ _ => True
-    NormForm := λ x => (x.coef = 0 → x.base = 1)
-    norm_red := λ x _ => True.intro
-    norm_eq := sorry
+    RedForm := λ lvl x => 
+      match lvl with
+      | redLvl n => True
+      | normLvl => (x.coef = 0 → x.base = 1)
+    redform_norm := sorry
+    redform_zero := sorry
+    redform_succ := sorry
   }
 
   instance {K ι} [LT ι] [Zero K] : QForm (SymEq K ι) :=
   {
-    RedForm := λ x => x.base.1.Sorted
-    NormForm := λ x => x.base.1.Sorted ∧ (x.coef = 0 → x.base = 1)
-    norm_red := λ x h => h.1
-    norm_eq := sorry
+    RedForm := λ lvl x => 
+      match lvl with
+      | redLvl 0 => True
+      | redLvl n => x.base.1.Sorted
+      | normLvl => x.base.1.Sorted ∧ (x.coef = 0 → x.base = 1)
+    redform_norm := sorry
+    redform_zero := sorry
+    redform_succ := sorry
   }
 
   instance {K ι} [LT ι] [Zero K] [Neg K] : QForm (AltEq K ι) :=
   {
-    RedForm := λ x => x.base.1.StrictlySorted
-    NormForm := λ x => x.base.1.StrictlySorted ∧ (x.coef = 0 → x.base = 1)
-    norm_red := λ x h => h.1
-    norm_eq := sorry
+    RedForm := λ lvl x => 
+      match lvl with
+      | redLvl 0 => True
+      | redLvl n => x.base.1.StrictlySorted
+      | normLvl => x.base.1.StrictlySorted ∧ (x.coef = 0 → x.base = 1)
+    redform_norm := sorry
+    redform_zero := sorry
+    redform_succ := sorry
   }
 
-  instance {K ι} [Zero K] [Reduce K] : QReduce (FreeEq K ι) :=
+  instance {K ι} [Zero K] : QReduce (FreeEq K ι) rawLvl :=
   {
-    reduce := λ x => ⟨reduce x.coef, x.base⟩
+    reduce := λ x => x
     is_reduce := sorry
     eq_reduce := sorry
-    preserve_norm := sorry
+    preserve_stronger := sorry
   }
 
-  instance {K ι} [LT ι] [DecidableCp ι] [Zero K] [Reduce K] : QReduce (SymEq K ι) :=
+  instance {K ι} [Zero K] [DecidableEq K] : QReduce (FreeEq K ι) normLvl :=
   {
-    reduce := λ x => ⟨reduce x.coef, ⟨x.base.1.bubblesort⟩⟩
+    reduce := λ x => if x.coef = 0 then ⟨0, 1⟩ else x
     is_reduce := sorry
     eq_reduce := sorry
-    preserve_norm := sorry
+    preserve_stronger := sorry
   }
 
-  -- TODO: Check for repeated element in monomial
-  instance {K ι} [LT ι] [DecidableCp ι] [Zero K] [Neg K] [Reduce K] : QReduce (AltEq K ι) :=
+  instance {K ι} [LT ι] [Zero K] : QReduce (SymEq K ι) rawLvl :=
+  {
+    reduce := λ x => x
+    is_reduce := sorry
+    eq_reduce := sorry
+    preserve_stronger := sorry
+  }
+
+  instance {K ι} [LT ι] [DecidableCp ι] [Zero K] : QReduce (SymEq K ι) (redLvl 1) :=
+  {
+    reduce := λ x => ⟨x.coef, ⟨x.base.1.bubblesort⟩⟩
+    is_reduce := sorry
+    eq_reduce := sorry
+    preserve_stronger := sorry
+  }
+
+  instance {K ι} [LT ι] [DecidableCp ι] [Zero K] [DecidableEq K] : QReduce (SymEq K ι) normLvl :=
+  {
+    reduce := λ x => if x.coef = 0 then ⟨0, 1⟩ else (QReduce.reduce (SymEq K ι) (redLvl 1) x)
+    is_reduce := sorry
+    eq_reduce := sorry
+    preserve_stronger := sorry
+  }
+
+  instance {K ι} [LT ι] [Zero K] [Neg K] : QReduce (AltEq K ι) rawLvl :=
+  {
+    reduce := λ x => x
+    is_reduce := sorry
+    eq_reduce := sorry
+    preserve_stronger := sorry
+  }
+
+  instance {K ι} [LT ι] [DecidableCp ι] [Zero K] [Neg K] : QReduce (AltEq K ι) (redLvl 1) :=
   {
     reduce := λ x =>
       let (xb, n, b) := x.base.1.bubblesortTransNum
       if b then
         ⟨0, 1⟩
       else
-        let c := reduce <| if n%2==0 then x.coef else -x.coef
+        let c := if n%2==0 then x.coef else -x.coef
         ⟨c, ⟨xb⟩⟩
     is_reduce := sorry
     eq_reduce := sorry
-    preserve_norm := sorry
+    preserve_stronger := sorry
   }
 
-  instance {K ι} [DecidableEq K] [Zero K] [Normalize K] : QNormalize (FreeEq K ι) :=
+  instance {K ι} [LT ι] [DecidableCp ι] [Zero K] [Neg K] [DecidableEq K] : QReduce (AltEq K ι) normLvl :=
   {
-    normalize := λ x => 
-      let c := normalize x.coef
-      if c = 0 then ⟨0, 1⟩ else ⟨c, x.base⟩
-    is_normalize := sorry
-    eq_normalize := sorry
-  }
-
-  instance {K ι} [LT ι] [DecidableCp ι] [DecidableEq K] [Zero K] [Normalize K] : QNormalize (SymEq K ι) :=
-  {
-    normalize := λ x => 
-      let c := normalize x.coef
-      let b := x.base.1.bubblesort
-      if c = 0 then ⟨0, 1⟩ else ⟨c, ⟨b⟩⟩
-    is_normalize := sorry
-    eq_normalize := sorry
-  }
-
-  -- TODO: Check for repeated element in monomial
-  instance {K ι} [LT ι] [DecidableCp ι] [DecidableEq K] [Zero K] [Neg K] [Normalize K] : QNormalize (AltEq K ι) :=
-  {
-    normalize := λ x => 
-      let (xb, n, b) := x.base.1.bubblesortTransNum
-      if b then 
-        ⟨0, 1⟩
-      else
-        let c := normalize x.coef
-        let c := if (n%2 == 0) then c else -c
-        if c = 0 then ⟨0, 1⟩ else ⟨c, ⟨xb⟩⟩
-    is_normalize := sorry
-    eq_normalize := sorry
+    reduce := λ x => if x.coef = 0 then ⟨0, 1⟩ else (QReduce.reduce (AltEq K ι) (redLvl 1) x)
+    is_reduce := sorry
+    eq_reduce := sorry
+    preserve_stronger := sorry
   }
 
 end Monomial 
@@ -232,25 +203,50 @@ def AltMonomial (K : Type v) (ι : Type u) [LT ι] [Neg K] [Zero K]:=
 namespace FreeMonomial
   open Monomial
 
-  variable {K ι} [Zero K] [One K] [Mul K] [DecidableEq K] [Reduce K] [Normalize K]  --[QNormalize (FreeEq K X)]
+  variable {K ι} [Zero K] [One K] [Mul K] [DecidableEq K] -- [Reduce K] [Normalize K]  --[QNormalize (FreeEq K X)]
 
   instance (c : K) : IsQHom (FreeEq K ι) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance (c : K) : IsQHomR (FreeEq K ι) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance : HMul K (FreeMonomial K ι) (FreeMonomial K ι) :=
-  ⟨
-    λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
-  ⟩
+  instance (n : Nat) (c : K) : IsQHom' (redLvl n) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance {n : Nat} : HMul K (FreeMonomial K ι) (FreeMonomial K ι) :=
+    ⟨λ c m => Quot'.lift' (redLvl n) (λ x => ⟨c*x.coef, x.base⟩) m⟩
 
   instance : IsQHom₂ (FreeEq K ι) (FreeEq K ι) (FreeEq K ι) 
     (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
   instance : Mul (FreeMonomial K ι) :=
   ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
 
+  instance (c : K) : IsQHom (FreeEq K ι) (FreeEq K ι) (λ x => c * x) := sorry
+  instance {n} (c : K) : IsQHom' (redLvl n) (FreeEq K ι) (λ x => c * x) := sorry
+  instance : HMul K (FreeMonomial K ι) (FreeMonomial K ι) :=
+  ⟨λ c => Quot'.lift' (redLvl 0) (λ x => c * x)⟩
+
+  instance : Zero (FreeMonomial K ι) := ⟨⟦⟨⟨0, 1⟩, normLvl, sorry⟩⟧⟩
+  instance : One (FreeMonomial K ι) := ⟨⟦⟨⟨1, 1⟩, normLvl, sorry⟩⟧⟩
+
   instance : Monomial (FreeMonomial K ι) K (FreeMonoid ι) :=
   {
-    intro := λ k x => ⟦QRepr.raw ⟨k, x⟩⟧
+    intro := λ k x => ⟦⟨⟨k, x⟩, rawLvl, sorry⟩⟧
     base := λ m => m.nrepr.base
     coef := λ m => m.nrepr.coef
+  }
+
+  instance : Semigroup (FreeMonomial K ι) :=
+  {
+    mul_assoc := sorry
+  }
+
+  instance : Monoid (FreeMonomial K ι) :=
+  {
+    mul_one := sorry
+    one_mul := sorry
+    npow_zero' := sorry 
+    npow_succ' := sorry
+  }
+
+  instance : MonoidWithZero (FreeMonomial K ι) := 
+  {
+    zero_mul := sorry
+    mul_zero := sorry
   }
 
   def toString [ToString ι] [ToString K]
@@ -264,36 +260,52 @@ namespace FreeMonomial
   instance [ToString ι] [ToString K] : ToString (FreeMonomial K ι) 
     := ⟨λ m => m.toString "⊗" "*"⟩
 
-  instance [QReduce (FreeEq K ι)] : Reduce (FreeMonomial K ι) := Quot'.instReduceQuot'
-  instance [QNormalize (FreeEq K ι)] : Normalize (FreeMonomial K ι) := Quot'.instNormalizeQuot'
+  instance {lvl} [QReduce (FreeEq K ι) lvl] : Reduce (FreeMonomial K ι) lvl := Quot'.instReduceQuot'
 
 end FreeMonomial
 
 namespace SymMonomial
   open Monomial
 
-  variable {K ι} [LT ι] [DecidableCp ι] [DecidableEq K] [Zero K] [One K] [Mul K] [Reduce K] [Normalize K] -- [QNormalize (SymEq K ι)]
+  variable {K ι} [LT ι] [DecidableCp ι] [DecidableEq K] [Zero K] [One K] [Mul K] --[Reduce K] [Normalize K] -- [QNormalize (SymEq K ι)]
 
   instance (c : K) : IsQHom (SymEq K ι) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance (c : K) : IsQHomR (SymEq K ι) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance {n} (c : K) : IsQHom' (redLvl n) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
   instance : HMul K (SymMonomial K ι) (SymMonomial K ι) :=
-  ⟨
-    λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
-  ⟩
+  ⟨λ c => Quot'.lift' (redLvl 1) (λ x => ⟨c*x.coef, x.base⟩)⟩
 
   instance : IsQHom₂ (SymEq K ι) (SymEq K ι) (SymEq K ι) 
     (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
   instance : Mul (SymMonomial K ι) :=
   ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
 
-  instance : Zero (SymMonomial K ι) := ⟨⟦QRepr.norm ⟨0, 1⟩ sorry⟧⟩
-  instance : One (SymMonomial K ι) := ⟨⟦QRepr.norm ⟨1, 1⟩ sorry⟧⟩
+  instance : Zero (SymMonomial K ι) := ⟨⟦⟨⟨0, 1⟩, normLvl, sorry⟩⟧⟩
+  instance : One (SymMonomial K ι) := ⟨⟦⟨⟨1, 1⟩, normLvl, sorry⟩⟧⟩
 
   instance : Monomial (SymMonomial K ι) K (FreeMonoid ι) :=
   {
-    intro := λ k x => ⟦QRepr.raw ⟨k, x⟩⟧
+    intro := λ k x => ⟦⟨⟨k, x⟩, rawLvl, sorry⟩⟧
     base := λ m => m.nrepr.base
     coef := λ m => m.nrepr.coef
+  }
+
+  instance : Semigroup (SymMonomial K ι) :=
+  {
+    mul_assoc := sorry
+  }
+
+  instance : Monoid (SymMonomial K ι) :=
+  {
+    mul_one := sorry
+    one_mul := sorry
+    npow_zero' := sorry 
+    npow_succ' := sorry
+  }
+
+  instance : MonoidWithZero (SymMonomial K ι) := 
+  {
+    zero_mul := sorry
+    mul_zero := sorry
   }
 
   instance : DecidableEq (SymMonomial K ι) := 
@@ -315,21 +327,20 @@ namespace SymMonomial
   instance [ToString ι] [ToString K] : ToString (SymMonomial K ι) 
     := ⟨λ m => m.toString "*" "*"⟩
 
-  instance [QReduce (SymEq K ι)] : Reduce (SymMonomial K ι) := Quot'.instReduceQuot'
-  instance [QNormalize (SymEq K ι)] : Normalize (SymMonomial K ι) := Quot'.instNormalizeQuot'
+  instance {lvl} [QReduce (SymEq K ι) lvl] : Reduce (SymMonomial K ι) lvl := Quot'.instReduceQuot'
 
 end SymMonomial
 
 namespace AltMonomial
   open Monomial
 
-  variable {K ι} [LT ι] [DecidableCp ι] [Zero K] [Neg K] [Mul K] [Normalize K] [DecidableEq K] -- [QNormalize (AltEq K ι)] 
+  variable {K ι} [LT ι] [DecidableCp ι] [Zero K] [One K] [Neg K] [Mul K] [Normalize K] [DecidableEq K] -- [QNormalize (AltEq K ι)] 
 
   instance (c : K) : IsQHom (AltEq K ι) (AltEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance (c : K) : IsQHomR (AltEq K ι) (AltEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  instance (n : Nat) (c : K) : IsQHom' (redLvl n) (AltEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
   instance : HMul K (AltMonomial K ι) (AltMonomial K ι) :=
   ⟨
-    λ c m => Quot'.rlift (λ x => ⟨c*x.coef, x.base⟩) m
+    λ c m => Quot'.lift' (redLvl 1) (λ x => ⟨c*x.coef, x.base⟩) m
   ⟩
 
   instance : IsQHom₂ (AltEq K ι) (AltEq K ι) (AltEq K ι) 
@@ -337,11 +348,33 @@ namespace AltMonomial
   instance : Mul (AltMonomial K ι) :=
   ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
 
+  instance : Zero (AltMonomial K ι) := ⟨⟦⟨⟨0, 1⟩, normLvl, sorry⟩⟧⟩
+  instance : One (AltMonomial K ι) := ⟨⟦⟨⟨1, 1⟩, normLvl, sorry⟩⟧⟩
+
   instance : Monomial (AltMonomial K ι) K (FreeMonoid ι) :=
   {
-    intro := λ k x =>  ⟦QRepr.raw ⟨k, x⟩⟧
+    intro := λ k x => ⟦⟨⟨k, x⟩, rawLvl, sorry⟩⟧
     base := λ m => m.nrepr.base
     coef := λ m => m.nrepr.coef
+  }
+
+  instance : Semigroup (AltMonomial K ι) :=
+  {
+    mul_assoc := sorry
+  }
+
+  instance : Monoid (AltMonomial K ι) :=
+  {
+    mul_one := sorry
+    one_mul := sorry
+    npow_zero' := sorry 
+    npow_succ' := sorry
+  }
+
+  instance : MonoidWithZero (AltMonomial K ι) := 
+  {
+    zero_mul := sorry
+    mul_zero := sorry
   }
 
   def toString [ToString ι] [ToString K] 
@@ -359,39 +392,36 @@ namespace AltMonomial
     := ⟨λ m => m.toString "∧" "*"⟩
 
 
-  instance [QReduce (AltEq K ι)] : Reduce (AltMonomial K ι) := Quot'.instReduceQuot'
-  instance [QNormalize (AltEq K ι)] : Normalize (AltMonomial K ι) := Quot'.instNormalizeQuot'
+  instance instReduce (lvl) [QReduce (AltEq K ι) lvl] : Reduce (AltMonomial K ι) lvl := Quot'.instReduceQuot'
+  instance [QNormalize (AltEq K ι)] : Normalize (AltMonomial K ι) := instReduce normLvl
 
 end AltMonomial
 
-#eval ( (10 : ℕ).toSubscript)
+def m : FreeMonomial Int Nat := ⟦⟨⟨1, ⟨[0,2,0,3]⟩⟩, rawLvl, sorry⟩⟧
+def p : SymMonomial Int Nat := ⟦⟨⟨2, ⟨[0,2,0,3]⟩⟩, rawLvl, sorry⟩⟧
+def w : AltMonomial Int Nat := ⟦⟨⟨2, ⟨[1,0,3]⟩⟩, rawLvl, sorry⟩⟧
+def w' : AltMonomial Int Nat := ⟦⟨⟨0, ⟨[5,2]⟩⟩, rawLvl, sorry⟩⟧
+def w'' : AltMonomial Int Nat := ⟦⟨⟨3, ⟨[5,2]⟩⟩, rawLvl, sorry⟩⟧
 
-def m : FreeMonomial Int Nat := ⟦QRepr.raw ⟨1, ⟨[0,2,0,3]⟩⟩⟧
-def p : SymMonomial Int Nat := ⟦QRepr.raw ⟨1, ⟨[0,2,0,3]⟩⟩⟧
-def w : AltMonomial Int Nat := ⟦QRepr.raw ⟨2, ⟨[1,0,3]⟩⟩⟧
-def w' : AltMonomial Int Nat := ⟦QRepr.raw ⟨0, ⟨[5,2]⟩⟩⟧
-def w'' : AltMonomial Int Nat := ⟦QRepr.raw ⟨3, ⟨[5,2]⟩⟩⟧
+example : (m |> toString) = "1*[0]⊗[2]⊗[0]⊗[3]" := by nativeDecide
+example : (p*p |>.toDebugString) = "⟦4*[0]⊗[2]⊗[0]⊗[3]⊗[0]⊗[2]⊗[0]⊗[3]⟧₀" := by nativeDecide
+example : (p*p |> reduce (redLvl 1) |>.toDebugString) = "⟦4*[0]⊗[0]⊗[0]⊗[0]⊗[2]⊗[2]⊗[3]⊗[3]⟧₁" := by nativeDecide
+example : (p |> toString) = "2*[0]*[0]*[2]*[3]" := by nativeDecide
 
-#check Quot'.instNormalizeQuot'.normalize
+example : (w |> toString) = "-2*[0]∧[1]∧[3]" := by nativeDecide
+example : (w |> reduce (redLvl 0) |>.toDebugString) = "⟦2*[1]⊗[0]⊗[3]⟧₀" := by nativeDecide
+example : (w |> reduce (redLvl 1) |>.toDebugString) = "⟦-2*[0]⊗[1]⊗[3]⟧₁" := by nativeDecide
+example : (w |> normalize |>.toDebugString) = "⟦-2*[0]⊗[1]⊗[3]⟧∞" := by nativeDecide
+example : (w*w |> reduce (redLvl 1) |>.toDebugString) = "⟦0*1⟧₁" := by nativeDecide
+example : (w*w'' |> reduce (redLvl 1) |>.toDebugString) = "⟦-6*[0]⊗[1]⊗[2]⊗[3]⊗[5]⟧₁" := by nativeDecide
 
-#eval m
-#eval p
-#eval w.toDebugString
-#eval w*w''
-#eval w |> Quot'.instNormalizeQuot'.normalize |>.toDebugString
-#eval w |> normalize |>.toDebugString
-#eval w'.toDebugString
-#eval (w' |> reduce).toDebugString
-#eval (w' |> normalize).toDebugString
+example : (w' |> toString) = "0*1" := by nativeDecide
+example : (w' |>.toDebugString) = "⟦0*[5]⊗[2]⟧₀" := by nativeDecide
+example : (w' |> reduce (redLvl 1) |>.toDebugString) = "⟦0*[2]⊗[5]⟧₁" := by nativeDecide
+example : (w' |> normalize |>.toDebugString) = "⟦0*1⟧∞" := by nativeDecide
 
+example : (w*w' |>.toDebugString) = "⟦0*[1]⊗[0]⊗[3]⊗[5]⊗[2]⟧₀" := by nativeDecide
+example : (w*w' |> reduce (redLvl 1) |>.toDebugString) = "⟦0*[0]⊗[1]⊗[2]⊗[3]⊗[5]⟧₁" := by nativeDecide
+example : (w*w' |> normalize |>.toDebugString) = "⟦0*1⟧∞" := by nativeDecide
 
-#eval (w*w').toDebugString
-#eval (w*w' |> reduce).toDebugString
-#eval (w*w' |> normalize).toDebugString
-
-
-
-
--- 𝔁₀ 𝓭𝔁₀ 𝓮₀ 
-
-
+-- 𝔁₀ 𝓭𝔁₀ 𝓮₀
