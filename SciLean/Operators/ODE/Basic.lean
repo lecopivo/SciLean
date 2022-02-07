@@ -3,16 +3,15 @@ import SciLean.Operators.Limit
 
 namespace SciLean
 
-def ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X := sorry
+constant ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X
 
--- @[simp] axiom ode_solve.definition {X} [Vec X] (f : X → X) (t dt : ℝ) (x₀ : X) [IsCont f] : δ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
-
+axiom ode_solve.definition {X} [Vec X] (f : X → X) [IsSmooth f] (t dt : ℝ) (x₀ : X) : δ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
 
 variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 
 def ode_solve_fixed_dt_impl (n : Nat) (stepper : ℝ → (X → X) → (X → X)) (f : X → X) (t : ℝ) (x₀ : X) : X := 
 Id.run do
-  let Δt := t/(n.toFloat.toReal)
+  let Δt := t/n
   let mut x := x₀
   for i in [0:n] do
     x := (stepper Δt f) x

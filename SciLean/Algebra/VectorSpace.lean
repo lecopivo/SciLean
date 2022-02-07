@@ -33,6 +33,8 @@ section CommonVectorSpaces
 
   -- example {X} [Field X] : AddCommGroup X := by infer_instance
 
+  instance {X} [Vec X] : Inhabited X := ⟨0⟩
+
   instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
   instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
   instance : Module ℝ ℝ := Module.mk sorry sorry
