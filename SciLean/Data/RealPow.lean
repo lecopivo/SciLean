@@ -58,7 +58,6 @@ instance (n : Nat)
 instance (n : Nat) (i : Fin n)
   : HasAdjoint (λ c : ℝ^n => c[i]) := sorry
 
-
 -- @[simp]
 -- theorem adjoint_of_pullback {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι] 
 --   (g : ι → κ) [IsInv g]
@@ -152,3 +151,13 @@ instance (n m : Nat)
   : HasAdjoint (λ (c : (ℝ^m)^n) (i : Fin n) => c[i]) := sorry
 instance (n m : Nat) (i : Fin n)
   : HasAdjoint (λ c : (ℝ^m)^n => c[i]) := sorry
+
+@[simp]                         
+theorem adjoint_of_Rnm_get (n m : Nat)
+  : (λ (u : (ℝ^m)^n) i => u[i])† = PowType.intro :=
+by 
+  funext x;
+  inner_ext;
+  simp (discharger := assumption)
+  simp[SemiInner.semiInner',SemiInner.semiInner]
+  admit

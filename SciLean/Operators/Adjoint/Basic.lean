@@ -185,7 +185,7 @@ namespace Adjoint
     simp (discharger := assumption)
     admit
 
-  @[simp] 
+  @[simp high] 
   theorem adjoint_of_id
     : adjoint (λ x : X => x) = id := 
   by 
