@@ -211,7 +211,7 @@
     - [[https://core.ac.uk/download/pdf/82396223.pdf][The Differential Lambda-Calculus, 2003]]
     - [[https://dl.acm.org/doi/10.1145/1330017.1330018][Reverse-mode AD in a functional framework: Lambda the Ultimate Backpropagator, 2008]]      
     - [[https://arxiv.org/abs/1806.02136][Efficient differentiable programming in a functional array-processing language, 2018]]
-    - [[https://proceedings.neurips.cc/paper/2018/hash/0a1bf96b7165e962e90cb14648c9462d-Abstract.html][Computing Higher Order Derivatives of Matrix and Tensor Expressions, 2018]]
+    - [[https://proceedings.neurips.cc/paper/2018/hash/0a1bf96b7165e962e90cb14648c9462d-Abstract.html][Computing Higher Order Derivatives of Matrix and Tensor Expressions, 2018]] and its [[http://www.matrixcalculus.org/matrixCalculus][web app]]
     - [[https://arxiv.org/abs/1804.00746][The Simple Essence of Automatic Differentiation (Extended version), 2018]]
     - [[https://arxiv.org/abs/1810.11530][Automatic differentiation in ML: Where we are and where we should be going, 2018]]
     - [[https://openreview.net/forum?id=ryxuz9SzDB][The Differentiable Curry, 2019]]
