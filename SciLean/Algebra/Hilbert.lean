@@ -22,11 +22,11 @@ namespace SemiInner
   @[reducible] instance {X Y} [Trait X] : Trait₂ X Y := ⟨Trait.R X, Trait.D X, Trait.eval⟩
   @[reducible] instance {X Y} [Trait Y] : Trait₂ X Y := ⟨Trait.R Y, Trait.D Y, Trait.eval⟩
 
-  class Guard (X : Type u) 
-  class Guard₂ (X : Type u) (Y : Type u')
+  -- class Guard (X : Type u) 
+  -- class Guard₂ (X : Type u) (Y : Type u')
 
-  instance {X} [Trait X] : Guard X := ⟨⟩
-  instance {X Y} [Trait₂ X Y] : Guard₂ X Y := ⟨⟩
+  -- instance {X} [Trait X] : Guard X := ⟨⟩
+  -- instance {X Y} [Trait₂ X Y] : Guard₂ X Y := ⟨⟩
 
 end SemiInner
 
@@ -105,6 +105,7 @@ class SemiHilbert (X) (R : Type u) (D : Type v) (e : R → D → ℝ) [outParam 
                       ↔ 
                       (∀ D (x' : X) (h : testFunction D x'), e ⟪x, x'⟫ D = 0))
 
+attribute [inferTCGoalsRL] SemiHilbert.toSemiInner
 
 abbrev Hilbert (X : Type u) := SemiHilbert X ℝ Unit (λ r _ => r)
 -- @[reducible] instance {X} [Hilbert X] : SemiInner.Trait X := by infer_instance
@@ -127,7 +128,9 @@ namespace SemiHilbert
   --   [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
   --   [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
   --   : SemiHilbert (X × Y) (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval := 
-  instance (X Y R D e) [Trait₂ X Y] [Vec R]
+  @[inferTCGoalsRL]
+  instance (X Y R D e) -- [Trait₂ X Y] 
+    [Vec R]
     [SemiHilbert X R D e] 
     [SemiHilbert Y R D e] 
     : SemiHilbert (X × Y) R D e := 
@@ -148,7 +151,10 @@ namespace SemiHilbert
   -- instance (X) [Trait X] [Vec (Trait.R X)] 
   --   [SemiHilbert X (Trait.R X) (Trait.D X) Trait.eval] (ι : Type v) [Enumtype ι] 
   --   : SemiHilbert (ι → X) (Trait.R X) (Trait.D X) Trait.eval := 
-  instance (X R D e) [Trait X] [Vec R]
+
+  @[inferTCGoalsRL]
+  instance (X R D e) --[Trait X] 
+    [Vec R]
     [SemiHilbert X R D e] (ι : Type v) [Enumtype ι] 
     : SemiHilbert (ι → X) R D e := 
   {
@@ -162,3 +168,4 @@ namespace SemiHilbert
 
 end SemiHilbert
 
+-- example (n m) : SemiInner.Trait (Fin n → Fin m → ℝ) := by infer_instance
