@@ -204,6 +204,7 @@
 
     - [[https://arxiv.org/abs/2007.08017][λₛ: Computable Semantics for Differentiable Programming with Higher-Order Functions and Datatypes, 2021]]
     - [[https://arxiv.org/abs/1910.00935][DiffTaichi: Differentiable Programming for Physical Simulation, 2020]]
+    - [[https://al3623.github.io/assets/documents/LiuPOPL2022.pdf][Verified Tensor-Program Optimization Via High-Level Scheduling Rewrites, 2022]]
 
 *** Other
 
