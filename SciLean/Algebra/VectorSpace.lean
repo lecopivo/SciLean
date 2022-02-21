@@ -38,7 +38,7 @@ section CommonVectorSpaces
   instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
   instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
   instance : Module ℝ ℝ := Module.mk sorry sorry
-  @[reducible] instance : Vec ℝ := Vec.mk
+  instance : Vec ℝ := Vec.mk
   -- instance (priority := high) [Vec U] : HMul ℝ U U := by infer_instance
 
   -- instance {A} [AddCommGroup A] : AddCommGroup (α → A) := AddCommGroup.mk sorry
