@@ -59,7 +59,10 @@ namespace ℝ
   -- instance : Pow ℝ Nat := ⟨natPow⟩
   instance : HPow ℝ ℝ ℝ := ⟨Math.pow⟩
 
-  instance : Numeric ℝ := ⟨λ n => n.toFloat⟩
+  -- instance : Numeric ℝ := ⟨λ n => n.toFloat⟩
+  instance (n : Nat) : OfNat ℝ n := ⟨n.toFloat⟩
+  instance : Coe ℕ ℝ := ⟨λ n => n.toFloat.toReal⟩
+
   instance : Inv ℝ := ⟨λ x => 1/x⟩
 
   instance : HPow ℝ ℤ ℝ := 
@@ -105,9 +108,16 @@ namespace ℝ
     mul_one := sorry
     npow_zero' := sorry
     npow_succ' := sorry
-    mul_add := sorry
-    add_mul := sorry
-    ofNat_succ := sorry
+
+    add_comm := sorry
+    left_distrib := sorry
+    right_distrib := sorry
+
+    mul_assoc := sorry
+
+    -- mul_add := sorry
+    -- add_mul := sorry
+    -- ofNat_succ := sorry
   }
 
   instance : Ring ℝ :=

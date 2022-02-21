@@ -317,7 +317,7 @@ namespace Algebra
 
   instance (n : Nat) : OfNat (Algebra M K X lvl) n := ⟨(OfNat.ofNat n : K)*(1 : Algebra M K X lvl)⟩
 
-  instance : Numeric (Algebra M K X lvl) := ⟨λ n => (OfNat.ofNat n : K)*(1 : Algebra M K X lvl)⟩
+  -- instance : Numeric (Algebra M K X lvl) := ⟨λ n => (OfNat.ofNat n : K)*(1 : Algebra M K X lvl)⟩
 
   instance : AddSemigroup (Algebra M K X lvl) :=
   {
@@ -346,9 +346,16 @@ namespace Algebra
     mul_one := sorry
     npow_zero' := sorry
     npow_succ' := sorry
-    mul_add := sorry
-    add_mul := sorry
-    ofNat_succ := sorry
+
+    add_comm := sorry
+    left_distrib := sorry
+    right_distrib := sorry
+
+    mul_assoc := sorry
+
+    -- mul_add := sorry
+    -- add_mul := sorry
+    -- ofNat_succ := sorry
   }
 
   instance : Ring (Algebra M K X lvl) :=

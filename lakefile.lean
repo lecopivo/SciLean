@@ -4,14 +4,14 @@ open Lake DSL System
 package SciLean {
   dependencies := #[{
     name := `mathlib
-    src := Source.git "https://github.com/leanprover-community/mathlib4.git" "4e68bccb1cfc14ca57671ab2cd288f96b9e6a387"
+    src := Source.git "https://github.com/leanprover-community/mathlib4.git" "e5b2b217243c699b8f3df18df98dcbb3ff57ab7c"
   }]
 }
 
 script tests (args) do
   let cwd ← IO.currentDir
-  let testDir ← cwd / "test"
-  let searchPath ← SearchPath.toString 
+  let testDir := cwd / "test"
+  let searchPath := SearchPath.toString 
                       ["build" / "lib",
                        "lean_packages" / "mathlib" / "build" / "lib"]
 

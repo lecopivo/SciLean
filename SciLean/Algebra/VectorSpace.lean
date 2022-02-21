@@ -35,6 +35,7 @@ section CommonVectorSpaces
 
   instance {X} [Vec X] : Inhabited X := ⟨0⟩
 
+  set_option synthInstance.maxHeartbeats 5000
   instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
   instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
   instance : Module ℝ ℝ := Module.mk sorry sorry

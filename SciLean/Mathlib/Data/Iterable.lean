@@ -166,7 +166,7 @@ namespace Iterable
                     if nxt == e then   
                       return val'
                     else do
-                      val ← val'
+                      val ← pure val'
                       it := nxt
           pure val
   }

@@ -135,13 +135,13 @@ namespace Enumtype
   {
     forIn := λ r init f => 
                match r with
-                 | none => init
+                 | none => pure init
                  | some (s,e) => do
                    let mut val := init
                    for i in [s.1:e.1+1] do
                      match (← f (⟨i,sorry⟩, i) val) with
                        | ForInStep.done d => return d
-                       | ForInStep.yield d => val ← d
+                       | ForInStep.yield d => val ← pure d
                    pure val
   }
 
@@ -153,7 +153,7 @@ namespace Enumtype
   {
     forIn := λ r init f =>
                match r with 
-                 | none => init
+                 | none => pure init
                  | some ((is,js),(ie,je)) => do
                    let mut val := init
                    for (i,li) in (range is ie) do
@@ -161,7 +161,7 @@ namespace Enumtype
                      for (j,lj) in (range js je) do
                        match (← f ((i,j), lj + offset) val) with
                          | ForInStep.done d => return d
-                         | ForInStep.yield d => val ← d
+                         | ForInStep.yield d => val ← pure d
                    pure val
   }
 
@@ -173,7 +173,7 @@ namespace Enumtype
   {
     forIn := λ r init f => 
                match r with 
-                 | none => init
+                 | none => pure init
                  | some ((is,js),(ie,je)) => do
                    let mut val := init
                    for (j,lj) in (range js je) do
@@ -181,7 +181,7 @@ namespace Enumtype
                      for (i,li) in (range is ie) do
                        match (← f ((i,j), li + offset) val) with
                          | ForInStep.done d => return d
-                         | ForInStep.yield d => val ← d
+                         | ForInStep.yield d => val ← pure d
                    pure val
   }
 

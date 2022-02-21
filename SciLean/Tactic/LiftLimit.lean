@@ -11,14 +11,14 @@ if (test e) then
   (replace e)
 else
 match e with
-  | Expr.app f x d => do (mkApp (← (replaceSubExpression f test replace)) (← (replaceSubExpression x test replace)))
-  | Expr.lam n x b _ => mkLambda n e.binderInfo x (← replaceSubExpression b test replace)
+  | Expr.app f x d => do pure (mkApp (← (replaceSubExpression f test replace)) (← (replaceSubExpression x test replace)))
+  | Expr.lam n x b _ => pure $ mkLambda n e.binderInfo x (← replaceSubExpression b test replace)
 
 -- do lambdaTelescope e fun xs b => do
 --             mkLambdaFVars xs (← replaceSubExpression b test replace)
   -- 
   -- this is incomplete and should use lambda telescope
-  | _ => e
+  | _ => pure e
 
 
 -- use 

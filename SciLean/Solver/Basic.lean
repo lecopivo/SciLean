@@ -41,7 +41,7 @@ inductive ImplSpec {α : Type _} : (spec : α → Prop) → Type _
 namespace ImplSpec
 
   def assemble {α} {pred : α → Prop} : ImplSpec pred → IO α
-    | pure impl _ => impl
+    | pure impl _ => Pure.pure impl
     | limit _ _ impl _ _ => impl.assemble
     | @check _ _ _ dec impl help => 
         match dec with

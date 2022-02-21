@@ -34,7 +34,7 @@ def implAssumeCheckCore (mvarId : MVarId) (prop msg : Expr) (type : assumeOrChec
     let tag    ← getMVarTag mvarId
     let target ← getMVarType mvarId
     
-    let newTarget ← mkForall Name.anonymous BinderInfo.default prop target
+    let newTarget ← pure $ mkForall Name.anonymous BinderInfo.default prop target
     let newMVarId  ← mkFreshExprSyntheticOpaqueMVar newTarget tag
 
     match type with
