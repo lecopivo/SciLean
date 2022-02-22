@@ -48,7 +48,7 @@ def main : IO Unit := do
     for (m : Nat) in [0:M] do
       for (n : Nat) in [0:N] do
         
-        let xi := x[n]
+        let xi := x[!n]
         if (2*m - M)/(M : ℝ) - xi < 0  then
           IO.print "x"
         else
