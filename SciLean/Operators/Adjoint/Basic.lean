@@ -18,7 +18,7 @@ prefix:max "𝓘" => SemiInner.Signature.Dom
 ---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
 open SemiInner in
 class HasAdjoint' {X Y}
-  {R D e} [outParam $ Vec R] [outParam $ SemiHilbert X R D e] [outParam $ SemiHilbert Y R D e] (f : X → Y) : Prop  
+  {R D e} [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] (f : X → Y) : Prop  
   where
     hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (d : (Trait₂.D X Y)), 
                    (testFunction' d x ∨ testFunction' d y) → ⟪f' y, x⟫ = ⟪y, f x⟫
@@ -190,7 +190,6 @@ namespace Adjoint
     : adjoint (λ x : X => x) = id := 
   by 
     funext x; inner_ext; simp (discharger := assumption); admit
-
 
   @[simp]
   theorem adjoint_of_const {ι} [Enumtype ι]
