@@ -83,73 +83,107 @@ by
 --           ∑ j, 2 * ⟪x[i] - x[j], dx[i] - dx[j]⟫
 --   := by infer_instance
 
-example (n : Nat) [NonZero n] (x : ((ℝ)^n))
-     : ∀ (i : Fin n), HasAdjoint (fun (dx : ((ℝ)^n)) =>
-                       ∑ j, x[i] * dx[j])
-     := by intro i; infer_instance
+constant sum' {n} (f : Fin n → ℝ) : ℝ
 
-set_option trace.Meta.Tactic.simp.discharge true in
-def double_sum_adjoint' (n : Nat) [NonZero n] (x : ((ℝ)^n))
-     : Impl (fun (dx : ((ℝ)^n)) (i : Fin n) =>
-        ∑ j, x[i] * dx[j])†
-  := 
+instance {n} : IsLin (sum' : (Fin n → ℝ) → ℝ) := sorry
+instance {n} : HasAdjoint (sum' : (Fin n → ℝ) → ℝ) := sorry
+
+set_option trace.Meta.synthInstance true in
+example (n : Nat)
+     : ∀ (c : ℝ), HasAdjoint (fun (dx : Fin n → ℝ) => fun j => c * dx j)
+     :=
 by
-  -- WHY IS THIS NOT SIMPLIFYING ?? 
-  -- i.e. why simp can't discharge?
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  finish_impl
+  -- intro c
+  infer_instance; done
+
+--- This needs to work and it does not for some reason :(
+---
+---   This has problem because it triggers a SubGoal 'SciLean.Vec Float'
+--- that can't be solved.
+set_option trace.Meta.synthInstance true in
+example (n : Nat)
+     : ∀ (c : ℝ), HasAdjoint (fun (dx : Fin n → ℝ) => sum' fun j => c * dx j)
+     :=
+by
+  -- intro c
+  infer_instance; done
+
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- -- set_option pp.explicit true in
+-- def double_sum_adjoint'' (n : Nat) (x : Fin n → ℝ)
+--      : Impl (fun (dx : Fin n → ℝ) (i j : Fin n) => x i * dx j)†
+--   := 
+-- by
+--   -- WHY IS THIS NOT SIMPLIFYING ?? 
+--   -- i.e. why simp can't discharge?
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   finish_impl
+
+
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- def double_sum_adjoint' (n : Nat) [NonZero n] (x : ((ℝ)^n)) (c : ℝ)
+--      : Impl (fun (dx : ((ℝ)^n)) (i j : Fin n) => x[i] * dx[j])†
+--   := 
+-- by
+--   -- WHY IS THIS NOT SIMPLIFYING ?? 
+--   -- i.e. why simp can't discharge?
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   finish_impl
 
   
--- set_option pp.explicit true in
-set_option trace.Meta.Tactic.simp.discharge true in
-def double_sum_adjoint (n : Nat) [NonZero n] (x : ((ℝ^(3:ℕ))^n))
-     : Impl (fun (dx : ((ℝ^(3:ℕ))^n)) i =>
-        ∑ j, 2 * ⟪x[i] - x[j], dx[i] - dx[j]⟫)†
-  := 
-by
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
-  simp (config := { singlePass := true })
+-- -- set_option pp.explicit true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- def double_sum_adjoint (n : Nat) [NonZero n] (x : ((ℝ^(3:ℕ))^n))
+--      : Impl (fun (dx : ((ℝ^(3:ℕ))^n)) i =>
+--         ∑ j, 2 * ⟪x[i] - x[j], dx[i] - dx[j]⟫)†
+--   := 
+-- by
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
+--   simp (config := { singlePass := true })
   
-  -- conv =>
-  --   enter [1,y,1,1,i,1,j]
-  --   simp
-  --   delta Function.uncurry
+--   -- conv =>
+--   --   enter [1,y,1,1,i,1,j]
+--   --   simp
+--   --   delta Function.uncurry
     
-  finish_impl
+--   finish_impl
   
 
 
 
-def V.grad (n : Nat) [NonZero n] (ε : ℝ) [NonZero ε] (m k : ℝ) 
--- : Impl (δ λ x : (ℝ^(3:ℕ)^n) => ∑ i j, ϕ ε (-1) (x[i] - x[j])) := 
-: Impl (∇ λ x : ((ℝ^(3:ℕ))^n) => ∑ i j, ∥x[i] - x[j]∥²) := 
-by
-  autograd
-  conv =>
-    enter [1,x]
-    simp
+-- def V.grad (n : Nat) [NonZero n] (ε : ℝ) [NonZero ε] (m k : ℝ) 
+-- -- : Impl (δ λ x : (ℝ^(3:ℕ)^n) => ∑ i j, ϕ ε (-1) (x[i] - x[j])) := 
+-- : Impl (∇ λ x : ((ℝ^(3:ℕ))^n) => ∑ i j, ∥x[i] - x[j]∥²) := 
+-- by
+--   autograd
+--   conv =>
+--     enter [1,x]
+--     simp
 
-  . 
+--   . 
 
     
-  finish_impl
+--   finish_impl
 
 
 -- set_option trace.Meta.isDefEq true in

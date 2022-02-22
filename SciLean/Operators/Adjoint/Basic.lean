@@ -383,7 +383,7 @@ namespace Adjoint
   by 
     admit
 
-  instance
+  instance has_adjoint_of_diag_arg
     (f : Y1 → Y2 → Z) (g1 : X → ι → Y1) (g2 : X → ι → Y2)
     [HasAdjoint g1] [HasAdjoint g2]
     [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] 
@@ -405,7 +405,7 @@ namespace Adjoint
       ∘ (comp (uncurry f)†) 
     := sorry
 
-  instance {ι κ} [Enumtype ι] [Enumtype κ]
+  instance has_adjoint_of_swap_pullback {ι κ} [Enumtype ι] [Enumtype κ]
       (f : ι → X → Y) (h : ι → κ)
       [∀ i, HasAdjoint (f i)] [IsInv h]
       :
