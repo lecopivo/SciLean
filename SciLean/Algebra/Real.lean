@@ -1,56 +1,66 @@
 import SciLean.Mathlib.Algebra.Field.Basic
 
-def ℝ := Float
+-- def ℝ := Float
 -- abbrev ℝ := ℝ
+structure ℝ where
+  val : Float
 
-def Float.toReal (x : Float) : ℝ := x
+def Float.toReal (x : Float) : ℝ := ⟨x⟩
 
 namespace Math
 
-  def sqrt : ℝ → ℝ := Float.sqrt
-  def pow : ℝ → ℝ → ℝ := Float.pow
+  abbrev toRealFun (f : Float → Float) : ℝ → ℝ 
+    := λ x => ⟨f x.val⟩
 
-  def sin : ℝ → ℝ := Float.sin
-  def cos : ℝ → ℝ := Float.cos
-  def tan : ℝ → ℝ := Float.tan
-  def atan : ℝ → ℝ := Float.atan
-  def atan2 : ℝ → ℝ → ℝ := Float.atan2
+  abbrev toRealFun₂ (f : Float → Float → Float) : ℝ → ℝ → ℝ 
+    := λ x y => ⟨f x.val y.val⟩
 
-  def exp : ℝ → ℝ := Float.exp
-  def exp2 : ℝ → ℝ := Float.exp2
-  def log : ℝ → ℝ := Float.log
-  def log2 : ℝ → ℝ := Float.log2
-  def log10 : ℝ → ℝ := Float.log10
+  def sqrt : ℝ → ℝ := toRealFun Float.sqrt
+  def pow : ℝ → ℝ → ℝ := toRealFun₂ Float.pow
+
+  def sin : ℝ → ℝ := toRealFun Float.sin
+  def cos : ℝ → ℝ := toRealFun Float.cos
+  def tan : ℝ → ℝ := toRealFun Float.tan
+  def atan : ℝ → ℝ := toRealFun Float.atan
+  def atan2 : ℝ → ℝ → ℝ := toRealFun₂ Float.atan2
+
+  def exp : ℝ → ℝ := toRealFun Float.exp
+  def exp2 : ℝ → ℝ := toRealFun Float.exp2
+  def log : ℝ → ℝ := toRealFun Float.log
+  def log2 : ℝ → ℝ := toRealFun Float.log2
+  def log10 : ℝ → ℝ := toRealFun Float.log10
 
 end Math
 
 namespace ℝ
 
-  def toFloat (x : ℝ) : Float := x
+  def toFloat (x : ℝ) : Float := x.val
   instance : ToString ℝ := ⟨λ x => x.toFloat.toString⟩
   
   instance : LT ℝ := ⟨λ x y => x.toFloat < y.toFloat⟩
   instance : LE ℝ := ⟨λ x y => x.toFloat ≤ y.toFloat⟩
-  instance : OfScientific ℝ := instOfScientificFloat
+  -- This should override 2.0 interperting as a Float
+  -- @[defaultInstance mid+1]
+  instance (priority := high) : OfScientific ℝ := ⟨λ m e d => ⟨instOfScientificFloat.1 m e d⟩⟩
 
-  instance (x y : ℝ) : Decidable (x < y) := by simp[ℝ] infer_instance done
+  instance (x y : ℝ) : Decidable (x < y) :=                         
+    if x.val < y.val
+    then isTrue sorry
+    else isFalse sorry
+
   -- this kind of breaks with NaNs but I want to make sure that we never get them as division by zero is zero
   instance (x y : ℝ) : Decidable (x = y) := if (x < y) ∨ (y < x) then isFalse (sorry : x≠y) else isTrue (sorry : x=y)
   
-  instance : Add ℝ := ⟨λ x y => x.toFloat + y.toFloat⟩
-  instance : Sub ℝ := ⟨λ x y => x.toFloat - y.toFloat⟩
-  instance : Mul ℝ := ⟨λ x y => x.toFloat * y.toFloat⟩
-  instance : Div ℝ := ⟨λ x y => if y = 0.0 then 0.0 else x.toFloat / y.toFloat⟩
-  instance : Neg ℝ := ⟨λ x => (-x : Float)⟩
+  instance : Add ℝ := ⟨λ x y => ⟨x.val + y.val⟩⟩
+  instance : Sub ℝ := ⟨λ x y => ⟨x.val - y.val⟩⟩
+  instance : Mul ℝ := ⟨λ x y => ⟨x.val * y.val⟩⟩
+  instance : Div ℝ := ⟨λ x y => if y = 0.0 then 0.0 else ⟨x.val / y.val⟩⟩
+  instance : Neg ℝ := ⟨λ x => ⟨(-x.val : Float)⟩⟩
 
   -- instance : Zero ℝ := ⟨Float.ofNat 0⟩  
   -- instance : One ℝ  := ⟨Float.ofNat 1⟩
   -- instance : OfNat ℝ n := ⟨Float.ofNat n⟩
   -- instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
-
-  -- This should override 2.0 interperting as a Float
-  @[defaultInstance mid+1]
-  instance (priority := high) : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
   -- def natPow (r : ℝ) : Nat → ℝ
   -- | 0 => 1
@@ -60,7 +70,7 @@ namespace ℝ
   instance : HPow ℝ ℝ ℝ := ⟨Math.pow⟩
 
   -- instance : Numeric ℝ := ⟨λ n => n.toFloat⟩
-  instance (n : Nat) : OfNat ℝ n := ⟨n.toFloat⟩
+  instance (n : Nat) : OfNat ℝ n := ⟨⟨n.toFloat⟩⟩
   instance : Coe ℕ ℝ := ⟨λ n => n.toFloat.toReal⟩
 
   instance : Inv ℝ := ⟨λ x => 1/x⟩
