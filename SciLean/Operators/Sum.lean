@@ -88,6 +88,8 @@ end KronSimps
 
 section SumKronSimps
 
+  -- TODO: Switch to Enumtype instead of Fin.
+  --       What was the problem with Enumtype?
   -- variable {ι κ} [Enumtype ι] [Enumtype κ] [Inhabited ι]
 
   @[simp] 
@@ -117,12 +119,15 @@ end SumKronSimps
 --   : (∑ i, f (kron (g i) j) i j) = f 1 (g⁻¹ j) j
 --   := sorry
 
+example [NonZero n] (j : Fin n) (f : Fin n → ℝ)
+  : (∑ i : Fin n, kron i j * f i) = f j
+  :=
+  by simp done
 
 example [NonZero n] (j : Fin n) 
   : (∑ i : Fin n, kron (i+1) j) = 1
   :=
   by simp done
-
 
 example [NonZero n] (j : Fin n) 
   : (∑ i : Fin n, i * (kron (i+1) j)) = (j-1)

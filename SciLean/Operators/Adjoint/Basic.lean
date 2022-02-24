@@ -171,6 +171,9 @@ namespace Adjoint
       : 
         HasAdjoint (λ x => f (g x)) := sorry
 
+    instance eval_has_adjoint {ι} (i : ι) [Enumtype ι]
+      : HasAdjoint (λ (f : ι → ℝ) => f i) := sorry
+
     -- instance diag_has_adjoint (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2] : HasAdjoint (λ x => f (g1 x) (g2 x)) := sorry
     -- instance diag_parm_has_adjoint (f : Y1 → Y2 → Z) (g1 : X → α → Y1) (g2 : X → α → Y2) [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2] : HasAdjoint (λ x a => f (g1 x a) (g2 x a)) := sorry
 
@@ -432,5 +435,6 @@ namespace Adjoint
   macro "autoadjoint" : tactic => `(conv => autoadjoint)
 
   --------------------------------------------------------------------------------------------
+
 
 end Adjoint

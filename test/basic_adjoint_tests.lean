@@ -21,7 +21,7 @@ example (r : ℝ) (x' : X)
   : (λ x : X => r*((λ x'' => ⟪x', x''⟫) x))† = λ s => r * s * x' := by simp funext s; simp done
 
 example {n : Nat} (a : Fin n) [NonZero n] 
-  : (λ (f : Fin n → ℝ) i => f (i - a))† = (λ (f : Fin n → ℝ) x => f (x + a)) := by simp funext f x; simp done
+  : (λ (f : Fin n → ℝ) i => f (i - a))† = (λ (f : Fin n → ℝ) x => f (x + a)) := by simp done
 example {ι} [Enumtype ι] 
   : (λ x : ι → X => sum x)† = (λ (x : X) (i : ι) => x) := by simp done
 example {n} [NonZero n] (c : Fin n) 
@@ -40,6 +40,10 @@ example (y : ℝ)
 example (a b : ℝ) (x : X)
   : (λ dx : X => a * ⟪x, dx⟫ * b)† 1 = a * b * x := by autoadjoint; simp done -- FIXME!
 
+example {ι} [Enumtype ι] (i : ι) (c : ℝ)
+  : (fun (x : ι → ℝ) => x i * c)† 1 = (fun j => kron i j * c)
+  := by autoadjoint; simp; done
+
 set_option synthInstance.maxHeartbeats 5000
 example 
   : (λ (x : Fin n → ℝ) => sum λ i => x i)† 1 = (λ i => (1 : ℝ)) := by simp done
@@ -48,7 +52,8 @@ example
 -- set_option trace.Meta.isDefEq true in
 -- set_option trace.Meta.Tactic.simp true in
 example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) 
-  : (λ (g : Fin n → ℝ) => sum (λ i => (f i) * (g (i+c))))† (1 : ℝ) = (fun i => f (i - c)) := by simp; funext i; simp done
+  : (λ (g : Fin n → ℝ) => sum (λ i => (f i) * (g (i+c))))† (1 : ℝ) = (fun i => f (i - c)) := by simp; done
 
-example {ι} [Enumtype ι] (f : ι → ℝ) 
-  : (fun df : ι → ℝ => ∑ i, df i * f i + f i * df i)† 1 = (2 : ℝ) * f := by simp done
+set_option trace.Meta.Tactic.simp.discharge true in
+example {n} [NonZero n] (f : Fin n → ℝ) 
+  : (fun df : Fin n → ℝ => ∑ i, df i * f i + f i * df i)† 1 = (2 : ℝ) * f := by simp; autoadjoint; simp; done
