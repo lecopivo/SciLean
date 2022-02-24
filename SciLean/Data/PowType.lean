@@ -1,6 +1,4 @@
 import SciLean.Mathlib.Data.PowType
--- import SciLean.Algebra
-import SciLean.Categories
 import SciLean.Operators
 
 
@@ -37,11 +35,11 @@ instance {R D e} [Vec R] [SemiHilbert X R D e] : SemiHilbert (X^n) R D e :=
   semi_inner_ext := sorry
 }
 
+
 variable [Vec X]
 
 instance (i : Fin n)  : IsLin (λ c : X^n => c[i]) := sorry
 instance : IsLin (λ (c : X^n) (i : Fin n)  => c[i]) := sorry
-
 
 
 variable {R D e} [Vec R] [SemiHilbert X R D e]
