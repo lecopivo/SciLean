@@ -23,11 +23,28 @@ theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
   := sorry
 
 @[simp] 
-theorem sum_of_sum {X ι} [Enumtype ι] [Vec X]
+theorem sum_of_add {X ι} [Enumtype ι] [Vec X]
   (f g : ι → X)
   : (∑ i, f i + g i) = (∑ i, f i) + (∑ i, g i)
   := sorry
 
+@[simp] 
+theorem sum_of_sub {X ι} [Enumtype ι] [Vec X]
+  (f g : ι → X)
+  : (∑ i, f i - g i) = (∑ i, f i) - (∑ i, g i)
+  := sorry
+
+@[simp] 
+theorem sum_of_smul {X ι} [Enumtype ι] [Vec X]
+  (f : ι → X) (c : ℝ)
+  : (∑ i, c * f i ) = c * (∑ i, f i)
+  := sorry
+
+@[simp] 
+theorem sum_of_neg {X ι} [Enumtype ι] [Vec X]
+  (f : ι → X)
+  : (∑ i, - f i ) = - (∑ i, f i)
+  := sorry
 
 --- Kronecker delta simplifications ---
 ---------------------------------------
@@ -116,3 +133,7 @@ example [NonZero n] (j : Fin n)
   : (∑ i : Fin n, (kron (i+1) j) * i) = (j-1)
   :=
   by simp done
+
+
+
+--- TODO: add tactics sum_together sum_apart sum_expand 
