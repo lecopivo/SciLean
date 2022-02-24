@@ -70,9 +70,6 @@ namespace PowType.powType
   def map {X n} [PowType X n] (x : X^n) (f : X → X) : X^n := 
     x.mapIdx λ i xi => f xi
 
-  #check Array.getOp
-
-
   section Operations
 
     variable {X n} [PowType X n]
