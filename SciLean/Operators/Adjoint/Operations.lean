@@ -63,6 +63,7 @@ namespace Adjoint
   @[simp]
   theorem adjoint_of_hmul_of_fun_arg [HasAdjoint f] (r : ℝ) : adjoint (λ x => r*(f x)) = (λ y => r*(adjoint f y)) := by funext x; simp admit -- by funext y; simp
 
+  instance : HasAdjoint (λ x : X => -x) := sorry
   @[simp]
   theorem adjoint_of_neg : adjoint (Neg.neg : X → X) = Neg.neg := sorry
   @[simp]

@@ -26,7 +26,7 @@ instance {R D e} [SemiInner X R D e] [Zero R] [Add R] : SemiInner (X^n) R D e :=
 }
 
 @[inferTCGoalsRL]
-instance {R D e} [Vec R] [SemiHilbert X R D e] : SemiHilbert (X^n) R D e :=
+instance [Hilbert X] : Hilbert (X^n) :=
 {
   semi_inner_add := sorry
   semi_inner_mul := sorry
@@ -42,7 +42,7 @@ instance (i : Fin n)  : IsLin (λ c : X^n => c[i]) := sorry
 instance : IsLin (λ (c : X^n) (i : Fin n)  => c[i]) := sorry
 
 
-variable {R D e} [Vec R] [SemiHilbert X R D e]
+variable [Hilbert X]
 
 instance 
   : HasAdjoint (λ (c : X^n) (i : Fin n) => c[i]) := sorry

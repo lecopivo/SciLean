@@ -55,7 +55,7 @@ namespace ℝ
   instance : Sub ℝ := ⟨λ x y => ⟨x.val - y.val⟩⟩
   instance : Mul ℝ := ⟨λ x y => ⟨x.val * y.val⟩⟩
   instance : Div ℝ := ⟨λ x y => if y = 0.0 then 0.0 else ⟨x.val / y.val⟩⟩
-  instance : Neg ℝ := ⟨λ x => ⟨(-x.val : Float)⟩⟩
+  instance : Neg ℝ := ⟨λ x => ⟨-x.val⟩⟩
 
   -- instance : Zero ℝ := ⟨Float.ofNat 0⟩  
   -- instance : One ℝ  := ⟨Float.ofNat 1⟩

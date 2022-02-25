@@ -76,30 +76,93 @@ example : SemiInner.Trait (ℝ^(3:ℕ)) := by infer_instance
 --   simp (config := { singlePass := true })
 --   admit
 
+notation x "[[" i "]]" => PowType.powType.getOp x i
+
+
 example (x : Fin n → ℝ) : ∀  (i : Fin n), SciLean.HasAdjoint 
   fun (dx : Fin n → ℝ) => 
           ∑ j, x i * (dx i + dx j)
   := by infer_instance done
 
+example (x : Fin n → ℝ^(3:ℕ)) : ∀  (i : Fin n), SciLean.HasAdjoint 
+  fun (dx : Fin n → ℝ^(3:ℕ)) j => ⟪x i,  dx j - dx j⟫
+  := by infer_instance done
+
+
 -- example : SciLean.SemiHilbert ℝ (SciLean.SemiInner.Trait₂.R (ℝ × ℝ) ℝ) (SciLean.SemiInner.Trait₂.D (ℝ × ℝ) ℝ) SciLean.SemiInner.Trait₂.eval := by infer_instance
 
+constant sum' {n} (f : Fin n → ℝ) : ℝ
+
+instance {n} : IsLin (sum' : (Fin n → ℝ) → ℝ) := sorry
+instance {n} : HasAdjoint (sum' : (Fin n → ℝ) → ℝ) := sorry
 
 --- Float gets exposed somewhere, somehow :(
 -- set_option trace.Meta.isDefEq true in
+example (x : ((ℝ)^n)) (c : ℝ) : ∀ (i : Fin n), HasAdjoint 
+  fun (dx : ((ℝ)^n)) => ∑ j, x[j] * (dx[j] + (2:ℝ)*dx[i])
+  := by infer_instance done
+
+example {X} [Hilbert X] : ∀ (i : Fin n), HasAdjoint
+  fun (x : X) => -x
+  := by infer_instance done
+
+-- set_option pp.explicit true in
+-- set_option trace.Meta.synthInstance true in
+example : ∀ (i : Fin n), HasAdjoint 
+  fun (x : ℝ) => -x
+  := 
+by
+  -- intro i  -- with this it works
+  infer_instance done
+
+open SemiInner in
+class HA' {X}
+  {R} [Vec R] (f : X → X) : Prop  
+  -- where
+  --   hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (d : (Trait₂.D X Y)), 
+  --                  (testFunction' d x ∨ testFunction' d y) → ⟪f' y, x⟫ = ⟪y, f x⟫
+  --   preservesTestFun : ∀ (x : X) (d : (Trait₂.D X Y)), testFunction' d x → testFunction' d (f x)
+
+open SemiInner in
+@[reducible] abbrev HA {X} 
+  [Trait X] 
+  [Vec (Trait.R X)]
+  (f : X → X) 
+  : Prop 
+  := HA' (R := (Trait.R X)) f
+
+instance {X R D e} [Vec R] [SemiHilbert X R D e] : HA (λ x : X => -x) := sorry
+
+example {X} [Hilbert X] : ∀ (i : Fin n), HA
+  fun (x : X) => -x
+  := by infer_instance done
+
+-- set_option pp.explicit true in
+-- set_option trace.Meta.isDefEq true in
+-- set_option trace.Meta.synthInstance true in
+example : HA
+  fun (x : ℝ) => -x
+  := by infer_instance done
+
+example : ∀ (i : Fin n), HasAdjoint 
+  fun (x : ((ℝ^(3:ℕ))^n)) => -x
+  := by infer_instance done
+
 set_option trace.Meta.synthInstance true in
-example (x : ((ℝ)^n)) : ∀ (i : Fin n), SciLean.HasAdjoint 
-  fun (dx : ((ℝ)^n)) => ∑ j, x[i] * (dx[j] + dx[i])
+example (x : ((ℝ^(3:ℕ))^n)) (c : ℝ) : ∀ (i : Fin n), HasAdjoint 
+  fun (dx : ((ℝ^(3:ℕ))^n)) => ∑ j, ⟪x[j], dx[i] + dx[j]⟫
   := by infer_instance done
 
-example (x : ((ℝ^(3:ℕ))^n)) : ∀  (i : Fin n), SciLean.HasAdjoint 
+example (x : ((ℝ^(3:ℕ))^n)) : ∀  (i : Fin n), HasAdjoint 
   fun (dx : ((ℝ^(3:ℕ))^n)) =>
-          ∑ j, 2 * ⟪x[i] - x[j], dx[i] - dx[j]⟫
+          ∑ j, 2 * ⟪x[i] - x[j], dx[i] + dx[j]⟫
   := by infer_instance done
 
--- constant sum' {n} (f : Fin n → ℝ) : ℝ
 
--- instance {n} : IsLin (sum' : (Fin n → ℝ) → ℝ) := sorry
--- instance {n} : HasAdjoint (sum' : (Fin n → ℝ) → ℝ) := sorry
+-- set_option trace.Meta.isDefEq true in
+example (n : List Nat) (i : Nat) (m : List (_ i)) (h : n = m) : n = m := sorry
+
+-- example (x : SemiInner.Trait₂.R ℝ ℝ) (i : Nat) (y : SemiInner.Trait₂.R (_ i) (_ i))  : True := sorry
 
 -- -- set_option trace.Meta.synthInstance true in
 -- example (n : Nat)
