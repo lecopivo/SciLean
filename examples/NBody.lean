@@ -59,8 +59,8 @@ example : SemiInner.Trait (ℝ^(3:ℕ)) := by infer_instance
 
 -- instance (n : ℕ) : SciLean.HasAdjoint (sum : (Fin n → ℝ) → ℝ) := by infer_instance
 
--- instance {X Y} [Hilbert X] [Hilbert Y] : SciLean.HasAdjoint (fun xy : X × Y => xy.fst) := by sorry
--- instance {X Y} [Hilbert X] [Hilbert Y] : SciLean.HasAdjoint (fun xy : X × Y => xy.snd) := by sorry
+instance {X Y} [Hilbert X] [Hilbert Y] : SciLean.HasAdjoint (fun xy : X × Y => xy.fst) := by sorry
+instance {X Y} [Hilbert X] [Hilbert Y] : SciLean.HasAdjoint (fun xy : X × Y => xy.snd) := by sorry
 
 -- @[simp] theorem Prod.fst.adjoint {X Y} [Hilbert X] [Hilbert Y] 
 --   : (Prod.fst : X × Y → X)† = λ x : X => (x, 0) := by sorry
@@ -148,9 +148,22 @@ example : ∀ (i : Fin n), HasAdjoint
   fun (x : ((ℝ^(3:ℕ))^n)) => -x
   := by infer_instance done
 
+example {m} : ∀ (i : Fin n), HasAdjoint $
+  (fun (dx : Fin n → Fin m → ℝ) => dx i)
+  := by infer_instance done
+
+example {m : Nat} : ∀ (i : Fin n), HasAdjoint 
+  fun (dx : Fin n → ℝ^m) j => dx i + dx j
+  := by infer_instance done
+
 set_option trace.Meta.synthInstance true in
-example (x : ((ℝ^(3:ℕ))^n)) (c : ℝ) : ∀ (i : Fin n), HasAdjoint 
-  fun (dx : ((ℝ^(3:ℕ))^n)) => ∑ j, ⟪x[j], dx[i] + dx[j]⟫
+example {m : Nat} (x : ℝ^m) : ∀ (i : Fin n), HasAdjoint 
+  fun (dx : Fin n → ℝ^m) => ∑ j, ⟪x, dx i + dx j⟫
+  := by infer_instance done
+
+example (x : ℝ^(3:ℕ)) : ∀ (i : Fin n), HasAdjoint 
+  fun (dx : ((ℝ^(3:ℕ))^n)) =>
+          ∑ j, ⟪x, dx[i] + dx[j]⟫
   := by infer_instance done
 
 example (x : ((ℝ^(3:ℕ))^n)) : ∀  (i : Fin n), HasAdjoint 
