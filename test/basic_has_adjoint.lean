@@ -8,7 +8,7 @@ open SciLean
 
 
 variable {α β γ : Type}
-variable {X Y Z : Type} {R D e} [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
+variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
 example : HasAdjoint λ xx : X × X => xx.1 + xx.2 := by infer_instance
@@ -25,15 +25,14 @@ example {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i
 example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) : HasAdjoint fun (x : Fin n → ℝ) i => f i * x (i + c) := by infer_instance
 
 example {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => f i * df i) := by infer_instance done
-set_option synthInstance.maxHeartbeats 2000 
 example {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i * f i + f i * df i) := by infer_instance done
 example {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i * f i) := by infer_instance done
 example {n} [NonZero n] (f : Fin n → ℝ) : HasAdjoint (λ r i => (f i) * r) := by infer_instance done
+set_option synthInstance.maxHeartbeats 2000 in
 example {n} [NonZero n] (g : Fin n → ℝ) (c : Fin n) 
  : HasAdjoint (fun (df : Fin n → ℝ) => sum fun (b : Fin n) => df (b + c) * g c + g (b + c) * df b) := by infer_instance done
 
-set_option synthInstance.maxHeartbeats 5000 
--- TODO: make these work!
--- example {n} [NonZero n] (g : Fin n → ℝ) (c : Fin n) : HasAdjoint fun (f : Fin n → ℝ) (b : Fin n) => f c := by infer_instance
--- example {n} [NonZero n] (g : Fin n → ℝ) (c : Fin n) : HasAdjoint fun (f : Fin n → ℝ) b => f (b + c) * g c + g (b + c) * f c := by infer_instance
+example {n} [NonZero n] (g : Fin n → ℝ) (c : Fin n) : HasAdjoint fun (f : Fin n → ℝ) (b : Fin n) => f c := by infer_instance
+set_option synthInstance.maxHeartbeats 2000 in
+example {n} [NonZero n] (g : Fin n → ℝ) (c : Fin n) : HasAdjoint fun (f : Fin n → ℝ) b => f (b + c) * g c + g (b + c) * f c := by infer_instance
 

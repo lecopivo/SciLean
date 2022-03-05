@@ -9,7 +9,7 @@ open SemiInner
 
 variable {α β γ : Type}
 variable {X Y Z : Type} {R D e}
-variable [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
+variable [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
 namespace Adjoint
@@ -28,6 +28,8 @@ namespace Adjoint
   @[simp]
   theorem adjoint_of_add_of_fun_arg_parm (f g : X → ι → Y) [HasAdjoint f] [HasAdjoint g]
       : adjoint (λ x i => f x i + g x i) = adjoint (λ x i => f x i) + adjoint (λ x i => g x i) := by funext z; simp; done
+
+  example [HasAdjoint f] [HasAdjoint g] : (f + g)† = f† + g† := by simp
 
   --- Subtraction
   instance : HasAdjoint (λ x : X×X => x.1 - x.2) := sorry

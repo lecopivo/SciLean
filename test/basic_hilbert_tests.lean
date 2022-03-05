@@ -4,17 +4,12 @@ import SciLean.Tactic
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} {R D e} [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
+variable {X Y Z : Type}[SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
 
-example : SemiInner.Trait X := by infer_instance
-example : IsLin (SemiInner.semiInner' : X → X → _) := by infer_instance done
-example : IsLin (λ x y : X => ⟪x, y⟫) := by infer_instance done
-example : IsLin (SemiInner.semiInner' : X → X → R) := by infer_instance done
+example : IsLin (SemiInner.semiInner : X → X → _) := by infer_instance done
 example : IsLin (λ x y : X => ⟪x, y⟫) := by infer_instance done
 example (x : X) : IsLin (λ y : X => ⟪x, y⟫) := by infer_instance done
-example {X' : Type} [SemiHilbert X' ℝ Unit (λ r _ => r)] : IsLin (SemiInner.semiInner' : X' → X' → ℝ) := by infer_instance
-
 
 -- example {X Y R D eval} [Vec R] [FinVec X] [SemiInner Y R D eval] [Vec Y]
 --   : SemiInner (X ⊸ Y) R D eval := by infer_instance

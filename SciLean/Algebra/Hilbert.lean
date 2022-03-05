@@ -4,118 +4,91 @@ import SciLean.Algebra.VectorSpace
 
 namespace SciLean
 
-namespace SemiInner
+class SemiInner (X : Type u) where  
+  Domain : Type
+  domain : Domain -- some arbitrary domain
+  semiInner : X → X → Domain → ℝ
+  testFunction : Domain → X → Prop
 
-  class Trait (X : Type u) where
-    R : Type v
-    D : Type w
-    eval : R → D → ℝ
-
-  class Trait₂ (X : Type u) (Y : Type u') where
-    R : Type v
-    D : Type w
-    eval : R → D → ℝ
-
-  attribute [reducible] Trait.R Trait.D Trait.eval
-  attribute [reducible] Trait₂.R Trait₂.D Trait₂.eval
-
-  @[reducible] instance {X Y} [Trait X] : Trait₂ X Y := ⟨Trait.R X, Trait.D X, Trait.eval⟩
-  @[reducible] instance {X Y} [Trait Y] : Trait₂ X Y := ⟨Trait.R Y, Trait.D Y, Trait.eval⟩
-
-  -- class Guard (X : Type u) 
-  -- class Guard₂ (X : Type u) (Y : Type u')
-
-  -- instance {X} [Trait X] : Guard X := ⟨⟩
-  -- instance {X Y} [Trait₂ X Y] : Guard₂ X Y := ⟨⟩
-
-end SemiInner
-
-class SemiInner (X : Type u) (R : Type v) (D : Type w) (eval : R → D → ℝ) where  
-  semiInner : X → X → R
-  testFunction : D → X → Prop
+-- attribute [reducible] SemiInner.Domain
 
 namespace SemiInner
 
-  @[reducible] instance (X) (R : Type u) (D : Type v) (e : R → D → ℝ) [SemiInner X R D e] : Trait X := ⟨R, D, e⟩
+  prefix:max "𝓓 " => Domain
+  instance {X} [SemiInner X] : Inhabited (𝓓 X) := ⟨domain⟩
 
-  -- open SemiInner in
-  -- abbrev semiInner' {X : Type u} [Trait X] [SemiInner X (Trait.R X) (Trait.D X) Trait.eval] : X → X → (Trait.R X)
-  --   := SemiInner.semiInner Trait.eval
+  notation "⟪" x ", " y "⟫" => semiInner x y default
+  notation "⟪" x ", " y "⟫[" Ω "]" => (semiInner x y) Ω
 
-  -- notation "⟪" e "|" x ", " y "⟫" => SemiInner.semiInner e x y  
-
-  abbrev semiInner' {X} [Trait X] [inst : SemiInner X (Trait.R X) (Trait.D X) Trait.eval] (x y : X) 
-    := SemiInner.semiInner (self := inst) _ x y
-
-  abbrev testFunction' {X} [Trait X] [inst : SemiInner X (Trait.R X) (Trait.D X) Trait.eval]
-    := SemiInner.testFunction (self := inst)
-
-  notation "⟪" x ", " y "⟫" => semiInner' x y 
-
-  def normSqr {X}[Trait X] [inst : SemiInner X (Trait.R X) (Trait.D X) Trait.eval] (x : X) := ⟪x, x⟫
+  def normSqr {X} [SemiInner X] (x : X) := ⟪x, x⟫
 
   notation "∥" x "∥²" => normSqr x
 
-  -- @[reducible] instance : Trait ℝ := ⟨ℝ, Unit, λ r _ => r⟩
-
   -- Reals
-  instance : SemiInner ℝ ℝ Unit (λ r _ => r):=
+  -- @[reducible]
+  instance : SemiInner ℝ :=
   {
-    semiInner := λ x y => x * y
+    Domain := Unit
+    domain := ()
+    semiInner := λ x y _ => x * y
     testFunction := λ _ _ => True
   }
 
   -- Product type
-  instance (X Y R D e) [SemiInner X R D e] [SemiInner Y R D e] [Add R] 
-    : SemiInner (X × Y) R D e :=
+  -- @[reducible]
+  instance (X Y) [SemiInner X] [SemiInner Y]
+    : SemiInner (X × Y) :=
   { 
-    semiInner     := λ (x,y) (x',y') => ⟪x,x'⟫ + ⟪y,y'⟫
-    testFunction  := λ d (x,y) => testFunction' d x ∧ testFunction' d y
+    Domain := Domain X × Domain Y
+    domain := (domain, domain)
+    semiInner     := λ (x,y) (x',y') (Ω, Ω') => ⟪x,x'⟫[Ω] + ⟪y,y'⟫[Ω']
+    testFunction  := λ (Ω,Ω') (x,y) => testFunction Ω x ∧ testFunction Ω' y
   }
-  -- Maybe use Trait₂
-  @[reducible] instance (X Y) [Trait X] : Trait (X × Y) 
-    := ⟨Trait.R X, Trait.D X, Trait.eval⟩
-  @[reducible] instance (X Y) [Trait Y] : Trait (X × Y) 
-    := ⟨Trait.R Y, Trait.D Y, Trait.eval⟩
 
   -- Pi type
-  instance (ι X R D e) [SemiInner X R D e] [Add R] [Zero R] [Enumtype ι] : SemiInner (ι → X) R D e :=
+  -- @[reducible]
+  instance (X) [SemiInner X] (ι) [Enumtype ι] : SemiInner (ι → X) :=
   {
-    semiInner       := λ f g => ∑ i, ⟪f i, g i⟫
-    testFunction := λ d f => ∀ i, testFunction' d (f i)
+    Domain := Domain X
+    domain := domain
+    semiInner    := λ f g Ω => ∑ i, ⟪f i, g i⟫[Ω]
+    testFunction := λ Ω f => ∀ i, testFunction Ω (f i)
   }
-  @[reducible] instance {X} [Trait X] [Enumtype ι] : Trait (ι → X) 
-    := ⟨Trait.R X, Trait.D X, Trait.eval⟩
 
-  -- example (X R D e) [SemiInner X R D e] [Enumtype ι] [Add R] [Zero R] 
-  --   : SemiInner (ι → X) R D e := by infer_instance
+  instance (X) [SemiInner X] [Zero X] : SemiInner (ℤ → X) :=
+  {
+    Domain := (ℤ × ℤ) × (𝓓 X)
+    domain := ((0, 1), default)
+    semiInner    := λ f g ((a, b), Ω) => ∑ i : Fin (b - a).toNat, ⟪f (a + i), g (a + i)⟫[Ω]
+    testFunction := λ ((a, b), Ω) f => ∀ i : ℤ, 
+      if (i ≥ a) ∧ (i < b) 
+      then testFunction Ω (f i)
+      else (f i) = 0
+  }
 
 end SemiInner
 
---   (R : outParam (Type v)) (D : outParam (Type w)) (e : outParam (R → D → ℝ))
---   (R : Type u) (D : Type v) (e : R → D → ℝ)
+-- (R : outParam (Type v)) (D : outParam (Type w)) (e : outParam (R → Domain → ℝ))
+-- (R : Type u) (D : Type v) (e : R → Domain → ℝ)
 open SemiInner in
-class SemiHilbert (X) (R : outParam $ Type u) (D : outParam $ Type v) (e : outParam $ R → D → ℝ) [outParam $ Vec R] extends Vec X, SemiInner X R D e where
-  semi_inner_add : ∀ (x y z : X),      ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫
-  semi_inner_mul : ∀ (x y : X) (r : ℝ),  ⟪r*x, y⟫ = r*⟪x, y⟫
-  semi_inner_sym : ∀ (x y : X),            ⟪x, y⟫ = ⟪y, x⟫
-  semi_inner_pos : ∀ (x : X) D,  (e ⟪x, x⟫ D) ≥ (0 : ℝ)
-  semi_inner_ext : ∀ (x : X), 
-                     ((x = 0) 
-                      ↔ 
-                      (∀ D (x' : X) (h : testFunction D x'), e ⟪x, x'⟫ D = 0))
+class SemiHilbert (X) extends Vec X, SemiInner X where
+  semi_inner_add : ∀ (x y z : X) Ω,      ⟪x + y, z⟫[Ω] = ⟪x, z⟫[Ω] + ⟪y, z⟫[Ω]
+  semi_inner_mul : ∀ (x y : X) (r : ℝ) Ω,  ⟪r*x, y⟫[Ω] = r*⟪x, y⟫[Ω]
+  semi_inner_sym : ∀ (x y : X) Ω,            ⟪x, y⟫[Ω] = ⟪y, x⟫[Ω]
+  semi_inner_pos : ∀ (x : X) Ω,            (⟪x, x⟫[Ω]) ≥ (0 : ℝ)
+  semi_inner_ext : ∀ (x : X),
+    ((x = 0) ↔ (∀ Ω (x' : X) (h : testFunction d x'), ⟪x, x'⟫[Ω] = 0))
 
-attribute [inferTCGoalsRL] SemiHilbert.toSemiInner
-
-abbrev Hilbert (X : Type u) := SemiHilbert X ℝ Unit (λ r _ => r)
--- @[reducible] instance {X} [Hilbert X] : SemiInner.Trait X := by infer_instance
--- @[reducible] instance {X R D e} [SemiInner X R D e] : SemiInner.Trait X := by infer_instance
-
+-- Hilbert space is something where Domains are an singleton/unit/contractible type
+open SemiInner Function in
+class Hilbert (X) extends SemiHilbert X where
+  D_is_unit : ∃ f : 𝓓 X → Unit, bijective f
+                                     
 namespace SemiHilbert 
 
   open SemiInner
 
-  instance : Hilbert ℝ := 
+  instance : SemiHilbert ℝ := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -124,16 +97,13 @@ namespace SemiHilbert
     semi_inner_ext := sorry
   }
 
-  -- instance (X Y) [Trait₂ X Y] [Vec (Trait₂.R X Y)] 
-  --   [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
-  --   [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
-  --   : SemiHilbert (X × Y) (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval := 
-  @[inferTCGoalsRL]
-  instance (X Y R D e) -- [Trait₂ X Y] 
-    [Vec R]
-    [SemiHilbert X R D e] 
-    [SemiHilbert Y R D e] 
-    : SemiHilbert (X × Y) R D e := 
+  instance : Hilbert ℝ :=
+  {
+    D_is_unit := sorry
+  }
+
+  instance (X Y) [SemiHilbert X] [SemiHilbert Y] 
+    : SemiHilbert (X × Y) := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -141,22 +111,15 @@ namespace SemiHilbert
     semi_inner_pos := sorry
     semi_inner_ext := sorry
   }
-  -- instance {X Y} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert X] [SemiHilbert' Y (Trait.sig X)]: SemiHilbert ℝ := SemiHilbert.mk
-  -- instance {X Y} [Trait Y] [Vec (Trait.sig Y).R] [SemiHilbert Y] [SemiHilbert' X (Trait.sig Y)]: SemiHilbert ℝ := SemiHilbert.mk
 
-  -- set_option trace.Meta.synthInstance true in
-  -- example {X Y} [Hilbert X] [Hilbert Y] : Hilbert (X × Y) := by infer_instance
+  instance (X Y) [Hilbert X] [Hilbert Y] 
+    : Hilbert (X × Y) := 
+  {
+    D_is_unit := sorry
+  }
 
-
-  -- instance (X) [Trait X] [Vec (Trait.R X)] 
-  --   [SemiHilbert X (Trait.R X) (Trait.D X) Trait.eval] (ι : Type v) [Enumtype ι] 
-  --   : SemiHilbert (ι → X) (Trait.R X) (Trait.D X) Trait.eval := 
-
-  @[inferTCGoalsRL]
-  instance (X R D e) --[Trait X] 
-    [Vec R]
-    [SemiHilbert X R D e] (ι : Type v) [Enumtype ι] 
-    : SemiHilbert (ι → X) R D e := 
+  instance (X) [SemiHilbert X] (ι) [Enumtype ι] 
+    : SemiHilbert (ι → X) := 
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -164,8 +127,11 @@ namespace SemiHilbert
     semi_inner_pos := sorry
     semi_inner_ext := sorry
   }
-  -- instance {ι : Type v} {X} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert X] [Enumtype ι] : SemiHilbert (ι → X) := SemiHilbert.mk
+
+  instance (X) [Hilbert X] (ι) [Enumtype ι] 
+    : Hilbert (ι → X) := 
+  {
+    D_is_unit := sorry
+  }
 
 end SemiHilbert
-
--- example (n m) : SemiInner.Trait (Fin n → Fin m → ℝ) := by infer_instance

@@ -5,7 +5,8 @@ namespace SciLean.ReverseDiff
 
 variable {α β γ α' β': Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-variable {U V W : Type} {R D e} [Vec R] [SemiHilbert U R D e] [SemiHilbert V R D e] [SemiHilbert W R D e]
+variable {U V W : Type} [SemiHilbert U] [SemiHilbert V] [SemiHilbert W]
+variable [Inhabited (𝓓 U)] [Inhabited (𝓓 V)] [Inhabited (𝓓 W)]
 
 @[simp] 
 theorem reverse_diff_of_composition_1 

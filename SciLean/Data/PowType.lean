@@ -19,14 +19,15 @@ instance [AddCommMonoid X] [DistribMulAction ℝ X] : Module ℝ (X^n) := Module
 
 instance [AddCommGroup X] [DistribMulAction ℝ X] : Vec (X^n) := Vec.mk
 
-instance {R D e} [SemiInner X R D e] [Zero R] [Add R] : SemiInner (X^n) R D e :=
+instance [SemiInner X] : SemiInner (X^n) :=
 {
-  semiInner := λ x y => ∑ i, ⟪x[i], y[i]⟫
+  Domain := 𝓓 X
+  domain := default
+  semiInner := λ x y Ω => ∑ i, ⟪x[i], y[i]⟫[Ω]
   testFunction := λ _ _ => True
 }
 
-@[inferTCGoalsRL]
-instance [Hilbert X] : Hilbert (X^n) :=
+instance [SemiHilbert X] : SemiHilbert (X^n) :=
 {
   semi_inner_add := sorry
   semi_inner_mul := sorry
@@ -35,6 +36,10 @@ instance [Hilbert X] : Hilbert (X^n) :=
   semi_inner_ext := sorry
 }
 
+instance [Hilbert X] : Hilbert (X^n) :=
+{
+  D_is_unit := sorry
+}
 
 variable [Vec X]
 

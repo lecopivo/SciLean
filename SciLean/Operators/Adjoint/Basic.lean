@@ -11,70 +11,61 @@ namespace SciLean
 
 prefix:max "𝓘" => SemiInner.Signature.Dom
 
+open SemiInner in
+class HasDual {X} [SemiHilbert X] (f : X → 𝓓 X → ℝ) : Prop where
+  hasDual : ∃ (x : X), ∀ (y : X) (Ω : 𝓓 X), testFunction Ω y → f y Ω = ⟪x, y⟫[Ω]
+
+open SemiInner in
+noncomputable
+def dual {X} [SemiHilbert X] (f : X → 𝓓 X → ℝ) : X
+    :=
+    match Classical.propDecidable (HasDual f) with
+      | isTrue h => Classical.choose (HasDual.hasDual (self := h))
+      | _ => (0 :X)
+
+-- Probably well behaved only on HasAdjoint functions
+
+open SemiInner in
+instance {X} [SemiHilbert X] : LT (𝓓 X) := ⟨λ Ω Ω' => ∀ (x : X), testFunction Ω x → testFunction Ω' x⟩
+
+open SemiInner in
+class PreservesTestFunctions {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : Prop where
+  preservesTestFun : ∀ (Ω : 𝓓 X), ∃ (Ω' : 𝓓 Y), 
+    (∀ (x : X), testFunction Ω x → testFunction Ω' (f x)) ∧                         -- preserves test functions
+    (∀ (Ω'' : 𝓓 Y), (Ω'' < Ω') → ∃ x, testFunction Ω x → ¬testFunction Ω'' (f x))  -- can not be smaller
+
+open SemiInner in
+noncomputable
+def domain_pushforward {X Y} [SemiHilbert X] [SemiHilbert Y]
+    (f : X → Y) : 𝓓 X → 𝓓 Y
+    :=
+    λ Ω =>
+    match Classical.propDecidable (PreservesTestFunctions f) with
+      | isTrue  h => Classical.choose (PreservesTestFunctions.preservesTestFun (self := h) Ω)
+      | _ => default
+
+postfix:max "‡" => domain_pushforward
+
+
 --- Notes on the definition:
 ---       1. Existence is postulated because we do not work with complete vector spaces
 ---       2. condition `testFunction D x` is there to prove uniquness of adjoint
 ---       3. condition `testFunction D y` is there to prove f†† = f
 ---       4. condition `preservesTestFun` is there to prove (f ∘ g)† = g† ∘ f†
 open SemiInner in
-class HasAdjoint' {X Y}
-  {R D e} [outParam $ Vec R] [outParam $ SemiHilbert X R D e] [outParam $ SemiHilbert Y R D e] (f : X → Y) : Prop  
-  where
-    hasAdjoint : ∃ (f' : Y → X), ∀ (x : X) (y : Y) (d : (Trait₂.D X Y)), 
-                   (testFunction' d x ∨ testFunction' d y) → ⟪f' y, x⟫ = ⟪y, f x⟫
-    preservesTestFun : ∀ (x : X) (d : (Trait₂.D X Y)), testFunction' d x → testFunction' d (f x)
+class HasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) 
+  extends PreservesTestFunctions f : Prop where
+    has_dual : ∀ y, HasDual (λ x Ω => ⟪y, f x⟫[f‡ Ω])
 
--- TODO: Understand why the argument (f : X → Y) has to be at the last position
--- otherwise I'm getting some odd errors when working with reals
-open SemiInner in
-@[reducible] abbrev HasAdjoint {X Y} 
-  [Trait₂ X Y] 
-  [Vec (Trait₂.R X Y)] 
-  [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval]
-  [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval]
-  (f : X → Y) 
-  : Prop 
-  := HasAdjoint' (R := (Trait₂.R X Y)) (D := (Trait₂.D X Y)) (e := (Trait₂.eval)) f
+instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjoint f] (y : Y)
+  : HasDual (λ x Ω => ⟪y, f x⟫[f‡ Ω]) := sorry
 
 open SemiInner in
 noncomputable
-def adjoint {X Y} 
-    [Trait₂ X Y] [Vec (Trait₂.R X Y)] 
-    [SemiHilbert X (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval] 
-    [SemiHilbert Y (Trait₂.R X Y) (Trait₂.D X Y) Trait₂.eval]
-    (f : X → Y) 
-    : 
-      Y → X 
+def adjoint {X Y} [SemiHilbert X] [SemiHilbert Y] 
+    (f : X → Y) : Y → X 
     :=
-    match Classical.propDecidable (HasAdjoint f) with
-      | isTrue  h => Classical.choose (HasAdjoint'.hasAdjoint (self := h))
-      | _ => (0 : Y → X)
-
--- section AutoCompleteS
-
---   open SemiInner
-
---   class PairTrait (X Y : Type) where
---     sig : Signature
-
---   export PairTrait (sig)
---   attribute [reducible] PairTrait.sig
-
---   @[reducible] instance {X Y} [Trait X] : PairTrait X Y := ⟨Trait.sig X⟩
---   @[reducible] instance {X Y} [Trait Y] : PairTrait X Y := ⟨Trait.sig Y⟩
-
---   variable {X Y} [PairTrait X Y] [Vec (sig X Y).R] [SemiHilbert' X (sig X Y)] [SemiHilbert' Y (sig X Y)] 
---   noncomputable
---   abbrev adjoint (f : X → Y) := adjoint' (sig X Y) f
-
---   abbrev HasAdjoint (f : X → Y) := HasAdjoint' (sig X Y) f
-
---   -- these might be dangerouds
---   -- @[reducible] instance {X} [Trait X] [Vec (Trait.sig X).R] [SemiHilbert' X (Trait.sig X)] : SemiHilbert X := SemiHilbert.mk (X := X)
---   @[reducible] instance {X S} [SemiInner' X S] : Trait X := ⟨S⟩
---   -- @[reducible] instance {X} [Trait X] [SemiInner' X (Trait.sig X)] : SemiInner X := SemiInner.mk
-
--- end AutoCompleteS
+    λ y => dual (λ x Ω => ⟪y, f x⟫[f‡ Ω])
 
 postfix:max "†" => adjoint
 
@@ -83,76 +74,84 @@ namespace Adjoint
   open SemiInner
 
   variable {α β γ : Type}
-  variable {X Y Z: Type} {R D e} [Vec R] [SemiHilbert X R D e] [SemiHilbert Y R D e] [SemiHilbert Z R D e]
+  variable {X Y Z: Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 
-  variable (f : X → Y) (x : X) (y : Y) [HasAdjoint f]
+ 
+  @[simp]
+  theorem semiinner_of_dual (f : X → 𝓓 X → ℝ) [HasDual f]
+    (x : X) (Ω : 𝓓 X)
+    : testFunction Ω x → 
+      ⟪dual f, x⟫[Ω] = f x Ω
+    := sorry
 
-  #check ⟪f† y, x⟫ = ⟪y, f x⟫
+  instance (f : Y → Z) (g : X → Y)
+    [PreservesTestFunctions f] [PreservesTestFunctions g]
+    : PreservesTestFunctions (λ x => f (g x)) 
+    := sorry
 
-
-  -- open SemiInner in
-  -- instance {X S} [SemiHilbert' X (Trait.sig X)] : Vec (Trait.sig X).R := ⟨S⟩
-  
-  -- set_option synthInstance.maxHeartbeats 5000
-                
-  -- example : SemiHilbert' X (Trait.sig X) := by infer_instance
-  -- example : SemiHilbert X := by infer_instance
-  -- example : SemiHilbert Y := by infer_instance
-  -- example : SemiHilbert Z := by infer_instance
-
+  @[simp]
+  theorem domain_pushforward_of_comp (f : Y → Z) (g : X → Y)
+    [PreservesTestFunctions f] [PreservesTestFunctions g] (Ω : 𝓓 X)
+    : (λ x => f (g x))‡ Ω = f‡ (g‡ Ω)
+    := sorry
 
   @[simp]
   theorem inner_adjoint_fst_right_test
-    (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (Ω : 𝓓 X) [HasAdjoint f] 
     : 
-      (h : testFunction' d x) 
-      → ⟪f† y, x⟫ = ⟪y, f x⟫
-    := sorry
+      testFunction Ω x →
+      ⟪f† y, x⟫[Ω] = ⟪y, f x⟫[f‡ Ω]
+    := 
+  by
+    intro h;
+    simp[adjoint]
+    rw[semiinner_of_dual]
+    apply h
+    done
 
-  @[simp]
-  theorem inner_adjoint_fst_left_test
-    (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
-    : 
-      (h : testFunction' d y) 
-      → ⟪f† y, x⟫ = ⟪y, f x⟫ 
-    := sorry
+  -- This is probably not true in general
+  -- @[simp]
+  -- theorem inner_adjoint_fst_left_test
+  --   (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
+  --   : 
+  --     (h : testFunction' d y) 
+  --     → ⟪f† y, x⟫ = ⟪y, f x⟫ 
+  --   := sorry
 
   @[simp]
   theorem inner_adjoint_snd_right_test 
-    (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
+    (f : X → Y) (x : X) (y : Y) (Ω : 𝓓 X) [HasAdjoint f] 
     : 
-      (h : testFunction' d x) 
-      → ⟪x, f† y⟫ = ⟪f x, y⟫ 
+      testFunction Ω x →
+      ⟪x, f† y⟫[Ω] = ⟪f x, y⟫[f‡ Ω]
     := sorry
 
-  @[simp]
-  theorem inner_adjoint_snd_left_test
-    (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
-    : 
-      (h : testFunction' d y) 
-      → ⟪x, f† y⟫ = ⟪f x, y⟫
-    := sorry
+  -- This is probably not true in general
+  -- @[simp]
+  -- theorem inner_adjoint_snd_left_test
+  --   (f : X → Y) (x : X) (y : Y) (d : D) [HasAdjoint f] 
+  --   : 
+  --     (h : testFunction' d y) 
+  --     → ⟪x, f† y⟫ = ⟪f x, y⟫
+  --   := sorry
 
-  theorem inner_ext {X} (x y : X) [Trait X] [Vec (Trait.R X)] [SemiHilbert X (Trait.R X) (Trait.D X) Trait.eval] 
+  theorem inner_ext {X} (x y : X) [SemiHilbert X] 
     : 
-      (∀ (x' : X) (d : (Trait.D X)), testFunction' d x' → ⟪x, x'⟫ = ⟪y, x'⟫)
-       → (x = y)
+      (∀ (x' : X) (Ω : 𝓓 X), testFunction Ω x' → ⟪x, x'⟫[Ω] = ⟪y, x'⟫[Ω]) → (x = y)
     := sorry 
 
-  -- TODO: This needs some refinement as currnetly you need to write a semicolon
-  --       after `inner_ext` if you do not want to specify all arguments
-  syntax "inner_ext" (ident)? (ident)? (ident)? : tactic
-  macro_rules
-    | `(tactic| inner_ext ) => `(tactic| inner_ext ϕ D h)
-    | `(tactic| inner_ext $x) => `(tactic| inner_ext $x D h)
-    | `(tactic| inner_ext $x $D) => `(tactic| inner_ext $x $D h)
-    | `(tactic| inner_ext $x $D $h) => `(tactic| apply inner_ext; intro $x $D $h)
+  -- syntax "inner_ext" (ident)? (ident)? (ident)? : tactic
+  -- macro_rules
+  --   | `(tactic| inner_ext ) => `(tactic| inner_ext ϕ D h)
+  --   | `(tactic| inner_ext $x) => `(tactic| inner_ext $x D h)
+  --   | `(tactic| inner_ext $x $D) => `(tactic| inner_ext $x $D h)
+  --   | `(tactic| inner_ext $x $D $h) => `(tactic| apply inner_ext; intro $x $D $h)
 
   -- Having adjoint actually implies linearity. The converse is not true in our 
   -- scenario, Convenient Vector spaces, as we do not have Riesz representation theorem.
-  instance (f : X → Y) [HasAdjoint f] : IsLin f := sorry
-  instance (f : X → Y) [HasAdjoint f] : IsLin (f†) := sorry
-  instance (f : X → Y) [HasAdjoint f] : HasAdjoint (f†) := sorry
+  -- instance (f : X → Y) [HasAdjoint f] : IsLin f := sorry
+  -- instance (f : X → Y) [HasAdjoint f] : IsLin (f†) := sorry
+  -- instance (f : X → Y) [HasAdjoint f] : HasAdjoint (f†) := sorry
 
   section Core
 
@@ -174,52 +173,85 @@ namespace Adjoint
     instance eval_has_adjoint {ι} (i : ι) [Enumtype ι]
       : HasAdjoint (λ (f : ι → X) => f i) := sorry
 
-    -- instance diag_has_adjoint (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2] : HasAdjoint (λ x => f (g1 x) (g2 x)) := sorry
-    -- instance diag_parm_has_adjoint (f : Y1 → Y2 → Z) (g1 : X → α → Y1) (g2 : X → α → Y2) [HasAdjoint (λ yy : Y1 × Y2 => f yy.1 yy.2)] [HasAdjoint g1] [HasAdjoint g2] : HasAdjoint (λ x a => f (g1 x a) (g2 x a)) := sorry
-
   end Core
 
-  set_option trace.Meta.Tactic.simp true in
-  @[simp]
-  theorem adjoint_of_adjoint (f : X → Y) [HasAdjoint f] : f†† = f := 
-  by 
-    funext x 
-    inner_ext;
-    simp (discharger := assumption)
-    admit
+  -- For this to be true we need `inner_adjoint_fst_left_test` 
+  -- Is this theorem important?
+  -- @[simp]
+  -- theorem adjoint_of_adjoint (f : X → Y) [HasAdjoint f] : f†† = f := 
+  -- by 
+  --   funext x
+  --   apply inner_ext
+  --   intro ϕ Ω h
+  --   simp (discharger := assumption)
+  --   done
+
+  @[simp] 
+  theorem domain_pushforward_of_id (Ω : 𝓓 X)
+    : (λ x : X => x)‡ Ω = Ω
+    := sorry
 
   @[simp high] 
   theorem adjoint_of_id
     : adjoint (λ x : X => x) = id := 
   by 
-    funext x; inner_ext; simp (discharger := assumption); admit
+    funext x; apply inner_ext; intro y Ω h; simp (discharger := assumption); done
+
+  @[simp]
+  theorem domain_pushforward_of_const 
+    {ι} [Enumtype ι] (Ω : 𝓓 (ι → X))
+    : (λ (x : X) (i : ι) => x)‡ Ω = Ω
+    := sorry
 
   @[simp]
   theorem adjoint_of_const {ι} [Enumtype ι]
     : (λ (x : X) (i : ι) => x)† = sum := 
   by 
-    funext x; inner_ext;
-    simp (discharger := assumption);
-    simp[semiInner, semiInner]
-    -- now just propagete sum inside and we are done
-    admit
-
-  -- This is unfortunatelly not true with current definition of adjoint
-  -- @[simp]
-  -- theorem adjoint_of_const_on_real [SemiInnerTrait X] [SemiHilbert X (𝓘 X)]
-  --     : (λ (x : X) => (λ (t : ℝ) ⟿ x))† = integral := sorry
+    funext x; apply inner_ext; intro y Ω h;
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp[semiInner]
+    rw[!?((∑ i, ⟪x i, y⟫[Ω]) = ⟪∑ i, x i, y⟫[Ω])]
+    done
 
   instance {ι} [Enumtype ι] : HasAdjoint (sum : (ι → X) → X) := sorry
 
+  @[simp] theorem domain_pushforward_of_sum {ι} [Enumtype ι] (Ω)
+    : (sum : (ι → X) → X)‡ Ω = Ω
+    := sorry
+
   @[simp] theorem adjoint_of_sum {ι} [Enumtype ι]
-    : (sum : (ι → X) → X)† = (λ (x : X) (i : ι) => x) := sorry
+    : (sum : (ι → X) → X)† = (λ (x : X) (i : ι) => x) :=
+  by
+    funext f; apply inner_ext; intro g Ω h;
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp[semiInner]
+    rw [!?((∑ i, ⟪f, g i⟫[Ω]) = ⟪f, ∑ i, g i⟫[Ω])]
+    done
+
+  instance {ι} [Enumtype ι] 
+    (f : X → ι → Y) (i : ι) [HasAdjoint f] 
+    : HasAdjoint (λ x => f x i)
+    := sorry
+
+  @[simp]
+  theorem domain_pushforward_of_parm {ι} [Enumtype ι] 
+    (f : X → ι → Y) (i : ι) [PreservesTestFunctions f] (Ω )
+    : (λ x => f x i)‡ Ω = f‡ Ω
+    := sorry
 
   @[simp]
   theorem adjoint_of_parm {ι} [Enumtype ι] 
     (f : X → ι → Y) (i : ι) [HasAdjoint f] 
     : 
       (λ x => f x i)† = (λ y => f† (λ j => (kron i j)*y)) 
-    := sorry
+    :=
+  by
+    funext y; apply inner_ext; intro x Ω h;
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp[semiInner]
+    rw[!?((∑ j, ⟪(kron i j) * y, (f x j)⟫[f‡ Ω]) = ⟪y, (f x i)⟫[f‡ Ω])]
+    done
 
   instance {ι} [Enumtype ι]
       (f : ι → X → Y)
@@ -228,20 +260,40 @@ namespace Adjoint
         HasAdjoint (λ x i => f i x)   
       := sorry
 
-  @[simp]
-  theorem adjoint_of_swap {ι} [Enumtype ι]
-      (f : ι → X → Y)
-      [∀ i, HasAdjoint (f i)]
-      :
-        (λ x i => f i x)† = (λ (y : ι → Y) => ∑ i, (f i)† (y i))
-      := 
-  by
-    funext x
-    inner_ext;
-    simp (discharger := assumption);
-    -- propagate sum outside of ⟪·,·⟫, move (f i)† on ϕ
-    -- expand defitions of ⟪·,·⟫ and it should be done
-    admit
+  -- Is this realy true??
+  -- theorem domain_pushforward_of_swap  {ι} [Enumtype ι]
+  --     (f : ι → X → Y)
+  --     [∀ i, HasAdjoint (f i)] (Ω j)
+  --     : (f j)‡ Ω < (f (fun x i => f i x)‡ Ω
+  --     := sorry
+
+  -- @[simp]
+  -- theorem adjoint_of_swap {ι} [Enumtype ι]
+  --     (f : ι → X → Y)
+  --     [∀ i, HasAdjoint (f i)]
+  --     :
+  --       (λ x i => f i x)† = (λ (y : ι → Y) => ∑ i, (f i)† (y i))
+  --     := 
+  -- by
+  --   funext y; apply inner_ext; intro x Ω h;
+  --   rw[inner_adjoint_fst_right_test]
+  --   . simp[semiInner]
+
+  --     -- This is a form of more general statement:
+  --     --   testFunction Ω x → Ω < Ω' → 
+  --     --   ⟪y, x⟫[Ω'] = ⟪y, x⟫[Ω] 
+  --     conv =>
+  --       lhs; enter [1,i]
+  --       rw[!?(⟪y i, f i x⟫[(fun x j => f j x)‡ Ω] = ⟪y i, f i x⟫[(f i)‡ Ω])]
+
+  --     -- simple linearity
+  --     rw[!?(⟪∑ i, (f i)† (y i), x⟫[Ω] = ∑ i, ⟪(f i)† (y i), x⟫[Ω])]
+  --     conv =>
+  --       rhs; enter [1,i]
+  --       rw[inner_adjoint_fst_right_test _ _ _ _ h]
+  --     done
+  --   . apply h
+  --   done
 
   @[simp]
   theorem adjoint_of_swap' {ι κ} [Enumtype ι] [Enumtype κ]
@@ -361,7 +413,7 @@ namespace Adjoint
 
   open Function
 
-  variable {Y1 Y2} {ι : Type} [SemiHilbert Y1 R D e] [SemiHilbert Y2 R D e] [Enumtype ι]
+  variable {Y1 Y2} {ι : Type} [SemiHilbert Y1] [SemiHilbert Y2] [Enumtype ι]
 
   instance (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) 
     [HasAdjoint g1] [HasAdjoint g2]

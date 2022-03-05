@@ -99,10 +99,8 @@ namespace Hom
   -- instance {X Y} [FinEnumVec X] [Vec Y] [Trait Y] [SemiInner Y (Trait.R Y) (Trait.D Y) Trait.eval] 
   --   : Trait (X ⊸ Y) := ⟨Trait.R Y, Trait.D Y, Trait.eval⟩
 
-  -- TODO: Figure out why does signature does not get infered here automatically??
-  -- example : SemiInner.Trait ℝ := by infer_instance
   example : Hilbert ℝ := by infer_instance
-  example : SemiHilbert ℝ ℝ Unit (λ r _ => r) := by infer_instance
+  example : SemiHilbert ℝ := by infer_instance
 
 
   -- set_option trace.Meta.isDefEq true in
