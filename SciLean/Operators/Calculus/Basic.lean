@@ -9,7 +9,6 @@ namespace SciLean
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {U V W : Type} [SemiHilbert U] [SemiHilbert V] [SemiHilbert W]
-variable [Inhabited (𝓓 U)] [Inhabited (𝓓 V)] [Inhabited (𝓓 W)]
 
 ------------------
 -- Differential --
