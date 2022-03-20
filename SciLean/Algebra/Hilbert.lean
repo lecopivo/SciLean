@@ -88,6 +88,7 @@ class SemiHilbert (X) extends Vec X, SemiInner X where
     ((x = 0) ↔ (∀ Ω (ϕ : X) (h : testFunction Ω ϕ), ⟪x, ϕ⟫[Ω] = 0))
   semi_inner_gtr : ∀ (x ϕ : X) (Ω Ω' : 𝓓 X), 
     testFunction Ω ϕ → Ω < Ω' → ⟪x, ϕ⟫[Ω'] = ⟪x, ϕ⟫[Ω]
+  -- Maybe that {ϕ // testFunction Ω ϕ} form a vector space
 
 class Hilbert (X) extends SemiHilbert X, UniqueDomain X
                                      

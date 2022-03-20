@@ -53,8 +53,6 @@ def adjoint {X Y} [SemiHilbert X] [SemiHilbert Y]
 
 postfix:max "†" => adjoint
 
--- namespace Adjoint
-
   open SemiInner
 
   variable {α β γ : Type}
@@ -81,6 +79,17 @@ postfix:max "†" => adjoint
 
   instance preserves_test_functions_id
     : PreservesTestFunctions (λ x : X => x) := sorry
+
+  @[simp]
+  theorem hilbert_domain {X} [Hilbert X] (Ω : 𝓓 X)
+    : Ω = uniqueDomain := sorry
+
+  @[simp]
+  theorem domain_pushforward_of_hilbert {Y} [Hilbert Y] (Ω : 𝓓 X)
+    (f : X → Y) [PreservesTestFunctions f]
+    : f‡ Ω = uniqueDomain
+  := sorry
+
 
   @[simp]
   theorem domain_pushforward_of_id (Ω : 𝓓 X)
@@ -183,8 +192,4 @@ postfix:max "†" => adjoint
   -- instance (f : X → Y) [HasAdjoint f] : IsLin f := sorry
   -- instance (f : X → Y) [HasAdjoint f] : IsLin (f†) := sorry
 
-
   instance (f : X → Y) [HasAdjoint f] : HasAdjoint (f†) := sorry
-
-
--- end Adjoint

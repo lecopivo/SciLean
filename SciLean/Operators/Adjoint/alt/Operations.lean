@@ -52,10 +52,24 @@ namespace SciLean
 
   @[simp]
   theorem adjoint_of_add 
-    : (λ ((x,y) : X×X) => x + y)† = λ x => (x, x) := sorry
+    : (λ ((x,y) : X×X) => x + y)† = λ x => (x, x) 
+  := by
+    funext x; apply inner_ext; intro ϕ Ω h
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp[SemiInner.semiInner]
+    -- split the inner product and use the fact that:
+    --   Ω.1 < (fun x => x.1 + x.2)‡ Ω  and  testFunction Ω.1 ϕ.1
+    --   Ω.2 < (fun x => x.1 + x.2)‡ Ω  and  testFunction Ω.2 ϕ.2
+    admit
+
   @[simp]
   theorem adjoint_of_sub 
-    : (λ ((x,y) : X×X) => x - y)† = λ x : X => (x, -x) := sorry
+    : (λ ((x,y) : X×X) => x - y)† = λ x : X => (x, -x)
+  := by
+    funext x; apply inner_ext; intro ϕ Ω h
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp[SemiInner.semiInner]
+    admit
 
   @[simp]
   theorem adjoint_of_add_fun 
@@ -89,13 +103,23 @@ namespace SciLean
   theorem adjoint_of_inner1 
     {X : Type} [Hilbert X] 
     (y : X) 
-    : (λ x : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * y) := sorry
+    : (λ x : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * y) 
+  := by
+    funext x; apply inner_ext; intro ϕ Ω h
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp
+    rw[!?(⟪ϕ,y⟫ = ⟪y,ϕ⟫)]
+    done
 
   @[simp]
   theorem adjoint_of_inner2 
     {X : Type} [Hilbert X] 
     (x : X) 
-    : (λ y : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * x) := sorry
+    : (λ y : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * x) := by
+    funext y; apply inner_ext; intro ϕ Ω h
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp 
+    done
 
   @[simp]
   theorem adjoint_of_inner1_comp 
