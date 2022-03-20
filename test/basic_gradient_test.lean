@@ -7,14 +7,10 @@ variable {α β γ : Type}
 variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
-example (y z : X) [Hilbert X] 
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+example (y : X)
   : 
-    ∇ (λ x : X => ⟪x,y⟫) z = y 
-  := by autograd done
-
-example (y : X) [Hilbert X] 
-  : 
-    ∇ (λ x : X => ⟪x,x⟫) y = (2 : ℝ) * y 
+    ∇ (λ x : X => 2 * ⟪x,x⟫) = λ x : X => (2 : ℝ) * ((2 : ℝ) * x)
   := by autograd done
 
 example (g : ι → ℝ) 
@@ -36,18 +32,9 @@ by
   autograd done
 
 
-def norm {X} [Hilbert X] (x : X) := Math.sqrt ⟪x, x⟫
-
-notation "∥" x "∥" => norm x
-
--- TODO: Move this somewhere else
-instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥^2) := sorry
-@[simp] theorem differential_of_squared_norm {X} [Hilbert X] 
-  : δ (λ x : X => ∥x∥^2) = λ x dx : X => 2*⟪x, dx⟫ := sorry
-
 example {X} [Hilbert X] (x : X) 
   : 
-    ∇ (λ x : X => ∥x∥^2) x = (2 : ℝ) * x 
+    ∇ (λ x : X => ∥x∥²) x = (2 : ℝ) * x 
   := 
 by autograd done
 

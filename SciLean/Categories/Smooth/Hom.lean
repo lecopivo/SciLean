@@ -106,6 +106,7 @@ namespace Hom
     semi_inner_sym := sorry
     semi_inner_pos := sorry
     semi_inner_ext := sorry
+    semi_inner_gtr := sorry
   }
 
   -- variable {X Y Z : Type} [Hilbert Y]

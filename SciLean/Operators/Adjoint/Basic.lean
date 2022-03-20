@@ -199,8 +199,8 @@ namespace Adjoint
 
   @[simp]
   theorem domain_pushforward_of_const 
-    {ι} [Enumtype ι] (Ω : 𝓓 (ι → X))
-    : (λ (x : X) (i : ι) => x)‡ Ω = Ω
+    {ι} [Enumtype ι] (Ω : 𝓓 X)
+    : (λ (x : X) (i : ι) => x)‡ Ω = λ _ => Ω
     := sorry
 
   @[simp]
@@ -215,9 +215,9 @@ namespace Adjoint
 
   instance {ι} [Enumtype ι] : HasAdjoint (sum : (ι → X) → X) := sorry
 
-  @[simp] theorem domain_pushforward_of_sum {ι} [Enumtype ι] (Ω)
-    : (sum : (ι → X) → X)‡ Ω = Ω
-    := sorry
+  -- @[simp] theorem domain_pushforward_of_sum {ι} [Enumtype ι] (Ω)
+  --   : (sum : (ι → X) → X)‡ Ω = Ω
+  --   := sorry
 
   @[simp] theorem adjoint_of_sum {ι} [Enumtype ι]
     : (sum : (ι → X) → X)† = (λ (x : X) (i : ι) => x) :=
@@ -225,7 +225,7 @@ namespace Adjoint
     funext f; apply inner_ext; intro g Ω h;
     rw[inner_adjoint_fst_right_test _ _ _ _ h]
     simp[semiInner]
-    rw [!?((∑ i, ⟪f, g i⟫[Ω]) = ⟪f, ∑ i, g i⟫[Ω])]
+    rw [!?((∑ i, ⟪f, g i⟫[Ω i]) = ⟪f, ∑ i, g i⟫[sum‡ Ω])]
     done
 
   instance {ι} [Enumtype ι] 
@@ -235,12 +235,12 @@ namespace Adjoint
 
   @[simp]
   theorem domain_pushforward_of_parm {ι} [Enumtype ι] 
-    (f : X → ι → Y) (i : ι) [PreservesTestFunctions f] (Ω )
-    : (λ x => f x i)‡ Ω = f‡ Ω
+    (f : X → ι → Y) (i : ι) [PreservesTestFunctions f] Ω
+    : (λ x => f x i)‡ Ω = f‡ Ω i
     := sorry
 
   @[simp]
-  theorem adjoint_of_parm {ι} [Enumtype ι] 
+  theorem adjoint_of_parm {ι} [Enumtype ι] [Nonempty ι]
     (f : X → ι → Y) (i : ι) [HasAdjoint f] 
     : 
       (λ x => f x i)† = (λ y => f† (λ j => (kron i j)*y)) 
@@ -250,7 +250,6 @@ namespace Adjoint
     rw[inner_adjoint_fst_right_test _ _ _ _ h]
     rw[inner_adjoint_fst_right_test _ _ _ _ h]
     simp[semiInner]
-    rw[!?((∑ j, ⟪(kron i j) * y, (f x j)⟫[f‡ Ω]) = ⟪y, (f x i)⟫[f‡ Ω])]
     done
 
   instance {ι} [Enumtype ι]
@@ -267,33 +266,33 @@ namespace Adjoint
   --     : (f j)‡ Ω < (f (fun x i => f i x)‡ Ω
   --     := sorry
 
-  -- @[simp]
-  -- theorem adjoint_of_swap {ι} [Enumtype ι]
-  --     (f : ι → X → Y)
-  --     [∀ i, HasAdjoint (f i)]
-  --     :
-  --       (λ x i => f i x)† = (λ (y : ι → Y) => ∑ i, (f i)† (y i))
-  --     := 
-  -- by
-  --   funext y; apply inner_ext; intro x Ω h;
-  --   rw[inner_adjoint_fst_right_test]
-  --   . simp[semiInner]
+  @[simp]
+  theorem adjoint_of_swap {ι} [Enumtype ι]
+      (f : ι → X → Y)
+      [∀ i, HasAdjoint (f i)]
+      :
+        (λ x i => f i x)† = (λ (y : ι → Y) => ∑ i, (f i)† (y i))
+      := 
+  by
+    funext y; apply inner_ext; intro x Ω h;
+    rw[inner_adjoint_fst_right_test]
+    . simp[semiInner]
 
-  --     -- This is a form of more general statement:
-  --     --   testFunction Ω x → Ω < Ω' → 
-  --     --   ⟪y, x⟫[Ω'] = ⟪y, x⟫[Ω] 
-  --     conv =>
-  --       lhs; enter [1,i]
-  --       rw[!?(⟪y i, f i x⟫[(fun x j => f j x)‡ Ω] = ⟪y i, f i x⟫[(f i)‡ Ω])]
+      -- This is a form of more general statement:
+      --   testFunction Ω x → Ω < Ω' → 
+      --   ⟪y, x⟫[Ω'] = ⟪y, x⟫[Ω] 
+      conv =>
+        lhs; enter [1,i]
+        rw[!?(⟪y i, f i x⟫[(fun x j => f j x)‡ Ω i] = ⟪y i, f i x⟫[(f i)‡ Ω])]
 
-  --     -- simple linearity
-  --     rw[!?(⟪∑ i, (f i)† (y i), x⟫[Ω] = ∑ i, ⟪(f i)† (y i), x⟫[Ω])]
-  --     conv =>
-  --       rhs; enter [1,i]
-  --       rw[inner_adjoint_fst_right_test _ _ _ _ h]
-  --     done
-  --   . apply h
-  --   done
+      -- simple linearity
+      rw[!?(⟪∑ i, (f i)† (y i), x⟫[Ω] = ∑ i, ⟪(f i)† (y i), x⟫[Ω])]
+      conv =>
+        rhs; enter [1,i]
+        rw[inner_adjoint_fst_right_test _ _ _ _ h]
+      done
+    . apply h
+    done
 
   @[simp]
   theorem adjoint_of_swap' {ι κ} [Enumtype ι] [Enumtype κ]
@@ -323,6 +322,18 @@ namespace Adjoint
       (adjoint (λ x => f (g x))) = (adjoint g) ∘ (adjoint f)
     := sorry
 
+  instance (a : α) (h : α → β) 
+    (f : Y → β → Z) [HasAdjoint λ y => f y (h a)]
+    (g : X → α → Y) [HasAdjoint λ x => g x a]
+    : HasAdjoint (λ x => f (g x a) (h a))
+    := sorry
+
+  @[simp]
+  theorem adjoint_comp_parm (a : α) (h : α → β) 
+    (f : Y → β → Z) [HasAdjoint λ y => f y (h a)]
+    (g : X → α → Y) [HasAdjoint λ x => g x a]
+    : (λ x => f (g x a) (h a))† = (λ x => g x a)† ∘ (λ y => f y (h a))†
+    := sorry
 
   instance {ι κ} [Enumtype ι] [Enumtype κ] [Nonempty ι] 
     (g : ι → κ) [IsInv g]

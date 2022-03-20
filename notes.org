@@ -220,6 +220,7 @@
     - [[https://arxiv.org/abs/1911.04523][A Simple Differentiable Programming Language, 2020]]
 
     - [[https://arxiv.org/abs/1802.04730][Tensor Comprehensions: Framework-Agnostic High-Performance Machine Learning Abstractions]]
+    - [[https://doi.org/10.1145/3498710][Provably Correct, Asymptotically Efficient, Higher-Order Reverse-Mode Automatic Differentiation, 2022]]
 
 *** Math Foundation
 

@@ -36,3 +36,10 @@ example {n} [NonZero n] (g : Fin n → ℝ) (c : Fin n) : HasAdjoint fun (f : Fi
 set_option synthInstance.maxHeartbeats 2000 in
 example {n} [NonZero n] (g : Fin n → ℝ) (c : Fin n) : HasAdjoint fun (f : Fin n → ℝ) b => f (b + c) * g c + g (b + c) * f c := by infer_instance
 
+example (x : Fin n → ℝ) (i : Fin n) : SciLean.HasAdjoint fun (dx : Fin n → ℝ) => ∑ j, x i * (dx i + dx j) := by infer_instance done
+example {m : Nat} : ∀ (i : Fin n), HasAdjoint fun (dx : Fin n → ℝ^m) j => dx i + dx j := by infer_instance done
+set_option synthInstance.maxHeartbeats 4000 in
+example (x : Fin n → ℝ^(3:ℕ)) (i : Fin n) : SciLean.HasAdjoint fun (dx : Fin n → ℝ^(3:ℕ)) j => ⟪x i, dx j⟫ := by infer_instance done
+set_option synthInstance.maxHeartbeats 4000 in
+example {m : Nat} (x : ℝ^m) : ∀ (i : Fin n), HasAdjoint fun (dx : Fin n → ℝ^m) => ∑ j, 2 * ⟪x, dx i + dx j⟫ := by infer_instance done
+

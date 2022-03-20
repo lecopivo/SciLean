@@ -11,6 +11,8 @@ class Iterable (ι : Type u) where
   -- This can be stated as an existence of a bijection between `ι` and `Fin n` for suitable `n`
   decEq : DecidableEq ι
 
+attribute [reducible] Iterable.decEq
+
 -- Iterable that respects inequality
 class IterableLt (ι : Type u) extends LT ι, Iterable ι where 
   next_lt : ∀ (i : ι), 

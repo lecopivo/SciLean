@@ -8,7 +8,7 @@ namespace SciLean
 open SemiInner
 
 variable {α β γ : Type}
-variable {X Y Z : Type} {R D e}
+variable {X Y Z : Type} 
 variable [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
@@ -17,7 +17,20 @@ namespace Adjoint
   variable (f g : X → Y) 
   variable (r : ℝ)
 
+  instance : SciLean.HasAdjoint (fun xy : X × Y => xy.fst) := by sorry
+  instance : SciLean.HasAdjoint (fun xy : X × Y => xy.snd) := by sorry
+
+  @[simp (mid+1)] theorem Prod.fst.adjoint
+    : (Prod.fst : X × Y → X)† = λ x : X => (x, 0) := by sorry
+  @[simp (mid+1)] theorem Prod.snd.adjoint
+    : (Prod.snd : X × Y → Y)† = λ y : Y => (0, y) := by sorry
+
   --- Addition
+  instance : HasAdjoint (uncurry (HAdd.hAdd : X → X → X)) := sorry
+  instance : HasAdjoint (λ p : X×X => p.1 + p.2) := sorry
+
+  @[simp (mid+1)]
+  theorem adjoint_of_uncurry_hadd : (uncurry (HAdd.hAdd : X → X → X))† = λ x => (x, x) := sorry
   instance : HasAdjoint (λ x : X×X => x.1 + x.2) := sorry
   @[simp]
   theorem adjoint_of_hadd : adjoint (λ x : X×X => x.1 + x.2) = (λ x => (x,x)) := sorry
@@ -27,12 +40,14 @@ namespace Adjoint
   theorem adjoint_of_add_of_fun_arg [HasAdjoint f] [HasAdjoint g] : adjoint (λ x => f x + g x) = (λ y => adjoint f y + adjoint g y) := by funext a; simp; done
   @[simp]
   theorem adjoint_of_add_of_fun_arg_parm (f g : X → ι → Y) [HasAdjoint f] [HasAdjoint g]
-      : adjoint (λ x i => f x i + g x i) = adjoint (λ x i => f x i) + adjoint (λ x i => g x i) := by funext z; simp; done
+      : adjoint (λ x i => f x i + g x i) = adjoint (λ x i => f x i) + adjoint (λ x i => g x i) := by funext z; simp; admit -- done
 
-  example [HasAdjoint f] [HasAdjoint g] : (f + g)† = f† + g† := by simp
+  example [HasAdjoint f] [HasAdjoint g] : (f + g)† = f† + g† :=  by simp
 
   --- Subtraction
   instance : HasAdjoint (λ x : X×X => x.1 - x.2) := sorry
+  @[simp (mid+1)]
+  theorem adjoint_of_uncurry_hsub : (uncurry (HSub.hSub : X → X → X))† = λ x => (x, -x) := sorry
   @[simp]
   theorem adjoint_of_hsub : adjoint (λ x : X×X => x.1 - x.2) = (λ x => (x,-x)) := sorry
   @[simp]
@@ -83,6 +98,3 @@ namespace Adjoint
   theorem adjoint_of_inner_1' {X Y : Type} [Hilbert X] [Hilbert Y] (f : X → Y) [HasAdjoint f] (y : Y) : adjoint (λ x : X => ⟪f x, y⟫) = (λ (s : ℝ) => s * (adjoint f) y) := by sorry -- funext r; autoadjoint; simp; admit
   @[simp]
   theorem adjoint_of_inner_2' {X Y : Type} [Hilbert X] [Hilbert Y] (f : X → Y) [HasAdjoint f] (y : Y) : adjoint (λ x : X => ⟪y, f x⟫) = (λ (s : ℝ) => s * (adjoint f) y) := by sorry
-
-
-  

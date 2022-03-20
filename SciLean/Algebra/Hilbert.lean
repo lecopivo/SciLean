@@ -12,17 +12,25 @@ class SemiInner (X : Type u) where
 
 -- attribute [reducible] SemiInner.Domain
 
+class UniqueDomain (X : Type u) [SemiInner X] where
+  uniqueDomain : ∃ f : SemiInner.Domain X → Unit, Function.bijective f
+
 namespace SemiInner
 
   prefix:max "𝓓 " => Domain
   instance {X} [SemiInner X] : Inhabited (𝓓 X) := ⟨domain⟩
+  instance {X} [SemiInner X] : LT (𝓓 X) := ⟨λ Ω Ω' => ∀ (x : X), testFunction Ω x → testFunction Ω' x⟩
 
-  notation "⟪" x ", " y "⟫" => semiInner x y default
+  def uniqueDomain {X : Type u} [SemiInner X] [UniqueDomain X] : 𝓓 X := default
+
+  notation "⟪" x ", " y "⟫" => semiInner x y uniqueDomain
   notation "⟪" x ", " y "⟫[" Ω "]" => (semiInner x y) Ω
 
-  def normSqr {X} [SemiInner X] (x : X) := ⟪x, x⟫
+  def normSqr {X} [SemiInner X] [UniqueDomain X] (x : X) := ⟪x, x⟫
+  def norm {X} [SemiInner X] [UniqueDomain X] (x : X) := Math.sqrt (normSqr x)
 
   notation "∥" x "∥²" => normSqr x
+  notation "∥" x "∥" => norm x
 
   -- Reals
   -- @[reducible]
@@ -49,10 +57,10 @@ namespace SemiInner
   -- @[reducible]
   instance (X) [SemiInner X] (ι) [Enumtype ι] : SemiInner (ι → X) :=
   {
-    Domain := Domain X
-    domain := domain
-    semiInner    := λ f g Ω => ∑ i, ⟪f i, g i⟫[Ω]
-    testFunction := λ Ω f => ∀ i, testFunction Ω (f i)
+    Domain := ι → Domain X
+    domain := λ _ => domain
+    semiInner    := λ f g Ω => ∑ i, ⟪f i, g i⟫[Ω i]
+    testFunction := λ Ω f => ∀ i, testFunction (Ω i) (f i)
   }
 
   instance (X) [SemiInner X] [Zero X] : SemiInner (ℤ → X) :=
@@ -77,12 +85,11 @@ class SemiHilbert (X) extends Vec X, SemiInner X where
   semi_inner_sym : ∀ (x y : X) Ω,            ⟪x, y⟫[Ω] = ⟪y, x⟫[Ω]
   semi_inner_pos : ∀ (x : X) Ω,            (⟪x, x⟫[Ω]) ≥ (0 : ℝ)
   semi_inner_ext : ∀ (x : X),
-    ((x = 0) ↔ (∀ Ω (x' : X) (h : testFunction d x'), ⟪x, x'⟫[Ω] = 0))
+    ((x = 0) ↔ (∀ Ω (ϕ : X) (h : testFunction Ω ϕ), ⟪x, ϕ⟫[Ω] = 0))
+  semi_inner_gtr : ∀ (x ϕ : X) (Ω Ω' : 𝓓 X), 
+    testFunction Ω ϕ → Ω < Ω' → ⟪x, ϕ⟫[Ω'] = ⟪x, ϕ⟫[Ω]
 
--- Hilbert space is something where Domains are an singleton/unit/contractible type
-open SemiInner Function in
-class Hilbert (X) extends SemiHilbert X where
-  D_is_unit : ∃ f : 𝓓 X → Unit, bijective f
+class Hilbert (X) extends SemiHilbert X, UniqueDomain X
                                      
 namespace SemiHilbert 
 
@@ -95,11 +102,12 @@ namespace SemiHilbert
     semi_inner_sym := sorry
     semi_inner_pos := sorry
     semi_inner_ext := sorry
+    semi_inner_gtr := sorry
   }
 
   instance : Hilbert ℝ :=
   {
-    D_is_unit := sorry
+    uniqueDomain := sorry
   }
 
   instance (X Y) [SemiHilbert X] [SemiHilbert Y] 
@@ -110,12 +118,13 @@ namespace SemiHilbert
     semi_inner_sym := sorry
     semi_inner_pos := sorry
     semi_inner_ext := sorry
+    semi_inner_gtr := sorry
   }
 
   instance (X Y) [Hilbert X] [Hilbert Y] 
     : Hilbert (X × Y) := 
   {
-    D_is_unit := sorry
+    uniqueDomain := sorry
   }
 
   instance (X) [SemiHilbert X] (ι) [Enumtype ι] 
@@ -126,12 +135,13 @@ namespace SemiHilbert
     semi_inner_sym := sorry
     semi_inner_pos := sorry
     semi_inner_ext := sorry
+    semi_inner_gtr := sorry
   }
 
   instance (X) [Hilbert X] (ι) [Enumtype ι] 
     : Hilbert (ι → X) := 
   {
-    D_is_unit := sorry
+    uniqueDomain := sorry
   }
 
 end SemiHilbert

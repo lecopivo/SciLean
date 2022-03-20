@@ -3,12 +3,12 @@ import Mathlib.Algebra.Group.Defs
 
 namespace SciLean
 
-class PowType (X : Type) (n : Nat) where
-  powType : Type
-  intro : (Fin n → X) → powType
-  get : powType → Fin n → X
-  set : powType → Fin n → X → powType
-  ext  : ∀ x y, (∀ i, get x i = get y i) → x = y
+class PowType (X : Type) where
+  powType : Nat → Type
+  intro {n} : (Fin n → X) → powType n
+  get {n} : powType n → Fin n → X
+  set {n} : powType n → Fin n → X → powType n
+  ext {n} : ∀ x y : powType n, (∀ i, get x i = get y i) → x = y
 
 -- instance (priority := low) {X} (n : Nat) : PowType X n :=
 -- {
@@ -43,13 +43,13 @@ notation X "^" n => PowType.powType X n
 
 namespace PowType.powType
 
-  variable {X n} [PowType X n]
+  variable {X} {n : Nat} [PowType X]
 
   abbrev get (x : X^n) (i : Fin n) : X := PowType.get x i
   abbrev set (x : X^n) (i : Fin n) (xi : X) : X^n := PowType.set x i xi
 
   def getOp (self : X^n) (idx : Fin n) : X := self.get idx
-
+ 
   @[simp]
   theorem get_to_getop (x : X^n) (i : Fin n) : x.get i = x[i] := by simp[getOp] done
 
@@ -59,7 +59,7 @@ namespace PowType.powType
   -- instance {X} [PowType X 1] : Coe (X^1) X := ⟨λ x => x.get 0⟩
   -- instance {X} [PowType X 0] : Coe (X^(0:Nat)) Unit := ⟨λ x => ()⟩
 
-  def mapIdx {X n} [PowType X n] (x : X^n) (f : Fin n → X → X) : X^n :=
+  def mapIdx {X} {n : Nat} [PowType X] (x : X^n) (f : Fin n → X → X) : X^n :=
     Id.run do
     let mut x' := x
     for i in [0:n] do
@@ -67,12 +67,12 @@ namespace PowType.powType
       x' := set x' i (f i (get x' i))
     x'
 
-  def map {X n} [PowType X n] (x : X^n) (f : X → X) : X^n := 
+  def map {X} {n : Nat} [PowType X] (x : X^n) (f : X → X) : X^n := 
     x.mapIdx λ i xi => f xi
 
   section Operations
 
-    variable {X n} [PowType X n]
+    variable {X} {n : Nat} [PowType X]
 
     instance [Add X] : Add (X^n) := ⟨λ x y => x.mapIdx λ i xi => xi + y[i]⟩
     instance [Sub X] : Sub (X^n) := ⟨λ x y => x.mapIdx λ i xi => xi - y[i]⟩
@@ -122,19 +122,19 @@ namespace PowType.powType
 
   -- end TableOpConversion
 
-  def concat {X n m} [PowType X n] [PowType X m] [PowType X (n+m)] : (X^n) → (X^m) → X^(n+m) :=
+  def concat {X} {n m : Nat} [PowType X] : (X^n) → (X^m) → X^(n+m) :=
     λ x y => PowType.intro λ i => 
       if i < n then
         x.get ⟨i, sorry⟩
       else
         y.get ⟨i.1-n, sorry⟩
 
-  def split {X N} (n : Fin N) [PowType X N] [PowType X n] [PowType X (N-n)] : (X^N) → (X^n) × (X^(N-n)) :=
+  def split {X} {N : Nat} (n : Fin N) [PowType X] : (X^N) → (X^n) × (X^(N-n)) :=
     λ x => 
       (PowType.intro λ i => x.get ⟨i.1, sorry⟩, 
        PowType.intro λ i => x.get ⟨i.1 + n, sorry⟩)
 
-  instance {X n} [ToString X] [PowType X n] : ToString (X^n) :=
+  instance {X} {n : Nat} [ToString X] [PowType X] : ToString (X^n) :=
     ⟨λ x => 
       if n == 0 then
         "^[]"
@@ -146,7 +146,7 @@ namespace PowType.powType
 
 end PowType.powType
 
-def List.toPowType {X} (l : List X) [PowType X l.length] : X^l.length :=
+def List.toPowType {X} (l : List X) [PowType X] : X^l.length :=
   PowType.intro λ i => l.toArray.get ⟨i.1, sorry⟩
 
 syntax "^[" sepBy(term, ", ") "]" : term
@@ -157,7 +157,7 @@ macro_rules
 
 @[simp]
 theorem sum_intro {ι} [Enumtype ι]
-  [PowType α n] [Add α] [Zero α] [Zero (Fin n → α)] [Add (Fin n → α)]
+  [PowType α] [Add α] [Zero α] [Zero (Fin n → α)] [Add (Fin n → α)]
   (f : ι → Fin n → α) 
   : (∑ i, PowType.intro (f i)) = (PowType.intro (∑ i, f i))
   := 
@@ -166,13 +166,22 @@ by
 
 @[simp]
 theorem add_intro 
-  (f g : Fin n → α) [PowType α n] [Add α]
+  (f g : Fin n → α) [PowType α] [Add α]
   : 
     (PowType.intro f)  + (PowType.intro g)
     = 
     (PowType.intro λ i => f i + g i)
   := 
 by
+  admit
+
+@[simp]
+theorem hmul_intro 
+  (f : Fin n → α) [PowType α] [HMul β α α] (b : β)
+  :
+    b * (PowType.intro f) = PowType.intro λ i => b * f i
+  := 
+by 
   admit
 
 

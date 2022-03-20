@@ -9,7 +9,7 @@ variable {α β γ : Type}
 variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z] 
 
 example (f : Y → Z) (g : X → Y) (z : Z) [HasAdjoint f] [HasAdjoint g] : (f ∘ g)† z = g† (f† z) := by simp done
-example (f g : X → Y) [HasAdjoint f] [HasAdjoint g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp done
+example (f g : X → Y) [HasAdjoint f] [HasAdjoint g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp
 
 example (y : Y) (r : ℝ) 
   : (λ x => ⟪x,y⟫)† r = r*y := by simp done
@@ -29,7 +29,7 @@ example {n} [NonZero n] (c : Fin n)
 example {ι} [Enumtype ι] (f : ι → X → Y) [∀ i, HasAdjoint (f i)] 
   : (λ x i => f i x)† = (λ y => ∑ i, (f i)† (y i)) := by funext y; simp done
 example {ι} [Enumtype ι] (f : ι → X → Y) [∀ i, HasAdjoint (f i)] 
-  : (λ (g : ι → X) i => f i (g i))† = (λ h i => (f i)† (h i)) := by simp done
+  : (λ (g : ι → X) i => f i (g i))† = (λ h i => (f i)† (h i)) := by funext h i; simp; admit
 
 example (y : ℝ) : (λ x : ℝ => x * y)† 1 = y := by simp done
 example (y : ℝ) : (λ x : ℝ => y * x)† 1 = y := by simp done
@@ -47,5 +47,16 @@ example
 example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) 
   : (λ (g : Fin n → ℝ) => sum (λ i => (f i) * (g (i+c))))† (1 : ℝ) = (fun i => f (i - c)) := by funext i; simp; done
 
+-- set_option trace.Meta.Tactic.simp.discharge true in
 example {n} [NonZero n] (f : Fin n → ℝ) 
   : (fun df : Fin n → ℝ => ∑ i, df i * f i + f i * df i)† 1 = (2 : ℝ) * f := by simp; done
+
+example {n} (f : Fin n → ℝ) (i : Fin n)
+  : (λ (x : Fin n → ℝ) => x i * f i)† = λ (y : ℝ) (j : Fin n) => kron i j * f i * y
+  := by funext x j; simp; done
+
+
+example {X Y : Type} [Hilbert X] [Hilbert Y] : (Prod.fst : X × Y → X)† = λ x : X => (x, 0) := by simp
+example {X Y : Type} [Hilbert X] [Hilbert Y] : (Prod.snd : X × Y → Y)† = λ y : Y => (0, y) := by simp
+example {X Y : Type} [Hilbert X] [Hilbert Y] : (λ ((x,y) : X × Y) => x)† = λ x : X => (x, (0:Y)) := by simp
+example {X Y : Type} [Hilbert X] [Hilbert Y] : (λ ((x,y) : X × Y) => y)† = λ y : Y => ((0:X), y) := by simp

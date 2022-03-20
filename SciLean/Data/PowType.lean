@@ -4,7 +4,7 @@ import SciLean.Operators
 
 namespace SciLean.PowType
 
-variable (X : Type) (n m : Nat) [PowType X n]
+variable (X : Type) (n m : Nat) [PowType X]
 
 instance [AddSemigroup X]  : AddSemigroup (X^n)  := AddSemigroup.mk sorry
 instance [AddMonoid X]     : AddMonoid (X^n)     := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
@@ -34,11 +34,12 @@ instance [SemiHilbert X] : SemiHilbert (X^n) :=
   semi_inner_sym := sorry
   semi_inner_pos := sorry
   semi_inner_ext := sorry
+  semi_inner_gtr := sorry
 }
 
 instance [Hilbert X] : Hilbert (X^n) :=
 {
-  D_is_unit := sorry
+  uniqueDomain := sorry
 }
 
 variable [Vec X]

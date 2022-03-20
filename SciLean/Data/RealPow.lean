@@ -2,24 +2,56 @@ import SciLean.Data.PowType
 
 namespace SciLean
 
-instance (n : Nat) : PowType ℝ n := 
-{
-  powType := {a : FloatArray // a.size = n}
-  intro := λ f => Id.run do
+structure NFloatArray (n : ℕ) where
+  data : FloatArray
+  h_size : data.size = n
+
+structure RealArray where
+  data : FloatArray
+
+namespace RealArray 
+
+  def size (u : RealArray) : Nat := u.data.size
+
+  def get (u : RealArray) (i : Fin u.size) : ℝ := ⟨u.data.get !i.1⟩
+  def set (u : RealArray) (i : Fin u.size) (x : ℝ) : RealArray := ⟨u.data.set (!i.1) (x.1)⟩
+
+  def intro {n} (f : Fin n → ℝ) : RealArray := Id.run do
     let mut x := FloatArray.mkEmpty n
     for i in [0:n] do
       let i := ⟨i, sorry⟩
       x := x.push (f i).val
-    ⟨x, sorry⟩
-  get := λ x i => ⟨x.1.get ⟨i.1, sorry⟩⟩
-  set := λ x i xi => ⟨x.1.set ⟨i.1, sorry⟩ xi.val, sorry⟩
+    ⟨x⟩
+
+end RealArray
+
+
+structure NRealArray (n : ℕ) where
+  data : RealArray
+  h_size : data.size = n
+
+namespace NRealArray
+
+  def get {n} (u : NRealArray n) (i : Fin n) : ℝ := u.1.get !i.1
+  def set {n} (u : NRealArray n) (i : Fin n) (x : ℝ) : NRealArray n := ⟨u.1.set (!i.1) x, sorry⟩
+  def intro {n} (f : Fin n → ℝ) : NRealArray n := ⟨RealArray.intro f, sorry⟩
+
+end NRealArray
+
+
+instance : PowType ℝ := 
+{
+  powType := λ n => NRealArray n -- NFloatArray n -- {a : FloatArray // a.size = n}
+  intro := NRealArray.intro 
+  get := NRealArray.get
+  set := NRealArray.set
   ext := sorry
 }
 
-instance (n m : Nat) : PowType (ℝ^m) n := 
+instance (m : Nat) : PowType (ℝ^m) := 
 {
-  powType := {a : FloatArray // a.size = n * m}
-  intro := λ f => Id.run do
+  powType := λ n => NFloatArray n -- {a : FloatArray // a.size = n * m}
+  intro := λ {n} f => Id.run do
     let mut x := FloatArray.mkEmpty (n*m)
     for i in [0:n] do
       let xi := (f !i)

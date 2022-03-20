@@ -10,7 +10,6 @@ instance {X ι} [Vec X] [Enumtype ι] : IsLin (Enumtype.sum : (ι → X) → X) 
 def kron {ι} [DecidableEq ι] (i j : ι) : ℝ := if (i==j) then 1 else 0
 
 
-
 --- Sum simplifications ---
 ---------------------------
 -- These theorems probably should not be under `simp` but under specialized tactic
@@ -46,6 +45,13 @@ theorem sum_of_neg {X ι} [Enumtype ι] [Vec X]
   : (∑ i, - f i ) = - (∑ i, f i)
   := sorry
 
+@[simp]
+theorem sum_of_linear {X Y ι} [Enumtype ι] [Vec X] [Vec Y]
+  (f : X → Y) [IsLin f]
+  (g : ι → X)
+  : (∑ i, f (g i)) = f (∑ i, g i)
+  := sorry
+
 --- Kronecker delta simplifications ---
 ---------------------------------------
 -- The idea behind these is that when ever we have a sum with kronecker
@@ -57,27 +63,31 @@ section KronSimps
   -- I think it is a problem with `Iterable` as it has its own copy of
   -- DecEq and then there is a problem with unifications when combined 
   -- with `sum`
-  variable {ι} [Enumtype ι] 
+  variable {ι} [DecidableEq ι] 
   variable {X} [Vec X]
 
   @[simp] 
-  theorem kron_mul_assoc {i j : Fin n} (x y : ℝ) : (kron i j) * x * y = (kron i j) * (x * y) 
+  theorem kron_mul_assoc {i j : ι} (x y : ℝ) : (kron i j) * x * y = (kron i j) * (x * y) 
     := sorry
 
   @[simp] 
-  theorem kron_smul_assoc {i j : Fin n} (r : ℝ) (x : X) : (kron i j) * r * x = (kron i j) * (r * x) 
+  theorem kron_smul_assoc {i j : ι} (r : ℝ) (x : X) : (kron i j) * r * x = (kron i j) * (r * x) 
     := sorry
 
   @[simp] 
-  theorem kron_right_mul {i j : Fin n} (x : ℝ) : x * (kron i j)  = (kron i j) * x
+  theorem kron_mul_assoc_mid (x : ℝ) (y : X) (i j : ι) : x * ((kron i j) * y)  = (kron i j) * (x * y)
     := sorry
 
   @[simp] 
-  theorem kron_neg {i j : Fin n} : -(kron i j) = (kron i j) * (-1) 
+  theorem kron_right_mul (x : ℝ) (i j : ι) : x * (kron i j)  = (kron i j) * x
     := sorry
 
   @[simp] 
-  theorem kron_neg_mul {i j : Fin n} (x : X) : -(kron i j * x) = kron i j * (-x) 
+  theorem kron_neg {i j : ι} : -(kron i j) = (kron i j) * (-1) 
+    := sorry
+
+  @[simp] 
+  theorem kron_neg_mul {i j : ι} (x : X) : -(kron i j * x) = kron i j * (-x) 
     := sorry
 
 end KronSimps
@@ -100,13 +110,51 @@ section SumKronSimps
     := sorry
 
   @[simp] 
-  theorem sum_of_kron_2 {n} [NonZero n]
+  theorem sum_of_kron_2 
+    {ι} [Enumtype ι] [Nonempty ι]
+    {κ} [Enumtype κ]
+    {X} [Vec X] 
+    (f : ℝ → α → X) [IsLin f]
+    (h : ι → α)
+    (g : ι → κ) [IsInv g]
+    (j : κ)
+    : (∑ i, f (kron (g i) j) (h i)) = f 1 (h (g⁻¹ j))
+    := sorry
+
+  @[simp] 
+  theorem sum_of_kron_2''
+    {ι} [Enumtype ι] [Nonempty ι]
+    {κ} [Enumtype κ]
+    {X} [Vec X] 
+    (f : ℝ → α → X) [IsLin f]
+    (h : ι → α)
+    (g : ι → κ) [IsInv g]
+    (j : κ)
+    : (∑ i, f (kron j (g i)) (h i)) = f 1 (h (g⁻¹ j))
+    := sorry
+
+
+  @[simp] 
+  theorem sum_of_kron_2' {n} [NonZero n]
     {X} [Vec X] (f : ℝ → α → X) [IsLin f]
     (h : Fin n → α)
     (g : Fin n → Fin n) [IsInv g]
     (j : Fin n)
     : (∑ i, f (kron (g i) j) (h i)) = f 1 (h (g⁻¹ j))
+    := sorry -- Why it this not done with 
+
+  @[simp] 
+  theorem sum_of_kron_1' {ι} [Enumtype ι] [Nonempty ι]
+    (g : ι → ι) [IsInv g]
+    (j : ι)
+    : (∑ i, kron (g i) j) = 1
     := sorry
+
+  theorem sum_of_kron_1'' {ι} [Enumtype ι] [Nonempty ι]
+    (g : ι → ι) [IsInv g]
+    (j : ι)
+    : (∑ i, kron (g i) j) = 1
+    := by simp; done
 
 end SumKronSimps
 
@@ -129,16 +177,77 @@ example [NonZero n] (j : Fin n)
   :=
   by simp done
 
+-- set_option trace.Meta.Tactic.simp true in
 example [NonZero n] (j : Fin n) 
   : (∑ i : Fin n, i * (kron (i+1) j)) = (j-1)
   :=
-  by simp done
+  by simp; done
 
 example [NonZero n] (j : Fin n) 
   : (∑ i : Fin n, (kron (i+1) j) * i) = (j-1)
   :=
   by simp done
 
-
-
 --- TODO: add tactics sum_together sum_apart sum_expand 
+end SciLean
+
+-- def kron' (i j : Int) : Float := if (i=j) then 1 else 0
+-- def kron'' (i j : α) [DecidableEq α] : Float := if (i=j) then 1 else 0
+
+-- class Foo (α : Type) where
+--   decEq : DecidableEq α
+
+-- instance {α} [Foo α] : DecidableEq α := Foo.decEq
+-- instance {n} : Foo (Fin n) := ⟨by infer_instance⟩
+
+-- @[simp] 
+-- theorem kron'_right_mul {i j : Int} (x : Float) : x * kron' i j = kron' i j * x := sorry
+-- @[simp] 
+-- theorem kron''_right_mul {i j : α} [Foo α] (x : Float) : x * kron'' i j = kron'' i j * x := sorry
+
+-- #check Iterable
+-- def Int.toFloat : Int → Float
+-- | Int.ofNat   n => n.toFloat
+-- | Int.negSucc n => - (n + 1).toFloat
+
+-- instance : Coe Int Float := ⟨λ i => i.toFloat⟩
+
+-- variable (i : Int)
+
+-- set_option trace.Meta.isDefEq true in
+-- example {i j : Fin n} : (i) * kron'' i j = kron'' i j * (i) := 
+-- by
+--   -- simp
+--   rw[kron''_right_mul]
+
+
+-- -- @[inline] 
+-- -- def kron {ι} [DecidableEq ι] (i j : ι) : ℝ := if (i==j) then 1 else 0
+
+-- example (P : Prop) (f g : α → P) : f = g := 
+-- by
+--   simp
+--   done
+
+-- example (P : Prop) : ∀ (a b : Decidable P), a = b := 
+-- by intro a b; 
+--    induction a; 
+--    induction b;
+--    simp (discharger := assumption)
+--    simp
+   
+
+-- example : DecidableEq ℕ := by infer_instance
+
+-- #check instDecidableEqNat
+
+-- variable (a b : ℕ) (P : Prop) (a b : Decidable P)
+
+-- class Foo (α : Type) where
+--   dec_eq : DecidableEq α
+
+-- instance : Foo ℕ := { dec_eq := by infer_instance }
+
+-- example : decide (1=1) (h := instDecidableEqNat 1 1) = decide (1=1) (h := instFooNat.dec_eq 1 1) := by simp
+
+-- example :  = decide (1=1) (h := b) := by simp

@@ -1,3 +1,4 @@
+import SciLean.Prelude
 import SciLean.Mathlib.Data.Enumtype
 import SciLean.Algebra
 
@@ -321,6 +322,3 @@ namespace Prism
 
   -- Face if Morph not containing collapses and shifts
 
-
-
-  -- DOP P deg

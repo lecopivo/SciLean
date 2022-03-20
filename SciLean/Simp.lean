@@ -37,8 +37,10 @@ variable (r : ℝ)
 
 @[simp] theorem pair_mul (r : ℝ) (x : X) (y : Y) : r * (x, y) = (r * x, r * y) := sorry
 
-@[simp] theorem inner_mul_1 (r : ℝ) (x y : U) : ⟪r * x, y⟫ = r * ⟪x,y⟫ := sorry
-@[simp] theorem inner_mul_2 (r : ℝ) (x y : U) : ⟪x, r * y⟫ = r * ⟪x,y⟫ := sorry
+@[simp] theorem inner_mul_1 {X} [SemiHilbert X] (r : ℝ) (x y : X) Ω : ⟪r * x, y⟫[Ω] = r * ⟪x,y⟫[Ω] := sorry
+@[simp] theorem inner_mul_2 {X} [SemiHilbert X] (r : ℝ) (x y : X) Ω : ⟪x, r * y⟫[Ω] = r * ⟪x,y⟫[Ω] := sorry
+@[simp] theorem inner_zero1 {X} [SemiHilbert X] (x : X) Ω : ⟪(0 : X), x⟫[Ω] = 0 := sorry
+@[simp] theorem inner_zero2 {X} [SemiHilbert X] (x : X) Ω : ⟪x, (0 : X)⟫[Ω] = 0 := sorry
 
 @[simp] theorem inner_prod (u u' : U) (v v' : V) : ⟪(u,v), (u',v')⟫ = ⟪u,u'⟫ + ⟪v,v'⟫ := sorry
 @[simp] theorem inner_real (x y : ℝ) : ⟪x, y⟫ = x * y := sorry
