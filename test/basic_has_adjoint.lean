@@ -25,7 +25,8 @@ example {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i
 example {n} [NonZero n] (f : Fin n → ℝ) (c : Fin n) : HasAdjoint fun (x : Fin n → ℝ) i => f i * x (i + c) := by infer_instance
 
 example {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => f i * df i) := by infer_instance done
-example {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i * f i + f i * df i) := by infer_instance done
+set_option synthInstance.maxHeartbeats 1000 in
+example {ι} [Enumtype ι] [Nonempty ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i * f i + f i * df i) := by infer_instance done
 example {ι} [Enumtype ι] (f : ι → ℝ) : HasAdjoint (λ (df : ι → ℝ) i => df i * f i) := by infer_instance done
 example {n} [NonZero n] (f : Fin n → ℝ) : HasAdjoint (λ r i => (f i) * r) := by infer_instance done
 set_option synthInstance.maxHeartbeats 2000 in
@@ -40,6 +41,7 @@ example (x : Fin n → ℝ) (i : Fin n) : SciLean.HasAdjoint fun (dx : Fin n →
 example {m : Nat} : ∀ (i : Fin n), HasAdjoint fun (dx : Fin n → ℝ^m) j => dx i + dx j := by infer_instance done
 set_option synthInstance.maxHeartbeats 4000 in
 example (x : Fin n → ℝ^(3:ℕ)) (i : Fin n) : SciLean.HasAdjoint fun (dx : Fin n → ℝ^(3:ℕ)) j => ⟪x i, dx j⟫ := by infer_instance done
-set_option synthInstance.maxHeartbeats 4000 in
-example {m : Nat} (x : ℝ^m) : ∀ (i : Fin n), HasAdjoint fun (dx : Fin n → ℝ^m) => ∑ j, 2 * ⟪x, dx i + dx j⟫ := by infer_instance done
+set_option synthInstance.maxHeartbeats 2000 in
+set_option synthInstance.maxSize 150 in
+example {m : Nat} (x : ℝ^m) : ∀ (i : Fin n), HasAdjoint fun (dx : Fin n → ℝ^m) => ∑ j : Fin n, 2 * ⟪x, dx i + dx j⟫ := by infer_instance done
 

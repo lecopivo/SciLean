@@ -13,7 +13,7 @@ theorem reverse_diff_of_composition_1
         [IsSmooth g] [IsSmooth f]
     : 𝓑 (λ x => f (g x)) = (λ x => (𝓑 f • 𝓑 g) x) := 
 by 
-  funext x; simp[reverse_diff, reverse_diff, reverse_comp];
+  funext x; simp[reverse_diff, reverse_diff, reverse_comp]; funext dz
   conv in (δ _) => enter [x, dx]; simp
   simp done
 

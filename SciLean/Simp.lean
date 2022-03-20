@@ -23,8 +23,9 @@ variable (r : ℝ)
 
 @[simp] theorem zero_eval [Zero β] : (0 : α → β) a = 0 := by simp[Zero.zero,OfNat.ofNat]; done
 
--- @[simp] theorem mul_one (x : ℝ) : x * 1 = x := by simp
+@[simp] theorem mul_one' (x : ℝ) : x * 1 = x := by simp
 @[simp] theorem one_mul (x : X) : (1:ℝ) * x = x := sorry
+-- @[simp] theorem mul_one (r : ℝ) : r * (1:ℝ) = r := sorry
 
 -- @[simp] theorem neg_neg (x : X) : - - x = x := by simp
 

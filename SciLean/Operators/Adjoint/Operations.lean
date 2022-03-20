@@ -1,100 +1,165 @@
-import SciLean.Operators.Adjoint.Combinators
+import SciLean.Operators.Adjoint.Core
 
-import SciLean.Simp
-
-open Function
 namespace SciLean
 
-open SemiInner
+  variable {α β γ : Type}
+  variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
+  variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
+  variable {ι κ} [Enumtype ι] [Enumtype κ]
 
-variable {α β γ : Type}
-variable {X Y Z : Type} 
-variable [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
-variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
+  -- Negation --
+  --------------
 
-namespace Adjoint
-
-  variable (f g : X → Y) 
-  variable (r : ℝ)
-
-  instance : SciLean.HasAdjoint (fun xy : X × Y => xy.fst) := by sorry
-  instance : SciLean.HasAdjoint (fun xy : X × Y => xy.snd) := by sorry
-
-  @[simp (mid+1)] theorem Prod.fst.adjoint
-    : (Prod.fst : X × Y → X)† = λ x : X => (x, 0) := by sorry
-  @[simp (mid+1)] theorem Prod.snd.adjoint
-    : (Prod.snd : X × Y → Y)† = λ y : Y => (0, y) := by sorry
-
-  --- Addition
-  instance : HasAdjoint (uncurry (HAdd.hAdd : X → X → X)) := sorry
-  instance : HasAdjoint (λ p : X×X => p.1 + p.2) := sorry
-
-  @[simp (mid+1)]
-  theorem adjoint_of_uncurry_hadd : (uncurry (HAdd.hAdd : X → X → X))† = λ x => (x, x) := sorry
-  instance : HasAdjoint (λ x : X×X => x.1 + x.2) := sorry
+  instance has_adjoint_neg
+    : HasAdjoint (λ x : X => -x) := sorry
   @[simp]
-  theorem adjoint_of_hadd : adjoint (λ x : X×X => x.1 + x.2) = (λ x => (x,x)) := sorry
+  theorem adjoint_of_neg
+    : (λ x : X => -x)† = λ x : X => -x := sorry
   @[simp]
-  theorem adjoint_of_add_of_fun [HasAdjoint f] [HasAdjoint g] : adjoint (f + g) = adjoint f + adjoint g := by funext a; simp[HAdd.hAdd, Add.add]; done
-  @[simp]
-  theorem adjoint_of_add_of_fun_arg [HasAdjoint f] [HasAdjoint g] : adjoint (λ x => f x + g x) = (λ y => adjoint f y + adjoint g y) := by funext a; simp; done
-  @[simp]
-  theorem adjoint_of_add_of_fun_arg_parm (f g : X → ι → Y) [HasAdjoint f] [HasAdjoint g]
-      : adjoint (λ x i => f x i + g x i) = adjoint (λ x i => f x i) + adjoint (λ x i => g x i) := by funext z; simp; admit -- done
+  theorem adjoint_of_negx 
+    (f : X → Y) [HasAdjoint f]
+    : f† (-x) = - f† x := sorry
 
-  example [HasAdjoint f] [HasAdjoint g] : (f + g)† = f† + g† :=  by simp
+  -- Scalar multiplication --
+  ---------------------------
 
-  --- Subtraction
-  instance : HasAdjoint (λ x : X×X => x.1 - x.2) := sorry
-  @[simp (mid+1)]
-  theorem adjoint_of_uncurry_hsub : (uncurry (HSub.hSub : X → X → X))† = λ x => (x, -x) := sorry
+  instance has_adjoint_smul2 (r : ℝ)
+    : HasAdjoint (λ x : X => r * x) := sorry
   @[simp]
-  theorem adjoint_of_hsub : adjoint (λ x : X×X => x.1 - x.2) = (λ x => (x,-x)) := sorry
+  theorem adjoint_of_smul2 (r : ℝ)
+    : (λ x : X => r * x)† = r * (λ x : X => x) := sorry
   @[simp]
-  theorem adjoint_of_sub_of_fun [HasAdjoint f] [HasAdjoint g] : adjoint (f - g) = adjoint f - adjoint g := by funext a; simp[HSub.hSub, Sub.sub]; admit -- almost done
-  @[simp]
-  theorem adjoint_of_sub_of_fun_arg [HasAdjoint f] [HasAdjoint g] : adjoint (λ x => f x - g x) = λ y => adjoint f y - adjoint g y := by funext a; simp; admit -- almost done
-  @[simp]
-  theorem adjoint_of_sub_of_fun_arg_parm (f g : X → Fin n → Y) [HasAdjoint f] [HasAdjoint g]
-      : adjoint (λ x i => f x i - g x i) = adjoint (λ x i => f x i) - adjoint (λ x i => g x i) := by funext z; simp; admit
+  theorem adjoint_of_smul2x (r : ℝ) 
+    (f : X → Y) [HasAdjoint f]
+    : f† (r * x) = r * f† x := sorry
 
-  --- Multiplication
-  instance (r : ℝ) : HasAdjoint (λ x : X => r * x) := sorry
-  instance {X} [Hilbert X] (x : X) : HasAdjoint (λ r : ℝ => r * x) := sorry
-  -- TODO: Figure out why the following instance is necessary to prove:
-  -- example : ∀ y, HasAdjoint (λ x : ℝ => y * x) := by infer_instance
-  -- oddly enought moving `y` before the colon makes it work
-  instance (r : ℝ) : HasAdjoint (λ x : ℝ => r * x) := sorry
+  -- These hold only for Hilbert spaces!!!
+  -- Maybe can be generalized for `x` that are test functions
+  -- For those we can pick the domain on which they are test functions
+  instance has_adjoint_smul1 
+    {X} [Hilbert X] (x : X)
+    : HasAdjoint (λ r : ℝ => r * x) := sorry
+  @[simp] 
+  theorem adjoint_of_smul1
+    {X} [Hilbert X] (x : X)
+    : (λ r : ℝ => r * x)† = λ y : X => ⟪x, y⟫ := sorry
+
+  -- Addition --
+  --------------
+
+  instance : HasAdjoint (λ ((x,y) : X×X) => x + y) := sorry
+  instance : HasAdjoint (λ ((x,y) : X×X) => x - y) := sorry
 
   @[simp]
-  theorem adjoint_of_hmul_1 {X} [Hilbert X] (x : X) : adjoint (λ r : ℝ => r * x ) = (λ y => ⟪x, y⟫) := sorry
-  @[simp]
-  theorem adjoint_of_hmul_2 (r : ℝ) : adjoint (λ x : X => r*x) = (λ x : X => r*x) := sorry
+  theorem adjoint_of_add 
+    : (λ ((x,y) : X×X) => x + y)† = λ x => (x, x) 
+  := by
+    funext x; apply inner_ext; intro ϕ Ω h
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp[SemiInner.semiInner]
+    -- split the inner product and use the fact that:
+    --   Ω.1 < (fun x => x.1 + x.2)‡ Ω  and  testFunction Ω.1 ϕ.1
+    --   Ω.2 < (fun x => x.1 + x.2)‡ Ω  and  testFunction Ω.2 ϕ.2
+    admit
 
-  -- set_option trace.Meta true in
-  -- @[simp]
-  -- theorem adjoint_of_hmul_1_parm {X Y ι : Type} [Hilbert X] [Hilbert Y] [Enumtype ι] (f : X → ι → ℝ) [HasAdjoint f] (y : ι → Y) 
-  --     : (λ x i => (f x i)*(y i))† = f† ∘ (λ y' i => ⟪y i,y' i⟫ ()) := by simp done
   @[simp]
-  theorem adjoint_of_hmul_of_fun [HasAdjoint f] : adjoint (r*f) = r*(adjoint f) := by funext y; simp[HMul.hMul, Mul.mul] admit
-  @[simp]
-  theorem adjoint_of_hmul_of_fun_arg [HasAdjoint f] (r : ℝ) : adjoint (λ x => r*(f x)) = (λ y => r*(adjoint f y)) := by funext x; simp admit -- by funext y; simp
+  theorem adjoint_of_sub 
+    : (λ ((x,y) : X×X) => x - y)† = λ x : X => (x, -x)
+  := by
+    funext x; apply inner_ext; intro ϕ Ω h
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp[SemiInner.semiInner]
+    admit
 
-  instance : HasAdjoint (λ x : X => -x) := sorry
   @[simp]
-  theorem adjoint_of_neg : adjoint (Neg.neg : X → X) = Neg.neg := sorry
+  theorem adjoint_of_add_fun 
+    (f g : X → Y) [HasAdjoint f] [HasAdjoint g] 
+    : (f + g)† = f† + g† 
+  := by simp[HAdd.hAdd, Add.add]; done
   @[simp]
-  theorem adjoint_of_neg_of_fun [HasAdjoint f] : adjoint (-f) = -(adjoint f) := sorry --by funext y; simp[Neg.neg]
+  theorem adjoint_of_sub_fun 
+    (f g : X → Y) [HasAdjoint f] [HasAdjoint g] 
+    : (f - g)† = f† - g† 
+  := by simp[HSub.hSub, Sub.sub]; done
 
+  @[simp]
+  theorem adjoint_of_add_funparm 
+    (f g : X → ι → Y) [HasAdjoint f] [HasAdjoint g] [Nonempty ι]
+    : (λ x i => f x i + g x i)† = f† + g† 
+  := by funext z; simp; done
+  @[simp]
+  theorem adjoint_of_sub_funparm 
+    (f g : X → ι → Y) [HasAdjoint f] [HasAdjoint g] [Nonempty ι]
+    : (λ x i => f x i - g x i)† = f† - g† 
+  := by funext z; simp; done
 
+  -- Inner Product --
+  -------------------
+
+  -- instance (y : X) Ω : IsLin (λ x y : X => ⟪x, y⟫[Ω]) := sorry
   instance {X} [Hilbert X] (y : X) : HasAdjoint (λ x : X => ⟪x, y⟫) := sorry
   instance {X} [Hilbert X] (x : X) : HasAdjoint (λ y : X => ⟪x, y⟫) := sorry
-  @[simp]
-  theorem adjoint_of_inner_1 {X} [Hilbert X] (y : X) : (λ x : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * y) := sorry
-  @[simp]
-  theorem adjoint_of_inner_2 {X} [Hilbert X] (x : X) : (λ y : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * x) := sorry
 
   @[simp]
-  theorem adjoint_of_inner_1' {X Y : Type} [Hilbert X] [Hilbert Y] (f : X → Y) [HasAdjoint f] (y : Y) : adjoint (λ x : X => ⟪f x, y⟫) = (λ (s : ℝ) => s * (adjoint f) y) := by sorry -- funext r; autoadjoint; simp; admit
+  theorem adjoint_of_inner1 
+    {X : Type} [Hilbert X] 
+    (y : X) 
+    : (λ x : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * y) 
+  := by
+    funext x; apply inner_ext; intro ϕ Ω h
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp
+    rw[!?(⟪ϕ,y⟫ = ⟪y,ϕ⟫)]
+    done
+
   @[simp]
-  theorem adjoint_of_inner_2' {X Y : Type} [Hilbert X] [Hilbert Y] (f : X → Y) [HasAdjoint f] (y : Y) : adjoint (λ x : X => ⟪y, f x⟫) = (λ (s : ℝ) => s * (adjoint f) y) := by sorry
+  theorem adjoint_of_inner2 
+    {X : Type} [Hilbert X] 
+    (x : X) 
+    : (λ y : X => ⟪x, y⟫)† = (λ (s : ℝ) => s * x) := by
+    funext y; apply inner_ext; intro ϕ Ω h
+    rw[inner_adjoint_fst_right_test _ _ _ _ h]
+    simp 
+    done
+
+  @[simp]
+  theorem adjoint_of_inner1_comp 
+    {X Y : Type} [Hilbert X] [Hilbert Y] 
+    (f : X → Y) [HasAdjoint f] 
+    (y : Y) 
+    : (λ x : X => ⟪f x, y⟫)† = (λ (s : ℝ) => s * f† y) 
+  := by rw[adjoint_of_comp_at_point2] simp done
+
+  @[simp]
+  theorem adjoint_of_inner2_comp 
+    {X Y : Type} [Hilbert X] [Hilbert Y] 
+    (f : X → Y) [HasAdjoint f] 
+    (y : Y) 
+    : (λ x : X => ⟪y, f x⟫)† = (λ (s : ℝ) => s * f† y) 
+  := by rw[adjoint_of_comp_at_point1] simp done
+
+
+  -- Sum --
+  ---------
+
+  instance has_adjoint_sum
+   : HasAdjoint (sum : (ι → X) → X) := sorry
+
+  @[simp]
+  theorem adjoint_of_sum
+    : (sum : (ι → X) → X)† = λ x i => x := sorry
+
+  -- Combinators --
+  -----------------
+
+  @[simp] 
+  theorem adjoint_of_function_id 
+    : adjoint (id : X → X) = id := by simp[id]
+
+  @[simp] 
+  theorem adjoint_of_function_comp 
+    (f : Y → Z) [HasAdjoint f] 
+    (g : X → Y) [HasAdjoint g] 
+    : (f∘g)† = g† ∘ f† := by simp[Function.comp]
+
+end SciLean
