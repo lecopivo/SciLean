@@ -128,7 +128,7 @@ namespace SciLean
     (f : X → Y) [HasAdjoint f] 
     (y : Y) 
     : (λ x : X => ⟪f x, y⟫)† = (λ (s : ℝ) => s * f† y) 
-  := by rw[adjoint_of_comp_at_point2] simp done
+  := by simp; unfold hold; simp; done
 
   @[simp]
   theorem adjoint_of_inner2_comp 
@@ -136,7 +136,7 @@ namespace SciLean
     (f : X → Y) [HasAdjoint f] 
     (y : Y) 
     : (λ x : X => ⟪y, f x⟫)† = (λ (s : ℝ) => s * f† y) 
-  := by rw[adjoint_of_comp_at_point1] simp done
+  := by simp; unfold hold; simp; done
 
 
   -- Sum --

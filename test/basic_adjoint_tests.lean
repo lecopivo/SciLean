@@ -36,11 +36,11 @@ example (y : ℝ) : (λ x : ℝ => y * x)† 1 = y := by simp done
 
 -- set_option trace.Meta.Tactic.simp.discharge true in
 example (a b : ℝ) (x : X)
-  : (λ dx : X => (a * ⟪x, dx⟫) * b)† 1 = b * (a * x) := 
+  : (λ dx : X => (a * ⟪x, dx⟫) * b)† 1 = a * (b * x) := 
 by autoadjoint; simp done
 
 example {ι} [Enumtype ι] [Nonempty ι] (i : ι) (c : ℝ)
-  : (fun (x : ι → ℝ) => x i * c)† 1 = (c * fun j => kron i j)
+  : (fun (x : ι → ℝ) => x i * c)† 1 = (fun j => kron i j * c)
   := by autoadjoint; simp; done
 
 example [NonZero n]
@@ -53,7 +53,7 @@ example {n} [NonZero n] (f : Fin n → ℝ)
   : (fun df : Fin n → ℝ => ∑ i, df i * f i + f i * df i)† 1 = (2 : ℝ) * (fun j => f j) := by funext i; autoadjoint; simp only [mul_one'] done
 
 example {n} [NonZero n] (f : Fin n → ℝ) (i : Fin n)
-  : (λ (x : Fin n → ℝ) => x i * f i)† = λ (y : ℝ) => f i * λ j => kron i j * y
+  : (λ (x : Fin n → ℝ) => x i * f i)† = λ (y : ℝ) j => kron i j * (f i * y)
   := by funext x j; autoadjoint; done
 
 
