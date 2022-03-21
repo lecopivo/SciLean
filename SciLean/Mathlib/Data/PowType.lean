@@ -176,6 +176,18 @@ by
   admit
 
 @[simp]
+theorem sub_intro 
+  (f g : Fin n → α) [PowType α] [Sub α]
+  : 
+    (PowType.intro f)  - (PowType.intro g)
+    = 
+    (PowType.intro λ i => f i - g i)
+  := 
+by
+  admit
+
+
+@[simp]
 theorem hmul_intro 
   (f : Fin n → α) [PowType α] [HMul β α α] (b : β)
   :
