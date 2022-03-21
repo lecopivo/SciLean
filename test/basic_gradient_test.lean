@@ -45,7 +45,13 @@ example {n} (g : Fin n → ℝ) [NonZero n]
     (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
   := 
 by 
-  autograd; funext i; simp; done
+  autograd; funext i; simp;
+  conv =>
+    lhs
+    simp only [!?(∀ x y z : ℝ, x * (y - z) = x * y - x * z), 
+               !?(∀ x y z : ℝ, (x - y) * z = x * z - y * z)]
+    simp
+  done
 
 -- set_option synthInstance.maxHeartbeats 1000
 -- example (g : ι → ℝ) 
