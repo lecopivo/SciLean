@@ -75,7 +75,18 @@ section KronSimps
     := sorry
 
   @[simp] 
-  theorem kron_mul_assoc_mid (x : ℝ) (y : X) (i j : ι) : x * ((kron i j) * y)  = (kron i j) * (x * y)
+  theorem kron_mul_assoc_mid (x : ℝ) (y : X) (i j : ι) 
+    : x * ((kron i j) * y)  = (kron i j) * (x * y)
+    := sorry
+
+  @[simp] 
+  theorem kron_mul_kron_add (x : ℝ) (y z : X) (i j k l : ι) 
+    : x * (kron i j * y + kron k l * z) = (kron i j) * (x * y) + kron k l * (x * z)
+    := sorry
+
+  @[simp] 
+  theorem kron_mul_kron_sub (x : ℝ) (y z : X) (i j k l : ι) 
+    : x * (kron i j * y - kron k l * z) = (kron i j) * (x * y) - kron k l * (x * z)
     := sorry
 
   @[simp] 

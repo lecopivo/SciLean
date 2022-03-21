@@ -21,9 +21,6 @@ by
   simp[HamiltonianSystem, H]
   autograd
   autograd
-  simp only [!?(∀ x y z: ℝ, x * (y - z) = x * y - x * z),
-             !?(∀ x y z: ℝ, (x - y) * z = x * z - y * z)] -- expand
-  simp
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
