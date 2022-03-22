@@ -3,9 +3,9 @@ import SciLean.Mechanics
 
 open SciLean
 
-set_option synthInstance.maxSize 1024
-set_option synthInstance.maxHeartbeats 500000
-set_option maxHeartbeats 500000
+set_option synthInstance.maxSize 2048
+set_option synthInstance.maxHeartbeats 5000000
+set_option maxHeartbeats 5000000
 
 variable {X} [Hilbert X]
 
@@ -18,7 +18,7 @@ theorem eps_norm.diff {X} [Hilbert X] (ε : ℝ) [NonZero ε] (α : ℝ)
 
 @[simp]
 theorem eps_norm.grad {X} [Hilbert X] (ε : ℝ) [NonZero ε] (α : ℝ)
-  : ∇ (λ x : X => (∥x∥² + ε^2)^α) = λ x : X => 2 * α * ((∥x∥² + ε^2)^(α-1)) * x
+  : ∇ (λ x : X => (∥x∥² + ε^2)^α) = λ x : X => 2 * α * (((∥x∥² + ε^2)^(α-1)) * x)
   := by funext x; autograd; done
 
 
@@ -100,19 +100,32 @@ variable {n : Nat} [NonZero n] (ε : ℝ) [NonZero ε]
 -- set_option trace.Meta.Tactic.simp.discharge true in
 example  : Impl (∇ λ x : (ℝ^(3:ℕ))^n => ∑ i j, ϕ ε (-1) (x[i] - x[j])) :=
 by
-  autograd
-  conv => 
-    enter [1,x,1,j]
-    simp only [mul_sub_expand, mul_add_expand]  -- Expand
-    simp -- remove Kronecker's delta
-    simp only [!?(∀ y, ϕ ε (-1 - 2) (x[j] - y) = ϕ ε (-1 - 2) (y - x[j]))]
-    simp only [← sum_of_add, ← sum_of_sub, ← mul_add_expand, ← mul_sub_expand]
-    enter [1,i]
-    simp only [!?(x[j] - x[i] + -(x[i] - x[j]) = (2 : ℝ) * (x[j] - x[i]))]
+  conv =>
+    enter [1]
+    unfold gradient
+    conv => 
+      pattern (δ _)
+      enter [x,dx]
+      simp (config := {singlePass := true})
+      simp (config := {singlePass := true})
+      enter[1,i]
+      simp (config := {singlePass := true})
+      simp (config := {singlePass := true})
+      enter[1,j]
+      simp (config := {singlePass := true})
+      simp (config := {singlePass := true})
+      simp (config := {singlePass := true})
+      simp (config := {singlePass := true})
+    . 
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+    simp
+    conv => 
+      enter [x,1,j,1,2,1,i]
+      simp only [!?(∀ y, ϕ ε (-1 - 2) (x[j] - y) = ϕ ε (-1 - 2) (y - x[j]))]
 
-  .
-
-  
+  . 
+  finish_impl
 
 -- def V.grad (n : Nat) [NonZero n] (ε : ℝ) [NonZero ε] (m k : ℝ) 
 --   : Impl (∇ λ x : Fin n → Fin 3 → ℝ => ∑ i j, ∥x i - x j∥²) := 

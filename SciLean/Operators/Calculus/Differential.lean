@@ -35,7 +35,6 @@ theorem differential_of_uncurried_linear_2 (f : X → Y → Z) [IsLin (λ xy : X
         (x : X) (y dy : Y)
         : δ (f x) y dy = f 0 dy := sorry
 
-
 @[simp] 
 theorem differential_of_id'  (x dx : X)
         : δ (id) x dx = dx := by simp[id]

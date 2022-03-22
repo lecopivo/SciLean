@@ -7,6 +7,8 @@ variable {α β γ : Type}
 variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
+variable {n : Nat} [NonZero n]
+
 -- set_option trace.Meta.Tactic.simp.rewrite true in
 example (y : X)
   : 
@@ -20,9 +22,8 @@ example (g : ι → ℝ)
     (λ _ => (1 : ℝ)) 
   := by autograd done
 
-set_option synthInstance.maxHeartbeats 5000
-
-example {n} (g : Fin n → ℝ) [NonZero n]
+set_option synthInstance.maxHeartbeats 1000 in
+example (g : Fin n → ℝ)
   : 
     ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i)) g 
     = 
@@ -38,7 +39,8 @@ example {X} [Hilbert X] (x : X)
   := 
 by autograd done
 
-example {n} (g : Fin n → ℝ) [NonZero n]
+set_option synthInstance.maxHeartbeats 1000 in
+example (g : Fin n → ℝ)
   : 
     ∇ (λ (f : Fin n → ℝ) => ∑ i, ⟪(f (i + 1) - f i), (f (i + 1) - f i)⟫) g 
     = 
@@ -46,6 +48,21 @@ example {n} (g : Fin n → ℝ) [NonZero n]
   := 
 by
   autograd done
+
+
+set_option synthInstance.maxHeartbeats 500000 in
+set_option synthInstance.maxSize 2048 in
+set_option maxHeartbeats 500000 in
+example (l : Fin n → ℝ)
+  : ∇ (λ (x : (ℝ^(3:ℕ))^n) => ∑ i, ∥ ∥x[i] - x[i-1]∥² - (l i)^2∥²)
+    =
+    (fun (x : (ℝ^(3:ℕ))^n) => PowType.intro fun i =>
+      (2:ℝ) * ((∥x[i] - x[i - 1]∥² - l i ^ 2) * ((2:ℝ) * (x[i] - x[i - 1])) -
+               (∥x[i + 1] - x[i + 1 - 1]∥² - l (i + 1) ^ 2) * ((2:ℝ) * (x[i + 1] - x[i + 1 - 1]))))
+  := 
+by
+  autograd
+
 
 -- set_option synthInstance.maxHeartbeats 1000
 -- example (g : ι → ℝ) 
