@@ -315,7 +315,7 @@ namespace Algebra
   instance : One (Algebra M K X lvl) := ⟨⟦⟨Repr.mon 1, normLvl, sorry⟩⟧⟩
   instance : Zero (Algebra M K X lvl) := ⟨⟦⟨Repr.mon 0, normLvl, sorry⟩⟧⟩
 
-  instance (n : Nat) : OfNat (Algebra M K X lvl) n := ⟨(OfNat.ofNat n : K)*(1 : Algebra M K X lvl)⟩
+  -- instance (n : Nat) : OfNat (Algebra M K X lvl) n := ⟨(n : K)*(1 : Algebra M K X lvl)⟩
 
   -- instance : Numeric (Algebra M K X lvl) := ⟨λ n => (OfNat.ofNat n : K)*(1 : Algebra M K X lvl)⟩
 
@@ -334,8 +334,7 @@ namespace Algebra
     mul_assoc := sorry
   }
 
-  instance : Semiring (Algebra M K X lvl) := 
-  {
+  instance : Semiring (Algebra M K X lvl) where
     add_zero := sorry
     zero_add := sorry
     nsmul_zero' := sorry
@@ -353,19 +352,24 @@ namespace Algebra
 
     mul_assoc := sorry
 
+    natCast n := (n : K)*(1 : Algebra M K X lvl)
+    natCast_zero := sorry
+    natCast_succ := sorry
+
     -- mul_add := sorry
     -- add_mul := sorry
     -- ofNat_succ := sorry
-  }
 
-  instance : Ring (Algebra M K X lvl) :=
-  {
+  instance : Ring (Algebra M K X lvl) where
     sub_eq_add_neg := sorry
     gsmul_zero' := sorry
     gsmul_succ' := sorry
     gsmul_neg' := sorry
     add_left_neg := sorry
-  }
+    
+    intCast n := (n : K)*(1 : Algebra M K X lvl)
+    intCast_ofNat := sorry
+    intCast_negSucc := sorry
 
 end Algebra
 

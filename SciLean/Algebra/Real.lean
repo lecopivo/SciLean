@@ -6,6 +6,8 @@ structure ℝ where
   val : Float
 
 def Float.toReal (x : Float) : ℝ := ⟨x⟩
+def Nat.toReal (n : Nat) : ℝ := n.toFloat.toReal
+def Int.toReal (n : Int) : ℝ := (Float.ofInt n).toReal
 
 namespace Math
 
@@ -62,8 +64,8 @@ namespace ℝ
   -- @[irreducible]
   instance : Neg ℝ := ⟨λ x => ⟨-x.val⟩⟩
 
-  -- instance : Zero ℝ := ⟨Float.ofNat 0⟩  
-  -- instance : One ℝ  := ⟨Float.ofNat 1⟩
+  instance : Zero ℝ := ⟨0.0⟩  
+  instance : One ℝ  := ⟨1.0⟩
   -- instance : OfNat ℝ n := ⟨Float.ofNat n⟩
   -- instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
@@ -75,11 +77,11 @@ namespace ℝ
   instance : HPow ℝ ℝ ℝ := ⟨Math.pow⟩
 
   -- instance : Numeric ℝ := ⟨λ n => n.toFloat⟩
-  instance (n : Nat) : OfNat ℝ n := ⟨⟨n.toFloat⟩⟩
-  instance : Coe ℕ ℝ := ⟨λ n => n.toFloat.toReal⟩
-  instance : Coe ℤ ℝ := ⟨λ n => (Float.ofInt n).toReal⟩
+  -- instance (n : Nat) : OfNat ℝ n := ⟨⟨n.toFloat⟩⟩
+  -- instance : Coe ℕ ℝ := ⟨λ n => n.toFloat.toReal⟩
+  -- instance : Coe ℤ ℝ := ⟨λ n => (Float.ofInt n).toReal⟩
 
-  instance : Inv ℝ := ⟨λ x => 1/x⟩
+  instance : Inv ℝ := ⟨λ x => 1.0/x⟩
 
   -- instance : HPow ℝ ℤ ℝ := ⟨λ x n => x^(n : ℝ)⟩
   -- ⟨λ x n => 
@@ -153,7 +155,7 @@ namespace ℝ
     right_distrib := sorry
     mul_one := sorry
     one_mul := sorry
-    npow n x := x^(n : ℝ) ----------- !!!
+    npow n x := x^(n.toReal) ----------- !!!
     npow_zero' n := sorry
     npow_succ' n x := sorry
     mul_assoc := sorry
@@ -162,14 +164,20 @@ namespace ℝ
     add_zero := sorry
     zero_add := sorry
     add_left_neg := sorry
-    nsmul n x := (n : ℝ) * x ----------------  !!!
+    nsmul n x := (n.toReal) * x ----------------  !!!
     nsmul_zero' := sorry
     nsmul_succ' n x := sorry
     sub_eq_add_neg a b := sorry
-    gsmul n x := (n : ℝ) * x --------- !!!
+    gsmul n x := (n.toReal) * x --------- !!!
     gsmul_zero' := sorry
     gsmul_succ' n x := sorry
     gsmul_neg' n x := sorry
+    natCast n := n.toReal
+    natCast_zero := sorry
+    natCast_succ := sorry
+    intCast n := n.toReal
+    intCast_ofNat := sorry
+    intCast_negSucc := sorry
 
   -- {
   --   mul_comm := sorry
