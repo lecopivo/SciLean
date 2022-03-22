@@ -44,6 +44,9 @@ namespace Enumtype
     next_toFin    := sorry
   }
 
+  @[simp]       
+  theorem numof_unit : numOf Unit = 1 := by simp[numOf] done 
+
   instance : Enumtype (Fin n) :=
   {
     numOf := n
@@ -54,6 +57,9 @@ namespace Enumtype
     next_fromFin  := sorry
     next_toFin    := sorry
   }
+
+  @[simp]       
+  theorem numof_fin {n} : numOf (Fin n) = n := by simp[numOf] done 
 
   --- Row-major 
   instance [Enumtype α] [Enumtype β] : Enumtype (α × β) :=

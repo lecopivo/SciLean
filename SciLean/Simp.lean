@@ -31,6 +31,7 @@ variable (r : ℝ)
 
 @[simp] theorem neg_sub (x y : X) : x - (-y) = x + y := sorry 
 @[simp] theorem add_neg (x y : X) : x + (-y) = x - y := sorry
+@[simp] theorem eval_neg (f : α → X) (x : α) : (-f) x = -(f x) := sorry
 
 @[simp] theorem mul_neg_neg (r : ℝ) (x : X) : (-r) * (-x) = r * x := sorry
 -- @[simp] theorem mul_neg_1 (r : ℝ) (x : X) : (-r) * x = -(r * x) := sorry

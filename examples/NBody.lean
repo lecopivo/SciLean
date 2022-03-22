@@ -12,8 +12,8 @@ variable {X} [Hilbert X]
 instance (ε : ℝ) [NonZero ε] (α : ℝ) : IsSmooth (λ x : X => (∥x∥² + ε^2)^α) := sorry
 
 @[simp]
-theorem eps_norm.diff {X} [Hilbert X] (ε : ℝ) [NonZero ε] (α : ℝ)
-  : δ (λ x : X => (∥x∥² + ε^2)^α) = λ x dx : X => 2 * α * ((∥x∥² + ε^2)^(α-1)) * ⟪x, dx⟫
+theorem eps_norm.diff {X} [Hilbert X] (ε : ℝ) [NonZero ε]
+  : δ (λ (x : X) (α : ℝ) => (∥x∥² + ε^2)^α) = λ (x dx : X) (α) => 2 * α * ((∥x∥² + ε^2)^(α-1)) * ⟪x, dx⟫
   := sorry
 
 @[simp]
@@ -36,11 +36,11 @@ by
 
 @[simp]
 theorem ϕ.grad (ε : ℝ) [NonZero ε] (α : ℝ) 
-  : ∇ (ϕ ε α) = λ x : X => α * (ϕ ε (α-2) x) * x := 
+  : ∇ (ϕ ε α) = λ x : X => α * (ϕ ε (α-2) x * x) := 
 by 
   simp[ϕ]
   rw[!?(2 * (α / 2) = α),
-     !?((α - 2) / 2 = α /2 - 1)] 
+     !?((α - 2) / 2 = α /2 - 1)]
   done
 
 -- Lennard-Jones potential
@@ -97,34 +97,65 @@ theorem mul_sub_expand {X : Type} [Vec X] (r : ℝ) (x y : X)
 -- notation x "[[" i "]]" => PowType.powType.getOp x i
 variable {n : Nat} [NonZero n] (ε : ℝ) [NonZero ε]
 
--- set_option trace.Meta.Tactic.simp.discharge true in
-example  : Impl (∇ λ x : (ℝ^(3:ℕ))^n => ∑ i j, ϕ ε (-1) (x[i] - x[j])) :=
+example  : Impl (∇ λ x : Fin n → Fin 3 → ℝ => ∑ i j, ∥x i - x j∥²) :=
 by
-  conv =>
-    enter [1]
-    unfold gradient
-    conv => 
-      pattern (δ _)
-      enter [x,dx]
-      simp (config := {singlePass := true})
-      simp (config := {singlePass := true})
-      enter[1,i]
-      simp (config := {singlePass := true})
-      simp (config := {singlePass := true})
-      enter[1,j]
-      simp (config := {singlePass := true})
-      simp (config := {singlePass := true})
-      simp (config := {singlePass := true})
-      simp (config := {singlePass := true})
-    . 
-    simp (config := {singlePass := true})
-    simp (config := {singlePass := true})
-    simp
-    conv => 
-      enter [x,1,j,1,2,1,i]
-      simp only [!?(∀ y, ϕ ε (-1 - 2) (x[j] - y) = ϕ ε (-1 - 2) (y - x[j]))]
+  unfold gradient
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
+  simp (config := {singlePass := true})
 
-  . 
+  -- conv =>
+  --   enter [1]
+  --   unfold gradient
+  --   pattern (δ _)
+  --   -- simp
+
+
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- example  : Impl (∇ λ x : Fin n → Fin 3 → ℝ => ∑ i j, ϕ ε (-1) (x i - x j)) :=
+-- by
+  -- conv =>
+  --   enter [1]
+  --   unfold gradient
+  --   pattern (δ _)
+  --   simp
+  --   conv => 
+  --     pattern (δ _)
+  --     enter [x,dx]
+  --     simp (config := {singlePass := true})
+  --     simp (config := {singlePass := true})
+  --     enter[1,i]
+  --     simp (config := {singlePass := true})
+  --     simp (config := {singlePass := true})
+  --     enter[1,j]
+  --     simp (config := {singlePass := true})
+  --     simp (config := {singlePass := true})
+  --     simp (config := {singlePass := true})
+  --     simp (config := {singlePass := true})
+  --   . 
+  --   simp (config := {singlePass := true})
+  --   simp (config := {singlePass := true})
+  --   simp
+  --   conv => 
+  --     enter [x,1,j,1,2,1,i]
+  --     simp only [!?(∀ y, ϕ ε (-1 - 2) (x[j] - y) = ϕ ε (-1 - 2) (y - x[j]))]
+
+  -- . 
   finish_impl
 
 -- def V.grad (n : Nat) [NonZero n] (ε : ℝ) [NonZero ε] (m k : ℝ) 

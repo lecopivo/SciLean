@@ -16,6 +16,11 @@ def kron {ι} [DecidableEq ι] (i j : ι) : ℝ := if (i==j) then 1 else 0
 -- For now, they are under `simp` to get some nice examples working
 
 @[simp] 
+theorem sum_of_const {X ι} [Enumtype ι] [Vec X] (x : X)
+  : (∑ i : ι, x) = (Enumtype.numOf ι : ℝ) * x
+  := sorry
+
+@[simp] 
 theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
   (f : ι → X → Y)
   : (∑ i, λ j => f i j) = (λ j => ∑ i, f i j)
@@ -39,13 +44,14 @@ theorem sum_of_smul {X ι} [Enumtype ι] [Vec X]
   : (∑ i, c * f i ) = c * (∑ i, f i)
   := sorry
 
-@[simp] 
+@[simp]
 theorem sum_of_neg {X ι} [Enumtype ι] [Vec X]
   (f : ι → X)
   : (∑ i, - f i ) = - (∑ i, f i)
   := sorry
 
-@[simp]
+-- @[simp low]
+-- This can loop together with `sum_into_lambda`
 theorem sum_of_linear {X Y ι} [Enumtype ι] [Vec X] [Vec Y]
   (f : X → Y) [IsLin f]
   (g : ι → X)

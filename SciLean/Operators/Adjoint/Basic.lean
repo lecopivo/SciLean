@@ -41,6 +41,8 @@ class HasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y)
   extends PreservesTestFunctions f, IsLin f : Prop where
     has_dual : ∀ y, HasDual (λ x Ω => ⟪y, f x⟫[f‡ Ω])
 
+-- attribute [instance low] HasAdjoint.toIsLin
+
 instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjoint f] (y : Y)
   : HasDual (λ x Ω => ⟪y, f x⟫[f‡ Ω]) := sorry
 

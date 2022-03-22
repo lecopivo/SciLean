@@ -30,8 +30,7 @@ theorem differential_of_uncurried_linear_1 (f : X → Y → Z) [IsLin (λ xy : X
         : δ f = λ x dx (y : Y) => f dx 0 := sorry
 
 @[simp low] 
-theorem differential_of_uncurried_linear_2 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] 
-        (x : X)
+theorem differential_of_uncurried_linear_2 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)] (x : X)
         : δ (f x) = λ y dy => f 0 dy := sorry
 
 @[simp] 
