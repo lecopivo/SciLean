@@ -81,6 +81,7 @@ example : IsSmooth (λ (g : X → X) x => f (g (f x))) := by infer_instance
 example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => g (f (f x))) := by infer_instance
 example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g) := by infer_instance
+-- set_option synthInstance.maxHeartbeats 10000 in
 example : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g) := by infer_instance
 -- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => x |> g |> f |> f |> f) := by infer_instance
@@ -88,6 +89,7 @@ example : IsSmooth (λ (g : X → X) x => x |> f |> g |> f |> f) := by infer_ins
 example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f |> f) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => x |> f |> f |> g |> f) := by infer_instance
 example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g |> f) := by infer_instance
+-- set_option synthInstance.maxHeartbeats 10000 in
 example : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g |> f) := by infer_instance
 -- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g |> f) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => x |> f |> f |> f |> g) := by infer_instance

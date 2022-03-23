@@ -1,4 +1,5 @@
 import SciLean.Operators.Calculus.Differential
+import SciLean.Operators.Calculus.AtomicRSmoothFun
 import SciLean.Operators.Adjoint
 
 namespace SciLean.ReverseDiff
@@ -126,3 +127,45 @@ theorem reverse_diff_of_linear
         : 𝓑 f x = (f x, f†) := 
 by 
   simp[reverse_diff] done
+
+-- @[reducible] 
+-- instance : AtomicSmoothFun (Neg.neg : X → X) where
+--   is_smooth := by simp infer_instance done
+--   df := λ x dx => - dx
+--   is_df := by simp done
+
+-- @[reducible] 
+-- instance : AtomicSmoothFun₂ (HMul.hMul : ℝ → X → X) where
+--   is_smooth₁ := by simp infer_instance done
+--   is_smooth₂ := by simp infer_instance done
+--   df₁ := λ r dr x => dr * x
+--   df₂ := λ r x dx => r * dx
+--   is_df₁ := by simp done
+--   is_df₂ := by simp done
+
+-- @[reducible] 
+-- instance : AtomicSmoothFun₂ (HAdd.hAdd : X → X → X) where
+--   is_smooth₁ := by simp infer_instance done
+--   is_smooth₂ := by simp infer_instance done
+--   df₁ := λ x dx y => dx
+--   df₂ := λ x y dy => dy
+--   is_df₁ := by simp done
+--   is_df₂ := by simp done
+
+-- @[reducible] 
+-- instance : AtomicSmoothFun₂ (HSub.hSub : X → X → X) where
+--   is_smooth₁ := by simp infer_instance done
+--   is_smooth₂ := by simp infer_instance done
+--   df₁ := λ x dx y => dx
+--   df₂ := λ x y dy => - dy
+--   is_df₁ := by simp done
+--   is_df₂ := by simp done
+
+-- @[reducible] 
+-- instance : AtomicRSmoothFun₂ (HAdd.hAdd : U → U → U) where
+--   has_adjoint₁ := by simp infer_instance done
+--   has_adjoint₂ := by simp infer_instance done
+--   adj₁ := λ x y dz => dz
+--   adj₂ := λ x y dz => dz
+--   is_adj₁ := by simp done
+--   is_adj₂ := by simp done

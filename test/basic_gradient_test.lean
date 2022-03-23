@@ -22,7 +22,7 @@ example (g : ι → ℝ)
     (λ _ => (1 : ℝ)) 
   := by autograd done
 
-set_option synthInstance.maxHeartbeats 400 in
+set_option synthInstance.maxHeartbeats 500 in
 set_option maxHeartbeats 8000 in
 example 
   : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i))
@@ -47,7 +47,7 @@ example {X} [Hilbert X] (x : X)
   : 
     ∇ (λ x : X => ∥x∥²) x = (2 : ℝ) * x 
   := 
-by autograd done
+by autograd simp[AtomicSmoothFun.df] done
 
 -- set_option synthInstance.maxHeartbeats 1000 in
 example (g : Fin n → ℝ)
@@ -105,7 +105,6 @@ example
 --     ∇ (λ (f : ι → ℝ) => ∑ i, (f i)*(f i)) g = (2 : ℝ) * g 
 --   := 
 -- by autograd; done
-
 
 
 example : δ (λ x : ℝ^n => ∑ i, x[i]) = λ x dx => ∑ i, dx[i] := by simp done
