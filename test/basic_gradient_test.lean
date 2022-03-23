@@ -79,9 +79,18 @@ example
     0
    -- (fun x => (2:ℝ) * ((fun j => (n:ℝ) * x j - fun j => sum fun i => x i j) - fun j => (fun j => sum fun i => x i j) - (n:ℝ) * x j))
  := by
-   autograd
-   -- I was unable to typecheck the rhs, so we are just checking if `autograd` terminates on this
+   autograd    -- I was unable to typecheck the rhs, so we are just checking if `autograd` terminates on this
    admit
+
+set_option trace.Meta.Tactic.simp true in
+example
+  : 𝓑 (λ x : Fin n → Fin 3 → ℝ => ∑ i j, ∥x i - x j∥²)
+    = 
+    0
+ := by
+   simp    -- I was unable to typecheck the rhs, so we are just checking if `autograd` terminates on this
+   admit
+
 
 -- set_option synthInstance.maxHeartbeats 1000
 -- example (g : ι → ℝ) 
@@ -96,6 +105,7 @@ example
 --     ∇ (λ (f : ι → ℝ) => ∑ i, (f i)*(f i)) g = (2 : ℝ) * g 
 --   := 
 -- by autograd; done
+
 
 
 example : δ (λ x : ℝ^n => ∑ i, x[i]) = λ x dx => ∑ i, dx[i] := by simp done

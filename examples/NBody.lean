@@ -59,11 +59,9 @@ def H (n : Nat) (ε : ℝ) (x p : ((ℝ^(3:ℕ))^n)) := ∥p∥² + ∑ i j, ϕ 
 
 def V {n : Nat} (ε : ℝ) (x : ((ℝ^(3:ℕ))^n)) := ∑ i j, ϕ ε (-1) (x[i] - x[j])
 
-
 -- variable (n : Nat) (x : (ℝ^(3:ℕ))^n) (i j : Fin n) (u : ℝ^n) (i j : Fin n) (ε : ℝ)
 
 notation x "[[" i "]]" => PowType.powType.getOp x i
-
 
 theorem sum_of_const {X : Type} {n : Nat} (x : X) [Vec X] 
   : (∑ i : Fin n, x) = (n : ℝ) * x
@@ -97,27 +95,6 @@ theorem mul_sub_expand {X : Type} [Vec X] (r : ℝ) (x y : X)
 -- notation x "[[" i "]]" => PowType.powType.getOp x i
 variable {n : Nat} [NonZero n] (ε : ℝ) [NonZero ε]
 
-example  : Impl (∇ λ x : Fin n → Fin 3 → ℝ => ∑ i j, ∥x i - x j∥²) :=
-by
-  unfold gradient
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
-  simp (config := {singlePass := true})
 
   -- conv =>
   --   enter [1]
@@ -127,8 +104,9 @@ by
 
 
 -- set_option trace.Meta.Tactic.simp.discharge true in
--- example  : Impl (∇ λ x : Fin n → Fin 3 → ℝ => ∑ i j, ϕ ε (-1) (x i - x j)) :=
--- by
+example  : Impl (∇ λ x : Fin n → ℝ^(3:ℕ) => ∑ i j, ϕ ε (-1) (x i - x j)) :=
+by
+  autograd
   -- conv =>
   --   enter [1]
   --   unfold gradient

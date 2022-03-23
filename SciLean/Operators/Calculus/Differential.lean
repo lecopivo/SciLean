@@ -11,7 +11,7 @@ variable {Y1 Y2 Y3 Y4 : Type} [Vec Y1] [Vec Y2] [Vec Y3] [Vec Y4]
 theorem differential_at_zero (f : X → Y) [IsSmooth f] (x : X)
         : δ f x 0 = 0 := sorry
 
--- Maybe this one two? Because we cannot have simp theorem stating `f 0 = 0` for linear `f`.
+-- Maybe this one too? We cannot have simp theorem stating `f 0 = 0` for linear `f`.
 -- This is a simp theorem with variable head and that is not allowed.
 -- @[simp] 
 -- theorem differential_at_zero_comp (f : Y → Z) [IsSmooth f] (y : Y) (g : X → Y) [IsLin g]
@@ -118,6 +118,13 @@ theorem differential_of_diag_parm_2 (f : Y1 → Y2 → Z) (g1 : X → β → Y1)
 
 
 -- variable (X Y : Type) [Vec X] [Vec Y]
+-- set_option trace.Meta.Tactic.simp.discharge true in 
+@[simp high]
+theorem differential_of_fst
+  : δ (Prod.fst : X×Y → X) = λ xy (dx,dy) => dx := sorry
+@[simp high]
+theorem differential_of_snd
+  : δ (Prod.snd : X×Y → Y) = λ xy (dx,dy) => dy := sorry
 
 instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥²) := by simp[SemiInner.normSqr]; infer_instance done
 instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥^2) := sorry
@@ -138,7 +145,7 @@ by
 instance : IsLin (λ (f : X ⟿ Y) => δ f.1) := sorry
 instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
 instance (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
-instance {U V : Type} [SemiHilbert U] [SemiHilbert V] (f : U → V) (u : U) [IsSmooth f] : HasAdjoint (δ f u) := sorry
+-- instance {U V : Type} [SemiHilbert U] [SemiHilbert V] (f : U → V) (u : U) [IsSmooth f] : HasAdjoint (δ f u) := sorry
 
 instance {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) (x dx : X) 
   [IsSmooth f] [h : ∀ x, IsSmooth (f x)] : IsSmooth (δ f x dx) := sorry
