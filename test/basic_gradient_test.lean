@@ -23,7 +23,7 @@ example (g : ι → ℝ)
   := by autograd done
 
 set_option synthInstance.maxHeartbeats 500 in
-set_option maxHeartbeats 8000 in
+set_option maxHeartbeats 80000 in
 example 
   : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i))
     = 
@@ -47,7 +47,7 @@ example {X} [Hilbert X] (x : X)
   : 
     ∇ (λ x : X => ∥x∥²) x = (2 : ℝ) * x 
   := 
-by autograd simp[AtomicSmoothFun.df] done
+by autograd done
 
 -- set_option synthInstance.maxHeartbeats 1000 in
 example (g : Fin n → ℝ)
@@ -61,35 +61,36 @@ by
 
 
 -- Too slow with `x : (ℝ^(3:ℕ))^n
-example (l : Fin n → ℝ)
-  : ∇ (λ (x : Fin n → Fin 3 → ℝ) => ∑ i, ∥ ∥x i  - x (i-1)∥² - (l i)^2∥²)
-    =
-    (fun (x : Fin n → Fin 3 → ℝ) =>
-      (2:ℝ) * fun j =>
-        (∥x j - x (j - 1)∥² - l j ^ 2) * ((2:ℝ) * (x j - x (j - 1))) -
-        (∥x (j + 1) - x (j + 1 - 1)∥² - l (j + 1) ^ 2) * ((2:ℝ) * (x (j + 1) - x (j + 1 - 1))))
-  := by autograd done
+-- Quite compicated
+-- example (l : Fin n → ℝ)
+--   : ∇ (λ (x : Fin n → Fin 3 → ℝ) => ∑ i, ∥ ∥x i  - x (i-1)∥² - (l i)^2∥²)
+--     =
+--     (fun (x : Fin n → Fin 3 → ℝ) =>
+--       (2:ℝ) * fun j =>
+--         (∥x j - x (j - 1)∥² - l j ^ 2) * ((2:ℝ) * (x j - x (j - 1))) -
+--         (∥x (j + 1) - x (j + 1 - 1)∥² - l (j + 1) ^ 2) * ((2:ℝ) * (x (j + 1) - x (j + 1 - 1))))
+--   := by autograd done
 
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
-set_option synthInstance.maxSize 256 in
-example
-  : ∇ (λ x : Fin n → Fin 3 → ℝ => ∑ i j, ∥x i - x j∥²)
-    = 
-    0
-   -- (fun x => (2:ℝ) * ((fun j => (n:ℝ) * x j - fun j => sum fun i => x i j) - fun j => (fun j => sum fun i => x i j) - (n:ℝ) * x j))
- := by
-   autograd    -- I was unable to typecheck the rhs, so we are just checking if `autograd` terminates on this
-   admit
+-- set_option synthInstance.maxSize 256 in
+-- example
+--   : ∇ (λ x : Fin n → Fin 3 → ℝ => ∑ i j, ∥x i - x j∥²)
+--     = 
+--     0
+--    -- (fun x => (2:ℝ) * ((fun j => (n:ℝ) * x j - fun j => sum fun i => x i j) - fun j => (fun j => sum fun i => x i j) - (n:ℝ) * x j))
+--  := by
+--    autograd    -- I was unable to typecheck the rhs, so we are just checking if `autograd` terminates on this
+--    admit
 
-set_option trace.Meta.Tactic.simp true in
-example
-  : 𝓑 (λ x : Fin n → Fin 3 → ℝ => ∑ i j, ∥x i - x j∥²)
-    = 
-    0
- := by
-   simp    -- I was unable to typecheck the rhs, so we are just checking if `autograd` terminates on this
-   admit
+-- set_option trace.Meta.Tactic.simp true in
+-- example
+--   : 𝓑 (λ x : Fin n → Fin 3 → ℝ => ∑ i j, ∥x i - x j∥²)
+--     = 
+--     0
+--  := by
+--    simp    -- I was unable to typecheck the rhs, so we are just checking if `autograd` terminates on this
+--    admit
 
 
 -- set_option synthInstance.maxHeartbeats 1000

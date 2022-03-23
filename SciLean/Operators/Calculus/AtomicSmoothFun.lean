@@ -21,27 +21,27 @@ attribute [reducible] AtomicSmoothFun.df
 attribute [reducible] AtomicSmoothFun₂.df₁
 attribute [reducible] AtomicSmoothFun₂.df₂
 
-@[simp]
+@[simp high]
 theorem differential_of_atomic (f : X → Y) [AtomicSmoothFun f]
   : δ f = AtomicSmoothFun.df f :=
 by
   apply AtomicSmoothFun.is_df
   done
 
-@[simp]
+@[simp high]
 theorem differential_of_atomic₂_df₁ (f : X → Y → Z) [AtomicSmoothFun₂ f]
   : δ f = AtomicSmoothFun₂.df₁ f :=
 by
   apply AtomicSmoothFun₂.is_df₁
   done
 
-@[simp]
+@[simp high]
 theorem differential_of_atomic₂_df₂ (f : X → Y → Z) [AtomicSmoothFun₂ f] (x : X)
   : δ (f x) = AtomicSmoothFun₂.df₂ f x :=
 by
   apply AtomicSmoothFun₂.is_df₂
   done
 
--- instance (priority := high) (f : X → Y) [AtomicSmoothFun f] : IsSmooth f := AtomicSmoothFun.is_smooth
--- instance (priority := high) (f : X → Y → Z) [AtomicSmoothFun₂ f] : IsSmooth f := AtomicSmoothFun₂.is_smooth₁
--- instance (priority := high) (f : X → Y → Z) (x : X) [AtomicSmoothFun₂ f] : IsSmooth (f x) := AtomicSmoothFun₂.is_smooth₂ x
+instance (priority := high) (f : X → Y) [AtomicSmoothFun f] : IsSmooth f := AtomicSmoothFun.is_smooth
+instance (priority := high) (f : X → Y → Z) [AtomicSmoothFun₂ f] : IsSmooth f := AtomicSmoothFun₂.is_smooth₁
+instance (priority := high) (f : X → Y → Z) (x : X) [AtomicSmoothFun₂ f] : IsSmooth (f x) := AtomicSmoothFun₂.is_smooth₂ x

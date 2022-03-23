@@ -127,11 +127,11 @@ theorem differential_of_fst
 theorem differential_of_snd
   : δ (Prod.snd : X×Y → Y) = λ xy (dx,dy) => dy := sorry
 
-@[reducible]
-instance {X} [Hilbert X] : AtomicSmoothFun (λ x : X => ∥x∥²) where
-  is_smooth := by simp[SemiInner.normSqr] infer_instance done
-  df := λ x dx : X => 2*⟪x, dx⟫
-  is_df := by simp[SemiInner.normSqr, SemiHilbert.semi_inner_sym] done
+-- @[reducible]
+-- instance {X} [Hilbert X] : AtomicSmoothFun (λ x : X => ∥x∥²) where
+--   is_smooth := by simp[SemiInner.normSqr] infer_instance done
+--   df := λ x dx : X => 2*⟪x, dx⟫
+--   is_df := by simp[SemiInner.normSqr, SemiHilbert.semi_inner_sym] done
 
 instance {X} [Hilbert X] : IsSmooth (λ x : X => ∥x∥²) := 
 by 
@@ -140,7 +140,8 @@ by
 @[simp] theorem differential_of_squared_norm {X} [Hilbert X] 
   : δ (λ x : X => ∥x∥²) = λ x dx : X => 2*⟪x, dx⟫ := 
 by
-  simp done
+  simp[SemiInner.normSqr, SemiHilbert.semi_inner_sym] done
+
 
 instance : IsLin (λ (f : X ⟿ Y) => δ f.1) := sorry
 instance (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry

@@ -48,12 +48,20 @@ by
   conv => lhs; enter [2,x]; simp
   done
 
+
+
 example (i j : Fin n) 
-  : (𝓑 fun (x : Fin n → X) => x i - x j) = 0 :=
+  : (𝓑 fun (x : Fin n → X) => x i - x j)
+    =
+    (fun x : X×X => (x.1 - x.2, fun dx : X => (dx, -dx))) •
+      ReverseDiff.reverse_lmap 
+        (fun fx : Fin n → X => (fx i, fun (dv : X) k => kron i k * dv)) 
+        (fun fx : Fin n → X => (fx j, fun (dv : X) k => kron j k * dv))
+   :=
 by
   simp
   simp[reverse_diff, Function.uncurry]
-  admit
+  done
 
 
 -- These collect what needs to be defined for atomic functions

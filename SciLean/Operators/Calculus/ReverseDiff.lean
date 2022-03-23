@@ -111,6 +111,34 @@ instance
   (f : U → ι → V) [IsSmooth f] [∀ x, HasAdjoint (δ f x)]
   (i : ι) (x : U)
   : HasAdjoint (δ (λ x => f x i) x) := by simp infer_instance done
+
+------------------------------------------------------------------
+
+@[simp (low-1)] -- last resort
+theorem reverse_diff_of_linear 
+        (f : U → V) [IsLin f]
+        (x : U)
+        : 𝓑 f x = (f x, f†) := 
+by 
+  simp[reverse_diff] done
+
+------------------------------------------------------------------
+
+@[simp]
+theorem reverse_comp_id {α β : Type} (f : (α → (β×(β→α)))) 
+  : f • (λ x => (x, λ dx => dx)) = f := 
+by     
+  funext x; simp[reverse_comp]
+  conv => lhs; enter [2,x]; simp
+  done
+
+@[simp]
+theorem reverse_id_comp {α β : Type} (f : (α → (β×(β→α)))) 
+  : (λ x => (x, λ dx => dx)) • f = f :=
+by     
+  funext x; simp[reverse_comp]
+  conv => lhs; enter [2,x]; simp
+  done
   
 @[simp] 
 theorem reverse_diff_of_function_comp
@@ -120,13 +148,6 @@ theorem reverse_diff_of_function_comp
 by
   simp[Function.comp] done
 
-@[simp (low-1)] -- last resort
-theorem reverse_diff_of_linear 
-        (f : U → V) [IsLin f]
-        (x : U)
-        : 𝓑 f x = (f x, f†) := 
-by 
-  simp[reverse_diff] done
 
 -- @[reducible] 
 -- instance : AtomicSmoothFun (Neg.neg : X → X) where
@@ -143,7 +164,7 @@ by
 --   is_df₁ := by simp done
 --   is_df₂ := by simp done
 
--- @[reducible] 
+-- @[reducible]
 -- instance : AtomicSmoothFun₂ (HAdd.hAdd : X → X → X) where
 --   is_smooth₁ := by simp infer_instance done
 --   is_smooth₂ := by simp infer_instance done
@@ -152,7 +173,7 @@ by
 --   is_df₁ := by simp done
 --   is_df₂ := by simp done
 
--- @[reducible] 
+-- @[reducible]
 -- instance : AtomicSmoothFun₂ (HSub.hSub : X → X → X) where
 --   is_smooth₁ := by simp infer_instance done
 --   is_smooth₂ := by simp infer_instance done
@@ -161,11 +182,40 @@ by
 --   is_df₁ := by simp done
 --   is_df₂ := by simp done
 
+
 -- @[reducible] 
+-- instance : AtomicRSmoothFun (Neg.neg : U → U) where
+--   has_adjoint := by simp infer_instance done
+--   adj := λ x dx => - dx
+--   is_adj := by simp done
+
+-- @[reducible]
+-- instance (f : X → Y → Z) [AtomicSmoothFun₂ f] (x : X) : AtomicSmoothFun (f x : Y → Z) where
+--   is_smooth := AtomicSmoothFun₂.is_smooth₂ x
+--   df := AtomicSmoothFun₂.df₂ f x
+--   is_df := AtomicSmoothFun₂.is_df₂ x
+
+-- @[reducible] 
+-- instance (r : ℝ) : AtomicRSmoothFun (HMul.hMul r : U → U) where
+--   has_adjoint := by simp infer_instance done
+--   adj := λ x dx => r * dx
+--   is_adj := by simp[HMul.hMul] done
+
+
+-- @[reducible]
 -- instance : AtomicRSmoothFun₂ (HAdd.hAdd : U → U → U) where
 --   has_adjoint₁ := by simp infer_instance done
 --   has_adjoint₂ := by simp infer_instance done
 --   adj₁ := λ x y dz => dz
 --   adj₂ := λ x y dz => dz
+--   is_adj₁ := by simp done
+--   is_adj₂ := by simp done
+
+-- @[reducible]
+-- instance : AtomicRSmoothFun₂ (HSub.hSub : U → U → U) where
+--   has_adjoint₁ := by simp infer_instance done
+--   has_adjoint₂ := by simp infer_instance done
+--   adj₁ := λ x y dz => dz
+--   adj₂ := λ x y dz => - dz
 --   is_adj₁ := by simp done
 --   is_adj₂ := by simp done
