@@ -1,4 +1,4 @@
-import SciLean.Operators.Calculus.Differential
+import SciLean.Operators.Calculus.DiffAtom
 
 namespace SciLean.ForwardDiff
 
@@ -35,22 +35,22 @@ theorem forward_diff_of_composition_2 (f : Y → Z) [IsSmooth f] (gdg : (α → 
 by  
   simp[forward_diff]; done
 
-@[simp]
-theorem forward_diff_of_linear (f : X → Y) [IsLin f] (xdx : X×X)
-    : 𝓣 f xdx = (f xdx.1, f xdx.2) := 
-by 
-  induction xdx; simp[forward_diff]; done
+-- @[simp]
+-- theorem forward_diff_of_linear (f : X → Y) [IsLin f] (xdx : X×X)
+--     : 𝓣 f xdx = (f xdx.1, f xdx.2) := 
+-- by 
+--   induction xdx; simp[forward_diff]; done
 
-@[simp]
-theorem forward_diff_of_uncurried_linear_1 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)]
-    (xdx : X×X)
-    : 𝓣 f xdx = (λ y => f xdx.1 y, λ (y : Y) => f xdx.2 0) :=
-by 
-  induction xdx; simp[forward_diff]; done
+-- @[simp]
+-- theorem forward_diff_of_uncurried_linear_1 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)]
+--     (xdx : X×X)
+--     : 𝓣 f xdx = (λ y => f xdx.1 y, λ (y : Y) => f xdx.2 0) :=
+-- by 
+--   induction xdx; simp[forward_diff]; done
 
-@[simp]
-theorem forward_diff_of_uncurried_linear_2 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)]
-    (x : X) (ydy : Y×Y)
-    : 𝓣 (f x) ydy = (f x ydy.1, f 0 ydy.2) :=
-by
-  induction ydy; simp[forward_diff]; done
+-- @[simp]
+-- theorem forward_diff_of_uncurried_linear_2 (f : X → Y → Z) [IsLin (λ xy : X×Y => f xy.1 xy.2)]
+--     (x : X) (ydy : Y×Y)
+--     : 𝓣 (f x) ydy = (f x ydy.1, f 0 ydy.2) :=
+-- by
+--   induction ydy; simp[forward_diff]; done

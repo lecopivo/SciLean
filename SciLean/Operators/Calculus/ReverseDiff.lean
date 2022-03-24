@@ -1,4 +1,4 @@
-import SciLean.Operators.Calculus.Differential
+import SciLean.Operators.Calculus.DiffAtom
 import SciLean.Operators.Calculus.AtomicRSmoothFun
 import SciLean.Operators.Adjoint
 
@@ -114,13 +114,13 @@ instance
 
 ------------------------------------------------------------------
 
-@[simp (low-1)] -- last resort
-theorem reverse_diff_of_linear 
-        (f : U → V) [IsLin f]
-        (x : U)
-        : 𝓑 f x = (f x, f†) := 
-by 
-  simp[reverse_diff] done
+-- @[simp (low-1)] -- last resort
+-- theorem reverse_diff_of_linear 
+--         (f : U → V) [IsLin f]
+--         (x : U)
+--         : 𝓑 f x = (f x, f†) := 
+-- by 
+--   simp[reverse_diff] done
 
 ------------------------------------------------------------------
 

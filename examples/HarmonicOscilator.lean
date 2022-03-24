@@ -14,8 +14,7 @@ def solver (m k : ℝ) (steps : Nat)
 by
   -- Unfold Hamiltonian definition and compute gradients
   simp[HamiltonianSystem, H]
-  autograd
-  autograd
+  simp[gradient, AtomicSmoothFun₂.df₁, AtomicSmoothFun₂.df₂, AtomicSmoothFun.df]
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]

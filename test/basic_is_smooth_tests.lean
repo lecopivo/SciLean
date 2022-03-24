@@ -44,15 +44,15 @@ namespace maintests
   example (f : α → β → γ → X → Y) [∀ a b c, IsSmooth (f a b c)] : IsSmooth (λ x a b c => f a b c x) := by infer_instance
   example (f : X → X) [IsSmooth f] : IsSmooth (λ (g : X → X) x => f (f (g x))) := by infer_instance
   example (f : X → X → β → Y) [IsSmooth f] [∀ x, IsSmooth (f x)] : IsSmooth (λ x b => f x x b) := by infer_instance
-  example (f : X → X → β → Y) [IsLin f] [∀ x, IsLin (f x)] : IsSmooth (λ x b => f x x b) := by infer_instance
+  -- example (f : X → X → β → Y) [IsLin f] [∀ x, IsLin (f x)] : IsSmooth (λ x b => f x x b) := by infer_instance
   example : IsSmooth (λ (g : X → Y) (x : X) => F (g (h x)) a) := by infer_instance
   example : IsSmooth (λ (x : X) => G' (h x) z w) := by infer_instance
   example (f : X → X → β → Y) [IsSmooth f] [∀ x, IsSmooth (f x)] (b) : IsSmooth (λ x => f x x b) := by infer_instance
-  example (f : X → X → β → Y) [IsLin f] [∀ x, IsLin (f x)] (b) : IsSmooth (λ x => f x x b) := by infer_instance
+  -- example (f : X → X → β → Y) [IsLin f] [∀ x, IsLin (f x)] (b) : IsSmooth (λ x => f x x b) := by infer_instance
   example : IsSmooth (λ (h : X → X) (x : X) => G (h x)) := by infer_instance
 
   set_option synthInstance.maxHeartbeats 5000
-  set_option trace.Meta.synthInstance true in
+  -- set_option trace.Meta.synthInstance true in
   example : IsSmooth (λ (h : X → X) (x : X) => G (h x) a b) := by infer_instance
   example : IsSmooth (λ (h : X → X) (x : X) => H a (h x) b) := by infer_instance
   example : IsSmooth (λ (x : X) => h (F (h' ((h' ∘ g) (h x))) a)) := by infer_instance

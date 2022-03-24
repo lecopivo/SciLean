@@ -26,7 +26,7 @@ by
 
 instance (x y : X) : HasAdjoint λ dy => δ (λ y : X => x - y) y dy := 
 by 
-  rw[Smooth.differential_of_uncurried_linear_2 HSub.hSub]; simp
+  simp
   infer_instance done
 
 

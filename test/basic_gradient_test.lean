@@ -22,32 +22,43 @@ example (g : ι → ℝ)
     (λ _ => (1 : ℝ)) 
   := by autograd done
 
-set_option synthInstance.maxHeartbeats 500 in
-set_option maxHeartbeats 80000 in
+set_option synthInstance.maxHeartbeats 1000 in
+set_option maxHeartbeats 50000 in
 example 
   : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i))
     = 
     (λ (f : Fin n → ℝ) i => f (i - 1) + f (i + 1)) 
   := 
 by 
-  autograd done
+  simp[gradient] 
+  unfold_atomic; unfold hold
+  simp
+  funext x j; simp
+  done
 
-set_option synthInstance.maxHeartbeats 700 in
-set_option maxHeartbeats 11000 in
+-- set_option synthInstance.maxHeartbeats 2000 in
+-- set_option maxHeartbeats 50000 in
 example 
   : ∇ (λ (f : ℝ^n) => ∑ i, f[i + 1]*f[i])
     = 
     λ (f : ℝ^n) => PowType.intro λ i => f[i - 1] + f[i + 1]
   := 
 by 
-  autograd done
+  simp[gradient]
+  unfold_atomic; unfold hold
+  simp
+  done
 
 
+-- set_option trace.Meta.Tactic.simp.discharge true in
 example {X} [Hilbert X] (x : X) 
   : 
     ∇ (λ x : X => ∥x∥²) x = (2 : ℝ) * x 
   := 
-by autograd done
+by simp[gradient]
+   unfold_atomic
+   simp
+   done
 
 -- set_option synthInstance.maxHeartbeats 1000 in
 example (g : Fin n → ℝ)
@@ -57,11 +68,21 @@ example (g : Fin n → ℝ)
     (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
   := 
 by
-  autograd done
+  simp[gradient]
+  unfold_atomic; unfold hold
+  simp
+  funext i; simp
+  done
 
+-- set_option synthInstance.maxHeartbeats 50000 in
+-- set_option synthInstance.maxSize 2048 in                           
+-- example (c : Fin n → ℝ) (k : ℝ) : IsSmooth fun (x : Fin n → Fin 3 → ℝ) (i : Fin n) => ∥ ∥x i - x (i - 1)∥² - (c i) ∥² := by infer_instance
 
 -- Too slow with `x : (ℝ^(3:ℕ))^n
 -- Quite compicated
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option synthInstance.maxHeartbeats 50000 in
+-- set_option synthInstance.maxSize 2048 in                           
 -- example (l : Fin n → ℝ)
 --   : ∇ (λ (x : Fin n → Fin 3 → ℝ) => ∑ i, ∥ ∥x i  - x (i-1)∥² - (l i)^2∥²)
 --     =
@@ -69,8 +90,15 @@ by
 --       (2:ℝ) * fun j =>
 --         (∥x j - x (j - 1)∥² - l j ^ 2) * ((2:ℝ) * (x j - x (j - 1))) -
 --         (∥x (j + 1) - x (j + 1 - 1)∥² - l (j + 1) ^ 2) * ((2:ℝ) * (x (j + 1) - x (j + 1 - 1))))
---   := by autograd done
-
+--   := 
+-- by
+  -- conv => 
+  --   lhs
+  --   simp[gradient]
+  -- conv => 
+  --   lhs
+  --   simp
+  -- done
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
 -- set_option synthInstance.maxSize 256 in
@@ -108,11 +136,12 @@ by
 -- by autograd; done
 
 
-example : δ (λ x : ℝ^n => ∑ i, x[i]) = λ x dx => ∑ i, dx[i] := by simp done
-example : δ (λ x : ℝ^n => ∑ i, 2*x[i]) = λ x dx => ∑ i, (2:ℝ)*dx[i] := by simp done
-example : δ (λ x : ℝ^n => (∑ i, x[i]*x[i])) = λ x dx => (∑ i, dx[i]*x[i]) + (∑ i, x[i]*dx[i]) := by simp done
-example : ∇ (λ x : ℝ^n => ∑ i, x[i]) = λ x => PowType.intro (λ i => (1:ℝ)) := by autograd done
-example : ∇ (λ x : ℝ^n => ∑ i, x[i]*x[i]) = λ x : ℝ^n => (2:ℝ)*x := by autograd admit -- not quite there, not sure what to do about this case
+-- example : δ (λ x : ℝ^n => ∑ i, x[i]) = λ x dx => ∑ i, dx[i] := by simp done
+-- example : δ (λ x : ℝ^n => ∑ i, 2*x[i]) = λ x dx => ∑ i, (2:ℝ)*dx[i] := by simp done
+-- example : δ (λ x : ℝ^n => (∑ i, x[i]*x[i])) = λ x dx => (∑ i, dx[i]*x[i]) + (∑ i, x[i]*dx[i]) := by simp done
+-- example : ∇ (λ x : ℝ^n => ∑ i, x[i]) = λ x => PowType.intro (λ i => (1:ℝ)) := by autograd done
+-- example : ∇ (λ x : ℝ^n => ∑ i, x[i]*x[i]) = λ x : ℝ^n => (2:ℝ)*x := by autograd admit -- not quite there,
+-- not sure what to do about this case
 
   --   example : ∇ (λ x => ∑ i, x[i]*x[i-a]) x = ((lmk λ i => x[i-a]) + (lmk λ i => x[i+a])) := by autograd done
   --   -- example : ∇ (λ x => ∑ i, (x[i+a] - x[i])*(x[i+a] - x[i])) x = 0 := by autograd done -- Needs some more sophisticated simplifications

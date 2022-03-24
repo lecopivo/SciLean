@@ -42,19 +42,21 @@ instance [Hilbert X] : Hilbert (X^n) :=
   uniqueDomain := sorry
 }
 
+
 variable [Vec X]
 
-instance (i : Fin n)  : IsLin (λ c : X^n => c[i]) := sorry
-instance : IsLin (λ (c : X^n) (i : Fin n)  => c[i]) := sorry
+instance : IsSmooth   (λ (c : X^n) (i : Fin n)  => c[i]) := sorry
+instance : IsLin      (λ (c : X^n) (i : Fin n)  => c[i]) := sorry
+-- instance (i : Fin n) : IsSmooth   (λ c : X^n => c[i]) := by infer_instance
+-- instance (i : Fin n) : IsLin      (λ c : X^n => c[i]) := by infer_instance
 
+@[simp]
+theorem diff_of_powtype_getOp
+  : δ (λ (x : X^n) (i : Fin n) => x[i]) = λ x dx i => dx[i] := sorry
 
 variable [Hilbert X]
-
-instance 
-  : HasAdjoint (λ (c : X^n) (i : Fin n) => c[i]) := sorry
-
-instance (i : Fin n)
-  : HasAdjoint (λ c : X^n => c[i]) := sorry
+instance : HasAdjoint (λ (c : X^n) (i : Fin n) => c[i]) := sorry
+-- instance (i : Fin n) : HasAdjoint (λ c : X^n => c[i]) := by infer_instance
 
 @[simp]                         
 theorem adjoint_of_powtype_get

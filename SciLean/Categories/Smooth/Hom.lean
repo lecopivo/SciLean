@@ -44,7 +44,7 @@ namespace Hom
     conv =>
       enter [1,x]
       simp[Neg.neg]
-    infer_instance
+    admit -- infer_instance
 
   instance (f g : X → ℝ) [IsSmooth f] [IsSmooth g] : IsSmooth (f * g) :=
   by
@@ -53,7 +53,7 @@ namespace Hom
       simp
     infer_instance
 
-  instance : Zero (X ⟿ Y) := ⟨⟨0, by infer_instance⟩⟩
+  instance : Zero (X ⟿ Y) := ⟨⟨0, by admit⟩⟩
   instance : Add (X ⟿ Y) := ⟨λ f g => ⟨f + g, by infer_instance⟩⟩
   instance : Sub (X ⟿ Y) := ⟨λ f g => ⟨f - g, by infer_instance⟩⟩
   instance : Mul (X ⟿ ℝ) := ⟨λ f g => ⟨f * g, by infer_instance⟩⟩
@@ -175,6 +175,8 @@ namespace Hom
   example : X → ℝ ⟿ X := λ (x : X) (r : ℝ) ⟿ r*x
 
   variable (x : X)
+
+  instance : IsSmooth (λ f : X ⟿ Y => f.1) := by apply lin_is_smooth
 
   #check λ (x : X) => (λ (t : ℝ) ⟿ x)
 

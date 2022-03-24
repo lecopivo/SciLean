@@ -13,4 +13,4 @@ class IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_smooth : is_smo
 
 def SmoothMap (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsSmooth f }
 
-instance (priority := low) (f : X → Y) [IsLin f] : IsSmooth f := sorry
+theorem lin_is_smooth (f : X → Y) [IsLin f] : IsSmooth f := sorry
