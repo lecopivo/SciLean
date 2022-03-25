@@ -20,6 +20,9 @@ instance (r : ℝ) : IsLin (λ (x : X) => r*x) := sorry
 -- instance : IsLin (HMul.hMul : ℝ → X → X) := sorry
 -- instance (r : ℝ) : IsLin (HMul.hMul r : X → X) := sorry
 
+instance : IsLin (λ xy : X×Y => xy.1) := sorry
+instance : IsLin (λ xy : X×Y => xy.2) := sorry
+
 instance : IsLin (λ x : X => -x) := sorry
 
 instance {X} [Vec X] (P : X → Prop) [Vec {x : X // P x}] : IsLin (Subtype.val : {x : X // P x} → X) := sorry

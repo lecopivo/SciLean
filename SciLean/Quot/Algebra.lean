@@ -225,6 +225,7 @@ namespace Algebra
       redform_norm := sorry
       redform_zero := sorry
       redform_succ := sorry
+      redform_inf  := sorry
     }
 
     open Quot'

@@ -31,3 +31,7 @@ by
 instance parm_is_smooth (f : X → β → Z) [IsSmooth f] (b : β) : IsSmooth (λ x => f x b) := sorry
 instance comp_is_smooth (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] : IsSmooth (λ x => f (g x)) := sorry
 instance diag_is_smooth (f : Y1 → Y2 → Z) (g1 : X → Y1) (g2 : X → Y2) [IsSmooth f] [∀ y1, IsSmooth (f y1)] [IsSmooth g1] [IsSmooth g2] : IsSmooth (λ x => f (g1 x) (g2 x)) := sorry
+
+instance [Vec X] [Vec Y] [Vec Z] (f : X → Y×Z) [IsSmooth f] : IsSmooth (λ x => (f x).1) := sorry
+instance [Vec X] [Vec Y] [Vec Z] (f : X → Y×Z) [IsSmooth f] : IsSmooth (λ x => (f x).2) := sorry
+

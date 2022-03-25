@@ -9,7 +9,9 @@ variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 variable {Y1 Y2 Y3 Y4 : Type} [Vec Y1] [Vec Y2] [Vec Y3] [Vec Y4]
 
 
-asdfasdf make thid fail to compile
+-- asdfasdf make thid fail to compile
+
+
 
 @[simp] 
 theorem differential_at_zero (f : X → Y) [IsSmooth f] (x : X)

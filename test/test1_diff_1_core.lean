@@ -6,10 +6,9 @@ variable {α β γ : Type}
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 
-set_option maxHeartbeats 1200
-set_option synthInstance.maxHeartbeats 200
+set_option maxHeartbeats 1500
+set_option synthInstance.maxHeartbeats 250
 set_option synthInstance.maxSize 50
-
 
 example (a : α) (f : Y → α → Z) [IsSmooth f] (g : X → Y) [IsSmooth g]
   : δ (λ x => f (g x) a) = λ x dx => δ f (g x) (δ g x dx) a := by simp

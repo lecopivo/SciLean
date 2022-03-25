@@ -12,3 +12,4 @@ macro:max "!" noWs t:term : term => `(⟨$t, sorry⟩)
 notation "!?" P => (sorry : P)
 
 
+macro:max "#" noWs t:term : term => `(⟨$t, by decide⟩)

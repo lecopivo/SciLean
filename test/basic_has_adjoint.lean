@@ -6,7 +6,6 @@ open Function
 
 open SciLean
 
-
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
@@ -42,6 +41,6 @@ example {m : Nat} : ∀ (i : Fin n), HasAdjoint fun (dx : Fin n → ℝ^m) j => 
 set_option synthInstance.maxHeartbeats 4000 in
 example (x : Fin n → ℝ^(3:ℕ)) (i : Fin n) : SciLean.HasAdjoint fun (dx : Fin n → ℝ^(3:ℕ)) j => ⟪x i, dx j⟫ := by infer_instance done
 set_option synthInstance.maxHeartbeats 2000 in
-set_option synthInstance.maxSize 150 in
+set_option synthInstance.maxSize 200 in
 example {m : Nat} (x : ℝ^m) : ∀ (i : Fin n), HasAdjoint fun (dx : Fin n → ℝ^m) => ∑ j : Fin n, 2 * ⟪x, dx i + dx j⟫ := by infer_instance done
 

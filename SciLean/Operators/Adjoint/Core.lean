@@ -49,6 +49,10 @@ namespace SciLean
     (f : X → ι → Z) [HasAdjoint f] 
     : HasAdjoint (λ x => f x i) := sorry
 
+  -- constant zero
+  instance has_adjoint_const_zero
+    : HasAdjoint (λ (x : X) => (0:Y)) := sorry
+
   -- Product type
   instance has_adjoint_fst
     : HasAdjoint (λ ((x,y) : X×Y) => x) := sorry

@@ -107,6 +107,7 @@ namespace SciLean.Quot'
     redform_norm : ∀ x y, S x y → RedForm normLvl x → RedForm normLvl y → x = y
     redform_zero : ∀ x, RedForm rawLvl x = True
     redform_succ : ∀ x n, RedForm (n+(1 : Nat)) x → RedForm n x
+    redform_inf  : ∀ x lvl, RedForm normLvl x → RedForm lvl x
 
   open QForm
 

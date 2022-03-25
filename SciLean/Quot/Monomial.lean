@@ -93,6 +93,7 @@ namespace Monomial
     redform_norm := sorry
     redform_zero := sorry
     redform_succ := sorry
+    redform_inf  := sorry
   }
 
   instance {K ι} [LT ι] [Zero K] : QForm (SymEq K ι) :=
@@ -105,6 +106,7 @@ namespace Monomial
     redform_norm := sorry
     redform_zero := sorry
     redform_succ := sorry
+    redform_inf  := sorry
   }
 
   instance {K ι} [LT ι] [Zero K] [Neg K] : QForm (AltEq K ι) :=
@@ -117,6 +119,7 @@ namespace Monomial
     redform_norm := sorry
     redform_zero := sorry
     redform_succ := sorry
+    redform_inf  := sorry
   }
 
   instance {K ι} [Zero K] : QReduce (FreeEq K ι) rawLvl :=

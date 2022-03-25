@@ -1,6 +1,6 @@
 import SciLean.Prelude
 import SciLean.Categories
-import SciLean.Operators.Inverse
+-- import SciLean.Operators.Inverse
 import SciLean.Operators.Sum
 import SciLean.Simp
 

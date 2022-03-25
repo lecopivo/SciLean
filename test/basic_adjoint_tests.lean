@@ -16,7 +16,7 @@ example (y : Y) (r : ℝ)
 example (y : X) (r : ℝ) 
   : (λ x => ⟪x,y⟫ + ⟪y,x⟫)† r = (2 : ℝ)*(r*y) := by simp done
 example (r : ℝ) (x' : X) 
-  : (λ x : X => r*((λ x'' => ⟪x', x''⟫) x))† = λ s => r * (s * x') := by simp done
+  : (λ x : X => r*((λ x'' => ⟪x', x''⟫) x))† = λ s => (r * s) * x' := by simp done
 
 example {n : Nat} (a : Fin n) [NonZero n] 
   : (λ (f : Fin n → ℝ) i => f (i - a))† = (λ (f : Fin n → ℝ) x => f (x + a)) := 
@@ -36,7 +36,7 @@ example (y : ℝ) : (λ x : ℝ => y * x)† 1 = y := by simp done
 
 -- set_option trace.Meta.Tactic.simp.discharge true in
 example (a b : ℝ) (x : X)
-  : (λ dx : X => (a * ⟪x, dx⟫) * b)† 1 = a * (b * x) := 
+  : (λ dx : X => (a * ⟪x, dx⟫) * b)† 1 = (a * b) * x := 
 by autoadjoint; simp done
 
 example {ι} [Enumtype ι] [Nonempty ι] (i : ι) (c : ℝ)

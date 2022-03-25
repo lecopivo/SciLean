@@ -22,14 +22,14 @@ example (g : ι → ℝ)
     (λ _ => (1 : ℝ)) 
   := by autograd done
 
-set_option synthInstance.maxHeartbeats 1000 in
-set_option maxHeartbeats 50000 in
+-- set_option synthInstance.maxHeartbeats 2000 in
+-- set_option maxHeartbeats 50000 in
 example 
   : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i))
     = 
     (λ (f : Fin n → ℝ) i => f (i - 1) + f (i + 1)) 
   := 
-by 
+by
   simp[gradient] 
   unfold_atomic; unfold hold
   simp
