@@ -42,6 +42,7 @@ namespace Iterable
     decEq := by infer_instance
   }
 
+  -- TODO: Add [NonZero n]
   instance : Iterable (Fin n) :=
   {
     first := match n with | 0 => none | _ => some ⟨0,sorry⟩

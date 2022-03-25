@@ -84,8 +84,12 @@ section NN
      -- [∀ x₀ (x : W₁ × W₂), SciLean.HasAdjoint (SciLean.differential (fun x => f₁ x.1 x₀) x)]
      -- [∀ (x₀ : X₀) (x : W₁ × W₂), SciLean.HasAdjoint (SciLean.differential (fun x => x₀) x)]
 
-  instance (x : W₁ × W₂) : SciLean.HasAdjoint (δ (fun x => x.2) x) := sorry
   instance (x : W₁ × W₂) : SciLean.HasAdjoint (δ (fun x => x.1) x) := sorry
+  instance (x : W₁ × W₂) : SciLean.HasAdjoint (δ (fun x => x.2) x) := sorry
+
+  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (δ f x)] : SciLean.HasAdjoint (δ (fun x => (f x).1) x) := by simp infer_instance
+  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (δ f x)] : SciLean.HasAdjoint (δ (fun x => (f x).2) x) := by simp infer_instance
+
 
   -- instance : ∀ (x : W₁ × W₂ × W₃), SciLean.HasAdjoint (SciLean.differential (fun x => x.2.2) x) := by infer_instance done
 
@@ -97,6 +101,10 @@ section NN
     : 𝓑 (λ x : X => x) = λ x => (x, λ dx => dx) := by simp[reverse_diff] done
 
   @[simp]
+  theorem reverse_diff_of_const (y : Y)
+    : 𝓑 (λ x : X => y) = λ x => (y, λ dy : Y => (0:X)) := by simp[reverse_diff] done
+
+  @[simp]
   theorem reverse_diff_of_fst
     : 𝓑 (λ xy : X×Y => xy.1) = λ xy => (xy.1, λ dx => (dx, (0:Y))) := by simp[reverse_diff] done
 
@@ -104,22 +112,36 @@ section NN
   theorem reverse_diff_of_snd
     : 𝓑 (λ xy : X×Y => xy.2) = λ xy => (xy.2, λ dy => ((0:X), dy)) := by simp[reverse_diff] done
 
+  @[simp]
+  theorem reverse_diff_of_fst_comp (f : X → Y×Z) [IsSmooth f] [∀ x, HasAdjoint (δ f x)]
+    : 𝓑 (λ x : X => (f x).1) = (λ yz => (yz.1, λ dy => (dy, (0:Z)))) • 𝓑 f := 
+  by 
+    funext x; simp[reverse_diff,reverse_comp]
+    funext dy; simp
+    done
+
+  @[simp]
+  theorem reverse_diff_of_snd_comp (f : X → Y×Z) [IsSmooth f] [∀ x, HasAdjoint (δ f x)]
+    : 𝓑 (λ x : X => (f x).2) = (λ yz => (yz.2, λ dz => ((0:Y), dz))) • 𝓑 f :=
+  by 
+    funext x; simp[reverse_diff,reverse_comp]
+    funext dy; simp
+    done
 
   -- instance : SciLean.IsSmooth fun x => f₂ x.2.1 (f₁ x.1 x₀)
-
   -- set_option trace.Meta.synthInstance true in
   -- set_option maxHeartbeats 1000000 in
   -- set_option synthInstance.maxHeartbeats 500000 in
   set_option synthInstance.maxSize 20480 in
   -- set_option trace.Meta.Tactic.simp.discharge true in
   example (x₀ : X₀)
-    -- : 𝓑 (λ (w₁,w₂,w₃) => x₀ |> f₁ w₁ |> f₂ w₂ |> f₃ w₃) = 0 := 
-    : 𝓑 (λ w : W₁ × W₂ × W₃ => x₀ |> f₁ w.1 |> f₂ w.2.1 |> f₃ w.2.2) = 0 := 
+    -- : 𝓑 (λ (w₁,w₂,w₃) => x₀ |> f₁ w₁ |> f₂ w₂ |> f₃ w₃) = 0 :=
+    : 𝓑 (λ (w₁,w₂,w₃) => x₀ |> f₁ w₁ |> f₂ w₂ |> f₃ w₃) = 0 :=
   by
     simp
     conv =>
       lhs
-      conv => 
+      conv =>
         enter [2,1]
         simp [reverse_comp, Function.comp]
       conv =>
@@ -127,8 +149,8 @@ section NN
         simp [reverse_comp, Function.comp]
       conv =>
         enter [2,2,2,2,2]
-        simp [reverse_comp, reverse_diff_of_atomic]
-    .
+        simp [reverse_comp, reverse_diff_of_atomic, Function.comp, ReverseDiff.reverse_lmap]
+    . 
     -- simp (config := {singlePass := true})
 
     -- simp[reverse_diff,Function.uncurry]
@@ -140,10 +162,7 @@ section NN
     unfold hold
     admit
 
-
-
 end NN
-
 
 #check Sigma
 

@@ -1,125 +1,258 @@
 import Mathlib
+-- import SciLean.Mathlib.Algebra.Module.Basic
+import SciLean.Categories
 import SciLean.Quot.QuotQ
 
 namespace SciLean
 
+structure Compression (Val : Type) (Compr : Type) where
+  canCompress : Val → Bool
+  uncompress : Compr → Val
+  compress : Val → Compr
+
+  eq (a : Val) (b : Compr) : Prop := (a = uncompress b)
+  compressible (a : Val)   : Prop := (a = uncompress (compress a))
+
+  unique : ∀ b, (compress (uncompress b)) = b
+  valid  : ∀ a, (canCompress a = true) ↔ compressible a
+
 namespace Compressed
 
   -- β is the compressed type
-  inductive Repr (α : Type) (β : Type) where
-  | uncompr (a : α) : Repr α β
-  | compr (b : β) : Repr α β
+  inductive Repr (Val : Type) (Compr : Type) where
+  | val   (a : Val) : Repr Val Compr
+  | compr (b : Compr) : Repr Val Compr
 
   namespace Repr
 
     variable {α β : Type}
 
-    instance [Zero β] : Zero (Repr α β) := ⟨compr 0⟩
-    instance [One β] : Zero (Repr α β) := ⟨compr 1⟩
-
-    instance [Neg α] [Neg β] : Neg (Repr α β) := 
-      ⟨λ x => 
-        match x with
-        | uncompr x => uncompr (-x)
-        | compr   x => compr   (-x)⟩
-
-    instance [HAdd γ α α] [HAdd γ β β] : HAdd γ (Repr α β) (Repr α β) := 
-      ⟨λ c x => 
-        match x with
-        | uncompr x => uncompr (c + x)
-        | compr   x => compr   (c + x)⟩
-
-    instance [HMul γ α α] [HMul γ β β] : HMul γ (Repr α β) (Repr α β) := 
-      ⟨λ c x => 
-        match x with
-        | uncompr x => uncompr (c * x)
-        | compr   x => compr   (c * x)⟩
-
-    instance [Add α] [Add β] [hadd1 : HAdd β α α] [hadd2 : HAdd α β α] : Add (Repr α β) := 
-      ⟨λ x y => 
-        match x, y with
-        | uncompr x, uncompr y => uncompr (x + y)
-        | compr   x, compr y   => compr   (x + y)
-        | uncompr x, compr y   => uncompr (x + y)
-        | compr   x, uncompr y => uncompr (x + y)⟩
-
-    instance [Sub α] [Sub β] [hsub1 : HSub β α α] [hsub2 : HSub α β α] : Sub (Repr α β) := 
-      ⟨λ x y => 
-        match x, y with
-        | uncompr x, uncompr y => uncompr (x - y)
-        | compr   x, compr y   => compr   (x - y)
-        | uncompr x, compr y   => uncompr (x - y)
-        | compr   x, uncompr y => uncompr (x - y)⟩
-
-    instance [Mul α] [Mul β] [hmul1 : HMul β α α] [hmul2 : HMul α β α] : Mul (Repr α β) := 
-      ⟨λ x y => 
-        match x, y with
-        | uncompr x, uncompr y => uncompr (x * y)
-        | compr   x, compr y   => compr   (x * y)
-        | uncompr x, compr y   => uncompr (x * y)
-        | compr   x, uncompr y => uncompr (x * y)⟩
-
-    instance [Add α] : Add (Repr α Unit) := 
-      ⟨λ x y => 
-        match x, y with
-        | uncompr x, uncompr y => uncompr (x + y)
-        | compr   x, compr y   => compr   ()
-        | uncompr x, compr y   => uncompr x
-        | compr   x, uncompr y => uncompr y⟩
-
-    instance [Sub α] [Neg α] : Sub (Repr α Unit) := 
-      ⟨λ x y => 
-        match x, y with
-        | uncompr x, uncompr y => uncompr (x - y)
-        | compr   x, compr y   => compr   ()
-        | uncompr x, compr y   => uncompr x
-        | compr   x, uncompr y => uncompr (-y)⟩
-
-    instance [Mul α] : Mul (Repr α Unit) := 
-      ⟨λ x y => 
-        match x, y with
-        | uncompr x, uncompr y => uncompr (x * y)
-        | _        ,         _ => compr   ()⟩
-
-    def Eq (eq : α → β → Prop) : Repr α β → Repr α β → Prop 
-      | uncompr x, uncompr y => x = y
-      | compr   x, compr   y => x = y
-      | uncompr x, compr   y => eq x y
-      | compr   x, uncompr y => eq y x
+    def Eq (c : Compression α β) : Repr α β → Repr α β → Prop 
+      | val   x, val   y => x = y
+      | compr x, compr y => x = y
+      | val   x, compr y => c.eq x y
+      | compr x, val   y => c.eq y x
 
     open Quot'
 
-    instance (eq : α → β → Prop) : QForm (Eq eq) where
+    instance (c : Compression α β) : QForm (Eq c) where
       RedForm := λ lvl x => 
         match lvl with
         | redLvl _ => True
         | normLvl => 
           match x with 
           | compr _ => True
-          | uncompr a => ∀ (b : β), ¬(eq a b)
+          | val   a => ¬(c.compressible a)
       redform_norm := sorry
       redform_zero := sorry
       redform_succ := sorry
       redform_inf  := sorry
     
-    instance (eq : α → β → Prop) (n : Nat) : QReduce (Eq eq) (redLvl n) where
+    instance (c : Compression α β) (n : Nat) : QReduce (Eq c) (redLvl n) where
       reduce := id
       is_reduce := sorry
       eq_reduce := sorry
       preserve_stronger := sorry
 
-    -- ℝ^(n×m) := (ℝ^n)^m or (ℝ^m)^n ...
-
-    instance [Zero α] [DecidableEq α] : QReduce (Eq (λ (a : α) (_ : Unit) => (a=0))) (normLvl) where
+    instance (c : Compression α β) : QReduce (Eq c) (normLvl) where
       reduce := λ x =>
         match x with
-        | compr x => compr ()
-        | uncompr x => if x=0 then compr () else uncompr x
+        | compr x => compr x
+        | val   x => if h : c.canCompress x then compr (c.compress x) else val x
       is_reduce := sorry
       eq_reduce := sorry
       preserve_stronger := sorry
 
+    def project (x : Repr α β) (c : Compression α β) : β :=
+      match x with
+      | compr x => x
+      | val   x => c.compress x
     
   end Repr
       
 end Compressed
+
+def Compressed (α) {β} (c : Compression α β) (autoUncompress := true) := Quot' (Compressed.Repr.Eq c)
+
+namespace Compressed
+
+  variable {α β} {c c' : Compression α β}
+
+  open Quot'
+
+  instance : Coe α (Compressed α c) := ⟨λ a => ⟦⟨.val a, rawLvl, sorry⟩⟧⟩
+  instance : Coe β (Compressed α c) := ⟨λ b => ⟦⟨.compr b, normLvl, sorry⟩⟧⟩
+
+  def uncompress (x : Compressed α c) : α :=
+    (Quot.lift · sorry x) <| 
+      (λ x => 
+        match x.repr with
+        | .val a => a
+        | .compr x => c.uncompress x)
+
+  -- compress if possible
+  def maybe_compress (x : Compressed α c) : Compressed α c := 
+    (Quot.lift · sorry x) <|
+      (λ x => ⟦x.normalize⟧)
+
+  @[simp]
+  theorem maybe_compress_is_id (x : Compressed α c)
+    : x.maybe_compress = x := sorry
+
+  -- compress no matter what
+  def compress (x : Compressed α c) : Compressed α c :=
+    (Quot.lift · sorry x) <|
+      (λ x => ⟦⟨.compr (x.repr.project c), normLvl, sorry⟩⟧)
+
+  instance : Coe (Compressed α c (autoUncompress := true)) α := ⟨(λ x => x.uncompress)⟩
+
+  def map (x : Compressed α c) 
+    (f : α → γ) (g : β → γ) 
+    (h : ∀ a b, c.eq a b → f a = g b) 
+    : γ :=
+    (Quot.lift · sorry x) <|
+    (λ x => 
+      match x.repr with
+      | .val x => f x
+      | .compr x => g x)
+
+  def map₂ (x y : Compressed α c) 
+    (faa : α → α → γ) (fbb : β → β → γ)
+    (fab : α → β → γ) (fba : β → α → γ)
+    (h : (∀ xa xb ya yb,  c.eq xa xb → c.eq ya yb → (faa xa ya = fbb xb yb)) ∧
+         (∀ xa xb ya, c.eq xa xb → (faa xa ya = fba xb ya)) ∧ 
+         (∀ ya yb xa, c.eq ya yb → (faa xa ya = fab xa yb)))
+    := x.map 
+        (λ xa => y.map 
+         (λ ya => faa xa ya)
+         (λ yb => fab xa yb)
+         sorry)
+        (λ xb => y.map
+         (λ ya => fba xb ya)
+         (λ yb => fbb xb yb)
+         sorry) 
+        sorry
+
+  variable (x : Compressed α c) (x' : Compressed α c' (autoUncompress := false))
+
+  #check (x : α)
+  #check_failure (x' : α)
+
+namespace Compressed
+
+def ZeroCompression (α : Type) [Zero α] [DecidableEq α] : Compression α Unit where
+  canCompress a := (a = 0)
+  uncompress p := 0
+  compress a := ()
+
+  valid := sorry
+  unique := sorry
+
+namespace ZeroCompression
+
+  abbrev ZCompr (α : Type) [Zero α] [DecidableEq α] := Compressed α (ZeroCompression α)
+
+  variable {α : Type} [Zero α] [DecidableEq α]
+
+  instance : Zero (ZCompr α) := ⟨()⟩
+  instance [One α] : One (ZCompr α) := ⟨(1:α)⟩
+
+  instance [Monoid R] [AddMonoid α] [DistribMulAction R α] : HMul R (ZCompr α) (ZCompr α) := 
+    ⟨λ r x => x.map (λ a : α => (HMul.hMul r a : α)) (λ p => ()) sorry⟩
+
+  instance [AddMonoid α] : Add (ZCompr α) := 
+    ⟨λ x y : ZCompr α => 
+      (x.map₂ y
+        (λ x y => (x + y : α))
+        (λ _ _ => ())
+        (λ x _ => x)
+        (λ _ x => x)
+        sorry)⟩
+
+  instance [SubNegMonoid α] : Sub (ZCompr α) := 
+    ⟨λ x y : ZCompr α => 
+      (x.map₂ y
+        (λ x y => (x - y : α))
+        (λ _ _ => ())
+        (λ x _ => x)
+        (λ _ x => (-x : α))
+        sorry)⟩
+
+  instance [MulZeroClass α] : Mul (ZCompr α) := 
+    ⟨λ x y : ZCompr α => 
+      (x.map₂ y
+        (λ x y => (x * y : α))
+        (λ _ _ => ())
+        (λ x _ => ())
+        (λ _ x => ())
+        sorry)⟩
+
+  instance [SubNegMonoid α] : Neg (ZCompr α) := ⟨λ x => x.map (λ a => (-a : α)) (λ p => ()) 
+    (by 
+      intro a b h
+      apply Quot.sound; simp
+      simp[ZeroCompression] at h
+      have h' : -(0 : α) = (0 : α) := sorry -- here we need `SubNegMonoid α`
+      simp [h,h']
+      simp[Repr.Eq, ZeroCompression]
+      done)⟩
+
+  instance [AddCommGroup α] : AddCommGroup (ZCompr α) where
+    add_comm := sorry
+    add_assoc := sorry
+    add_zero := sorry
+    zero_add := sorry
+    add_left_neg := sorry
+    nsmul_zero' := sorry
+    nsmul_succ' n x := sorry
+    sub_eq_add_neg a b := sorry
+    gsmul_zero' := sorry
+    gsmul_succ' n x := sorry
+    gsmul_neg' n x := sorry
+
+  instance [Ring α] : Ring (ZCompr α) where
+    zero_mul := sorry
+    mul_zero := sorry
+    -- mul_comm := sorry
+    left_distrib := sorry
+    right_distrib := sorry
+    mul_one := sorry
+    one_mul := sorry
+    -- npow n x := x^(n.toReal) ----------- !!!
+    npow_zero' n := sorry
+    npow_succ' n x := sorry
+    mul_assoc := sorry
+    add_comm := sorry
+    add_assoc := sorry
+    add_zero := sorry
+    zero_add := sorry
+    add_left_neg := sorry
+    -- nsmul n x := (n.toReal) * x ----------------  !!!
+    nsmul_zero' := sorry
+    nsmul_succ' n x := sorry
+    sub_eq_add_neg a b := sorry
+    -- gsmul n x := (n.toReal) * x --------- !!!
+    gsmul_zero' := sorry
+    gsmul_succ' n x := sorry
+    gsmul_neg' n x := sorry
+    natCast n := (n : α)
+    natCast_zero := sorry
+    natCast_succ := sorry
+    intCast n := (AddGroupWithOne.intCast n : α)
+    intCast_ofNat := sorry
+    intCast_negSucc := sorry
+
+  instance [CommRing α] : CommRing (ZCompr α) where
+    mul_comm := sorry
+
+  instance [Semiring R] [AddCommGroup α] [Module R α] : Module R (ZCompr α) where
+    one_smul := sorry
+    mul_smul := sorry
+    smul_add := sorry
+    smul_zero := sorry
+    add_smul := sorry
+    zero_smul := sorry
+
+  instance [Vec α] : Vec (ZCompr α) := Vec.mk
+
+end ZeroCompression

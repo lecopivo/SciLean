@@ -17,7 +17,7 @@ namespace Table
   
   -- Mark function as a table
   abbrev toTable (f : α → β) : α ↦ β := f
-  @[simp] theorem toTable_apply (f : α → β) : toTable f = f := by rfl
+  -- @[simp] theorem toTable_apply (f : α → β) : toTable f = f := by rfl
   instance (ι : Type v) (α : Type w) : Table (ι ↦ α) ι α := ⟨λ f => f⟩
   -- TODO: support `table (i,j) => f i j`
   macro "table" xs:Lean.explicitBinders "=> " b:term : term => Lean.expandExplicitBinders `Table.toTable xs b
