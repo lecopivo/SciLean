@@ -1,4 +1,4 @@
-import Mathlib
+-- import Mathlib
 -- import SciLean.Mathlib.Algebra.Module.Basic
 import SciLean.Categories
 import SciLean.Quot.QuotQ
@@ -18,7 +18,6 @@ structure Compression (Val : Type) (Compr : Type) where
 
 namespace Compressed
 
-  -- β is the compressed type
   inductive Repr (Val : Type) (Compr : Type) where
   | val   (a : Val) : Repr Val Compr
   | compr (b : Compr) : Repr Val Compr
@@ -26,6 +25,12 @@ namespace Compressed
   namespace Repr
 
     variable {α β : Type}
+
+    instance [ToString α] [ToString β] : ToString (Repr α β) := 
+    ⟨λ x => 
+      match x with
+      | val   a => toString a
+      | compr b => toString b⟩
 
     def Eq (c : Compression α β) : Repr α β → Repr α β → Prop 
       | val   x, val   y => x = y
@@ -72,7 +77,11 @@ namespace Compressed
       
 end Compressed
 
+
+
 def Compressed (α) {β} (c : Compression α β) (autoUncompress := true) := Quot' (Compressed.Repr.Eq c)
+
+
 
 namespace Compressed
 
@@ -80,8 +89,10 @@ namespace Compressed
 
   open Quot'
 
+
   instance : Coe α (Compressed α c) := ⟨λ a => ⟦⟨.val a, rawLvl, sorry⟩⟧⟩
   instance : Coe β (Compressed α c) := ⟨λ b => ⟦⟨.compr b, normLvl, sorry⟩⟧⟩
+
 
   def uncompress (x : Compressed α c) : α :=
     (Quot.lift · sorry x) <| 
@@ -104,7 +115,6 @@ namespace Compressed
     (Quot.lift · sorry x) <|
       (λ x => ⟦⟨.compr (x.repr.project c), normLvl, sorry⟩⟧)
 
-  instance : Coe (Compressed α c (autoUncompress := true)) α := ⟨(λ x => x.uncompress)⟩
 
   def map (x : Compressed α c) 
     (f : α → γ) (g : β → γ) 
@@ -133,12 +143,24 @@ namespace Compressed
          sorry) 
         sorry
 
-  variable (x : Compressed α c) (x' : Compressed α c' (autoUncompress := false))
+  -- What is goint on with this coercion? It is doing odd stuff with `Coe`.
+  instance : CoeHead (Compressed α c (autoUncompress := true)) α := ⟨(λ x => x.uncompress)⟩
 
-  #check (x : α)
-  #check_failure (x' : α)
+  section FewTests
 
-namespace Compressed
+    variable (x : Compressed α c) (x' : Compressed α c' (autoUncompress := false))
+
+    #check (x : α)
+    #check_failure (x' : α)
+
+    variable {α β} [HMul α β β] (a : α) (b : β)
+    #check a * b
+
+  end FewTests
+  
+
+end Compressed
+
 
 def ZeroCompression (α : Type) [Zero α] [DecidableEq α] : Compression α Unit where
   canCompress a := (a = 0)
@@ -148,26 +170,39 @@ def ZeroCompression (α : Type) [Zero α] [DecidableEq α] : Compression α Unit
   valid := sorry
   unique := sorry
 
+
 namespace ZeroCompression
 
   abbrev ZCompr (α : Type) [Zero α] [DecidableEq α] := Compressed α (ZeroCompression α)
 
-  variable {α : Type} [Zero α] [DecidableEq α]
+  variable {α : Type} [DecidableEq α]
 
-  instance : Zero (ZCompr α) := ⟨()⟩
-  instance [One α] : One (ZCompr α) := ⟨(1:α)⟩
+  instance [Zero α] : Zero (ZCompr α) := ⟨()⟩
+  instance [One α] [Zero α] : One (ZCompr α) := ⟨(1:α)⟩
 
-  instance [Monoid R] [AddMonoid α] [DistribMulAction R α] : HMul R (ZCompr α) (ZCompr α) := 
-    ⟨λ r x => x.map (λ a : α => (HMul.hMul r a : α)) (λ p => ()) sorry⟩
+  instance {R : Type} [Monoid R] [AddMonoid α] [DistribMulAction R α]  : HMul R (ZCompr α) (ZCompr α) := 
+    ⟨λ r x => x.map (λ a : α => (HMul.hMul r a : α)) (λ p => ()) 
+     (by 
+      simp[Compressed.Repr.Eq, ZeroCompression]
+      apply Quot.sound; simp
+      apply (DistribMulAction.smul_zero)
+     )⟩
 
-  instance [AddMonoid α] : Add (ZCompr α) := 
+  instance {α : Type} [DecidableEq α] [AddMonoid α] : Add (ZCompr α) := 
     ⟨λ x y : ZCompr α => 
       (x.map₂ y
         (λ x y => (x + y : α))
         (λ _ _ => ())
         (λ x _ => x)
         (λ _ x => x)
-        sorry)⟩
+        (by 
+      simp[Compressed.Repr.Eq, ZeroCompression]
+      constructor
+      . intros _ _ h h'; apply Quot.sound; simp[h,h']
+      constructor
+      . intros _ _ h; apply Quot.sound; simp[h]
+      . intros _ _ h; apply Quot.sound; simp[h]
+     ))⟩
 
   instance [SubNegMonoid α] : Sub (ZCompr α) := 
     ⟨λ x y : ZCompr α => 
@@ -176,7 +211,14 @@ namespace ZeroCompression
         (λ _ _ => ())
         (λ x _ => x)
         (λ _ x => (-x : α))
-        sorry)⟩
+        (by 
+      simp[Compressed.Repr.Eq, ZeroCompression]
+      constructor
+      . intros _ _ h h'; apply Quot.sound; simp[h,h']; admit
+      constructor
+      . intros _ _ h; apply Quot.sound; simp[h]; admit
+      . intros _ _ h; apply Quot.sound; simp[h]; admit
+     ))⟩
 
   instance [MulZeroClass α] : Mul (ZCompr α) := 
     ⟨λ x y : ZCompr α => 
@@ -185,17 +227,21 @@ namespace ZeroCompression
         (λ _ _ => ())
         (λ x _ => ())
         (λ _ x => ())
-        sorry)⟩
+        (by 
+      simp[Compressed.Repr.Eq, ZeroCompression]
+      constructor
+      . intros _ _ h h'; apply Quot.sound; simp[h,h']; admit
+      constructor
+      . intros _ _ h; apply Quot.sound; simp[h]; admit
+      . intros _ _ h; apply Quot.sound; simp[h]; admit
+     ))⟩
 
   instance [SubNegMonoid α] : Neg (ZCompr α) := ⟨λ x => x.map (λ a => (-a : α)) (λ p => ()) 
     (by 
-      intro a b h
+      simp[Compressed.Repr.Eq, ZeroCompression]
       apply Quot.sound; simp
-      simp[ZeroCompression] at h
-      have h' : -(0 : α) = (0 : α) := sorry -- here we need `SubNegMonoid α`
-      simp [h,h']
-      simp[Repr.Eq, ZeroCompression]
-      done)⟩
+      admit -- -0=0 this should be provable from `SubNegMonoid`
+     )⟩
 
   instance [AddCommGroup α] : AddCommGroup (ZCompr α) where
     add_comm := sorry
@@ -256,3 +302,18 @@ namespace ZeroCompression
   instance [Vec α] : Vec (ZCompr α) := Vec.mk
 
 end ZeroCompression
+
+namespace HOHO
+
+  open ZeroCompression
+
+  def a : ZCompr Int := (42 : Int)
+  def b : ZCompr Int := ()
+  def c := a * b
+  def d := a + b + a 
+  #eval a.toDebugString
+  #eval b.toDebugString
+  #eval c.toDebugString
+  #eval d.toDebugString
+
+end HOHO
