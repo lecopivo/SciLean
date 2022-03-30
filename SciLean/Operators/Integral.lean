@@ -18,11 +18,11 @@ def integral {X} [Vec X] (f : ℝ ⟿ X) : ℝ × ℝ → X := integral! f.1
 noncomputable
 abbrev mkIntegral {X} [Vec X] (f : ℝ → X) [h : IsSmooth f] := integral ⟨f, h⟩ 
 
-macro "∫!" xs:Lean.explicitBinders ", " b:term : term 
-  => Lean.expandExplicitBinders `SciLean.integral! xs b
+-- macro "∫!" xs:Lean.explicitBinders ", " b:term : term 
+--   => Lean.expandExplicitBinders `SciLean.integral! xs b
 
-macro "∫" xs:Lean.explicitBinders ", " b:term : term 
-  => Lean.expandExplicitBinders `SciLean.mkIntegral xs b
+-- macro "∫" xs:Lean.explicitBinders ", " b:term : term 
+--   => Lean.expandExplicitBinders `SciLean.mkIntegral xs b
 
 -- variable (f : ℝ → ℝ → ℝ)
 
@@ -31,17 +31,17 @@ macro "∫" xs:Lean.explicitBinders ", " b:term : term
 variable (f : ℝ ⟿ ℝ ⟿ ℝ)
 
 instance {X} [Vec X] : IsLin (integral : (ℝ ⟿ X) → ℝ × ℝ → X) := sorry
-instance {X} [Vec X] : IsLin (λ f : (ℝ ⟿ X) => ∫ t, f t) := sorry
+instance {X} [Vec X] : IsLin (λ f : (ℝ ⟿ X) => mkIntegral λ t => f t) := sorry
 
 -- instance {X} [Vec X] : IsLin (integral! : (ℝ → X) → ℝ × ℝ → X) := sorry
-instance {X} [Vec X] : IsLin (λ f : (ℝ ⟿ X) => ∫! t, f t) := sorry
+instance {X} [Vec X] : IsLin (λ f : (ℝ ⟿ X) => integral! λ t => f t) := sorry
 
 example : IsSmooth (λ x y => f y x) := by infer_instance
 -- example : IsSmooth (λ x y : ℝ => f (y + x) y) := by infer_instance
 
 -- #check ∫ y, (∫ x, λ y ⟿ f x y)
 
-#check ∫ x, f x
+-- #check ∫ x, f x
 
 
 --  δ δ!  |  ∇ ∇!  |  ∫ ∫!  |  † †!

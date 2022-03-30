@@ -1,10 +1,15 @@
 import Lean
 import Lean.Meta.Basic
 import Lean.Elab.Tactic.Basic
+import Lean.Elab.Tactic.ElabTerm
+import Lean.Elab.Tactic.Conv.Basic
+
 
 open Lean 
 open Lean.Meta
 open Lean.Elab.Tactic
+
+namespace BubbleLimit
 
 partial def replaceSubExpression (e : Expr) (test : Expr → Bool) (replace : Expr → MetaM Expr) : MetaM Expr := do
 if (test e) then
@@ -13,13 +18,7 @@ else
 match e with
   | Expr.app f x d => do pure (mkApp (← (replaceSubExpression f test replace)) (← (replaceSubExpression x test replace)))
   | Expr.lam n x b _ => pure $ mkLambda n e.binderInfo x (← replaceSubExpression b test replace)
-
--- do lambdaTelescope e fun xs b => do
---             mkLambdaFVars xs (← replaceSubExpression b test replace)
-  -- 
-  -- this is incomplete and should use lambda telescope
   | _ => pure e
-
 
 -- use 
 def getlimit  (e : Expr) : MetaM Expr := do
@@ -37,7 +36,7 @@ def getlimit  (e : Expr) : MetaM Expr := do
         mkAppM' lim args)
     mkLambdaFVars #[nFv] (← replaceSubExpression e test replace)
   
-def liftLimitCore (mvarId : MVarId) (N msg : Expr) : MetaM (List MVarId) :=
+def bubbleLimitCore (mvarId : MVarId) : MetaM (List MVarId) :=
   withMVarContext mvarId do
     let tag      ← getMVarTag mvarId
     let target   ← getMVarType mvarId
@@ -46,24 +45,45 @@ def liftLimitCore (mvarId : MVarId) (N msg : Expr) : MetaM (List MVarId) :=
     let spec := target.getAppArgs[1]
     let lim ← getlimit spec
 
-    let new_spec := (mkApp lim N)
-    let new_target ← mkAppM `SciLean.Impl #[mkApp lim N]
+    let new_spec ← mkAppM `SciLean.limit #[lim]
+    let new_target ← mkAppM `SciLean.Impl #[new_spec]
     let new_mvar  ← mkFreshExprSyntheticOpaqueMVar new_target tag
-    let eq       ← mkEq spec (← mkAppM `SciLean.limit #[lim])
+    let eq       ← mkEq new_target target
     let eq_mvar  ← mkFreshExprSyntheticOpaqueMVar eq
 
-    assignExprMVar mvarId (← mkAppM `SciLean.ImplSpec.limit #[lim, N, new_mvar, msg, eq_mvar])
+    assignExprMVar mvarId (← mkAppM `Eq.mp #[eq_mvar, new_mvar])
 
     return [eq_mvar.mvarId!, new_mvar.mvarId!]  
 
-syntax (name := lift_limit) "lift_limit" (colGt term:max)* : tactic
+syntax (name := bubble_limit) "bubble_limit": tactic
 
-@[tactic lift_limit] def tacticLiftLimit : Tactic
-| `(tactic| lift_limit $N:term $msg:term) => do 
-          let N ← elabTerm N none true
-          let msg ← elabTerm msg none true
+@[tactic bubble_limit] def tacticBubbleLimit : Tactic
+| `(tactic| bubble_limit) => do 
           let mainGoal ← getMainGoal
-          let todos ← liftLimitCore mainGoal N msg
+          let todos ← bubbleLimitCore mainGoal
           setGoals todos
           pure ()
 | _ => Lean.Elab.throwUnsupportedSyntax
+
+
+syntax (name := bubble_lim) "bubble_lim": conv
+
+open Conv
+
+#check Eq.trans
+
+@[tactic bubble_lim] def tacticBubbleLim : Tactic
+| `(conv| bubble_lim) => do  
+  withMVarContext (← getMainGoal) do
+    let lhs ← getLhs
+    let f ← getlimit lhs
+    let lhs' ← mkAppM `SciLean.limit #[f]
+
+    let eqGoal ← mkFreshExprSyntheticOpaqueMVar (← mkEq lhs lhs')
+
+    updateLhs lhs' eqGoal
+    replaceMainGoal [eqGoal.mvarId!, (← getMainGoal)]
+| _ => Lean.Elab.throwUnsupportedSyntax
+
+end BubbleLimit
+  

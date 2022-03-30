@@ -30,9 +30,8 @@ example
     (λ (f : Fin n → ℝ) i => f (i - 1) + f (i + 1)) 
   := 
 by
-  simp[gradient] 
-  unfold_atomic; unfold hold
-  simp
+  simp[gradient]
+  simp[AtomicAdjointFun.adj,hold]
   funext x j; simp
   done
 
@@ -45,8 +44,7 @@ example
   := 
 by 
   simp[gradient]
-  unfold_atomic; unfold hold
-  simp
+  simp[AtomicAdjointFun.adj,hold]
   done
 
 
@@ -56,8 +54,6 @@ example {X} [Hilbert X] (x : X)
     ∇ (λ x : X => ∥x∥²) x = (2 : ℝ) * x 
   := 
 by simp[gradient]
-   unfold_atomic
-   simp
    done
 
 -- set_option synthInstance.maxHeartbeats 1000 in
@@ -69,8 +65,7 @@ example (g : Fin n → ℝ)
   := 
 by
   simp[gradient]
-  unfold_atomic; unfold hold
-  simp
+  simp[AtomicAdjointFun.adj,hold]
   funext i; simp
   done
 

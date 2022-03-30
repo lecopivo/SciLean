@@ -12,10 +12,10 @@ attribute [reducible] Prod.Get.T Prod.Get.geti
 instance (priority := low) : Prod.Get X 0 := ⟨λ x => x⟩
 
 @[reducible]
-instance : Prod.Get (X×Y) 0 := ⟨λ (x,y) => x⟩
+instance : Prod.Get (X×Y) 0 := ⟨λ x => x.fst⟩ -- `λ (x,y) => x` causes some trouble while infering IsSmooth
 
 @[reducible]
-instance [pg : Prod.Get Y n] : Prod.Get (X×Y) (n+1) := ⟨λ (x,y) => pg.geti y⟩
+instance [pg : Prod.Get Y n] : Prod.Get (X×Y) (n+1) := ⟨λ x => pg.geti x.snd⟩ -- `λ (x,y) => pg.geti y` causes some trouble while infering IsSmooth
 
 abbrev Prod.get {X Y} (i : Nat) [pg : Prod.Get (X×Y) i] (x : X×Y) := pg.geti x
 abbrev Prod.getOp {X Y} (idx : Nat) [pg : Prod.Get (X×Y) idx] (self : X×Y) := pg.geti self

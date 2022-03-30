@@ -19,6 +19,13 @@ inductive ImplSpec {α : Type _} : (spec : α → Prop) → Type _
           (help : String) 
           : spec (limit l) → ImplSpec spec
 
+  -- | newSpec {newSpec : α → Prop}
+  --         {oldSpec : α → Prop}
+  --         (valid : ∀ α, newSpec a → oldSpec a)
+  --         (impl : α)
+  --         (h : newSpec impl) 
+  --         : ImplSpec oldSpec
+
   | check {spec : α → Prop} 
           {P : Prop} [Decidable P]
           (impl : P → ImplSpec spec)

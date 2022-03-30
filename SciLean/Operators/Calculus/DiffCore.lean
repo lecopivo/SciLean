@@ -18,7 +18,7 @@ theorem diff_of_const
 
 @[simp low-3]
 theorem diff_of_swap (f : α → X → Y) [∀ i, IsSmooth (f i)]
-  : δ (λ (x : X) a => f a x) = λ x dx a => δ (f a) x dx := sorry
+  : δ (λ x a => f a x) = λ x dx a => δ (f a) x dx := sorry
 
 @[simp low-1]
 theorem diff_of_comp

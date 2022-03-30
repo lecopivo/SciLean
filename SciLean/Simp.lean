@@ -25,17 +25,24 @@ variable (r : ℝ)
 
 @[simp] theorem mul_one' (x : ℝ) : x * 1 = x := by simp
 @[simp] theorem one_mul (x : X) : (1:ℝ) * x = x := sorry
+@[simp] theorem neg_one_mul (x : X) : (-1:ℝ) * x = -x := sorry
+
+@[simp] theorem div_one (x : ℝ) : x/1 = x := sorry
+
 -- @[simp] theorem mul_one (r : ℝ) : r * (1:ℝ) = r := sorry
 
 -- @[simp] theorem neg_neg (x : X) : - - x = x := by simp
 
-@[simp] theorem neg_sub (x y : X) : x - (-y) = x + y := sorry 
+@[simp] theorem sub_neg (x y : X) : x - (-y) = x + y := sorry 
 @[simp] theorem add_neg (x y : X) : x + (-y) = x - y := sorry
+@[simp] theorem neg_sub (x y : X) : -x - y = -(x + y) := sorry 
+
 @[simp] theorem eval_neg (f : α → X) (x : α) : (-f) x = -(f x) := sorry
 
 @[simp] theorem mul_neg_neg (r : ℝ) (x : X) : (-r) * (-x) = r * x := sorry
--- @[simp] theorem mul_neg_1 (r : ℝ) (x : X) : (-r) * x = -(r * x) := sorry
--- @[simp] theorem mul_neg_2 (r : ℝ) (x : X) : r * (-x) = -(r * x) := sorry
+theorem mul_neg_1 (r : ℝ) (x : X) : (-r) * x = -(r * x) := sorry
+theorem mul_neg_2 (r : ℝ) (x : X) : r * (-x) = -(r * x) := sorry
+theorem smul_smul_mul (r s: ℝ) (x : X) : r * (s * x) = ((r * s) * x) := sorry
 
 @[simp] theorem pair_mul (r : ℝ) (x : X) (y : Y) : r * (x, y) = (r * x, r * y) := sorry
 

@@ -87,8 +87,9 @@ section NN
   instance (x : W₁ × W₂) : SciLean.HasAdjoint (δ (fun x => x.1) x) := sorry
   instance (x : W₁ × W₂) : SciLean.HasAdjoint (δ (fun x => x.2) x) := sorry
 
-  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (δ f x)] : SciLean.HasAdjoint (δ (fun x => (f x).1) x) := by simp infer_instance
-  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (δ f x)] : SciLean.HasAdjoint (δ (fun x => (f x).2) x) := by simp infer_instance
+
+  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (δ f x)] : SciLean.HasAdjoint (δ (fun x => (f x).1) x) := by simp admit
+  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (δ f x)] : SciLean.HasAdjoint (δ (fun x => (f x).2) x) := by simp admit
 
 
   -- instance : ∀ (x : W₁ × W₂ × W₃), SciLean.HasAdjoint (SciLean.differential (fun x => x.2.2) x) := by infer_instance done
@@ -118,7 +119,7 @@ section NN
   by 
     funext x; simp[reverse_diff,reverse_comp]
     funext dy; simp
-    done
+    admit
 
   @[simp]
   theorem reverse_diff_of_snd_comp (f : X → Y×Z) [IsSmooth f] [∀ x, HasAdjoint (δ f x)]
@@ -126,7 +127,7 @@ section NN
   by 
     funext x; simp[reverse_diff,reverse_comp]
     funext dy; simp
-    done
+    admit
 
   -- instance : SciLean.IsSmooth fun x => f₂ x.2.1 (f₁ x.1 x₀)
   -- set_option trace.Meta.synthInstance true in
@@ -149,7 +150,7 @@ section NN
         simp [reverse_comp, Function.comp]
       conv =>
         enter [2,2,2,2,2]
-        simp [reverse_comp, reverse_diff_of_atomic, Function.comp, ReverseDiff.reverse_lmap]
+        simp [reverse_comp, Function.comp, ReverseDiff.reverse_lmap]
     . 
     -- simp (config := {singlePass := true})
 

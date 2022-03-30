@@ -10,20 +10,20 @@ variable (f df : ℝ ⟿ ℝ)
 -- TODO: Move this somewhere else ... 
 @[simp high] theorem differential_of_hom_subtype {X Y} [Vec X] [Vec Y] : δ (Subtype.val : (X ⟿ Y) → (X → Y)) = λ f df => df.1 := sorry
 
-example : δ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, f t)) f df = ∫ t, df t := by
+example : δ (λ (f : (ℝ ⟿ ℝ)) => (mkIntegral λ t => f t)) f df = mkIntegral λ t => df t := by
   simp[mkIntegral] admit
 
 example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t)) f df = λ t => (df t) * (f t) + (f t) * (df t) :=
 by
-  simp admit
+  simp done
 
-example (t b : ℝ) : δ (fun (f : ℝ ⟿ ℝ) (t : ℝ) => (f t) * (f t)) f df t = (df t) * (f t) + (f t) * (df t) := by simp admit
-example (t : ℝ) : δ (fun (f : ℝ ⟿ ℝ) (t : ℝ) => (f t) * (f t)) f df t = (df t) * (f t) + (f t) * (df t) := by simp admit
+example (t b : ℝ) : δ (fun (f : ℝ ⟿ ℝ) (t : ℝ) => (f t) * (f t)) f df t = (df t) * (f t) + (f t) * (df t) := by simp done
+example (t : ℝ) : δ (fun (f : ℝ ⟿ ℝ) (t : ℝ) => (f t) * (f t)) f df t = (df t) * (f t) + (f t) * (df t) := by simp done
 
 
 variable (f : ℝ ⟿ ℝ) (x : ℝ×ℝ)
 
-#check δ (∫ t, f t)
+-- #check δ (∫ t, f t)
 
 class Dual (X Y : Type) where
   dual : (X → Y) → X

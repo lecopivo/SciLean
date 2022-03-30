@@ -8,7 +8,7 @@ variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 
 set_option maxHeartbeats 1500
 set_option synthInstance.maxHeartbeats 250
-set_option synthInstance.maxSize 50
+set_option synthInstance.maxSize 60
 
 example (a : α) (f : Y → α → Z) [IsSmooth f] (g : X → Y) [IsSmooth g]
   : δ (λ x => f (g x) a) = λ x dx => δ f (g x) (δ g x dx) a := by simp
@@ -44,10 +44,9 @@ example (f : Y₁ → Y₂ → β → Z) (g1 : X → Y₁) (g2 : X → Y₂)
   [IsSmooth f] [∀ y1, IsSmooth (f y1)] [IsSmooth g1] [IsSmooth g2]
   : δ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) = λ x dx b => δ f (g1 x) (δ g1 x dx) (g2 x) b + δ (f (g1 x)) (g2 x) (δ g2 x dx) b := by simp
 
-example {X} [Hilbert X] : δ (λ x : X => ⟪x, x⟫) = λ x dx => 2 * ⟪dx, x⟫ :=
-  by simp[AtomicSmoothFun₂.df₁, AtomicSmoothFun₂.df₂]
-     simp_rw [SemiHilbert.semi_inner_sym] simp
-
+example {X} [Hilbert X] : δ (λ x : X => ⟪x, x⟫) = λ x dx => 2 * ⟪dx, x⟫ := 
+by 
+  simp; simp_rw [SemiHilbert.semi_inner_sym]; simp
 
 
 --- Other a bit more disorganized tests
