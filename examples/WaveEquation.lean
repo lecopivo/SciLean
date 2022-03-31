@@ -19,13 +19,7 @@ def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H n m
 by
   -- Unfold Hamiltonian definition and compute gradients
   simp[HamiltonianSystem, H]
-  simp[gradient, AtomicSmoothFun₂.df₁, AtomicSmoothFun₂.df₂, AtomicSmoothFun.df, AtomicAdjointFun.adj, AtomicAdjointFun₂.adj₁, AtomicAdjointFun₂.adj₂]
-  -- simp[gradient]
-  -- unfold_atomic
-  -- simp[hold]
-  -- unfold_atomic
-  -- simp[hold]
-  -- simp[gradient, AtomicSmoothFun₂.df₁, AtomicSmoothFun₂.df₂, AtomicSmoothFun.df]
+  simp[gradient, AtomicAdjointFun.adj, AtomicAdjointFun₂.adj₁, AtomicAdjointFun₂.adj₂]
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
