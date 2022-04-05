@@ -22,6 +22,16 @@ constant differential (f : X → Y) (x dx : X) : Y :=
 
 prefix:max "δ" => differential
 
+
+--------------------------
+-- Adjoint Differential --
+--------------------------
+noncomputable 
+def adjoint_differential (f : U → V) (x : U) (dy : V) : U := (δ f x)† dy
+
+prefix:max "δ†" => adjoint_differential
+
+
 ----------------
 -- Derivative --
 ----------------
@@ -35,7 +45,7 @@ prefix:max "ⅆ" => derivative
 -- Gradient --
 -------------- 
 noncomputable
-abbrev gradient [Hilbert U] (f : U → ℝ) : U → U := λ x => (δ f x)† 1
+abbrev gradient [Hilbert U] (f : U → ℝ) : U → U := λ x => δ† f x 1
 
 prefix:max "∇" => gradient
 
@@ -54,7 +64,7 @@ prefix:max "𝓣" => forward_diff
 open SemiInner in
 noncomputable 
 def reverse_diff 
-  (f : U → V) : U → V × (V → U) := λ x => (f x, (δ f x)†)
+  (f : U → V) : U → V × (V → U) := λ x => (f x, δ† f x)
 
 prefix:max "𝓑" => reverse_diff
 

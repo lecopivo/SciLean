@@ -1,4 +1,6 @@
+import Lean
 import SciLean.Mathlib.Data.Enumtype
+import SciLean.Notation
 
 --- In this file we define bunch of conventions and conveniences through out the library
 
@@ -13,3 +15,18 @@ notation "!?" P => (sorry : P)
 
 
 macro:max "#" noWs t:term : term => `(⟨$t, by decide⟩)
+
+
+open Lean.Meta
+
+initialize differentiation_simp_extension 
+  : SimpExtension ← registerSimpAttr `diff "Differentiation Rules"
+
+initialize differentiation_core_simp_extension 
+  : SimpExtension ← registerSimpAttr `diff_core "Core Differentiation Rules"
+
+
+-- initialize differentiation_simp_extension 
+--   : SimpExtension ← registerSimpAttr `my_simp "my own simp attribute"
+
+

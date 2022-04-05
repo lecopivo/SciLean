@@ -13,14 +13,14 @@ variable {n : Nat} [NonZero n]
 example (y : X)
   : 
     ∇ (λ x : X => 2 * ⟪x,x⟫) = λ x : X => (2 : ℝ) * ((2 : ℝ) * x)
-  := by autograd done
+  := by simp[gradient, adjoint_differential] done
 
 example (g : ι → ℝ) 
   : 
     ∇ (λ (f : ι → ℝ) => ∑ i, f i) g 
     = 
     (λ _ => (1 : ℝ)) 
-  := by autograd done
+  := by simp[gradient, adjoint_differential] done
 
 -- set_option synthInstance.maxHeartbeats 2000 in
 -- set_option maxHeartbeats 50000 in
@@ -30,7 +30,7 @@ example
     (λ (f : Fin n → ℝ) i => f (i - 1) + f (i + 1)) 
   := 
 by
-  simp[gradient]
+  simp[gradient, adjoint_differential]
   simp[AtomicAdjointFun.adj,hold]
   funext x j; simp
   done
@@ -43,7 +43,7 @@ example
     λ (f : ℝ^n) => PowType.intro λ i => f[i - 1] + f[i + 1]
   := 
 by 
-  simp[gradient]
+  simp[gradient, adjoint_differential]
   simp[AtomicAdjointFun.adj,hold]
   done
 
@@ -53,7 +53,7 @@ example {X} [Hilbert X] (x : X)
   : 
     ∇ (λ x : X => ∥x∥²) x = (2 : ℝ) * x 
   := 
-by simp[gradient]
+by simp[gradient, adjoint_differential]
    done
 
 -- set_option synthInstance.maxHeartbeats 1000 in
@@ -64,7 +64,7 @@ example (g : Fin n → ℝ)
     (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
   := 
 by
-  simp[gradient]
+  simp[gradient, adjoint_differential]
   simp[AtomicAdjointFun.adj,hold]
   funext i; simp
   done

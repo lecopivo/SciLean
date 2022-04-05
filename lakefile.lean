@@ -4,7 +4,7 @@ open Lake DSL System
 package SciLean {
   dependencies := #[{
     name := `mathlib
-    src := Source.git "https://github.com/leanprover-community/mathlib4.git" "ca6e1a007d913217db123733ce0bce4e028985d9"
+    src := Source.git "https://github.com/leanprover-community/mathlib4.git" "977e6e1ddb5306b83460b3c1c86ca43cac969326"
   }]
 }
 

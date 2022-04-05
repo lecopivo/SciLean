@@ -7,7 +7,7 @@ variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 
 set_option maxHeartbeats 500
-set_option synthInstance.maxHeartbeats 110
+set_option synthInstance.maxHeartbeats 160
 set_option synthInstance.maxSize 30
 
 --- Test 0 

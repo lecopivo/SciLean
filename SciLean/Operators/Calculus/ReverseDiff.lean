@@ -14,7 +14,7 @@ variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 theorem reverse_diff_of_id
   : 𝓑 (λ x : U => x) = (λ x => (x, λ dx => dx)) :=
 by 
-  simp[reverse_diff] done
+  simp[reverse_diff, adjoint_differential] done
 
 instance (x : U) : HasAdjoint (δ (λ x => x) x) := by simp infer_instance done
 
@@ -26,7 +26,7 @@ theorem reverse_diff_of_swap
     λ x : U => (λ i : ι => f i x, 
                 λ dg : ι → V => ∑ i, (𝓑 (f i) x).2 (dg i)) :=
 by 
-  simp[reverse_diff] done
+  simp[reverse_diff, adjoint_differential] done
 
 instance (f : ι → U → V) [∀ i, IsSmooth (f i)] [∀ i x, HasAdjoint (δ (f i) x)] (x : U)
   : HasAdjoint (δ (λ x i => f i x) x) := by simp infer_instance done
@@ -46,7 +46,7 @@ theorem reverse_diff_of_comp
   (g : U → V) [IsSmooth g] [∀ x, HasAdjoint (δ g x)]
   : 𝓑 (λ x => f (g x)) = (λ x => (𝓑 f • 𝓑 g) x) := 
 by 
-  funext x; simp[reverse_diff, reverse_diff, reverse_comp]
+  funext x; simp[reverse_diff, reverse_diff, reverse_comp, adjoint_differential]
   funext dz; simp
   done
 
@@ -80,7 +80,7 @@ theorem reverse_diff_of_diag
     = 
     𝓑 (Function.uncurry f) • reverse_lmap (𝓑 g₁) (𝓑 g₂) := 
 by
-  funext x; simp [reverse_diff, reverse_comp, Function.uncurry]
+  funext x; simp [reverse_diff, reverse_comp, Function.uncurry, adjoint_differential]
   funext dz; simp
   done
 
@@ -103,7 +103,7 @@ theorem reverse_diff_of_parm
     -- maybe this variant is better - which one produces better code?
     -- (λ x : U => (f x i, λ dv => (𝓑 f x).2 (λ j => kron i j * dv))) := 
 by
-  funext fx; simp [reverse_diff, reverse_comp]
+  funext fx; simp [reverse_diff, reverse_comp, adjoint_differential]
   funext dv; simp
   done
 

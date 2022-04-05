@@ -59,6 +59,15 @@ namespace PowType.powType
   -- instance {X} [PowType X 1] : Coe (X^1) X := ⟨λ x => x.get 0⟩
   -- instance {X} [PowType X 0] : Coe (X^(0:Nat)) Unit := ⟨λ x => ()⟩
 
+  def modify {X} {n : Nat} [PowType X] [Inhabited X] (x : X^n) (i : Fin n) (f : X → X) : X^n := Id.run do
+    let mut x := x
+    let xi := x[i]
+    -- Reset x[i] to ensure `xi` be modified in place if possible
+    -- I do not thin we can take the same liberty as Array.modifyMUnsafe and assign `unsafeCast ()`
+    x := x.set i default
+    x := x.set i (f xi)
+    x
+
   def mapIdx {X} {n : Nat} [PowType X] (x : X^n) (f : Fin n → X → X) : X^n :=
     Id.run do
     let mut x' := x
@@ -69,6 +78,8 @@ namespace PowType.powType
 
   def map {X} {n : Nat} [PowType X] (x : X^n) (f : X → X) : X^n := 
     x.mapIdx λ i xi => f xi
+
+  
 
   section Operations
 
@@ -86,6 +97,34 @@ namespace PowType.powType
 
     instance [One X]  : One (X^n)  := ⟨intro λ _ => 1⟩
     instance [Zero X] : Zero (X^n) := ⟨intro λ _ => 0⟩
+
+    instance [LT X] : LT (X^n) := ⟨λ u v => ∀ i, u[i] < v[i]⟩ 
+    instance [LE X] : LE (X^n) := ⟨λ u v => ∀ i, u[i] ≤ v[i]⟩ 
+
+    instance [DecidableEq X] : DecidableEq (X^n) := 
+      λ u v => Id.run do
+        let mut eq : Bool := true
+        for i in [0:n] do
+          if u[⟨i,sorry⟩] ≠ v[⟨i,sorry⟩] then
+            eq := false
+            break
+        if eq then isTrue sorry else isFalse sorry
+
+    instance [LT X] [∀ x y : X, Decidable (x < y)] (u v : X^n) : Decidable (u < v) := Id.run do
+      let mut eq : Bool := true
+      for i in [0:n] do
+        if ¬(u[⟨i,sorry⟩] < v[⟨i,sorry⟩]) then
+          eq := false
+          break
+      if eq then isTrue sorry else isFalse sorry
+
+    instance [LE X] [∀ x y : X, Decidable (x ≤ y)] (u v : X^n) : Decidable (u ≤ v) := Id.run do
+      let mut eq : Bool := true
+      for i in [0:n] do
+        if ¬(u[⟨i,sorry⟩] ≤ v[⟨i,sorry⟩]) then
+          eq := false
+          break
+      if eq then isTrue sorry else isFalse sorry
  
   end Operations
 

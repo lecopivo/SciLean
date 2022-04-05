@@ -27,7 +27,7 @@ namespace Differential.Tests
   example : IsSmooth (λ (g : X → X) (x : X) => F (g x) y) := by infer_instance done
 
   example : δ (λ x => x) x dx = dx := by simp done
-  example : δ (λ x => f (g x)) x dx = δ f (g x) (δ g x dx) := by simp done
+  example : δ (λ x => f (g x)) x dx = δ f (g x) (δ g x dx) := by simp (config := {singlePass := true}) only [diff] done
   example : δ (λ x => f (g (f1 x))) x dx = δ f (g (f1 x)) (δ g (f1 x) (δ f1 x dx)) := by simp done
   example : δ (λ (x : X) => F x (g x)) x dx = δ F x dx (g x) + δ (F x) (g x) (δ g x dx) := by simp  done
   example : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx (g x) + δ (F x) (g x) (δ g x dx)) := by simp done
@@ -40,7 +40,10 @@ namespace Differential.Tests
   example (y x dx : X) : δ (λ x : X => y) x dx = 0 := by simp done
   example : δ (λ x => x + x) x dx = dx + dx := by simp done
   example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr*r + (r + 1)*dr := by simp done
-  example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + (r * r + 1) * dr := by autodiff done
+
+  set_option trace.Meta.Tactic.simp.unify true in
+  example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by simp only [↓ diff] done
+
 
   variable (u du u' : U) (v dv : V)
   example : δ (λ u : U => ⟪u,u'⟫) u du = ⟪du,u'⟫ := by simp done
@@ -80,21 +83,21 @@ namespace Differential.Tests
     
   -- end DifferentiatingSums
 
-  section integral
+  -- section integral
 
-    variable (f df : ℝ ⟿ ℝ)
+  --   variable (f df : ℝ ⟿ ℝ)
 
-    example : δ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, f t)) f df = ∫ t, df t := by
-      simp[mkIntegral] done
+  --   example : δ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, f t)) f df = ∫ t, df t := by
+  --     simp[mkIntegral] done
 
-    instance : IsLin (Subtype.val : (X ⟿ Y) → (X → Y)) := by infer_instance
+  --   instance : IsLin (Subtype.val : (X ⟿ Y) → (X → Y)) := by infer_instance
 
-    @[simp high] theorem differential_of_hom_subtype {X Y} [Vec X] [Vec Y] : δ (Subtype.val : (X ⟿ Y) → (X → Y)) = λ f df => df.1 := sorry
+  --   @[simp high] theorem differential_of_hom_subtype {X Y} [Vec X] [Vec Y] : δ (Subtype.val : (X ⟿ Y) → (X → Y)) = λ f df => df.1 := sorry
 
-    example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t)) f df = λ t => (df t) * (f t) + (f t) * (df t) :=
-    by
-      autodiff done
-      done
+  --   example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t)) f df = λ t => (df t) * (f t) + (f t) * (df t) :=
+  --   by
+  --     autodiff done
+  --     done
 
 
 
@@ -128,6 +131,6 @@ namespace Differential.Tests
     --   simp[mkIntegral]
     --   done
 
-  end integral
+--   end integral
 
-end Differential.Tests
+-- end Differential.Tests

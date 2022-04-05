@@ -61,7 +61,7 @@ example (i j : Fin n)
    :=
 by
   simp
-  simp[reverse_diff, Function.uncurry]
+  simp[reverse_diff, Function.uncurry, adjoint_differential]
   done
 
 
@@ -99,19 +99,19 @@ section NN
 
   @[simp]
   theorem reverse_diff_of_id
-    : 𝓑 (λ x : X => x) = λ x => (x, λ dx => dx) := by simp[reverse_diff] done
+    : 𝓑 (λ x : X => x) = λ x => (x, λ dx => dx) := by simp[reverse_diff, adjoint_differential] done
 
   @[simp]
   theorem reverse_diff_of_const (y : Y)
-    : 𝓑 (λ x : X => y) = λ x => (y, λ dy : Y => (0:X)) := by simp[reverse_diff] done
+    : 𝓑 (λ x : X => y) = λ x => (y, λ dy : Y => (0:X)) := by simp[reverse_diff, adjoint_differential] done
 
   @[simp]
   theorem reverse_diff_of_fst
-    : 𝓑 (λ xy : X×Y => xy.1) = λ xy => (xy.1, λ dx => (dx, (0:Y))) := by simp[reverse_diff] done
+    : 𝓑 (λ xy : X×Y => xy.1) = λ xy => (xy.1, λ dx => (dx, (0:Y))) := by simp[reverse_diff, adjoint_differential] done
 
   @[simp]
   theorem reverse_diff_of_snd
-    : 𝓑 (λ xy : X×Y => xy.2) = λ xy => (xy.2, λ dy => ((0:X), dy)) := by simp[reverse_diff] done
+    : 𝓑 (λ xy : X×Y => xy.2) = λ xy => (xy.2, λ dy => ((0:X), dy)) := by simp[reverse_diff, adjoint_differential] done
 
   @[simp]
   theorem reverse_diff_of_fst_comp (f : X → Y×Z) [IsSmooth f] [∀ x, HasAdjoint (δ f x)]

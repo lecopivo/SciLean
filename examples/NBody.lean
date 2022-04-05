@@ -9,6 +9,10 @@ set_option synthInstance.maxSize 2048
 set_option synthInstance.maxHeartbeats 500000
 set_option maxHeartbeats 500000
 
+#eval Id.run do
+  let x : ℝ^(3:ℕ) := ^[1.0,2.0,3.0]
+  x
+
 section SNorm
 
   variable {X} [Hilbert X]
@@ -29,6 +33,10 @@ section SNorm
     is_smooth := sorry
     is_df := sorry
 
+  @[simp, diff high]
+  theorem snorm.diff (ε : ℝ) [NonZero ε]
+    : δ (snorm ε) = λ x dx : X => (1/snorm ε x) * ⟪x, dx⟫ := by simp
+
   variable (ε : ℝ) [NonZero ε]
 
   @[simp]
@@ -41,14 +49,14 @@ section SNorm
   instance snorm.is_smooth_of_pow {X Y} [Vec X] [Hilbert Y] (α : ℝ) (f : X → Y) [IsSmooth f]
     : IsSmooth (λ x => (snorm ε (f x))^α) := sorry
   
-  @[simp]
+  @[simp, diff high]
   theorem snorm.diff_of_pow {X Y} [Vec X] [Hilbert Y] (α : ℝ) (f : X → Y) [IsSmooth f]
     : δ (λ x => (snorm ε (f x))^α) = λ x dx : X => α * ((snorm ε (f x))^(α-2)) * ⟪f x, δ f x dx⟫ := 
   by
     admit
 
-  -- TODO: a bit dubious in the current formulation
-  theorem snorm.norm_approx (x : X) 
+  -- TODO: a bit dubious in the current formulation 
+  theorem snorm.norm_approx (x : X) [NonZero ε]
     : ∥x∥ = limit λ n => (snorm (ε/n) x) := sorry
 
   def solver_limit {X} [Vec X] {g : ℕ → X} (n₀ : ℕ) (impl : (n : ℕ) → Solver λ f => f = g n)
@@ -57,13 +65,14 @@ section SNorm
   def solver_finish {X} [Vec X] {g : X}
     : Solver (λ f => f = g) := Solver.exact g rfl
 
-  example (n : Nat) (x : Fin n → X) [NonZero n] : Solver (λ f => f = (∇ λ x : Fin n → X => ∑ i j, ∥x i - x j∥^(-1:ℝ))) :=
+  example (n : Nat) (x : Fin n → X) [NonZero n] 
+    : Solver (λ f => f = (∇ λ x : Fin n → X => ∑ i j, ∥x i - x j∥^(-1:ℝ))) :=
   by
     simp only [snorm.norm_approx ε]
 
     conv => enter[1,f,2]; bubble_lim; (tactic => simp; admit)
     apply solver_limit 1; intro E
-    
+
     simp[gradient]
     
     conv =>
@@ -78,24 +87,45 @@ section SNorm
     
 end SNorm
 
-
 notation x "[[" i "]]" => PowType.powType.getOp x i
 
-def H (n : Nat) (ε : ℝ) (m : ℝ^n) (x p : ((ℝ^(3:ℕ))^n)) := (∑ i, (1/(2*m[i])) * ∥p[i]∥²) + (∑ i j, (m[i]*m[j]) * ∥x[i] - x[j]∥{ε}^(-1:ℝ))
+def H (n : Nat) (ε : ℝ) (m : ℝ^n) (x p : ((ℝ^(3:ℕ))^n)) := 
+  (∑ i, (1/(2*m[i])) * ∥p[i]∥²) 
+  + 
+  (∑ i j, (m[i]*m[j]) * ∥x[i] - x[j]∥{ε}^(-1:ℝ))
 
-def solver (n : Nat) [NonZero n] (ε : ℝ) [NonZero ε] (m : ℝ^n) 
-: Solver (λ f => f = ode_solve (HamiltonianSystem (H n ε m))) :=
+-- short_circuit_fun_proofs
+instance (priority := high) {X Y} [Vec X] [Vec Y] (f : X → Y) : IsSmooth f := sorry
+instance (priority := high) {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : HasAdjoint f := sorry
+instance (priority := high) {α β} (f : α → β) : IsInv f := sorry
+
+-- set_option trace.Meta.synthInstance true in
+-- set_option trace.Meta.synthInstance.newSubgoal true in
+-- set_option trace.Meta.synthInstance.generate false in
+-- set_option trace.Meta.synthInstance.globalInstances false in
+-- set_option trace.Meta.synthInstance.resume false in
+-- set_option trace.Meta.synthInstance.tryResolve false in
+-- set_option trace.Meta.synthInstance.unusedArgs false in
+def solver (n : Nat) [NonZero n] (ε : ℝ) [NonZero ε] (m : ℝ^n)
+  : Solver (λ f => f = ode_solve (HamiltonianSystem (H n ε m))) :=
 by
   -- Unfold Hamiltonian definition and compute gradients
   simp[HamiltonianSystem, H]
   
   simp[gradient]
 
-  -- Here I want to do some rewrites
+  conv => 
+    pattern (_ - _)
+    conv => 
+      enter [2,1,i]
+      rw[!?(m[i] * (-(∥x[i] - x[j]∥{ε}^(-(1+2:ℝ))) * (m[j] * (x[i] - x[j])))
+            =
+            -(m[j] * (-(∥x[j] - x[i]∥{ε}^(-(1+2:ℝ))) * (m[i] * (x[j] - x[i])))))]
+    simp
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
   conv => enter[1,f,2]; bubble_lim; (tactic => simp; admit)
-  apply solver_limit 1; intro E
+  apply solver_limit 1; intro steps
     
   apply solver_finish

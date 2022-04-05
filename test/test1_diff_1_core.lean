@@ -72,6 +72,6 @@ example g dg x : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = δ F (g x) 
 example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr*r + (r + 1)*dr := by simp done
 example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
 
-set_option synthInstance.maxHeartbeats 300 in
+set_option synthInstance.maxHeartbeats 400 in
 set_option maxHeartbeats 2500 in
 example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + (r * r + 1) * dr := by simp done
