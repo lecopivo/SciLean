@@ -2,6 +2,7 @@ import Lake
 open Lake DSL System
 
 package SciLean {
+  defaultFacet := PackageFacet.staticLib
   dependencies := #[{
     name := `mathlib
     src := Source.git "https://github.com/leanprover-community/mathlib4.git" "977e6e1ddb5306b83460b3c1c86ca43cac969326"

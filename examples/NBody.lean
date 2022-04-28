@@ -43,7 +43,7 @@ section SNorm
   theorem snorm.grad
     : ∇ (snorm ε) = λ x : X => (1/snorm ε x) * x :=
   by
-    simp[gradient]; unfold_atomic; simp
+    simp[gradient, adjoint_differential]; unfold_atomic; simp
     done
 
   instance snorm.is_smooth_of_pow {X Y} [Vec X] [Hilbert Y] (α : ℝ) (f : X → Y) [IsSmooth f]
@@ -73,7 +73,7 @@ section SNorm
     conv => enter[1,f,2]; bubble_lim; (tactic => simp; admit)
     apply solver_limit 1; intro E
 
-    simp[gradient]
+    simp[gradient, adjoint_differential]
     
     conv =>
       enter [1,f,2,x,1,j,2,1,i]
@@ -112,7 +112,7 @@ by
   -- Unfold Hamiltonian definition and compute gradients
   simp[HamiltonianSystem, H]
   
-  simp[gradient]
+  simp[gradient, adjoint_differential]
 
   conv => 
     pattern (_ - _)

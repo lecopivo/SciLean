@@ -25,6 +25,17 @@ inductive ApproxSolution {α : Type _} [Vec α] : (spec : α → Prop) → Type 
     (impl : (n : ℕ) → ApproxSolution (specₙ n))
     (key help : String) -- `key` is used to modify value of `n₀`
     : ApproxSolution spec
+-- | approx' {spec : α → Prop}
+--     (specₙ : P → α → Prop)
+--     (filter : Filter P)
+--     (consistent : ∀ (aₙ : P → α),
+--       (∀ p, specₙ p (aₙ p)) →
+--       (∃ a, (lim filter aₙ = a) → spec a))
+--     (p₀ : P) -- default value of `n` to be used when asembling
+--     (impl : P → α)
+--     (h : ∀ p, specₙ p (impl p))
+--     (key help : String) -- `key` is used to modify value of `n₀`
+--     : ApproxSolution spec
 | weakApprox {spec : α → Prop}
     (specₙ : ℕ → α → Prop)
     (consistent : ∀ (aₙ : ℕ → α),
@@ -116,22 +127,17 @@ def foo (s : ℝ) := ∇ (λ x : ℝ => s * x)
 rewrite
   simp[gradient, adjoint_differential]
 
+-- Add proof and 
+macro "approx_limit " n0:term : tactic =>
+ `((conv => enter [1]; bubble_lim; (tactic => sorry)); ((apply (Approx.limit _ ($n0:term)))))
 
-approx bar (s : ℝ) (n₀ : ℕ) := ∇ (limit λ n => λ x : ℝ => (s + 1.0/(n:ℝ)) * x)
+approx bar (s : ℝ) (n₀ : ℕ) := ∇ (limit λ n => λ x : ℝ => (s + (1:ℝ)/(n:ℝ)) * x)
 by
-  conv => enter [1]; bubble_lim; (tactic => admit)
-  apply Approx.limit _ n₀; intro n
+  trace_state
+  approx_limit n₀; intro n; simp
   simp[gradient, adjoint_differential]
-
  
 #eval foo 10 1
+
 #eval (bar 10 100).val! 1
 
-#check Monad
-#check @Approx
-
-
--- ApproxSolution
-
--- Approx a := ApproxSolution (λ x => x = a) 
--- Impl a := ExactSolution (λ x => x = a)
