@@ -406,25 +406,25 @@ def w : AltMonomial Int Nat := ⟦⟨⟨2, ⟨[1,0,3]⟩⟩, rawLvl, sorry⟩⟧
 def w' : AltMonomial Int Nat := ⟦⟨⟨0, ⟨[5,2]⟩⟩, rawLvl, sorry⟩⟧
 def w'' : AltMonomial Int Nat := ⟦⟨⟨3, ⟨[5,2]⟩⟩, rawLvl, sorry⟩⟧
 
-example : (m |> toString) = "1*[0]⊗[2]⊗[0]⊗[3]" := by nativeDecide
-example : (p*p |>.toDebugString) = "⟦4*[0]⊗[2]⊗[0]⊗[3]⊗[0]⊗[2]⊗[0]⊗[3]⟧₀" := by nativeDecide
-example : (p*p |> reduce (redLvl 1) |>.toDebugString) = "⟦4*[0]⊗[0]⊗[0]⊗[0]⊗[2]⊗[2]⊗[3]⊗[3]⟧₁" := by nativeDecide
-example : (p |> toString) = "2*[0]*[0]*[2]*[3]" := by nativeDecide
+example : (m |> toString) = "1*[0]⊗[2]⊗[0]⊗[3]" := by native_decide
+example : (p*p |>.toDebugString) = "⟦4*[0]⊗[2]⊗[0]⊗[3]⊗[0]⊗[2]⊗[0]⊗[3]⟧₀" := by native_decide
+example : (p*p |> reduce (redLvl 1) |>.toDebugString) = "⟦4*[0]⊗[0]⊗[0]⊗[0]⊗[2]⊗[2]⊗[3]⊗[3]⟧₁" := by native_decide
+example : (p |> toString) = "2*[0]*[0]*[2]*[3]" := by native_decide
 
-example : (w |> toString) = "-2*[0]∧[1]∧[3]" := by nativeDecide
-example : (w |> reduce (redLvl 0) |>.toDebugString) = "⟦2*[1]⊗[0]⊗[3]⟧₀" := by nativeDecide
-example : (w |> reduce (redLvl 1) |>.toDebugString) = "⟦-2*[0]⊗[1]⊗[3]⟧₁" := by nativeDecide
-example : (w |> normalize |>.toDebugString) = "⟦-2*[0]⊗[1]⊗[3]⟧∞" := by nativeDecide
-example : (w*w |> reduce (redLvl 1) |>.toDebugString) = "⟦0*1⟧₁" := by nativeDecide
-example : (w*w'' |> reduce (redLvl 1) |>.toDebugString) = "⟦-6*[0]⊗[1]⊗[2]⊗[3]⊗[5]⟧₁" := by nativeDecide
+example : (w |> toString) = "-2*[0]∧[1]∧[3]" := by native_decide
+example : (w |> reduce (redLvl 0) |>.toDebugString) = "⟦2*[1]⊗[0]⊗[3]⟧₀" := by native_decide
+example : (w |> reduce (redLvl 1) |>.toDebugString) = "⟦-2*[0]⊗[1]⊗[3]⟧₁" := by native_decide
+example : (w |> normalize |>.toDebugString) = "⟦-2*[0]⊗[1]⊗[3]⟧∞" := by native_decide
+example : (w*w |> reduce (redLvl 1) |>.toDebugString) = "⟦0*1⟧₁" := by native_decide
+example : (w*w'' |> reduce (redLvl 1) |>.toDebugString) = "⟦-6*[0]⊗[1]⊗[2]⊗[3]⊗[5]⟧₁" := by native_decide
 
-example : (w' |> toString) = "0*1" := by nativeDecide
-example : (w' |>.toDebugString) = "⟦0*[5]⊗[2]⟧₀" := by nativeDecide
-example : (w' |> reduce (redLvl 1) |>.toDebugString) = "⟦0*[2]⊗[5]⟧₁" := by nativeDecide
-example : (w' |> normalize |>.toDebugString) = "⟦0*1⟧∞" := by nativeDecide
+example : (w' |> toString) = "0*1" := by native_decide
+example : (w' |>.toDebugString) = "⟦0*[5]⊗[2]⟧₀" := by native_decide
+example : (w' |> reduce (redLvl 1) |>.toDebugString) = "⟦0*[2]⊗[5]⟧₁" := by native_decide
+example : (w' |> normalize |>.toDebugString) = "⟦0*1⟧∞" := by native_decide
 
-example : (w*w' |>.toDebugString) = "⟦0*[1]⊗[0]⊗[3]⊗[5]⊗[2]⟧₀" := by nativeDecide
-example : (w*w' |> reduce (redLvl 1) |>.toDebugString) = "⟦0*[0]⊗[1]⊗[2]⊗[3]⊗[5]⟧₁" := by nativeDecide
-example : (w*w' |> normalize |>.toDebugString) = "⟦0*1⟧∞" := by nativeDecide
+example : (w*w' |>.toDebugString) = "⟦0*[1]⊗[0]⊗[3]⊗[5]⊗[2]⟧₀" := by native_decide
+example : (w*w' |> reduce (redLvl 1) |>.toDebugString) = "⟦0*[0]⊗[1]⊗[2]⊗[3]⊗[5]⟧₁" := by native_decide
+example : (w*w' |> normalize |>.toDebugString) = "⟦0*1⟧∞" := by native_decide
 
 -- 𝔁₀ 𝓭𝔁₀ 𝓮₀

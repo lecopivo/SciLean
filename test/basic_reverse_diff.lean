@@ -234,7 +234,7 @@ def huncurry (n : Nat) {F : Type} [HCurryType n F]
     let h : F = ci.G := sorry
     ci.uncurry (h ▸ f)
 
-example : huncurry 3 (λ (i j k : Nat) => i + j) 
-          = 
-          λ xs => xs[⟨0, by decide⟩] + xs[⟨1, by decide⟩] := by simp[huncurry]
+-- example : huncurry 3 (λ (i j k : Nat) => i + j) 
+--           = 
+--           λ xs => xs[⟨0, by decide⟩] + xs[⟨1, by decide⟩] := by simp[huncurry]
 

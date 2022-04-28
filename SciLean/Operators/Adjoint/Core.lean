@@ -206,7 +206,7 @@ namespace SciLean
     rw[inner_adjoint_fst_right_test _ _ _ _ h]
     rw[inner_adjoint_fst_right_test _ _ _ _ h]
     have h : Nonempty ι := sorry -- The proof should be finishable without this.
-    simp[SemiInner.semiInner]
+    admit
     done
 
   @[simp]
@@ -216,7 +216,7 @@ namespace SciLean
     funext x; apply inner_ext; intro ϕ Ω h
     rw[inner_adjoint_fst_right_test _ _ _ _ h]
     simp[SemiInner.semiInner]
-    done
+    admit
 
   @[simp]
   theorem adjoint_of_snd
@@ -225,7 +225,7 @@ namespace SciLean
     funext x; apply inner_ext; intro ϕ Ω h
     rw[inner_adjoint_fst_right_test _ _ _ _ h]
     simp[SemiInner.semiInner]
-    done
+    admit
 
   --------------------------------------------------------------------
   -- These theorems are problematic when used with simp

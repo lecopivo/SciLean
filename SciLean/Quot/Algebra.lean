@@ -272,27 +272,27 @@ namespace Algebra
     def x : Rep := Repr.mon (⟦⟨⟨1, ⟨[0]⟩⟩, normLvl, sorry⟩⟧)
     def y : Rep := Repr.mon (⟦⟨⟨1, ⟨[1]⟩⟩, normLvl, sorry⟩⟧)
 
-    example : (x * (x * y) * x |>.reduce1 |> toString) = "[0]*[0]*[0]*[1]" := by nativeDecide
-    example : (y * ((2:ℤ)*x) * ((3:ℤ)*x) |>.reduce1 |> toString) = "6*[0]*[0]*[1]" := by nativeDecide
-    example : ((x*y + ((x + y*x) + x) + y) |>.reduce1 |> toString) = "(((([0]*[1] + [0]) + [0]*[1]) + [0]) + [1])" := by nativeDecide
-    example : ((2:ℤ)*x + (3:ℤ)*x*((5:ℤ)*(x + y)) |>.reduce1 |> toString) = "(2*[0] + 15*[0] * ([0] + [1]))" := by nativeDecide
+    example : (x * (x * y) * x |>.reduce1 |> toString) = "[0]*[0]*[0]*[1]" := by native_decide
+    example : (y * ((2:ℤ)*x) * ((3:ℤ)*x) |>.reduce1 |> toString) = "6*[0]*[0]*[1]" := by native_decide
+    example : ((x*y + ((x + y*x) + x) + y) |>.reduce1 |> toString) = "(((([0]*[1] + [0]) + [0]*[1]) + [0]) + [1])" := by native_decide
+    example : ((2:ℤ)*x + (3:ℤ)*x*((5:ℤ)*(x + y)) |>.reduce1 |> toString) = "(2*[0] + 15*[0] * ([0] + [1]))" := by native_decide
 
-    example : ((x + x) |>.reduce2 |> toString) = "2*[0]" := by nativeDecide
-    example : ((x + y + x) |>.reduce2 |> toString) = "(2*[0] + [1])" := by nativeDecide
-    example : (x + (x + y) |>.reduce2 |> toString) = "(2*[0] + [1])" := by nativeDecide
-    example : (x + x + y + (-1:ℤ)*x |>.reduce2 |> toString) = "([0] + [1])" := by nativeDecide
-    example : ((2:ℤ)*x + x*((0:ℤ)*x + (0:ℤ)*y) |>.reduce2 |> toString) = "2*[0]" := by nativeDecide
-    example : ((2:ℤ)*x + x*((0:ℤ)*x + (0:ℤ)*y + one) |>.reduce2 |> toString) = "3*[0]" := by nativeDecide
-    example : ((2:ℤ)*x + (5:ℤ)*((2:ℤ)*x + x + (0:ℤ)*y) |>.reduce2 |> toString) = "17*[0]" := by nativeDecide
+    example : ((x + x) |>.reduce2 |> toString) = "2*[0]" := by native_decide
+    example : ((x + y + x) |>.reduce2 |> toString) = "(2*[0] + [1])" := by native_decide
+    example : (x + (x + y) |>.reduce2 |> toString) = "(2*[0] + [1])" := by native_decide
+    example : (x + x + y + (-1:ℤ)*x |>.reduce2 |> toString) = "([0] + [1])" := by native_decide
+    example : ((2:ℤ)*x + x*((0:ℤ)*x + (0:ℤ)*y) |>.reduce2 |> toString) = "2*[0]" := by native_decide
+    example : ((2:ℤ)*x + x*((0:ℤ)*x + (0:ℤ)*y + one) |>.reduce2 |> toString) = "3*[0]" := by native_decide
+    example : ((2:ℤ)*x + (5:ℤ)*((2:ℤ)*x + x + (0:ℤ)*y) |>.reduce2 |> toString) = "17*[0]" := by native_decide
     example : (((2:ℤ)*x + y)*((2:ℤ)*x + (1:ℤ)*y + (10:ℤ)*one + x*y) |>.reduce2 |> toString) 
-              = "(2*[0] + [1]) * (((10*1 + 2*[0]) + [1]) + [0]*[1])" := by nativeDecide
+              = "(2*[0] + [1]) * (((10*1 + 2*[0]) + [1]) + [0]*[1])" := by native_decide
 
     example : ((5:ℤ)*(x + y)*((2:ℤ)*x + x + (3:ℤ)*y) |>.normalize |> toString) 
-              = "((15*[0]*[0] + 30*[0]*[1]) + 15*[1]*[1])" := by nativeDecide
+              = "((15*[0]*[0] + 30*[0]*[1]) + 15*[1]*[1])" := by native_decide
     example : (((2:ℤ)*x + y)*((2:ℤ)*x + (1:ℤ)*y + (10:ℤ)*one + x*y) |>.normalize |> toString) 
-              = "((((((20*[0] + 10*[1]) + 4*[0]*[0]) + 4*[0]*[1]) + [1]*[1]) + 2*[0]*[0]*[1]) + [0]*[1]*[1])" := by nativeDecide
+              = "((((((20*[0] + 10*[1]) + 4*[0]*[0]) + 4*[0]*[1]) + [1]*[1]) + 2*[0]*[0]*[1]) + [0]*[1]*[1])" := by native_decide
     example : ((2:ℤ)*x + (3:ℤ)*x*((5:ℤ)*(x + y)) |>.normalize |> toString) 
-              = "((2*[0] + 15*[0]*[0]) + 15*[0]*[1])" := by nativeDecide
+              = "((2*[0] + 15*[0]*[0]) + 15*[0]*[1])" := by native_decide
 
   end Test
 

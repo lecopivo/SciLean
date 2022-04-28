@@ -5,7 +5,7 @@ package SciLean {
   defaultFacet := PackageFacet.staticLib
   dependencies := #[{
     name := `mathlib
-    src := Source.git "https://github.com/leanprover-community/mathlib4.git" "977e6e1ddb5306b83460b3c1c86ca43cac969326"
+    src := Source.git "https://github.com/leanprover-community/mathlib4.git" "800bc41ecd44473c28473f9d2e83919aead32b2d"
   }]
 }
 
