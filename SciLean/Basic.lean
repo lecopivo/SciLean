@@ -5,6 +5,7 @@ import SciLean.Simp
 import SciLean.Solver
 import SciLean.Tactic
 import SciLean.Quot
+import SciLean.Mechanics
 
 -- import SciLean.Linear
 -- import SciLean.Smooth
