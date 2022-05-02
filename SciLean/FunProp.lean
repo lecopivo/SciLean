@@ -7,7 +7,7 @@ def Lean.Name.decapitalize : Name → Name
   | Name.str p s _ => Name.mkStr p s.decapitalize
   | n              => n
 
-namespace SciLean
+namespace SciLean.FunProp
 
 def separateExplicitBinders (binders : Array Syntax) : (Array Syntax) := Id.run do
   let mut binders' : Array Syntax := #[]
@@ -55,8 +55,6 @@ declare_syntax_cat argProp (behavior := both)
 
 syntax "argument_property" ident declId bracketedBinder* ":" term "where" argProp  : command
 
--- argument_property $x: $prop:argProp $props:argProp,*
-
 syntax (name := argProperty)  "classProperty" ident bracketedBinder* ":=" term : argProp
 
 macro_rules
@@ -77,20 +75,23 @@ macro_rules
   let lam ← `(fun $parm $postParms* => $funId $preArgs* $arg $postArgs*)
   let st ← `(instance $instId:declId $preParms:bracketedBinder* $extraParms* : $P $lam := $proof)
 
-  -- dbg_trace ""
-  -- dbg_trace st.prettyPrint
-  -- dbg_trace st
-  -- dbg_trace ""
-
   pure st
 
-syntax (name := argPropIsSmoothAuto) "isSmooth" bracketedBinder* : argProp
-syntax (name := argPropIsLinAuto)    "isLin" bracketedBinder* : argProp
-syntax (name := argPropHasAdjointAuto) "hasAdjoint" bracketedBinder* : argProp
 
-syntax (name := argPropIsSmooth)   "isSmooth" bracketedBinder* ":=" term : argProp
-syntax (name := argPropIsLin)      "isLin" bracketedBinder* ":=" term : argProp
-syntax (name := argPropHasAdjoint) "hasAdjoint" bracketedBinder* ":=" term : argProp
+syntax "isSmooth"   bracketedBinder* ":=" term : argProp
+syntax "isSmooth"   bracketedBinder*           : argProp
+syntax "isLin"      bracketedBinder* ":=" term : argProp
+syntax "isLin"      bracketedBinder*           : argProp
+syntax "hasAdjoint" bracketedBinder* ":=" term : argProp
+syntax "hasAdjoint" bracketedBinder*           : argProp
+syntax "isInv"      bracketedBinder* ":=" term : argProp
+syntax "isInv"      bracketedBinder*           : argProp
+
+syntax "hasAdjDiff" bracketedBinder* ":=" term : argProp
+syntax "hasAdjDiff" bracketedBinder*           : argProp
+syntax "hasInvDiff" bracketedBinder* ":=" term : argProp
+syntax "hasInvDiff" bracketedBinder*           : argProp
+
 
 macro_rules
 | `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
@@ -164,23 +165,6 @@ macro_rules
       hasAdjDiff $extraParms:bracketedBinder*) => do
   `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
        hasAdjDiff $extraParms:bracketedBinder* := by (unfold $(mkIdent $ fId.getIdAt 0); simp; infer_instance))
-
-
-section ClassPropertyTest
-
-  argument_property x Math.atan2 (x y : ℝ) : ℝ where
-    classProperty IsSmooth := sorry
-
-  argument_property y Math.atan2 (x y : ℝ) : ℝ where
-    classProperty IsSmooth := sorry
-
-  #check Math.atan2.arg_x.isSmooth
-  #check Math.atan2.arg_y.isSmooth
-
-  example : IsSmooth Math.atan2 := by infer_instance
-  example (x : ℝ) : IsSmooth (Math.atan2 x) := by infer_instance
-
-end ClassPropertyTest
 
 inductive AutoExactSolution {α : Type _} : (α → Prop) → Type _ where
 | exact {spec : α → Prop} (a : α) (h : spec a) : AutoExactSolution spec
