@@ -182,69 +182,154 @@ section ClassPropertyTest
 
 end ClassPropertyTest
 
+inductive AutoExactSolution {α : Type _} : (α → Prop) → Type _ where
+| exact {spec : α → Prop} (a : α) (h : spec a) : AutoExactSolution spec
 
-syntax (name := argPropDiff) "diff" bracketedBinder* ":=" term "by" tactic : argProp
-syntax (name := argPropDiff') "diff'" bracketedBinder* ":=" term "by" tactic : argProp
+def AutoImpl {α} (a : α) := AutoExactSolution λ x => x = a
+
+def AutoImpl.val {α} {a : α} (x : AutoImpl a) : α :=
+match x with
+| .exact val _ => val
+
+def AutoImpl.finish {α} {a : α} : AutoImpl a := .exact a rfl
+
+theorem AutoImpl.impl_eq_spec (x : AutoImpl a) : a = x.val :=
+by
+  cases x; rename_i a' h; 
+  simp[AutoImpl.val, val, h]
+  done
+
+-- I don't think think this can be proven. Can it lead to contradiction?
+axiom AutoImpl.injectivity_axiom {α} (a b : α) : (AutoImpl a = AutoImpl b) → (a = b)
+
+-- Do we really need AutoImpl.injectivity_axiom?
+@[simp] theorem AutoImpl.normalize_val {α : Type u} (a b : α) (h : (AutoImpl a = AutoImpl b)) 
+  : AutoImpl.val (Eq.mpr h (AutoImpl.finish (a:=b))) = b := 
+by
+  have h' : a = b := by apply AutoImpl.injectivity_axiom; apply h
+  revert h; rw[h']
+  simp[val,finish,Eq.mpr]
+  done
+
+
+inductive DifferentialMode where
+| explicit (df proof : Syntax) : DifferentialMode
+| rewrite  (rw : Syntax) : DifferentialMode
+
+def generateDifferentialCommands 
+  (x id retType : Syntax) 
+  (parms extraParms: Array Syntax) 
+  (mode : DifferentialMode) 
+  (makeDef := true)
+  : MacroM Syntax := 
+do
+  let (preParms, parm, postParms) ← splitParms parms x.getId
+
+  let preArgs  := getExplicitArgs preParms
+  let arg      := (getExplicitArgs #[parm])[0]
+  let postArgs := getExplicitArgs postParms
+
+  let darg  := Lean.mkIdent $ arg.getId.appendBefore "d"
+  let dparm := mkNode ``Lean.Parser.Term.explicitBinder #[parm[0], mkNullNode #[darg], parm[2], parm[3], parm[4]]
+
+  let funName  := id.getIdAt 0
+  let funId    := Lean.mkIdent funName
+  let declBase := funName.append $ x.getId.appendBefore "arg_"
+
+  let diffId := Lean.mkIdent $ declBase.append "diff"
+  let diffSimpId  := Lean.mkIdent $ declBase.append "diff_simp"
+
+  let diffNonComp ← `(δ (fun $parm $postParms* => $funId:ident $preArgs* $arg $postArgs*))
+  let diffComp ← 
+    match mode with
+      | .explicit df proof => 
+        `(fun $parm $dparm $postParms* => ($df : $retType))
+      | .rewrite rw => 
+       `((by 
+           conv => enter[1]; $rw
+           apply AutoImpl.finish
+          : AutoImpl $diffNonComp).val)
+  let eqProof ← 
+    match mode with
+      | .explicit df proof => 
+        `(by $proof)
+      | .rewrite rw =>
+        if makeDef then
+          `(by unfold $diffId; apply (AutoImpl.impl_eq_spec _))
+        else
+          `(by apply (AutoImpl.impl_eq_spec _))
+
+  if makeDef then
+    let diffDef ← `(def $diffId:declId $preParms:bracketedBinder* := $diffComp:term)
+    -- TODO: replace $diffId with $diffComp when we do not generate definition
+    let diffSimp ← `(@[simp] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffId $preArgs* := $eqProof)
+    pure $ mkNullNode #[diffDef,diffSimp]
+  else
+    let diffSimp ← `(@[simp] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffComp := $eqProof)
+    pure diffSimp
+
+open Lean.Parser.Tactic.Conv
+syntax "diff" bracketedBinder* ":=" term "by" tacticSeq : argProp
+syntax "diff" bracketedBinder* "by" convSeq : argProp
+syntax "diff" bracketedBinder* : argProp
+
+-- Sometime it is undesirable to generate definition `f.arg_x.diff
+-- This is usefull for example for differential of composition:
+--
+--   δ λ x => f (g x) = λ x dx => δ f (g x) (δ g x dx)
+--
+--   In this case `comp.arg_x.diff would have to be noncomputable and
+--   most of the time we do not want that. So `diff_no_def` just defines the simp
+--   theorem with the above equality where rhs is not hidden behind comp.arg_x.diff
+-- syntax "diff'" bracketedBinder* ":=" term "by" tacticSeq : argProp
+syntax "diff_no_def" bracketedBinder* ":=" term "by" tacticSeq : argProp
+syntax "diff_no_def" bracketedBinder* "by" convSeq : argProp
+syntax "diff_no_def" bracketedBinder* : argProp
+
 
 macro_rules
 | `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
-       diff $extraParms:bracketedBinder* := $df:term by $proof:tactic) => do
+       diff $extraParms:bracketedBinder* := $df:term by $proof:tacticSeq) => do
 
-  let (preParms, parm, postParms) ← splitParms parms x.getId
-
-  let preArgs  := getExplicitArgs preParms
-  let arg      := (getExplicitArgs #[parm])[0]
-  let postArgs := getExplicitArgs postParms
-
-  let darg  := Lean.mkIdent $ arg.getId.appendBefore "d"
-  let dparm := mkNode ``Lean.Parser.Term.explicitBinder #[parm[0], mkNullNode #[darg], parm[2], parm[3], parm[4]]
-
-  let funName  := fId.getIdAt 0
-  let funId    := Lean.mkIdent funName
-  let declBase := funName.append $ x.getId.appendBefore "arg_"
-
-  let defId := Lean.mkIdent $ declBase.append "diff"
-  let eqId  := Lean.mkIdent $ declBase.append "diffIsValid"
-
-  let equality ← `(SciLean.differential ($funId:ident $preArgs*) = fun $parm $dparm $postParms* => $defId:ident $preArgs* $arg $darg $postArgs*)
-
-  let defSt ← `(def $defId:declId $preParms:bracketedBinder* $parm $dparm $postParms* : $retType:term := $df:term)
-  let eqSt  ← `(@[simp] theorem $eqId:declId $preParms:bracketedBinder* $extraParms:bracketedBinder* : $equality:term := by $proof)
-
-  pure $ mkNullNode #[defSt, eqSt]
+  generateDifferentialCommands x fId retType parms extraParms (.explicit df proof)
 
 | `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
-       diff' $extraParms:bracketedBinder* := $df:term by $proof:tactic) => do
+       diff $extraParms:bracketedBinder* by $rewrite:convSeq) => do
 
-  let (preParms, parm, postParms) ← splitParms parms x.getId
+  generateDifferentialCommands x fId retType parms extraParms (.rewrite rewrite)  
 
-  let preArgs  := getExplicitArgs preParms
-  let arg      := (getExplicitArgs #[parm])[0]
-  let postArgs := getExplicitArgs postParms
+| `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
+       diff $extraParms:bracketedBinder*) => do
 
-  let darg  := Lean.mkIdent $ arg.getId.appendBefore "d"
-  let dparm := mkNode ``Lean.Parser.Term.explicitBinder #[parm[0], mkNullNode #[darg], parm[2], parm[3], parm[4]]
+  let funId := Lean.mkIdent $ fId.getIdAt 0
+  `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
+       diff $extraParms:bracketedBinder* by unfold $funId; simp)
 
-  let funName  := fId.getIdAt 0
-  let funId    := Lean.mkIdent funName
-  let declBase := funName.append $ x.getId.appendBefore "arg_"
+| `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
+       diff_no_def $extraParms:bracketedBinder* := $df:term by $proof:tacticSeq) => do
 
-  let eqId  := Lean.mkIdent $ declBase.append "diffSimplify"
+  generateDifferentialCommands x fId retType parms extraParms (.explicit df proof) (makeDef := false)
 
-  let equality ← `(SciLean.differential ($funId:ident $preArgs*) = fun $parm $dparm $postParms* => $df)
+| `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
+       diff_no_def $extraParms:bracketedBinder* by $rw:convSeq) => do
 
-  `(@[simp] theorem $eqId:declId $preParms:bracketedBinder* $extraParms:bracketedBinder* : $equality:term := by $proof)
+  generateDifferentialCommands x fId retType parms extraParms (.rewrite rw) (makeDef := false)
 
+| `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
+       diff_no_def $extraParms:bracketedBinder*) => do
+
+  let funId := Lean.mkIdent $ fId.getIdAt 0
+  `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
+       diff_no_def $extraParms:bracketedBinder* by unfold $funId; simp)
 
 
 @[simp] theorem  asf : δ Math.exp = λ x dx => dx * Math.exp x := sorry
 
 argument_property x Math.exp (x : ℝ) : ℝ where
-  diff := dx * Math.exp x  by (sorry)
-
+  diff := dx * Math.exp x  by simp[diff] 
 
 #check Math.exp.arg_x.diff
-#check Math.exp.arg_x.diffIsValid
+#check Math.exp.arg_x.diff_simp
 
 -- variable (is_smooth diff is_diff is proof: Nat)
 
@@ -272,8 +357,7 @@ macro_rules
     argument $x:ident $props:argProp,* , $prop:argProp) => do
     `(function_properties $id:declId $parms:bracketedBinder* : $retType 
       argument $x $props.getElems,*
-      argument_property $x:ident $id:declId $parms:bracketedBinder* : $retType where $prop
-      )
+      argument_property $x:ident $id:declId $parms:bracketedBinder* : $retType where $prop)
 
 | `(function_properties $id:declId $parms:bracketedBinder* : $retType:term
     $aprops:argProps*
@@ -291,45 +375,61 @@ macro_rules
       argument_property $x:ident $id:declId $parms:bracketedBinder* : $retType where $prop)
 
 
-
--- syntax "is_smooth" ":=" term : argProp
--- syntax "is_linear" ":=" term : argProp
-
--- macro_rules
--- | `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
---       is_smooth := $proof:term) =>
--- `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
---       classProperty IsSmooth := $proof:term)
--- | `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
---       is_linear := $proof:term) =>
--- `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
---       classProperty IsLin := $proof:term)
-
-def myFun (x y : ℝ) : ℝ := y * x * y
+def myFun (x y z : ℝ) : ℝ := y * x * y * z
 argument x
-  isSmooth := by simp[myFun] infer_instance,
-  isLin := by simp[myFun] infer_instance,
-  diff := y * dx * y  by (simp[myFun, diff]) 
+  -- Explicit proof of smoothness
+  isSmooth := by unfold myFun; infer_instance,
+  -- Automatic proof of linearity
+  isLin,
+  -- Explicit differential + proof that it is actually a diffrential
+  diff     := y * dx * y * z by simp[myFun, diff] done
 argument y
-  isSmooth := by simp[myFun] infer_instance,
-  diff := dy * x * y + y * x * dy  by (simp[myFun, diff]; done)
+  -- Automatic proof of smoothness
+  isSmooth, 
+  -- Differential by rewriting '∀ x, δ (λ y z => myFun x y z)'
+  diff by (simp[myFun])
+argument z
+  isSmooth,  
+  -- Automatic differential
+  diff
 
-def comp {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : Y → Z) (g : X → Y) (x : X) : Z := f (g x)
+#check Eq.mp
+#check Nat
+
+-- theorem psigma_eq_inj {α} (a b : α) : (PSigma λ x => x = a) = (PSigma λ x => x = b) → a = b := 
+-- by
+  
+example (x : ℝ) : δ (myFun x) = myFun.arg_y.diff x := 
+by
+  unfold myFun.arg_y.diff
+  simp[myFun.arg_y.diff]
+--   simp[myFun.arg_x.diff]
+--   simp[Eq.mpr, myFun.arg_x.diff.proof_1, AutoImpl.finish, AutoImpl.val, Eq.mp, myFun, AutoImpl, PSigma.fst, AutoExactSolution.exact]
+--   -- cases (Eq.mpr _ _); rename_i a' h
+--   -- simp[AutoImpl.val, h]
+--   -- rw [AutoImpl.impl_eq_spec]
+--   done
+
+-- Just having {X Y Z} breaks auto differentiation in x
+def comp {X Y Z : Type} [Vec X] [Vec Y] [Vec Z] (f : Y → Z) (g : X → Y) (x : X) : Z := f (g x)
 argument f
-  isSmooth, isLin,
-  diff'    := df (g x) by (simp[comp])
+  isSmooth, isLin, diff_no_def
 argument g
-  isSmooth [IsSmooth f],
-  diff'    [IsSmooth f] := δ f (g x) (dg x) by (simp[comp] done)
+  isSmooth [IsSmooth f], diff_no_def [IsSmooth f]
 argument x
-  isSmooth [IsSmooth f] [IsSmooth g],
-  diff'    [IsSmooth f] [IsSmooth g] := δ f (g x) (δ g x dx) by (simp[comp]; done)
+  isSmooth [IsSmooth f] [IsSmooth g], diff_no_def [IsSmooth f] [IsSmooth g]
 
+
+-- @[  simp  ]  theorem  comp.arg_x.diff_simp' {X Y Z : Type} [Vec X] [Vec Y] [Vec Z] (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g]  
+--   :  (δ  (  fun (x : X)  =>  comp f g x  ))  =  (by  (conv  =>  enter[1]; (simp[comp])); apply  AutoImpl.finish  :  (AutoImpl  (δ  (  fun (x : X)  =>  comp f g x  )))  ).val  
+--   := by  apply  (  AutoImpl.impl_eq_spec  _  ) 
 
 function_properties Prod.fst {X Y} [Vec X] [Vec Y] (xy : X × Y) : X
 argument xy
-  isSmooth, isLin,
-  diff := dxy.1 by simp[diff]
+  isSmooth, isLin, diff
+
+#print Prod.fst.arg_xy.diff
+
 
 function_properties Prod.fst {X Y} [SemiHilbert X] [SemiHilbert Y] (xy : X × Y) : X
 argument xy
@@ -367,7 +467,6 @@ argument y
 --   isLin      := by infer_instance
 --   hasAdjoint := by infer_instance
 
-
 function_properties Function.const {X} [Vec X] (ι : Type) (x : X) (i : ι) : X
 argument x
   isSmooth, isLin,
@@ -378,7 +477,6 @@ argument y
   isSmooth, 
   diff       := 0 by simp[Function.const,diff]
 
-
 #check @Function.const.arg_y.isSmooth
 #check @Function.const.arg_y.diff
 #print Function.const.arg_y.diff
@@ -386,7 +484,6 @@ argument y
 function_properties Function.const {X} [SemiHilbert X] (ι : Type) [Enumtype ι] (x : X) : ι → X
 argument x
   hasAdjoint, hasAdjDiff
-
 
 -- #check Prod.fst.arg_xy.hasAdjoint
 
@@ -396,10 +493,11 @@ example {X} [Vec X] (x y : X) : HAdd.hAdd x y = x + y := by rfl
 #check myFun.arg_x.isLin
 #check myFun.arg_y.isSmooth
 #check myFun.arg_y.diff
-#check myFun.arg_y.diffIsValid
+#check myFun.arg_y.diff_simp
 
-#check myFun.arg_x.diffIsValid
+#check myFun.arg_x.diff_simp
 
 variable (classProperty is_smooth : Nat)
 
 #check is_smooth
+
