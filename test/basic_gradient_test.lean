@@ -1,5 +1,7 @@
-import SciLean.Basic
-import SciLean.Tactic
+-- import SciLean.Core.Functions
+-- import SciLean.Tactic
+
+import SciLean.Core.Functions
 
 namespace SciLean
 
@@ -7,33 +9,37 @@ variable {α β γ : Type}
 variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
-variable {n : Nat} [NonZero n]
+variable {n : Nat} [Nonempty (Fin n)]
 
--- set_option trace.Meta.Tactic.simp.rewrite true in
 example (y : X)
   : 
-    ∇ (λ x : X => 2 * ⟪x,x⟫) = λ x : X => (2 : ℝ) * ((2 : ℝ) * x)
-  := by simp[gradient, adjoint_differential] done
+    ∇ (λ x : X => ⟪x,x⟫) = λ x : X => (1:ℝ) * x + (1:ℝ) * x
+  := by simp; unfold hold; simp done
+
 
 example (g : ι → ℝ) 
   : 
     ∇ (λ (f : ι → ℝ) => ∑ i, f i) g 
     = 
     (λ _ => (1 : ℝ)) 
-  := by simp[gradient, adjoint_differential] done
+  := by simp done
+
 
 -- set_option synthInstance.maxHeartbeats 2000 in
 -- set_option maxHeartbeats 50000 in
+set_option trace.Meta.Tactic.simp.discharge true in
+set_option trace.Meta.Tactic.simp.rewrite true in
 example 
   : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i))
     = 
     (λ (f : Fin n → ℝ) i => f (i - 1) + f (i + 1)) 
   := 
 by
-  simp[gradient, adjoint_differential]
-  simp[AtomicAdjointFun.adj,hold]
-  funext x j; simp
+  simp
   done
+
+
+/-
 
 -- set_option synthInstance.maxHeartbeats 2000 in
 -- set_option maxHeartbeats 50000 in
@@ -147,3 +153,5 @@ by
     --           = 
     --           (λ (f : Fin n → ℝ) i => 2 * (f (i - a + a) - f (i - a) - (f (i + a) - f i))) := by autograd done
   --   example (c : ℝ) : ∇ (λ (f : Fin n → ℝ) => ∑ i, c*(f i)*(f i)) = (λ (f : Fin n → ℝ) => (2:ℝ)*c*f) := by autograd done
+
+-/

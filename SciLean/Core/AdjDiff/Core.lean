@@ -16,7 +16,7 @@ def adjDiff
   (f : X → Y) (x : X) : Y → X := (δ f x)†
 
 prefix:max "δ†" => adjDiff
-macro "∇" f:term:max : term => `(λ x => δ† $f x (1:ℝ))
+macro:max "∇" f:term:max : term => `(λ x => δ† $f x (1:ℝ))
 
 
 ----------------------------------------------------------------------
@@ -57,7 +57,6 @@ theorem diag.arg_x.adjDiff_simp
   [∀ y₁ y₂, HasAdjoint (λ dy₂ => δ (f y₁) y₂ dy₂)]
   (g₁ : X → Y₁) [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
   (g₂ : X → Y₂) [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
-  (x : X)
   : δ† (λ x => f (g₁ x) (g₂ x)) 
     = 
     λ x dx' => 
@@ -83,6 +82,14 @@ theorem comp.arg_x.parm1.adjDiff_simp
     δ† (λ x => f (g x) a) = λ x dx' => (δ† g x) ((δ† (hold λ y => f y a)) (g x) dx')
 := by 
   simp[adjDiff]; unfold hold; simp; done
+
+example
+  (a : α) 
+  (f : Y → α → Z) [IsSmooth f] [∀ y, HasAdjoint (λ dy => δ f y dy a)]
+  (g : X → Y) [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
+  : 
+    δ† (λ x => f (g x) a) = λ x dx' => (δ† g x) ((δ† (λ y => f y a)) (g x) dx')
+:= by simp done
 
 @[simp low-1]
 theorem comp.arg_x.parm2.adjDiff_simp
@@ -113,8 +120,7 @@ theorem diag.arg_x.parm1.adjDiff_simp
   [∀ y₁ y₂, HasAdjoint (λ dy₂ => δ (f y₁) y₂ dy₂ a)]
   (g₁ : X → Y₁) [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
   (g₂ : X → Y₂) [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
-  (x : X)
-  : δ† (λ x => f (g₁ x) (g₂ x) a) 
+  : δ† (λ x => f (g₁ x) (g₂ x) a)
     = 
     λ x dx' => 
       (δ† g₁ x) ((δ† (hold λ y₁ => f y₁ (g₂ x) a)) (g₁ x) dx')
@@ -133,7 +139,6 @@ theorem diag.arg_x.parm2.adjDiff_simp
   [∀ y₁ y₂, HasAdjoint (λ dy₂ => δ (f y₁) y₂ dy₂ a b)]
   (g₁ : X → Y₁) [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
   (g₂ : X → Y₂) [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
-  (x : X)
   : δ† (λ x => f (g₁ x) (g₂ x) a b) 
     = 
     λ x dx' => 
@@ -153,7 +158,6 @@ theorem diag.arg_x.parm3.adjDiff_simp
   [∀ y₁ y₂, HasAdjoint (λ dy₂ => δ (f y₁) y₂ dy₂ a b c)]
   (g₁ : X → Y₁) [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
   (g₂ : X → Y₂) [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
-  (x : X)
   : δ† (λ x => f (g₁ x) (g₂ x) a b c) 
     = 
     λ x dx' => 

@@ -5,6 +5,8 @@
 import SciLean.Core.Diff
 import SciLean.Core.Adjoint
 import SciLean.Core.AdjDiff
+import SciLean.Core.Inv
+
 
 namespace SciLean
 
