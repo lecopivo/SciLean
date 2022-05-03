@@ -84,8 +84,7 @@ argument y [SemiHilbert X]
 argument y [AddGroup X] [Nonempty X]
   isInv    := sorry,
   inv_simp := y' - x by sorry
--- argument x y
---   isLin
+
 
 instance HAdd.hAdd.arg_xy.isLin {X} [Vec X] 
   : IsLin (λ ((x, y) : (X × X)) => x + y) := sorry
@@ -95,9 +94,6 @@ instance HAdd.hAdd.arg_xy.hasAdjoint {X} [SemiHilbert X]
 
 @[simp] theorem HAdd.hAdd.arg_xy.adj_simp {X} [SemiHilbert X] 
   : (Function.uncurry HAdd.hAdd)† = λ xy' : X => (xy', xy') := sorry
-
--- function_properties HAdd.hAdd {X : Type} [SemiHilbert X] (x y : X) : X
---   hasAdjoint
 
 
 -- Subtraction --
@@ -124,8 +120,6 @@ argument y [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x - y' by sorry
 
--- argument x y
---   isLin
 
 instance HSub.hSub.arg_xy.isLin {X} [Vec X] 
   : IsLin (λ ((x, y) : (X × X)) => x - y) := sorry
@@ -135,7 +129,6 @@ instance HSub.hSub.arg_xy.hasAdjoint {X} [SemiHilbert X]
 
 @[simp] theorem HSub.hSub.arg_xy.adj_simp {X} [SemiHilbert X] 
   : (Function.uncurry HSub.hSub)† = λ xy' : X => (xy', - xy') := sorry
-
 
 -- Inner product --
 -------------------
