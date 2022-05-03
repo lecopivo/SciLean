@@ -1,15 +1,12 @@
-import SciLean.Basic
-import SciLean.Tactic
+import SciLean.Core.Functions
 
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
-variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
+variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z]
 
 
 example : IsLin (SemiInner.semiInner : X → X → _) := by infer_instance done
-set_option synthInstance.maxHeartbeats 2000 in
 example Ω : IsLin (λ x y : X => ⟪x, y⟫[Ω]) := by infer_instance done
 example (x : X) Ω : IsLin (λ y : X => ⟪x, y⟫[Ω]) := by infer_instance done
 

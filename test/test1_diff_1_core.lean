@@ -1,4 +1,4 @@
-import SciLean.Operators.Calculus.DiffAtom
+import SciLean.Core.Functions
 
 namespace SciLean.Smooth
 
@@ -44,9 +44,7 @@ example (f : Y₁ → Y₂ → β → Z) (g1 : X → Y₁) (g2 : X → Y₂)
   [IsSmooth f] [∀ y1, IsSmooth (f y1)] [IsSmooth g1] [IsSmooth g2]
   : δ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) = λ x dx b => δ f (g1 x) (δ g1 x dx) (g2 x) b + δ (f (g1 x)) (g2 x) (δ g2 x dx) b := by simp
 
-example {X} [Hilbert X] : δ (λ x : X => ⟪x, x⟫) = λ x dx => 2 * ⟪dx, x⟫ := 
-by 
-  simp; simp_rw [SemiHilbert.semi_inner_sym]; simp
+example {X} [Hilbert X] : δ (λ x : X => ⟪x, x⟫) = λ x dx =>  ⟪dx, x⟫ + ⟪x, dx⟫ := by simp; done
 
 
 --- Other a bit more disorganized tests
@@ -69,9 +67,6 @@ example : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx 
 example g dg x : δ (λ (g : X → Y) => f (g x)) g dg = δ f (g x) (dg x) := by simp done
 example g dg x : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by simp done
 example g dg x : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = δ F (g x) (dg x) y := by simp done
-example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr*r + (r + 1)*dr := by simp done
+example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by simp done
 example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
-
-set_option synthInstance.maxHeartbeats 400 in
-set_option maxHeartbeats 2500 in
-example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + (r * r + 1) * dr := by simp done
+example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by simp done

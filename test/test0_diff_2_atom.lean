@@ -1,4 +1,4 @@
-import SciLean.Operators.Calculus.DiffAtom
+import SciLean.Core.Functions
 
 namespace SciLean.Smooth
 
@@ -21,8 +21,8 @@ example (x : X) : δ (λ y : X => x + y) = λ y dy => dy := by simp
 example (y : X) : δ (λ x : X => x + y) = λ x dx => dx := by simp done
 example (x : X) : δ (λ y : X => x - y) = λ y dy => (-dy : X) := by simp
 example (y : X) : δ (λ x : X => x - y) = λ x dx => dx := by simp done
-example {X} [SemiHilbert X] (y : X) Ω : δ (λ x : X => ⟪x, y⟫[Ω]) = λ x dx => ⟪dx, y⟫[Ω] := by simp done
-example {X} [SemiHilbert X] (x : X) Ω : δ (λ y : X => ⟪x, y⟫[Ω]) = λ y dy => ⟪x, dy⟫[Ω] := by simp done
+example {X} [Hilbert X] (y : X) : δ (λ x : X => ⟪x, y⟫) = λ x dx => ⟪dx, y⟫ := by simp done
+example {X} [Hilbert X] (x : X) : δ (λ y : X => ⟪x, y⟫) = λ y dy => ⟪x, dy⟫ := by simp done
 example {ι} [Enumtype ι] : δ (λ f : ι → X => ∑ i, f i) = λ f df => ∑ i, df i := by simp done
 
 

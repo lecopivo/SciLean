@@ -1,10 +1,11 @@
-import SciLean.Core.IsSmooth
-import SciLean.Core.IsLin
-import SciLean.Core.HasAdjoint
+-- import SciLean.Core.IsSmooth
+-- import SciLean.Core.IsLin
+-- import SciLean.Core.HasAdjoint
 
 import SciLean.Core.Diff
 import SciLean.Core.Adjoint
 import SciLean.Core.AdjDiff
+import SciLean.Core.Inv
 
 namespace SciLean
 
@@ -22,6 +23,9 @@ argument x [SemiHilbert X]
   adj_simp   := - x' by sorry,
   hasAdjDiff := by simp infer_instance done,
   adjDiff_simp := - dx' by simp[adjDiff] done
+argument x [AddGroup X] [Nonempty X]
+  isInv := sorry,
+  inv_simp := - x' by sorry
 
 
 -- Multiplication --
@@ -37,6 +41,7 @@ argument x [Hilbert X]
   adj_simp   := ⟪x', y⟫ by sorry,
   hasAdjDiff := by simp infer_instance done,
   adjDiff_simp := ⟪dx', y⟫ by simp[adjDiff] done
+
 argument y [Vec X]
   isLin      := sorry,
   isSmooth   := sorry,
@@ -46,6 +51,14 @@ argument y [SemiHilbert X]
   adj_simp   := x * y' by sorry,
   hasAdjDiff := by simp infer_instance,
   adjDiff_simp := x * dy' by simp[adjDiff] done
+argument y [Vec X] [Nonempty X] [Fact (x ≠ 0)]
+  isInv    := sorry,
+  inv_simp := 1/x * y' by sorry
+
+function_properties HMul.hMul (x : ℝ) (y : ℝ)  : ℝ
+argument x [Fact (y ≠ 0)]
+  isInv    := sorry,
+  inv_simp := x' * (1/y) by sorry
 
 
 -- Addition --
@@ -55,21 +68,27 @@ function_properties HAdd.hAdd {X : Type} (x y : X) : X
 argument x [Vec X]
   isSmooth  := sorry, 
   diff_simp := dx by sorry
-  -- isInv       := sorry
-  -- inv         := x' - y
 argument x [SemiHilbert X]
   hasAdjDiff := by simp infer_instance,
   adjDiff_simp := dx' by simp[adjDiff] done
+argument x [AddGroup X] [Nonempty X]
+  isInv := sorry,
+  inv_simp := x' - y by sorry
+
 argument y [Vec X]
   isSmooth  := sorry,
   diff_simp := dy by sorry
-  -- isInv       := sorry
-  -- inv         := y' - x
 argument y [SemiHilbert X]
-  hasAdjDiff := by simp infer_instance,
+  hasAdjDiff   := by simp infer_instance,
   adjDiff_simp := dy' by simp[adjDiff] done
+argument y [AddGroup X] [Nonempty X]
+  isInv    := sorry,
+  inv_simp := y' - x by sorry
 -- argument x y
 --   isLin
+
+instance HAdd.hAdd.arg_xy.isLin {X} [Vec X] 
+  : IsLin (λ ((x, y) : (X × X)) => x + y) := sorry
 
 instance HAdd.hAdd.arg_xy.hasAdjoint {X} [SemiHilbert X] 
   : HasAdjoint (λ ((x, y) : (X × X)) => x + y) := sorry
@@ -88,24 +107,25 @@ function_properties HSub.hSub {X : Type} (x y : X) : X
 argument x [Vec X] 
   isSmooth  := sorry, 
   diff_simp := dx by sorry
-  -- isInv       := sorry
-  -- inv         := x' + y
 argument x [SemiHilbert X]
   hasAdjDiff := by simp infer_instance,
   adjDiff_simp := dx' by simp[adjDiff] done
-  
+argument x [AddGroup X] [Nonempty X]
+  isInv := sorry,
+  inv_simp := x' + y by sorry
+ 
 argument y [Vec X] 
   isSmooth  := sorry,
   diff_simp := - dy by sorry
-  -- isInv       := sorry
-  -- inv         := y' + x
 argument y [SemiHilbert X]
   hasAdjDiff := by simp infer_instance,
   adjDiff_simp := - dy' by simp[adjDiff] done
+argument y [AddGroup X] [Nonempty X]
+  isInv := sorry,
+  inv_simp := x - y' by sorry
 
 -- argument x y
 --   isLin
-
 
 instance HSub.hSub.arg_xy.isLin {X} [Vec X] 
   : IsLin (λ ((x, y) : (X × X)) => x - y) := sorry
@@ -137,17 +157,3 @@ argument y
   adj_simp     := y' * x by sorry,
   hasAdjDiff   := by simp infer_instance,
   adjDiff_simp := dy' * x by simp[adjDiff] done
-
--- variable {α β γ : Type}
--- variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-
--- variable (f : Y → Z) [IsSmooth f]
--- variable (F : X → Y → Z) [IsSmooth F] [∀ x, IsSmooth (F x)]
-
--- example g dg x : δ (λ (g : X → Y) => f (g x)) g dg = δ f (g x) (dg x) := by simp done
--- example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by simp done
--- example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
-
--- noncomputable
--- @[reducible]
--- abbrev grad [SemiHilbert X] (f : X → ℝ) : X → X := λ x => δ† f x (1:ℝ)

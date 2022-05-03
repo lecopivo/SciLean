@@ -1,3 +1,4 @@
+import SciLean.Core.Prelude
 import SciLean.Core.IsLin
 import SciLean.Core.HasAdjoint
 
@@ -60,17 +61,15 @@ theorem diag.arg_x.adj_simp_safeguard
   : (λ (x,y) => f x y)† = (Function.uncurry f)† := 
 by simp only [Function.uncurry] done
 
--- @[simp low]
--- theorem parm.arg_x.adj_simp
---   (f : X → ι → Z) [HasAdjoint f] (i : ι)
---   : (λ x => f x i)† = (λ z => f† (λ j => (kron i j) * z))
--- := sorry
+@[simp low]
+theorem parm.arg_x.adj_simp
+  (f : X → ι → Z) [HasAdjoint f] (i : ι)
+  : (λ x => f x i)† = (λ x' => f† (λ j => (kron i j) * x'))
+:= sorry
 
 
 ----------------------------------------------------------------------
   -- These theorems are problematic when used with simp
-
-def hold {α} (a : α) := a
 
 
 @[simp low-1] -- try to avoid using this theorem

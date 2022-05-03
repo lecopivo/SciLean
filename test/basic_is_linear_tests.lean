@@ -1,4 +1,4 @@
-import SciLean.Basic
+import SciLean.Core.Functions
 
 namespace SciLean.Lin.Tests
 
@@ -29,7 +29,7 @@ namespace maintests
   example (f : X → X → Y) [IsLin (λ xx : X×X => f xx.1 xx.2)] : IsLin (λ x => f (h x) x) := by infer_instance
   example (f : X → X → Y) [IsLin (λ xx : X×X => f xx.1 xx.2)] : IsLin (λ x => f x (h x)) := by infer_instance
 
-  set_option synthInstance.maxHeartbeats 5000
+  -- set_option synthInstance.maxHeartbeats 5000
   example : IsLin (λ (f : Y → Z) (x : X) => (f (g x))) := by infer_instance
   example : IsLin (λ (h'' : X → X) (x : X) => (h (h'' ((h ∘ h) x)))) := by infer_instance
   example : IsLin (λ (h'' : X → X) (x : X) => (h ∘ h ∘ h) (h (h'' (h ((h ∘ h) x))))) := by infer_instance
@@ -39,7 +39,7 @@ namespace maintests
   example : IsLin (λ (h : X → X) (x : X) => H' a b (h x)) := by infer_instance
   example (f : X → X → α → Y) [∀ a, IsLin (λ xx : X×X => f xx.1 xx.2 a)] (a : α) : IsLin (λ x => f (h x) x a) := by infer_instance
   example : IsLin (λ (h : X → X) (x : X) => G (h x) a b) := by infer_instance
-  set_option synthInstance.maxHeartbeats 500
+  -- set_option synthInstance.maxHeartbeats 500
 
   -- example (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f x a x) := by infer_instance
   -- example (f : X → α → X → Y) (a : α) [IsLin (λ xx : X×X => f xx.1 a xx.2)] : IsLin (λ x => f (h x) a x) := by infer_instance
@@ -61,24 +61,4 @@ example (f : X → X) [IsLin f] : IsLin ((f ∘ f) ∘ (f ∘ (f ∘ f))) := by 
 example (y : X) (A : X → X) (B : X → X) [IsLin A] [IsLin B] : IsLin λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
  
 end combtests
-
-namespace hilbert
-
-variable {U V W : Type} [Hilbert U] [Hilbert V] [Hilbert W]
-
--- example (d) : IsLin λ (u v : U) => (u, v)_[d] := by infer_instance
--- example : IsLin λ u : U => ⟨u,u'⟩ := by infer_instance
-
-
--- example (v : ℝ×ℝ) : IsLin (λ u : ℝ×ℝ => ⟨u, v⟩) := by infer_instance
-
--- set_option trace.Meta.synthInstance.tryResolve false
--- set_option trace.Meta.synthInstance.generate false
--- example : SemiInner ℝ := by infer_instance
--- example : Hilbert ℝ := by infer_instance
--- example : IsLin (SemiInner.semi_inner : U → U → _ → ℝ) := by infer_instance
--- example : IsLin (SemiInner.semi_inner : ℝ → ℝ → _ → ℝ) := by infer_instance
--- example : IsLin (SemiInner.semi_inner : ℝ×ℝ → ℝ×ℝ → _ → ℝ) := by infer_instance
-
-end hilbert 
 

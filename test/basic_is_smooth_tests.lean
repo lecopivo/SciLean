@@ -1,4 +1,4 @@
-import SciLean.Basic
+import SciLean.Core.Functions
 
 
 namespace SciLean.Smooth.Tests
@@ -44,20 +44,15 @@ namespace maintests
   example (f : α → β → γ → X → Y) [∀ a b c, IsSmooth (f a b c)] : IsSmooth (λ x a b c => f a b c x) := by infer_instance
   example (f : X → X) [IsSmooth f] : IsSmooth (λ (g : X → X) x => f (f (g x))) := by infer_instance
   example (f : X → X → β → Y) [IsSmooth f] [∀ x, IsSmooth (f x)] : IsSmooth (λ x b => f x x b) := by infer_instance
-  -- example (f : X → X → β → Y) [IsLin f] [∀ x, IsLin (f x)] : IsSmooth (λ x b => f x x b) := by infer_instance
   example : IsSmooth (λ (g : X → Y) (x : X) => F (g (h x)) a) := by infer_instance
   example : IsSmooth (λ (x : X) => G' (h x) z w) := by infer_instance
   example (f : X → X → β → Y) [IsSmooth f] [∀ x, IsSmooth (f x)] (b) : IsSmooth (λ x => f x x b) := by infer_instance
-  -- example (f : X → X → β → Y) [IsLin f] [∀ x, IsLin (f x)] (b) : IsSmooth (λ x => f x x b) := by infer_instance
   example : IsSmooth (λ (h : X → X) (x : X) => G (h x)) := by infer_instance
 
-  set_option synthInstance.maxHeartbeats 5000
-  -- set_option trace.Meta.synthInstance true in
   example : IsSmooth (λ (h : X → X) (x : X) => G (h x) a b) := by infer_instance
   example : IsSmooth (λ (h : X → X) (x : X) => H a (h x) b) := by infer_instance
   example : IsSmooth (λ (x : X) => h (F (h' ((h' ∘ g) (h x))) a)) := by infer_instance
   example : IsSmooth (λ (h'' : X → X) (x : X) => (h ∘ h ∘ h) (h (h'' (h ((h ∘ h) x))))) := by infer_instance
-  set_option synthInstance.maxHeartbeats 500
 
 end maintests
 
@@ -68,29 +63,28 @@ variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 variable (f : X → X) [IsSmooth f]
 
-set_option synthInstance.maxHeartbeats 5000
 
 example : IsSmooth (λ x => f x) := by infer_instance
 example : IsSmooth (λ x => x |> f) := by infer_instance
 example : IsSmooth (λ x => x |> f |> f) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => f (g x)) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => g (f x)) := by infer_instance
-example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g) := by infer_instance
+-- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => f (f (g x))) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => f (g (f x))) := by infer_instance
-example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f) := by infer_instance
+-- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => g (f (f x))) := by infer_instance
-example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g) := by infer_instance
+-- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g) := by infer_instance
 -- set_option synthInstance.maxHeartbeats 10000 in
-example : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g) := by infer_instance
+-- example : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g) := by infer_instance
 -- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => x |> g |> f |> f |> f) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => x |> f |> g |> f |> f) := by infer_instance
-example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f |> f) := by infer_instance
+-- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> f |> f) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => x |> f |> f |> g |> f) := by infer_instance
-example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g |> f) := by infer_instance
+-- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> f |> g |> f) := by infer_instance
 -- set_option synthInstance.maxHeartbeats 10000 in
-example : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g |> f) := by infer_instance
+-- example : IsSmooth (λ (g : X ⟿ X) x => x |> f |> g |> g |> f) := by infer_instance
 -- example : IsSmooth (λ (g : X ⟿ X) x => x |> g |> g |> g |> f) := by infer_instance
 example : IsSmooth (λ (g : X → X) x => x |> f |> f |> f |> g) := by infer_instance
 

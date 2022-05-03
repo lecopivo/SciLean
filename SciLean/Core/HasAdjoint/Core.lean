@@ -1,5 +1,4 @@
 import SciLean.Algebra
--- import SciLean.Categories.Basic
 
 namespace SciLean
 
@@ -65,7 +64,7 @@ instance comp.arg_x.parm2.hasAdjoint
 := by 
   (apply comp.arg_x.hasAdjoint (λ y => f y a b) g) done
 
-instance comp_at_point3_has_adjoint
+instance comp.arg_x.parm3.hasAdjoint
   (a : α) (b : β) (c : γ)
   (f : Y → α → β → γ → Z) [HasAdjoint (λ y => f y a b c)]
   (g : X → Y) [HasAdjoint g] 

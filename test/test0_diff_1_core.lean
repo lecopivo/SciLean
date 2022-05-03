@@ -1,4 +1,4 @@
-import SciLean.Operators.Calculus.DiffCore
+import SciLean.Core.Functions
 
 namespace SciLean.Smooth
 

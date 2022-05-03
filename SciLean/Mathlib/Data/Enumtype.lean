@@ -191,7 +191,6 @@ namespace Enumtype
                    pure val
   }
 
-
   -- It is important to fetch a new instance of `UpperBoundUnsafe` at call site.
   -- That way we are likely to fetch an instance of `UpperBound` if available
   def sum {α} [Zero α] [Add α] {ι} [Enumtype ι] (f : ι → α) : α := ((do
