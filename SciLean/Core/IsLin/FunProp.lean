@@ -1,5 +1,5 @@
 import SciLean.FunPropCore
-import SciLean.NewStyle.IsLin.Core
+import SciLean.Core.IsLin.Core
 
 namespace SciLean.FunProp
 
@@ -7,7 +7,7 @@ syntax "isLin"   bracketedBinder* ":=" term : argProp
 syntax "isLin"   bracketedBinder*           : argProp
 
 macro_rules
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
       isLin $extraParms:bracketedBinder* := $proof:term) => do
 
   let (preParms, parm, postParms) ← splitParms parms x.getId
@@ -22,11 +22,13 @@ macro_rules
 
   let lam ← `(fun $parm $postParms* => $funId $preArgs* $arg $postArgs*)
 
-  `(instance $instId:ident $preParms:bracketedBinder* $argParms* $extraParms* : SciLean.IsLin $lam := $proof)
+  let st ← `(instance $instId:ident $preParms:bracketedBinder*  $extraParms* : SciLean.IsLin $lam := $proof)
 
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+  pure st
+
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
       isLin $extraParms:bracketedBinder*) => do
 
-  `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+  `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
       isLin $extraParms:bracketedBinder* := by unfold $funId; infer_instance; done)
 

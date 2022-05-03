@@ -1,4 +1,4 @@
-import SciLean.NewStyle.Adjoint.Core
+import SciLean.Core.Adjoint.Core
 import SciLean.FunPropCore
 
 namespace SciLean.FunProp
@@ -55,7 +55,6 @@ do
 
   if makeDef then
     let adjDef ← `(def $adjId:declId $preParms:bracketedBinder* $parm' $postParms* $extraParms* := $adjComp:term)
-    -- TODO: replace $adjId with $adjComp when we do not generate definition
     let adjSimp ← `(@[simp] theorem $adjSimpId:declId $preParms:bracketedBinder* $postParms* $extraParms* 
                                    : $adjNonComp = (fun $parm' => $adjId $preArgs* $arg' $postArgs*) := $eqProof)
     pure $ mkNullNode #[adjDef,adjSimp]
@@ -84,35 +83,35 @@ syntax "adj_simp" bracketedBinder* "by" convSeq : argProp
 syntax "adj_simp" bracketedBinder* : argProp
 
 macro_rules
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        adj $extraParms:bracketedBinder* := $df:term by $proof:tacticSeq) => do
 
-  generateAdjointCommands x funId retType parms (argParms.append extraParms) (.explicit df proof)
+  generateAdjointCommands x funId retType parms extraParms (.explicit df proof)
 
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        adj $extraParms:bracketedBinder* by $rewrite:convSeq) => do
 
-  generateAdjointCommands x funId retType parms (argParms.append extraParms) (.rewrite rewrite)  
+  generateAdjointCommands x funId retType parms extraParms (.rewrite rewrite)  
 
 | `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
        adj $extraParms:bracketedBinder*) => do
 
-  `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+  `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        adj $extraParms:bracketedBinder* by unfold $funId; simp)
 
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        adj_simp $extraParms:bracketedBinder* := $df:term by $proof:tacticSeq) => do
 
-  generateAdjointCommands x funId retType parms (argParms.append extraParms) (.explicit df proof) (makeDef := false)
+  generateAdjointCommands x funId retType parms extraParms (.explicit df proof) (makeDef := false)
 
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        adj_simp $extraParms:bracketedBinder* by $rw:convSeq) => do
 
-  generateAdjointCommands x funId retType parms (argParms.append extraParms) (.rewrite rw) (makeDef := false)
+  generateAdjointCommands x funId retType parms extraParms (.rewrite rw) (makeDef := false)
 
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+| `(argument_property $x:ident  $funId:ident $parms:bracketedBinder* : $retType:term where
        adj_simp $extraParms:bracketedBinder*) => do
 
-  `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+  `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        adj_simp $extraParms:bracketedBinder* by unfold $funId; simp)
 

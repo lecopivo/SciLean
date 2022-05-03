@@ -1,7 +1,7 @@
 import Lean
 import Init.Classical
 
-import SciLean.NewStyle.IsSmooth
+import SciLean.Core.IsSmooth
 
 namespace SciLean
 

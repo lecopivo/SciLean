@@ -1,5 +1,5 @@
-import SciLean.NewStyle.Adjoint
-import SciLean.NewStyle.Diff
+import SciLean.Core.Adjoint
+import SciLean.Core.Diff
 
 namespace SciLean
 

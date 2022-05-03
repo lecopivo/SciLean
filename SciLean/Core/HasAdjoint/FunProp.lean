@@ -1,5 +1,5 @@
 import SciLean.FunPropCore
-import SciLean.NewStyle.HasAdjoint.Core
+import SciLean.Core.HasAdjoint.Core
 
 namespace SciLean.FunProp
 
@@ -7,7 +7,7 @@ syntax "hasAdjoint"   bracketedBinder* ":=" term : argProp
 syntax "hasAdjoint"   bracketedBinder*           : argProp
 
 macro_rules
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
       hasAdjoint $extraParms:bracketedBinder* := $proof:term) => do
 
   let (preParms, parm, postParms) ← splitParms parms x.getId
@@ -22,10 +22,10 @@ macro_rules
 
   let lam ← `(fun $parm => $funId $preArgs* $arg $postArgs*)
 
-  `(instance $instId:ident $preParms:bracketedBinder* $postParms* $argParms* $extraParms* : SciLean.HasAdjoint $lam := $proof)
+  `(instance $instId:ident $preParms:bracketedBinder* $postParms* $extraParms* : SciLean.HasAdjoint $lam := $proof)
 
-| `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
       hasAdjoint $extraParms:bracketedBinder*) => do
 
-  `(argument_property $x:ident $argParms:bracketedBinder* $funId:ident $parms:bracketedBinder* : $retType:term where
+  `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
       hasAdjoint $extraParms:bracketedBinder* := by unfold $funId; infer_instance; done)

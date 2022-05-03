@@ -1,8 +1,8 @@
-import SciLean.NewStyle.IsSmooth
-import SciLean.NewStyle.IsLin
-import SciLean.NewStyle.HasAdjoint
-import SciLean.NewStyle.Diff
-import SciLean.NewStyle.Adjoint
+import SciLean.Core.IsSmooth
+import SciLean.Core.IsLin
+import SciLean.Core.HasAdjoint
+import SciLean.Core.Diff
+import SciLean.Core.Adjoint
 
 namespace SciLean
 

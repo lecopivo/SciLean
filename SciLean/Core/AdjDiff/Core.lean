@@ -1,6 +1,6 @@
-import SciLean.NewStyle.Diff
-import SciLean.NewStyle.Adjoint
-import SciLean.NewStyle.HasAdjDiff
+import SciLean.Core.Diff
+import SciLean.Core.Adjoint
+import SciLean.Core.HasAdjDiff
 
 namespace SciLean
 
@@ -16,6 +16,7 @@ def adjointDifferential
   (f : X → Y) (x : X) : Y → X := (δ f x)†
 
 prefix:max "δ†" => adjointDifferential
+macro "∇" f:term:max : term => `(λ x => δ† $f x (1:ℝ))
 
 
 ----------------------------------------------------------------------

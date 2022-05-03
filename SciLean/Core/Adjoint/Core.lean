@@ -1,5 +1,5 @@
-import SciLean.NewStyle.IsLin
-import SciLean.NewStyle.HasAdjoint
+import SciLean.Core.IsLin
+import SciLean.Core.HasAdjoint
 
 namespace SciLean
 
