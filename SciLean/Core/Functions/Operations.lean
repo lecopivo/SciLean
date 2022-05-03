@@ -19,7 +19,9 @@ argument x [Vec X]
   diff_simp  := - dx by sorry
 argument x [SemiHilbert X]
   hasAdjoint := sorry,
-  adj_simp   := - x' by sorry
+  adj_simp   := - x' by sorry,
+  hasAdjDiff := by simp infer_instance
+  -- adjDiff_simp := - dx' by sorry
 
 
 -- Multiplication --
@@ -32,30 +34,38 @@ argument x [Vec X]
   diff_simp  := dx * y by sorry
 argument x [Hilbert X]
   hasAdjoint := sorry,
-  adj_simp   := ⟪x', y⟫ by sorry
+  adj_simp   := ⟪x', y⟫ by sorry,
+  hasAdjDiff := by simp infer_instance
+  -- adjDiff_simp := ⟪dx', y⟫ by sorry
 argument y [Vec X]
   isLin      := sorry,
   isSmooth   := sorry,
   diff_simp  := x * dy by sorry
 argument y [SemiHilbert X]
   hasAdjoint := sorry,
-  adj_simp   := x * y' by sorry
+  adj_simp   := x * y' by sorry,
+  hasAdjDiff := by simp infer_instance
+  -- adjDiff_simp := ⟪x, dy'⟫ by sorry
 
 
 -- Addition --
 --------------
 
-function_properties HAdd.hAdd {X : Type} [Vec X] (x y : X) : X
-argument x
+function_properties HAdd.hAdd {X : Type} (x y : X) : X
+argument x [Vec X]
   isSmooth  := sorry, 
   diff_simp := dx by sorry
   -- isInv       := sorry
   -- inv         := x' - y
-argument y
+argument x [SemiHilbert X]
+  hasAdjDiff := by simp infer_instance
+argument y [Vec X]
   isSmooth  := sorry,
   diff_simp := dy by sorry
   -- isInv       := sorry
   -- inv         := y' - x
+argument y [SemiHilbert X]
+  hasAdjDiff := by simp infer_instance
 -- argument x y
 --   isLin
 
@@ -102,17 +112,21 @@ instance HSub.hSub.arg_xy.hasAdjoint {X} [SemiHilbert X]
 
 function_properties SemiInner.semiInner {X} [Hilbert X] (x y : X) (Ω : 𝓓 X) : ℝ
 argument x
-  isLin       := sorry,
-  isSmooth    := sorry,
-  hasAdjoint  := sorry,
-  diff_simp   := ⟪dx, y⟫[Ω] by sorry,
-  adj_simp    := x' * y by sorry
-argument y    
-  isLin       := sorry,
-  isSmooth    := sorry,
-  hasAdjoint  := sorry,
-  diff_simp   := ⟪x, dy⟫[Ω] by sorry,
-  adj_simp    := y' * x by sorry
+  isLin        := sorry,
+  isSmooth     := sorry,
+  hasAdjoint   := sorry,
+  diff_simp    := ⟪dx, y⟫[Ω] by sorry,
+  adj_simp     := x' * y by sorry,
+  hasAdjDiff   := by simp infer_instance
+  -- adjDiff_simp := dx' * y by sorry
+argument y
+  isLin        := sorry,
+  isSmooth     := sorry,
+  hasAdjoint   := sorry,
+  diff_simp    := ⟪x, dy⟫[Ω] by sorry,
+  adj_simp     := y' * x by sorry,
+  hasAdjDiff   := by simp infer_instance
+  -- adjDiff_simp := dy' * x by sorry
 
 -- variable {α β γ : Type}
 -- variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
