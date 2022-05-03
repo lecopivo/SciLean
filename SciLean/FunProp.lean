@@ -1,5 +1,6 @@
 import Lean.Parser
 import SciLean.Basic
+import SciLean.AutoImpl
 
 open Lean.Parser Lean Syntax
 
@@ -166,36 +167,6 @@ macro_rules
   `(argument_property $x:ident $fId:declId $parms:bracketedBinder* : $retType:term where
        hasAdjDiff $extraParms:bracketedBinder* := by (unfold $(mkIdent $ fId.getIdAt 0); simp; infer_instance))
 
-inductive AutoExactSolution {α : Type _} : (α → Prop) → Type _ where
-| exact {spec : α → Prop} (a : α) (h : spec a) : AutoExactSolution spec
-
-def AutoImpl {α} (a : α) := AutoExactSolution λ x => x = a
-
-def AutoImpl.val {α} {a : α} (x : AutoImpl a) : α :=
-match x with
-| .exact val _ => val
-
-def AutoImpl.finish {α} {a : α} : AutoImpl a := .exact a rfl
-
-theorem AutoImpl.impl_eq_spec (x : AutoImpl a) : a = x.val :=
-by
-  cases x; rename_i a' h; 
-  simp[AutoImpl.val, val, h]
-  done
-
--- I don't think think this can be proven. Can it lead to contradiction?
-axiom AutoImpl.injectivity_axiom {α} (a b : α) : (AutoImpl a = AutoImpl b) → (a = b)
-
--- Do we really need AutoImpl.injectivity_axiom?
-@[simp] theorem AutoImpl.normalize_val {α : Type u} (a b : α) (h : (AutoImpl a = AutoImpl b)) 
-  : AutoImpl.val (Eq.mpr h (AutoImpl.finish (a:=b))) = b := 
-by
-  have h' : a = b := by apply AutoImpl.injectivity_axiom; apply h
-  revert h; rw[h']
-  simp[val,finish,Eq.mpr]
-  done
-
-
 inductive DifferentialMode where
 | explicit (df proof : Syntax) : DifferentialMode
 | rewrite  (rw : Syntax) : DifferentialMode
@@ -307,23 +278,8 @@ macro_rules
        diff_no_def $extraParms:bracketedBinder* by unfold $funId; simp)
 
 
-@[simp] theorem  asf : δ Math.exp = λ x dx => dx * Math.exp x := sorry
-
-argument_property x Math.exp (x : ℝ) : ℝ where
-  diff := dx * Math.exp x  by simp[diff] 
-
-#check Math.exp.arg_x.diff
-#check Math.exp.arg_x.diff_simp
-
--- variable (is_smooth diff is_diff is proof: Nat)
-
--- #check is_smooth
--- #check diff
--- #check is_diff
--- #check proof
 
 syntax argProps := "argument" ident argProp,+
-
 syntax "function_properties" declId bracketedBinder* ":" term argProps+ : command
 
 macro "def" id:declId parms:bracketedBinder* ":" retType:term ":=" body:term props:argProps+ : command =>
