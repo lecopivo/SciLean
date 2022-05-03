@@ -12,10 +12,10 @@ variable {ι : Type} [Enumtype ι]
 
 
 noncomputable 
-def adjointDifferential
+def adjDiff
   (f : X → Y) (x : X) : Y → X := (δ f x)†
 
-prefix:max "δ†" => adjointDifferential
+prefix:max "δ†" => adjDiff
 macro "∇" f:term:max : term => `(λ x => δ† $f x (1:ℝ))
 
 
@@ -24,22 +24,22 @@ macro "∇" f:term:max : term => `(λ x => δ† $f x (1:ℝ))
 
 @[simp]
 theorem id.arg_x.adjDiff_simp
-  : δ† (λ x : X => x) = λ x dx => dx := by simp[adjointDifferential] done
+  : δ† (λ x : X => x) = λ x dx => dx := by simp[adjDiff] done
 
 @[simp]
 theorem const.arg_x.adjDiff_simp 
-  : δ† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjointDifferential] done
+  : δ† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjDiff] done
 
 @[simp]
 theorem const.arg_y.adjDiff_simp (x : X)
-  : δ† (λ (y : Y) => x) = (λ y dy' => (0 : Y)) := by simp[adjointDifferential] done
+  : δ† (λ (y : Y) => x) = (λ y dy' => (0 : Y)) := by simp[adjDiff] done
 
 @[simp low-3]
 theorem swap.arg_y.adjDiff_simp
   (f : ι → Y → Z) [∀ i, IsSmooth (f i)] [∀ i x, HasAdjoint $ δ (f i) x]
   : δ† (λ y i => f i y) =  (λ y dy' => ∑ i, (δ† (f i) x) (dy' i)) := 
 by 
-  simp[adjointDifferential] rfl done
+  simp[adjDiff] rfl done
 
 @[simp low-1]
 theorem comp.arg_x.adjDiff_simp
@@ -47,7 +47,7 @@ theorem comp.arg_x.adjDiff_simp
   (g : X → Y) [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
   : δ† (λ x => f (g x)) = λ x dx' => (δ† g x) ((δ† f (g x)) dx') := 
 by 
-  simp[adjointDifferential] done
+  simp[adjDiff] done
 
 
 @[simp low-2]
@@ -67,7 +67,7 @@ theorem diag.arg_x.adjDiff_simp
     := 
 by 
   have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
-  simp[adjointDifferential] admit
+  simp[adjDiff] admit
 
 
 ----------------------------------------------------------------------
@@ -82,7 +82,7 @@ theorem comp.arg_x.parm1.adjDiff_simp
   : 
     δ† (λ x => f (g x) a) = λ x dx' => (δ† g x) ((δ† (hold λ y => f y a)) (g x) dx')
 := by 
-  simp[adjointDifferential]; unfold hold; simp; done
+  simp[adjDiff]; unfold hold; simp; done
 
 @[simp low-1]
 theorem comp.arg_x.parm2.adjDiff_simp
@@ -92,7 +92,7 @@ theorem comp.arg_x.parm2.adjDiff_simp
   : 
     δ† (λ x => f (g x) a b) = λ x dx' => (δ† g x) ((δ† (hold λ y => f y a b)) (g x) dx')
 := by 
-  simp[adjointDifferential]; unfold hold; simp; done
+  simp[adjDiff]; unfold hold; simp; done
 
 @[simp low-1]
 theorem comp.arg_x.parm3.adjDiff_simp
@@ -102,7 +102,7 @@ theorem comp.arg_x.parm3.adjDiff_simp
   : 
     δ† (λ x => f (g x) a b c) = λ x dx' => (δ† g x) ((δ† (hold λ y => f y a b c)) (g x) dx')
 := by 
-  simp[adjointDifferential]; unfold hold; simp; done
+  simp[adjDiff]; unfold hold; simp; done
 
 
 @[simp low-1] -- try to avoid using this theorem
@@ -122,7 +122,7 @@ theorem diag.arg_x.parm1.adjDiff_simp
       (δ† g₂ x) ((δ† (hold λ y₂ => f (g₁ x) y₂ a)) (g₂ x) dx')
 := by 
   have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
-  simp[adjointDifferential]; unfold hold; simp; unfold hold; admit
+  simp[adjDiff]; unfold hold; simp; unfold hold; admit
 
 
 @[simp low-1] -- try to avoid using this theorem
@@ -142,7 +142,7 @@ theorem diag.arg_x.parm2.adjDiff_simp
       (δ† g₂ x) ((δ† (hold λ y₂ => f (g₁ x) y₂ a b)) (g₂ x) dx')
 := by 
   have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
-  simp[adjointDifferential]; unfold hold; simp; unfold hold; admit
+  simp[adjDiff]; unfold hold; simp; unfold hold; admit
 
 
 @[simp low-1] -- try to avoid using this theorem
@@ -162,4 +162,4 @@ theorem diag.arg_x.parm3.adjDiff_simp
       (δ† g₂ x) ((δ† (hold λ y₂ => f (g₁ x) y₂ a b c)) (g₂ x) dx')
 := by 
   have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
-  simp[adjointDifferential]; unfold hold; simp; unfold hold; admit
+  simp[adjDiff]; unfold hold; simp; unfold hold; admit
