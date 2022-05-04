@@ -25,6 +25,33 @@ example (g : ι → ℝ)
   := by simp done
 
 
+example 
+  : δ (fun (x : Fin n → ℝ) i => x (i + 1) * x i) 
+    = 
+    (fun x dx a => dx (a + 1) * x a + x (a + 1) * dx a) := 
+by
+  simp
+
+set_option synthInstance.maxHeartbeats 2000 
+set_option maxHeartbeats 50000 
+set_option synthInstance.maxSize 2000
+
+
+set_option trace.Meta.synthInstance true in
+example : (x : Fin n → ℝ) → SciLean.HasAdjoint (SciLean.differential (fun x i => x (i + 1) * x i) x) :=
+by 
+  -- intro h;
+  -- apply swap.arg_y.hasAdjDiff
+  infer_instance
+
+
+set_option trace.Meta.Tactic.simp.discharge true in
+set_option trace.Meta.Tactic.simp.rewrite true in
+example : adjDiff (fun (x : Fin n → ℝ) => x i) = (fun x dx' j => kron i j * dx') :=
+by
+  simp
+  done
+
 -- set_option synthInstance.maxHeartbeats 2000 in
 -- set_option maxHeartbeats 50000 in
 set_option trace.Meta.Tactic.simp.discharge true in
@@ -35,6 +62,7 @@ example
     (λ (f : Fin n → ℝ) i => f (i - 1) + f (i + 1)) 
   := 
 by
+  simp
   simp
   done
 

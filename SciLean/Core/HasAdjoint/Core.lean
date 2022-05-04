@@ -5,13 +5,13 @@ namespace SciLean
 -- TODO: 
 --   - define adjoint in distributional sense and 
 --   - redefine SemiHilbert as space with test functions and pairng with them
-class HasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) 
+class HasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : Prop
     -- has_dual : ∀ y, HasDual (λ x Ω => ⟪y, f x⟫[f‡ Ω])
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
-variable {ι : Type} [Enumtype ι]
+variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
 -- I combinator
 instance id.arg_x.hasAdjoint
@@ -39,9 +39,9 @@ instance diag.arg_x.hasAdjoint
   (g₂ : X → Y₂) [HasAdjoint g₂] 
   : HasAdjoint (λ x => f (g₁ x) (g₂ x)) := sorry
 
-instance parm.arg_x.hasAdjoint
-  (f : X → ι → Z) [HasAdjoint f] (y : ι) 
-  : HasAdjoint (λ x => f x y) := sorry
+instance eval.arg_x.parm1.hasAdjoint
+  (f : X → ι → Z) [HasAdjoint f] (i : ι) 
+  : HasAdjoint (λ x => f x i) := sorry
 
 
 --------------------------------------------------------------------

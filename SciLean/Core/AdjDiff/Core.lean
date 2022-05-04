@@ -37,9 +37,9 @@ theorem const.arg_y.adjDiff_simp (x : X)
 @[simp low-3]
 theorem swap.arg_y.adjDiff_simp
   (f : ι → Y → Z) [∀ i, IsSmooth (f i)] [∀ i x, HasAdjoint $ δ (f i) x]
-  : δ† (λ y i => f i y) =  (λ y dy' => ∑ i, (δ† (f i) x) (dy' i)) := 
+  : δ† (λ y i => f i y) = (λ y dy' => ∑ i, (δ† (f i) y) (dy' i)) := 
 by 
-  simp[adjDiff] rfl done
+  simp[adjDiff] done
 
 @[simp low-1]
 theorem comp.arg_x.adjDiff_simp
@@ -68,9 +68,31 @@ by
   have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
   simp[adjDiff] admit
 
+-- @[simp low]
+-- theorem parm.arg_x.adjDiff_simp
+--   (f : X → ι → Z) [∀ x, HasAdjoint $ δ f x] (i : ι)
+--   : (λ x => f x i)† = (λ x' => f† (λ j => (kron i j) * x'))
+-- := sorry
 
-----------------------------------------------------------------------
-  -- These theorems are problematic when used with simp
+@[simp low]
+theorem eval.arg_f.adjDiff_simp
+  (i : ι)
+  : δ† (λ (f : ι → X) => f i) = (λ f df' j => ((kron i j) * df' : X))
+:= sorry
+
+
+@[simp low]
+theorem parm.arg_x.adjDiff_simp
+  (f : X → ι → Z) [IsSmooth f] [∀ x, HasAdjoint $ δ f x] (i : ι)
+  : δ† (λ x => f x i) = (λ x dx' => (δ† f x) (λ j => ((kron i j) * dx' : Z)))
+:= 
+by 
+  rw [comp.arg_x.adjDiff_simp (λ (x : ι → Z) => x i) f]
+  simp
+
+
+--------------------------------------------------------
+-- These theorems are problematic when used with simp --
 
 
 @[simp low-1]

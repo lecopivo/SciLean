@@ -62,11 +62,19 @@ theorem diag.arg_x.adj_simp_safeguard
 by simp only [Function.uncurry] done
 
 @[simp low]
-theorem parm.arg_x.adj_simp
-  (f : X → ι → Z) [HasAdjoint f] (i : ι)
-  : (λ x => f x i)† = (λ x' => f† (λ j => (kron i j) * x'))
+theorem eval.arg_f.adj_simp
+  (i : ι)
+  : (λ (f : ι → X) => f i)† = (λ f' j => ((kron i j) * f' : X))
 := sorry
 
+@[simp low-1]
+theorem eval.arg_x.parm1.adj_simp
+  (f : X → ι → Z) [HasAdjoint f] (i : ι)
+  : (λ x => f x i)† = (λ x' => f† (λ j => (kron i j) * x'))
+:= 
+by 
+  rw [comp.arg_x.adj_simp (λ (x : ι → Z) => x i) f]
+  simp done
 
 ----------------------------------------------------------------------
   -- These theorems are problematic when used with simp
