@@ -25,8 +25,8 @@ macro_rules
   let declBase := funName.append $ x.getId.appendBefore "arg_"
   let instId := Lean.mkIdent $ declBase.append "hasAdjDiff"
 
-  let lam ← `(fun $dparm => δ (fun $parm => $funId $preArgs* $arg) $arg $darg $postArgs*)
-  let type ← `(SciLean.HasAdjoint $ $lam)
+  let lam ← `((fun $parm => $funId $preArgs* $arg $postArgs*))
+  let type ← `(SciLean.HasAdjDiff $lam)
 
   `(instance $instId:ident $preParms:bracketedBinder* $postParms* $extraParms* $parm : $type := $proof)
 
