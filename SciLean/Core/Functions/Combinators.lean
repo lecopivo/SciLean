@@ -21,24 +21,23 @@ argument g [Vec Y] [Vec Z]
   isLin     [IsLin f]    := by simp[Function.comp] infer_instance,
   isSmooth  [IsSmooth f] := by simp[Function.comp] infer_instance,
   diff_simp [IsSmooth f] := δ f (g x) (dg x) by simp[Function.comp] done
-argument x 
+argument x
   [Vec X] [Vec Y] [Vec Z]
   [IsLin f] [IsLin g]
   isLin     := by simp[Function.comp] infer_instance
-argument x 
+argument x
   [Vec X] [Vec Y] [Vec Z]
   [IsSmooth f] [IsSmooth g] 
   isSmooth  := by simp[Function.comp] infer_instance,
   diff_simp := δ f (g x) (δ g x dx) by simp[Function.comp] done
-argument x 
+argument x
   [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
   [HasAdjoint f] [HasAdjoint g]
   hasAdjoint := by simp[Function.comp] infer_instance,
   adj_simp   := (g† ∘ f†) x' by simp[Function.comp] done
-argument x 
+argument x
   [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
-  [IsSmooth f] [∀ y, HasAdjoint $ δ f y]
-  [IsSmooth g] [∀ x, HasAdjoint $ δ g x]
-  hasAdjDiff   := by simp[Function.comp] infer_instance,
+  [HasAdjDiff f] [HasAdjDiff g]
+  hasAdjDiff   := by simp[Function.comp]; infer_instance done,
   adjDiff_simp := ((δ† g x) ∘ (δ† f (g x))) dx'  by simp[Function.comp] done
   

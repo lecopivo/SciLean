@@ -36,27 +36,35 @@ theorem const.arg_y.adjDiff_simp (x : X)
 
 @[simp low-3]
 theorem swap.arg_y.adjDiff_simp
-  (f : ι → Y → Z) [∀ i, IsSmooth (f i)] [∀ i x, HasAdjoint $ δ (f i) x]
-  : δ† (λ y i => f i y) = (λ y dy' => ∑ i, (δ† (f i) y) (dy' i)) := 
+  (f : ι → X → Z) [inst : ∀ i, HasAdjDiff (f i)]
+  : δ† (λ x y => f y x) = (λ x dx' => ∑ i, (δ† (f i) x) (dx' i)) := 
 by 
+  have isf := λ i => (inst i).isSmooth
+  have iaf := λ i => (inst i).hasAdjDiff
+
   simp[adjDiff] done
 
 @[simp low-1]
 theorem comp.arg_x.adjDiff_simp
-  (f : Y → Z) [IsSmooth f] [∀ y, HasAdjoint $ δ f y] 
-  (g : X → Y) [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
+  (f : Y → Z) [instf : HasAdjDiff f] --[IsSmooth f] [∀ y, HasAdjoint $ δ f y] 
+  (g : X → Y) [instg : HasAdjDiff g] -- [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
   : δ† (λ x => f (g x)) = λ x dx' => (δ† g x) ((δ† f (g x)) dx') := 
 by 
+  have isf := instf.isSmooth
+  have iaf := instf.hasAdjDiff
+  have isg := instg.isSmooth
+  have iag := instg.hasAdjDiff
+
   simp[adjDiff] done
 
 
 @[simp low-2]
 theorem diag.arg_x.adjDiff_simp
-  (f : Y₁ → Y₂ → Z) [IsSmooth f] [∀ y₁, IsSmooth (f y₁)] 
-  [∀ y₁ y₂, HasAdjoint (λ dy₁ => δ f y₁ dy₁ y₂)]
-  [∀ y₁ y₂, HasAdjoint (λ dy₂ => δ (f y₁) y₂ dy₂)]
-  (g₁ : X → Y₁) [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
-  (g₂ : X → Y₂) [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
+  (f : Y₁ → Y₂ → Z) [IsSmooth f]
+  [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂]
+  [∀ y₁, HasAdjDiff λ y₂ => f y₁ y₂]
+  (g₁ : X → Y₁) [HasAdjDiff g₁]
+  (g₂ : X → Y₂) [HasAdjDiff g₂]
   : δ† (λ x => f (g₁ x) (g₂ x)) 
     = 
     λ x dx' => 
@@ -65,14 +73,8 @@ theorem diag.arg_x.adjDiff_simp
       (δ† g₂ x) ((δ† λ y₂ => f (g₁ x) y₂) (g₂ x) dx')
     := 
 by 
-  have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
-  simp[adjDiff] admit
+  admit
 
--- @[simp low]
--- theorem parm.arg_x.adjDiff_simp
---   (f : X → ι → Z) [∀ x, HasAdjoint $ δ f x] (i : ι)
---   : (λ x => f x i)† = (λ x' => f† (λ j => (kron i j) * x'))
--- := sorry
 
 @[simp low]
 theorem eval.arg_f.adjDiff_simp
@@ -82,8 +84,8 @@ theorem eval.arg_f.adjDiff_simp
 
 
 @[simp low]
-theorem parm.arg_x.adjDiff_simp
-  (f : X → ι → Z) [IsSmooth f] [∀ x, HasAdjoint $ δ f x] (i : ι)
+theorem eval.arg_x.parm1.adjDiff_simp
+  (f : X → ι → Z) [HasAdjDiff f]
   : δ† (λ x => f x i) = (λ x dx' => (δ† f x) (λ j => ((kron i j) * dx' : Z)))
 := 
 by 
@@ -98,17 +100,18 @@ by
 @[simp low-1]
 theorem comp.arg_x.parm1.adjDiff_simp
   (a : α) 
-  (f : Y → α → Z) [IsSmooth f] [∀ y, HasAdjoint (λ dy => δ f y dy a)]
-  (g : X → Y) [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
+  (f : Y → α → Z) [HasAdjDiff λ y => f y a]
+  (g : X → Y) [HasAdjDiff g]
   : 
     δ† (λ x => f (g x) a) = λ x dx' => (δ† g x) ((δ† (hold λ y => f y a)) (g x) dx')
 := by 
-  simp[adjDiff]; unfold hold; simp; done
+  apply (comp.arg_x.adjDiff_simp (λ y => f y a) g)
+  done
 
 example
   (a : α) 
-  (f : Y → α → Z) [IsSmooth f] [∀ y, HasAdjoint (λ dy => δ f y dy a)]
-  (g : X → Y) [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
+  (f : Y → α → Z) [HasAdjDiff λ y => f y a]
+  (g : X → Y) [HasAdjDiff g]
   : 
     δ† (λ x => f (g x) a) = λ x dx' => (δ† g x) ((δ† (λ y => f y a)) (g x) dx')
 := by simp done
@@ -116,32 +119,34 @@ example
 @[simp low-1]
 theorem comp.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
-  (f : Y → α → β → Z) [IsSmooth f] [∀ y, HasAdjoint (λ dy => δ f y dy a b)]
-  (g : X → Y) [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
+  (f : Y → α → β → Z) [HasAdjDiff λ y => f y a b]
+  (g : X → Y) [HasAdjDiff g]
   : 
     δ† (λ x => f (g x) a b) = λ x dx' => (δ† g x) ((δ† (hold λ y => f y a b)) (g x) dx')
 := by 
-  simp[adjDiff]; unfold hold; simp; done
+  apply (comp.arg_x.adjDiff_simp (λ y => f y a b) g)
+  done
 
 @[simp low-1]
 theorem comp.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
-  (f : Y → α → β → γ → Z) [IsSmooth f] [∀ y, HasAdjoint (λ dy => δ f y dy a b c)]
-  (g : X → Y) [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
+  (f : Y → α → β → γ → Z) [HasAdjDiff λ y => f y a b c]
+  (g : X → Y) [HasAdjDiff g]
   : 
     δ† (λ x => f (g x) a b c) = λ x dx' => (δ† g x) ((δ† (hold λ y => f y a b c)) (g x) dx')
 := by 
-  simp[adjDiff]; unfold hold; simp; done
+  apply (comp.arg_x.adjDiff_simp (λ y => f y a b c) g)
+  done
 
 
 @[simp low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm1.adjDiff_simp
   (a : α)
-  (f : Y₁ → Y₂ → α → Z) [IsSmooth f] [∀ y₁, IsSmooth (f y₁)] 
-  [∀ y₁ y₂, HasAdjoint (λ dy₁ => δ f y₁ dy₁ y₂ a)]
-  [∀ y₁ y₂, HasAdjoint (λ dy₂ => δ (f y₁) y₂ dy₂ a)]
-  (g₁ : X → Y₁) [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
-  (g₂ : X → Y₂) [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
+  (f : Y₁ → Y₂ → α → Z) [IsSmooth λ y₁ y₂ => f y₁ y₂ a]
+  [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂ a]
+  [∀ y₁, HasAdjDiff λ y₂ => f y₁ y₂ a]
+  (g₁ : X → Y₁) [HasAdjDiff g₁]
+  (g₂ : X → Y₂) [HasAdjDiff g₂]
   : δ† (λ x => f (g₁ x) (g₂ x) a)
     = 
     λ x dx' => 
@@ -149,43 +154,41 @@ theorem diag.arg_x.parm1.adjDiff_simp
       +
       (δ† g₂ x) ((δ† (hold λ y₂ => f (g₁ x) y₂ a)) (g₂ x) dx')
 := by 
-  have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
-  simp[adjDiff]; unfold hold; simp; unfold hold; admit
-
+  (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂)
+  done
 
 @[simp low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
-  (f : Y₁ → Y₂ → α → β → Z) [IsSmooth f] [∀ y₁, IsSmooth (f y₁)] 
-  [∀ y₁ y₂, HasAdjoint (λ dy₁ => δ f y₁ dy₁ y₂ a b)]
-  [∀ y₁ y₂, HasAdjoint (λ dy₂ => δ (f y₁) y₂ dy₂ a b)]
-  (g₁ : X → Y₁) [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
-  (g₂ : X → Y₂) [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
-  : δ† (λ x => f (g₁ x) (g₂ x) a b) 
+  (f : Y₁ → Y₂ → α → β → Z) [IsSmooth λ y₁ y₂ => f y₁ y₂ a b]
+  [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂ a b]
+  [∀ y₁, HasAdjDiff λ y₂ => f y₁ y₂ a b]
+  (g₁ : X → Y₁) [HasAdjDiff g₁]
+  (g₂ : X → Y₂) [HasAdjDiff g₂]
+  : δ† (λ x => f (g₁ x) (g₂ x) a b)
     = 
     λ x dx' => 
       (δ† g₁ x) ((δ† (hold λ y₁ => f y₁ (g₂ x) a b)) (g₁ x) dx')
       +
       (δ† g₂ x) ((δ† (hold λ y₂ => f (g₁ x) y₂ a b)) (g₂ x) dx')
 := by 
-  have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
-  simp[adjDiff]; unfold hold; simp; unfold hold; admit
-
+  (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂)
+  done
 
 @[simp low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
-  (f : Y₁ → Y₂ → α → β → γ → Z) [IsSmooth f] [∀ y₁, IsSmooth (f y₁)] 
-  [∀ y₁ y₂, HasAdjoint (λ dy₁ => δ f y₁ dy₁ y₂ a b c)]
-  [∀ y₁ y₂, HasAdjoint (λ dy₂ => δ (f y₁) y₂ dy₂ a b c)]
-  (g₁ : X → Y₁) [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
-  (g₂ : X → Y₂) [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
-  : δ† (λ x => f (g₁ x) (g₂ x) a b c) 
+  (f : Y₁ → Y₂ → α → β → γ → Z) [IsSmooth λ y₁ y₂ => f y₁ y₂ a b c]
+  [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂ a b c]
+  [∀ y₁, HasAdjDiff λ y₂ => f y₁ y₂ a b c]
+  (g₁ : X → Y₁) [HasAdjDiff g₁]
+  (g₂ : X → Y₂) [HasAdjDiff g₂]
+  : δ† (λ x => f (g₁ x) (g₂ x) a b c)
     = 
     λ x dx' => 
       (δ† g₁ x) ((δ† (hold λ y₁ => f y₁ (g₂ x) a b c)) (g₁ x) dx')
       +
       (δ† g₂ x) ((δ† (hold λ y₂ => f (g₁ x) y₂ a b c)) (g₂ x) dx')
 := by 
-  have inst : HasAdjoint (λ yy : Z × Z => yy.1 + yy.2) := sorry
-  simp[adjDiff]; unfold hold; simp; unfold hold; admit
+  (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a b c) g₁ g₂)
+  done

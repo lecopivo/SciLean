@@ -22,5 +22,5 @@ argument f [Vec X]
 argument f [SemiHilbert X]
   hasAdjoint  := sorry,
   adj_simp    := λ _ => f' by sorry,
-  hasAdjDiff  := by simp infer_instance done,
+  hasAdjDiff  := by constructor; infer_instance; simp; infer_instance done,
   adjDiff_simp := λ _ => df' by simp[adjDiff] done
