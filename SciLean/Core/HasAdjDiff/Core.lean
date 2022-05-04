@@ -17,28 +17,14 @@ theorem infer_HasAdjDiff {f : X → Y} [IsSmooth f] : (∀ x, HasAdjoint $ δ f 
 
 ----------------------------------------------------------------------
 
--- instance id.arg_x.hasAdjDiff (x : X)
---   : HasAdjoint $ δ (λ x' => x') x := by simp infer_instance
-
 instance id.arg_x.hasAdjDiff
   : HasAdjDiff (λ x : X => x) := by apply infer_HasAdjDiff; intro; simp; infer_instance
-
--- instance const.arg_x.hasAdjDiff (x : X)
---   : HasAdjoint $ δ (λ (x' : X) (i : ι) => x') x := by simp infer_instance
 
 instance const.arg_x.hasAdjDiff
   : HasAdjDiff (λ (x : X) (i : ι) => x) := by apply infer_HasAdjDiff; intro; simp; infer_instance
 
--- instance const.arg_y.hasAdjDiff (x : X) (y : Y)
---   : HasAdjoint $ δ (λ (y' : Y) => x) y := by simp infer_instance
-
 instance const.arg_y.hasAdjDiff (x : X)
   : HasAdjDiff (λ (y : Y) => x) := by apply infer_HasAdjDiff; intro; simp; infer_instance
-
--- instance (priority := low) swap.arg_y.hasAdjDiff
---   (f : ι → Y → Z) [∀ x, IsSmooth (f x)] [∀ x y, HasAdjoint $ δ (f x) y]
---   (y : Y)
---   : HasAdjoint $ δ (λ y' x => f x y') y := by simp infer_instance
 
 instance (priority := low) swap.arg_y.hasAdjDiff
   (f : ι → Y → Z) [inst : ∀ x, HasAdjDiff (f x)]
