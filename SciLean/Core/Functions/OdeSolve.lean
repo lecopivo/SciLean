@@ -31,7 +31,14 @@ argument x₀ [Vec X] [IsSmooth f] [∀ s, IsLin (f s)]
   isLin   := sorry
 argument x₀ [Hilbert X] [IsSmooth f] [∀ s, HasAdjoint (f s)]
   hasAdjoint := sorry,
-  adj_simp   := odeSolve (λ s => (f (t - s))†) t x₀' by sorry
+  adj_simp   := odeSolve (λ s => (f (t - s))†) t x₀' 
+  by 
+    -- Define adjoint solution `y such that
+    --  ∀ s, ⟪x (t - s), y s⟫ = ⟪x t, y 0⟫ 
+    -- in particular for s := t we get desired ⟪x 0, y t⟫ = ⟪x t, y 0⟫
+    -- Differentiate above equation w.r.t to `s and you get that `y satisfies
+    -- δ y s 1 = (f (t - s))†
+    sorry
 argument x₀ [Vec X] [IsSmooth f] [∀ s, IsSmooth (f s)]
   isSmooth   := sorry,
   diff_simp  := odeSolve (λ s => δ (f s) (odeSolve f s x₀)) t dx₀
