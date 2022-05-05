@@ -28,7 +28,7 @@ macro_rules
   let lam ← `((fun $parm => $funId $preArgs* $arg $postArgs*))
   let type ← `(SciLean.HasAdjDiff $lam)
 
-  `(instance $instId:ident $preParms:bracketedBinder* $postParms* $extraParms* $parm : $type := $proof)
+  `(instance $instId:ident $preParms:bracketedBinder* $postParms* $extraParms* : $type := $proof)
 
 | `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
       hasAdjDiff $extraParms:bracketedBinder*) => do

@@ -61,6 +61,33 @@ argument x [Fact (y ≠ 0)]
   inv_simp := x' * (1/y) by sorry
 
 
+-- Division --
+--------------
+
+-- ???BIG QUESTION???
+-- Can we really state smoothenss in `x as??
+--    IsSmooth (λ (x y : ℝ) => x / y)
+-- 
+-- or do we only have?
+--    ∀ y, IsSmooth (λ x : ℝ => x / y
+
+-- If only the second is true
+-- instance HDiv.hDiv.arg_x.isSmooth (y : ℝ) : IsSmooth (λ (x : ℝ) => x / y) := by sorry
+-- @[simp] theorem HDiv.hDiv.arg_x.diff_simp (y : ℝ) : δ (λ (x : ℝ) => x / y) = λ x dx => dx / y := by sorry
+
+function_properties HDiv.hDiv (x y : ℝ) : ℝ
+argument x
+  isLin     := by sorry,
+  isSmooth  := by sorry,
+  diff_simp := dx / y by sorry,
+  hasAdjoint := sorry,
+  adj_simp := x' / y by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
+  adjDiff_simp := dx' / y by simp[adjDiff] done
+
+--- We can't say much in `y as we do not have `IsSmoothAt
+
+
 -- Addition --
 --------------
 
@@ -150,3 +177,16 @@ argument y
   adj_simp     := y' * x by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
   adjDiff_simp := dy' * x by simp[adjDiff] done
+
+@[simp]
+theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[SemiInner.semiInner] done
+
+-- Squared Norm --
+------------------
+
+function_properties SemiInner.normSqr {X} [Hilbert X] (x : X) : ℝ
+argument x
+  isSmooth,
+  diff_simp := 2 * ⟪dx, x⟫ by simp[normSqr] admit,
+  hasAdjDiff,
+  adjDiff_simp := (2:ℝ) * x by sorry

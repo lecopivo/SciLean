@@ -1,17 +1,13 @@
-import SciLean.Basic
-import SciLean.Mechanics
+import SciLean.Core.Functions
+-- import SciLean.Mechanics
 import SciLean.Tactic.BubbleLimit
-import SciLean.Solver.Impl
+-- import SciLean.Solver.Impl
 
 open SciLean
 
 set_option synthInstance.maxSize 2048
 set_option synthInstance.maxHeartbeats 500000
 set_option maxHeartbeats 500000
-
-#eval Id.run do
-  let x : ℝ^(3:ℕ) := ^[1.0,2.0,3.0]
-  x
 
 section SNorm
 

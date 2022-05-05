@@ -75,11 +75,6 @@ syntax "argument_property" ident bracketedBinder* ident bracketedBinder* ":" ter
 syntax argProps := "argument" ident bracketedBinder* argProp,+
 syntax "function_properties" ident bracketedBinder* ":" term argProps+ : command
 
-macro "def" id:declId parms:bracketedBinder* ":" retType:term ":=" body:term props:argProps+ : command =>
-  `(def $id:declId $parms:bracketedBinder* : $retType := $body
-    function_properties $id:ident $parms:bracketedBinder* : $retType $props:argProps*)
-
-
 -- This seems overly complicated
 -- TODO: incorporate `argParms into `parms before calling `argument_property
 ---      This way you do not have to deal with `argParms when defining cusom `argument_property
@@ -118,3 +113,7 @@ macro_rules
       argument_property $x:ident $id:ident $allParms:bracketedBinder* : $retType where $prop)
 
 
+macro "def" id:declId parms:bracketedBinder* ":" retType:term ":=" body:term props:argProps+ : command => do
+  let funId := mkIdent $ id.getIdAt 0
+  `(def $id:declId $parms:bracketedBinder* : $retType := $body
+    function_properties $funId:ident $parms:bracketedBinder* : $retType $props:argProps*)

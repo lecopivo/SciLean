@@ -83,7 +83,7 @@ theorem eval.arg_f.adjDiff_simp
 := sorry
 
 
-@[simp low]
+@[simp low-1]
 theorem eval.arg_x.parm1.adjDiff_simp
   (f : X → ι → Z) [HasAdjDiff f]
   : δ† (λ x => f x i) = (λ x dx' => (δ† f x) (λ j => ((kron i j) * dx' : Z)))

@@ -32,17 +32,9 @@ example
 by
   simp
 
-set_option synthInstance.maxHeartbeats 2000 
-set_option maxHeartbeats 50000 
-set_option synthInstance.maxSize 2000
+-- set_option synthInstance.maxHeartbeats 2000 
+-- set_option maxHeartbeats 50000 
 
-
-set_option trace.Meta.synthInstance true in
-example : (x : Fin n → ℝ) → SciLean.HasAdjoint (SciLean.differential (fun x i => x (i + 1) * x i) x) :=
-by 
-  -- intro h;
-  -- apply swap.arg_y.hasAdjDiff
-  infer_instance
 
 
 set_option trace.Meta.Tactic.simp.discharge true in
@@ -52,21 +44,33 @@ by
   simp
   done
 
+
+-- @[simp] 
+theorem sum_of_add {X ι} [Enumtype ι] [Vec X]
+  (f g : ι → X)
+  : (∑ i, f i + g i) = (∑ i, f i) + (∑ i, g i)
+  := sorry
+
+theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
+  (f : ι → X → Y)
+  : (∑ i, λ j => f i j) = (λ j => ∑ i, f i j)
+  := sorry
+
+
+
 -- set_option synthInstance.maxHeartbeats 2000 in
 -- set_option maxHeartbeats 50000 in
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.unify true in
 example 
   : ∇ (λ (f : Fin n → ℝ) => ∑ i, (f (i + 1))*(f i))
     = 
-    (λ (f : Fin n → ℝ) i => f (i - 1) + f (i + 1)) 
+    (λ (f : Fin n → ℝ) => (λ i => ⟪1, f (i - 1)⟫) + (λ i => f (i + 1))) 
   := 
 by
-  simp
-  simp
-  done
-
-
+  simp; simp only [sum_of_add, sum_into_lambda]; simp done
+ 
 /-
 
 -- set_option synthInstance.maxHeartbeats 2000 in
@@ -81,16 +85,21 @@ by
   simp[AtomicAdjointFun.adj,hold]
   done
 
+-/ 
+
 
 -- set_option trace.Meta.Tactic.simp.discharge true in
 example {X} [Hilbert X] (x : X) 
   : 
     ∇ (λ x : X => ∥x∥²) x = (2 : ℝ) * x 
   := 
-by simp[gradient, adjoint_differential]
-   done
+by simp done 
 
--- set_option synthInstance.maxHeartbeats 1000 in
+
+set_option synthInstance.maxHeartbeats 1000 in
+set_option synthInstance.maxSize 2000 in
+
+
 example (g : Fin n → ℝ)
   : 
     ∇ (λ (f : Fin n → ℝ) => ∑ i, ⟪(f (i + 1) - f i), (f (i + 1) - f i)⟫) g 
@@ -98,10 +107,12 @@ example (g : Fin n → ℝ)
     (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
   := 
 by
-  simp[gradient, adjoint_differential]
-  simp[AtomicAdjointFun.adj,hold]
-  funext i; simp
+  funext i; simp; unfold hold; simp;
+  
+  rw[!?(i - 1 + 1 = i)]
   done
+
+/-
 
 -- set_option synthInstance.maxHeartbeats 50000 in
 -- set_option synthInstance.maxSize 2048 in                           
