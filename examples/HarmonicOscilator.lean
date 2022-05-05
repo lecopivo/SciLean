@@ -1,5 +1,9 @@
-import SciLean.Basic
+-- import SciLean.Core.Functions
 import SciLean.Mechanics
+import SciLean.Operators.ODE
+import SciLean.Solver 
+import SciLean.Tactic.LiftLimit
+import SciLean.Tactic.FinishImpl
 
 set_option synthInstance.maxHeartbeats 5000
 
@@ -14,7 +18,6 @@ def solver (m k : ℝ) (steps : Nat)
 by
   -- Unfold Hamiltonian definition and compute gradients
   simp[HamiltonianSystem, H]
-  simp[gradient, adjoint_differential, AtomicAdjointFun₂.adj₁, AtomicAdjointFun₂.adj₂, AtomicAdjointFun.adj]
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
@@ -44,4 +47,3 @@ def main : IO Unit := do
       if j < 10*(x.1+1) then
         IO.print "o"
     IO.println ""
-  

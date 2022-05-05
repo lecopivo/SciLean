@@ -1,4 +1,4 @@
-import SciLean.Operators
+import SciLean.Operators.Limit
 
 namespace SciLean
 

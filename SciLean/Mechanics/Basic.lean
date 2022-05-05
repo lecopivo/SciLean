@@ -1,4 +1,4 @@
-import SciLean.Operators
+import SciLean.Core.Functions
 
 open Function
 namespace SciLean

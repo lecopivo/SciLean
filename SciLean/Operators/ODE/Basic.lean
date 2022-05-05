@@ -1,4 +1,4 @@
-import SciLean.Operators.Calculus
+import SciLean.Core.Functions
 import SciLean.Operators.Limit
 
 namespace SciLean

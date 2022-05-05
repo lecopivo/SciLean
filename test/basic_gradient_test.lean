@@ -30,10 +30,12 @@ theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
   : (∑ i, λ j => f i j) = (λ j => ∑ i, f i j)
   := sorry
 
+@[simp] theorem one_smul {X} [Vec X] (x : X) : (1:ℝ) * x = x := sorry
 
 instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (δ† f x) := sorry
 
-set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify true in
 @[simp]
 theorem asdf [Nonempty ι]
   (f : Y → Z) [HasAdjDiff f]
@@ -42,8 +44,8 @@ theorem asdf [Nonempty ι]
     δ† (λ x i => f (g x i)) = λ x dx' => (δ† g x) λ i => ((δ† f) (g x i) (dx' i))
 := by 
   funext x dx';
-  simp; simp only [sum_of_linear]; simp; simp[HMul.hMul]
-  admit
+  simp; simp only [sum_of_linear]; simp
+  done
 
 
 @[simp high] -- try to avoid using this theorem
