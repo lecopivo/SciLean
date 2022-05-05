@@ -16,13 +16,75 @@ example (y : X)
     ∇ (λ x : X => ⟪x,x⟫) = λ x : X => (1:ℝ) * x + (1:ℝ) * x
   := by simp; unfold hold; simp done
 
+-- @[simp low]
+-- This can loop together with `sum_into_lambda`
+theorem sum_of_linear {X Y ι} [Enumtype ι] [Vec X] [Vec Y]
+  (f : X → Y) [IsLin f]
+  (g : ι → X)
+  : (∑ i, f (g i)) = f (∑ i, g i)
+  := sorry
 
-example (g : ι → ℝ) 
+@[simp] 
+theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
+  (f : ι → X → Y)
+  : (∑ i, λ j => f i j) = (λ j => ∑ i, f i j)
+  := sorry
+
+
+instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (δ† f x) := sorry
+
+set_option trace.Meta.Tactic.simp.discharge true in
+@[simp]
+theorem asdf [Nonempty ι]
+  (f : Y → Z) [HasAdjDiff f]
+  (g : X → ι → Y) [HasAdjDiff g]
   : 
-    ∇ (λ (f : ι → ℝ) => ∑ i, f i) g 
+    δ† (λ x i => f (g x i)) = λ x dx' => (δ† g x) λ i => ((δ† f) (g x i) (dx' i))
+:= by 
+  funext x dx';
+  simp; simp only [sum_of_linear]; simp; simp[HMul.hMul]
+  admit
+
+
+@[simp high] -- try to avoid using this theorem
+theorem hohoho [SemiHilbert Y₂] [SemiHilbert Y₁] [Nonempty ι]
+  (f : Y₁ → Y₂ → Z) [IsSmooth f]
+  [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂]
+  [∀ y₁, HasAdjDiff λ y₂ => f y₁ y₂]
+  (g₁ : X → ι → Y₁) [HasAdjDiff g₁]
+  (g₂ : X → ι → Y₂) [HasAdjDiff g₂]
+  : δ† (λ x i => f (g₁ x i) (g₂ x i))
+    = 
+    λ x dx' => 
+      (δ† g₁ x) (λ i => (δ† (hold λ y₁ => f y₁ (g₂ x i))) (g₁ x i) (dx' i))
+      +
+      (δ† g₂ x) (λ i => (δ† (hold λ y₂ => f (g₁ x i) y₂)) (g₂ x i) (dx' i))
+:= by admit
+
+  -- (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂)
+  -- done
+
+@[simp high + 1] -- try to avoid using this theorem
+theorem hohohoo
+  (g₁ : X → ι → ℝ) [HasAdjDiff g₁]
+  (g₂ : X → ι → Y) [HasAdjDiff g₂]
+  : δ† (λ x i => (g₁ x i) * (g₂ x i))
+    = 
+    λ x dx' => 
+      (δ† g₁ x) (λ i => ⟪dx' i, g₂ x i⟫)
+      +
+      (δ† g₂ x) (λ i => g₁ x i * dx' i)
+:= by admit
+
+
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+example (g : ι → ℝ) [Nonempty ι]
+  : 
+    ∇ (λ (f : ι → ℝ) => ∑ i, (f i) * (f i)) g 
     = 
     (λ _ => (1 : ℝ)) 
-  := by simp done
+  := by simp; unfold hold; simp done
 
 
 example 
@@ -36,9 +98,8 @@ by
 -- set_option maxHeartbeats 50000 
 
 
-
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.rewrite true in
 example : adjDiff (fun (x : Fin n → ℝ) => x i) = (fun x dx' j => kron i j * dx') :=
 by
   simp
