@@ -5,7 +5,6 @@ import SciLean.Solver
 import SciLean.Tactic.LiftLimit
 import SciLean.Tactic.FinishImpl
 
-set_option synthInstance.maxHeartbeats 5000
 
 open SciLean
 

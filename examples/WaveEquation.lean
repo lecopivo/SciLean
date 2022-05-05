@@ -1,5 +1,8 @@
-import SciLean.Basic
 import SciLean.Mechanics
+import SciLean.Operators.ODE
+import SciLean.Solver 
+import SciLean.Tactic.LiftLimit
+import SciLean.Tactic.FinishImpl
 
 set_option synthInstance.maxHeartbeats 500000
 set_option maxHeartbeats 500000

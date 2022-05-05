@@ -1,4 +1,18 @@
-import SciLean.Operators
+
+/- 
+
+  In this file we provide some goodies for Prod 
+
+  Namely 
+    1. index access: 
+       `(42, 1.0, "hello")[2] == "hello"`
+    2. index set:
+       `(42,3.14159,"hello").set 2 "world" = (42,3.14159,"world")`
+    3. curry function:
+       `hcurry 3 (λ ((i,j,k) : Nat×Nat×Nat) => i + j) = (λ i j k => i + j)`
+    4. uncurry function
+       `huncurry 3 (λ i j k : Nat => i + j) = λ (i,j,k) => i + j`
+ -/ 
 
 ----------------------------------------------------------------------
 
