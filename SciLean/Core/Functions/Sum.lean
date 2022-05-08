@@ -1,15 +1,7 @@
--- import SciLean.Core.IsSmooth
--- import SciLean.Core.IsLin
--- import SciLean.Core.HasAdjoint
-
-import SciLean.Core.Diff
-import SciLean.Core.Adjoint
-import SciLean.Core.AdjDiff
-import SciLean.Core.Inv
-
+import SciLean.Core.Mor
+import SciLean.Core.Fun
 
 namespace SciLean
-
 
 -- Sum --
 ---------
