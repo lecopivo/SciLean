@@ -1,6 +1,8 @@
 import Lean
 import Init.Classical
 
+import SciLean.Core.Prelude
+import SciLean.Core.Mor.IsLin
 import SciLean.Core.Mor.IsSmooth
 
 namespace SciLean
@@ -20,6 +22,15 @@ def differential (f : X → Y) (x dx : X) : Y :=
       | _ => (0 : Y)
 
 prefix:max "δ" => differential
+
+-- -- Bad as an instance
+-- theorem linear_is_smooth (f : X → Y) [IsLin f] : IsSmooth f := sorry
+-- Bad for simp
+theorem diff_of_linear (f : X → Y) [IsLin f] : δ f = λ x dx => f dx := sorry
+
+instance diff.arg_x.isSmooth (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
+instance diff.arg_dx.isLin    (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (δ f x) := sorry
+instance diff.arg_dx.isSmooth (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (δ f x) := sorry
 
 ----------------------------------------------------------------------
 

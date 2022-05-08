@@ -83,6 +83,9 @@ namespace ℝ
 
   instance : Inv ℝ := ⟨λ x => 1.0/x⟩
 
+  instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
+
+
   -- instance : HPow ℝ ℤ ℝ := ⟨λ x n => x^(n : ℝ)⟩
   -- ⟨λ x n => 
   --   match n with

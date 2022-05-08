@@ -67,8 +67,9 @@ namespace ℝ
   instance : Zero ℝ := ⟨0.0⟩  
   instance : One ℝ  := ⟨1.0⟩
   instance : HPow ℝ ℝ ℝ := ⟨Math.pow⟩
-
   instance : Inv ℝ := ⟨λ x => 1.0/x⟩
+
+  instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
 
   instance : CommRing ℝ where
     zero_mul := sorry
@@ -111,7 +112,6 @@ namespace ℝ
     fpow n x := x^(n : ℝ)   ---------  !!!
     fpow_succ := sorry
     fpow_neg := sorry
-
 
 end ℝ
 

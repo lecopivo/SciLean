@@ -1,6 +1,7 @@
 import SciLean.Std.Function
 import SciLean.Mathlib.Convenient.Basic
--- import SciLean.Categories.Lin
+
+import SciLean.Core.Mor.IsLin
 
 namespace SciLean
 
@@ -12,7 +13,8 @@ class IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_smooth : is_smo
 
 def SmoothMap (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsSmooth f }
 
--- theorem lin_is_smooth (f : X → Y) [IsLin f] : IsSmooth f := sorry
+-- Would be a bad instance!
+theorem linear_is_smooth (f : X → Y) [IsLin f] : IsSmooth f := sorry
 
 ------------------------------------------------------------------------------------
 

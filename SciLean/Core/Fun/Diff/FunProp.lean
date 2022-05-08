@@ -96,13 +96,13 @@ macro_rules
        diff $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident  $funId:ident $parms:bracketedBinder* : $retType:term where
-       diff $extraParms:bracketedBinder* by unfold $funId; simp)
+       diff $extraParms:bracketedBinder* by (first | rw[diff_of_linear] | (unfold $funId; simp; unfold hold; simp)))
 
 | `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        diff? $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident  $funId:ident $parms:bracketedBinder* : $retType:term where
-       diff $extraParms:bracketedBinder* by unfold $funId; simp; trace_state)
+       diff $extraParms:bracketedBinder* by (first | rw[diff_of_linear] | (unfold $funId; simp; unfold hold; simp)); trace_state)
 
 | `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        diff_simp $extraParms:bracketedBinder* := $df:term by $proof:tacticSeq) => do
@@ -118,11 +118,11 @@ macro_rules
        diff_simp $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
-       diff_simp $extraParms:bracketedBinder* by unfold $funId; simp)
+       diff_simp $extraParms:bracketedBinder*  by (first | rw[diff_of_linear] | (unfold $funId; simp; unfold hold; simp)))
 
 | `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        diff_simp? $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
-       diff_simp $extraParms:bracketedBinder* by unfold $funId; simp; trace_state)
+       diff_simp $extraParms:bracketedBinder* by (first | rw[diff_of_linear] | (unfold $funId; simp; unfold hold; simp));trace_state)
 

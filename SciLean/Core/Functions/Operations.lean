@@ -7,11 +7,12 @@ namespace SciLean
 -- Negation --
 --------------
 
+#check Nat
+
 function_properties Neg.neg {X : Type} (x : X) : X
 argument x [Vec X]
   isLin      := sorry,
-  isSmooth   := sorry,
-  diff_simp  := - dx by sorry
+  isSmooth, diff_simp 
 argument x [SemiHilbert X]
   hasAdjoint := sorry,
   adj_simp   := - x' by sorry,
@@ -28,8 +29,7 @@ argument x [AddGroup X] [Nonempty X]
 function_properties HMul.hMul {X : Type} (x : ℝ) (y : X) : X
 argument x [Vec X] 
   isLin      := sorry,
-  isSmooth   := sorry, 
-  diff_simp  := dx * y by sorry
+  isSmooth, diff_simp
 argument x [Hilbert X]
   hasAdjoint := sorry,
   adj_simp   := ⟪x', y⟫ by sorry,
@@ -38,8 +38,7 @@ argument x [Hilbert X]
 
 argument y [Vec X]
   isLin      := sorry,
-  isSmooth   := sorry,
-  diff_simp  := x * dy by sorry
+  isSmooth, diff_simp
 argument y [SemiHilbert X]
   hasAdjoint := sorry,
   adj_simp   := x * y' by sorry,
@@ -72,8 +71,7 @@ argument x [Fact (y ≠ 0)]
 function_properties HDiv.hDiv (x y : ℝ) : ℝ
 argument x
   isLin     := by sorry,
-  isSmooth  := by sorry,
-  diff_simp := dx / y by sorry,
+  isSmooth, diff_simp,
   hasAdjoint := sorry,
   adj_simp := x' / y by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
@@ -157,17 +155,15 @@ instance HSub.hSub.arg_xy.hasAdjoint {X} [SemiHilbert X]
 function_properties SemiInner.semiInner {X} [Hilbert X] (x y : X) (Ω : 𝓓 X) : ℝ
 argument x
   isLin        := sorry,
-  isSmooth     := sorry,
+  isSmooth, diff_simp,
   hasAdjoint   := sorry,
-  diff_simp    := ⟪dx, y⟫[Ω] by sorry,
   adj_simp     := x' * y by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
   adjDiff_simp := dx' * y by simp[adjDiff] done
 argument y
   isLin        := sorry,
-  isSmooth     := sorry,
+  isSmooth, diff_simp,
   hasAdjoint   := sorry,
-  diff_simp    := ⟪x, dy⟫[Ω] by sorry,
   adj_simp     := y' * x by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
   adjDiff_simp := dy' * x by simp[adjDiff] done

@@ -13,8 +13,6 @@ open Function SciLean
 
 variable {n : USize} [Nonempty (Idx n)]
 
-instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
-
 def H (m k : ℝ) (x p : ℝ^n) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)
   (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i , ∥x[i] - x[i - (1:USize)]∥²)
