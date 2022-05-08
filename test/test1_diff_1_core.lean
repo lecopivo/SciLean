@@ -6,7 +6,7 @@ variable {α β γ : Type}
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 
-set_option maxHeartbeats 1500
+set_option maxHeartbeats 2000
 set_option synthInstance.maxHeartbeats 250
 set_option synthInstance.maxSize 60
 
@@ -69,4 +69,4 @@ example g dg x : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g
 example g dg x : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = δ F (g x) (dg x) y := by simp done
 example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by simp; ring done
 example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by simp done 
-example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by simp done
+example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by simp; ring done

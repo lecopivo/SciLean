@@ -3,7 +3,7 @@ import SciLean.Mathlib.Data.Prod
 import SciLean.Mathlib.Data.Pi
 import SciLean.Mathlib.Data.PUnit
 
-import SciLean.Algebra.Real
+import SciLean.Core.Obj.Real
 
 namespace SciLean
 
@@ -37,7 +37,7 @@ section CommonVectorSpaces
 
   instance {X} [Vec X] : Inhabited X := ⟨0⟩
 
-  set_option synthInstance.maxHeartbeats 5000
+  -- set_option synthInstance.maxHeartbeats 5000
   instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
   instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
   instance : Module ℝ ℝ := Module.mk sorry sorry
@@ -69,9 +69,9 @@ section CommonVectorSpaces
   instance {A B M} [AddMonoid B] [AddMonoid A] [Monoid M] [DistribMulAction M A]  [DistribMulAction M B] : DistribMulAction M (A × B) := DistribMulAction.mk sorry sorry
   instance {M N R} [AddCommGroup M] [AddCommGroup N] [Semiring R] [Module R M] [Module R N] : Module R (M × N) := Module.mk sorry sorry
 
-  set_option synthInstance.maxHeartbeats 5000
+  -- set_option synthInstance.maxHeartbeats 5000
   instance [Vec U] [Vec V] : Vec (U × V) := Vec.mk
-  set_option synthInstance.maxHeartbeats 500
+  -- set_option synthInstance.maxHeartbeats 500
 
 
   instance : AddSemigroup Unit := AddSemigroup.mk sorry

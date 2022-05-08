@@ -1,5 +1,4 @@
 import Mathlib.Algebra.Group.Basic
-import Mathlib.Init.Function
 
 section FunctionOperations
 

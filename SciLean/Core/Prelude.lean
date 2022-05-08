@@ -1,3 +1,4 @@
+import Mathlib
 import SciLean.Algebra
 
 namespace SciLean
