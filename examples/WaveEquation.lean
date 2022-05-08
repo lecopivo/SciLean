@@ -3,26 +3,34 @@ import SciLean.Operators.ODE
 import SciLean.Solver 
 import SciLean.Tactic.LiftLimit
 import SciLean.Tactic.FinishImpl
+import SciLean.Data.PowType
+import SciLean.Core.Extra
 
-set_option synthInstance.maxHeartbeats 500000
-set_option maxHeartbeats 500000
+-- set_option synthInstance.maxHeartbeats 500000
+-- set_option maxHeartbeats 500000
 
 open Function SciLean
 
-notation x "[[" i "]]" => PowType.powType.getOp x i
+-- notation x "[[" i "]]" => PowType.powType.getOp x i
 
-variable (n : Nat) [NonZero n]
+variable {n : USize} [Nonempty (Idx n)]
 
-def H (m k : ℝ) (x p : ℝ^n) := 
+instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
+
+def H (m k : ℝ) (x p : ℝ^n) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)
-  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²) -- + 2 * k * (∑ i, ∥(∥x[i] - x[i-1]∥² - 0.1)∥²)
+  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i , ∥x[i] - x[i - (1:USize)]∥²)
+argument x
+  isSmooth, diff, hasAdjDiff, adjDiff
+argument p
+  isSmooth, diff, hasAdjDiff, adjDiff
 
+-- set_option trace.Meta.Tactic.simp.rewrite true in
 -- set_option trace.Meta.Tactic.simp.discharge true in
-def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H n m k))) :=
+def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H (n:=n) m k))) :=
 by
   -- Unfold Hamiltonian definition and compute gradients
-  simp[HamiltonianSystem, H]
-  simp[gradient, adjoint_differential, AtomicAdjointFun₂.adj₁, AtomicAdjointFun₂.adj₂, AtomicAdjointFun.adj]
+  simp [HamiltonianSystem]
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
@@ -37,10 +45,12 @@ def main : IO Unit := do
   let k := 100000.0
 
   let N : Nat := 100
-  let evolve ← (solver N m k substeps).assemble
+  have h : Nonempty (Idx N) := sorry
+
+  let evolve ← (solver (n:=N) m k substeps).assemble
 
   let t := 1.0
-  let x₀ : (ℝ^N) := PowType.intro λ (i : Fin N) => (Math.sin ((i : ℝ)/10))
+  let x₀ : (ℝ^N) := PowType.intro λ (i : Idx N) => (Math.sin ((i.1 : ℝ)/10))
   let p₀ : (ℝ^N) := PowType.intro λ i => (0 : ℝ)
   let mut (x,p) := (x₀, p₀)
 

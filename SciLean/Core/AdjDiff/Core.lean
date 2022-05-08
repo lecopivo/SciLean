@@ -18,6 +18,7 @@ def adjDiff
 prefix:max "δ†" => adjDiff
 macro:max "∇" f:term:max : term => `(λ x => δ† $f x (1:ℝ))
 
+instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (δ† f x) := sorry
 
 ----------------------------------------------------------------------
 
@@ -81,7 +82,6 @@ theorem eval.arg_f.adjDiff_simp
   (i : ι)
   : δ† (λ (f : ι → X) => f i) = (λ f df' j => ((kron i j) * df' : X))
 := sorry
-
 
 @[simp low-1]
 theorem eval.arg_x.parm1.adjDiff_simp
@@ -192,3 +192,5 @@ theorem diag.arg_x.parm3.adjDiff_simp
 := by 
   (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a b c) g₁ g₂)
   done
+
+

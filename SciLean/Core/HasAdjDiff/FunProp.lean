@@ -34,4 +34,4 @@ macro_rules
       hasAdjDiff $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
-      hasAdjDiff $extraParms:bracketedBinder* := by unfold $funId; infer_instance; done)
+      hasAdjDiff $extraParms:bracketedBinder* := by unfold $funId; simp; infer_instance; done)

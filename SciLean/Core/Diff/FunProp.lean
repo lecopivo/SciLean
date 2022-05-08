@@ -65,6 +65,7 @@ open Lean.Parser.Tactic.Conv
 syntax "diff" bracketedBinder* ":=" term "by" tacticSeq : argProp
 syntax "diff" bracketedBinder* "by" convSeq : argProp
 syntax "diff" bracketedBinder* : argProp
+syntax "diff?" bracketedBinder* : argProp
 
 -- Sometime it is undesirable to generate definition `f.arg_x.diff
 -- This is usefull for example for differential of composition:
@@ -78,6 +79,7 @@ syntax "diff" bracketedBinder* : argProp
 syntax "diff_simp" bracketedBinder* ":=" term "by" tacticSeq : argProp
 syntax "diff_simp" bracketedBinder* "by" convSeq : argProp
 syntax "diff_simp" bracketedBinder* : argProp
+syntax "diff_simp?" bracketedBinder* : argProp
 
 macro_rules
 | `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
@@ -97,6 +99,12 @@ macro_rules
        diff $extraParms:bracketedBinder* by unfold $funId; simp)
 
 | `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
+       diff? $extraParms:bracketedBinder*) => do
+
+  `(argument_property $x:ident  $funId:ident $parms:bracketedBinder* : $retType:term where
+       diff $extraParms:bracketedBinder* by unfold $funId; simp; trace_state)
+
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        diff_simp $extraParms:bracketedBinder* := $df:term by $proof:tacticSeq) => do
 
   generateDifferentialCommands x funId retType parms extraParms (.explicit df proof) (makeDef := false)
@@ -111,4 +119,10 @@ macro_rules
 
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        diff_simp $extraParms:bracketedBinder* by unfold $funId; simp)
+
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
+       diff_simp? $extraParms:bracketedBinder*) => do
+
+  `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
+       diff_simp $extraParms:bracketedBinder* by unfold $funId; simp; trace_state)
 

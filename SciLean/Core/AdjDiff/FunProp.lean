@@ -42,7 +42,7 @@ do
        `((by 
            conv => enter[1]; $rw
            apply AutoImpl.finish
-          : AutoImpl $adjDiffNonComp).val)
+          : AutoImpl $adjDiffNonComp).val $arg $darg')
   let eqProof ← 
     match mode with
       | .explicit df proof => 
@@ -68,6 +68,8 @@ open Lean.Parser.Tactic.Conv
 syntax "adjDiff" bracketedBinder* ":=" term "by" tacticSeq : argProp
 syntax "adjDiff" bracketedBinder* "by" convSeq : argProp
 syntax "adjDiff" bracketedBinder* : argProp
+syntax "adjDiff?" bracketedBinder* : argProp
+
 
 -- Sometime it is undesirable to generate definition `f.arg_x.adjDiff
 -- This is usefull for example for adjDifferential of composition:
@@ -81,6 +83,7 @@ syntax "adjDiff" bracketedBinder* : argProp
 syntax "adjDiff_simp" bracketedBinder* ":=" term "by" tacticSeq : argProp
 syntax "adjDiff_simp" bracketedBinder* "by" convSeq : argProp
 syntax "adjDiff_simp" bracketedBinder* : argProp
+syntax "adjDiff_simp?" bracketedBinder* : argProp
 
 macro_rules
 | `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
@@ -97,7 +100,13 @@ macro_rules
        adjDiff $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident  $funId:ident $parms:bracketedBinder* : $retType:term where
-       adjDiff $extraParms:bracketedBinder* by unfold $funId; simp)
+       adjDiff $extraParms:bracketedBinder* by unfold $funId; simp; unfold hold; simp)
+
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
+       adjDiff? $extraParms:bracketedBinder*) => do
+
+  `(argument_property $x:ident  $funId:ident $parms:bracketedBinder* : $retType:term where
+       adjDiff $extraParms:bracketedBinder* by unfold $funId; simp; unfold hold; simp; trace_state)
 
 | `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
        adjDiff_simp $extraParms:bracketedBinder* := $df:term by $proof:tacticSeq) => do
@@ -113,5 +122,11 @@ macro_rules
        adjDiff_simp $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
-       adjDiff_simp $extraParms:bracketedBinder* by unfold $funId; simp)
+       adjDiff_simp $extraParms:bracketedBinder* by unfold $funId; simp; unfold hold; simp)
+
+| `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
+       adjDiff_simp? $extraParms:bracketedBinder*) => do
+
+  `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
+       adjDiff_simp $extraParms:bracketedBinder* by unfold $funId; simp; unfold hold; simp; trace_state)
 

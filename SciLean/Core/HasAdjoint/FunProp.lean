@@ -28,4 +28,5 @@ macro_rules
       hasAdjoint $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
-      hasAdjoint $extraParms:bracketedBinder* := by unfold $funId; infer_instance; done)
+      hasAdjoint $extraParms:bracketedBinder* := by unfold $funId; simp; infer_instance; done)
+

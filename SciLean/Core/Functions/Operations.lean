@@ -189,4 +189,4 @@ argument x
   isSmooth,
   diff_simp := 2 * ⟪dx, x⟫ by simp[normSqr] admit,
   hasAdjDiff,
-  adjDiff_simp := (2:ℝ) * x by sorry
+  adjDiff_simp := ((2:ℝ) * dx') * x by simp[normSqr]; unfold hold; simp; admit

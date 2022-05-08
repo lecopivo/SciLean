@@ -2,6 +2,7 @@
 -- import SciLean.Tactic
 
 import SciLean.Core.Functions
+import SciLean.Core.Extra
 
 namespace SciLean
 
@@ -14,78 +15,6 @@ variable {n : Nat} [Nonempty (Fin n)]
 example (y : X)
   : 
     ∇ (λ x : X => ⟪x,x⟫) = λ x : X => (1:ℝ) * x + (1:ℝ) * x
-  := by simp; unfold hold; simp done
-
--- @[simp low]
--- This can loop together with `sum_into_lambda`
-theorem sum_of_linear {X Y ι} [Enumtype ι] [Vec X] [Vec Y]
-  (f : X → Y) [IsLin f]
-  (g : ι → X)
-  : (∑ i, f (g i)) = f (∑ i, g i)
-  := sorry
-
-@[simp] 
-theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
-  (f : ι → X → Y)
-  : (∑ i, λ j => f i j) = (λ j => ∑ i, f i j)
-  := sorry
-
-@[simp] theorem one_smul {X} [Vec X] (x : X) : (1:ℝ) * x = x := sorry
-
-instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (δ† f x) := sorry
-
--- set_option trace.Meta.Tactic.simp.discharge true in
--- set_option trace.Meta.Tactic.simp.unify true in
-@[simp]
-theorem asdf [Nonempty ι]
-  (f : Y → Z) [HasAdjDiff f]
-  (g : X → ι → Y) [HasAdjDiff g]
-  : 
-    δ† (λ x i => f (g x i)) = λ x dx' => (δ† g x) λ i => ((δ† f) (g x i) (dx' i))
-:= by 
-  funext x dx';
-  simp; simp only [sum_of_linear]; simp
-  done
-
-
-@[simp high] -- try to avoid using this theorem
-theorem hohoho [SemiHilbert Y₂] [SemiHilbert Y₁] [Nonempty ι]
-  (f : Y₁ → Y₂ → Z) [IsSmooth f]
-  [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂]
-  [∀ y₁, HasAdjDiff λ y₂ => f y₁ y₂]
-  (g₁ : X → ι → Y₁) [HasAdjDiff g₁]
-  (g₂ : X → ι → Y₂) [HasAdjDiff g₂]
-  : δ† (λ x i => f (g₁ x i) (g₂ x i))
-    = 
-    λ x dx' => 
-      (δ† g₁ x) (λ i => (δ† (hold λ y₁ => f y₁ (g₂ x i))) (g₁ x i) (dx' i))
-      +
-      (δ† g₂ x) (λ i => (δ† (hold λ y₂ => f (g₁ x i) y₂)) (g₂ x i) (dx' i))
-:= by admit
-
-  -- (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂)
-  -- done
-
-@[simp high + 1] -- try to avoid using this theorem
-theorem hohohoo
-  (g₁ : X → ι → ℝ) [HasAdjDiff g₁]
-  (g₂ : X → ι → Y) [HasAdjDiff g₂]
-  : δ† (λ x i => (g₁ x i) * (g₂ x i))
-    = 
-    λ x dx' => 
-      (δ† g₁ x) (λ i => ⟪dx' i, g₂ x i⟫)
-      +
-      (δ† g₂ x) (λ i => g₁ x i * dx' i)
-:= by admit
-
-
-
-set_option trace.Meta.Tactic.simp.rewrite true in
-example (g : ι → ℝ) [Nonempty ι]
-  : 
-    ∇ (λ (f : ι → ℝ) => ∑ i, (f i) * (f i)) g 
-    = 
-    (λ _ => (1 : ℝ)) 
   := by simp; unfold hold; simp done
 
 
@@ -108,18 +37,6 @@ by
   done
 
 
--- @[simp] 
-theorem sum_of_add {X ι} [Enumtype ι] [Vec X]
-  (f g : ι → X)
-  : (∑ i, f i + g i) = (∑ i, f i) + (∑ i, g i)
-  := sorry
-
-theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
-  (f : ι → X → Y)
-  : (∑ i, λ j => f i j) = (λ j => ∑ i, f i j)
-  := sorry
-
-
 
 -- set_option synthInstance.maxHeartbeats 2000 in
 -- set_option maxHeartbeats 50000 in
@@ -132,7 +49,7 @@ example
     (λ (f : Fin n → ℝ) => (λ i => ⟪1, f (i - 1)⟫) + (λ i => f (i + 1))) 
   := 
 by
-  simp; simp only [sum_of_add, sum_into_lambda]; simp done
+  simp[sum_of_add, sum_into_lambda]  done
  
 /-
 
@@ -167,7 +84,7 @@ example (g : Fin n → ℝ)
   : 
     ∇ (λ (f : Fin n → ℝ) => ∑ i, ⟪(f (i + 1) - f i), (f (i + 1) - f i)⟫) g 
     = 
-    (λ i => (2 : ℝ) * (g (i - 1 + 1) - g (i - 1) - (g (i + 1) - g i))) 
+    (λ i => 2 * (g i - g (i - 1) + -(g (i + 1) - g i))) 
   := 
 by
   funext i; simp; unfold hold; simp;
