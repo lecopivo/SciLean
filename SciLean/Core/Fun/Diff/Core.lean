@@ -66,3 +66,15 @@ theorem diff_of_diag
 theorem diff_of_parm
   (f : X → α → Y) [IsSmooth f] (a : α)
   : δ (λ x => f x a) = λ x dx => δ f x dx a := sorry
+
+
+@[simp low]
+theorem uncurry.arg_xy.diff_simp
+  (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
+  : δ (λ ((x,y) : (X×Y)) => f x y) = λ (x,y) (dx,dy) => δ f x dx y + δ (f x) y dy := sorry 
+
+@[simp low]
+theorem uncurry.arg_xy.parm1.diff_simp
+  (a : α)
+  (f : X → Y → α → Z) [IsSmooth λ x y => f x y a] [∀ x, IsSmooth (λ y => f x y a)]
+  : δ (λ ((x,y) : (X×Y)) => f x y a) = λ (x,y) (dx,dy) => δ f x dx y a + δ (f x) y dy a := sorry

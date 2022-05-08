@@ -10,8 +10,7 @@ namespace SciLean
 function_properties Prod.fst {X Y : Type} (xy : X × Y) : X
 argument xy [Vec X] [Vec Y]
   isLin        := sorry,
-  isSmooth,
-  diff_simp    := dxy.1 by apply diff_of_linear
+  isSmooth, diff_simp, fwdDiff_simp
 argument xy [SemiHilbert X] [SemiHilbert Y]
   hasAdjoint   := sorry,
   adj_simp     := (xy', 0) by sorry,
@@ -30,8 +29,7 @@ argument xy [Nonempty X] [Subsingleton Y] [Inhabited Y]
 function_properties Prod.snd {X Y : Type} (xy : X × Y) : Y
 argument xy [Vec X] [Vec Y]
   isLin        := sorry,
-  isSmooth,
-  diff_simp    := dxy.2 by apply diff_of_linear
+  isSmooth, diff_simp, fwdDiff_simp
 argument xy [SemiHilbert X] [SemiHilbert Y]
   hasAdjoint   := sorry,
   adj_simp     := (0, xy') by sorry,
