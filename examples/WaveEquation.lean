@@ -11,8 +11,6 @@ import SciLean.Core.Extra
 
 open Function SciLean
 
--- notation x "[[" i "]]" => PowType.powType.getOp x i
-
 variable {n : USize} [Nonempty (Idx n)]
 
 instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩

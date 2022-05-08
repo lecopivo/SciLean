@@ -1,4 +1,4 @@
-import SciLean.Core.Functions
+import SciLean.Core
 
 namespace SciLean
 

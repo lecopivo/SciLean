@@ -31,5 +31,3 @@ macro_rules
   -- let funId    := Lean.mkIdent $ funId.getIdAt 0
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
       isSmooth $extraParms:bracketedBinder* := by unfold $funId; simp; infer_instance; done)
-
-

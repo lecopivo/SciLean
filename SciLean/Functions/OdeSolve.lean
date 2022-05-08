@@ -1,10 +1,4 @@
-import SciLean.Core.Diff
-import SciLean.Core.Adjoint
-import SciLean.Core.AdjDiff
-import SciLean.Core.Inv
-
-import SciLean.Core.Functions.Prod
-import SciLean.Core.Functions.Operations
+import SciLean.Core
 
 namespace SciLean
 
