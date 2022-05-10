@@ -12,6 +12,12 @@ structure Vec3 where
   y : ℝ
   z : ℝ
 
+structure Vec4 where
+  x : ℝ
+  y : ℝ
+  z : ℝ
+  w : ℝ
+
 structure FloatNArray (n : Nat) where
   val : FloatArray
   property : val.size = n
@@ -22,7 +28,8 @@ abbrev RealPowType (n : Nat) :=
   | 1 => ℝ
   | 2 => Vec2
   | 3 => Vec3
-  | k+4 => FloatNArray (k+4)
+  | 4 => Vec4
+  | k+5 => FloatNArray (k+4)
 
 def RealPowType.intro {n : Nat} (f : Idx n → ℝ) : RealPowType n := 
   match n with
@@ -32,35 +39,57 @@ def RealPowType.intro {n : Nat} (f : Idx n → ℝ) : RealPowType n :=
     ⟨f !0, f !1⟩
   | 3 => 
     ⟨f !0, f !1, f !2⟩
-  | m+4 => Id.run do
+  | 4 => 
+    ⟨f !0, f !1, f !2, f !3⟩
+  | m+5 => Id.run do
     let mut x := FloatArray.mkEmpty n
     for i in Idx.all do
       x := x.push (f i).1
     ⟨x,sorry⟩
 
-def RealPowType.get {n : Nat} (x : RealPowType n) (i : USize) (h : i.1 < n) : ℝ := 
+def RealPowType.get {n : Nat} (x : RealPowType n) (i : USize) (h : i.1.1 < n) : ℝ := 
   match n with
   | 0 => 0
   | 1 => x
-  | 2 => if i = 0 then x.x else x.y
-  | 3 => if i = 0 then x.x else if i = 1 then x.y else x.z
-  | m+4 => 
+  | 2 => 
+    match i with
+    | ⟨0, _⟩ => x.x
+    | ⟨1, _⟩ => x.y
+  | 3 => 
+    match i with
+    | ⟨0, _⟩ => x.x
+    | ⟨1, _⟩ => x.y
+    | ⟨2, _⟩ => x.z
+  | 4 => 
+    match i with
+    | ⟨0, _⟩ => x.x
+    | ⟨1, _⟩ => x.y
+    | ⟨2, _⟩ => x.z
+    | ⟨3, _⟩ => x.w
+  | m+5 => 
     let x : FloatNArray _ := x  -- force Lean to realize the type of x
     ⟨x.val.uget i sorry⟩
 
-def RealPowType.set {n : Nat} (x : RealPowType n) (i : USize) (xi : ℝ) (h : i.1 < n) : RealPowType n := 
+def RealPowType.set {n : Nat} (x : RealPowType n) (i : USize) (xi : ℝ) (h : i.1.1 < n) : RealPowType n := 
   match n with
   | 0 => 0
   | 1 => xi
-  | 2 => if i = 0 then {x with x := xi} else {x with y := xi}
+  | 2 =>
+    match i with
+    | ⟨0, _⟩ => {x with x := xi}
+    | ⟨1, _⟩ => {x with y := xi}
   | 3 => 
-    if i = 0 then
-      {x with x := xi} 
-    else if i = 1 then 
-      {x with y := xi} 
-    else 
-      {x with z := xi}
-  | m+4 => 
+    match i with
+    | ⟨0, _⟩ => {x with x := xi}
+    | ⟨1, _⟩ => {x with y := xi}
+    | ⟨2, _⟩ => {x with z := xi}
+  | 4 => 
+    match i with
+    | ⟨0, _⟩ => {x with x := xi}
+    | ⟨1, _⟩ => {x with y := xi}
+    | ⟨2, _⟩ => {x with z := xi}
+    | ⟨3, _⟩ => {x with w := xi}
+  | m+5 => 
     let x : FloatNArray _ := x
     ⟨x.1.uset i xi.1 sorry, sorry⟩
 
