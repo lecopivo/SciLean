@@ -18,6 +18,13 @@ section FunctionOperations
 
   variable (f g : (a : α) → β a) (a : α)
 
+  @[simp] theorem fun_zero_eval [∀ a, Zero (β a)] (x : α)
+    : (0 : (a : α) → β a) x = (0 : β x) := by simp[OfNat.ofNat, Zero.zero] done
+  @[simp] theorem fun_one_eval [∀ a, One (β a)] (x : α)
+    : (1 : (a : α) → β a) x = (1 : β x) := by simp[OfNat.ofNat, One.one] done
+
+  @[simp] theorem fun_neg_eval [∀ a, Neg (β a)] 
+    : (-f) a = -(f a) := by simp[Neg.neg] done
   @[simp] theorem fun_add_eval [∀ a, Add (β a)] 
     : (f + g) a = f a + g a := by simp[HAdd.hAdd,Add.add] done
   @[simp] theorem fun_sub_eval [∀ a, Sub (β a)] 

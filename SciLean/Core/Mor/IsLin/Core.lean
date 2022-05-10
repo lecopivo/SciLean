@@ -11,9 +11,6 @@ class IsLin {U V} [Vec U] [Vec V] (f : U → V) : Prop :=
 
 -- set_option synthInstance.maxHeartbeats 500
 
-def LinMap (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsLin f }
-
-
 ------------------------------------------------------------------------------------
 
 

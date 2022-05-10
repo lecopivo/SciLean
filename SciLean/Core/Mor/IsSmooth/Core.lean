@@ -11,7 +11,6 @@ open SciLean.Mathlib.Convenient
 
 class IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_smooth : is_smooth f)
 
-def SmoothMap (X Y : Type) [Vec X] [Vec Y] := { f : X → Y // IsSmooth f }
 
 -- Would be a bad instance!
 theorem linear_is_smooth (f : X → Y) [IsLin f] : IsSmooth f := sorry

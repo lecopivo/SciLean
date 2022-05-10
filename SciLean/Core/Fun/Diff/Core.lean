@@ -29,7 +29,7 @@ prefix:max "δ" => differential
 theorem diff_of_linear (f : X → Y) [IsLin f] : δ f = λ x dx => f dx := sorry
 
 instance diff.arg_x.isSmooth (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
-instance diff.arg_dx.isLin    (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (δ f x) := sorry
+instance diff.arg_dx.isLin    (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
 instance diff.arg_dx.isSmooth (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (δ f x) := sorry
 
 ----------------------------------------------------------------------
