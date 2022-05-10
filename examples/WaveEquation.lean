@@ -11,7 +11,7 @@ import SciLean.Core.Extra
 
 open Function SciLean
 
-variable {n : USize} [Nonempty (Idx n)]
+variable {n : Nat} [Nonempty (Idx n)]
 
 def H (m k : ℝ) (x p : ℝ^n) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)

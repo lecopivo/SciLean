@@ -2,11 +2,11 @@ import SciLean.Mathlib.Data.Enumtype
 import SciLean.Core.Functions
 
 namespace SciLean
-structure Idx (n : USize) where
+structure Idx (n : Nat) where
   val : USize
-  property : val < n
+  property : val < n.toUSize
 
-def Idx.toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, i.2⟩
+def Idx.toFin {n} (i : Idx n) : Fin n := ⟨i.1.toNat, sorry⟩
 
 -- instance (n) : Coe (Idx n) USize := ⟨λ x => x.1⟩
 
@@ -15,10 +15,10 @@ instance {n} : DecidableEq (Idx n) :=
 
 instance {n} : Enumtype (Idx n) :=
 {
-  first := if n.1 ≠ ⟨0, by native_decide⟩ then some ⟨0, sorry⟩ else none
+  first := if n ≠ 0 then some ⟨0, sorry⟩ else none
   next  := λ i =>
-    if h : i.1+1<n then some ⟨i.1+1, h⟩ else none
-  numOf   := n.toNat
+    if h : (i.1+1)<n then some ⟨i.1+1, h⟩ else none
+  numOf   := n
   fromFin := λ i => ⟨i.1.toUSize, sorry⟩
   toFin   := λ i => i.toFin
   decEq := by infer_instance
@@ -65,7 +65,7 @@ instance {n} [Nonempty (Idx n)] : OfNat (Idx n) i := ⟨i.toUSize % n,sorry⟩
 -- }
 
 namespace Idx 
-  inductive Range (n : USize)
+  inductive Range (n : Nat)
   | all : Range n
 
   export Range (all)
@@ -79,7 +79,7 @@ instance {m} [Monad m] {n}
 {
   forIn := λ r init f => do
         let mut val := init
-        for (i : Nat) in [0:n.toNat] do
+        for (i : Nat) in [0:n] do
           match (← f ⟨i.toUSize,sorry⟩ val) with
             | ForInStep.done val' => return val'
             | ForInStep.yield val' => 

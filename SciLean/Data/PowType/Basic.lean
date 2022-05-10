@@ -5,7 +5,7 @@ import SciLean.Data.Idx
 namespace SciLean
 
 class PowType (X : Type) where
-  powType : USize → Type
+  powType : Nat → Type
   intro {n} : (Idx n → X) → powType n
   get {n} : powType n → Idx n → X
   set {n} : powType n → Idx n → X → powType n
@@ -15,7 +15,7 @@ notation X "^" n => PowType.powType X n
 
 namespace PowType.powType
 
-  variable {X} {n : USize} [PowType X]
+  variable {X} {n : Nat} [PowType X]
 
   abbrev set (x : X^n) (i : Idx n) (xi : X) : X^n := PowType.set x i xi
 
@@ -27,7 +27,7 @@ namespace PowType.powType
   @[simp]
   theorem intro_getop (f : Idx n → X) (i : Idx n) : (intro f)[i] = f i := by sorry
 
-  def modify {X} {n : USize} [PowType X] [Inhabited X] (x : X^n) (i : Idx n) (f : X → X) : X^n := Id.run do
+  def modify {X} {n : Nat} [PowType X] [Inhabited X] (x : X^n) (i : Idx n) (f : X → X) : X^n := Id.run do
     let mut x := x
     let xi := x[i]
     -- Reset x[i] to ensure `xi` be modified in place if possible
@@ -36,20 +36,20 @@ namespace PowType.powType
     x := x.set i (f xi)
     x
 
-  def mapIdx {X} {n : USize} [PowType X] (x : X^n) (f : Idx n → X → X) : X^n :=
+  def mapIdx {X} {n : Nat} [PowType X] (x : X^n) (f : Idx n → X → X) : X^n :=
     Id.run do
     let mut x' := x
     for i in Idx.all do
       x' := set x' i (f i (get x' i))
     x'
 
-  def map {X} {n : USize} [PowType X] (x : X^n) (f : X → X) : X^n := 
+  def map {X} {n : Nat} [PowType X] (x : X^n) (f : X → X) : X^n := 
     x.mapIdx λ i xi => f xi
 
 
   section Operations
 
-    variable {X} {n : USize} [PowType X]
+    variable {X} {n : Nat} [PowType X]
 
     instance [Add X] : Add (X^n) := ⟨λ x y => x.mapIdx λ i xi => xi + y[i]⟩
     instance [Sub X] : Sub (X^n) := ⟨λ x y => x.mapIdx λ i xi => xi - y[i]⟩
@@ -94,19 +94,19 @@ namespace PowType.powType
  
   end Operations
 
-  def concat {X} {n m : USize} [PowType X] : (X^n) → (X^m) → X^(n+m) :=
+  def concat {X} {n m : Nat} [PowType X] : (X^n) → (X^m) → X^(n+m) :=
     λ x y => PowType.intro λ i => 
       if i.1 < n then
         x[⟨i.1, sorry⟩]
       else
         y[⟨i.1-n, sorry⟩]
 
-  def split {X} {N : USize} (n : Idx N) [PowType X] : (X^N) → (X^n.1) × (X^(N-n.1)) :=
+  def split {X} {N : Nat} (n : Idx N) [PowType X] : (X^N) → (X^n.1.toNat) × (X^(N-n.1.toNat)) :=
     λ x => 
       (PowType.intro λ i => x[⟨i.1, sorry⟩], 
        PowType.intro λ i => x[⟨i.1 + n.1, sorry⟩])
 
-  instance {X} {n : USize} [ToString X] [PowType X] : ToString (X^n) :=
+  instance {X} {n : Nat} [ToString X] [PowType X] : ToString (X^n) :=
     ⟨λ x => 
       if n == 0 then
         "^[]"
@@ -119,7 +119,7 @@ namespace PowType.powType
 
 end PowType.powType
 
-def List.toPowType {X} (l : List X) [PowType X] : X^l.length.toUSize :=
+def List.toPowType {X} (l : List X) [PowType X] : X^l.length :=
   PowType.intro λ i => l.toArray.get ⟨i.1.toNat, sorry⟩
 
 syntax "^[" sepBy(term, ", ") "]" : term

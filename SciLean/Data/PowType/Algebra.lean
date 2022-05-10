@@ -4,7 +4,7 @@ import SciLean.Algebra
 
 namespace SciLean.PowType
 
-variable (X : Type) (n m : USize) [PowType X]
+variable (X : Type) (n m : Nat) [PowType X]
 
 instance [AddSemigroup X]  : AddSemigroup (X^n)  := AddSemigroup.mk sorry
 instance [AddMonoid X]     : AddMonoid (X^n)     := AddMonoid.mk sorry sorry nsmul_rec sorry sorry

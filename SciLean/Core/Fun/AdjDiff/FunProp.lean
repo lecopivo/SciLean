@@ -42,16 +42,16 @@ do
        `((by 
            conv => enter[1]; $rw
            apply AutoImpl.finish
-          : AutoImpl $adjDiffNonComp).val $arg $darg')
+          : AutoImpl ($adjDiffNonComp $arg $darg')).val)
   let eqProof ← 
     match mode with
       | .explicit df proof => 
         `(by $proof)
       | .rewrite rw =>
         if makeDef then
-          `(by unfold $adjDiffId; apply (AutoImpl.impl_eq_spec _))
+          `(by unfold $adjDiffId;  conv in (AutoImpl.val _) => rw[← AutoImpl.impl_eq_spec _])
         else
-          `(by apply (AutoImpl.impl_eq_spec _))
+          `(by conv in (AutoImpl.val _) => rw[← AutoImpl.impl_eq_spec _])
 
   if makeDef then
     let adjDiffDef ← `(def $adjDiffId:declId $preParms:bracketedBinder* $parm $dparm' $postParms* $extraParms* := $adjDiffComp:term)

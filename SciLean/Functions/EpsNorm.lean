@@ -16,5 +16,12 @@ namespace SciLean
   @[simp]
   theorem εnorm.is_norm_at_zero (x : X) : ∥x∥{0} = ∥x∥ := sorry
 
-  instance normεp.isNonNegative           (x : X) (p : ℝ) : Fact (∥x∥{ε} ≥ 0) := sorry
-  instance normεp.isPositive [Fact (ε≠0)] (x : X) (p : ℝ) : Fact (∥x∥{ε} > 0) := sorry
+  instance εnorm.isNonNegative           (x : X) : Fact (∥x∥{ε} ≥ 0) := sorry
+  instance εnorm.isPositive [Fact (ε≠0)] (x : X) : Fact (∥x∥{ε} > 0) := sorry
+  
+  instance εnorm.pow.arg_x.isSmooth   [Fact (ε≠0)] : IsSmooth λ (x : X) (y : ℝ) => ∥x∥{ε}^y := sorry
+  instance εnorm.pow.arg_x.hasAdjDiff [Fact (ε≠0)] (y : ℝ) : IsSmooth λ (x : X) => ∥x∥{ε}^y := sorry
+  @[simp] theorem εnorm.pow.arg_x.diff_simp [Fact (ε≠0)] 
+    : (δ λ (x : X) (y : ℝ) => ∥x∥{ε}^y) = λ x dx y => (y * ⟪dx,x⟫) * ∥x∥{ε}^(y-(2:ℝ)) := sorry
+  @[simp] theorem εnorm.pow.arg_x.fwdDiff_simp [Fact (ε≠0)] (y : ℝ) 
+    : (δ† λ (x : X) => ∥x∥{ε}^y) = λ (x : X) dx' => (y * dx' * ∥x∥{ε}^(y-(2:ℝ))) * x := sorry

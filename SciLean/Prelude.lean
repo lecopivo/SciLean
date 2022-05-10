@@ -26,6 +26,13 @@ initialize differentiation_core_simp_extension
   : SimpExtension ← registerSimpAttr `diff_core "Core Differentiation Rules"
 
 
+initialize lambdaPush_simp_extension 
+  : SimpExtension ← registerSimpAttr `lambdaPush "Propagate Lambdas Inside"
+
+initialize lambdaPull_simp_extension 
+  : SimpExtension ← registerSimpAttr `lambdaPull "Propagate Lambdas Outside"
+
+
 -- initialize differentiation_simp_extension 
 --   : SimpExtension ← registerSimpAttr `my_simp "my own simp attribute"
 

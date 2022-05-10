@@ -3,7 +3,7 @@ import SciLean.Core.Functions
 
 namespace SciLean.PowType
 
-function_properties powType.getOp {X} [PowType X] {n : USize} (x : X^n) (i : Idx n) : X
+function_properties powType.getOp {X} [PowType X] {n : Nat} (x : X^n) (i : Idx n) : X
 argument x [Vec X]
   isLin    := sorry,
   isSmooth := sorry,
@@ -14,12 +14,12 @@ argument x [SemiHilbert X]
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
   adjDiff_simp := (0 : X^n).set i dx' by simp[adjDiff] done
 
-instance powType.getOp.arg_xi.hasAdjDiff {X} [SemiHilbert X] [PowType X] {n : USize} 
+instance powType.getOp.arg_xi.hasAdjDiff {X} [SemiHilbert X] [PowType X] {n : Nat} 
   : HasAdjDiff (λ (x : X^n) i => x[i]) := sorry
-@[simp] theorem powType.getOp.arg_xi.adjDiff {X} [SemiHilbert X] [PowType X] {n : USize} 
+@[simp] theorem powType.getOp.arg_xi.adjDiff {X} [SemiHilbert X] [PowType X] {n : Nat} 
   : δ† (λ (x : X^n) i => x[i]) = λ x dx' => PowType.intro dx' := sorry
 
-function_properties powType.set {X} [PowType X] {n : USize} (x : X^n) (i : Idx n) (xi : X) : X^n
+function_properties powType.set {X} [PowType X] {n : Nat} (x : X^n) (i : Idx n) (xi : X) : X^n
 argument x [Vec X]
   isSmooth  := sorry,
   diff_simp := dx.set i 0 by sorry
@@ -38,7 +38,7 @@ argument xi [SemiHilbert X]
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
   adjDiff_simp := dxi'[i] by simp[adjDiff] done
 
-function_properties PowType.intro {X} [PowType X] {n : USize} (f : Idx n → X) : X^n
+function_properties PowType.intro {X} [PowType X] {n : Nat} (f : Idx n → X) : X^n
 argument f [Vec X]
   isLin := sorry,
   isSmooth := sorry,

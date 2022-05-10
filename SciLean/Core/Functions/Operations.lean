@@ -161,7 +161,7 @@ instance HSub.hSub.arg_xy.hasAdjoint {X} [SemiHilbert X]
 @[simp]
 theorem HSub.hSub.arg_xy.fwdDiff_simp  {X : Type} [Vec X] 
   : (𝓣 λ ((x,y) : (X×X)) => x - y) = λ ((x,y),(dx,dy)) => (x-y, dx-dy) :=
-by simp[fwdDiff] sorry
+by simp[fwdDiff] done
 
 
 -- Inner product --
@@ -201,4 +201,4 @@ argument x
   diff_simp    := 2 * ⟪dx, x⟫ by simp[normSqr] admit,
   fwdDiff_simp := (∥x∥², 2 * ⟪dx, x⟫) by simp[fwdDiff] done,
   hasAdjDiff,
-  adjDiff_simp := ((2:ℝ) * dx') * x by simp[normSqr]; unfold hold; simp; admit
+  adjDiff_simp := ((2:ℝ) * dx') * x by simp[normSqr]; unfold hold; simp; done
