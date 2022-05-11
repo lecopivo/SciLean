@@ -278,7 +278,9 @@
    - [[https://github.com/google-research/dex-lang][Dex]]
    - [[https://futhark-lang.org/][furthark]]
    - [[https://iheartla.github.io/][I❤️LA]]
+   - [[https://github.com/google/jax][Jax]]  
    - [[https://github.com/patrick-kidger/diffrax][diffrax]]
+   - [[https://www.tensorflow.org/probability/oryx][Oryx]] 
 
    - [[https://github.com/kztk-m/sparcl][Sparcl]] - partially-invertible computation
 

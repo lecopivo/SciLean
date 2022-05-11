@@ -1,6 +1,7 @@
 import SciLean.Core.Mor
 import SciLean.Core.Fun
 import SciLean.Core.Functions
+import SciLean.Core.Obj.FinVec
 
 namespace SciLean
 
@@ -42,3 +43,35 @@ namespace SciLean
 
   instance : CoeFun (X⊸Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
 
+  def LinMap.mk {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [IsLin f] : X ⊸ Y := ⟨f, by infer_instance⟩
+
+  -- Right now, I prefer this notation
+  macro "fun" xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
+  macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
+
+
+  -- @[inferTCGoalsRL]
+  instance {X Y ι} [Enumtype ι] [FinVec X ι] [Vec Y] [SemiInner Y] : SemiInner (X ⊸ Y) :=
+  {
+    Domain := SemiInner.Domain Y
+    domain := SemiInner.domain
+    semiInner := λ f g Ω => ∑ i, ⟪f (𝔼 i), g (𝔼 i)⟫[Ω]
+    testFunction := λ Ω f => ∀ x, SemiInner.testFunction Ω (f x)
+  }
+
+  instance {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] : SemiHilbert (X ⊸ Y) :=
+  {
+    semi_inner_add := sorry
+    semi_inner_mul := sorry
+    semi_inner_sym := sorry
+    semi_inner_pos := sorry
+    semi_inner_ext := sorry
+    semi_inner_gtr := sorry
+  }
+
+  instance {X Y ι} [Enumtype ι] [FinVec X ι] [Vec Y] [SemiInner Y] [UniqueDomain Y] : UniqueDomain (X ⊸ Y) :=
+  {
+    uniqueDomain := UniqueDomain.uniqueDomain (X:=Y)
+  }
+
+  instance {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Hilbert (X⊸Y) := Hilbert.mk
