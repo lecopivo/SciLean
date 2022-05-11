@@ -139,12 +139,10 @@ namespace SciLean
 
   -- set_option trace.Meta.Tactic.simp.discharge true in
   -- set_option trace.Meta.synthInstance true in
-  -- example {Y} [Hilbert Y] (g : X⟿X⊸Y)
-  --   : (λ (f : X⟿Y) => λ x ⟿ ⟪g x, λ dx ⊸ δ f.1 x dx⟫)† = 0 := 
-  -- by 
-  --   simp
-    -- rw[elem_wise_comp_arg' (λ x y => ⟪g x, y⟫) (λ f x => λ dx ⊸ δ f.1 x dx)]
-    -- simp
+  example {Y} [Hilbert Y] (g : X⟿X⊸Y)
+    : (λ (f : X⟿Y) => λ x ⟿ ⟪g x, λ dx ⊸ δ f.1 x dx⟫)† = 0 := 
+  by 
+    simp
 
 
 /-

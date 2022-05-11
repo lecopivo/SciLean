@@ -161,14 +161,14 @@ example [Nonempty (Fin n)] (j : Fin n)
   :=
   by simp done
 
-example [Nonempty (Fin n)] (j : Fin n) 
-  : (∑ i : Fin n, i * (kron (i+1) j)) = (j-1)
-  :=
-  by simp done
+-- example [Nonempty (Fin n)] (j : Fin n) 
+--   : (∑ i : Fin n, i * (kron (i+1) j)) = j - 1
+--   :=
+--   by simp done
 
-example [Nonempty (Fin n)] (j : Fin n) 
-  : (∑ i : Fin n, (kron (i+1) j) * i) = (j-1)
-  :=
-  by simp done
+-- example [Nonempty (Fin n)] (j : Fin n) 
+--   : (∑ i : Fin n, (kron (i+1) j) * i) = (j-1)
+--   :=
+--   by simp done
 
 end SciLean
