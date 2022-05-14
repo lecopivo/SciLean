@@ -1,5 +1,6 @@
 import SciLean.Core.Prelude
 import SciLean.Core.Mor.IsLin
+import SciLean.Core.Mor.IsSmooth
 import SciLean.Core.Mor.HasAdjoint
 
 namespace SciLean
@@ -12,6 +13,12 @@ def adjoint {X Y} [SemiHilbert X] [SemiHilbert Y]
 postfix:max "†" => adjoint
 
 theorem adjoint_is_linear {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjoint f] : IsLin (f†) := sorry
+
+instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjoint f] 
+  : IsSmooth (f†) := sorry
+instance {X Y Z} [Vec X] [SemiHilbert Y] [SemiHilbert Z] 
+  (f : X → Y → Z) [IsSmooth f] [∀ x, HasAdjoint (f x)] 
+  : IsSmooth λ x => (f x)† := sorry
 
 ----------------------------------------------------------------------
 
@@ -43,6 +50,16 @@ theorem comp.arg_x.adj_simp
   (g : X → Y) [HasAdjoint g] 
   : (λ x => f (g x))† = λ z => g† (f† z) := sorry
 
+-- @[simp low]
+-- theorem subst.arg_x.adj_simp
+--   (f : X → Y → Z) [HasAdjoint (λ ((x,y) : X × Y) => f x y)] 
+--   (g : X → Y) [HasAdjoint g] 
+--   : (λ x => f x (g x))† 
+--     = λ z =>
+--         let f' := (λ (x,y) => f x y)†
+--         (f' z).1 + g† (f' z).2
+-- := by sorry
+
 @[simp low]
 theorem diag.arg_x.adj_simp
   (f : Y₁ → Y₂ → Z) [HasAdjoint (λ yy : Y₁ × Y₂ => f yy.1 yy.2)] 
@@ -60,6 +77,7 @@ theorem diag.arg_x.adj_simp_safeguard
   (f : X → Y → Z) [HasAdjoint (λ ((x,y) : X×Y) => f x y)]
   : (λ (x,y) => f x y)† = (Function.uncurry f)† := 
 by simp only [Function.uncurry] done
+
 
 @[simp low]
 theorem eval.arg_f.adj_simp

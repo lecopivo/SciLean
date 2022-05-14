@@ -64,17 +64,6 @@ by
   apply subst.arg_x.isSmooth (λ x y => f x y a)
   done
 
-
--- instance (priority := mid-1) subst.arg_x.parm1.isSmooth
---   (a : α)
---   (f : X → Y → α → Z) [IsSmooth (λ x y => f x y a)] [∀ x, IsSmooth (λ y => f x y a)] 
---   (g : X → Y) [IsSmooth g] :
---   IsSmooth (λ x => f x (g x) a) := 
--- by
---   apply subst.arg_x.isSmooth (λ x y => f x y a)
---   done
-
-
 instance (priority := mid-1) subst.arg_x.parm2.isSmooth
   (a : α) (b : β)
   (f : X → Y → α → β → Z) [IsSmooth (λ x y => f x y a b)] [∀ x, IsSmooth (λ y => f x y a b)] 

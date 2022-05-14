@@ -8,7 +8,7 @@ namespace SciLean
 
   macro:max "𝔼" i:term : term => `(Basis.basis $i)
 
-  class FinVec (X : Type) (ι : Type) [outParam $ Enumtype ι] extends Hilbert X, Basis X ι ℝ
+  class FinVec (X : Type) (ι : outParam $ Type) [outParam $ Enumtype ι] extends Hilbert X, Basis X ι ℝ
 
   instance : Basis ℝ Unit ℝ :=
   {

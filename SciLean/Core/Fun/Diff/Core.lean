@@ -36,6 +36,12 @@ instance diff.arg_dx.isSmooth (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (δ 
 
 instance diff.arg_y.isSmooth (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)] (x dx) : IsSmooth (δ f x dx) := sorry
 
+instance diff.arg_x.comp.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] [Vec W]
+  (f : Y → Z → W) [IsSmooth f] [∀ y, IsSmooth (f y)] 
+  (g : X → Y) [IsSmooth g]
+  : IsSmooth (λ x => δ (f (g x))) := sorry
+
+
 ----------------------------------------------------------------------
 
 @[simp, diff_core]

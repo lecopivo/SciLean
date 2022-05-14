@@ -76,6 +76,34 @@ theorem diag.arg_x.adjDiff_simp
 by 
   admit
 
+@[simp low-2]
+theorem subst.arg_x.adjDiff_simp
+  (f : X → Y → Z) [IsSmooth f]
+  [instfx : ∀ y, HasAdjDiff λ x => f x y]
+  [instfy : ∀ x, HasAdjDiff (f x)]
+  (g : X → Y) [instg : HasAdjDiff g]
+  : δ† (λ x => f x (g x)) 
+    = 
+    λ x dx' => 
+      (δ† (hold λ x' => f x' (g x))) x dx'
+      +
+      (δ† g x) (δ† (f x) (g x) dx')
+    := 
+by 
+  have isfx := λ y => (instfx y).isSmooth
+  have iafx := λ y => (instfx y).hasAdjDiff
+  have isfy := λ x => (instfy x).isSmooth
+  have iafy := λ x => (instfy x).hasAdjDiff
+  have isg := instg.isSmooth
+  have iag := instg.hasAdjDiff
+
+  simp at iafx
+  simp at iafy
+
+  funext x dx';
+  -- have adjAdd : ∀ {X} [SemiHilbert X], HasAdjoint fun yy : X×X => yy.fst + yy.snd := sorry
+  simp[adjDiff] --- bla bla bla
+  admit
 
 @[simp low]
 theorem eval.arg_f.adjDiff_simp

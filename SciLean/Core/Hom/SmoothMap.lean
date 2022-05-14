@@ -30,7 +30,7 @@ namespace SciLean
   instance : Sub (X⟿Y) := ⟨λ f g => ⟨f.1 + g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
   instance : Mul (X⟿ℝ) := ⟨λ f g => ⟨f.1 + g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
   instance : HMul ℝ (X⟿Y) (X⟿Y) := ⟨λ r f => ⟨r * f.1, by have hf := f.2; infer_instance⟩⟩
-  -- instance : HMul (X⟿ℝ) (X⟿Y) (X⟿Y) := ⟨λ g f => ⟨λ x => g.1 x * f.1 x, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
+  instance : HMul (X⟿ℝ) (X⟿Y) (X⟿Y) := ⟨λ g f => ⟨λ x => g.1 x * f.1 x, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
  
   instance : Zero (X ⟿ Y) := ⟨⟨0, by (conv => enter [1,x]); simp; infer_instance done⟩⟩
   instance : One (X ⟿ ℝ) := ⟨⟨1, by (conv => enter [1,x]); simp; infer_instance done⟩⟩
@@ -47,7 +47,7 @@ namespace SciLean
 
   instance : Vec (X ⟿ Y) := Vec.mk
 
-  -- instance : Coe (X⟿Y) (X→Y) := ⟨λ f => f.1⟩
+  instance : Coe (X⟿Y) (X→Y) := ⟨λ f => f.1⟩
   instance : CoeFun (X⟿Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
 
   --------------------------------------------------------------------
@@ -85,6 +85,11 @@ namespace SciLean
   --   : IsSmooth λ x => SmoothMap.mk (λ y => f x (g x y) a) := by infer_instance
 
   @[simp]
+  theorem SmoothMap.mk.arg_f.diff_simp {X Y} [Vec X] [Vec Y] 
+    (f : X → Y) [IsSmooth f] 
+    : δ (SmoothMap.mk f).1 = δ f := by simp[SmoothMap.mk] done
+
+  @[simp]
   theorem SmoothMap.mk.arg_x.diff_simp {X Y Z} [Vec X] [Vec Y] [Vec Z]
     (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
     : δ (λ x => SmoothMap.mk (f x)) = λ x dx => SmoothMap.mk (δ f x dx) := sorry
@@ -120,7 +125,7 @@ namespace SciLean
     testFunction := sorry
   }
 
-  instance {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] : SemiHilbert (X ⟿ Y) :=
+  instance {X Y} {ι : Type} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] : SemiHilbert (X ⟿ Y) :=
   {
     semi_inner_add := sorry
     semi_inner_mul := sorry
@@ -129,3 +134,13 @@ namespace SciLean
     semi_inner_ext := sorry
     semi_inner_gtr := sorry
   }
+
+  variable {Z} [SemiHilbert Z]
+
+  set_option pp.all true in
+  example : SemiHilbert (ℝ ⟿ Z) := 
+  by 
+    try infer_instance
+    -- apply instSemiHilbertSmoothMapToVecToSemiHilbertToHilbert (X:= ℝ) (Y:=Z) (ι := Unit)
+
+  
