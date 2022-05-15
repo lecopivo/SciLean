@@ -16,7 +16,7 @@ theorem sum_of_const {X ι} [Enumtype ι] [Vec X] (x : X)
 -- @[simp] 
 theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
   (f : ι → X → Y)
-  : (∑ i, λ j => f i j) = (λ j => ∑ i, f i j)
+  : (∑ i, λ x => f i x) = (λ x => ∑ i, f i x)
   := sorry
 
 -- @[simp] 

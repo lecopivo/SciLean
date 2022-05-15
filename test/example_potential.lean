@@ -43,3 +43,17 @@ by
   simp [← sum_of_add]
   done
 
+
+def H (n : ℕ) (ε : ℝ) (C LJ : ℝ) (r m : Idx n → ℝ) (x p : (ℝ^(3:ℕ))^n) : ℝ :=
+  (∑ i, (1/(2*m i)) * ∥p[i]∥²)
+  +
+  ∑ i j,   Coloumb ε C (m i * m j) (x[i] - x[j])
+         + LennardJones ε LJ (r i + r j) (x[i] - x[j])
+argument p [Fact (n≠0)] [Fact (ε≠0)]
+  isSmooth, diff, hasAdjDiff, adjDiff
+argument x [Fact (n≠0)] [Fact (ε≠0)]
+  isSmooth, diff, hasAdjDiff, 
+  adjDiff by
+    simp[H]; unfold hold; simp
+    simp [sum_into_lambda]
+    simp [← sum_of_add]
