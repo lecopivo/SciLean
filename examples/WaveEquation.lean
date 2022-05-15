@@ -6,17 +6,19 @@ import SciLean.Tactic.FinishImpl
 import SciLean.Data.PowType
 import SciLean.Core.Extra
 
--- set_option synthInstance.maxHeartbeats 500000
--- set_option maxHeartbeats 500000
+set_option synthInstance.maxSize 2048
+set_option synthInstance.maxHeartbeats 500000
+set_option maxHeartbeats 500000
 
 open Function SciLean
 
 variable {n : Nat} [Nonempty (Idx n)]
 
+-- set_option trace.Meta.synthInstance true in
 def H (m k : ℝ) (x p : ℝ^n) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)
   (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i , ∥x[i] - x[i - (1:USize)]∥²)
-argument x
+argument x 
   isSmooth, diff, hasAdjDiff, adjDiff
 argument p
   isSmooth, diff, hasAdjDiff, adjDiff

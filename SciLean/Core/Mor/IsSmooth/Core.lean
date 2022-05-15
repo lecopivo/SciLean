@@ -40,15 +40,13 @@ instance (priority := mid-1) subst.arg_x.isSmooth
   (g : X → Y) [IsSmooth g] :
   IsSmooth (λ x => f x (g x)) := sorry
 
--- instance comp.arg_x.isSmooth 
-example 
+instance comp.arg_x.isSmooth 
   (f : Y → Z) [IsSmooth f]
   (g : X → Y) [IsSmooth g] 
   : IsSmooth (λ x => f (g x)) := by infer_instance
 
 
--- instance diag.arg_x.isSmooth 
-example
+instance diag.arg_x.isSmooth 
   (f : Y₁ → Y₂ → Z) [IsSmooth f] [∀ y₁, IsSmooth (f y₁)] 
   (g₁ : X → Y₁) [IsSmooth g₁] 
   (g₂ : X → Y₂) [IsSmooth g₂] :
