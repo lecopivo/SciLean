@@ -22,7 +22,7 @@ theorem eval.arg_x_i.adjDiff_simp
   (f : X → ι → Y) [HasAdjDiff f]
   : δ† (λ (x : X) (i : ι) (j : κ) => f x i) = λ x dx' => δ† f x (λ i => ∑ j, dx' i j)
 := by
-  funext x dx'; simp
+  funext x dx'; simp;
   simp [sum_of_linear, sum_into_lambda]
   done
 
@@ -91,13 +91,49 @@ theorem diag.arg_x_i.adjDiff_simp
   simp [sum_of_linear, sum_into_lambda, sum_of_add]
   done
 
+@[simp low-3]
+theorem scomb.arg_x_i_j.adjDiff_simp 
+  {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
+  {ι κ : Type} [Enumtype ι] [Enumtype κ] [Nonempty ι] [Nonempty κ]
+  (f : X → ι → κ → Y →  Z) [IsSmooth f]
+  [∀ y, HasAdjDiff λ x i j => f x i j y]
+  [∀ x, HasAdjDiff λ y i j => f x i j y]
+  (g : X → ι → κ → Y) [HasAdjDiff g]
+  : δ† (λ x i j => f x i j (g x i j) )
+    = 
+    λ x dx' => 
+      (δ† (hold λ x' i j => f x' i j (g x i j)) x dx')
+      +
+      (δ† g x) (λ i j => (δ† (λ y => f x i j y) (g x i j) (dx' i j)))
+:= by 
+  admit
+
+-- @[simp low-2]
+-- theorem scomb.arg_x_i_j.parm1.adjDiff_simp 
+--   {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
+--   {ι κ : Type} [Enumtype ι] [Enumtype κ] [Nonempty ι] [Nonempty κ]
+--   {α₁ : Type} (a₁ : ι → κ → α₁)
+--   (f : X → ι → κ → Y → α₁ → Z) [IsSmooth f]
+--   [∀ y, HasAdjDiff λ x i j => f x i j y (a₁ i j)]
+--   [∀ x, HasAdjDiff λ y i j => f x i j y (a₁ i j)]
+--   (g : X → ι → κ → Y) [HasAdjDiff g]
+--   : δ† (λ x i j => f x i j (g x i j) (a₁ i j))
+--     = 
+--     λ x dx' => 
+--       (δ† (hold λ x' i j => f x' i j (g x i j) (a₁ i j)) x dx')
+--       +
+--       (δ† g x) (λ i j => (δ† (λ y => f x i j y (a₁ i j)) (g x i j) (dx' i j)))
+-- := by 
+--   admit
+
+-- set_option trace.Meta.Tactic.simp.rewrite true in
 @[simp high]
 theorem diag.arg_x_i_j.adjDiff_simp 
   (f : Y₁ → Y₂ → Z) [IsSmooth f]
   [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂]
   [∀ y₁, HasAdjDiff λ y₂ => f y₁ y₂]
-  (g₁ : X → ι → κ → Y₁) [HasAdjDiff g₁]
-  (g₂ : X → ι → κ → Y₂) [HasAdjDiff g₂]
+  (g₁ : X → ι → κ → Y₁) [hg₁ : HasAdjDiff g₁]
+  (g₂ : X → ι → κ → Y₂) [hg₂ : HasAdjDiff g₂]
   : δ† (λ x i j => f (g₁ x i j) (g₂ x i j))
     = 
     λ x dx' => 
@@ -105,32 +141,17 @@ theorem diag.arg_x_i_j.adjDiff_simp
       +
       (δ† g₂ x) (λ i j => (δ† (λ y₂ => f (g₁ x i j) y₂)) (g₂ x i j) (dx' i j))
 := by 
-  funext x dx';
-  simp [sum_of_linear, sum_into_lambda, sum_of_add]
-  done
-
-
--- set_option trace.Meta.Tactic.simp.discharge true in
-@[simp high]
-theorem subst.arg_x_i_j.adjDiff_simp 
-  (f : X → Y → ι → κ →  Z) [IsSmooth f]
-  [∀ y, HasAdjDiff λ x => f x y]
-  [∀ x, HasAdjDiff λ y => f x y]
-  (g : X → ι → κ → Y) [HasAdjDiff g]
-  : δ† (λ x i j => f x (g x i j) i j)
-    = 
-    λ x dx' => 
-      (δ† (λ x' i j => f x' (g x i j) i j) x dx')
-      +
-      (δ† g x) (λ i j => (δ† (λ y => f x y i j) (g x i j) (dx' i j)))
-:= by 
-  funext x dx';
-  -- conv => 
-  --   lhs
-  --   simp
-  --   -- rw[subst.arg_x.adjDiff_simp]
-  -- simp [sum_of_linear, sum_into_lambda, sum_of_add]
+  have sg₁ := hg₁.1
+  have sg₂ := hg₂.1
+  simp; unfold hold; simp; unfold hold; simp
   admit
+
+
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+example {n} [Fact (n≠0)] : (δ†fun (x : Fin n → ℝ) (i j : Fin n) => x j) = λ x dx' => ∑ i, dx' i := 
+by
+  simp
+
 
 
 @[simp low-1]

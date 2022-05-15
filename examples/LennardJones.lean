@@ -25,28 +25,55 @@ def Coloumb (ε strength mass : ℝ) (x : ℝ^(3:ℕ)) : ℝ := - strength * mas
 argument x [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, adjDiff
 
-
+set_option trace.Meta.Tactic.simp.rewrite true in 
+example (n : ℕ) [Fact (n≠0)] 
+  : (δ† λ (x : (ℝ^(3:ℕ))^n) (i j : Idx n) => x[j]) 
+    =
+    λ x dx' => PowType.intro (∑ j, dx' j) := 
+by
+  simp; done
 
 -- SciLean.diag.arg_x_i_j.adjDiff_simp, failed to synthesize instance SciLean.IsSmooth (Coloumb ε C)
 
+-- @[simp low-2]
+-- theorem hoho
+--   {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
+--   {ι κ : Type} [Enumtype ι] [Enumtype κ] [Nonempty ι] [Nonempty κ]
+--   (f : X → ι → κ → Y →  Z) [IsSmooth f]
+--   [∀ y, HasAdjDiff λ x i j => f x i j y]
+--   [∀ x, HasAdjDiff λ y i j => f x i j y]
+--   (g : X → ι → κ → Y) [HasAdjDiff g]
+--   : δ† (λ x i j => f x i j (g x i j) )
+--     = 
+--     λ x dx' => 
+--       (δ† (hold λ x' i j => f x' i j (g x i j)) x dx')
+--       +
+--       (δ† g x) (λ i j => (δ† (λ y => f x i j y) (g x i j) (dx' i j)))
+-- := by 
+--   funext x dx';
+--   -- conv => 
+--   --   lhs
+--   --   simp
+--   --   -- rw[subst.arg_x.adjDiff_simp]
+--   -- simp [sum_of_linear, sum_into_lambda, sum_of_add]
+--   admit
+
 
 set_option trace.Meta.Tactic.simp.rewrite true in 
-set_option trace.Meta.Tactic.simp.discharge true in 
+-- set_option trace.Meta.Tactic.simp.discharge true in 
 def H (n : ℕ) (ε : ℝ) (C LJ : ℝ) (r m : Idx n → ℝ) (x p : (ℝ^(3:ℕ))^n) : ℝ :=
   ∑ i j, Coloumb ε C (m i * m j) (x[i] - x[j])
+         +
+         LennardJones ε LJ (r i + r j) (x[i] - x[j])
 -- argument p [Fact (n≠0)] [Fact (ε≠0)]
 --   isSmooth, diff, hasAdjDiff, adjDiff
 argument x [Fact (n≠0)] [Fact (ε≠0)]
   -- isSmooth, diff, hasAdjDiff, 
   adjDiff by
-    simp[H]
+    simp[H]; unfold hold; simp
     simp [sum_into_lambda]
     simp [← sum_of_add]
     
-
-  
-
-
 -- def H (n : Nat) (ε : ℝ) (m : Idx n → ℝ) (x p : ((ℝ^(3:Nat))^n)) : ℝ := 
 --   (∑ i, (1/(2*m i)) * ∥p[i]∥²)
 --   +
