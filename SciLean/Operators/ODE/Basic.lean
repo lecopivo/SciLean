@@ -1,5 +1,5 @@
 import SciLean.Core.Functions
-import SciLean.Operators.Limit
+import SciLean.Functions.Limit
 
 namespace SciLean
 

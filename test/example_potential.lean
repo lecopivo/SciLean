@@ -23,9 +23,6 @@ def Coloumb (ε strength mass : ℝ) (x : ℝ^(3:ℕ)) : ℝ := - strength * mas
 argument x [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, adjDiff
 
-
--- set_option trace.Meta.Tactic.simp.rewrite true in 
--- set_option trace.Meta.Tactic.simp.discharge true in 
 example (n : ℕ) (ε : ℝ) [Fact (n≠0)] [Fact (ε≠0)] (C LJ : ℝ) (r m : Idx n → ℝ)
   : (δ† λ (x : (ℝ^(3:ℕ))^n) => 
   ∑ i j, Coloumb ε C (m i * m j) (x[i] - x[j])
