@@ -50,6 +50,11 @@ namespace ℝ
     then isTrue sorry
     else isFalse sorry
 
+  instance (x y : ℝ) : Decidable (x ≤ y) :=                         
+    if x.val ≤ y.val
+    then isTrue sorry
+    else isFalse sorry
+
   -- this kind of breaks with NaNs but I want to make sure that we never get them as division by zero is zero
   instance (x y : ℝ) : Decidable (x = y) := if (x < y) ∨ (y < x) then isFalse (sorry : x≠y) else isTrue (sorry : x=y)
   
