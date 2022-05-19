@@ -126,9 +126,13 @@ instance (m : Nat) : PowType (ℝ^m) :=
 
 @[reducible] 
 instance : Vec Vec2 := (by infer_instance : Vec (ℝ^(2:ℕ)))
+@[reducible] 
+instance : Vec Vec3 := (by infer_instance : Vec (ℝ^(3:ℕ)))
 
 @[reducible] 
 instance : Hilbert Vec2 := (by infer_instance : Hilbert (ℝ^(2:ℕ)))
+@[reducible] 
+instance : Hilbert Vec3 := (by infer_instance : Hilbert (ℝ^(3:ℕ)))
 
 function_properties Vec2.mk (x y : ℝ) : Vec2
 argument x
@@ -141,3 +145,44 @@ argument y
   diff_simp := ⟨0,dy⟩ by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; sorry,
   adjDiff_simp := dy'.y by sorry
+
+function_properties Vec3.mk (x y z : ℝ) : Vec3
+argument x
+  isSmooth := sorry,
+  diff_simp := ⟨dx,0,0⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; sorry,
+  adjDiff_simp := dx'.x by sorry
+argument y
+  isSmooth := sorry,
+  diff_simp := ⟨0,dy,0⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; sorry,
+  adjDiff_simp := dy'.y by sorry
+argument z
+  isSmooth := sorry,
+  diff_simp := ⟨0,0,dz⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; sorry,
+  adjDiff_simp := dz'.z by sorry
+
+function_properties Vec3.x (x : ℝ^(3:ℕ)) : ℝ
+argument x
+  isLin := sorry, isSmooth, diff_simp,
+  hasAdjoint := sorry,
+  adj_simp := ⟨x',0,0⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
+  adjDiff_simp := ⟨dx', 0, 0⟩ by simp[adjDiff]
+
+function_properties Vec3.y (x : ℝ^(3:ℕ)) : ℝ
+argument x
+  isLin := sorry, isSmooth, diff_simp,
+  hasAdjoint := sorry,
+  adj_simp := ⟨0,x',0⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
+  adjDiff_simp := ⟨0, dx', 0⟩ by simp[adjDiff]
+
+function_properties Vec3.z (x : ℝ^(3:ℕ)) : ℝ
+argument x
+  isLin := sorry, isSmooth, diff_simp,
+  hasAdjoint := sorry,
+  adj_simp := ⟨0,0,x'⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
+  adjDiff_simp := ⟨0,0,dx'⟩ by simp[adjDiff]
