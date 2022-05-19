@@ -122,3 +122,22 @@ instance (m : Nat) : PowType (ℝ^m) :=
     !x
   ext := sorry
 }
+
+
+@[reducible] 
+instance : Vec Vec2 := (by infer_instance : Vec (ℝ^(2:ℕ)))
+
+@[reducible] 
+instance : Hilbert Vec2 := (by infer_instance : Hilbert (ℝ^(2:ℕ)))
+
+function_properties Vec2.mk (x y : ℝ) : Vec2
+argument x
+  isSmooth := sorry,
+  diff_simp := ⟨dx,0⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; sorry,
+  adjDiff_simp := dx'.x by sorry
+argument y
+  isSmooth := sorry,
+  diff_simp := ⟨0,dy⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; sorry,
+  adjDiff_simp := dy'.y by sorry
