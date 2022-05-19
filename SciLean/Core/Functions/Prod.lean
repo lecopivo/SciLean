@@ -4,6 +4,30 @@ import SciLean.Core.Fun
 namespace SciLean
 
 
+-- Prod.mk --
+-------------
+
+function_properties Prod.mk {X Y : Type} (x : X) (y : Y) : X×Y
+argument x [Inhabited X]
+  isInv := sorry,
+  inv_simp := x'.1 by sorry
+argument x [Vec X] [Vec Y]
+  isSmooth := sorry,
+  diff_simp := (dx,0) by sorry
+argument x [SemiHilbert X] [SemiHilbert Y]
+  hasAdjDiff := by constructor; infer_instance; simp; admit,
+  adjDiff_simp := dx'.1 by sorry
+argument y [Inhabited Y]
+  isInv := sorry,
+  inv_simp := y'.2 by sorry
+argument y [Vec X] [Vec Y]
+  isSmooth := sorry,
+  diff_simp := (0,dy) by sorry
+argument y [SemiHilbert X] [SemiHilbert Y]
+  hasAdjDiff := by constructor; infer_instance; simp; admit,
+  adjDiff_simp := dy'.2 by sorry
+  
+
 -- Prod.fst --
 --------------
 
