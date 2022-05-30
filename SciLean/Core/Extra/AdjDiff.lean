@@ -7,7 +7,7 @@ variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ] [Nonempty ι] [Nonempty κ]
 
-@[simp]
+@[simp ↓]
 theorem swap.arg_f.adjDiff_simp 
   : δ† (λ (f : ι → κ → X) (j : κ) (i : ι) => f i j) = λ f df' i j => df' j i
 := by 
@@ -17,7 +17,7 @@ theorem swap.arg_f.adjDiff_simp
 
  -- δ†fun x i j => getOp x i
 
-@[simp]
+@[simp ↓]
 theorem eval.arg_x_i.adjDiff_simp 
   (f : X → ι → Y) [HasAdjDiff f]
   : δ† (λ (x : X) (i : ι) (j : κ) => f x i) = λ x dx' => δ† f x (λ i => ∑ j, dx' i j)
@@ -26,7 +26,7 @@ theorem eval.arg_x_i.adjDiff_simp
   simp [sum_of_linear, sum_into_lambda]
   done
 
-@[simp]
+@[simp ↓]
 theorem comp.arg_x_i.adjDiff_simp 
   (f : Y → Z) [HasAdjDiff f]
   (g : X → ι → Y) [HasAdjDiff g]
@@ -37,7 +37,7 @@ theorem comp.arg_x_i.adjDiff_simp
   simp [sum_of_linear, sum_into_lambda]
   done
 
-@[simp]
+@[simp ↓]
 theorem comp.arg_x_i_j.adjDiff_simp 
   (f : Y → Z) [HasAdjDiff f]
   (g : X → ι → κ → Y) [HasAdjDiff g]
@@ -50,7 +50,7 @@ theorem comp.arg_x_i_j.adjDiff_simp
 
 
 
-@[simp]
+@[simp ↓]
 theorem comp.arg_x_i.arg1.adjDiff_simp 
   (f : Y → ι → Z) [HasAdjDiff f]
   (g : X → ι → Y) [HasAdjDiff g]
@@ -61,7 +61,7 @@ theorem comp.arg_x_i.arg1.adjDiff_simp
   simp [sum_of_linear, sum_into_lambda]
   done
 
-@[simp]
+@[simp ↓]
 theorem comp.arg_x_i.arg1'.adjDiff_simp 
   (f : ι → Y → Z) [∀ i, HasAdjDiff (f i)]
   (g : X → ι → Y) [HasAdjDiff g]
@@ -73,7 +73,7 @@ theorem comp.arg_x_i.arg1'.adjDiff_simp
   done
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
-@[simp high]
+@[simp ↓ high]
 theorem diag.arg_x_i.adjDiff_simp 
   (f : Y₁ → Y₂ → Z) [IsSmooth f]
   [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂]
@@ -91,7 +91,7 @@ theorem diag.arg_x_i.adjDiff_simp
   simp [sum_of_linear, sum_into_lambda, sum_of_add]
   done
 
-@[simp low-3]
+@[simp ↓ low-3]
 theorem scomb.arg_x_i_j.adjDiff_simp 
   {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
   {ι κ : Type} [Enumtype ι] [Enumtype κ] [Nonempty ι] [Nonempty κ]
@@ -106,9 +106,9 @@ theorem scomb.arg_x_i_j.adjDiff_simp
       +
       (δ† g x) (λ i j => (δ† (λ y => f x i j y) (g x i j) (dx' i j)))
 := by 
-  admit
+   admit
 
--- @[simp low-2]
+-- @[simp ↓ low-2]
 -- theorem scomb.arg_x_i_j.parm1.adjDiff_simp 
 --   {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
 --   {ι κ : Type} [Enumtype ι] [Enumtype κ] [Nonempty ι] [Nonempty κ]
@@ -127,7 +127,7 @@ theorem scomb.arg_x_i_j.adjDiff_simp
 --   admit
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
-@[simp high]
+@[simp ↓ high]
 theorem diag.arg_x_i_j.adjDiff_simp 
   (f : Y₁ → Y₂ → Z) [IsSmooth f]
   [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂]
@@ -154,7 +154,7 @@ by
 
 
 
-@[simp low-1]
+@[simp ↓ low-1]
 theorem comp.arg_x_i.adjDiff_simp' {ι κ : Type} [Enumtype ι] [Enumtype κ] {X Z} [SemiHilbert X] [SemiHilbert Z]
   (g : ι → κ) [IsInv g] [Nonempty ι]
   (f : X → κ → Z) [HasAdjDiff f]

@@ -146,6 +146,23 @@ argument y
   hasAdjDiff := by constructor; infer_instance; simp; sorry,
   adjDiff_simp := dy'.y by sorry
 
+function_properties Vec2.x (x : ℝ^(2:ℕ)) : ℝ
+argument x
+  isLin := sorry, isSmooth, diff_simp,
+  hasAdjoint := sorry,
+  adj_simp := ⟨x',0⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
+  adjDiff_simp := ⟨dx', 0⟩ by simp[adjDiff]
+
+function_properties Vec2.y (x : ℝ^(2:ℕ)) : ℝ
+argument x
+  isLin := sorry, isSmooth, diff_simp,
+  hasAdjoint := sorry,
+  adj_simp := ⟨0,x'⟩ by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
+  adjDiff_simp := ⟨0, dx'⟩ by simp[adjDiff]
+
+
 function_properties Vec3.mk (x y z : ℝ) : Vec3
 argument x
   isSmooth := sorry,

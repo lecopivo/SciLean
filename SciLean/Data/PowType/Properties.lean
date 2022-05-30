@@ -12,7 +12,7 @@ argument x [SemiHilbert X]
   hasAdjoint := sorry,
   adj_simp := (0 : X^n).set i x' by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := (0 : X^n).set i dx' by simp[adjDiff] done
+  adjDiff_simp := (0 : X^n).set i dx' by simp[adjDiff]; unfold hold; simp done
 
 instance powType.getOp.arg_xi.hasAdjDiff {X} [SemiHilbert X] [PowType X] {n : Nat} 
   : HasAdjDiff (λ (x : X^n) i => x[i]) := sorry
@@ -27,7 +27,7 @@ argument x [SemiHilbert X]
   hasAdjoint [Fact (xi=0)] := sorry,
   adj_simp   [Fact (xi=0)] := x'.set i 0 by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx'.set i 0 by simp[adjDiff] done
+  adjDiff_simp := dx'.set i 0 by simp[adjDiff]; unfold hold; simp done
 
 argument xi [Vec X]
   isSmooth  := sorry,

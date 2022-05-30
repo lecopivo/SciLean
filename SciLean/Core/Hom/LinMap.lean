@@ -75,3 +75,20 @@ namespace SciLean
   }
 
   instance {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Hilbert (X⊸Y) := Hilbert.mk
+
+
+  instance (f : X ⊸ Y) : IsLin (λ x => f x) := f.2
+
+  example {X Y Z} [Vec X] [Vec Y] [Vec Z] : Vec ((X ⊸ Y) → Z) := by infer_instance
+
+  variable {W X Y Z : Type} [Vec W] [Vec X] [Vec Y] [Vec Z]
+  variable (L : X → Y → Z) [IsLin L] [∀ x, IsLin (L x)]
+
+  example : IsLin (λ (x : W) (f : W ⊸ Y) (a : X) => L a (f x)) := by infer_instance
+  example : IsLin (λ (a : X) (f : W → Y) (x : W) => L a (f x)) := by infer_instance
+  example : IsLin (λ (f : W → Y) (a : X) (x : W) => L a (f x)) := by infer_instance
+
+
+  example {α β X Z : Type} [Vec X]  [Vec Z]
+    (L : X → β → Z) [IsLin L]
+    : IsLin (λ (x : X) (f : α → β) (a : α) => L x (f a)) := by infer_instance

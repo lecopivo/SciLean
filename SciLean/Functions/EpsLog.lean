@@ -10,14 +10,14 @@ namespace SciLean
   argument x [Fact (ε≠0)]
     isSmooth     := sorry,
     diff_simp    := ⟪dx,x⟫ * ∥x∥^{(-2:ℝ),ε}  by sorry,
-    hasAdjDiff   := by constructor; infer_instance; simp[diff]; intro; infer_instance done,
+    hasAdjDiff   := by constructor; infer_instance; simp; intro; infer_instance done,
     adjDiff_simp := (dx' * εpow ε x (-2)) * x by (simp[adjDiff]; unfold hold; simp; done)
 
   function_properties εpow (ε : ℝ) (x : X) (y : ℝ) : ℝ
   argument y [Fact (ε≠0)]
     isSmooth := sorry,
     diff_simp := dy * (εlog ε x) * εpow ε x y by sorry,
-    hasAdjDiff := by constructor; infer_instance; simp[diff]; intro; infer_instance done,
+    hasAdjDiff := by constructor; infer_instance; simp; intro; infer_instance done,
     adjDiff_simp := dy' * εpow ε x y * (εlog ε x) by (simp[adjDiff]; unfold hold; simp)
 
   notation  "log{" ε "}" x:max => εlog ε x

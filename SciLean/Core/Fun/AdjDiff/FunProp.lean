@@ -55,11 +55,11 @@ do
 
   if makeDef then
     let adjDiffDef ← `(def $adjDiffId:declId $preParms:bracketedBinder* $parm $dparm' $postParms* $extraParms* := $adjDiffComp:term)
-    let adjDiffSimp ← `(@[simp] theorem $adjDiffSimpId:declId $preParms:bracketedBinder* $postParms* $extraParms* 
+    let adjDiffSimp ← `(@[simp ↓] theorem $adjDiffSimpId:declId $preParms:bracketedBinder* $postParms* $extraParms* 
                                         : $adjDiffNonComp = fun $parm $dparm' => $adjDiffId $preArgs* $arg $darg' $postArgs* := $eqProof)
     pure $ mkNullNode #[adjDiffDef,adjDiffSimp]
   else
-    let adjDiffSimp ← `(@[simp] theorem $adjDiffSimpId:declId $preParms:bracketedBinder* $postParms* $extraParms* 
+    let adjDiffSimp ← `(@[simp ↓] theorem $adjDiffSimpId:declId $preParms:bracketedBinder* $postParms* $extraParms* 
                                         : $adjDiffNonComp = (fun $parm $dparm' => $adjDiffComp:term) := $eqProof)
     pure adjDiffSimp
 

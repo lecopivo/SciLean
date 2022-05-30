@@ -22,7 +22,6 @@ argument p [Fact (n≠0)]
   isSmooth, hasAdjDiff, adjDiff
 argument x [Fact (n≠0)]
   isSmooth, hasAdjDiff, adjDiff
-      
   
 def solver (steps : ℕ) (n : Nat) [Fact (n≠0)] (m l w : Idx n → ℝ)
   : Impl (ode_solve (HamiltonianSystem (H n m l w))) :=

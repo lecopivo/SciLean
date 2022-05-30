@@ -35,7 +35,7 @@ example (n : ℕ) (ε : ℝ) [Fact (n≠0)] [Fact (ε≠0)] (C LJ : ℝ) (r m : 
           + (  LennardJones.arg_x.adjDiff ε LJ (r i + r j) (x[i] - x[j]) dx'
              - LennardJones.arg_x.adjDiff ε LJ (r j + r i) (x[j] - x[i]) dx') :=
 by
-  simp; unfold hold; simp
+  simp; unfold hold; simp;
   simp [sum_into_lambda]
   simp [← sum_of_add]
   done
@@ -51,6 +51,6 @@ argument p [Fact (n≠0)] [Fact (ε≠0)]
 argument x [Fact (n≠0)] [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, 
   adjDiff by
-    simp[H]; unfold hold; simp
+    simp[H]; unfold hold; simp; unfold hold; simp;
     simp [sum_into_lambda]
     simp [← sum_of_add]

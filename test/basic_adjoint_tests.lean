@@ -48,8 +48,10 @@ example -- [NonZero n]
 example {n} (f : Fin n → ℝ) (c : Fin n) [Nonempty (Fin n)] 
   : (λ (g : Fin n → ℝ) => sum (λ i => (f i) * (g (i+c))))† (1 : ℝ) = (fun i => f (i - c)) := by funext i; simp[sum_into_lambda]; done
 
+set_option trace.Meta.Tactic.simp.discharge true in
+set_option trace.Meta.Tactic.simp.rewrite true in
 example {n} (f : Fin n → ℝ) [Nonempty (Fin n)] 
-  : (fun df : Fin n → ℝ => ∑ i, df i * f i + f i * df i)† 1 = λ i => ⟪1,f i⟫ + f i := by funext i; simp; unfold hold; simp[sum_into_lambda]; done
+  : (fun df : Fin n → ℝ => ∑ i, df i * f i + f i * df i)† 1 = λ i => ⟪1,f i⟫ + f i := by funext i; simp; unfold hold; simp; simp only [sum_into_lambda]; done
 
 example {n} (f : Fin n → ℝ) (i : Fin n) [Nonempty (Fin n)]
   : (λ (x : Fin n → ℝ) => x i * f i)† = λ (y : ℝ) j => kron i j * ⟪y, f i⟫

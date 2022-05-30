@@ -23,19 +23,19 @@ instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (δ† f x) := sorry
 ----------------------------------------------------------------------
 
 
-@[simp]
+@[simp ↓]
 theorem id.arg_x.adjDiff_simp
   : δ† (λ x : X => x) = λ x dx => dx := by simp[adjDiff] done
 
-@[simp]
+@[simp ↓]
 theorem const.arg_x.adjDiff_simp 
   : δ† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjDiff] done
 
-@[simp]
+@[simp ↓]
 theorem const.arg_y.adjDiff_simp (x : X)
   : δ† (λ (y : Y) => x) = (λ y dy' => (0 : Y)) := by simp[adjDiff] done
 
-@[simp low-4]
+@[simp ↓ low-4]
 theorem swap.arg_y.adjDiff_simp
   (f : ι → X → Z) [inst : ∀ i, HasAdjDiff (f i)]
   : δ† (λ x y => f y x) = (λ x dx' => ∑ i, (δ† (f i) x) (dx' i)) := 
@@ -45,7 +45,7 @@ by
 
   simp[adjDiff] done
 
-@[simp low-3]
+@[simp ↓ low-3]
 theorem subst.arg_x.adjDiff_simp
   (f : X → Y → Z) [IsSmooth f]
   [instfx : ∀ y, HasAdjDiff λ x => f x y]
@@ -75,7 +75,7 @@ by
   admit
 
 
-@[simp low-2]
+@[simp ↓ low-2]
 theorem subst.arg_x.parm1.adjDiff_simp
   (a : α)
   (f : X → Y → α → Z) [IsSmooth λ x y => f x y a]
@@ -93,7 +93,7 @@ by
   apply subst.arg_x.adjDiff_simp (λ x y => f x y a) g
   done
 
-@[simp low-2]
+@[simp ↓ low-2]
 theorem subst.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
   (f : X → Y → α → β → Z) [IsSmooth λ x y => f x y a b]
@@ -111,7 +111,7 @@ by
   apply subst.arg_x.adjDiff_simp (λ x y => f x y a b) g
   done
 
-@[simp low-2]
+@[simp ↓ low-2]
 theorem subst.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
   (f : X → Y → α → β → γ → Z) [IsSmooth λ x y => f x y a b c]
@@ -129,7 +129,7 @@ by
   apply subst.arg_x.adjDiff_simp (λ x y => f x y a b c) g
   done
 
-@[simp low-1]
+@[simp ↓ low-1]
 theorem comp.arg_x.adjDiff_simp
   (f : Y → Z) [instf : HasAdjDiff f] --[IsSmooth f] [∀ y, HasAdjoint $ δ f y] 
   (g : X → Y) [instg : HasAdjDiff g] -- [IsSmooth g] [∀ x, HasAdjoint $ δ g x] 
@@ -138,7 +138,7 @@ by
   simp; unfold hold; simp
   done
 
-@[simp low-2]
+@[simp ↓ low-2]
 theorem diag.arg_x.adjDiff_simp
   (f : Y₁ → Y₂ → Z) [IsSmooth f]
   [∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂]
@@ -156,13 +156,13 @@ by
   have sg := hg.1
   simp; unfold hold; simp; unfold hold; simp; done
 
-@[simp low]
+@[simp ↓ low]
 theorem eval.arg_f.adjDiff_simp
   (i : ι)
   : δ† (λ (f : ι → X) => f i) = (λ f df' j => ((kron i j) * df' : X))
 := sorry
 
-@[simp low-1]
+@[simp ↓ low-1]
 theorem eval.arg_x.parm1.adjDiff_simp
   (f : X → ι → Z) [HasAdjDiff f]
   : δ† (λ x => f x i) = (λ x dx' => (δ† f x) (λ j => ((kron i j) * dx' : Z)))
@@ -176,7 +176,7 @@ by
 -- These theorems are problematic when used with simp --
 
 
-@[simp low-1]
+@[simp ↓ low-1]
 theorem comp.arg_x.parm1.adjDiff_simp
   (a : α) 
   (f : Y → α → Z) [HasAdjDiff λ y => f y a]
@@ -187,7 +187,7 @@ theorem comp.arg_x.parm1.adjDiff_simp
   simp; unfold hold; simp
   done
 
-@[simp low-1]
+@[simp ↓ low-1]
 theorem comp.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
   (f : Y → α → β → Z) [HasAdjDiff λ y => f y a b]
@@ -198,7 +198,7 @@ theorem comp.arg_x.parm2.adjDiff_simp
   simp; unfold hold; simp
   done
 
-@[simp low-1]
+@[simp ↓ low-1]
 theorem comp.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
   (f : Y → α → β → γ → Z) [HasAdjDiff λ y => f y a b c]
@@ -213,7 +213,7 @@ example (a : α) (f : Y₁ → Y₂ → α → Z) [IsSmooth λ y₁ y₂ => f y�
   (g₁ : X → Y₁) [hg : IsSmooth g₁] : IsSmooth (λ x y => f (g₁ x) y a) := by infer_instance
 
 
-@[simp low-1] -- try to avoid using this theorem
+@[simp ↓ low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm1.adjDiff_simp
   (a : α)
   (f : Y₁ → Y₂ → α → Z) [IsSmooth λ y₁ y₂ => f y₁ y₂ a]
@@ -232,7 +232,7 @@ theorem diag.arg_x.parm1.adjDiff_simp
 
   admit
   
-@[simp low-1] -- try to avoid using this theorem
+@[simp ↓ low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
   (f : Y₁ → Y₂ → α → β → Z) [IsSmooth λ y₁ y₂ => f y₁ y₂ a b]
@@ -250,7 +250,7 @@ theorem diag.arg_x.parm2.adjDiff_simp
   (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂)
   done
 
-@[simp low-1] -- try to avoid using this theorem
+@[simp ↓ low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
   (f : Y₁ → Y₂ → α → β → γ → Z) [IsSmooth λ y₁ y₂ => f y₁ y₂ a b c]
@@ -271,7 +271,7 @@ theorem diag.arg_x.parm3.adjDiff_simp
 ----------------------------------------------------------------------
 
 
--- @[simp]
+-- @[simp ↓]
 -- theorem subst.arg_x.adjDiff_simp'''
 --   (f : X → Y → Z) [IsSmooth f]
 --   [instfx : ∀ y, HasAdjDiff λ x => f x y]
@@ -286,3 +286,7 @@ theorem diag.arg_x.parm3.adjDiff_simp
 --     := 
 -- by 
 --   sorry
+
+
+
+

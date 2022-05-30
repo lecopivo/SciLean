@@ -9,8 +9,8 @@ namespace SciLean
   argument x [Fact (ε≠0)]
     isSmooth     := sorry,
     diff_simp    := y * ⟪dx, x⟫ * εpow ε x (y-2) by sorry,
-    hasAdjDiff   := by constructor; infer_instance; simp[diff]; intro; infer_instance done,
-    adjDiff_simp := (y * (dx' * εpow ε x (y-2))) * x by (simp[adjDiff]; unfold hold; simp;done)
+    hasAdjDiff   := by constructor; infer_instance; simp; intro; infer_instance done,
+    adjDiff_simp := (y * (dx' * εpow ε x (y-2))) * x by (simp[adjDiff]; unfold hold; simp; unfold hold; simp done)
   -- Defined in EpsLog.lean 
   -- argument y [Fact (ε≠0)]
   --   isSmooth := sorry,

@@ -21,4 +21,15 @@ section ProductOperations
   instance [Zero α] [Zero β] : Zero (α × β) := ⟨(0, 0)⟩
   instance [One α] [One β] : One (α × β) := ⟨(1, 1)⟩
 
+  theorem prod_neg_elemwise [Neg X] [Neg Y] (xy : X × Y) : - xy = (- xy.1, - xy.2) := by simp[Neg.neg] done
+  theorem prod_add_elemwise [Add X] [Add Y] (xy xy' : X × Y) : xy + xy' = (xy.1 + xy'.1, xy.2 + xy'.2) := by simp[HAdd.hAdd,Add.add] done
+  theorem prod_sub_elemwise [Sub X] [Sub Y] (xy xy' : X × Y) : xy - xy' = (xy.1 - xy'.1, xy.2 - xy'.2) := by simp[HSub.hSub,Sub.sub] done
+  theorem prod_mul_elemwise [Mul X] [Mul Y] (xy xy' : X × Y) : xy * xy' = (xy.1 * xy'.1, xy.2 * xy'.2) := by simp[HMul.hMul,Mul.mul] done
+  theorem prod_div_elemwise [Div X] [Div Y] (xy xy' : X × Y) : xy / xy' = (xy.1 / xy'.1, xy.2 / xy'.2) := by simp[HDiv.hDiv,Div.div] done
+
+  theorem prod_hmul_elemwise [HMul α X X] [HMul α Y Y] (xy : X × Y) (a : α) : a * xy = (a * xy.1, a * xy.2) := by simp[HMul.hMul] done
+
+  theorem prod_one_elemwise [One X] [One Y] : (1 : X×Y) = (1,1) := by simp[One.one, OfNat.ofNat] done
+  theorem prod_zero_elemwise [Zero X] [Zero Y] : (0 : X×Y) = (0,0) := by simp[OfNat.ofNat, Zero.zero] done
+
 end ProductOperations

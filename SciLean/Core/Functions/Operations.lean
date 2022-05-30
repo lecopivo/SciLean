@@ -34,7 +34,7 @@ argument x [Hilbert X]
   hasAdjoint := sorry,
   adj_simp   := ⟪x', y⟫ by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := ⟪dx', y⟫ by simp[adjDiff] done
+  adjDiff_simp := ⟪dx', y⟫ by simp[adjDiff]; unfold hold; simp done
 
 argument y [Vec X]
   isLin      := sorry,
@@ -53,9 +53,9 @@ argument x [Fact (y ≠ 0)]
   isInv    := sorry,
   inv_simp := x' * (1/y) by sorry
 
-@[simp]
-theorem HMul.hMul.arg_xy.fwdDiff_simp  {X : Type} [Vec X] 
-  : (𝓣 λ ((x,y) : (ℝ×X)) => x * y) = λ ((x,y),(dx,dy)) => (x*y, dx*y + x*dy) :=
+@[simp, simp_diff]
+theorem HMul.hMul.arg_xy.fwdDiff_simp  {X : Type} [Vec X]  {α}
+  : (fwdDiff α λ ((x,y) : (ℝ×X)) => x * y) = λ ((x,y),dxy) => (x*y, λ a => (dxy a).1 * y + x * (dxy a).2) :=
 by  simp[fwdDiff] done
 
 -- Division --
@@ -79,7 +79,7 @@ argument x
   hasAdjoint := sorry,
   adj_simp := x' / y by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' / y by simp[adjDiff] done
+  adjDiff_simp := dx' / y by simp[adjDiff]; unfold hold; simp done
 
 --- We can't say much in `y as we do not have `IsSmoothAt
 
@@ -93,7 +93,7 @@ argument x [Vec X]
   diff_simp := dx by sorry
 argument x [SemiHilbert X]
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' by simp[adjDiff] done
+  adjDiff_simp := dx' by simp[adjDiff]; unfold hold; simp done
 argument x [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x' - y by sorry
@@ -115,12 +115,12 @@ instance HAdd.hAdd.arg_xy.isLin {X} [Vec X]
 instance HAdd.hAdd.arg_xy.hasAdjoint {X} [SemiHilbert X] 
   : HasAdjoint (λ ((x, y) : (X × X)) => x + y) := sorry
 
-@[simp] theorem HAdd.hAdd.arg_xy.adj_simp {X} [SemiHilbert X] 
+@[simp, simp_diff] theorem HAdd.hAdd.arg_xy.adj_simp {X} [SemiHilbert X] 
   : (Function.uncurry HAdd.hAdd)† = λ xy' : X => (xy', xy') := sorry
 
-@[simp]
-theorem HAdd.hAdd.arg_xy.fwdDiff_simp  {X : Type} [Vec X] 
-  : (𝓣 λ ((x,y) : (X×X)) => x + y) = λ ((x,y),(dx,dy)) => (x+y, dx+dy) :=
+@[simp, simp_diff]
+theorem HAdd.hAdd.arg_xy.fwdDiff_simp  {X : Type} [Vec X] {α}
+  : (fwdDiff α λ ((x,y) : (X×X)) => x + y) = λ ((x,y),dxy) => (x+y, λ a => (dxy a).1 + (dxy a).2) :=
 by simp[fwdDiff] done
 
 
@@ -133,7 +133,7 @@ argument x [Vec X]
   diff_simp := dx by sorry
 argument x [SemiHilbert X]
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' by simp[adjDiff] done
+  adjDiff_simp := dx' by simp[adjDiff]; unfold hold; simp done
 argument x [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x' + y by sorry
@@ -155,12 +155,12 @@ instance HSub.hSub.arg_xy.isLin {X} [Vec X]
 instance HSub.hSub.arg_xy.hasAdjoint {X} [SemiHilbert X] 
   : HasAdjoint (λ ((x, y) : (X × X)) => x - y) := sorry
 
-@[simp] theorem HSub.hSub.arg_xy.adj_simp {X} [SemiHilbert X] 
+@[simp, simp_diff] theorem HSub.hSub.arg_xy.adj_simp {X} [SemiHilbert X] 
   : (Function.uncurry HSub.hSub)† = λ xy' : X => (xy', - xy') := sorry
 
-@[simp]
-theorem HSub.hSub.arg_xy.fwdDiff_simp  {X : Type} [Vec X] 
-  : (𝓣 λ ((x,y) : (X×X)) => x - y) = λ ((x,y),(dx,dy)) => (x-y, dx-dy) :=
+@[simp, simp_diff]
+theorem HSub.hSub.arg_xy.fwdDiff_simp  {X : Type} [Vec X] {α}
+  : (fwdDiff α λ ((x,y) : (X×X)) => x - y) = λ ((x,y),dxy) => (x-y, λ a => (dxy a).1-(dxy a).2) :=
 by simp[fwdDiff] done
 
 
@@ -174,21 +174,21 @@ argument x
   hasAdjoint   := sorry,
   adj_simp     := x' * y by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' * y by simp[adjDiff] done
+  adjDiff_simp := dx' * y by simp[adjDiff]; unfold hold; simp done
 argument y
   isLin        := sorry,
   isSmooth, diff_simp, fwdDiff_simp,
   hasAdjoint   := sorry,
   adj_simp     := y' * x by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dy' * x by simp[adjDiff] done
+  adjDiff_simp := dy' * x by simp[adjDiff]; unfold hold; simp done
 
-@[simp]
+@[simp, simp_diff]
 theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[SemiInner.semiInner] done
 
-@[simp]
-theorem SemiInner.semiInner.arg_xy.fwdDiff_simp  {X : Type} [Hilbert X] 
-  : (𝓣 λ (xy : (X×X)) => ⟪xy.1,xy.2⟫) = λ ((x,y),(dx,dy)) => (⟪x,y⟫, ⟪dx,y⟫ + ⟪x,dy⟫) :=
+@[simp, simp_diff]
+theorem SemiInner.semiInner.arg_xy.fwdDiff_simp  {X : Type} [Hilbert X] {α}
+  : (fwdDiff α λ (xy : (X×X)) => ⟪xy.1,xy.2⟫) = λ ((x,y),dxy) => (⟪x,y⟫, λ a => ⟪(dxy a).1,y⟫ + ⟪x,(dxy a).2⟫) :=
 by simp[fwdDiff]; done
 
 
@@ -199,6 +199,6 @@ function_properties SemiInner.normSqr {X} [Hilbert X] (x : X) : ℝ
 argument x
   isSmooth,
   diff_simp    := 2 * ⟪dx, x⟫ by simp[normSqr] admit,
-  fwdDiff_simp := (∥x∥², 2 * ⟪dx, x⟫) by simp[fwdDiff] done,
+  -- fwdDiff_simp := λ a => (∥x∥², 2 * ⟪dx a, x⟫) by simp[fwdDiff] done,
   hasAdjDiff,
   adjDiff_simp := ((2:ℝ) * dx') * x by simp[normSqr]; unfold hold; simp; done
