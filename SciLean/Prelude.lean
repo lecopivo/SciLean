@@ -22,6 +22,9 @@ open Lean.Meta
 register_simp_attr lambdaPush "Propagate Lambdas Inside"
 register_simp_attr lambdaPull "Propagate Lambdas Outside"
 
+register_simp_attr addPush "Propagate Add Inside"
+register_simp_attr addPull "Propagate Add Outside"
+
 -- initialize lambdaPush_simp_extension 
 --   : SimpExtension ← registerSimpAttr `lambdaPush "Propagate Lambdas Inside"
 
