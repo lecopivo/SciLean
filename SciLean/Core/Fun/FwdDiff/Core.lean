@@ -7,7 +7,7 @@ variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 
 noncomputable 
-def fwdDiff (α : Type) (f : X → Y) : X×(α → X) → Y×(α → Y) := λ (x,dx) => (f x, λ a => δ f x (dx a))
+def fwdDiff (f : X → Y) : X → Y×(X → Y) := λ x => (f x, λ dx => δ f x dx)
 
 prefix:max "𝓣" => fwdDiff
 
@@ -15,7 +15,7 @@ def fwdDiff.split (f : α → β × γ) : (α → β)×(α→γ) := (λ a => (f 
 def fwdDiff.merge (fg : (α → β)×(α→γ)) : α → β×γ := λ a => (fg.1 a, fg.2 a) 
 def fwdDiff.transpose : (Y₁×Y₁)×(Y₂×Y₂) → (Y₁×Y₂)×(Y₁×Y₂) := λ ((a,b),(c,d)) => ((a,c),(b,d))
 
-theorem fwdDiff_of_linear (f : X → Y) [IsLin f] : fwdDiff α f = λ (x,dx) => (f x, λ a => f (dx a)) :=
+theorem fwdDiff_of_linear (f : X → Y) [IsLin f] : fwdDiff f = λ x => (f x, f) :=
 by 
   simp [fwdDiff]
   rw[diff_of_linear]
@@ -52,40 +52,40 @@ def uncurryFD {α : Type} (Tf : X×(α → X) → (Y→Z)×(α → Y → Z)) (Tf
     let (z, dfx) := Tfx x (y, λ a => (dxy a).2)
     (z, λ a => df a y + dfx a)
 
-@[simp ↓]
-theorem uncurry_fwdDiff (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-  : fwdDiff α (Function.uncurry f) = uncurryFD (fwdDiff α f) (λ x => fwdDiff α (f x))
-  := by
-  simp[fwdDiff,Function.uncurry,uncurryFD] done
+-- @[simp ↓]
+-- theorem uncurry_fwdDiff (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
+--   : fwdDiff α (Function.uncurry f) = uncurryFD (fwdDiff α f) (λ x => fwdDiff α (f x))
+--   := by
+--   simp[fwdDiff,Function.uncurry,uncurryFD] done
 
 ----------------------------------------------------------------------
 
 @[simp ↓, simp_diff]
 theorem id.arg_x.fwdDiff_simp
-  : fwdDiff α (λ x : X => x) = λ (x,dx) => (x,dx) := by simp[fwdDiff] done
+  : fwdDiff (λ x : X => x) = λ x => (x, λ dx => dx) := by simp[fwdDiff] done
 
 @[simp ↓, simp_diff]
 theorem const.arg_y.fwdDiff_simp (x : X)
-  : fwdDiff α (λ y : Y => x) = λ (y,dy) => (x,0) := by simp[fwdDiff,OfNat.ofNat, Zero.zero] done
+  : fwdDiff (λ y : Y => x) = λ y => (x, λ _ => 0) := by simp[fwdDiff] done
 
 @[simp ↓ low-3]
 theorem swap.arg_x.fwdDiff_simp (f : α → X → Y) [∀ i, IsSmooth (f i)]
-  : fwdDiff β (λ x a => f a x) = 
-           λ xdx => 
-           let f' := λ a => fwdDiff β (f a) xdx
-           (λ a => (f' a).1, λ b a => (f' a).2 b) := 
+  : fwdDiff (λ x a => f a x) = 
+           λ x => 
+           let f' := λ a => fwdDiff (f a)
+           (λ a => f a x, λ dx a => (f' a x).2 dx) := 
 by 
   simp[fwdDiff] done
-
+/-
 -- @[simp ↓ low-2, simp_diff low-2]
 theorem scomb.arg_x.fwdDiff_simp
   (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
   (g : X → Y) [IsSmooth g] 
-  : fwdDiff α (λ x => f x (g x))
+  : fwdDiff (λ x => f x (g x))
     = 
     λ xdx =>
-      let Tf  := fwdDiff α f
-      let Tg  := fwdDiff α g
+      let Tf  := fwdDiff f
+      let Tg  := fwdDiff g
       let Tfg := fmapFD Tf Tg
       let Tfx := fwdDiff α (f xdx.1)
       evalFD (fmapFD Tf Tg xdx) Tfx
@@ -129,3 +129,4 @@ theorem parm.arg_x.fwdDiff_simp
   := 
 by 
   simp [fwdDiff] done
+-/

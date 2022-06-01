@@ -33,7 +33,7 @@ do
   let diffId := Lean.mkIdent $ declBase.append "fwdDiff"
   let diffSimpId  := Lean.mkIdent $ declBase.append "fwdDiff_simp"
 
-  let diffNonComp ← `(fwdDiff α (fun $parm $postParms* => $funId:ident $preArgs* $arg $postArgs*))
+  let diffNonComp ← `(fwdDiff (fun $parm $postParms* => $funId:ident $preArgs* $arg $postArgs*))
   let diffComp ← 
     match mode with
       | .explicit df proof => 
@@ -55,12 +55,12 @@ do
 
   if makeDef then
     let diffDef ← `(def $diffId:declId $preParms:bracketedBinder* := $diffComp:term)
-    let diffSimp ← `(@[simp] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* {α} : $diffNonComp = $diffId $preArgs* := $eqProof)
+    let diffSimp ← `(@[simp] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffId $preArgs* := $eqProof)
     dbg_trace diffDef.prettyPrint
     dbg_trace diffSimp.prettyPrint
     pure $ mkNullNode #[diffDef,diffSimp]
   else
-    let diffSimp ← `(@[simp] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* {α} : $diffNonComp = $diffComp := $eqProof)
+    let diffSimp ← `(@[simp] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffComp := $eqProof)
     pure diffSimp
 
 

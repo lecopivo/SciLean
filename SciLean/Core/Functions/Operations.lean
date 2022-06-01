@@ -53,10 +53,10 @@ argument x [Fact (y ≠ 0)]
   isInv    := sorry,
   inv_simp := x' * (1/y) by sorry
 
-@[simp, simp_diff]
-theorem HMul.hMul.arg_xy.fwdDiff_simp  {X : Type} [Vec X]  {α}
-  : (fwdDiff α λ ((x,y) : (ℝ×X)) => x * y) = λ ((x,y),dxy) => (x*y, λ a => (dxy a).1 * y + x * (dxy a).2) :=
-by  simp[fwdDiff] done
+-- @[simp, simp_diff]
+-- theorem HMul.hMul.arg_xy.fwdDiff_simp  {X : Type} [Vec X]  {α}
+--   : (fwdDiff λ ((x,y) : (ℝ×X)) => x * y) = λ ((x,y),dxy) => (x*y, λ a => (dxy a).1 * y + x * (dxy a).2) :=
+-- by  simp[fwdDiff] done
 
 -- Division --
 --------------
@@ -118,10 +118,10 @@ instance HAdd.hAdd.arg_xy.hasAdjoint {X} [SemiHilbert X]
 @[simp, simp_diff] theorem HAdd.hAdd.arg_xy.adj_simp {X} [SemiHilbert X] 
   : (Function.uncurry HAdd.hAdd)† = λ xy' : X => (xy', xy') := sorry
 
-@[simp, simp_diff]
-theorem HAdd.hAdd.arg_xy.fwdDiff_simp  {X : Type} [Vec X] {α}
-  : (fwdDiff α λ ((x,y) : (X×X)) => x + y) = λ ((x,y),dxy) => (x+y, λ a => (dxy a).1 + (dxy a).2) :=
-by simp[fwdDiff] done
+-- @[simp, simp_diff]
+-- theorem HAdd.hAdd.arg_xy.fwdDiff_simp  {X : Type} [Vec X] {α}
+--   : (fwdDiff λ ((x,y) : (X×X)) => x + y) = λ ((x,y),dxy) => (x+y, λ a => (dxy a).1 + (dxy a).2) :=
+-- by simp[fwdDiff] done
 
 
 -- Subtraction --
@@ -158,10 +158,10 @@ instance HSub.hSub.arg_xy.hasAdjoint {X} [SemiHilbert X]
 @[simp, simp_diff] theorem HSub.hSub.arg_xy.adj_simp {X} [SemiHilbert X] 
   : (Function.uncurry HSub.hSub)† = λ xy' : X => (xy', - xy') := sorry
 
-@[simp, simp_diff]
-theorem HSub.hSub.arg_xy.fwdDiff_simp  {X : Type} [Vec X] {α}
-  : (fwdDiff α λ ((x,y) : (X×X)) => x - y) = λ ((x,y),dxy) => (x-y, λ a => (dxy a).1-(dxy a).2) :=
-by simp[fwdDiff] done
+-- @[simp, simp_diff]
+-- theorem HSub.hSub.arg_xy.fwdDiff_simp  {X : Type} [Vec X] {α}
+--   : (fwdDiff λ ((x,y) : (X×X)) => x - y) = λ ((x,y),dxy) => (x-y, λ a => (dxy a).1-(dxy a).2) :=
+-- by simp[fwdDiff] done
 
 
 -- Inner product --
@@ -186,10 +186,10 @@ argument y
 @[simp, simp_diff]
 theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[SemiInner.semiInner] done
 
-@[simp, simp_diff]
-theorem SemiInner.semiInner.arg_xy.fwdDiff_simp  {X : Type} [Hilbert X] {α}
-  : (fwdDiff α λ (xy : (X×X)) => ⟪xy.1,xy.2⟫) = λ ((x,y),dxy) => (⟪x,y⟫, λ a => ⟪(dxy a).1,y⟫ + ⟪x,(dxy a).2⟫) :=
-by simp[fwdDiff]; done
+-- @[simp, simp_diff]
+-- theorem SemiInner.semiInner.arg_xy.fwdDiff_simp  {X : Type} [Hilbert X] {α}
+--   : (fwdDiff λ (xy : (X×X)) => ⟪xy.1,xy.2⟫) = λ ((x,y),dxy) => (⟪x,y⟫, λ a => ⟪(dxy a).1,y⟫ + ⟪x,(dxy a).2⟫) :=
+-- by simp[fwdDiff]; done
 
 
 -- Squared Norm --
