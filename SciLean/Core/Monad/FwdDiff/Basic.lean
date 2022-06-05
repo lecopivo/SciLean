@@ -1,4 +1,4 @@
-import SciLean.Core.Functions
+ import SciLean.Core.Functions
 
 import SciLean.Core.Monad.VecMonad
 
@@ -37,6 +37,12 @@ def appFDM {X Y Z : Type} {m} [Monad m]
   λ (y,dy) => do
     let (z, dz) ← Tf y
     pure (z, λ dx => dy dx >>= dz)
+
+def mapFDM {X Y: Type} {m} [Monad m] 
+  (Tf : X → (Y × (X → Y)))
+  : X → m (Y × (X → m Y)) := λ x => 
+    let (y,df) := Tf x
+    pure (y, λ dx => pure (df dx))
 
 @[simp]
 theorem compFDM_appFDM
@@ -95,20 +101,15 @@ class FwdDiffMonad (m : Type → Type) extends VecMonad m where
     (g : X → m Y) [IsSmooth g] (hf₂ : ∀ x, IsSmoothM (g x))
     : fwdDiffM (compM f g) = compFDM (fwdDiffM f) (fwdDiffM g)
 
-  mapFDM {X Y} [Vec X] [Vec Y] (f : X → Y×(X → Y)) 
-    : X → m (Y × (X → m Y))
+  -- mapFDM {X Y} [Vec X] [Vec Y] (f : X → Y×(X → Y)) 
+  --   : X → m (Y × (X → m Y))
   mapFDM_id {X} [Vec X]
-    : mapFDM (idFD (X:=X)) = idFDM
+    : mapFDM (m:=m) (idFD (X:=X)) = idFDM
   mapFDM_comp {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : Y → Z×(Y→Z)) (g : X → Y×(X→Y))
-    : mapFDM (compFD f g) = compFDM (mapFDM f) (mapFDM g)
+    : mapFDM (m:=m) (compFD f g) = compFDM (mapFDM f) (mapFDM g)
 
   fwdDiff_fwdDiffM {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] 
     : fwdDiffM (mapM f) = mapFDM (fwdDiff f)
-
-  -- uncurryD {X Y Z} [Vec X] [Vec Y] [Vec Z] (α : Type)
-  --   (Tf : X×(α → m X) → m ((Y → m Z) × (α → m (Y → m Z))))
-  --   (Tfx : X → (Y × (α → m Y)) → m (Z × (α → m Z)))
-  --   : (X×Y) × (α → m (X×Y)) → m (Z × (α → m Z))
 
   const_fwdDiffM {X Y : Type} [Vec X] [Vec Y] 
     (mx : m X) (hx : IsSmoothM mx)
@@ -117,22 +118,14 @@ class FwdDiffMonad (m : Type → Type) extends VecMonad m where
         let xdx ← fwdDiffM (λ _ : Unit => mx) ()
         pure (xdx.1, λ dy => xdx.2 ()))
 
-  -- fmap_fwdDiffM {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-  --   (f : X → m Y) [IsSmooth f] (hf₂ : ∀ x, IsSmoothM (f x))
-  --   (g : X → m Z) [IsSmooth g] (hg₂ : ∀ x, IsSmoothM (g x))
-  --   : fwdDiffM (λ x => do pure (← f x, ← g x)) = fmaplrFDM (fwdDiffM f) (fwdDiffM g)
-
   diag_fwdDiffM {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
     (f : X → m Y) [IsSmooth f] (hf₂ : ∀ x, IsSmoothM (f x))
     (g : X → m Z) [IsSmooth g] (hg₂ : ∀ x, IsSmoothM (g x))
     : fwdDiffM (λ x => do pure (← f x, ← g x)) = fmaplrFDM (fwdDiffM f) (fwdDiffM g)
 
--- class IsSmoothM {X Y} [Vec X] [Vec Y] {m} [FwdDiffMonad m] (f : X → m Y) where
---    is_smooth     : IsSmooth f
---    is_smoothM : ∀ x, FwdDiffMonad.IsSmoothM (f x)
-
 export FwdDiffMonad (fwdDiffM)
 
-class IsSmoothM {X} [Vec X] {m} [FwdDiffMonad m] (mx : m X) where
+class IsSmoothM {X} [Vec X] {m} [FwdDiffMonad m] (mx : m X) : Prop where
   is_smoothM  : FwdDiffMonad.IsSmoothM mx
+
     

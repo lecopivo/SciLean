@@ -12,6 +12,16 @@ variable {m} [FwdDiffMonad m]
 ----------------------------------------------------------------------
 
 @[simp ↓]
+theorem fwdDiffM_pure_fwdDiff (f : X → Y) [IsSmooth f]
+  : fwdDiffM (λ x => pure (f:=m) (f x)) = mapFDM (fwdDiff f) :=
+by
+  apply FwdDiffMonad.fwdDiff_fwdDiffM; done
+  
+
+----------------------------------------------------------------------
+
+
+@[simp ↓]
 theorem idM.arg_x.fwdDiffM_simp
   : fwdDiffM (λ x => (pure x : m X))
     =
@@ -40,6 +50,26 @@ by
   apply FwdDiffMonad.fwdDiffM_comp f (λ x => (hf₂ x).1) g (λ x => (hg₂ x).1)
   done
 
+@[simp ↓ low]
+theorem comp.arg_x.fwdDiffM_simp 
+  (f : Y → m Z) [hf₁ : IsSmooth f] [hf₂ : ∀ y, IsSmoothM (f y)]
+  (g : X → Y) [hg₁ : IsSmooth g]
+  : fwdDiffM (λ x => f (g x)) 
+    = 
+    (λ x => do
+      let Tg := fwdDiff g
+      let Tf := fwdDiffM f
+      appFDM Tf (← mapFDM Tg x)) :=
+by 
+  have h : (λ x => f (g x)) = (λ x => (mapM g x) >>= f) := by simp[mapM]
+  rw[h]; --rw[compM.arg_x.fwdDiffM_simp]
+  sorry
+  -- done
+  -- simp only [← compFDM_appFDM]
+  -- apply FwdDiffMonad.fwdDiffM_comp f (λ x => (hf₂ x).1) g (λ x => (hg₂ x).1)
+  -- done
+
+
 theorem diagM.arg_x.fwdDiffM_simp
     (f : X → m Y) [hf₁ : IsSmooth f] [hf₂ : ∀ x, IsSmoothM (f x)]
     (g : X → m Z) [hg₁ : IsSmooth g] [hg₂ : ∀ x, IsSmoothM (g x)]
@@ -50,7 +80,6 @@ by
   apply FwdDiffMonad.diag_fwdDiffM f (λ x => (hf₂ x).1) g (λ x => (hg₂ x).1)
   done
 
--- set_option pp.all true in
 @[simp ↓ low-3]
 theorem scombM.arg_x.fwdDiffM_simp
   (f : X → Y → m Z) [IsSmooth f] [∀ x, IsSmooth (f x)] [∀ x y, IsSmoothM (f x y)]
