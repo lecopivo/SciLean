@@ -97,3 +97,42 @@ by
   simp
   sorry -- apply diagPairM.arg_x.isSmooth pure g   -- duh: why 'FwdDiffMonad m' can't be synthesized?
 
+-- @[simp ↓ low-3]
+theorem scomb.arg_x.fwdDiffM_simp
+  (f : X → Y → m Z) [IsSmooth f] [∀ x, IsSmooth (f x)] [∀ x y, IsSmoothM (f x y)]
+  (g : X → Y) [IsSmooth g]
+  : fwdDiffM (λ x => (do f x (g x) : m Z)) 
+    =
+    (λ x => do
+      let Tg := fwdDiff g
+      let Tf := fwdDiffM (hold λ xy => f xy.1 xy.2)
+      fmaplrFDM idFDM (mapFDM Tg) x >>= appFDM Tf) := 
+by
+  have h : (λ x => (do f x (g x) : m Z)) = (λ x => (do f x (← (mapM g) x) : m Z)) := by simp[mapM]
+  rw[h]
+  -- rw[scombM.arg_x.fwdDiffM_simp]
+  sorry
+
+
+-- This prevents an infinite loop when using `scomb.arg_x.fwdDiffM_simp`  and `scombM.arg_x.fwdDiffM_simp`
+-- @[simp ↓ low-2]
+theorem scomb.arg_x.fwdDiffM_simp_safeguard (f : X → Y → m Z)
+  : fwdDiffM (λ xy => f xy.1 xy.2) = fwdDiffM (Function.uncurry f) :=
+by
+  simp[Function.uncurry] done  
+
+
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify true in
+example {W} [Vec W] (f : X → Y → m Z) 
+  : fwdDiffM (λ x : ((W × Y) × X) => f x.2 x.1.2) 
+    = 
+    let Tf := fwdDiffM (λ ((x,y) : (X × Y)) => f x y)
+    let g  := λ x : ((W × Y) × X) => (x.2,x.1.2)
+    let Tg := mapFDM (m:=m) (fwdDiff g)
+    λ x => (do appFDM Tf (← Tg x)) := 
+by
+  simp[mapFDM,appFDM]
+  admit
+  
+

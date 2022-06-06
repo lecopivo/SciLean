@@ -49,6 +49,20 @@ instance Id.instVecMonad : VecMonad Id where
   add_pureZero_right := by simp
   bind_pureZero_pure := by simp
 
+@[reducible]
+instance ReaderT.instVecMonad [Vec σ] [VecMonad m] : VecMonad (ReaderT σ m) where
+  vecM := λ X inst => by simp[ReaderT]; infer_instance
+  pureZero := λ x s => pureZero x
+  add_pureZero_right := by 
+    intro X inst mx y; funext s
+    simp[pure, ReaderT.pure, bind, ReaderT.bind] 
+    rw[fun_add_eval]; simp [prod_add_elemwise]
+    done
+  bind_pureZero_pure := by
+    intro X inst mx y; funext s
+    simp[pure, ReaderT.pure, bind, ReaderT.bind]
+    done
+
 -- set_option trace.Meta.Tactic.simp.discharge true in
 -- set_option trace.Meta.Tactic.simp.unify true in
 @[reducible]
@@ -64,4 +78,3 @@ instance StateT.instVecMonad [Vec σ] [VecMonad m] : VecMonad (StateT σ m) wher
     intro X inst mx y; funext s
     simp[pure, StateT.pure, bind, StateT.bind]
     done
-

@@ -13,7 +13,8 @@ argument x [Inhabited X]
   inv_simp := x'.1 by sorry
 argument x [Vec X] [Vec Y]
   isSmooth := sorry,
-  diff_simp := (dx,0) by sorry
+  diff_simp := (dx,0) by sorry,
+  fwdDiff_simp by  (simp[fwdDiff])
 argument x [SemiHilbert X] [SemiHilbert Y]
   hasAdjDiff := by constructor; infer_instance; simp; admit,
   adjDiff_simp := dx'.1 by sorry
@@ -22,7 +23,8 @@ argument y [Inhabited Y]
   inv_simp := y'.2 by sorry
 argument y [Vec X] [Vec Y]
   isSmooth := sorry,
-  diff_simp := (0,dy) by sorry
+  diff_simp := (0,dy) by sorry,
+  fwdDiff_simp by  (simp[fwdDiff])
 argument y [SemiHilbert X] [SemiHilbert Y]
   hasAdjDiff := by constructor; infer_instance; simp; admit,
   adjDiff_simp := dy'.2 by sorry

@@ -6,26 +6,29 @@ set_option synthInstance.maxSize 2048
 
 namespace SciLean
 
+set_option trace.Meta.Tactic.simp.rewrite true in
 noncomputable
-instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (StateT σ m) where
+instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (ReaderT σ m) where
   IsSmoothM mx := IsSmooth (λ s => mx s) ∧ ∀ s, SciLean.IsSmoothM (mx s)
   
   ---
 
   pure_is_smooth := by 
-    simp[pure,StateT.pure,StateM,StateT,Id]; infer_instance done
+    simp[pure,ReaderT.pure,ReaderT,Id]; infer_instance done
+
   pure_is_smoothM x := by 
-    simp[pure,StateT.pure,StateM,StateT,Id]; constructor; infer_instance; infer_instance done
+    simp[pure,ReaderT.pure,ReaderT,Id]; constructor; infer_instance; infer_instance done
 
   bind_is_smooth f hf₁ mhf₂ g hg₁ mhg₂ := by 
-    simp[compM,bind,StateT.bind,pure,StateT.pure,StateM,StateT,Id] at f hf₁ mhf₂ g hg₁ mhg₂ ⊢
+    simp[compM,bind,ReaderT.bind,pure,ReaderT.pure,ReaderT,Id] at f hf₁ mhf₂ g hg₁ mhg₂ ⊢
     have hg₂ : ∀ x, IsSmooth (g x) := λ x => (mhg₂ x).1
     have hg₃ : ∀ x s, IsSmoothM (g x s) := λ x => (mhg₂ x).2
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
     have hf₃ : ∀ x s, IsSmoothM (f x s) := λ x => (mhf₂ x).2
     infer_instance done
+
   bind_is_smoothM f hf₁ mhf₂ mx hx := by 
-    simp[compM,bind,StateT.bind,pure,StateT.pure,StateM,StateT,Id,VecMonad] at f hf₁ mhf₂ mx hx ⊢
+    simp[compM,bind,ReaderT.bind,pure,ReaderT.pure,ReaderT,Id,VecMonad] at f hf₁ mhf₂ mx hx ⊢
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
     have hf₃ : ∀ x s, IsSmoothM (f x s) := λ x => (mhf₂ x).2
 
@@ -36,7 +39,7 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (StateT σ m) where
     constructor; infer_instance; infer_instance done
 
   diag_is_smooth f hf₁ mhf₂ g hg₁ mhg₂ := by
-    simp[compM,bind,StateT.bind,pure,StateT.pure,StateM,StateT,Id] at f hf₁ mhf₂ g hg₁ mhg₂ ⊢
+    simp[compM,bind,ReaderT.bind,pure,ReaderT.pure,ReaderT,Id] at f hf₁ mhf₂ g hg₁ mhg₂ ⊢
     have hg₂ : ∀ x, IsSmooth (g x) := λ x => (mhg₂ x).1
     have hg₃ : ∀ x s, IsSmoothM (g x s) := λ x => (mhg₂ x).2
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
@@ -44,7 +47,7 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (StateT σ m) where
     infer_instance done
 
   diag_is_smoothM mx hx my hy := by
-    simp[compM,bind,StateT.bind,pure,StateT.pure,StateM,StateT,Id] at mx hx my hy ⊢
+    simp[compM,bind,ReaderT.bind,pure,ReaderT.pure,ReaderT,Id] at mx hx my hy ⊢
 
     -- For some reason these instances fail to be infered automatically 
     have hx1 : IsSmooth λ s => (mx s) := hx.1
@@ -57,35 +60,36 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (StateT σ m) where
   ---
 
   fwdDiffM f := λ x s => do
-     let ((y,s),df) ← fwdDiffM (λ (x,s) => f x s) (x,s)
-     pure ((y, λ dx ds => df (dx,ds)), s)
+     let (y,df) ← fwdDiffM (λ (x,s) => f x s) (x,s)
+     pure (y, λ dx ds => df (dx,ds))
 
-  fwdDiffM_id := by simp[pure,StateT.pure,StateM,StateT,Id,prod_add_elemwise,idFDM,idM,Function.uncurry]
+  fwdDiffM_id := by simp[pure,ReaderT.pure,ReaderT,Id,prod_add_elemwise,idFDM,idM,mapFDM,Function.uncurry]
 
   fwdDiffM_comp f hf₁ mhf₂ g hg₁ mhg₂ := by
-    simp[fwdDiff,compM,compFDM,pure,StateT.pure,bind,StateT.bind,StateT,StateM,Id,prod_add_elemwise,fmaplrFDM,appFDM] at f hf₁ mhf₂ g hg₁ mhg₂ ⊢
+    simp[fwdDiff,compM,compFDM,pure,ReaderT.pure,bind,ReaderT.bind,ReaderT,Id,prod_add_elemwise,fmaplrFDM,appFDM] at f hf₁ mhf₂ g hg₁ mhg₂ ⊢
     have hg₂ : ∀ x, IsSmooth (g x) := λ x => (mhg₂ x).1
     have hg₃ : ∀ x s, IsSmoothM (g x s) := λ x => (mhg₂ x).2
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
     have hf₃ : ∀ x s, IsSmoothM (f x s) := λ x => (mhf₂ x).2
-    funext x s; simp[appFDM,Function.uncurry]
+    funext x s; simp; simp[appFDM,idFDM,fmaplrFDM, mapFDM]; unfold hold; simp[appFDM,idFDM,fmaplrFDM, mapFDM]
     done
 
   ---
 
-  mapFDM_id := by simp[pure,StateT.pure,idFD,idFDM,mapFDM]
+  mapFDM_id := by simp[pure,ReaderT.pure,idFD,idFDM,mapFDM]
 
   mapFDM_comp Tf Tg := by
-    simp[bind,StateT.bind,pure,StateT.pure,idFD,idFDM,compFDM,compFD,mapFDM]
+    simp[bind,ReaderT.bind,pure,ReaderT.pure,idFD,idFDM,compFDM,compFD,mapFDM]
 
   ---
 
   fwdDiff_fwdDiffM f _ := by 
-    simp[fwdDiff,pure,StateT.pure,StateT,StateM,Id,prod_add_elemwise,mapM,Function.uncurry,mapFDM]
+    simp[fwdDiff,pure,ReaderT.pure,ReaderT,Id,prod_add_elemwise,mapM]
+    funext dx ds; simp[mapFDM,pure,ReaderT.pure]
     done
 
   const_fwdDiffM mx hx := by
-    simp[fwdDiff,compM,compFDM,pure,StateT.pure,bind,StateT.bind,StateT,StateM,Id,prod_add_elemwise] at mx hx ⊢
+    simp[fwdDiff,compM,compFDM,pure,ReaderT.pure,bind,ReaderT.bind,ReaderT,Id,prod_add_elemwise] at mx hx ⊢
     funext y s;
     have hx1 : IsSmooth λ s => (mx s) := hx.1
     have hx2 : ∀ s, IsSmoothM (mx s) := hx.2
@@ -93,7 +97,7 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (StateT σ m) where
     done
 
   diag_fwdDiffM f hf₁ mhf₂ g hg₁ mhg₂ := by
-    simp[fwdDiff,compM,compFDM,pure,StateT.pure,bind,StateT.bind,StateT,StateM,Id,prod_add_elemwise,fmaplrFDM] at f hf₁ mhf₂ g hg₁ mhg₂ ⊢
+    simp[fwdDiff,compM,compFDM,pure,ReaderT.pure,bind,ReaderT.bind,ReaderT,Id,prod_add_elemwise,fmaplrFDM] at f hf₁ mhf₂ g hg₁ mhg₂ ⊢
     have hg₂ : ∀ x, IsSmooth (g x) := λ x => (mhg₂ x).1
     have hg₃ : ∀ x s, IsSmoothM (g x s) := λ x => (mhg₂ x).2
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1

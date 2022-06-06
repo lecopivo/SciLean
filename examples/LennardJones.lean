@@ -31,9 +31,9 @@ def H (n : ℕ) (ε : ℝ) (C LJ : ℝ) (r m : Idx n → ℝ) (x p : (ℝ^(3:ℕ
 argument p [Fact (n≠0)] [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, adjDiff
 argument x [Fact (n≠0)] [Fact (ε≠0)]
-  isSmooth, diff, hasAdjDiff, 
+  isSmooth, diff, hasAdjDiff,
   adjDiff by
-    simp[H]; unfold hold; simp
+    simp[H]; unfold hold; simp; unfold hold; simp
     simp [sum_into_lambda]
     simp [← sum_of_add]
 

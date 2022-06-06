@@ -28,6 +28,7 @@ argument p
 def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H (n:=n) m k))) :=
 by
   -- Unfold Hamiltonian definition and compute gradients
+  unfold HamiltonianSystem
   simp [HamiltonianSystem]
 
   -- Apply RK4 method
