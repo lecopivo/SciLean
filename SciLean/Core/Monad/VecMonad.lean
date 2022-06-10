@@ -3,7 +3,7 @@ import SciLean.Core.Functions
 namespace SciLean
 
 
-class VecMonad (m : Type u → Type v) extends Monad m, LawfulMonad m where
+class VecMonad (m : Type → Type) extends Monad m, LawfulMonad m where
   vecM (X) [Vec X] : Vec (m X)
   pureZero {X} : X → m X
   add_pureZero_right {X} [Vec X] (mx : m X) (y : X) : mx + pureZero y = bind mx (λ x => pure (x + y))

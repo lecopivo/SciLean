@@ -6,7 +6,6 @@ set_option synthInstance.maxSize 2048
 
 namespace SciLean
 
-set_option trace.Meta.Tactic.simp.rewrite true in
 noncomputable
 instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (ReaderT σ m) where
   IsSmoothM mx := IsSmooth (λ s => mx s) ∧ ∀ s, SciLean.IsSmoothM (mx s)
@@ -71,7 +70,7 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (ReaderT σ m) where
     have hg₃ : ∀ x s, IsSmoothM (g x s) := λ x => (mhg₂ x).2
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
     have hf₃ : ∀ x s, IsSmoothM (f x s) := λ x => (mhf₂ x).2
-    funext x s; simp; simp[appFDM,idFDM,fmaplrFDM, mapFDM]; unfold hold; simp[appFDM,idFDM,fmaplrFDM, mapFDM]
+    funext x s; simp; simp[appFDM,idFDM,fmaplrFDM, mapFDM]; unfold hold; simp[appFDM,idFDM,fmaplrFDM, mapFDM, fwdDiff]
     done
 
   ---
@@ -103,8 +102,7 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (ReaderT σ m) where
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
     have hf₃ : ∀ x s, IsSmoothM (f x s) := λ x => (mhf₂ x).2
     funext x s; 
-    -- This is problematic for some reason, looks like a bug in simp
-    -- simp[idFDM, fmaplrFDM, appFDM, mapFDM]
-    sorry
+    simp[idFDM, fmaplrFDM, appFDM, mapFDM, fwdDiff, prod_add_elemwise]
+    done
 
 

@@ -14,6 +14,7 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (StateT σ m) where
 
   pure_is_smooth := by 
     simp[pure,StateT.pure,StateM,StateT,Id]; infer_instance done
+
   pure_is_smoothM x := by 
     simp[pure,StateT.pure,StateM,StateT,Id]; constructor; infer_instance; infer_instance done
 
@@ -24,6 +25,7 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (StateT σ m) where
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
     have hf₃ : ∀ x s, IsSmoothM (f x s) := λ x => (mhf₂ x).2
     infer_instance done
+
   bind_is_smoothM f hf₁ mhf₂ mx hx := by 
     simp[compM,bind,StateT.bind,pure,StateT.pure,StateM,StateT,Id,VecMonad] at f hf₁ mhf₂ mx hx ⊢
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
@@ -99,8 +101,7 @@ instance {σ} [Vec σ] {m} [FwdDiffMonad m] : FwdDiffMonad (StateT σ m) where
     have hf₂ : ∀ y, IsSmooth (f y) := λ y => (mhf₂ y).1
     have hf₃ : ∀ x s, IsSmoothM (f x s) := λ x => (mhf₂ x).2
     funext x s; 
-    -- This is problematic for some reason, looks like a bug in simp
-    -- simp[idFDM, fmaplrFDM, appFDM, mapFDM]
-    sorry
+    simp[idFDM, fmaplrFDM, appFDM, mapFDM, fwdDiff, prod_add_elemwise]
+    done
 
 

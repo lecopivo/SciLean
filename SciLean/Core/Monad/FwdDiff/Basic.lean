@@ -2,8 +2,8 @@
 
 import SciLean.Core.Monad.VecMonad
 
-set_option synthInstance.maxSize 2048
-set_option synthInstance.maxHeartbeats 100000
+-- set_option synthInstance.maxSize 2048
+-- set_option synthInstance.maxHeartbeats 100000
 
 namespace SciLean
 
@@ -68,22 +68,22 @@ def fmaplrFDM {X Y Z : Type} {m} [Monad m]
     let (z, dg) ← Tg x
     pure ((y,z), λ dx => do pure (← df dx, ← dg dx))
 
-class FwdDiffMonad (m : Type → Type) extends VecMonad m where
+class FwdDiffMonad (m : Type → Type) extends VecMonad m : Type 1 where
   IsSmoothM {X} [Vec X] (mx : m X) : Prop
 
   pure_is_smooth {X} [Vec X] : IsSmooth (λ x : X => (pure x : m X))
   pure_is_smoothM {X} [Vec X] (x : X) : IsSmoothM (pure x : m X)
 
-  bind_is_smooth {X Y Z} [Vec X] [Vec Y] [Vec Z]
+  bind_is_smooth {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
     (f : Y → m Z) (hf₁ : IsSmooth f) (mhf₂ : ∀ y, IsSmoothM (f y))
     (g : X → m Y) (hg₁ : IsSmooth g) (mhg₂ : ∀ x, IsSmoothM (g x))
     : IsSmooth (compM f g)
-  bind_is_smoothM {X Y} [Vec X] [Vec Y]
+  bind_is_smoothM {X Y : Type} [Vec X] [Vec Y]
     (f : X → m Y) (hf₁ : IsSmooth f) (mhf₂ : ∀ x, IsSmoothM (f x))
     (mx : m X) (hx : IsSmoothM mx)
     : IsSmoothM (mx >>= f)
 
-  diag_is_smooth {X Y Z} [Vec X] [Vec Y] [Vec Z]
+  diag_is_smooth {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
     (f : X → m Y) (hf₁ : IsSmooth f) (hf₂ : ∀ x, IsSmoothM (f x))
     (g : X → m Z) (hg₁ : IsSmooth g) (hg₂ : ∀ x, IsSmoothM (g x))
     : IsSmooth λ x => (do pure (← f x, ← g x) : m (Y×Z))

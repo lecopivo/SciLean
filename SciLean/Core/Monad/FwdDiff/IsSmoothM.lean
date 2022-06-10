@@ -26,6 +26,16 @@ by
   constructor
   apply FwdDiffMonad.bind_is_smoothM f hf₁ (λ x => (hf₂ x).1) mx hx.1
 
+instance mapM.arg_f.isSmooth
+  : IsSmooth (λ f : X → Y => mapM (m:=m) f) := by simp[mapM] infer_instance
+instance mapM.arg_x.isSmooth
+  (f : X → Y) [IsSmooth f]
+  : IsSmooth (λ x => mapM (m:=m) f x) := by simp[mapM] infer_instance
+instance mapM.arg_x.isSmoothM
+  (f : X → Y) [IsSmooth f] (x : X)
+  : IsSmoothM (mapM (m:=m) f x) := by simp[mapM] infer_instance
+
+
 instance compM.arg_x.isSmooth
   (f : Y → m Z) [hf₁ : IsSmooth f] [hf₂ : ∀ x, IsSmoothM (f x)]
   (g : X → m Y) [hg₁ : IsSmooth g] [hg₂ : ∀ x, IsSmoothM (g x)] 
@@ -114,6 +124,17 @@ by infer_instance
 --   (g₁ : X → m Y₁) [IsSmooth g₁] [∀ x, IsSmoothM (g₁ x)]
 --   (g₂ : X → m Y₂) [IsSmooth g₂] [∀ x, IsSmoothM (g₂ x)] (x : X) 
 --   : IsSmoothM (do pure (← g₁ x, ← g₂ x) : m (Y₁ × Y₂)) := by infer_instance
+
+----------------------------------------------------------------------
+
+-- instance compM.arg_x.parm_a.isSmooth
+--   (a : α)
+--   (f : Y → α → m Z) [hf₁ : IsSmooth (λ y => f y a)] [hf₂ : ∀ y, IsSmoothM (λ f y a)]
+--   (g : X → m Y) [hg₁ : IsSmooth g] [hg₂ : ∀ x, IsSmoothM (g x)] 
+--   : IsSmooth (λ x => g x >>= f) := 
+-- by 
+--   apply FwdDiffMonad.bind_is_smooth f hf₁ (λ x => (hf₂ x).1) g hg₁ (λ x => (hg₂ x).1)
+
   
 section Tests
 
@@ -166,3 +187,5 @@ section Tests
     infer_instance
 
 end Tests
+
+

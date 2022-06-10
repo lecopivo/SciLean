@@ -1,11 +1,11 @@
 import SciLean.Core.Monad.FwdDiff.IsSmoothM
 
-set_option synthInstance.maxSize 2048
+set_option synthInstance.maxSize 20480
 set_option synthInstance.maxHeartbeats 100000
 
 namespace SciLean
 
-variable {α β γ}
+variable {α β γ : Type}
 variable {X Y Z Y₁ Y₂ : Type} [Vec X] [Vec Y] [Vec Z] [Vec Y₁] [Vec Y₂]
 variable {m} [FwdDiffMonad m]
 
@@ -17,9 +17,7 @@ theorem fwdDiffM_pure_fwdDiff (f : X → Y) [IsSmooth f]
 by
   apply FwdDiffMonad.fwdDiff_fwdDiffM; done
   
-
 ----------------------------------------------------------------------
-
 
 @[simp ↓]
 theorem idM.arg_x.fwdDiffM_simp
@@ -62,13 +60,10 @@ theorem comp.arg_x.fwdDiffM_simp
       appFDM Tf (← mapFDM Tg x)) :=
 by 
   have h : (λ x => f (g x)) = (λ x => (mapM g x) >>= f) := by simp[mapM]
-  rw[h]; --rw[compM.arg_x.fwdDiffM_simp]
-  sorry
-  -- done
-  -- simp only [← compFDM_appFDM]
-  -- apply FwdDiffMonad.fwdDiffM_comp f (λ x => (hf₂ x).1) g (λ x => (hg₂ x).1)
-  -- done
-
+  rw[h];
+  rw[compM.arg_x.fwdDiffM_simp]
+  simp[mapM,mapFDM]
+  done
 
 theorem diagM.arg_x.fwdDiffM_simp
     (f : X → m Y) [hf₁ : IsSmooth f] [hf₂ : ∀ x, IsSmoothM (f x)]
@@ -93,9 +88,9 @@ theorem scombM.arg_x.fwdDiffM_simp
 by
   rw[← FwdDiffMonad.fwdDiffM_id]
   simp only[← diagM.arg_x.fwdDiffM_simp, idM]
-  rw[← compM.arg_x.fwdDiffM_simp (hf₁ := by infer_instance) (hg₁ := _)] -- this is also odd
-  simp
-  sorry -- apply diagPairM.arg_x.isSmooth pure g   -- duh: why 'FwdDiffMonad m' can't be synthesized?
+  rw[← compM.arg_x.fwdDiffM_simp]
+  simp [-compM.arg_x.fwdDiffM_simp]
+  done
 
 -- @[simp ↓ low-3]
 theorem scomb.arg_x.fwdDiffM_simp
@@ -110,29 +105,38 @@ theorem scomb.arg_x.fwdDiffM_simp
 by
   have h : (λ x => (do f x (g x) : m Z)) = (λ x => (do f x (← (mapM g) x) : m Z)) := by simp[mapM]
   rw[h]
-  -- rw[scombM.arg_x.fwdDiffM_simp]
+  rw[scombM.arg_x.fwdDiffM_simp]
   sorry
 
+-- set_option pp.all true in
+-- set_option trace.Meta.synthInstance true in
+@[simp ↓ low-1]
+theorem diag.arg_x.fwdDiffM_simp
+  (f : Y₁ → Y₂ → m Z) [IsSmooth f] [∀ y₁, IsSmooth (f y₁)] [∀ y₁ y₂, IsSmoothM (f y₁ y₂)]
+  (g₁ : X → Y₁) [IsSmooth g₁]
+  (g₂ : X → Y₂) [IsSmooth g₂]
+  : fwdDiffM (λ x => (do f (g₁ x) (g₂ x) : m Z)) 
+    =
+    -- (λ x => do
+    --   let Tg₁ := fwdDiff g₁
+    --   let Tg₂ := fwdDiff g₂
+    --   let Tf := fwdDiffM (hold λ y => f y.1 y.2)
+    --   fmaplrFDM (mapFDM Tg₁) (mapFDM Tg₂) x >>= appFDM Tf) := 
+    (λ x => do
+      let (y₁, dy₁) := fwdDiff g₁ x
+      let (y₂, dy₂) := fwdDiff g₂ x
+      let Tf := fwdDiffM (hold λ y => f y.1 y.2)
+      appFDM Tf ((y₁,y₂), λ dx => pure (dy₁ dx, dy₂ dx))) := 
 
--- This prevents an infinite loop when using `scomb.arg_x.fwdDiffM_simp`  and `scombM.arg_x.fwdDiffM_simp`
--- @[simp ↓ low-2]
-theorem scomb.arg_x.fwdDiffM_simp_safeguard (f : X → Y → m Z)
-  : fwdDiffM (λ xy => f xy.1 xy.2) = fwdDiffM (Function.uncurry f) :=
 by
-  simp[Function.uncurry] done  
+  have h : (λ x => (do f (g₁ x) (g₂ x) : m Z))
+            = 
+            (λ x => (g₁ x, g₂ x) |> (λ y => f y.1 y.2)) := by simp[mapM]
+  rw[h]
+  conv => lhs; rw[comp.arg_x.fwdDiffM_simp (λ y => f y.1 y.2) (λ x => (g₁ x, g₂ x))]
+  funext x
+  simp[fmaplrFDM, mapFDM, appFDM, idFDM, mapM, fwdDiff,prod_add_elemwise,hold]
+  done
 
-
--- set_option trace.Meta.Tactic.simp.discharge true in
--- set_option trace.Meta.Tactic.simp.unify true in
-example {W} [Vec W] (f : X → Y → m Z) 
-  : fwdDiffM (λ x : ((W × Y) × X) => f x.2 x.1.2) 
-    = 
-    let Tf := fwdDiffM (λ ((x,y) : (X × Y)) => f x y)
-    let g  := λ x : ((W × Y) × X) => (x.2,x.1.2)
-    let Tg := mapFDM (m:=m) (fwdDiff g)
-    λ x => (do appFDM Tf (← Tg x)) := 
-by
-  simp[mapFDM,appFDM]
-  admit
   
 
