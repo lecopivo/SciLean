@@ -61,9 +61,15 @@ example (f : X → X) [IsLin f] : IsLin ((f ∘ f) ∘ (f ∘ (f ∘ f))) := by 
 example (y : X) (A : X → X) (B : X → X) [IsLin A] [IsLin B] : IsLin λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
 
 
+section multilinear_test
 
-example (xy : ℝ × ℝ) : IsLin λ (z : ℝ)       => z * (xy.1 + xy.2) := by infer_instance
-example (z  : ℝ)     : IsLin λ (xy : ℝ × ℝ)  => z * (xy.1 + xy.2) := by infer_instance
+abbrev f (xy : ℝ × ℝ) (z : ℝ) := z * (xy.1 + xy.2)
+
+example (xy) : IsLin λ z  => f xy z := by infer_instance
+example (z)  : IsLin λ xy => f xy z := by infer_instance
+
+end multilinear_test
+
  
 end combtests
 

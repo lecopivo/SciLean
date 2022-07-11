@@ -1,6 +1,6 @@
 import SciLean.Core.Functions
-import SciLean.Tactic.AutoDiff.Main
-import SciLean.Tactic.CustomSimp.DebugSimp
+-- import SciLean.Tactic.AutoDiff.Main
+-- import SciLean.Tactic.CustomSimp.DebugSimp
 
 namespace SciLean.Smooth
 
@@ -15,7 +15,7 @@ set_option synthInstance.maxSize 50
 --- Test 0 
 
 -- We want to solve all these in a single pass i.e. linear complexity in the expression size
-macro "diff_simp" : tactic => `(autodiff_core (config := {singlePass := true}))
+macro "diff_simp" : tactic => `(simp) -- `(autodiff_core (config := {singlePass := true}))
 
 -- I 
 example : δ (λ x : X => x) = λ x dx => dx := by diff_simp

@@ -23,12 +23,12 @@ namespace NRealArray
     ⟨x, sorry⟩
 
   instance : FunType (NRealArray n) (Fin n) ℝ where
-    toFun a i := a[i]
+    toFun a i := a.get i
 
     ext := sorry
 
   instance [Enumtype ι] : FunType (NRealArray (numOf ι)) ι ℝ where
-    toFun a i := a[toFin i]
+    toFun a i := a.get (toFin i)
 
     ext := sorry
 

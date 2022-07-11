@@ -1,5 +1,5 @@
 import SciLean.Core.Functions
-import SciLean.Tactic.AutoDiff.Main
+-- import SciLean.Tactic.AutoDiff.Main
 
 namespace SciLean.Smooth
 
@@ -11,7 +11,8 @@ set_option maxHeartbeats 2000
 set_option synthInstance.maxHeartbeats 250
 set_option synthInstance.maxSize 60
 
-macro "diff_simp" : tactic => `(autodiff_core (config := {singlePass := true}))
+-- macro "diff_simp" : tactic => `(autodiff_core (config := {singlePass := true}))
+macro "diff_simp" : tactic => `(simp) 
 
 example (a : α) (f : Y → α → Z) [IsSmooth f] (g : X → Y) [IsSmooth g]
   : δ (λ x => f (g x) a) = λ x dx => δ f (g x) (δ g x dx) a := by diff_simp

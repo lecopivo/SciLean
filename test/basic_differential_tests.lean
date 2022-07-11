@@ -1,5 +1,5 @@
 import SciLean.Core.Functions
-import SciLean.Tactic.AutoDiff.Main
+-- import SciLean.Tactic.AutoDiff.Main
 
 namespace SciLean
 
@@ -16,7 +16,8 @@ variable (G : X × Y → Z) [IsSmooth G]
 
 variable (x dx : X) (y dy : Y) (z dz : Z)
 
-macro "diff_simp" : tactic => `(autodiff_core (config := {singlePass := true}))
+-- macro "diff_simp" : tactic => `(autodiff_core (config := {singlePass := true}))
+macro "diff_simp" : tactic => `(simp) -- `(autodiff_core (config := {singlePass := true}))
 
 example : δ (λ x => x) x dx = dx := by diff_simp done
 example : δ (λ x => f (g x)) x dx = δ f (g x) (δ g x dx) := by diff_simp done

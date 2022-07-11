@@ -87,7 +87,7 @@ example (g : Fin n → ℝ)
     (λ i => 2 * (g i - g (i - 1) + -(g (i + 1) - g i))) 
   := 
 by
-  funext i; simp; unfold hold; simp;
+  funext i; simp; --unfold hold; simp;
   
   rw[!?(i - 1 + 1 = i)]
   done

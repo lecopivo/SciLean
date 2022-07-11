@@ -15,12 +15,12 @@ namespace NFloatArray
   def intro {n} (f : Fin n → Float) : NFloatArray n := sorry
 
   instance : FunType (NFloatArray n) (Fin n) Float where
-    toFun a i := a[i]
+    toFun a i := a.get i
 
     ext := sorry
 
   instance [Enumtype ι] : FunType (NFloatArray (numOf ι)) ι Float where
-    toFun a i := a[toFin i]
+    toFun a i := a.get (toFin i)
 
     ext := sorry
 

@@ -1,5 +1,5 @@
 import SciLean.Core.Functions
-import SciLean.Tactic.AutoDiff.Main
+-- import SciLean.Tactic.AutoDiff.Main
 
 namespace SciLean.Smooth
 
@@ -8,7 +8,9 @@ variable {X Y Z W : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] [SemiH
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ] [Nonempty ι] [Nonempty κ]
 
-macro "diff_simp" : tactic => `(autodiff_core (config := {singlePass := true}))
+-- macro "diff_simp" : tactic => `(autodiff_core (config := {singlePass := true}))
+macro "diff_simp" : tactic => `(simp) -- `(autodiff_core (config := {singlePass := true}))
+
 
 example {X} [Hilbert X] (x : X) : δ† (λ r : ℝ => r * x) = λ r dr' => ⟪dr', x⟫ := by diff_simp
 example (r : ℝ) : δ† (λ x : X => r * x) = λ x (dx' : X) => r * dx' := by diff_simp
