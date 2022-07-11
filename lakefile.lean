@@ -1,17 +1,26 @@
 import Lake
 open Lake DSL System
 
-package SciLean {
-  defaultFacet := PackageFacet.staticLib
-  dependencies := #[{
-    name := `mathlib
-    src := Source.git "https://github.com/leanprover-community/mathlib4.git" "4df5616da077213c63c85d702f7b78e268792636"
-  }]
+package scilean 
+  -- defaultFacet := PackageFacet.staticLib
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git"@"8f609e0ed826dde127c8bc322cb6f91c5369d37a"
+
+-- #check  LeanLibConfig
+@[defaultTarget]
+lean_lib SciLean {
+  roots := #[`SciLean]
 }
+
+
+
+
+
+
 
 script tests (args) do
   let cwd ← IO.currentDir
-  let testDir := cwd / "test"
+  -- let testDir := cwd / "test"
   let searchPath := SearchPath.toString 
                       ["build" / "lib",
                        "lean_packages" / "mathlib" / "build" / "lib"]
@@ -43,3 +52,4 @@ script tests (args) do
   IO.println s!"\nSuccessful tests: {testNum - failedTests.size} / {testNum}"
 
   return 0
+

@@ -50,5 +50,5 @@ open Lean.Parser.Tactic.Conv
 syntax term "rewrite_by" convSeq : term
 
 macro_rules
-  | `($x rewrite_by $rw:convSeq) =>
+  | `($x rewrite_by $rw:conv) =>
     `((by (conv => enter[1]; $rw) (apply AutoImpl.finish) : AutoImpl $x).val)

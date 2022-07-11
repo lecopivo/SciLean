@@ -3,6 +3,8 @@ import SciLean.FunPropCore
 
 namespace SciLean.FunProp
 
+open Lean.TSyntax.Compat -- makes old untyped syntax code compile
+
 open Lean
 
 inductive FwdDifferentialMode where
@@ -19,7 +21,7 @@ do
   let (preParms, parm, postParms) ← splitParms parms x.getId
 
   let preArgs  := getExplicitArgs preParms
-  let arg      := (getExplicitArgs #[parm])[0]
+  let arg      := (getExplicitArgs #[parm])[0]!
   let postArgs := getExplicitArgs postParms
 
   let type  := parm[2][1]
@@ -56,8 +58,8 @@ do
   if makeDef then
     let diffDef ← `(def $diffId:declId $preParms:bracketedBinder* := $diffComp:term)
     let diffSimp ← `(@[simp ↓, simp_diff] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffId $preArgs* := $eqProof)
-    dbg_trace diffDef.prettyPrint
-    dbg_trace diffSimp.prettyPrint
+    dbg_trace diffDef.raw.prettyPrint
+    dbg_trace diffSimp.raw.prettyPrint
     pure $ mkNullNode #[diffDef,diffSimp]
   else
     let diffSimp ← `(@[simp ↓, simp_diff] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffComp := $eqProof)

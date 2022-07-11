@@ -3,6 +3,8 @@ import SciLean.FunPropCore
 
 namespace SciLean.FunProp
 
+open Lean.TSyntax.Compat -- makes old untyped syntax code compile
+
 open Lean
 
 inductive AdjDifferentialMode where
@@ -19,7 +21,7 @@ do
   let (preParms, parm, postParms) ← splitParms parms x.getId
 
   let preArgs  := getExplicitArgs preParms
-  let arg      := (getExplicitArgs #[parm])[0]
+  let arg      := (getExplicitArgs #[parm])[0]!
   let postArgs := getExplicitArgs postParms
   let argType  := parm[2][1]
 

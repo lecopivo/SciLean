@@ -59,6 +59,11 @@ variable {X : Type} {Y : Type} {Z : Type} [Vec X] [Vec Y] [Vec Z]
 
 example (f : X → X) [IsLin f] : IsLin ((f ∘ f) ∘ (f ∘ (f ∘ f))) := by infer_instance
 example (y : X) (A : X → X) (B : X → X) [IsLin A] [IsLin B] : IsLin λ x => (B∘A) x + B (A (B x) + B x) := by infer_instance
+
+
+
+example (xy : ℝ × ℝ) : IsLin λ (z : ℝ)       => z * (xy.1 + xy.2) := by infer_instance
+example (z  : ℝ)     : IsLin λ (xy : ℝ × ℝ)  => z * (xy.1 + xy.2) := by infer_instance
  
 end combtests
 

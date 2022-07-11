@@ -4,7 +4,7 @@ import SciLean.Functions.Limit
 namespace SciLean
 
 noncomputable
-constant ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X
+opaque ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X
 
 axiom ode_solve.definition {X} [Vec X] (f : X → X) [IsSmooth f] (t dt : ℝ) (x₀ : X) : δ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
 

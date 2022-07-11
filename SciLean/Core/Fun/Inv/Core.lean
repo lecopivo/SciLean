@@ -4,7 +4,7 @@ import SciLean.Core.Mor.IsInv
 namespace SciLean
 
 noncomputable
-constant inverse {X Y} [Nonempty X] (f : X → Y) : Y → X 
+opaque inverse {X Y} [Nonempty X] (f : X → Y) : Y → X 
 
 postfix:max "⁻¹" => inverse
 

@@ -3,6 +3,8 @@ import SciLean.Core.Mor.HasAdjDiff.Core
 
 namespace SciLean.FunProp
 
+open Lean.TSyntax.Compat -- makes old untyped syntax code compile
+
 open Lean
 
 syntax "hasAdjDiff"   bracketedBinder* ":=" term : argProp
@@ -15,7 +17,7 @@ macro_rules
   let (preParms, parm, postParms) ← splitParms parms x.getId
 
   let preArgs  := getExplicitArgs preParms
-  let arg      := (getExplicitArgs #[parm])[0]
+  let arg      := (getExplicitArgs #[parm])[0]!
   let postArgs := getExplicitArgs postParms
 
   let darg  := Lean.mkIdent $ arg.getId.appendBefore "d"

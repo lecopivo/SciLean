@@ -4,6 +4,8 @@ import SciLean.AutoImpl
 
 open Lean.Parser Lean Syntax
 
+open TSyntax.Compat -- makes old untyped syntax code compile
+
 def Lean.Name.decapitalize : Name → Name
   | Name.str p s _ => Name.mkStr p s.decapitalize
   | n              => n
@@ -20,7 +22,6 @@ def separateExplicitBinders (binders : Array Syntax) : (Array Syntax) := Id.run 
         binders' := binders'.push $
           mkNode ``Lean.Parser.Term.explicitBinder #[b[0], mkNullNode #[arg], b[2], b[3], b[4]]
   pure binders'
-
 
 def splitParms (parms : Array Syntax) (name : Name) : MacroM (Array Syntax × Syntax × Array Syntax) := do
   let parms := separateExplicitBinders parms
@@ -52,13 +53,18 @@ def getExplicitArgs (binders : Array Syntax) : (Array Syntax) := Id.run do
   pure args
 
 --- Adds a binder `b as far left as possible among `binders
-def addBinder (binders : Array Syntax) (b : Syntax) : Array Syntax := Id.run do
+--- Example: for
+---    binders = `((X : Type) (x : X))
+---    b       = `([Vec X])
+---
+---  output is: `((X : Type) [Vec X] (x : X))
+def addBinder (binders : TSyntaxArray `Lean.Parser.Term.bracketedBinder) (b : TSyntax `Lean.Parser.Term.bracketedBinder) 
+  : TSyntaxArray `Lean.Parser.Term.bracketedBinder := Id.run do
   let n := binders.size
 
-  let mut stop := false
   for i in [0:n] do
-    for p in binders[n-i-1][1].getArgs do
-      match b.find? (λ q => q == p) with
+    for p in binders[n-i-1]!.raw[1].getArgs do
+      match b.raw.find? (λ q => q == p) with
       | some _ => 
         return binders.insertAt (n - i) b
       | none   =>
@@ -66,8 +72,12 @@ def addBinder (binders : Array Syntax) (b : Syntax) : Array Syntax := Id.run do
     
   binders.push b
 
-def addBinders (binders : Array Syntax) (bs : Array Syntax) : Array Syntax := 
-  bs.foldr (λ b binders => addBinder binders b) binders
+
+-- def addBinders (binders : Array Syntax) (bs : Array Syntax) : Array Syntax := 
+--   bs.foldr (λ b binders => addBinder binders b) binders
+
+def addBinders (binders bs : TSyntaxArray `Lean.Parser.Term.bracketedBinder) : TSyntaxArray `Lean.Parser.Term.bracketedBinder := 
+  Array.foldr (λ b binders => addBinder binders b) binders bs
 
 declare_syntax_cat argProp (behavior := both)
 
@@ -114,6 +124,6 @@ macro_rules
 
 
 macro "def" id:declId parms:bracketedBinder* ":" retType:term ":=" body:term props:argProps+ : command => do
-  let funId := mkIdent $ id.getIdAt 0
+  let funId := mkIdent $ id.raw.getIdAt 0
   `(def $id:declId $parms:bracketedBinder* : $retType := $body
     function_properties $funId:ident $parms:bracketedBinder* : $retType $props:argProps*)

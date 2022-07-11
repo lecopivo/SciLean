@@ -3,6 +3,8 @@ import SciLean.Core.Mor.IsInv.Core
 
 namespace SciLean.FunProp
 
+open Lean.TSyntax.Compat -- makes old untyped syntax code compile
+
 syntax "isInv"   bracketedBinder* ":=" term : argProp
 syntax "isInv"   bracketedBinder*           : argProp
 
@@ -13,7 +15,7 @@ macro_rules
   let (preParms, parm, postParms) ← splitParms parms x.getId
 
   let preArgs  := getExplicitArgs preParms
-  let arg      := (getExplicitArgs #[parm])[0]
+  let arg      := (getExplicitArgs #[parm])[0]!
   let postArgs := getExplicitArgs postParms
 
   let funName  := funId.getId
