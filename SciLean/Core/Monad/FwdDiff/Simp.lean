@@ -106,7 +106,8 @@ by
   have h : (λ x => (do f x (g x) : m Z)) = (λ x => (do f x (← (mapM g) x) : m Z)) := by simp[mapM]
   rw[h]
   rw[scombM.arg_x.fwdDiffM_simp]
-  sorry
+  simp[mapM,fmaplrFDM,idFDM,appFDM,mapFDM,fwdDiff,hold]
+  done
 
 -- set_option pp.all true in
 -- set_option trace.Meta.synthInstance true in
@@ -126,8 +127,7 @@ theorem diag.arg_x.fwdDiffM_simp
       let (y₁, dy₁) := fwdDiff g₁ x
       let (y₂, dy₂) := fwdDiff g₂ x
       let Tf := fwdDiffM (hold λ y => f y.1 y.2)
-      appFDM Tf ((y₁,y₂), λ dx => pure (dy₁ dx, dy₂ dx))) := 
-
+      appFDM Tf ((y₁,y₂), λ dx => pure (dy₁ dx, dy₂ dx))) :=
 by
   have h : (λ x => (do f (g₁ x) (g₂ x) : m Z))
             = 
@@ -135,8 +135,5 @@ by
   rw[h]
   conv => lhs; rw[comp.arg_x.fwdDiffM_simp (λ y => f y.1 y.2) (λ x => (g₁ x, g₂ x))]
   funext x
-  simp[fmaplrFDM, mapFDM, appFDM, idFDM, mapM, fwdDiff,prod_add_elemwise,hold]
+  simp[fmaplrFDM, mapFDM, appFDM, idFDM, mapM, fwdDiff,prod_add_elemwise,hold,appFD]
   done
-
-  
-

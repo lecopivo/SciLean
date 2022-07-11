@@ -69,6 +69,3 @@ argument xy [Subsingleton X] [Inhabited X] [Nonempty Y]
 
 -- At some point I needed this because of some reduction shenanigans
 -- instance [Vec X] [Vec Y] [Vec Z] (f : X → Y×Z) [IsSmooth f] : IsSmooth (λ x => (f x).2) := sorry
-
-
-

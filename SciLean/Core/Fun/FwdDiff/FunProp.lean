@@ -55,12 +55,12 @@ do
 
   if makeDef then
     let diffDef ← `(def $diffId:declId $preParms:bracketedBinder* := $diffComp:term)
-    let diffSimp ← `(@[simp] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffId $preArgs* := $eqProof)
+    let diffSimp ← `(@[simp ↓, simp_diff] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffId $preArgs* := $eqProof)
     dbg_trace diffDef.prettyPrint
     dbg_trace diffSimp.prettyPrint
     pure $ mkNullNode #[diffDef,diffSimp]
   else
-    let diffSimp ← `(@[simp] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffComp := $eqProof)
+    let diffSimp ← `(@[simp ↓, simp_diff] theorem $diffSimpId:declId $preParms:bracketedBinder* $extraParms* : $diffNonComp = $diffComp := $eqProof)
     pure diffSimp
 
 

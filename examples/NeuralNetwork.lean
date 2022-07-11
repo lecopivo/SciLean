@@ -1,6 +1,91 @@
-import SciLean.Basic
+-- import SciLean.Basic
+import SciLean.Core
+import SciLean.Data.PowType
+
+set_option synthInstance.maxSize 2048
 
 namespace SciLean
+
+def conv2d (x : ℝ^{N, M, L}) (w : ℝ^{n, m, L, l}) (b : ℝ^{l}) : ℝ^{N-(n-1), M-(m-1), l} := 
+  .intro λ ((i, j), k) => Id.run do
+    let mut val : ℝ := 0
+    for (di, _) in Enumtype.fullRange (Fin n) do
+      for (dj, _) in Enumtype.fullRange (Fin m) do
+        let i' := ⟨i.1 + di.1, sorry⟩
+        let j' := ⟨j.1 + dj.1, sorry⟩
+        val += ∑ k', x[((i',j'), k')] * w[(((di, dj), k'), k)]
+        -- ideal notation:
+        -- val += ⟪x[i',j', :], w[di, dj, :, k]⟫
+        -- or
+        -- val += ∑ k', x[i',j', k'] * w[di, dj, k', k]
+    val + b[k]
+
+-- set_option trace.Meta.Tactic.simp.discharge true in
+def dense1d {N} (x : ℝ^{N}) (w : ℝ^{N,N}) (b : ℝ^{N}) : ℝ^{N} :=
+  .intro λ i => (∑ j, w[(i,j)] * x[j]) + b[i]
+-- argument x
+--   isSmooth
+
+set_option synthInstance.maxSize 2048
+set_option synthInstance.maxHeartbeats 500000
+-- set_option maxRecDepth 5000
+-- set_option maxHeartbeats 2000000
+-- set_option maxCoeSize 500
+
+
+set_option trace.Meta.synthInstance true in
+instance {N} (i) (w : ℝ^{N}) : IsSmooth (λ (x : ℝ) => w[i]) :=
+by 
+  -- Why does this fail?
+  infer_instance
+  -- apply const.arg_y.isSmooth
+  -- apply (@diag.arg_x.isSmooth _ _ _ _ _ _ _ _ _ _)
+  done
+
+#check PowTypeCarrier.intro
+
+def avgpool2d {N M L} (x : ℝ^{N, M, L}) : ℝ^{N/2, M/2, L} := 
+  .intro λ ((i,j), k) => 
+    let i0 := ⟨2*i.1, sorry⟩
+    let j0 := ⟨2*j.1, sorry⟩
+    let i1 := ⟨2*i.1 + 1, sorry⟩
+    let j1 := ⟨2*j.1 + 1, sorry⟩
+    (x[((i0, j0), k)] + x[((i0, j1), k)] + x[((i1, j0), k)] + x[((i1, j1), k)])/4
+argument x
+  isLin, isSmooth, diff,
+  hasAdjoint := sorry,
+  adj := .intro λ ((i,j), k) => 
+      let i' := ⟨i.1/2, sorry⟩
+      let j' := ⟨j.1/2, sorry⟩
+      x'[((i',j'),k)]/4 by sorry,
+  hasAdjDiff, adjDiff
+
+
+example : IsLin (λ (f : (Fin N × Fin M) × Fin L → ℝ) => (.intro f : ℝ^{N,M,L})) := by infer_instance
+example (x : ℝ^{N,M,L}) (i j k) : IsLin (λ (x : ℝ^{N,M,L}) => x[((i,j), k)]) := by infer_instance
+example (x : ℝ^{N,M,L}) (i j k) : IsLin (λ (x : ℝ^{N,M,L}) => x[((i,j), k)] + x[((i,j), k)]) := by infer_instance
+
+
+
+
+def conv2d {n : ℕ} (m : ℕ) (w : ℝ^[3,3,m]) (b : ℝ^m) (x : ℝ^[n+2,n+2]) : ℝ^[n,n] := Id.run do
+  let mut y : ℝ^[n,n] := 0
+  y.mapIdx λ (i,j) => sorry
+
+def maxpool {n m k : ℕ} (ε : ℝ) (x : ℝ^[2*n,2*m,2*k]) : ℝ^[n,m,k] := sorry
+
+def neural_network 
+  (w₁) (x : (ℝ^(28:ℕ))^(28:ℕ)) := x
+  x |> 
+  (λ x => conv2d 32 w₁ b₁ )
+
+#check Nat
+
+def foo := λ (x,y) => Math.sin x + Math.cos y
+
+#check foo
+
+/-
 
 def conv311 {n m} (k : Nat) (x : NDVector [3,n,m]) (w : NDVector [3,1,1,k]) : NDVector [n,m,k] := sorry
 def conv33  {n m} (k : Nat) (l : Nat) (x : NDVector [n,m,k]) (w : NDVector [3,3,k*l]) : NDVector [n,m,k*l] := sorry
@@ -114,3 +199,4 @@ by
 --     print_main_goal
     
     
+-/

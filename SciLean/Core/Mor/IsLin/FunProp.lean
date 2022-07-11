@@ -30,5 +30,5 @@ macro_rules
       isLin $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
-      isLin $extraParms:bracketedBinder* := by unfold $funId; infer_instance; done)
+      isLin $extraParms:bracketedBinder* := by unfold $funId; simp; infer_instance; done)
 

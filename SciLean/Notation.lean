@@ -10,7 +10,7 @@ syntax atomic(Term.ident Term.optType) " *= " term : doElem
 syntax atomic(Term.ident Term.optType) " *.= " term : doElem
 syntax atomic(Term.ident Term.optType) " /= " term : doElem
 
---- Syntax for: x[i] := y, x[i] += y, x[i] -= y, x[i] *= y
+--- Syntax for: x[i] := y, x[i] ← y, x[i] += y, x[i] -= y, x[i] *= y
 syntax (priority := high) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " := " term : doElem
 syntax (priority := high) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " ← " term : doElem
 syntax atomic(Term.ident) noWs "[" term "]" " += " term : doElem

@@ -108,6 +108,14 @@ namespace Enumtype
   def Range (α : Type u) [Enumtype α] := Option (α × α)
   def range {α} [Enumtype α] (s e : α) : Range α := some (s,e)
 
+  def Range.length {α} [Enumtype α] (r : Range α) : ℕ :=
+    match r with
+    | none => 0
+    | some (s,e) => 
+      let is := toFin s
+      let ie := toFin e
+      ie.1 - is.1 + 1
+
   --- Should we have `×` or `×ₗ` there? Maybe define `*ₗ` notation.
   instance [Enumtype ι] [Enumtype κ] : HMul (Range ι) (Range κ) (Range (ι × κ)) :=
     ⟨λ I J =>
@@ -136,6 +144,7 @@ namespace Enumtype
   structure ValidLinIndex {ι} [Enumtype ι] (i : ι) (li : Nat) : Type where
     valid : li = (toFin i).1
 
+
   instance {m} [Monad m] {n}
            : ForIn m (Range (Fin n)) (Fin n × Nat) :=
   {
@@ -150,6 +159,29 @@ namespace Enumtype
                        | ForInStep.yield d => val ← pure d
                    pure val
   }
+
+
+  instance {m} [Monad m] [Enumtype ι]
+           : ForIn m (Range ι) (ι × Nat) :=
+  {
+    forIn := λ r init f => 
+      match r with
+      | none => pure init
+      | some (s,e) => do
+        let n := r.length
+        let mut idx := s
+        let mut val := init
+        for i in [0:n] do
+          match (← f (idx, i) val), Iterable.next idx with 
+          | ForInStep.done d, _ => return d
+          | ForInStep.yield d, none => do
+            val ← pure d
+          | ForInStep.yield d, some idx' => do
+            idx := idx'
+            val ← pure d
+        pure val
+  }
+
 
   -- Row-major ordering, i.e. the inner loop runs over κ
   instance {m} [Monad m] [Enumtype ι] [Enumtype κ]
@@ -170,6 +202,7 @@ namespace Enumtype
                          | ForInStep.yield d => val ← pure d
                    pure val
   }
+
 
   -- Colum-major ordering, i.e. the inner loop runs over ι
   instance {m} [Monad m] [Enumtype ι] [Enumtype κ]

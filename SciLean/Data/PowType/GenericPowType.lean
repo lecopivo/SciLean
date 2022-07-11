@@ -57,45 +57,14 @@ instance {T I X} [PowType T I X] [Enumtype I] [ToString I] [ToString X] : ToStri
     "{" ++ s ++ "}"⟩
 
 
--- namespace PowType
-
---   @[simp]
---   theorem sum_intro {ι} [Enumtype ι]
---     [PowType α] [Add α] [Zero α] [Zero (Idx n → α)] [Add (Idx n → α)]
---     (f : ι → Idx n → α) 
---     : (∑ i, PowType.intro (f i)) = (PowType.intro (∑ i, f i))
---     := 
---   by
---     admit
-
---   @[simp]
---   theorem add_intro 
---     (f g : Idx n → α) [PowType α] [Add α]
---     : 
---       (PowType.intro f)  + (PowType.intro g)
---       = 
---       (PowType.intro λ i => f i + g i)
---     := 
---   by
---     admit
-
---   @[simp]
---   theorem sub_intro 
---     (f g : Idx n → α) [PowType α] [Sub α]
---     : 
---       (PowType.intro f)  - (PowType.intro g)
---       = 
---       (PowType.intro λ i => f i - g i)
---     := 
---   by
---     admit
+variable (x : ℝ^{n,m})
 
 
---   @[simp]
---   theorem hmul_intro 
---     (f : Idx n → α) [PowType α] [HMul β α α] (b : β)
---     :
---       b * (PowType.intro f) = PowType.intro λ i => b * f i
---     := 
---   by 
---     admit
+-- def conv2d (x : Fin n → Fin m → ℝ) (y : Fin 3 → Fin 3 → Fin k → ℝ) : ℝ^{n-2, m-2, k} := 
+--   .intro λ ((i, j), k) => Id.run do
+--     let mut val : ℝ := 0
+--     for di in [0:3] do
+--       for dj in [0:3] do
+--         val := val + x[(i + di -1, j + dj -1)] -- * y[(di+1, dj+1, k)]
+--     val
+    
