@@ -29,6 +29,7 @@ namespace PowTypeCarrier
   instance : FunType.HasIntro (X^I) := PowType.toHasIntro
 
   -- abbrev getOp (self : X^I) (idx : I) : X := FunType.toFun self idx
+  @[defaultInstance]
   instance : GetElem (X^I) I X (λ _ _ => True) where getElem x i _ := FunType.toFun x i
   abbrev set (x : X^I) (i : I) (xi : X) : X^I := FunType.HasSet.set x i xi
   abbrev intro (f : I → X) : X^I := FunType.HasIntro.intro f

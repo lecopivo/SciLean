@@ -9,6 +9,7 @@ open Lean
 open Lean.Meta
 open Lean.Elab.Tactic
 
+open TSyntax.Compat -- makes old untyped syntax code compile
 
 --- Add an assumption 
 syntax (name := impl_assume) "impl_assume" notFollowedBy("|") (colGt term:max)* : tactic
@@ -53,7 +54,7 @@ def implAssumeCheckCore (mvarId : MVarId) (prop msg : Expr) (type : assumeOrChec
 | `(tactic| impl_assume $prop:term $msg:term) => do
             evalTactic (← `(tactic| impl_assume $prop:term $msg:term h))
 | `(tactic| impl_assume $prop:term) => do
-            let msg := Syntax.mkStrLit (toString prop.prettyPrint)
+            let msg := Syntax.mkStrLit (toString prop.raw.prettyPrint)
             evalTactic (← `(tactic| impl_assume $prop:term $msg h))
 | _ => Lean.Elab.throwUnsupportedSyntax
 
@@ -68,7 +69,7 @@ def implAssumeCheckCore (mvarId : MVarId) (prop msg : Expr) (type : assumeOrChec
 | `(tactic| impl_check $prop:term $msg:term) => do
             evalTactic (← `(tactic| impl_check $prop:term $msg:term h))
 | `(tactic| impl_check $prop:term) => do
-            let msg := Syntax.mkStrLit (toString prop.prettyPrint)
+            let msg := Syntax.mkStrLit (toString prop.raw.prettyPrint)
             evalTactic (← `(tactic| impl_check $prop:term $msg h))
 | _ => Lean.Elab.throwUnsupportedSyntax
 

@@ -12,12 +12,12 @@ set_option maxHeartbeats 500000
 
 open Function SciLean
 
-variable {n : Nat} [Nonempty (Idx n)]
+variable {n : Nat} [Nonempty (Fin n)]
 
 -- set_option trace.Meta.synthInstance true in
-def H (m k : ℝ) (x p : ℝ^n) : ℝ := 
+def H (m k : ℝ) (x p : ℝ^{n}) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)
-  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i , ∥x[i] - x[i - (1:USize)]∥²)
+  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i , ∥x[i] - x[i - (1 : Fin n)]∥²)
 argument x 
   isSmooth, diff, hasAdjDiff, adjDiff
 argument p

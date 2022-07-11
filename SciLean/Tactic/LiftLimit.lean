@@ -32,7 +32,7 @@ def getlimit  (e : Expr) : MetaM Expr := do
         | none => false)
     let replace := (λ e : Expr => 
       do
-        let lim := e.getAppArgs[2]
+        let lim := e.getAppArgs[2]!
         let args := #[nFv].append e.getAppArgs[3:]
         mkAppM' lim args)
     mkLambdaFVars #[nFv] (← replaceSubExpression e test replace)
@@ -43,7 +43,7 @@ def liftLimitCore (mvarId : MVarId) (N msg : Expr) : MetaM (List MVarId) :=
     let target   ← getMVarType mvarId
 
     -- Check if target is actually `Impl spec`
-    let spec := target.getAppArgs[1]
+    let spec := target.getAppArgs[1]!
     let lim ← getlimit spec
 
     let new_spec := (mkApp lim N)
