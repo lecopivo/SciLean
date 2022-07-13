@@ -22,27 +22,27 @@ namespace NRealArray
       x := x.push (f i).1
     ⟨x, sorry⟩
 
+  instance : GetElem (NRealArray n) (Fin n) ℝ (λ _ _ => True) where
+    getElem a i _ := a.get i
   instance : FunType (NRealArray n) (Fin n) ℝ where
-    toFun a i := a.get i
-
     ext := sorry
 
+  instance [Enumtype ι] : GetElem (NRealArray (numOf ι)) ι ℝ (λ _ _ => True) where
+    getElem a i _ := a.get (toFin i)
   instance [Enumtype ι] : FunType (NRealArray (numOf ι)) ι ℝ where
-    toFun a i := a.get (toFin i)
-
     ext := sorry
 
   open FunType
 
+  instance : SetElem (NRealArray n) (Fin n) ℝ where
+    setElem a i ai := a.set i ai
   instance : HasSet (NRealArray n) where
-    set a i ai := a.set i ai
-
     toFun_set_eq  := sorry
     toFun_set_neq := sorry
 
+  instance [Enumtype ι] : SetElem (NRealArray (numOf ι)) ι ℝ where
+    setElem a i ai := a.set (toFin i) ai
   instance [Enumtype ι] : HasSet (NRealArray (numOf ι)) where
-    set a i ai := a.set (toFin i) ai
-
     toFun_set_eq  := sorry
     toFun_set_neq := sorry
 

@@ -3,41 +3,69 @@ import SciLean.Data.Idx
 
 namespace SciLean
 
-class FunType (T : Type) (X Y : outParam Type) where
-  toFun : T → X → Y
+class SetElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
+  setElem : (x : Cont) → (i : Idx) → (xi : Elem) → Cont
 
-  ext : ∀ f g : T, (∀ x : X, toFun f x = toFun g x) ↔ f = g
+export SetElem (setElem)
+
+class ModifyElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
+  modifyElem : (x : Cont) → (i : Idx) → (Elem → Elem) → Cont
+
+export ModifyElem (modifyElem)
+
+open Lean Parser Term
+
+open TSyntax.Compat
+
+syntax (priority := high+1) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " := " term : doElem
+macro_rules
+| `(doElem| $x:ident[ $i:term ] := $xi) => do
+  let lhs ← `($x[$i])
+  -- Do we alias? Does `x[i]` appear on the right hand side too?
+  -- For example `x[i] := 2 * x[i]`
+  -- In such cases we want to use `modifyElem` instead of `setElem`
+  if let .some _ := xi.raw.find? (λ x => lhs.raw == x) then
+    let var ← `(y)
+    let xi' ← xi.raw.replaceM (λ s => if s == lhs.raw then pure $ .some var else pure $ none)
+    let g ← `(λ $var => $xi')
+    -- dbg_trace s!"aliasing, new rhs {g.raw.prettyPrint}"
+    `(doElem| $x:ident := modifyElem ($x:ident) $i $g)
+  else 
+    `(doElem| $x:ident := setElem ($x:ident) $i $xi)
+
+
+class FunType (T : Type) (X Y : outParam Type) extends GetElem T X Y (λ _ _ => True) where
+  ext : ∀ f g : T, (∀ x : X, f[x] = g[x]) ↔ f = g
+
+attribute [defaultInstance] FunType.toGetElem
 
 namespace FunType
 
   @[ext]
-  theorem fun_ext {T X Y} [FunType T X Y] (f g : T) : (∀ x : X, toFun f x = toFun g x) → f = g := (FunType.ext f g).1
+  theorem fun_ext {T X Y} [FunType T X Y] (f g : T) : (∀ x : X, f[x] = g[x]) → f = g := (FunType.ext f g).1
 
-  -- To easily enable function application `f x` for `f : T` provide an instance of HasFunCoe
-  class HasFunCoe {X Y} (T : Type) [FunType T X Y] 
-  instance [FunType T X Y] [HasFunCoe T] : CoeFun T (λ _ => X → Y) where
-    coe := λ f => FunType.toFun f 
+  -- -- To easily enable function application `f x` for `f : T` provide an instance of HasFunCoe
+  -- class HasFunCoe {X Y} (T : Type) [FunType T X Y] 
+  -- instance [FunType T X Y] [HasFunCoe T] : CoeFun T (λ _ => X → Y) where
+  --   coe := λ f x => f[x]
 
-  section Example
+  -- section Example
 
-    variable {T X Y} [FunType T X Y] [HasFunCoe T] (f : T) (x : X)
+  --   variable {T X Y} [FunType T X Y] [HasFunCoe T] (f : T) (x : X)
 
-  end Example
+  -- end Example
 
-  class HasSet {X Y} (T : Type) [FunType T X Y] where
-    set : T → X → Y → T
+  class HasSet {X Y} (T : Type) [FunType T X Y] extends SetElem T X Y where
+    toFun_set_eq  : ∀ (x : X) (y : Y) (f : T), (setElem f x y)[x] = y
+    toFun_set_neq : ∀ (x x' : X) (y : Y) (f : T), x' ≠ x → (setElem f x y)[x'] = f[x']
 
-    toFun_set_eq  : ∀ (x : X) (y : Y) (f : T), toFun (set f x y) x = y
-    toFun_set_neq : ∀ (x x' : X) (y : Y) (f : T), x' ≠ x → toFun (set f x y) x' = toFun f x'
-
-  export HasSet (set)
-
+  attribute [defaultInstance] HasSet.toSetElem
   attribute [simp] HasSet.toFun_set_eq
 
   class HasIntro {X Y} (T : Type) [FunType T X Y] where
     intro : (X → Y) → T
     
-    toFun_intro : ∀ f x, toFun (intro f) x = f x
+    toFun_intro : ∀ f x, (intro f)[x] = f x
 
   export HasIntro (intro)
 
@@ -47,54 +75,62 @@ namespace FunType
     (f : T) (x : X) (g : Y → Y) : T := 
     Id.run do
     let mut f := f
-    let y := toFun f x
+    let y := f[x]
     -- Reset `f x` to ensure `y` can be modified in place if possible
     -- This is the same trick as in Array.modifyMUnsafe
     -- f := set f x (unsafeCast ())
-    f := set f x default
-    f := set f x (g y)
+    -- Unfortunatelly `unsafeCast ()` does not seem to be working,
+    -- so we require Y to be inhabited and use that instead.
+    f[x] := default
+    f[x] := g y
     f
 
   @[implementedBy modifyUnsafe]
   def modify {T X Y} [FunType T X Y] [HasSet T] [Inhabited Y] (f : T) (x : X) (g : Y → Y) : T := 
-    set f x (g (toFun f x))
+    setElem f x (g (f[x]))
+
+  instance [FunType T X Y] [HasSet T] [Inhabited Y] : ModifyElem T X Y where
+    modifyElem f x g := modify f x g
 
   @[simp]
-  theorem toFun_modify_eq [FunType T X Y] [HasSet T] [Inhabited Y] (f : T) (x : X) (g : Y → Y) 
-    : toFun (modify f x g) x = g (toFun f x) := by simp[modify]; done
+  theorem toFun_modify_eq [FunType T X Y] [HasSet T] [Inhabited Y] (f : T) (x : X) (g : Y → Y)
+    : (modifyElem f x g)[x] = g f[x] := by simp[modifyElem, modify]; done
 
   @[simp]
-  theorem toFun_modify_neq [FunType T X Y] [HasSet T] [Inhabited Y] (f : T) (x x' : X) (g : Y → Y) 
-    : x' ≠ x → toFun (modify f x g) x' = toFun f x' := by simp[modify]; apply HasSet.toFun_set_neq; done
+  theorem toFun_modify_neq [FunType T X Y] [HasSet T] [Inhabited Y] (f : T) (x x' : X) (g : Y → Y)
+    : x' ≠ x → (modifyElem f x g)[x'] = f[x'] := by simp[modify]; apply HasSet.toFun_set_neq; done
 
   def mapIdx [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : X → Y → Y) (f : T) : T := Id.run do
     let mut f := f
-    for (x,i) in Enumtype.fullRange X do
-      f := modify f x (g x)
+    for (x,_) in Enumtype.fullRange X do
+      -- This notation should correctly handle aliasing 
+      -- It should expand to `f := modifyElem f x (g x) True.intro`
+      -- This prevent from making copy of `f[x]`
+      f[x] := g x f[x]
     f
 
   @[simp]
-  theorem toFun_mapIdx [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : X → Y → Y) (f : T) (x : X) 
-    : toFun (mapIdx g f) x = g x (toFun f x) := sorry
+  theorem getElem_mapIdx [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : X → Y → Y) (f : T) (x : X) 
+    : (mapIdx g f)[x] = g x f[x] := sorry
 
   def map [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : Y → Y) (f : T) : T := Id.run do
     let mut f := f
-    for (x,i) in Enumtype.fullRange X do
-      f := modify f x g
+    for (x,_) in Enumtype.fullRange X do
+      f[x] := g f[x]
     f
     
   @[simp]
-  theorem toFun_map [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : Y → Y) (f : T) (x : X) 
-    : toFun (map g f) x = g (toFun f x) := sorry
+  theorem getElem_map [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : Y → Y) (f : T) (x : X) 
+    : (map g f)[x] = g f[x] := sorry
   
   section Operations
 
     variable {T X Y} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [Inhabited Y]
 
-    instance [Add Y] : Add T := ⟨λ f g => mapIdx (λ x fx => fx + toFun g x) f⟩
-    instance [Sub Y] : Sub T := ⟨λ f g => mapIdx (λ x fx => fx - toFun g x) f⟩
-    instance [Mul Y] : Mul T := ⟨λ f g => mapIdx (λ x fx => fx * toFun g x) f⟩
-    instance [Div Y] : Div T := ⟨λ f g => mapIdx (λ x fx => fx / toFun g x) f⟩
+    instance [Add Y] : Add T := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
+    instance [Sub Y] : Sub T := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
+    instance [Mul Y] : Mul T := ⟨λ f g => mapIdx (λ x fx => fx * g[x]) f⟩
+    instance [Div Y] : Div T := ⟨λ f g => mapIdx (λ x fx => fx / g[x]) f⟩
 
     instance {R} [HMul R Y Y] : HMul R T T := ⟨λ r f => map (λ fx => r*(fx : Y)) f⟩
 
@@ -104,14 +140,14 @@ namespace FunType
     instance [One Y]  : One T  := ⟨intro λ _ => 1⟩
     instance [Zero Y] : Zero T := ⟨intro λ _ => 0⟩
 
-    instance [LT Y] : LT T := ⟨λ f g => ∀ x, toFun f x < toFun g x⟩ 
-    instance [LE Y] : LE T := ⟨λ f g => ∀ x, toFun f x ≤ toFun g x⟩
+    instance [LT Y] : LT T := ⟨λ f g => ∀ x, f[x] < g[x]⟩ 
+    instance [LE Y] : LE T := ⟨λ f g => ∀ x, f[x] ≤ g[x]⟩
 
     instance [DecidableEq Y] : DecidableEq T := 
       λ f g => Id.run do
         let mut eq : Bool := true
         for (x,_) in Enumtype.fullRange X do
-          if toFun f x ≠ toFun g x then
+          if f[x] ≠ g[x] then
             eq := false
             break
         if eq then isTrue sorry else isFalse sorry
@@ -119,7 +155,7 @@ namespace FunType
     instance [LT Y] [∀ x y : Y, Decidable (x < y)] (f g : T) : Decidable (f < g) := Id.run do
       let mut lt : Bool := true
       for (x,_) in Enumtype.fullRange X do
-        if ¬(toFun f x < toFun g x) then
+        if ¬(f[x] < g[x]) then
           lt := false
           break
       if lt then isTrue sorry else isFalse sorry
@@ -127,7 +163,7 @@ namespace FunType
     instance [LE Y] [∀ x y : Y, Decidable (x ≤ y)] (f g : T) : Decidable (f ≤ g) := Id.run do
       let mut le : Bool := true
       for (x,_) in Enumtype.fullRange X do
-        if ¬(toFun f x ≤ toFun g x) then
+        if ¬(f[x] ≤ g[x]) then
           le := false
           break
       if le then isTrue sorry else isFalse sorry

@@ -14,27 +14,27 @@ namespace NFloatArray
 
   def intro {n} (f : Fin n → Float) : NFloatArray n := sorry
 
+  instance : GetElem (NFloatArray n) (Fin n) Float (λ _ _ => True) where
+    getElem a i _ := a.get i
   instance : FunType (NFloatArray n) (Fin n) Float where
-    toFun a i := a.get i
-
     ext := sorry
 
+  instance [Enumtype ι] : GetElem (NFloatArray (numOf ι)) ι Float (λ _ _ => True) where
+    getElem a i _ := a.get (toFin i)
   instance [Enumtype ι] : FunType (NFloatArray (numOf ι)) ι Float where
-    toFun a i := a.get (toFin i)
-
     ext := sorry
 
   open FunType
 
+  instance : SetElem (NFloatArray n) (Fin n) Float where
+    setElem a i ai := a.set i ai
   instance : HasSet (NFloatArray n) where
-    set a i ai := a.set i ai
-
     toFun_set_eq  := sorry
     toFun_set_neq := sorry
 
+  instance [Enumtype ι] : SetElem (NFloatArray (numOf ι)) ι Float where
+    setElem a i ai := a.set (toFin i) ai
   instance [Enumtype ι] : HasSet (NFloatArray (numOf ι)) where
-    set a i ai := a.set (toFin i) ai
-
     toFun_set_eq  := sorry
     toFun_set_neq := sorry
 

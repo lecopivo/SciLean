@@ -18,11 +18,11 @@ variable {n : Nat} [Nonempty (Fin n)]
 def H (m k : ℝ) (x p : ℝ^{n}) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)
   (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i , ∥x[i] - x[i - (1 : Fin n)]∥²)
-argument x 
+argument x
   isSmooth, diff, hasAdjDiff, adjDiff
 argument p
   isSmooth, diff, hasAdjDiff, adjDiff
-
+ 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
 -- set_option trace.Meta.Tactic.simp.discharge true in
 def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H (n:=n) m k))) :=

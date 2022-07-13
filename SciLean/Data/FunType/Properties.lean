@@ -3,36 +3,81 @@ import SciLean.Core.Functions
 
 namespace SciLean.FunType
 
-function_properties toFun {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] (f : T) (x : X) : Y
-argument f [Vec Y]
-  isLin := sorry,
-  isSmooth, diff_simp
-argument f [SemiHilbert Y]
-  hasAdjoint := sorry,
-  adj_simp := set (0 : T) x f' by sorry,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := set (0 : T) x df' by simp[adjDiff]; unfold hold; simp done
+variable {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] 
+
+-- instance parm.arg_x.isSmooth' {β : Sort u} [Vec X] [Vec Z]
+--   (f : X → β → Z) [IsSmooth f] (y : β) 
+--   : IsSmooth (λ x => f x y) := sorry
+
+-- There are some issues working with `getElem : (x : Cont) → (i : Idx) → Dom x i → Elem`
+-- bacause it has inherently dependent types plus `Dom x i : Prop` and 
+-- we do not have `Vec (P → X)` for `P : Prop` and `X : Type`
+
+
+instance getElem.arg_f.isLin [Vec Y]
+  : IsLin (λ (f : T) (x : X) => f[x]) := sorry
+instance getElem.arg_f.isLin_alt [Vec Y] (x : X)
+  : IsLin (λ (f : T) => f[x]) := sorry
+
+instance getElem.arg_f.isSmooth [Vec Y]
+  : IsSmooth (λ (f : T) (x : X) => f[x]) := linear_is_smooth _
+instance getElem.arg_f.isSmooth_alt [Vec Y] (x : X)  
+  : IsSmooth (λ (f : T) => f[x]) := linear_is_smooth _
+
+@[simp ↓] theorem getElem.arg_f.diff_simp [Vec Y]
+  : δ (λ (f : T) (x : X) => f[x]) = λ f df x => df[x]
+  := diff_of_linear _
+@[simp ↓] theorem getElem.arg_f.diff_simp_alt [Vec Y] (x : X)
+  : δ (λ (f : T) => f[x]) = λ f df => df[x]
+  := diff_of_linear _
+
+
+instance getElem.arg_f.hasAdjoint [SemiHilbert Y] (x : X)
+  : HasAdjoint (λ (f : T) => f[x]) := sorry
+@[simp ↓] theorem getElem.arg_f.adj_simp [SemiHilbert Y] (x : X)
+  : (λ (f : T) => f[x])† = λ f' => setElem 0 x f' := sorry
+
+instance getElem.arg_f.hasAdjDiff [SemiHilbert Y] (x : X)
+  : HasAdjDiff (λ (f : T) => getElem f x True.intro) := by constructor; infer_instance; simp; infer_instance done
+@[simp ↓] theorem getElem.arg_f.adjDiff_simp [SemiHilbert Y] (x : X)
+  : δ† (λ (f : T) => f[x]) = λ _ df' => setElem (0 : T) x df' := by simp[adjDiff]; done
+
+
+-- This unfortunatelly does not solve automatically :( the unification fails
+example (x : X) (f : ℝ → T) [Vec Y] [IsSmooth f] 
+  : δ (λ (s : ℝ) => (f s)[x]) = λ s ds => (δ f s ds)[x] := 
+by 
+  rw[diff_of_comp (λ g => getElem g x True.intro) f]; 
+  simp; 
+  done
 
 ---
 
-function_properties set {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] (f : T) (x : X) (y : Y) : T
-argument f [Vec Y]
-  isSmooth := sorry, 
-  diff_simp := set df x 0 by sorry
-argument f [SemiHilbert Y]
-  hasAdjoint [Fact (y=0)] := sorry,
-  adj_simp [Fact (y=0)] := set f' x 0 by sorry,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := set df' x 0 by simp[adjDiff]; unfold hold; simp done
+-- instance setElem.arg_f.isSmooth [Vec Y]
+--   : IsSmooth (λ (f : T) (x : X) (y : Y) => setElem f x y) := sorry
 
-argument y [Vec Y]
+-- TODO: for some reason specifying [Vec Y] and [SemiHilbert Y] does not work 
+--       after `argument _`
+
+function_properties setElem [Vec Y] (f : T) (x : X) (y : Y) : T
+argument f 
+  isSmooth := sorry, 
+  diff_simp := setElem df x 0 by sorry
+argument y
   isSmooth := sorry,
-  diff_simp := set 0 x dy by sorry
-argument y [SemiHilbert Y]
+  diff_simp := setElem 0 x dy by sorry
+
+function_properties setElem [SemiHilbert Y] (f : T) (x : X) (y : Y) : T
+argument f 
+  hasAdjoint [Fact (y=0)] := sorry,
+  adj_simp [Fact (y=0)] := setElem f' x 0 by sorry,
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
+  adjDiff_simp := setElem df' x 0 by simp[adjDiff]; unfold hold; simp done
+argument y
   hasAdjoint [Fact (f=0)] := sorry,
-  adj_simp [Fact (f=0)] := toFun y' x by sorry,
+  adj_simp [Fact (f=0)] := y'[x] by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := toFun dy' x by simp[adjDiff]; done
+  adjDiff_simp := dy'[x] by simp[adjDiff]; done
 
 ---
 
@@ -42,34 +87,32 @@ argument y [SemiHilbert Y]
 -- argument f [Vec Y]
 --   isLin := sorry
 
-instance intro.arg_f.isLin {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [Vec Y] 
+instance intro.arg_f.isLin [Vec Y] 
   : IsLin λ (f : X → Y) => (intro f : T) := sorry
 
-instance intro.arg_f.isSmooth {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [Vec Y] 
+instance intro.arg_f.isSmooth [Vec Y] 
   : IsSmooth λ (f : X → Y) => (intro f : T) := linear_is_smooth _
 
 @[simp ↓]
-theorem intro.arg_f.diff_simp {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [Vec Y] 
+theorem intro.arg_f.diff_simp [Vec Y] 
   : (δ λ (f : X → Y) => (intro f : T)) = λ f df => intro df := diff_of_linear _
 
-instance intro.arg_f.hasAdjoint {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [SemiHilbert Y] 
+instance intro.arg_f.hasAdjoint [SemiHilbert Y] 
   : HasAdjoint λ (f : X → Y) => (intro f : T) := sorry
 
 @[simp ↓]
-theorem intro.arg_f.adj_simp {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [SemiHilbert Y] 
-  : (λ (f : X → Y) => (intro f : T))† = λ f' x => toFun f' x := sorry
+theorem intro.arg_f.adj_simp [SemiHilbert Y] 
+  : (λ (f : X → Y) => (intro f : T))† = λ f' x => f'[x] := sorry
 
-instance {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [SemiHilbert Y] 
-  : HasAdjoint λ (f : X → Y) => (intro f : T) := sorry
 
-instance {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [SemiHilbert Y] 
+instance intro.arg_f.hasAdjDiff [SemiHilbert Y] 
   : HasAdjDiff λ (f : X → Y) => (intro f : T) := 
 by 
   constructor; infer_instance; simp; infer_instance done
 
 @[simp ↓] 
-theorem intro.arg_f.adjDiff_simp {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [SemiHilbert Y] 
-  : (δ† λ (f : X → Y) => (intro f : T)) = λ f df' x => toFun df' x := by simp[adjDiff] done
+theorem intro.arg_f.adjDiff_simp [SemiHilbert Y] 
+  : (δ† λ (f : X → Y) => (intro f : T)) = λ f df' x => df'[x] := by simp[adjDiff] done
 
 ---
 

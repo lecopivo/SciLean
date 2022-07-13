@@ -26,7 +26,7 @@ instance [SemiInner Y] : SemiInner T :=
 {
   Domain := 𝓓 Y
   domain := default
-  semiInner := λ f g Ω => ∑ x, ⟪toFun f x, toFun g x⟫[Ω]
+  semiInner := λ f g Ω => ∑ x, ⟪f[x], g[x]⟫[Ω]
   testFunction := λ _ _ => True
 }
 

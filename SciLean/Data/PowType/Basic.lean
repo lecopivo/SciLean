@@ -3,7 +3,10 @@ import SciLean.Data.NRealArray
 
 namespace SciLean
 
--- We keep the argument order the same as for FunType
+-- PowType is just like FunType where the type `T` is not important
+-- The main example `ℝ^n`, it bahaves like `Fin n → ℝ` but we do not 
+-- care too much about what exactly `T` is. 
+-- PowType provides notation `ℝ^Fin n`, we also have short hand `ℝ^{n}`.
 open FunType in
 class PowType (T : outParam Type) (I X : Type) extends FunType T I X, HasSet T, HasIntro T
 
@@ -11,14 +14,19 @@ def PowTypeCarrier (X I : Type) {T} [PowType T I X] := T
 
 notation X "^" I => PowTypeCarrier X I
 
+-- Allow notation like ℝ^{n,m,k}
 syntax term "^{" term,* "}" : term
-
 macro_rules 
 | `($X:term ^{ $n }) => do
   `($X ^ (Fin $n))
-| `($X:term ^{ $n,$ns,* }) => do
-  let I ← ns.getElems.foldlM (λ x y => `($x × Fin $y)) (← `(Fin $n))
-  `($X ^ $I)
+| `($X:term ^{ $ns,* }) => do
+  if 0 < ns.getElems.size then
+    let last := ns.getElems[ns.getElems.size-1]!
+    let ns' := ns.getElems[:ns.getElems.size-1]
+    let I ← ns'.foldrM (λ x y => `(Fin $x × $y)) (← `(Fin $last))
+    `($X ^ $I)
+  else 
+    `(Unit)
 
 namespace PowTypeCarrier
 
@@ -28,11 +36,9 @@ namespace PowTypeCarrier
   instance : FunType.HasSet (X^I) := PowType.toHasSet
   instance : FunType.HasIntro (X^I) := PowType.toHasIntro
 
-  -- abbrev getOp (self : X^I) (idx : I) : X := FunType.toFun self idx
-  @[defaultInstance]
-  instance : GetElem (X^I) I X (λ _ _ => True) where getElem x i _ := FunType.toFun x i
-  abbrev set (x : X^I) (i : I) (xi : X) : X^I := FunType.HasSet.set x i xi
-  abbrev intro (f : I → X) : X^I := FunType.HasIntro.intro f
+  abbrev get (x : X^I) (i : I) : X := getElem x i True.intro
+  abbrev set (x : X^I) (i : I) (xi : X) : X^I := setElem x i xi
+  abbrev intro (f : I → X) : X^I := FunType.intro f
   abbrev modify [Inhabited X] (x : X^I) (i : I) (f : X → X) : X^I := FunType.modify x i f
   abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := FunType.mapIdx f x
   abbrev map (f : X → X) (x : X^I) : X^I := FunType.map f x
@@ -58,6 +64,8 @@ instance {T I X} [PowType T I X] [Enumtype I] [ToString I] [ToString X] : ToStri
         s := s.append s!", {i}: {x[i]}"
     "{" ++ s ++ "}"⟩
 
+-- variable (x : ℝ^{3,22,10})
+-- #check λ (i,j,k) => x[(i,j,k)]
 
 -- namespace PowType
 
