@@ -15,24 +15,24 @@ def myPre (e : Expr) : SimpM Step :=
   pure (Step.visit (Result.mk e none))
 
 theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y → Z) [IsSmooth g] [IsSmooth f] [∀ x, IsSmooth (f x)]
-  : (δ λ x => 
+  : (∂ λ x => 
       let y := g x
       f x y)
     =
     λ x dx =>
       let y  := g x
-      let dy := δ g x dx
-      δ f x dx y + δ (f x) y dy
+      let dy := ∂ g x dx
+      ∂ f x dx y + ∂ (f x) y dy
 := by simp done
 
 theorem diffOfLetSimple {X Y α} [Vec X] [Vec Y] (a : α) (f : X → α → Y) [IsSmooth (λ x => f x a)]
-  : (δ λ x => 
+  : (∂ λ x => 
       let y := a
       f x y)
     =
     let y := a
     λ x dx =>
-      δ (λ x => f x y) x dx
+      ∂ (λ x => f x y) x dx
 := by simp done
 
 #check @Zero.zero
@@ -135,15 +135,15 @@ open Lean.Elab.Tactic in
 @[simp] theorem foo_simp (a b : Nat) : foo a b = a + b := by unfold foo; rfl 
 
 -- example {X Y} [Vec X] [Vec Y] (g : X → X) (f : X → X → Y) [IsSmooth g] [IsSmooth f] [∀ x, IsSmooth (f x)]
---   : (δ λ x => 
+--   : (∂ λ x => 
 --       let y := g x
 --       f y y)
 --     =
 --     hold
 --     λ x dx =>
 --       let y  := g x
---       let dy := δ g x dx
---       δ f y dy y + δ (f y) y dy
+--       let dy := ∂ g x dx
+--       ∂ f y dy y + ∂ (f y) y dy
 -- := by
 --   autodiff_core (config := {zeta := false})
 --   simp[hold]
@@ -151,7 +151,7 @@ open Lean.Elab.Tactic in
 
 example {X Y Z W} [Vec X] [Vec Y] [Vec Z] [Vec W] (g : W → X) (h : W → Y) (f : W → X → Y → Z) [IsSmooth h] [IsSmooth g] [IsSmooth f] [∀ x, IsSmooth (f x)]  [∀ x y, IsSmooth (f x y)]
   : (λ n : Nat => 
-    (δ λ x w : W => 
+    (∂ λ x w : W => 
       let y := g x
       let z := h x
       f x y z))
@@ -160,10 +160,10 @@ example {X Y Z W} [Vec X] [Vec Y] [Vec Z] [Vec W] (g : W → X) (h : W → Y) (f
     hold
     λ x dx w =>
       let y  := g x
-      let dy := δ g x dx
+      let dy := ∂ g x dx
       let z  := h x
-      let dz := δ h x dx
-      δ f x dx y z + δ (f x) y dy z + δ (f x y) z dz
+      let dz := ∂ h x dx
+      ∂ f x dx y z + ∂ (f x) y dy z + ∂ (f x y) z dz
 := by
   autodiff_core (config := {zeta := false, singlePass := true})
   -- autodiff_core (config := {zeta := false, singlePass := true})
@@ -173,10 +173,10 @@ example {X Y Z W} [Vec X] [Vec Y] [Vec Z] [Vec W] (g : W → X) (h : W → Y) (f
   done
 
 @[simp]
-theorem diff_at_zero {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : δ f x 0 = 0 := sorry
+theorem diff_at_zero {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : ∂ f x 0 = 0 := sorry
 
 example {X Y} [Vec X] [Vec Y] (a : α) (g : α → X) (f : X → X → Y) [IsSmooth (λ x => f x (g a))]
-  : (λ n : Nat => (δ λ x => 
+  : (λ n : Nat => (∂ λ x => 
       let y := g a
       f x y))
     = 
@@ -184,21 +184,21 @@ example {X Y} [Vec X] [Vec Y] (a : α) (g : α → X) (f : X → X → Y) [IsSmo
     hold
     λ x dx =>
       let y := g a
-      δ (λ x => f x y) x dx
+      ∂ (λ x => f x y) x dx
 := by
   autodiff_core (config := {zeta := false})
   simp[hold]
   done
 
 -- example {X Y} [Vec X] [Vec Y] (a : α) (g : α → X) (f : X → X → Y) [IsSmooth (f (g a))]
---   : (δ λ x => 
+--   : (∂ λ x => 
 --       let y := g a
 --       f y x)
 --     =
 --     hold
 --     λ x dx =>
 --       let y  := g a
---       δ (f y) x dx
+--       ∂ (f y) x dx
 -- := by
 --   autodiff_core (config := {zeta := false})
 --   simp[hold]

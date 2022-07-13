@@ -35,7 +35,7 @@ do
   let adjDiffId := Lean.mkIdent $ declBase.append "adjDiff"
   let adjDiffSimpId  := Lean.mkIdent $ declBase.append "adjDiff_simp"
 
-  let adjDiffNonComp ← `(δ† (fun $parm => $funId:ident $preArgs* $arg $postArgs*))
+  let adjDiffNonComp ← `(∂† (fun $parm => $funId:ident $preArgs* $arg $postArgs*))
   let adjDiffComp ← 
     match mode with
       | .explicit df' proof => 
@@ -76,7 +76,7 @@ syntax "adjDiff?" bracketedBinder* : argProp
 -- Sometime it is undesirable to generate definition `f.arg_x.adjDiff
 -- This is usefull for example for adjDifferential of composition:
 --
---   δ λ x => f (g x) = λ x dx => δ f (g x) (δ g x dx)
+--   ∂ λ x => f (g x) = λ x dx => ∂ f (g x) (∂ g x dx)
 --
 --   In this case `comp.arg_x.adjDiff would have to be noncomputable and
 --   most of the time we do not want that. So `adjDiff_simp` just defines the simp

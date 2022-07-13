@@ -60,7 +60,7 @@ argument ω
   isSmooth, diff, hasAdjDiff, adjDiff
 
 def momentum (m₁ m₂ : ℝ) (l₁ l₂ : ℝ) (Ω ω : ℝ×ℝ) : ℝ×ℝ :=
-  (δ† (λ ω' => L m₁ m₂ l₁ l₂ Ω ω') ω 1)
+  (∂† (λ ω' => L m₁ m₂ l₁ l₂ Ω ω') ω 1)
   rewrite_by
     simp
 

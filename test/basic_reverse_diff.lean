@@ -21,11 +21,11 @@ by
   admit
 
 
-instance (x y : X) : HasAdjoint λ dx => δ (λ x y : X => x - y) x dx y := 
+instance (x y : X) : HasAdjoint λ dx => ∂ (λ x y : X => x - y) x dx y := 
 by 
   simp infer_instance done
 
-instance (x y : X) : HasAdjoint λ dy => δ (λ y : X => x - y) y dy := 
+instance (x y : X) : HasAdjoint λ dy => ∂ (λ y : X => x - y) y dy := 
 by 
   simp
   infer_instance done
@@ -72,24 +72,24 @@ section NN
   variable {X₀ X₁ X₂ X₃ : Type} [Hilbert X₀] [Hilbert X₁] [Hilbert X₂] [Hilbert X₃]
   variable {W₁ W₂ : Type} [Hilbert W₁] [Hilbert W₂] [Hilbert W₃]
   variable (f₁ : W₁ → X₀ → X₁) [IsSmooth f₁] [∀ w, IsSmooth (f₁ w)]
-     [∀ w x, HasAdjoint λ dw => δ f₁ w dw x]
-     [∀ w x, HasAdjoint λ dx => δ (f₁ w) x dx]
+     [∀ w x, HasAdjoint λ dw => ∂ f₁ w dw x]
+     [∀ w x, HasAdjoint λ dx => ∂ (f₁ w) x dx]
   variable (f₂ : W₂ → X₁ → X₂) [IsSmooth f₂] [∀ w, IsSmooth (f₂ w)]
-     [∀ w x, HasAdjoint λ dw => δ f₂ w dw x]
-     [∀ w x, HasAdjoint λ dx => δ (f₂ w) x dx]
+     [∀ w x, HasAdjoint λ dw => ∂ f₂ w dw x]
+     [∀ w x, HasAdjoint λ dx => ∂ (f₂ w) x dx]
   variable (f₃ : W₃ → X₂ → X₃) [IsSmooth f₃] [∀ w, IsSmooth (f₃ w)]
-     [∀ w x, HasAdjoint λ dw => δ f₃ w dw x]
-     [∀ w x, HasAdjoint λ dx => δ (f₃ w) x dx]
+     [∀ w x, HasAdjoint λ dw => ∂ f₃ w dw x]
+     [∀ w x, HasAdjoint λ dx => ∂ (f₃ w) x dx]
 
      -- [∀ x₀ (x : W₁ × W₂), SciLean.HasAdjoint (SciLean.differential (fun x => f₁ x.1 x₀) x)]
      -- [∀ (x₀ : X₀) (x : W₁ × W₂), SciLean.HasAdjoint (SciLean.differential (fun x => x₀) x)]
 
-  instance (x : W₁ × W₂) : SciLean.HasAdjoint (δ (fun x => x.1) x) := sorry
-  instance (x : W₁ × W₂) : SciLean.HasAdjoint (δ (fun x => x.2) x) := sorry
+  instance (x : W₁ × W₂) : SciLean.HasAdjoint (∂ (fun x => x.1) x) := sorry
+  instance (x : W₁ × W₂) : SciLean.HasAdjoint (∂ (fun x => x.2) x) := sorry
 
 
-  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (δ f x)] : SciLean.HasAdjoint (δ (fun x => (f x).1) x) := by simp admit
-  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (δ f x)] : SciLean.HasAdjoint (δ (fun x => (f x).2) x) := by simp admit
+  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (∂ f x)] : SciLean.HasAdjoint (∂ (fun x => (f x).1) x) := by simp admit
+  instance (f : X → W₁×W₂) [IsSmooth f] [HasAdjoint (∂ f x)] : SciLean.HasAdjoint (∂ (fun x => (f x).2) x) := by simp admit
 
 
   -- instance : ∀ (x : W₁ × W₂ × W₃), SciLean.HasAdjoint (SciLean.differential (fun x => x.2.2) x) := by infer_instance done
@@ -114,7 +114,7 @@ section NN
     : 𝓑 (λ xy : X×Y => xy.2) = λ xy => (xy.2, λ dy => ((0:X), dy)) := by simp[reverse_diff, adjoint_differential] done
 
   @[simp]
-  theorem reverse_diff_of_fst_comp (f : X → Y×Z) [IsSmooth f] [∀ x, HasAdjoint (δ f x)]
+  theorem reverse_diff_of_fst_comp (f : X → Y×Z) [IsSmooth f] [∀ x, HasAdjoint (∂ f x)]
     : 𝓑 (λ x : X => (f x).1) = (λ yz => (yz.1, λ dy => (dy, (0:Z)))) • 𝓑 f := 
   by 
     funext x; simp[reverse_diff,reverse_comp]
@@ -122,7 +122,7 @@ section NN
     admit
 
   @[simp]
-  theorem reverse_diff_of_snd_comp (f : X → Y×Z) [IsSmooth f] [∀ x, HasAdjoint (δ f x)]
+  theorem reverse_diff_of_snd_comp (f : X → Y×Z) [IsSmooth f] [∀ x, HasAdjoint (∂ f x)]
     : 𝓑 (λ x : X => (f x).2) = (λ yz => (yz.2, λ dz => ((0:Y), dz))) • 𝓑 f :=
   by 
     funext x; simp[reverse_diff,reverse_comp]

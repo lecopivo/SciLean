@@ -15,24 +15,24 @@ def myPre (e : Expr) : SimpM Step :=
   pure (Step.visit (Result.mk e none))
 
 theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y → Z) [IsSmooth g] [IsSmooth f] [∀ x, IsSmooth (f x)]
-  : (δ λ x => 
+  : (∂ λ x => 
       let y := g x
       f x y)
     =
     λ x dx =>
       let y  := g x
-      let dy := δ g x dx
-      δ f x dx y + δ (f x) y dy
+      let dy := ∂ g x dx
+      ∂ f x dx y + ∂ (f x) y dy
 := by simp done
 
 theorem diffOfLetSimple {X Y α} [Vec X] [Vec Y] (a : α) (f : X → α → Y) [IsSmooth (λ x => f x a)]
-  : (δ λ x => 
+  : (∂ λ x => 
       let y := a
       f x y)
     =
     let y := a
     λ x dx =>
-      δ (λ x => f x y) x dx
+      ∂ (λ x => f x y) x dx
 := by simp done
 
 #check @Zero.zero

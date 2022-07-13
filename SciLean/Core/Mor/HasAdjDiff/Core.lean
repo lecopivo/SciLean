@@ -11,9 +11,9 @@ variable {ι : Type} [Enumtype ι]
 
 class HasAdjDiff (f : X → Y) : Prop where
   isSmooth : IsSmooth f
-  hasAdjDiff : ∀ x, HasAdjoint $ δ f x
+  hasAdjDiff : ∀ x, HasAdjoint $ ∂ f x
 
-theorem infer_HasAdjDiff {f : X → Y} [IsSmooth f] : (∀ x, HasAdjoint $ δ f x) → HasAdjDiff f := sorry
+theorem infer_HasAdjDiff {f : X → Y} [IsSmooth f] : (∀ x, HasAdjoint $ ∂ f x) → HasAdjDiff f := sorry
 
 ----------------------------------------------------------------------
 
@@ -51,8 +51,8 @@ instance diag.arg_x.hasAdjDiff
   (f : Y₁ → Y₂ → Z) [IsSmooth f] -- Smoothness in y₁ and y₂ does not guarantee joint smoothness
   [instf1 : ∀ y₂, HasAdjDiff λ y₁ => f y₁ y₂] 
   [instf2 : ∀ y₁, HasAdjDiff λ y₂ => f y₁ y₂]
-  (g₁ : X → Y₁) [instg1 : HasAdjDiff g₁] -- [IsSmooth g₁] [∀ x, HasAdjoint (δ g₁ x)]
-  (g₂ : X → Y₂) [instg2 : HasAdjDiff g₂]-- [IsSmooth g₂] [∀ x, HasAdjoint (δ g₂ x)]
+  (g₁ : X → Y₁) [instg1 : HasAdjDiff g₁] -- [IsSmooth g₁] [∀ x, HasAdjoint (∂ g₁ x)]
+  (g₂ : X → Y₂) [instg2 : HasAdjDiff g₂]-- [IsSmooth g₂] [∀ x, HasAdjoint (∂ g₂ x)]
   : HasAdjDiff (λ x => f (g₁ x) (g₂ x)) := 
   by 
     have isg1 := instg1.isSmooth

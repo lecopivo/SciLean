@@ -90,7 +90,7 @@ class FwdDiffMonad (m : Type → Type) extends VecMonad m, IgnoreEffect m where
 
 -- @[addPull]
 -- theorem add_pull_differential {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x dx dx' : X)
---   : δ f x (dx + dx') = δ f x dx + δ f x dx' := sorry
+--   : ∂ f x (dx + dx') = ∂ f x dx + ∂ f x dx' := sorry
 
 -- @[addPull]
 -- theorem add_pull_prod_fst {X Y} [Add X] [Add Y] (xy xy' : X×Y)

@@ -74,7 +74,7 @@ syntax "inv" bracketedBinder* : argProp
 -- Sometime it is undesirable to generate definition `f.arg_x.inv
 -- This is usefull for example for inverential of composition:
 --
---   δ λ x => f (g x) = λ x dx => δ f (g x) (δ g x dx)
+--   ∂ λ x => f (g x) = λ x dx => ∂ f (g x) (∂ g x dx)
 --
 --   In this case `comp.arg_x.inv would have to be noncomputable and
 --   most of the time we do not want that. So `inv_simp` just defines the simp

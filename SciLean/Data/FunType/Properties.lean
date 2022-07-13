@@ -25,10 +25,10 @@ instance getElem.arg_f.isSmooth_alt [Vec Y] (x : X)
   : IsSmooth (λ (f : T) => f[x]) := linear_is_smooth _
 
 @[simp ↓] theorem getElem.arg_f.diff_simp [Vec Y]
-  : δ (λ (f : T) (x : X) => f[x]) = λ f df x => df[x]
+  : ∂ (λ (f : T) (x : X) => f[x]) = λ f df x => df[x]
   := diff_of_linear _
 @[simp ↓] theorem getElem.arg_f.diff_simp_alt [Vec Y] (x : X)
-  : δ (λ (f : T) => f[x]) = λ f df => df[x]
+  : ∂ (λ (f : T) => f[x]) = λ f df => df[x]
   := diff_of_linear _
 
 
@@ -40,12 +40,12 @@ instance getElem.arg_f.hasAdjoint [SemiHilbert Y] (x : X)
 instance getElem.arg_f.hasAdjDiff [SemiHilbert Y] (x : X)
   : HasAdjDiff (λ (f : T) => getElem f x True.intro) := by constructor; infer_instance; simp; infer_instance done
 @[simp ↓] theorem getElem.arg_f.adjDiff_simp [SemiHilbert Y] (x : X)
-  : δ† (λ (f : T) => f[x]) = λ _ df' => setElem (0 : T) x df' := by simp[adjDiff]; done
+  : ∂† (λ (f : T) => f[x]) = λ _ df' => setElem (0 : T) x df' := by simp[adjDiff]; done
 
 
 -- This unfortunatelly does not solve automatically :( the unification fails
 example (x : X) (f : ℝ → T) [Vec Y] [IsSmooth f] 
-  : δ (λ (s : ℝ) => (f s)[x]) = λ s ds => (δ f s ds)[x] := 
+  : ∂ (λ (s : ℝ) => (f s)[x]) = λ s ds => (∂ f s ds)[x] := 
 by 
   rw[diff_of_comp (λ g => getElem g x True.intro) f]; 
   simp; 
@@ -95,7 +95,7 @@ instance intro.arg_f.isSmooth [Vec Y]
 
 @[simp ↓]
 theorem intro.arg_f.diff_simp [Vec Y] 
-  : (δ λ (f : X → Y) => (intro f : T)) = λ f df => intro df := diff_of_linear _
+  : (∂ λ (f : X → Y) => (intro f : T)) = λ f df => intro df := diff_of_linear _
 
 instance intro.arg_f.hasAdjoint [SemiHilbert Y] 
   : HasAdjoint λ (f : X → Y) => (intro f : T) := sorry
@@ -112,7 +112,7 @@ by
 
 @[simp ↓] 
 theorem intro.arg_f.adjDiff_simp [SemiHilbert Y] 
-  : (δ† λ (f : X → Y) => (intro f : T)) = λ f df' x => df'[x] := by simp[adjDiff] done
+  : (∂† λ (f : X → Y) => (intro f : T)) = λ f df' x => df'[x] := by simp[adjDiff] done
 
 ---
 

@@ -7,7 +7,7 @@ variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 
 noncomputable 
-def fwdDiff (f : X → Y) : X → Y×(X → Y) := λ x => (f x, λ dx => δ f x dx)
+def fwdDiff (f : X → Y) : X → Y×(X → Y) := λ x => (f x, λ dx => ∂ f x dx)
 
 prefix:max "𝓣" => fwdDiff
 

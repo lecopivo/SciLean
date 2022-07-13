@@ -30,7 +30,7 @@ open SciLean.Tactic.CustomSimp in
 
 -- example {X Y Z W} [Vec X] [Vec Y] [Vec Z] [Vec W] (g : W → X) (h : W → Y) (f : W → X → Y → Z) [IsSmooth h] [IsSmooth g] [IsSmooth f] [∀ x, IsSmooth (f x)]  [∀ x y, IsSmooth (f x y)]
 --   : (λ n : Nat => 
---     (δ λ x w : W => 
+--     (∂ λ x w : W => 
 --       let y := g x
 --       let z := h x
 --       f x y z))
@@ -39,10 +39,10 @@ open SciLean.Tactic.CustomSimp in
 --     hold
 --     λ x dx w =>
 --       let y  := g x
---       let dy := δ g x dx
+--       let dy := ∂ g x dx
 --       let z  := h x
---       let dz := δ h x dx
---       δ f x dx y z + δ (f x) y dy z + δ (f x y) z dz
+--       let dz := ∂ h x dx
+--       ∂ f x dx y z + ∂ (f x) y dy z + ∂ (f x y) z dz
 -- := by
 --   autodiff_core (config := {zeta := false, singlePass := true})
 
@@ -53,10 +53,10 @@ open SciLean.Tactic.CustomSimp in
 --   admit
 
 -- @[simp]
--- theorem diff_at_zero {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : δ f x 0 = 0 := sorry
+-- theorem diff_at_zero {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : ∂ f x 0 = 0 := sorry
 
 -- example {X Y} [Vec X] [Vec Y] (a : α) (g : α → X) (f : X → X → Y) [IsSmooth (λ x => f x (g a))]
---   : (λ n : Nat => (δ λ x => 
+--   : (λ n : Nat => (∂ λ x => 
 --       let y := g a
 --       f x y))
 --     = 
@@ -64,21 +64,21 @@ open SciLean.Tactic.CustomSimp in
 --     hold
 --     λ x dx =>
 --       let y := g a
---       δ (λ x => f x y) x dx
+--       ∂ (λ x => f x y) x dx
 -- := by
 --   autodiff_core (config := {zeta := false})
 --   simp[hold]
 --   done
 
 -- example {X Y} [Vec X] [Vec Y] (a : α) (g : α → X) (f : X → X → Y) [IsSmooth (f (g a))]
---   : (δ λ x => 
+--   : (∂ λ x => 
 --       let y := g a
 --       f y x)
 --     =
 --     hold
 --     λ x dx =>
 --       let y  := g a
---       δ (f y) x dx
+--       ∂ (f y) x dx
 -- := by
 --   autodiff_core (config := {zeta := false})
 --   simp[hold]

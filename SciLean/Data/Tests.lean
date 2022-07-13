@@ -19,9 +19,9 @@ section NDVector
   variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
 
   variable {dims} (x dx : NDVector dims) (i : Fin dims.product)
-  example : δ (λ x => x[i]) x dx = dx[i] := by simp done
-  example : δ (λ x => x[i]*x[i]) x dx = dx[i]*x[i] + x[i]*dx[i] := by simp done
-  example : δ (λ x i => x[i]*x[i]) x dx i = dx[i]*x[i] + x[i]*dx[i] := by simp done
+  example : ∂ (λ x => x[i]) x dx = dx[i] := by simp done
+  example : ∂ (λ x => x[i]*x[i]) x dx = dx[i]*x[i] + x[i]*dx[i] := by simp done
+  example : ∂ (λ x i => x[i]*x[i]) x dx i = dx[i]*x[i] + x[i]*dx[i] := by simp done
 
   example : Vec (NDVector dims) := by infer_instance
   example : Hilbert (NDVector dims) := by infer_instance

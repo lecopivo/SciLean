@@ -74,7 +74,7 @@ syntax "adj" bracketedBinder* : argProp
 -- Sometime it is undesirable to generate definition `f.arg_x.adj
 -- This is usefull for example for adjerential of composition:
 --
---   δ λ x => f (g x) = λ x dx => δ f (g x) (δ g x dx)
+--   ∂ λ x => f (g x) = λ x dx => ∂ f (g x) (∂ g x dx)
 --
 --   In this case `comp.arg_x.adj would have to be noncomputable and
 --   most of the time we do not want that. So `adj_simp` just defines the simp

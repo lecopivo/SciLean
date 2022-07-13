@@ -64,7 +64,7 @@ def VGG :=
     )
 
 
-def heheh {w dw x} : δ (VGG) w dw x = 0 := 
+def heheh {w dw x} : ∂ (VGG) w dw x = 0 := 
 by
   simp[VGG]
   simp[VGG.match_1]

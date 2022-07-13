@@ -15,40 +15,40 @@ set_option synthInstance.maxSize 60
 macro "diff_simp" : tactic => `(simp) 
 
 example (a : α) (f : Y → α → Z) [IsSmooth f] (g : X → Y) [IsSmooth g]
-  : δ (λ x => f (g x) a) = λ x dx => δ f (g x) (δ g x dx) a := by diff_simp
+  : ∂ (λ x => f (g x) a) = λ x dx => ∂ f (g x) (∂ g x dx) a := by diff_simp
 
 example (f : Y → Z) [IsSmooth f]
-  : δ (λ (g : α → Y) (a : α) => f (g a)) = λ g dg a => δ f (g a) (dg a) := by diff_simp
+  : ∂ (λ (g : α → Y) (a : α) => f (g a)) = λ g dg a => ∂ f (g a) (dg a) := by diff_simp
 
 example
-  : δ (λ (f : β → Z) (g : α → β) (a : α) => f (g a)) = λ f df (g : α → β) a => df (g a) := by diff_simp
+  : ∂ (λ (f : β → Z) (g : α → β) (a : α) => f (g a)) = λ f df (g : α → β) a => df (g a) := by diff_simp
 
 example (f : Y → β → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] (b) 
-  : δ (λ x => f (g x) b) = λ x dx => δ f (g x) (δ g x dx) b := by diff_simp
+  : ∂ (λ x => f (g x) b) = λ x dx => ∂ f (g x) (∂ g x dx) b := by diff_simp
 
 example (f : Y → β → Z) [IsSmooth f] (b)
-  : δ (λ (g : α → Y) a => f (g a) b) = λ g dg a => δ f (g a) (dg a) b := by diff_simp
+  : ∂ (λ (g : α → Y) a => f (g a) b) = λ g dg a => ∂ f (g a) (dg a) b := by diff_simp
 
 example (f : β → Y → Z) (g : β → X → Y) [∀ b, IsSmooth (f b)] [∀ b, IsSmooth (g b)]
-  : δ (λ x b => f b (g b x)) = λ x dx b => δ (f b) (g b x) (δ (g b) x dx) := by diff_simp
+  : ∂ (λ x b => f b (g b x)) = λ x dx b => ∂ (f b) (g b x) (∂ (g b) x dx) := by diff_simp
 
 example (f : Y → β → Z) (g : X → Y) [IsSmooth f] [IsSmooth g]
-  : δ (λ x b => f (g x) b) = λ x dx b => δ f (g x) (δ g x dx) b := by diff_simp
+  : ∂ (λ x b => f (g x) b) = λ x dx b => ∂ f (g x) (∂ g x dx) b := by diff_simp
 
 example (f : Y → β → Z) [IsSmooth f]
-  : δ (λ (g : α → Y) a b => f (g a) b) = λ g dg a b => δ f (g a) (dg a) b := by diff_simp
+  : ∂ (λ (g : α → Y) a b => f (g a) b) = λ g dg a b => ∂ f (g a) (dg a) b := by diff_simp
 
 example (f : Y₁ → β2 → Z) (g2 : α → β2) [IsSmooth f] (g dg)
-  : δ (λ  (g1 : α → Y₁) a => f (g1 a) (g2 a)) g dg = λ a => δ f (g a) (dg a) (g2 a) := by diff_simp
+  : ∂ (λ  (g1 : α → Y₁) a => f (g1 a) (g2 a)) g dg = λ a => ∂ f (g a) (dg a) (g2 a) := by diff_simp
 
 example (f : β1 → Y₂ → Z) (g1 : α → β1) [∀ y1, IsSmooth (f y1)] 
-  : δ (λ (g2 : α → Y₂) a => f (g1 a) (g2 a)) = λ g dg a => δ (f (g1 a)) (g a) (dg a) := by diff_simp
+  : ∂ (λ (g2 : α → Y₂) a => f (g1 a) (g2 a)) = λ g dg a => ∂ (f (g1 a)) (g a) (dg a) := by diff_simp
 
 example (f : Y₁ → Y₂ → β → Z) (g1 : X → Y₁) (g2 : X → Y₂)
   [IsSmooth f] [∀ y1, IsSmooth (f y1)] [IsSmooth g1] [IsSmooth g2]
-  : δ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) = λ x dx b => δ f (g1 x) (δ g1 x dx) (g2 x) b + δ (f (g1 x)) (g2 x) (δ g2 x dx) b := by diff_simp
+  : ∂ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) = λ x dx b => ∂ f (g1 x) (∂ g1 x dx) (g2 x) b + ∂ (f (g1 x)) (g2 x) (∂ g2 x dx) b := by diff_simp
 
-example {X} [Hilbert X] : δ (λ x : X => ⟪x, x⟫) = λ x dx =>  ⟪dx, x⟫ + ⟪x, dx⟫ := by diff_simp; done
+example {X} [Hilbert X] : ∂ (λ x : X => ⟪x, x⟫) = λ x dx =>  ⟪dx, x⟫ + ⟪x, dx⟫ := by diff_simp; done
 
 
 --- Other a bit more disorganized tests
@@ -63,14 +63,14 @@ variable (G : X × Y → Z) [IsSmooth G]
 
 variable (x dx : X) (y dy : Y) (z dz : Z)
 
-example : δ (λ x => f (g (f1 x))) x dx = δ f (g (f1 x)) (δ g (f1 x) (δ f1 x dx)) := by diff_simp done
-example : δ (λ x => x + x) x dx = dx + dx := by diff_simp done
+example : ∂ (λ x => f (g (f1 x))) x dx = ∂ f (g (f1 x)) (∂ g (f1 x) (∂ f1 x dx)) := by diff_simp done
+example : ∂ (λ x => x + x) x dx = dx + dx := by diff_simp done
 
-example : δ (λ (x : X) => F x (g x)) x dx = δ F x dx (g x) + δ (F x) (g x) (δ g x dx) := by diff_simp  done
-example : δ (λ (x : X) => f3 (F x (g x))) x dx = δ f3 (F x (g x)) (δ F x dx (g x) + δ (F x) (g x) (δ g x dx)) := by diff_simp done
-example g dg x : δ (λ (g : X → Y) => f (g x)) g dg = δ f (g x) (dg x) := by diff_simp done
-example g dg x : δ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = δ (F x) (g x) (dg x) := by diff_simp done
-example g dg x : δ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = δ F (g x) (dg x) y := by diff_simp done
-example (r dr : ℝ) : δ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by diff_simp; done
-example g dg y : δ (λ (g : X → X) (x : X) => F (g x) y) g dg x = δ F (g x) (dg x) y := by diff_simp done 
-example (r dr : ℝ) : δ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by diff_simp; done
+example : ∂ (λ (x : X) => F x (g x)) x dx = ∂ F x dx (g x) + ∂ (F x) (g x) (∂ g x dx) := by diff_simp  done
+example : ∂ (λ (x : X) => f3 (F x (g x))) x dx = ∂ f3 (F x (g x)) (∂ F x dx (g x) + ∂ (F x) (g x) (∂ g x dx)) := by diff_simp done
+example g dg x : ∂ (λ (g : X → Y) => f (g x)) g dg = ∂ f (g x) (dg x) := by diff_simp done
+example g dg x : ∂ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = ∂ (F x) (g x) (dg x) := by diff_simp done
+example g dg x : ∂ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = ∂ F (g x) (dg x) y := by diff_simp done
+example (r dr : ℝ) : ∂ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by diff_simp; done
+example g dg y : ∂ (λ (g : X → X) (x : X) => F (g x) y) g dg x = ∂ F (g x) (dg x) y := by diff_simp done 
+example (r dr : ℝ) : ∂ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by diff_simp; done

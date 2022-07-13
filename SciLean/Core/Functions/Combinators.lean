@@ -15,7 +15,7 @@ argument f [Vec Z]
 argument g [Vec Y] [Vec Z]
   isLin     [IsLin f]    := by simp[Function.comp] infer_instance,
   isSmooth  [IsSmooth f] := by simp[Function.comp] infer_instance,
-  diff_simp [IsSmooth f] := δ f (g x) (dg x) by simp[Function.comp] done
+  diff_simp [IsSmooth f] := ∂ f (g x) (dg x) by simp[Function.comp] done
 argument x
   [Vec X] [Vec Y] [Vec Z]
   [IsLin f] [IsLin g]
@@ -24,7 +24,7 @@ argument x
   [Vec X] [Vec Y] [Vec Z]
   [IsSmooth f] [IsSmooth g] 
   isSmooth  := by simp[Function.comp] infer_instance,
-  diff_simp := δ f (g x) (δ g x dx) by simp[Function.comp] done
+  diff_simp := ∂ f (g x) (∂ g x dx) by simp[Function.comp] done
 argument x
   [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
   [HasAdjoint f] [HasAdjoint g]
@@ -34,7 +34,7 @@ argument x
   [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
   [HasAdjDiff f] [HasAdjDiff g]
   hasAdjDiff   := by simp[Function.comp]; infer_instance done,
-  adjDiff_simp := ((δ† g x) ∘ (δ† f (g x))) dx'  by simp[Function.comp] done
+  adjDiff_simp := ((∂† g x) ∘ (∂† f (g x))) dx'  by simp[Function.comp] done
   
 
 
@@ -46,7 +46,7 @@ argument x
 -- argument g [Vec Y] [Vec Z]
 --   isLin     [IsLin f]    := by simp[Function.comp] infer_instance,
 --   isSmooth  [IsSmooth f] := by simp[Function.comp] infer_instance,
---   diff_simp [IsSmooth f] := δ f (g x) (dg x) by simp[Function.comp] done
+--   diff_simp [IsSmooth f] := ∂ f (g x) (dg x) by simp[Function.comp] done
 -- argument x
 --   [Vec X] [Vec Y] [Vec Z]
 --   [IsLin f] [IsLin g]
@@ -55,7 +55,7 @@ argument x
 --   [Vec X] [Vec Y] [Vec Z]
 --   [IsSmooth f] [IsSmooth g] 
 --   isSmooth  := by simp[Function.comp] infer_instance,
---   diff_simp := δ f (g x) (δ g x dx) by simp[Function.comp] done
+--   diff_simp := ∂ f (g x) (∂ g x dx) by simp[Function.comp] done
 -- argument x
 --   [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 --   [HasAdjoint f] [HasAdjoint g]
@@ -65,5 +65,5 @@ argument x
 --   [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 --   [HasAdjDiff f] [HasAdjDiff g]
 --   hasAdjDiff   := by simp[Function.comp]; infer_instance done,
---   adjDiff_simp := ((δ† g x) ∘ (δ† f (g x))) dx'  by simp[Function.comp] done
+--   adjDiff_simp := ((∂† g x) ∘ (∂† f (g x))) dx'  by simp[Function.comp] done
   

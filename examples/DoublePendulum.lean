@@ -26,7 +26,7 @@ def parm (l : ℝ×ℝ) (θ : Q) : V :=
 def PureImpl {α} (a : α → Prop) := α
 def pure_impl {α} {a : α} : PureImpl (Eq a) := a
 
-def L (m l : ℝ×ℝ) (θ ω : Q) : PureImpl (Eq (L' m (parm l θ) (δ (parm l) θ ω))) :=
+def L (m l : ℝ×ℝ) (θ ω : Q) : PureImpl (Eq (L' m (parm l θ) (∂ (parm l) θ ω))) :=
 by
   conv =>
     enter [1]
@@ -83,7 +83,7 @@ by
 
   finish_impl
   
-def solver_2 (m k l : ℝ) (steps : Nat) : Impl (λ x v : Q => ∇(δ (L m k l) x v) v) :=
+def solver_2 (m k l : ℝ) (steps : Nat) : Impl (λ x v : Q => ∇(∂ (L m k l) x v) v) :=
 by
 
   conv in (L _ _ _) =>
@@ -109,7 +109,7 @@ by
   finish_impl
 
   
-def solver_3 (m k l : ℝ) (steps : Nat) : Impl (λ x v : Q => δ(∇((L m k l) x)) v) :=
+def solver_3 (m k l : ℝ) (steps : Nat) : Impl (λ x v : Q => ∂(∇((L m k l) x)) v) :=
 by
 
   conv in (L _ _ _) =>

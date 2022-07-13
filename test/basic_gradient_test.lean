@@ -19,7 +19,7 @@ example (y : X)
 
 
 example 
-  : δ (fun (x : Fin n → ℝ) i => x (i + 1) * x i) 
+  : ∂ (fun (x : Fin n → ℝ) i => x (i + 1) * x i) 
     = 
     (fun x dx a => dx (a + 1) * x a + x (a + 1) * dx a) := 
 by
@@ -156,9 +156,9 @@ by
 -- by autograd; done
 
 
--- example : δ (λ x : ℝ^n => ∑ i, x[i]) = λ x dx => ∑ i, dx[i] := by simp done
--- example : δ (λ x : ℝ^n => ∑ i, 2*x[i]) = λ x dx => ∑ i, (2:ℝ)*dx[i] := by simp done
--- example : δ (λ x : ℝ^n => (∑ i, x[i]*x[i])) = λ x dx => (∑ i, dx[i]*x[i]) + (∑ i, x[i]*dx[i]) := by simp done
+-- example : ∂ (λ x : ℝ^n => ∑ i, x[i]) = λ x dx => ∑ i, dx[i] := by simp done
+-- example : ∂ (λ x : ℝ^n => ∑ i, 2*x[i]) = λ x dx => ∑ i, (2:ℝ)*dx[i] := by simp done
+-- example : ∂ (λ x : ℝ^n => (∑ i, x[i]*x[i])) = λ x dx => (∑ i, dx[i]*x[i]) + (∑ i, x[i]*dx[i]) := by simp done
 -- example : ∇ (λ x : ℝ^n => ∑ i, x[i]) = λ x => PowType.intro (λ i => (1:ℝ)) := by autograd done
 -- example : ∇ (λ x : ℝ^n => ∑ i, x[i]*x[i]) = λ x : ℝ^n => (2:ℝ)*x := by autograd admit -- not quite there,
 -- not sure what to do about this case

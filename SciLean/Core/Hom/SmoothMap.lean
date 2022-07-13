@@ -87,12 +87,12 @@ namespace SciLean
   @[simp]
   theorem SmoothMap.mk.arg_f.diff_simp {X Y} [Vec X] [Vec Y] 
     (f : X → Y) [IsSmooth f] 
-    : δ (SmoothMap.mk f).1 = δ f := by simp[SmoothMap.mk] done
+    : ∂ (SmoothMap.mk f).1 = ∂ f := by simp[SmoothMap.mk] done
 
   @[simp]
   theorem SmoothMap.mk.arg_x.diff_simp {X Y Z} [Vec X] [Vec Y] [Vec Z]
     (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-    : δ (λ x => SmoothMap.mk (f x)) = λ x dx => SmoothMap.mk (δ f x dx) := sorry
+    : ∂ (λ x => SmoothMap.mk (f x)) = λ x dx => SmoothMap.mk (∂ f x dx) := sorry
 
   instance PSigma.mk.arg_x.isSmooth
            (P : Y → Prop) [Vec ((y : Y) ×' P y)] 
@@ -105,14 +105,14 @@ namespace SciLean
   --          (P : Y → Prop) [Vec ((y : Y) ×' P y)] 
   --          (f : X → Y) [IsSmooth f] 
   --          (p : (x : X) → P (f x)) 
-  --          : (δ λ x => PSigma.mk (f x) (p x)) = λ x dx => PSigma.mk (δ f x dx) sorry := sorry
+  --          : (∂ λ x => PSigma.mk (f x) (p x)) = λ x dx => PSigma.mk (∂ f x dx) sorry := sorry
 
   --------------------------------------------------------------------
   
-  instance differential.arg_f.isSmooth : IsSmooth (λ (f : X⟿Y) => δ f.1) := sorry
+  instance differential.arg_f.isSmooth : IsSmooth (λ (f : X⟿Y) => ∂ f.1) := sorry
 
   @[simp]
-  theorem differential.arg_f.diff_simp : δ (λ (f : X⟿Y) => δ f.1) = λ f df => δ df.1 := sorry
+  theorem differential.arg_f.diff_simp : ∂ (λ (f : X⟿Y) => ∂ f.1) = λ f df => ∂ df.1 := sorry
 
 
   --------------------------------------------------------------------

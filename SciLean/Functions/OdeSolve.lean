@@ -7,11 +7,11 @@ constant odeSolve {X} [Vec X] (f : ℝ → X → X) (t : ℝ) (x₀ : X) : X
 
 
 --- Duhhh  move this somewhere ... 
-instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : IsSmooth (δ f) := sorry
-instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : IsLin (δ f x) := sorry
-instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (δ f x) := sorry
+instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : IsSmooth (∂ f) := sorry
+instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : IsLin (∂ f x) := sorry
+instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (∂ f x) := sorry
 instance {X Y₁ Y₂ Z} [Vec X] [Vec Y₁] [Vec Y₂] [Vec Z] (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂) [IsSmooth f] [∀ y₁, IsSmooth (f y₁)] [IsSmooth g₁] [IsSmooth g₂] 
-  : IsSmooth (λ x => δ (f (g₁ x)) (g₂ x)) := by sorry
+  : IsSmooth (λ x => ∂ (f (g₁ x)) (g₂ x)) := by sorry
 
 function_properties odeSolve {X} (f : ℝ → X → X) (t : ℝ) (x₀ : X) : X
 argument t [Vec X] [IsSmooth f] [∀ s, IsSmooth (f s)]
@@ -31,18 +31,18 @@ argument x₀ [Hilbert X] [IsSmooth f] [∀ s, HasAdjoint (f s)]
     --  ∀ s, ⟪x (t - s), y s⟫ = ⟪x t, y 0⟫ 
     -- in particular for s := t we get desired ⟪x 0, y t⟫ = ⟪x t, y 0⟫
     -- Differentiate above equation w.r.t to `s and you get that `y satisfies
-    -- δ y s 1 = (f (t - s))†
+    -- ∂ y s 1 = (f (t - s))†
     sorry
 argument x₀ [Vec X] [IsSmooth f] [∀ s, IsSmooth (f s)]
   isSmooth   := sorry,
-  diff_simp  := odeSolve (λ s => δ (f s) (odeSolve f s x₀)) t dx₀
+  diff_simp  := odeSolve (λ s => ∂ (f s) (odeSolve f s x₀)) t dx₀
     by sorry
 argument x₀ [Hilbert X] [IsSmooth f] [inst : ∀ t, HasAdjDiff (f t)]
   hasAdjDiff   := by 
     have isf := λ t => (inst t).isSmooth
     have iaf := λ t => (inst t).hasAdjDiff
     constructor; infer_instance; simp; intro x₀; infer_instance,
-  adjDiff_simp := odeSolve (λ s => δ† (f (t - s)) (odeSolve f (t - s) x₀)) t dx₀' 
+  adjDiff_simp := odeSolve (λ s => ∂† (f (t - s)) (odeSolve f (t - s) x₀)) t dx₀' 
     by 
       have isf := λ t => (inst t).isSmooth
       have iaf := λ t => (inst t).hasAdjDiff

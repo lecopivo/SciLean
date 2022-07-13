@@ -10,28 +10,28 @@ namespace SciLean
   #check smoothDiff†
 
   #check adjoint
-  -- #check (λ f : X → Y => δ f)†
+  -- #check (λ f : X → Y => ∂ f)†
 
   #check differential†
   
   
   noncomputable
   def divergence (f : X → X → Y) : X → Y := 
-    λ x => ∑ i, δ f x (𝔼 i) (𝔼 i)
+    λ x => ∑ i, ∂ f x (𝔼 i) (𝔼 i)
 
   @[simp] 
   theorem diff_adj_is_divergence (f : X → X → Y) [IsSmooth f] [∀ x, IsLin (f x)]
-  : (smoothDiff† (λ x ⟿ λ dx ⊸ f x dx)) = λ x ⟿ ∑ i, δ f x (𝔼 i) (𝔼 i) := sorry
+  : (smoothDiff† (λ x ⟿ λ dx ⊸ f x dx)) = λ x ⟿ ∑ i, ∂ f x (𝔼 i) (𝔼 i) := sorry
 
   @[simp] 
   theorem diff_adj_is_divergence' (f : X → X → Y) [IsSmooth f] [∀ x, IsLin (f x)]
-  : (λ (f : X ⟿ Y) => (λ x ⟿ λ dx ⊸ δ f.1 x dx))† = λ f' => λ x ⟿ ∑ i : ι, (δ f'.1 x (𝔼 i)) (𝔼 i) := sorry
+  : (λ (f : X ⟿ Y) => (λ x ⟿ λ dx ⊸ ∂ f.1 x dx))† = λ f' => λ x ⟿ ∑ i : ι, (∂ f'.1 x (𝔼 i)) (𝔼 i) := sorry
 
 
   #check @diff_adj_is_divergence
 
   variable (f : X → Y)
 
-  #check δ f
+  #check ∂ f
 
 

@@ -146,7 +146,7 @@ def cross_entropy_eps {dims} (ε : ℝ) (p q : NDVector dims) : ℝ :=
 def heheho 
     : Impl (λ image label w =>
               let F := λ w => cross_entropy_eps ε ((neural_network ε β) w image) label
-              †(δ F w) 1) 
+              †(∂ F w) 1) 
     := sorry
 
   
@@ -158,7 +158,7 @@ def heheho
 
 
     
-def heheh {w dw x} : Impl (δ (neural_network ε β) w dw x) := 
+def heheh {w dw x} : Impl (∂ (neural_network ε β) w dw x) := 
 by
   simp[neural_network,neural_network.match_1]
 
@@ -187,7 +187,7 @@ by
 
 -- #check @Prod.rec
 
--- def foo_grad : Impl (δ foo) :=
+-- def foo_grad : Impl (∂ foo) :=
 -- by
 --   conv =>
 --     enter [1,p,dp]

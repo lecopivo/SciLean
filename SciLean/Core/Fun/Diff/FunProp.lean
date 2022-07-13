@@ -34,7 +34,7 @@ do
   let diffId := Lean.mkIdent $ declBase.append "diff"
   let diffSimpId  := Lean.mkIdent $ declBase.append "diff_simp"
 
-  let diffNonComp ← `(δ (fun $parm $postParms* => $funId:ident $preArgs* $arg $postArgs*))
+  let diffNonComp ← `(∂ (fun $parm $postParms* => $funId:ident $preArgs* $arg $postArgs*))
   let diffComp ← 
     match mode with
       | .explicit df proof => 
@@ -72,7 +72,7 @@ syntax "diff?" bracketedBinder* : argProp
 -- Sometime it is undesirable to generate definition `f.arg_x.diff
 -- This is usefull for example for differential of composition:
 --
---   δ λ x => f (g x) = λ x dx => δ f (g x) (δ g x dx)
+--   ∂ λ x => f (g x) = λ x dx => ∂ f (g x) (∂ g x dx)
 --
 --   In this case `comp.arg_x.diff would have to be noncomputable and
 --   most of the time we do not want that. So `diff_simp` just defines the simp

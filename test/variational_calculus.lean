@@ -8,22 +8,22 @@ open SciLean
 variable (f df : ℝ ⟿ ℝ)
 
 -- TODO: Move this somewhere else ... 
-@[simp high] theorem differential_of_hom_subtype {X Y} [Vec X] [Vec Y] : δ (Subtype.val : (X ⟿ Y) → (X → Y)) = λ f df => df.1 := sorry
+@[simp high] theorem differential_of_hom_subtype {X Y} [Vec X] [Vec Y] : ∂ (Subtype.val : (X ⟿ Y) → (X → Y)) = λ f df => df.1 := sorry
 
-example : δ (λ (f : (ℝ ⟿ ℝ)) => (mkIntegral λ t => f t)) f df = mkIntegral λ t => df t := by
+example : ∂ (λ (f : (ℝ ⟿ ℝ)) => (mkIntegral λ t => f t)) f df = mkIntegral λ t => df t := by
   simp[mkIntegral] admit
 
-example : δ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t)) f df = λ t => (df t) * (f t) + (f t) * (df t) :=
+example : ∂ (λ (f : (ℝ ⟿ ℝ)) (t : ℝ) => (f t) * (f t)) f df = λ t => (df t) * (f t) + (f t) * (df t) :=
 by
   simp done
 
-example (t b : ℝ) : δ (fun (f : ℝ ⟿ ℝ) (t : ℝ) => (f t) * (f t)) f df t = (df t) * (f t) + (f t) * (df t) := by simp done
-example (t : ℝ) : δ (fun (f : ℝ ⟿ ℝ) (t : ℝ) => (f t) * (f t)) f df t = (df t) * (f t) + (f t) * (df t) := by simp done
+example (t b : ℝ) : ∂ (fun (f : ℝ ⟿ ℝ) (t : ℝ) => (f t) * (f t)) f df t = (df t) * (f t) + (f t) * (df t) := by simp done
+example (t : ℝ) : ∂ (fun (f : ℝ ⟿ ℝ) (t : ℝ) => (f t) * (f t)) f df t = (df t) * (f t) + (f t) * (df t) := by simp done
 
 
 variable (f : ℝ ⟿ ℝ) (x : ℝ×ℝ)
 
--- #check δ (∫ t, f t)
+-- #check ∂ (∫ t, f t)
 
 class Dual (X Y : Type) where
   dual : (X → Y) → X
@@ -47,10 +47,10 @@ noncomputable
 instance [Hilbert X] : Dual X ℝ where
   dual := λ f => dual (λ x _ => f x)
 
-#check Dual.dual (δ (λ x : ℝ×ℝ => ⟪x, 1⟫) x)
-#check Dual.dual ((δ λ f : ℝ ⟿ ℝ => λ Ω => ⟪f, 1⟫[Ω]) f)
+#check Dual.dual (∂ (λ x : ℝ×ℝ => ⟪x, 1⟫) x)
+#check Dual.dual ((∂ λ f : ℝ ⟿ ℝ => λ Ω => ⟪f, 1⟫[Ω]) f)
 
--- example : δ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, (f t) * (f t) + (f t))) f df = ∫ t, (df t) * (f t) + (f t + 1) * (df t) := 
+-- example : ∂ (λ (f : (ℝ ⟿ ℝ)) => (∫ t, (f t) * (f t) + (f t))) f df = ∫ t, (df t) * (f t) + (f t + 1) * (df t) := 
 -- by
 --   simp[integral]
 --   simp[mkIntegral, integral]

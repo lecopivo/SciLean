@@ -17,7 +17,7 @@ argument x [SemiHilbert X]
 instance powType.getOp.arg_xi.hasAdjDiff {X} [SemiHilbert X] [PowType X] {n : Nat} 
   : HasAdjDiff (λ (x : X^n) i => x[i]) := sorry
 @[simp] theorem powType.getOp.arg_xi.adjDiff {X} [SemiHilbert X] [PowType X] {n : Nat} 
-  : δ† (λ (x : X^n) i => x[i]) = λ x dx' => PowType.intro dx' := sorry
+  : ∂† (λ (x : X^n) i => x[i]) = λ x dx' => PowType.intro dx' := sorry
 
 function_properties powType.set {X} [PowType X] {n : Nat} (x : X^n) (i : Idx n) (xi : X) : X^n
 argument x [Vec X]
@@ -58,7 +58,7 @@ example {X} [PowType X] [Vec X] {n} {i : Idx n}: IsSmooth λ (x : X^n) => x[i] :
 
 -- @[simp]
 -- theorem diff_of_powtype_getOp
---   : δ (λ (x : X^n) (i : Fin n) => x[i]) = λ x dx i => dx[i] := sorry
+--   : ∂ (λ (x : X^n) (i : Fin n) => x[i]) = λ x dx i => dx[i] := sorry
 
 -- variable [Hilbert X]
 -- instance : HasAdjoint (λ (c : X^n) (i : Fin n) => c[i]) := sorry

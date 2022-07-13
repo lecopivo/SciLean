@@ -24,7 +24,7 @@ argument x [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, adjDiff
 
 example (n : ℕ) (ε : ℝ) [Fact (n≠0)] [Fact (ε≠0)] (C LJ : ℝ) (r m : Idx n → ℝ)
-  : (δ† λ (x : (ℝ^(3:ℕ))^n) => 
+  : (∂† λ (x : (ℝ^(3:ℕ))^n) => 
   ∑ i j, Coloumb ε C (m i * m j) (x[i] - x[j])
          +
          LennardJones ε LJ (r i + r j) (x[i] - x[j]))

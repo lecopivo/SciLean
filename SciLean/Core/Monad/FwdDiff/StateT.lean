@@ -163,7 +163,7 @@ theorem StateT.modify.fwdDiffM_simp (f : X → σ → σ) [IsSmooth f] [∀ x, I
     = 
     (λ x => do
       let s ← get
-      let df := λ dx ds => δ f x dx s + δ (f x) s ds
+      let df := λ dx ds => ∂ f x dx s + ∂ (f x) s ds
       pure (← modify (f x), λ dx => modify (λ ds => df dx ds)))
   :=
 by

@@ -70,7 +70,7 @@ argument x [Fact (y ≠ 0)]
 
 -- If only the second is true
 -- instance HDiv.hDiv.arg_x.isSmooth (y : ℝ) : IsSmooth (λ (x : ℝ) => x / y) := by sorry
--- @[simp] theorem HDiv.hDiv.arg_x.diff_simp (y : ℝ) : δ (λ (x : ℝ) => x / y) = λ x dx => dx / y := by sorry
+-- @[simp] theorem HDiv.hDiv.arg_x.diff_simp (y : ℝ) : ∂ (λ (x : ℝ) => x / y) = λ x dx => dx / y := by sorry
 
 function_properties HDiv.hDiv (x y : ℝ) : ℝ
 argument x

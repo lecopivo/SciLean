@@ -49,7 +49,7 @@ argument xy [Nonempty X] [Subsingleton Y] [Inhabited Y]
 -- At some point I needed this because of some reduction shenanigans
 -- instance [Vec X] [Vec Y] [Vec Z] (f : X → Y×Z) [IsSmooth f] : IsSmooth (λ x => (f x).1) := sorry
 @[simp, simp_diff] 
-theorem Prod.fst.arg_xy.diff_simp' {X Y} [Vec X] [Vec Y] : (δ λ x : X×Y => x.1) = λ x dx => dx.1 := by simp
+theorem Prod.fst.arg_xy.diff_simp' {X Y} [Vec X] [Vec Y] : (∂ λ x : X×Y => x.1) = λ x dx => dx.1 := by simp
 
 -- Prod.snd --
 --------------
