@@ -44,13 +44,13 @@ def main : IO Unit := do
   let k := 100000.0
 
   let N : Nat := 100
-  have h : Nonempty (Idx N) := sorry
+  have h : Nonempty (Fin N) := sorry
 
   let evolve ← (solver (n:=N) m k substeps).assemble
 
   let t := 1.0
-  let x₀ : (ℝ^N) := PowType.intro λ (i : Idx N) => (Math.sin ((i.1 : ℝ)/10))
-  let p₀ : (ℝ^N) := PowType.intro λ i => (0 : ℝ)
+  let x₀ : (ℝ^{N}) := .intro λ (i : Fin N) => (Math.sin ((i.1 : ℝ)/10))
+  let p₀ : (ℝ^{N}) := .intro λ i => (0 : ℝ)
   let mut (x,p) := (x₀, p₀)
 
   for i in [0:300] do

@@ -10,7 +10,7 @@ namespace SciLean
 open FunType in
 class PowType (T : outParam Type) (I X : Type) extends FunType T I X, HasSet T, HasIntro T
 
-def PowTypeCarrier (X I : Type) {T} [PowType T I X] := T
+abbrev PowTypeCarrier (X I : Type) {T} [PowType T I X] := T
 
 notation X "^" I => PowTypeCarrier X I
 
@@ -38,7 +38,7 @@ namespace PowTypeCarrier
 
   abbrev get (x : X^I) (i : I) : X := getElem x i True.intro
   abbrev set (x : X^I) (i : I) (xi : X) : X^I := setElem x i xi
-  abbrev intro (f : I → X) : X^I := FunType.intro f
+  abbrev intro (f : I → X) : X^I := FunType.intro _ f
   abbrev modify [Inhabited X] (x : X^I) (i : I) (f : X → X) : X^I := FunType.modify x i f
   abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := FunType.mapIdx f x
   abbrev map (f : X → X) (x : X^I) : X^I := FunType.map f x

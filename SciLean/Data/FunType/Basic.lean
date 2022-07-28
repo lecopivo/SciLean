@@ -1,5 +1,6 @@
-import SciLean.Mathlib.Data.Enumtype
-import SciLean.Data.Idx
+-- import SciLean.Mathlib.Data.Enumtype
+-- import SciLean.Data.Idx
+import SciLean.Core
 
 namespace SciLean
 
@@ -67,40 +68,43 @@ namespace FunType
     
     toFun_intro : ∀ f x, (intro f)[x] = f x
 
-  export HasIntro (intro)
+  -- export HasIntro (intro)
+
+  abbrev intro {X Y} (T : Type) [FunType T X Y] [HasIntro T] (f : X → Y) : T := HasIntro.intro f
 
   attribute [simp] HasIntro.toFun_intro
 
-  unsafe def modifyUnsafe {T X Y} [FunType T X Y] [HasSet T] [Inhabited Y]
+  unsafe def modifyUnsafe {T X Y} [FunType T X Y] [HasSet T]
     (f : T) (x : X) (g : Y → Y) : T := 
     Id.run do
     let mut f := f
     let y := f[x]
     -- Reset `f x` to ensure `y` can be modified in place if possible
     -- This is the same trick as in Array.modifyMUnsafe
-    -- f := set f x (unsafeCast ())
-    -- Unfortunatelly `unsafeCast ()` does not seem to be working,
-    -- so we require Y to be inhabited and use that instead.
-    f[x] := default
+    -- Unfortunatelly `unsafeCast ()` does not seem to be working :( 
+    -- I could require [Inhabited Y] but that was causing other problems
+    -- f[x] := unsafeCast ()
     f[x] := g y
     f
 
-  @[implementedBy modifyUnsafe]
-  def modify {T X Y} [FunType T X Y] [HasSet T] [Inhabited Y] (f : T) (x : X) (g : Y → Y) : T := 
+  -- TODO: figure out how to make modifyUnsafe work
+  -- @[implementedBy modifyUnsafe]
+  @[inline]
+  def modify {T X Y} [FunType T X Y] [HasSet T] (f : T) (x : X) (g : Y → Y) : T := 
     setElem f x (g (f[x]))
 
-  instance [FunType T X Y] [HasSet T] [Inhabited Y] : ModifyElem T X Y where
+  instance [FunType T X Y] [HasSet T] : ModifyElem T X Y where
     modifyElem f x g := modify f x g
 
   @[simp]
-  theorem toFun_modify_eq [FunType T X Y] [HasSet T] [Inhabited Y] (f : T) (x : X) (g : Y → Y)
+  theorem toFun_modify_eq [FunType T X Y] [HasSet T] (f : T) (x : X) (g : Y → Y)
     : (modifyElem f x g)[x] = g f[x] := by simp[modifyElem, modify]; done
 
   @[simp]
-  theorem toFun_modify_neq [FunType T X Y] [HasSet T] [Inhabited Y] (f : T) (x x' : X) (g : Y → Y)
+  theorem toFun_modify_neq [FunType T X Y] [HasSet T] (f : T) (x x' : X) (g : Y → Y)
     : x' ≠ x → (modifyElem f x g)[x'] = f[x'] := by simp[modify]; apply HasSet.toFun_set_neq; done
 
-  def mapIdx [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : X → Y → Y) (f : T) : T := Id.run do
+  def mapIdx [FunType T X Y] [HasSet T] [Enumtype X] (g : X → Y → Y) (f : T) : T := Id.run do
     let mut f := f
     for (x,_) in Enumtype.fullRange X do
       -- This notation should correctly handle aliasing 
@@ -110,22 +114,22 @@ namespace FunType
     f
 
   @[simp]
-  theorem getElem_mapIdx [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : X → Y → Y) (f : T) (x : X) 
+  theorem getElem_mapIdx [FunType T X Y] [HasSet T] [Enumtype X] (g : X → Y → Y) (f : T) (x : X) 
     : (mapIdx g f)[x] = g x f[x] := sorry
 
-  def map [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : Y → Y) (f : T) : T := Id.run do
+  def map [FunType T X Y] [HasSet T] [Enumtype X] (g : Y → Y) (f : T) : T := Id.run do
     let mut f := f
     for (x,_) in Enumtype.fullRange X do
       f[x] := g f[x]
     f
     
   @[simp]
-  theorem getElem_map [FunType T X Y] [HasSet T] [Enumtype X] [Inhabited Y] (g : Y → Y) (f : T) (x : X) 
+  theorem getElem_map [FunType T X Y] [HasSet T] [Enumtype X] (g : Y → Y) (f : T) (x : X) 
     : (map g f)[x] = g f[x] := sorry
   
   section Operations
 
-    variable {T X Y} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [Inhabited Y]
+    variable {T X Y} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] 
 
     instance [Add Y] : Add T := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
     instance [Sub Y] : Sub T := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
@@ -137,8 +141,8 @@ namespace FunType
     instance [Neg Y] : Neg T := ⟨λ f => map (λ fx => -(fx : Y)) f⟩
     instance [Inv Y] : Inv T := ⟨λ f => map (λ fx => (fx : Y)⁻¹) f⟩
 
-    instance [One Y]  : One T  := ⟨intro λ _ => 1⟩
-    instance [Zero Y] : Zero T := ⟨intro λ _ => 0⟩
+    instance [One Y]  : One T  := ⟨intro T λ _ => 1⟩
+    instance [Zero Y] : Zero T := ⟨intro T λ _ => 0⟩
 
     instance [LT Y] : LT T := ⟨λ f g => ∀ x, f[x] < g[x]⟩ 
     instance [LE Y] : LE T := ⟨λ f g => ∀ x, f[x] ≤ g[x]⟩

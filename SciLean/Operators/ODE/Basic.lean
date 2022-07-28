@@ -6,7 +6,8 @@ namespace SciLean
 noncomputable
 opaque ode_solve {X} [Vec X] (f : X → X) (t : ℝ) (x₀ : X) : X
 
-axiom ode_solve.definition {X} [Vec X] (f : X → X) [IsSmooth f] (t dt : ℝ) (x₀ : X) : ∂ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
+axiom ode_solve.definition {X} [Vec X] (f : X → X) [IsSmooth f] (t dt : ℝ) (x₀ : X) 
+  : ∂ (ode_solve f) t dt x₀ = dt * f (ode_solve f t x₀)
 
 variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 

@@ -1,11 +1,13 @@
 
 namespace SciLean
 
+-- This is like `ExactSolution` but it is intended to be used in automation.
 inductive AutoExactSolution {α : Type _} : (α → Prop) → Type _ where
 | exact {spec : α → Prop} (a : α) (h : spec a) : AutoExactSolution spec
 
 def AutoImpl {α} (a : α) := AutoExactSolution λ x => x = a
 
+@[inline]
 def AutoImpl.val {α} {a : α} (x : AutoImpl a) : α :=
 match x with
 | .exact val _ => val
@@ -43,7 +45,6 @@ by
     intro eq; rw[← A.2]; rw[← eq]
     apply (h ▸ A).2
   }
-
 
 open Lean.Parser.Tactic.Conv
 

@@ -1,18 +1,12 @@
 import SciLean.Data.FunType.Algebra
-import SciLean.Core.Functions
 
 namespace SciLean.FunType
 
 variable {T X Y : Type} [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] 
 
--- instance parm.arg_x.isSmooth' {β : Sort u} [Vec X] [Vec Z]
---   (f : X → β → Z) [IsSmooth f] (y : β) 
---   : IsSmooth (λ x => f x y) := sorry
-
 -- There are some issues working with `getElem : (x : Cont) → (i : Idx) → Dom x i → Elem`
 -- bacause it has inherently dependent types plus `Dom x i : Prop` and 
 -- we do not have `Vec (P → X)` for `P : Prop` and `X : Type`
-
 
 instance getElem.arg_f.isLin [Vec Y]
   : IsLin (λ (f : T) (x : X) => f[x]) := sorry
@@ -88,34 +82,35 @@ argument y
 --   isLin := sorry
 
 instance intro.arg_f.isLin [Vec Y] 
-  : IsLin λ (f : X → Y) => (intro f : T) := sorry
+  : IsLin λ (f : X → Y) => (intro T f : T) := sorry
 
 instance intro.arg_f.isSmooth [Vec Y] 
-  : IsSmooth λ (f : X → Y) => (intro f : T) := linear_is_smooth _
+  : IsSmooth λ (f : X → Y) => (intro T f : T) := linear_is_smooth _
 
 @[simp ↓]
 theorem intro.arg_f.diff_simp [Vec Y] 
-  : (∂ λ (f : X → Y) => (intro f : T)) = λ f df => intro df := diff_of_linear _
+  : (∂ λ (f : X → Y) => (intro T f : T)) = λ f df => intro T df := diff_of_linear _
 
 instance intro.arg_f.hasAdjoint [SemiHilbert Y] 
-  : HasAdjoint λ (f : X → Y) => (intro f : T) := sorry
+  : HasAdjoint λ (f : X → Y) => (intro T f : T) := sorry
 
 @[simp ↓]
 theorem intro.arg_f.adj_simp [SemiHilbert Y] 
-  : (λ (f : X → Y) => (intro f : T))† = λ f' x => f'[x] := sorry
+  : (λ (f : X → Y) => (intro T f : T))† = λ f' x => f'[x] := sorry
 
 
 instance intro.arg_f.hasAdjDiff [SemiHilbert Y] 
-  : HasAdjDiff λ (f : X → Y) => (intro f : T) := 
+  : HasAdjDiff λ (f : X → Y) => (intro T f : T) := 
 by 
   constructor; infer_instance; simp; infer_instance done
 
 @[simp ↓] 
 theorem intro.arg_f.adjDiff_simp [SemiHilbert Y] 
-  : (∂† λ (f : X → Y) => (intro f : T)) = λ f df' x => df'[x] := by simp[adjDiff] done
+  : (∂† λ (f : X → Y) => (intro T f : T)) = λ f df' x => df'[x] := by simp[adjDiff] done
 
 ---
 
 
 
 -- TODO: modify, mapIdx, map
+

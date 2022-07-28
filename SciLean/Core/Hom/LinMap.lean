@@ -5,7 +5,7 @@ import SciLean.Core.Obj.FinVec
 
 namespace SciLean
 
-  abbrev LinMap (X Y : Type) [Vec X] [Vec Y] := (f : X → Y) ×' (IsLin f)
+  abbrev LinMap (X Y : Type) [Vec X] [Vec Y] := {f : X → Y // IsLin f}
 
   infixr:25 " ⊸ " => LinMap
 
@@ -43,12 +43,11 @@ namespace SciLean
 
   instance : CoeFun (X⊸Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
 
-  def LinMap.mk {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [IsLin f] : X ⊸ Y := ⟨f, by infer_instance⟩
+  abbrev LinMap.mk {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [IsLin f] : X ⊸ Y := ⟨f, by infer_instance⟩
 
   -- Right now, I prefer this notation
   macro "fun" xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
   macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
-
 
   -- @[inferTCGoalsRL]
   instance {X Y ι} [Enumtype ι] [FinVec X ι] [Vec Y] [SemiInner Y] : SemiInner (X ⊸ Y) :=
@@ -75,7 +74,6 @@ namespace SciLean
   }
 
   instance {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Hilbert (X⊸Y) := Hilbert.mk
-
 
   instance (f : X ⊸ Y) : IsLin (λ x => f x) := f.2
 

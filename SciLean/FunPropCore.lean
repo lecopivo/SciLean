@@ -7,7 +7,7 @@ open Lean.Parser Lean Syntax
 open TSyntax.Compat -- makes old untyped syntax code compile
 
 def Lean.Name.decapitalize : Name → Name
-  | Name.str p s _ => Name.mkStr p s.decapitalize
+  | Name.str p s => Name.mkStr p s.decapitalize
   | n              => n
 
 namespace SciLean.FunProp

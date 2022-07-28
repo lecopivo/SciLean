@@ -15,7 +15,7 @@ instance [AddCommGroup X]  : AddCommGroup (X^n)  := AddCommGroup.mk sorry
 
 instance [MulAction ℝ X] : MulAction ℝ (X^n) := MulAction.mk sorry sorry
 instance [AddMonoid X] [DistribMulAction ℝ X] : DistribMulAction ℝ (X^n) := DistribMulAction.mk sorry sorry
-instance [AddCommMonoid X] [DistribMulAction ℝ X] : Module ℝ (X^n) := Module.mk sorry sorry
+local instance [AddCommMonoid X] [DistribMulAction ℝ X] : Module ℝ (X^n) := Module.mk sorry sorry
 
 instance [AddCommGroup X] [DistribMulAction ℝ X] : Vec (X^n) := Vec.mk
 

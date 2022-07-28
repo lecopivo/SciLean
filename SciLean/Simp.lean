@@ -54,6 +54,9 @@ theorem smul_smul_mul (r s: ℝ) (x : X) : r * (s * x) = ((r * s) * x) := sorry
 @[simp] theorem inner_prod (u u' : U) (v v' : V) : ⟪(u,v), (u',v')⟫ = ⟪u,u'⟫ + ⟪v,v'⟫ := sorry
 @[simp] theorem inner_real (x y : ℝ) : ⟪x, y⟫ = x * y := sorry
 @[simp] theorem square_sqrt_square (x : ℝ) : (Math.sqrt (x * x))^2 = x * x := sorry
+@[simp] theorem inner_zero_x (x : U) : ⟪0, x⟫ = 0 := sorry
+@[simp] theorem inner_x_zero (x : U) : ⟪0, x⟫ = 0 := sorry
+
 
 @[simp] theorem add_same_1 (a b : ℝ) (x : X) : a*x + b*x = (a+b)*x := sorry
 @[simp] theorem add_same_2 (a : ℝ) (x : X) : a*x + x = (a+1)*x := sorry

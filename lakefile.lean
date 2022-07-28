@@ -2,19 +2,14 @@ import Lake
 open Lake DSL System
 
 package scilean 
-  -- defaultFacet := PackageFacet.staticLib
-require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"@"8f609e0ed826dde127c8bc322cb6f91c5369d37a"
 
--- #check  LeanLibConfig
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git"@"c431c2aed56453ad362a7cf780ba6a6a48fcc916"
+
 @[defaultTarget]
 lean_lib SciLean {
   roots := #[`SciLean]
 }
-
-
-
-
 
 
 
@@ -25,12 +20,12 @@ script tests (args) do
                       ["build" / "lib",
                        "lean_packages" / "mathlib" / "build" / "lib"]
 
-  let mut testNum := 0
+  let mut testNum : Nat := 0
   let mut failedTests : Array (FilePath × IO.Process.Output) := #[]
 
   for test in (← (cwd / "test").readDir) do
     if test.path.extension == some "lean" then
-      testNum := testNum + 1
+      testNum := testNum + (1 : Nat)
 
       let r ← timeit s!"Running test: {test.fileName}\t" (IO.Process.output {
         cmd := "lean"
@@ -38,7 +33,7 @@ script tests (args) do
         env := #[("LEAN_PATH", searchPath)]
       })
     
-      if r.exitCode == 0 then
+      if r.exitCode == (0 : UInt32) then
         IO.println "  Success!"
       else
         failedTests := failedTests.append #[(test.path, r)]

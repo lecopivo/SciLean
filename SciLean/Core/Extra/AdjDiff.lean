@@ -3,7 +3,7 @@ import SciLean.Core.Functions
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
+variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι κ : Type} [Enumtype ι] [Enumtype κ] [Nonempty ι] [Nonempty κ]
 
@@ -47,8 +47,6 @@ theorem comp.arg_x_i_j.adjDiff_simp
   funext x dx';
   simp [sum_of_linear, sum_into_lambda]
   done
-
-
 
 @[simp ↓]
 theorem comp.arg_x_i.arg1.adjDiff_simp 
@@ -146,13 +144,10 @@ theorem diag.arg_x_i_j.adjDiff_simp
   simp; unfold hold; simp; unfold hold; simp
   admit
 
-
 -- set_option trace.Meta.Tactic.simp.rewrite true in
 example {n} [Fact (n≠0)] : (∂†fun (x : Fin n → ℝ) (i j : Fin n) => x j) = λ x dx' => ∑ i, dx' i := 
 by
   simp
-
-
 
 @[simp ↓ low-1]
 theorem comp.arg_x_i.adjDiff_simp' {ι κ : Type} [Enumtype ι] [Enumtype κ] {X Z} [SemiHilbert X] [SemiHilbert Z]

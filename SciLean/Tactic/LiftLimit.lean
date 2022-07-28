@@ -6,12 +6,14 @@ open Lean
 open Lean.Meta
 open Lean.Elab.Tactic
 
+#check Expr.lam
+
 partial def replaceSubExpression (e : Expr) (test : Expr → Bool) (replace : Expr → MetaM Expr) : MetaM Expr := do
 if (test e) then
   (replace e)
 else
 match e with
-  | Expr.app f x d => do pure (mkApp (← (replaceSubExpression f test replace)) (← (replaceSubExpression x test replace)))
+  | Expr.app f x => do pure (mkApp (← (replaceSubExpression f test replace)) (← (replaceSubExpression x test replace)))
   | Expr.lam n x b _ => pure $ mkLambda n e.binderInfo x (← replaceSubExpression b test replace)
 
 -- do lambdaTelescope e fun xs b => do

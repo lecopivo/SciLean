@@ -47,3 +47,5 @@ def main : IO Unit := do
       if j < 10*(x.1+1) then
         IO.print "o"
     IO.println ""
+
+
