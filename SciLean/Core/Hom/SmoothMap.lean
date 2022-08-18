@@ -58,7 +58,6 @@ namespace SciLean
 
   --------------------------------------------------------------------
 
-  -- Ideally abbrev but it causes some problems with infinite simp loop
   @[inline]
   abbrev SmoothMap.mk {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [inst : IsSmooth f] : X ⟿ Y := ⟨f, inst⟩
 
@@ -74,15 +73,6 @@ namespace SciLean
   theorem SmoothMap.mk.eval (f : X → Y) [IsSmooth f] (x : X) 
     : (SmoothMap.mk f) x = f x := by simp
 
-  -- instance SmoothMap.mk.arg_x.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
-  --   (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-  --   : IsSmooth λ x => SmoothMap.mk (f x) := sorry
-
-  -- instance SmoothMap.mk.arg_x.parm1.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
-  --   (f : X → Y → α → Z) (a : α) [IsSmooth λ x y => f x y a] [∀ x, IsSmooth (λ y => f x y a)]
-  --   (g : X → Y → Y) [IsSmooth g] [∀ x, IsSmooth (g x)]
-  --   : IsSmooth λ x => SmoothMap.mk (λ y => f x (g x y) a) := by infer_instance
-
   @[simp]
   theorem SmoothMap.mk.arg_f.diff_simp {X Y} [Vec X] [Vec Y] 
     (f : X → Y) [IsSmooth f] 
@@ -91,38 +81,22 @@ namespace SciLean
   @[simp]
   theorem SmoothMap.mk.arg_x.diff_simp {X Y Z} [Vec X] [Vec Y] [Vec Z]
     (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-    : ∂ (λ x => SmoothMap.mk (f x)) = λ x dx => SmoothMap.mk (∂ f x dx) := sorry
+    : ∂ (λ x => SmoothMap.mk (f x)) = λ x dx => SmoothMap.mk (∂ f x dx) := by simp
 
-  -- instance PSigma.mk.arg_x.isSmooth
-  --          (P : Y → Prop) [Vec ((y : Y) ×' P y)] 
-  --          (f : X → Y) [IsSmooth f] 
-  --          (p : (x : X) → P (f x)) 
-  --          : IsSmooth λ x => PSigma.mk (f x) (p x) := sorry
-
-  instance Subtype.mk.arg_x.isSmooth
-           (P : Y → Prop) [Vec {y : Y // P y}] 
-           (f : X → Y) [IsSmooth f] 
-           (p : (x : X) → P (f x)) 
-           : IsSmooth λ x => Subtype.mk (f x) (p x) := sorry
-
+  -- This instance is still necessary to typecheck: `λ x dx ⟿ ∂ f x dx`
+  -- I do not understand why is it necessary if it can be infered automatically
   instance SmoothMap.mk.arg_x.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
-    (f : X → Y → Z) [IsSmooth f] (h : ∀ x, IsSmooth (f x))
+    (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
     : IsSmooth λ x => SmoothMap.mk (f x) := by infer_instance
 
+  instance SmoothMap.mk.arg_x.isLin {X Y Z} [Vec X] [Vec Y] [Vec Z] 
+    (f : X → Y → Z) [IsLin f] [∀ x, IsSmooth (f x)]
+    : IsLin λ x => SmoothMap.mk (f x) := by infer_instance
 
-  -- instance Subtype.mk.arg_x.isSmooth' {X Y Z} [Vec X] [Vec Y] [Vec Z]
-  --          (P : Y → Prop) [Vec {y : Y // P y}] 
-  --          (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-  --          (p : (x : X) → P (f x)) 
-  --          : IsSmooth λ x => Subtype.mk (f x) (p x) := sorry
-
-
-  -- @[simp]
-  -- theorem PSigma.mk.arg_x.diff_simp
-  --          (P : Y → Prop) [Vec ((y : Y) ×' P y)] 
-  --          (f : X → Y) [IsSmooth f] 
-  --          (p : (x : X) → P (f x)) 
-  --          : (∂ λ x => PSigma.mk (f x) (p x)) = λ x dx => PSigma.mk (∂ f x dx) sorry := sorry
+  -- instance SmoothMap.mk.arg_x.parm1.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
+  --   (f : X → Y → α → Z) (a : α) [IsSmooth λ x y => f x y a] [∀ x, IsSmooth (λ y => f x y a)]
+  --   (g : X → Y → Y) [IsSmooth g] [∀ x, IsSmooth (g x)]
+  --   : IsSmooth λ x => SmoothMap.mk (λ y => f x (g x y) a) := by infer_instance
 
   --------------------------------------------------------------------
 
@@ -143,14 +117,6 @@ namespace SciLean
 
   -- @[simp]
   -- theorem differential.arg_f.parm_x.diff_simp (dx : X) : ∂ (λ (f : X⟿Y) (x : X) => ∂ f.1 x dx) = λ f df  x=> ∂ df.1 x dx := by simp
-
-  section differential_map_test
-
-    variable {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f]
-
-    #check λ x dx ⟿ ∂ f x dx
-
-  end differential_map_test
 
   --------------------------------------------------------------------
 
@@ -174,7 +140,6 @@ namespace SciLean
 
   variable {Z} [SemiHilbert Z]
 
-  set_option pp.all true in
   example : SemiHilbert (ℝ ⟿ Z) := 
   by 
     infer_instance

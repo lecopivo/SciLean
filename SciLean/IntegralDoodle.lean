@@ -83,16 +83,10 @@ namespace SciLean
   macro "∫" f:term : term => `(Integral.integral $f)
   macro "∫" x:ident "," fx:term : term => `(integral λ $x => $fx)
   
-  variable {X Y Z} [Vec Y] [FinVec X ι] [Vec Z]
+  variable {X Y Z} [FinVec X ι] [Vec Y] [Vec Z]
 
-  instance SmoothMap.val.arg_f.isLin : IsLin (λ f : X⟿Y => f.1) := sorry
-  instance SmoothMap.val.arg_f.isSmooth : IsSmooth (λ f : X⟿Y => f.1) := sorry
-
-  @[simp]
-  theorem SmoothMap.val.arg_f.diff_simp 
-    : ∂ (λ f : X⟿Y => f.1) = λ f df => df.1 := 
-  by 
-    apply diff_of_linear; done
+  -- instance SmoothMap.val.arg_f.isLin : IsLin (λ f : X⟿Y => f.1) := by infer_instance
+  -- instance SmoothMap.val.arg_f.isSmooth : IsSmooth (λ f : X⟿Y => f.1) := by infer_instance
 
   -- We can't prove linearity of differential directly
   -- instance (F : (X⟿Y) → (X → Y)) [IsLin F] [∀ f, IsSmooth (F f)] 
@@ -102,8 +96,29 @@ namespace SciLean
 
   instance (F : Z → X → Y) [IsLin F] [∀ f, IsSmooth (F f)] 
     : IsLin λ (z : Z) => ∫ x, F z x := sorry
-  instance (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)] 
+  instance asdf (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)] 
     : IsSmooth λ (z : Z) => ∫ x, F z x := sorry
+
+  -- instance (f : X → Y → Z) [IsSmooth F] [∀ f, IsSmooth (F f)] 
+  --   (g : X → Y) [IsSmooth
+  --   : IsSmooth λ (z : Z) => ∫ x, F z x := sorry
+  example : IsSmooth fun (f : X ⟿ Y) x => (2 : ℝ) * f x := by infer_instance
+
+  -- set_option trace.Meta.Tactic.simp.discharge true in
+  -- set_option synthInstance.maxSize 2048 in
+  -- set_option synthInstance.maxHeartbeats 500000 in
+
+  -- This should fail fast !!!
+  example (f df : X ⟿ Y) : IsLin (∂ (fun (f : X ⟿ Y) => ∂ f.1) f df) := 
+  by
+    infer_instance
+    -- conv => 
+    --   enter [1]
+    --   simp
+    -- infer_instance
+
+  set_option synthInstance.maxSize 2048 in
+  example : ∀ (x : X), IsSmooth fun (f : X ⟿ Y) => (2 : ℝ) * f x := by infer_instance
 
   @[simp] 
   theorem integral_diff (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)]
@@ -116,11 +131,14 @@ namespace SciLean
   example : IsLin λ (f : X⟿Y) => ∫ x, f x := by infer_instance
   example : IsLin λ (f : X⟿Y) => ∫ x, (2 : ℝ) * f x := by infer_instance
   example : IsSmooth λ (f : X⟿Y) => ∫ x, f x := by infer_instance
+  -- set_option trace.Meta.synthInstance true in
+  set_option synthInstance.maxSize 2048 in
   example : IsSmooth λ (f : X⟿Y) => ∫ x, (2 : ℝ) * f x := by infer_instance
   example : (∂ λ (f : X⟿Y) => ∫ x, f x) = (λ _ df : X⟿Y => ∫ x, df x) := by simp
 
   example (u : X) : IsSmooth λ (f : X⟿Y) (x : X) => ∂ f.1 x u := by infer_instance
   example (u : X) : IsSmooth (λ (f : X⟿Y) => ∫ x, ∂ f.1 x u) := by infer_instance
+  set_option synthInstance.maxSize 2048 in
   example (u : X) : (∂ λ (f : X⟿Y) => ∫ x, ∂ f.1 x u) = λ _ df : X⟿Y => ∫ x, ∂ df.1 x u := by simp
 
   example [Hilbert Y] : IsSmooth λ (f : X⟿Y) (x : X) => ∂† f.1 x := sorry

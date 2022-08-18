@@ -39,6 +39,7 @@ instance diff.arg_x.isSmooth (f : X → Y) [IsSmooth f] : IsSmooth (∂ f) := so
 instance diff.arg_dx.isLin    (f : X → Y) [IsSmooth f] (x : X) : IsLin (∂ f x) := sorry
 instance diff.arg_dx.isSmooth (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (∂ f x) := sorry
 
+instance diff.arg_y.isLin (f : X → Y → Z) [IsSmooth f] [∀ x, IsLin (f x)] (x dx) : IsLin (∂ f x dx) := sorry
 instance diff.arg_y.isSmooth (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)] (x dx) : IsSmooth (∂ f x dx) := sorry
 
 instance diff.arg_x.comp.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] [Vec W]
