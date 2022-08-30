@@ -38,6 +38,13 @@ export Differential (differential)
 prefix:max "∂" => differential
 macro "∂" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂ λ $x => $f)
 
+-- maybe provide notation  `∂[dx] (x:=x₀), f x = ∂ f x₀ dx` and its variants
+-- Variants
+--     1. ∂[dx] (x:=x₀), f x          -- `∂[dx]` would be directional derivative operator
+--     2. ∂ (x:=x₀;dx), f x           -- this has weird version without `x₀` ∂ (x:=;dx), f x 
+--     3. ∂_dx (x:=x₀), f x           -- Can we parse this properly? What if `dx` is complicated, do we allow `∂_(dx)` ?
+--     4. ??
+
 class Derivative (Fun : Type) (Diff : outParam Type) where
   derivative : Fun → Diff
 

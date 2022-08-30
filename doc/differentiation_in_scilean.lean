@@ -2,17 +2,18 @@ import SciLean
 open SciLean
 
 /- 
-Build me with: `alectryon --lake ../lakefile.lean differentiation_in_scilean.lean
+Build me with:
+`alectryon --lake ../lakefile.lean differentiation_in_scilean.lean`
 -/ 
 
 /-!
-=================================================
-Symbolic and Automatic Differentiation in SciLean
-=================================================
+==========================
+Differentiation in SciLean
+==========================
 
-The backbone of any numerical/scientific software is a automatic and/or
-symbolic differentiation. In SciLean, automatic and symbolic differentiation
-is build on top of two operators:
+The backbone of any numerical/scientific/machine learing software is 
+an automatic and/or symbolic differentiation. In SciLean, automatic and 
+symbolic differentiation is build on top of these two operators:
 
 1. Differential `∂ : (X → Y) → (X → X → Y)` 
 
@@ -75,9 +76,6 @@ We will show that these two operators give a rise to a whole zoo of operators
 Differential
 ============
 
-Let's have a closer look at the differential `∂`. First of all, we will
-be working in the context of vector spaces, so we declare few of them
-
  -/
 
 section Differential
@@ -100,7 +98,7 @@ on the position `x`.
 applies tactic `t` on the term `x`. This notation confuses the `#check` 
 command. To see the actual result it is better to use the `trace_state` 
 tactic. TODO: Add a document explaining the technical detail of `rewrite_by`
-notation.)
+notation. TODO: Add delaborator for terms created with `AutoImpl`)
 
 Another way to check that the differential is computed correctly
 
@@ -163,7 +161,7 @@ Or as a symbolic computation
 
 /-!
 
-The second most common rule is the product rule
+Another common rule is the product rule
 
  -/ 
 
@@ -173,14 +171,88 @@ The second most common rule is the product rule
 
 /-!
 
-Debugging Derivatives
----------------------
+Derivative
+----------
+
+The standard notion of derivative takes a function from reals to reals, `f : ℝ → ℝ`,
+and produces again a function from, usually denoted with `f' : ℝ → ℝ`. 
+
+The differential `∂` does not fit this. The well know result that 
+derivative of exponential is exponential `exp' = exp` can't be expressed as 
+easily with differential.
+
+The naive statement does not even typecheck
+
+ -/
+
+  #check_failure ∂ Math.exp = Math.exp 
+
+/-!
+
+The `exp' = exp` is this slightly cumbersome statement
+
+ -/
+
+  example : (λ t => ∂ Math.exp t 1) = Math.exp := by simp
+
+/-!
+
+For this reason we introduce a new operator, derivative `ⅆ : (ℝ → X) → (ℝ → X)`.
+Which is defines as follows
+
+ -/
+
+  example (f : ℝ → X) : ⅆ f = λ t => ∂ f t 1 := 
+    by simp[derivative]
+
+/-!
+
+Now we have 
+
+ -/
+
+  example : ⅆ Math.exp = Math.exp := by simp[derivative]
+
+/-!
+
+(TODO: Right now simplifier needs to unfold `derivative`. Fix it!)
+
+We provide convenient notation, `ⅆ t, f t` and `ⅆ (t:=t₀), f t`, for
+taking derivative with a respect to an explicit variable.
+
+ -/
+  section DerivativeNotation
+
+    variable (f : ℝ → X) (t₀ : ℝ)
+
+    -- effectively translates `t,` to `λ t =>`
+    example : (ⅆ t, f t) = ⅆ (λ t => f t ) := by rfl
+
+    -- similar as above but also applies `t₀` 
+    example : (ⅆ (t:=t₀), f t) = ⅆ (λ t => f t) t₀ := by rfl
+
+  end DerivativeNotation
+
+/-!
+
+..
+
+The notation `ⅆ (t:=t₀), f t` tries to mimick the mathematical notation
+
+.. math:: \frac{d}{dt}\bigg\rvert_{t=t_0} f(t)
+
+ -/ 
+
+/-!
+
+Debugging Differentiation
+-------------------------
 
 Sometimes the differentiation is not doing what we expect. It is crucial
 to know how to figure out what went wrong.
 
 To demonstrate this, let's introduce a function `h` but without the smoothenss
-proof i.e. we do introduce `[IsSmooth h]`
+proof i.e. we do not introduce `[IsSmooth h]`
 
  -/
 
@@ -193,7 +265,8 @@ Now the chain rule for `f` and `h` fails
  -/
 
   example : (∂ λ x => f (h x)) = (λ x dx => ∂ f (h x) (∂ h x dx)) := 
-    by simp; admit
+    by simp   -- no progress
+       admit  -- we have to give up
 
 /-!
 
@@ -248,34 +321,14 @@ A bit more complicated computation
 
   set_option trace.Meta.Tactic.simp.rewrite true in
   #check (∂ λ x : ℝ => x * Math.exp (x*x) + x) 
-           rewrite_by (simp; trace_state /- .unfold -/)
+           rewrite_by 
+           (simp; trace_state /- .unfold -/)
 
 /-!
 
 Clicking on `simp` reveals fairly long list of rewrites.
 
-We will worry
-
  -/ 
-
-/-! 
-
-To indicate smoothenss(or any other properties) we use typeclasses. 
-`IsSmooth f` is a typeclass containing a proof that the function `f` 
-is smooth. The typeclass system is fairly powerfull and can automatically 
-prove smoothness of more complicated function. 
-
-Composition of smooth function is a smooth function
-
- -/ 
-
-example : IsSmooth (λ x => f (g x)) := by infer_instance
-
-/-!
-
-The tactic `infer_instance` invokes typeclass system
-
- -/
 
 end Differential
 
@@ -307,7 +360,7 @@ by
 /-!
 
 Manually unfolding every definition can get tedious. To circumvent that, 
-you have to anotate the definition of `square` to indicate that it is 
+you can anotate the definition of `square` to indicate that it is 
 differentiable.
 
  -/ 
@@ -375,8 +428,9 @@ by
   unfold square_v2.arg_x.diff -- manually unfold definition
   simp  -- we can continue with computation
 
-example : (λ x => ∂ ∂ square_v4 x 1 1) = (λ x => 2) := by simp
-
+example : (λ x => ∂ ∂ square_v4 x 1 1) = (λ x => 2) := 
+by 
+  simp  -- done immediately
 
 /-!
 
@@ -457,3 +511,163 @@ the simp theorem states directly `∂ cube_v1 = λ x dx => 3 * dx * x * x`.
 
  -/
 
+/-!
+
+Adjoint Differential
+====================
+
+Finding the minimum of a function `f : X → ℝ` with gradient descent 
+requires function's gradient `∇ f : X → X`.
+
+However, can we compute the gradient just with the differential `∂`? 
+No we can't! We need an adjoint `†` too!
+
+The differential `∂ f x` at point `x` is a linear function `X → R`.
+When we take an adjoint and apply one we get an element of `X`. That 
+is the gradient of `f` at `x`!
+
+In finite dimension, we can think about differential `∂ f x` is a row vector.
+To get a column vector we have to transpose it i.e. take its adjoint.
+
+For general function `f : X → Y`, we define adjoint differential 
+`∂† : (X → Y) → (X → Y → X)` as `∂† f x dy := (∂ f x)† dy`
+
+Taking adjoint makes sense only for functions between Hilberts spaces.
+Let's introduce few of those
+
+ -/ 
+
+section AdjointDifferential
+
+  variable {X Y Z} [Hilbert X] [Hilbert Y] [Hilbert Z]
+
+/-!
+
+To stress the definition of adjoint differential
+
+ -/
+
+  example (f : X → Y) : ∂† f = λ x dy => (∂ f x)† dy := by rfl
+
+/-!
+
+Similarly to derivative `ⅆ`, we define a specialized operator gradient `∇`
+for real valued functions over any Hilbert space
+
+ -/
+
+  example (f : X → ℝ) : ∇ f = λ x => (∂ f x)† 1 := by rfl
+
+/-!
+
+The important result is that the gradient of squared norm `∥x∥²` is `2*x`
+
+ -/
+
+
+  #check (∇ (x : X), ∥x∥²) 
+           rewrite_by (simp[gradient,hold]; trace_state)  /- .unfold -/
+
+/-!
+
+(TODO: Make sure we do not need to unfold gradient and hold here`)
+
+Another fun result is that the gradient of `⟪A x, x⟫` is `(A† + A) x`
+
+ -/
+
+  variable (A : X → X) [HasAdjDiff A] [IsLin A]
+
+  #check (∇ x, ⟪A x, x⟫) rewrite_by 
+           (simp[gradient,hold,adjointDifferential]; trace_state) /- .unfold -/
+
+/-!
+
+(TODO: Ughh, this requires too many assumptions on A and too many unfolding`)
+
+Similar to chain rule for differential, we have a chain rule for the adjoint 
+differential but the composition is in reverse
+
+ -/
+
+  variable (f : Y → Z) [HasAdjDiff f]
+  variable (g : X → Y) [HasAdjDiff g]
+
+  example : (∂† λ x => f (g x)) = (λ x dz => ∂† g x (∂† f (g x) dz)) := 
+    by simp
+
+/-!
+
+(TODO: Explain what `HasAdjDiff f` is)
+
+ -/ 
+
+
+/-!
+
+Euler-Lagrange Equations
+------------------------
+
+Let's write down Euler-Lagrange equations to demonstrate SciLean's notation
+in a bit complicated scenario.
+
+They are usally written in the following way
+
+.. math:: \frac{d}{dt} \frac{\partial}{\partial \dot x} L(x(t),\dot x(t)) - \frac{\partial}{\partial x} L(x(t),\dot x(t)) = 0
+
+However, the partial derivative notation is really ambigous. Thus a bit
+more explicit form is
+
+.. math:: \frac{d}{ds}\bigg\rvert_{s=t} \frac{\partial}{\partial v}\bigg\rvert_{v=\dot y(s)} L(y(s),v) - \frac{\partial}{\partial x}\bigg\rvert_{x=y(t)} L(x, \dot y(t)) = 0
+
+And this form can be written in SciLean relativelly nicely.
+ 
+ -/
+
+  variable (L : X → X → ℝ)  -- Lagrangian 
+  variable (y : ℝ → X)      -- trajectory 
+  variable (t : ℝ)          -- time
+
+  #check 
+    ⅆ (s:=t), ∇ (v:=ⅆ y s), L (y s) v - ∇ (x:=y t), L x (ⅆ y t) = 0
+
+/-!
+
+Let's plug in a Lagrangian for a particle in a potential field and hopefully 
+we get the correct equations of motion.
+
+ -/
+  def L' (ϕ : X → ℝ) (m : ℝ) (x v : X) := 1/2*m*∥v∥² - ϕ x
+   
+  variable [IsSmooth y]  -- trajectory is smooth
+  variable (ϕ : X → ℝ)  [HasAdjDiff ϕ]
+  variable (m : ℝ) -- mass
+
+  #check 
+    (ⅆ (s:=t), ∇ (v:=ⅆ y s), L' ϕ m (y s) v 
+     - 
+     ∇ (x:=y t), L' ϕ m x (ⅆ y t))
+    rewrite_by 
+    (simp[L']
+     simp[gradient,hold]
+     simp[derivative]
+     trace_state) /- .unfold -/
+
+/-!
+
+(TODO: Make sure we get these rewrite to make the result look nicer
+
+  `2 * (1/2) = 1`
+ 
+  `differential (∂y) t 1 1 = ⅆ (ⅆ y) t` 
+
+  `adjointDifferential (fun x => ϕ x) (y t) (-1) = - ∇ ϕ (y t)`)
+
+The result is (with the TODO rewrites) `m * ⅆ (ⅆ y) t + ∇ ϕ (y t)` which 
+exacly corresponts to the equation of a particle in a potential field `ϕ`
+
+.. math:: m \ddot y(t) = - \nabla \phi (y(t))
+
+ -/
+
+end AdjointDifferential
