@@ -9,7 +9,7 @@ namespace SciLean
     isSmooth     := sorry,
     diff_simp    := ⟪dx, x⟫ / εnorm ε x by sorry,
     hasAdjDiff   := by constructor; infer_instance; simp; intro; infer_instance done,
-    adjDiff_simp := (dx' / εnorm ε x) * x by (simp[adjDiff]; unfold hold; simp done)
+    adjDiff_simp := (dx' / εnorm ε x) * x by (simp[adjointDifferential]; unfold hold; simp done)
 
   notation "∥" x "∥{" ε "}" => εnorm ε x
 

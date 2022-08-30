@@ -8,7 +8,6 @@ variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι : Type} [Enumtype ι]
 
-
 class HasAdjDiff (f : X → Y) : Prop where
   isSmooth : IsSmooth f
   hasAdjDiff : ∀ x, HasAdjoint $ ∂ f x

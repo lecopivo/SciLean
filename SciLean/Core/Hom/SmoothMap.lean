@@ -26,8 +26,8 @@ namespace SciLean
 
   instance : Neg (X⟿Y) := ⟨λ f   => ⟨-f.1, by have hf := f.2; infer_instance⟩⟩
   instance : Add (X⟿Y) := ⟨λ f g => ⟨f.1 + g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
-  instance : Sub (X⟿Y) := ⟨λ f g => ⟨f.1 + g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
-  instance : Mul (X⟿ℝ) := ⟨λ f g => ⟨f.1 + g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
+  instance : Sub (X⟿Y) := ⟨λ f g => ⟨f.1 - g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
+  instance : Mul (X⟿ℝ) := ⟨λ f g => ⟨f.1 * g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
   instance : HMul ℝ (X⟿Y) (X⟿Y) := ⟨λ r f => ⟨r * f.1, by have hf := f.2; infer_instance⟩⟩
   instance : HMul (X⟿ℝ) (X⟿Y) (X⟿Y) := ⟨λ g f => ⟨λ x => g.1 x * f.1 x, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
  
@@ -49,6 +49,13 @@ namespace SciLean
   -- instance : Coe (X⟿Y) (X→Y) := ⟨λ f => f.1⟩
   instance : CoeFun (X⟿Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
 
+
+  --- TODO: This should fail fast!!! but it does not :(
+  -- set_option synthInstance.maxHeartbeats 5000 in
+  -- example {X Y} [Vec X] [Vec Y] (f df : X ⟿ Y) : IsLin (∂ (λ (f : X ⟿ Y) => ∂ f.1) f df) := 
+  -- by
+  --   infer_instance
+
   --------------------------------------------------------------------
 
   instance (f : X ⟿ Y) : IsSmooth f.1 := f.2
@@ -67,16 +74,18 @@ namespace SciLean
 
   @[simp] 
   theorem SmoothMap.beta_reduce (f : X ⟿ Y) 
-      : (λ (x : X) ⟿ f x) = f := by simp
+      : (λ (x : X) ⟿ f x) = f := by simp done
 
-  @[simp]
-  theorem SmoothMap.mk.eval (f : X → Y) [IsSmooth f] (x : X) 
-    : (SmoothMap.mk f) x = f x := by simp
+  -- @[simp]
+  -- theorem SmoothMap.mk.eval (f : X → Y) [IsSmooth f] (x : X) 
+  --   : (SmoothMap.mk f) x = f x := by simp
+  -- The above theorem causes this example to fail with a very obscure error
+  -- example {X Y} [Vec Y] (r : ℝ) : (λ (f : X→Y) (x : X) => r * f x) = (λ (f : X→Y) => r * f) := by funext f x; simp; done
 
   @[simp]
   theorem SmoothMap.mk.arg_f.diff_simp {X Y} [Vec X] [Vec Y] 
     (f : X → Y) [IsSmooth f] 
-    : ∂ (SmoothMap.mk f).1 = ∂ f := by simp[SmoothMap.mk] done
+    : ∂ (SmoothMap.mk f).1 = ∂ f := by simp done
 
   @[simp]
   theorem SmoothMap.mk.arg_x.diff_simp {X Y Z} [Vec X] [Vec Y] [Vec Z]
@@ -144,3 +153,4 @@ namespace SciLean
   by 
     infer_instance
     -- apply instSemiHilbertSmoothMapToVecToSemiHilbertToHilbert (X:= ℝ) (Y:=Z) (ι := Unit)
+

@@ -15,20 +15,60 @@ variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 ------------------
 -- Differential --
 ------------------
--- @[irreducible] -- this does not work work as intended and I switched to `constant`
 noncomputable 
-def differential (f : X → Y) (x dx : X) : Y := 
+def differentialSpec (f : X → Y) (x dx : X) : Y := 
     match Classical.propDecidable (IsSmooth f) with
       | isTrue  h => sorry
-      | _ => (0 : Y)
+      /- For nondifferentiable function the value is not specified.
+         Maybe we could assign zero, similarly to division by zero.
+         With zero, `differential` might be semilinear in `f`.
+         This should be investigated! -/
+      | _ => Classical.choice (by infer_instance) 
+
+class Differential (Fun : Type) (Diff : outParam Type) where
+  differential : Fun → Diff
+
+@[defaultInstance]
+noncomputable
+instance : Differential (X → Y) (X → X → Y) where
+  differential := differentialSpec
+
+export Differential (differential)
 
 prefix:max "∂" => differential
+macro "∂" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂ λ $x => $f)
 
--- Potential notation
--- prefix:max "∂" => differential 
--- macro "∂/∂" noWs x:ident b:term : term => `(λ x₀ => ∂ (λ $x => $b) x₀ 1)
--- variable (f : ℝ → ℝ → ℝ) (x y : ℝ)
--- #check (∂/∂x f x y) x + (∂/∂y f x y) y
+class Derivative (Fun : Type) (Diff : outParam Type) where
+  derivative : Fun → Diff
+
+@[defaultInstance]
+noncomputable
+instance : Derivative (ℝ → X) (ℝ → X) where
+  derivative f := λ t => ∂ f t 1
+
+export Derivative (derivative)
+
+prefix:max "ⅆ" => derivative
+
+-- Notation 
+-- ⅆ s, f s         --> ⅆ λ s => f s
+-- ⅆ s : ℝ, f s     --> ⅆ λ s : ℝ => f s
+-- ⅆ s := t, f s    --> (ⅆ λ s => f s) t
+syntax diffBinderType  := ":" term
+syntax diffBinderValue := ":=" term
+syntax diffBinder := ident (diffBinderType <|> diffBinderValue)?
+syntax "ⅆ" diffBinder "," term:66 : term
+syntax "ⅆ" "(" diffBinder ")" "," term:66 : term
+macro_rules 
+| `(ⅆ $x:ident, $f) =>
+  `(ⅆ λ $x => $f)
+| `(ⅆ $x:ident : $type:term, $f) =>
+  `(ⅆ λ $x : $type => $f)
+| `(ⅆ $x:ident := $val:term, $f) =>
+  `((ⅆ λ $x => $f) $val)
+| `(ⅆ ($b:diffBinder), $f) =>
+  `(ⅆ $b, $f)
+
 
 -- -- Bad as an instance
 -- theorem linear_is_smooth (f : X → Y) [IsLin f] : IsSmooth f := sorry
@@ -57,7 +97,7 @@ theorem diff.arg_df.diff_simp (f : X → Y) [IsSmooth f] (x : X)
 
 
 theorem WTF_INVESTIGATE_THIS {X} {Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X)
-  : (∂ (∂ f x)) = (λ x' dx => ∂ f x' x') := by 
+  : (∂ (∂ f x)) = (λ x' _ => ∂ f x' x') := by 
   apply (diff_of_linear (λ dx => ∂ f x dx)) --- WTF??!!!!
   done
 
@@ -104,10 +144,12 @@ theorem diff_of_eval
 @[simp ↓ low, simp_diff low]
 theorem uncurry.arg_xy.diff_simp
   (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-  : ∂ (λ ((x,y) : (X×Y)) => f x y) = λ (x,y) (dx,dy) => ∂ f x dx y + ∂ (f x) y dy := sorry 
+  : ∂ (λ (xy : (X×Y)) => f xy.1 xy.2) = λ (x,y) (dx,dy) => ∂ f x dx y + ∂ (f x) y dy := sorry 
+
+  -- : ∂ (λ ((x,y) : (X×Y)) => f x y) = λ (x,y) (dx,dy) => ∂ f x dx y + ∂ (f x) y dy := sorry 
 
 @[simp ↓ low, simp_diff low]
 theorem uncurry.arg_xy.parm1.diff_simp
   (a : α)
   (f : X → Y → α → Z) [IsSmooth λ x y => f x y a] [∀ x, IsSmooth (λ y => f x y a)]
-  : ∂ (λ ((x,y) : (X×Y)) => f x y a) = λ (x,y) (dx,dy) => ∂ f x dx y a + ∂ (f x) y dy a := sorry
+  : ∂ (λ (xy : (X×Y)) => f xy.1 xy.2 a) = λ (x,y) (dx,dy) => ∂ f x dx y a + ∂ (f x) y dy a := sorry

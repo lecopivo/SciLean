@@ -4,14 +4,12 @@ open Lake DSL System
 package scilean 
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"@"c431c2aed56453ad362a7cf780ba6a6a48fcc916"
+  "https://github.com/leanprover-community/mathlib4.git"@"f16c2788554b9960de815ae1e3f25de8c722bde4"
 
 @[defaultTarget]
 lean_lib SciLean {
   roots := #[`SciLean]
 }
-
-
 
 script tests (args) do
   let cwd ← IO.currentDir
@@ -48,3 +46,5 @@ script tests (args) do
 
   return 0
 
+meta if get_config? env = some "dev" then -- dev is so not everyone has to build it
+require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "main"

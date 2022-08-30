@@ -15,7 +15,7 @@ argument f [SemiHilbert X]
   hasAdjoint  := sorry,
   adj_simp    := λ _ => f' by sorry,
   hasAdjDiff  := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := λ _ => df' by simp[adjDiff] done
+  adjDiff_simp := λ _ => df' by simp[adjointDifferential] done
 
 
 --- Sum simplifications ---

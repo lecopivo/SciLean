@@ -49,6 +49,7 @@ namespace SciLean
 
   end BasicInstances
 
+
   --------------------------------------------------------------------
 
   @[inline]
@@ -61,6 +62,7 @@ namespace SciLean
   --------------------------------------------------------------------
 
   instance (f : X ⊸ Y) : IsLin f.1 := f.2
+  instance (f : X ⊸ Y) : IsSmooth f.1 := linear_is_smooth f.1
 
   @[ext] 
   theorem LinMap.ext {X Y} [Vec X] [Vec Y] (f g : X ⊸ Y) : (∀ x, f x = g x) → f = g := sorry
@@ -97,15 +99,15 @@ namespace SciLean
 
    section differential_map_test
 
-    variable {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (A : X → Y) [IsLin A] (g : X ⟿ Y)
+    variable (f : X → Y) [IsSmooth f] (A : X → Y) [IsLin A] (g : X ⟿ Y)
 
     #check λ x ⊸ A x
     #check λ x dx ⟿ ∂ f x dx
     #check λ x ⟿ λ dx ⊸ ∂ f x dx
     #check λ x ⟿ λ dx ⊸ ∂ g.1 x dx
 
-  end differential_map_test
 
+  end differential_map_test
 
   --------------------------------------------------------------------
 
@@ -146,7 +148,42 @@ namespace SciLean
   example : IsLin (λ (a : X) (f : W → Y) (x : W) => L a (f x)) := by infer_instance
   example : IsLin (λ (f : W → Y) (a : X) (x : W) => L a (f x)) := by infer_instance
 
-
   example {α β X Z : Type} [Vec X]  [Vec Z]
     (L : X → β → Z) [IsLin L]
     : IsLin (λ (x : X) (f : α → β) (a : α) => L x (f a)) := by infer_instance
+
+
+  ----------------------------------------------------------------------------------------
+
+  noncomputable
+  instance : Differential (X ⟿ Y) (X ⟿ X ⊸ Y) where
+    differential := λ f => λ x ⟿ λ dx ⊸ ∂ f.1 x dx
+
+  class Compose (HomYZ HomXY : Type) (HomXZ : outParam Type) where
+    compose : HomYZ → HomXY → HomXZ 
+
+  instance {X Y Z : Type} : Compose (Y → Z) (X → Y) (X → Z) where
+    compose f g x := f (g x)
+
+  instance {X Y Z : Type} [Vec X] [Vec Y] [Vec Z] : Compose (Y ⟿ Z) (X ⟿ Y) (X ⟿ Z) where
+    compose f g := λ x ⟿ f (g x)
+
+  macro(priority := high) f:term "∘" g:term :term => `(Compose.compose $f $g)
+
+  @[simp]
+  theorem differential_normalize_on_smooth_map (f : X ⟿ Y) 
+    : (λ x ⟿ λ dx ⊸ ∂ f.1 x dx) = ∂ f := by simp[Differential.differential]; done
+
+  @[simp]
+  theorem differential_normalize_on_smooth_map_2 (f : X → Y) [IsSmooth f]
+    : ∂ (λ x ⟿ f x) = (λ x ⟿ λ dx ⊸ ∂ f x dx) := by simp[Differential.differential]; done
+
+
+  -- variable (f : Y ⟿ Z) (g : X ⟿ Y) (x : X) (A : X ⊸ Y) (y : Y)
+    -- : ∂ (f ∘ g) = 
+
+
+  -- #check λ x ⟿ A x
+  -- set_option trace.Meta.synthInstance true in
+  -- #check λ x ⟿ λ dx ⟿ ∂ f (g x) (g dx)
+  -- #check λ x ⟿ (λ dx ⊸ ∂ f.1 (g x) (∂ g.1 x dx))

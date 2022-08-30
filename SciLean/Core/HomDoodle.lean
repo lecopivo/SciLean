@@ -9,6 +9,8 @@ set_option synthInstance.maxSize 2048
 
 namespace SciLean
 
+
+
   namespace HomProps
   
     variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
@@ -36,6 +38,8 @@ namespace SciLean
     
 
   end HomProps
+
+
 
   --------------------------------------------------------------------
 
@@ -68,12 +72,13 @@ namespace SciLean
 
   -- end tests
 
-  variable {X Y Z ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] [SemiHilbert Z] [SemiHilbert W]
 
+  variable {X Y Z ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] [SemiHilbert Z] [SemiHilbert W]
 
   @[simp] 
   theorem elem_wise_comp_arg (A : X → Y → Z) [IsSmooth A] [∀ x, HasAdjoint (A x)] [∀ x, IsSmooth (A x)]
     : (λ (f : X ⟿ Y) => λ (x : X) ⟿ (A x) (f x))† = λ (f' : X⟿Z) => λ x ⟿ (A x)† (f' x) := sorry
+
 
   @[simp] 
   theorem elem_wise_comp_arg.parm1 (A : X → Y → α → Z) (a : α) [IsSmooth λ x y => A x y a] [∀ x, HasAdjoint (λ y => A x y a)] [∀ x, IsSmooth (λ y => A x y a)]
@@ -90,6 +95,7 @@ namespace SciLean
     (A : X → Z → α → W) [IsSmooth λ x z => A x z a] [∀ x, HasAdjoint (λ z => A x z a)] [∀ x, IsSmooth (λ z => A x z a)]
     (F : (X⟿Y) → X → Z) [IsSmooth F] [∀ f, IsSmooth (F f)] [HasAdjoint (λ f => λ x ⟿ F f x)]
     : (λ (f : X ⟿ Y) => λ (x : X) ⟿ (A x (F f x) a))† = λ (f' : X⟿W) => (λ f => λ x ⟿ F f x)† (λ x ⟿ (λ z => A x z a)† (f' x)) := sorry
+
 
 
   -- @[simp] 
@@ -141,9 +147,6 @@ namespace SciLean
   --     -- λ (f' : X⟿W) => (λ f => λ x ⟿ F f x)† (λ x ⟿ (A x)† (f' x)) 
   --   := sorry
 
-
-
-
   --- Divergence in the sense of differential forms
   --- (f : X⟿X⊸Y) is a smooth field of Y-valued 1-forms and divergence is then `*d* f` where `*` is Hodge star and `d` is De Rahm differential
   def flat {X} [Hilbert X] (x : X) : X⊸ℝ := λ y ⊸ ⟪x,y⟫
@@ -151,7 +154,7 @@ namespace SciLean
   noncomputable
   def sharp {X} [Hilbert X] (x : X⊸ℝ) : X := inverse flat x
 
-  theorem sharp.by_basis {X} [Enumtype ι] [FinVec X ι] (x : X⊸ℝ) : sharp x = (∑ i, (x.1 (𝔼 i)) * (𝔼 i : X))  := sorry
+  theorem sharp.by_basis {X} [Enumtype ι] [FinVec X ι] (x : X⊸ℝ) : sharp x = (∑ i, (x.1 (𝔼 i)) * (𝔼 i : X)) := sorry
 
   noncomputable
   abbrev divergence {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] (f : X⟿X⊸Y) : X⟿Y :=
@@ -173,6 +176,8 @@ namespace SciLean
       = 
       (λ (f' : X ⟿ Y) => λ (x : X) ⟿ - ∂ f'.1 x v) := sorry
 
+
+
   -- set_option trace.Meta.synthInstance true in
   example (A : X → Y → Z) [IsSmooth A] [∀ x, HasAdjoint (A x)] [∀ x, IsSmooth (A x)] (f : X → Z) [IsSmooth f]
     : IsSmooth λ x => (A x)† (f x) := by infer_instance
@@ -181,7 +186,8 @@ namespace SciLean
   -- set_option trace.Meta.Tactic.simp.discharge true in
   example (r : ℝ) : (λ (f : X ⟿ Y) => λ x ⟿ r * f x)† = λ (f' : X⟿Y) =>  (r * f') := by funext f'; ext x; simp[HMul.hMul] done
 
-  example (r : ℝ) : (λ (f : X→Y) (x : X) => r * f x) = (λ (f : X→Y) => r * f) := by simp; funext f x; simp
+
+  example (r : ℝ) : (λ (f : X→Y) (x : X) => r * f x) = (λ (f : X→Y) => r * f) := by funext f x; simp; done
 
   example (g : X⟿ℝ)
     : (λ (f : X⟿Y) => λ x ⟿ g x * f x)† = λ (f' : X⟿Y) => (λ x ⟿ g x * f' x) := by simp
@@ -203,11 +209,7 @@ namespace SciLean
     : (r * A) x = r * A x := by simp[HMul.hMul] done
 
   @[simp]
-  theorem LinMap.mk.eval  {X Y} [Vec X] [Vec Y] (f : X → Y) [IsLin f] (x : X) 
-    : PSigma.fst (LinMap.mk f) x = f x := sorry
-
-  @[simp]
-  theorem lin_map_diff_apply {X Y Z} [Vec X] [Vec Y] [Vec Z] 
+  theorem lin_map_diff_apply_simp {X Y Z} [Vec X] [Vec Y] [Vec Z] 
     (f : X → Y → Z) [IsSmooth f] [∀ x, IsLin (f x)] (x dx : X) (y : Y)
     : ∂ (λ x => λ y ⊸ f x y) x dx y = ∂ (λ x => f x y) x dx := sorry
 
@@ -215,6 +217,10 @@ namespace SciLean
   -- theorem lin_map_adj_apply {X Y Z} [Vec X] [Vec Y] [Vec Z] 
   --   (f : X → Y → Z) [IsSmooth f] [∀ x, IsLin (f x)] (x dx : X) (y : Y)
   --   : ∂ (λ x => λ y ⊸ f x y) x dx y = ∂ (λ x => f x y) x dx := sorry
+
+  variable (f g : X ⟿ Y) 
+
+  #check λ x ⟿ f x + g x
 
 
   -- set_option trace.Meta.Tactic.simp.discharge true in
@@ -224,7 +230,8 @@ namespace SciLean
       =
       λ f' => λ (x : X) ⟿ - (∑ (i : ι), (∂ (λ x ⟿ (f' x * g x)).1 x (𝔼 i)) (𝔼 i)) := 
   by 
-    simp; done
+    sorry
+    -- simp; done
 
   set_option trace.Meta.Tactic.simp.rewrite true in
   example {Y} [Hilbert Y] (g : X⟿Y)
@@ -287,6 +294,7 @@ namespace SciLean
         let b := λ x ⟿ (Ff' x).1 x
         λ x ⟿ a x + b x 
     := sorry
+
 
   instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : HasAdjoint f := sorry
   instance {X Y} [Vec X] [Vec Y] (f : X → Y) : IsSmooth f := sorry

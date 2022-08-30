@@ -34,7 +34,7 @@ instance getElem.arg_f.hasAdjoint [SemiHilbert Y] (x : X)
 instance getElem.arg_f.hasAdjDiff [SemiHilbert Y] (x : X)
   : HasAdjDiff (λ (f : T) => getElem f x True.intro) := by constructor; infer_instance; simp; infer_instance done
 @[simp ↓] theorem getElem.arg_f.adjDiff_simp [SemiHilbert Y] (x : X)
-  : ∂† (λ (f : T) => f[x]) = λ _ df' => setElem (0 : T) x df' := by simp[adjDiff]; done
+  : ∂† (λ (f : T) => f[x]) = λ _ df' => setElem (0 : T) x df' := by simp[adjointDifferential]; done
 
 
 -- This unfortunatelly does not solve automatically :( the unification fails
@@ -56,22 +56,24 @@ by
 function_properties setElem [Vec Y] (f : T) (x : X) (y : Y) : T
 argument f 
   isSmooth := sorry, 
-  diff_simp := setElem df x 0 by sorry
+  diff_simp := setElem df x 0 by sorry,
+  fwdDiff_simp by (enter [f]; simp [SciLean.fwdDiff])
 argument y
   isSmooth := sorry,
-  diff_simp := setElem 0 x dy by sorry
+  diff_simp := setElem 0 x dy by sorry,
+  fwdDiff by (enter[x]; simp [SciLean.fwdDiff])
 
 function_properties setElem [SemiHilbert Y] (f : T) (x : X) (y : Y) : T
 argument f 
   hasAdjoint [Fact (y=0)] := sorry,
   adj_simp [Fact (y=0)] := setElem f' x 0 by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := setElem df' x 0 by simp[adjDiff]; unfold hold; simp done
+  adjDiff_simp := setElem df' x 0 by simp[adjointDifferential]; unfold hold; simp done
 argument y
   hasAdjoint [Fact (f=0)] := sorry,
   adj_simp [Fact (f=0)] := y'[x] by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dy'[x] by simp[adjDiff]; done
+  adjDiff_simp := dy'[x] by simp[adjointDifferential]; done
 
 ---
 
@@ -91,6 +93,13 @@ instance intro.arg_f.isSmooth [Vec Y]
 theorem intro.arg_f.diff_simp [Vec Y] 
   : (∂ λ (f : X → Y) => (intro T f : T)) = λ f df => intro T df := diff_of_linear _
 
+@[simp ↓]
+theorem intro.arg_f.fwdDiff_simp [Vec Y] 
+  : (fwdDiff λ (f : X → Y) => (intro T f : T)) 
+    = 
+    λ f => (intro T f, λ df => intro T df) 
+  := fwdDiff_of_linear _
+
 instance intro.arg_f.hasAdjoint [SemiHilbert Y] 
   : HasAdjoint λ (f : X → Y) => (intro T f : T) := sorry
 
@@ -106,7 +115,7 @@ by
 
 @[simp ↓] 
 theorem intro.arg_f.adjDiff_simp [SemiHilbert Y] 
-  : (∂† λ (f : X → Y) => (intro T f : T)) = λ f df' x => df'[x] := by simp[adjDiff] done
+  : (∂† λ (f : X → Y) => (intro T f : T)) = λ f df' x => df'[x] := by simp[adjointDifferential] done
 
 ---
 

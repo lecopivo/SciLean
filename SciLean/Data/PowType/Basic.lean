@@ -28,6 +28,10 @@ macro_rules
   else 
     `(Unit)
 
+-- Allow notation like `A[x,y]` instead of `A[(x,y)]`
+macro A:term  noWs "[" id1:term "," id2:term "]" : term => `($A[($id1, $id2)])
+macro A:term  noWs "[" id1:term "," id2:term "," id3:term "]" : term => `($A[($id1, $id2, $id3)])
+
 namespace PowTypeCarrier
 
   variable {X I} {T : outParam Type} [Enumtype I] [PowType T I X] [Inhabited X]

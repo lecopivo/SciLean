@@ -3,6 +3,17 @@ import SciLean.Data.FunType.Basic
 namespace SciLean 
 namespace FunType
 
+  -- set_option trace.Meta.synthInstance true in
+  -- set_option synthInstance.maxHeartbeats 5000 in
+  -- example (x : ℝ) : IsSmooth fun (f : ℝ⟿ℝ) => ∂ f x := by infer_instance
+
+  -- #check  @SciLean.differential
+
+  -- set_option trace.Meta.synthInstance true in
+  -- example {X} [Vec X] : IsSmooth fun (x : X) => (SciLean.differential : (X → X) → X → X → X) := by infer_instance
+  -- -- SciLean.LinMap.mk.arg_x.isSmooth
+  -- example : ∀ (x : { f : ℝ → ℝ // SciLean.IsLin f }), IsSmooth fun (f : ℝ⟿ℝ) => x.val := by infer_instance
+
 variable (T X Y : Type) [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] 
 
 instance (priority := low) [AddSemigroup Y]  : AddSemigroup T  := AddSemigroup.mk sorry

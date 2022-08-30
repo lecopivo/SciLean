@@ -64,7 +64,7 @@ variable (G : X × Y → Z) [IsSmooth G]
 variable (x dx : X) (y dy : Y) (z dz : Z)
 
 example : ∂ (λ x => f (g (f1 x))) x dx = ∂ f (g (f1 x)) (∂ g (f1 x) (∂ f1 x dx)) := by diff_simp done
-example : ∂ (λ x => x + x) x dx = dx + dx := by diff_simp done
+example : ∂ (λ x : X => x + x) x dx = dx + dx := by diff_simp done
 
 example : ∂ (λ (x : X) => F x (g x)) x dx = ∂ F x dx (g x) + ∂ (F x) (g x) (∂ g x dx) := by diff_simp  done
 example : ∂ (λ (x : X) => f3 (F x (g x))) x dx = ∂ f3 (F x (g x)) (∂ F x dx (g x) + ∂ (F x) (g x) (∂ g x dx)) := by diff_simp done

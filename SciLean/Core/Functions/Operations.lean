@@ -17,7 +17,7 @@ argument x [SemiHilbert X]
   hasAdjoint := sorry,
   adj_simp   := - x' by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := - dx' by simp[adjDiff] done
+  adjDiff_simp := - dx' by simp[adjointDifferential] done
 argument x [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := - x' by sorry
@@ -34,7 +34,7 @@ argument x [Hilbert X]
   hasAdjoint := sorry,
   adj_simp   := ⟪x', y⟫ by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := ⟪dx', y⟫ by simp[adjDiff]; unfold hold; simp done
+  adjDiff_simp := ⟪dx', y⟫ by simp[adjointDifferential]; unfold hold; simp done
 
 argument y [Vec X]
   isLin      := sorry,
@@ -43,7 +43,7 @@ argument y [SemiHilbert X]
   hasAdjoint := sorry,
   adj_simp   := x * y' by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := x * dy' by simp[adjDiff] done
+  adjDiff_simp := x * dy' by simp[adjointDifferential] done
 argument y [Vec X] [Nonempty X] [Fact (x ≠ 0)]
   isInv    := sorry,
   inv_simp := 1/x * y' by sorry
@@ -79,7 +79,7 @@ argument x
   hasAdjoint := sorry,
   adj_simp := x' / y by sorry,
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' / y by simp[adjDiff]; unfold hold; simp done
+  adjDiff_simp := dx' / y by simp[adjointDifferential]; unfold hold; simp done
 
 --- We can't say much in `y as we do not have `IsSmoothAt
 
@@ -93,7 +93,7 @@ argument x [Vec X]
   diff_simp := dx by sorry
 argument x [SemiHilbert X]
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' by simp[adjDiff]; unfold hold; simp done
+  adjDiff_simp := dx' by simp[adjointDifferential]; unfold hold; simp done
 argument x [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x' - y by sorry
@@ -103,7 +103,7 @@ argument y [Vec X]
   diff_simp := dy by sorry
 argument y [SemiHilbert X]
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dy' by simp[adjDiff] done
+  adjDiff_simp := dy' by simp[adjointDifferential] done
 argument y [AddGroup X] [Nonempty X]
   isInv    := sorry,
   inv_simp := y' - x by sorry
@@ -133,7 +133,7 @@ argument x [Vec X]
   diff_simp := dx by sorry
 argument x [SemiHilbert X]
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' by simp[adjDiff]; unfold hold; simp done
+  adjDiff_simp := dx' by simp[adjointDifferential]; unfold hold; simp done
 argument x [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x' + y by sorry
@@ -143,7 +143,7 @@ argument y [Vec X]
   diff_simp := - dy by sorry
 argument y [SemiHilbert X]
   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := - dy' by simp[adjDiff] done
+  adjDiff_simp := - dy' by simp[adjointDifferential] done
 argument y [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x - y' by sorry
@@ -174,14 +174,14 @@ argument x
   hasAdjoint   := sorry,
   adj_simp     := x' * y by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' * y by simp[adjDiff]; unfold hold; simp done
+  adjDiff_simp := dx' * y by simp[adjointDifferential]; unfold hold; simp done
 argument y
   isLin        := sorry,
   isSmooth, diff_simp, fwdDiff_simp,
   hasAdjoint   := sorry,
   adj_simp     := y' * x by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dy' * x by simp[adjDiff]; unfold hold; simp done
+  adjDiff_simp := dy' * x by simp[adjointDifferential]; unfold hold; simp done
 
 @[simp, simp_diff]
 theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[SemiInner.semiInner] done

@@ -74,6 +74,16 @@ namespace FunType
 
   attribute [simp] HasIntro.toFun_intro
 
+  -- This should be improved such that we can specify the type of arguments
+  -- This clashes with typeclass arguments, but who in their right mind
+  -- starts a lambda arguments with a typeclass?
+  syntax (name:=hihi) "λ" "[" Lean.Parser.ident,+ "]" " => " term : term
+
+  macro_rules (kind := hihi)
+  | `(λ [ $id1:ident ] => $b:term) => `(FunType.intro _ λ $id1 => $b)
+  | `(λ [ $id1:ident, $id2:ident ] => $b:term) => `(FunType.intro _ λ ($id1, $id2) => $b)
+  | `(λ [ $id1:ident, $id2:ident, $id3:ident ] => $b:term) => `(FunType.intro _ λ ($id1, $id2, $id3) => $b)
+
   unsafe def modifyUnsafe {T X Y} [FunType T X Y] [HasSet T]
     (f : T) (x : X) (g : Y → Y) : T := 
     Id.run do

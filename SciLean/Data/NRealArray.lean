@@ -46,16 +46,16 @@ namespace NRealArray
     toFun_set_eq  := sorry
     toFun_set_neq := sorry
 
-  instance : HasIntro (NRealArray n) where
-    intro f := intro f
+  -- instance : HasIntro (NRealArray n) where
+  --   intro f := intro f
 
-    toFun_intro := sorry
+  --   toFun_intro := sorry
 
   -- TODO: This can can a faster implementation using `Iterable.next`
+  @[defaultInstance]
   instance [Enumtype ι] : HasIntro (NRealArray (numOf ι)) where
     intro f := intro (λ i => f (fromFin i))
 
     toFun_intro := sorry
 
 end NRealArray
-

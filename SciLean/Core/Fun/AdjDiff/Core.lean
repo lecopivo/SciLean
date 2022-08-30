@@ -10,13 +10,50 @@ variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι : Type} [Enumtype ι]
 
+-- noncomputable 
+-- def adjDiff
+--   (f : X → Y) (x : X) : Y → X := (∂ f x)†
 
-noncomputable 
-def adjDiff
-  (f : X → Y) (x : X) : Y → X := (∂ f x)†
+class AdjointDifferential (Fun : Type) (Diff : outParam Type) where
+  adjointDifferential : Fun → Diff
 
-prefix:max "∂†" => adjDiff
-macro:max "∇" f:term:max : term => `(λ x => ∂† $f x (1:ℝ))
+export AdjointDifferential (adjointDifferential)
+
+@[defaultInstance]
+noncomputable
+instance : AdjointDifferential (X → Y) (X → Y → X) where
+  adjointDifferential f x := (∂ f x)†
+
+prefix:max "∂†" => adjointDifferential
+macro "∂†" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂† λ $x => $f)
+
+class Gradient (Fun : Type) (Diff : outParam Type) where
+  gradient : Fun → Diff
+
+@[defaultInstance]
+noncomputable
+instance [One Y] : Gradient (X → Y) (X → X) where
+  gradient f := λ x => ∂† f x 1
+
+export Gradient (gradient)
+
+prefix:max "∇" => gradient
+
+-- Notation 
+-- ⅆ s, f s         --> ⅆ λ s => f s
+-- ⅆ s : ℝ, f s     --> ⅆ λ s : ℝ => f s
+-- ⅆ s := t, f s    --> (ⅆ λ s => f s) t
+syntax "∇" diffBinder "," term:66 : term
+syntax "∇" "(" diffBinder ")" "," term:66 : term
+macro_rules 
+| `(∇ $x:ident, $f) =>
+  `(∇ λ $x => $f)
+| `(∇ $x:ident : $type:term, $f) =>
+  `(∇ λ $x : $type => $f)
+| `(∇ $x:ident := $val:term, $f) =>
+  `((∇ λ $x => $f) $val)
+| `(∇ ($b:diffBinder), $f) =>
+  `(∇ $b, $f)
 
 instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (∂† f x) := sorry
 
@@ -25,15 +62,15 @@ instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (∂† f x) := sorry
 
 @[simp ↓]
 theorem id.arg_x.adjDiff_simp
-  : ∂† (λ x : X => x) = λ x dx => dx := by simp[adjDiff] done
+  : ∂† (λ x : X => x) = λ x dx => dx := by simp[adjointDifferential] done
 
 @[simp ↓]
 theorem const.arg_x.adjDiff_simp 
-  : ∂† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjDiff] done
+  : ∂† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjointDifferential] done
 
 @[simp ↓]
 theorem const.arg_y.adjDiff_simp (x : X)
-  : ∂† (λ (y : Y) => x) = (λ y dy' => (0 : Y)) := by simp[adjDiff] done
+  : ∂† (λ (y : Y) => x) = (λ y dy' => (0 : Y)) := by simp[adjointDifferential] done
 
 @[simp ↓ low-4]
 theorem swap.arg_y.adjDiff_simp
@@ -43,7 +80,7 @@ by
   have isf := λ i => (inst i).isSmooth
   have iaf := λ i => (inst i).hasAdjDiff
 
-  simp[adjDiff] done
+  simp[adjointDifferential] done
 
 @[simp ↓ low-3]
 theorem subst.arg_x.adjDiff_simp
@@ -71,7 +108,7 @@ by
 
   funext x dx';
   -- have adjAdd : ∀ {X} [SemiHilbert X], HasAdjoint fun yy : X×X => yy.fst + yy.snd := sorry
-  simp[adjDiff] --- bla bla bla
+  simp[adjointDifferential] --- bla bla bla
   admit
 
 

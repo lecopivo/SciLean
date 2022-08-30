@@ -11,8 +11,10 @@ open SciLean.Mathlib.Convenient
 
 class IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := (is_smooth : is_smooth f)
 
-
 -- Would be a bad instance!
+-- Maybe we can also have split to 
+--  1. `IsLin` for atomic linear function and
+--  2. `IsLinT` for transitiv closure 
 theorem linear_is_smooth (f : X → Y) [IsLin f] : IsSmooth f := sorry
 
 ------------------------------------------------------------------------------------
