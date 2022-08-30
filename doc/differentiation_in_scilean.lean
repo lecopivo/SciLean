@@ -19,7 +19,7 @@ symbolic differentiation is build on top of these two operators:
 
 2. Adjoint `†: (X → Y) → (Y → X)`
 
-The differential `∂` tells you how much does the function `f : X → Y`
+The differential `∂` tells us how much does the function `f : X → Y`
 changes in the direction `dx : X` at the point `x : X`. The usual 
 mathematical definition is:
 
@@ -115,11 +115,17 @@ Few more basic derivatives: of a constant, quadratic function, sine
 
  -/
 
-  #check (∂ λ x : ℝ => (1 : ℝ)) rewrite_by (simp; trace_state /- .unfold -/ )
+  #check (∂ λ x : ℝ => (1 : ℝ)) 
+    rewrite_by 
+    (simp; trace_state) /- .unfold -/
 
-  #check (∂ λ x : ℝ => x * x) rewrite_by (simp; trace_state /- .unfold -/ )
+  #check (∂ λ x : ℝ => x * x) 
+    rewrite_by 
+    (simp; trace_state) /- .unfold -/ 
 
-  #check (∂ λ x : ℝ => Math.sin x) rewrite_by (simp; trace_state /- .unfold -/ )
+  #check (∂ λ x : ℝ => Math.sin x) 
+    rewrite_by 
+    (simp; trace_state) /- .unfold -/ 
 
 
 /-!
@@ -156,7 +162,9 @@ Or as a symbolic computation
 
  -/
 
-  #check (∂ λ x => f (g x)) rewrite_by (simp; trace_state /- .unfold -/)
+  #check (∂ λ x => f (g x)) 
+    rewrite_by 
+    (simp; trace_state) /- .unfold -/
 
 
 /-!
@@ -167,7 +175,9 @@ Another common rule is the product rule
 
   variable (ϕ ψ : ℝ → ℝ) [IsSmooth ϕ] [IsSmooth ψ]
 
-  #check (∂ λ x => ϕ x * ψ x) rewrite_by (simp; trace_state /- .unfold -/)
+  #check (∂ λ x => ϕ x * ψ x) 
+    rewrite_by 
+    (simp; trace_state) /- .unfold -/
 
 /-!
 
@@ -321,8 +331,8 @@ A bit more complicated computation
 
   set_option trace.Meta.Tactic.simp.rewrite true in
   #check (∂ λ x : ℝ => x * Math.exp (x*x) + x) 
-           rewrite_by 
-           (simp; trace_state /- .unfold -/)
+    rewrite_by 
+    (simp; trace_state) /- .unfold -/
 
 /-!
 
@@ -360,7 +370,7 @@ by
 /-!
 
 Manually unfolding every definition can get tedious. To circumvent that, 
-you can anotate the definition of `square` to indicate that it is 
+we can anotate the definition of `square` to indicate that it is 
 differentiable.
 
  -/ 
@@ -371,7 +381,7 @@ argument x
 
 /-!
 
-(TODO: When using `def` with annotations, you **have** explicitely specify 
+(TODO: When using `def` with annotations, we **have to** explicitely specify 
 the return type. Remove this limitation or add a warrning when the
 return type is missing.)
 
@@ -566,7 +576,8 @@ The important result is that the gradient of squared norm `∥x∥²` is `2*x`
 
 
   #check (∇ (x : X), ∥x∥²) 
-           rewrite_by (simp[gradient,hold]; trace_state)  /- .unfold -/
+    rewrite_by 
+    (simp[gradient,hold]; trace_state)  /- .unfold -/
 
 /-!
 
@@ -578,8 +589,9 @@ Another fun result is that the gradient of `⟪A x, x⟫` is `(A† + A) x`
 
   variable (A : X → X) [HasAdjDiff A] [IsLin A]
 
-  #check (∇ x, ⟪A x, x⟫) rewrite_by 
-           (simp[gradient,hold,adjointDifferential]; trace_state) /- .unfold -/
+  #check (∇ x, ⟪A x, x⟫) 
+    rewrite_by 
+    (simp[gradient,hold,adjointDifferential]; trace_state) /- .unfold -/
 
 /-!
 
