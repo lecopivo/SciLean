@@ -36,25 +36,22 @@ example {X} [Vec X] : HMul ℝ X X := by infer_instance
 -- instance (priority := low) [AddCommGroup Y] [DistribMulAction ℝ Y] : Vec T := Vec.mk
 instance (priority := low) [Vec Y] : Vec T := Vec.mk
 
-instance (priority := low) [SemiInner Y] : SemiInner T :=
-{
-  Domain := 𝓓 Y
-  domain := default
-  semiInner := λ f g Ω => ∑ x, ⟪f[x], g[x]⟫[Ω]
-  testFunction := λ _ _ => True
-}
+instance (priority := low) [Inner Y] : Inner T where
+  inner := λ f g => ∑ x, ⟪f[x], g[x]⟫
 
-instance (priority := low) [SemiHilbert Y] : SemiHilbert T :=
-{
-  semi_inner_add := sorry
-  semi_inner_mul := sorry
-  semi_inner_sym := sorry
-  semi_inner_pos := sorry
-  semi_inner_ext := sorry
-  semi_inner_gtr := sorry
-}
+instance (priority := low) (T X Y : Type) [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] [Vec Y]
+  [TestFunctions Y] : TestFunctions T where
+  TestFun f := ∀ x, TestFun (f[x])
+  is_lin_subspace := sorry
 
-instance (priority := low) [Hilbert Y] : Hilbert T :=
-{
-  uniqueDomain := sorry
-}
+instance (priority := low) (T X Y : Type) [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] 
+  [SemiHilbert Y] : SemiHilbert T where
+  inner_add := sorry
+  inner_mul := sorry
+  inner_sym := sorry
+  inner_pos := sorry
+  inner_ext := sorry
+
+instance (priority := low) (T X Y : Type) [FunType T X Y] [HasSet T] [HasIntro T] [Enumtype X] 
+  [Hilbert Y] : Hilbert T where
+  all_are_test := sorry

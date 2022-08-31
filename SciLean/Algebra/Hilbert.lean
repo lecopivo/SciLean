@@ -4,145 +4,104 @@ import SciLean.Algebra.VectorSpace
 
 namespace SciLean
 
-class SemiInner (X : Type u) where  
-  Domain : Type
-  domain : Domain -- some arbitrary domain
-  semiInner : X → X → Domain → ℝ
-  testFunction : Domain → X → Prop
+class Inner (X : Type u) where  
+  inner : X → X → ℝ
 
--- attribute [reducible] SemiInner.Domain
+namespace Inner
 
-class UniqueDomain (X : Type u) [SemiInner X] where
-  uniqueDomain : ∃ f : SemiInner.Domain X → Unit, Function.bijective f
+  notation "⟪" x ", " y "⟫" => Inner.inner x y
 
-namespace SemiInner
-
-  prefix:max "𝓓 " => Domain
-  instance {X} [SemiInner X] : Inhabited (𝓓 X) := ⟨domain⟩
-  instance {X} [SemiInner X] : LT (𝓓 X) := ⟨λ Ω Ω' => ∀ (x : X), testFunction Ω x → testFunction Ω' x⟩
-
-  def uniqueDomain {X : Type u} [SemiInner X] [UniqueDomain X] : 𝓓 X := default
-
-  notation "⟪" x ", " y "⟫" => semiInner x y uniqueDomain
-  notation "⟪" x ", " y "⟫[" Ω "]" => (semiInner x y) Ω
-
-  def normSqr {X} [SemiInner X] [UniqueDomain X] (x : X) := ⟪x, x⟫
-  def norm {X} [SemiInner X] [UniqueDomain X] (x : X) := Math.sqrt (normSqr x)
+  def normSqr {X} [Inner X] (x : X) := ⟪x, x⟫
+  def norm {X} [Inner X] (x : X) := Math.sqrt (normSqr x)
 
   notation "∥" x "∥²" => normSqr x
   notation "∥" x "∥" => norm x
 
-  -- Reals
-  -- @[reducible]
-  instance : SemiInner ℝ :=
-  {
-    Domain := Unit
-    domain := ()
-    semiInner := λ x y _ => x * y
-    testFunction := λ _ _ => True
-  }
+end Inner
 
-  -- Product type
-  -- @[reducible]
-  instance (X Y) [SemiInner X] [SemiInner Y]
-    : SemiInner (X × Y) :=
-  { 
-    Domain := Domain X × Domain Y
-    domain := (domain, domain)
-    semiInner     := λ (x,y) (x',y') (Ω, Ω') => ⟪x,x'⟫[Ω] + ⟪y,y'⟫[Ω']
-    testFunction  := λ (Ω,Ω') (x,y) => testFunction Ω x ∧ testFunction Ω' y
-  }
+structure VecSubspace {X} [Vec X] (V : X → Prop) : Prop where
+  zero : V 0
+  add : ∀ x y, V x → V y → V (x + y)
+  smul : ∀ (s : ℝ) x, V x → V (s * x)
 
-  -- Pi type
-  -- @[reducible]
-  instance (X) [SemiInner X] (ι) [Enumtype ι] : SemiInner (ι → X) :=
-  {
-    Domain := ι → Domain X
-    domain := λ _ => domain
-    semiInner    := λ f g Ω => ∑ i, ⟪f i, g i⟫[Ω i]
-    testFunction := λ Ω f => ∀ i, testFunction (Ω i) (f i)
-  }
+class TestFunctions (X : Type u) [Vec X] where
+  TestFun : X → Prop
+  is_lin_subspace : VecSubspace TestFun
 
-  instance (X) [SemiInner X] [Zero X] : SemiInner (ℤ → X) :=
-  {
-    Domain := (ℤ × ℤ) × (𝓓 X)
-    domain := ((0, 1), default)
-    semiInner    := λ f g ((a, b), Ω) => ∑ i : Fin (b - a).toNat, ⟪f (a + i), g (a + i)⟫[Ω]
-    testFunction := λ ((a, b), Ω) f => ∀ i : ℤ, 
-      if (i ≥ a) ∧ (i < b) 
-      then testFunction Ω (f i)
-      else (f i) = 0
-  }
+export TestFunctions (TestFun)
 
-end SemiInner
+open Inner in
+class SemiHilbert (X) extends Vec X, Inner X, TestFunctions X where
+  inner_add : ∀ (x y z : X), (TestFun x ∧ TestFun y) ∨ TestFun z → 
+    ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫
+  inner_mul : ∀ (x y : X) (r : ℝ), TestFun x ∨ TestFun y →
+    ⟪r*x, y⟫ = r*⟪x, y⟫
+  inner_sym : ∀ (x y : X), TestFun x ∨ TestFun y →
+    ⟪x, y⟫ = ⟪y, x⟫
+  inner_pos : ∀ (x : X), TestFun x →
+    ⟪x, x⟫ ≥ (0 : ℝ)
+  inner_ext : ∀ (x : X),
+    ((x = 0) ↔ (∀ (ϕ : X), TestFun ϕ → ⟪x, ϕ⟫ = 0))
 
--- (R : outParam (Type v)) (D : outParam (Type w)) (e : outParam (R → Domain → ℝ))
--- (R : Type u) (D : Type v) (e : R → Domain → ℝ)
-open SemiInner in
-class SemiHilbert (X) extends Vec X, SemiInner X where
-  semi_inner_add : ∀ (x y z : X) Ω,      ⟪x + y, z⟫[Ω] = ⟪x, z⟫[Ω] + ⟪y, z⟫[Ω]
-  semi_inner_mul : ∀ (x y : X) (r : ℝ) Ω,  ⟪r*x, y⟫[Ω] = r*⟪x, y⟫[Ω]
-  semi_inner_sym : ∀ (x y : X) Ω,            ⟪x, y⟫[Ω] = ⟪y, x⟫[Ω]
-  semi_inner_pos : ∀ (x : X) Ω,            (⟪x, x⟫[Ω]) ≥ (0 : ℝ)
-  semi_inner_ext : ∀ (x : X),
-    ((x = 0) ↔ (∀ Ω (ϕ : X) (h : testFunction Ω ϕ), ⟪x, ϕ⟫[Ω] = 0))
-  semi_inner_gtr : ∀ (x ϕ : X) (Ω Ω' : 𝓓 X), 
-    testFunction Ω ϕ → Ω < Ω' → ⟪x, ϕ⟫[Ω'] = ⟪x, ϕ⟫[Ω]
-  -- Maybe that {ϕ // testFunction Ω ϕ} form a vector space
-
-class Hilbert (X) extends SemiHilbert X, UniqueDomain X
+class Hilbert (X) extends SemiHilbert X where
+  all_are_test : ∀ x : X, TestFun x
                                      
-namespace SemiHilbert 
+--- Reals
 
-  open SemiInner
+instance : Inner ℝ where
+  inner x y := x * y 
 
-  instance : SemiHilbert ℝ := 
-  {
-    semi_inner_add := sorry
-    semi_inner_mul := sorry
-    semi_inner_sym := sorry
-    semi_inner_pos := sorry
-    semi_inner_ext := sorry
-    semi_inner_gtr := sorry
-  }
+instance : TestFunctions ℝ where
+  TestFun x := True
+  is_lin_subspace := sorry
 
-  instance : Hilbert ℝ :=
-  {
-    uniqueDomain := sorry
-  }
+instance : SemiHilbert ℝ where
+  inner_add := sorry
+  inner_mul := sorry
+  inner_sym := sorry
+  inner_pos := sorry
+  inner_ext := sorry
 
-  instance (X Y) [SemiHilbert X] [SemiHilbert Y] 
-    : SemiHilbert (X × Y) := 
-  {
-    semi_inner_add := sorry
-    semi_inner_mul := sorry
-    semi_inner_sym := sorry
-    semi_inner_pos := sorry
-    semi_inner_ext := sorry
-    semi_inner_gtr := sorry
-  }
+instance : Hilbert ℝ where
+  all_are_test := sorry
 
-  instance (X Y) [Hilbert X] [Hilbert Y] 
-    : Hilbert (X × Y) := 
-  {
-    uniqueDomain := sorry
-  }
+-- Product space
 
-  instance (X) [SemiHilbert X] (ι) [Enumtype ι] 
-    : SemiHilbert (ι → X) := 
-  {
-    semi_inner_add := sorry
-    semi_inner_mul := sorry
-    semi_inner_sym := sorry
-    semi_inner_pos := sorry
-    semi_inner_ext := sorry
-    semi_inner_gtr := sorry
-  }
+instance (X Y) [Inner X] [Inner Y] : Inner (X × Y) where
+  inner := λ (x,y) (x',y') => ⟪x,x'⟫ + ⟪y,y'⟫
 
-  instance (X) [Hilbert X] (ι) [Enumtype ι] 
-    : Hilbert (ι → X) := 
-  {
-    uniqueDomain := sorry
-  }
+instance (X Y) [Vec X] [Vec Y] [TestFunctions X] [TestFunctions Y] : TestFunctions (X×Y) where
+  TestFun xy := TestFun xy.1 ∧ TestFun xy.2
+  is_lin_subspace := sorry
 
-end SemiHilbert
+instance (X Y) [SemiHilbert X] [SemiHilbert Y] : SemiHilbert (X × Y) where
+  inner_add := sorry
+  inner_mul := sorry
+  inner_sym := sorry
+  inner_pos := sorry
+  inner_ext := sorry
+
+instance (X Y) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) where
+  all_are_test := sorry
+
+-- Function type
+
+instance (X) [Inner X] (ι) [Enumtype ι] : Inner (ι → X) where
+  inner := λ f g => ∑ i, ⟪f i, g i⟫
+
+instance (X) [Vec X] [TestFunctions X] (ι) [Enumtype ι] : TestFunctions (ι → X) where
+  TestFun f := ∀ i, TestFun (f i)
+  is_lin_subspace := sorry
+
+instance (X) [SemiHilbert X] (ι) [Enumtype ι] 
+  : SemiHilbert (ι → X) where
+  inner_add := sorry
+  inner_mul := sorry
+  inner_sym := sorry
+  inner_pos := sorry
+  inner_ext := sorry
+
+instance (X) [Hilbert X] (ι) [Enumtype ι] 
+  : Hilbert (ι → X) where
+  all_are_test := sorry
+

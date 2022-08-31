@@ -2,11 +2,15 @@ import SciLean.Algebra
 
 namespace SciLean
 
--- TODO: 
---   - define adjoint in distributional sense and 
---   - redefine SemiHilbert as space with test functions and pairng with them
-class HasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : Prop
-    -- has_dual : ∀ y, HasDual (λ x Ω => ⟪y, f x⟫[f‡ Ω])
+/-
+  Questions for the definition:
+    1. Should there be `TestFun ψ`? or just `TestFun ϕ` is sufficient?
+    2. Should we require that `f'` also preserves test functions?
+       Is it necessary for adjoint to be well defined? Or is it a consequence?
+  -/
+class HasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : Prop where
+  preserve_test_functions : ∀ x, TestFun x → TestFun (f x)
+  has_adjoint : ∃ f' : Y → X, ∀ (ϕ : X) (ψ : Y), (TestFun ϕ ∨ TestFun ψ) → ⟪f ϕ, ψ⟫ = ⟪ϕ, f' ψ⟫
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]

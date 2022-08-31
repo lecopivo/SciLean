@@ -167,7 +167,7 @@ instance HSub.hSub.arg_xy.hasAdjoint {X} [SemiHilbert X]
 -- Inner product --
 -------------------
 
-function_properties SemiInner.semiInner {X} [Hilbert X] (x y : X) (Ω : 𝓓 X) : ℝ
+function_properties Inner.inner {X} [Hilbert X] (x y : X) : ℝ
 argument x
   isLin        := sorry,
   isSmooth, diff_simp, fwdDiff_simp,
@@ -181,10 +181,10 @@ argument y
   hasAdjoint   := sorry,
   adj_simp     := y' * x by sorry,
   hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dy' * x by simp[adjointDifferential]; unfold hold; simp done
+  adjDiff_simp := dy' * x by simp[adjointDifferential]; done
 
 @[simp, simp_diff]
-theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[SemiInner.semiInner] done
+theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[Inner.inner] done
 
 -- @[simp, simp_diff]
 -- theorem SemiInner.semiInner.arg_xy.fwdDiff_simp  {X : Type} [Hilbert X] {α}
@@ -195,10 +195,10 @@ theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[
 -- Squared Norm --
 ------------------
 
-function_properties SemiInner.normSqr {X} [Hilbert X] (x : X) : ℝ
+function_properties Inner.normSqr {X} [Hilbert X] (x : X) : ℝ
 argument x
   isSmooth,
   diff_simp    := 2 * ⟪dx, x⟫ by simp[normSqr] admit,
   -- fwdDiff_simp := λ a => (∥x∥², 2 * ⟪dx a, x⟫) by simp[fwdDiff] done,
   hasAdjDiff,
-  adjDiff_simp := ((2:ℝ) * dx') * x by simp[normSqr]; unfold hold; simp; done
+  adjDiff_simp := ((2:ℝ) * dx') * x by simp[normSqr]; done 

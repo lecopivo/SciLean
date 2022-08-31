@@ -129,23 +129,20 @@ namespace SciLean
 
   --------------------------------------------------------------------
 
-  instance {X Y ι} [Enumtype ι] [FinVec X ι] [Vec Y] [SemiInner Y] : SemiInner (X ⟿ Y) :=
-  {
-    Domain := sorry
-    domain := sorry
-    semiInner := sorry
-    testFunction := sorry
-  }
+  instance {X Y ι} [Enumtype ι] [FinVec X ι] [Vec Y] [Inner Y] : Inner (X ⟿ Y) where
+    inner := sorry
 
-  instance {X Y} {ι : Type} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] : SemiHilbert (X ⟿ Y) :=
-  {
-    semi_inner_add := sorry
-    semi_inner_mul := sorry
-    semi_inner_sym := sorry
-    semi_inner_pos := sorry
-    semi_inner_ext := sorry
-    semi_inner_gtr := sorry
-  }
+  instance {X Y ι} [Enumtype ι] [FinVec X ι] [Vec Y] [TestFunctions Y] : TestFunctions (X ⟿ Y) where
+    TestFun := sorry -- compactly supported functions with values in test functions    
+    is_lin_subspace := sorry
+
+
+  instance {X Y} {ι : Type} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] : SemiHilbert (X ⟿ Y) where
+    inner_add := sorry
+    inner_mul := sorry
+    inner_sym := sorry
+    inner_pos := sorry
+    inner_ext := sorry
 
   variable {Z} [SemiHilbert Z]
 
