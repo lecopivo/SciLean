@@ -34,11 +34,7 @@ jobs:
       - name: Install Alectryon
         run: python3 -m pip install git+https://github.com/cpitclaudel/alectryon.git
       - name: Install LeanInk
-        run: |
-	  pwd
-	  git clone https://github.com/leanprover/LeanInk
-	  cd LeanInk
-	  pwd
+        run: git clone https://github.com/leanprover/LeanInk
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Pages
