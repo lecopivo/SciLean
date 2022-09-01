@@ -42,7 +42,9 @@ jobs:
           echo $GITHUB_WORKSPACE
           ls $GITHUB_WORKSPACE
           ls $GITHUB_WORKSPACE/doc
-      - name: Build with Doc-Gen4
+      - name: Build SciLean
+        run: lake build
+      - name: Build Doc
         run: lake -Kenv=dev build SciLean:docs
       - name: Content of build/doc
         run: ls $GITHUB_WORKSPACE/build/doc
