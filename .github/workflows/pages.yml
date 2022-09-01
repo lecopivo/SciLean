@@ -44,6 +44,8 @@ jobs:
           ls $GITHUB_WORKSPACE/doc
       - name: Build with Doc-Gen4
         run: lake -Kenv=dev build SciLean:docs
+      - name: Content of build/doc
+        run: ls $GITHUB_WORKSPACE/build/doc
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
@@ -56,6 +58,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
