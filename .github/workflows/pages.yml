@@ -35,12 +35,13 @@ jobs:
         uses: actions/checkout@v3
       - name: Setup Pages
         uses: actions/configure-pages@v2
-      - name: Build Documentation
+      - name: Print Few ENV Variables
         run: |
           echo "${{ github.workspace }}"
           echo "GITHUB_WORKSPACE"
           echo $GITHUB_WORKSPACE
-	  lake -Kdoc=on build SciLean:docs
+      - name: Build with Doc-Gen4
+	run: lake -Kdoc=on build SciLean:docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
