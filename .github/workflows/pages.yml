@@ -40,8 +40,6 @@ jobs:
           echo "${{ github.workspace }}"
           echo "GITHUB_WORKSPACE"
           echo $GITHUB_WORKSPACE
-      - name: Build with Doc-Gen4
-	run: lake -Kdoc=on build SciLean:docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
