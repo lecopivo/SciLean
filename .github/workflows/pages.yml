@@ -38,7 +38,6 @@ jobs:
       - name: Build Documentation
         run: |
           echo "${{ github.workspace }}"
-	  echo ${{ github.workspace }}
           echo "GITHUB_WORKSPACE"
           echo $GITHUB_WORKSPACE
 	  lake -Kdoc=on build SciLean:docs
