@@ -42,8 +42,8 @@ jobs:
           echo $GITHUB_WORKSPACE
           ls $GITHUB_WORKSPACE
           ls $GITHUB_WORKSPACE/doc
-      - name: Lake Help
-        run: lake --help
+      - name: Build with Doc-Gen4
+        run: lake -Kenv=dev build Test:docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
