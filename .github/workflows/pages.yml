@@ -40,6 +40,10 @@ jobs:
           echo "${{ github.workspace }}"
           echo "GITHUB_WORKSPACE"
           echo $GITHUB_WORKSPACE
+          ls $GITHUB_WORKSPACE
+          ls $GITHUB_WORKSPACE/doc
+      - name: Lake Help
+        run: lake --help
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
