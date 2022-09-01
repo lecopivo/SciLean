@@ -30,6 +30,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Build Documentation
+        run: |
+          echo "{{ github.workspace }}"
+	  echo ${{ github.workspace }}
+          echo "GITHUB_WORKSPACE"
+          echo $GITHUB_WORKSPACE
+	  lake -Kdoc=on build SciLean:docs
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
