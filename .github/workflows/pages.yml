@@ -43,7 +43,7 @@ jobs:
           ls $GITHUB_WORKSPACE
           ls $GITHUB_WORKSPACE/doc
       - name: Build with Doc-Gen4
-        run: lake -Kenv=dev build Test:docs
+        run: lake -Kenv=dev build SciLean:docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
