@@ -39,13 +39,13 @@ jobs:
         uses: actions/configure-pages@v2
       - name: Get LeanInk and Build LeanInk
         run: pushd $GITHUB_WORKSPACE/..; git clone https://github.com/leanprover/LeanInk.git; cd LeanInk; ls; cp $GITHUB_WORKSPACE/lean-toolchain lean-toolchain; lake build; pwd; ls build/bin; echo "$GITHUB_WORKSPACE/../LeanInk/build/bin"; ls $GITHUB_WORKSPACE/../LeanInk/build/bin; cat $GITHUB_PATH;echo "$GITHUB_WORKSPACE/../LeanInk/build/bin" >> $GITHUB_PATH; echo $GITHUB_PATH; cat $GITHUB_PATH; popd
-      - name: Direct LeanInk Help
-        run: $GITHUB_WORKSPACE/../LeanInk/build/bin/leanInk -h
+      # - name: Direct LeanInk Help
+      #   run: $GITHUB_WORKSPACE/../LeanInk/build/bin/leanInk -h
       - name: LeankInk Help
         run: leanInk -h
-      - name: ∂ Build SciLean
+      - name: ∂∫ Build SciLean
         run: lake build
-      - name: 📖 Build Doc 
+      - name: 📕 Build Doc 
         run: lake -Kenv=dev build SciLean:docs
 #      - name: Build Literate Lean
 #        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc/build $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
