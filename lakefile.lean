@@ -11,6 +11,13 @@ lean_lib SciLean {
   roots := #[`SciLean]
 }
 
+/-- 
+
+  Compiles all lean files 'test/*.lean
+    
+    lake script run tests
+
+ -/
 script tests (args) do
   let cwd ← IO.currentDir
   -- let testDir := cwd / "test"
@@ -46,8 +53,18 @@ script tests (args) do
 
   return 0
 
--- Builds a literate lean file and places it to build/doc/literate
--- If no files are supplied all *.lean files in doc/literate are build 
+/--
+
+  Compiles literate lean file 'doc/literate/harmonic_oscillator.lean' 
+and places the result to 'build/doc/literate'
+
+    lake script run literate doc/literate/harmonic_oscillator.lean
+
+  Compiles all literate lean files 'doc/literate/*.lean' and places 
+the result to 'build/doc/literate'
+
+    lake scipt run literate
+ -/
 script literate (args) do
   let cwd ← IO.currentDir
 

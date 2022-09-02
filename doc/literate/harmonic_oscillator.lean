@@ -9,9 +9,9 @@ open SciLean
 
 /-! 
 
-=============================
+==============================
 Harmonic Oscillator in SciLean
-=============================
+==============================
 
 Let's demonstrate basic capabilities of SciLean on the simulation of 
 harmonic oscillator. 
@@ -87,7 +87,7 @@ Thus the function `f` that needs to be provided to `ode_solve` is
 
 -/
 
-#check λ m k (x,p) => (∇ (p':=p), H m k x p', ∇ (x':=x), H m k x' p) /- .unfold -/
+#check λ m k (x,p) => (∇ (p':=p), H m k x p', - ∇ (x':=x), H m k x' p) /- .unfold -/
 
 
 /-!
@@ -106,8 +106,8 @@ For harmonic oscillator this is
 -- set_option trace.Meta.Tactic.simp.rewrite true in
 def solver (m k : ℝ) (steps : Nat)
   : Impl (ode_solve 
-           λ (x,p) => ( ∇ (p':=p), H m k x p', 
-                       -∇ (x':=x), H m k x' p)) :=
+           λ (x,p) => (  ∇ (p':=p), H m k x p', 
+                       - ∇ (x':=x), H m k x' p)) :=
 by
   -- unfold Hamiltonian definition
   simp [H];
