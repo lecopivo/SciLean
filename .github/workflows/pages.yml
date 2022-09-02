@@ -35,11 +35,11 @@ jobs:
         run: python3 -m pip install git+https://github.com/cpitclaudel/alectryon.git
       - name: Install LeanInk
         run: |
+	  pushd $HOME
 	  git clone https://github.com/leanprover/LeanInk
-	  ls
-          ls ..
 	  cd LeanInk
 	  lake build
+	  popd 
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Pages
