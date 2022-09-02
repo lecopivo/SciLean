@@ -51,7 +51,6 @@ jobs:
       - name: Build LeanInk
       	run: |
 	  cd lean_packages/leanInk
-	  cp $GITHUB_WORKSPACE/lean-toolchain lean-toolchain
 	  lake build
 	  echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH
       - name: Build Literate Lean
