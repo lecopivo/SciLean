@@ -57,8 +57,8 @@ jobs:
         run: lake build --dir $GITHUB_WORKSPACE/lean_packages/leanInk
       - name: Link LeanInk to Path
         run: echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH
-      - name: Build Literate Lean
-        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
+#      - name: Build Literate Lean
+#        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
       - name: Content of build/doc
         run: ls $GITHUB_WORKSPACE/build/doc
       - name: Upload artifact
