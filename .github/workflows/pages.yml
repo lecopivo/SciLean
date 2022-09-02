@@ -37,11 +37,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Setup Pages
         uses: actions/configure-pages@v2
-      - name: Install LeanInk
-        run: |
-	  git clone https://github.com/leanprover/LeanInk
-	  cd LeanInk
-	  lake build
       - name: Print Few ENV Variables
         run: |
           echo "${{ github.workspace }}"
@@ -53,6 +48,8 @@ jobs:
         run: lake build
       - name: Build Doc
         run: lake -Kenv=dev build SciLean:docs
+      - name: Build Literate Lean
+        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --otput-directory $GITHUB_WORKSPACE/doc $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
       - name: Content of build/doc
         run: ls $GITHUB_WORKSPACE/build/doc
       - name: Upload artifact
