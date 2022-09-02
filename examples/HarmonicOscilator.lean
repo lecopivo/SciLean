@@ -17,7 +17,7 @@ def solver (m k : ℝ) (steps : Nat)
   : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by
   -- Unfold Hamiltonian definition and compute gradients
-  simp [HamiltonianSystem, H]; unfold hold; simp
+  simp [HamiltonianSystem, H]; simp[gradient,hold]
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
@@ -49,3 +49,4 @@ def main : IO Unit := do
     IO.println ""
 
 
+#eval main

@@ -30,6 +30,8 @@ SciLean
 Tutorials
 ---------
 
-[Differentiation in SciLean(WIP)](literate/differentiation_in_scilean.html)
+[Harmonic Oscillator](literate/harmonic_oscilator.html)
+
+[Differentiation in SciLean](literate/differentiation_in_scilean.html)
 
 -/
