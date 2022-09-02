@@ -37,32 +37,19 @@ jobs:
         uses: actions/checkout@v3
       - name: Setup Pages
         uses: actions/configure-pages@v2
-      - name: Print Few ENV Variables
-        run: |
-          echo "${{ github.workspace }}"
-          echo "GITHUB_WORKSPACE"
-          echo $GITHUB_WORKSPACE
-          ls $GITHUB_WORKSPACE
-          ls $GITHUB_WORKSPACE/doc
 
-      - name: Build SciLean
+      - name: Get LeanInk and Build LeanInk
+        run: git clone https://github.com/leanprover/LeanInk.git; cd LeanInk; ls; cp $GITHUB_WORKSPACE/lean-toolchain lean-toolchain; echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH; leankInk -h
+
+      - name: ∂ Build SciLean
         run: lake build
-      - name: Build Doc
+	
+      - name: 📖 Build Doc 
         run: lake -Kenv=dev build SciLean:docs
-      - name: Show packages
-        run: ls $GITHUB_WORKSPACE/lean_packages
-      - name: Copy SciLean toolchain to LeanInk
-        run: cp $GITHUB_WORKSPACE/lean-toolchain $GITHUB_WORKSPACE/lean_packages/leanInk/lean-toolchain
-      - name: Build LeanInk
-        run: lake build --dir $GITHUB_WORKSPACE/lean_packages/leanInk
-      - name: Link LeanInk to Path
-        run: echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH
-      - name: Get LeanInk
-        run: https://github.com/leanprover/LeanInk.git; cd LeanInk; ls; cp $GITHUB_WORKSPACE/lean-toolchain lean-toolchain
-      - name: Build Literate Lean
-        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc/build $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
-      - name: Content of build/doc
-        run: ls $GITHUB_WORKSPACE/build/doc
+	
+#      - name: Build Literate Lean
+#        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc/build $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
+	
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
