@@ -44,15 +44,15 @@ jobs:
           echo $GITHUB_WORKSPACE
           ls $GITHUB_WORKSPACE
           ls $GITHUB_WORKSPACE/doc
+
       - name: Build SciLean
         run: lake build
       - name: Build Doc
         run: lake -Kenv=dev build SciLean:docs
-      - name: Build LeanInk
-      	run: |
-	  cd lean_packages/leanInk
-	  lake build
-	  echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH
+      - name: Show packages
+        run: ls $GITHUB_WORKSPACE/lean_packages
+      - name: Copy toolchain file
+        run: cp $GITHUB_WORKSPACE/lean-toolchain $GITHUB_WORKSPACE/lean_packages/leanInk/lean-toolchain
       - name: Build Literate Lean
         run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
       - name: Content of build/doc
