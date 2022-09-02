@@ -35,18 +35,14 @@ jobs:
         run: python3 -m pip install git+https://github.com/cpitclaudel/alectryon.git
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Get LeanInk and Build LeanInk
+      - name: Get and Build LeanInk
         run: pushd $GITHUB_WORKSPACE/..; git clone https://github.com/leanprover/LeanInk.git; cd LeanInk; ls; cp $GITHUB_WORKSPACE/lean-toolchain lean-toolchain; lake build; echo "$GITHUB_WORKSPACE/../LeanInk/build/bin" >> $GITHUB_PATH; popd
-      # - name: Direct LeanInk Help
-      #   run: $GITHUB_WORKSPACE/../LeanInk/build/bin/leanInk -h
-      - name: Where is LeanInk 
-        run: whereis leanInk
       - name: Build SciLean ∂∫
         run: lake build
       - name: Build Doc 📕
         run: lake -Kenv=dev build SciLean:docs
       - name: Build Literate Lean Files
-        run: for f in $GITHUB_WORKSPACE/doc/*.lean; do alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc $f; done
+        run: lake script run literate
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
@@ -54,15 +50,6 @@ jobs:
         with:
           # Upload entire repository
           path: '.'
-
-  test: 
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: What is in HOME?
-        run: pwd; ls
-      - name: What is in GITHUB_WORKSPACE?
-        run: cd $GITHUB_WORKSPACE; pwd; ls
 
   # Single deploy job since we're just deploying
   deploy:

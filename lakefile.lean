@@ -46,5 +46,22 @@ script tests (args) do
 
   return 0
 
+-- Builds all literate *.lean files in doc/literate and saves them to
+-- build/doc/literate
+script literate (args) do
+  let cwd ← IO.currentDir
+
+  for file in (← (cwd / "doc" / "literate").readDir) do
+    if file.path.extension == some "lean" then
+      
+      IO.println s!"Building literate lean file: {file.path.toString}"
+
+      let _ ← IO.Process.output {
+        cmd := "alectryon"
+        args := #["--lake", "lakefile.lean", "--output-directory", "build/doc/literate", file.path.toString]
+      }
+
+  return 0
+
 meta if get_config? env = some "dev" then -- dev is so not everyone has to build it
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "main"
