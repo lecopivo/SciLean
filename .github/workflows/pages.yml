@@ -33,15 +33,15 @@ jobs:
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
       - name: Install Alectryon
         run: python3 -m pip install git+https://github.com/cpitclaudel/alectryon.git
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
       - name: Install LeanInk
         run: |
 	  git clone https://github.com/leanprover/LeanInk
 	  cd LeanInk
 	  lake build
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
       - name: Print Few ENV Variables
         run: |
           echo "${{ github.workspace }}"
