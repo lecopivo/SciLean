@@ -20,46 +20,16 @@ import SciLean.Tactic.FinishImpl
 
 /-!
 
-hohohoho
-========
-
-heheh 
-=====
+SciLean
+=======
 
 
-hihihi
-------
+  Framework for scientific computing such as solving differential equations, optimization or machine learning written in [Lean](http://leanprover.github.io/). This library is in an *extremely early stage of development* and at its current stage is just a proof of concept on how Lean can be used for scientific computing.
 
 
-asdf
+Tutorials
+---------
 
-.. math:  \int e^x
+[Differentiation in SciLean(WIP)](literate/differentiation_in_scilean.html)
 
-
-\(
-\int e^x
-)\
-
-
-$$
-\int e^x
-$$
-
-some Lean code
-
-```lean
-
-#check Nat
-
-
-```
-
-
-```lean
-def compose.{u, v, w}
-            {α : Type u} {β : Type v} {γ : Type w}
-            (g : β → γ) (f : α → β) (x : α) : γ :=
-  g (f x)
-```
-
- -/ 
+-/
