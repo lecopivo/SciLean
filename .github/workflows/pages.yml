@@ -50,8 +50,7 @@ jobs:
         run: lake -Kenv=dev build SciLean:docs
       - name: Build LeanInk
       	run |
-	  cd $GITHUB_WORKSPACE/lean_packages/leanInk
-	  cp $GITHUB_WORKSPACE/lean-toolchain $GITHUB_WORKSPACE/lean_packages/leanInk/lean-toolchain
+	  cd lean_packages/leanInk
 	  lake build
 	  echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH
       - name: Build Literate Lean
