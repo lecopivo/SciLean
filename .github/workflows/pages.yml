@@ -31,25 +31,21 @@ jobs:
           curl -sSfL https://github.com/leanprover/elan/releases/download/v1.3.1/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz
           ./elan-init -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
+	  
       - name: Install Alectryon
         run: python3 -m pip install git+https://github.com/cpitclaudel/alectryon.git
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Pages
         uses: actions/configure-pages@v2
-
       - name: Get LeanInk and Build LeanInk
         run: git clone https://github.com/leanprover/LeanInk.git; cd LeanInk; ls; cp $GITHUB_WORKSPACE/lean-toolchain lean-toolchain; echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH; leankInk -h
-
       - name: ∂ Build SciLean
         run: lake build
-	
       - name: 📖 Build Doc 
         run: lake -Kenv=dev build SciLean:docs
-	
 #      - name: Build Literate Lean
 #        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc/build $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
-	
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
