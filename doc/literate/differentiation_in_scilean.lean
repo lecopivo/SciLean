@@ -81,7 +81,8 @@ The simples possible example: What is the differential of identity function?
 
  -/ 
 
-  #check (∂ λ x : ℝ => x) rewrite_by (simp; trace_state /- .unfold -/ )
+  #check (∂ λ x : ℝ => x) 
+    rewrite_by (simp; trace_state /- .unfold -/ )
 
 /-!
 

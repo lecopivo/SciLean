@@ -51,6 +51,23 @@ script tests (args) do
 script literate (args) do
   let cwd ← IO.currentDir
 
+  let copyCss : IO Unit := do
+    let alectryonSrc := cwd / "doc" / "literate" / "alectryon.css"
+    let alectryonTrg := cwd / "build" / "doc" / "literate" / "alectryon.css"
+    let pygmentsSrc := cwd / "doc" / "literate" / "pygments.css"
+    let pygmentsTrg := cwd / "build" / "doc" / "literate" / "pygments.css"
+
+    let _ ← IO.Process.output {
+      cmd := "cp"
+      args := #[alectryonSrc.toString, alectryonTrg.toString]
+    }
+
+    let _ ← IO.Process.output {
+      cmd := "cp"
+      args := #[pygmentsSrc.toString, pygmentsTrg.toString]
+    }
+
+
   if ¬ args.isEmpty then
     for f in args do
       let file := cwd / f
@@ -59,9 +76,11 @@ script literate (args) do
 
       let _ ← IO.Process.output {
         cmd := "alectryon"
-        args := #["--lake", "lakefile.lean", "--output-directory", "build/doc/literate", file.toString]
+        args := #["--no-header", "--lake", "lakefile.lean", "--output-directory", "build/doc/literate", file.toString]
       }
     
+    copyCss
+
     return 0
 
   for file in (← (cwd / "doc" / "literate").readDir) do
@@ -71,8 +90,10 @@ script literate (args) do
 
       let _ ← IO.Process.output {
         cmd := "alectryon"
-        args := #["--lake", "lakefile.lean", "--output-directory", "build/doc/literate", file.path.toString]
+        args := #["--no-header", "--lake", "lakefile.lean", "--output-directory", "build/doc/literate", file.path.toString]
       }
+
+  copyCss
 
   return 0
 
