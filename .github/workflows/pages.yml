@@ -38,7 +38,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Get LeanInk and Build LeanInk
-        run: pushd $HOME; git clone https://github.com/leanprover/LeanInk.git; cd LeanInk; ls; cp $GITHUB_WORKSPACE/lean-toolchain lean-toolchain; lake build; ls $HOME/LeankInk/build/bin; echo "$HOME/LeankInk/build/bin" >> $GITHUB_PATH; leankInk -h; popd
+        run: pushd $HOME; git clone https://github.com/leanprover/LeanInk.git; cd LeanInk; ls; cp $GITHUB_WORKSPACE/lean-toolchain lean-toolchain; lake build; ls; ls ..; ls ../..; echo "$HOME/LeankInk/build/bin" >> $GITHUB_PATH; leankInk -h; popd
       - name: ∂ Build SciLean
         run: lake build
       - name: 📖 Build Doc 
