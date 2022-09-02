@@ -46,10 +46,23 @@ script tests (args) do
 
   return 0
 
--- Builds all literate *.lean files in doc/literate and saves them to
--- build/doc/literate
+-- Builds a literate lean file and places it to build/doc/literate
+-- If no files are supplied all *.lean files in doc/literate are build 
 script literate (args) do
   let cwd ← IO.currentDir
+
+  if ¬ args.isEmpty then
+    for f in args do
+      let file := cwd / f
+
+      IO.println s!"Building literate lean file: {file}"
+
+      let _ ← IO.Process.output {
+        cmd := "alectryon"
+        args := #["--lake", "lakefile.lean", "--output-directory", "build/doc/literate", file.toString]
+      }
+    
+    return 0
 
   for file in (← (cwd / "doc" / "literate").readDir) do
     if file.path.extension == some "lean" then

@@ -1,11 +1,6 @@
 import SciLean
 open SciLean
 
-/- 
-Build me with: `alectryon --lake ../lakefile.lean literate_lean_test.lean`
--/ 
-
-
 /-!
 Running queries
 ===============

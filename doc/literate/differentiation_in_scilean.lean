@@ -1,11 +1,6 @@
 import SciLean
 open SciLean
 
-/- 
-Build me with:
-`alectryon --lake ../lakefile.lean differentiation_in_scilean.lean`
--/ 
-
 /-!
 ==========================
 Differentiation in SciLean
