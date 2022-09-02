@@ -30,7 +30,7 @@ SciLean
 Tutorials
 ---------
 
-[Harmonic Oscillator](literate/harmonic_oscilator.html)
+[Harmonic Oscillator](literate/harmonic_oscillator.html)
 
 [Differentiation in SciLean](literate/differentiation_in_scilean.html)
 
