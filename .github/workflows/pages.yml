@@ -60,9 +60,9 @@ jobs:
     needs: build
     steps:
       - name: What is in HOME?
-      - run: pwd; ls
+        run: pwd; ls
       - name: What is in GITHUB_WORKSPACE?
-      - run: cd $GITHUB_WORKSPACE; pwd; ls
+        run: cd $GITHUB_WORKSPACE; pwd; ls
 
   # Single deploy job since we're just deploying
   deploy:
