@@ -48,8 +48,14 @@ jobs:
         run: lake build
       - name: Build Doc
         run: lake -Kenv=dev build SciLean:docs
+      - name: Build LeanInk
+      	run |
+	  cd $GITHUB_WORKSPACE/lean_packages/leanInk
+	  cp $GITHUB_WORKSPACE/lean-toolchain $GITHUB_WORKSPACE/lean_packages/leanInk/lean-toolchain
+	  lake build
+	  echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH
       - name: Build Literate Lean
-        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --otput-directory $GITHUB_WORKSPACE/doc $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
+        run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
       - name: Content of build/doc
         run: ls $GITHUB_WORKSPACE/build/doc
       - name: Upload artifact
