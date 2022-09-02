@@ -51,12 +51,12 @@ jobs:
         run: lake -Kenv=dev build SciLean:docs
       - name: Show packages
         run: ls $GITHUB_WORKSPACE/lean_packages
-      - name: Copy toolchain file
+      - name: Copy SciLean toolchain to LeanInk
         run: cp $GITHUB_WORKSPACE/lean-toolchain $GITHUB_WORKSPACE/lean_packages/leanInk/lean-toolchain
       - name: Build LeanInk
-        run: lake build --dir $GITHUB_WORKSPACE/lean-toolchain/leanInk
+        run: lake build --dir $GITHUB_WORKSPACE/lean_packages/leanInk
       - name: Link LeanInk to Path
-        run: echo "$GITHUB_WORKSPACE/lean-toolchain/leanInk/build/bin" >> $GITHUB_PATH
+        run: echo "$GITHUB_WORKSPACE/lean_packages/leanInk/build/bin" >> $GITHUB_PATH
       - name: Build Literate Lean
         run: alectryon --lake $GITHUB_WORKSPACE/lakefile.lean --output-directory $GITHUB_WORKSPACE/doc $GITHUB_WORKSPACE/doc/differentiation_in_scilean.lean
       - name: Content of build/doc
