@@ -4,6 +4,7 @@ import Lean.Elab.Tactic.Basic
 import Lean.Elab.Tactic.ElabTerm
 import Lean.Elab.Tactic.Conv.Basic
 
+import SciLean.Functions.Limit
 
 open Lean 
 open Lean.Meta
@@ -16,7 +17,7 @@ if (test e) then
   (replace e)
 else
 match e with
-  | Expr.app f x d => do pure (mkApp (← (replaceSubExpression f test replace)) (← (replaceSubExpression x test replace)))
+  | Expr.app f x => do pure (mkApp (← (replaceSubExpression f test replace)) (← (replaceSubExpression x test replace)))
   | Expr.lam n x b _ => pure $ mkLambda n e.binderInfo x (← replaceSubExpression b test replace)
   | _ => pure e
 
@@ -27,22 +28,22 @@ def getlimit  (e : Expr) : MetaM Expr := do
     let nFv := mkFVar nId
     let test := (λ e : Expr => 
       match e.getAppFn.constName? with
-        | some name => name == `SciLean.limit
+        | some name => name == ``SciLean.limit
         | none => false)
     let replace := (λ e : Expr => 
       do
-        let lim := e.getAppArgs[2]
+        let lim := e.getAppArgs[2]!
         let args := #[nFv].append e.getAppArgs[3:]
         mkAppM' lim args)
     mkLambdaFVars #[nFv] (← replaceSubExpression e test replace)
   
 def bubbleLimitCore (mvarId : MVarId) : MetaM (List MVarId) :=
-  withMVarContext mvarId do
-    let tag      ← getMVarTag mvarId
-    let target   ← getMVarType mvarId
+  mvarId.withContext do
+    let tag      ← mvarId.getTag
+    let target   ← mvarId.getType
 
     -- Check if target is actually `Impl spec`
-    let spec := target.getAppArgs[1]
+    let spec := target.getAppArgs[1]!
     let lim ← getlimit spec
 
     let new_spec ← mkAppM `SciLean.limit #[lim]
@@ -51,7 +52,7 @@ def bubbleLimitCore (mvarId : MVarId) : MetaM (List MVarId) :=
     let eq       ← mkEq new_target target
     let eq_mvar  ← mkFreshExprSyntheticOpaqueMVar eq
 
-    assignExprMVar mvarId (← mkAppM `Eq.mp #[eq_mvar, new_mvar])
+    mvarId.assign (← mkAppM `Eq.mp #[eq_mvar, new_mvar])
 
     return [eq_mvar.mvarId!, new_mvar.mvarId!]  
 
@@ -70,11 +71,9 @@ syntax (name := bubble_lim) "bubble_lim": conv
 
 open Conv
 
-#check Eq.trans
-
 @[tactic bubble_lim] def tacticBubbleLim : Tactic
 | `(conv| bubble_lim) => do  
-  withMVarContext (← getMainGoal) do
+  (← getMainGoal).withContext do
     let lhs ← getLhs
     let f ← getlimit lhs
     let lhs' ← mkAppM `SciLean.limit #[f]

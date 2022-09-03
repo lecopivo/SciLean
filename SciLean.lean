@@ -8,6 +8,10 @@ import SciLean.Data.PowType
 import SciLean.Solver 
 import SciLean.Tactic.LiftLimit
 import SciLean.Tactic.FinishImpl
+
+import SciLean.Solver.Solver
+
+
 -- import SciLean.Data.PowType
 -- import SciLean.Solver 
 -- import SciLean.Tactic.LiftLimit
