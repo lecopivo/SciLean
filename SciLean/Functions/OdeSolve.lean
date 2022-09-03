@@ -2,16 +2,8 @@ import SciLean.Core
 
 namespace SciLean
 
-
-constant odeSolve {X} [Vec X] (f : ℝ → X → X) (t : ℝ) (x₀ : X) : X
-
-
---- Duhhh  move this somewhere ... 
-instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] : IsSmooth (∂ f) := sorry
-instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : IsLin (∂ f x) := sorry
-instance {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X) : IsSmooth (∂ f x) := sorry
-instance {X Y₁ Y₂ Z} [Vec X] [Vec Y₁] [Vec Y₂] [Vec Z] (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂) [IsSmooth f] [∀ y₁, IsSmooth (f y₁)] [IsSmooth g₁] [IsSmooth g₂] 
-  : IsSmooth (λ x => ∂ (f (g₁ x)) (g₂ x)) := by sorry
+noncomputable
+def odeSolve {X} [Vec X] (f : ℝ → X → X) (t : ℝ) (x₀ : X) : X := sorry
 
 function_properties odeSolve {X} (f : ℝ → X → X) (t : ℝ) (x₀ : X) : X
 argument t [Vec X] [IsSmooth f] [∀ s, IsSmooth (f s)]
@@ -19,7 +11,7 @@ argument t [Vec X] [IsSmooth f] [∀ s, IsSmooth (f s)]
   diff_simp := dt * f t (odeSolve f t x₀) by sorry
 argument t [Hilbert X] [IsSmooth f] [∀ s, IsSmooth (f s)]
   hasAdjDiff   := by constructor; infer_instance; simp; intro; infer_instance done,
-  adjDiff_simp := ⟪dt', f t (odeSolve f t x₀)⟫ by simp[adjDiff] done
+  adjDiff_simp := ⟪dt', f t (odeSolve f t x₀)⟫ by simp[adjointDifferential,hold] done
  
 argument x₀ [Vec X] [IsSmooth f] [∀ s, IsLin (f s)]
   isLin   := sorry
@@ -47,7 +39,8 @@ argument x₀ [Hilbert X] [IsSmooth f] [inst : ∀ t, HasAdjDiff (f t)]
       have isf := λ t => (inst t).isSmooth
       have iaf := λ t => (inst t).hasAdjDiff
       simp at iaf
-      simp[adjDiff] done
+      admit
+      -- simp[adjointDifferential] done
 
 
   
