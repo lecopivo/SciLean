@@ -38,4 +38,7 @@ Tutorials
 
 [Differentiation in SciLean](literate/differentiation_in_scilean.html)
 
+[Approximations(not readable in its current form)](literate/approximations.html)
+
+
 -/
