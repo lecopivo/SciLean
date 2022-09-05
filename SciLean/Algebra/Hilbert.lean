@@ -30,19 +30,42 @@ class TestFunctions (X : Type u) [Vec X] where
 
 export TestFunctions (TestFun)
 
-open Inner in
+
+-- All elements of a Convenient Hilbert space are test functions
+-- I think that inner_mul and inner_sym do not need to assume TestFun on x or y
+-- because ⟪r*x, y⟫ or ⟪y,x⟫ is meaningulf iff ⟪x,y⟫ is
+-- We are mainly interested if this holds for integrals i.e. when ⟪f, g⟫ = ∫ x, f x * g x
 class SemiHilbert (X) extends Vec X, Inner X, TestFunctions X where
-  inner_add : ∀ (x y z : X), (TestFun x ∧ TestFun y) ∨ TestFun z → 
+  inner_add : ∀ (x y z : X), TestFun x ∧ TestFun y ∧ TestFun z →
     ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫
-  inner_mul : ∀ (x y : X) (r : ℝ), TestFun x ∨ TestFun y →
+  inner_mul : ∀ (x y : X) (r : ℝ),
     ⟪r*x, y⟫ = r*⟪x, y⟫
-  inner_sym : ∀ (x y : X), TestFun x ∨ TestFun y →
+  inner_sym : ∀ (x y : X),
     ⟪x, y⟫ = ⟪y, x⟫
   inner_pos : ∀ (x : X), TestFun x →
     ⟪x, x⟫ ≥ (0 : ℝ)
   inner_ext : ∀ (x : X),
     ((x = 0) ↔ (∀ (ϕ : X), TestFun ϕ → ⟪x, ϕ⟫ = 0))
+  -- Maybe add this? Can we prove it or do we need to assume it?
+  -- Is this true on (ℝ ⟿ ℝ)? It should be otherwise I'm questioning everything.
+  -- inner_with_testfun_is_smooth : ∀ ϕ, TestFun ϕ → IsSmooth ⟪·, ϕ⟫     
 
+  -- inner_ext does imply `TestFun x → x ≠ 0 → ⟪x,x⟫ > 0`
+  -- Let ϕ s.t. ⟪x,ϕ⟫ > 0, let (ε > 0)
+  --  ⟪x - ε * ϕ, x - ε * ϕ⟫ = ⟪x,x⟫ - 2*ε*⟪x,ϕ⟫ + ε²*⟪ϕ,ϕ⟫ ≥ 0
+  --  ⟪x,x⟫ ≥ 2*ε*⟪x,ϕ⟫ - ε²*⟪ϕ,ϕ⟫
+  -- For sufficiently small ε we have
+  --  0 < 2*ε*⟪x,ϕ⟫ - ε²*⟪ϕ,ϕ⟫ ≤ ⟪x,x⟫
+
+  -- Inner product is not a smooth function function on (ℝ ⟿ ℝ)
+  -- Take a smooth path γ t := ϕ t * λ x ⟿ 1 / sqrt (x*x + 1)
+  -- where `ϕ : ℝ → ℝ` is a smooth bumb function that is non zero only on [-1,1]
+  -- Then:
+  --   1. ∀ t ∈ (-1,1),     ⟪γ t, γ t⟫ = ∞
+  --   2. ∀ t ∈ ℝ \ (-1,1), ⟪γ t, γ t⟫ = 0
+
+
+-- Can we prove that `⟪·, ·⟫` is smooth function? Or do we need to assume it?
 class Hilbert (X) extends SemiHilbert X where
   all_are_test : ∀ x : X, TestFun x
                                      

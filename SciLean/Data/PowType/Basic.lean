@@ -28,9 +28,16 @@ macro_rules
   else 
     `(Unit)
 
--- Allow notation like `A[x,y]` instead of `A[(x,y)]`
+-- Allow notation like `A[x,y]` instead of `A[(x,y)]` and A[i,:] or A[:,j]
+-- Maybe:
+--   1. A[i,·]  : Fin m → ℝ
+--   2. A[i,:]  : ℝ^{m}
+-- TODO: Generalize this
 macro A:term  noWs "[" id1:term "," id2:term "]" : term => `($A[($id1, $id2)])
 macro A:term  noWs "[" id1:term "," id2:term "," id3:term "]" : term => `($A[($id1, $id2, $id3)])
+macro A:term  noWs "[" id1:term "," id2:term "," id3:term "," id4:term "]" : term => `($A[($id1, $id2, $id3, $id4)])
+macro A:term  noWs "[" id1:term "," ":" "]" : term => `(λ [j] => $A[($id1, j)])
+macro A:term  noWs "[" ":" "," id2:term "]" : term => `(λ [i] => $A[(i, $id2)])
 
 namespace PowTypeCarrier
 

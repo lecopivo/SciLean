@@ -16,7 +16,7 @@ variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 -- Differential --
 ------------------
 noncomputable 
-def differentialSpec (f : X → Y) (x dx : X) : Y := 
+opaque differentialSpec (f : X → Y) (x dx : X) : Y := 
     match Classical.propDecidable (IsSmooth f) with
       | isTrue  h => sorry
       /- For nondifferentiable function the value is not specified.
@@ -45,17 +45,23 @@ macro "∂" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂ λ $x => 
 --     3. ∂_dx (x:=x₀), f x           -- Can we parse this properly? What if `dx` is complicated, do we allow `∂_(dx)` ?
 --     4. ??
 
-class Derivative (Fun : Type) (Diff : outParam Type) where
-  derivative : Fun → Diff
+class Derivative (Fun : Type) where
+  derivative : Nat → Fun → Fun
 
 @[defaultInstance]
 noncomputable
-instance : Derivative (ℝ → X) (ℝ → X) where
-  derivative f := λ t => ∂ f t 1
+instance : Derivative (ℝ → X) where
+  derivative := 
+    let rec dn (n : Nat) (f : ℝ → X) : ℝ → X :=
+      match n with
+      | 0    => f
+      | n'+1 => dn n' (λ t => ∂ f t 1)
+    dn
 
 export Derivative (derivative)
 
-prefix:max "ⅆ" => derivative
+prefix:max "ⅆ" => derivative 1
+macro:max "ⅆ[" n:term "]" : term => `(derivative $n)
 
 -- Notation 
 -- ⅆ s, f s         --> ⅆ λ s => f s
@@ -66,7 +72,9 @@ syntax diffBinderValue := ":=" term
 syntax diffBinder := ident (diffBinderType <|> diffBinderValue)?
 syntax "ⅆ" diffBinder "," term:66 : term
 syntax "ⅆ" "(" diffBinder ")" "," term:66 : term
-macro_rules 
+syntax "ⅆ[" term "]" diffBinder "," term:66 : term            -- TODO: implement macro_rule
+syntax "ⅆ[" term "]" "(" diffBinder ")" "," term:66 : term    -- TODO: implement macro_rule
+macro_rules
 | `(ⅆ $x:ident, $f) =>
   `(ⅆ λ $x => $f)
 | `(ⅆ $x:ident : $type:term, $f) =>
@@ -100,12 +108,6 @@ theorem diff.arg_df.diff_simp (f : X → Y) [IsSmooth f] (x : X)
   : (∂ (∂ f x)) = (λ _ dx => ∂ f x dx) := by 
   -- apply (diff_of_linear (λ dx => ∂ f x dx))
   rw[diff_of_linear (λ dx => ∂ f x dx)]
-  done
-
-
-theorem WTF_INVESTIGATE_THIS {X} {Y} [Vec X] [Vec Y] (f : X → Y) [IsSmooth f] (x : X)
-  : (∂ (∂ f x)) = (λ x' _ => ∂ f x' x') := by 
-  apply (diff_of_linear (λ dx => ∂ f x dx)) --- WTF??!!!!
   done
 
 ----------------------------------------------------------------------

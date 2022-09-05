@@ -32,7 +32,7 @@ namespace SciLean
   instance : HMul (X⟿ℝ) (X⟿Y) (X⟿Y) := ⟨λ g f => ⟨λ x => g.1 x * f.1 x, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
  
   instance : Zero (X ⟿ Y) := ⟨⟨0, by (conv => enter [1,x]); simp; infer_instance done⟩⟩
-  instance : One (X ⟿ ℝ) := ⟨⟨1, by (conv => enter [1,x]); simp; infer_instance done⟩⟩
+  instance [One Y] : One (X ⟿ Y) := ⟨⟨1, by (conv => enter [1,x]); simp; infer_instance done⟩⟩
 
   instance : AddSemigroup (X ⟿ Y) := AddSemigroup.mk sorry
   instance : AddMonoid (X ⟿ Y)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry

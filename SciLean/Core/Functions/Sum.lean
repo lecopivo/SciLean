@@ -37,13 +37,13 @@ theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
 -- @[simp] 
 theorem sum_of_add {X ι} [Enumtype ι] [Vec X]
   (f g : ι → X)
-  : (∑ i, f i + g i) = (∑ i, f i) + (∑ i, g i)
+  : ∑ i, (f i + g i) = (∑ i, f i) + (∑ i, g i)
   := sorry
 
 -- @[simp] 
 theorem sum_of_sub {X ι} [Enumtype ι] [Vec X]
   (f g : ι → X)
-  : (∑ i, f i - g i) = (∑ i, f i) - (∑ i, g i)
+  : ∑ i, (f i - g i) = (∑ i, f i) - (∑ i, g i)
   := sorry
 
 -- @[simp] 
@@ -64,6 +64,11 @@ theorem sum_of_linear {X Y ι} [Enumtype ι] [Vec X] [Vec Y]
   (f : X → Y) [IsLin f]
   (g : ι → X)
   : (∑ i, f (g i)) = f (∑ i, g i)
+  := sorry
+
+theorem sum_swap {X ι κ} [Enumtype ι] [Enumtype κ] [Vec X]
+  (f : ι → κ → X)
+  : (∑ i j, f i j) = (∑ j i, f i j)
   := sorry
 
 @[simp] 

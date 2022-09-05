@@ -6,7 +6,7 @@ import SciLean.Core.Mor.HasAdjoint
 namespace SciLean
 
 noncomputable
-def adjoint {X Y} [SemiHilbert X] [SemiHilbert Y] 
+opaque adjoint {X Y} [SemiHilbert X] [SemiHilbert Y] 
     (f : X → Y) : Y → X 
     := sorry
 

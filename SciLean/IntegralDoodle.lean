@@ -26,7 +26,13 @@ namespace SciLean
   class IntegrableDomain (X : Type) where
     Dom : Type
 
-  def TestFunction [SemiHilbert X] (x : X) : Prop := sorry
+  noncomputable 
+  def indicatorFunction {α} (Ω : α → Prop) (a : α) : ℝ :=
+    match Classical.propDecidable (Ω a) with
+      | isTrue  _ => 1
+      | isFalse _ => 0
+
+  -- prefix:max "𝟙" => indicatorFunction
 
   variable {ι} [Enumtype ι]
 
@@ -34,21 +40,56 @@ namespace SciLean
   def IsBounded {X} [FinVec X ι] (Ω : Set X) : Prop := sorry
 
   def IntDom (X : Type) [FinVec X ι] : Type := {Ω : Set X // IsOpen Ω}
-  def LocIntDom (X : Type) [FinVec X ι] : Type := {Ω : Set X // IsOpen Ω ∧ IsBounded Ω}
+
+  -- TODO: LocIntDom should form an Abelian group, so we can write
+  --   1. ∫ x ∈ [1,-1], f x         -- usefull for the differentiation under the integral sign
+  --   1. ∫ x ∈ 3*Ω₁ - Ω₂, f x      -- usefull for working with chains and cochains
+  -- def LocIntDom (X : Type) [FinVec X ι] : Type := {Ω : Set X // IsOpen Ω ∧ IsBounded Ω}
+
+  inductive LocIntDom.Repr(X : Type) [FinVec X ι] where
+  | set (Ω : Set X) : IsOpen Ω → IsBounded Ω → LocIntDom.Repr X
+  | sum (Ω₁ Ω₂ : LocIntDom.Repr X) : LocIntDom.Repr X
+  | smul (s : ℝ) (Ω : LocIntDom.Repr X) : LocIntDom.Repr X
+
+  noncomputable
+  def LocIntDom.Repr.indicatorFun {X} [FinVec X ι] (Ω : LocIntDom.Repr X) : X → ℝ := 
+  match Ω with
+  | set Ω' _ _ => indicatorFunction Ω'
+  | sum Ω₁ Ω₂  => Ω₁.indicatorFun + Ω₂.indicatorFun
+  | smul s Ω   => s * Ω.indicatorFun
+
+  def LocIntDom.Repr.Eq {X} [FinVec X ι] (Ω₁ Ω₂ : LocIntDom.Repr X) : Prop :=
+    (Ω₁.indicatorFun = Ω₂.indicatorFun)
+
+  def LocIntDom (X : Type) [FinVec X ι] : Type := Quot (LocIntDom.Repr.Eq (X:=X))
+
+  instance {X} [FinVec X ι] : Add (LocIntDom X) := 
+    ⟨(λ Ω₁ => (λ Ω₂ => Quot.mk _ (.sum Ω₁ Ω₂)) |> (Quot.lift · sorry)) |> (Quot.lift · sorry)⟩
+ 
+  instance {X} [FinVec X ι] : HMul ℝ (LocIntDom X) (LocIntDom X) := 
+    ⟨λ s => (λ Ω => Quot.mk _ (.smul s Ω)) |> (Quot.lift · sorry)⟩
+
+  -- Empty set
+  instance {X} [FinVec X ι] : Zero (LocIntDom X) := 
+    ⟨Quot.mk _ (.set (λ _ => False) sorry sorry)⟩
+ 
 
   -- Probably Riemann integrability on domain Ω
   class IsIntegrable [FinVec X ι] [Vec Y] (f : X → Y) (Ω : IntDom X) : Prop
   class IsLocIntegrable [FinVec X ι] [Vec Y] (f : X → Y) : Prop where
-    is_loc_integrable : ∀ Ω : LocIntDom X, IsIntegrable f ⟨Ω.1, Ω.2.1⟩
-
+    is_loc_integrable : ∀ Ω : LocIntDom X, IsIntegrable f sorry -- ⟨Ω.1, Ω.2.1⟩
 
   -- If `f` is integrable on `Ω` return integral otherwise return zero
-  -- We choose to integrate only over bounded domains.
-  -- This way the function `λ (f : X⟿Y) => ∫ x, f x` can be linear.
+  -- IMPORTANT: We choose to integrate only over **bounded** domains.
+  --            This way the function `λ (f : X⟿Y) => ∫ x, f x` can be linear.
+  -- QUESTION: Do we need Y to be complete? For example smooth function
+  --   with compact support do not form closed subspace in `ℝ ⟿ ℝ`. 
+  --   Can we have `γ : ℝ ⟿ {f : ℝ ⟿ ℝ // TestFun f}` such that 
+  --   `∫ t ∈ [0,1], γ.1` is not a `TestFun`?
   def integral {X Y : Type} [FinVec X ι] [Vec Y] (f : X → Y) (Ω : LocIntDom X) : Y := sorry
 
-  class Integral (α : Type) (β : outParam Type) where
-    integral : α → β
+  class Integral (Fun : Type) (R : outParam Type) where
+    integral : Fun → R
 
   attribute [reducible] Integral.integral
 
@@ -80,14 +121,82 @@ namespace SciLean
   --  - ∫ x ∈ Ω, f x -- Integrate over particular subset
   --  - ∫ x : X, f x -- Integrate over the whole set
 
-  --  The paper 'I♥LA: compilable markdown for linear algebra' https://doi.org/10.1145/3478513.3480506  
+  --  The paper 'I♥LA: compilable markdown for linear algebra' https://doi.org/10.1145/3478513.3480506
   --  claims on page 5 that conservative sum is more common then greedy
   --  We addopt this for integral too, hence the priority `fx:term:66`
 
   macro "∫" f:term:66 : term => `(Integral.integral $f)
   macro "∫" x:Lean.Parser.Term.funBinder "," fx:term:66 : term => `(∫ λ $x => $fx)
+  -- ∫ (x,y), f x y  -- does not work :(
+  
+  -- We should probably require for `R` to be of the form `... → ℝ`
+  -- Otherwise it does not make sense
+  -- Unfortunatelly I do not know how to nest integrals :( 
+  -- class HasVarDual {Fun R} [SemiHilbert Fun] [One Fun] [Integral Fun R] (F : Fun → R) : Prop where
+  --   hasVarDual : ∃ A : Fun → Fun, HasAdjoint A ∧ (∀ f, F f = ∫ (A f))
+    -- There is something magical about the type `R` that ensures uniqueness of A
+    -- Ohh yeah `R` is really big ... 
+    --   for example for `Fun = ℝ^{n}` the `R` would be `(Fin n → Bool) → ℝ` 
+    --   i.e. we have to provide `Fin n → Bool` to specify over which indices to sum over
+    --   the `(Fin n → Bool) → ℝ` is waaay bigger then `ℝ^{n}`
+
+  class FullIntegral (Fun : Type) (R : outParam Type) where
+    integral : Fun → R           -- R plays a bit similar role of ℝ
+
+  instance {X ι} [Enumtype ι] [FinVec X ι] : FullIntegral (X ⟿ ℝ) (LocIntDom X → ℝ) where
+    integral f := ∫ f
+
+  instance {X ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] [FullIntegral Y R] [Vec R]
+    : FullIntegral (X ⟿ Y) (LocIntDom X → R) where
+    integral f := ∫ x, FullIntegral.integral (f x)
+
+  def HasVarDual {Fun R} [SemiHilbert Fun] [FullIntegral Fun R] (F : Fun → R) : Prop :=
+    ∃ A : Fun → Fun, HasAdjoint A ∧ (∀ f, F f = FullIntegral.integral (A f))
+
+  noncomputable
+  def varDual {Fun R} [SemiHilbert Fun] [One Fun] [FullIntegral Fun R] (F : Fun → R) : Fun :=
+    match Classical.propDecidable (HasVarDual F) with
+    | isTrue h =>
+      let A := Classical.choose h
+      A† 1
+    | isFalse _ => 0
+
+  #check Vec 
+
+  -- This should be immediate from the definition
+  @[simp]
+  theorem varDual_smooth_fun {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y]
+    (F : (X ⟿ ℝ) → (X ⟿ ℝ)) [HasAdjoint F]
+    : varDual (λ f => ∫ F f) = F† 1 := sorry
+
+
+  -- instance {X ι} [Enumtype ι] [FinVec X ι] : VarDual (X ⟿ ℝ) (LocIntDom X → ℝ) where
+  --   -- hasVarDual F := ∃ A : (X ⟿ ℝ) → (X ⟿ ℝ), HasAdjoint A ∧ (∀ f, F f = ∫ (A f))
+  --   integral f := ∫ f
+  --   varDual := sorry
+
+  -- instance {X ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] [VarDual Y R] : VarDual (X ⟿ Y) (LocIntDom X → R) where
+  --   hasVarDual F := ∃ A : (X ⟿ Y) → (X ⟿ Y), HasAdjoint A ∧ (∀ f, F f = ∫ (A f))
+  --   varDual := sorry
+
+
+  -- instance VarDual (X → ℝ) (LocIntDom X → ℝ) where
+  --   varDual := sorry
+
+
+  -- noncomputable 
+  -- def varDual {Fun R} [SemiHilbert Fun] [One Fun] [Integral Fun R] (F : Fun → R) : Fun := 
+  --   match Classical.propDecidable (HasVarDual F) with
+  --   | isTrue h => 
+  --     let A := Classical.choose h.hasVarDual
+  --     A† 1
+  --   | isFalse _ => 0
   
   variable {X Y Z} [FinVec X ι] [Vec Y] [Vec Z]
+
+  #check varDual λ (f : X ⟿ ℝ) => ∫ x, f x
+  #check_failure varDual λ (f : X ⟿ X ⟿ ℝ) => ∫ x, f x  -- this should not typecheck fail
+  #check varDual λ (f : X ⟿ X ⟿ ℝ) => ∫ x, ∫ y, f x y -- this shoud typecheck
 
   -- instance SmoothMap.val.arg_f.isLin : IsLin (λ f : X⟿Y => f.1) := by infer_instance
   -- instance SmoothMap.val.arg_f.isSmooth : IsSmooth (λ f : X⟿Y => f.1) := by infer_instance
@@ -103,6 +212,8 @@ namespace SciLean
   instance (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)] 
     : IsSmooth λ (z : Z) => ∫ x, F z x := sorry
 
+  -- IMPORTANT: This is true only when we integrate over bounded domains!
+  --            Double check this is really true
   @[simp]
   theorem diff_integral (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)] 
     : ∂ (λ z => ∫ x, F z x) = λ z dz => ∫ x, ∂ F z dz x := sorry
@@ -162,15 +273,28 @@ namespace SciLean
   set_option synthInstance.maxSize 2048 in
   example : ∂ (λ f : ℝ⟿ℝ => ∫ x, ∥∂ f x 1∥²) = λ (f df : ℝ⟿ℝ) => ∫ x, 2 *  ∂ df x 1 * ∂ f x 1 := by simp; done
 
-  class HasVarDual {Y} [Hilbert Y] (F : (X ⟿ Y) → LocIntDom X → ℝ) where
-    has_var_dual : ∃ (f : X ⟿ Y), ∀ (g : X ⟿ Y), F g = ∫ x, ⟪f x, g x⟫ -- maybe g true only for domains Ω on which g is a test function
+  -- class HasVarDual {Y} [Hilbert Y] (F : (X ⟿ Y) → LocIntDom X → ℝ) where
+  --   has_var_dual : ∃ (f : X ⟿ Y), ∀ (g : X ⟿ Y), F g = ∫ x, ⟪f x, g x⟫ -- maybe g true only for domains Ω on which g is a test function
 
-  -- Defined only if it has variational dual otherwise zero function
-  def varDual : ((X ⟿ Y) → LocIntDom X → ℝ) → (X ⟿ Y) := sorry
+  -- -- Defined only if it has variational dual otherwise zero function
+  -- def varDual : ((X ⟿ Y) → LocIntDom X → ℝ) → (X ⟿ Y) := sorry
 
-  @[simp]
-  theorem varDual_smooth_fun {Y} [Hilbert Y] (F : (X ⟿ Y) → (X ⟿ ℝ)) [HasAdjoint F] 
-    : varDual (λ f : X ⟿ Y => ∫ F f) = F† (λ _ ⟿ 1) := sorry
+      
+
+  -- instance {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] : VarDual (X ⟿ Y) (LocIntDom X → ℝ) where
+  --   varDual := varDual
+
+  -- instance hoho {X Y R} [FinVec X ι] [SemiHilbert Y] [VarDual Y R] : VarDual (X ⟿ Y) (LocIntDom X → R) where
+  --   varDual := sorry
+
+  -- example : VarDual (ℤ → ℝ) (LocIntDom ℤ → ℝ) := by infer_instance
+  -- example : VarDual (X ⟿ ℤ → ℝ) (LocIntDom X → LocIntDom ℤ → ℝ) := by infer_instance
+  -- example : VarDual (ℤ → X ⟿ ℝ) (LocIntDom ℤ → LocIntDom X → ℝ) := by infer_instance
+
+  -- example {Y Z} [FinVec Y ι] [SemiHilbert Z] : VarDual (Y ⟿ Z) (LocIntDom Y → ℝ) := by infer_instance
+  -- example {X Y Z} [FinVec X ι] [FinVec Y ι] [SemiHilbert Z] : VarDual (X ⟿ Y ⟿ Z) (LocIntDom X → LocIntDom Y → ℝ) := by infer_instance
+  -- example {X Y Z} [FinVec X ι] [FinVec Y ι] [SemiHilbert Z] : VarDual (X×Y ⟿ Z) (LocIntDom (X × Y) → ℝ) := by infer_instance
+
 
   @[simp]
   theorem varDual_fun {Y} [Hilbert Y] (F : (X ⟿ Y) → (X ⟿ ℝ)) [HasAdjoint F] 

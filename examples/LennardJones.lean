@@ -13,17 +13,17 @@ set_option synthInstance.maxSize 2048
 set_option synthInstance.maxHeartbeats 500000
 set_option maxHeartbeats 500000
 
-def LennardJones (ε minEnergy : ℝ) (radius : ℝ) (x : ℝ^(3:ℕ)) : ℝ :=
+def LennardJones (ε minEnergy : ℝ) (radius : ℝ) (x : ℝ^{3}) : ℝ :=
   let x' := ∥1/radius * x∥^{-6, ε}
   4 * minEnergy * x' * (x' - 1)
 argument x [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, adjDiff
 
-def Coloumb (ε strength mass : ℝ) (x : ℝ^(3:ℕ)) : ℝ := - strength * mass * ∥x∥^{-1,ε}
+def Coloumb (ε strength mass : ℝ) (x : ℝ^{3}) : ℝ := - strength * mass * ∥x∥^{-1,ε}
 argument x [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, adjDiff
 
-def H (n : ℕ) (ε : ℝ) (C LJ : ℝ) (r m : Idx n → ℝ) (x p : (ℝ^(3:ℕ))^n) : ℝ :=
+def H (n : ℕ) (ε : ℝ) (C LJ : ℝ) (r m : Idx n → ℝ) (x p : (ℝ^{3})^{n}) : ℝ :=
   (∑ i, (1/(2*m i)) * ∥p[i]∥²)
   +
   ∑ i j,   Coloumb ε C (m i * m j) (x[i] - x[j])

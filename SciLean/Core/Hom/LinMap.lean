@@ -71,7 +71,7 @@ namespace SciLean
   theorem LinMap.beta_reduce (f : X ⊸ Y) 
       : (λ (x : X) ⊸ f x) = f := by simp
 
-  @[simp]
+  -- @[simp]
   theorem LinMap.mk.eval (f : X → Y) [IsLin f] (x : X) 
     : (LinMap.mk f) x = f x := by simp
 

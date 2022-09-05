@@ -237,7 +237,7 @@ namespace Enumtype
   --       The paper 'I♥LA: compilable markdown for linear algebra' https://doi.org/10.1145/3478513.3480506  
   --           claims on page 5 that conservative sum is more common then greedy
 
-  macro "∑" xs:Lean.explicitBinders ", " b:term : term => Lean.expandExplicitBinders `Enumtype.sum xs b
+  macro "∑" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders `Enumtype.sum xs b
 
   -- section Examples
 

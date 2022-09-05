@@ -6,6 +6,8 @@ namespace SciLean
     basis : ι → X
     proj  : ι → X → K
 
+  class OrthBasis (X : Type u) [Basis X ι K] : Prop where
+
   macro:max "𝔼" i:term : term => `(Basis.basis $i)
 
   /- Currently we assume that the basis for FinVec is orthonormal through out the codebase. 
@@ -23,3 +25,20 @@ namespace SciLean
   }
 
   instance : FinVec ℝ Unit := FinVec.mk
+
+
+  @[inferTCGoalsRL]
+  instance {X Y ι κ : Type} [Enumtype ι] [Enumtype κ] [Zero X] [Zero Y] 
+    [Basis X ι ℝ] [Basis Y κ ℝ] : Basis (X×Y) (ι⊕κ) ℝ where
+    basis idx := 
+      match idx with
+      | .inl i => (𝔼 i, 0)
+      | .inr j => (0, 𝔼 j)
+    proj := λ idx (x,y) => 
+      match idx with
+      | .inl i => Basis.proj i x
+      | .inr j => Basis.proj j y
+
+  @[inferTCGoalsRL]
+  instance {X Y ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ]
+    : FinVec (X×Y) (ι⊕κ) := ⟨⟩
