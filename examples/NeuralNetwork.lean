@@ -2,6 +2,7 @@
 import SciLean.Core
 import SciLean.Data.PowType
 import SciLean.Functions.EpsNorm
+import SciLean.Tactic.Basic
 
 set_option synthInstance.maxSize 2048
 
@@ -50,6 +51,7 @@ theorem swap.arg_y.adj_simp_specialized {X Y Z}
   (g : ι → X → Y) [∀ i, HasAdjoint (g i)]
   : (λ x i => f (g i x))† = λ (f' : ι → Z) => (λ x i => g i x)† (λ i => f† (f' i)) := 
 by
+  simp
   sorry
   -- TODO: Can I prove this with existing theorems???
 
@@ -144,16 +146,17 @@ by
 example {n N} [Nonempty (Fin N)] [Nonempty (Fin n)]  (w : Fin n → ℝ) 
   : (λ (x : Fin N → ℝ) (i : Fin N) => ∑ (i' : Fin n), w i' * x (i.shift i') * w i')†
     =
-    (λ (x' : Fin N → ℝ) (i : Fin N) => ∑ (i' : Fin n), x' (i.shift (-i')) * w i') :=
+    (λ (x' : Fin N → ℝ) (i : Fin N) => ∑ (i' : Fin n), w i' * x' (i.shift (-i')) * w i') :=
 by
-  simp
-  simp[hold]
   conv =>
     lhs
+    simp[hold]
     enter [x']
     simp only [sum_into_lambda]
     enter [i]
     rw[sum_swap]
+    simp
+    simp only [kron_smul_assoc,sum_of_kron_2]
     simp
   done
 
@@ -179,6 +182,67 @@ by
   simp
   done
 
+#check SciLean.eval.arg_x.parm1.adj_simp
+
+
+example {N M} (i)
+  : (λ (x : Fin N → Fin M → ℝ) => x i)† 
+    = 
+    λ (x' : Fin M → ℝ) j => kron i j  * x'
+:= 
+by 
+  conv => lhs; simp
+  done
+
+example {N M} (j)
+  : (λ (x : Fin N → Fin M → ℝ) i => x i j)† 
+    = 0
+    -- λ (x' : Fin N → ℝ) j' => kron j' j  * x'
+:=
+by
+  conv =>
+    lhs
+    try { simp; done }  -- this should detect what we do not need the repeat anymore
+    repeat' ext
+    simp
+  done
+
+
+example {N M} (i j)
+  : (λ (x : Fin N → Fin M → ℝ) => x i j)† 
+    = 
+    λ (x' : ℝ) i' j' => kron i i' * kron j j' * x'
+:= 
+by 
+  conv => 
+    lhs
+    try { simp; done }  -- this should detect what we do not need the repeat anymore
+    repeat' ext
+    simp
+  done
+
+
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+example {N M n m} [Nonempty (Fin N)] [Nonempty (Fin M)] [Nonempty (Fin n)] [Nonempty (Fin m)]
+  (w : Fin n → Fin m → ℝ) 
+  : (λ (x : Fin N → Fin M → ℝ) i j => ∑ i' j',  w i' j' * x i j)†
+    =
+    (λ (x' : Fin N → Fin M→ ℝ) i j => ∑ i' j', w i' j' * x' (i.shift (-i')) (j.shift (-j'))) :=
+    -- (λ (x' : Fin N → ℝ) (i : Fin N) => ∑ (i' : Fin n), x' (i.shift (-i')) * w i') :=
+by
+  conv => 
+    lhs
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+    simp (config := {singlePass := true})
+  done
 
 
 
@@ -191,18 +255,23 @@ instance {n} [Fact (n≠0)] : Nonempty (Fin n) := sorry
 -- argument w [Fact (N≠0)] [Fact (n≠0)]
 --   adjDiff by simp[conv1d]; trace_state
 
-def conv1d {N n} (x : Fin N → ℝ) (w : Fin n → ℝ) : Fin N → ℝ := 
-   λ i => (∑ i', w i' * x (i.shift i'))
+def conv1d {N n} (x : Fin N → ℝ) (w : Fin n → ℝ) (b : ℝ) : Fin N → ℝ := 
+   λ i => ∑ i', w i' * x (i.shift i') + b
 argument x [Fact (N≠0)] [Fact (n≠0)]
   hasAdjDiff,
   adjDiff by 
     simp only [adjointDifferential]
-    simp [conv1d]
+    unfold conv1d; simp
 argument w [Fact (N≠0)] [Fact (n≠0)]
   hasAdjDiff,
   adjDiff by
     simp only [adjointDifferential]
-    simp [conv1d]
+    unfold conv1d; simp
+argument b [Fact (N≠0)] [Fact (n≠0)]
+  hasAdjDiff,
+  adjDiff by
+    simp only [adjointDifferential]
+    unfold conv1d; simp
  
 set_option trace.Meta.Tactic.simp.rewrite true in   
 def conv2d {N M n m} (x : Fin N → Fin M → ℝ) (w : Fin n → Fin m → ℝ) 
@@ -210,7 +279,7 @@ def conv2d {N M n m} (x : Fin N → Fin M → ℝ) (w : Fin n → Fin m → ℝ)
   λ i j => (∑ i' j', w i' j' * x (i.shift i') (j.shift j'))
 argument x [Fact (N≠0)] [Fact (M≠0)] [Fact (n≠0)] [Fact (m≠0)]
   adjDiff by
-    -- simp only [adjointDifferential]
+    simp only [adjointDifferential]
     unfold conv2d
     simp (config := {singlePass := true})
     simp (config := {singlePass := true})

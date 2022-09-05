@@ -39,7 +39,7 @@ theorem const.arg_x.adj_simp
 theorem const.arg_y.adj_simp
   : (λ (y : Y) => (0 : X))† = λ y' => (0 : Y) := sorry
 
-@[simp ↓ low]
+@[simp ↓ low-3]
 theorem swap.arg_y.adj_simp
   (f : ι → Y → Z) [∀ i, HasAdjoint (f i)] 
   : (λ y i => f i y)† = λ g => ∑ i, (f i)† (g i) := sorry
@@ -162,3 +162,4 @@ theorem diag.arg_x.parm2.adj_simp
              (hold λ (y₁,y₂) => f y₁ y₂ a b)† z
 := by 
   (apply diag.arg_x.adj_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂) done
+
