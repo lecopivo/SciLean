@@ -80,61 +80,100 @@ This might sound completely pointless, how it is useful to define a function
 that we can not run? The advantage is that we can disentangle the program
 specification from its implementation. 
 
-Let's state the existence of square root for positive real numbers
- -/
-theorem sqrt_exists : ∀ (y : ℝ), y ≥ 0 → ∃ (x : ℝ), x ≥ 0 ∧ x * x = y := sorry
+The square root function is defined in mathlib_, we do not provide the 
+full definition here just 
 
-/-!
-We omit the proof of this theorem here.
+.. _mathlib: https://leanprover-community.github.io/mathlib_docs/data/real/sqrt.html#real.sqrt
 
-Now we can define the noncomputable version of `sqrt` that returns the 
-square root for positive numbers and zero for negative numbers.
  -/
 noncomputable
-def sqrt (y : ℝ) : ℝ := sorry
-
-theorem sqrt_on_pos (y : ℝ) :   y ≥ 0  → sqrt y * sqrt y = y := sorry
-theorem sqrt_on_neg (y : ℝ) : ¬(y ≥ 0) → sqrt y = 0 := sorry
+def real.sqrt (x : ℝ) : ℝ := sorry
+  --Possible noncomputable definition
+  -- if x > 0 then
+  --   inf { y // x < y * y }     -- infimum of a set is noncomputable
+  -- else
+  --   0
 
 /-!
 
-Here we just postulate the existence of the square root function but
-its full definition can be found in mathlib_.
+(TODO: Note somewhere that we assume that we have reals with computable + - * / <
+  This either opens up a can of worms about consistency or floating point arithmetics.
+  And I do not want to get into that right now ...)
 
-.. _mathlib: https://leanprover-community.github.io/mathlib_docs/data/real/sqrt.html
+The `real.sqrt` function satisfies two main properties. The first one, 
+called `real.mul_self_sqrt`_, for non-negative :math:`x` we have 
+:math:`\sqrt{x} \sqrt{x} = x`. The second one, called `real.sqrt_eq_zero_of_nonpos`_, 
+for negative :math:`x` the :math:`\sqrt{x}` is defined to be zero. In math class
+square root of negative number is usually not defined, however in type theory
+this does not work so well. This is similar to division by zero, in 
+Lean we have `1/0 = 0`, you can read about this more on Kevin Buzzard's page_.
 
+.. _page: https://xenaproject.wordpress.com/2020/07/05/division-by-zero-in-type-theory-a-faq/
+
+.. _`real.sqrt_eq_zero_of_nonpos`: https://leanprover-community.github.io/mathlib_docs/data/real/sqrt.html#real.sqrt_eq_zero_of_nonpos
+
+.. _`real.mul_self_sqrt`:  https://leanprover-community.github.io/mathlib_docs/data/real/sqrt.html#real.mul_self_sqrt
+
+ -/
+
+theorem real.mul_self_sqrt {x : ℝ} (h : 0 ≤ x) 
+  : real.sqrt x * real.sqrt x = x := sorry
+
+@[simp]
+theorem real.sqrt_eq_zero_of_nonpos {x : ℝ} (h : ¬(0 ≤ x)) 
+  : real.sqrt x = 0 := sorry
+
+/-!
 
 In particular, we can proof that the Babylonian and Bakhshali method 
-converge to the square root
+converge to the square root. Again we omit the proofs here again, but 
+it is well in the capability of Lean and mathlib to do so.
+
  -/
 
-theorem sqrtBabylonian.limit (x₀ y : ℝ) : x₀ ≥ 0 → y ≥ 0 →
-  sqrt y = limit λ n => sqrtBabylonian n x₀ y := sorry
+theorem sqrtBabylonian.limit {x : ℝ} (y₀ : ℝ) (hy : y₀ ≥ 0) (hx : 0 ≤ x)
+  : real.sqrt x = limit λ n => sqrtBabylonian n y₀ x := sorry
 
-theorem sqrtBakhshali.limit (x₀ y : ℝ) : x₀ ≥ 0 → y ≥ 0 →
-  sqrt y = limit λ n => sqrtBakhshali n x₀ y := sorry
+theorem sqrtBakhshali.limit {x : ℝ} (y₀ : ℝ) (hy : y₀ ≥ 0) (hx : 0 ≤ x)
+  : real.sqrt y = limit λ n => sqrtBakhshali n x₀ y := sorry
 
 /-!
-We omit these proofs again as it is not what were are after right now.
+
+To build an approximation, we state `approx sqrtApprox := real.sqrt` followed
+by instructions how to construct such approximation. The type of `sqrtApprox` is 
+`Approx real.sqrt`, which is an object holding couple of useful informations
+about the approximation:
+
+  1. Parameters to controll the accuracy of the approximation.
+  2. Options to switch between different approximations.
+  3. Under what conditions this approximation is actually valid.
+
+Here is the Lean code to generate the approximation
  -/
 
-approx sqrtApprox := sqrt
+approx sqrtApprox := real.sqrt
 by 
-  trace_state
   conv => 
-    enter [1,y] 
+    trace_state
+    enter [1] -- Step into `Approx ...`
+    enter [x] -- introduce the argument `x`
 
-    if h : y≥0 then 
-      rw [sqrtBabylonian.limit 1 y (by native_decide) h]
+    if h : 0 ≤ x then 
+      -- For positive `x` we apply the Babylonian method
+      rw [sqrtBabylonian.limit (x/2) (sorry) h]
     else
-      rw [sqrt_on_neg y h]
-
+      -- For negative `x` we know the result is zero
+      rw [real.sqrt_eq_zero_of_nonpos h]
   
+  -- We pick 4 steps as default
   approx_limit 4; intro n
 
 /-!
 
+(TODO: Add parameter to switch between Babylonian and Bakhshali.)
+
 To get the value of an approximation we need to call `.val!` 
 
  -/
+
 #eval sqrtApprox.val! 2
