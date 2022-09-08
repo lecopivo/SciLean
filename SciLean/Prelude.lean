@@ -16,6 +16,10 @@ notation "!?" P => (sorry : P)
 
 macro:max "#" noWs t:term : term => `(⟨$t, by decide⟩)
 
+-- TODO: Add compiler flag to diplay proof 
+axiom sorryProofAxiom {P : Prop} : P 
+macro "sorry_proof" : term => do  `(sorryProofAxiom)
+macro "sorry_proof" : tactic => `(apply sorry_proof)
 
 open Lean.Meta
 
