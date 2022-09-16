@@ -4,20 +4,52 @@ import SciLean.Algebra
 
 namespace SciLean
 
+/-- Prism
+
+  A prism is anything that can be created from a point and two operations: cone and product. This way we can basic geometric primitives like triangles, squares, pyramids, n-simplices, n-cubes etc.
+
+
+
+
+```
+    *   = point
+
+    *
+   / \  = cone *--*
+  *---*
+
+  *--*          *
+  |  |  = prod  |   *--*
+  *--*          *
+```
+
+  segment  = cone point  
+  triangle = cone segment
+  square   = prod segment segment
+  cube     = prod segment square
+  tet      = cone triangle
+  pyramid  = cone square
+
+  n-simples = coneⁿ point 
+  n-cube    = (prod segment)ⁿ⁻¹ segment
+
+  Non-uniqueness
+  --------------
+
+  TODO: This definition needs to be factored
+
+  Cartain prisms have multiple different representations. For example `cube = prod segment square ≈ prod square segment`. This is the reason this inductive type is only a representation and not the final prism.
+
+ -/
 inductive Prism where
   | point : Prism
   | cone (P : Prism) : Prism
   | prod (P Q : Prism) : Prism
+deriving DecidableEq
 
 namespace Prism
 
-  def beq (P Q : Prism) : Bool :=
-    match P, Q with
-    | point, point => true
-    | cone P, cone Q => beq P Q
-    | prod P P', prod Q Q' => beq P Q ∧ beq P' Q'
-    | _, _ => false
-
+  /-- Number of `n`-dimensional faces of prism `P` -/
   def faceCount (P : Prism) (n : Nat) : Nat :=
     match P with
     | point => if n == 0 then 1 else 0
@@ -27,11 +59,31 @@ namespace Prism
       | n+1 => P.faceCount n + P.faceCount (n+1)
     | prod P Q => ∑ i : Fin (n+1), (P.faceCount i.1) * (Q.faceCount (n-i.1))
 
+  /-- Dimension of a prism -/
   def dim : (P : Prism) → Nat
     | point => 0
     | cone P' => 1 + P'.dim
     | prod P' Q' => P'.dim + Q'.dim
 
+  /-- 
+    The type `Face P` represends faces of a prism `P` 
+
+    Point prism can have only one face, the point itself.
+
+    Cone prisms have three types of faces.
+      1. the tip
+      2. sides of the code
+      3. faces of the base prism
+    
+    Product prisms have faces are created by products of 
+
+    Categorical perspective
+    -----------------------
+
+    A face is a inclusion of a prism `F` into a prism `P`. For a face `f : Face P`, we can obtain `F` by `f.toPrism`.
+    
+    Then we can thin about `f` as a morphism `F → P` in the `Prism` category.
+  -/
   inductive Face : Prism → Type where
     | point : Face point
     | tip (P : Prism) : Face (cone P)
@@ -39,22 +91,22 @@ namespace Prism
     | base {P : Prism} (f : Face P) : Face (cone P)
     | prod {P Q : Prism} (f : Face P) (g : Face Q) 
       : Face (prod P Q)
+  deriving DecidableEq
 
   namespace Face
 
-    def beq {P} (f g : Face P) : Bool :=
-      match P, f, g with
-      | _, point, point => true
-      | _, tip _, tip _ => true
-      | _, cone f, cone g => beq f g
-      | _, base f, base g => beq f g
-      | Prism.prod P' Q', prod f f', prod g g' => beq f g ∧ beq f' g'
-      | _, _, _ => false
+/--
+A face of a prism is again a prism. This function converts 
 
-    instance {P} : DecidableEq (Face P) :=
-      λ f g =>
-        if f.beq g then (isTrue sorry) else (isFalse sorry)
+---
 
+Categorical perspective
+-----------------------
+
+A face is a inclusion of a prism `F` into a prism `P`. For a face `f : Face P`, we can obtain `F` by `f.toPrism`.
+
+Then we can thin about `f` as a morphism `F → P` in the `Prism` category.
+-/
     def toPrism {P} (f : Face P) : Prism :=
       match f with
       | point => Prism.point
@@ -63,8 +115,10 @@ namespace Prism
       | base f => f.toPrism
       | prod f g => Prism.prod f.toPrism g.toPrism
 
+    /-- Dimension of a prism -/
     def dim {P} (f : Face P) : Nat := f.toPrism.dim
 
+    /-- Face of a face is a face. For further details see `Face.ofFace` -/
     def ofFace' {P Q : Prism}
       (f : Face P) (g : Face Q) (h : f.toPrism = Q) 
       : Face P
@@ -83,6 +137,17 @@ namespace Prism
           prod (ofFace' f' g' (by simp[toPrism] at h; apply h.1)) 
                (ofFace' f'' g'' (by simp[toPrism] at h; apply h.2))
 
+/--
+Face of a face is a face. If we have a face `f` of prism `P` and a face `g` of prism `f.toPrism` then `g` is also a face of `P`.
+
+
+---
+
+Categorical perspective
+----------------------- 
+This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a morphism `S → Q`. Then `g.ofFace : Face P` is just a composition `f∘g` in the `Prism` category.
+-/
+
     def ofFace {P} {f : Face P} (g : Face f.toPrism) : Face P
       := ofFace' f g (by rfl)
 
@@ -90,12 +155,13 @@ namespace Prism
     -- TODO: Fix this, g.ofFace get interpreted as `ofFace (f := g)`
     -- example {P} (f : Face P) (g : Face f.toPrism) : Face P := g.ofFace
 
+    /-- The prism type of a face does not depend on the larger prism. -/
     @[simp]
     theorem toPrism_ofFace {P} {f : Face P} (g : Face f.toPrism) 
       : Face.toPrism (Face.ofFace g) = Face.toPrism g
       := sorry
 
-    -- First face of give dimension `n`
+    /-- The first `n`-face of `P` -/
     def first (P : Prism) (n : Nat) : Option (Face P) :=
       match P, n with
       | Prism.point, 0 => some point
@@ -114,7 +180,11 @@ namespace Prism
           | _, _ => continue
         none
 
-    -- Next face of the same dimension
+    /-- The dimension of the first `n`-face is really `n` -/
+    theorem first.dim (P: Prism) (n : Nat) (h : n ≤ P.dim)
+      : (Face.first P n).map (·.dim)  = some n := sorry
+
+    /-- The next face of the same dimension -/
     def next {P} (f : Face P) : Option (Face P) := 
       match P, f.dim, f with
       | Prism.point, 0, point => none
@@ -146,7 +216,7 @@ namespace Prism
               match first P' (f'.dim+1), first Q' m'' with
               | some f'', some g'' => some $ Face.prod f'' g''
               | _, _ => none
-      | _, _, _ => none -- this should be unreachable!
+      | _, _, _ => panic! "Unreachable code in Face.next. This is a bug!"
 
     instance {P} : Iterable (Face P) :=
     {
@@ -161,7 +231,7 @@ namespace Prism
       decEq := by infer_instance
     }
 
-    -- Give index of a face amog face of the same dimension
+    /-- Index of a face amog faces of the same dimension -/
     def toFin {P} (f : Face P) : Fin (P.faceCount f.dim) := 
       match P, f.dim, f with
       | _, _, point => ⟨0, sorry⟩
@@ -175,6 +245,7 @@ namespace Prism
 
   end Face
 
+  /-- Face of fixed dimension -/
   def NFace (P : Prism) (n : Nat) := {f : Face P // f.dim = n}
 
   namespace NFace
