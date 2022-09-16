@@ -18,7 +18,7 @@ open Lean Parser Term
 
 open TSyntax.Compat
 
-syntax (priority := high+1) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " := " term : doElem
+syntax (priority := high) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " := " term : doElem
 macro_rules
 | `(doElem| $x:ident[ $i:term ] := $xi) => do
   let lhs ← `($x[$i])
@@ -29,10 +29,31 @@ macro_rules
     let var ← `(y)
     let xi' ← xi.raw.replaceM (λ s => if s == lhs.raw then pure $ .some var else pure $ none)
     let g ← `(λ $var => $xi')
-    -- dbg_trace s!"aliasing, new rhs {g.raw.prettyPrint}"
     `(doElem| $x:ident := modifyElem ($x:ident) $i $g)
   else 
     `(doElem| $x:ident := setElem ($x:ident) $i $xi)
+
+--- Syntax for: x[i] := y, x[i] ← y, x[i] += y, x[i] -= y, x[i] *= y
+syntax (priority := high) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " ← " term : doElem
+syntax atomic(Term.ident) noWs "[" term "]" " += " term : doElem
+syntax atomic(Term.ident) noWs "[" term "]" " -= " term : doElem
+syntax atomic(Term.ident) noWs "[" term "]" " *= " term : doElem
+syntax atomic(Term.ident) noWs "[" term "]" " *.= " term : doElem
+syntax atomic(Term.ident) noWs "[" term "]" " /= " term : doElem
+
+--- Rules for: x[i] := y, x[i] += y, x[i] -= y, x[i] *= y
+macro_rules
+| `(doElem| $x:ident[ $i:term ] ← $xi) => `(doElem| $x:ident := setElem ($x:ident) $i (← $xi))
+macro_rules
+| `(doElem| $x:ident[ $i:term ] += $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => val + $xi))
+macro_rules
+| `(doElem| $x:ident[ $i:term ] -= $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => val - $xi))
+macro_rules
+| `(doElem| $x:ident[ $i:term ] *= $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => val * $xi))
+macro_rules
+| `(doElem| $x:ident[ $i:term ] *.= $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => $xi * val))
+macro_rules
+| `(doElem| $x:ident[ $i:term ] /= $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => val / $xi))
 
 
 class FunType (T : Type) (X Y : outParam Type) extends GetElem T X Y (λ _ _ => True) where
