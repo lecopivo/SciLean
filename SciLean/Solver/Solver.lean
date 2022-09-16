@@ -13,6 +13,38 @@ inductive ExactSolution {α : Type _} : (spec : α → Prop) → Type _
 def ExactSolution.val {α} {spec : α → Prop} : ExactSolution spec → α 
 | ExactSolution.exact a' _ => a'
 
+inductive Parameter where
+| fin (n : Nat) (m : Fin n) : Parameter
+| nat (n : Nat) : Parameter
+| int  (n : Int) : Parameter
+| float (x : Float) : Parameter
+| string (s : String) : Parameter
+
+def Parameter.type : Parameter → Type
+| fin n _ => Fin n
+| nat _ => Nat
+| int _ => Int
+| float _ => Float
+| string _ => String
+
+def Parameter.val (p : Parameter) : p.type :=
+match p with
+| fin _ m => m
+| nat n => n
+| int n => n
+| float x => x
+| string s => s
+
+-- This might not be provable as `Fin n = Fin m` does not imply `n = m`
+instance (p p' : Parameter) : Decidable (p.type = p'.type) :=
+match p, p' with
+| .fin n _, .fin n' _ => if h : n = n' then isTrue (by simp[Parameter.type]; rw[h]) else isFalse sorry
+| .nat _, .nat _ => isTrue (by rfl) 
+| .int _, .int _ => isTrue (by rfl) 
+| .float _, .float _ => isTrue (by rfl)
+| .string _, .string _ => isTrue (by rfl)
+| _, _ => isFalse sorry
+
 inductive ApproxSolution {α : Type _} [Vec α] : (spec : α → Prop) → Type _ 
 | exact {spec : α → Prop}
     (impl : α)
@@ -51,6 +83,13 @@ approximation
     (impl : ApproxSolution (specₙ n))
     (help : String)
     : ApproxSolution spec
+| param {spec : α → Prop} {β : Type}
+    (impl : β → ApproxSolution spec)
+    (p : Parameter)
+    (h : p.type = β)
+    (key : String)
+    (help : String)
+    : ApproxSolution spec
 | check {spec : α → Prop}
     {P : Prop} [dec : Decidable P]
     (impl : P → ApproxSolution spec)
@@ -65,9 +104,28 @@ approximation
 def ApproxSolution.val! {α} [Vec α] {spec : α → Prop} : ApproxSolution spec → α 
 | exact impl _ => impl
 | approx _ _ n impl key _ => (impl n).val!
+| param impl p h _ _ => (impl (h ▸ p.val)).val!
 | weakApprox _ _ _ impl _ => impl.val!
 | check      impl _ => (impl sorry).val!
 | assumption impl _ => (impl sorry).val!
+
+def ApproxSolution.changeParam {α} [Vec α] {spec : α → Prop} 
+  (p : Parameter) (key : String) 
+  : ApproxSolution spec → ApproxSolution spec
+| exact impl h => exact impl h
+| approx _ h n impl key' help => approx _ h n (λ n => (impl n).changeParam p key) key' help
+| weakApprox _ h n impl help => weakApprox _ h n (impl.changeParam p key) help
+| param impl p' h key' help => 
+  if key = key' then
+    if p.type = p'.type then
+      param impl p' h key' help
+    else
+      param (λ p' => (impl p').changeParam p key) p' h key' help
+  else
+    param (λ p' => (impl p').changeParam p key) p' h key' help
+| check impl help => check (λ h => (impl h).changeParam p key) help
+| assumption impl help => assumption (λ h => (impl h).changeParam p key) help
+-- | e => e
 
 ----------------------------------------------------------------------
 
