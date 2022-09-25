@@ -1,6 +1,7 @@
 import SciLean.Prelude
 import SciLean.Mathlib.Data.Enumtype
 import SciLean.Algebra
+import SciLean.Core
 
 namespace SciLean
 
@@ -302,6 +303,9 @@ namespace Prism.Repr
       | n+1 => P.faceCount n + P.faceCount (n+1)
     | prod P Q => ∑ i : Fin (n+1), (P.faceCount i.1) * (Q.faceCount (n-i.1))
 
+  abbrev pointCount (P : Prism.Repr) : Nat := P.faceCount 0
+  abbrev edgeCount  (P : Prism.Repr) : Nat := P.faceCount 1
+
   /-- 
     The type `Face P` represends faces of a prism `P` 
 
@@ -330,6 +334,30 @@ namespace Prism.Repr
       : Face (prod P Q)
   deriving DecidableEq
 
+
+  inductive Face' : Type where
+    | point : Face'
+    | tip (P : Prism.Repr) : Face'
+    | cone (f : Face') : Face'
+    | base (f : Face') : Face'
+    | prod (f g : Face')  : Face'
+  deriving DecidableEq, Inhabited
+
+  def Face'.toPrism : Face' → Prism.Repr
+    | point => .point
+    | tip _ => .point
+    | cone f => f.toPrism.cone
+    | base f => f.toPrism
+    | prod f g => f.toPrism.prod g.toPrism
+
+  def Face'.ofPrism : Face' → Prism.Repr
+    | point => .point
+    | tip P => P.cone
+    | cone f => f.ofPrism.cone
+    | base f => f.ofPrism.cone
+    | prod f g => f.ofPrism.prod g.ofPrism
+
+
   namespace Face
 
   instance : Inhabited (Face P) := 
@@ -342,7 +370,7 @@ namespace Prism.Repr
 
   def toString : Face P → String 
     | point => "•"
-    | tip P => s!"(tip ({P})"
+    | tip P => s!"(tip ({P}))"
     | cone f => s!"(cone {f.toString})"
     | base f => s!"(base {f.toString})"
     | prod f g => s!"({f.toString} × {g.toString})"
@@ -517,27 +545,6 @@ namespace Prism.Repr
     | _ => panic! "Unreachable code in Face.fromCanonical! This is a bug! Case: .prod P Q"
 
 
-  #check Nat
-
-  -- | .cone P, _, .cone f => 
-  --   have h : (P.cone).toCanonical = P.toCanonical.cone := sorry_proof
-  --   sorry_proof -- .cone f.fromCanonical
-  -- | .cone P, _, .base f => 
-  --   have h : (P.cone).toCanonical = P.toCanonical.cone := sorry_proof
-  --   sorry_proof --(h ▸ .base f.toCanonical)
-
-  -- | .prod P Q, _, .prod f g => sorry_proof
-
-
-  -- def fromCanonical {P} (f : Face P.toCanonical) : Face P := 
-  -- match P, f with 
-  -- | .point, .point => 
-  --   have h : .point = Repr.point.toCanonical:= sorry_proof
-  --   (h ▸ .point)
-  -- | .cone P, _ => sorry_proof
-  -- | .prod P Q, _ => sorry_proof
-
-
 /--
 A face of a prism is again a prism. This function converts 
 
@@ -561,47 +568,42 @@ Then we can thin about `f` as a morphism `F → P` in the `Prism` category.
     /-- Dimension of a prism -/
     def dim {P} (f : Face P) : Nat := f.toPrism.dim
 
-    /-- Face of a face is a face. For further details see `Face.ofFace` -/
-    def ofFace' {P Q : Prism.Repr}
-      (f : Face P) (g : Face Q) (h : f.toPrism = Q) 
-      : Face P
-      :=
-        match f, g, h with 
-        |   point,   point, _ => point
-        |  tip P',   point, _ => tip P'
-        | cone _,   tip _, _ => tip _
-        | cone f', cone g', h => 
-          cone (ofFace' f' g' (by simp[toPrism] at h; apply h))
-        | cone f', base g', h => 
-          base (ofFace' f' g' (by simp[toPrism] at h; apply h))
-        | base f',      g', h => 
-          base (ofFace' f' g' (by simp[toPrism] at h; apply h))
-        | prod f' f'', prod g' g'', h => 
-          prod (ofFace' f' g' (by simp[toPrism] at h; apply h.1)) 
-               (ofFace' f'' g'' (by simp[toPrism] at h; apply h.2))
-
 /--
-Face of a face is a face. If we have a face `f` of prism `P` and a face `g` of prism `f.toPrism` then `g` is also a face of `P`.
+Face of a face is a face. If we have a face `f` of prism `P` and a face `g` of prism `f.toPrism` then `g` is also a face of `P`. 
+
+It is a called "comp" because we can think of `f` and `g` as inclusions of a prism to a larger prism. Reinterpreting `g` as a face of `P` is just a composition of these inclusions.
 
 
 ---
 
 Categorical perspective
 ----------------------- 
-This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a morphism `S → Q`. Then `g.ofFace : Face P` is just a composition `f∘g` in the `Prism` category.
+This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a morphism `S → Q` in `Prism` category, `comp f g : Face P` is just their composition.
 -/
 
-    def ofFace {P} {f : Face P} (g : Face f.toPrism) : Face P
-      := ofFace' f g (by rfl)
+    def comp {P Q : Prism.Repr}
+      (f : Face P) (g : Face Q) (h : f.toPrism = Q := by (first | rfl |simp)) 
+      : Face P
+      :=
+        match f, g, h with 
+        | point,   point, _ => point
+        | tip P',   point, _ => tip P'
+        | cone _,   tip _, _ => tip _
+        | cone f', cone g', h => 
+          cone (f'.comp g' (by simp[toPrism] at h; apply h))
+        | cone f', base g', h => 
+          base (f'.comp g' (by simp[toPrism] at h; apply h))
+        | base f',      g', h => 
+          base (f'.comp g' (by simp[toPrism] at h; apply h))
+        | prod f' f'', prod g' g'', h => 
+          prod (f'.comp g' (by simp[toPrism] at h; apply h.1)) 
+               (f''.comp g'' (by simp[toPrism] at h; apply h.2))
 
-    example {P} (f : Face P) (g : Face f.toPrism) : Face P := ofFace g
-    -- TODO: Fix this, g.ofFace get interpreted as `ofFace (f := g)`
-    -- example {P} (f : Face P) (g : Face f.toPrism) : Face P := g.ofFace
 
     /-- The prism type of a face does not depend on the larger prism. -/
     @[simp]
     theorem toPrism_ofFace {P} {f : Face P} (g : Face f.toPrism) 
-      : Face.toPrism (Face.ofFace g) = Face.toPrism g
+      : (f.comp g).toPrism = g.toPrism
       := sorry_proof
 
     /-- The first `n`-face of `P` -/
@@ -703,30 +705,30 @@ This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a 
 
 
   /-- Face of fixed dimension -/
-  def NFace (P : Prism.Repr) (n : Nat) := {f : Face P // f.dim = n}
+  def FaceN (P : Prism.Repr) (n : Nat) := {f : Face P // f.dim = n}
 
-  namespace NFace
+  namespace FaceN
 
-    instance {P} : DecidableEq (NFace P n) := by simp[NFace] infer_instance done
+    instance {P} : DecidableEq (FaceN P n) := by simp[FaceN] infer_instance done
 
-    def first {P n} : Option (NFace P n) :=
+    def first {P n} : Option (FaceN P n) :=
       match Face.first P n with
       | some f' => some ⟨f', sorry_proof⟩
       | none => none
 
-    def next {P n} (f : NFace P n) : Option (NFace P n) :=
+    def next {P n} (f : FaceN P n) : Option (FaceN P n) :=
       match f.1.next with
       | some f' => some ⟨f', sorry_proof⟩
       | none => none
 
-    instance {P n} : Iterable (NFace P n) :=
+    instance {P n} : Iterable (FaceN P n) :=
     {
       first := first
       next := next
       decEq := by infer_instance
     }
 
-    def toFin {P n} (f : NFace P n) : Fin (P.faceCount n) := (f.2 ▸ f.1.toFin)
+    def toFin {P n} (f : FaceN P n) : Fin (P.faceCount n) := (f.2 ▸ f.1.toFin)
 
     -- def Face.fromFin (P : Prism) (n : Nat) (i : Fin (P.faceCount n)) : Face P n := 
     --   match P, n, i with
@@ -760,7 +762,7 @@ This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a 
     --     sorry_proof
     --     -- panic! "This should be unreachable!"
 
-  end NFace
+  end FaceN
 
   -- def segment  := cone point
   -- def triangle := cone segment
@@ -770,85 +772,75 @@ This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a 
   -- def pyramid  := cone square
   -- def prism    := prod segment triangle
 
+  def facesN (P : Prism.Repr) (d : Nat) := Iterable.fullRange (FaceN P d)
+  def faces  (P : Prism.Repr) := Iterable.fullRange (Face P)
+
+  def Face.facesN {P} (f : Face P) (d : Nat) := Iterable.fullRange (FaceN f.toPrism d)
+  def Face.faces  {P} (f : Face P) := Iterable.fullRange (Face f.toPrism)
+
   def analyzePrism (P : Prism.Repr) : IO Unit := do
     IO.println s!"Analyzing {P}"
 
     for d in [0:P.dim+1] do
       IO.println s!"  Looking at {d}-faces"
+      
+      for f in P.facesN d do
+        IO.println s!"     id: {f.1.dim} | {f.1} | {f.1.toPrism} | {f.1.toPrism.toCanonical} | canonical: {f.1.toCanonical.fromCanonical == f.1}"
 
-      let mut f := Face.first P d |>.getD default
-      for i in [0:P.faceCount d] do
+        IO.print s!"       "
+        for g in f.1.faces do
+          IO.print s!"| {g.toPrism.toCanonical} "
+        IO.println s!""
 
-        IO.println s!"    face {i}: id:{f.toFin} | {f.toPrism} | {f.toPrism.toCanonical} | canonical: {f == f}"
+      -- let mut f := Face.first P d |>.getD default
+      -- for i in [0:P.faceCount d] do
 
-        f.toPrism.forFacesM 
-          λ g => IO.println s!"     {g.toPrism == (Face.ofFace g |>.toPrism)}"-- g.toPrism.forFacesM 
+      --   IO.println s!"    face {i}: id:{f.toFin} | {f.toPrism} | {f.toPrism.toCanonical} | canonical: {f == f}"
 
-        f.toCanonical.toPrism.forFacesM 
-          λ g => IO.println s!"     {g.toCanonical.fromCanonical == g}"-- g.toPrism.forFacesM 
+      --   f.toPrism.forFacesM 
+      --     λ g => IO.println s!"     {g.toPrism == (f.comp g |>.toPrism)}"-- g.toPrism.forFacesM 
 
-        --     λ h => 
-        --       let h'  := Face.ofFace h
-        --       let h'' := Face.ofFace h'
-        --       IO.println s!"{h''}"
-        -- -- IO.println ""
-        f := f.next.getD default
+      --   f.toCanonical.toPrism.forFacesM 
+      --     λ g => IO.println s!"     {g.toCanonical.fromCanonical == g}"-- g.toPrism.forFacesM 
 
+      --   --     λ h => 
+      --   --       let h'  := Face.ofFace h
+      --   --       let h'' := Face.ofFace h'
+      --   --       IO.println s!"{h''}"
+      --   -- -- IO.println ""
+      --   f := f.next.getD default
 
-  #eval analyzePrism triangle
-  #eval analyzePrism (point.prod (square.prod point))
+  -- #eval analyzePrism triangle
+  -- #eval analyzePrism (point.prod (square.prod point))
+  -- #eval analyzePrism pyramid
+  -- #eval analyzePrism (triangle.prod segment)
+  -- #eval ((cube).cone.prod triangle).dim
 
-  #eval analyzePrism pyramid
+  abbrev Space : Prism.Repr → Type
+  | .point => Unit
+  | .cone P => ℝ × P.Space
+  | .prod P Q => P.Space × Q.Space
 
-  #eval analyzePrism (triangle.prod segment)
-
-  -- ((tip (•) × ((cone •) × (tip (• ∧ •)))
-
-  -- #eval analyzePrism ((cube).cone.prod triangle)
-
-  #eval ((cube).cone.prod triangle).dim
-
-  -- #eval point.prod segment 
-
-
-
-#exit
-
-  #eval (
-    (do
-      let mut it := Face.first prism 2
-      for i in [0:100] do
-        match it with
-        | some f => do
-          IO.print s!"{f.toFin}: "
-          -- IO.print s!"{f.toPrism}: "
-          let mut jt := Face.first f.toPrism 0
-          for j in [0:100] do
-            match jt with
-            | some g => 
-              IO.print s!"{g.ofFace.toFin} "
-              jt := g.next
-            | none => break
-          IO.println ""
-          it := f.next
-        | none => break
-    ) : IO Unit)
-
-  -- Natural embedding space
-  def 𝔼 : (P : Prism) → Type
-    | point => Unit
-    | cone P' => ℝ × P'.𝔼
-    | prod P' Q' => P'.𝔼 × Q'.𝔼
-
-  instance E.Vec (P : Prism) : Vec P.𝔼 :=
+  instance instVecSpace (P : Prism.Repr) : Vec P.Space :=
     match P with
-    | point => by simp[𝔼]; infer_instance done
-    | cone P => by simp[𝔼]; apply (@instVecProd _ _ (by infer_instance) (Vec P)); done
-    | prod P Q => by simp[𝔼]; apply (@instVecProd _ _ (Vec P) (Vec Q)); done
+    | point =>    by simp[Space]; infer_instance done
+    | cone P =>   by simp[Space]; apply (@instVecProd _ _ (by infer_instance) (instVecSpace P)); done
+    | prod P Q => by simp[Space]; apply (@instVecProd _ _ (instVecSpace P) (instVecSpace Q)); done
 
-  def pointCount (P : Prism) : Nat := P.faceCount 0
+  def Face.embed {P : Prism.Repr} (f : Face P) (x : f.toPrism.Space) : P.Space :=
+  match f, x with
+  | .point, _ => ()
+  | .tip _x, _ => (1,0)
+  | .cone P', x'' => 
+    let (t', x') := x''
+    (t', (1-t')*(P'.embed x'))
+  | .base P', x'' =>
+    (0, (P'.embed x''))
+  | .prod P' Q', x'' =>
+    let (x', y') := x''
+    (P'.embed x', Q'.embed y')
 
-  def barycenter (P : Prism) : P.𝔼 :=
+  def barycenter (P : Prism.Repr) : P.Space :=
     match P with
     | point => 0
     | cone P' => 
@@ -857,41 +849,116 @@ This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a 
     | prod P Q =>
       (P.barycenter, Q.barycenter)
 
-  def pos {P : Prism} : NFace P 0 → P.𝔼 := sorry_proof
-  -- def pos {P : Prism} : Fin (P.pointCount) → ℝ^P.dim := sorry_proof
-
   -- def toRn : {P : Prism} → P.E → ℝ^P.dim := sorry_proof
   -- def fromRn : {P : Prism} → ℝ^P.dim → P.E := sorry_proof
 
-  def barycentricCoord {P : Prism} (p : NFace P 0) (x : P.𝔼) : ℝ := 
+  -- Most likely this has bad numerics!!!
+  -- What type of barycentric coordinates are these? They are not harmonic, maybe Wachspress?
+  -- Can we define different set of coordinates inductively?
+  def barycentricCoord {P : Prism.Repr} (p : FaceN P 0) (x : P.Space) : ℝ := 
     match P, p, x with
-    | point, _, _ => 0
-    | cone P', ⟨Face.tip _, _⟩, (t, x') => t
-    | cone P', ⟨Face.base p', _⟩, (t, x') => 
-      t * (barycentricCoord (!p' : NFace P' 0) x')
-    | prod P Q, ⟨Face.prod p q, _⟩, (x, y) => 
-      (barycentricCoord (!p : NFace P 0) x) * 
-      (barycentricCoord (!q : NFace Q 0) y)
-    | _, _, _ => 0 -- This should be unreachable!
+    | .point, _, _ => 0
+    | .cone .point, ⟨Face.base _, _⟩, (t, ()) => 1-t
+    | .cone _, ⟨Face.tip _, _⟩, (t, (_)) => t
 
-  -- def barycentricCoord {P : Prism} : Fin (P.pointCount) → ℝ^P.dim → ℝ := sorry_proof
 
-  -- embedding map from a face to prism
-  def Face.embed {P} (f : Face P) : f.toPrism.𝔼 → P.𝔼 := sorry_proof
+    -- Trivial implementation that is not numerically well behaved
+    -- | .cone _, ⟨Face.tip _, _⟩, (t, _) => t
+    -- | .cone _, ⟨Face.base p', _⟩, (t, x') => 
+    --   (1-t) * (barycentricCoord ⟨p', sorry_proof⟩ (1/(1-t) * x'))
+
+    | .cone (.cone _), ⟨Face.base (Face.tip _), _⟩, (_, (s, _)) => s
+    | .cone (.cone _), ⟨Face.base (Face.base p), _⟩, (t, (s, x)) => 
+      barycentricCoord ⟨Face.base p, sorry_proof⟩ (t+s, x)
+    | .cone (.prod P Q), ⟨Face.base (Face.prod p q), _⟩, (t, (x, y)) => 
+      (barycentricCoord ⟨Face.base p, sorry_proof⟩ (t,x)) * 
+      (barycentricCoord ⟨q, sorry_proof⟩ (1/(1-t) * y))
+    
+    | .prod _ _, ⟨Face.prod p q, _⟩, (x, y) => 
+      (barycentricCoord ⟨p, sorry_proof⟩ x) * 
+      (barycentricCoord ⟨q, sorry_proof⟩ y)
+    | _, _, _ => panic! "Unreachable code in barycentricCoord! This is a bug"
+
+  abbrev coord {P} (p : FaceN P 0) (x : P.Space) : ℝ := barycentricCoord p x
+
+  private def testBarycentricCoord (P : Prism.Repr) : IO Unit := do
+    IO.println s!"Testing barycentric coordinates of {P}"
+    
+    for pi in P.facesN 0 do
+      for pj in P.facesN 0 do
+        IO.print s!"{P.coord pi (pj.1.embed 0)} " 
+      
+      IO.println ""
+    IO.println ""
+
+  #eval testBarycentricCoord segment
+  #eval testBarycentricCoord cube.cone
+  #eval testBarycentricCoord pyramid.cone
 
 
   -- order preserving map from one prism to another prism
   -- Should include pure inclusions like Face but also collapses
   -- 
   -- There is some non-uniqueness, doing `shift` if the same as `cone ∘ base`
-  inductive Morph : Prism → Type
-    | point : Morph point
-    | tip (P : Prism) : Morph (cone P)
-    | cone {P : Prism} (f : Morph P) : Morph (cone P)
-    | base {P : Prism} (f : Morph P) : Morph (cone P)
-    | collapse {P : Prism} (m : Morph (cone P)) : Morph (cone (cone P))
-    | shift    {P : Prism} (m : Morph (cone P)) : Morph (cone (cone P))
-    | prod {P Q : Prism} (f : Morph P) (g : Morph Q) : Morph (prod P Q)
+  -- inductive Morph : Prism → Type
+  --   | point : Morph point
+  --   | tip (P : Prism) : Morph (cone P)
+  --   | cone {P : Prism} (f : Morph P) : Morph (cone P)
+  --   | base {P : Prism} (f : Morph P) : Morph (cone P)
+  --   | collapse {P : Prism} (m : Morph (cone P)) : Morph (cone (cone P))
+  --   | shift    {P : Prism} (m : Morph (cone P)) : Morph (cone (cone P))
+  --   | prod {P Q : Prism} (f : Morph P) (g : Morph Q) : Morph (prod P Q)
 
   -- Face if Morph not containing collapses and shifts
+
+end Prism.Repr
+
+def Prism.Rel (P Q : Prism.Repr) : Prop := P.toCanonical = Q.toCanonical
+
+def Prism := Quot Prism.Rel
+
+def Prism.nrepr (P : Prism) : Prism.Repr := sorry -- pick the unique canonical prism
+
+def Prism.Face.Rel (P : Prism) : (Σ P, Prism.Repr.Face P) → (Σ P, Prism.Repr.Face P) → Prop :=
+  λ f g => ∃ h : f.1.toCanonical = g.1.toCanonical ∧ f.1.toCanonical = P.nrepr, 
+            (h.1 ▸ f.2.toCanonical) = g.2.toCanonical
+
+def Prism.Face (P : Prism) := Quot (Prism.Face.Rel P)
+
+
+theorem toCanonical_toPrism (f : Prism.Repr.Face P) : f.toCanonical.toPrism = f.toPrism := sorry
+
+#check Quot.rec
+
+def Prism.Face.toPrism {P} : Face P → Prism := 
+  Quot.lift (λ f => Quot.mk _ f.2.toPrism) 
+
+  (by intro f g h; simp[Rel,ite] at h; simp; 
+      apply Quot.sound; simp[Prism.Rel]
+      conv => lhs; rw[← toCanonical_toPrism]
+      conv => rhs; rw[← toCanonical_toPrism]
+      cases h; rename_i h q;
+      rw[← q];
+      simp
+      done)
+
+structure Prism.Inclusion.Repr (Q P : Prism) where
+  (P' : Prism.Repr)
+  (f : Prism.Repr.Face P')
+  (hP : P'.toCanonical = P.nrepr)
+  (hQ : f.toPrism.toCanonical = Q.nrepr)
+
+
+
+
+
+  -- For finite element spaces look at:
+  -- 
+  -- Construction of scalar and vector finite element families on polygonal and polyhedral meshes
+  --   https://arxiv.org/abs/1405.6978
+  --
+  -- Minimal degree H(curl) And H(div) conforming finite elements on polytopal meshes
+  --   https://arxiv.org/abs/1502.01553
+  
+
 
