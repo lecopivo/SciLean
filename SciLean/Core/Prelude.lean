@@ -3,8 +3,6 @@ import SciLean.Algebra
 
 namespace SciLean
 
-def hold {α} (a : α) := a
-
 @[inline] 
 def kron {ι} [DecidableEq ι] (i j : ι) : ℝ := if (i=j) then 1 else 0
 
@@ -36,3 +34,4 @@ macro "ℤ(" "-∞" "," b:term "]" : term => `({x : ℤ // x ≤ $b})
 macro "ℤ(" "-∞" "," b:term ")" : term => `({x : ℤ // x < $b})
 macro "ℤ(" a:term "," "∞" "]" : term => `({x : ℤ // $a ≤ x})
 macro "ℤ(" a:term "," "∞" ")" : term => `({x : ℤ // $a < x})
+

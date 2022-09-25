@@ -7,19 +7,28 @@ import SciLean.Notation
 -- Export symbols from Mathlib
 export Enumtype (sum)
 
+@[inline]
+def hold {α} (a : α) := a
+
+
 --- !i creates an element of a subtype with an omitted proof
 --- much nicer then writing ⟨i, sorry⟩
 macro:max "!" noWs t:term : term => `(⟨$t, sorry⟩)
 
 notation "!?" P => (sorry : P)
 
+abbrev QuotientMk {α} [SA : Setoid α] (a : α) := Quotient.mk SA a
+notation " ⟦ " x " ⟧ " => QuotientMk x
 
-macro:max "#" noWs t:term : term => `(⟨$t, by decide⟩)
+macro:max "#" noWs t:term : term => `(⟨$t, by first | decide | simp | native_decide⟩)
 
 -- TODO: Add compiler flag to diplay proof 
 axiom sorryProofAxiom {P : Prop} : P 
 macro "sorry_proof" : term => do  `(sorryProofAxiom)
 macro "sorry_proof" : tactic => `(apply sorry_proof)
+
+-- class OTimes (α : Type u) (β : Type v) (γ : outParam $ Type w) where
+--   otimes : α → β → γ
 
 open Lean.Meta
 
