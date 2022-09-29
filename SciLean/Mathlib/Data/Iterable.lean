@@ -1,6 +1,6 @@
 import Mathlib.Algebra.Group.Defs
-
 import SciLean.Mathlib.Data.ColProd
+
 
 -- `first` is `Option ι` because we want `Fin n`, in particular `Fin 0`, to be Iterable.
 -- I do not like it and we might want to define a new `Fin n` where `n` is a true natural number i.e. positive integers
@@ -34,6 +34,15 @@ namespace Iterable
       | n+1 => move! n (next! i)
 
   instance : DecidableEq ι := Iterable.decEq
+
+  instance : DecidableEq Empty := λ a b => isTrue (by induction a; done)
+
+  instance : Iterable Empty :=
+  {
+    first := none
+    next  := λ i => none
+    decEq := by infer_instance
+  }
 
   instance : Iterable Unit :=
   {

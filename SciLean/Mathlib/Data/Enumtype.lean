@@ -1,5 +1,6 @@
 import SciLean.Mathlib.Data.Iterable
 
+
 -- Enumerable type
 class Enumtype (α : Type u) extends Iterable α where
   numOf : Nat
@@ -31,6 +32,17 @@ namespace Enumtype
   {
     upperBound := numOf ι
     valid := sorry
+  }
+
+  instance : Enumtype Empty :=
+  {
+    numOf := 0
+    fromFin := λ a => absurd (a := a.1<0) a.2 sorry
+    toFin := λ a => (by induction a; done)
+
+    first_fromFin := sorry
+    next_fromFin  := sorry
+    next_toFin    := sorry
   }
 
   instance : Enumtype Unit :=

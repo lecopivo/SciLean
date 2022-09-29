@@ -1,5 +1,4 @@
 import SciLean.Data.FunType
-import SciLean.Data.NRealArray
 
 namespace SciLean
 
@@ -41,7 +40,7 @@ macro A:term  noWs "[" ":" "," id2:term "]" : term => `(λ [i] => $A[(i, $id2)])
 
 namespace PowTypeCarrier
 
-  variable {X I} {T : outParam Type} [Enumtype I] [PowType T I X] [Inhabited X]
+  variable {X I} {T : outParam Type} [Enumtype I] [PowType T I X] -- [Inhabited X]
 
   instance : FunType (X^I) I X := PowType.toFunType
   instance : FunType.HasSet (X^I) := PowType.toHasSet
@@ -56,14 +55,12 @@ namespace PowTypeCarrier
 
 end PowTypeCarrier
 
-instance [Enumtype I] : PowType (NRealArray (numOf I)) I ℝ := ⟨⟩
+-- namespace PowTypeCarrier
 
-namespace PowTypeCarrier
+--   def reshape {I J} [Enumtype I] [Enumtype J] [PowType  (x : ℝ^I) (h : numOf I = numOf J) : ℝ^J :=
+--     ⟨x.1, h ▸ x.2⟩
 
-  def reshape {I J} [Enumtype I] [Enumtype J] (x : ℝ^I) (h : numOf I = numOf J) : ℝ^J :=
-    ⟨x.1, h ▸ x.2⟩
-
-end PowTypeCarrier
+-- end PowTypeCarrier
 
 instance {T I X} [PowType T I X] [Enumtype I] [ToString I] [ToString X] : ToString (X^I) :=
   ⟨λ x => Id.run do
