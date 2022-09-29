@@ -10,6 +10,12 @@ export Enumtype (sum)
 @[inline]
 def hold {α} (a : α) := a
 
+class Fact (P : Prop) : Prop where
+  proof : P
+
+instance : Fact (x=x) := ⟨by rfl⟩
+
+instance [Fact (n≠0)] : Inhabited (Fin n) := ⟨⟨0, sorry⟩⟩
 
 --- !i creates an element of a subtype with an omitted proof
 --- much nicer then writing ⟨i, sorry⟩
@@ -47,4 +53,10 @@ register_simp_attr addPull "Propagate Add Outside"
 -- initialize differentiation_simp_extension 
 --   : SimpExtension ← registerSimpAttr `my_simp "my own simp attribute"
 
-
+open Lean Elab Term Meta in
+elab "reduce_type_of" t:term : term => do
+  let val ← elabTerm t none
+  let typ ← inferType val
+  let reduced ← reduce typ (skipTypes := false)
+  let proof ← mkAppOptM ``rfl #[mkSort levelOne, reduced]
+  mkAppOptM ``cast #[typ, reduced, proof, val]
