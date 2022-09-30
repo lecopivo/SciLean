@@ -16,6 +16,32 @@
 
 ----------------------------------------------------------------------
 
+class Prod.Size (α : Type) where
+  size : Nat
+
+class Prod.SizeFlat (α : Type) where
+  sizeFlat : Nat
+
+instance (priority := low) (α) : Prod.Size α where
+  size := 1
+
+instance (priority := low) (α) : Prod.SizeFlat α where
+  sizeFlat := 1
+
+instance (α β) [sb : Prod.Size β] : Prod.Size (α×β) where
+  size := 1 + sb.size
+
+instance (α β) [sa : Prod.SizeFlat α] [sb : Prod.SizeFlat β] : Prod.SizeFlat (α×β) where
+  sizeFlat := sa.sizeFlat + sb.sizeFlat
+
+@[reducible]
+def Prod.size {α β : Type} [Prod.Size β] (_ : α × β) : Nat := Prod.Size.size (α × β)
+
+@[reducible]
+def Prod.sizeFlat {α β : Type} [Prod.SizeFlat α] [Prod.SizeFlat β] (_ : α × β) : Nat := Prod.SizeFlat.sizeFlat (α × β)
+
+----------------------------------------------------------------------
+
 class Prod.Get (X : Type) (i : Nat) where
   {T : Type}
   geti : X → T
@@ -95,9 +121,18 @@ abbrev hcurry {Xs Y : Type} (n : Nat) (f : Xs → Y) [Prod.Curry n Xs Y] := Prod
 ----------------------------------------------------------------------
 
 example : (42,3.14159,"hello").get 0 = 42 := by rfl
-example : (42,3.14159,"hello")[0] = 42 := by rfl
-example : (42,3.14159,"hello")[1] = 3.14159 := by rfl
-example : (42,3.14159,"hello")[2] = "hello" := by rfl
+example : (42,3.14159,"hello").get 1 = 3.14159 := by rfl
+example : (42,3.14159,"hello").get 2 = "hello" := by rfl
+example : ("hello", (42, 3.14159), "world").get 1 = (42,3.14159) := by rfl
+
+
+-- Product is right associative and we respect it
+example : (42,3.14159,"hello").size = 3 := by rfl
+example : (42,(3.14159,"hello")).size = 3 := by rfl
+example : ((42,3.14159),"hello").size = 2 := by rfl
+example : ((42,3.14159),"hello").sizeFlat = 3 := by rfl
+example : ((42,3.14159),("hello","world")).size = 3 := by rfl
+example : ((42,3.14159),("hello","world")).sizeFlat = 4 := by rfl
 
 example : (42,3.14159,"hello").set 2 "world" = (42,3.14159,"world") := by rfl
 
