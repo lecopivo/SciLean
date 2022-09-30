@@ -53,6 +53,9 @@ namespace PowTypeCarrier
   abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := FunType.mapIdx f x
   abbrev map (f : X → X) (x : X^I) : X^I := FunType.map f x
 
+  abbrev Index (x : X^I) := I
+  abbrev Value (x : X^I) := X
+  
 end PowTypeCarrier
 
 -- namespace PowTypeCarrier

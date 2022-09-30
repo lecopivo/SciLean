@@ -10,6 +10,8 @@ export Enumtype (sum)
 @[inline]
 def hold {α} (a : α) := a
 
+abbrev typeOf {α} (_ : α) := α
+
 class Fact (P : Prop) : Prop where
   proof : P
 
@@ -17,7 +19,6 @@ instance : Fact (x=x) := ⟨by rfl⟩
 
 instance [Fact (n≠0)] : Inhabited (Fin n) := ⟨⟨0, sorry⟩⟩
 instance {ι : Type} [Enumtype ι] [Nonempty ι] : Fact (numOf ι≠0) := sorry
-
 
 --- !i creates an element of a subtype with an omitted proof
 --- much nicer then writing ⟨i, sorry⟩

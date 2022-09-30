@@ -28,7 +28,7 @@ macro_rules
   if let .some _ := xi.raw.find? (λ x => lhs.raw == x) then
     let var ← `(y)
     let xi' ← xi.raw.replaceM (λ s => if s == lhs.raw then pure $ .some var else pure $ none)
-    let g ← `(λ $var => $xi')
+    let g ← `(λ ($var : typeOf $lhs) => $xi')
     `(doElem| $x:ident := modifyElem ($x:ident) $i $g)
   else 
     `(doElem| $x:ident := setElem ($x:ident) $i $xi)
@@ -36,8 +36,11 @@ macro_rules
 --- Syntax for: x[i] := y, x[i] ← y, x[i] += y, x[i] -= y, x[i] *= y
 syntax (priority := high) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " ← " term : doElem
 syntax atomic(Term.ident) noWs "[" term "]" " += " term : doElem
+syntax atomic(Term.ident) noWs "[" term "]" " +.= " term : doElem
 syntax atomic(Term.ident) noWs "[" term "]" " -= " term : doElem
+/-- Multiplication from right -/
 syntax atomic(Term.ident) noWs "[" term "]" " *= " term : doElem
+/-- Multiplication from left -/
 syntax atomic(Term.ident) noWs "[" term "]" " *.= " term : doElem
 syntax atomic(Term.ident) noWs "[" term "]" " /= " term : doElem
 
@@ -45,16 +48,17 @@ syntax atomic(Term.ident) noWs "[" term "]" " /= " term : doElem
 macro_rules
 | `(doElem| $x:ident[ $i:term ] ← $xi) => `(doElem| $x:ident := setElem ($x:ident) $i (← $xi))
 macro_rules
-| `(doElem| $x:ident[ $i:term ] += $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => val + $xi))
+| `(doElem| $x:ident[ $i:term ] += $xi) => `(doElem| $x:ident[$i] := $x[$i] + $xi)
 macro_rules
-| `(doElem| $x:ident[ $i:term ] -= $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => val - $xi))
+| `(doElem| $x:ident[ $i:term ] +.= $xi) => `(doElem| $x:ident[$i] := $xi + $x[$i])
 macro_rules
-| `(doElem| $x:ident[ $i:term ] *= $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => val * $xi))
+| `(doElem| $x:ident[ $i:term ] -= $xi) => `(doElem| $x:ident[$i] := $x[$i] - $xi)
 macro_rules
-| `(doElem| $x:ident[ $i:term ] *.= $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => $xi * val))
+| `(doElem| $x:ident[ $i:term ] *= $xi) => `(doElem| $x:ident[$i] := $x[$i] * $xi)
 macro_rules
-| `(doElem| $x:ident[ $i:term ] /= $xi) => `(doElem| $x:ident := modifyElem ($x:ident) $i (λ val => val / $xi))
-
+| `(doElem| $x:ident[ $i:term ] -= $xi) => `(doElem| $x:ident[$i] := $xi * $x[$i])
+macro_rules
+| `(doElem| $x:ident[ $i:term ] -= $xi) => `(doElem| $x:ident[$i] := $x[$i] / $xi)
 
 class FunType (T : Type) (X Y : outParam Type) extends GetElem T X Y (λ _ _ => True) where
   ext : ∀ f g : T, (∀ x : X, f[x] = g[x]) ↔ f = g

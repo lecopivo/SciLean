@@ -131,11 +131,17 @@ instance : PowType (DataArrayN α (numOf ι)) ι α := ⟨⟩
 #eval ((λ [i] => i) : (Fin 3 × Fin 2 × Fin 2)^(Fin 3 × Fin 2 × Fin 2)).data
 #eval ((λ [i] => i) : (Fin 3 × Fin 2 × Fin 2)^(Fin 3 × Fin 2 × Fin 2)).data.byteData
 
-#eval ((λ [i] => (i.1.toFloat, i.1.toFloat.sqrt)) : (Float × Float)^(Fin 3))
+#eval ((λ [i] => (i.1.toFloat, i.1.toFloat.sqrt)) : (Float × Float)^(Fin 17))
+
+#check Id.run do
+  let mut a : ℝ^{10} := λ [i] => i.1
+  for (i,_) in Enumtype.fullRange a.Index do
+    a[i] *= 1000
+    a[i] += Math.sqrt i.1 + a[i]
+  a
 
 #eval Id.run do
-  let mut a : ℝ^{100} := λ [i] => i.1
-  for (i,_) in Enumtype.fullRange (Fin 100) do
-    a[i] *= 1000 
-    a[i] += Math.sqrt i.1
+  let mut a : (ℝ×ℝ)^{3,3} := λ [i,j] => (i.1,j.1)
+  for (i,_) in Enumtype.fullRange a.Index do
+    a[i] := (Math.sqrt a[i].1, Math.exp a[i].2)
   a
