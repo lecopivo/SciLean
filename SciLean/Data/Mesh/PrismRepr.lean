@@ -184,6 +184,7 @@ namespace PrismRepr
     else 
       isTrue (by simp[LE.le]; assumption)
 
+
 /-- PrismRepr is in canonical form iff
   1. it is a point
   2. it is a cone of a prism in canonical form
@@ -619,6 +620,25 @@ namespace PrismRepr
       | none => True 
     := sorry_proof
 
+
+  def prodSplit (P : PrismRepr) : List PrismRepr :=
+  match P with
+  | .point  => [.point]
+  | .cone Q => [.cone Q]
+  | .prod Q₁ Q₂ => Q₁ :: Q₂.prodSplit
+
+  def prodHead (P : PrismRepr) : PrismRepr :=
+  match P with
+  | .point  => .point
+  | .cone Q => .cone Q
+  | .prod Q₁ _ => Q₁
+
+  def prodTail (P : PrismRepr) : PrismRepr :=
+  match P with
+  | .point  => .point
+  | .cone _ => .point
+  | .prod _ Q₂ => Q₂
+
   -- def first' (P : PrismRepr) (n : Option Nat := none) : Option (FaceRepr' P n) := 
   --   match n with
   --   | some n => P.first n |>.map (⟨·, sorry_proof, sorry_proof⟩)
@@ -837,6 +857,31 @@ def PrismRepr.barycentricCoord {P : PrismRepr} (p : FaceRepr) (_ : p.ofPrism = P
 
 theorem PrismRepr.barycentricCoord_sound {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space)
   : P.barycentricCoord p h x = P.barycentricCoordSpec p h x := sorry_proof
+
+
+namespace PrismRepr
+
+
+end PrismRepr
+
+  #eval triangle < square
+  #eval triangle * triangle 
+  #eval segment * pyramid |>.dim
+
+  -- Ordering of 4D prisms
+  -- cone of 3D
+  #eval tet.cone < pyramid.cone
+  #eval pyramid.cone < prism.cone
+  #eval prism.cone < cube.cone
+  #eval cube.cone < segment * tet
+  -- 1D × 3D
+  #eval segment * tet < segment * pyramid
+  #eval segment * pyramid < segment * prism
+  -- 1D × 1D × 2D
+  #eval segment * prism < segment * cube
+  -- 1D × 1D × 1D × 1D
+  #eval segment * cube < triangle * triangle
+
 
 -- order preserving map from one prism to another prism
 -- Should include pure inclusions like Face but also collapses

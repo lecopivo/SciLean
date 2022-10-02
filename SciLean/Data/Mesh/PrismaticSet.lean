@@ -7,7 +7,6 @@ namespace SciLean
   -- open Prism
 
 
-
   structure PrismaticSet where 
     /-- Index set for Elems of type `P` -/
     Elem (P : Prism) : Type     
@@ -139,7 +138,7 @@ namespace SciLean
   def zero' : Line.Elem segment' := cast (by rfl) (0 : ℤ)
   
   #check Line.face segmentSrc zero
-  #check reduce_type_of (Line.face segmentTrg zero')
+  -- #check reduce_type_of (Line.face segmentTrg zero')
     
   def Circle (n : Nat) : PrismaticSet :=
   {
@@ -343,45 +342,95 @@ namespace SciLean
 
 open Prism
 
-  -- This is Enumtype
-  structure PrismDecomposition (P : Prism) where
-    fst : Prism
-    snd : Prism
-    property : P = fst * snd
-
-  -- -- This is Enumtype if `S₁.FaceIndex P` and `S₂.FaceIndex P` are Enumtypes
-  -- structure PrismaticSet'.ProdFaceIndex (P : Prism) (S₁ S₂ : PrismaticSet') where
-  --   dec : PrismDecomposition P
-  --   Elem₁ : S₁.Elem dec.fst
-  --   Elem₂ : S₂.Elem dec.snd
-
   structure PrismaticSet.ProdElem (P : Prism) (Elem₁ Elem₂ : Prism → Type) where
     dec : PrismDecomposition P
     fst : Elem₁ dec.fst
     snd : Elem₂ dec.snd
 
-  def Face.split {P : Prism l} (f : Face P n) (P₁ P₂ : Prism l) (h : P = P₁ * P₂) : Face P₁ × Face P₂ :=
-    match f.1.nrepr.fromCanonical (P₁.nrepr.prod P₂.nrepr) sorry_proof with
-    | .prod f₁ f₂ =>
-      (⟨⟦l|f₁⟧, sorry_proof, by simp⟩, ⟨⟦l|f₂⟧, sorry_proof, by simp⟩)
-    | _ => absurd (a := True) sorry_proof sorry_proof /- fromCanonical (P * Q) has to be always a face of type .prod f g -/
+  instance [∀ P, Iterable (Elem₁ P)] [∀ P, Iterable (Elem₂ P)] 
+    : Iterable (PrismaticSet.ProdElem P Elem₁ Elem₂) :=
+  {
+    first := Id.run do
+      for dec in Iterable.fullRange (PrismDecomposition P) do
+        match Iterable.first (ι := Elem₁ dec.fst), Iterable.first (ι := Elem₂ dec.snd) with
+        | some fst, some snd => return (some ⟨dec, fst, snd⟩)
+        | _, _ => continue
+      none
+
+    next  := λ elem => 
+      match Iterable.next elem.snd with
+      | some snd' => some ⟨elem.dec, elem.fst, snd'⟩
+      | none => 
+        match (Iterable.next elem.fst), (Iterable.first (ι := Elem₂ elem.dec.snd)) with
+        | some fst', some snd' => some ⟨elem.dec, fst', snd'⟩
+        | _, _ =>
+          match Iterable.next elem.dec with
+          | some dec => Id.run do
+            let range : Iterable.LinRange (PrismDecomposition P) := some (dec, none)
+            for dec' in range do
+              match Iterable.first (ι := Elem₁ dec'.fst), Iterable.first (ι := Elem₂ dec'.snd) with
+              | some fst', some snd' => return (some ⟨dec', fst', snd'⟩)
+              | _, _ => continue
+            none
+          | none => none
+    
+    decEq := λ elem elem' =>
+      if h : elem.dec = elem'.dec 
+        then if
+         elem.fst = (h ▸ elem'.fst) ∧
+         elem.snd = (h ▸ elem'.snd)
+        then 
+          isTrue sorry_proof
+        else 
+          isFalse sorry_proof
+      else
+        isFalse sorry_proof
+  }
+
+  instance [∀ P, Enumtype (Elem₁ P)] [∀ P, Enumtype (Elem₂ P)] 
+    : Enumtype (PrismaticSet.ProdElem P Elem₁ Elem₂) :=
+  {
+    numOf := ∑ dec : PrismDecomposition P, numOf (Elem₁ dec.fst) * numOf (Elem₂ dec.snd)
+
+    toFin := λ e => Id.run do
+      let mut N := 0
+      for dec in Iterable.fullRange (PrismDecomposition P) do
+        if dec = e.dec then
+          break
+        else 
+          N += numOf (Elem₁ dec.fst) * numOf (Elem₂ dec.snd)
+      -- let N := ∑ dec < e.dec, numOf (Elem₁ dec.fst) * numOf (Elem₂ dec.snd)
+      ⟨(toFin e.fst).1 * (toFin e.snd).1 + N, sorry_proof⟩
+
+    fromFin := λ i => Id.run do
+      let mut id : Nat := i.1
+      for dec in Iterable.fullRange (PrismDecomposition P) do
+        let N₁ := numOf (Elem₁ dec.fst)
+        let N₂ := numOf (Elem₂ dec.fst)
+        let N := N₁ * N₂
+        if id < N then
+          let i := id / N₂
+          let j := id % N₂
+          return ⟨dec, fromFin ⟨i,sorry_proof⟩, fromFin ⟨j,sorry_proof⟩⟩
+        else
+          id -= N
+      absurd (a:= True) sorry_proof sorry_proof -- This should not happed
+
+    first_fromFin := sorry_proof
+    next_fromFin  := sorry_proof
+    next_toFin    := sorry_proof
+  }
 
 
   def PrismaticSet.prod (S₁ S₂ : PrismaticSet) : PrismaticSet :=
   {
     Elem := λ P => ProdElem P S₁.Elem S₂.Elem
-    CofaceIndex := λ e Q => ProdElem Q (S₁.CofaceIndex e.fst) (S₂.CofaceIndex e.snd)
+    CofaceIndex := λ e P => ProdElem P (S₁.CofaceIndex e.fst) (S₂.CofaceIndex e.snd)
 
-    face := λ {Q _} ι e => 
-      let P₁ := e.dec.fst
-      let P₂ := e.dec.snd
-      let (f₁, f₂) := ι.toFace.split P₁ P₂ e.dec.property
-      let Q₁ := f₁.toPrism
-      let Q₂ := f₂.toPrism
-      let Qdec : PrismDecomposition Q := ⟨Q₁, Q₂, sorry_proof⟩
-      let ι₁ : Inclusion Q₁ P₁ := ⟨f₁.1, sorry_proof, sorry_proof⟩
-      let ι₂ : Inclusion Q₂ P₂ := ⟨f₂.1, sorry_proof, sorry_proof⟩
-      ⟨Qdec, S₁.face ι₁ e.fst, S₂.face ι₂ e.snd⟩
+    face := λ ι e => 
+      let ιDec := ι.split e.dec
+      let (ι₁,ι₂) := ιDec.2
+      ⟨ιDec.1, S₁.face ι₁ e.fst, S₂.face ι₂ e.snd⟩
 
     coface := λ {Q e P} ⟨dec, f₁', f₂'⟩ =>
       let (ι₁, e₁) := S₁.coface f₁'
@@ -393,3 +442,13 @@ open Prism
     face_coface := sorry_proof
     face_comp := sorry_proof
   }
+
+
+  instance (S₁ S₂ : PrismaticSet) [∀ P, Enumtype (S₁.Elem P)] [∀ P, Enumtype (S₂.Elem P)] (P : Prism)
+    : Enumtype ((PrismaticSet.prod S₁ S₂).Elem P) := by unfold PrismaticSet.prod; infer_instance
+
+  instance (S₁ S₂ : PrismaticSet) 
+    [∀ Q (e : S₁.Elem Q) P, Enumtype (S₁.CofaceIndex e P)] 
+    [∀ Q (e : S₂.Elem Q) P, Enumtype (S₂.CofaceIndex e P)] 
+    (Q) (e : (PrismaticSet.prod S₁ S₂).Elem Q) (P)
+    : Enumtype ((PrismaticSet.prod S₁ S₂).CofaceIndex e P) := by unfold PrismaticSet.prod; infer_instance
