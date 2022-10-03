@@ -142,6 +142,6 @@ instance : PowType (DataArrayN α (numOf ι)) ι α := ⟨⟩
 
 #eval Id.run do
   let mut a : (ℝ×ℝ)^{3,3} := λ [i,j] => (i.1,j.1)
-  for (i,_) in Enumtype.fullRange a.Index do
-    a[i] := (Math.sqrt a[i].1, Math.exp a[i].2)
+  for (i,li) in Enumtype.fullRange a.Index do
+    a[li] := (Math.sqrt a[li].1, Math.exp a[li].2)
   a

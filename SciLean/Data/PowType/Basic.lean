@@ -69,7 +69,7 @@ instance {T I X} [PowType T I X] [Enumtype I] [ToString I] [ToString X] : ToStri
   ⟨λ x => Id.run do
     let mut s := ""
     for (i,li) in Enumtype.fullRange I do
-      if li = 0 then
+      if li.1 = 0 then
         s := s.append s!"{i}: {x[i]}"
       else 
         s := s.append s!", {i}: {x[i]}"

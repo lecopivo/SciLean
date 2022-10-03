@@ -158,7 +158,7 @@ namespace Enumtype
 
 
   instance {m} [Monad m] {n}
-           : ForIn m (Range (Fin n)) (Fin n × Nat) :=
+           : ForIn m (Range (Fin n)) (Fin n × (Fin (numOf (Fin n)))) :=
   {
     forIn := λ r init f => 
                match r with
@@ -166,7 +166,7 @@ namespace Enumtype
                  | some (s,e) => do
                    let mut val := init
                    for i in [s.1:e.1+1] do
-                     match (← f (⟨i,sorry⟩, i) val) with
+                     match (← f (⟨i,sorry⟩, ⟨i,sorry⟩) val) with
                        | ForInStep.done d => return d
                        | ForInStep.yield d => val ← pure d
                    pure val
@@ -174,7 +174,7 @@ namespace Enumtype
 
 
   instance {m} [Monad m] [Enumtype ι]
-           : ForIn m (Range ι) (ι × Nat) :=
+           : ForIn m (Range ι) (ι × Fin (numOf ι)) :=
   {
     forIn := λ r init f => 
       match r with
@@ -184,7 +184,7 @@ namespace Enumtype
         let mut idx := s
         let mut val := init
         for i in [0:n] do
-          match (← f (idx, i) val), Iterable.next idx with 
+          match (← f (idx, ⟨i,sorry⟩) val), Iterable.next idx with 
           | ForInStep.done d, _ => return d
           | ForInStep.yield d, none => do
             val ← pure d
@@ -199,7 +199,7 @@ namespace Enumtype
   instance {m} [Monad m] [Enumtype ι] [Enumtype κ]
            [ForIn m (Range ι) (ι × Nat)]
            [ForIn m (Range κ) (κ × Nat)]
-           : ForIn m (Range (ι × κ)) ((ι × κ) × Nat) :=
+           : ForIn m (Range (ι × κ)) ((ι × κ) × (Fin (numOf (ι × κ)))) :=
   {
     forIn := λ r init f =>
                match r with 
@@ -209,7 +209,7 @@ namespace Enumtype
                    for (i,li) in (range is ie) do
                      let offset := (numOf κ) * li
                      for (j,lj) in (range js je) do
-                       match (← f ((i,j), lj + offset) val) with
+                       match (← f ((i,j), ⟨lj + offset, sorry⟩) val) with
                          | ForInStep.done d => return d
                          | ForInStep.yield d => val ← pure d
                    pure val
@@ -220,7 +220,7 @@ namespace Enumtype
   instance {m} [Monad m] [Enumtype ι] [Enumtype κ]
            [ForIn m (Range ι) (ι × Nat)]
            [ForIn m (Range κ) (κ × Nat)]
-           : ForIn m (Range (ι ×ₗ κ)) ((ι ×ₗ κ) × Nat) :=
+           : ForIn m (Range (ι ×ₗ κ)) ((ι ×ₗ κ) × (Fin (numOf (ι ×ₗ κ)))) :=
   {
     forIn := λ r init f => 
                match r with 
@@ -230,7 +230,7 @@ namespace Enumtype
                    for (j,lj) in (range js je) do
                      let offset := (numOf ι) * lj
                      for (i,li) in (range is ie) do
-                       match (← f ((i,j), li + offset) val) with
+                       match (← f ((i,j), ⟨li + offset, sorry⟩) val) with
                          | ForInStep.done d => return d
                          | ForInStep.yield d => val ← pure d
                    pure val
