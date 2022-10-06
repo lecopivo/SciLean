@@ -65,5 +65,26 @@ namespace GradedQuotient
   := sorry_proof
 
   variable {β : Type w} [GradedSetoid β Lvl]
+
+  @[simp high]
+  theorem lift_graded_morphism   
+    {Lvl : Type u'} [BoundedLattice Lvl] {lvl : Lvl}
+    {α : Type u} [GradedSetoid α Lvl] [GradedSetoid.Reduce α lvl]
+    {β : Type v} [GradedSetoid β Lvl] [GradedSetoid.Reduce β lvl]
+    (f : α → β) [GradedSetoid.Morphism f] 
+    (x : α)
+    : ⟦lvl| f x⟧ = Quotient.lift (λ (a : GradedSetoid.Repr α lvl) => ⟦GradedSetoid.Repr.mk (f a.1) a.2 sorry_proof sorry_proof⟧) sorry_proof ⟦lvl| x⟧
+    := sorry_proof
+
+  @[simp]
+  theorem lift_graded_morphism₂  
+    {Lvl : Type u'} {lvl : Lvl} [BoundedLattice Lvl] 
+    {α : Type u} [GradedSetoid α Lvl] [GradedSetoid.Reduce α lvl]
+    {β : Type v} [GradedSetoid β Lvl] [GradedSetoid.Reduce β lvl]
+    {γ : Type v} [GradedSetoid γ Lvl] [GradedSetoid.Reduce γ lvl]
+    (f : α → β → γ) [GradedSetoid.Morphism₂ f] 
+    (x : α) (y : β)
+    : ⟦lvl| f x y⟧ = Quotient.lift₂ (λ (x : GradedSetoid.Repr α lvl) (y : GradedSetoid.Repr β lvl) => ⟦GradedSetoid.Repr.mk (f x.1 y.1) x.2 sorry_proof x.4⟧) sorry_proof ⟦lvl| x⟧ ⟦lvl| y⟧
+    := sorry_proof
   
 end GradedQuotient
