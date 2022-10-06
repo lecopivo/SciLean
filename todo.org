@@ -3,6 +3,46 @@
  - basic simulations from classical mechanics
  - basic variational calculus
 
+* Library improvements
+
+** Function predicates and their transitive closure
+   Introduce transitive closure for function predicates like =IsSmooth=, =IsLin= etc. Take inspiration from =CoeT= or =MonadLiftT=, =Coe= itself is user facing typeclass that you provide instance for but when you actually use it you want to infer its transitive closure =CoeT=.
+
+   The advantage is that we will can provide instances that derive =IsSmooth= from =IsLin= that can fail quickly. For example, deriving smoothness of =f ∘ g= you do not want to try composition of smooth function **and** composition of linear functions. You want to apply the composition theorem only once! Deriving smoothness from linearity should work only for atomic functions.
+
+   - pros: =IsSmoothT= will be derivable from =IsLin=. Currently all predicates live in their own world and can't derive each other. This creates lots of repetition.
+   - cons: For new users it might be difficult to understand the difference of =IsSmooth= and =IsSmoothT=. Maybe we can provide a linter for this.
+
+** Generalize and unify =function_argument= notation
+
+   The =function_argument= notation is messy and disorganized. Improve it.
+
+** Autodiff, autoadjoint tactic and let bindings
+
+   Correctly and efficiently differentiate through let bindings. There is already some work on this in =SciLean/Tactic/AutoDiff=
+
+   - focus on differential and adjoint first (worry about adjDiff, fwdDiff, revDiff later)
+   - make it work as a single pass. Differentiation should be done on a single traversal
+   - maybe add an option that checks if differential/adjoint is fully eliminated
+
+** Guard for simp
+
+   I would like to have a guard for certain simp theorems. Currently I use =hold= trick to prevent some simp theorems to apply to theorems to apply to themselves. Alternatively we could say that this simp theorem applies only if a certain functions does not unify to identity. There is also a case for product projections.
+   
+** Set up more robust testing
+
+   Usually when I develop something temporary tests for it. So maybe allow for tests through out the code base.
+
+* Diffeological spaces and tangent space
+
+  Define diffeological space and its tangent space, smooth function between them and differential
+
+  The question what notion of tangent space should we use? Maybe we can use only diffeological spaces that are convenient vector spaces or their subsets and quotients.
+
+* Differentiability at point
+
+  Try define smoothenss/differentiability at a point. I really want to work with =1/x= without problems and assume that it is differentiable for every =x≠0=.
+  
 * Machine learning
 
  - table interface
@@ -27,9 +67,13 @@
 
   - Prism
   - Prismatic mesh
-    - preshear on Prism
+    - presheaf on Prism
     - generalization of [[https://en.wikipedia.org/wiki/Delta_set][delta set]]
   - product of meshes
+
+  - conversion for simplicial complex to Prismatic Mesh
+  - conversion of cell complex (made out of prisms) to Prismatic Mesh
+    I do not think this is in general possible. Probably possible only after certain subdivision.
   
 * Runtime symbolic module
 
