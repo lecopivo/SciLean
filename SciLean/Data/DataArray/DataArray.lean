@@ -117,31 +117,45 @@ instance : FunType.HasIntro (DataArrayN α (numOf ι)) where
 
 instance : PowType (DataArrayN α (numOf ι)) ι α := ⟨⟩
 
-#check ℝ^(Fin 3)
+-- #check ℝ^(Fin 3)
 
-#eval ((λ [i] => i.1.toReal ) : ℝ^(Fin 100)) |>.map Math.sqrt
+-- #eval ((λ [i] => i.1.toReal ) : ℝ^(Fin 100)) |>.map Math.sqrt
 
-#eval ((λ [i] => i) : (Fin 3 × Fin 5)^(Fin 3 × Fin 5))
-#eval ((λ [i] => i) : (Fin 3 × Fin 5)^(Fin 3 × Fin 5)).data
-#eval ((λ [i] => i) : (Fin 3 × Fin 5)^(Fin 3 × Fin 5)).data.byteData
+-- #eval ((λ [i] => i) : (Fin 3 × Fin 5)^(Fin 3 × Fin 5))
+-- #eval ((λ [i] => i) : (Fin 3 × Fin 5)^(Fin 3 × Fin 5)).data
+-- #eval ((λ [i] => i) : (Fin 3 × Fin 5)^(Fin 3 × Fin 5)).data.byteData
 
-#eval (1,2,3,4)
+-- #eval (1,2,3,4)
 
-#eval ((λ [i] => i) : (Fin 3 × Fin 2 × Fin 2)^(Fin 3 × Fin 2 × Fin 2))
-#eval ((λ [i] => i) : (Fin 3 × Fin 2 × Fin 2)^(Fin 3 × Fin 2 × Fin 2)).data
-#eval ((λ [i] => i) : (Fin 3 × Fin 2 × Fin 2)^(Fin 3 × Fin 2 × Fin 2)).data.byteData
+-- #eval ((λ [i] => i) : (Fin 3 × Fin 2 × Fin 2)^(Fin 3 × Fin 2 × Fin 2))
+-- #eval ((λ [i] => i) : (Fin 3 × Fin 2 × Fin 2)^(Fin 3 × Fin 2 × Fin 2)).data
+-- #eval ((λ [i] => i) : (Fin 3 × Fin 2 × Fin 2)^(Fin 3 × Fin 2 × Fin 2)).data.byteData
 
-#eval ((λ [i] => (i.1.toFloat, i.1.toFloat.sqrt)) : (Float × Float)^(Fin 17))
+-- #eval ((λ [i] => (i.1.toFloat, i.1.toFloat.sqrt)) : (Float × Float)^(Fin 17))
 
-#check Id.run do
-  let mut a : ℝ^{10} := λ [i] => i.1
-  for (i,_) in Enumtype.fullRange a.Index do
-    a[i] *= 1000
-    a[i] += Math.sqrt i.1 + a[i]
-  a
 
-#eval Id.run do
-  let mut a : (ℝ×ℝ)^{3,3} := λ [i,j] => (i.1,j.1)
-  for (i,li) in Enumtype.fullRange a.Index do
-    a[li] := (Math.sqrt a[li].1, Math.exp a[li].2)
-  a
+-- variable (x : ℝ^{n,m})
+
+-- #check x
+-- #check λ (i,j) => x[i,j]
+-- #check ∑ i, x[i]
+
+-- #check Id.run do
+--   let mut a : ℝ^{10} := λ [i] => i.1
+--   for (i,_) in Enumtype.fullRange a.Index do
+--     a[i] *= 1000
+--     a[i] += Math.sqrt i.1 + a[i]
+--   a
+
+-- #eval Id.run do
+--   let mut a : (ℝ×ℝ)^{3,3} := λ [i,j] => (i.1,j.1)
+--   for (i,li) in Enumtype.fullRange a.Index do
+--     a[li] := (Math.sqrt a[li].1, Math.exp a[li].2)
+--   a
+
+
+-- #eval Id.run do
+--   let mut a : ℝ^(Fin 3 × Fin 3) := 0
+--   for ((i,j),li) in Enumtype.fullRange a.Index do
+--     a[li] := if i = j then 1 else 0
+--   a
