@@ -83,7 +83,7 @@ For harmonic oscillator, the evolution is given by Hamilton's equations
   \end{align}
 
 Thus the function `f` that needs to be provided to `ode_solve` is 
-`λ (x,p) => (∇ (p':=p), H x p', ∇ (x':=x), H x' p)`
+`λ (x,p) => (∇ (p':=p), H x p', - ∇ (x':=x), H x' p)`
 
 -/
 
@@ -92,11 +92,11 @@ Thus the function `f` that needs to be provided to `ode_solve` is
 
 /-!
 
-Now we turn in to very interesing style of programming. We provide 
-a specification and a series of commands(tactics) we construct a runnable
+Now we turn in to a very interesing style of programming. We provide 
+a specification and with a series of commands(tactics) we construct a runnable
 program.
 
-To run a simulation on a compute we want an implementation of a differential
+To run a simulation on a computer we want an implementation of a differential
 equation solver i.e. we want a withness of `Impl (ode_solve f)`.
 
 For harmonic oscillator this is
