@@ -61,5 +61,4 @@ elab "reduce_type_of" t:term : term => do
   let val ← elabTerm t none
   let typ ← inferType val
   let reduced ← reduce typ (skipTypes := false)
-  let proof ← mkAppOptM ``rfl #[mkSort levelOne, reduced]
-  mkAppOptM ``cast #[typ, reduced, proof, val]
+  Expr.letE `x reduced (val) (Expr.bvar 0) false |> pure

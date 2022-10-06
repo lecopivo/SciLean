@@ -65,7 +65,7 @@ with
   @[computedField]
   dim : (P : PrismRepr) → Nat
   | .point => 0
-  | .cone P' => 1 + P'.dim
+  | .cone P' => P'.dim + 1
   | .prod P' Q' => P'.dim + Q'.dim
 deriving DecidableEq, Inhabited
 
@@ -274,6 +274,10 @@ namespace PrismRepr
   /-- toCanonical truly producees prism in canonical form -/
   @[simp]
   theorem toCanonical_IsCanonical (P : PrismRepr) : P.toCanonical.IsCanonical := sorry_proof
+
+  @[simp]
+  theorem toCanonical_dim (P : PrismRepr) : P.toCanonical.dim = P.dim := sorry_proof
+
   -- test_by
   --   examples:
   --     P := [segment, triangle, prism, pyramid] 
@@ -465,18 +469,29 @@ namespace FaceRepr
     | _ => unreachable!
   decreasing_by sorry_proof
 
-
+  @[simp]
   theorem fromCanonical_ofPrism (f : FaceRepr) (P : PrismRepr) (h : f.ofPrism = P.toCanonical)
     : (fromCanonical f P h).ofPrism = P 
   := sorry_proof
 
+  @[simp]
+  theorem fromCanonical_toPrism (f : FaceRepr) (P : PrismRepr) (h : f.ofPrism = P.toCanonical)
+    : (fromCanonical f P h).toPrism.toCanonical = f.toPrism.toCanonical
+  := sorry_proof
+
+  @[simp]
   theorem fromCanonical_dim (f : FaceRepr) (P : PrismRepr) (h : f.ofPrism = P.toCanonical)
     : (fromCanonical f P h).dim = f.dim
   := sorry_proof
 
-  -- This is not true for `toPrism` !!!
+  @[simp]
   theorem ofPrism_toCanonical_toCanonical_ofPrism (f : FaceRepr)
     : f.toCanonical.ofPrism = f.ofPrism.toCanonical
+  := sorry_proof
+
+  @[simp]
+  theorem toPrism_toCanonical_toCanonical_toPrism (f : FaceRepr)
+    : f.toCanonical.toPrism.toCanonical = f.toPrism.toCanonical
   := sorry_proof
 
 /--

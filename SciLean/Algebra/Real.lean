@@ -32,6 +32,8 @@ namespace Math
   def log2 : ℝ → ℝ := toRealFun Float.log2
   def log10 : ℝ → ℝ := toRealFun Float.log10
 
+  def pi : ℝ := ⟨3.14159265359⟩
+
 end Math
 
 namespace ℝ

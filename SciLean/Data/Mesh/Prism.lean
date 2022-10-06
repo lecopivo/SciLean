@@ -3,108 +3,70 @@ import SciLean.Mathlib.Data.Enumtype
 import SciLean.Algebra
 import SciLean.Data.FinProd
 import SciLean.Data.ArrayN
+import SciLean.Data.DataArray
 import SciLean.Data.Mesh.PrismRepr
 import SciLean.Data.Quotient.GradedQuotient
--- import SciLean.Tactic.RemoveLambdaLet
 
 namespace SciLean
 
+structure Prism where
+  repr : PrismRepr
+  repr_IsCanonical : repr.IsCanonical
+deriving DecidableEq
 
-macro "quot_lift" : conv => `(simp[Setoid.quotient_of_map])
+structure Face (P : Prism) (dim : Option Nat := none) where
+  repr : FaceRepr
+  repr_ofPrism : repr.ofPrism = P.repr
+  repr_dim : repr.dim = dim.getD repr.dim
+deriving DecidableEq
 
-instance : GradedSetoid PrismRepr TwoLevel where
-  r P Q := P.toCanonical = Q.toCanonical
-  iseqv := sorry_proof
-
-  OfLevel P lvl := 
-    match lvl with
-    | .any => True
-    | .canonical => P.toCanonical = P
-
-  lvl_order x l l' hl ho := (by cases l; simp; induction l'; simp; cases ho; cases l'; simp; apply hl;)
-  every_top _ := by simp
-  unique_bottom x y h hx hy := by simp at hx hy; rw [← hx, ← hy]; apply h; done
-
--- instance Prism.instSetoid : Setoid PrismRepr where
---   r P Q := P.toCanonical = Q.toCanonical
---   iseqv := sorry_proof
-
-def Prism (maxLvl := TwoLevel.any) := GradedQuotient PrismRepr maxLvl
+structure Inclusion (Q : Prism) (P : Prism) where
+  repr : FaceRepr
+  repr_ofPrism : repr.ofPrism = P.repr
+  repr_toPrism : repr.toPrism.toCanonical = Q.repr
+deriving DecidableEq
 
 namespace Prism
 
-variable {l : TwoLevel}
+def dim (P : Prism) : Nat := P.repr.dim
+def faceCount (n : Nat) (P : Prism) : Nat := P.repr.faceCount n
+abbrev pointCount (P : Prism) : Nat := P.faceCount 0
+abbrev edgeCount  (P : Prism) : Nat := P.faceCount 1
 
-instance : Setoid.Map (λ x : PrismRepr => x.toCanonical) := sorry_proof
-instance : Setoid.Morphism (λ x : PrismRepr => x.toCanonical) := sorry_proof
+def toString (P : Prism) : String := P.repr.toString
+instance : ToString Prism := ⟨λ P => P.toString⟩
 
-def nrepr (P : Prism l) : PrismRepr := P.liftOn (λ P => 
-  match P.lvl with
-  | .any => P.1.toCanonical 
-  | .canonical => P.1
-  ) sorry_proof
-  -- match P.repr.lvl with
-  -- | .any       => P.repr.1.toCanonical
-  -- | .canonical => P.repr.1
-  -- rewrite_by simp
+instance : One Prism := ⟨.point, by simp⟩
+instance : Inhabited Prism := ⟨.point, by simp⟩
 
-instance : DecidableEq (Prism l) := λ P Q => if P.nrepr = Q.nrepr then isTrue sorry_proof else isFalse sorry_proof
+def cone (P : Prism) : Prism := ⟨P.repr.cone, by apply PrismRepr.IsCanonical.cone; apply P.2; done⟩
+def prod (P Q : Prism) : Prism := ⟨P.repr.prod Q.repr |>.toCanonical, by simp⟩
+instance : Mul Prism := ⟨λ P Q => P.prod Q⟩
 
-instance : Setoid.Map (λ P : PrismRepr => P.dim) := sorry_proof
-def dim (P : Prism l) : Nat := P.repr.dim rewrite_by quot_lift
+abbrev Space (P : Prism) := ℝ^{P.dim}
 
-instance (n) : Setoid.Map (λ P : PrismRepr => P.faceCount n) := sorry_proof
-def faceCount (n : Nat) (P : Prism l) : Nat := P.repr.faceCount n rewrite_by quot_lift
+def inPrism (P : Prism) (x : ℝ^{P.dim}) : Bool := 
+  match P with
+  | ⟨.point, _⟩ => x = 0
+  | ⟨.cone Q, _⟩ => 
+    let Q : Prism := ⟨Q, sorry_proof⟩
+    let x : ℝ^{Q.dim + 1} := x 
+    let t : ℝ := x[⟨Q.dim, by simp⟩]
+    let y : ℝ^{Q.dim} := λ [i] => x[⟨i.1, sorry_proof⟩]
+    if t = 1 then
+      x = 0
+    else 
+      Q.inPrism (1/(1-t) * y)
+  | ⟨.prod P₁ P₂, _⟩ =>
+    let P₁ : Prism := ⟨P₁, sorry_proof⟩
+    let P₂ : Prism := ⟨P₂, sorry_proof⟩
+    let x₁ : ℝ^{P₁.dim} := λ [i] => x[⟨i.1, sorry_proof⟩]
+    let x₂ : ℝ^{P₂.dim} := λ [i] => x[⟨P₁.dim + i.1, sorry_proof⟩]
+    (P₁.inPrism x₁) ∧ (P₂.inPrism x₂)
 
-abbrev pointCount (P : Prism l) : Nat := P.faceCount 0
-abbrev edgeCount  (P : Prism l) : Nat := P.faceCount 1
+def InPrism (P : Prism) (x : ℝ^{P.dim}) : Prop := (P.inPrism x = true)
 
-def toString (P : Prism l) : String := P.nrepr.toString
-instance : ToString (Prism l) := ⟨λ P => P.toString⟩
-partial def toDbgString (P : Prism) : String := P.liftOn (λ P => P.1.toString) sorry_proof
-
-instance (lvl : TwoLevel) : GradedSetoid.Reduce PrismRepr lvl where
-  reduce P := match lvl with | .any => P | .canonical => P.toCanonical
-  reduce_sound := sorry_proof
-  reduce_lvl   := sorry_proof
-
-
--- set_option trace.Meta.Tactic.simp.discharge true in
--- set_option trace.Meta.Tactic.simp.unify true in
-
-@[simp high]
-theorem lift_graded_morphism   
-  {Lvl : Type u'} [BoundedLattice Lvl] {lvl : Lvl}
-  {α : Type u} [GradedSetoid α Lvl] [GradedSetoid.Reduce α lvl]
-  {β : Type v} [GradedSetoid β Lvl] [GradedSetoid.Reduce β lvl]
-  (f : α → β) [GradedSetoid.Morphism f] 
-  (x : α)
-  : ⟦lvl| f x⟧ = Quotient.lift (λ (a : GradedSetoid.Repr α lvl) => ⟦GradedSetoid.Repr.mk (f a.1) a.2 sorry_proof sorry_proof⟧) sorry_proof ⟦lvl| x⟧
-  := sorry_proof
-
-@[simp]
-theorem lift_graded_morphism₂  
-  {Lvl : Type u'} {lvl : Lvl} [BoundedLattice Lvl] 
-  {α : Type u} [GradedSetoid α Lvl] [GradedSetoid.Reduce α lvl]
-  {β : Type v} [GradedSetoid β Lvl] [GradedSetoid.Reduce β lvl]
-  {γ : Type v} [GradedSetoid γ Lvl] [GradedSetoid.Reduce γ lvl]
-  (f : α → β → γ) [GradedSetoid.Morphism₂ f] 
-  (x : α) (y : β)
-  : ⟦lvl| f x y⟧ = Quotient.lift₂ (λ (x : GradedSetoid.Repr α lvl) (y : GradedSetoid.Repr β lvl) => ⟦GradedSetoid.Repr.mk (f x.1 y.1) x.2 sorry_proof x.4⟧) sorry_proof ⟦lvl| x⟧ ⟦lvl| y⟧
-  := sorry_proof
-
-instance : One (Prism l) := ⟨⟦l| .point⟧⟩
-instance : Inhabited (Prism l) := ⟨⟦l| .point⟧⟩
-
-instance : GradedSetoid.Morphism (λ P : PrismRepr => P.cone) := sorry_proof
-def cone (P : Prism l) : Prism l := ⟦l| P.repr.cone⟧ rewrite_by quot_lift
-
-instance : Setoid.Morphism₂ (λ P Q : PrismRepr => P.prod Q) := sorry_proof
-def prod (P Q : Prism l) : Prism l := ⟦l| P.repr.prod Q.repr⟧ rewrite_by quot_lift
-instance : Mul (Prism l) := ⟨λ P Q => P.prod Q⟩
-
-def point : Prism .canonical := 1
-
+def point : Prism := 1
 def segment := point.cone
 
 def triangle := segment.cone
@@ -115,7 +77,21 @@ def pyramid := square.cone
 def prism   := segment*triangle
 def cube    := segment*square
 
-instance (l) : Coe (Prism .canonical) (Prism l) := ⟨λ P => ⟦⟨P.nrepr, .canonical, sorry_proof, sorry_proof⟩⟧⟩
+-- def Foo (P : Prism) : Type :=
+--   match P.repr with
+--   | .point => Int
+--   | .cone .point => Int
+--   | .prod (.cone .point) (.cone .point) => Float
+--   | _ => Empty
+
+-- example : Foo point = Int   := by rfl
+-- example : Foo segment = Int := by rfl
+-- example : Foo square = Float  := by rfl 
+-- example : Foo cube = Empty  := by rfl
+
+-- def a : Foo point   := (5 : Int)
+-- def b : Foo segment := (5 : Int)
+-- def c : Foo square  := (5 : Float) -- This does not work :( -- The PrismRepr.toCanonical needs better implementation
 
 /-- Number of prism in dimension `dim`
 
@@ -211,288 +187,61 @@ def primePrismFromNat : Nat → Prism
   | 7 => cube.cone
   | _ => panic! "Getting prime prism from Nat is not implemented for dim > 4!"
 
-def prismToFin (P : Prism l) : Fin (prismCount P.dim) :=
-  match P.nrepr with
+def prismToFin (P : Prism) : Fin (prismCount P.dim) :=
+  match P with
   -- 0D
-  | .point => ⟨0, sorry_proof⟩
+  | ⟨.point, _⟩ => ⟨0, sorry_proof⟩
   -- 1D
-  | .cone .point => ⟨0, sorry_proof⟩
+  | ⟨.cone .point, _⟩ => ⟨0, sorry_proof⟩
   -- 2D
-  | .cone (.cone .point) => ⟨0, sorry_proof⟩
-  | .prod (.cone .point) (.cone .point) => ⟨1, sorry_proof⟩
+  | ⟨.cone (.cone .point), _⟩ => ⟨0, sorry_proof⟩
+  | ⟨.prod (.cone .point) (.cone .point), _⟩ => ⟨1, sorry_proof⟩
   -- 3D
-  | .cone (.cone (.cone .point)) => ⟨0, sorry_proof⟩
-  | .cone (.prod (.cone .point) (.cone .point)) => ⟨1, sorry_proof⟩
-  | .prod (.cone .point) (.cone (.cone .point)) => ⟨2, sorry_proof⟩
-  | .prod (.cone .point) (.prod (.cone .point) (.cone .point)) => ⟨3, sorry_proof⟩
+  | ⟨.cone (.cone (.cone .point)), _⟩ => ⟨0, sorry_proof⟩
+  | ⟨.cone (.prod (.cone .point) (.cone .point)), _⟩ => ⟨1, sorry_proof⟩
+  | ⟨.prod (.cone .point) (.cone (.cone .point)), _⟩ => ⟨2, sorry_proof⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone .point)), _⟩ => ⟨3, sorry_proof⟩
   -- 4D
-  | .cone (.cone (.cone (.cone .point))) => ⟨0, sorry_proof⟩
-  | .cone (.cone (.prod (.cone .point) (.cone .point))) => ⟨1, sorry_proof⟩
-  | .cone (.prod (.cone .point) (.cone (.cone .point))) => ⟨2, sorry_proof⟩
-  | .cone (.prod (.cone .point) (.prod (.cone .point) (.cone .point))) => ⟨3, sorry_proof⟩
-  | .prod (.cone .point) (.cone (.cone (.cone .point))) => ⟨4, sorry_proof⟩
-  | .prod (.cone .point) (.cone (.prod (.cone .point) (.cone .point))) => ⟨5, sorry_proof⟩
-  | .prod (.cone .point) (.prod (.cone .point) (.cone (.cone .point))) => ⟨6, sorry_proof⟩
-  | .prod (.cone .point) (.prod (.cone .point) (.prod (.cone .point) (.cone .point))) => ⟨7, sorry_proof⟩
-  | .prod (.cone (.cone .point)) (.cone (.cone .point)) => ⟨8, sorry_proof⟩
+  | ⟨.cone (.cone (.cone (.cone .point))), _⟩ => ⟨0, sorry_proof⟩
+  | ⟨.cone (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨1, sorry_proof⟩
+  | ⟨.cone (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨2, sorry_proof⟩
+  | ⟨.cone (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨3, sorry_proof⟩
+  | ⟨.prod (.cone .point) (.cone (.cone (.cone .point))), _⟩ => ⟨4, sorry_proof⟩
+  | ⟨.prod (.cone .point) (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨5, sorry_proof⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨6, sorry_proof⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨7, sorry_proof⟩
+  | ⟨.prod (.cone (.cone .point)) (.cone (.cone .point)), _⟩ => ⟨8, sorry_proof⟩
 
-  | _ => 
+  | P => 
     have : Inhabited (Fin (prismCount P.dim)) := cast sorry_proof (⟨0, sorry_proof⟩ : Fin 1)
     panic! "Getting prism from Fin n is not implemented for dim > 4!"
 
 
-end Prism
-
-
-instance : GradedSetoid FaceRepr TwoLevel where
-  r f g := f.toCanonical = g.toCanonical
-  iseqv := sorry_proof
-
-  OfLevel f lvl := 
-    match lvl with
-    | .any => True
-    | .canonical => f.toCanonical = f
-
-  lvl_order x l l' hl ho := (by cases l; simp; induction l'; simp; cases ho; cases l'; simp; apply hl;)
-  every_top _ := by simp
-  unique_bottom x y h hx hy := by simp at hx hy; rw [← hx, ← hy]; apply h; done
-
-instance (lvl : TwoLevel) : GradedSetoid.Reduce FaceRepr lvl where
-  reduce f := match lvl with | .any => f | .canonical => f.toCanonical
-  reduce_sound := sorry_proof
-  reduce_lvl   := sorry_proof
-
-def FaceBase (lvl := TwoLevel.any) := GradedQuotient FaceRepr lvl
-
-instance {lvl} : DecidableEq (FaceBase lvl) := λ f g => if (f.nrepr = g.nrepr) then isTrue sorry else isFalse sorry
-
-instance : GradedSetoid.Morphism (λ f : FaceRepr => f.ofPrism) := sorry_proof
-def FaceBase.ofPrism (f : FaceBase l) : Prism l := ⟦l| f.repr.ofPrism⟧ rewrite_by simp
-
-instance : Setoid.Map (λ f : FaceRepr => f.dim) := sorry_proof
-def FaceBase.dim (f : FaceBase l) : Nat := f.repr.dim rewrite_by simp[Setoid.quotient_of_map]
-
-instance (n) : OfNat (Option ℕ) n := ⟨some n⟩
-
-structure Face (P : Prism lvl) (dim : Option Nat := none) where
-  f : FaceBase lvl
-  hp : f.ofPrism = P
-  hd : f.dim = dim.getD f.dim
-deriving DecidableEq
-
---------- FaceBase ---------------------------------------------------
-namespace FaceBase
-
-variable {l}
-
--- Not a GradedSetoid.Morphism!!!
-instance : Setoid.Morphism (λ f : FaceRepr => f.toPrism) := sorry_proof
-def toPrism (f : FaceBase l) : Prism l := ⟦l| f.repr.toPrism⟧ rewrite_by simp
-
-def comp (f g : FaceBase l) (h : f.toPrism = g.ofPrism) : FaceBase l :=
-  f.liftOn₂ g (λ f g => ⟦⟨f.1.comp (g.normalize.1.fromCanonical f.1.toPrism sorry_proof) sorry_proof, f.2, sorry_proof, f.4⟩⟧) sorry_proof
-
-instance : GradedSetoid.Morphism (λ P : PrismRepr => FaceRepr.tip P) := sorry_proof
-def tip (P : Prism l) : FaceBase l := ⟦l| FaceRepr.tip P.repr⟧ rewrite_by simp
-
-instance : GradedSetoid.Morphism (λ f : FaceRepr => f.cone) := sorry_proof
-def cone (f : FaceBase l) : FaceBase l := ⟦l| f.repr.cone⟧ rewrite_by simp
-
-instance : GradedSetoid.Morphism (λ f : FaceRepr => f.base) := sorry_proof
-def base (f : FaceBase l) : FaceBase l := ⟦l| f.repr.base⟧ rewrite_by simp
-
-instance : Setoid.Morphism₂ (λ f g: FaceRepr => f.prod g) := sorry_proof
-def prod (f g : FaceBase l) : FaceBase l := ⟦l| f.repr.prod g.repr⟧ rewrite_by simp
-
-instance : Mul (FaceBase l) := ⟨λ f g => f.prod g⟩
-
-def liftOnP (f : FaceBase l) (P : Prism l) (n : Nat) {α : Type}
-       (F : (f : GradedSetoid.Repr FaceRepr l) → 
-            (hp : f.1.ofPrism.toCanonical = P.nrepr) → 
-            (hd : f.1.dim = n) → α)
-       (hf : ∀ f f' hp hp' hd hd', f ≈ f' → F f hp hd = F f' hp' hd')
-       (hp : f.ofPrism = P) (hd : f.dim = n) : α 
-       :=  
-       f.recOn (motive := λ (f' : FaceBase l) => (f'.ofPrism = P) → (f'.dim = n) → α)
-           (λ f hp hd => F f sorry_proof sorry_proof) sorry_proof hp hd
-
-
-end FaceBase
-----------------------------------------------------------------------
-
-
---------- Face -------------------------------------------------------
-namespace Face 
-
-variable {l} {P : Prism l} {n : Option Nat}
-
-abbrev nrepr (f : Face P n) : FaceRepr := f.1.nrepr
-
-noncomputable
-abbrev grepr (f : Face P n) : GradedSetoid.Repr FaceRepr l := f.1.grepr
-
-noncomputable
-abbrev repr (f : Face P n) : FaceRepr := f.1.repr
-
-def lift (f : Face P n)
-       (F : (f : GradedSetoid.Repr FaceRepr l) → 
-            (hp : f.1.ofPrism.toCanonical = P.nrepr) → 
-            (hd : (match n with | some n => (f.1.dim = n) | none => True)) → α) 
-       (hf : ∀ f f' hp hp' hd hd', f ≈ f' → F f hp hd = F f' hp' hd')
-       (f : Face P n) : α 
-       :=
-       f.1.liftOnP P (match n with | some n => n | none => f.1.dim) (λ f hp hd => F f hp sorry_proof) sorry_proof f.2 sorry_proof
-
--- Not a GradedSetoid.Morphism!!!
-instance : Setoid.Morphism (λ f : FaceRepr => f.toPrism) := sorry_proof
-def toPrism (f : Face P n) : Prism l := ⟦l| f.repr.toPrism⟧ rewrite_by simp
-
-abbrev ofPrism (_ : Face P n) : Prism l := P
-
-def dim (f : Face P n) : Nat :=
-  match n with
-  | some n => n
-  | none => f.1.dim
-
-def comp (f : Face P n) (g : Face f.toPrism m) : Face P m := 
-  ⟨f.1.comp g.1 sorry_proof, sorry_proof, sorry_proof⟩
-
-@[simp]
-theorem comp_toPrism (f : Face P n) (g : Face f.toPrism m) 
-  : (f.comp g).toPrism = g.toPrism := sorry_proof
-
-@[simp]
-theorem comp_dim (f : Face P n) (g : Face f.toPrism m) 
-  : (f.comp g).dim = g.dim := sorry_proof
-
-def tip (P : Prism l) : Face (P.cone) (P.dim) := ⟨FaceBase.tip P, sorry_proof, sorry_proof⟩
-def cone (f : Face P n) : Face (P.cone) (n.map (·+1)) := ⟨f.1.cone, sorry_proof, sorry_proof⟩
-def base (f : Face P n) : Face (P.cone) n := ⟨f.1.base, sorry_proof, sorry_proof⟩
-def prod (f : Face P n) (g : Face Q m) : Face (P*Q) (match n, m with | some n, some m => n+m | _, _ => none) := ⟨f.1*g.1, sorry_proof, sorry_proof⟩
-
-instance {n m : Nat} : HMul (Face P n) (Face Q m) (Face (P*Q) (n+m)) := ⟨λ f g => f.prod g⟩
-
-end Face
-----------------------------------------------------------------------
-
--- Inclusion of Q's `n`-faces to P
--- Can we remove `n`? The problem is that without explicit `n` the `CoeFun` is not synthesized properly
--- If the dimension a face `g` does not match the dimension of the inclusion `f`
--- 
-structure Inclusion (Q P : Prism l) where
-  face : FaceBase l
-  source : Q = face.toPrism
-  target : P = face.ofPrism
-
---------- Inclusion --------------------------------------------------
-namespace Inclusion 
-
-def toFace {Q P : Prism l} (ι : Inclusion Q P) : Face P := ⟨ι.1, sorry_proof /- ι.3 -/, by simp⟩
-
-def comp {S Q P : Prism l} (f : Inclusion Q P) (g : Inclusion S Q) : Inclusion S P := ⟨f.1.comp g.1 sorry_proof, sorry_proof, sorry_proof⟩
-
-instance : Compose (Inclusion Q P) (Inclusion S Q) (Inclusion S P) where
-  compose f g := f.comp g
-
--- instance (P Q : Prism l) : CoeFun (Inclusion P Q n) (λ _ => Face Q n → Face P n) := ⟨λ f g => f.val.comp (f.domain ▸ g)⟩
--- def cast (f : Inclusion P Q n) {m} : Inclusion P Q m := ⟨f.1,f.2⟩
-
--- variable (P Q : Prism l) (n m) (f : Inclusion P Q n) (g : Face Q n) (h : Face Q m)
-
--- #check f g
--- #check f.cast h
-
--- #check f.cast
-  
-end Inclusion
-----------------------------------------------------------------------
-
---------- Prism ------------------------------------------------------
-namespace Prism
-
-variable {l : TwoLevel}
-
-def first (P : Prism l) (n : Option Nat := none) : Option (Face P n) := 
-  P.liftOn (λ P => 
+def firstFace (P : Prism) (n : Option Nat := none) : Option (Face P n) :=
   match n with
   | none => match P.1.first 0 with
-    | some f => some ⟨⟦⟨f, l, sorry_proof, sorry_proof⟩⟧, sorry_proof, sorry_proof⟩
+    | some f => ⟨f, sorry_proof, sorry_proof⟩ |> some
     | none => none
   | some n =>
   match P.1.first n with
-  | some f => some ⟨⟦⟨f, l, sorry_proof, sorry_proof⟩⟧, sorry_proof, sorry_proof⟩
-  | none => none) sorry_proof
-
-end Prism
-----------------------------------------------------------------------
-
---------- Face -------------------------------------------------------
-namespace Face
-
-variable {l : TwoLevel}
-
-def next {P : Prism l} {n} (f : Face P n) : Option (Face P n) :=
-  f.1.liftOn (λ f' => 
-    match f'.1.next with
-    | some f => some ⟨⟦⟨f, l, sorry_proof, sorry_proof⟩⟧, sorry_proof, sorry_proof⟩
-    | none => 
-      match n with
-      | some _ => none
-      | none => 
-        match f'.1.ofPrism.first (f'.1.dim+1) with
-        | some f => some ⟨⟦⟨f, l, sorry_proof, sorry_proof⟩⟧, sorry_proof, sorry_proof⟩
-        | none => none
-    ) sorry_proof
-
-instance : ToString (Face P n) := ⟨λ P => P.1.liftOn (λ P => P.normalize.1.toString) sorry_proof⟩
-
-instance (P : Prism l) (n)
-  : Iterable (Face P n) :=
-{
-  first := P.first n
-  next := λ f => f.next
-  decEq := by infer_instance
-}
-
-def faces {P : Prism l} {n} (f : Face P n) (m : Option Nat := none)  := Iterable.fullRange (Face f.toPrism m)
-
-end Face
-----------------------------------------------------------------------
-
---------- Prism ------------------------------------------------------
-namespace Prism
-
-def faces (P : Prism l) (n : Option Nat := none) := Iterable.fullRange (Face P n)
-
-def test (P : Prism l) : IO Unit := do
-  for f in P.faces do
-    IO.println s!"dim: {f.dim} | {f}"
-    IO.print "       "
-    for g in f.faces do
-      IO.print s!"| {g} | {f.comp g} "
-    IO.println ""
-  pure ()
-
-#eval test (point*prism*point)
-#eval triangle*segment = prism
-
+  | some f => ⟨f, sorry_proof, sorry_proof⟩ |> some
+  | none => none
 
 /-- For prism `P = P₁ × ... × Pₘ` return `[P₁, ..., Pₘ]` i.e. list of all product factors. -/
-def prodSplit (P : Prism l) : List (Prism l) := 
-  P.nrepr.prodSplit.map (λ P => ⟦l| P⟧)
+def prodSplit (P : Prism) : List (Prism) := 
+  if P.1 = .point 
+  then []
+  else P.1.prodSplit.map (λ Pi => ⟨Pi, sorry_proof⟩) 
 
-/-- For prism `P = P₁^n₁ × ... × Pₘ^nₘ` return `[(P₁,n₁), ..., (Pₘ,nₘ)]` i.e. list of all unique product factors with their powers. 
 
-TODO: This function is causing deterministic timeout of whnf. Thus it is marked as opaque to prevent reduction throught it.
--/
-opaque prodTally (P : Prism l) : List (Prism l × Nat) := 
+opaque prodTally (P : Prism) : List (Prism × Nat) := 
   -- This implementation exploits the fact that P.prodSplit is ordered!
   let prod := P.prodSplit
   match prod.head? with
   | some head =>
-    let (last, tally) : (Prism l × Nat) × List (Prism l × Nat) :=
+    let (last, tally) : (Prism × Nat) × List (Prism × Nat) :=
       prod.tail.foldl (λ ((current,count), tally') P => 
-        if P = current then 
+        if P = current then
           ((current, count + 1), tally')
         else
           ((P,1), (current, count) :: tally')
@@ -500,17 +249,116 @@ opaque prodTally (P : Prism l) : List (Prism l × Nat) :=
     (last :: tally).reverse
   | none => []
 
-def primePowers (P : Prism l) : ArrayN Nat (primePrismCumCount P.dim) := sorry
-
 /-- For a list `[(P₁,n₁), ... , (Pₘ,nₘ)]` construct `P = P₁^n₁ × ... × Pₘ^nₘ` -/
-def listProd : (Ps : List (Prism l × Nat)) → Prism l
-  | [] => Prism.point
-  | [(P,1)] => P
-  | (_, 0) :: Ps => listProd Ps
-  | (P, n+1) :: Ps => P * listProd ((P,n) :: Ps)
-  
+def listProd (Ps : List (Prism × Nat)) : Prism := 
+  let rec prod (Qs : List (Prism × Nat)) : PrismRepr :=
+    match Qs with
+    | [] => .point
+    | [(P,1)] => P.1
+    | (_, 0) :: Ps => prod Ps
+    | (P, n+1) :: Ps => P.1 * prod ((P,n) :: Ps)
+  ⟨prod Ps |>.toCanonical, by simp⟩
+
+def primePowers (P : Prism) : ArrayN Nat (primePrismCumCount P.dim) := 
+  match P with
+  -- 0D
+  | ⟨.point, _⟩ => ⟨#[], by simp[dim]⟩
+  -- 1D
+  | ⟨.cone .point, _⟩ => ⟨#[1], by simp[dim]⟩
+  -- 2D
+  | ⟨.cone (.cone .point), _⟩ => ⟨#[0,1], by simp[dim]⟩
+  | ⟨.prod (.cone .point) (.cone .point), _⟩ => ⟨#[2,0], by simp[dim]⟩
+  -- 3D
+  | ⟨.cone (.cone (.cone .point)), _⟩ => ⟨#[0,0,1,0], by simp[dim]⟩
+  | ⟨.cone (.prod (.cone .point) (.cone .point)), _⟩ => ⟨#[0,0,0,1], sorry_proof⟩
+  | ⟨.prod (.cone .point) (.cone (.cone .point)), _⟩ => ⟨#[1,1,0,0], sorry_proof⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone .point)), _⟩ => ⟨#[3,0,0,0], sorry_proof⟩
+  -- 4D
+  | ⟨.cone (.cone (.cone (.cone .point))), _⟩ => ⟨#[0,0,0,0,1,0,0,0], sorry_proof⟩
+  | ⟨.cone (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,1,0,0], sorry_proof⟩
+  | ⟨.cone (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,0,1,0], sorry_proof⟩
+  | ⟨.cone (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,0,0,1], sorry_proof⟩
+  | ⟨.prod (.cone .point) (.cone (.cone (.cone .point))), _⟩ => ⟨#[1,0,1,0,0,0,0,0], sorry_proof⟩
+  | ⟨.prod (.cone .point) (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[1,0,0,1,0,0,0,0], sorry_proof⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨#[2,1,0,0,0,0,0,0], sorry_proof⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[4,0,0,0,0,0,0,0], sorry_proof⟩
+  | ⟨.prod (.cone (.cone .point)) (.cone (.cone .point)), _⟩ => ⟨#[0,2,0,0,0,0,0,0], sorry_proof⟩
+  | _ => panic! "PrimePowers is not implemented for prisms of dimension larger then four!"
+
+
 end Prism
-----------------------------------------------------------------------
+
+namespace Face
+
+def dim (f : Face P n) : Nat := n.getD f.repr.dim
+def toPrism (f : Face P n) : Prism := ⟨f.1.toPrism.toCanonical, by simp⟩
+def ofPrism (_ : Face P n) : Prism := P
+
+def comp (f : Face P n) (g : Face f.toPrism m) : Face P m := 
+  ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2,toPrism] done)) 
+   (by simp[g.2, toPrism,f.2]; done), 
+   by simp[f.repr_ofPrism], 
+   by simp; cases m; simp; simp; rw[g.repr_dim]; simp done⟩
+
+@[simp]
+theorem comp_toPrism (f : Face P n) (g : Face f.toPrism m) 
+  : (f.comp g).toPrism = g.toPrism := by simp[comp,toPrism]
+
+@[simp]
+theorem comp_dim (f : Face P n) (g : Face f.toPrism m) 
+  : (f.comp g).dim = g.dim := by simp[comp,dim]
+
+def tip (P : Prism) : Face (P.cone) (some 0) := ⟨.tip P.repr, by simp[FaceRepr.ofPrism,Prism.cone], by simp[FaceRepr.dim, FaceRepr.toPrism]⟩
+def cone (f : Face P n) : Face (P.cone) (n.map (·+1)) := ⟨.cone f.repr, by simp[FaceRepr.ofPrism,Prism.cone, f.2], sorry_proof⟩
+def base (f : Face P n) : Face (P.cone) n := ⟨.base f.repr, sorry_proof, sorry_proof⟩
+
+instance : Add (Option Nat) := ⟨λ n m => match n, m with | some n, some m => n+m | _, _ => none⟩
+def prod (f : Face P n) (g : Face Q m) : Face (P.prod Q) (n+m) := ⟨f.repr.prod g.repr |>.toCanonical, sorry_proof, sorry_proof⟩
+
+def next (f : Face P n) : Option (Face P n) := 
+  match f.repr.next with
+  | some f' => ⟨f', sorry_proof, sorry_proof⟩ |> some
+  | none => 
+    match n with
+    | some _ => none
+    | none => 
+      match f.ofPrism.firstFace (some (f.dim+1)) with
+      | some f' => ⟨f'.1, f'.2, by simp⟩ |> some
+      | none => none
+
+instance (P : Prism) (n)
+  : Iterable (Face P n) :=
+{
+  first := P.firstFace n
+  next := λ f => f.next
+  decEq := by infer_instance
+}
+
+def faces {P : Prism} {n} (f : Face P n) (m : Option Nat := none)  := Iterable.fullRange (Face f.toPrism m)
+
+end Face
+
+namespace Prism
+
+def faces (P : Prism) (n : Option Nat := none)  := Iterable.fullRange (Face P n)
+
+end Prism
+
+namespace Inclusion
+
+def toFace (f : Inclusion Q P) : Face P Q.dim := ⟨f.1, f.2, by simp[Prism.dim, FaceRepr.dim]; rw[← f.3]; simp⟩
+
+def comp (f : Inclusion Q P) (g : Inclusion S Q) : Inclusion S P := 
+  ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2, f.3]; done)) 
+   (by simp[g.2, f.2]; done), 
+   by simp[f.2] done, 
+   by simp[g.3] done⟩
+
+instance : Compose (Inclusion Q P) (Inclusion S Q) (Inclusion S P) where
+  compose f g := f.comp g
+ 
+end Inclusion
+
 
 /-- Decomposition of a prism `P = P₁ * P₂`.
 
@@ -521,22 +369,31 @@ When we have and element `(i₁, ..., iₘ) : PrismDecomposition P` we can const
     fst := P₁^i₁ × ... × Pₘ^iₘ
     snd := P₁^(n₁-i₁) × ... × Pₘ^(nₘ-iₘ)
  -/
-def PrismDecomposition (P : Prism l) := FinProd (P.prodTally.map (·.2+1))
+def PrismDecomposition (P : Prism) := FinProd (P.prodTally.map (·.2+1))
+
+-- with
+--   @[computedField]
+--   fst : (PrismDecomposition P) → Prism
+--   | .powers ns => Prism.listProd <| P.prodTally.map (·.1) |>.zip ns.toList
+
+  -- @[computedField]
+  -- snd : (PrismDecomposition P) → Prism
+  -- | .powers ns => (Prism.listProd <| P.prodTally.map (·.1) |>.zip ns.toListComplement
 
 --------- PrismDecomposition -----------------------------------------
 namespace PrismDecomposition 
 
-variable {l} {P : Prism l}
+variable {l} {P : Prism}
 
-def prisms (dec : PrismDecomposition P) : Prism l × Prism l :=
+def prisms (dec : PrismDecomposition P) : Prism × Prism :=
   let factors := P.prodTally.map (·.1)
   (Prism.listProd (factors |>.zip dec.toList),
    Prism.listProd (factors |>.zip dec.toListComplement))
 
 /-- Given a prism decomposition `P = P₁ × P₂`, return `P₁` -/
-def fst (dec : PrismDecomposition P) : Prism l := dec.prisms.1
+def fst (dec : PrismDecomposition P) : Prism := dec.prisms.1
 /-- Given a prism decomposition `P = P₁ × P₂`, return `P₂` -/
-def snd (dec : PrismDecomposition P) : Prism l := dec.prisms.2
+def snd (dec : PrismDecomposition P) : Prism := dec.prisms.2
 
 /-- `PrismDecomposition P` truly represents a decomposition of a prism `P` -/
 @[simp]
@@ -544,23 +401,8 @@ theorem mul_fst_snd (dec : PrismDecomposition P) : dec.fst * dec.snd = P := sorr
 
 instance : Enumtype (PrismDecomposition P) := by simp[PrismDecomposition]; infer_instance
 
-end PrismDecomposition 
+end PrismDecomposition
 ----------------------------------------------------------------------
-
--- Alternative definition for decomposition
-structure PrismDecomposition' (P : Prism l) where 
-  power : ArrayN Nat (Prism.primePrismCumCount P.dim)
-  bound : ∀ i, power[i] ≤ P.primePowers[i]
-
-namespace PrismDecomposition'
-
--- def fst (dec : PrismDecomposition P) : Prism l × Prism l := 
---   Π i, (primePrismFromNat i.1)^dec.power[i]
--- def snd (dec : PrismDecomposition P) : Prism l × Prism l := 
---   let pPower := P.primePowers
---   Π i, (primePrismFromNat i.1)^(pPower[i] - dec.power[i])
-
-end PrismDecomposition'
 
 
 --------- Prism ------------------------------------------------------
@@ -571,21 +413,21 @@ This is of course not possible in general and any excess powers ignored.
 
 TODO: The implementation is really bad!!! Improve it!!
 -/
-def decomposeBy (P P₁ : Prism l) : PrismDecomposition P :=
+def decomposeBy (P P₁ : Prism) : PrismDecomposition P :=
   let pt  := P.prodTally
   let pt₁ := P₁.prodTally
   
   let pt' := pt.map (λ (Pi, a) =>
-    let find := pt₁.find (λ ((Qi, _) : Prism l × Nat) => Pi = Qi)
+    let find := pt₁.find (λ ((Qi, _) : Prism × Nat) => Pi = Qi)
     match find with
-    | some (Qi, b) => (Pi, b % (a+1))
+    | some (_, b) => (Pi, b % (a+1))
     | none => (Pi, 0))
 
   let rec fromList {ns} (vals : List Nat) : FinProd ns :=
     match ns, vals with
     | [],  _ => Unit.unit
-    | [n], [i] => ⟨i % n, sorry⟩
-    | n :: m :: ns, i :: j :: is => (⟨i % n, sorry⟩, fromList (j :: is))
+    | [n], [i] => ⟨i % n, sorry_proof⟩
+    | n :: _ :: _, i :: j :: is => (⟨i % n, sorry_proof⟩, fromList (j :: is))
     | _, _ => absurd (a:=True) sorry_proof sorry_proof
 
   fromList (pt'.map (·.2))
@@ -595,22 +437,27 @@ end Prism
 --------- Inclusion --------------------------------------------------
 namespace Inclusion 
 
-variable {l} {P Q : Prism l}
+def faceInclusion {P Q} (ι : Inclusion Q P) (x : ℝ^{Q.dim}) : ℝ^{P.dim} := sorry
 
-/-- Splits `Inclusiton Q P` based on the decomposition `P = P₁ * P₂` into two inclusions `Inclusion Q₁ P₁` and `Inclusion Q₂ P₂`. -/
+variable {P Q : Prism}
+
+/-- Splits `Inclusiton Q P` based on the decomposition `P = P₁ * P₂` into two inclusions `Inclusion Q₁ P₁` and `Inclusion Q₂ P₂`. 
+
+TODO: Reinspect this implementation, it was originally written for quotient implementation of Prism and might be problematic
+-/
 def split (ι : Inclusion Q P) (Pdec : PrismDecomposition P) 
-  : (Qdec : PrismDecomposition Q) × Inclusion Qdec.fst Pdec.fst × Inclusion Qdec.snd Pdec.snd := 
+  : (Qdec : PrismDecomposition Q) × Inclusion Qdec.fst Pdec.fst × Inclusion Qdec.snd Pdec.snd 
+  := 
   let P₁ := Pdec.fst
   let P₂ := Pdec.snd
-  match ι.1.nrepr.fromCanonical (P₁.nrepr.prod P₂.nrepr) sorry_proof with
+  match ι.repr.fromCanonical (P₁.repr.prod P₂.repr) sorry_proof with
   | .prod f g => 
-    let f₁ : FaceBase l := ⟦l| f⟧
-    let f₂ : FaceBase l := ⟦l| g⟧
-    let Qdec : PrismDecomposition Q := Q.decomposeBy f₁.toPrism
-    let ι₁ : Inclusion Qdec.fst Pdec.fst := ⟨f₁, sorry_proof, sorry_proof⟩
-    let ι₂ : Inclusion Qdec.snd Pdec.snd := ⟨f₂, sorry_proof, sorry_proof⟩
+    let Qdec : PrismDecomposition Q := Q.decomposeBy ⟨f.toPrism.toCanonical, sorry_proof⟩
+    let ι₁ : Inclusion Qdec.fst Pdec.fst := ⟨f, sorry_proof, sorry_proof⟩
+    let ι₂ : Inclusion Qdec.snd Pdec.snd := ⟨g, sorry_proof, sorry_proof⟩
     Sigma.mk Qdec (ι₁,ι₂) --, ι₂)
-  | _ => absurd (a := True) sorry_proof sorry_proof /- fromCanonical (P * Q) has to be always a face of type .prod f g -/
+  | _ =>
+    absurd (a := True) sorry_proof sorry_proof /- fromCanonical (P * Q) has to be always a face of type .prod f g -/
 
 end Inclusion
 ----------------------------------------------------------------------
@@ -627,28 +474,18 @@ end Inclusion
     let d : FinProd _ := dec
     IO.println s!"{dec.fst} | {dec.snd} | {d.toList} {d.toListComplement}"
 
-
--- #eval list3'
--- set_option trace.Meta.whnf true in
--- set_option maxHeartbeats 100 in
--- def t1 : FinProd list3 := fromFin ⟨3,sorry⟩
--- #eval t1
-
--- #eval show IO Unit from do
---   for (i,_) in Enumtype.fullRange (FinProd list3) do
---     IO.println s!"{i}"
-
--- example : (fromFin 2 : PrismDecomposition Prism.cube) = (fromFin 2 : PrismDecomposition Prism.cube) := by rfl
-
--- #eval ((fromFin ⟨2,sorry⟩) : PrismDecomposition Prism.cube)
-
--- #eval (fromFin 2 : PrismDecomposition Prism.cube)
+    for e in Prism.square.faces (some 1) do
+      let i : Inclusion Prism.segment Prism.square := ⟨e.1, sorry_proof, sorry_proof⟩
+      let split := i.split dec
+      IO.println s!"{split.2.1.repr} | {split.2.2.repr}"
 
 
+#eval show IO Unit from do
+  for (dec, li) in Enumtype.fullRange (PrismDecomposition (Prism.segment)) do
+    let d : FinProd _ := dec
+    IO.println s!"{dec.fst} | {dec.snd} | {d.toList} {d.toListComplement}"
 
--- def PrismRepr.Space' (P : PrismRepr) : Type := 
---   match P.toCanonical with
---   | .point => Unit
---   | .cone .point => ℝ
---   | .cone Q => ℝ × Q.Space'
---   | .prod Q₁ Q₂ => Q₁.Space' × Q₂.Space'
+    for e in Prism.segment.faces (some 0) do
+      let i : Inclusion Prism.point Prism.segment := ⟨e.1, sorry_proof, sorry_proof⟩
+      let split := i.split dec
+      IO.println s!"{split.2.1.repr} | {split.2.2.repr}"

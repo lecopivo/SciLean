@@ -53,6 +53,16 @@ namespace PowTypeCarrier
   abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := FunType.mapIdx f x
   abbrev map (f : X → X) (x : X^I) : X^I := FunType.map f x
 
+  variable [∀ n, PowType T (Fin n) X]
+  
+  def split {n m : Nat} (x : X^{n+m}) : X^{n} × X^{m} := 
+    (λ [i] => x[⟨i.1,sorry_proof⟩], λ [i] => x[⟨i.1+n,sorry_proof⟩])
+  def merge {n m : Nat} (x : X^{n}) (y : X^{m})  : X^{n+m} := 
+    (λ [i] => if i.1 < n 
+              then x[⟨i.1,sorry_proof⟩]
+              else y[⟨i.1-n, sorry_proof⟩])
+  -- abbrev concat {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := x.merge y
+
   abbrev Index (x : X^I) := I
   abbrev Value (x : X^I) := X
   

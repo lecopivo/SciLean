@@ -59,6 +59,23 @@ namespace Iterable
     decEq := by infer_instance
   }
 
+  instance : Iterable Nat := 
+  {
+    first := some 0
+    next  := λ n => some (n+1)
+    decEq := by infer_instance
+  }
+
+  instance : Iterable Int := 
+  {
+    first := some 0
+    next  := λ n =>
+      match n with 
+      | .ofNat n   => .negSucc n     |> some
+      | .negSucc n => .ofNat (n+1) |> some
+    decEq := by infer_instance
+  }
+
   -- Row major ordering, this respects `<` defined on `ι × κ`
   instance [Iterable ι] [Iterable κ]
            : Iterable (ι × κ) :=
