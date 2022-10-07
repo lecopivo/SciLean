@@ -27,6 +27,8 @@ structure PrismaticSet where
   face_comp {P Q S : Prism} : ∀ (f : Inclusion Q P) (g : Inclusion S Q),
     (face (f ∘ g)) = face g ∘ face f
 
+namespace PrismaticSet
+
 /-- Coface interface of a prismatic set. 
 
 The `coface` function is not included in `PrismaticSet` as it is not always necessary and computing all the neighbouring information can be costly. 
@@ -47,10 +49,11 @@ class Coface (S : PrismaticSet) where
   face_coface : ∀ (e : S.Elem Q) (P : Prism) (i : CofaceIndex e P), 
     Function.uncurry S.face (coface i) = e
 
-abbrev PrismaticSet.CofaceIndex (S : PrismaticSet) [Coface S] {Q} (e : S.Elem Q) (P : Prism) 
+
+abbrev CofaceIndex (S : PrismaticSet) [Coface S] {Q} (e : S.Elem Q) (P : Prism) 
   := Coface.CofaceIndex e P
 
-abbrev PrismaticSet.coface (S : PrismaticSet) [Coface S] {Q} {e : S.Elem Q} {P} (id : S.CofaceIndex e P) 
+abbrev coface (S : PrismaticSet) [Coface S] {Q} {e : S.Elem Q} {P} (id : S.CofaceIndex e P) 
   := Coface.coface id
 
 -- TODO:
@@ -60,7 +63,7 @@ abbrev PrismaticSet.coface (S : PrismaticSet) [Coface S] {Q} {e : S.Elem Q} {P} 
 --  3. caching -- stamps out face maps to index arrays 
                -- explicit boundary maps -- potential for computing homologies
 
-structure PrismaticSet.ProdElem (P : Prism) (Elem₁ Elem₂ : Prism → Type) where
+structure ProdElem (P : Prism) (Elem₁ Elem₂ : Prism → Type) where
   dec : PrismDecomposition P
   fst : Elem₁ dec.fst
   snd : Elem₂ dec.snd
@@ -140,7 +143,7 @@ instance [∀ P, Enumtype (Elem₁ P)] [∀ P, Enumtype (Elem₂ P)]
 }
 
 
-def PrismaticSet.prod (S₁ S₂ : PrismaticSet) : PrismaticSet :=
+def prod (S₁ S₂ : PrismaticSet) : PrismaticSet :=
 {
   Elem := λ P => ProdElem P S₁.Elem S₂.Elem
 
@@ -154,7 +157,6 @@ def PrismaticSet.prod (S₁ S₂ : PrismaticSet) : PrismaticSet :=
   face_comp := sorry_proof
 }
 
-open PrismaticSet in
 instance (S₁ S₂ : PrismaticSet) [Coface S₁] [Coface S₂] : Coface (S₁.prod S₂) where
 
   CofaceIndex := λ e P => ProdElem P (S₁.CofaceIndex e.fst) (S₂.CofaceIndex e.snd)

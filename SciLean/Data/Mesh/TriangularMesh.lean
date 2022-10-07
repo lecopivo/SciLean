@@ -3,13 +3,7 @@ import SciLean.Data.DataArray
 
 namespace SciLean
 
-#check ℝ^{3}
-
-variable (n m : Nat) [Fact (n≠0)]
-
-example : PlainDataType (Fin n) := by infer_instance
-
-structure TriangularMeshData where
+structure TriangularSet.FaceData where
   pointCount : Nat
   edgeCount  : Nat
   triangleCount : Nat
@@ -17,17 +11,22 @@ structure TriangularMeshData where
   edgePoints    : (Fin pointCount)^{edgeCount, 2}
   triangleEdges : (Fin edgeCount)^{triangleCount, 3}
 
-  pointEdges     : ArrayN (Array (Fin edgeCount)) pointCount
-  pointTriangles : ArrayN (Array (Fin triangleCount)) pointCount
-  edgeTriangles  : ArrayN (Array (Fin triangleCount)) edgeCount
+  -- TODO: Add proposition that it is consistent
 
--- TODO: Define few predicates on TriangularMeshData
+open Prism in
+structure TriangularSet.CofaceData extends FaceData where
+  pointEdges     : ArrayN (Array (Inclusion point segment × Fin edgeCount)) pointCount
+  pointTriangles : ArrayN (Array (Inclusion point triangle × Fin triangleCount)) pointCount
+  edgeTriangles  : ArrayN (Array (Inclusion segment triangle × Fin triangleCount)) edgeCount
+
+
+-- TODO: Define few predicates on TriangularSet.FaceData
 --     1. it is consistent
 --     2. it is a manifold i.e. each edge has one or two neighbours
 --     3. does not have boundary i.e. every edge has at least two neighbours (does not have to be manifold e.g. double bubble)
 
 open Prism in
-def TriangularSet (data : TriangularMeshData) : PrismaticSet :=
+def TriangularSet (data : TriangularSet.FaceData) : PrismaticSet :=
 {
   Elem := λ P =>
     match P with
@@ -35,22 +34,6 @@ def TriangularSet (data : TriangularMeshData) : PrismaticSet :=
     | segment  => Fin data.edgeCount
     | triangle => Fin data.triangleCount
     | _ => Empty
-
-  CofaceIndex := λ {Q} e P =>
-    match Q, P with
-    -- point neighbours
-    | point, point    => Unit
-    | point, segment  => Fin data.pointEdges[e].size
-    | point, triangle => Fin data.pointTriangles[e].size
-
-    -- edge neighbours
-    | segment, segment  => Unit
-    | segment, triangle => Fin data.edgeTriangles[e].size
-
-    -- triagnle neighbours
-    | triagnle, triangle => Unit
-
-    | _, _ => Empty
 
   face := λ {Q P} ι e => 
     match Q, P, ι with
@@ -79,8 +62,62 @@ def TriangularSet (data : TriangularMeshData) : PrismaticSet :=
     |  segment, triangle,  ⟨.cone (.tip .point), _, _⟩ => data.triangleEdges[e,1]
     | triangle, triangle, ⟨.cone (.cone .point), _, _⟩ => e
 
+    | _, _, _ => 
+      /- In all remaining cases `e` is an element of `Empty` -/
+      absurd (a:=True) sorry_proof sorry_proof 
+
+
+  face_comp := sorry_proof
 }
 
-  
+open Prism in
+instance (data : TriangularSet.CofaceData) : (TriangularSet data.toFaceData).Coface where
 
-  #check Prism.point
+  CofaceIndex := λ {Q} e P =>
+    match Q, P with
+    -- point neighbours
+    | point, point    => Unit
+    | point, segment  => 
+      let e : Fin data.pointCount := reduce_type_of e
+      Fin data.pointEdges[e].size
+    | point, triangle => 
+      let e : Fin data.pointCount := reduce_type_of e
+      Fin data.pointTriangles[e].size
+
+    -- edge neighbours
+    | segment, segment  => Unit
+    | segment, triangle => 
+      let e : Fin data.edgeCount := reduce_type_of e
+      Fin data.edgeTriangles[e].size
+
+    -- triagnle neighbours
+    | triangle, triangle => Unit
+
+    | _, _ => Empty
+  
+  coface := λ {Q} e P id =>
+    match Q, P with
+    
+    | point, point => 
+      (⟨.point, sorry_proof, sorry_proof⟩, e)
+    | point, segment => 
+      data.pointEdges[reduce_type_of e][id]
+    | point, triangle =>
+      data.pointTriangles[reduce_type_of e][id]
+
+    | segment, segment => 
+      let e : Fin data.edgeCount := e
+      (⟨.cone .point, sorry_proof, sorry_proof⟩, e)
+    | segment, triangle =>
+      data.edgeTriangles[reduce_type_of e][id]
+
+    | triangle, triangle => 
+      let e : Fin data.triangleCount := e
+      (⟨.cone (.cone .point), sorry_proof, sorry_proof⟩, e)
+
+    | _, _ => 
+      /- In all remaining cases `id` is an element of `Empty` -/
+      absurd (a:=True) sorry_proof sorry_proof 
+
+
+  face_coface := sorry_proof

@@ -28,7 +28,8 @@ namespace SciLean
     face_comp := sorry_proof
   }
 
-  instance : Coface LineSet where
+
+  instance : LineSet.Coface where
     CofaceIndex := 
       λ {Q} _ P => 
       match Q, P with
@@ -72,14 +73,15 @@ namespace SciLean
       let enum : Enumtype Empty := by infer_instance
       cast sorry_proof enum
 
+
   instance (Q P) (e : LineSet.Elem Q) : Enumtype (LineSet.CofaceIndex e P) :=
      match Q, P with
      -- neighbours of a point
-     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[LineSet, PrismaticSet.CofaceIndex, Coface.CofaceIndex]; infer_instance
-     | ⟨.point, _⟩, ⟨.cone .point, _⟩ => by simp[LineSet, PrismaticSet.CofaceIndex, Coface.CofaceIndex]; infer_instance
+     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[LineSet, PrismaticSet.Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+     | ⟨.point, _⟩, ⟨.cone .point, _⟩ => by simp[LineSet, PrismaticSet.Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
 
      -- neighbours of a Circle
-     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[LineSet, PrismaticSet.CofaceIndex, Coface.CofaceIndex]; infer_instance
+     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[LineSet, PrismaticSet.Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
 
      -- all the rest is empty
      | _, _ => 
@@ -98,7 +100,12 @@ namespace SciLean
           e + x
         | _ => absurd (a:=True) sorry_proof sorry_proof)
 
-      (closestPoint := λ x => 
+
+      (toPos_face := sorry_proof)
+
+
+  instance : LineMesh.ClosestPoint where
+      closestPoint := λ x => 
         let nx : Int := 
           if 0 ≤ x 
           then  (Float.floor  x.toFloat).toUInt64.toNat 
@@ -108,8 +115,5 @@ namespace SciLean
           ⟨Prism.point, nx, 0⟩
         else 
           let ix : ℝ^{1} := λ [i] => ix
-          ⟨Prism.segment, nx, ix⟩)
-
-      (toPos_face := sorry_proof)
-      (closestPoint_toPos := sorry_proof)
-
+          ⟨Prism.segment, nx, ix⟩
+      closestPoint_toPos := sorry_proof

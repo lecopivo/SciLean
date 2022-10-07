@@ -26,7 +26,7 @@ namespace SciLean
     face_comp := sorry_proof
   }
 
-  instance : Coface (SegmentSet n) where
+  instance : (SegmentSet n).Coface where
     CofaceIndex := 
       λ {Q} e P => 
       match Q, P with
@@ -87,21 +87,21 @@ namespace SciLean
   instance (n Q P) (e : (SegmentSet n).Elem Q) : Enumtype ((SegmentSet n).CofaceIndex e P) :=
      match Q, P with
      -- neighbours of a point
-     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[SegmentSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex]; infer_instance
      | ⟨.point, _⟩, ⟨.cone .point, _⟩ => 
        match n with
-       | 0 => by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+       | 0 => by simp[SegmentSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex]; infer_instance
        | n'+1 => 
          let e : Fin (n'+2) := e
          if h : e = 0 ∨ e = n'+1
-         then by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex, h]; infer_instance
-         else by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex, h]; infer_instance
+         then by simp[SegmentSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex, h]; infer_instance
+         else by simp[SegmentSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex, h]; infer_instance
      | ⟨.point, _⟩, _ => 
        let enum : Enumtype Empty := by infer_instance
        cast sorry_proof enum
 
      -- neighbours of a segment
-     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[SegmentSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex]; infer_instance
      | ⟨.cone .point, _⟩, _ => 
        let enum : Enumtype Empty := by infer_instance
        cast sorry_proof enum
@@ -125,7 +125,11 @@ namespace SciLean
           e + x
         | _ => absurd (a:=True) sorry_proof sorry_proof)
 
-      (closestPoint := λ x => 
+      (toPos_face := sorry_proof)
+
+
+  instance : (SegmentMesh n).ClosestPoint where
+      closestPoint := λ x => 
         if x < 0 then
           ⟨Prism.point, ⟨0, sorry_proof⟩, 0⟩
         else if x > n then
@@ -137,8 +141,6 @@ namespace SciLean
             ⟨Prism.point, ⟨nx, sorry_proof⟩, 0⟩
           else 
             let ix : ℝ^{1} := λ [i] => ix
-            ⟨Prism.segment, ⟨nx, sorry_proof⟩, ix⟩)
+            ⟨Prism.segment, ⟨nx, sorry_proof⟩, ix⟩
 
-      (toPos_face := sorry_proof)
-      (closestPoint_toPos := sorry_proof)
-
+      closestPoint_toPos := sorry_proof

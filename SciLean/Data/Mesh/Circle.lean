@@ -26,7 +26,7 @@ namespace SciLean
     face_comp := sorry_proof
   }
 
-  instance : Coface (CircleSet n) where
+  instance : (CircleSet n).Coface where
     CofaceIndex := 
       λ {Q} _ P => 
       match Q, P with
@@ -79,22 +79,23 @@ namespace SciLean
   instance (n Q P) (e : (CircleSet n).Elem Q) : Enumtype ((CircleSet n).CofaceIndex e P) :=
      match Q, P with
      -- neighbours of a point
-     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[CircleSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex]; infer_instance
      | ⟨.point, _⟩, ⟨.cone .point, _⟩ => 
        match n with
-       | 0 => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
-       | 1 => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
-       | n'+2 => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+       | 0 => by simp[CircleSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex]; infer_instance
+       | 1 => by simp[CircleSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex]; infer_instance
+       | n'+2 => by simp[CircleSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex]; infer_instance
 
      -- neighbours of a Circle
-     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[CircleSet, PrismaticSet.CofaceIndex, PrismaticSet.Coface.CofaceIndex]; infer_instance
 
      -- all the rest is empty
      | _, _ => 
        let enum : Enumtype Empty := by infer_instance
        cast sorry_proof enum
 
-  def CircleMesh (n : Nat) [Fact (n≠0)] : PrismaticMesh (ℝ×ℝ) := 
+
+  def CircleMesh (n : Nat) : PrismaticMesh (ℝ×ℝ) := 
     PrismaticMesh.mk (CircleSet n)
       (toPos := λ p => 
         match p with
@@ -109,7 +110,11 @@ namespace SciLean
           (Math.cos θ, Math.sin θ)
         | _ => absurd (a:=True) sorry_proof sorry_proof
       )
-      (closestPoint := λ xy => 
+      (toPos_face := sorry_proof)
+
+
+  instance : (CircleMesh n).ClosestPoint where
+      closestPoint := λ xy => 
         let θ := (Math.atan2 (-xy.2) (-xy.1) + Math.pi)/(2*Math.pi)
         let nθ := (Float.floor θ.toFloat).toUInt64.toNat 
         let iθ := θ - nθ
@@ -118,6 +123,5 @@ namespace SciLean
         else
           let iθ : ℝ^{1} := λ [i] => iθ
           ⟨Prism.segment, ⟨nθ, sorry_proof⟩, iθ⟩
-        )
-      (toPos_face := sorry_proof)
-      (closestPoint_toPos := sorry_proof)
+
+      closestPoint_toPos := sorry_proof

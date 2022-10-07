@@ -12,17 +12,21 @@ namespace SciLean
   -- It should extend PrismaticSet, but there is some problem with 
   structure PrismaticMesh (X : Type) [Vec X] extends PrismaticSet where
     toPos : (MeshPos toPrismaticSet) → X
-    closestPoint : X → (MeshPos toPrismaticSet)
 
     -- Continuity across faces
     toPos_face (Q P : Prism) (ι : Inclusion Q P) (e : Elem P) (x : ℝ^{Q.dim}) (h : Q.InPrism x)
       : toPos ⟨P, e, ι.faceInclusion x⟩ = toPos ⟨Q, face ι e, x⟩
     
-    -- Point on the mesh is the closes point
-    closestPoint_toPos (p : MeshPos toPrismaticSet) : closestPoint (toPos p) = p
+  namespace PrismaticMesh
 
+  class ClosestPoint {X} [Vec X] (M : PrismaticMesh X) where
+    closestPoint : X → (MeshPos M.toPrismaticSet)
+    -- Point on the mesh is the closes point
+    closestPoint_toPos (p : MeshPos M.toPrismaticSet) : closestPoint (M.toPos p) = p
+
+  abbrev closestPoint {X} [Vec X] (M : PrismaticMesh X) [ClosestPoint M] (x : X) := ClosestPoint.closestPoint (M:=M) x
   
-  def PrismaticMesh.prod {X Y} [Vec X] [Vec Y] (M : PrismaticMesh X) (N : PrismaticMesh Y) : PrismaticMesh (X×Y) :=
+  def prod {X Y} [Vec X] [Vec Y] (M : PrismaticMesh X) (N : PrismaticMesh Y) : PrismaticMesh (X×Y) :=
     PrismaticMesh.mk (M.toPrismaticSet.prod N.toPrismaticSet)
       (toPos := λ p => 
         let dim₁ := p.elem.dec.fst.dim
@@ -35,7 +39,13 @@ namespace SciLean
         let pos₂ := N.toPos p₂
         (pos₁, pos₂))
 
-      (closestPoint := λ (x,y) => 
+      (toPos_face := sorry_proof)
+
+  instance {X Y} [Vec X] [Vec Y] 
+    (M : PrismaticMesh X) [M.ClosestPoint]
+    (N : PrismaticMesh Y) [N.ClosestPoint]
+    : PrismaticMesh.ClosestPoint (M.prod N) where
+      closestPoint := λ (x,y) => 
         let p₁ := M.closestPoint x        
         let p₂ := N.closestPoint y
         let P := p₁.prism * p₂.prism
@@ -44,7 +54,5 @@ namespace SciLean
         ⟨decP, cast sorry_proof p₁.elem, cast sorry_proof p₂.elem⟩, 
         λ [i] => if i.1 < p₁.prism.dim 
                  then p₁.pos[⟨i.1, sorry_proof⟩]
-                 else p₂.pos[⟨i.1 - p₁.prism.dim, sorry_proof⟩]⟩)
-
-      (toPos_face := sorry_proof)
-      (closestPoint_toPos := sorry_proof)
+                 else p₂.pos[⟨i.1 - p₁.prism.dim, sorry_proof⟩]⟩
+      closestPoint_toPos := sorry_proof
