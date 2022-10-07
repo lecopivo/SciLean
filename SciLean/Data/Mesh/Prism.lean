@@ -66,15 +66,23 @@ def inPrism (P : Prism) (x : ℝ^{P.dim}) : Bool :=
 
 def InPrism (P : Prism) (x : ℝ^{P.dim}) : Prop := (P.inPrism x = true)
 
-def point : Prism := 1
-def segment := point.cone
+@[matchPattern]
+def point : Prism := ⟨.point, sorry_proof⟩
+@[matchPattern]
+def segment : Prism := ⟨.cone .point, sorry_proof⟩
 
-def triangle := segment.cone
-def square   := segment*segment
+@[matchPattern]
+def triangle : Prism := ⟨.cone (.cone .point), sorry_proof⟩
+@[matchPattern]
+def square   : Prism := ⟨.prod (.cone .point) (.cone .point), sorry_proof⟩
 
-def tet     := triangle.cone
+@[matchPattern]
+def tet     : Prism := triangle.cone
+@[matchPattern]
 def pyramid := square.cone
+@[matchPattern]
 def prism   := segment*triangle
+@[matchPattern]
 def cube    := segment*square
 
 -- def Foo (P : Prism) : Type :=

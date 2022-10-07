@@ -178,7 +178,9 @@ instance instPlainDataTypeProd [ta : PlainDataType α] [tb : PlainDataType β] :
 def Fin.bitSize  (n : Nat) : Nat := (Nat.log2 n + (n - 2^(Nat.log2 n) != 0).toUInt64.toNat)
 def Fin.byteSize (n : Nat) : Nat := (Fin.bitSize n + 7) / 8
 
-def Fin.bitType (n : Nat) (_ : n ≠ 0) (_ : n ≤ 2^8) : BitType (Fin n) where
+-- TODO: IMPORTANT This breaks consistency with (n=0) as we could make `Fin 0` from a byte
+-- Adding assumption (n≠0) is really annoying
+def Fin.bitType (n : Nat) (_ : n ≤ 2^8) : BitType (Fin n) where
   bits := (bitSize n).toUInt8
   h_size := sorry_proof
   fromByte b := ⟨b.toNat % n, sorry_proof⟩ --- The modulo here is just in case to remove junk bit values, also we need `n≠0` for consistency
@@ -211,23 +213,24 @@ def Fin.byteType (n : Nat) (_ : 2^8 < n) : ByteType (Fin n) where
   fromByteArray_toByteArray := sorry_proof
   fromByteArray_toByteArray_other := sorry_proof
 
-instance (n) [f : Fact (n≠0)] : PlainDataType (Fin n) where
+-- TODO: IMPORTANT This breaks consistency see Fin.bitType
+instance (n) : PlainDataType (Fin n) where
   btype := 
     if h : n ≤ 2^8 
-    then .inl (Fin.bitType n f.proof h) 
+    then .inl (Fin.bitType n h) 
     else .inr (Fin.byteType n (by simp at h; apply h))
 
 -------------- Enumtype ----------------------------------------------
 ----------------------------------------------------------------------
 
-def Enumtype.bitType (α : Type) [Enumtype α] [Nonempty α] (h : numOf α ≤ 2^8) : BitType α where
+def Enumtype.bitType (α : Type) [Enumtype α] (h : numOf α ≤ 2^8) : BitType α where
   bits := Fin.bitSize (numOf α) |>.toUInt8
   h_size := sorry_proof
-  fromByte b := fromFin <| (Fin.bitType (numOf α) sorry_proof h).fromByte b
-  toByte a   := (Fin.bitType (numOf α) sorry_proof h).toByte (toFin a)
+  fromByte b := fromFin <| (Fin.bitType (numOf α) h).fromByte b
+  toByte a   := (Fin.bitType (numOf α) h).toByte (toFin a)
   fromByte_toByte := sorry_proof
 
-def Enumtype.byteType (α : Type) [Enumtype α] [Nonempty α] (hn : 2^8 < numOf α ) : ByteType α where
+def Enumtype.byteType (α : Type) [Enumtype α] (hn : 2^8 < numOf α ) : ByteType α where
   bytes := Fin.byteSize (numOf α)
   h_size := sorry_proof
 
@@ -257,7 +260,7 @@ As Enumtype:
   The type `Fin (2^8-1)` needs 8 bits thus only a single byte as `instPlainDataTypeEnumtype`
     
 -/
-instance (priority := low) instPlainDataTypeEnumtype  {α : Type} [Enumtype α] [Nonempty α] : PlainDataType α where
+instance (priority := low) instPlainDataTypeEnumtype  {α : Type} [Enumtype α] : PlainDataType α where
   btype := 
     if h : (numOf α) ≤ 2^8 
     then .inl (Enumtype.bitType α h)

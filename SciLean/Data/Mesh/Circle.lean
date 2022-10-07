@@ -23,8 +23,12 @@ namespace SciLean
       | ⟨.point, _⟩, ⟨.cone .point, _⟩, ⟨.tip .point, _, _⟩, e => ⟨(e.1+1) % n, sorry_proof⟩
       | _, _, _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
 
+    face_comp := sorry_proof
+  }
+
+  instance : Coface (CircleSet n) where
     CofaceIndex := 
-      λ {Q} e P => 
+      λ {Q} _ P => 
       match Q, P with
       -- neighbours of a point
       | ⟨.point, _⟩, ⟨.point, _⟩ => Unit
@@ -49,8 +53,9 @@ namespace SciLean
       | ⟨.point, _⟩, ⟨.cone .point, _⟩ => 
         match n with 
         | 0 => absurd (a:= True) sorry_proof sorry_proof /- `id` has to be an element of Empty -/
-        | 1 => (⟨.base .point, sorry_proof, sorry_proof⟩, 0)
-        | _+2 =>
+        | 1 => (⟨.base .point, sorry_proof, sorry_proof⟩, ⟨0,sorry_proof⟩)
+        | n'+2 =>
+            let e : Fin (n'+2) := e
             if id = 0 
             then (⟨ .tip .point, sorry_proof, sorry_proof⟩, ⟨(e+n-1) % n, sorry_proof⟩)
             else (⟨.base .point, sorry_proof, sorry_proof⟩, e)
@@ -61,8 +66,6 @@ namespace SciLean
       | _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
 
     face_coface := sorry_proof
-    face_comp := sorry_proof
-  }
 
 
   instance (n : Nat) (P : Prism) : Enumtype ((CircleSet n).Elem P) := 
@@ -76,15 +79,15 @@ namespace SciLean
   instance (n Q P) (e : (CircleSet n).Elem Q) : Enumtype ((CircleSet n).CofaceIndex e P) :=
      match Q, P with
      -- neighbours of a point
-     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[PrismaticSet.Elem, CircleSet]; infer_instance
+     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
      | ⟨.point, _⟩, ⟨.cone .point, _⟩ => 
        match n with
-       | 0 => by simp[PrismaticSet.Elem, CircleSet]; infer_instance
-       | 1 => by simp[PrismaticSet.Elem, CircleSet]; infer_instance
-       | n'+2 => by simp[PrismaticSet.Elem, CircleSet]; infer_instance
+       | 0 => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+       | 1 => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
+       | n'+2 => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
 
      -- neighbours of a Circle
-     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[PrismaticSet.Elem, CircleSet]; infer_instance
+     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[CircleSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
 
      -- all the rest is empty
      | _, _ => 

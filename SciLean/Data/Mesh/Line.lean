@@ -2,6 +2,8 @@ import SciLean.Data.Mesh.PrismaticMesh
 
 namespace SciLean
 
+  open Prism
+
   def LineSet : PrismaticSet :=
   {
     Elem := λ P => 
@@ -23,6 +25,10 @@ namespace SciLean
       | ⟨.point, _⟩, ⟨.cone .point, _⟩, ⟨.tip .point, _, _⟩, e => e+1
       | _, _, _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
 
+    face_comp := sorry_proof
+  }
+
+  instance : Coface LineSet where
     CofaceIndex := 
       λ {Q} _ P => 
       match Q, P with
@@ -39,12 +45,13 @@ namespace SciLean
       | _, _ => Empty
 
     coface := 
-      λ {Q} e P id =>  -- Q.nrepr = f'.toPrism.toCanonical
+      λ {Q} e P id => 
       match Q, P with
       -- neighbours of a point
       | ⟨.point, _⟩, ⟨.point, _⟩ => 
         (⟨.point, sorry_proof, sorry_proof⟩, e)
       | ⟨.point, _⟩, ⟨.cone .point, _⟩ => 
+        let e : Int := e
         if id = 0 
         then (⟨.tip .point, sorry_proof, sorry_proof⟩, e-1)
         else (⟨.base .point, sorry_proof, sorry_proof⟩, e)
@@ -55,8 +62,6 @@ namespace SciLean
       | _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
 
     face_coface := sorry_proof
-    face_comp := sorry_proof
-  }
 
 
   instance (P : Prism) : Iterable (LineSet.Elem P) :=
@@ -70,11 +75,11 @@ namespace SciLean
   instance (Q P) (e : LineSet.Elem Q) : Enumtype (LineSet.CofaceIndex e P) :=
      match Q, P with
      -- neighbours of a point
-     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[PrismaticSet.Elem, LineSet]; infer_instance
-     | ⟨.point, _⟩, ⟨.cone .point, _⟩ => by simp[PrismaticSet.Elem, LineSet]; infer_instance
+     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[LineSet, PrismaticSet.CofaceIndex, Coface.CofaceIndex]; infer_instance
+     | ⟨.point, _⟩, ⟨.cone .point, _⟩ => by simp[LineSet, PrismaticSet.CofaceIndex, Coface.CofaceIndex]; infer_instance
 
      -- neighbours of a Circle
-     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[PrismaticSet.Elem, LineSet]; infer_instance
+     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[LineSet, PrismaticSet.CofaceIndex, Coface.CofaceIndex]; infer_instance
 
      -- all the rest is empty
      | _, _ => 

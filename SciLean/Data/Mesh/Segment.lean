@@ -23,6 +23,10 @@ namespace SciLean
       | ⟨.point, _⟩, ⟨.cone .point, _⟩, ⟨.tip .point, _, _⟩, e => e+1
       | _, _, _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
 
+    face_comp := sorry_proof
+  }
+
+  instance : Coface (SegmentSet n) where
     CofaceIndex := 
       λ {Q} e P => 
       match Q, P with
@@ -32,6 +36,7 @@ namespace SciLean
         match n with 
         | 0 => Empty
         | n'+1 => 
+          let e : Fin (n'+2) := e
           if e = 0 ∨ e = n'+1
           then Unit
           else Fin 2
@@ -52,15 +57,16 @@ namespace SciLean
         match n with 
         | 0 => absurd (a:= True) sorry_proof sorry_proof /- `id` has to be an element of Empty -/
         | n'+1 =>
+          let e : Fin (n'+2) := e
           if h : e = 0
-          then (⟨.base .point, sorry_proof, sorry_proof⟩, 0)
+          then (⟨.base .point, sorry_proof, sorry_proof⟩, ⟨0, sorry_proof⟩)
           else if h' : e = n' + 1
           then (⟨.tip .point, sorry_proof, sorry_proof⟩, ⟨n', by simp⟩)
           else 
             let id : Fin 2 := cast (by simp[h,h']) id
             if id = 0 
-            then (⟨ .tip .point, sorry_proof, sorry_proof⟩, e-1)
-            else (⟨.base .point, sorry_proof, sorry_proof⟩, e)
+            then (⟨ .tip .point, sorry_proof, sorry_proof⟩, ⟨e-1, sorry_proof⟩)
+            else (⟨.base .point, sorry_proof, sorry_proof⟩, ⟨e, sorry_proof⟩)
 
       -- neighbours of a segment is the segment itself
       | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => 
@@ -68,8 +74,6 @@ namespace SciLean
       | _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
 
     face_coface := sorry_proof
-    face_comp := sorry_proof
-  }
   
 
   instance (n : Nat) (P : Prism) : Enumtype ((SegmentSet n).Elem P) := 
@@ -83,21 +87,21 @@ namespace SciLean
   instance (n Q P) (e : (SegmentSet n).Elem Q) : Enumtype ((SegmentSet n).CofaceIndex e P) :=
      match Q, P with
      -- neighbours of a point
-     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[PrismaticSet.Elem, SegmentSet]; infer_instance
+     | ⟨.point, _⟩, ⟨.point, _⟩ => by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
      | ⟨.point, _⟩, ⟨.cone .point, _⟩ => 
        match n with
-       | 0 => by simp[PrismaticSet.Elem, SegmentSet]; infer_instance
+       | 0 => by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
        | n'+1 => 
          let e : Fin (n'+2) := e
          if h : e = 0 ∨ e = n'+1
-         then by simp[PrismaticSet.Elem, SegmentSet, h]; infer_instance
-         else by simp[PrismaticSet.Elem, SegmentSet, h]; infer_instance
+         then by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex, h]; infer_instance
+         else by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex, h]; infer_instance
      | ⟨.point, _⟩, _ => 
        let enum : Enumtype Empty := by infer_instance
        cast sorry_proof enum
 
      -- neighbours of a segment
-     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[PrismaticSet.Elem, SegmentSet]; infer_instance
+     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[SegmentSet, Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
      | ⟨.cone .point, _⟩, _ => 
        let enum : Enumtype Empty := by infer_instance
        cast sorry_proof enum

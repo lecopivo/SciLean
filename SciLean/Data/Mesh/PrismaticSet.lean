@@ -15,26 +15,43 @@ Categorical view
 
 `PrismaticSet` is a presheaf on the catogory of `Prism`. The `Elem` function maps prisms to types. The `face` function maps prism inclusion to functions between types `Elem P`. 
 
-What is the categorical point of view of `coface`? Maybe adjunction of something? I don't know. Figuring this out might improve the interface and make it more composable.
 -/
 structure PrismaticSet where 
   /-- Index set for Elems of type `P` -/
   Elem (P : Prism) : Type     
-  -- Index set for cofaces of `e` of type `Q`
-  CofaceIndex {Q} (e : Elem Q) (P : Prism) : Type
 
   /-- Face of `e` of type `Q` given an inclusion of `Q` to `P` -/
   face {Q P} (f : Inclusion Q P) (e : Elem P) : Elem Q
-  /-- Coface is a -/
-  coface {Q} {e : Elem Q} {P : Prism} : CofaceIndex e P → Inclusion Q P × Elem P
-
-  -- consitency between face and coface
-  face_coface : ∀ (e : Elem Q) (P : Prism) (i : CofaceIndex e P), 
-    Function.uncurry face (coface i) = e
 
   -- Contravariant functoriality - i.e. PrismaticSet is a presheaf
   face_comp {P Q S : Prism} : ∀ (f : Inclusion Q P) (g : Inclusion S Q),
     (face (f ∘ g)) = face g ∘ face f
+
+/-- Coface interface of a prismatic set. 
+
+The `coface` function is not included in `PrismaticSet` as it is not always necessary and computing all the neighbouring information can be costly. 
+
+Categorical view
+================
+
+What is the categorical point of view of `coface`? Maybe adjunction of something? I don't know. Figuring this out might improve the interface and make it more composable.
+-/
+class Coface (S : PrismaticSet) where
+  -- Index set for cofaces of `e` of type `Q`
+  CofaceIndex {Q} (e : S.Elem Q) (P : Prism) : Type
+  
+  /-- Coface is a -/
+  coface {Q} {e : S.Elem Q} {P : Prism} : CofaceIndex e P → Inclusion Q P × S.Elem P
+
+  -- consitency between face and coface
+  face_coface : ∀ (e : S.Elem Q) (P : Prism) (i : CofaceIndex e P), 
+    Function.uncurry S.face (coface i) = e
+
+abbrev PrismaticSet.CofaceIndex (S : PrismaticSet) [Coface S] {Q} (e : S.Elem Q) (P : Prism) 
+  := Coface.CofaceIndex e P
+
+abbrev PrismaticSet.coface (S : PrismaticSet) [Coface S] {Q} {e : S.Elem Q} {P} (id : S.CofaceIndex e P) 
+  := Coface.coface id
 
 -- TODO:
 --  1. product 
@@ -48,7 +65,7 @@ structure PrismaticSet.ProdElem (P : Prism) (Elem₁ Elem₂ : Prism → Type) w
   fst : Elem₁ dec.fst
   snd : Elem₂ dec.snd
 
-instance [∀ P, Iterable (Elem₁ P)] [∀ P, Iterable (Elem₂ P)] 
+instance [∀ P, Iterable (Elem₁ P)] [∀ P, Iterable (Elem₂ P)]
   : Iterable (PrismaticSet.ProdElem P Elem₁ Elem₂) :=
 {
   first := Id.run do
@@ -126,7 +143,6 @@ instance [∀ P, Enumtype (Elem₁ P)] [∀ P, Enumtype (Elem₂ P)]
 def PrismaticSet.prod (S₁ S₂ : PrismaticSet) : PrismaticSet :=
 {
   Elem := λ P => ProdElem P S₁.Elem S₂.Elem
-  CofaceIndex := λ e P => ProdElem P (S₁.CofaceIndex e.fst) (S₂.CofaceIndex e.snd)
 
   face := λ ι e =>
     let ιDec := ι.split e.dec
@@ -134,6 +150,14 @@ def PrismaticSet.prod (S₁ S₂ : PrismaticSet) : PrismaticSet :=
     -- dbg_trace s!"{ι₁.repr} | {ι₂.repr}"
     ⟨ιDec.1, S₁.face ι₁ e.fst, S₂.face ι₂ e.snd⟩
     -- ⟨ιDec.1, cast sorry 0, cast sorry 0⟩
+
+  face_comp := sorry_proof
+}
+
+open PrismaticSet in
+instance (S₁ S₂ : PrismaticSet) [Coface S₁] [Coface S₂] : Coface (S₁.prod S₂) where
+
+  CofaceIndex := λ e P => ProdElem P (S₁.CofaceIndex e.fst) (S₂.CofaceIndex e.snd)
 
   coface := λ {Q _ P} ⟨dec, f₁', f₂'⟩ =>
     let (ι₁, e₁) := S₁.coface f₁'
@@ -143,16 +167,13 @@ def PrismaticSet.prod (S₁ S₂ : PrismaticSet) : PrismaticSet :=
     (ι, e)
 
   face_coface := sorry_proof
-  face_comp := sorry_proof
-}
-
 
 instance (S₁ S₂ : PrismaticSet) [∀ P, Enumtype (S₁.Elem P)] [∀ P, Enumtype (S₂.Elem P)] (P : Prism)
   : Enumtype ((PrismaticSet.prod S₁ S₂).Elem P) := by unfold PrismaticSet.prod; infer_instance
 
-instance (S₁ S₂ : PrismaticSet)
+instance (S₁ S₂ : PrismaticSet) [Coface S₁] [Coface S₂]
   [∀ Q (e : S₁.Elem Q) P, Enumtype (S₁.CofaceIndex e P)]
   [∀ Q (e : S₂.Elem Q) P, Enumtype (S₂.CofaceIndex e P)]
   (Q) (e : (PrismaticSet.prod S₁ S₂).Elem Q) (P)
-  : Enumtype ((PrismaticSet.prod S₁ S₂).CofaceIndex e P) := by unfold PrismaticSet.prod; infer_instance
+  : Enumtype ((PrismaticSet.prod S₁ S₂).CofaceIndex e P) := by unfold PrismaticSet.prod; unfold PrismaticSet.CofaceIndex; simp[Coface.CofaceIndex]; infer_instance
 
