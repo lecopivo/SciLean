@@ -604,6 +604,16 @@ end FaceRepr
   
 namespace PrismRepr
 
+  def topFace : PrismRepr → FaceRepr
+  | .point => .point
+  | .cone P => .cone P.topFace
+  | .prod P Q => .prod P.topFace Q.topFace
+
+  @[simp] 
+  theorem topFace_ofPrism (P : PrismRepr) : P.topFace.ofPrism = P := sorry_proof
+  @[simp] 
+  theorem topFace_toPrism (P : PrismRepr) : P.topFace.toPrism = P := sorry_proof
+
   /-- The first `n`-face of `P` -/
   def first (P : PrismRepr) (n : Nat) : Option FaceRepr:=
     match P, n with
@@ -634,7 +644,6 @@ namespace PrismRepr
       | some f => f.dim = n
       | none => True 
     := sorry_proof
-
 
   def prodSplit (P : PrismRepr) : List PrismRepr :=
   match P with
@@ -847,35 +856,33 @@ def PrismRepr.barycentricCoordSpec {P : PrismRepr} (p : FaceRepr) (_ : p.ofPrism
 -- Most likely this has bad numerics!!!
 -- What type of barycentric coordinates are these? They are not harmonic, maybe Wachspress?
 -- Can we define different set of coordinates inductively?
-def PrismRepr.barycentricCoord {P : PrismRepr} (p : FaceRepr) (_ : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space) : ℝ := 
-  match P, p, x with
-  | .point, _, _ => 0
-  | .cone .point, .base _, (t, ()) => 1-t
-  | .cone _, .tip _, (t, (_)) => t
-  | .cone (.cone _), .base (.tip _), (_, (s, _)) => s
-  | .cone (.cone P), .base (.base p), (t, (s, x)) => 
+def PrismRepr.barycentricCoord {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space) : ℝ := 
+  match P, p, x, h.1 with
+  | .point, _, _, _ => 0
+  | .cone .point, .base _, (t, ()), _ => 1-t
+  | .cone _, .tip _, (t, (_)), _ => t
+  | .cone (.cone _), .base (.tip _), (_, (s, _)), _ => s
+  | .cone (.cone P), .base (.base p), (t, (s, x)), _ => 
     -- let p' : FaceRepr' (some $ .cone P) (0 : Nat) := ⟨.base p, sorry_proof, sorry_proof⟩
     barycentricCoord (P := P.cone) (.base p) sorry_proof (t+s, x)
-  | .cone (.prod P Q), .base (.prod p q), (t, (x, y)) => 
+  | .cone (.prod P Q), .base (.prod p q), (t, (x, y)),_ => 
     -- let p' : FaceRepr' (some $ .cone P) (0 : Nat) := ⟨.base p, sorry_proof, sorry_proof⟩
     (barycentricCoord (P := P.cone) (.base p) sorry_proof (t,x)) * 
     (barycentricCoord q sorry_proof (1/(1-t) * y))
-  | .prod _ _, .prod p q, (x, y) => 
+  | .prod _ _, .prod p q, (x, y), _ => 
     (barycentricCoord p sorry_proof x) * 
     (barycentricCoord q sorry_proof y)
   -- In all these cases `p` is not a point
   -- Can we modify the original match statement to eliminate these?
-  | .cone (.prod _ _), .cone _, _ => unreachable!
-  | .cone (.cone _),  .base (.cone _), _ => unreachable!
-  | .cone (.cone _),  .cone _, _ => unreachable!
-  | .cone .point, .cone _, _ => unreachable!
+  -- | .cone (.prod _ _), .cone _, _ => unreachable!
+  -- | .cone (.cone _),  .base (.cone _), _ => unreachable!
+  -- | .cone (.cone _),  .cone _, _ => unreachable!
+  -- | .cone .point, .cone _, _ => unreachable!
 
 theorem PrismRepr.barycentricCoord_sound {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space)
   : P.barycentricCoord p h x = P.barycentricCoordSpec p h x := sorry_proof
 
-
 namespace PrismRepr
-
 
 end PrismRepr
 

@@ -30,37 +30,37 @@ def TriangularSet (data : TriangularSet.FaceData) : PrismaticSet :=
 {
   Elem := λ P =>
     match P with
-    | point    => Fin data.pointCount
-    | segment  => Fin data.edgeCount
-    | triangle => Fin data.triangleCount
+    | ⟨.point, _⟩ => Fin data.pointCount
+    | ⟨.cone .point, _⟩  => Fin data.edgeCount
+    | ⟨.cone (.cone .point), _⟩ => Fin data.triangleCount
     | _ => Empty
 
   face := λ {Q P} ι e => 
     match Q, P, ι with
     -- faces of a point
-    | point, point, ⟨.point, _, _⟩ => e
+    | ⟨.point, _⟩, ⟨.point, _⟩, ⟨.point, _, _⟩ => e
 
     -- facese of an edge
     -- TODO: use conversion of a face to Fin
-    |  point,  segment, ⟨.base .point, _, _⟩ => data.edgePoints[e,0]
-    |  point,  segment,  ⟨.tip .point, _, _⟩ => data.edgePoints[e,1]
-    | segment, segment, ⟨.cone .point, _, _⟩ => e
+    |  ⟨.point, _⟩,  ⟨.cone .point, _⟩, ⟨.base .point, _, _⟩ => data.edgePoints[e,0]
+    |  ⟨.point, _⟩,  ⟨.cone .point, _⟩,  ⟨.tip .point, _, _⟩ => data.edgePoints[e,1]
+    | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩, ⟨.cone .point, _, _⟩ => e
 
     -- facese of a triangle
     -- TODO: use conversion of a face to Fin
-    | point, triangle, ⟨.base (.base .point), _, _⟩ => 
+    | ⟨.point, _⟩, ⟨.cone (.cone .point), _⟩, ⟨.base (.base .point), _, _⟩ => 
       let edge := data.triangleEdges[e,0]
       data.edgePoints[edge,0]
-    | point, triangle, ⟨.base (.tip .point), _, _⟩  =>
+    | ⟨.point, _⟩, ⟨.cone (.cone .point), _⟩, ⟨.base (.tip .point), _, _⟩  =>
       let edge := data.triangleEdges[e,0]
       data.edgePoints[edge,1]
-    | point, triangle, ⟨.tip (.cone .point), _, _⟩  => 
+    | ⟨.point, _⟩, ⟨.cone (.cone .point), _⟩, ⟨.tip (.cone .point), _, _⟩  => 
       let edge := data.triangleEdges[e,1]
       data.edgePoints[edge,1]
-    |  segment, triangle, ⟨.base (.cone .point), _, _⟩ => data.triangleEdges[e,0]
-    |  segment, triangle, ⟨.cone (.base .point), _, _⟩ => data.triangleEdges[e,1]
-    |  segment, triangle,  ⟨.cone (.tip .point), _, _⟩ => data.triangleEdges[e,1]
-    | triangle, triangle, ⟨.cone (.cone .point), _, _⟩ => e
+    |  ⟨.cone .point, _⟩, ⟨.cone (.cone .point), _⟩, ⟨.base (.cone .point), _, _⟩ => data.triangleEdges[e,0]
+    |  ⟨.cone .point, _⟩, ⟨.cone (.cone .point), _⟩, ⟨.cone (.base .point), _, _⟩ => data.triangleEdges[e,1]
+    |  ⟨.cone .point, _⟩, ⟨.cone (.cone .point), _⟩,  ⟨.cone (.tip .point), _, _⟩ => data.triangleEdges[e,1]
+    | ⟨.cone (.cone .point), _⟩, ⟨.cone (.cone .point), _⟩, ⟨.cone (.cone .point), _, _⟩ => e
 
     | _, _, _ => 
       /- In all remaining cases `e` is an element of `Empty` -/
@@ -76,42 +76,42 @@ instance (data : TriangularSet.CofaceData) : (TriangularSet data.toFaceData).Cof
   CofaceIndex := λ {Q} e P =>
     match Q, P with
     -- point neighbours
-    | point, point    => Unit
-    | point, segment  => 
+    | ⟨.point, _⟩, ⟨.point, _⟩    => Unit
+    | ⟨.point, _⟩, ⟨.cone .point, _⟩  => 
       let e : Fin data.pointCount := reduce_type_of e
       Fin data.pointEdges[e].size
-    | point, triangle => 
+    | ⟨.point, _⟩, ⟨.cone (.cone .point), _⟩ => 
       let e : Fin data.pointCount := reduce_type_of e
       Fin data.pointTriangles[e].size
 
     -- edge neighbours
-    | segment, segment  => Unit
-    | segment, triangle => 
+    | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩  => Unit
+    | ⟨.cone .point, _⟩, ⟨.cone (.cone .point), _⟩ => 
       let e : Fin data.edgeCount := reduce_type_of e
       Fin data.edgeTriangles[e].size
 
     -- triagnle neighbours
-    | triangle, triangle => Unit
+    | ⟨.cone (.cone .point), _⟩, ⟨.cone (.cone .point), _⟩ => Unit
 
     | _, _ => Empty
   
   coface := λ {Q} e P id =>
     match Q, P with
     
-    | point, point => 
+    | ⟨.point, _⟩, ⟨.point, _⟩ => 
       (⟨.point, sorry_proof, sorry_proof⟩, e)
-    | point, segment => 
+    | ⟨.point, _⟩, ⟨.cone .point, _⟩ => 
       data.pointEdges[reduce_type_of e][id]
-    | point, triangle =>
+    | ⟨.point, _⟩, ⟨.cone (.cone .point), _⟩ =>
       data.pointTriangles[reduce_type_of e][id]
 
-    | segment, segment => 
+    | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => 
       let e : Fin data.edgeCount := e
       (⟨.cone .point, sorry_proof, sorry_proof⟩, e)
-    | segment, triangle =>
+    | ⟨.cone .point, _⟩, ⟨.cone (.cone .point), _⟩ =>
       data.edgeTriangles[reduce_type_of e][id]
 
-    | triangle, triangle => 
+    | ⟨.cone (.cone .point), _⟩, ⟨.cone (.cone .point), _⟩ => 
       let e : Fin data.triangleCount := e
       (⟨.cone (.cone .point), sorry_proof, sorry_proof⟩, e)
 
@@ -119,5 +119,19 @@ instance (data : TriangularSet.CofaceData) : (TriangularSet data.toFaceData).Cof
       /- In all remaining cases `id` is an element of `Empty` -/
       absurd (a:=True) sorry_proof sorry_proof 
 
-
   face_coface := sorry_proof
+
+
+structure TriangularMesh.PointData (dim : Nat) extends TriangularSet.FaceData where
+  pos : ℝ^{pointCount, dim}
+
+def TriangularMesh {dim} (data : TriangularMesh.PointData dim) : PrismaticMesh (ℝ^{dim}) :=
+  PrismaticMesh.mk (X:=ℝ^{dim}) (TriangularSet data.toFaceData) 
+  (toPos := λ ⟨P,e,x⟩ =>
+    let p : Inclusion Prism.point P → ℝ^{dim} := λ ι =>
+      let pt := (TriangularSet data.toFaceData).face ι e
+      data.pos[reduce_type_of pt, :]
+    P.barycentricInterpolate p x)
+  (toPos_face := sorry_proof)
+
+

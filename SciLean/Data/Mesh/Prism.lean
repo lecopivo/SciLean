@@ -302,6 +302,9 @@ def dim (f : Face P n) : Nat := n.getD f.repr.dim
 def toPrism (f : Face P n) : Prism := ⟨f.1.toPrism.toCanonical, by simp⟩
 def ofPrism (_ : Face P n) : Prism := P
 
+abbrev anyDim (f : Face P n) : Face P := ⟨f.1, f.2, by simp⟩
+instance : Coe (Face P n) (Face P) := ⟨λ f => f.anyDim⟩
+
 def comp (f : Face P n) (g : Face f.toPrism m) : Face P m := 
   ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2,toPrism] done)) 
    (by simp[g.2, toPrism,f.2]; done), 
@@ -341,6 +344,9 @@ instance (P : Prism) (n)
   next := λ f => f.next
   decEq := by infer_instance
 }
+
+instance (P : Prism)
+  : Inhabited (Face P) := ⟨⟨P.repr.topFace, by simp, by simp⟩⟩
 
 def faces {P : Prism} {n} (f : Face P n) (m : Option Nat := none)  := Iterable.fullRange (Face f.toPrism m)
 
@@ -416,6 +422,19 @@ end PrismDecomposition
 --------- Prism ------------------------------------------------------
 namespace Prism
 
+def topFace (P : Prism) : Face P P.dim := ⟨P.repr.topFace, by simp, by simp[FaceRepr.dim,Prism.dim]⟩
+
+def segment.point0 : Face segment (some 0) := ⟨.base .point, by simp, by simp⟩
+def segment.point1 : Face segment (some 0) := ⟨.tip .point, by simp, by simp⟩
+
+def triangle.point0 : Face triangle (some 0) := ⟨.base (.base .point), by simp, by simp⟩
+def triangle.point1 : Face triangle (some 0) := ⟨.base (.tip .point), by simp, by simp⟩
+def triangle.point2 : Face triangle (some 0) := ⟨.tip (.cone .point), by simp, by simp⟩
+def triangle.edge0 : Face triangle (some 1) := ⟨.base (.cone .point), by simp, by simp⟩
+def triangle.edge1 : Face triangle (some 1) := ⟨.cone (.base .point), by simp, by simp⟩
+def triangle.edge2 : Face triangle (some 1) := ⟨.cone (.tip .point), by simp, by simp⟩
+
+
 /-- Tries to find decomposition of `P` such that `P = P₁ * ??` 
 This is of course not possible in general and any excess powers ignored.
 
@@ -439,6 +458,33 @@ def decomposeBy (P P₁ : Prism) : PrismDecomposition P :=
     | _, _ => absurd (a:=True) sorry_proof sorry_proof
 
   fromList (pt'.map (·.2))
+
+-- TODO: Improve implementation, this is probably not very numerically stable
+def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim}) : X := 
+  match P with
+  | ⟨.point, h⟩ => 
+    let ι : Inclusion point _ := ⟨.point, sorry_proof, sorry_proof⟩
+    f ι
+  | ⟨.cone P', _⟩ => 
+    let x : ℝ^{P'.dim} := λ [i] => x[⟨i.1,sorry_proof⟩]
+    let t : ℝ := x[⟨P'.dim,sorry_proof⟩]
+
+    let P' : Prism := ⟨P', sorry_proof⟩
+    let f₀ := P'.barycentricInterpolate (λ ι => f ⟨ι.1.base, sorry_proof, sorry_proof⟩) (1/(1-t)*x)
+
+    let f₁ := f ⟨.tip P'.1, sorry_proof, sorry_proof⟩
+
+    f₀ + t * (f₁-f₀)
+
+  | ⟨.prod P Q, _⟩ => 
+    let P : Prism := ⟨P, sorry_proof⟩
+    let Q : Prism := ⟨Q, sorry_proof⟩
+    let x : ℝ^{P.dim} := λ [i] => x[⟨i.1,sorry_proof⟩]
+    let y : ℝ^{Q.dim} := λ [i] => x[⟨i.1+P.dim,sorry_proof⟩]
+
+    P.barycentricInterpolate (x:=x) (λ ιP =>
+      Q.barycentricInterpolate (x:=y) (λ ιQ => 
+        f ⟨ιP.1.prod ιQ.1, sorry_proof, sorry_proof⟩))
 
 end Prism
 

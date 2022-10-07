@@ -57,6 +57,12 @@ namespace PowTypeCarrier
   
   def split {n m : Nat} (x : X^{n+m}) : X^{n} × X^{m} := 
     (λ [i] => x[⟨i.1,sorry_proof⟩], λ [i] => x[⟨i.1+n,sorry_proof⟩])
+
+  def split3 {n m k : Nat} (x : X^{n+m+k}) : X^{n} × X^{m} × X^{k} := 
+    (λ [i] => x[⟨i.1,sorry_proof⟩], 
+     λ [i] => x[⟨i.1+n,sorry_proof⟩],
+     λ [i] => x[⟨i.1+n+m,sorry_proof⟩])
+
   def merge {n m : Nat} (x : X^{n}) (y : X^{m})  : X^{n+m} := 
     (λ [i] => if i.1 < n 
               then x[⟨i.1,sorry_proof⟩]

@@ -17,6 +17,7 @@ class Fact (P : Prop) : Prop where
 
 instance : Fact (x=x) := ⟨by rfl⟩
 
+instance {α : Type u} (β : α → Type v) [Inhabited α] [∀ a, Inhabited (β a)] : Inhabited (Sigma β) := ⟨Sigma.mk default default⟩
 instance [Fact (n≠0)] : Inhabited (Fin n) := ⟨⟨0, sorry⟩⟩
 instance {ι : Type} [Enumtype ι] [Nonempty ι] : Fact (numOf ι≠0) := sorry
 
