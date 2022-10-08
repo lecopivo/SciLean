@@ -20,6 +20,55 @@ structure TriangularSet.CofaceData extends FaceData where
   edgeTriangles  : ArrayN (Array (Inclusion segment triangle × Fin triangleCount)) edgeCount
 
 
+def TriangularSet.FaceData.fromTriangles {pointCount triangleCount} 
+  (trianglePoints : (Fin pointCount)^{triangleCount,3}) : TriangularSet.FaceData := Id.run do
+
+  -- why does qsort need Inhabited?
+  have : Fact (pointCount ≠ 0) := sorry_proof
+  have : Fact (triangleCount ≠ 0) := sorry_proof
+
+  let sort (a b c : Fin pointCount) := 
+    let r := #[a,b,c].qsort (·<·)
+    (r[0]!, r[1]!, r[2]!)
+
+  -- create a bit array of edges and their local index to 
+  let mut edges : Array ((Fin pointCount × Fin pointCount) × (Array (Fin triangleCount × Fin 3))) := #[]
+  for (i,_) in Enumtype.fullRange (Fin triangleCount) do
+    let (p0, p1, p2) := sort (trianglePoints[i,0]) (trianglePoints[i,1]) (trianglePoints[i,2])
+    edges := edges |>.push ((p0, p1), #[(i,0)])
+                   |>.push ((p0, p2), #[(i,1)])
+                   |>.push ((p1, p2), #[(i,2)])
+
+  -- sort edges 
+  edges := edges.qsort (·.1<·.1) 
+  -- remove duplicate edges and collect neighbouring triangles
+  edges := edges.foldl (λ a b => 
+    let last := a[a.size-1]!
+    if last.1 = b.1 then
+      a.set! (a.size-1) (last.1, last.2.append b.2)
+    else
+      a.push b) #[edges[0]!] (start := 1)
+ 
+  let edgeCount := edges.size
+  let mut triangleEdges : (Fin edgeCount)^{triangleCount, 3} := λ [i] => ⟨0, sorry_proof⟩
+  let mut edgePoints    : (Fin pointCount)^{edgeCount, 2}    := λ [i] => ⟨0, sorry_proof⟩
+  for h : i in [0:edgeCount] do
+    let i : Fin edgeCount := ⟨i,h.2⟩
+    edgePoints[(i,(0 : Fin 2))] := edges[i].1.1
+    edgePoints[(i,(1 : Fin 2))] := edges[i].1.2
+    for h : j in [0:edges[i].2.size] do
+      let j : Fin _ := ⟨j,h.2⟩
+      triangleEdges[edges[i].2[j]] := i
+
+  {
+    pointCount := pointCount
+    edgeCount := edgeCount
+    triangleCount := triangleCount
+
+    edgePoints := edgePoints
+    triangleEdges := triangleEdges
+  }
+
 -- TODO: Define few predicates on TriangularSet.FaceData
 --     1. it is consistent
 --     2. it is a manifold i.e. each edge has one or two neighbours
