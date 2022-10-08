@@ -99,9 +99,10 @@ namespace PrismRepr
     | point => if n == 0 then 1 else 0
     | cone P => 
       match n with
-      | 0   => 1 + P.faceCount 0
+      | 0   => (P.faceCount 0) + 1
       | n+1 => P.faceCount n + P.faceCount (n+1)
     | prod P Q => ∑ i : Fin (n+1), (P.faceCount i.1) * (Q.faceCount (n-i.1))
+
 
   abbrev pointCount (P : PrismRepr) : Nat := P.faceCount 0
   abbrev edgeCount  (P : PrismRepr) : Nat := P.faceCount 1
@@ -774,19 +775,61 @@ end FaceRepr
 
 
 /-- Index of a face among all faces of the same prism and dimension -/
+-- def FaceRepr.index (f : FaceRepr) : Nat := 
+--   match f.dim, f with
+--   | _, point => 0
+--   | _, tip _ => 0
+--   | _, cone f' => f'.index
+--   | 0, base f' => f'.index + 1
+--   | n'+1, base f' => f'.ofPrism.faceCount n' + f'.index
+--   | _, prod f' g' => 
+--     let P' := f'.ofPrism
+--     let Q' := g'.ofPrism
+--     (∑ i : Fin f'.dim, (P'.faceCount i)*(Q'.faceCount (f.dim-i)))
+--     + g'.index * (P'.faceCount f'.dim)
+--     + f'.index 
+
 def FaceRepr.index (f : FaceRepr) : Nat := 
-  match f.dim, f with
-  | _, point => 0
-  | _, tip _ => 0
-  | _, cone f' => f'.index
-  | 0, base f' => f'.index + 1
-  | n'+1, base f' => f'.ofPrism.faceCount n' + f'.index
-  | _, prod f' g' => 
+  match f with
+  | point => 0
+  | tip P => P.faceCount 0
+  | base f' => f'.index 
+  | cone f' => (f'.ofPrism.faceCount f.dim) + f'.index
+  | prod f' g' => 
     let P' := f'.ofPrism
     let Q' := g'.ofPrism
     (∑ i : Fin f'.dim, (P'.faceCount i)*(Q'.faceCount (f.dim-i)))
     + g'.index * (P'.faceCount f'.dim)
     + f'.index 
+
+
+def FaceRepr.fromIndex (P : PrismRepr) (dim : Nat) (i : Fin (P.faceCount dim)) : FaceRepr := 
+  match P, dim with
+  | .point, 0 => point
+  | .cone P', 0 => 
+    let n' := P'.faceCount 0
+    if h : i.1 < n' then
+      .base (fromIndex P' 0 ⟨i.1, h⟩)
+    else 
+      .tip P'
+  | .cone P', dim'+1 => 
+    let n' := P'.faceCount (dim'+1)
+    if h : i.1 < n' then
+      .base (fromIndex P' (dim'+1) ⟨i.1, h⟩)
+    else
+      .cone (fromIndex P' dim' ⟨i.1 - n', sorry_proof⟩)
+  | .prod P' Q', _ => Id.run do
+    let mut n := 0
+    for d' in [0:dim+1] do
+      let Δn := (P'.faceCount d') * (Q'.faceCount (dim-d'))
+      if h : i.1 < n + Δn then
+        let iP := (i-n) % (P'.faceCount d')
+        let iQ := (i-n) / (P'.faceCount d')
+        return (fromIndex P' d' ⟨iP,sorry_proof⟩).prod (fromIndex Q' (dim-d') ⟨iQ,sorry_proof⟩)
+      else
+        n := n + Δn
+
+    panic! s!"Invalid index {i} in FaceRepr.fromIndex!"
 
 /-- Index of a face is smaller then the number of faces of the same dimesnsion and of the same Prism -/
 def FaceRepr.index_numberOfFaces (f : FaceRepr)
@@ -797,7 +840,6 @@ def FaceRepr.index_numberOfFaces (f : FaceRepr)
 def FaceRepr.index_ext (f g : FaceRepr)
   : f.ofPrism = g.ofPrism → f.dim = g.dim → f.index = g.index → f = g
   := sorry_proof
-
 
 abbrev PrismRepr.Space : PrismRepr → Type
 | .point => Unit

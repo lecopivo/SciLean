@@ -345,6 +345,19 @@ instance (P : Prism) (n)
   decEq := by infer_instance
 }
 
+def toFin (f : Face P (some n)) : Fin (P.faceCount n) := ⟨f.repr.index, sorry_proof⟩
+def fromFin (P : Prism) (n : Nat) (i : Fin (P.faceCount n)) : Face P (some n) := ⟨FaceRepr.fromIndex P.1 n i, sorry_proof, sorry_proof⟩
+
+instance : Enumtype (Face P (some n)) where
+  numOf := P.faceCount n
+  toFin := toFin
+  fromFin := fromFin P n
+
+  first_fromFin := sorry_proof
+  next_fromFin  := sorry_proof
+  next_toFin    := sorry_proof
+
+
 instance (P : Prism)
   : Inhabited (Face P) := ⟨⟨P.repr.topFace, by simp, by simp⟩⟩
 
@@ -371,6 +384,10 @@ def comp (f : Inclusion Q P) (g : Inclusion S Q) : Inclusion S P :=
 instance : Compose (Inclusion Q P) (Inclusion S Q) (Inclusion S P) where
   compose f g := f.comp g
  
+-- def toFin (f : Inclusion Q P) : Fin (P.faceCount Q.dim) := ⟨f.repr.index, sorry_proof⟩
+-- def fromFin (Q P : Prism) (i : Fin (P.faceCount Q.dim)) : Inclusion Q P := ⟨FaceRepr.fromIndex P.1 Q.dim i, sorry_proof, sorry_proof⟩
+
+
 end Inclusion
 
 
@@ -459,6 +476,19 @@ def decomposeBy (P P₁ : Prism) : PrismDecomposition P :=
 
   fromList (pt'.map (·.2))
 
+/-- Number of `Q` prisms in `P` prism -/
+def subprismCount (P Q : Prism) : Nat :=
+  match P, Q with
+  | ⟨.point, _⟩, ⟨.point, _⟩ => 1
+  | ⟨.point, _⟩, _ => 0
+
+  | ⟨.cone P', _⟩, ⟨.point, _⟩ => subprismCount ⟨P', sorry_proof⟩ point + 1
+  | ⟨.cone P', _⟩, ⟨.cone Q', _⟩ => subprismCount ⟨P', sorry_proof⟩ ⟨Q', sorry_proof⟩ + subprismCount ⟨P', sorry_proof⟩ (.cone ⟨Q', sorry_proof⟩)
+  | ⟨.cone P', _⟩, ⟨.prod _ _, _⟩ => subprismCount ⟨P', sorry_proof⟩ Q
+
+  | ⟨.prod P₁ P₂, _⟩, _ => ∑ dec : (PrismDecomposition Q), subprismCount ⟨P₁, sorry_proof⟩ dec.fst * subprismCount ⟨P₂, sorry_proof⟩ dec.snd
+
+
 -- TODO: Improve implementation, this is probably not very numerically stable
 def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim}) : X := 
   match P with
@@ -474,8 +504,9 @@ def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X)
 
     let f₁ := f ⟨.tip P'.1, sorry_proof, sorry_proof⟩
 
-    f₀ + t * (f₁-f₀)
-
+    (1-t) * f₀ + t * f₁
+    -- f₁ + (1-t) * (f₀ - f₁)
+    -- f₀ + t * (f₁-f₀)
   | ⟨.prod P Q, _⟩ => 
     let P : Prism := ⟨P, sorry_proof⟩
     let Q : Prism := ⟨Q, sorry_proof⟩
@@ -519,9 +550,16 @@ end Inclusion
 #check Enumtype.fullRange (PrismDecomposition Prism.cube) 
 
 #eval show IO Unit from do
-  for (dec, li) in Enumtype.fullRange (PrismDecomposition (Prism.cube*Prism.triangle*Prism.triangle)) do
+  let P := Prism.pyramid -- (Prism.cube*Prism.triangle*Prism.triangle)
+  for (dec, li) in Enumtype.fullRange (PrismDecomposition P) do
     let d : FinProd _ := dec
     IO.println s!"{dec.fst} | {dec.snd} | {d.toList} {d.toListComplement}"
+
+  for d in [0:P.dim+1] do
+    IO.println s!"Listing {d}-faces:"
+    for e in P.faces d do
+      IO.println s!"index: {e.repr.index} | {FaceRepr.fromIndex P.1 d ⟨e.repr.index,sorry_proof⟩ == e.repr} | {e.repr}"
+
 
 #eval show IO Unit from do
   for (dec, li) in Enumtype.fullRange (PrismDecomposition (Prism.square)) do
