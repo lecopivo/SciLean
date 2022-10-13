@@ -7,6 +7,9 @@ import SciLean.Algebra.Real
 
 namespace SciLean
 
+-- This is an auxiliary class mainly used for deriving
+class SMul (X : Type u) extends HMul ℝ X X
+
 -- __   __      _             ___
 -- \ \ / /__ __| |_ ___ _ _  / __|_ __  __ _ __ ___
 --  \ V / -_) _|  _/ _ \ '_| \__ \ '_ \/ _` / _/ -_)
