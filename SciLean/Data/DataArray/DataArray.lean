@@ -40,7 +40,13 @@ def DataArray.set (arr : DataArray α) (i : Fin arr.size) (val : α) : DataArray
   | .inr byteType => 
     ⟨byteType.toByteArray arr.byteData (byteType.bytes * i.1) sorry_proof val, arr.size, sorry_proof⟩
 
-
+def DataArray.drop (arr : DataArray α) (k : Nat) : DataArray α := ⟨arr.byteData, arr.size - k, sorry_proof⟩
+def DataArray.push (arr : DataArray α) (k : Nat := 1) (val : α) : DataArray α :=
+  -- do we fit `k` more?
+  if pd.bytes (arr.size + k) ≤ arr.byteData.size then
+    sorry
+  else
+    sorry -- double capacity and push back
 
 /-- Extensionality of DataArray
 
@@ -115,7 +121,8 @@ instance : FunType.HasIntro (DataArrayN α (numOf ι)) where
     intro f := ⟨DataArray.intro' f, sorry_proof⟩
     toFun_intro := sorry_proof
 
-instance : PowType (DataArrayN α (numOf ι)) ι α := ⟨⟩
+@[defaultInstance]
+instance : PowType (DataArrayN α (numOf ι)) ι α := PowType.mk (toGenericArray := GenericArray.mk)
 
 -- #check ℝ^(Fin 3)
 

@@ -7,9 +7,9 @@ namespace SciLean
 -- care too much about what exactly `T` is. 
 -- PowType provides notation `ℝ^Fin n`, we also have short hand `ℝ^{n}`.
 open FunType in
-class PowType (T : outParam Type) (I X : Type) extends FunType T I X, HasSet T, HasIntro T
+class PowType (T : outParam Type) (I X : Type) extends GenericArray T I X
 
-abbrev PowTypeCarrier (X I : Type) {T} [PowType T I X] := T
+abbrev PowTypeCarrier (X I : Type) {T : outParam Type} [PowType T I X] := T
 
 notation X "^" I => PowTypeCarrier X I
 
@@ -42,9 +42,14 @@ namespace PowTypeCarrier
 
   variable {X I} {T : outParam Type} [Enumtype I] [PowType T I X] -- [Inhabited X]
 
-  instance : FunType (X^I) I X := PowType.toFunType
-  instance : FunType.HasSet (X^I) := PowType.toHasSet
-  instance : FunType.HasIntro (X^I) := PowType.toHasIntro
+  @[defaultInstance]
+  instance : FunType (X^I) I X := by infer_instance 
+  @[defaultInstance]
+  instance : FunType.HasSet (X^I) := by infer_instance 
+  @[defaultInstance]
+  instance : FunType.HasIntro (X^I) := by infer_instance 
+  @[defaultInstance]
+  instance : GenericArray (X^I) I X := by infer_instance 
 
   abbrev get (x : X^I) (i : I) : X := getElem x i True.intro
   abbrev set (x : X^I) (i : I) (xi : X) : X^I := setElem x i xi
@@ -53,25 +58,70 @@ namespace PowTypeCarrier
   abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := FunType.mapIdx f x
   abbrev map (f : X → X) (x : X^I) : X^I := FunType.map f x
 
-  variable [∀ n, PowType T (Fin n) X]
+  -- variable [∀ n, PowType T (Fin n) X]
   
-  def split {n m : Nat} (x : X^{n+m}) : X^{n} × X^{m} := 
+  def split {n m : Nat} 
+    {Tn : outParam Type} [PowType Tn (Fin n) X]  
+    {Tm : outParam Type} [PowType Tm (Fin m) X]  
+    {Tnm : outParam Type} [PowType Tnm (Fin (n+m)) X]  
+    (x : X^{n+m}) : X^{n} × X^{m} := 
     (λ [i] => x[⟨i.1,sorry_proof⟩], λ [i] => x[⟨i.1+n,sorry_proof⟩])
 
-  def split3 {n m k : Nat} (x : X^{n+m+k}) : X^{n} × X^{m} × X^{k} := 
+  def split3 {n m k : Nat} 
+    {Tn : outParam Type} [PowType Tn (Fin n) X]  
+    {Tm : outParam Type} [PowType Tm (Fin m) X]  
+    {Tk : outParam Type} [PowType Tk (Fin k) X]  
+    {Tnmk : outParam Type} [PowType Tnmk (Fin (n+m+k)) X]  
+    (x : X^{n+m+k}) : X^{n} × X^{m} × X^{k} := 
     (λ [i] => x[⟨i.1,sorry_proof⟩], 
      λ [i] => x[⟨i.1+n,sorry_proof⟩],
      λ [i] => x[⟨i.1+n+m,sorry_proof⟩])
 
-  def merge {n m : Nat} (x : X^{n}) (y : X^{m})  : X^{n+m} := 
+  def merge {n m : Nat} 
+    {Tn : outParam Type} [PowType Tn (Fin n) X]  
+    {Tm : outParam Type} [PowType Tm (Fin m) X]  
+    {Tnm : outParam Type} [PowType Tnm (Fin (n+m)) X]  
+    (x : X^{n}) (y : X^{m})  : X^{n+m} := 
     (λ [i] => if i.1 < n 
               then x[⟨i.1,sorry_proof⟩]
               else y[⟨i.1-n, sorry_proof⟩])
   -- abbrev concat {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := x.merge y
 
-  abbrev Index (x : X^I) := I
-  abbrev Value (x : X^I) := X
-  
+  abbrev Index (_ : X^I) := I
+  abbrev Value (_ : X^I) := X
+
+  section Updates
+
+  variable {n} [Vec X] {T : outParam Type} [PowType T (Fin n) X]
+  def upper2DiagonalUpdate (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : X^{n}) : X^{n} := 
+    if n = 0 then x
+    else Id.run do
+      let mut x := x
+      for i in [0:n-1] do
+        let i : Fin n := ⟨i,sorry_proof⟩
+        x[i] := a i * x[i] + b ⟨i.1,sorry_proof⟩ * x[⟨i.1+1,sorry_proof⟩]
+      let last : Fin n := ⟨n-1, sorry_proof⟩
+      x[last] := a last * x[last]
+      x
+
+  def lower2DiagonalUpdate [Vec X] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : X^{n}) : X^{n} := 
+    if n = 0 then x
+    else Id.run do
+      let mut x := x
+      for i in [1:n] do
+        let i : Fin n := ⟨i,sorry_proof⟩
+        x[i] := a i * x[i] + b ⟨i.1-1,sorry_proof⟩ * x[⟨i.1-1,sorry_proof⟩]
+      let first : Fin n := ⟨0, sorry_proof⟩
+      x[first] := a first * x[first]
+      x
+
+  variable {k} {Tnk : outParam Type} [PowType Tnk (Fin (n+k)) X]
+
+  def drop (x : X^{n+k}) (k : Nat) : X^{n} := sorry
+  def push (x : X^{n+k}) (k : Nat := 1) (val : X) : X^{n} := sorry
+
+  end Updates
+
 end PowTypeCarrier
 
 -- namespace PowTypeCarrier

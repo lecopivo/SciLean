@@ -84,38 +84,38 @@ argument y
 --   isLin := sorry
 
 instance intro.arg_f.isLin [Vec Y] 
-  : IsLin λ (f : X → Y) => (intro T f : T) := sorry
+  : IsLin λ (f : X → Y) => (intro T f) := sorry
 
 instance intro.arg_f.isSmooth [Vec Y] 
-  : IsSmooth λ (f : X → Y) => (intro T f : T) := linear_is_smooth _
+  : IsSmooth λ (f : X → Y) => (intro T f) := linear_is_smooth _
 
 @[simp ↓]
 theorem intro.arg_f.diff_simp [Vec Y] 
-  : (∂ λ (f : X → Y) => (intro T f : T)) = λ f df => intro T df := diff_of_linear _
+  : (∂ λ (f : X → Y) => (intro T f)) = λ f df => intro T df := diff_of_linear _
 
 @[simp ↓]
 theorem intro.arg_f.fwdDiff_simp [Vec Y] 
-  : (fwdDiff λ (f : X → Y) => (intro T f : T)) 
+  : (fwdDiff λ (f : X → Y) => (intro T f)) 
     = 
     λ f => (intro T f, λ df => intro T df) 
   := fwdDiff_of_linear _
 
 instance intro.arg_f.hasAdjoint [SemiHilbert Y] 
-  : HasAdjoint λ (f : X → Y) => (intro T f : T) := sorry
+  : HasAdjoint λ (f : X → Y) => (intro T f) := sorry
 
 @[simp ↓]
 theorem intro.arg_f.adj_simp [SemiHilbert Y] 
-  : (λ (f : X → Y) => (intro T f : T))† = λ f' x => f'[x] := sorry
+  : (λ (f : X → Y) => (intro T f))† = λ f' x => f'[x] := sorry
 
 
 instance intro.arg_f.hasAdjDiff [SemiHilbert Y] 
-  : HasAdjDiff λ (f : X → Y) => (intro T f : T) := 
+  : HasAdjDiff λ (f : X → Y) => (intro T f) := 
 by 
   constructor; infer_instance; simp; infer_instance done
 
 @[simp ↓] 
 theorem intro.arg_f.adjDiff_simp [SemiHilbert Y] 
-  : (∂† λ (f : X → Y) => (intro T f : T)) = λ f df' x => df'[x] := by simp[adjointDifferential] done
+  : (∂† λ (f : X → Y) => (intro T f)) = λ f df' x => df'[x] := by simp[adjointDifferential] done
 
 ---
 

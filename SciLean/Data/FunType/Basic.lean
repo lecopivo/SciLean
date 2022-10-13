@@ -10,9 +10,76 @@ class SetElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
 export SetElem (setElem)
 
 class ModifyElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
-  modifyElem : (x : Cont) → (i : Idx) → (Elem → Elem) → Cont
+  modifyElem : (x : Cont) → (i : Idx) → (f : Elem → Elem) → Cont
 
 export ModifyElem (modifyElem)
+
+class IntroElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
+  introElem : (f : Idx → Elem) → Cont
+
+export IntroElem (introElem)
+
+class PushElem (Cont : Nat → Type u) (Elem : outParam (Type w)) where
+  pushElem (k : Nat) (val : Elem) : Cont n → Cont (n + k)
+
+export PushElem (pushElem)
+
+class DropElem (Cont : Nat → Type u) (Elem : outParam (Type w)) where
+  dropElem (k : Nat) : Cont (n + k) → Cont n
+
+export DropElem (dropElem)
+
+class ReserveElem (Cont : Nat → Type u) (Elem : outParam (Type w)) where
+  reserveElem (k : Nat) : Cont n → Cont n
+
+export ReserveElem (reserveElem)
+
+
+/-- This class says that `Cont` behaves like an array with `Elem` values indexed by `Idx`
+
+Examples for `Idx = Fin n` and `Elem = ℝ` are: `ArrayN ℝ n` or `ℝ^{n}`
+
+For `array : Cont` you can:
+  1. get values: `getElem array x : Elem` for `x : Idx`
+  2. set values: `setElem array x y : Cont` for `x : Idx` and `y : Elem`
+  3. make new a array: `introElem f : Cont` for `f : Idx → Elem`
+
+Alternative notation:
+  1. `array[x]`
+  2. in `do` block: `array[x] := y`, `array[x] += y`, ...
+  3. `λ [x] => f x` this notation works only if the type `Cont` can be infered from the context
+     Common use: `let array : Cont := λ [x] => f x` where the type asscription `: Cont` is important.
+-/
+class GenericArray' (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam) 
+  extends GetElem Cont Idx Elem (λ _ _ => True), 
+          SetElem Cont Idx Elem,
+          IntroElem Cont Idx Elem
+  where
+  ext : ∀ f g : Cont, (∀ x : Idx, f[x] = g[x]) ↔ f = g
+  getElem_setElem_eq  : ∀ (x : Idx) (y : Elem) (f : Cont), (setElem f x y)[x] = y
+  getElem_setElem_neq : ∀ (x x' : Idx) (y : Elem) (f : Cont), x' ≠ x → (setElem f x y)[x'] = f[x']
+  getElem_introElem : ∀ f x, (introElem f)[x] = f x
+
+class GenericLinearArray (Cont : Nat → Type u) (Elem : Type w |> outParam) 
+  extends PushElem Cont Elem, 
+          DropElem Cont Elem, 
+          ReserveElem Cont Elem
+  where
+  toGenericArray : ∀ n, GenericArray' (Cont n) (Fin n) Elem
+
+  pushElem_getElem : ∀ n k val (i : Fin (n+k)) (x : Cont n), n ≤ i.1 → 
+    have : ∀ n', GetElem (Cont n') (Fin n') Elem (λ _ _ => True) := λ n' => (toGenericArray n').toGetElem
+    (pushElem k val x)[i] = val
+
+  dropElem_getElem : ∀ n k (i : Fin n) (x : Cont (n+k)), 
+    have : ∀ n', GetElem (Cont n') (Fin n') Elem (λ _ _ => True) := λ n' => (toGenericArray n').toGetElem
+    (dropElem k x)[i] = x[(⟨i.1, sorry_proof⟩ : Fin (n+k))]
+
+  reserveElem_id : ∀ (x : Cont n) (k), reserveElem k x = x
+  
+
+instance {T} {Y : outParam Type} [inst : GenericLinearArray T Y] (n) : GenericArray' (T n) (Fin n) Y := inst.toGenericArray n
+
 
 open Lean Parser Term
 
@@ -60,6 +127,8 @@ macro_rules
 macro_rules
 | `(doElem| $x:ident[ $i:term ] -= $xi) => `(doElem| $x:ident[$i] := $x[$i] / $xi)
 
+
+-- TODO: rename to GetElemExt
 class FunType (T : Type) (X Y : outParam Type) extends GetElem T X Y (λ _ _ => True) where
   ext : ∀ f g : T, (∀ x : X, f[x] = g[x]) ↔ f = g
 
@@ -208,3 +277,8 @@ namespace FunType
       if le then isTrue sorry else isFalse sorry
 
   end Operations
+
+end FunType
+
+class GenericArray (T : Type) (X Y : outParam Type) extends FunType T X Y, FunType.HasSet T, FunType.HasIntro T
+
