@@ -68,6 +68,7 @@ the result to 'build/doc/literate'
 script literate (args) do
   let cwd ← IO.currentDir
 
+  -- Copy css files
   let copyCss : IO Unit := do
     let alectryonSrc := cwd / "doc" / "literate" / "alectryon.css"
     let alectryonTrg := cwd / "build" / "doc" / "literate" / "alectryon.css"
@@ -78,13 +79,13 @@ script literate (args) do
       cmd := "cp"
       args := #[alectryonSrc.toString, alectryonTrg.toString]
     }
-
     let _ ← IO.Process.output {
       cmd := "cp"
       args := #[pygmentsSrc.toString, pygmentsTrg.toString]
     }
 
 
+  -- Build files specified on the input
   if ¬ args.isEmpty then
     for f in args do
       let file := cwd / f
@@ -100,6 +101,7 @@ script literate (args) do
 
     return 0
 
+  -- Build all literate files
   for file in (← (cwd / "doc" / "literate").readDir) do
     if file.path.extension == some "lean" then
       
