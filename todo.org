@@ -33,6 +33,33 @@
 
    Usually when I develop something temporary tests for it. So maybe allow for tests through out the code base.
 
+* Non-smooth differential
+
+  There should be a way to compute differential and gradient of non-smooth functions.
+  The most important cases are:
+    1. norm/absolute value
+    2. min/max functions
+    3. signed distance function
+
+  I believe that 1. and 2. can be achieved by defining differential as an average of a differential in positive and negative direction and requiring that this differential is a linear function. Then pre/post composition by smooth function should satisfy chain rule.
+
+  Can this be generalized to signed distance functions? 
+
+  I do not believe that there is a reasonable way to define differential such that a useful chain rule holds. It has to be an inequality, look at notes: [[https://arxiv.org/pdf/1708.04180.pdf][Nonsmooth Analysis And Optimization]] and this [[https://mathoverflow.net/questions/355666/does-the-generalised-directional-derivative-satisfy-any-version-of-the-chain-rul][MathOverflow question]] for counter example.
+
+  Another counter example is:
+    g(x) := max(0,x)
+    f(x) := a*max(0,x) + b*min(0,x)
+
+    f(g(x)) := a*max(0,x)
+
+  If derivative is an average of derivative in positive and negative direction:  
+    g'(0) := 1/2
+    f'(0) := (a+b)/2
+    (f∘g)'(0) := a/2
+
+    f'(0)*g'(0) = (a+b)/4 ≠ a/2 = (f∘g)'(0)
+ 
 * Diffeological spaces and tangent space
 
   Define diffeological space and its tangent space, smooth function between them and differential
