@@ -63,3 +63,31 @@ elab "reduce_type_of" t:term : term => do
   let typ ← inferType val
   let reduced ← reduce typ (skipTypes := false)
   Expr.letE `x reduced (val) (Expr.bvar 0) false |> pure
+
+
+@[inline]
+def sort3 {α} (a b c : α) [LT α] [∀ x y : α, Decidable (x<y)] : α×α×α := Id.run do
+  let mut a' := a
+  let mut b' := b
+  let mut c' := c
+
+  if a > b then
+    a' := b
+    b' := a
+  else 
+    a' := a
+    b' := b
+  
+  if b' > c then
+    c' := b'
+    if a' > c then
+      b' := a'
+      a' := c
+    else
+      b' := c
+  else
+    c' := c
+
+  (a',b',c')
+  
+ 

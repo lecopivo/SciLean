@@ -26,6 +26,23 @@ namespace SciLean
 
   abbrev closestPoint {X} [Vec X] (M : PrismaticMesh X) [ClosestPoint M] (x : X) := ClosestPoint.closestPoint (M:=M) x
   
+  open Prism in
+  def size {X} [Hilbert X] {M : PrismaticMesh X} {P} (e : M.Elem P) : ℝ := 
+    match P with
+    | ⟨.point, _⟩ => 1
+    | ⟨.cone .point, _⟩ => 
+      let p0 := M.toPos ⟨_, M.face segment.point0 e, 0⟩
+      let p1 := M.toPos ⟨_, M.face segment.point1 e, 0⟩
+      ∥p1-p0∥
+    | ⟨.cone (.cone .point), _⟩ =>
+      let p0 := M.toPos ⟨_, M.face triangle.point0 e, 0⟩
+      let p1 := M.toPos ⟨_, M.face triangle.point1 e, 0⟩
+      let p2 := M.toPos ⟨_, M.face triangle.point2 e, 0⟩
+      let (a,b,c) := sort3 ∥p0-p1∥ ∥p0-p2∥ ∥p1-p2∥
+      -- see '§2. How to compute ∆' in https://people.eecs.berkeley.edu/~wkahan/Triangle.pdf
+      (Math.sqrt (a+(b+c))*(c-(a-b))*(c+(a-b))*(a+(b-c)))/4
+    | _ => panic! "Size of prism {P} is not implemented!"
+  
   def prod {X Y} [Vec X] [Vec Y] (M : PrismaticMesh X) (N : PrismaticMesh Y) : PrismaticMesh (X×Y) :=
     PrismaticMesh.mk (M.toPrismaticSet.prod N.toPrismaticSet)
       (toPos := λ p => 

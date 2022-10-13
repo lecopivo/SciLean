@@ -441,17 +441,6 @@ namespace Prism
 
 def topFace (P : Prism) : Face P P.dim := ⟨P.repr.topFace, by simp, by simp[FaceRepr.dim,Prism.dim]⟩
 
-def segment.point0 : Face segment (some 0) := ⟨.base .point, by simp, by simp⟩
-def segment.point1 : Face segment (some 0) := ⟨.tip .point, by simp, by simp⟩
-
-def triangle.point0 : Face triangle (some 0) := ⟨.base (.base .point), by simp, by simp⟩
-def triangle.point1 : Face triangle (some 0) := ⟨.base (.tip .point), by simp, by simp⟩
-def triangle.point2 : Face triangle (some 0) := ⟨.tip (.cone .point), by simp, by simp⟩
-def triangle.edge0 : Face triangle (some 1) := ⟨.base (.cone .point), by simp, by simp⟩
-def triangle.edge1 : Face triangle (some 1) := ⟨.cone (.base .point), by simp, by simp⟩
-def triangle.edge2 : Face triangle (some 1) := ⟨.cone (.tip .point), by simp, by simp⟩
-
-
 /-- Tries to find decomposition of `P` such that `P = P₁ * ??` 
 This is of course not possible in general and any excess powers ignored.
 
@@ -476,17 +465,28 @@ def decomposeBy (P P₁ : Prism) : PrismDecomposition P :=
 
   fromList (pt'.map (·.2))
 
+
 /-- Number of `Q` prisms in `P` prism -/
 def subprismCount (P Q : Prism) : Nat :=
   match P, Q with
   | ⟨.point, _⟩, ⟨.point, _⟩ => 1
   | ⟨.point, _⟩, _ => 0
 
-  | ⟨.cone P', _⟩, ⟨.point, _⟩ => subprismCount ⟨P', sorry_proof⟩ point + 1
-  | ⟨.cone P', _⟩, ⟨.cone Q', _⟩ => subprismCount ⟨P', sorry_proof⟩ ⟨Q', sorry_proof⟩ + subprismCount ⟨P', sorry_proof⟩ (.cone ⟨Q', sorry_proof⟩)
-  | ⟨.cone P', _⟩, ⟨.prod _ _, _⟩ => subprismCount ⟨P', sorry_proof⟩ Q
+  | ⟨.cone P', h⟩, ⟨.point, _⟩ => 
+    let P' : Prism := ⟨P', by simp[h]⟩
+    subprismCount P' point + 1
+  | ⟨.cone P', h⟩, ⟨.cone Q', h'⟩ => 
+    let P' : Prism := ⟨P', by simp[h]⟩
+    let Q' : Prism := ⟨Q', by simp[h']⟩
+    subprismCount P' Q' + subprismCount P' Q'.cone
+  | ⟨.cone P', h⟩, ⟨.prod _ _, _⟩ => 
+    let P' : Prism := ⟨P', by simp[h]⟩
+    subprismCount P' Q
 
-  | ⟨.prod P₁ P₂, _⟩, _ => ∑ dec : (PrismDecomposition Q), subprismCount ⟨P₁, sorry_proof⟩ dec.fst * subprismCount ⟨P₂, sorry_proof⟩ dec.snd
+  | ⟨.prod P₁ P₂, _⟩, _ => 
+    let P₁ : Prism := ⟨P₁, sorry_proof⟩
+    let P₂ : Prism := ⟨P₂, sorry_proof⟩
+    ∑ dec : (PrismDecomposition Q), subprismCount P₁ dec.fst * subprismCount P₂ dec.snd
 
 
 -- TODO: Improve implementation, this is probably not very numerically stable
@@ -547,7 +547,21 @@ def split (ι : Inclusion Q P) (Pdec : PrismDecomposition P)
 end Inclusion
 ----------------------------------------------------------------------
 
-#check Enumtype.fullRange (PrismDecomposition Prism.cube) 
+namespace Prism
+
+
+def segment.point0 : Inclusion point segment := ⟨.base .point, sorry_proof, sorry_proof⟩
+def segment.point1 : Inclusion point segment := ⟨.tip .point, sorry_proof, sorry_proof⟩
+
+def triangle.point0 : Inclusion point triangle := ⟨.base (.base .point), sorry_proof, sorry_proof⟩
+def triangle.point1 : Inclusion point triangle := ⟨.base (.tip .point), sorry_proof, sorry_proof⟩
+def triangle.point2 : Inclusion point triangle := ⟨.tip (.cone .point), sorry_proof, sorry_proof⟩
+def triangle.edge0 : Inclusion segment triangle := ⟨.base (.cone .point), sorry_proof, sorry_proof⟩
+def triangle.edge1 : Inclusion segment triangle := ⟨.cone (.base .point), sorry_proof, sorry_proof⟩
+def triangle.edge2 : Inclusion segment triangle := ⟨.cone (.tip .point), sorry_proof, sorry_proof⟩
+
+
+end Prism
 
 #eval show IO Unit from do
   let P := Prism.pyramid -- (Prism.cube*Prism.triangle*Prism.triangle)

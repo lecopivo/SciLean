@@ -275,15 +275,20 @@ namespace PrismRepr
   /-- toCanonical truly producees prism in canonical form -/
   @[simp]
   theorem toCanonical_IsCanonical (P : PrismRepr) : P.toCanonical.IsCanonical := sorry_proof
-
+  /-- toCanonical preserves dimension -/
   @[simp]
   theorem toCanonical_dim (P : PrismRepr) : P.toCanonical.dim = P.dim := sorry_proof
 
-  -- test_by
-  --   examples:
-  --     P := [segment, triangle, prism, pyramid] 
-  --   counter_examples:
-  --     P := [prod triangle segment, prod (cone square) (cone triangle)]
+  @[simp]
+  theorem IsCanonical_point : point.IsCanonical := IsCanonical.point
+  @[simp]
+  theorem IsCanonical_base_of_cone (P : PrismRepr) (h : P.cone.IsCanonical) : P.IsCanonical := sorry_proof
+  @[simp]
+  theorem IsCanonical_cone (P : PrismRepr) (h : P.IsCanonical) : P.cone.IsCanonical := IsCanonical.cone P h
+  @[simp]
+  theorem IsCanonical_prod_fst (P Q : PrismRepr) (h : (P.prod Q).IsCanonical) : P.IsCanonical := sorry_proof
+  @[simp]
+  theorem IsCanonical_prod_snd (P Q : PrismRepr) (h : (P.prod Q).IsCanonical) : Q.IsCanonical := sorry_proof
 
 
   section ToCanonicalTests

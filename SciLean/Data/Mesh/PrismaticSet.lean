@@ -56,6 +56,10 @@ abbrev CofaceIndex (S : PrismaticSet) [Coface S] {Q} (e : S.Elem Q) (P : Prism)
 abbrev coface (S : PrismaticSet) [Coface S] {Q} {e : S.Elem Q} {P} (id : S.CofaceIndex e P) 
   := Coface.coface id
 
+abbrev pointCount (S : PrismaticSet) [Enumtype (S.Elem point)] := numOf (S.Elem point)
+abbrev edgeCount (S : PrismaticSet) [Enumtype (S.Elem segment)] := numOf (S.Elem segment)
+abbrev triangleCount (S : PrismaticSet) [Enumtype (S.Elem triangle)] := numOf (S.Elem triangle)
+
 -- TODO:
 --  1. product 
 --  1. sum 

@@ -27,14 +27,10 @@ def TriangularSet.FaceData.fromTriangles {pointCount triangleCount}
   have : Fact (pointCount ≠ 0) := sorry_proof
   have : Fact (triangleCount ≠ 0) := sorry_proof
 
-  let sort (a b c : Fin pointCount) := 
-    let r := #[a,b,c].qsort (·<·)
-    (r[0]!, r[1]!, r[2]!)
-
   -- create a bit array of edges and their local index to 
   let mut edges : Array ((Fin pointCount × Fin pointCount) × (Array (Fin triangleCount × Fin 3))) := #[]
   for (i,_) in Enumtype.fullRange (Fin triangleCount) do
-    let (p0, p1, p2) := sort (trianglePoints[i,0]) (trianglePoints[i,1]) (trianglePoints[i,2])
+    let (p0, p1, p2) := sort3 (trianglePoints[i,0]) (trianglePoints[i,1]) (trianglePoints[i,2])
     edges := edges |>.push ((p0, p1), #[(i,0)])
                    |>.push ((p0, p2), #[(i,1)])
                    |>.push ((p1, p2), #[(i,2)])
@@ -174,7 +170,7 @@ instance (data : TriangularSet.CofaceData) : (TriangularSet data.toFaceData).Cof
 structure TriangularMesh.PointData (dim : Nat) extends TriangularSet.FaceData where
   pos : ℝ^{pointCount, dim}
 
-def TriangularMesh {dim} (data : TriangularMesh.PointData dim) : PrismaticMesh (ℝ^{dim}) :=
+def TriangularMesh (dim) (data : TriangularMesh.PointData dim) : PrismaticMesh (ℝ^{dim}) :=
   PrismaticMesh.mk (X:=ℝ^{dim}) (TriangularSet data.toFaceData) 
   (toPos := λ ⟨P,e,x⟩ =>
     let p : Inclusion Prism.point P → ℝ^{dim} := λ ι =>

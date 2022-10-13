@@ -123,9 +123,8 @@ macro_rules
       argument_property $x:ident $id:ident $allParms:bracketedBinder* : $retType where $prop)
 
 
-
--- TODO: Add documentation!!! When function has documentation this gets broken!
-macro "def" id:declId parms:bracketedBinder* ":" retType:term ":=" body:term props:argProps+ : command => do
+-- TODO: Doc is currently discarted !!!
+macro doc:docComment* "def" id:declId parms:bracketedBinder* ":" retType:term ":=" body:term props:argProps+ : command => do
   let funId := mkIdent $ id.raw.getIdAt 0
   `(def $id:declId $parms:bracketedBinder* : $retType := $body
     function_properties $funId:ident $parms:bracketedBinder* : $retType $props:argProps*)
