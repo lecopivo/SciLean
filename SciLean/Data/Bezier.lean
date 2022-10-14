@@ -4,6 +4,7 @@ import SciLean.Data.FunRec
 import SciLean.Tactic.ConvIf
 import SciLean.Meta.DerivingOp
 import SciLean.Meta.DerivingAlgebra
+import SciLean.Solver.Solver
 
 namespace SciLean
 
@@ -51,6 +52,27 @@ argument t
 
 abbrev eval [Vec X] {n} (points : Points n) (t : ℝ) : X := evalDer 0 points t
 
+def split [Vec X] {n} (points : Points n) (t : ℝ) : Points n × Points n := 
+  let fₙ :  (n' : Nat) → Points (n - n') × Points n' × Points n'
+                       → Points (n - (n' + 1)) × Points (n' + 1) × Points (n' + 1) :=
+      λ n' (pts, startPts, endPts) => 
+        -- This is effectivelly asking if `0 < n - n'` but in a form that is usefully for typecasting
+        if h : n - n' = (n - (n' + 1) + 1) then
+          -- In this case pts should have at least one element
+          let first := pts[⟨0, sorry_proof⟩]
+          let last  := pts[⟨n - n' - 1, sorry_proof⟩]
+          (linearInterpolate t (h ▸ pts), pushElem 1 first startPts, pushElem 1 last endPts)
+        else
+          -- it should be the case that `n - n' = 0` 
+          -- thus `h'` should be saying 0 = 0
+          have h' : (n - n') = (n - (n' + 1)) := sorry_proof
+          -- `pts` is an empty array, so just push 0 vectors to startPts and endPts
+          ((h' ▸ pts), pushElem 1 0 startPts, pushElem 1 0 endPts)
+
+  let (_, startPts, endPts) := (funRec n 0 fₙ (points, reserveElem n 0, reserveElem n 0))
+  (startPts, reverse endPts)
+
+
 /-- Bezier curve evaluation satisfy a recursive formula -/
 def eval_rec [Vec X] (points : Points (n + 2)) (t : ℝ)
   : 
@@ -58,6 +80,39 @@ def eval_rec [Vec X] (points : Points (n + 2)) (t : ℝ)
     let P₁ : Points (n+1) := λ [i] => points[⟨i.1+1, sorry_proof⟩]
     eval points t = (1-t) * eval P₀ t + t * eval P₁ t 
   := sorry_proof
+
+
+section BezierCurvesOfReals
+
+-- TODO: Replace with ℝ^{n} I do not think there is a good argument for using a generic array
+variable {RealPoints : Nat → Type} [GenericLinearArray RealPoints ℝ]
+
+/-- Finds all roots of a polynomial `p` in the interval `[a, b]`.-/
+noncomputable
+def Polynomial.roots (p : ℝ → ℝ) (a b : ℝ) /- [IsPol f] -/ : Array ℝ := sorry
+
+/-- Finds all roots in [0,1] interval of a Bezier curve -/
+noncomputable 
+def roots {n} (points : RealPoints n) : Array ℝ := Polynomial.roots (eval points) 0 1
+
+/-- Approximation of `roots` -/
+noncomputable
+approx roots_approx := λ {n} (weights : RealPoints n) => roots weights
+by
+  simp
+
+/-- Finds all points in [0,1] of a Bezier curve that have zero derivative -/
+noncomputable 
+def extremalPoints {n} (weights : RealPoints n) : Array ℝ := sorry
+
+/-- Approximation of `roots` -/
+noncomputable
+approx extremalPoints_approx := λ {n} (weights : RealPoints n) => extremalPoints weights
+by
+  simp
+
+end BezierCurvesOfReals
+
 
 end Bezier
 

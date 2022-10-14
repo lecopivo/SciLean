@@ -45,7 +45,7 @@ match p, p' with
 | .string _, .string _ => isTrue (by rfl)
 | _, _ => isFalse sorry
 
-inductive ApproxSolution {α : Type _} [Vec α] : (spec : α → Prop) → Type _ 
+inductive ApproxSolution {α : Type _} : (spec : α → Prop) → Type _ 
 | exact {spec : α → Prop}
     (impl : α)
     (h : spec impl)
@@ -101,7 +101,7 @@ approximation
     (help : String)
     : ApproxSolution spec
 
-def ApproxSolution.val! {α} [Vec α] {spec : α → Prop} : ApproxSolution spec → α 
+def ApproxSolution.val! {α} {spec : α → Prop} : ApproxSolution spec → α 
 | exact impl _ => impl
 | approx _ _ n impl key _ => (impl n).val!
 | param impl p h _ _ => (impl (h ▸ p.val)).val!
@@ -141,10 +141,10 @@ def ApproxSolution.changeParam {α} [Vec α] {spec : α → Prop}
 --   done
 
 
-def Approx {α} [Vec α] (a : α) := ApproxSolution (λ x => x = a)
-def Approx.val! {α} [Vec α] {a : α} (approx : Approx a) : α := ApproxSolution.val! approx
-def Approx.exact {α} [Vec α] {a : α} : Approx a := ApproxSolution.exact a rfl
-def Approx.limit {α} [Vec α] {aₙ : ℕ → α} (x : (n : ℕ) → Approx (aₙ n)) (n₀ : ℕ)
+def Approx {α} (a : α) := ApproxSolution (λ x => x = a)
+def Approx.val! {α} {a : α} (approx : Approx a) : α := ApproxSolution.val! approx
+def Approx.exact {α} {a : α} : Approx a := ApproxSolution.exact a rfl
+def Approx.limit {α} {aₙ : ℕ → α} (x : (n : ℕ) → Approx (aₙ n)) (n₀ : ℕ)
   : Approx (limit aₙ) := ApproxSolution.approx (λ n x => x = (aₙ n)) sorry n₀ x "" "" 
 
 syntax declModifiers "approx " declId bracketedBinder* (":" term)? ":=" term " by " tacticSeq : command
@@ -166,4 +166,5 @@ approx bar (s : ℝ) (n₀ : ℕ) := ∇ (limit λ n => λ x : ℝ => (s + (1:�
 by
   approx_limit n₀; intro n; simp
   simp[gradient]
+
 

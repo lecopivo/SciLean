@@ -32,11 +32,12 @@ def getlimit  (e : Expr) : MetaM Expr := do
         | none => false)
     let replace := (λ e : Expr => 
       do
-        let lim := e.getAppArgs[2]!
+        let lim := e.getAppArgs[1]!
         let args := #[nFv].append e.getAppArgs[3:]
         mkAppM' lim args)
     mkLambdaFVars #[nFv] (← replaceSubExpression e test replace)
   
+
 def bubbleLimitCore (mvarId : MVarId) : MetaM (List MVarId) :=
   mvarId.withContext do
     let tag      ← mvarId.getTag

@@ -43,6 +43,71 @@ argument elem
   adj [Fact (cont=0)] := ∑ i : Fin k, elem'[⟨n+i.1, sorry_proof⟩] by sorry_proof
 
 
+----------------------------------------------------------------------
+
+
+def reverse {n : Nat} (cont : Cont n) : Cont n := Id.run do
+  let mut cont := cont
+  for i in [0:n/2] do
+    let i  : Fin n := ⟨i, sorry_proof⟩
+    let i' : Fin n := ⟨n - i.1 - 1, sorry_proof⟩
+    let tmp := cont[i]
+    cont[i] := cont[i']
+    cont[i'] := tmp
+  cont
+
+----------------------------------------------------------------------
+
+/-- Generate UpperTriangularArray from and array of size `n`
+
+UpperTriangularArray is an array that relates to lower triangular matrix as:
+`[x[0,0], x[0,1], ..., x[0,n-1], 
+         x[1,1], ..., x[1,n-1], 
+                 ⋱,     ⁞  ,
+                    , x[n-1,n-1]]`
+-/
+def generateUpperTriangularArray (f : (n' : Nat) → Cont (n'+1) → Cont n') (x : Cont n) : Cont ((n*(n+1))/2) := sorry
+
+
+
+/-- Generate LowerTriangularArray from a single element
+
+Example: generate Pascal's triangle:
+  `generateLowerTriangularArray (λ n' x => λ [i] => i = 0 then x[i] else x[i] + x[i-1]) 1`
+
+LowerTriangularArray is an array that relates to lower triangular matrix as:
+`[x[0,0], 
+ x[1,0], x[1,1], 
+ x[2,0], x[2,1], x[2,2],
+ ...]` 
+-/
+def generateLowerTriangularArray (f : (n' : Nat) → Cont n' → Cont (n'+1)) (x : Elem) (n : Nat) : Cont ((n*(n+1))/2) := sorry
+
+/-- Access an element of UpperTriangularArray given `i : Fin n` and `j : Fin (n-i)` 
+
+It corresponds to the `(i,i+j)` element of the triangular matrix.
+
+UpperTriangularArray is an array that relates to lower triangular matrix as:
+`[x[0,0], x[0,1], ..., x[0,n-1], 
+         x[1,1], ..., x[1,n-1], 
+                 ⋱,     ⁞  ,
+                    , x[n-1,n-1]]`
+-/
+def upperTriangularArrayGet (upperTriangular : Cont ((n*(n+1))/2)) (i : Fin n) (j : Fin (n-i)) : Elem := sorry
+
+
+/-- Access an element of LowerTriangularArray given `(i : Fin n)` and `(j : Fin i)`
+
+It corresponds to the `(i,j)` element of the triangular matrix.
+
+LowerTriangularArray is an array that relates to lower triangular matrix as:
+`[x[0,0], 
+ x[1,0], x[1,1], 
+    ⁞            ⋱, 
+ x[n-1,0], ...     , x[n-1,n-1]]`
+-/
+def lowerTriangularArrayGet (upperTriangular : Cont ((n*(n+1))/2)) (i : Fin n) (j : Fin (i+1)) : Elem := sorry
+
 
 ----------------------------------------------------------------------
 

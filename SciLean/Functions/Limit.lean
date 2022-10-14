@@ -2,10 +2,10 @@ import SciLean.Algebra
 
 namespace SciLean
 
-def has_limit {X} [Vec X] (lim : Nat → X) : Prop := sorry
+def has_limit {X} (lim : Nat → X) : Prop := sorry
 
 noncomputable 
-def limit {X} [Vec X] (lim : Nat → X) : X := sorry
+def limit {X} (lim : Nat → X) : X := sorry
 
 def Filter (α : Type) : Type := sorry
 def neighbourhood (a : α) : Filter α := sorry
