@@ -55,6 +55,10 @@ macro_rules
 | `(∇ ($b:diffBinder), $f) =>
   `(∇ $b, $f)
 
+@[simp]
+theorem gradient_is_adjDiff (f : X → ℝ) 
+  : ∇ f = λ x => ∂† f x 1 := by rfl
+
 instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (∂† f x) := sorry
 
 ----------------------------------------------------------------------

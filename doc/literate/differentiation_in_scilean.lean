@@ -209,7 +209,7 @@ Which is defines as follows
  -/
 
   example (f : ℝ → X) : ⅆ f = λ t => ∂ f t 1 := 
-    by simp[derivative]
+    by simp
 
 /-!
 
@@ -217,7 +217,7 @@ Now we have
 
  -/
 
-  example : ⅆ Math.exp = Math.exp := by simp[derivative]
+  example : ⅆ Math.exp = Math.exp := by simp
 
 /-!
 
@@ -573,7 +573,7 @@ The important result is that the gradient of squared norm `∥x∥²` is `2*x`
 
   #check (∇ (x : X), ∥x∥²) 
     rewrite_by 
-    (simp[gradient,hold]; trace_state)  /- .unfold -/
+    (simp; trace_state)  /- .unfold -/
 
 /-!
 
@@ -587,7 +587,7 @@ Another fun result is that the gradient of `⟪A x, x⟫` is `(A† + A) x`
 
   #check (∇ x, ⟪A x, x⟫) 
     rewrite_by 
-    (simp[gradient,hold,adjointDifferential]; trace_state) /- .unfold -/
+    (simp[adjointDifferential]; trace_state) /- .unfold -/
 
 /-!
 
@@ -656,9 +656,10 @@ we get the correct equations of motion.
      - 
      ∇ (x:=y t), L' ϕ m x (ⅆ y t))
     rewrite_by 
-    (simp[L']
-     simp[gradient,hold]
-     simp[derivative]
+    (-- Currently broken :(
+     -- simp
+     -- simp[gradient,hold]
+     -- simp[derivative]
      trace_state) /- .unfold -/
 
 /-!

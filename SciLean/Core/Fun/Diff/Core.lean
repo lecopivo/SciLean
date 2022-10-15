@@ -84,6 +84,9 @@ macro_rules
 | `(ⅆ ($b:diffBinder), $f) =>
   `(ⅆ $b, $f)
 
+@[simp]
+theorem derivative_is_diff (f : ℝ → X) 
+  : ⅆ f = λ t => ∂ f t 1 := by rfl
 
 -- -- Bad as an instance
 -- theorem linear_is_smooth (f : X → Y) [IsLin f] : IsSmooth f := sorry

@@ -176,4 +176,4 @@ To get the value of an approximation we need to call `.val!`
 
  -/
 
-#eval sqrtApprox.val! 2
+#eval sqrtApprox.val 2
