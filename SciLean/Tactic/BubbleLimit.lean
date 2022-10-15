@@ -23,9 +23,7 @@ match e with
 
 -- use 
 def getlimit  (e : Expr) : MetaM Expr := do
-  let nId ← mkFreshFVarId
-  withLCtx ((← getLCtx).mkLocalDecl nId `n (mkConst `Nat)) (← getLocalInstances) do
-    let nFv := mkFVar nId
+  withLocalDecl `n default (mkConst `Nat) λ n => do
     let test := (λ e : Expr => 
       match e.getAppFn.constName? with
         | some name => name == ``SciLean.limit
@@ -33,9 +31,9 @@ def getlimit  (e : Expr) : MetaM Expr := do
     let replace := (λ e : Expr => 
       do
         let lim := e.getAppArgs[1]!
-        let args := #[nFv].append e.getAppArgs[3:]
+        let args := #[n].append e.getAppArgs[2:]
         mkAppM' lim args)
-    mkLambdaFVars #[nFv] (← replaceSubExpression e test replace)
+    mkLambdaFVars #[n] (← replaceSubExpression e test replace)
   
 
 def bubbleLimitCore (mvarId : MVarId) : MetaM (List MVarId) :=
@@ -43,12 +41,12 @@ def bubbleLimitCore (mvarId : MVarId) : MetaM (List MVarId) :=
     let tag      ← mvarId.getTag
     let target   ← mvarId.getType
 
-    -- Check if target is actually `Impl spec`
+    -- Check if target is actually `Approx spec`
     let spec := target.getAppArgs[1]!
     let lim ← getlimit spec
 
     let new_spec ← mkAppM `SciLean.limit #[lim]
-    let new_target ← mkAppM `SciLean.Impl #[new_spec]
+    let new_target ← mkAppM `SciLean.Approx #[new_spec]
     let new_mvar  ← mkFreshExprSyntheticOpaqueMVar new_target tag
     let eq       ← mkEq new_target target
     let eq_mvar  ← mkFreshExprSyntheticOpaqueMVar eq

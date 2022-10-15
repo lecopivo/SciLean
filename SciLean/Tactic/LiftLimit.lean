@@ -34,6 +34,7 @@ def getlimit  (e : Expr) : MetaM Expr := do
         | none => false)
     let replace := (λ e : Expr => 
       do
+        dbg_trace s!"HOHOHO {e}"
         let lim := e.getAppArgs[2]!
         let args := #[nFv].append e.getAppArgs[3:]
         mkAppM' lim args)
@@ -44,7 +45,7 @@ def liftLimitCore (mvarId : MVarId) (N msg : Expr) : MetaM (List MVarId) :=
     let tag      ← getMVarTag mvarId
     let target   ← getMVarType mvarId
 
-    -- Check if target is actually `Impl spec`
+    -- TODO: check if target is actually `Impl spec`
     let spec := target.getAppArgs[1]!
     let lim ← getlimit spec
 

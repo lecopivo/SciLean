@@ -1,8 +1,9 @@
 import SciLean.Mechanics
 import SciLean.Operators.ODE
-import SciLean.Solver 
-import SciLean.Tactic.LiftLimit
-import SciLean.Tactic.FinishImpl
+-- import SciLean.Solver 
+-- import SciLean.Tactic.LiftLimit
+-- import SciLean.Tactic.FinishImpl
+import SciLean.Solver.Solver
 
 open SciLean
 
@@ -104,10 +105,9 @@ For harmonic oscillator this is
  -/
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
-def solver (m k : ℝ) (steps : Nat)
-  : Impl (ode_solve 
-           λ (x,p) => (  ∇ (p':=p), H m k x p', 
-                       - ∇ (x':=x), H m k x' p)) :=
+approx solver (steps : Nat) := λ (m k : ℝ) => 
+  (ode_solve λ (x,p) => (  ∇ (p':=p), H m k x p', 
+                         - ∇ (x':=x), H m k x' p))
 by
   -- unfold Hamiltonian definition
   simp [H];
@@ -119,9 +119,7 @@ by
   rw [ode_solve_fixed_dt runge_kutta4_step]
 
   -- agree that we solve the original goal only approximately 
-  lift_limit steps "Number of ODE solver steps."; admit; simp
-  
-  finish_impl
+  bubble_limit; sorry_proof; apply Approx.limit _ steps; intro n; simp
 
 
 /-!
@@ -136,10 +134,10 @@ def main : IO Unit := do
   let m := 1.0
   let k := 10.0
 
-  let evolve ← (solver m k substeps).assemble
+  let evolve := (solver substeps).val m k
 
-  let x₀ := 1.0
-  let p₀ := 0.0
+  let x₀ : ℝ := 1.0
+  let p₀ : ℝ := 0.0
   let mut (x,p) := (x₀, p₀)
 
   for _ in [0:40] do
