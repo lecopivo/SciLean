@@ -40,10 +40,10 @@ def pmap : (α → γ) → (β → δ) → (α×β → γ×δ) := λ f g ac => (
   section CombinatorIdentities
 
   @[simp]
-  def comp_id (f : α → β) : f ∘ id = f := by funext x; simp done
+  def comp_id (f : α → β) : f ∘ id = f := by funext x; simp; done
 
   @[simp]
-  def id_comp (f : α → β) : id ∘ f = f := by funext x; simp done
+  def id_comp (f : α → β) : id ∘ f = f := by funext x; simp; done
 
   end CombinatorIdentities
 

@@ -3,13 +3,16 @@ open Lake DSL System
 
 package scilean 
 
-require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"@"f16c2788554b9960de815ae1e3f25de8c722bde4"
-
 @[defaultTarget]
 lean_lib SciLean {
   roots := #[`SciLean]
 }
+
+meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
+require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
+
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "master"
+
 
 /-- 
 
@@ -115,6 +118,3 @@ script literate (args) do
   copyCss
 
   return 0
-
-meta if get_config? env = some "dev" then -- dev is so not everyone has to build it
-require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "main"

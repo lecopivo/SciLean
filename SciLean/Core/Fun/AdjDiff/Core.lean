@@ -62,15 +62,15 @@ instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (∂† f x) := sorry
 
 @[simp ↓]
 theorem id.arg_x.adjDiff_simp
-  : ∂† (λ x : X => x) = λ x dx => dx := by simp[adjointDifferential] done
+  : ∂† (λ x : X => x) = λ x dx => dx := by simp[adjointDifferential]; done
 
 @[simp ↓]
 theorem const.arg_x.adjDiff_simp 
-  : ∂† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjointDifferential] done
+  : ∂† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjointDifferential]; done
 
 @[simp ↓]
 theorem const.arg_y.adjDiff_simp (x : X)
-  : ∂† (λ (y : Y) => x) = (λ y dy' => (0 : Y)) := by simp[adjointDifferential] done
+  : ∂† (λ (y : Y) => x) = (λ y dy' => (0 : Y)) := by simp[adjointDifferential]; done
 
 @[simp ↓ low-4]
 theorem swap.arg_y.adjDiff_simp
@@ -80,7 +80,7 @@ by
   have isf := λ i => (inst i).isSmooth
   have iaf := λ i => (inst i).hasAdjDiff
 
-  simp[adjointDifferential] done
+  simp[adjointDifferential]; done
 
 @[simp ↓ low-3]
 theorem subst.arg_x.adjDiff_simp

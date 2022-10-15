@@ -65,11 +65,11 @@ def uncurryFD {α : Type} (Tf : X×(α → X) → (Y→Z)×(α → Y → Z)) (Tf
 
 @[simp ↓, simp_diff]
 theorem id.arg_x.fwdDiff_simp
-  : fwdDiff (λ x : X => x) = λ x => (x, λ dx => dx) := by simp[fwdDiff] done
+  : fwdDiff (λ x : X => x) = λ x => (x, λ dx => dx) := by simp[fwdDiff]; done
 
 @[simp ↓, simp_diff]
 theorem const.arg_y.fwdDiff_simp (x : X)
-  : fwdDiff (λ y : Y => x) = λ y => (x, λ _ => 0) := by simp[fwdDiff] done
+  : fwdDiff (λ y : Y => x) = λ y => (x, λ _ => 0) := by simp[fwdDiff]; done
 
 @[simp ↓ low-3]
 theorem swap.arg_x.fwdDiff_simp (f : α → X → Y) [∀ i, IsSmooth (f i)]
@@ -78,7 +78,7 @@ theorem swap.arg_x.fwdDiff_simp (f : α → X → Y) [∀ i, IsSmooth (f i)]
            let Tf := λ a => fwdDiff (f a)
            (λ a => (Tf a x).1, λ dx a => (Tf a x).2 dx) := 
 by 
-  simp[fwdDiff] done
+  simp[fwdDiff]; done
 
 
 @[simp ↓ low-2, simp_diff low-2]
@@ -93,7 +93,7 @@ theorem scomb.arg_x.fwdDiff_simp
       appFD Tf ((x,y), λ dx => (dx, dy dx))
     := 
   by 
-    simp[fwdDiff,fmapFD,evalFD,appFD,hold] done
+    simp[fwdDiff,fmapFD,evalFD,appFD,hold]; done
 
 @[simp ↓ low-1, simp_diff low-1]
 theorem comp.arg_x.fwdDiff_simp
@@ -116,4 +116,4 @@ theorem parm.arg_x.fwdDiff_simp
       (fx a, λ dx => dfx dx a)
   := 
 by 
-  simp [fwdDiff] done
+  simp [fwdDiff]; done

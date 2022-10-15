@@ -151,7 +151,7 @@ syntax declModifiers "approx " declId bracketedBinder* (":" term)? ":=" term " b
 
 macro_rules
   | `($mods:declModifiers approx $id $params:bracketedBinder* := $body by $rewrites:tacticSeq) =>
-    `($mods:declModifiers def $id $params:bracketedBinder* := (by ($rewrites) (apply Approx.exact) : Approx $body))
+    `($mods:declModifiers def $id $params:bracketedBinder* := (by ($rewrites); (apply Approx.exact) : Approx $body))
 
 
 -- def foo (s : ℝ) := ∇ (λ x : ℝ => s * x)

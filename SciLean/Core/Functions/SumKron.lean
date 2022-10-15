@@ -106,12 +106,12 @@ end SumKronSimps
 example [Nonempty (Fin n)] (j : Fin n) (f : Fin n → ℝ)
   : (∑ i : Fin n, kron i j * f i) = f j
   :=
-  by simp done
+  by simp; done
 
 example [Nonempty (Fin n)] (j : Fin n) 
   : (∑ i : Fin n, kron (i+1) j) = 1
   :=
-  by simp done
+  by simp; done
 
 -- example [Nonempty (Fin n)] (j : Fin n) 
 --   : (∑ i : Fin n, i * (kron (i+1) j)) = j - 1

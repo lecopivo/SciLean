@@ -52,4 +52,4 @@ syntax term "rewrite_by" convSeq : term
 
 macro_rules
   | `($x rewrite_by $rw:convSeq) =>
-    `((by (conv => enter[1]; ($rw)) (apply AutoImpl.finish) : AutoImpl $x).val)
+    `((by (conv => enter[1]; ($rw)); (apply AutoImpl.finish) : AutoImpl $x).val)

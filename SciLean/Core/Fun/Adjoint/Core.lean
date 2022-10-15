@@ -76,7 +76,7 @@ theorem diag.arg_x.adj_simp
 theorem diag.arg_x.adj_simp_safeguard
   (f : X → Y → Z) [HasAdjoint (λ ((x,y) : X×Y) => f x y)]
   : (λ (x,y) => f x y)† = (Function.uncurry f)† := 
-by simp only [Function.uncurry] done
+by simp only [Function.uncurry]; done
 
 
 @[simp ↓ low]
@@ -92,7 +92,7 @@ theorem eval.arg_x.parm1.adj_simp
 := 
 by 
   rw [comp.arg_x.adj_simp (λ (x : ι → Z) => x i) f]
-  simp done
+  simp; done
 
 ----------------------------------------------------------------------
   -- These theorems are problematic when used with simp
@@ -106,7 +106,7 @@ theorem comp.arg_x.parm1.adj_simp
   : 
     (λ x => f (g x) a)† = λ z => g† ((hold λ y => f y a)† z)
 := by 
-  (apply comp.arg_x.adj_simp (λ y => f y a) g) done
+  (apply comp.arg_x.adj_simp (λ y => f y a) g); done
 
 example
   (a : α) 
@@ -124,7 +124,7 @@ theorem comp.arg_x.parm2.adj_simp
   : 
     (λ x => f (g x) a b)† = λ z => g† ((hold λ y => f y a b)† z)
 := by 
-  (apply comp.arg_x.adj_simp (λ y => f y a b) g) done
+  (apply comp.arg_x.adj_simp (λ y => f y a b) g); done
 
 @[simp ↓ low-1] -- try to avoid using this theorem
 theorem comp.arg_x.parm3.adj_simp
@@ -134,7 +134,7 @@ theorem comp.arg_x.parm3.adj_simp
   : 
     (λ x => f (g x) a b c)† = λ z => g† ((hold λ y => f y a b c)† z)
 := by 
-  (apply comp.arg_x.adj_simp (λ y => f y a b c) g) done
+  (apply comp.arg_x.adj_simp (λ y => f y a b c) g); done
 
 -- theorem adjoint_of_comp_at_point4
 -- ...
@@ -149,7 +149,7 @@ theorem diag.arg_x.parm1.adj_simp
     = λ z => (λ (y₁,y₂) => (g₁† y₁) + (g₂† y₂)) $
              (hold λ (y₁,y₂) => f y₁ y₂ a)† z
 := by 
-  (apply diag.arg_x.adj_simp (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂) done
+  (apply diag.arg_x.adj_simp (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂); done
 
 @[simp ↓ low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm2.adj_simp
@@ -161,5 +161,5 @@ theorem diag.arg_x.parm2.adj_simp
     = λ z => (λ (y₁,y₂) => (g₁† y₁) + (g₂† y₂)) $
              (hold λ (y₁,y₂) => f y₁ y₂ a b)† z
 := by 
-  (apply diag.arg_x.adj_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂) done
+  (apply diag.arg_x.adj_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂); done
 

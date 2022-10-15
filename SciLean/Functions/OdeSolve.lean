@@ -13,8 +13,8 @@ argument t [Vec X] [IsSmooth f] [∀ s, IsSmooth (f s)]
   isSmooth  := sorry_proof,
   diff_simp := dt * f t (odeSolve f t x₀) by sorry_proof
 argument t [Hilbert X] [IsSmooth f] [∀ s, IsSmooth (f s)]
-  hasAdjDiff   := by constructor; infer_instance; simp; intro; infer_instance done,
-  adjDiff_simp := ⟪dt', f t (odeSolve f t x₀)⟫ by simp[adjointDifferential,hold] done
+  hasAdjDiff   := by constructor; infer_instance; simp; intro; infer_instance; done,
+  adjDiff_simp := ⟪dt', f t (odeSolve f t x₀)⟫ by simp[adjointDifferential,hold]; done
  
 argument x₀ [Vec X] [IsSmooth f] [∀ s, IsLin (f s)]
   isLin   := sorry_proof

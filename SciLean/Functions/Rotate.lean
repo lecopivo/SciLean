@@ -1,5 +1,5 @@
 import SciLean.Core
-import SciLean.Data.PowType
+-- import SciLean.Data.PowType
 import SciLean.Functions.CrossProduct
 import SciLean.Functions.Trigonometric
 

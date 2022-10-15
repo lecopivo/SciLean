@@ -1,5 +1,5 @@
 import SciLean.Core
-import SciLean.Data.PowType
+import SciLean.Data.GenericArray
 
 set_option synthInstance.maxSize 2048
 

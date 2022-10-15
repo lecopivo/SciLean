@@ -18,11 +18,11 @@ namespace SciLean
     variable (g : X → Y) [IsLin g]
     variable (r : ℝ)
 
-    instance : IsLin (-f)    := by (conv => enter [1,x]); simp; infer_instance done
-    instance : IsLin (f + g) := by (conv => enter [1,x]); simp; infer_instance done
-    instance : IsLin (f - g) := by (conv => enter [1,x]); simp; infer_instance done
-    instance : IsLin (r * f) := by (conv => enter [1,x]); simp; infer_instance done
-    instance : IsLin (0 : X → Y) :=  by (conv => enter [1,x]); simp; infer_instance done
+    instance : IsLin (-f)    := by (conv => enter [1,x]); simp; infer_instance; done
+    instance : IsLin (f + g) := by (conv => enter [1,x]); simp; infer_instance; done
+    instance : IsLin (f - g) := by (conv => enter [1,x]); simp; infer_instance; done
+    instance : IsLin (r * f) := by (conv => enter [1,x]); simp; infer_instance; done
+    instance : IsLin (0 : X → Y) :=  by (conv => enter [1,x]); simp; infer_instance; done
 
     instance : Neg (X⊸Y) := ⟨λ f   => ⟨-f.1, by have hf := f.2; infer_instance⟩⟩
     instance : Add (X⊸Y) := ⟨λ f g => ⟨f.1 + g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
@@ -30,7 +30,7 @@ namespace SciLean
     instance : Mul (X⊸ℝ) := ⟨λ f g => ⟨f.1 + g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
     instance : HMul ℝ (X⊸Y) (X⊸Y) := ⟨λ r f => ⟨r * f.1, by have hf := f.2; infer_instance⟩⟩
 
-    instance : Zero (X ⊸ Y) := ⟨⟨0, by (conv => enter [1,x]); simp; infer_instance done⟩⟩
+    instance : Zero (X ⊸ Y) := ⟨⟨0, by (conv => enter [1,x]); simp; infer_instance; done⟩⟩
 
     instance : AddSemigroup (X ⊸ Y) := AddSemigroup.mk sorry
     instance : AddMonoid (X ⊸ Y)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry

@@ -16,8 +16,8 @@ argument x [Vec X]
 argument x [SemiHilbert X]
   hasAdjoint := sorry,
   adj_simp   := - x' by sorry,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := - dx' by simp[adjointDifferential] done
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := - dx' by simp[adjointDifferential]; done
 argument x [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := - x' by sorry
@@ -33,8 +33,8 @@ argument x [Vec X]
 argument x [Hilbert X]
   hasAdjoint := sorry,
   adj_simp   := ⟪x', y⟫ by sorry,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := ⟪dx', y⟫ by simp[adjointDifferential]; unfold hold; simp done
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := ⟪dx', y⟫ by simp[adjointDifferential]; unfold hold; simp; done
 
 argument y [Vec X]
   isLin      := sorry,
@@ -42,8 +42,8 @@ argument y [Vec X]
 argument y [SemiHilbert X]
   hasAdjoint := sorry,
   adj_simp   := x * y' by sorry,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := x * dy' by simp[adjointDifferential] done
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := x * dy' by simp[adjointDifferential]; done
 argument y [Vec X] [Nonempty X] [Fact (x ≠ 0)]
   isInv    := sorry,
   inv_simp := 1/x * y' by sorry
@@ -56,7 +56,7 @@ argument x [Fact (y ≠ 0)]
 -- @[simp, simp_diff]
 -- theorem HMul.hMul.arg_xy.fwdDiff_simp  {X : Type} [Vec X]  {α}
 --   : (fwdDiff λ ((x,y) : (ℝ×X)) => x * y) = λ ((x,y),dxy) => (x*y, λ a => (dxy a).1 * y + x * (dxy a).2) :=
--- by  simp[fwdDiff] done
+-- by  simp[fwdDiff]; done
 
 -- Division --
 --------------
@@ -78,8 +78,8 @@ argument x
   isSmooth, diff_simp, fwdDiff_simp,
   hasAdjoint := sorry,
   adj_simp := x' / y by sorry,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' / y by simp[adjointDifferential]; unfold hold; simp done
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := dx' / y by simp[adjointDifferential]; unfold hold; simp; done
 
 --- We can't say much in `y as we do not have `IsSmoothAt
 
@@ -92,8 +92,8 @@ argument x [Vec X]
   isSmooth  := sorry, 
   diff_simp := dx by sorry
 argument x [SemiHilbert X]
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' by simp[adjointDifferential]; unfold hold; simp done
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := dx' by simp[adjointDifferential]; unfold hold; simp; done
 argument x [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x' - y by sorry
@@ -102,8 +102,8 @@ argument y [Vec X]
   isSmooth  := sorry,
   diff_simp := dy by sorry
 argument y [SemiHilbert X]
-  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dy' by simp[adjointDifferential] done
+  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := dy' by simp[adjointDifferential]; done
 argument y [AddGroup X] [Nonempty X]
   isInv    := sorry,
   inv_simp := y' - x by sorry
@@ -121,7 +121,7 @@ instance HAdd.hAdd.arg_xy.hasAdjoint {X} [SemiHilbert X]
 -- @[simp, simp_diff]
 -- theorem HAdd.hAdd.arg_xy.fwdDiff_simp  {X : Type} [Vec X] {α}
 --   : (fwdDiff λ ((x,y) : (X×X)) => x + y) = λ ((x,y),dxy) => (x+y, λ a => (dxy a).1 + (dxy a).2) :=
--- by simp[fwdDiff] done
+-- by simp[fwdDiff]; done
 
 
 -- Subtraction --
@@ -132,8 +132,8 @@ argument x [Vec X]
   isSmooth  := sorry, 
   diff_simp := dx by sorry
 argument x [SemiHilbert X]
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' by simp[adjointDifferential]; unfold hold; simp done
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := dx' by simp[adjointDifferential]; unfold hold; simp; done
 argument x [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x' + y by sorry
@@ -142,8 +142,8 @@ argument y [Vec X]
   isSmooth  := sorry,
   diff_simp := - dy by sorry
 argument y [SemiHilbert X]
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := - dy' by simp[adjointDifferential] done
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := - dy' by simp[adjointDifferential]; done
 argument y [AddGroup X] [Nonempty X]
   isInv := sorry,
   inv_simp := x - y' by sorry
@@ -161,7 +161,7 @@ instance HSub.hSub.arg_xy.hasAdjoint {X} [SemiHilbert X]
 -- @[simp, simp_diff]
 -- theorem HSub.hSub.arg_xy.fwdDiff_simp  {X : Type} [Vec X] {α}
 --   : (fwdDiff λ ((x,y) : (X×X)) => x - y) = λ ((x,y),dxy) => (x-y, λ a => (dxy a).1-(dxy a).2) :=
--- by simp[fwdDiff] done
+-- by simp[fwdDiff]; done
 
 
 -- Inner product --
@@ -173,23 +173,23 @@ argument x
   isSmooth, diff_simp, fwdDiff_simp,
   hasAdjoint   := sorry,
   adj_simp     := x' * y by sorry,
-  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := dx' * y by simp[adjointDifferential]; unfold hold; simp done
+  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := dx' * y by simp[adjointDifferential]; unfold hold; simp; done
 argument y
   isLin        := sorry,
   isSmooth, diff_simp, fwdDiff_simp,
   hasAdjoint   := sorry,
   adj_simp     := y' * x by sorry,
-  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
+  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance; done,
   adjDiff_simp := dy' * x by simp[adjointDifferential]; done
 
 @[simp, simp_diff]
-theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[Inner.inner] done
+theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[Inner.inner]; done
 
 -- @[simp, simp_diff]
 -- theorem SemiInner.semiInner.arg_xy.fwdDiff_simp  {X : Type} [Hilbert X] {α}
 --   : (fwdDiff λ (xy : (X×X)) => ⟪xy.1,xy.2⟫) = λ ((x,y),dxy) => (⟪x,y⟫, λ a => ⟪(dxy a).1,y⟫ + ⟪x,(dxy a).2⟫) :=
--- by simp[fwdDiff]; done
+-- by simp[fwdDiff];; done
 
 
 -- Squared Norm --
@@ -198,7 +198,7 @@ theorem SemiInner.semiInner.on_reals (x y : ℝ) : ⟪x,y⟫ = x * y := by simp[
 function_properties Inner.normSqr {X} [Hilbert X] (x : X) : ℝ
 argument x
   isSmooth,
-  diff_simp    := 2 * ⟪dx, x⟫ by simp[normSqr] admit,
-  -- fwdDiff_simp := λ a => (∥x∥², 2 * ⟪dx a, x⟫) by simp[fwdDiff] done,
+  diff_simp    := 2 * ⟪dx, x⟫ by simp[normSqr]; admit,
+  -- fwdDiff_simp := λ a => (∥x∥², 2 * ⟪dx a, x⟫) by simp[fwdDiff]; done,
   hasAdjDiff,
   adjDiff_simp := ((2:ℝ) * dx') * x by simp[normSqr]; done 

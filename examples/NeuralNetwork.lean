@@ -95,7 +95,6 @@ namespace SciLean.Tensor
   argument w
     adjDiff by unfold conv1d''; simp; unfold hold; simp[sum_into_lambda]
 
-  #exit 
 
   def conv2d {N M n m l} [Fact (N≠0)] [Fact (M≠0)] [Fact (n≠0)] [Fact (m≠0)]
     (x : ℝ^{N, M}) (w : ℝ^{l, n, m}) (b : ℝ^{l}) : ℝ^{l, N, M} := 
@@ -148,23 +147,37 @@ def conv_d1 {N M : Nat} (x : ℝ^{M}) (w : ℝ^{N,M}) (b : ℝ^{N}) : ℝ^{N} :=
 def avgpool2d (x : ℝ^{L, N, M}) : ℝ^{L, N/2, M/2} :=
   λ [k,i,j] => 0.25 * ∑ (di dj : Fin 2), x[k, i |>.scaleUp |>.shift di, j |>.scaleUp |>.shift dj]
 
+instance (n) : Fact (n ≠ 0) := sorry_proof
+
 def minst_clasifier (ε w) (x : ℝ^{16,16}) :=
     w |> 
-    λ (w₁, b₁, w₂, b₂, w₃, b₃) =>
+    λ (w₁, b₁, w₂, b₂) =>
       x 
       |> (Tensor.conv2d (l:=10) (n:=3) (m:=3) · w₁ b₁) 
       |> (avgpool2d ·)
       |>.map (relu ε)
-      |> (conv2d (l:=10) (n:=3) (m:=3) · w₂ b₂) 
+      |> (Tensor.conv2d (l:=10) (n:=3) (m:=3) · w₂ b₂) 
       |> (avgpool2d ·)
       |>.map (relu ε)
-      |> (fully_connected_rank3 (n:=10) · w₃ b₃)
+
+
+-- def minst_clasifier (ε w) (x : ℝ^{16,16}) :=
+--     w |> 
+--     λ (w₁, b₁, w₂, b₂) =>
+--       x 
+--       |> (Tensor.conv2d (l:=10) (n:=3) (m:=3) · w₁ b₁) 
+--       |> (avgpool2d ·)
+--       |>.map (relu ε)
+--       |> (conv2d (n:=3) (m:=3) · w₂ b₂) 
+--       |> (avgpool2d ·)
+--       |>.map (relu ε)
 
 #check minst_clasifier
 
+example : (Enumtype.numOf (Fin (16 / 2)) * Enumtype.numOf (Fin (16 / 2)) / 2) = 32 := by simp
+#check Fin 10 × Fin 5 × Fin (32)
 
-
-#exit 
+##exit 
 set_option synthInstance.maxSize 2048
 set_option synthInstance.maxHeartbeats 500000
 -- set_option maxRecDepth 5000

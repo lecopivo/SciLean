@@ -58,7 +58,7 @@ instance comp.arg_x.parm1.hasAdjoint
   (g : X → Y) [HasAdjoint g] 
   : HasAdjoint (λ x => f (g x) a)
 := by 
-  (apply comp.arg_x.hasAdjoint (λ y => f y a) g) done
+  (apply comp.arg_x.hasAdjoint (λ y => f y a) g); done
 
 instance comp.arg_x.parm2.hasAdjoint
   (a : α) (b : β)
@@ -66,7 +66,7 @@ instance comp.arg_x.parm2.hasAdjoint
   (g : X → Y) [HasAdjoint g] 
   : HasAdjoint (λ x => f (g x) a b)
 := by 
-  (apply comp.arg_x.hasAdjoint (λ y => f y a b) g) done
+  (apply comp.arg_x.hasAdjoint (λ y => f y a b) g); done
 
 instance comp.arg_x.parm3.hasAdjoint
   (a : α) (b : β) (c : γ)
@@ -74,7 +74,7 @@ instance comp.arg_x.parm3.hasAdjoint
   (g : X → Y) [HasAdjoint g] 
   : HasAdjoint (λ x => f (g x) a b c)
 := by 
-  (apply comp.arg_x.hasAdjoint (λ y => f y a b c) g) done
+  (apply comp.arg_x.hasAdjoint (λ y => f y a b c) g); done
 
 instance diag.arg_x.parm1.hasAdjoint
   (a : α)
@@ -83,7 +83,7 @@ instance diag.arg_x.parm1.hasAdjoint
   (g₂ : X → Y₂) [HasAdjoint g₂] 
   : HasAdjoint (λ x => f (g₁ x) (g₂ x) a)
 := by 
-  (apply diag.arg_x.hasAdjoint (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂) done
+  (apply diag.arg_x.hasAdjoint (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂); done
 
 instance diag.arg_x.parm2.hasAdjoint
   (a : α) (b : β)
@@ -92,7 +92,7 @@ instance diag.arg_x.parm2.hasAdjoint
   (g₂ : X → Y₂) [HasAdjoint g₂] 
   : HasAdjoint (λ x => f (g₁ x) (g₂ x) a b)
 := by 
-  (apply diag.arg_x.hasAdjoint (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂) done
+  (apply diag.arg_x.hasAdjoint (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂); done
 
 instance diag.arg_x.parm3.hasAdjoint
   (a : α) (b : β) (c : γ)
@@ -101,6 +101,6 @@ instance diag.arg_x.parm3.hasAdjoint
   (g₂ : X → Y₂) [HasAdjoint g₂] 
   : HasAdjoint (λ x => f (g₁ x) (g₂ x) a b c)
 := by 
-  (apply diag.arg_x.hasAdjoint (λ y₁ y₂ => f y₁ y₂ a b c) g₁ g₂) done
+  (apply diag.arg_x.hasAdjoint (λ y₁ y₂ => f y₁ y₂ a b c) g₁ g₂); done
 
 

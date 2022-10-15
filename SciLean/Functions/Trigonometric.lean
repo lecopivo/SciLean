@@ -8,14 +8,14 @@ namespace SciLean
   argument x
     isSmooth   := sorry, 
     diff_simp  := dx * Math.cos x by sorry,
-    hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-    adjDiff_simp := dx' * Math.cos x by simp[adjointDifferential] done
+    hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+    adjDiff_simp := dx' * Math.cos x by simp[adjointDifferential]; done
 
   function_properties Math.cos (x : ℝ) : ℝ
   argument x
     isSmooth   := sorry, 
     diff_simp  := -dx * Math.sin x by sorry,
-    hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
+    hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
     adjDiff_simp := -dx' * Math.sin x by simp[adjointDifferential]; unfold hold; simp; admit
 
   -- These are related to Spherical Bessle functions
@@ -33,14 +33,14 @@ namespace SciLean
   argument x 
     isSmooth := sorry,
     diff_simp := dx * (- x * Math.sinr3 x + x * Math.cosr2 x) by sorry,
-    hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
+    hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
     adjDiff_simp by simp[adjointDifferential]
 
   function_properties Math.cosr2 (x : ℝ) : ℝ
   argument x
     isSmooth := sorry,
     diff_simp := dx * (- x * Math.sinr3 x - 2 * x * Math.cosr4 x) by sorry,
-    hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
+    hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
     adjDiff_simp by simp[adjointDifferential]
 
 
@@ -63,21 +63,21 @@ namespace SciLean
   argument x
     isSmooth   := sorry,
     diff_simp  := dx/2 * (cosr2Sqrt x - sinr3Sqrt x) by sorry,
-    hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
+    hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
     adjDiff_simp by simp[adjointDifferential]; unfold hold; simp
 
   function_properties Math.cosSqrt (x : ℝ) : ℝ
   argument x
     isSmooth   := sorry,
     diff_simp  := -dx/2 * Math.sinr1Sqrt x by sorry,
-    hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
+    hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
     adjDiff_simp by simp[adjointDifferential]; unfold hold; simp
 
   function_properties Math.cosr2Sqrt (x : ℝ) : ℝ
   argument x 
     isSmooth  := sorry,
     diff_simp := -dx/2 * (sinr3Sqrt x + 2 * cosr4Sqrt x) by sorry,
-    hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
+    hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
     adjDiff_simp by simp[adjointDifferential]; unfold hold; simp
 
   @[simp]

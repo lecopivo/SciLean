@@ -40,8 +40,8 @@ argument xy [Vec X] [Vec Y]
 argument xy [SemiHilbert X] [SemiHilbert Y]
   hasAdjoint   := sorry,
   adj_simp     := (xy', 0) by sorry,
-  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := (dxy', 0) by simp[adjointDifferential] done
+  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := (dxy', 0) by simp[adjointDifferential]; done
 argument xy [Nonempty X] [Subsingleton Y] [Inhabited Y] 
   isInv        := sorry,
   inv_simp     := (xy', default) by sorry
@@ -61,8 +61,8 @@ argument xy [Vec X] [Vec Y]
 argument xy [SemiHilbert X] [SemiHilbert Y]
   hasAdjoint   := sorry,
   adj_simp     := (0, xy') by sorry,
-  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := (0, dxy') by simp[adjointDifferential] done
+  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := (0, dxy') by simp[adjointDifferential]; done
 argument xy [Subsingleton X] [Inhabited X] [Nonempty Y]
   isInv        := sorry,
   inv_simp     := (default, xy') by sorry

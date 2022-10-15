@@ -66,7 +66,7 @@ def addBinder (binders : TSyntaxArray `Lean.Parser.Term.bracketedBinder) (b : TS
     for p in binders[n-i-1]!.raw[1].getArgs do
       match b.raw.find? (λ q => q == p) with
       | some _ => 
-        return binders.insertAt (n - i) b
+        return binders.insertAt ⟨n - i, sorry⟩ b
       | none   =>
         continue
     

@@ -33,7 +33,7 @@ instance getElem.arg_cont.hasAdjoint [SemiHilbert Elem] (idx : Idx)
   : (λ (cont : Cont) => cont[idx])† = λ cont' => setElem 0 idx cont' := sorry
 
 instance getElem.arg_cont.hasAdjDiff [SemiHilbert Elem] (idx : Idx)
-  : HasAdjDiff (λ (cont : Cont) => cont[idx]) := by constructor; infer_instance; simp; infer_instance done
+  : HasAdjDiff (λ (cont : Cont) => cont[idx]) := by constructor; infer_instance; simp; infer_instance; done
 
 @[simp ↓] theorem getElem.arg_cont.adjDiff_simp [SemiHilbert Elem] (idx : Idx)
   : ∂† (λ (cont : Cont) => cont[idx]) = λ _ dcont' => setElem 0 idx dcont' := by simp[adjointDifferential]; done
@@ -69,12 +69,12 @@ function_properties setElem [SemiHilbert Elem] (cont : Cont) (idx : Idx) (elem :
 argument cont 
   hasAdjoint [Fact (elem=0)] := sorry_proof,
   adj_simp [Fact (elem=0)] := setElem cont' idx 0 by sorry_proof,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
-  adjDiff_simp := setElem dcont' idx 0 by simp[adjointDifferential]; unfold hold; simp done
+  hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
+  adjDiff_simp := setElem dcont' idx 0 by simp[adjointDifferential]; unfold hold; simp; done
 argument elem
   hasAdjoint [Fact (cont=0)] := sorry_proof,
   adj_simp [Fact (cont=0)] := elem'[idx] by sorry_proof,
-  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance done,
+  hasAdjDiff   := by constructor; infer_instance; simp; infer_instance; done,
   adjDiff_simp := delem'[idx] by simp[adjointDifferential]; done
 
 ---
@@ -112,11 +112,11 @@ theorem introElem.arg_f.adj_simp [SemiHilbert Elem]
 instance introElem.arg_f.hasAdjDiff [SemiHilbert Elem] 
   : HasAdjDiff  λ (f : Idx → Elem) => (introElem f : Cont) :=
 by 
-  constructor; infer_instance; simp; infer_instance done
+  constructor; infer_instance; simp; infer_instance; done
 
 @[simp ↓] 
 theorem introElem.arg_f.adjDiff_simp [SemiHilbert Elem] 
-  : (∂† λ (f : Idx → Elem) => (introElem f : Cont)) = λ _ df' idx => df'[idx] := by simp[adjointDifferential] done
+  : (∂† λ (f : Idx → Elem) => (introElem f : Cont)) = λ _ df' idx => df'[idx] := by simp[adjointDifferential]; done
 
 
 ---

@@ -15,14 +15,14 @@ namespace SciLean
   variable (g : X → Y) [IsSmooth g]
   variable (r : ℝ)
 
-  instance : IsSmooth (-f)    := by (conv => enter [1,x]); simp; infer_instance done
-  instance : IsSmooth (f + g) := by (conv => enter [1,x]); simp; infer_instance done
-  instance : IsSmooth (f - g) := by (conv => enter [1,x]); simp; infer_instance done
-  instance : IsSmooth (r * f) := by (conv => enter [1,x]); simp; infer_instance done
+  instance : IsSmooth (-f)    := by (conv => enter [1,x]); simp; infer_instance; done
+  instance : IsSmooth (f + g) := by (conv => enter [1,x]); simp; infer_instance; done
+  instance : IsSmooth (f - g) := by (conv => enter [1,x]); simp; infer_instance; done
+  instance : IsSmooth (r * f) := by (conv => enter [1,x]); simp; infer_instance; done
   instance (f g : X → ℝ) [IsSmooth f] [IsSmooth g]
-    : IsSmooth (f * g) := by (conv => enter [1,x]); simp; infer_instance done
-  instance : IsSmooth (0 : X → Y) :=  by (conv => enter [1,x]); simp; infer_instance done
-  instance : IsSmooth (1 : X → ℝ) :=  by (conv => enter [1,x]); simp; infer_instance done
+    : IsSmooth (f * g) := by (conv => enter [1,x]); simp; infer_instance; done
+  instance : IsSmooth (0 : X → Y) :=  by (conv => enter [1,x]); simp; infer_instance; done
+  instance : IsSmooth (1 : X → ℝ) :=  by (conv => enter [1,x]); simp; infer_instance; done
 
   instance : Neg (X⟿Y) := ⟨λ f   => ⟨-f.1, by have hf := f.2; infer_instance⟩⟩
   instance : Add (X⟿Y) := ⟨λ f g => ⟨f.1 + g.1, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
@@ -31,8 +31,8 @@ namespace SciLean
   instance : HMul ℝ (X⟿Y) (X⟿Y) := ⟨λ r f => ⟨r * f.1, by have hf := f.2; infer_instance⟩⟩
   instance : HMul (X⟿ℝ) (X⟿Y) (X⟿Y) := ⟨λ g f => ⟨λ x => g.1 x * f.1 x, by have hf := f.2; have hg := g.2; infer_instance⟩⟩
  
-  instance : Zero (X ⟿ Y) := ⟨⟨0, by (conv => enter [1,x]); simp; infer_instance done⟩⟩
-  instance [One Y] : One (X ⟿ Y) := ⟨⟨1, by (conv => enter [1,x]); simp; infer_instance done⟩⟩
+  instance : Zero (X ⟿ Y) := ⟨⟨0, by (conv => enter [1,x]); simp; infer_instance; done⟩⟩
+  instance [One Y] : One (X ⟿ Y) := ⟨⟨1, by (conv => enter [1,x]); simp; infer_instance; done⟩⟩
 
   instance : AddSemigroup (X ⟿ Y) := AddSemigroup.mk sorry
   instance : AddMonoid (X ⟿ Y)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
@@ -74,18 +74,18 @@ namespace SciLean
 
   @[simp] 
   theorem SmoothMap.beta_reduce (f : X ⟿ Y) 
-      : (λ (x : X) ⟿ f x) = f := by simp done
+      : (λ (x : X) ⟿ f x) = f := by simp; done
 
   -- @[simp]
   -- theorem SmoothMap.mk.eval (f : X → Y) [IsSmooth f] (x : X) 
   --   : (SmoothMap.mk f) x = f x := by simp
   -- The above theorem causes this example to fail with a very obscure error
-  -- example {X Y} [Vec Y] (r : ℝ) : (λ (f : X→Y) (x : X) => r * f x) = (λ (f : X→Y) => r * f) := by funext f x; simp; done
+  -- example {X Y} [Vec Y] (r : ℝ) : (λ (f : X→Y) (x : X) => r * f x) = (λ (f : X→Y) => r * f) := by funext f x; simp;; done
 
   @[simp]
   theorem SmoothMap.mk.arg_f.diff_simp {X Y} [Vec X] [Vec Y] 
     (f : X → Y) [IsSmooth f] 
-    : ∂ (SmoothMap.mk f).1 = ∂ f := by simp done
+    : ∂ (SmoothMap.mk f).1 = ∂ f := by simp; done
 
   @[simp]
   theorem SmoothMap.mk.arg_x.diff_simp {X Y Z} [Vec X] [Vec Y] [Vec Z]

@@ -31,7 +31,7 @@ instance comp.arg_x.parm1.isInv
   (g : X → Y) [IsInv g] 
   : IsInv (λ x => f (g x) a)
 := by 
-  (apply comp.arg_x.isInv (λ y => f y a) g) done
+  (apply comp.arg_x.isInv (λ y => f y a) g); done
 
 instance comp.arg_x.parm2.isInv
   (a : α) (b : β)
@@ -39,7 +39,7 @@ instance comp.arg_x.parm2.isInv
   (g : X → Y) [IsInv g] 
   : IsInv (λ x => f (g x) a b)
 := by 
-  (apply comp.arg_x.isInv (λ y => f y a b) g) done
+  (apply comp.arg_x.isInv (λ y => f y a b) g); done
 
 instance comp.arg_x.parm3.isInv
   (a : α) (b : β) (c : γ)
@@ -47,7 +47,7 @@ instance comp.arg_x.parm3.isInv
   (g : X → Y) [IsInv g] 
   : IsInv (λ x => f (g x) a b c)
 := by 
-  (apply comp.arg_x.isInv (λ y => f y a b c) g) done
+  (apply comp.arg_x.isInv (λ y => f y a b c) g); done
 
 
 

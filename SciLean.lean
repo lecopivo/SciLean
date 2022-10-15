@@ -2,8 +2,7 @@ import SciLean.Mechanics
 import SciLean.Operators.ODE
 import SciLean.Functions
 
-import SciLean.Data.FunType
-import SciLean.Data.PowType
+import SciLean.Data.GenericArray
 
 import SciLean.Solver 
 import SciLean.Tactic.LiftLimit

@@ -81,7 +81,7 @@ namespace Iterable
            : Iterable (ι × κ) :=
   {
     first := 
-      match first, first with
+      match (first : Option ι), (first : Option κ) with
         | (some i), (some j) => some (i,j)
         | _, _ => none
     next := λ (i,j) => 
@@ -89,21 +89,21 @@ namespace Iterable
       match (next j) with
         | some j' => some (i, j')
         | none => 
-        match (next i), first with
+        match (next i), (first : Option κ) with
           | (some i'), (some js) => some (i', js)
           | _, _ => none
     decEq := by infer_instance
   }
   
   -- Iterators on `ι × κ` respects `<`
-  instance [IterableLt ι] [IterableLt κ] : IterableLt (ι × κ) := ⟨sorry⟩
+  -- instance [IterableLt ι] [IterableLt κ] : IterableLt (ι × κ) := ⟨sorry⟩
 
     -- Column major ordering, this respects `<` defined on `ι ×ₗ κ`
   instance [Iterable ι] [Iterable κ]
            : Iterable (ι ×ₗ κ) :=
   {
     first := 
-      match first, first with
+      match (first : Option ι), (first : Option κ) with
         | (some i), (some j) => some (i,j)
         | _, _ => none
     next := λ (i,j) => 
@@ -111,10 +111,10 @@ namespace Iterable
       match (next i) with
         | some i' => some (i', j)
         | none => 
-        match first, (next j) with
+        match (first : Option ι), (next j) with
           | (some is), (some j') => some (is, j')
           | _, _ => none
-    decEq := by simp[ColProd] infer_instance
+    decEq := by simp[ColProd]; infer_instance
   }
   
   -- Iterators on `ι ×ₗ κ` respects `<`
@@ -159,7 +159,7 @@ namespace Iterable
   instance {κ} [Iterable κ] : HMul (Range ι) (Range κ) (Range (ι × κ)) := ⟨sorry⟩
   
   def fullRange (ι : Type u) [Iterable ι] : LinRange ι := 
-    match first with 
+    match (first : Option ι) with 
       | some fst => some (fst, none) 
       | none => none
 

@@ -46,7 +46,7 @@ theorem comp.arg_x.parm1.inv_simp
   : 
     (λ x => f (g x) a)⁻¹ = λ x' => g⁻¹ ((hold λ y => f y a)⁻¹ x')
 := by 
-  (apply comp.arg_x.inv_simp (λ y => f y a) g) done
+  (apply comp.arg_x.inv_simp (λ y => f y a) g); done
 
 example [Nonempty Y]
   (a : α) 
@@ -64,7 +64,7 @@ theorem comp.arg_x.parm2.inv_simp
   : 
     (λ x => f (g x) a b)⁻¹ = λ x' => g⁻¹ ((hold λ y => f y a b)⁻¹ x')
 := by 
-  (apply comp.arg_x.inv_simp (λ y => f y a b) g) done
+  (apply comp.arg_x.inv_simp (λ y => f y a b) g); done
 
 @[simp low-1] -- try to avoid using this theorem
 theorem comp.arg_x.parm3.inv_simp
@@ -74,7 +74,7 @@ theorem comp.arg_x.parm3.inv_simp
   : 
     (λ x => f (g x) a b c)⁻¹ = λ z => g⁻¹ ((hold λ y => f y a b c)⁻¹ z)
 := by 
-  (apply comp.arg_x.inv_simp (λ y => f y a b c) g) done
+  (apply comp.arg_x.inv_simp (λ y => f y a b c) g); done
 
 -- theorem comp.arg_x.parm4.inv_simp
 -- ...
