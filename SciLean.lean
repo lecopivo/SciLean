@@ -4,8 +4,8 @@ import SciLean.Functions
 
 import SciLean.Data.GenericArray
 import SciLean.Data.DataArray
-import SciLean.Data.Mesh
-import SciLean.Data.Quotient
+-- import SciLean.Data.Mesh
+-- import SciLean.Data.Quotient
 
 import SciLean.Solver 
 import SciLean.Tactic.LiftLimit
