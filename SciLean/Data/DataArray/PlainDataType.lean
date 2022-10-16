@@ -48,6 +48,12 @@ def PlainDataType.bytes {α : Type} (pd : PlainDataType α) (n : Nat) : Nat :=
   | .inl bitType => (n + ((8/bitType.bits) - 1).toNat) / (8/bitType.bits).toNat
   | .inr byteType => byteType.bytes * n
 
+/-- How many `α` can fit into a buffer with `byteNum` bytes -/
+def PlainDataType.capacity {α : Type} (pd : PlainDataType α) (byteNum : Nat) : Nat :=
+  match pd.btype with
+  | .inl bitType => byteNum * (8/bitType.bits.toNat)
+  | .inr byteType => byteNum / byteType.bytes
+
 
 --------------- Prod -------------------------------------------------
 ----------------------------------------------------------------------
@@ -78,7 +84,7 @@ def Prod.bitTypeProd {α β} (ta : BitType α) (tb : BitType β) : BitType (α �
   else
     .inr {
       bytes := 2
-      h_size := by simp done
+      h_size := by simp; done
 
       fromByteArray := λ b i _ => 
         let aByte := b[2*i]'sorry_proof

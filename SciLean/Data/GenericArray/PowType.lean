@@ -97,6 +97,9 @@ abbrev modify (x : X^I) (i : I) (f : X → X) : X^I := GenericArray.modifyElem x
 abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := GenericArray.mapIdx f x
 abbrev map (f : X → X) (x : X^I) : X^I := GenericArray.map f x
 
+abbrev Index (_ : X^I) := I
+abbrev Elem  (_ : X^I) := X
+
 end FixedSize
 
 

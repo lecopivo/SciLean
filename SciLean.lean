@@ -3,6 +3,7 @@ import SciLean.Operators.ODE
 import SciLean.Functions
 
 import SciLean.Data.GenericArray
+import SciLean.Data.DataArray
 
 import SciLean.Solver 
 import SciLean.Tactic.LiftLimit
