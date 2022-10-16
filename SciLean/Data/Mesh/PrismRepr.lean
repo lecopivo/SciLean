@@ -853,7 +853,7 @@ abbrev PrismRepr.Space : PrismRepr → Type
 
 instance PrismRepr.instVecSpace (P : PrismRepr) : Vec P.Space :=
   match P with
-  | point =>    by simp[Space]; infer_instance done
+  | point =>    by simp[Space]; infer_instance; done
   | cone P =>   by simp[Space]; apply (@instVecProd _ _ (by infer_instance) (instVecSpace P)); done
   | prod P Q => by simp[Space]; apply (@instVecProd _ _ (instVecSpace P) (instVecSpace Q)); done
 
@@ -1055,4 +1055,4 @@ def analyzePrism (P : PrismRepr) : IO Unit := do
 #eval analyzePrism (triangle.prod segment)
 #eval ((cube).cone.prod triangle).dim
 
-#exit 
+

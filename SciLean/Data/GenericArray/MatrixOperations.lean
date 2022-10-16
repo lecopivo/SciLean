@@ -8,16 +8,6 @@ section GenericLinearArray
 variable {Cont : Nat → Type} {Elem : Type |> outParam}
 variable [GenericLinearArray Cont Elem]
 
-
-instance [ToString Elem] : ToString (Cont n) := ⟨λ x => Id.run do
-  if n = 0 then
-    "'[]"
-  else
-    let mut s := s!"'[{x[⟨0,sorry_proof⟩]}"
-    for i in [1:n] do
-      s := s ++ s!", {x[⟨i,sorry_proof⟩]}"
-    s ++ "]"⟩
-
 -- DropElem 
 function_properties dropElem [Vec Elem] {n : Nat} (k : Nat) (cont : Cont (n+k)) : Cont n
 argument cont

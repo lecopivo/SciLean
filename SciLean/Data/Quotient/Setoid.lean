@@ -30,13 +30,13 @@ namespace Setoid
     : Morphism (λ x => f (g x)) where
     is_sound := 
   by 
-    intros; apply mf.is_sound; apply mg.is_sound; assumption done
+    intros; apply mf.is_sound; apply mg.is_sound; assumption; done
 
   instance comp_is_map (f : β → δ) [mf : Map f] (g : α → β) [mg : Morphism g]
     : Map (λ x => f (g x)) where
     is_sound :=
   by 
-    intros; apply mf.is_sound; apply mg.is_sound; assumption done
+    intros; apply mf.is_sound; apply mg.is_sound; assumption; done
 
   instance scomb_is_mor (f : α → β → γ) [mf : Morphism₂ f] (g : α → β) [mg : Morphism g]
     : Morphism (λ x => f x (g x)) where

@@ -105,7 +105,7 @@ namespace SciLean
           (Math.cos θ, Math.sin θ)
         | ⟨⟨.cone .point, _⟩, e, x⟩ => 
           let e : Fin n := e
-          let x : ℝ := (reduce_type_of x)[0]
+          let x : ℝ := x
           let θ := 2*Math.pi*(e.1.toReal + x)/n
           (Math.cos θ, Math.sin θ)
         | _ => absurd (a:=True) sorry_proof sorry_proof

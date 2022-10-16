@@ -1,11 +1,8 @@
-import SciLean.Prelude
-import SciLean.Mathlib.Data.Enumtype
 import SciLean.Algebra
 import SciLean.Data.FinProd
 import SciLean.Data.ArrayN
 import SciLean.Data.DataArray
 import SciLean.Data.Mesh.PrismRepr
-import SciLean.Data.Quotient.GradedQuotient
 
 namespace SciLean
 
@@ -306,10 +303,10 @@ abbrev anyDim (f : Face P n) : Face P := ⟨f.1, f.2, by simp⟩
 instance : Coe (Face P n) (Face P) := ⟨λ f => f.anyDim⟩
 
 def comp (f : Face P n) (g : Face f.toPrism m) : Face P m := 
-  ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2,toPrism] done)) 
+  ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2,toPrism]; done)) 
    (by simp[g.2, toPrism,f.2]; done), 
    by simp[f.repr_ofPrism], 
-   by simp; cases m; simp; simp; rw[g.repr_dim]; simp done⟩
+   by simp; cases m; simp; simp; rw[g.repr_dim]; simp; done⟩
 
 @[simp]
 theorem comp_toPrism (f : Face P n) (g : Face f.toPrism m) 
@@ -378,8 +375,8 @@ def toFace (f : Inclusion Q P) : Face P Q.dim := ⟨f.1, f.2, by simp[Prism.dim,
 def comp (f : Inclusion Q P) (g : Inclusion S Q) : Inclusion S P := 
   ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2, f.3]; done)) 
    (by simp[g.2, f.2]; done), 
-   by simp[f.2] done, 
-   by simp[g.3] done⟩
+   by simp[f.2]; done, 
+   by simp[g.3]; done⟩
 
 instance : Compose (Inclusion Q P) (Inclusion S Q) (Inclusion S P) where
   compose f g := f.comp g
@@ -441,6 +438,7 @@ namespace Prism
 
 def topFace (P : Prism) : Face P P.dim := ⟨P.repr.topFace, by simp, by simp[FaceRepr.dim,Prism.dim]⟩
 
+
 /-- Tries to find decomposition of `P` such that `P = P₁ * ??` 
 This is of course not possible in general and any excess powers ignored.
 
@@ -451,7 +449,7 @@ def decomposeBy (P P₁ : Prism) : PrismDecomposition P :=
   let pt₁ := P₁.prodTally
   
   let pt' := pt.map (λ (Pi, a) =>
-    let find := pt₁.find (λ ((Qi, _) : Prism × Nat) => Pi = Qi)
+    let find := pt₁.find? (λ ((Qi, _) : Prism × Nat) => Pi = Qi)
     match find with
     | some (_, b) => (Pi, b % (a+1))
     | none => (Pi, 0))

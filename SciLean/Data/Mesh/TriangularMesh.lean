@@ -36,7 +36,7 @@ def TriangularSet.FaceData.fromTriangles {pointCount triangleCount}
                    |>.push ((p1, p2), #[(i,2)])
 
   -- sort edges 
-  edges := edges.qsort (·.1<·.1) 
+  edges := edges.qsort (λ x y => x.1.1<y.1.1 ∨ (x.1.1 = y.1.1 ∧ x.1.2 < y.1.2)) 
   -- remove duplicate edges and collect neighbouring triangles
   edges := edges.foldl (λ a b => 
     let last := a[a.size-1]!
@@ -55,6 +55,7 @@ def TriangularSet.FaceData.fromTriangles {pointCount triangleCount}
     for h : j in [0:edges[i].2.size] do
       let j : Fin _ := ⟨j,h.2⟩
       triangleEdges[edges[i].2[j]] := i
+      
 
   {
     pointCount := pointCount

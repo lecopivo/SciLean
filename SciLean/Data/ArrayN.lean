@@ -1,4 +1,3 @@
-import SciLean
 
 namespace SciLean 
 
@@ -16,4 +15,3 @@ instance [Inhabited α] : Inhabited (ArrayN α n) :=
     h_size := by simp
   }⟩
 
-end SciLean

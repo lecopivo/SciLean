@@ -84,15 +84,6 @@ def DataArray.intro (f : ι → α) : DataArray α := Id.run do
     d' := d'.set ⟨li,sorry_proof⟩ (f i)
   d'
 
-instance [PlainDataType α] [ToString α] : ToString (DataArray α) := ⟨λ a => Id.run do
-  if a.size = 0 then
-    return "[]"
-  else 
-    let mut s : String := s!"[{a.get ⟨0,sorry_proof⟩}"
-    for i in [1:a.size] do
-      s := s ++ s!", {a.get ⟨i,sorry_proof⟩}"
-    s ++ "]"⟩
-
 structure DataArrayN (α : Type) [pd : PlainDataType α] (n : Nat) where
   data : DataArray α
   h_size : n = data.size
@@ -142,11 +133,16 @@ instance : GenericArray (DataArrayN α (numOf ι)) ι α  where
   getElem_setElem_neq := sorry_proof
   getElem_introElem := sorry_proof
 
-@[defaultInstance]
-instance : PowType (DataArrayN α (numOf ι)) ι α := PowType.mk 
 
-@[defaultInstance]
-instance : LinearPowType (DataArrayN α) α := LinearPowType.mk
+-- ShortOptDataArray is prefered for PowType
+-- @[defaultInstance]
+-- instance : PowType (DataArrayN α (numOf ι)) ι α := PowType.mk 
+
+-- ShortOptDataArray is prefered for PowType
+-- @[defaultInstance]
+-- instance : LinearPowType (DataArrayN α) α := LinearPowType.mk
+
+
 
 -- #check ℝ^(Fin 3)
 

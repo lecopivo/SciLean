@@ -96,7 +96,7 @@ namespace SciLean
         | ⟨⟨.point, _⟩, e, _⟩ => (reduce_type_of e)
         | ⟨⟨.cone .point, _⟩, e, x⟩ => 
           let e : Int := e
-          let x : ℝ := (reduce_type_of x)[0]
+          let x : ℝ := x
           e + x
         | _ => absurd (a:=True) sorry_proof sorry_proof)
 

@@ -121,7 +121,7 @@ namespace SciLean
           e
         | ⟨⟨.cone .point, _⟩, e, x⟩ => 
           let e : Fin n := e
-          let x : ℝ := (reduce_type_of x)[0]
+          let x : ℝ := x
           e + x
         | _ => absurd (a:=True) sorry_proof sorry_proof)
 

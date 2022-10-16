@@ -121,6 +121,17 @@ def map [GenericArray Cont Idx Elem] [Enumtype Idx] (f : Elem → Elem) (arr : C
 theorem getElem_map [GenericArray Cont Idx Elem] [Enumtype Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
   : (map f arr)[i] = f arr[i] := sorry_proof
 
+
+instance [GenericArray Cont Idx Elem] [ToString Elem] [Enumtype Idx] : ToString (Cont) := ⟨λ a => 
+  match Iterable.first (ι:=Idx) with
+  | some fst => Id.run do
+    let mut s : String := s!"'[{a[fst]}"
+    for (i,li) in Enumtype.fullRange Idx do
+      if li.1 = 0 then continue else
+      s := s ++ s!", {a[i]}"
+    s ++ "]"
+  | none => "'[]"⟩
+
 section Operations
 
   variable [GenericArray Cont Idx Elem] [Enumtype Idx] 

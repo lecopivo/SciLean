@@ -184,8 +184,8 @@ instance instPlainDataTypeProd [ta : PlainDataType α] [tb : PlainDataType β] :
 def Fin.bitSize  (n : Nat) : Nat := (Nat.log2 n + (n - 2^(Nat.log2 n) != 0).toUInt64.toNat)
 def Fin.byteSize (n : Nat) : Nat := (Fin.bitSize n + 7) / 8
 
--- TODO: IMPORTANT This breaks consistency with (n=0) as we could make `Fin 0` from a byte
--- Adding assumption (n≠0) is really annoying
+-- INCONSISTENT: This breaks consistency with (n=0) as we could make `Fin 0` from a byte
+-- Adding assumption (n≠0) is really annoying, what to do about this? 
 def Fin.bitType (n : Nat) (_ : n ≤ 2^8) : BitType (Fin n) where
   bits := (bitSize n).toUInt8
   h_size := sorry_proof
@@ -219,7 +219,7 @@ def Fin.byteType (n : Nat) (_ : 2^8 < n) : ByteType (Fin n) where
   fromByteArray_toByteArray := sorry_proof
   fromByteArray_toByteArray_other := sorry_proof
 
--- TODO: IMPORTANT This breaks consistency see Fin.bitType
+-- INCONSISTENT: This breaks consistency see Fin.bitType
 instance (n) : PlainDataType (Fin n) where
   btype := 
     if h : n ≤ 2^8 
