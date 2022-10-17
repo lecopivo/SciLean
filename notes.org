@@ -280,7 +280,8 @@
    - [[https://iheartla.github.io/][I❤️LA]]
    - [[https://github.com/google/jax][Jax]]  
    - [[https://github.com/patrick-kidger/diffrax][diffrax]]
-   - [[https://www.tensorflow.org/probability/oryx][Oryx]] 
+   - [[https://www.tensorflow.org/probability/oryx][Oryx]]
+   - [[https://github.com/IBM/FormalML][FormalML]]
 
    - [[https://github.com/kztk-m/sparcl][Sparcl]] - partially-invertible computation
 
