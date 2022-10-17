@@ -3,13 +3,13 @@ import SciLean.Data.DataArray.DataArray
 namespace SciLean
 
 -- TODO: In the future this will be probably replaced by `α × α` but currently a struct like this has better performance(at least I was told so :)
-structure Vec2 (α : Type) [PlainDataType α] where 
+structure Vec2 (α : Type) where 
   (x y : α)
 
-structure Vec3 (α : Type) [PlainDataType α] where 
+structure Vec3 (α : Type) where 
   (x y z : α)
 
-structure Vec4 (α : Type) [PlainDataType α] where 
+structure Vec4 (α : Type) where 
   (x y z w : α)
 
 abbrev ShortOptDataArray (α : Type) [PlainDataType α] (n : Nat) := 
