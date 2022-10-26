@@ -40,13 +40,14 @@ def Prod.size {α β : Type} [Prod.Size β] (_ : α × β) : Nat := Prod.Size.si
 @[reducible]
 def Prod.sizeFlat {α β : Type} [Prod.SizeFlat α] [Prod.SizeFlat β] (_ : α × β) : Nat := Prod.SizeFlat.sizeFlat (α × β)
 
+
 ----------------------------------------------------------------------
 
 class Prod.Get (X : Type) (i : Nat) where
-  {T : Type}
-  geti : X → T
+  {type : Type}
+  get : X → type
 
-attribute [reducible] Prod.Get.T Prod.Get.geti
+attribute [reducible] Prod.Get.type Prod.Get.get
 
 @[reducible]
 instance (priority := low) : Prod.Get X 0 := ⟨λ x => x⟩
@@ -55,10 +56,9 @@ instance (priority := low) : Prod.Get X 0 := ⟨λ x => x⟩
 instance : Prod.Get (X×Y) 0 := ⟨λ x => x.fst⟩ -- `λ (x,y) => x` causes some trouble while infering IsSmooth
 
 @[reducible]
-instance [pg : Prod.Get Y n] : Prod.Get (X×Y) (n+1) := ⟨λ x => pg.geti x.snd⟩ -- `λ (x,y) => pg.geti y` causes some trouble while infering IsSmooth
+instance [pg : Prod.Get Y n] : Prod.Get (X×Y) (n+1) := ⟨λ x => pg.get x.snd⟩ -- `λ (x,y) => pg.get y` causes some trouble while infering IsSmooth
 
-abbrev Prod.get {X Y} (i : Nat) [pg : Prod.Get (X×Y) i] (x : X×Y) := pg.geti x
-abbrev Prod.getOp {X Y} (idx : Nat) [pg : Prod.Get (X×Y) idx] (self : X×Y) := pg.geti self
+abbrev Prod.get {X Y} (i : Nat) [pg : Prod.Get (X×Y) i] (x : X×Y) := pg.get x
 
 ----------------------------------------------------------------------
 
@@ -141,3 +141,8 @@ example : huncurry 2 (λ i j k : Nat => i + j) = λ (i,j) k => i + j := by rfl
 
 example : hcurry 3 (λ ((i,j,k) : Nat×Nat×Nat) => i + j) = (λ i j k => i + j) := by rfl
 example : hcurry 2 (λ ((i,j,k) : Nat×Nat×Nat) => i + j) = (λ i (j,k) => i + j) := by rfl
+
+
+
+
+
