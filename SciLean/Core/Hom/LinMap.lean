@@ -33,8 +33,8 @@ namespace SciLean
     instance : Zero (X ⊸ Y) := ⟨⟨0, by (conv => enter [1,x]); simp; infer_instance; done⟩⟩
 
     instance : AddSemigroup (X ⊸ Y) := AddSemigroup.mk sorry
-    instance : AddMonoid (X ⊸ Y)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
-    instance : SubNegMonoid (X ⊸ Y) := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
+    instance : AddMonoid (X ⊸ Y)    := AddMonoid.mk sorry sorry nsmulRec sorry sorry
+    instance : SubNegMonoid (X ⊸ Y) := SubNegMonoid.mk sorry zsmulRec sorry sorry sorry
     instance : AddGroup (X ⊸ Y)     := AddGroup.mk sorry
     instance : AddCommGroup (X ⊸ Y) := AddCommGroup.mk sorry
 
@@ -56,7 +56,9 @@ namespace SciLean
   abbrev LinMap.mk {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [inst : IsLin f] : X ⊸ Y := ⟨f, inst⟩
 
   -- Right now, I prefer this notation
+  open Lean.TSyntax.Compat in
   macro "fun" xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
+  open Lean.TSyntax.Compat in
   macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term => Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
 
   --------------------------------------------------------------------

@@ -28,7 +28,7 @@ opaque differentialSpec (f : X → Y) (x dx : X) : Y :=
 class Differential (Fun : Type) (Diff : outParam Type) where
   differential : Fun → Diff
 
-@[defaultInstance]
+@[default_instance]
 noncomputable
 instance : Differential (X → Y) (X → X → Y) where
   differential := differentialSpec
@@ -48,7 +48,7 @@ macro "∂" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂ λ $x => 
 class Derivative (Fun : Type) where
   derivative : Nat → Fun → Fun
 
-@[defaultInstance]
+@[default_instance]
 noncomputable
 instance : Derivative (ℝ → X) where
   derivative := 

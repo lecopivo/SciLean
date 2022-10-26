@@ -3,7 +3,7 @@ import SciLean.Algebra
 namespace SciLean
 
 class IsInv {X Y} (f : X → Y) : Prop where
-  (is_inv : Function.bijective f)
+  (is_inv : Function.Bijective f)
 
 
 variable {α β γ : Type}

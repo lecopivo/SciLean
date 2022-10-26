@@ -186,10 +186,10 @@ namespace ShortOptDataArray
     dropElem_getElem := sorry_proof
     reserveElem_id := sorry_proof
 
-  @[defaultInstance]
+  @[default_instance]
   instance {ι} [Enumtype ι] : PowType (ShortOptDataArray α (numOf ι)) ι α := PowType.mk
 
-  @[defaultInstance]
+  @[default_instance]
   instance : LinearPowType (ShortOptDataArray α) α := LinearPowType.mk
 
 end ShortOptDataArray

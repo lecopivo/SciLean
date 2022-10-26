@@ -58,7 +58,7 @@ class GenericArray (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> 
   getElem_introElem : ∀ f i, (introElem f)[i] = f i
 
 attribute [simp] GenericArray.getElem_setElem_eq GenericArray.getElem_introElem
-attribute [defaultInstance] GenericArray.toGetElem GenericArray.toSetElem GenericArray.toIntroElem
+attribute [default_instance] GenericArray.toGetElem GenericArray.toSetElem GenericArray.toIntroElem
 
 class GenericLinearArray (Cont : Nat → Type u) (Elem : Type w |> outParam) 
   extends PushElem Cont Elem, 

@@ -49,8 +49,8 @@ section CommonVectorSpaces
 
   -- instance {A} [AddCommGroup A] : AddCommGroup (α → A) := AddCommGroup.mk sorry
   instance {A} [AddSemigroup A] : AddSemigroup (α → A) := AddSemigroup.mk sorry
-  instance {A} [AddMonoid A]    : AddMonoid (α → A)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
-  instance {A} [SubNegMonoid A] : SubNegMonoid (α → A) := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
+  instance {A} [AddMonoid A]    : AddMonoid (α → A)    := AddMonoid.mk sorry sorry nsmulRec sorry sorry
+  instance {A} [SubNegMonoid A] : SubNegMonoid (α → A) := SubNegMonoid.mk sorry zsmulRec sorry sorry sorry
   instance {A} [AddGroup A]     : AddGroup (α → A)     := AddGroup.mk sorry
   instance {A} [AddCommGroup A] : AddCommGroup (α → A) := AddCommGroup.mk sorry
 
@@ -63,8 +63,8 @@ section CommonVectorSpaces
   set_option synthInstance.maxHeartbeats 500
 
   instance {A B} [AddSemigroup A] [AddSemigroup B] : AddSemigroup (A × B) := AddSemigroup.mk sorry
-  instance {A B} [AddMonoid A] [AddMonoid B]       : AddMonoid (A × B)    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
-  instance {A B} [SubNegMonoid A] [SubNegMonoid B] : SubNegMonoid (A × B) := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
+  instance {A B} [AddMonoid A] [AddMonoid B]       : AddMonoid (A × B)    := AddMonoid.mk sorry sorry nsmulRec sorry sorry
+  instance {A B} [SubNegMonoid A] [SubNegMonoid B] : SubNegMonoid (A × B) := SubNegMonoid.mk sorry zsmulRec sorry sorry sorry
   instance {A B} [AddGroup A] [AddGroup B]         : AddGroup (A × B)     := AddGroup.mk sorry
   instance {A B} [AddCommGroup A] [AddCommGroup B] : AddCommGroup (A × B) := AddCommGroup.mk sorry
 
@@ -78,8 +78,8 @@ section CommonVectorSpaces
 
 
   instance : AddSemigroup Unit := AddSemigroup.mk sorry
-  instance : AddMonoid Unit    := AddMonoid.mk sorry sorry nsmul_rec sorry sorry
-  instance : SubNegMonoid Unit := SubNegMonoid.mk sorry gsmul_rec sorry sorry sorry
+  instance : AddMonoid Unit    := AddMonoid.mk sorry sorry nsmulRec sorry sorry
+  instance : SubNegMonoid Unit := SubNegMonoid.mk sorry zsmulRec sorry sorry sorry
   instance : AddGroup Unit     := AddGroup.mk sorry
   instance : AddCommGroup Unit := AddCommGroup.mk sorry
 

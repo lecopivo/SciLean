@@ -27,7 +27,7 @@ namespace SciLean
   instance : FinVec ℝ Unit := FinVec.mk
 
 
-  @[inferTCGoalsRL]
+  @[infer_tc_goals_rl]
   instance {X Y ι κ : Type} [Enumtype ι] [Enumtype κ] [Zero X] [Zero Y] 
     [Basis X ι ℝ] [Basis Y κ ℝ] : Basis (X×Y) (ι⊕κ) ℝ where
     basis idx := 
@@ -39,6 +39,6 @@ namespace SciLean
       | .inl i => Basis.proj i x
       | .inr j => Basis.proj j y
 
-  @[inferTCGoalsRL]
+  @[infer_tc_goals_rl]
   instance {X Y ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ]
     : FinVec (X×Y) (ι⊕κ) := ⟨⟩

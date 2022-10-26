@@ -7,9 +7,9 @@ variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
 variable [GenericArray Cont Idx Elem] [Enumtype Idx] 
 
 instance (priority := low) [AddSemigroup Elem]  : AddSemigroup Cont  := AddSemigroup.mk sorry_proof
-instance (priority := low) [AddMonoid Elem]     : AddMonoid Cont     := AddMonoid.mk sorry_proof sorry_proof nsmul_rec sorry_proof sorry_proof
+instance (priority := low) [AddMonoid Elem]     : AddMonoid Cont     := AddMonoid.mk sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
 instance (priority := low) [AddCommMonoid Elem] : AddCommMonoid Cont := AddCommMonoid.mk sorry_proof
-instance (priority := low) [SubNegMonoid Elem]  : SubNegMonoid Cont  := SubNegMonoid.mk sorry_proof gsmul_rec sorry_proof sorry_proof sorry_proof
+instance (priority := low) [SubNegMonoid Elem]  : SubNegMonoid Cont  := SubNegMonoid.mk sorry_proof zsmulRec sorry_proof sorry_proof sorry_proof
 instance (priority := low) [AddGroup Elem]      : AddGroup Cont      := AddGroup.mk sorry_proof
 instance (priority := low) [AddCommGroup Elem]  : AddCommGroup Cont  := AddCommGroup.mk sorry_proof
 

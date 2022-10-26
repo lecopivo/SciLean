@@ -24,7 +24,6 @@ by
 axiom AutoImpl.injectivity_axiom {α} (a b : α) : (AutoImpl a = AutoImpl b) → (a = b)
 
 -- Do we really need AutoImpl.injectivity_axiom?
-set_option pp.all true in
 @[simp] theorem AutoImpl.normalize_val {α : Type u} (a b : α) (h : (AutoImpl a = AutoImpl b)) 
   : AutoImpl.val (Eq.mpr h (AutoImpl.finish (a:=b))) = b := 
 by
@@ -32,6 +31,17 @@ by
   revert h; rw[h']
   simp[val,finish,Eq.mpr]
   done
+
+-- This is a new version of `AutoImpl.normalize_val`, some tactic uses `cast` instead of `Eq.mpr` now
+-- TODO: clean this up
+@[simp] theorem AutoImpl.normalize_val' {α : Type u} (a b : α) (h : (AutoImpl a = AutoImpl b)) 
+  : AutoImpl.val (cast h (AutoImpl.finish (a:=a))) = a := 
+by sorry
+  -- have h' : a = b := by apply AutoImpl.injectivity_axiom; apply h
+  -- revert h; rw[h']
+  -- simp[val,finish,Eq.mpr]
+  -- done
+
 
 example {α : Type} (a b : α) (A : (Σ' x, x = a)) (h : (Σ' x, x = a) = (Σ' x, x = b))
   : (a = b) ↔ (h ▸ A).1 = A.1 := 

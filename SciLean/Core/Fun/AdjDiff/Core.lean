@@ -19,7 +19,7 @@ class AdjointDifferential (Fun : Type) (Diff : outParam Type) where
 
 export AdjointDifferential (adjointDifferential)
 
-@[defaultInstance]
+@[default_instance]
 noncomputable
 instance : AdjointDifferential (X → Y) (X → Y → X) where
   adjointDifferential f x := (∂ f x)†
@@ -30,7 +30,7 @@ macro "∂†" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂† λ 
 class Gradient (Fun : Type) (Diff : outParam Type) where
   gradient : Fun → Diff
 
-@[defaultInstance]
+@[default_instance]
 noncomputable
 instance [One Y] : Gradient (X → Y) (X → X) where
   gradient f := λ x => ∂† f x 1

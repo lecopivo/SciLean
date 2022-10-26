@@ -3,7 +3,7 @@ open Lake DSL System
 
 package scilean 
 
-@[defaultTarget]
+@[default_target]
 lean_lib SciLean {
   roots := #[`SciLean]
 }

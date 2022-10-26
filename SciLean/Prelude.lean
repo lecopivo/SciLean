@@ -12,9 +12,6 @@ def hold {α} (a : α) := a
 
 abbrev typeOf {α} (_ : α) := α
 
-class Fact (P : Prop) : Prop where
-  proof : P
-
 instance : Fact (x=x) := ⟨by rfl⟩
 
 instance {α : Type u} (β : α → Type v) [Inhabited α] [∀ a, Inhabited (β a)] : Inhabited (Sigma β) := ⟨Sigma.mk default default⟩
@@ -35,7 +32,7 @@ macro:max "#" noWs t:term : term => `(⟨$t, by first | decide | simp | native_d
 -- TODO: Add compiler flag to diplay proof 
 axiom sorryProofAxiom {P : Prop} : P 
 macro "sorry_proof" : term => do  `(sorryProofAxiom)
-macro "sorry_proof" : tactic => `(apply sorry_proof)
+macro "sorry_proof" : tactic => `(tactic| apply sorry_proof)
 
 -- class OTimes (α : Type u) (β : Type v) (γ : outParam $ Type w) where
 --   otimes : α → β → γ

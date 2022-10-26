@@ -178,10 +178,10 @@ namespace ℝ
     nsmul_zero' := sorry
     nsmul_succ' n x := sorry
     sub_eq_add_neg a b := sorry
-    gsmul n x := (n.toReal) * x --------- !!!
-    gsmul_zero' := sorry
-    gsmul_succ' n x := sorry
-    gsmul_neg' n x := sorry
+    -- gsmul n x := (n.toReal) * x --------- !!!
+    -- gsmul_zero' := sorry
+    -- gsmul_succ' n x := sorry
+    -- gsmul_neg' n x := sorry
     natCast n := n.toReal
     natCast_zero := sorry
     natCast_succ := sorry
