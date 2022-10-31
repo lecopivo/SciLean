@@ -20,7 +20,7 @@ Id.run do
   x
 
 --- This requires some conditions on the function ... or just add the conclusion as an assumption
-def ode_solve_fixed_dt (stepper : ℝ → (X → X) → (X → X)) 
+theorem ode_solve_fixed_dt (stepper : ℝ → (X → X) → (X → X)) 
   : ode_solve = limit (λ n => ode_solve_fixed_dt_impl n stepper) := sorry
 
 --  ___ _

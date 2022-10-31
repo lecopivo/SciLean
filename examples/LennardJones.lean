@@ -3,7 +3,7 @@ import SciLean.Operators.ODE
 import SciLean.Solver 
 import SciLean.Tactic.LiftLimit
 import SciLean.Tactic.FinishImpl
-import SciLean.Data.PowType
+import SciLean.Data.DataArray
 import SciLean.Core.Extra
 import SciLean.Functions
 
@@ -23,7 +23,7 @@ def Coloumb (ε strength mass : ℝ) (x : ℝ^{3}) : ℝ := - strength * mass * 
 argument x [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, adjDiff
 
-def H (n : ℕ) (ε : ℝ) (C LJ : ℝ) (r m : Idx n → ℝ) (x p : (ℝ^{3})^{n}) : ℝ :=
+def H (n : ℕ) (ε : ℝ) (C LJ : ℝ) (r m : Fin n → ℝ) (x p : (ℝ^{3})^{n}) : ℝ :=
   (∑ i, (1/(2*m i)) * ∥p[i]∥²)
   +
   ∑ i j,   Coloumb ε C (m i * m j) (x[i] - x[j])

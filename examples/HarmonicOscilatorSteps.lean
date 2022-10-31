@@ -1,80 +1,54 @@
-import SciLean.Basic
+-- import SciLean.Core.Functions
 import SciLean.Mechanics
+import SciLean.Operators.ODE
+import SciLean.Solver.Solver 
+import SciLean.Tactic.LiftLimit
+import SciLean.Tactic.FinishImpl
 
-set_option synthInstance.maxHeartbeats 5000
 
 open SciLean
 
-abbrev V := ℝ × ℝ
-
-def H (x p : V) := ∥p∥² + ∥x∥²
+def H (m k : ℝ) (x p : ℝ) := ∥p∥² + ∥x∥²
 
 set_option trace.Meta.Tactic.simp.rewrite true in
-def solver (steps : Nat)
-  : Impl (ode_solve (HamiltonianSystem H)) :=
+approx solver (m k : ℝ) (steps : Nat)
+  := (ode_solve (HamiltonianSystem (H m k)))
 by
   -- Unfold Hamiltonian definition and compute gradients
-  simp[HamiltonianSystem, H]
-  
-  conv =>
-    pattern (gradient _)
-    enter [p]
-    simp[gradient]
-    conv =>
-      pattern (differential _)
-      enter [p,dp]
-      simp (config := { singlePass := true })
-      simp (config := { singlePass := true })
-      simp (config := { singlePass := true })
-      simp (config := { singlePass := true })
-      simp (config := { singlePass := true })
-    .
-    simp (config := { singlePass := true })
-    simp (config := { singlePass := true })
-    simp (config := { singlePass := true })
-
-  conv =>
-    pattern (gradient _)
-    enter [x]
-    simp[gradient]
-    conv =>
-      pattern (differential _)
-      enter [x,dx]
-      simp (config := { singlePass := true })
-      simp (config := { singlePass := true })
-      simp (config := { singlePass := true })
-      simp (config := { singlePass := true })
-    .
-    simp (config := { singlePass := true })
-    simp (config := { singlePass := true })
-    simp (config := { singlePass := true })
-
-  -- impl_check (steps>0) "Number of steps is zero"
+  unfold HamiltonianSystem
+  unfold H
+  simp (config := {singlePass := true}) [hold] 
+  simp (config := {singlePass := true}) [hold] 
+  simp (config := {singlePass := true}) [hold] 
+  simp (config := {singlePass := true}) [hold] 
+  simp (config := {singlePass := true}) [hold] 
+  simp (config := {singlePass := true}) [hold]
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
-  lift_limit steps "Number of ODE solver steps."; admit; simp
-  
-  finish_impl
+  approx_limit steps; simp; intro steps';
+
 
 def main : IO Unit := do
 
   let substeps := 1
+  let m := 1.0
+  let k := 10.0
 
-  let evolve ← (solver substeps).assemble
+  let evolve := (solver m k substeps).val
 
-  let t := 1.0
-  let x₀ := (1.0, 0.5)
-  let p₀ := (0.0, 0.0)
+  let Δt := 0.1
+  let x₀ := 1.0
+  let p₀ := 0.0
   let mut (x,p) := (x₀, p₀)
 
-  for i in [0:40] do
+  for _ in [0:40] do
   
-    (x, p) := evolve 0.1 (x, p)
+    (x, p) := evolve Δt (x, p)
 
     -- print
     for (j : Nat) in [0:20] do
-      if j < 10*(x.1+1) then
+      if j < 10*(x+1) then
         IO.print "o"
     IO.println ""
 

@@ -1,9 +1,9 @@
 import SciLean.Mechanics
 import SciLean.Operators.ODE
-import SciLean.Solver 
-import SciLean.Tactic.LiftLimit
-import SciLean.Tactic.FinishImpl
-import SciLean.Data.PowType
+import SciLean.Solver.Solver
+-- import SciLean.Tactic.LiftLimit
+-- import SciLean.Tactic.FinishImpl
+import SciLean.Data.DataArray
 import SciLean.Core.Extra
 
 set_option synthInstance.maxSize 2048
@@ -17,15 +17,14 @@ variable {n : Nat} [Nonempty (Fin n)]
 -- set_option trace.Meta.synthInstance true in
 def H (m k : ℝ) (x p : ℝ^{n}) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)
-  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i , ∥x[i] - x[i - (1 : Fin n)]∥²)
+  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i , ∥x[i] - x[i - 1]∥²)
 argument x
   isSmooth, diff, hasAdjDiff, adjDiff
 argument p
   isSmooth, diff, hasAdjDiff, adjDiff
- 
--- set_option trace.Meta.Tactic.simp.rewrite true in
--- set_option trace.Meta.Tactic.simp.discharge true in
-def solver (m k : ℝ) (steps : Nat) : Impl (ode_solve (HamiltonianSystem (H (n:=n) m k))) :=
+
+
+approx solver (m k : ℝ) (steps : Nat) := (ode_solve (HamiltonianSystem (H (n:=n) m k)))
 by
   -- Unfold Hamiltonian definition and compute gradients
   unfold HamiltonianSystem
@@ -33,9 +32,8 @@ by
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
-  lift_limit steps "Number of ODE solver steps."; admit; simp
-    
-  finish_impl
+  approx_limit steps; simp; intro steps'
+
 
 def main : IO Unit := do
 
@@ -46,14 +44,14 @@ def main : IO Unit := do
   let N : Nat := 100
   have h : Nonempty (Fin N) := sorry
 
-  let evolve ← (solver (n:=N) m k substeps).assemble
+  let evolve := (solver (n:=N) m k substeps).val
 
   let t := 1.0
   let x₀ : (ℝ^{N}) := .intro λ (i : Fin N) => (Math.sin ((i.1 : ℝ)/10))
   let p₀ : (ℝ^{N}) := .intro λ i => (0 : ℝ)
   let mut (x,p) := (x₀, p₀)
 
-  for i in [0:300] do
+  for i in [0:20] do
   
     (x, p) := evolve 0.1 (x, p)
 
@@ -70,4 +68,4 @@ def main : IO Unit := do
       IO.println ""
 
 
---- δ ∂
+-- #eval main
