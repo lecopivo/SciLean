@@ -8,39 +8,44 @@ import Lean.Elab
 -- namespace Lean.Elab.Tactic
 open Lean Meta Simp
 
-namespace SciLean.DebugSimp
+namespace SciLean.Meta.DebugSimp
 
 def pre (e : Expr) : SimpM Step := do
   trace[Meta.Tactic.simp] "Running pre on {← ppExpr e}"
-  pure (Step.visit (Result.mk e none))
+  pure (Step.visit (Result.mk e none 0))
 
 def post (e : Expr) : SimpM Step := do
   trace[Meta.Tactic.simp] "Running post on {← ppExpr e}"
-  pure (Step.visit (Result.mk e none))
+  pure (Step.visit (Result.mk e none 0))
 
 
 open Lean.Parser.Tactic in
 syntax (name := debug_simp) "debug_simp " (config)? (discharger)? (&"only ")? ("[" (simpStar <|> simpErase <|> simpLemma),* "]")? (location)? : tactic
 
+
 open Lean.Elab.Tactic in
 @[tactic debug_simp] def evalDebugSimp : Tactic := fun stx => do
-  let r ← withMainContext <| mkSimpContext stx (eraseLocal := false)
-  r.dischargeWrapper.with fun discharge? =>
-    SciLean.Tactic.CustomSimp.simpLocation r.ctx discharge? r.fvarIdToLemmaId (expandOptLocation stx[5]) #[pre] #[post]
+  let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false)
+  let usedSimps ← dischargeWrapper.with fun discharge? =>
+    SciLean.Meta.CustomSimp.simpLocation ctx discharge? (expandOptLocation stx[5]) #[pre] #[post]
+  if tactic.simp.trace.get (← getOptions) then
+    dbg_trace "warning: Runnig custom simp with tracing, not sure if it is working properly!"
+    traceSimpCall stx usedSimps
 
--- constant foo : Nat → Nat
--- class Foo (n : Nat)
 
--- theorem foo_zero (n) [Foo n] : foo n = 0 := sorry
+opaque foo : Nat → Nat
+class Foo (n : Nat)
 
--- set_option trace.Meta.Tactic.simp true in
--- set_option trace.Meta.Tactic.simp.unify true in
--- set_option trace.Meta.Tactic.simp.discharge true in
--- example (op : Nat → Nat → Nat) (a b c : Nat) :
---   op (foo a) (foo $ op (foo (foo a)) (foo $ op b c)) = 0 :=
--- by
---   debug_simp [↓foo_zero]
---   admit
+theorem foo_zero (n) [Foo n] : foo n = 0 := sorry
+
+set_option trace.Meta.Tactic.simp true in
+set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.discharge true in
+example (op : Nat → Nat → Nat) (a b c : Nat) :
+  op (foo a) (foo $ op (foo (foo a)) (foo $ op b c)) = 0 := 
+by
+  debug_simp [↓foo_zero]
+  admit
 
 
 -- def bar (f : Nat → Nat) := λ a b : Nat => f b
