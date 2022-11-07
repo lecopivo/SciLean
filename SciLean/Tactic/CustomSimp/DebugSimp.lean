@@ -32,19 +32,23 @@ open Lean.Elab.Tactic in
     dbg_trace "warning: Runnig custom simp with tracing, not sure if it is working properly!"
     traceSimpCall stx usedSimps
 
-
 opaque foo : Nat → Nat
 class Foo (n : Nat)
 
-theorem foo_zero (n) [Foo n] : foo n = 0 := sorry
+-- @[simp_guard n 0]
+-- theorem foo_zero (n) [Foo n] : foo n = 0 := sorry
+
+@[simp_guard f foo]
+theorem foo_fun_zero {α : Type} [Foo n] (f : α → Nat) (a : α) : foo (f a) = 0 := sorry
 
 set_option trace.Meta.Tactic.simp true in
 set_option trace.Meta.Tactic.simp.unify true in
 set_option trace.Meta.Tactic.simp.discharge true in
 example (op : Nat → Nat → Nat) (a b c : Nat) :
-  op (foo a) (foo $ op (foo (foo a)) (foo $ op b c)) = 0 := 
+  op (foo (foo a)) (foo $ op (foo (foo 0)) (foo $ op b c)) = 0 := 
 by
-  debug_simp [↓foo_zero]
+  -- debug_simp [↓foo_zero]
+  debug_simp [↓foo_fun_zero]
   admit
 
 

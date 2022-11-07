@@ -18,10 +18,10 @@ namespace SciLean.Meta.CustomSimp
 
 open Lean Meta Simp
 
-@[simp, simp_guard f (λ x => x)]
-theorem foo (a : Nat) (b : Int) (f : Nat → Nat) : 0 = 0 := by rfl
+-- @[simp, simp_guard f (λ x => x)]
+-- theorem foo (a : Nat) (b : Int) (f : Nat → Nat) : 0 = 0 := by rfl
 
-#eval show Lean.Elab.Term.TermElabM Bool from do pure (hasCustomSimpGuard (← getEnv) ``foo)
+-- #eval show Lean.Elab.Term.TermElabM Bool from do pure (hasCustomSimpGuard (← getEnv) ``foo)
 
 def mkEqTrans (r₁ r₂ : Result) : MetaM Result := do
   match r₁.proof? with
@@ -33,15 +33,14 @@ def mkEqTrans (r₁ r₂ : Result) : MetaM Result := do
 def synthesizeArgs (thmId : Origin) (xs : Array Expr) (bis : Array BinderInfo) (discharge? : Expr → SimpM (Option Expr)) : SimpM Bool := do
   -- simp guard
   match thmId with
-  | .decl thmName => do 
-    let info ← getConstInfo thmName
-    let type := info.type
-    trace[Meta.Tactic.simp.discharge] s!"Synthesizing Arguments for: {thmId.key}"
-    trace[Meta.Tactic.simp.discharge] s!"  arguments: {(← xs.mapM (λ x => instantiateMVars x))}"
-    let args ← forallTelescope type λ args _ => do
-      for arg in args do
-        let decl ← getFVarLocalDecl arg
-        trace[Meta.Tactic.simp.discharge] s!"  argument {decl.userName} has type {decl.type}"
+  | .decl thmName => do
+    match simpGuardAttr.getParam? (← getEnv) thmName with
+    | some (nth, valFun) => do
+        -- apply local context for `nth` argument
+        let val ← mkAppOptM' valFun (xs.map some)[0:nth]
+        if (← isDefEq (← instantiateMVars xs[nth]!) val) then
+          return false -- simp guard applies to this case, thus return false
+    | none => pure ()
   | _ => pure ()
 
   for x in xs, bi in bis do
