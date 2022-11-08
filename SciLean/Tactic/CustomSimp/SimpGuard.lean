@@ -32,7 +32,7 @@ initialize simpGuardAttr : ParametricAttribute (Nat × Expr) ←
         let valFun ← forallBoundedTelescope info.type nth λ args _ => do
           let value ← elabTerm val none
           if value.hasMVar then
-            throwError "Simp guard value `{value}` contains metavariable! Currently, this is not supported!"
+            throwError "Simp guard value `{value}` contains metavariable! This is not supported currently!"
           mkLambdaFVars args value
 
         pure (nth, valFun)
@@ -44,4 +44,3 @@ def hasCustomSimpGuard (env : Environment) (n : Name) : Bool :=
   match simpGuardAttr.getParam? env n with
   | some _ => true
   | none => false
-

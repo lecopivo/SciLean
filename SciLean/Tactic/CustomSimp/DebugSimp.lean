@@ -1,5 +1,4 @@
 import SciLean.Tactic.CustomSimp.Main
-import SciLean.Core
 
 import Lean.Meta
 import Lean.Parser
