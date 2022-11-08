@@ -37,7 +37,7 @@ class Foo (n : Nat)
 -- @[simp_guard n 0]
 -- theorem foo_zero (n) [Foo n] : foo n = 0 := sorry
 
-@[simp_guard f foo]
+@[simp_guard f foo, a (0 : Nat)]
 theorem foo_fun_zero {α : Type} [Foo n] (f : α → Nat) (a : α) : foo (f a) = 0 := sorry
 
 set_option trace.Meta.Tactic.simp true in
@@ -49,7 +49,6 @@ by
   -- debug_simp [↓foo_zero]
   debug_simp [↓foo_fun_zero]
   admit
-
 
 -- def bar (f : Nat → Nat) := λ a b : Nat => f b
 

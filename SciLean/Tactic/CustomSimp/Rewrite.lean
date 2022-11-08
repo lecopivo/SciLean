@@ -35,11 +35,24 @@ def synthesizeArgs (thmId : Origin) (xs : Array Expr) (bis : Array BinderInfo) (
   match thmId with
   | .decl thmName => do
     match simpGuardAttr.getParam? (← getEnv) thmName with
-    | some (nth, valFun) => do
-        -- apply local context for `nth` argument
-        let val ← mkAppOptM' valFun (xs.map some)[0:nth]
-        if (← isDefEq (← instantiateMVars xs[nth]!) val) then
-          return false -- simp guard applies to this case, thus return false
+    | some guards => do
+        let doApplyGuard ← guards.allM λ (nth, valFun, mvarNum) => do
+
+          -- TODO: figure out how to decide if we should call mkFreshTypeMVar or mkFreshExprMVar 
+          let mvars ← Array.mkArray mvarNum () |>.mapM (λ _ => do pure <| some <| ← mkFreshTypeMVar)
+
+          -- apply local context for `nth` argument and apply fresh mvars if necessary
+          let val ← mkAppOptM' valFun ((xs.map some)[0:nth].toArray.append mvars)
+          if (← isDefEq xs[nth]! val) then
+            pure true
+          else 
+            pure false
+
+        if doApplyGuard then
+            -- TODO: get argument name 
+            trace[Meta.Tactic.simp.discharge] "{← ppOrigin thmId}, not applied because of simp guard"
+            return false
+
     | none => pure ()
   | _ => pure ()
 
