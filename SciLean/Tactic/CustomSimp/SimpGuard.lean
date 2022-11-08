@@ -10,7 +10,19 @@ open Lean Meta Elab Elab.Term
 
 /-- Prevent applying the theorem if the specified argument is equation to the specified value. 
 
-WARNING: It only works with custom simplifiers! Normal simplifier ignores this.
+Warning: It only works with custom simplifiers! Normal simplifier ignores this.
+
+
+Example:
+---
+Adding the following simp guard to the chain rule prevents appying it if `g` is an identity function.
+
+```
+  @[simp_guard g (λ x => x)]
+  theorem chain_rule {α β γ : Type}
+    (f : β → γ) (g : α → β)
+    : ∂ (λ x => f (g x)) = λ x dx => ∂ f (g x) (∂ g x dx) := ...
+```
 -/
 syntax (name := simp_guard) "simp_guard" (ident term),+ : attr
 
