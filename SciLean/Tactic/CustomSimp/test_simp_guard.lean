@@ -25,7 +25,5 @@ example
   : D (λ x => f (g x) d) = λ x dx => D (λ y => f y d) (g x) (D g x dx) :=
 by
   -- simp [D_comp_parm] -- normal `simp` fails with timeout
-  conv =>
-    lhs
-    scilean_simp [D_comp_parm] -- our `custom_simp` with a simp guard solves this goal
+  scilean_simp [D_comp_parm]
   done

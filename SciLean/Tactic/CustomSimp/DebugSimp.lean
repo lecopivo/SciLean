@@ -49,14 +49,3 @@ by
   -- debug_simp [↓foo_zero]
   debug_simp [↓foo_fun_zero]
   admit
-
--- def bar (f : Nat → Nat) := λ a b : Nat => f b
-
--- theorem bar_simp (f : Nat → Nat) (a b : Nat) : bar f a b = f b := by simp[bar]
-
--- -- -- works
--- -- example (f : Nat → Nat) : bar f a (bar f b c) = f (f c) := by debug_simp (config := {singlePass := true}) only [↓bar_simp]
-
--- -- does not work
--- set_option trace.Meta.Tactic.simp true in
--- example : bar (λ x => x) a (bar (λ x => x) b c) = c := by debug_simp (config := {singlePass := true}) only [↓bar_simp]

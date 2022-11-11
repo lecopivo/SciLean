@@ -10,9 +10,9 @@ open Lean Meta.Simp
 
 namespace SciLean
 
-def myPre (e : Expr) : SimpM Step := 
-  dbg_trace s!"Running pre on {e}"
-  pure (Step.visit (Result.mk e none))
+-- def myPre (e : Expr) : SimpM Step := 
+--   dbg_trace s!"Running pre on {e}"
+--   pure (Step.visit (Result.mk e none))
 
 theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y → Z) [IsSmooth g] [IsSmooth f] [∀ x, IsSmooth (f x)]
   : (∂ λ x => 
@@ -23,7 +23,7 @@ theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y →
       let y  := g x
       let dy := ∂ g x dx
       ∂ f x dx y + ∂ (f x) y dy
-:= by simp done
+:= by simp; done
 
 theorem diffOfLetSimple {X Y α} [Vec X] [Vec Y] (a : α) (f : X → α → Y) [IsSmooth (λ x => f x a)]
   : (∂ λ x => 
@@ -33,7 +33,7 @@ theorem diffOfLetSimple {X Y α} [Vec X] [Vec Y] (a : α) (f : X → α → Y) [
     let y := a
     λ x dx =>
       ∂ (λ x => f x y) x dx
-:= by simp done
+:= by simp; done
 
 #check @Zero.zero
 
@@ -44,81 +44,156 @@ abbrev vecZero (X : Type) [Vec X] : X := 0
 def sorryAx' (α : Sort _) : α := sorryAx α false
 -- Differentiate expression w.r.t to give free variables `xs = [(x₀,dx₀), (x₁, dx₁), ...]`
 -- This differentiates only through lambdas and lets
+
 open Lean Meta in
-partial def diffExpr (lctx : LocalContext) (e : Expr) (xs : Array (Expr × Expr)) : MetaM (Option Expr) := do
-Meta.withLCtx lctx (← getLocalInstances) do 
-  match e with
-  | Expr.letE xname xtype xval body _ => 
-    let dxname := xname.appendBefore "d"
-    let dxval? ← diffExpr lctx (xval.lowerLooseBVars 1 1) xs
-    match dxval? with
-    | some dxval =>
-      withLetDecl xname xtype xval λ x => do
-      withLetDecl dxname xtype dxval λ dx => do
-        let dbody? ← diffExpr (← getLCtx) ((body.instantiate1 x).lowerLooseBVars 1 1) (xs.push (x,dx))
-        match dbody? with
-          | some dbody => mkLetFVars #[x,dx] dbody
-          | none => pure none
-    | none => 
-      withLetDecl xname xtype xval λ x => do
-        let dbody? ← diffExpr (← getLCtx) ((body.instantiate1 x).lowerLooseBVars 1 1) xs
-        match dbody? with
-          | some dbody => mkLetFVars #[x] dbody
-          | none => pure none
-  -- TODO:
-  -- | Expr.lam .. => 
-  | _ => 
-    let mut dfs : Array Expr := #[]
+def diffLet (e : Expr) : MetaM (Option (Expr × Expr)) :=
+  match e.app4? ``differential with
+  | none => pure none
+  | some (_,_,_,e') =>
+    match e' with
+    | Expr.lam .. => lambdaLetTelescope e' λ xs b => do
+      let x := xs[0]!
+      let xDecl ← getFVarLocalDecl x
+      -- find first let that depends on `x`
+      let yIdx? ← xs.findIdxM? 
+        (λ xi => do 
+          let xiDecl ← getFVarLocalDecl xi
+          pure <| xiDecl.isLet ∧ xiDecl.value.containsFVar xDecl.fvarId)
+      match yIdx? with
+      | none => pure none
+      | some yIdx => 
+        let y := xs[yIdx]!
+        let yDecl ← getFVarLocalDecl y
+        let yFun  ← mkLambdaFVars #[x] yDecl.value
 
-    -- TODO: Add this check!!! but we might have to add zero if we differentiate zero
-    -- if (e.containsFVar x.fvarId!) then  
+        -- withLocalDecl (xDecl.userName.appendAfter "'") xDecl.binderInfo xDecl.type λ x' =>
+        withLocalDecl (xDecl.userName |>.appendBefore "d") xDecl.binderInfo xDecl.type λ dx => do
 
-    for i in [0:xs.size] do
+        -- replace `x` with `x'` in the type of `y`
+        -- This should not really happen as differentiating dependently typed functions is currently not possible
+        -- let yType ← mkAppM' (← mkLambdaFVars #[x] yDecl.type) #[x']
 
-      let x  := xs[i].1
-      let dx := xs[i].2
-      if (e.containsFVar x.fvarId!) then 
-        let xname := ((← getLCtx).getFVar! x).userName
-        let xtype ← inferType x
-        let f  := mkLambda (xname.appendAfter "'") default xtype (e.abstract #[x])
-        let df ← mkAppM `SciLean.differential #[f.eta, x, dx]
-        dfs := dfs.push df
-    match dfs.size with
-    | 0 => pure none
-    | 1 => pure dfs[0]
-    | _ => do pure $ some (← (dfs[1:]).foldlM (λ dfi df => mkAppM `HAdd.hAdd #[dfi,df]) dfs[0])
-  
+        -- withLetDecl (yDecl.userName.appendAfter "'") yType (← mkAppM' yFun #[x']) λ y' => do
+        -- let b := b.replaceFVar y y'
+        -- let xs := xs.map λ xi => xi.replaceFVar y y'
+        dbg_trace "hihi {← ppExpr yFun}"
+        let dyVal ← mkAppM' (← mkAppM ``differential #[yFun]) #[x, dx]
+        dbg_trace "hoho {← ppExpr dyVal}"
+        withLetDecl (yDecl.userName |>.appendAfter "'" |>.appendBefore "d") yDecl.type dyVal λ dy => do
+
+
+        let bXFun ← mkLambdaFVars (#[x].append xs[yIdx+1:]) b
+        let bYFun := Expr.lam yDecl.userName (← inferType y) (b.abstract #[y]) default
+
+        dbg_trace "hehe {← ppExpr bXFun}"
+        dbg_trace "huhu {← ppExpr bYFun}"
+        let fdx ← mkAppM' (← mkAppM ``differential #[bXFun]) #[x, dx]
+        let fdy ← mkAppM' (← mkAppM ``differential #[bYFun]) #[y, dy]
+
+        dbg_trace "bla {← ppExpr fdx}"
+        dbg_trace "blo {← ppExpr fdy}"
+
+
+        let vars := #[x,dx] 
+          |>.append xs[1:yIdx]
+          |>.append #[y, dy]
+          |>.append xs[yIdx+1:]
+
+        dbg_trace "vars: {vars}"
+        dbg_trace "vars: {← vars.mapM λ v => ppExpr v}"
+
+        let b' ← mkAppM ``HAdd.hAdd #[fdx, fdy]
+
+        dbg_trace "b': {b'}"
+        dbg_trace "b': {← ppExpr b'}"
+
+        let e'' ← mkLambdaFVars vars b'
+
+        dbg_trace "e'': {e''}"
+        dbg_trace "e'': {← ppExpr e''}"
+
+        
+        let eqType ← mkAppM ``Eq #[e, e'']
+        -- TODO: Currently we sorry equality proof
+        let eqProof ← mkAppM ``sorryAx' #[eqType]
+
+        pure <| some (e'', eqProof)
+    | _ => pure none
+
+
+open Lean Meta in
+/-- Differentiate `e` with respect to free variables `dvars = [(x₁, dx₁), ..., (xₙ, dxₙ)]` 
+
+Returns `none` if `e` does not depend on any of the `x₁, ..., xₙ`. -/
+def diffFVars (dvars : Array (Expr × Expr)) (e : Expr) : MetaM (Option Expr) := do 
+
+  let fstIdx? := dvars.findIdx? (λ (xi, _) => e.containsFVar xi.fvarId!)
+
+  match fstIdx? with
+  | none => pure none
+  | some fstIdx => do
+    let D := λ (e' : Expr) ((x, dx) : Expr × Expr) => do
+      let xDecl ← getFVarLocalDecl x
+      let f := Expr.lam xDecl.userName xDecl.type (e'.abstract #[x]) default
+      mkAppM' (← mkAppM ``differential #[f]) #[x, dx]
+    let e' ← dvars[fstIdx+1:].foldlM (init := ← D e dvars[fstIdx]!) 
+      λ e' (xi, dxi) => do
+        mkAppM ``HAdd.hAdd #[e', ← D e (xi, dxi)]
+
+    pure (some e')
+
+
+
+open Lean Meta in
+def diffLet' (e : Expr) : MetaM (Option (Expr × Expr)) :=
+  match e.app4? ``differential with
+  | none => pure none
+  | some (_,_,_,e') =>
+    match e' with
+    | Expr.lam .. => lambdaLetTelescope e' λ xs b => do
+      let x := xs[0]!
+      let xDecl ← getFVarLocalDecl x
+
+      if xDecl.isLet then 
+        return none
+
+      withLocalDecl (xDecl.userName |>.appendBefore "d") xDecl.binderInfo xDecl.type λ dx => do
+
+      -- Comput differentials of all let bindings
+      let (lctx, vars, dvars) ← xs[1:].foldlM (init := (← getLCtx, #[x,dx], #[(x,dx)])) 
+        (λ (lctx, vars, dvars) xi => do
+          withLCtx lctx (← getLocalInstances) do 
+            let xiDecl ← getFVarLocalDecl xi
+            if ¬xiDecl.isLet then
+              pure (lctx, vars.push xi, dvars)
+            else
+              match ← diffFVars dvars xiDecl.value with
+              | none => pure (lctx, vars.push xi, dvars)
+              | some dxiVal => do
+                withLetDecl (xiDecl.userName |>.appendBefore "d") xiDecl.type dxiVal λ dxi => do
+                  pure (← getLCtx, vars.append #[xi, dxi], dvars.push (xi, dxi))) 
+      
+      -- no let binding worth differentiating through found
+      if dvars.size = 1 then
+        return none
+
+      withLCtx lctx (← getLocalInstances) do
+        match ← diffFVars dvars b with
+        | none => pure none
+        | some db => do
+          let e'' ← mkLambdaFVars vars db
+
+          let eqType ← mkAppM ``Eq #[e, e'']
+          -- TODO: Currently we sorry equality proof
+          let eqProof ← mkAppM ``sorryAx' #[eqType]
+
+          pure <| some (e'', eqProof)
+    | _ => pure none
+
+
 
 open Lean Meta in
 partial def letDiff (e : Expr) : SimpM Step := do
-  match e with  
-  | Expr.app (Expr.app (Expr.app (Expr.app (Expr.app (Expr.const `SciLean.differential _ _) _ _) _ _) _ _) _ _) e' _ => 
-      dbg_trace s!"Applying differential!"             
-      match e' with
-      | Expr.lam .. => 
-        lambdaTelescope e' λ xs lb => do
-
-          let zero ← mkAppOptM `SciLean.vecZero #[← inferType lb, none]
-
-          let x := xs[0]
-          let xname := ((← getLCtx).getFVar! x).userName
-          let xtype ← inferType x
-          let dxname := xname.appendBefore "d"
-          let df ← 
-            withLocalDecl dxname default xtype λ dx => do
-              let df ← diffExpr (← getLCtx) lb #[(x,dx)]
-              let df := df.getD zero
-              dbg_trace s!"labda body to differentiate:\n{← ppExpr lb}\n"
-              dbg_trace s!"differentiated:\n{← ppExpr df}\n\n"
-              mkLambdaFVars (#[x,dx].append xs[1:]) df
-
-          dbg_trace s!"Final fun:\n{← ppExpr df}\n"
-          let eq ← mkAppM `Eq #[e,df]
-          dbg_trace s!"eq {← ppExpr eq}"
-          let proof ← mkAppM `SciLean.sorryAx' #[eq]
-          dbg_trace s!"proof {← ppExpr proof}"
-          dbg_trace s!"proof Type {← ppExpr (← inferType proof)}"
-
-          pure (Step.visit (Result.mk df proof))
-      | _ => pure (Step.visit (Result.mk e none))
-  | _ => pure (Step.visit (Result.mk e none))
+  match ← diffLet' e with
+  | some (e', proof) => pure (Step.visit (Result.mk e' proof 0))
+  | none => pure (Step.visit { expr := e })
