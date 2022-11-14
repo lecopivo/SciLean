@@ -5,8 +5,6 @@ open Lean Elab Command
 namespace SciLean.Meta
 
 
-#check sorryAx
-
 private def mkAlgebraInstance (algName : Name) (declName : Name) : TermElabM Unit := do
   let env ← getEnv
   match getStructureInfo? env declName with
@@ -35,10 +33,10 @@ private def mkAlgebraInstance (algName : Name) (declName : Name) : TermElabM Uni
 
 -- The (_ : Unit) argument is there to only force that all the classes are infered when we apply `mkAppM`
 def AddSemigroup.sorryMk (X : Type u) [Add X] (_ : Unit): AddSemigroup X := AddSemigroup.mk sorry
-def AddMonoid.sorryMk (X : Type u) [AddSemigroup X] [Zero X] (_ : Unit) : AddMonoid X := AddMonoid.mk sorry_proof sorry_proof nsmul_rec sorry_proof sorry_proof
+def AddMonoid.sorryMk (X : Type u) [AddSemigroup X] [Zero X] (_ : Unit) : AddMonoid X := AddMonoid.mk sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
 
 def AddCommMonoid.sorryMk (X : Type u) [AddMonoid X] (_ : Unit) : AddCommMonoid X := AddCommMonoid.mk sorry_proof
-def SubNegMonoid.sorryMk (X : Type u) [AddMonoid X] [Neg X] [Sub X] (_ : Unit) : SubNegMonoid X  := SubNegMonoid.mk sorry_proof gsmul_rec sorry_proof sorry_proof sorry_proof
+def SubNegMonoid.sorryMk (X : Type u) [AddMonoid X] [Neg X] [Sub X] (_ : Unit) : SubNegMonoid X  := SubNegMonoid.mk sorry_proof zsmulRec sorry_proof sorry_proof sorry_proof
 def AddGroup.sorryMk (X : Type u) [SubNegMonoid X] (_ : Unit) : AddGroup X      := AddGroup.mk sorry_proof
 def AddCommGroup.sorryMk (X : Type u) [AddGroup X] (_ : Unit) : AddCommGroup X  := AddCommGroup.mk sorry_proof
 
