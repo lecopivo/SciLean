@@ -51,7 +51,7 @@ def main : IO Unit := do
   let p₀ : (ℝ^{N}) := .intro λ i => (0 : ℝ)
   let mut (x,p) := (x₀, p₀)
 
-  for i in [0:20] do
+  for i in [0:1000] do
   
     (x, p) := evolve 0.1 (x, p)
 
