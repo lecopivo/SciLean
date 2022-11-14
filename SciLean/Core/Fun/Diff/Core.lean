@@ -131,7 +131,12 @@ theorem diff_of_swap (f : α → X → Y) [∀ i, IsSmooth (f i)]
 theorem diff_of_comp
   (f : Y → Z) [IsSmooth f] 
   (g : X → Y) [IsSmooth g] 
-  : ∂ (λ x => f (g x)) = λ x dx => ∂ f (g x) (∂ g x dx) := sorry
+  : ∂ (λ x => f (g x)) 
+    = 
+    λ x dx => 
+      let y := g x
+      let dy := ∂ g x dx
+      ∂ f y dy := sorry
 
 @[simp ↓ low-2, simp_diff low-2]
 theorem diff_of_diag
@@ -140,8 +145,13 @@ theorem diff_of_diag
   (g₂ : X → Y₂) [IsSmooth g₂]
   : ∂ (λ x => f (g₁ x) (g₂ x)) 
     = 
-    λ x dx => ∂ f (g₁ x) (∂ g₁ x dx) (g₂ x) + 
-              ∂ (f (g₁ x)) (g₂ x) (∂ g₂ x dx) := sorry
+    λ x dx => 
+      let y₁ := g₁ x
+      let dy₁ := ∂ g₁ x dx
+      let y₂ := g₂ x
+      let dy₂ := ∂ g₂ x dx
+      ∂ f y₁ dy₁ y₂ + 
+      ∂ (f y₁) y₂ dy₂ := sorry
 
 @[simp ↓ low, simp_diff low]
 theorem diff_of_parm

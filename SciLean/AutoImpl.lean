@@ -58,7 +58,7 @@ by
 
 open Lean.Parser.Tactic.Conv
 
-syntax term "rewrite_by" convSeq : term
+syntax term:max "rewrite_by" convSeq : term
 
 macro_rules
   | `($x rewrite_by $rw:convSeq) =>

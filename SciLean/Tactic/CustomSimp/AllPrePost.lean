@@ -7,11 +7,11 @@ namespace SciLean.Tactic.CustomSimp
 open Lean Meta.Simp
 
 partial def preRewriteAll (e : Expr) : SimpM Step := do
-  trace[Meta.Tactic.simp] s!"Pre simp on:\n{← Meta.ppExpr e}"
+  -- trace[Meta.Tactic.simp] s!"Pre simp on:\n{← Meta.ppExpr e}"
   let e := e.headBeta
   for thms in (← read).simpTheorems do
     if let some r ← rewrite? e thms.pre thms.erased DefaultMethods.discharge? (tag := "pre") (rflOnly := false) then
-      trace[Meta.Tactic.simp] s!"Simplified to: {← Meta.ppExpr r.expr}"
+      -- trace[Meta.Tactic.simp] s!"Simplified to: {← Meta.ppExpr r.expr}"
       return ← andThen (Step.visit r) (λ e => preRewriteAll e)
   return Step.visit { expr := e }
 

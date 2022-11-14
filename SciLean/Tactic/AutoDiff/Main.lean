@@ -23,9 +23,8 @@ open Lean.Elab.Tactic in
 @[tactic autodiff_core] def autoDiffCore : Tactic := fun stx => do
   let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false)
   let usedSimps ← dischargeWrapper.with fun discharge? =>
-    SciLean.Meta.CustomSimp.simpLocation ctx discharge? (expandOptLocation stx[5]) #[letDiff] #[]
+    SciLean.Meta.CustomSimp.simpLocation ctx discharge? (expandOptLocation stx[5]) #[letDiff, preRewriteAll] #[]
   if tactic.simp.trace.get (← getOptions) then
-    dbg_trace "warning: Runnig custom simp with tracing, not sure if it is working properly!"
     traceSimpCall stx usedSimps
 
 
@@ -41,27 +40,35 @@ open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
   let (result, _) ← dischargeWrapper.with fun d? => SciLean.Meta.CustomSimp.simp lhs ctx (discharge? := d?) #[letDiff, preRewriteAll] #[]
   applySimpResult result
 
-set_option trace.Meta.Tactic.simp true in
-set_option trace.Meta.Tactic.simp.rewrite true in
-set_option trace.Meta.Tactic.simp.unify false in
-#check (∂ λ (x : ℝ) => let y := x*x; let z := x + y*x*x; x + y + z) rewrite_by (
-  autodiff_core (config := {singlePass := true,  zeta := false});
-  simp (config := {zeta := false}) only [];
-  trace_state;)
 
+macro "autodiff" : conv => `(conv| (autodiff_core (config := {singlePass := true,  zeta := false}); try simp (config := {zeta := false}) only [];))
+macro "autodiff" : tactic => `(tactic| (autodiff_core (config := {singlePass := true,  zeta := false}); try simp (config := {zeta := false}) only [];))
+
+
+
+-- set_option trace.Meta.Tactic.simp true in
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.unify false in
+-- #check (∂ λ (x : ℝ) => let y := x*x; let z := x + y*x*x; x + y + z)
+--   rewrite_by 
+--     autodiff
+--     trace_state
 
 -- set_option trace.Meta.Tactic.simp true in
 -- set_option trace.Meta.Tactic.simp.rewrite false in
 -- set_option trace.Meta.Tactic.simp.unify false in
--- #check (∂ λ (x : ℝ) => let y := x; let z := x + y; y + z) rewrite_by (
---   autodiff_core (config := {singlePass := true, zeta := false}); trace_state;)
-
+-- #check (∂ λ (x : ℝ) => let y := x; let z := x + y; y + z)
+--   rewrite_by 
+--     autodiff
+--     trace_state
 
 -- This fails to apply `SciLean.diff_of_comp` because it `foo` can't be proven to be smooth
-set_option trace.Meta.Tactic.simp.rewrite true in
-set_option trace.Meta.Tactic.simp.discharge true in
-#check (∂ λ (x : ℝ) => let z := x^2; let foo := λ y => Math.sin (Math.exp y); foo (Math.cos z)) rewrite_by (autodiff_core (config := {singlePass := true, zeta := false}); simp (config := { zeta := false}) only []; trace_state;)
-
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- #check (∂ λ (x : ℝ) => let z := x^2; let foo := λ y => Math.sin (Math.exp y); foo (Math.cos z)) 
+--   rewrite_by 
+--     autodiff
+--     trace_state
 
 
 -- @[irreducible] def foo (a b : Nat) := a + b
