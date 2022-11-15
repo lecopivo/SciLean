@@ -24,10 +24,10 @@ namespace SciLean
 
         if j = 0 then
           let q₁ := cθ * x₂[k,0] - sθ * x₂[k,1]
-          p + q₁
+          (p + q₁)/2
         else 
           let q₂ := cθ * x₂[k,1] + sθ * x₂[k,0]
-          p + q₂
+          (p + q₂)/2
 
       x'
 
