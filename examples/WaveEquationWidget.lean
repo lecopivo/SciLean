@@ -14,7 +14,7 @@ def Array.intro {n α} (f : Fin n → α) : Array α := Id.run do
     a := a.push (f ⟨i, sorry⟩)
   a
 
-def generateData : Json := Id.run do
+def generateData := Id.run do
   let substeps := 1
   let m := 1.0
   let k := 100000.0
@@ -29,32 +29,30 @@ def generateData : Json := Id.run do
   let p₀ : ℝ^{N} := .intro λ i => (0 : ℝ)
   let mut (x,p) := (x₀, p₀)
 
-  let steps := 10
+  let steps := 100
   let mut data : Array (Array (Vec2 Float)) := Array.mkEmpty steps
-  
+
   for i in [0:steps] do
-  
+
     (x, p) := evolve 0.1 (x, p)
-    
+
     data := data.push (Array.intro (λ i => ⟨i.1.toFloat/ N.toFloat, x[i].toFloat⟩))
 
-  toJson data
+  data
   -- data.map (λ d => d.map (
 
-#eval generateData
-
+-- #eval toJson generateData
 
 @[widget]
 def helloWidget : UserWidgetDefinition where
   name := "Hello"
-  javascript := "
-    import * as React from 'react';
-    export default function(props) {
-      const name = (props.name || 'world') + ' ' + props.dog
-      return React.createElement('p', {}, name + '!')
-    }"
+  javascript := include_str "." / "plot.js"
 
-#widget helloWidget .null
+#widget helloWidget (Json.mkObj [
+  ("data", toJson generateData),
+  ("useTimer", true),
+  ("yDomain", toJson [0, 1])
+])
 
 #widget helloWidget (Json.mkObj [("name", "Tomas"), ("dog", "labrador")])
 
@@ -75,13 +73,13 @@ def helloWidget : UserWidgetDefinition where
 --   let mut (x,p) := (x₀, p₀)
 
 --   for i in [0:1000] do
-  
+
 --     (x, p) := evolve 0.1 (x, p)
 
 --     let M : Nat := 20
 --     for (m : Nat) in [0:M] do
 --       for (n : Nat) in [0:N] do
-        
+
 --         let xi := x[!n]
 --         if (2*m - M)/(M : ℝ) - xi < 0  then
 --           IO.print "x"
