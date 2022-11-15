@@ -7,8 +7,6 @@ namespace SciLean
 -- Negation --
 --------------
 
-#check Nat
-
 function_properties Neg.neg {X : Type} (x : X) : X
 argument x [Vec X]
   isLin      := sorry,
