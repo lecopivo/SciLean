@@ -97,8 +97,29 @@ abbrev modify (x : X^I) (i : I) (f : X → X) : X^I := GenericArray.modifyElem x
 abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := GenericArray.mapIdx f x
 abbrev map (f : X → X) (x : X^I) : X^I := GenericArray.map f x
 
+def toArray (v : X^I) : Array X := Id.run do
+  let mut array : Array X := Array.mkEmpty (numOf I)
+  for (i, _) in Enumtype.fullRange I do
+    array := array.push v[i]
+  return array
+
 abbrev Index (_ : X^I) := I
 abbrev Elem  (_ : X^I) := X
+
+open Lean in
+instance [ToJson X] : ToJson (X^I) where
+  toJson v := toJson (v.toArray)
+
+open Lean in
+instance [FromJson X] : FromJson (X^I) where
+  fromJson? json := 
+    match fromJson? (α := Array X) json with
+    | .error msg => .error msg
+    | .ok array => 
+      if h : (numOf I) = array.size then
+        .ok (introElem λ i => array[h ▸ toFin i])
+      else 
+        .error "Failed to convert to json to PowType X^{n}, json size does not match `n`"
 
 end FixedSize
 

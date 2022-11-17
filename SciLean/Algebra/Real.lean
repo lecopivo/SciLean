@@ -40,6 +40,18 @@ namespace ℝ
 
   def toFloat (x : ℝ) : Float := x.val
   instance : ToString ℝ := ⟨λ x => x.toFloat.toString⟩
+
+  open Lean in
+  instance : ToJson ℝ where
+    toJson x := toJson x.1
+
+  open Lean in
+  instance : FromJson ℝ where
+    fromJson? json :=
+      match fromJson? (α := Float) json with
+      | .error msg => .error msg
+      | .ok x => .ok ⟨x⟩
+
   
   instance : LT ℝ := ⟨λ x y => x.toFloat < y.toFloat⟩
   instance : LE ℝ := ⟨λ x y => x.toFloat ≤ y.toFloat⟩
