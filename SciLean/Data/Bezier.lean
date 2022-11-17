@@ -120,17 +120,6 @@ structure BezierCurve {T : Nat → Type} (X : Type) [Vec X] [LinearPowType T X] 
   points : X^{deg + 1}
 deriving Vec
 
-
-structure Vec3 where
-  (x y z : ℝ)
-deriving Vec, Mul, Div
-
-instance : ToString Vec3 := ⟨λ v => s!"({v.x}, {v.y}, {v.z})"⟩
-
-#eval (10 : ℝ) * Vec3.mk 1 2 3 / Vec3.mk 100 200 300
-
-#check instAddSemigroupBezierCurve
-
 namespace BezierCurve 
 
 variable {T : Nat → Type} {X : Type} [Vec X] [LinearPowType T X] {deg}
