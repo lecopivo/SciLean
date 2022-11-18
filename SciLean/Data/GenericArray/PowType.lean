@@ -127,22 +127,10 @@ end FixedSize
 section VariableSize
 variable {X} {T : outParam (Nat → Type)} [LinearPowType T X]
 
-/-- Array of zero size. -/
-def empty : X^{0} := λ [i] => 
-  absurd (a := ∃ n : Nat, n < 0) 
-         (Exists.intro i.1 i.2) 
-         (by intro h; have h' := h.choose_spec; cases h'; done)
-
-def split {n m : Nat} 
-  (x : X^{n+m}) : X^{n} × X^{m} := 
-  (λ [i] => x[⟨i.1,sorry_proof⟩], λ [i] => x[⟨i.1+n,sorry_proof⟩])
-
-def merge {n m : Nat} 
-  (x : X^{n}) (y : X^{m}) : X^{n+m} := 
-  (λ [i] => if i.1 < n 
-            then x[⟨i.1,sorry_proof⟩]
-            else y[⟨i.1-n, sorry_proof⟩])
-
+abbrev empty : X^{0} := GenericArray.empty 
+abbrev split {n m : Nat} (x : X^{n+m}) : X^{n} × X^{m} := GenericArray.split x
+abbrev merge {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArray.append x y
+abbrev append {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArray.append x y
 abbrev drop (k : Nat := 1) (x : X^{n+k}) : X^{n} := dropElem k x
 abbrev push (x : X^{n}) (xi : X) (k : Nat := 1) : X^{n+k} := pushElem k xi x
 

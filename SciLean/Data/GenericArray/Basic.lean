@@ -180,3 +180,26 @@ section Operations
 end Operations
 
 end GenericArray
+
+
+namespace GenericArray
+
+  variable {Cont : Nat → Type} {Elem : Type |> outParam}
+  variable [GenericLinearArray Cont Elem]
+
+  def empty : Cont 0 := introElem λ i => 
+    absurd (a := ∃ n : Nat, n < 0) 
+           (Exists.intro i.1 i.2) 
+           (by intro h; have h' := h.choose_spec; cases h'; done)
+
+  def split {n m : Nat} (x : Cont (n+m)) : Cont n × Cont m :=
+    (introElem λ i => x[⟨i.1,sorry_proof⟩],
+     introElem λ i => x[⟨i.1+n,sorry_proof⟩])
+
+  def append {n m : Nat} (x : Cont n) (y : Cont m) : Cont (n+m) :=
+    introElem λ i =>
+      if i.1 < n
+      then x[⟨i.1,sorry_proof⟩]
+      else y[⟨i.1-n, sorry_proof⟩]
+
+end GenericArray
