@@ -133,6 +133,58 @@ instance : GenericArray (DataArrayN α (numOf ι)) ι α  where
   getElem_setElem_neq := sorry_proof
   getElem_introElem := sorry_proof
 
+@[infer_tc_goals_rl]
+instance {Cont ι α : Type} [Enumtype ι] [Inhabited α] [pd : PlainDataType α] [GenericArray Cont ι α] : PlainDataType Cont where
+  btype := match pd.btype with
+    | .inl αBitType => 
+      -- TODO: Fixme !!!!
+      .inr {
+        bytes := 2
+        h_size := sorry_proof
+
+        fromByteArray := λ b i h => 
+          introElem (λ j => default)
+        toByteArray   := λ b i h c => b
+        toByteArray_size := sorry_proof
+        fromByteArray_toByteArray := sorry_proof
+        fromByteArray_toByteArray_other := sorry_proof
+      }
+    | .inr αByteType => 
+      .inr {
+        bytes := (numOf ι) * αByteType.bytes
+        h_size := sorry_proof
+
+        fromByteArray := λ b i h => 
+          introElem (λ j => 
+            let idx := (i + (toFin j).1*αByteType.bytes)
+            αByteType.fromByteArray b idx sorry_proof)
+        toByteArray   := λ b i h c => Id.run do
+          let mut b := b
+          for (j,lj) in Enumtype.fullRange ι do
+            let idx := (i + lj.1*αByteType.bytes)
+            b := αByteType.toByteArray b idx sorry_proof c[j]
+          b
+
+        toByteArray_size := sorry_proof
+        fromByteArray_toByteArray := sorry_proof
+        fromByteArray_toByteArray_other := sorry_proof
+      }
+
+
+  -- bytes : Nat
+  -- h_size : 1 < bytes  -- for one byte types use BitInfo
+  -- fromByteArray (b : ByteArray) (i : Nat) (h : i+bytes ≤ b.size) : α
+  -- toByteArray   (b : ByteArray) (i : Nat) (h : i+bytes ≤ b.size) (a : α) : ByteArray
+
+  -- -- `toByteArray` does not modify ByteArray size
+  -- toByteArray_size : ∀ b i h a, (toByteArray b i h a).size = b.size
+  -- -- we can recover `a` from bytes
+  -- fromByteArray_toByteArray : ∀ a b i h h', fromByteArray (toByteArray b i h a) i h' = a
+  -- -- `toByteArray` does not affect other bytes
+  -- fromByteArray_toByteArray_other : ∀ a b i j h, (j < i) ∨ (i+size) ≤ j → (toByteArray b i h a).get! j = b.get! j
+
+
+
 
 -- ShortOptDataArray is prefered for PowType
 -- @[defaultInstance]
