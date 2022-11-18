@@ -33,7 +33,7 @@ namespace Math
   def log10 : ℝ → ℝ := toRealFun Float.log10
 
   def ceil : ℝ → ℝ := toRealFun Float.ceil
-  def floor : ℝ → ℝ := toRealFun Float.round
+  def floor : ℝ → ℝ := toRealFun Float.floor
   def round : ℝ → ℝ := toRealFun Float.round
   def abs : ℝ → ℝ := toRealFun Float.abs
 
