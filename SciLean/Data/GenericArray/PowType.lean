@@ -146,6 +146,8 @@ def drop' (x : X^{n}) (k : Nat := 1) : X^{n-k} :=
 /-- Computes: `y[i] := a i * x[i] + b i * x[i+1]` 
 
 Special case for `i=n-1`: `y[n-1] := a (n-1) * x[n-1]` -/
+abbrev generateUpperTriangularArray (f : (n' : Nat) → X^{n'+1} → X^{n'}) (x : X^{n}) : X^{(n*(n+1))/2} := 
+  GenericArray.generateUpperTriangularArray f x
 abbrev upper2DiagonalUpdate [Vec X] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : X^{n}) : X^{n} :=
   GenericArray.upper2DiagonalUpdate a b x
 
