@@ -172,8 +172,6 @@ syntax siunit noWs "⁻³" : siunit
 
 syntax "ℝ[" siunit "]" : term
 
-
-#check Nat
 macro_rules
 | `(siunit| $unit * $unit') => do
   match (← Lean.expandMacros unit) with 
@@ -234,3 +232,26 @@ example : ℝ[J]  = ℝ[N*m]   := by rfl
 example : ℝ[W]  = ℝ[J*s⁻¹] := by rfl
 example : ℝ[Pa] = ℝ[N*m⁻²] := by rfl
 
+example : ℝ[N*m²*kg⁻²] = ℝ[m³*kg⁻¹*s⁻²] := by rfl
+example : ℝ[J*Hz⁻¹] = ℝ[J*s] := by rfl
+
+namespace PhysicalConstants 
+  --- Source: https://en.wikipedia.org/wiki/Physical_constant#Table_of_physical_constants
+
+  def gravitationalConstant : ℝ[N*m²*kg⁻²] := ⟨6.674 * 10.0^(-11.0)⟩
+  abbrev G := gravitationalConstant
+
+  def speedOfLight : ℝ[m*s⁻¹] := ⟨299792458.0⟩
+  abbrev c := speedOfLight
+
+  def planckConstant : ℝ[J*Hz⁻¹] := ⟨6.62607015 * 10.0^(-34.0)⟩
+  abbrev h := planckConstant
+  abbrev ℎ := planckConstant
+
+  def reducedPlanckConstant : ℝ[J*s] := h / Math.pi
+  abbrev ℏ := reducedPlanckConstant
+
+  def electronMass : ℝ[kg] := ⟨9.1093837015 * 10.0^(-31.0)⟩
+  abbrev mₑ : ℝ[kg] := electronMass
+
+end PhysicalConstants

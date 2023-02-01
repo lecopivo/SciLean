@@ -2,12 +2,15 @@ import SciLean.Algebra
 
 namespace SciLean.Mathlib.Convenient
 
-  variable {X Y} [Vec X] [Vec Y]
+  variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 
-  def is_smooth (f : X → Y) : Prop := sorry
+  opaque is_smooth (f : X → Y) : Prop
 
-  def is_smooth_at (f : X → Y) (x : X) : Prop := sorry
+  noncomputable 
+  opaque derivative (f : X → Y) (h : is_smooth f) (x dx : X) : Y
 
-  def integrate [Vec X] (a b : ℝ) (f : ℝ → X) (h : is_smooth f) : X := sorry
+  opaque is_smooth_at (f : X → Y) (x : X) : Prop
+
+  opaque integrate [Vec X] (a b : ℝ) (f : ℝ → X) (h : is_smooth f) : X
   
 end SciLean.Mathlib.Convenient

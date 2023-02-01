@@ -37,7 +37,7 @@ namespace Enumtype
   instance : Enumtype Empty :=
   {
     numOf := 0
-    fromFin := λ a => absurd (a := a.1<0) a.2 sorry
+    fromFin := λ a => absurd (a := a.1<0) a.2 (by intro h; cases h)
     toFin := λ a => (by induction a; done)
 
     first_fromFin := sorry

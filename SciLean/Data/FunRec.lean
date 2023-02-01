@@ -10,7 +10,7 @@ Reverse composition is `funRevRec`
 def funRec {α : Nat → Type} (n m : Nat) (f : (n : Nat) → α n → α (n + 1)) (x : α m) : α (n + m) :=
   match n with
   | 0 => cast sorry_proof x
-  | n + 1 => f (n+m) (cast sorry_proof (funRec n m f x)) |> (cast sorry_proof ·)
+  | n + 1 => f (n+m) (funRec n m f x) |> (cast sorry_proof ·)
 
 instance {α : Nat → Type} [∀ n, Vec (α n)] 
   (f : (n : Nat) → α n → α (n + 1)) [∀ n, IsLin (f n)] (n : Nat) 

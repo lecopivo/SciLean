@@ -115,3 +115,39 @@ variable {X} [Vec X]
 
 
 end VecSimps
+
+
+
+section VecProp
+
+class VecProp {X : Type} [Vec X] (P : X → Prop) : Prop where
+  add : ∀ x y, P x → P y → P (x + y)
+  neg : ∀ x, P x → P (- x)
+  smul : ∀ (r : ℝ) x, P x → P (r * x)
+  zero : P 0
+
+variable {X : Type} [Vec X] {P : X → Prop} [inst : VecProp P]
+
+instance : Add {x : X // P x} := ⟨λ x y => ⟨x.1 + y.1, inst.add x.1 y.1 x.2 y.2⟩⟩
+instance : Sub {x : X // P x} := ⟨λ x y => ⟨x.1 - y.1, sorry⟩⟩
+instance : Neg {x : X // P x} := ⟨λ x => ⟨- x.1, inst.neg x.1 x.2⟩⟩
+instance : HMul ℝ {x : X // P x} {x : X // P x} := ⟨λ r x => ⟨r * x.1, inst.smul r x.1 x.2⟩⟩
+
+instance : Zero {x : X // P x} := ⟨⟨0, inst.zero⟩⟩
+
+instance : AddSemigroup {x : X // P x} := AddSemigroup.mk sorry
+instance : AddMonoid {x : X // P x}    := AddMonoid.mk sorry sorry nsmulRec sorry sorry
+instance : SubNegMonoid {x : X // P x} := SubNegMonoid.mk sorry zsmulRec sorry sorry sorry
+instance : AddGroup {x : X // P x}     := AddGroup.mk sorry
+instance : AddCommGroup {x : X // P x} := AddCommGroup.mk sorry
+
+instance : MulAction ℝ {x : X // P x} := MulAction.mk sorry sorry
+instance : DistribMulAction ℝ {x : X // P x} := DistribMulAction.mk sorry sorry
+instance : Module ℝ {x : X // P x} := Module.mk sorry sorry
+
+-- This should get subset topology inherited from `X` 
+-- Important: this topology is not the same as of `X ⟿ Y`
+-- The question should Vec be ∞-complete? I'm not sure that it can be
+instance : Vec {x : X // P x} := Vec.mk
+
+end VecProp

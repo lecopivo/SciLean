@@ -37,6 +37,14 @@ argument x
   adjDiff_simp := ((∂† g x) ∘ (∂† f (g x))) dx'  by simp[Function.comp]; done
   
 
+instance Function.comp.arg_g.has_adjoint {ι X Y : Type} [Enumtype ι] [SemiHilbert X] [SemiHilbert Y]
+  (f : X → Y) [HasAdjoint f] : HasAdjoint λ g : ι → X => f ∘ g := sorry
+
+@[simp]
+theorem Function.comp.arg_g.adj_simp {ι X Y : Type} [Enumtype ι] [SemiHilbert X] [SemiHilbert Y]
+  (f : X → Y) [HasAdjoint f] : (λ g : ι → X => f ∘ g)† = λ g' => f† ∘ g' := sorry
+
+
 
 -- function_properties Function.uncurry {X Y Z : Type} (f : X → Y → Z) (p : X×Y) : Z
 -- argument f [Vec Z]

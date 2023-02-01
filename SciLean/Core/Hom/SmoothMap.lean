@@ -5,7 +5,9 @@ import SciLean.Core.Obj.FinVec
 
 namespace SciLean
 
-  abbrev SmoothMap (X Y : Type) [Vec X] [Vec Y] := {f : X → Y // IsSmooth f}
+  structure SmoothMap (X Y : Type) [Vec X] [Vec Y] where
+    val : X → Y 
+    is_smooth : IsSmooth val
 
   infixr:25 " ⟿ " => SmoothMap
 
@@ -44,6 +46,10 @@ namespace SciLean
   instance : DistribMulAction ℝ (X ⟿ Y) := DistribMulAction.mk sorry sorry
   instance : Module ℝ (X ⟿ Y) := Module.mk sorry sorry
 
+  -- IMPORTANT: I think that `X → Y` and `X ⟿ Y` should not have the same
+  -- topology. `X → Y` is just a product topology/initial topology based on all
+  -- evaluations for every `x : X`. However `X ⟿ Y` has topology given by point 5 in:
+  -- https://en.wikipedia.org/wiki/Convenient_vector_space#Main_properties_of_smooth_calculus
   instance : Vec (X ⟿ Y) := Vec.mk
 
   -- instance : Coe (X⟿Y) (X→Y) := ⟨λ f => f.1⟩
@@ -56,6 +62,8 @@ namespace SciLean
   -- by
   --   infer_instance
 
+  instance {X Y : Type} [Vec X] [Vec Y] : VecProp (X := X → Y) IsSmooth := sorry
+
   --------------------------------------------------------------------
 
   instance (f : X ⟿ Y) : IsSmooth f.1 := f.2
@@ -65,14 +73,19 @@ namespace SciLean
 
   --------------------------------------------------------------------
 
-  @[inline]
-  abbrev SmoothMap.mk {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [inst : IsSmooth f] : X ⟿ Y := ⟨f, inst⟩
+  @[macro_inline]
+  abbrev SmoothMap.mk' {X Y  : Type} [Vec X] [Vec Y] (f : X → Y) [inst : IsSmooth f] : X ⟿ Y := ⟨f, inst⟩
+
+  def SmoothMap.incl {X Y : Type} [Vec X] [Vec Y] (f : {f' : X → Y // IsSmooth f'}) : X ⟿ Y := ⟨f.1, f.2⟩
+
+  -- TODO: This is a big big question if this is actually correct
+  instance {X Y : Type} [Vec X] [Vec Y] : IsSmooth (SmoothMap.incl (X := X) (Y := Y)) := sorry
 
   -- Right now, I prefer this notation
   open Lean.TSyntax.Compat in
-  macro "fun" xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.SmoothMap.mk xs b
+  macro "fun" xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.SmoothMap.mk' xs b
   open Lean.TSyntax.Compat in
-  macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.SmoothMap.mk xs b
+  macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term => Lean.expandExplicitBinders `SciLean.SmoothMap.mk' xs b
 
   @[simp] 
   theorem SmoothMap.beta_reduce (f : X ⟿ Y) 
@@ -87,22 +100,31 @@ namespace SciLean
   @[simp]
   theorem SmoothMap.mk.arg_f.diff_simp {X Y} [Vec X] [Vec Y] 
     (f : X → Y) [IsSmooth f] 
-    : ∂ (SmoothMap.mk f).1 = ∂ f := by simp; done
+    : ∂ (SmoothMap.mk' f).1 = ∂ f := by simp; done
+
+  -- TODO: IMPORTANT: I'm really uncertain about this theorem. Is it really true.
+  -- If not then then whole thing might fall apart :(
+  instance SmoothMap.mk.arg_x.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
+    (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
+    : IsSmooth λ x => SmoothMap.mk' (f x) := 
+  by
+    let h : (λ x => SmoothMap.mk' (f x))
+            =
+            λ x => SmoothMap.incl ⟨f x, by infer_instance⟩
+          := by rfl
+    rw [h]
+    apply @comp.arg_x.isSmooth _ _ _ _ _ _ _ (by infer_instance) _ (by admit)
+    done
 
   @[simp]
   theorem SmoothMap.mk.arg_x.diff_simp {X Y Z} [Vec X] [Vec Y] [Vec Z]
     (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-    : ∂ (λ x => SmoothMap.mk (f x)) = λ x dx => SmoothMap.mk (∂ f x dx) := by simp
+    : ∂ (λ x => SmoothMap.mk' (f x)) = λ x dx => SmoothMap.mk' (∂ f x dx) := sorry_proof
 
-  -- This instance is still necessary to typecheck: `λ x dx ⟿ ∂ f x dx`
-  -- I do not understand why is it necessary if it can be infered automatically
-  instance SmoothMap.mk.arg_x.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
-    (f : X → Y → Z) [IsSmooth f] [∀ x, IsSmooth (f x)]
-    : IsSmooth λ x => SmoothMap.mk (f x) := by infer_instance
 
   instance SmoothMap.mk.arg_x.isLin {X Y Z} [Vec X] [Vec Y] [Vec Z] 
     (f : X → Y → Z) [IsLin f] [∀ x, IsSmooth (f x)]
-    : IsLin λ x => SmoothMap.mk (f x) := by infer_instance
+    : IsLin λ x => SmoothMap.mk' (f x) := sorry_proof
 
   -- instance SmoothMap.mk.arg_x.parm1.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
   --   (f : X → Y → α → Z) (a : α) [IsSmooth λ x y => f x y a] [∀ x, IsSmooth (λ y => f x y a)]

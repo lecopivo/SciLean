@@ -156,12 +156,15 @@ theorem diff_of_diag
 @[simp ↓ low, simp_diff low]
 theorem diff_of_parm
   (f : X → α → Y) [IsSmooth f] (a : α)
-  : ∂ (λ x => f x a) = λ x dx => ∂ f x dx a := sorry
+  : ∂ (λ x => f x a) = λ x dx => ∂ f x dx a := 
+by
+  rw[diff_of_swap (λ a x => f x a)]
 
 @[simp ↓, simp_diff]
 theorem diff_of_eval
   (a : α)
   : ∂ (λ f : α → Y => f a) = λ f df => df a := by simp
+
 
 @[simp ↓ low, simp_diff low]
 theorem uncurry.arg_xy.diff_simp
@@ -175,3 +178,4 @@ theorem uncurry.arg_xy.parm1.diff_simp
   (a : α)
   (f : X → Y → α → Z) [IsSmooth λ x y => f x y a] [∀ x, IsSmooth (λ y => f x y a)]
   : ∂ (λ (xy : (X×Y)) => f xy.1 xy.2 a) = λ (x,y) (dx,dy) => ∂ f x dx y a + ∂ (f x) y dy a := sorry
+

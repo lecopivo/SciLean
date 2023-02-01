@@ -67,7 +67,7 @@ UpperTriangularArray is an array that relates to lower triangular matrix as:
 -/
 def generateUpperTriangularArray (f : (n' : Nat) → Cont (n'+1) → Cont n') (x : Cont n) : Cont ((n*(n+1))/2) := 
   match n with
-  | 0 => λ [i] => cast sorry_proof () -- you can't have i of type `Fin 0`
+  | 0 => λ [i] ==> cast sorry_proof () -- you can't have i of type `Fin 0`
   | _+1 => 
     let x' := f _ x
     let c := generateUpperTriangularArray f x' 

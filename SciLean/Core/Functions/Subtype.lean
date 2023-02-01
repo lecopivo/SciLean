@@ -9,13 +9,13 @@ variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 -- through well behaved function `f`
 
 instance Subtype.mk.arg_x.isLin
-  (P : Y → Prop) [Vec {y : Y // P y}] 
+  (P : Y → Prop) [VecProp P] 
   (f : X → Y) [IsLin f] 
   (p : (x : X) → P (f x)) 
   : IsLin λ x => Subtype.mk (f x) (p x) := sorry
 
 instance Subtype.mk.arg_x.isSmooth
-  (P : Y → Prop) [Vec {y : Y // P y}] 
+  (P : Y → Prop) [VecProp P] 
   (f : X → Y) [IsSmooth f] 
   (p : (x : X) → P (f x)) 
   : IsSmooth λ x => Subtype.mk (f x) (p x) := sorry
@@ -23,14 +23,14 @@ instance Subtype.mk.arg_x.isSmooth
 
 -- The fact that the subtype forms a vector space is crucially important!!!
 theorem diff_of_vec_subtype_is_subtype 
-  (P : Y → Prop) [Vec {y : Y // P y}] 
+  (P : Y → Prop) [VecProp P] 
   (f : X → Y) [IsSmooth f] 
   (p : (x : X) → P (f x)) (x dx : X)
   : P (∂ f x dx) := sorry
 
 @[simp]
 theorem Subtype.mk.arg_x.diff_simp
-  (P : Y → Prop) [Vec {y : Y // P y}] 
+  (P : Y → Prop) [VecProp P] 
   (f : X → Y) [IsSmooth f] 
   (p : (x : X) → P (f x)) 
   : ∂ (λ x => Subtype.mk (f x) (p x))
@@ -40,6 +40,6 @@ theorem Subtype.mk.arg_x.diff_simp
 ----
 
 function_properties Subtype.val {α : Type} {P : α → Prop} (x : Subtype P) : α
-argument x [Vec α] [Vec {y : α // P y}]
+argument x [Vec α] [VecProp P]
   isLin := sorry,
   isSmooth, diff_simp

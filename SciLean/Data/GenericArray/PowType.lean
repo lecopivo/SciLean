@@ -82,6 +82,19 @@ macro A:term  noWs "[" ":" "," id2:term "]" : term => `(λ [i] => $A[(i, $id2)])
 /-- `A[·,j]` is just a notation for `λ i => A[i,j]` -/
 macro A:term  noWs "[" "·" "," id2:term "]" : term => `(λ i => $A[(i, $id2)])
 
+
+-- This should be improved such that we can specify the type of arguments
+-- This clashes with typeclass arguments, but who in their right mind
+-- starts a lambda arguments with a typeclass?
+syntax (name:=powTypeIntroSyntax) "λ" "[" Lean.Parser.ident,+ "]" " => " term : term
+
+abbrev introPowElem {X I} {T : outParam Type} [Enumtype I] [PowType T I X] (f : I → X) : X^I := λ [i] ==> f i
+
+macro_rules (kind := powTypeIntroSyntax)
+| `(λ [ $id1:ident ] => $b:term) => `(introPowElem λ $id1 => $b)
+| `(λ [ $id1:ident, $id2:ident ] => $b:term) => `(introPowElem λ ($id1, $id2) => $b)
+| `(λ [ $id1:ident, $id2:ident, $id3:ident ] => $b:term) => `(introPowElem λ ($id1, $id2, $id3) => $b)
+
 end CustomNotation
 
 namespace PowTypeCarrier
@@ -175,12 +188,19 @@ example [Vec X] (x : X^{n+1}) : IsSmooth (λ t => x.linearInterpolate t) := by i
 end VariableSize
 
 
-structure BezierCurve {T : Nat → Type} (X : Type) [Vec X] [LinearPowType T X] (deg : Nat) where
-  points : X^{deg + 1}
+section Currying
 
+variable {X I J}  [Enumtype I] [Enumtype J]
+variable {T : outParam Type} [PowType T J X]
+variable {T' : outParam Type} [PowType T' I (X^J)]
+variable {T'' : outParam Type} [PowType T'' (I×J) X]
 
-variable {X} {T : outParam (Nat → Type)} [LinearPowType T X] [Vec X]
+-- sometimes this should be effectivelly identity function
+-- sometimes you have to reshuffle memory around, how to deal with this?
+-- def curry : (X^(I×J)) → ((X^J)^I) := sorry
+-- def uncurry : ((X^J)^I) → (X^(I×J)) := sorry
 
-#check BezierCurve X 10
+end Currying
+
 
 end PowTypeCarrier

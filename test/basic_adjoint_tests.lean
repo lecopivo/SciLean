@@ -1,4 +1,5 @@
 import SciLean.Core.Functions
+import SciLean.Tactic.RemoveLambdaLet
 
 open Function
 
@@ -7,15 +8,15 @@ open SciLean
 variable {α β γ : Type}
 variable {X Y Z : Type} [Hilbert X] [Hilbert Y] [Hilbert Z] 
 
-example (f : Y → Z) (g : X → Y) (z : Z) [HasAdjoint f] [HasAdjoint g] : (f ∘ g)† z = g† (f† z) := by simp done
-example (f g : X → Y) [HasAdjoint f] [HasAdjoint g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp
+example (f : Y → Z) (g : X → Y) (z : Z) [HasAdjoint f] [HasAdjoint g] : (f ∘ g)† z = g† (f† z) := by simp; done
+example (f g : X → Y) [HasAdjoint f] [HasAdjoint g] (y : Y) : (λ x => f x + g x)† y = f† y + g† y := by simp; done
 
 example (y : Y) (r : ℝ) 
-  : (λ x => ⟪x,y⟫)† r = r*y := by simp done
+  : (λ x => ⟪x,y⟫)† r = r*y := by simp; done
 example (y : X) (r : ℝ) 
-  : (λ x => ⟪x,y⟫ + ⟪y,x⟫)† r = r * y + r * y := by simp done
+  : (λ x => ⟪x,y⟫ + ⟪y,x⟫)† r = r * y + r * y := by simp; done
 example (r : ℝ) (x' : X) 
-  : (λ x : X => r*((λ x'' => ⟪x', x''⟫) x))† = λ s => (r * s) * x' := by simp done
+  : (λ x : X => r*((λ x'' => ⟪x', x''⟫) x))† = λ s => (r * s) * x' := by simp; done
 
 example {n : Nat} (a : Fin n) [Nonempty (Fin n)] 
   : (λ (f : Fin n → ℝ) i => f (i - a))† = (λ (f : Fin n → ℝ) x => f (x + a)) := 
@@ -62,3 +63,32 @@ example {X Y : Type} [Hilbert X] [Hilbert Y] : (Prod.fst : X × Y → X)† = λ
 example {X Y : Type} [Hilbert X] [Hilbert Y] : (Prod.snd : X × Y → Y)† = λ y : Y => (0, y) := by simp
 example {X Y : Type} [Hilbert X] [Hilbert Y] : (λ ((x,y) : X × Y) => x)† = λ x : X => (x, (0:Y)) := by simp
 example {X Y : Type} [Hilbert X] [Hilbert Y] : (λ ((x,y) : X × Y) => y)† = λ y : Y => ((0:X), y) := by simp
+
+
+set_option trace.Meta.Tactic.simp.discharge true in
+example : (λ (x : Fin n → ℝ) => Function.comp (HMul.hMul 2) x)† = 0 := by rw[Function.comp.arg_g.adj_simp]; simp[comp]; admit
+
+@[simp (low-2) ↓]
+theorem asdf {ι : Type} [Enumtype ι] (f : Y → Z) [HasAdjoint f] 
+  : (λ (g : ι → Y) i => f (g i))† = λ (g' : ι → Z) i => f† (g' i)  := sorry
+
+example : (λ (x : Fin n → ℝ) => ∑ i, x i)† = 0 := by simp; admit
+example : (λ (x : Fin n → ℝ) => ∑ i, 1 * x i)† = 0 := by simp; admit
+
+example : HasAdjoint (λ x : ℝ => 2 * x) := by infer_instance
+
+set_option synthInstance.maxSize 2000 in
+set_option synthInstance.maxHeartbeats 200000 in
+set_option pp.funBinderTypes true in
+set_option trace.Meta.Tactic.simp.rewrite true in
+set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify true in
+example : (λ (x : Fin n → ℝ) i => 2 * x i)† = 0 := 
+by
+  simp -- [-SciLean.swap.arg_y.adj_simp] 
+  simp; admit
+
+
+example : (λ (x : Fin n → ℝ) i => 2 * x i)† = 0 := by simp; admit
+
+example : (λ (x : Fin n → ℝ) => ∑ i, 2 * x i)† = 0 := by simp; admit

@@ -86,17 +86,17 @@ namespace SciLean
   @[simp]
   theorem LinMap.mk.arg_x.diff_simp {X Y Z} [Vec X] [Vec Y] [Vec Z]
     (f : X → Y → Z) [IsSmooth f] [∀ x, IsLin (f x)]
-    : ∂ (λ x => LinMap.mk (f x)) = λ x dx => LinMap.mk (∂ f x dx) := by simp
+    : ∂ (λ x => LinMap.mk (f x)) = λ x dx => LinMap.mk (∂ f x dx) := sorry_proof
 
   -- This instance is still necessary to typecheck: `λ x ⟿ λ dx ⊸ ∂ f x dx`
   -- I do not understand why is it necessary if it can be infered automatically
   instance LinMap.mk.arg_x.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
     (f : X → Y → Z) [IsSmooth f] [∀ x, IsLin (f x)]
-    : IsSmooth λ x => LinMap.mk (f x) := by infer_instance
+    : IsSmooth λ x => LinMap.mk (f x) := sorry
 
   instance LinMap.mk.arg_x.isLin {X Y Z} [Vec X] [Vec Y] [Vec Z] 
     (f : X → Y → Z) [IsLin f] [∀ x, IsLin (f x)]
-    : IsLin λ x => LinMap.mk (f x) := by infer_instance
+    : IsLin λ x => LinMap.mk (f x) := sorry_proof
 
 
    section differential_map_test
