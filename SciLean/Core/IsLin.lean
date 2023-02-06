@@ -17,7 +17,7 @@ Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
 
 Transitive closure of `IsLinNT`
 -/
-class IsLinNT {X Y} [Vec X] [Vec Y] {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
   proof : is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
 
@@ -26,7 +26,7 @@ class IsLinNT {X Y} [Vec X] [Vec Y] {Xs Y' : Type} [Vec Xs] [Vec Y']
 
 Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
 -/
-class IsLinN {X Y} [Vec X] [Vec Y] {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
 
 /-- `IsLin f` says that `f : X → Y` is linear.

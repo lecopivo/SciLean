@@ -8,11 +8,11 @@ open SciLean.Mathlib.Convenient
 
 /-- Transitive closure of `IsSmoothN`
 -/
-class IsSmoothNT {X Y} [Vec X] [Vec Y] {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+class IsSmoothNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
   proof : is_smooth (uncurryN n f)
 
-class IsSmoothN {X Y} [Vec X] [Vec Y] {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+class IsSmoothN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsSmoothNT n f : Prop
 
 
