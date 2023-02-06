@@ -103,8 +103,10 @@ namespace Real
   -- instance : Coe ℕ ℝ := ⟨λ n => n.toFloat.toReal⟩
   -- instance : Coe ℤ ℝ := ⟨λ n => (Float.ofInt n).toReal⟩
 
+
   instance : Inv ℝ := ⟨λ x => 1.0/x⟩
 
+  instance : Coe Bool ℝ := ⟨λ b => if b then 1.0 else 0.0⟩
   instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
 
 
