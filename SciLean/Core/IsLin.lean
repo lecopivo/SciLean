@@ -46,9 +46,9 @@ abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
 
 --------------------------------------------------------------------------------
 
-instance instIsLin_is_IsSmooth {X Y} [Vec X] [Vec Y] {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+instance instIsLin_is_IsSmooth {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] [inst : IsLinN n f] 
-  : IsSmoothNT n f := ⟨inst.proof.2⟩
+  : IsSmoothN n f := IsSmoothN.mk (toIsSmoothNT:=⟨inst.proof.2⟩)
 
 --------------------------------------------------------------------------------
 
@@ -73,16 +73,16 @@ by
   rw[← h]; apply F.2
 
 instance linear_add_extra_2_2 (f : X → Y) [IsLinT f]
-  : IsLinNT 2 (λ x (z : Z) => f x) := sorry
+  : IsLinNT 2 (λ x (z : Z) => f x) := sorry_proof
 
 instance linear_add_extra_3_1 (f : Y → Z → W) [IsLinNT 2 f]
-  : IsLinNT 3 (λ (x : X) y z => f y z) := sorry
+  : IsLinNT 3 (λ (x : X) y z => f y z) := sorry_proof
 
 instance linear_add_extra_3_2 (f : X → Z → W) [IsLinNT 2 f]
-  : IsLinNT 3 (λ x (y : Y) z => f x z) := sorry
+  : IsLinNT 3 (λ x (y : Y) z => f x z) := sorry_proof
 
 instance linear_add_extra_3_3 (f : X → Y → W) [IsLinNT 2 f]
-  : IsLinNT 3 (λ x y (z : Z) => f x y) := sorry
+  : IsLinNT 3 (λ x y (z : Z) => f x y) := sorry_proof
 
 
 -- IsLinNT 3 fun x y => f (g₁ x)
@@ -93,7 +93,7 @@ instance linear_add_extra_3_3 (f : X → Y → W) [IsLinNT 2 f]
 --------------------------------------------------------------------------------
 
 instance id.arg_x.isLin 
-  : IsLin λ x : X => x := sorry
+  : IsLin λ x : X => x := sorry_proof
 
 -- I think this is waying that `(λ x y => x : X ⊸ Y → X)` not `(λ x y => x : X ⊸ Y ⟿ X)`
 instance const.arg_xy.isLin 
