@@ -3,7 +3,7 @@ import SciLean.Mathlib.Data.Prod
 import SciLean.Mathlib.Data.Pi
 import SciLean.Mathlib.Data.PUnit
 
-import SciLean.Algebra.Real
+import SciLean.Core.Real
 
 namespace SciLean
 
@@ -27,14 +27,12 @@ section CommonVectorSpaces
 
   instance {X} [Vec X] : Inhabited X := ⟨0⟩
 
-  set_option synthInstance.maxHeartbeats 5000
   instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
   instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
   instance : Module ℝ ℝ := Module.mk sorry sorry
   instance : Vec ℝ := Vec.mk
-  -- instance (priority := high) [Vec U] : HMul ℝ U U := by infer_instance
 
-  -- instance {A} [AddCommGroup A] : AddCommGroup (α → A) := AddCommGroup.mk sorry
+
   def AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α := AddSemigroup.mk sorry_proof
   def AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α := 
     AddMonoid.mk (toAddSemigroup := AddSemigroup.mkSorryProofs) sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
@@ -55,6 +53,7 @@ section CommonVectorSpaces
     Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs))
     
   instance [Vec U] : Vec (α → U) := Vec.mkSorryProofs
+  instance(priority:=low) (α : Type) (X : α → Type) [∀ a, Vec (X a)] : Vec ((a : α) → X a) := Vec.mkSorryProofs
   instance [Vec U] [Vec V] : Vec (U × V) := Vec.mkSorryProofs
   instance : Vec Unit := Vec.mkSorryProofs
 
@@ -100,16 +99,6 @@ instance : Neg {x : X // P x} := ⟨λ x => ⟨- x.1, inst.neg x.1 x.2⟩⟩
 instance : HMul ℝ {x : X // P x} {x : X // P x} := ⟨λ r x => ⟨r * x.1, inst.smul r x.1 x.2⟩⟩
 
 instance : Zero {x : X // P x} := ⟨⟨0, inst.zero⟩⟩
-
--- instance : AddSemigroup {x : X // P x} := AddSemigroup.mk sorry
--- instance : AddMonoid {x : X // P x}    := AddMonoid.mk sorry sorry nsmulRec sorry sorry
--- instance : SubNegMonoid {x : X // P x} := SubNegMonoid.mk sorry zsmulRec sorry sorry sorry
--- instance : AddGroup {x : X // P x}     := AddGroup.mk sorry
--- instance : AddCommGroup {x : X // P x} := AddCommGroup.mk sorry
-
--- instance : MulAction ℝ {x : X // P x} := MulAction.mk sorry sorry
--- instance : DistribMulAction ℝ {x : X // P x} := DistribMulAction.mk sorry sorry
--- instance : Module ℝ {x : X // P x} := Module.mk sorry sorry
 
 -- This should get subset topology inherited from `X` 
 -- Important: topology on `X→Y` is not the same as of `X ⟿ Y`

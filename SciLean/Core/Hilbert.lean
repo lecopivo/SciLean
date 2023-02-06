@@ -1,10 +1,10 @@
 import SciLean.Mathlib.Data.Enumtype
 
-import SciLean.Algebra.VectorSpace
+import SciLean.Core.Vec
 
 namespace SciLean
 
-class Inner (X : Type u) where  
+class Inner (X : Type) where  
   inner : X → X → ℝ
 
 namespace Inner
@@ -19,14 +19,8 @@ namespace Inner
 
 end Inner
 
-structure VecSubspace {X} [Vec X] (V : X → Prop) : Prop where
-  zero : V 0
-  add : ∀ x y, V x → V y → V (x + y)
-  smul : ∀ (s : ℝ) x, V x → V (s * x)
-
-class TestFunctions (X : Type u) [Vec X] where
+class TestFunctions (X : Type) where
   TestFun : X → Prop
-  is_lin_subspace : VecSubspace TestFun
 
 export TestFunctions (TestFun)
 
@@ -46,6 +40,8 @@ class SemiHilbert (X) extends Vec X, Inner X, TestFunctions X where
     ⟪x, x⟫ ≥ (0 : ℝ)
   inner_ext : ∀ (x : X),
     ((x = 0) ↔ (∀ (ϕ : X), TestFun ϕ → ⟪x, ϕ⟫ = 0))
+  is_lin_subspace : VecProp (X:=X) TestFun
+
   -- Maybe add this? Can we prove it or do we need to assume it?
   -- Is this true on (ℝ ⟿ ℝ)? It should be otherwise I'm questioning everything.
   -- inner_with_testfun_is_smooth : ∀ ϕ, TestFun ϕ → IsSmooth ⟪·, ϕ⟫     
@@ -69,6 +65,13 @@ class SemiHilbert (X) extends Vec X, Inner X, TestFunctions X where
 class Hilbert (X) extends SemiHilbert X where
   all_are_test : ∀ x : X, TestFun x
                                      
+
+def SemiHilbert.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [HMul ℝ α α] [Inner α] [TestFunctions α] : SemiHilbert α
+  := SemiHilbert.mk (toVec := Vec.mkSorryProofs) sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
+
+def Hilbert.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [HMul ℝ α α] [Inner α] [TestFunctions α] : Hilbert α
+  := Hilbert.mk (toSemiHilbert := SemiHilbert.mkSorryProofs) sorry_proof
+
 --- Reals
 
 instance : Inner ℝ where
@@ -76,17 +79,8 @@ instance : Inner ℝ where
 
 instance : TestFunctions ℝ where
   TestFun x := True
-  is_lin_subspace := sorry
 
-instance : SemiHilbert ℝ where
-  inner_add := sorry
-  inner_mul := sorry
-  inner_sym := sorry
-  inner_pos := sorry
-  inner_ext := sorry
-
-instance : Hilbert ℝ where
-  all_are_test := sorry
+instance : Hilbert ℝ := Hilbert.mkSorryProofs
 
 -- Product space
 
@@ -95,17 +89,9 @@ instance (X Y) [Inner X] [Inner Y] : Inner (X × Y) where
 
 instance (X Y) [Vec X] [Vec Y] [TestFunctions X] [TestFunctions Y] : TestFunctions (X×Y) where
   TestFun xy := TestFun xy.1 ∧ TestFun xy.2
-  is_lin_subspace := sorry
 
-instance (X Y) [SemiHilbert X] [SemiHilbert Y] : SemiHilbert (X × Y) where
-  inner_add := sorry
-  inner_mul := sorry
-  inner_sym := sorry
-  inner_pos := sorry
-  inner_ext := sorry
-
-instance (X Y) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) where
-  all_are_test := sorry
+instance (X Y) [SemiHilbert X] [SemiHilbert Y] : SemiHilbert (X × Y) := SemiHilbert.mkSorryProofs
+instance (X Y) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) := Hilbert.mkSorryProofs
 
 -- Function type
 
@@ -114,17 +100,6 @@ instance (X) [Inner X] (ι) [Enumtype ι] : Inner (ι → X) where
 
 instance (X) [Vec X] [TestFunctions X] (ι) [Enumtype ι] : TestFunctions (ι → X) where
   TestFun f := ∀ i, TestFun (f i)
-  is_lin_subspace := sorry
 
-instance (X) [SemiHilbert X] (ι) [Enumtype ι] 
-  : SemiHilbert (ι → X) where
-  inner_add := sorry
-  inner_mul := sorry
-  inner_sym := sorry
-  inner_pos := sorry
-  inner_ext := sorry
-
-instance (X) [Hilbert X] (ι) [Enumtype ι] 
-  : Hilbert (ι → X) where
-  all_are_test := sorry
-
+instance (X) [SemiHilbert X] (ι) [Enumtype ι] : SemiHilbert (ι → X) := SemiHilbert.mkSorryProofs
+instance (X) [Hilbert X] (ι) [Enumtype ι] : Hilbert (ι → X) := Hilbert.mkSorryProofs

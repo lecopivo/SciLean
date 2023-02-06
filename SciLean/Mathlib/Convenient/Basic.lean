@@ -1,4 +1,4 @@
-import SciLean.Algebra
+import SciLean.Core.Vec
 
 namespace SciLean.Mathlib.Convenient
 
