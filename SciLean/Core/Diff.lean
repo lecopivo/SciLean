@@ -1,26 +1,25 @@
-import Init.Meta
-import Lean.Parser
-
 import Mathlib.Data.Sigma.Basic
 import SciLean.Core.Vec
+import SciLean.Core.Hilbert
 
 namespace SciLean
 
 
 /--
   -/
+@[reducible]
 class Diff (X : Type) where
   TangentSpace : X → Type
   [instVecTS : ∀ x, Vec (TangentSpace x)]
 
-attribute [reducible] Diff.TangentSpace Diff.instVecTS
+attribute [reducible] Diff.TangentSpace Diff.instVecTS Diff.mk
 
 abbrev TangentSpace (X : Type) (x : X) [Diff X] : Type := Diff.TangentSpace x
 def TangentBundle (X : Type) [Diff X] : Type := (x : X) × TangentSpace X x
 
 notation "𝒯[" x "]" X:max => (TangentSpace X x)
 
-/-- Privides notation `𝒯 X` for `TangentBundle X` -/
+/-- Provides notation `𝒯 X` for `TangentBundle X` -/
 instance (X : Type) [Diff X] : TangentMap X (TangentBundle X) := ⟨⟩
 
 @[reducible]
@@ -40,18 +39,17 @@ instance Diff_of_funType
   (X) [Diff X]
   : Diff (α → X) := ⟨λ x => (a : α) → 𝒯[x a] X⟩
 
+
 @[reducible]
-instance Vec_of_Sum_of_tangent_spaces
+instance 
   (X Y : Type)  (xy : X⊕Y) [Diff X] [Diff Y]
-  : Vec ((λ xy => match xy with | .inl x => 𝒯[x] X | .inr y => 𝒯[y] Y) xy)  -- 
-  :=
-  match xy with
-  | .inl _ => inferInstance
-  | .inr _ => inferInstance
+  : Vec (((𝒯[·] X) ⊕ (𝒯[·] Y)) xy) -- (λ xy => match xy with | .inl x => 𝒯[x] X | .inr y => 𝒯[y] Y) xy)  -- 
+  := inferInstance
+
 
 @[reducible]
 instance Diff_of_Sum (X) [Diff X] (Y) [Diff Y]
-  : Diff (X⊕Y) := ⟨λ xy => match xy with | .inl x => 𝒯[x] X | .inr y => 𝒯[y] Y⟩
+  : Diff (X⊕Y) := ⟨((𝒯[·] X) ⊕ (𝒯[·] Y))⟩
 
 --------------------------------------------------------------------------------
 
@@ -72,4 +70,9 @@ example (x : ℝ) : Vec (𝒯[x] ℝ) = Vec ℝ := by rfl
   example (x : X) (y : Y) (z : Z) : 𝒯[(x,y,z)] (X×Y×Z) = (𝒯[x] X × 𝒯[y] Y × 𝒯[z] Z) := by rfl; done
 
 end TangentSpaceTests
+
+
+
+--------------------------------------------------------------------------------
+
 

@@ -1,3 +1,4 @@
+import SciLean.Notation
 import SciLean.Core.Attributes
 import SciLean.Core.HasAdjoint
 
@@ -19,6 +20,7 @@ def adjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : Y → X
     f'
   | isFalse _ => 0
   
+@[default_instance]
 instance (f : X → Y) [SemiHilbert X] [SemiHilbert Y] : Dagger f (adjoint f) := ⟨⟩
 
 instance adjoint_hasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjointT f]
@@ -34,26 +36,26 @@ variable {ι : Type} [Enumtype ι]
 
 @[simp ↓, autodiff]
 theorem id.arg_x.adj_simp
-  : (λ x : X => x)† = λ x => x := sorry
+  : (λ x : X => x)† = λ x => x := sorry_proof
 
 @[simp ↓, autodiff]
 theorem const.arg_x.adj_simp
-  : (λ (x : X) (i : ι) => x)† = λ f => ∑ i, f i := sorry
+  : (λ (x : X) (i : ι) => x)† = λ f => ∑ i, f i := sorry_proof
 
 @[simp ↓, autodiff]
 theorem const.arg_y.adj_simp
-  : (λ (y : Y) => (0 : X))† = λ y' => (0 : Y) := sorry
+  : (λ (y : Y) => (0 : X))† = λ y' => (0 : Y) := sorry_proof
 
 @[simp ↓ low-3, autodiff low-3]
 theorem swap.arg_y.adj_simp
   (f : ι → Y → Z) [∀ i, HasAdjointT (f i)] 
-  : (λ y i => f i y)† = λ g => ∑ i, (f i)† (g i) := sorry
+  : (λ y i => f i y)† = λ g => ∑ i, (f i)† (g i) := sorry_proof
 
 @[simp ↓ low, autodiff low-3]
 theorem comp.arg_x.adj_simp
   (f : Y → Z) [HasAdjointT f] 
   (g : X → Y) [HasAdjointT g] 
-  : (λ x => f (g x))† = λ z => g† (f† z) := sorry
+  : (λ x => f (g x))† = λ z => g† (f† z) := sorry_proof
 
 -- @[simp ↓ low]
 -- theorem subst.arg_x.adj_simp
@@ -63,7 +65,7 @@ theorem comp.arg_x.adj_simp
 --     = λ z =>
 --         let f' := (λ (x,y) => f x y)†
 --         (f' z).1 + g† (f' z).2
--- := by sorry
+-- := by sorry_proof
 
 -- TODO: add simp guard!
 @[simp ↓ low, autodiff low]
@@ -74,7 +76,7 @@ theorem diag.arg_x.adj_simp
   : (λ x => f (g₁ x) (g₂ x))† 
     = λ z => (λ (y₁,y₂) => (g₁† y₁) + (g₂† y₂)) $
              (λ (y₁,y₂) => f y₁ y₂)† z 
-:= by sorry
+:= by sorry_proof
 
 -- This prevents an infinite loop when using `adjoint_of_diag` 
 -- with `g₁ = Prod.fst` and `g₂ = Prod.snd`
@@ -83,17 +85,16 @@ theorem diag.arg_x.adj_simp_safeguard
   (f : X → Y → Z) [HasAdjointNT 2 f]
   : adjoint (λ xy => f xy.1 xy.2) = (uncurryN 2 f)† := by rfl; done 
 
-
 @[simp ↓ low, autodiff low]
 theorem eval.arg_f.adj_simp
   (i : ι)
-  : (λ (f : ι → X) => f i)† = (λ f' j => ((i == j : ℝ) * f' : X))
-:= sorry
+  : (λ (f : ι → X) => f i)† = (λ f' j => ([[i = j]] * f' : X))
+:= sorry_proof
 
 @[simp ↓ low-1, autodiff low-1]
 theorem eval.arg_x.parm1.adj_simp
   (f : X → ι → Z) [HasAdjointT f] (i : ι)
-  : (λ x => f x i)† = (λ x' => f† (λ j => ((i == j : ℝ) * x')))
+  : (λ x => f x i)† = (λ x' => f† (λ j => ([[i = j]] * x')))
 := 
 by 
   rw [comp.arg_x.adj_simp (λ (x : ι → Z) => x i) f]

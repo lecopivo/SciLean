@@ -65,11 +65,14 @@ instance HasAdjoint_add_extra_3_3 (f : X → Y → W) [HasAdjointNT 2 f]
 --------------------------------------------------------------------------------
 
 instance id.arg_x.hasAdjoint 
-  : HasAdjoint λ x : X => x := sorry_proof
+  : HasAdjointT λ x : X => x := sorry_proof
 
 -- I think this is waying that `(λ x y => x : X ⊸ Y → X)` not `(λ x y => x : X ⊸ Y ⟿ X)`
-instance const.arg_xy.hasAdjoint 
-  : HasAdjoint λ (x : X) (i : ι) => x := sorry_proof
+instance const.arg_x.hasAdjoint 
+  : HasAdjointT λ (x : X) (i : ι) => x := sorry_proof
+
+instance const.arg_y.hasAdjoint 
+  : HasAdjointT λ (y : Y) => (0 : X) := sorry_proof
 
 instance (priority := low) swap.arg_y.hasAdjoint 
   (f : ι → Y → Z) [∀ x, HasAdjointT (f x)] 

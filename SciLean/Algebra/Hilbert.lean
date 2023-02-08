@@ -109,8 +109,15 @@ instance (X Y) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) where
 
 -- Function type
 
-instance (X) [Inner X] (ι) [Enumtype ι] : Inner (ι → X) where
+instance (ι) (X : ι → Type) [∀ i, Inner (X i)] [Enumtype ι] : Inner ((i : ι) → X i) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫
+
+-- instance (X) [Inner X] (ι) [Enumtype ι] : Inner (ι → X) where
+--   inner := λ f g => ∑ i, ⟪f i, g i⟫
+
+instance (ι) (X : ι → Type) [∀ i, Vec (X i)] [∀ i, TestFunctions (X i)] [Enumtype ι] : TestFunctions ((i : ι) → X i) where
+  TestFun f := ∀ i, TestFun (f i)
+  is_lin_subspace := sorry
 
 instance (X) [Vec X] [TestFunctions X] (ι) [Enumtype ι] : TestFunctions (ι → X) where
   TestFun f := ∀ i, TestFun (f i)

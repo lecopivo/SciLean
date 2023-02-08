@@ -66,11 +66,11 @@ class Hilbert (X) extends SemiHilbert X where
   all_are_test : ∀ x : X, TestFun x
                                      
 
-def SemiHilbert.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [HMul ℝ α α] [Inner α] [TestFunctions α] : SemiHilbert α
-  := SemiHilbert.mk (toVec := Vec.mkSorryProofs) sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
+def SemiHilbert.mkSorryProofs {α} [Vec α] [Inner α] [TestFunctions α] : SemiHilbert α
+  := SemiHilbert.mk sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
 
-def Hilbert.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [HMul ℝ α α] [Inner α] [TestFunctions α] : Hilbert α
-  := Hilbert.mk (toSemiHilbert := SemiHilbert.mkSorryProofs) sorry_proof
+def Hilbert.mkSorryProofs {α} [SemiHilbert α] : Hilbert α
+  := Hilbert.mk sorry_proof
 
 --- Reals
 
@@ -80,6 +80,7 @@ instance : Inner ℝ where
 instance : TestFunctions ℝ where
   TestFun x := True
 
+instance : SemiHilbert ℝ := SemiHilbert.mkSorryProofs
 instance : Hilbert ℝ := Hilbert.mkSorryProofs
 
 -- Product space
@@ -97,9 +98,64 @@ instance (X Y) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) := Hilbert.mkSorryProo
 
 instance (X) [Inner X] (ι) [Enumtype ι] : Inner (ι → X) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫
+-- dependent version of previous
+instance (priority:=low) (ι) (X : ι → Type) 
+  [∀ i, Inner (X i)] [Enumtype ι] 
+  : Inner ((i : ι) → X i) where
+  inner := λ f g => ∑ i, ⟪f i, g i⟫
 
 instance (X) [Vec X] [TestFunctions X] (ι) [Enumtype ι] : TestFunctions (ι → X) where
   TestFun f := ∀ i, TestFun (f i)
+--dependent version of previous
+instance (priority:=low) (ι) (X : ι → Type) 
+  [∀ i, Vec (X i)] [∀ i, TestFunctions (X i)] [Enumtype ι] 
+  : TestFunctions ((i : ι) → X i) where
+  TestFun f := ∀ i, TestFun (f i)
+
+
+-- Sum type
+
+instance instInnerSum
+  (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
+  [∀ x, Inner (TX x)] [∀ y, Inner (TY y)]
+  : Inner ((TX⊕TY) xy) 
+  :=
+  match xy with
+  | .inl _ => inferInstance
+  | .inr _ => inferInstance
+
+instance instTestFunctions
+  (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
+  [∀ x, TestFunctions (TX x)] [∀ y, TestFunctions (TY y)]
+  : TestFunctions ((TX⊕TY) xy) 
+  :=
+  match xy with
+  | .inl _ => inferInstance
+  | .inr _ => inferInstance
+
+instance instSemiHilbert
+  (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
+  [∀ x, SemiHilbert (TX x)] [∀ y, SemiHilbert (TY y)]
+  : SemiHilbert ((TX⊕TY) xy) 
+  :=
+  match xy with
+  | .inl _ => inferInstance
+  | .inr _ => inferInstance
+
+instance instHilbert
+  (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
+  [∀ x, Hilbert (TX x)] [∀ y, Hilbert (TY y)]
+  : Hilbert ((TX⊕TY) xy) 
+  :=
+  match xy with
+  | .inl _ => inferInstance
+  | .inr _ => inferInstance
+
+
 
 instance (X) [SemiHilbert X] (ι) [Enumtype ι] : SemiHilbert (ι → X) := SemiHilbert.mkSorryProofs
+instance (priority:=low) (ι) (X : ι → Type) [∀ i, SemiHilbert (X i)] [Enumtype ι] : SemiHilbert ((i : ι) → X i) 
+  := SemiHilbert.mkSorryProofs
 instance (X) [Hilbert X] (ι) [Enumtype ι] : Hilbert (ι → X) := Hilbert.mkSorryProofs
+instance (priority:=low) (ι) (X : ι → Type) [∀ i, Hilbert (X i)] [Enumtype ι] : Hilbert ((i : ι) → X i) 
+  := Hilbert.mkSorryProofs

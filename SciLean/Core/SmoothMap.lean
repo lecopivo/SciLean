@@ -179,7 +179,6 @@ namespace SciLean
 
 
   variable {ι κ : Type} {E F G : ι → Type} {E' : κ → Type} [∀ i, Vec (E i)] [∀ i, Vec (F i)] [∀ i, Vec (G i)] [∀ j, Vec (E' j)]
-  instance  [∀ i, Vec (F i)] : Vec ((i : ι) → (F i)) := sorry
 
   def pmapDep : ((i : ι)→(E i)) ⟿ ((i : ι)→(F i)) ⟿ ((i : ι)→(E i)×(F i)) := ⟨λ f => ⟨λ g => λ x => (f x, g x), sorry⟩, sorry⟩
   def fmapDep : ((i : ι)→(E i)) ⟿ ((j : κ)→(E' j)) ⟿ ((ij : (ι×κ))→(E ij.1)×(E' ij.2)) := ⟨λ f => ⟨λ g => λ (i,j) => (f i, g j), sorry⟩, sorry⟩

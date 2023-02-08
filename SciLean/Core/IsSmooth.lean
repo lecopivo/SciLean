@@ -38,7 +38,7 @@ variable {Y₁ Y₂ Y₃ : Type} [Vec Y₁] [Vec Y₂] [Vec Y₃]
 instance (f : X → Y → Z) [IsSmoothNT 2 f]
   : IsSmoothT (λ x => f x) := sorry_proof
 
-instance (f : X → Y → Z) [IsSmoothNT 2 f] (x : X)
+instance IsSmooth2_apply_1 (f : X → Y → Z) [IsSmoothNT 2 f] (x : X)
   : IsSmoothT (λ y => f x y) := sorry_proof
 
 
@@ -79,7 +79,10 @@ instance id.arg_x.isSmooth
   : IsSmooth λ x : X => x := sorry_proof
 
 instance const.arg_xy.isSmooth 
-  : IsSmoothN 2 λ (x : X) (y : Y) => x := sorry_proof
+  : IsSmoothNT 2 λ (x : X) (y : Y) => x := inferInstance
+
+instance const.arg_y.isSmooth (x : X)
+  : IsSmoothT λ (y : Y) => x := by apply IsSmooth2_apply_1 (f := λ x y => x); done
 
 instance (priority := low) swap.arg_y.isSmooth 
   (f : α → Y → Z) [∀ x, IsSmoothT (f x)] 
@@ -108,7 +111,6 @@ instance comp.arg_x.isSmooth
   (f : Y → Z) [IsSmoothT f]
   (g : X → Y) [IsSmoothT g] 
   : IsSmoothT (λ x => f (g x)) := by infer_instance
-
 
 instance {Ws W' : Type} [Vec Ws] [Vec W']
   (f : Z → W) [Prod.Uncurry n W Ws W'] [IsSmoothNT (n+1) f]
@@ -139,6 +141,7 @@ instance comp3.arg_x.isSmooth
 by
   -- have : IsSmoothNT 4 fun x y z => f (g₁ x y z) (g₂ x y z) := by apply hoho
   infer_instance
+
 
 
 instance Prod.fst.arg_xy.isSmooth : IsSmooth (Prod.fst : X×Y → X) := sorry_proof

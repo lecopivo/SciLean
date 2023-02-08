@@ -57,6 +57,17 @@ section CommonVectorSpaces
   instance [Vec U] [Vec V] : Vec (U × V) := Vec.mkSorryProofs
   instance : Vec Unit := Vec.mkSorryProofs
 
+
+  instance instVecSum
+    (X Y : Type) (TX : X → Type) (TY : Y → Type)  (xy : X⊕Y) 
+    [∀ x, Vec (TX x)] [∀ y, Vec (TY y)]
+    : Vec ((TX⊕TY) xy) 
+    :=
+    match xy with
+    | .inl _ => inferInstance
+    | .inr _ => inferInstance
+
+
 end CommonVectorSpaces
 
 

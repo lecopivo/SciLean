@@ -14,8 +14,10 @@ abbrev typeOf {α} (_ : α) := α
 
 instance : Fact (x=x) := ⟨by rfl⟩
 
-instance {α : Type u} (β : α → Type v) [Inhabited α] [∀ a, Inhabited (β a)] : Inhabited (Sigma β) := ⟨Sigma.mk default default⟩
-instance [Fact (n≠0)] : Inhabited (Fin n) := ⟨⟨0, sorry⟩⟩
+instance instInhabitedSigma 
+  {α : Type u} (β : α → Type v) [Inhabited α] [∀ a, Inhabited (β a)] 
+  : Inhabited (Sigma β) := ⟨Sigma.mk default default⟩
+instance instInhabitedFin [Fact (n≠0)] : Inhabited (Fin n) := ⟨⟨0, sorry⟩⟩
 instance {ι : Type} [Enumtype ι] [Nonempty ι] : Fact (numOf ι≠0) := sorry
 
 --- !i creates an element of a subtype with an omitted proof
@@ -60,6 +62,16 @@ elab "reduce_type_of" t:term : term => do
   let typ ← inferType val
   let reduced ← reduce typ (skipTypes := false)
   Expr.letE `x reduced (val) (Expr.bvar 0) false |> pure
+
+
+abbrev Sum.map {α : Type u} {β : Type v} {γ : Sort w} 
+  (f : α → γ) (g : β → γ) (xy : α ⊕ β) : γ := 
+  match xy with
+  | .inl x => f x
+  | .inr y => g y
+
+infix:30 "⊕" => Sum.map
+
 
 
 -- @[inline]

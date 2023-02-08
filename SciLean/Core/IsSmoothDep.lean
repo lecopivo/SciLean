@@ -68,7 +68,13 @@ instance id.arg_x.isSmoothDep
 example {α : Type} : IsSmoothDepNT 1 (fun (x : α → Y) => x) := inferInstance
 
 instance const.arg_xy.isSmoothDep
-  : IsSmoothDepN 2 λ (x : X) (y : Y) => x := sorry_proof
+  : IsSmoothDepNT 2 λ (x : X) (y : Y) => x := inferInstance
+
+instance const.arg_x.isSmoothDep
+  : IsSmoothDepT λ (x : X) (y : Y) => x := inferInstance
+
+instance const.arg_y.isSmoothDep (x : X)
+  : IsSmoothDepT λ (y : Y) => x := IsSmoothDep.remove_2_1 (λ x y => x) x
 
 instance (priority := low) swap.arg_y.isSmoothDep {α : Type}
   (f : α → Y → Z) [∀ x, IsSmoothDepT (f x)]

@@ -106,8 +106,12 @@ namespace Real
 
   instance : Inv ℝ := ⟨λ x => 1.0/x⟩
 
-  instance : Coe Bool ℝ := ⟨λ b => if b then 1.0 else 0.0⟩
   instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
+
+
+  -- Used for Kroneckers delta as  `δᵢⱼ = [[i = j]]`
+  instance : Coe Bool ℝ := ⟨λ b => if b then 1.0 else 0.0⟩
+  macro "[[" p:term "]]" : term => `((($p : Bool) : ℝ))
 
 
   -- instance : HPow ℝ ℤ ℝ := ⟨λ x n => x^(n : ℝ)⟩
