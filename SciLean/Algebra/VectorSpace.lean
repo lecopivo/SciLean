@@ -35,23 +35,23 @@ section CommonVectorSpaces
   -- instance (priority := high) [Vec U] : HMul ℝ U U := by infer_instance
 
   -- instance {A} [AddCommGroup A] : AddCommGroup (α → A) := AddCommGroup.mk sorry
-  def AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α := AddSemigroup.mk sorry_proof
-  def AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α := 
+  abbrev AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α := AddSemigroup.mk sorry_proof
+  abbrev AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α := 
     AddMonoid.mk (toAddSemigroup := AddSemigroup.mkSorryProofs) sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
-  def SubNegMonoid.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α]  : SubNegMonoid α := 
+  abbrev SubNegMonoid.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α]  : SubNegMonoid α := 
     SubNegMonoid.mk (toAddMonoid := AddMonoid.mkSorryProofs) sorry_proof zsmulRec sorry_proof sorry_proof sorry_proof
-  def AddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddGroup α :=
+  abbrev AddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddGroup α :=
     AddGroup.mk (toSubNegMonoid := SubNegMonoid.mkSorryProofs) sorry_proof
-  def AddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddCommGroup α :=
+  abbrev AddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddCommGroup α :=
     AddCommGroup.mk (toAddGroup := AddGroup.mkSorryProofs) sorry_proof
 
-  def MulAction.mkSorryProofs {α β} [Monoid α] [HMul α β β] : MulAction α β := MulAction.mk sorry_proof sorry_proof
-  def DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [HMul α β β] : DistribMulAction α β := 
+  abbrev MulAction.mkSorryProofs {α β} [Monoid α] [HMul α β β] : MulAction α β := MulAction.mk sorry_proof sorry_proof
+  abbrev DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [HMul α β β] : DistribMulAction α β := 
     DistribMulAction.mk (toMulAction := MulAction.mkSorryProofs) sorry_proof sorry_proof
-  def Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [HMul α β β] : Module α β := 
+  abbrev Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [HMul α β β] : Module α β := 
     Module.mk (toDistribMulAction := DistribMulAction.mkSorryProofs) sorry_proof sorry_proof
 
-  def Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [HMul ℝ α α] : Vec α :=
+  abbrev Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [HMul ℝ α α] : Vec α :=
     Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs))
     
   instance [Vec U] : Vec (α → U) := Vec.mkSorryProofs

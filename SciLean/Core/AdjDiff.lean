@@ -259,7 +259,7 @@ theorem comp.arg_x.parm3.adjDiff_simp
 
 -- TODO: fix this!!!
 example (a : α) (f : Y₁ → Y₂ → α → Z) [IsSmoothT λ y₁ y₂ => f y₁ y₂ a]
-  (g₁ : X → Y₁) [hg : IsSmoothT g₁] : IsSmoothT (λ x y => f (g₁ x) y a) := by try infer_instance; admit
+  (g₁ : X → Y₁) [hg : IsSmoothT g₁] : IsSmoothT (λ x y => f (g₁ x) y a) := by (try infer_instance); admit
 
 
 @[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
@@ -374,7 +374,7 @@ by
   admit
 
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm1.revDiff_simp
   (a : α)
   (f : X → Y → α → Z) [HasAdjDiffNT 2 λ x y => f x y a]

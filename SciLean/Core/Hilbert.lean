@@ -66,10 +66,10 @@ class Hilbert (X) extends SemiHilbert X where
   all_are_test : ∀ x : X, TestFun x
                                      
 
-def SemiHilbert.mkSorryProofs {α} [Vec α] [Inner α] [TestFunctions α] : SemiHilbert α
+abbrev SemiHilbert.mkSorryProofs {α} [Vec α] [Inner α] [TestFunctions α] : SemiHilbert α
   := SemiHilbert.mk sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
 
-def Hilbert.mkSorryProofs {α} [SemiHilbert α] : Hilbert α
+abbrev Hilbert.mkSorryProofs {α} [SemiHilbert α] : Hilbert α
   := Hilbert.mk sorry_proof
 
 --- Reals
