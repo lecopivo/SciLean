@@ -44,8 +44,13 @@ theorem infer_HasAdjDiffDep {X Y : Type} {Xs Y' : Type} [SemiHilbertDiff Xs] [Se
 instance HasAdjDiffDep2_apply_2 (f : X → Y → Z) [HasAdjDiffDepNT 2 f] (y : Y)
   : HasAdjDiffDepT (λ x => f x y) := sorry_proof
 
-instance HasAdjDiffDep2_apply_1 (f : X → Y → Z) [HasAdjDiffDepNT 2 f] (x : X)
-  : HasAdjDiffDepT (λ y => f x y) := sorry_proof
+instance HasAdjDiffDep2_apply_1 (f : X → Y → Z) [inst : HasAdjDiffDepNT 2 f] (x : X)
+  : HasAdjDiffDepT (λ y => f x y) := 
+by
+  have is := inst.proof.1
+  have ia := inst.proof.2
+ 
+  apply infer_HasAdjDiffDep; intro x; simp; admit
 
 instance (f : X → Y → Z → W) [HasAdjDiffDepNT 3 f] (y z)
   : HasAdjDiffDepT (λ x => f x y z) := sorry_proof
@@ -90,24 +95,21 @@ instance const.arg_x.hasAdjoint_no_index {X} [SemiHilbert X]
 instance const.arg_x.hasAdjDiffDep
   : HasAdjDiffDepT (λ (x : X) (i : ι) => x) := by apply infer_HasAdjDiffDep; intro; unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll; simp; infer_instance; done
 
-set_option trace.Meta.Match.unify true in
-set_option trace.Meta.Tactic.simp.unify true in
-set_option trace.pp.analyze.tryUnify true in
+
 instance const.arg_y.hasAdjDiffDep (x : X)
   : HasAdjDiffDepT (λ (y : Y) => x) := 
 by 
-  apply infer_HasAdjDiffDep; intro y;
-  unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll; 
-  simp; apply const.arg_y.hasAdjoint (Y:=𝒯[y] Y) (X:=𝒯[x] X); infer_instance
+  apply infer_HasAdjDiffDep; intro;
+  simp; infer_instance
 
 instance (priority := low) swap.arg_y.hasAdjDiffDep
-  (f : ι → Y → Z) [inst : ∀ x, HasAdjDiffDepT (f x)]
+  (f : ι → Y → Z) [inst : ∀ i, HasAdjDiffDepT (f i)]
   : HasAdjDiffDepT (λ y x => f x y) :=
 by
   have is := λ x => (inst x).proof.1
   have ia := λ x => (inst x).proof.2
-  apply infer_HasAdjDiffDep; intro;
-  unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll; 
+  apply infer_HasAdjDiffDep; intro y;
+  unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll;   
   simp; infer_instance; done
 
 
@@ -183,7 +185,7 @@ instance eval.arg_x.parm1.hasAdjDiffDep
     have := inst.proof.1
     have := inst.proof.2
 
-    apply infer_HasAdjDiffDep; intro; simp; infer_instance
+    apply infer_HasAdjDiffDep; intro x; simp; infer_instance
 
 ----------------------------------------------------------------------
 

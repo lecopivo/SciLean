@@ -51,6 +51,12 @@ theorem swap.arg_y.adj_simp
   (f : ι → Y → Z) [∀ i, HasAdjointT (f i)] 
   : (λ y i => f i y)† = λ g => ∑ i, (f i)† (g i) := sorry_proof
 
+@[simp ↓ low-4, autodiff low-4]
+theorem swapDep.arg_y.adj_simp
+  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Enumtype ι]
+  (f : (i : ι) → Y → Z i) [∀ i, HasAdjointT (f i)] 
+  : (λ y i => f i y)† = λ g => ∑ i, (f i)† (g i) := sorry_proof
+
 @[simp ↓ low, autodiff low-3]
 theorem comp.arg_x.adj_simp
   (f : Y → Z) [HasAdjointT f] 
@@ -92,6 +98,13 @@ theorem eval.arg_f.adj_simp
 := sorry_proof
 
 @[simp ↓ low-1, autodiff low-1]
+theorem evalDep.arg_f.adj_simp
+  {ι} {X : ι → Type} [∀ i, SemiHilbert (X i)] [Enumtype ι]
+  (i : ι)
+  : (λ (f : (i' : ι) → X i') => f i)† = (λ f' j => (if h : i = j then h ▸ f' else 0))
+:= sorry_proof
+
+@[simp ↓ low-1, autodiff low-1]
 theorem eval.arg_x.parm1.adj_simp
   (f : X → ι → Z) [HasAdjointT f] (i : ι)
   : (λ x => f x i)† = (λ x' => f† (λ j => ([[i = j]] * x')))
@@ -99,6 +112,17 @@ theorem eval.arg_x.parm1.adj_simp
 by 
   rw [comp.arg_x.adj_simp (λ (x : ι → Z) => x i) f]
   simp; done
+
+@[simp ↓ low-2, autodiff low-2]
+theorem evalDep.arg_x.parm1.adj_simp
+  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Enumtype ι]
+  (f : X → (i : ι) → Z i) [HasAdjointT f] (i : ι)
+  : (λ x => f x i)† = (λ x' => f† (λ j => (if h : i = j then h ▸ x' else 0)))
+:= 
+by 
+  rw [comp.arg_x.adj_simp (λ (x : (i : ι) → Z i) => x i) f]
+  simp; done
+
 
 ----------------------------------------------------------------------
   -- These theorems are problematic when used with simp

@@ -67,6 +67,14 @@ elab:max "𝒯" x:term:max : term => withFreshMacroScope do
   elabTerm (← `(?m)) none
 
 
+class ReverseDifferential {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
+
+elab:max "ℛ" x:term:max : term => withFreshMacroScope do
+  _ ← synthInstance (← elabType (← `(ReverseDifferential $x ?m)))
+  elabTerm (← `(?m)) none
+
+
+
 class OTimes {α : Sort u} {β : Sort v} (a : α) (b : β) {γ : outParam $ Sort w} (c :  outParam γ) 
 
 elab x:term:71 "⊗" y:term:72 : term => withFreshMacroScope do

@@ -75,8 +75,14 @@ instance const.arg_y.hasAdjoint
   : HasAdjointT λ (y : Y) => (0 : X) := sorry_proof
 
 instance (priority := low) swap.arg_y.hasAdjoint 
-  (f : ι → Y → Z) [∀ x, HasAdjointT (f x)] 
+  (f : ι → Y → Z) [∀ i, HasAdjointT (f i)] 
   : HasAdjointT (λ y x => f x y) := sorry
+
+instance (priority := low-1) swapDep.arg_y.hasAdjoint 
+  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Enumtype ι]
+  (f : (i : ι) → Y → Z i) [∀ x, HasAdjointT (f x)] 
+  : HasAdjointT (λ y x => f x y) := sorry
+
 
 instance (priority := mid-1) subst.arg_x.hasAdjoint 
   (f : X → Y → Z) [HasAdjointNT 2 f]
@@ -137,6 +143,11 @@ by
 instance eval.arg_x.parm1.hasAdjoint
   (f : X → ι → Z) [HasAdjointT f] (i : ι) 
   : HasAdjointT (λ x => f x i) := sorry_proof
+
+instance (priority := mid-1) evalDep.arg_x.parm1.hasAdjoint {Z : ι → Type} [∀ i, SemiHilbert (Z i)]
+  (f : X → (i : ι) → Z i) [HasAdjointT f] (i : ι) 
+  : HasAdjointT (λ x => f x i) := sorry_proof
+
   
 --------------------------------------------------------------------
 -- Variants a of theorems at points --
