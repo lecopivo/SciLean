@@ -203,3 +203,13 @@ instance diag.arg_x.parm3.hasAdjoint
   : HasAdjointT (λ x => f (g₁ x) (g₂ x) a b c)
 := by 
   (apply diag.arg_x.hasAdjoint (λ y₁ y₂ => f y₁ y₂ a b c) g₁ g₂); done
+
+
+
+--------------------------------------------------------------------------------
+-- Product projections and addition
+
+
+instance Prod.fst.arg_xy.hasAdjoint : HasAdjoint (Prod.fst : X×Y → X) := sorry_proof
+instance Prod.snd.arg_xy.hasAdjoint : HasAdjoint (Prod.snd : X×Y → Y) := sorry_proof
+instance HAdd.hAdd.arg_xy.hasAdjoint : HasAdjointN 2 (HAdd.hAdd : X → X → X) := sorry_proof

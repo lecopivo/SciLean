@@ -155,6 +155,11 @@ instance comp3.arg_x.isLin
   : IsLinNT 3 (λ x y z => f (g₁ x y z) (g₂ x y z) (g₃ x y z)) := 
 by
   infer_instance
+
+
+instance Prod.fst.arg_xy.isLin : IsLin (Prod.fst : X×Y → X) := sorry_proof
+instance Prod.snd.arg_xy.isLin : IsLin (Prod.snd : X×Y → Y) := sorry_proof
+instance HAdd.hAdd.arg_xy.isLin : IsLinN 2 (HAdd.hAdd : X → X → X) := sorry_proof
   
 
 ----------------------------------------------------------------------

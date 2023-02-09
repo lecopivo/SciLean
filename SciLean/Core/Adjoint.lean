@@ -2,6 +2,8 @@ import SciLean.Notation
 import SciLean.Core.Attributes
 import SciLean.Core.HasAdjoint
 
+import SciLean.Tactic.CustomSimp.AllPrePost
+
 namespace SciLean
 
 class Dagger {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
@@ -123,12 +125,11 @@ by
   rw [comp.arg_x.adj_simp (λ (x : (i : ι) → Z i) => x i) f]
   simp; done
 
-
 ----------------------------------------------------------------------
   -- These theorems are problematic when used with simp
 
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, autodiff low-1, simp_guard g (λ x => x)] -- try to avoid using this theorem
 theorem comp.arg_x.parm1.adj_simp
   (a : α) 
   (f : Y → α → Z) [HasAdjointT (λ y => f y a)]
@@ -146,7 +147,7 @@ example
     (λ x => f (g x) a)† = λ z => g† ((λ y => f y a)† z)
 := by simp
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, autodiff low-1, simp_guard g (λ x => x)] -- try to avoid using this theorem
 theorem comp.arg_x.parm2.adj_simp
   (a : α) (b : β)
   (f : Y → α → β → Z) [HasAdjointT (λ y => f y a b)]
@@ -156,7 +157,7 @@ theorem comp.arg_x.parm2.adj_simp
 := by 
   (apply comp.arg_x.adj_simp (λ y => f y a b) g); done
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, autodiff low-1, simp_guard g (λ x => x)] -- try to avoid using this theorem
 theorem comp.arg_x.parm3.adj_simp
   (a : α) (b : β) (c : γ)
   (f : Y → α → β → γ → Z) [HasAdjointT (λ y => f y a b c)]
@@ -169,7 +170,7 @@ theorem comp.arg_x.parm3.adj_simp
 -- theorem adjoint_of_comp_at_point4
 -- ...
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, autodiff low-1, simp_guard g₁ Prod.fst, g₂ Prod.snd] -- try to avoid using this theorem
 theorem diag.arg_x.parm1.adj_simp
   (a : α)
   (f : Y₁ → Y₂ → α → Z) [HasAdjointNT 2 (λ y₁ y₂ => f y₁ y₂ a)] 
@@ -181,7 +182,7 @@ theorem diag.arg_x.parm1.adj_simp
 := by 
   (apply diag.arg_x.adj_simp (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂); done
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, autodiff low-1, simp_guard g₁ Prod.fst, g₂ Prod.snd] -- try to avoid using this theorem
 theorem diag.arg_x.parm2.adj_simp
   (a : α) (b : β)
   (f : Y₁ → Y₂ → α → β → Z) [HasAdjointNT 2 (λ  y₁ y₂ => f y₁ y₂ a b)] 
@@ -193,3 +194,27 @@ theorem diag.arg_x.parm2.adj_simp
 := by 
   (apply diag.arg_x.adj_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂); done
 
+
+--------------------------------------------------------------------------------
+-- Product projections and addition
+
+@[simp ↓, autodiff]
+theorem Prod.fst.arg_xy.adjoint_simp
+  : (Prod.fst : X×Y → X)†
+    =
+    λ x => (x,0)
+  := sorry_proof
+
+@[simp ↓, autodiff]
+theorem Prod.snd.arg_xy.adjoint_simp
+  : (Prod.snd : X×Y → Y)†
+    =
+    λ y => (0,y)
+  := sorry_proof
+
+@[simp ↓, autodiff]
+theorem HAdd.hAdd.arg_xy.adjoint_simp
+  : (uncurryN 2 λ x y : X => x + y)†
+    =
+    λ x => (x,x)
+  := sorry_proof

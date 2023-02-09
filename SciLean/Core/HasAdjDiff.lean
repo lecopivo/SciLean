@@ -106,8 +106,12 @@ by
   have isg := instg.proof.1
   have iag := instg.proof.2
 
-  apply infer_HasAdjDiff; intro; 
-  simp[uncurryN, Prod.Uncurry.uncurry, tangentMap]; admit
+  apply infer_HasAdjDiff; intro x; 
+  simp[uncurryN, Prod.Uncurry.uncurry, tangentMap]; 
+  -- Thise should follow from `iaf`
+  have : ∀ x y, HasAdjointT λ dx => ∂ f x dx y := sorry_proof
+  have : ∀ x y, HasAdjointT λ dy => ∂ (f x) y dy := sorry_proof
+  infer_instance; done
 
 instance (priority := mid-1) subst2.arg_x.hasAdjDiff 
   (f : X → Y → Y₁ → Z) [HasAdjDiffNT 3 f]

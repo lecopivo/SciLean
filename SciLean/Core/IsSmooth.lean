@@ -146,6 +146,7 @@ by
 
 instance Prod.fst.arg_xy.isSmooth : IsSmooth (Prod.fst : X×Y → X) := sorry_proof
 instance Prod.snd.arg_xy.isSmooth : IsSmooth (Prod.snd : X×Y → Y) := sorry_proof
+instance HAdd.hAdd.arg_xy.isSmooth : IsSmoothN 2 (HAdd.hAdd : X → X → X) := sorry_proof
 
 --------------------------------------------------------------------------------
 -- Smooth Map --

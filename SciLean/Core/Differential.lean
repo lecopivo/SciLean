@@ -5,6 +5,8 @@ import SciLean.Core.Attributes
 import SciLean.Core.IsSmooth
 import SciLean.Core.IsLin
 
+import SciLean.Tactic.CustomSimp.AllPrePost
+
 namespace SciLean
 
 variable {α β γ : Type}
@@ -182,7 +184,7 @@ theorem differential.of_const (x : X)
 theorem differential.of_swap (f : α → X → Y) [∀ i, IsSmoothT (f i)]
   : ∂ (λ x a => f a x) = λ x dx a => ∂ (f a) x dx := sorry_proof
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, autodiff low-1, simp_guard g (λ x => x)]
 theorem differential.of_comp
   (f : Y → Z) [IsSmoothT f] 
   (g : X → Y) [IsSmoothT g]
@@ -195,7 +197,7 @@ theorem differential.of_comp
       ∂ f y dy 
   := sorry_proof
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, autodiff low-2, simp_guard g₁ Prod.fst, g₂ Prod.snd]
 theorem differential.of_diag
   (f : Y₁ → Y₂ → Z) [IsSmoothNT 2 f]
   (g₁ : X → Y₁) [IsSmoothT g₁]
@@ -235,9 +237,8 @@ theorem Prod.fst.arg_xy.diff_simp
 theorem Prod.snd.arg_xy.diff_simp
   : ∂ (Prod.snd : X×Y → Y)
     =
-    λ xy dxy => dxy.2
+    λ xy (dx,dy) => dy
   := sorry_proof
-
 
 --------------------------------------------------------------------------------
 -- Tangent Map Rules --
@@ -258,7 +259,7 @@ theorem tangentMap.of_swap (f : α → X → Y) [∀ i, IsSmoothT (f i)]
   : 𝒯 (λ x a => f a x) = λ (x,dx) => (λ a => f a x, λ a => ∂ (f a) x dx) 
   := by simp[tangentMap]; done
 
-@[simp ↓ low-1, autodiff]
+@[simp ↓ low-1, autodiff, simp_guard g (λ x => x)]
 theorem tangentMap.of_comp
   (f : Y → Z) [IsSmoothT f] 
   (g : X → Y) [IsSmoothT g] 
@@ -267,7 +268,7 @@ theorem tangentMap.of_comp
     λ xdx => 𝒯 f (𝒯 g xdx)
   := by simp[tangentMap]; done
 
-@[simp ↓ low-2, autodiff]
+@[simp ↓ low-2, autodiff, simp_guard g₁ Prod.fst, g₂ Prod.snd]
 theorem tangentMap.of_diag
   (f : Y₁ → Y₂ → Z) [IsSmoothNT 2 f]
   (g₁ : X → Y₁) [IsSmoothT g₁]
@@ -285,7 +286,7 @@ theorem tangentMap.of_diag
 
 Bilinear maps should usually provide a rewrite rule for `𝒯 (uncurryN 2 f)`
 -/
-@[simp ↓ low-5]
+@[simp ↓ low-5, autodiff low-5]
 theorem tangentMap.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothNT 2 f]
   : 𝒯 (uncurryN 2 f) 
     =
@@ -334,8 +335,45 @@ theorem diff_of_linear (f : X → Y) [IsLin f]
   : ∂ f = λ _ dx => f dx := sorry_proof
 
 @[simp low, autodiff] 
+theorem tangentMap_of_linear (f : X → Y) [IsLin f]
+  : 𝒯 f = λ (x,dx) => (f x, f dx) := by simp[tangentMap]; done
+
+
+@[simp low, autodiff] 
 theorem diff_of_linear_2_1 (f : X → Y → Z) [IsLinN 2 f] : ∂ f = λ _ dx _ => f dx 0 := sorry_proof
 @[simp low, autodiff] 
-theorem diff_of_linear_2_2 (f : X → Y → Z) [IsLinN 2 f] (x : X) : ∂ (f x) = λ _ dy => f 0 dy := sorry_proof
+theorem diff_of_linear_2_2 (f : X → Y → Z) [IsLinN 2 f] (x : X) : ∂ (λ y => f x y) = λ _ dy => f 0 dy := sorry_proof
 
 
+--------------------------------------------------------------------------------
+-- Differential of product projections and addition
+--------------------------------------------------------------------------------
+
+
+@[simp ↓, autodiff]
+theorem Prod.fst.arg_xy.tangentMap_simp
+  : 𝒯 (Prod.fst : X×Y → X)
+    =
+    λ ((x,y),(dx,dy)) => (x,dx)
+  := by simp
+
+@[simp ↓, autodiff]
+theorem Prod.snd.arg_xy.tangentMap_simp
+  : 𝒯 (Prod.snd : X×Y → Y)
+    =
+    λ ((x,y),(dx,dy)) => (y,dy)
+  := by simp
+
+@[simp ↓, autodiff]
+theorem HAdd.hAdd.arg_xy.diff_simp
+  : ∂ (uncurryN 2 λ x y : X => x + y)
+    =
+    λ xy (dx,dy) => dx + dy
+  := by simp[uncurryN, Prod.Uncurry.uncurry]; done
+
+@[simp ↓, autodiff]
+theorem HAdd.hAdd.arg_xy.tangentMap_simp
+  : 𝒯 (uncurryN 2 λ x y : X => x + y)
+    =
+    λ ((x,y),(dx,dy)) => (x+y, dx+dy)
+  := by simp; done
