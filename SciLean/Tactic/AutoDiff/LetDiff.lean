@@ -1,5 +1,5 @@
 import SciLean.Tactic.CustomSimp.Main
-import SciLean.Core
+import SciLean.Core.Differential
 
 import Lean.Meta
 import Lean.Parser
@@ -14,7 +14,7 @@ namespace SciLean
 --   dbg_trace s!"Running pre on {e}"
 --   pure (Step.visit (Result.mk e none))
 
-theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y → Z) [IsSmooth g] [IsSmooth f] [∀ x, IsSmooth (f x)]
+theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y → Z) [IsSmoothT g] [IsSmoothNT 2 f]
   : (∂ λ x => 
       let y := g x
       f x y)
@@ -23,7 +23,7 @@ theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y →
       let y  := g x
       let dy := ∂ g x dx
       ∂ f x dx y + ∂ (f x) y dy
-:= by simp; done
+:= by simp[tangentMap]; done
 
 theorem diffOfLetSimple {X Y α} [Vec X] [Vec Y] (a : α) (f : X → α → Y) [IsSmooth (λ x => f x a)]
   : (∂ λ x => 
@@ -35,21 +35,18 @@ theorem diffOfLetSimple {X Y α} [Vec X] [Vec Y] (a : α) (f : X → α → Y) [
       ∂ (λ x => f x y) x dx
 := by simp; done
 
-#check @Zero.zero
-
 abbrev vecZero (X : Type) [Vec X] : X := 0
 
-#check @Eq
-#check @sorryAx
 def sorryAx' (α : Sort _) : α := sorryAx α false
 -- Differentiate expression w.r.t to give free variables `xs = [(x₀,dx₀), (x₁, dx₁), ...]`
 -- This differentiates only through lambdas and lets
-
+#check @differential
 open Lean Meta in
-def diffLet (e : Expr) : MetaM (Option (Expr × Expr)) :=
+def diffLet (e : Expr) : MetaM (Option (Expr × Expr)) := do
   match e.app4? ``differential with
   | none => pure none
   | some (_,_,_,e') =>
+    dbg_trace s!"Differential application {← Lean.Meta.ppExpr e}"
     match e' with
     | Expr.lam .. => lambdaLetTelescope e' λ xs b => do
       let x := xs[0]!
@@ -145,10 +142,14 @@ def diffFVars (dvars : Array (Expr × Expr)) (e : Expr) : MetaM (Option Expr) :=
 
 
 open Lean Meta in
-def diffLet' (e : Expr) : MetaM (Option (Expr × Expr)) :=
-  match e.app4? ``differential with
-  | none => pure none
-  | some (_,_,_,e') =>
+def diffLet' (e : Expr) : MetaM (Option (Expr × Expr)) := do
+
+  if ¬(e.isAppOf ``differential) then
+    return none
+  else
+    match e.getArg? 5 with
+    | none => return none
+    | some e' => do
     match e' with
     | Expr.lam .. => lambdaLetTelescope e' λ xs b => do
       let x := xs[0]!

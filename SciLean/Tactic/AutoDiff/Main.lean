@@ -1,20 +1,23 @@
-import SciLean.Tactic.CustomSimp.Main
+-- import SciLean.Tactic.CustomSimp.Main
 import SciLean.Tactic.CustomSimp.AllPrePost
 -- import SciLean.Tactic.CustomSimp.DebugSimp
 
 import SciLean.Tactic.AutoDiff.LetDiff
-import SciLean.Core
-import SciLean.Functions
+import SciLean.AutoImpl
+import SciLean.Core.CoreFunctionProperties
+-- import SciLean.Functions
 
-import Lean.Meta
-import Lean.Parser
-import Lean.Elab
+-- import Lean.Meta
+-- import Lean.Parser
+-- import Lean.Elab
 
 -- namespace Lean.Elab.Tactic
 open Lean Meta.Simp
 
 namespace SciLean
 open Tactic.CustomSimp
+
+-- Tactic
 
 open Lean.Parser.Tactic in
 syntax (name := autodiff_core) "autodiff_core " (config)? (discharger)? (&"only ")? ("[" (simpStar <|> simpErase <|> simpLemma),* "]")? (location)? : tactic
@@ -27,10 +30,9 @@ open Lean.Elab.Tactic in
   if tactic.simp.trace.get (← getOptions) then
     traceSimpCall stx usedSimps
 
+-- Conv 
 
 open Lean.Parser.Tactic in
-/-- `simp [thm]` performs simplification using `thm` and marked `@[simp]` lemmas.
-See the `simp` tactic for more information. -/
 syntax (name := autodiff_core_conv) "autodiff_core" (config)? (discharger)? (&" only")? (" [" (simpStar <|> simpErase <|> simpLemma),* "]")? : conv
 
 open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
@@ -46,13 +48,28 @@ macro "autodiff" : tactic => `(tactic| (autodiff_core (config := {singlePass := 
 
 
 
--- set_option trace.Meta.Tactic.simp true in
+
+example : IsSmoothT fun x : ℝ => x + x * x := by infer_instance
+
+
 -- set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
 -- set_option trace.Meta.Tactic.simp.unify false in
--- #check (∂ λ (x : ℝ) => let y := x*x; let z := x + y*x*x; x + y + z)
---   rewrite_by 
---     autodiff
---     trace_state
+#check (∂ λ (x : ℝ) => let y := x*x; y)
+  rewrite_by
+    autodiff
+    trace_state
+
+
+-- set_option trace.Meta.Tactic.simp true in
+set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify false in
+#check (∂ λ (x : ℝ) => let y := x*x; let z := x + y*x*x; x + y + z)
+  rewrite_by
+    autodiff_core (config:={zeta:=false}) only []
+    autodiff
+    trace_state
 
 -- set_option trace.Meta.Tactic.simp true in
 -- set_option trace.Meta.Tactic.simp.rewrite false in

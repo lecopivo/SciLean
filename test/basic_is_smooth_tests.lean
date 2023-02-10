@@ -1,5 +1,4 @@
--- import SciLean.Core.IsSmooth
-import SciLean.Core.CoreFunctionProperties
+import SciLean.Core
 
 namespace SciLean.Smooth.Tests
 
