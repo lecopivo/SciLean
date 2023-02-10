@@ -5,7 +5,7 @@ import SciLean.Core.Attributes
 import SciLean.Core.IsSmooth
 import SciLean.Core.IsLin
 
-import SciLean.Tactic.CustomSimp.AllPrePost
+import SciLean.Tactic.CustomSimp.SimpGuard
 
 namespace SciLean
 

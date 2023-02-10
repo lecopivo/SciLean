@@ -1,10 +1,10 @@
--- import SciLean.Tactic.CustomSimp.Main
-import SciLean.Tactic.CustomSimp.AllPrePost
+import SciLean.Tactic.CustomSimp.Main
+-- import SciLean.Tactic.CustomSimp.AllPrePost
 -- import SciLean.Tactic.CustomSimp.DebugSimp
 
 import SciLean.Tactic.AutoDiff.LetDiff
-import SciLean.AutoImpl
-import SciLean.Core.CoreFunctionProperties
+-- import SciLean.AutoImpl
+import SciLean.Core
 -- import SciLean.Functions
 
 -- import Lean.Meta
@@ -12,10 +12,28 @@ import SciLean.Core.CoreFunctionProperties
 -- import Lean.Elab
 
 -- namespace Lean.Elab.Tactic
-open Lean Meta.Simp
+open Lean Meta Simp
 
 namespace SciLean
-open Tactic.CustomSimp
+
+
+partial def autoDiffPre (e : Expr) : SimpM Step := do
+  -- trace[Meta.Tactic.simp] s!"Pre simp on:\n{← Meta.ppExpr e}"
+  let e := e.headBeta
+
+  -- Always use `autodiff` marked theorems and set them all as `pre` instead of post  
+  let autodiffExt ← Lean.Meta.getSimpExtension? "autodiff"
+  let mut autodiffThms ← autodiffExt.get!.getTheorems 
+  autodiffThms := { autodiffThms with pre := autodiffThms.post, post := autodiffThms.pre }
+
+  let allThms := #[autodiffThms].append (← read).simpTheorems
+  for thms in allThms do
+    if let some r ← rewrite? e thms.pre thms.erased DefaultMethods.discharge? (tag := "pre") (rflOnly := false) then
+      -- trace[Meta.Tactic.simp] s!"Simplified to: {← Meta.ppExpr r.expr}"
+      return ← andThen (Step.visit r) (λ e => autoDiffPre e)
+  return Step.visit { expr := e }
+
+
 
 -- Tactic
 
@@ -26,7 +44,7 @@ open Lean.Elab.Tactic in
 @[tactic autodiff_core] def autoDiffCore : Tactic := fun stx => do
   let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false)
   let usedSimps ← dischargeWrapper.with fun discharge? =>
-    SciLean.Meta.CustomSimp.simpLocation ctx discharge? (expandOptLocation stx[5]) #[letDiff, preRewriteAll] #[]
+    SciLean.Meta.CustomSimp.simpLocation ctx discharge? (expandOptLocation stx[5]) #[letDiff, autoDiffPre] #[]
   if tactic.simp.trace.get (← getOptions) then
     traceSimpCall stx usedSimps
 
@@ -39,20 +57,52 @@ open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
 @[tactic autodiff_core_conv] def autoDiffCoreConv : Tactic := fun stx => withMainContext do
   let { ctx, dischargeWrapper, .. } ← mkSimpContext stx (eraseLocal := false)
   let lhs ← getLhs
-  let (result, _) ← dischargeWrapper.with fun d? => SciLean.Meta.CustomSimp.simp lhs ctx (discharge? := d?) #[letDiff, preRewriteAll] #[]
+  let (result, _) ← dischargeWrapper.with fun d? => SciLean.Meta.CustomSimp.simp lhs ctx (discharge? := d?) #[letDiff, autoDiffPre] #[]
   applySimpResult result
 
 
-macro "autodiff" : conv => `(conv| (autodiff_core (config := {singlePass := true,  zeta := false}); try simp (config := {zeta := false}) only [];))
-macro "autodiff" : tactic => `(tactic| (autodiff_core (config := {singlePass := true,  zeta := false}); try simp (config := {zeta := false}) only [];))
+macro "autodiff" : conv => 
+  `(conv| (autodiff_core (config := {singlePass := true,  zeta := false}) only []; 
+           try simp (config := {zeta := false}) only [];))
+macro "autodiff" : tactic => 
+  `(tactic| (autodiff_core (config := {singlePass := true,  zeta := false}) only []; 
+             try simp (config := {zeta := false}) only [];))
+
+-- Tactic
+
+open Lean.Parser.Tactic in
+syntax (name := symdiff_core) "symdiff_core " (config)? (discharger)? (&"only ")? ("[" (simpStar <|> simpErase <|> simpLemma),* "]")? (location)? : tactic
+
+open Lean.Elab.Tactic in
+@[tactic symdiff_core] def symDiffCore : Tactic := fun stx => do
+  let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false)
+  let usedSimps ← dischargeWrapper.with fun discharge? =>
+    SciLean.Meta.CustomSimp.simpLocation ctx discharge? (expandOptLocation stx[5]) #[autoDiffPre] #[]
+  if tactic.simp.trace.get (← getOptions) then
+    traceSimpCall stx usedSimps
+
+-- Conv 
+
+open Lean.Parser.Tactic in
+syntax (name := symdiff_core_conv) "symdiff_core" (config)? (discharger)? (&" only")? (" [" (simpStar <|> simpErase <|> simpLemma),* "]")? : conv
+
+open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
+@[tactic symdiff_core_conv] def symDiffCoreConv : Tactic := fun stx => withMainContext do
+  let { ctx, dischargeWrapper, .. } ← mkSimpContext stx (eraseLocal := false)
+  let lhs ← getLhs
+  let (result, _) ← dischargeWrapper.with fun d? => SciLean.Meta.CustomSimp.simp lhs ctx (discharge? := d?) #[autoDiffPre] #[]
+  applySimpResult result
 
 
+macro "symdiff" : conv => 
+  `(conv| (symdiff_core (config := {singlePass := true}) only [SciLean.tangentMap, SciLean.reverseDifferential]
+           try simp (config := {zeta := false}) only [];))
+macro "symdiff" : tactic => 
+  `(tactic| (symdiff_core (config := {singlePass := true}) only [SciLean.tangentMap, SciLean.reverseDifferential]; 
+             try simp (config := {zeta := false}) only [];))
 
 
-example : IsSmoothT fun x : ℝ => x + x * x := by infer_instance
-
-
--- set_option trace.Meta.Tactic.simp.rewrite true in
+set_option trace.Meta.Tactic.simp.rewrite true in
 -- set_option trace.Meta.Tactic.simp.discharge true in
 -- set_option trace.Meta.Tactic.simp.unify false in
 #check (∂ λ (x : ℝ) => let y := x*x; y)
@@ -62,14 +112,14 @@ example : IsSmoothT fun x : ℝ => x + x * x := by infer_instance
 
 
 -- set_option trace.Meta.Tactic.simp true in
-set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.rewrite true in
 -- set_option trace.Meta.Tactic.simp.discharge true in
 -- set_option trace.Meta.Tactic.simp.unify false in
-#check (∂ λ (x : ℝ) => let y := x*x; let z := x + y*x*x; x + y + z)
-  rewrite_by
-    autodiff_core (config:={zeta:=false}) only []
-    autodiff
-    trace_state
+-- #check (∂ λ (x : ℝ) => let y := x*x; let z := x + y*x*x; x + y + z)
+--   rewrite_by
+--     autodiff_core (config:={zeta:=false}) only []
+--     autodiff
+--     trace_state
 
 -- set_option trace.Meta.Tactic.simp true in
 -- set_option trace.Meta.Tactic.simp.rewrite false in

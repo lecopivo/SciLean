@@ -1,4 +1,4 @@
-import SciLean.Tactic.CustomSimp.DebugSimp
+import SciLean.Tactic.CustomSimp.Main
 
 import Lean.Meta
 

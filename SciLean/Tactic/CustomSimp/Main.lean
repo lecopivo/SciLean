@@ -6,8 +6,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura
 -/
 import Lean.Meta.Tactic.Simp.Main
--- import Lean.Meta.Tactic.Simp.Rewrite
 import Lean.Elab.Tactic
+
 import SciLean.Tactic.CustomSimp.Rewrite
 
 namespace Lean.Meta.Simp
