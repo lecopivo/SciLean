@@ -1,7 +1,146 @@
 import SciLean.Core.AdjDiff
+import SciLean.Core.AudoDiffSimps
 import SciLean.AutoImpl
 
 namespace SciLean
+
+--------------------------------------------------------------------------------
+-- Addition
+
+-- argument (x,y) [SemiHilbert X]
+--   hasAdjDiff
+--   abbrev ∂† dxy := (dxy,dxy)
+--   abbrev ℛ     -- auto
+
+-- already exists
+-- instance HAdd.hAdd.arg_xy.isSmooth
+-- theorem HAdd.hAdd.arg_xy.diff_simp
+-- theorem HAdd.hAdd.arg_xy.tangentMap_simp
+-- instance HAdd.hAdd.arg_xy.hasAdjoint
+-- theorem HAdd.hAdd.arg_xy.adjoint_simp
+
+instance HAdd.hAdd.arg_xy.hasAdjDiff
+  {X} [SemiHilbert X]
+  : HasAdjDiffN 2 (λ (x y : X) => x + y) := by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
+
+@[simp, autodiff]
+theorem HAdd.hAdd.arg_xy.adjDiff_simp
+  {X} [SemiHilbert X]
+  : ∂† (uncurryN 2 λ (x y : X) => x + y)
+    =
+    λ (x,y) dxy => (dxy, dxy)
+  := by simp[uncurryN,Prod.Uncurry.uncurry,adjointDifferential,hold]; done
+
+@[simp, autodiff]
+theorem HAdd.hAdd.arg_xy.revDiff_simp
+  {X} [SemiHilbert X]
+  : ℛ (uncurryN 2 λ (x y : X) => x + y) 
+    =
+    λ (x,y) => (x + y, λ dxy  => (dxy, dxy))
+  := by unfold reverseDifferential; simp; done
+
+
+-- argument x * [Vec X]
+--   isLin := sorry_proof
+--   isSmooth
+--   abbrev ∂ dx := dx * y
+--   abbrev 𝒯 dx
+-- argument x * [Hilbert X]
+--   hasAdjoint := sorry_proof
+--   abbrev † x' := ⟪x',y⟫
+--   hasAdjDiff -- auto
+--   abbrev ∂† dy := ⟪dy,y⟫
+--   abbrev ℛ
+instance HAdd.hAdd.arg_x.isSmooth
+  {X} [Vec X]
+  : IsSmooth (λ (x y : X) => x + y) := by apply IsSmoothN.mk
+
+@[simp, autodiff]
+theorem HAdd.hAdd.arg_x.diff_simp
+  {X} [Vec X]
+  : ∂ (λ (x y : X) => x + y) 
+    = 
+    λ x dx y => dx
+  := by simp
+
+@[simp, autodiff]
+theorem HAdd.hAdd.arg_x.tangentMap_simp
+  {X} [Vec X]
+  : 𝒯 (λ (x y : X) => x + y) 
+    = 
+    λ (x,dx) => (λ y => x+y, λ y => dx)
+  := by simp[tangentMap]; done
+
+instance HAdd.hAdd.arg_x.hasAdjDiff
+  {X} [Hilbert X] (y : X)
+  : HasAdjDiffT (λ (x : X) => x + y) := by apply infer_HasAdjDiff; simp; infer_instance; done
+
+@[simp, autodiff]
+theorem HAdd.hAdd.arg_x.adjDiff_simp
+  {X} [Hilbert X] (y : X)
+  : ∂† (λ (x : X) => x + y)
+    =
+    λ x dz => dz
+  := by simp[adjointDifferential,hold]; done
+
+@[simp, autodiff]
+theorem HAdd.hAdd.arg_x.revDiff_simp
+  {X} [Hilbert X] (y : X)
+  : ℛ (λ (x : X) => x + y)
+    =
+    λ x => (x + y, λ dx' : X => dx')
+  := by unfold reverseDifferential; simp[hold]; done
+
+-- argument y [Vec X]
+--   isLin := sorry_proof
+--   isSmooth      -- auto
+--   abbrev ∂ dy := x * dy
+--   abbrev 𝒯 dx  -- auto
+-- argument y [Hilbert X]
+--   hasAdjoint := sorry_proof
+--   abbrev † y' := x*y'
+--   hasAdjDiff -- auto
+--   abbrev ∂† dy := x*dy
+--   abbrev ℛ     -- auto
+instance HAdd.hAdd.arg_y.isSmooth
+  {X} [Vec X] (x : X)
+  : IsSmooth (λ (y : X) => x + y) := by apply IsSmoothN.mk
+
+@[simp,autodiff]
+theorem HAdd.hAdd.arg_y.diff_simp
+  {X} [Vec X] (x : X)
+  : ∂ (λ (y : X) => x + y)
+    =
+    λ (y dy : X) => dy
+  := by simp
+
+@[simp,autodiff]
+theorem HAdd.hAdd.arg_y.tangentMap_simp
+  {X} [Vec X] (x : X)
+  : 𝒯 (λ (y : X) => x + y)
+    =
+    λ (y,dy) => (x + y, dy)
+  := by simp[tangentMap]
+
+instance HAdd.hAdd.arg_y.hasAdjDiff
+  {X} [SemiHilbert X] (x : X)
+  : HasAdjDiff (λ (y : X) => x + y) := sorry_proof
+
+@[simp, autodiff]
+theorem HAdd.hAdd.arg_y.adjDiff_simp
+  {X} [SemiHilbert X] (x : X)
+  : ∂† (λ (y : X) => x + y)
+    =
+    λ (y dz : X) => dz
+  := by simp[adjointDifferential]; done
+
+@[simp, autodiff]
+theorem HAdd.hAdd.arg_y.revDiff_simp
+  {X} [SemiHilbert X] (x : X)
+  : ℛ (λ (y : X) => x + y)
+    =
+    λ y => (x + y, λ (dz : X) => dz)
+  := by simp[reverseDifferential]; done
 
 
 
