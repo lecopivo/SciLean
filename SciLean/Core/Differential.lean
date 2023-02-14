@@ -207,11 +207,25 @@ theorem differential.of_diag
     λ x dx => 
       let (y₁,dy₁) := 𝒯 g₁ (x,dx)
       let (y₂,dy₂) := 𝒯 g₂ (x,dx)
+      let df := ∂ (uncurryN 2 f)
       -- let y₁ := g₁ x
       -- let dy₁ := ∂ g₁ x dx
       -- let y₂ := g₂ x
       -- let dy₂ := ∂ g₂ x dx
-      ∂ f y₁ dy₁ y₂ +  ∂ (f y₁) y₂ dy₂ 
+      df (y₁,y₂) (dy₁,dy₂)
+      -- ∂ f y₁ dy₁ y₂ +  ∂ (f y₁) y₂ dy₂ 
+  := sorry_proof
+
+/-- Last resort theorem that changes tangent map to normal differential 
+
+Bilinear maps should usually provide a rewrite rule for `𝒯 (uncurryN 2 f)`
+-/
+@[simp ↓ low-5, autodiff low-5]
+theorem differential.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothNT 2 f]
+  : ∂ (uncurryN 2 f) 
+    =
+    λ (y₁,y₂) (dy₁,dy₂) =>
+    ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂
   := sorry_proof
 
 @[simp ↓ low, autodiff low]
@@ -280,7 +294,7 @@ theorem tangentMap.of_diag
       let (y₂,dy₂) := 𝒯 g₂ (x,dx)
       -- (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
       𝒯 (uncurryN 2 f) ((y₁,y₂),(dy₁,dy₂)) 
-  := by simp [tangentMap, uncurryN, Prod.Uncurry.uncurry]; done
+  := by simp [tangentMap]; done
 
 /-- Last resort theorem that changes tangent map to normal differential 
 
@@ -292,7 +306,7 @@ theorem tangentMap.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothNT 2 f]
     =
     λ ((y₁,y₂),(dy₁,dy₂)) =>
     (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
-  := by simp[tangentMap, uncurryN, Prod.Uncurry.uncurry]; done
+  := by simp[tangentMap]; done
 
 @[simp ↓ low, autodiff]
 theorem tangentMap.of_parm

@@ -85,11 +85,11 @@ theorem subst.arg_x.adjDiff_simp
   (g : X → Y) [instg : HasAdjDiffT g]
   : ∂† (λ x => f x (g x)) 
     = 
-    λ x dz => 
+    λ x dz =>
       let (y,dg') := ℛ g x
       -- let (dx,dy) := ∂† (uncurryN 2 f) (x,y) dz
       -- dx + dg' dy
-      (∂† (hold λ x' => f x' y)) x dz
+      (∂† (λ x' => f x' y)) x dz
       +
       dg' (∂† (f x) y dz)
     := 
@@ -97,14 +97,14 @@ by
   have := instg.proof.1
   have := instg.proof.2
   have := instf.proof.1
+  -- these follow from instf.proof.2
+  have : ∀ x y, HasAdjointT (λ dx => ∂ f x dx y) := sorry_proof
+  have : ∀ x y, HasAdjointT (λ dy => ∂ (f x) y dy) := sorry_proof
 
-  funext x dx';
-  -- have adjAdd : ∀ {X} [SemiHilbert X], HasAdjoint fun yy : X×X => yy.fst + yy.snd := sorry
-  simp[adjointDifferential, tangentMap] --- bla bla bla
-  admit
+  simp[adjointDifferential, reverseDifferential, tangentMap]
+  done
 
-
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm1.adjDiff_simp
   (a : α)
   (f : X → Y → α → Z) [HasAdjDiffNT 2 λ x y => f x y a]
@@ -115,15 +115,15 @@ theorem subst.arg_x.parm1.adjDiff_simp
       let (y,dg') := ℛ g x
       -- let (dx,dy) := ∂† (uncurryN 2 (λ x y => f x y a)) (x,y) dz
       -- dx + dg' dy
-      (∂† (hold λ x' => f x' y a)) x dz
+      (∂† (λ x' => f x' y a)) x dz
       +
-      dg' (∂† (hold λ y' => f x y' a) y dz)
+      dg' (∂† (λ y' => f x y' a) y dz)
     := 
 by 
-  rw[subst.arg_x.adjDiff_simp (λ x y => f x y a) g]; simp[hold]
+  rw[subst.arg_x.adjDiff_simp (λ x y => f x y a) g]
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
   (f : X → Y → α → β → Z) [HasAdjDiffNT 2 λ x y => f x y a b]
@@ -132,15 +132,15 @@ theorem subst.arg_x.parm2.adjDiff_simp
     = 
     λ x dz => 
       let (y,dg') := ℛ g x
-      (∂† (hold λ x' => f x' y a b)) x dz
+      (∂† (λ x' => f x' y a b)) x dz
       +
-      dg' (∂† (hold λ y' => f x y' a b) y dz)
+      dg' (∂† (λ y' => f x y' a b) y dz)
     := 
 by 
   apply subst.arg_x.adjDiff_simp (λ x y => f x y a b) g
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
   (f : X → Y → α → β → γ → Z) [HasAdjDiffNT 2 λ x y => f x y a b c]
@@ -149,15 +149,15 @@ theorem subst.arg_x.parm3.adjDiff_simp
     = 
     λ x dz => 
       let (y,dg') := ℛ g x
-      (∂† (hold λ x' => f x' y a b c)) x dz
+      (∂† (λ x' => f x' y a b c)) x dz
       +
-      dg' (∂† (hold λ y' => f x y' a b c) y dz)
+      dg' (∂† (λ y' => f x y' a b c) y dz)
     := 
 by 
   apply subst.arg_x.adjDiff_simp (λ x y => f x y a b c) g
   done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, autodiff low-1, simp_guard g (λ x => x)]
 theorem comp.arg_x.adjDiff_simp
   (f : Y → Z) [instf : HasAdjDiffT f]
   (g : X → Y) [instg : HasAdjDiffT g]
@@ -165,12 +165,10 @@ theorem comp.arg_x.adjDiff_simp
     = 
     λ x dz => 
       let (y,dg') := ℛ g x
-      dg' ((∂† f y) dz) := 
-by 
-  simp; unfold hold; simp
-  done
+      dg' ((∂† f y) dz) 
+  := by simp; done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, autodiff low-2, simp_guard g₁ Prod.fst, g₂ Prod.snd]
 theorem diag.arg_x.adjDiff_simp
   (f : Y₁ → Y₂ → Z) [HasAdjDiffNT 2 f]
   (g₁ : X → Y₁) [hg : HasAdjDiffT g₁]
@@ -185,7 +183,12 @@ theorem diag.arg_x.adjDiff_simp
       dg₂' ((∂† λ y₂' => f y₁ y₂') y₂ dz)
     := 
 by
-  simp; unfold hold; simp; unfold hold; simp[reverseDifferential]; done
+  rw[subst.arg_x.adjDiff_simp]
+  simp only [hold,reverseDifferential]
+  funext x dz
+  rw[comp.arg_x.adjDiff_simp (λ y₁ => f y₁ (g₂ x))]
+  simp only [reverseDifferential]
+  done
 
 @[simp ↓ low, autodiff low]
 theorem eval.arg_f.adjDiff_simp
@@ -223,7 +226,8 @@ theorem comp.arg_x.parm1.adjDiff_simp
       let (y,dg') := ℛ g x
       dg' ((∂† (hold λ y => f y a)) y dz)
 := by 
-  simp; unfold hold; simp
+  rw[subst.arg_x.parm1.adjDiff_simp]
+  simp[-subst.arg_x.parm1.adjDiff_simp,hold]
   done
 
 @[simp ↓ low-1, autodiff low-1]
@@ -238,7 +242,8 @@ theorem comp.arg_x.parm2.adjDiff_simp
       let (y,dg') := ℛ g x
       dg' ((∂† (hold λ y => f y a b)) y dz)
 := by 
-  simp; unfold hold; simp
+  rw[subst.arg_x.parm2.adjDiff_simp]
+  simp[-subst.arg_x.parm2.adjDiff_simp,hold]
   done
 
 @[simp ↓ low-1, autodiff low-1]
@@ -253,7 +258,8 @@ theorem comp.arg_x.parm3.adjDiff_simp
       let (y,dg') := ℛ g x
       dg' ((∂† (hold λ y => f y a b c)) y dx')
 := by 
-  simp; unfold hold; simp
+  rw[subst.arg_x.parm3.adjDiff_simp]
+  simp[-subst.arg_x.parm3.adjDiff_simp,hold]
   done
 
 
@@ -318,6 +324,49 @@ theorem diag.arg_x.parm3.adjDiff_simp
 ----------------------------------------------------------------------
 
 
+@[simp ↓, autodiff]
+theorem Prod.fst.arg_xy.adjDiff_simp
+  : ∂† (Prod.fst : X×Y → X)
+    =
+    λ xy dx => (dx,0)
+  := by unfold adjointDifferential; simp; done
+
+@[simp ↓, autodiff]
+theorem Prod.snd.arg_xy.adjDiff_simp
+  : ∂† (Prod.snd : X×Y → Y)
+    =
+    λ xy dy => (0,dy)
+  := by unfold adjointDifferential; simp; done
+
+@[simp ↓, autodiff]
+theorem HAdd.hAdd.arg_xy.adjDiff_simp
+  : ∂† (uncurryN 2 λ x y : X => x + y)
+    =
+    λ xy dx => (dx,dx)
+  :=  by unfold adjointDifferential; simp; done
+
+@[simp ↓, autodiff]
+theorem Prod.fst.arg_xy.revDiff_simp
+  : ℛ (Prod.fst : X×Y → X)
+    =
+    λ (x,y) => (x, λ dx => (dx,0))
+  := by unfold reverseDifferential; simp; done
+
+@[simp ↓, autodiff]
+theorem Prod.snd.arg_xy.revDiff_simp
+  : ℛ (Prod.snd : X×Y → Y)
+    =
+    λ (x,y) => (y, λ dy => (0,dy))
+  := by unfold reverseDifferential; simp; done
+
+@[simp ↓, autodiff]
+theorem HAdd.hAdd.arg_xy.revDiff_simp
+  : ℛ (uncurryN 2 λ x y : X => x + y)
+    =
+    λ (x,y) => (x+y, λ dx => (dx,dx))
+  := by unfold reverseDifferential; simp; done
+
+
 --------------------------------------------------------------------------------
 
 
@@ -350,7 +399,7 @@ by
 
   simp[adjointDifferential]; done
 
-@[simp ↓ low-3, autodiff low-3]
+@[simp ↓ low-3, autodiff low-3, simp_guard g (λ x => x)]
 theorem subst.arg_x.revDiff_simp
   (f : X → Y → Z) [instf : HasAdjDiffNT 2 f]
   (g : X → Y) [instg : HasAdjDiffT g]
@@ -370,8 +419,18 @@ by
   have := instf.proof.1
 
   funext x;
-  simp[adjointDifferential, tangentMap, reverseDifferential]
-  admit
+  unfold reverseDifferential
+  rw[subst.arg_x.adjDiff_simp]
+
+  simp only [uncurryN, Prod.Uncurry.uncurry]
+  simp only [hold, reverseDifferential]
+  conv => (rhs; rw[diag.arg_x.adjDiff_simp])
+  simp only [reverseDifferential, 
+             Prod.fst.arg_xy.adjDiff_simp, 
+             Prod.snd.arg_xy.adjDiff_simp,
+             prod_add_elemwise, 
+             add_zero, zero_add]
+  done
 
 
 @[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
@@ -392,7 +451,7 @@ by
   apply subst.arg_x.revDiff_simp (λ x y => f x y a) g
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm2.revDiff_simp
   (a : α) (b : β)
   (f : X → Y → α → β → Z) [HasAdjDiffNT 2 λ x y => f x y a b]
@@ -410,7 +469,7 @@ by
   apply subst.arg_x.revDiff_simp (λ x y => f x y a b) g
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm3.revDiff_simp
   (a : α) (b : β) (c : γ)
   (f : X → Y → α → β → γ → Z) [HasAdjDiffNT 2 λ x y => f x y a b c]
@@ -447,7 +506,9 @@ theorem comp.arg_x.revDiff_simp
       let (z,df') := ℛ f y
       (z, λ dz => dg' (df' dz)) := 
 by 
-  simp[reverseDifferential, uncurryN2.arg_x.diff_simp]
+  unfold reverseDifferential
+  simp only [comp.arg_x.adjDiff_simp]
+  simp only [reverseDifferential]
   done
 
 @[simp ↓ low-2, autodiff low-2]
@@ -467,7 +528,16 @@ theorem diag.arg_x.revDiff_simp
       -- dg₂' ((∂† λ y₂ => f y₁ y₂) y₂ (h₂ ▸ h₁ ▸ dx'))
     := 
 by
-  simp[reverseDifferential, uncurryN2.arg_x.diff_simp]; unfold hold;simp
+  unfold reverseDifferential
+  funext x
+  simp only [uncurryN, Prod.Uncurry.uncurry]
+  conv => lhs; enter [2,dz]; rw [diag.arg_x.adjDiff_simp]
+  conv => rhs; enter [2,dz]; rw [diag.arg_x.adjDiff_simp]
+  simp only [reverseDifferential,             
+             Prod.fst.arg_xy.adjDiff_simp, 
+             Prod.snd.arg_xy.adjDiff_simp, 
+             prod_add_elemwise, 
+             add_zero, zero_add]
   done
 
 @[simp ↓ low, autodiff low]
@@ -483,7 +553,7 @@ by
 @[simp ↓ low-1, autodiff low-1]
 theorem eval.arg_x.parm1.revDiff_simp
   (f : X → ι → Z) [HasAdjDiff f] (i : ι)
-  : ℛ (λ x => f x i) 
+  : ℛ (λ x => f x i)
     = 
     λ x =>
       let (fx, df') := ℛ f x

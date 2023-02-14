@@ -1,3 +1,8 @@
+import SciLean.Core
+
+
+#exit
+
 import SciLean.Mechanics
 import SciLean.Operators.ODE
 import SciLean.Functions

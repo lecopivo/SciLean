@@ -1,5 +1,5 @@
 import SciLean.Core.AdjDiff
-import SciLean.Core.AudoDiffSimps
+import SciLean.Core.AutoDiffSimps
 import SciLean.AutoImpl
 
 namespace SciLean
@@ -79,27 +79,9 @@ by
 -- theorem HAdd.hAdd.arg_xy.tangentMap_simp
 -- instance HAdd.hAdd.arg_xy.hasAdjoint
 -- theorem HAdd.hAdd.arg_xy.adjoint_simp
-
-instance HAdd.hAdd.arg_xy.hasAdjDiff
-  {X} [SemiHilbert X]
-  : HasAdjDiffN 2 (λ (x y : X) => x + y) := by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
-
-@[simp ↓, autodiff]
-theorem HAdd.hAdd.arg_xy.adjDiff_simp
-  {X} [SemiHilbert X]
-  : ∂† (uncurryN 2 λ (x y : X) => x + y)
-    =
-    λ (x,y) dxy => (dxy, dxy)
-  := by simp[uncurryN,Prod.Uncurry.uncurry,adjointDifferential,hold]; done
-
-@[simp ↓, autodiff]
-theorem HAdd.hAdd.arg_xy.revDiff_simp
-  {X} [SemiHilbert X]
-  : ℛ (uncurryN 2 λ (x y : X) => x + y) 
-    =
-    λ (x,y) => (x + y, λ dxy  => (dxy, dxy))
-  := by unfold reverseDifferential; simp; done
-
+-- instance HAdd.hAdd.arg_xy.hasAdjDiff
+-- theorem HAdd.hAdd.arg_xy.adjDiff_simp
+-- theorem HAdd.hAdd.arg_xy.revDiff_simp
 
 -- argument x * [Vec X]
 --   isLin := sorry_proof
@@ -142,7 +124,7 @@ theorem HAdd.hAdd.arg_x.adjDiff_simp
   : ∂† (λ (x : X) => x + y)
     =
     λ x dz => dz
-  := by simp[adjointDifferential,hold]; done
+  := by unfold adjointDifferential; simp; done
 
 @[simp ↓, autodiff]
 theorem HAdd.hAdd.arg_x.revDiff_simp
@@ -150,7 +132,7 @@ theorem HAdd.hAdd.arg_x.revDiff_simp
   : ℛ (λ (x : X) => x + y)
     =
     λ x => (x + y, λ dx' : X => dx')
-  := by unfold reverseDifferential; simp[hold]; done
+  := by unfold reverseDifferential; simp; done
 
 -- argument y [Vec X]
 --   isLin := sorry_proof
@@ -308,7 +290,7 @@ theorem HSub.hSub.arg_x.adjDiff_simp
   : ∂† (λ (x : X) => x - y)
     =
     λ x dz => dz
-  := by simp[adjointDifferential,hold]; done
+  := by unfold adjointDifferential; simp; done
 
 @[simp ↓, autodiff]
 theorem HSub.hSub.arg_x.revDiff_simp
@@ -316,7 +298,7 @@ theorem HSub.hSub.arg_x.revDiff_simp
   : ℛ (λ (x : X) => x - y)
     =
     λ x => (x - y, λ dx' : X => dx')
-  := by unfold reverseDifferential; simp[hold]; done
+  := by unfold reverseDifferential; simp; done
 
 -- argument y [Vec X]
 --   isLin := sorry_proof
@@ -431,7 +413,7 @@ theorem HMul.hMul.arg_x.adjDiff_simp
   : ∂† (λ (x : ℝ) => x * y)
     =
     λ x dy => ⟪dy,y⟫
-  := by simp[adjointDifferential,hold]; done
+  := by unfold adjointDifferential; simp; done
 
 @[simp ↓, autodiff]
 theorem HMul.hMul.arg_x.revDiff_simp
@@ -611,7 +593,7 @@ theorem Inner.inner.arg_x.adjDiff_simp
   {X} [Hilbert X] (y : X)
   : ∂† (λ x : X => ⟪x,y⟫)
     =
-    λ x ds => ds * y := by simp[adjointDifferential,hold]; done
+    λ x ds => ds * y := by unfold adjointDifferential; simp; done 
 
 @[simp ↓, autodiff]
 theorem Inner.inner.arg_x.revDiff_simp

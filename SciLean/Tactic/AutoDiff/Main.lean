@@ -17,9 +17,10 @@ open Lean Meta Simp
 namespace SciLean
 
 
-partial def autoDiffPre (e : Expr) : SimpM Step := do
-  -- trace[Meta.Tactic.simp] s!"Pre simp on:\n{← Meta.ppExpr e}"
+partial def autoDiffPre (e : Expr) (rep := false) : SimpM Step := do
   let e := e.headBeta
+  trace[Meta.Tactic.simp] s!"Autodiff step on:\n{← Meta.ppExpr e}"
+
 
   -- Always use `autodiff` marked theorems and set them all as `pre` instead of post  
   let autodiffExt ← Lean.Meta.getSimpExtension? "autodiff"
@@ -31,8 +32,7 @@ partial def autoDiffPre (e : Expr) : SimpM Step := do
     if let some r ← rewrite? e thms.pre thms.erased DefaultMethods.discharge? (tag := "pre") (rflOnly := false) then
       -- trace[Meta.Tactic.simp] s!"Simplified to: {← Meta.ppExpr r.expr}"
       return ← andThen (Step.visit r) (λ e => autoDiffPre e)
-  return Step.visit { expr := e }
-
+  return Step.visit {expr := e}
 
 
 -- Tactic
@@ -62,10 +62,10 @@ open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
 
 
 macro "autodiff" : conv => 
-  `(conv| (autodiff_core (config := {singlePass := true,  zeta := false}) only []; 
+  `(conv| (autodiff_core (config := {singlePass := true,  zeta := false}) only [autodiff_simp]; 
            try simp (config := {zeta := false}) only [];))
 macro "autodiff" : tactic => 
-  `(tactic| (autodiff_core (config := {singlePass := true,  zeta := false}) only []; 
+  `(tactic| (autodiff_core (config := {singlePass := true,  zeta := false}) only [autodiff_simp]; 
              try simp (config := {zeta := false}) only [];))
 
 -- Tactic
@@ -95,11 +95,11 @@ open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
 
 
 macro "symdiff" : conv => 
-  `(conv| (symdiff_core (config := {singlePass := true}) only [SciLean.tangentMap, SciLean.reverseDifferential]
-           try simp (config := {zeta := false}) only [];))
+  `(conv| (symdiff_core (config := {singlePass := true, zeta := false}) only [autodiff_simp, SciLean.differentialScalar, SciLean.gradient, SciLean.tangentMap, SciLean.reverseDifferential]
+           try simp (config := {zeta := true}) only [autodiff_simp];))
 macro "symdiff" : tactic => 
-  `(tactic| (symdiff_core (config := {singlePass := true}) only [SciLean.tangentMap, SciLean.reverseDifferential]; 
-             try simp (config := {zeta := false}) only [];))
+  `(tactic| (symdiff_core (config := {singlePass := true, zeta := false}) only [autodiff_simp, SciLean.differentialScalar, SciLean.gradient, SciLean.tangentMap, SciLean.reverseDifferential]; 
+             try simp (config := {zeta := true}) only [autodiff_simp];))
 
 
 set_option trace.Meta.Tactic.simp.rewrite true in
