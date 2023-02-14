@@ -12,18 +12,9 @@ variable {α β γ : Type}
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 
--- set_option maxHeartbeats 2000
--- set_option synthInstance.maxHeartbeats 500
--- set_option synthInstance.maxSize 80
-
--- set_option trace.Meta.Tactic.simp.discharge true in
--- set_option trace.Meta.Tactic.simp.unify true in
-
--- set_option trace.Meta.Tactic.simp true in
--- set_option trace.Meta.Tactic.simp.rewrite true in
--- set_option trace.Meta.Tactic.simp.discharge true in
--- set_option trace.Meta.Tactic.simp.congr true in
--- set_option trace.Meta.Tactic.simp.unify true in
+set_option maxHeartbeats 4000
+set_option synthInstance.maxHeartbeats 1000
+set_option synthInstance.maxSize 80
 
 example (f : Y → Z) [IsSmoothT f] (g : X → Y) [IsSmoothT g]
   : ∂ (λ x => f (g x)) = λ x dx => ∂ f (g x) (∂ g x dx) := by symdiff
@@ -96,6 +87,7 @@ example : ∂ (λ (x : X) => F x (g x)) x dx = ∂ F x dx (g x) + ∂ (F x) (g x
 example : ∂ (λ (x : X) => f3 (F x (g x))) x dx = ∂ f3 (F x (g x)) (∂ F x dx (g x) + ∂ (F x) (g x) (∂ g x dx)) := by symdiff; done
 example g dg x : ∂ (λ (g : X → Y) => f (g x)) g dg = ∂ f (g x) (dg x) := by symdiff; done
 example g dg x : ∂ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = ∂ (F x) (g x) (dg x) := by symdiff; done
+set_option synthInstance.maxHeartbeats 3000 in
 example g dg x : ∂ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = ∂ F (g x) (dg x) y := by symdiff; done
 example (r dr : ℝ) : ∂ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by symdiff; done
 example g dg y : ∂ (λ (g : X → X) (x : X) => F (g x) y) g dg x = ∂ F (g x) (dg x) y := by symdiff; done 
