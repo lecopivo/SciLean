@@ -124,17 +124,68 @@ example : IsSmoothT fun (g : X⟿Y) => fun x ⟿ g x := by infer_instance
 --   (g₂ : X → Y → Y₂) [IsSmoothNT 2 g₂] 
 --   : IsSmoothNT 2 λ (g : X⟿Y) x => f (g₁ x (g x)) (g₂ x (g x)) := sorry_proof
 
+instance {X} [Hilbert X] : HasAdjoint (λ (f : ℝ⟿X) => ⅆ f) := by (try infer_instance); sorry_proof
 
+@[simp ↓,autodiff]
+theorem differentialScalar.arg_f.adj_simp : (λ (f : ℝ⟿X) => ⅆ f)† = (λ (f : ℝ⟿X) => - ⅆ f) := by /- simp - maybe fix infinite recursion? -/ sorry_proof
 
-example  (f : X⟿Y) : IsSmoothNT 2 fun (g : X⟿Y) x => Inner.inner (g x) (f x) := 
+instance thm1 {Y'} [Vec Y'] {Z} [Hilbert Z] (A : X → Y → Y' → Z) [∀ x y', HasAdjointT (λ y => A x y y')] [IsSmoothNT 3 A] 
+  (g' : X → Y' := λ _ => 0) [IsSmoothT g']
+  : HasAdjointT (λ (g : X⟿Y) => λ x ⟿ A x (g x) (g' x)) := by (try infer_instance); sorry_proof
+
+instance {Z} [Hilbert Z] (A : X → Y → Z) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A] 
+  : HasAdjointT (λ (g : X⟿Y) => λ x ⟿ A x (g x)) := 
 by
-  infer_instance; done
-  -- apply ih Inner.inner (λ x _ => f x);
+  try infer_instance
+  apply thm1 (λ x y (y' : X) => A x y) (λ x : X => x) -- I think the unification can't infer the choice of Y' and g'
+  done  
 
 
+instance (Z) [Hilbert Z] (A : Y → Z) [HasAdjointT A] [IsSmoothT A] 
+  : HasAdjointT (λ (g : X⟿Y) => λ x ⟿ A (g x)) := by infer_instance
 
-set_option trace.Meta.synthInstance true in
-instance {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : Y → Z) [IsSmoothT f] : IsSmoothT (λ (g : X ⟿ Y) => λ x ⟿ f (g x)) := by infer_instance
+
+example  : HasAdjointT fun (g : X⟿Y) => fun x ⟿ g x := by infer_instance
+example  : HasAdjointT fun (g : X⟿Y) => fun x ⟿ (2:ℝ) * g x := by infer_instance
+example  : HasAdjointT fun (g : ℝ⟿ℝ) => fun (x : ℝ) ⟿ x * g x := by infer_instance
 
 example  (f : X⟿Y) : HasAdjointT fun (g : X⟿Y) => fun x ⟿ ⟪g x, f x⟫ := by infer_instance
 example  (f : X⟿Y) : HasAdjointT fun (g : X⟿Y) => fun x ⟿ ⟪f x, g x⟫ := by infer_instance
+
+-- set_option trace.Meta.synthPending true in
+-- example  (f : ℝ⟿ℝ) : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪f x, g x⟫ := by infer_instance
+
+#check Nat
+
+example (D : (ℝ⟿ℝ) → (ℝ⟿ℝ)) [HasAdjointT D] : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ D g x := by infer_instance
+
+example (D : (ℝ⟿ℝ) → (ℝ⟿ℝ)) [HasAdjointT D] : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ x * D g x :=
+by
+
+  let f₁ := fun (g : ℝ⟿ℝ) => fun x ⟿ x * g x
+  have h : (fun (g : ℝ⟿ℝ) => fun x ⟿ x * D g x) = f₁∘D := by rfl
+  have af₁ : HasAdjointT f₁ := by infer_instance
+  
+  rw[h]
+  infer_instance
+  done
+
+set_option synthInstance.maxSize 2000 in 
+example  (f : ℝ⟿ℝ) : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪f x, ⅆ g x⟫ :=
+by
+
+  let f₁ := fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪f x, g x⟫
+  have h : (fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪f x, ⅆ g x⟫) = f₁∘Smooth.differentialScalar := by rfl
+  have af₁ : HasAdjointT f₁ := by infer_instance
+  
+  rw[h]
+  infer_instance
+  done
+
+
+set_option synthInstance.maxSize 2000 in 
+example (f : ℝ⟿ℝ) : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪f x, ⅆ g x⟫ := by infer_instance
+
+-- variable (f : ℝ⟿ℝ)
+
+-- #check ⅆ f  
