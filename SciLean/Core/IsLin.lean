@@ -169,13 +169,15 @@ instance HAdd.hAdd.arg_xy.isLin : IsLinN 2 (HAdd.hAdd : X → X → X) := sorry_
 -- Linear Map --
 --------------------------------------------------------------------------------
 
-/-- LinMap is a linear function
 
-We consider function `f : X ⊸ Y` to be atomically linear thus we provide IsLin
-instance and not IsLinT instance -/  
-instance instLinMapIsLin (f : X ⊸ Y) : IsLin (λ x => f x) := by 
+instance LinearMap.val.arg_fx.isSmooth : IsSmoothN 2 (λ (f : X⊸Y) (x : X) => f x) := by sorry_proof
+
+instance LinearMap.val.arg_x.isLin (f : X ⊸ Y) : IsLin (λ x => f x) :=  
+by 
   unfold IsLin; apply (IsLinN.mk (toIsLinNT:=_)); 
   constructor; apply f.2; done
+
+instance LinearMap.val.arg_f.isLin : IsLin (λ (f : X ⟿ Y) => (f : X → Y)) := sorry_proof
 
 
 --------------------------------------------------------------------------------
