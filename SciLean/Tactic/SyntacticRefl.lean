@@ -23,4 +23,3 @@ open Lean.Elab.Tactic Lean Meta in
 example : 0 = 0 := 
 by
   stx_rfl
-

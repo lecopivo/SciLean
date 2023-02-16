@@ -101,7 +101,7 @@ by
   have : ∀ x y, HasAdjointT (λ dx => ∂ f x dx y) := sorry_proof
   have : ∀ x y, HasAdjointT (λ dy => ∂ (f x) y dy) := sorry_proof
 
-  simp[adjointDifferential, reverseDifferential, tangentMap]
+  simp[adjointDifferential, reverseDifferential, tangentMap, -comp.arg_x.parm1.adj_simp]
   done
 
 @[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]

@@ -750,6 +750,52 @@ theorem Inner.normSqr.arg_x.revDiff_simp
 by
   simp[reverseDifferential]; done
 
+
+--------------------------------------------------------------------------------
+-- Pow
+
+instance HPow.hPow.RealNatReal.arg_x.isSmooth (n : Nat)
+  : IsSmooth (λ x : ℝ => x^n) := sorry_proof
+
+@[simp ↓, autodiff]
+theorem HPow.hPow.RealNatReal.arg_x.diff_simp (n : Nat)
+  : ∂ (λ x : ℝ => x^n)
+    =
+    λ x dx : ℝ => n*dx*x^(n-1 : Nat)
+  := sorry_proof
+
+@[simp ↓, autodiff]
+theorem HPow.hPow.RealNatReal.arg_x.tangentMap_simp (n : Nat)
+  : 𝒯 (λ x : ℝ => x^n)
+    =
+    λ ((x,dx) : ℝ × ℝ) =>
+      (x^n, n*dx*x^(n-1 : Nat))
+  := by simp[tangentMap]; done
+
+@[simp ↓, autodiff]
+theorem HPow.hPow.RealNatReal.arg_x.HasAdjDiff (n : Nat)
+  : HasAdjDiff (λ x : ℝ => x^n) :=
+by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
+
+@[simp ↓, autodiff]
+theorem HPow.hPow.RealNatReal.arg_x.adjDiff_simp (n : Nat)
+  : ∂† (λ x : ℝ => x^n)
+    =
+    λ x dy : ℝ => 
+      n * dy * x^(n-1 : Nat)
+  :=
+by simp[adjointDifferential]; done
+
+@[simp ↓, autodiff]
+theorem HPow.hPow.RealNatReal.arg_x.reverseDiff_simp (n : Nat)
+  : ℛ (λ x : ℝ => x^n)
+    =
+    λ x : ℝ => 
+      (x^n, λ dy => n * dy * x^(n - 1 : Nat))
+  :=
+by simp[reverseDifferential]; done
+ 
+
 --------------------------------------------------------------------------------
 -- Function.comp
 

@@ -73,9 +73,6 @@ instance differential.arg_x.comp.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] [Vec W
   (g : X → Y) [IsSmoothT g]
   : IsSmoothT (λ x => ∂ (f (g x))) := sorry_proof
 
-instance curry_is_smooth (f : X → Y → Z) [IsSmoothNT 2 f] 
-  : IsSmoothT λ x => λ y ⟿ f x y := sorry_proof -- follows from currying 
-
 instance : IsLin (λ (f : X ⟿ Y) => (f : X → Y)) := sorry_proof
 instance : IsLin (λ (f : X ⊸ Y) => (f : X → Y)) := sorry_proof
 

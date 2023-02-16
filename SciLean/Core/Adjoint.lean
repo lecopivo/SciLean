@@ -135,17 +135,9 @@ theorem comp.arg_x.parm1.adj_simp
   (f : Y → α → Z) [HasAdjointT (λ y => f y a)]
   (g : X → Y) [HasAdjointT g] 
   : 
-    (λ x => f (g x) a)† = λ z => g† ((hold λ y => f y a)† z)
+    (λ x => f (g x) a)† = λ z => g† ((λ y => f y a)† z)
 := by 
   (apply comp.arg_x.adj_simp (λ y => f y a) g); done
-
-example
-  (a : α) 
-  (f : Y → α → Z) [HasAdjointT (λ y => f y a)]
-  (g : X → Y) [HasAdjointT g] 
-  : 
-    (λ x => f (g x) a)† = λ z => g† ((λ y => f y a)† z)
-:= by simp
 
 @[simp ↓ low-1, autodiff low-1, simp_guard g (λ x => x)] -- try to avoid using this theorem
 theorem comp.arg_x.parm2.adj_simp
@@ -153,7 +145,7 @@ theorem comp.arg_x.parm2.adj_simp
   (f : Y → α → β → Z) [HasAdjointT (λ y => f y a b)]
   (g : X → Y) [HasAdjointT g] 
   : 
-    (λ x => f (g x) a b)† = λ z => g† ((hold λ y => f y a b)† z)
+    (λ x => f (g x) a b)† = λ z => g† ((λ y => f y a b)† z)
 := by 
   (apply comp.arg_x.adj_simp (λ y => f y a b) g); done
 
@@ -163,7 +155,7 @@ theorem comp.arg_x.parm3.adj_simp
   (f : Y → α → β → γ → Z) [HasAdjointT (λ y => f y a b c)]
   (g : X → Y) [HasAdjointT g] 
   : 
-    (λ x => f (g x) a b c)† = λ z => g† ((hold λ y => f y a b c)† z)
+    (λ x => f (g x) a b c)† = λ z => g† ((λ y => f y a b c)† z)
 := by 
   (apply comp.arg_x.adj_simp (λ y => f y a b c) g); done
 

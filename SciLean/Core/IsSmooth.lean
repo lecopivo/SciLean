@@ -35,21 +35,29 @@ variable {Y₁ Y₂ Y₃ : Type} [Vec Y₁] [Vec Y₂] [Vec Y₃]
 
 --- Removing arguments - generalized this 
 
-instance (f : X → Y → Z) [IsSmoothNT 2 f]
+instance IsSmooth2_to_IsSmooth1_1 (f : X → Y → Z) [IsSmoothNT 2 f]
   : IsSmoothT (λ x => f x) := sorry_proof
 
-instance IsSmooth2_apply_1 (f : X → Y → Z) [IsSmoothNT 2 f] (x : X)
+instance IsSmooth2_to_IsSmooth1_2 (f : X → Y → Z) [IsSmoothNT 2 f] (x : X)
   : IsSmoothT (λ y => f x y) := sorry_proof
 
 
-instance (f : X → Y → Z → W) [IsSmoothNT 3 f]
-  : IsSmoothT (λ x => f x) := sorry_proof
+instance IsSmooth3_to_IsSmooth2_1 (f : X → Y → Z → W) [IsSmoothNT 3 f]
+  : IsSmoothNT 2 (λ x y => f x y) := sorry_proof
 
-instance (f : X → Y → Z → W) [IsSmoothNT 3 f] (x : X)
-  : IsSmoothT (λ y => f x y) := sorry_proof
+instance IsSmooth3_to_IsSmooth2_2 (f : X → Y → Z → W) [IsSmoothNT 3 f] (x : X)
+  : IsSmoothNT 2 (λ y z => f x y z) := sorry_proof
 
-instance (f : X → Y → Z → W) [IsSmoothNT 3 f] (x : X) (y : Y)
-  : IsSmoothT (λ z => f x y z) := sorry_proof
+
+-- instance (f : X → Y → Z → W) [IsSmoothNT 3 f]
+--   : IsSmoothT (λ x => f x) := by infer_instance
+
+-- instance (f : X → Y → Z → W) [IsSmoothNT 3 f] (x : X)
+--   : IsSmoothT (λ y => f x y) := by infer_instance
+
+-- instance (f : X → Y → Z → W) [IsSmoothNT 3 f] (x : X) (y : Y)
+--   : IsSmoothT (λ z => f x y z) := by infer_instance
+
 
 
 --- Adding arguments - generalized this 
@@ -82,7 +90,7 @@ instance const.arg_xy.isSmooth
   : IsSmoothNT 2 λ (x : X) (y : Y) => x := inferInstance
 
 instance const.arg_y.isSmooth (x : X)
-  : IsSmoothT λ (y : Y) => x := by apply IsSmooth2_apply_1 (f := λ x y => x); done
+  : IsSmoothT λ (y : Y) => x := by apply IsSmooth2_to_IsSmooth1_2 (f := λ x y => x); done
 
 instance (priority := low) swap.arg_y.isSmooth 
   (f : α → Y → Z) [∀ x, IsSmoothT (f x)] 
@@ -142,23 +150,28 @@ by
   -- have : IsSmoothNT 4 fun x y z => f (g₁ x y z) (g₂ x y z) := by apply hoho
   infer_instance
 
-
+instance diag.arg_x.isSmooth
+  (f : Y₁ → Y₂ → Z) [IsSmoothNT 2 f]
+  (g₁ : X → Y₁) [IsSmoothT g₁]
+  (g₂ : X → Y₂) [IsSmoothT g₂]
+  : IsSmoothT (λ x => f (g₁ x) (g₂ x)) := by infer_instance
 
 instance Prod.fst.arg_xy.isSmooth : IsSmooth (Prod.fst : X×Y → X) := sorry_proof
 instance Prod.snd.arg_xy.isSmooth : IsSmooth (Prod.snd : X×Y → Y) := sorry_proof
 instance HAdd.hAdd.arg_xy.isSmooth : IsSmoothN 2 (HAdd.hAdd : X → X → X) := sorry_proof
 
 --------------------------------------------------------------------------------
--- Smooth Map --
+-- Smooth Map - part 1
 --------------------------------------------------------------------------------
 
-/-- SmoothMap is a smooth function
 
-We consider function `f : X ⟿ Y` to be atomically smooth thus we provide IsSmooth
-instance and not IsSmoothT instance -/  
-instance instSmoothMapIsSmooth (f : X ⟿ Y) : IsSmooth (λ x => f x) := by 
-  unfold IsSmooth; apply (IsSmoothN.mk (toIsSmoothNT:=_)); 
-  constructor; apply f.2; done
+instance SmoothMap.val.arg_fx.isSmooth : IsSmoothN 2 (λ (f : X⟿Y) (x : X) => f x) := 
+by
+  have h : (uncurryN 2 λ (f : X⟿Y) (x : X) => f x) = Smooth.eval := sorry_proof
+  sorry_proof
+
+instance SmoothMap.val.arg_x.isSmooth (f : X ⟿ Y) : IsSmooth (λ x => f x) := by apply IsSmoothN.mk
+instance SmoothMap.val.arg_f.isSmooth : IsSmooth (λ (f : X ⟿ Y) => (f : X → Y)) := by apply IsSmoothN.mk
 
 
 --------------------------------------------------------------------------------
@@ -179,3 +192,41 @@ macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term =>
 @[simp]
 theorem SmoothMap.simp_normalize (f : X ⟿ Y) 
     : (λ (x : X) ⟿ f x) = f := by simp; done
+
+
+
+--------------------------------------------------------------------------------
+-- Smooth Map - part 2
+--------------------------------------------------------------------------------
+
+
+instance curry_is_smooth (f : X → Y → Z) [IsSmoothNT 2 f] 
+  : IsSmoothT λ x => λ y ⟿ f x y := by (try infer_instance); sorry_proof
+
+instance scomb.arg_fgx.isSmooth [Vec X] [Vec Y] [Vec Z] 
+  : IsSmoothNT 3 λ (f : X⟿Y⟿Z) (g : X⟿Y) (x : X) => f x (g x) := by (try infer_instance); sorry_proof
+
+instance scomb.arg_gx.isSmooth [Vec X] [Vec Y] [Vec Z] 
+  (f : X → Y → Z) [IsSmoothNT 2 f]
+  : IsSmoothNT 2 λ (g : X⟿Y) (x : X) => f x (g x) := 
+by 
+  infer_instance
+  done
+
+-- This was necessary at some point ... most likely delete it
+-- instance scomb.arg_gx.isSmooth_alt  {X Y Y' Z} [Vec X] [Vec Y] [Vec Y'] [Vec Z] 
+--   (f : X → Y → Y' → Z) [IsSmoothNT 3 f]  
+--   (g' : X → Y') [IsSmoothNT 1 g']
+--   : IsSmoothNT 2 λ (g : X⟿Y) x => f x (g x) (g' x) := 
+-- by 
+--   infer_instance
+--   done
+
+instance comp.arg_fgx.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z]
+  : IsSmoothNT 3 (λ (f : Y ⟿ Z) (g : X ⟿ Y) x => f (g x)) := 
+by (try infer_instance); sorry_proof
+
+instance comp.arg_gx.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] 
+  (f : Y → Z) [IsSmoothT f] 
+  : IsSmoothNT 2 (λ (g : X ⟿ Y) x => f (g x)) := by infer_instance
+

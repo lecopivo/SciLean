@@ -91,11 +91,16 @@ namespace Real
   -- instance : OfNat ℝ n := ⟨Float.ofNat n⟩
   -- instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
-  -- def natPow (r : ℝ) : Nat → ℝ
-  -- | 0 => 1
-  -- | n+1 => r * natPow r n
+  def natPow (r : ℝ) (n : Nat) : ℝ := Id.run do
+    let mut s   := if n &&& 1 = 1 then r else 1
+    let mut r2i := r
+    for i in [1:n.log2+1] do
+      r2i  := r2i * r2i
+      if (n >>> i) &&& 1 = 1 then
+        s := s * r2i
+    s
 
-  -- instance : Pow ℝ Nat := ⟨natPow⟩
+  instance : HPow ℝ Nat ℝ := ⟨natPow⟩
   instance : HPow ℝ ℝ ℝ := ⟨Real.pow⟩
 
   -- instance : Numeric ℝ := ⟨λ n => n.toFloat⟩
@@ -108,11 +113,9 @@ namespace Real
 
   instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
 
-
   -- Used for Kroneckers delta as  `δᵢⱼ = [[i = j]]`
   instance : Coe Bool ℝ := ⟨λ b => if b then 1.0 else 0.0⟩
   macro "[[" p:term "]]" : term => `((($p : Bool) : ℝ))
-
 
   -- instance : HPow ℝ ℤ ℝ := ⟨λ x n => x^(n : ℝ)⟩
   -- ⟨λ x n => 
@@ -186,7 +189,7 @@ namespace Real
     right_distrib := sorry_proof
     mul_one := sorry_proof
     one_mul := sorry_proof
-    npow n x := x^(n.toReal) ----------- !!!
+    npow n x := x.natPow n
     npow_zero' n := sorry_proof
     npow_succ' n x := sorry_proof
     mul_assoc := sorry_proof
@@ -210,6 +213,7 @@ namespace Real
     intCast_ofNat := sorry_proof
     intCast_negSucc := sorry_proof
 
+
   -- {
   --   mul_comm := sorry_proof
   -- }
@@ -218,6 +222,7 @@ namespace Real
   -- {
   --   exists_pair_ne := sorry_proof
   -- }
+
 
   instance : Field ℝ where
     exists_pair_ne := sorry_proof
@@ -258,6 +263,8 @@ namespace Real
   --   hpow_succ := sorry_proof
   --   hpow_neg := sorry_proof
   -- }
+
+
 
 end Real
 

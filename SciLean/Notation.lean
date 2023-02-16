@@ -82,3 +82,10 @@ elab x:term:71 "⊗" y:term:72 : term => withFreshMacroScope do
   elabTerm (← `(?m)) none
 
 
+
+class Integral {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
+
+elab:max "∫" x:term:max : term => withFreshMacroScope do
+  _ ← synthInstance (← elabType (← `(Integral $x ?m)))
+  elabTerm (← `(?m)) none
+

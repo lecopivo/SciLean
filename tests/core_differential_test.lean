@@ -1,12 +1,7 @@
 import SciLean.Core
 import SciLean.Tactic.AutoDiff
 
-import Lean.Elab.Tactic.ElabTerm
-import Lean.Elab.Tactic.Conv.Basic
-import Lean.Meta.Tactic.Simp
-
-
-namespace SciLean.Smooth
+open SciLean
 
 variable {α β γ : Type}
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]

@@ -1,6 +1,6 @@
 import SciLean.Core
 
-namespace SciLean.Smooth.Tests
+open SciLean
 
 variable {α β γ : Type} 
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
@@ -123,3 +123,18 @@ namespace combtests
   example (y : X) (A : X → X) (B : X → X) [IsSmoothT A] [IsSmoothT B] : IsSmoothT (λ x : X => x + x) := by infer_instance
 end combtests
 
+
+
+section highorderfunctions
+
+variable {X Y : Type} [Hilbert X] [Hilbert Y]
+
+example : IsSmoothT fun (g : X⟿Y) => fun x ⟿ (c:ℝ) * g x := by infer_instance
+example : IsSmoothT fun (g : ℝ⟿Y) => fun x ⟿ x * g x := by infer_instance
+example : IsSmoothT fun (g : ℝ⟿ℝ) => fun x ⟿ g x * x := by infer_instance
+example  (f : X⟿Y) : IsSmoothT fun (g : X⟿Y) => fun x ⟿ ⟪f x, g x⟫ := by infer_instance
+example  (f : X⟿Y) : IsSmoothT fun (g : X⟿Y) => fun x ⟿ ⟪g x, f x⟫ := by infer_instance
+example  (f : X⟿Y) (A B : Y → Y) [IsSmoothT A] [IsSmooth B] : IsSmoothT fun (g : X⟿Y) => fun x ⟿ ⟪A (g x), B (f x)⟫ := by infer_instance
+example : IsSmoothT fun (g : ℝ⟿Y) => fun x ⟿ x * g x := by infer_instance
+
+end highorderfunctions

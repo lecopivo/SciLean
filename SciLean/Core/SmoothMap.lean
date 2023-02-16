@@ -11,7 +11,9 @@ namespace SciLean
   The notation `X ⟿ Y` is prefered, but this fixes pure ASCII equivalent. -/
   infixr:25 " ~~> " => SmoothMap 
 
-  /-- `X ⟿ Y` is the space of all smooth maps between `X` and `Y` -/
+  /-- `X ⟿ Y` is the space of all smooth maps between `X` and `Y`. 
+
+  Can be also written as `X ~~> Y` -/
   infixr:25 " ⟿ " => SmoothMap
 
   variable {X Y} [Vec X] [Vec Y]
