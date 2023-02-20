@@ -19,6 +19,13 @@ def adjointDifferential (f : X → Y) (x : X) (dy' : Y) : X := (∂ f x)† dy'
 @[default_instance]
 instance (f : X → Y) : PartialDagger f (adjointDifferential f) := ⟨⟩
 
+-- Someting wrong here :(
+-- noncomputable 
+-- def Smooth.adjointDifferential {X Y} [Hilbert X] [Hilbert Y] (f : X ⟿ Y) : X⟿Y⊸X := λ x ⟿ λ dy ⊸ adjoint (∂ f x) dy
+
+-- @[default_instance]
+-- instance (f : X → Y) : PartialDagger f (adjointDifferential f) := ⟨⟩
+
 
 -- Question: Should there be `𝒯[y] Y` or `𝒯[f x] Y`?
 -- Maybe return `(y:Y)×(𝒯[y] Y → 𝒯[x] X)×(f x = y)` but there is a problem with `Sigma` vs `PSigma`
@@ -33,6 +40,11 @@ abbrev gradient (f : X → ℝ) (x : X) : X := ∂† f x 1
 
 @[default_instance]
 instance (f : X → ℝ) : Nabla f (gradient f) := ⟨⟩
+
+noncomputable
+abbrev Smooth.gradient (f : X ⟿ ℝ) : X⟿X := SmoothMap.mk (λ x => adjoint (λ dx => ∂ f x dx) 1) sorry_proof
+
+instance (f : X ⟿ ℝ) : Nabla f (Smooth.gradient f) := ⟨⟩
 
 
 -- Notation 

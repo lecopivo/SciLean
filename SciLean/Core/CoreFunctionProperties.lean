@@ -797,6 +797,27 @@ by simp[reverseDifferential]; done
  
 
 --------------------------------------------------------------------------------
+-- Differential 
+
+instance differential.arg_fxdx.isSmooth 
+  {X Y W} [Vec X] [Vec Y] [Vec W]
+  (f : W → X → Y) [IsSmoothNT 2 f] : IsSmoothNT 3 (λ w x dx => ∂ (f w) x dx) := by (try infer_instance); sorry_proof
+
+@[simp ↓, autodiff]
+theorem differential.arg_f.diff_simp
+  {X Y W} [Vec X] [Vec Y] [Vec W]
+  (f : W → X → Y) [IsSmoothNT 2 f] 
+  : ∂ (λ w x dx => ∂ (f w) x dx)
+    =
+    λ w dw x dx =>
+      ∂ (∂ f w dw) x dx
+    := sorry_proof
+
+
+-- already exists
+-- instance differential.arg_dx.isLin
+
+--------------------------------------------------------------------------------
 -- Function.comp
 
 instance Function.comp.arg_x.isSmooth

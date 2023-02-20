@@ -60,6 +60,13 @@ elab:max "∇" x:term:max : term => withFreshMacroScope do
   elabTerm (← `(?m)) none
 
 
+class Divergence {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
+
+elab:max "∇·" x:term:max : term => withFreshMacroScope do
+  _ ← synthInstance (← elabType (← `(Divergence $x ?m)))
+  elabTerm (← `(?m)) none
+
+
 class TangentMap {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
 
 elab:max "𝒯" x:term:max : term => withFreshMacroScope do

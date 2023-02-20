@@ -2,8 +2,7 @@ import Lean
 import Init.Classical
 
 import SciLean.Core.Attributes
-import SciLean.Core.IsSmooth
-import SciLean.Core.IsLin
+import SciLean.Core.HasAdjoint
 
 import SciLean.Tactic.CustomSimp.SimpGuard
 
@@ -12,6 +11,7 @@ namespace SciLean
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z] 
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
+
 
 --------------------------------------------------------------------------------
 -- Differential --
@@ -58,26 +58,34 @@ macro_rules
 --------------------------------------------------------------------------------
 
 instance differential.arg_x.isSmooth (f : X → Y) [IsSmoothT f] 
-  : IsSmoothNT 2 (λ x dx => ∂ f x dx) := sorry_proof
+  : IsSmoothNT 2 (λ x dx => ∂ f x dx) := by (try infer_instance); sorry_proof
 instance differential.arg_dx.isLin    (f : X → Y) [IsSmoothT f] (x : X) 
-  : IsLinT (λ dx => ∂ f x dx) := sorry_proof
+  : IsLinT (λ dx => ∂ f x dx) := by (try infer_instance); sorry_proof
 
 instance differential.arg_y.isLin 
   (f : X → Y → Z) [IsSmoothT f] [∀ x, IsLinT (f x)] (x dx) 
-  : IsLinT (λ y => ∂ f x dx y) := sorry_proof
+  : IsLinT (λ y => ∂ f x dx y) := by (try infer_instance); sorry_proof
 instance differential.arg_y.isSmooth (f : X → Y → Z) [IsSmoothNT 2 f] (x dx) 
-  : IsSmoothT (λ y => ∂ f x dx y) := sorry_proof
+  : IsSmoothT (λ y => ∂ f x dx y) := by (try infer_instance); sorry_proof
 
 instance differential.arg_x.comp.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] [Vec W]
   (f : Y → Z → W) [IsSmoothNT 2 f]
   (g : X → Y) [IsSmoothT g]
-  : IsSmoothT (λ x => ∂ (f (g x))) := sorry_proof
+  : IsSmoothT (λ x => ∂ (f (g x))) := by (try infer_instance); sorry_proof
 
-instance : IsLin (λ (f : X ⟿ Y) => (f : X → Y)) := sorry_proof
-instance : IsLin (λ (f : X ⊸ Y) => (f : X → Y)) := sorry_proof
 
-instance (f : X → Y) [IsSmoothT f] 
-  : IsSmoothT λ x => λ dx ⊸ ∂ f x dx:= sorry_proof 
+instance SmoothMap.mk'.arg_f.diff_simp {X Y W} [Vec X] [Vec Y] [Vec W]
+  (f : W → X → Y) [IsSmoothNT 2 f]
+  : ∂ (λ w => λ x ⟿ f w x)
+    =
+    λ w dw => λ x ⟿ ∂ f w dw x := by simp; sorry_proof
+
+
+instance LinMap.mk'.arg_f.diff_simp {X Y W} [Vec X] [Vec Y] [Vec W]
+  (f : W → X → Y) [IsSmoothNT 2 f] [∀ w, IsLinT (f w)]
+  : ∂ (λ w => λ x ⊸ f w x)
+    =
+    λ w dw => λ x ⊸ ∂ f w dw x := by sorry_proof
 
 noncomputable
 def Smooth.differential (f : X ⟿ Y) : (X ⟿ X ⊸ Y) := fun x ⟿ fun dx ⊸ ∂ f.1 x dx
@@ -93,12 +101,14 @@ noncomputable
 abbrev differentialScalar (f : ℝ → X) (t : ℝ) : X := ∂ f t 1
 
 noncomputable
-abbrev Smooth.differentialScalar (f : ℝ ⟿ X) : ℝ ⟿ X := λ t ⟿ ∂ f t 1
+abbrev Smooth.differentialScalar (f : ℝ ⟿ X) : ℝ ⟿ X := λ t ⟿ ((∂ f t) 1)
 
 @[default_instance] 
-instance (f : ℝ → X) : Differential f (differentialScalar f) := ⟨⟩
+instance differentialScalar.instDifferentialNotation (f : ℝ → X) 
+  : Differential f (differentialScalar f) := ⟨⟩
 
-instance (f : ℝ ⟿ X) : Differential f (Smooth.differentialScalar f) := ⟨⟩
+instance Smooth.differentialScalar.instDifferentialNotation (f : ℝ ⟿ X) 
+  : Differential f (Smooth.differentialScalar f) := ⟨⟩
 
  
 -- Notation 
@@ -125,7 +135,7 @@ macro_rules
 noncomputable
 def tangentMap (f : X → Y) : X×X → Y×Y := λ (x,dx) => (f x, ∂ f x dx)
 
-instance : IsSmoothN 2 (Prod.mk : X → Y → X×Y) := sorry_proof
+instance Prod.mk.arg_xy.isSmooth : IsSmoothN 2 (Prod.mk : X → Y → X×Y) := sorry_proof
 
 instance (f : X → Y) : IsSmooth (λ (x,dx) => ∂ f x dx) := sorry_proof
 instance (f : X ⟿ Y) : IsSmooth (λ (x,dx) => ∂ f x dx) := sorry_proof
@@ -164,7 +174,25 @@ instance : ForwardDifferential (X → Y) (X → Y×(X→Y)) where
 -- instance : ForwardDifferential (X ⟿ Y) (X ⟿ Y×(X⊸Y)) where
 --   forwardDifferential := λ f => λ x ⟿ (f x, λ dx ⊸ ∂ f x dx)
 
+--------------------------------------------------------------------------------
+-- Automatic differentiation unzipp 
+--------------------------------------------------------------------------------
+-- Currently not used but might be used to do reverse mode AD as 
+--   tangentMap -> adUnzipp -> "some kind of adjunction"
 
+class HasADUnzipp {X Y} [Vec X] [Vec Y] (f : X×X→Y×Y) : Prop where
+  has_unzip : ∃ g : X → Y×(X→Y), ∀ x dx, 
+    (f (x,dx)).1 = (g x).1 ∧ (f (x,dx)).2 = (g x).2 dx
+  is_lin :
+    let g := Classical.choose has_unzip
+    ∀ x, IsLin (g x).2
+
+noncomputable
+def adUnzipp {X Y} [Vec X] [Vec Y] (f : X×X→Y×Y) : X → Y×(X→Y) :=
+  match Classical.dec (HasADUnzipp f) with
+  | isTrue h => Classical.choose h.has_unzip
+  | isFalse _ => 0
+  
 --------------------------------------------------------------------------------
 -- Differential Rules --
 --------------------------------------------------------------------------------
@@ -388,3 +416,5 @@ theorem HAdd.hAdd.arg_xy.tangentMap_simp
     =
     λ ((x,y),(dx,dy)) => (x+y, dx+dy)
   := by simp; done
+
+

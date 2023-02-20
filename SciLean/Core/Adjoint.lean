@@ -28,6 +28,16 @@ instance (f : X → Y) [SemiHilbert X] [SemiHilbert Y] : Dagger f (adjoint f) :=
 instance adjoint_hasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjointT f]
   : HasAdjoint (f†) := sorry_proof
 
+instance adjoint_is_smooth {X Y Z} [Vec X] [SemiHilbert Y] [SemiHilbert Z]
+  (A : X → Y → Z) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
+  : IsSmoothT (λ x => (A x)†) := sorry_proof
+
+-- on Hilbert spaces any linear function has adjoint
+-- We only want this to apply for atomic functions that is why we ask for `IsLin` and not for `IsLinT`
+-- This causes some issues
+-- instance {X Y} [Hilbert X] [Hilbert Y] (A : X → Y) [IsLin A] : HasAdjointT A := sorry_proof
+
+-- example {X Y} [Hilbert X] [Hilbert Y] (A : X ⊸ Y) : IsLinT λ x => adjoint A x := by infer_instance
 
 --------------------------------------------------------------------------------
 

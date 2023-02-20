@@ -170,21 +170,23 @@ instance HAdd.hAdd.arg_xy.isLin : IsLinN 2 (HAdd.hAdd : X → X → X) := sorry_
 --------------------------------------------------------------------------------
 
 
-instance LinearMap.val.arg_fx.isSmooth : IsSmoothN 2 (λ (f : X⊸Y) (x : X) => f x) := by sorry_proof
+instance LinMap.val.arg_fx.isSmooth : IsSmoothN 2 (λ (f : X⊸Y) (x : X) => f x) := by sorry_proof
 
-instance LinearMap.val.arg_x.isLin (f : X ⊸ Y) : IsLin (λ x => f x) :=  
+instance LinMap.val.arg_x.isLin (f : X ⊸ Y) : IsLin (λ x => f x) :=  
 by 
   unfold IsLin; apply (IsLinN.mk (toIsLinNT:=_)); 
   constructor; apply f.2; done
 
-instance LinearMap.val.arg_f.isLin : IsLin (λ (f : X ⟿ Y) => (f : X → Y)) := sorry_proof
+instance SmoothMap.val.arg_f.isLin : IsLin (λ (f : X ⟿ Y) => (f : X → Y)) := sorry_proof
+instance LinMap.val.arg_f.isLin : IsLin (λ (f : X ⊸ Y) => (f : X → Y)) := sorry_proof
+instance LinMap.val.arg_f.isSmooth : IsSmooth (λ (f : X ⟿ Y) => (f : X → Y)) := by apply IsSmoothN.mk
 
 
 --------------------------------------------------------------------------------
 -- Lin Map Lambda Notation --
 --------------------------------------------------------------------------------
 
-@[macro_inline]
+-- @[macro_inline]
 abbrev LinMap.mk' (f : X → Y) [inst : IsLinT f] : X ⊸ Y := ⟨f, inst.proof⟩
 
 open Lean.TSyntax.Compat in
@@ -198,3 +200,8 @@ macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term =>
 @[simp]
 theorem LinMap.simp_normalize (f : X ⊸ Y) 
     : (λ (x : X) ⊸ f x) = f := by simp; done
+
+instance LinMap.mk'.arg_f.isSmooth {X Y W} [Vec X] [Vec Y] [Vec W]
+  (f : W → X → Y) [IsSmoothNT 2 f] [∀ w, IsLinT (f w)]
+  : IsSmoothT λ w => λ x ⊸ f w x := by (try infer_instance); sorry_proof
+

@@ -2,6 +2,7 @@
 import SciLean.Mathlib.Convenient.Basic
 -- import SciLean.Core.New.IsSmooth
 import SciLean.Core.TensorProduct
+import SciLean.Core.FinVec
 
 namespace SciLean
 
@@ -48,6 +49,44 @@ namespace SciLean
   instance : Vec (X ⊸ Y) := Vec.mk
 
   instance : CoeFun (X⊸Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
+
+  @[infer_tc_goals_rl]
+  instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Inner (X ⊸ Y) where
+    inner f g := ∑ i, ⟪f (𝕖' i), g (𝕖' i)⟫
+
+  @[infer_tc_goals_rl]
+  instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : TestFunctions (X ⊸ Y) where
+    TestFun _ := True
+
+  @[infer_tc_goals_rl]
+  instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : SemiHilbert (X ⊸ Y) := SemiHilbert.mkSorryProofs
+
+  @[infer_tc_goals_rl]
+  instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Hilbert (X ⊸ Y) := Hilbert.mkSorryProofs
+
+  @[infer_tc_goals_rl]
+  instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : Basis (X ⊸ Y) (ι×κ) ℝ where
+    basis := λ (i,j) => ⟨λ x => Basis.proj i x * 𝕖[Y] j, sorry_proof⟩
+    proj := λ (i,j) f => Basis.proj j (f (𝕖 i))
+
+  @[infer_tc_goals_rl]
+  instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : DualBasis (X ⊸ Y) (ι×κ) ℝ where
+    dualBasis := λ (i,j) => ⟨λ x => DualBasis.dualProj i x * 𝕖'[Y] j, sorry_proof⟩
+    dualProj := λ (i,j) f => DualBasis.dualProj j (f (𝕖 i))
+
+
+  @[infer_tc_goals_rl]
+  instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : FinVec (X ⊸ Y) (ι×κ) where     
+    is_basis := sorry_proof
+    duality := 
+    by 
+      intro (i,j) (i',j'); simp[Basis.basis, DualBasis.dualBasis, Inner.inner];
+      -- This should be:
+      --  ∑ i_i, ⟪[[i=i_]] * 𝕖 j, [[i'=i_1]] 𝕖' j'⟫
+      --  [[i=i']] * ⟪𝕖 j, 𝕖' j'⟫
+      --  [[i=i']] * [[j=j']]
+      sorry_proof
+
 
   --------------------------------------------------------------------
 

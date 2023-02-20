@@ -160,6 +160,29 @@ instance Prod.fst.arg_xy.isSmooth : IsSmooth (Prod.fst : X×Y → X) := sorry_pr
 instance Prod.snd.arg_xy.isSmooth : IsSmooth (Prod.snd : X×Y → Y) := sorry_proof
 instance HAdd.hAdd.arg_xy.isSmooth : IsSmoothN 2 (HAdd.hAdd : X → X → X) := sorry_proof
 
+
+--------------------------------------------------------------------------------
+-- Highorder unification instances
+--------------------------------------------------------------------------------
+
+instance(priority:=low) comp.arg_x.isSmooth_unif1 {X Y Z} [Vec X] [Vec Y] [Vec Z] {α β : Type} (a)
+  (f : Y → α → Z) [IsSmoothT λ y => f y a]
+  (g : X → Y) [IsSmoothT g] 
+  : IsSmoothT (λ x => f (g x) a) :=
+by
+  try infer_instance
+  apply comp.arg_x.isSmooth (λ y => f y a)
+
+
+instance(priority:=low+1) comp.arg_x.isSmooth_unif {X Y Z} [Vec X] [Vec Y] [Vec Z] {α β : Type} (a b)
+  (f : Y → α → β → Z) [IsSmoothT λ y => f y a b]
+  (g : X → Y) [IsSmoothT g] 
+  : IsSmoothT (λ x => f (g x) a b) :=
+by
+  try infer_instance
+  apply comp.arg_x.isSmooth (λ y => f y a b)
+
+
 --------------------------------------------------------------------------------
 -- Smooth Map - part 1
 --------------------------------------------------------------------------------
@@ -193,15 +216,15 @@ macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term =>
 theorem SmoothMap.simp_normalize (f : X ⟿ Y) 
     : (λ (x : X) ⟿ f x) = f := by simp; done
 
+instance SmoothMap.mk'.arg_f.isSmooth
+  (f : W → X → Y) [IsSmoothNT 2 f]
+  : IsSmoothT λ w => λ x ⟿ f w x := by (try infer_instance); sorry_proof
 
 
 --------------------------------------------------------------------------------
 -- Smooth Map - part 2
 --------------------------------------------------------------------------------
 
-
-instance curry_is_smooth (f : X → Y → Z) [IsSmoothNT 2 f] 
-  : IsSmoothT λ x => λ y ⟿ f x y := by (try infer_instance); sorry_proof
 
 instance scomb.arg_fgx.isSmooth [Vec X] [Vec Y] [Vec Z] 
   : IsSmoothNT 3 λ (f : X⟿Y⟿Z) (g : X⟿Y) (x : X) => f x (g x) := by (try infer_instance); sorry_proof
