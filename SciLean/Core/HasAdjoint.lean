@@ -4,11 +4,6 @@ import SciLean.Core.Hilbert
 namespace SciLean
 
 open SciLean.Mathlib.Convenient
-
--- Maybe that the adjoint `f'` also preserves test functions? Or can we conclude that?
-structure has_adjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : Prop where
-  preserve_test_functions : ∀ x, TestFun x → TestFun (f x)
-  has_adjoint : ∃ f' : Y → X, ∀ (ϕ : X) (ψ : Y), (TestFun ϕ ∨ TestFun ψ) → ⟪f ϕ, ψ⟫ = ⟪ϕ, f' ψ⟫
   
 
 class HasAdjointNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 

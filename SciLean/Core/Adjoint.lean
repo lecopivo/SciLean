@@ -1,36 +1,18 @@
 import SciLean.Notation
 import SciLean.Core.Attributes
 import SciLean.Core.HasAdjoint
+import SciLean.Core.Defs
 
 import SciLean.Tactic.CustomSimp.AllPrePost
 
 namespace SciLean
 
-class Dagger {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
-
-open Lean Elab Term Meta in
-elab:max x:term:max "†" : term => withFreshMacroScope do
-  _ ← synthInstance (← elabType (← `(Dagger $x ?m)))
-  elabTerm (← `(?m)) none
-
-
-noncomputable
-def adjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : Y → X :=
-  match Classical.propDecidable (has_adjoint f) with
-  | isTrue h =>
-    let f' := Classical.choose h.has_adjoint
-    f'
-  | isFalse _ => 0
-  
-@[default_instance]
-instance (f : X → Y) [SemiHilbert X] [SemiHilbert Y] : Dagger f (adjoint f) := ⟨⟩
-
-instance adjoint_hasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjointT f]
+instance adjoint.arg_y.hasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjointT f]
   : HasAdjoint (f†) := sorry_proof
 
-instance adjoint_is_smooth {X Y Z} [Vec X] [SemiHilbert Y] [SemiHilbert Z]
-  (A : X → Y → Z) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
-  : IsSmoothT (λ x => (A x)†) := sorry_proof
+instance adjoint.arg_fy.isSmooth {X Y W} [Vec W] [SemiHilbert X] [SemiHilbert Y]
+  (A : W → X → Y) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
+  : IsSmoothNT 2 (λ w y => (A w)† y) := sorry_proof
 
 -- on Hilbert spaces any linear function has adjoint
 -- We only want this to apply for atomic functions that is why we ask for `IsLin` and not for `IsLinT`

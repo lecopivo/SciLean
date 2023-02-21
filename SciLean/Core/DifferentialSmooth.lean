@@ -81,7 +81,7 @@ instance Smooth.divergence.arg_f.isLin
 instance Smooth.divergence.arg_f.isSmooth
   : IsSmooth (Smooth.divergence : (X⟿X) → (X⟿ℝ)) := by infer_instance
 
-@[simp ↓, autodiff]
+@[autodiff]
 theorem Smooth.divergence.arg_f.adj_simp  
   : (Smooth.divergence : (X⟿X) → (X⟿ℝ))†
     =
@@ -97,7 +97,7 @@ instance Smooth.divergenceDual.arg_f.isLin
 instance Smooth.divergenceDual.arg_f.isSmooth
   : IsSmooth (Smooth.divergenceDual : (X⟿X⊸Y) → (X⟿Y)) := by infer_instance
 
-@[simp ↓, autodiff]
+@[autodiff]
 theorem Smooth.divergenceDual.arg_f.adj_simp  
   : (Smooth.divergenceDual : (X⟿X⊸Y) → (X⟿Y))†
     =
@@ -133,7 +133,8 @@ instance Smooth.differentialScalar.arg_f.isLin {X} [Vec X]
 instance Smooth.differentialScalar.arg_f.isSmooth {X} [Vec X] 
   : IsSmooth (Smooth.differentialScalar : (ℝ⟿X) → ℝ⟿X) := by infer_instance
 
-instance Smooth.differentialScalar.arg_f.adj_simp {X} [Hilbert X] 
+@[autodiff]
+theorem Smooth.differentialScalar.arg_f.adj_simp {X} [Hilbert X] 
   : (Smooth.differentialScalar : (ℝ⟿X) → (ℝ⟿X))†
     =
     - Smooth.differentialScalar
@@ -151,8 +152,23 @@ instance Smooth.gradient.arg_f.isLin {X} [SemiHilbert X]
 instance Smooth.gradient.arg_f.isSmooth {X} [SemiHilbert X] 
   : IsSmooth (Smooth.gradient : (X⟿ℝ) → (X⟿X)) := by infer_instance
 
-instance Smooth.gradient.arg_f.adj_simp 
-  : (Smooth.gradient : (X⟿ℝ) →X⟿X)† 
+@[simp, autodiff]
+theorem Smooth.gradient.arg_f.adj_simp 
+  : (Smooth.gradient : (X⟿ℝ) → X⟿X)† 
     =
     - Smooth.divergence
     := sorry_proof
+
+
+set_option synthInstance.maxSize 2000 in
+example  (f : ℝ⟿ℝ) : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪ⅆ f x, ⅆ g x⟫ := by infer_instance
+
+-- set_option synthInstance.maxSize 2000 in
+-- example  (f : X⟿ℝ) : (fun (g : X⟿ℝ) => fun x ⟿ ⟪∇ f x, ∇ g x⟫)†
+--                        = 
+--                        λ h => - Smooth.divergence (λ x ⟿ (h x * ∇ f x)) := 
+-- by (conv => lhs; symdiff); done
+
+#check Smooth.gradient
+
+

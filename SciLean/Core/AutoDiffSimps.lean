@@ -1,5 +1,6 @@
-import SciLean.Core.AdjDiff
-
+-- import SciLean.Core.AdjDiff
+import SciLean.Core.Defs
+import SciLean.Core.Attributes
 
 namespace SciLean.AutoDiffSimp
 

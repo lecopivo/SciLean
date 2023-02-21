@@ -13,11 +13,11 @@ variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι : Type} [Enumtype ι]
 
 
-noncomputable 
-def adjointDifferential (f : X → Y) (x : X) (dy' : Y) : X := (∂ f x)† dy'
+-- noncomputable 
+-- def adjointDifferential (f : X → Y) (x : X) (dy' : Y) : X := (∂ f x)† dy'
 
-@[default_instance]
-instance (f : X → Y) : PartialDagger f (adjointDifferential f) := ⟨⟩
+-- @[default_instance]
+-- instance (f : X → Y) : PartialDagger f (adjointDifferential f) := ⟨⟩
 
 -- Someting wrong here :(
 -- noncomputable 
@@ -29,22 +29,22 @@ instance (f : X → Y) : PartialDagger f (adjointDifferential f) := ⟨⟩
 
 -- Question: Should there be `𝒯[y] Y` or `𝒯[f x] Y`?
 -- Maybe return `(y:Y)×(𝒯[y] Y → 𝒯[x] X)×(f x = y)` but there is a problem with `Sigma` vs `PSigma`
-noncomputable
-def reverseDifferential (f : X → Y) (x : X) : Y×(Y→X) := (f x, λ dy => ∂† f x dy)
+-- noncomputable
+-- def reverseDifferential (f : X → Y) (x : X) : Y×(Y→X) := (f x, λ dy => ∂† f x dy)
 
-instance (priority:=low) (f : X → Y) : ReverseDifferential f (reverseDifferential f) := ⟨⟩
+-- instance (priority:=low) (f : X → Y) : ReverseDifferential f (reverseDifferential f) := ⟨⟩
 
 
-noncomputable
-abbrev gradient (f : X → ℝ) (x : X) : X := ∂† f x 1
+-- noncomputable
+-- abbrev gradient (f : X → ℝ) (x : X) : X := ∂† f x 1
 
-@[default_instance]
-instance (f : X → ℝ) : Nabla f (gradient f) := ⟨⟩
+-- @[default_instance]
+-- instance (f : X → ℝ) : Nabla f (gradient f) := ⟨⟩
 
-noncomputable
-abbrev Smooth.gradient (f : X ⟿ ℝ) : X⟿X := SmoothMap.mk (λ x => adjoint (λ dx => ∂ f x dx) 1) sorry_proof
+-- noncomputable
+-- abbrev Smooth.gradient (f : X ⟿ ℝ) : X⟿X := SmoothMap.mk (λ x => adjoint (λ dx => ∂ f x dx) 1) sorry_proof
 
-instance (f : X ⟿ ℝ) : Nabla f (Smooth.gradient f) := ⟨⟩
+-- instance (f : X ⟿ ℝ) : Nabla f (Smooth.gradient f) := ⟨⟩
 
 
 -- Notation 

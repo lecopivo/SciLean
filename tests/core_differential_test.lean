@@ -52,8 +52,9 @@ example (f g : X → α → Y) [IsSmoothT f] [IsSmoothT g]
   : ∂ (λ x a => f x a + g x a) 
     =
     λ x dx a => ∂ f x dx a + ∂ g x dx a := by symdiff; done
-  
 
+set_option maxHeartbeats 7000 in  
+set_option synthInstance.maxHeartbeats 5000 in
 example (f : Y₁ → Y₂ → β → Z) (g1 : X → Y₁) (g2 : X → Y₂)
   [IsSmoothNT 2 f] [IsSmoothT g1] [IsSmoothT g2]
   : ∂ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) 

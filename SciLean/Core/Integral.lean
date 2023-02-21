@@ -104,7 +104,6 @@ theorem varDual_smooth_fun_elemwise' [Hilbert Y] [Vec Z] (f : X → Z) [IsSmooth
 by apply varDual_smooth_fun_elemwise (λ x y => A y (f x)); done
 
 
-#exit
 --------------------------------------------------------------------------------
 -- Junk
 --------------------------------------------------------------------------------
@@ -136,27 +135,7 @@ example : IsSmoothT fun (g : X⟿Y) => fun x ⟿ g x := by infer_instance
 --   (g₂ : X → Y → Y₂) [IsSmoothNT 2 g₂] 
 --   : IsSmoothNT 2 λ (g : X⟿Y) x => f (g₁ x (g x)) (g₂ x (g x)) := sorry_proof
 
-
-
 instance integral.arg_f.isLin : IsLin (integral : (X⟿Y) → LocIntDom X → Y) := sorry_proof
-
-
-
-@[simp ↓,autodiff]
-theorem differentialScalar.arg_f.adj_simp 
-  : (λ (f : ℝ⟿X) => ⅆ f)† = (λ (f : ℝ⟿X) => - ⅆ f) := 
-by /- simp - maybe fix infinite recursion? -/ sorry_proof
-
-
-instance {X Y } [SemiHilbert X] [SemiHilbert Y]
-  (A : X → Y) [HasAdjointT A] [IsSmoothT A]
-  : IsSmoothT A† := by infer_instance
-
-
-instance {X Y Z} [Vec X] [SemiHilbert Y] [SemiHilbert Z]
-  (A : X → Y → Z) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
-  : IsSmoothNT 2 (λ x z => (A x)† z) := by (try infer_instance); sorry_proof
-
 
 -- instance  {Y'} [Vec Y'] {Z} [Hilbert Z]
 --   (A : X → Y → Y' → Z) [∀ x y', HasAdjointT (λ y => A x y y')] [IsSmoothNT 3 A]
@@ -272,12 +251,13 @@ by
   apply elemwise_adjoint (λ x y => y + x * y)
   done
 
-set_option synthInstance.maxSize 2000 in
-example  : HasAdjointT fun (g : ℝ⟿Y) => fun x ⟿ g x + ⅆ g x := 
-by 
-  have : HasAdjointNT 2 (λ (g dg : ℝ ⟿ X) => λ x ⟿ g x + dg x) := sorry_proof
-  apply scomb_highorder_adjoint (λ g (dg : ℝ ⟿ X) => λ x ⟿ g x + dg x) (λ g => ⅆ g)
-  infer_instance
+
+-- set_option synthInstance.maxSize 2000 in
+-- example  : HasAdjointT fun (g : ℝ⟿Y) => fun x ⟿ g x + ⅆ g x := 
+-- by 
+--   have : HasAdjointNT 2 (λ (g dg : ℝ ⟿ X) => λ x ⟿ g x + dg x) := sorry_proof
+--   apply scomb_highorder_adjoint (λ g (dg : ℝ ⟿ X) => λ x ⟿ g x + dg x) (λ g => ⅆ g)
+--   infer_instance
 
 
 -- set_option trace.Meta.synthPending true in
@@ -289,7 +269,7 @@ example (D : (ℝ⟿ℝ) → (ℝ⟿ℝ)) [HasAdjointT D] : HasAdjointT fun (g :
 
 
 set_option synthInstance.maxSize 2000 in
-example  (f : ℝ⟿ℝ) : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪ⅆ f x, ⅆ g x⟫ := by infer_instance
+example  (f : ℝ⟿ℝ) : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪ⅆ f x, ⅆ g x⟫ := by (try infer_instance); sorry_proof
 
 
 example  (f : X⟿Y) : (fun (g : X⟿Y) => fun x ⟿ ⟪g x, f x⟫)† = λ h => λ x ⟿ h x * f x := by simp; done
@@ -312,7 +292,7 @@ example  (f : ℝ⟿ℝ) : (fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪f x, ⅆ g x⟫)
                        = 
                        λ h => - (λ x ⟿ ⅆ h x * f x + h x * ⅆ f x) := 
 by 
-  simp[differentialScalar,tangentMap,Smooth.differential,Smooth.differentialScalar]; done
+  simp[differentialScalar,tangentMap,Smooth.differential,Smooth.differentialScalar]; sorry_proof
 
 
 #check Nat
@@ -321,10 +301,10 @@ by
 
 
 
-set_option synthInstance.maxSize 2000 in
-example (f : ℝ⟿ℝ) : ∇ (fun (g : ℝ⟿ℝ) => (∫ x, ⟪f x, ⅆ g x⟫))
-                      = 
-                      (λ g => - ⅆ f) := by simp[variationalGradient, tangentMap,Smooth.differential]; done
+-- set_option synthInstance.maxSize 2000 in
+-- example (f : ℝ⟿ℝ) : ∇ (fun (g : ℝ⟿ℝ) => (∫ x, ⟪f x, ⅆ g x⟫))
+--                       = 
+--                       (λ g => - ⅆ f) := by simp[variationalGradient, tangentMap,Smooth.differential]; done
   -- simp[differentialScalar,tangentMap,Smooth.differential,Smooth.differentialScalar]; done
 
 
@@ -332,14 +312,11 @@ example (f : ℝ⟿ℝ) : ∇ (fun (g : ℝ⟿ℝ) => (∫ x, ⟪f x, ⅆ g x⟫
 
 example (f : ℝ⟿ℝ) : IsSmoothNT 2 (fun (g : ℝ⟿ℝ) x => ⟪f x, g x⟫) := by infer_instance
 
-set_option synthInstance.maxSize 2000 in
-example (f : ℝ⟿ℝ) : IsSmoothNT 2 (fun (g : ℝ⟿ℝ) x => ⟪f x, ⅆ g x⟫) := by infer_instance
+-- example (f : ℝ⟿ℝ) : IsSmoothNT 2 (fun (g : ℝ⟿ℝ) x => ⟪f x, ⅆ g x⟫) := by infer_instance
 
 
-set_option trace.Meta.synthInstance true in
 
-
-def a : IsSmoothT (fun (g : ℝ⟿ℝ) => ⅆ g) := by infer_instance
+-- def a : IsSmoothT (fun (g : ℝ⟿ℝ) => ⅆ g) := by infer_instance
 
 
 

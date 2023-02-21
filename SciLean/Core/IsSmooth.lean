@@ -1,5 +1,6 @@
 import SciLean.Data.Prod
 
+import SciLean.Core.Attributes
 import SciLean.Core.SmoothMap
 
 namespace SciLean
@@ -212,7 +213,7 @@ open Lean.TSyntax.Compat in
 macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term => 
   Lean.expandExplicitBinders `SciLean.SmoothMap.mk' xs b
 
-@[simp]
+@[simp, autodiff_simp]
 theorem SmoothMap.simp_normalize (f : X ⟿ Y) 
     : (λ (x : X) ⟿ f x) = f := by simp; done
 

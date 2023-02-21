@@ -3,8 +3,11 @@ import Init.Classical
 
 import SciLean.Core.Attributes
 import SciLean.Core.HasAdjoint
+import SciLean.Core.Defs
 
-import SciLean.Tactic.CustomSimp.SimpGuard
+-- import SciLean.Tactic.CustomSimp.SimpGuard
+import SciLean.Tactic.AutoDiff
+import SciLean.Core.AutoDiffSimps
 
 namespace SciLean
 
@@ -17,18 +20,18 @@ variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 -- Differential --
 --------------------------------------------------------------------------------
 
-noncomputable 
-opaque differential (f : X → Y) (x dx : X) : Y := 
-    match Classical.propDecidable (IsSmooth f) with
-      | isTrue  h => Mathlib.Convenient.derivative f h.proof x dx
-      /- For nondifferentiable function the value is not specified.
-         Maybe we could assign zero, similarly to division by zero.
-         With zero, `differential` might be semilinear in `f`.
-         This should be investigated! -/
-      | _ => 0
+-- noncomputable 
+-- opaque differential (f : X → Y) (x dx : X) : Y := 
+--     match Classical.propDecidable (IsSmooth f) with
+--       | isTrue  h => Mathlib.Convenient.derivative f h.proof x dx
+--       /- For nondifferentiable function the value is not specified.
+--          Maybe we could assign zero, similarly to division by zero.
+--          With zero, `differential` might be semilinear in `f`.
+--          This should be investigated! -/
+--       | _ => 0
 
-@[default_instance]
-instance (f : X → Y) : Partial f (differential f) := ⟨⟩
+-- @[default_instance]
+-- instance (f : X → Y) : Partial f (differential f) := ⟨⟩
 
 -- maybe provide notation  `∂[dx] (x:=x₀), f x = ∂ f x₀ dx` and its variants
 -- Variants
@@ -87,28 +90,28 @@ instance LinMap.mk'.arg_f.diff_simp {X Y W} [Vec X] [Vec Y] [Vec W]
     =
     λ w dw => λ x ⊸ ∂ f w dw x := by sorry_proof
 
-noncomputable
-def Smooth.differential (f : X ⟿ Y) : (X ⟿ X ⊸ Y) := fun x ⟿ fun dx ⊸ ∂ f.1 x dx
+-- noncomputable
+-- def Smooth.differential (f : X ⟿ Y) : (X ⟿ X ⊸ Y) := fun x ⟿ fun dx ⊸ ∂ f.1 x dx
 
-instance (f : X ⟿ Y) : Partial f (Smooth.differential f) := ⟨⟩
+-- instance (f : X ⟿ Y) : Partial f (Smooth.differential f) := ⟨⟩
 
 
---------------------------------------------------------------------------------
--- Scalar Differential --
---------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+-- -- Scalar Differential --
+-- --------------------------------------------------------------------------------
 
-noncomputable
-abbrev differentialScalar (f : ℝ → X) (t : ℝ) : X := ∂ f t 1
+-- noncomputable
+-- abbrev differentialScalar (f : ℝ → X) (t : ℝ) : X := ∂ f t 1
 
-noncomputable
-abbrev Smooth.differentialScalar (f : ℝ ⟿ X) : ℝ ⟿ X := λ t ⟿ ((∂ f t) 1)
+-- noncomputable
+-- abbrev Smooth.differentialScalar (f : ℝ ⟿ X) : ℝ ⟿ X := λ t ⟿ ((∂ f t) 1)
 
-@[default_instance] 
-instance differentialScalar.instDifferentialNotation (f : ℝ → X) 
-  : Differential f (differentialScalar f) := ⟨⟩
+-- @[default_instance] 
+-- instance differentialScalar.instDifferentialNotation (f : ℝ → X) 
+--   : Differential f (differentialScalar f) := ⟨⟩
 
-instance Smooth.differentialScalar.instDifferentialNotation (f : ℝ ⟿ X) 
-  : Differential f (Smooth.differentialScalar f) := ⟨⟩
+-- instance Smooth.differentialScalar.instDifferentialNotation (f : ℝ ⟿ X) 
+--   : Differential f (Smooth.differentialScalar f) := ⟨⟩
 
  
 -- Notation 
@@ -128,70 +131,26 @@ macro_rules
   `(ⅆ $b, $f)
 
 
---------------------------------------------------------------------------------
--- Dual Number Differential --
---------------------------------------------------------------------------------
-
-noncomputable
-def tangentMap (f : X → Y) : X×X → Y×Y := λ (x,dx) => (f x, ∂ f x dx)
-
-instance Prod.mk.arg_xy.isSmooth : IsSmoothN 2 (Prod.mk : X → Y → X×Y) := sorry_proof
-
-instance (f : X → Y) : IsSmooth (λ (x,dx) => ∂ f x dx) := sorry_proof
-instance (f : X ⟿ Y) : IsSmooth (λ (x,dx) => ∂ f x dx) := sorry_proof
-
-noncomputable
-def Smooth.tangentMap (f : X ⟿ Y) : X×X ⟿ Y×Y := λ xdx ⟿ (f xdx.1, ∂ f xdx.1 xdx.2)
-
-@[default_instance]
-instance (f : X → Y) : TangentMap f (tangentMap f) := ⟨⟩
-
-instance (f : X ⟿ Y) : TangentMap f (Smooth.tangentMap f) := ⟨⟩
-
-
---------------------------------------------------------------------------------
--- Forward Differential --
---------------------------------------------------------------------------------
---
--- Usefull when you want to compute jacobian-vector-product for multiple different 
--- vectors but at the same point. For a single jacobian-vector-product use `tangentMap`
--- 
-
-@[reducible]
-class ForwardDifferential (α : Type) (β : outParam Type) where
-  forwardDifferential : α → β
-
-export ForwardDifferential (forwardDifferential)
-
-prefix:max "ℱ" => forwardDifferential
-
-@[default_instance]
-noncomputable
-instance : ForwardDifferential (X → Y) (X → Y×(X→Y)) where
-  forwardDifferential := λ f x => (f x, λ dx => ∂ f x dx)
+-- --------------------------------------------------------------------------------
+-- -- Dual Number Differential --
+-- --------------------------------------------------------------------------------
 
 -- noncomputable
--- instance : ForwardDifferential (X ⟿ Y) (X ⟿ Y×(X⊸Y)) where
---   forwardDifferential := λ f => λ x ⟿ (f x, λ dx ⊸ ∂ f x dx)
+-- def tangentMap (f : X → Y) : X×X → Y×Y := λ (x,dx) => (f x, ∂ f x dx)
 
---------------------------------------------------------------------------------
--- Automatic differentiation unzipp 
---------------------------------------------------------------------------------
--- Currently not used but might be used to do reverse mode AD as 
---   tangentMap -> adUnzipp -> "some kind of adjunction"
+-- instance Prod.mk.arg_xy.isSmooth : IsSmoothN 2 (Prod.mk : X → Y → X×Y) := sorry_proof
 
-class HasADUnzipp {X Y} [Vec X] [Vec Y] (f : X×X→Y×Y) : Prop where
-  has_unzip : ∃ g : X → Y×(X→Y), ∀ x dx, 
-    (f (x,dx)).1 = (g x).1 ∧ (f (x,dx)).2 = (g x).2 dx
-  is_lin :
-    let g := Classical.choose has_unzip
-    ∀ x, IsLin (g x).2
+-- instance (f : X → Y) : IsSmooth (λ (x,dx) => ∂ f x dx) := sorry_proof
+-- instance (f : X ⟿ Y) : IsSmooth (λ (x,dx) => ∂ f x dx) := sorry_proof
 
-noncomputable
-def adUnzipp {X Y} [Vec X] [Vec Y] (f : X×X→Y×Y) : X → Y×(X→Y) :=
-  match Classical.dec (HasADUnzipp f) with
-  | isTrue h => Classical.choose h.has_unzip
-  | isFalse _ => 0
+-- noncomputable
+-- def Smooth.tangentMap (f : X ⟿ Y) : X×X ⟿ Y×Y := λ xdx ⟿ (f xdx.1, ∂ f xdx.1 xdx.2)
+
+-- @[default_instance]
+-- instance (f : X → Y) : TangentMap f (tangentMap f) := ⟨⟩
+
+-- instance (f : X ⟿ Y) : TangentMap f (Smooth.tangentMap f) := ⟨⟩
+
   
 --------------------------------------------------------------------------------
 -- Differential Rules --
@@ -286,17 +245,17 @@ theorem Prod.snd.arg_xy.diff_simp
 @[simp ↓, autodiff]
 theorem tangentMap.of_id
   : 𝒯 (λ x : X => x) = λ xdx => xdx 
-  := by simp[tangentMap]; done
+  := by symdiff; done
 
 @[simp ↓, autodiff]
 theorem tangentMap.of_const (x : X)
   : 𝒯 (λ y : Y => x) = λ (y,dy) => (x,0) 
-  := by simp[tangentMap]; done
+  := by symdiff; done
 
 @[simp ↓ low-3, autodiff]
 theorem tangentMap.of_swap (f : α → X → Y) [∀ i, IsSmoothT (f i)]
   : 𝒯 (λ x a => f a x) = λ (x,dx) => (λ a => f a x, λ a => ∂ (f a) x dx) 
-  := by simp[tangentMap]; done
+  := by symdiff; done
 
 @[simp ↓ low-1, autodiff, simp_guard g (λ x => x)]
 theorem tangentMap.of_comp
@@ -305,7 +264,7 @@ theorem tangentMap.of_comp
   : 𝒯 (λ x => f (g x)) 
     = 
     λ xdx => 𝒯 f (𝒯 g xdx)
-  := by simp[tangentMap]; done
+  := by symdiff; done
 
 @[simp ↓ low-2, autodiff, simp_guard g₁ Prod.fst, g₂ Prod.snd]
 theorem tangentMap.of_diag
@@ -319,7 +278,7 @@ theorem tangentMap.of_diag
       let (y₂,dy₂) := 𝒯 g₂ (x,dx)
       -- (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
       𝒯 (uncurryN 2 f) ((y₁,y₂),(dy₁,dy₂)) 
-  := by simp [tangentMap]; done
+  := by symdiff; done
 
 /-- Last resort theorem that changes tangent map to normal differential 
 
@@ -337,7 +296,7 @@ theorem tangentMap.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothNT 2 f]
 theorem tangentMap.of_parm
   (f : X → α → Y) [IsSmoothT f] (a : α)
   : 𝒯 (λ x => f x a) = λ xdx => let (f',df') := 𝒯 f xdx; (f' a, df' a) 
-  := by simp[tangentMap, uncurryN, Prod.Uncurry.uncurry]; done
+  := by symdiff; done
 
 @[simp ↓, autodiff]
 theorem tangentMap.of_eval
@@ -375,7 +334,7 @@ theorem diff_of_linear (f : X → Y) [IsLin f]
 
 @[simp low, autodiff] 
 theorem tangentMap_of_linear (f : X → Y) [IsLin f]
-  : 𝒯 f = λ (x,dx) => (f x, f dx) := by simp[tangentMap]; done
+  : 𝒯 f = λ (x,dx) => (f x, f dx) := by symdiff; done
 
 
 @[simp low, autodiff] 
@@ -394,21 +353,21 @@ theorem Prod.fst.arg_xy.tangentMap_simp
   : 𝒯 (Prod.fst : X×Y → X)
     =
     λ ((x,y),(dx,dy)) => (x,dx)
-  := by simp
+  := by symdiff
 
 @[simp ↓, autodiff]
 theorem Prod.snd.arg_xy.tangentMap_simp
   : 𝒯 (Prod.snd : X×Y → Y)
     =
     λ ((x,y),(dx,dy)) => (y,dy)
-  := by simp
+  := by symdiff
 
 @[simp ↓, autodiff]
 theorem HAdd.hAdd.arg_xy.diff_simp
   : ∂ (uncurryN 2 λ x y : X => x + y)
     =
     λ xy (dx,dy) => dx + dy
-  := by simp[uncurryN, Prod.Uncurry.uncurry]; done
+  := by symdiff; done 
 
 @[simp ↓, autodiff]
 theorem HAdd.hAdd.arg_xy.tangentMap_simp

@@ -53,6 +53,14 @@ elab:max "ⅆ" x:term:max : term => withFreshMacroScope do
   elabTerm (← `(?m)) none
 
 
+class Dagger {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
+
+open Lean Elab Term Meta in
+elab:max x:term:max "†" : term => withFreshMacroScope do
+  _ ← synthInstance (← elabType (← `(Dagger $x ?m)))
+  elabTerm (← `(?m)) none
+
+
 class Nabla {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
 
 elab:max "∇" x:term:max : term => withFreshMacroScope do

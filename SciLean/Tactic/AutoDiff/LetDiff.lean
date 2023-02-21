@@ -1,5 +1,6 @@
+import Mathlib.Lean.Expr
 import SciLean.Tactic.CustomSimp.Main
-import SciLean.Core.Differential
+-- import SciLean.Core.Differential
 
 import Lean.Meta
 import Lean.Parser
@@ -14,36 +15,38 @@ namespace SciLean
 --   dbg_trace s!"Running pre on {e}"
 --   pure (Step.visit (Result.mk e none))
 
-theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y → Z) [IsSmoothT g] [IsSmoothNT 2 f]
-  : (∂ λ x => 
-      let y := g x
-      f x y)
-    =
-    λ x dx =>
-      let y  := g x
-      let dy := ∂ g x dx
-      ∂ f x dx y + ∂ (f x) y dy
-:= by simp[tangentMap]; done
+-- theorem diffOfLet {X Y Z} [Vec X] [Vec Y] [Vec Z] (g : X → Y) (f : X → Y → Z) [IsSmoothT g] [IsSmoothNT 2 f]
+--   : (∂ λ x => 
+--       let y := g x
+--       f x y)
+--     =
+--     λ x dx =>
+--       let y  := g x
+--       let dy := ∂ g x dx
+--       ∂ f x dx y + ∂ (f x) y dy
+-- := by simp[tangentMap]; done
 
-theorem diffOfLetSimple {X Y α} [Vec X] [Vec Y] (a : α) (f : X → α → Y) [IsSmooth (λ x => f x a)]
-  : (∂ λ x => 
-      let y := a
-      f x y)
-    =
-    let y := a
-    λ x dx =>
-      ∂ (λ x => f x y) x dx
-:= by simp; done
+-- theorem diffOfLetSimple {X Y α} [Vec X] [Vec Y] (a : α) (f : X → α → Y) [IsSmooth (λ x => f x a)]
+--   : (∂ λ x => 
+--       let y := a
+--       f x y)
+--     =
+--     let y := a
+--     λ x dx =>
+--       ∂ (λ x => f x y) x dx
+-- := by simp; done
 
-abbrev vecZero (X : Type) [Vec X] : X := 0
+-- abbrev vecZero (X : Type) [Vec X] : X := 0
+
+-- -- Differentiate expression w.r.t to give free variables `xs = [(x₀,dx₀), (x₁, dx₁), ...]`
+-- -- This differentiates only through lambdas and lets
+-- #check @differential
 
 def sorryAx' (α : Sort _) : α := sorryAx α false
--- Differentiate expression w.r.t to give free variables `xs = [(x₀,dx₀), (x₁, dx₁), ...]`
--- This differentiates only through lambdas and lets
-#check @differential
+
 open Lean Meta in
 def diffLet (e : Expr) : MetaM (Option (Expr × Expr)) := do
-  match e.app4? ``differential with
+  match e.app4? `SciLean.differential with
   | none => pure none
   | some (_,_,_,e') =>
     dbg_trace s!"Differential application {← Lean.Meta.ppExpr e}"
@@ -74,7 +77,7 @@ def diffLet (e : Expr) : MetaM (Option (Expr × Expr)) := do
         -- let b := b.replaceFVar y y'
         -- let xs := xs.map λ xi => xi.replaceFVar y y'
         dbg_trace "hihi {← ppExpr yFun}"
-        let dyVal ← mkAppM' (← mkAppM ``differential #[yFun]) #[x, dx]
+        let dyVal ← mkAppM' (← mkAppM `SciLean.differential #[yFun]) #[x, dx]
         dbg_trace "hoho {← ppExpr dyVal}"
         withLetDecl (yDecl.userName |>.appendAfter "'" |>.appendBefore "d") yDecl.type dyVal λ dy => do
 
@@ -84,8 +87,8 @@ def diffLet (e : Expr) : MetaM (Option (Expr × Expr)) := do
 
         dbg_trace "hehe {← ppExpr bXFun}"
         dbg_trace "huhu {← ppExpr bYFun}"
-        let fdx ← mkAppM' (← mkAppM ``differential #[bXFun]) #[x, dx]
-        let fdy ← mkAppM' (← mkAppM ``differential #[bYFun]) #[y, dy]
+        let fdx ← mkAppM' (← mkAppM `SciLean.differential #[bXFun]) #[x, dx]
+        let fdy ← mkAppM' (← mkAppM `SciLean.differential #[bYFun]) #[y, dy]
 
         dbg_trace "bla {← ppExpr fdx}"
         dbg_trace "blo {← ppExpr fdy}"
@@ -132,7 +135,7 @@ def diffFVars (dvars : Array (Expr × Expr)) (e : Expr) : MetaM (Option Expr) :=
     let D := λ (e' : Expr) ((x, dx) : Expr × Expr) => do
       let xDecl ← getFVarLocalDecl x
       let f := Expr.lam xDecl.userName xDecl.type (e'.abstract #[x]) default
-      mkAppM' (← mkAppM ``differential #[f]) #[x, dx]
+      mkAppM' (← mkAppM `SciLean.differential #[f]) #[x, dx]
     let e' ← dvars[fstIdx+1:].foldlM (init := ← D e dvars[fstIdx]!) 
       λ e' (xi, dxi) => do
         mkAppM ``HAdd.hAdd #[e', ← D e (xi, dxi)]
@@ -144,7 +147,7 @@ def diffFVars (dvars : Array (Expr × Expr)) (e : Expr) : MetaM (Option Expr) :=
 open Lean Meta in
 def diffLet' (e : Expr) : MetaM (Option (Expr × Expr)) := do
 
-  if ¬(e.isAppOf ``differential) then
+  if ¬(e.isAppOf `SciLean.differential) then
     return none
   else
     match e.getArg? 5 with
