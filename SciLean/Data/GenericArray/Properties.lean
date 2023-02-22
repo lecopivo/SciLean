@@ -1,4 +1,5 @@
 import SciLean.Data.GenericArray.Algebra
+import SciLean.Tactic.CustomSimp.DebugSimp
 
 namespace SciLean
 
@@ -15,57 +16,72 @@ instance getElem.arg_cont.isLin_alt [Vec Elem] (idx : Idx)
   : IsLin (λ (cont : Cont) => cont[idx]) := sorry_proof
 
 instance getElem.arg_cont.isSmooth [Vec Elem]
-  : IsSmooth (λ (cont : Cont) (idx : Idx) => cont[idx]) := linear_is_smooth _
+  : IsSmooth (λ (cont : Cont) (idx : Idx) => cont[idx]) := by infer_instance
 instance getElem.arg_cont.isSmooth_alt [Vec Elem] (idx : Idx)  
-  : IsSmooth (λ (cont : Cont) => cont[idx]) := linear_is_smooth _
+  : IsSmooth (λ (cont : Cont) => cont[idx]) := by infer_instance
 instance getElem.arg_cont.isSmooth_comp [Vec Elem] [Vec X]
-  (f : X → Cont) [IsSmooth f] (idx : Idx)
-  : IsSmooth (λ (x : X) => (f x)[idx]) := comp.arg_x.isSmooth (λ cont => cont[idx]'True.intro) f
+  (f : X → Cont) [IsSmoothT f] (idx : Idx)
+  : IsSmoothT (λ (x : X) => (f x)[idx]) := comp.arg_x.isSmooth (λ cont => cont[idx]) f
 
 
-@[simp ↓] theorem getElem.arg_cont.diff_simp [Vec Elem]
+@[diff] theorem getElem.arg_cont.diff_simp [Vec Elem]
   : ∂ (λ (cont : Cont) (idx : Idx) => cont[idx]) = λ cont dcont idx => dcont[idx]
-  := diff_of_linear _
-@[simp ↓] theorem getElem.arg_cont.diff_simp_alt [Vec Elem] (idx : Idx)
+  := by symdiff; done
+@[diff] theorem getElem.arg_cont.tangentMap_simp [Vec Elem]
+  : 𝒯 (λ (cont : Cont) (idx : Idx) => cont[idx]) 
+    = 
+    λ (cont,dcont) => (λ idx => cont[idx], λ idx => dcont[idx])
+  := by symdiff; done
+@[diff] theorem getElem.arg_cont.diff_simp_alt [Vec Elem] (idx : Idx)
   : ∂ (λ (cont : Cont) => cont[idx]) = λ cont dcont => dcont[idx]
-  := diff_of_linear _
-@[simp ↓] theorem getElem.arg_cont.diff_simp_comp [Vec Elem] [Vec X]
-  (f : X → Cont) [IsSmooth f]
+  := by symdiff; done
+@[diff] theorem getElem.arg_cont.tangentMap_simp_alt [Vec Elem] (idx : Idx)
+  : 𝒯 (λ (cont : Cont) => cont[idx]) 
+    = 
+    λ (cont,dcont) => (cont[idx],dcont[idx])
+  := by symdiff; done
+@[diff] theorem getElem.arg_cont.diff_simp_comp [Vec Elem] [Vec X]
+  (f : X → Cont) [IsSmoothT f] (idx : Idx)
   : ∂ (λ (x : X) => (f x)[idx]) = λ x dx => (∂ f x dx)[idx]
-  := by rw[diff_of_comp (λ cont => cont[idx]'True.intro) f]; simp
+  := by rw[differential.of_comp (λ cont => cont[idx]'sorry_proof) f]; symdiff; symdiff; done
 
 
 instance getElem.arg_cont.hasAdjoint [SemiHilbert Elem] (idx : Idx)
-  : HasAdjoint (λ (cont : Cont) => cont[idx]) := sorry
-@[simp ↓] theorem getElem.arg_cont.adj_simp [SemiHilbert Elem] (idx : Idx)
-  : (λ (cont : Cont) => cont[idx])† = λ cont' => setElem 0 idx cont' := sorry
-@[simp ↓] theorem getElem.arg_cont.adj_simp_comp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
-  (f : X → Cont) [HasAdjoint f]
-  : (λ x => (f x)[idx])† = λ x' => f† (setElem 0 idx x') := sorry_proof
--- by 
---   rw[comp.arg_x.adj_simp (λ cont : Cont => cont[idx]'True.intro) f]; simp
+  : HasAdjoint (λ (cont : Cont) => cont[idx]) := sorry_proof
+@[diff] theorem getElem.arg_cont.adj_simp [SemiHilbert Elem] (idx : Idx)
+  : (λ (cont : Cont) => cont[idx])† = λ cont' => setElem 0 idx cont' := sorry_proof
+@[diff] theorem getElem.arg_cont.adj_simp_comp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
+  (f : X → Cont) [HasAdjointT f]
+  : (λ x => (f x)[idx])† = λ x' => f† (setElem 0 idx x') :=
+by 
+  rw[comp.arg_x.adj_simp (λ cont : Cont => cont[idx]'True.intro) f]; symdiff; done
 
 instance getElem.arg_cont.hasAdjDiff [SemiHilbert Elem] (idx : Idx)
-  : HasAdjDiff (λ (cont : Cont) => cont[idx]) := by constructor; infer_instance; simp; infer_instance; done
+  : HasAdjDiff (λ (cont : Cont) => cont[idx]) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
 
-@[simp ↓] theorem getElem.arg_cont.adjDiff_simp [SemiHilbert Elem] (idx : Idx)
-  : ∂† (λ (cont : Cont) => cont[idx]) = λ _ dcont' => setElem 0 idx dcont' := by simp[adjointDifferential]; done
-@[simp ↓] theorem getElem.arg_cont.adjDiff_simp_comp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
-  (f : X → Cont) [inst : HasAdjDiff f]
+@[diff] theorem getElem.arg_cont.adjDiff_simp [SemiHilbert Elem] (idx : Idx)
+  : ∂† (λ (cont : Cont) => cont[idx]) = λ _ dcont' => setElem 0 idx dcont' := by unfold adjointDifferential; symdiff; symdiff; done
+@[diff] theorem getElem.arg_cont.adjDiff_simp_comp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
+  (f : X → Cont) [inst : HasAdjDiffT f]
   : ∂† (λ (x : X) => (f x)[idx]) = λ x dx' => ∂† f x (setElem 0 idx dx') := 
 by 
-  have _ := inst.1
-  have _ := inst.2 
-  simp[adjointDifferential]
+  have _ := inst.1.1
+  have _ := inst.1.2
+
+  unfold adjointDifferential
+  symdiff; symdiff
   done
 
 
 -- This unfortunatelly does not solve automatically :( the unification fails
-example (x : Idx) (f : ℝ → Cont) [Vec Elem] [IsSmooth f] 
+set_option trace.Meta.Tactic.simp true in
+set_option trace.Meta.Tactic.simp.rewrite true in
+example (x : Idx) (f : ℝ → Cont) [Vec Elem] [IsSmoothT f] 
   : ∂ (λ (s : ℝ) => (f s)[x]) = λ s ds => (∂ f s ds)[x] := 
 by 
-  rw[diff_of_comp (λ g => getElem g x True.intro) f];
-  simp;
+  rw[differential.of_comp (λ g => getElem g x True.intro) f]
+  -- debug_simp (config := {singlePass := true, proj := false, zeta := false, beta := false, eta := false, iota := false}) only [diff,tangentMap]
+  symdiff_core (config := {singlePass := true, iota := false}) only [tangentMap]; symdiff
   done
 
 ---

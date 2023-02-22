@@ -85,8 +85,11 @@ example g dg x : ∂ (λ (g : X → Y) => f (g x)) g dg = ∂ f (g x) (dg x) := 
 example g dg x : ∂ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = ∂ (F x) (g x) (dg x) := by symdiff; done
 set_option synthInstance.maxHeartbeats 3000 in
 example g dg x : ∂ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = ∂ F (g x) (dg x) y := by symdiff; done
+set_option synthInstance.maxHeartbeats 2000 in
 example (r dr : ℝ) : ∂ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by symdiff; done
 example g dg y : ∂ (λ (g : X → X) (x : X) => F (g x) y) g dg x = ∂ F (g x) (dg x) y := by symdiff; done 
+set_option maxHeartbeats 5000 in  
+set_option synthInstance.maxHeartbeats 2000 in
 example (r dr : ℝ) : ∂ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by symdiff; done
 
 

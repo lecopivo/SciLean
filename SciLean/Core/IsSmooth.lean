@@ -213,9 +213,9 @@ open Lean.TSyntax.Compat in
 macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term => 
   Lean.expandExplicitBinders `SciLean.SmoothMap.mk' xs b
 
-@[simp, autodiff_simp]
-theorem SmoothMap.simp_normalize (f : X ⟿ Y) 
-    : (λ (x : X) ⟿ f x) = f := by simp; done
+@[simp, diff_simp]
+theorem SmoothMap.eta_reduction (f : X ⟿ Y) 
+    : (λ (x : X) ⟿ f x) = f := by rfl; done
 
 instance SmoothMap.mk'.arg_f.isSmooth
   (f : W → X → Y) [IsSmoothNT 2 f]

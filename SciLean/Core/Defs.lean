@@ -116,8 +116,8 @@ def Smooth.gradient (f : X ⟿ ℝ) : X⟿X := SmoothMap.mk (λ x => adjoint (λ
 
 
 @[default_instance]
-instance (f : X → ℝ) : Nabla f (gradient f) := ⟨⟩
-instance (f : X ⟿ ℝ) : Nabla f (Smooth.gradient f) := ⟨⟩
+instance gradient.instNablaNotation (f : X → ℝ) : Nabla f (gradient f) := ⟨⟩
+instance Smooth.gradient.instNablaNotation (f : X ⟿ ℝ) : Nabla f (Smooth.gradient f) := ⟨⟩
 
 
 end OnSemiHilbertSpaces

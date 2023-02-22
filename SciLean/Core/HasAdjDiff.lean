@@ -40,6 +40,9 @@ theorem infer_HasAdjDiff' {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilb
   : (∀ x, HasAdjointT $ ∂ (uncurryN n f) x) → HasAdjDiffN n f
   := λ h => sorry
 
+-- instance (priority := low-9) HasAdjoint_HasAdjDiff (f : X → Y) [HasAdjoint f] : HasAdjDiff f := 
+-- by apply infer_HasAdjDiff'; symdiff; infer_instance; done
+
 --------------------------------------------------------------------------------
 
 

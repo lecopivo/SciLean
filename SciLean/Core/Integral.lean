@@ -85,19 +85,19 @@ instance (F : (X⟿Y) → LocIntDom X → ℝ) : Nabla F (variationalGradient F)
 
 -- Properties
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem variationalGradient_unfold (F : (X⟿Y) → LocIntDom X → ℝ)
   : ∇ F = λ f => (∂ F f)† := by rfl
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem varDual_smooth_fun (F : (X⟿Y) → (X⟿ℝ)) [HasAdjointT F]
   : (λ (f : X ⟿ Y) => ∫ (F f))† = F† (λ _ ⟿ 1) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem varDual_smooth_fun_elemwise [Hilbert Y] (A : X → Y → ℝ) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
   : (λ (g : X ⟿ Y) => ∫ x, A x (g x))† = (λ x ⟿ (A x)† 1) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem varDual_smooth_fun_elemwise' [Hilbert Y] [Vec Z] (f : X → Z) [IsSmoothT f] 
   (A : Y → Z → ℝ) [∀ z, HasAdjointT (λ y => A y z)] [IsSmoothNT 2 A]
   : (λ (g : X ⟿ Y) => ∫ x, A (g x) (f x))† = (λ x ⟿ (λ y => A y (f x))† 1) := 
@@ -171,7 +171,7 @@ by
   sorry_proof
 
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem elemwise_adjoint_simp {Z} [Hilbert Z] (A : X → Y → Z) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
   : (λ (g : X⟿Y) => λ x ⟿ A x (g x))†
     =
@@ -191,7 +191,7 @@ by
   infer_instance
   done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem elemwise_adjoint_simp_alt1 {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y]
   {X' Y' ι' : Type} [Enumtype ι'] [FinVec X' ι'] [Hilbert Y']
   (D : (X⟿Y) → (X'⟿Y')) [HasAdjointT D]
@@ -217,7 +217,7 @@ by
   apply elemwise_adjoint_alt1 (λ x => x) (λ x y => A x y (g' x))
   done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem elemwise_adjoint_simp_alt2 {Y'} [Vec Y'] {Z} [Hilbert Z]
   (A : X → Y → Y' → Z) [∀ x y', HasAdjointT (λ y => A x y y')] [IsSmoothNT 3 A]
   (g' : X → Y' := λ _ => 0) [IsSmoothT g']
@@ -275,24 +275,22 @@ example  (f : ℝ⟿ℝ) : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪ⅆ f
 example  (f : X⟿Y) : (fun (g : X⟿Y) => fun x ⟿ ⟪g x, f x⟫)† = λ h => λ x ⟿ h x * f x := by simp; done
 example  (f : X⟿Y) : (fun (g : X⟿Y) => fun x ⟿ ⟪f x, g x⟫)† = λ h => λ x ⟿ h x * f x := by simp; done
 
+example  (f : X⟿Y) : HasAdjointT fun (g : X⟿Y) => fun x ⟿ ⟪f x, g x⟫ := by infer_instance
+example  (f : X⟿Y) : HasAdjointT fun (g : X⟿Y) => fun x ⟿ ⟪g x, f x⟫ := by infer_instance
+example  (f : X⟿Y) (A : (X⟿Y) → (X⟿Y)) [HasAdjointT A] : HasAdjointT fun (g : X⟿Y) => fun x ⟿ ⟪A g x, f x⟫ := by (try infer_instance); admit
+example  (f : X⟿Y) (A : (X⟿Y) → (X⟿Y)) [HasAdjointT A] : HasAdjointT fun (g : X⟿Y) => fun x ⟿ ⟪f x, A g x⟫ := by infer_instance
 
 
--- @[simp ↓, autodiff]
+-- @[simp ↓, diff]
 -- theorem smooth_diff_to_normal_diff {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmoothT f]
 --   : ∂ (λ x ⟿ f x) = λ x ⟿ λ dx ⊸ ∂ f x dx := by simp[Smooth.differential]; done
 
 
--- @[simp ↓, autodiff]
+-- @[simp ↓, diff]
 -- theorem smooth_sdif_to_normal_sdiff {X} [Vec X] (f : ℝ → X) [IsSmoothT f]
 --   : ⅆ (λ x ⟿ f x) = λ x ⟿ ⅆ f x := by simp[Smooth.differential]; done
 
 
-set_option synthInstance.maxSize 2000 in
-example  (f : ℝ⟿ℝ) : (fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪f x, ⅆ g x⟫)†
-                       = 
-                       λ h => - (λ x ⟿ ⅆ h x * f x + h x * ⅆ f x) := 
-by 
-  simp[differentialScalar,tangentMap,Smooth.differential,Smooth.differentialScalar]; sorry_proof
 
 
 #check Nat

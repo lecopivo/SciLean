@@ -69,19 +69,19 @@ instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (∂† f x) := sorry
 ----------------------------------------------------------------------
 
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem id.arg_x.adjDiff_simp
-  : ∂† (λ x : X => x) = λ x dx => dx := by simp[adjointDifferential]; done
+  : ∂† (λ x : X => x) = λ x dx => dx := by symdiff; simp[adjointDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem const.arg_x.adjDiff_simp 
   : ∂† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjointDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem const.arg_y.adjDiff_simp (x : X)
   : ∂† (λ (y : Y) => x) = (λ y dy' => (0 : Y)) := by simp[adjointDifferential]; done
 
-@[simp ↓ low-4, autodiff low-4]
+@[simp ↓ low-4, diff low-4]
 theorem swap.arg_y.adjDiff_simp
   (f : ι → X → Z) [inst : ∀ i, HasAdjDiffT (f i)]
   : ∂† (λ x y => f y x) = (λ x dx' => ∑ i, (∂† (f i) x) (dx' i)) := 
@@ -91,7 +91,7 @@ by
 
   simp[adjointDifferential]; done
 
-@[simp ↓ low-3, autodiff low-3]
+@[simp ↓ low-3, diff low-3]
 theorem subst.arg_x.adjDiff_simp
   (f : X → Y → Z) [instf : HasAdjDiffNT 2 f]
   (g : X → Y) [instg : HasAdjDiffT g]
@@ -116,7 +116,7 @@ by
   simp[adjointDifferential, reverseDifferential, tangentMap, -comp.arg_x.parm1.adj_simp]
   done
 
-@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
+@[simp ↓ low-2, diff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm1.adjDiff_simp
   (a : α)
   (f : X → Y → α → Z) [HasAdjDiffNT 2 λ x y => f x y a]
@@ -135,7 +135,7 @@ by
   rw[subst.arg_x.adjDiff_simp (λ x y => f x y a) g]
   done
 
-@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
+@[simp ↓ low-2, diff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
   (f : X → Y → α → β → Z) [HasAdjDiffNT 2 λ x y => f x y a b]
@@ -152,7 +152,7 @@ by
   apply subst.arg_x.adjDiff_simp (λ x y => f x y a b) g
   done
 
-@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
+@[simp ↓ low-2, diff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
   (f : X → Y → α → β → γ → Z) [HasAdjDiffNT 2 λ x y => f x y a b c]
@@ -169,7 +169,7 @@ by
   apply subst.arg_x.adjDiff_simp (λ x y => f x y a b c) g
   done
 
-@[simp ↓ low-1, autodiff low-1, simp_guard g (λ x => x)]
+@[simp ↓ low-1, diff low-1, simp_guard g (λ x => x)]
 theorem comp.arg_x.adjDiff_simp
   (f : Y → Z) [instf : HasAdjDiffT f]
   (g : X → Y) [instg : HasAdjDiffT g]
@@ -180,7 +180,7 @@ theorem comp.arg_x.adjDiff_simp
       dg' ((∂† f y) dz) 
   := by simp; done
 
-@[simp ↓ low-2, autodiff low-2, simp_guard g₁ Prod.fst, g₂ Prod.snd]
+@[simp ↓ low-2, diff low-2, simp_guard g₁ Prod.fst, g₂ Prod.snd]
 theorem diag.arg_x.adjDiff_simp
   (f : Y₁ → Y₂ → Z) [HasAdjDiffNT 2 f]
   (g₁ : X → Y₁) [hg : HasAdjDiffT g₁]
@@ -202,7 +202,7 @@ by
   simp only [reverseDifferential]
   done
 
-@[simp ↓ low, autodiff low]
+@[simp ↓ low, diff low]
 theorem eval.arg_f.adjDiff_simp
   (i : ι)
   : ∂† (λ (f : ι → X) => f i) 
@@ -210,7 +210,7 @@ theorem eval.arg_f.adjDiff_simp
     (λ f df' j => ([[i = j]] * df' : X))
 := sorry
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem eval.arg_x.parm1.adjDiff_simp
   (f : X → ι → Z) [HasAdjDiff f]
   : ∂† (λ x => f x i) 
@@ -226,7 +226,7 @@ by
 -- These theorems are problematic when used with simp --
 
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.parm1.adjDiff_simp
   (a : α) 
   (f : Y → α → Z) [HasAdjDiff λ y => f y a]
@@ -242,7 +242,7 @@ theorem comp.arg_x.parm1.adjDiff_simp
   simp[-subst.arg_x.parm1.adjDiff_simp,hold]
   done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
   (f : Y → α → β → Z) [HasAdjDiff λ y => f y a b]
@@ -258,7 +258,7 @@ theorem comp.arg_x.parm2.adjDiff_simp
   simp[-subst.arg_x.parm2.adjDiff_simp,hold]
   done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
   (f : Y → α → β → γ → Z) [HasAdjDiff λ y => f y a b c]
@@ -280,7 +280,7 @@ example (a : α) (f : Y₁ → Y₂ → α → Z) [IsSmoothT λ y₁ y₂ => f y
   (g₁ : X → Y₁) [hg : IsSmoothT g₁] : IsSmoothT (λ x y => f (g₁ x) y a) := by (try infer_instance); admit
 
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, diff low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm1.adjDiff_simp
   (a : α)
   (f : Y₁ → Y₂ → α → Z) [HasAdjDiffNT 2 λ y₁ y₂ => f y₁ y₂ a]
@@ -297,7 +297,7 @@ theorem diag.arg_x.parm1.adjDiff_simp
 := by 
   (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂)
   
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, diff low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm2.adjDiff_simp
   (a : α) (b : β)
   (f : Y₁ → Y₂ → α → β → Z) [HasAdjDiffNT 2 λ y₁ y₂ => f y₁ y₂ a b]
@@ -315,7 +315,7 @@ theorem diag.arg_x.parm2.adjDiff_simp
   (apply diag.arg_x.adjDiff_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂)
   done
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, diff low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm3.adjDiff_simp
   (a : α) (b : β) (c : γ)
   (f : Y₁ → Y₂ → α → β → γ → Z) [HasAdjDiffNT 2 λ y₁ y₂ => f y₁ y₂ a b c]
@@ -336,42 +336,42 @@ theorem diag.arg_x.parm3.adjDiff_simp
 ----------------------------------------------------------------------
 
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Prod.fst.arg_xy.adjDiff_simp
   : ∂† (Prod.fst : X×Y → X)
     =
     λ xy dx => (dx,0)
   := by unfold adjointDifferential; simp; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Prod.snd.arg_xy.adjDiff_simp
   : ∂† (Prod.snd : X×Y → Y)
     =
     λ xy dy => (0,dy)
   := by unfold adjointDifferential; simp; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HAdd.hAdd.arg_xy.adjDiff_simp
   : ∂† (uncurryN 2 λ x y : X => x + y)
     =
     λ xy dx => (dx,dx)
   :=  by unfold adjointDifferential; simp; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Prod.fst.arg_xy.revDiff_simp
   : ℛ (Prod.fst : X×Y → X)
     =
     λ (x,y) => (x, λ dx => (dx,0))
   := by unfold reverseDifferential; simp; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Prod.snd.arg_xy.revDiff_simp
   : ℛ (Prod.snd : X×Y → Y)
     =
     λ (x,y) => (y, λ dy => (0,dy))
   := by unfold reverseDifferential; simp; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HAdd.hAdd.arg_xy.revDiff_simp
   : ℛ (uncurryN 2 λ x y : X => x + y)
     =
@@ -382,18 +382,18 @@ theorem HAdd.hAdd.arg_xy.revDiff_simp
 --------------------------------------------------------------------------------
 
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem id.arg_x.revDiff_simp
   : ℛ (λ x : X => x) = λ x => (x, λ x => x) := by simp[reverseDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem const.arg_x.revDiff_simp 
   : ℛ (λ (x : X) (i : ι) => x) 
     = 
     λ x => ((λ i => x), (λ f => ∑ i, f i))
   := by simp[reverseDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem const.arg_y.revDiff_simp (x : X)
   : ℛ (λ (y : Y) => x) 
     =
@@ -401,7 +401,7 @@ theorem const.arg_y.revDiff_simp (x : X)
       (x, (λ dy' => 0))
   := by simp[reverseDifferential]; done
 
-@[simp ↓ low-4, autodiff low-4]
+@[simp ↓ low-4, diff low-4]
 theorem swap.arg_y.revDiff_simp
   (f : ι → X → Z) [inst : ∀ i, HasAdjDiffT (f i)]
   : ∂† (λ x y => f y x) = (λ x dx' => ∑ i, (∂† (f i) x) (dx' i)) := 
@@ -411,7 +411,7 @@ by
 
   simp[adjointDifferential]; done
 
-@[simp ↓ low-3, autodiff low-3, simp_guard g (λ x => x)]
+@[simp ↓ low-3, diff low-3, simp_guard g (λ x => x)]
 theorem subst.arg_x.revDiff_simp
   (f : X → Y → Z) [instf : HasAdjDiffNT 2 f]
   (g : X → Y) [instg : HasAdjDiffT g]
@@ -445,7 +445,7 @@ by
   done
 
 
-@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
+@[simp ↓ low-2, diff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm1.revDiff_simp
   (a : α)
   (f : X → Y → α → Z) [HasAdjDiffNT 2 λ x y => f x y a]
@@ -463,7 +463,7 @@ by
   apply subst.arg_x.revDiff_simp (λ x y => f x y a) g
   done
 
-@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
+@[simp ↓ low-2, diff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm2.revDiff_simp
   (a : α) (b : β)
   (f : X → Y → α → β → Z) [HasAdjDiffNT 2 λ x y => f x y a b]
@@ -481,7 +481,7 @@ by
   apply subst.arg_x.revDiff_simp (λ x y => f x y a b) g
   done
 
-@[simp ↓ low-2, autodiff low-2, simp_guard g (λ x => x)]
+@[simp ↓ low-2, diff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm3.revDiff_simp
   (a : α) (b : β) (c : γ)
   (f : X → Y → α → β → γ → Z) [HasAdjDiffNT 2 λ x y => f x y a b c]
@@ -498,7 +498,7 @@ by
   done
 
 
--- @[simp ↓ low-10, autodiff low-10]
+-- @[simp ↓ low-10, diff low-10]
 theorem uncurryN2.arg_x.diff_simp
   (f : X → Y → Z) [HasAdjDiffNT 2 f]
   : ∂† (uncurryN 2 f) 
@@ -507,7 +507,7 @@ theorem uncurryN2.arg_x.diff_simp
       (∂† (λ x' => f x' y) x dz, ∂† (λ y' => f x y') y dz)
   := sorry_proof
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.revDiff_simp
   (f : Y → Z) [instf : HasAdjDiffT f]
   (g : X → Y) [instg : HasAdjDiffT g]
@@ -523,7 +523,7 @@ by
   simp only [reverseDifferential]
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem diag.arg_x.revDiff_simp
   (f : Y₁ → Y₂ → Z) [HasAdjDiffNT 2 f]
   (g₁ : X → Y₁) [hg : HasAdjDiffT g₁]
@@ -552,7 +552,7 @@ by
              add_zero, zero_add]
   done
 
-@[simp ↓ low, autodiff low]
+@[simp ↓ low, diff low]
 theorem eval.arg_f.revDiff_simp
   (i : ι)
   : ℛ (λ (f : ι → X) => f i) 
@@ -562,7 +562,7 @@ theorem eval.arg_f.revDiff_simp
 by 
   simp[reverseDifferential,adjointDifferential]; done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem eval.arg_x.parm1.revDiff_simp
   (f : X → ι → Z) [HasAdjDiff f] (i : ι)
   : ℛ (λ x => f x i)

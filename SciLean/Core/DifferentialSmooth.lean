@@ -18,6 +18,9 @@ instance Basis.basis.arg_x.isLin {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
   : IsLin (λ x : X => 𝕡 i x) := by infer_instance
 instance Basis.basis.arg_x.isSmooth {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
   : IsSmooth (λ x : X => 𝕡 i x) := by infer_instance
+instance Basis.basis.arg_x.hasAdjDiff {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : HasAdjDiff (λ x : X => 𝕡 i x) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
+
 
 instance Basis.basis.arg_x.adj_simp {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
   : adjoint (λ (x : X) => 𝕡 i x) = (λ c => c * 𝕖'[X] i) := sorry_proof
@@ -28,6 +31,8 @@ instance DualBasis.dualBasis.arg_x.isLin {X ι} [Enumtype ι] [FinVec X ι] (i :
   : IsLin (λ x : X => 𝕡' i x) := by infer_instance
 instance DualBasis.dualBasis.arg_x.isSmooth {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
   : IsSmooth (λ x : X => 𝕡' i x) := by infer_instance
+instance DualBasis.dualBasis.arg_x.hasAdjDiff {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : HasAdjDiff (λ x : X => 𝕡' i x) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
 
 instance DualBasis.dualBasis.arg_x.adj_simp {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
   : adjoint (λ (x : X) => 𝕡' i x) = (λ c => c * 𝕖[X] i) := sorry_proof
@@ -81,7 +86,7 @@ instance Smooth.divergence.arg_f.isLin
 instance Smooth.divergence.arg_f.isSmooth
   : IsSmooth (Smooth.divergence : (X⟿X) → (X⟿ℝ)) := by infer_instance
 
-@[autodiff]
+@[diff]
 theorem Smooth.divergence.arg_f.adj_simp  
   : (Smooth.divergence : (X⟿X) → (X⟿ℝ))†
     =
@@ -97,7 +102,7 @@ instance Smooth.divergenceDual.arg_f.isLin
 instance Smooth.divergenceDual.arg_f.isSmooth
   : IsSmooth (Smooth.divergenceDual : (X⟿X⊸Y) → (X⟿Y)) := by infer_instance
 
-@[autodiff]
+@[diff]
 theorem Smooth.divergenceDual.arg_f.adj_simp  
   : (Smooth.divergenceDual : (X⟿X⊸Y) → (X⟿Y))†
     =
@@ -133,7 +138,7 @@ instance Smooth.differentialScalar.arg_f.isLin {X} [Vec X]
 instance Smooth.differentialScalar.arg_f.isSmooth {X} [Vec X] 
   : IsSmooth (Smooth.differentialScalar : (ℝ⟿X) → ℝ⟿X) := by infer_instance
 
-@[autodiff]
+@[diff]
 theorem Smooth.differentialScalar.arg_f.adj_simp {X} [Hilbert X] 
   : (Smooth.differentialScalar : (ℝ⟿X) → (ℝ⟿X))†
     =
@@ -152,7 +157,7 @@ instance Smooth.gradient.arg_f.isLin {X} [SemiHilbert X]
 instance Smooth.gradient.arg_f.isSmooth {X} [SemiHilbert X] 
   : IsSmooth (Smooth.gradient : (X⟿ℝ) → (X⟿X)) := by infer_instance
 
-@[simp, autodiff]
+@[diff]
 theorem Smooth.gradient.arg_f.adj_simp 
   : (Smooth.gradient : (X⟿ℝ) → X⟿X)† 
     =
@@ -160,15 +165,52 @@ theorem Smooth.gradient.arg_f.adj_simp
     := sorry_proof
 
 
+--------------------------------------------------------------------------------
+-- doodle
+--------------------------------------------------------------------------------
+
+set_option synthInstance.maxSize 2000 in
+example  (f : ℝ⟿ℝ) : (fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪f x, ⅆ g x⟫)†
+                       = 
+                       λ h => - ⅆ (λ x ⟿ h x * f x) := by symdiff; done
+
+
 set_option synthInstance.maxSize 2000 in
 example  (f : ℝ⟿ℝ) : HasAdjointT fun (g : ℝ⟿ℝ) => fun x ⟿ ⟪ⅆ f x, ⅆ g x⟫ := by infer_instance
 
 -- set_option synthInstance.maxSize 2000 in
--- example  (f : X⟿ℝ) : (fun (g : X⟿ℝ) => fun x ⟿ ⟪∇ f x, ∇ g x⟫)†
---                        = 
---                        λ h => - Smooth.divergence (λ x ⟿ (h x * ∇ f x)) := 
--- by (conv => lhs; symdiff); done
+example  (f : X⟿ℝ) : (fun (g : X⟿ℝ) => fun x ⟿ ⟪∇ f x, ∇ g x⟫)†
+                       = 
+                       λ h : X⟿ℝ => - ∇· (λ x ⟿ (h x * ∇ f x)) := by symdiff; done
 
-#check Smooth.gradient
+
+@[diff]
+theorem hahah {X Y Z} [Vec X] [Vec Y] [Vec Z]
+  (f : X → Y → Z) [IsSmoothNT 2 f]
+  : ∂ (λ x => λ y ⟿ f x y) = λ x dx => λ y ⟿ (∂ f) x dx y := sorry_proof
+
+@[simp, diff_simp]
+theorem differential_zero_dir {X Y} [Vec X] [Vec Y]
+  (f : X → Y) [IsSmooth f] (x)
+  : ∂ f x 0 = 0 := sorry_proof
+
+#check integral.arg_f.isLin
+
+example : ∂ (fun (g : X⟿ℝ) => ∫ x, ∥∇ g x∥²)
+          =
+          λ g dg : X⟿ℝ => ∫ x, 2 * ⟪∇ dg x, ∇ g x⟫ :=
+by symdiff; done
+
+
+attribute [default_instance] Smooth.gradient.instNablaNotation
+        
+set_option trace.Meta.Tactic.simp.discharge true in
+example : ∇ (fun (g : X⟿ℝ) => ∫ x, (1/2:ℝ) * ∥∇ g x∥²)
+          = 
+          λ g : X⟿ℝ => - ∇· (∇ g) := 
+by symdiff; symdiff; simp only [uncurryN, Prod.Uncurry.uncurry];
+   simp only [(sorry_proof : ∀ x y : X, ⟪x,y⟫ = ⟪y,x⟫)];
+   symdiff
+   done
 
 

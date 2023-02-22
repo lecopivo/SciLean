@@ -24,8 +24,8 @@ partial def autoDiffPre (e : Expr) (rep := false) : SimpM Step := do
   trace[Meta.Tactic.simp] s!"Autodiff step on:\n{← Meta.ppExpr e}"
 
 
-  -- Always use `autodiff` marked theorems and set them all as `pre` instead of post  
-  let autodiffExt ← Lean.Meta.getSimpExtension? "autodiff"
+  -- Always use `diff` marked theorems and set them all as `pre` instead of post  
+  let autodiffExt ← Lean.Meta.getSimpExtension? "diff"
   let mut autodiffThms ← autodiffExt.get!.getTheorems 
   autodiffThms := { autodiffThms with pre := autodiffThms.post, post := autodiffThms.pre }
 
@@ -67,10 +67,10 @@ open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
 
 
 macro "autodiff" : conv => 
-  `(conv| (autodiff_core (config := {singlePass := true,  zeta := false}) only [/- ↓ autodiff (problem is that ↓ is ignored) ,-/autodiff_simp]; 
+  `(conv| (autodiff_core (config := {singlePass := true,  zeta := false, iota := false}) only [/- ↓ autodiff (problem is that ↓ is ignored) ,-/diff_simp]; 
            try simp (config := {zeta := false}) only [];))
 macro "autodiff" : tactic => 
-  `(tactic| (autodiff_core (config := {singlePass := true,  zeta := false}) only [/- ↓ autodiff (problem is that ↓ is ignored),-/autodiff_simp]; 
+  `(tactic| (autodiff_core (config := {singlePass := true,  zeta := false, iota := false}) only [/- ↓ diff (problem is that ↓ is ignored),-/diff_simp]; 
              try simp (config := {zeta := false}) only [];))
 
 -- Tactic
@@ -100,18 +100,18 @@ open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
 
 
 macro "symdiff" : conv => 
-  `(conv| (symdiff_core (config := {singlePass := true, zeta := false}) only [/- ↓ autodiff (problem is that ↓ is ignored),-/ autodiff_simp, SciLean.differentialScalar, SciLean.gradient, SciLean.tangentMap, SciLean.reverseDifferential]
-           try simp (config := {zeta := true}) only [autodiff_simp];))
+  `(conv| (symdiff_core (config := {singlePass := true, zeta := false, iota := false}) only [/- ↓ diff (problem is that ↓ is ignored),-/ diff_simp, SciLean.differentialScalar, SciLean.gradient, SciLean.tangentMap, SciLean.reverseDifferential]
+           try simp (config := {zeta := true}) only [diff_simp];))
 macro "symdiff" : tactic => 
-  `(tactic| (symdiff_core (config := {singlePass := true, zeta := false}) only [/- ↓ autodiff (problem is that ↓ is ignored),-/autodiff_simp, SciLean.differentialScalar, SciLean.gradient, SciLean.tangentMap, SciLean.reverseDifferential]; 
-             try simp (config := {zeta := true}) only [autodiff_simp];))
+  `(tactic| (symdiff_core (config := {singlePass := true, zeta := false, iota := false}) only [/- ↓ diff (problem is that ↓ is ignored),-/diff_simp, SciLean.differentialScalar, SciLean.gradient, SciLean.tangentMap, SciLean.reverseDifferential]; 
+             try simp (config := {zeta := true}) only [diff_simp];))
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
 -- -- set_option trace.Meta.Tactic.simp.discharge true in
 -- -- set_option trace.Meta.Tactic.simp.unify false in
 -- #check (∂ λ (x : ℝ) => let y := x*x; y)
 --   rewrite_by
---     -- simp (config := {singlePass := true}) only [↓ autodiff, tangentMap]
+--     -- simp (config := {singlePass := true}) only [↓ diff, tangentMap]
 --     symdiff
 
 --     trace_state
@@ -123,8 +123,8 @@ macro "symdiff" : tactic =>
 -- set_option trace.Meta.Tactic.simp.unify false in
 -- #check (∂ λ (x : ℝ) => let y := x*x; let z := x + y*x*x; x + y + z)
 --   rewrite_by
---     autodiff_core (config:={zeta:=false}) only []
---     autodiff
+--     diff_core (config:={zeta:=false}) only []
+--     diff
 --     trace_state
 
 -- set_option trace.Meta.Tactic.simp true in
@@ -132,7 +132,7 @@ macro "symdiff" : tactic =>
 -- set_option trace.Meta.Tactic.simp.unify false in
 -- #check (∂ λ (x : ℝ) => let y := x; let z := x + y; y + z)
 --   rewrite_by 
---     autodiff
+--     diff
 --     trace_state
 
 -- This fails to apply `SciLean.diff_of_comp` because it `foo` can't be proven to be smooth
@@ -140,7 +140,7 @@ macro "symdiff" : tactic =>
 -- set_option trace.Meta.Tactic.simp.discharge true in
 -- #check (∂ λ (x : ℝ) => let z := x^2; let foo := λ y => Math.sin (Math.exp y); foo (Math.cos z)) 
 --   rewrite_by 
---     autodiff
+--     diff
 --     trace_state
 
 
@@ -163,11 +163,11 @@ macro "symdiff" : tactic =>
 --       let dz := ∂ h x dx
 --       ∂ f x dx y z + ∂ (f x) y dy z + ∂ (f x y) z dz
 -- := by
---   autodiff_core (config := {zeta := false, singlePass := true})
+--   diff_core (config := {zeta := false, singlePass := true})
 
---   -- autodiff_core (config := {zeta := false, singlePass := true})
---   -- autodiff_core (config := {zeta := false, singlePass := true})
---   -- autodiff_core (config := {zeta := false, singlePass := true})
+--   -- diff_core (config := {zeta := false, singlePass := true})
+--   -- diff_core (config := {zeta := false, singlePass := true})
+--   -- diff_core (config := {zeta := false, singlePass := true})
 --   simp[hold]
 --   admit
 
@@ -185,7 +185,7 @@ macro "symdiff" : tactic =>
 --       let y := g a
 --       ∂ (λ x => f x y) x dx
 -- := by
---   autodiff_core (config := {zeta := false})
+--   diff_core (config := {zeta := false})
 --   simp[hold]
 --   done
 
@@ -199,7 +199,7 @@ macro "symdiff" : tactic =>
 --       let y  := g a
 --       ∂ (f y) x dx
 -- := by
---   autodiff_core (config := {zeta := false})
+--   diff_core (config := {zeta := false})
 --   simp[hold]
 --   done
 

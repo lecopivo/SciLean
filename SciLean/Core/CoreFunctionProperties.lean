@@ -15,14 +15,14 @@ instance Neg.neg.arg_x.isSmooth
   {X} [Vec X] 
   : IsSmooth (λ x : X => -x) := by infer_instance
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Neg.neg.arg_x.diff_simp
   {X} [Vec X] 
   : ∂ (λ x : X => -x)
     =
     λ x dx => -dx := by simp
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Neg.neg.arg_x.tangentMap_simp
   {X} [Vec X] 
   : 𝒯 (λ x : X => -x)
@@ -34,7 +34,7 @@ instance Nat.neg.arg_x.hasAdjoint
   {X} [SemiHilbert X]
   : HasAdjoint (λ x : X => -x) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Neg.neg.arg_x.adjoint_simp
   {X} [SemiHilbert X] 
   : (λ x : X => -x)†
@@ -46,7 +46,7 @@ instance Neg.neg.arg_x.hasAdjDiff
   : HasAdjDiff (λ x : X => -x) := 
 by apply infer_HasAdjDiff'; simp; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Neg.neg.arg_x.adjDiff_simp
   {X} [SemiHilbert X] 
   : ∂† (λ x : X => -x)
@@ -55,7 +55,7 @@ theorem Neg.neg.arg_x.adjDiff_simp
 by
   simp[adjointDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Neg.neg.arg_x.revDiff_simp
   {X} [SemiHilbert X] 
   : ℛ (λ x : X => -x)
@@ -98,7 +98,7 @@ instance HAdd.hAdd.arg_x.isSmooth
   {X} [Vec X]
   : IsSmooth (λ (x y : X) => x + y) := by apply IsSmoothN.mk
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HAdd.hAdd.arg_x.diff_simp
   {X} [Vec X]
   : ∂ (λ (x y : X) => x + y) 
@@ -106,7 +106,7 @@ theorem HAdd.hAdd.arg_x.diff_simp
     λ x dx y => dx
   := by simp
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HAdd.hAdd.arg_x.tangentMap_simp
   {X} [Vec X]
   : 𝒯 (λ (x y : X) => x + y) 
@@ -118,7 +118,7 @@ instance HAdd.hAdd.arg_x.hasAdjDiff
   {X} [Hilbert X] (y : X)
   : HasAdjDiffT (λ (x : X) => x + y) := by apply infer_HasAdjDiff; simp; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HAdd.hAdd.arg_x.adjDiff_simp
   {X} [Hilbert X] (y : X)
   : ∂† (λ (x : X) => x + y)
@@ -126,7 +126,7 @@ theorem HAdd.hAdd.arg_x.adjDiff_simp
     λ x dz => dz
   := by unfold adjointDifferential; simp; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HAdd.hAdd.arg_x.revDiff_simp
   {X} [Hilbert X] (y : X)
   : ℛ (λ (x : X) => x + y)
@@ -149,7 +149,7 @@ instance HAdd.hAdd.arg_y.isSmooth
   {X} [Vec X] (x : X)
   : IsSmooth (λ (y : X) => x + y) := by apply IsSmoothN.mk
 
-@[simp ↓,autodiff]
+@[simp ↓,diff]
 theorem HAdd.hAdd.arg_y.diff_simp
   {X} [Vec X] (x : X)
   : ∂ (λ (y : X) => x + y)
@@ -157,7 +157,7 @@ theorem HAdd.hAdd.arg_y.diff_simp
     λ (y dy : X) => dy
   := by simp
 
-@[simp ↓,autodiff]
+@[simp ↓,diff]
 theorem HAdd.hAdd.arg_y.tangentMap_simp
   {X} [Vec X] (x : X)
   : 𝒯 (λ (y : X) => x + y)
@@ -169,7 +169,7 @@ instance HAdd.hAdd.arg_y.hasAdjDiff
   {X} [SemiHilbert X] (x : X)
   : HasAdjDiff (λ (y : X) => x + y) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HAdd.hAdd.arg_y.adjDiff_simp
   {X} [SemiHilbert X] (x : X)
   : ∂† (λ (y : X) => x + y)
@@ -177,7 +177,7 @@ theorem HAdd.hAdd.arg_y.adjDiff_simp
     λ (y dz : X) => dz
   := by simp[adjointDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HAdd.hAdd.arg_y.revDiff_simp
   {X} [SemiHilbert X] (x : X)
   : ℛ (λ (y : X) => x + y)
@@ -203,14 +203,14 @@ instance HSub.hSub.arg_xy.isSmooth
   {X} [Vec X]
   : IsSmoothN 2 (λ x y : X => x - y) := by infer_instance
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_xy.diff_simp
   {X} [Vec X] 
   : ∂ (uncurryN 2 λ x y : X => x - y)
     =
     λ (x,y) (dx,dy) => dx - dy := by simp[uncurryN,Prod.Uncurry.uncurry]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_xy.tangentMap_simp
   {X} [Vec X]
   : 𝒯 (uncurryN 2 λ x y : X => x - y)
@@ -221,7 +221,7 @@ instance HSub.hSub.arg_xy.hasAdjoint
   {X} [SemiHilbert X]
   : HasAdjoint (uncurryN 2 λ x y : X => x - y) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_xy.adjoint_simp
   {X} [SemiHilbert X]
   : (uncurryN 2 λ x y : X => x - y)†
@@ -232,7 +232,7 @@ instance HSub.hSub.arg_xy.hasAdjDiff
   {X} [SemiHilbert X]
   : HasAdjDiffN 2 (λ (x y : X) => x - y) := by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_xy.adjDiff_simp
   {X} [SemiHilbert X]
   : ∂† (uncurryN 2 λ (x y : X) => x - y)
@@ -240,7 +240,7 @@ theorem HSub.hSub.arg_xy.adjDiff_simp
     λ (x,y) dxy => (dxy, -dxy)
   := by simp[uncurryN,Prod.Uncurry.uncurry,adjointDifferential,hold]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_xy.revDiff_simp
   {X} [SemiHilbert X]
   : ℛ (uncurryN 2 λ (x y : X) => x - y) 
@@ -264,7 +264,7 @@ instance HSub.hSub.arg_x.isSmooth
   {X} [Vec X]
   : IsSmooth (λ (x y : X) => x - y) := by apply IsSmoothN.mk
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_x.diff_simp
   {X} [Vec X]
   : ∂ (λ (x y : X) => x - y) 
@@ -272,7 +272,7 @@ theorem HSub.hSub.arg_x.diff_simp
     λ x dx y => dx
   := by simp
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_x.tangentMap_simp
   {X} [Vec X]
   : 𝒯 (λ (x y : X) => x - y) 
@@ -284,7 +284,7 @@ instance HSub.hSub.arg_x.hasAdjDiff
   {X} [Hilbert X] (y : X)
   : HasAdjDiffT (λ (x : X) => x - y) := by apply infer_HasAdjDiff; simp; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_x.adjDiff_simp
   {X} [Hilbert X] (y : X)
   : ∂† (λ (x : X) => x - y)
@@ -292,7 +292,7 @@ theorem HSub.hSub.arg_x.adjDiff_simp
     λ x dz => dz
   := by unfold adjointDifferential; simp; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_x.revDiff_simp
   {X} [Hilbert X] (y : X)
   : ℛ (λ (x : X) => x - y)
@@ -315,7 +315,7 @@ instance HSub.hSub.arg_y.isSmooth
   {X} [Vec X] (x : X)
   : IsSmooth (λ (y : X) => x - y) := by apply IsSmoothN.mk
 
-@[simp ↓,autodiff]
+@[simp ↓,diff]
 theorem HSub.hSub.arg_y.diff_simp
   {X} [Vec X] (x : X)
   : ∂ (λ (y : X) => x - y)
@@ -323,7 +323,7 @@ theorem HSub.hSub.arg_y.diff_simp
     λ (y dy : X) => -dy
   := by simp
 
-@[simp ↓,autodiff]
+@[simp ↓,diff]
 theorem HSub.hSub.arg_y.tangentMap_simp
   {X} [Vec X] (x : X)
   : 𝒯 (λ (y : X) => x - y)
@@ -335,7 +335,7 @@ instance HSub.hSub.arg_y.hasAdjDiff
   {X} [SemiHilbert X] (x : X)
   : HasAdjDiff (λ (y : X) => x - y) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_y.adjDiff_simp
   {X} [SemiHilbert X] (x : X)
   : ∂† (λ (y : X) => x - y)
@@ -343,7 +343,7 @@ theorem HSub.hSub.arg_y.adjDiff_simp
     λ (y dz : X) => -dz
   := by simp[adjointDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HSub.hSub.arg_y.revDiff_simp
   {X} [SemiHilbert X] (x : X)
   : ℛ (λ (y : X) => x - y)
@@ -375,7 +375,7 @@ instance HMul.hMul.arg_x.isSmooth
   {X} [Vec X]
   : IsSmooth (λ (x : ℝ) (y : X) => x * y) := by infer_instance
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_x.diff_simp
   {X} [Vec X]
   : ∂ (λ (x : ℝ) (y : X) => x * y) 
@@ -383,7 +383,7 @@ theorem HMul.hMul.arg_x.diff_simp
     λ x dx y => dx * y
   := by simp
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_x.tangentMap_simp
   {X} [Vec X]
   : 𝒯 (λ (x : ℝ) (y : X) => x * y) 
@@ -395,7 +395,7 @@ instance HMul.hMul.arg_x.hasAdjoint
   {X} [Hilbert X] (y : X)
   : HasAdjoint (λ (x : ℝ) => x * y) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_x.hasAdjoint_simp
   {X} [Hilbert X] (y : X)
   : (λ (x : ℝ) => x * y)†
@@ -407,7 +407,7 @@ instance HMul.hMul.arg_x.hasAdjDiff
   {X} [Hilbert X] (y : X)
   : HasAdjDiffT (λ (x : ℝ) => x * y) := by apply infer_HasAdjDiff; simp; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_x.adjDiff_simp
   {X} [Hilbert X] (y : X)
   : ∂† (λ (x : ℝ) => x * y)
@@ -415,7 +415,7 @@ theorem HMul.hMul.arg_x.adjDiff_simp
     λ x dy => ⟪dy,y⟫
   := by unfold adjointDifferential; simp; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_x.revDiff_simp
   {X} [Hilbert X] (y : X)
   : ℛ (λ (x : ℝ) => x * y)
@@ -442,7 +442,7 @@ instance HMul.hMul.arg_y.isSmooth
   {X} [Vec X] (x : ℝ)
   : IsSmoothT (λ (y : X) => x * y) := by infer_instance
 
-@[simp ↓,autodiff]
+@[simp ↓,diff]
 theorem HMul.hMul.arg_y.diff_simp
   {X} [Vec X] (x : ℝ)
   : ∂ (λ (y : X) => x * y)
@@ -450,7 +450,7 @@ theorem HMul.hMul.arg_y.diff_simp
     λ (y dy : X) => x * dy
   := by simp
 
-@[simp ↓,autodiff]
+@[simp ↓,diff]
 theorem HMul.hMul.arg_y.tangentMap_simp
   {X} [Vec X] (x : ℝ)
   : 𝒯 (λ (y : X) => x * y)
@@ -462,7 +462,7 @@ instance HMul.hMul.arg_y.hasAdjoint
   {X} [SemiHilbert X] (x : ℝ)
   : HasAdjoint (λ (y : X) => x * y) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_y.adjoint_simp
   {X} [SemiHilbert X] (x : ℝ)
   : (λ (y : X) => x * y)†
@@ -474,7 +474,7 @@ instance HMul.hMul.arg_y.hasAdjDiff
   {X} [SemiHilbert X] (x : ℝ)
   : HasAdjDiff (λ (y : X) => x * y) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_y.adjDiff_simp
   {X} [SemiHilbert X] (x : ℝ)
   : ∂† (λ (y : X) => x * y)
@@ -482,7 +482,7 @@ theorem HMul.hMul.arg_y.adjDiff_simp
     λ (y dy' : X) => x * dy'
   := by simp[adjointDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_y.revDiff_simp
   {X} [SemiHilbert X] (x : ℝ)
   : ℛ (λ (y : X) => x * y)
@@ -504,7 +504,7 @@ instance HMul.hMul.arg_xy.isSmooth
   {X} [Vec X]
   : IsSmoothN 2 (λ (x : ℝ) (y : X) => x * y) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_xy.diff_simp
   {X} [Vec X]
   : ∂ (uncurryN 2 λ (x : ℝ) (y : X) => x * y)
@@ -513,7 +513,7 @@ theorem HMul.hMul.arg_xy.diff_simp
       dx * y + x * dy
   := by simp[uncurryN, Prod.Uncurry.uncurry]
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_xy.tangentMap_simp
   {X} [Vec X]
   : 𝒯 (uncurryN 2 λ (x : ℝ) (y : X) => x * y)
@@ -526,7 +526,7 @@ instance HMul.hMul.arg_xy.hasAdjDiff
   {X} [Hilbert X]
   : HasAdjDiffN 2 (λ (x : ℝ) (y : X) => x * y) := by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; intro xy; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_xy.adjDiff_simp
   {X} [Hilbert X]
   : ∂† (uncurryN 2 λ (x : ℝ) (y : X) => x * y) 
@@ -536,7 +536,7 @@ theorem HMul.hMul.arg_xy.adjDiff_simp
         funext (x,y) dxy; simp
         admit
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HMul.hMul.arg_xy.revDiff_simp
   {X} [Hilbert X]
   : ℛ (uncurryN 2 λ (x : ℝ) (y : X) => x * y) 
@@ -558,14 +558,14 @@ instance Inner.inner.arg_x.isSmooth
   {X} [Hilbert X]
   : IsSmooth (λ x y : X => ⟪x,y⟫) := by infer_instance
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_x.diff_simp
   {X} [Hilbert X]
   : ∂ (λ x y : X => ⟪x,y⟫)
     =
     λ x dx y => ⟪dx,y⟫ := by simp
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_x.tangentMap_simp
   {X} [Hilbert X]
   : 𝒯 (λ (x y : X) => ⟪x,y⟫)
@@ -577,7 +577,7 @@ instance Inner.inner.arg_x.hasAdjoint
   {X} [Hilbert X] (y : X)
   : HasAdjoint (λ x : X => ⟪x,y⟫) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_x.adjoint_simp
   {X} [Hilbert X] (y : X)
   : (λ x : X => ⟪x,y⟫)†
@@ -588,14 +588,14 @@ instance Inner.inner.arg_x.hasAdjDiff
   {X} [Hilbert X] (y : X)
   : HasAdjDiff (λ x : X => ⟪x,y⟫) := by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_x.adjDiff_simp
   {X} [Hilbert X] (y : X)
   : ∂† (λ x : X => ⟪x,y⟫)
     =
     λ x ds => ds * y := by unfold adjointDifferential; simp; done 
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_x.revDiff_simp
   {X} [Hilbert X] (y : X)
   : ℛ (λ x : X => ⟪x,y⟫)
@@ -617,14 +617,14 @@ instance Inner.inner.arg_y.isSmooth
   {X} [Hilbert X] (x : X)
   : IsSmooth (λ y : X => ⟪x,y⟫) := by infer_instance
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_y.diff_simp
   {X} [Hilbert X] (x : X)
   : ∂ (λ y : X => ⟪x,y⟫)
     =
     λ y dy => ⟪x,dy⟫ := by simp
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_y.tangentMap_simp
   {X} [Hilbert X] (x : X)
   : 𝒯 (λ y : X => ⟪x,y⟫)
@@ -635,7 +635,7 @@ instance Inner.inner.arg_y.hasAdjoint
   {X} [Hilbert X] (x : X)
   : HasAdjoint (λ y : X => ⟪x,y⟫) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_y.adjoint_simp
   {X} [Hilbert X] (x : X)
   : (λ y : X => ⟪x,y⟫)†
@@ -646,14 +646,14 @@ instance Inner.inner.arg_y.hasAdjDiff
   {X} [Hilbert X] (x : X)
   : HasAdjDiff (λ y : X => ⟪x,y⟫) := by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_y.adjDiff_simp
   {X} [Hilbert X] (x : X)
   : ∂† (λ y : X => ⟪x,y⟫)
     =
     λ y ds => ds * x := by simp[adjointDifferential,hold]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_y.revDiff_simp
   {X} [Hilbert X] (x : X)
   : ℛ (λ y : X => ⟪x,y⟫)
@@ -667,14 +667,14 @@ instance Inner.inner.arg_xy.isSmooth
   {X} [Hilbert X] 
   : IsSmoothN 2 (λ x y : X => ⟪x,y⟫) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_xy.diff_simp 
   {X} [Hilbert X] 
   : ∂ (uncurryN 2 λ x y : X => ⟪x,y⟫)
     =
     λ (x,y) (dx,dy) => ⟪dx,y⟫ + ⟪x,dy⟫ := by simp[uncurryN, Prod.Uncurry.uncurry]
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_xy.tangentMap_simp 
   {X} [Hilbert X] 
   : 𝒯 (uncurryN 2 λ x y : X => ⟪x,y⟫)
@@ -685,14 +685,14 @@ instance Inner.inner.arg_xy.hasAdjDiff
   {X} [Hilbert X] 
   : HasAdjDiffN 2 (λ x y : X => ⟪x,y⟫) :=  by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; intro (x,y); infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_xy.ajdDiff_simp 
   {X} [Hilbert X]
   : ∂† (uncurryN 2 λ x y : X => ⟪x,y⟫)
     =
     λ (x,y) dz => (dz*y, dz*x) := by simp[adjointDifferential, uncurryN, Prod.Uncurry.uncurry, hold]; admit
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.inner.arg_xy.revDiff_simp 
   {X} [Hilbert X]
   : ℛ (uncurryN 2 λ x y : X => ⟪x,y⟫)
@@ -709,7 +709,7 @@ instance Inner.normSqr.arg_x.isSmooth
 by
   unfold normSqr; apply IsSmoothN.mk; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.normSqr.arg_x.diff_simp
   {X} [Hilbert X] 
   : ∂ (λ x : X => ∥x∥²)
@@ -718,7 +718,7 @@ theorem Inner.normSqr.arg_x.diff_simp
 by
   unfold normSqr; simp; admit
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.normSqr.arg_x.tangentMap_simp
   {X} [Hilbert X] 
   : 𝒯 (λ x : X => ∥x∥²)
@@ -732,7 +732,7 @@ instance Inner.normSqr.arg_x.hasAdjDiff
   : HasAdjDiff (λ x : X => ∥x∥²) := 
 by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.normSqr.arg_x.adjDiff_simp
   {X} [Hilbert X] 
   : ∂† (λ x : X => ∥x∥²)
@@ -741,7 +741,7 @@ theorem Inner.normSqr.arg_x.adjDiff_simp
 by
   simp[adjointDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Inner.normSqr.arg_x.revDiff_simp
   {X} [Hilbert X] 
   : ℛ (λ x : X => ∥x∥²)
@@ -757,14 +757,14 @@ by
 instance HPow.hPow.RealNatReal.arg_x.isSmooth (n : Nat)
   : IsSmooth (λ x : ℝ => x^n) := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HPow.hPow.RealNatReal.arg_x.diff_simp (n : Nat)
   : ∂ (λ x : ℝ => x^n)
     =
     λ x dx : ℝ => n*dx*x^(n-1 : Nat)
   := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HPow.hPow.RealNatReal.arg_x.tangentMap_simp (n : Nat)
   : 𝒯 (λ x : ℝ => x^n)
     =
@@ -772,12 +772,12 @@ theorem HPow.hPow.RealNatReal.arg_x.tangentMap_simp (n : Nat)
       (x^n, n*dx*x^(n-1 : Nat))
   := by simp[tangentMap]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HPow.hPow.RealNatReal.arg_x.HasAdjDiff (n : Nat)
   : HasAdjDiff (λ x : ℝ => x^n) :=
 by apply infer_HasAdjDiff'; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HPow.hPow.RealNatReal.arg_x.adjDiff_simp (n : Nat)
   : ∂† (λ x : ℝ => x^n)
     =
@@ -786,7 +786,7 @@ theorem HPow.hPow.RealNatReal.arg_x.adjDiff_simp (n : Nat)
   :=
 by simp[adjointDifferential]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem HPow.hPow.RealNatReal.arg_x.reverseDiff_simp (n : Nat)
   : ℛ (λ x : ℝ => x^n)
     =
@@ -803,10 +803,10 @@ instance differential.arg_fxdx.isSmooth
   {X Y W} [Vec X] [Vec Y] [Vec W]
   (f : W → X → Y) [IsSmoothNT 2 f] : IsSmoothNT 3 (λ w x dx => ∂ (f w) x dx) := by (try infer_instance); sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem differential.arg_f.diff_simp
   {X Y W} [Vec X] [Vec Y] [Vec W]
-  (f : W → X → Y) [IsSmoothNT 2 f] 
+  (f : W → X → Y) [IsSmoothNT 2 f]
   : ∂ (λ w x dx => ∂ (f w) x dx)
     =
     λ w dw x dx =>
