@@ -1,42 +1,10 @@
-import SciLean.Core.Integral
+import SciLean.Core.IntegralProperties
+
 
 set_option synthInstance.maxSize 2000
 
 namespace SciLean
 
--- TODO: move this!
-instance sum.arg_f.hasAdjoint {X ι} [Enumtype ι] [SemiHilbert X] 
-  : HasAdjoint (sum : (ι → X) → X) := by (try infer_instance); sorry_proof
-instance sum.arg_f.isLin {X ι} [Enumtype ι] [Vec X] 
-  : IsLin (sum : (ι → X) → X) := by (try infer_instance); sorry_proof
-instance sum.arg_f.isSmooth {X ι} [Enumtype ι] [Vec X] 
-  : IsSmooth (sum : (ι → X) → X) := by infer_instance
-
-instance Basis.basis.arg_x.hasAdjoint {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : HasAdjoint (λ x : X => 𝕡 i x) := by (try infer_instance); sorry_proof
-instance Basis.basis.arg_x.isLin {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : IsLin (λ x : X => 𝕡 i x) := by infer_instance
-instance Basis.basis.arg_x.isSmooth {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : IsSmooth (λ x : X => 𝕡 i x) := by infer_instance
-instance Basis.basis.arg_x.hasAdjDiff {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : HasAdjDiff (λ x : X => 𝕡 i x) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
-
-
-instance Basis.basis.arg_x.adj_simp {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : adjoint (λ (x : X) => 𝕡 i x) = (λ c => c * 𝕖'[X] i) := sorry_proof
-
-instance DualBasis.dualBasis.arg_x.hasAdjoint {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : HasAdjoint (λ x : X => 𝕡' i x) := by (try infer_instance); sorry_proof
-instance DualBasis.dualBasis.arg_x.isLin {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : IsLin (λ x : X => 𝕡' i x) := by infer_instance
-instance DualBasis.dualBasis.arg_x.isSmooth {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : IsSmooth (λ x : X => 𝕡' i x) := by infer_instance
-instance DualBasis.dualBasis.arg_x.hasAdjDiff {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : HasAdjDiff (λ x : X => 𝕡' i x) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
-
-instance DualBasis.dualBasis.arg_x.adj_simp {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
-  : adjoint (λ (x : X) => 𝕡' i x) = (λ c => c * 𝕖[X] i) := sorry_proof
-  
 
 --------------------------------------------------------------------------------
 -- Divergence
@@ -204,11 +172,14 @@ by symdiff; done
 
 attribute [default_instance] Smooth.gradient.instNablaNotation
         
-set_option trace.Meta.Tactic.simp.discharge true in
-example : ∇ (fun (g : X⟿ℝ) => ∫ x, (1/2:ℝ) * ∥∇ g x∥²)
+-- set_option trace.Meta.Tactic.simp.discharge true in
+
+
+example : ∇ (g : X⟿ℝ), ∫ x, (1/2:ℝ) * ∥∇ g x∥²
           = 
           λ g : X⟿ℝ => - ∇· (∇ g) := 
-by symdiff; symdiff; simp only [uncurryN, Prod.Uncurry.uncurry];
+by unfold variationalGradient
+   symdiff; symdiff; simp only [uncurryN, Prod.Uncurry.uncurry];
    simp only [(sorry_proof : ∀ x y : X, ⟪x,y⟫ = ⟪y,x⟫)];
    symdiff
    done

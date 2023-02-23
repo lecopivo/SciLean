@@ -10,47 +10,47 @@ variable [GenericArray Cont Idx Elem] [Enumtype Idx]
 -- bacause it has inherently dependent types plus `Dom x i : Prop` and 
 -- we do not have `Vec (P → X)` for `P : Prop` and `X : Type`
 
-instance getElem.arg_cont.isLin [Vec Elem]
+instance getElem.arg_cont_.isLin [Vec Elem]
   : IsLin (λ (cont : Cont) (idx : Idx) => cont[idx]) := sorry_proof
-instance getElem.arg_cont.isLin_alt [Vec Elem] (idx : Idx)
+instance getElem.arg_cont.isLin [Vec Elem] (idx : Idx)
   : IsLin (λ (cont : Cont) => cont[idx]) := sorry_proof
 
-instance getElem.arg_cont.isSmooth [Vec Elem]
+instance getElem.arg_cont_.isSmooth [Vec Elem]
   : IsSmooth (λ (cont : Cont) (idx : Idx) => cont[idx]) := by infer_instance
-instance getElem.arg_cont.isSmooth_alt [Vec Elem] (idx : Idx)  
+instance getElem.arg_cont.isSmooth [Vec Elem] (idx : Idx)  
   : IsSmooth (λ (cont : Cont) => cont[idx]) := by infer_instance
-instance getElem.arg_cont.isSmooth_comp [Vec Elem] [Vec X]
+instance getElem.arg_cont.composition.isSmooth [Vec Elem] [Vec X]
   (f : X → Cont) [IsSmoothT f] (idx : Idx)
   : IsSmoothT (λ (x : X) => (f x)[idx]) := comp.arg_x.isSmooth (λ cont => cont[idx]) f
 
 
-@[diff] theorem getElem.arg_cont.diff_simp [Vec Elem]
+@[diff] theorem getElem.arg_cont_.diff_simp [Vec Elem]
   : ∂ (λ (cont : Cont) (idx : Idx) => cont[idx]) = λ cont dcont idx => dcont[idx]
   := by symdiff; done
-@[diff] theorem getElem.arg_cont.tangentMap_simp [Vec Elem]
-  : 𝒯 (λ (cont : Cont) (idx : Idx) => cont[idx]) 
+@[diff] theorem getElem.arg_cont_.tangentMap_simp [Vec Elem]
+  : 𝒯 (λ (cont : Cont) (idx : Idx) => cont[idx])
     = 
     λ (cont,dcont) => (λ idx => cont[idx], λ idx => dcont[idx])
   := by symdiff; done
-@[diff] theorem getElem.arg_cont.diff_simp_alt [Vec Elem] (idx : Idx)
+@[diff] theorem getElem.arg_cont.diff_simp [Vec Elem] (idx : Idx)
   : ∂ (λ (cont : Cont) => cont[idx]) = λ cont dcont => dcont[idx]
   := by symdiff; done
-@[diff] theorem getElem.arg_cont.tangentMap_simp_alt [Vec Elem] (idx : Idx)
-  : 𝒯 (λ (cont : Cont) => cont[idx]) 
+@[diff] theorem getElem.arg_cont.tangentMap_simp [Vec Elem] (idx : Idx)
+  : 𝒯 (λ (cont : Cont) => cont[idx])
     = 
     λ (cont,dcont) => (cont[idx],dcont[idx])
   := by symdiff; done
-@[diff] theorem getElem.arg_cont.diff_simp_comp [Vec Elem] [Vec X]
+@[diff] theorem getElem.arg_cont.composition.diff_simp [Vec Elem] [Vec X]
   (f : X → Cont) [IsSmoothT f] (idx : Idx)
   : ∂ (λ (x : X) => (f x)[idx]) = λ x dx => (∂ f x dx)[idx]
-  := by rw[differential.of_comp (λ cont => cont[idx]'sorry_proof) f]; symdiff; symdiff; done
+  := by rw[differential.of_comp (λ cont => cont[idx]'sorry_proof) f]; symdiff; done
 
 
 instance getElem.arg_cont.hasAdjoint [SemiHilbert Elem] (idx : Idx)
   : HasAdjoint (λ (cont : Cont) => cont[idx]) := sorry_proof
 @[diff] theorem getElem.arg_cont.adj_simp [SemiHilbert Elem] (idx : Idx)
   : (λ (cont : Cont) => cont[idx])† = λ cont' => setElem 0 idx cont' := sorry_proof
-@[diff] theorem getElem.arg_cont.adj_simp_comp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
+@[diff] theorem getElem.arg_cont.composition.adj_simp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
   (f : X → Cont) [HasAdjointT f]
   : (λ x => (f x)[idx])† = λ x' => f† (setElem 0 idx x') :=
 by 
@@ -61,7 +61,7 @@ instance getElem.arg_cont.hasAdjDiff [SemiHilbert Elem] (idx : Idx)
 
 @[diff] theorem getElem.arg_cont.adjDiff_simp [SemiHilbert Elem] (idx : Idx)
   : ∂† (λ (cont : Cont) => cont[idx]) = λ _ dcont' => setElem 0 idx dcont' := by unfold adjointDifferential; symdiff; symdiff; done
-@[diff] theorem getElem.arg_cont.adjDiff_simp_comp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
+@[diff] theorem getElem.arg_cont.composition.adjDiff_simp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
   (f : X → Cont) [inst : HasAdjDiffT f]
   : ∂† (λ (x : X) => (f x)[idx]) = λ x dx' => ∂† f x (setElem 0 idx dx') := 
 by 
@@ -80,8 +80,7 @@ example (x : Idx) (f : ℝ → Cont) [Vec Elem] [IsSmoothT f]
   : ∂ (λ (s : ℝ) => (f s)[x]) = λ s ds => (∂ f s ds)[x] := 
 by 
   rw[differential.of_comp (λ g => getElem g x True.intro) f]
-  -- debug_simp (config := {singlePass := true, proj := false, zeta := false, beta := false, eta := false, iota := false}) only [diff,tangentMap]
-  symdiff_core (config := {singlePass := true, iota := false}) only [tangentMap]; symdiff
+  symdiff
   done
 
 ---

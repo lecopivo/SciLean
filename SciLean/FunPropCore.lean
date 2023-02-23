@@ -84,6 +84,7 @@ declare_syntax_cat argProp (behavior := both)
 syntax "argument_property" ident bracketedBinder* ident bracketedBinder* ":" term "where" argProp  : command
 syntax argProps := "argument" ident bracketedBinder* argProp,+
 syntax "function_properties" ident bracketedBinder* ":" term argProps+ : command
+j
 
 -- This seems overly complicated
 -- TODO: incorporate `argParms into `parms before calling `argument_property

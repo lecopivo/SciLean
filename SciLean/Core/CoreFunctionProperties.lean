@@ -818,6 +818,57 @@ theorem differential.arg_f.diff_simp
 -- instance differential.arg_dx.isLin
 
 --------------------------------------------------------------------------------
+-- Sum
+--------------------------------------------------------------------------------
+
+instance sum.arg_f.hasAdjoint {X ι} [Enumtype ι] [SemiHilbert X] 
+  : HasAdjoint (sum : (ι → X) → X) := by (try infer_instance); sorry_proof
+instance sum.arg_f.isLin {X ι} [Enumtype ι] [Vec X] 
+  : IsLin (sum : (ι → X) → X) := by (try infer_instance); sorry_proof
+instance sum.arg_f.isSmooth {X ι} [Enumtype ι] [Vec X] 
+  : IsSmooth (sum : (ι → X) → X) := by infer_instance
+instance sum.arg_f.hasAdjDiff {X ι} [Enumtype ι] [SemiHilbert X] 
+  : HasAdjDiff (sum : (ι → X) → X) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
+
+instance sum.arg_f.adj_simp {X ι} [Enumtype ι] [SemiHilbert X] 
+  : (sum : (ι → X) → X)† = λ x i => x := sorry_proof
+
+--------------------------------------------------------------------------------
+-- Basis.proj
+--------------------------------------------------------------------------------
+
+instance Basis.proj.arg_x.hasAdjoint {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : HasAdjoint (λ x : X => 𝕡 i x) := by (try infer_instance); sorry_proof
+instance Basis.proj.arg_x.isLin {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : IsLin (λ x : X => 𝕡 i x) := by infer_instance
+instance Basis.proj.arg_x.isSmooth {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : IsSmooth (λ x : X => 𝕡 i x) := by infer_instance
+instance Basis.proj.arg_x.hasAdjDiff {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : HasAdjDiff (λ x : X => 𝕡 i x) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
+
+instance Basis.proj.arg_x.adj_simp {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : adjoint (λ (x : X) => 𝕡 i x) = (λ c => c * 𝕖'[X] i) := sorry_proof
+
+
+--------------------------------------------------------------------------------
+-- DualBasis.dualProj
+--------------------------------------------------------------------------------
+
+instance DualBasis.dualProj.arg_x.hasAdjoint {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : HasAdjoint (λ x : X => 𝕡' i x) := by (try infer_instance); sorry_proof
+instance DualBasis.dualProj.arg_x.isLin {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : IsLin (λ x : X => 𝕡' i x) := by infer_instance
+instance DualBasis.dualProj.arg_x.isSmooth {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : IsSmooth (λ x : X => 𝕡' i x) := by infer_instance
+instance DualBasis.dualProj.arg_x.hasAdjDiff {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : HasAdjDiff (λ x : X => 𝕡' i x) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
+
+instance DualBasis.dualProj.arg_x.adj_simp {X ι} [Enumtype ι] [FinVec X ι] (i : ι)
+  : adjoint (λ (x : X) => 𝕡' i x) = (λ c => c * 𝕖[X] i) := sorry_proof
+  
+
+
+--------------------------------------------------------------------------------
 -- Function.comp
 
 instance Function.comp.arg_x.isSmooth
