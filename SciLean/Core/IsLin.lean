@@ -6,49 +6,65 @@ namespace SciLean
 open SciLean.Mathlib.Convenient
 
 
---TODO: Question?
--- Should linearity include smoothness? Are there usefull linear 
--- functions that are not smooth? 
--- In finite dimension every linear function is smooth but in infitite
--- dimensional spaces it does not have to be the case.
-/-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+-- --TODO: Question?
+-- -- Should linearity include smoothness? Are there usefull linear 
+-- -- functions that are not smooth? 
+-- -- In finite dimension every linear function is smooth but in infitite
+-- -- dimensional spaces it does not have to be the case.
+-- /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
 
-Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+-- Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
 
-Transitive closure of `IsLinNT`
--/
-class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
-
-
-/-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
-
-Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
--/
-class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
-
-/-- `IsLin f` says that `f : X → Y` is linear.
-
-Abbreviation for `IsLinN 1 f`
--/
-abbrev IsLin {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinN 1 f
-
-/-- `IsLinT f` says that `f : X → Y` is linear.
-
-Abbreviation for `IsLinNT 1 f`.
-
-`IsLinT` is transitive closure of `IsLin`.
--/
-abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
+-- Transitive closure of `IsLinNT`
+-- -/
+-- class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+--   proof : is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
 
 
---------------------------------------------------------------------------------
+-- /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
 
-instance instIsLin_is_IsSmooth {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] [inst : IsLinN n f] 
-  : IsSmoothN n f := IsSmoothN.mk (toIsSmoothNT:=⟨inst.proof.2⟩)
+-- Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+-- -/
+-- class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
+
+-- /-- `IsLin f` says that `f : X → Y` is linear.
+
+-- Abbreviation for `IsLinN 1 f`
+-- -/
+-- abbrev IsLin {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinN 1 f
+
+-- /-- `IsLinT f` says that `f : X → Y` is linear.
+
+-- Abbreviation for `IsLinNT 1 f`.
+
+-- `IsLinT` is transitive closure of `IsLin`.
+-- -/
+-- abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
+
+-- --------------------------------------------------------------------------------
+
+syntax "isLin" (":=" term)? : argProp
+
+open Lean Parser.Term in
+macro_rules
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isLin $[:= $proof:term]?) => do
+
+  let data ← FunctionPropertyData.parse id parms retType arg
+
+  let instanceId := mkIdent $ data.funPropNamespace.append "isLin"
+
+  let instanceType ← `(IsLinN $data.mainArgNumLit $(← data.mkLambda))
+  let finalCommand ←
+    match proof with
+    | none =>
+      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := by unfold $id; apply IsLinN.mk; done)
+    | some proof =>
+      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := $proof)
+  
+  return finalCommand 
+
 
 --------------------------------------------------------------------------------
 

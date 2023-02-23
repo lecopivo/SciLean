@@ -1,30 +1,61 @@
 import SciLean.Data.Prod
 
 import SciLean.Core.Attributes
-import SciLean.Core.SmoothMap
+import SciLean.Core.Defs
+-- import SciLean.Core.SmoothMap
+
+import SciLean.Core.Meta.FunctionProperty
 
 namespace SciLean
 
 open SciLean.Mathlib.Convenient
 
-/-- Transitive closure of `IsSmoothN`
--/
-class IsSmoothNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : is_smooth (uncurryN n f)
+-- /-- Transitive closure of `IsSmoothN`
+-- -/
+-- class IsSmoothNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+--   proof : is_smooth (uncurryN n f)
 
-class IsSmoothN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsSmoothNT n f : Prop
-
-
-/-- Abbreviation for `IsSmoothN 1`
--/
-abbrev IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothN 1 f
+-- class IsSmoothN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsSmoothNT n f : Prop
 
 
-/-- Abbreviation for `IsSmoothNT 1`
--/
-abbrev IsSmoothT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothNT 1 f
+-- /-- Abbreviation for `IsSmoothN 1`
+-- -/
+-- abbrev IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothN 1 f
+
+
+-- /-- Abbreviation for `IsSmoothNT 1`
+-- -/
+-- abbrev IsSmoothT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothNT 1 f
+
+--------------------------------------------------------------------------------
+
+instance IsLin_is_IsSmooth {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] [inst : IsLinN n f] 
+  : IsSmoothN n f := IsSmoothN.mk (toIsSmoothNT:=⟨inst.proof.2⟩)
+
+--------------------------------------------------------------------------------
+
+syntax "isSmooth" (":=" term)? : argProp
+
+open Lean Parser.Term in
+macro_rules
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isSmooth $[:= $proof:term]?) => do
+
+  let data ← FunctionPropertyData.parse id parms retType arg
+
+  let instanceId := mkIdent $ data.funPropNamespace.append "isSmooth"
+
+  let instanceType ← `(IsSmoothN $data.mainArgNumLit $(← data.mkLambda))
+  let finalCommand ←
+    match proof with
+    | none =>
+      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := by unfold $id; apply IsSmoothN.mk; done)
+    | some proof =>
+      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := $proof)
+  
+  return finalCommand 
 
 
 --------------------------------------------------------------------------------
@@ -157,10 +188,11 @@ instance diag.arg_x.isSmooth
   (g₂ : X → Y₂) [IsSmoothT g₂]
   : IsSmoothT (λ x => f (g₁ x) (g₂ x)) := by infer_instance
 
-instance Prod.fst.arg_xy.isSmooth : IsSmooth (Prod.fst : X×Y → X) := sorry_proof
-instance Prod.snd.arg_xy.isSmooth : IsSmooth (Prod.snd : X×Y → Y) := sorry_proof
-instance HAdd.hAdd.arg_xy.isSmooth : IsSmoothN 2 (HAdd.hAdd : X → X → X) := sorry_proof
+-- instance Prod.fst.arg_xy.isSmooth : IsSmooth (Prod.fst : X×Y → X) := sorry_proof
 
+function_property Prod.fst (xy : X×Y) argument xy isSmooth := sorry_proof
+function_property Prod.snd (xy : X×Y) argument xy isSmooth := sorry_proof
+function_property HAdd.hAdd (x y : X) argument (x,y) isSmooth := sorry_proof
 
 --------------------------------------------------------------------------------
 -- Highorder unification instances
@@ -188,15 +220,13 @@ by
 -- Smooth Map - part 1
 --------------------------------------------------------------------------------
 
-
-instance SmoothMap.val.arg_fx.isSmooth : IsSmoothN 2 (λ (f : X⟿Y) (x : X) => f x) := 
-by
-  have h : (uncurryN 2 λ (f : X⟿Y) (x : X) => f x) = Smooth.eval := sorry_proof
-  sorry_proof
-
-instance SmoothMap.val.arg_x.isSmooth (f : X ⟿ Y) : IsSmooth (λ x => f x) := by apply IsSmoothN.mk
-instance SmoothMap.val.arg_f.isSmooth : IsSmooth (λ (f : X ⟿ Y) => (f : X → Y)) := by apply IsSmoothN.mk
-
+function_properties SmoothMap.val (f : X⟿Y) (x : X) : Y
+argument (f,x)
+  isSmooth := sorry_proof
+argument f 
+  isSmooth := by apply IsSmoothN.mk
+argument x 
+  isSmooth := by apply IsSmoothN.mk
 
 --------------------------------------------------------------------------------
 -- Smooth Map Lambda Notation --
@@ -214,13 +244,12 @@ macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term =>
   Lean.expandExplicitBinders `SciLean.SmoothMap.mk' xs b
 
 @[simp, diff_simp]
-theorem SmoothMap.eta_reduction (f : X ⟿ Y) 
+theorem SmoothMap.eta_reduction (f : X ⟿ Y)
     : (λ (x : X) ⟿ f x) = f := by rfl; done
 
 instance SmoothMap.mk'.arg_f.isSmooth
   (f : W → X → Y) [IsSmoothNT 2 f]
   : IsSmoothT λ w => λ x ⟿ f w x := by (try infer_instance); sorry_proof
-
 
 --------------------------------------------------------------------------------
 -- Smooth Map - part 2

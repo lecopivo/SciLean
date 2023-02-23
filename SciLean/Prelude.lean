@@ -73,6 +73,24 @@ abbrev Sum.map {α : Type u} {β : Type v} {γ : Sort w}
 infix:30 "⊕" => Sum.map
 
 
+-- TOOD: move me
+def find? {α ι} [Enumtype ι] (p : α → Bool) (f : ι → α) : Option α := Id.run do
+  for (i,_) in Enumtype.fullRange ι do
+    let a := f i
+    if p a then
+      return some a
+  return none
+
+-- TOOD: move me
+def findIdx? {α ι} [Enumtype ι] (p : α → Bool) (f : ι → α) : Option ι := Id.run do
+  for (i,_) in Enumtype.fullRange ι do
+    let a := f i
+    if p a then
+      return some i
+  return none
+
+
+
 
 -- @[inline]
 -- def sort3 {α} (a b c : α) [LT α] [∀ x y : α, Decidable (x<y)] : α×α×α := Id.run do

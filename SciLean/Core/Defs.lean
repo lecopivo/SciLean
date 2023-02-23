@@ -121,3 +121,72 @@ instance Smooth.gradient.instNablaNotation (f : X ⟿ ℝ) : Nabla f (Smooth.gra
 
 
 end OnSemiHilbertSpaces
+
+
+--------------------------------------------------------------------------------
+-- IsSmooth
+--------------------------------------------------------------------------------
+
+/-- Transitive closure of `IsSmoothN`
+-/
+class IsSmoothNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+  proof : is_smooth (uncurryN n f)
+
+class IsSmoothN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsSmoothNT n f : Prop
+
+
+/-- Abbreviation for `IsSmoothN 1`
+-/
+abbrev IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothN 1 f
+
+
+/-- Abbreviation for `IsSmoothNT 1`
+-/
+abbrev IsSmoothT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothNT 1 f
+
+
+--------------------------------------------------------------------------------
+-- IsLin
+--------------------------------------------------------------------------------
+
+--TODO: Question?
+-- Should linearity include smoothness? Are there usefull linear 
+-- functions that are not smooth? 
+-- In finite dimension every linear function is smooth but in infitite
+-- dimensional spaces it does not have to be the case.
+/-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+
+Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+
+Transitive closure of `IsLinNT`
+-/
+class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+  proof : is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
+
+
+/-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+
+Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+-/
+class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
+
+/-- `IsLin f` says that `f : X → Y` is linear.
+
+Abbreviation for `IsLinN 1 f`
+-/
+abbrev IsLin {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinN 1 f
+
+/-- `IsLinT f` says that `f : X → Y` is linear.
+
+Abbreviation for `IsLinNT 1 f`.
+
+`IsLinT` is transitive closure of `IsLin`.
+-/
+abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
+
+--------------------------------------------------------------------------------
+
