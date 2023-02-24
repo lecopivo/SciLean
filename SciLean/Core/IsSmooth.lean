@@ -35,6 +35,7 @@ instance IsLin_is_IsSmooth {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y']
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] [inst : IsLinN n f] 
   : IsSmoothN n f := IsSmoothN.mk (toIsSmoothNT:=⟨inst.proof.2⟩)
 
+
 --------------------------------------------------------------------------------
 
 syntax "isSmooth" (":=" term)? : argProp

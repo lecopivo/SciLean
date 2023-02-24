@@ -42,6 +42,18 @@ def BracketedBinder.split (b : BracketedBinder) : MacroM (Array BracketedBinder)
   | `(bracketedBinderF| {$x* : $X}) => x.mapM λ x => `(bracketedBinderF| {$x : $X})
   | _ => pure #[b]
 
+def BracketedBinder.modifyIdent (b : BracketedBinder) (f : Ident → Ident) : MacroM BracketedBinder :=
+  match b with
+  | `(bracketedBinderF| ($x* $[: $X]?)) => 
+    let x' := x.map (λ ident => let ident : Ident := ⟨ident.raw⟩; f ident)
+    `(bracketedBinderF| ($x'* $[: $X]?))
+  | `(bracketedBinderF| {$x* $[: $X]?}) => 
+    let x' := x.map (λ ident => let ident : Ident := ⟨ident.raw⟩; f ident)
+    `(bracketedBinderF| {$x'* $[: $X]?})
+  | `(bracketedBinderF| [$[$x :]? $X]) => 
+    let x' := x.map f
+    `(bracketedBinderF| [$[$x' :]? $X])
+  | _ => default
 
 def BracketedBinder.toFunBinder (b : BracketedBinder) : MacroM (TSyntax ``Parser.Term.funBinder) :=
   match b with

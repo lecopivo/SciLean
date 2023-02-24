@@ -1,6 +1,7 @@
 import Lean.Parser
 
 import SciLean.Prelude
+import SciLean.Data.Prod
 import SciLean.Core.Meta.BracketedBinder
 
 namespace SciLean
@@ -121,6 +122,8 @@ def FunctionPropertyData.contextBinders
         some b)
    |>.filterMap id
 
+def FunctionPropertyData.mainArgIdent! (data : FunctionPropertyData) (i : Nat) : Ident := 
+  data.get! i |>.getIdent
 
 def FunctionPropertyData.mainArgIds (data : FunctionPropertyData) : Array Nat :=
 Id.run do
@@ -133,12 +136,42 @@ Id.run do
 
 def FunctionPropertyData.mainArgNumLit (data : FunctionPropertyData) : NumLit :=
   Syntax.mkNumLit (toString data.mainArgNum)
+
+
+def FunctionPropertyData.mainBinders (data : FunctionPropertyData) : Array BracketedBinder :=
+  data.mainArgIds.map (λ i => data.get! i)
+
+def FunctionPropertyData.mainFunBinders (data : FunctionPropertyData) : MacroM (Array (TSyntax ``funBinder)) :=
+  data.mainBinders.mapM (λ b => b.toFunBinder)
+
+def mkProdFunBinder (bs : Array BracketedBinder) : MacroM (TSyntax ``funBinder) :=
+  if bs.size = 1 then
+    bs.get! 0 |>.toFunBinder
+  else if bs.size = 2 then 
+    let x := bs.get! 0 |>.getIdent
+    let y := bs.get! 1 |>.getIdent
+    let X := bs.get! 0 |>.getType
+    let Y := bs.get! 1 |>.getType
+    `((($x,$y) : $X × $Y))
+  else
+    panic! "mkUncurriedFunBinder: More then 2 arguments are currnetly unsupported!"
+
+/--
+  Returns main argument function binder e.g. for argument specification `(x,y,z)` it returns `((x,y,z) : X×Y×Z))`
+ -/
+def FunctionPropertyData.mainFunBinder (data : FunctionPropertyData) : MacroM (TSyntax ``funBinder) :=
+  mkProdFunBinder data.mainBinders                                       
   
 def FunctionPropertyData.funBinders (data : FunctionPropertyData) 
   : MacroM (TSyntaxArray ``Parser.Term.funBinder) := 
 
   data.mainArgIds.append data.trailingArgs
     |>.mapM (λ id => data.get! id |>.toFunBinder)
+
+def FunctionPropertyData.trailingBinders (data : FunctionPropertyData) : Array BracketedBinder :=
+  data.trailingArgs.map (λ i => data.get! i)
+def FunctionPropertyData.trailingFunBinders (data : FunctionPropertyData) : MacroM (TSyntaxArray ``funBinder) :=
+  data.trailingBinders.mapM (λ b => b.toFunBinder)
 
 def FunctionPropertyData.mkApp
  (data : FunctionPropertyData) : MacroM Term := 
@@ -149,6 +182,7 @@ do
   match data.retType with
   | some T => `(($data.funIdent $explicitIdents* : $T))
   | none => `($data.funIdent $explicitIdents*)
+  -- `($data.funIdent $explicitIdents*)
 
 def FunctionPropertyData.mkLambda
   (data : FunctionPropertyData) : MacroM Term := 
@@ -158,7 +192,10 @@ do
 def FunctionPropertyData.mkUncurryLambda
   (data : FunctionPropertyData) : MacroM Term := 
 do
-  `(uncurryN $data.mainArgNumLit λ $(← data.funBinders)* => $(← data.mkApp))
+  if data.mainArgNum > 1 then
+    `(uncurryN $data.mainArgNumLit λ $(← data.funBinders)* => $(← data.mkApp))
+  else
+    data.mkLambda
 
 def FunctionPropertyData.funBinder
  (data : FunctionPropertyData) : TSyntax ``Parser.Term.funBinder := Id.run do
