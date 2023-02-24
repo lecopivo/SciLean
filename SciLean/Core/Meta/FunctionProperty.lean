@@ -112,7 +112,7 @@ do
   
 
 def FunctionPropertyData.contextBinders 
- (data : FunctionPropertyData) : TSyntaxArray ``Parser.Term.bracketedBinder := 
+ (data : FunctionPropertyData) : Array BracketedBinder := 
    data.binders.mapIdx 
      (λ i b => 
       if (data.fstMainArg ≤ i ∧ i < data.fstMainArg + data.mainArgNum) ||
@@ -144,6 +144,14 @@ def FunctionPropertyData.mainBinders (data : FunctionPropertyData) : Array Brack
 def FunctionPropertyData.mainFunBinders (data : FunctionPropertyData) : MacroM (Array (TSyntax ``funBinder)) :=
   data.mainBinders.mapM (λ b => b.toFunBinder)
 
+def FunctionPropertyData.mainArgType (data : FunctionPropertyData) : MacroM Term :=
+  let binders := data.mainBinders
+  if binders.size > 1 then
+    binders[0:binders.size-1].foldrM (λ X Xs => `($(X.getType) × $Xs)) binders[binders.size-1]!.getType
+  else
+    pure binders[0]!.getType
+
+
 def mkProdFunBinder (bs : Array BracketedBinder) : MacroM (TSyntax ``funBinder) :=
   if bs.size = 1 then
     bs.get! 0 |>.toFunBinder
@@ -173,8 +181,14 @@ def FunctionPropertyData.trailingBinders (data : FunctionPropertyData) : Array B
 def FunctionPropertyData.trailingFunBinders (data : FunctionPropertyData) : MacroM (TSyntaxArray ``funBinder) :=
   data.trailingBinders.mapM (λ b => b.toFunBinder)
 
+def FunctionPropertyData.mkAppContext 
+  (data : FunctionPropertyData) (f : Term := data.funIdent) : Term :=
+
+  Syntax.mkApp f (data.contextBinders.filterMap λ b => 
+                    if b.isExplicit then some b.getIdent else none)
+
 def FunctionPropertyData.mkApp
- (data : FunctionPropertyData) : MacroM Term := 
+  (data : FunctionPropertyData) : MacroM Term := 
 do
   let explicitIdents := data.binders.filterMap 
     (λ (b : BracketedBinder) => if b.isExplicit then some b.getIdent else none)

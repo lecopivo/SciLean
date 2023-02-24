@@ -6,19 +6,19 @@ namespace SciLean
 open SciLean.Mathlib.Convenient
   
 
-class HasAdjointNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : has_adjoint (uncurryN n f) ∧ is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
+-- class HasAdjointNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+--   proof : has_adjoint (uncurryN n f) ∧ is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
 
 
-class HasAdjointN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjointNT n f : Prop
+-- class HasAdjointN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjointNT n f : Prop
 
 
-abbrev HasAdjointT {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointNT 1 f
-abbrev HasAdjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointN 1 f
+-- abbrev HasAdjointT {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointNT 1 f
+-- abbrev HasAdjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointN 1 f
 
---------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------
 
 
 instance instHasAdjoint_is_IsLin {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 

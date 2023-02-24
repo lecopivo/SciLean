@@ -190,3 +190,29 @@ abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
 
 --------------------------------------------------------------------------------
 
+
+class HasAdjointNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+  proof : has_adjoint (uncurryN n f) ∧ is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
+
+
+class HasAdjointN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjointNT n f : Prop
+
+
+abbrev HasAdjointT {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointNT 1 f
+abbrev HasAdjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointN 1 f
+
+--------------------------------------------------------------------------------
+
+/-- Transitive closure of `HasAdjDiffN`
+-/
+class HasAdjDiffNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+  proof : IsSmoothNT n f ∧ ∀ x, HasAdjointT (∂ (uncurryN n f) x)
+
+class HasAdjDiffN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
+  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjDiffNT n f : Prop
+
+abbrev HasAdjDiffT {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjDiffNT 1 f
+abbrev HasAdjDiff {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjDiffN 1 f

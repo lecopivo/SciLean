@@ -9,17 +9,17 @@ variable {Y₁ Y₂ Y₃ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilb
 variable {ι : Type} [Enumtype ι]
 
 
-/-- Transitive closure of `HasAdjDiffN`
--/
-class HasAdjDiffNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : IsSmoothNT n f ∧ ∀ x, HasAdjointT (∂ (uncurryN n f) x)
+-- /-- Transitive closure of `HasAdjDiffN`
+-- -/
+-- class HasAdjDiffNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+--   proof : IsSmoothNT n f ∧ ∀ x, HasAdjointT (∂ (uncurryN n f) x)
 
-class HasAdjDiffN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjDiffNT n f : Prop
+-- class HasAdjDiffN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjDiffNT n f : Prop
 
-abbrev HasAdjDiffT {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjDiffNT 1 f
-abbrev HasAdjDiff {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjDiffN 1 f
+-- abbrev HasAdjDiffT {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjDiffNT 1 f
+-- abbrev HasAdjDiff {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjDiffN 1 f
 
 -- class HasAdjDiff (f : X → Y) : Prop where
 --   isSmooth : IsSmooth f

@@ -58,6 +58,8 @@ by
 
 open Lean.Parser.Tactic.Conv
 
+
+-- TODO: turn `rewrite_by` to an elaborator and do not use `AutoImpl`
 syntax term:max "rewrite_by" convSeq : term
 
 macro_rules
