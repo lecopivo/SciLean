@@ -1,1 +1,1 @@
-import SciLean.Core.CoreFunctionProperties
+import SciLean.Core.AdjDiff

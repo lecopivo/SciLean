@@ -201,10 +201,4 @@ instance diag.arg_x.parm3.hasAdjoint
 
 
 
---------------------------------------------------------------------------------
--- Product projections and addition
 
-
-instance Prod.fst.arg_xy.hasAdjoint : HasAdjoint (Prod.fst : X×Y → X) := sorry_proof
-instance Prod.snd.arg_xy.hasAdjoint : HasAdjoint (Prod.snd : X×Y → Y) := sorry_proof
-instance HAdd.hAdd.arg_xy.hasAdjoint : HasAdjointN 2 (HAdd.hAdd : X → X → X) := sorry_proof

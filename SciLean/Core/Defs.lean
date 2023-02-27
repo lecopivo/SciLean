@@ -56,9 +56,9 @@ instance Smooth.differentialScalar.instDifferentialNotation (f : ℝ ⟿ X)
 -- 𝒯
 
 noncomputable
-def tangentMap (f : X → Y) : X×X → Y×Y := λ (x,dx) => (f x, ∂ f x dx)
+def tangentMap (f : X → Y) : X → X → Y×Y := λ  x dx => (f x, ∂ f x dx)
 noncomputable
-def Smooth.tangentMap (f : X ⟿ Y) : X×X ⟿ Y×Y := ⟨λ (x,dx) => (f x, ∂ f x dx), sorry_proof⟩
+def Smooth.tangentMap (f : X ⟿ Y) : X ⟿ X ⟿ Y×Y := ⟨λ x => ⟨λ dx => (f x, ∂ f x dx), sorry_proof⟩, sorry_proof⟩
 
 @[default_instance]
 instance (f : X → Y) : TangentMap f (tangentMap f) := ⟨⟩

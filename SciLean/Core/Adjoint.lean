@@ -179,26 +179,4 @@ theorem diag.arg_x.parm2.adj_simp
   (apply diag.arg_x.adj_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂); done
 
 
---------------------------------------------------------------------------------
--- Product projections and addition
 
-@[simp ↓, diff]
-theorem Prod.fst.arg_xy.adjoint_simp
-  : (Prod.fst : X×Y → X)†
-    =
-    λ x => (x,0)
-  := sorry_proof
-
-@[simp ↓, diff]
-theorem Prod.snd.arg_xy.adjoint_simp
-  : (Prod.snd : X×Y → Y)†
-    =
-    λ y => (0,y)
-  := sorry_proof
-
-@[simp ↓, diff]
-theorem HAdd.hAdd.arg_xy.adjoint_simp
-  : (uncurryN 2 λ x y : X => x + y)†
-    =
-    λ x => (x,x)
-  := sorry_proof

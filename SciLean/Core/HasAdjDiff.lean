@@ -89,7 +89,7 @@ instance id.arg_x.hasAdjDiff
   : HasAdjDiffT (λ x : X => x) := by apply infer_HasAdjDiff; intro; simp; infer_instance
 
 instance const.arg_x.hasAdjDiff
-  : HasAdjDiffT (λ (x : X) (i : ι) => x) := by apply infer_HasAdjDiff; intro; simp; infer_instance; done
+  : HasAdjDiffT (λ (x : X) (i : ι) => x) := by apply infer_HasAdjDiff; intro; symdiff; infer_instance; done
 
 instance const.arg_y.hasAdjDiff (x : X)
   : HasAdjDiffT (λ (y : Y) => x) := by apply infer_HasAdjDiff; intro; simp; infer_instance
@@ -203,11 +203,3 @@ instance diag.arg_x.parm1.hasAdjDiff
     apply diag.arg_x.hasAdjDiff (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂
     done
 
-
---------------------------------------------------------------------------------
--- Product projections and addition
-
-
-instance Prod.fst.arg_xy.hasAdjDiff : HasAdjDiff (Prod.fst : X×Y → X) := by apply infer_HasAdjDiff'; intro; simp; infer_instance
-instance Prod.snd.arg_xy.hasAdjDiff : HasAdjDiff (Prod.snd : X×Y → Y) := by apply infer_HasAdjDiff'; intro; simp; infer_instance
-instance HAdd.hAdd.arg_xy.hasAdjDiff : HasAdjDiffN 2 (HAdd.hAdd : X → X → X) := by apply infer_HasAdjDiff'; intro; simp; infer_instance

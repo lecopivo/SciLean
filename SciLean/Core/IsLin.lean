@@ -173,29 +173,7 @@ by
   infer_instance
 
 
-instance Prod.fst.arg_xy.isLin : IsLin (Prod.fst : X×Y → X) := sorry_proof
-instance Prod.snd.arg_xy.isLin : IsLin (Prod.snd : X×Y → Y) := sorry_proof
-instance HAdd.hAdd.arg_xy.isLin : IsLinN 2 (HAdd.hAdd : X → X → X) := sorry_proof
-  
-
 ----------------------------------------------------------------------
-
-
---------------------------------------------------------------------------------
--- Linear Map --
---------------------------------------------------------------------------------
-
-
-instance LinMap.val.arg_fx.isSmooth : IsSmoothN 2 (λ (f : X⊸Y) (x : X) => f x) := by sorry_proof
-
-instance LinMap.val.arg_x.isLin (f : X ⊸ Y) : IsLin (λ x => f x) :=  
-by 
-  unfold IsLin; apply (IsLinN.mk (toIsLinNT:=_)); 
-  constructor; apply f.2; done
-
-instance SmoothMap.val.arg_f.isLin : IsLin (λ (f : X ⟿ Y) => (f : X → Y)) := sorry_proof
-instance LinMap.val.arg_f.isLin : IsLin (λ (f : X ⊸ Y) => (f : X → Y)) := sorry_proof
-instance LinMap.val.arg_f.isSmooth : IsSmooth (λ (f : X ⟿ Y) => (f : X → Y)) := by apply IsSmoothN.mk
 
 
 --------------------------------------------------------------------------------

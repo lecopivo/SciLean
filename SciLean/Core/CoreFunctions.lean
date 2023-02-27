@@ -193,12 +193,16 @@ argument y
 function_properties HMul.hMul {X} [SemiHilbert X] (x : ℝ) (y : X) : X
 argument y
   hasAdjoint := sorry_proof,
-  abbrev † := x*y' by sorry_proof
+  abbrev † := x*y' by sorry_proof,
+  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; infer_instance,
+  abbrev ∂† := x*dy' by unfold adjointDifferential; symdiff; symdiff
   
 function_properties HMul.hMul {X} [Hilbert X] (x : ℝ) (y : X) : X
 argument x
   hasAdjoint := sorry_proof,
-  abbrev † := ⟪x',y⟫ by sorry_proof
+  abbrev † := ⟪x',y⟫ by sorry_proof,
+  hasAdjDiff := by sorry_proof, -- apply HasAdjDiffN.mk'; symdiff; infer_instance,
+  abbrev ∂† := ⟪dx',y⟫ by unfold adjointDifferential; sorry_proof -- symdiff; symdiff
 argument (x,y)
   hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
   abbrev ∂† := (⟪dxy',y⟫, x*dxy') by unfold adjointDifferential; symdiff; sorry_proof
@@ -227,6 +231,20 @@ argument y
   abbrev ∂ := ⟪x,dy⟫ by symdiff,
   hasAdjoint := sorry_proof,
   abbrev † := y'*x by sorry_proof
+
+
+--------------------------------------------------------------------------------
+-- Inner.normSqr - ∥·∥²
+--------------------------------------------------------------------------------
+
+function_properties Inner.normSqr {X} [Hilbert X] (x : X) : ℝ
+argument x 
+  isSmooth := sorry_proof,
+  abbrev ∂ := 2*⟪dx,x⟫ by sorry_proof,
+  -- abbrev 𝒯 := (∥x∥², 2*⟪dx,x⟫) by sorry_proof,
+  hasAdjDiff := sorry_proof,
+  abbrev ∂† := 2*dx'*x by sorry_proof
+  -- abbrev ℛ := (∥x∥², λ dx' => 2*dx'*x) by sorry_proof,
 
 
 --------------------------------------------------------------------------------

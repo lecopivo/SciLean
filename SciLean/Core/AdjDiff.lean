@@ -113,8 +113,11 @@ by
   have : ∀ x y, HasAdjointT (λ dx => ∂ f x dx y) := sorry_proof
   have : ∀ x y, HasAdjointT (λ dy => ∂ (f x) y dy) := sorry_proof
 
-  simp[adjointDifferential, reverseDifferential, tangentMap, -comp.arg_x.parm1.adj_simp]
-  done
+  unfold adjointDifferential -- reverseDifferential, tangentMap, -comp.arg_x.parm1.adj_simp]
+  symdiff
+  sorry_proof
+  -- simp (config := {singlePass := true})
+  -- done
 
 @[simp ↓ low-2, diff low-2, simp_guard g (λ x => x)]
 theorem subst.arg_x.parm1.adjDiff_simp
@@ -337,46 +340,25 @@ theorem diag.arg_x.parm3.adjDiff_simp
 
 
 @[simp ↓, diff]
-theorem Prod.fst.arg_xy.adjDiff_simp
-  : ∂† (Prod.fst : X×Y → X)
-    =
-    λ xy dx => (dx,0)
-  := by unfold adjointDifferential; simp; done
-
-@[simp ↓, diff]
-theorem Prod.snd.arg_xy.adjDiff_simp
-  : ∂† (Prod.snd : X×Y → Y)
-    =
-    λ xy dy => (0,dy)
-  := by unfold adjointDifferential; simp; done
-
-@[simp ↓, diff]
-theorem HAdd.hAdd.arg_xy.adjDiff_simp
-  : ∂† (uncurryN 2 λ x y : X => x + y)
-    =
-    λ xy dx => (dx,dx)
-  :=  by unfold adjointDifferential; simp; done
-
-@[simp ↓, diff]
 theorem Prod.fst.arg_xy.revDiff_simp
   : ℛ (Prod.fst : X×Y → X)
     =
     λ (x,y) => (x, λ dx => (dx,0))
-  := by unfold reverseDifferential; simp; done
+  := by unfold reverseDifferential; symdiff; done
 
 @[simp ↓, diff]
 theorem Prod.snd.arg_xy.revDiff_simp
   : ℛ (Prod.snd : X×Y → Y)
     =
     λ (x,y) => (y, λ dy => (0,dy))
-  := by unfold reverseDifferential; simp; done
+  := by unfold reverseDifferential; symdiff; done
 
 @[simp ↓, diff]
 theorem HAdd.hAdd.arg_xy.revDiff_simp
   : ℛ (uncurryN 2 λ x y : X => x + y)
     =
     λ (x,y) => (x+y, λ dx => (dx,dx))
-  := by unfold reverseDifferential; simp; done
+  := by unfold reverseDifferential; symdiff; done
 
 
 --------------------------------------------------------------------------------
