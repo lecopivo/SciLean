@@ -19,19 +19,19 @@ instance(priority:=mid-1) (f : X → Y) : Partial f (differentialDep f) := ⟨�
 instance(priority:=mid-1) (f : X → Y) : TangentMap f (tangentMapDep' f) := ⟨⟩
 
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem differentialDep.of_id
   : ∂ (λ x : X => x) = λ x dx => dx := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem differentialDep.of_const (x : X)
   : ∂ (λ y : Y => x) = λ y dy => 0 := sorry_proof
 
-@[simp ↓ low-3, autodiff low-3]
+@[simp ↓ low-3, diff low-3]
 theorem differentialDep.of_swap (f : α → X → Y) [∀ i, IsSmoothDepT (f i)]
   : ∂ (λ x a => f a x) = λ x dx a => ∂ (f a) x dx := sorry_proof
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem differentialDep.of_comp
   (f : Y → Z) [IsSmoothDepT f]
   (g : X → Y) [IsSmoothDepT g]
@@ -50,7 +50,7 @@ theorem differentialDep.of_comp
       -- ∂ f (g x) (∂ g x dx)
   := sorry_proof
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem differentialDep.of_diag
   (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f]
   (g₁ : X → Y₁) [IsSmoothDepT g₁]
@@ -68,7 +68,7 @@ theorem differentialDep.of_diag
   := sorry_proof
 
 
-@[simp ↓ low-5, autodiff low-5]
+@[simp ↓ low-5, diff low-5]
 theorem differentialDep.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f]
   : ∂ (uncurryN 2 f) 
     =
@@ -76,26 +76,26 @@ theorem differentialDep.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f
     ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂
   := by admit
 
-@[simp ↓ low, autodiff low]
+@[simp ↓ low, diff low]
 theorem differentialDep.of_parm
   (f : X → α → Y) [IsSmoothDepT f] (a : α)
   : ∂ (λ x => f x a) = λ x dx => ∂ f x dx a := 
 by
   rw[differentialDep.of_swap (λ a x => f x a)]
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem differentialDep.of_eval
   (a : α)
   : ∂ (λ f : α → Y => f a) = λ _ df => df a := by simp
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Prod.fst.arg_xy.diffDep_simp
   : ∂ (Prod.fst : X×Y → X) 
     =
     λ xy dxy => dxy.1
   := sorry_proof
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem Prod.snd.arg_xy.diffDep_simp
   : ∂ (Prod.snd : X×Y → Y) 
     =
@@ -106,22 +106,22 @@ theorem Prod.snd.arg_xy.diffDep_simp
 -- Tangent Map Rules --
 --------------------------------------------------------------------------------
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem tangentMapDep.of_id
   : 𝒯 (λ x : X => x) = λ x dx => ⟨x,dx,rfl⟩
   := by simp[tangentMapDep']; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem tangentMapDep.of_const (x : X)
   : 𝒯 (λ y : Y => x) = λ y dy => ⟨x,0,rfl⟩
   := by simp[tangentMapDep']; done
 
-@[simp ↓ low-3, autodiff low-3]
+@[simp ↓ low-3, diff low-3]
 theorem tangentMapDep.of_swap (f : α → X → Y) [∀ i, IsSmoothDepT (f i)]
   : 𝒯 (λ x a => f a x) = λ x dx => ⟨λ a => f a x, λ a => ∂ (f a) x dx, rfl⟩
   := by simp[tangentMapDep']; done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem tangentMapDep.of_comp
   (f : Y → Z) [IsSmoothDepT f]
   (g : X → Y) [IsSmoothDepT g]
@@ -132,7 +132,7 @@ theorem tangentMapDep.of_comp
       h ▸ 𝒯 f y dy
   := by simp[tangentMapDep']; done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem tangentMapDep.of_diag
   (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f]
   (g₁ : X → Y₁) [IsSmoothDepT g₁]
@@ -155,7 +155,7 @@ theorem tangentMapDep.of_diag
 
 Bilinear maps should usually provide a rewrite rule for `𝒯 (uncurryN 2 f)`
 -/
-@[simp ↓ low-5, autodiff low-5]
+@[simp ↓ low-5, diff low-5]
 theorem tangentMapDep.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f]
   : 𝒯 (uncurryN 2 f) 
     =
@@ -165,7 +165,7 @@ theorem tangentMapDep.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f]
     simp[tangentMapDep']
     done
 
-@[simp ↓ low, autodiff low]
+@[simp ↓ low, diff low]
 theorem tangentMapDep.of_parm
   (f : X → α → Y) [IsSmoothDepT f] (a : α)
   : 𝒯 (λ x => f x a) 
@@ -175,7 +175,7 @@ theorem tangentMapDep.of_parm
       ⟨f' a, df' a, by rw[h]; done⟩
   := by simp[tangentMapDep']; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem tangentMapDep.of_eval
   (a : α)
   : 𝒯 (λ f : α → Y => f a) 

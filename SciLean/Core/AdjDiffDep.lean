@@ -54,19 +54,19 @@ instance (f : X → Y) [HasAdjDiffDepT f] (x : X) : IsLinT (∂† f x) := sorry
 ----------------------------------------------------------------------
 
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem id.arg_x.adjDiffDep_simp
   : ∂† (λ x : X => x) = λ x dx => dx := by simp[adjointDifferentialDep]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem const.arg_x.adjDiffDep_simp 
   : ∂† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjointDifferentialDep]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem const.arg_y.adjDiffDep_simp (x : X)
   : ∂† (λ (y : Y) => x) = (λ y dy' => 0) := by simp[adjointDifferentialDep]; done
 
-@[simp ↓ low-4, autodiff low-4]
+@[simp ↓ low-4, diff low-4]
 theorem swap.arg_y.adjDiffDep_simp
   (f : ι → X → Z) [inst : ∀ i, HasAdjDiffDepT (f i)]
   : ∂† (λ x y => f y x) = (λ x dx' => ∑ i, (∂† (f i) x) (dx' i)) := 
@@ -76,7 +76,7 @@ by
 
   simp[adjointDifferentialDep]; done
 
-@[simp ↓ low-3, autodiff low-3]
+@[simp ↓ low-3, diff low-3]
 theorem subst.arg_x.adjDiffDep_simp
   (f : X → Y → Z) [instf : HasAdjDiffDepNT 2 f]
   (g : X → Y) [instg : HasAdjDiffDepT g]
@@ -98,7 +98,7 @@ by
   admit
 
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem subst.arg_x.parm1.adjDiffDep_simp
   (a : α)
   (f : X → Y → α → Z) [HasAdjDiffDepNT 2 λ x y => f x y a]
@@ -115,7 +115,7 @@ by
   apply subst.arg_x.adjDiffDep_simp (λ x y => f x y a) g
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem subst.arg_x.parm2.adjDiffDep_simp
   (a : α) (b : β)
   (f : X → Y → α → β → Z) [HasAdjDiffDepNT 2 λ x y => f x y a b]
@@ -132,7 +132,7 @@ by
   apply subst.arg_x.adjDiffDep_simp (λ x y => f x y a b) g
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem subst.arg_x.parm3.adjDiffDep_simp
   (a : α) (b : β) (c : γ)
   (f : X → Y → α → β → γ → Z) [HasAdjDiffDepNT 2 λ x y => f x y a b c]
@@ -149,7 +149,7 @@ by
   apply subst.arg_x.adjDiffDep_simp (λ x y => f x y a b c) g
   done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.adjDiffDep_simp
   (f : Y → Z) [instf : HasAdjDiffDepT f]
   (g : X → Y) [instg : HasAdjDiffDepT g]
@@ -162,7 +162,7 @@ by
   simp; unfold hold; simp
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem diag.arg_x.adjDiffDep_simp
   (f : Y₁ → Y₂ → Z) [HasAdjDiffDepNT 2 f]
   (g₁ : X → Y₁) [hg : HasAdjDiffDepT g₁]
@@ -179,7 +179,7 @@ theorem diag.arg_x.adjDiffDep_simp
 by
   simp; unfold hold; simp; unfold hold; simp[reverseDifferentialDep,adjointDifferentialDep]; done
 
-@[simp ↓ low, autodiff low]
+@[simp ↓ low, diff low]
 theorem eval.arg_f.adjDiffDep_simp
   (i : ι)
   : ∂† (λ (f : ι → X) => f i) 
@@ -189,7 +189,7 @@ theorem eval.arg_f.adjDiffDep_simp
 by 
   simp[reverseDifferentialDep,adjointDifferentialDep]; done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem eval.arg_x.parm1.adjDiffDep_simp
   (f : X → ι → Z) [HasAdjDiffDep f]
   : ∂† (λ x => f x i) 
@@ -205,7 +205,7 @@ by
 -- These theorems are problematic when used with simp --
 
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.parm1.adjDiffDep_simp
   (a : α) 
   (f : Y → α → Z) [HasAdjDiffDep λ y => f y a]
@@ -220,7 +220,7 @@ theorem comp.arg_x.parm1.adjDiffDep_simp
   simp; unfold hold; simp
   done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.parm2.adjDiffDep_simp
   (a : α) (b : β)
   (f : Y → α → β → Z) [HasAdjDiffDep λ y => f y a b]
@@ -235,7 +235,7 @@ theorem comp.arg_x.parm2.adjDiffDep_simp
   simp; unfold hold; simp
   done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.parm3.adjDiffDep_simp
   (a : α) (b : β) (c : γ)
   (f : Y → α → β → γ → Z) [HasAdjDiffDep λ y => f y a b c]
@@ -250,7 +250,7 @@ theorem comp.arg_x.parm3.adjDiffDep_simp
   simp; unfold hold; simp
   done
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, diff low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm1.adjDiffDep_simp
   (a : α)
   (f : Y₁ → Y₂ → α → Z) [HasAdjDiffDepNT 2 λ y₁ y₂ => f y₁ y₂ a]
@@ -267,7 +267,7 @@ theorem diag.arg_x.parm1.adjDiffDep_simp
 := by 
   (apply diag.arg_x.adjDiffDep_simp (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂)
   
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, diff low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm2.adjDiffDep_simp
   (a : α) (b : β)
   (f : Y₁ → Y₂ → α → β → Z) [HasAdjDiffDepNT 2 λ y₁ y₂ => f y₁ y₂ a b]
@@ -285,7 +285,7 @@ theorem diag.arg_x.parm2.adjDiffDep_simp
   (apply diag.arg_x.adjDiffDep_simp (λ y₁ y₂ => f y₁ y₂ a b) g₁ g₂)
   done
 
-@[simp ↓ low-1, autodiff low-1] -- try to avoid using this theorem
+@[simp ↓ low-1, diff low-1] -- try to avoid using this theorem
 theorem diag.arg_x.parm3.adjDiffDep_simp
   (a : α) (b : β) (c : γ)
   (f : Y₁ → Y₂ → α → β → γ → Z) [HasAdjDiffDepNT 2 λ y₁ y₂ => f y₁ y₂ a b c]
@@ -306,11 +306,11 @@ theorem diag.arg_x.parm3.adjDiffDep_simp
 --------------------------------------------------------------------------------
 
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem id.arg_x.revDiffDep_simp
   : ℛ (λ x : X => x) = λ x => ⟨x, λ x => x, rfl⟩ := by simp[reverseDifferentialDep]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem const.arg_x.revDiffDep_simp 
   : ℛ (λ (x : X) (i : ι) => x) 
     = 
@@ -318,7 +318,7 @@ theorem const.arg_x.revDiffDep_simp
       ⟨(λ i => x), (λ f => ∑ i, f i), rfl⟩ 
   := by simp[reverseDifferentialDep]; done
 
-@[simp ↓, autodiff]
+@[simp ↓, diff]
 theorem const.arg_y.revDiffDep_simp (x : X)
   : ℛ (λ (y : Y) => x) 
     =
@@ -326,7 +326,7 @@ theorem const.arg_y.revDiffDep_simp (x : X)
       ⟨x, (λ dy' => 0), rfl⟩
   := by simp[reverseDifferentialDep]; done
 
-@[simp ↓ low-4, autodiff low-4]
+@[simp ↓ low-4, diff low-4]
 theorem swap.arg_y.revDiffDep_simp
   (f : ι → X → Z) [inst : ∀ i, HasAdjDiffDepT (f i)]
   : ∂† (λ x y => f y x) = (λ x dx' => ∑ i, (∂† (f i) x) (dx' i)) := 
@@ -336,7 +336,7 @@ by
 
   simp[adjointDifferentialDep]; done
 
-@[simp ↓ low-3, autodiff low-3]
+@[simp ↓ low-3, diff low-3]
 theorem subst.arg_x.revDiffDep_simp
   (f : X → Y → Z) [instf : HasAdjDiffDepNT 2 f]
   (g : X → Y) [instg : HasAdjDiffDepT g]
@@ -364,7 +364,7 @@ by
   admit
 
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem subst.arg_x.parm1.revDiffDep_simp
   (a : α)
   (f : X → Y → α → Z) [HasAdjDiffDepNT 2 λ x y => f x y a]
@@ -387,7 +387,7 @@ by
   apply subst.arg_x.revDiffDep_simp (λ x y => f x y a) g
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem subst.arg_x.parm2.revDiffDep_simp
   (a : α) (b : β)
   (f : X → Y → α → β → Z) [HasAdjDiffDepNT 2 λ x y => f x y a b]
@@ -410,7 +410,7 @@ by
   apply subst.arg_x.revDiffDep_simp (λ x y => f x y a b) g
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem subst.arg_x.parm3.revDiffDep_simp
   (a : α) (b : β) (c : γ)
   (f : X → Y → α → β → γ → Z) [HasAdjDiffDepNT 2 λ x y => f x y a b c]
@@ -428,7 +428,7 @@ by
   done
 
 
--- @[simp ↓ low-10, autodiff low-10]
+-- @[simp ↓ low-10, diff low-10]
 theorem uncurryN2.arg_x.diffDep_simp
   (f : X → Y → Z) [HasAdjDiffDepNT 2 f]
   : ∂† (uncurryN 2 f) 
@@ -437,7 +437,7 @@ theorem uncurryN2.arg_x.diffDep_simp
       (∂† (λ x' => f x' y) x dz, ∂† (λ y' => f x y') y dz)
   := sorry_proof
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem comp.arg_x.revDiffDep_simp
   (f : Y → Z) [instf : HasAdjDiffDepT f]
   (g : X → Y) [instg : HasAdjDiffDepT g]
@@ -451,7 +451,7 @@ by
   simp[reverseDifferentialDep, uncurryN2.arg_x.diffDep_simp]
   done
 
-@[simp ↓ low-2, autodiff low-2]
+@[simp ↓ low-2, diff low-2]
 theorem diag.arg_x.revDiffDep_simp
   (f : Y₁ → Y₂ → Z) [HasAdjDiffDepNT 2 f]
   (g₁ : X → Y₁) [hg : HasAdjDiffDepT g₁]
@@ -472,7 +472,7 @@ by
   simp[reverseDifferentialDep, uncurryN2.arg_x.diffDep_simp]; unfold hold;simp
   done
 
-@[simp ↓ low, autodiff low]
+@[simp ↓ low, diff low]
 theorem eval.arg_f.revDiffDep_simp
   (i : ι)
   : ℛ (λ (f : ι → X) => f i) 
@@ -485,7 +485,7 @@ theorem eval.arg_f.revDiffDep_simp
 by 
   simp[reverseDifferentialDep,adjointDifferentialDep]; done
 
-@[simp ↓ low-1, autodiff low-1]
+@[simp ↓ low-1, diff low-1]
 theorem eval.arg_x.parm1.revDiffDep_simp
   (f : X → ι → Z) [HasAdjDiffDep f] (i : ι)
   : ℛ (λ x => f x i) 
