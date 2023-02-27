@@ -339,30 +339,6 @@ theorem diag.arg_x.parm3.adjDiff_simp
 ----------------------------------------------------------------------
 
 
-@[simp ↓, diff]
-theorem Prod.fst.arg_xy.revDiff_simp
-  : ℛ (Prod.fst : X×Y → X)
-    =
-    λ (x,y) => (x, λ dx => (dx,0))
-  := by unfold reverseDifferential; symdiff; done
-
-@[simp ↓, diff]
-theorem Prod.snd.arg_xy.revDiff_simp
-  : ℛ (Prod.snd : X×Y → Y)
-    =
-    λ (x,y) => (y, λ dy => (0,dy))
-  := by unfold reverseDifferential; symdiff; done
-
-@[simp ↓, diff]
-theorem HAdd.hAdd.arg_xy.revDiff_simp
-  : ℛ (uncurryN 2 λ x y : X => x + y)
-    =
-    λ (x,y) => (x+y, λ dx => (dx,dx))
-  := by unfold reverseDifferential; symdiff; done
-
-
---------------------------------------------------------------------------------
-
 
 @[simp ↓, diff]
 theorem id.arg_x.revDiff_simp

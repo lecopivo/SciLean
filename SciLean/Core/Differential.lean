@@ -329,30 +329,3 @@ theorem diff_of_linear_2_1 (f : X → Y → Z) [IsLinN 2 f] : ∂ f = λ _ dx _ 
 theorem diff_of_linear_2_2 (f : X → Y → Z) [IsLinN 2 f] (x : X) : ∂ (λ y => f x y) = λ _ dy => f 0 dy := sorry_proof
 
 
---------------------------------------------------------------------------------
--- Differential of product projections and addition
---------------------------------------------------------------------------------
-
-
-@[simp ↓, diff]
-theorem Prod.fst.arg_xy.tangentMap_simp
-  : 𝒯 (Prod.fst : X×Y → X)
-    =
-    λ (x,y) (dx,dy) => (x,dx)
-  := by symdiff
-
-@[simp ↓, diff]
-theorem Prod.snd.arg_xy.tangentMap_simp
-  : 𝒯 (Prod.snd : X×Y → Y)
-    =
-    λ (x,y) (dx,dy) => (y,dy)
-  := by symdiff
-
-@[simp ↓, diff]
-theorem HAdd.hAdd.arg_xy.tangentMap_simp
-  : 𝒯 (uncurryN 2 λ x y : X => x + y)
-    =
-    λ (x,y) (dx,dy) => (x+y, dx+dy)
-  := by simp; done
-
-
