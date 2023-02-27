@@ -8,6 +8,8 @@ import SciLean.Tactic.AutoDiff
 namespace SciLean
 
 --------------------------------------------------------------------------------
+-- isSmooth
+--------------------------------------------------------------------------------
 
 syntax "isSmooth" (":=" term)? : argProp
 
@@ -31,6 +33,8 @@ macro_rules
 
 
 --------------------------------------------------------------------------------
+-- isLin
+--------------------------------------------------------------------------------
 
 syntax "isLin" (":=" term)? : argProp
 
@@ -52,6 +56,9 @@ macro_rules
   
   return finalCommand 
 
+
+--------------------------------------------------------------------------------
+-- hasAdjoint
 --------------------------------------------------------------------------------
 
 syntax "hasAdjoint" (":=" term)? : argProp
@@ -74,6 +81,8 @@ macro_rules
   
   return finalCommand 
 
+--------------------------------------------------------------------------------
+-- hasAdjDiff
 --------------------------------------------------------------------------------
 
 theorem HasAdjDiffN.mk' {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
@@ -113,7 +122,8 @@ syntax termAndProof := ":=" term "by" tacticSeq
 syntax termWithProofOrConvTactic := termAndProof <|> byConvTactic
 
 --------------------------------------------------------------------------------
-
+-- ∂
+--------------------------------------------------------------------------------
 
 syntax defOrAbbrev "∂" (mainArg)? (termWithProofOrConvTactic)? : argProp
 
@@ -166,9 +176,66 @@ macro_rules
   else
     Macro.throwUnsupported
 
-
+--------------------------------------------------------------------------------
+-- 𝒯
 --------------------------------------------------------------------------------
 
+
+syntax defOrAbbrev "𝒯" (mainArg)? (termWithProofOrConvTactic)? : argProp
+
+open Lean Parser.Term in
+macro_rules
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec $doa:defOrAbbrev 𝒯 $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
+
+  let data ← FunctionPropertyData.parse id parms retType arg 
+
+  let lhs := Syntax.mkCApp ``tangentMap #[← data.mkUncurryLambda]
+
+  let mainBinder ← data.mainFunBinder
+
+  let diffBinder ← 
+    match dargs with
+    | none => data.mainBinders.mapM (λ b => b.modifyIdent λ ident => mkIdent <| ident.getId.appendBefore "d") 
+              >>= mkProdFunBinder
+    | some _ => Macro.throwError "Specifying custom names is currently unsupported!"
+  let trailingBinders ← data.trailingFunBinders
+
+  let (rhs, proof) ← 
+    match tpc with
+    | `(termWithProofOrConvTactic| := $df:term by $proof:tacticSeq) =>
+      let rhs ← `(λ $mainBinder $diffBinder $trailingBinders* => $df)
+      let proof ← `(by $proof)
+      pure (rhs, proof)
+
+    | `(termWithProofOrConvTactic| by $c:convSeq) => 
+      let rhs ← `($lhs rewrite_by $c)
+      let proof ← `(by apply AutoImpl.impl_eq_spec)
+      pure (rhs, proof)
+
+    | _ =>  Macro.throwUnsupported
+
+  let definition_name   := mkIdent $ data.funPropNamespace.append "diff"
+  let simp_theorem_name := mkIdent $ data.funPropNamespace.append "diff_simp"
+
+  if doa.raw[0].getAtomVal == "def" then
+    `(
+    def $definition_name $data.contextBinders* := $rhs
+    @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $(data.mkAppContext definition_name) := $proof
+    #print $definition_name
+    #check $simp_theorem_name
+    )
+  else if doa.raw[0].getAtomVal == "abbrev" then
+    `(
+    @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $rhs := $proof
+    #check $simp_theorem_name
+    )
+  else
+    Macro.throwUnsupported
+
+
+--------------------------------------------------------------------------------
+-- †
+--------------------------------------------------------------------------------
 
 syntax defOrAbbrev "†" (mainArg)? (termWithProofOrConvTactic)? : argProp
 

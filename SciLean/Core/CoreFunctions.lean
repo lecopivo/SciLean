@@ -203,6 +203,7 @@ argument (x,y)
   hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
   abbrev ∂† := (⟪dxy',y⟫, x*dxy') by unfold adjointDifferential; symdiff; sorry_proof
 
+
 --------------------------------------------------------------------------------
 -- Inner.innet - ⟪·,·⟫
 --------------------------------------------------------------------------------
@@ -226,3 +227,68 @@ argument y
   abbrev ∂ := ⟪x,dy⟫ by symdiff,
   hasAdjoint := sorry_proof,
   abbrev † := y'*x by sorry_proof
+
+
+--------------------------------------------------------------------------------
+-- SmoothMap.val
+--------------------------------------------------------------------------------
+
+function_properties SmoothMap.val {X Y} [Vec X] [Vec Y] (f : X⟿Y) (x : X) : Y
+argument (f,x)
+  isSmooth := sorry_proof,
+  abbrev ∂ := df x + ∂ f x dx by funext (f,x) (df,dx); simp;  sorry_proof
+argument f ..
+  isLin := sorry_proof,
+  isSmooth,
+  abbrev ∂ := df x by symdiff 
+argument x 
+  isSmooth := sorry_proof,
+  abbrev ∂ := ∂ f x dx by unfold Smooth.differential; symdiff -- not sure if I want this
+
+
+--------------------------------------------------------------------------------
+-- SmoothMap.mk'
+--------------------------------------------------------------------------------
+
+-- instance SmoothMap.mk'.arg_f.prolongation.isSmoothT {X Y W} [Vec X] [Vec Y] [Vec W] 
+--   (f : W → X → Y) [IsSmoothNT 2 f]
+--   : IsSmoothT (λ w => λ x ⟿ f w x) := sorry_proof
+
+-- instance SmoothMap.mk'.arg_f.prolongation.diff_simp {X Y W} [Vec X] [Vec Y] [Vec W] 
+--   (f : W → X → Y) [IsSmoothNT 2 f]
+--   : ∂ (λ w => λ x ⟿ f w x) 
+--     =
+--     λ w dw => λ x ⟿ ∂ f w dw x:= sorry_proof
+
+
+--------------------------------------------------------------------------------
+-- LinMap.val
+--------------------------------------------------------------------------------
+
+function_properties LinMap.val {X Y} [Vec X] [Vec Y] (f : X⊸Y) (x : X) : Y
+argument (f,x)
+  isSmooth := sorry_proof,
+  abbrev ∂ := df x + f dx by funext (f,x) (df,dx); simp; sorry_proof
+argument f ..
+  isLin := sorry_proof,
+  isSmooth,
+  abbrev ∂ := df x by symdiff 
+argument x 
+  isLin := sorry_proof,
+  isSmooth,
+  abbrev ∂ := f dx by symdiff
+
+
+--------------------------------------------------------------------------------
+-- LinMap.mk'
+--------------------------------------------------------------------------------
+
+-- instance SmoothMap.mk'.arg_f.prolongation.isSmoothT {X Y W} [Vec X] [Vec Y] [Vec W] 
+--   (f : W → X → Y) [IsSmoothNT 2 f]
+--   : IsSmoothT (λ w => λ x ⟿ f w x) := sorry_proof
+
+-- instance SmoothMap.mk'.arg_f.prolongation.diff_simp {X Y W} [Vec X] [Vec Y] [Vec W] 
+--   (f : W → X → Y) [IsSmoothNT 2 f]
+--   : ∂ (λ w => λ x ⟿ f w x) 
+--     =
+--     λ w dw => λ x ⟿ ∂ f w dw x:= sorry_proof

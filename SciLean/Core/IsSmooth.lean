@@ -138,11 +138,6 @@ instance diag.arg_x.isSmooth
   (g₂ : X → Y₂) [IsSmoothT g₂]
   : IsSmoothT (λ x => f (g₁ x) (g₂ x)) := by infer_instance
 
--- instance Prod.fst.arg_xy.isSmooth : IsSmooth (Prod.fst : X×Y → X) := sorry_proof
-
-function_property Prod.fst (xy : X×Y) argument xy isSmooth := sorry_proof
-function_property Prod.snd (xy : X×Y) argument xy isSmooth := sorry_proof
-function_property HAdd.hAdd (x y : X) argument (x,y) isSmooth := sorry_proof
 
 --------------------------------------------------------------------------------
 -- Highorder unification instances
@@ -167,23 +162,10 @@ by
 
 
 --------------------------------------------------------------------------------
--- Smooth Map - part 1
---------------------------------------------------------------------------------
-
-function_properties SmoothMap.val (f : X⟿Y) (x : X) : Y
-argument (f,x)
-  isSmooth := sorry_proof
-argument f 
-  isSmooth := by apply IsSmoothN.mk
-argument x 
-  isSmooth := by apply IsSmoothN.mk
-
---------------------------------------------------------------------------------
 -- Smooth Map Lambda Notation --
 --------------------------------------------------------------------------------
 
-@[macro_inline]
-abbrev SmoothMap.mk' (f : X → Y) [inst : IsSmoothT f] : X ⟿ Y := ⟨f, inst.proof⟩
+abbrev SmoothMap.mk' {X Y} [Vec X] [Vec Y] (f : X → Y) [inst : IsSmoothT f] : X ⟿ Y := ⟨f, inst.proof⟩
 
 open Lean.TSyntax.Compat in
 macro "fun" xs:Lean.explicitBinders " ⟿ " b:term : term => 
@@ -192,6 +174,7 @@ macro "fun" xs:Lean.explicitBinders " ⟿ " b:term : term =>
 open Lean.TSyntax.Compat in
 macro "λ"   xs:Lean.explicitBinders " ⟿ " b:term : term => 
   Lean.expandExplicitBinders `SciLean.SmoothMap.mk' xs b
+
 
 @[simp, diff_simp]
 theorem SmoothMap.eta_reduction (f : X ⟿ Y)
