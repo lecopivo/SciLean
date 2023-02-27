@@ -2,62 +2,11 @@ import SciLean.Data.Prod
 
 import SciLean.Core.Attributes
 import SciLean.Core.Defs
--- import SciLean.Core.SmoothMap
-
-import SciLean.Core.Meta.FunctionProperty
+import SciLean.Core.CoreFunctions
 
 namespace SciLean
 
 open SciLean.Mathlib.Convenient
-
--- /-- Transitive closure of `IsSmoothN`
--- -/
--- class IsSmoothNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
---   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
---   proof : is_smooth (uncurryN n f)
-
--- class IsSmoothN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
---   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsSmoothNT n f : Prop
-
-
--- /-- Abbreviation for `IsSmoothN 1`
--- -/
--- abbrev IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothN 1 f
-
-
--- /-- Abbreviation for `IsSmoothNT 1`
--- -/
--- abbrev IsSmoothT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothNT 1 f
-
---------------------------------------------------------------------------------
-
-instance IsLin_is_IsSmooth {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] [inst : IsLinN n f] 
-  : IsSmoothN n f := IsSmoothN.mk (toIsSmoothNT:=⟨inst.proof.2⟩)
-
-
---------------------------------------------------------------------------------
-
-syntax "isSmooth" (":=" term)? : argProp
-
-open Lean Parser.Term in
-macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isSmooth $[:= $proof:term]?) => do
-
-  let data ← FunctionPropertyData.parse id parms retType arg
-
-  let instanceId := mkIdent $ data.funPropNamespace.append "isSmooth"
-
-  let instanceType ← `(IsSmoothN $data.mainArgNumLit $(← data.mkLambda))
-  let finalCommand ←
-    match proof with
-    | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := by unfold $id; apply IsSmoothN.mk; done)
-    | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := $proof)
-  
-  return finalCommand 
-
 
 --------------------------------------------------------------------------------
 
