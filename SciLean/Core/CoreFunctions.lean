@@ -65,6 +65,10 @@ argument xy
 --------------------------------------------------------------------------------
 
 function_properties Prod.mk {X Y} [Vec X] [Vec Y] (x : X) (y : Y) : X×Y
+argument (x,y) 
+  isLin := sorry_proof,
+  isSmooth,
+  abbrev ∂ := (dx, dy) by symdiff
 argument x ..
   isSmooth := sorry_proof,
   abbrev ∂ := (dx,0) by sorry_proof
@@ -75,6 +79,11 @@ argument y
   -- abbrev 𝒯 := ((x,y), (0,dy)) by symdiff
 
 function_properties Prod.mk {X Y} [SemiHilbert X] [SemiHilbert Y] (x : X) (y : Y) : X×Y
+argument (x,y)
+  hasAdjoint := sorry_proof,
+  abbrev † := xy' by sorry_proof,
+  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
+  abbrev ∂† := dxy' by unfold adjointDifferential; symdiff; symdiff
 argument x
   hasAdjDiff := sorry_proof,
   abbrev ∂† := dx'.1 by sorry_proof
