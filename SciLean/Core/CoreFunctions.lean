@@ -198,7 +198,7 @@ function_properties HMul.hMul {X} [SemiHilbert X] (x : ℝ) (y : X) : X
 argument y
   hasAdjoint := sorry_proof,
   abbrev † := x*y' by sorry_proof,
-  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; infer_instance,
+  hasAdjDiff,
   abbrev ∂† ℛ := x*dy' by unfold adjointDifferential; symdiff; symdiff
   
 function_properties HMul.hMul {X} [Hilbert X] (x : ℝ) (y : X) : X

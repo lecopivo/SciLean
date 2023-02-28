@@ -8,42 +8,64 @@ section GenericLinearArray
 variable {Cont : Nat → Type} {Elem : Type |> outParam}
 variable [GenericLinearArray Cont Elem]
 
--- DropElem 
+
+--------------------------------------------------------------------------------
+-- dropElem
+--------------------------------------------------------------------------------
+
 function_properties dropElem [Vec Elem] {n : Nat} (k : Nat) (cont : Cont (n+k)) : Cont n
 argument cont
   isLin := sorry_proof,
-  isSmooth, diff_simp
+  isSmooth, 
+  abbrev ∂ 𝒯 := dropElem k dcont by sorry_proof
 
 function_properties dropElem [SemiHilbert Elem] {n : Nat} (k : Nat) (cont : Cont (n+k)) : Cont n
 argument cont
   hasAdjoint := sorry_proof,
-  adj_simp := pushElem k 0 cont' by sorry_proof,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
-  adjDiff_simp by simp[adjointDifferential]
+  abbrev † := pushElem k 0 cont' by sorry_proof,
+  hasAdjDiff := by apply infer_HasAdjDiff'; symdiff; infer_instance; done,
+  abbrev ∂† ℛ := pushElem k 0 dcont' by unfold adjointDifferential; symdiff; symdiff; done
 
 
--- PushElem 
+--------------------------------------------------------------------------------
+-- pushElem
+--------------------------------------------------------------------------------
+
 function_properties pushElem [Vec Elem] {n : Nat} (k : Nat) (elem : Elem) (cont : Cont n) : Cont (n+k)
+argument (elem, cont)
+  isLin := sorry_proof,
+  isSmooth,
+  abbrev ∂ 𝒯 := pushElem k delem dcont by sorry_proof
 argument cont
   isLin [Fact (elem=0)] := sorry_proof,
   isSmooth := sorry_proof, 
-  diff_simp := pushElem k 0 dcont by sorry_proof
+  abbrev ∂ 𝒯 := pushElem k 0 dcont by sorry_proof
 argument elem
   isLin [Fact (cont=0)] := sorry_proof,
   isSmooth := sorry_proof,
-  diff_simp := pushElem k delem 0 by sorry_proof
+  abbrev ∂ 𝒯 := pushElem k delem 0 by sorry_proof
 
 function_properties pushElem [SemiHilbert Elem] {n : Nat} (k : Nat) (elem : Elem) (cont : Cont n) : Cont (n+k)
+argument (elem, cont)
+  hasAdjoint := sorry_proof,
+  abbrev † := (∑ i : Fin k, elemcont'[⟨n+i.1, sorry_proof⟩], dropElem k elemcont') by sorry_proof,
+  hasAdjDiff,
+  abbrev ∂† ℛ := (∑ i : Fin k, delemcont'[⟨n+i.1, sorry_proof⟩], dropElem k delemcont') by unfold adjointDifferential; symdiff; symdiff
 argument cont
   hasAdjoint [Fact (elem=0)] := sorry_proof,
-  adj_simp [Fact (elem=0)] := dropElem k cont' by sorry_proof
+  abbrev † [Fact (elem=0)] := dropElem k cont' by sorry_proof,
+  hasAdjDiff,
+  abbrev ∂† ℛ := dropElem k dcont' by unfold adjointDifferential; symdiff; symdiff
 argument elem
   hasAdjoint [Fact (cont=0)] := sorry_proof,
-  adj [Fact (cont=0)] := ∑ i : Fin k, elem'[⟨n+i.1, sorry_proof⟩] by sorry_proof
+  abbrev † [Fact (cont=0)] := ∑ i : Fin k, elem'[⟨n+i.1, sorry_proof⟩] by sorry_proof,
+  hasAdjDiff,
+  abbrev ∂† ℛ := ∑ i : Fin k, delem'[⟨n+i.1, sorry_proof⟩] by unfold adjointDifferential; symdiff; symdiff
 
 
-----------------------------------------------------------------------
-
+--------------------------------------------------------------------------------
+-- reverse
+--------------------------------------------------------------------------------
 
 def reverse {n : Nat} (cont : Cont n) : Cont n := Id.run do
   let mut cont := cont
@@ -55,6 +77,7 @@ def reverse {n : Nat} (cont : Cont n) : Cont n := Id.run do
     cont[i'] := tmp
   cont
 
+
 ----------------------------------------------------------------------
 
 /-- Generate UpperTriangularArray from and array of size `n`
@@ -64,10 +87,13 @@ UpperTriangularArray is an array that relates to lower triangular matrix as:
          x[1,1], ..., x[1,n-1], 
                  ⋱,     ⁞  ,
                     , x[n-1,n-1]]`
+
+
+TODO: Make tail recursive!
 -/
 def generateUpperTriangularArray (f : (n' : Nat) → Cont (n'+1) → Cont n') (x : Cont n) : Cont ((n*(n+1))/2) := 
   match n with
-  | 0 => λ [i] ==> cast sorry_proof () -- you can't have i of type `Fin 0`
+  | 0 => introElem λ _ => cast sorry_proof () -- you can't have i of type `Fin 0`
   | _+1 => 
     let x' := f _ x
     let c := generateUpperTriangularArray f x' 
@@ -141,45 +167,46 @@ def lower2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) 
     x[first] := a first * x[first]
     x
 
-function_properties upper2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n
-argument a 
-  isLin [Fact (b=0)] := sorry_proof,
-  isSmooth  := sorry_proof,
-  diff_simp := mapIdx (λ i (xi : Elem) => da i * xi) x by sorry_proof
-argument b
-  isLin [Fact (a=0)] := sorry_proof,
-  isSmooth  := sorry_proof,
-  diff_simp := upper2DiagonalUpdate 0 db x by sorry_proof
-argument x
-  isLin := sorry_proof,
-  isSmooth, diff_simp
 
-function_properties upper2DiagonalUpdate [SemiHilbert Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n
-argument x 
-  hasAdjoint := sorry_proof,
-  adj_simp   := lower2DiagonalUpdate a b x' by sorry_proof,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
-  adjDiff_simp by simp[adjointDifferential]
+-- function_properties upper2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n
+-- argument a 
+--   isLin [Fact (b=0)] := sorry_proof,
+--   isSmooth  := sorry_proof,
+--   diff_simp := mapIdx (λ i (xi : Elem) => da i * xi) x by sorry_proof
+-- argument b
+--   isLin [Fact (a=0)] := sorry_proof,
+--   isSmooth  := sorry_proof,
+--   diff_simp := upper2DiagonalUpdate 0 db x by sorry_proof
+-- argument x
+--   isLin := sorry_proof,
+--   isSmooth, diff_simp
 
-function_properties lower2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n
-argument a 
-  isLin [Fact (b=0)] := sorry_proof,
-  isSmooth  := sorry_proof,
-  diff_simp := mapIdx (λ i (xi : Elem) => da i * xi) x by sorry_proof
-argument b
-  isLin [Fact (a=0)] := sorry_proof,
-  isSmooth  := sorry_proof,
-  diff_simp := lower2DiagonalUpdate 0 db x by sorry_proof
-argument x 
-  isLin := sorry_proof,
-  isSmooth, diff_simp
+-- function_properties upper2DiagonalUpdate [SemiHilbert Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n
+-- argument x 
+--   hasAdjoint := sorry_proof,
+--   adj_simp   := lower2DiagonalUpdate a b x' by sorry_proof,
+--   hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
+--   adjDiff_simp by simp[adjointDifferential]
 
-function_properties lower2DiagonalUpdate [SemiHilbert Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n
-argument x 
-  hasAdjoint := sorry_proof,
-  adj_simp   := upper2DiagonalUpdate a b x' by sorry_proof,
-  hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
-  adjDiff_simp by simp[adjointDifferential]
+-- function_properties lower2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n
+-- argument a 
+--   isLin [Fact (b=0)] := sorry_proof,
+--   isSmooth  := sorry_proof,
+--   diff_simp := mapIdx (λ i (xi : Elem) => da i * xi) x by sorry_proof
+-- argument b
+--   isLin [Fact (a=0)] := sorry_proof,
+--   isSmooth  := sorry_proof,
+--   diff_simp := lower2DiagonalUpdate 0 db x by sorry_proof
+-- argument x 
+--   isLin := sorry_proof,
+--   isSmooth, diff_simp
+
+-- function_properties lower2DiagonalUpdate [SemiHilbert Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n
+-- argument x 
+--   hasAdjoint := sorry_proof,
+--   adj_simp   := upper2DiagonalUpdate a b x' by sorry_proof,
+--   hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
+--   adjDiff_simp by simp[adjointDifferential]
 
 
 -- These theorems are usefull when differentiating `upper2DiagonalUpdate` w.r.t to `a` and `b`
@@ -200,15 +227,17 @@ theorem mapIdx_add_lower2DiagonalUpdate_0_b [Vec Elem] (a : Fin n → ℝ) (b : 
 def differences [Vec Elem] {n} (x : Cont (n+1)) : Cont n := 
   x |> upper2DiagonalUpdate (λ _ => 1) (λ _ => -1)
     |> dropElem 1
-argument x
-  isLin := sorry_proof,
-  isSmooth, diff_simp
 
-function_properties differences [SemiHilbert Elem] {n} (x : Cont (n+1)) : Cont n
-argument x
-  hasAdjoint,
-  hasAdjDiff,
-  adjDiff
+-- function_properties differences [Vec Elem] {n} (x : Cont (n+1)) : Cont n
+-- argument x
+--   isLin := sorry_proof,
+--   isSmooth, diff_simp
+
+-- function_properties differences [SemiHilbert Elem] {n} (x : Cont (n+1)) : Cont n
+-- argument x
+--   hasAdjoint,
+--   hasAdjDiff,
+--   adjDiff
 
 
 -- Maybe custom implementation that does:
@@ -218,13 +247,16 @@ argument x
 def linearInterpolate [Vec Elem] {n} (t : ℝ) (x : Cont (n+1)) : Cont n := 
   x |> upper2DiagonalUpdate (λ _ => (1-t)) (λ _ => t)
     |> dropElem 1
-argument t
-  isSmooth, diff
-argument x
-  isLin := sorry_proof,
-  isSmooth, diff_simp
 
-function_properties linearInterpolate [SemiHilbert Elem] {n} (t : ℝ) (x : Cont (n+1)) : Cont n
-argument x
-  hasAdjoint, adj,
-  hasAdjDiff, adjDiff
+
+-- function_properties linearInterpolate [Vec Elem] {n} (t : ℝ) (x : Cont (n+1)) : Cont n
+-- argument t
+--   isSmooth, diff
+-- argument x
+--   isLin := sorry_proof,
+--   isSmooth, diff_simp
+
+-- function_properties linearInterpolate [SemiHilbert Elem] {n} (t : ℝ) (x : Cont (n+1)) : Cont n
+-- argument x
+--   hasAdjoint, adj,
+--   hasAdjDiff, adjDiff

@@ -66,13 +66,16 @@ macro_rules
     `(Unit)
 
 
--- TODO: Generalize this
-/-- `A[i,j]` is just a notation for `A[(i,j)]` -/
-macro A:term  noWs "[" id1:term "," id2:term "]" : term => `($A[($id1, $id2)])
-/-- `A[i,j,k]` is just a notation for `A[(i,j,k)]` -/
-macro A:term  noWs "[" id1:term "," id2:term "," id3:term "]" : term => `($A[($id1, $id2, $id3)])
-/-- `A[i,j,k,l]` is just a notation for `A[(i,j,k,l)]` -/
-macro A:term  noWs "[" id1:term "," id2:term "," id3:term "," id4:term "]" : term => `($A[($id1, $id2, $id3, $id4)])
+-- -- TODO: Generalize this
+-- /-- `A[i,j]` is just a notation for `A[(i,j)]` -/
+-- macro A:term  noWs "[" id1:term "," id2:term "]" : term => `($A[($id1, $id2)])
+-- /-- `A[i,j,k]` is just a notation for `A[(i,j,k)]` -/
+-- macro A:term  noWs "[" id1:term "," id2:term "," id3:term "]" : term => `($A[($id1, $id2, $id3)])
+-- /-- `A[i,j,k,l]` is just a notation for `A[(i,j,k,l)]` -/
+-- macro A:term  noWs "[" id1:term "," id2:term "," id3:term "," id4:term "]" : term => `($A[($id1, $id2, $id3, $id4)])
+
+macro A:term  noWs "[" id:term "," ids:term,* "]" : term => `($A[($id,$ids:term,*)])
+
 /-- `A[i,:]` is just a notation for `λ [j] => A[i,j]` -/
 macro A:term  noWs "[" id1:term "," ":" "]" : term => `(λ [j] => $A[($id1, j)])
 /-- `A[i,·]` is just a notation for `λ [j] => A[i,j]` -/
@@ -86,14 +89,15 @@ macro A:term  noWs "[" "·" "," id2:term "]" : term => `(λ i => $A[(i, $id2)])
 -- This should be improved such that we can specify the type of arguments
 -- This clashes with typeclass arguments, but who in their right mind
 -- starts a lambda arguments with a typeclass?
-syntax (name:=powTypeIntroSyntax) "λ" "[" Lean.Parser.ident,+ "]" " => " term : term
+syntax (name:=powTypeIntroSyntax) "λ" Lean.Parser.Term.funBinder+  " ==> " term : term
+syntax (name:=powTypeIntroSyntaxAlt) "⊞" Lean.Parser.Term.funBinder+  " , " term : term
 
-abbrev introPowElem {X I} {T : outParam Type} [Enumtype I] [PowType T I X] (f : I → X) : X^I := λ [i] ==> f i
+abbrev introPowElem {X I} {T : outParam Type} [Enumtype I] [PowType T I X] (f : I → X) : X^I := introElem λ i => f i
 
 macro_rules (kind := powTypeIntroSyntax)
-| `(λ [ $id1:ident ] => $b:term) => `(introPowElem λ $id1 => $b)
-| `(λ [ $id1:ident, $id2:ident ] => $b:term) => `(introPowElem λ ($id1, $id2) => $b)
-| `(λ [ $id1:ident, $id2:ident, $id3:ident ] => $b:term) => `(introPowElem λ ($id1, $id2, $id3) => $b)
+| `(λ $xs:funBinder* ==> $b:term) => `(introPowElem λ $xs* => $b)
+macro_rules (kind := powTypeIntroSyntaxAlt)
+| `(⊞ $xs:funBinder* , $b:term) => `(introPowElem λ $xs* => $b)
 
 end CustomNotation
 
@@ -147,15 +151,6 @@ abbrev append {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArray.appe
 abbrev drop (k : Nat := 1) (x : X^{n+k}) : X^{n} := dropElem k x
 abbrev push (x : X^{n}) (xi : X) (k : Nat := 1) : X^{n+k} := pushElem k xi x
 
--- TODO: prove properties of `drop'` and maybe replace `drop`
-def drop' (x : X^{n}) (k : Nat := 1) : X^{n-k} := 
-  let n' := n - k
-  if h : n = n' + k then
-    dropElem k (h ▸ x)
-  else
-    have h : n - k = 0 := sorry_proof
-    cast (by rw[h]) (empty : X^{0})
-
 /-- Computes: `y[i] := a i * x[i] + b i * x[i+1]` 
 
 Special case for `i=n-1`: `y[n-1] := a (n-1) * x[n-1]` -/
@@ -178,12 +173,12 @@ abbrev differences [Vec X] (x : X^{n+1}) : X^{n} :=
 abbrev linearInterpolate [Vec X] (t : ℝ) (x : X^{n+1}) : X^{n} :=
   GenericArray.linearInterpolate t x
 
-example [Vec X] : IsLin (λ x : X^{n} => x.upper2DiagonalUpdate (λ _ => 1) (λ _ => -1)) := by infer_instance
-example [Vec X] : IsLin (λ x : X^{n+1} => x.drop) := by infer_instance
-example [Vec X] (xi : X) : IsSmooth (λ x : X^{n} => x.push xi) := by infer_instance
+-- example [Vec X] : IsLin (λ x : X^{n} => x.upper2DiagonalUpdate (λ _ => 1) (λ _ => -1)) := by infer_instance
+-- example [Vec X] : IsLin (λ x : X^{n+1} => x.drop) := by infer_instance
+-- example [Vec X] (xi : X) : IsSmooth (λ x : X^{n} => x.push xi) := by infer_instance
 
-example [Vec X] : IsSmooth (λ x : X^{n+1} => x.linearInterpolate) := by infer_instance
-example [Vec X] (x : X^{n+1}) : IsSmooth (λ t => x.linearInterpolate t) := by infer_instance
+-- example [Vec X] : IsSmooth (λ x : X^{n+1} => x.linearInterpolate) := by infer_instance
+-- example [Vec X] (x : X^{n+1}) : IsSmooth (λ t => x.linearInterpolate t) := by infer_instance
 
 end VariableSize
 

@@ -53,14 +53,26 @@ macro_rules
 -- This should be improved such that we can specify the type of arguments
 -- This clashes with typeclass arguments, but who in their right mind
 -- starts a lambda arguments with a typeclass?
-syntax (name:=genericArrayIntroSyntax) "λ" "[" Lean.Parser.ident,+ "]" " ==> " term : term
+-- syntax (name:=genericArrayIntroSyntax) "λ" "[" Lean.Parser.ident,+ "]" " ==> " term : term
+
+-- macro_rules (kind := genericArrayIntroSyntax)
+-- | `(λ [ $id1:ident ] ==> $b:term) => `(introElem λ $id1 => $b)
+-- | `(λ [ $id1:ident, $id2:ident ] ==> $b:term) => `(introElem λ ($id1, $id2) => $b)
+-- | `(λ [ $id1:ident, $id2:ident, $id3:ident ] ==> $b:term) => `(introElem λ ($id1, $id2, $id3) => $b)
 
 
-macro_rules (kind := genericArrayIntroSyntax)
-| `(λ [ $id1:ident ] ==> $b:term) => `(introElem λ $id1 => $b)
-| `(λ [ $id1:ident, $id2:ident ] ==> $b:term) => `(introElem λ ($id1, $id2) => $b)
-| `(λ [ $id1:ident, $id2:ident, $id3:ident ] ==> $b:term) => `(introElem λ ($id1, $id2, $id3) => $b)
+-- syntax (name:=genericArrayIntroSyntax) "λ" funBinder+ " ==> " term : term
 
 
-variable {Cont} [GenericArray Cont (Fin 10) (Fin 10)]
-#check ((λ [i] ==> (i : Fin 10)))
+-- macro_rules (kind := genericArrayIntroSyntax)
+-- | `(λ $xs:funBinder* ==> $b:term) => `(introElem λ $xs* => $b)
+-- | `(λ [ $id1:ident, $id2:ident ] ==> $b:term) => `(introElem λ ($id1, $id2) => $b)
+-- | `(λ [ $id1:ident, $id2:ident, $id3:ident ] ==> $b:term) => `(introElem λ ($id1, $id2, $id3) => $b)
+
+
+-- variable {Cont} [GenericArray Cont (Fin 10) (Fin 10)]
+-- #check ((λ i ==> (i : Fin 10)))
+
+-- #check ((λ i ==> (i : Fin 10)))
+
+
