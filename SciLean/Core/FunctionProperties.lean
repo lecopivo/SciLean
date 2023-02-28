@@ -11,11 +11,11 @@ namespace SciLean
 -- isSmooth
 --------------------------------------------------------------------------------
 
-syntax "isSmooth" (":=" term)? : argProp
+syntax "isSmooth" bracketedBinder* (":=" term)? : argProp
 
 open Lean Parser.Term in
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isSmooth $[:= $proof:term]?) => do
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isSmooth $extraAssumptions:bracketedBinder* $[:= $proof:term]?) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg
 
@@ -25,9 +25,9 @@ macro_rules
   let finalCommand ←
     match proof with
     | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := by first | infer_instance | apply IsSmoothN.mk | (unfold $id; apply IsSmoothN.mk); done)
+      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := by first | infer_instance | apply IsSmoothN.mk | (unfold $id; apply IsSmoothN.mk); done)
     | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := $proof)
+      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := $proof)
   
   return finalCommand 
 
@@ -36,11 +36,11 @@ macro_rules
 -- isLin
 --------------------------------------------------------------------------------
 
-syntax "isLin" (":=" term)? : argProp
+syntax "isLin" bracketedBinder* (":=" term)? : argProp
 
 open Lean Parser.Term in
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isLin $[:= $proof:term]?) => do
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isLin $extraAssumptions:bracketedBinder* $[:= $proof:term]?) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg
 
@@ -50,9 +50,9 @@ macro_rules
   let finalCommand ←
     match proof with
     | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := by first | infer_instance | apply IsLinN.mk | (unfold $id; apply IsLinN.mk); done)
+      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := by first | infer_instance | apply IsLinN.mk | (unfold $id; apply IsLinN.mk); done)
     | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := $proof)
+      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := $proof)
   
   return finalCommand 
 
@@ -61,11 +61,13 @@ macro_rules
 -- hasAdjoint
 --------------------------------------------------------------------------------
 
-syntax "hasAdjoint" (":=" term)? : argProp
+syntax "hasAdjoint" bracketedBinder* (":=" term)? : argProp
 
 open Lean Parser.Term in
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec hasAdjoint $[:= $proof:term]?) => do
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $arg:argSpec 
+      hasAdjoint $extraAssumptions:bracketedBinder* $[:= $proof:term]?) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg
 
@@ -75,9 +77,9 @@ macro_rules
   let finalCommand ←
     match proof with
     | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := by first | infer_instance | apply HasAdjointN.mk | (unfold $id; apply HasAdjointN.mk); done)
+      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := by first | infer_instance | apply HasAdjointN.mk | (unfold $id; apply HasAdjointN.mk); done)
     | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := $proof)
+      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := $proof)
   
   return finalCommand 
 
@@ -92,11 +94,13 @@ theorem HasAdjDiffN.mk' {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilber
     have : HasAdjDiffNT n f := by constructor; constructor; infer_instance; apply h
     apply HasAdjDiffN.mk
 
-syntax "hasAdjDiff" (":=" term)? : argProp
+syntax "hasAdjDiff" bracketedBinder* (":=" term)? : argProp
 
 open Lean Parser.Term in
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec hasAdjDiff $[:= $proof:term]?) => do
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $arg:argSpec 
+      hasAdjDiff $extraAssumptions:bracketedBinder* $[:= $proof:term]?) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg
 
@@ -106,9 +110,9 @@ macro_rules
   let finalCommand ←
     match proof with
     | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := by apply HasAdjDiffN.mk'; symdiff; infer_instance; done)
+      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := by apply HasAdjDiffN.mk'; symdiff; infer_instance; done)
     | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := $proof)
+      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := $proof)
   
   return finalCommand 
 
@@ -130,13 +134,13 @@ theorem tangentMap_auto_proof {X Y} [Vec X] [Vec Y]
   : 𝒯 f = λ x dx => (f x, df x dx) := by simp[tangentMap, h]; done
   
 syntax maybeTangentMap := "𝒯"
-syntax defOrAbbrev "∂" (maybeTangentMap)? (mainArg)? (termWithProofOrConvTactic)? : argProp
+syntax defOrAbbrev "∂" (maybeTangentMap)? bracketedBinder* (mainArg)? (termWithProofOrConvTactic)? : argProp
 
 open Lean Parser.Term in
 macro_rules
 | `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
     argument $arg:argSpec 
-      $doa:defOrAbbrev ∂ $[$doTanMap:maybeTangentMap]? $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
+      $doa:defOrAbbrev ∂ $[$doTanMap:maybeTangentMap]? $extraAssumptions:bracketedBinder* $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg 
 
@@ -184,9 +188,9 @@ macro_rules
   let diff_command ←   
     if doa.raw[0].getAtomVal == "def" then
     `(def $definition_name $data.contextBinders* := $rhs
-      @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $(data.mkAppContext definition_name) := $proof)
+      @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof)
   else if doa.raw[0].getAtomVal == "abbrev" then
-    `(@[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $rhs := $proof)
+    `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof)
   else
     Macro.throwUnsupported
 
@@ -201,9 +205,9 @@ macro_rules
   let tangentMap_command : TSyntax `command ←   
     if doa.raw[0].getAtomVal == "def" then
       `(def $definition_name $data.contextBinders* := $rhsTM
-        @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhsTM = $(data.mkAppContext definition_name) := $proof)
+        @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhsTM = $(data.mkAppContext definition_name) := $proof)
     else if doa.raw[0].getAtomVal == "abbrev" then
-      `(@[diff] theorem $simp_theorem_name $data.contextBinders* : $lhsTM = $rhsTM := $tangentMapProof)
+      `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhsTM = $rhsTM := $tangentMapProof)
     else
       Macro.throwUnsupported
 
@@ -215,11 +219,13 @@ macro_rules
 --------------------------------------------------------------------------------
 
 
-syntax defOrAbbrev "𝒯" (mainArg)? (termWithProofOrConvTactic)? : argProp
+syntax defOrAbbrev "𝒯" bracketedBinder* (mainArg)? (termWithProofOrConvTactic)? : argProp
 
 open Lean Parser.Term in
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec $doa:defOrAbbrev 𝒯 $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $arg:argSpec 
+      $doa:defOrAbbrev 𝒯 $extraAssumptions:bracketedBinder* $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg 
 
@@ -255,13 +261,13 @@ macro_rules
   if doa.raw[0].getAtomVal == "def" then
     `(
     def $definition_name $data.contextBinders* := $rhs
-    @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $(data.mkAppContext definition_name) := $proof
+    @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof
     #print $definition_name
     #check $simp_theorem_name
     )
   else if doa.raw[0].getAtomVal == "abbrev" then
     `(
-    @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $rhs := $proof
+    @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof
     #check $simp_theorem_name
     )
   else
@@ -272,13 +278,13 @@ macro_rules
 -- †
 --------------------------------------------------------------------------------
 
-syntax defOrAbbrev "†" (mainArg)? (termWithProofOrConvTactic)? : argProp
+syntax defOrAbbrev "†" bracketedBinder* (mainArg)? (termWithProofOrConvTactic)? : argProp
 
 open Lean Parser.Term in
 macro_rules
 | `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
     argument $arg:argSpec 
-      $doa:defOrAbbrev † $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
+      $doa:defOrAbbrev † $extraAssumptions:bracketedBinder* $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg 
 
@@ -312,13 +318,13 @@ macro_rules
   if doa.raw[0].getAtomVal == "def" then
     `(
     def $definition_name $data.contextBinders* := $rhs
-    @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $(data.mkAppContext definition_name) := $proof
+    @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof
     #print $definition_name
     #check $simp_theorem_name
     )
   else if doa.raw[0].getAtomVal == "abbrev" then
     `(
-    @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $rhs := $proof
+    @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof
     #check $simp_theorem_name
     )
   else
@@ -332,13 +338,13 @@ theorem revDiff_auto_proof {X Y} [SemiHilbert X] [SemiHilbert Y]
 
 
 syntax maybeRevDiff := "ℛ"
-syntax defOrAbbrev "∂†" (maybeRevDiff)? (mainArg)? (termWithProofOrConvTactic)? : argProp
+syntax defOrAbbrev "∂†" (maybeRevDiff)? bracketedBinder* (mainArg)? (termWithProofOrConvTactic)? : argProp
 
 open Lean Parser.Term in
 macro_rules
 | `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
     argument $arg:argSpec 
-      $doa:defOrAbbrev ∂† $[$doRevDiff:maybeRevDiff]? $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
+      $doa:defOrAbbrev ∂† $[$doRevDiff:maybeRevDiff]? $extraAssumptions:bracketedBinder* $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg 
 
@@ -385,9 +391,9 @@ macro_rules
   let adjDiff_command ← 
     if doa.raw[0].getAtomVal == "def" then
       `(def $definition_name $data.contextBinders* := $rhs
-        @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $(data.mkAppContext definition_name) := $proof)
+        @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof)
     else if doa.raw[0].getAtomVal == "abbrev" then
-      `(@[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $rhs := $proof)
+      `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof)
     else
       Macro.throwUnsupported
 
@@ -404,9 +410,9 @@ macro_rules
   let revDiff_command ← 
     if doa.raw[0].getAtomVal == "def" then
       `(def $definition_name $data.contextBinders* := $rhsRD
-        @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhsRD = $(data.mkAppContext definition_name) := $proofRD)
+        @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhsRD = $(data.mkAppContext definition_name) := $proofRD)
     else if doa.raw[0].getAtomVal == "abbrev" then
-      `(@[diff] theorem $simp_theorem_name $data.contextBinders* : $lhsRD = $rhsRD := $revDiffProof)
+      `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhsRD = $rhsRD := $revDiffProof)
     else
       Macro.throwUnsupported
 
@@ -415,11 +421,13 @@ macro_rules
 --------------------------------------------------------------------------------
 
 
-syntax defOrAbbrev "ℛ" (mainArg)? (termWithProofOrConvTactic)? : argProp
+syntax defOrAbbrev "ℛ" bracketedBinder* (mainArg)? (termWithProofOrConvTactic)? : argProp
 
 open Lean Parser.Term in
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec $doa:defOrAbbrev ℛ $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $arg:argSpec 
+      $doa:defOrAbbrev ℛ $extraAssumptions:bracketedBinder* $[$dargs:mainArg]? $tpc:termWithProofOrConvTactic) => do
 
   let data ← FunctionPropertyData.parse id parms retType arg 
 
@@ -453,13 +461,13 @@ macro_rules
   if doa.raw[0].getAtomVal == "def" then
     `(
     def $definition_name $data.contextBinders* := $rhs
-    @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $(data.mkAppContext definition_name) := $proof
+    @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof
     #print $definition_name
     #check $simp_theorem_name
     )
   else if doa.raw[0].getAtomVal == "abbrev" then
     `(
-    @[diff] theorem $simp_theorem_name $data.contextBinders* : $lhs = $rhs := $proof
+    @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof
     #check $simp_theorem_name
     )
   else
