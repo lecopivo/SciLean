@@ -71,7 +71,7 @@ do
     -- check if other main arguments are valid and consecutive 
     for i in [1:data.mainArgNum] do
       if otherIdents[i-1]! != data.argName! (fstId+i) then
-        Macro.throwError s!"Invalid main argument {otherIdents[i-1]!} expected { data.argName! (fstId+i)}."
+        Macro.throwError s!"Invalid main argument {otherIdents[i-1]!} expected { data.argName! (fstId+i)}. Main arguments have to be consecutitive and in the same order as in the function definition."
 
     match trailing with 
     | none => pure () -- dbg_trace "rest not specified"

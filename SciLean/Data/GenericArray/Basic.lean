@@ -47,8 +47,8 @@ Alternative notation:
   3. `λ [x] => f x` this notation works only if the type `Cont` can be infered from the context
      Common use: `let array : Cont := λ [x] => f x` where the type asscription `: Cont` is important.
 -/
-class GenericArray (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam) 
-  extends GetElem Cont Idx Elem (λ _ _ => True), 
+class GenericArray (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam)
+  extends GetElem Cont Idx Elem (λ _ _ => True),
           SetElem Cont Idx Elem,
           IntroElem Cont Idx Elem
   where
@@ -60,9 +60,9 @@ class GenericArray (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> 
 attribute [simp] GenericArray.getElem_setElem_eq GenericArray.getElem_introElem
 attribute [default_instance] GenericArray.toGetElem GenericArray.toSetElem GenericArray.toIntroElem
 
-class GenericLinearArray (Cont : Nat → Type u) (Elem : Type w |> outParam) 
-  extends PushElem Cont Elem, 
-          DropElem Cont Elem, 
+class GenericLinearArray (Cont : Nat → Type u) (Elem : Type w |> outParam)
+  extends PushElem Cont Elem,
+          DropElem Cont Elem,
           ReserveElem Cont Elem
   where
   toGenericArray : ∀ n, GenericArray (Cont n) (Fin n) Elem
