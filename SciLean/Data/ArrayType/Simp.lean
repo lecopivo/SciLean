@@ -1,9 +1,9 @@
-import SciLean.Data.GenericArray.Properties
+import SciLean.Data.ArrayType.Properties
 
 namespace SciLean
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [GenericArray Cont Idx Elem] [Enumtype Idx] [Nonempty Idx]
+variable [ArrayType Cont Idx Elem] [Enumtype Idx] [Nonempty Idx]
 
 @[simp]
 theorem sum_setElem_zero [Vec Elem] (f : Idx → Elem) :

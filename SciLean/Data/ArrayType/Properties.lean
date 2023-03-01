@@ -1,9 +1,9 @@
-import SciLean.Data.GenericArray.Algebra
+import SciLean.Data.ArrayType.Algebra
 
 namespace SciLean
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [GenericArray Cont Idx Elem] [Enumtype Idx] 
+variable [ArrayType Cont Idx Elem] [Enumtype Idx] 
 
 -- There are some issues working with `getElem : (x : Cont) → (i : Idx) → Dom x i → Elem`
 -- bacause it has inherently dependent types plus `Dom x i : Prop` and 

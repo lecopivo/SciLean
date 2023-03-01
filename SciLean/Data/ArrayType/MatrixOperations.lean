@@ -1,12 +1,12 @@
-import SciLean.Data.GenericArray.Notation
-import SciLean.Data.GenericArray.Properties
+import SciLean.Data.ArrayType.Notation
+import SciLean.Data.ArrayType.Properties
 
 namespace SciLean
-namespace GenericArray
-section GenericLinearArray
+namespace ArrayType
+section LinearArrayType
 
 variable {Cont : Nat → Type} {Elem : Type |> outParam}
-variable [GenericLinearArray Cont Elem]
+variable [LinearArrayType Cont Elem]
 
 
 --------------------------------------------------------------------------------

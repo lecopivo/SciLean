@@ -1,5 +1,5 @@
 import SciLean.Data.DataArray.PlainDataType
-import SciLean.Data.GenericArray
+import SciLean.Data.ArrayType
 
 namespace SciLean
 

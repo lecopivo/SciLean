@@ -1,6 +1,6 @@
-import SciLean.Data.GenericArray.Basic
-import SciLean.Data.GenericArray.Notation
-import SciLean.Data.GenericArray.MatrixOperations
+import SciLean.Data.ArrayType.Basic
+import SciLean.Data.ArrayType.Notation
+import SciLean.Data.ArrayType.MatrixOperations
 
 
 namespace SciLean
@@ -8,7 +8,7 @@ namespace SciLean
 /-- This class says that `T` is the canonical type to store `numOf I` element of `X`. 
 
 This class allows for the notation `X^I` and `T = X^I`. -/
-class PowType (T : outParam Type) (I X : Type) extends GenericArray T I X
+class PowType (T : outParam Type) (I X : Type) extends ArrayType T I X
 
 /-- Obtains the type of `X^I` by providing `X` and `I` -/
 abbrev PowTypeCarrier (X I : Type) {T : outParam Type} [PowType T I X] := T
@@ -16,7 +16,7 @@ abbrev PowTypeCarrier (X I : Type) {T : outParam Type} [PowType T I X] := T
 /-- This class says that `T n` is the canonical type to store `n` elements of `X`.
 
 This class allows for the notation `X^{n}` and `T n = X^{n}`. -/
-class LinearPowType (T : outParam (Nat → Type)) (X : Type) extends GenericLinearArray T X
+class LinearPowType (T : outParam (Nat → Type)) (X : Type) extends LinearArrayType T X
 
 instance (T : Nat → Type) (X : Type) [LinearPowType T X] (n : Nat) : PowType (T n) (Fin n) X := PowType.mk
 
@@ -35,7 +35,7 @@ The precise type of `X^I` depends on `X` and `I` and it is determined by the typ
 notation X "^" I => PowTypeCarrier X I
 
 -- instance (T : Nat → Type) [∀ n, PowType (T n) (Fin n) X] [DropElem T X] [PushElem T X] [ReserveElem T X] 
---   : GenericLinearArray T X := GenericLinearArray.mk (by infer_instance) sorry_proof sorry_proof sorry_proof
+--   : LinearArrayType T X := LinearArrayType.mk (by infer_instance) sorry_proof sorry_proof sorry_proof
 
 
 section CustomNotation
@@ -110,9 +110,9 @@ variable {X I} {T : outParam Type} [Enumtype I] [PowType T I X] -- [Inhabited X]
 abbrev get (x : X^I) (i : I) : X := getElem x i True.intro
 abbrev set (x : X^I) (i : I) (xi : X) : X^I := setElem x i xi
 abbrev intro (f : I → X) : X^I := introElem f
-abbrev modify (x : X^I) (i : I) (f : X → X) : X^I := GenericArray.modifyElem x i f
-abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := GenericArray.mapIdx f x
-abbrev map (f : X → X) (x : X^I) : X^I := GenericArray.map f x
+abbrev modify (x : X^I) (i : I) (f : X → X) : X^I := ArrayType.modifyElem x i f
+abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := ArrayType.mapIdx f x
+abbrev map (f : X → X) (x : X^I) : X^I := ArrayType.map f x
 
 def toArray (v : X^I) : Array X := Id.run do
   let mut array : Array X := Array.mkEmpty (numOf I)
@@ -144,10 +144,10 @@ end FixedSize
 section VariableSize
 variable {X} {T : outParam (Nat → Type)} [LinearPowType T X]
 
-abbrev empty : X^{0} := GenericArray.empty 
-abbrev split {n m : Nat} (x : X^{n+m}) : X^{n} × X^{m} := GenericArray.split x
-abbrev merge {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArray.append x y
-abbrev append {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArray.append x y
+abbrev empty : X^{0} := ArrayType.empty 
+abbrev split {n m : Nat} (x : X^{n+m}) : X^{n} × X^{m} := ArrayType.split x
+abbrev merge {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := ArrayType.append x y
+abbrev append {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := ArrayType.append x y
 abbrev drop (k : Nat := 1) (x : X^{n+k}) : X^{n} := dropElem k x
 abbrev push (x : X^{n}) (xi : X) (k : Nat := 1) : X^{n+k} := pushElem k xi x
 
@@ -155,23 +155,23 @@ abbrev push (x : X^{n}) (xi : X) (k : Nat := 1) : X^{n+k} := pushElem k xi x
 
 Special case for `i=n-1`: `y[n-1] := a (n-1) * x[n-1]` -/
 abbrev generateUpperTriangularArray (f : (n' : Nat) → X^{n'+1} → X^{n'}) (x : X^{n}) : X^{(n*(n+1))/2} := 
-  GenericArray.generateUpperTriangularArray f x
+  ArrayType.generateUpperTriangularArray f x
 abbrev upper2DiagonalUpdate [Vec X] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : X^{n}) : X^{n} :=
-  GenericArray.upper2DiagonalUpdate a b x
+  ArrayType.upper2DiagonalUpdate a b x
 
 /-- Computes: `y[i] := a i * x[i] + b (i-1) * x[i-1]` 
 
 Special case for `i=0`: `y[0] := a 0 * x[0]` -/
 abbrev lower2DiagonalUpdate [Vec X] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : X^{n}) : X^{n} :=
-  GenericArray.lower2DiagonalUpdate a b x
+  ArrayType.lower2DiagonalUpdate a b x
 
 /-- Computes: `y[i] := x[i+1] - x[i]` -/
 abbrev differences [Vec X] (x : X^{n+1}) : X^{n} :=
-  GenericArray.differences x
+  ArrayType.differences x
 
 /-- Computes: `y[i] := (1-t) * x[i] + t * x[i+1]` -/
 abbrev linearInterpolate [Vec X] (t : ℝ) (x : X^{n+1}) : X^{n} :=
-  GenericArray.linearInterpolate t x
+  ArrayType.linearInterpolate t x
 
 -- example [Vec X] : IsLin (λ x : X^{n} => x.upper2DiagonalUpdate (λ _ => 1) (λ _ => -1)) := by infer_instance
 -- example [Vec X] : IsLin (λ x : X^{n+1} => x.drop) := by infer_instance

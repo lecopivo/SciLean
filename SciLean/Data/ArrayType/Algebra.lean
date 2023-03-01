@@ -1,10 +1,10 @@
-import SciLean.Data.GenericArray.Basic
+import SciLean.Data.ArrayType.Basic
 
 namespace SciLean 
-namespace GenericArray
+namespace ArrayType
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [GenericArray Cont Idx Elem] [Enumtype Idx] 
+variable [ArrayType Cont Idx Elem] [Enumtype Idx] 
 
 -- The above instance is giving problems in the following examples.
 -- TOOD: investigate

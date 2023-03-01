@@ -1,5 +1,5 @@
 import SciLean.Prelude
-import SciLean.Algebra
+import SciLean.Core.Real
 
 namespace SciLean
 
@@ -153,7 +153,7 @@ def Prod.byteTypeProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType (
 
 /-- Product of `PlainDataType` is `PlainDataType`
 
-**Instance diamond** This instance is currently prefered over `instPlainDataTypeEnumtype`.
+**Instance diamond:** This instance is currently prefered over `instPlainDataTypeEnumtype`.
 
 This instance makes a diamond together with `instPlainDataTypeEnumtype`  when `α` and `β` are `Enumtype`. Using this instance is less computationally intensive when writting and reading from `DataArra` but it consumes more memory. The `instPlainDataTypeEnumtype` is doing the exact opposite.
 

@@ -47,7 +47,7 @@ Alternative notation:
   3. `λ [x] => f x` this notation works only if the type `Cont` can be infered from the context
      Common use: `let array : Cont := λ [x] => f x` where the type asscription `: Cont` is important.
 -/
-class GenericArray (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam)
+class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam)
   extends GetElem Cont Idx Elem (λ _ _ => True),
           SetElem Cont Idx Elem,
           IntroElem Cont Idx Elem
@@ -57,30 +57,30 @@ class GenericArray (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> 
   getElem_setElem_neq : ∀ (i j : Idx) (val : Elem) (arr : Cont), i ≠ j → (setElem arr i val)[j] = arr[j]
   getElem_introElem : ∀ f i, (introElem f)[i] = f i
 
-attribute [simp] GenericArray.getElem_setElem_eq GenericArray.getElem_introElem
-attribute [default_instance] GenericArray.toGetElem GenericArray.toSetElem GenericArray.toIntroElem
+attribute [simp] ArrayType.getElem_setElem_eq ArrayType.getElem_introElem
+attribute [default_instance] ArrayType.toGetElem ArrayType.toSetElem ArrayType.toIntroElem
 
-class GenericLinearArray (Cont : Nat → Type u) (Elem : Type w |> outParam)
+class LinearArrayType (Cont : Nat → Type u) (Elem : Type w |> outParam)
   extends PushElem Cont Elem,
           DropElem Cont Elem,
           ReserveElem Cont Elem
   where
-  toGenericArray : ∀ n, GenericArray (Cont n) (Fin n) Elem
+  toArrayType : ∀ n, ArrayType (Cont n) (Fin n) Elem
 
   pushElem_getElem : ∀ n k val (i : Fin (n+k)) (x : Cont n), n ≤ i.1 → 
-    have : ∀ n', GetElem (Cont n') (Fin n') Elem (λ _ _ => True) := λ n' => (toGenericArray n').toGetElem
+    have : ∀ n', GetElem (Cont n') (Fin n') Elem (λ _ _ => True) := λ n' => (toArrayType n').toGetElem
     (pushElem k val x)[i] = val
 
   dropElem_getElem : ∀ n k (i : Fin n) (x : Cont (n+k)), 
-    have : ∀ n', GetElem (Cont n') (Fin n') Elem (λ _ _ => True) := λ n' => (toGenericArray n').toGetElem
+    have : ∀ n', GetElem (Cont n') (Fin n') Elem (λ _ _ => True) := λ n' => (toArrayType n').toGetElem
     (dropElem k x)[i] = x[(⟨i.1, sorry_proof⟩ : Fin (n+k))]
 
   reserveElem_id : ∀ (x : Cont n) (k), reserveElem k x = x
   
 
-instance {T} {Y : outParam Type} [inst : GenericLinearArray T Y] (n) : GenericArray (T n) (Fin n) Y := inst.toGenericArray n
+instance {T} {Y : outParam Type} [inst : LinearArrayType T Y] (n) : ArrayType (T n) (Fin n) Y := inst.toArrayType n
 
-namespace GenericArray
+namespace ArrayType
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
 
@@ -92,16 +92,16 @@ def modifyElem [GetElem Cont Idx Elem λ _ _ => True] [SetElem Cont Idx Elem]
   setElem arr i (f (arr[i]))
 
 @[simp]
-theorem getElem_modifyElem_eq [GenericArray Cont Idx Elem] (cont : Cont) (idx : Idx) (f : Elem → Elem)
+theorem getElem_modifyElem_eq [ArrayType Cont Idx Elem] (cont : Cont) (idx : Idx) (f : Elem → Elem)
   : (modifyElem cont idx f)[idx] = f cont[idx] := by simp[modifyElem]; done
 
 @[simp]
-theorem getElem_modifyElem_neq [inst : GenericArray Cont Idx Elem] (arr : Cont) (i j : Idx) (f : Elem → Elem)
-  : i ≠ j → (modifyElem arr i f)[j] = arr[j] := by simp[modifyElem]; apply GenericArray.getElem_setElem_neq; done
+theorem getElem_modifyElem_neq [inst : ArrayType Cont Idx Elem] (arr : Cont) (i j : Idx) (f : Elem → Elem)
+  : i ≠ j → (modifyElem arr i f)[j] = arr[j] := by simp[modifyElem]; apply ArrayType.getElem_setElem_neq; done
 
 -- Maybe turn this into a class and this is a default implementation
 -- For certain types there might be a faster implementation
-def mapIdx [GenericArray Cont Idx Elem] [Enumtype Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
+def mapIdx [ArrayType Cont Idx Elem] [Enumtype Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
   let mut arr := arr
   for (i,_) in Enumtype.fullRange Idx do
     -- This notation should correctly handle aliasing 
@@ -111,18 +111,18 @@ def mapIdx [GenericArray Cont Idx Elem] [Enumtype Idx] (f : Idx → Elem → Ele
   arr
 
 @[simp]
-theorem getElem_mapIdx [GenericArray Cont Idx Elem] [Enumtype Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
+theorem getElem_mapIdx [ArrayType Cont Idx Elem] [Enumtype Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
   : (mapIdx f arr)[i] = f i arr[i] := sorry_proof
 
-def map [GenericArray Cont Idx Elem] [Enumtype Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
+def map [ArrayType Cont Idx Elem] [Enumtype Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
   mapIdx (λ _ => f) arr
 
 @[simp]
-theorem getElem_map [GenericArray Cont Idx Elem] [Enumtype Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
+theorem getElem_map [ArrayType Cont Idx Elem] [Enumtype Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
   : (map f arr)[i] = f arr[i] := sorry_proof
 
 
-instance [GenericArray Cont Idx Elem] [ToString Elem] [Enumtype Idx] : ToString (Cont) := ⟨λ a => 
+instance [ArrayType Cont Idx Elem] [ToString Elem] [Enumtype Idx] : ToString (Cont) := ⟨λ a => 
   match Iterable.first (ι:=Idx) with
   | some fst => Id.run do
     let mut s : String := s!"'[{a[fst]}"
@@ -134,7 +134,7 @@ instance [GenericArray Cont Idx Elem] [ToString Elem] [Enumtype Idx] : ToString 
 
 section Operations
 
-  variable [GenericArray Cont Idx Elem] [Enumtype Idx] 
+  variable [ArrayType Cont Idx Elem] [Enumtype Idx] 
 
   instance [Add Elem] : Add Cont := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
   instance [Sub Elem] : Sub Cont := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
@@ -179,13 +179,13 @@ section Operations
 
 end Operations
 
-end GenericArray
+end ArrayType
 
 
-namespace GenericArray
+namespace ArrayType
 
   variable {Cont : Nat → Type} {Elem : Type |> outParam}
-  variable [GenericLinearArray Cont Elem]
+  variable [LinearArrayType Cont Elem]
 
   def empty : Cont 0 := introElem λ i => 
     absurd (a := ∃ n : Nat, n < 0) 
@@ -202,4 +202,4 @@ namespace GenericArray
       then x[⟨i.1,sorry_proof⟩]
       else y[⟨i.1-n, sorry_proof⟩]
 
-end GenericArray
+end ArrayType
