@@ -250,6 +250,24 @@ argument x
 
 
 --------------------------------------------------------------------------------
+-- sum - ∑
+--------------------------------------------------------------------------------
+
+function_properties sum {X ι} [Vec X] [Enumtype ι] (f : ι → X) : X
+argument f
+  isLin := sorry_proof,
+  isSmooth,
+  abbrev ∂ 𝒯 := sum df by symdiff
+
+function_properties sum {X ι} [SemiHilbert X] [Enumtype ι] (f : ι → X) : X
+argument f
+  hasAdjoint := sorry_proof,
+  abbrev † := λ _ => f' by sorry_proof,
+  hasAdjDiff,
+  abbrev ∂† ℛ := λ _ => df' by unfold adjointDifferential; symdiff; symdiff
+
+
+--------------------------------------------------------------------------------
 -- SmoothMap.val
 --------------------------------------------------------------------------------
 
@@ -266,7 +284,7 @@ argument x
   isSmooth := sorry_proof,
   abbrev ∂ := ∂ f x dx by unfold Smooth.differential; symdiff,
   abbrev 𝒯 := 𝒯 f x dx by unfold Smooth.tangentMap; symdiff
-  
+
 
 --------------------------------------------------------------------------------
 -- SmoothMap.mk'
