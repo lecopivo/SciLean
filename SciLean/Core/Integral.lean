@@ -102,7 +102,10 @@ theorem variationalGradient_on_integral (F : (X⟿Y) → (X⟿ℝ)) [inst : HasA
 by 
   have _ := inst.1.1
   have _ := inst.1.2
-  simp[variationalGradient,adjointDifferential,tangentMap]
+  unfold variationalGradient
+  unfold adjointDifferential
+  symdiff
+  symdiff
   done
 
 

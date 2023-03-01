@@ -1,5 +1,5 @@
 import SciLean.Core.Integral
-import SciLean.Core.CoreFunctionProperties
+import SciLean.Core.AdjDiff
 
 
 namespace SciLean
@@ -153,13 +153,18 @@ by
   apply elemwise_adjoint (λ x y => y + x * y)
   done
 
+instance : HasAdjoint (Smooth.differentialScalar : (ℝ⟿X) → (ℝ⟿X)) := sorry_proof
 
--- set_option synthInstance.maxSize 2000 in
--- example  : HasAdjointT fun (g : ℝ⟿Y) => fun x ⟿ g x + ⅆ g x := 
--- by 
---   have : HasAdjointNT 2 (λ (g dg : ℝ ⟿ X) => λ x ⟿ g x + dg x) := sorry_proof
---   apply scomb_highorder_adjoint (λ g (dg : ℝ ⟿ X) => λ x ⟿ g x + dg x) (λ g => ⅆ g)
---   infer_instance
+example  : HasAdjointT fun (g : ℝ⟿Y) => ⅆ g := by infer_instance
+example  : HasAdjointT fun (g : ℝ⟿Y) => fun x ⟿ ⅆ g x := by infer_instance
+
+
+set_option synthInstance.maxSize 20000 in
+example  : HasAdjointT fun (g : ℝ⟿Y) => fun x ⟿ g x + ⅆ g x := 
+by 
+  have : HasAdjointNT 2 (λ (g dg : ℝ ⟿ X) => λ x ⟿ g x + dg x) := sorry_proof
+  apply scomb_highorder_adjoint (λ g (dg : ℝ ⟿ X) => λ x ⟿ g x + dg x) (λ g => ⅆ g)
+  infer_instance
 
 
 -- set_option trace.Meta.synthPending true in
