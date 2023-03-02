@@ -138,6 +138,9 @@ instance diag.arg_x.isSmooth
   (g₂ : X → Y₂) [IsSmoothT g₂]
   : IsSmoothT (λ x => f (g₁ x) (g₂ x)) := by infer_instance
 
+-- instance eval.arg_f.isSmooth
+--   (a : α)
+--   : IsSmoothT (λ (f : α → X) => f a) := by infer_instance
 
 --------------------------------------------------------------------------------
 -- Highorder unification instances

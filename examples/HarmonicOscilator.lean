@@ -1,9 +1,10 @@
 -- import SciLean.Core.Functions
-import SciLean.Mechanics
-import SciLean.Operators.ODE
+import SciLean
+import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
-import SciLean.Tactic.LiftLimit
-import SciLean.Tactic.FinishImpl
+
+-- import SciLean.Tactic.LiftLimit
+-- import SciLean.Tactic.FinishImpl
 
 open SciLean
 
@@ -11,15 +12,15 @@ open SciLean
 def H (m k : ℝ) (x p : ℝ) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
 
 approx solver (m k : ℝ) (steps : Nat)
-  := (ode_solve (HamiltonianSystem (H m k)))
+  := odeSolve (λ t (x,p) => ( ∇ (p':=p), H m k x  p',
+                             -∇ (x':=x), H m k x' p))
 by
-  -- Unfold Hamiltonian definition and compute gradients
-  unfold HamiltonianSystem
+  -- Unfold Hamiltonian and compute gradients
   unfold H
-  simp [hold]
+  symdiff; symdiff
 
   -- Apply RK4 method
-  rw [ode_solve_fixed_dt runge_kutta4_step]
+  rw [odeSolve_fixed_dt runge_kutta4_step]
   approx_limit steps; simp; intro steps';
 
 
@@ -29,16 +30,16 @@ def main : IO Unit := do
   let m := 1.0
   let k := 10.0
 
-  let evolve := (solver m k substeps).val
-
   let Δt := 0.1
   let x₀ := 1.0
   let p₀ := 0.0
+  let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
   for _ in [0:40] do
   
-    (x, p) := evolve Δt (x, p)
+    (x, p) := solver m k substeps 0 (x, p) Δt
+    t += Δt
 
     -- print
     for (j : Nat) in [0:20] do
@@ -46,4 +47,4 @@ def main : IO Unit := do
         IO.print "o"
     IO.println ""
 
--- #eval main
+#eval main

@@ -1,5 +1,3 @@
-import SciLean.Algebra
-
 namespace SciLean
 
 def has_limit {X} (lim : Nat → X) : Prop := sorry

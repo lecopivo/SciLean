@@ -1,6 +1,6 @@
 -- import SciLean.Operators
 import SciLean.Core
-import SciLean.Functions.OdeSolve
+-- import SciLean.Functions.OdeSolve
 import SciLean.Tactic.BubbleLimit
 
 namespace SciLean
@@ -147,6 +147,10 @@ def Approx.exact {α} {a : α} : Approx a := ApproxSolution.exact a rfl
 def Approx.limit {α} {aₙ : ℕ → α} (x : (n : ℕ) → Approx (aₙ n)) (n₀ : ℕ)
   : Approx (limit aₙ) := ApproxSolution.approx (λ n x => x = (aₙ n)) sorry n₀ x "" "" 
 
+
+-- instance {α} (a : α) : Coe (Approx a) α := ⟨λ approx => approx.val⟩
+instance {α β : Type _} (f : α → β) : CoeFun (Approx f) (λ _ => α → β) := ⟨λ approx => approx.val⟩
+
 syntax declModifiers "approx " declId bracketedBinder* (":" term)? ":=" term " by " tacticSeq : command
 
 macro_rules
@@ -164,7 +168,8 @@ macro "approx_limit " n0:term : tactic =>
 
 approx bar (s : ℝ) (n₀ : ℕ) := ∇ (limit λ n => λ x : ℝ => (s + (1:ℝ)/(n:ℝ)) * x)
 by
-  approx_limit n₀; intro n; simp
-  simp[gradient]
+  approx_limit n₀; intro n;
+  symdiff
+
 
 

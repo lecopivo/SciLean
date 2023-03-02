@@ -16,7 +16,6 @@ end Function
 namespace Lean.Elab.Tactic.Conv
 open Meta
 
-
 open Lean 
 open Lean.Meta
 open Lean.Elab.Tactic
@@ -98,12 +97,22 @@ fun stx => withMainContext do
           changeLhs (← removelambdalet lhs (← getLCtx))
           pure ()
 
-
 example : (λ x : Nat => x + x) = (λ _ => 0) := 
 by 
   rmlamlet
   admit
   done
+
+open Function
+
+example (sum : {k : Nat} → (Fin k → Nat) → Nat) (A : Fin n → Fin m → Nat) (x : Fin m → Nat) 
+  : (λ i => sum λ j => A i j * x j) = (λ _ => 0) := 
+by 
+  rmlamlet
+  admit
+  done
+
+
 
 -- syntax (name := print_goal) "print_goal" : conv
 
