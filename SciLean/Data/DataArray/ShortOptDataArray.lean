@@ -167,20 +167,20 @@ namespace ShortOptDataArray
   instance : ReserveElem (ShortOptDataArray α) α where
     reserveElem := reserve
 
-  instance : GenericArray (ShortOptDataArray α n) (Fin n) α  where
+  instance : ArrayType (ShortOptDataArray α n) (Fin n) α  where
     ext := sorry_proof
     getElem_setElem_eq := sorry_proof
     getElem_setElem_neq := sorry_proof
     getElem_introElem := sorry_proof
 
-  instance : GenericArray (ShortOptDataArray α (numOf ι)) ι α  where
+  instance : ArrayType (ShortOptDataArray α (numOf ι)) ι α  where
     ext := sorry_proof
     getElem_setElem_eq := sorry_proof
     getElem_setElem_neq := sorry_proof
     getElem_introElem := sorry_proof
 
-  instance : GenericLinearArray (ShortOptDataArray α) α where
-    toGenericArray := by infer_instance
+  instance : LinearArrayType (ShortOptDataArray α) α where
+    toArrayType := by infer_instance
 
     pushElem_getElem := sorry_proof
     dropElem_getElem := sorry_proof

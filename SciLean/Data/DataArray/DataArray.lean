@@ -115,26 +115,26 @@ instance : DropElem (DataArrayN α) α where
 instance : ReserveElem (DataArrayN α) α where
   reserveElem k xs := ⟨xs.1.reserve k, sorry_proof⟩
 
-instance : GenericArray (DataArrayN α n) (Fin n) α  where
+instance : ArrayType (DataArrayN α n) (Fin n) α  where
   ext := sorry_proof
   getElem_setElem_eq := sorry_proof
   getElem_setElem_neq := sorry_proof
   getElem_introElem := sorry_proof
 
-instance : GenericLinearArray (DataArrayN α) α  where
-  toGenericArray := by infer_instance
+instance : LinearArrayType (DataArrayN α) α  where
+  toArrayType := by infer_instance
   pushElem_getElem := sorry_proof
   dropElem_getElem := sorry_proof
   reserveElem_id := sorry_proof
 
-instance : GenericArray (DataArrayN α (numOf ι)) ι α  where
+instance : ArrayType (DataArrayN α (numOf ι)) ι α  where
   ext := sorry_proof
   getElem_setElem_eq := sorry_proof
   getElem_setElem_neq := sorry_proof
   getElem_introElem := sorry_proof
 
 @[infer_tc_goals_rl]
-instance {Cont ι α : Type} [Enumtype ι] [Inhabited α] [pd : PlainDataType α] [GenericArray Cont ι α] : PlainDataType Cont where
+instance {Cont ι α : Type} [Enumtype ι] [Inhabited α] [pd : PlainDataType α] [ArrayType Cont ι α] : PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType => 
       -- TODO: Fixme !!!!
