@@ -4,6 +4,7 @@ import SciLean.Tactic.CustomSimp.Main
 
 import SciLean.Tactic.AutoDiff.LetDiff
 import SciLean.Core.Defs
+import SciLean.Core.Attributes
 
 -- import SciLean.AutoImpl
 -- import SciLean.Core
@@ -34,8 +35,8 @@ partial def autoDiffPre (e : Expr) (rep := false) : SimpM Step := do
   -- let allThms := (← read).simpTheorems
 
   for thms in allThms do
-    if let some r ← rewrite? e thms.pre thms.erased DefaultMethods.discharge? (tag := "pre") (rflOnly := false) then
-      -- trace[Meta.Tactic.simp] s!"Simplified to: {← Meta.ppExpr r.expr}"
+    if let some r ← Meta.CustomSimp.rewrite? e thms.pre thms.erased DefaultMethods.discharge? (tag := "pre") (rflOnly := false) then
+      trace[Meta.Tactic.simp] s!"Simplified to: {← Meta.ppExpr r.expr}"
       return ← andThen (Step.visit r) (λ e => autoDiffPre e)
   return Step.visit {expr := e}
 
@@ -105,6 +106,7 @@ macro "symdiff" : conv =>
 macro "symdiff" : tactic => 
   `(tactic| (symdiff_core (config := {singlePass := true, zeta := false, iota := false}) only [/- ↓ diff (problem is that ↓ is ignored),-/diff_simp, SciLean.differentialScalar, SciLean.gradient, SciLean.tangentMap, SciLean.reverseDifferential]; 
              try simp (config := {zeta := true}) only [diff_simp];))
+
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
 -- -- set_option trace.Meta.Tactic.simp.discharge true in
