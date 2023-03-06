@@ -32,3 +32,4 @@ theorem adjDiff_sum_eval
   := by unfold adjointDifferential
         have  := λ i j => (hf i j).1.1
         symdiff; symdiff; sorry_proof
+
