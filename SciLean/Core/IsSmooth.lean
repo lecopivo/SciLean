@@ -143,25 +143,22 @@ instance diag.arg_x.isSmooth
 --   : IsSmoothT (λ (f : α → X) => f a) := by infer_instance
 
 --------------------------------------------------------------------------------
--- Highorder unification instances
+-- Unification hints
 --------------------------------------------------------------------------------
 
-instance(priority:=low) comp.arg_x.isSmooth_unif1 {X Y Z} [Vec X] [Vec Y] [Vec Z] {α β : Type} (a)
-  (f : Y → α → Z) [IsSmoothT λ y => f y a]
-  (g : X → Y) [IsSmoothT g] 
-  : IsSmoothT (λ x => f (g x) a) :=
-by
-  try infer_instance
-  apply comp.arg_x.isSmooth (λ y => f y a)
+unif_hint (f? : Y → Z) (g? : X → Y) (f : Y → α → Z) (g : X → Y) (a : α) where
+  f? =?= λ x => f x a
+  g? =?= g
+  |-
+  IsSmoothT (λ x => f? (g? x)) =?= IsSmoothT (λ x => f (g x) a)
 
-
-instance(priority:=low+1) comp.arg_x.isSmooth_unif {X Y Z} [Vec X] [Vec Y] [Vec Z] {α β : Type} (a b)
-  (f : Y → α → β → Z) [IsSmoothT λ y => f y a b]
-  (g : X → Y) [IsSmoothT g] 
-  : IsSmoothT (λ x => f (g x) a b) :=
-by
-  try infer_instance
-  apply comp.arg_x.isSmooth (λ y => f y a b)
+unif_hint (f? : Y → Z) (g? : X → Y) 
+  (f : Y → α → β → Z) (g : X → Y) (a : α) (b : β) 
+where
+  f? =?= λ x => f x a b
+  g? =?= g
+  |-
+  IsSmoothT (λ x => f? (g? x)) =?= IsSmoothT (λ x => f (g x) a b)
 
 
 --------------------------------------------------------------------------------
