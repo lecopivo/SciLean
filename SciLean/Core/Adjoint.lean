@@ -129,9 +129,9 @@ by
   rw [comp.arg_x.adj_simp (λ (x : (i : ι) → Z i) => x i) f]
   simp; done
 
-----------------------------------------------------------------------
-  -- These theorems are problematic when used with simp
-
+--------------------------------------------------------------------------------
+-- Unification Hints
+--------------------------------------------------------------------------------
 
 unif_hint comp.arg_x.adj_simp.unif_hint_1 (f? : Y → Z)
   (f :  Y → α → Z) (g  : X → Y) (a : α)  
