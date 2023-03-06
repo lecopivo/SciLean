@@ -114,8 +114,7 @@ namespace Real
   instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
 
   -- Used for Kroneckers delta as  `δᵢⱼ = [[i = j]]`
-  instance : Coe Bool ℝ := ⟨λ b => if b then (1:ℝ) else (0:ℝ)⟩
-  macro "[[" p:term "]]" : term => `((($p : Bool) : ℝ))
+  notation "[[" p "]]" => if p then (1:ℝ) else (0:ℝ)
 
   -- instance : HPow ℝ ℤ ℝ := ⟨λ x n => x^(n : ℝ)⟩
   -- ⟨λ x n => 
