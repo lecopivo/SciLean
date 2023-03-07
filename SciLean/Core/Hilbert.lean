@@ -14,10 +14,10 @@ namespace Inner
   def normSqr {X} [Inner X] (x : X) := ⟪x, x⟫
   def norm {X} [Inner X] (x : X) := (normSqr x).sqrt
 
-  notation "∥" x "∥²" => normSqr x
-  notation "∥" x "∥" => norm x
-
 end Inner
+
+notation " ‖ " x " ‖² " => Inner.normSqr x
+notation " ‖ " x " ‖ " => Inner.norm x
 
 class TestFunctions (X : Type) where
   TestFun : X → Prop
