@@ -74,6 +74,11 @@ namespace SciLean
     dualBasis := λ (i,j) => ⟨λ x => DualBasis.dualProj i x * 𝕖'[Y] j, sorry_proof⟩
     dualProj := λ (i,j) f => DualBasis.dualProj j (f (𝕖 i))
 
+  open BasisDuality in
+  @[infer_tc_goals_rl]
+  instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : BasisDuality (X ⊸ Y) where
+    toDual   := λ f => ⟨λ x => toDual (f (fromDual x)), sorry_proof⟩
+    fromDual := λ f => ⟨λ x => fromDual (f (toDual x)), sorry_proof⟩
 
   @[infer_tc_goals_rl]
   instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : FinVec (X ⊸ Y) (ι×κ) where     
@@ -86,7 +91,8 @@ namespace SciLean
       --  [[i=i']] * ⟪𝕖 j, 𝕖' j'⟫
       --  [[i=i']] * [[j=j']]
       sorry_proof
-
+    to_dual := asdf   -- have to prove this as I have no clue in which order to compose fromDual and to toDual
+    from_dual := asdf 
 
   --------------------------------------------------------------------
 
