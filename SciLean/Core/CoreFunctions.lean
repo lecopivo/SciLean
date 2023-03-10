@@ -319,6 +319,15 @@ argument x
   abbrev ∂ 𝒯 := f dx by symdiff
 
 
+function_properties LinMap.val {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] (f : X⊸Y) (x : X) : Y
+argument f
+  hasAdjoint := sorry_proof,
+  isLin := sorry_proof,  -- TODO: this should be done automatically!
+  abbrev † := ⟨λ x' => ⟪x,x'⟫ * f', sorry_proof⟩ by sorry_proof,
+  hasAdjDiff,
+  abbrev ∂† ℛ := ⟨λ x' => ⟪x,x'⟫ * df', sorry_proof⟩ by unfold adjointDifferential; symdiff; symdiff
+
+
 --------------------------------------------------------------------------------
 -- LinMap.mk'
 --------------------------------------------------------------------------------

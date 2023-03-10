@@ -17,10 +17,6 @@ argument f
   abbrev ∂ 𝒯 := introPowElem df by symdiff
 
 
--- set_option pp.all true in
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.rewrite true in
-set_option synthInstance.maxSize 2000 in
 function_properties introPowElem [SemiHilbert X] (f : I → X) : X^I
 argument f
   hasAdjoint := by unfold introPowElem; apply HasAdjointN.mk,
@@ -43,3 +39,13 @@ theorem introPowElem.arg_f.revDiff_simp [SemiHilbert X]
   : ℛ (λ (f : I → X) => introPowElem f)
     =
     λ f => (introPowElem f, λ df' => (λ idx => df'[idx])) := by unfold reverseDifferential; symdiff
+
+
+-- This example was timing out if `introPowElem` is `abbrev` instead of `def`
+example {ι} [Enumtype ι] (i : ι)
+  : (λ (f : ι → ℝ) => f i)†
+    = 
+    λ f' i' => [[i=i']] * f' := 
+by 
+  symdiff
+  done

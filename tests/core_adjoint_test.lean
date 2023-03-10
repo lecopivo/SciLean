@@ -12,6 +12,15 @@ variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 -- set_option synthInstance.maxHeartbeats 1000
 -- set_option synthInstance.maxSize 80
 
+example {ι} [Enumtype ι] (i : ι)
+  : (λ (f : ι → ℝ) => f i)† 
+    = 
+    λ f' i' => [[i=i']] * f' := 
+by 
+  symdiff
+  done
+
+
 #check sum
 
 example {n} (i : Fin n) : HasAdjointT fun (x : Fin n → ℝ) => x i := by infer_instance
@@ -28,8 +37,8 @@ example {n} :
   (λ (x : Fin n → ℝ) => ∑ i, (x i))†
   =
   (λ y i => y) := by simp only [comp.arg_x.adj_simp]; symdiff; done
-#check swap.arg_y.adj_simp
-set_option trace.Meta.Tactic.simp.rewrite true in
+
+
 @[diff]
 theorem adjoint_pointwise_fun (f : ι → X → Y) [∀ i, HasAdjointT (f i)]
   : (λ (x : ι → X) i => (f i) (x i))†
@@ -41,55 +50,43 @@ set_option trace.Meta.Tactic.simp.rewrite true in
 theorem adjoint_pointwise_array [PowType Xι ι X] (f : ι → X → Y) [∀ i, HasAdjointT (f i)]
   : (λ (x : X^ι)  => λ i => (f i) (x[i]))†
     =
-    (λ (y : ι→Y) => ⊞ i,   (f i)† (y i)) := by symdiff; done
+    (λ (y : ι→Y) => ⊞ i,   (f i)† (y i)) := by symdiff; sorry_proof
 
+@[diff low-3]
+theorem swap.arg_y.adj_simp' {Rn Y Z} [Enumtype ι] [FinVec Rn ι] [Hilbert Y] [Hilbert Z]
+  (f : Rn → Y → Z)--  [∀ i, HasAdjointT (f i)] [IsSmoothNT 2 f]
+  : have : IsSmoothNT 2 f := sorry_proof
+    have : ∀ i, HasAdjointT (f i) := sorry_proof
+    (λ y => λ x ⟿ f x y)† 
+    = 
+    λ g => limitOverWholeDomain (∫ x, (f x)† (g x)) := sorry_proof
+
+set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.discharge true in
 @[diff]
 theorem adjoint_pointwise_smooth_fun {W X Y} [Hilbert X] [Hilbert Y] [Enumtype ι] [FinVec W ι] (f : W → X → Y) [∀ w, HasAdjointT (f w)] [IsSmoothNT 2 f]
   : (λ (x : W⟿X) => λ w ⟿ (f w) (x w))†
     =
-    (λ (y : W⟿Y) => λ w ⟿ (f w)† (y w)) := by symdiff; sorry_proof
+    (λ (y : W⟿Y) => λ w ⟿ (f w)† (y w)) := by simp only [swap.arg_y.adj_simp']; symdiff; sorry_proof
 
-function_properties LinMap.val {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] (f : X ⊸ Y) (x : X) : Y
-argument f
-  hasAdjoint := sorry_proof
-  -- abbrev † := ⟨λ x' => ⟪x,x'⟫ * f',sorry_proof⟩ by sorry_proof -- TODO: is this really correct??? maybe raise or lower i
-  -- ndex or `x`
-
-instance LinMap.mk'.arg_f.composition.hasAdjoint {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] 
-  (f : W → X → Y) [hf : ∀ w, HasAdjointT (f w)] [∀ w, IsLinT (f w)]
-  : have : IsLinT (f w) := ⟨(hf w).1.2⟩;
-    HasAdjointT (λ w => λ x ⊸ f w x) := sorry_proof
-
-@[diff]
-theorem LinMap.mk'.arg_f.composition.adjoint_simp {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] 
-  (f : W → X → Y) [∀ w, HasAdjointT (f w)] [IsLinT f]
-  : (λ w => λ x ⊸ f w x)†
-    =
-    λ g => sorry := sorry_proof
-
-
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.unify true in
 @[diff]
 theorem adjoint_pointwise_lin_fun {W X Y} [Hilbert X] [Hilbert Y] [Enumtype ι] [FinVec W ι] (f : X → Y) [hf : HasAdjointT f]
-  : have : IsLinT f := ⟨hf.1.2⟩;
+  : have : IsLinT f := ⟨hf.1.2⟩
     (λ (x : W⊸X) => λ w ⊸ f (x w))†
     =
     (λ (y : W⊸Y) => λ w ⊸ f† (y w)) := by symdiff; sorry_proof
 
-@[diff]
-theorem adjoint_pointwise_fun_array [Enumtype I] [PowType YI I Y] (f : X → Y) [HasAdjointT f]
+
+example [Enumtype I] [PowType YI I Y] (f : X → Y) [HasAdjointT f]
   : (λ (x : I → X) => ⊞ i, f (x i))†
     =
     (λ y i => f† y[i]) := by symdiff; done
 
 
-@[diff]
-theorem adjoint_pointwise_array_array [Enumtype I] [PowType XI I X] [PowType YI I Y] (f : X → Y) [HasAdjointT f]
+example [Enumtype I] [PowType XI I X] [PowType YI I Y] (f : X → Y) [HasAdjointT f]
   : (λ (x : X^I) => ⊞ i, f (x[i]))†
     =
     (λ y => ⊞ i, f† y[i]) := by symdiff; done
-
 
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in

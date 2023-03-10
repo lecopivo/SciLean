@@ -92,7 +92,8 @@ macro A:term  noWs "[" "·" "," id2:term "]" : term => `(λ i => $A[(i, $id2)])
 syntax (name:=powTypeIntroSyntax) "λ" Lean.Parser.Term.funBinder+  " ==> " term : term
 syntax (name:=powTypeIntroSyntaxAlt) "⊞" Lean.Parser.Term.funBinder+  " , " term : term
 
-abbrev introPowElem {X I} {T : outParam Type} [Enumtype I] [PowType T I X] (f : I → X) : X^I := introElem λ i => f i
+-- Having this as an abbrev was causing some issues
+def introPowElem {X I} {T : outParam Type} [Enumtype I] [PowType T I X] (f : I → X) : X^I := introElem λ i => f i
 
 macro_rules (kind := powTypeIntroSyntax)
 | `(λ $xs:funBinder* ==> $b:term) => `(introPowElem λ $xs* => $b)
