@@ -26,6 +26,11 @@ namespace SciLean
 
   variable {X Y : Type} [Vec X] [Vec Y]
 
+  instance : CoeFun (X⊸Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
+
+  @[ext] 
+  theorem LinMap.ext {X Y} [Vec X] [Vec Y] (f g : X ⊸ Y) : (∀ x, f x = g x) → f = g := sorry
+
   instance : Neg (X⊸Y) := ⟨λ f   => ⟨-f.1, sorry_proof⟩⟩
   instance : Add (X⊸Y) := ⟨λ f g => ⟨f.1 + g.1, sorry_proof⟩⟩
   instance : Sub (X⊸Y) := ⟨λ f g => ⟨f.1 - g.1, sorry_proof⟩⟩
@@ -48,11 +53,13 @@ namespace SciLean
 
   instance : Vec (X ⊸ Y) := Vec.mk
 
-  instance : CoeFun (X⊸Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
-
   @[infer_tc_goals_rl]
   instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Inner (X ⊸ Y) where
-    inner f g := ∑ i, ⟪f (𝕖' i), g (𝕖' i)⟫
+    -- This should be the correct version of the inner product
+    -- It looks assymetrical but it is a consequence of `inner_proj_dualproj`
+    --   ⟪x, y⟫ = ∑ i, 𝕡 i x * 𝕡' i y
+    -- which also appears assymetrical
+    inner f g := ∑ i, ⟪f (𝕖 i), g (𝕖' i)⟫
 
   @[infer_tc_goals_rl]
   instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : TestFunctions (X ⊸ Y) where
@@ -72,7 +79,7 @@ namespace SciLean
   @[infer_tc_goals_rl]
   instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : DualBasis (X ⊸ Y) (ι×κ) ℝ where
     dualBasis := λ (i,j) => ⟨λ x => DualBasis.dualProj i x * 𝕖'[Y] j, sorry_proof⟩
-    dualProj := λ (i,j) f => DualBasis.dualProj j (f (𝕖 i))
+    dualProj := λ (i,j) f => DualBasis.dualProj j (f (𝕖' i))
 
   open BasisDuality in
   @[infer_tc_goals_rl]
@@ -91,13 +98,29 @@ namespace SciLean
       --  [[i=i']] * ⟪𝕖 j, 𝕖' j'⟫
       --  [[i=i']] * [[j=j']]
       sorry_proof
-    to_dual := asdf   -- have to prove this as I have no clue in which order to compose fromDual and to toDual
-    from_dual := asdf 
+    to_dual := 
+    by
+      simp [BasisDuality.toDual, Basis.proj, DualBasis.dualBasis]
+      intro f; ext x; 
+      simp[FinVec.to_dual,FinVec.from_dual]
+      -- Now the goal is:
+      --   ∑ j, 𝕡 j (f (∑ i, 𝕡' i x * 𝕖 i)) * 𝕖' j
+      --   =
+      --   ∑ (i,j), 𝕡 j (f (𝕖 i)) * 𝕡' i x * 𝕖' j
+      sorry_proof
+    from_dual := 
+    by
+      simp [BasisDuality.fromDual, DualBasis.dualProj, Basis.basis]
+      intro f; ext x; 
+      simp[FinVec.to_dual,FinVec.from_dual]
+      -- Now the goal is:
+      --   ∑ j, 𝕡' j (f (∑ i, 𝕡 i x * 𝕖' i)) * 𝕖 j
+      --   =
+      --   ∑ (i,j), 𝕡' j (f (𝕖' i)) * 𝕡' i x * 𝕖 j
+      sorry_proof
 
   --------------------------------------------------------------------
 
-  @[ext] 
-  theorem LinMap.ext {X Y} [Vec X] [Vec Y] (f g : X ⊸ Y) : (∀ x, f x = g x) → f = g := sorry
 
   variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
   

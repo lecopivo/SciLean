@@ -37,9 +37,16 @@ instance (priority := low) {κ} {_ : Enumtype κ} [FinVec Elem κ] : DualBasis C
   dualBasis := λ (i,j) => introElem λ i' => [[i=i']] * 𝕖'[Elem] j
   dualProj := λ (i,j) x => 𝕡' j x[i]
 
+open BasisDuality in
+instance (priority := low) {κ} {_ : Enumtype κ} [FinVec Elem κ] : BasisDuality Cont where
+  toDual   := ArrayType.map toDual
+  fromDual := ArrayType.map fromDual
+
 instance (priority := low) {κ : Type} {_ : Enumtype κ} [FinVec Elem κ] : FinVec Cont (Idx×κ) where
   is_basis := sorry_proof
   duality := by intro (i,j) (i',j'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
+  to_dual := sorry_proof
+  from_dual := sorry_proof
 
 
 
