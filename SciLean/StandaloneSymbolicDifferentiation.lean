@@ -17,7 +17,6 @@ instance {X} [Vec X] : OfNat X 0 := Vec.toOfNat
 -- IsSmooth predicate
 class IsSmooth {X Y : Type} [Vec X] [Vec Y] (f : X → Y) : Prop where impl : smooth_impl f
 class IsSmooth2 {X Y Z : Type} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) extends IsSmooth λ (x,y) => f x y
-class IsSmooth3 {W X Y Z : Type} [Vec W] [Vec X] [Vec Y] [Vec Z] (f : W → X → Y → Z) extends IsSmooth λ (w,x,y) => f w x y
 
 
 -- Differential
@@ -73,6 +72,7 @@ instance IsSmooth_uncurry_y (f : X → Y → Z) [IsSmooth2 f] (x : X)
 instance IsSmooth_uncurry_x (f : X → Y → Z) [IsSmooth2 f]
   : IsSmooth (λ x => λ y ⟿ f x y) := sorry
 
+-- These two rules are suficient for what we do in this file but are not sufficient in general
 instance IsSmooth_uncurry_x_comp (f : X → Y → Z) [IsSmooth2 f]
   (g : W → X) [IsSmooth g]
   : IsSmooth (λ w => λ y ⟿ f (g w) y) := sorry
@@ -83,19 +83,19 @@ instance IsSmooth_uncurry_x_const (f : X → Z) [IsSmooth f]
 -- Differential rules
 --------------------------------------------------------------------------------
 
-@[simp ↓]
+@[simp]
 theorem differential_rule_I
   : ∂ (λ x : X => x)
     =
     λ x dx => dx := sorry
 
-@[simp ↓]
+@[simp]
 theorem differential_rule_K (x : X)
   : ∂ (λ y : Y => x)
     =
     λ y Y => 0 := sorry
 
-@[simp ↓ low]
+@[simp]
 theorem differential_rule_S
   (f : X → Y → Z) (g : X → Y) [IsSmooth2 f] [IsSmooth g]
   : ∂ (λ x => f x (g x))
@@ -105,13 +105,13 @@ theorem differential_rule_S
       +
       ∂ (f x) (g x) (∂ g x dx) := sorry
 
-@[simp ↓ low-2]
+@[simp]
 theorem differential_rule_C (f : α → X → Y) [∀ a, IsSmooth (f a)]
   : ∂ (λ x a => f a x)
     =
     λ x dx a => ∂ (f a) x dx := sorry
 
-@[simp ↓ low-1]
+@[simp]
 theorem differential_rule_C' (f : X → α → Y) [IsSmooth f] (a : α)
   : ∂ (λ x => f x a)
     =
