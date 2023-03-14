@@ -38,6 +38,31 @@ example {n} :
   =
   (λ y i => y) := by simp only [comp.arg_x.adj_simp]; symdiff; done
 
+example {n k} (x : Fin n → ℝ)
+    : (λ (w : Fin k → ℝ) => λ (i : Fin n) => ∑ j, w j * x (i + j) )†
+      =
+      λ (y : Fin n → ℝ) => λ (j : Fin k) => ∑ i, x i * y (i - j) := sorry_proof
+
+example (p q : ℝ ⟿ ℝ) 
+  : (λ (f : ℝ ⟿ ℝ) => λ x ⟿ p x * f x + q x * ⅆ f x)†
+     =
+    (λ (f : ℝ ⟿ ℝ) => λ x ⟿ p x * f x - ⅆ (x':=x), q x' * f x') := sorry_proof
+
+
+example (f : X → Y → Z) [IsSmoothNT 2 f]
+  : differential (λ ((x,y) : X×Y) => f x y)
+    =
+    λ (x,y) (dx,dy) => 
+      ∂ (λ x' => f x' y) x dx
+      +
+      ∂ (λ y' => f x y') y dy
+    := by symdiff; done
+
+
+example (f : X → Y → Z) :
+  IsSmoothNT 2 f 
+  ↔ 
+  (∀ x, IsSmoothT (f x)) ∧ IsSmoothT (λ x => λ y ⟿ f x y) := sorry_proof
 
 @[diff]
 theorem adjoint_pointwise_fun (f : ι → X → Y) [∀ i, HasAdjointT (f i)]

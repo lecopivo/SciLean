@@ -3,10 +3,11 @@ namespace SciLean
 -- opaque definitions
 opaque vec_impl (X : Type) : Type
 opaque smooth_impl (f : X → Y) : Prop
-
+opaque ℝ : Type
 
 -- Vec Type
-class Vec (X : Type) extends OfNat X 0, Add X, Sub X, Neg X where impl : vec_impl X
+class Vec (X : Type) extends OfNat X 0, Add X, Sub X, Neg X, HMul ℝ X X where impl : vec_impl X
+instance : Vec ℝ := sorry
 instance {X Y} [Vec X] [Vec Y] : Vec (X×Y) := sorry
 instance {α : Type} [Vec X] : Vec (α→X) := sorry
 
@@ -82,19 +83,19 @@ instance IsSmooth_uncurry_x_const (f : X → Z) [IsSmooth f]
 -- Differential rules
 --------------------------------------------------------------------------------
 
-@[simp]
+@[simp ↓]
 theorem differential_rule_I
   : ∂ (λ x : X => x)
     =
     λ x dx => dx := sorry
 
-@[simp]
+@[simp ↓]
 theorem differential_rule_K (x : X)
   : ∂ (λ y : Y => x)
     =
     λ y Y => 0 := sorry
 
-@[simp]
+@[simp ↓ low]
 theorem differential_rule_S
   (f : X → Y → Z) (g : X → Y) [IsSmooth2 f] [IsSmooth g]
   : ∂ (λ x => f x (g x))
@@ -104,13 +105,13 @@ theorem differential_rule_S
       +
       ∂ (f x) (g x) (∂ g x dx) := sorry
 
-@[simp]
+@[simp ↓ low-2]
 theorem differential_rule_C (f : α → X → Y) [∀ a, IsSmooth (f a)]
   : ∂ (λ x a => f a x)
     =
     λ x dx a => ∂ (f a) x dx := sorry
 
-@[simp]
+@[simp ↓ low-1]
 theorem differential_rule_C' (f : X → α → Y) [IsSmooth f] (a : α)
   : ∂ (λ x => f x a)
     =
@@ -118,14 +119,22 @@ theorem differential_rule_C' (f : X → α → Y) [IsSmooth f] (a : α)
 
 
 
--- Some basic properties of addition and zero
+-- Some basic properties of addition, multiplication and zero
 instance : IsSmooth2 (λ x y : X => x + y) := sorry
 @[simp] theorem HAdd.hAdd.arg_x.diff_simp : ∂ (λ x y : X => x + y) = λ x dx y => dx := sorry
 @[simp] theorem HAdd.hAdd.arg_y.diff_simp (x : X) : ∂ (λ y : X => x + y) = λ y dy => dy := sorry
 
+instance : IsSmooth2 (λ (x : ℝ) (y : X) => x * y) := sorry
+@[simp] theorem HMul.hMul.arg_x.diff_simp : ∂ (λ (x : ℝ) (y : X) => x * y) = λ x dx y => dx * y := sorry
+@[simp] theorem HMul.hMul.arg_y.diff_simp (x : ℝ) : ∂ (λ y : X => x * y) = λ y dy : X => x * dy := sorry
+
+
 @[simp] theorem add_zero (x : X) : x + 0 = x := sorry
 @[simp] theorem zero_add (x : X) : 0 + x = x := sorry
+@[simp] theorem mul_zero (x : X) : (0:ℝ) * x = (0:X) := sorry
+
 @[simp] theorem zero_app (a : α) : (0 : α → X) a = (0 : X) := sorry
+@[simp] theorem differential_zero (f : X → Y) [IsSmooth f] (x : X): ∂ f x 0 = 0 := sorry
 
 
 @[simp high] -- prefer this over S rule
@@ -133,7 +142,26 @@ theorem chain_rule
   (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g]
   : ∂ (λ x => f (g x))
     =
-    λ x dx =>∂ f (g x) (∂ g x dx) := by simp
+    λ x dx => ∂ f (g x) (∂ g x dx) := by simp
+
+@[simp high] -- prefer this over S rule
+theorem binop_chain_rule {Y₁ Y₂} [Vec Y₁] [Vec Y₂]
+  (f : Y₁ → Y₂ → Z) [IsSmooth2 f] 
+  (g₁ : X → Y₁) [IsSmooth g₁]
+  (g₂ : X → Y₂) [IsSmooth g₂]
+  : ∂ (λ x => f (g₁ x) (g₂ x))
+    =
+    λ x dx => 
+      ∂ f (g₁ x) (∂ g₁ x dx) (g₂ x)
+      +
+      ∂ (f (g₁ x)) (g₂ x) (∂ g₂ x dx) := 
+by 
+  funext x dx
+  rw[differential_rule_S (λ x y => f (g₁ x) y) g₂]; dsimp
+  rw[differential_rule_C]; dsimp
+  rw[differential_rule_S (λ _ x' => f x' (g₂ x)) g₁]
+  simp
+  done
 
 
 --------------------------------------------------------------------------------
@@ -286,22 +314,23 @@ example g dg x : ∂ (λ (g : X → Y) => f (g x)) g dg = ∂ f (g x) (dg x) := 
 example g dg x : ∂ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = ∂ (F x) (g x) (dg x) := by simp
 
 
--- These tests seems to break in this minimal version. I'm not sure why though
-section tests_that_break
+-- The following tests rely on `binop_chain_rule`
 
-  example g dg x : ∂ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = ∂ F (g x) (dg x) y := by admit
-   example g dg y : ∂ (λ (g : X → X) (x : X) => F (g x) y) g dg x = ∂ F (g x) (dg x) y := by admit
+example g dg x : ∂ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = ∂ F (g x) (dg x) y := by simp
+example g dg y : ∂ (λ (g : X → X) (x : X) => F (g x) y) g dg x = ∂ F (g x) (dg x) y := by simp
 
- example (f : X → α → Y) [IsSmooth f] (a : α) (y : Y)
-   : ∂ (fun (x : X) => (f x a) + y)
-     =
-     λ x dx => ∂ f x dx a := by admit
+example (r dr : ℝ) : ∂ (λ x : ℝ => x*x) r dr = dr * r + r * dr := by simp
+example (r dr : ℝ) : ∂ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by simp
+example (r dr : ℝ) : ∂ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by simp
 
- example (f g : X → α → Y) [IsSmooth f] [IsSmooth g]
-   : ∂ (λ x a => f x a + g x a) 
-     =
-     λ x dx a => ∂ f x dx a + ∂ g x dx a := by admit
+example (f : X → α → Y) [IsSmooth f] (a : α) (y : Y)
+  : ∂ (fun (x : X) => (f x a) + y)
+    =
+    λ x dx => ∂ f x dx a := by simp
 
-end tests_that_break
+example (f g : X → α → Y) [IsSmooth f] [IsSmooth g]
+  : ∂ (λ x a => f x a + g x a) 
+    =
+    λ x dx a => ∂ f x dx a + ∂ g x dx a := by simp
 
 end differentiation_tests
