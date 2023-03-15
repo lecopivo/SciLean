@@ -159,22 +159,44 @@ by
   have h : (λ u => λ v x ⟿ f u x (g v x)) = comp curry (curry (comp f' g')) := by simp[comp,curry,uncurry,prodMap,fst,snd]
   rw[h]; infer_instance
 
-instance IsSmooth_rule_C  (f : α → X → Y) [∀ a, IsSmooth (f a)]
+
+instance IsSmooth_rule_C₂ (f : α → X → Y) [∀ a, IsSmooth (f a)]
   : IsSmooth λ x a => f a x := 
 by
   have h : (λ x a => f a x) = comp (forallMap (λ a => λ x ⟿ f a x)) const := by simp[comp, forallMap, const]
   rw[h]; infer_instance
+
+instance IsSmooth_rule_C₁.unif_hint (f : U → α → X → Y) [∀ a, IsSmooth2 (λ u x => f u a x)] (a : α) (u : U)
+  : IsSmooth (λ x => f u a x) := 
+by 
+  try infer_instance
+  have := IsSmooth_uncurry_y (λ u x => f u a x)
+  infer_instance
+
+instance IsSmooth_rule_C₁ (f : U → α → X → Y) [∀ a, IsSmooth2 (λ u x => f u a x)]
+  : IsSmooth λ u => λ x ⟿ λ a => f u a x :=
+by
+  have h : (λ u => λ x ⟿ λ a => f u a x) 
+           =
+           curry (λ xy ⟿ λ a => uncurry (λ u x ⟿ f u a x) xy)
+         := by simp[curry,uncurry]
+  rw[h]; infer_instance
  
-instance IsSmooth_rule_C' (f : X → α → Y) [IsSmooth f] (a : α)
+instance IsSmooth_rule_C'₂ (f : X → α → Y) [IsSmooth f] (a : α)
   : IsSmooth λ x => f x a :=
 by
   have h : (λ x => f x a) = comp (eval a) (λ x ⟿ f x) := by simp[comp,eval]
   rw[h]; infer_instance
 
+instance IsSmooth_rule_C'₁ (f : U → X → α → Y) [IsSmooth2 f] (a : α)
+  : IsSmooth λ u => λ x ⟿ f u x a :=
+by
+  have h : (λ u => λ x ⟿ f u x a) 
+           = 
+           curry (λ xy ⟿ uncurry (λ u x ⟿ f u x) xy a) 
+         := by simp[curry, uncurry]
+  rw[h]; infer_instance
 
---------------------------------------------------------------------------------
--- These rules are just allows us to write [IsSmooth2 f] instead of [∀ x, IsSmooth (f x)] [IsSmooth λ x => λ y ⟿ f x y]
--- Writing the second is a chore
 
 
 --------------------------------------------------------------------------------
