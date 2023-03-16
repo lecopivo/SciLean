@@ -115,13 +115,14 @@ by
 --------------------------------------------------------------------------------
 -- Expressing IsSmooth2, IsSmooth3, ... in terms of IsSmooth
 --------------------------------------------------------------------------------
-
+/-
 instance IsSmooth2_curry (f : X → Y → Z)
   [∀ x, IsSmooth (f x)] [IsSmooth λ x => λ y ⟿ f x y]
   : IsSmooth2 f := IsSmooth2.mk (toIsSmooth := 
 by   
   have h : (λ (x,y) => f x y) = uncurry (λ x y ⟿ f x y) := by simp[uncurry]
   rw[h]; infer_instance)
+  -/
   
 
 instance IsSmooth2_uncurry_y (f : X → Y → Z) [IsSmooth2 f] (x : X)
@@ -138,13 +139,14 @@ by
   have h : (λ x => λ y ⟿ f x y) = curry f' := by simp[curry]
   rw[h]; infer_instance
 
-
+/-
 instance IsSmooth3_curry (f : X → Y → Z → W)
   [∀ x y, IsSmooth (λ z => f x y z)] [∀ x, IsSmooth λ y => λ z ⟿ f x y z] [IsSmooth λ x => λ y z ⟿ f x y z]
   : IsSmooth3 f := IsSmooth3.mk (toIsSmooth := 
 by
   have h : (λ (x,y,z) => f x y z) = uncurry (comp uncurry (λ x y z ⟿ f x y z)) := by simp[uncurry,comp]
   rw[h]; infer_instance)
+  -/
 
 instance IsSmooth3_uncurry_z (f : X → Y → Z → W) [IsSmooth3 f] (x : X) (y : Y)
   : IsSmooth (λ z => f x y z) :=
@@ -173,24 +175,27 @@ by
 -- Forgetting smoothness
 --------------------------------------------------------------------------------
 
-instance IsSmooth2_forget_y (f : X → Y → Z) [IsSmooth2 f]
+instance IsSmooth2_forget_y (f : X → Y → Z) [∀ x, IsSmooth (f x)] [IsSmooth λ x => λ y ⟿ f x y] -- [IsSmooth2 f]
   : IsSmooth f := 
 by 
+  try infer_instance
   have h : f = comp forget (λ x y ⟿ f x y) := by simp[comp,forget]
   rw[h]; infer_instance
 
-instance IsSmooth3_forget_z (f : X → Y → Z → W) [IsSmooth3 f]
+instance IsSmooth3_forget_z (f : X → Y → Z → W) [∀ x y, IsSmooth (λ z => f x y z)] [∀ x, IsSmooth λ y => λ z ⟿ f x y z] [IsSmooth λ x => λ y z ⟿ f x y z]-- [IsSmooth3 f]
   : IsSmooth (λ x => λ y ⟿ λ z => f x y z) := 
 by 
+  try infer_instance
   have h : (λ x => λ y ⟿ λ z => f x y z) 
            = 
            comp (comp forget) (λ x y z ⟿ f x y z) 
          := by simp[comp,forget]
   rw[h]; infer_instance
 
-instance IsSmooth3_forget_y (f : X → Y → Z → W) [IsSmooth3 f] (y : Y)
+instance IsSmooth3_forget_y (f : X → Y → Z → W) (y : Y) [∀ x y, IsSmooth (λ z => f x y z)] [∀ x, IsSmooth λ y => λ z ⟿ f x y z] [IsSmooth λ x => λ y z ⟿ f x y z] -- [IsSmooth3 f] 
   : IsSmooth (λ x => λ z ⟿ f x y z) := 
 by 
+  try infer_instance
   have h : (λ x => λ z ⟿ f x y z) 
            = 
            comp (eval y) (λ x y z ⟿ f x y z) 
@@ -216,7 +221,7 @@ by
   rw[h]; infer_instance
 
 instance IsSmooth_rule_S₃
-  (f : X → Y → Z) [IsSmooth2 f] 
+  (f : X → Y → Z) [∀ x, IsSmooth (f x)] [IsSmooth λ x => λ y ⟿ f x y] -- [IsSmooth2 f]
   (g : X → Y)  [IsSmooth g]
   : IsSmooth (λ x => f x (g x)) := 
 by
@@ -227,8 +232,8 @@ by
   rw[h]; infer_instance
 
 instance IsSmooth_rule_S₂ 
-  (f : X → Y → Z) [IsSmooth2 f] 
-  (g : V → (X → Y)) [IsSmooth2 g]
+  (f : X → Y → Z)   [∀ x, IsSmooth (f x)] [IsSmooth λ x => λ y ⟿ f x y] -- [IsSmooth2 f] 
+  (g : V → (X → Y)) [∀ v, IsSmooth (g v)] [IsSmooth λ v => λ x ⟿ g v x] -- [IsSmooth2 g]
   : IsSmooth (λ v => λ x ⟿ f x (g v x)) := 
 by
   let f' := uncurry (λ x y ⟿ f x y)
@@ -240,8 +245,8 @@ by
   rw[h]; infer_instance
 
 instance IsSmooth_rule_S₁ 
-  (f : U → (X → Y → Z)) [IsSmooth3 f] 
-  (g : V → (X → Y)) [IsSmooth2 g]
+  (f : U → (X → Y → Z)) [∀ u x, IsSmooth (λ y => f u x y)] [∀ u, IsSmooth λ x => λ y ⟿ f u x y] [IsSmooth λ u => λ x y ⟿ f u x y] -- [IsSmooth3 f] 
+  (g : V → (X → Y))      [∀ v, IsSmooth (g v)] [IsSmooth λ v => λ x ⟿ g v x]  -- [IsSmooth2 g]
   : IsSmooth (λ u => λ v x ⟿ f u x (g v x)) := 
 by
   let f' := uncurry (comp uncurry (λ u x y ⟿ f u x y))
@@ -253,7 +258,7 @@ by
   rw[h]; infer_instance
 
 
-instance IsSmooth_rule_C₂ 
+instance (priority:=low) IsSmooth_rule_C₂ 
   (f : α → X → Y) [∀ a, IsSmooth (f a)]
   : IsSmooth λ x a => f a x := 
 by
@@ -263,16 +268,8 @@ by
          := by simp[comp, forallMap, const]
   rw[h]; infer_instance
 
-instance IsSmooth_rule_C₁.unif_hint 
-  (f : U → α → X → Y) [∀ a, IsSmooth2 (λ u x => f u a x)] (a : α) (u : U)
-  : IsSmooth (λ x => f u a x) := 
-by 
-  try infer_instance
-  have := IsSmooth2_uncurry_y (λ u x => f u a x)
-  infer_instance
-
-instance IsSmooth_rule_C₁ 
-  (f : U → α → X → Y) [∀ a, IsSmooth2 (λ u x => f u a x)]
+instance (priority:=low) IsSmooth_rule_C₁ 
+  (f : U → α → X → Y) [∀ a u, IsSmooth (λ x => f u a x)] [∀ a, IsSmooth (λ u => λ x ⟿ f u a x)] -- [∀ a, IsSmooth2 (λ u x => f u a x)]
   : IsSmooth λ u => λ x ⟿ λ a => f u a x :=
 by
   have h : (λ u => λ x ⟿ λ a => f u a x) 
@@ -281,15 +278,15 @@ by
          := by simp[curry,uncurry]
   rw[h]; infer_instance
  
-instance IsSmooth_rule_C'₂ 
-  (f : X → α → Y) [IsSmooth f] (a : α)
+instance (priority:=low) IsSmooth_rule_C'₂ 
+  (f : X → α → Y) (a : α) [IsSmooth f] 
   : IsSmooth λ x => f x a :=
 by
   have h : (λ x => f x a) = comp (proj a) (λ x ⟿ f x) := by simp[comp,proj]
   rw[h]; infer_instance
 
-instance IsSmooth_rule_C'₁ 
-  (f : U → X → α → Y) [IsSmooth2 f] (a : α)
+instance (priority:=low) IsSmooth_rule_C'₁ 
+  (f : U → X → α → Y) (a : α) [∀ u, IsSmooth (f u)] [IsSmooth λ u => λ x ⟿ f u x] -- [IsSmooth2 f] 
   : IsSmooth λ u => λ x ⟿ f u x a :=
 by
   have h : (λ u => λ x ⟿ f u x a) 
@@ -299,14 +296,51 @@ by
   rw[h]; infer_instance
 
 
+instance (priority:=low-1) IsSmooth_rule_C'' (f : X → Y → Z)  [∀ x, IsSmooth (f x)] [IsSmooth λ x => λ y ⟿ f x y]
+  : IsSmooth (λ y => λ x ⟿ f x y) := by infer_instance
 
 
 --------------------------------------------------------------------------------
 
+-- Permuting arguments
+
+example (f : X → Y → Z → W) [IsSmooth3 f]
+  : IsSmooth (λ x => λ z y ⟿ f x y z) := by infer_instance
+
+example (f : X → Y → Z → W) [IsSmooth3 f]
+  : IsSmooth (λ x => λ z ⟿ f x y z) := by infer_instance
+
+example (f : X → Y → Z → W) [IsSmooth3 f]
+  : IsSmooth (λ x y => λ z ⟿ f x y z) := by infer_instance
+
+example (f : X → Y → Z → W) [IsSmooth3 f]
+  : IsSmooth (λ y => λ x z ⟿ f x y z) := by infer_instance
+
+example (f : X → Y → Z → W) [IsSmooth3 f]
+  : IsSmooth (λ z => λ x y ⟿ f x y z) := by infer_instance
+
+
+example (f : X → Y → Z → W) [IsSmooth3 f]
+  : IsSmooth (λ y => λ x z ⟿ f x y z) := by infer_instance
+
+
+
+example (f : X → X → X → Z) [IsSmooth3 f]
+  : IsSmooth (λ x => λ x' y ⟿ f x' x y) := 
+by infer_instance
+
+example (f : X → X → X → Z) [IsSmooth3 f]
+  : IsSmooth (λ x => λ x' y ⟿ f x' x y) := 
+by infer_instance
 
 instance IsSmooth_uncurry_S (f : X → Y → W → Z) [IsSmooth3 f]
   (g : X → Y → W) [IsSmooth2 g]
   : IsSmooth (λ x => λ y ⟿ f x y (g x y)) := by (try infer_instance); admit
+
+
+instance IsSmooth_uncurry_S' (f : X → Y → W → Z) [IsSmooth3 f]
+  (g : X → Y → W) [IsSmooth2 g]
+  : IsSmooth (λ x => λ x' y ⟿ f x y (g x' y)) := by infer_instance
 
 
 set_option synthInstance.maxSize 300 in
@@ -379,39 +413,39 @@ by infer_instance
 
 -- IsSmooth3 to IsSmooth2
 example (f : X → Y → Z → W) [IsSmooth3 f]
-  : IsSmooth2 (λ x y z => f x y z) := 
+  : IsSmooth (λ x => λ y ⟿ λ z => f x y z) := 
 by infer_instance
 
 example (f : X → Y → Z → W) [IsSmooth3 f]
-  : IsSmooth2 (λ x z y => f x y z) := 
+  : IsSmooth (λ x => λ z ⟿ λ y => f x y z) := 
 by infer_instance
 
 example (f : X → Y → Z → W) [IsSmooth3 f]
-  : IsSmooth2 (λ y x z => f x y z) := 
+  : IsSmooth (λ y => λ x ⟿ λ z => f x y z) := 
 by infer_instance
 
 example (f : X → Y → Z → W) [IsSmooth3 f]
-  : IsSmooth2 (λ y z x => f x y z) := 
+  : IsSmooth (λ y => λ z ⟿ λ x => f x y z) := 
 by infer_instance
 
 example (f : X → Y → Z → W) [IsSmooth3 f]
-  : IsSmooth2 (λ z x y => f x y z) := 
+  : IsSmooth (λ z => λ x ⟿ λ y => f x y z) := 
 by infer_instance
 
 example (f : X → Y → Z → W) [IsSmooth3 f]
-  : IsSmooth2 (λ z y x => f x y z) := 
+  : IsSmooth (λ z => λ y ⟿ λ x => f x y z) := 
 by infer_instance
 
 example (f : X → Y → Z → W) [IsSmooth3 f] (z : Z)
-  : IsSmooth2 (λ x y => f x y z) := 
+  : IsSmooth (λ x => λ y ⟿ f x y z) := 
 by infer_instance
 
 example (f : X → Y → Z → W) [IsSmooth3 f] (y : Y)
-  : IsSmooth2 (λ x z => f x y z) := 
+  : IsSmooth (λ x => λ z ⟿ f x y z) := 
 by infer_instance
 
 example (f : X → Y → Z → W) [IsSmooth3 f] (x : X)
-  : IsSmooth2 (λ y z => f x y z) := 
+  : IsSmooth (λ y => λ z ⟿ f x y z) := 
 by infer_instance
 
 
@@ -421,7 +455,7 @@ example (f : X → X → Z) [IsSmooth2 f]
 by infer_instance
 
 example (f : X → X → X → Z) [IsSmooth3 f]
-  : IsSmooth2 (λ x y => f x x y) := 
+  : IsSmooth (λ x => λ y ⟿ f x x y) := 
 by infer_instance
 
 example (f : X → X → X → Z) [IsSmooth3 f]
@@ -429,21 +463,21 @@ example (f : X → X → X → Z) [IsSmooth3 f]
 by infer_instance
 
 example (f : X → X → X → Z) [IsSmooth3 f]
-  : IsSmooth2 (λ x y => f x y x) := 
+  : IsSmooth (λ x => λ y ⟿ f x y x) := 
 by infer_instance
 
 example (f : X → X → X → Z) [IsSmooth3 f]
-  : IsSmooth2 (λ x y => f y x x) := 
+  : IsSmooth (λ x => λ y ⟿ f y x x) := 
 by infer_instance
 
 example (f : X → X → X → Z) [IsSmooth3 f]
-  : IsSmooth2 (λ x y => f x y y) := 
+  : IsSmooth (λ x => λ y ⟿ f x y y) := 
 by infer_instance
 
 example (f : X → X → X → Z) [IsSmooth3 f]
-  : IsSmooth2 (λ x y => f y x y) := 
+  : IsSmooth (λ x => λ y ⟿ f y x y) := 
 by infer_instance
 
 example (f : X → X → X → Z) [IsSmooth3 f]
-  : IsSmooth2 (λ x y => f x y y) := 
+  : IsSmooth (λ x => λ y ⟿ f x y y) := 
 by infer_instance
