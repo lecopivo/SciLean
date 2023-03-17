@@ -251,7 +251,7 @@ namespace Enumtype
 
 
   open Lean.TSyntax.Compat in
-  macro "∑" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders `Enumtype.sum xs b
+  macro "∑" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``Enumtype.sum xs b
 
   -- section Examples
 

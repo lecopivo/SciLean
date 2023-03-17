@@ -9,7 +9,11 @@ namespace SciLean
 
 instance IsLin_is_IsSmooth {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] [inst : IsLinN n f] 
-  : IsSmoothN n f := IsSmoothN.mk (toIsSmoothNT:=⟨inst.proof.2⟩)
+  : IsSmoothN n f := ⟨sorry_proof⟩
+
+instance {X Y} [Vec X] [Vec Y] (f : X → Y) [inst : IsSmoothN 1 f] : IsSmooth f := by
+  induction inst
+  apply IsSmooth.mk
 
 @[diff] 
 theorem diff_of_linear {X Y} [Vec X] [Vec Y] (f : X → Y) [IsLin f]
@@ -27,9 +31,8 @@ theorem diff_of_linear_2 {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) [Is
 function_properties Prod.fst {X Y} [Vec X] [Vec Y] (xy : X×Y) : X
 argument xy
   isLin := sorry_proof,
-  isSmooth,
-  abbrev ∂ 𝒯 := dxy.1 by symdiff -- ,
-  -- abbrev 𝒯 := (xy.1, dxy.1) by symdiff
+  isSmooth := sorry_proof,
+  abbrev ∂ 𝒯 := dxy.1 by symdiff
 
 function_properties Prod.fst {X Y} [SemiHilbert X] [SemiHilbert Y] (xy : X×Y) : X
 argument xy
@@ -47,7 +50,7 @@ argument xy
 function_properties Prod.snd {X Y} [Vec X] [Vec Y] (xy : X×Y) : Y
 argument xy
   isLin := sorry_proof,
-  isSmooth,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := dxy.2 by symdiff -- ,
   -- abbrev 𝒯 := (xy.2, dxy.2) by symdiff
 
@@ -67,7 +70,7 @@ argument xy
 function_properties Prod.mk {X Y} [Vec X] [Vec Y] (x : X) (y : Y) : X×Y
 argument (x,y) 
   isLin := sorry_proof,
-  isSmooth,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := (dx, dy) by symdiff
 argument x
   isSmooth := sorry_proof,
@@ -99,7 +102,7 @@ argument y
 function_properties Neg.neg {X} [Vec X] (x : X) : X
 argument x
   isLin := sorry_proof, 
-  isSmooth,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := - dx by symdiff-- ,
   -- abbrev 𝒯 := (-x, -dx) by symdiff
 
@@ -118,7 +121,7 @@ argument x
 function_properties HAdd.hAdd {X} [Vec X]  (x y : X) : X
 argument (x,y)
   isLin := sorry_proof,
-  isSmooth,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := dx + dy by symdiff-- ,
   -- abbrev 𝒯 := (x+y, dx+dy) by symdiff
 argument x
@@ -152,6 +155,7 @@ argument y
 function_properties HSub.hSub {X} [Vec X]  (x y : X) : X
 argument (x,y)
   isLin := sorry_proof,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := dx - dy by symdiff-- ,
   -- abbrev 𝒯 := (x-y, dx-dy) by symdiff
 argument x
@@ -187,11 +191,11 @@ argument (x,y)
   abbrev ∂ 𝒯 := dx*y + x*dy by sorry_proof
 argument x
   isLin := sorry_proof, 
-  isSmooth,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := dx*y by sorry_proof
 argument y
   isLin := sorry_proof, 
-  isSmooth,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := x*dy by sorry_proof
 
 function_properties HMul.hMul {X} [SemiHilbert X] (x : ℝ) (y : X) : X
@@ -224,14 +228,14 @@ argument (x,y)
   abbrev ∂† ℛ := (dxy'*x, dxy'*y) by sorry_proof
 argument x ..
   isLin := sorry_proof,
-  isSmooth, 
+  isSmooth := sorry_proof, 
   abbrev ∂ 𝒯 := ⟪dx,y⟫ by symdiff
 argument x
   hasAdjoint := sorry_proof,
   abbrev † := x'*y by sorry_proof
 argument y
   isLin := sorry_proof,
-  isSmooth, 
+  isSmooth := sorry_proof, 
   abbrev ∂ 𝒯 := ⟪x,dy⟫ by symdiff,
   hasAdjoint := sorry_proof,
   abbrev † := y'*x by sorry_proof
@@ -256,7 +260,7 @@ argument x
 function_properties sum {X ι} [Vec X] [Enumtype ι] (f : ι → X) : X
 argument f
   isLin := sorry_proof,
-  isSmooth,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := sum df by symdiff
 
 function_properties sum {X ι} [SemiHilbert X] [Enumtype ι] (f : ι → X) : X
@@ -278,12 +282,12 @@ argument (f,x)
   abbrev 𝒯 := let (y,dy) := 𝒯 f x dx; (y, df x + dy) by unfold Smooth.tangentMap; symdiff
 argument f
   isLin := sorry_proof,
-  isSmooth,
-  abbrev ∂ 𝒯 := df x by symdiff 
-argument x 
   isSmooth := sorry_proof,
-  abbrev ∂ := ∂ f x dx by unfold Smooth.differential; symdiff,
-  abbrev 𝒯 := 𝒯 f x dx by unfold Smooth.tangentMap; symdiff
+  abbrev ∂ 𝒯 := df x by symdiff 
+-- argument x 
+--   isSmooth := sorry_proof,
+--   abbrev ∂ := ∂ f x dx by unfold Smooth.differential; symdiff,
+--   abbrev 𝒯 := 𝒯 f x dx by unfold Smooth.tangentMap; symdiff
 
 
 --------------------------------------------------------------------------------
@@ -311,21 +315,21 @@ argument (f,x)
   abbrev ∂ 𝒯 := df x + f dx by funext (f,x) (df,dx); simp; sorry_proof
 argument f ..
   isLin := sorry_proof,
-  isSmooth,
+  isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := df x by symdiff 
-argument x 
-  isLin := sorry_proof,
-  isSmooth,
-  abbrev ∂ 𝒯 := f dx by symdiff
+-- argument x 
+--   isLin := sorry_proof-- ,
+  -- isSmooth := sorry_proof,
+  -- abbrev ∂ 𝒯 := f dx by symdiff
 
 
-function_properties LinMap.val {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] (f : X⊸Y) (x : X) : Y
-argument f
-  hasAdjoint := sorry_proof,
-  isLin := sorry_proof,  -- TODO: this should be done automatically!
-  abbrev † := ⟨λ x' => ⟪x,x'⟫ * f', sorry_proof⟩ by sorry_proof,
-  hasAdjDiff,
-  abbrev ∂† ℛ := ⟨λ x' => ⟪x,x'⟫ * df', sorry_proof⟩ by unfold adjointDifferential; symdiff; symdiff
+-- function_properties LinMap.val {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] (f : X⊸Y) (x : X) : Y
+-- argument f
+--   hasAdjoint := sorry_proof,
+--   isLin := sorry_proof,  -- TODO: this should be done automatically!
+--   abbrev † := ⟨λ x' => ⟪x,x'⟫ * f', sorry_proof⟩ by sorry_proof,
+--   hasAdjDiff,
+--   abbrev ∂† ℛ := ⟨λ x' => ⟪x,x'⟫ * df', sorry_proof⟩ by unfold adjointDifferential; symdiff; symdiff
 
 
 --------------------------------------------------------------------------------

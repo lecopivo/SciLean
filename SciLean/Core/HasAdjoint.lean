@@ -21,13 +21,13 @@ open SciLean.Mathlib.Convenient
 -- --------------------------------------------------------------------------------
 
 
-instance instHasAdjoint_is_IsLin {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] 
-  [inst : HasAdjointN n f]  : IsLinN n f := IsLinN.mk (toIsLinNT:=⟨inst.proof.2⟩)
+-- instance instHasAdjoint_is_IsLin {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] 
+--   [inst : HasAdjointN n f]  : IsLinN n f := IsLinN.mk (toIsLinNT:=⟨sorry_proof,sorry_proof⟩)
 
-instance instHasAdjoint_is_IsSmooth {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] 
-  [HasAdjointN n f]  : IsSmoothNT n f := inferInstance
+-- instance instHasAdjoint_is_IsSmooth {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] 
+--   [HasAdjointN n f]  : IsSmoothNT n f := inferInstance
 
 
 --------------------------------------------------------------------------------

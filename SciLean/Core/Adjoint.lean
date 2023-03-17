@@ -10,9 +10,14 @@ namespace SciLean
 instance adjoint.arg_y.hasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjointT f]
   : HasAdjoint (f†) := sorry_proof
 
-instance adjoint.arg_fy.isSmooth {X Y W} [Vec W] [SemiHilbert X] [SemiHilbert Y]
-  (A : W → X → Y) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
-  : IsSmoothNT 2 (λ w y => (A w)† y) := sorry_proof
+
+instance adjoint.arg_fy.isSmooth_2 {X Y W} [Vec W] [SemiHilbert X] [SemiHilbert Y]
+  (A : W → X → Y) [∀ x, HasAdjointT (A x)] [∀ w, IsSmoothT (A w)] [IsSmoothT λ w => λ x ⟿ A w x] (w : W)
+  : IsSmoothT (λ y => (A w)† y) := sorry_proof
+
+instance adjoint.arg_fy.isSmooth_1 {X Y W} [Vec W] [SemiHilbert X] [SemiHilbert Y]
+  (A : W → X → Y) [∀ x, HasAdjointT (A x)] [∀ w, IsSmoothT (A w)] [IsSmoothT λ w => λ x ⟿ A w x]
+  : IsSmoothT (λ w => λ y ⟿ (A w)† y) := sorry_proof
 
 -- on Hilbert spaces any linear function has adjoint
 -- We only want this to apply for atomic functions that is why we ask for `IsLin` and not for `IsLinT`

@@ -99,8 +99,18 @@ theorem inner_basis_dualBasis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
 by apply FinVec.duality
 
 @[simp]
+theorem inner_dualBasis_basis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
+  : ⟪𝕖'[X] i, 𝕖 j⟫ = [[i=j]] :=
+by sorry_proof
+
+@[simp]
 theorem inner_dualBasis_proj {X ι} [Enumtype ι] [FinVec X ι] (i : ι) (x : X)
   : ⟪x, 𝕖' i⟫ = 𝕡 i x :=
+by sorry_proof
+
+@[simp]
+theorem inner_basis_dualProj {X ι} [Enumtype ι] [FinVec X ι] (i : ι) (x : X)
+  : ⟪x, 𝕖 i⟫ = 𝕡' i x :=
 by sorry_proof
 
 @[simp]
@@ -109,15 +119,10 @@ theorem proj_basis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
 by simp only [←inner_dualBasis_proj, inner_basis_dualBasis, eq_comm]; done
 
 @[simp]
-theorem inner_dualBasis_basis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
-  : ⟪𝕖'[X] i, 𝕖 j⟫ = [[i=j]] :=
-by 
-  sorry_proof
+theorem dualProj_dualBasis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
+  : 𝕡' i (𝕖'[X] j) = [[i=j]] :=
+by simp only [←inner_basis_dualProj, inner_dualBasis_basis, eq_comm]; done
 
-@[simp]
-theorem inner_basis_dualProj {X ι} [Enumtype ι] [FinVec X ι] (i : ι) (x : X)
-  : ⟪𝕖[X] i, x⟫ = 𝕡' i x :=
-by sorry_proof
 
 instance : FinVec ℝ Unit where
   is_basis := by simp[Basis.proj, Basis.basis]; sorry_proof

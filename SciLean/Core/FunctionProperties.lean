@@ -88,7 +88,7 @@ macro_rules
 --------------------------------------------------------------------------------
 
 theorem HasAdjDiffN.mk' {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
-  {n : Nat} {f : X → Y} [Prod.Uncurry n (X → Y) Xs Y'] [IsSmoothNT n f]
+  {n : Nat} {f : X → Y} [Prod.Uncurry n (X → Y) Xs Y'] [IsSmoothN n f]
   : (∀ x, HasAdjointT $ ∂ (uncurryN n f) x) → HasAdjDiffN n f
   := λ h => by 
     have : HasAdjDiffNT n f := by constructor; constructor; infer_instance; apply h

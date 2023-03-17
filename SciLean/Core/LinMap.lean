@@ -3,17 +3,52 @@ import SciLean.Mathlib.Convenient.Basic
 -- import SciLean.Core.New.IsSmooth
 import SciLean.Core.TensorProduct
 import SciLean.Core.FinVec
+import SciLean.Core.SmoothMap
 
 namespace SciLean
 
-  def is_linear {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop :=
-    ∀ x y, f (x + y) = f x + f y
-    ∧ 
-    ∀ (s : ℝ) x, f (s*x) = s * (f x)
+
+ --TODO: Question?
+ -- Should linearity include smoothness? Are there usefull linear 
+ -- functions that are not smooth? 
+ -- In finite dimension every linear function is smooth but in infitite
+ -- dimensional spaces it does not have to be the case.
+ /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+
+ Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+
+ Transitive closure of `IsLinNT`
+ -/
+ class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+   is_lin : TensorProduct.is_linear (uncurryN n f)
+   is_smooth : IsSmoothT (uncurryN n f)
+
+  /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+
+  Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+  -/
+  class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+    (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
+
+  /-- `IsLin f` says that `f : X → Y` is linear.
+
+  Abbreviation for `IsLinN 1 f`
+  -/
+  abbrev IsLin {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinN 1 f
+
+  /-- `IsLinT f` says that `f : X → Y` is linear.
+
+  Abbreviation for `IsLinNT 1 f`.
+
+  `IsLinT` is transitive closure of `IsLin`.
+  -/
+  abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
+
 
   structure LinMap (X Y : Type) [Vec X] [Vec Y] where
     val : X → Y 
-    property : is_linear val ∧ Mathlib.Convenient.is_smooth val
+    [property : IsLinT val]
 
   /-- `X --o Y` is the space of all linear maps between `X` and `Y`.
 
@@ -23,35 +58,93 @@ namespace SciLean
   /-- `X ⊸ Y` is the space of all linear maps between `X` and `Y` -/
   infixr:25 " ⊸ " => LinMap
 
+  -- Lambda notation
+  open Lean.TSyntax.Compat in
+  macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term =>
+    Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
 
-  variable {X Y : Type} [Vec X] [Vec Y]
+  variable {X Y Z W: Type} [Vec X] [Vec Y] [Vec Z] [Vec W] 
 
   instance : CoeFun (X⊸Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
 
+  instance LinMap.val.arg_x.isLin {X Y} [Vec X] [Vec Y] (f : X ⊸ Y)
+    : IsLinT f.1 := f.2
+
+  abbrev LinMap.mk' {X Y} [Vec X] [Vec Y] (f : X → Y) (_ : IsLinT f) : X⊸Y := λ x ⊸ f x
+
   @[ext] 
-  theorem LinMap.ext {X Y} [Vec X] [Vec Y] (f g : X ⊸ Y) : (∀ x, f x = g x) → f = g := sorry
+  theorem LinMap.ext {X Y} [Vec X] [Vec Y] (f g : X ⊸ Y) : (∀ x, f x = g x) → f = g := by sorry
 
-  instance : Neg (X⊸Y) := ⟨λ f   => ⟨-f.1, sorry_proof⟩⟩
-  instance : Add (X⊸Y) := ⟨λ f g => ⟨f.1 + g.1, sorry_proof⟩⟩
-  instance : Sub (X⊸Y) := ⟨λ f g => ⟨f.1 - g.1, sorry_proof⟩⟩
-  instance : Mul (X⊸ℝ) := ⟨λ f g => ⟨f.1 * g.1, sorry_proof⟩⟩
-  instance : HMul ℝ (X⊸Y) (X⊸Y) := ⟨λ r f => ⟨r * f.1, sorry_proof⟩⟩
-  instance : HMul (X⊸ℝ) (X⊸Y) (X⊸Y) := ⟨λ g f => ⟨λ x => g.1 x * f.1 x, sorry_proof⟩⟩
- 
-  instance : Zero (X ⊸ Y) := ⟨⟨0, sorry_proof⟩⟩
-  instance [One Y] : One (X ⊸ Y) := ⟨⟨1, sorry_proof⟩⟩
+  @[simp, diff_simp]
+  theorem LinMap.eta_reduction {X Y} [Vec X] [Vec Y] (f : X ⊸ Y)
+      : (λ (x : X) ⊸ f x) = f := by rfl; done
 
-  instance : AddSemigroup (X ⊸ Y) := AddSemigroup.mk sorry_proof
-  instance : AddMonoid (X ⊸ Y)    := AddMonoid.mk sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
-  instance : SubNegMonoid (X ⊸ Y) := SubNegMonoid.mk sorry_proof zsmulRec sorry_proof sorry_proof sorry_proof
-  instance : AddGroup (X ⊸ Y)     := AddGroup.mk sorry_proof
-  instance : AddCommGroup (X ⊸ Y) := AddCommGroup.mk sorry_proof
+  theorem show_is_lin_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⊸ Y) : (∀ x, f x = g x) → IsLinT f :=
+  by
+    intro p
+    have q : f = g := by ext; apply p
+    rw[q]; infer_instance
 
-  instance : MulAction ℝ (X ⊸ Y) := MulAction.mk sorry_proof sorry_proof
-  instance : DistribMulAction ℝ (X ⊸ Y) := DistribMulAction.mk sorry_proof sorry_proof
-  instance : Module ℝ (X ⊸ Y) := Module.mk sorry_proof sorry_proof
 
-  instance : Vec (X ⊸ Y) := Vec.mk
+  namespace Lin
+
+  variable {Z : Type} [Vec Z] {α : Type}
+
+  def comp' : (Y⊸Z) → (X⊸Y) → (X⊸Z) := λ f g =>
+    LinMap.mk (property := sorry) λ x => f (g x)
+
+  def prodMap' : (X⊸Y) → (X⊸Z) → (X ⊸ Y×Z) := λ f g =>
+    LinMap.mk (property := sorry) λ x => (f x, g x)
+
+  def zeroFun : Y⊸X :=
+    LinMap.mk (property := sorry) λ y => (0 : X)
+
+  def swap : X⊗Y → Y⊗X := (λ xy => xy.map' (λ (x : X) (y : Y) => y⊗x) sorry)
+
+  @[simp] theorem comp'_eval (f : Y ⊸ Z) (g : X⊸Y) (x : X) : comp' f g x = f (g x) := by simp[comp']
+  @[simp] theorem prodMap'_eval (f : X ⊸ Y) (g : X⊸Z) (x : X) : prodMap' f g x = (f x, g x) := by simp[prodMap']
+  @[simp] theorem zeroFun_eval (y : Y) : zeroFun y = (0 : X) := by simp[zeroFun]
+
+
+  def neg : X ⊸ X := LinMap.mk' (λ x => -x) sorry
+  def add' : X×X ⊸ X := LinMap.mk' (λ (x,y) => x+y) sorry
+  def sub' : X×X ⊸ X := LinMap.mk' (λ (x,y) => x-y) sorry
+  def mul' : ℝ×ℝ ⊸ ℝ := LinMap.mk' (λ (x,y) => x*y) sorry
+
+  -- def tassocl : 
+  -- def tassocr : 
+  def unit' : ℝ → X ⊸ ℝ⊗X := λ r => LinMap.mk' (λ x => r⊗x) sorry
+  def counit : ℝ⊗X ⊸ X := LinMap.mk' ((λ rx => rx.map' (λ r x => r * x) sorry)) sorry
+
+  @[simp] theorem unit'_eval (r : ℝ) (x : X) : unit' r x = r⊗x := by simp[unit']
+  @[simp] theorem counit_eval (r : ℝ) (x : X) : counit (r⊗x) = r*x := by simp[counit]
+
+  instance : Neg (X⊸Y) := ⟨λ f => LinMap.mk' (λ x => -f x)
+    (show_is_lin_via (comp' neg f) (by ext; simp[neg]))⟩
+
+  instance : Add (X⊸Y) := ⟨λ f g => LinMap.mk' (λ x => f x + g x)
+    (show_is_lin_via (comp' add' (prodMap' f g)) (by ext; simp[add']))⟩
+
+  instance : Sub (X⊸Y) := ⟨λ f g => LinMap.mk' (λ x => f x - g x)
+    (show_is_lin_via (comp' sub' (prodMap' f g)) (by ext; simp[sub']))⟩
+
+  instance : Mul (X⊸ℝ) := ⟨λ f g => LinMap.mk' (λ x => f x * g x)
+    (show_is_lin_via (comp' mul' (prodMap' f g)) (by ext; simp[mul']))⟩
+
+  instance : HMul ℝ (X⊸Y) (X⊸Y) := ⟨λ r f => LinMap.mk' (λ x => r * f x)
+    (show_is_lin_via (comp' counit (comp' (unit' r) f)) (by ext; simp))⟩
+
+  instance : Zero (X ⊸ Y) := ⟨zeroFun⟩
+
+  -- !!!THIS USES SORRY!!!
+  instance : Vec (X ⊸ Y) := Vec.mkSorryProofs
+
+  end Lin
+
+  def TensorProduct.map (f : X ⊸ Y ⊸ Z) (xy : X⊗Y) : Z := xy.map' (λ x y => f x y) sorry_proof
+
+  namespace Lin
+
 
   @[infer_tc_goals_rl]
   instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Inner (X ⊸ Y) where
@@ -73,19 +166,19 @@ namespace SciLean
 
   @[infer_tc_goals_rl]
   instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : Basis (X ⊸ Y) (ι×κ) ℝ where
-    basis := λ (i,j) => ⟨λ x => Basis.proj i x * 𝕖[Y] j, sorry_proof⟩
-    proj := λ (i,j) f => Basis.proj j (f (𝕖 i))
+    basis := λ (i,j) => LinMap.mk' (λ x => 𝕡 i x * 𝕖[Y] j) sorry_proof
+    proj := λ (i,j) f => 𝕡 j (f (𝕖 i))
 
   @[infer_tc_goals_rl]
   instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : DualBasis (X ⊸ Y) (ι×κ) ℝ where
-    dualBasis := λ (i,j) => ⟨λ x => DualBasis.dualProj i x * 𝕖'[Y] j, sorry_proof⟩
-    dualProj := λ (i,j) f => DualBasis.dualProj j (f (𝕖' i))
+    dualBasis := λ (i,j) => LinMap.mk' (λ x => 𝕡' i x * 𝕖'[Y] j) sorry_proof
+    dualProj := λ (i,j) f => 𝕡' j (f (𝕖' i))
 
   open BasisDuality in
   @[infer_tc_goals_rl]
   instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : BasisDuality (X ⊸ Y) where
-    toDual   := λ f => ⟨λ x => toDual (f (fromDual x)), sorry_proof⟩
-    fromDual := λ f => ⟨λ x => fromDual (f (toDual x)), sorry_proof⟩
+    toDual   := λ f => LinMap.mk' (λ x => toDual (f (fromDual x))) sorry_proof
+    fromDual := λ f => LinMap.mk' (λ x => fromDual (f (toDual x))) sorry_proof
 
   @[infer_tc_goals_rl]
   instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : FinVec (X ⊸ Y) (ι×κ) where     
@@ -122,187 +215,191 @@ namespace SciLean
   --------------------------------------------------------------------
 
 
-  variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
-  
-  namespace Linear
+  def curry' (f : X ⊗ Y ⊸ Z) : (X ⊸ Y ⊸ Z) := 
+    LinMap.mk' (λ x => 
+      LinMap.mk' (λ y => f (x ⊗ y)) 
+      sorry_proof) 
+    sorry_proof
 
-  def comp' : (Y ⊸ Z) → (X ⊸ Y) → (X ⊸ Z) := λ f g => ⟨λ x => f (g x), sorry_proof⟩
+  def uncurry' (f : X ⊸ Y ⊸ Z) : (X ⊗ Y ⊸ Z) := 
+    LinMap.mk' (λ xy => xy.map' (λ x y => f x y) sorry_proof) sorry_proof
 
-  noncomputable
-  def curry' : (X ⊗ Y ⊸ Z) → (X ⊸ Y ⊸ Z) := λ f => ⟨λ x => ⟨λ y => f (x ⊗ y), sorry_proof⟩, sorry_proof⟩
+  def id : X ⊸ X := LinMap.mk' (λ x => x) sorry_proof
+  def fst : X×Y ⊸ X := LinMap.mk' (λ (x,_) => x) sorry_proof
+  def snd : X×Y ⊸ Y := LinMap.mk' (λ (_,y) => y) sorry_proof
 
-  noncomputable 
-  def uncurry' : (X ⊸ Y ⊸ Z) → (X ⊗ Y ⊸ Z) := λ f => ⟨λ xy => 
-    let ⟨_,x,y⟩ := xy.repr
-    ∑ i, f (x i) (y i), 
-    sorry_proof⟩ -- we need to write and element of `X ⊗ Y` as ∑ i, c i * (x i ⊗ y i)
+  @[simp] theorem curry'_eval (f : X⊗Y ⊸ Z) (x : X) (y : Y) : curry' f x y = f (x⊗y) := by simp[curry']
+  @[simp] theorem uncurry'_eval (f : X ⊸ Y ⊸ Z) (xy : X⊗Y) : uncurry' f xy = xy.map f := by simp[uncurry',TensorProduct.map]
+  @[simp] theorem id_eval (x : X) : id x = x := by simp[id]
+  @[simp] theorem fst_eval (xy : X×Y) : fst xy = xy.1 := by simp[fst]
+  @[simp] theorem snd_eval (xy : X×Y) : snd xy = xy.2 := by simp[snd]
 
-  def id : X ⊸ X := ⟨λ x => x, sorry_proof⟩
-  def fst : X×Y ⊸ X := ⟨λ (x,y) => x, sorry_proof⟩
-  def snd : X×Y ⊸ Y := ⟨λ (x,y) => y, sorry_proof⟩
+  def tprod : X ⊸ Y ⊸ X⊗Y := 
+    LinMap.mk' (λ x => 
+      LinMap.mk' (λ y => x⊗y)
+      (show_is_lin_via (curry' id x) (by ext y; simp)))
+    (show_is_lin_via (curry' id) (by ext x y; simp))
+
   -- noncomputable
-  -- def tprod : X×Y ⊸ X⊗Y := ⟨λ (x,y) => TensorProduct.tprod x y, sorry_proof⟩
-
-  noncomputable
-  def tpmap : (X⊸Y) ⊸ (X⊸Z) ⊸ (X⊸Y⊗Z) := ⟨λ f => ⟨λ g => ⟨λ x => (f x ⊗ g x), sorry_proof⟩, sorry_proof⟩, sorry_proof⟩
-  noncomputable
-  def tfmap : (X⊸Z) ⊸ (Y⊸W) ⊸ (X⊗Y⊸Z⊗W) := ⟨λ f => ⟨λ g => ⟨λ xy => 
-    let ⟨_,x,y⟩ := xy.repr
-    ∑ i, f (x i) ⊗ g (y i), sorry_proof⟩, sorry_proof⟩, sorry_proof⟩
-
-
-  def pmap : (X⊸Y) × (X⊸Z) ⊸ (X⊸Y×Z) := ⟨λ (f,g) => ⟨λ x => (f x, g x), sorry_proof⟩, sorry_proof⟩
-  def fmap : (X⊸Z) × (Y⊸W) ⊸ (X×Y⊸Z×W) := ⟨λ (f,g) =>⟨λ (x,y) => (f x, g y), sorry_proof⟩, sorry_proof⟩
-  def fmap' : (X→Z) × (Y→W) ⊸ (X×Y→Z×W) := ⟨λ (f,g) => λ (x,y) => (f x, g y), sorry_proof⟩
-  def pmap' : (X→Y) × (X→Z) ⊸ (X→Y×Z) := ⟨λ (f,g) => λ x => (f x, g x), sorry_proof⟩
-
-  -- I don't think this is a valid map
+  -- def tpmap : (X⊸Y) ⊸ (X⊸Z) ⊸ (X⊸Y⊗Z) := ⟨λ f => ⟨λ g => ⟨λ x => (f x ⊗ g x), sorry_proof⟩, sorry_proof⟩, sorry_proof⟩
   -- noncomputable
-  -- def tfmap' : (X→Z) ⊸ (Y→W) ⊸ (X⊗Y→Z⊗W) := ⟨λ f => ⟨ λ g => λ xy => 
+  -- def tfmap : (X⊸Z) ⊸ (Y⊸W) ⊸ (X⊗Y⊸Z⊗W) := ⟨λ f => ⟨λ g => ⟨λ xy => 
   --   let ⟨_,x,y⟩ := xy.repr
-  --   ∑ i, f (x i) ⊗ g (y i), sorry_proof⟩, sorry_proof⟩
-
-  noncomputable
-  def tpmap' : (X→Y) ⊸ (X→Z) ⊸ (X→Y⊗Z) := ⟨λ f => ⟨λ g => λ x => f x ⊗ g x, sorry_proof⟩, sorry_proof⟩
+  --   ∑ i, f (x i) ⊗ g (y i), sorry_proof⟩, sorry_proof⟩, sorry_proof⟩
 
 
-  -- Does this one work?
-  def comp'' : (Y ⊸ Z) ⊸ (X → Y) ⊸ (X → Z) := ⟨λ f => ⟨λ g => λ x => f (g x), sorry_proof⟩, sorry_proof⟩
+  -- def pmap : (X⊸Y) × (X⊸Z) ⊸ (X⊸Y×Z) := ⟨λ (f,g) => ⟨λ x => (f x, g x), sorry_proof⟩, sorry_proof⟩
+  -- def fmap : (X⊸Z) × (Y⊸W) ⊸ (X×Y⊸Z×W) := ⟨λ (f,g) =>⟨λ (x,y) => (f x, g y), sorry_proof⟩, sorry_proof⟩
+  -- def fmap' : (X→Z) × (Y→W) ⊸ (X×Y→Z×W) := ⟨λ (f,g) => λ (x,y) => (f x, g y), sorry_proof⟩
+  -- def pmap' : (X→Y) × (X→Z) ⊸ (X→Y×Z) := ⟨λ (f,g) => λ x => (f x, g x), sorry_proof⟩
+
+  -- -- I don't think this is a valid map
+  -- -- noncomputable
+  -- -- def tfmap' : (X→Z) ⊸ (Y→W) ⊸ (X⊗Y→Z⊗W) := ⟨λ f => ⟨ λ g => λ xy => 
+  -- --   let ⟨_,x,y⟩ := xy.repr
+  -- --   ∑ i, f (x i) ⊗ g (y i), sorry_proof⟩, sorry_proof⟩
+
+  -- noncomputable
+  -- def tpmap' : (X→Y) ⊸ (X→Z) ⊸ (X→Y⊗Z) := ⟨λ f => ⟨λ g => λ x => f x ⊗ g x, sorry_proof⟩, sorry_proof⟩
 
 
-  noncomputable
-  def teval : ((X⊸Y)⊗X) ⊸ Y := uncurry' id
-  noncomputable
-  def tpair : X⊸Y⊸X⊗Y := curry' id
+  -- -- Does this one work?
+  -- def comp'' : (Y ⊸ Z) ⊸ (X → Y) ⊸ (X → Z) := ⟨λ f => ⟨λ g => λ x => f (g x), sorry_proof⟩, sorry_proof⟩
+
+
+  -- noncomputable
+  -- def teval : ((X⊸Y)⊗X) ⊸ Y := uncurry' id
+  -- noncomputable
+  -- def tpair : X⊸Y⊸X⊗Y := curry' id
 
   
-  def assocl : X×(Y×Z) ⊸ (X×Y)×Z := 
-    let F : X×(Y×Z) ⊸ (X×Y)×Z := pmap ((pmap (fst, (comp' fst snd))), (comp' snd snd))
-    ⟨λ (x,(y,z)) => ((x,y),z), 
-     by 
-       have h : (λ (x,(y,z)) => ((x,y),z)) = F.1 := by simp[pmap, comp', fst, snd]
-       rw[h]
-       apply F.2⟩
+  -- def assocl : X×(Y×Z) ⊸ (X×Y)×Z := 
+  --   let F : X×(Y×Z) ⊸ (X×Y)×Z := pmap ((pmap (fst, (comp' fst snd))), (comp' snd snd))
+  --   ⟨λ (x,(y,z)) => ((x,y),z), 
+  --    by 
+  --      have h : (λ (x,(y,z)) => ((x,y),z)) = F.1 := by simp[pmap, comp', fst, snd]
+  --      rw[h]
+  --      apply F.2⟩
 
-  def assocr : (X×Y)×Z ⊸ X×(Y×Z) := 
-    let F : (X×Y)×Z ⊸ X×(Y×Z) := pmap ((comp' fst fst), (pmap ((comp' snd fst), snd)))
-    ⟨λ ((x,y),z) => (x,(y,z)),
-     by 
-       have h : (λ ((x,y),z) => (x,(y,z))) = F.1 := by simp[pmap, comp', fst, snd]
-       rw[h]
-       apply F.2⟩
-
-  @[simp]
-  theorem assocl_eval (xyz : X×(Y×Z)) : assocl xyz = ((xyz.1,xyz.2.1),xyz.2.2) := rfl
-
-  @[simp]
-  theorem assocr_eval (xyz : (X×Y)×Z) : assocr xyz = (xyz.1.1,(xyz.1.2,xyz.2)) := rfl
-
-  noncomputable
-  def tassocl : X⊗(Y⊗Z) ⊸ (X⊗Y)⊗Z := ⟨λ xyz => 
-    let ⟨_,x,yz⟩ := xyz.repr
-    let y := λ i => (yz i).repr.snd.fst
-    let z := λ i => (yz i).repr.snd.snd
-    ∑ i j, (x i ⊗ y i j) ⊗ z i j,
-    sorry_proof⟩
-
-  noncomputable
-  def tassocr : (X⊗Y)⊗Z ⊸ X⊗(Y⊗Z) := ⟨λ xyz => 
-    let ⟨_,xy,z⟩ := xyz.repr
-    let x := λ i => (xy i).repr.snd.fst
-    let y := λ i => (xy i).repr.snd.snd
-    ∑ i j, x i j ⊗ (y i j ⊗ z i),
-    sorry_proof⟩
-
-  def swap : (X×Y) ⊸ (Y×X) := pmap (snd, fst)
-
-  @[simp]
-  theorem swap_eval (xy : (X×Y)) : swap xy = (xy.2, xy.1) := rfl
-
-  noncomputable
-  def tswap : (X⊗Y) ⊸ (Y⊗X) := ⟨λ xy => 
-    let ⟨_,x,y⟩ := xy.repr
-    ∑ i, y i ⊗ x i,
-    sorry_proof⟩
-
-  def rot132 : (X×Y)×Z ⊸ (X×Z)×Y := comp' assocl (comp' (fmap (id, swap)) assocr)
-
-  @[simp]
-  theorem rot132_eval (xyz : (X×Y)×Z) : rot132 xyz = ((xyz.1.1, xyz.2), xyz.1.2) := rfl
-
-  noncomputable
-  def trot132 : (X⊗Y)⊗Z ⊸ (X⊗Z)⊗Y := comp' tassocl (comp' (tfmap id tswap) tassocr)
-
-  @[simp]
-  theorem trot132_eval (x : X) (y : Y) (z : Z) : trot132 ((x⊗y)⊗z) = (x⊗z)⊗y := sorry_proof
-
-  -- TODO: This function is perfectly computable, make it so
-  -- only the proof of linearity goes via noncomputable tensor product
-  noncomputable
-  def comp : (Y ⊸ Z) ⊸ (X ⊸ Y) ⊸ (X ⊸ Z) := 
-    let F₁ : (Y⊸Z)⊗((X⊸Y)⊗X) ⊸ Z := comp' teval (tfmap id teval)
-    curry' (curry' (comp' F₁ tassocr))
-
-
-  @[simp]
-  theorem comp_eval (f : Y⊸Z) (g : X ⊸ Y) (x : X) : comp f g x = f (g x) := sorry_proof
-
-  -- def const : X⊸Y⊸X := curry' fst
+  -- def assocr : (X×Y)×Z ⊸ X×(Y×Z) := 
+  --   let F : (X×Y)×Z ⊸ X×(Y×Z) := pmap ((comp' fst fst), (pmap ((comp' snd fst), snd)))
+  --   ⟨λ ((x,y),z) => (x,(y,z)),
+  --    by 
+  --      have h : (λ ((x,y),z) => (x,(y,z))) = F.1 := by simp[pmap, comp', fst, snd]
+  --      rw[h]
+  --      apply F.2⟩
 
   -- @[simp]
-  -- theorem const_eval (f : Y⊸Z) (g : X ⊸ Y) (x : X) : comp f g x = f (g x) := rfl
-
-  noncomputable
-  def uncurry : (X ⊸ Y ⊸ Z) ⊸ (X⊗Y ⊸ Z) := 
-    let F : ((X⊸Y⊸Z)⊗X)⊗Y ⊸ Z := comp teval (tfmap teval id)
-
-    let G₁ : (X⊗Y ⊸ (X⊸Y⊸Z)⊗(X⊗Y)) ⊸ (X⊗Y ⊸ Z) := comp (comp' F tassocl)
-    let G₂ : (X⊸Y⊸Z) ⊸ (X⊗Y ⊸ (X⊸Y⊸Z)⊗(X⊗Y)) := tpair
-    comp' G₁ G₂
+  -- theorem assocl_eval (xyz : X×(Y×Z)) : assocl xyz = ((xyz.1,xyz.2.1),xyz.2.2) := rfl
 
   -- @[simp]
-  -- theorem Smooth.uncurry_eval (f : X ⊸ Y ⊸ Z) (xy : X×Y) : Smooth.uncurry f xy = f xy.1 xy.2 := by rfl
+  -- theorem assocr_eval (xyz : (X×Y)×Z) : assocr xyz = (xyz.1.1,(xyz.1.2,xyz.2)) := rfl
+
+  -- noncomputable
+  -- def tassocl : X⊗(Y⊗Z) ⊸ (X⊗Y)⊗Z := ⟨λ xyz => 
+  --   let ⟨_,x,yz⟩ := xyz.repr
+  --   let y := λ i => (yz i).repr.snd.fst
+  --   let z := λ i => (yz i).repr.snd.snd
+  --   ∑ i j, (x i ⊗ y i j) ⊗ z i j,
+  --   sorry_proof⟩
+
+  -- noncomputable
+  -- def tassocr : (X⊗Y)⊗Z ⊸ X⊗(Y⊗Z) := ⟨λ xyz => 
+  --   let ⟨_,xy,z⟩ := xyz.repr
+  --   let x := λ i => (xy i).repr.snd.fst
+  --   let y := λ i => (xy i).repr.snd.snd
+  --   ∑ i j, x i j ⊗ (y i j ⊗ z i),
+  --   sorry_proof⟩
+
+  -- def swap : (X×Y) ⊸ (Y×X) := pmap (snd, fst)
+
+  -- @[simp]
+  -- theorem swap_eval (xy : (X×Y)) : swap xy = (xy.2, xy.1) := rfl
+
+  -- noncomputable
+  -- def tswap : (X⊗Y) ⊸ (Y⊗X) := ⟨λ xy => 
+  --   let ⟨_,x,y⟩ := xy.repr
+  --   ∑ i, y i ⊗ x i,
+  --   sorry_proof⟩
+
+  -- def rot132 : (X×Y)×Z ⊸ (X×Z)×Y := comp' assocl (comp' (fmap (id, swap)) assocr)
+
+  -- @[simp]
+  -- theorem rot132_eval (xyz : (X×Y)×Z) : rot132 xyz = ((xyz.1.1, xyz.2), xyz.1.2) := rfl
+
+  -- noncomputable
+  -- def trot132 : (X⊗Y)⊗Z ⊸ (X⊗Z)⊗Y := comp' tassocl (comp' (tfmap id tswap) tassocr)
+
+  -- @[simp]
+  -- theorem trot132_eval (x : X) (y : Y) (z : Z) : trot132 ((x⊗y)⊗z) = (x⊗z)⊗y := sorry_proof
+
+  -- -- TODO: This function is perfectly computable, make it so
+  -- -- only the proof of linearity goes via noncomputable tensor product
+  -- noncomputable
+  -- def comp : (Y ⊸ Z) ⊸ (X ⊸ Y) ⊸ (X ⊸ Z) := 
+  --   let F₁ : (Y⊸Z)⊗((X⊸Y)⊗X) ⊸ Z := comp' teval (tfmap id teval)
+  --   curry' (curry' (comp' F₁ tassocr))
+
+
+  -- @[simp]
+  -- theorem comp_eval (f : Y⊸Z) (g : X ⊸ Y) (x : X) : comp f g x = f (g x) := sorry_proof
+
+  -- -- def const : X⊸Y⊸X := curry' fst
+
+  -- -- @[simp]
+  -- -- theorem const_eval (f : Y⊸Z) (g : X ⊸ Y) (x : X) : comp f g x = f (g x) := rfl
+
+  -- noncomputable
+  -- def uncurry : (X ⊸ Y ⊸ Z) ⊸ (X⊗Y ⊸ Z) := 
+  --   let F : ((X⊸Y⊸Z)⊗X)⊗Y ⊸ Z := comp teval (tfmap teval id)
+
+  --   let G₁ : (X⊗Y ⊸ (X⊸Y⊸Z)⊗(X⊗Y)) ⊸ (X⊗Y ⊸ Z) := comp (comp' F tassocl)
+  --   let G₂ : (X⊸Y⊸Z) ⊸ (X⊗Y ⊸ (X⊸Y⊸Z)⊗(X⊗Y)) := tpair
+  --   comp' G₁ G₂
+
+  -- -- @[simp]
+  -- -- theorem Smooth.uncurry_eval (f : X ⊸ Y ⊸ Z) (xy : X×Y) : Smooth.uncurry f xy = f xy.1 xy.2 := by rfl
   
-  noncomputable
-  def curry : (X ⊗ Y ⊸ Z) ⊸ (X ⊸ Y ⊸ Z) := 
+  -- noncomputable
+  -- def curry : (X ⊗ Y ⊸ Z) ⊸ (X ⊸ Y ⊸ Z) := 
 
-    let G : ((X⊗Y⊸Z)⊗Y)⊗X ⊸ Z := comp (comp (uncurry' id) (tfmap id tswap)) tassocr
+  --   let G : ((X⊗Y⊸Z)⊗Y)⊗X ⊸ Z := comp (comp (uncurry' id) (tfmap id tswap)) tassocr
 
-    let H : (Y ⊸ (X⊗Y⊸Z)⊗Y)⊗X ⊸ (Y ⊸ ((X⊗Y⊸Z)⊗Y)⊗X) := curry' (comp (tfmap teval id) trot132)
+  --   let H : (Y ⊸ (X⊗Y⊸Z)⊗Y)⊗X ⊸ (Y ⊸ ((X⊗Y⊸Z)⊗Y)⊗X) := curry' (comp (tfmap teval id) trot132)
 
-    let F₁ : (X⊗Y⊸Z) ⊸ (Y ⊸ (X⊗Y⊸Z)⊗Y) := tpair
-    let F₂ : (Y ⊸ (X⊗Y⊸Z)⊗Y) ⊸ (X ⊸ (Y ⊸ (X⊗Y⊸Z)⊗Y)⊗X) := tpair
-    let F₃ : (X ⊸ (Y ⊸ (X⊗Y⊸Z)⊗Y)⊗X) ⊸ (X ⊸ (Y ⊸ ((X⊗Y⊸Z)⊗Y)⊗X)) := comp H
+  --   let F₁ : (X⊗Y⊸Z) ⊸ (Y ⊸ (X⊗Y⊸Z)⊗Y) := tpair
+  --   let F₂ : (Y ⊸ (X⊗Y⊸Z)⊗Y) ⊸ (X ⊸ (Y ⊸ (X⊗Y⊸Z)⊗Y)⊗X) := tpair
+  --   let F₃ : (X ⊸ (Y ⊸ (X⊗Y⊸Z)⊗Y)⊗X) ⊸ (X ⊸ (Y ⊸ ((X⊗Y⊸Z)⊗Y)⊗X)) := comp H
 
-    comp (comp (comp G)) (comp F₃ (comp F₂ F₁))
+  --   comp (comp (comp G)) (comp F₃ (comp F₂ F₁))
 
-  -- @[simp]
-  -- theorem Smooth.curry_eval (f : X×Y ⊸ Z) (x : X) (y : Y) : Smooth.curry f x y = f (x,y) := by rfl
+  -- -- @[simp]
+  -- -- theorem Smooth.curry_eval (f : X×Y ⊸ Z) (x : X) (y : Y) : Smooth.curry f x y = f (x,y) := by rfl
 
-  -- TODO: make it computable
-  noncomputable 
-  def prod : (X → Y ⊸ Z) ⊸ (X→Y) ⊸ (X→Z) := 
-    let F : (X → Y ⊸ Z) ⊸ (X→Y) ⊸ (X → Y ⊸ Z)⊗(X→Y) := tpair
-    let G₁ : (X → Y ⊸ Z)⊗(X→Y) ⊸ (X → (Y⊸Z)⊗Y) := uncurry tpmap'
-    let G₂ : (X → (Y⊸Z)⊗Y) ⊸ (X→Z) := comp'' teval
+  -- -- TODO: make it computable
+  -- noncomputable 
+  -- def prod : (X → Y ⊸ Z) ⊸ (X→Y) ⊸ (X→Z) := 
+  --   let F : (X → Y ⊸ Z) ⊸ (X→Y) ⊸ (X → Y ⊸ Z)⊗(X→Y) := tpair
+  --   let G₁ : (X → Y ⊸ Z)⊗(X→Y) ⊸ (X → (Y⊸Z)⊗Y) := uncurry tpmap'
+  --   let G₂ : (X → (Y⊸Z)⊗Y) ⊸ (X→Z) := comp'' teval
     
-    comp (comp (comp G₂ G₁)) F
+  --   comp (comp (comp G₂ G₁)) F
 
-  @[simp]
-  theorem prod_eval (f : X → Y ⊸ Z) : prod f (λ _ => y) x = f x y := sorry_proof
+  -- @[simp]
+  -- theorem prod_eval (f : X → Y ⊸ Z) : prod f (λ _ => y) x = f x y := sorry_proof
 
-  -- def scomb : (X⊸Y⊸Z) ⊸ (X⊸Y) ⊸ X ⊸ Z := 
-  --   let F₁ : (X⊸Y⊸Z)⊗(X⊸Y)⊗X ⊸ (X⊗Y⊸Z)⊗(X⊗Y) := tfmap uncurry (tpmap snd teval)
-  --   comp (curry) (curry (comp eval F₁))
-
-
-  -- variable {ι κ : Type} {E F G : ι → Type} {E' : κ → Type} [∀ i, Vec (E i)] [∀ i, Vec (F i)] [∀ i, Vec (G i)] [∀ j, Vec (E' j)]
-  -- instance  [∀ i, Vec (F i)] : Vec ((i : ι) → (F i)) := sorry
-
-  -- def Smooth.pmapDep : ((i : ι)→(E i)) ⊸ ((i : ι)→(F i)) ⊸ ((i : ι)→(E i)×(F i)) := ⟨λ f => ⟨λ g => λ x => (f x, g x), sorry⟩, sorry⟩
-  -- def Smooth.fmapDep : ((i : ι)→(E i)) ⊸ ((j : κ)→(E' j)) ⊸ ((ij : (ι×κ))→(E ij.1)×(E' ij.2)) := ⟨λ f => ⟨λ g => λ (i,j) => (f i, g j), sorry⟩, sorry⟩
-  -- def Smooth.prodDep : ((i : ι) → E i ⊸ F i) ⊸ ((i : ι) → E i) ⊸ ((i : ι) → F i) := sorry 
+  -- -- def scomb : (X⊸Y⊸Z) ⊸ (X⊸Y) ⊸ X ⊸ Z := 
+  -- --   let F₁ : (X⊸Y⊸Z)⊗(X⊸Y)⊗X ⊸ (X⊗Y⊸Z)⊗(X⊗Y) := tfmap uncurry (tpmap snd teval)
+  -- --   comp (curry) (curry (comp eval F₁))
 
 
-  end Linear
+  -- -- variable {ι κ : Type} {E F G : ι → Type} {E' : κ → Type} [∀ i, Vec (E i)] [∀ i, Vec (F i)] [∀ i, Vec (G i)] [∀ j, Vec (E' j)]
+  -- -- instance  [∀ i, Vec (F i)] : Vec ((i : ι) → (F i)) := sorry
+
+  -- -- def Smooth.pmapDep : ((i : ι)→(E i)) ⊸ ((i : ι)→(F i)) ⊸ ((i : ι)→(E i)×(F i)) := ⟨λ f => ⟨λ g => λ x => (f x, g x), sorry⟩, sorry⟩
+  -- -- def Smooth.fmapDep : ((i : ι)→(E i)) ⊸ ((j : κ)→(E' j)) ⊸ ((ij : (ι×κ))→(E ij.1)×(E' ij.2)) := ⟨λ f => ⟨λ g => λ (i,j) => (f i, g j), sorry⟩, sorry⟩
+  -- -- def Smooth.prodDep : ((i : ι) → E i ⊸ F i) ⊸ ((i : ι) → E i) ⊸ ((i : ι) → F i) := sorry 
+
+
+  -- end Linear
 

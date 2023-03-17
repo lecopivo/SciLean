@@ -1,6 +1,8 @@
 namespace SciLean
 
-set_option synthInstance.maxSize 10000
+
+
+set_option synthInstance.maxSize 1000
 
 
 -- opaque definitions

@@ -6,66 +6,6 @@ namespace SciLean
 open SciLean.Mathlib.Convenient
 
 
--- --TODO: Question?
--- -- Should linearity include smoothness? Are there usefull linear 
--- -- functions that are not smooth? 
--- -- In finite dimension every linear function is smooth but in infitite
--- -- dimensional spaces it does not have to be the case.
--- /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
-
--- Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
-
--- Transitive closure of `IsLinNT`
--- -/
--- class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
---   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
---   proof : is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
-
-
--- /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
-
--- Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
--- -/
--- class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
---   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
-
--- /-- `IsLin f` says that `f : X → Y` is linear.
-
--- Abbreviation for `IsLinN 1 f`
--- -/
--- abbrev IsLin {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinN 1 f
-
--- /-- `IsLinT f` says that `f : X → Y` is linear.
-
--- Abbreviation for `IsLinNT 1 f`.
-
--- `IsLinT` is transitive closure of `IsLin`.
--- -/
--- abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
-
--- --------------------------------------------------------------------------------
-
-syntax "isLin" (":=" term)? : argProp
-
-open Lean Parser.Term in
-macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isLin $[:= $proof:term]?) => do
-
-  let data ← FunctionPropertyData.parse id parms retType arg
-
-  let instanceId := mkIdent $ data.funPropNamespace.append "isLin"
-
-  let instanceType ← `(IsLinN $data.mainArgNumLit $(← data.mkLambda))
-  let finalCommand ←
-    match proof with
-    | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := by unfold $id; apply IsLinN.mk; done)
-    | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* : $instanceType := $proof)
-  
-  return finalCommand 
-
-
 --------------------------------------------------------------------------------
 
 
@@ -80,13 +20,7 @@ variable {Y₁ Y₂ Y₃ : Type} [Vec Y₁] [Vec Y₂] [Vec Y₃]
 --------------------------------------------------------------------------------
 
 instance linear_add_extra_2_1 (f : X → Y) [hf : IsLinT f]
-  : IsLinNT 2 (λ (z : Z) x => f x) := 
-by
-  -- An example how to go about proving these things
-  let F : Z×X ⊸ Y := Linear.comp ⟨f, hf.1⟩ Linear.snd
-  have h : F.1 = λ (zx : Z×X) => f zx.2 := by ext; simp; admit
-  constructor; simp[uncurryN, Prod.Uncurry.uncurry]
-  rw[← h]; apply F.2
+  : IsLinNT 2 (λ (z : Z) x => f x) := sorry_proof
 
 instance linear_add_extra_2_2 (f : X → Y) [IsLinT f]
   : IsLinNT 2 (λ x (z : Z) => f x) := sorry_proof
@@ -180,22 +114,7 @@ by
 -- Lin Map Lambda Notation --
 --------------------------------------------------------------------------------
 
--- @[macro_inline]
-abbrev LinMap.mk' (f : X → Y) [inst : IsLinT f] : X ⊸ Y := ⟨f, inst.proof⟩
-
-open Lean.TSyntax.Compat in
-macro "fun" xs:Lean.explicitBinders " ⊸ " b:term : term => 
-  Lean.expandExplicitBinders `SciLean.LinMap.mk' xs b
-
-open Lean.TSyntax.Compat in
-macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term => 
-  Lean.expandExplicitBinders `SciLean.LinMap.mk' xs b
-
-@[simp]
-theorem LinMap.simp_normalize (f : X ⊸ Y) 
-    : (λ (x : X) ⊸ f x) = f := by simp; done
-
-instance LinMap.mk'.arg_f.isSmooth {X Y W} [Vec X] [Vec Y] [Vec W]
-  (f : W → X → Y) [IsSmoothNT 2 f] [∀ w, IsLinT (f w)]
-  : IsSmoothT λ w => λ x ⊸ f w x := by (try infer_instance); sorry_proof
+-- instance LinMap.mk'.arg_f.isSmooth {X Y W} [Vec X] [Vec Y] [Vec W]
+--   (f : W → X → Y) [IsSmoothNT 2 f] [∀ w, IsLinT (f w)]
+--   : IsSmoothT λ w => λ x ⊸ f w x := by (try infer_instance); sorry_proof
 

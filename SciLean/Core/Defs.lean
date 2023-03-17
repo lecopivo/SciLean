@@ -29,7 +29,10 @@ opaque differential (f : X → Y) (x dx : X) : Y :=
 
 noncomputable
 def Smooth.differential (f : X ⟿ Y) : (X ⟿ X ⊸ Y) := 
-  ⟨λ x => ⟨λ dx => SciLean.differential f.1 x dx, sorry_proof⟩, sorry_proof⟩
+  SmoothMap.mk' (λ x => 
+    LinMap.mk' (λ dx => SciLean.differential f.1 x dx) 
+    sorry_proof)
+  sorry_proof
 
 @[default_instance]
 instance (f : X → Y) : Partial f (differential f) := ⟨⟩
@@ -44,7 +47,7 @@ def differentialScalar (f : ℝ → X) (t : ℝ) : X :=
 
 noncomputable
 def Smooth.differentialScalar (f : ℝ ⟿ X) : ℝ ⟿ X := 
-  ⟨λ t => ((differential f t) 1), sorry_proof⟩
+  SmoothMap.mk' (λ t => ((differential f t) 1)) sorry_proof
 
 @[default_instance] 
 instance differentialScalar.instDifferentialNotation (f : ℝ → X) 
@@ -58,7 +61,11 @@ instance Smooth.differentialScalar.instDifferentialNotation (f : ℝ ⟿ X)
 noncomputable
 def tangentMap (f : X → Y) : X → X → Y×Y := λ  x dx => (f x, ∂ f x dx)
 noncomputable
-def Smooth.tangentMap (f : X ⟿ Y) : X ⟿ X ⟿ Y×Y := ⟨λ x => ⟨λ dx => (f x, ∂ f x dx), sorry_proof⟩, sorry_proof⟩
+def Smooth.tangentMap (f : X ⟿ Y) : X ⟿ X ⟿ Y×Y := 
+  SmoothMap.mk' (λ x => 
+    SmoothMap.mk' (λ dx => (f x, ∂ f x dx))
+    (sorry_proof))
+  sorry_proof
 
 @[default_instance]
 instance (f : X → Y) : TangentMap f (tangentMap f) := ⟨⟩
@@ -112,7 +119,7 @@ noncomputable
 def gradient (f : X → ℝ) (x : X) : X := ∂† f x 1
 
 noncomputable
-def Smooth.gradient (f : X ⟿ ℝ) : X⟿X := SmoothMap.mk (λ x => adjoint (λ dx => ∂ f x dx) 1) sorry_proof
+def Smooth.gradient (f : X ⟿ ℝ) : X⟿X := SmoothMap.mk' (λ x => adjoint (λ dx => ∂ f x dx) 1) sorry_proof
 
 
 @[default_instance]
@@ -127,78 +134,57 @@ end OnSemiHilbertSpaces
 -- IsSmooth
 --------------------------------------------------------------------------------
 
-/-- Transitive closure of `IsSmoothN`
--/
-class IsSmoothNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : is_smooth (uncurryN n f)
-
-class IsSmoothN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsSmoothNT n f : Prop
-
-
-/-- Abbreviation for `IsSmoothN 1`
--/
-abbrev IsSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothN 1 f
-
-
-/-- Abbreviation for `IsSmoothNT 1`
--/
-abbrev IsSmoothT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsSmoothNT 1 f
 
 
 --------------------------------------------------------------------------------
 -- IsLin
 --------------------------------------------------------------------------------
 
---TODO: Question?
--- Should linearity include smoothness? Are there usefull linear 
--- functions that are not smooth? 
--- In finite dimension every linear function is smooth but in infitite
--- dimensional spaces it does not have to be the case.
-/-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+-- --TODO: Question?
+-- -- Should linearity include smoothness? Are there usefull linear 
+-- -- functions that are not smooth? 
+-- -- In finite dimension every linear function is smooth but in infitite
+-- -- dimensional spaces it does not have to be the case.
+-- /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
 
-Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+-- Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
 
-Transitive closure of `IsLinNT`
--/
-class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
+-- Transitive closure of `IsLinNT`
+-- -/
+-- class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
+--   proof : is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
 
 
-/-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+-- /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
 
-Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
--/
-class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
+-- Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+-- -/
+-- class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
+--   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
 
-/-- `IsLin f` says that `f : X → Y` is linear.
+-- /-- `IsLin f` says that `f : X → Y` is linear.
 
-Abbreviation for `IsLinN 1 f`
--/
-abbrev IsLin {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinN 1 f
+-- Abbreviation for `IsLinN 1 f`
+-- -/
+-- abbrev IsLin {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinN 1 f
 
-/-- `IsLinT f` says that `f : X → Y` is linear.
+-- /-- `IsLinT f` says that `f : X → Y` is linear.
 
-Abbreviation for `IsLinNT 1 f`.
+-- Abbreviation for `IsLinNT 1 f`.
 
-`IsLinT` is transitive closure of `IsLin`.
--/
-abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
+-- `IsLinT` is transitive closure of `IsLin`.
+-- -/
+-- abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
 
 --------------------------------------------------------------------------------
 
-
-class HasAdjointNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
+class HasAdjointNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : has_adjoint (uncurryN n f) ∧ is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
+  proof : has_adjoint (uncurryN n f)
 
-
-class HasAdjointN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
+class HasAdjointN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjointNT n f : Prop
-
 
 abbrev HasAdjointT {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointNT 1 f
 abbrev HasAdjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointN 1 f
@@ -209,7 +195,7 @@ abbrev HasAdjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := 
 -/
 class HasAdjDiffNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : IsSmoothNT n f ∧ ∀ x, HasAdjointT (∂ (uncurryN n f) x)
+  proof : IsSmoothN n f ∧ ∀ x, HasAdjointT (∂ (uncurryN n f) x)
 
 class HasAdjDiffN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjDiffNT n f : Prop
