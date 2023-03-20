@@ -54,15 +54,25 @@ example (f g : X → α → Y) [IsSmoothT f] [IsSmoothT g]
     λ x dx a => ∂ f x dx a + ∂ g x dx a := by symdiff; done
 
 set_option maxHeartbeats 7000 in  
-set_option synthInstance.maxHeartbeats 5000 in
+set_option synthInstance.maxHeartbeats 50000 in
 example (f : Y₁ → Y₂ → β → Z) (g1 : X → Y₁) (g2 : X → Y₂)
-  [IsSmoothNT 2 f] [IsSmoothT g1] [IsSmoothT g2]
+  [∀ y₁, IsSmoothT (f y₁)] [IsSmoothT λ y₁ => λ y₂ ⟿ f y₁ y₂] [IsSmoothT g1] [IsSmoothT g2]
   : ∂ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) 
     = 
-    λ x dx b => ∂ f (g1 x) (∂ g1 x dx) (g2 x) b + ∂ (f (g1 x)) (g2 x) (∂ g2 x dx) b := by symdiff; done
+    λ x dx b => ∂ f (g1 x) (∂ g1 x dx) (g2 x) b + ∂ (f (g1 x)) (g2 x) (∂ g2 x dx) b := 
+by symdiff; done
 
 example {X} [Hilbert X] : ∂ (λ x : X => ⟪x, x⟫) = λ x dx =>  ⟪dx, x⟫ + ⟪x, dx⟫ := by symdiff; done
 
+example 
+  (f : Y → α → Z) [IsSmoothT f]
+  (g : X → Y) [IsSmoothT g]
+  (a : α)
+  : ∂ (λ x => f (g x) a)
+    =
+    λ x dx => 
+      ∂ f (g x) (∂ g x dx) a 
+  := by symdiff; done
 
 --- Other a bit more disorganized tests
 
@@ -71,7 +81,7 @@ variable (g : X → Y) [IsSmoothT g]
 variable (f1 : X → X) [IsSmoothT f1]
 variable (f2 : Y → Y) [IsSmoothT f2]
 variable (f3 : Z → Z) [IsSmoothT f3]
-variable (F : X → Y → Z) [IsSmoothNT 2 F]
+variable (F : X → Y → Z) [∀ x, IsSmoothT (F x)] [IsSmoothT λ x => λ y ⟿ F x y]
 variable (G : X × Y → Z) [IsSmoothT G]
 
 variable (x dx : X) (y dy : Y) (z dz : Z)
@@ -79,20 +89,16 @@ variable (x dx : X) (y dy : Y) (z dz : Z)
 example : ∂ (λ x => f (g (f1 x))) x dx = ∂ f (g (f1 x)) (∂ g (f1 x) (∂ f1 x dx)) := by symdiff; done
 example : ∂ (λ x : X => x + x) x dx = (2:ℝ) * dx := by symdiff; done
 
-set_option synthInstance.maxHeartbeats 2000 in
+
 example : ∂ (λ (x : X) => F x (g x)) x dx = ∂ F x dx (g x) + ∂ (F x) (g x) (∂ g x dx) := by symdiff; done
-set_option synthInstance.maxHeartbeats 2000 in
 example : ∂ (λ (x : X) => f3 (F x (g x))) x dx = ∂ f3 (F x (g x)) (∂ F x dx (g x) + ∂ (F x) (g x) (∂ g x dx)) := by symdiff; done
 example g dg x : ∂ (λ (g : X → Y) => f (g x)) g dg = ∂ f (g x) (dg x) := by symdiff; done
 example g dg x : ∂ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = ∂ (F x) (g x) (dg x) := by symdiff; done
 example g dg x : ∂ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = ∂ F (g x) (dg x) y := by symdiff; done
-set_option synthInstance.maxHeartbeats 2000 in
 example (r dr : ℝ) : ∂ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by symdiff; done
 example g dg y : ∂ (λ (g : X → X) (x : X) => F (g x) y) g dg x = ∂ F (g x) (dg x) y := by symdiff; done 
-set_option maxHeartbeats 5000 in
-set_option synthInstance.maxHeartbeats 2000 in
 example (r dr : ℝ) : ∂ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by symdiff; done
 
-example : ⅆ (λ x : ℝ => ∥x∥²) = λ x => (2:ℝ) * x := by symdiff; done
-example {X} [Hilbert X] (m k : ℝ) (p : X) : ∇ (λ x : X => 1/2*m * ∥p∥² + 1/2*k * ∥x∥²) = λ x : X => k * x := by symdiff; done
-example {X} [Hilbert X] (m k : ℝ) (x : X) : ∇ (λ p : X => 1/(2*m) * ∥p∥² + 1/2*k * ∥x∥²) = λ p : X => 1/m * p := by symdiff; done
+example : ⅆ (λ x : ℝ => ‖x‖²) = λ x => (2:ℝ) * x := by symdiff; done
+example {X} [Hilbert X] (m k : ℝ) (p : X) : ∇ (λ x : X => 1/2*m * ‖p‖² + 1/2*k * ‖x‖²) = λ x : X => k * x := by symdiff; done
+example {X} [Hilbert X] (m k : ℝ) (x : X) : ∇ (λ p : X => 1/(2*m) * ‖p‖² + 1/2*k * ‖x‖²) = λ p : X => 1/m * p := by symdiff; done

@@ -85,7 +85,7 @@ function_properties Prod.mk {X Y} [SemiHilbert X] [SemiHilbert Y] (x : X) (y : Y
 argument (x,y)
   hasAdjoint := sorry_proof,
   abbrev † := xy' by sorry_proof,
-  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
+  hasAdjDiff := sorry_proof,
   abbrev ∂† ℛ := dxy' by unfold adjointDifferential; symdiff; symdiff
 argument x
   hasAdjDiff := sorry_proof,
@@ -138,7 +138,7 @@ function_properties HAdd.hAdd {X} [SemiHilbert X] (x y : X) : X
 argument (x,y)
   hasAdjoint := sorry_proof,
   abbrev † := (xy',xy') by sorry_proof,
-  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; (try infer_instance); sorry_proof,
+  hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; (try infer_instance); sorry_proof,
   abbrev ∂† ℛ := (dxy', dxy') by unfold adjointDifferential; symdiff; symdiff
 argument x 
   hasAdjDiff := sorry_proof,
@@ -170,7 +170,7 @@ argument y
 function_properties HSub.hSub {X} [SemiHilbert X] (x y : X) : X
 argument (x,y)
   hasAdjoint := sorry_proof,
-  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
+  hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
   abbrev † := (xy',-xy') by sorry_proof,
   abbrev ∂† ℛ := (dxy', -dxy') by unfold adjointDifferential; symdiff; symdiff
 argument x 
@@ -212,7 +212,7 @@ argument x
   hasAdjDiff := by sorry_proof, -- apply HasAdjDiffN.mk'; symdiff; infer_instance,
   abbrev ∂† ℛ := ⟪dx',y⟫ by unfold adjointDifferential; sorry_proof -- symdiff; symdiff
 argument (x,y)
-  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
+  hasAdjDiff := sorry_proof, --  by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
   abbrev ∂† ℛ := (⟪dxy',y⟫, x*dxy') by unfold adjointDifferential; symdiff; sorry_proof
 
 
@@ -224,7 +224,7 @@ function_properties Inner.inner {X} [Hilbert X] (x y : X) : ℝ
 argument (x,y)
   isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := ⟪dx,y⟫ + ⟪x,dy⟫ by sorry_proof,
-  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
+  hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
   abbrev ∂† ℛ := (dxy'*x, dxy'*y) by sorry_proof
 argument x ..
   isLin := sorry_proof,

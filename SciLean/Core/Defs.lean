@@ -195,7 +195,8 @@ abbrev HasAdjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := 
 -/
 class HasAdjDiffNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-  proof : IsSmoothN n f ∧ ∀ x, HasAdjointT (∂ (uncurryN n f) x)
+  is_smooth : IsSmoothT (uncurryN n f)
+  diff_has_adjoint : ∀ x, HasAdjointT (∂ (uncurryN n f) x)
 
 class HasAdjDiffN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjDiffNT n f : Prop

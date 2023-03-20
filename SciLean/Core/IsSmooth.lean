@@ -64,6 +64,11 @@ by
 
 -- ...
 
+-- instance uncurry1_isSmooth {X Y} [Vec X] [Vec Y] (f : X → Y) [IsSmoothT f] : IsSmoothT (uncurryN (no_index 1) f) := sorry_proof
+
+instance uncurry2_isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y] : IsSmoothT (uncurryN (no_index 2) f) := sorry_proof
+
+
 --------------------------------------------------------------------------------
 -- Forgetting smoothness
 --------------------------------------------------------------------------------

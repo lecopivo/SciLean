@@ -26,17 +26,17 @@ variable {ι : Type} [Enumtype ι]
 --   hasAdjDiff : ∀ x, HasAdjoint $ ∂ f x
 instance (priority:=low-10) {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y']
-  [IsSmoothN n f] [∀ x, HasAdjoint (∂ (uncurryN n f) x)]
+  [sf : IsSmoothN n f] [∀ x, HasAdjoint (∂ (uncurryN n f) x)]
   : HasAdjDiffN n f
-  := HasAdjDiffN.mk (toHasAdjDiffNT:= by constructor; constructor; infer_instance; infer_instance)
+  := HasAdjDiffN.mk (toHasAdjDiffNT:= by constructor; apply sf.1; infer_instance)
 
 theorem infer_HasAdjDiff {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
-  {n : Nat} {f : X → Y} [Prod.Uncurry n (X → Y) Xs Y'] [IsSmoothNT n f]
+  {n : Nat} {f : X → Y} [Prod.Uncurry n (X → Y) Xs Y'] [IsSmoothT (uncurryN n f)]
   : (∀ x, HasAdjointT $ ∂ (uncurryN n f) x) → HasAdjDiffNT n f
-  := λ h => by constructor; constructor; infer_instance; apply h
+  := λ h => by constructor; infer_instance; apply h
 
 theorem infer_HasAdjDiff' {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
-  {n : Nat} {f : X → Y} [Prod.Uncurry n (X → Y) Xs Y'] [IsSmoothNT n f]
+  {n : Nat} {f : X → Y} [Prod.Uncurry n (X → Y) Xs Y'] [IsSmoothT (uncurryN n f)]
   : (∀ x, HasAdjointT $ ∂ (uncurryN n f) x) → HasAdjDiffN n f
   := λ h => sorry
 
@@ -98,8 +98,8 @@ instance (priority := low) swap.arg_y.hasAdjDiff
   (f : ι → Y → Z) [inst : ∀ x, HasAdjDiffT (f x)]
   : HasAdjDiffT (λ y x => f x y) :=
 by
-  have is := λ x => (inst x).proof.1
-  have ia := λ x => (inst x).proof.2
+  have is := λ x => (inst x).1
+  have ia := λ x => (inst x).2
   apply infer_HasAdjDiff; intro; 
   simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
 
@@ -109,17 +109,21 @@ instance (priority := mid-1) subst.arg_x.hasAdjDiff
   (g : X → Y) [instg : HasAdjDiffT g] 
   : HasAdjDiffT (λ x => f x (g x)) := 
 by
-  have isf := instf.proof.1
-  have iaf := instf.proof.2
-  have isg := instg.proof.1
-  have iag := instg.proof.2
+  have isf := instf.1
+  have iaf := instf.2
+  have isg := instg.1
+  have iag := instg.2
+  
+  have : ∀ x, IsSmoothT (f x) := sorry_proof
+  have : IsSmoothT (λ x => λ y ⟿ f x y) := sorry_proof
 
-  apply infer_HasAdjDiff; intro x; 
-  simp[uncurryN, Prod.Uncurry.uncurry, tangentMap]; 
-  -- Thise should follow from `iaf`
-  have : ∀ x y, HasAdjointT λ dx => ∂ f x dx y := sorry_proof
-  have : ∀ x y, HasAdjointT λ dy => ∂ (f x) y dy := sorry_proof
-  infer_instance; done
+  sorry_proof 
+  -- apply infer_HasAdjDiff; intro x; 
+  -- simp[uncurryN, Prod.Uncurry.uncurry, tangentMap]; 
+  -- -- Thise should follow from `iaf`
+  -- have : ∀ x y, HasAdjointT λ dx => ∂ f x dx y := sorry_proof
+  -- have : ∀ x y, HasAdjointT λ dy => ∂ (f x) y dy := sorry_proof
+  -- infer_instance; done
 
 instance (priority := mid-1) subst2.arg_x.hasAdjDiff 
   (f : X → Y → Y₁ → Z) [HasAdjDiffNT 3 f]
@@ -177,8 +181,8 @@ instance eval.arg_x.parm1.hasAdjDiff
   (f : X → ι → Z) [inst : HasAdjDiffT f] (i : ι)
   : HasAdjDiffT (λ x => f x i) := 
   by
-    have := inst.proof.1
-    have := inst.proof.2
+    have := inst.1
+    have := inst.2
 
     apply infer_HasAdjDiff; intro; simp; infer_instance
 

@@ -24,7 +24,7 @@ instance getElem.arg_cont.isSmooth [Vec Elem] (idx : Idx)
   : IsSmooth (λ (cont : Cont) => cont[idx]) := by infer_instance
 instance getElem.arg_cont.composition.isSmooth [Vec Elem] [Vec X]
   (f : X → Cont) [IsSmoothT f] (idx : Idx)
-  : IsSmoothT (λ (x : X) => (f x)[idx]) := comp.arg_x.isSmooth (λ cont => cont[idx]) f
+  : IsSmoothT (λ (x : X) => (f x)[idx]) := IsSmoothT_comp (λ cont => cont[idx]) f
 
 
 @[diff] theorem getElem.arg_cont_.diff_simp [Vec Elem]
@@ -68,8 +68,8 @@ instance getElem.arg_cont.hasAdjDiff [SemiHilbert Elem] (idx : Idx)
   (f : X → Cont) [inst : HasAdjDiffT f]
   : ∂† (λ (x : X) => (f x)[idx]) = λ x dx' => ∂† f x (setElem 0 idx dx') := 
 by 
-  have _ := inst.1.1
-  have _ := inst.1.2
+  have _ := inst.1
+  have _ := inst.2
 
   unfold adjointDifferential
   symdiff; symdiff

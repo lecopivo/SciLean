@@ -86,8 +86,8 @@ theorem swap.arg_y.adjDiff_simp
   (f : ι → X → Z) [inst : ∀ i, HasAdjDiffT (f i)]
   : ∂† (λ x y => f y x) = (λ x dx' => ∑ i, (∂† (f i) x) (dx' i)) := 
 by 
-  have := λ i => (inst i).proof.1
-  have := λ i => (inst i).proof.2
+  have := λ i => (inst i).1
+  have := λ i => (inst i).2
 
   simp[adjointDifferential]; done
 
@@ -106,9 +106,9 @@ theorem subst.arg_x.adjDiff_simp
       dg' (∂† (f x) y dz)
     := 
 by 
-  have := instg.proof.1
-  have := instg.proof.2
-  have := instf.proof.1
+  have := instg.1
+  have := instg.2
+  have := instf.1
   -- these follow from instf.proof.2
   have : ∀ x y, HasAdjointT (λ dx => ∂ f x dx y) := sorry_proof
   have : ∀ x y, HasAdjointT (λ dy => ∂ (f x) y dy) := sorry_proof
@@ -364,8 +364,8 @@ theorem swap.arg_y.revDiff_simp
   (f : ι → X → Z) [inst : ∀ i, HasAdjDiffT (f i)]
   : ∂† (λ x y => f y x) = (λ x dx' => ∑ i, (∂† (f i) x) (dx' i)) := 
 by 
-  have := λ i => (inst i).proof.1
-  have := λ i => (inst i).proof.2
+  have := λ i => (inst i).1
+  have := λ i => (inst i).2
 
   simp[adjointDifferential]; done
 
@@ -384,9 +384,9 @@ theorem subst.arg_x.revDiff_simp
       
     := 
 by 
-  have := instg.proof.1
-  have := instg.proof.2
-  have := instf.proof.1
+  have := instg.1
+  have := instg.2
+  have := instf.1
 
   funext x;
   unfold reverseDifferential

@@ -25,8 +25,8 @@ theorem adjDiff_sum_eval
     λ x dy => λ j => ∑ i, ∂† (f i j) (x j) (dy i) := 
 by 
   unfold adjointDifferential
-  have  := λ i j => (hf i j).1.1
-  have  := λ i j => (hf i j).1.2
+  have  := λ i j => (hf i j).1
+  have  := λ i j => (hf i j).2
   symdiff; symdiff
   done
 

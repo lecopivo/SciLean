@@ -247,6 +247,7 @@ theorem tangentMap.of_comp
       𝒯 f y dy
   := by symdiff; done
 
+
 @[simp ↓ low-2, diff, simp_guard g₁ Prod.fst, g₂ Prod.snd]
 theorem tangentMap.of_diag
   (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y]
@@ -271,7 +272,7 @@ theorem tangentMap.of_uncurryN (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f x)
     =
     λ (y₁,y₂) (dy₁,dy₂) =>
     (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
-  := by simp[tangentMap]; done
+  := by symdiff; done
 
 @[simp ↓ low, diff]
 theorem tangentMap.of_parm
