@@ -3,7 +3,7 @@ import Qq
 
 open SciLean
 
-variable {X Y W : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert W]
+variable {X Y Z W : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] [SemiHilbert W]
          {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
          {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
@@ -16,7 +16,7 @@ example {n : Nat} (m : ℝ) : (∇ (x : ℝ^{n}), 1/2 * m * ‖x‖²) = λ x : 
 theorem adjoint_sum_eval_rank1 (f : ι → X → Y) [∀ i, HasAdjointT (f i)]
   : (λ (x : ι → X) => ∑ i, f i (x i))†
     =
-    λ y i => (f i)† y := by symdiff; sorry_proof
+    λ y i => (f i)† y := by symdiff; sorry
 
 
 
@@ -28,8 +28,8 @@ theorem adjDiff_sum_eval_rank1 (f : ι → X → Y) [hf : ∀ i, HasAdjDiffT (f 
     λ x dy' i => ∂† (f i) (x i) dy' := 
 by 
   unfold adjointDifferential
-  have := λ i => (hf i).1.1
-  have := λ i => (hf i).1.2
+  have := λ i => (hf i).1
+  have := λ i => (hf i).2
   symdiff; symdiff; done
 
 @[diff]
@@ -99,15 +99,73 @@ where
   ∂† (λ (x : ι → ℝ) => ∑ i, x i * x i)
 
 
+@[simp]
+theorem sum_setElem_zero {Xι} [ArrayType Xι ι X]
+  : ∑ i, setElem (0 : Xι) i (f i) = introElem f := sorry
+
+@[diff]
+theorem adjDiff_ArrayType_rule_forall₂ {Xι} [ArrayType Xι ι X] (f : ι → X → Y) [∀ i, HasAdjDiffT (f i)]
+  : ∂† (λ (x : Xι) i => f i x[i])
+    =
+    λ x dx' => introElem λ i => ∂† (f i) x[i] (dx' i) := 
+by
+  symdiff; simp; done
 
 
-example {n : Nat} : ∇ (x : Fin n → ℝ), ∑ i, x i = λ x i => 1 := by symdiff; done
-example {n : Nat} : ∇ (x : Fin n → ℝ), ∑ i, ‖x i‖² = λ x i => (2:ℝ) * x i := by symdiff; done
-example {n : Nat} (c : ℝ) : ∇ (x : Fin n → ℝ), ∑ i, c * ‖x i‖² = λ x i => 2 * c * x i := by symdiff; done 
+unif_hint adjDiff_ArrayType_rule_forall₂.unif_hint_2 {Xι} [ArrayType Xι ι X]
+  (f? : ι → X → Y)
+  (f : ι → X → W) (h : ι → W → Y)
+where
+  f? =?= λ i x => h i (f i x)
+  |-
+  ∂† (λ (x : Xι) i => f? i x[i])
+  =?= 
+  ∂† (λ (x : Xι) i => h i (f i x[i]))
+
+@[diff]
+theorem adjDiff_ArrayType_rule_forall₂.unif_hint_1 {Xι} [ArrayType Xι ι X]
+  (f : ι → X → Y) [∀ i, HasAdjDiffT (f i)]
+  (h : ι → Y → Z) [∀ i, HasAdjDiffT (h i)]
+  : ∂† (λ (x : Xι) i => h i (f i x[i]))
+    =
+    λ x dx' => introElem λ i => ∂† (λ x => h i (f i x)) x[i] (dx' i) := 
+by
+  symdiff; done
+
+
+example {X} [Hilbert X] (c : ℝ) : HasAdjDiffT (fun x : X => c * ‖ x ‖²) := by infer_instance
+
+example (c : ℝ) : HasAdjDiffT (fun x : ℝ => c * ‖ x ‖² ) := by infer_instance
+example {X} [Hilbert X] (c : ℝ) : HasAdjDiffT (fun x : X => c * ⟪x,x⟫) := by infer_instance
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+example {n : Nat} : ∇ (x : Fin n → ℝ), ∑ i, x i  = λ x i =>    1 := by symdiff; done
+set_option trace.Meta.Tactic.simp.rewrite true in
+example {n : Nat} : ∇ (x : ℝ^{n}),      ∑ i, x[i] = λ x => ⊞ i, 1 := by symdiff; rfl; done
+
+example {n : Nat} : ∇ (x : Fin n → ℝ), ∑ i, ‖x i‖²  = λ x i =>    (2:ℝ) * x i := by symdiff; done
+example {n : Nat} : ∇ (x : ℝ^{n}),      ∑ i, ‖x[i]‖² = λ x => ⊞ i, (2:ℝ) * x[i] := by symdiff; rfl; done
+
+example {n : Nat} (c : ℝ) : ∇ (x : Fin n → ℝ), ∑ i, c * ‖x i‖²  = λ x i =>    2 * c * x i := by symdiff; done 
+
+set_option synthInstance.maxSize 1000 
+set_option trace.Meta.Tactic.simp.unify true in
+example {n : Nat} (c : ℝ) : ∇ (x : ℝ^{n}),      ∑ i, c * ‖x[i]‖² = λ x => ⊞ i, 2 * c * x[i] := by symdiff; rfl; done 
+
+set_option trace.Meta.Tactic.simp.discharge true in
+example {n : Nat} (c : ℝ) : ∂† (λ (x : ℝ^{n}) i => c * ‖x[i]‖²) = λ x dx' => ⊞ i, 2 * c * dx' i * x[i] := by 
+  symdiff
+  rw[adjDiff_ArrayType_rule_forall₂.unif_hint]; symdiff; rfl -- (λ _ (x : ℝ) => ‖x‖²) (λ _ (x : ℝ) => c * x)
+  done
+
+
 example {n : Nat} (c : ℝ) : ∇ (x : Fin n → ℝ), ∑ i, (c + i) * ‖x i‖² = λ x (i : Fin n) => 2 * (c + i) * x i := by symdiff; done 
 set_option trace.Meta.Tactic.simp.unify true in
-example {n : Nat} : ∇ (x : Fin n → ℝ), ∑ i, x i * x i = λ x i => 2 * x i := by unfold gradient; funext x; symdiff; done
-example {n : Nat} : ∇ (x : ℝ^{n}), ∑ i, x[i] = λ x => ⊞ i, 1 := by symdiff; done
+example {n : Nat} : ∇ (x : Fin n → ℝ), ∑ i, x i * x i = λ x i => 2 * x i := 
+by 
+  unfold gradient; funext x; 
+  rw[adjDiff_sum_eval_rank1 (λ i xi => xi * xi)]
+  symdiff; done
 example {n : Nat} : ∇ (x : ℝ^{n}), ∑ i, x[i]*x[i] = λ x => ⊞ i, (2:ℝ) * x[i] := by symdiff; done
 
 

@@ -43,11 +43,11 @@ instance linear_add_extra_3_3 (f : X → Y → W) [IsLinNT 2 f]
 --------------------------------------------------------------------------------
 
 instance id.arg_x.isLin 
-  : IsLin λ x : X => x := sorry_proof
+  : IsLinT λ x : X => x := sorry_proof
 
 -- I think this is waying that `(λ x y => x : X ⊸ Y → X)` not `(λ x y => x : X ⊸ Y ⟿ X)`
 instance const.arg_xy.isLin 
-  : IsLin λ (x : X) (y : Y) => x := sorry_proof
+  : IsLinT λ (x : X) (y : Y) => x := sorry_proof
 
 instance (priority := low) swap.arg_y.isLin 
   (f : α → Y → Z) [∀ x, IsLinT (f x)] 

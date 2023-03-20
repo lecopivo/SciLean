@@ -47,20 +47,22 @@ example (f : β1 → Y₂ → Z) (g1 : α → β1) [∀ y1, IsSmoothT (f y1)]
 example {α : Type} {β : α → Type} (a : α) [∀ a, Add (β a)] 
   : (λ (f g : (a:α) → β a) a => (f + g) a) = (λ (f g : (a:α) → β a) a => f a + g a) := by symdiff; done
 
-
+set_option synthInstance.maxSize 100 in
+set_option synthInstance.maxHeartbeats 2000 in
 example (f g : X → α → Y) [IsSmoothT f] [IsSmoothT g]
   : ∂ (λ x a => f x a + g x a) 
     =
     λ x dx a => ∂ f x dx a + ∂ g x dx a := by symdiff; done
 
-set_option maxHeartbeats 7000 in  
-set_option synthInstance.maxHeartbeats 50000 in
-example (f : Y₁ → Y₂ → β → Z) (g1 : X → Y₁) (g2 : X → Y₂)
-  [∀ y₁, IsSmoothT (f y₁)] [IsSmoothT λ y₁ => λ y₂ ⟿ f y₁ y₂] [IsSmoothT g1] [IsSmoothT g2]
-  : ∂ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) 
-    = 
-    λ x dx b => ∂ f (g1 x) (∂ g1 x dx) (g2 x) b + ∂ (f (g1 x)) (g2 x) (∂ g2 x dx) b := 
-by symdiff; done
+-- set_option maxHeartbeats 70000 in  
+-- set_option synthInstance.maxSize 2000 in
+-- set_option synthInstance.maxHeartbeats 200000 in
+-- example (f : Y₁ → Y₂ → β → Z) (g1 : X → Y₁) (g2 : X → Y₂)
+--   [∀ y₁, IsSmoothT (f y₁)] [IsSmoothT λ y₁ => λ y₂ ⟿ f y₁ y₂] [IsSmoothT g1] [IsSmoothT g2]
+--   : ∂ (λ (x : X) (b : β) => f (g1 x) (g2 x) b) 
+--     = 
+--     λ x dx b => ∂ f (g1 x) (∂ g1 x dx) (g2 x) b + ∂ (f (g1 x)) (g2 x) (∂ g2 x dx) b := 
+-- by symdiff; done
 
 example {X} [Hilbert X] : ∂ (λ x : X => ⟪x, x⟫) = λ x dx =>  ⟪dx, x⟫ + ⟪x, dx⟫ := by symdiff; done
 
@@ -95,8 +97,12 @@ example : ∂ (λ (x : X) => f3 (F x (g x))) x dx = ∂ f3 (F x (g x)) (∂ F x 
 example g dg x : ∂ (λ (g : X → Y) => f (g x)) g dg = ∂ f (g x) (dg x) := by symdiff; done
 example g dg x : ∂ (λ (g : X → Y) (x : X) => F x (g x)) g dg x = ∂ (F x) (g x) (dg x) := by symdiff; done
 example g dg x : ∂ (λ (g : X → X) (y : Y) => F (g x) y) g dg y = ∂ F (g x) (dg x) y := by symdiff; done
+set_option maxHeartbeats 5000 in
+set_option synthInstance.maxHeartbeats 2000 in
 example (r dr : ℝ) : ∂ (λ x : ℝ => x*x + x) r dr = dr * r + r * dr + dr := by symdiff; done
 example g dg y : ∂ (λ (g : X → X) (x : X) => F (g x) y) g dg x = ∂ F (g x) (dg x) y := by symdiff; done 
+set_option maxHeartbeats 6000 in
+set_option synthInstance.maxHeartbeats 2000 in
 example (r dr : ℝ) : ∂ (λ x : ℝ => x*x*x + x) r dr = (dr * r + r * dr) * r + r * r * dr + dr := by symdiff; done
 
 example : ⅆ (λ x : ℝ => ‖x‖²) = λ x => (2:ℝ) * x := by symdiff; done

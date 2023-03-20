@@ -12,7 +12,7 @@ import SciLean.Core.AutoDiffSimps
 namespace SciLean
 
 variable {α β γ : Type}
-variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z] 
+variable {X Y Z U V : Type} [Vec X] [Vec Y] [Vec Z] [Vec U] [Vec V]
 variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 
 
@@ -143,10 +143,95 @@ macro_rules
 
 -- instance (f : X ⟿ Y) : TangentMap f (Smooth.tangentMap f) := ⟨⟩
 
+
+
+instance differential.arg_dx.isLin (f : X → Y) [IsSmoothT f] (x : X)
+  : IsLinT (λ dx => ∂ f x dx) := sorry_proof
+
+instance differential.arg_dx.isSmooth (f : X → Y) [IsSmoothT f] (x : X)
+  : IsSmoothT (λ dx => ∂ f x dx) := sorry_proof
+
+
+instance (f : X → Y → Z) [∀ x, IsLin (f x)] [IsSmoothT λ x => λ y ⊸ f x y]
+  : IsSmoothT (λ x => λ y ⟿ f x y) := show_smoothness_via (Smooth.comp (λ (L : Y⊸Z) ⟿ λ y ⟿ L y) (λ x ⟿ λ y ⊸ f x y)) (by ext x y; simp)
+
+-- instance differential.arg_x_dx.isSmooth' (f : X → Y) [IsSmoothT f]
+--   : IsSmoothT (λ x => λ dx ⊸ ∂ f x dx) := sorry_proof
+
+instance differential.arg_x_dx.isSmooth (f : X → Y) [IsSmoothT f]
+  : IsSmoothT (λ x => λ dx ⟿ ∂ f x dx) := sorry_proof
+
+-- instance differential.arg_f_xdx.isSmooth' (f : U → X → Y) [∀ u, IsSmoothT (f u)] [IsSmoothT λ u => λ x ⟿ f u x]
+--   : IsSmoothT (λ u => λ x ⟿ λ dx ⊸ ∂ (f u) x dx) := sorry_proof
+
+instance differential.arg_f_xdx.isSmooth (f : U → X → Y) [∀ u, IsSmoothT (f u)] [IsSmoothT λ u => λ x ⟿ f u x]
+  : IsSmoothT (λ u => λ x dx ⟿ ∂ (f u) x dx) := sorry_proof
+
+instance differential.arg_y.isSmooth (f : X → Y → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT (λ x => λ y ⟿ f x y)] (x dx : X)
+  : IsSmoothT (λ y => ∂ f x dx y) := by (try infer_instance); sorry_proof
+instance differential.arg_dx_y.isSmooth (f : X → Y → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT (λ x => λ y ⟿ f x y)] (x : X)
+  : IsSmoothT (λ dx => λ y ⟿ ∂ f x dx y) := by (try infer_instance); sorry_proof
+instance differential.arg_x_dxy.isSmooth (f : X → Y → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT (λ x => λ y ⟿ f x y)]
+  : IsSmoothT (λ x => λ dx y ⟿ ∂ f x dx y) := by (try infer_instance); sorry_proof
+instance differential.arg_f_xdxy.isSmooth (f : U → X → Y → Z) [∀ u x, IsSmoothT (f u x)] [∀ u, IsSmoothT (λ x => λ y ⟿ f u x y)] [IsSmoothT (λ u => λ x y ⟿ f u x y)]
+  : IsSmoothT (λ u => λ x dx y ⟿ ∂ (f u) x dx y) := by (try infer_instance); sorry_proof
+
   
 --------------------------------------------------------------------------------
 -- Differential Rules --
 --------------------------------------------------------------------------------
+
+-- -- I: X⟿X
+
+-- @[diff]
+-- theorem differential_rule_I 
+--   : ∂ (λ x : X => x) = λ _ dx => dx := sorry_proof
+
+
+-- -- K: X⟿Y⟿X
+
+-- @[diff]
+-- theorem differential_rule_K₂ (x : X) 
+--   : ∂ (λ _ : Y => x) = λ _ _ => 0 := sorry_proof
+
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+-- @[diff]
+-- theorem differential_rule_K₁ 
+--   : ∂ (λ (x : X) (_ : Y) => x) = λ _ dx _ => dx := sorry_proof
+
+
+-- -- S: (X⟿Y⟿Z)⟿(X⟿Y)⟿X⟿Z
+
+-- @[diff]
+-- theorem differential_rule_S₃
+--   (f : X → Y → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y] -- [IsSmoothN 2 f]
+--   (g : X → Y)  [IsSmoothT g]
+--   : ∂ (λ x => f x (g x)) 
+--     = 
+--     λ x dx => 
+--       let (y,dy) := 𝒯 g x dx
+--       ∂ f x dx y + ∂ (f x) y dy
+--   := sorry_proof
+
+-- instance (f : U → X → Y → Z) [∀ u x, IsSmoothT (f u x)] [∀ u, IsSmoothT (λ x => λ y ⟿ f u x y)] [IsSmoothT (λ u => λ x y ⟿ f u x y)]
+--   (g : U → X) [IsSmoothT g]
+--   : IsSmoothT λ u => λ y ⟿ f u (g u) y := 
+-- by 
+--   try infer_instance
+--   have : IsSmoothT fun u => λ u' y ⟿ f u (g u') y := by (try infer_instance); apply IsSmoothT_rule_S₁ (λ u x y => f u y x) (λ v _ => g v)
+--   apply IsSmoothT_duplicate_argument (λ u u' => λ y ⟿ f u (g u') y)
+
+-- @[diff]
+-- theorem differential_rule_S₂
+--   (f : X → Y → Z)   [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y] -- [IsSmoothN 2 f]
+--   (g : V → (X → Y)) [∀ v, IsSmoothT (g v)] [IsSmoothT λ v => λ x ⟿ g v x] -- [IsSmoothN 2 g]
+--   : ∂ (λ v => λ x ⟿ f x (g v x))
+--     =
+--     λ v dv => λ x ⟿ ∂ (f x) (g v x) (∂ g v dv x)
+--   := sorry_proof
+
+
+--------------------------
 
 @[simp ↓, diff]
 theorem differential.of_id
@@ -285,7 +370,6 @@ theorem tangentMap.of_eval
   (a : α)
   : 𝒯 (λ f : α → Y => f a) = λ f df => (f a, df a) := by simp
 
-
 -- @[simp ↓ low, diff]
 -- theorem uncurry.arg_xy.diff_simp
 --   (f : X → Y → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y]
@@ -320,5 +404,3 @@ theorem tangentMap_of_linear (f : X → Y) [IsLin f]
 theorem diff_of_linear_2_1 (f : X → Y → Z) [IsLinN 2 f] : ∂ f = λ _ dx _ => f dx 0 := sorry_proof
 @[simp low, diff] 
 theorem diff_of_linear_2_2 (f : X → Y → Z) [IsLinN 2 f] (x : X) : ∂ (λ y => f x y) = λ _ dy => f 0 dy := sorry_proof
-
-

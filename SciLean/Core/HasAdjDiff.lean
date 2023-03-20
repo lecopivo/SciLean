@@ -207,3 +207,4 @@ instance diag.arg_x.parm1.hasAdjDiff
     apply diag.arg_x.hasAdjDiff (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂
     done
 
+

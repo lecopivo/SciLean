@@ -24,7 +24,7 @@ instance getElem.arg_cont.isSmooth [Vec Elem] (idx : Idx)
   : IsSmooth (λ (cont : Cont) => cont[idx]) := by infer_instance
 instance getElem.arg_cont.composition.isSmooth [Vec Elem] [Vec X]
   (f : X → Cont) [IsSmoothT f] (idx : Idx)
-  : IsSmoothT (λ (x : X) => (f x)[idx]) := IsSmoothT_comp (λ cont => cont[idx]) f
+  : IsSmoothT (λ (x : X) => (f x)[idx]) := IsSmoothT_comp₃ (λ cont => cont[idx]) f
 
 
 @[diff] theorem getElem.arg_cont_.diff_simp [Vec Elem]
@@ -53,6 +53,8 @@ instance getElem.arg_cont.hasAdjoint [SemiHilbert Elem] (idx : Idx)
   : HasAdjoint (λ (cont : Cont) => cont[idx]) := sorry_proof
 @[diff] theorem getElem.arg_cont.adj_simp [SemiHilbert Elem] (idx : Idx)
   : (λ (cont : Cont) => cont[idx])† = λ cont' => setElem 0 idx cont' := sorry_proof
+@[diff] theorem getElem.arg_cont_idx.adj_simp [SemiHilbert Elem]
+  : (λ (cont : Cont) (idx: Idx) => cont[idx])† = λ cont' => introElem cont' := sorry_proof
 @[diff] theorem getElem.arg_cont.composition.adj_simp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
   (f : X → Cont) [HasAdjointT f]
   : (λ x => (f x)[idx])† = λ x' => f† (setElem 0 idx x') :=
@@ -64,6 +66,8 @@ instance getElem.arg_cont.hasAdjDiff [SemiHilbert Elem] (idx : Idx)
 
 @[diff] theorem getElem.arg_cont.adjDiff_simp [SemiHilbert Elem] (idx : Idx)
   : ∂† (λ (cont : Cont) => cont[idx]) = λ _ dcont' => setElem 0 idx dcont' := by unfold adjointDifferential; symdiff; symdiff; done
+@[diff] theorem getElem.arg_cont_idx.adjDiff_simp [SemiHilbert Elem]
+  : ∂† (λ (cont : Cont) idx => cont[idx]) = λ _ dcont' => introElem dcont' := by unfold adjointDifferential; symdiff; symdiff; done
 @[diff] theorem getElem.arg_cont.composition.adjDiff_simp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
   (f : X → Cont) [inst : HasAdjDiffT f]
   : ∂† (λ (x : X) => (f x)[idx]) = λ x dx' => ∂† f x (setElem 0 idx dx') := 
