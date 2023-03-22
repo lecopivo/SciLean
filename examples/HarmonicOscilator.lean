@@ -1,15 +1,11 @@
--- import SciLean.Core.Functions
 import SciLean
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 
--- import SciLean.Tactic.LiftLimit
--- import SciLean.Tactic.FinishImpl
-
 open SciLean
 
 
-def H (m k : ℝ) (x p : ℝ) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
+def H (m k : ℝ) (x p : ℝ) := (1/(2*m)) * ‖p‖² + k/2 * ‖x‖²
 
 approx solver (m k : ℝ) (steps : Nat)
   := odeSolve (λ t (x,p) => ( ∇ (p':=p), H m k x  p',

@@ -1,4 +1,5 @@
-import SciLean.Algebra
+import SciLean.Mathlib.Data.PUnit
+import SciLean.Mathlib.Data.Prod
 import SciLean.Mathlib.Data.Enumtype
 
 namespace SciLean

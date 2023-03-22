@@ -1,4 +1,4 @@
-import SciLean.Algebra
+-- import SciLean.Algebra
 import SciLean.Data.FinProd
 import SciLean.Data.ArrayN
 import SciLean.Data.DataArray
@@ -49,7 +49,7 @@ def inPrism (P : Prism) (x : ℝ^{P.dim}) : Bool :=
     let Q : Prism := ⟨Q, sorry_proof⟩
     let x : ℝ^{Q.dim + 1} := x 
     let t : ℝ := x[⟨Q.dim, by simp⟩]
-    let y : ℝ^{Q.dim} := λ [i] => x[⟨i.1, sorry_proof⟩]
+    let y : ℝ^{Q.dim} := ⊞ i, x[⟨i.1, sorry_proof⟩]
     if t = 1 then
       x = 0
     else 
@@ -57,29 +57,29 @@ def inPrism (P : Prism) (x : ℝ^{P.dim}) : Bool :=
   | ⟨.prod P₁ P₂, _⟩ =>
     let P₁ : Prism := ⟨P₁, sorry_proof⟩
     let P₂ : Prism := ⟨P₂, sorry_proof⟩
-    let x₁ : ℝ^{P₁.dim} := λ [i] => x[⟨i.1, sorry_proof⟩]
-    let x₂ : ℝ^{P₂.dim} := λ [i] => x[⟨P₁.dim + i.1, sorry_proof⟩]
+    let x₁ : ℝ^{P₁.dim} := ⊞ i, x[⟨i.1, sorry_proof⟩]
+    let x₂ : ℝ^{P₂.dim} := ⊞ i, x[⟨P₁.dim + i.1, sorry_proof⟩]
     (P₁.inPrism x₁) ∧ (P₂.inPrism x₂)
 
 def InPrism (P : Prism) (x : ℝ^{P.dim}) : Prop := (P.inPrism x = true)
 
-@[matchPattern]
+@[match_pattern]
 def point : Prism := ⟨.point, sorry_proof⟩
-@[matchPattern]
+@[match_pattern]
 def segment : Prism := ⟨.cone .point, sorry_proof⟩
 
-@[matchPattern]
+@[match_pattern]
 def triangle : Prism := ⟨.cone (.cone .point), sorry_proof⟩
-@[matchPattern]
+@[match_pattern]
 def square   : Prism := ⟨.prod (.cone .point) (.cone .point), sorry_proof⟩
 
-@[matchPattern]
+@[match_pattern]
 def tet     : Prism := triangle.cone
-@[matchPattern]
+@[match_pattern]
 def pyramid := square.cone
-@[matchPattern]
+@[match_pattern]
 def prism   := segment*triangle
-@[matchPattern]
+@[match_pattern]
 def cube    := segment*square
 
 -- def Foo (P : Prism) : Type :=
@@ -378,8 +378,8 @@ def comp (f : Inclusion Q P) (g : Inclusion S Q) : Inclusion S P :=
    by simp[f.2]; done, 
    by simp[g.3]; done⟩
 
-instance : Compose (Inclusion Q P) (Inclusion S Q) (Inclusion S P) where
-  compose f g := f.comp g
+-- instance : Compose (Inclusion Q P) (Inclusion S Q) (Inclusion S P) where
+--   compose f g := f.comp g
  
 -- def toFin (f : Inclusion Q P) : Fin (P.faceCount Q.dim) := ⟨f.repr.index, sorry_proof⟩
 -- def fromFin (Q P : Prism) (i : Fin (P.faceCount Q.dim)) : Inclusion Q P := ⟨FaceRepr.fromIndex P.1 Q.dim i, sorry_proof, sorry_proof⟩
@@ -494,7 +494,7 @@ def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X)
     let ι : Inclusion point _ := ⟨.point, sorry_proof, sorry_proof⟩
     f ι
   | ⟨.cone P', _⟩ => 
-    let x : ℝ^{P'.dim} := λ [i] => x[⟨i.1,sorry_proof⟩]
+    let x : ℝ^{P'.dim} := ⊞ i, x[⟨i.1,sorry_proof⟩]
     let t : ℝ := x[⟨P'.dim,sorry_proof⟩]
 
     let P' : Prism := ⟨P', sorry_proof⟩
@@ -508,8 +508,8 @@ def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X)
   | ⟨.prod P Q, _⟩ => 
     let P : Prism := ⟨P, sorry_proof⟩
     let Q : Prism := ⟨Q, sorry_proof⟩
-    let x : ℝ^{P.dim} := λ [i] => x[⟨i.1,sorry_proof⟩]
-    let y : ℝ^{Q.dim} := λ [i] => x[⟨i.1+P.dim,sorry_proof⟩]
+    let x : ℝ^{P.dim} := ⊞ i, x[⟨i.1,sorry_proof⟩]
+    let y : ℝ^{Q.dim} := ⊞ i, x[⟨i.1+P.dim,sorry_proof⟩]
 
     P.barycentricInterpolate (x:=x) (λ ιP =>
       Q.barycentricInterpolate (x:=y) (λ ιQ => 

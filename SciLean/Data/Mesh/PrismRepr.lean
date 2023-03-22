@@ -1,6 +1,6 @@
 import SciLean.Prelude
 import SciLean.Mathlib.Data.Enumtype
-import SciLean.Algebra
+-- import SciLean.Algebra
 import SciLean.Core
 
 def List.bubblesort [LT α] [DecidableRel (. < . : α → α → Prop)] (l : List α) : {l' : List α // l.length = l'.length} :=
@@ -62,7 +62,7 @@ inductive PrismRepr where
   | prod (P Q : PrismRepr) : PrismRepr
 with
   /-- Dimension of a prism -/
-  @[computedField]
+  @[computed_field]
   dim : (P : PrismRepr) → Nat
   | .point => 0
   | .cone P' => P'.dim + 1
@@ -343,7 +343,7 @@ inductive FaceRepr : Type where
 with
 
   /-- Converts Face to Prism -/
-  @[computedField]
+  @[computed_field]
   toPrism : FaceRepr → PrismRepr
   | .point => .point
   | .tip _ => .point
@@ -352,7 +352,7 @@ with
   | .prod f g => f.toPrism.prod g.toPrism
 
   /-- Face `f` is a face of the prism `f.ofPrism` -/
-  @[computedField]
+  @[computed_field]
   ofPrism : FaceRepr → PrismRepr
   | .point => .point
   | .tip P => P.cone
