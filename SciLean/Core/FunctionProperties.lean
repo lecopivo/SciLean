@@ -354,7 +354,10 @@ macro_rules
   let mainBinder ← data.mainFunBinder
 
   let x' := mkIdent s!"d{data.mainArgString}'"
-  let adjBinder : TSyntax ``funBinder ← `(($x'))
+  let adjBinder : TSyntax ``funBinder ← 
+    match retType with 
+    | .some T => `(($x' : $T))
+    | .none => `(($x'))
 
   let funVal ← data.mkApp
 
