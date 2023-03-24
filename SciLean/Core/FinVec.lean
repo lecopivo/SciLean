@@ -78,10 +78,10 @@ end Basis
 /--
  -/
 class FinVec (X : Type) (ι : outParam Type) [outParam $ Enumtype ι] extends Hilbert X, Basis X ι ℝ, DualBasis X ι ℝ, BasisDuality X where
-  is_basis : ∀ x : X, x = ∑ i : ι, 𝕡 i x * 𝕖[X] i
+  is_basis : ∀ x : X, x = ∑ i : ι, 𝕡 i x • 𝕖[X] i
   duality : ∀ i j, ⟪𝕖[X] i, 𝕖'[X] j⟫ = [[i=j]]
-  to_dual   : toDual   x = ∑ i,  𝕡 i x * 𝕖'[X] i
-  from_dual : fromDual x = ∑ i, 𝕡' i x *  𝕖[X] i
+  to_dual   : toDual   x = ∑ i,  𝕡 i x • 𝕖'[X] i
+  from_dual : fromDual x = ∑ i, 𝕡' i x •  𝕖[X] i
 
 theorem basis_ext {X ι} [Enumtype ι] [FinVec X ι] (x y : X)
   : (∀ i, ⟪x, 𝕖 i⟫ = ⟪y, 𝕖 i⟫) → (x = y) := sorry_proof

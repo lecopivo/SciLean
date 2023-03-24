@@ -158,7 +158,7 @@ macro_rules
 
   let funVal ← data.mkApp
 
-  let (rhs, proof, rhsTM, proofTM) ← 
+  let (rhs, proof, rhsTM) ← 
     match tpc with
     | `(termWithProofOrConvTactic| := $df:term by $prf:tacticSeq) =>
       let rhs ← `(λ $mainBinder $diffBinder $trailingBinders* => $df)
@@ -168,8 +168,7 @@ macro_rules
           `(λ $mainBinder $diffBinder => ($funVal, $df))
         else
           `(λ $mainBinder $diffBinder => (λ $trailingBinders* => $funVal, λ  $trailingBinders* => $df))      
-      let proofTM ← `(by $prf)
-      pure (rhs, proof, rhsTM, proofTM)
+      pure (rhs, proof, rhsTM)
 
     | `(termWithProofOrConvTactic| by $c:convSeq) => 
       let rhs ← `($lhs rewrite_by $c)
@@ -177,8 +176,7 @@ macro_rules
       if doTanMap.isSome then
         Macro.throwError "Using conv tactic to generate tangentMap is currently unsupported!"
       let rhsTM ← `($lhs rewrite_by $c)
-      let proofTM ← `(by apply AutoImpl.impl_eq_spec)
-      pure (rhs, proof, rhsTM, proofTM)
+      pure (rhs, proof, rhsTM)
 
     | _ =>  Macro.throwUnsupported
 
@@ -186,13 +184,13 @@ macro_rules
   let simp_theorem_name := mkIdent $ data.funPropNamespace.append "diff_simp"
 
   let diff_command ←   
-    if doa.raw[0].getAtomVal == "def" then
-    `(def $definition_name $data.contextBinders* := $rhs
-      @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof)
-  else if doa.raw[0].getAtomVal == "abbrev" then
-    `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof)
-  else
-    Macro.throwUnsupported
+    match doa with
+    | `(defOrAbbrev| def) => 
+      `(def $definition_name $data.contextBinders* := $rhs
+        @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof)
+    | `(defOrAbbrev| abbrev) =>
+      `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof)
+    | _ => Macro.throwUnsupported
 
   if doTanMap.isNone then
     return diff_command
@@ -202,17 +200,18 @@ macro_rules
   let definition_name   := mkIdent $ data.funPropNamespace.append "tangentMap"
   let simp_theorem_name := mkIdent $ data.funPropNamespace.append "tangentMap_simp"
 
-  let tangentMap_command : TSyntax `command ←   
-    if doa.raw[0].getAtomVal == "def" then
+  let tangentMap_command : TSyntax `command ← 
+    match doa with
+    | `(defOrAbbrev| def) =>
       `(def $definition_name $data.contextBinders* := $rhsTM
         @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhsTM = $(data.mkAppContext definition_name) := $proof)
-    else if doa.raw[0].getAtomVal == "abbrev" then
+    | `(defOrAbbrev| abbrev) =>
       `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhsTM = $rhsTM := $tangentMapProof)
-    else
-      Macro.throwUnsupported
+    | _ => Macro.throwUnsupported
 
   `($diff_command:command
     $tangentMap_command:command)
+
 
 --------------------------------------------------------------------------------
 -- 𝒯
@@ -258,20 +257,20 @@ macro_rules
   let definition_name   := mkIdent $ data.funPropNamespace.append "tangentMap"
   let simp_theorem_name := mkIdent $ data.funPropNamespace.append "tangentMap_simp"
 
-  if doa.raw[0].getAtomVal == "def" then
+  match doa with
+  | `(defOrAbbrev| def) =>
     `(
     def $definition_name $data.contextBinders* := $rhs
     @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof
     #print $definition_name
     #check $simp_theorem_name
     )
-  else if doa.raw[0].getAtomVal == "abbrev" then
+  | `(defOrAbbrev| abbrev) =>
     `(
     @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof
     #check $simp_theorem_name
     )
-  else
-    Macro.throwUnsupported
+  | _ => Macro.throwUnsupported
 
 
 --------------------------------------------------------------------------------
@@ -315,20 +314,20 @@ macro_rules
   let definition_name   := mkIdent $ data.funPropNamespace.append "adjoint"
   let simp_theorem_name := mkIdent $ data.funPropNamespace.append "adjoint_simp"
 
-  if doa.raw[0].getAtomVal == "def" then
+  match doa with
+  | `(defOrAbbrev| def) =>
     `(
     def $definition_name $data.contextBinders* := $rhs
     @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof
     #print $definition_name
     #check $simp_theorem_name
     )
-  else if doa.raw[0].getAtomVal == "abbrev" then
+  | `(defOrAbbrev| abbrev) =>    
     `(
     @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof
     #check $simp_theorem_name
     )
-  else
-    Macro.throwUnsupported
+  | _ => Macro.throwUnsupported
 
 --------------------------------------------------------------------------------
 
@@ -392,13 +391,13 @@ macro_rules
   let simp_theorem_name := mkIdent $ data.funPropNamespace.append "adjDiff_simp"
 
   let adjDiff_command ← 
-    if doa.raw[0].getAtomVal == "def" then
+    match doa with
+    | `(defOrAbbrev| def) =>
       `(def $definition_name $data.contextBinders* := $rhs
         @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof)
-    else if doa.raw[0].getAtomVal == "abbrev" then
+    | `(defOrAbbrev| abbrev) =>      
       `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof)
-    else
-      Macro.throwUnsupported
+    | _ => Macro.throwUnsupported 
 
 
   if doRevDiff.isNone then
@@ -411,13 +410,13 @@ macro_rules
   let simp_theorem_name := mkIdent $ data.funPropNamespace.append "revDiff_simp"
 
   let revDiff_command ← 
-    if doa.raw[0].getAtomVal == "def" then
+    match doa with
+    | `(defOrAbbrev| def) => 
       `(def $definition_name $data.contextBinders* := $rhsRD
         @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhsRD = $(data.mkAppContext definition_name) := $proofRD)
-    else if doa.raw[0].getAtomVal == "abbrev" then
+    | `(defOrAbbrev| abbrev) =>      
       `(@[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhsRD = $rhsRD := $revDiffProof)
-    else
-      Macro.throwUnsupported
+    | _ => Macro.throwUnsupported 
 
   `($adjDiff_command:command
     $revDiff_command:command)
@@ -461,21 +460,20 @@ macro_rules
   dbg_trace lhs.raw.prettyPrint
   dbg_trace rhs.raw.prettyPrint
 
-  if doa.raw[0].getAtomVal == "def" then
+  match doa with
+  | `(defOrAbbrev| def) =>
     `(
     def $definition_name $data.contextBinders* := $rhs
     @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $(data.mkAppContext definition_name) := $proof
     #print $definition_name
     #check $simp_theorem_name
     )
-  else if doa.raw[0].getAtomVal == "abbrev" then
+  | `(defOrAbbrev| abbrev) =>
     `(
     @[diff] theorem $simp_theorem_name $data.contextBinders* $extraAssumptions* : $lhs = $rhs := $proof
     #check $simp_theorem_name
     )
-  else
-    Macro.throwUnsupported
-
+  | _ => Macro.throwUnsupported
 
 
 -- variable [SemiHilbert X] [Hilbert X] 

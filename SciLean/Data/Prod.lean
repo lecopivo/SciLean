@@ -82,10 +82,10 @@ instance : Prod.Set (X×Y) 0 X := ⟨λ (x,y) x₀ => (x₀,y)⟩
 
 @[reducible]
 instance {X Y : Type} {Yₙ : outParam Type} [pg : Prod.Set Y n Yₙ] 
-  : Prod.Set (X×Y) (n+1) Yₙ := ⟨λ (x,y) y₀ => (x, pg.seti n y y₀)⟩
+  : Prod.Set (X×Y) (n+1) Yₙ := ⟨λ (x,y) y₀ => (x, pg.seti (i:=n) y y₀)⟩
 
 abbrev Prod.set {X Xs : Type} {Xᵢ : outParam Type} 
-  (i : Nat) [pg : Prod.Set (X×Xs) i Xᵢ] (x : X×Xs) (xi) := pg.seti i x xi
+  (i : Nat) [pg : Prod.Set (X×Xs) i Xᵢ] (x : X×Xs) (xi) := pg.seti (i:=i) x xi
 
 --------------------------------------------------------------------------------
 
@@ -101,7 +101,7 @@ instance (priority := low) {X Y : Type} : Prod.Uncurry 1 (X→Y) X Y where
 @[reducible]
 instance {X Y : Type} {Xs' Y' : outParam Type} [c : Prod.Uncurry n Y Xs' Y']
   : Prod.Uncurry (n+1) (X→Y) (X×Xs') Y' where
-  uncurry := λ (f : X → Y) ((x,xs) : X×Xs') => c.uncurry n (f x) xs
+  uncurry := λ (f : X → Y) ((x,xs) : X×Xs') => c.uncurry (n:=n) (f x) xs
 
 abbrev uncurryN {F : Type} {Xs Y : outParam Type} 
   (n : Nat) (f : F) [Prod.Uncurry n F Xs Y] 
@@ -122,7 +122,7 @@ instance (priority := low) : Prod.Curry 1 X Y (X→Y) where
 @[reducible]
 instance {X Xs Y : Type} {F : outParam Type} [c : outParam $ Prod.Curry n Xs Y F] 
   : Prod.Curry (n+1) (X×Xs) Y (X→F) where
-  curry := λ (f : X×Xs → Y) => (λ (x : X) => c.curry n (λ y => f (x,y)))
+  curry := λ (f : X×Xs → Y) => (λ (x : X) => c.curry (n:=n) (λ y => f (x,y)))
 
 abbrev curryN {Xs Y : outParam $ Type} {F : outParam Type} 
   (n : Nat) (f : Xs → Y) [outParam $ Prod.Curry n Xs Y F] := Prod.Curry.curry n f

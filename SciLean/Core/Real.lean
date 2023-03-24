@@ -1,5 +1,8 @@
+
 import SciLean.Prelude
-import SciLean.Mathlib.Algebra.Field.Basic
+import Mathlib.Algebra.Field.Basic
+
+-- import SciLean.Mathlib.Algebra.Field.Basic
 
 structure Real where
   val : Float
@@ -147,18 +150,17 @@ namespace Real
   --   mul_assoc := sorry_proof
   -- }
 
-  -- instance : Semiring ℝ := 
-  -- {
+  -- instance : Semiring ℝ where
   --   add_zero := sorry_proof
   --   zero_add := sorry_proof
-  --   nsmul_zero' := sorry_proof
-  --   nsmul_succ' := sorry_proof
+  --   -- nsmul_zero' := sorry_proof
+  --   -- nsmul_succ' := sorry_proof
   --   zero_mul := sorry_proof
   --   mul_zero := sorry_proof
   --   one_mul := sorry_proof
   --   mul_one := sorry_proof
-  --   npow_zero' := sorry_proof
-  --   npow_succ' := sorry_proof
+  --   -- npow_zero' := sorry_proof
+  --   -- npow_succ' := sorry_proof
 
   --   add_comm := sorry_proof
   --   left_distrib := sorry_proof
@@ -169,16 +171,14 @@ namespace Real
   --   -- mul_add := sorry_proof
   --   -- add_mul := sorry_proof
   --   -- ofNat_succ := sorry_proof
-  -- }
 
-  -- instance : Ring ℝ :=
-  -- {
+  -- instance : Ring ℝ where
   --   sub_eq_add_neg := sorry_proof
-  --   gsmul_zero' := sorry_proof
-  --   gsmul_succ' := sorry_proof
-  --   gsmul_neg' := sorry_proof
+  --   -- gsmul_zero' := sorry_proof
+  --   -- gsmul_succ' := sorry_proof
+  --   -- gsmul_neg' := sorry_proof
   --   add_left_neg := sorry_proof
-  -- }
+
 
   instance : CommRing ℝ where
     zero_mul := sorry_proof
@@ -188,18 +188,18 @@ namespace Real
     right_distrib := sorry_proof
     mul_one := sorry_proof
     one_mul := sorry_proof
-    npow n x := x.natPow n
-    npow_zero' n := sorry_proof
-    npow_succ' n x := sorry_proof
+    -- npow n x := x.natPow n
+    -- npow_zero' n := sorry_proof
+    -- npow_succ' n x := sorry_proof
     mul_assoc := sorry_proof
     add_comm := sorry_proof
     add_assoc := sorry_proof
     add_zero := sorry_proof
     zero_add := sorry_proof
     add_left_neg := sorry_proof
-    nsmul n x := (n.toReal) * x ----------------  !!!
-    nsmul_zero' := sorry_proof
-    nsmul_succ' n x := sorry_proof
+    -- nsmul n x := (n.toReal) * x ----------------  !!!
+    -- nsmul_zero' := sorry_proof
+    -- nsmul_succ' n x := sorry_proof
     sub_eq_add_neg a b := sorry_proof
     -- gsmul n x := (n.toReal) * x --------- !!!
     -- gsmul_zero' := sorry_proof
@@ -228,9 +228,9 @@ namespace Real
     div_eq_mul_inv := sorry_proof 
     mul_inv_cancel := sorry_proof
     inv_zero := sorry_proof
-    fpow n x := x^(n : ℝ)   ---------  !!!
-    fpow_succ := sorry_proof
-    fpow_neg := sorry_proof
+    -- fpow n x := x^(n : ℝ)   ---------  !!!
+    -- fpow_succ := sorry_proof
+    -- fpow_neg := sorry_proof
 
   --   -- by admit
   --   mul_assoc := sorry_proof

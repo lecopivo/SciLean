@@ -11,5 +11,6 @@ section UnitOperations
 
   -- Multiplication on `α` is not necessary but we do not want for example `ℕ*()` to compile
   instance [Mul α] : HMul α PUnit PUnit := ⟨λ a x => PUnit.unit⟩
+  instance [Mul α] : SMul α PUnit := ⟨λ a x => PUnit.unit⟩
  
 end UnitOperations

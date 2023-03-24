@@ -33,7 +33,7 @@ class SemiHilbert (X) extends Vec X, Inner X, TestFunctions X where
   inner_add : ∀ (x y z : X), TestFun x ∧ TestFun y ∧ TestFun z →
     ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫
   inner_mul : ∀ (x y : X) (r : ℝ),
-    ⟪r*x, y⟫ = r*⟪x, y⟫
+    ⟪r•x, y⟫ = r*⟪x, y⟫
   inner_sym : ∀ (x y : X),
     ⟪x, y⟫ = ⟪y, x⟫
   inner_pos : ∀ (x : X), TestFun x →
@@ -121,8 +121,8 @@ instance instInnerSum
   : Inner ((TX⊕TY) xy) 
   :=
   match xy with
-  | .inl _ => inferInstance
-  | .inr _ => inferInstance
+  | .inl _ => by dsimp; infer_instance
+  | .inr _ => by dsimp; infer_instance
 
 instance instTestFunctions
   (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
@@ -130,8 +130,8 @@ instance instTestFunctions
   : TestFunctions ((TX⊕TY) xy) 
   :=
   match xy with
-  | .inl _ => inferInstance
-  | .inr _ => inferInstance
+  | .inl _ => by dsimp; infer_instance
+  | .inr _ => by dsimp; infer_instance
 
 instance instSemiHilbert
   (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
@@ -139,8 +139,8 @@ instance instSemiHilbert
   : SemiHilbert ((TX⊕TY) xy) 
   :=
   match xy with
-  | .inl _ => inferInstance
-  | .inr _ => inferInstance
+  | .inl _ => by dsimp; infer_instance
+  | .inr _ => by dsimp; infer_instance
 
 instance instHilbert
   (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
@@ -148,8 +148,8 @@ instance instHilbert
   : Hilbert ((TX⊕TY) xy) 
   :=
   match xy with
-  | .inl _ => inferInstance
-  | .inr _ => inferInstance
+  | .inl _ => by dsimp; infer_instance 
+  | .inr _ => by dsimp; infer_instance
 
 
 

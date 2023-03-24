@@ -64,15 +64,6 @@ elab "reduce_type_of" t:term : term => do
   Expr.letE `x reduced (val) (Expr.bvar 0) false |> pure
 
 
-abbrev Sum.map {α : Type u} {β : Type v} {γ : Sort w} 
-  (f : α → γ) (g : β → γ) (xy : α ⊕ β) : γ := 
-  match xy with
-  | .inl x => f x
-  | .inr y => g y
-
-infix:30 "⊕" => Sum.map
-
-
 -- TOOD: move me
 def find? {α ι} [Enumtype ι] (p : α → Bool) (f : ι → α) : Option α := Id.run do
   for (i,_) in Enumtype.fullRange ι do

@@ -34,6 +34,7 @@ argument xy
   isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := dxy.1 by symdiff
 
+
 function_properties Prod.fst {X Y} [SemiHilbert X] [SemiHilbert Y] (xy : X×Y) : X
 argument xy
   hasAdjoint := sorry_proof,
@@ -86,7 +87,7 @@ argument (x,y)
   hasAdjoint := sorry_proof,
   abbrev † := xy' by sorry_proof,
   hasAdjDiff := sorry_proof,
-  abbrev ∂† ℛ := dxy' by unfold adjointDifferential; symdiff; symdiff
+  abbrev ∂† ℛ := dxy' by unfold adjointDifferential; symdiff; symdiff; simp; symdiff; admit
 argument x
   hasAdjDiff := sorry_proof,
   abbrev ∂† ℛ := dx'.1 by sorry_proof
@@ -133,13 +134,12 @@ argument y
   abbrev ∂ 𝒯 := dy by sorry_proof-- ,
   -- abbrev 𝒯 := (x+y, dy) by symdiff
 
-
 function_properties HAdd.hAdd {X} [SemiHilbert X] (x y : X) : X
 argument (x,y)
   hasAdjoint := sorry_proof,
   abbrev † := (xy',xy') by sorry_proof,
   hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; (try infer_instance); sorry_proof,
-  abbrev ∂† ℛ := (dxy', dxy') by unfold adjointDifferential; symdiff; symdiff
+  abbrev ∂† ℛ := (dxy', dxy') by unfold adjointDifferential; symdiff; symdiff; admit
 argument x 
   hasAdjDiff := sorry_proof,
   abbrev ∂† ℛ := dx' by sorry_proof
@@ -172,7 +172,7 @@ argument (x,y)
   hasAdjoint := sorry_proof,
   hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
   abbrev † := (xy',-xy') by sorry_proof,
-  abbrev ∂† ℛ := (dxy', -dxy') by unfold adjointDifferential; symdiff; symdiff
+  abbrev ∂† ℛ := (dxy', -dxy') by unfold adjointDifferential; symdiff; symdiff; admit
 argument x 
   hasAdjDiff := sorry_proof,
   abbrev ∂† ℛ := dx' by sorry_proof
@@ -185,27 +185,27 @@ argument y
 -- HMul.hMul - (·*·)
 --------------------------------------------------------------------------------
 
-function_properties HMul.hMul {X} [Vec X] (x : ℝ) (y : X) : X
+function_properties SMul.smul {X} [Vec X] (x : ℝ) (y : X) : X
 argument (x,y)
   isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx*y + x*dy by sorry_proof
+  abbrev ∂ 𝒯 := dx•y + x•dy by sorry_proof
 argument x
   isLin := sorry_proof, 
   isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx*y by sorry_proof
+  abbrev ∂ 𝒯 := dx•y by sorry_proof
 argument y
   isLin := sorry_proof, 
   isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := x*dy by sorry_proof
+  abbrev ∂ 𝒯 := x•dy by sorry_proof
 
-function_properties HMul.hMul {X} [SemiHilbert X] (x : ℝ) (y : X) : X
+function_properties SMul.smul {X} [SemiHilbert X] (x : ℝ) (y : X) : X
 argument y
   hasAdjoint := sorry_proof,
-  abbrev † := x*y' by sorry_proof,
+  abbrev † := x•y' by sorry_proof,
   hasAdjDiff,
-  abbrev ∂† ℛ := x*dy' by unfold adjointDifferential; symdiff; symdiff
+  abbrev ∂† ℛ := x•dy' by unfold adjointDifferential; symdiff; symdiff
   
-function_properties HMul.hMul {X} [Hilbert X] (x : ℝ) (y : X) : X
+function_properties SMul.smul {X} [Hilbert X] (x : ℝ) (y : X) : X
 argument x
   hasAdjoint := sorry_proof,
   abbrev † := ⟪x',y⟫ by sorry_proof,
@@ -213,7 +213,7 @@ argument x
   abbrev ∂† ℛ := ⟪dx',y⟫ by unfold adjointDifferential; sorry_proof -- symdiff; symdiff
 argument (x,y)
   hasAdjDiff := sorry_proof, --  by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
-  abbrev ∂† ℛ := (⟪dxy',y⟫, x*dxy') by unfold adjointDifferential; symdiff; sorry_proof
+  abbrev ∂† ℛ := (⟪dxy',y⟫, x•dxy') by unfold adjointDifferential; symdiff; sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -225,20 +225,20 @@ argument (x,y)
   isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := ⟪dx,y⟫ + ⟪x,dy⟫ by sorry_proof,
   hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
-  abbrev ∂† ℛ := (dxy'*x, dxy'*y) by sorry_proof
+  abbrev ∂† ℛ := (dxy'•x, dxy'•y) by sorry_proof
 argument x ..
   isLin := sorry_proof,
   isSmooth := sorry_proof, 
   abbrev ∂ 𝒯 := ⟪dx,y⟫ by symdiff
 argument x
   hasAdjoint := sorry_proof,
-  abbrev † := x'*y by sorry_proof
+  abbrev † := x'•y by sorry_proof
 argument y
   isLin := sorry_proof,
   isSmooth := sorry_proof, 
   abbrev ∂ 𝒯 := ⟪x,dy⟫ by symdiff,
   hasAdjoint := sorry_proof,
-  abbrev † := y'*x by sorry_proof
+  abbrev † := y'•x by sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -250,7 +250,7 @@ argument x
   isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := 2*⟪dx,x⟫ by sorry_proof,
   hasAdjDiff := sorry_proof,
-  abbrev ∂† ℛ := 2*dx'*x by sorry_proof
+  abbrev ∂† ℛ := (2*dx')•x by sorry_proof
 
 
 --------------------------------------------------------------------------------

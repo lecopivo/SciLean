@@ -13,20 +13,20 @@ attribute [diff_simp] fun_zero_eval fun_one_eval fun_neg_eval fun_add_eval fun_s
 
 section VecSimps
 variable {X} [Vec X]
-@[simp,diff_simp] theorem one_smul (x : X) : (1 : ℝ) * x = x := sorry_proof
-@[simp,diff_simp] theorem zero_smul (x : X) : (0 : ℝ) * x = (0 : X) := sorry_proof
-@[simp,diff_simp] theorem smul_zero (r : ℝ) : r * (0 : X) = (0 : X) := sorry_proof
-@[simp,diff_simp] theorem neg_one_smul (x : X) : (-1 : ℝ) * x = -x := sorry_proof
+@[simp,diff_simp] theorem one_smul (x : X) : (1 : ℝ) • x = x := sorry_proof
+@[simp,diff_simp] theorem zero_smul (x : X) : (0 : ℝ) • x = (0 : X) := sorry_proof
+@[simp,diff_simp] theorem smul_zero (r : ℝ) : r • (0 : X) = (0 : X) := sorry_proof
+@[simp,diff_simp] theorem neg_one_smul (x : X) : (-1 : ℝ) • x = -x := sorry_proof
 
 @[simp,diff_simp] theorem add_neg_sub (x y : X) : x + -y = x - y := sorry_proof
 @[simp,diff_simp] theorem neg_add_sub (x y : X) : -x + y = y - x := sorry_proof
 
-@[simp,diff_simp] theorem smul_smul_mul (r s: ℝ) (x : X) : r * (s * x) = ((r * s) * x) := sorry_proof
+@[simp,diff_simp] theorem smul_smul_mul (r s: ℝ) (x : X) : r • (s • x) = ((r * s) • x) := sorry_proof
 
-@[simp,diff_simp] theorem add_same_1 (a b : ℝ) (x : X) : a*x + b*x = (a+b)*x := sorry_proof
-@[simp,diff_simp] theorem add_same_2 (a : ℝ) (x : X) : a*x + x = (a+1)*x := sorry_proof
-@[simp,diff_simp] theorem add_same_3 (a : ℝ) (x : X) : x + a*x = (1+a)*x := sorry_proof
-@[simp,diff_simp] theorem add_same_4 (x : X) : x + x = (2:ℝ)*x := sorry_proof
+@[simp,diff_simp] theorem add_same_1 (a b : ℝ) (x : X) : a•x + b•x = (a+b)•x := sorry_proof
+@[simp,diff_simp] theorem add_same_2 (a : ℝ) (x : X) : a•x + x = (a+1)•x := sorry_proof
+@[simp,diff_simp] theorem add_same_3 (a : ℝ) (x : X) : x + a•x = (1+a)•x := sorry_proof
+@[simp,diff_simp] theorem add_same_4 (x : X) : x + x = (2:ℝ)•x := sorry_proof
 
 @[simp,diff_simp] theorem inner_real (x y : ℝ) : ⟪x,y⟫ = x*y := by rfl; done
 

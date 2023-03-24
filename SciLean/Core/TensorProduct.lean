@@ -20,21 +20,10 @@ def TensorProduct (X Y : Type) [Vec X] [Vec Y] : Type := Quot (TensorProduct.Equ
 
 namespace TensorProduct
 
-  -- -- @[instance]
-  -- axiom instVec {X Y : Type} [Vec X] [Vec Y] : Vec (TensorProduct X Y)
-
   def tprod {X Y} [Vec X] [Vec Y] (x : X) (y : Y) : TensorProduct X Y := Quot.mk _ #[(x,y)]
 
-  open Lean Elab Term Meta in
-  elab x:term:71 "⊗" y:term:72 : term => do
-    let xval ← elabTerm x none
-    let yval ← elabTerm y none
-    let val ← mkAppOptM ``TensorProduct #[xval,yval,none,none] <|> mkAppM ``tprod #[xval,yval]
-    pure val
-
-  -- axiom reprAxiom {X Y : Type} [Vec X] [Vec Y] (xy : X ⊗ Y)
-  --   : ∃ (n : Nat) (x : Fin n → X) (y : Fin n → Y),
-  --     xy = ∑ i, x i ⊗ y i
+  instance {X Y} [Vec X] [Vec Y] : OTimes X Y (TensorProduct X Y) := ⟨⟩
+  instance {X Y} [Vec X] [Vec Y] (x : X) (y : Y) : OTimes x y (tprod x y) := ⟨⟩
 
   variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 
@@ -50,7 +39,7 @@ namespace TensorProduct
 
   structure is_linear  (f : X → Y) : Prop where
     add  : ∀ x y, f (x + y) = f x + f y
-    smul : ∀ (s : ℝ) x, f (s*x) = s * (f x)
+    smul : ∀ (s : ℝ) x, f (s•x) = s • (f x)
 
   /-- Extends bilinear map `X → Y → Z` to `X ⊗ Y → Z`. -/
   def map' (f : X → Y → Z) (h : is_linear f ∧ ∀ x, is_linear (f x)) (xy : X ⊗ Y) : Z :=
@@ -60,7 +49,7 @@ namespace TensorProduct
     : map' f h (x⊗y) = f x y := sorry_proof
 
   instance : Neg (X⊗Y) := ⟨λ xy  => 
-    xy.liftOn (c := sorry_proof) (λ xy : Array (X×Y) => Quot.mk _ <| xy.map (λ (x,y) => (-x,y)))⟩
+    xy.liftOn (λ xy : Array (X×Y) => Quot.mk _ <| xy.map (λ (x,y) => (-x,y))) sorry_proof⟩
 
   instance : Add (X⊗Y) := ⟨λ xy xy' => 
     xy.liftOn (λ xy : Array (X×Y) => 
@@ -69,11 +58,11 @@ namespace TensorProduct
   instance : Sub (X⊗Y) := ⟨λ xy xy' => xy + (-xy')⟩
 
   -- We scale x and y by the same amount in the hope of better numerical stability
-  instance : HMul ℝ (X⊗Y) (X⊗Y) := ⟨λ r xy => 
+  instance : SMul ℝ (X⊗Y) := ⟨λ r xy => 
     let s  := if 0 ≤ r then 1 else 0
     let r' := if 0 ≤ r then r.sqrt else (-r).sqrt 
-    xy.liftOn (c := sorry_proof) λ xy =>
-      Quot.mk _ <| xy.map (λ (x,y) => (s*r'*x, r'*y))⟩
+    xy.liftOn (λ xy =>
+      Quot.mk _ <| xy.map (λ (x,y) => ((s*r')•x, r'•y))) sorry_proof⟩
 
   instance : Zero (X⊗Y) := ⟨(Quot.mk _ (#[] : Array (X×Y)))⟩
 

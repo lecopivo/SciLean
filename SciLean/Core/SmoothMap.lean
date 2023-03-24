@@ -48,25 +48,25 @@ namespace SciLean
   theorem SmoothMap.eta_reduction {X Y} [Vec X] [Vec Y] (f : X ⟿ Y)
       : (λ (x : X) ⟿ f x) = f := by rfl; done
 
-  theorem show_smoothness_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⟿ Y) : (∀ x, f x = g x) → IsSmoothT f :=
+  theorem show_smoothness_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⟿ Y) : (f = g) → IsSmoothT f :=
   by
     intro p
-    have q : f = g := by ext; apply p
+    have q : f = g := by apply p
     rw[q]; infer_instance
 
   variable {X Y Z} [Vec X] [Vec Y] [Vec Z] {α : Type}
 
   def Smooth.comp' : (Y ⟿ Z) → (X ⟿ Y) → (X⟿Z) := λ f g =>
-    SmoothMap.mk (property := sorry) λ x => f (g x)
+    SmoothMap.mk' (λ x => f (g x)) sorry
 
   def Smooth.prodMap' : (X⟿Y) → (X⟿Z) → (X ⟿ Y×Z) := λ f g =>
-    SmoothMap.mk (property := sorry) λ x => (f x, g x)
+    SmoothMap.mk' (λ x => (f x, g x)) sorry
 
   def Smooth.prodMap'' : (α→X) × (α→Y) ⟿ (α → X×Y) :=
-    SmoothMap.mk (property := sorry) λ (x,y) a => (x a, y a)
+    SmoothMap.mk' (λ (x,y) a => (x a, y a)) sorry
 
   def Smooth.const' : X→Y⟿X := λ x =>
-    SmoothMap.mk (property := sorry) λ y => x
+    SmoothMap.mk' (λ y => x) sorry
 
   @[simp] theorem Smooth.comp'_eval (f : Y ⟿ Z) (g : X⟿Y) (x : X) : Smooth.comp' f g x = f (g x) := by simp[Smooth.comp']
   @[simp] theorem Smooth.prodMap'_eval (f : X ⟿ Y) (g : X⟿Z) (x : X) : Smooth.prodMap' f g x = (f x, g x) := by simp[Smooth.prodMap']
@@ -76,7 +76,7 @@ namespace SciLean
   def Smooth.neg : X ⟿ X := SmoothMap.mk' (λ x => -x) sorry
   def Smooth.add' : X×X ⟿ X := SmoothMap.mk' (λ (x,y) => x+y) sorry
   def Smooth.sub' : X×X ⟿ X := SmoothMap.mk' (λ (x,y) => x-y) sorry
-  def Smooth.smul' : ℝ×X ⟿ X := SmoothMap.mk' (λ (r,x) => r*x) sorry
+  def Smooth.smul' : ℝ×X ⟿ X := SmoothMap.mk' (λ (r,x) => r•x) sorry
   def Smooth.mul' : ℝ×ℝ ⟿ ℝ := SmoothMap.mk' (λ (x,y) => x*y) sorry
 
   open Smooth
@@ -93,10 +93,10 @@ namespace SciLean
   instance : Mul (X⟿ℝ) := ⟨λ f g => SmoothMap.mk' (λ x => f x * g x)
     (show_smoothness_via (comp' mul' (prodMap' f g)) (by ext; simp[mul']))⟩
 
-  instance : HMul ℝ (X⟿Y) (X⟿Y) := ⟨λ r f => SmoothMap.mk' (λ x => r * f x)
+  instance : SMul ℝ (X⟿Y) := ⟨λ r f => SmoothMap.mk' (λ x => r • f x)
     (show_smoothness_via (comp' smul' (prodMap' (const' r) f)) (by ext; simp[smul']))⟩
 
-  instance : HMul (X⟿ℝ) (X⟿Y) (X⟿Y) := ⟨λ f g => SmoothMap.mk' (λ x => f x * g x)
+  instance : HMul (X⟿ℝ) (X⟿Y) (X⟿Y) := ⟨λ f g => SmoothMap.mk' (λ x => f x • g x)
     (show_smoothness_via (comp' smul' (prodMap' f g)) (by ext; simp[smul']))⟩
  
   instance : Zero (X ⟿ Y) := ⟨const' 0⟩
@@ -148,12 +148,12 @@ namespace SciLean
   def pair : X⟿Y⟿X×Y := 
     SmoothMap.mk' (λ x => 
       SmoothMap.mk' (λ y => (x,y))
-      (show_smoothness_via (curry' id x) (by ext; simp)))
-    (show_smoothness_via (curry' id) (by ext; simp))
+      (show_smoothness_via (curry' id x) (by funext x; simp)))
+    (show_smoothness_via (curry' id) (by funext y; simp[curry']))
 
   def swap : X×Y⟿Y×X := 
     SmoothMap.mk' (λ (x,y) => (y,x))
-      (show_smoothness_via (prodMap' snd fst) (by ext; simp))
+      (show_smoothness_via (prodMap' snd fst) (by funext; simp))
 
 
   @[simp] theorem pair_eval (x : X) (y : Y) : pair x y = (x,y) := by simp[pair]
@@ -168,11 +168,11 @@ namespace SciLean
 
   def assocl : X×(Y×Z) ⟿ (X×Y)×Z := 
     SmoothMap.mk' (λ (x,y,z) => ((x,y),z))
-      (show_smoothness_via (prodMap' (prodMap' fst (comp' fst snd))  (comp' snd snd)) (by ext; simp))
+      (show_smoothness_via (prodMap' (prodMap' fst (comp' fst snd))  (comp' snd snd)) (by funext; simp))
 
   def assocr : (X×Y)×Z ⟿ X×(Y×Z) := 
     SmoothMap.mk' (λ ((x,y),z) => (x,y,z))
-      (show_smoothness_via (prodMap' (comp' fst fst) (prodMap' (comp' snd fst) snd)) (by ext; simp))
+      (show_smoothness_via (prodMap' (comp' fst fst) (prodMap' (comp' snd fst) snd)) (by funext; simp))
 
 
   @[simp] theorem eval_eval (x : X) (f : X⟿Y) : eval x f = f x := by simp[eval]
@@ -195,14 +195,14 @@ namespace SciLean
     SmoothMap.mk' (λ f => 
       SmoothMap.mk' (λ g => 
         SmoothMap.mk' (λ x => (f x, g x))
-        (show_smoothness_via (prodMap' f g) (by ext; simp)))
-      (show_smoothness_via (curry' (comp' swap (prodMap' (uncurry' id) (comp' f snd)))) (by ext; simp)))
+        (show_smoothness_via (prodMap' f g) (by funext; simp)))
+      (show_smoothness_via (curry' (comp' swap (prodMap' (uncurry' id) (comp' f snd)))) (by funext g; simp[comp',curry'])))
     (show_smoothness_via (
       let F : (X⟿Y)×(X⟿Z)×X ⟿ Y×Z := comp' 
         (prodMap' (comp' (uncurry' id) fst) (comp' (uncurry' id) snd)) 
         (prodMap' (prodMap' fst (comp' snd snd)) (prodMap' (comp' fst snd) (comp' snd snd)))
       curry' (curry' (comp' F (assocr))))
-      (by ext; simp))
+      (by funext; simp[curry',comp']))
 
 
   @[simp] theorem comp_eval (f : Y⟿Z) (g : X⟿Y) : comp f g = comp' f g := by simp[comp,comp']

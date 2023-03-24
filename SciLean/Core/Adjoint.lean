@@ -105,7 +105,7 @@ theorem diag.arg_x.adj_simp
 @[simp ↓ low, diff low]
 theorem eval.arg_f.adj_simp
   (i : ι)
-  : (λ (f : ι → X) => f i)† = (λ f' j => ([[i = j]] * f' : X))
+  : (λ (f : ι → X) => f i)† = (λ f' j => ([[i = j]] • f' : X))
 := sorry_proof
 
 @[simp ↓ low-1, diff low-1]
@@ -118,7 +118,7 @@ theorem evalDep.arg_f.adj_simp
 @[simp ↓ low-1, diff low-1]
 theorem eval.arg_x.parm1.adj_simp
   (f : X → ι → Z) [HasAdjointT f] (i : ι)
-  : (λ x => f x i)† = (λ x' => f† (λ j => ([[i = j]] * x')))
+  : (λ x => f x i)† = (λ x' => f† (λ j => ([[i = j]] • x')))
 := 
 by 
   rw [comp.arg_x.adj_simp (λ (x : ι → Z) => x i) f]

@@ -19,7 +19,7 @@ open Lean Meta Simp
 
 namespace SciLean
 
-
+#check Lean.MetaM
 partial def autoDiffPre (e : Expr) (rep := false) : SimpM Step := do
   let e := e.headBeta
   trace[Meta.Tactic.simp] s!"Autodiff step on:\n{← Meta.ppExpr e}"

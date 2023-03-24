@@ -5,6 +5,8 @@ import SciLean.Core.Attributes
 import SciLean.Core.HasAdjoint
 import SciLean.Core.Defs
 
+import SciLean.Tactic.CustomSimp.DebugSimp
+
 -- import SciLean.Tactic.CustomSimp.SimpGuard
 import SciLean.Tactic.AutoDiff
 import SciLean.Core.AutoDiffSimps
@@ -321,6 +323,8 @@ theorem tangentMap.of_swap (f : α → X → Y) [∀ i, IsSmoothT (f i)]
   : 𝒯 (λ x a => f a x) = λ x dx => (λ a => f a x, λ a => ∂ (f a) x dx) 
   := by symdiff; done
 
+set_option trace.Meta.Tactic.simp true in
+set_option trace.Meta.Tactic.simp.unify false in
 @[simp ↓ low-1, diff, simp_guard g (λ x => x)]
 theorem tangentMap.of_comp
   (f : Y → Z) [IsSmoothT f] 
@@ -330,7 +334,7 @@ theorem tangentMap.of_comp
     λ x dx =>
       let (y,dy) := 𝒯 g x dx
       𝒯 f y dy
-  := by symdiff; done
+  := by unfold tangentMap; debug_simp; symdiff_core; done
 
 
 @[simp ↓ low-2, diff, simp_guard g₁ Prod.fst, g₂ Prod.snd]

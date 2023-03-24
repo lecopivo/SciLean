@@ -1,4 +1,5 @@
-import SciLean.Mathlib.Algebra.Module.Basic
+-- import SciLean.Mathlib.Algebra.Module.Basic
+import Mathlib.Algebra.Module.Basic
 import SciLean.Mathlib.Data.Prod
 import SciLean.Mathlib.Data.Pi
 import SciLean.Mathlib.Data.PUnit
@@ -7,8 +8,6 @@ import SciLean.Core.Real
 
 namespace SciLean
 
--- This is an auxiliary class mainly used for deriving
-class SMul (X : Type u) extends HMul ℝ X X
 
 -- __   __      _             ___
 -- \ \ / /__ __| |_ ___ _ _  / __|_ __  __ _ __ ___
@@ -43,13 +42,13 @@ section CommonVectorSpaces
   def AddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddCommGroup α :=
     AddCommGroup.mk (toAddGroup := AddGroup.mkSorryProofs) sorry_proof
 
-  def MulAction.mkSorryProofs {α β} [Monoid α] [HMul α β β] : MulAction α β := MulAction.mk sorry_proof sorry_proof
-  def DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [HMul α β β] : DistribMulAction α β := 
+  def MulAction.mkSorryProofs {α β} [Monoid α] [SMul α β] : MulAction α β := MulAction.mk sorry_proof sorry_proof
+  def DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [SMul α β] : DistribMulAction α β := 
     DistribMulAction.mk (toMulAction := MulAction.mkSorryProofs) sorry_proof sorry_proof
-  def Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [HMul α β β] : Module α β := 
+  def Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [SMul α β] : Module α β := 
     Module.mk (toDistribMulAction := DistribMulAction.mkSorryProofs) sorry_proof sorry_proof
 
-  def Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [HMul ℝ α α] : Vec α :=
+  def Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [SMul ℝ α] : Vec α :=
     Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs))
     
   instance [Vec U] : Vec (α → U) := Vec.mkSorryProofs
@@ -57,6 +56,7 @@ section CommonVectorSpaces
   instance [Vec U] [Vec V] : Vec (U × V) := Vec.mkSorryProofs
   instance : Vec Unit := Vec.mkSorryProofs
 
+  infix:30 "⊕" => Sum.elim  -- X⊕Y→Type
 
   instance instVecSum
     (X Y : Type) (TX : X → Type) (TY : Y → Type)  (xy : X⊕Y) 
@@ -64,8 +64,8 @@ section CommonVectorSpaces
     : Vec ((TX⊕TY) xy) 
     :=
     match xy with
-    | .inl _ => inferInstance
-    | .inr _ => inferInstance
+    | .inl _ => by dsimp; infer_instance
+    | .inr _ => by dsimp; infer_instance
 
 
 end CommonVectorSpaces
@@ -77,7 +77,7 @@ section VecProp
 class VecProp {X : Type} [Vec X] (P : X → Prop) : Prop where
   add : ∀ x y, P x → P y → P (x + y)
   neg : ∀ x, P x → P (- x)
-  smul : ∀ (r : ℝ) x, P x → P (r * x)
+  smul : ∀ (r : ℝ) x, P x → P (r • x)
   zero : P 0
 
 variable {X : Type} [Vec X] {P : X → Prop} [inst : VecProp P]
@@ -85,7 +85,7 @@ variable {X : Type} [Vec X] {P : X → Prop} [inst : VecProp P]
 instance : Add {x : X // P x} := ⟨λ x y => ⟨x.1 + y.1, inst.add x.1 y.1 x.2 y.2⟩⟩
 instance : Sub {x : X // P x} := ⟨λ x y => ⟨x.1 - y.1, sorry⟩⟩
 instance : Neg {x : X // P x} := ⟨λ x => ⟨- x.1, inst.neg x.1 x.2⟩⟩
-instance : HMul ℝ {x : X // P x} {x : X // P x} := ⟨λ r x => ⟨r * x.1, inst.smul r x.1 x.2⟩⟩
+instance : SMul ℝ {x : X // P x} := ⟨λ r x => ⟨r • x.1, inst.smul r x.1 x.2⟩⟩
 
 instance : Zero {x : X // P x} := ⟨⟨0, inst.zero⟩⟩
 

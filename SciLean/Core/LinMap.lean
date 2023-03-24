@@ -79,10 +79,10 @@ namespace SciLean
   theorem LinMap.eta_reduction {X Y} [Vec X] [Vec Y] (f : X ⊸ Y)
       : (λ (x : X) ⊸ f x) = f := by rfl; done
 
-  theorem show_is_lin_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⊸ Y) : (∀ x, f x = g x) → IsLinT f :=
+  theorem show_is_lin_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⊸ Y) : (f = g) → IsLinT f :=
   by
     intro p
-    have q : f = g := by ext; apply p
+    have q : f = g := by apply p
     rw[q]; infer_instance
 
 
@@ -91,13 +91,13 @@ namespace SciLean
   variable {Z : Type} [Vec Z] {α : Type}
 
   def comp' : (Y⊸Z) → (X⊸Y) → (X⊸Z) := λ f g =>
-    LinMap.mk (property := sorry) λ x => f (g x)
+    LinMap.mk' (λ x => f (g x)) sorry
 
   def prodMap' : (X⊸Y) → (X⊸Z) → (X ⊸ Y×Z) := λ f g =>
-    LinMap.mk (property := sorry) λ x => (f x, g x)
+    LinMap.mk' (λ x => (f x, g x)) sorry
 
   def zeroFun : Y⊸X :=
-    LinMap.mk (property := sorry) λ y => (0 : X)
+    LinMap.mk' (λ y => (0 : X)) sorry
 
   def swap : X⊗Y → Y⊗X := (λ xy => xy.map' (λ (x : X) (y : Y) => y⊗x) sorry)
 
@@ -114,25 +114,25 @@ namespace SciLean
   -- def tassocl : 
   -- def tassocr : 
   def unit' : ℝ → X ⊸ ℝ⊗X := λ r => LinMap.mk' (λ x => r⊗x) sorry
-  def counit : ℝ⊗X ⊸ X := LinMap.mk' ((λ rx => rx.map' (λ r x => r * x) sorry)) sorry
+  def counit : ℝ⊗X ⊸ X := LinMap.mk' ((λ rx => rx.map' (λ r x => r • x) sorry)) sorry
 
   @[simp] theorem unit'_eval (r : ℝ) (x : X) : unit' r x = r⊗x := by simp[unit']
-  @[simp] theorem counit_eval (r : ℝ) (x : X) : counit (r⊗x) = r*x := by simp[counit]
+  @[simp] theorem counit_eval (r : ℝ) (x : X) : counit (r⊗x) = r•x := by simp[counit]
 
   instance : Neg (X⊸Y) := ⟨λ f => LinMap.mk' (λ x => -f x)
-    (show_is_lin_via (comp' neg f) (by ext; simp[neg]))⟩
+    (show_is_lin_via (comp' neg f) (by funext; simp[neg]))⟩
 
   instance : Add (X⊸Y) := ⟨λ f g => LinMap.mk' (λ x => f x + g x)
-    (show_is_lin_via (comp' add' (prodMap' f g)) (by ext; simp[add']))⟩
+    (show_is_lin_via (comp' add' (prodMap' f g)) (by funext; simp[add']))⟩
 
   instance : Sub (X⊸Y) := ⟨λ f g => LinMap.mk' (λ x => f x - g x)
-    (show_is_lin_via (comp' sub' (prodMap' f g)) (by ext; simp[sub']))⟩
+    (show_is_lin_via (comp' sub' (prodMap' f g)) (by funext; simp[sub']))⟩
 
   instance : Mul (X⊸ℝ) := ⟨λ f g => LinMap.mk' (λ x => f x * g x)
-    (show_is_lin_via (comp' mul' (prodMap' f g)) (by ext; simp[mul']))⟩
+    (show_is_lin_via (comp' mul' (prodMap' f g)) (by funext; simp[mul']))⟩
 
-  instance : HMul ℝ (X⊸Y) (X⊸Y) := ⟨λ r f => LinMap.mk' (λ x => r * f x)
-    (show_is_lin_via (comp' counit (comp' (unit' r) f)) (by ext; simp))⟩
+  instance : SMul ℝ (X⊸Y) := ⟨λ r f => LinMap.mk' (λ x => r • f x)
+    (show_is_lin_via (comp' counit (comp' (unit' r) f)) (by funext; simp))⟩
 
   instance : Zero (X ⊸ Y) := ⟨zeroFun⟩
 
@@ -166,12 +166,12 @@ namespace SciLean
 
   @[infer_tc_goals_rl]
   instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : Basis (X ⊸ Y) (ι×κ) ℝ where
-    basis := λ (i,j) => LinMap.mk' (λ x => 𝕡 i x * 𝕖[Y] j) sorry_proof
+    basis := λ (i,j) => LinMap.mk' (λ x => 𝕡 i x • 𝕖[Y] j) sorry_proof
     proj := λ (i,j) f => 𝕡 j (f (𝕖 i))
 
   @[infer_tc_goals_rl]
   instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : DualBasis (X ⊸ Y) (ι×κ) ℝ where
-    dualBasis := λ (i,j) => LinMap.mk' (λ x => 𝕡' i x * 𝕖'[Y] j) sorry_proof
+    dualBasis := λ (i,j) => LinMap.mk' (λ x => 𝕡' i x • 𝕖'[Y] j) sorry_proof
     dualProj := λ (i,j) f => 𝕡' j (f (𝕖' i))
 
   open BasisDuality in

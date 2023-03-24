@@ -15,7 +15,7 @@ class SemiHilbertDiff (X : Type) extends Diff X where
   inner_add : ∀ (x' : X) (x y z : 𝒯[x'] X), TestFun x ∧ TestFun y ∧ TestFun z →
     ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫
   inner_mul : ∀ (x' : X) (x y : 𝒯[x'] X) (r : ℝ),
-    ⟪r*x, y⟫ = r*⟪x, y⟫
+    ⟪r•x, y⟫ = r*⟪x, y⟫
   inner_sym : ∀ (x' : X) (x y : 𝒯[x'] X),
     ⟪x, y⟫ = ⟪y, x⟫
   inner_pos : ∀ (x' : X) (x : 𝒯[x'] X), TestFun x →
