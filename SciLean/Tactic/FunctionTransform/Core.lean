@@ -23,7 +23,7 @@ prefix:max "∂" => diff
 
 theorem diff_I  : ∂ (λ x : α => x) = λ x dx => dx := sorry
 -- theorem diff_K : ∂ (λ (x : α) (y : β) => x) = λ x dx y => dx := sorry
-theorem diff_K [OfNat α 0] (x : α) : ∂ (λ (y : β) => x) = λ y dy => 0 := sorry
+theorem diff_K [OfNat α 0] (β : Type _) (x : α) : ∂ (λ (y : β) => x) = λ y dy => 0 := sorry
 theorem diff_B (f : β → γ) (g : α → β) 
   : ∂ (λ x => f (g x)) 
     = 
@@ -39,10 +39,52 @@ theorem diff_C (f : β → α → γ)
   : ∂ (λ (x : α) (y : β) => f y x)
     =
     λ x dx y => ∂ (f y) x dx := sorry
-theorem diff_eval (x : α)
+theorem diff_eval (β) (x : α)
   : ∂ (λ (f : α → β) => f x)
     =
     λ f df => df x := sorry
+
+def adj (f : α → β) : β → α := sorry
+
+postfix:max "†" => adj
+
+theorem adj_I  : ∂ (λ x : α => x) = λ x dx => dx := sorry
+theorem adj_B (f : β → γ) (g : α → β) 
+  : (λ x => f (g x))†
+    = 
+    λ z => g† (f† z) := sorry
+
+theorem adj_S [Add α] (f : α → β → γ) (g : α → β) 
+  : (λ x => f x (g x))†
+    = 
+    λ z => 
+      let (a,b) := (λ ab : α×β => f ab.1 ab.2)† z
+      a + g† b := sorry
+
+def sum (f : α → β) : β := sorry
+
+@[simp] theorem diff_sum 
+  : ∂ (λ (f : α → β) => sum f)
+    =
+    λ f df => sum df := sorry
+
+@[simp] theorem sum_eval (f : α → β → γ) (b : β)
+  : sum f b
+    =
+    sum (λ a => f a b) := sorry
+
+theorem adj_C (f : β → α → γ)
+  : (λ (x : α) (y : β) => f y x)†
+    =
+    λ g => sum λ y => (f y)† (g y) := sorry
+
+def kron (i i' : α) (b : β) : β := sorry
+
+theorem adj_eval (β) (x : α)
+  : (λ (f : α → β) => f x)†
+    =
+    λ y x' => kron x x' y := sorry
+
 /--
 Constructs a proof that the original expression is true
 given a simp result which simplifies the target to `True`.
@@ -65,7 +107,9 @@ def _root_.Array.findRevIdx? {α : Type} (as : Array α) (p : α → Bool) : Opt
 def getNameOfRuleI (transName : Name) : Option Name :=
   if transName == ``diff then
     return ``diff_I
-  else 
+  else if transName == ``adj then
+    return ``adj_I
+  else
     none
 
 def applyRuleI (transName : Name) (X : Expr) : MetaM (Option (Expr×Expr)) := do
@@ -80,21 +124,24 @@ def applyRuleI (transName : Name) (X : Expr) : MetaM (Option (Expr×Expr)) := do
 def getNameOfRuleK (transName : Name) : Option Name :=
   if transName == ``diff then
     return ``diff_K
-  else 
+  else
     none
 
 def applyRuleK (transName : Name) (x Y : Expr) : MetaM (Option (Expr×Expr)) := do
   if let .some rule := getNameOfRuleK transName then
-    let proof ← Meta.mkAppOptM rule #[← inferType x, Y, none, x]
+    let proof ← Meta.mkAppM rule #[Y, x]
     let rhs := (← inferType proof).getArg! 2
     return (rhs, proof)
   else
+    trace[Meta.Tactic.fun_trans.trans] s!"Failed applying rule K"
     return none
 
 
 def getNameOfRuleS (transName : Name) : Option Name :=
   if transName == ``diff then
     return ``diff_S
+  else if transName == ``adj then
+    return ``adj_S
   else 
     none
 
@@ -110,6 +157,8 @@ def applyRuleS (transName : Name) (f g : Expr) : MetaM (Option (Expr×Expr)) := 
 def getNameOfRuleB (transName : Name) : Option Name :=
   if transName == ``diff then
     return ``diff_B
+  else if transName == ``adj then
+    return ``adj_B
   else 
     none
 
@@ -124,6 +173,8 @@ def applyRuleB (transName : Name) (f g : Expr) : MetaM (Option (Expr×Expr)) := 
 def getNameOfRuleC (transName : Name) : Option Name :=
   if transName == ``diff then
     return ``diff_C
+  else if transName == ``adj then
+    return ``adj_C
   else 
     none
 
@@ -139,12 +190,14 @@ def applyRuleC (transName : Name) (f : Expr) : MetaM (Option (Expr×Expr)) := do
 def getNameOfRuleEval (transName : Name) : Option Name :=
   if transName == ``diff then
     return ``diff_eval
+  else if transName == ``adj then
+    return ``adj_eval
   else 
     none
 
 def applyRuleEval (transName : Name) (x Y : Expr) : MetaM (Option (Expr×Expr)) := do
   if let .some rule := getNameOfRuleEval transName then
-    let proof ← Meta.mkAppOptM rule #[none, Y, x]
+    let proof ← Meta.mkAppM rule #[Y, x]
     let rhs := (← inferType proof).getArg! 2
     return (rhs, proof)
   else 
@@ -157,6 +210,8 @@ def applyRuleEval (transName : Name) (x Y : Expr) : MetaM (Option (Expr×Expr)) 
 def getFunctionTransform (e : Expr) : Option (Name × Expr × Array Expr) :=
   if e.isApp && (e.isAppOf ``diff) then     
     return (``diff, e.getAppArgs[2]!, e.getAppArgs[3:])
+  else if e.isApp && (e.isAppOf ``adj) then     
+    return (``adj, e.getAppArgs[2]!, e.getAppArgs[3:])
   else
     none
 
@@ -198,8 +253,8 @@ def transformFunction (transName : Name) (f : Expr) : MetaM (Option (Expr × Exp
 
           trace[Meta.Tactic.fun_trans.trans] s!"Application case 'F:{← Meta.ppExpr F}' 'args:{← args.mapM Meta.ppExpr}'"
 
-          -- the last arguments with non-trivial occurence of `x`        
-          let id? := args.findRevIdx? (λ arg => (arg != x) && (arg.containsFVar xId))
+          -- the first arguments with non-trivial occurence of `x`        
+          let id? := args.findIdx? (λ arg => (arg != x) && (arg.containsFVar xId))
 
           -- non trivial composition?
           if let .some id := id? then

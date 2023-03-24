@@ -52,6 +52,7 @@ by
   fun_trans
   done
 
+
 example (x : α)
   : ∂ (λ (f : α → β) => f x) 
     =
@@ -88,18 +89,6 @@ by
   done
 
 
-def sum (f : α → β) : β := sorry
-
-@[simp] theorem diff_sum 
-  : ∂ (λ (f : α → β) => sum f)
-    =
-    λ f df => sum df := sorry
-
-@[simp] theorem sum_eval (f : α → β → γ) (b : β)
-  : sum f b
-    =
-    sum (λ a => f a b) := sorry
-
 -- set_option trace.Meta.Tactic.fun_trans.step true in
 example (f : α → β → γ)
   : ∂ (λ y => sum (λ x => f x y))
@@ -120,3 +109,33 @@ by
   done
   
 
+
+example (f : β₁ → β₂ → γ) (g₁ : α → β₁) (g₂ : α → β₂) [Add γ]
+  : ∂ (λ x => f (g₁ x) (g₂ x))
+    = 
+    λ x dx => 
+      ∂ (f (g₁ x)) (g₂ x) (∂ g₂ x dx)
+      +
+      ∂ (λ y => f y (g₂ x)) (g₁ x) (∂ g₁ x dx) :=
+by
+  fun_trans
+  done
+
+
+example (f : β → γ) (g : α → β) 
+  : (λ x => f (g x))†
+    =
+    λ z => g† (f† z) :=
+by
+  fun_trans
+  done
+
+
+example {α β₁ β₂ γ : Type} [Add α] [Add (α×β₁)] [Add ((α×β₂)×β₂)] (f : β₁ → β₂ → γ) (g₁ : α → β₁) (g₂ : α → β₂) 
+  : (λ x => f (g₁ x) (g₂ x))†
+    = 
+    λ z => sorry
+:=
+by
+  fun_trans
+  done
