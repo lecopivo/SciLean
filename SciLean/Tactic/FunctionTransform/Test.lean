@@ -11,11 +11,13 @@ by
   fun_trans
   done
 
+
 example {α β γ : Type} [Nonempty α] [Nonempty β]
   : ∂(λ (x : Nat) (y : Nat) => x) = λ x dx y => dx := 
 by
   fun_trans  -- (config := {singlePass := true})
   done
+
 
 example {α β γ : Type} [Nonempty α] [Nonempty β]
   : ∂(λ (x : Nat) (y z : Nat) => x) = λ x dx y z => dx := 
@@ -23,11 +25,13 @@ by
   fun_trans
   done
 
+
 example {α β γ : Type} (f : β → γ) (g : α → β) [Nonempty α] [Nonempty β]
   : ∂(λ x => f (g x)) = λ x dx => ∂ f (g x) (∂ g x dx) := 
 by
   fun_trans
   done
+
 
 example {α β γ : Type} (f : α → β → γ) (g : α → β)  [Add γ]
   : ∂(λ x => f x (g x)) 
@@ -40,11 +44,13 @@ by
   fun_trans
   done
 
+
 example {α β γ δ : Type} (f : β → δ → γ) (g : α → β) (d : δ)
   : ∂(λ x => f (g x) d) = λ x dx => ∂ (λ y => f y d) (g x) (∂ g x dx) := 
 by
   fun_trans
   done
+
 
 example (x : Nat)
   : ∂(λ (y : Nat) => x) = λ y dy => 0 := 
@@ -151,10 +157,12 @@ by
   done
 
 
-example {α β₁ β₂ β₃ γ : Type} [Add α] [Add (α×β₁)] [Add ((α×β₂)×β₂)] (f : β₁ → β₂ → β₃ → γ) (g₁ : α → β₁) (g₂ : α → β₂) (g₃ : α → β₃) 
+example {α β₁ β₂ β₃ γ : Type} [Add α] (f : β₁ → β₂ → β₃ → γ) (g₁ : α → β₁) (g₂ : α → β₂) (g₃ : α → β₃)
   : (λ x => f (g₁ x) (g₂ x) (g₃ x))†
-    = 
-    λ z => sorry :=
+    =
+    λ z => 
+      let (b₁,b₂,b₃) := (uncurry3 f)† z
+      g₁† b₁ + (g₂† b₂ + g₃† b₃) :=
 by
   fun_trans
   done
