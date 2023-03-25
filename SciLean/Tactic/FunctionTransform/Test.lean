@@ -33,7 +33,7 @@ example {α β γ : Type} (f : α → β → γ) (g : α → β)  [Add γ]
   : ∂(λ x => f x (g x)) 
     = 
     λ x dx => 
-      ∂ f x dx (g x)
+      ∂ (λ x' => f x' (g x)) x dx
       +
       ∂ (f x) (g x) (∂ g x dx) := 
 by
@@ -83,7 +83,7 @@ by
 example c
   : ∂ (λ (f : α → β → γ → δ) y x => f x y c) 
     =
-    λ f df y x=> df x y c :=
+    λ f df y x => df x y c :=
 by
   fun_trans
   done
@@ -106,17 +106,17 @@ example (f : α → β → γ)
     λ y dy => sum λ x => ∂ (f x) y dy :=
 by
   fun_trans
+  fun_trans
   done
-  
 
 
-example (f : β₁ → β₂ → γ) (g₁ : α → β₁) (g₂ : α → β₂) [Add γ]
+example {α β₁ β₂ γ : Type} (f : β₁ → β₂ → γ) (g₁ : α → β₁) (g₂ : α → β₂) [Add γ]
   : ∂ (λ x => f (g₁ x) (g₂ x))
     = 
     λ x dx => 
-      ∂ (f (g₁ x)) (g₂ x) (∂ g₂ x dx)
+      ∂ (λ x' => f x' (g₂ x)) (g₁ x) (∂ g₁ x dx)        
       +
-      ∂ (λ y => f y (g₂ x)) (g₁ x) (∂ g₁ x dx) :=
+      ∂ (f (g₁ x)) (g₂ x) (∂ g₂ x dx) :=
 by
   fun_trans
   done
@@ -131,11 +131,39 @@ by
   done
 
 
-example {α β₁ β₂ γ : Type} [Add α] [Add (α×β₁)] [Add ((α×β₂)×β₂)] (f : β₁ → β₂ → γ) (g₁ : α → β₁) (g₂ : α → β₂) 
+example {α β₁ β₂ γ : Type} [Add α] (f : β₁ → β₂ → γ) (g₁ : α → β₁) (g₂ : α → β₂)
   : (λ x => f (g₁ x) (g₂ x))†
     = 
-    λ z => sorry
-:=
+    λ z => 
+      let (b₁,b₂) := (uncurry f)† z 
+      g₁† b₁ + g₂† b₂ :=
 by
   fun_trans
   done
+
+
+example {α β : Type} [Add α] [Add β] (g₁ : α → β) (g₂ : α → β)
+  : (λ x => (g₁ x) + (g₂ x))†
+    = 
+    λ z => g₁† z + g₂† z :=
+by
+  fun_trans
+  done
+
+
+example {α β₁ β₂ β₃ γ : Type} [Add α] [Add (α×β₁)] [Add ((α×β₂)×β₂)] (f : β₁ → β₂ → β₃ → γ) (g₁ : α → β₁) (g₂ : α → β₂) (g₃ : α → β₃) 
+  : (λ x => f (g₁ x) (g₂ x) (g₃ x))†
+    = 
+    λ z => sorry :=
+by
+  fun_trans
+  done
+
+
+example {α β₁ β₂ γ : Type} [Add α] [Add (α×β₁)] [Add ((α×β₂)×β₂)] (f : β₁ → β₂ → β₃ → γ) (g₁ : α → β₁) (g₂ : α → β₂) (g₃ : α → β₃) 
+ : (λ x => (λ (b₁,b₂,b₃) => f b₁ b₂ b₃) (g₁ x, g₂ x, g₃ x))
+   =
+   λ x => f  (g₁ x) (g₂ x) (g₃ x) :=
+by
+  rfl
+

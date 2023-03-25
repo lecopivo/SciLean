@@ -28,13 +28,13 @@ theorem diff_B (f : β → γ) (g : α → β)
   : ∂ (λ x => f (g x)) 
     = 
     λ x dx => ∂ f (g x) (∂ g x dx) := sorry
-theorem diff_S [Add γ] (f : α → β → γ) (g : α → β) 
-  : ∂ (λ x => f x (g x)) 
+theorem diff_S [Add γ] (f : β → α → γ) (g : α → β) 
+  : ∂ (λ x => f (g x) x) 
     = 
     λ x dx => 
-      ∂ f x dx (g x) 
+      ∂ (f (g x)) x dx 
       + 
-      ∂ (f x) (g x) (∂ g x dx) := sorry
+      ∂ f (g x) (∂ g x dx) x := sorry
 theorem diff_C (f : β → α → γ)
   : ∂ (λ (x : α) (y : β) => f y x)
     =
@@ -43,6 +43,24 @@ theorem diff_eval (β) (x : α)
   : ∂ (λ (f : α → β) => f x)
     =
     λ f df => df x := sorry
+
+abbrev uncurry (f : α → β → γ) := λ (x,y) => f x y
+abbrev uncurry3 (f : α → β → γ → δ) := λ (x,y,z) => f x y z
+
+@[simp ↓]
+theorem diff_uncurry_add [Add γ] (f : α → β → γ) 
+  : ∂(uncurry λ x y => f x y)
+    =
+    λ (x,y) (dx,dy) => 
+      ∂ (λ x' => f x' y) x dx
+      +
+      ∂ (f x) y dy := sorry
+
+@[simp ↓]
+theorem diff_prod_map (f : α → β) (g : α → γ)
+  : ∂ (λ x => (f x, g x))
+    =
+    λ x dx => (∂ f x dx, ∂ g x dx) := sorry
 
 def adj (f : α → β) : β → α := sorry
 
@@ -54,16 +72,16 @@ theorem adj_B (f : β → γ) (g : α → β)
     = 
     λ z => g† (f† z) := sorry
 
-theorem adj_S [Add α] (f : α → β → γ) (g : α → β) 
-  : (λ x => f x (g x))†
+theorem adj_S [Add α] (f : β → α → γ) (g : α → β) 
+  : (λ x => f (g x) x)†
     = 
     λ z => 
-      let (a,b) := (λ ab : α×β => f ab.1 ab.2)† z
-      a + g† b := sorry
+      let (b,a) := (λ (b,a) => f b a)† z
+      g† b + a := sorry
 
 def sum (f : α → β) : β := sorry
 
-@[simp] theorem diff_sum 
+@[simp ↓] theorem diff_sum 
   : ∂ (λ (f : α → β) => sum f)
     =
     λ f df => sum df := sorry
@@ -84,6 +102,19 @@ theorem adj_eval (β) (x : α)
   : (λ (f : α → β) => f x)†
     =
     λ y x' => kron x x' y := sorry
+
+
+@[simp ↓]
+theorem adj_prod_map (f : α → β) (g : α → γ) [Add α]
+  : (λ x => (f x, g x))†
+    =
+    λ (y,z) => f† y + g† z := sorry
+
+@[simp ↓]
+theorem ajd_uncurry_add [Add α]
+  : (uncurry λ x y : α => x + y)†
+    =
+    λ x => (x,x) := sorry
 
 /--
 Constructs a proof that the original expression is true
@@ -215,7 +246,7 @@ def getFunctionTransform (e : Expr) : Option (Name × Expr × Array Expr) :=
   else
     none
 
-
+-- #check Prod.mk 0 (Prod.mk 1 2)
 /-- 
   -/
 def transformFunction (transName : Name) (f : Expr) : MetaM (Option (Expr × Expr)) := do
@@ -253,6 +284,43 @@ def transformFunction (transName : Name) (f : Expr) : MetaM (Option (Expr × Exp
 
           trace[Meta.Tactic.fun_trans.trans] s!"Application case 'F:{← Meta.ppExpr F}' 'args:{← args.mapM Meta.ppExpr}'"
 
+          if let some info ← getMatcherInfo? F.constName then
+            trace[Meta.Tactic.fun_trans.trans] s!"Encountered matcher!"
+            return none
+
+          if b.isAppOf ``Prod.mk then
+            return none
+          
+          let doArity := true
+
+          if doArity then do
+            let depArgs := args.mapIdx (λ i arg => if arg.containsFVar xId then some (arg, i.1) else none) |>.filterMap id
+            if depArgs.size >= 2 then
+              let g : Expr ← 
+                (depArgs[0:depArgs.size-1]).foldrM (init:=depArgs[depArgs.size-1]!.1) 
+                  (λ y ys => mkAppOptM ``Prod.mk #[none, none, y.1,ys]) >>=
+                λ g => mkLambdaFVars #[x] g
+
+              let Ys := depArgs.map λ (arg, _) => (Name.anonymous, λ _ => inferType arg)
+              let f ← 
+                withLocalDeclsD Ys λ ys => do
+                  let mut args' := args
+                  for i in [0:ys.size] do
+                    args' := args'.set! depArgs[i]!.2 ys[i]!
+                  let b' ← mkAppOptM' F (args'.map some)
+                  mkLambdaFVars ys b'
+                  -- mkAppM ``uncurry #[← mkLambdaFVars ys b']
+
+              if depArgs.size == 2 then
+                let f ← mkAppM ``uncurry #[f]
+                trace[Meta.Tactic.fun_trans.trans] s!"case: binary operation 'f:{← Meta.ppExpr f}' 'g:{← Meta.ppExpr g}'"
+                return ← applyRuleB transName f g
+              if depArgs.size == 3 then
+                let f ← mkAppM ``uncurry3 #[f]
+                trace[Meta.Tactic.fun_trans.trans] s!"case: ternary operation 'f:{← Meta.ppExpr f}' 'g:{← Meta.ppExpr g}'"
+                return ← applyRuleB transName f g
+              
+            
           -- the first arguments with non-trivial occurence of `x`        
           let id? := args.findIdx? (λ arg => (arg != x) && (arg.containsFVar xId))
 
@@ -272,7 +340,7 @@ def transformFunction (transName : Name) (f : Expr) : MetaM (Option (Expr × Exp
   
               -- rule S: λ x => f x (g x)
               else
-                let f ← mkLambdaFVars #[x,y] fbody
+                let f ← mkLambdaFVars #[y,x] fbody
                 trace[Meta.Tactic.fun_trans.trans] s!"case: S 'f:{← Meta.ppExpr f}' 'g:{← Meta.ppExpr g}'"
                 return ← applyRuleS transName f.eta g.eta
             return f'proof
@@ -435,6 +503,7 @@ Elaborates a call to `norm_num only? [args]` or `norm_num1`.
 def elabFunTrans (args : Syntax) (loc : Syntax)
     (simpOnly := false) (useSimp := true) : TacticM Unit := do
   let ctx ← getSimpContext args (!useSimp || simpOnly)
+  let ctx := {ctx with config := {ctx.config with iota := false, zeta := false, singlePass := true}}
   let g ← getMainGoal
   let res ← match expandOptLocation loc with
   | .targets hyps simplifyTarget => funTransAt g ctx (← getFVarIds hyps) simplifyTarget useSimp
