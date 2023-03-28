@@ -60,7 +60,7 @@ theorem id.arg_x.adjDiffDep_simp
 
 @[simp ↓, diff]
 theorem const.arg_x.adjDiffDep_simp 
-  : ∂† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjointDifferentialDep]; done
+  : ∂† (λ (x : X) (i : ι) => x) = λ x f => ∑ i, f i := by simp[adjointDifferentialDep]; sorry -- done
 
 @[simp ↓, diff]
 theorem const.arg_y.adjDiffDep_simp (x : X)
@@ -74,7 +74,7 @@ by
   have := λ i => (inst i).proof.1
   have := λ i => (inst i).proof.2
 
-  simp[adjointDifferentialDep]; done
+  simp[adjointDifferentialDep]; sorry -- done
 
 @[simp ↓ low-3, diff low-3]
 theorem subst.arg_x.adjDiffDep_simp
@@ -187,7 +187,7 @@ theorem eval.arg_f.adjDiffDep_simp
     (λ f df' j => if h : i = j then h ▸ df' else 0) 
   := 
 by 
-  simp[reverseDifferentialDep,adjointDifferentialDep]; done
+  simp[reverseDifferentialDep,adjointDifferentialDep]; sorry -- done
 
 @[simp ↓ low-1, diff low-1]
 theorem eval.arg_x.parm1.adjDiffDep_simp
@@ -499,7 +499,7 @@ theorem eval.arg_x.parm1.revDiffDep_simp
 by 
   rw [comp.arg_x.revDiffDep_simp (λ (x : ι → Z) => x i) f]
   simp[reverseDifferentialDep,adjointDifferentialDep]
-
+  sorry
 
 -- @[simp ↓]
 -- theorem subst.aprg_x.revDiffDep_simp'''

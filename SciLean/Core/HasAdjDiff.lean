@@ -86,13 +86,13 @@ instance HasAdjDiff_add_extra_3_3 (f : X → Y → W) [HasAdjDiffNT 2 f]
 --------------------------------------------------------------------------------
 
 instance id.arg_x.hasAdjDiff
-  : HasAdjDiffT (λ x : X => x) := by apply infer_HasAdjDiff; intro; simp; infer_instance
+  : HasAdjDiffT (λ x : X => x) := by apply infer_HasAdjDiff; intro; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance
 
 instance const.arg_x.hasAdjDiff
-  : HasAdjDiffT (λ (x : X) (i : ι) => x) := by apply infer_HasAdjDiff; intro; symdiff; infer_instance; done
+  : HasAdjDiffT (λ (x : X) (i : ι) => x) := by apply infer_HasAdjDiff; intro; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance; done
 
 instance const.arg_y.hasAdjDiff (x : X)
-  : HasAdjDiffT (λ (y : Y) => x) := by apply infer_HasAdjDiff; intro; simp; infer_instance
+  : HasAdjDiffT (λ (y : Y) => x) := by apply infer_HasAdjDiff; intro; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance
 
 instance (priority := low) swap.arg_y.hasAdjDiff
   (f : ι → Y → Z) [inst : ∀ x, HasAdjDiffT (f x)]
@@ -184,7 +184,7 @@ instance eval.arg_x.parm1.hasAdjDiff
     have := inst.1
     have := inst.2
 
-    apply infer_HasAdjDiff; intro; simp; infer_instance
+    apply infer_HasAdjDiff; intro; simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance
 
 ----------------------------------------------------------------------
 

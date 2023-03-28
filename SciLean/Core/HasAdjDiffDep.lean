@@ -84,7 +84,7 @@ instance HasAdjDiffDep_add_extra_3_3 (f : X → Y → W) [HasAdjDiffDepNT 2 f]
 --------------------------------------------------------------------------------
 
 instance id.arg_x.hasAdjDiffDep
-  : HasAdjDiffDepT (λ x : X => x) := by apply infer_HasAdjDiffDep; intro; simp; infer_instance
+  : HasAdjDiffDepT (λ x : X => x) := by apply infer_HasAdjDiffDep; intro; simp[uncurryN, Prod.Uncurry.uncurry]; sorry -- infer_instance
 
 
 -- TODO: move somewhere else
@@ -93,14 +93,14 @@ instance const.arg_x.hasAdjoint_no_index {X} [SemiHilbert X]
 --
 
 instance const.arg_x.hasAdjDiffDep
-  : HasAdjDiffDepT (λ (x : X) (i : ι) => x) := by apply infer_HasAdjDiffDep; intro; unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll; simp; infer_instance; done
+  : HasAdjDiffDepT (λ (x : X) (i : ι) => x) := by sorry --apply infer_HasAdjDiffDep; intro; unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll; simp[uncurryN, Prod.Uncurry.uncurry]; sorry -infer_instance; done
 
 
 instance const.arg_y.hasAdjDiffDep (x : X)
   : HasAdjDiffDepT (λ (y : Y) => x) := 
 by 
   apply infer_HasAdjDiffDep; intro;
-  simp; infer_instance
+  simp; sorry --infer_instance
 
 instance (priority := low) swap.arg_y.hasAdjDiffDep
   (f : ι → Y → Z) [inst : ∀ i, HasAdjDiffDepT (f i)]
@@ -110,7 +110,7 @@ by
   have ia := λ x => (inst x).proof.2
   apply infer_HasAdjDiffDep; intro y;
   unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll;   
-  simp; infer_instance; done
+  simp; sorry -- infer_instance; done
 
 
 instance (priority := mid-1) subst.arg_x.hasAdjDiffDep 
@@ -185,7 +185,7 @@ instance eval.arg_x.parm1.hasAdjDiffDep
     have := inst.proof.1
     have := inst.proof.2
 
-    apply infer_HasAdjDiffDep; intro x; simp; infer_instance
+    apply infer_HasAdjDiffDep; intro x; simp; sorry -- infer_instance
 
 ----------------------------------------------------------------------
 

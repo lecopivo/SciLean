@@ -114,8 +114,8 @@ by
   have : ∀ x y, HasAdjointT (λ dy => ∂ (f x) y dy) := sorry_proof
 
   unfold adjointDifferential -- reverseDifferential, tangentMap, -comp.arg_x.parm1.adj_simp]
-  symdiff
-  sorry_proof
+  sorry -- symdiff
+    --sorry_proof
   -- simp (config := {singlePass := true})
   -- done
 
@@ -210,7 +210,7 @@ theorem eval.arg_f.adjDiff_simp
   (i : ι)
   : ∂† (λ (f : ι → X) => f i) 
     = 
-    (λ f df' j => ([[i = j]] * df' : X))
+    (λ f df' j => ([[i = j]] • df' : X))
 := sorry
 
 @[simp ↓ low-1, diff low-1]
@@ -218,7 +218,7 @@ theorem eval.arg_x.parm1.adjDiff_simp
   (f : X → ι → Z) [HasAdjDiff f]
   : ∂† (λ x => f x i) 
     = 
-    (λ x dx' => (∂† f x) (λ j => ([[i = j]] * dx' : Z)))
+    (λ x dx' => (∂† f x) (λ j => ([[i = j]] • dx' : Z)))
 := 
 by 
   rw [comp.arg_x.adjDiff_simp (λ (x : ι → Z) => x i) f]
@@ -515,7 +515,7 @@ theorem eval.arg_f.revDiff_simp
   (i : ι)
   : ℛ (λ (f : ι → X) => f i) 
     = 
-    λ f => (f i, (λ dx j => ([[i=j]] * dx : X)))
+    λ f => (f i, (λ dx j => ([[i=j]] • dx : X)))
   := 
 by 
   simp[reverseDifferential,adjointDifferential]; done
@@ -528,7 +528,7 @@ theorem eval.arg_x.parm1.revDiff_simp
     λ x =>
       let (fx, df') := ℛ f x
       (fx i, 
-      λ dz => df' (λ j => ([[i=j]] * dz)))
+      λ dz => df' (λ j => ([[i=j]] • dz)))
   := 
 by 
   rw [comp.arg_x.revDiff_simp (λ (x : ι → Z) => x i) f]

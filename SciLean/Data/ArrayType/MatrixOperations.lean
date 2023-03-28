@@ -49,17 +49,17 @@ function_properties pushElem [SemiHilbert Elem] {n : Nat} (k : Nat) (elem : Elem
 argument (elem, cont)
   hasAdjoint := sorry_proof,
   abbrev † := (∑ i : Fin k, elemcont'[⟨n+i.1, sorry_proof⟩], dropElem k elemcont') by sorry_proof,
-  hasAdjDiff,
-  abbrev ∂† ℛ := (∑ i : Fin k, delemcont'[⟨n+i.1, sorry_proof⟩], dropElem k delemcont') by unfold adjointDifferential; symdiff; symdiff
+  hasAdjDiff := sorry,
+  abbrev ∂† ℛ := (∑ i : Fin k, delemcont'[⟨n+i.1, sorry_proof⟩], dropElem k delemcont') by unfold adjointDifferential; symdiff; sorry -- symdiff
 argument cont
   hasAdjoint [Fact (elem=0)] := sorry_proof,
   abbrev † [Fact (elem=0)] := dropElem k cont' by sorry_proof,
-  hasAdjDiff,
+  hasAdjDiff := sorry,
   abbrev ∂† ℛ := dropElem k dcont' by unfold adjointDifferential; symdiff; symdiff
 argument elem
   hasAdjoint [Fact (cont=0)] := sorry_proof,
   abbrev † [Fact (cont=0)] := ∑ i : Fin k, elem'[⟨n+i.1, sorry_proof⟩] by sorry_proof,
-  hasAdjDiff,
+  hasAdjDiff := sorry,
   abbrev ∂† ℛ := ∑ i : Fin k, delem'[⟨n+i.1, sorry_proof⟩] by unfold adjointDifferential; symdiff; symdiff
 
 
@@ -151,9 +151,9 @@ def upper2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) 
     let mut x := x
     for i in [0:n-1] do
       let i : Fin n := ⟨i,sorry_proof⟩
-      x[i] := a i * x[i] + b ⟨i.1,sorry_proof⟩ * x[⟨i.1+1,sorry_proof⟩]
+      x[i] := a i • x[i] + b ⟨i.1,sorry_proof⟩ • x[⟨i.1+1,sorry_proof⟩]
     let last : Fin n := ⟨n-1, sorry_proof⟩
-    x[last] := a last * x[last]
+    x[last] := a last • x[last]
     x
 
 def lower2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n) : Cont n := 
@@ -162,9 +162,9 @@ def lower2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) 
     let mut x := x
     for i in [1:n] do
       let i : Fin n := ⟨i,sorry_proof⟩
-      x[i] := a i * x[i] + b ⟨i.1-1,sorry_proof⟩ * x[⟨i.1-1,sorry_proof⟩]
+      x[i] := a i • x[i] + b ⟨i.1-1,sorry_proof⟩ • x[⟨i.1-1,sorry_proof⟩]
     let first : Fin n := ⟨0, sorry_proof⟩
-    x[first] := a first * x[first]
+    x[first] := a first • x[first]
     x
 
 
@@ -213,11 +213,11 @@ def lower2DiagonalUpdate [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) 
 -- This happens for example in `linearInterpolate`
 @[simp]
 theorem mapIdx_add_upper2DiagonalUpdate_0_b [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n)
-  : mapIdx (λ i (xi : Elem) => a i * xi) x + upper2DiagonalUpdate 0 b x = upper2DiagonalUpdate a b x := sorry_proof
+  : mapIdx (λ i (xi : Elem) => a i • xi) x + upper2DiagonalUpdate 0 b x = upper2DiagonalUpdate a b x := sorry_proof
 
 @[simp]
 theorem mapIdx_add_lower2DiagonalUpdate_0_b [Vec Elem] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : Cont n)
-  : mapIdx (λ i (xi : Elem) => a i * xi) x + lower2DiagonalUpdate 0 b x = lower2DiagonalUpdate a b x := sorry_proof
+  : mapIdx (λ i (xi : Elem) => a i • xi) x + lower2DiagonalUpdate 0 b x = lower2DiagonalUpdate a b x := sorry_proof
 
 
 

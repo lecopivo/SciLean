@@ -56,18 +56,18 @@ section ArrayTypeNotation
 
 open Lean
 
-syntax myFunBinder := " ( " ident  " : " term ("⇒" term)? " )"
+-- syntax myFunBinder := " ( " ident  " : " term ("⇒" term)? " )"
 
-syntax (priority:=high)  --(name:=lambdaParserWithArrayType) 
-  " λ " myFunBinder* " => " term : term
+-- syntax (priority:=high)  --(name:=lambdaParserWithArrayType) 
+--   " λ " myFunBinder* " => " term : term
 
-macro_rules -- (kind := lambdaParserWithArrayType) 
-| `(λ ($x:ident : $X:term) => $b) => `(fun ($x : $X:term) => $b)
-| `(λ ($f:ident : $X:term ⇒ $Y:term) => $b) =>
-  let XY := mkIdent s!"{X.raw.prettyPrint}⇒{Y.raw.prettyPrint}"
-  `(fun {$XY : Type} [ArrayType $XY $X $Y] ($f : $XY) => $b)
-| `(λ $x:myFunBinder $xs:myFunBinder* => $b) =>
-  `(λ $x:myFunBinder => λ $xs:myFunBinder* => $b)
+-- macro_rules -- (kind := lambdaParserWithArrayType) 
+-- | `(λ ($x:ident : $X:term) => $b) => `(fun ($x : $X:term) => $b)
+-- | `(λ ($f:ident : $X:term ⇒ $Y:term) => $b) =>
+--   let XY := mkIdent s!"{X.raw.prettyPrint}⇒{Y.raw.prettyPrint}"
+--   `(fun {$XY : Type} [ArrayType $XY $X $Y] ($f : $XY) => $b)
+-- | `(λ $x:myFunBinder $xs:myFunBinder* => $b) =>
+--   `(λ $x:myFunBinder => λ $xs:myFunBinder* => $b)
 
 
 -- syntax vecType := " Vec "
@@ -90,7 +90,7 @@ macro_rules -- (kind := lambdaParserWithArrayType)
 -- --   `(λ $x:myFunBinder => λ $xs:myFunBinder* => $b)
 -- -- | `(λ $x:funBinder => $b) => `(fun $x => $b)
 
-#check λ (f : Nat ⇒ Float) (i : Nat) => f[i]
+-- #check λ (f : Nat ⇒ Float) (i : Nat) => f[i]
 #check λ (f : Nat → Float) (i) => f i
 #check λ (f : Nat → Float) i => f i
 

@@ -34,7 +34,7 @@ theorem diff_S [Add γ] (f : β → α → γ) (g : α → β)
     λ x dx => 
       ∂ (f (g x)) x dx 
       + 
-      ∂ f (g x) (∂ g x dx) x := sorry
+      ∂ (λ y' => f y' x) (g x) (∂ g x dx) := sorry
 theorem diff_C (f : β → α → γ)
   : ∂ (λ (x : α) (y : β) => f y x)
     =
@@ -43,6 +43,19 @@ theorem diff_eval (β) (x : α)
   : ∂ (λ (f : α → β) => f x)
     =
     λ f df => df x := sorry
+
+theorem diff_let [Add γ] (f : β → α → γ) (g : α → β)
+  : ∂ (λ x => 
+      let y := g x
+      f y x)
+    =
+    λ x dx =>
+      let y  := g x
+      let dy := ∂ g x dx
+      ∂ (λ yx' : β × α => f yx'.1 yx'.2) (y,x) (dy,dx) := 
+by 
+  dsimp
+  sorry
 
 abbrev uncurry (f : α → β → γ) := λ (x,y) => f x y
 abbrev uncurry3 (f : α → β → γ → δ) := λ (x,y,z) => f x y z
@@ -103,6 +116,27 @@ theorem adj_eval (β) (x : α)
     =
     λ y x' => kron x x' y := sorry
 
+theorem adj_let {α β γ : Type} [Add α] (f : β → α → γ) (g : α → β)
+  : (λ x => 
+      let y := g x
+      f y x)†
+    =
+    λ z =>
+      let yx := (λ yx' : β × α => f yx'.1 yx'.2)† z
+      g† yx.1 + yx.2 := 
+by 
+  sorry
+
+theorem adj_let_B {α β γ : Type} [Add α] (f : β → γ) (g : α → β)
+  : (λ x => 
+      let y := g x
+      f y)†
+    =
+    λ z =>
+      let y := f† z
+      g† y := 
+by 
+  sorry
 
 @[simp ↓]
 theorem adj_prod_map (f : α → β) (g : α → γ) [Add α]
@@ -196,6 +230,7 @@ def getNameOfRuleB (transName : Name) : Option Name :=
 def applyRuleB (transName : Name) (f g : Expr) : MetaM (Option (Expr×Expr)) := do
   if let .some rule := getNameOfRuleB transName then
     let proof ← Meta.mkAppM rule #[f,g]
+    trace[Meta.Tactic.fun_trans.trans] s!"case: B '{← Meta.ppExpr (← inferType proof)}'"
     let rhs := (← inferType proof).getArg! 2
      return (rhs, proof)
    else 
@@ -234,6 +269,23 @@ def applyRuleEval (transName : Name) (x Y : Expr) : MetaM (Option (Expr×Expr)) 
   else 
     return none
 
+def getNameOfRuleLet (transName : Name) : Option Name :=
+  if transName == ``diff then
+    return ``diff_let
+  else if transName == ``adj then
+    return ``adj_let
+  else 
+    none
+
+def applyRuleLet (transName : Name) (f g : Expr) : MetaM (Option (Expr×Expr)) := do
+  if let .some rule := getNameOfRuleLet transName then
+    let proof ← Meta.mkAppM rule #[f, g]
+    let rhs := (← inferType proof).getArg! 2
+    return (rhs, proof)
+  else 
+    return none
+
+
 
 /-- 
   Is expression `e` of the form `T f x₀ x₁ .. xₙ` where `T` is some function transformation?
@@ -247,19 +299,38 @@ def getFunctionTransform (e : Expr) : Option (Name × Expr × Array Expr) :=
     none
 
 -- #check Prod.mk 0 (Prod.mk 1 2)
+
 /-- 
   -/
 def transformFunction (transName : Name) (f : Expr) : MetaM (Option (Expr × Expr)) := do
   match f with 
-  | .lam .. => lambdaTelescope f λ xs b => do
+  | .lam .. => lambdaLetTelescope f λ xs b => do
     trace[Meta.Tactic.fun_trans.trans] s!"Transforming '{← Meta.ppExpr f}'"
     if h : xs.size > 0 then
 
-      -- rule C: λ x y => f y x
+
       if (xs.size ≠ 1) then
-        trace[Meta.Tactic.fun_trans.trans] s!"case: C 'f:{← Meta.ppExpr f}'"
-        let f ← Meta.mkLambdaFVars (#[xs[1]!, xs[0]!].append xs[2:]) b
-        return ← applyRuleC transName f.eta
+        let x := xs[0]!
+        let y := xs[1]!
+        let yId := y.fvarId!
+
+        -- let binding
+        if let .some yVal ← yId.getValue? then
+
+          let g ← mkLambdaFVars #[x] yVal
+          let f ← withLocalDecl
+            (← yId.getUserName) default (← yId.getType) λ y' => do
+            let b' ← mkLambdaFVars (xs[2:]) b
+            mkLambdaFVars #[y', x] (b'.replaceFVar y y')
+
+          trace[Meta.Tactic.fun_trans.trans] s!"case: let 'f:{← Meta.ppExpr f}' 'g:{← Meta.ppExpr g}'"
+          return ← applyRuleLet transName f.eta g.eta
+
+        -- rule C: λ x y => f y x
+        else 
+          trace[Meta.Tactic.fun_trans.trans] s!"case: C 'f:{← Meta.ppExpr f}'"
+          let f ← Meta.mkLambdaFVars (#[xs[1]!, xs[0]!].append xs[2:]) b
+          return ← applyRuleC transName f.eta
       else 
 
         let x := xs[0]
@@ -290,6 +361,13 @@ def transformFunction (transName : Name) (f : Expr) : MetaM (Option (Expr × Exp
 
           if b.isAppOf ``Prod.mk then
             return none
+
+          -- if b.isAppOf ``Prod.fst then
+          --   return none
+
+          -- if b.isAppOf ``Prod.snd then
+          --   return none
+
           
           let doArity := true
 
@@ -503,7 +581,7 @@ Elaborates a call to `norm_num only? [args]` or `norm_num1`.
 def elabFunTrans (args : Syntax) (loc : Syntax)
     (simpOnly := false) (useSimp := true) : TacticM Unit := do
   let ctx ← getSimpContext args (!useSimp || simpOnly)
-  let ctx := {ctx with config := {ctx.config with iota := false, zeta := false, singlePass := true}}
+  let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true}}
   let g ← getMainGoal
   let res ← match expandOptLocation loc with
   | .targets hyps simplifyTarget => funTransAt g ctx (← getFVarIds hyps) simplifyTarget useSimp

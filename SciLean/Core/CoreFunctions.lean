@@ -15,11 +15,11 @@ instance {X Y} [Vec X] [Vec Y] (f : X → Y) [inst : IsSmoothN 1 f] : IsSmooth f
   induction inst
   apply IsSmooth.mk
 
-@[diff] 
+@[simp ↓, diff] 
 theorem diff_of_linear {X Y} [Vec X] [Vec Y] (f : X → Y) [IsLin f]
   : ∂ f = λ _ dx => f dx := sorry_proof
 
-@[diff] 
+@[simp ↓, diff] 
 theorem diff_of_linear_2 {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) [IsLinN 2 f]
   : ∂ (uncurryN 2 f) = λ _ (dx,dy) => f dx dy := sorry_proof
 

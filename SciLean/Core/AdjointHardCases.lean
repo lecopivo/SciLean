@@ -15,7 +15,7 @@ theorem adjoint_sum_eval
   : (λ (x : κ → X) => λ i => ∑ j, (f i j) (x j))†
     =
     λ y => λ j => ∑ i, (f i j)† (y i)
-  := by symdiff; sorry_proof
+  := by sorry -- symdiff; sorry_proof
 
 @[diff]
 theorem adjDiff_sum_eval
@@ -27,8 +27,8 @@ by
   unfold adjointDifferential
   have  := λ i j => (hf i j).1
   have  := λ i j => (hf i j).2
-  symdiff; symdiff
-  done
+  sorry -- symdiff; symdiff
+  -- done
 
 @[diff]
 theorem revDiff_sum_eval

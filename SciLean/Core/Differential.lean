@@ -334,7 +334,7 @@ theorem tangentMap.of_comp
     λ x dx =>
       let (y,dy) := 𝒯 g x dx
       𝒯 f y dy
-  := by unfold tangentMap; debug_simp; symdiff_core; done
+  := by unfold tangentMap; simp[tangentMap] --  debug_simp; symdiff_core; done
 
 
 @[simp ↓ low-2, diff, simp_guard g₁ Prod.fst, g₂ Prod.snd]
@@ -349,7 +349,7 @@ theorem tangentMap.of_diag
       let (y₂,dy₂) := 𝒯 g₂ x dx
       -- (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
       𝒯 (uncurryN 2 f) (y₁,y₂) (dy₁,dy₂)
-  := by symdiff; done
+  := by simp[tangentMap]; done
 
 /-- Last resort theorem that changes tangent map to normal differential 
 
@@ -361,13 +361,13 @@ theorem tangentMap.of_uncurryN (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f x)
     =
     λ (y₁,y₂) (dy₁,dy₂) =>
     (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
-  := by symdiff; done
+  := by simp[tangentMap]; done
 
 @[simp ↓ low, diff]
 theorem tangentMap.of_parm
   (f : X → α → Y) [IsSmoothT f] (a : α)
   : 𝒯 (λ x => f x a) = λ x dx => let (f',df') := 𝒯 f x dx; (f' a, df' a) 
-  := by symdiff; done
+  := by simp[tangentMap]; done
 
 @[simp ↓, diff]
 theorem tangentMap.of_eval
@@ -401,7 +401,7 @@ to be differentiated with this theorem. -/
 
 @[simp low, diff] 
 theorem tangentMap_of_linear (f : X → Y) [IsLin f]
-  : 𝒯 f = λ x dx => (f x, f dx) := by symdiff; done
+  : 𝒯 f = λ x dx => (f x, f dx) := by simp[tangentMap]; done
 
 
 @[simp low, diff] 

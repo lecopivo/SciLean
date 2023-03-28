@@ -175,3 +175,88 @@ example {α β₁ β₂ γ : Type} [Add α] [Add (α×β₁)] [Add ((α×β₂)�
 by
   rfl
 
+@[simp ↓ high]
+theorem Prod.fst.diff 
+  : ∂ (λ x : α × β => x.1) = λ x dx => dx.1 := sorry
+
+@[simp ↓ high]
+theorem Prod.snd.diff 
+  : ∂ (λ x : α × β => x.2) = λ x dx => dx.2 := sorry
+
+@[simp]
+theorem add_diff [Add α]
+  : ∂ (uncurry λ x y : α => x + y) = λ (x,y) (dx,dy) => dx + dy := sorry
+
+example (f : α → α) [Add α] [OfNat α 0]
+  : ∂ (λ x => 
+         let y := f x
+         let z := x + f y
+         x + y + z + f z)
+    =
+    sorry
+  :=
+by
+  fun_trans
+  fun_trans
+  simp (config := {zeta := false}) []
+  done
+
+
+@[simp ↓]
+theorem hoho (f : β → γ) (z : γ)
+  : ((fun x : β × α => f x.fst)† z).fst 
+    =
+    f† z
+  := sorry
+
+@[simp ↓]
+theorem hoho' (f : β → γ) (z : γ) [OfNat α 0]
+  : ((fun x : β × α => f x.fst)† z).snd
+    =
+    0
+  := sorry
+
+
+example {α : Type} (f g h : α → α) [Add α] [Add (α×α)] [OfNat α 0] [OfNat (α×α) 0]
+  : (λ x => 
+         let y := f x
+         let z := g y
+         h z)†
+    =
+    sorry
+  :=
+by
+  fun_trans
+  simp (config := {zeta := false}) only []
+  fun_trans
+  simp (config := {zeta := false}) only []
+  simp
+  done
+
+
+
+set_option trace.Meta.Tactic.fun_trans.step true in
+set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option pp.all true in
+example {α β γ : Type}
+  : ∂ (λ (x : α × β × γ) =>
+         x.snd.fst)
+    =
+    sorry 
+  :=
+by
+  fun_trans
+  done
+
+
+
+example 
+  : ∂ (Prod.snd : α × (β × γ) → β × γ)
+  =
+    fun x dx => sorry
+        -- ((∂fun x => x.snd.fst) x dx, (∂fun x => x.snd.snd) x dx)
+  :=
+by
+  simp
+  
+

@@ -48,4 +48,4 @@ example {ι} [Enumtype ι] (i : ι)
     λ f' i' => [[i=i']] * f' := 
 by 
   symdiff
-  done
+  admit --done

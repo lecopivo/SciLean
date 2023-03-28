@@ -8,7 +8,7 @@ variable [ArrayType Cont Idx Elem] [Enumtype Idx]
 
 -- The above instance is giving problems in the following examples.
 -- TOOD: investigate
-example {X} [Vec X] : HMul ℝ X X := by infer_instance
+example {X} [Vec X] : SMul ℝ X := by infer_instance
 -- This one can't be stated here, but gets messed up by the above instance
 -- example : ∀ (i : Idx), IsSmooth λ (x : Cont) => ∥x[i]∥² := by infer_instance -- apply λ
 
@@ -30,11 +30,11 @@ instance (priority := low) [Hilbert Elem]
   all_are_test := sorry_proof
 
 instance (priority := low) {κ} {_ : Enumtype κ} [FinVec Elem κ] : Basis Cont (Idx×κ) ℝ where
-  basis := λ (i,j) => introElem λ i' => [[i=i']] * 𝕖[Elem] j
+  basis := λ (i,j) => introElem λ i' => [[i=i']] • 𝕖[Elem] j
   proj := λ (i,j) x => 𝕡 j x[i]
 
 instance (priority := low) {κ} {_ : Enumtype κ} [FinVec Elem κ] : DualBasis Cont (Idx×κ) ℝ where
-  dualBasis := λ (i,j) => introElem λ i' => [[i=i']] * 𝕖'[Elem] j
+  dualBasis := λ (i,j) => introElem λ i' => [[i=i']] • 𝕖'[Elem] j
   dualProj := λ (i,j) x => 𝕡' j x[i]
 
 open BasisDuality in
