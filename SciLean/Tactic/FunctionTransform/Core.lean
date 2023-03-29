@@ -57,6 +57,19 @@ by
   dsimp
   sorry
 
+theorem diff_let_B (f : β → γ) (g : α → β)
+  : ∂ (λ x => 
+      let y := g x
+      f y)
+    =
+    λ x dx =>
+      let y  := g x
+      let dy := ∂ g x dx
+      ∂ f y dy := 
+by 
+  dsimp
+  sorry
+
 abbrev uncurry (f : α → β → γ) := λ (x,y) => f x y
 abbrev uncurry3 (f : α → β → γ → δ) := λ (x,y,z) => f x y z
 
@@ -285,6 +298,21 @@ def applyRuleLet (transName : Name) (f g : Expr) : MetaM (Option (Expr×Expr)) :
   else 
     return none
 
+def getNameOfRuleLetB (transName : Name) : Option Name :=
+  if transName == ``diff then
+    return ``diff_let_B
+  else if transName == ``adj then
+    return ``adj_let_B
+  else 
+    none
+
+def applyRuleLetB (transName : Name) (f g : Expr) : MetaM (Option (Expr×Expr)) := do
+  if let .some rule := getNameOfRuleLetB transName then
+    let proof ← Meta.mkAppM rule #[f, g]
+    let rhs := (← inferType proof).getArg! 2
+    return (rhs, proof)
+  else 
+    return none
 
 
 /-- 
@@ -312,20 +340,29 @@ def transformFunction (transName : Name) (f : Expr) : MetaM (Option (Expr × Exp
       if (xs.size ≠ 1) then
         let x := xs[0]!
         let y := xs[1]!
+        let xId := x.fvarId!
         let yId := y.fvarId!
 
         -- let binding
         if let .some yVal ← yId.getValue? then
 
           let g ← mkLambdaFVars #[x] yVal
-          let f ← withLocalDecl
+          return ← withLocalDecl
             (← yId.getUserName) default (← yId.getType) λ y' => do
             let b' ← mkLambdaFVars (xs[2:]) b
-            mkLambdaFVars #[y', x] (b'.replaceFVar y y')
 
-          trace[Meta.Tactic.fun_trans.trans] s!"case: let 'f:{← Meta.ppExpr f}' 'g:{← Meta.ppExpr g}'"
-          return ← applyRuleLet transName f.eta g.eta
+            if b'.containsFVar xId then
+              let f ← mkLambdaFVars #[y', x] (b'.replaceFVar y y')
 
+              trace[Meta.Tactic.fun_trans.trans] s!"case: let 'f:{← Meta.ppExpr f}' 'g:{← Meta.ppExpr g}'"
+              applyRuleLet transName f.eta g.eta
+            else
+              let f ← mkLambdaFVars #[y'] (b'.replaceFVar y y')
+
+              trace[Meta.Tactic.fun_trans.trans] s!"case: letB 'f:{← Meta.ppExpr f}' 'g:{← Meta.ppExpr g}'"
+              applyRuleLetB transName f.eta g.eta
+        
+  
         -- rule C: λ x y => f y x
         else 
           trace[Meta.Tactic.fun_trans.trans] s!"case: C 'f:{← Meta.ppExpr f}'"

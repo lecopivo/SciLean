@@ -183,6 +183,14 @@ theorem Prod.fst.diff
 theorem Prod.snd.diff 
   : ∂ (λ x : α × β => x.2) = λ x dx => dx.2 := sorry
 
+@[simp ↓ high]
+theorem Prod.fst.adj [OfNat β 0]
+  : (λ x : α × β => x.1)† = λ x => (x,0) := sorry
+
+@[simp ↓ high]
+theorem Prod.snd.adj [OfNat α 0]
+  : (λ x : α × β => x.2)† = λ x => (0,x) := sorry
+
 @[simp]
 theorem add_diff [Add α]
   : ∂ (uncurry λ x y : α => x + y) = λ (x,y) (dx,dy) => dx + dy := sorry
@@ -190,8 +198,8 @@ theorem add_diff [Add α]
 example (f : α → α) [Add α] [OfNat α 0]
   : ∂ (λ x => 
          let y := f x
-         let z := x + f y
-         x + y + z + f z)
+         let z := f y
+         y + z + f z)
     =
     sorry
   :=
@@ -217,19 +225,22 @@ theorem hoho' (f : β → γ) (z : γ) [OfNat α 0]
   := sorry
 
 
+set_option trace.Meta.Tactic.simp.discharge true in
 example {α : Type} (f g h : α → α) [Add α] [Add (α×α)] [OfNat α 0] [OfNat (α×α) 0]
   : (λ x => 
          let y := f x
          let z := g y
-         h z)†
+         let z' := g z
+         h z')†
     =
     sorry
   :=
 by
   fun_trans
-  simp (config := {zeta := false}) only []
   fun_trans
-  simp (config := {zeta := false}) only []
+  simp (config := {zeta := false}) []
+  fun_trans
+  simp (config := {zeta := false}) []
   simp
   done
 
