@@ -107,10 +107,16 @@ theorem adj_S [Add α] (f : β → α → γ) (g : α → β)
 
 def sum (f : α → β) : β := sorry
 
-@[simp ↓] theorem diff_sum 
+@[simp ↓] theorem sum_diff
   : ∂ (λ (f : α → β) => sum f)
     =
     λ f df => sum df := sorry
+
+@[simp ↓] theorem sum_adj
+  : (λ (f : α → β) => sum f)†
+    =
+    λ x i => x := sorry
+
 
 @[simp] theorem sum_eval (f : α → β → γ) (b : β)
   : sum f b
@@ -328,6 +334,48 @@ def getFunctionTransform (e : Expr) : Option (Name × Expr × Array Expr) :=
 
 -- #check Prod.mk 0 (Prod.mk 1 2)
 
+-- TODO: generalize to other monads
+def _root_.Lean.Meta.letTelescope (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := 
+  lambdaLetTelescope e λ xs b => do
+    if let .some i ← xs.findIdxM? (λ x => do pure ¬(← x.fvarId!.isLetVar)) then
+      k xs[0:i] (← mkLambdaFVars xs[i+1:] b)
+    else
+      k xs b
+
+
+/-- Modifies expression of the form:
+  ```
+  let a :=
+    let b := x
+    g b
+  f a b
+  ```
+  
+  to 
+  
+  ```
+  let b := x
+  let a := g b
+  f a b
+  ```
+ -/
+def normalizeLetBindings (e : Expr) : MetaM (Option Expr) :=
+  match e with
+  | .letE .. => letTelescope e λ as fVal => do
+    let a := as[0]!
+    let aId := a.fvarId!
+    if let .some aVal ← aId.getValue? then
+      match aVal with
+      | .letE .. => letTelescope aVal λ bs gVal => do
+        withLetDecl (← aId.getUserName) (← aId.getType) gVal λ a' => do
+          let fVal ← mkLambdaFVars as[1:] fVal
+          let fVal := fVal.replaceFVar a a'
+          mkLambdaFVars (bs |>.append #[a']) fVal
+      | _ => return none
+    else
+      return none
+  | _ => return none
+
 /-- 
   -/
 def transformFunction (transName : Name) (f : Expr) : MetaM (Option (Expr × Expr)) := do
@@ -489,6 +537,13 @@ def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
     trace[Meta.Tactic.fun_trans.step] s!"Post-step through {← Meta.ppExpr e}"
   else 
     trace[Meta.Tactic.fun_trans.step] s!"Pre-step through {← Meta.ppExpr e}"
+
+  if post then 
+    if let .some e' ← normalizeLetBindings e then
+      trace[Meta.Tactic.fun_trans.trans] s!"Normalizing let binding from:\n{← Meta.ppExpr e} \n\nto:\n\n{← Meta.ppExpr e'}"
+
+      return .some (.visit (.mk e' none 0))
+
   
   if let .some (transName, f, args) := getFunctionTransform e then
     if let .some (f', proof) ← transformFunction transName f then

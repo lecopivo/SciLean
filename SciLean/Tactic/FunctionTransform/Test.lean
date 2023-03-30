@@ -237,11 +237,11 @@ example {α : Type} (f g h : α → α) [Add α] [Add (α×α)] [OfNat α 0] [Of
   :=
 by
   fun_trans
-  fun_trans
-  simp (config := {zeta := false}) []
-  fun_trans
-  simp (config := {zeta := false}) []
-  simp
+  -- fun_trans
+  -- simp (config := {zeta := false}) []
+  -- fun_trans
+  -- simp (config := {zeta := false}) []
+  -- simp
   done
 
 
@@ -269,5 +269,15 @@ example
   :=
 by
   simp
-  
 
+set_option trace.Meta.Tactic.simp.discharge true in  
+example (A : Fin n → Fin m → Nat)
+  : (λ x : Fin m → Nat => λ i => sum λ j => A i j * x j)†
+    =
+    (λ y => λ i => sum λ j => A j i * y j)
+  :=
+by
+  fun_trans
+  fun_trans
+
+  done
