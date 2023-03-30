@@ -49,7 +49,7 @@ def FunTransRuleType.expectedForm (ruleType : FunTransRuleType) : String :=
   -- | fst     => "T (fun (xy : X×Y) => xy.1) = ..."
   -- | snd     => "T (fun (xy : X×Y) => xy.2) = ..."
 
-def FunTransRuleType.all : List FunTransRuleType := [.id,.const,.comp,.swap,.forallMap,.eval,.prodMap]
+def FunTransRuleType.all : List FunTransRuleType := [.id,.const,.comp,.swap,.forallMap,.eval,.prodMap,.letBinop,.letComp]
 
 /-- 
   Contains a map from a name of function transformation to 
