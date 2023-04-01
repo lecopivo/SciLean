@@ -24,7 +24,7 @@ inductive FunTransRuleType where
 
   | swap  -- T (λ y x => f x y)    -- this should produce a expression containing only `T (λ y => f x y)`
 
-  | forallMap -- T (λ f g x => f x (g x))
+  | forallMap -- T (λ g x => f x (g x))
   | eval      -- T (λ f => f x)
 
   | prodMap   -- T (λ x => (f x, g x))
@@ -34,6 +34,8 @@ inductive FunTransRuleType where
   -- | fst       -- T (λ xy => xy.1)
   -- | snd       -- T (λ xy => xy.2)
 deriving BEq, Hashable, Repr
+
+instance : ToString FunTransRuleType := ⟨λ x => toString (repr x)⟩
 
 def FunTransRuleType.expectedForm (ruleType : FunTransRuleType) : String :=
   match ruleType with
@@ -69,6 +71,7 @@ def isId (F : Expr) : MetaM (Option Expr) :=
     else 
       return none
 
+
 /-- Is `F` equal to `λ (y : Y) => x` ?
   On success returns `(Y,x)` -/
 def isConst (F : Expr) : MetaM (Option (Expr×Expr)) :=
@@ -89,10 +92,11 @@ def isComp (F : Expr) : MetaM (Option (Expr×Expr)) :=
   lambdaTelescope F λ xs b => do
     if xs.size = 1 then
       let x := xs[0]!
+      let xId := x.fvarId!
 
       if let .app f gx := b then
         if let .app g x' := gx then
-          if x == x' then
+          if (x == x') && ¬(f.containsFVar xId) && ¬(g.containsFVar xId) then
             return (f,g)
 
       return none
@@ -158,7 +162,7 @@ def isProdMap (F : Expr) : MetaM (Option (Expr×Expr)) :=
     if xs.size = 1 then
       let x := xs[0]!
 
-      if let .some (fx, gx) := b.app2? ``Prod.mk then
+      if let .some (_, _, fx, gx) := b.app4? ``Prod.mk then
         if let .app f x' := fx then
           if let .app g x'' := gx then
             if (x == x') && (x == x'') then
@@ -170,7 +174,7 @@ def isProdMap (F : Expr) : MetaM (Option (Expr×Expr)) :=
 
 /-- Is `F` equal to `λ (x : X) => let y := g x; f x y` ?
   On success returns `(f,g)` -/
-def isLetE (F : Expr) : MetaM (Option (Expr×Expr)) :=
+def isLetBinop (F : Expr) : MetaM (Option (Expr×Expr)) :=
   lambdaLetTelescope F λ xs b => do
     if xs.size = 2 then
       let x := xs[0]!
@@ -206,8 +210,18 @@ def isLetComp (F : Expr) : MetaM (Option (Expr×Expr)) :=
     else
       return none
 
-
 open Lean Qq Meta Elab Term in
+/-- Mark function transformation rule, possible forms are:
+  - id:    T (λ x => x)
+  - const: T (λ y => x)
+  - comp:  T (λ x => f (g x))
+  - swap:  T (λ y x => f x y)
+  - eval:  T (λ f => f x)
+  - forallMap: T (λ g x => f x (g x))
+  - prodMap:   T (λ x => (f x, g x))
+  - letBinop:  T (λ x => let y := g x; f x y)
+  - letComp:   T (λ x => let y := g x; f y)
+  -/
 initialize funTransRuleAttr : TagAttribute ← 
   registerTagAttribute 
     `fun_trans_rule
@@ -336,7 +350,7 @@ initialize funTransRuleAttr : TagAttribute ←
               throwError "Prod map rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
 
           -- letBinop
-          if let .some (f,g) ← isLetE F then
+          if let .some (f,g) ← isLetBinop F then
             dbg_trace s!"LetBinop rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 2) then
@@ -373,4 +387,3 @@ initialize funTransRuleAttr : TagAttribute ←
 macro "fun_prop" : attr => `(attr|instance)
 macro "fun_prop_def" : attr => `(attr|class)
 macro "fun_prop_rule" : attr => `(attr|instance)
-
