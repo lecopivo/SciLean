@@ -73,11 +73,7 @@ def _root_.Lean.Meta.getExplicitArgs (e : Expr) : MetaM (Option (Name×Array Exp
   return (funName, explicitArgs)
 
 
-/-- Applies letBinop rule to `λ x => let y := g x; f x y`
-
-  Returns `(f', (proof : T (λ x => let y := g x; f x y) = f'))`
-  -/
-def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Expr) : MetaM (Option (Expr × Expr)) := do
+def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Expr) : SimpM (Option Simp.Step) := do
 
   let ruleMap ← funTransRulesMapRef.get
   let .some rule := ruleMap.find? (transName, ruleType)
@@ -86,17 +82,15 @@ def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Exp
   let proof ← mkAppNoTrailingM rule args
   let rhs := (← inferType proof).getArg! 2
   dbg_trace s!"Applying rule {ruleType}, proof: `{← ppExpr (← inferType proof)}` | rhs: `{← ppExpr rhs}`"
-  return (rhs, proof)
+  return .some (.visit (.mk rhs proof 0))
 
-/-- Applies letBinop or letComp rule to `λ x => let y := ..; b`
+/-- Applies letBinop or letComp rule to `T (λ x => let y := ..; b)` as a simp step.
   
   - `x` has to be lambda free variable
   - `y` has to be let free variable
   - `b` is the body of the let binding
-
-  Returns `(f', (proof : T (λ x => let y := ..; b) = f'))`
   -/
-def applyLetRules (transName : Name) (x y b : Expr) : MetaM (Option (Expr × Expr)) := do
+def applyLetRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) := do
 
   let xId := x.fvarId!
   let yId := y.fvarId!
@@ -116,14 +110,12 @@ def applyLetRules (transName : Name) (x y b : Expr) : MetaM (Option (Expr × Exp
       let f ← mkLambdaFVars #[y'] b
       applyRule transName .letComp #[f,g]
 
-/-- Applies letBinop or letComp rule to `λ x y => b`
+/-- Applies letBinop or letComp rule to `T (λ x y => b)` as a simp step.
   
   - `x` and `y` has to be lambda free variable
   - `b` is the body of the lambda function
-
-  Returns `(f', (proof : T (λ x y => b) = f'))`
   -/
-def applyLambdaRules (transName : Name) (x y b : Expr) : MetaM (Option (Expr × Expr)) := do
+def applyLambdaRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) := do
 
   let xId := x.fvarId!
   -- let yId := y.fvarId!
@@ -155,20 +147,40 @@ def applyLambdaRules (transName : Name) (x y b : Expr) : MetaM (Option (Expr × 
   -- -- Attempt at propagating the argument `y` into the body
   -- For example `λ g i => g i + g i` is equal to `λ g => (λ i => g i) + (λ i => g i)`
   if let .some (funName, args) ← getExplicitArgs b then
-    let args' ← args.mapM (mkLambdaFVars #[y])
+    let args' ← args.mapM (m:=MetaM) (mkLambdaFVars #[y])
     try 
       let b' ← mkAppM funName args'
-      let org ← mkLambdaFVars #[y] b 
-      dbg_trace s!"success at propagating {← ppExpr y} inside of {← ppExpr b}\nresult: {← ppExpr b'}\noriginal: {← ppExpr org}\nis def eq to the original: {← isDefEq (← whnf (← mkAppM' b' #[y])) b}"
-      dbg_trace s!"hoho: {← ppExpr (← whnf (← mkAppM' b' #[y]))}"
-    catch e =>
-      dbg_trace s!"success at propagating {← ppExpr y} inside of {← ppExpr b}"
+      -- The expression `f` is in the above example would be this:
+      -- λ i g => ((λ i' => g i') + (λ i' => g i')) i
+
+      -- let org ← mkLambdaFVars #[y] b 
+      -- dbg_trace s!"success at propagating {← ppExpr y} inside of {← ppExpr b}\nresult: {← ppExpr b'}\noriginal: {← ppExpr org}\nis def eq to the original: {← isDefEq (← whnf (← mkAppM' b' #[y])) b}"
+      -- dbg_trace s!"hoho: {← ppExpr (← whnf (← mkAppM' b' #[y]))}"
+
+      -- option 1 how to proceed
+      -- let f  ← mkLambdaFVars #[y,x] (← mkAppM' b' #[y])
+      -- return ← applyRule transName .swap #[f]
+
+      -- option 2 how to proceed 
+      let e ← mkAppM transName #[← mkLambdaFVars #[x] b']
+      return some (.visit (.mk e none 0))
+
+      -- contrived application of composition rule to ensure function transformation
+      -- can work in a single pass
+      -- Alternativaly we could make bunch of functions mutally recursive
+      -- option 3
+      -- let id ← withLocalDecl `f default (← inferType b') λ f => 
+      --   mkLambdaFVars #[f] f
+      -- let g ← mkLambdaFVars #[x] b'
+      -- return ← applyRule transName .comp #[id,g]
+    catch e => pure ()
+      -- dbg_trace s!"success at propagating {← ppExpr y} inside of {← ppExpr b}"
 
   let f ← mkLambdaFVars #[y,x] b
   applyRule transName .swap #[f]
 
 
-/-- Apply rule for identity, constant or evaluation to `λ x => b`
+/-- Apply rule for identity, constant or evaluation to `T (λ x => b)` as a simp step.
 
   - `x` has to be lambda free variable
   - `b` is the body of the lambda function
@@ -177,10 +189,8 @@ def applyLambdaRules (transName : Name) (x y b : Expr) : MetaM (Option (Expr × 
     1. identity: T (λ x => x)
     2. constant: T (λ y => x)
     3. evaluation: T (λ f => f x) 
-
-  Returns `(f', (proof : T (λ x => b) = f'))`
 -/
-def applySimpleRules (transName : Name) (x b : Expr) : MetaM (Option (Expr×Expr)) := do
+def applySimpleRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) := do
 
   let xId := x.fvarId!
 
@@ -201,14 +211,13 @@ def applySimpleRules (transName : Name) (x b : Expr) : MetaM (Option (Expr×Expr
   return none
 
 
-/-- Applies the composition rule to `λ x => f (g x)` if `b = f (g x)`
+/-- Applies the composition rule to `T (λ x => b)` as a simp step
 
   - `x` has to be lambda free variable
   - `b` is the body of the lambda function - rule applies only if `b` is in the form `f (g x)`
-  
-  Returns `(f', (proof : T (λ x => f (g x)) = f'))`
+
   -/
-def applyCompRules (transName : Name) (x b : Expr) : MetaM (Option (Expr×Expr)) := do
+def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) := do
 
   let xId := x.fvarId!
 
@@ -263,11 +272,12 @@ def applyCompRules (transName : Name) (x b : Expr) : MetaM (Option (Expr×Expr))
     let lastId  := depArgs.size-1
     let lastArg := depArgs[lastId]!.1
 
-    let g : Expr ← 
-      (depArgs[0:lastId]).foldrM (init:=lastArg) 
-        (λ y ys => mkAppOptM ``Prod.mk #[none, none, y.1, ys]) 
+    let g :=
+      (depArgs[0:lastId]).foldrM (init:=lastArg)
+        (λ y ys => mkAppOptM ``Prod.mk #[none, none, y.1, ys])
       >>= 
       mkLambdaFVars #[x]
+    let g ← g
 
     let Ys := depArgs.map λ (arg, _) => (Name.anonymous, λ _ => inferType arg)
 
@@ -299,10 +309,8 @@ def applyCompRules (transName : Name) (x b : Expr) : MetaM (Option (Expr×Expr))
 
 
 /-- Transform `T f` according to the core transformation rules.
-
-  Returns `(f', (proof : T f = f'))` or `none` if no rule was applied.
   -/
-def main (transName : Name) (f : Expr) : MetaM (Option (Expr × Expr)) := do
+def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
 
   match f.eta with
   | .lam .. => lambdaLetTelescope f λ xs b => do
@@ -426,23 +434,26 @@ def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
       return .some (.visit (.mk e' none 0))
   
   if let .some (transName, f, args) ← getFunctionTransform e then
-    if let .some (f', proof) ← main transName f then
-      
-      let (f', proof) ← args.foldlM (init := (f',proof))
-          λ (f', proof) arg => do pure (← mkAppM' f' #[arg], 
-                                        ← mkAppM ``congrFun #[proof, arg])
-      let f' := f'.headBeta
+    if let .some step ← main transName f then
 
-      trace[Meta.Tactic.fun_trans.rewrite] s!"Rewriting from:\n{← Meta.ppExpr e}\nto:\n{← Meta.ppExpr f'}"
+      let step := step.updateResult (← args.foldlM (init:=step.result) λ step' arg => Simp.mkCongrFun step' arg)
 
-      let goal ← mkEq e f'
+      return step
+      -- let (f', proof) ← args.foldlM (init := (f',proof))
+      --     λ (f', proof) arg => do pure (← mkAppM' f' #[arg], 
+      --                                   ← mkAppM ``congrFun #[proof, arg])
+      -- let f' := f'.headBeta
+
+      -- trace[Meta.Tactic.fun_trans.rewrite] s!"Rewriting from:\n{← Meta.ppExpr e}\nto:\n{← Meta.ppExpr f'}"
+
+      -- let goal ← mkEq e f'
 
       -- if (← isDefEq goal (← inferType proof)) then
       --   dbg_trace s!"Proof `{← ppExpr proof}` seems to be correct"
       -- else
       --   dbg_trace s!"Proof `{← ppExpr proof}` does not seem to be correct. Expected type is `{← ppExpr goal}` but it has type `{← ppExpr (← inferType proof)}`"
 
-      return some (.visit (.mk f' proof 0))
+
 
   return none
 
