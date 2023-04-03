@@ -97,12 +97,6 @@ def isFunApp? (e : Expr) : Option (FunType × Expr × Expr) :=
     return (.normal, f, x)
   | _ => none
 
-variable [TopologicalSpace α] (f : C(α,α))
-
-set_option pp.all true in
-#check λ x => f x
-#check FunLike.coe
-
 partial def getFunAppFn (e : Expr) : Expr := 
   if let .some (_, f, _) := isFunApp? e then
     getFunAppFn f
@@ -115,9 +109,6 @@ private partial def getFunAppArgsRevAux (e : Expr) (args : Array Expr) : Expr ×
     getFunAppArgsRevAux f (args.push x)
   else
     (e, args)
-
-#check Expr.getAppFn
-#check Expr.getAppArgs
 
 def getFunAppArgs (e : Expr) : Array Expr := 
   (getFunAppArgsRevAux e #[]).2.reverse
@@ -168,28 +159,6 @@ def mkFunApp1M (f x : Expr) : MetaM Expr := do
 
 def mkFunAppM (f : Expr) (xs : Array Expr) : MetaM Expr := 
   xs.foldlM (init := f) λ f x => mkFunApp1M f x
-  -- let F ← inferType f
-  -- let .some (funType, _, _) ← isFunSpace? F
-  --   | throwError "Error in `mkFunAppM`: `{← ppExpr f}` is not a function!"
-  -- match funType with
-  -- | .normal => return .app f x
-  -- | .map ``SmoothMap => mkAppM ``SmoothMap.val #[f, x]
-  -- | .map ``LinMap => mkAppM ``LinMap.val #[f, x]
-  -- | .map ``PowType => mkAppOptM ``getElem #[none, none, none, none, none, f, x, some (.const ``True.intro [])]
-  -- | .map n => throwError "Error in `mkFunSpace`, unrecognized function type `{n}`"
-#check Expr.eta
--- This does not work at all!
-def funHeadBeta1 (e : Expr) : Expr := 
-  if let .some (funType, f, x) := isFunApp? e then
-    if let .some (funType', _, _, b, _) := isFunLambda? f then
-      if funType == funType' then
-        b.instantiate1 x
-      else 
-        e
-    else
-      e
-  else
-    e
 
 -- There is probably a better implementation
 def funHeadBeta (e : Expr) : MetaM Expr := 
@@ -294,9 +263,9 @@ open Qq
   let x : Q(ℝ) := q(1)
 
   IO.println s!"{← ppExpr (← mkFunApp1M f x)}"
-  IO.println s!"{← ppExpr (funHeadBeta1 (← (mkFunApp1M f x)))}"
+  IO.println s!"{← ppExpr (← funHeadBeta (← (mkFunApp1M f x)))}"
 
   let f := q(λ (x : _root_.Real) =>[C] x + x)
   let x := q(1 : _root_.Real)
   IO.println s!"{← ppExpr (← mkFunApp1M f x)}"
-  IO.println s!"{← ppExpr (funHeadBeta1 (← (mkFunApp1M f x)))}"
+  IO.println s!"{← ppExpr (← funHeadBeta (← (mkFunApp1M f x)))}"
