@@ -9,7 +9,7 @@ namespace SciLean
 structure Real where
   val : Float
 
-notation " ℝ " => Real
+notation (priority := high) " ℝ " => Real
 
 def _root_.Float.toSciLeanReal (x : Float) : ℝ := ⟨x⟩
 def _root_.Nat.toReal (n : Nat) : ℝ := n.toFloat.toSciLeanReal

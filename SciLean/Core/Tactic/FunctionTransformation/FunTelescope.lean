@@ -4,9 +4,22 @@ import SciLean.Core.Tactic.FunctionTransformation.Core
 import SciLean.Core
 import SciLean.Data.ArrayType
 import SciLean.Data.DataArray
+
+import Mathlib.Topology.Algebra.Group.Basic
+import Mathlib.Topology.ContinuousFunction.Basic
+import Mathlib.Topology.Instances.Real
+
 import Qq
 
 namespace SciLean
+
+#check LinearMap
+
+infixr:25 " =>[C] " => ContinuousMap
+
+open Lean.TSyntax.Compat in
+macro "λ"   xs:Lean.explicitBinders " =>[C] " b:term : term =>
+  Lean.expandExplicitBinders ``ContinuousMap.mk xs b
 
 open Lean Meta
 
@@ -30,6 +43,8 @@ def FunType.mkFun (funType : FunType) (f : Expr) : MetaM Expr :=
       mkAppOptM ``LinMap.mk #[none,none,none,none,f,none]
     else if funSpaceName == ``PowType then
       mkAppM ``introPowElem #[f]
+    else if funSpaceName == ``ContinuousMap then
+      mkAppM ``ContinuousMap.mk #[f]
     else
       throwError s!"Unknown function type `{funSpaceName}`"
 
@@ -64,6 +79,8 @@ def isFunLambda? (e : Expr) : Option (FunType × Name × Expr × Expr × BinderI
     return (.map ``LinMap, n, d, b, bi)
   | mkApp6 (.const ``introPowElem _) _ _ _ _ _ (.lam n d b bi) => 
     return (.map ``PowType, n, d, b, bi)
+  | mkApp6 (.const ``ContinuousMap.mk _) _ _ _ _ (.lam n d b bi) _ => 
+    return (.map ``ContinuousMap, n, d, b, bi)
   | _ => none
 
 def isFunApp? (e : Expr) : Option (FunType × Expr × Expr) :=
@@ -72,11 +89,19 @@ def isFunApp? (e : Expr) : Option (FunType × Expr × Expr) :=
     return (.map ``SmoothMap, f ,x)
   | mkApp6 (.const ``LinMap.val _) _ _ _ _ f x => 
     return (.map ``LinMap, f ,x)
+  | mkApp6 (.const ``FunLike.coe _) (mkApp4 (.const ``ContinuousMap _) _ _ _ _) _ _ _ f x => 
+    return (.map ``ContinuousMap, f, x)
   | mkApp8 (.const ``getElem _) _ _ _ _ _ f x _ =>
     return (.map ``PowType, f ,x) -- should we double check that it is indeed PowType ? 
   | .app f x => 
     return (.normal, f, x)
   | _ => none
+
+variable [TopologicalSpace α] (f : C(α,α))
+
+set_option pp.all true in
+#check λ x => f x
+#check FunLike.coe
 
 partial def getFunAppFn (e : Expr) : Expr := 
   if let .some (_, f, _) := isFunApp? e then
@@ -91,6 +116,9 @@ private partial def getFunAppArgsRevAux (e : Expr) (args : Array Expr) : Expr ×
   else
     (e, args)
 
+#check Expr.getAppFn
+#check Expr.getAppArgs
+
 def getFunAppArgs (e : Expr) : Array Expr := 
   (getFunAppArgsRevAux e #[]).2.reverse
 
@@ -99,6 +127,7 @@ def isFunSpace? (e : Expr) : MetaM (Option FunType) :=
   | .forallE .. => return some .normal
   | mkApp4 (.const ``SmoothMap _) _ _ _ _ => return some (.map ``SmoothMap)
   | mkApp4 (.const ``LinMap _) _ _ _ _ => return some (.map ``LinMap)
+  | mkApp4 (.const ``ContinuousMap _) _ _ _ _ => return some (.map ``ContinuousMap)
   | e => do
     let X? ← Meta.mkFreshExprMVar (mkSort levelOne)
     let Y? ← Meta.mkFreshExprMVar (mkSort levelOne)
@@ -119,6 +148,7 @@ def mkFunSpace (funType : FunType) (X Y : Expr) : MetaM Expr :=
   | .normal => mkArrow X Y
   | .map ``SmoothMap => mkAppM ``SmoothMap #[X,Y]
   | .map ``LinMap => mkAppM ``LinMap #[X,Y]
+  | .map ``ContinuousMap => mkAppM ``ContinuousMap #[X,Y]
   | .map ``PowType => mkAppM ``PowTypeCarrier #[X,Y]
   | .map n => throwError "Error in `mkFunSpace`, unrecognized function type `{n}`"
 
@@ -130,6 +160,7 @@ def mkFunApp1M (f x : Expr) : MetaM Expr := do
   | .normal => return .app f x
   | .map ``SmoothMap => mkAppM ``SmoothMap.val #[f, x]
   | .map ``LinMap => mkAppM ``LinMap.val #[f, x]
+  | .map ``ContinuousMap => mkAppM ``FunLike.coe #[f, x]
   | .map ``PowType => do
     let fx ← mkAppM ``getElem #[f, x]
     mkAppM' fx #[(.const ``True.intro [])]
@@ -146,7 +177,7 @@ def mkFunAppM (f : Expr) (xs : Array Expr) : MetaM Expr :=
   -- | .map ``LinMap => mkAppM ``LinMap.val #[f, x]
   -- | .map ``PowType => mkAppOptM ``getElem #[none, none, none, none, none, f, x, some (.const ``True.intro [])]
   -- | .map n => throwError "Error in `mkFunSpace`, unrecognized function type `{n}`"
-
+#check Expr.eta
 -- This does not work at all!
 def funHeadBeta1 (e : Expr) : Expr := 
   if let .some (funType, f, x) := isFunApp? e then
@@ -217,16 +248,13 @@ def funEta (e : Expr) : MetaM Expr := do
         break
     mkFunFVars xs[0:j] b
 
-#check Smooth.differential
 
 def bar : (ℝ ⟿ ℝ) ⟿ ℝ ⟿ ℝ ⊸ ℝ := sorry
-#check (λ (f : ℝ ⟿ ℝ) (x : ℝ) ⟿ bar f x)
 
 open Qq
 #eval show MetaM Unit from do
   let f := q(λ (n : Nat) => λ (x : ℝ) ⟿ λ (z : ℝ) ⊸ z)
   let f := q(λ (n : Nat) => λ (x : ℝ) ⟿ ⊞ (i : Fin n), (x:ℝ))
-
   
   IO.println s!"original function:  {← ppExpr f}"
   
@@ -268,9 +296,7 @@ open Qq
   IO.println s!"{← ppExpr (← mkFunApp1M f x)}"
   IO.println s!"{← ppExpr (funHeadBeta1 (← (mkFunApp1M f x)))}"
 
--- X → X
--- X ⟿ X
--- X ⊸ X
-
--- (I → X ⟿ Y) → (I → X) → Y^I
-
+  let f := q(λ (x : _root_.Real) =>[C] x + x)
+  let x := q(1 : _root_.Real)
+  IO.println s!"{← ppExpr (← mkFunApp1M f x)}"
+  IO.println s!"{← ppExpr (funHeadBeta1 (← (mkFunApp1M f x)))}"
