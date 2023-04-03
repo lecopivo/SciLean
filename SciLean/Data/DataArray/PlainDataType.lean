@@ -307,7 +307,7 @@ def ℝ.byteType : ByteType ℝ where
   bytes := 8
   h_size := sorry_proof
 
-  fromByteArray b i h := Float.byteType.fromByteArray b i h |>.toReal
+  fromByteArray b i h := Float.byteType.fromByteArray b i h |>.toSciLeanReal
   toByteArray b i h a := Float.byteType.toByteArray b i h a.toFloat
 
   toByteArray_size := sorry_proof

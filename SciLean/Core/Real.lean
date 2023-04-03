@@ -4,14 +4,16 @@ import Mathlib.Algebra.Field.Basic
 
 -- import SciLean.Mathlib.Algebra.Field.Basic
 
+namespace SciLean
+
 structure Real where
   val : Float
 
 notation " ℝ " => Real
 
-def Float.toReal (x : Float) : ℝ := ⟨x⟩
-def Nat.toReal (n : Nat) : ℝ := n.toFloat.toReal
-def Int.toReal (n : Int) : ℝ := (Float.ofInt n).toReal
+def _root_.Float.toSciLeanReal (x : Float) : ℝ := ⟨x⟩
+def _root_.Nat.toReal (n : Nat) : ℝ := n.toFloat.toSciLeanReal
+def _root_.Int.toReal (n : Int) : ℝ := (Float.ofInt n).toSciLeanReal
 
 namespace Real
 
