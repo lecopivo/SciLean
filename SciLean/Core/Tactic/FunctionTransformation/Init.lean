@@ -5,6 +5,16 @@ open Lean Meta Elab Elab.Term
 
 namespace SciLean
 
+namespace FunctionTransformation
+
+
+initialize registerTraceClass `Meta.Tactic.fun_trans
+initialize registerTraceClass `Meta.Tactic.fun_trans.missing_rule
+initialize registerTraceClass `Meta.Tactic.fun_trans.normalize_let
+initialize registerTraceClass `Meta.Tactic.fun_trans.rewrite
+
+initialize registerTraceClass `Meta.Tactic.fun_trans_rule
+
 register_simp_attr fun_trans
 
 initialize funTransDefAttr : TagAttribute ← 
@@ -247,11 +257,9 @@ initialize funTransRuleAttr : TagAttribute ←
 
           let explicitArgs ← xs.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
 
-          -- TODO: convert dbg_trace to trace
-
           -- identity
           if let .some X ← isId F then
-            dbg_trace s!"Identity rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"Identity rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠1) then
               throwError "Identity rule is expecting exactly one explicit argument `{← ppExpr X}`!"
@@ -264,7 +272,7 @@ initialize funTransRuleAttr : TagAttribute ←
 
           -- constant
           if let .some (Y,x) ← isConst F then
-            dbg_trace s!"Constant rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"Constant rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 2) then
               throwError "Constant rule is expecting exactly two explicit arguments `{← ppExpr Y}` and `{← ppExpr x}`!"
@@ -278,7 +286,7 @@ initialize funTransRuleAttr : TagAttribute ←
 
           -- composition
           if let .some (f,g) ← isComp F then
-            dbg_trace s!"Composition rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"Composition rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 2) then
               throwError "Composition rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
@@ -292,7 +300,7 @@ initialize funTransRuleAttr : TagAttribute ←
 
           -- swap
           if let .some f ← isSwap F then
-            dbg_trace s!"Swap arguments rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"Swap arguments rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 1) then
               throwError "Swap arguments rule is expecting exactly one explicit argument `{← ppExpr f}`!"
@@ -305,7 +313,7 @@ initialize funTransRuleAttr : TagAttribute ←
 
           -- forallMap
           if let .some f ← isForallMap F then
-            dbg_trace s!"Forall map rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"Forall map rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 1) then
               throwError "Forall map rule is expecting exactly one explicit argument `{← ppExpr f}`!"
@@ -319,7 +327,7 @@ initialize funTransRuleAttr : TagAttribute ←
 
           -- eval
           if let .some (Y,x) ← isEval F then
-            dbg_trace s!"Eval rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"Eval rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 2) then
               throwError "Eval rule is expecting exactly two explicit arguments `{← ppExpr Y}` and `{← ppExpr x}`!"
@@ -333,7 +341,7 @@ initialize funTransRuleAttr : TagAttribute ←
 
           -- prodMap
           if let .some (f,g) ← isProdMap F then
-            dbg_trace s!"Prod map rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"Prod map rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 2) then
               throwError "Prod map rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
@@ -347,7 +355,7 @@ initialize funTransRuleAttr : TagAttribute ←
 
           -- letBinop
           if let .some (f,g) ← isLetBinop F then
-            dbg_trace s!"LetBinop rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"LetBinop rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 2) then
               throwError "LetBinop rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
@@ -361,7 +369,7 @@ initialize funTransRuleAttr : TagAttribute ←
 
           -- letComp
           if let .some (f,g) ← isLetComp F then
-            dbg_trace s!"LetComp rule for `{funTransName}` detected!"
+            trace[Meta.Tactic.fun_trans_rule] s!"LetComp rule for `{funTransName}` detected!"
 
             if (explicitArgs.size ≠ 2) then
               throwError "LetComp rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
@@ -376,7 +384,6 @@ initialize funTransRuleAttr : TagAttribute ←
 
           throwError s!"Unrecognised function transformation rule!\nPossible forms of a rule are:\n{FunTransRuleType.all.map (λ rule => ("  " ++ toString funTransName ++ " " ++ rule.expectedForm ++ '\n'.toString)) |> String.join}"
       )           
-
 
 
 -- Function propositions are currently solved via type class resolutio

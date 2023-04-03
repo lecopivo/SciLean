@@ -265,7 +265,12 @@ open Qq
   IO.println s!"{← ppExpr (← mkFunApp1M f x)}"
   IO.println s!"{← ppExpr (← funHeadBeta (← (mkFunApp1M f x)))}"
 
-  let f := q(λ (x : _root_.Real) =>[C] x + x)
-  let x := q(1 : _root_.Real)
+  let f : Q(C(_root_.Real, _root_.Real)) := q(λ (x : _root_.Real) =>[C] x + x)
+  let x : Q(_root_.Real) := q(1 : _root_.Real)
+  let fx := q($f $x)
+  let fx' := q(($f).toFun $x)
   IO.println s!"{← ppExpr (← mkFunApp1M f x)}"
-  IO.println s!"{← ppExpr (← funHeadBeta (← (mkFunApp1M f x)))}"
+  IO.println s!"{← ppExpr (← funHeadBeta fx)}"
+  IO.println s!"{← ppExpr fx} is app of: {(← isFunApp? fx).1}"
+  IO.println s!"{← ppExpr fx'} is app of: {(← isFunApp? fx').1}"
+  IO.println s!"{← ppExpr f} is app of: {(← isFunApp? f).1}"

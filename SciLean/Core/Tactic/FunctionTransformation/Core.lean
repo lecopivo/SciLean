@@ -10,12 +10,6 @@ open Lean Meta
 namespace SciLean
 
 
-initialize registerTraceClass `Meta.Tactic.fun_trans
-initialize registerTraceClass `Meta.Tactic.fun_trans.missing_rule
-initialize registerTraceClass `Meta.Tactic.fun_trans.normalize_let
-initialize registerTraceClass `Meta.Tactic.fun_trans.rewrite
-
-
 def _root_.Lean.Meta.getConstExplicitArgIdx (constName : Name) : MetaM (Array Nat) := do
   let info ← getConstInfo constName
 
