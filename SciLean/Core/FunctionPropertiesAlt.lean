@@ -166,11 +166,11 @@ elab_rules : command
 
 
 -- For a give function/constant property and arguments this gives you the name of the theorem talking about the property in those arguments
--- extraPreArgNum and extraPostArgNum tells you the number of additional arguments compared to the arguments of the function/constant
 structure FunctionTheorem where
   thrm : Name
-  extraPreArgNum : Nat
-  extraPostArgNum : Nat
+
+-- extraPreArgNum : Nata
+-- extraPostArgNum : Nat
 
 -- Retrieve theorem for a give function/constant, function transform/property and set of arguments indices 
 -- For example `HAdd.hAdd` has 6 arguments `{X Y Z} [HAdd X Y Z] x y`
@@ -190,11 +190,9 @@ argument x
 argument y
   isSmooth := by admit
 
-
 #check HAdd.hAdd.arg_xy.isSmooth
 #check HAdd.hAdd.arg_x.isSmooth
 #check HAdd.hAdd.arg_y.isSmooth
-
 
 instance {X} [Vec X] : IsSmooth (λ x : X => x) := sorry
 instance {X Y} [Vec X] [Vec Y] (x : X): IsSmooth (λ y : Y => x) := sorry
@@ -207,6 +205,23 @@ set_option trace.Meta.synthInstance true in
 example (y : ℝ) : IsSmooth λ x : ℝ => y + x := by apply HAdd.hAdd.arg_y.isSmooth
 
 
+#eval show MetaM Unit from do 
+  let info ← getConstInfo ``HAdd.hAdd
+  let type := info.type
+
+  forallTelescope type λ xs b => do
+    let name : Name := sorry
+    let mut lctx ← getLCtx
+    let insts ← getLocalInstances
+    lctx := lctx.setUserName xs[4]!.fvarId! `hihi
+    lctx := lctx.setUserName xs[5]!.fvarId! `hoho
+    withLCtx lctx (← getLocalInstances) do
+      let names ← xs.mapM λ x => x.fvarId!.getUserName
+      IO.println s!"Argument names: {names}"
+      IO.println s!"Internal names: {names.map λ name => name.isInternal}"
+      IO.println s!"Impl detail names: {names.map λ name => name.isImplementationDetail}"
+
+    
 
   -- let instanceId := mkIdent $ data.funPropNamespace.append "isSmooth"
 
