@@ -8,96 +8,118 @@ import SciLean.Core.SmoothMap
 namespace SciLean
 
 
- --TODO: Question?
- -- Should linearity include smoothness? Are there usefull linear 
- -- functions that are not smooth? 
- -- In finite dimension every linear function is smooth but in infitite
- -- dimensional spaces it does not have to be the case.
- /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+@[fun_prop_def]
+structure IsLin {X Y : Type _} [Vec X] [Vec Y] (f : X → Y) : Prop where
+ isLin : TensorProduct.is_linear f 
+ isSmooth : IsSmooth f
 
- Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
+structure LinMap (X Y : Type _) [Vec X] [Vec Y] where
+  toFun : X → Y 
+  isLin_toFun : IsLin toFun := by infer_instance
 
- Transitive closure of `IsLinNT`
- -/
- class IsLinNT {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
-   is_lin : TensorProduct.is_linear (uncurryN n f)
-   is_smooth : IsSmoothT (uncurryN n f)
+/-- `X --o Y` is the space of all linear maps between `X` and `Y`.
 
-  /-- Function `f : X₁ → ... Xₙ → Y'` is a linear as a function `X₁ × ... × Xₙ → Y'`.
+The notation `X ⊸ Y` is prefered, but this fixes pure ASCII equivalent. -/
+infixr:25 " --o " => LinMap
 
-  Where `X = X₁` and `Y = X₂ → ... → Xₙ → Y'`
-  -/
-  class IsLinN {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-    (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends IsLinNT n f : Prop
+/-- `X ⊸ Y` is the space of all linear maps between `X` and `Y` -/
+infixr:25 " ⊸ " => LinMap
 
-  /-- `IsLin f` says that `f : X → Y` is linear.
+-- Lambda notation
+open Lean.TSyntax.Compat in
+macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term =>
+  Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
+open Lean.TSyntax.Compat in
+macro "fun"   xs:Lean.explicitBinders " ⊸ " b:term : term =>
+  Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
 
-  Abbreviation for `IsLinN 1 f`
-  -/
-  abbrev IsLin {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinN 1 f
+class LinMapClass (F : Type _) (X Y : outParam <| Type _) [Vec X] [Vec Y]
+  extends FunLike F X fun _ => Y where
+  map_isLin (f : F) : IsLin f
 
-  /-- `IsLinT f` says that `f : X → Y` is linear.
+export LinMapClass (map_isLin)
 
-  Abbreviation for `IsLinNT 1 f`.
+attribute [fun_prop] map_isLin
 
-  `IsLinT` is transitive closure of `IsLin`.
-  -/
-  abbrev IsLinT {X Y} [Vec X] [Vec Y] (f : X → Y) : Prop := IsLinNT 1 f
+section LinMapClass
 
+  -- The following is heavily inspired by ContinuousMap
 
-  structure LinMap (X Y : Type) [Vec X] [Vec Y] where
-    val : X → Y 
-    [property : IsLinT val]
+  variable {F X Y : Type _} [Vec X] [Vec Y] [LinMapClass F X Y]
 
-  /-- `X --o Y` is the space of all linear maps between `X` and `Y`.
+  instance : CoeTC F (X ⊸ Y) :=
+    ⟨fun f =>
+      { toFun := f
+        isLin_toFun := map_isLin f }⟩
 
-  The notation `X ⊸ Y` is prefered, but this fixes pure ASCII equivalent. -/
-  infixr:25 " --o " => LinMap
+end LinMapClass
 
-  /-- `X ⊸ Y` is the space of all linear maps between `X` and `Y` -/
-  infixr:25 " ⊸ " => LinMap
+namespace LinMap
 
-  -- Lambda notation
-  open Lean.TSyntax.Compat in
-  macro "λ"   xs:Lean.explicitBinders " ⊸ " b:term : term =>
-    Lean.expandExplicitBinders `SciLean.LinMap.mk xs b
+  variable {X Y Z W : Type _} [Vec X] [Vec Y] [Vec Z] [Vec W]
 
-  variable {X Y Z W: Type} [Vec X] [Vec Y] [Vec Z] [Vec W] 
+  instance : LinMapClass (X⊸Y) X Y where
+    map_isLin f := f.isLin_toFun
+    coe f := f.toFun
+    coe_injective' := sorry_proof
+    
+  @[simp]
+  theorem toFun_eq_coe {f : X ⊸ Y} : f.toFun = (f : X → Y) :=
+    rfl
 
-  instance : CoeFun (X⊸Y) (λ _ => X→Y) := ⟨λ f => f.1⟩
+  def Simps.apply (f : X ⊸ Y) : X → Y := f
 
-  instance LinMap.val.arg_x.isLin {X Y} [Vec X] [Vec Y] (f : X ⊸ Y)
-    : IsLinT f.1 := f.2
+  initialize_simps_projections LinMap (toFun → apply)
 
-  abbrev LinMap.mk' {X Y} [Vec X] [Vec Y] (f : X → Y) (_ : IsLinT f) : X⊸Y := λ x ⊸ f x
+  @[simp]
+  protected theorem coe_coe {F : Type} [LinMapClass F X Y] (f : F) : ⇑(f : X ⊸ Y) = f :=
+    rfl
 
-  @[ext] 
-  theorem LinMap.ext {X Y} [Vec X] [Vec Y] (f g : X ⊸ Y) : (∀ x, f x = g x) → f = g := by sorry
+  @[ext]
+  theorem ext {f g : X ⊸ Y} (h : ∀ x, f x = g x) : f = g :=
+    FunLike.ext _ _ h
 
-  @[simp, diff_simp]
-  theorem LinMap.eta_reduction {X Y} [Vec X] [Vec Y] (f : X ⊸ Y)
+  @[fun_prop]
+  theorem isLin_set_coe (s : Set (X⊸Y)) (f : s) : IsLin (f : X → Y) :=
+    map_isLin f.1
+
+  @[simp]
+  theorem coe_mk (f : X → Y) (h : IsLin f) : ⇑(⟨f, h⟩ : X ⊸ Y) = f :=
+    rfl
+
+  @[simp]
+  theorem eta (f : X ⊸ Y)
       : (λ (x : X) ⊸ f x) = f := by rfl; done
 
-  theorem show_is_lin_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⊸ Y) : (f = g) → IsLinT f :=
+  protected def id : X ⊸ X :=
+    LinMap.mk (λ x => x) sorry
+
+  @[simp]
+  theorem coe_id : ⇑(LinMap.id : X ⊸ X) = _root_.id := 
+    rfl
+
+  @[simp]
+  theorem id_apply (x : X) : LinMap.id x = x :=
+    rfl
+
+  ------------------------------------------------------------------------------
+  -- X ⊸ Y is vector space 
+  ------------------------------------------------------------------------------
+
+  theorem show_is_lin_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⊸ Y) : (f = g) → IsLin f :=
   by
     intro p
     have q : f = g := by apply p
     rw[q]; infer_instance
 
-
-  namespace Lin
-
-  variable {Z : Type} [Vec Z] {α : Type}
-
   def comp' : (Y⊸Z) → (X⊸Y) → (X⊸Z) := λ f g =>
-    LinMap.mk' (λ x => f (g x)) sorry
+    LinMap.mk (λ x => f (g x)) sorry
 
   def prodMap' : (X⊸Y) → (X⊸Z) → (X ⊸ Y×Z) := λ f g =>
-    LinMap.mk' (λ x => (f x, g x)) sorry
+    LinMap.mk (λ x => (f x, g x)) sorry
 
   def zeroFun : Y⊸X :=
-    LinMap.mk' (λ y => (0 : X)) sorry
+    LinMap.mk (λ y => (0 : X)) sorry
 
   def swap : X⊗Y → Y⊗X := (λ xy => xy.map' (λ (x : X) (y : Y) => y⊗x) sorry)
 
@@ -106,32 +128,32 @@ namespace SciLean
   @[simp] theorem zeroFun_eval (y : Y) : zeroFun y = (0 : X) := by simp[zeroFun]
 
 
-  def neg : X ⊸ X := LinMap.mk' (λ x => -x) sorry
-  def add' : X×X ⊸ X := LinMap.mk' (λ (x,y) => x+y) sorry
-  def sub' : X×X ⊸ X := LinMap.mk' (λ (x,y) => x-y) sorry
-  def mul' : ℝ×ℝ ⊸ ℝ := LinMap.mk' (λ (x,y) => x*y) sorry
+  def neg : X ⊸ X := LinMap.mk (λ x => -x) sorry
+  def add' : X×X ⊸ X := LinMap.mk (λ (x,y) => x+y) sorry
+  def sub' : X×X ⊸ X := LinMap.mk (λ (x,y) => x-y) sorry
+  def mul' : ℝ×ℝ ⊸ ℝ := LinMap.mk (λ (x,y) => x*y) sorry
 
   -- def tassocl : 
   -- def tassocr : 
-  def unit' : ℝ → X ⊸ ℝ⊗X := λ r => LinMap.mk' (λ x => r⊗x) sorry
-  def counit : ℝ⊗X ⊸ X := LinMap.mk' ((λ rx => rx.map' (λ r x => r • x) sorry)) sorry
+  def unit' : ℝ → X ⊸ ℝ⊗X := λ r => LinMap.mk (λ x => r⊗x) sorry
+  def counit : ℝ⊗X ⊸ X := LinMap.mk ((λ rx => rx.map' (λ r x => r • x) sorry)) sorry
 
   @[simp] theorem unit'_eval (r : ℝ) (x : X) : unit' r x = r⊗x := by simp[unit']
   @[simp] theorem counit_eval (r : ℝ) (x : X) : counit (r⊗x) = r•x := by simp[counit]
 
-  instance : Neg (X⊸Y) := ⟨λ f => LinMap.mk' (λ x => -f x)
+  instance : Neg (X⊸Y) := ⟨λ f => LinMap.mk (λ x => -f x)
     (show_is_lin_via (comp' neg f) (by funext; simp[neg]))⟩
 
-  instance : Add (X⊸Y) := ⟨λ f g => LinMap.mk' (λ x => f x + g x)
+  instance : Add (X⊸Y) := ⟨λ f g => LinMap.mk (λ x => f x + g x)
     (show_is_lin_via (comp' add' (prodMap' f g)) (by funext; simp[add']))⟩
 
-  instance : Sub (X⊸Y) := ⟨λ f g => LinMap.mk' (λ x => f x - g x)
+  instance : Sub (X⊸Y) := ⟨λ f g => LinMap.mk (λ x => f x - g x)
     (show_is_lin_via (comp' sub' (prodMap' f g)) (by funext; simp[sub']))⟩
 
-  instance : Mul (X⊸ℝ) := ⟨λ f g => LinMap.mk' (λ x => f x * g x)
+  instance : Mul (X⊸ℝ) := ⟨λ f g => LinMap.mk (λ x => f x * g x)
     (show_is_lin_via (comp' mul' (prodMap' f g)) (by funext; simp[mul']))⟩
 
-  instance : SMul ℝ (X⊸Y) := ⟨λ r f => LinMap.mk' (λ x => r • f x)
+  instance : SMul ℝ (X⊸Y) := ⟨λ r f => LinMap.mk (λ x => r • f x)
     (show_is_lin_via (comp' counit (comp' (unit' r) f)) (by funext; simp))⟩
 
   instance : Zero (X ⊸ Y) := ⟨zeroFun⟩
@@ -139,94 +161,95 @@ namespace SciLean
   -- !!!THIS USES SORRY!!!
   instance : Vec (X ⊸ Y) := Vec.mkSorryProofs
 
-  end Lin
 
-  def TensorProduct.map (f : X ⊸ Y ⊸ Z) (xy : X⊗Y) : Z := xy.map' (λ x y => f x y) sorry_proof
+  def _root_.SciLean.TensorProduct.map (f : X ⊸ Y ⊸ Z) (xy : X⊗Y) : Z := xy.map' (λ x y => f x y) sorry_proof
 
-  namespace Lin
+  section FinVec 
+
+    variable {X Y : Type _} {ι κ} {_ : Enumtype ι} {_ : Enumtype κ}
+
+  -- @[infer_tc_goals_rl]
+    instance [FinVec X ι] [Hilbert Y] : Inner (X ⊸ Y) where
+      -- This should be the correct version of the inner product
+      -- It looks assymetrical but it is a consequence of `inner_proj_dualproj`
+      --   ⟪x, y⟫ = ∑ i, 𝕡 i x * 𝕡' i y
+      -- which also appears assymetrical
+      inner f g := ∑ i, ⟪f (𝕖 i), g (𝕖' i)⟫
+
+    -- @[infer_tc_goals_rl]
+    instance [FinVec X ι] [Hilbert Y] : TestFunctions (X ⊸ Y) where
+      TestFun _ := True
+
+    -- @[infer_tc_goals_rl]
+    instance [FinVec X ι] [Hilbert Y] : SemiHilbert (X ⊸ Y) := SemiHilbert.mkSorryProofs
+
+    -- @[infer_tc_goals_rl]
+    instance [FinVec X ι] [Hilbert Y] : Hilbert (X ⊸ Y) := Hilbert.mkSorryProofs
+
+    -- @[infer_tc_goals_rl]
+    instance [FinVec X ι] [FinVec Y κ] : Basis (X ⊸ Y) (ι×κ) ℝ where
+      basis := λ (i,j) => LinMap.mk (λ x => 𝕡 i x • 𝕖[Y] j) sorry_proof
+      proj := λ (i,j) f => 𝕡 j (f (𝕖 i))
+
+    -- @[infer_tc_goals_rl]
+    instance [FinVec X ι] [FinVec Y κ] : DualBasis (X ⊸ Y) (ι×κ) ℝ where
+      dualBasis := λ (i,j) => LinMap.mk (λ x => 𝕡' i x • 𝕖'[Y] j) sorry_proof
+      dualProj := λ (i,j) f => 𝕡' j (f (𝕖' i))
+
+    open BasisDuality in
+    -- @[infer_tc_goals_rl]
+    instance [FinVec X ι] [FinVec Y κ] : BasisDuality (X ⊸ Y) where
+      toDual   := λ f => LinMap.mk (λ x => toDual (f (fromDual x))) sorry_proof
+      fromDual := λ f => LinMap.mk (λ x => fromDual (f (toDual x))) sorry_proof
+
+    -- @[infer_tc_goals_rl]
+    instance [FinVec X ι] [FinVec Y κ] : FinVec (X ⊸ Y) (ι×κ) where     
+      is_basis := sorry_proof
+      duality := by 
+        intro (i,j) (i',j'); simp[Basis.basis, DualBasis.dualBasis, Inner.inner];
+        -- This should be:
+        --  ∑ i_i, ⟪[[i=i_]] * 𝕖 j, [[i'=i_1]] 𝕖' j'⟫
+        --  [[i=i']] * ⟪𝕖 j, 𝕖' j'⟫
+        --  [[i=i']] * [[j=j']]
+        sorry_proof
+      to_dual := by
+        simp [BasisDuality.toDual, Basis.proj, DualBasis.dualBasis]
+        intro f; ext x; 
+        simp[FinVec.to_dual,FinVec.from_dual]
+        -- Now the goal is:
+        --   ∑ j, 𝕡 j (f (∑ i, 𝕡' i x * 𝕖 i)) * 𝕖' j
+        --   =
+        --   ∑ (i,j), 𝕡 j (f (𝕖 i)) * 𝕡' i x * 𝕖' j
+        sorry_proof
+      from_dual := by
+        simp [BasisDuality.fromDual, DualBasis.dualProj, Basis.basis]
+        intro f; ext x; 
+        simp[FinVec.to_dual,FinVec.from_dual]
+        -- Now the goal is:
+        --   ∑ j, 𝕡' j (f (∑ i, 𝕡 i x * 𝕖' i)) * 𝕖 j
+        --   =
+        --   ∑ (i,j), 𝕡' j (f (𝕖' i)) * 𝕡' i x * 𝕖 j
+        sorry_proof
+
+  end FinVec 
 
 
-  @[infer_tc_goals_rl]
-  instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Inner (X ⊸ Y) where
-    -- This should be the correct version of the inner product
-    -- It looks assymetrical but it is a consequence of `inner_proj_dualproj`
-    --   ⟪x, y⟫ = ∑ i, 𝕡 i x * 𝕡' i y
-    -- which also appears assymetrical
-    inner f g := ∑ i, ⟪f (𝕖 i), g (𝕖' i)⟫
-
-  @[infer_tc_goals_rl]
-  instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : TestFunctions (X ⊸ Y) where
-    TestFun _ := True
-
-  @[infer_tc_goals_rl]
-  instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : SemiHilbert (X ⊸ Y) := SemiHilbert.mkSorryProofs
-
-  @[infer_tc_goals_rl]
-  instance {X ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] : Hilbert (X ⊸ Y) := Hilbert.mkSorryProofs
-
-  @[infer_tc_goals_rl]
-  instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : Basis (X ⊸ Y) (ι×κ) ℝ where
-    basis := λ (i,j) => LinMap.mk' (λ x => 𝕡 i x • 𝕖[Y] j) sorry_proof
-    proj := λ (i,j) f => 𝕡 j (f (𝕖 i))
-
-  @[infer_tc_goals_rl]
-  instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : DualBasis (X ⊸ Y) (ι×κ) ℝ where
-    dualBasis := λ (i,j) => LinMap.mk' (λ x => 𝕡' i x • 𝕖'[Y] j) sorry_proof
-    dualProj := λ (i,j) f => 𝕡' j (f (𝕖' i))
-
-  open BasisDuality in
-  @[infer_tc_goals_rl]
-  instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : BasisDuality (X ⊸ Y) where
-    toDual   := λ f => LinMap.mk' (λ x => toDual (f (fromDual x))) sorry_proof
-    fromDual := λ f => LinMap.mk' (λ x => fromDual (f (toDual x))) sorry_proof
-
-  @[infer_tc_goals_rl]
-  instance {X ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] : FinVec (X ⊸ Y) (ι×κ) where     
-    is_basis := sorry_proof
-    duality := 
-    by 
-      intro (i,j) (i',j'); simp[Basis.basis, DualBasis.dualBasis, Inner.inner];
-      -- This should be:
-      --  ∑ i_i, ⟪[[i=i_]] * 𝕖 j, [[i'=i_1]] 𝕖' j'⟫
-      --  [[i=i']] * ⟪𝕖 j, 𝕖' j'⟫
-      --  [[i=i']] * [[j=j']]
-      sorry_proof
-    to_dual := 
-    by
-      simp [BasisDuality.toDual, Basis.proj, DualBasis.dualBasis]
-      intro f; ext x; 
-      simp[FinVec.to_dual,FinVec.from_dual]
-      -- Now the goal is:
-      --   ∑ j, 𝕡 j (f (∑ i, 𝕡' i x * 𝕖 i)) * 𝕖' j
-      --   =
-      --   ∑ (i,j), 𝕡 j (f (𝕖 i)) * 𝕡' i x * 𝕖' j
-      sorry_proof
-    from_dual := 
-    by
-      simp [BasisDuality.fromDual, DualBasis.dualProj, Basis.basis]
-      intro f; ext x; 
-      simp[FinVec.to_dual,FinVec.from_dual]
-      -- Now the goal is:
-      --   ∑ j, 𝕡' j (f (∑ i, 𝕡 i x * 𝕖' i)) * 𝕖 j
-      --   =
-      --   ∑ (i,j), 𝕡' j (f (𝕖' i)) * 𝕡' i x * 𝕖 j
-      sorry_proof
-
-  --------------------------------------------------------------------
+  ------------------------------------------------------------------------------
+  -- Basic combinators like const, comp, curry, uncurry, prodMk, prodMap, pi
+  ------------------------------------------------------------------------------
 
 
   def curry' (f : X ⊗ Y ⊸ Z) : (X ⊸ Y ⊸ Z) := 
-    LinMap.mk' (λ x => 
-      LinMap.mk' (λ y => f (x ⊗ y)) 
+    LinMap.mk (λ x => 
+      LinMap.mk (λ y => f (x ⊗ y)) 
       sorry_proof) 
     sorry_proof
 
   def uncurry' (f : X ⊸ Y ⊸ Z) : (X ⊗ Y ⊸ Z) := 
-    LinMap.mk' (λ xy => xy.map' (λ x y => f x y) sorry_proof) sorry_proof
+    LinMap.mk (λ xy => xy.map' (λ x y => f x y) sorry_proof) sorry_proof
 
-  def id : X ⊸ X := LinMap.mk' (λ x => x) sorry_proof
-  def fst : X×Y ⊸ X := LinMap.mk' (λ (x,_) => x) sorry_proof
-  def snd : X×Y ⊸ Y := LinMap.mk' (λ (_,y) => y) sorry_proof
+  def fst : X×Y ⊸ X := LinMap.mk (λ (x,_) => x) sorry_proof
+  def snd : X×Y ⊸ Y := LinMap.mk (λ (_,y) => y) sorry_proof
 
   @[simp] theorem curry'_eval (f : X⊗Y ⊸ Z) (x : X) (y : Y) : curry' f x y = f (x⊗y) := by simp[curry']
   @[simp] theorem uncurry'_eval (f : X ⊸ Y ⊸ Z) (xy : X⊗Y) : uncurry' f xy = xy.map f := by simp[uncurry',TensorProduct.map]
@@ -235,10 +258,10 @@ namespace SciLean
   @[simp] theorem snd_eval (xy : X×Y) : snd xy = xy.2 := by simp[snd]
 
   def tprod : X ⊸ Y ⊸ X⊗Y := 
-    LinMap.mk' (λ x => 
-      LinMap.mk' (λ y => x⊗y)
-      (show_is_lin_via (curry' id x) (by ext y; simp)))
-    (show_is_lin_via (curry' id) (by ext x y; simp))
+    LinMap.mk (λ x => 
+      LinMap.mk (λ y => x⊗y)
+      (show_is_lin_via (curry' LinMap.id x) (by ext y; simp)))
+    (show_is_lin_via (curry' LinMap.id) (by ext x y; simp))
 
   -- noncomputable
   -- def tpmap : (X⊸Y) ⊸ (X⊸Z) ⊸ (X⊸Y⊗Z) := ⟨λ f => ⟨λ g => ⟨λ x => (f x ⊗ g x), sorry_proof⟩, sorry_proof⟩, sorry_proof⟩

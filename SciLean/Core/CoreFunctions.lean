@@ -1,28 +1,16 @@
 import SciLean.Core.FunctionProperties
 
+import Std.Data.List.Basic
 
 namespace SciLean
+
 
 --------------------------------------------------------------------------------
 -- Core bootstrapping theorems
 --------------------------------------------------------------------------------
 
-instance IsLin_is_IsSmooth {X Y : Type} {Xs Y' : Type} [Vec Xs] [Vec Y'] 
-  (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] [inst : IsLinN n f] 
-  : IsSmoothN n f := ⟨sorry_proof⟩
-
-instance {X Y} [Vec X] [Vec Y] (f : X → Y) [inst : IsSmoothN 1 f] : IsSmooth f := by
-  induction inst
-  apply IsSmooth.mk
-
-@[simp ↓, diff] 
-theorem diff_of_linear {X Y} [Vec X] [Vec Y] (f : X → Y) [IsLin f]
+theorem differential_of_linear {X Y} [Vec X] [Vec Y] {f : X → Y} [IsLin f]
   : ∂ f = λ _ dx => f dx := sorry_proof
-
-@[simp ↓, diff] 
-theorem diff_of_linear_2 {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) [IsLinN 2 f]
-  : ∂ (uncurryN 2 f) = λ _ (dx,dy) => f dx dy := sorry_proof
-
 
 --------------------------------------------------------------------------------
 -- Prod.fst - (·.1)
@@ -31,17 +19,15 @@ theorem diff_of_linear_2 {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y → Z) [Is
 function_properties Prod.fst {X Y} [Vec X] [Vec Y] (xy : X×Y) : X
 argument xy
   isLin := sorry_proof,
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dxy.1 by symdiff
-
+  isSmooth,
+  abbrev ∂ 𝒯 := dxy.1 by apply differential_of_linear
 
 function_properties Prod.fst {X Y} [SemiHilbert X] [SemiHilbert Y] (xy : X×Y) : X
 argument xy
   hasAdjoint := sorry_proof,
   abbrev † := ⟨xy',0⟩ by sorry_proof,
-  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; infer_instance,
-  abbrev ∂† ℛ := (dxy', 0) by unfold adjointDifferential; symdiff; symdiff
-  -- abbrev ℛ := (xy.1, λ dxy' => (dxy',0)) by symdiff
+  hasAdjDiff,
+  abbrev ∂† ℛ := (dxy', 0) by unfold adjointDifferential; symdiff; symdiff; done
 
 
 --------------------------------------------------------------------------------
@@ -51,15 +37,14 @@ argument xy
 function_properties Prod.snd {X Y} [Vec X] [Vec Y] (xy : X×Y) : Y
 argument xy
   isLin := sorry_proof,
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dxy.2 by symdiff -- ,
-  -- abbrev 𝒯 := (xy.2, dxy.2) by symdiff
+  isSmooth,
+  abbrev ∂ 𝒯 := dxy.2 by apply differential_of_linear
 
 function_properties Prod.snd {X Y} [SemiHilbert X] [SemiHilbert Y] (xy : X×Y) : Y
 argument xy
   hasAdjoint := sorry_proof,
   abbrev † := ⟨0, xy'⟩ by sorry_proof,
-  hasAdjDiff := by apply HasAdjDiffN.mk'; symdiff; infer_instance,
+  hasAdjDiff,
   abbrev ∂† := (0, dxy') by unfold adjointDifferential; symdiff; symdiff,
   abbrev ℛ := (xy.2, λ dxy' => (0,dxy')) by symdiff
 
@@ -72,11 +57,10 @@ function_properties Prod.mk {X Y} [Vec X] [Vec Y] (x : X) (y : Y) : X×Y
 argument (x,y) 
   isLin := sorry_proof,
   isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := (dx, dy) by symdiff
+  abbrev ∂ 𝒯 := (dx, dy) by simp[uncurryN, Prod.Uncurry.uncurry]; apply differential_of_linear; done
 argument x
   isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := (dx,0) by sorry_proof-- ,
-  -- abbrev 𝒯 := ((x,y), (dx,0)) by symdiff
+  abbrev ∂ 𝒯 := (dx,0) by sorry_proof
 argument y
   isSmooth := sorry_proof,
   abbrev ∂ 𝒯 := (0,dy) by sorry_proof -- ,
@@ -103,8 +87,8 @@ argument y
 function_properties Neg.neg {X} [Vec X] (x : X) : X
 argument x
   isLin := sorry_proof, 
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := - dx by symdiff-- ,
+  isSmooth,
+  abbrev ∂ 𝒯 := - dx by apply differential_of_linear -- ,
   -- abbrev 𝒯 := (-x, -dx) by symdiff
 
 function_properties Neg.neg {X} [SemiHilbert X] (x : X) : X
@@ -123,7 +107,7 @@ function_properties HAdd.hAdd {X} [Vec X]  (x y : X) : X
 argument (x,y)
   isLin := sorry_proof,
   isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx + dy by symdiff-- ,
+  abbrev ∂ 𝒯 := dx + dy by sorry_proof -- ,
   -- abbrev 𝒯 := (x+y, dx+dy) by symdiff
 argument x
   isSmooth := sorry_proof,

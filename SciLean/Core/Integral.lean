@@ -51,7 +51,7 @@ variable {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y]
 
 noncomputable
 instance : Inner (X⟿Y) where
-  inner f g := (integral (SmoothMap.mk' (λ x => ⟪f x, g x⟫) sorry)) |> limitOverWholeDomain
+  inner f g := (integral (SmoothMap.mk (λ x => ⟪f x, g x⟫) sorry)) |> limitOverWholeDomain
 
 instance : TestFunctions (X⟿Y) where
   TestFun f := sorry -- has compact support

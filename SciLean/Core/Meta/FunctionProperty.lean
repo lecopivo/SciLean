@@ -234,6 +234,34 @@ def FunctionPropertyData.funPropNamespace (data : FunctionPropertyData) : Name :
 
   data.funIdent.getId |>.append argspec
 
+/--
+  Create a composition lambda
+
+  For exmaple: 
+
+    With main arugments `x,y` and function `foo` this function returns 
+    `T, #[(x : T → X), (y : T → Y)], λ (t : T) => foo (x t) (y t)`
+  -/
+def FunctionPropertyData.mkCompositionLambda (data : FunctionPropertyData) : MacroM (Ident × Array BracketedBinder × Term) := do
+  let t : Ident ← `(t)
+  let T : Ident ← `(T)
+
+  let mainBinders ← data.mainBinders.mapM λ b => `(bracketedBinderF| ($b.getIdent : $T → $b.getType))
+
+  let mut explicitArgs? := data.binders.map
+    (λ (b : BracketedBinder) => if b.isExplicit then some (b.getIdent : Term) else none)
+
+  -- only main arguments are transformed from `x` to `(x t)`
+  for i in data.mainArgIds do
+    let argi := explicitArgs?[i]!.getD default
+    explicitArgs? := explicitArgs?.set! i (← `(($argi $t)))
+
+  let explicitArgs := explicitArgs?.filterMap id
+
+  let lambda ← `(λ ($t : $T) => $data.funIdent $explicitArgs*)
+  
+  return (T, mainBinders, lambda)
+
 syntax argumentProperties := "argument" argSpec argProp,+
 syntax "function_properties" ident bracketedBinder* (":" term)? argumentProperties+  : command
 

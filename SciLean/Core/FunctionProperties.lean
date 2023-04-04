@@ -11,6 +11,8 @@ namespace SciLean
 -- isSmooth
 --------------------------------------------------------------------------------
 
+theorem isLin_isSmooth {X Y} [Vec X] [Vec Y] {f : X → Y} [inst : IsLin f] : IsSmooth f := inst.isSmooth
+
 syntax "isSmooth" bracketedBinder* (":=" term)? : argProp
 
 open Lean Parser.Term in
@@ -21,13 +23,24 @@ macro_rules
 
   let instanceId := mkIdent $ data.funPropNamespace.append "isSmooth"
 
-  let instanceType ← `(IsSmoothN $data.mainArgNumLit $(← data.mkLambda))
-  let finalCommand ←
+  let (instanceType, extraBinders) ← 
+    match data.mainArgNum with 
+    | 0 => Macro.throwError "Must specify at least one argument!" 
+    | 1 => pure (← `(IsSmooth  $(← data.mkLambda)), (#[] : Array BracketedBinder))
+    | _ => do 
+      let (T, mainBinders, lambda) ← data.mkCompositionLambda
+      let TBinders : Array BracketedBinder :=  #[← `(bracketedBinderF| {$T : Type _}), ← `(bracketedBinderF| [Vec $T])]
+      let mainAssumptions ← mainBinders.mapM (β := BracketedBinder) (λ b => `(bracketedBinderF| [IsSmooth $b.getIdent] ))
+      let instType ← `(IsSmooth $lambda)
+      pure (instType, TBinders.append (mainBinders.append mainAssumptions))
+
+  let proof ← 
     match proof with
-    | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := by first | infer_instance | apply IsSmoothN.mk | (unfold $id; apply IsSmoothN.mk); done)
-    | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := $proof)
+    | none => `(term| by first | apply isLin_isSmooth | infer_instance | (unfold $id; infer_instance); done)
+    | some prf =>pure  prf
+
+  let finalCommand ←
+      `(@[fun_prop] theorem $instanceId $data.contextBinders* $extraBinders* $extraAssumptions* : $instanceType := $proof)
   
   return finalCommand 
 
@@ -46,13 +59,24 @@ macro_rules
 
   let instanceId := mkIdent $ data.funPropNamespace.append "isLin"
 
-  let instanceType ← `(IsLinN $data.mainArgNumLit $(← data.mkLambda))
-  let finalCommand ←
+  let (instanceType, extraBinders) ← 
+    match data.mainArgNum with 
+    | 0 => Macro.throwError "Must specify at least one argument!" 
+    | 1 => pure (← `(IsLin  $(← data.mkLambda)), (#[] : Array BracketedBinder))
+    | _ => do 
+      let (T, mainBinders, lambda) ← data.mkCompositionLambda
+      let TBinders : Array BracketedBinder :=  #[← `(bracketedBinderF| {$T : Type _}), ← `(bracketedBinderF| [Vec $T])]
+      let mainAssumptions ← mainBinders.mapM (β := BracketedBinder) (λ b => `(bracketedBinderF| [IsLin $b.getIdent] ))
+      let instType ← `(IsLin $lambda)
+      pure (instType, TBinders.append (mainBinders.append mainAssumptions))
+
+  let proof ← 
     match proof with
-    | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := by first | infer_instance | apply IsLinN.mk | (unfold $id; apply IsLinN.mk); done)
-    | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := $proof)
+    | none => `(term| by first | infer_instance | (unfold $id; infer_instance); done)
+    | some prf =>pure  prf
+
+  let finalCommand ←
+      `(@[fun_prop] theorem $instanceId $data.contextBinders* $extraBinders* $extraAssumptions* : $instanceType := $proof)
   
   return finalCommand 
 
@@ -73,26 +97,30 @@ macro_rules
 
   let instanceId := mkIdent $ data.funPropNamespace.append "hasAdjoint"
 
-  let instanceType ← `(HasAdjointN $data.mainArgNumLit $(← data.mkLambda))
-  let finalCommand ←
+  let (instanceType, extraBinders) ← 
+    match data.mainArgNum with 
+    | 0 => Macro.throwError "Must specify at least one argument!" 
+    | 1 => pure (← `(HasAdjoint  $(← data.mkLambda)), (#[] : Array BracketedBinder))
+    | _ => do 
+      let (T, mainBinders, lambda) ← data.mkCompositionLambda
+      let TBinders : Array BracketedBinder :=  #[← `(bracketedBinderF| {$T : Type _}), ← `(bracketedBinderF| [SemiHilbert $T])]
+      let mainAssumptions ← mainBinders.mapM (β := BracketedBinder) (λ b => `(bracketedBinderF| [HasAdjoint $b.getIdent] ))
+      let instType ← `(HasAdjoint $lambda)
+      pure (instType, TBinders.append (mainBinders.append mainAssumptions))
+
+  let proof ← 
     match proof with
-    | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := by first | infer_instance | apply HasAdjointN.mk | (unfold $id; apply HasAdjointN.mk); done)
-    | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := $proof)
+    | none => `(term| by first | infer_instance | (unfold $id; infer_instance); done)
+    | some prf =>pure  prf
+
+  let finalCommand ←
+      `(@[fun_prop] theorem $instanceId $data.contextBinders* $extraBinders* $extraAssumptions* : $instanceType := $proof)
   
   return finalCommand 
 
 --------------------------------------------------------------------------------
 -- hasAdjDiff
 --------------------------------------------------------------------------------
-
-theorem HasAdjDiffN.mk' {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y']
-  {n : Nat} {f : X → Y} [Prod.Uncurry n (X → Y) Xs Y'] [IsSmoothT (uncurryN n f)]
-  : (∀ x, HasAdjointT $ ∂ (uncurryN n f) x) → HasAdjDiffN n f
-  := λ h => by 
-    have : HasAdjDiffNT n f := by constructor; infer_instance; infer_instance;
-    apply HasAdjDiffN.mk
 
 syntax "hasAdjDiff" bracketedBinder* (":=" term)? : argProp
 
@@ -106,13 +134,24 @@ macro_rules
 
   let instanceId := mkIdent $ data.funPropNamespace.append "hasAdjDiff"
 
-  let instanceType ← `(HasAdjDiffN $data.mainArgNumLit $(← data.mkLambda))
-  let finalCommand ←
+  let (instanceType, extraBinders) ← 
+    match data.mainArgNum with 
+    | 0 => Macro.throwError "Must specify at least one argument!" 
+    | 1 => pure (← `(HasAdjDiff  $(← data.mkLambda)), (#[] : Array BracketedBinder))
+    | _ => do 
+      let (T, mainBinders, lambda) ← data.mkCompositionLambda
+      let TBinders : Array BracketedBinder :=  #[← `(bracketedBinderF| {$T : Type _}), ← `(bracketedBinderF| [SemiHilbert $T])]
+      let mainAssumptions ← mainBinders.mapM (β := BracketedBinder) (λ b => `(bracketedBinderF| [HasAdjDiff $b.getIdent] ))
+      let instType ← `(HasAdjDiff $lambda)
+      pure (instType, TBinders.append (mainBinders.append mainAssumptions))
+
+  let proof ← 
     match proof with
-    | none =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := by apply HasAdjDiffN.mk'; symdiff; infer_instance; done)
-    | some proof =>
-      `(instance (priority:=mid) $instanceId $data.contextBinders* $extraAssumptions* : $instanceType := $proof)
+    | none => `(term| by apply HasAdjDiff.mk; infer_instance; symdiff; infer_instance; done)
+    | some prf =>pure  prf
+
+  let finalCommand ←
+      `(@[fun_prop] theorem $instanceId $data.contextBinders* $extraBinders* $extraAssumptions* : $instanceType := $proof)
   
   return finalCommand 
 
@@ -134,6 +173,31 @@ theorem tangentMap_auto_proof {X Y} [Vec X] [Vec Y]
   : 𝒯 f = λ x dx => (f x, df x dx) := by simp[tangentMap, h]; done
   
 syntax maybeTangentMap := "𝒯"
+/-- Define differental and/or tangentMap
+
+
+  Example 1, elementary function
+  ```
+  function_properties Real.exp (x : ℝ) : ℝ
+  argument x
+    abbrev ∂ := dx * x.exp by <proof>
+  ```
+  Using `abbrev ∂` will simplify `∂ Real.exp x dx` to `dx * x.exp`.
+
+  Using `abbrev ∂` is usefull when we stating derivatives of elementary functions as they are usually expressible in terms of other elementary functions.
+
+  Example 2, custom compilcated function
+  ```
+  def foo (x : ℝ ) : ℝ := x + x.exp
+  argument x
+    def ∂ by symdiff
+  ```
+  Using `def ∂` will simplify `∂ foo x dx` to foo.arg_x.diff` which is equal to `dx + dx * x.exp`.
+
+  Using `def ∂` is usefull when we state derivatives of more complicated functions, as the derivative can be rather compilcated. On the other hand the derivative 
+
+
+  -/
 syntax defOrAbbrev "∂" (maybeTangentMap)? bracketedBinder* (mainArg)? (termWithProofOrConvTactic)? : argProp
 
 open Lean Parser.Term in
