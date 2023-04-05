@@ -4,6 +4,11 @@ import Std.Classes.SetNotation
 
 namespace SciLean
 
+/--
+  `Array α` that is guaranteed to be sorted based on `[Ord α]` and has no duplicates.
+
+  WARRNING: `Ord α` is assumed to be lawful, currently there is no typeclass for it.
+  -/
 structure ArraySet (α : Type _) [ord : Ord α] where
   data : Array α
   isSet : data.sortAndDeduplicate = data

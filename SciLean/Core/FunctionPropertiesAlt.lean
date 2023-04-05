@@ -7,13 +7,14 @@ import SciLean.Tactic.AutoDiff
 
 import SciLean.Data.ArraySet
 
+import SciLean.Core.FunctionTheorems
+
 namespace SciLean
+
+set_option linter.unusedVariables false 
 
 open Lean Parser.Term Lean.Elab Meta
 
---------------------------------------------------------------------------------
--- isSmooth
---------------------------------------------------------------------------------
 
 @[inline]
 def _root_.Array.partitionIdxM {m} [Monad m] (p : α → m Bool) (as : Array α) : m (Array α × Array α × Array (Sum Nat Nat)) := do
@@ -43,7 +44,10 @@ variable [MonadControlT MetaM n] [Monad n]
 
 #check map2MetaM
 
-@[inline] def map4MetaM [MonadControlT MetaM m] [Monad m] (f : forall {α}, (β → γ → δ → ε → MetaM α) → MetaM α) {α} (k : β → γ → δ → ε → m α) : m α :=
+@[inline] def _root_.Lean.Meta.map3MetaM [MonadControlT MetaM m] [Monad m] (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α) {α} (k : β → γ → δ → m α) : m α :=
+  controlAt MetaM fun runInBase => f (fun b c d => runInBase <| k b c d)
+
+@[inline] def _root_.Lean.Meta.map4MetaM [MonadControlT MetaM m] [Monad m] (f : forall {α}, (β → γ → δ → ε → MetaM α) → MetaM α) {α} (k : β → γ → δ → ε → m α) : m α :=
   controlAt MetaM fun runInBase => f (fun b c d e => runInBase <| k b c d e)
 
 private def createCompositionImpl (e : Expr) (xs : Array Expr) (k : (T : Expr) → (t : Expr) → (ys : Array Expr) → (e' : Expr) → MetaM α) : MetaM α := do
@@ -52,6 +56,8 @@ private def createCompositionImpl (e : Expr) (xs : Array Expr) (k : (T : Expr) �
       
       let xIds := xs.map λ x => x.fvarId!
 
+      -- We are not using `withLocalDecls` as it requires `Inhabited α` and that 
+      -- does not play well with map4MetaM
       let mut lctx ← getLCtx
       let mut i := lctx.numIndices
       let mut ys : Array Expr := .mkEmpty xs.size
@@ -71,21 +77,6 @@ private def createCompositionImpl (e : Expr) (xs : Array Expr) (k : (T : Expr) �
 
         k T t ys e'
 
-      -- This does not work because `witlLocalDecls` requires Inhabited and that breaks map4MetaM
-      -- let yDecls ← xIds.mapM λ id => do
-      --   let name ← id.getUserName
-      --   let bi ← id.getBinderInfo 
-      --   let type ← mkArrow T (← id.getType)
-      --   pure (name, bi, λ _ => pure type)
-
-      -- withLocalDecls yDecls λ ys => do
-      --   let yts ← ys.mapM λ y => mkAppM' y #[t]
-      --   let replacePairs := xIds.zip yts
-      --   let e' := replacePairs.foldl (init:=e) λ e (id,yt) => e.replaceFVarId id yt
-
-      --   k T t ys e'
-          
-
 /-- 
   For every free variable `x : X` introduce `y : T → X` and replace every `x` in `e` with `y t`.
 
@@ -95,256 +86,355 @@ def createComposition  (e : Expr) (xs : Array Expr) (k : (T : Expr) → (t : Exp
   map4MetaM (fun k => createCompositionImpl e xs k) k
 
 
+-- def createCompositionOtherImpl (e : Expr) (xs : Array Expr) (other : Array Expr) 
+--   (k : (T : Expr) → (t : Expr) →  (ys : Array Expr) → (other' : Array Expr) → (e' : Expr) → MetaM α) : MetaM α := do
+
 /-- 
-  Takes an expression `e` and every free variable `x : X`, specified by `xs`, is replaced by `y t` where `y : T → X`, `t : T` where `t` and `T` are new free variables.
+  For every free variable `x : X`, elements of `xs`, introduce `y : T → X`, elements of `ys`, and: 
+    - replace every `x` in `e` with `y t` 
+    - replace every `x` in `other` with `y`.
+  where `{T : Type} (t : T)` are newly introduced free variables
 
-  Returns:
-    1. modified expression `e`
-    2. array of free variables [T, t, x₁, ..., xₙ] where [x₁, ..., xₙ] are replacenmens for the specified free variables
-    3. local contex after modification
-    4. local instances after modification
-  
+  Then call `k` on `e` providing `T`, `t`, `ys` `other`
+
+  NOTE: Most likely this operation makes sense only if `other` is a list of free variables
   -/
-def createComposition' (e : Expr) (fvars : Array FVarId) (lctx : LocalContext) (localInsts : LocalInstances) 
-  : MetaM (Expr × Array FVarId × LocalContext × LocalInstances) := 
-do
-  withLCtx lctx localInsts do
-    withLocalDecl `T .implicit (mkSort levelOne) λ T => do
-      withLocalDecl `t .default T λ t => do
+def createCompositionOther (e : Expr) (xs : Array Expr) (other : Array Expr) 
+  (k : (T : Expr) → (t : Expr) →  (ys : Array Expr) → (other' : Array Expr) → (e' : Expr) → n α) : n α := do
 
-        -- check we can actually do it
-        lctx.forM λ decl => 
-          fvars.forM λ fvar => do
-            if decl.type.containsFVar fvar then
-              throwError "Failed `createComposition`, free variable {← fvar.getUserName} appears in type of {decl.userName}! Dependent types are not supported!"
-            if let .some val := decl.value? then
-              if val.containsFVar fvar then
-                throwError "Failed `createComposition`, free variable {← fvar.getUserName} appears in the value of {decl.userName}! This is currently not supported!"
-        
-        let localDecls ← fvars.mapM λ id => do
-          let name ← id.getUserName
-          let bi ← id.getBinderInfo 
-          let type ← mkArrow T (← id.getType)
-          pure (name, bi, λ _ => pure type)
+  createComposition e xs λ T t ys e => do 
+    
+    let other := other.map λ e' => 
+      e'.replace (λ e'' => Id.run do
+        for (x, y) in xs.zip ys do
+          if e'' == x then 
+            return some y
+        return none)
 
-        withLocalDecls localDecls λ ys => do
-          let yts ← ys.mapM λ y => mkAppM' y #[t]
-          let replacePairs := fvars.zip yts
-          let e := replacePairs.foldl (init:=e) λ e (id,yt) => e.replaceFVarId id yt
+    k T t ys other e
 
-          let newFVars := (#[T,t].append ys).map λ y => y.fvarId!
-      
-          -- TODO: Maybe return context without the old free variables
-          pure (e, newFVars, ← getLCtx, ← getLocalInstances)
-          
+/-- 
+Applies `funName` to `e` but as a composition through arguments specified by `argIds`
 
-/-- Makes a type that says that `e` is smooth in the given free variables
-  
-  Returns expression `e [x₀ -> y₁ t, ... xₙ -> y₁ t]
-  -/
-def createIsSmooth (e : Expr) (abstractOver : Array Expr) (smoothArgIds : ArraySet Nat) : MetaM Expr := do
+This means, for `e = f x₁ .. xₙ` return expression `λ {T} [Space T] a₁ ... aₘ [FunProp xᵢ] : Fun λ t => f x₁ .. (xᵢ t) xₙ` 
+
+where:
+  - `Fun`, `FunProp`, `Space` correspond to `funName`, `propName`, `spaceName`
+  - `i ∈ argIds`
+  - `a₁, ..., aₘ ∈ abstractOver` but any occurance of `xᵢ : X` is replaced with `xᵢ : T → X` 
+For example:
+```
+createFunProp ``differential ``IsSmooth ``Vec (@HAdd.hAdd X X X inst.toHAdd x y) #[4] #[X, inst, x, y]
+```
+produces
+```
+∀ {T : Type} [Vec T] {X} [inst : Vec X] (x : X) (y : T → X) [IsSmooth y] : differential λ t => x + (y t)
+```
+-/
+def mkCompositionFunApp (funName propName spaceName : Name) (e : Expr) (argIds : ArraySet Nat) (abstractOver : Array Expr) : MetaM Expr := do
 
   let args := e.getAppArgs
 
-  let smoothArgs := smoothArgIds.data.map λ i => args[i]!
+  let xs := argIds.data.map λ i => args[i]!
 
-  createComposition e smoothArgs λ T t ys e => do 
-    -- replace smooth arguments with new values from `ys`
-    let abstractOver := abstractOver.map λ arg => 
-      if let .some i := smoothArgs.findIdx? (λ sarg => sarg == arg) then
-        ys[i]!
-      else
-        arg
+  createCompositionOther e xs abstractOver λ T t ys abstractOver e => do
 
-    withLocalDecl `inst .instImplicit (← mkAppM ``Vec #[T]) λ VecT => do
+    withLocalDecl `inst .instImplicit (← mkAppM spaceName #[T]) λ SpaceT => do
 
-      let smoothDecls ← ys.mapM λ y => do
+      let funPropDecls ← ys.mapM λ y => do
         let name := `inst
         let bi := BinderInfo.instImplicit
-        let type ← mkAppM ``IsSmooth #[y]
+        let type ← mkAppM propName #[y]
         pure (name, bi, λ _ => pure type)
   
-      withLocalDecls smoothDecls λ smoothYs => do
-        let vars := #[T,VecT] 
+      withLocalDecls funPropDecls λ ysProp => do
+        let vars := #[T,SpaceT]
           |>.append abstractOver
-          |>.append smoothYs
-        let statement ← mkAppM ``IsSmooth #[← mkLambdaFVars #[t] e]
-        mkLambdaFVars vars statement
+          |>.append ysProp
+        let statement ← mkAppM funName #[← mkLambdaFVars #[t] e]
+        mkForallFVars vars statement
 
-      
+/-- Makes a type that says that `f x₁ .. xₙ` satisfies function propsotion `propName` in `xᵢ`
+  
+  The returned expression is: `∀ a₁ ... aₘ : FunProp λ xᵢ => f x₁ .. xᵢ xₙ` 
+  where `a₁, ..., aₘ ∈ abstractOver` -/
+def mkSingleArgFunApp (funName : Name) (e : Expr) (i : Nat) (abstractOver : Array Expr) : MetaM Expr := do
 
-theorem isLin_isSmooth {X Y} [Vec X] [Vec Y] {f : X → Y} [inst : IsLin f] : IsSmooth f := inst.isSmooth
+  let args := e.getAppArgs
 
-syntax "isSmooth" bracketedBinder* (":=" term)? : argProp
+  let xi := args[i]!
 
-#check Command.liftCoreM
-#check TermElabM
+  let statement ← mkAppM funName #[← mkLambdaFVars #[xi] e]
 
-set_option linter.unusedVariables false 
+  let abstractOver := abstractOver.filter (λ a => a != xi)
 
-#check TheoremVal.mk
+  mkForallFVars abstractOver statement
+
+
+/--
+  Creates argument suffix for a constant and specified arguments.
+
+  Examples:
+
+    For `constName = ``foo` where `foo : ∀ (α : Type) → [inst : Add α] → (x y : α) → α`
+    and `argIds = #[2,3]`
+    returns `xy` because the third argument has name `x` and the fourth argument has name `y`
+
+    For `HAdd.hAdd : ∀ (α β γ : Type) → [inst : HAdd α β γ] → α → β → γ`
+    and `argIds = #[4,5]`
+    returns `a4a5` beause fifth and sixth arguments are anonymous
+  -/
+def constArgSuffix (constName : Name) (argIds : ArraySet Nat) : MetaM String := do
+
+  let info ← getConstInfo constName
+  let suffix ← forallTelescope info.type λ args _ => do
+    IO.println s!"{← (args.mapM λ arg => ppExpr arg)}"
+    (argIds.data.mapM λ i => do
+      let name ← args[i]!.fvarId!.getUserName
+      IO.println s!"{← ppExpr args[i]!}"
+      if name.isInternal then
+        return name.eraseMacroScopes.appendAfter (toString i)
+      else
+        return name)
+
+  return suffix.foldl (init:="") λ s n => s ++ toString n             
+
+
+#check TSyntax
+def _root_.Lean.TSyntax.argSpecNames (argSpec : TSyntax ``argSpec) : Array Name := 
+  match argSpec with 
+  | `(argSpec| $id:ident) => #[id.getId]
+  | `(argSpec| ($id:ident, $ids:ident,*)) => #[id.getId].append (ids.getElems.map λ id => id.getId)
+  | _ => #[]
+
+syntax "funProp" ident ident bracketedBinder* ":=" term : argProp
+syntax "funTrans" ident ident ident bracketedBinder* ":=" term "by" term: argProp
 
 elab_rules : command
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec isSmooth $extraAssumptions:bracketedBinder* $[:= $proof:term]?) => do
-
-  let data ← Command.liftTermElabM <| liftMacroM <| FunctionPropertyData.parse id parms retType arg
-
-  let mainArgNames := data.mainArgIds.map (λ i => data.argName! i)
+| `(function_property $id $parms* $[: $retType:term]? 
+    argument $argSpec $assumptions1*
+    funProp $propId $spaceId $assumptions2* := $proof) => do
 
   Command.liftTermElabM  do
-    let funStx ← liftMacroM do
-      let data ← FunctionPropertyData.parse id parms retType arg
-      let funBinders ← data.binders.mapM (λ b => b.toFunBinder)
-      let args := data.binders.filterMap (λ b => if b.isExplicit then some b.getIdent else none)
-      dbg_trace  s!"args: {args.map λ arg => arg.raw.prettyPrint}"
 
-      `(λ $funBinders* => $id $args*)
+    Term.elabBinders (parms |>.append assumptions1 |>.append assumptions2) λ xs => do
 
-    IO.println s!"funStx {funStx.raw.prettyPrint}"
-    let function ← Term.elabTerm funStx none
-
-    IO.println s!"Function {← ppExpr function} : {← ppExpr (← inferType function)}"
+      let propName := propId.getId
+      let spaceName := spaceId.getId
   
-    Term.elabBinders parms λ xs => do
-      IO.println s!"Elaborated binders: {← xs.mapM λ x => do pure s!"{← x.fvarId!.getUserName} {repr (← x.fvarId!.getBinderInfo)} {← ppExpr (← x.fvarId!.getType)}" }"
+      let argNames : Array Name := argSpec.argSpecNames 
 
-    lambdaTelescope function λ xs b => do
+      let explicitArgs := (← xs.filterM λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
+      let e ← mkAppM id.getId explicitArgs
+      let args := e.getAppArgs
 
-      let smoothness ← createIsSmooth b xs #[4,5].toArraySet
-      IO.println s!"Nicelly generated smoothness statnment: {← ppExpr smoothness}"
+      let mainArgIds ← argNames.mapM λ name => do
+        let idx? ← args.findIdxM? (λ arg => do
+          if let .some fvar := arg.fvarId? then
+            let name' ← fvar.getUserName
+            pure (name' == name)
+          else 
+            pure false)
+        match idx? with
+        | some idx => pure idx
+        | none => throwError "Specified argument `{name}` is not valid!"
 
-      let smoothness ← createIsSmooth b xs #[4].toArraySet
-      IO.println s!"Nicelly generated smoothness statnment: {← ppExpr smoothness}"
+      let mainArgIds := mainArgIds.toArraySet
 
-      let smoothness ← createIsSmooth b xs #[5].toArraySet
-      IO.println s!"Nicelly generated smoothness statnment: {← ppExpr smoothness}"
+      let theoremType ← mkCompositionFunApp propName propName spaceName e mainArgIds xs >>= instantiateMVars
 
-      let xName := `x
+      let prf ← forallTelescope theoremType λ ys b => do
+        let val ← Term.elabTermAndSynthesize proof b 
+        mkLambdaFVars ys val
 
-      let ys ← xs.filterM (λ x => do  if (←x.fvarId!.getUserName)==xName then return false else return true)
-      let x ← xs.filterM (λ x => do  if (←x.fvarId!.getUserName)==xName then return true else return false)
-      
-      let f' ← mkLambdaFVars ys (← mkAppM ``IsSmooth #[← mkLambdaFVars x b])
-      IO.println s!"smoothness in x: {← ppExpr f'}"
+      let theoremName := id.getId
+        |>.append `arg_
+        |>.appendAfter (← constArgSuffix id.getId mainArgIds)
+        |>.append propName.getString
 
+      let info : TheoremVal :=
+      {
+        name := theoremName
+        type := theoremType
+        value := prf
+        levelParams := []
+      }
 
-    lambdaTelescope function λ xs b => do
+      addDecl (.thmDecl info)
+      addInstance info.name .local 1000
 
-      let xName := `x
+      addFunctionTheorem id.getId propName mainArgIds ⟨theoremName⟩
 
-      let ys ← xs.filterM (λ x => do  if (←x.fvarId!.getUserName)==xName then return false else return true)
-      let x ← xs.filterM (λ x => do  if (←x.fvarId!.getUserName)==xName then return true else return false)
+      -- For only one main argument we also formulate the theorem in non-compositional manner
+      -- For example this formulates
+      --   `IsSmooth λ x => x + y`
+      -- in addition to 
+      --   `IsSmooth λ t => (x t) + y` 
+      if mainArgIds.size = 1 then
+        let i := mainArgIds.data[0]!
+        let theoremType ← mkSingleArgFunApp propName e i xs >>= instantiateMVars
+        
+        let prf ← forallTelescope theoremType λ xs b => do
+          let thrm : Ident := mkIdent theoremName
+          let prf ← Term.elabTermAndSynthesize (← `(by apply $thrm)) b
+          mkLambdaFVars xs prf
 
-      let f' ← mkLambdaFVars ys (← mkAppM ``IsSmooth #[← mkLambdaFVars x b])
-      IO.println s!"smoothness in x: {← ppExpr f'}"
+        let info : TheoremVal :=
+        {
+          name := theoremName.appendAfter "'"
+          type := theoremType
+          value := prf
+          levelParams := []
+        }
 
+        addDecl (.thmDecl info)
+        addInstance info.name .local 1000
 
-    let smoothness ← 
-    withLocalDecl `T .implicit (mkSort levelOne)               λ T => do
-      withLocalDecl "inst✝" .instImplicit (← mkAppM ``Vec #[T]) λ TVec => do
-        withLocalDecl `t .default T                                λ t => do
-          lambdaTelescope function λ xs b => do
+| `(function_property $id $parms* $[: $retType]? 
+    argument $argSpec $assumptions1*
+    funTrans $transId $propId $spaceId $assumptions2* := $Tf by $proof) => do
 
-            let mainArgTest := λ arg : Expr => do 
-              let name ← arg.fvarId!.getUserName
-              if (mainArgNames.find? (λ name' => name' == name)).isSome then -- 
-                return true
-              else 
-                return false
+  Command.liftTermElabM  do
 
-            let (mainArgs, contextArgs, ids) ← xs.partitionIdxM mainArgTest
+    Term.elabBinders (parms |>.append assumptions1 |>.append assumptions2) λ xs => do
 
-            -- IO.println s!"main args: {← mainArgs.mapM (λ arg => ppExpr arg)}"
-
-            let mainArgsDecls ← mainArgs.mapM λ arg => do
-              let name ← arg.fvarId!.getUserName
-              let bi := BinderInfo.default
-              let type ← mkArrow T (← inferType arg)
-              pure (name, bi, λ (_:Array Expr) => (pure type : TermElabM Expr))
-
-            withLocalDecls mainArgsDecls λ xs => do
-
-              let isSmoothDecls ← xs.mapM (λ x => do
-                let name : Name := "inst✝"
-                let bi := BinderInfo.instImplicit
-                let type ← mkAppM ``IsSmooth #[x]
-                return (name, bi, λ (_:Array Expr) => (pure type : TermElabM Expr)))
-
-              withLocalDecls isSmoothDecls λ smoothArgs => do
-                let xts ← xs.mapM (λ xt => mkAppM' xt #[t])
-                let replacePairs := mainArgs.zip xts
-                let b' := replacePairs.foldl (init := b)
-                            λ b (x,xt) => b.replace (λ x' => if x==x' then some xt else none)
-                let f ← liftMetaM <|
-                  (mkLambdaFVars #[t] b' 
-                  >>= λ x => mkAppM ``IsSmooth #[x] 
-                  >>= mkForallFVars smoothArgs
-                  >>= mkForallFVars (ids.merge xs contextArgs)
-                  >>= mkForallFVars #[T,TVec])
-
-                IO.println s!"smoothness in x and y: {← ppExpr f}"
-                pure f
-
-
-    -- get rid of some universe metavariables
-    let smoothness ← instantiateMVars smoothness
-    let prf ← 
-      forallTelescope smoothness λ xs b => do
-        let val ← Term.elabTermAndSynthesize proof.get! b 
-        mkLambdaFVars xs val
-
-
-    let info : TheoremVal :=
-    {
-      name := id.getId.append ((`arg_).appendAfter data.mainArgString) |>.append `isSmooth
-      type := smoothness
-      value := prf
-      levelParams := []
-    }
-
-    addDecl (.thmDecl info)
-    addInstance info.name .local 1000
+      let transName := transId.getId
+      let propName := propId.getId
+      let spaceName := spaceId.getId
   
-  IO.println "hihi"
+      let argNames : Array Name := argSpec.argSpecNames 
+
+      let explicitArgs := (← xs.filterM λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
+      let e ← mkAppM id.getId explicitArgs
+      let args := e.getAppArgs
+
+      let mainArgIds ← argNames.mapM λ name => do
+        let idx? ← args.findIdxM? (λ arg => do
+          if let .some fvar := arg.fvarId? then
+            let name' ← fvar.getUserName
+            pure (name' == name)
+          else 
+            pure false)
+        match idx? with
+        | some idx => pure idx
+        | none => throwError "Specified argument `{name}` is not valid!"
+
+      let mainArgIds := mainArgIds.toArraySet
+
+      let funTrans ← mkCompositionFunApp transName propName spaceName e mainArgIds xs >>= instantiateMVars
+
+      forallTelescope funTrans λ ys b => do
+
+        let Tf  ← Term.elabTermAndSynthesize Tf (← inferType b)
+        let theoremType ← mkEq b Tf
+        let prf ← Term.elabTermAndSynthesize proof theoremType
+
+        let theoremName := id.getId
+          |>.append "arg_"
+          |>.appendAfter (← constArgSuffix id.getId mainArgIds)
+          |>.append transName.getString
+          |>.appendAfter "_simp"
+
+        let info : TheoremVal :=
+        {
+          name := theoremName
+          type := ← mkForallFVars ys theoremType
+          value := ← mkLambdaFVars ys prf
+          levelParams := []
+        }
+
+        addDecl (.thmDecl info)
+
+        addFunctionTheorem id.getId transName mainArgIds ⟨theoremName⟩
 
 
--- For a give function/constant property and arguments this gives you the name of the theorem talking about the property in those arguments
-structure FunctionTheorem where
-  thrm : Name
 
--- extraPreArgNum : Nata
--- extraPostArgNum : Nat
-
--- Retrieve theorem for a give function/constant, function transform/property and set of arguments indices 
--- For example `HAdd.hAdd` has 6 arguments `{X Y Z} [HAdd X Y Z] x y`
--- and it has differential, IsSmooth in [4,5] and [4] and [5]
--- but is IsLin, adjoint only in [4,5]
-def FunctionTheorems : PersistentHashMap (Name × Name) (PersistentHashMap (ArraySet Nat) FunctionTheorem) := sorry
-
-def getFunctionTheorem (constName : Name) (transOrPropName : Name) (fvar : FVarId) (args : Array Expr) : Option Expr := sorry
-
-set_option pp.funBinderTypes true in
-function_properties HAdd.hAdd {X : Type} [Vec X]  (x y : X) : X
-argument (x,y)
-  isSmooth := by admit
-argument x
-  isSmooth := by admit
-argument y
-  isSmooth := by admit
-
-#check HAdd.hAdd.arg_xy.isSmooth
-#check HAdd.hAdd.arg_x.isSmooth
-#check HAdd.hAdd.arg_y.isSmooth
-
+ 
 instance {X} [Vec X] : IsSmooth (λ x : X => x) := sorry
 instance {X Y} [Vec X] [Vec Y] (x : X): IsSmooth (λ y : Y => x) := sorry
 
-example : IsSmooth λ x : ℝ => x + x := by infer_instance
+instance {X} [SemiHilbert X] : HasAdjDiff (λ x : X => x) := sorry
+instance {X Y} [SemiHilbert X] [SemiHilbert Y] (x : X): HasAdjDiff (λ y : Y => x) := sorry
 
-example (y : ℝ) : IsSmooth λ x : ℝ => x + y := by infer_instance
+theorem isLin_isSmooth {X Y} [Vec X] [Vec Y] {f : X → Y} [inst : IsLin f] : IsSmooth f := inst.isSmooth
+theorem hasAdjoint_on_FinVec {X Y ι κ} {_ : Enumtype ι} {_ : Enumtype κ} [FinVec X ι] [FinVec Y κ] {f : X → Y} [inst : IsLin f] : HasAdjoint f := sorry
+theorem hasAdjDiff_on_FinVec {X Y ι κ} {_ : Enumtype ι} {_ : Enumtype κ} [FinVec X ι] [FinVec Y κ] {f : X → Y} [inst : IsSmooth f] : HasAdjDiff f := sorry
 
-set_option trace.Meta.synthInstance true in
-example (y : ℝ) : IsSmooth λ x : ℝ => y + x := by apply HAdd.hAdd.arg_y.isSmooth
+syntax " IsSmooth " bracketedBinder* (":=" term)? : argProp
+syntax " IsLin " bracketedBinder* (":=" term)? : argProp
+syntax " HasAdjoint " bracketedBinder* (":=" term)? : argProp
+syntax " HasAdjDiff " bracketedBinder* (":=" term)? : argProp
+
+-- For some reason macro turning just `isSmooth := proof` into `funProp IsSmooth Vec := proof` does not work
+macro_rules
+-- IsSmooth
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $argSpec:argSpec $assumptions1*
+    IsSmooth $assumptions2* $[:= $proof]?) => do
+  let prop : Ident := mkIdent ``IsSmooth
+  let space : Ident := mkIdent ``Vec
+  let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
+  `(function_property $id $parms* $[: $retType:term]? 
+    argument $argSpec $assumptions1*
+    funProp $prop $space $assumptions2* := $prf)
+-- IsLin
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $argSpec:argSpec  $assumptions1*
+    IsLin $extraAssumptions* $[:= $proof]?) => do
+  let prop : Ident := mkIdent ``IsLin
+  let space : Ident := mkIdent ``Vec
+  let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
+  `(function_property $id $parms* $[: $retType:term]? 
+    argument $argSpec  $assumptions1*
+    funProp $prop $space $extraAssumptions* := $prf)
+-- HasAdjoint
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $argSpec:argSpec  $assumptions1*
+    HasAdjoint $extraAssumptions* $[:= $proof]?) => do
+  let prop : Ident := mkIdent ``HasAdjoint
+  let space : Ident := mkIdent ``SemiHilbert
+  let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
+  `(function_property $id $parms* $[: $retType:term]? 
+    argument $argSpec  $assumptions1*
+    funProp $prop $space $extraAssumptions* := $prf)
+-- HasAdjDiff
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $argSpec:argSpec  $assumptions1*
+    HasAdjDiff $extraAssumptions* $[:= $proof]?) => do
+  let prop : Ident := mkIdent ``HasAdjDiff
+  let space : Ident := mkIdent ``SemiHilbert
+  let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
+  `(function_property $id $parms* $[: $retType:term]? 
+    argument $argSpec  $assumptions1*
+    funProp $prop $space $extraAssumptions* := $prf)
+
+
+function_properties HAdd.hAdd {X : Type} (x y : X) : X
+argument (x,y) [Vec X]
+  IsLin    := sorry,
+  IsSmooth := sorry,
+  funTrans SciLean.differential SciLean.IsSmooth SciLean.Vec [Vec X] := λ t dt => ∂ x t dt + ∂ y t dt by (by funext t dt; simp; admit)
+argument (x,y) [SemiHilbert X]
+  HasAdjoint := sorry,
+  HasAdjDiff := sorry
+argument x
+  IsSmooth [Vec X],
+  HasAdjDiff [SemiHilbert X]
+argument y
+  IsSmooth [Vec X],
+  HasAdjDiff [SemiHilbert X],
+  funTrans SciLean.differential SciLean.IsSmooth SciLean.Vec [Vec X] := λ t dt => ∂ y t dt by (by funext t dt; simp; admit)
+
+#eval printFunctionTheorems
+
+example {X} [Vec X] (y : X) : IsSmooth λ x : X => x + y := by infer_instance
+example {X} [Vec X] (y : X) : IsSmooth λ x : X => y + x := by infer_instance
+
+#check HAdd.hAdd.arg_a4a5.IsSmooth
+#check HAdd.hAdd.arg_a4a5.differential_simp
+#check HAdd.hAdd.arg_a4.IsSmooth
+#check HAdd.hAdd.arg_a5.IsSmooth'
+#check HAdd.hAdd.arg_a5.differential_simp
 
 
 #eval show MetaM Unit from do 
@@ -370,32 +460,5 @@ example (y : ℝ) : IsSmooth λ x : ℝ => y + x := by apply HAdd.hAdd.arg_y.isS
       IO.println s!"Impl detail names: {names.map λ name => name.isImplementationDetail}"
 
 
-
-  -- withLCtx lctx localInsts do
-  --   lctx.modifyLocalDecl
-  --   let newDecls ← fvars.mapM λ fvar
-
-  -- let instanceId := mkIdent $ data.funPropNamespace.append "isSmooth"
-
-  -- let (instanceType, extraBinders) ← 
-  --   match data.mainArgNum with 
-  --   | 0 => Macro.throwError "Must specify at least one argument!" 
-  --   | 1 => pure (← `(IsSmooth  $(← data.mkLambda)), (#[] : Array BracketedBinder))
-  --   | _ => do 
-  --     let (T, mainBinders, lambda) ← data.mkCompositionLambda
-  --     let TBinders : Array BracketedBinder :=  #[← `(bracketedBinderF| {$T : Type _}), ← `(bracketedBinderF| [Vec $T])]
-  --     let mainAssumptions ← mainBinders.mapM (β := BracketedBinder) (λ b => `(bracketedBinderF| [IsSmooth $b.getIdent] ))
-  --     let instType ← `(IsSmooth $lambda)
-  --     pure (instType, TBinders.append (mainBinders.append mainAssumptions))
-
-  -- let proof ← 
-  --   match proof with
-  --   | none => `(term| by first | apply isLin_isSmooth | infer_instance | (unfold $id; infer_instance); done)
-  --   | some prf =>pure  prf
-
-  -- let finalCommand ←
-  --     `(@[fun_prop] theorem $instanceId $data.contextBinders* $extraBinders* $extraAssumptions* : $instanceType := $proof)
-  
-  -- return finalCommand 
-
-
+variable (foo : ℝ → ℝ)
+#check ∂ foo
