@@ -1,10 +1,10 @@
-import SciLean.Core.FunctionProperties
+-- import SciLean.Core.FunctionProperties
 
 import Std.Data.List.Basic
 
 namespace SciLean
 
-
+#exit
 --------------------------------------------------------------------------------
 -- Core bootstrapping theorems
 --------------------------------------------------------------------------------

@@ -7,7 +7,8 @@ open Lean
 namespace SciLean
 
 structure FunctionTheorem where
-  thrm : Name
+  normalTheorem : Name
+  compTheorem : Name
 
 initialize functionTheoremsMapRef : IO.Ref (PersistentHashMap (Name × Name) (PersistentHashMap (ArraySet Nat) FunctionTheorem)) ← IO.mkRef {}
 

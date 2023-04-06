@@ -9,11 +9,55 @@ import SciLean.Data.ArraySet
 
 import SciLean.Core.FunctionTheorems
 
+
 namespace SciLean
 
 set_option linter.unusedVariables false 
 
 open Lean Parser.Term Lean.Elab Meta
+
+#check mkApp
+
+def uncurryN' {F : Type} {Xs Y : outParam Type} 
+  (n : Nat) (f : F) [Prod.Uncurry n F Xs Y] 
+  := uncurryN n f
+
+
+def _root_.Lean.Meta.getConstExplicitArgIdx (constName : Name) : MetaM (Array Nat) := do
+  let info ← getConstInfo constName
+
+  let (_, explicitArgIdx) ← forallTelescope info.type λ Xs _ => do
+    Xs.foldlM (init := (0,(#[] : Array Nat))) 
+      λ (i, ids) X => do 
+        if (← X.fvarId!.getBinderInfo).isExplicit then
+          pure (i+1, ids.push i)
+        else
+          pure (i+1, ids)
+
+  return explicitArgIdx
+
+def _root_.Lean.Meta.getConstArity (constName : Name) : MetaM Nat := do
+  let info ← getConstInfo constName
+  return info.type.forallArity
+
+/--
+  Same as `mkAppM` but does not leave trailing implicit arguments.
+
+  For example for `foo : (X : Type) → [OfNat 0 X] → X` the ``mkAppNoTrailingM `foo #[X]`` produces `foo X : X` instead of `@foo X : [OfNat 0 X] → X`
+-/
+def _root_.Lean.Meta.mkAppNoTrailingM (constName : Name) (xs : Array Expr) : MetaM Expr := do
+
+  let n ← getConstArity constName
+  let explicitArgIds ← getConstExplicitArgIdx constName
+
+  -- number of arguments to apply
+  let argCount := explicitArgIds[xs.size]? |>.getD n
+
+  let mut args : Array (Option Expr) := Array.mkArray argCount none
+  for i in [0:xs.size] do
+    args := args.set! explicitArgIds[i]! (.some xs[i]!)
+
+  mkAppOptM constName args
 
 
 @[inline]
@@ -199,8 +243,330 @@ def constArgSuffix (constName : Name) (argIds : ArraySet Nat) : MetaM String := 
 
   return suffix.foldl (init:="") λ s n => s ++ toString n             
 
+/--
+For `#[x₁, .., xₙ]` create `(x₁, .., xₙ)`.
+-/
+def mkProdElem (xs : Array Expr) : MetaM Expr := do
+  if xs.size = 0 then
+    return default
+  if xs.size = 1 then
+    return xs[0]!
+  else
+    xs[:xs.size-1].foldrM (init:=xs[xs.size-1]!) 
+      λ x p => 
+        mkAppM ``Prod.mk #[x,p]
 
-#check TSyntax
+/--
+For `(x₀, .., xₙ₋₁)` return `xᵢ` but as a product projection.
+
+For example for `xyz : X × Y × Z`, `mkProdProj xyz 1` returns `xyz.snd.fst`.
+-/
+def mkProdProj (x : Expr) (i : Nat) : MetaM Expr := do
+  let X ← inferType x
+  if X.isAppOfArity ``Prod 2 then
+     match i with
+     | 0 => mkAppM ``Prod.fst #[x]
+     | n+1 => mkProdProj (← mkAppM ``Prod.snd #[x]) n
+  else
+    if i = 0 then
+      return x
+    else
+      throwError "Failed `mkProdProd`, can't take {i}-th element of {← ppExpr x}. It is not a product type!"
+
+/--
+For free variables `#[x₁, .., xₙ]` create a fitting name for a variable of type `X₁ × .. × Xₙ`
+
+Returns `x₁..xₙ`, for example for `#[x,y]` returns `xy`
+ -/
+def mkProdFVarName (xs : Array Expr) : MetaM Name := do
+  xs.foldlM (init:="") λ n x => do return (n ++ toString (← x.fvarId!.getUserName))
+
+
+/--
+For expression `e` and free variables `xs = #[x₁, .., xₙ]`
+Return 
+```
+FunProp (uncurryN n λ x₁ .. xₙ => e)
+```
+ -/
+def mkTargetExprFunProp (funProp : Name) (e : Expr) (xs : Array Expr) : MetaM Expr := do
+
+  let n := xs.size
+  let nExpr := mkNatLit n
+
+  -- P = FunProp (uncurryN n λ x₁' .. xₙ' => e)
+  let P ← 
+    mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
+    >>=
+    λ e' => mkAppM funProp #[e']
+
+  return P
+
+
+def mkNormalTheoremFunProp (funProp : Name) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) : MetaM Expr := do
+  let statement ← mkTargetExprFunProp funProp e xs 
+
+  -- filter out xs from contextVars
+
+  let contextVars := contextVars.filter 
+    λ var => 
+      if xs.find? (λ x => var == x) |>.isSome then
+        false
+      else 
+        true
+
+  mkForallFVars contextVars statement
+
+def mkCompTheoremFunProp (funProp spaceName : Name) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) : MetaM Expr := do
+
+  createCompositionOther e xs contextVars λ T t ys abstractOver e => do
+
+    withLocalDecl `inst .instImplicit (← mkAppM spaceName #[T]) λ SpaceT => do
+
+      let funPropDecls ← ys.mapM λ y => do
+        let name := `inst
+        let bi := BinderInfo.instImplicit
+        let type ← mkAppM funProp #[y]
+        pure (name, bi, λ _ => pure type)
+  
+      withLocalDecls funPropDecls λ ysProp => do
+        let vars := #[T,SpaceT]
+          |>.append abstractOver
+          |>.append ysProp
+        let statement ← mkAppM funProp #[← mkLambdaFVars #[t] e]
+        mkForallFVars vars statement
+
+
+/--
+For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
+Return 
+```
+λ dx₁ .. dxₙ => ∂ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ']) (x₁, .., xₙ) (dx₁, .., dxₙ)
+```
+ -/
+def mkTargetExprDifferential (e : Expr) (xs : Array Expr) : MetaM Expr := do
+
+  let n := xs.size
+  let nExpr := mkNatLit n
+
+  -- f' = ∂ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
+  let f' ← 
+    mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
+    >>=
+    λ e' => mkAppM ``differential #[e']
+
+  let dxDecls ← xs.mapM λ x => do
+    let id := x.fvarId!
+    let name := (← id.getUserName).appendBefore "d"
+    let bi ← id.getBinderInfo
+    let type ← id.getType
+    pure (name, bi, λ _ => pure type)
+
+  withLocalDecls dxDecls λ dxs => do
+    
+    let xsProd  ← mkProdElem xs
+    let dxsProd ← mkProdElem dxs
+
+    mkLambdaFVars dxs (← mkAppM' f' #[xsProd, dxsProd])
+
+/--
+For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
+Return 
+```
+λ dx₁ .. dxₙ => 𝒯 (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ']) (x₁, .., xₙ) (dx₁, .., dxₙ)
+```
+ -/
+def mkTargetExprTangentMap (e : Expr) (xs : Array Expr) : MetaM Expr := do
+
+  let n := xs.size
+  let nExpr := mkNatLit n
+
+  -- f' = 𝒯 (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
+  let f' ← 
+    mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
+    >>=
+    λ e' => mkAppM ``tangentMap #[e']
+
+  let dxDecls ← xs.mapM λ x => do
+    let id := x.fvarId!
+    let name := (← id.getUserName).appendBefore "d"
+    let bi ← id.getBinderInfo
+    let type ← id.getType
+    pure (name, bi, λ _ => pure type)
+
+  withLocalDecls dxDecls λ dxs => do
+    
+    let xsProd  ← mkProdElem xs
+    let dxsProd ← mkProdElem dxs
+
+    mkLambdaFVars dxs (← mkAppM' f' #[xsProd, dxsProd])
+
+
+/--
+For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
+Return 
+```
+λ (xs' : X₁ × .. Xₙ) => (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])† xs'
+```
+where `xᵢ : Xᵢ`
+ -/
+def mkTargetExprAdjoint (e : Expr) (xs : Array Expr) : MetaM Expr := do
+  
+  let n := xs.size
+  let nExpr := mkNatLit n
+
+  -- f' = (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])†
+  let f' ← 
+    mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
+    >>=
+    λ e' => mkAppM ``adjoint #[e']
+  
+  let xsProdName ← mkProdFVarName xs
+  let bi : BinderInfo := default
+  let xsProdType ← inferType (← mkProdElem xs)
+
+  withLocalDecl xsProdName bi xsProdType λ xsProd => do
+
+    mkLambdaFVars #[xsProd] (← mkAppM' f' #[xsProd])
+
+
+/--
+For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
+Return 
+```
+λ (dxs' : X₁ × .. Xₙ) => ∂† (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])† (x₁, .., xₙ) dxs'
+```
+where `xᵢ : Xᵢ`
+ -/
+def mkTargetExprAdjDiff (e : Expr) (xs : Array Expr) : MetaM Expr := do
+  
+  let n := xs.size
+  let nExpr := mkNatLit n
+
+  -- f' = ∂† (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
+  let f' ← 
+    mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
+    >>=
+    λ e' => mkAppM ``adjoint #[e']
+  
+  let dxsName := (← mkProdFVarName xs).appendBefore "d"
+  let bi : BinderInfo := default
+  let dxsType ← inferType (← mkProdElem xs)
+
+  withLocalDecl dxsName bi dxsType λ dxs => do
+
+    let xsProd  ← mkProdElem xs
+
+    mkLambdaFVars #[dxs] (← mkAppM' f' #[xsProd, dxs])
+
+
+/--
+For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
+Return 
+```
+ℛ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])† (x₁, .., xₙ)'
+```
+ -/
+def mkTargetExprRevDiff (e : Expr) (xs : Array Expr) : MetaM Expr := do
+  
+  let n := xs.size
+  let nExpr := mkNatLit n
+
+  -- f' = ℛ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
+  let f' ← 
+    mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
+    >>=
+    λ e' => mkAppM ``adjoint #[e']
+  
+  return f'
+
+/--
+Applies function transformation to `λ x₁ .. xₙ => e` w.r.t. to all the free variables `xs = #[x₁, .., xₙ]`
+-/
+def mkTargetExpr (transName : Name) (e : Expr) (xs : Array Expr) : MetaM Expr := do
+  if transName == ``differential then
+    mkTargetExprDifferential e xs
+  else if transName == ``tangentMap then
+    mkTargetExprTangentMap e xs
+  else if transName == ``adjoint then
+    mkTargetExprAdjoint e xs
+  else if transName == ``adjointDifferential then
+    mkTargetExprAdjDiff e xs
+  else if transName == ``reverseDifferential then
+    mkTargetExprRevDiff e xs
+  else
+    throwError "Error in `mkTargetExpr`, unrecognized function transformation `{transName}`."
+
+
+/--
+`targetproof` is a proof that `targetExpr` is propositionally equal to `mkTargetExprDifferential e xs`
+
+Assuming that `xs` is a subset of `contextVars`
+-/
+def mkCompTheoremDifferential (e : Expr) (xs : Array Expr) (targetExpr : Expr) (targetProof : Expr) (contextVars : Array Expr) : MetaM (Expr × Expr) := do
+
+  createCompositionOther e xs contextVars λ T t ys contextVars e => do
+
+    withLocalDecl `inst .instImplicit (← mkAppM ``Vec #[T]) λ SpaceT => do
+      let dtName := (← t.fvarId!.getUserName).appendBefore "d"
+      withLocalDecl dtName .default (← inferType t) λ dt => do
+
+        let funPropDecls ← ys.mapM λ y => do
+          let name := `inst
+          let bi := BinderInfo.instImplicit
+          let type ← mkAppM ``IsSmooth #[y]
+          pure (name, bi, λ _ => pure type)
+
+        withLocalDecls funPropDecls λ ysProp => do
+          let contextVars := #[T,SpaceT]
+            |>.append contextVars
+            |>.append ysProp
+
+          let lhs ← mkAppM ``differential #[← mkLambdaFVars #[t] e]
+
+          let mut lctx ← getLCtx
+          let mut i := lctx.numIndices
+          let mut xs'  : Array Expr := .mkEmpty xs.size
+          let mut dxs' : Array Expr := .mkEmpty xs.size
+          for y in ys do 
+            let id := y.fvarId!
+            let  xName := (← id.getUserName).appendAfter "'"
+            let dxName := xName.appendBefore "d"
+            let  xVal ← mkAppM' y #[t]
+            let dxVal ← mkAppM' (← mkAppM ``differential #[y]) #[t,dt]
+            let  xType ← inferType xVal
+            let dxType ← inferType dxVal
+            let  xId ← mkFreshFVarId
+            let dxId ← mkFreshFVarId
+            xs'  :=  xs'.push (mkFVar  xId)
+            dxs' := dxs'.push (mkFVar dxId)
+            lctx := lctx.addDecl (mkLetDeclEx i xId xName xType xVal)
+            lctx := lctx.addDecl (mkLetDeclEx (i+1) dxId dxName dxType dxVal)
+            i := i + 2
+
+          withLCtx lctx (← getLocalInstances) do
+
+            let rhs ← 
+              mkLambdaFVars xs targetExpr -- abstract old xs
+              >>=
+              λ e => mkAppM' e xs' >>= pure ∘ Expr.headBeta  -- replace xs with xs' 
+              >>=
+              λ e => mkAppM' e dxs' >>= pure ∘ Expr.headBeta -- apply dxs'
+              >>=
+              λ e => mkLambdaFVars (xs'.append dxs') e
+              >>=
+              λ e => mkLambdaFVars #[t,dt] e  -- abstract over t and dt
+
+            pure (← mkForallFVars contextVars (← mkEq lhs rhs), default)
+
+
+def mkCompTheorem (transName : Name) (e : Expr) (xs : Array Expr) (targetExpr : Expr) (targetProof : Expr) (contextVars : Array Expr) : MetaM (Expr × Expr) := do
+  if transName == ``differential then
+    mkCompTheoremDifferential e xs targetExpr targetProof contextVars    
+  else
+    throwError "Error in `mkCompTheorem`, unrecognized function transformation `{transName}`."
+
+
 def _root_.Lean.TSyntax.argSpecNames (argSpec : TSyntax ``argSpec) : Array Name := 
   match argSpec with 
   | `(argSpec| $id:ident) => #[id.getId]
@@ -208,7 +574,7 @@ def _root_.Lean.TSyntax.argSpecNames (argSpec : TSyntax ``argSpec) : Array Name 
   | _ => #[]
 
 syntax "funProp" ident ident bracketedBinder* ":=" term : argProp
-syntax "funTrans" ident ident ident bracketedBinder* ":=" term "by" term: argProp
+syntax "funTrans" ident bracketedBinder* ":=" term "by" term: argProp
 
 elab_rules : command
 | `(function_property $id $parms* $[: $retType:term]? 
@@ -217,14 +583,14 @@ elab_rules : command
 
   Command.liftTermElabM  do
 
-    Term.elabBinders (parms |>.append assumptions1 |>.append assumptions2) λ xs => do
+    Term.elabBinders (parms |>.append assumptions1 |>.append assumptions2) λ contextVars => do
 
       let propName := propId.getId
       let spaceName := spaceId.getId
   
       let argNames : Array Name := argSpec.argSpecNames 
 
-      let explicitArgs := (← xs.filterM λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
+      let explicitArgs := (← contextVars.filterM λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       let e ← mkAppM id.getId explicitArgs
       let args := e.getAppArgs
 
@@ -239,11 +605,14 @@ elab_rules : command
         | some idx => pure idx
         | none => throwError "Specified argument `{name}` is not valid!"
 
+      let xs := mainArgIds.map λ i => args[i]!
       let mainArgIds := mainArgIds.toArraySet
 
-      let theoremType ← mkCompositionFunApp propName propName spaceName e mainArgIds xs >>= instantiateMVars
 
-      let prf ← forallTelescope theoremType λ ys b => do
+      -- normal theorem - in the form `FunProp (uncurryN n λ x₁ .. xₙ => e)`
+      let normalTheorem ← mkNormalTheoremFunProp propName e xs contextVars >>= instantiateMVars
+
+      let prf ← forallTelescope normalTheorem λ ys b => do
         let val ← Term.elabTermAndSynthesize proof b 
         mkLambdaFVars ys val
 
@@ -255,7 +624,7 @@ elab_rules : command
       let info : TheoremVal :=
       {
         name := theoremName
-        type := theoremType
+        type := normalTheorem
         value := prf
         levelParams := []
       }
@@ -263,48 +632,71 @@ elab_rules : command
       addDecl (.thmDecl info)
       addInstance info.name .local 1000
 
-      addFunctionTheorem id.getId propName mainArgIds ⟨theoremName⟩
+      -- composition theorem - in the form `FunProp (λ t => e[xᵢ:=yᵢ t])`
+      let compTheorem   ← mkCompTheoremFunProp propName spaceName e xs contextVars >>= instantiateMVars
 
-      -- For only one main argument we also formulate the theorem in non-compositional manner
-      -- For example this formulates
-      --   `IsSmooth λ x => x + y`
-      -- in addition to 
-      --   `IsSmooth λ t => (x t) + y` 
-      if mainArgIds.size = 1 then
-        let i := mainArgIds.data[0]!
-        let theoremType ← mkSingleArgFunApp propName e i xs >>= instantiateMVars
+      let compTheoremName := theoremName.appendAfter "'"
+
+      let prf ← forallTelescope compTheorem λ ys b => do
+        -- TODO: Fill the proof here!!! 
+        -- I think I can manually apply composition rule and then it should be 
+        -- automatically discargable by using the normal theorem and product rule
+        let val ← Term.elabTermAndSynthesize (← `(by sorry)) b  
+        mkLambdaFVars ys val
+
+      let info : TheoremVal :=
+      {
+        name := compTheoremName
+        type := compTheorem
+        value := prf
+        levelParams := []
+      }
+
+      addDecl (.thmDecl info)
+      addInstance info.name .local 1000
+
+      addFunctionTheorem id.getId propName mainArgIds ⟨theoremName, compTheoremName⟩
+
+      -- -- For only one main argument we also formulate the theorem in non-compositional manner
+      -- -- For example this formulates
+      -- --   `IsSmooth λ x => x + y`
+      -- -- in addition to 
+      -- --   `IsSmooth λ t => (x t) + y` 
+      -- if mainArgIds.size = 1 then
+      --   let i := mainArgIds.data[0]!
+      --   let theoremType ← mkSingleArgFunApp propName e i xs >>= instantiateMVars
         
-        let prf ← forallTelescope theoremType λ xs b => do
-          let thrm : Ident := mkIdent theoremName
-          let prf ← Term.elabTermAndSynthesize (← `(by apply $thrm)) b
-          mkLambdaFVars xs prf
+      --   let prf ← forallTelescope theoremType λ xs b => do
+      --     let thrm : Ident := mkIdent theoremName
+      --     let prf ← Term.elabTermAndSynthesize (← `(by apply $thrm)) b
+      --     mkLambdaFVars xs prf
 
-        let info : TheoremVal :=
-        {
-          name := theoremName.appendAfter "'"
-          type := theoremType
-          value := prf
-          levelParams := []
-        }
+      --   let info : TheoremVal :=
+      --   {
+      --     name := theoremName.appendAfter "'"
+      --     type := theoremType
+      --     value := prf
+      --     levelParams := []
+      --   }
 
-        addDecl (.thmDecl info)
-        addInstance info.name .local 1000
+      --   addDecl (.thmDecl info)
+      --   addInstance info.name .local 1000
 
 | `(function_property $id $parms* $[: $retType]? 
     argument $argSpec $assumptions1*
-    funTrans $transId $propId $spaceId $assumptions2* := $Tf by $proof) => do
+    funTrans $transId $assumptions2* := $Tf by $proof) => do
 
   Command.liftTermElabM  do
 
-    Term.elabBinders (parms |>.append assumptions1 |>.append assumptions2) λ xs => do
+    Term.elabBinders (parms |>.append assumptions1 |>.append assumptions2) λ contextVars => do
 
       let transName := transId.getId
-      let propName := propId.getId
-      let spaceName := spaceId.getId
+      -- let propName := propId.getId
+      -- let spaceName := spaceId.getId
   
       let argNames : Array Name := argSpec.argSpecNames 
 
-      let explicitArgs := (← xs.filterM λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
+      let explicitArgs := (← contextVars.filterM λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       let e ← mkAppM id.getId explicitArgs
       let args := e.getAppArgs
 
@@ -319,39 +711,60 @@ elab_rules : command
         | some idx => pure idx
         | none => throwError "Specified argument `{name}` is not valid!"
 
+      let xs := mainArgIds.map λ i => args[i]!
       let mainArgIds := mainArgIds.toArraySet
 
-      let funTrans ← mkCompositionFunApp transName propName spaceName e mainArgIds xs >>= instantiateMVars
+      let targetExpr ← mkTargetExpr transName e xs
+      let (compTheorem, prf) ← mkCompTheorem transName e xs targetExpr default contextVars
 
-      forallTelescope funTrans λ ys b => do
+      IO.println s!"Target expression for `{transName}' is:\n{← ppExpr targetExpr}"
 
-        let Tf  ← Term.elabTermAndSynthesize Tf (← inferType b)
-        let theoremType ← mkEq b Tf
-        let prf ← Term.elabTermAndSynthesize proof theoremType
+      IO.println s!"Composition theorem for `{transName}' is:\n{← ppExpr compTheorem}"
 
-        let theoremName := id.getId
-          |>.append "arg_"
-          |>.appendAfter (← constArgSuffix id.getId mainArgIds)
-          |>.append transName.getString
-          |>.appendAfter "_simp"
+      forallTelescope compTheorem λ ys b => do
 
-        let info : TheoremVal :=
-        {
-          name := theoremName
-          type := ← mkForallFVars ys theoremType
-          value := ← mkLambdaFVars ys prf
-          levelParams := []
-        }
+      --   let Tf  ← Term.elabTermAndSynthesize Tf (← inferType b)
+      --   let theoremType ← mkEq b Tf
+        let prf ← Term.elabTermAndSynthesize proof b
 
-        addDecl (.thmDecl info)
+      --   let theoremName := id.getId
+      --     |>.append "arg_"
+      --     |>.appendAfter (← constArgSuffix id.getId mainArgIds)
+      --     |>.append transName.getString
+      --     |>.appendAfter "_simp"
 
-        addFunctionTheorem id.getId transName mainArgIds ⟨theoremName⟩
+      --   let info : TheoremVal :=
+      --   {
+      --     name := theoremName
+      --     type := ← mkForallFVars ys theoremType
+      --     value := ← mkLambdaFVars ys prf
+      --     levelParams := []
+      --   }
+
+      --   addDecl (.thmDecl info)
+
+      --   addFunctionTheorem id.getId transName mainArgIds ⟨theoremName⟩
 
 
 
  
 instance {X} [Vec X] : IsSmooth (λ x : X => x) := sorry
 instance {X Y} [Vec X] [Vec Y] (x : X): IsSmooth (λ y : Y => x) := sorry
+instance {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g] : IsSmooth (λ x  => f (g x)) := sorry
+instance {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y) (g : X → Z) [IsSmooth f] [IsSmooth g] : IsSmooth (λ x  => (f x, g x)) := sorry
+
+instance {X Y} [Vec X] [Vec Y] (x : X): IsSmooth (λ xy : X×Y => xy.1) := sorry
+instance {X Y} [Vec X] [Vec Y] (x : X): IsSmooth (λ xy : X×Y => xy.2) := sorry
+
+theorem diff_comp {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g]
+  : ∂ (λ x => f (g x)) 
+    =
+    λ x dx => ∂ f (g x) (∂ g x dx) := sorry
+
+theorem diff_prodMk {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y) (g : X → Z) [IsSmooth f] [IsSmooth g]
+  : ∂ (λ x => (f x, g x)) 
+    =
+    λ x dx => (∂ f x dx, ∂ g x dx) := sorry
 
 instance {X} [SemiHilbert X] : HasAdjDiff (λ x : X => x) := sorry
 instance {X Y} [SemiHilbert X] [SemiHilbert Y] (x : X): HasAdjDiff (λ y : Y => x) := sorry
@@ -408,22 +821,37 @@ macro_rules
     argument $argSpec  $assumptions1*
     funProp $prop $space $extraAssumptions* := $prf)
 
+#check Eq.trans
+
+#check uncurryN
+
+example {ι : Type} {_ : Enumtype ι} [FinVec X ι] : FinVec (X×X) (ι⊕ι) := by infer_instance
 
 function_properties HAdd.hAdd {X : Type} (x y : X) : X
 argument (x,y) [Vec X]
   IsLin    := sorry,
-  IsSmooth := sorry,
-  funTrans SciLean.differential SciLean.IsSmooth SciLean.Vec [Vec X] := λ t dt => ∂ x t dt + ∂ y t dt by (by funext t dt; simp; admit)
+  IsSmooth := by apply isLin_isSmooth-- ,
+--   funTrans SciLean.differential [Vec X] := λ t dt => ∂ x t dt + ∂ y t dt by 
+--     by 
+--       -- funext t dt
+--       -- simp
+--       have h : (λ t : T => (x t + y t  : X))
+--                =
+--                λ t : T => (λ xy : (X×X) => xy.1 + xy.2) ((λ t => (x t, y t)) t) := sorry
+--       have : IsSmooth (uncurryN 2 (λ x y : X => x + y)) := sorry
+--       -- rw[h]
+--       apply Eq.trans (diff_comp (uncurryN 2 (λ x y : X => x + y)) (λ t => (x t, y t))) _
+--       simp only [diff_prodMk]
 argument (x,y) [SemiHilbert X]
   HasAdjoint := sorry,
   HasAdjDiff := sorry
 argument x
-  IsSmooth [Vec X],
-  HasAdjDiff [SemiHilbert X]
+  IsSmooth [Vec X] := by simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance,
+  HasAdjDiff [SemiHilbert X] := by simp[uncurryN, Prod.Uncurry.uncurry]; infer_instance
 argument y
-  IsSmooth [Vec X],
-  HasAdjDiff [SemiHilbert X],
-  funTrans SciLean.differential SciLean.IsSmooth SciLean.Vec [Vec X] := λ t dt => ∂ y t dt by (by funext t dt; simp; admit)
+  IsSmooth [Vec X] := by apply HAdd.hAdd.arg_a4a5.IsSmooth',
+  HasAdjDiff [SemiHilbert X] := by apply HAdd.hAdd.arg_a4a5.HasAdjDiff'
+--   funTrans SciLean.differential [Vec X] := λ t dt => ∂ y t dt by (by funext t dt; simp; admit)
 
 #eval printFunctionTheorems
 

@@ -131,10 +131,12 @@ instance : FinVec ℝ Unit where
   from_dual := by sorry_proof
   
 -- @[infer_tc_goals_rl]
--- instance {X Y ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ]
---   : FinVec (X×Y) (ι⊕κ) where
---   is_basis := sorry_proof
---   duality := sorry_proof
+instance {X Y ι κ} {_ :Enumtype ι} {_ : Enumtype κ} [FinVec X ι] [FinVec Y κ]
+  : FinVec (X×Y) (ι⊕κ) where
+  is_basis := sorry_proof
+  duality := sorry_proof
+  to_dual := sorry_proof
+  from_dual := sorry_proof
 
 opaque foo {X} {ι : Type} [Enumtype ι] [FinVec X ι] (x : X) : X
 
