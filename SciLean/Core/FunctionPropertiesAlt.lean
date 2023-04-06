@@ -281,7 +281,7 @@ def mkProdProj (x : Expr) (i : Nat) : MetaM Expr := do
     if i = 0 then
       return x
     else
-      throwError "Failed `mkProdProd`, can't take {i}-th element of {← ppExpr x}. It is not a product type!"
+      throwError "Failed `mkProdProj`, can't take {i}-th element of {← ppExpr x}. It has type {← ppExpr X} which is not a product type!"
 
 
 def mkProdSplitElem (xs : Expr) (n : Nat) : MetaM (Array Expr) := 
@@ -505,11 +505,12 @@ def mkTargetExprRevDiff (e : Expr) (xs : Array Expr) : MetaM Expr := do
   -- f' = ℛ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
   let f' ← 
     mkUncurryFun n (← mkLambdaFVars xs e)
-    -- mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
     >>=
-    λ e' => mkAppM ``adjoint #[e']
+    λ e' => mkAppM ``reverseDifferential #[e']
   
-  return f'
+  let xsProd  ← mkProdElem xs
+
+  mkAppM' f' #[xsProd]
 
 /--
 Applies function transformation to `λ x₁ .. xₙ => e` w.r.t. to all the free variables `xs = #[x₁, .., xₙ]`
@@ -784,6 +785,84 @@ def mkCompTheoremAdjDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
 
               mkForallFVars contextVars (← mkEq lhs rhs)
 
+/--
+This function expects that `defVal` has the same type as `mkTargetExprDifferential e xs`
+
+Assuming that `xs` is a subset of `contextVars`
+-/
+def mkCompTheoremRevDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr) (defVal : Expr) : MetaM Expr := do
+
+  createCompositionOther e xs contextVars λ T t ys contextVars e => do
+
+    withLocalDecl `inst .instImplicit (← mkAppM ``SemiHilbert #[T]) λ SpaceT => do
+
+      let funPropDecls ← ys.mapM λ y => do
+        let name := `inst
+        let bi := BinderInfo.instImplicit
+        let type ← mkAppM ``HasAdjDiff #[y]
+        pure (name, bi, λ _ => pure type)
+
+      withLocalDecls funPropDecls λ ysProp => do
+        let contextVars := #[T,SpaceT]
+          |>.append contextVars
+          |>.append ysProp
+
+        let lhs ← mkAppM ``reverseDifferential #[← mkLambdaFVars #[t] e]
+
+        let mut lctx ← getLCtx
+        let mut i := lctx.numIndices
+        let mut Rxs : Array Expr := .mkEmpty xs.size
+        for y in ys do 
+          let id := y.fvarId!
+          let RxName := (← id.getUserName).appendBefore "R"
+          let RxVal ← mkAppM ``reverseDifferential #[y, t]
+          let RxType ← inferType RxVal
+          let RxId ← mkFreshFVarId
+          Rxs  := Rxs.push (mkFVar RxId)
+          lctx := lctx.addDecl (mkLetDeclEx i RxId RxName RxType RxVal)
+          i := i + 1
+
+        withLCtx lctx (← getLocalInstances) do
+
+          let xs' ← Rxs.mapM λ Rx => mkProdProj Rx 0
+
+          -- replace `xs` with `xs'`
+          let RfxVal := (← mkAppM' (← mkLambdaFVars xs defVal) xs').headBeta
+
+          withLetDecl `Rfx (← inferType RfxVal) RfxVal λ Rfx => do
+
+            let fx  ← mkProdProj Rfx 0
+            let df' ← mkProdProj Rfx 1
+
+            let dxsName' := (← mkProdFVarName xs).appendAfter "'" |>.appendBefore "d"
+            let dxsType' ← inferType e
+
+            let dF' ←
+              withLocalDecl dxsName' .default dxsType' λ dxs' => do
+
+                let dxsName : Name := ← xs.foldlM (init:="") λ (s : String) x => do
+                  let xName := toString (← x.fvarId!.getUserName)
+                  return s ++ "d" ++ xName
+                let dxsVal ← mkAppM' df' #[dxs']
+                let dxsType ← inferType dxsVal
+
+                withLetDecl dxsName dxsType dxsVal λ dxs => do
+
+                  let dxVals ← mkProdSplitElem dxs xs.size
+                  let dxFuns ← Rxs.mapM λ Rx => mkProdProj Rx 1
+
+                  let xdxVals ← (dxFuns.zip dxVals).mapM 
+                    λ (df,dx) => mkAppM' df #[dx]
+
+                  let sum ← mkAppFoldlM ``HAdd.hAdd xdxVals
+
+                  mkLambdaFVars #[dxs',dxs] sum
+
+            let rhs ← mkLambdaFVars ((#[t].append Rxs).push Rfx) (← mkProdElem #[fx, dF'])
+
+            mkForallFVars contextVars (← mkEq lhs rhs)
+
+
 
 def mkCompTheorem (transName : Name) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) (defVal : Expr) : MetaM Expr := do
   if transName == ``differential then
@@ -794,6 +873,8 @@ def mkCompTheorem (transName : Name) (e : Expr) (xs : Array Expr) (contextVars :
     mkCompTheoremAdjoint e xs contextVars defVal
   else if transName == ``adjointDifferential then
     mkCompTheoremAdjDiff e xs contextVars defVal
+  else if transName == ``reverseDifferential then
+    mkCompTheoremRevDiff e xs contextVars defVal
   else
     throwError "Error in `mkCompTheorem`, unrecognized function transformation `{transName}`."
 
@@ -838,7 +919,6 @@ elab_rules : command
 
       let xs := mainArgIds.map λ i => args[i]!
       let mainArgIds := mainArgIds.toArraySet
-
 
       -- normal theorem - in the form `FunProp (uncurryN n λ x₁ .. xₙ => e)`
       let normalTheorem ← mkNormalTheoremFunProp propName e xs contextVars >>= instantiateMVars
@@ -928,7 +1008,9 @@ elab_rules : command
         |>.appendAfter (← constArgSuffix id.getId mainArgIds)
         |>.append transName.getString
 
-      let defValLambda ← mkLambdaFVars contextVars defVal >>= instantiateMVars
+      let defValLambda ← do
+        let contextVars := maybeFilterContextVars transName xs contextVars
+        mkLambdaFVars contextVars defVal >>= instantiateMVars
 
       let info : DefinitionVal := 
       {
@@ -1116,7 +1198,6 @@ argument y
 
 #check HAdd.hAdd.arg_a5.differential_simp
 
-#eval printFunctionTheorems
 
 example {X} [Vec X] (y : X) : IsSmooth λ x : X => x + y := by infer_instance
 example {X} [Vec X] (y : X) : IsSmooth λ x : X => y + x := by infer_instance
@@ -1134,28 +1215,31 @@ example {X} [Vec X] (y : X) : IsSmooth λ x : X => y + x := by infer_instance
 #check HAdd.hAdd.arg_a5.IsSmooth'
 #check HAdd.hAdd.arg_a5.differential_simp
 
-#eval show MetaM Unit from do 
-  let info ← getConstInfo ``HAdd.hAdd
-  let type := info.type
 
-  forallTelescope type λ xs b => do
-    let mut lctx ← getLCtx
-    let insts ← getLocalInstances
-    lctx := Prod.fst <| xs.foldl (init := (lctx,0)) λ (lctx,i) x =>
-      let xId := x.fvarId!
-      let name := (lctx.get! xId).userName
-      if name.isInternal then
-        let name := name.modifyBase λ n => n.appendAfter (toString i)
-        (lctx.setUserName xId name, i+1)
-      else
-        (lctx,i+1)    
-
-    withLCtx lctx (← getLocalInstances) do
-      let names ← xs.mapM λ x => x.fvarId!.getUserName
-      IO.println s!"Argument names: {names}"
-      IO.println s!"Internal names: {names.map λ name => name.isInternal}"
-      IO.println s!"Impl detail names: {names.map λ name => name.isImplementationDetail}"
+def foo {α β γ : Type} (a : α) (b : β) (c : γ) : γ := sorry
 
 
-variable (foo : ℝ → ℝ)
-#check ∂ foo
+function_properties SciLean.foo {α β γ : Type} (a : α) (b : β) (c : γ)
+argument (a,c) [Vec α] [Vec γ]
+  IsLin := sorry,
+  IsSmooth := isLin_isSmooth,
+  funTrans SciLean.differential := sorry by sorry,
+  funTrans SciLean.tangentMap := sorry by sorry
+argument (a,c) [SemiHilbert α] [SemiHilbert γ]
+  HasAdjoint := sorry,
+  HasAdjDiff := sorry,
+  funTrans SciLean.adjoint := sorry by sorry,
+  funTrans SciLean.adjointDifferential := sorry by sorry,
+  funTrans SciLean.reverseDifferential := sorry by sorry
+argument (a,b,c) [SemiHilbert α] [SemiHilbert β] [SemiHilbert γ]
+  HasAdjoint := sorry,
+  HasAdjDiff := sorry,
+  funTrans SciLean.adjoint := sorry by sorry,
+  funTrans SciLean.adjointDifferential := sorry by sorry,
+  funTrans SciLean.reverseDifferential := sorry by sorry
+
+#check foo.arg_ac.adjoint
+#check foo.arg_ac.adjointDifferential
+
+
+#eval printFunctionTheorems

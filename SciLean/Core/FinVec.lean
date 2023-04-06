@@ -137,8 +137,3 @@ instance {X Y ι κ} {_ :Enumtype ι} {_ : Enumtype κ} [FinVec X ι] [FinVec Y 
   duality := sorry_proof
   to_dual := sorry_proof
   from_dual := sorry_proof
-
-opaque foo {X} {ι : Type} [Enumtype ι] [FinVec X ι] (x : X) : X
-
-set_option pp.all true in
-#check foo (1 : ℝ)
