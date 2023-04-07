@@ -111,6 +111,9 @@ def mkCompTheoremDifferential (e : Expr) (xs : Array Expr) (contextVars : Array 
   createCompositionOther e xs contextVars λ T t ys contextVars e => do
 
     withLocalDecl `inst .instImplicit (← mkAppM ``Vec #[T]) λ SpaceT => do
+
+      let lhs ← mkAppM ``differential #[← mkLambdaFVars #[t] e]
+
       let dtName := (← t.fvarId!.getUserName).appendBefore "d"
       withLocalDecl dtName .default (← inferType t) λ dt => do
 
@@ -124,8 +127,6 @@ def mkCompTheoremDifferential (e : Expr) (xs : Array Expr) (contextVars : Array 
           let contextVars := #[T,SpaceT]
             |>.append contextVars
             |>.append ysProp
-
-          let lhs ← mkAppM ``differential #[← mkLambdaFVars #[t] e]
 
           let mut lctx ← getLCtx
           let mut i := lctx.numIndices
@@ -173,6 +174,9 @@ def mkCompTheoremTangentMap (e : Expr) (xs : Array Expr) (contextVars : Array Ex
   createCompositionOther e xs contextVars λ T t ys contextVars e => do
 
     withLocalDecl `inst .instImplicit (← mkAppM ``Vec #[T]) λ SpaceT => do
+
+      let lhs ← mkAppM ``tangentMap #[← mkLambdaFVars #[t] e]
+
       let dtName := (← t.fvarId!.getUserName).appendBefore "d"
       withLocalDecl dtName .default (← inferType t) λ dt => do
 
@@ -186,8 +190,6 @@ def mkCompTheoremTangentMap (e : Expr) (xs : Array Expr) (contextVars : Array Ex
           let contextVars := #[T,SpaceT]
             |>.append contextVars
             |>.append ysProp
-
-          let lhs ← mkAppM ``tangentMap #[← mkLambdaFVars #[t] e]
 
           let mut lctx ← getLCtx
           let mut i := lctx.numIndices
@@ -229,6 +231,9 @@ def mkCompTheoremAdjoint (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
   createCompositionOther e xs contextVars λ T t ys contextVars e => do
 
     withLocalDecl `inst .instImplicit (← mkAppM ``SemiHilbert #[T]) λ SpaceT => do
+
+      let lhs ← mkAppM ``adjoint #[← mkLambdaFVars #[t] e]
+
       let xName' := (← mkProdFVarName xs).appendAfter "'"
       let xType' ← inferType e
       withLocalDecl xName' .default xType' λ x' => do
@@ -243,8 +248,6 @@ def mkCompTheoremAdjoint (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
           let contextVars := #[T,SpaceT]
             |>.append contextVars
             |>.append ysProp
-
-          let lhs ← mkAppM ``adjoint #[← mkLambdaFVars #[t] e]
             
           let xName'' := xName'.appendAfter "'"
           let xVal'' := (← mkAppM' defVal #[x']).headBeta
@@ -274,6 +277,8 @@ def mkCompTheoremAdjDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
 
     withLocalDecl `inst .instImplicit (← mkAppM ``SemiHilbert #[T]) λ SpaceT => do
 
+      let lhs ← mkAppM ``adjointDifferential #[← mkLambdaFVars #[t] e]
+
       let dxsName' := (← mkProdFVarName xs).appendAfter "'" |>.appendBefore "d"
       let dxsType' ← inferType e
 
@@ -289,8 +294,6 @@ def mkCompTheoremAdjDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
           let contextVars := #[T,SpaceT]
             |>.append contextVars
             |>.append ysProp
-
-          let lhs ← mkAppM ``adjointDifferential #[← mkLambdaFVars #[t] e]
 
           let mut lctx ← getLCtx
           let mut i := lctx.numIndices
@@ -340,6 +343,8 @@ def mkCompTheoremRevDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
 
     withLocalDecl `inst .instImplicit (← mkAppM ``SemiHilbert #[T]) λ SpaceT => do
 
+      let lhs ← mkAppM ``reverseDifferential #[← mkLambdaFVars #[t] e]
+
       let funPropDecls ← ys.mapM λ y => do
         let name := `inst
         let bi := BinderInfo.instImplicit
@@ -350,8 +355,6 @@ def mkCompTheoremRevDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
         let contextVars := #[T,SpaceT]
           |>.append contextVars
           |>.append ysProp
-
-        let lhs ← mkAppM ``reverseDifferential #[← mkLambdaFVars #[t] e]
 
         let mut lctx ← getLCtx
         let mut i := lctx.numIndices

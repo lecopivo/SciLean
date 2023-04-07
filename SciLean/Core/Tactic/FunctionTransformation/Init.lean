@@ -5,7 +5,7 @@ open Lean Meta Elab Elab.Term
 
 namespace SciLean
 
-namespace FunctionTransformation
+-- namespace FunctionTransformation
 
 initialize registerTraceClass `Meta.Tactic.fun_trans
 initialize registerTraceClass `Meta.Tactic.fun_trans.missing_rule

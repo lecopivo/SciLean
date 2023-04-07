@@ -1,7 +1,6 @@
 import SciLean.Data.Prod
 import SciLean.Core.LinMap
 import SciLean.Core.SmoothMap
-import SciLean.Core.Tactic.FunctionTransformation.Init
 
 namespace SciLean
 

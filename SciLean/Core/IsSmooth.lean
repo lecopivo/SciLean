@@ -1,8 +1,4 @@
-import SciLean.Data.Prod
-
-import SciLean.Core.Attributes
 import SciLean.Core.Defs
-import SciLean.Core.CoreFunctions
 
 namespace SciLean
 
@@ -16,9 +12,31 @@ variable {Y₁ Y₂ Y₃ : Type} [Vec Y₁] [Vec Y₂] [Vec Y₃]
 
 open Smooth
 
---------------------------------------------------------------------------------
--- Expressing IsSmoothN in terms of IsSmoothT
---------------------------------------------------------------------------------
+@[fun_prop_rule]
+theorem IsSmooth.rule_id 
+  : IsSmooth (λ x : X => x) := sorry
+
+
+@[fun_prop_rule]
+theorem IsSmooth.rule_const (x : X)
+  : IsSmooth (λ y : Y => x) := sorry
+
+
+@[fun_prop_rule]
+theorem IsSmooth.rule_comp 
+  (f : Y → Z) [IsSmooth f]
+  (g : X → Y) [IsSmooth g]
+  : IsSmooth (λ x : X => f (g x)) := sorry
+
+@[fun_prop_rule]
+theorem IsSmooth.rule_prodMk
+  (f : X → Y) [IsSmooth f]
+  (g : X → Z) [IsSmooth g]
+  : IsSmooth (λ x : X => (f x, g x)) := sorry
+
+
+
+
 
 instance IsSmooth1_to_IsSmoothT (f : X → Y) [inst : IsSmoothN 1 f] 
   : IsSmoothT f := 

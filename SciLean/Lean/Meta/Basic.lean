@@ -23,6 +23,26 @@ def getConstArity (constName : Name) : MetaM Nat := do
   return info.type.forallArity
 
 
+/-- Is `e` in the form `foo x₀ .. xₙ` where `foo` is some constant
+
+  It returns only explicit arguments and the original expression should be recoverable by `mkAppM foo #[x₀, .., xₙ]`
+  -/
+def getExplicitArgs (e : Expr) : MetaM (Option (Name×Array Expr)) := do
+  let .some (funName, _) := e.getAppFn.const?
+    | return none
+  
+  let n ← getConstArity funName
+  let explicitArgIds ← getConstExplicitArgIdx funName
+
+  let args := e.getAppArgs
+
+  let explicitArgs := explicitArgIds.foldl (init := #[])
+    λ a id => if h : id < args.size then a.push args[id] else a
+  
+  return (funName, explicitArgs)
+
+
+
 /--
   Same as `mkAppM` but does not leave trailing implicit arguments.
 

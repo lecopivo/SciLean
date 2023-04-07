@@ -1,10 +1,9 @@
-import SciLean.Core.Tactic.FunctionTransformation.AttribInit
 import SciLean.Core.Tactic.FunctionTransformation.Core
 
-import SciLean.Core
-import SciLean.Data.ArrayType.Notation
-import SciLean.Data.ArrayType.PowType
-import SciLean.Data.DataArray
+import SciLean.Core.Defs
+-- import SciLean.Data.ArrayType.Notation
+-- import SciLean.Data.ArrayType.PowType
+-- import SciLean.Data.DataArray
 
 namespace SciLean
 

@@ -3,68 +3,13 @@ import Std.Lean.Parser
 import Mathlib.Tactic.NormNum.Core
 
 import SciLean.Data.Prod
-import SciLean.Core.Tactic.FunctionTransformation.AttribInit
+import SciLean.Core.Tactic.FunctionTransformation.Init
+
+import SciLean.Lean.Meta.Basic
 
 open Lean Meta
 
 namespace SciLean
-
-
-def _root_.Lean.Meta.getConstExplicitArgIdx (constName : Name) : MetaM (Array Nat) := do
-  let info ← getConstInfo constName
-
-  let (_, explicitArgIdx) ← forallTelescope info.type λ Xs _ => do
-    Xs.foldlM (init := (0,(#[] : Array Nat))) 
-      λ (i, ids) X => do 
-        if (← X.fvarId!.getBinderInfo).isExplicit then
-          pure (i+1, ids.push i)
-        else
-          pure (i+1, ids)
-
-  return explicitArgIdx
-
-def _root_.Lean.Meta.getConstArity (constName : Name) : MetaM Nat := do
-  let info ← getConstInfo constName
-  return info.type.forallArity
-
-
-/--
-  Same as `mkAppM` but does not leave trailing implicit arguments.
-
-  For example for `foo : (X : Type) → [OfNat 0 X] → X` the ``mkAppNoTrailingM `foo #[X]`` produces `foo X : X` instead of `@foo X : [OfNat 0 X] → X`
--/
-def _root_.Lean.Meta.mkAppNoTrailingM (constName : Name) (xs : Array Expr) : MetaM Expr := do
-
-  let n ← getConstArity constName
-  let explicitArgIds ← getConstExplicitArgIdx constName
-
-  -- number of arguments to apply
-  let argCount := explicitArgIds[xs.size]? |>.getD n
-
-  let mut args : Array (Option Expr) := Array.mkArray argCount none
-  for i in [0:xs.size] do
-    args := args.set! explicitArgIds[i]! (.some xs[i]!)
-
-  mkAppOptM constName args
-
-
-/-- Is `e` in the form `foo x₀ .. xₙ` where `foo` is some constant
-
-  It returns only explicit arguments and the original expression should be recoverable by `mkAppM foo #[x₀, .., xₙ]`
-  -/
-def _root_.Lean.Meta.getExplicitArgs (e : Expr) : MetaM (Option (Name×Array Expr)) := do
-  let .some (funName, _) := e.getAppFn.const?
-    | return none
-  
-  let n ← getConstArity funName
-  let explicitArgIds ← getConstExplicitArgIdx funName
-
-  let args := e.getAppArgs
-
-  let explicitArgs := explicitArgIds.foldl (init := #[])
-    λ a id => if h : id < args.size then a.push args[id] else a
-  
-  return (funName, explicitArgs)
 
 
 def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Expr) : SimpM (Option Simp.Step) := do
