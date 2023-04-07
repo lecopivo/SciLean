@@ -86,236 +86,299 @@ argument y
 -- Neg.neg - (-·)
 --------------------------------------------------------------------------------
 
-function_properties Neg.neg {X} [Vec X] (x : X) : X
+function_properties Neg.neg {X : Type} [Vec X] (x : X) : X
 argument x
-  isLin := sorry_proof, 
-  isSmooth,
-  abbrev ∂ 𝒯 := - dx by apply differential_of_linear -- ,
-  -- abbrev 𝒯 := (-x, -dx) by symdiff
+  IsLin := sorry_proof, 
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx => -dx by simp[differential.of_linear], 
+  abbrev 𝒯 := λ dx => (-x, -dx) by simp[tangentMap,differential.of_linear]
 
 function_properties Neg.neg {X} [SemiHilbert X] (x : X) : X
 argument x
-  hasAdjoint := sorry_proof, 
-  abbrev † := - x' by sorry_proof,
-  hasAdjDiff,
-  abbrev ∂† ℛ := - dx' by unfold adjointDifferential; symdiff; symdiff
+  HasAdjoint := sorry_proof, 
+  abbrev † := λ x' => -x' by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dx' => -dx' by sorry_proof,
+  abbrev ℛ := (-x, λ dx' => -dx') by sorry_proof
 
 
 --------------------------------------------------------------------------------
 -- HAdd.hAdd - (·+·)
 --------------------------------------------------------------------------------
 
-function_properties HAdd.hAdd {X} [Vec X]  (x y : X) : X
+function_properties HAdd.hAdd {X : Type} [Vec X] (x y : X) : X
 argument (x,y)
-  isLin := sorry_proof,
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx + dy by sorry_proof -- ,
-  -- abbrev 𝒯 := (x+y, dx+dy) by symdiff
+  IsLin    := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx dy => dx + dy by sorry_proof,
+  abbrev 𝒯 := λ dx dy => (x + y, dx + dy) by sorry_proof
 argument x
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx by sorry_proof-- ,
-  -- abbrev 𝒯 := (x+y, dx) by symdiff
+  IsSmooth := by infer_instance,
+  abbrev ∂ := λ dx => dx by sorry_proof,
+  abbrev 𝒯 := λ dx => (x+y, dx) by sorry_proof
 argument y
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dy by sorry_proof-- ,
-  -- abbrev 𝒯 := (x+y, dy) by symdiff
+  IsSmooth := by apply HAdd.hAdd.arg_a4a5.IsSmooth',
+  abbrev ∂ := λ dy => dy by sorry_proof,
+  abbrev 𝒯 := λ dy => (x+y, dy) by sorry_proof
 
-function_properties HAdd.hAdd {X} [SemiHilbert X] (x y : X) : X
+function_properties HAdd.hAdd {X : Type} [SemiHilbert X] (x y : X) : X
 argument (x,y)
-  hasAdjoint := sorry_proof,
-  abbrev † := (xy',xy') by sorry_proof,
-  hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; (try infer_instance); sorry_proof,
-  abbrev ∂† ℛ := (dxy', dxy') by unfold adjointDifferential; symdiff; symdiff; admit
-argument x 
-  hasAdjDiff := sorry_proof,
-  abbrev ∂† ℛ := dx' by sorry_proof
+  HasAdjoint := sorry,
+  HasAdjDiff := sorry,
+  abbrev † := λ xy' => (xy', xy') by sorry,
+  abbrev ∂† := λ dxy' => (dxy', dxy') by sorry,
+  abbrev ℛ := (x+y, λ dxy' => (dxy', dxy')) by sorry
+argument x
+  HasAdjDiff := by infer_instance,
+  abbrev ∂† := λ dx' => dx' by sorry,
+  abbrev ℛ := (x+y, λ dx' => dx') by sorry
 argument y
-  hasAdjDiff := sorry_proof,
-  abbrev ∂† ℛ := dy' by sorry_proof
-
+  HasAdjDiff := by apply HAdd.hAdd.arg_a4a5.HasAdjDiff',
+  abbrev ∂† := λ dy' => dy' by sorry,
+  abbrev ℛ := (x+y, λ dy' => dy') by sorry
 
 --------------------------------------------------------------------------------
 -- HSub.hSub - (·-·)
 --------------------------------------------------------------------------------
 
-function_properties HSub.hSub {X} [Vec X]  (x y : X) : X
+function_properties HSub.hSub {X : Type} [Vec X] (x y : X) : X
 argument (x,y)
-  isLin := sorry_proof,
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx - dy by symdiff-- ,
-  -- abbrev 𝒯 := (x-y, dx-dy) by symdiff
+  IsLin    := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx dy => dx - dy by sorry_proof,
+  abbrev 𝒯 := λ dx dy => (x - y, dx - dy) by sorry_proof
 argument x
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx by sorry_proof-- ,
-  -- abbrev 𝒯 := (x-y, dx) by symdiff
+  IsSmooth := by infer_instance,
+  abbrev ∂ := λ dx => dx by sorry_proof,
+  abbrev 𝒯 := λ dx => (x-y, dx) by sorry_proof
 argument y
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := -dy by sorry_proof-- ,
-  -- abbrev 𝒯 := (x-y,-dy) by symdiff
+  IsSmooth := by apply HSub.hSub.arg_a4a5.IsSmooth',
+  abbrev ∂ := λ dy => -dy by sorry_proof,
+  abbrev 𝒯 := λ dy => (x-y, -dy) by sorry_proof
 
-function_properties HSub.hSub {X} [SemiHilbert X] (x y : X) : X
+function_properties HSub.hSub {X : Type} [SemiHilbert X] (x y : X) : X
 argument (x,y)
-  hasAdjoint := sorry_proof,
-  hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
-  abbrev † := (xy',-xy') by sorry_proof,
-  abbrev ∂† ℛ := (dxy', -dxy') by unfold adjointDifferential; symdiff; symdiff; admit
-argument x 
-  hasAdjDiff := sorry_proof,
-  abbrev ∂† ℛ := dx' by sorry_proof
+  HasAdjoint := sorry,
+  HasAdjDiff := sorry,
+  abbrev † := λ xy' => (xy', -xy') by sorry,
+  abbrev ∂† := λ dxy' => (dxy', -dxy') by sorry,
+  abbrev ℛ := (x+y, λ dxy' => (dxy', -dxy')) by sorry
+argument x
+  HasAdjDiff := by infer_instance,
+  abbrev ∂† := λ dx' => dx' by sorry,
+  abbrev ℛ := (x-y, λ dx' => dx') by sorry
 argument y
-  hasAdjDiff := sorry_proof,
-  abbrev ∂† ℛ := -dy' by sorry_proof
+  HasAdjDiff := by apply HSub.hSub.arg_a4a5.HasAdjDiff',
+  abbrev ∂† := λ dy' => -dy' by sorry,
+  abbrev ℛ := (x-y, λ dy' => -dy') by sorry
 
 
 --------------------------------------------------------------------------------
--- HMul.hMul - (·*·)
+-- SMul.sMul - (·•·)
 --------------------------------------------------------------------------------
 
-function_properties SMul.smul {X} [Vec X] (x : ℝ) (y : X) : X
+function_properties SMul.smul {X : Type} [Vec X] (x : ℝ) (y : X) : X
 argument (x,y)
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx•y + x•dy by sorry_proof
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx dy => dx•y + x•dy by sorry_proof,
+  abbrev 𝒯 := λ dx dy => (x•y, dx•y + x•dy) by sorry_proof
 argument x
-  isLin := sorry_proof, 
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := dx•y by sorry_proof
+  IsLin := sorry_proof, 
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx => dx•y by sorry_proof,
+  abbrev 𝒯 := λ dx => (x•y, dx•y) by sorry_proof
 argument y
-  isLin := sorry_proof, 
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := x•dy by sorry_proof
+  IsLin := sorry_proof, 
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dy => x•dy by sorry_proof,
+  abbrev 𝒯 := λ dy => (x•dy, x•dy) by sorry_proof
 
-function_properties SMul.smul {X} [SemiHilbert X] (x : ℝ) (y : X) : X
+function_properties SMul.smul {X : Type} [SemiHilbert X] (x : ℝ) (y : X) : X
 argument y
-  hasAdjoint := sorry_proof,
-  abbrev † := x•y' by sorry_proof,
-  hasAdjDiff,
-  abbrev ∂† ℛ := x•dy' by unfold adjointDifferential; symdiff; symdiff
+  HasAdjoint := sorry_proof,
+  abbrev † := λ y' => x•y' by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dy' => x•dy' by sorry_proof,
+  abbrev ℛ := (x•y, λ dy' => x•dy') by sorry_proof
   
-function_properties SMul.smul {X} [Hilbert X] (x : ℝ) (y : X) : X
-argument x
-  hasAdjoint := sorry_proof,
-  abbrev † := ⟪x',y⟫ by sorry_proof,
-  hasAdjDiff := by sorry_proof, -- apply HasAdjDiffN.mk'; symdiff; infer_instance,
-  abbrev ∂† ℛ := ⟪dx',y⟫ by unfold adjointDifferential; sorry_proof -- symdiff; symdiff
+function_properties SMul.smul {X : Type} [Hilbert X] (x : ℝ) (y : X) : X
 argument (x,y)
-  hasAdjDiff := sorry_proof, --  by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
-  abbrev ∂† ℛ := (⟪dxy',y⟫, x•dxy') by unfold adjointDifferential; symdiff; sorry_proof
+  HasAdjDiff := sorry_proof, --  by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
+  abbrev ∂† := λ dxy' => (⟪dxy',y⟫, x•dxy') by sorry_proof,
+  abbrev ℛ := (x•y, λ dxy' => (⟪dxy',y⟫, x•dxy')) by sorry_proof
+argument x
+  HasAdjoint := sorry_proof,
+  abbrev † := λ x' => ⟪x',y⟫ by sorry_proof,
+  HasAdjDiff := by sorry_proof, 
+  abbrev ∂† := λ dx' => ⟪dx',y⟫ by sorry_proof,
+  abbrev ℛ := (x•y, λ dx' => ⟪dx',y⟫) by sorry_proof
+
+--------------------------------------------------------------------------------
+-- HMul.hMul - (·•·)
+--------------------------------------------------------------------------------
+
+-- TODO: Generalize to any algebra with smooth multiplication
+function_properties HMul.hMul (x y : ℝ)
+argument (x,y)
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx dy => dx*y + x*dy by sorry_proof,
+  abbrev 𝒯 := λ dx dy => (x*y, dx*y + x*dy) by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dxy' => (dxy'*y, x*dxy') by sorry_proof,
+  abbrev ℛ := (x*y, λ dxy' => (dxy'*y, x*dxy')) by sorry_proof
+argument x
+  IsLin := sorry_proof, 
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx => dx*y by sorry_proof,
+  abbrev 𝒯 := λ dx => (x*y, dx*y) by sorry_proof,
+  HasAdjoint := sorry_proof,
+  abbrev † := λ x' => x'*y by sorry_proof,
+  HasAdjDiff := by sorry_proof, 
+  abbrev ∂† := λ dx' => dx'*y by sorry_proof,
+  abbrev ℛ := (x*y, λ dx' => dx'*y) by sorry_proof
+argument y
+  IsLin := sorry_proof, 
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dy => x*dy by sorry_proof,
+  abbrev 𝒯 := λ dy => (x*dy, x*dy) by sorry_proof,
+  HasAdjoint := sorry_proof,
+  abbrev † := λ y' => x*y' by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dy' => x*dy' by sorry_proof,
+  abbrev ℛ := (x*y, λ dy' => x*dy') by sorry_proof
 
 
 --------------------------------------------------------------------------------
 -- Inner.innet - ⟪·,·⟫
 --------------------------------------------------------------------------------
 
-function_properties Inner.inner {X} [Hilbert X] (x y : X) : ℝ
+function_properties SciLean.Inner.inner {X} [Hilbert X] (x y : X)
 argument (x,y)
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := ⟪dx,y⟫ + ⟪x,dy⟫ by sorry_proof,
-  hasAdjDiff := sorry_proof, -- by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
-  abbrev ∂† ℛ := (dxy'•x, dxy'•y) by sorry_proof
-argument x ..
-  isLin := sorry_proof,
-  isSmooth := sorry_proof, 
-  abbrev ∂ 𝒯 := ⟪dx,y⟫ by symdiff
-argument x
-  hasAdjoint := sorry_proof,
-  abbrev † := x'•y by sorry_proof
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx dy => ⟪dx,y⟫ + ⟪x,dy⟫ by sorry_proof,
+  abbrev 𝒯 := λ dx dy => (⟪x,y⟫, ⟪dx,y⟫ + ⟪x,dy⟫) by sorry_proof,
+  HasAdjDiff := sorry_proof, 
+  abbrev ∂† := λ dxy' => (dxy'•x, dxy'•y) by sorry_proof,
+  abbrev ℛ := (⟪x,y⟫, λ dxy' => (dxy'•x, dxy'•y)) by sorry_proof
+argument x 
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof, 
+  abbrev ∂ := λ dx => ⟪dx,y⟫ by sorry_proof,
+  abbrev 𝒯 := λ dx => (⟪x,y⟫, ⟪dx,y⟫) by sorry_proof,
+  HasAdjoint := sorry_proof,
+  abbrev † := λ x' => x'•y by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dx' => dx'•y by sorry_proof,
+  abbrev ℛ := (⟪x,y⟫,λ dx' => dx'•y) by sorry_proof
 argument y
-  isLin := sorry_proof,
-  isSmooth := sorry_proof, 
-  abbrev ∂ 𝒯 := ⟪x,dy⟫ by symdiff,
-  hasAdjoint := sorry_proof,
-  abbrev † := y'•x by sorry_proof
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof, 
+  abbrev ∂ := λ dy => ⟪x,dy⟫ by sorry_proof,
+  abbrev 𝒯 := λ dy => (⟪x,y⟫, ⟪x,dy⟫) by sorry_proof,
+  HasAdjoint := sorry_proof,
+  abbrev † := λ y' => y'•x by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dy' => dy'•x by sorry_proof,
+  abbrev ℛ := (⟪x,y⟫, λ dy' => dy'•x) by sorry_proof
+
 
 
 --------------------------------------------------------------------------------
 -- Inner.normSqr - ∥·∥²
 --------------------------------------------------------------------------------
 
-function_properties Inner.normSqr {X} [Hilbert X] (x : X) : ℝ
+function_properties SciLean.Inner.normSqr {X : Type} [Hilbert X] (x : X) : ℝ
 argument x 
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := 2*⟪dx,x⟫ by sorry_proof,
-  hasAdjDiff := sorry_proof,
-  abbrev ∂† ℛ := (2*dx')•x by sorry_proof
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx => 2*⟪dx,x⟫ by sorry_proof,
+  abbrev 𝒯 := λ dx => (‖x‖², 2*⟪dx,x⟫) by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dx' => (2*dx')•x by sorry_proof,
+  abbrev ℛ := (‖x‖², λ dx' => (2*dx')•x) by sorry_proof
 
 
 --------------------------------------------------------------------------------
 -- sum - ∑
 --------------------------------------------------------------------------------
 
-function_properties sum {X ι} [Vec X] [Enumtype ι] (f : ι → X) : X
+function_properties Enumtype.sum {X ι : Type} [Vec X] [Enumtype ι] (f : ι → X) : X
 argument f
-  isLin := sorry_proof,
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := sum df by symdiff
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ df => sum df by sorry_proof,
+  abbrev 𝒯 := λ df => (sum f, sum df) by sorry_proof
 
-function_properties sum {X ι} [SemiHilbert X] [Enumtype ι] (f : ι → X) : X
+
+function_properties Enumtype.sum {X ι : Type} [SemiHilbert X] [Enumtype ι] (f : ι → X) : X
 argument f
-  hasAdjoint := sorry_proof,
-  abbrev † := λ _ => f' by sorry_proof,
-  hasAdjDiff,
-  abbrev ∂† ℛ := λ _ => df' by unfold adjointDifferential; symdiff; symdiff
+  HasAdjoint := sorry_proof,
+  abbrev † := λ f' _ => f' by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ df' _ => df' by sorry_proof,
+  abbrev ℛ := (sum f, λ df' _ => df') by sorry_proof
 
 
 --------------------------------------------------------------------------------
 -- SmoothMap.val
 --------------------------------------------------------------------------------
 
-function_properties SmoothMap.val {X Y} [Vec X] [Vec Y] (f : X⟿Y) (x : X) : Y
+function_properties SciLean.SmoothMap.toFun {X Y : Type} [Vec X] [Vec Y] (f : X⟿Y) (x : X) : Y
 argument (f,x)
-  isSmooth := sorry_proof,
-  abbrev ∂ := df x + ∂ f x dx by funext (f,x) (df,dx); simp; sorry_proof,
-  abbrev 𝒯 := let (y,dy) := 𝒯 f x dx; (y, df x + dy) by unfold Smooth.tangentMap; symdiff
+  IsSmooth := sorry_proof
+  -- noncomputable abbrev ∂ := λ df dx => df x + ∂ f x dx by sorry_proof,
+  -- noncomputable abbrev 𝒯 := λ df dx => let (y,dy) := 𝒯 f x dx; (y, df x + dy) by sorry_proof
 argument f
-  isLin := sorry_proof,
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := df x by symdiff 
--- argument x 
---   isSmooth := sorry_proof,
---   abbrev ∂ := ∂ f x dx by unfold Smooth.differential; symdiff,
---   abbrev 𝒯 := 𝒯 f x dx by unfold Smooth.tangentMap; symdiff
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ df => df x by sorry_proof,
+  abbrev 𝒯 := λ df => (f x, df x) by sorry_proof
+argument x 
+  IsSmooth := sorry_proof
+  -- noncomputable abbrev ∂ := λ dx => ∂ f x dx by sorry_proof,
+  -- noncomputable abbrev 𝒯 := λ dx => 𝒯 f x dx by sorry_proof
 
 
 --------------------------------------------------------------------------------
 -- SmoothMap.mk'
 --------------------------------------------------------------------------------
 
--- instance SmoothMap.mk'.arg_f.prolongation.isSmoothT {X Y W} [Vec X] [Vec Y] [Vec W] 
---   (f : W → X → Y) [IsSmoothNT 2 f]
---   : IsSmoothT (λ w => λ x ⟿ f w x) := sorry_proof
 
--- instance SmoothMap.mk'.arg_f.prolongation.diff_simp {X Y W} [Vec X] [Vec Y] [Vec W] 
---   (f : W → X → Y) [IsSmoothNT 2 f]
---   : ∂ (λ w => λ x ⟿ f w x) 
---     =
---     λ w dw => λ x ⟿ ∂ f w dw x:= sorry_proof
+-- TODO: Make this work!
+-- function_properties SciLean.SmoothMap.mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) (hf : IsSmooth f)
+-- argument f 
+--   IsLin [IsLin λ tx => f tx.1 tx.2] := sorry_proof,
+--   IsSmooth [IsSmooth λ tx => f tx.1 tx.2] := sorry_proof,
+--   abbrev ∂ [IsSmooth λ tx => f tx.1 tx.2] := λ df => df by sorry_proof
 
 
 --------------------------------------------------------------------------------
 -- LinMap.val
 --------------------------------------------------------------------------------
 
-function_properties LinMap.val {X Y} [Vec X] [Vec Y] (f : X⊸Y) (x : X) : Y
+function_properties SciLean.LinMap.toFun {X Y : Type} [Vec X] [Vec Y] (f : X⊸Y) (x : X)
 argument (f,x)
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := df x + f dx by funext (f,x) (df,dx); simp; sorry_proof
-argument f ..
-  isLin := sorry_proof,
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := df x by symdiff 
--- argument x 
---   isLin := sorry_proof-- ,
-  -- isSmooth := sorry_proof,
-  -- abbrev ∂ 𝒯 := f dx by symdiff
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ df dx => df x + f dx by sorry_proof,
+  abbrev 𝒯 := λ df dx => (f x, df x + f dx) by sorry_proof
+argument f 
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ df => df x by sorry_proof,
+  abbrev 𝒯 := λ df => (f x, df x) by sorry_proof
+argument x 
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dx => f dx by sorry_proof,
+  abbrev 𝒯 := λ dx => (f x, f dx) by sorry_proof
 
 
--- function_properties LinMap.val {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] (f : X⊸Y) (x : X) : Y
--- argument f
---   hasAdjoint := sorry_proof,
---   isLin := sorry_proof,  -- TODO: this should be done automatically!
---   abbrev † := ⟨λ x' => ⟪x,x'⟫ * f', sorry_proof⟩ by sorry_proof,
---   hasAdjDiff,
---   abbrev ∂† ℛ := ⟨λ x' => ⟪x,x'⟫ * df', sorry_proof⟩ by unfold adjointDifferential; symdiff; symdiff
+function_properties SciLean.LinMap.toFun {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y] (f : X⊸Y) (x : X) : Y
+argument f
+  HasAdjoint := sorry_proof,
+  abbrev † := λ f' => ⟨λ x' => ⟪x,x'⟫ • f', sorry_proof⟩ by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ df' => ⟨λ x' => ⟪x,x'⟫ • df', sorry_proof⟩ by sorry_proof,
+  abbrev ℛ := (f x, λ df' => ⟨λ x' => ⟪x,x'⟫ • df', sorry_proof⟩) by sorry_proof
 
 
 --------------------------------------------------------------------------------
