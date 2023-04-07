@@ -26,17 +26,39 @@ theorem IsSmooth.rule_const (x : X)
 theorem IsSmooth.rule_comp 
   (f : Y → Z) [IsSmooth f]
   (g : X → Y) [IsSmooth g]
-  : IsSmooth (λ x : X => f (g x)) := sorry
+  : IsSmooth (λ x => f (g x)) := sorry
 
 @[fun_prop_rule]
 theorem IsSmooth.rule_prodMk
   (f : X → Y) [IsSmooth f]
   (g : X → Z) [IsSmooth g]
-  : IsSmooth (λ x : X => (f x, g x)) := sorry
+  : IsSmooth (λ x => (f x, g x)) := sorry
+
+@[fun_prop_rule]
+theorem IsSmooth.rule_pi
+  (f : α → X → Y) [∀ a, IsSmooth (f a)]
+  : IsSmooth (λ x a => f a x) := sorry
+
+@[fun_prop_rule]
+theorem IsSmooth.rule_eval (a : α)
+  : IsSmooth (λ (f : α → X)  => f a) := sorry
+
+@[fun_prop_rule]
+theorem IsSmooth.rule_comp_eval 
+  (a : α) (f : X → α → Y) [IsSmooth f]
+  : IsSmooth (λ x => f x a) := IsSmooth.rule_comp (λ g : α → Y => g a) f
 
 
+@[fun_prop_rule]
+theorem IsSmooth.rule_fst
+  : IsSmooth (λ xy : X×Y => xy.1) := sorry
+
+@[fun_prop_rule]
+theorem IsSmooth.rule_snd
+  : IsSmooth (λ xy : X×Y => xy.2) := sorry
 
 
+#exit
 
 instance IsSmooth1_to_IsSmoothT (f : X → Y) [inst : IsSmoothN 1 f] 
   : IsSmoothT f := 
