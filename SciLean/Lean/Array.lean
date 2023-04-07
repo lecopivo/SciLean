@@ -67,3 +67,40 @@ def joinrM [Monad m] [Inhabited β] (xs : Array α) (map : α → m β) (op : β
 def joinr [Inhabited β] (xs : Array α) (map : α → β) (op : β → β → β) : β := Id.run do
   xs.joinrM map op
 
+
+
+/--
+Ordering by size then by lexicographical ordering(left to right).
+  -/
+def lexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
+  match compare as.size bs.size with
+  | .lt => return .lt
+  | .gt => return .gt
+  | .eq => 
+    for i in [0:as.size] do
+      have : i < as.size := sorry
+      have : i < bs.size := sorry
+      match compare as[i] bs[i] with
+      | .lt => return .lt
+      | .gt => return .gt
+      | .eq => continue
+    return .eq
+
+/--
+Ordering by size then by colexicographical ordering(right to left).
+  -/
+def colexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
+  match compare as.size bs.size with
+  | .lt => return .lt
+  | .gt => return .gt
+  | .eq => 
+    for i in [0:as.size] do
+      let i := as.size - i - 1
+      have : i < as.size := sorry
+      have : i < bs.size := sorry
+      match compare as[i] bs[i] with
+      | .lt => return .lt
+      | .gt => return .gt
+      | .eq => continue
+    return .eq
+
