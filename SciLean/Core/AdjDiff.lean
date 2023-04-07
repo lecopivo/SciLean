@@ -12,41 +12,6 @@ variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι : Type} [Enumtype ι]
 
-
--- noncomputable 
--- def adjointDifferential (f : X → Y) (x : X) (dy' : Y) : X := (∂ f x)† dy'
-
--- @[default_instance]
--- instance (f : X → Y) : PartialDagger f (adjointDifferential f) := ⟨⟩
-
--- Someting wrong here :(
--- noncomputable 
--- def Smooth.adjointDifferential {X Y} [Hilbert X] [Hilbert Y] (f : X ⟿ Y) : X⟿Y⊸X := λ x ⟿ λ dy ⊸ adjoint (∂ f x) dy
-
--- @[default_instance]
--- instance (f : X → Y) : PartialDagger f (adjointDifferential f) := ⟨⟩
-
-
--- Question: Should there be `𝒯[y] Y` or `𝒯[f x] Y`?
--- Maybe return `(y:Y)×(𝒯[y] Y → 𝒯[x] X)×(f x = y)` but there is a problem with `Sigma` vs `PSigma`
--- noncomputable
--- def reverseDifferential (f : X → Y) (x : X) : Y×(Y→X) := (f x, λ dy => ∂† f x dy)
-
--- instance (priority:=low) (f : X → Y) : ReverseDifferential f (reverseDifferential f) := ⟨⟩
-
-
--- noncomputable
--- abbrev gradient (f : X → ℝ) (x : X) : X := ∂† f x 1
-
--- @[default_instance]
--- instance (f : X → ℝ) : Nabla f (gradient f) := ⟨⟩
-
--- noncomputable
--- abbrev Smooth.gradient (f : X ⟿ ℝ) : X⟿X := SmoothMap.mk (λ x => adjoint (λ dx => ∂ f x dx) 1) sorry_proof
-
--- instance (f : X ⟿ ℝ) : Nabla f (Smooth.gradient f) := ⟨⟩
-
-
 -- Notation 
 -- ∇ s, f s         --> ∇ λ s => f s
 -- ∇ s : ℝ, f s     --> ∇ λ s : ℝ => f s
@@ -62,6 +27,206 @@ macro_rules
   `((∇ λ $x => $f) $val)
 | `(∇ ($b:diffBinder), $f) =>
   `(∇ $b, $f)
+
+
+
+variable {α β γ : Type}
+variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
+variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
+variable {ι : Type} [Enumtype ι]
+
+
+@[fun_trans_rule]
+theorem adjointDifferential.rule_id (X) [SemiHilbert X]
+  : ∂† (λ x : X => x)
+    =
+    λ x dx' => dx' := sorry
+
+@[fun_trans_rule]
+theorem adjointDifferential.rule_comp
+  (f : Y → Z) [HasAdjDiff f]
+  (g : X → Y) [HasAdjDiff g]
+  : ∂† (λ x : X => f (g x))
+    =
+    λ x dx' => ∂† g x (∂† f (g x) dx') := sorry
+
+@[fun_trans_rule]
+theorem adjointDifferential.rule_pi
+  (f : ι → X → Y) [∀ a, HasAdjDiff (f a)]
+  : ∂† (λ (g : ι → X) (i : ι) => f i (g i))
+    =
+    λ g dg' i => ∂† (f i) (g i) (dg' i) := sorry
+
+theorem adjointDifferential.rule_const' 
+  : ∂† (λ (x : X) (i : ι) => x)
+    =
+    λ x dx' => ∑ i, dx' i := sorry
+
+@[fun_trans_rule]
+theorem adjointDifferential.rule_swap 
+  (f : ι → X → Y) [∀ i, HasAdjDiff (f i)]
+  : ∂† (λ (x : X) (i : ι) => f i x)
+    =
+    λ x dx' => ∑ i, ∂† (f i) x (dx' i) := 
+by 
+  rw[adjointDifferential.rule_comp (λ (g : ι → X) (i : ι) => f i (g i)) (λ x i => x)]
+  simp[adjointDifferential.rule_pi, adjointDifferential.rule_const']
+  done
+
+@[fun_trans_rule]
+theorem adjointDifferential.rule_eval (X) [SemiHilbert X] (i : ι)
+  : ∂† (λ (f : ι → X) => f i)
+    =
+    λ f df' i' => [[i=i']] • df' := sorry
+
+@[fun_trans_rule]
+theorem adjointDifferential.rule_prodMk 
+  (f : X → Y) [HasAdjDiff f]
+  (g : X → Z) [HasAdjDiff g]
+  : ∂† (λ x => (f x, g x))
+    =
+    λ x dx' => 
+      ∂† f x dx'.1 + ∂† g x dx'.2 := sorry
+
+@[fun_trans_rule]
+theorem adjointDifferential.rule_letBinop 
+  (f : X → Y → Z) [HasAdjDiff λ xy : X×Y => f xy.1 xy.2]
+  (g : X → Y) [HasAdjDiff g]
+  : ∂† (λ (x : X) => let y := g x; f x y)
+    =
+    λ x dx' =>
+      let dxy := ∂† (λ xy : X×Y => f xy.1 xy.2) (x, g x) dx'
+      dxy.1 + ∂† g x dxy.2 := sorry
+
+@[fun_trans_rule]
+theorem adjointDifferential.rule_letComp 
+  (f : Y → Z) [HasAdjDiff f]
+  (g : X → Y) [HasAdjDiff g]
+  : ∂† (λ (x : X) => let y := g x; f y)
+    =
+    λ x dx' =>
+      let dy' := ∂† f (g x) dx'
+      ∂† g x dy' 
+  := sorry
+
+@[fun_trans]
+theorem adjointDifferential.rule_fst (X Y) [SemiHilbert X] [SemiHilbert Y]
+  : ∂† (λ (xy : X×Y) => xy.1)
+    =
+    λ xy dxy' => (dxy', 0) := sorry
+
+@[fun_trans]
+theorem adjointDifferential.rule_snd (X Y) [SemiHilbert X] [SemiHilbert Y]
+  : ∂† (λ (xy : X×Y) => xy.2)
+    =
+    λ xy dxy' => (0, dxy') := sorry
+
+
+--------------------------------------------------------------------------------
+-- Reverse Differential Rules
+--------------------------------------------------------------------------------
+
+@[fun_trans_rule]
+theorem reverseDifferential.rule_id (X) [SemiHilbert X]
+  : ℛ (λ x : X => x)
+    =
+    λ x => (x , λ dx' => dx') := sorry
+
+@[fun_trans_rule]
+theorem reverseDifferential.rule_comp
+  (f : Y → Z) [HasAdjDiff f]
+  (g : X → Y) [HasAdjDiff g]
+  : ℛ (λ x : X => f (g x))
+    =
+    λ x => 
+      let Ry := ℛ g x
+      let Rz := ℛ f Ry.1
+      (Rz.1, λ dx' => Ry.2 (Rz.2 dx')) := sorry
+
+@[fun_trans_rule]
+theorem reverseDifferential.rule_pi
+  (f : ι → X → Y) [∀ a, HasAdjDiff (f a)]
+  : ℛ (λ (g : ι → X) (i : ι) => f i (g i))
+    =
+    λ g => 
+      let Rf := λ i => ℛ (f i) (g i)
+      (λ i => (Rf i).1, λ dg' i => (Rf i).2 (dg' i)) := sorry
+
+theorem reverseDifferential.rule_const' 
+  : ℛ (λ (x : X) (i : ι) => x)
+    =
+    λ x => (λ i => x, λ dx' => ∑ i, dx' i) := sorry
+
+@[fun_trans_rule]
+theorem reverseDifferential.rule_swap 
+  (f : ι → X → Y) [∀ i, HasAdjDiff (f i)]
+  : ℛ (λ (x : X) (i : ι) => f i x)
+    =
+    λ x => 
+      let Rf := λ i => ℛ (f i) x
+      (λ i => (Rf i).1, λ dx' => ∑ i, (Rf i).2 (dx' i)) := 
+by 
+  rw[reverseDifferential.rule_comp (λ (g : ι → X) (i : ι) => f i (g i)) (λ x i => x)]
+  simp[reverseDifferential.rule_pi, reverseDifferential.rule_const']
+  done
+
+@[fun_trans_rule]
+theorem reverseDifferential.rule_eval (X) [SemiHilbert X] (i : ι)
+  : ℛ (λ (f : ι → X) => f i)
+    =
+    λ f => (f i, λ df' i' => [[i=i']] • df') := sorry
+
+@[fun_trans_rule]
+theorem reverseDifferential.rule_prodMk 
+  (f : X → Y) [HasAdjDiff f]
+  (g : X → Z) [HasAdjDiff g]
+  : ℛ (λ x => (f x, g x))
+    =
+    λ x => 
+      let Ry := ℛ f x
+      let Rz := ℛ g x
+      ((Ry.1, Rz.1), λ dx' => Ry.2 dx'.1 + Rz.2 dx'.2) := sorry
+
+@[fun_trans_rule]
+theorem reverseDifferential.rule_letBinop 
+  (f : X → Y → Z) [HasAdjDiff λ xy : X×Y => f xy.1 xy.2]
+  (g : X → Y) [HasAdjDiff g]
+  : ℛ (λ (x : X) => let y := g x; f x y)
+    =
+    λ x =>
+      let Ry := ℛ g x
+      let Rz := ℛ (λ xy : X×Y => f xy.1 xy.2) (x, Ry.1)
+      (Rz.1, λ dx' => 
+               let dxy := Rz.2 dx'
+               dxy.1 + Ry.2 dxy.2)
+  := sorry
+
+@[fun_trans_rule]
+theorem reverseDifferential.rule_letComp 
+  (f : Y → Z) [HasAdjDiff f]
+  (g : X → Y) [HasAdjDiff g]
+  : ℛ (λ (x : X) => let y := g x; f y)
+    =
+    λ x =>
+      let Ry := ℛ g x
+      let Rz := ℛ f Ry.1
+      (Rz.1, λ dx' => Ry.2 (Rz.2 dx'))
+  := sorry
+
+@[fun_trans]
+theorem reverseDifferential.rule_fst (X Y) [SemiHilbert X] [SemiHilbert Y]
+  : ℛ (λ (xy : X×Y) => xy.1)
+    =
+    λ xy => (xy.1, λ dxy' => (dxy', 0)) := sorry
+
+@[fun_trans]
+theorem reverseDifferential.rule_snd (X Y) [SemiHilbert X] [SemiHilbert Y]
+  : ℛ (λ (xy : X×Y) => xy.2)
+    =
+    λ xy => (xy.2, λ dxy' => (0, dxy')) := sorry
+
+
+#exit
 
 
 instance (f : X → Y) [HasAdjDiff f] (x : X) : IsLin (∂† f x) := sorry

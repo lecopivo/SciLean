@@ -37,6 +37,46 @@ variable {X Y Z W : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] [SemiH
 variable {Y₁ Y₂ Y₃ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Y₃]
 variable {ι κ : Type} [Enumtype ι]
 
+@[fun_prop_rule]
+theorem HasAdjoint.rule_id 
+  : HasAdjoint (λ x : X => x) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjoint.rule_comp 
+  (f : Y → Z) [HasAdjoint f]
+  (g : X → Y) [HasAdjoint g]
+  : HasAdjoint (λ x => f (g x)) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjoint.rule_prodMk
+  (f : X → Y) [HasAdjoint f]
+  (g : X → Z) [HasAdjoint g]
+  : HasAdjoint (λ x => (f x, g x)) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjoint.rule_pi
+  (f : ι → X → Y) [∀ i, HasAdjoint (f i)]
+  : HasAdjoint (λ x i => f i x) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjoint.rule_eval (i : ι)
+  : HasAdjoint (λ (f : ι → X)  => f i) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjoint.rule_comp_eval 
+  (i : ι) (f : X → ι → Y) [HasAdjoint f]
+  : HasAdjoint (λ x => f x i) := HasAdjoint.rule_comp (λ g : ι → Y => g i) f
+
+@[fun_prop_rule]
+theorem HasAdjoint.rule_fst
+  : HasAdjoint (λ xy : X×Y => xy.1) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjoint.rule_snd
+  : HasAdjoint (λ xy : X×Y => xy.2) := sorry
+
+#exit
+
 instance HasAdjoint_add_extra_2_1 (f : X → Y) [hf : HasAdjointT f]
   : HasAdjointNT 2 (λ (z : Z) x => f x) := sorry_proof
 

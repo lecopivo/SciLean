@@ -14,6 +14,47 @@ variable {α β : Type}
 variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 variable {Y₁ Y₂ Y₃ : Type} [Vec Y₁] [Vec Y₂] [Vec Y₃]
 
+@[fun_prop_rule]
+theorem IsLin.rule_id 
+  : IsLin (λ x : X => x) := sorry
+
+
+@[fun_prop_rule]
+theorem IsLin.rule_comp 
+  (f : Y → Z) [IsLin f]
+  (g : X → Y) [IsLin g]
+  : IsLin (λ x => f (g x)) := sorry
+
+@[fun_prop_rule]
+theorem IsLin.rule_prodMk
+  (f : X → Y) [IsLin f]
+  (g : X → Z) [IsLin g]
+  : IsLin (λ x => (f x, g x)) := sorry
+
+@[fun_prop_rule]
+theorem IsLin.rule_pi
+  (f : α → X → Y) [∀ a, IsLin (f a)]
+  : IsLin (λ x a => f a x) := sorry
+
+@[fun_prop_rule]
+theorem IsLin.rule_eval (a : α)
+  : IsLin (λ (f : α → X)  => f a) := sorry
+
+@[fun_prop_rule]
+theorem IsLin.rule_comp_eval 
+  (a : α) (f : X → α → Y) [IsLin f]
+  : IsLin (λ x => f x a) := IsLin.rule_comp (λ g : α → Y => g a) f
+
+@[fun_prop_rule]
+theorem IsLin.rule_fst
+  : IsLin (λ xy : X×Y => xy.1) := sorry
+
+@[fun_prop_rule]
+theorem IsLin.rule_snd
+  : IsLin (λ xy : X×Y => xy.2) := sorry
+
+#exit
+
 
 --------------------------------------------------------------------------------
 -- Adding Arguments Instances --

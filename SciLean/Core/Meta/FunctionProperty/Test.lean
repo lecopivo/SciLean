@@ -85,49 +85,22 @@ function_properties HAdd.hAdd {X : Type} (x y : X) : X
 argument (x,y) [Vec X]
   IsLin    := sorry,
   IsSmooth := by apply isLin_isSmooth,
-  funTrans SciLean.differential := λ dx dy => dx + dy by sorry 
-  by
-    simp only
-      [diff_comp (λ xy : X×X => xy.fst + xy.snd) (λ t => (x t, y t)),
-       HAdd.hAdd.arg_a4a5.differential_simp,
-       diff_prodMk]
-    done,
-  funTrans SciLean.tangentMap := λ dx dy => (x + y, dx + dy)  by sorry 
-  by 
-    simp [tangentMap_comp (λ xy : X×X => xy.fst + xy.snd) (λ t => (x t, y t))]
-    simp [HAdd.hAdd.arg_a4a5.tangentMap_simp]
-    done
+  abbrev ∂ := λ dx dy => dx + dy by sorry,
+  abbrev 𝒯 := λ dx dy => (x + y, dx + dy) by sorry 
 argument (x,y) [SemiHilbert X]
   HasAdjoint := sorry,
   HasAdjDiff := sorry,
-  funTrans SciLean.adjoint := λ xy' => (xy', xy')  by sorry 
-  by 
-    simp [adjoint_comp (λ xy : X×X => xy.fst + xy.snd) (λ t => (x t, y t))]
-    simp [HAdd.hAdd.arg_a4a5.adjoint_simp]
-    done,
-  funTrans SciLean.adjointDifferential := λ xy' => (xy', xy')  by sorry by sorry
+  abbrev † := λ xy' => (xy', xy')  by sorry,
+  abbrev ∂† := λ xy' => (xy', xy')  by sorry
 argument x
   IsSmooth [Vec X] := by infer_instance,
   HasAdjDiff [SemiHilbert X] := by infer_instance,
-  funTrans SciLean.differential [Vec X] := λ dx => dx by
-    simp [HAdd.hAdd.arg_a4a5.differential_simp']
-    done
-  by
-    sorry,
-  funTrans SciLean.tangentMap [Vec X] := λ dx => (x+y, dx) by 
-    simp [HAdd.hAdd.arg_a4a5.differential_simp', tangentMap]
-    done
-  by
-    sorry
+  abbrev ∂ [Vec X] := λ dx => dx by simp [HAdd.hAdd.arg_a4a5.differential_simp'],
+  abbrev 𝒯 [Vec X] := λ dx => (x+y, dx) by simp [HAdd.hAdd.arg_a4a5.differential_simp', tangentMap]
 argument y
   IsSmooth [Vec X] := by apply HAdd.hAdd.arg_a4a5.IsSmooth',
   HasAdjDiff [SemiHilbert X] := by apply HAdd.hAdd.arg_a4a5.HasAdjDiff',
-  funTrans SciLean.differential [Vec X] := λ dy => dy by 
-    rw [HAdd.hAdd.arg_a4a5.differential_simp']; simp
-    done
-  by
-    sorry
-
+  abbrev ∂ [Vec X] := λ dy => dy by rw [HAdd.hAdd.arg_a4a5.differential_simp']; simp
 
 def foo {α β γ : Type} (a : α) (b : β) (c : γ) : γ := sorry
 
@@ -135,31 +108,20 @@ function_properties SciLean.foo {α β γ : Type} (a : α) (b : β) (c : γ)
 argument (a,c) [Vec α] [Vec γ]
   IsLin := sorry,
   IsSmooth := isLin_isSmooth,
-  funTrans SciLean.differential := sorry by sorry by sorry,
-  funTrans SciLean.tangentMap := sorry by sorry by sorry
+  abbrev funTrans SciLean.differential := sorry by sorry,
+  abbrev funTrans SciLean.tangentMap := sorry by sorry
 argument (a,c) [SemiHilbert α] [SemiHilbert γ]
   HasAdjoint := sorry,
   HasAdjDiff := sorry,
-  funTrans SciLean.adjoint := sorry  by sorry by sorry,
-  funTrans SciLean.adjointDifferential := sorry  by sorry by sorry,
-  funTrans SciLean.reverseDifferential := sorry  by sorry by sorry
+  abbrev funTrans SciLean.adjoint := sorry  by sorry,
+  abbrev funTrans SciLean.adjointDifferential := sorry  by sorry,
+  abbrev funTrans SciLean.reverseDifferential := sorry  by sorry
 argument (a,b,c) [SemiHilbert α] [SemiHilbert β] [SemiHilbert γ]
   HasAdjoint := sorry,
   HasAdjDiff := sorry,
-  funTrans SciLean.adjoint := λ c => (0,0,c) by sorry 
-  by 
-    simp only 
-         [adjoint_comp (λ abc : α×β×γ => foo abc.1 abc.2.1 abc.2.2) (λ t => (a t, b t, c t)),
-          adjoint_prodMk,
-          foo.arg_abc.adjoint_simp,
-          add_assoc]
-    done,
-  funTrans SciLean.adjointDifferential := sorry  by sorry by sorry,
-  funTrans SciLean.reverseDifferential := sorry  by sorry by sorry
+  abbrev funTrans SciLean.adjoint := λ c => (0,0,c) by sorry,
+  abbrev funTrans SciLean.adjointDifferential := sorry  by sorry,
+  abbrev funTrans SciLean.reverseDifferential := sorry  by sorry
 
 
-#check foo.arg_ac.adjoint
-#check foo.arg_ac.adjointDifferential
-
-
-#eval printFunctionTheorems
+#check foo.arg_abc.reverseDifferential_simp'

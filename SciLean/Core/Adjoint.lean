@@ -7,6 +7,99 @@ import SciLean.Tactic.CustomSimp.AllPrePost
 
 namespace SciLean
 
+
+variable {α β γ : Type}
+variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
+variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
+variable {ι : Type} [Enumtype ι]
+
+
+@[fun_trans_rule]
+theorem adjoint.rule_id (X) [SemiHilbert X]
+  : (λ x : X => x)†
+    =
+    λ x' => x' := sorry
+
+@[fun_trans_rule]
+theorem adjoint.rule_comp
+  (f : Y → Z) [HasAdjoint f]
+  (g : X → Y) [HasAdjoint g]
+  : (λ x : X => f (g x))†
+    =
+    λ x' => g† (f† x') := sorry
+
+@[fun_trans_rule]
+theorem adjoint.rule_pi
+  (f : ι → X → Y) [∀ a, HasAdjoint (f a)]
+  : (λ (g : ι → X) (i : ι) => f i (g i))†
+    =
+    λ g' i => (f i)† (g' i) := sorry
+
+theorem adjoint.rule_const' 
+  : (λ (x : X) (i : ι) => x)†
+    =
+    λ x' => ∑ i, x' i := sorry
+
+@[fun_trans_rule]
+theorem adjoint.rule_swap 
+  (f : ι → X → Y) [∀ i, HasAdjoint (f i)]
+  : (λ (x : X) (i : ι) => f i x)†
+    =
+    λ x' => ∑ i, (f i)† (x' i) := 
+by 
+  rw[adjoint.rule_comp (λ (g : ι → X) (i : ι) => f i (g i)) (λ x i => x)]
+  simp[adjoint.rule_pi, adjoint.rule_const']
+  done
+
+@[fun_trans_rule]
+theorem adjoint.rule_eval (X) [SemiHilbert X] (i : ι)
+  : (λ (f : ι → X) => f i)†
+    =
+    λ f' i' => [[i=i']] • f' := sorry
+
+@[fun_trans_rule]
+theorem adjoint.rule_prodMk 
+  (f : X → Y) [HasAdjoint f]
+  (g : X → Z) [HasAdjoint g]
+  : (λ x => (f x, g x))†
+    =
+    λ x' => f† x'.1 + g† x'.2 := sorry
+
+@[fun_trans_rule]
+theorem adjoint.rule_letBinop 
+  (f : X → Y → Z) [HasAdjoint λ xy : X×Y => f xy.1 xy.2]
+  (g : X → Y) [HasAdjoint g]
+  : (λ (x : X) => let y := g x; f x y)†
+    =
+    λ x' =>
+      let xy := (λ xy : X×Y => f xy.1 xy.2)† x'
+      xy.1 + g† xy.2 := sorry
+
+@[fun_trans_rule]
+theorem adjoint.rule_letComp 
+  (f : Y → Z) [HasAdjoint f]
+  (g : X → Y) [HasAdjoint g]
+  : (λ (x : X) => let y := g x; f y)†
+    =
+    λ x' =>
+      let y'  := f† x'
+      g† y' := sorry
+
+@[fun_trans]
+theorem adjoint.rule_fst (X Y) [SemiHilbert X] [SemiHilbert Y]
+  : (λ (xy : X×Y) => xy.1)†
+    =
+    λ xy' => (xy', 0) := sorry
+
+@[fun_trans]
+theorem adjoint.rule_snd (X Y) [SemiHilbert X] [SemiHilbert Y]
+  : (λ (xy : X×Y) => xy.2)†
+    =
+    λ xy' => (0, xy') := sorry
+
+
+#exit
+
 instance adjoint.arg_y.hasAdjoint {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjointT f]
   : HasAdjoint (f†) := sorry_proof
 

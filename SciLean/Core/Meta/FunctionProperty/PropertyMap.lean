@@ -19,7 +19,7 @@ def addFunctionProperty (constName opName : Name) (ids : ArraySet Nat) (thrm : F
       (λ argMap => argMap.insert ids thrm)
 
 
-def printFunctionTheorems : IO Unit := do
+def printFunctionProperties : IO Unit := do
   let m ← functionPropertyMapRef.get
   m.forM λ (const, op) argMap => do
       IO.println s!"{const} {op}"

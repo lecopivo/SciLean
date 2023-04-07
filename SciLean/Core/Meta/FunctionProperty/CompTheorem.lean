@@ -208,8 +208,8 @@ def mkCompTheoremTangentMap (e : Expr) (xs : Array Expr) (contextVars : Array Ex
 
           withLCtx lctx (← getLocalInstances) do
 
-            let  xs' ← Txs'.mapM (λ Tx => mkProdProj Tx 0)
-            let dxs' ← Txs'.mapM (λ Tx => mkProdProj Tx 1)
+            let  xs' ← Txs'.mapM (λ Tx => mkProdFst Tx)
+            let dxs' ← Txs'.mapM (λ Tx => mkProdSnd Tx)
 
             let rhs ← do
               let mut e ← mkLambdaFVars xs defVal -- abstract old xs
@@ -257,7 +257,7 @@ def mkCompTheoremAdjoint (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
 
             let yVals' ← ys.mapIdxM λ i y => do
                 let y ← mkAppM ``adjoint #[y] 
-                mkAppM' y #[← mkProdProj x'' i]
+                mkAppM' y #[← mkProdProj x'' i ys.size]
 
             let ySum ← mkAppFoldlM ``HAdd.hAdd yVals'
 
@@ -371,15 +371,15 @@ def mkCompTheoremRevDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
 
         withLCtx lctx (← getLocalInstances) do
 
-          let xs' ← Rxs.mapM λ Rx => mkProdProj Rx 0
+          let xs' ← Rxs.mapM λ Rx => mkProdFst Rx
 
           -- replace `xs` with `xs'`
           let RfxVal := (← mkAppM' (← mkLambdaFVars xs defVal) xs').headBeta
 
           withLetDecl `Rfx (← inferType RfxVal) RfxVal λ Rfx => do
 
-            let fx  ← mkProdProj Rfx 0
-            let df' ← mkProdProj Rfx 1
+            let fx  ← mkProdFst Rfx
+            let df' ← mkProdSnd Rfx
 
             let dxsName' := (← mkProdFVarName xs).appendAfter "'" |>.appendBefore "d"
             let dxsType' ← inferType e
@@ -396,7 +396,7 @@ def mkCompTheoremRevDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
                 withLetDecl dxsName dxsType dxsVal λ dxs => do
 
                   let dxVals ← mkProdSplitElem dxs xs.size
-                  let dxFuns ← Rxs.mapM λ Rx => mkProdProj Rx 1
+                  let dxFuns ← Rxs.mapM λ Rx => mkProdSnd Rx
 
                   let xdxVals ← (dxFuns.zip dxVals).mapM 
                     λ (df,dx) => mkAppM' df #[dx]

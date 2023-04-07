@@ -1,5 +1,6 @@
-import SciLean.Core.Differential
-import SciLean.Core.Adjoint
+-- import SciLean.Core.Differential
+-- import SciLean.Core.Adjoint
+import SciLean.Core.HasAdjoint
 
 namespace SciLean
 
@@ -8,6 +9,50 @@ variable {X Y Z W : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] [SemiH
 variable {Y₁ Y₂ Y₃ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Y₃]
 variable {ι : Type} [Enumtype ι]
 
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_id 
+  : HasAdjDiff (λ x : X => x) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_const (x : X)
+  : HasAdjDiff (λ y : Y => x) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_comp 
+  (f : Y → Z) [HasAdjDiff f]
+  (g : X → Y) [HasAdjDiff g]
+  : HasAdjDiff (λ x => f (g x)) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_prodMk
+  (f : X → Y) [HasAdjDiff f]
+  (g : X → Z) [HasAdjDiff g]
+  : HasAdjDiff (λ x => (f x, g x)) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_pi
+  (f : ι → X → Y) [∀ i, HasAdjDiff (f i)]
+  : HasAdjDiff (λ x i => f i x) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_eval (i : ι)
+  : HasAdjDiff (λ (f : ι → X)  => f i) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_comp_eval 
+  (i : ι) (f : X → ι → Y) [HasAdjDiff f]
+  : HasAdjDiff (λ x => f x i) := HasAdjDiff.rule_comp (λ g : ι → Y => g i) f
+
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_fst
+  : HasAdjDiff (λ xy : X×Y => xy.1) := sorry
+
+@[fun_prop_rule]
+theorem HasAdjDiff.rule_snd
+  : HasAdjDiff (λ xy : X×Y => xy.2) := sorry
+
+
+#exit 
 
 -- /-- Transitive closure of `HasAdjDiffN`
 -- -/

@@ -87,17 +87,26 @@ For `#[x₁, .., xₙ]` create `(x₁, .., xₙ)`.
 -/
 def mkProdElem (xs : Array Expr) : MetaM Expr := mkAppFoldrM ``Prod.mk xs
 
+def mkProdFst (x : Expr) : MetaM Expr := mkAppM ``Prod.fst #[x]
+def mkProdSnd (x : Expr) : MetaM Expr := mkAppM ``Prod.snd #[x]
+
 /--
 For `(x₀, .., xₙ₋₁)` return `xᵢ` but as a product projection.
 
-For example for `xyz : X × Y × Z`, `mkProdProj xyz 1` returns `xyz.snd.fst`.
+We need to know the total size of the product to be considered.
+
+For example for `xyz : X × Y × Z`
+  - `mkProdProj xyz 1 3` returns `xyz.snd.fst`.
+  - `mkProdProj xyz 1 2` returns `xyz.snd`.
 -/
-def mkProdProj (x : Expr) (i : Nat) : MetaM Expr := do
+def mkProdProj (x : Expr) (i : Nat) (n : Nat) : MetaM Expr := do
   let X ← inferType x
   if X.isAppOfArity ``Prod 2 then
-     match i with
-     | 0 => mkAppM ``Prod.fst #[x]
-     | n+1 => mkProdProj (← mkAppM ``Prod.snd #[x]) n
+     match i, n with
+     | _, 0 => pure x
+     | _, 1 => pure x
+     | 0, _ => mkAppM ``Prod.fst #[x]
+     | i'+1, n'+1 => mkProdProj (← mkAppM ``Prod.snd #[x]) i' n'
   else
     if i = 0 then
       return x
@@ -108,7 +117,7 @@ def mkProdProj (x : Expr) (i : Nat) : MetaM Expr := do
 def mkProdSplitElem (xs : Expr) (n : Nat) : MetaM (Array Expr) := 
   (Array.mkArray n 0)
     |>.mapIdx (λ i _ => i.1)
-    |>.mapM (λ i => mkProdProj xs i)
+    |>.mapM (λ i => mkProdProj xs i n)
 
 def mkUncurryFun (n : Nat) (f : Expr) : MetaM Expr := do
   if n ≤ 1 then

@@ -1,15 +1,14 @@
 import Lean
 import Init.Classical
 
-import SciLean.Core.Attributes
+-- import SciLean.Core.Attributes
 import SciLean.Core.HasAdjoint
 import SciLean.Core.Defs
 
-import SciLean.Tactic.CustomSimp.DebugSimp
-
+-- import SciLean.Tactic.CustomSimp.DebugSimp
 -- import SciLean.Tactic.CustomSimp.SimpGuard
-import SciLean.Tactic.AutoDiff
-import SciLean.Core.AutoDiffSimps
+-- import SciLean.Tactic.AutoDiff
+-- import SciLean.Core.AutoDiffSimps
 
 namespace SciLean
 
@@ -44,7 +43,203 @@ macro_rules
 | `(∂ ($b:diffBinder), $f) =>
   `(∂ $b, $f)
 
+--------------------------------------------------------------------------------
+-- Differential rules
+--------------------------------------------------------------------------------
 
+@[fun_trans_rule]
+theorem differential.rule_id (X) [Vec X]
+  : ∂ (λ x : X => x)
+    =
+    λ x dx => dx := sorry
+
+@[fun_trans_rule]
+theorem differential.rule_const (Y : Type) [Vec Y] (x : X)
+  : ∂ (λ y : Y => x)
+    =
+    λ y dy => 0 := sorry
+
+@[fun_trans_rule]
+theorem differential.rule_comp
+  (f : Y → Z) [IsSmooth f]
+  (g : X → Y) [IsSmooth g]
+  : ∂ (λ x : X => f (g x))
+    =
+    λ x dx => ∂ f (g x) (∂ g x dx) := sorry
+
+@[fun_trans_rule]
+theorem differential.rule_pi
+  (f : α → X → Y) [∀ a, IsSmooth (f a)]
+  : ∂ (λ (g : α → X) (a : α) => f a (g a))
+    =
+    λ g dg a => ∂ (f a) (g a) (dg a) := sorry
+
+theorem differential.rule_const' 
+  : ∂ (λ (x : X) (y : Y) => x)
+    =
+    λ x dx y => dx := sorry
+
+@[fun_trans_rule]
+theorem differential.rule_swap 
+  (f : α → X → Y) [∀ a, IsSmooth (f a)]
+  : ∂ (λ (x : X) (a : α) => f a x)
+    =
+    λ x dx a => ∂ (f a) x dx := 
+by 
+  rw[differential.rule_comp (λ (g : α → X) (a : α) => f a (g a)) (λ x a => x)]
+  simp[differential.rule_pi, differential.rule_const']
+  done
+
+@[fun_trans_rule]
+theorem differential.rule_eval (X) [Vec X] (a : α)
+  : ∂ (λ (f : α → X) => f a)
+    =
+    λ f df => df a := sorry
+
+@[fun_trans_rule]
+theorem differential.rule_prodMk 
+  (f : X → Y) [IsSmooth f]
+  (g : X → Z) [IsSmooth g]
+  : ∂ (λ x => (f x, g x))
+    =
+    λ x dx => (∂ f x dx, ∂ g x dx) := sorry
+
+@[fun_trans_rule]
+theorem differential.rule_letBinop 
+  (f : X → Y → Z) [IsSmooth λ xy : X×Y => f xy.1 xy.2]
+  (g : X → Y) [IsSmooth g]
+  : ∂ (λ (x : X) => let y := g x; f x y)
+    =
+    λ x dx =>
+      let y  := g x
+      let dy := ∂ g x dx 
+      ∂ (λ xy => f xy.1 xy.2) (x,y) (dx,dy) := sorry
+
+@[fun_trans_rule]
+theorem differential.rule_letComp 
+  (f : Y → Z) [IsSmooth f]
+  (g : X → Y) [IsSmooth g]
+  : ∂ (λ (x : X) => let y := g x; f y)
+    =
+    λ x dx =>
+      let y  := g x
+      let dy := ∂ g x dx 
+      ∂ f y dy := sorry
+
+@[fun_trans]
+theorem differential.rule_fst (X Y) [Vec X] [Vec Y]
+  : ∂ (λ (xy : X×Y) => xy.1)
+    =
+    λ xy dxy => dxy.1 := sorry
+
+@[fun_trans]
+theorem differential.rule_snd (X Y) [Vec X] [Vec Y]
+  : ∂ (λ (xy : X×Y) => xy.2)
+    =
+    λ xy dxy => dxy.2 := sorry
+
+
+--------------------------------------------------------------------------------
+-- Tangent Map rules
+--------------------------------------------------------------------------------
+
+@[fun_trans_rule]
+theorem tangentMap.rule_id (X) [Vec X]
+  : 𝒯 (λ x : X => x)
+    =
+    λ x dx => (x,dx) := sorry
+
+@[fun_trans_rule]
+theorem tangentMap.rule_const (Y : Type) [Vec Y] (x : X)
+  : 𝒯 (λ y : Y => x)
+    =
+    λ y dy => (x,0) := sorry
+
+@[fun_trans_rule]
+theorem tangentMap.rule_comp
+  (f : Y → Z) [IsSmooth f]
+  (g : X → Y) [IsSmooth g]
+  : 𝒯 (λ x : X => f (g x))
+    =
+    λ x dx => 
+      let ydy := 𝒯 g x dx
+      𝒯 f ydy.1 ydy.2 := sorry
+
+@[fun_trans_rule]
+theorem tangentMap.rule_pi
+  (f : α → X → Y) [∀ a, IsSmooth (f a)]
+  : 𝒯 (λ (g : α → X) (a : α) => f a (g a))
+    =
+    λ g dg => (λ a => f a (g a), 
+               λ a => ∂ (f a) (g a) (dg a)) := sorry
+
+theorem tangentMap.rule_const' 
+  : 𝒯 (λ (x : X) (y : Y) => x)
+    =
+    λ x dx => (λ y => x, λ y => dx) := sorry
+
+@[fun_trans_rule]
+theorem tangentMap.rule_swap 
+  (f : α → X → Y) [∀ a, IsSmooth (f a)]
+  : 𝒯 (λ (x : X) (a : α) => f a x)
+    =
+    λ x dx => (λ a => f a x, λ a => ∂ (f a) x dx) := 
+by 
+  rw[tangentMap.rule_comp (λ (g : α → X) (a : α) => f a (g a)) (λ x a => x)]
+  simp[tangentMap.rule_pi, tangentMap.rule_const']
+  done
+
+@[fun_trans_rule]
+theorem tangentMap.rule_eval (X) [Vec X] (a : α)
+  : 𝒯 (λ (f : α → X) => f a)
+    =
+    λ f df => (f a, df a) := sorry
+
+@[fun_trans_rule]
+theorem tangentMap.rule_prodMk 
+  (f : X → Y) [IsSmooth f]
+  (g : X → Z) [IsSmooth g]
+  : 𝒯 (λ x => (f x, g x))
+    =
+    λ x dx => 
+      let ydy := 𝒯 f x dx
+      let zdz := 𝒯 g x dx
+      ((ydy.1, zdz.1), (ydy.2, zdz.2)) := sorry
+
+@[fun_trans_rule]
+theorem tangentMap.rule_letBinop 
+  (f : X → Y → Z) [IsSmooth λ xy : X×Y => f xy.1 xy.2]
+  (g : X → Y) [IsSmooth g]
+  : 𝒯 (λ (x : X) => let y := g x; f x y)
+    =
+    λ x dx =>
+      let ydy := 𝒯 g x dx 
+      𝒯 (λ xy => f xy.1 xy.2) (x,y) (dx,dy) := sorry
+
+@[fun_trans_rule]
+theorem tangentMap.rule_letComp 
+  (f : Y → Z) [IsSmooth f]
+  (g : X → Y) [IsSmooth g]
+  : 𝒯 (λ (x : X) => let y := g x; f y)
+    =
+    λ x dx =>
+      let ydy := 𝒯 g x dx 
+      𝒯 f ydy.1 ydy.2 := sorry
+
+@[fun_trans]
+theorem tangentMap.rule_fst (X Y) [Vec X] [Vec Y]
+  : 𝒯 (λ (xy : X×Y) => xy.1)
+    =
+    λ xy dxy => (xy.1, dxy.1) := sorry
+
+@[fun_trans]
+theorem tangentMap.rule_snd (X Y) [Vec X] [Vec Y]
+  : 𝒯 (λ (xy : X×Y) => xy.2)
+    =
+    λ xy dxy => (xy.2, dxy.2) := sorry
+
+
+#exit
 --------------------------------------------------------------------------------
 -- Smooth Differential --
 --------------------------------------------------------------------------------

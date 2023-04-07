@@ -2,9 +2,9 @@ import SciLean.Data.ArraySet
 
 import SciLean.Core.Meta.FunctionProperty.NormalTheorem
 import SciLean.Core.Meta.FunctionProperty.CompTheorem
+import SciLean.Core.Meta.FunctionProperty.PropertyMap
 
-import SciLean.Core.FunctionTheorems
-
+import SciLean.Core.Meta.RewriteBy
 
 namespace SciLean
 
@@ -85,7 +85,7 @@ def addFunPropDecl (propName spaceName : Name) (e : Expr) (xs : Array Expr) (con
     -- TODO: Fill the proof here!!! 
     -- I think I can manually apply composition rule and then it should be 
     -- automatically discargable by using the normal theorem and product rule
-    let val ← Term.elabTermAndSynthesize (← `(by sorry)) b  
+    let val ← Term.elabTermAndSynthesize (← `(by sorry_proof)) b  
     mkLambdaFVars ys val
 
   let info : TheoremVal :=
@@ -99,11 +99,14 @@ def addFunPropDecl (propName spaceName : Name) (e : Expr) (xs : Array Expr) (con
   addDecl (.thmDecl info)
   addInstance info.name .local 1000
 
-  addFunctionTheorem constName propName mainArgIds ⟨theoremName, compTheoremName⟩
+  addFunctionProperty constName propName mainArgIds ⟨theoremName, compTheoremName⟩
 
+inductive FunTransDefStx 
+  | valProof (valStx : Term) (proof : TSyntax ``Lean.Parser.Tactic.tacticSeq)
+  | conv     (conv : TSyntax ``Parser.Tactic.Conv.convSeq)
 
-def addFunTransDecl (transName : Name) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) 
-  (defValStx : TSyntax `term) (proof proof2 : TSyntax `Lean.Parser.Tactic.tacticSeq) : TermElabM Unit := do
+def addFunTransDecl (transName : Name) (useDef : Bool) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) 
+  (funTransDefStx : FunTransDefStx) : TermElabM Unit := do
 
   let f    := e.getAppFn
   let args := e.getAppArgs
@@ -118,46 +121,56 @@ def addFunTransDecl (transName : Name) (e : Expr) (xs : Array Expr) (contextVars
     | throwError s!"Error in `addFunPropDecls`, the expression `{← ppExpr e}` has to be an application of a constant!"
 
   -- make definition
-  let defType ← inferType (← mkNormalTheoremLhs transName e xs)
-  let defVal  ← Term.elabTermAndSynthesize defValStx defType
+  let defTargetVal  ← mkNormalTheoremLhs transName e xs
+  let defType ← inferType defTargetVal
+  let (defVal, defProof)  ← 
+    match funTransDefStx with
+    | .valProof valStx proofStx => do
+      let val ← Term.elabTermAndSynthesize valStx defType
+      let prf ← Term.elabTermAndSynthesize (← `(by $proofStx)) (← mkEq defTargetVal val)
+      pure (val, prf)
+    | .conv rw => rewriteBy defTargetVal rw
 
   let defName := constName
     |>.append "arg_"
     |>.appendAfter (← constArgSuffix constName mainArgIds)
     |>.append transName.getString
 
-  let defValLambda ← do
-    let contextVars := maybeFilterContextVars transName xs contextVars
-    mkLambdaFVars contextVars defVal >>= instantiateMVars
+  -- some function transformations remove `xs` so we need to remove them from the `contextVars`
+  let contextVars' := maybeFilterContextVars transName xs contextVars
+  let defValLambda ← mkLambdaFVars contextVars' defVal
 
   let info : DefinitionVal := 
   {
-    name := defName
-    type := ← inferType defValLambda
-    value := defValLambda
+    name  := defName
+    type  := ← instantiateMVars (← inferType defValLambda)
+    value := ← instantiateMVars defValLambda 
     hints := .regular 0
     safety := .safe
     levelParams := []
   }
 
-  addDecl (.defnDecl info)
+  addAndCompile (.defnDecl info)
 
-  let normalTheorem ← mkNormalTheorem transName e xs contextVars defVal
+  -- If we want to use just defined value in the simp theorem
+  let defVal ← 
+    if useDef = true then do
+      mkAppOptM defName (contextVars'.map some)
+    else
+      pure defVal
 
-  IO.println s!"Normal theorem for {transName}:\n{← ppExpr normalTheorem}"
+  let normalTheoremType  ← mkForallFVars contextVars' (← mkEq defTargetVal defVal)
+  let normalTheoremProof ← mkLambdaFVars contextVars' defProof
 
-  let prf ← forallTelescope normalTheorem λ contextVars statement => do
-    let prf ← Term.elabTermAndSynthesize (← `(by $proof:tacticSeq)) statement
-    mkLambdaFVars contextVars prf
-
+  IO.println s!"Normal theorem for {transName}:\n{← ppExpr normalTheoremType}"
 
   let theoremName := defName.appendAfter "_simp"
 
   let info : TheoremVal :=
   {
-    name := theoremName
-    type := normalTheorem
-    value := prf
+    name  := theoremName
+    type  := ← instantiateMVars normalTheoremType
+    value := ← instantiateMVars normalTheoremProof
     levelParams := []
   }
 
@@ -168,7 +181,10 @@ def addFunTransDecl (transName : Name) (e : Expr) (xs : Array Expr) (contextVars
   IO.println s!"Composition theorem for {transName}:\n{← ppExpr compTheorem}"
 
   let prf ← forallTelescope compTheorem λ contextVars statement => do
-    let prf ← Term.elabTermAndSynthesize (← `(by $proof2)) statement
+    -- TODO: Fill the proof here!!! 
+    -- I think I can manually apply composition rule and then it should be 
+    -- automatically discargable by using the normal theorem and product rule
+    let prf ← Term.elabTermAndSynthesize (← `(by sorry_proof)) statement
     mkLambdaFVars contextVars prf
 
   let compTheoremName := defName.appendAfter "_simp'"
@@ -183,4 +199,5 @@ def addFunTransDecl (transName : Name) (e : Expr) (xs : Array Expr) (contextVars
 
   addDecl (.thmDecl info)
 
-  addFunctionTheorem constName transName mainArgIds ⟨theoremName,compTheoremName⟩
+  addFunctionProperty constName transName mainArgIds ⟨theoremName, compTheoremName⟩
+
