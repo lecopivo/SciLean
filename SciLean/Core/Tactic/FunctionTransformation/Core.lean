@@ -1,11 +1,9 @@
 import Std.Lean.Parser
-
 import Mathlib.Tactic.NormNum.Core
 
+import SciLean.Lean.Meta.Basic
 import SciLean.Data.Prod
 import SciLean.Core.Tactic.FunctionTransformation.Init
-
-import SciLean.Lean.Meta.Basic
 
 open Lean Meta
 

@@ -63,6 +63,23 @@ def FunTransRuleType.all : List FunTransRuleType := [.id,.const,.comp,.swap,.for
   -/
 initialize funTransRulesMapRef : IO.Ref (PersistentHashMap (Name×FunTransRuleType) Name) ← IO.mkRef {}
 
+
+initialize myExt : SimplePersistentEnvExtension String (Array String) ←
+  registerSimplePersistentEnvExtension {
+    name := `mystuff
+    addEntryFn := Array.push
+    addImportedFn := Array.concatMap id
+  }
+
+open Elab Command in
+elab "#liststuff" : command => do
+  for stuff in myExt.getState (← getEnv) do
+    dbg_trace stuff
+
+elab "#addStuff" msg:str : command => do
+  modifyEnv (myExt.addEntry · msg.getString)
+
+
 /-- Is `F` equal to `λ (x : X) => x`?
   On success returns `X` -/
 def isId (F : Expr) : MetaM (Option Expr) :=

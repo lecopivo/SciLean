@@ -1,12 +1,7 @@
-import SciLean.Notation
-import SciLean.Core.Attributes
-import SciLean.Core.HasAdjoint
 import SciLean.Core.Defs
-
-import SciLean.Tactic.CustomSimp.AllPrePost
-
+import SciLean.Core.HasAdjoint
+import SciLean.Core.Differential
 namespace SciLean
-
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]

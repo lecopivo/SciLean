@@ -1,171 +1,33 @@
-import SciLean.Core.Tactic.FunctionTransformation.Core
+-- import SciLean.Core.Tactic.FunctionTransformation.Core
 
 import SciLean.Core.Defs
+
+import SciLean.Core.Differential
+import SciLean.Core.Adjoint
+import SciLean.Core.AdjDiff
+
+import SciLean.Core.CoreFunctions
 -- import SciLean.Data.ArrayType.Notation
 -- import SciLean.Data.ArrayType.PowType
 -- import SciLean.Data.DataArray
 
 namespace SciLean
 
-@[fun_trans_def]
-def diff {X Y} [Vec X] [Vec Y] (f : X → Y) : X → X → Y := sorry
-
-@[fun_trans_def]
-def inv {X Y} [Nonempty X] (f : X → Y) : Y → X := sorry
-
-@[fun_trans_def]
-def adj {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : Y → X := sorry
-
-@[fun_trans_rule]
-theorem diff_id (X) [Vec X]
-  : diff (λ x : X => x)
-    =
-    λ x dx => dx := sorry
-
-@[fun_trans_rule]
-theorem diff_const {X} (Y : Type) [Vec X] [Vec Y] (x : X)
-  : diff (λ y : Y => x)
-    =
-    λ y dy => 0 := sorry
-
-@[fun_trans_rule]
-theorem diff_comp {X Y Z} [Vec X] [Vec Y] [Vec Z]
-  (f : Y → Z) (g : X → Y) -- [IsSmoothT f] [IsSmoothT g]
-  : diff (λ x : X => f (g x))
-    =
-    λ x dx => diff f (g x) (diff g x dx) := sorry
-
-@[fun_trans_rule]
-theorem diff_swap {α X Y : Type} [Vec X] [Vec Y]
-  (f : α → X → Y) 
-  : diff (λ (x : X) (a : α) => f a x)
-    =
-    λ x dx a => diff (f a) x dx := sorry
-
-@[fun_trans_rule]
-theorem diff_forallMap {α X Y : Type} [Vec X] [Vec Y]
-  (f : α → X → Y)
-  : diff (λ (g : α → X) (a : α) => f a (g a))
-    =
-    λ g dg a => diff (f a) (g a) (dg a) := sorry
-
-@[fun_trans_rule]
-theorem diff_eval {α} (X) [Vec X] (a : α)
-  : diff (λ (f : α → X) => f a)
-    =
-    λ f df => df a := sorry
-
-@[fun_trans_rule]
-theorem diff_prodMap {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y) (g : X → Z)
-  : diff (λ x => (f x, g x))
-    =
-    λ x dx => (diff f x dx, diff g x dx) := sorry
+#eval show IO Unit from do 
+  let map ← funTransRulesMapRef.get
+  IO.println (map.toList.foldl (init:="") λ m e => m ++ toString e ++ "\n")
 
 
-@[fun_trans_rule]
-theorem diff_letBinop {X Y Z} [Vec X] [Vec Y] [Vec Z]
-  (f : X → Y → Z) (g : X → Y)
-  : diff (λ (x : X) => let y := g x; f x y)
-    =
-    λ x dx =>
-      let y  := g x
-      let dy := diff g x dx 
-      diff (λ xy => f xy.1 xy.2) (x,y) (dx,dy) := sorry
-
-@[fun_trans_rule]
-theorem diff_letComp {X Y Z} [Vec X] [Vec Y] [Vec Z]
-  (f : Y → Z) (g : X → Y)
-  : diff (λ (x : X) => let y := g x; f y)
-    =
-    λ x dx =>
-      let y  := g x
-      let dy := diff g x dx 
-      diff f y dy := sorry
-
-@[fun_trans]
-theorem diff_fst (X Y) [Vec X] [Vec Y]
-  : diff (λ (xy : X×Y) => xy.1)
-    =
-    λ xy dxy => dxy.1 := sorry
-
-@[fun_trans]
-theorem diff_snd (X Y) [Vec X] [Vec Y]
-  : diff (λ (xy : X×Y) => xy.2)
-    =
-    λ xy dxy => dxy.2 := sorry
-
-@[fun_trans_rule]
-theorem adj_id (X) [SemiHilbert X]
-  : adj (λ x : X => x)
-    =
-    λ x => x := sorry
-
--- no const rule for adj
-
-@[fun_trans_rule]
-theorem adj_comp {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
-  (f : Y → Z) (g : X → Y)
-  : adj (λ x => f (g x))
-    =
-    λ z => adj g (adj f z) := sorry
-
-@[fun_trans_rule]
-theorem adj_swap {X Y ι} [SemiHilbert X] [SemiHilbert Y] [Enumtype ι]
-  (f : ι → X → Y)
-  : adj (λ x i => f i x)
-    =
-    λ g => ∑ i, adj (f i) (g i) 
-  := sorry
-
-@[fun_trans_rule]
-theorem adj_eval (X) {ι} [SemiHilbert X] [Enumtype ι]
-  (i : ι)
-  : adj (λ (f : ι → X) => f i)
-    =
-    λ x j => [[i=j]]•x
-  := sorry
-
-@[fun_trans_rule]
-theorem adj_forallMap {X Y ι} [SemiHilbert X] [SemiHilbert Y] [Enumtype ι]
-  (f : ι → X → Y) 
-  : adj (λ (g : ι → X) i => f i (g i))
-    =
-    λ h i => adj (f i) (h i)
-  := sorry
-
-@[fun_trans_rule]
-theorem adj_prodMap {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
-  (f : X → Y) (g : X → Z)
-  : adj (λ x => (f x, g x))
-    =
-    λ yz => adj f yz.1 + adj g yz.2
-  := sorry
-
-@[fun_trans_rule]
-theorem adj_letBinop {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
-  (f : X → Y → Z) (g : X → Y)
-  : adj (λ x => let y := g x; f x y)
-    =
-    λ z => 
-      let xy := adj (uncurryN 2 f) z
-      xy.1 + adj g xy.2 := sorry
-
-@[fun_trans_rule]
-theorem adj_letComp {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
-  (f : Y → Z) (g : X → Y)
-  : adj (λ x => let y := g x; f y)
-    =
-    λ z => 
-      let y := adj f z
-      adj g y := sorry
-
-
-example {X Y ι} [SemiHilbert X] [SemiHilbert Y] [Enumtype ι]
-  : adj (λ (x : X) (i : ι) => x)
+set_option trace.Meta.Tactic.fun_trans true in
+set_option trace.Meta.Tactic.fun_trans.missing_rule true in
+set_option trace.Meta.Tactic.fun_trans.rewrite true in
+example {X Y ι : Type} [SemiHilbert X] [SemiHilbert Y] [Enumtype ι]
+  : (λ (x : X) (i : ι) => x)†
     =
     λ f => ∑ i, f i := 
 by
   fun_trans
+  done
 
 example {X Y₁ Y₂ Z} [SemiHilbert X] [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Z]
   (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂)
@@ -180,7 +42,7 @@ by
 
 
 
-
+#exit
 -- @[fun_trans_rule]
 -- theorem adj_const {X} (ι : Type)  [SemiHilbert X]
 --   : adj (λ i : ι => x)

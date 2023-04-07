@@ -1,9 +1,7 @@
-import Lean
-import Init.Classical
-
-import SciLean.Core.Differential
-import SciLean.Core.Adjoint
+import SciLean.Core.Defs
 import SciLean.Core.HasAdjDiff
+import SciLean.Core.Adjoint
+import SciLean.Core.Differential
 
 namespace SciLean
 

@@ -1,14 +1,5 @@
-import Lean
-import Init.Classical
-
--- import SciLean.Core.Attributes
-import SciLean.Core.HasAdjoint
 import SciLean.Core.Defs
-
--- import SciLean.Tactic.CustomSimp.DebugSimp
--- import SciLean.Tactic.CustomSimp.SimpGuard
--- import SciLean.Tactic.AutoDiff
--- import SciLean.Core.AutoDiffSimps
+import SciLean.Core.IsSmooth
 
 namespace SciLean
 
@@ -237,7 +228,6 @@ theorem tangentMap.rule_snd (X Y) [Vec X] [Vec Y]
   : 𝒯 (λ (xy : X×Y) => xy.2)
     =
     λ xy dxy => (xy.2, dxy.2) := sorry
-
 
 #exit
 --------------------------------------------------------------------------------
