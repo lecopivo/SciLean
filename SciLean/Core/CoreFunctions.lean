@@ -28,6 +28,7 @@ argument xy
   abbrev ∂† := λ dxy' => (dxy', 0) by sorry_proof,
   abbrev ℛ := (xy.1, λ dxy' => (dxy', 0)) by sorry_proof
 
+
 --------------------------------------------------------------------------------
 -- Prod.snd - (·.2)
 --------------------------------------------------------------------------------
@@ -137,6 +138,7 @@ argument y
   abbrev ∂† := λ dy' => dy' by sorry,
   abbrev ℛ := (x+y, λ dy' => dy') by sorry
 
+
 --------------------------------------------------------------------------------
 -- HSub.hSub - (·-·)
 --------------------------------------------------------------------------------
@@ -213,8 +215,9 @@ argument x
   abbrev ∂† := λ dx' => ⟪dx',y⟫ by sorry_proof,
   abbrev ℛ := (x•y, λ dx' => ⟪dx',y⟫) by sorry_proof
 
+
 --------------------------------------------------------------------------------
--- HMul.hMul - (·•·)
+-- HMul.hMul - (·*·)
 --------------------------------------------------------------------------------
 
 -- TODO: Generalize to any algebra with smooth multiplication
@@ -371,7 +374,6 @@ argument x
   abbrev ∂ := λ dx => f dx by sorry_proof,
   abbrev 𝒯 := λ dx => (f x, f dx) by sorry_proof
 
-
 function_properties SciLean.LinMap.toFun {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y] (f : X⊸Y) (x : X) : Y
 argument f
   HasAdjoint := sorry_proof,
@@ -394,3 +396,4 @@ argument f
 --   : ∂ (λ w => λ x ⟿ f w x) 
 --     =
 --     λ w dw => λ x ⟿ ∂ f w dw x:= sorry_proof
+
