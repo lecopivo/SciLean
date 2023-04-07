@@ -7,7 +7,6 @@ namespace SciLean
 
 namespace FunctionTransformation
 
-
 initialize registerTraceClass `Meta.Tactic.fun_trans
 initialize registerTraceClass `Meta.Tactic.fun_trans.missing_rule
 initialize registerTraceClass `Meta.Tactic.fun_trans.normalize_let
