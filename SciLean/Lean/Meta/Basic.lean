@@ -5,20 +5,29 @@ import SciLean.Lean.Array
 
 namespace Lean.Meta
 
-def getConstExplicitArgIdx (constName : Name) : MetaM (Array Nat) := do
+variable {m} [Monad m] [MonadEnv m] [MonadError m]
+
+def _root_.Lean.Expr.explicitArgIds (e : Expr) : Array Nat := 
+  run e #[] 0
+where run (e : Expr) (ids : Array Nat) (i : Nat) : Array Nat := 
+  match e with
+  | .forallE _ _ e' bi => 
+    if bi.isExplicit then 
+      run e' (ids.push i) (i+1)
+    else 
+      run e' ids (i+1)
+  | .lam _ _ e' bi => 
+    if bi.isExplicit then 
+      run e' (ids.push i) (i+1)
+    else 
+      run e' ids (i+1)
+  | _ => ids
+
+def getConstExplicitArgIds (constName : Name) : m (Array Nat) := do
   let info ← getConstInfo constName
-  
-  let (_, explicitArgIdx) ← forallTelescope info.type λ Xs _ => do
-    Xs.foldlM (init := (0,(#[] : Array Nat))) 
-      λ (i, ids) X => do 
-        if (← X.fvarId!.getBinderInfo).isExplicit then
-          pure (i+1, ids.push i)
-        else
-          pure (i+1, ids)
+  return info.type.explicitArgIds
 
-  return explicitArgIdx
-
-def getConstArity (constName : Name) : MetaM Nat := do
+def getConstArity (constName : Name) : m Nat := do
   let info ← getConstInfo constName
   return info.type.forallArity
 
@@ -32,7 +41,7 @@ def getExplicitArgs (e : Expr) : MetaM (Option (Name×Array Expr)) := do
     | return none
   
   let n ← getConstArity funName
-  let explicitArgIds ← getConstExplicitArgIdx funName
+  let explicitArgIds ← getConstExplicitArgIds funName
 
   let args := e.getAppArgs
 
@@ -51,7 +60,7 @@ def getExplicitArgs (e : Expr) : MetaM (Option (Name×Array Expr)) := do
 def mkAppNoTrailingM (constName : Name) (xs : Array Expr) : MetaM Expr := do
 
   let n ← getConstArity constName
-  let explicitArgIds ← getConstExplicitArgIdx constName
+  let explicitArgIds ← getConstExplicitArgIds constName
 
   -- number of arguments to apply
   let argCount := explicitArgIds[xs.size]? |>.getD n

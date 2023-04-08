@@ -1,7 +1,12 @@
 import Lean
 import Qq
 
+import Std.Data.RBMap.Alter
+import SciLean.Lean.Array
+import SciLean.Lean.MergeMapDeclarationExtension
+
 open Lean Meta Elab Elab.Term
+
 
 namespace SciLean
 
@@ -38,7 +43,7 @@ inductive FunTransRuleType where
   | letComp   -- T (λ x => let y := g x; f y)
   -- | fst       -- T (λ xy => xy.1)
   -- | snd       -- T (λ xy => xy.2)
-deriving BEq, Hashable, Repr
+deriving BEq, Hashable, Repr, Ord
 
 instance : ToString FunTransRuleType := ⟨λ x => toString (repr x)⟩
 
@@ -58,27 +63,28 @@ def FunTransRuleType.expectedForm (ruleType : FunTransRuleType) : String :=
 
 def FunTransRuleType.all : List FunTransRuleType := [.id,.const,.comp,.swap,.forallMap,.eval,.prodMap,.letBinop,.letComp]
 
-/-- 
-  Contains a map from a name of function transformation to 
-  -/
-initialize funTransRulesMapRef : IO.Ref (PersistentHashMap (Name×FunTransRuleType) Name) ← IO.mkRef {}
+private def merge (transName : Name) (as bs : RBMap FunTransRuleType Name compare) : RBMap FunTransRuleType Name compare :=
+  as.mergeBy (t₂ := bs) (λ type ruleName ruleName' => 
+    if ruleName == ruleName' then 
+      ruleName 
+    else 
+      panic! s!"Two incopatible `{type}` rules for `{transName}`.\nKeep only one of `{ruleName}` or `{ruleName'}` and remove the other!")
 
+abbrev FunTransRuleMap := RBMap FunTransRuleType Name compare
 
-initialize myExt : SimplePersistentEnvExtension String (Array String) ←
-  registerSimplePersistentEnvExtension {
-    name := `mystuff
-    addEntryFn := Array.push
-    addImportedFn := Array.concatMap id
-  }
+initialize FunTransRuleExt : MergeMapDeclarationExtension FunTransRuleMap ← mkMergeMapDeclarationExtension ⟨merge, sorry⟩
 
-open Elab Command in
-elab "#liststuff" : command => do
-  for stuff in myExt.getState (← getEnv) do
-    dbg_trace stuff
+variable {m} [Monad m] [MonadEnv m]
 
-elab "#addStuff" msg:str : command => do
-  modifyEnv (myExt.addEntry · msg.getString)
+def insertFunTransRule (transName : Name) (type : FunTransRuleType) (ruleName : Name) : m Unit := do
+  let m : FunTransRuleMap := {}
+  FunTransRuleExt.insert transName (m.insert type ruleName)
 
+def findFunTransRule? (transName : Name) (type : FunTransRuleType) : m (Option Name) := do
+  if let .some m ← FunTransRuleExt.find? transName then
+    return m.find? type
+  else
+    return none
 
 /-- Is `F` equal to `λ (x : X) => x`?
   On success returns `X` -/
@@ -281,7 +287,7 @@ initialize funTransRuleAttr : TagAttribute ←
               throwError "Identity rule is expecting exactly one explicit argument `{← ppExpr X}`!"
 
             if (explicitArgs[0]! == X) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .id) name)
+              insertFunTransRule funTransName .id name
               return ()
             else
               throwError "Identity rule is expecting exactly one explicit argument `{← ppExpr X}`!"
@@ -295,7 +301,7 @@ initialize funTransRuleAttr : TagAttribute ←
   
             if (explicitArgs[0]! == Y) &&
                (explicitArgs[1]! == x) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .const) name)
+              insertFunTransRule funTransName .const name
               return ()
             else
               throwError "Constant rule is expecting exactly two explicit arguments `{← ppExpr Y}` and `{← ppExpr x}`!"
@@ -309,7 +315,7 @@ initialize funTransRuleAttr : TagAttribute ←
   
             if (explicitArgs[0]! == f) &&
                (explicitArgs[1]! == g) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .comp) name)
+              insertFunTransRule funTransName .comp name
               return ()
             else
               throwError "Composition rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
@@ -322,7 +328,7 @@ initialize funTransRuleAttr : TagAttribute ←
               throwError "Swap arguments rule is expecting exactly one explicit argument `{← ppExpr f}`!"
   
             if (explicitArgs[0]! == f) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .swap) name)
+              insertFunTransRule funTransName .swap name
               return ()
             else
               throwError "Swap arguments rule is expecting exactly one explicit argument `{← ppExpr f}`!"
@@ -335,7 +341,7 @@ initialize funTransRuleAttr : TagAttribute ←
               throwError "Forall map rule is expecting exactly one explicit argument `{← ppExpr f}`!"
   
             if (explicitArgs[0]! == f) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .forallMap) name)
+              insertFunTransRule funTransName .forallMap name
               return ()
             else
               throwError "Forall map rule is expecting exactly one explicit argument `{← ppExpr f}`!"
@@ -350,7 +356,7 @@ initialize funTransRuleAttr : TagAttribute ←
   
             if (explicitArgs[0]! == Y) &&
                (explicitArgs[1]! == x) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .eval) name)
+              insertFunTransRule funTransName .eval name
               return ()
             else
               throwError "Eval rule is expecting exactly two explicit arguments `{← ppExpr Y}` and `{← ppExpr x}`!"
@@ -364,7 +370,7 @@ initialize funTransRuleAttr : TagAttribute ←
   
             if (explicitArgs[0]! == f) &&
                (explicitArgs[1]! == g) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .prodMap) name)
+              insertFunTransRule funTransName .prodMap name
               return ()
             else
               throwError "Prod map rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
@@ -378,7 +384,7 @@ initialize funTransRuleAttr : TagAttribute ←
   
             if (explicitArgs[0]! == f) &&
                (explicitArgs[1]! == g) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .letBinop) name)
+              insertFunTransRule funTransName .letBinop name
               return ()
             else
               throwError "LetBinop rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
@@ -392,7 +398,7 @@ initialize funTransRuleAttr : TagAttribute ←
   
             if (explicitArgs[0]! == f) &&
                (explicitArgs[1]! == g) then
-              funTransRulesMapRef.modify (λ m => m.insert (funTransName, .letComp) name)
+              insertFunTransRule funTransName .letComp name
               return ()
             else
               throwError "LetComp rule is expecting exactly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"

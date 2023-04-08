@@ -12,8 +12,7 @@ namespace SciLean
 
 def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Expr) : SimpM (Option Simp.Step) := do
 
-  let ruleMap ← funTransRulesMapRef.get
-  let .some rule := ruleMap.find? (transName, ruleType)
+  let .some rule ← findFunTransRule? transName ruleType
     | trace[Meta.Tactic.fun_trans.missing_rule] s!"Missing {ruleType} rule for `{transName}`."
       return none
   let proof ← mkAppNoTrailingM rule args
@@ -389,8 +388,6 @@ def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
       --   dbg_trace s!"Proof `{← ppExpr proof}` seems to be correct"
       -- else
       --   dbg_trace s!"Proof `{← ppExpr proof}` does not seem to be correct. Expected type is `{← ppExpr goal}` but it has type `{← ppExpr (← inferType proof)}`"
-
-
 
   return none
 

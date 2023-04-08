@@ -2,7 +2,7 @@ import SciLean.Data.ArraySet
 
 import SciLean.Core.Meta.FunctionProperty.NormalTheorem
 import SciLean.Core.Meta.FunctionProperty.CompTheorem
-import SciLean.Core.Meta.FunctionProperty.PropertyMap
+import SciLean.Core.Meta.FunctionProperty.EnvExtension
 
 import SciLean.Core.Meta.RewriteBy
 
@@ -97,9 +97,9 @@ def addFunPropDecl (propName spaceName : Name) (e : Expr) (xs : Array Expr) (con
   }
 
   addDecl (.thmDecl info)
-  addInstance info.name .local 1000
+  addInstance info.name .global 1000
 
-  addFunctionProperty constName propName mainArgIds ⟨theoremName, compTheoremName⟩
+  addFunctionProperty constName propName mainArgIds theoremName compTheoremName none
 
 inductive FunTransDefStx 
   | valProof (valStx : Term) (proof : TSyntax ``Lean.Parser.Tactic.tacticSeq)
@@ -199,5 +199,5 @@ def addFunTransDecl (transName : Name) (useDef : Bool) (e : Expr) (xs : Array Ex
 
   addDecl (.thmDecl info)
 
-  addFunctionProperty constName transName mainArgIds ⟨theoremName, compTheoremName⟩
+  addFunctionProperty constName transName mainArgIds theoremName compTheoremName defName
 

@@ -6,53 +6,49 @@ open Lean
 
 namespace Lean
 
-structure MergeMapDeclarationExtension.ValidMerge (merge : α → α → α) : Prop where
-  assoc : ∀ a b c, merge (merge a b) c = merge a (merge b c)
-  comm  : ∀ a b, merge a b = merge b a
+structure MergeMapDeclarationExtension.Merge (α) where
+  merge : Name → α → α → α
+  is_valid : ∀ n a b c, merge n (merge n a b) c = merge n a (merge n b c)
+             ∧
+             ∀ n a b, merge n a b = merge n b a
 
 open MergeMapDeclarationExtension in
 /--
 Similar to `MapDeclarationExtension` but it allows you have insert declarations that were not declared in the same file. 
 However, you have to provide how to merge the values and to guarantee consistency i.e. merging should be associative and commutative.
 -/
-def MergeMapDeclarationExtension (α : Type) (merge : Name → α → α → α) (h : ∀ n, ValidMerge (merge n)) 
-  := SimplePersistentEnvExtension (Name × α) (Std.RBMap Name α Name.quickCmp)
-
+def MergeMapDeclarationExtension (α)
+  := PersistentEnvExtension (Name × α) (Name × α) (Std.RBMap Name α Name.quickCmp)
 
 open MergeMapDeclarationExtension in
-def mkMergeMapDeclarationExtension [Inhabited α] (merge : Name → α → α → α) 
-  (h : ∀ n, ValidMerge (merge n)) (name : Name := by exact decl_name%)
-  : IO (MergeMapDeclarationExtension α merge h) :=
-  registerSimplePersistentEnvExtension {
-    name          := name,
-    addImportedFn := fun s => (s.map λ s' => .ofArray s' _) |>.joinl id λ a b => a.mergeWith merge b,
-    addEntryFn    := fun s (n,val') => s.alter n (λ val? => match val? with | .some val => merge n val val' | none => val'),
-    toArrayFn     := fun s => s.toArray.qsort (fun a b => Name.quickLt a.1 b.1)
+def mkMergeMapDeclarationExtension [Inhabited α] (merge : Merge α) (name : Name := by exact decl_name%)
+  : IO (MergeMapDeclarationExtension α) :=
+  registerPersistentEnvExtension {
+    name          := name
+    mkInitial     := pure default
+    addImportedFn := fun s => 
+      let m := (s.map λ s' => .ofArray s' _) |>.joinl id λ a b => .mergeWith merge.1 a b
+      pure m
+    addEntryFn    := fun s (n,val') => (s.alter n (λ val? => match val? with | .some val => merge.1 n val val' | none => val'))
+    exportEntriesFn := fun s => s.toList.toArray
   }
+
 
 namespace MergeMapDeclarationExtension
 
-variable {α : Type} {merge : Name → α → α → α} {h : ∀ n, ValidMerge (merge n)}
 
-instance : Inhabited (MergeMapDeclarationExtension α merge h) :=
-  inferInstanceAs (Inhabited (SimplePersistentEnvExtension ..))
+instance : Inhabited (MergeMapDeclarationExtension α) :=
+  inferInstanceAs (Inhabited (PersistentEnvExtension ..))
 
-def insert (ext : MergeMapDeclarationExtension α merge h) (env : Environment) (declName : Name) (val : α) : Environment :=
-  have : Inhabited Environment := ⟨env⟩
-  ext.addEntry env (declName, val)
+variable {m} [Monad m] [MonadEnv m]
 
-def find? [Inhabited α] (ext : MergeMapDeclarationExtension α merge h) (env : Environment) (declName : Name) : Option α :=
-  match env.getModuleIdxFor? declName with
-  | some modIdx =>
-    match (ext.getModuleEntries env modIdx).binSearch (declName, default) (fun a b => Name.quickLt a.1 b.1) with
-    | some e => some e.2
-    | none   => none
-  | none => (ext.getState env).find? declName
+def insert (ext : MergeMapDeclarationExtension α) (declName : Name) (val : α) : m Unit :=
+  modifyEnv (λ env => ext.addEntry env (declName, val))
 
-def contains [Inhabited α] (ext : MergeMapDeclarationExtension α merge h) (env : Environment) (declName : Name) : Bool :=
-  match env.getModuleIdxFor? declName with
-  | some modIdx => (ext.getModuleEntries env modIdx).binSearchContains (declName, default) (fun a b => Name.quickLt a.1 b.1)
-  | none        => (ext.getState env).contains declName
+def find? [Inhabited α] (ext : MergeMapDeclarationExtension α) (declName : Name) : m (Option α) := do
+  return (ext.getState (← getEnv)).find? declName
+
+def contains [Inhabited α] (ext : MergeMapDeclarationExtension α) (declName : Name) : m Bool := do
+  return (ext.getState (← getEnv)).contains declName
 
 end MergeMapDeclarationExtension
-

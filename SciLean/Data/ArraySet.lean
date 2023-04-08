@@ -2,6 +2,8 @@ import Std.Data.Array.Merge
 import Std.Data.List.Basic
 import Std.Classes.SetNotation
 
+import SciLean.Lean.Array
+
 namespace SciLean
 
 /--
@@ -25,6 +27,9 @@ namespace ArraySet
 
   def toArray (as : ArraySet α) : Array α := as.data
   def toList (as : ArraySet α) : List α := as.data.toList
+
+  instance : Coe (ArraySet α) (Array α) := ⟨λ as => as.data⟩
+  instance [ToString α] : ToString (ArraySet α) := ⟨λ as => toString as.data⟩
 
   def _root_.Array.toArraySet (as : Array α) : ArraySet α where
     data := as.sortAndDeduplicate
@@ -68,6 +73,8 @@ namespace ArraySet
       return isTrue sorry
     else
       return isFalse sorry
+
+  def lexOrd [Ord α] (a b : ArraySet α) : Ordering := a.data.lexOrd b.data 
       
   -- def a := #[1,2,3,4].toArraySet
   -- def b := #[4,3,2].toArraySet

@@ -1,4 +1,4 @@
--- import SciLean.Core.Tactic.FunctionTransformation.Core
+import SciLean.Core.Tactic.FunctionTransformation.Core
 
 import SciLean.Core.Defs
 
@@ -13,9 +13,6 @@ import SciLean.Core.CoreFunctions
 
 namespace SciLean
 
-#eval show IO Unit from do 
-  let map ← funTransRulesMapRef.get
-  IO.println (map.toList.foldl (init:="") λ m e => m ++ toString e ++ "\n")
 
 
 set_option trace.Meta.Tactic.fun_trans true in
@@ -29,30 +26,23 @@ by
   fun_trans
   done
 
-example {X Y₁ Y₂ Z} [SemiHilbert X] [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Z]
-  (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂)
-  : adj (λ (x : X) => f (g₁ x) (g₂ x))
-    =
-    λ z => 
-      let xy := adj (uncurryN 2 f) z
-      adj g₁ xy.1 + adj g₂ xy.2 
-  :=
-by
-  fun_trans
+-- example {X Y₁ Y₂ Z} [SemiHilbert X] [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Z]
+--   (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂)
+--   : (λ (x : X) => f (g₁ x) (g₂ x))†
+--     =
+--     λ z => 
+--       let xy := (uncurryN 2 f)† z
+--       g₁† xy.1 + g₂† xy.2 
+--   :=
+-- by
+--   fun_trans
 
 
 
-#exit
--- @[fun_trans_rule]
 -- theorem adj_const {X} (ι : Type)  [SemiHilbert X]
 --   : adj (λ i : ι => x)
 --     =
 --     λ x => x := sorry
-
-#eval show IO Unit from do
-
-  let rules ← funTransRulesMapRef.get 
-  IO.println s!"{String.join (rules.toList.map (λ r => toString r ++ "\n"))}"
 
 
 #check (2 + 4) rewrite_by simp; trace_state
@@ -66,74 +56,59 @@ set_option trace.Meta.Tactic.fun_trans.missing_rule true
 set_option trace.Meta.Tactic.fun_trans.normalize_let true 
 
 example
-  : diff (λ x : X => x) 
+  : ∂ (λ x : X => x) 
     = 
     λ x dx => dx 
   := by fun_trans
 
 
 example (x : X)
-  : diff (λ y : Y => x) y
+  : ∂ (λ y : Y => x) y
     = 
     λ dy => 0
   := by fun_trans
 
 example (a : α) (f : α → X)
-  : diff (λ f' : α → X => f' a) f
+  : ∂ (λ f' : α → X => f' a) f
     = 
     λ df => df a
   := by fun_trans
 
 
-example (f : Y → Z) (g : X → Y) -- [IsSmoothT f] [IsSmoothT g]
-  : diff (λ x : X => f (g x))
+example (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g]
+  : ∂ (λ x : X => f (g x))
     = 
-    λ x dx => diff f (g x) (diff g x dx)
-  := by fun_trans
-
-
-example (f : X → Y → Z) (g : X → Y) -- [IsSmoothT (uncurryN 2 f)] [IsSmoothT g]
-  : diff (λ x : X => f x (g x))
-    = 
-    λ x dx => diff (uncurryN 2 f) (x, g x) (dx, diff g x dx)
-  := by fun_trans
-
-
-example (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂)
-  -- [IsSmoothT (uncurryN 2 f)] [IsSmoothT g₁] [IsSmoothT g₂]
-  : diff (λ x : X => f (g₁ x) (g₂ x))
-    = 
-    λ x dx => diff (uncurryN 2 f) (g₁ x, g₂ x) (diff g₁ x dx, diff g₂ x dx)
+    λ x dx => ∂ f (g x) (∂ g x dx)
   := by fun_trans
 
 
 example {ι : Type} [Enumtype ι] (f g : ι → X)
   : f + g = λ i => f i + g i := by rfl
 
-@[simp ↓]
-theorem add_diff : diff (uncurryN 2 λ x y : X => x + y) = λ xy dxy => dxy.1 + dxy.2 := sorry
 
+set_option trace.Meta.Tactic.simp.rewrite true in
+set_option trace.Meta.Tactic.fun_trans.rewrite true in
 example {ι : Type} [Enumtype ι]
-  : diff (λ (g : ι → X) i => g i + g i)
+  : ∂ (λ (g : ι → X) i => g i + g i)
     =
-    λ g dg i => (2 : ℝ) • (dg i)
-  := by fun_trans; fun_trans; done
+    λ g dg i => dg i + dg i
+  := by simp only [differential.rule_swap]; simp only [HAdd.hAdd.arg_a4a5.differential_simp'];  fun_trans;  done
 
 example {ι : Type} [Enumtype ι] (p q : ℝ → ℝ) (x : ℝ)
-  : diff (λ (f : ℝ → ℝ) x => f x + ⅆ f x)
+  : ∂ (λ (f : ℝ → ℝ) x => f x + ⅆ f x)
     =
-    λ f df => df + diff differentialScalar f df
+    λ f df => df + ∂ ⅆ f df
   := by fun_trans; fun_trans; done
 
 example 
   (p q f : ℝ → ℝ)
-  : ((fun x => p x * f x) + fun x => q x * differentialScalar f x)
+  : ((fun x => p x * f x) + fun x => q x * ∂erentialScalar f x)
     =
-    fun x => p x * f x + q x * differentialScalar f x
+    fun x => p x * f x + q x * ∂erentialScalar f x
   := by rfl
 
 example {ι : Type} [Enumtype ι] (p q : ℝ → ℝ) (x : ℝ) (c : ℝ)
-  : diff (λ (f : ℝ → ℝ) => x * f x)
+  : ∂ (λ (f : ℝ → ℝ) => x * f x)
     =
     λ f df => x * df x
   := by fun_trans; done
