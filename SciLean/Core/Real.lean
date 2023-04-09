@@ -96,6 +96,9 @@ namespace Real
   -- instance : OfNat ℝ n := ⟨Float.ofNat n⟩
   -- instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
+  def max (x y : ℝ) : ℝ := if x < y then y else x
+  def min (x y : ℝ) : ℝ := if x < y then x else y
+
   def natPow (r : ℝ) (n : Nat) : ℝ := Id.run do
     let mut s   := if n &&& 1 = 1 then r else 1
     let mut r2i := r

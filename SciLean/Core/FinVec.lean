@@ -75,6 +75,11 @@ section Basis
 
 end Basis
 
+class OrhonormalBasis (X : Type) (ι : outParam $ Type v) [Basis X ι ℝ] [Inner X] : Prop where
+  is_orhogonal : ∀ i j, i ≠ j → ⟪𝕖[X] i, 𝕖 j⟫ = 0
+  is_orhonormal : ∀ i, ⟪𝕖[X] i, 𝕖 i⟫ = 1
+
+
 /--
  -/
 class FinVec (X : Type) (ι : outParam Type) [outParam $ Enumtype ι] extends Hilbert X, Basis X ι ℝ, DualBasis X ι ℝ, BasisDuality X where
@@ -129,7 +134,11 @@ instance : FinVec ℝ Unit where
   duality := by simp[Basis.proj, Basis.basis, DualBasis.dualProj, DualBasis.dualBasis, Inner.inner]; done
   to_dual := by sorry_proof
   from_dual := by sorry_proof
-  
+
+instance : OrhonormalBasis ℝ Unit where
+  is_orhogonal  := sorry_proof
+  is_orhonormal := sorry_proof
+
 -- @[infer_tc_goals_rl]
 instance {X Y ι κ} {_ :Enumtype ι} {_ : Enumtype κ} [FinVec X ι] [FinVec Y κ]
   : FinVec (X×Y) (ι⊕κ) where
