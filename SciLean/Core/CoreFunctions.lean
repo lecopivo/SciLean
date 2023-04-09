@@ -397,3 +397,4 @@ argument f
 --     =
 --     λ w dw => λ x ⟿ ∂ f w dw x:= sorry_proof
 
+#eval printFunctionProperties ``HAdd.hAdd

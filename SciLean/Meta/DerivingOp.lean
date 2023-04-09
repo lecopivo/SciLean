@@ -1,4 +1,4 @@
-import SciLean.Algebra
+import SciLean.Core.Hilbert
 import Lean.Elab.Deriving.Basic
 
 open Lean Elab Command
@@ -128,9 +128,6 @@ def mkNullaryOpHandler (className opName : Name) (declNames : Array Name) : Comm
     return true
   else
     return false
-class SMul (X : Type u) where
-  smul : ℝ → X → X
-
 
 def mkSMulOpInstance (declName : Name) : TermElabM Unit := do
   let env ← getEnv
@@ -140,14 +137,14 @@ def mkSMulOpInstance (declName : Name) : TermElabM Unit := do
     let instValue ← Meta.forallTelescope structType λ xs _ => 
     do
       let strct ← Meta.mkAppOptM info.structName (xs.map some)
-      let binOp ← Meta.withLocalDecl `s default (mkConst ``ℝ) λ s => 
+      let binOp ← Meta.withLocalDecl `s default (mkConst ``SciLean.Real) λ s => 
                    Meta.withLocalDecl `x default strct λ x => do 
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
-          fields := fields.push (← Meta.mkAppM ``HMul.hMul #[s, x.proj info.structName i])
+          fields := fields.push (← Meta.mkAppM ``SMul.smul #[s, x.proj info.structName i])
         (Meta.mkLambdaFVars #[s,x] (← Meta.mkAppM (info.structName.append "mk") fields))
 
-      Meta.mkLambdaFVars xs (← Meta.mkAppM ``HMul.mk #[binOp])
+      Meta.mkLambdaFVars xs (← Meta.mkAppM ``SMul.mk #[binOp])
 
     let instType ← Meta.inferType instValue
 
@@ -182,7 +179,7 @@ initialize
   registerDerivingHandler ``Neg (mkUnaryOpHandler ``Neg ``Neg.neg)
   registerDerivingHandler ``Zero (mkNullaryOpHandler ``Zero ``Zero.zero)
   registerDerivingHandler ``One  (mkNullaryOpHandler ``One ``One.one)
-  registerDerivingHandler ``SciLean.SMul mkSMulOpHandler
+  registerDerivingHandler ``SMul mkSMulOpHandler
 
 
 

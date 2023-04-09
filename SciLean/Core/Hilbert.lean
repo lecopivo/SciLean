@@ -16,8 +16,8 @@ namespace Inner
 
 end Inner
 
-notation " ‖ " x " ‖² " => Inner.normSqr x
-notation " ‖ " x " ‖ " => Inner.norm x
+notation " ∥ " x " ∥² " => Inner.normSqr x
+notation " ∥ " x " ∥ " => Inner.norm x
 
 class TestFunctions (X : Type) where
   TestFun : X → Prop
@@ -115,41 +115,41 @@ instance (priority:=low) (ι) (X : ι → Type)
 
 -- Sum type
 
-instance instInnerSum
-  (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
-  [∀ x, Inner (TX x)] [∀ y, Inner (TY y)]
-  : Inner ((TX⊕TY) xy) 
-  :=
-  match xy with
-  | .inl _ => by dsimp; infer_instance
-  | .inr _ => by dsimp; infer_instance
+-- instance instInnerSum
+--   (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
+--   [∀ x, Inner (TX x)] [∀ y, Inner (TY y)]
+--   : Inner ((TX⊕TY) xy) 
+--   :=
+--   match xy with
+--   | .inl _ => by dsimp; infer_instance
+--   | .inr _ => by dsimp; infer_instance
 
-instance instTestFunctions
-  (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
-  [∀ x, TestFunctions (TX x)] [∀ y, TestFunctions (TY y)]
-  : TestFunctions ((TX⊕TY) xy) 
-  :=
-  match xy with
-  | .inl _ => by dsimp; infer_instance
-  | .inr _ => by dsimp; infer_instance
+-- instance instTestFunctions
+--   (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
+--   [∀ x, TestFunctions (TX x)] [∀ y, TestFunctions (TY y)]
+--   : TestFunctions ((TX⊕TY) xy) 
+--   :=
+--   match xy with
+--   | .inl _ => by dsimp; infer_instance
+--   | .inr _ => by dsimp; infer_instance
 
-instance instSemiHilbert
-  (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
-  [∀ x, SemiHilbert (TX x)] [∀ y, SemiHilbert (TY y)]
-  : SemiHilbert ((TX⊕TY) xy) 
-  :=
-  match xy with
-  | .inl _ => by dsimp; infer_instance
-  | .inr _ => by dsimp; infer_instance
+-- instance instSemiHilbert
+--   (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
+--   [∀ x, SemiHilbert (TX x)] [∀ y, SemiHilbert (TY y)]
+--   : SemiHilbert ((TX⊕TY) xy) 
+--   :=
+--   match xy with
+--   | .inl _ => by dsimp; infer_instance
+--   | .inr _ => by dsimp; infer_instance
 
-instance instHilbert
-  (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
-  [∀ x, Hilbert (TX x)] [∀ y, Hilbert (TY y)]
-  : Hilbert ((TX⊕TY) xy) 
-  :=
-  match xy with
-  | .inl _ => by dsimp; infer_instance 
-  | .inr _ => by dsimp; infer_instance
+-- instance instHilbert
+--   (X Y : Type) (TX : X → Type) (TY : Y → Type) (xy : X⊕Y) 
+--   [∀ x, Hilbert (TX x)] [∀ y, Hilbert (TY y)]
+--   : Hilbert ((TX⊕TY) xy) 
+--   :=
+--   match xy with
+--   | .inl _ => by dsimp; infer_instance 
+--   | .inr _ => by dsimp; infer_instance
 
 
 
@@ -159,3 +159,4 @@ instance (priority:=low) (ι) (X : ι → Type) [∀ i, SemiHilbert (X i)] [Enum
 instance (X) [Hilbert X] (ι) [Enumtype ι] : Hilbert (ι → X) := Hilbert.mkSorryProofs
 instance (priority:=low) (ι) (X : ι → Type) [∀ i, Hilbert (X i)] [Enumtype ι] : Hilbert ((i : ι) → X i) 
   := Hilbert.mkSorryProofs
+

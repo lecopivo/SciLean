@@ -33,8 +33,6 @@ namespace FProperty
 
   variable (fp : FProperty)
 
-  def getNormalTheorem (property : Name) (argIds : ArraySet Nat) : Option Name := sorry
-  def getCompTheorem (property : Name) (argIds : ArraySet Nat) : Option Name := sorry
   def insert (property : Name) (argIds : ArraySet Nat) (thrms : Theorems) : FProperty := 
     fp.alter property (λ p? =>
       match p? with

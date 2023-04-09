@@ -40,7 +40,7 @@ def SubNegMonoid.sorryMk (X : Type u) [AddMonoid X] [Neg X] [Sub X] (_ : Unit) :
 def AddGroup.sorryMk (X : Type u) [SubNegMonoid X] (_ : Unit) : AddGroup X      := AddGroup.mk sorry_proof
 def AddCommGroup.sorryMk (X : Type u) [AddGroup X] (_ : Unit) : AddCommGroup X  := AddCommGroup.mk sorry_proof
 
-def MulAction.sorryMk (X : Type u) [HMul ℝ X X] (_ : Unit) : MulAction ℝ X := MulAction.mk sorry_proof sorry_proof
+def MulAction.sorryMk (X : Type u) [SMul ℝ X] (_ : Unit) : MulAction ℝ X := MulAction.mk sorry_proof sorry_proof
 def DistribMulAction.sorryMk (X : Type u)  [AddMonoid X] [MulAction ℝ X] (_ : Unit) : DistribMulAction ℝ X := DistribMulAction.mk sorry_proof sorry_proof
 def Module.sorryMk (X : Type u) [AddCommMonoid X] [DistribMulAction ℝ X] (_ : Unit) : Module ℝ X := Module.mk sorry_proof sorry_proof
 
@@ -168,4 +168,5 @@ initialize
   registerDerivingHandler ``AddGroup mkAddGroupHandler
   registerDerivingHandler ``AddCommGroup mkAddCommGroupHandler
   registerDerivingHandler ``Vec mkVecHandler
+
 

@@ -83,43 +83,43 @@ class FinVec (X : Type) (ι : outParam Type) [outParam $ Enumtype ι] extends Hi
   to_dual   : toDual   x = ∑ i,  𝕡 i x • 𝕖'[X] i
   from_dual : fromDual x = ∑ i, 𝕡' i x •  𝕖[X] i
 
-theorem basis_ext {X ι} [Enumtype ι] [FinVec X ι] (x y : X)
+theorem basis_ext {X ι} {_ : Enumtype ι} [FinVec X ι] (x y : X)
   : (∀ i, ⟪x, 𝕖 i⟫ = ⟪y, 𝕖 i⟫) → (x = y) := sorry_proof
 
-theorem dualBasis_ext {X ι} [Enumtype ι] [FinVec X ι] (x y : X)
+theorem dualBasis_ext {X ι} {_ : Enumtype ι} [FinVec X ι] (x y : X)
   : (∀ i, ⟪x, 𝕖' i⟫ = ⟪y, 𝕖' i⟫) → (x = y) := sorry_proof
 
-theorem inner_proj_dualProj {X ι} [Enumtype ι] [FinVec X ι] (x y : X)
+theorem inner_proj_dualProj {X ι} {_ : Enumtype ι} [FinVec X ι] (x y : X)
   : ⟪x, y⟫ = ∑ i, 𝕡 i x * 𝕡' i y :=
 by sorry_proof
 
 @[simp]
-theorem inner_basis_dualBasis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
+theorem inner_basis_dualBasis {X ι} {_ : Enumtype ι} [FinVec X ι] (i j : ι)
   : ⟪𝕖[X] i, 𝕖' j⟫ = [[i=j]] :=
 by apply FinVec.duality
 
 @[simp]
-theorem inner_dualBasis_basis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
+theorem inner_dualBasis_basis {X ι} {_ : Enumtype ι} [FinVec X ι] (i j : ι)
   : ⟪𝕖'[X] i, 𝕖 j⟫ = [[i=j]] :=
 by sorry_proof
 
 @[simp]
-theorem inner_dualBasis_proj {X ι} [Enumtype ι] [FinVec X ι] (i : ι) (x : X)
+theorem inner_dualBasis_proj {X ι} {_ : Enumtype ι} [FinVec X ι] (i : ι) (x : X)
   : ⟪x, 𝕖' i⟫ = 𝕡 i x :=
 by sorry_proof
 
 @[simp]
-theorem inner_basis_dualProj {X ι} [Enumtype ι] [FinVec X ι] (i : ι) (x : X)
+theorem inner_basis_dualProj {X ι} {_ : Enumtype ι} [FinVec X ι] (i : ι) (x : X)
   : ⟪x, 𝕖 i⟫ = 𝕡' i x :=
 by sorry_proof
 
 @[simp]
-theorem proj_basis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
+theorem proj_basis {X ι} {_ : Enumtype ι} [FinVec X ι] (i j : ι)
   : 𝕡 i (𝕖[X] j) = [[i=j]] :=
 by simp only [←inner_dualBasis_proj, inner_basis_dualBasis, eq_comm]; done
 
 @[simp]
-theorem dualProj_dualBasis {X ι} [Enumtype ι] [FinVec X ι] (i j : ι)
+theorem dualProj_dualBasis {X ι} {_ : Enumtype ι} [FinVec X ι] (i j : ι)
   : 𝕡' i (𝕖'[X] j) = [[i=j]] :=
 by simp only [←inner_basis_dualProj, inner_dualBasis_basis, eq_comm]; done
 
