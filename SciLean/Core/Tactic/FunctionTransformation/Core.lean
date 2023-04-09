@@ -510,3 +510,13 @@ open Lean.Parser.Tactic in
 elab (name := funTrans) "fun_trans" only:&" only"? args:(simpArgs ?) loc:(location ?) : tactic =>
   elabFunTrans args loc (simpOnly := only.isSome) (useSimp := true)
 
+
+open Lean Elab Tactic Lean.Parser.Tactic
+
+syntax (name := funTransConv) "fun_trans" &" only"? (simpArgs)? : conv
+
+/-- Elaborator for `norm_num` conv tactic. -/
+@[tactic funTransConv] def elabFunTransConv : Tactic := fun stx ↦ withMainContext do
+  let ctx ← getSimpContext stx[2] !stx[1].isNone
+  let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true}}
+  Conv.applySimpResult (← deriveSimp ctx (← instantiateMVars (← Conv.getLhs)) (useSimp := true))

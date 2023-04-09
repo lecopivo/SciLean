@@ -35,7 +35,7 @@ namespace Shape
     -- else
     --   boundary
 
-  class IsLocate (f : Shape p → X → Location) where
+  class IsLocate (f : Shape p → X → Location) : Prop where
     is_locate : locateSpec = f
 
   class HasLocate (p : P → Set X) where
@@ -51,14 +51,14 @@ namespace Shape
   ------------------------------------------------------------------------------
   -- Level Set 
   ------------------------------------------------------------------------------
-  class IsLevelSet (f : Shape p → X → ℝ) where
+  class IsLevelSet (f : Shape p → X → ℝ) : Prop where
     is_level_set : ∀ (s : Shape p), 
-      if f s x < 0 then
-        s.locateSpec x = inside
+      if 0 < f s x then
+        s.locateSpec x = outside
       else if f s x = 0 then
         s.locateSpec x = boundary
       else 
-        s.locateSpec x = outside
+        s.locateSpec x = inside
 
   class HasLevelSet (p : P → Set X) where
     levelSet : Shape p → X → ℝ
@@ -67,6 +67,19 @@ namespace Shape
   def levelSet [HasLevelSet p] (s : Shape p) (x : X) := HasLevelSet.levelSet s x
 
   instance [HasLevelSet p] : IsLevelSet (levelSet (p:=p)) := HasLevelSet.is_level_set
+
+  def locateFromLevelSet [HasLevelSet p] : HasLocate p := 
+  {
+    locate := λ s x =>
+      let d := s.levelSet x
+      if 0 < d then
+        .outside
+      else if d = 0 then
+        .boundary
+      else
+        .inside
+    is_locate := sorry_proof
+  }
 
 
   ------------------------------------------------------------------------------
@@ -80,15 +93,15 @@ namespace Shape
     -- | outside =>  dist(x, boundary s)
     -- | boundary => 0
 
-  class IsOutsideDist (f : Shape p → X → ℝ) where
+  class IsOutsideDist (f : Shape p → X → ℝ) : Prop where
     is_outside_dist : ∀ s x,
       0 ≤ f s x → s.sdfSpec x = f s x
 
-  class IsInsideDist (f : Shape p → X → ℝ) where
+  class IsInsideDist (f : Shape p → X → ℝ) : Prop where
     is_inside_dist : ∀ s x,
       f s x ≤ 0 → s.sdfSpec x = f s x
 
-  class IsSdf (f : Shape p → X → ℝ) extends IsOutsideDist f, IsInsideDist f
+  class IsSdf (f : Shape p → X → ℝ) extends IsOutsideDist f, IsInsideDist f : Prop
 
   class HasSdf (p : P → Set X) where
     sdf (s : Shape p) (x : X) : ℝ
@@ -102,6 +115,19 @@ namespace Shape
 
   @[simp] theorem sdf_spec (f : Shape p → X → ℝ) [IsSdf f]
     : sdfSpec = f := sorry_proof
+
+  def locateFromSdf [HasSdf p] : HasLocate p := 
+  {
+    locate := λ s x =>
+      let d := s.sdf x
+      if 0 < d then
+        .outside
+      else if d = 0 then
+        .boundary
+      else
+        .inside
+    is_locate := sorry_proof
+  }
 
 
   ------------------------------------------------------------------------------

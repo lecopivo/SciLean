@@ -98,6 +98,20 @@ namespace Real
 
   def max (x y : ℝ) : ℝ := if x < y then y else x
   def min (x y : ℝ) : ℝ := if x < y then x else y
+  def clamp (x min max : ℝ) : ℝ := 
+    if x < min then 
+      min 
+    else if max < x then
+      max
+    else
+      x
+  def sign (x : ℝ) := 
+    if 0 < x then
+      1
+    else if x = 0 then
+      0
+    else
+      -1
 
   def natPow (r : ℝ) (n : Nat) : ℝ := Id.run do
     let mut s   := if n &&& 1 = 1 then r else 1
