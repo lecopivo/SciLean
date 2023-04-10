@@ -16,9 +16,10 @@ namespace FunctionProperty
 local instance : Ord (ArraySet Nat) := ⟨ArraySet.lexOrd⟩
 local instance : Ord Name := ⟨Name.quickCmp⟩
 
+
 structure Theorems where
-  normalTheorem : Name
-  compTheorem : Name
+  normalTheorem : Option Name
+  compTheorem : Option Name
   definition : Option Name
 deriving BEq, Inhabited
 
@@ -110,9 +111,10 @@ def checkCompTheoremCallingConvention
   pure ()
 
 def addFunctionProperty (function property : Name) (argIds : ArraySet Nat) 
-  (normalTheorem compTheorem : Name) (definition : Option Name) : m Unit := do
+  (normalTheorem compTheorem definition : Option Name) : m Unit := do
 
-  checkCompTheoremCallingConvention function argIds compTheorem
+  if let .some thrm := compTheorem then
+    checkCompTheoremCallingConvention function argIds thrm
 
   FunctionPropertyExt.insert function 
     (FProperty.empty.insert property argIds ⟨normalTheorem, compTheorem, definition⟩)

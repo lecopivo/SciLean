@@ -252,7 +252,46 @@ argument y
 
 
 --------------------------------------------------------------------------------
--- Inner.innet - ⟪·,·⟫
+-- HDiv.hDiv - x/y
+--------------------------------------------------------------------------------
+
+function_properties HDiv.hDiv (x y : ℝ) 
+argument x
+  IsLin := sorry,
+  IsSmooth := sorry,
+  abbrev ∂ := λ dx => dx/y by sorry,
+  abbrev 𝒯 := λ dx => let iy := 1/y; (x*iy, dx*iy)  by sorry,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ dx' => dx'/y by sorry,
+  abbrev ℛ := let iy := 1/y; (x*iy, λ dx' => dx'*iy) by sorry
+
+
+--------------------------------------------------------------------------------
+-- ite - if c then t else e
+--------------------------------------------------------------------------------
+
+function_properties ite {X : Type} [Vec X] (c : Prop) [h : Decidable c] (t e : X)
+argument (t,e)
+  IsLin := sorry,
+  IsSmooth := sorry,
+  abbrev ∂ := λ dt de => if c then dt else de by sorry,
+  abbrev 𝒯 := λ dt de => if c then (t,dt) else (e,de) by sorry
+
+function_properties ite {X : Type} [SemiHilbert X] (c : Prop) [h : Decidable c] (t e : X)
+argument (t,e)
+  HasAdjoint := sorry,
+  abbrev † := λ te' => if c then (te', 0) else (0, te') by sorry,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ dte' => if c then (dte', 0) else (0, dte') by sorry,
+  abbrev ℛ := 
+    if c then 
+      (t, λ dte' => (dte', 0)) 
+    else 
+      (e, λ dte' => (0, dte')) by sorry
+
+
+--------------------------------------------------------------------------------
+-- Inner.inner - ⟪·,·⟫
 --------------------------------------------------------------------------------
 
 function_properties SciLean.Inner.inner {X} [Hilbert X] (x y : X)
@@ -285,7 +324,6 @@ argument y
   abbrev ℛ := (⟪x,y⟫, λ dy' => dy'•x) by sorry_proof
 
 
-
 --------------------------------------------------------------------------------
 -- Inner.normSqr - ∥·∥²
 --------------------------------------------------------------------------------
@@ -294,10 +332,10 @@ function_properties SciLean.Inner.normSqr {X : Type} [Hilbert X] (x : X) : ℝ
 argument x 
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx => 2*⟪dx,x⟫ by sorry_proof,
-  abbrev 𝒯 := λ dx => (‖x‖², 2*⟪dx,x⟫) by sorry_proof,
+  abbrev 𝒯 := λ dx => (∥x∥², 2*⟪dx,x⟫) by sorry_proof,
   HasAdjDiff := sorry_proof,
   abbrev ∂† := λ dx' => (2*dx')•x by sorry_proof,
-  abbrev ℛ := (‖x‖², λ dx' => (2*dx')•x) by sorry_proof
+  abbrev ℛ := (∥x∥², λ dx' => (2*dx')•x) by sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -327,18 +365,18 @@ argument f
 
 function_properties SciLean.SmoothMap.toFun {X Y : Type} [Vec X] [Vec Y] (f : X⟿Y) (x : X) : Y
 argument (f,x)
-  IsSmooth := sorry_proof
-  -- noncomputable abbrev ∂ := λ df dx => df x + ∂ f x dx by sorry_proof,
-  -- noncomputable abbrev 𝒯 := λ df dx => let (y,dy) := 𝒯 f x dx; (y, df x + dy) by sorry_proof
+  IsSmooth := sorry_proof,
+  noncomputable abbrev ∂ := λ df dx => df x + ∂ f x dx by sorry_proof,
+  noncomputable abbrev 𝒯 := λ df dx => let ydy := 𝒯 f x dx; (ydy.1, df x + ydy.2) by sorry_proof
 argument f
   IsLin := sorry_proof,
   IsSmooth := sorry_proof,
   abbrev ∂ := λ df => df x by sorry_proof,
   abbrev 𝒯 := λ df => (f x, df x) by sorry_proof
 argument x 
-  IsSmooth := sorry_proof
-  -- noncomputable abbrev ∂ := λ dx => ∂ f x dx by sorry_proof,
-  -- noncomputable abbrev 𝒯 := λ dx => 𝒯 f x dx by sorry_proof
+  IsSmooth := sorry_proof,
+  noncomputable abbrev ∂ := λ dx => ∂ f x dx by sorry_proof,
+  noncomputable abbrev 𝒯 := λ dx => 𝒯 f x dx by sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -397,4 +435,3 @@ argument f
 --     =
 --     λ w dw => λ x ⟿ ∂ f w dw x:= sorry_proof
 
-#eval printFunctionProperties ``HAdd.hAdd

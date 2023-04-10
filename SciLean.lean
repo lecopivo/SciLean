@@ -1,5 +1,5 @@
 import SciLean.Core
-import SciLean.Data.DataArray
+-- import SciLean.Data.DataArray
 
 
 #exit

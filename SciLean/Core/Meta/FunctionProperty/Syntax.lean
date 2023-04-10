@@ -37,7 +37,8 @@ syntax defProof := ":=" term "by" tacticSeq
 syntax defByConv := "by" Parser.Tactic.Conv.convSeq
 -- syntax defProofOrConv := (":=" term "by" tacticSeq) <|> ("by" Parser.Tactic.Conv.convSeq)
 syntax defProofOrConv := defProof <|> defByConv
-syntax defOrAbbrev "funTrans" ident bracketedBinder* defProofOrConv : argProp
+syntax noncomp := "noncomputable"
+syntax (noncomp)? defOrAbbrev "funTrans" ident bracketedBinder* defProofOrConv : argProp
 
 elab_rules : command
 | `(function_property $id $parms* $[: $retType:term]? 
@@ -75,7 +76,7 @@ elab_rules : command
 elab_rules : command
 | `(function_property $id $parms* $[: $retType]? 
     argument $argSpec $assumptions1*
-    $doa:defOrAbbrev funTrans $transId $assumptions2* $doc:defProofOrConv) => do
+    $[$nc:noncomp]? $doa:defOrAbbrev funTrans $transId $assumptions2* $doc:defProofOrConv) => do
 
   Command.liftTermElabM  do
 
@@ -114,7 +115,7 @@ elab_rules : command
         | `(defProofOrConv| by $c) => pure (.conv c)
         | _ => throwUnsupportedSyntax
 
-      addFunTransDecl transName useDef e xs contextVars funDefStx
+      addFunTransDecl transName useDef nc.isSome e xs contextVars funDefStx
 
 
 syntax " IsSmooth " bracketedBinder* (":=" term)? : argProp
@@ -175,57 +176,57 @@ macro_rules
 
 
 
-syntax defOrAbbrev "∂" bracketedBinder* defProofOrConv : argProp
+syntax (noncomp)? defOrAbbrev "∂" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
 | `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
     argument $argSpec:argSpec  $assumptions1*
-    $doa:defOrAbbrev ∂ $extraAssumptions* $doc:defProofOrConv) => do
+    $[$nc]? $doa:defOrAbbrev ∂ $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``differential
   `(function_property $id $parms* $[: $retType:term]? 
     argument $argSpec  $assumptions1*
-    $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
+    $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
 
-syntax defOrAbbrev "𝒯" bracketedBinder* defProofOrConv : argProp
+syntax (noncomp)? defOrAbbrev "𝒯" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
 | `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
     argument $argSpec:argSpec  $assumptions1*
-    $doa:defOrAbbrev 𝒯 $extraAssumptions* $doc:defProofOrConv) => do
+    $[$nc]? $doa:defOrAbbrev 𝒯 $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``tangentMap
   `(function_property $id $parms* $[: $retType:term]? 
     argument $argSpec  $assumptions1*
-    $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
+    $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
 
-syntax defOrAbbrev "†" bracketedBinder* defProofOrConv : argProp
+syntax (noncomp)? defOrAbbrev "†" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
 | `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
     argument $argSpec:argSpec  $assumptions1*
-    $doa:defOrAbbrev † $extraAssumptions* $doc:defProofOrConv) => do
+    $[$nc]? $doa:defOrAbbrev † $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``adjoint
   `(function_property $id $parms* $[: $retType:term]? 
     argument $argSpec  $assumptions1*
-    $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
+    $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
 
-syntax defOrAbbrev "∂†" bracketedBinder* defProofOrConv : argProp
+syntax (noncomp)? defOrAbbrev "∂†" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
 | `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
     argument $argSpec:argSpec  $assumptions1*
-    $doa:defOrAbbrev ∂† $extraAssumptions* $doc:defProofOrConv) => do
+    $[$nc]? $doa:defOrAbbrev ∂† $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``adjointDifferential
   `(function_property $id $parms* $[: $retType:term]? 
     argument $argSpec  $assumptions1*
-    $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
+    $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
 
-syntax defOrAbbrev "ℛ" bracketedBinder* defProofOrConv : argProp
+syntax (noncomp)? defOrAbbrev "ℛ" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
 | `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
-    $doa:defOrAbbrev ℛ $extraAssumptions* $doc:defProofOrConv) => do
+    $[$nc]? $doa:defOrAbbrev ℛ $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``reverseDifferential
   `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
-    $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
+    $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)

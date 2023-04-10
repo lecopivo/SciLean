@@ -105,7 +105,8 @@ inductive FunTransDefStx
   | valProof (valStx : Term) (proof : TSyntax ``Lean.Parser.Tactic.tacticSeq)
   | conv     (conv : TSyntax ``Parser.Tactic.Conv.convSeq)
 
-def addFunTransDecl (transName : Name) (useDef : Bool) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) 
+def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bool) 
+  (e : Expr) (xs : Array Expr) (contextVars : Array Expr) 
   (funTransDefStx : FunTransDefStx) : TermElabM Unit := do
 
   let f    := e.getAppFn
@@ -150,11 +151,14 @@ def addFunTransDecl (transName : Name) (useDef : Bool) (e : Expr) (xs : Array Ex
     levelParams := []
   }
 
-  addAndCompile (.defnDecl info)
+  if nonComputable then 
+    addDecl (.defnDecl info)
+  else
+    addAndCompile (.defnDecl info)
 
   -- If we want to use just defined value in the simp theorem
   let defVal ← 
-    if useDef = true then do
+    if useDefInSimp = true then do
       mkAppOptM defName (contextVars'.map some)
     else
       pure defVal
