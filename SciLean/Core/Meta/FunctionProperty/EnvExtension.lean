@@ -119,6 +119,18 @@ def addFunctionProperty (function property : Name) (argIds : ArraySet Nat)
   FunctionPropertyExt.insert function 
     (FProperty.empty.insert property argIds ⟨normalTheorem, compTheorem, definition⟩)
 
+def getFunctionProperty (function property : Name) 
+  : m (Option (Std.RBMap (ArraySet Nat) Theorems compare)) := 
+do
+  let some properties ← FunctionPropertyExt.find? function
+    | return none
+
+  let some propMap := properties.find? property
+    | return none
+
+  return propMap
+  
+
 
 def printFunctionProperties (function : Name) : CoreM Unit := do
   if let .some fp ← FunctionPropertyExt.find? function then
@@ -134,5 +146,5 @@ def printFunctionProperties (function : Name) : CoreM Unit := do
 
 end  FunctionProperty
 
-export FunctionProperty (FunctionPropertyExt addFunctionProperty printFunctionProperties)
+export FunctionProperty (FunctionPropertyExt addFunctionProperty getFunctionProperty printFunctionProperties)
 

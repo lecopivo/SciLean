@@ -86,26 +86,14 @@ example {ι : Type} [Enumtype ι] (f g : ι → X)
   : f + g = λ i => f i + g i := by rfl
 
 
+set_option trace.Meta.Tactic.fun_trans true
 set_option trace.Meta.Tactic.simp.rewrite true in
 set_option trace.Meta.Tactic.fun_trans.rewrite true in
 example {ι : Type} [Enumtype ι]
   : ∂ (λ (g : ι → X) i => g i + g i)
     =
     λ g dg i => dg i + dg i
-  := by simp only [differential.rule_swap]; simp only [HAdd.hAdd.arg_a4a5.differential_simp'];  fun_trans;  done
-
-example {ι : Type} [Enumtype ι] (p q : ℝ → ℝ) (x : ℝ)
-  : ∂ (λ (f : ℝ → ℝ) x => f x + ⅆ f x)
-    =
-    λ f df => df + ∂ ⅆ f df
-  := by fun_trans; fun_trans; done
-
-example 
-  (p q f : ℝ → ℝ)
-  : ((fun x => p x * f x) + fun x => q x * ∂erentialScalar f x)
-    =
-    fun x => p x * f x + q x * ∂erentialScalar f x
-  := by rfl
+  := by fun_trans;  done
 
 example {ι : Type} [Enumtype ι] (p q : ℝ → ℝ) (x : ℝ) (c : ℝ)
   : ∂ (λ (f : ℝ → ℝ) => x * f x)

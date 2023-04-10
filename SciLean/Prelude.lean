@@ -22,14 +22,14 @@ instance {ι : Type} [Enumtype ι] [Nonempty ι] : Fact (numOf ι≠0) := sorry
 
 --- !i creates an element of a subtype with an omitted proof
 --- much nicer then writing ⟨i, sorry⟩
-macro:max "!" noWs t:term : term => `(⟨$t, sorry⟩)
+-- macro:max "!" noWs t:term : term => `(⟨$t, sorry⟩)
 
-notation "!?" P => (sorry : P)
+-- notation "!?" P => (sorry : P)
 
 abbrev QuotientMk {α} [SA : Setoid α] (a : α) := Quotient.mk SA a
 notation " ⟦ " x " ⟧ " => QuotientMk x
 
-macro:max "#" noWs t:term : term => `(⟨$t, by first | decide | simp | native_decide⟩)
+-- macro:max "#" noWs t:term : term => `(⟨$t, by first | decide | simp | native_decide⟩)
 
 -- TODO: Add compiler flag to diplay proof 
 axiom sorryProofAxiom {P : Prop} : P 

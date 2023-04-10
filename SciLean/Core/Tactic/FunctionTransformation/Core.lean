@@ -5,6 +5,8 @@ import SciLean.Lean.Meta.Basic
 import SciLean.Data.Prod
 import SciLean.Core.Tactic.FunctionTransformation.Init
 
+import SciLean.Core.Meta.FunctionProperty.Apply
+
 open Lean Meta
 
 namespace SciLean
@@ -165,70 +167,86 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
 
   -- Not sure how to handle this case, does it come up?
   if F.containsFVar xId then
-    trace[Meta.Tactic.fun_trans.missing_rule] s!"Composition case: the head of the expression {← ppExpr b} depends on the argument {← ppExpr x}. TODO: handle this case!"
-    return none
+    throwError s!"Composition case: the head of the expression {← ppExpr b} depends on the argument {← ppExpr x}. TODO: handle this case!"
 
-  let depArgs := args.mapIdx (λ i arg => if arg.containsFVar xId then some (arg, i.1) else none) |>.filterMap id
+  let .some constName := F.constName?
+    | throwError s!"Can handle only applications of contants! Got {← ppExpr b} which is application of {← ppExpr F}"
 
-  -- not a composition at all
-  if depArgs.size = 0 then
-    return none
-  -- simple composition of the form `f (g x)`
-  else if depArgs.size = 1 then
+  let arity ← getConstArity constName
+  if args.size = arity then
+    trace[Meta.Tactic.fun_trans] s!"Handling application of consant {constName} in expr {← ppExpr b}"
+    let some statement ← applyCompTheorem transName constName args x
+      | return none 
+    let rhs := (← inferType statement).getArg! 2
+    trace[Meta.Tactic.fun_trans] s!"Composition theorem says:\n{← ppExpr (← inferType statement)}"
 
-    let (gx,i) := depArgs[0]!
-    -- trivial case 
-    if gx == x then
-      return none
-    let g ← mkLambdaFVars #[x] gx
-
-    let Y ← inferType gx
-    let f ← withLocalDecl `y default Y 
-      λ y => do
-        let args' := args.set! i y
-        mkLambdaFVars #[y] (← mkAppOptM' F (args'.map some))
-
-
-    
-    return ← (applyRule transName .comp #[f.eta,g.eta])
-
-  -- complicated composition e.g. `f (g₁ x) (g₂ x)` which is treated as composition of `uncurryN 2 f` and `λ x => (g₁ x, g₂ x)`
+    return .some (.visit (.mk rhs statement 0))
+  else if args.size > arity then
+    throwError s!"Constant {constName} has too many applied arguments in {← ppExpr b}. TODO: handle this case!"
   else
+    throwError s!"Constant {constName} has too few applied arguments in {← ppExpr b}. TODO: handle this case!"
 
-    -- Special handling for `λ x => (f x, g x)`
-    if let .some (Fname, _) := F.const? then
-      if (Fname == ``Prod.mk) then
-        if depArgs.size ≠ 2 then
-          panic! "Composition rule: encountered odd number of arguments in the special handling for `Prod.mk` in the expression {← ppExpr b}"
-        let f ← mkLambdaFVars #[x] depArgs[0]!.1
-        let g ← mkLambdaFVars #[x] depArgs[1]!.1
-        return ← (applyRule transName .prodMap #[f.eta,g.eta])
+  -- let depArgs := args.mapIdx (λ i arg => if arg.containsFVar xId then some (arg, i.1) else none) |>.filterMap id
+
+  -- -- not a composition at all
+  -- if depArgs.size = 0 then
+  --   return none
+  -- -- simple composition of the form `f (g x)`
+  -- else if depArgs.size = 1 then
+
+  --   let (gx,i) := depArgs[0]!
+  --   -- trivial case 
+  --   if gx == x then
+  --     return none
+  --   let g ← mkLambdaFVars #[x] gx
+
+  --   let Y ← inferType gx
+  --   let f ← withLocalDecl `y default Y 
+  --     λ y => do
+  --       let args' := args.set! i y
+  --       mkLambdaFVars #[y] (← mkAppOptM' F (args'.map some))
+
 
     
-    let lastId  := depArgs.size-1
-    let lastArg := depArgs[lastId]!.1
+  --   return ← (applyRule transName .comp #[f.eta,g.eta])
 
-    let g :=
-      (depArgs[0:lastId]).foldrM (init:=lastArg)
-        (λ y ys => mkAppOptM ``Prod.mk #[none, none, y.1, ys])
-      >>= 
-      mkLambdaFVars #[x]
-    let g ← g
+  -- -- complicated composition e.g. `f (g₁ x) (g₂ x)` which is treated as composition of `uncurryN 2 f` and `λ x => (g₁ x, g₂ x)`
+  -- else
 
-    let Ys := depArgs.map λ (arg, _) => (Name.anonymous, λ _ => inferType arg)
+  --   -- Special handling for `λ x => (f x, g x)`
+  --   if let .some (Fname, _) := F.const? then
+  --     if (Fname == ``Prod.mk) then
+  --       if depArgs.size ≠ 2 then
+  --         panic! "Composition rule: encountered odd number of arguments in the special handling for `Prod.mk` in the expression {← ppExpr b}"
+  --       let f ← mkLambdaFVars #[x] depArgs[0]!.1
+  --       let g ← mkLambdaFVars #[x] depArgs[1]!.1
+  --       return ← (applyRule transName .prodMap #[f.eta,g.eta])
 
-    let f ← 
-      withLocalDeclsD Ys λ ys => do
-        let mut args' := args
-        for i in [0:ys.size] do
-          let j := depArgs[i]!.2
-          args' := args'.set! j ys[i]!
-        let b' ← mkAppOptM' F (args'.map some)
-        let f' ← mkLambdaFVars ys b'
-        let n := mkNatLit ys.size 
-        mkAppNoTrailingM ``uncurryN #[n, f'.eta]
+    
+  --   let lastId  := depArgs.size-1
+  --   let lastArg := depArgs[lastId]!.1
 
-    return ← (applyRule transName .comp #[f,g.eta])
+  --   let g :=
+  --     (depArgs[0:lastId]).foldrM (init:=lastArg)
+  --       (λ y ys => mkAppOptM ``Prod.mk #[none, none, y.1, ys])
+  --     >>= 
+  --     mkLambdaFVars #[x]
+  --   let g ← g
+
+  --   let Ys := depArgs.map λ (arg, _) => (Name.anonymous, λ _ => inferType arg)
+
+  --   let f ← 
+  --     withLocalDeclsD Ys λ ys => do
+  --       let mut args' := args
+  --       for i in [0:ys.size] do
+  --         let j := depArgs[i]!.2
+  --         args' := args'.set! j ys[i]!
+  --       let b' ← mkAppOptM' F (args'.map some)
+  --       let f' ← mkLambdaFVars ys b'
+  --       let n := mkNatLit ys.size 
+  --       mkAppNoTrailingM ``uncurryN #[n, f'.eta]
+
+  --   return ← (applyRule transName .comp #[f,g.eta])
 
 
 -- -- (binderName : Name) (binderType : Expr) (body : Expr) (binderInfo : BinderInfo)

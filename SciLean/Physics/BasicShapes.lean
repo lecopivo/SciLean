@@ -2,6 +2,7 @@ import SciLean.Core.Defs
 import SciLean.Core.Meta.RewriteBy
 import SciLean.Core.AdjDiff
 import SciLean.Core.Tactic.FunctionTransformation.Core
+import SciLean.Core.UnsafeAD
 
 import SciLean.Physics.Shape
 
@@ -97,11 +98,44 @@ structure Ball.Params (X : Type) [Hilbert X] where
   center : X
   radius : {r : ℝ // 0 ≤ r}
 
+namespace Ball.Params
+
+  variable {X : Type} [Hilbert X] (p : Params X)
+
+  def sdf (x : X) := ∥x - p.center∥ - p.radius.1
+
+  def sdfGrad (x : X) := (∇ (sdf p) x) 
+    rewrite_by
+      unfold sdf; unfold gradient
+      (tactic => have : UnsafeAD := sorry)
+      fun_trans
+
+  def sdfHess (x : X) (u v : X) := (∂ (∂ (sdf p)) x u v) 
+    rewrite_by
+      unfold sdf; unfold gradient
+      (tactic => have : UnsafeAD := sorry)
+      fun_trans
+      simp[fun_trans]
+      fun_trans
+
+  def levelSet (x : X) := ∥x - p.center∥² - p.radius.1^2
+
+  def levelSetGrad (x : X) := (∇ (levelSet p) x) 
+    rewrite_by
+      unfold levelSet; unfold gradient
+      fun_trans
+
+  def levelSetHess (x u v: X) := (∂ (∂ (levelSet p)) x u v) 
+    rewrite_by
+      unfold levelSet; unfold gradient
+      fun_trans; simp; fun_trans
+
+end Ball.Params
+
 def Ball.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop := 
   ∥x - p.center∥ ≤ p.radius.1
 
 abbrev Ball (X ι : Type) [Enumtype ι] [FinVec X ι] := Shape (Ball.toSet (X:=X))
-
 
 namespace Ball
 
@@ -268,15 +302,23 @@ namespace RoundCone.Params
     else if (y.sign*p.a2*y2 < k) then 
       (x2 + y2).sqrt * p.il2 - p.r1
     else 
-      ((x2*p.a2*p.il2).sqrt+y*p.rr)*p.il2 - p.r1
+    ((x2*p.a2*p.il2).sqrt+y*p.rr)*p.il2 - p.r1
 
-  set_option trace.Meta.Tactic.fun_trans.rewrite true in
   noncomputable
   def sdfGrad (x : X) := (∇ p.sdf x)
     rewrite_by
-      unfold sdf
-      unfold gradient
---      (tactic => have : UnsafeAD := sorry)
+      unfold sdf; unfold gradient
+      (tactic => have : UnsafeAD := sorry)
+      fun_trans
+
+      -- simp (config := {zeta := false}) [fun_trans]
+      -- fun_trans
+      -- simp (config := {zeta := false}) [fun_trans]
+      -- fun_trans
+      -- simp (config := {zeta := false}) [fun_trans]
+      -- fun_trans
+      -- simp (config := {zeta := false}) [fun_trans]
+
 --    simp[adjointDifferential.rule_comp, ite.arg_te.adjointDifferential_simp']
       -- fun_trans
 
@@ -336,3 +378,15 @@ namespace RoundCone
 
 
 end RoundCone
+
+
+variable {X Y} [SemiHilbert X] [SemiHilbert Y]
+#check (∂† λ xy : X × Y => xy.fst) rewrite_by fun_trans [fun_trans]; simp [fun_trans]
+
+open Lean Qq Meta
+
+#eval show MetaM Unit from do
+
+  let fst : Q(ℝ×ℝ → ℝ) := q(λ xy : ℝ × ℝ => xy.fst)
+
+  IO.println (← reduce fst)
