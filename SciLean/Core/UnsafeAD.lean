@@ -39,28 +39,37 @@ argument x
   abbrev ℛ := let xNorm := ∥x∥; (xNorm, λ dx' => (dx'/∥x∥) • x) by sorry
 
 
+function_properties SciLean.Real.pow [UnsafeAD] (x y : ℝ) 
+argument (x,y)
+  IsSmooth := sorry,
+  abbrev ∂ := λ dx dy => (dy * x.log + dx*y/x)*(x.pow y) by sorry,
+  abbrev 𝒯 := λ dx dy => let xy := x.pow y; (xy, (dy * x.log + dx*y/x)*xy) by sorry,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ dxy' => let xy := x.pow y; (dxy'*x.log*xy, dxy'*y/x*xy) by sorry,
+  abbrev ℛ := let xy := x.pow y; (xy, λ dxy' => (dxy'*x.log*xy, dxy'*y/x*xy)) by sorry
+
 -- These theorems have to be done by had as `function_property` can't handle dependant types
 -- and `ite` has this `(c : Prop) [Decidable c]` which is currently not handled well
 
 @[fun_trans]
-theorem ite.arg_te.differential_simp' [inst : UnsafeAD] 
+theorem ite.arg_te.differential_simp' [UnsafeAD] 
   {X Y} [Vec X] [Vec Y] 
   (c : X → Prop) [∀ x, Decidable (c x)] 
   (t : X → Y) (e : X → Y) [IsSmooth t] [IsSmooth e]
   : ∂ (λ x => if c x then t x else e x)
     =
     λ x dx => if c x then ∂ t x dx else ∂ e x dx 
-  := inst.kaboom.elim
+  := UnsafeAD.kaboom.elim
 
 @[fun_trans]
-theorem ite.arg_te.tangentMap_simp' 
-  [inst : UnsafeAD] {X Y} [Vec X] [Vec Y] 
+theorem ite.arg_te.tangentMap_simp' [UnsafeAD] 
+  {X Y} [Vec X] [Vec Y] 
   (c : X → Prop) [∀ x, Decidable (c x)] 
   (t : X → Y) (e : X → Y) [IsSmooth t] [IsSmooth e]
   : ∂ (λ x => if c x then t x else e x)
     =
     λ x dx => if c x then ∂ t x dx else ∂ e x dx 
-  := inst.kaboom.elim
+  := UnsafeAD.kaboom.elim
 
 
 -- What should we do about `c x` on rhs? Or adjoint just does not exist?
@@ -76,27 +85,24 @@ theorem ite.arg_te.tangentMap_simp'
 
 
 @[fun_trans]
-theorem ite.arg_te.adjointDifferential_simp' 
-  [inst : UnsafeAD] {X Y} [SemiHilbert X] [SemiHilbert Y] 
+theorem ite.arg_te.adjointDifferential_simp' [UnsafeAD] 
+  {X Y} [SemiHilbert X] [SemiHilbert Y] 
   (c : X → Prop) [∀ x, Decidable (c x)] 
   (t : X → Y) (e : X → Y) [HasAdjDiff t] [HasAdjDiff e]
   : ∂† (λ x => if c x then t x else e x)
     =
     λ x dx' => if c x then ∂† t x dx' else ∂† e x dx'
-  := inst.kaboom.elim
+  := UnsafeAD.kaboom.elim
 
 @[fun_trans]
-theorem ite.arg_te.reverseDifferential_simp' 
-  [inst : UnsafeAD] {X Y} [SemiHilbert X] [SemiHilbert Y] 
+theorem ite.arg_te.reverseDifferential_simp' [UnsafeAD] 
+  {X Y} [SemiHilbert X] [SemiHilbert Y] 
   (c : X → Prop) [∀ x, Decidable (c x)] 
   (t : X → Y) (e : X → Y) [HasAdjDiff t] [HasAdjDiff e]
   : ℛ (λ x => if c x then t x else e x)
     =
     λ x => if c x then ℛ t x else ℛ e x
-  := inst.kaboom.elim
-
-#check @ite
-
+  := UnsafeAD.kaboom.elim
 
 #eval show Lean.CoreM Unit from do
 
@@ -109,4 +115,3 @@ theorem ite.arg_te.reverseDifferential_simp'
 
 
 
-#eval printFunctionProperties `ite
