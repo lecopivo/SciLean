@@ -74,7 +74,7 @@ def addFunPropDecl (propName spaceName : Name) (e : Expr) (xs : Array Expr) (con
   }
 
   addDecl (.thmDecl info)
-  addInstance info.name .local 1000
+  addInstance info.name .global 1000
 
   -- composition theorem - in the form `FunProp (λ t => e[xᵢ:=yᵢ t])`
   let compTheorem   ← mkCompTheoremFunProp propName spaceName e xs contextVars
