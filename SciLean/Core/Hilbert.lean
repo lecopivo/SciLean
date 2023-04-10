@@ -16,8 +16,8 @@ namespace Inner
 
 end Inner
 
-notation " ∥ " x " ∥² " => Inner.normSqr x
-notation " ∥ " x " ∥ " => Inner.norm x
+notation " ‖ " x " ‖² " => Inner.normSqr x
+notation " ‖ " x " ‖ " => Inner.norm x
 
 class TestFunctions (X : Type) where
   TestFun : X → Prop

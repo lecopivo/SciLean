@@ -18,8 +18,9 @@ def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Exp
     | trace[Meta.Tactic.fun_trans.missing_rule] s!"Missing {ruleType} rule for `{transName}`."
       return none
   let proof ← mkAppNoTrailingM rule args
+  let statement ← inferType proof
   let rhs := (← inferType proof).getArg! 2
-  dbg_trace s!"Applying rule {ruleType}, proof: `{← ppExpr (← inferType proof)}` | rhs: `{← ppExpr rhs}`"
+  trace[Meta.Tactic.fun_trans.rewrite] s!"By basic rule `{rule}`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
   return .some (.visit (.mk rhs proof 0))
 
 /-- Applies letBinop or letComp rule to `T (λ x => let y := ..; b)` as a simp step.
@@ -35,6 +36,12 @@ def applyLetRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) :
 
   let .some gx ← yId.getValue?
     | return none
+
+  -- if the let binding does not contain `x` then move the let binding out of the 
+  -- function transformation
+  if ¬(gx.containsFVar xId) then
+    let e ← mkAppM transName #[← mkLambdaFVars #[y, x] b]
+    return .some (.visit (.mk e none 0))
 
   let g ← mkLambdaFVars #[x] gx
 
@@ -170,17 +177,17 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
     throwError s!"Composition case: the head of the expression {← ppExpr b} depends on the argument {← ppExpr x}. TODO: handle this case!"
 
   let .some constName := F.constName?
-    | throwError s!"Can handle only applications of contants! Got {← ppExpr b} which is application of {← ppExpr F}"
+    | throwError s!"Can handle only applications of contants! Got `{← ppExpr b}` which is an application of `{← ppExpr F}`"
 
   let arity ← getConstArity constName
   if args.size = arity then
-    trace[Meta.Tactic.fun_trans] s!"Handling application of consant {constName} in expr {← ppExpr b}"
-    let some statement ← applyCompTheorem transName constName args x
-      | return none 
-    let rhs := (← inferType statement).getArg! 2
-    trace[Meta.Tactic.fun_trans] s!"Composition theorem says:\n{← ppExpr (← inferType statement)}"
+    let some (proof,thrm) ← applyCompTheorem transName constName args x
+      | throwError s!"Failed at appying composition theorem for transformation `{transName}` and function `{constName}`"
+    let statement ← inferType proof
+    let rhs := statement.getArg! 2
+    trace[Meta.Tactic.fun_trans.rewrite] s!"By composition theorem `{thrm}`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
 
-    return .some (.visit (.mk rhs statement 0))
+    return .some (.visit (.mk rhs proof 0))
   else if args.size > arity then
     throwError s!"Constant {constName} has too many applied arguments in {← ppExpr b}. TODO: handle this case!"
   else
@@ -266,7 +273,9 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
   -/
 def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
 
-  match f.eta with
+  trace[Meta.Tactic.fun_trans.step] s!"\n{← ppExpr f}"
+
+  match f with
   | .lam .. => lambdaLetTelescope f λ xs b => do
 
     if xs.size > 1 then
@@ -287,6 +296,9 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
 
       let b ← mkLambdaFVars xs[2:] b
 
+      -- Change expression like `xy.1` back to `xy.
+      let b ← revertStructureProj b
+
       -- λ x => x | λ y => x | λ f => f x
       if let .some r ← applySimpleRules transName x b then
         return r
@@ -297,6 +309,11 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
 
 
       return none
+
+  | .letE .. => letTelescope f λ xs b => do
+    -- swap all let bindings and the function transformation
+    let f' ← mkLambdaFVars xs (← mkAppM transName #[b])
+    return .some (.visit (.mk f' none 0))
 
   | _ => return none
 
@@ -336,54 +353,41 @@ def getFunctionTransform (e : Expr) : MetaM (Option (Name × Expr × Array Expr)
   else 
     return none
 
--- TODO: generalize to other monads
-def _root_.Lean.Meta.letTelescope (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := 
-  lambdaLetTelescope e λ xs b => do
-    if let .some i ← xs.findIdxM? (λ x => do pure ¬(← x.fvarId!.isLetVar)) then
-      k xs[0:i] (← mkLambdaFVars xs[i+1:] b)
-    else
-      k xs b
-
-
-/-- Modifies expression of the form:
-  ```
-  let a :=
-    let b := x
-    g b
-  f a b
-  ```
-  
-  to 
-  
-  ```
-  let b := x
-  let a := g b
-  f a b
-  ```
- -/
-def normalizeLetBindings (e : Expr) : MetaM (Option Expr) :=
+partial def normalizeLet? (e : Expr) : Option Expr :=
+  let (e', flag) := 
+    match e.flattenLet? with
+    | some e' => run e' true
+    | none    => run e false
+  if flag then some e' else none
+where 
+  run (e : Expr) (didNormalize : Bool) : Expr × Bool :=
   match e with
-  | .letE .. => letTelescope e λ as fVal => do
-    let a := as[0]!
-    let aId := a.fvarId!
-    if let .some aVal ← aId.getValue? then
-      match aVal with
-      | .letE .. => letTelescope aVal λ bs gVal => do
-        withLetDecl (← aId.getUserName) (← aId.getType) gVal λ a' => do
-          let fVal ← mkLambdaFVars as[1:] fVal
-          let fVal := fVal.replaceFVar a a'
-          mkLambdaFVars (bs |>.append #[a']) fVal
-      | _ => return none
+  | .letE xName xType xVal body _ => 
+    if false then
+      (e, false)
+    -- if the let binding is not depending on any free or bound variables then it does not doing any computation and we can remove it
+    else if ¬(xVal.hasAnyFVar (λ _ => true)) && ¬xVal.hasLooseBVars then
+      run (body.instantiate1 xVal) true
+
+    -- the let binding is just a free or bound variable thus completely redundant
+    else if xVal.isFVar || xVal.isBVar then
+      run (body.instantiate1 xVal) true
+
+    -- the let binding is not used at all
+    else if ¬(body.hasLooseBVar 0) then
+      run (body.instantiate1 xVal) true
+
     else
-      return none
-  | _ => return none
+      let (body', didNormalize) := run body didNormalize
+      (.letE xName xType xVal body' default, didNormalize)
+  | _ => (e, didNormalize)
 
 
 def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
 
   if post then 
-    if let .some e' ← normalizeLetBindings e then
-      trace[Meta.Tactic.fun_trans.normalize_let] s!"Normalizing let binding from:\n{← Meta.ppExpr e} \n\nto:\n\n{← Meta.ppExpr e'}"
+    if let .some e' := normalizeLet? e then
+      trace[Meta.Tactic.fun_trans.normalize_let] s!"\n{← Meta.ppExpr e}\n==>\n{← Meta.ppExpr e'}"
 
       return .some (.visit (.mk e' none 0))
   

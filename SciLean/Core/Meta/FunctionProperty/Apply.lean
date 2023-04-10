@@ -8,7 +8,7 @@ namespace SciLean
 For `T = funTrans` and `f = function`
 Get statement for `T (λ t => f x₁ .. xₙ) = ...`
 -/
-def applyCompTheorem (funTrans function : Name) (xs : Array Expr) (t : Expr) : MetaM (Option Expr) := do
+def applyCompTheorem (funTrans function : Name) (xs : Array Expr) (t : Expr) : MetaM (Option (Expr×Name)) := do
 
   let tId := t.fvarId!
   
@@ -28,6 +28,10 @@ def applyCompTheorem (funTrans function : Name) (xs : Array Expr) (t : Expr) : M
     let some compTheorem := thrms.compTheorem
       | continue
 
+    if function = ``ite then
+      dbg_trace s!"Found appropriate composition theorem for {funTrans} {function}. It is {compTheorem} and arguments {args}. Dependent arguments are {depArgIds'}"
+
+
     if depArgIds' ⊆ args then
       let mut ys := xs
     
@@ -38,7 +42,7 @@ def applyCompTheorem (funTrans function : Name) (xs : Array Expr) (t : Expr) : M
       let explicitArgIds ← getConstExplicitArgIds function
       let explicitYs := explicitArgIds.map (λ i => ys[i]!)
       
-      return some (← mkAppNoTrailingM compTheorem explicitYs)
+      return some ((← mkAppNoTrailingM compTheorem explicitYs), compTheorem)
 
   return none
   

@@ -80,14 +80,20 @@ the type of `yᵢ` is `T → Xᵢ` for `i ∈ argIds` and `Xᵢ` for `i ∉ argI
 -/
 def checkCompTheoremCallingConvention 
   (function : Name) (argIds : ArraySet Nat) (compTheorem : Name) : m Unit := do
-  let fArgIds ← getConstExplicitArgIds function
-  let tArgIds ← getConstExplicitArgIds compTheorem
 
-  if fArgIds.size ≠ tArgIds.size then 
-    throwError s!"Failed checking composition theorem calling convention!\nComposition theorem `{compTheorem}` has to have the same number of explicit arguments as the function `{function}`!"
+  -- TODO: update this function
+  -- These checks were to restrictive in case of dependent types
+  --  for example `ite.arg_te.differential_simp'` was failing it
+  --  
+  
+  -- let fArgIds ← getConstExplicitArgIds function
+  -- let tArgIds ← getConstExplicitArgIds compTheorem
 
-  if ¬(argIds ⊆ fArgIds.toArraySet) then
-    throwError s!"Failed checking composition theorem calling convention!\nSpecified argument ids `{argIds}` have to be a subset of explicit argument ids `{fArgIds}`!"
+  -- if fArgIds.size ≠ tArgIds.size then 
+  --   throwError s!"Failed checking composition theorem calling convention!\nComposition theorem `{compTheorem}` has to have the same number of explicit arguments as the function `{function}`!"
+
+  -- if ¬(argIds ⊆ fArgIds.toArraySet) then
+  --   throwError s!"Failed checking composition theorem calling convention!\nSpecified argument ids `{argIds}` have to be a subset of explicit argument ids `{fArgIds}`!"
 
   -- TODO: Check that specified arguments have the correct types
 

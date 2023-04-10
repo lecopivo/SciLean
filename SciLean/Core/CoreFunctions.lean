@@ -332,10 +332,10 @@ function_properties SciLean.Inner.normSqr {X : Type} [Hilbert X] (x : X) : ℝ
 argument x 
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx => 2*⟪dx,x⟫ by sorry_proof,
-  abbrev 𝒯 := λ dx => (∥x∥², 2*⟪dx,x⟫) by sorry_proof,
+  abbrev 𝒯 := λ dx => (‖x‖², 2*⟪dx,x⟫) by sorry_proof,
   HasAdjDiff := sorry_proof,
   abbrev ∂† := λ dx' => (2*dx')•x by sorry_proof,
-  abbrev ℛ := (∥x∥², λ dx' => (2*dx')•x) by sorry_proof
+  abbrev ℛ := (‖x‖², λ dx' => (2*dx')•x) by sorry_proof
 
 
 --------------------------------------------------------------------------------

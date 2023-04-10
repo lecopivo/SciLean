@@ -5,6 +5,9 @@ namespace SciLean
 class UnsafeAD where
   kaboom : False
 
+macro "unsafe_ad" : tactic => `(tactic| have unsafe_ad : UnsafeAD := sorry)
+macro "unsafe_ad" : conv => `(conv| tactic => unsafe_ad)
+
 instance [inst : UnsafeAD] {X Y} [Vec X] [Vec Y] (f : X → Y) : IsSmooth f := inst.kaboom.elim
 instance [inst : UnsafeAD] {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : HasAdjDiff f := inst.kaboom.elim
 
@@ -22,21 +25,21 @@ argument (x,y)
 function_properties SciLean.Inner.norm [UnsafeAD] {X} [Hilbert X] (x : X) 
 argument x
   IsSmooth := sorry,
-  abbrev ∂ := λ dx => ⟪dx, x⟫/∥x∥ by sorry,
-  abbrev 𝒯 := λ dx => let xNorm := ∥x∥; (xNorm, ⟪dx, x⟫/xNorm) by sorry,
+  abbrev ∂ := λ dx => ⟪dx, x⟫/‖x‖ by sorry,
+  abbrev 𝒯 := λ dx => let xNorm := ‖x‖; (xNorm, ⟪dx, x⟫/xNorm) by sorry,
   HasAdjDiff := sorry,
-  abbrev ∂† := λ dx' => (dx'/∥x∥) • x by sorry,
-  abbrev ℛ := let xNorm := ∥x∥; (xNorm, λ dx' => (dx'/∥x∥) • x) by sorry
+  abbrev ∂† := λ dx' => (dx'/‖x‖) • x by sorry,
+  abbrev ℛ := let xNorm := ‖x‖; (xNorm, λ dx' => (dx'/‖x‖) • x) by sorry
 
 
 function_properties SciLean.Real.sqrt [UnsafeAD] (x : ℝ) 
 argument x
   IsSmooth := sorry,
   abbrev ∂ := λ dx => dx/(2 * x.sqrt) by sorry,
-  abbrev 𝒯 := λ dx => let xNorm := ∥x∥; (xNorm, ⟪dx, x⟫/xNorm) by sorry,
+  abbrev 𝒯 := λ dx => let xNorm := ‖x‖; (xNorm, ⟪dx, x⟫/xNorm) by sorry,
   HasAdjDiff := sorry,
-  abbrev ∂† := λ dx' => (dx'/∥x∥) • x by sorry,
-  abbrev ℛ := let xNorm := ∥x∥; (xNorm, λ dx' => (dx'/∥x∥) • x) by sorry
+  abbrev ∂† := λ dx' => (dx'/‖x‖) • x by sorry,
+  abbrev ℛ := let xNorm := ‖x‖; (xNorm, λ dx' => (dx'/‖x‖) • x) by sorry
 
 
 function_properties SciLean.Real.pow [UnsafeAD] (x y : ℝ) 
@@ -106,10 +109,10 @@ theorem ite.arg_te.reverseDifferential_simp' [UnsafeAD]
 
 #eval show Lean.CoreM Unit from do
 
-  addFunctionProperty ``ite ``differential #[1,3,4].toArraySet none ``ite.arg_te.differential_simp' none
-  addFunctionProperty ``ite ``tangentMap #[1,3,4].toArraySet none ``ite.arg_te.tangentMap_simp' none
-  addFunctionProperty ``ite ``adjointDifferential #[1,3,4].toArraySet none ``ite.arg_te.adjointDifferential_simp' none
-  addFunctionProperty ``ite ``reverseDifferential #[1,3,4].toArraySet none ``ite.arg_te.reverseDifferential_simp' none
+  addFunctionProperty ``ite ``differential #[1,2,3,4].toArraySet none ``ite.arg_te.differential_simp' none
+  addFunctionProperty ``ite ``tangentMap #[1,2,3,4].toArraySet none ``ite.arg_te.tangentMap_simp' none
+  addFunctionProperty ``ite ``adjointDifferential #[1,2,3,4].toArraySet none ``ite.arg_te.adjointDifferential_simp' none
+  addFunctionProperty ``ite ``reverseDifferential #[1,2,3,4].toArraySet none ``ite.arg_te.reverseDifferential_simp' none
 
 
 

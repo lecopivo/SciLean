@@ -1,19 +1,125 @@
 import SciLean.Core.Tactic.FunctionTransformation.Core
-
-import SciLean.Core.Defs
-
-import SciLean.Core.Differential
-import SciLean.Core.Adjoint
-import SciLean.Core.AdjDiff
-
+import SciLean.Core.UnsafeAD
 import SciLean.Core.CoreFunctions
--- import SciLean.Data.ArrayType.Notation
--- import SciLean.Data.ArrayType.PowType
--- import SciLean.Data.DataArray
 
 namespace SciLean
 
 
+variable {X : Type} [Hilbert X]
+
+-- set_option trace.Meta.Tactic.fun_trans true 
+-- set_option trace.Meta.Tactic.fun_trans.step true 
+-- set_option trace.Meta.Tactic.fun_trans.rewrite true 
+-- set_option trace.Meta.Tactic.fun_trans.normalize_let true 
+example 
+  : ∂ (λ xy : ℝ × ℝ => xy.fst)
+    =
+    λ xy dxy => dxy.fst 
+  :=
+by
+  fun_trans
+
+-- Level Set of a sphere
+
+-- differential
+example (c : X) (r : ℝ)
+  : ∂ (x : X), (‖x - c‖² - r^2)
+    =
+    λ x dx => 2 * ⟪dx, x - c⟫
+  := 
+by
+  conv => lhs; fun_trans
+
+set_option profiler true
+
+-- gradient
+example (c : X) (r : ℝ)
+  : ∇ (x : X), (‖x - c‖² - r^2)
+    =
+    λ x => (2:ℝ) • (x - c)
+  := 
+by
+  unfold gradient
+  conv => lhs; fun_trans; simp (config := {zeta := false})
+
+example (x : X) : IsSmooth λ y : X => ⟪x,y⟫ := by infer_instance
+example (x : X) : IsSmooth (Inner.inner x)  := by infer_instance
+
+
+-- hessian
+example (c : X) (r : ℝ)
+  : ∂ (∂ (x : X), (‖x - c‖² - r^2))
+    =
+    λ x u v => 2 * ⟪v, u⟫
+  := 
+by
+  conv => 
+    lhs; 
+    fun_trans
+    fun_trans
+    simp
+
+
+-- Signed Distance Function of a sphere
+
+-- differential
+example (c : X) (r : ℝ)
+  : ∂ (x : X), (‖x - c‖ - r)
+    =
+    λ x dx => ⟪dx, x - c⟫ / ‖x - c‖
+  := 
+by
+  unsafe_ad
+  conv => lhs; fun_trans
+
+set_option profiler true
+
+-- gradient
+example (c : X) (r : ℝ)
+  : ∇ (x : X), (‖x - c‖ - r)
+    =
+    λ x => ‖x - c‖⁻¹ • (x - c)
+  := 
+by
+  unsafe_ad
+  unfold gradient
+  conv => lhs; fun_trans
+
+example (x : X) : IsSmooth λ y : X => ⟪x,y⟫ := by infer_instance
+example (x : X) : IsSmooth (Inner.inner x)  := by infer_instance
+
+
+-- hessian
+example (c : X) (r : ℝ)
+  : ∂ (∂ (x : X), (‖x - c‖ - r))
+    =
+    λ x u v => 
+      (⟪v, u⟫ * ‖x - c‖ - ⟪v, x - c⟫ * (⟪u, x - c⟫ / ‖x - c‖ )) / ‖x - c‖^2
+  := 
+by
+  unsafe_ad
+  conv => 
+    lhs; 
+    fun_trans
+    fun_trans
+
+
+-- Differentiation of ReLu
+
+example 
+  : ∂ (λ x : ℝ => if 0 < x then x else 0)
+    =
+    λ x dx => if 0 < x then dx else 0
+  :=
+by
+  unsafe_ad
+  conv =>
+    lhs
+    fun_trans
+
+#exit
+
+#check Lean.mkFreshId
 
 set_option trace.Meta.Tactic.fun_trans true in
 set_option trace.Meta.Tactic.fun_trans.missing_rule true in
@@ -21,10 +127,40 @@ set_option trace.Meta.Tactic.fun_trans.rewrite true in
 example {X Y ι : Type} [SemiHilbert X] [SemiHilbert Y] [Enumtype ι]
   : (λ (x : X) (i : ι) => x)†
     =
-    λ f => ∑ i, f i := 
+    λ f => ∑ i, f i :=
 by
   fun_trans
   done
+
+
+open Lean Meta Qq
+#eval show MetaM Unit from do
+  let e := q(λ xy : ℝ × ℝ => xy.1)
+
+  let xy : Q(ℝ×ℝ) := q((1,2))
+
+  let x ← mkAppM ``Prod.fst #[xy]
+
+  let f := q(λ x : Nat => let y := 666 - x; let a := (let b := (let d := 10; d); b + x); let c := (let e := a + 10; e + a); x + a + c)
+
+  IO.println s!"{← ppExpr x} is projection: {x.isProj}"
+
+  lambdaTelescope f λ xs f => do
+    IO.println s!"\n{← ppExpr f}\n"
+    IO.println s!"{← ppExpr (f.flattenLet)}\n"
+    let f' ← normalizeLet? f
+    IO.println s!"\n{← ppExpr f'}\n"
+    IO.println s!"f is equal to f': {← isDefEq f f'}\n"
+  
+  lambdaTelescope e λ xs fst => do
+
+    IO.println s!"{← ppExpr fst} is projection: {fst.isProj}"
+
+    let fst ← reduce fst
+    IO.println s!"{← ppExpr fst} is projection: {fst.isProj}"
+
+    
+
 
 -- example {X Y₁ Y₂ Z} [SemiHilbert X] [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Z]
 --   (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂)

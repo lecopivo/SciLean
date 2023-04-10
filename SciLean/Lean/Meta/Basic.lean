@@ -23,6 +23,38 @@ where run (e : Expr) (ids : Array Nat) (i : Nat) : Array Nat :=
       run e' ids (i+1)
   | _ => ids
 
+
+partial def _root_.Lean.Expr.flattenLet (e : Expr) : Expr := 
+  match e with
+  | .letE xName xType xVal xBody _ => 
+    match xVal with
+    | .letE yName yType yVal yBody _ =>
+
+      flattenLet $
+        .letE yName yType yVal
+          (.letE xName xType yBody (xBody.liftLooseBVars 1 1) default) default
+
+    | _ => .letE xName xType xVal xBody default
+  | _ => e
+
+
+partial def _root_.Lean.Expr.flattenLet? (e : Expr) : Option Expr := do
+  match e with
+  | .letE xName xType xVal xBody _ => 
+    match xVal with
+    | .letE yName yType yVal yBody _ =>
+
+      let e' := 
+        .letE yName yType yVal
+          (.letE xName xType yBody (xBody.liftLooseBVars 1 1) default) default
+
+      return (flattenLet? e').getD e'
+
+    | _ => do
+      return (.letE xName xType xVal (← flattenLet? xBody) default)
+  | _ => none
+
+
 def getConstExplicitArgIds (constName : Name) : m (Array Nat) := do
   let info ← getConstInfo constName
   return info.type.explicitArgIds
@@ -31,6 +63,19 @@ def getConstArity (constName : Name) : m Nat := do
   let info ← getConstInfo constName
   return info.type.forallArity
 
+/-- Changes structure projection back to function application. Left unchanged if not a projection.
+
+For example `proj ``Prod 0 xy` is changed to `mkApp ``Prod.fst #[xy]`.
+-/
+def revertStructureProj (e : Expr) : MetaM Expr :=
+  match e with
+  | .proj name i struct => do
+    let some info := getStructureInfo? (← getEnv) name
+      | panic! "structure expected"
+    let some projFn := info.getProjFn? i
+      | panic! "valid projection index expected"
+    mkAppM projFn #[struct]
+  | _ => return e
 
 /-- Is `e` in the form `foo x₀ .. xₙ` where `foo` is some constant
 
@@ -142,6 +187,7 @@ def mkUncurryFun (n : Nat) (f : Expr) : MetaM Expr := do
       let xs' ← mkProdSplitElem xProd n
       mkLambdaFVars #[xProd] (← mkAppM' f xs').headBeta
 
+
 @[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]
   (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α) 
   {α} (k : β → γ → δ → m α) : m α :=
@@ -151,3 +197,16 @@ def mkUncurryFun (n : Nat) (f : Expr) : MetaM Expr := do
   (f : forall {α}, (β → γ → δ → ε → MetaM α) → MetaM α) 
   {α} (k : β → γ → δ → ε → m α) : m α :=
   controlAt MetaM fun runInBase => f (fun b c d e => runInBase <| k b c d e)
+
+
+private def letTelescopeImpl (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := 
+  lambdaLetTelescope e λ xs b => do
+    if let .some i ← xs.findIdxM? (λ x => do pure ¬(← x.fvarId!.isLetVar)) then
+      k xs[0:i] (← mkLambdaFVars xs[i:] b)
+    else
+      k xs b
+
+variable [MonadControlT MetaM n] [Monad n]
+
+def letTelescope (e : Expr) (k : Array Expr → Expr → n α) : n α := 
+  map2MetaM (fun k => letTelescopeImpl e k) k
