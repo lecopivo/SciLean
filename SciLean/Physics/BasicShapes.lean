@@ -233,28 +233,6 @@ end Capsule
 -- Round Cone
 ------------------------------------------------------------------------------
 
-class UnsafeAD where
-  kaboom : False
-
-instance [inst : UnsafeAD] {X Y} [Vec X] [Vec Y] (f : X → Y) : IsSmooth f := inst.kaboom.elim
-instance [inst : UnsafeAD] {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : HasAdjDiff f := inst.kaboom.elim
-
-@[fun_trans]
-theorem ite.arg_te.differential_simp' [inst : UnsafeAD] {X Y} [Vec X] [Vec Y] 
-  (t : X → Y) (e : X → Y) (p : X → Prop) [∀ x, Decidable (p x)] 
-  : ∂ (λ x => if p x then t x else e x)
-    =
-    λ x dx => if p x then ∂ t x dx else ∂ e x dx 
-  := inst.kaboom.elim
-
-@[fun_trans]
-theorem ite.arg_te.adjointDifferential_simp' 
-  [inst : UnsafeAD] {X Y} [SemiHilbert X] [SemiHilbert Y] 
-  (t : X → Y) (e : X → Y) (p : X → Prop) [∀ x, Decidable (p x)] 
-  : ∂† (λ x => if p x then t x else e x)
-    =
-    λ x dx' => if p x then ∂† t x dx' else ∂† e x dx'
-  := inst.kaboom.elim
 
 
 structure RoundCone.Params (X : Type) [Hilbert X] where
@@ -298,8 +276,8 @@ namespace RoundCone.Params
     rewrite_by
       unfold sdf
       unfold gradient
-      (tactic => have : UnsafeAD := sorry)
-      simp[adjointDifferential.rule_comp, ite.arg_te.adjointDifferential_simp']
+--      (tactic => have : UnsafeAD := sorry)
+--    simp[adjointDifferential.rule_comp, ite.arg_te.adjointDifferential_simp']
       -- fun_trans
 
 
