@@ -19,7 +19,7 @@ macro_rules
     let var ← `(y)
     let xi' ← xi.raw.replaceM (λ s => if s == lhs.raw then pure $ .some var else pure $ none)
     let g ← `(λ ($var : typeOf $lhs) => $xi')
-    `(doElem| $x:ident := ArrayType.modifyElem ($x:ident) $i $g)
+    `(doElem| $x:ident := GenericArrayType.modifyElem ($x:ident) $i $g)
   else 
     `(doElem| $x:ident := setElem ($x:ident) $i $xi)
 
@@ -52,28 +52,28 @@ macro_rules
 
 
 
-section ArrayTypeNotation
+section GenericArrayTypeNotation
 
 open Lean
 
 -- syntax myFunBinder := " ( " ident  " : " term ("⇒" term)? " )"
 
--- syntax (priority:=high)  --(name:=lambdaParserWithArrayType) 
+-- syntax (priority:=high)  --(name:=lambdaParserWithGenericArrayType) 
 --   " λ " myFunBinder* " => " term : term
 
--- macro_rules -- (kind := lambdaParserWithArrayType) 
+-- macro_rules -- (kind := lambdaParserWithGenericArrayType) 
 -- | `(λ ($x:ident : $X:term) => $b) => `(fun ($x : $X:term) => $b)
 -- | `(λ ($f:ident : $X:term ⇒ $Y:term) => $b) =>
 --   let XY := mkIdent s!"{X.raw.prettyPrint}⇒{Y.raw.prettyPrint}"
---   `(fun {$XY : Type} [ArrayType $XY $X $Y] ($f : $XY) => $b)
+--   `(fun {$XY : Type} [GenericArrayType $XY $X $Y] ($f : $XY) => $b)
 -- | `(λ $x:myFunBinder $xs:myFunBinder* => $b) =>
 --   `(λ $x:myFunBinder => λ $xs:myFunBinder* => $b)
 
 
 -- syntax vecType := " Vec "
 
--- syntax arrayType := term " ⇒ " term
--- syntax myExplicitFunBinder := " *( " ident  " : " arrayType  " )"
+-- syntax GenericArrayType := term " ⇒ " term
+-- syntax myExplicitFunBinder := " *( " ident  " : " GenericArrayType  " )"
 -- syntax myFunBinder := Parser.Term.funBinder <|> myExplicitFunBinder 
 
 -- syntax (priority:=low)
@@ -83,9 +83,9 @@ open Lean
 -- | `(λ *($f:ident : $X:term ⇒ $Y:term) $xs:myFunBinder* => $b) =>
 --   let XY := mkIdent s!"{X.raw.prettyPrint}⇒{Y.raw.prettyPrint}"
 --   if xs.size = 0 then
---     `(fun {$XY : Type} [ArrayType $XY $X $Y] ($f : $XY) => $b)
+--     `(fun {$XY : Type} [GenericArrayType $XY $X $Y] ($f : $XY) => $b)
 --   else
---     `(fun {$XY : Type} [ArrayType $XY $X $Y] ($f : $XY) => λ $xs* => $b)
+--     `(fun {$XY : Type} [GenericArrayType $XY $X $Y] ($f : $XY) => λ $xs* => $b)
 -- -- | `(λ $x:myFunBinder $xs:myFunBinder* => $b) =>
 -- --   `(λ $x:myFunBinder => λ $xs:myFunBinder* => $b)
 -- -- | `(λ $x:funBinder => $b) => `(fun $x => $b)
@@ -94,29 +94,29 @@ open Lean
 #check λ (f : Nat → Float) (i) => f i
 #check λ (f : Nat → Float) i => f i
 
-end ArrayTypeNotation
+end GenericArrayTypeNotation
 
 -- This should be improved such that we can specify the type of arguments
 -- This clashes with typeclass arguments, but who in their right mind
 -- starts a lambda arguments with a typeclass?
--- syntax (name:=ArrayTypeIntroSyntax) "λ" "[" Lean.Parser.ident,+ "]" " ==> " term : term
+-- syntax (name:=GenericArrayTypeIntroSyntax) "λ" "[" Lean.Parser.ident,+ "]" " ==> " term : term
 
--- macro_rules (kind := ArrayTypeIntroSyntax)
+-- macro_rules (kind := GenericArrayTypeIntroSyntax)
 -- | `(λ [ $id1:ident ] ==> $b:term) => `(introElem λ $id1 => $b)
 -- | `(λ [ $id1:ident, $id2:ident ] ==> $b:term) => `(introElem λ ($id1, $id2) => $b)
 -- | `(λ [ $id1:ident, $id2:ident, $id3:ident ] ==> $b:term) => `(introElem λ ($id1, $id2, $id3) => $b)
 
 
--- syntax (name:=ArrayTypeIntroSyntax) "λ" funBinder+ " ==> " term : term
+-- syntax (name:=GenericArrayTypeIntroSyntax) "λ" funBinder+ " ==> " term : term
 
 
--- macro_rules (kind := ArrayTypeIntroSyntax)
+-- macro_rules (kind := GenericArrayTypeIntroSyntax)
 -- | `(λ $xs:funBinder* ==> $b:term) => `(introElem λ $xs* => $b)
 -- | `(λ [ $id1:ident, $id2:ident ] ==> $b:term) => `(introElem λ ($id1, $id2) => $b)
 -- | `(λ [ $id1:ident, $id2:ident, $id3:ident ] ==> $b:term) => `(introElem λ ($id1, $id2, $id3) => $b)
 
 
--- variable {Cont} [ArrayType Cont (Fin 10) (Fin 10)]
+-- variable {Cont} [GenericArrayType Cont (Fin 10) (Fin 10)]
 -- #check ((λ i ==> (i : Fin 10)))
 
 -- #check ((λ i ==> (i : Fin 10)))

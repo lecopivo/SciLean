@@ -2,65 +2,78 @@ import SciLean.Data.ArrayType.Notation
 import SciLean.Data.ArrayType.Properties
 
 namespace SciLean
-namespace ArrayType
-section LinearArrayType
+namespace GenericArrayType
+section LinearGenericArrayType
 
 variable {Cont : Nat → Type} {Elem : Type |> outParam}
-variable [LinearArrayType Cont Elem]
+variable [LinearGenericArrayType Cont Elem]
 
 
 --------------------------------------------------------------------------------
 -- dropElem
 --------------------------------------------------------------------------------
 
-function_properties dropElem [Vec Elem] {n : Nat} (k : Nat) (cont : Cont (n+k)) : Cont n
+function_properties SciLean.DropElem.dropElem 
+  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] [Vec Elem] 
+  {n : Nat} (k : Nat) (cont : Cont (n+k)) 
 argument cont
-  isLin := sorry_proof,
-  isSmooth, 
-  abbrev ∂ 𝒯 := dropElem k dcont by sorry_proof
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,  
+  abbrev ∂ := λ dcont => dropElem k dcont by sorry_proof,
+  abbrev 𝒯 := λ dcont => (dropElem k cont, dropElem k dcont) by sorry_proof
 
-function_properties dropElem [SemiHilbert Elem] {n : Nat} (k : Nat) (cont : Cont (n+k)) : Cont n
+function_properties SciLean.DropElem.dropElem 
+  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] [SemiHilbert Elem] 
+  {n : Nat} (k : Nat) (cont : Cont (n+k)) 
 argument cont
-  hasAdjoint := sorry_proof,
-  abbrev † := pushElem k 0 cont' by sorry_proof,
-  hasAdjDiff := by apply infer_HasAdjDiff'; symdiff; infer_instance; done,
-  abbrev ∂† ℛ := pushElem k 0 dcont' by unfold adjointDifferential; symdiff; symdiff; done
+  HasAdjoint := sorry_proof,
+  abbrev † := λ cont' => pushElem k 0 cont' by sorry_proof,
+  HasAdjDiff := by sorry_proof,
+  abbrev ∂† := λ dcont' => pushElem k 0 dcont' by sorry_proof,
+  abbrev ℛ := (dropElem k cont, λ dcont' => pushElem k 0 dcont') by sorry_proof
 
 
 --------------------------------------------------------------------------------
 -- pushElem
 --------------------------------------------------------------------------------
 
-function_properties pushElem [Vec Elem] {n : Nat} (k : Nat) (elem : Elem) (cont : Cont n) : Cont (n+k)
+function_properties SciLean.PushElem.pushElem 
+  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] [Vec Elem] 
+  {n : Nat} (k : Nat) (elem : Elem) (cont : Cont n)
 argument (elem, cont)
-  isLin := sorry_proof,
-  isSmooth,
-  abbrev ∂ 𝒯 := pushElem k delem dcont by sorry_proof
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ delem dcont => pushElem k delem dcont by sorry_proof,
+  abbrev 𝒯 := λ delem dcont => (pushElem k elem cont, pushElem k delem dcont) by sorry_proof
 argument cont
-  isLin [Fact (elem=0)] := sorry_proof,
-  isSmooth := sorry_proof, 
-  abbrev ∂ 𝒯 := pushElem k 0 dcont by sorry_proof
+  IsLin [Fact (elem=0)] := sorry_proof,
+  IsSmooth := sorry_proof, 
+  abbrev ∂ := λ dcont => pushElem k 0 dcont by sorry_proof,
+  abbrev 𝒯 := λ dcont => (pushElem k elem cont, pushElem k 0 dcont) by sorry_proof
 argument elem
-  isLin [Fact (cont=0)] := sorry_proof,
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := pushElem k delem 0 by sorry_proof
+  IsLin [Fact (cont=0)] := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ delem => pushElem k delem 0 by sorry_proof,
+  abbrev 𝒯 := λ delem => (pushElem k elem cont, pushElem k delem 0) by sorry_proof
 
-function_properties pushElem [SemiHilbert Elem] {n : Nat} (k : Nat) (elem : Elem) (cont : Cont n) : Cont (n+k)
+function_properties SciLean.PushElem.pushElem 
+  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] [SemiHilbert Elem] 
+  {n : Nat} (k : Nat) (elem : Elem) (cont : Cont n)
 argument (elem, cont)
-  hasAdjoint := sorry_proof,
-  abbrev † := (∑ i : Fin k, elemcont'[⟨n+i.1, sorry_proof⟩], dropElem k elemcont') by sorry_proof,
-  hasAdjDiff := sorry,
-  abbrev ∂† ℛ := (∑ i : Fin k, delemcont'[⟨n+i.1, sorry_proof⟩], dropElem k delemcont') by unfold adjointDifferential; symdiff; sorry -- symdiff
+  HasAdjoint := sorry_proof,
+  abbrev † := λ elemcont' => (∑ i : Fin k, elemcont'[⟨n+i.1, sorry_proof⟩], dropElem k elemcont') by sorry_proof,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ delemcont' => (∑ i : Fin k, delemcont'[⟨n+i.1, sorry_proof⟩], dropElem k delemcont') by sorry_proof
 argument cont
-  hasAdjoint [Fact (elem=0)] := sorry_proof,
-  abbrev † [Fact (elem=0)] := dropElem k cont' by sorry_proof,
-  hasAdjDiff := sorry,
-  abbrev ∂† ℛ := dropElem k dcont' by unfold adjointDifferential; symdiff; symdiff
+  HasAdjoint [Fact (elem=0)] := sorry_proof,
+  abbrev † [Fact (elem=0)] := λ cont' => dropElem k cont' by sorry_proof,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ dcont' => dropElem k dcont' by sorry_proof
 argument elem
-  hasAdjoint [Fact (cont=0)] := sorry_proof,
-  abbrev † [Fact (cont=0)] := ∑ i : Fin k, elem'[⟨n+i.1, sorry_proof⟩] by sorry_proof,
-  hasAdjDiff := sorry,
-  abbrev ∂† ℛ := ∑ i : Fin k, delem'[⟨n+i.1, sorry_proof⟩] by unfold adjointDifferential; symdiff; symdiff
+  HasAdjoint [Fact (cont=0)] := sorry_proof,
+  abbrev † [Fact (cont=0)] := λ elem' => ∑ i : Fin k, elem'[⟨n+i.1, sorry_proof⟩] by sorry_proof,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ delem' => ∑ i : Fin k, delem'[⟨n+i.1, sorry_proof⟩] by sorry_proof
 
 
 --------------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 import SciLean.Data.ArrayType.Basic
 
 namespace SciLean 
-namespace ArrayType
+namespace GenericArrayType
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [ArrayType Cont Idx Elem] [Enumtype Idx] 
+variable [GenericArrayType Cont Idx Elem] [Enumtype Idx] 
 
 -- The above instance is giving problems in the following examples.
 -- TOOD: investigate
@@ -39,8 +39,8 @@ instance (priority := low) {κ} {_ : Enumtype κ} [FinVec Elem κ] : DualBasis C
 
 open BasisDuality in
 instance (priority := low) {κ} {_ : Enumtype κ} [FinVec Elem κ] : BasisDuality Cont where
-  toDual   := ArrayType.map toDual
-  fromDual := ArrayType.map fromDual
+  toDual   := GenericArrayType.map toDual
+  fromDual := GenericArrayType.map fromDual
 
 instance (priority := low) {κ : Type} {_ : Enumtype κ} [FinVec Elem κ] : FinVec Cont (Idx×κ) where
   is_basis := sorry_proof

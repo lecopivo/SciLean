@@ -1,4 +1,4 @@
-import SciLean.Data.ArrayType.PowType
+import SciLean.Data.ArrayType.ArrayType
 import SciLean.Data.ArrayType.Properties
 
 

@@ -3,7 +3,7 @@ import SciLean.Data.ArrayType.Algebra
 namespace SciLean
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [ArrayType Cont Idx Elem] [Enumtype Idx] 
+variable [GenericArrayType Cont Idx Elem] [Enumtype Idx] 
 
 -- There are some issues working with `getElem : (x : Cont) → (i : Idx) → Dom x i → Elem`
 -- bacause it has inherently dependent types plus `Dom x i : Prop` and 
@@ -13,138 +13,164 @@ variable [ArrayType Cont Idx Elem] [Enumtype Idx]
 -- getElem 
 --------------------------------------------------------------------------------
 
-instance getElem.arg_cont_.isLin [Vec Elem]
-  : IsLin (λ (cont : Cont) (idx : Idx) => cont[idx]) := sorry_proof
-instance getElem.arg_cont.isLin [Vec Elem] (idx : Idx)
-  : IsLin (λ (cont : Cont) => cont[idx]) := sorry_proof
 
-instance getElem.arg_cont_.isSmooth [Vec Elem]
-  : IsSmooth (λ (cont : Cont) (idx : Idx) => cont[idx]) := by infer_instance
-instance getElem.arg_cont.isSmooth [Vec Elem] (idx : Idx)  
-  : IsSmooth (λ (cont : Cont) => cont[idx]) := by infer_instance
-instance getElem.arg_cont.composition.isSmooth [Vec Elem] [Vec X]
-  (f : X → Cont) [IsSmoothT f] (idx : Idx)
-  : IsSmoothT (λ (x : X) => (f x)[idx]) := IsSmoothT_comp₃ (λ cont => cont[idx]) f
+theorem getElem.arg_cont.IsLin [Vec Elem] (idx : Idx) (dom)
+  : IsLin (λ (cont : Cont) => getElem cont idx dom) := sorry_proof
+instance getElem.arg_cont.IsLin' [Vec Elem] {T : Type} [Vec T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.IsLin cont] 
+  : SciLean.IsLin (λ t => getElem (cont t) idx dom) := sorry_proof
+
+instance getElem.arg_cont.IsSmooth [Vec Elem] (idx : Idx) (dom)
+  : IsSmooth (λ (cont : Cont) => getElem cont idx dom) := sorry_proof
+instance getElem.arg_cont.IsSmooth' [Vec Elem] {T : Type} [Vec T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.IsSmooth cont] 
+  : SciLean.IsSmooth (λ t => getElem (cont t) idx dom) := sorry_proof
 
 
-@[diff] theorem getElem.arg_cont_.diff_simp [Vec Elem]
-  : ∂ (λ (cont : Cont) (idx : Idx) => cont[idx]) = λ cont dcont idx => dcont[idx]
-  := by symdiff; done
-@[diff] theorem getElem.arg_cont_.tangentMap_simp [Vec Elem]
-  : 𝒯 (λ (cont : Cont) (idx : Idx) => cont[idx])
-    = 
-    λ cont dcont => (λ idx => cont[idx], λ idx => dcont[idx])
-  := by symdiff; done
-@[diff] theorem getElem.arg_cont.diff_simp [Vec Elem] (idx : Idx)
-  : ∂ (λ (cont : Cont) => cont[idx]) = λ cont dcont => dcont[idx]
-  := by symdiff; done
-@[diff] theorem getElem.arg_cont.tangentMap_simp [Vec Elem] (idx : Idx)
-  : 𝒯 (λ (cont : Cont) => cont[idx])
-    = 
-    λ cont dcont => (cont[idx],dcont[idx])
-  := by symdiff; done
-@[diff] theorem getElem.arg_cont.composition.diff_simp [Vec Elem] [Vec X]
-  (f : X → Cont) [IsSmoothT f] (idx : Idx)
-  : ∂ (λ (x : X) => (f x)[idx]) = λ x dx => (∂ f x dx)[idx]
-  := by rw[differential.of_comp (λ cont => cont[idx]'sorry_proof) f]; symdiff; done
+theorem getElem.arg_cont.differential_simp [Vec Elem] (idx : Idx) (dom)
+  : ∂ (λ (cont : Cont) => getElem cont idx dom)
+    =
+    λ cont dcont => dcont[idx] := sorry_proof
+
+theorem getElem.arg_cont.differential_simp' [Vec Elem] {T : Type} [Vec T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.IsSmooth cont]
+  : ∂ (λ t => getElem (cont t) idx dom)
+    =
+    λ t dt => (∂ cont t dt)[idx]
+  := sorry_proof
 
 
-instance getElem.arg_cont.hasAdjoint [SemiHilbert Elem] (idx : Idx)
-  : HasAdjoint (λ (cont : Cont) => cont[idx]) := sorry_proof
-@[diff] theorem getElem.arg_cont.adj_simp [SemiHilbert Elem] (idx : Idx)
-  : (λ (cont : Cont) => cont[idx])† = λ cont' => setElem 0 idx cont' := sorry_proof
-@[diff] theorem getElem.arg_cont_idx.adj_simp [SemiHilbert Elem]
-  : (λ (cont : Cont) (idx: Idx) => cont[idx])† = λ cont' => introElem cont' := sorry_proof
-@[diff] theorem getElem.arg_cont.composition.adj_simp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
-  (f : X → Cont) [HasAdjointT f]
-  : (λ x => (f x)[idx])† = λ x' => f† (setElem 0 idx x') :=
-by 
-  rw[comp.arg_x.adj_simp (λ cont : Cont => cont[idx]'True.intro) f]; symdiff; done
+theorem getElem.arg_cont.tangentMap_simp [Vec Elem] (idx : Idx) (dom)
+  : 𝒯 (λ (cont : Cont) => getElem cont idx dom)
+    =
+    λ cont dcont => (cont[idx], dcont[idx]) := sorry_proof
 
-instance getElem.arg_cont.hasAdjDiff [SemiHilbert Elem] (idx : Idx)
-  : HasAdjDiff (λ (cont : Cont) => cont[idx]) := by apply infer_HasAdjDiff'; symdiff; infer_instance; done
+theorem getElem.arg_cont.tangentMap_simp' [Vec Elem] {T : Type} [Vec T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.IsSmooth cont]
+  : 𝒯 (λ t => getElem (cont t) idx dom)
+    =
+    λ t dt => 
+      let Tcont := 𝒯 cont t dt
+      (Tcont.fst[idx], Tcont.snd[idx])
+  := sorry_proof
 
-@[diff] theorem getElem.arg_cont.adjDiff_simp [SemiHilbert Elem] (idx : Idx)
-  : ∂† (λ (cont : Cont) => cont[idx]) = λ _ dcont' => setElem 0 idx dcont' := by unfold adjointDifferential; symdiff; symdiff; done
-@[diff] theorem getElem.arg_cont_idx.adjDiff_simp [SemiHilbert Elem]
-  : ∂† (λ (cont : Cont) idx => cont[idx]) = λ _ dcont' => introElem dcont' := by unfold adjointDifferential; symdiff; symdiff; done
-@[diff] theorem getElem.arg_cont.composition.adjDiff_simp [SemiHilbert Elem] [SemiHilbert X] (idx : Idx)
-  (f : X → Cont) [inst : HasAdjDiffT f]
-  : ∂† (λ (x : X) => (f x)[idx]) = λ x dx' => ∂† f x (setElem 0 idx dx') := 
-by 
-  have _ := inst.1
-  have _ := inst.2
 
-  unfold adjointDifferential
-  symdiff; symdiff
-  done
+instance getElem.arg_cont.HasAdjoint [SemiHilbert Elem] (idx : Idx) (dom)
+  : HasAdjoint (λ (cont : Cont) => getElem cont idx dom) := sorry_proof
+instance getElem.arg_cont.HasAdjoint' [SemiHilbert Elem] {T : Type} [SemiHilbert T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.HasAdjoint cont] 
+  : SciLean.HasAdjoint (λ t => getElem (cont t) idx dom) := sorry_proof
+
+theorem getElem.arg_cont.adjoint_simp [SemiHilbert Elem] (idx : Idx) (dom)
+  : (λ (cont : Cont) => getElem cont idx dom)†
+    =
+    λ cont' => setElem 0 idx cont' := sorry_proof
+
+theorem getElem.arg_cont.adjoint_simp' [SemiHilbert Elem] {T : Type} [SemiHilbert T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.HasAdjoint cont]
+  : (λ t => getElem (cont t) idx dom)†
+    =
+    λ t' => cont† (setElem 0 idx t')
+  := sorry_proof
+
+
+instance getElem.arg_cont.HasAdjDiff [SemiHilbert Elem] (idx : Idx) (dom)
+  : HasAdjDiff (λ (cont : Cont) => getElem cont idx dom) := sorry_proof
+instance getElem.arg_cont.HasAdjDiff' [SemiHilbert Elem] {T : Type} [SemiHilbert T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.HasAdjDiff cont] 
+  : SciLean.HasAdjDiff (λ t => getElem (cont t) idx dom) := sorry_proof
+
+theorem getElem.arg_cont.adjointDifferential_simp [SemiHilbert Elem] (idx : Idx) (dom)
+  : ∂† (λ (cont : Cont) => getElem cont idx dom)
+    =
+    λ _ dcont' => setElem 0 idx dcont' := sorry_proof
+
+theorem getElem.arg_cont.adjointDifferential_simp' [SemiHilbert Elem] {T : Type} [SemiHilbert T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.HasAdjoint cont]
+  : ∂† (λ t => getElem (cont t) idx dom)
+    =
+    λ t dt' => ∂† cont t (setElem 0 idx dt')
+  := sorry_proof
+
+theorem getElem.arg_cont.reverseDifferential_simp [SemiHilbert Elem] (idx : Idx) (dom)
+  : ℛ (λ (cont : Cont) => getElem cont idx dom)
+    =
+    λ cont => (cont[idx], λ dcont' => setElem 0 idx dcont') := sorry_proof
+
+theorem getElem.arg_cont.reverseDifferential_simp' [SemiHilbert Elem] {T : Type} [SemiHilbert T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.HasAdjoint cont]
+  : ℛ (λ t => getElem (cont t) idx dom)
+    =
+    λ t => 
+      let Rcont := ℛ cont t
+      (Rcont.fst[idx], λ dt' => Rcont.snd (setElem 0 idx dt'))
+  := sorry_proof
+
+-- register function transformations for ite
+#eval show Lean.CoreM Unit from do
+
+  addFunctionProperty ``getElem ``IsSmooth #[5].toArraySet ``getElem.arg_cont.IsSmooth ``getElem.arg_cont.IsSmooth' none
+  addFunctionProperty ``getElem ``HasAdjoint #[5].toArraySet ``getElem.arg_cont.HasAdjoint ``getElem.arg_cont.HasAdjoint' none
+  addFunctionProperty ``getElem ``HasAdjDiff #[5].toArraySet ``getElem.arg_cont.HasAdjDiff ``getElem.arg_cont.HasAdjDiff' none
+  addFunctionProperty ``getElem ``differential #[5].toArraySet ``getElem.arg_cont.differential_simp ``getElem.arg_cont.differential_simp' none
+  addFunctionProperty ``getElem ``tangentMap #[5].toArraySet ``getElem.arg_cont.tangentMap_simp ``getElem.arg_cont.tangentMap_simp' none
+  addFunctionProperty ``getElem ``adjointDifferential #[5].toArraySet ``getElem.arg_cont.adjointDifferential_simp ``getElem.arg_cont.adjointDifferential_simp' none
+  addFunctionProperty ``getElem ``reverseDifferential #[5].toArraySet ``getElem.arg_cont.reverseDifferential_simp ``getElem.arg_cont.reverseDifferential_simp' none
 
 
 --------------------------------------------------------------------------------
 -- setElem 
 --------------------------------------------------------------------------------
 
-function_properties setElem [Vec Elem] (cont : Cont) (idx : Idx) (elem : Elem) : Cont
--- argument (cont,elem)
---   isLin := sorry_proof,
---   isSmooth,
---   abbrev ∂ 𝒯 := setElem dcont idx delem by sorry_proof
+function_properties SciLean.SetElem.setElem {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam} 
+  [GenericArrayType Cont Idx Elem] [Enumtype Idx] [Vec Elem] 
+  (cont : Cont) (idx : Idx) (elem : Elem)
+argument (cont, elem)
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dcont delem => setElem dcont idx delem by sorry_proof,
+  abbrev 𝒯 := λ dcont delem => (setElem cont idx elem, setElem dcont idx delem) by sorry_proof
 argument cont
-  isSmooth := sorry_proof, 
-  abbrev ∂ 𝒯 := setElem dcont idx 0 by sorry_proof
+  IsLin [Fact (elem = 0)] := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ dcont => setElem dcont idx 0 by sorry_proof,
+  abbrev 𝒯 := λ dcont=> (setElem cont idx elem, setElem dcont idx 0) by sorry_proof
 argument elem
-  isSmooth := sorry_proof,
-  abbrev ∂ 𝒯 := setElem 0 idx delem by sorry_proof
+  IsLin [Fact (cont = 0)] := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ delem => setElem 0 idx delem by sorry_proof,
+  abbrev 𝒯 := λ delem => (setElem cont idx elem, setElem 0 idx delem) by sorry_proof
 
-
-function_properties setElem [SemiHilbert Elem] (cont : Cont) (idx : Idx) (elem : Elem) : Cont
-argument cont 
-  hasAdjoint [Fact (elem=0)] := sorry_proof,
-  -- abbrev † [Fact (elem=0)] := setElem cont' idx 0 by sorry_proof
-  hasAdjDiff := sorry_proof,
-  abbrev ∂† ℛ := setElem dcont' idx 0 by unfold adjointDifferential; symdiff; sorry_proof
+function_properties SciLean.SetElem.setElem {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam} 
+  [GenericArrayType Cont Idx Elem] [Enumtype Idx] [SemiHilbert Elem] 
+  (cont : Cont) (idx : Idx) (elem : Elem)
+argument (cont, elem)
+  HasAdjoint := sorry_proof,
+  abbrev † := λ contelem' => (setElem contelem' idx 0 , contelem'[idx]) by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dcontelem' => (setElem dcontelem' idx 0 , dcontelem'[idx]) by sorry_proof,
+  abbrev ℛ := (setElem cont idx elem, λ dcontelem' => (setElem dcontelem' idx 0 , dcontelem'[idx])) by sorry_proof
+argument cont
+  HasAdjoint [Fact (elem = 0)] := sorry_proof,
+  abbrev † [Fact (elem = 0)] := λ cont' => (setElem cont' idx 0) by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ dcont' => (setElem dcont' idx 0) by sorry_proof,
+  abbrev ℛ := (setElem cont idx elem, λ dcont' => (setElem dcont' idx 0)) by sorry_proof
 argument elem
-  hasAdjoint [Fact (cont=0)] := sorry_proof,
-  abbrev † [Fact (cont=0)] := elem'[idx] by sorry_proof,
-  hasAdjDiff := sorry_proof,
-  abbrev ∂† := delem'[idx] by unfold adjointDifferential; symdiff; symdiff; done
-
--- @[simp ↓, infer_tc_goals_rl]
--- instance setElem.arg_cont.adj_simp [SemiHilbert Elem] (idx : Idx) (elem : Elem) -- [Fact (elem=0)]
---   : (λ cont : Cont => setElem cont idx elem)†
---     =
---     (λ cont' => setElem cont' idx 0) := by sorry_proof
-
--- this clashes with `setElem.arg_cont.adj_simp` for some unknown reason
--- TODO: remove this once the clash is resolved!
-example :
-  (λ (x : ℝ) => x + x)†
-  =
-  (λ y => y + y) := by sorry --symdiff; done
-
--- double check it does not happend with ∂†
-example :
-  ∂† (λ (x : ℝ) => x + x)
-  =
-  (λ x dy' => dy' + dy') := by sorry --symdiff; done
-
+  HasAdjoint [Fact (cont = 0)] := sorry_proof,
+  abbrev † [Fact (cont = 0)] := λ elem' => (elem'[idx]) by sorry_proof,
+  HasAdjDiff := sorry_proof,
+  abbrev ∂† := λ delem' => delem'[idx] by sorry_proof,
+  abbrev ℛ := (setElem cont idx elem, λ delem' => delem'[idx]) by sorry_proof
 
 --------------------------------------------------------------------------------
 -- introElem 
 --------------------------------------------------------------------------------
 
-function_properties introElem [Vec Elem] (f : Idx → Elem) : Cont
-argument f
-  isLin := sorry_proof,
-  isSmooth,
-  abbrev ∂ 𝒯 := introElem df by symdiff
+-- function_properties SciLean.IntroElem.introElem {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam} 
+--   [GenericArrayType Cont Idx Elem] [Enumtype Idx] [Vec Elem] (f : Idx → Elem) 
+-- argument f
+--   IsLin := sorry_proof,
+--   IsSmooth := sorry_proof,
+--   abbrev ∂ := introElem df by sorry_proof
 
-function_properties introElem [SemiHilbert Elem] (f : Idx → Elem) : Cont
-argument f
-  hasAdjoint := sorry_proof,
-  abbrev † := λ idx => f'[idx] by sorry_proof,
-  hasAdjDiff, 
-  abbrev ∂† ℛ := λ idx => df'[idx] by unfold adjointDifferential; symdiff; symdiff; done
+-- function_properties introElem [SemiHilbert Elem] (f : Idx → Elem) : Cont
+-- argument f
+--   hasAdjoint := sorry_proof,
+--   abbrev † := λ idx => f'[idx] by sorry_proof,
+--   hasAdjDiff, 
+--   abbrev ∂† ℛ := λ idx => df'[idx] by unfold adjointDifferential; symdiff; symdiff; done
 
 
 ---
