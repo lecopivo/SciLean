@@ -12,8 +12,8 @@ approx solver (m k : ℝ) (steps : Nat)
                              -∇ (x':=x), H m k x' p))
 by
   -- Unfold Hamiltonian and compute gradients
-  unfold H
-  symdiff; symdiff
+  unfold H; unfold gradient
+  fun_trans; fun_trans
 
   -- Apply RK4 method
   rw [odeSolve_fixed_dt runge_kutta4_step]
@@ -42,5 +42,6 @@ def main : IO Unit := do
       if j < 10*(x+1) then
         IO.print "o"
     IO.println ""
+
 
 #eval main

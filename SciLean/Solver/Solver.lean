@@ -1,6 +1,4 @@
--- import SciLean.Operators
 import SciLean.Core
--- import SciLean.Functions.OdeSolve
 import SciLean.Tactic.BubbleLimit
 
 namespace SciLean
@@ -166,10 +164,10 @@ macro_rules
 macro "approx_limit " n0:term : tactic =>
  `(tactic| ((conv => enter [1]; bubble_lim; (tactic => sorry)); apply (Approx.limit _ ($n0:term))))
 
-approx bar (s : ℝ) (n₀ : ℕ) := ∇ (limit λ n => λ x : ℝ => (s + (1:ℝ)/(n:ℝ)) * x)
-by
-  approx_limit n₀; intro n;
-  symdiff
+-- approx bar (s : ℝ) (n₀ : ℕ) := ∇ (limit λ n => λ x : ℝ => (s + (1:ℝ)/(n:ℝ)) * x)
+-- by
+--   approx_limit n₀; intro n;
+--   symdiff
 
 
 

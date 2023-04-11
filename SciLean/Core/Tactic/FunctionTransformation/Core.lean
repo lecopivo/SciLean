@@ -11,6 +11,7 @@ open Lean Meta
 
 namespace SciLean
 
+namespace FunctionTransformation
 
 def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Expr) : SimpM (Option Simp.Step) := do
 

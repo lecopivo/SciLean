@@ -1,4 +1,5 @@
 import SciLean.Core
+import SciLean.Core.Tactic.FunctionTransformation.Core
 -- import SciLean.Data.DataArray
 
 

@@ -41,20 +41,20 @@ theorem odeSolve_fixed_dt (stepper : (ℝ → X → X) → ℝ → X → ℝ →
 -- |___/\__\___| .__/ .__/\___|_| /__/
 --             |_|  |_|
 
-def forward_euler_step  (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X := x₀ + Δt * f t₀ x₀
+def forward_euler_step  (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X := x₀ + Δt • f t₀ x₀
 
 def midpoint_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X := 
   let dt := Δt/2
-  let x' := x₀ + dt * f t₀ x₀
-  x₀ + Δt * (f (t₀+dt) x')
+  let x' := x₀ + dt • f t₀ x₀
+  x₀ + Δt • (f (t₀+dt) x')
 
 def runge_kutta4_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X :=
   let dt := Δt/2
   let k1 := f t₀ x₀
-  let k2 := f (t₀+dt) (x₀ + dt * k1)
-  let k3 := f (t₀+dt) (x₀ + dt * k2)
-  let k4 := f (t₀+Δt) (x₀ + Δt * k3)
-  x₀ + (Δt/6) * (k1 + (2:ℝ)*k2 + (2:ℝ)*k3 + k4)
+  let k2 := f (t₀+dt) (x₀ + dt • k1)
+  let k3 := f (t₀+dt) (x₀ + dt • k2)
+  let k4 := f (t₀+Δt) (x₀ + Δt • k3)
+  x₀ + (Δt/6) • (k1 + (2:ℝ)•k2 + (2:ℝ)•k3 + k4)
 
 
 #exit 
