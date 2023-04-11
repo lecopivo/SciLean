@@ -1,5 +1,5 @@
--- import SciLean.Core.FunctionProperties
 import SciLean.Core.AdjDiff
+import SciLean.Core.UnsafeAD
 import SciLean.Core.Meta.FunctionProperty.Syntax
 namespace SciLean
 
@@ -266,28 +266,14 @@ argument x
   abbrev ℛ := let iy := 1/y; (x*iy, λ dx' => dx'*iy) by sorry
 
 
---------------------------------------------------------------------------------
--- ite - if c then t else e
---------------------------------------------------------------------------------
-
-function_properties ite {X : Type} [Vec X] (c : Prop) [h : Decidable c] (t e : X)
-argument (t,e)
-  IsLin := sorry,
+function_properties HDiv.hDiv [UnsafeAD] (x y : ℝ) 
+argument (x,y)
   IsSmooth := sorry,
-  abbrev ∂ := λ dt de => if c then dt else de by sorry,
-  abbrev 𝒯 := λ dt de => if c then (t,dt) else (e,de) by sorry
-
-function_properties ite {X : Type} [SemiHilbert X] (c : Prop) [h : Decidable c] (t e : X)
-argument (t,e)
-  HasAdjoint := sorry,
-  abbrev † := λ te' => if c then (te', 0) else (0, te') by sorry,
+  abbrev ∂ := λ dx dy => (dx*y - x*dy) / (y^2)  by sorry,
+  abbrev 𝒯 := λ dx dy => let iy := 1/y; (x*iy, (dx*y - x*dy)*iy^2)  by sorry,
   HasAdjDiff := sorry,
-  abbrev ∂† := λ dte' => if c then (dte', 0) else (0, dte') by sorry,
-  abbrev ℛ := 
-    if c then 
-      (t, λ dte' => (dte', 0)) 
-    else 
-      (e, λ dte' => (0, dte')) by sorry
+  abbrev ∂† := λ dxy' => let s := dxy' / (y^2); (s * y, - s * x) by sorry,
+  abbrev ℛ := let iy := 1/y; (x*iy, λ dxy' => let s := dxy' * iy^2; (s * y, - s * x)) by sorry
 
 
 --------------------------------------------------------------------------------
@@ -339,6 +325,20 @@ argument x
 
 
 --------------------------------------------------------------------------------
+-- Inner.norm - ∥·∥
+--------------------------------------------------------------------------------
+
+function_properties SciLean.Inner.norm [UnsafeAD] {X} [Hilbert X] (x : X) 
+argument x
+  IsSmooth := sorry,
+  abbrev ∂ := λ dx => ⟪dx, x⟫/‖x‖ by sorry,
+  abbrev 𝒯 := λ dx => let xNorm := ‖x‖; (xNorm, ⟪dx, x⟫/xNorm) by sorry,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ dx' => (dx'/‖x‖) • x by sorry,
+  abbrev ℛ := let xNorm := ‖x‖; (xNorm, λ dx' => (dx'/‖x‖) • x) by sorry
+
+
+--------------------------------------------------------------------------------
 -- sum - ∑
 --------------------------------------------------------------------------------
 
@@ -382,7 +382,6 @@ argument x
 --------------------------------------------------------------------------------
 -- SmoothMap.mk'
 --------------------------------------------------------------------------------
-
 
 -- TODO: Make this work!
 -- function_properties SciLean.SmoothMap.mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) (hf : IsSmooth f)
@@ -435,3 +434,95 @@ argument f
 --     =
 --     λ w dw => λ x ⟿ ∂ f w dw x:= sorry_proof
 
+
+--------------------------------------------------------------------------------
+-- ite - if c then t else e
+--------------------------------------------------------------------------------
+
+function_properties ite {X : Type} [Vec X] (c : Prop) [h : Decidable c] (t e : X)
+argument (t,e)
+  IsLin := sorry,
+  IsSmooth := sorry,
+  abbrev ∂ := λ dt de => if c then dt else de by sorry,
+  abbrev 𝒯 := λ dt de => if c then (t,dt) else (e,de) by sorry
+
+function_properties ite {X : Type} [SemiHilbert X] (c : Prop) [h : Decidable c] (t e : X)
+argument (t,e)
+  HasAdjoint := sorry,
+  abbrev † := λ te' => if c then (te', 0) else (0, te') by sorry,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ dte' => if c then (dte', 0) else (0, dte') by sorry,
+  abbrev ℛ := 
+    if c then 
+      (t, λ dte' => (dte', 0)) 
+    else 
+      (e, λ dte' => (0, dte')) by sorry
+
+-- These theorems have to be done by had as `function_property` can't handle dependant types
+-- and `ite` has this `(c : Prop) [Decidable c]` which is currently not handled well
+
+@[fun_trans]
+theorem ite.arg_te.IsSmooth' [UnsafeAD] 
+  {X Y} [Vec X] [Vec Y] 
+  (c : X → Prop) [∀ x, Decidable (c x)] 
+  (t : X → Y) (e : X → Y) [IsSmooth t] [IsSmooth e]
+  : IsSmooth (λ x => if c x then t x else e x)
+  := UnsafeAD.kaboom.elim
+
+@[fun_trans]
+theorem ite.arg_te.HasAdjDiff' [UnsafeAD] 
+  {X Y} [SemiHilbert X] [SemiHilbert Y] 
+  (c : X → Prop) [∀ x, Decidable (c x)] 
+  (t : X → Y) (e : X → Y) [HasAdjDiff t] [HasAdjDiff e]
+  : HasAdjDiff (λ x => if c x then t x else e x)
+  := UnsafeAD.kaboom.elim
+
+@[fun_trans]
+theorem ite.arg_te.differential_simp' [UnsafeAD] 
+  {X Y} [Vec X] [Vec Y] 
+  (c : X → Prop) [∀ x, Decidable (c x)] 
+  (t : X → Y) (e : X → Y) [IsSmooth t] [IsSmooth e]
+  : ∂ (λ x => if c x then t x else e x)
+    =
+    λ x dx => if c x then ∂ t x dx else ∂ e x dx 
+  := UnsafeAD.kaboom.elim
+
+@[fun_trans]
+theorem ite.arg_te.tangentMap_simp' [UnsafeAD] 
+  {X Y} [Vec X] [Vec Y] 
+  (c : X → Prop) [∀ x, Decidable (c x)] 
+  (t : X → Y) (e : X → Y) [IsSmooth t] [IsSmooth e]
+  : ∂ (λ x => if c x then t x else e x)
+    =
+    λ x dx => if c x then ∂ t x dx else ∂ e x dx 
+  := UnsafeAD.kaboom.elim
+
+@[fun_trans]
+theorem ite.arg_te.adjointDifferential_simp' [UnsafeAD] 
+  {X Y} [SemiHilbert X] [SemiHilbert Y] 
+  (c : X → Prop) [∀ x, Decidable (c x)] 
+  (t : X → Y) (e : X → Y) [HasAdjDiff t] [HasAdjDiff e]
+  : ∂† (λ x => if c x then t x else e x)
+    =
+    λ x dx' => if c x then ∂† t x dx' else ∂† e x dx'
+  := UnsafeAD.kaboom.elim
+
+@[fun_trans]
+theorem ite.arg_te.reverseDifferential_simp' [UnsafeAD] 
+  {X Y} [SemiHilbert X] [SemiHilbert Y] 
+  (c : X → Prop) [∀ x, Decidable (c x)] 
+  (t : X → Y) (e : X → Y) [HasAdjDiff t] [HasAdjDiff e]
+  : ℛ (λ x => if c x then t x else e x)
+    =
+    λ x => if c x then ℛ t x else ℛ e x
+  := UnsafeAD.kaboom.elim
+
+-- register function transformations for ite
+#eval show Lean.CoreM Unit from do
+
+  addFunctionProperty ``ite ``IsSmooth #[1,2,3,4].toArraySet none ``ite.arg_te.IsSmooth' none
+  addFunctionProperty ``ite ``HasAdjDiff #[1,2,3,4].toArraySet none ``ite.arg_te.HasAdjDiff' none
+  addFunctionProperty ``ite ``differential #[1,2,3,4].toArraySet none ``ite.arg_te.differential_simp' none
+  addFunctionProperty ``ite ``tangentMap #[1,2,3,4].toArraySet none ``ite.arg_te.tangentMap_simp' none
+  addFunctionProperty ``ite ``adjointDifferential #[1,2,3,4].toArraySet none ``ite.arg_te.adjointDifferential_simp' none
+  addFunctionProperty ``ite ``reverseDifferential #[1,2,3,4].toArraySet none ``ite.arg_te.reverseDifferential_simp' none
