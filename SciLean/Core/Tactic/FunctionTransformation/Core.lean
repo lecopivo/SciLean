@@ -141,7 +141,6 @@ def applySimpleRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) 
 
   -- identity - (λ x => x)
   if (b == x) then
-    dbg_trace s!"rule I `{← xId.getType}`"
     return ← (applyRule transName .id #[← xId.getType])
 
   -- constant - (λ y => x)
