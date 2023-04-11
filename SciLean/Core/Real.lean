@@ -23,16 +23,16 @@ namespace Real
   abbrev toRealFun₂ (f : Float → Float → Float) : ℝ → ℝ → ℝ 
     := λ x y => ⟨f x.val y.val⟩
 
-  def sqrt : ℝ → ℝ := toRealFun Float.sqrt
-  def pow : ℝ → ℝ → ℝ := toRealFun₂ Float.pow
+  def sqrt (x : ℝ) : ℝ := toRealFun Float.sqrt x
+  def pow (x y : ℝ) : ℝ := toRealFun₂ Float.pow x y
 
-  def sin : ℝ → ℝ := toRealFun Float.sin
-  def cos : ℝ → ℝ := toRealFun Float.cos
-  def tan : ℝ → ℝ := toRealFun Float.tan
-  def atan : ℝ → ℝ := toRealFun Float.atan
-  def atan2 : ℝ → ℝ → ℝ := toRealFun₂ Float.atan2
+  def sin (θ : ℝ) : ℝ := toRealFun Float.sin θ
+  def cos (θ : ℝ) : ℝ := toRealFun Float.cos θ
+  def tan (θ : ℝ) : ℝ := toRealFun Float.tan θ
+  def atan (yx : ℝ) : ℝ := toRealFun Float.atan yx
+  def atan2 (y x : ℝ) : ℝ := toRealFun₂ Float.atan2 y x
 
-  def exp : ℝ → ℝ := toRealFun Float.exp
+  def exp (x : ℝ) : ℝ := toRealFun Float.exp x
   def exp2 : ℝ → ℝ := toRealFun Float.exp2
   def log : ℝ → ℝ := toRealFun Float.log
   def log2 : ℝ → ℝ := toRealFun Float.log2

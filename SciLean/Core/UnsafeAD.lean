@@ -1,7 +1,4 @@
--- import SciLean.Core.CoreFunctions
 import SciLean.Core.Defs
--- import SciLean.Core.Meta.FunctionProperty.Syntax
--- import SciLean.
 
 namespace SciLean
 
@@ -16,7 +13,7 @@ Allows automatic differentiation to perform inconsistent rewrites like `∀ x∈
 
 The set of inconsistent rewrites is carefully chosen such that automatic differentiation outputs reasonable answer, e.g. the result is correct almost everywhere, but right now we do not provide any formal guarantees.
 
-Yes we agree, this is not an ideal state of affairs! Assuming inconsistency is not great but not having these rewrites would severly limit the usefullness of automatic differentiation. Hopefully, in the future we will have a better way to handle this. One potential solution is for AD to also produce a set where the result is valid.
+Yes we agree, this is not an ideal state of affairs! Assuming inconsistency is not great but not having these rewrites would severely limit the usefullness of automatic differentiation. Hopefully, in the future we will have a better way to handle this. One potential solution would be for AD to also produce a set where the result is valid.
 -/
 macro (name:=unsafeADTactic) "unsafe_ad" : tactic => 
   `(tactic| have unsafe_ad : UnsafeAD := sorry)

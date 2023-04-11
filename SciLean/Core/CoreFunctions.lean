@@ -270,10 +270,24 @@ function_properties HDiv.hDiv [UnsafeAD] (x y : ℝ)
 argument (x,y)
   IsSmooth := sorry,
   abbrev ∂ := λ dx dy => (dx*y - x*dy) / (y^2)  by sorry,
-  abbrev 𝒯 := λ dx dy => let iy := 1/y; (x*iy, (dx*y - x*dy)*iy^2)  by sorry,
+  abbrev 𝒯 := let iy := 1/y; λ dx dy => (x*iy, (dx*y - x*dy)*iy^2)  by sorry,
   HasAdjDiff := sorry,
   abbrev ∂† := λ dxy' => let s := dxy' / (y^2); (s * y, - s * x) by sorry,
   abbrev ℛ := let iy := 1/y; (x*iy, λ dxy' => let s := dxy' * iy^2; (s * y, - s * x)) by sorry
+
+
+--------------------------------------------------------------------------------
+-- Inv.inv - x⁼¹
+--------------------------------------------------------------------------------
+
+function_properties Inv.inv [UnsafeAD] (x : ℝ) 
+argument x
+  IsSmooth := sorry,
+  abbrev ∂ := let ix := x⁻¹; λ dx => -dx * ix^2  by sorry,
+  abbrev 𝒯 := let ix := x⁻¹; λ dx => (ix, -dx * ix^2)  by sorry,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ dx' => let ix := x⁻¹; -dx' * ix^2 by sorry,
+  abbrev ℛ := let ix := x⁻¹; (ix, λ dx' => -dx' * ix^2) by sorry
 
 
 --------------------------------------------------------------------------------
