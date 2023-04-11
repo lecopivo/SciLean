@@ -75,9 +75,9 @@ section Basis
 
 end Basis
 
-class OrhonormalBasis (X : Type) (ι : outParam $ Type v) [Basis X ι ℝ] [Inner X] : Prop where
-  is_orhogonal : ∀ i j, i ≠ j → ⟪𝕖[X] i, 𝕖 j⟫ = 0
-  is_orhonormal : ∀ i, ⟪𝕖[X] i, 𝕖 i⟫ = 1
+class OrthonormalBasis (X : Type) (ι : Type v) (K : Type w) [Zero K] [Basis X ι K] [Inner X] : Prop where
+  is_orthogonal : ∀ i j, i ≠ j → ⟪𝕖[X] i, 𝕖 j⟫ = 0
+  is_orthonormal : ∀ i, ⟪𝕖[X] i, 𝕖 i⟫ = 1
 
 
 /--
@@ -135,9 +135,9 @@ instance : FinVec ℝ Unit where
   to_dual := by sorry_proof
   from_dual := by sorry_proof
 
-instance : OrhonormalBasis ℝ Unit where
-  is_orhogonal  := sorry_proof
-  is_orhonormal := sorry_proof
+instance : OrthonormalBasis ℝ Unit ℝ where
+  is_orthogonal  := sorry_proof
+  is_orthonormal := sorry_proof
 
 -- @[infer_tc_goals_rl]
 instance {X Y ι κ} {_ :Enumtype ι} {_ : Enumtype κ} [FinVec X ι] [FinVec Y κ]

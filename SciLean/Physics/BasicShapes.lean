@@ -3,8 +3,11 @@ import SciLean.Core.Meta.RewriteBy
 import SciLean.Core.AdjDiff
 import SciLean.Core.Tactic.FunctionTransformation.Core
 import SciLean.Core.UnsafeAD
+import SciLean.Core.CoreFunctions
 
 import SciLean.Physics.Shape
+
+
 
 namespace SciLean
 
@@ -44,7 +47,7 @@ namespace AxisAlignedBox
     is_locate := sorry
 
 
-  instance [OrhonormalBasis X ι] : HasSdf (toSet (X:=X) (ι:=ι)) where
+  instance [OrthonormalBasis X ι ℝ] : HasSdf (toSet (X:=X) (ι:=ι)) where
     sdf := λ s x => Id.run do
       let mut cornerDist : ℝ := 0
       let mut sideDist   : ℝ := 0
@@ -102,23 +105,23 @@ namespace Ball.Params
 
   variable {X : Type} [Hilbert X] (p : Params X)
 
-  def sdf (x : X) := ∥x - p.center∥ - p.radius.1
+  def sdf (x : X) := ‖x - p.center‖ - p.radius.1
 
   def sdfGrad (x : X) := (∇ (sdf p) x) 
     rewrite_by
       unfold sdf; unfold gradient
-      (tactic => have : UnsafeAD := sorry)
+      unsafe_ad
       fun_trans
 
   def sdfHess (x : X) (u v : X) := (∂ (∂ (sdf p)) x u v) 
     rewrite_by
       unfold sdf; unfold gradient
-      (tactic => have : UnsafeAD := sorry)
+      unsafe_ad
       fun_trans
       simp[fun_trans]
       fun_trans
 
-  def levelSet (x : X) := ∥x - p.center∥² - p.radius.1^2
+  def levelSet (x : X) := ‖x - p.center‖² - p.radius.1^2
 
   def levelSetGrad (x : X) := (∇ (levelSet p) x) 
     rewrite_by
@@ -133,7 +136,7 @@ namespace Ball.Params
 end Ball.Params
 
 def Ball.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop := 
-  ∥x - p.center∥ ≤ p.radius.1
+  ‖x - p.center‖ ≤ p.radius.1
 
 abbrev Ball (X ι : Type) [Enumtype ι] [FinVec X ι] := Shape (Ball.toSet (X:=X))
 
@@ -142,13 +145,13 @@ namespace Ball
   variable {X} [Hilbert X]
 
   instance : HasLevelSet (toSet (X:=X)) where
-    levelSet := λ s x => ∥x - s.params.center∥² - s.params.radius^2
+    levelSet := λ s x => ‖x - s.params.center‖² - s.params.radius^2
     is_level_set := sorry
 
   instance : HasLocate (toSet (X:=X)) := locateFromLevelSet
 
   instance : HasSdf (toSet (X:=X)) where
-    sdf := λ s x => ∥x - s.params.center∥ - s.params.radius.1
+    sdf := λ s x => ‖x - s.params.center‖ - s.params.radius.1
     is_sdf := sorry
   
   instance : HasReflect (toSet (X:=X)) where
@@ -195,9 +198,9 @@ structure Capsule.Params (X : Type) [Hilbert X] where
 def Capsule.sdf {X} [Hilbert X] (a b : X) (r : ℝ) (x : X) : ℝ :=
   let xa := x - a
   let ba := (b - a)
-  let ba := (1/∥ba∥) • ba
+  let ba := (1/‖ba‖) • ba
   let h := ⟪xa, ba⟫.clamp 0 1 
-  ∥xa - h•ba∥ - r
+  ‖xa - h•ba‖ - r
 
 def Capsule.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop := 
   Capsule.sdf p.point1 p.point2 p.radius x ≤ 0
@@ -212,9 +215,9 @@ namespace Capsule
     levelSet := λ s x => 
       let xa := x - s.params.point1
       let ba := (s.params.point2 - s.params.point1)
-      let ba := (1/∥ba∥) • ba
+      let ba := (1/‖ba‖) • ba
       let h := ⟪xa, ba⟫.clamp 0 1 
-      ∥xa - h•ba∥² - s.params.radius^2
+      ‖xa - h•ba‖² - s.params.radius^2
     is_level_set := sorry
 
   instance : HasLocate (toSet (X:=X)) := locateFromLevelSet
@@ -223,9 +226,9 @@ namespace Capsule
     sdf := λ s x => 
       let xa := x - s.params.point1
       let ba := (s.params.point2 - s.params.point1)
-      let ba := (1/∥ba∥) • ba
+      let ba := (1/‖ba‖) • ba
       let h := ⟪xa, ba⟫.clamp 0 1 
-      ∥xa - h•ba∥ - s.params.radius
+      ‖xa - h•ba‖ - s.params.radius
     is_sdf := sorry
   
   instance : HasReflect (toSet (X:=X)) where
@@ -283,7 +286,7 @@ namespace RoundCone.Params
 
   -- Maybe turn these into computed fields
   def ba := p.b - p.a
-  def l2 := ∥p.ba∥²
+  def l2 := ‖p.ba‖²
   def rr := p.r1.1 - p.r2.1
   def a2 := p.l2 - p.rr^2
   def il2 := 1.0 / p.l2
@@ -292,7 +295,7 @@ namespace RoundCone.Params
     let pa := x - p.a
     let y  := ⟪pa,p.ba⟫
     let z  := y - p.l2
-    let x2 := ∥p.l2•pa - y•p.ba∥²
+    let x2 := ‖p.l2•pa - y•p.ba‖²
     let y2 := y*y*p.l2
     let z2 := z*z*p.l2
 
@@ -304,23 +307,16 @@ namespace RoundCone.Params
     else 
     ((x2*p.a2*p.il2).sqrt+y*p.rr)*p.il2 - p.r1
 
-  noncomputable
-  def sdfGrad (x : X) := (∇ p.sdf x)
-    rewrite_by
-      unfold sdf; unfold gradient
-      (tactic => have : UnsafeAD := sorry)
-      fun_trans
+  set_option synthInstance.maxSize 2000
 
-      -- simp (config := {zeta := false}) [fun_trans]
-      -- fun_trans
-      -- simp (config := {zeta := false}) [fun_trans]
-      -- fun_trans
-      -- simp (config := {zeta := false}) [fun_trans]
-      -- fun_trans
-      -- simp (config := {zeta := false}) [fun_trans]
+  -- noncomputable
+  -- def sdfGrad (x : X) := (∇ p.sdf x)
+  --   rewrite_by
+  --     unfold sdf; unfold gradient
+  --     unsafe_ad
+  --     ignore_fun_prop
+  --     fun_trans
 
---    simp[adjointDifferential.rule_comp, ite.arg_te.adjointDifferential_simp']
-      -- fun_trans
 
 
 end RoundCone.Params
