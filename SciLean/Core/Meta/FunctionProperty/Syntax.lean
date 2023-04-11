@@ -174,6 +174,19 @@ macro_rules
     funProp $prop $space $extraAssumptions* := $prf)
 
 
+syntax " IsInv " bracketedBinder* (":=" term)? : argProp
+
+macro_rules
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $argSpec:argSpec  $assumptions1*
+    IsInv $extraAssumptions* $[:= $proof]?) => do
+  let prop : Ident := mkIdent ``IsInv
+  let space : Ident := mkIdent ``Nonempty
+  let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
+  `(function_property $id $parms* $[: $retType:term]? 
+    argument $argSpec  $assumptions1*
+    funProp $prop $space $extraAssumptions* := $prf)
+
 
 
 syntax (noncomp)? defOrAbbrev "∂" bracketedBinder* defProofOrConv : argProp
@@ -228,5 +241,16 @@ macro_rules
     $[$nc]? $doa:defOrAbbrev ℛ $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``reverseDifferential
   `(function_property $id $parms* $[: $retType:term]?
+    argument $argSpec  $assumptions1*
+    $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
+
+syntax (noncomp)? defOrAbbrev "⁻¹" bracketedBinder* defProofOrConv : argProp
+
+macro_rules
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+    argument $argSpec:argSpec  $assumptions1*
+    $[$nc]? $doa:defOrAbbrev ⁻¹ $extraAssumptions* $doc:defProofOrConv) => do
+  let trans : Ident := mkIdent ``invFun
+  `(function_property $id $parms* $[: $retType:term]? 
     argument $argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)

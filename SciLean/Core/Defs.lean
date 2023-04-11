@@ -1,6 +1,7 @@
 import SciLean.Data.Prod
 import SciLean.Core.LinMap
 import SciLean.Core.SmoothMap
+import SciLean.Core.InvMap
 
 namespace SciLean
 
@@ -132,6 +133,14 @@ def Smooth.gradient (f : X ⟿ ℝ) : X⟿X := SmoothMap.mk (λ x => adjoint (λ
 @[default_instance]
 instance gradient.instNablaNotation (f : X → ℝ) : Nabla f (gradient f) := ⟨⟩
 instance Smooth.gradient.instNablaNotation (f : X ⟿ ℝ) : Nabla f (Smooth.gradient f) := ⟨⟩
+
+
+-- ⁻¹
+@[fun_trans_def]
+noncomputable 
+def invFun {α β} [Nonempty α] (f : α → β) : β → α := Function.invFun f
+
+instance invFun.instInverseNotation {α β} [Nonempty α] (f : α → β) : InverseNotation f (invFun f) := ⟨⟩
 
 
 end OnSemiHilbertSpaces

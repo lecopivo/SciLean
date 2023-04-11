@@ -2,6 +2,8 @@ import Lean
 import Lean.Parser.Do
 import Lean.Parser.Term
 
+import Mathlib.Algebra.Group.Defs
+
 open Lean Parser
 
 namespace SciLean
@@ -104,3 +106,14 @@ elab:max "∫" x:term:max : term => withFreshMacroScope do
   _ ← synthInstance (← elabType (← `(Integral $x ?m)))
   elabTerm (← `(?m)) none
 
+
+
+class InverseNotation {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
+
+open Lean Elab Term Meta in
+elab:max (priority:=high) x:term:max "⁻¹" : term => withFreshMacroScope do
+  _ ← synthInstance (← elabType (← `(InverseNotation $x ?m)))
+  elabTerm (← `(?m)) none
+
+-- recover old notation
+instance inv.instInverseNotation {α} [Inv α] (a : α) : InverseNotation a (Inv.inv a) := ⟨⟩

@@ -409,6 +409,46 @@ def mkCompTheoremRevDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
 
             mkForallFVars contextVars (← mkEq lhs rhs)
 
+/--
+This function expects that `defVal` has the same type as `mkTargetExprTangentMap e xs`
+
+Assuming that `xs` is a subset of `contextVars`
+-/
+def mkCompTheoremInvFun (e : Expr) (xs : Array Expr) (contextVars : Array Expr) (defVal : Expr) : MetaM Expr := do
+
+  createCompositionOther e xs contextVars λ T t ys contextVars e => do
+
+    withLocalDecl `inst .instImplicit (← mkAppM ``Nonempty #[T]) λ SpaceT => do
+
+      let lhs ← mkAppM ``invFun #[← mkLambdaFVars #[t] e]
+
+      let xName' := (← mkProdFVarName xs).appendAfter "'"
+      let xType' ← inferType e
+      withLocalDecl xName' .default xType' λ x' => do
+
+        let g ← ys.mapM λ y => mkAppM' y #[t]
+        let g ← mkAppFoldrM ``Prod.mk g
+        let g ← mkLambdaFVars #[t] g
+        let g := g.eta
+
+        withLocalDecl `inst .instImplicit (← mkAppM ``IsInv #[g]) λ gIsInv => do
+          let contextVars := #[T,SpaceT]
+            |>.append contextVars
+            |>.push gIsInv
+            
+          let xName'' := xName'.appendAfter "'"
+          let xVal'' := (← mkAppM' defVal #[x']).headBeta
+          let xType'' ← inferType xVal''
+
+          withLetDecl xName'' xType'' xVal'' λ x'' => do
+
+            let ig ← mkAppM ``invFun #[g]
+            let result ← mkAppM' ig #[x'']
+
+            let rhs ← mkLambdaFVars #[x',x''] result
+
+            mkForallFVars contextVars (← mkEq lhs rhs)
+
 
 
 def mkCompTheorem (transName : Name) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) (defVal : Expr) : MetaM Expr := do
@@ -422,6 +462,8 @@ def mkCompTheorem (transName : Name) (e : Expr) (xs : Array Expr) (contextVars :
     mkCompTheoremAdjDiff e xs contextVars defVal  >>= instantiateMVars
   else if transName == ``reverseDifferential then
     mkCompTheoremRevDiff e xs contextVars defVal  >>= instantiateMVars
+  else if transName == ``invFun then
+    mkCompTheoremInvFun e xs contextVars defVal  >>= instantiateMVars
   else
     throwError "Error in `mkCompTheorem`, unrecognized function transformation `{transName}`."
 

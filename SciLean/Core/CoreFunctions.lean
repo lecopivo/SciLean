@@ -82,6 +82,10 @@ argument y
   abbrev ∂† := λ dy' => dy'.2 by sorry_proof,
   abbrev ℛ := ((x,y), λ dy' => dy'.2) by sorry_proof
 
+function_properties Prod.mk {X Y : Type} [Nonempty X] [Nonempty Y] (x : X) (y : Y)
+argument (x,y)
+  IsInv := sorry_proof,
+  abbrev ⁻¹ := λ xy => xy by sorry_proof
 
 --------------------------------------------------------------------------------
 -- Neg.neg - (-·)
@@ -101,6 +105,11 @@ argument x
   HasAdjDiff := sorry_proof,
   abbrev ∂† := λ dx' => -dx' by sorry_proof,
   abbrev ℛ := (-x, λ dx' => -dx') by sorry_proof
+
+function_properties Neg.neg {X : Type} [AddGroup X] (x : X)
+argument x
+  IsInv := sorry_proof,
+  abbrev ⁻¹ := λ x' => -x' by sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -138,6 +147,14 @@ argument y
   abbrev ∂† := λ dy' => dy' by sorry,
   abbrev ℛ := (x+y, λ dy' => dy') by sorry
 
+function_properties HAdd.hAdd {X : Type} [AddGroup X] (x y : X) : X
+argument x
+  IsInv := sorry_proof,
+  abbrev ⁻¹ := λ x' => x' - y by sorry_proof
+argument y
+  IsInv := sorry_proof,
+  abbrev ⁻¹ := λ y' => y' - x by sorry_proof
+
 
 --------------------------------------------------------------------------------
 -- HSub.hSub - (·-·)
@@ -173,6 +190,14 @@ argument y
   HasAdjDiff := by apply HSub.hSub.arg_a4a5.HasAdjDiff',
   abbrev ∂† := λ dy' => -dy' by sorry,
   abbrev ℛ := (x-y, λ dy' => -dy') by sorry
+
+function_properties HSub.hSub {X : Type} [AddGroup X] (x y : X) : X
+argument x
+  IsInv := sorry_proof,
+  abbrev ⁻¹ := λ x' => x' + y by sorry_proof
+argument y
+  IsInv := sorry_proof,
+  abbrev ⁻¹ := λ y' => x - y' by sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -215,6 +240,11 @@ argument x
   abbrev ∂† := λ dx' => ⟪dx',y⟫ by sorry_proof,
   abbrev ℛ := (x•y, λ dx' => ⟪dx',y⟫) by sorry_proof
 
+function_properties SMul.smul {X : Type} [Vec X] (x : ℝ) (y : X) : X
+argument y
+  IsInv [Fact (x≠0)] := sorry_proof,
+  abbrev ⁻¹ [Fact (x≠0)] := λ y' => x⁻¹ • y' by sorry_proof 
+
 
 --------------------------------------------------------------------------------
 -- HMul.hMul - (·*·)
@@ -250,6 +280,14 @@ argument y
   abbrev ∂† := λ dy' => x*dy' by sorry_proof,
   abbrev ℛ := (x*y, λ dy' => x*dy') by sorry_proof
 
+function_properties HMul.hMul {X : Type} [GroupWithZero X] (x y : X)
+argument x
+  IsInv [Fact (y≠0)] := sorry_proof,
+  abbrev ⁻¹ [Fact (y≠0)] := λ x' => x'/y by sorry_proof
+argument y
+  IsInv [Fact (x≠0)] := sorry_proof,
+  abbrev ⁻¹ [Fact (x≠0)] := λ y' => y'/x by sorry_proof
+
 
 --------------------------------------------------------------------------------
 -- HDiv.hDiv - x/y
@@ -275,6 +313,14 @@ argument (x,y)
   abbrev ∂† := λ dxy' => let s := dxy' / (y^2); (s * y, - s * x) by sorry,
   abbrev ℛ := let iy := 1/y; (x*iy, λ dxy' => let s := dxy' * iy^2; (s * y, - s * x)) by sorry
 
+function_properties HDiv.hDiv {X : Type} [GroupWithZero X] (x y : X)
+argument x 
+  IsInv [Fact (y≠0)] := sorry_proof,
+  abbrev ⁻¹ [Fact (y≠0)] := λ x' => x'*y by sorry_proof
+argument y
+  IsInv [Fact (x≠0)] := sorry_proof,
+  abbrev ⁻¹ [Fact (x≠0)] := λ y' => x/y' by sorry_proof
+
 
 --------------------------------------------------------------------------------
 -- Inv.inv - x⁼¹
@@ -288,6 +334,11 @@ argument x
   HasAdjDiff := sorry,
   abbrev ∂† := λ dx' => let ix := x⁻¹; -dx' * ix^2 by sorry,
   abbrev ℛ := let ix := x⁻¹; (ix, λ dx' => -dx' * ix^2) by sorry
+
+function_properties Inv.inv {X : Type} [GroupWithZero X] (x : X)
+argument x 
+  IsInv := sorry_proof,
+  abbrev ⁻¹ := λ x' => x'⁻¹ by sorry_proof
 
 
 --------------------------------------------------------------------------------

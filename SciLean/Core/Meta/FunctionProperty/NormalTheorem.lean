@@ -197,6 +197,35 @@ def mkNormalTheoremLhsRevDiff (e : Expr) (xs : Array Expr) : MetaM Expr := do
 
   mkAppM' f' #[xsProd]
 
+
+/--
+For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
+Return 
+```
+λ (xs' : X₁ × .. Xₙ) => (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])⁻¹ xs'
+```
+where `xᵢ : Xᵢ`
+ -/
+def mkNormalTheoremLhsInvFun (e : Expr) (xs : Array Expr) : MetaM Expr := do
+  
+  let n := xs.size
+  let nExpr := mkNatLit n
+
+  -- f' = (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])†
+  let f' ← 
+    mkUncurryFun n (← mkLambdaFVars xs e)
+    >>=
+    λ e' => mkAppM ``invFun #[e']
+  
+  let xsProdName := (← mkProdFVarName xs).appendAfter "'"
+  let bi : BinderInfo := default
+  let xsProdType ← inferType e --(← mkProdElem xs)
+
+  withLocalDecl xsProdName bi xsProdType λ xsProd => do
+
+    mkLambdaFVars #[xsProd] (← mkAppM' f' #[xsProd])
+
+
 /--
 Applies function transformation to `λ x₁ .. xₙ => e` w.r.t. to all the free variables `xs = #[x₁, .., xₙ]`
 -/
@@ -211,6 +240,8 @@ def mkNormalTheoremLhs (transName : Name) (e : Expr) (xs : Array Expr) : MetaM E
     mkNormalTheoremLhsAdjDiff e xs
   else if transName == ``reverseDifferential then
     mkNormalTheoremLhsRevDiff e xs
+  else if transName == ``invFun then
+    mkNormalTheoremLhsInvFun e xs
   else
     throwError "Error in `mkNormalTheoremLhs`, unrecognized function transformation `{transName}`."
 
@@ -220,7 +251,8 @@ def mkNormalTheoremRhsType (transName : Name) (e : Expr) (xs : Array Expr) : Met
 
 
 def maybeFilterContextVars (transName : Name) (xs : Array Expr) (contextVars : Array Expr) : Array Expr :=
-  if transName == ``adjoint then
+  if (transName == ``adjoint) ||
+     (transName == ``invFun) then
     contextVars.filter 
       λ var => 
         if xs.find? (λ x => var == x) |>.isSome then
