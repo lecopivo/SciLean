@@ -50,19 +50,23 @@ example
     conv => lhs; unfold gradient; unfold adjointDifferential; fun_trans; fun_trans; fun_trans; simp (config := {zeta := false})
 
 
+function_properties Fin.shift {n} [Nonempty (Fin n)] (x : Fin n) (y : Int)
+argument x
+  IsInv := sorry_proof,
+  abbrev ⁻¹ := λ x' => x'.shift (-y) by sorry_proof
 
-example [Nonempty (Fin n)] [IsInv fun (i : Fin n) => Fin.shift i 1]
-  : ∂† (λ (x : Fin n → ℝ) i => ‖ x i + x (i.shift 1)‖²)
+example [Nonempty (Fin n)]
+  : ∂† (λ (x : Fin n → ℝ) i => ‖ x i - x (i.shift 1)‖²)
     =
     sorry
   :=
 by
-  let f := λ (i : Fin n) (xi : ℝ) (g : Fin n → ℝ) => ‖ xi + g (i.shift 1)‖²
+  let f := λ (i : Fin n) (xi : ℝ) (g : Fin n → ℝ) => ‖ xi - g (i.shift 1)‖²
   rw[adjointDifferential.rule_piComp' f (λ i => i)]
   funext g dg'
-  simp only [adjointDifferential.rule_piComp (λ j x => ‖g j + x‖²) (λ i => i.shift 1)]
+  simp only [adjointDifferential.rule_piComp (λ j x => ‖g j - x‖²) (λ i => i.shift 1)]
 
-  dsimp; fun_trans; fun_trans;
+  dsimp; fun_trans; fun_trans; simp
 
 
 -- open FunctionTransformation Lean Meta Qq
