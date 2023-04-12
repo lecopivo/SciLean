@@ -24,7 +24,7 @@ structure Theorems where
 deriving BEq, Inhabited
 
 /-- 
-This holds a collection of property theorems for a fixed 
+This holds a collection of property theorems for a fixed constant
 -/
 def FProperty := Std.RBMap Name (Std.RBMap (ArraySet Nat) Theorems compare) compare
 

@@ -34,3 +34,23 @@ theorem invFun.rule_letComp
     λ z =>
       let y  := f⁻¹ z
       g⁻¹ y := sorry
+
+
+@[fun_trans_rule]
+theorem invFun.rule_pi
+  (f : α → X → Y) [∀ a, IsInv (f a)]
+  : (λ (g : α → X) (a : α) => f a (g a))⁻¹
+    =
+    λ g' a => (f a)⁻¹ (g' a)  := sorry
+
+
+-- @[fun_trans_rule]
+theorem invFun.rule_piComp [Nonempty α]
+  (f : α → X → Y) [∀ a, IsInv (f a)]
+  (h : α → β) [IsInv h]
+  : (λ (g : β → X) (a : α) => f a (g (h a)))⁻¹
+    =
+    λ g' b => 
+      let a := h⁻¹ b
+      (f a)⁻¹ (g' a) := sorry
+

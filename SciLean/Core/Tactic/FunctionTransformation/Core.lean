@@ -14,10 +14,10 @@ namespace SciLean
 namespace FunctionTransformation
 
 def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Expr) : SimpM (Option Simp.Step) := do
-
   let .some rule ← findFunTransRule? transName ruleType
     | trace[Meta.Tactic.fun_trans.missing_rule] s!"Missing {ruleType} rule for `{transName}`."
       return none
+
   let proof ← mkAppNoTrailingM rule args
   let statement ← inferType proof
   let rhs := (← inferType proof).getArg! 2
@@ -76,6 +76,8 @@ def applyLambdaRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step
       let g := x
       let i := y
       let gi ← mkAppM' g #[i]
+      trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Attempting to eliminate {← ppExpr gi} from:\n{← ppExpr b}"
+
       let r ←  withLocalDecl ((← g.fvarId!.getUserName).appendAfter (← i.fvarId!.getUserName).toString)
                               default 
                               (← inferType gi)
@@ -84,6 +86,8 @@ def applyLambdaRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step
           -- We have succesfully eliminated `x y` from `b`
           if ¬(b'.containsFVar xId) then
             let f ← mkLambdaFVars #[y, gi'] b'
+            trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Succesfully eliminated, result:\n{← ppExpr f}"
+
             applyRule transName .forallMap #[f]
           else 
             pure none
@@ -92,35 +96,28 @@ def applyLambdaRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step
 
   -- -- Attempt at propagating the argument `y` into the body
   -- For example `λ g i => g i + g i` is equal to `λ g => (λ i => g i) + (λ i => g i)`
-  if let .some (funName, args) ← getExplicitArgs b then
+  if let .some (funName, args) ← getExplicitArgs b then do
     let args' ← args.mapM (m:=MetaM) (mkLambdaFVars #[y])
+
+    trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Attempting to propagate lambda in `{← ppExpr y}` into the function `{funName}` in the expression:\n{← ppExpr (← mkLambdaFVars #[y] b)}"
+
     try 
-      let b' ← mkAppM funName args'
-      -- The expression `f` is in the above example would be this:
-      -- λ i g => ((λ i' => g i') + (λ i' => g i')) i
+      let b' ← mkAppM funName args'      
+      let eq ← mkFreshExprMVar (← mkEq b (← reduce (← whnf (← mkAppM' b' #[y]))))
 
-      -- let org ← mkLambdaFVars #[y] b 
-      -- dbg_trace s!"success at propagating {← ppExpr y} inside of {← ppExpr b}\nresult: {← ppExpr b'}\noriginal: {← ppExpr org}\nis def eq to the original: {← isDefEq (← whnf (← mkAppM' b' #[y])) b}"
-      -- dbg_trace s!"hoho: {← ppExpr (← whnf (← mkAppM' b' #[y]))}"
-
-      -- option 1 how to proceed
-      -- let f  ← mkLambdaFVars #[y,x] (← mkAppM' b' #[y])
-      -- return ← applyRule transName .swap #[f]
-
-      -- option 2 how to proceed 
-      let e ← mkAppM transName #[← mkLambdaFVars #[x] b']
-      return some (.visit (.mk e none 0))
-
-      -- contrived application of composition rule to ensure function transformation
-      -- can work in a single pass
-      -- Alternativaly we could make bunch of functions mutally recursive
-      -- option 3
-      -- let id ← withLocalDecl `f default (← inferType b') λ f => 
-      --   mkLambdaFVars #[f] f
-      -- let g ← mkLambdaFVars #[x] b'
-      -- return ← applyRule transName .comp #[id,g]
-    catch e => pure ()
-      -- dbg_trace s!"success at propagating {← ppExpr y} inside of {← ppExpr b}"
+      try
+        eq.mvarId!.refl
+        trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Succeffully propagated `{← ppExpr y}` into `{funName}`!"
+        
+        let e ← mkAppM transName #[← mkLambdaFVars #[x] b']
+        return some (.visit (.mk e none 0))
+      catch _ =>
+        trace[Meta.Tactic.fun_trans.step] s!"Failed to prove definitional equality:\n{← ppExpr (← inferType eq)}"
+        pure ()
+      pure ()
+    catch _ => 
+      trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"The function `{funName}` is not meaningful on `{← ppExpr (← inferType y)} → {← ppExpr (← inferType b)}`"
+      pure ()
 
   let f ← mkLambdaFVars #[y,x] b
   applyRule transName .swap #[f]
@@ -353,24 +350,37 @@ def getFunctionTransform (e : Expr) : MetaM (Option (Name × Expr × Array Expr)
   else 
     return none
 
+/--
+Heuristic whether expression `e` is performing any meaningful computation. This 
+is used when normalizing let bindings. Computationally meaningless let bindings are
+removed.
+-/
+def _root_.Lean.Expr.doesComputation (e : Expr) : Bool := 
+  match e with
+  | .app f x => 
+    x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x
+  | _ => false
+
 partial def normalizeLet? (e : Expr) : Option Expr :=
-  let (e', flag) := 
+  let (e, flag) := 
     match e.flattenLet? with
-    | some e' => run e' true
-    | none    => run e false
-  if flag then some e' else none
+    | some e' => (e', true)
+    | none    => (e, false)
+  let (e, flag) := 
+    match e.splitLetProd? with
+    | some e' => (e', true)
+    | none    => (e, flag)
+  let (e, flag) := run e flag
+  if flag then some e else none
 where 
   run (e : Expr) (didNormalize : Bool) : Expr × Bool :=
   match e with
-  | .letE xName xType xVal body _ => 
+  | .letE xName xType xVal body _ =>
     if false then
       (e, false)
-    -- if the let binding is not depending on any free or bound variables then it does not doing any computation and we can remove it
-    else if ¬(xVal.hasAnyFVar (λ _ => true)) && ¬xVal.hasLooseBVars then
-      run (body.instantiate1 xVal) true
 
-    -- the let binding is just a free or bound variable thus completely redundant
-    else if xVal.isFVar || xVal.isBVar then
+    -- remove let binding if it is not doing any meaningful computation
+    else if ¬xVal.doesComputation then
       run (body.instantiate1 xVal) true
 
     -- the let binding is not used at all
@@ -390,9 +400,11 @@ def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
       trace[Meta.Tactic.fun_trans.normalize_let] s!"\n{← Meta.ppExpr e}\n==>\n{← Meta.ppExpr e'}"
 
       return .some (.visit (.mk e' none 0))
+      
   
   if let .some (transName, f, args) ← getFunctionTransform e then
     if let .some step ← main transName f then
+
 
       let step := step.updateResult (← args.foldlM (init:=step.result) λ step' arg => Simp.mkCongrFun step' arg)
 

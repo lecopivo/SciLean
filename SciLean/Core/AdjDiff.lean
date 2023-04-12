@@ -2,13 +2,14 @@ import SciLean.Core.Defs
 import SciLean.Core.HasAdjDiff
 import SciLean.Core.Adjoint
 import SciLean.Core.Differential
+import SciLean.Core.Integral
 
 namespace SciLean
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
-variable {ι : Type} [Enumtype ι]
+variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
 -- Notation 
 -- ∇ s, f s         --> ∇ λ s => f s
@@ -118,6 +119,37 @@ theorem adjointDifferential.rule_snd (X Y) [SemiHilbert X] [SemiHilbert Y]
   : ∂† (λ (xy : X×Y) => xy.2)
     =
     λ xy dxy' => (0, dxy') := sorry
+
+/--
+
+-/
+theorem adjointDifferential.rule_piComp [Nonempty κ]
+  (f : κ → X → Y) [∀ j, HasAdjDiff (f j)] 
+  (h : κ → ι) [IsInv h]
+  : ∂† (λ (g : ι → X) (j : κ) => f j (g (h j)))
+    =
+    λ g dg' i => 
+      ∂† (f (h⁻¹ i)) (g i) (dg' (h⁻¹ i))
+  := sorry
+
+/--
+
+-/
+theorem adjointDifferential.rule_piComp' [Nonempty κ]
+  (f : κ → X → (ι → X) → Y) [∀ j, HasAdjDiff (λ (x,g) => f j x g)] 
+  (h : κ → ι) [IsInv h]
+  : ∂† (λ (g : ι → X) (j : κ) => f j (g (h j)) g)
+    =
+    λ g dg' i => 
+      let a := λ i' => ∂† (λ x => f (h⁻¹ i') x g) (g i') (dg' (h⁻¹ i'))
+      let b := ∂† (λ (g' : ι → X) (j : κ) => f j (g (h j)) g') g dg'
+      a i + b i
+      
+
+      -- +
+      -- ∂† (λ g' => f (h⁻¹ i) x g') g (dg' (h⁻¹ i))
+
+  := sorry
 
 
 --------------------------------------------------------------------------------

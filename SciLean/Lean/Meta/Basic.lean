@@ -1,58 +1,12 @@
 import Lean
 import Std.Lean.Expr
 
+import SciLean.Lean.Expr 
 import SciLean.Lean.Array
 
 namespace Lean.Meta
 
 variable {m} [Monad m] [MonadEnv m] [MonadError m]
-
-def _root_.Lean.Expr.explicitArgIds (e : Expr) : Array Nat := 
-  run e #[] 0
-where run (e : Expr) (ids : Array Nat) (i : Nat) : Array Nat := 
-  match e with
-  | .forallE _ _ e' bi => 
-    if bi.isExplicit then 
-      run e' (ids.push i) (i+1)
-    else 
-      run e' ids (i+1)
-  | .lam _ _ e' bi => 
-    if bi.isExplicit then 
-      run e' (ids.push i) (i+1)
-    else 
-      run e' ids (i+1)
-  | _ => ids
-
-
-partial def _root_.Lean.Expr.flattenLet (e : Expr) : Expr := 
-  match e with
-  | .letE xName xType xVal xBody _ => 
-    match xVal with
-    | .letE yName yType yVal yBody _ =>
-
-      flattenLet $
-        .letE yName yType yVal
-          (.letE xName xType yBody (xBody.liftLooseBVars 1 1) default) default
-
-    | _ => .letE xName xType xVal xBody default
-  | _ => e
-
-
-partial def _root_.Lean.Expr.flattenLet? (e : Expr) : Option Expr := do
-  match e with
-  | .letE xName xType xVal xBody _ => 
-    match xVal with
-    | .letE yName yType yVal yBody _ =>
-
-      let e' := 
-        .letE yName yType yVal
-          (.letE xName xType yBody (xBody.liftLooseBVars 1 1) default) default
-
-      return (flattenLet? e').getD e'
-
-    | _ => do
-      return (.letE xName xType xVal (← flattenLet? xBody) default)
-  | _ => none
 
 
 def getConstExplicitArgIds (constName : Name) : m (Array Nat) := do

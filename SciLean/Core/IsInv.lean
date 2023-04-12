@@ -7,7 +7,7 @@ namespace SciLean
 variable {X Y Z : Type} 
 
 @[fun_prop_rule]
-theorem IsLin.rule_id 
+theorem IsInv.rule_id 
   : IsInv (λ x : X => x) := sorry
 
 @[fun_prop_rule]

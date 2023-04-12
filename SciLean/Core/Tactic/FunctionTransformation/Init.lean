@@ -17,6 +17,7 @@ initialize registerTraceClass `Meta.Tactic.fun_trans.step
 initialize registerTraceClass `Meta.Tactic.fun_trans.missing_rule
 initialize registerTraceClass `Meta.Tactic.fun_trans.normalize_let
 initialize registerTraceClass `Meta.Tactic.fun_trans.rewrite
+initialize registerTraceClass `Meta.Tactic.fun_trans.lambda_special_cases
 
 initialize registerTraceClass `Meta.Tactic.fun_trans_rule
 
