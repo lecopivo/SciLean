@@ -50,6 +50,7 @@ theorem differential.rule_const (Y : Type) [Vec Y] (x : X)
     =
     λ y dy => 0 := sorry
 
+
 @[fun_trans_rule]
 theorem differential.rule_comp
   (f : Y → Z) [IsSmooth f]
@@ -87,6 +88,7 @@ theorem differential.rule_eval (X) [Vec X] (a : α)
     =
     λ f df => df a := sorry
 
+set_option pp.all true in
 @[fun_trans_rule]
 theorem differential.rule_prodMk 
   (f : X → Y) [IsSmooth f]
@@ -94,17 +96,6 @@ theorem differential.rule_prodMk
   : ∂ (λ x => (f x, g x))
     =
     λ x dx => (∂ f x dx, ∂ g x dx) := sorry
-
-@[fun_trans_rule]
-theorem differential.rule_letBinop 
-  (f : X → Y → Z) [IsSmooth λ xy : X×Y => f xy.1 xy.2]
-  (g : X → Y) [IsSmooth g]
-  : ∂ (λ (x : X) => let y := g x; f x y)
-    =
-    λ x dx =>
-      let y  := g x
-      let dy := ∂ g x dx 
-      ∂ (λ xy => f xy.1 xy.2) (x,y) (dx,dy) := sorry
 
 @[fun_trans_rule]
 theorem differential.rule_letComp 
@@ -116,6 +107,17 @@ theorem differential.rule_letComp
       let y  := g x
       let dy := ∂ g x dx 
       ∂ f y dy := sorry
+
+@[fun_trans_rule]
+theorem differential.rule_letBinop 
+  (f : X → Y → Z) [IsSmooth λ xy : X×Y => f xy.1 xy.2]
+  (g : X → Y) [IsSmooth g]
+  : ∂ (λ (x : X) => let y := g x; f x y)
+    =
+    λ x dx =>
+      let y  := g x
+      let dy := ∂ g x dx 
+      ∂ (λ xy => f xy.1 xy.2) (x,y) (dx,dy) := sorry
 
 @[fun_trans]
 theorem differential.rule_fst (X Y) [Vec X] [Vec Y]

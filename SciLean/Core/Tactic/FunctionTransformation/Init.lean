@@ -67,7 +67,7 @@ def FunTransRuleType.expectedForm (ruleType : FunTransRuleType) : String :=
   -- | fst     => "T (fun (xy : X×Y) => xy.1) = ..."
   -- | snd     => "T (fun (xy : X×Y) => xy.2) = ..."
 
-def FunTransRuleType.all : List FunTransRuleType := [.id,.const,.comp,.swap,.eval,.piMap,.piMapComp,.prodMap,.letBinop,.letComp]
+def FunTransRuleType.all : List FunTransRuleType := [.id,.const,.comp,.swap,.eval,.piMap,.piMapComp,.prodMap,.letComp,.letBinop]
 
 private def merge (transName : Name) (as bs : RBMap FunTransRuleType Name compare) : RBMap FunTransRuleType Name compare :=
   as.mergeBy (t₂ := bs) (λ type ruleName ruleName' => 
@@ -80,7 +80,7 @@ abbrev FunTransRuleMap := RBMap FunTransRuleType Name compare
 
 initialize FunTransRuleExt : MergeMapDeclarationExtension FunTransRuleMap ← mkMergeMapDeclarationExtension ⟨merge, sorry⟩
 
-variable {m} [Monad m] [MonadEnv m]
+variable {m} [Monad m] [MonadEnv m] 
 
 def insertFunTransRule (transName : Name) (type : FunTransRuleType) (ruleName : Name) : m Unit := do
   let m : FunTransRuleMap := {}
@@ -91,6 +91,14 @@ def findFunTransRule? (transName : Name) (type : FunTransRuleType) : m (Option N
     return m.find? type
   else
     return none
+
+def printFunTransRules : CoreM Unit := do
+  let map := FunTransRuleExt.getState (← getEnv)
+  for (trans, rules) in map do
+    IO.println s!"Transformation `{trans}`"
+    for (type, thrm) in rules do
+      IO.println s!"  rule: {type} | theorem: `{thrm}`"
+
 
 
 /-- Assuming `eq` in the form `T f = rhs` return `(T,f)` where `T` is a function transformaion. -/
@@ -120,7 +128,7 @@ def isIdRule (rule : Expr) : MetaM Bool :=
     let (_, F) ← getFunTransEq eq
 
     lambdaTelescope F λ xs b => do
-
+      
       if xs.size ≠ 1 then
         return false
 
@@ -153,6 +161,8 @@ def isConstRule (rule : Expr) : MetaM Bool :=
       let y := xs[0]!
       let Y ← inferType y
       let x := b
+      if (b.containsFVar y.fvarId!) then
+        return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
@@ -172,22 +182,26 @@ def isCompRule (rule : Expr) : MetaM Bool :=
     
     lambdaTelescope F λ xs b => do
 
-      if xs.size ≠ 2 then
+      if xs.size ≠ 1 then
         return false
 
       let x := xs[0]!
-      let X : Q(Type 1) ← inferType x
-      let Z : Q(Type 1) ← inferType b
+      let X : Q(Type) ← inferType x
+      let Z : Q(Type) ← inferType b
       let f := b.getAppFn
-      let some ((Y : Q(Type 1)), _) := (← inferType f).arrow?
+      let some ((Y : Q(Type)), _) := (← inferType f).arrow?
         | return false
       let x : Q($X) := x
       let f : Q($Y → $Z) := f
       let g : Q($X → $Y) := (b.getArg! 0).getAppFn
 
-      let b' := q($f ($g $x))
+      try 
+        let b' := q($f ($g $x))
 
-      if ¬(← isDefEq b' b) then
+        if ¬(← isDefEq b' b) then
+          return false
+
+      catch _ => 
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
@@ -214,16 +228,19 @@ def isSwapRule (rule : Expr) : MetaM Bool :=
 
       let y := xs[0]!
       let x := xs[1]!
-      let X : Q(Type 1) ← inferType x
-      let Y : Q(Type 1) ← inferType y
-      let Z : Q(Type 1) ← inferType b
+      let X : Q(Type) ← inferType x
+      let Y : Q(Type) ← inferType y
+      let Z : Q(Type) ← inferType b
       let f : Q($X → $Y → $Z) := b.getAppFn
       let y : Q($Y) := y
       let x : Q($X) := x
 
       let b' := q($f $x $y)
 
-      if ¬(← isDefEq b' b) then
+      try 
+        if ¬(← isDefEq b' b) then
+          return false
+      catch _ =>
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
@@ -244,18 +261,21 @@ def isEvalRule (rule : Expr) : MetaM Bool :=
     
     lambdaTelescope F λ xs b => do
 
-      if xs.size ≠ 2 then
+      if xs.size ≠ 1 then
         return false
 
       let f := xs[0]!
-      let some ((α : Q(Type 1)), (X : Q(Type 1))) := (← inferType f).arrow?
+      let some ((α : Q(Type)), (X : Q(Type))) := (← inferType f).arrow?
         | return false
       let a : Q($α) := b.getArg! 0
       let f : Q($α → $X) := f
 
       let b' := q($f $a)
 
-      if ¬(← isDefEq b' b) then
+      try 
+        if ¬(← isDefEq b' b) then
+          return false
+      catch _ => 
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
@@ -283,10 +303,10 @@ def isPiMapRule (rule : Expr) : MetaM Bool := do
       let g := xs[0]!
       let a := xs[1]!
 
-      let α : Q(Type 1)← inferType a
-      let some (_, (X : Q(Type 1))) := (← inferType g).arrow?
+      let α : Q(Type)← inferType a
+      let some (_, (X : Q(Type))) := (← inferType g).arrow?
         | return false
-      let Y : Q(Type 1) ← inferType b
+      let Y : Q(Type) ← inferType b
 
       let g : Q($α → $X) := g
       let a : Q($α) := a
@@ -295,7 +315,10 @@ def isPiMapRule (rule : Expr) : MetaM Bool := do
 
       let b' := q($f $a ($g $a))
 
-      if ¬(← isDefEq b' b) then
+      try 
+        if ¬(← isDefEq b' b) then
+          return false
+      catch _ => 
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
@@ -329,18 +352,18 @@ def isPiMapCompRule (rule : Expr) : MetaM Bool := do
       | throwError "Function transfromation rule has to be of the form `T f = g`"
 
     lambdaTelescope F λ xs b => do
-
+      
       if xs.size ≠ 2 then
         return false
 
       let g := xs[0]!
       let a := xs[1]!
 
-      let α : Q(Type 1)← inferType a
+      let α : Q(Type)← inferType a
       let βX ← inferType g
-      let some ((β : Q(Type 1)), (X : Q(Type 1))) := βX.arrow?
+      let some ((β : Q(Type)), (X : Q(Type))) := βX.arrow?
         | return false
-      let Y : Q(Type 1) ← inferType b
+      let Y : Q(Type) ← inferType b
 
       let g : Q($β → $X) := g
       let a : Q($α) := a
@@ -350,7 +373,10 @@ def isPiMapCompRule (rule : Expr) : MetaM Bool := do
 
       let b' := q($f $a $g ($g ($h $a)))
 
-      if ¬(← isDefEq b' b) then
+      try
+        if ¬(← isDefEq b' b) then
+          return false
+      catch _ =>
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
@@ -376,16 +402,20 @@ def isProdMapRule (rule : Expr) : MetaM Bool :=
         return false
 
       let x := xs[0]!
-      let X : Q(Type 1) ← inferType x
-      let some ((Y : Q(Type 1)), (Z : Q(Type 1))) := (← inferType b).app2? ``Prod
+      let X : Q(Type 0) ← inferType x
+      let some ((Y : Q(Type 0)), (Z : Q(Type 0))) := (← inferType b).app2? ``Prod
         | return false
+
       let f : Q($X → $Y) := (b.getArg! 2).getAppFn
       let g : Q($X → $Z) := (b.getArg! 3).getAppFn
       let x : Q($X) := x
 
       let b' := q(($f $x, $g $x))
 
-      if ¬(← isDefEq b' b) then
+      try
+        if ¬(← isDefEq b' b) then
+          return false
+      catch _ =>
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
@@ -407,23 +437,31 @@ def isLetCompRule (rule : Expr) : MetaM Bool :=
     
     lambdaTelescope F λ xs b => do
 
-      if xs.size ≠ 2 then
+      if xs.size ≠ 1 then
         return false
 
       let x := xs[0]!
-      let X : Q(Type 1) ← inferType x
-      let Z : Q(Type 1) ← inferType b
-      let f := b.getAppFn
-      let some ((Y : Q(Type 1)), _) := (← inferType f).arrow?
+      let X : Q(Type) ← inferType x
+      let Z : Q(Type) ← inferType b
+      let f := b.letBody!.getAppFn
+      let some ((Y : Q(Type)), _) := (← inferType f).arrow?
         | return false
       let x : Q($X) := x
       let f : Q($Y → $Z) := f
-      let g : Q($X → $Y) := (b.getArg! 0).getAppFn
+      let g : Q($X → $Y) := b.letValue!.getAppFn
 
       let b' := q(let y := $g $x; $f y)
 
-      if ¬(← isDefEq b' b) then
+      dbg_trace s!"b: {← ppExpr b} | b': {← ppExpr b'}"
+
+      try
+        if ¬(← isDefEq b' b) then
+          return false
+      catch _ =>
         return false
+
+      dbg_trace s!"b is def eq to b'"
+
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
@@ -443,22 +481,25 @@ def isLetBinopRule (rule : Expr) : MetaM Bool :=
     
     lambdaTelescope F λ xs b => do
 
-      if xs.size ≠ 2 then
+      if xs.size ≠ 1 then
         return false
 
       let x := xs[0]!
-      let X : Q(Type 1) ← inferType x
-      let Z : Q(Type 1) ← inferType b
-      let g := (b.getArg! 0).getAppFn
-      let some (_, (Y : Q(Type 1))) := (← inferType g).arrow?
+      let X : Q(Type) ← inferType x
+      let Z : Q(Type) ← inferType b
+      let g := b.letValue!.getAppFn
+      let some (_, (Y : Q(Type))) := (← inferType g).arrow?
         | return false
       let x : Q($X) := x
-      let f : Q($X → $Y → $Z) := b.getAppFn
+      let f : Q($X → $Y → $Z) := b.letBody!.getAppFn
       let g : Q($X → $Y) := g
 
       let b' := q(let y := $g $x; $f $x y)
 
-      if ¬(← isDefEq b' b) then
+      try
+        if ¬(← isDefEq b' b) then
+          return false
+      catch _ =>
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
