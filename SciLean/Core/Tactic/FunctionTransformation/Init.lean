@@ -140,7 +140,7 @@ def isIdRule (rule : Expr) : MetaM Bool :=
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠1 && 
+      if explicitArgs.size≠1 || 
          explicitArgs[0]! != X then
          throwError "Id rule expects exacly one explicit argument `{← ppExpr X}`!"
 
@@ -166,8 +166,8 @@ def isConstRule (rule : Expr) : MetaM Bool :=
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠2 && 
-         explicitArgs[0]! != Y &&
+      if explicitArgs.size≠2 ||
+         explicitArgs[0]! != Y ||
          explicitArgs[1]! != x then
          throwError "Const rule expects exacly two explicit arguments `{← ppExpr Y}` and `{← ppExpr x}`!"
 
@@ -206,8 +206,8 @@ def isCompRule (rule : Expr) : MetaM Bool :=
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠2 && 
-         explicitArgs[0]! != f &&
+      if explicitArgs.size≠2 ||
+         explicitArgs[0]! != f ||
          explicitArgs[1]! != g then
          throwError "Comp rule expects exacly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
 
@@ -245,7 +245,7 @@ def isSwapRule (rule : Expr) : MetaM Bool :=
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠1 && 
+      if explicitArgs.size≠1 ||
          explicitArgs[0]! != f then
          throwError "Const rule expects exacly one explicit argument `{← ppExpr f}`!"
 
@@ -280,8 +280,8 @@ def isEvalRule (rule : Expr) : MetaM Bool :=
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠2 && 
-         explicitArgs[0]! != X &&
+      if explicitArgs.size≠2 || 
+         explicitArgs[0]! != X ||
          explicitArgs[1]! != a then
          throwError "Comp rule expects exacly two explicit arguments `{← ppExpr X}` and `{← ppExpr a}`!"
 
@@ -323,7 +323,7 @@ def isPiMapRule (rule : Expr) : MetaM Bool := do
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠1 && 
+      if explicitArgs.size≠1 ||
          explicitArgs[0]! != f then
          throwError "PiMap rule expects exacly one explicit argument `{← ppExpr f}`!"
 
@@ -336,20 +336,7 @@ def isPiMapCompRule (rule : Expr) : MetaM Bool := do
 
   forallTelescope rule λ contextVars eq => do
 
-    if ¬eq.isEq then
-      return false
-
-    let env ← getEnv
-    let lhs := eq.getArg! 1
-
-    let .some funTransName := lhs.getAppFn.constName?
-      | throwError "Function transfromation rule has to be of the form `T f = g`"
-
-    if ¬(funTransDefAttr.hasTag env funTransName) then
-      throwError s!"Constant `{funTransName}` is not a valid function transformation. Maybe it is missing an attribute, fix by adding `attribute [fun_trans_def] {funTransName}`"
-
-    let .some F := lhs.getAppRevArgs[0]?
-      | throwError "Function transfromation rule has to be of the form `T f = g`"
+    let (_, F) ← getFunTransEq eq
 
     lambdaTelescope F λ xs b => do
       
@@ -381,9 +368,9 @@ def isPiMapCompRule (rule : Expr) : MetaM Bool := do
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠2 && 
-         explicitArgs[0]! != f &&
-         explicitArgs[1]! != g then
+      if explicitArgs.size≠2 || 
+         explicitArgs[0]! != f ||
+         explicitArgs[1]! != h then
          throwError "PiMapComp rule expects exacly two explicit arguments `{← ppExpr f}` and `{← ppExpr h}`!"
 
       return true
@@ -420,8 +407,8 @@ def isProdMapRule (rule : Expr) : MetaM Bool :=
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠2 && 
-         explicitArgs[0]! != f &&
+      if explicitArgs.size≠2 ||
+         explicitArgs[0]! != f ||
          explicitArgs[1]! != g then
          throwError "ProdMap rule expects exacly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
 
@@ -465,8 +452,8 @@ def isLetCompRule (rule : Expr) : MetaM Bool :=
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠2 && 
-         explicitArgs[0]! != f &&
+      if explicitArgs.size≠2 ||
+         explicitArgs[0]! != f ||
          explicitArgs[1]! != g then
          throwError "LetComp rule expects exacly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
 
@@ -504,8 +491,8 @@ def isLetBinopRule (rule : Expr) : MetaM Bool :=
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       
-      if explicitArgs.size≠2 && 
-         explicitArgs[0]! != f &&
+      if explicitArgs.size≠2 || 
+         explicitArgs[0]! != f ||
          explicitArgs[1]! != g then
          throwError "LetBinop rule expects exacly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
 

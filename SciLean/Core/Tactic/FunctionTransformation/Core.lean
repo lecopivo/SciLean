@@ -56,45 +56,55 @@ def applyLetRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) :
       let f ← mkLambdaFVars #[y'] b
       applyRule transName .letComp #[f,g]
 
+open Qq in
 /-- Applies letBinop or letComp rule to `T (λ x y => b)` as a simp step.
   
   - `x` and `y` has to be lambda free variable
   - `b` is the body of the lambda function
   -/
-def applyLambdaRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) := do
+def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.Step) := do
 
-  let xId := x.fvarId!
-  -- let yId := y.fvarId!
-
-  let X ← inferType x
-  let Y ← inferType y
-
-  -- Attempt applying `forallMap` i.e. the case `λ g i => f i (g i)`
-  if let .forallE _ Y' _ _ := X then
-    if (← isDefEq Y Y') then
+  -- Attempt applying `piMapComp` i.e. the case `λ g a => f a g (g (h a))`
+  if let .forallE _ β X _ ← inferType x then
       -- rename variable to make the code more readable
-      let g := x
-      let i := y
-      let gi ← mkAppM' g #[i]
-      trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Attempting to eliminate {← ppExpr gi} from:\n{← ppExpr b}"
+      let α : Q(Type) ← inferType y
+      let β : Q(Type) := β
+      let X : Q(Type) := X
+      -- let Y : Q(Type) ← inferType body
+      let a : Q($α) := y
+      let g : Q($β → $X) := x
 
-      let r ←  withLocalDecl ((← g.fvarId!.getUserName).appendAfter (← i.fvarId!.getUserName).toString)
-                              default 
-                              (← inferType gi)
-        λ gi' => do
-          let b' := b.replace (λ e => if e == gi then .some gi' else none)
-          -- We have succesfully eliminated `x y` from `b`
-          if ¬(b'.containsFVar xId) then
-            let f ← mkLambdaFVars #[y, gi'] b'
-            trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Succesfully eliminated, result:\n{← ppExpr f}"
+      -- collect all subterms in the body of the form `g _`
+      let (_,occurrences) ← StateT.run (s:=(#[] : Array Expr))
+        (body.forEach' λ e => do
+          if (e.getAppFn == g) && 
+             (e.getAppNumArgs == 1) && 
+             (e.containsFVar a.fvarId!) then
+            modify λ s => s.push e
+            return false
+          return true)
 
-            applyRule transName .piMap #[f]
-          else 
-            pure none
-      if r.isSome then
-        return r
+      if 0 < occurrences.size then
+        let occ := occurrences[0]!
+        let ga ← mkAppM' g #[a]
+        let h ← mkLambdaFVars #[a] (occ.getArg! 0)
+        let step ←
+          withLocalDecl `gha default X λ gha =>
+            let fbody := body.replace (λ e => if e == occ then gha else none)
+            -- we have completely elimated `g` from the body, thus we can use `piMap` rule
+            if (¬fbody.containsFVar g.fvarId!) &&
+               (occ == ga) then do
+              let f ← mkLambdaFVars #[a, gha] fbody
+              return ← applyRule transName .piMap #[f]
+            else do
+              let f ← mkLambdaFVars #[a, g, gha] fbody
+              return ← applyRule transName .piMapComp #[f,h]
 
-  let f ← mkLambdaFVars #[y,x] b
+        return step
+
+
+
+  let f ← mkLambdaFVars #[y,x] body
   applyRule transName .swap #[f]
 
 

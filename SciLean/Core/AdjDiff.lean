@@ -42,6 +42,12 @@ theorem adjointDifferential.rule_id (X) [SemiHilbert X]
     λ x dx' => dx' := sorry
 
 @[fun_trans_rule]
+theorem adjointDifferential.rule_const (Y : Type) [SemiHilbert Y] (x : X)
+  : ∂† (λ y : Y => x)
+    =
+    λ y dy' => 0 := sorry
+
+@[fun_trans_rule]
 theorem adjointDifferential.rule_comp
   (f : Y → Z) [HasAdjDiff f]
   (g : X → Y) [HasAdjDiff g]
@@ -123,27 +129,16 @@ theorem adjointDifferential.rule_snd (X Y) [SemiHilbert X] [SemiHilbert Y]
 /--
 
 -/
+@[fun_trans_rule]
 theorem adjointDifferential.rule_piComp [Nonempty κ]
-  (f : κ → X → Y) [∀ j, HasAdjDiff (f j)] 
+  (f : κ → (ι → X) → X → Y) [∀ j, HasAdjDiff (λ (g,x) => f j g x)] 
   (h : κ → ι) [IsInv h]
-  : ∂† (λ (g : ι → X) (j : κ) => f j (g (h j)))
+  : ∂† (λ (g : ι → X) (j : κ) => f j g (g (h j)))
     =
     λ g dg' i => 
-      ∂† (f (h⁻¹ i)) (g i) (dg' (h⁻¹ i))
-  := sorry
-
-/--
-
--/
-theorem adjointDifferential.rule_piComp' [Nonempty κ]
-  (f : κ → X → (ι → X) → Y) [∀ j, HasAdjDiff (λ (x,g) => f j x g)] 
-  (h : κ → ι) [IsInv h]
-  : ∂† (λ (g : ι → X) (j : κ) => f j (g (h j)) g)
-    =
-    λ g dg' i => 
-      let a := λ i' => ∂† (λ x => f (h⁻¹ i') x g) (g i') (dg' (h⁻¹ i'))
-      let b := ∂† (λ (g' : ι → X) (j : κ) => f j (g (h j)) g') g dg'
-      a i + b i
+      let dg₁ := λ i' => ∂† (λ x => f (h⁻¹ i') g x) (g i') (dg' (h⁻¹ i'))
+      let dg₂ := ∂† (λ (g' : ι → X) (j : κ) => f j g' (g (h j))) g dg'
+      dg₁ i + dg₂ i
       
 
       -- +
