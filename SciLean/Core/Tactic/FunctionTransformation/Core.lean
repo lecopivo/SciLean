@@ -88,7 +88,7 @@ def applyLambdaRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step
             let f ← mkLambdaFVars #[y, gi'] b'
             trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Succesfully eliminated, result:\n{← ppExpr f}"
 
-            applyRule transName .forallMap #[f]
+            applyRule transName .piMap #[f]
           else 
             pure none
       if r.isSome then
