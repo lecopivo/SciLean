@@ -28,20 +28,8 @@ example
     conv => lhs; unfold gradient; fun_trans; fun_trans
 
 
-example 
-  : ∇ (λ (x : Fin n → ℝ) => ∑ i, ‖ x i ‖²)
-    =
-    λ x i => 2 * x i
-  := by 
-    conv => 
-      lhs; unfold gradient; unfold adjointDifferential
-      fun_trans; fun_trans; fun_trans
-      simp (config := {zeta := false})
-      simp
-
 def _root_.Fin.shift (x : Fin n) (y : Int) : Fin n := ⟨((x.1 + y) % n).toNat, sorry⟩
 
-set_option trace.Meta.Tactic.fun_trans.rewrite true in
 example 
   : ∇ (λ (x : Fin n → ℝ) => ∑ i, ‖ x i + x (i.shift 1)‖²)
     =
@@ -69,6 +57,78 @@ by
   dsimp; fun_trans; fun_trans; simp
 
 
+#check Enumtype.sum.arg_f.adjointDifferential_simp'
+
+example [Nonempty (Fin n)]
+  : ∂† (λ (x : Fin n → ℝ) => ∑ i, ‖ x i - x (i.shift 1)‖²)
+    =
+    sorry
+  :=
+by
+  simp only [Enumtype.sum.arg_f.adjointDifferential_simp']
+  let f := λ (i : Fin n) (xi : ℝ) (g : Fin n → ℝ) => ‖ xi - g (i.shift 1)‖²
+  simp only[adjointDifferential.rule_piComp' f (λ i => i)]
+  funext g dg'
+  simp only [adjointDifferential.rule_piComp (λ j x => ‖g j - x‖²) (λ i => i.shift 1)]
+
+  dsimp; fun_trans; fun_trans; simp
+
+
+
+example [Nonempty (Fin n)] (c : Fin n → ℝ)
+  : ∂† (λ (x : Fin n → ℝ) i => c i * x i - x (i.shift 1))
+    =
+    sorry
+  :=
+by
+  let f := λ (i : Fin n) (xi : ℝ) (g : Fin n → ℝ) => c i * xi - g (i.shift 1)
+  rw[adjointDifferential.rule_piComp' f (λ i => i)]
+  funext g dg'
+  simp only [adjointDifferential.rule_piComp (λ j x => c j * g j - x) (λ i => i.shift 1)]
+
+  dsimp; fun_trans; fun_trans; simp
+
+
+def CD {n} (x : Fin n → ℝ) : Fin n → ℝ := λ i => x (i.shift 1) - x (i.shift (-1))
+
+def extend {n} (x : Fin n → ℝ) : Int → ℝ := λ i => if h : (0 ≤ i) && (i < n) then x ⟨i.toNat, sorry⟩ else 0
+
+open Lean Meta Qq
+#eval show MetaM Unit from do
+
+  let e := q(λ (x : Fin 10 → ℝ) i => ‖ x i - x (i.shift 1) + CD x i + extend (CD x) (i.shift 3)‖²)
+
+  lambdaTelescope e λ xs b => do
+    let B ← inferType b
+    IO.println s!"type : {← ppExpr B}"
+    let x := xs[0]!
+    let i := xs[1]!
+
+    let (_,occurrences) ← StateT.run (s:=(#[] : Array Expr))
+      (b.forEach' λ e => do
+        if e.getAppFn == x then
+          modify λ s => s.push e
+          return false
+        else if e.getAppArgs.any (λ arg => arg == x) then
+          -- modify λ s => s.push e
+          return false
+        return true)
+
+    IO.println (← occurrences.mapM λ o => ppExpr o)
+    
+    for oc in occurrences do
+      let xi ← inferType oc
+
+
+      withLocalDecl `xi default (← inferType oc) λ xi => do
+        let b' := b.replace (λ se => if se == oc then some xi else none)
+
+        let f ← mkLambdaFVars #[i, xi, x] b'
+        let h ← mkLambdaFVars #[i] oc.appArg!
+        IO.println s!"{← ppExpr f}"
+        IO.println s!"{← ppExpr h}"
+
+        
 -- open FunctionTransformation Lean Meta Qq
 
 -- #eval show MetaM Unit from do
@@ -96,7 +156,7 @@ by
 -- set_option trace.Meta.Tactic.fun_trans.step true in
 -- set_option trace.Meta.Tactic.fun_trans.normalize_let true in
 -- set_option trace.Meta.Tactic.fun_trans.rewrite true in
-#exit
+
 def shift (x : Fin n) (y : Int) : Fin n := ⟨((x.1 + y) % n).toNat, sorry⟩
 
 
@@ -150,41 +210,4 @@ example {T : Type} [inst : Vec T] {X : Type} [inst : Hilbert X] (x : T → X)
   := sorry
 #check Inner.normSqr.arg_x.differential_simp'
 
--- #check let_val_congr (fun df' : Fin 10 → ℝ => sum df')
---     (congrFun (congrFun (Inner.normSqr.arg_x.differential_simp' fun (x : ℝ → Fin 10 → ℝ) (i : Fin 10) => x (shift i 1)) t) dt)
 
--- #check Inner.normSqr.arg_x.differential_simp'
-
--- #check  (congrFun (congrFun (Inner.normSqr.arg_x.differential_simp' fun (x : ℝ → Fin 10 → ℝ) (i : Fin 10) => x (shift i 1)) t) dt)
-
-
--- def foo := (congrFun (congrFun (Inner.normSqr.arg_x.differential_simp' fun (x : ℝ → Fin 10 → ℝ) (i : Fin 10) => x (shift i 1)) t) dt)
-
--- open Lean Meta Qq
--- #eval show MetaM Unit from do
-
---   let hihi := q(λ t dt => foo t dt)
-
---   lambdaTelescope hihi λ xs b => do
---     let B ← inferType b
---     IO.println s!"type : {← ppExpr B}"
---     IO.println s!"is eq : {(B.isAppOf ``Eq)}"
-
-section Bug
-
-
-
-opaque t : Nat → Fin 10 → Nat
-opaque dt : Nat → Fin 10 → Nat
-
-opaque diff {α β} (f : α → β) : α → α → β := λ a _ => f a
-opaque norm2 {α} (a : α) : Nat 
-opaque inner {α} (a b : α) : Nat
-
-def compTheorem {T : Type} {X : Type} (x : T → X)
-  :
-  (diff fun t =>  norm2 (x t) ) = fun t dt => inner (diff x t dt) (x t)
-  := sorry
-
-#check let_val_congr (fun df' : Fin 10 → Nat => sum' df')
-    (congrFun (congrFun (compTheorem fun (x : Nat → Fin 10 → Nat) (i : Fin 10) => x (shift i 1)) t) dt)
