@@ -94,31 +94,6 @@ def applyLambdaRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step
       if r.isSome then
         return r
 
-  -- -- Attempt at propagating the argument `y` into the body
-  -- For example `λ g i => g i + g i` is equal to `λ g => (λ i => g i) + (λ i => g i)`
-  if let .some (funName, args) ← getExplicitArgs b then do
-    let args' ← args.mapM (m:=MetaM) (mkLambdaFVars #[y])
-
-    trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Attempting to propagate lambda in `{← ppExpr y}` into the function `{funName}` in the expression:\n{← ppExpr (← mkLambdaFVars #[y] b)}"
-
-    try 
-      let b' ← mkAppM funName args'      
-      let eq ← mkFreshExprMVar (← mkEq b (← reduce (← whnf (← mkAppM' b' #[y]))))
-
-      try
-        eq.mvarId!.refl
-        trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"Succeffully propagated `{← ppExpr y}` into `{funName}`!"
-        
-        let e ← mkAppM transName #[← mkLambdaFVars #[x] b']
-        return some (.visit (.mk e none 0))
-      catch _ =>
-        trace[Meta.Tactic.fun_trans.step] s!"Failed to prove definitional equality:\n{← ppExpr (← inferType eq)}"
-        pure ()
-      pure ()
-    catch _ => 
-      trace[Meta.Tactic.fun_trans.lambda_special_cases] s!"The function `{funName}` is not meaningful on `{← ppExpr (← inferType y)} → {← ppExpr (← inferType b)}`"
-      pure ()
-
   let f ← mkLambdaFVars #[y,x] b
   applyRule transName .swap #[f]
 
