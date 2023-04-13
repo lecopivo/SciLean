@@ -19,7 +19,7 @@ abbrev ShortOptDataArray (α : Type) [PlainDataType α] (n : Nat) :=
   | 2 => Vec2 α
   | 3 => Vec3 α
   | 4 => Vec4 α
-  | k+5 => DataArrayN α (k+5)
+  | k+5 => DataArrayN α (Fin (k+5))
 
 namespace ShortOptDataArray
 
@@ -180,16 +180,16 @@ namespace ShortOptDataArray
     getElem_introElem := sorry_proof
 
   instance : LinearArrayType (ShortOptDataArray α) α where
-    toArrayType := by infer_instance
+    toGenericArrayType := by infer_instance
 
     pushElem_getElem := sorry_proof
     dropElem_getElem := sorry_proof
     reserveElem_id := sorry_proof
 
-  @[default_instance]
-  instance {ι} [Enumtype ι] : PowType (ShortOptDataArray α (numOf ι)) ι α := PowType.mk
+  -- @[default_instance]
+  -- instance {ι} [Enumtype ι] : PowType (ShortOptDataArray α (numOf ι)) ι α := PowType.mk
 
-  @[default_instance]
-  instance : LinearPowType (ShortOptDataArray α) α := LinearPowType.mk
+  -- @[default_instance]
+  -- instance : LinearPowType (ShortOptDataArray α) α := LinearPowType.mk
 
 end ShortOptDataArray

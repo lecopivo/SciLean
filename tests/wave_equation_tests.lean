@@ -1,6 +1,4 @@
 import SciLean
-import SciLean.Core.IsInv
-import SciLean.Core.InvFun
 
 open SciLean
 
@@ -26,12 +24,6 @@ example
   := by 
     conv => lhs; unfold gradient; fun_trans; fun_trans
 
-def _root_.Fin.shift (x : Fin n) (y : Int) : Fin n := ⟨((x.1 + y) % n).toNat, sorry⟩
-
-function_properties Fin.shift {n} [Nonempty (Fin n)] (x : Fin n) (y : Int)
-argument x
-  IsInv := sorry_proof,
-  abbrev ⁻¹ := λ x' => x'.shift (-y) by sorry_proof
 
 example [Nonempty (Fin n)]
   : ∂† (λ (x : Fin n → ℝ) i => ‖ x (i.shift 1) - x i‖²)
@@ -64,3 +56,45 @@ by
   unfold gradient
   conv => lhs; fun_trans; simp
 
+
+-- Now the same thing with arrays
+#check @getElem
+example 
+  : ∂ (λ (x : ℝ^{n}) => ∑ i, ‖ x[i]‖²)
+    =
+    λ x dx => ∑ i, 2 * ⟪dx[i], x[i]⟫
+  := by fun_trans
+
+example {ι} [Enumtype ι]
+  : ∂ (λ (x : ℝ^ι) => ∑ i, ‖ x[i] ‖²)
+    =
+    λ x dx => ∑ i, 2 * ⟪dx[i], x[i]⟫
+  := by fun_trans
+
+example 
+  : ∇ (λ (x : ℝ^{n}) => ∑ i, ‖ x[i] ‖²)
+    =
+    λ x => ⊞ i, (2:ℝ) * x[i]
+  := by
+    conv => lhs; unfold gradient; fun_trans; fun_trans
+
+example [Nonempty (Fin n)]
+  : ∂† (λ (x : ℝ^{n}) i => ‖ x[i.shift 1] - x[i]‖²)
+    =
+    λ g dg' => ⊞ i,
+      (2:ℝ) * dg' (Fin.shift i (-1)) * (g[i] - g[i.shift (-1)]) 
+      + 
+      -((2:ℝ) * dg' i * (g[i.shift 1] - g[i]))
+  :=
+by
+  conv => lhs; fun_trans; fun_trans; simp
+  done
+
+example [Nonempty (Fin n)]
+  : ∇ (λ (x : ℝ^{n}) => ∑ i, ‖ x[i.shift 1] - x[i]‖²)
+    =
+    λ x => ⊞ i, (2:ℝ) * (x[i] - x[i.shift (-1)]) + -((2:ℝ) * (x[i.shift 1] - x[i]))
+  :=
+by
+  unfold gradient
+  conv => lhs; fun_trans; fun_trans; simp

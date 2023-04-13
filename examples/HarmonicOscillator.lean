@@ -32,7 +32,7 @@ def main : IO Unit := do
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
-  for _ in [0:40] do
+  for _ in [0:4000] do
   
     (x, p) := solver m k substeps 0 (x, p) Δt
     t += Δt
@@ -43,5 +43,3 @@ def main : IO Unit := do
         IO.print "o"
     IO.println ""
 
-
-#eval main

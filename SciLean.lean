@@ -1,6 +1,11 @@
 import SciLean.Core
 import SciLean.Core.Tactic.FunctionTransformation.Core
--- import SciLean.Data.DataArray
+
+
+import SciLean.Data.Fin
+import SciLean.Data.ArrayType
+import SciLean.Data.DataArray
+
 
 
 #exit

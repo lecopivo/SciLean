@@ -5,8 +5,19 @@ package scilean
 
 @[default_target]
 lean_lib SciLean {
+  precompileModules := true
   roots := #[`SciLean]
 }
+
+
+lean_exe WaveEquation {
+  root := `examples.WaveEquation
+}
+
+lean_exe HarmonicOscillator {
+  root := `examples.HarmonicOscillator
+}
+
 
 meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"

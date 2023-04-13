@@ -139,11 +139,6 @@ theorem adjointDifferential.rule_piComp [Nonempty κ]
       let dg₁ := λ i' => ∂† (λ x => f (h⁻¹ i') g x) (g i') (dg' (h⁻¹ i'))
       let dg₂ := ∂† (λ (g' : ι → X) (j : κ) => f j g' (g (h j))) g dg'
       dg₁ i + dg₂ i
-      
-
-      -- +
-      -- ∂† (λ g' => f (h⁻¹ i) x g') g (dg' (h⁻¹ i))
-
   := sorry
 
 

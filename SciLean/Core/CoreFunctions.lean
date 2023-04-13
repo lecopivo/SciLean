@@ -1,4 +1,6 @@
 import SciLean.Core.AdjDiff
+import SciLean.Core.InvFun
+
 import SciLean.Core.UnsafeAD
 import SciLean.Core.Meta.FunctionProperty.Syntax
 namespace SciLean

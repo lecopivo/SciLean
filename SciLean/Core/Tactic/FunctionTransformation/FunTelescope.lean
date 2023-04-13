@@ -1,4 +1,4 @@
-import SciLean.Core.Tactic.FunctionTransformation.AttribInit
+import SciLean.Core.Tactic.FunctionTransformation.Init
 import SciLean.Core.Tactic.FunctionTransformation.Core
 
 import SciLean.Core
@@ -41,8 +41,8 @@ def FunType.mkFun (funType : FunType) (f : Expr) : MetaM Expr :=
       mkAppOptM ``SmoothMap.mk #[none,none,none,none,f,none]
     else if funSpaceName == ``LinMap then
       mkAppOptM ``LinMap.mk #[none,none,none,none,f,none]
-    else if funSpaceName == ``PowType then
-      mkAppM ``introPowElem #[f]
+    else if funSpaceName == ``ArrayType then
+      mkAppM ``introArrayElem #[f]
     else if funSpaceName == ``ContinuousMap then
       mkAppM ``ContinuousMap.mk #[f]
     else
@@ -77,22 +77,22 @@ def isFunLambda? (e : Expr) : Option (FunType × Name × Expr × Expr × BinderI
     return (.map ``SmoothMap, n, d, b, bi)
   | mkApp6 (.const ``LinMap.mk _) _ _ _ _ (.lam n d b bi) _ => 
     return (.map ``LinMap, n, d, b, bi)
-  | mkApp6 (.const ``introPowElem _) _ _ _ _ _ (.lam n d b bi) => 
-    return (.map ``PowType, n, d, b, bi)
+  | mkApp6 (.const ``introArrayElem _) _ _ _ _ _ (.lam n d b bi) => 
+    return (.map ``ArrayType, n, d, b, bi)
   | mkApp6 (.const ``ContinuousMap.mk _) _ _ _ _ (.lam n d b bi) _ => 
     return (.map ``ContinuousMap, n, d, b, bi)
   | _ => none
 
 def isFunApp? (e : Expr) : Option (FunType × Expr × Expr) :=
   match e with
-  | mkApp6 (.const ``SmoothMap.val _) _ _ _ _ f x => 
+  | mkApp6 (.const ``SmoothMap.toFun _) _ _ _ _ f x => 
     return (.map ``SmoothMap, f ,x)
-  | mkApp6 (.const ``LinMap.val _) _ _ _ _ f x => 
+  | mkApp6 (.const ``LinMap.toFun _) _ _ _ _ f x => 
     return (.map ``LinMap, f ,x)
   | mkApp6 (.const ``FunLike.coe _) (mkApp4 (.const ``ContinuousMap _) _ _ _ _) _ _ _ f x => 
     return (.map ``ContinuousMap, f, x)
   | mkApp8 (.const ``getElem _) _ _ _ _ _ f x _ =>
-    return (.map ``PowType, f ,x) -- should we double check that it is indeed PowType ? 
+    return (.map ``ArrayType, f ,x) -- should we double check that it is indeed ArrayType ? 
   | .app f x => 
     return (.normal, f, x)
   | _ => none
@@ -128,11 +128,11 @@ def isFunSpace? (e : Expr) : MetaM (Option FunType) :=
     let .some _ ← trySynthInstance arrayType 
       | return none
 
-    -- -- make sure that it is indeed PowType
-    -- if ¬(← isDefEq e (← mkAppOptM ``PowTypeCarrier #[X?, Y?, none, none])) then
+    -- -- make sure that it is indeed ArrayType
+    -- if ¬(← isDefEq e (← mkAppOptM ``ArrayTypeCarrier #[X?, Y?, none, none])) then
     --   return none
 
-    return some (.map ``PowType)
+    return some (.map ``ArrayType)
 
 def mkFunSpace (funType : FunType) (X Y : Expr) : MetaM Expr :=
   match funType with
@@ -140,7 +140,7 @@ def mkFunSpace (funType : FunType) (X Y : Expr) : MetaM Expr :=
   | .map ``SmoothMap => mkAppM ``SmoothMap #[X,Y]
   | .map ``LinMap => mkAppM ``LinMap #[X,Y]
   | .map ``ContinuousMap => mkAppM ``ContinuousMap #[X,Y]
-  | .map ``PowType => mkAppM ``PowTypeCarrier #[X,Y]
+  | .map ``ArrayType => mkAppM ``ArrayTypeCarrier #[X,Y]
   | .map n => throwError "Error in `mkFunSpace`, unrecognized function type `{n}`"
 
 def mkFunApp1M (f x : Expr) : MetaM Expr := do
@@ -149,10 +149,10 @@ def mkFunApp1M (f x : Expr) : MetaM Expr := do
     | throwError "Error in `mkFunAppM`: `{← ppExpr f}` is not a function!"
   match funType with
   | .normal => return .app f x
-  | .map ``SmoothMap => mkAppM ``SmoothMap.val #[f, x]
-  | .map ``LinMap => mkAppM ``LinMap.val #[f, x]
+  | .map ``SmoothMap => mkAppM ``SmoothMap.toFun #[f, x]
+  | .map ``LinMap => mkAppM ``LinMap.toFun #[f, x]
   | .map ``ContinuousMap => mkAppM ``FunLike.coe #[f, x]
-  | .map ``PowType => do
+  | .map ``ArrayType => do
     let fx ← mkAppM ``getElem #[f, x]
     mkAppM' fx #[(.const ``True.intro [])]
   | .map n => throwError "Error in `mkFunSpace`, unrecognized function type `{n}`"
@@ -237,7 +237,7 @@ open Qq
   IO.println s!"`ℝ ⟿ ℝ` is function space: {(← isFunSpace? q(ℝ⟿ℝ)).isSome}"
   IO.println s!"`ℝ ⊸ ℝ` is function space: {(← isFunSpace? q(ℝ⊸ℝ)).isSome}"
   IO.println s!"`ℝ^{3}` is function space: {(← isFunSpace? q(ℝ^{3})).isSome}"
-  IO.println s!"`Vec3 ℝ` is function space: {(← isFunSpace? q(Vec3 ℝ)).isSome}"
+  -- IO.println s!"`Vec3 ℝ` is function space: {(← isFunSpace? q(Vec3 ℝ)).isSome}"
   IO.println s!"`Array ℝ` is function space: {(← isFunSpace? q(Array ℝ)).isSome}"
 
   let n := q(10 : Nat)
@@ -255,9 +255,9 @@ open Qq
   IO.println s!"Args of application: {← (nxi'.mapM ppExpr)}"
 
   let fst := q(λ xy : Nat × Nat => xy.fst)
-  let add := q(λ (x y : ℝ) ⟿ (λ x y ⟿ x + y) x y)
+  -- let add := q(λ (x y : ℝ) ⟿ (λ x y ⟿ x + y) x y)
   IO.println s!"eta reduced fst: {← ppExpr (← funEta fst)}"
-  IO.println s!"eta reduced add: {← ppExpr (← funEta add)}"
+  -- IO.println s!"eta reduced add: {← ppExpr (← funEta add)}"
 
   let f := q(λ (x : ℝ) ⟿ x + x)
   let x : Q(ℝ) := q(1)

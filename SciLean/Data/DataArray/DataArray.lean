@@ -84,54 +84,42 @@ def DataArray.intro (f : ι → α) : DataArray α := Id.run do
     d' := d'.set ⟨li,sorry_proof⟩ (f i)
   d'
 
-structure DataArrayN (α : Type) [pd : PlainDataType α] (n : Nat) where
+structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [Enumtype ι] where
   data : DataArray α
-  h_size : n = data.size
+  h_size : numOf ι = data.size
 
-instance (n) : GetElem (DataArrayN α n) (Fin n) α (λ _ _ => True) where
-  getElem xs i _ := xs.1.get (xs.2 ▸ i)
-
-instance : GetElem (DataArrayN α (numOf ι)) ι α (λ _ _ => True) where
+instance : GetElem (DataArrayN α ι) ι α (λ _ _ => True) where
   getElem xs i _ := xs.1.get (xs.2 ▸ toFin i)
 
-instance : SetElem (DataArrayN α n) (Fin n) α where
-  setElem xs i xi := ⟨xs.1.set (xs.2 ▸ i) xi, sorry_proof⟩
-
-instance : SetElem (DataArrayN α (numOf ι)) ι α where
+instance : SetElem (DataArrayN α ι) ι α where
   setElem xs i xi := ⟨xs.1.set (xs.2 ▸ toFin i) xi, sorry_proof⟩
 
-instance : IntroElem (DataArrayN α n) (Fin n) α where
+instance : IntroElem (DataArrayN α ι) ι α where
   introElem f := ⟨DataArray.intro f, sorry_proof⟩
 
-instance : IntroElem (DataArrayN α (numOf ι)) ι α where
+instance : IntroElem (DataArrayN α ι) ι α where
   introElem f := ⟨DataArray.intro f, sorry_proof⟩
 
-instance : PushElem (DataArrayN α) α where
+instance : PushElem (λ n => DataArrayN α (Fin n)) α where
   pushElem k val xs := ⟨xs.1.push k val, sorry_proof⟩
 
-instance : DropElem (DataArrayN α) α where
+instance : DropElem (λ n => DataArrayN α (Fin n)) α where
   dropElem k xs := ⟨xs.1.drop k, sorry_proof⟩
 
-instance : ReserveElem (DataArrayN α) α where
+instance : ReserveElem (λ n => DataArrayN α (Fin n)) α where
   reserveElem k xs := ⟨xs.1.reserve k, sorry_proof⟩
 
-instance : ArrayType (DataArrayN α n) (Fin n) α  where
+instance : ArrayType (DataArrayN α ι) ι α  where
   ext := sorry_proof
   getElem_setElem_eq := sorry_proof
   getElem_setElem_neq := sorry_proof
   getElem_introElem := sorry_proof
 
-instance : LinearArrayType (DataArrayN α) α  where
-  toArrayType := by infer_instance
+instance : LinearArrayType (λ n => DataArrayN α (Fin n)) α where
+  toGenericArrayType := by infer_instance
   pushElem_getElem := sorry_proof
   dropElem_getElem := sorry_proof
   reserveElem_id := sorry_proof
-
-instance : ArrayType (DataArrayN α (numOf ι)) ι α  where
-  ext := sorry_proof
-  getElem_setElem_eq := sorry_proof
-  getElem_setElem_neq := sorry_proof
-  getElem_introElem := sorry_proof
 
 @[infer_tc_goals_rl]
 instance {Cont ι α : Type} [Enumtype ι] [Inhabited α] [pd : PlainDataType α] [ArrayType Cont ι α] : PlainDataType Cont where

@@ -95,10 +95,15 @@ syntax (name:=arrayTypeIntroSyntaxAlt) "⊞" Lean.Parser.Term.funBinder+  " , " 
 -- Having this as an abbrev was causing some issues
 def introArrayElem {X I} {T : outParam Type} [Enumtype I] [ArrayType T I X] (f : I → X) : X^I := introElem λ i => f i
 
+
 -- macro_rules (kind := arrayTypeIntroSyntax)
 -- | `(λ $xs:funBinder* ==> $b:term) => `(introArrayElem λ $xs* => $b)
 macro_rules (kind := arrayTypeIntroSyntaxAlt)
 | `(⊞ $xs:funBinder* , $b:term) => `(introArrayElem λ $xs* => $b)
+
+@[simp]
+theorem getElem_introArrayElem {XI I X} [ArrayType XI I X] [Enumtype I] (f : I → X) (i : I)
+  : (⊞ i', f i')[i] = f i := sorry_proof
 
 end CustomNotation
 

@@ -4,7 +4,27 @@ import SciLean.Data.ArrayType.Properties
 
 namespace SciLean
 
-variable {X I} {T : outParam Type} [Enumtype I] [ArrayType T I X] -- [Inhabited X]
+variable {XI X I} [Enumtype I] [ArrayType XI I X] -- [Inhabited X]
+variable {YI Y} [Enumtype I] [ArrayType YI I Y] -- [Inhabited X]
+
+
+theorem adjointDifferential.rule_piMap {Y:Type} [SemiHilbert X] [SemiHilbert Y] 
+  (f : I → X → Y) [∀ i, HasAdjDiff (f i)]
+  : ∂† (λ (g : X^I) (i : I) => f i g[i])
+    =
+    λ g dg' => ⊞ i, ∂† (f i) (g[i]) (dg' i)
+  := sorry
+
+theorem adjointDifferential.rule_piMapComp {J Y:Type} [SemiHilbert X] [SemiHilbert Y] [Enumtype J] [Nonempty J]
+  (f : J → XI → X → Y) [∀ i, HasAdjDiff (λ (g,x) => f i g x)]
+  (h : J → I)
+  : ∂† (λ (g : X^I) (j : J) => f j g g[h j])
+    =
+    λ g dg' => ⊞ i, 
+      let dg₁ := λ i' => ∂† (λ x => f (h⁻¹ i) g x) (g[i']) (dg' (h⁻¹ i'))
+      let dg₂ := λ i' => (∂† (λ (g' : X^I) (j : J) => f j g' g[h j]) g dg')[i'] -- we are expecting to (array)beta reduce
+      dg₁ i + dg₂ i
+  := sorry
 
 --------------------------------------------------------------------------------
 -- introElem 

@@ -24,6 +24,7 @@ def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Exp
   trace[Meta.Tactic.fun_trans.rewrite] s!"By basic rule `{rule}`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
   return .some (.visit (.mk rhs proof 0))
 
+
 /-- Applies letBinop or letComp rule to `T (λ x => let y := ..; b)` as a simp step.
   
   - `x` has to be lambda free variable
@@ -102,7 +103,44 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
 
         return step
 
+  -- TODO: Generalize this!
+  -- Attempt applying `arrayMapComp` i.e. the case `∂† λ g a => f i g (g[h i])`
+  if transName == `SciLean.adjointDifferential then
+    let (_,occurrences) ← StateT.run (s:=(#[] : Array Expr))
+      (body.forEach' λ e => do
+        if (e.isAppOf ``getElem) &&
+           (e.getAppNumArgs == 8) &&
+           (e.getArg! 5 == x) &&
+           (e.getArg! 6 |>.containsFVar y.fvarId!) then
+          modify λ s => s.push e
+          return false
+        return true)
 
+    if occurrences.size > 0 then
+      let lhs ← mkAppM transName #[← mkLambdaFVars #[x,y] body]
+      let occ := occurrences[0]!
+      -- let ga ← mkAppOptM ``getElem #[none,none,none,none,none,x,y, none]
+      let h ← mkLambdaFVars #[y] (occ.getArg! 6)
+      let step : Option Simp.Step ← 
+        withLocalDecl `gha default (← inferType occ) λ gha => do
+          let fbody := body.replace (λ e => if e == occ then gha else none)
+          -- we have completely elimated `g` from the body, thus we can use `piMap` rule
+          if (¬fbody.containsFVar x.fvarId!) &&
+             (occ.getArg! 6 == y) then do
+            let f ← mkLambdaFVars #[y, gha] fbody
+            let proof ← mkAppNoTrailingM `SciLean.adjointDifferential.rule_piMap #[f]
+            let statement ← inferType proof
+            let rhs := statement.getArg! 2
+            trace[Meta.Tactic.fun_trans.rewrite] s!"By rule arrayMap `\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
+            return .some (.visit (.mk rhs proof 0))
+          else do
+            let f ← mkLambdaFVars #[y, x, gha] fbody
+            let proof ← mkAppNoTrailingM `SciLean.adjointDifferential.rule_piMapComp #[f,h]
+            let statement ← inferType proof
+            let rhs := statement.getArg! 2
+            trace[Meta.Tactic.fun_trans.rewrite] s!"By rule arrayMapComp`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
+            return .some (.visit (.mk rhs proof 0))
+      return step
 
   let f ← mkLambdaFVars #[y,x] body
   applyRule transName .swap #[f]
@@ -361,8 +399,8 @@ where
   run (e : Expr) (didNormalize : Bool) : Expr × Bool :=
   match e with
   | .letE xName xType xVal body _ =>
-    if false then
-      (e, false)
+    if body == .bvar 0 then
+      (xVal, true)
 
     -- remove let binding if it is not doing any meaningful computation
     else if ¬xVal.doesComputation then
