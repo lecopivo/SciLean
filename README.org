@@ -26,15 +26,10 @@ lake build
 
 To run examples:
 #+begin_src
-lake env lean --run examples/HarmonicOscilator.lean 
-lake env lean --run examples/WaveEquation.lean 
+lake build HarmonicOscillator && ./build/bin/HarmonicOscillator
+lake build WaveEquation && ./build/bin/WaveEquation 
 #+end_src
 Other examples in =examples= directory do not currently work.
-
-To run tests:
-#+begin_src
-lake run tests
-#+end_src
 
 * Example: Simulation of harmonic oscillator
 
