@@ -213,81 +213,71 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
   else
     throwError s!"Constant {constName} has too few applied arguments in {← ppExpr b}. TODO: handle this case!"
 
-  -- let depArgs := args.mapIdx (λ i arg => if arg.containsFVar xId then some (arg, i.1) else none) |>.filterMap id
+-- TODO: Move this somewhere else and add an environment extension for this to fetch this dynamically
+def getFunTransStructureRule (transName structName : Name) : MetaM (Option Name) := do
+  if (structName == ``Prod) then
+    if (transName == `SciLean.adjointDifferential) then
+      return `SciLean.adjointDifferential.structure_rule.Prod 
+    if (transName == `SciLean.reverseDifferential) then
+      return `SciLean.reverseDifferential.structure_rule.Prod 
+  return none
 
-  -- -- not a composition at all
-  -- if depArgs.size = 0 then
-  --   return none
-  -- -- simple composition of the form `f (g x)`
-  -- else if depArgs.size = 1 then
+/--
+If `x` is an element of a structure type and there is a specialized transformation
+rule for this structure apply this rule to `T λ x => b`.
+-/
+def tryStructureRule? (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) := do
 
-  --   let (gx,i) := depArgs[0]!
-  --   -- trivial case 
-  --   if gx == x then
-  --     return none
-  --   let g ← mkLambdaFVars #[x] gx
+  let X ← whnf (← inferType x)
 
-  --   let Y ← inferType gx
-  --   let f ← withLocalDecl `y default Y 
-  --     λ y => do
-  --       let args' := args.set! i y
-  --       mkLambdaFVars #[y] (← mkAppOptM' F (args'.map some))
+  let .const structName us := X.getAppFn
+    | return none 
 
+  let some info := getStructureInfo? (← getEnv) structName
+    | return none
+  
+  let some rule ← getFunTransStructureRule transName info.structName
+    | return none
 
-    
-  --   return ← (applyRule transName .comp #[f.eta,g.eta])
+  let projArgs := (X.getAppArgs.push x)
+  let xprojs := info.fieldInfo.map λ fieldInfo => 
+                  mkAppN (.const fieldInfo.projFn us) projArgs
 
-  -- -- complicated composition e.g. `f (g₁ x) (g₂ x)` which is treated as composition of `uncurryN 2 f` and `λ x => (g₁ x, g₂ x)`
-  -- else
+  let xprojTypes ← xprojs.mapM λ xi => inferType xi
 
-  --   -- Special handling for `λ x => (f x, g x)`
-  --   if let .some (Fname, _) := F.const? then
-  --     if (Fname == ``Prod.mk) then
-  --       if depArgs.size ≠ 2 then
-  --         panic! "Composition rule: encountered odd number of arguments in the special handling for `Prod.mk` in the expression {← ppExpr b}"
-  --       let f ← mkLambdaFVars #[x] depArgs[0]!.1
-  --       let g ← mkLambdaFVars #[x] depArgs[1]!.1
-  --       return ← (applyRule transName .prodMap #[f.eta,g.eta])
+  let xName ← x.fvarId!.getUserName
+  let xprojDecls := info.fieldInfo.mapIdx λ i fieldInfo => 
+                      (xName.appendAfter (toString fieldInfo.fieldName), default, λ _ => pure xprojTypes[i]!)
 
-    
-  --   let lastId  := depArgs.size-1
-  --   let lastArg := depArgs[lastId]!.1
+  let step ← 
+    withLocalDecls xprojDecls λ xps => do
 
-  --   let g :=
-  --     (depArgs[0:lastId]).foldrM (init:=lastArg)
-  --       (λ y ys => mkAppOptM ``Prod.mk #[none, none, y.1, ys])
-  --     >>= 
-  --     mkLambdaFVars #[x]
-  --   let g ← g
+      let replaceRules := xprojs.zip xps
 
-  --   let Ys := depArgs.map λ (arg, _) => (Name.anonymous, λ _ => inferType arg)
+      let b' := b.replace (λ e => do 
+        for (val, fvar) in replaceRules do
+          if e == val then
+            return fvar
+        none)
 
-  --   let f ← 
-  --     withLocalDeclsD Ys λ ys => do
-  --       let mut args' := args
-  --       for i in [0:ys.size] do
-  --         let j := depArgs[i]!.2
-  --         args' := args'.set! j ys[i]!
-  --       let b' ← mkAppOptM' F (args'.map some)
-  --       let f' ← mkLambdaFVars ys b'
-  --       let n := mkNatLit ys.size 
-  --       mkAppNoTrailingM ``uncurryN #[n, f'.eta]
+      -- no projection was found
+      if xps.all λ xp => ¬(b'.containsFVar xp.fvarId!) then
+        return none
 
-  --   return ← (applyRule transName .comp #[f,g.eta])
+      let f ← mkLambdaFVars (xps.reverse.push x) b'
 
+      let proof ← mkAppNoTrailingM rule #[f]
+      let statement ← inferType proof
+      let rhs := statement.getArg! 2
+      let lhs ← mkAppM transName #[← mkLambdaFVars #[x] b]
+      dbg_trace s!"Applying structure rule to: {← ppExpr lhs}"
+      dbg_trace s!"motive: {← ppExpr f}"
+      dbg_trace s!"lhs type: {← ppExpr (← inferType lhs)}"
+      dbg_trace s!"rhs type: {← ppExpr (← inferType rhs)}"
+      trace[Meta.Tactic.fun_trans.rewrite] s!"By structure rule {rule} `\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
+      return .some (.visit (.mk rhs proof 0))
 
--- -- (binderName : Name) (binderType : Expr) (body : Expr) (binderInfo : BinderInfo)
---   withLocalDecl (← yId.getUserName) default (← inferType y) λ y' => do
---     let b := b.replaceFVarId yId y'
-
---     if b.containsFVar xId then 
---       let f ← mkLambdaFVars #[x,y'] b
---       applyRule transName .letBinop #[f,g]
---     else
---       let f ← mkLambdaFVars #[y'] b
---       applyRule transName .letComp #[f,g]
-
-
+  return step
 
 /-- Transform `T f` according to the core transformation rules.
   -/
@@ -298,8 +288,12 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
   match f with
   | .lam .. => lambdaLetTelescope f λ xs b => do
 
+    let x := xs[0]!
+
+    if let some step ← tryStructureRule? transName x (← mkLambdaFVars xs[1:] b) then
+      return step
+
     if xs.size > 1 then
-      let x := xs[0]!
       let y := xs[1]!
 
       let b ← mkLambdaFVars xs[2:] b
@@ -312,7 +306,6 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
         applyLambdaRules transName x y b
 
     else 
-      let x := xs[0]!
 
       let b ← mkLambdaFVars xs[2:] b
 
@@ -336,15 +329,6 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
     return .some (.visit (.mk f' none 0))
 
   | _ => return none
-
-  -- -- Is `e` in the form `T f` ?
-  -- let .some transName := e.getAppFn.constName?
-  --   | return none
-  -- let .some f := e.getAppRevArgs[0]?
-  --   | return none
-  -- let env ← getEnv
-  -- if ¬funTransDefAttr.hasTag env transName || ¬f.isLambda then
-  --   return none
 
 /-- 
   Is expression `e` of the form `T f x₀ x₁ .. xₙ` where `T` is some function transformation?
@@ -432,19 +416,6 @@ def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
       let step := step.updateResult (← args.foldlM (init:=step.result) λ step' arg => Simp.mkCongrFun step' arg)
 
       return step
-      -- let (f', proof) ← args.foldlM (init := (f',proof))
-      --     λ (f', proof) arg => do pure (← mkAppM' f' #[arg], 
-      --                                   ← mkAppM ``congrFun #[proof, arg])
-      -- let f' := f'.headBeta
-
-      -- trace[Meta.Tactic.fun_trans.rewrite] s!"Rewriting from:\n{← Meta.ppExpr e}\nto:\n{← Meta.ppExpr f'}"
-
-      -- let goal ← mkEq e f'
-
-      -- if (← isDefEq goal (← inferType proof)) then
-      --   dbg_trace s!"Proof `{← ppExpr proof}` seems to be correct"
-      -- else
-      --   dbg_trace s!"Proof `{← ppExpr proof}` does not seem to be correct. Expected type is `{← ppExpr goal}` but it has type `{← ppExpr (← inferType proof)}`"
 
   return none
 

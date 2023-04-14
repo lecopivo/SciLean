@@ -5,7 +5,7 @@ package scilean
 
 @[default_target]
 lean_lib SciLean {
-  precompileModules := true
+  -- precompileModules := true
   roots := #[`SciLean]
 }
 

@@ -141,6 +141,17 @@ theorem adjointDifferential.rule_piComp [Nonempty κ]
       dg₁ i + dg₂ i
   := sorry
 
+theorem adjointDifferential.structure_rule.Prod 
+  {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
+  (f : X → Y → X×Y → Z) [HasAdjDiff λ (x,y,xy) => f x y xy]
+  : ∂† (λ xy : X×Y => f xy.1 xy.2 xy)
+    =
+    λ xy dz => 
+      let dx  := ∂† (λ x' => f x' xy.2 xy) xy.1 dz
+      let dy  := ∂† (λ y' => f xy.1 y' xy) xy.2 dz
+      let dxy := ∂† (λ xy' => f xy.1 xy.2 xy') xy dz
+      (dx,dy) + dxy
+  := sorry
 
 --------------------------------------------------------------------------------
 -- Reverse Differential Rules
@@ -244,6 +255,19 @@ theorem reverseDifferential.rule_snd (X Y) [SemiHilbert X] [SemiHilbert Y]
   : ℛ (λ (xy : X×Y) => xy.2)
     =
     λ xy => (xy.2, λ dxy' => (0, dxy')) := sorry
+
+
+theorem reverseDifferential.structure_rule.Prod 
+  {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
+  (f : X → Y → X×Y → Z) [HasAdjDiff λ (x,y,xy) => f x y xy]
+  : ℛ (λ xy : X×Y => f xy.1 xy.2 xy)
+    =
+    λ xy => 
+      let Rz  := ℛ (λ xyxy : X×Y×(X×Y) => f xyxy.1 xyxy.2.1 xyxy.2.2) (xy.1,xy.2,xy)
+      (Rz.1, λ dz => 
+               let dxdydxy := Rz.2 dz
+               (dxdydxy.1, dxdydxy.2.1) + dxdydxy.2.2)
+  := sorry
 
 
 #exit
