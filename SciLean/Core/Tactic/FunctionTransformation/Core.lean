@@ -131,6 +131,7 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
             let proof ← mkAppNoTrailingM `SciLean.adjointDifferential.rule_piMap #[f]
             let statement ← inferType proof
             let rhs := statement.getArg! 2
+            dbg_trace s!"Array comp motive: {← ppExpr f}"
             trace[Meta.Tactic.fun_trans.rewrite] s!"By rule arrayMap `\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
             return .some (.visit (.mk rhs proof 0))
           else do
@@ -138,6 +139,8 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
             let proof ← mkAppNoTrailingM `SciLean.adjointDifferential.rule_piMapComp #[f,h]
             let statement ← inferType proof
             let rhs := statement.getArg! 2
+            dbg_trace s!"Array comp motive f: {← ppExpr f}"
+            dbg_trace s!"Array comp motive h: {← ppExpr h}"
             trace[Meta.Tactic.fun_trans.rewrite] s!"By rule arrayMapComp`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
             return .some (.visit (.mk rhs proof 0))
       return step
