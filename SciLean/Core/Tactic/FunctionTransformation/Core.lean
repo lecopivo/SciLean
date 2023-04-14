@@ -269,11 +269,6 @@ def tryStructureRule? (transName : Name) (x b : Expr) : SimpM (Option Simp.Step)
       let proof ← mkAppNoTrailingM rule #[f]
       let statement ← inferType proof
       let rhs := statement.getArg! 2
-      let lhs ← mkAppM transName #[← mkLambdaFVars #[x] b]
-      dbg_trace s!"Applying structure rule to: {← ppExpr lhs}"
-      dbg_trace s!"motive: {← ppExpr f}"
-      dbg_trace s!"lhs type: {← ppExpr (← inferType lhs)}"
-      dbg_trace s!"rhs type: {← ppExpr (← inferType rhs)}"
       trace[Meta.Tactic.fun_trans.rewrite] s!"By structure rule {rule} `\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
       return .some (.visit (.mk rhs proof 0))
 
