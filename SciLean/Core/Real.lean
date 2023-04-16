@@ -1,4 +1,3 @@
-
 import SciLean.Prelude
 import Mathlib.Algebra.Field.Basic
 
@@ -79,6 +78,18 @@ namespace Real
 
   -- this kind of breaks with NaNs but I want to make sure that we never get them as division by zero is zero
   instance (x y : ℝ) : Decidable (x = y) := if (x < y) ∨ (y < x) then isFalse (sorry_proof : x≠y) else isTrue (sorry_proof : x=y)
+
+  instance : LinearOrder ℝ where
+    le_refl := sorry
+    le_trans := sorry
+    le_antisymm := sorry
+    le_total := sorry
+    lt_iff_le_not_le := sorry
+    decidable_le := by infer_instance
+
+
+  -- instance : ZeroLEOneClass ℝ where
+  --   zero_le_one := sorry_proof
   
   -- @[irreducible]
   instance : Add ℝ := ⟨λ x y => ⟨x.val + y.val⟩⟩
