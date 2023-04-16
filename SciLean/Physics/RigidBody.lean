@@ -46,7 +46,7 @@ namespace Position
 end Position
 
 def kineticEnergy (p : Params X R) (x : Position X R) (v : Velocity x) : ℝ := 
-  1/2 * (p.inertiaTensor v.angularVelocity v.angularVelocity + p.mass * ∥v.velocity∥²)
+  1/2 * (p.inertiaTensor v.angularVelocity v.angularVelocity + p.mass * ‖v.velocity‖²)
 
 
 end RigidBody

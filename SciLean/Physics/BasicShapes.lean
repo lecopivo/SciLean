@@ -172,7 +172,7 @@ namespace Ball
     is_trans := sorry
    }
 
-  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate (toSet (X:=X)) R := λ r => 
+  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r => 
   {
     trans := λ p => 
       {
@@ -251,7 +251,7 @@ namespace Capsule
     is_trans := sorry
    }
 
-  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate (toSet (X:=X)) R := λ r => 
+  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r => 
   {
     trans := λ p => 
       {
@@ -360,7 +360,7 @@ namespace RoundCone
     is_trans := sorry
    }
 
-  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate (toSet (X:=X)) R := λ r => 
+  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r => 
   {
     trans := λ p => 
       {

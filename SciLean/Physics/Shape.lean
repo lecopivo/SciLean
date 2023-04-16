@@ -18,13 +18,14 @@ structure Shape {P X} (toSet : P → Set X) where
 
 namespace Shape
 
-  variable {P X : Type} [Hilbert X] {p : P → Set X}
-
+  -- TODO: replace all occurrences of `p` to `toSet`
+  variable {P X : Type} [Hilbert X] {p : P → Set X} {toSet : P → Set X}
 
   ------------------------------------------------------------------------------
   -- Locate
   ------------------------------------------------------------------------------
   inductive Location | inside | boundary | outside 
+  deriving Inhabited, BEq
 
   noncomputable 
   def locateSpec (s : Shape p) (x : X) : Location := sorry
@@ -106,10 +107,9 @@ namespace Shape
   class HasSdf (p : P → Set X) where
     sdf (s : Shape p) (x : X) : ℝ
     is_sdf : IsSdf sdf
-
+  
   def sdf [HasSdf p] (s : Shape p) (x : X) := HasSdf.sdf s x
 
-  
   instance [HasSdf p] : IsSdf (sdf (p:=p)) := HasSdf.is_sdf
   instance (f : Shape p → X → ℝ) [IsSdf f] : IsLevelSet f := sorry
 
@@ -130,6 +130,25 @@ namespace Shape
   }
 
 
+  ------------------------------------------------------------------------------
+  -- Closest Point
+  ------------------------------------------------------------------------------
+  /--
+  Finds a closest point on the boundary of `s` to the point `x` and also tells you if 
+  `x` is inside/outside or on the boundary of `s`.
+  If the closest point is not unique, it will just pick one.
+  -/
+  class HasClosestPoint (toSet : P → Set X) where
+    closestPointLoc (s : Shape toSet) (x : X) : (Option X) × Location
+    is_closest_point : (sorry : Prop)
+
+  def closestPoint [HasClosestPoint toSet] (s : Shape toSet) (x : X) : Option X := 
+    (HasClosestPoint.closestPointLoc s x).1
+
+  def closestPointLoc [HasClosestPoint toSet] (s : Shape toSet) (x : X) : (Option X) × Location := 
+    HasClosestPoint.closestPointLoc s x
+
+  
   ------------------------------------------------------------------------------
   -- Distance between two shapes
   ------------------------------------------------------------------------------
@@ -153,33 +172,33 @@ namespace Shape
   ------------------------------------------------------------------------------
   -- Shape Transform
   ------------------------------------------------------------------------------
-  class HasTransform (p : P → Set X) (f : X → X) where
+  class HasTransform (toSet : P → Set X) (f : X → X) where
     trans : P → P
-    is_trans : sorry -- the new shape is f(A)
+    is_trans : ∀ p x, x ∈ toSet p ↔ f x ∈ toSet (trans p)
 
   def trans (f : X → X) [HasTransform p f] (s : Shape p) : Shape p := ⟨HasTransform.trans p f s.params⟩
 
   -- Common transformations
   abbrev HasReflect (p : P → Set X) := HasTransform p Neg.neg
   abbrev HasTranslate (p : P → Set X) := ∀ t, HasTransform p λ x => x + t
-  abbrev HasRotate (p : P → Set X) (R : Type) [Group R] [LieGroup.SO R X] 
+  abbrev HasRotate (R : Type) [Group R] [LieGroup.SO R X] (p : P → Set X)  
     := ∀ r : R, HasTransform p λ x => r • x
   abbrev HasMirror (p : P → Set X) := ∀ n : X, HasTransform p λ x => x - ((2 : ℝ) * ⟪x,n⟫) • n
 
   abbrev reflect [HasReflect p] (s : Shape p) := s.trans Neg.neg
-  abbrev translete [HasTranslate p] (s : Shape p) (t : X) := s.trans λ x => x + t
-  abbrev rotate {R : Type} [Group R] [LieGroup.SO R X] [HasRotate p R] 
+  abbrev translate [HasTranslate p] (s : Shape p) (t : X) := s.trans λ x => x + t
+  abbrev rotate {R : Type} [Group R] [LieGroup.SO R X] [HasRotate R p] 
     (s : Shape p) (r : R) := s.trans λ x => r • x 
   abbrev mirror [HasMirror p] (s : Shape p) (n : X) := s.trans λ x => x - ((2 : ℝ) * ⟪x,n⟫) • n
 
-  class HasRigidTransform (p : P → Set X) (R : Type) [Group R] [LieGroup.SO R X] where
+  class HasRigidTransform (R : Type) [Group R] [LieGroup.SO R X] (p : P → Set X) where
     hasTranslate : HasTranslate p
-    hasRotate : HasRotate p R
+    hasRotate : HasRotate R p
 
-  instance {R : Type} [Group R] [LieGroup.SO R X] [inst : HasRigidTransform p R] 
+  instance {R : Type} [Group R] [LieGroup.SO R X] [inst : HasRigidTransform R p] 
     : HasTranslate p := inst.hasTranslate
-  instance {R : Type} [Group R] [LieGroup.SO R X] [inst : HasRigidTransform p R] 
-    : HasRotate p R := inst.hasRotate
+  instance {R : Type} [Group R] [LieGroup.SO R X] [inst : HasRigidTransform R p] 
+    : HasRotate R p := inst.hasRotate
 
 
   ------------------------------------------------------------------------------
@@ -188,5 +207,212 @@ namespace Shape
   class HasMinkowskiSum (p : P → Set X) (q : Q → Set X) (r : outParam $ R → Set X) where
     sum : P → Q → R
     is_sum : sorry
+
+  
+
+  -- Transformed Shapes
+  ------------------------------------------------------------------------------        
+
+  ------------------------------------------------------------------------------
+  -- Rigid Transform 
+  ------------------------------------------------------------------------------        
+  structure RigidTransformParams (P : Type) (X R : Type) [Hilbert X] [Group R] [LieGroup.SO R X] where
+    params : P
+    translate : X
+    rotate : R
+    inverseRotate : R
+    valid_rotate : rotate * inverseRotate = 1
+
+  def rigidTransformSet (R : Type) [Hilbert X] [Group R] [LieGroup.SO R X] (toSet : P → Set X) 
+    : RigidTransformParams P X R → Set X :=
+    λ ⟨p, t, _, ir, _⟩ x => ir • (x - t) ∈ toSet p
+
+  def mkRigidTransformed {R : Type} [Group R] [LieGroup.SO R X] (t : X) (r : R) (s : Shape toSet)
+    : Shape (rigidTransformSet R toSet) :=
+    {
+      params := {
+        params := s.params
+        translate := t
+        rotate := r
+        inverseRotate := r⁻¹
+        valid_rotate := by simp
+      }
+    }
+  
+  instance (R : Type) [Group R] [LieGroup.SO R X] 
+    : HasTranslate (rigidTransformSet R toSet) := λ t' => 
+  {
+    trans := λ ⟨p, t, r, ir, h⟩ => ⟨p, t + t', r, ir, h⟩
+    is_trans := sorry
+  }
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] 
+    : HasRotate R (rigidTransformSet R toSet) := λ r' => 
+  {
+    trans := λ ⟨p, t, r, ir, h⟩ => ⟨p, r' • t, r' * r, ir * r'⁻¹, sorry⟩
+    is_trans := sorry
+  }
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasLocate toSet] 
+    : HasLocate (rigidTransformSet R toSet) where
+    locate := λ ⟨⟨p, t, r, ir, _⟩⟩ x => 
+      let x' := ir • (x - t)
+      let s' : Shape toSet := ⟨p⟩
+      s'.locate x'
+    is_locate := sorry
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasLevelSet toSet] 
+    : HasLevelSet (rigidTransformSet R toSet) where
+    levelSet := λ ⟨⟨p, t, r, ir, _⟩⟩ x => 
+      let x' := ir • (x - t)
+      let s' : Shape toSet := ⟨p⟩
+      s'.levelSet x'
+    is_level_set := sorry
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasSdf toSet] 
+    : HasSdf (rigidTransformSet R toSet) where
+    sdf := λ ⟨⟨p, t, _, ir, _⟩⟩ x => 
+      let x' := ir • (x - t)
+      let s' : Shape toSet := ⟨p⟩
+      s'.sdf x'
+    is_sdf := sorry
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasClosestPoint toSet] 
+    : HasClosestPoint (rigidTransformSet R toSet) where
+    closestPointLoc := λ ⟨⟨p, t, r, ir, _⟩⟩ x => 
+      let x' := ir • (x - t)
+      let s' : Shape toSet := ⟨p⟩
+      let (cp?, loc) := s'.closestPointLoc x'
+      (cp?.map λ cp => r • cp + t, loc)
+    is_closest_point := sorry
+
+
+  ------------------------------------------------------------------------------
+  -- Velocity Sweep 
+  ------------------------------------------------------------------------------        
+  structure VelSweepParams (P : Type) (X : Type) [Vec X] where
+    params : P
+    t₁ : ℝ
+    t₂ : ℝ
+    vel  : X
+    
+  def velSweepSet (toSet : P → Set X) : VelSweepParams P X → Set (ℝ × X) :=
+    λ p (t,x) => 
+      p.t₁ ≤ t ∧ t ≤ p.t₂ 
+      ∧ 
+      x - (t - p.t₁)•p.vel ∈ toSet p.params
+
+  def mkVelSwept (t₁ t₂ : ℝ) (vel : X) (s : Shape toSet)
+    : Shape (velSweepSet toSet) :=
+    {
+      params := { 
+        params := s.params
+        t₁ := t₁
+        t₂ := t₂
+        vel := vel
+      }
+    }
+
+
+  instance {toSet : P → Set X} [HasLocate toSet] 
+    : HasLocate (velSweepSet toSet) 
+  where
+    locate := λ s (t,x) => 
+      if s.params.t₁ ≤ t && t ≤ s.params.t₂ then
+        let s' : Shape toSet := ⟨s.params.params⟩
+        match s'.locate (x - (t - s.params.t₁)•s.params.vel) with
+        | .outside => .outside
+        | .boundary => .boundary
+        | .inside => 
+          if t == s.params.t₁ || t == s.params.t₂ then
+            .boundary
+          else
+            .inside
+      else
+        .outside
+    is_locate := sorry
+
+  instance {toSet : P → Set X} [HasClosestPoint toSet] 
+    : HasClosestPoint (velSweepSet toSet) 
+  where
+    closestPointLoc := λ s (t,x) => 
+      let t₁ := s.params.t₁
+      let t₂ := s.params.t₂
+      let vel := s.params.vel
+
+      if t₂ < t₁ then
+        (none, .outside)
+
+      else if t ≤ t₁ then
+        let s₁ : Shape toSet := ⟨s.params.params⟩
+        let (cp₁?, loc) := s₁.closestPointLoc x
+        match cp₁?, loc with
+        | some cp₁, .outside  => ((t₁, cp₁) , .outside)
+        | some cp₁, .inside   => ((t₁, x) , if t = t₁ then .boundary else .outside)
+        | some cp₁, .boundary => ((t₁, x) , if t = t₁ then .boundary else .outside)
+        | none, .outside  => (none, .outside)
+        | none, .inside   => ((t₁, x), if t = t₁ then .boundary else .outside)
+        | none, .boundary => ((t₁, x), if t = t₁ then .boundary else .outside)
+
+      else if t₂ ≤ t then
+        let s₁ : Shape toSet := ⟨s.params.params⟩
+        let (cp₂?, loc) := s₁.closestPointLoc (x - (t₂-t₁)•vel)
+        let cp₂? := cp₂?.map (λ cp => cp + (t₂-t₁)•vel)
+        match cp₂?, loc with
+        | some cp₂, .outside  => ((t₂, cp₂) , .outside)
+        | some cp₂, .inside   => ((t₂, x) , if t = t₂ then .boundary else .outside)
+        | some cp₂, .boundary => ((t₂, x) , if t = t₂ then .boundary else .outside)
+        | none, .outside  => (none, .outside)
+        | none, .inside   => ((t₂, x), if t = t₂ then .boundary else .outside)
+        | none, .boundary => ((t₂, x), if t = t₂ then .boundary else .outside)
+
+      else -- now we have `t₁ < t ∧ t < t₂`
+        let Δt := t - t₁
+        let x₁ := x - Δt•vel
+        let s₁ : Shape toSet := ⟨s.params.params⟩
+        let (cp₁?,loc₁) := s₁.closestPointLoc x₁
+
+        match cp₁? with
+        | none => 
+           match loc₁ with
+           | .outside => (none, .outside)
+           | .inside  => 
+             if t - t₁ ≤ t₂ - t then
+               ((t₁,x), if t = t₁ then .boundary else .inside)
+             else
+               ((t₂,x), if t = t₂ then .boundary else .inside)  
+           | .boundary => 
+             -- if the point `x` is on the boundary then there has to be a closes point
+             panic! "Unreachable code in `HasClosestPoint.closestPointLoc`"
+        | some cp₁ =>
+
+          -- I want to write thise:
+          -- let Δt' := solution Δt', ⟪(x,t) - (cp₁, t₁) - Δt'•(vel,1), (vel,1)⟫ = 0 rewrite_by solve
+          let Δt' := (⟪x-cp₁,vel⟫ + Δt) / (‖vel‖² + 1)
+          let t'  := t₁ + Δt'
+          let cp' := cp₁ + Δt'•vel
+
+          match loc₁ with
+          | .boundary => ((t,x) , .boundary)
+          | .outside => 
+            if t' < t₁ then
+              ((t₁, cp₁), .outside)
+            else if t₂ < t' then
+              ((t₂, cp₁ + (t₂ - t₁)•vel), .outside)
+            else
+              ((t', cp'), .outside)
+          | .inside => 
+            let d2' := ‖cp' - x‖² + (t' - t)^2
+            let d2₁ := (t-t₂)^2
+            let d2₂ := (t₂-t)^2
+            if d2₁ ≤ d2' && d2₁ ≤ d2₂ then
+              ((t₁, x), .inside)
+            else if d2₂ ≤ d2' && d2₂ ≤ d2₁ then
+              ((t₂, x + (t₂-t₁)•vel), .inside)
+            else
+             ((t', cp'), .inside)
+
+    is_closest_point := sorry
+
 
 end Shape
