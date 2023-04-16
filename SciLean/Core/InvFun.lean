@@ -54,3 +54,14 @@ theorem invFun.rule_piComp [Nonempty α]
       let a := h⁻¹ b
       (f a)⁻¹ (g' a) := sorry
 
+theorem InvFun.rule_prodMap [Nonempty α] [Nonempty β]
+  (f : α → α') [IsInv f] 
+  (g : β → β') [IsInv g] 
+  : (λ ab : α×β => (f ab.1, g ab.2))⁻¹
+    =
+    λ ab : α'×β' => (f⁻¹ ab.1, g⁻¹ ab.2) := sorry
+
+theorem InvFun.rule_prodMap_rev [Nonempty α] [Nonempty β]
+  (f : α → α') [IsInv f] 
+  (g : β → β') [IsInv g] 
+  : IsInv (λ ab : α×β => (g ab.2, f ab.1)) := sorry
