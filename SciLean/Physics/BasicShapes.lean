@@ -245,7 +245,7 @@ namespace Capsule
     trans := λ p => 
       {
         point1 := p.point1 + t
-        point2   := p.point2 + t
+        point2 := p.point2 + t
         radius := p.radius
       }
     is_trans := sorry

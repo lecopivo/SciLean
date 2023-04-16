@@ -150,26 +150,6 @@ namespace Shape
 
   
   ------------------------------------------------------------------------------
-  -- Distance between two shapes
-  ------------------------------------------------------------------------------
-  noncomputable
-  def distSpec (A : Shape p) (B : Shape q) : ℝ := sorry
-    -- if disjoint A B then
-    --   sup (x ∈ A), inf (y ∈ B), dist x y
-    -- else
-    --   - min (sup (x ∈ A∩B) (inf (y ∈ ∂B), dist x y))
-    --         (sup (x ∈ A∩B) (inf (y ∈ ∂A), dist x y))
-
-  class HasDist (p : P → Set X) (q : Q → Set X) where
-    dist (A : Shape p) (B : Shape q) : ℝ 
-    is_dist : ∀ A B, distSpec A B = dist A B
-
-  def dist [HasDist p q] (A : Shape p) (B : Shape q) : ℝ := HasDist.dist A B
-  @[simp] theorem dist_spec [HasDist p q] (A : Shape p) (B : Shape q)
-    : distSpec A B = dist A B := by apply HasDist.is_dist
-  
-
-  ------------------------------------------------------------------------------
   -- Shape Transform
   ------------------------------------------------------------------------------
   class HasTransform (toSet : P → Set X) (f : X → X) where
@@ -183,12 +163,15 @@ namespace Shape
   abbrev HasTranslate (p : P → Set X) := ∀ t, HasTransform p λ x => x + t
   abbrev HasRotate (R : Type) [Group R] [LieGroup.SO R X] (p : P → Set X)  
     := ∀ r : R, HasTransform p λ x => r • x
+  abbrev HasScale (p : P → Set X)  
+    := ∀ s : ℝ, HasTransform p λ x => s • x
   abbrev HasMirror (p : P → Set X) := ∀ n : X, HasTransform p λ x => x - ((2 : ℝ) * ⟪x,n⟫) • n
 
   abbrev reflect [HasReflect p] (s : Shape p) := s.trans Neg.neg
   abbrev translate [HasTranslate p] (s : Shape p) (t : X) := s.trans λ x => x + t
   abbrev rotate {R : Type} [Group R] [LieGroup.SO R X] [HasRotate R p] 
     (s : Shape p) (r : R) := s.trans λ x => r • x 
+  abbrev scale [HasScale p] (s : Shape p) (r : ℝ) := s.trans λ x => r • x 
   abbrev mirror [HasMirror p] (s : Shape p) (n : X) := s.trans λ x => x - ((2 : ℝ) * ⟪x,n⟫) • n
 
   class HasRigidTransform (R : Type) [Group R] [LieGroup.SO R X] (p : P → Set X) where
@@ -204,14 +187,196 @@ namespace Shape
   ------------------------------------------------------------------------------
   -- Minkowski Sum
   ------------------------------------------------------------------------------
-  class HasMinkowskiSum (p : P → Set X) (q : Q → Set X) (r : outParam $ R → Set X) where
+  class HasMinkowskiSum (toSet₁ : P → Set X) (toSet₂ : Q → Set X) (toSet₃ : outParam $ R → Set X) where
     sum : P → Q → R
-    is_sum : sorry
+    is_sum : ∀ p q z, 
+      (z ∈ toSet₃ (sum p q)) 
+      ↔ 
+      ∃ (x y : X), (z = x + y) ∧ (x ∈ toSet₁ p) ∧ (y ∈ toSet₂ q)
+
+
+  ------------------------------------------------------------------------------
+  -- Distance between two shapes
+  ------------------------------------------------------------------------------
+  noncomputable
+  def distSpec (A : Shape p) (B : Shape q) : ℝ := sorry
+    -- evaluate signed distance of minkowski sum of A,-B at the origin
+
+  class HasDist (p : P → Set X) (q : Q → Set X) where
+    dist (A : Shape p) (B : Shape q) : ℝ 
+    is_dist : ∀ A B, distSpec A B = dist A B
+
+  def dist [HasDist p q] (A : Shape p) (B : Shape q) : ℝ := HasDist.dist A B
+  @[simp] theorem dist_spec [HasDist p q] (A : Shape p) (B : Shape q)
+    : distSpec A B = dist A B := by apply HasDist.is_dist
 
   
 
   -- Transformed Shapes
   ------------------------------------------------------------------------------        
+
+  ------------------------------------------------------------------------------
+  -- Translated Shape
+  ------------------------------------------------------------------------------        
+  structure TranslatedParams (P : Type) (X : Type) where
+    params : P
+    translate : X
+
+  def translatedSet (toSet : P → Set X) 
+    : TranslatedParams P X → Set X :=
+    λ ⟨p, t⟩ x => (x - t) ∈ toSet p
+
+  def mkTranslated (t : X) (s : Shape toSet) : Shape (translatedSet toSet) :=
+  {
+    params := {
+      params := s.params
+      translate := t
+    }
+  }
+
+  instance 
+    : HasTranslate (translatedSet toSet) := λ t' => 
+  {
+    trans := λ ⟨p, t⟩ => ⟨p, t + t'⟩
+    is_trans := sorry
+  }
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasRotate R toSet]
+    : HasRotate R (translatedSet toSet) := λ r => 
+  {
+    trans := λ ⟨p, t⟩ =>
+      let s : Shape toSet := ⟨p⟩
+      ⟨(s.rotate r).1, r • t⟩
+    is_trans := sorry
+  }
+
+  instance [HasScale toSet]
+    : HasScale (translatedSet toSet) := λ r => 
+  {
+    trans := λ ⟨p, t⟩ =>
+      let s : Shape toSet := ⟨p⟩
+      ⟨(s.scale r).1, r • t⟩
+    is_trans := sorry
+  }
+
+  instance [HasLocate toSet]
+    : HasLocate (translatedSet toSet) where
+    locate := λ ⟨p, t⟩ x => 
+      let s' : Shape toSet := ⟨p⟩
+      let x' := x - t
+      s'.locate x'
+    is_locate := sorry
+
+  instance [HasLevelSet toSet]
+    : HasLevelSet (translatedSet toSet) where
+    levelSet := λ ⟨p, t⟩ x => 
+      let s' : Shape toSet := ⟨p⟩
+      let x' := x - t
+      s'.levelSet x'
+    is_level_set := sorry
+
+  instance [HasSdf toSet]
+    : HasSdf (translatedSet toSet) where
+    sdf := λ ⟨p, t⟩ x => 
+      let s' : Shape toSet := ⟨p⟩
+      let x' := x - t
+      s'.sdf x'
+    is_sdf := sorry
+
+  instance  [HasClosestPoint toSet] 
+    : HasClosestPoint (translatedSet toSet) where
+    closestPointLoc := λ ⟨p, t⟩ x => 
+      let s' : Shape toSet := ⟨p⟩
+      let x' := x - t
+      let (cp?, loc) := s'.closestPointLoc x'
+      (cp?.map λ cp => cp + t, loc)
+    is_closest_point := sorry
+
+
+  ------------------------------------------------------------------------------
+  -- Rotated Shape
+  ------------------------------------------------------------------------------        
+  structure RotatedParams (P : Type) (X R : Type) [Hilbert X] [Group R] [LieGroup.SO R X] where
+    params : P
+    rotate : R
+    inverseRotate : R
+    valid_rotate : rotate * inverseRotate = 1
+
+  def rotatedSet (R : Type) [Hilbert X] [Group R] [LieGroup.SO R X] (toSet : P → Set X) 
+    : RotatedParams P X R → Set X :=
+    λ ⟨p, _, ir, _⟩ x => ir • x ∈ toSet p
+
+  def mkRotateded {R : Type} [Group R] [LieGroup.SO R X] (r : R) (s : Shape toSet)
+    : Shape (rotatedSet R toSet) :=
+    {
+      params := {
+        params := s.params
+        rotate := r
+        inverseRotate := r⁻¹
+        valid_rotate := by simp
+      }
+    }
+  
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasTranslate toSet]
+    : HasTranslate (rotatedSet R toSet) := λ t => 
+  {
+    trans := λ ⟨p, r, ir, h⟩ => 
+      let s' : Shape toSet := ⟨p⟩ 
+      let p' := (s'.translate (ir•t)).1
+      ⟨p', r, ir, h⟩
+    is_trans := sorry
+  }
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] 
+    : HasRotate R (rotatedSet R toSet) := λ r' => 
+  {
+    trans := λ ⟨p, r, ir, h⟩ => ⟨p, r' * r, ir * r'⁻¹, sorry⟩
+    is_trans := sorry
+  }
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasScale toSet]
+    : HasScale (rotatedSet R toSet) := λ r' => 
+  {
+    trans := λ ⟨p, r, ir, h⟩ => 
+      let s' : Shape toSet := ⟨p⟩ 
+      let p' := (s'.scale r').1
+      ⟨p', r, ir, h⟩
+    is_trans := sorry
+  }
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasLocate toSet] 
+    : HasLocate (rotatedSet R toSet) where
+    locate := λ ⟨p, r, ir, _⟩ x => 
+      let x' := ir • x
+      let s' : Shape toSet := ⟨p⟩
+      s'.locate x'
+    is_locate := sorry
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasLevelSet toSet] 
+    : HasLevelSet (rotatedSet R toSet) where
+    levelSet := λ ⟨p, r, ir, _⟩ x => 
+      let x' := ir • x
+      let s' : Shape toSet := ⟨p⟩
+      s'.levelSet x'
+    is_level_set := sorry
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasSdf toSet] 
+    : HasSdf (rotatedSet R toSet) where
+    sdf := λ ⟨p,  _, ir, _⟩ x => 
+      let x' := ir • x
+      let s' : Shape toSet := ⟨p⟩
+      s'.sdf x'
+    is_sdf := sorry
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasClosestPoint toSet] 
+    : HasClosestPoint (rotatedSet R toSet) where
+    closestPointLoc := λ ⟨p, r, ir, _⟩ x => 
+      let x' := ir • x 
+      let s' : Shape toSet := ⟨p⟩
+      let (cp?, loc) := s'.closestPointLoc x'
+      (cp?.map λ cp => r • cp, loc)
+    is_closest_point := sorry
+
 
   ------------------------------------------------------------------------------
   -- Rigid Transform 
@@ -224,67 +389,31 @@ namespace Shape
     valid_rotate : rotate * inverseRotate = 1
 
   def rigidTransformSet (R : Type) [Hilbert X] [Group R] [LieGroup.SO R X] (toSet : P → Set X) 
-    : RigidTransformParams P X R → Set X :=
-    λ ⟨p, t, _, ir, _⟩ x => ir • (x - t) ∈ toSet p
+    : TranslatedParams (RotatedParams P X R) X → Set X := translatedSet (rotatedSet R toSet)
 
   def mkRigidTransformed {R : Type} [Group R] [LieGroup.SO R X] (t : X) (r : R) (s : Shape toSet)
-    : Shape (rigidTransformSet R toSet) :=
-    {
-      params := {
-        params := s.params
-        translate := t
-        rotate := r
-        inverseRotate := r⁻¹
-        valid_rotate := by simp
-      }
-    }
+    : Shape (rigidTransformSet R toSet) := s.mkRotateded r |>.mkTranslated t
   
-  instance (R : Type) [Group R] [LieGroup.SO R X] 
-    : HasTranslate (rigidTransformSet R toSet) := λ t' => 
-  {
-    trans := λ ⟨p, t, r, ir, h⟩ => ⟨p, t + t', r, ir, h⟩
-    is_trans := sorry
-  }
+  instance (R : Type) [Group R] [LieGroup.SO R X]
+    : HasTranslate (rigidTransformSet R toSet) := by unfold rigidTransformSet; infer_instance
 
   instance (R : Type) [Group R] [LieGroup.SO R X] 
-    : HasRotate R (rigidTransformSet R toSet) := λ r' => 
-  {
-    trans := λ ⟨p, t, r, ir, h⟩ => ⟨p, r' • t, r' * r, ir * r'⁻¹, sorry⟩
-    is_trans := sorry
-  }
+    : HasRotate R (rigidTransformSet R toSet) := by unfold rigidTransformSet; infer_instance
+
+  instance (R : Type) [Group R] [LieGroup.SO R X] [HasScale toSet]
+    : HasScale (rigidTransformSet R toSet) := by unfold rigidTransformSet; infer_instance
 
   instance (R : Type) [Group R] [LieGroup.SO R X] [HasLocate toSet] 
-    : HasLocate (rigidTransformSet R toSet) where
-    locate := λ ⟨⟨p, t, r, ir, _⟩⟩ x => 
-      let x' := ir • (x - t)
-      let s' : Shape toSet := ⟨p⟩
-      s'.locate x'
-    is_locate := sorry
+    : HasLocate (rigidTransformSet R toSet) := by unfold rigidTransformSet; infer_instance
 
   instance (R : Type) [Group R] [LieGroup.SO R X] [HasLevelSet toSet] 
-    : HasLevelSet (rigidTransformSet R toSet) where
-    levelSet := λ ⟨⟨p, t, r, ir, _⟩⟩ x => 
-      let x' := ir • (x - t)
-      let s' : Shape toSet := ⟨p⟩
-      s'.levelSet x'
-    is_level_set := sorry
+    : HasLevelSet (rigidTransformSet R toSet) := by unfold rigidTransformSet; infer_instance
 
   instance (R : Type) [Group R] [LieGroup.SO R X] [HasSdf toSet] 
-    : HasSdf (rigidTransformSet R toSet) where
-    sdf := λ ⟨⟨p, t, _, ir, _⟩⟩ x => 
-      let x' := ir • (x - t)
-      let s' : Shape toSet := ⟨p⟩
-      s'.sdf x'
-    is_sdf := sorry
+    : HasSdf (rigidTransformSet R toSet) := by unfold rigidTransformSet; infer_instance
 
   instance (R : Type) [Group R] [LieGroup.SO R X] [HasClosestPoint toSet] 
-    : HasClosestPoint (rigidTransformSet R toSet) where
-    closestPointLoc := λ ⟨⟨p, t, r, ir, _⟩⟩ x => 
-      let x' := ir • (x - t)
-      let s' : Shape toSet := ⟨p⟩
-      let (cp?, loc) := s'.closestPointLoc x'
-      (cp?.map λ cp => r • cp + t, loc)
-    is_closest_point := sorry
+    : HasClosestPoint (rigidTransformSet R toSet) := by unfold rigidTransformSet; infer_instance
 
 
   ------------------------------------------------------------------------------
@@ -312,7 +441,6 @@ namespace Shape
         vel := vel
       }
     }
-
 
   instance {toSet : P → Set X} [HasLocate toSet] 
     : HasLocate (velSweepSet toSet) 
