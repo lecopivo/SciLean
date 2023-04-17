@@ -8,8 +8,6 @@ import SciLean.Data.DataArray
 
 import SciLean.Physics.Shape
 
-
-
 namespace SciLean
 
 namespace Shape
@@ -86,6 +84,17 @@ namespace AxisAlignedBoxAtOrigin
     trans := λ p => p
     is_trans := sorry
 
+  instance : HasScale (toSet (X:=X) (ι:=ι)) := λ s => 
+  {
+    trans := λ ⟨p, h⟩ => 
+      {
+        radius := ⊞ i, s.abs * p[i]
+        radius_valid := sorry
+      }
+    is_trans := sorry
+  }
+
+
 end AxisAlignedBoxAtOrigin
 
 
@@ -135,6 +144,7 @@ def BallAtOrigin.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop :=
   ‖x‖ ≤ p.radius
 
 abbrev BallAtOrigin (X : Type) {ι : Type} {_ : Enumtype ι} [FinVec X ι] := Shape (BallAtOrigin.toSet (X:=X))
+
 def mkBallAtOrigin (X) {ι} {_:Enumtype ι} [FinVec X ι] (radius : ℝ) 
   : BallAtOrigin X := ⟨radius.abs, sorry⟩
 
@@ -167,6 +177,15 @@ namespace BallAtOrigin
     is_trans := sorry
    }
 
+  instance : HasScale (toSet (X:=X)) := λ s => 
+  {
+    trans := λ ⟨r, h⟩ => 
+      {
+        radius := s.abs * r
+        radius_valid := sorry
+      }
+    is_trans := sorry
+  }
 
 end BallAtOrigin
 
@@ -260,8 +279,9 @@ end Capsule
 structure RoundCone.Params (X : Type) [Hilbert X] where
   a : X
   b : X
-  r1 : {r : ℝ // 0 ≤ r}
-  r2 : {r : ℝ // 0 ≤ r}
+  r1 : ℝ
+  r2 : ℝ
+  valid : 0 ≤ r1 ∧ 0 ≤ r2
 
 namespace RoundCone.Params 
 
@@ -272,7 +292,7 @@ namespace RoundCone.Params
   -- Maybe turn these into computed fields
   def ba := p.b - p.a
   def l2 := ‖p.ba‖²
-  def rr := p.r1.1 - p.r2.1
+  def rr := p.r1 - p.r2
   def a2 := p.l2 - p.rr^2
   def il2 := 1.0 / p.l2
 
@@ -330,6 +350,7 @@ namespace RoundCone
         b := - p.b
         r1 := p.r1
         r2 := p.r2
+        valid := p.valid
       }
     is_trans := sorry
 
@@ -341,6 +362,7 @@ namespace RoundCone
         b := p.b + t
         r1 := p.r1
         r2 := p.r2
+        valid := p.valid
       }
     is_trans := sorry
    }
@@ -353,10 +375,23 @@ namespace RoundCone
         b := r • p.b
         r1 := p.r1
         r2 := p.r2
+        valid := p.valid
       }
     is_trans := sorry
    }
 
+  instance : HasScale (toSet (X:=X)) := λ s => 
+  {
+    trans := λ p => 
+      {
+        a := s•p.a 
+        b := s•p.b
+        r1 := s.abs*p.r1
+        r2 := s.abs*p.r2
+        valid := sorry
+      }
+    is_trans := sorry
+   }
 
 end RoundCone
 
