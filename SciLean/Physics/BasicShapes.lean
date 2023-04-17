@@ -19,11 +19,11 @@ namespace Shape
 -- Axis Aligned Box
 ------------------------------------------------------------------------------
 
-structure AxisAlignedBoxAtOrigin.Params (X ι : Type) [Enumtype ι] [FinVec X ι] where
+structure AxisAlignedBoxAtOrigin.Params (X) {ι : Type} {_:Enumtype ι} [FinVec X ι] where
   radius : ℝ^ι
   radius_valid : ∀ i, 0 ≤ radius[i] -- we do not want empty box
 
-def AxisAlignedBoxAtOrigin.toSet {X ι : Type} [Enumtype ι] [FinVec X ι] (p : Params X ι) (x : X) : Prop := 
+def AxisAlignedBoxAtOrigin.toSet {X ι : Type} [Enumtype ι] [FinVec X ι] (p : Params X) (x : X) : Prop := 
   ∀ i : ι, (Real.abs (𝕡 i x)) ≤ p.radius[i]
 
 abbrev AxisAlignedBoxAtOrigin (X : Type) {ι} {_ : Enumtype ι} [FinVec X ι] := Shape (AxisAlignedBoxAtOrigin.toSet (X:=X) (ι:=ι))
@@ -35,7 +35,7 @@ abbrev Box (X R : Type) {ι} {_:Enumtype ι} [FinVec X ι] [Group R] [LieGroup.S
 
 def mkAxisAlignedBox {X : Type} {ι} {_:Enumtype ι} [FinVec X ι] (min max : X) 
   : AxisAlignedBox X := 
-  let p : AxisAlignedBoxAtOrigin.Params X ι := 
+  let p : AxisAlignedBoxAtOrigin.Params X := 
     { 
       radius := ⊞ i, (0.5 : ℝ) * (𝕡 i max - 𝕡 i min).abs
       radius_valid := sorry
@@ -93,7 +93,6 @@ namespace AxisAlignedBoxAtOrigin
       }
     is_trans := sorry
   }
-
 
 end AxisAlignedBoxAtOrigin
 
