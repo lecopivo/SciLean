@@ -32,6 +32,9 @@ abbrev AxisAlignedBoxAtOrigin (X : Type) {ι} {_ : Enumtype ι} [FinVec X ι] :=
 
 abbrev AxisAlignedBox (X : Type) {ι} {_:Enumtype ι} [FinVec X ι] := Shape (translatedSet (AxisAlignedBoxAtOrigin.toSet (X:=X) (ι:=ι)))
 
+abbrev Box (X R : Type) {ι} {_:Enumtype ι} [FinVec X ι] [Group R] [LieGroup.SO R X] 
+  := Shape (rigidTransformSet R (AxisAlignedBoxAtOrigin.toSet (X:=X) (ι:=ι)))
+
 def mkAxisAlignedBox {X : Type} {ι} {_:Enumtype ι} [FinVec X ι] (min max : X) 
   : AxisAlignedBox X := 
   let p : AxisAlignedBoxAtOrigin.Params X ι := 
