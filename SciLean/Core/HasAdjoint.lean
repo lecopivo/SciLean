@@ -35,7 +35,7 @@ open SciLean.Mathlib.Convenient
 variable {α β : Type}
 variable {X Y Z W : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] [SemiHilbert W]
 variable {Y₁ Y₂ Y₃ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Y₃]
-variable {ι κ : Type} [Enumtype ι]
+variable {ι κ : Type} [Index ι]
 
 @[fun_prop_rule]
 theorem HasAdjoint.rule_id 
@@ -114,7 +114,7 @@ instance (priority := low) swap.arg_y.hasAdjoint
   : HasAdjointT (λ y x => f x y) := sorry
 
 instance (priority := low-1) swapDep.arg_y.hasAdjoint 
-  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Enumtype ι]
+  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Index ι]
   (f : (i : ι) → Y → Z i) [∀ x, HasAdjointT (f x)] 
   : HasAdjointT (λ y x => f x y) := sorry
 

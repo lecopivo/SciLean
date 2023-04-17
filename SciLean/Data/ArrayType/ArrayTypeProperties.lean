@@ -1,11 +1,11 @@
 import SciLean.Data.ArrayType.ArrayType
-import SciLean.Data.ArrayType.Properties
+import SciLean.Data.ArrayType.GenericArrayTypeProperties
 
 
 namespace SciLean
 
-variable {XI X I} [Enumtype I] [ArrayType XI I X] -- [Inhabited X]
-variable {YI Y} [Enumtype I] [ArrayType YI I Y] -- [Inhabited X]
+variable {XI X I} [Index I] [ArrayType XI I X] -- [Inhabited X]
+variable {YI Y} [Index I] [ArrayType YI I Y] -- [Inhabited X]
 
 
 theorem adjointDifferential.rule_piMap {Y:Type} [SemiHilbert X] [SemiHilbert Y] 
@@ -15,7 +15,7 @@ theorem adjointDifferential.rule_piMap {Y:Type} [SemiHilbert X] [SemiHilbert Y]
     λ g dg' => ⊞ i, ∂† (f i) (g[i]) (dg' i)
   := sorry
 
-theorem adjointDifferential.rule_piMapComp {J Y:Type} [SemiHilbert X] [SemiHilbert Y] [Enumtype J] [Nonempty J]
+theorem adjointDifferential.rule_piMapComp {J Y:Type} [SemiHilbert X] [SemiHilbert Y] [Index J] [Nonempty J]
   (f : J → XI → X → Y) [∀ i, HasAdjDiff (λ (g,x) => f i g x)]
   (h : J → I)
   : ∂† (λ (g : X^I) (j : J) => f j g g[h j])
@@ -31,7 +31,7 @@ theorem adjointDifferential.rule_piMapComp {J Y:Type} [SemiHilbert X] [SemiHilbe
 --------------------------------------------------------------------------------
 
 function_properties SciLean.introArrayElem 
-  {X I} {T : outParam Type} [Enumtype I] [ArrayType T I X] [Vec X] 
+  {X I} {T : outParam Type} [Index I] [ArrayType T I X] [Vec X] 
   (f : I → X) 
 argument f
   IsLin := sorry_proof,
@@ -40,7 +40,7 @@ argument f
   abbrev 𝒯 := λ df => (⊞ i, f i, ⊞ i, df i) by sorry_proof
 
 function_properties SciLean.introArrayElem 
-  {X I} {T : outParam Type} [Enumtype I] [ArrayType T I X] [SemiHilbert X] 
+  {X I} {T : outParam Type} [Index I] [ArrayType T I X] [SemiHilbert X] 
   (f : I → X) 
 argument f
   HasAdjoint := sorry_proof,

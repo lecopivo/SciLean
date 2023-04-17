@@ -50,6 +50,10 @@ instance {n} : HMul USize (Idx n) (Idx n) := ⟨λ x y => ⟨(x * y.1)%n, sorry�
 
 def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry⟩
 
+
+def shiftPos (x : Idx n) (s : USize) := x + s
+def shiftNeg (x : Idx n) (s : USize) := x - s
+
 instance {n} : Enumtype (Idx n) :=
 {
   first := if h : 0 < n then some ⟨0, h⟩ else none

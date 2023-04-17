@@ -1,4 +1,5 @@
-import SciLean.Core
+import SciLean.Prelude
+import SciLean.Data.Index
 
 namespace SciLean
 
@@ -17,18 +18,18 @@ class IntroElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
 
 export IntroElem (introElem)
 
-class PushElem (Cont : Nat → Type u) (Elem : outParam (Type w)) where
-  pushElem (k : Nat) (elem : Elem) : Cont n → Cont (n + k)
+class PushElem (Cont : USize → Type u) (Elem : outParam (Type w)) where
+  pushElem (k : USize) (elem : Elem) : Cont n → Cont (n + k)
 
 export PushElem (pushElem)
 
-class DropElem (Cont : Nat → Type u) (Elem : outParam (Type w)) where
-  dropElem (k : Nat) : Cont (n + k) → Cont n
+class DropElem (Cont : USize → Type u) (Elem : outParam (Type w)) where
+  dropElem (k : USize) : Cont (n + k) → Cont n
 
 export DropElem (dropElem)
 
-class ReserveElem (Cont : Nat → Type u) (Elem : outParam (Type w)) where
-  reserveElem (k : Nat) : Cont n → Cont n
+class ReserveElem (Cont : USize → Type u) (Elem : outParam (Type w)) where
+  reserveElem (k : USize) : Cont n → Cont n
 
 export ReserveElem (reserveElem)
 
@@ -60,25 +61,25 @@ class GenericArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w
 attribute [simp] GenericArrayType.getElem_setElem_eq GenericArrayType.getElem_introElem
 attribute [default_instance] GenericArrayType.toGetElem GenericArrayType.toSetElem GenericArrayType.toIntroElem
 
-class LinearGenericArrayType (Cont : Nat → Type u) (Elem : Type w |> outParam)
+class LinearGenericArrayType (Cont : USize → Type u) (Elem : Type w |> outParam)
   extends PushElem Cont Elem,
           DropElem Cont Elem,
           ReserveElem Cont Elem
   where
-  toGenericArrayType : ∀ n, GenericArrayType (Cont n) (Fin n) Elem
+  toGenericArrayType : ∀ n, GenericArrayType (Cont n) (Idx n) Elem
 
-  pushElem_getElem : ∀ n k val (i : Fin (n+k)) (x : Cont n), n ≤ i.1 → 
-    have : ∀ n', GetElem (Cont n') (Fin n') Elem (λ _ _ => True) := λ n' => (toGenericArrayType n').toGetElem
+  pushElem_getElem : ∀ n k val (i : Idx (n+k)) (x : Cont n), n ≤ i.1 → 
+    have : ∀ n', GetElem (Cont n') (Idx n') Elem (λ _ _ => True) := λ n' => (toGenericArrayType n').toGetElem
     (pushElem k val x)[i] = val
 
-  dropElem_getElem : ∀ n k (i : Fin n) (x : Cont (n+k)), 
-    have : ∀ n', GetElem (Cont n') (Fin n') Elem (λ _ _ => True) := λ n' => (toGenericArrayType n').toGetElem
-    (dropElem k x)[i] = x[(⟨i.1, sorry_proof⟩ : Fin (n+k))]
+  dropElem_getElem : ∀ n k (i : Idx n) (x : Cont (n+k)), 
+    have : ∀ n', GetElem (Cont n') (Idx n') Elem (λ _ _ => True) := λ n' => (toGenericArrayType n').toGetElem
+    (dropElem k x)[i] = x[(⟨i.1, sorry_proof⟩ : Idx (n+k))]
 
   reserveElem_id : ∀ (x : Cont n) (k), reserveElem k x = x
   
 
-instance {T} {Y : outParam Type} [inst : LinearGenericArrayType T Y] (n) : GenericArrayType (T n) (Fin n) Y := inst.toGenericArrayType n
+instance {T} {Y : outParam Type} [inst : LinearGenericArrayType T Y] (n) : GenericArrayType (T n) (Idx n) Y := inst.toGenericArrayType n
 
 namespace GenericArrayType
 
@@ -101,9 +102,9 @@ theorem getElem_modifyElem_neq [inst : GenericArrayType Cont Idx Elem] (arr : Co
 
 -- Maybe turn this into a class and this is a default implementation
 -- For certain types there might be a faster implementation
-def mapIdx [GenericArrayType Cont Idx Elem] [Enumtype Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
+def mapIdx [GenericArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
   let mut arr := arr
-  for (i,_) in Enumtype.fullRange Idx do
+  for (i,_) in Index.fullRange Idx do
     -- This notation should correctly handle aliasing 
     -- It should expand to `f := modifyElem f x (g x) True.intro`
     -- This prevent from making copy of `f[x]`
@@ -111,18 +112,18 @@ def mapIdx [GenericArrayType Cont Idx Elem] [Enumtype Idx] (f : Idx → Elem →
   arr
 
 @[simp]
-theorem getElem_mapIdx [GenericArrayType Cont Idx Elem] [Enumtype Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
+theorem getElem_mapIdx [GenericArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
   : (mapIdx f arr)[i] = f i arr[i] := sorry_proof
 
-def map [GenericArrayType Cont Idx Elem] [Enumtype Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
+def map [GenericArrayType Cont Idx Elem] [Index Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
   mapIdx (λ _ => f) arr
 
 @[simp]
-theorem getElem_map [GenericArrayType Cont Idx Elem] [Enumtype Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
+theorem getElem_map [GenericArrayType Cont Idx Elem] [Index Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
   : (map f arr)[i] = f arr[i] := sorry_proof
 
 
-instance [GenericArrayType Cont Idx Elem] [ToString Elem] [Enumtype Idx] : ToString (Cont) := ⟨λ a => 
+instance [GenericArrayType Cont Idx Elem] [ToString Elem] [Index Idx] : ToString (Cont) := ⟨λ a => 
   match Iterable.first (ι:=Idx) with
   | some fst => Id.run do
     let mut s : String := s!"'[{a[fst]}"
@@ -134,7 +135,7 @@ instance [GenericArrayType Cont Idx Elem] [ToString Elem] [Enumtype Idx] : ToStr
 
 section Operations
 
-  variable [GenericArrayType Cont Idx Elem] [Enumtype Idx] 
+  variable [GenericArrayType Cont Idx Elem] [Index Idx] 
 
   instance [Add Elem] : Add Cont := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
   instance [Sub Elem] : Sub Cont := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
@@ -185,19 +186,19 @@ end GenericArrayType
 
 namespace GenericArrayType
 
-  variable {Cont : Nat → Type} {Elem : Type |> outParam}
+  variable {Cont : USize → Type} {Elem : Type |> outParam}
   variable [LinearGenericArrayType Cont Elem]
 
   def empty : Cont 0 := introElem λ i => 
-    absurd (a := ∃ n : Nat, n < 0) 
+    absurd (a := ∃ n : USize, n < 0) 
            (Exists.intro i.1 i.2) 
            (by intro h; have h' := h.choose_spec; cases h'; done)
 
-  def split {n m : Nat} (x : Cont (n+m)) : Cont n × Cont m :=
+  def split {n m : USize} (x : Cont (n+m)) : Cont n × Cont m :=
     (introElem λ i => x[⟨i.1,sorry_proof⟩],
      introElem λ i => x[⟨i.1+n,sorry_proof⟩])
 
-  def append {n m : Nat} (x : Cont n) (y : Cont m) : Cont (n+m) :=
+  def append {n m : USize} (x : Cont n) (y : Cont m) : Cont (n+m) :=
     introElem λ i =>
       if i.1 < n
       then x[⟨i.1,sorry_proof⟩]

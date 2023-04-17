@@ -1,6 +1,6 @@
-import SciLean.Data.ArrayType.Basic
-import SciLean.Data.ArrayType.Notation
-import SciLean.Data.ArrayType.MatrixOperations
+import SciLean.Data.ArrayType.GenericArrayType
+-- import SciLean.Data.ArrayType.Notation
+-- import SciLean.Data.ArrayType.MatrixOperations
 
 
 namespace SciLean
@@ -16,9 +16,9 @@ abbrev ArrayTypeCarrier (X I : Type) {T : outParam Type} [ArrayType T I X] := T
 /-- This class says that `T n` is the canonical type to store `n` elements of `X`.
 
 This class allows for the notation `X^{n}` and `T n = X^{n}`. -/
-class LinearArrayType (T : outParam (Nat → Type)) (X : Type) extends LinearGenericArrayType T X
+class LinearArrayType (T : outParam (USize → Type)) (X : Type) extends LinearGenericArrayType T X
 
-instance (T : Nat → Type) (X : Type) [LinearArrayType T X] (n : Nat) : ArrayType (T n) (Fin n) X := ArrayType.mk
+instance (T : USize → Type) (X : Type) [LinearArrayType T X] (n : USize) : ArrayType (T n) (Idx n) X := ArrayType.mk
 
 /-- Type that behaves like and array with values in `X` and indices in `I`.
 
@@ -55,12 +55,12 @@ The type `X^{n₁,...,nₘ}` is just a notation for `X^(Fin n₁ × ... Fin nₘ
 syntax term "^{" term,* "}" : term
 macro_rules 
 | `($X:term ^{ $n }) => do
-  `($X ^ (Fin $n))
+  `($X ^ (Idx $n))
 | `($X:term ^{ $ns,* }) => do
   if 0 < ns.getElems.size then
     let last := ns.getElems[ns.getElems.size-1]!
     let ns' := ns.getElems[:ns.getElems.size-1]
-    let I ← ns'.foldrM (λ x y => `(Fin $x × $y)) (← `(Fin $last))
+    let I ← ns'.foldrM (λ x y => `(Idx $x × $y)) (← `(Idx $last))
     `($X ^ $I)
   else 
     `(Unit)
@@ -93,7 +93,7 @@ syntax (name:=arrayTypeIntroSyntax) "λ" Lean.Parser.Term.funBinder+  " ==> " te
 syntax (name:=arrayTypeIntroSyntaxAlt) "⊞" Lean.Parser.Term.funBinder+  " , " term : term
 
 -- Having this as an abbrev was causing some issues
-def introArrayElem {X I} {T : outParam Type} [Enumtype I] [ArrayType T I X] (f : I → X) : X^I := introElem λ i => f i
+def introArrayElem {X I} {T : outParam Type} [Index I] [ArrayType T I X] (f : I → X) : X^I := introElem λ i => f i
 
 
 -- macro_rules (kind := arrayTypeIntroSyntax)
@@ -102,7 +102,7 @@ macro_rules (kind := arrayTypeIntroSyntaxAlt)
 | `(⊞ $xs:funBinder* , $b:term) => `(introArrayElem λ $xs* => $b)
 
 @[simp]
-theorem getElem_introArrayElem {XI I X} [ArrayType XI I X] [Enumtype I] (f : I → X) (i : I)
+theorem getElem_introArrayElem {XI I X} [ArrayType XI I X] [Index I] (f : I → X) (i : I)
   : (⊞ i', f i')[i] = f i := sorry_proof
 
 end CustomNotation
@@ -111,7 +111,7 @@ namespace ArrayTypeCarrier
 
 section FixedSize
 
-variable {X I} {T : outParam Type} [Enumtype I] [ArrayType T I X] -- [Inhabited X]
+variable {X I} {T : outParam Type} [Index I] [ArrayType T I X] -- [Inhabited X]
 
 abbrev get (x : X^I) (i : I) : X := getElem x i True.intro
 abbrev set (x : X^I) (i : I) (xi : X) : X^I := setElem x i xi
@@ -126,8 +126,8 @@ def toArray (v : X^I) : Array X := Id.run do
     array := array.push v[i]
   return array
 
-abbrev Index (_ : X^I) := I
-abbrev Elem  (_ : X^I) := X
+-- abbrev Index (_ : X^I) := I
+-- abbrev Elem  (_ : X^I) := X
 
 open Lean in
 instance [ToJson X] : ToJson (X^I) where
@@ -148,19 +148,23 @@ end FixedSize
 
 
 section VariableSize
-variable {X} {T : outParam (Nat → Type)} [LinearArrayType T X]
+variable {X} {T : outParam (USize → Type)} [LinearArrayType T X]
 
 abbrev empty : X^{0} := GenericArrayType.empty 
-abbrev split {n m : Nat} (x : X^{n+m}) : X^{n} × X^{m} := GenericArrayType.split x
-abbrev merge {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArrayType.append x y
-abbrev append {n m : Nat} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArrayType.append x y
-abbrev drop (k : Nat := 1) (x : X^{n+k}) : X^{n} := dropElem k x
-abbrev push (x : X^{n}) (xi : X) (k : Nat := 1) : X^{n+k} := pushElem k xi x
+abbrev split {n m : USize} (x : X^{n+m}) : X^{n} × X^{m} := GenericArrayType.split x
+abbrev merge {n m : USize} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArrayType.append x y
+abbrev append {n m : USize} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArrayType.append x y
+abbrev drop (k : USize := 1) (x : X^{n+k}) : X^{n} := dropElem k x
+abbrev push (x : X^{n}) (xi : X) (k : USize := 1) : X^{n+k} := pushElem k xi x
 
+
+-- TODO: Fix these operations, change Fin to Idx
+
+#exit 
 /-- Computes: `y[i] := a i * x[i] + b i * x[i+1]` 
 
 Special case for `i=n-1`: `y[n-1] := a (n-1) * x[n-1]` -/
-abbrev generateUpperTriangularArray (f : (n' : Nat) → X^{n'+1} → X^{n'}) (x : X^{n}) : X^{(n*(n+1))/2} := 
+abbrev generateUpperTriangularArray (f : (n' : USize) → X^{n'+1} → X^{n'}) (x : X^{n}) : X^{(n*(n+1))/2} := 
   GenericArrayType.generateUpperTriangularArray f x
 abbrev upper2DiagonalUpdate [Vec X] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : X^{n}) : X^{n} :=
   GenericArrayType.upper2DiagonalUpdate a b x

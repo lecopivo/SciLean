@@ -9,7 +9,7 @@ namespace SciLean
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
-variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
+variable {ι κ : Type} [Index ι] [Index κ]
 
 -- Notation 
 -- ∇ s, f s         --> ∇ λ s => f s
@@ -32,7 +32,7 @@ macro_rules
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
-variable {ι : Type} [Enumtype ι]
+variable {ι : Type} [Index ι]
 
 
 @[fun_trans_rule]

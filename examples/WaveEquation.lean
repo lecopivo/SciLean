@@ -1,18 +1,19 @@
 import SciLean
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
+import SciLean.Data.IdxProperties
 
 open SciLean
 
-variable {n : Nat} [Nonempty (Fin n)]
+variable {n : USize} [Nonempty (Idx n)]
 
 -- set_option trace.Meta.synthInstance true in
 def H (m k : ℝ) (x p : ℝ^{n}) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)
-  (Δx/(2*m)) * ‖p‖² + (Δx * k/2) * (∑ i , ‖x[i.shift 1] - x[i]‖²)
+  (Δx/(2*m)) * ‖p‖² + (Δx * k/2) * (∑ i, ‖x[i.shiftPos 1] - x[i]‖²)
 
 
-function_properties H {n : Nat} [Nonempty (Fin n)] (m k : ℝ) (x p : ℝ^{n}) : ℝ
+function_properties H {n : USize} [Nonempty (Idx n)] (m k : ℝ) (x p : ℝ^{n}) : ℝ
 argument x
   def ∂† by 
     unfold H
@@ -43,11 +44,11 @@ def main : IO Unit := do
   let m := 1.0
   let k := 100000.0
 
-  let N : Nat := 100000
-  have h : Nonempty (Fin N) := sorry
+  let N : USize := 100
+  have h : Nonempty (Idx N) := sorry
 
   let Δt := 0.1
-  let x₀ : (ℝ^{N}) := ⊞ (i : Fin N), (Real.sin ((i.1 : ℝ)/10))
+  let x₀ : (ℝ^{N}) := ⊞ (i : Idx N), (Real.sin ((i.1 : ℝ)/10))
   let p₀ : (ℝ^{N}) := ⊞ i, (0 : ℝ)
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
@@ -57,12 +58,11 @@ def main : IO Unit := do
     (x, p) := solver m k substeps t (x, p) Δt
     t += Δt
 
-    let M : Nat := 20
-    for (m : Nat) in [0:M] do
-      for (n : Nat) in [0:N] do
-        let n : Fin N := ⟨n, sorry⟩
+    let M : USize := 20
+    for (m,_) in Index.fullRange (Idx M) do
+      for (n,_) in Index.fullRange (Idx N) do
         let xi := x[n]
-        if (2*m - M)/(M : ℝ) - xi < 0  then
+        if (2*m.1 - M)/(M : ℝ) - xi < 0  then
           IO.print "x"
         else
           IO.print "."

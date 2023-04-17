@@ -1,11 +1,11 @@
 import Lean
-import SciLean.Mathlib.Data.Enumtype
+import SciLean.Data.Index
 import SciLean.Notation
 
 --- In this file we define bunch of conventions and conveniences through out the library
 
 -- Export symbols from Mathlib
-export Enumtype (sum)
+export SciLean.Index (sum)
 
 @[inline]
 def hold {α} (a : α) := a

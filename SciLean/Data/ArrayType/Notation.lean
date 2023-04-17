@@ -1,11 +1,9 @@
-import SciLean.Data.ArrayType.Basic
+import SciLean.Data.ArrayType.GenericArrayType
 
 namespace SciLean
 
-
 open Lean Parser 
 open TSyntax.Compat
-
 
 
 syntax (priority := high) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " := " term : doElem

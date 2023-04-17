@@ -14,86 +14,96 @@ structure Vec4 (α : Type) where
 
 namespace Vec2 
 
-  def get (v : Vec2 α) : Fin 2 → α 
-    | ⟨0, _⟩ => v.x
-    | ⟨1, _⟩ => v.y
+  def get (v : Vec2 α) (i : Idx 2) : α :=
+    if i.1 = 0 then
+      v.x
+    else
+      v.y
 
-  def set (v : Vec2 α) : Fin 2 → α → Vec2 α
-    | ⟨0, _⟩, a => {v with x := a}
-    | ⟨1, _⟩, a => {v with y := a}
+  def set (v : Vec2 α) (i : Idx 2) (vi : α) : Vec2 α :=
+    if i.1 = 0 then
+      ⟨vi, v.y⟩
+    else
+      ⟨v.x, vi⟩
     
-  def intro (f : Fin 2 → α) : Vec2 α := ⟨f 0, f 1⟩
+  def intro (f : Idx 2 → α) : Vec2 α := ⟨f ⟨0,sorry⟩, f ⟨1,sorry⟩⟩
 
-  instance : GetElem (Vec2 α) (Fin 2) α (λ _ _ => True) where
+  instance : GetElem (Vec2 α) (Idx 2) α (λ _ _ => True) where
     getElem v i _ := v.get i
 
-  instance : SetElem (Vec2 α) (Fin 2) α where
+  instance : SetElem (Vec2 α) (Idx 2) α where
     setElem v i xi := v.set i xi
 
-  instance : IntroElem (Vec2 α) (Fin 2) α where
+  instance : IntroElem (Vec2 α) (Idx 2) α where
     introElem := intro
 
 end Vec2
 
 namespace Vec3 
 
-  def get (v : Vec3 α) : Fin 3 → α 
-    | ⟨0, _⟩ => v.x
-    | ⟨1, _⟩ => v.y
-    | ⟨2, _⟩ => v.z
+  def get (v : Vec3 α) (i : Idx 3) : α :=
+  if i.1 = 0 then
+    v.x
+  else if i.1 = 1 then
+    v.y
+  else
+    v.z
 
-  def set (v : Vec3 α) : Fin 3 → α → Vec3 α
-    | ⟨0, _⟩, a => {v with x := a}
-    | ⟨1, _⟩, a => {v with y := a}
-    | ⟨2, _⟩, a => {v with z := a}
+  def set (v : Vec3 α) (i : Idx 3) (vi : α) : Vec3 α :=
+  if i.1 = 0 then
+    ⟨vi, v.y, v.z⟩
+  else if i.1 = 1 then
+    ⟨v.x, vi, v.z⟩
+  else
+    ⟨v.x, v.y, vi⟩
     
-  def intro (f : Fin 3 → α) : Vec3 α := ⟨f 0, f 1, f 2⟩
+  def intro (f : Idx 3 → α) : Vec3 α := ⟨f ⟨0,sorry⟩, f ⟨1,sorry⟩, f ⟨2,sorry⟩⟩
 
-  instance : GetElem (Vec3 α) (Fin 3) α (λ _ _ => True) where
+  instance : GetElem (Vec3 α) (Idx 3) α (λ _ _ => True) where
     getElem v i _ := v.get i
 
-  instance : SetElem (Vec3 α) (Fin 3) α where
+  instance : SetElem (Vec3 α) (Idx 3) α where
     setElem v i xi := v.set i xi
 
-  instance : IntroElem (Vec3 α) (Fin 3) α where
+  instance : IntroElem (Vec3 α) (Idx 3) α where
     introElem := intro
 
 end Vec3
 
 namespace Vec4 
 
-  def get (v : Vec4 α) : Fin 4 → α 
+  def get (v : Vec4 α) : Idx 4 → α 
     | ⟨0, _⟩ => v.x
     | ⟨1, _⟩ => v.y
     | ⟨2, _⟩ => v.z
     | ⟨3, _⟩ => v.w
 
-  def set (v : Vec4 α) : Fin 4 → α → Vec4 α
+  def set (v : Vec4 α) : Idx 4 → α → Vec4 α
     | ⟨0, _⟩, a => {v with x := a}
     | ⟨1, _⟩, a => {v with y := a}
     | ⟨2, _⟩, a => {v with z := a}
     | ⟨3, _⟩, a => {v with w := a}
     
-  def intro (f : Fin 4 → α) : Vec4 α := ⟨f 0, f 1, f 2, f 3⟩
+  def intro (f : Idx 4 → α) : Vec4 α := ⟨f 0, f 1, f 2, f 3⟩
 
-  instance : GetElem (Vec4 α) (Fin 4) α (λ _ _ => True) where
+  instance : GetElem (Vec4 α) (Idx 4) α (λ _ _ => True) where
     getElem v i _ := v.get i
 
-  instance : SetElem (Vec4 α) (Fin 4) α where
+  instance : SetElem (Vec4 α) (Idx 4) α where
     setElem v i xi := v.set i xi
 
-  instance : IntroElem (Vec4 α) (Fin 4) α where
+  instance : IntroElem (Vec4 α) (Idx 4) α where
     introElem := intro
 
 
-abbrev ShortOptDataArray (α : Type) [PlainDataType α] (n : Nat) := 
+abbrev ShortOptDataArray (α : Type) [PlainDataType α] (n : USize) := 
   match n with
-  | 0 => Unit
-  | 1 => α
-  | 2 => Vec2 α
-  | 3 => Vec3 α
-  | 4 => Vec4 α
-  | k+5 => DataArrayN α (Fin (k+5))
+  | ⟨0,_⟩ => Unit
+  | ⟨1,_⟩ => α
+  | ⟨2,_⟩ => Vec2 α
+  | ⟨3,_⟩ => Vec3 α
+  | ⟨4,_⟩ => Vec4 α
+  | ⟨k+5,_⟩ => DataArrayN α (Idx (k.toUSize+5))
 
 namespace ShortOptDataArray
 
@@ -101,15 +111,15 @@ namespace ShortOptDataArray
 
   /-- 
   -/
-  def get {n : Nat} (v : ShortOptDataArray α n) (i : Fin n) : α :=
+  def get {n : USize} (v : ShortOptDataArray α n) (i : Idx n) : α :=
   match n with
-  | 0 => absurd (a:=True) sorry_proof sorry_proof -- impossible to have `i : Fin 0`
-  | 1 => v
-  | 2 => 
+  | ⟨0,_⟩ => absurd (a:=True) sorry_proof sorry_proof -- impossible to have `i : Idx 0`
+  | ⟨1,_⟩ => v
+  | ⟨2,_⟩ => 
     match i with 
     | ⟨0, _⟩ => v.x     
     | ⟨1, _⟩ => v.y
-  | 3 => 
+  | ⟨3,_⟩ => 
     match i with 
     | ⟨0, _⟩ => v.x     
     | ⟨1, _⟩ => v.y     
@@ -123,22 +133,22 @@ namespace ShortOptDataArray
   | _+5 => v.1.get ⟨i, sorry_proof⟩
 
   @[inline]
-  instance : GetElem (ShortOptDataArray α n) (Fin n) α (λ _ _ => True) := 
+  instance : GetElem (ShortOptDataArray α n) (Idx n) α (λ _ _ => True) := 
     match n with
-    | 0 => ⟨λ _ _ _ => absurd (a:=True) sorry_proof sorry_proof⟩
-    | 1 => ⟨λ x _ _ => x⟩
-    | 2 => by infer_instance
-    | 3 => by infer_instance
-    | 4 => by infer_instance
-    | k+5 => by infer_instance
+    | ⟨0,_⟩ => ⟨λ _ _ _ => absurd (a:=True) sorry_proof sorry_proof⟩
+    | ⟨1,_⟩ => ⟨λ x _ _ => x⟩
+    | ⟨2,_⟩ => by simp[ShortOptDataArray]; apply 
+    | ⟨3,_⟩ => by infer_instance
+    | ⟨4,_⟩ => by infer_instance
+    | ⟨k+5,_⟩ => by infer_instance
 
   @[inline]
   instance : GetElem (ShortOptDataArray α (numOf ι)) ι α (λ _ _ => True) where
-    getElem v i _ := getElem v (toFin i) True.intro
+    getElem v i _ := getElem v (toIdx i) True.intro
 
-  def set {n : Nat} (v : ShortOptDataArray α n) (i : Fin n) (xi : α) : ShortOptDataArray α n :=
+  def set {n : Nat} (v : ShortOptDataArray α n) (i : Idx n) (xi : α) : ShortOptDataArray α n :=
   match n with
-  | 0 => absurd (a:=True) sorry_proof sorry_proof -- impossible to have `i : Fin 0`
+  | 0 => absurd (a:=True) sorry_proof sorry_proof -- impossible to have `i : Idx 0`
   | 1 => xi
   | 2 => 
     match i with 
@@ -157,7 +167,7 @@ namespace ShortOptDataArray
     | ⟨3, _⟩ => {v with w := xi}
   | _+5 => ⟨v.1.set ⟨i, sorry_proof⟩ xi, sorry_proof⟩
 
-  instance : SetElem (ShortOptDataArray α n) (Fin n) α :=
+  instance : SetElem (ShortOptDataArray α n) (Idx n) α :=
     match n with
     | 0 => ⟨λ _ _ _ => absurd (a:=True) sorry_proof sorry_proof⟩
     | 1 => ⟨λ x _ _ => x⟩
@@ -167,9 +177,9 @@ namespace ShortOptDataArray
     | k+5 => by infer_instance
 
   instance : SetElem (ShortOptDataArray α (numOf ι)) ι α where
-    setElem v i xi := setElem v (toFin i) xi
+    setElem v i xi := setElem v (toIdx i) xi
 
-  def intro {n : Nat} (f : Fin n → α) : ShortOptDataArray α n := 
+  def intro {n : Nat} (f : Idx n → α) : ShortOptDataArray α n := 
     match n with
     | 0 => ()
     | 1 => f 0
@@ -181,7 +191,7 @@ namespace ShortOptDataArray
       ⟨f 0, f 1, f 2, f 3⟩
     | _+5 => ⟨DataArray.intro f, sorry_proof⟩
 
-  instance : IntroElem (ShortOptDataArray α n) (Fin n) α :=
+  instance : IntroElem (ShortOptDataArray α n) (Idx n) α :=
     match n with
     | 0 => ⟨λ _  => absurd (a:=True) sorry_proof sorry_proof⟩
     | 1 => ⟨λ x => x 0⟩
@@ -191,7 +201,7 @@ namespace ShortOptDataArray
     | k+5 => by infer_instance
 
   instance : IntroElem (ShortOptDataArray α (numOf ι)) ι α where
-    introElem f := intro (λ i => f (fromFin i))
+    introElem f := intro (λ i => f (fromIdx i))
 
   def push {n : Nat} (k : Nat) (x : α) (v : ShortOptDataArray α n) : ShortOptDataArray α (n + k) :=
     match n, n + k with
@@ -218,7 +228,7 @@ namespace ShortOptDataArray
 
     | _+5, _+5 => ⟨v.1.push k x, sorry_proof⟩
 
-    | _, m+5 => ⟨.intro λ (i : Fin (m + 5)) => if i < n then v.get ⟨i, sorry_proof⟩ else x, sorry_proof⟩
+    | _, m+5 => ⟨.intro λ (i : Idx (m + 5)) => if i < n then v.get ⟨i, sorry_proof⟩ else x, sorry_proof⟩
 
     -- This should be unreachable, how can I write the match statement to cover everything?
     | _, _ => 
@@ -248,7 +258,7 @@ namespace ShortOptDataArray
 
     | 4, _+1 => ⟨v.get ⟨0,sorry_proof⟩, v.get ⟨1, sorry_proof⟩, v.get ⟨2, sorry_proof⟩, v.get ⟨3, sorry_proof⟩⟩
 
-    | n+5, _ => ⟨.intro λ (i : Fin (n + 5)) => v.get ⟨i,sorry_proof⟩, sorry_proof⟩
+    | n+5, _ => ⟨.intro λ (i : Idx (n + 5)) => v.get ⟨i,sorry_proof⟩, sorry_proof⟩
 
   instance : DropElem (ShortOptDataArray α) α where
     dropElem := drop
@@ -261,7 +271,7 @@ namespace ShortOptDataArray
   instance : ReserveElem (ShortOptDataArray α) α where
     reserveElem := reserve
 
-  -- instance : ArrayType (ShortOptDataArray α n) (Fin n) α  where
+  -- instance : ArrayType (ShortOptDataArray α n) (Idx n) α  where
   --   ext := sorry_proof
   --   getElem_setElem_eq := sorry_proof
   --   getElem_setElem_neq := sorry_proof

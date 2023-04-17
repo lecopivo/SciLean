@@ -1,9 +1,11 @@
-import SciLean.Data.ArrayType.Algebra
+import SciLean.Data.ArrayType.GenericArrayTypeAlgebra
 
 namespace SciLean
 
+section GenericArrayType
+
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [GenericArrayType Cont Idx Elem] [Enumtype Idx] 
+variable [GenericArrayType Cont Idx Elem] [Index Idx] 
 
 -- There are some issues working with `getElem : (x : Cont) → (i : Idx) → Dom x i → Elem`
 -- bacause it has inherently dependent types plus `Dom x i : Prop` and 
@@ -12,7 +14,6 @@ variable [GenericArrayType Cont Idx Elem] [Enumtype Idx]
 --------------------------------------------------------------------------------
 -- getElem 
 --------------------------------------------------------------------------------
-
 
 theorem getElem.arg_cont.IsLin [Vec Elem] (idx : Idx) (dom)
   : IsLin (λ (cont : Cont) => getElem cont idx dom) := sorry_proof
@@ -114,7 +115,7 @@ theorem getElem.arg_cont.reverseDifferential_simp' [SemiHilbert Elem] {T : Type}
 --------------------------------------------------------------------------------
 
 function_properties SciLean.SetElem.setElem {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam} 
-  [GenericArrayType Cont Idx Elem] [Enumtype Idx] [Vec Elem] 
+  [GenericArrayType Cont Idx Elem] [Index Idx] [Vec Elem] 
   (cont : Cont) (idx : Idx) (elem : Elem)
 argument (cont, elem)
   IsLin := sorry_proof,
@@ -133,7 +134,7 @@ argument elem
   abbrev 𝒯 := λ delem => (setElem cont idx elem, setElem 0 idx delem) by sorry_proof
 
 function_properties SciLean.SetElem.setElem {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam} 
-  [GenericArrayType Cont Idx Elem] [Enumtype Idx] [SemiHilbert Elem] 
+  [GenericArrayType Cont Idx Elem] [Index Idx] [SemiHilbert Elem] 
   (cont : Cont) (idx : Idx) (elem : Elem)
 argument (cont, elem)
   HasAdjoint := sorry_proof,
@@ -159,7 +160,7 @@ argument elem
 --------------------------------------------------------------------------------
 
 -- function_properties SciLean.IntroElem.introElem {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam} 
---   [GenericArrayType Cont Idx Elem] [Enumtype Idx] [Vec Elem] (f : Idx → Elem) 
+--   [GenericArrayType Cont Idx Elem] [Index Idx] [Vec Elem] (f : Idx → Elem) 
 -- argument f
 --   IsLin := sorry_proof,
 --   IsSmooth := sorry_proof,
@@ -176,3 +177,79 @@ argument elem
 ---
 
 -- TODO: modify, mapIdx, map
+
+end GenericArrayType
+
+
+section LinearGenericArrayType
+
+variable {Cont : USize → Type} {Elem : Type |> outParam}
+variable [LinearGenericArrayType Cont Elem]
+
+------------------------------------------------------------------------------
+-- dropElem
+--------------------------------------------------------------------------------
+
+function_properties SciLean.DropElem.dropElem 
+  {Cont : USize → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] [Vec Elem] 
+  {n : USize} (k : USize) (cont : Cont (n+k)) 
+argument cont
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,  
+  abbrev ∂ := λ dcont => dropElem k dcont by sorry_proof,
+  abbrev 𝒯 := λ dcont => (dropElem k cont, dropElem k dcont) by sorry_proof
+
+function_properties SciLean.DropElem.dropElem 
+  {Cont : USize → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] [SemiHilbert Elem] 
+  {n : USize} (k : USize) (cont : Cont (n+k)) 
+argument cont
+  HasAdjoint := sorry_proof,
+  abbrev † := λ cont' => pushElem k 0 cont' by sorry_proof,
+  HasAdjDiff := by sorry_proof,
+  abbrev ∂† := λ dcont' => pushElem k 0 dcont' by sorry_proof,
+  abbrev ℛ := (dropElem k cont, λ dcont' => pushElem k 0 dcont') by sorry_proof
+
+
+--------------------------------------------------------------------------------
+-- pushElem
+--------------------------------------------------------------------------------
+
+function_properties SciLean.PushElem.pushElem 
+  {Cont : USize → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] [Vec Elem] 
+  {n : USize} (k : USize) (elem : Elem) (cont : Cont n)
+argument (elem, cont)
+  IsLin := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ delem dcont => pushElem k delem dcont by sorry_proof,
+  abbrev 𝒯 := λ delem dcont => (pushElem k elem cont, pushElem k delem dcont) by sorry_proof
+argument cont
+  IsLin [Fact (elem=0)] := sorry_proof,
+  IsSmooth := sorry_proof, 
+  abbrev ∂ := λ dcont => pushElem k 0 dcont by sorry_proof,
+  abbrev 𝒯 := λ dcont => (pushElem k elem cont, pushElem k 0 dcont) by sorry_proof
+argument elem
+  IsLin [Fact (cont=0)] := sorry_proof,
+  IsSmooth := sorry_proof,
+  abbrev ∂ := λ delem => pushElem k delem 0 by sorry_proof,
+  abbrev 𝒯 := λ delem => (pushElem k elem cont, pushElem k delem 0) by sorry_proof
+
+function_properties SciLean.PushElem.pushElem 
+  {Cont : USize → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] [SemiHilbert Elem] 
+  {n : USize} (k : USize) (elem : Elem) (cont : Cont n)
+argument (elem, cont)
+  HasAdjoint := sorry_proof,
+  abbrev † := λ elemcont' => (∑ i : Idx k, elemcont'[⟨n+i.1, sorry_proof⟩], dropElem k elemcont') by sorry_proof,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ delemcont' => (∑ i : Idx k, delemcont'[⟨n+i.1, sorry_proof⟩], dropElem k delemcont') by sorry_proof
+argument cont
+  HasAdjoint [Fact (elem=0)] := sorry_proof,
+  abbrev † [Fact (elem=0)] := λ cont' => dropElem k cont' by sorry_proof,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ dcont' => dropElem k dcont' by sorry_proof
+argument elem
+  HasAdjoint [Fact (cont=0)] := sorry_proof,
+  abbrev † [Fact (cont=0)] := λ elem' => ∑ i : Idx k, elem'[⟨n+i.1, sorry_proof⟩] by sorry_proof,
+  HasAdjDiff := sorry,
+  abbrev ∂† := λ delem' => ∑ i : Idx k, delem'[⟨n+i.1, sorry_proof⟩] by sorry_proof
+
+end LinearGenericArrayType
