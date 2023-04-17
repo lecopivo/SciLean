@@ -25,7 +25,7 @@ namespace Shape
   -- Locate
   ------------------------------------------------------------------------------
   inductive Location | inside | boundary | outside 
-  deriving Inhabited, BEq
+  deriving Inhabited, BEq, Repr
 
   noncomputable 
   def locateSpec (s : Shape p) (x : X) : Location := sorry
@@ -169,19 +169,10 @@ namespace Shape
 
   abbrev reflect [HasReflect p] (s : Shape p) := s.trans Neg.neg
   abbrev translate [HasTranslate p] (s : Shape p) (t : X) := s.trans λ x => x + t
-  abbrev rotate {R : Type} [Group R] [LieGroup.SO R X] [HasRotate R p] 
+  abbrev rotate {R : Type} [Group R] [LieGroup.SO R X] [HasRotate R p]
     (s : Shape p) (r : R) := s.trans λ x => r • x 
   abbrev scale [HasScale p] (s : Shape p) (r : ℝ) := s.trans λ x => r • x 
   abbrev mirror [HasMirror p] (s : Shape p) (n : X) := s.trans λ x => x - ((2 : ℝ) * ⟪x,n⟫) • n
-
-  class HasRigidTransform (R : Type) [Group R] [LieGroup.SO R X] (p : P → Set X) where
-    hasTranslate : HasTranslate p
-    hasRotate : HasRotate R p
-
-  instance {R : Type} [Group R] [LieGroup.SO R X] [inst : HasRigidTransform R p] 
-    : HasTranslate p := inst.hasTranslate
-  instance {R : Type} [Group R] [LieGroup.SO R X] [inst : HasRigidTransform R p] 
-    : HasRotate R p := inst.hasRotate
 
 
   ------------------------------------------------------------------------------
@@ -418,7 +409,7 @@ namespace Shape
 
   ------------------------------------------------------------------------------
   -- Velocity Sweep 
-  ------------------------------------------------------------------------------        
+  ------------------------------------------------------------------------------
   structure VelSweepParams (P : Type) (X : Type) [Vec X] where
     params : P
     t₁ : ℝ
@@ -431,7 +422,7 @@ namespace Shape
       ∧ 
       x - (t - p.t₁)•p.vel ∈ toSet p.params
 
-  def mkVelSwept (t₁ t₂ : ℝ) (vel : X) (s : Shape toSet)
+  def mkVelSweep (t₁ t₂ : ℝ) (vel : X) (s : Shape toSet)
     : Shape (velSweepSet toSet) :=
     {
       params := { 
@@ -442,8 +433,8 @@ namespace Shape
       }
     }
 
-  instance {toSet : P → Set X} [HasLocate toSet] 
-    : HasLocate (velSweepSet toSet) 
+  instance {toSet : P → Set X} [HasLocate toSet]
+    : HasLocate (velSweepSet toSet)
   where
     locate := λ s (t,x) => 
       if s.params.t₁ ≤ t && t ≤ s.params.t₂ then
@@ -460,8 +451,8 @@ namespace Shape
         .outside
     is_locate := sorry
 
-  instance {toSet : P → Set X} [HasClosestPoint toSet] 
-    : HasClosestPoint (velSweepSet toSet) 
+  instance {toSet : P → Set X} [HasClosestPoint toSet]
+    : HasClosestPoint (velSweepSet toSet)
   where
     closestPointLoc := λ s (t,x) => 
       let t₁ := s.params.t₁

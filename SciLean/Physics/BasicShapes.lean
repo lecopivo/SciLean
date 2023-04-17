@@ -4,6 +4,7 @@ import SciLean.Core.AdjDiff
 import SciLean.Core.Tactic.FunctionTransformation.Core
 import SciLean.Core.UnsafeAD
 import SciLean.Core.CoreFunctions
+import SciLean.Data.DataArray
 
 import SciLean.Physics.Shape
 
@@ -20,17 +21,27 @@ namespace Shape
 -- Axis Aligned Box
 ------------------------------------------------------------------------------
 
-structure AxisAlignedBox.Params (X ι : Type) [Enumtype ι] [FinVec X ι] where
-  min : ι → ℝ  -- TODO: Change to ℝ^ι once it is not broken
-  max : ι → ℝ  
-  is_valid : ∀ i, min i ≤ max i -- we do not want empty box
+structure AxisAlignedBoxAtOrigin.Params (X ι : Type) [Enumtype ι] [FinVec X ι] where
+  radius : ℝ^ι
+  radius_valid : ∀ i, 0 ≤ radius[i] -- we do not want empty box
 
-def AxisAlignedBox.toSet {X ι} [Enumtype ι] [FinVec X ι] (p : Params X ι) (x : X) : Prop := 
-  ∀ i : ι, (p.min i ≤ 𝕡 i x) ∧ (𝕡 i x ≤ p.max i)
+def AxisAlignedBoxAtOrigin.toSet {X ι : Type} [Enumtype ι] [FinVec X ι] (p : Params X ι) (x : X) : Prop := 
+  ∀ i : ι, (Real.abs (𝕡 i x)) ≤ p.radius[i]
 
-abbrev AxisAlignedBox (X ι : Type) [Enumtype ι] [FinVec X ι] := Shape (AxisAlignedBox.toSet (X:=X) (ι:=ι))
+abbrev AxisAlignedBoxAtOrigin (X : Type) {ι} {_ : Enumtype ι} [FinVec X ι] := Shape (AxisAlignedBoxAtOrigin.toSet (X:=X) (ι:=ι))
 
-namespace AxisAlignedBox
+abbrev AxisAlignedBox (X : Type) {ι} {_:Enumtype ι} [FinVec X ι] := Shape (translatedSet (AxisAlignedBoxAtOrigin.toSet (X:=X) (ι:=ι)))
+
+def mkAxisAlignedBox {X : Type} {ι} {_:Enumtype ι} [FinVec X ι] (min max : X) 
+  : AxisAlignedBox X := 
+  let p : AxisAlignedBoxAtOrigin.Params X ι := 
+    { 
+      radius := ⊞ i, (0.5 : ℝ) * (𝕡 i max - 𝕡 i min).abs
+      radius_valid := sorry
+    }
+  ⟨p, (0.5 : ℝ) • (min + max)⟩
+
+namespace AxisAlignedBoxAtOrigin
 
   variable {X ι} [Enumtype ι] [FinVec X ι]
 
@@ -38,14 +49,13 @@ namespace AxisAlignedBox
     locate := λ s x => Id.run do
       let mut l : Location := .inside
       for (i,_) in Enumtype.fullRange ι do
-        let xi := 𝕡 i x
-        if xi < s.params.min i || s.params.max i < xi then
+        let xi := (𝕡 i x).abs
+        if s.params.radius[i] < xi then
           return .outside
-        if xi = s.params.min i || s.params.max i = xi then
+        if xi = s.params.radius[i] then
           l := .boundary
       return l
     is_locate := sorry
-
 
   instance [OrthonormalBasis X ι ℝ] : HasSdf (toSet (X:=X) (ι:=ι)) where
     sdf := λ s x => Id.run do
@@ -53,9 +63,8 @@ namespace AxisAlignedBox
       let mut sideDist   : ℝ := 0
       for (i,id) in Enumtype.fullRange ι do
         let xi := 𝕡 i x
-        let ci := (s.params.max i + s.params.min i)/2 -- center 
-        let ri := (s.params.max i - s.params.min i)/2 -- radius
-        let q := (xi - ci).abs - ri
+        let ri := s.params.radius[i]
+        let q := xi.abs - ri
 
         -- initialize sideDist
         if id.1 = 0 then
@@ -71,41 +80,25 @@ namespace AxisAlignedBox
     is_sdf := sorry
   
   instance : HasReflect (toSet (X:=X) (ι:=ι)) where
-    trans := λ p => 
-      {
-        min := λ i => - p.max i
-        max := λ i => - p.min i
-        is_valid := sorry
-      }
+    trans := λ p => p
     is_trans := sorry
 
-  instance : HasTranslate (toSet (X:=X) (ι:=ι)) := λ t => 
-  {
-    trans := λ p => 
-      {
-        min := λ i => p.min i + 𝕡 i t
-        max := λ i => p.max i + 𝕡 i t
-        is_valid := sorry
-      }
-    is_trans := sorry
-   }
-
-end AxisAlignedBox
+end AxisAlignedBoxAtOrigin
 
 
 ------------------------------------------------------------------------------
 -- Ball
 ------------------------------------------------------------------------------
 
-structure Ball.Params (X : Type) [Hilbert X] where
-  center : X
-  radius : {r : ℝ // 0 ≤ r}
+structure BallAtOrigin.Params (X : Type) [Hilbert X] where
+  radius : ℝ 
+  radius_valid : 0 ≤ radius
 
-namespace Ball.Params
+namespace BallAtOrigin.Params
 
   variable {X : Type} [Hilbert X] (p : Params X)
 
-  def sdf (x : X) := ‖x - p.center‖ - p.radius.1
+  def sdf (x : X) := ‖x‖ - p.radius
 
   def sdfGrad (x : X) := (∇ (sdf p) x) 
     rewrite_by
@@ -121,7 +114,7 @@ namespace Ball.Params
       simp[fun_trans]
       fun_trans
 
-  def levelSet (x : X) := ‖x - p.center‖² - p.radius.1^2
+  def levelSet (x : X) := ‖x‖² - p.radius^2
 
   def levelSetGrad (x : X) := (∇ (levelSet p) x) 
     rewrite_by
@@ -133,57 +126,46 @@ namespace Ball.Params
       unfold levelSet; unfold gradient
       fun_trans; simp; fun_trans
 
-end Ball.Params
+end BallAtOrigin.Params
 
-def Ball.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop := 
-  ‖x - p.center‖ ≤ p.radius.1
+def BallAtOrigin.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop := 
+  ‖x‖ ≤ p.radius
 
-abbrev Ball (X ι : Type) [Enumtype ι] [FinVec X ι] := Shape (Ball.toSet (X:=X))
+abbrev BallAtOrigin (X : Type) {ι : Type} {_ : Enumtype ι} [FinVec X ι] := Shape (BallAtOrigin.toSet (X:=X))
+def mkBallAtOrigin (X) {ι} {_:Enumtype ι} [FinVec X ι] (radius : ℝ) 
+  : BallAtOrigin X := ⟨radius.abs, sorry⟩
 
-namespace Ball
+abbrev Ball (X) {ι} {_:Enumtype ι} [FinVec X ι] := Shape (translatedSet (BallAtOrigin.toSet (X:=X)))
+
+def mkBall {X} {ι} {_:Enumtype ι} [FinVec X ι] (center : X) (radius : ℝ) 
+  : Ball X := (mkBallAtOrigin X radius).mkTranslated center
+
+namespace BallAtOrigin
 
   variable {X} [Hilbert X]
 
   instance : HasLevelSet (toSet (X:=X)) where
-    levelSet := λ s x => ‖x - s.params.center‖² - s.params.radius^2
+    levelSet := λ s x => ‖x‖² - s.params.radius^2
     is_level_set := sorry
 
   instance : HasLocate (toSet (X:=X)) := locateFromLevelSet
 
   instance : HasSdf (toSet (X:=X)) where
-    sdf := λ s x => ‖x - s.params.center‖ - s.params.radius.1
+    sdf := λ s x => ‖x‖ - s.params.radius
     is_sdf := sorry
   
   instance : HasReflect (toSet (X:=X)) where
-    trans := λ p => 
-      {
-        center := - p.center
-        radius := p.radius
-      }
+    trans := λ p => p
     is_trans := sorry
-
-  instance : HasTranslate (toSet (X:=X)) := λ t => 
-  {
-    trans := λ p => 
-      {
-        center := p.center + t
-        radius := p.radius
-      }
-    is_trans := sorry
-   }
 
   instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r => 
   {
-    trans := λ p => 
-      {
-        center := r • p.center
-        radius := p.radius
-      }
+    trans := λ p => p
     is_trans := sorry
    }
 
 
-end Ball
+end BallAtOrigin
 
 
 ------------------------------------------------------------------------------
@@ -217,7 +199,7 @@ namespace Capsule
       let ba := (s.params.point2 - s.params.point1)
       let ba := (1/‖ba‖) • ba
       let h := ⟪xa, ba⟫.clamp 0 1 
-      ‖xa - h•ba‖² - s.params.radius^2
+      ‖xa - h•ba‖² - s.params.radius.1^2
     is_level_set := sorry
 
   instance : HasLocate (toSet (X:=X)) := locateFromLevelSet
