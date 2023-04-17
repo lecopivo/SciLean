@@ -3,45 +3,59 @@ import SciLean.Mathlib.Data.Enumtype
 
 namespace SciLean
 
+/--
+Similar to `Fin n` but uses `USize` internally instead of `Nat`
+
+WARRNING: Needs serious revision such that overflows are handled correctly!
+-/
 structure Idx (n : USize) where
   val : USize
   property : val < n
+  -- Maybe add this assumption then adding two `Idx n` won't cause overflow
+  -- not_too_big : n < (USize.size/2).toUSize
 deriving DecidableEq
 
-class Index (ι : Type u) extends Iterable ι where
-  numOf : USize
-  fromIdx : Idx numOf → ι
-  toIdx : ι → Idx numOf
-  
-  fromIdx_toIdx : fromIdx ∘ toIdx = id
-  toIdx_fromIdx : toIdx ∘ fromIdx = id
+instance : ToString (Idx n) := ⟨λ i => toString i.1⟩
 
-def Idx.toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry⟩
+instance {n} : LT (Idx n) where
+  lt a b := a.val < b.val
 
-instance : Index (Idx n) where
-  first := if h : 0 < n then some ⟨0,h⟩ else none
-  next := λ i => if h : i.1 + 1 < n then some ⟨i.1 + 1, h⟩ else none
-  decEq := by infer_instance
+instance {n} : LE (Idx n) where
+  le a b := a.val ≤ b.val
 
-  numOf := n
-  fromIdx := id
-  toIdx := id
-  
-  fromIdx_toIdx := by simp
-  toIdx_fromIdx := by simp
+instance Idx.decLt {n} (a b : Idx n) : Decidable (a < b) := USize.decLt ..
+instance Idx.decLe {n} (a b : Idx n) : Decidable (a ≤ b) := USize.decLe ..
 
--- instance [Index ι] [Index κ] : Index (ι×κ) where
---   numOf := if (Index.numOf ι).toNat * (Index.numOf κ).toNat < USize.max then Index.numOf ι * Index.numOf κ else panic! "asdf"
+namespace Idx
 
-instance {n} : DecidableEq (Idx n) := 
-  λ i j => if h : i.1=j.1 then isTrue sorry else isFalse sorry
+def elim0.{u} {α : Sort u} : Idx 0 → α
+  | ⟨_, h⟩ => absurd h (Nat.not_lt_zero _)
+
+variable {n : USize}
+
+protected def ofUSize {n : USize} (a : USize) (h : n > 0) : Idx n :=
+  ⟨a % n, sorry⟩
+
+private theorem mlt {b : USize} : {a : USize} → a < n → b % n < n := sorry
+
+-- shifting index with wrapping 
+-- We want these operations to be invertible in `x` for every `y`. Is that the case?
+-- Maybe we need to require that `n < USize.size/2`
+@[default_instance]
+instance {n} : HAdd (Idx n) USize (Idx n) := ⟨λ x y => ⟨(x.1 + y)%n, sorry⟩⟩
+@[default_instance]
+instance {n} : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨((x.1 + n) - (y%n))%n, sorry⟩⟩
+@[default_instance]
+instance {n} : HMul USize (Idx n) (Idx n) := ⟨λ x y => ⟨(x * y.1)%n, sorry⟩⟩
+
+def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry⟩
 
 instance {n} : Enumtype (Idx n) :=
 {
-  first := if n ≠ 0 then some ⟨0, sorry⟩ else none
+  first := if h : 0 < n then some ⟨0, h⟩ else none
   next  := λ i =>
     if h : (i.1+1)<n then some ⟨i.1+1, h⟩ else none
-  numOf   := n
+  numOf   := n.toNat
   fromFin := λ i => ⟨i.1.toUSize, sorry⟩
   toFin   := λ i => i.toFin
   decEq := by infer_instance
@@ -53,8 +67,6 @@ instance {n} : Enumtype (Idx n) :=
 
 instance [Fact (n≠0)] : Nonempty (Idx n) := sorry
 
-instance {n} : HAdd (Idx n) USize (Idx n) := ⟨λ x y => ⟨(x.1 + y)%n, sorry⟩⟩
-instance {n} : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨(x.1 + n - (y%n))%n, sorry⟩⟩
-
-
-instance : ToString (Idx n) := ⟨λ i => toString i.1⟩
+-- This does not work as intended :(
+instance : OfNat (Idx (no_index (n+1))) i where
+  ofNat := ⟨(i % (n+1).toNat).toUSize, sorry⟩
