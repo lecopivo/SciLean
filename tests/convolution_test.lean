@@ -2,6 +2,40 @@ import SciLean
 
 open SciLean
 
+example : IsInv (λ xy : Nat × Nat => xy) := by infer_instance
+
+example : IsInv (λ xy : Nat × Nat => (xy.1,xy.2)) := by infer_instance
+
+instance [Nonempty α] [Nonempty β] (f : α → α') (g : β → β') [IsInv f] [IsInv g]
+  : IsInv λ xy : α×β => (f xy.1, g xy.2) := sorry_proof
+
+instance hoho [Nonempty α] [Nonempty β] (f : α → α') (g : β → β') [IsInv f] [IsInv g]
+  : IsInv λ xy : α×β => (g xy.snd, f xy.fst) := sorry_proof
+
+example : IsInv (λ xy : Int × Int => (1 + xy.snd, 2 + xy.fst)) := by infer_instance
+
+theorem prodMap.invFun [Nonempty α] [Nonempty β] (f : α → α') (g : β → β') [IsInv f] [IsInv g]
+  : (λ xy : α×β => (f xy.fst, g xy.snd))⁻¹
+    =
+    (λ xy : α'×β' => (f⁻¹ xy.fst, g⁻¹ xy.snd))
+  := sorry
+
+theorem prodMap.invFun' [Nonempty α] [Nonempty β] (f : α → α') (g : β → β') [IsInv f] [IsInv g]
+  : (λ xy : α×β => (f xy.fst, g xy.snd))⁻¹
+    =
+    (λ xy : α'×β' => (f⁻¹ xy.fst, g⁻¹ xy.snd))
+  := sorry
+
+#check Prod.mk.arg_fstsnd.IsInv'
+
+set_option trace.Meta.Tactic.fun_trans.step true in
+set_option trace.Meta.Tactic.fun_trans.rewrite true in
+#check (λ xy : Int × Int => (1 + xy.1, 3 + xy.2))⁻¹ rewrite_by simp only [prodMap.invFun]; fun_trans
+
+#check (λ xy : Int × Int => (1 + xy.2, 3 + xy.1))⁻¹ rewrite_by simp only [prodMap.invFun];
+
+
+#exit 
 def conv1d {n} (k) (w : Fin k → ℝ) (x : Fin n → ℝ) : Fin n → ℝ :=
   λ i => ∑ j, w j * x (i.shift j)
 

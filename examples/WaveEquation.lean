@@ -43,7 +43,7 @@ def main : IO Unit := do
   let m := 1.0
   let k := 100000.0
 
-  let N : Nat := 100
+  let N : Nat := 100000
   have h : Nonempty (Fin N) := sorry
 
   let Δt := 0.1

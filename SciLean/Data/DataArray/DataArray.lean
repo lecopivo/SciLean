@@ -122,7 +122,7 @@ instance : LinearArrayType (λ n => DataArrayN α (Fin n)) α where
   reserveElem_id := sorry_proof
 
 @[infer_tc_goals_rl]
-instance {Cont ι α : Type} [Enumtype ι] [Inhabited α] [pd : PlainDataType α] [ArrayType Cont ι α] : PlainDataType Cont where
+instance {Cont ι α : Type} [Enumtype ι] [Inhabited α] [pd : PlainDataType α] [GenericArrayType Cont ι α] : PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType => 
       -- TODO: Fixme !!!!
@@ -131,8 +131,8 @@ instance {Cont ι α : Type} [Enumtype ι] [Inhabited α] [pd : PlainDataType α
         h_size := sorry_proof
 
         fromByteArray := λ b i h => 
-          introElem (λ j => default)
-        toByteArray   := λ b i h c => b
+          introElem (λ j => panic! "not implemented!")
+        toByteArray   := λ b i h c => panic! "not implemented!"
         toByteArray_size := sorry_proof
         fromByteArray_toByteArray := sorry_proof
         fromByteArray_toByteArray_other := sorry_proof

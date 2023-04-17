@@ -12,6 +12,80 @@ structure Vec3 (α : Type) where
 structure Vec4 (α : Type) where 
   (x y z w : α)
 
+namespace Vec2 
+
+  def get (v : Vec2 α) : Fin 2 → α 
+    | ⟨0, _⟩ => v.x
+    | ⟨1, _⟩ => v.y
+
+  def set (v : Vec2 α) : Fin 2 → α → Vec2 α
+    | ⟨0, _⟩, a => {v with x := a}
+    | ⟨1, _⟩, a => {v with y := a}
+    
+  def intro (f : Fin 2 → α) : Vec2 α := ⟨f 0, f 1⟩
+
+  instance : GetElem (Vec2 α) (Fin 2) α (λ _ _ => True) where
+    getElem v i _ := v.get i
+
+  instance : SetElem (Vec2 α) (Fin 2) α where
+    setElem v i xi := v.set i xi
+
+  instance : IntroElem (Vec2 α) (Fin 2) α where
+    introElem := intro
+
+end Vec2
+
+namespace Vec3 
+
+  def get (v : Vec3 α) : Fin 3 → α 
+    | ⟨0, _⟩ => v.x
+    | ⟨1, _⟩ => v.y
+    | ⟨2, _⟩ => v.z
+
+  def set (v : Vec3 α) : Fin 3 → α → Vec3 α
+    | ⟨0, _⟩, a => {v with x := a}
+    | ⟨1, _⟩, a => {v with y := a}
+    | ⟨2, _⟩, a => {v with z := a}
+    
+  def intro (f : Fin 3 → α) : Vec3 α := ⟨f 0, f 1, f 2⟩
+
+  instance : GetElem (Vec3 α) (Fin 3) α (λ _ _ => True) where
+    getElem v i _ := v.get i
+
+  instance : SetElem (Vec3 α) (Fin 3) α where
+    setElem v i xi := v.set i xi
+
+  instance : IntroElem (Vec3 α) (Fin 3) α where
+    introElem := intro
+
+end Vec3
+
+namespace Vec4 
+
+  def get (v : Vec4 α) : Fin 4 → α 
+    | ⟨0, _⟩ => v.x
+    | ⟨1, _⟩ => v.y
+    | ⟨2, _⟩ => v.z
+    | ⟨3, _⟩ => v.w
+
+  def set (v : Vec4 α) : Fin 4 → α → Vec4 α
+    | ⟨0, _⟩, a => {v with x := a}
+    | ⟨1, _⟩, a => {v with y := a}
+    | ⟨2, _⟩, a => {v with z := a}
+    | ⟨3, _⟩, a => {v with w := a}
+    
+  def intro (f : Fin 4 → α) : Vec4 α := ⟨f 0, f 1, f 2, f 3⟩
+
+  instance : GetElem (Vec4 α) (Fin 4) α (λ _ _ => True) where
+    getElem v i _ := v.get i
+
+  instance : SetElem (Vec4 α) (Fin 4) α where
+    setElem v i xi := v.set i xi
+
+  instance : IntroElem (Vec4 α) (Fin 4) α where
+    introElem := intro
+
+
 abbrev ShortOptDataArray (α : Type) [PlainDataType α] (n : Nat) := 
   match n with
   | 0 => Unit
@@ -48,11 +122,19 @@ namespace ShortOptDataArray
     | ⟨3, _⟩ => v.w
   | _+5 => v.1.get ⟨i, sorry_proof⟩
 
-  instance : GetElem (ShortOptDataArray α n) (Fin n) α (λ _ _ => True) where
-    getElem v i _ := v.get i
+  @[inline]
+  instance : GetElem (ShortOptDataArray α n) (Fin n) α (λ _ _ => True) := 
+    match n with
+    | 0 => ⟨λ _ _ _ => absurd (a:=True) sorry_proof sorry_proof⟩
+    | 1 => ⟨λ x _ _ => x⟩
+    | 2 => by infer_instance
+    | 3 => by infer_instance
+    | 4 => by infer_instance
+    | k+5 => by infer_instance
 
+  @[inline]
   instance : GetElem (ShortOptDataArray α (numOf ι)) ι α (λ _ _ => True) where
-    getElem v i _ := v.get (toFin i)
+    getElem v i _ := getElem v (toFin i) True.intro
 
   def set {n : Nat} (v : ShortOptDataArray α n) (i : Fin n) (xi : α) : ShortOptDataArray α n :=
   match n with
@@ -75,11 +157,17 @@ namespace ShortOptDataArray
     | ⟨3, _⟩ => {v with w := xi}
   | _+5 => ⟨v.1.set ⟨i, sorry_proof⟩ xi, sorry_proof⟩
 
-  instance : SetElem (ShortOptDataArray α n) (Fin n) α where
-    setElem v i xi := v.set i xi
+  instance : SetElem (ShortOptDataArray α n) (Fin n) α :=
+    match n with
+    | 0 => ⟨λ _ _ _ => absurd (a:=True) sorry_proof sorry_proof⟩
+    | 1 => ⟨λ x _ _ => x⟩
+    | 2 => by infer_instance
+    | 3 => by infer_instance
+    | 4 => by infer_instance
+    | k+5 => by infer_instance
 
   instance : SetElem (ShortOptDataArray α (numOf ι)) ι α where
-    setElem v i xi := v.set (toFin i) xi
+    setElem v i xi := setElem v (toFin i) xi
 
   def intro {n : Nat} (f : Fin n → α) : ShortOptDataArray α n := 
     match n with
@@ -93,8 +181,14 @@ namespace ShortOptDataArray
       ⟨f 0, f 1, f 2, f 3⟩
     | _+5 => ⟨DataArray.intro f, sorry_proof⟩
 
-  instance : IntroElem (ShortOptDataArray α n) (Fin n) α where
-    introElem := intro
+  instance : IntroElem (ShortOptDataArray α n) (Fin n) α :=
+    match n with
+    | 0 => ⟨λ _  => absurd (a:=True) sorry_proof sorry_proof⟩
+    | 1 => ⟨λ x => x 0⟩
+    | 2 => by infer_instance
+    | 3 => by infer_instance
+    | 4 => by infer_instance
+    | k+5 => by infer_instance
 
   instance : IntroElem (ShortOptDataArray α (numOf ι)) ι α where
     introElem f := intro (λ i => f (fromFin i))
@@ -167,11 +261,11 @@ namespace ShortOptDataArray
   instance : ReserveElem (ShortOptDataArray α) α where
     reserveElem := reserve
 
-  instance : ArrayType (ShortOptDataArray α n) (Fin n) α  where
-    ext := sorry_proof
-    getElem_setElem_eq := sorry_proof
-    getElem_setElem_neq := sorry_proof
-    getElem_introElem := sorry_proof
+  -- instance : ArrayType (ShortOptDataArray α n) (Fin n) α  where
+  --   ext := sorry_proof
+  --   getElem_setElem_eq := sorry_proof
+  --   getElem_setElem_neq := sorry_proof
+  --   getElem_introElem := sorry_proof
 
   instance : ArrayType (ShortOptDataArray α (numOf ι)) ι α  where
     ext := sorry_proof
@@ -179,12 +273,14 @@ namespace ShortOptDataArray
     getElem_setElem_neq := sorry_proof
     getElem_introElem := sorry_proof
 
-  instance : LinearArrayType (ShortOptDataArray α) α where
-    toGenericArrayType := by infer_instance
+  -- instance : LinearArrayType (ShortOptDataArray α) α where
+  --   toGenericArrayType := by infer_instance
 
-    pushElem_getElem := sorry_proof
-    dropElem_getElem := sorry_proof
-    reserveElem_id := sorry_proof
+  --   pushElem_getElem := sorry_proof
+  --   dropElem_getElem := sorry_proof
+  --   reserveElem_id := sorry_proof
+
+
 
   -- @[default_instance]
   -- instance {ι} [Enumtype ι] : PowType (ShortOptDataArray α (numOf ι)) ι α := PowType.mk
