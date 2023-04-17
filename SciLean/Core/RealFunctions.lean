@@ -52,11 +52,11 @@ argument y
 function_properties SciLean.Real.natPow (x : ℝ) (n : Nat)
 argument x
   IsSmooth := sorry_proof,
-  abbrev ∂ := λ dx => (dx * n + x.natPow (n-1)) by sorry_proof,
-  abbrev 𝒯 := λ dx => (x.natPow n, dx * n + x.natPow (n-1)) by sorry_proof,
+  abbrev ∂ := λ dx => (dx * n * x.natPow (n-1)) by sorry_proof,
+  abbrev 𝒯 := λ dx => (x.natPow n, dx * n * x.natPow (n-1)) by sorry_proof,
   HasAdjDiff := sorry_proof,
-  abbrev ∂† := λ dx' => (dx' * n + x.natPow (n-1)) by sorry_proof,
-  abbrev ℛ := (x.natPow n, λ dx' => dx' * n + x.natPow (n-1)) by sorry_proof
+  abbrev ∂† := λ dx' => (dx' * n * x.natPow (n-1)) by sorry_proof,
+  abbrev ℛ := (x.natPow n, λ dx' => dx' * n * x.natPow (n-1)) by sorry_proof
 
 
 --------------------------------------------------------------------------------

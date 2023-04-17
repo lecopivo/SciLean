@@ -205,7 +205,7 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
   let arity ← getConstArity constName
   if args.size = arity then
     let some (proof,thrm) ← applyCompTheorem transName constName args x
-      | throwError s!"Failed at appying composition theorem for transformation `{transName}` and function `{constName}`"
+      | throwError s!"Failed at applying composition theorem for transformation `{transName}` and function `{constName}`"
     let statement ← inferType proof
     let rhs := statement.getArg! 2
     trace[Meta.Tactic.fun_trans.rewrite] s!"By composition theorem `{thrm}`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
