@@ -2,21 +2,11 @@ import Mathlib.Algebra.Group.Defs
 import SciLean.Mathlib.Data.ColProd
 
 
-structure Range (α : Type u) where
-  start : Option α
-  stop : USize
-  step : USize
-
 -- `first` is `Option ι` because we want `Fin n`, in particular `Fin 0`, to be Iterable.
 -- I do not like it and we might want to define a new `Fin n` where `n` is a true natural number i.e. positive integers
 class Iterable (ι : Type u) where
   first    : Option ι  
   next     : ι → Option ι
-  size : Nat
-
-  forIn {m} [Monad m] {β} (range : Range ι) (init : β) (f : ι → β → m (ForInStep β)) : m β
-  foldM {m} [Monad m] {β} (f : β → ι → m β) (init : β) : m β :=
-    forIn ⟨first, size.toUSize, 1⟩ init (λ i b => do pure (.yield (← f b i)))
   -- TODO: valid : "traverses the whole type" i.e. every element is reachable by `next`
   -- This can be stated as an existence of a bijection between `ι` and `Fin n` for suitable `n`
   decEq : DecidableEq ι
@@ -30,9 +20,7 @@ class IterableLt (ι : Type u) extends LT ι, Iterable ι where
                    | (some nxt) => i < nxt
                    | none => True
 
-
 namespace Iterable 
-
 
   variable {ι} [Iterable ι]
 
@@ -53,7 +41,6 @@ namespace Iterable
   {
     first := none
     next  := λ i => none
-    foldM := λ _ init => pure init
     decEq := by infer_instance
   }
 
@@ -61,43 +48,33 @@ namespace Iterable
   {
     first := some Unit.unit
     next  := λ i => none
-    foldM := λ f init => f init ()
     decEq := by infer_instance
   }
 
   -- TODO: Add [NonZero n]
-  partial instance : Iterable (Fin n) :=
+  instance : Iterable (Fin n) :=
   {
     first := match n with | 0 => none | _ => some ⟨0,sorry⟩
     next  := λ i => if (i.1+1<n) then some ⟨i.1+1, sorry⟩ else none
-    foldM := λ {m} _ {α} f init =>
-      let rec loop (i : Nat) (a : α) : m α := do
-        if i ≥ n then
-          pure a
-        else
-          loop (i+1) (← f a ⟨i,sorry⟩)
-      loop 0 init
-
     decEq := by infer_instance
   }
 
+  instance : Iterable Nat := 
+  {
+    first := some 0
+    next  := λ n => some (n+1)
+    decEq := by infer_instance
+  }
 
-  -- instance : Iterable Nat := 
-  -- {
-  --   first := some 0
-  --   next  := λ n => some (n+1)
-  --   decEq := by infer_instance
-  -- }
-
-  -- instance : Iterable Int := 
-  -- {
-  --   first := some 0
-  --   next  := λ n =>
-  --     match n with 
-  --     | .ofNat n   => .negSucc n     |> some
-  --     | .negSucc n => .ofNat (n+1) |> some
-  --   decEq := by infer_instance
-  -- }
+  instance : Iterable Int := 
+  {
+    first := some 0
+    next  := λ n =>
+      match n with 
+      | .ofNat n   => .negSucc n     |> some
+      | .negSucc n => .ofNat (n+1) |> some
+    decEq := by infer_instance
+  }
 
   -- Row major ordering, this respects `<` defined on `ι × κ`
   instance [Iterable ι] [Iterable κ]
@@ -115,10 +92,6 @@ namespace Iterable
         match (next i), (first : Option κ) with
           | (some i'), (some js) => some (i', js)
           | _, _ => none
-    foldM := λ f init => 
-      Iterable.foldM (init:=init) λ a (i : ι) => 
-        Iterable.foldM (init:=a) λ a' (j : κ) => 
-          f a' (i,j)
     decEq := by infer_instance
   }
   
@@ -141,10 +114,6 @@ namespace Iterable
         match (first : Option ι), (next j) with
           | (some is), (some j') => some (is, j')
           | _, _ => none
-    foldM := λ f init => 
-      Iterable.foldM (init:=init) λ a (j : κ) => 
-        Iterable.foldM (init:=a) λ a' (i : ι) => 
-          f a' (i,j)
     decEq := by simp[ColProd]; infer_instance
   }
   
@@ -176,12 +145,7 @@ namespace Iterable
           match (next j) with
             | some j' => some $ Sum.inr j'
             | none    => none
-    foldM := λ f init => 
-      pure init 
-      >>=
-      Iterable.foldM λ a (i : ι) => f a (.inl i)
-      >>=
-      Iterable.foldM λ a (j : κ) => f a (.inr j)
+         
     decEq := by infer_instance
   }
 

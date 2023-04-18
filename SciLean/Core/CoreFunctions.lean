@@ -409,7 +409,7 @@ argument x
 -- sum - ∑
 --------------------------------------------------------------------------------
 
-function_properties Enumtype.sum {X ι : Type} [Vec X] [Enumtype ι] (f : ι → X) : X
+function_properties SciLean.EnumType.sum {X ι : Type} [Vec X] [EnumType ι] (f : ι → X) : X
 argument f
   IsLin := sorry_proof,
   IsSmooth := sorry_proof,
@@ -417,7 +417,7 @@ argument f
   abbrev 𝒯 := λ df => (sum f, sum df) by sorry_proof
 
 
-function_properties Enumtype.sum {X ι : Type} [SemiHilbert X] [Enumtype ι] (f : ι → X) : X
+function_properties SciLean.EnumType.sum {X ι : Type} [SemiHilbert X] [EnumType ι] (f : ι → X) : X
 argument f
   HasAdjoint := sorry_proof,
   abbrev † := λ f' _ => f' by sorry_proof,
@@ -478,7 +478,7 @@ argument x
   abbrev ∂ := λ dx => f dx by sorry_proof,
   abbrev 𝒯 := λ dx => (f x, f dx) by sorry_proof
 
-function_properties SciLean.LinMap.toFun {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y] (f : X⊸Y) (x : X) : Y
+function_properties SciLean.LinMap.toFun {X Y ι : Type} [EnumType ι] [FinVec X ι] [Hilbert Y] (f : X⊸Y) (x : X) : Y
 argument f
   HasAdjoint := sorry_proof,
   abbrev † := λ f' => ⟨λ x' => ⟪x,x'⟫ • f', sorry_proof⟩ by sorry_proof,

@@ -121,8 +121,8 @@ abbrev mapIdx (f : I → X → X) (x : X^I) : X^I := GenericArrayType.mapIdx f x
 abbrev map (f : X → X) (x : X^I) : X^I := GenericArrayType.map f x
 
 def toArray (v : X^I) : Array X := Id.run do
-  let mut array : Array X := Array.mkEmpty (numOf I)
-  for (i, _) in Enumtype.fullRange I do
+  let mut array : Array X := Array.mkEmpty (Index.size I).toNat
+  for i in fullRange I do
     array := array.push v[i]
   return array
 
@@ -139,8 +139,8 @@ instance [FromJson X] : FromJson (X^I) where
     match fromJson? (α := Array X) json with
     | .error msg => .error msg
     | .ok array => 
-      if h : (numOf I) = array.size then
-        .ok (introElem λ i => array[h ▸ toFin i])
+      if h : (Index.size I).toNat = array.size then
+        .ok (introElem λ i => array.uget (toIdx i).1 (sorry_proof))
       else 
         .error "Failed to convert to json to ArrayType X^{n}, json size does not match `n`"
 

@@ -51,7 +51,7 @@ def DataArray.reserve  (arr : DataArray α) (n : USize) : DataArray α :=
     let newBytes := pd.bytes n
     let mut arr' : DataArray α := ⟨ByteArray.mkEmpty newBytes.toNat, arr.size, sorry_proof⟩
     -- copy over the old data
-    for (i,_) in Index.fullRange (Idx arr.size) do
+    for i in fullRange (Idx arr.size) do
       arr' := ⟨arr'.byteData.push 0, arr.size, sorry_proof⟩
       arr' := arr'.set i (arr.get i)
     arr'
@@ -77,11 +77,13 @@ theorem DataArray.ext (d d' : DataArray α) : (h : d.size = d'.size) → (∀ i,
 def DataArray.intro (f : ι → α) : DataArray α := Id.run do
   let bytes := (pd.bytes (Index.size ι))
   let mut d : ByteArray := ByteArray.mkEmpty bytes.toNat
-  for _ in Index.fullRange (Idx bytes) do
+  for _ in fullRange (Idx bytes) do
     d := d.push 0
   let mut d' : DataArray α := ⟨d, (Index.size ι), sorry_proof⟩
-  for (i,li) in Index.fullRange ι do
-    d' := d'.set ⟨li,sorry_proof⟩ (f i)
+  let mut li : USize := 0
+  for i in fullRange ι do
+    d' := d'.set ⟨li, sorry_proof⟩ (f i)
+    li += 1
   d'
 
 structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [Index ι] where
@@ -148,8 +150,10 @@ instance {Cont ι α : Type} [Index ι] [Inhabited α] [pd : PlainDataType α] [
             αByteType.fromByteArray b idx sorry_proof)
         toByteArray   := λ b i h c => Id.run do
           let mut b := b
-          for (j,lj) in Index.fullRange ι do
+          let mut lj : USize := 0
+          for j in fullRange ι do
             let idx := (i + lj*αByteType.bytes)
+            lj += 1
             b := αByteType.toByteArray b idx sorry_proof c[j]
           b
 

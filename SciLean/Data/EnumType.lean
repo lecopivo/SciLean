@@ -11,8 +11,10 @@ class EnumType (ι : Type u) where
   -- next  : ι → Option ι
   fullRange : EnumType.Range ι
 
-  forIn {m} [Monad m] {β} (range : EnumType.Range ι) (init : β) (f : ι → β → m (ForInStep β)) : m β
-  foldM {m} [Monad m] {β} (range : EnumType.Range ι) (f : β → ι → m β) (init : β) : m β -- :=
+  decEq : DecidableEq ι
+
+  forIn {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range ι) (init : β) (f : ι → β → m (ForInStep β)) : m β
+  foldM {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range ι) (f : β → ι → m β) (init : β) : m β -- :=
     -- forIn ⟨first, size.toUSize, 1⟩ init (λ i b => do pure (.yield (← f b i)))
 
 def fullRange (ι) [EnumType ι] : EnumType.Range ι := EnumType.fullRange
@@ -38,6 +40,7 @@ namespace EnumType
   --     | some (ι₁,ι₂), none => some (.inl ι₁, .inl ι₂)
   --     | none, some (κ₁,κ₂) => some (.inr κ₁, .inr κ₂)
   --     | none, none => none
+  instance [inst : EnumType ι] : DecidableEq ι := inst.decEq
   
   instance {ι} [EnumType ι] : ForIn m (Range ι) ι where
     forIn := forIn
@@ -45,6 +48,7 @@ namespace EnumType
   instance : EnumType Empty :=
   {
     fullRange := none
+    decEq := by infer_instance
     foldM := λ _ _ init => pure init
     forIn := λ _ init _ => pure init
   }
@@ -52,6 +56,7 @@ namespace EnumType
   instance : EnumType Unit :=
   {
     fullRange := some ((),())
+    decEq := by infer_instance
     foldM := λ range f init => if range.isSome then f init () else pure init
     forIn := λ range init f => 
       match range with 
@@ -70,6 +75,8 @@ namespace EnumType
         some (⟨0,h⟩, ⟨n-1,sorry⟩)
       else
         none
+
+    decEq := by infer_instance
 
     foldM := λ {m} _ {β} range f init =>
       let rec @[specialize] foldLoop (i : Fin n) (stop : Fin n) (b : β) : m β := do
@@ -104,11 +111,6 @@ namespace EnumType
 
   }
 
-  def r1 : Range (Fin 125) := some (5,10)
-
-  #eval for i in r1 do IO.println i
-  #eval EnumType.foldM r1 (init := ()) λ _ i => IO.println i
-
 
   partial instance : EnumType (Idx n) :=
   {
@@ -117,6 +119,8 @@ namespace EnumType
         some (⟨0,h⟩, ⟨n-1,sorry⟩)
       else
         none
+
+    decEq := by infer_instance
 
     foldM := λ {m} _ {β} range f init =>
       let rec @[specialize] foldLoop (i : Idx n) (stop : Idx n) (b : β) : m β := do
@@ -152,11 +156,6 @@ namespace EnumType
 
   }
 
-  def r2 : Range (Idx 15) := some (⟨4, by native_decide⟩, ⟨10, by native_decide⟩)
-
-  #eval for i in r2 do IO.println i
-  #eval EnumType.foldM r2 (init := ()) λ _ i => IO.println i
-
 
   /-- Embeds `ForInStep β` to `FoInStep (ForInStep β)`, useful for exiting from double for loops.
   -/
@@ -175,6 +174,8 @@ namespace EnumType
       match fullRange (ι:=ι), fullRange (ι:=κ) with
       | some (ι₁, ι₂), some (κ₁, κ₂) => some ((ι₁,κ₁), (ι₂,κ₂))
       | _, _ => none
+
+    decEq := by infer_instance
 
     foldM := λ r f init => 
       match r with
@@ -195,15 +196,6 @@ namespace EnumType
             | .yield b' => forInStepDouble (f (i,j) b') 
   }
 
-  def r3 : Range (Idx 15 × Fin 10 × Fin 20) := some ((⟨0,sorry⟩, 3, 0), (⟨3,sorry⟩, 6, 2))
-
-  #eval for (i,j,k) in r3 do
-         IO.println (i,j,k)
-         if i.1 == 2 && j.1 == 5 then
-           break
-
-  #eval EnumType.foldM r3 (init := ()) λ _ i => IO.println i
-
   instance [EnumType ι] [EnumType κ]
            : EnumType (ι ×ₗ κ) :=
   {
@@ -211,6 +203,8 @@ namespace EnumType
       match fullRange (ι:=ι), fullRange (ι:=κ) with
       | some (ι₁, ι₂), some (κ₁, κ₂) => some ((ι₁,κ₁), (ι₂,κ₂))
       | _, _ => none
+
+    decEq := by infer_instance
 
     foldM := λ r f init => 
       match r with
@@ -235,15 +229,6 @@ namespace EnumType
       
   }
 
-  def r4 : Range (Idx 15 ×ₗ Fin 10 × Fin 20) := some ((⟨0,sorry⟩, 3, 0), (⟨3,sorry⟩, 6, 2))
-
-  #eval for (i,j,k) in r4 do
-         IO.println (i,j,k)
-         if i.1 == 2 && j.1 == 5 then
-           break
-
-  #eval EnumType.foldM r4 (init := ()) λ _ i => IO.println i
-
 
   instance [EnumType ι] [EnumType κ]
            : EnumType (ι ⊕ κ) :=
@@ -254,6 +239,8 @@ namespace EnumType
       | some (ι₁, ι₂), none => some (.inl ι₁, .inl ι₂)
       | none, some (κ₁, κ₂) => some (.inr κ₁, .inr κ₂)
       | _, _ => none
+
+    decEq := by infer_instance
 
     foldM := λ r f init => 
       match r with
@@ -299,28 +286,62 @@ namespace EnumType
 
   }
 
-  def r5 : Range (Idx 15 ×ₗ (Fin 3 ⊕ Fin 4)) := some ((⟨0,sorry⟩, .inr 1), (⟨3,sorry⟩, .inr 2))
-
-  #eval for (i,j) in r5 do
-          if j == (Sum.inl 2) then
-             IO.println "break"
-             break
-          IO.println (i,j)
-
-  #eval EnumType.foldM r5 (init := ()) λ _ i => IO.println i
 
 
   def sum {α} [Zero α] [Add α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
     EnumType.foldM EnumType.fullRange (init := (0 : α)) λ a i => a + f i
 
-  -- TODO: add priority b:term:66
-  --       This way `∑ i, f i + c = (∑ i, f i) + c` i.e. sum gets stopped by `+` and `-`
-  --       The paper 'I♥LA: compilable markdown for linear algebra' https://doi.org/10.1145/3478513.3480506  
-  --           claims on page 5 that conservative sum is more common then greedy
-
   open Lean.TSyntax.Compat in
   macro "∑" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``EnumType.sum xs b
 
+  
+  -- TODO: move this somewhere else
+  -- namespace Tests
 
+  -- def r1 : Range (Fin 125) := some (5,10)
+
+  -- #eval for i in r1 do IO.println i
+  -- #eval EnumType.foldM r1 (init := ()) λ _ i => IO.println i
+
+
+  -- def r2 : Range (Idx 15) := some (⟨4, by native_decide⟩, ⟨10, by native_decide⟩)
+
+  -- #eval for i in r2 do IO.println i
+  -- #eval EnumType.foldM r2 (init := ()) λ _ i => IO.println i
+
+
+  -- def r3 : Range (Idx 15 × Fin 10 × Fin 20) := some ((⟨0,sorry⟩, 3, 0), (⟨3,sorry⟩, 6, 2))
+
+  -- #eval for (i,j,k) in r3 do
+  --        IO.println (i,j,k)
+  --        if i.1 == 2 && j.1 == 5 then
+  --          break
+
+  -- #eval EnumType.foldM r3 (init := ()) λ _ i => IO.println i
+
+
+
+  -- def r4 : Range (Idx 15 ×ₗ Fin 10 × Fin 20) := some ((⟨0,sorry⟩, 3, 0), (⟨3,sorry⟩, 6, 2))
+
+  -- #eval for (i,j,k) in r4 do
+  --        IO.println (i,j,k)
+  --        if i.1 == 2 && j.1 == 5 then
+  --          break
+
+  -- #eval EnumType.foldM r4 (init := ()) λ _ i => IO.println i
+
+
+  -- def r5 : Range (Idx 15 ×ₗ (Fin 3 ⊕ Fin 4)) := some ((⟨0,sorry⟩, .inr 1), (⟨3,sorry⟩, .inr 2))
+
+  -- #eval for (i,j) in r5 do
+  --         if j == (Sum.inl 2) then
+  --            IO.println "break"
+  --            break
+  --         IO.println (i,j)
+
+  -- #eval EnumType.foldM r5 (init := ()) λ _ i => IO.println i
+
+
+  -- end Tests
 
 end EnumType

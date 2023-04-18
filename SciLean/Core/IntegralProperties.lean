@@ -10,7 +10,7 @@ namespace SciLean
 -- Junk
 --------------------------------------------------------------------------------
 
-variable {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y]
+variable {X Y ι : Type} [EnumType ι] [FinVec X ι] [Hilbert Y]
 
 
 example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪f x, g x⟫)† = f := by simp
@@ -80,8 +80,8 @@ theorem elemwise_adjoint_simp {Z} [Hilbert Z] (A : X → Y → Z) [∀ x, HasAdj
     λ g => λ x ⟿ (A x)† (g x) := by sorry_proof
 
 
-instance elemwise_adjoint_alt1 {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y]
-  {X' Y' ι' : Type} [Enumtype ι'] [FinVec X' ι'] [Hilbert Y']
+instance elemwise_adjoint_alt1 {X Y ι : Type} [EnumType ι] [FinVec X ι] [Hilbert Y]
+  {X' Y' ι' : Type} [EnumType ι'] [FinVec X' ι'] [Hilbert Y']
   (D : (X⟿Y) → (X'⟿Y')) [HasAdjointT D]
   {Z} [Hilbert Z] (A : X' → Y' → Z) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
   : HasAdjointT (λ (g : X⟿Y) => λ x ⟿ A x (D g x)) :=
@@ -94,8 +94,8 @@ by
   done
 
 @[simp ↓, diff]
-theorem elemwise_adjoint_simp_alt1 {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y]
-  {X' Y' ι' : Type} [Enumtype ι'] [FinVec X' ι'] [Hilbert Y']
+theorem elemwise_adjoint_simp_alt1 {X Y ι : Type} [EnumType ι] [FinVec X ι] [Hilbert Y]
+  {X' Y' ι' : Type} [EnumType ι'] [FinVec X' ι'] [Hilbert Y']
   (D : (X⟿Y) → (X'⟿Y')) [HasAdjointT D]
   {Z} [Hilbert Z] (A : X' → Y' → Z) [∀ x, HasAdjointT (A x)] [IsSmoothNT 2 A]
   : (λ (g : X⟿Y) => λ x ⟿ A x (D g x))†

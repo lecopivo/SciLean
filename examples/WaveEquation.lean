@@ -59,8 +59,8 @@ def main : IO Unit := do
     t += Δt
 
     let M : USize := 20
-    for (m,_) in Index.fullRange (Idx M) do
-      for (n,_) in Index.fullRange (Idx N) do
+    for m in fullRange (Idx M) do
+      for n in fullRange (Idx N) do
         let xi := x[n]
         if (2*m.1 - M)/(M : ℝ) - xi < 0  then
           IO.print "x"

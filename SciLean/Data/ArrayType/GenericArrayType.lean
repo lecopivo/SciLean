@@ -104,7 +104,7 @@ theorem getElem_modifyElem_neq [inst : GenericArrayType Cont Idx Elem] (arr : Co
 -- For certain types there might be a faster implementation
 def mapIdx [GenericArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
   let mut arr := arr
-  for (i,_) in Index.fullRange Idx do
+  for i in fullRange Idx do
     -- This notation should correctly handle aliasing 
     -- It should expand to `f := modifyElem f x (g x) True.intro`
     -- This prevent from making copy of `f[x]`
@@ -123,15 +123,15 @@ theorem getElem_map [GenericArrayType Cont Idx Elem] [Index Idx] (f : Elem → E
   : (map f arr)[i] = f arr[i] := sorry_proof
 
 
-instance [GenericArrayType Cont Idx Elem] [ToString Elem] [Index Idx] : ToString (Cont) := ⟨λ a => 
-  match Iterable.first (ι:=Idx) with
-  | some fst => Id.run do
-    let mut s : String := s!"'[{a[fst]}"
-    for (i,li) in Enumtype.fullRange Idx do
-      if li.1 = 0 then continue else
-      s := s ++ s!", {a[i]}"
-    s ++ "]"
-  | none => "'[]"⟩
+-- instance [GenericArrayType Cont Idx Elem] [ToString Elem] [Index Idx] : ToString (Cont) := ⟨λ a => 
+--   match Iterable.first (ι:=Idx) with
+--   | some fst => Id.run do
+--     let mut s : String := s!"'[{a[fst]}"
+--     for (i,li) in Enumtype.fullRange Idx do
+--       if li.1 = 0 then continue else
+--       s := s ++ s!", {a[i]}"
+--     s ++ "]"
+--   | none => "'[]"⟩
 
 section Operations
 
@@ -157,7 +157,7 @@ section Operations
   instance [DecidableEq Elem] : DecidableEq Cont := 
     λ f g => Id.run do
       let mut eq : Bool := true
-      for (x,_) in Enumtype.fullRange Idx do
+      for x in fullRange Idx do
         if f[x] ≠ g[x] then
           eq := false
           break
@@ -165,7 +165,7 @@ section Operations
 
   instance [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) : Decidable (f < g) := Id.run do
     let mut lt : Bool := true
-    for (x,_) in Enumtype.fullRange Idx do
+    for x in fullRange Idx do
       if ¬(f[x] < g[x]) then
         lt := false
         break
@@ -173,7 +173,7 @@ section Operations
 
   instance [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) : Decidable (f ≤ g) := Id.run do
     let mut le : Bool := true
-    for (x,_) in Enumtype.fullRange Idx do
+    for x in fullRange Idx do
       if ¬(f[x] ≤ g[x]) then
         le := false
         break

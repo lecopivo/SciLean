@@ -207,8 +207,8 @@ def Idx.byteType (n : USize) (_ : 256 < n) : ByteType (Idx n) where
     let ofByte := i * bytes
 
     let mut val : USize := 0
-    for (_,j) in Index.fullRange (Idx bytes) do
-      val := val + ((b[ofByte+j]'sorry_proof).toUSize <<< (j*(8:USize)))
+    for j in fullRange (Idx bytes) do
+      val := val + ((b[ofByte+j.1]'sorry_proof).toUSize <<< (j.1*(8:USize)))
     ⟨val, sorry_proof⟩
 
   toByteArray b i h val := Id.run do
@@ -216,8 +216,8 @@ def Idx.byteType (n : USize) (_ : 256 < n) : ByteType (Idx n) where
     let ofByte := i * bytes
 
     let mut b := b
-    for (_,j) in Index.fullRange (Idx bytes) do
-      b := b.uset (ofByte+j) (val.1 >>> (j*(8:USize))).toUInt8 sorry_proof
+    for j in fullRange (Idx bytes) do
+      b := b.uset (ofByte+j.1) (val.1 >>> (j.1*(8:USize))).toUInt8 sorry_proof
     b
     
   toByteArray_size := sorry_proof

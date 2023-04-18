@@ -166,7 +166,7 @@ namespace LinMap
 
   section FinVec 
 
-    variable {X Y : Type _} {ι κ} {_ : Enumtype ι} {_ : Enumtype κ}
+    variable {X Y : Type _} {ι κ} {_ : EnumType ι} {_ : EnumType κ}
 
   -- @[infer_tc_goals_rl]
     instance [FinVec X ι] [Hilbert Y] : Inner (X ⊸ Y) where

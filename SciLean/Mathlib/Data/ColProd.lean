@@ -7,3 +7,5 @@ instance [ToString α] [ToString β] : ToString (α ×ₗ β) := by simp[ColProd
 -- Column-wise ordering 
 instance [LT α] [LT β] : LT (α ×ₗ β) where
   lt s t := s.2 < t.2 ∨ (s.2 = t.2 ∧ s.1 < t.1)
+
+instance [DecidableEq α] [DecidableEq β] : DecidableEq (α×ₗβ) := by simp[ColProd]; infer_instance
