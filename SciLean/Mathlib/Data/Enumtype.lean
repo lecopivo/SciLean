@@ -236,6 +236,22 @@ namespace Enumtype
                    pure val
   }
 
+  -- It is important to fetch a new instance of `UpperBoundUnsafe` at call site.
+  -- That way we are likely to fetch an instance of `UpperBound` if available
+  def sum {α} [Zero α] [Add α] {ι} [Enumtype ι] (f : ι → α) : α := ((do
+    let mut r : α := 0 
+    for i in Iterable.fullRange ι do
+      r := r + (f i)
+    r) : Id α)
+
+  -- TODO: add priority b:term:66
+  --       This way `∑ i, f i + c = (∑ i, f i) + c` i.e. sum gets stopped by `+` and `-`
+  --       The paper 'I♥LA: compilable markdown for linear algebra' https://doi.org/10.1145/3478513.3480506  
+  --           claims on page 5 that conservative sum is more common then greedy
+
+
+  open Lean.TSyntax.Compat in
+  macro "∑" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``Enumtype.sum xs b
 
   -- section Examples
 

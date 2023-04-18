@@ -21,13 +21,13 @@ opaque LocIntDom (X : Type) [Vec X] : Type
 --   Can we have `γ : ℝ ⟿ {f : ℝ ⟿ ℝ // TestFun f}` such that 
 --   `∫ t ∈ [0,1], γ.1` is not a `TestFun`?
 noncomputable
-opaque integral {X Y ι : Type} [Index ι] [FinVec X ι] [Vec Y] (f : X ⟿ Y) (Ω : LocIntDom X) : Y 
+opaque integral {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Vec Y] (f : X ⟿ Y) (Ω : LocIntDom X) : Y 
 
 noncomputable
-opaque limitOverWholeDomain {X Y ι : Type} [Index ι] [FinVec X ι] [Vec Y] (F : LocIntDom X → Y) : Y
+opaque limitOverWholeDomain {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Vec Y] (F : LocIntDom X → Y) : Y
 
 instance integral.instNotationIntegral 
-  {X Y ι : Type} [Index ι] [FinVec X ι] [Vec Y] (f : X ⟿ Y) 
+  {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Vec Y] (f : X ⟿ Y) 
   : Integral f (integral f) := ⟨⟩
 
 syntax intBinderType  := ":" term
@@ -47,7 +47,7 @@ macro_rules
 -- SemiHilbert structure on spaces like `ℝ^{n}⟿ℝ`
 --------------------------------------------------------------------------------
 
-variable {X Y ι : Type} [Index ι] [FinVec X ι] [Hilbert Y]
+variable {X Y ι : Type} [Enumtype ι] [FinVec X ι] [Hilbert Y]
 
 noncomputable
 instance : Inner (X⟿Y) where

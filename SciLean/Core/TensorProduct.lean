@@ -43,7 +43,7 @@ namespace TensorProduct
 
   /-- Extends bilinear map `X → Y → Z` to `X ⊗ Y → Z`. -/
   def map' (f : X → Y → Z) (h : is_linear f ∧ ∀ x, is_linear (f x)) (xy : X ⊗ Y) : Z :=
-    Quot.lift (λ xy : Array (X×Y) => ∑ i : Idx xy.size.toUSize, (f (xy.uget i.1 sorry).1 (xy.uget i.1 sorry).2)) sorry_proof xy
+    Quot.lift (λ xy : Array (X×Y) => ∑ i : Fin xy.size, (f xy[i].1 xy[i].2)) sorry_proof xy
 
   @[simp] theorem map'_tprod (f : X → Y → Z) (h : is_linear f ∧ ∀ x, is_linear (f x)) (x : X) (y : Y)
     : map' f h (x⊗y) = f x y := sorry_proof

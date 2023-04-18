@@ -161,12 +161,12 @@ namespace LinMap
   -- !!!THIS USES SORRY!!!
   instance : Vec (X ⊸ Y) := Vec.mkSorryProofs
 
- 
+
   def _root_.SciLean.TensorProduct.map (f : X ⊸ Y ⊸ Z) (xy : X⊗Y) : Z := xy.map' (λ x y => f x y) sorry_proof
 
   section FinVec 
 
-    variable {X Y : Type _} {ι κ} {_ : Index ι} {_ : Index κ}
+    variable {X Y : Type _} {ι κ} {_ : Enumtype ι} {_ : Enumtype κ}
 
   -- @[infer_tc_goals_rl]
     instance [FinVec X ι] [Hilbert Y] : Inner (X ⊸ Y) where

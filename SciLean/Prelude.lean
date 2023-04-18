@@ -1,11 +1,12 @@
 import Lean
-import SciLean.Data.Index
+-- import SciLean.Data.Index
+import SciLean.Data.EnumType
 import SciLean.Notation
 
 --- In this file we define bunch of conventions and conveniences through out the library
 
 -- Export symbols from Mathlib
-export SciLean.Index (sum)
+export SciLean.EnumType (sum)
 
 @[inline]
 def hold {α} (a : α) := a
@@ -18,7 +19,7 @@ instance instInhabitedSigma
   {α : Type u} (β : α → Type v) [Inhabited α] [∀ a, Inhabited (β a)] 
   : Inhabited (Sigma β) := ⟨Sigma.mk default default⟩
 instance instInhabitedFin [Fact (n≠0)] : Inhabited (Fin n) := ⟨⟨0, sorry⟩⟩
-instance {ι : Type} [Enumtype ι] [Nonempty ι] : Fact (numOf ι≠0) := sorry
+-- instance {ι : Type} [EnumType ι] [Nonempty ι] : Fact (numOf ι≠0) := sorry
 
 --- !i creates an element of a subtype with an omitted proof
 --- much nicer then writing ⟨i, sorry⟩
@@ -63,18 +64,19 @@ elab "reduce_type_of" t:term : term => do
   let reduced ← reduce typ (skipTypes := false)
   Expr.letE `x reduced (val) (Expr.bvar 0) false |> pure
 
-
+open SciLean EnumType in
 -- TOOD: move me
-def find? {α ι} [Enumtype ι] (p : α → Bool) (f : ι → α) : Option α := Id.run do
-  for (i,_) in Enumtype.fullRange ι do
+def find? {α ι} [EnumType ι] (p : α → Bool) (f : ι → α) : Option α := Id.run do
+  for i in fullRange ι do
     let a := f i
     if p a then
       return some a
   return none
 
+open SciLean EnumType in
 -- TOOD: move me
-def findIdx? {α ι} [Enumtype ι] (p : α → Bool) (f : ι → α) : Option ι := Id.run do
-  for (i,_) in Enumtype.fullRange ι do
+def findIdx? {α ι} [EnumType ι] (p : α → Bool) (f : ι → α) : Option ι := Id.run do
+  for i in fullRange ι do
     let a := f i
     if p a then
       return some i

@@ -7,7 +7,7 @@ namespace SciLean
 variable {α β γ : Type}
 variable {X Y Z W : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] [SemiHilbert W]
 variable {Y₁ Y₂ Y₃ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Y₃]
-variable {ι : Type} [Index ι]
+variable {ι : Type} [Enumtype ι]
 
 @[fun_prop_rule]
 theorem HasAdjDiff.rule_id 

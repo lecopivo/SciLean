@@ -1,4 +1,4 @@
-import SciLean.Data.Index
+import SciLean.Data.EnumType
 
 import SciLean.Core.Vec
 
@@ -96,19 +96,19 @@ instance (X Y) [Hilbert X] [Hilbert Y] : Hilbert (X × Y) := Hilbert.mkSorryProo
 
 -- Function type
 
-instance (X) [Inner X] (ι) [Index ι] : Inner (ι → X) where
+instance (X) [Inner X] (ι) [EnumType ι] : Inner (ι → X) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫
 -- dependent version of previous
 instance (priority:=low) (ι) (X : ι → Type) 
-  [∀ i, Inner (X i)] [Index ι] 
+  [∀ i, Inner (X i)] [EnumType ι] 
   : Inner ((i : ι) → X i) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫
 
-instance (X) [Vec X] [TestFunctions X] (ι) [Index ι] : TestFunctions (ι → X) where
+instance (X) [Vec X] [TestFunctions X] (ι) [EnumType ι] : TestFunctions (ι → X) where
   TestFun f := ∀ i, TestFun (f i)
 --dependent version of previous
 instance (priority:=low) (ι) (X : ι → Type) 
-  [∀ i, Vec (X i)] [∀ i, TestFunctions (X i)] [Index ι] 
+  [∀ i, Vec (X i)] [∀ i, TestFunctions (X i)] [EnumType ι] 
   : TestFunctions ((i : ι) → X i) where
   TestFun f := ∀ i, TestFun (f i)
 
@@ -153,10 +153,10 @@ instance (priority:=low) (ι) (X : ι → Type)
 
 
 
-instance (X) [SemiHilbert X] (ι) [Index ι] : SemiHilbert (ι → X) := SemiHilbert.mkSorryProofs
-instance (priority:=low) (ι) (X : ι → Type) [∀ i, SemiHilbert (X i)] [Index ι] : SemiHilbert ((i : ι) → X i) 
+instance (X) [SemiHilbert X] (ι) [EnumType ι] : SemiHilbert (ι → X) := SemiHilbert.mkSorryProofs
+instance (priority:=low) (ι) (X : ι → Type) [∀ i, SemiHilbert (X i)] [EnumType ι] : SemiHilbert ((i : ι) → X i) 
   := SemiHilbert.mkSorryProofs
-instance (X) [Hilbert X] (ι) [Index ι] : Hilbert (ι → X) := Hilbert.mkSorryProofs
-instance (priority:=low) (ι) (X : ι → Type) [∀ i, Hilbert (X i)] [Index ι] : Hilbert ((i : ι) → X i) 
+instance (X) [Hilbert X] (ι) [EnumType ι] : Hilbert (ι → X) := Hilbert.mkSorryProofs
+instance (priority:=low) (ι) (X : ι → Type) [∀ i, Hilbert (X i)] [EnumType ι] : Hilbert ((i : ι) → X i) 
   := Hilbert.mkSorryProofs
 

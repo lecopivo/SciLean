@@ -1,4 +1,4 @@
-import SciLean.Mathlib.Data.Enumtype
+-- import SciLean.Mathlib.Data.Enumtype
 -- import SciLean.Core.Functions
 
 namespace SciLean
@@ -54,23 +54,14 @@ def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry⟩
 def shiftPos (x : Idx n) (s : USize) := x + s
 def shiftNeg (x : Idx n) (s : USize) := x - s
 
-instance {n} : Enumtype (Idx n) :=
-{
-  first := if h : 0 < n then some ⟨0, h⟩ else none
-  next  := λ i =>
-    if h : (i.1+1)<n then some ⟨i.1+1, h⟩ else none
-  numOf   := n.toNat
-  fromFin := λ i => ⟨i.1.toUSize, sorry⟩
-  toFin   := λ i => i.toFin
-  decEq := by infer_instance
-  
-  first_fromFin := sorry
-  next_fromFin  := sorry
-  next_toFin    := sorry
-}
-
-instance [Fact (n≠0)] : Nonempty (Idx n) := sorry
-
 -- This does not work as intended :(
+
 instance : OfNat (Idx (no_index (n+1))) i where
-  ofNat := ⟨(i % (n+1).toNat).toUSize, sorry⟩
+  ofNat := Idx.ofUSize i.toUSize sorry
+
+instance : Inhabited (Idx (no_index (n+1))) where
+  default := 0
+
+
+
+-- #check (0 : Idx 10)

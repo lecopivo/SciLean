@@ -9,7 +9,7 @@ namespace SciLean
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] 
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
-variable {ι κ : Type} [Index ι] [Index κ]
+variable {ι κ : Type} [Enumtype ι] [Enumtype κ]
 
 -- Notation 
 -- ∇ s, f s         --> ∇ λ s => f s
@@ -32,7 +32,7 @@ macro_rules
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
-variable {ι : Type} [Index ι]
+variable {ι : Type} [Enumtype ι]
 
 
 @[fun_trans_rule]
@@ -65,7 +65,7 @@ theorem adjointDifferential.rule_pi
 theorem adjointDifferential.rule_const' 
   : ∂† (λ (x : X) (i : ι) => x)
     =
-    λ x dx' => ∑ i, dx' i := sorry
+    λ x dx' => Enumtype.sum λ i => dx' i := sorry
 
 @[fun_trans_rule]
 theorem adjointDifferential.rule_swap 

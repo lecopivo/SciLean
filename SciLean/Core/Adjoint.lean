@@ -6,7 +6,7 @@ namespace SciLean
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
-variable {ι : Type} [Index ι]
+variable {ι : Type} [Enumtype ι]
 
 
 @[fun_trans_rule]
@@ -33,7 +33,7 @@ theorem adjoint.rule_pi
 theorem adjoint.rule_const' 
   : (λ (x : X) (i : ι) => x)†
     =
-    λ x' => ∑ i, x' i := sorry
+    λ x' => Enumtype.sum λ i => x' i := sorry
 
 @[fun_trans_rule]
 theorem adjoint.rule_swap 
@@ -119,7 +119,7 @@ instance adjoint.arg_fy.isSmooth_1 {X Y W} [Vec W] [SemiHilbert X] [SemiHilbert 
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
-variable {ι : Type} [Index ι]
+variable {ι : Type} [Enumtype ι]
 
 @[simp ↓, diff]
 theorem id.arg_x.adj_simp
@@ -140,7 +140,7 @@ theorem swap.arg_y.adj_simp
 
 @[simp ↓ low-4, diff low-4]
 theorem swapDep.arg_y.adj_simp
-  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Index ι]
+  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Enumtype ι]
   (f : (i : ι) → Y → Z i) [∀ i, HasAdjointT (f i)] 
   : (λ y i => f i y)† = λ g => ∑ i, (f i)† (g i) := sorry_proof
 
@@ -198,7 +198,7 @@ theorem eval.arg_f.adj_simp
 
 @[simp ↓ low-1, diff low-1]
 theorem evalDep.arg_f.adj_simp
-  {ι} {X : ι → Type} [∀ i, SemiHilbert (X i)] [Index ι]
+  {ι} {X : ι → Type} [∀ i, SemiHilbert (X i)] [Enumtype ι]
   (i : ι)
   : (λ (f : (i' : ι) → X i') => f i)† = (λ f' j => (if h : i = j then h ▸ f' else 0))
 := sorry_proof
@@ -214,7 +214,7 @@ by
 
 @[simp ↓ low-2, diff low-2]
 theorem evalDep.arg_x.parm1.adj_simp
-  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Index ι]
+  {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [Enumtype ι]
   (f : X → (i : ι) → Z i) [HasAdjointT f] (i : ι)
   : (λ x => f x i)† = (λ x' => f† (λ j => (if h : i = j then h ▸ x' else 0)))
 := 
