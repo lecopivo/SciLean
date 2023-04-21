@@ -88,7 +88,7 @@ variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
 -- TODO: Make an inplace modification
 -- Maybe turn this into a class and this is a default implementation
 @[inline]
-def modifyElem [GetElem Cont Idx Elem λ _ _ => True] [SetElem Cont Idx Elem] 
+def modifyElem [GetElem Cont Idx Elem λ _ _ => True] [SetElem Cont Idx Elem]
   (arr : Cont) (i : Idx) (f : Elem → Elem) : Cont := 
   setElem arr i (f (arr[i]))
 

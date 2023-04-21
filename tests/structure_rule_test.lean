@@ -18,3 +18,14 @@ example {X Y} [Hilbert X] [Hilbert Y]
 by
   conv => lhs; fun_trans
   
+
+set_option trace.Meta.Tactic.fun_trans.step true in
+example
+  : ℛ (λ xy : ℝ × ℝ => xy.1 + xy.2) 
+    =
+    λ xy => (xy.1 + xy.2, λ ds => (ds,ds))
+  := 
+by
+  conv => 
+    lhs
+    fun_trans -- this is bad

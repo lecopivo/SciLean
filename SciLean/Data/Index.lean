@@ -17,6 +17,7 @@ class Index (ι : Type u) extends EnumType ι where
   fromIdx_toIdx : isValid = true → fromIdx ∘ toIdx = id
   toIdx_fromIdx : isValid = true → toIdx ∘ fromIdx = id
 
+
 export Index (toIdx fromIdx)
 
 namespace Index
@@ -111,3 +112,45 @@ instance [Index ι] [Index κ] : Index (ι×ₗκ) where
 
     fromIdx_toIdx := λ _ => sorry
     toIdx_fromIdx := λ _ => sorry
+
+
+  /--
+  Joins all values `f i` from left to right with operation `op` 
+  
+  The operation `op` is assumed to be associative and `unit` is the left unit of this operation i.e. `∀ a, op unit a = a`
+
+  WARRNING: This does not work correctly for small `m`. FIX THIS!!!!
+  -/
+  def parallelJoin {α ι} [Index ι] (m : USize) (f : ι → α) (op : α → α → α) (unit : α) : α := Id.run do
+    dbg_trace "!!!FIX ME!!! Index.parallelJoin is not implemented correctly!"
+    let n := size ι
+    if n == 0 then
+      return unit
+    let mut tasks : Array (Task α) := Array.mkEmpty m.toNat
+    let m := max 1 (min m n) -- cap min/max of `m` 
+    let stride : USize := (n+m-1)/m
+    let mut start : Idx n := ⟨0,sorry⟩
+    let mut stop  : Idx n := ⟨stride-1, sorry⟩
+    for i in fullRange (Idx m) do
+      let r : EnumType.Range ι := some (fromIdx start, fromIdx stop)
+      let partialJoin : Unit → α := λ _ => Id.run do
+        let mut a := unit
+        for i in r do
+          a := op a (f i)
+        a
+      tasks := tasks.push (Task.spawn partialJoin)
+      start := ⟨min (start.1 + stride) (n-1), sorry⟩
+      stop  := ⟨min (stop.1 + stride) (n-1), sorry⟩
+
+    let mut a := unit
+    for t in tasks do
+      a := op a t.get
+    a
+
+
+  open EnumType in
+  /--
+  Split the sum `∑ i, f i` into `m` chuncks and compute them in parallel
+  -/
+  def parallelSum {X ι} [Zero X] [Add X] [Index ι] (m : USize) (f : ι → X) : X :=
+    parallelJoin m f (λ x y => x + y) 0

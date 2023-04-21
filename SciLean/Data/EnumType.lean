@@ -14,34 +14,25 @@ class EnumType (ι : Type u) where
   decEq : DecidableEq ι
 
   forIn {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range ι) (init : β) (f : ι → β → m (ForInStep β)) : m β
-  foldM {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range ι) (f : β → ι → m β) (init : β) : m β -- :=
-    -- forIn ⟨first, size.toUSize, 1⟩ init (λ i b => do pure (.yield (← f b i)))
+  foldM {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range ι) (f : β → ι → m β) (init : β) : m β :=
+    forIn fullRange init (λ i b => f b i >>= pure ∘ .yield)
+
+  -- foldM_forIn : ∀ {m} [Monad m] {β} r (f : β → ι → m β) init, 
+  --   foldM r f init = forIn r init (λ i b => f b i >>= pure ∘ .yield)
+
+  -- something that foldM runs over all elements
+
+  -- The slight issue is with ranges over `ι×κ` where we do not simply run
+  -- from the first element to the last element but rather we run over all elements `(i,j)` 
+  -- such that `i` is in the range and `j` is in the range
+
 
 def fullRange (ι) [EnumType ι] : EnumType.Range ι := EnumType.fullRange
 
-  -- condition that fold iterates over all element and is aligned with first and next
-  -- some condition that if size < USize.size then forIn is doing the same thing as fold
-
 namespace EnumType 
 
-  -- class FullRange (ι : Type u) where
-  --   fullRange : Range ι
-
-  -- instance [FullRange ι] [FullRange κ] : FullRange (ι×κ) where
-  --   fullRange := 
-  --     match fullRange ι, fullRange κ with
-  --     | some (ι₁,ι₂), some (κ₁, κ₂) => some ((ι₁,κ₁), (ι₂,κ₂))
-  --     | _, _ => none
-
-  -- instance [FullRange ι] [FullRange κ] : FullRange (ι⊕κ) where
-  --   fullRange := 
-  --     match fullRange ι, fullRange κ with
-  --     | some (ι₁,_), some (_, κ₂) => some (.inl ι₁, .inr κ₂)
-  --     | some (ι₁,ι₂), none => some (.inl ι₁, .inl ι₂)
-  --     | none, some (κ₁,κ₂) => some (.inr κ₁, .inr κ₂)
-  --     | none, none => none
   instance [inst : EnumType ι] : DecidableEq ι := inst.decEq
-  
+
   instance {ι} [EnumType ι] : ForIn m (Range ι) ι where
     forIn := forIn
 
@@ -67,32 +58,7 @@ namespace EnumType
       | none => pure init
   }
 
-
-  partial instance : EnumType (Fin n) :=
-  {
-    fullRange := 
-      if h : 0 < n then
-        some (⟨0,h⟩, ⟨n-1,sorry⟩)
-      else
-        none
-
-    decEq := by infer_instance
-
-    foldM := λ {m} _ {β} range f init =>
-      let rec @[specialize] foldLoop (i : Fin n) (stop : Fin n) (b : β) : m β := do
-        let b' ← f b i
-        if i < stop then
-          foldLoop ⟨i.1+1, sorry⟩ stop b'
-        else
-          pure b'
-      match range with
-      | some (start,stop) => 
-        if start ≤ stop then 
-          foldLoop start stop init 
-        else 
-          pure init
-      | none => pure init
-    forIn := λ {m} _ {β} range init f => 
+  @[inline] partial def Fin.forIn {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range (Fin n)) (init : β) (f : Fin n → β → m (ForInStep β)) :=
       let rec @[specialize] forLoop (i : Fin n) (stop : Fin n) (b : β) : m β := do
         match (← f i b) with
         | ForInStep.done b  => pure b
@@ -109,35 +75,43 @@ namespace EnumType
           pure init
       | none => pure init
 
-  }
-
-
-  partial instance : EnumType (Idx n) :=
-  {
-    fullRange :=
-      if h : 0 < n then
-        some (⟨0,h⟩, ⟨n-1,sorry⟩)
-      else
-        none
-
-    decEq := by infer_instance
-
-    foldM := λ {m} _ {β} range f init =>
-      let rec @[specialize] foldLoop (i : Idx n) (stop : Idx n) (b : β) : m β := do
+  @[inline] partial def Fin.foldM {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range (Fin n)) (f : β → Fin n → m β) (init : β) :=
+      let rec @[specialize] foldLoop (i : Fin n) (stop : Fin n) (b : β) : m β := do
         let b' ← f b i
         if i < stop then
           foldLoop ⟨i.1+1, sorry⟩ stop b'
         else
           pure b'
       match range with
-      | some (start,stop) =>
+      | some (start,stop) => 
         if start ≤ stop then 
           foldLoop start stop init 
         else 
           pure init
       | none => pure init
 
-    forIn := λ {m} _ {β} range init f => 
+
+  @[inline] 
+  def Fin.fullRange (n) : Range (Fin n):=       
+      if h : 0 < n then
+        some (⟨0,h⟩, ⟨n-1,sorry⟩)
+      else
+        none
+
+  @[inline] 
+  instance : EnumType (Fin n) :=
+  {
+    fullRange := Fin.fullRange n
+
+    decEq := by infer_instance
+
+    foldM := Fin.foldM
+    forIn := Fin.forIn
+
+  }
+
+  @[inline]
+  partial def Idx.forIn {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range (Idx n)) (init : β) (f : Idx n → β → m (ForInStep β)) :=
       let rec @[specialize] forLoop (i : Idx n) (stop : Idx n) (b : β) : m β := do
         match (← f i b) with
         | ForInStep.done b  => pure b
@@ -154,6 +128,56 @@ namespace EnumType
           pure init
       | none => pure init
 
+
+  @[inline] 
+  partial def Idx.foldM {m : Type → Type} [Monad m] {β : Type} (range : EnumType.Range (Idx n)) (f : β → Idx n → m β) (init : β) :=
+      let rec @[specialize] foldLoop (i : Idx n) (stop : Idx n) (b : β) : m β := do
+        let b' ← f b i
+        if i < stop then
+          foldLoop ⟨i.1+1, sorry⟩ stop b'
+        else
+          pure b'
+      match range with
+      | some (start,stop) => 
+        if start ≤ stop then 
+          foldLoop start stop init 
+        else 
+          pure init
+      | none => pure init
+
+  @[inline] 
+  partial def Idx.fold {β : Type} (range : EnumType.Range (Idx n)) (f : β → Idx n → β) (init : β) :=
+      let rec @[specialize] foldLoop (i : Idx n) (stop : Idx n) (b : β) : β :=
+        let b' := f b i
+        if i < stop then
+          foldLoop ⟨i.1+1, sorry⟩ stop b'
+        else
+          b'
+      match range with
+      | some (start,stop) => 
+        if start ≤ stop then 
+          foldLoop start stop init 
+        else 
+          init
+      | none => init
+
+
+  @[inline]
+  def Idx.fullRange (n) : Range (Idx n) := 
+      if h : 0 < n then
+        some (⟨0,h⟩, ⟨n-1,sorry⟩)
+      else
+        none
+
+
+  @[inline]
+  partial instance : EnumType (Idx n) :=
+  {
+    fullRange := Idx.fullRange n
+    decEq := by infer_instance
+
+    foldM := Idx.foldM
+    forIn := Idx.forIn
   }
 
 
@@ -286,10 +310,9 @@ namespace EnumType
 
   }
 
-
-
-  def sum {α} [Zero α] [Add α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
+  @[specialize] def sum {α} [Zero α] [Add α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
     EnumType.foldM EnumType.fullRange (init := (0 : α)) λ a i => a + f i
+
 
   open Lean.TSyntax.Compat in
   macro "∑" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``EnumType.sum xs b

@@ -26,31 +26,60 @@ theorem prodMap.invFun' [Nonempty α] [Nonempty β] (f : α → α') (g : β →
     (λ xy : α'×β' => (f⁻¹ xy.fst, g⁻¹ xy.snd))
   := sorry
 
+example {n} (k) (w : Fin k → ℝ) (i : Fin n)
+  : ∂† (fun (x : Fin n → ℝ) j => w j * x (i.shift j))
+    =
+    λ x dx' i' => sorry  :=  --w (i.shift * dx'
+by
+  conv => 
+    lhs
+    fun_trans
+
+  sorry
+
+-- example (f : ι → ℝ → X) [∀ i, IsLin (f i)]
+--   : ∑ i, f i [[i=j]]
+
 #check Prod.mk.arg_fstsnd.IsInv'
 
-set_option trace.Meta.Tactic.fun_trans.step true in
-set_option trace.Meta.Tactic.fun_trans.rewrite true in
-#check (λ xy : Int × Int => (1 + xy.1, 3 + xy.2))⁻¹ rewrite_by simp only [prodMap.invFun]; fun_trans
+-- set_option trace.Meta.Tactic.fun_trans.step true in
+-- set_option trace.Meta.Tactic.fun_trans.rewrite true in
+-- #check (λ xy : Int × Int => (1 + xy.1, 3 + xy.2))⁻¹ rewrite_by simp only [prodMap.invFun]; fun_trans
+-- #check (λ xy : Int × Int => (1 + xy.2, 3 + xy.1))⁻¹ rewrite_by simp only [prodMap.invFun];
 
-#check (λ xy : Int × Int => (1 + xy.2, 3 + xy.1))⁻¹ rewrite_by simp only [prodMap.invFun];
-
-
-#exit 
 def conv1d {n} (k) (w : Fin k → ℝ) (x : Fin n → ℝ) : Fin n → ℝ :=
   λ i => ∑ j, w j * x (i.shift j)
 
+def conv1d' {n} (k) (w : Fin k → ℝ) (x : Fin n → ℝ) : Fin n → ℝ :=
+  λ i => ∑ j, w j * x (i.shift j)
 
+set_option trace.Meta.Tactic.fun_trans.step true
+function_properties conv1d {n} [Nonempty (Fin n)] (k) [Nonempty (Fin k)] (w : Fin k → ℝ) (x : Fin n → ℝ)
+argument x
+  def ∂† by
+    unfold conv1d
+    enter [dx']
+    rw [adjointDifferential.rule_swap]
+    dsimp
+    enter [1,i]
+    rw [adjointDifferential.rule_comp]
+    dsimp
+    fun_trans
+    simp (config := {zeta := false}) only [EnumType.sum.arg_f.adjointDifferential_simp]  
+
+
+#exit
 set_option trace.Meta.Tactic.fun_trans.rewrite true
 set_option trace.Meta.Tactic.fun_trans.step true
 set_option trace.Meta.Tactic.fun_trans.normalize_let true
 set_option trace.Meta.Tactic.fun_trans.lambda_special_cases true
-function_properties conv1d {n} [Nonempty (Fin n)] (k) (w : Fin k → ℝ) (x : Fin n → ℝ)
+function_properties conv1d {n} [Nonempty (Fin n)] (k) [Nonempty (Fin k)] (w : Fin k → ℝ) (x : Fin n → ℝ)
 argument x
   def ∂† by
     unfold conv1d; simp
     fun_trans; fun_trans
 
-
+#exit
 def conv2d {n m} (k l) (w : ℝ^{k,l}) (x : ℝ^{n,m}) : ℝ^{n,m} :=
   ⊞ i, ∑ j, w[j] * x[i.1.shift j.1, i.2.shift j.2]
 
