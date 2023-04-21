@@ -203,10 +203,10 @@ argument y
 
 
 --------------------------------------------------------------------------------
--- SMul.sMul - (·•·)
+-- HSMul.hSMul - (·•·)
 --------------------------------------------------------------------------------
 
-function_properties SMul.smul {X : Type} [Vec X] (x : ℝ) (y : X) : X
+function_properties HSMul.hSMul {X : Type} [Vec X] (x : ℝ) (y : X) : X
 argument (x,y)
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx dy => dx•y + x•dy by sorry_proof,
@@ -222,7 +222,7 @@ argument y
   abbrev ∂ := λ dy => x•dy by sorry_proof,
   abbrev 𝒯 := λ dy => (x•dy, x•dy) by sorry_proof
 
-function_properties SMul.smul {X : Type} [SemiHilbert X] (x : ℝ) (y : X) : X
+function_properties HSMul.hSMul {X : Type} [SemiHilbert X] (x : ℝ) (y : X) : X
 argument y
   HasAdjoint := sorry_proof,
   abbrev † := λ y' => x•y' by sorry_proof,
@@ -230,7 +230,7 @@ argument y
   abbrev ∂† := λ dy' => x•dy' by sorry_proof,
   abbrev ℛ := (x•y, λ dy' => x•dy') by sorry_proof
   
-function_properties SMul.smul {X : Type} [Hilbert X] (x : ℝ) (y : X) : X
+function_properties HSMul.hSMul {X : Type} [Hilbert X] (x : ℝ) (y : X) : X
 argument (x,y)
   HasAdjDiff := sorry_proof, --  by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
   abbrev ∂† := λ dxy' => (⟪dxy',y⟫, x•dxy') by sorry_proof,
@@ -242,7 +242,7 @@ argument x
   abbrev ∂† := λ dx' => ⟪dx',y⟫ by sorry_proof,
   abbrev ℛ := (x•y, λ dx' => ⟪dx',y⟫) by sorry_proof
 
-function_properties SMul.smul {X : Type} [Vec X] (x : ℝ) (y : X) : X
+function_properties HSMul.hSMul {X : Type} [Vec X] (x : ℝ) (y : X) : X
 argument y
   IsInv [Fact (x≠0)] := sorry_proof,
   abbrev ⁻¹ [Fact (x≠0)] := λ y' => x⁻¹ • y' by sorry_proof 
