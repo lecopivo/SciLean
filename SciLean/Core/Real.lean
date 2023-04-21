@@ -22,25 +22,25 @@ namespace Real
   abbrev toRealFun₂ (f : Float → Float → Float) : ℝ → ℝ → ℝ 
     := λ x y => ⟨f x.val y.val⟩
 
-  def sqrt (x : ℝ) : ℝ := toRealFun Float.sqrt x
-  def pow (x y : ℝ) : ℝ := toRealFun₂ Float.pow x y
-
   def sin (θ : ℝ) : ℝ := toRealFun Float.sin θ
   def cos (θ : ℝ) : ℝ := toRealFun Float.cos θ
   def tan (θ : ℝ) : ℝ := toRealFun Float.tan θ
   def atan (yx : ℝ) : ℝ := toRealFun Float.atan yx
   def atan2 (y x : ℝ) : ℝ := toRealFun₂ Float.atan2 y x
 
-  def exp (x : ℝ) : ℝ := toRealFun Float.exp x
-  def exp2 : ℝ → ℝ := toRealFun Float.exp2
-  def log : ℝ → ℝ := toRealFun Float.log
-  def log2 : ℝ → ℝ := toRealFun Float.log2
-  def log10 : ℝ → ℝ := toRealFun Float.log10
-
   def ceil : ℝ → ℝ := toRealFun Float.ceil
   def floor : ℝ → ℝ := toRealFun Float.floor
   def round : ℝ → ℝ := toRealFun Float.round
   def abs : ℝ → ℝ := toRealFun Float.abs
+
+  def exp (x : ℝ) : ℝ := toRealFun Float.exp x
+  def exp2 : ℝ → ℝ := toRealFun Float.exp2
+  def log (x : ℝ) : ℝ := toRealFun Float.log x.abs
+  def log2 (x : ℝ) : ℝ := toRealFun Float.log2 x.abs
+  def log10 (x : ℝ) : ℝ := toRealFun Float.log10 x.abs
+
+  def sqrt (x : ℝ) : ℝ := toRealFun Float.sqrt x.abs
+  def pow (x y : ℝ) : ℝ := toRealFun₂ Float.pow x.abs y
 
   def pi : ℝ := ⟨3.14159265359⟩
 
@@ -148,6 +148,9 @@ namespace Real
 
   -- Used for Kroneckers delta as  `δᵢⱼ = [[i = j]]`
   notation "[[" p "]]" => if p then (1:ℝ) else (0:ℝ)
+
+
+
 
   -- instance : HPow ℝ ℤ ℝ := ⟨λ x n => x^(n : ℝ)⟩
   -- ⟨λ x n => 
@@ -292,8 +295,6 @@ namespace Real
   --   hpow_succ := sorry_proof
   --   hpow_neg := sorry_proof
   -- }
-
-
 
 end Real
 
