@@ -34,6 +34,18 @@ macro_rules
 | `(∂ ($b:diffBinder), $f) =>
   `(∂ $b, $f)
 
+syntax "ⅆ" diffBinder "," term:66 : term
+syntax "ⅆ" "(" diffBinder ")" "," term:66 : term
+macro_rules
+| `(ⅆ $x:ident, $f) =>
+  `(ⅆ λ $x => $f)
+| `(ⅆ $x:ident : $type:term, $f) =>
+  `(ⅆ λ $x : $type => $f)
+| `(ⅆ $x:ident := $val:term, $f) =>
+  `((ⅆ λ $x => $f) $val)
+| `(ⅆ ($b:diffBinder), $f) =>
+  `(ⅆ $b, $f)
+
 
 --------------------------------------------------------------------------------
 -- Differential rules
