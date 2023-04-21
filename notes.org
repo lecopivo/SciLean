@@ -282,6 +282,8 @@
    - [[https://github.com/patrick-kidger/diffrax][diffrax]]
    - [[https://www.tensorflow.org/probability/oryx][Oryx]]
    - [[https://github.com/IBM/FormalML][FormalML]]
+   - [[https://github.com/DiffSharp/DiffSharp][DiffSharp]]
+   - [[https://github.com/owlbarn/owl][Owl]]
 
    - [[https://github.com/kztk-m/sparcl][Sparcl]] - partially-invertible computation
 
