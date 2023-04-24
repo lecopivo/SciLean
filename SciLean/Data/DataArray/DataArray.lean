@@ -123,7 +123,7 @@ instance : LinearArrayType (λ n => DataArrayN α (Idx n)) α where
   dropElem_getElem := sorry_proof
   reserveElem_id := sorry_proof
 
-@[infer_tc_goals_rl]
+
 instance {Cont ι α : Type} [Index ι] [Inhabited α] [pd : PlainDataType α] [GenericArrayType Cont ι α] : PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType => 
