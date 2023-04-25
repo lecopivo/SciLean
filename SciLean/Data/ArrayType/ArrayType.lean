@@ -5,14 +5,17 @@ import SciLean.Data.ArrayType.GenericArrayType
 
 namespace SciLean
 
+set_option synthInstance.checkSynthOrder false in
 /-- This class says that `T` is the canonical type to store `numOf I` element of `X`. 
 
 This class allows for the notation `X^I` and `T = X^I`. -/
 class ArrayType (T : outParam Type) (I X : Type) extends GenericArrayType T I X
 
+class PHPow.pHPow (α : Sort u) (β : Sort v) (γ : outParam $ Sort v)
 /-- Obtains the type of `X^I` by providing `X` and `I` -/
 abbrev ArrayTypeCarrier (X I : Type) {T : outParam Type} [ArrayType T I X] := T
 
+set_option synthInstance.checkSynthOrder false in
 /-- This class says that `T n` is the canonical type to store `n` elements of `X`.
 
 This class allows for the notation `X^{n}` and `T n = X^{n}`. -/
