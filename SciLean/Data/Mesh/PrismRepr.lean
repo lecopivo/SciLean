@@ -1,7 +1,7 @@
 import SciLean.Prelude
 import SciLean.Mathlib.Data.Enumtype
 -- import SciLean.Algebra
-import SciLean.Core
+import SciLean.Core.Vec
 
 def List.bubblesort [LT α] [DecidableRel (. < . : α → α → Prop)] (l : List α) : {l' : List α // l.length = l'.length} :=
   match l with
@@ -849,21 +849,38 @@ def FaceRepr.index_ext (f g : FaceRepr)
 abbrev PrismRepr.Space : PrismRepr → Type
 | .point => Unit
 | .cone P => ℝ × P.Space
+-- TODO: Make sure that the space of an edge is just ℝ
+-- | .cone .point => ℝ
+-- | .cone (.cone P) => ℝ × (PrismRepr.cone P).Space
+-- | .cone (.prod P) => ℝ × (PrismRepr.cone P).Space
 | .prod P Q => P.Space × Q.Space
+
+-- abbrev PrismRepr.Space' : PrismRepr → Type
+-- | .point => Unit
+-- | .cone .point => ℝ
+-- | .cone P => ℝ × P.Space
+-- | .prod P Q => P.Space × Q.Space
 
 instance PrismRepr.instVecSpace (P : PrismRepr) : Vec P.Space :=
   match P with
   | point =>    by simp[Space]; infer_instance; done
+  | cone .point => by simp[Space]; infer_instance; done
   | cone P =>   by simp[Space]; apply (@instVecProd _ _ (by infer_instance) (instVecSpace P)); done
   | prod P Q => by simp[Space]; apply (@instVecProd _ _ (instVecSpace P) (instVecSpace Q)); done
 
-def FaceRepr.embed (f : FaceRepr) (x : f.toPrism.Space) : f.ofPrism.Space :=
+
+/-- Space of a face, it is the same as the space of the corresponding prism -/
+abbrev FaceRepr.Space (f : FaceRepr) : Type := f.toPrism.Space
+
+/-- For a point `x` in the coordinates of a face `f` give coordinates of `x` w.r.t the the parent prism `f.ofPrism`
+-/
+def FaceRepr.embed (f : FaceRepr) (x : f.Space) : f.ofPrism.Space :=
 match f, x with
 | .point, _ => ()
 | .tip _x, _ => (1,0)
 | .cone P', x'' => 
   let (t', x') := x''
-  (t', (1-t')*(P'.embed x'))
+  (t', (1-t')•(P'.embed x'))
 | .base P', x'' =>
   (0, (P'.embed x''))
 | .prod P' Q', x'' =>
@@ -871,13 +888,12 @@ match f, x with
   (P'.embed x', Q'.embed y')
 
 -- def FaceRepr'.embed (f : FaceRepr' (some P) n) (x : f.toPrism.Space) : P.Space := f.2 ▸ (f.1.embed x)
-
 def PrismRepr.barycenter (P : PrismRepr) : P.Space :=
   match P with
   | point => 0
   | cone P' => 
     let w := (1.0 : ℝ)/(P.pointCount : ℝ)
-    (w, (1-w)*P'.barycenter)
+    (w, (1-w)•P'.barycenter)
   | prod P Q =>
     (P.barycenter, Q.barycenter)
 
@@ -893,7 +909,7 @@ def PrismRepr.barycentricCoordSpec {P : PrismRepr} (p : FaceRepr) (_ : p.ofPrism
   | .point, _, _ => 0
   | .cone _, .tip _, (t, _) => t
   | .cone _, .base p', (t, x') => 
-    (1-t) * (barycentricCoordSpec p' sorry_proof (1/(1-t) * x'))
+    (1-t) * (barycentricCoordSpec p' sorry_proof ((1/(1-t)) • x'))
   | .prod _ _, .prod p q, (x, y) => 
     (barycentricCoordSpec p sorry_proof x) * 
     (barycentricCoordSpec q sorry_proof y)
@@ -915,7 +931,7 @@ def PrismRepr.barycentricCoord {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P
   | .cone (.prod P Q), .base (.prod p q), (t, (x, y)),_ => 
     -- let p' : FaceRepr' (some $ .cone P) (0 : Nat) := ⟨.base p, sorry_proof, sorry_proof⟩
     (barycentricCoord (P := P.cone) (.base p) sorry_proof (t,x)) * 
-    (barycentricCoord q sorry_proof (1/(1-t) * y))
+    (barycentricCoord q sorry_proof ((1/(1-t)) • y))
   | .prod _ _, .prod p q, (x, y), _ => 
     (barycentricCoord p sorry_proof x) * 
     (barycentricCoord q sorry_proof y)
@@ -925,6 +941,154 @@ def PrismRepr.barycentricCoord {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P
   -- | .cone (.cone _),  .base (.cone _), _ => unreachable!
   -- | .cone (.cone _),  .cone _, _ => unreachable!
   -- | .cone .point, .cone _, _ => unreachable!
+
+
+-- Not all indices are valid
+-- in particular `.prod p q` then p and q have to have the same degree!
+inductive BasisIndex where
+  | point (n : Nat) : BasisIndex
+  | cone  (n : Nat) (b : BasisIndex) : BasisIndex
+  | prod (p q : BasisIndex) : BasisIndex
+
+-- index with degree, but it is difficult to work with
+inductive BasisIndex' : Nat → Type where
+  | point (n : Nat) : BasisIndex' n
+  | cone  (n : Nat) (b : BasisIndex' m) : BasisIndex' (n+m)
+  | prod (p q : BasisIndex' n) : BasisIndex' n
+
+def BasisIndex.ofPrism (i : BasisIndex) : PrismRepr :=
+  match i with
+  | point _ => .point
+  | cone _ p => .cone p.ofPrism
+  | prod p q => .prod p.ofPrism q.ofPrism
+
+def BasisIndex.degree (i : BasisIndex) : Nat :=
+  match i with
+  | point n => n
+  | cone n p => n + p.degree
+  | prod p q => max p.degree q.degree -- if p.degree ≠ q.degree then it is not a valid index!!!
+
+@[specialize] def product {α} [One α] [Mul α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
+  EnumType.foldM EnumType.fullRange (init := (1 : α)) λ a i => a * f i
+
+
+open Lean.TSyntax.Compat in
+macro "∏" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
+
+
+-- Lagrangian basis functions implementation
+private def BasisIndex.evalImpl (idx : BasisIndex) (deg : Nat) (x : idx.ofPrism.Space) : ℝ :=
+  match idx, x with
+  | .point _, _ => 1
+
+  | .cone n (.point m), (t, _) => 
+          (∏ i : Fin m, (1 - t - i / deg) / ((m:ℝ)/deg - (i:ℝ) / deg)) * 
+          (∏ j : Fin n, (    t - j / deg) / ((n:ℝ)/deg - (j:ℝ) / deg))
+
+  | .cone n (.cone m p), (t, s, x) => 
+          (∏ i : Fin n, (t - i / deg) / ((n:ℝ)  / deg - (i:ℝ) / deg)) * 
+          (∏ i : Fin m, (s - i / deg) / ((m:ℝ) / deg - (i:ℝ) / deg)) * 
+          ((BasisIndex.cone 0 p).evalImpl deg (t+s, x))
+
+  | .cone n (.prod p q), (t, (x,y)) => 
+          ((BasisIndex.cone n p).evalImpl deg (t, x)) * 
+          ((BasisIndex.cone n q).evalImpl deg (t, y)) / 
+          (∏ i : Fin n, (t - i / deg) / ((n:ℝ) / deg - i / deg))
+
+  | .prod p q, (x, y) => (p.evalImpl deg x) * (q.evalImpl deg y)
+
+
+-- Lagrangian basis function correspoinding to the index `idx`
+def BasisIndex.eval (idx : BasisIndex) (x : idx.ofPrism.Space) : ℝ :=
+  idx.evalImpl idx.degree x
+
+
+-- Lagrangian node correspoinding to the index `idx`
+def BasisIndex.node (idx : BasisIndex) : idx.ofPrism.Space :=
+  match idx with
+  | .point _ => ()
+  | .cone n p => let deg := n + p.degree; ((n:ℝ)/deg, ((p.degree:ℝ)/deg) • p.node)
+  | .prod p q => (p.node, q.node)
+
+
+inductive LagrangianIndex : (P : PrismRepr) → (deg : Nat) → Type 
+  | point (n : Nat) : LagrangianIndex .point n
+  | cone (n : Nat) (p : LagrangianIndex P m) : LagrangianIndex (.cone P) (n+m) 
+  | prod (p : LagrangianIndex P n) (q : LagrangianIndex Q n) : LagrangianIndex (.prod P Q) n 
+
+
+#eval show IO Unit from do
+  let idx := BasisIndex.cone 0 (BasisIndex.point 1)
+  IO.println (idx.eval (0,()))
+  IO.println (idx.eval (0.4,()))
+  IO.println (idx.eval (1,()))
+  let P : ℝ × Unit := idx.node
+  IO.println P
+
+#eval show IO Unit from do
+  let idx := BasisIndex.cone 1 (BasisIndex.point 1)
+  IO.println (idx.eval (0,()))
+  IO.println (idx.eval (0.5,()))
+  IO.println (idx.eval (1,()))
+  let P : ℝ × Unit := idx.node
+  IO.println P
+
+
+#eval show IO Unit from do
+  let idx := BasisIndex.cone 1 (BasisIndex.cone 2 (BasisIndex.point 0))
+  IO.println (idx.eval (0,0,()))
+  IO.println (idx.eval (0,1,()))
+  IO.println (idx.eval (1,0,()))
+  IO.println (idx.eval (0.5,0.5,()))
+  IO.println (idx.eval (1/3,1/3,()))
+  IO.println (idx.eval (1/3,2/3,()))
+  IO.println (idx.eval (2/3,1/3,()))
+  IO.println (idx.eval (1/3,0,()))
+  IO.println (idx.eval (0,1/3,()))
+  IO.println (idx.eval (2/3,0,()))
+  let P : ℝ × ℝ × Unit := idx.node
+  IO.println P
+
+
+#eval show IO Unit from do
+  let idx := (BasisIndex.prod (.cone 1 (.point 0)) (.cone 0 (.point 1)))
+  IO.println (idx.eval ((0,()),(0,())))
+  IO.println (idx.eval ((1,()),(0,())))
+  IO.println (idx.eval ((0,()),(1,())))
+  IO.println (idx.eval ((1,()),(1,())))
+  let P : (ℝ × Unit) × (ℝ × Unit) := idx.node
+  IO.println P
+
+
+#eval show IO Unit from do
+  let idx := BasisIndex.cone 0 (.prod (.cone 1 (.point 1)) (.cone 1 (.point 1)))
+  IO.println (idx.eval (0,((0,()),(0,()))))
+  IO.println (idx.eval (0,((1,()),(0,()))))
+  IO.println (idx.eval (0,((0,()),(1,()))))
+  IO.println (idx.eval (0,((1,()),(1,()))))
+  IO.println (idx.eval (1,((0,()),(0,()))))
+  IO.println (idx.eval (0,((0.5,()),(0.5,()))))
+  IO.println (idx.eval (0.5,((0.5,()),(0.5,()))))
+  IO.println (idx.eval (0.5,((0.0,()),(0.5,()))))
+  let P : ℝ × (ℝ × Unit) × (ℝ × Unit) := idx.node
+  IO.println P
+
+
+#eval show IO Unit from do
+  let idx := BasisIndex.cone 1 (.prod (.cone 1 (.point 0)) (.cone 1 (.point 0)))
+  IO.println (idx.eval (0,((0,()),(0,()))))
+  IO.println (idx.eval (0,((1,()),(0,()))))
+  IO.println (idx.eval (0,((0,()),(1,()))))
+  IO.println (idx.eval (0,((1,()),(1,()))))
+  IO.println (idx.eval (1,((0,()),(0,()))))
+  IO.println (idx.eval (0,((0.5,()),(0.5,()))))
+  IO.println (idx.eval (0.5,((0.5,()),(0.5,()))))
+  IO.println (idx.eval (0.5,((0.0,()),(0.5,()))))
+  IO.println (idx.eval (0,((0.5,()),(0,()))))
+  IO.println (idx.eval (0,((0.0,()),(0.5,()))))
+  let P : ℝ × (ℝ × Unit) × (ℝ × Unit) := idx.node
+  IO.println P
+
 
 theorem PrismRepr.barycentricCoord_sound {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space)
   : P.barycentricCoord p h x = P.barycentricCoordSpec p h x := sorry_proof
@@ -956,7 +1120,7 @@ end PrismRepr
 -- Should include pure inclusions like Face but also collapses
 -- 
 -- There is some non-uniqueness, doing `shift` if the same as `cone ∘ base`
--- inductive Morph : Prism → Type
+-- inductive Morph : Prism → Types
 --   | point : Morph point
 --   | tip (P : Prism) : Morph (cone P)
 --   | cone {P : Prism} (f : Morph P) : Morph (cone P)
