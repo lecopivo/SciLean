@@ -353,8 +353,8 @@ argument (x,y)
   abbrev ∂ := λ dx dy => ⟪dx,y⟫ + ⟪x,dy⟫ by sorry_proof,
   abbrev 𝒯 := λ dx dy => (⟪x,y⟫, ⟪dx,y⟫ + ⟪x,dy⟫) by sorry_proof,
   HasAdjDiff := sorry_proof, 
-  abbrev ∂† := λ dxy' => (dxy'•x, dxy'•y) by sorry_proof,
-  abbrev ℛ := (⟪x,y⟫, λ dxy' => (dxy'•x, dxy'•y)) by sorry_proof
+  abbrev ∂† := λ dxy' => (dxy'•y, dxy'•x) by sorry_proof,
+  abbrev ℛ := (⟪x,y⟫, λ dxy' => (dxy'•y, dxy'•x)) by sorry_proof
 argument x 
   IsLin := sorry_proof,
   IsSmooth := sorry_proof, 
