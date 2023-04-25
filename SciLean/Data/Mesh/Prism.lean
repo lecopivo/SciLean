@@ -40,28 +40,31 @@ def cone (P : Prism) : Prism := ⟨P.repr.cone, by apply PrismRepr.IsCanonical.c
 def prod (P Q : Prism) : Prism := ⟨P.repr.prod Q.repr |>.toCanonical, by simp⟩
 instance : Mul Prism := ⟨λ P Q => P.prod Q⟩
 
-abbrev Space (P : Prism) := ℝ^{P.dim}
+/-- Uniform embedding space - ℝ^{P.dim} -/
+abbrev Space (P : Prism) := ℝ^{P.dim.toUSize}
+/-- Structured Embedding space e.g. ℝ×ℝ×Unit for square or triangle, (ℝ×Unit)×((ℝ×Unit)×(ℝ×Unit)) for cube -/
+abbrev Space' (P : Prism) := P.repr.Space
 
-def inPrism (P : Prism) (x : ℝ^{P.dim}) : Bool := 
+def inPrism (P : Prism) (x : ℝ^{P.dim.toUSize}) : Bool := 
   match P with
   | ⟨.point, _⟩ => x = 0
   | ⟨.cone Q, _⟩ => 
     let Q : Prism := ⟨Q, sorry_proof⟩
-    let x : ℝ^{Q.dim + 1} := x 
-    let t : ℝ := x[⟨Q.dim, by simp⟩]
-    let y : ℝ^{Q.dim} := ⊞ i, x[⟨i.1, sorry_proof⟩]
+    let x : ℝ^{Q.dim.toUSize + 1} := cast sorry_proof x 
+    let t : ℝ := x[⟨Q.dim.toUSize, sorry_proof⟩]
+    let y : ℝ^{Q.dim.toUSize} := ⊞ i, x[⟨i.1, sorry_proof⟩]
     if t = 1 then
       x = 0
     else 
-      Q.inPrism (1/(1-t) * y)
+      Q.inPrism (1/(1-t) • y)
   | ⟨.prod P₁ P₂, _⟩ =>
     let P₁ : Prism := ⟨P₁, sorry_proof⟩
     let P₂ : Prism := ⟨P₂, sorry_proof⟩
-    let x₁ : ℝ^{P₁.dim} := ⊞ i, x[⟨i.1, sorry_proof⟩]
-    let x₂ : ℝ^{P₂.dim} := ⊞ i, x[⟨P₁.dim + i.1, sorry_proof⟩]
+    let x₁ : ℝ^{P₁.dim.toUSize} := ⊞ i, x[⟨i.1, sorry_proof⟩]
+    let x₂ : ℝ^{P₂.dim.toUSize} := ⊞ i, x[⟨P₁.dim.toUSize + i.1, sorry_proof⟩]
     (P₁.inPrism x₁) ∧ (P₂.inPrism x₂)
 
-def InPrism (P : Prism) (x : ℝ^{P.dim}) : Prop := (P.inPrism x = true)
+def InPrism (P : Prism) (x : ℝ^{P.dim.toUSize}) : Prop := (P.inPrism x = true)
 
 @[match_pattern]
 def point : Prism := ⟨.point, sorry_proof⟩
@@ -299,14 +302,22 @@ def dim (f : Face P n) : Nat := n.getD f.repr.dim
 def toPrism (f : Face P n) : Prism := ⟨f.1.toPrism.toCanonical, by simp⟩
 def ofPrism (_ : Face P n) : Prism := P
 
+@[simp]
+theorem ofPrism_repr (f : Face P n)
+  : f.repr.ofPrism = P.repr := f.2
+
+@[simp]
+theorem dim_repr {n : Nat} (f : Face P n)
+  : f.repr.dim = n := f.3
+
 abbrev anyDim (f : Face P n) : Face P := ⟨f.1, f.2, by simp⟩
-instance : Coe (Face P n) (Face P) := ⟨λ f => f.anyDim⟩
+-- instance : Coe (Face P n) (Face P) := ⟨λ f => f.anyDim⟩
 
 def comp (f : Face P n) (g : Face f.toPrism m) : Face P m := 
   ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2,toPrism]; done)) 
    (by simp[g.2, toPrism,f.2]; done), 
    by simp[f.repr_ofPrism], 
-   by simp; cases m; simp; simp; rw[g.repr_dim]; simp; done⟩
+   by simp; cases m; simp; simp; done⟩
 
 @[simp]
 theorem comp_toPrism (f : Face P n) (g : Face f.toPrism m) 
@@ -355,16 +366,35 @@ instance : Enumtype (Face P (some n)) where
   next_toFin    := sorry_proof
 
 
+
+
 instance (P : Prism)
   : Inhabited (Face P) := ⟨⟨P.repr.topFace, by simp, by simp⟩⟩
 
 def faces {P : Prism} {n} (f : Face P n) (m : Option Nat := none)  := Iterable.fullRange (Face f.toPrism m)
+
+
+@[simp]
+theorem toPrism_face_dim_zero (f : Face P (some 0)) : f.toPrism = point := sorry_proof
+
+@[simp]
+theorem toPrism_face_dim_one (f : Face P (some 1)) : f.toPrism = segment := sorry_proof
+
+/-- Position of a prism -/
+def position' {P : Prism} (f : Face P (some 0)) : P.Space' := cast (by simp) (f.repr.embed 0)
 
 end Face
 
 namespace Prism
 
 def faces (P : Prism) (n : Option Nat := none)  := Iterable.fullRange (Face P n)
+
+
+#eval show IO Unit from do
+  let P := Prism.cube 
+  for f in P.faces (some 2) do
+    IO.println s!"{f.repr.toString} | {f.toFin} | {Face.fromFin P _ (f.toFin) |>.repr |>.toString}"
+
 
 end Prism
 
@@ -484,32 +514,32 @@ def subprismCount (P Q : Prism) : Nat :=
   | ⟨.prod P₁ P₂, _⟩, _ => 
     let P₁ : Prism := ⟨P₁, sorry_proof⟩
     let P₂ : Prism := ⟨P₂, sorry_proof⟩
-    ∑ dec : (PrismDecomposition Q), subprismCount P₁ dec.fst * subprismCount P₂ dec.snd
+    Enumtype.sum λ dec : (PrismDecomposition Q) => subprismCount P₁ dec.fst * subprismCount P₂ dec.snd
 
 
 -- TODO: Improve implementation, this is probably not very numerically stable
-def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim}) : X := 
+def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim.toUSize}) : X := 
   match P with
   | ⟨.point, h⟩ => 
     let ι : Inclusion point _ := ⟨.point, sorry_proof, sorry_proof⟩
     f ι
   | ⟨.cone P', _⟩ => 
-    let x : ℝ^{P'.dim} := ⊞ i, x[⟨i.1,sorry_proof⟩]
-    let t : ℝ := x[⟨P'.dim,sorry_proof⟩]
+    let x : ℝ^{P'.dim.toUSize} := ⊞ i, x[⟨i.1,sorry_proof⟩]
+    let t : ℝ := x[⟨P'.dim.toUSize ,sorry_proof⟩]
 
     let P' : Prism := ⟨P', sorry_proof⟩
-    let f₀ := P'.barycentricInterpolate (λ ι => f ⟨ι.1.base, sorry_proof, sorry_proof⟩) (1/(1-t)*x)
+    let f₀ := P'.barycentricInterpolate (λ ι => f ⟨ι.1.base, sorry_proof, sorry_proof⟩) ((1/(1-t))•x)
 
     let f₁ := f ⟨.tip P'.1, sorry_proof, sorry_proof⟩
 
-    (1-t) * f₀ + t * f₁
+    (1-t) • f₀ + t • f₁
     -- f₁ + (1-t) * (f₀ - f₁)
     -- f₀ + t * (f₁-f₀)
   | ⟨.prod P Q, _⟩ => 
     let P : Prism := ⟨P, sorry_proof⟩
     let Q : Prism := ⟨Q, sorry_proof⟩
-    let x : ℝ^{P.dim} := ⊞ i, x[⟨i.1,sorry_proof⟩]
-    let y : ℝ^{Q.dim} := ⊞ i, x[⟨i.1+P.dim,sorry_proof⟩]
+    let x : ℝ^{P.dim.toUSize} := ⊞ i, x[⟨i.1,sorry_proof⟩]
+    let y : ℝ^{Q.dim.toUSize} := ⊞ i, x[⟨i.1+P.dim.toUSize,sorry_proof⟩]
 
     P.barycentricInterpolate (x:=x) (λ ιP =>
       Q.barycentricInterpolate (x:=y) (λ ιQ => 
@@ -520,7 +550,7 @@ end Prism
 --------- Inclusion --------------------------------------------------
 namespace Inclusion 
 
-def faceInclusion {P Q} (ι : Inclusion Q P) (x : ℝ^{Q.dim}) : ℝ^{P.dim} := sorry
+def faceInclusion {P Q} (ι : Inclusion Q P) (x : ℝ^{Q.dim.toUSize}) : ℝ^{P.dim.toUSize} := sorry
 
 variable {P Q : Prism}
 

@@ -236,6 +236,11 @@ namespace Enumtype
                    pure val
   }
 
+  def sum {α} [Zero α] [Add α] {ι} [Enumtype ι] (f : ι → α) : α := Id.run do
+    let mut r : α := 0 
+    for i in Iterable.fullRange ι do
+      r := r + (f i)
+    r
 
   -- section Examples
 

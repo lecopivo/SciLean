@@ -73,11 +73,3 @@ def FinProd.toListComplement {l} (is : FinProd l) : List Nat :=
   | [n], i => [n-i.1-1]
   | n :: _ :: _, (i, is) => (n-i.1-1) :: is.toListComplement
 
-
-#eval show IO Unit from do
-  let l := [2,2]
-  let N := numOf (FinProd l)
-  for (i,_) in Enumtype.fullRange (Fin N) do
-    let x : FinProd l := fromFin i
-    IO.println s!"{x}"
-  IO.println "hihi"

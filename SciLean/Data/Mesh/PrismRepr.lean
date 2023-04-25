@@ -868,6 +868,13 @@ instance PrismRepr.instVecSpace (P : PrismRepr) : Vec P.Space :=
   | cone P =>   by simp[Space]; apply (@instVecProd _ _ (by infer_instance) (instVecSpace P)); done
   | prod P Q => by simp[Space]; apply (@instVecProd _ _ (instVecSpace P) (instVecSpace Q)); done
 
+instance PrismRepr.Space.toString {P : PrismRepr} (x : P.Space) : String := 
+  match P, x with
+  | .point, _ => "()"
+  | .cone _, (t, x) => s!"({t},{x.toString})"
+  | .prod _ _, (x, y) => s!"({x.toString},{y.toString})"
+
+instance {P : PrismRepr} : ToString P.Space := ⟨λ x => x.toString⟩
 
 /-- Space of a face, it is the same as the space of the corresponding prism -/
 abbrev FaceRepr.Space (f : FaceRepr) : Type := f.toPrism.Space
@@ -1011,11 +1018,28 @@ def BasisIndex.node (idx : BasisIndex) : idx.ofPrism.Space :=
   | .prod p q => (p.node, q.node)
 
 
+/-- Index specifying Lagrangian basis function -/
 inductive LagrangianIndex : (P : PrismRepr) → (deg : Nat) → Type 
   | point (n : Nat) : LagrangianIndex .point n
   | cone (n : Nat) (p : LagrangianIndex P m) : LagrangianIndex (.cone P) (n+m) 
   | prod (p : LagrangianIndex P n) (q : LagrangianIndex Q n) : LagrangianIndex (.prod P Q) n 
 
+def LagrangianIndex.toBasisIndex : LagrangianIndex P deg → BasisIndex 
+| .point n  => .point n
+| .cone n p => .cone n p.toBasisIndex
+| .prod p q => .prod p.toBasisIndex q.toBasisIndex
+
+
+theorem LagrangianIndex.toBasisIndex_ofPrism (idx : LagrangianIndex P deg)
+  : idx.toBasisIndex.ofPrism = P := 
+by induction idx <;> repeat (first | assumption | constructor | simp[BasisIndex.ofPrism, toBasisIndex])
+
+theorem LagrangianIndex.toBasisIndex_degree (idx : LagrangianIndex P deg)
+  : idx.toBasisIndex.degree = deg := 
+by 
+  induction idx <;> repeat (first | assumption | constructor | simp[BasisIndex.degree, toBasisIndex] | aesop)
+
+def LagrangianIndex.node (idx : LagrangianIndex P deg) : P.Space := (idx.toBasisIndex_ofPrism ▸ idx.toBasisIndex.node)
 
 #eval show IO Unit from do
   let idx := BasisIndex.cone 0 (BasisIndex.point 1)
