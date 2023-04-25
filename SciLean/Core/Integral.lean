@@ -21,26 +21,32 @@ opaque LocIntDom (X : Type) [Vec X] : Type
 --   Can we have `γ : ℝ ⟿ {f : ℝ ⟿ ℝ // TestFun f}` such that 
 --   `∫ t ∈ [0,1], γ.1` is not a `TestFun`?
 noncomputable
-opaque integral {X Y ι : Type} [EnumType ι] [FinVec X ι] [Vec Y] (f : X ⟿ Y) (Ω : LocIntDom X) : Y 
+opaque integral {X Y ι : Type} [EnumType ι] [FinVec X ι] [Vec Y] (f : X → Y) (Ω : Set X) : Y 
 
-noncomputable
-opaque limitOverWholeDomain {X Y ι : Type} [EnumType ι] [FinVec X ι] [Vec Y] (F : LocIntDom X → Y) : Y
+-- noncomputable
+-- opaque limitOverWholeDomain {X Y ι : Type} [EnumType ι] [FinVec X ι] [Vec Y] (F :  X → Y) : Y
 
 instance integral.instNotationIntegral 
-  {X Y ι : Type} [EnumType ι] [FinVec X ι] [Vec Y] (f : X ⟿ Y) 
+  {X Y ι : Type} [EnumType ι] [FinVec X ι] [Vec Y] (f : X → Y) 
   : Integral f (integral f) := ⟨⟩
 
-syntax intBinderType  := ":" term
-syntax intBinder := ident (intBinderType)?
+
+syntax intBinderType := ":" term
+syntax intBinderSet  := "∈" term
+syntax intBinder := ident (intBinderType <|> intBinderSet)?
 syntax "∫" intBinder "," term:66 : term
 syntax "∫" "(" intBinder ")" "," term:66 : term
 macro_rules
 | `(∫ $x:ident, $f) =>
-  `(∫ (SmoothMap.mk' λ $x => $f))
+  `(∫ (λ $x => $f))
 | `(∫ $x:ident : $type:term, $f) =>
-  `(∫ (SmoothMap.mk' λ ($x : $type) => $f))
+  `(∫ (λ ($x : $type) => $f))
 | `(∫ ($x:ident : $type:term), $f) =>
   `(∫ $x:ident : $type:term, $f)
+| `(∫ $x:ident ∈ $s:term, $f) =>
+  `(integral (λ $x => $f) $s)
+| `(∫ ($x:ident ∈ $s:term), $f) =>
+  `(integral (λ $x => $f) $s)
 
 
 --------------------------------------------------------------------------------
@@ -51,10 +57,11 @@ variable {X Y ι : Type} [EnumType ι] [FinVec X ι] [Hilbert Y]
 
 noncomputable
 instance : Inner (X⟿Y) where
-  inner f g := (integral (SmoothMap.mk (λ x => ⟪f x, g x⟫) sorry)) |> limitOverWholeDomain
+  inner f g := (integral (SmoothMap.mk (λ x => ⟪f x, g x⟫) sorry)) ⊤
 
 instance : TestFunctions (X⟿Y) where
   TestFun f := sorry -- has compact support
 
 noncomputable
 instance : SemiHilbert (X⟿Y) := SemiHilbert.mkSorryProofs
+
