@@ -25,7 +25,7 @@ structure PrismaticSet where
 
   -- Contravariant functoriality - i.e. PrismaticSet is a presheaf
   face_comp {P Q S : Prism} : ∀ (f : Inclusion Q P) (g : Inclusion S Q),
-    (face (f ∘ g)) = face g ∘ face f
+    (face (f.comp g)) = (face g).comp (face f)
 
 namespace PrismaticSet
 
@@ -115,7 +115,7 @@ instance [∀ P, Iterable (Elem₁ P)] [∀ P, Iterable (Elem₂ P)]
 instance [∀ P, Enumtype (Elem₁ P)] [∀ P, Enumtype (Elem₂ P)] 
   : Enumtype (PrismaticSet.ProdElem P Elem₁ Elem₂) :=
 {
-  numOf := ∑ dec : PrismDecomposition P, numOf (Elem₁ dec.fst) * numOf (Elem₂ dec.snd)
+  numOf := Enumtype.sum λ dec : PrismDecomposition P => numOf (Elem₁ dec.fst) * numOf (Elem₂ dec.snd)
 
   toFin := λ e => Id.run do
     let mut N := 0

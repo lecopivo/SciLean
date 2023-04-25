@@ -40,9 +40,10 @@ def cone (P : Prism) : Prism := ⟨P.repr.cone, by apply PrismRepr.IsCanonical.c
 def prod (P Q : Prism) : Prism := ⟨P.repr.prod Q.repr |>.toCanonical, by simp⟩
 instance : Mul Prism := ⟨λ P Q => P.prod Q⟩
 
-/-- Uniform embedding space - ℝ^{P.dim} -/
+/-- Reference space of a prism - ℝ^{P.dim} -/
 abbrev Space (P : Prism) := ℝ^{P.dim.toUSize}
-/-- Structured Embedding space e.g. ℝ×ℝ×Unit for square or triangle, (ℝ×Unit)×((ℝ×Unit)×(ℝ×Unit)) for cube -/
+/-- Structured reference space e.g. ℝ×ℝ for square or triangle, ℝ×ℝ×ℝ for cube, (ℝ×ℝ)×(ℝ×ℝ) for triangle×triangle
+  -- TODO: Right now the space looks like ℝ×ℝ×Unit for square or triange. This should be changed! -/
 abbrev Space' (P : Prism) := P.repr.Space
 
 def inPrism (P : Prism) (x : ℝ^{P.dim.toUSize}) : Bool := 
