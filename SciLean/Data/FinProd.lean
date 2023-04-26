@@ -1,7 +1,8 @@
 import SciLean.Mathlib.Data.PUnit
 import SciLean.Mathlib.Data.Prod
 import SciLean.Mathlib.Data.Enumtype
-
+import SciLean.Data.EnumType
+ 
 namespace SciLean
 
 /-- Give `Fin n₁ × ... × Fin nₘ` for a list `[n₁,..., nₘ]`  -/
@@ -16,6 +17,14 @@ instance instEnumtypeFinProd (l : List Nat) : Enumtype (FinProd l) :=
   | [n] => by simp[FinProd]; infer_instance
   | n :: m :: ns => 
     have e := instEnumtypeFinProd (m :: ns)
+    by simp[FinProd]; infer_instance
+
+instance instEnumTypeFinProd (l : List Nat) : EnumType (FinProd l) := 
+  match l with
+  | []  => by simp[FinProd]; infer_instance
+  | [n] => by simp[FinProd]; infer_instance
+  | n :: m :: ns => 
+    have e := instEnumTypeFinProd (m :: ns)
     by simp[FinProd]; infer_instance
 
 instance instToStringFinProd (l : List Nat) : ToString (FinProd l) := 

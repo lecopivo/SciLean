@@ -1,5 +1,6 @@
 import SciLean.Prelude
 import SciLean.Mathlib.Data.Enumtype
+import SciLean.Data.EnumType
 -- import SciLean.Algebra
 import SciLean.Core.Vec
 
@@ -134,7 +135,6 @@ namespace PrismRepr
     2b. For `prod P₁ P₂` and `prod Q₁ Q₂` we use lexicographical
       ordering of (P₁, P₂) and (Q₁, Q₂)
       i.e. we want: segment * square < square * segment
-
 -/
   def ord (P Q : PrismRepr) : Ordering :=
     match P, Q with
@@ -165,7 +165,7 @@ namespace PrismRepr
   instance : LT PrismRepr := ⟨λ P Q => ord P Q = .lt⟩
   instance : LE PrismRepr := ⟨λ P Q => ord P Q ≠ .gt⟩
 
-  instance : DecidableEq Ordering := 
+  local instance : DecidableEq Ordering := 
     λ x y => 
     match x, y with
     | .lt, .lt => isTrue (by rfl)
@@ -375,7 +375,10 @@ namespace FaceRepr
   /-- Dimension of a face -/
   def dim (f : FaceRepr) : Nat := f.toPrism.dim
 
-  /-- Isomorphism between faces of `P` and `P.toCanonical`. -/
+  /-- Isomorphism between faces of `P` and `P.toCanonical`.
+
+  Maps every face of `P` to the corresponding face of the canonical `P.toCanonical`
+  -/
   def toCanonical (f : FaceRepr) : FaceRepr := 
   match f with 
   | .point => .point
@@ -408,9 +411,14 @@ namespace FaceRepr
 
   theorem toCanonical_ofPrism_IsCanonical (f : FaceRepr) : f.toCanonical.ofPrism.IsCanonical := sorry_proof
   theorem toCanonical_ofPrism (f : FaceRepr) : f.toCanonical.ofPrism = f.ofPrism.toCanonical := sorry_proof
+  @[simp]
   theorem toCanonical_dim (f : FaceRepr) : f.toCanonical.dim = f.dim := sorry_proof
 
-  /-- Isomorphism between faces of `P.toCanonical` and `P`. -/
+  /-- Isomorphism between faces of `P.toCanonical` and `P`. 
+
+  Maps every face of `P.toCanonical` to the corresponding face of `P`.
+  
+  It is an inverse of `FaceRepr.toCanonical` -/
   def fromCanonical (f : FaceRepr) (P : PrismRepr) (_ : f.ofPrism = P.toCanonical) : FaceRepr :=
   match P, f with
   | .point, .point => .point
@@ -551,65 +559,10 @@ This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a 
       := sorry_proof
 
 end FaceRepr
-
--- structure FaceRepr' (P : Option PrismRepr := none) (dim : Option ℕ := none) where
---   f : FaceRepr
---   hp : match P with
---        | some P => f.ofPrism = P
---        | none => True
---   hd : match dim with
---        | some dim => f.dim = dim
---        | none => True
-
--- namespace FaceRepr'
-
---   instance : DecidableEq (FaceRepr' P dim) := 
---     λ f g => 
---       if f.1=g.1 
---       then isTrue sorry_proof
---       else isFalse sorry_proof
-
---   def toPrism {P n} (f : FaceRepr' P n) : PrismRepr := f.1.toPrism
---   def ofPrism {P n} (f : FaceRepr' P n) : PrismRepr := f.1.ofPrism
---   def dim {P n} (f : FaceRepr' P n) : Nat := f.1.dim
-
---   @[simp]
---   theorem ofPrism_simp {P n} (f : FaceRepr' (some P) n) 
---     : f.ofPrism = P := by simp[ofPrism, f.2]; done
-
---   @[simp]
---   theorem dim_simp {P n} (f : FaceRepr' P (some n)) 
---     : f.dim = n := by simp[dim, f.3]; done
-
---   /-- Remove dimension information of a face -/
---   def anyDim {P n} (f : FaceRepr' P n) : FaceRepr' P := ⟨f.1, f.2, True.intro⟩
---   /-- Remove Prism information of a face -/
---   def anyPrism {P n} (f : FaceRepr' P n) : FaceRepr' none n := ⟨f.1, True.intro, f.3⟩
-
---   instance : Coe (FaceRepr' P n) FaceRepr := ⟨λ f => f.1⟩
-
---   def comp (f : FaceRepr' P n) (g : FaceRepr' (some Q) m) 
---     (h : f.1.toPrism = Q := by first | rfl | simp) 
---     : FaceRepr' P m
---     := 
---       ⟨f.1.comp g.1 (by rw[h,g.2]; done), 
---        by cases P; simp; simp[f.2]; done, 
---        by cases m; simp; simp[g.3]; done⟩
-
---   def toCanonical (f : FaceRepr' (some P) n) : FaceRepr' (some P.toCanonical) n :=
---     ⟨f.1.toCanonical, 
---      by simp[f.1.toCanonical_ofPrism,f.2] done, 
---      by simp[f.1.toCanonical_dim, f.3] done⟩
-
---   def fromCanonical (f : FaceRepr' (some P.toCanonical) n) : FaceRepr' (some P) n :=
---     ⟨f.1.fromCanonical P (by simp[f.2] done), 
---      by simp[f.1.fromCanonical_ofPrism,f.2] done, 
---      by simp[f.1.fromCanonical_dim, f.3] done⟩
-
--- end FaceRepr'
   
 namespace PrismRepr
 
+  /-- Returns prism `P` is its own face, i.e. the face with the highest dimension. -/
   def topFace : PrismRepr → FaceRepr
   | .point => .point
   | .cone P => .cone P.topFace
@@ -974,13 +927,6 @@ def BasisIndex.degree (i : BasisIndex) : Nat :=
   | point n => n
   | cone n p => n + p.degree
   | prod p q => max p.degree q.degree -- if p.degree ≠ q.degree then it is not a valid index!!!
-
-@[specialize] def product {α} [One α] [Mul α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
-  EnumType.foldM EnumType.fullRange (init := (1 : α)) λ a i => a * f i
-
-
-open Lean.TSyntax.Compat in
-macro "∏" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
 
 
 -- Lagrangian basis functions implementation

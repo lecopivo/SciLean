@@ -236,6 +236,7 @@ def firstFace (P : Prism) (n : Option Nat := none) : Option (Face P n) :=
   | some f => ⟨f, sorry_proof, sorry_proof⟩ |> some
   | none => none
 
+
 /-- For prism `P = P₁ × ... × Pₘ` return `[P₁, ..., Pₘ]` i.e. list of all product factors. -/
 def prodSplit (P : Prism) : List (Prism) := 
   if P.1 = .point 
@@ -332,7 +333,7 @@ def tip (P : Prism) : Face (P.cone) (some 0) := ⟨.tip P.repr, by simp[FaceRepr
 def cone (f : Face P n) : Face (P.cone) (n.map (·+1)) := ⟨.cone f.repr, by simp[FaceRepr.ofPrism,Prism.cone, f.2], sorry_proof⟩
 def base (f : Face P n) : Face (P.cone) n := ⟨.base f.repr, sorry_proof, sorry_proof⟩
 
-instance : Add (Option Nat) := ⟨λ n m => match n, m with | some n, some m => n+m | _, _ => none⟩
+local instance : Add (Option Nat) := ⟨λ n m => match n, m with | some n, some m => n+m | _, _ => none⟩
 def prod (f : Face P n) (g : Face Q m) : Face (P.prod Q) (n+m) := ⟨f.repr.prod g.repr |>.toCanonical, sorry_proof, sorry_proof⟩
 
 def next (f : Face P n) : Option (Face P n) := 
@@ -353,6 +354,7 @@ instance (P : Prism) (n)
   next := λ f => f.next
   decEq := by infer_instance
 }
+
 
 def toFin (f : Face P (some n)) : Fin (P.faceCount n) := ⟨f.repr.index, sorry_proof⟩
 def fromFin (P : Prism) (n : Nat) (i : Fin (P.faceCount n)) : Face P (some n) := ⟨FaceRepr.fromIndex P.1 n i, sorry_proof, sorry_proof⟩
@@ -446,8 +448,8 @@ variable {l} {P : Prism}
 
 def prisms (dec : PrismDecomposition P) : Prism × Prism :=
   let factors := P.prodTally.map (·.1)
-  (Prism.listProd (factors |>.zip dec.toList),
-   Prism.listProd (factors |>.zip dec.toListComplement))
+  (Prism.listProd (factors.zip dec.toList),
+   Prism.listProd (factors.zip dec.toListComplement))
 
 /-- Given a prism decomposition `P = P₁ × P₂`, return `P₁` -/
 def fst (dec : PrismDecomposition P) : Prism := dec.prisms.1
@@ -459,6 +461,7 @@ def snd (dec : PrismDecomposition P) : Prism := dec.prisms.2
 theorem mul_fst_snd (dec : PrismDecomposition P) : dec.fst * dec.snd = P := sorry_proof
 
 instance : Enumtype (PrismDecomposition P) := by simp[PrismDecomposition]; infer_instance
+instance : EnumType (PrismDecomposition P) := by simp[PrismDecomposition]; infer_instance
 
 end PrismDecomposition
 ----------------------------------------------------------------------
@@ -552,6 +555,7 @@ end Prism
 namespace Inclusion 
 
 def faceInclusion {P Q} (ι : Inclusion Q P) (x : ℝ^{Q.dim.toUSize}) : ℝ^{P.dim.toUSize} := sorry
+
 
 variable {P Q : Prism}
 
