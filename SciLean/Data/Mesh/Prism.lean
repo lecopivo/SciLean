@@ -26,6 +26,7 @@ deriving DecidableEq
 namespace Prism
 
 def dim (P : Prism) : Nat := P.repr.dim
+def dim' (P : Prism) : USize := P.repr.dim'
 def faceCount (n : Nat) (P : Prism) : Nat := P.repr.faceCount n
 abbrev pointCount (P : Prism) : Nat := P.faceCount 0
 abbrev edgeCount  (P : Prism) : Nat := P.faceCount 1
@@ -41,19 +42,19 @@ def prod (P Q : Prism) : Prism := ⟨P.repr.prod Q.repr |>.toCanonical, by simp�
 instance : Mul Prism := ⟨λ P Q => P.prod Q⟩
 
 /-- Reference space of a prism - ℝ^{P.dim} -/
-abbrev Space (P : Prism) := ℝ^{P.dim.toUSize}
+abbrev Space (P : Prism) := ℝ^{P.dim'}
 /-- Structured reference space e.g. ℝ×ℝ for square or triangle, ℝ×ℝ×ℝ for cube, (ℝ×ℝ)×(ℝ×ℝ) for triangle×triangle
   -- TODO: Right now the space looks like ℝ×ℝ×Unit for square or triange. This should be changed! -/
 abbrev Space' (P : Prism) := P.repr.Space
 
-def inPrism (P : Prism) (x : ℝ^{P.dim.toUSize}) : Bool := 
+def inPrism (P : Prism) (x : ℝ^{P.dim'}) : Bool := 
   match P with
   | ⟨.point, _⟩ => x = 0
   | ⟨.cone Q, _⟩ => 
     let Q : Prism := ⟨Q, sorry_proof⟩
-    let x : ℝ^{Q.dim.toUSize + 1} := cast sorry_proof x 
-    let t : ℝ := x[⟨Q.dim.toUSize, sorry_proof⟩]
-    let y : ℝ^{Q.dim.toUSize} := ⊞ i, x[⟨i.1, sorry_proof⟩]
+    let x : ℝ^{Q.dim' + 1} := cast sorry_proof x 
+    let t : ℝ := x[⟨Q.dim', sorry_proof⟩]
+    let y : ℝ^{Q.dim'} := ⊞ i, x[⟨i.1, sorry_proof⟩]
     if t = 1 then
       x = 0
     else 
@@ -61,11 +62,11 @@ def inPrism (P : Prism) (x : ℝ^{P.dim.toUSize}) : Bool :=
   | ⟨.prod P₁ P₂, _⟩ =>
     let P₁ : Prism := ⟨P₁, sorry_proof⟩
     let P₂ : Prism := ⟨P₂, sorry_proof⟩
-    let x₁ : ℝ^{P₁.dim.toUSize} := ⊞ i, x[⟨i.1, sorry_proof⟩]
-    let x₂ : ℝ^{P₂.dim.toUSize} := ⊞ i, x[⟨P₁.dim.toUSize + i.1, sorry_proof⟩]
+    let x₁ : ℝ^{P₁.dim'} := ⊞ i, x[⟨i.1, sorry_proof⟩]
+    let x₂ : ℝ^{P₂.dim'} := ⊞ i, x[⟨P₁.dim' + i.1, sorry_proof⟩]
     (P₁.inPrism x₁) ∧ (P₂.inPrism x₂)
 
-def InPrism (P : Prism) (x : ℝ^{P.dim.toUSize}) : Prop := (P.inPrism x = true)
+def InPrism (P : Prism) (x : ℝ^{P.dim'}) : Prop := (P.inPrism x = true)
 
 @[match_pattern]
 def point : Prism := ⟨.point, sorry_proof⟩
@@ -563,14 +564,14 @@ def subprismCount (P Q : Prism) : Nat :=
 
 
 -- TODO: Improve implementation, this is probably not very numerically stable
-def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim.toUSize}) : X := 
+def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim'}) : X := 
   match P with
   | ⟨.point, h⟩ => 
     let ι : Inclusion point _ := ⟨.point, sorry_proof, sorry_proof⟩
     f ι
   | ⟨.cone P', _⟩ => 
-    let x : ℝ^{P'.dim.toUSize} := ⊞ i, x[⟨i.1,sorry_proof⟩]
-    let t : ℝ := x[⟨P'.dim.toUSize ,sorry_proof⟩]
+    let x : ℝ^{P'.dim'} := ⊞ i, x[⟨i.1,sorry_proof⟩]
+    let t : ℝ := x[⟨P'.dim' ,sorry_proof⟩]
 
     let P' : Prism := ⟨P', sorry_proof⟩
     let f₀ := P'.barycentricInterpolate (λ ι => f ⟨ι.1.base, sorry_proof, sorry_proof⟩) ((1/(1-t))•x)
@@ -583,8 +584,8 @@ def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X)
   | ⟨.prod P Q, _⟩ => 
     let P : Prism := ⟨P, sorry_proof⟩
     let Q : Prism := ⟨Q, sorry_proof⟩
-    let x : ℝ^{P.dim.toUSize} := ⊞ i, x[⟨i.1,sorry_proof⟩]
-    let y : ℝ^{Q.dim.toUSize} := ⊞ i, x[⟨i.1+P.dim.toUSize,sorry_proof⟩]
+    let x : ℝ^{P.dim'} := ⊞ i, x[⟨i.1,sorry_proof⟩]
+    let y : ℝ^{Q.dim'} := ⊞ i, x[⟨i.1+P.dim',sorry_proof⟩]
 
     P.barycentricInterpolate (x:=x) (λ ιP =>
       Q.barycentricInterpolate (x:=y) (λ ιQ => 
@@ -595,7 +596,7 @@ end Prism
 --------- Inclusion --------------------------------------------------
 namespace Inclusion 
 
-def faceInclusion {P Q} (ι : Inclusion Q P) (x : ℝ^{Q.dim.toUSize}) : ℝ^{P.dim.toUSize} := sorry
+def faceInclusion {P Q} (ι : Inclusion Q P) (x : ℝ^{Q.dim'}) : ℝ^{P.dim'} := sorry
 
 
 variable {P Q : Prism}

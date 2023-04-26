@@ -70,6 +70,12 @@ with
   | .prod P' Q' => P'.dim + Q'.dim
 deriving DecidableEq, Inhabited
 
+def PrismRepr.dim' (P : PrismRepr) : USize :=
+  if P.dim < USize.size then
+    P.dim.toUSize
+  else
+    (USize.size-1).toUSize
+
 section PrismExamples
   open PrismRepr
 
@@ -729,7 +735,6 @@ end FaceRepr
 -- abbrev FaceRepr'.points (f : FaceRepr' P n') := f.1.faces (some 0)
 -- /-- All edges of a face -/
 -- abbrev FaceRepr'.edges (f : FaceRepr' P n') := f.1.faces (some 1)
-
 
 
 /-- Index of a face among all faces of the same prism and dimension -/
