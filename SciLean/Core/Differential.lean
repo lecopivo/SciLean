@@ -20,7 +20,7 @@ variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 --     4. ??
 -- macro "∂" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂ λ $x => $f)
 syntax diffBinderType  := ":" term
-syntax diffBinderValue := ":=" term
+syntax diffBinderValue := ":=" term (";" term)?
 syntax diffBinder := ident (diffBinderType <|> diffBinderValue)?
 syntax "∂" diffBinder "," term:66 : term
 syntax "∂" "(" diffBinder ")" "," term:66 : term
@@ -31,6 +31,8 @@ macro_rules
   `(∂ λ $x : $type => $f)
 | `(∂ $x:ident := $val:term, $f) =>
   `((∂ λ $x => $f) $val)
+| `(∂ $x:ident := $val:term ; $dir:term, $f) =>
+  `((∂ λ $x => $f) $val $dir)
 | `(∂ ($b:diffBinder), $f) =>
   `(∂ $b, $f)
 
