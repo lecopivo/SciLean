@@ -11,7 +11,9 @@ class EnumType (ι : Type u) where
 
   decEq : DecidableEq ι
   
-  forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : ι → β → m (ForInStep β)) : m β
+  -- Ther return type has `ForInStep` because it is useful to know if the loop 
+  -- ended normall or if it was interupted. This way we can easily exit from nested loops
+  forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : ι → β → m (ForInStep β)) : m (ForInStep β)
 
   -- something that foldM runs over all elements
 
@@ -26,36 +28,38 @@ namespace EnumType
 
   instance [inst : EnumType ι] : DecidableEq ι := inst.decEq
 
+
+  private def _root_.ForInStep.value (b : ForInStep β) : β :=
+    match b with
+    | .done b => b
+    | .yield b => b
+
+
   instance {ι} [EnumType ι] : ForIn m (FullRange ι) ι where
-    forIn := λ _ init f => forIn init f
+    forIn := λ _ init f => do pure (← forIn init f).value 
 
   instance : EnumType Empty :=
   {
     decEq := by infer_instance
-    forIn := λ init _ => pure init
+    forIn := λ init _ => pure (.yield init)
   }
   
   instance : EnumType Unit :=
   {
     decEq := by infer_instance
-    forIn := λ init f => do
-      match (← f () init) with
-      | .done b => pure b
-      | .yield b => pure b
+    forIn := λ init f => f () init
   }
 
   @[inline] partial def Fin.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Fin n → β → m (ForInStep β)) :=
-      let rec @[specialize] forLoop (i : Nat) (b : β) : m β := do
+      let rec @[specialize] forLoop (i : Nat) (b : β) (_ := (⟨init⟩ : Inhabited β)) : m (ForInStep β) := do
         if h : i < n then
           match (← f ⟨i,h⟩ b) with
-          | ForInStep.done b  => pure b
+          | ForInStep.done b  => pure (.done b)
           | ForInStep.yield b => forLoop (i + 1) b
         else
-          pure b
-      if 0 < n then
-        forLoop 0 init
-      else
-        pure init
+          pure (.yield b)
+      forLoop 0 init
+
 
   @[inline] 
   instance : EnumType (Fin n) :=
@@ -66,17 +70,14 @@ namespace EnumType
 
   @[inline]
   partial def Idx.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Idx n → β → m (ForInStep β)) :=
-      let rec @[specialize] forLoop (i : USize) (b : β) : m β := do
+      let rec @[specialize] forLoop (i : USize) (b : β) (_ := (⟨init⟩ : Inhabited β)) : m (ForInStep β) := do
         if h : i < n then
           match (← f ⟨i,h⟩ b) with
-          | ForInStep.done b  => pure b
+          | ForInStep.done b  => pure (.done b)
           | ForInStep.yield b => forLoop (i + 1) b
         else
-          pure b
-      if 0 < n then
-        forLoop 0 init
-      else
-        pure init
+          pure (.yield b)
+      forLoop 0 init
 
   @[inline]
   partial instance : EnumType (Idx n) :=
@@ -87,14 +88,14 @@ namespace EnumType
   }
 
 
-  /-- Embeds `ForInStep β` to `FoInStep (ForInStep β)`, useful for exiting from double for loops.
-  -/
-  @[inline] 
-  private def forInStepDouble {m} [Monad m] {β : Type u} (x : m (ForInStep β)) 
-    : m (ForInStep (ForInStep β)) := do
-    match (← x) with
-    | .done x => return .done (.done x)
-    | .yield x => return .yield (.yield x)
+  -- /-- Embeds `ForInStep β` to `FoInStep (ForInStep β)`, useful for exiting from double for loops.
+  -- -/
+  -- @[inline] 
+  -- private def forInStepDouble {m} [Monad m] {β : Type u} (x : m (ForInStep β)) 
+  --   : m (ForInStep (ForInStep β)) := do
+  --   match (← x) with
+  --   | .done x => return .done (.done x)
+  --   | .yield x => return .yield (.yield x)
 
 
   instance [EnumType ι] [EnumType κ]
@@ -103,11 +104,8 @@ namespace EnumType
     decEq := by infer_instance
 
     forIn := λ {m} _ {β} init f => 
-      EnumType.forIn  (init:=init) λ (i : ι) (b : β) => do
-        EnumType.forIn (init:=.yield b) λ (j : κ) (b' : ForInStep β) => do
-          match b' with
-          | .done b' => return .done (.done b')
-          | .yield b' => forInStepDouble (f (i,j) b') 
+      EnumType.forIn (init:=init) λ (i : ι) (b : β) => 
+        EnumType.forIn (init:=b) λ (j : κ) (b' : β) => f (i,j) b'
   }
 
   instance [EnumType ι] [EnumType κ]
@@ -116,14 +114,8 @@ namespace EnumType
     decEq := by infer_instance
 
     forIn := λ {m} _ {β} init f => 
-      EnumType.forIn (init:=init) λ (j : κ) (b : β) => do
-        EnumType.forIn (init:=.yield b) λ (i : ι) (b' : ForInStep β) => do
-          match b' with
-          | .done b' => return .done (.done b')
-          | .yield b' => 
-            match (← f (i,j) b') with
-            | .done b'' => return .done (.done b'')
-            | .yield b'' => return .yield (.yield b'')      
+      EnumType.forIn (init:=init) λ (j : κ) (b : β) => 
+        EnumType.forIn (init:=b) λ (i : ι) (b' : β) => f (i,j) b'
   }
 
 
@@ -133,30 +125,24 @@ namespace EnumType
     decEq := by infer_instance
 
     forIn := λ {m} _ {β} init f => do
-      let b : ForInStep β ←
-          EnumType.forIn (init:=ForInStep.yield init) λ i b => 
-            match b with
-            | .done b' => return .done (.done b')
-            | .yield b' => forInStepDouble (f (.inl i) b') 
+      let b ← EnumType.forIn (init:=init) λ i b => f (.inl i) b
 
       match b with
-      | .done b => pure b
+      | .done b => pure (.done b)
       | .yield b => EnumType.forIn (init:=b) λ j b => f (.inr j) b
-
   }
 
   @[specialize] def sum {α} [Zero α] [Add α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
-    EnumType.forIn (0 : α) λ (i : ι) a => .yield (a + f i) -- λ a i => a + f i
+    (← EnumType.forIn (0 : α) λ (i : ι) a => .yield (a + f i)).value
 
   open Lean.TSyntax.Compat in
   macro "∑" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``EnumType.sum xs b
 
   @[specialize] def product {α} [One α] [Mul α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
-    EnumType.forIn (1 : α) λ (i : ι) a => .yield (a * f i)
+    (← EnumType.forIn (1 : α) λ (i : ι) a => .yield (a * f i)).value
 
   open Lean.TSyntax.Compat in
   macro "∏" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
-
 
   
   -- TODO: move this somewhere else
