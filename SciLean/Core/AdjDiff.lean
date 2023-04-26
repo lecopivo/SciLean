@@ -11,6 +11,20 @@ variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι κ : Type} [EnumType ι] [EnumType κ]
 
+syntax "∂†" diffBinder "," term:66 : term
+syntax "∂†" "(" diffBinder ")" "," term:66 : term
+macro_rules
+| `(∂† $x:ident, $f) =>
+  `(∂† λ $x => $f)
+| `(∂† $x:ident : $type:term, $f) =>
+  `(∂† λ $x : $type => $f)
+| `(∂† $x:ident := $val:term, $f) =>
+  `((∂† λ $x => $f) $val)
+| `(∂† $x:ident := $val:term ; $dir:term, $f) =>
+  `((∂† λ $x => $f) $val $dir)
+| `(∂† ($b:diffBinder), $f) =>
+  `(∂† $b, $f)
+
 -- Notation 
 -- ∇ s, f s         --> ∇ λ s => f s
 -- ∇ s : ℝ, f s     --> ∇ λ s : ℝ => f s
