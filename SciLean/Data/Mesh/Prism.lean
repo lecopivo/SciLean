@@ -369,6 +369,48 @@ instance : Enumtype (Face P (some n)) where
   next_toFin    := sorry_proof
 
 
+def forIn {m} [Monad m] (P : Prism) (n : Nat) (init : β) (f : Face P n → β → m (ForInStep β)) : m (ForInStep β) := do
+  match P, n with
+  | ⟨.point, _⟩, 0 => f ⟨.point, sorry_proof, sorry_proof⟩ init
+  | ⟨.point, _⟩, n+1 => pure (.yield init)
+  | ⟨.cone P', _⟩, 0 => do
+      let P' : Prism := ⟨P', sorry_proof⟩
+
+      let b ← Face.forIn P' 0 init (λ q b => (f q.base b))
+      match b with
+      | .done b => return (.done b)
+      | .yield b => f (Face.tip P') b
+
+  | ⟨.cone P', _⟩, n+1 => do
+      let b ← Face.forIn ⟨P', sorry_proof⟩ (n+1) init (λ q b => (f q.base b))
+
+      match b with
+      | .done b => return .done b
+      | .yield b => 
+        Face.forIn ⟨P', sorry_proof⟩ n b (λ q b => (f q.cone b))
+
+  | ⟨.prod P Q, _⟩, n => do
+      let P : Prism := ⟨P, sorry_proof⟩
+      let Q : Prism := ⟨Q, sorry_proof⟩
+      
+      let mut b := ForInStep.yield init
+
+      for i in [0:n+1] do
+        let j := n - i
+
+        match b with
+        | .done b' => return .done b'
+        | .yield b' => 
+          b ← Face.forIn Q j b' λ q b =>
+                 Face.forIn P i b λ p b => 
+                   f ⟨p.repr.prod q.repr, sorry_proof, sorry_proof⟩ b
+
+      pure b
+
+
+instance (n : Nat) : EnumType (Face P n) where
+  decEq := by infer_instance
+  forIn := forIn P n
 
 
 instance (P : Prism)
@@ -416,7 +458,6 @@ def comp (f : Inclusion Q P) (g : Inclusion S Q) : Inclusion S P :=
  
 -- def toFin (f : Inclusion Q P) : Fin (P.faceCount Q.dim) := ⟨f.repr.index, sorry_proof⟩
 -- def fromFin (Q P : Prism) (i : Fin (P.faceCount Q.dim)) : Inclusion Q P := ⟨FaceRepr.fromIndex P.1 Q.dim i, sorry_proof, sorry_proof⟩
-
 
 end Inclusion
 
@@ -576,6 +617,78 @@ def split (ι : Inclusion Q P) (Pdec : PrismDecomposition P)
     Sigma.mk Qdec (ι₁,ι₂) --, ι₂)
   | _ =>
     absurd (a := True) sorry_proof sorry_proof /- fromCanonical (P * Q) has to be always a face of type .prod f g -/
+
+
+def forIn {m} [Monad m] (P : Prism) (Q : Prism) (init : β) (f : Inclusion Q P → β → m (ForInStep β)) : m (ForInStep β) := do
+  match P, Q with
+  | ⟨.point, _⟩, ⟨.point, _⟩ => f ⟨.point, sorry_proof, sorry_proof⟩ init
+  | ⟨.point, _⟩, _ => pure (.yield init)
+  | ⟨.cone P', _⟩, ⟨.point, _⟩ => do
+      let P' : Prism := ⟨P', sorry_proof⟩
+
+      let b ←
+        Inclusion.forIn P' Prism.point init (λ q b => 
+          let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
+          f q b)
+
+      match b with
+      | .done b => return (.done b)
+      | .yield b => 
+        let q : Inclusion _ _ := ⟨.tip P'.repr, sorry_proof, sorry_proof⟩
+        f q b
+
+  | ⟨.cone P', _⟩, ⟨.cone Q', _⟩ => do
+      let P' : Prism := ⟨P', sorry_proof⟩
+      let Q' : Prism := ⟨Q', sorry_proof⟩
+
+      let b ← 
+        Inclusion.forIn P' Q'.cone init (λ q b => 
+          let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
+          (f q b))
+
+      match b with
+      | .done b => return .done b
+      | .yield b => 
+        Inclusion.forIn P' Q' b (λ q b => 
+          let q : Inclusion _ _ := ⟨q.repr.cone, sorry_proof, sorry_proof⟩
+          (f q b))
+
+
+  | ⟨.cone P', _⟩, ⟨.prod Q₁ Q₂, _⟩ => do
+      let P' : Prism := ⟨P', sorry_proof⟩
+
+      let b ← 
+        Inclusion.forIn P' Q init (λ q b => 
+          let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
+          f q b)
+
+      pure b
+
+  | ⟨.prod P₁ P₂, _⟩, _ => do
+      let P₁ : Prism := ⟨P₁, sorry_proof⟩
+      let P₂ : Prism := ⟨P₂, sorry_proof⟩
+
+      let mut b := ForInStep.yield init
+
+      for dec in fullRange (PrismDecomposition Q) do
+
+        let Q₁ := dec.fst
+        let Q₂ := dec.snd
+
+        b ← 
+          Inclusion.forIn P₂ Q₂ init λ q₂ b => 
+            Inclusion.forIn P₁ Q₁ b λ q₁ b => 
+              f ⟨q₁.repr.prod q₂.repr, sorry_proof, sorry_proof⟩ b
+
+        if let .done b' := b then
+          return .done b'
+
+      return b
+
+instance {Q P : Prism} : EnumType (Inclusion Q P) where
+  decEq := by infer_instance
+  forIn := Inclusion.forIn P Q
+
 
 end Inclusion
 ----------------------------------------------------------------------
