@@ -76,7 +76,7 @@ argument x₀
              let x := x'.1
              let dxdx₀ := x'.2
              (f t x,
-              (∂ x':=x;dxdx₀, f t x'))
+              (∂ (x':=x;dxdx₀), f t x'))
     odeSolve F t₀ (x₀, dx₀) t
     by sorry_proof
 
@@ -127,14 +127,14 @@ argument x₀
       fst:
         λ dx₀' =>
         let x := λ s => odeSolve f t₀ x₀ s 
-        odeSolve (λ s dx' => - ∂† (f s) (x s) dx') t dx₀' t₀
+        odeSolve (λ s dx' => - ∂† (x':= x s; dx'), f s x') t dx₀' t₀
       snd:
         λ dx₀' =>
         let F := λ s (xdx' : X×X) => 
                    let x   := xdx'.1
                    let dx' := xdx'.2
                    (- (f s x),
-                    - ∂† (f s) x dx')
+                    - ∂† (x':=x;dx'), f s x')
         let xt := odeSolve f t₀ x₀ t
         (odeSolve F t (xt, dx₀') t₀).2
       by sorry_proof
