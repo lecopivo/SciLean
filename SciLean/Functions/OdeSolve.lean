@@ -141,6 +141,83 @@ argument x₀
     by sorry_proof
 
 
+
+theorem odeSolve.arg_ft₀x₀t.IsSmooth' {S X : Type} [Vec S] [Vec X]
+  (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
+  (t₀ : S → ℝ) [IsSmooth t₀]
+  (x₀ : S → X) [IsSmooth x₀]
+  (t : S → ℝ) [IsSmooth t]
+  : IsSmooth λ s => odeSolve (f s) (t₀ s) (x₀ s) (t s) := sorry_proof
+
+theorem odeSolve.arg_f.IsSmooth' {S X : Type} [Vec S] [Vec X]
+  (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
+  (t₀ : ℝ) (x₀ : X) (t : ℝ) 
+  : IsSmooth λ s => odeSolve (f s) t₀ x₀ t := sorry_proof
+
+theorem odeSolve.arg_ft₀x₀t.differential_simp' {S X : Type} [Vec S] [Vec X]
+  (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
+  (t₀ : S → ℝ) [IsSmooth t₀]
+  (x₀ : S → X) [IsSmooth x₀]
+  (t : S → ℝ) [IsSmooth t]
+  : (∂ s, odeSolve (f s) (t₀ s) (x₀ s) (t s))
+    =
+    λ s ds =>
+
+      let fs := f s
+      let dfdx := λ t x dx => ∂ x':=x;dx, f s t x'
+      let dfdt := λ t x    => ⅆ t':=t,    f s t' x
+      let dfds := λ t x    => ∂ s':=s;ds, f s' t x
+      let F := λ (t : ℝ) (x' : X×X×X×X) => 
+               let x := x'.1
+               let dxdf := x'.2.1
+               let dxdx₀ := x'.2.2.1
+               let dxdt₀ := x'.2.2.2
+               (fs t x,
+                (dfds t x + dfdx t x dxdf),
+                (dfdx t x dxdx₀),        
+                (dfdt t x + dfdx t x dxdt₀))
+
+      let dx₀ := ∂ x₀ s ds
+      let dt₀ := ∂ t₀ s ds
+      let dt := ∂ t s ds
+
+      let x' := odeSolve F (t₀ s) ((x₀ s), 0, dx₀, 0) (t s)
+      dt • fs (t s) x'.1 + x'.2.1 + x'.2.2.1 + dt₀ • x'.2.2.2
+    := sorry_proof
+
+theorem odeSolve.arg_f.differential_simp' {S X : Type} [Vec S] [Vec X]
+  (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
+  (t₀ : ℝ) (x₀ : X) (t : ℝ) 
+  : (∂ s, odeSolve (f s) t₀ x₀ t)
+    =
+    λ s ds =>
+
+      let fs := f s
+      let dfdx := λ t x dx => ∂ x':=x;dx, f s t x'
+      let dfds := λ t x    => ∂ s':=s;ds, f s' t x
+      let F := λ (t : ℝ) (x' : X×X) => 
+               let x := x'.1
+               let dxdf := x'.2
+               (fs t x,
+                (dfds t x + dfdx t x dxdf))
+
+      let x' := odeSolve F t₀ (x₀, 0) t
+      x'.2
+    := sorry_proof
+
+
+-- register function transformations for ite
+#eval show Lean.CoreM Unit from do
+
+  addFunctionProperty ``odeSolve ``IsSmooth #[2,3,4,5].toArraySet none ``odeSolve.arg_ft₀x₀t.IsSmooth' none
+  addFunctionProperty ``odeSolve ``differential #[2,3,4,5].toArraySet none ``odeSolve.arg_ft₀x₀t.differential_simp' none
+
+  addFunctionProperty ``odeSolve ``IsSmooth #[2].toArraySet none ``odeSolve.arg_f.IsSmooth' none
+  addFunctionProperty ``odeSolve ``differential #[2].toArraySet none ``odeSolve.arg_f.differential_simp' none
+
+
+--------------------------------------------------------------------------------
+
 variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 
 def odeSolve_fixed_dt_impl (n : Nat) (stepper : (ℝ → X → X) → ℝ → X → ℝ → X) 
