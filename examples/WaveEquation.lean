@@ -42,7 +42,7 @@ def main : IO Unit := do
 
   let substeps := 1
   let m := 1.0
-  let k := 100000.0
+  let k := 10000.0
 
   let N : USize := 100
   have h : Nonempty (Idx N) := sorry
@@ -55,7 +55,7 @@ def main : IO Unit := do
 
   for i in [0:1000] do
   
-    (x, p) := solver m k substeps t (x, p) Δt
+    (x, p) := solver m k substeps t (x, p) (t+Δt)
     t += Δt
 
     let M : USize := 20

@@ -13,7 +13,7 @@ approx solver (m k : ℝ) (steps : Nat)
 by
   -- Unfold Hamiltonian and compute gradients
   unfold H; unfold gradient
-  fun_trans; fun_trans
+  fun_trans; fun_trans; simp
 
   -- Apply RK4 method
   rw [odeSolve_fixed_dt runge_kutta4_step]
@@ -32,9 +32,9 @@ def main : IO Unit := do
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
-  for _ in [0:4000] do
+  for _ in [0:50] do
   
-    (x, p) := solver m k substeps 0 (x, p) Δt
+    (x, p) := solver m k substeps t (x, p) (t+Δt)
     t += Δt
 
     -- print
