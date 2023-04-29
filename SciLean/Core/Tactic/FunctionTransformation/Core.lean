@@ -202,7 +202,8 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
     throwError s!"Composition case: the head of the expression {← ppExpr b} depends on the argument {← ppExpr x}. TODO: handle this case!"
 
   let .some constName := F.constName?
-    | throwError s!"Can handle only applications of contants! Got `{← ppExpr b}` which is an application of `{← ppExpr F}`"
+    | trace[Meta.Tactic.fun_trans.rewrite] s!"Can handle only applications of contants! Got `{← ppExpr b}` which is an application of `{← ppExpr F}`"
+      return none
 
   let arity ← getConstArity constName
   if args.size = arity then

@@ -11,33 +11,35 @@ namespace SciLean
 noncomputable
 opaque odeSolve {X : Type} [Vec X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (t : ℝ) : X
 
-function_properties SciLean.odeSolve {X : Type} [Vec X] (f : ℝ → X → X) [IsSmooth λ tx : ℝ×X => f tx.1 tx.2] (t₀ : ℝ) (x₀ : X) (t : ℝ)
+function_properties SciLean.odeSolve {X : Type} [Vec X] 
+  (f : ℝ → X → X) [IsSmooth λ tx : ℝ×X => f tx.1 tx.2] 
+  (t₀ : ℝ) (x₀ : X) (t : ℝ)
 argument (t₀,x₀,t)
   IsSmooth := sorry_proof,
   noncomputable abbrev ∂ := λ dt₀ dx₀ dt =>
-    let F := λ (t : ℝ) (x' : X×X×X) => 
-             let x := x'.1
-             let dxdx₀ := x'.2.1
-             let dxdt₀ := x'.2.2
+    let dfdt := λ t x => ⅆ t':=t, f t' x
+    let dfdx := λ t x dx => ∂ x':=x;dx, f t x'
+    let F := λ (t : ℝ) (xdx : X×X) => 
+             let x := xdx.1
+             let dx := xdx.2
              (f t x,
-              (∂ x':=x;dxdx₀, f t x'),        
-              (ⅆ t':=t, f t' x) + (∂ x':=x;dxdt₀, f t x'))
-    let x' := odeSolve F t₀ (x₀, dx₀, 0) t
-    dt • f t x'.1 + x'.2.1 + dt₀ • x'.2.2
+              (dfdx t x dx + dt₀ • dfdt t x))
+    let x' := odeSolve F t₀ (x₀, dx₀) t
+    dt • f t x'.1 + x'.2
     by sorry_proof,
   noncomputable abbrev 𝒯 := λ dt₀ dx₀ dt =>
-    let F := λ (t : ℝ) (x' : X×X×X) => 
+    let dfdt := λ t x => ⅆ t':=t, f t' x
+    let dfdx := λ t x dx => ∂ x':=x;dx, f t x'
+    let F := λ (t : ℝ) (x' : X×X) => 
              let x := x'.1
-             let dxdx₀ := x'.2.1
-             let dxdt₀ := x'.2.2
+             let dx := x'.2
              (f t x,
-              (∂ x':=x;dxdx₀, f t x'),        
-              (ⅆ t':=t, f t' x) + (∂ x':=x;dxdt₀, f t x'))
-    let x' := odeSolve F t₀ (x₀, dx₀, 0) t
-    (x'.1, dt • f t x'.1 + x'.2.1 + dt₀ • x'.2.2)
+              (dfdx t x dx + dt₀ • dfdt t x))
+    let x' := odeSolve F t₀ (x₀, dx₀) t
+    (x'.1, dt • f t x'.1 + x'.2)
     by sorry_proof
 
-function_properties SciLean.odeSolve {X : Type} [Vec X] (f : ℝ → X → X) [IsSmooth λ tx : ℝ×X => f tx.1 tx.2] (t₀ : ℝ) (x₀ : X) (t : ℝ)
+function_properties SciLean.odeSolve {X : Type} [Vec X] (f : ℝ → X → X) [IsSmooth λ tx : ℝ×X => f tx.1 tx.2] [∀ t, IsSmooth (f t)] (t₀ : ℝ) (x₀ : X) (t : ℝ)
 argument t₀
   IsSmooth := by infer_instance,
   noncomputable abbrev ∂ := λ dt₀ => 
@@ -45,19 +47,18 @@ argument t₀
              let x := x'.1
              let dxdt₀ := x'.2
              (f t x,
-              (ⅆ t':=t, f t' x) + (∂ x':=x;dxdt₀, f t x'))
+              (∂ x':=x;dxdt₀, f t x') + dt₀ • (ⅆ t':=t, f t' x))
     let x' := odeSolve F t₀ (x₀, 0) t
-    dt₀ • x'.2
-    by sorry_proof,
+    x'.2
+    by fun_trans; simp,
   noncomputable abbrev 𝒯 := λ dt₀ =>
     let F := λ (t : ℝ) (x' : X×X) => 
              let x := x'.1
              let dxdt₀ := x'.2
              (f t x,
-              (ⅆ t':=t, f t' x) + (∂ x':=x;dxdt₀, f t x'))
-    let x' := odeSolve F t₀ (x₀, 0) t
-    (x'.1, dt₀ • x'.2)
-    by sorry_proof
+              (∂ x':=x;dxdt₀, f t x') + dt₀ • (ⅆ t':=t, f t' x))
+    odeSolve F t₀ (x₀, 0) t
+    by fun_trans; simp
 
 function_properties SciLean.odeSolve {X : Type} [Vec X] (f : ℝ → X → X) [IsSmooth λ tx : ℝ×X => f tx.1 tx.2] (t₀ : ℝ) (x₀ : X) (t : ℝ)
 argument x₀
@@ -70,26 +71,26 @@ argument x₀
               (∂ x':=x;dxdx₀, f t x'))
     let x' := odeSolve F t₀ (x₀, dx₀) t
     x'.2
-    by sorry_proof,
-  noncomputable abbrev 𝒯 := λ dx₀=>
+    by fun_trans; simp,
+  noncomputable abbrev 𝒯 := λ dx₀ =>
     let F := λ (t : ℝ) (x' : X×X) => 
              let x := x'.1
              let dxdx₀ := x'.2
              (f t x,
               (∂ (x':=x;dxdx₀), f t x'))
     odeSolve F t₀ (x₀, dx₀) t
-    by sorry_proof
+    by fun_trans; simp
 
 function_properties SciLean.odeSolve {X : Type} [Vec X] (f : ℝ → X → X) [IsSmooth λ tx : ℝ×X => f tx.1 tx.2] (t₀ : ℝ) (x₀ : X) (t : ℝ)
 argument t
   IsSmooth := by apply SciLean.odeSolve.arg_t₀x₀t.IsSmooth',
   noncomputable abbrev ∂ := λ dt => 
     dt • f t (odeSolve f t₀ x₀ t) 
-    by sorry_proof,
+    by fun_trans; sorry_proof,
   noncomputable abbrev 𝒯 := λ dt =>
     let x := odeSolve f t₀ x₀ t; 
     (x, dt • f t x) 
-    by sorry_proof
+    by fun_trans; sorry_proof
 
 
 function_properties SciLean.odeSolve {X : Type} [Vec X] (f : ℝ → X → X) [∀ t, IsLin λ x : X => f t x] (t₀ : ℝ) (x₀ : X) (t : ℝ)
@@ -141,7 +142,6 @@ argument x₀
     by sorry_proof
 
 
-
 theorem odeSolve.arg_ft₀x₀t.IsSmooth' {S X : Type} [Vec S] [Vec X]
   (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
   (t₀ : S → ℝ) [IsSmooth t₀]
@@ -149,10 +149,6 @@ theorem odeSolve.arg_ft₀x₀t.IsSmooth' {S X : Type} [Vec S] [Vec X]
   (t : S → ℝ) [IsSmooth t]
   : IsSmooth λ s => odeSolve (f s) (t₀ s) (x₀ s) (t s) := sorry_proof
 
-theorem odeSolve.arg_f.IsSmooth' {S X : Type} [Vec S] [Vec X]
-  (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
-  (t₀ : ℝ) (x₀ : X) (t : ℝ) 
-  : IsSmooth λ s => odeSolve (f s) t₀ x₀ t := sorry_proof
 
 theorem odeSolve.arg_ft₀x₀t.differential_simp' {S X : Type} [Vec S] [Vec X]
   (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
@@ -163,57 +159,93 @@ theorem odeSolve.arg_ft₀x₀t.differential_simp' {S X : Type} [Vec S] [Vec X]
     =
     λ s ds =>
 
+      let dt₀ := ∂ t₀ s ds
+
       let fs := f s
       let dfdx := λ t x dx => ∂ x':=x;dx, f s t x'
       let dfdt := λ t x    => ⅆ t':=t,    f s t' x
       let dfds := λ t x    => ∂ s':=s;ds, f s' t x
-      let F := λ (t : ℝ) (x' : X×X×X×X) => 
-               let x := x'.1
-               let dxdf := x'.2.1
-               let dxdx₀ := x'.2.2.1
-               let dxdt₀ := x'.2.2.2
+
+      let F := λ (t : ℝ) (xdx : X×X) => 
+               let x := xdx.1
+               let dx := xdx.2
                (fs t x,
-                (dfds t x + dfdx t x dxdf),
-                (dfdx t x dxdx₀),        
-                (dfdt t x + dfdx t x dxdt₀))
+                (dfds t x + dt₀ • dfdt t x + dfdx t x dx))
 
       let dx₀ := ∂ x₀ s ds
-      let dt₀ := ∂ t₀ s ds
       let dt := ∂ t s ds
 
-      let x' := odeSolve F (t₀ s) ((x₀ s), 0, dx₀, 0) (t s)
-      dt • fs (t s) x'.1 + x'.2.1 + x'.2.2.1 + dt₀ • x'.2.2.2
+      let x' := odeSolve F (t₀ s) ((x₀ s), dx₀) (t s)
+      dt • fs (t s) x'.1 + x'.2
     := sorry_proof
 
-theorem odeSolve.arg_f.differential_simp' {S X : Type} [Vec S] [Vec X]
+
+theorem odeSolve.arg_fx₀.HasAdjDiff' {S X : Type} [Hilbert S] [Hilbert X]
   (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
-  (t₀ : ℝ) (x₀ : X) (t : ℝ) 
-  : (∂ s, odeSolve (f s) t₀ x₀ t)
+  [∀ t, HasAdjDiff (λ sx : S×X => f sx.1 t sx.2)]
+  (t₀ : ℝ)
+  (x₀ : S → X) [HasAdjDiff x₀]
+  (t : ℝ)
+  : HasAdjDiff λ s => odeSolve (f s) t₀ (x₀ s) t := sorry
+
+
+theorem odeSolve.arg_fx₀.adjointDifferential_simp' {S X : Type} [Hilbert S] [Hilbert X]
+  (f : S → ℝ → X → X) [IsSmooth λ stx : S×ℝ×X => f stx.1 stx.2.1 stx.2.2]
+  [∀ t, HasAdjDiff (λ sx : S×X => f sx.1 t sx.2)]
+  (t₀ : ℝ)
+  (x₀ : S → X) [HasAdjDiff x₀]
+  (t : ℝ)
+  : (∂† s, odeSolve (f s) t₀ (x₀ s) t)
     =
-    λ s ds =>
+    alternatives 
+      fst:
+        fun s ds' =>
 
-      let fs := f s
-      let dfdx := λ t x dx => ∂ x':=x;dx, f s t x'
-      let dfds := λ t x    => ∂ s':=s;ds, f s' t x
-      let F := λ (t : ℝ) (x' : X×X) => 
-               let x := x'.1
-               let dxdf := x'.2
-               (fs t x,
-                (dfds t x + dfdx t x dxdf))
+          let dfdx' := λ t x dx' => ∂† x':=x;dx', f s t x'
+          let dfds' := λ t x ds' => ∂† s':=s;ds', f s' t x
 
-      let x' := odeSolve F t₀ (x₀, 0) t
-      x'.2
-    := sorry_proof
+          let x := λ t' => odeSolve (f s) t₀ (x₀ s) t'
 
+          let F := λ (t : ℝ) (x' : X×S) =>
+                   let α := x'.1
+                   let β := x'.2
+                   (dfdx' t (x t) α,
+                    - dfds' t (x t) α)
 
--- register function transformations for ite
+          let x' := odeSolve F t (ds', 0) t₀
+          let α := x'.1
+          let β := x'.2
+          ∂† x₀ s α + β
+      snd:
+        fun s ds' =>
+
+          let dfdx' := λ t x dx' => ∂† x':=x;dx', f s t x'
+          let dfds' := λ t x ds' => ∂† s':=s;ds', f s' t x
+
+          let xt := odeSolve (f s) t₀ (x₀ s) t
+
+          let F := λ (t : ℝ) (x' : X×X×S) =>
+                   let x := x'.1
+                   let α := x'.2.1
+                   let β := x'.2.2
+                   (f s t x,
+                    dfdx' t x α,
+                    - dfds' t x α)
+
+          let x' := odeSolve F t (xt, ds', 0) t₀
+          let α := x'.2.1
+          let β := x'.2.2
+          ∂† x₀ s α + β
+      by sorry_proof
+  := sorry
+
 #eval show Lean.CoreM Unit from do
 
   addFunctionProperty ``odeSolve ``IsSmooth #[2,3,4,5].toArraySet none ``odeSolve.arg_ft₀x₀t.IsSmooth' none
   addFunctionProperty ``odeSolve ``differential #[2,3,4,5].toArraySet none ``odeSolve.arg_ft₀x₀t.differential_simp' none
 
-  addFunctionProperty ``odeSolve ``IsSmooth #[2].toArraySet none ``odeSolve.arg_f.IsSmooth' none
-  addFunctionProperty ``odeSolve ``differential #[2].toArraySet none ``odeSolve.arg_f.differential_simp' none
+  addFunctionProperty ``odeSolve ``HasAdjDiff #[2,4].toArraySet none ``odeSolve.arg_fx₀.HasAdjDiff' none
+  addFunctionProperty ``odeSolve ``adjointDifferential #[2,4].toArraySet none ``odeSolve.arg_fx₀.adjointDifferential_simp' none
 
 
 --------------------------------------------------------------------------------
