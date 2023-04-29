@@ -63,5 +63,9 @@ instance : Inhabited (Idx (no_index (n+1))) where
   default := 0
 
 
+instance (n : Nat) : Nonempty (Idx (no_index (OfNat.ofNat (n+1)))) := sorry
+instance (n : Nat) : OfNat (Idx (no_index (OfNat.ofNat (n+1)))) i := ⟨(i % (n+1)).toUSize, sorry⟩
+
+
 
 -- #check (0 : Idx 10)
