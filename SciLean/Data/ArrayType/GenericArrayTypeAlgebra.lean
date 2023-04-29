@@ -34,14 +34,25 @@ instance (priority := low) {κ} {_ : Index κ} [FinVec Elem κ] : Basis Cont (Id
   basis := λ (i,j) => introElem λ i' => [[i=i']] • 𝕖[Elem] j
   proj := λ (i,j) x => 𝕡 j x[i]
 
+set_option synthInstance.checkSynthOrder false in
+instance [FinVec Elem Unit] : Basis Cont (Idx) ℝ where
+  basis := λ i => introElem λ i' => [[i=i']] • 𝕖[Elem] ()
+  proj := λ i x => 𝕡 () x[i]
+
 instance (priority := low) {κ} {_ : Index κ} [FinVec Elem κ] : DualBasis Cont (Idx×κ) ℝ where
   dualBasis := λ (i,j) => introElem λ i' => [[i=i']] • 𝕖'[Elem] j
   dualProj := λ (i,j) x => 𝕡' j x[i]
+
+set_option synthInstance.checkSynthOrder false in
+instance [FinVec Elem Unit] : DualBasis Cont Idx ℝ where
+  dualBasis := λ i => introElem λ i' => [[i=i']] • 𝕖'[Elem] ()
+  dualProj := λ i x => 𝕡' () x[i]
 
 open BasisDuality in
 instance (priority := low) {κ} {_ : Index κ} [FinVec Elem κ] : BasisDuality Cont where
   toDual   := GenericArrayType.map toDual
   fromDual := GenericArrayType.map fromDual
+
 
 instance (priority := low) {κ : Type} {_ : Index κ} [FinVec Elem κ] : FinVec Cont (Idx×κ) where
   is_basis := sorry_proof
@@ -49,6 +60,11 @@ instance (priority := low) {κ : Type} {_ : Index κ} [FinVec Elem κ] : FinVec 
   to_dual := sorry_proof
   from_dual := sorry_proof
 
-
+set_option synthInstance.checkSynthOrder false in
+instance [FinVec Elem Unit] : FinVec Cont Idx where
+  is_basis := sorry_proof
+  duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
+  to_dual := sorry_proof
+  from_dual := sorry_proof
 
 
