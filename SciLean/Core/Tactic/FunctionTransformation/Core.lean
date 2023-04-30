@@ -369,17 +369,10 @@ def _root_.Lean.Expr.doesComputation (e : Expr) : Bool :=
     x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x
   | _ => false
 
-partial def normalizeLet? (e : Expr) : Option Expr :=
-  let (e, flag) := 
-    match e.flattenLet? with
-    | some e' => (e', true)
-    | none    => (e, false)
-  let (e, flag) := 
-    match e.splitLetProd? with
-    | some e' => (e', true)
-    | none    => (e, flag)
-  let (e, flag) := run e flag
-  if flag then some e else none
+partial def normalizeLet? (e : Expr) : MetaM (Option Expr) := do
+  let e' ← flattenLet e
+  let (e', flag) := run e' (e' != e)
+  if flag then pure (some e') else pure none
 where 
   run (e : Expr) (didNormalize : Bool) : Expr × Bool :=
   match e with
@@ -404,7 +397,7 @@ where
 def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
 
   if post then 
-    if let .some e' := normalizeLet? e then
+    if let .some e' ← normalizeLet? e then
       trace[Meta.Tactic.fun_trans.normalize_let] s!"\n{← Meta.ppExpr e}\n==>\n{← Meta.ppExpr e'}"
 
       return .some (.visit (.mk e' none 0))
