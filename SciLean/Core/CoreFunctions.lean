@@ -275,7 +275,7 @@ argument y
   IsLin := sorry_proof, 
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dy => x*dy by sorry_proof,
-  abbrev 𝒯 := λ dy => (x*dy, x*dy) by sorry_proof,
+  abbrev 𝒯 := λ dy => (x*y, x*dy) by sorry_proof,
   HasAdjoint := sorry_proof,
   abbrev † := λ y' => x*y' by sorry_proof,
   HasAdjDiff := sorry_proof,
