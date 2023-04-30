@@ -19,6 +19,7 @@ else
 match e with
   | Expr.app f x => do pure (mkApp (← (replaceSubExpression f test replace)) (← (replaceSubExpression x test replace)))
   | Expr.lam n x b _ => pure $ mkLambda n e.binderInfo x (← replaceSubExpression b test replace)
+  | Expr.letE n t v b _ => pure $ mkLet n t (← replaceSubExpression v test replace) (← replaceSubExpression b test replace)
   | _ => pure e
 
 -- use 

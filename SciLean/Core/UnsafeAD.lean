@@ -33,7 +33,7 @@ macro (name:=ignoreFunPropTactic) "ignore_fun_prop" : tactic =>
   `(tactic| have ignore_fun_prop : IgnoreFunProp := sorry)
 
 @[inherit_doc ignoreFunPropTactic] 
-macro (name:=ignoreFunPropConv) "ignore_fun_prop" : conv => `(conv| tactic => unsafe_ad)
+macro (name:=ignoreFunPropConv) "ignore_fun_prop" : conv => `(conv| tactic => ignore_fun_prop)
 
 
 instance (priority:=high) [inst : IgnoreFunProp] {X Y} [Vec X] [Vec Y] (f : X → Y) 
@@ -41,3 +41,6 @@ instance (priority:=high) [inst : IgnoreFunProp] {X Y} [Vec X] [Vec Y] (f : X �
 
 instance (priority:=high) [inst : IgnoreFunProp] {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) 
   : HasAdjDiff f := inst.kaboom.elim
+
+instance (priority:=high) [inst : IgnoreFunProp] {X Y} [Nonempty X] (f : X → Y) 
+  : IsInv f := inst.kaboom.elim
