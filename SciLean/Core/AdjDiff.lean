@@ -178,6 +178,12 @@ theorem reverseDifferential.rule_id (X) [SemiHilbert X]
     λ x => (x , λ dx' => dx') := sorry
 
 @[fun_trans_rule]
+theorem reverseDifferential.rule_const (Y : Type) [SemiHilbert Y] (x : X)
+  : ℛ (λ y : Y => x)
+    =
+    λ y => (x, λ dy' => 0) := sorry
+
+@[fun_trans_rule]
 theorem reverseDifferential.rule_comp
   (f : Y → Z) [HasAdjDiff f]
   (g : X → Y) [HasAdjDiff g]
