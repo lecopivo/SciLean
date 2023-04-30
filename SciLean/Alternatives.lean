@@ -46,11 +46,21 @@ macro " alternatives_fst " : conv => `(conv| simp (config := {zeta := false}) on
 macro " alternatives_snd " : conv => `(conv| simp (config := {zeta := false}) only [Alternatives.pick_snd])
 
 
-@[app_unexpander Alternatives.choose] def unexpandMatch : Lean.PrettyPrinter.Unexpander
+@[app_unexpander Alternatives.choose] def unexpandAlternativecChoose : Lean.PrettyPrinter.Unexpander
   | `($(_) $a $b $ap) => 
     `(alternatives
        fst: $a
        snd: $b
+       by' _)
+  | `($(_) $a $b $ap $x) => 
+    `(alternatives
+       fst: $a $x
+       snd: $b $x
+       by' _)
+  | `($(_) $a $b $ap $x $y) => 
+    `(alternatives
+       fst: $a $x $y
+       snd: $b $x $y
        by' _)
   | _  => throw ()
 
