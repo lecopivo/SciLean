@@ -28,9 +28,6 @@ def applyCompTheorem (funTrans function : Name) (xs : Array Expr) (t : Expr) : M
     let some compTheorem := thrms.compTheorem
       | continue
 
-    if function = ``ite then
-      dbg_trace s!"Found appropriate composition theorem for {funTrans} {function}. It is {compTheorem} and arguments {args}. Dependent arguments are {depArgIds'}"
-
 
     if depArgIds' ⊆ args then
       let mut ys := xs
