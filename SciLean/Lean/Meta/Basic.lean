@@ -166,37 +166,40 @@ def letTelescope (e : Expr) (k : Array Expr → Expr → n α) : n α :=
   map2MetaM (fun k => letTelescopeImpl e k) k
 
 
-private partial def flatLetTelescopeImpl {α} (e : Expr) (k : Array Expr → Expr → MetaM α) (splitPairs := true) : MetaM α := do
+private partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array Expr → Expr → MetaM α) (splitPairs := true) : MetaM α := do
+  if fuel = 0 then
+    k #[] e
+  else
   match e with
   | .app f x => 
 
     -- we want to normalize let bindings only on value level
     -- also it was blowing the stack on complicated type class projections
     if ¬((← inferType x).isType) then
-      flatLetTelescopeImpl f λ xs f' => 
-        flatLetTelescopeImpl x λ ys x' => 
+      flatLetTelescopeImpl (fuel-1) f λ xs f' => 
+        flatLetTelescopeImpl (fuel-1) x λ ys x' => 
           k (xs.append ys) (.app f' x')
     else 
       k #[] e
 
   | .letE n t v b _ => 
-    flatLetTelescopeImpl v λ xs v' => do
+    flatLetTelescopeImpl (fuel-1) v λ xs v' => do
       match splitPairs, v'.app4? ``Prod.mk with
       | true, .some (Fst, Snd, fst, snd) => 
         withLetDecl (n.appendAfter "₁") Fst fst λ fst' => 
           withLetDecl (n.appendAfter "₂") Snd snd λ snd' => do
             let p ← mkAppM ``Prod.mk #[fst', snd']
-            flatLetTelescopeImpl (← mkLetFVars #[fst', snd'] (b.instantiate1 p)) λ ys b' => 
+            flatLetTelescopeImpl (fuel-1) (← mkLetFVars #[fst', snd'] (b.instantiate1 p)) λ ys b' => 
               k (xs.append ys) b'
 
       | _, _ => 
         withLetDecl n t v' λ v'' =>
-          flatLetTelescopeImpl (b.instantiate1 v'') λ ys b' => 
+          flatLetTelescopeImpl (fuel-1) (b.instantiate1 v'') λ ys b' => 
             k ((xs.push v'').append ys) b'
 
   | .lam n t b bi => 
     withLocalDecl n bi t λ x => 
-      flatLetTelescopeImpl (b.instantiate1 x) λ ys b' => do
+      flatLetTelescopeImpl (fuel-1) (b.instantiate1 x) λ ys b' => do
 
         -- find where can we split ys
         let mut i := 0
@@ -210,7 +213,7 @@ private partial def flatLetTelescopeImpl {α} (e : Expr) (k : Array Expr → Exp
         k ys[0:i] (← mkLambdaFVars #[x] (← mkLetFVars ys[i:] b'))
 
   | .mdata _ e => 
-    flatLetTelescopeImpl e k
+    flatLetTelescopeImpl (fuel-1) e k
 
   | _ => 
     k #[] e
@@ -231,8 +234,8 @@ It will run `k #[b₁, b₂, a] (f a (b₁,b₂))` where `b₁ := 10, b₂ := 12
 
 If `splitPairs` is `false`, it will run `k #[b, a] (f a b)`
 -/
-def flatLetTelescope (e : Expr) (k : Array Expr → Expr → n α) (splitPairs := true) : n α := 
-  map2MetaM (fun k => flatLetTelescopeImpl e k splitPairs) k
+def flatLetTelescope (fuel : Nat) (e : Expr) (k : Array Expr → Expr → n α) (splitPairs := true) : n α := 
+  map2MetaM (fun k => flatLetTelescopeImpl fuel e k splitPairs) k
 
 /-- Flattens let bindings and splits let binding of pairs.
 
@@ -252,6 +255,7 @@ let a₂ := 3 * (b₁, b₂).snd;
 (a₁, a₂).snd
 ```
 -/
-def flattenLet (e : Expr) (splitPairs := true) : MetaM Expr := 
-  flatLetTelescope (splitPairs:=splitPairs) e λ xs e' => 
+def flattenLet (fuel : Nat) (e : Expr) (splitPairs := true) : MetaM Expr := 
+  flatLetTelescope (splitPairs:=splitPairs) fuel e λ xs e' => 
     mkLetFVars xs e'
+
