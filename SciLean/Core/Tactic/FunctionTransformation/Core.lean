@@ -291,8 +291,8 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
 
     let x := xs[0]!
 
-    if let some step ← tryStructureRule? transName x (← mkLambdaFVars xs[1:] b) then
-      return step
+    -- if let some step ← tryStructureRule? transName x (← mkLambdaFVars xs[1:] b) then
+    --   return step
 
     if xs.size > 1 then
       let y := xs[1]!
@@ -367,10 +367,12 @@ def _root_.Lean.Expr.doesComputation (e : Expr) : Bool :=
   match e with
   | .app f x => 
     x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x
+  | .lam .. => true
+  | .letE .. => true
   | _ => false
 
 partial def normalizeLet? (e : Expr) : MetaM (Option Expr) := do
-  let e' ← flattenLet e
+  let e' ← flattenLet 2 e
   let (e', flag) := run e' (e' != e)
   if flag then pure (some e') else pure none
 where 
