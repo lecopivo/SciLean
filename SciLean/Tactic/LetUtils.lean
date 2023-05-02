@@ -78,7 +78,7 @@ where
 
       if let .some (x', n') := run x bLvl then
         if (n?.isNone || (n' < n?.get!)) &&
-           n' < n?.get! && x'.isLet && p x'.letName! then 
+          x'.isLet && p x'.letName! then 
           some (.letE x'.letName! x'.letType! x'.letValue! (.app (f.liftLooseBVars 0 1) x'.letBody!) false,
                 n'+1)
         else
@@ -86,7 +86,7 @@ where
 
       else if let .some (f', n') := run f bLvl then
         if (n?.isNone || (n' < n?.get!)) &&
-           n' < n?.get! && f'.isLet && p f'.letName! then 
+           f'.isLet && p f'.letName! then 
           some (.letE f'.letName! f'.letType! f'.letValue! (.app f'.letBody! (x.liftLooseBVars 0 1)) false,
                 n'+1)
         else
@@ -100,7 +100,7 @@ where
       if let .some (b', n') := run b (bLvl+1) then
 
         if (n?.isNone || (n' < n?.get!)) &&
-           n' < n?.get! && b'.isLet && p b'.letName! &&
+           b'.isLet && p b'.letName! &&
            ¬(b'.letType!.hasLooseBVar 0) && ¬(b'.letValue!.hasLooseBVar 0)then 
           let yName := b'.letName!
           let yType := b'.letType!
@@ -121,7 +121,7 @@ where
       if let .some (b', n') := run b (bLvl+1) then
 
         if (n?.isNone || (n' < n?.get!)) &&
-           n' < n?.get! && b'.isLet && p b'.letName! &&
+           b'.isLet && p b'.letName! &&
            ¬(b'.letType!.hasLooseBVar 0) && ¬(b'.letValue!.hasLooseBVar 0)then 
           let yName := b'.letName!
           let yType := b'.letType!
@@ -166,8 +166,8 @@ example
   := 
 by
   conv => 
-    lhs 
-    let_move_up z 10
+    lhs
+    let_move_up z
   
 
 #exit
