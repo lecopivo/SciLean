@@ -29,7 +29,12 @@ def _root_.Lean.Expr.myPrint : Expr → String
 | _ => "??"
 
 /--
-  Swaps bvars
+  Swaps bvars indices `i` and `j`
+
+  NOTE: the indices `i` and `j` do not correspond to the `n` in `bvar n`. Rather
+  they behave like indices in `Expr.lowerLooseBVars`, `Expr.liftLooseBVars`, etc.
+
+  TODO: This has to have a better implementation, but I'm still beyond confused with how bvar indices work
 -/
 def _root_.Lean.Expr.swapBVars (e : Expr) (i j : Nat) : Expr := 
 
@@ -40,14 +45,6 @@ def _root_.Lean.Expr.swapBVars (e : Expr) (i j : Nat) : Expr :=
     a
 
   e.instantiate swapBVarArray
-
-  -- e.replace (λ e' => 
-  --   if e'.isBVar && e'.bvarIdx! = i then 
-  --     some (.bvar j)
-  --   else if e'.isBVar && e'.bvarIdx! = j then
-  --     some (.bvar i)
-  --   else 
-  --     none)
 
 /-- Moves let binding upwards, maximum by `n?` positions.
   
@@ -127,8 +124,8 @@ where
           let yType := b'.letType!
           let yValue := b'.letValue!
           let b'' := b'.letBody!.swapBVars 0 1
-          some (.letE yName yType yValue 
-                  (.lam xName xType b'' bi) false,
+          some (.letE yName (yType.lowerLooseBVars 1 1) (yValue.lowerLooseBVars 1 1)
+                  (.lam xName (xType.liftLooseBVars 0 1) b'' bi) false,
                 n'+1)
         else
           some (.lam xName xType b' bi, n')
@@ -137,7 +134,8 @@ where
 
     | _ => none
 
-@[tactic let_move_up] def convLetMoveUp : Tactic
+@[tactic let_move_up] 
+def convLetMoveUp : Tactic
 | `(conv| let_move_up $id:ident $[$n:num]?) => do  
   (← getMainGoal).withContext do
     let lhs ← getLhs
@@ -153,46 +151,22 @@ example
       let b := x + a
       λ y => 
       let c := x + a + b + y
-      let d := x + a + b + y + c
+      let d := x + a + b
       a + b + (let z := 10; c + z) + d + y)
-    =
+    = 
     (λ x : Nat => 
       let a := x
       let b := x + a
       λ y => 
       let c := x + a + b + y
-      let d := x + a + b + y + c
+      let d := x + a + b
       a + b + (let z := 10; c + z) + d + y)
   := 
 by
   conv => 
     lhs
     let_move_up z
+    let_move_up d
   
 
 #exit
-
-@[tactic flatten_let_tactic] def tacticFlattenLet : Tactic
-| `(tactic| flatten_let) => do  
-  let goal ← getMainGoal
-  goal.withContext do
-    let t ← goal.getType
-    let t' ← flattenLet 20 t
-
-    let newGoal ← mkFreshExprMVar t'
-    let eqGoal ← mkFreshExprMVar (← mkEq t t')
-    eqGoal.mvarId!.refl
-
-    goal.assign (← mkAppM ``Eq.mpr #[eqGoal, newGoal])
-    replaceMainGoal [newGoal.mvarId!]
-
-| _ => Lean.Elab.throwUnsupportedSyntax
-
-
-@[tactic print_lhs] def printLhs : Tactic := fun stx => do
-  match stx with
-  | `(conv| print_lhs) => do
-    let lhs ← getLhs
-    IO.println lhs
-    -- dbg_trace lhs
-  | _ => throwUnsupportedSyntax
