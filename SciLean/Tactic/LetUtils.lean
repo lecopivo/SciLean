@@ -1,52 +1,38 @@
 import Lean.Elab.Tactic.ElabTerm
 import Lean.Elab.Tactic.Conv.Basic
 
-namespace Lean.Elab.Tactic.Conv 
-open Meta
+import SciLean.Lean.Expr
 
 
-
-syntax (name := print_lhs) "print_lhs" : conv
-syntax (name := print_rhs) "print_rhs" : conv
-syntax (name := add_id) "add_id" : conv
-syntax (name := add_foo) "add_foo" : conv
-
-
+namespace SciLean.Meta
 
 open Lean Meta Elab Tactic Conv
+
 
 syntax (name := let_move_up) " let_move_up " ident (num)? : conv 
 syntax (name := let_move_down) " let_move_down " ident (num)? : conv 
 syntax (name := let_unfold) " let_unfold " ident : conv 
 
 
-def _root_.Lean.Expr.myPrint : Expr → String 
-| .const n _ => n.toString
-| .bvar n => s!"[{n}]"
-| .app f x => f.myPrint ++ " " ++ x.myPrint
-| .lam n t x bi => s!"fun {n} => {x.myPrint}"
-| .letE n t v x _ => s!"let {n} := {v.myPrint}; {x.myPrint}"
-| _ => "??"
+syntax (name := let_add_core) " let_add_core " ident term : conv 
 
-/--
-  Swaps bvars indices `i` and `j`
+@[tactic let_add_core] 
+def convLetAdd : Tactic
+| `(conv| let_add_core $id:ident $val:term) => do  
+  (← getMainGoal).withContext do
+    let lhs ← getLhs
+    let xName := id.getId
+    let xValue ← elabTerm val none
+    let xType ← inferType xValue
+    
+    changeLhs (.letE xName xType xValue lhs false)
+| _ => Lean.Elab.throwUnsupportedSyntax
 
-  NOTE: the indices `i` and `j` do not correspond to the `n` in `bvar n`. Rather
-  they behave like indices in `Expr.lowerLooseBVars`, `Expr.liftLooseBVars`, etc.
 
-  TODO: This has to have a better implementation, but I'm still beyond confused with how bvar indices work
--/
-def _root_.Lean.Expr.swapBVars (e : Expr) (i j : Nat) : Expr := 
+macro " let_add " id:ident x:term : conv => `(conv| conv => let_add_core  $id $x; ext)
 
-  let swapBVarArray : Array Expr := Id.run do
-    let mut a : Array Expr := .mkEmpty e.looseBVarRange
-    for k in [0:e.looseBVarRange] do
-      a := a.push (.bvar (if k = i then j else if k = j then i else k))
-    a
 
-  e.instantiate swapBVarArray
-
-/-- Moves let binding upwards, maximum by `n?` positions.
+/-- Moves let binding upwards, maximum by `n?` positions. Returns none if there is no such let binding.
   
 For example for the following expresion 
 ```  
@@ -67,13 +53,13 @@ but only if the value of `y` does not depend on `z`.
 Changing `(some 1)` to `(some 2)` or `none`, `let z := ...` will be move to the top.
 -/
 def letMoveUp (e : Expr) (p : Name → Bool) (n? : Option Nat) : Option Expr := do
-  run e 0 |>.map λ (e, _) => e
+  run e |>.map λ (e, _) => e
 where
-  run (e : Expr) (bLvl : Nat) : Option (Expr×Nat) :=
+  run (e : Expr) : Option (Expr×Nat) :=
     match e with
     | .app f x => 
 
-      if let .some (x', n') := run x bLvl then
+      if let .some (x', n') := run x then
         if (n?.isNone || (n' < n?.get!)) &&
           x'.isLet && p x'.letName! then 
           some (.letE x'.letName! x'.letType! x'.letValue! (.app (f.liftLooseBVars 0 1) x'.letBody!) false,
@@ -81,7 +67,7 @@ where
         else
           some (.app f x', n')
 
-      else if let .some (f', n') := run f bLvl then
+      else if let .some (f', n') := run f then
         if (n?.isNone || (n' < n?.get!)) &&
            f'.isLet && p f'.letName! then 
           some (.letE f'.letName! f'.letType! f'.letValue! (.app f'.letBody! (x.liftLooseBVars 0 1)) false,
@@ -94,7 +80,7 @@ where
 
     | .letE xName xType xValue b _ => 
 
-      if let .some (b', n') := run b (bLvl+1) then
+      if let .some (b', n') := run b then
 
         if (n?.isNone || (n' < n?.get!)) &&
            b'.isLet && p b'.letName! &&
@@ -115,7 +101,7 @@ where
         none
 
     | .lam xName xType b bi => 
-      if let .some (b', n') := run b (bLvl+1) then
+      if let .some (b', n') := run b then
 
         if (n?.isNone || (n' < n?.get!)) &&
            b'.isLet && p b'.letName! &&
@@ -145,6 +131,78 @@ def convLetMoveUp : Tactic
 
 macro " let_move_up " id:ident n:(num)? : tactic => `(tactic| conv => let_move_up $id $[$n]?)
 
+
+
+/-- Moves let binding down, maximum by `n?` positions. Returns none if there is no such let binding.
+
+For example for the following expresion 
+```  
+  let x := ..
+  let y := ..
+  let z := ..
+  f x y z
+```
+calling `letMoveUp e (λ n => n == `x) (some 2)` will produce
+```
+  let y := ..
+  let z := ..
+  let x := ..
+  f x y z
+```
+but only if the value of `y` does not depend on `z`.
+
+ 
+Let binding is specified by a running `p` on let binding name.
+-/
+def letMoveDown (e : Expr) (p : Name → Bool) (n? : Option Nat) : Option Expr := do
+  if n?.isSome && n?.get! = 0 then
+    some e
+  else
+  match e with
+  | .app f x => 
+    if let .some x' := letMoveDown x p n? then
+      some (.app f x')
+    else if let .some f' := letMoveDown f p n? then
+      some (.app f' x)
+    else
+      none
+
+  | .letE xName xType xValue b _ => 
+      
+    if p xName then
+      match b with
+        | .letE yName yType yValue b' _ => 
+  
+      | .lam yName yType b' bi => sorry
+      | _ => some e
+    else
+
+      if let .some b' := letMoveDown b p n? then
+        some (.letE xName xType xValue b' _)
+      else
+        none
+
+    | .lam xName xType b bi => 
+      if let .some (b', n') := run b (bLvl+1) then
+
+        if (n?.isNone || (n' < n?.get!)) &&
+           b'.isLet && p b'.letName! &&
+           ¬(b'.letType!.hasLooseBVar 0) && ¬(b'.letValue!.hasLooseBVar 0)then 
+          let yName := b'.letName!
+          let yType := b'.letType!
+          let yValue := b'.letValue!
+          let b'' := b'.letBody!.swapBVars 0 1
+          some (.letE yName (yType.lowerLooseBVars 1 1) (yValue.lowerLooseBVars 1 1)
+                  (.lam xName (xType.liftLooseBVars 0 1) b'' bi) false,
+                n'+1)
+        else
+          some (.lam xName xType b' bi, n')
+      else
+        none
+
+    | _ => none
+
+
 example 
   : (λ x : Nat => 
       let a := x
@@ -160,13 +218,24 @@ example
       λ y => 
       let c := x + a + b + y
       let d := x + a + b
-      a + b + (let z := 10; c + z) + d + y)
+      a + b + (let z := 10; c + z) + d + y + 1)
   := 
 by
   conv => 
     lhs
     let_move_up z
     let_move_up d
+    let_add hihi 10
+    enter [hihi]
+    let_add hoho (10 + hihi)
+    enter [hoho]
+    let_add hehe (10 + hoho + hihi)
+    conv => let_add_core hehe2 (10)
+    conv => let_add_core hehe3 (10);
+  
+  
+
+
   
 
 #exit

@@ -16,7 +16,6 @@ instance [EnumType I] [GenericArrayType XI I X] [ToString X] : ToString XI :=
       s := s ++ toString x[i] ++ ", "
     s ++ "]"⟩
 
-
 variable (γ : ℝ)
 
 noncomputable
@@ -40,17 +39,6 @@ theorem invFun_as_argmin {X Y} [Nonempty X] [Hilbert Y] (f : X → Y) (y : Y) (h
   : f⁻¹ y = argmin x, ‖f x - y‖² := sorry_proof
 
 
-
-structure GradientDescent.Config where
-  stepScale : ℝ := 0.1
-  maxSteps := 10
-  -- absTol : Option ℝ := some (10^(-6))
-  -- relTol : Option ℝ := some (10^(-6))
-
-instance : Top (SciLean.Filter GradientDescent.Config) := sorry
-
--- TODO: define a filter on GradientDescent.Config
-
 def gradientDescent [Vec X] (gradf : X → X) (x₀ : X) (s : ℝ) (steps : Nat) : X := Id.run do
   let mut x := x₀
   for i in [0:steps] do
@@ -62,10 +50,6 @@ theorem argminFun.approx.gradientDescent {X} [Hilbert X] {f : X → ℝ} (x₀ :
     =
     limit λ n => gradientDescent (∇ f) x₀ s n
   := sorry_proof
-
-
-
-
 
 
 inductive Settings
@@ -135,14 +119,15 @@ theorem reverseDifferential_fst {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X →
     f x
   := by rfl
 
+set_option trace.Meta.Tactic.fun_trans.rewrite true in
 noncomputable
-approx aimToTarget (T : ℝ) (target : ℝ^{2}) :=
+def aimToTarget (T : ℝ) (target : ℝ^{2}) : Approx (
   let shoot := λ v : ℝ^{2} => 
                let xv' :=
                  odeSolve (t₀ := 0) (x₀ := (0,v)) (t := T)
                    (f := λ (t : ℝ) (x,v) => balisticMotion x v)
                xv'.1
-  shoot⁻¹ target
+  shoot⁻¹ target) := 
 by
   dsimp (config := {zeta := false})
   
@@ -158,26 +143,19 @@ by
   simp (config := {zeta := false}) only [h]
 
   unsafe_ad
-  ignore_fun_prop  
-  set_option trace.Meta.Tactic.fun_trans.step true in
-  set_option trace.Meta.Tactic.fun_trans.rewrite true in
-  set_option trace.Meta.Tactic.simp.rewrite true in
-  set_option trace.Meta.Tactic.fun_trans.lambda_special_cases true in
-  set_option trace.Meta.Tactic.fun_trans.normalize_let true in
+  ignore_fun_prop
   conv => 
     enter [1]
     fun_trans
-    flatten_let
-    fun_trans
-    flatten_let
-    simp (config := {zeta := false, eta := false, iota := false, beta := true, etaStruct := .none, proj := false}) 
-    flatten_let
-    flatten_let
-    dsimp (config := {zeta := false})
-    fun_trans
     fun_trans
 
-  
+    enter [shoot]
+    let_add Rshoot (ℛ shoot)
+    rw[(sorry : shoot = Rshoot.1)]
+    rw[(rfl : ℛ shoot = Rshoot)]
+
+  apply Approx.exact
+ 
 
   -- set_option trace.Meta.Tactic.fun_trans.rewrite false in
   -- fun_trans
