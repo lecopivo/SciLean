@@ -47,41 +47,25 @@ def convLetUnfold : Tactic
 | _ => Lean.Elab.throwUnsupportedSyntax
 
 
-syntax (name := let_unfold1) " let_unfold1 " ident : conv 
+syntax (name := let_unfold1) " let_unfold1 " ident (num)? : conv 
 
-def letUnfold1 (e : Expr) (id : Name) : Expr := Id.run do
+def letUnfold1 (e : Expr) (id : Name) (nth := 0) : Expr := Id.run do
   e.replaceM λ e => 
     if e.isLet && e.letName! = id then
-      dbg_trace s!"Attempting to unfold {id} in: "
-      dbg_trace e.myPrint
-      dbg_trace ""
-      dbg_trace e
-      dbg_trace ""
-
-      let r := e.looseBVarRange
-      let val := e.letValue!
-      return .done (Id.run do e.replaceM λ e => 
-        dbg_trace s!"sub expression: bvar-rangee {e.looseBVarRange}"
-        dbg_trace e
-        dbg_trace ""
-
-        let s := e.looseBVarRange
-        if e.isBVar && e.bvarIdx! = 0 then
-          return .done val
-        else
-          return .noMatch)
+      let b' := e.letBody!.instantiateOnce e.letValue! 0 nth
+      return .done (.letE e.letName! e.letType! e.letValue! b' false)
     else
       return .noMatch
 
 @[tactic let_unfold1] 
 def convLetUnfold1 : Tactic
-| `(conv| let_unfold1 $id:ident) => do  
+| `(conv| let_unfold1 $id:ident $[$n:num]?) => do  
   (← getMainGoal).withContext do
     let lhs ← getLhs
     
-    changeLhs (letUnfold1 lhs id.getId)
+    let n := n.map (λ n => n.getNat) |>.getD 0
+    changeLhs (letUnfold1 lhs id.getId n)
 | _ => Lean.Elab.throwUnsupportedSyntax
-
 
 
 /-- Moves let binding upwards, maximum by `n?` positions. Returns none if there is no such let binding.
@@ -236,6 +220,7 @@ def letMoveDown (e : Expr) (p : Name → Bool) (n? : Option Nat) : Option Expr :
 
 
   | _ => none
+
 
 
 example 

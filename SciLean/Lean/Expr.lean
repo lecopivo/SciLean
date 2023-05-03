@@ -147,6 +147,62 @@ where
     | e                => return .yield e
 
 
+
+/-- Replace `nth`-th occurance of bound variable i in `e` with `v`.
+
+Returns `.inl e'` if succesfully replaced or `.inr n` if `n` occurances, `n < nth`, of `i`-th bound variables have been found in `e`.
+
+WARRNING: Currently it ignores types.
+-/
+def instantiateOnceNth (e v : Expr) (i : Nat) (nth : Nat) : Expr ⊕ Nat :=
+  match e with
+  | .bvar j => 
+    if i = j then
+      if nth = 0 then 
+        .inl v 
+      else 
+        .inr 1
+    else
+      .inr 0
+
+  | .app f x =>
+    match instantiateOnceNth x v i nth with
+    | .inl x' => .inl (.app f x')
+    | .inr a => 
+    match instantiateOnceNth f v i (nth-a) with
+    | .inl f' => .inl (.app f' x)
+    | .inr b => .inr (a+b)
+
+  | .letE n t y b _ => 
+    match instantiateOnceNth y v i nth with
+    | .inl y' => .inl (.letE n t y' b false)
+    | .inr a => 
+    match instantiateOnceNth b v (i+1) (nth-a) with
+    | .inl b' => .inl (.letE n t y b' false)
+    | .inr b => .inr (a+b)
+
+  | .lam n t b bi => 
+    match instantiateOnceNth b v (i+1) nth with
+    | .inl b' => .inl (.lam n t b' bi)
+    | .inr a => .inr a
+
+  | .mdata d x => instantiateOnceNth x v i nth
+
+  | _ => .inr 0
+
+
+/-- Replace bound variable with index `i` in `e` with `v` only once.
+
+You can specify that you want to replace `nth`-th occurance of that bvar.
+
+WARRNING: Currently it ignores types.
+-/
+def instantiateOnce (e v : Expr) (i : Nat) (nth := 0) : Expr :=
+  match instantiateOnceNth e v i nth with
+  | .inl e' => e'
+  | _ => e
+  
+
 def myPrint : Expr → String 
 | .const n _ => n.toString
 | .bvar n => s!"[{n}]"
