@@ -205,12 +205,14 @@ theorem odeSolve.arg_fx₀.adjointDifferential_simp' {S X : Type} [Hilbert S] [H
     =
     -- alternatives 
     --   fst:
-        fun s ds' =>
+
+        fun s => 
+          let x := λ t' => odeSolve (f s) t₀ (x₀ s) t'
+
+          fun ds' =>
 
           let dfdx' := λ t x dx' => ∂† x':=x;dx', f s t x'
           let dfds' := λ t x ds' => ∂† s':=s;ds', f s' t x
-
-          let x := λ t' => odeSolve (f s) t₀ (x₀ s) t'
 
           let F := λ (t : ℝ) (x' : X×S) =>
                    let α := x'.1
