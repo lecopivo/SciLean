@@ -1,7 +1,7 @@
 import Lake
 open Lake DSL System
 
-package scilean 
+package scilean
 
 @[default_target]
 lean_lib SciLean {
@@ -16,6 +16,10 @@ lean_exe WaveEquation {
 
 lean_exe HarmonicOscillator {
   root := `examples.HarmonicOscillator
+}
+
+lean_exe CircleOptimisation {
+  root := `examples.CircleOptimisation
 }
 
 lean_exe ForLoopTest {
@@ -33,17 +37,17 @@ require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "m
 require proofwidgets from git "https://github.com/EdAyers/ProofWidgets4"@"v0.0.6"
 
 
-/-- 
+/--
 
   Compiles all lean files 'test/*.lean
-    
+
     lake script run tests
 
  -/
 script tests (args) do
   let cwd ← IO.currentDir
   -- let testDir := cwd / "test"
-  let searchPath := SearchPath.toString 
+  let searchPath := SearchPath.toString
                       ["build" / "lib",
                        "lean_packages" / "mathlib" / "build" / "lib"]
 
@@ -59,14 +63,14 @@ script tests (args) do
         args := #[test.path.toString]
         env := #[("LEAN_PATH", searchPath)]
       })
-    
+
       if r.exitCode == (0 : UInt32) then
         IO.println "  Success!"
       else
         failedTests := failedTests.append #[(test.path, r)]
         IO.println "  Failed!"
 
-  if failedTests.size != 0 then 
+  if failedTests.size != 0 then
     IO.println "\nFailed tests:"
     for (test, _) in failedTests do
       IO.println s!"  {test}"
@@ -77,12 +81,12 @@ script tests (args) do
 
 /--
 
-  Compiles literate lean file 'doc/literate/harmonic_oscillator.lean' 
+  Compiles literate lean file 'doc/literate/harmonic_oscillator.lean'
 and places the result to 'build/doc/literate'
 
     lake script run literate doc/literate/harmonic_oscillator.lean
 
-  Compiles all literate lean files 'doc/literate/*.lean' and places 
+  Compiles all literate lean files 'doc/literate/*.lean' and places
 the result to 'build/doc/literate'
 
     lake scipt run literate
@@ -118,7 +122,7 @@ script literate (args) do
         cmd := "alectryon"
         args := #["--no-header", "--lake", "lakefile.lean", "--output-directory", "build/doc/literate", file.toString]
       }
-    
+
     copyCss
 
     return 0
@@ -126,7 +130,7 @@ script literate (args) do
   -- Build all literate files
   for file in (← (cwd / "doc" / "literate").readDir) do
     if file.path.extension == some "lean" then
-      
+
       IO.println s!"Building literate lean file: {file.path.toString}"
 
       let _ ← IO.Process.output {
