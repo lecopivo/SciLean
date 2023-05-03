@@ -4,6 +4,7 @@ import Mathlib.Tactic.NormNum.Core
 import SciLean.Lean.Meta.Basic
 import SciLean.Data.Prod
 import SciLean.Core.Tactic.FunctionTransformation.Init
+import SciLean.Core.Tactic.FunctionTransformation.Simp
 
 import SciLean.Core.Meta.FunctionProperty.Apply
 
@@ -202,7 +203,13 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
     throwError s!"Composition case: the head of the expression {← ppExpr b} depends on the argument {← ppExpr x}. TODO: handle this case!"
 
   let .some constName := F.constName?
-    | trace[Meta.Tactic.fun_trans.rewrite] s!"Can handle only applications of contants! Got `{← ppExpr b}` which is an application of `{← ppExpr F}`"
+    | 
+      trace[Meta.Tactic.fun_trans.rewrite] s!"Can handle only applications of contants! Got `{← ppExpr b}` which is an application of `{← ppExpr F}`"
+      if F.isFVar && (← F.fvarId!.isLetVar) then
+        let id := F.fvarId!
+        let name ← id.getUserName
+        let val := (← id.getValue?).get!
+        trace[Meta.Tactic.fun_trans.rewrite] s!"Transforming let binding: let {name} := {← ppExpr val}"
       return none
 
   let arity ← getConstArity constName
@@ -366,8 +373,18 @@ removed.
 def _root_.Lean.Expr.doesComputation (e : Expr) : Bool := 
   match e with
   | .app f x => 
-    x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x
-  | .lam .. => true
+    -- TODO: generalize to any structure
+    if (f.isAppOf ``Prod.fst || f.isAppOf ``Prod.snd || f.isAppOf ``Prod.mk) then
+      if f.isAppOf ``Prod.mk then
+        if let (.app _ y) := f then
+          x.doesComputation || y.doesComputation
+        else
+          x.doesComputation
+      else
+        x.doesComputation
+    else
+      x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x
+  | .lam n t b bi => b.doesComputation
   | .letE .. => true
   | _ => false
 

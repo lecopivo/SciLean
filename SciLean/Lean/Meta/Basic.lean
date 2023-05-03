@@ -259,3 +259,47 @@ def flattenLet (fuel : Nat) (e : Expr) (splitPairs := true) : MetaM Expr :=
   flatLetTelescope (splitPairs:=splitPairs) fuel e λ xs e' => 
     mkLetFVars xs e'
 
+
+/-- Reduces structure projection but it preserves let bindings unlike `Lean.Meta.reduceProj?`.
+-/
+def reduceProj?' (e : Expr) : MetaM (Option Expr) := do
+  match e with
+  | Expr.proj _ i c => 
+    letTelescope c λ xs b => do
+      let some b ← Meta.project? b i
+        | return none
+      mkLambdaFVars xs b
+  | _               => return none
+
+
+/-- Reduces structure projection function but it preserves let bindings unlike `Lean.Meta.Simp.reduceProjFn?`.
+
+  TODO: Maybe move to SimpM and recover unfolding of user specified classes
+-/
+def reduceProjFn?' (e : Expr) : MetaM (Option Expr) := do
+  matchConst e.getAppFn (fun _ => pure none) fun cinfo _ => do
+    match (← getProjectionFnInfo? cinfo.name) with
+    | none => return none
+    | some projInfo =>
+      /- Helper function for applying `reduceProj?` to the result of `unfoldDefinition?` -/
+      let reduceProjCont? (e? : Option Expr) : MetaM (Option Expr) := do
+        match e? with
+        | none   => pure none
+        | some e =>
+          match (← reduceProj?' e.getAppFn) with
+          | some f => return some (mkAppN f e.getAppArgs)
+          | none   => return none
+      if projInfo.fromClass then
+        -- There was a special case in the simplifiedr step
+        -- -`class` projection
+        -- if (← read).isDeclToUnfold cinfo.name then
+        unless e.getAppNumArgs > projInfo.numParams do
+          return none
+        let major := e.getArg! projInfo.numParams
+        unless major.isConstructorApp (← getEnv) do
+          return none
+        reduceProjCont? (← withDefault <| unfoldDefinition? e)
+      else
+        -- `structure` projections
+        reduceProjCont? (← unfoldDefinition? e)
+
