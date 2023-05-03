@@ -78,6 +78,75 @@ def swapBVars (e : Expr) (i j : Nat) : Expr :=
   e.instantiate swapBVarArray
 
 
+inductive ReplaceStep where
+| noMatch 
+| done (e : Expr)
+| yield (e : Expr)
+
+inductive ReplaceResult where
+| done (e : Expr)
+| yield (e : Expr)
+
+
+@[specialize]
+def replaceM {m} [Monad m] (f : Expr → m ReplaceStep) (e : Expr) : m Expr := do
+  match ← run e with
+  | .done e => pure e
+  | .yield e => pure e
+where
+  run (e : Expr) : m ReplaceResult := do
+  match ← f e with
+  | .done eNew => return (.done eNew)
+  | .yield eNew => return (.yield eNew)
+  | .noMatch    => match e with
+    | .forallE _ d b _ => 
+      match ← run d with
+      | .done d => return .done (e.updateForallE! d b)
+      | .yield d =>
+      match ← run b with
+      | .done b => return .done (e.updateForallE! d b)
+      | .yield b => return .yield (e.updateForallE! d b)
+
+    | .lam _ d b _     => 
+      match ← run d with
+      | .done d => return .done (e.updateLambdaE! d b)
+      | .yield d =>
+      match ← run b with
+      | .done b => return .done (e.updateLambdaE! d b)
+      | .yield b => return .yield (e.updateLambdaE! d b)
+
+    | .mdata _ b       => 
+      match ← run b with
+      | .done b => return .done (e.updateMData! b)
+      | .yield b => return .yield (e.updateMData! b)
+
+    | .letE _ t v b _  => 
+      match ← run t with
+      | .done t => return .done (e.updateLet! t v b)
+      | .yield t =>
+      match ← run v with
+      | .done v => return .done (e.updateLet! t v b)
+      | .yield v =>
+      match ← run b with
+      | .done b => return .done (e.updateLet! t v b)
+      | .yield b => return .yield (e.updateLet! t v b)
+
+    | .app f a         => 
+      match ← run f with
+      | .done f => return .done (e.updateApp! f a)
+      | .yield f =>
+      match ← run a with
+      | .done a => return .done (e.updateApp! f a)
+      | .yield a => return .yield (e.updateApp! f a)
+
+    | .proj _ _ b      => 
+      match ← run b with
+      | .done b => return .done (e.updateProj! b)
+      | .yield b => return .yield (e.updateProj! b)
+
+    | e                => return .yield e
+
+
 def myPrint : Expr → String 
 | .const n _ => n.toString
 | .bvar n => s!"[{n}]"

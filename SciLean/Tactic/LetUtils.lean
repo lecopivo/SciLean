@@ -11,14 +11,13 @@ open Lean Meta Elab Tactic Conv
 
 syntax (name := let_move_up) " let_move_up " ident (num)? : conv 
 syntax (name := let_move_down) " let_move_down " ident (num)? : conv 
-syntax (name := let_unfold) " let_unfold " ident : conv 
 
 
-syntax (name := let_add_core) " let_add_core " ident term : conv 
+syntax (name := let_add) " let_add " ident term : conv 
 
-@[tactic let_add_core] 
+@[tactic let_add] 
 def convLetAdd : Tactic
-| `(conv| let_add_core $id:ident $val:term) => do  
+| `(conv| let_add $id:ident $val:term) => do  
   (← getMainGoal).withContext do
     let lhs ← getLhs
     let xName := id.getId
@@ -29,7 +28,60 @@ def convLetAdd : Tactic
 | _ => Lean.Elab.throwUnsupportedSyntax
 
 
-macro " let_add " id:ident x:term : conv => `(conv| conv => let_add_core  $id $x; ext)
+syntax (name := let_unfold) " let_unfold " ident : conv 
+
+def letUnfold (e : Expr) (id : Name) : Expr :=
+  e.replace λ e => 
+    if e.isLet && e.letName! = id then
+      some (e.letBody!.instantiate1 e.letValue!)
+    else
+      none
+
+@[tactic let_unfold] 
+def convLetUnfold : Tactic
+| `(conv| let_unfold $id:ident) => do  
+  (← getMainGoal).withContext do
+    let lhs ← getLhs
+    
+    changeLhs (letUnfold lhs id.getId)
+| _ => Lean.Elab.throwUnsupportedSyntax
+
+
+syntax (name := let_unfold1) " let_unfold1 " ident : conv 
+
+def letUnfold1 (e : Expr) (id : Name) : Expr := Id.run do
+  e.replaceM λ e => 
+    if e.isLet && e.letName! = id then
+      dbg_trace s!"Attempting to unfold {id} in: "
+      dbg_trace e.myPrint
+      dbg_trace ""
+      dbg_trace e
+      dbg_trace ""
+
+      let r := e.looseBVarRange
+      let val := e.letValue!
+      return .done (Id.run do e.replaceM λ e => 
+        dbg_trace s!"sub expression: bvar-rangee {e.looseBVarRange}"
+        dbg_trace e
+        dbg_trace ""
+
+        let s := e.looseBVarRange
+        if e.isBVar && e.bvarIdx! = 0 then
+          return .done val
+        else
+          return .noMatch)
+    else
+      return .noMatch
+
+@[tactic let_unfold1] 
+def convLetUnfold1 : Tactic
+| `(conv| let_unfold1 $id:ident) => do  
+  (← getMainGoal).withContext do
+    let lhs ← getLhs
+    
+    changeLhs (letUnfold1 lhs id.getId)
+| _ => Lean.Elab.throwUnsupportedSyntax
+
 
 
 /-- Moves let binding upwards, maximum by `n?` positions. Returns none if there is no such let binding.
@@ -171,41 +223,24 @@ def letMoveDown (e : Expr) (p : Name → Bool) (n? : Option Nat) : Option Expr :
       
     if p xName then
       match b with
-        | .letE yName yType yValue b' _ => 
+      | .letE yName yType yValue b' _ => sorry
   
       | .lam yName yType b' bi => sorry
       | _ => some e
     else
 
       if let .some b' := letMoveDown b p n? then
-        some (.letE xName xType xValue b' _)
+        some (.letE xName xType xValue b' false)
       else
         none
 
-    | .lam xName xType b bi => 
-      if let .some (b', n') := run b (bLvl+1) then
 
-        if (n?.isNone || (n' < n?.get!)) &&
-           b'.isLet && p b'.letName! &&
-           ¬(b'.letType!.hasLooseBVar 0) && ¬(b'.letValue!.hasLooseBVar 0)then 
-          let yName := b'.letName!
-          let yType := b'.letType!
-          let yValue := b'.letValue!
-          let b'' := b'.letBody!.swapBVars 0 1
-          some (.letE yName (yType.lowerLooseBVars 1 1) (yValue.lowerLooseBVars 1 1)
-                  (.lam xName (xType.liftLooseBVars 0 1) b'' bi) false,
-                n'+1)
-        else
-          some (.lam xName xType b' bi, n')
-      else
-        none
-
-    | _ => none
+  | _ => none
 
 
 example 
   : (λ x : Nat => 
-      let a := x
+      let a := 666
       let b := x + a
       λ y => 
       let c := x + a + b + y
@@ -218,7 +253,7 @@ example
       λ y => 
       let c := x + a + b + y
       let d := x + a + b
-      a + b + (let z := 10; c + z) + d + y + 1)
+      a + b + (let z := 10; c + z) + d + y)
   := 
 by
   conv => 
@@ -226,13 +261,11 @@ by
     let_move_up z
     let_move_up d
     let_add hihi 10
-    enter [hihi]
-    let_add hoho (10 + hihi)
-    enter [hoho]
-    let_add hehe (10 + hoho + hihi)
-    conv => let_add_core hehe2 (10)
-    conv => let_add_core hehe3 (10);
-  
+    let_unfold1 a
+    let_unfold1 a
+    let_unfold1 a
+    let_unfold1 a
+    let_unfold1 a
   
 
 

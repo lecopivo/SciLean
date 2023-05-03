@@ -2,7 +2,7 @@ import SciLean
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 import SciLean.Core.UnsafeAD
-
+import SciLean.Tactic.LetUtils
 
 open SciLean
   
@@ -119,7 +119,7 @@ theorem reverseDifferential_fst {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X →
     f x
   := by rfl
 
-set_option trace.Meta.Tactic.fun_trans.rewrite true in
+-- set_option trace.Meta.Tactic.fun_trans.rewrite true in
 noncomputable
 def aimToTarget (T : ℝ) (target : ℝ^{2}) : Approx (
   let shoot := λ v : ℝ^{2} => 
@@ -136,23 +136,36 @@ by
     rw [invFun_as_argmin _ _ sorry_proof]
     rw [argminFun.approx.gradientDescent v₀ s]
   
-  approx_limit 1; intro gdSteps;
-  dsimp (config := {zeta := false})
+  approx_limit 1; intro gdSteps; dsimp (config := {zeta := false})
+  
+  unfold gradient
 
-  have h : ∀ {X} [SemiHilbert X] (f : X → ℝ), ∇ f = λ x => (ℛ f x).2 1 := sorry
-  simp (config := {zeta := false}) only [h]
-
-  unsafe_ad
-  ignore_fun_prop
+  unsafe_ad; ignore_fun_prop
+  
   conv => 
     enter [1]
     fun_trans
-    fun_trans
 
-    enter [shoot]
-    let_add Rshoot (ℛ shoot)
-    rw[(sorry : shoot = Rshoot.1)]
-    rw[(rfl : ℛ shoot = Rshoot)]
+    conv => 
+      ext
+      let_add dshoot' (∂† shoot)
+      enter [dShoot']
+      rw[(sorry : ∂† shoot = dshoot')]
+    
+    conv =>
+      pattern (adjointDifferential _)
+      
+    -- let_unfold shootx
+    -- fun_trans
+    -- fun_trans
+    -- let_unfold dxy₁
+
+
+
+    
+
+
+
 
   apply Approx.exact
  
