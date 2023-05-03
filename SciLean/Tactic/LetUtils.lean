@@ -46,6 +46,8 @@ def convLetUnfold : Tactic
     changeLhs (letUnfold lhs id.getId)
 | _ => Lean.Elab.throwUnsupportedSyntax
 
+macro " let_unfold " id:ident : tactic => `(tactic| conv => let_unfold $id)
+
 
 syntax (name := let_unfold1) " let_unfold1 " ident (num)? : conv 
 
@@ -66,6 +68,8 @@ def convLetUnfold1 : Tactic
     let n := n.map (λ n => n.getNat) |>.getD 0
     changeLhs (letUnfold1 lhs id.getId n)
 | _ => Lean.Elab.throwUnsupportedSyntax
+
+macro " let_unfold1 " id:ident n:(num)? : tactic => `(tactic| conv => let_unfold1 $id $[$n]?)
 
 
 /-- Moves let binding upwards, maximum by `n?` positions. Returns none if there is no such let binding.
@@ -225,7 +229,7 @@ def letMoveDown (e : Expr) (p : Name → Bool) (n? : Option Nat) : Option Expr :
 
 example 
   : (λ x : Nat => 
-      let a := 666
+      let a := x
       let b := x + a
       λ y => 
       let c := x + a + b + y
