@@ -3,6 +3,7 @@ import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 import SciLean.Core.UnsafeAD
 import SciLean.Tactic.LetUtils
+import SciLean.Tactic.Basic
 
 open SciLean
   
@@ -112,22 +113,102 @@ variable (v₀ : ℝ^{2}) (s : ℝ) (set : Settings)
 
 #check Lean.Expr.eta
 
-@[simp]
-theorem reverseDifferential_fst {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) (x : X)
-  : (ℛ f x).fst
-    =
-    f x
-  := by rfl
+-- @[simp]
+-- theorem reverseDifferential_fst {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) (x : X)
+--   : (ℛ f x).fst
+--     =
+--     f x
+--   := by rfl
 
+#check Prod.neg_mk
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+@[simp]
+theorem neg_prod_mk {α β} [Neg α] [Neg β] (a : α) (b : β)
+  : -(a,b) = (-a,-b) := by simp
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+@[simp]
+theorem neg_prod_mk' {α β} [Neg α] [Neg β] (a : α) (b : β)
+  : -(⟨a,b⟩ : α×β) = (-a,-b) := by simp
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+@[simp]
+theorem add_prod_mk {α β} [Add α] [Add β] (a a' : α) (b b' : β)
+  : (a,b) + (a',b') = (a+a',b+b') := by simp
+
+theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ) 
+  : (∇ λ x => f x) = λ x => (ℛ f x).2 1 := by rfl
+
+
+syntax (name := project_conv) " project ": conv
+
+open Lean Meta Elab Tactic Conv
+@[tactic project_conv] def convProject : Tactic
+| `(conv| project) => do  
+  (← getMainGoal).withContext do
+    let lhs ← getLhs
+    dbg_trace "Is projection: {lhs.isProj} | {← ppExpr lhs}"
+    dbg_trace "Is projection: {(← unfoldDefinition? lhs).get!.isProj} | {← ppExpr lhs}"
+    if let some lhs' ← reduceProjFn?' lhs then
+      changeLhs lhs'
+    
+| _ => Lean.Elab.throwUnsupportedSyntax
+
+
+-- example 
+--   : (let a : Nat := 1
+--      (a * a, a + a)).fst
+--     =
+--     sorry
+--   := 
+-- by
+--   conv => 
+--     lhs
+--     project
+--     simp (config := {zeta := false, beta := true, proj := true, singlePass := true})
+  
+
+-- @[simp]
+-- theorem prod_fst_simp {α β} (a : α) (b : β) : (a, b).fst = a := by rfl
+
+-- @[simp]
+-- theorem prod_snd_simp {α β} (a : α) (b : β) : (a, b).snd = b := by rfl
+open Lean.Parser.Tactic in
+macro "rw'" " [" s:simpLemma,* "]" : conv => 
+  let s' : Syntax.TSepArray `Lean.Parser.Tactic.simpStar "," := ⟨s.1⟩ -- hack
+  `(conv| simp (config := {zeta := false, proj := false, beta := false, iota := false, eta := false, singlePass := true, decide := false}) only [$s',*])
+
+open Lean.Parser.Tactic in
+macro "rw'" " [" s:simpLemma,* "]" : tactic => 
+  let s' : Syntax.TSepArray `Lean.Parser.Tactic.simpStar "," := ⟨s.1⟩ -- hack
+  `(tactic| simp (config := {zeta := false, proj := false, beta := false, iota := false, eta := false, singlePass := true, decide := false}) only [$s',*])
+
+#check SciLean.GenericArrayType.instNeg
+
+def a : Neg (ℝ^{2}) := SciLean.GenericArrayType.instNeg 
+ 
+example 
+   : a = SubNegMonoid.toNeg
+   := 
+by
+  simp [a,GenericArrayType.instNeg, SubNegMonoid.toNeg, AddGroup.toSubNegMonoid, AddCommGroup.toAddGroup, Vec.toAddCommGroup, SemiHilbert.toVec, Hilbert.toSemiHilbert,FinVec.toHilbert]
+  simp [GenericArrayType.instFinVecToEnumType, GenericArrayType.instFinVecProdInstEnumTypeProdToEnumType, GenericArrayType.instHilbert, GenericArrayType.instSemiHilbert, GenericArrayType.instVec, Vec.mkSorryProofs, AddCommGroup.mkSorryProofs, AddGroup.mkSorryProofs]
+  simp [SubNegMonoid.mkSorryProofs]
+  simp [GenericArrayType.instNeg]
+  
+
+-- set_option trace.Meta.Tactic.fun_trans.normalize_let true in
 -- set_option trace.Meta.Tactic.fun_trans.rewrite true in
+-- set_option trace.Meta.Tactic.simp.congr true in
+-- set_option trace.Meta.Tactic.simp.unify true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
 noncomputable
 def aimToTarget (T : ℝ) (target : ℝ^{2}) : Approx (
-  let shoot := λ v : ℝ^{2} => 
-               let xv' :=
-                 odeSolve (t₀ := 0) (x₀ := (0,v)) (t := T)
+  let shoot := λ (t : ℝ) (v : ℝ^{2}) => 
+                 odeSolve (t₀ := 0) (x₀ := (0,v)) (t := t)
                    (f := λ (t : ℝ) (x,v) => balisticMotion x v)
-               xv'.1
-  shoot⁻¹ target) := 
+  (λ v => (shoot T v).1)⁻¹ target) := 
 by
   dsimp (config := {zeta := false})
   
@@ -136,31 +217,69 @@ by
     rw [invFun_as_argmin _ _ sorry_proof]
     rw [argminFun.approx.gradientDescent v₀ s]
   
-  approx_limit 1; intro gdSteps; dsimp (config := {zeta := false})
+  approx_limit 1; intro gdSteps
   
-  unfold gradient
+  rw'[gradient_as_revDiff]
 
   unsafe_ad; ignore_fun_prop
   
-  conv => 
+  conv =>
     enter [1]
+    fun_trans only
+    fun_trans only
+    fun_trans only
+    fun_trans only
+
+  save
+
+  conv =>
+    enter[1]; ext
+    let_add Rshoot (ℛ (shoot T))
+    enter [RShoot]
+    rw[(sorry : ℛ (shoot T) = Rshoot)]
+
+  let_unfold shoot
+
+  save
+
+  conv =>
+    enter [1]
+    fun_trans only
+    fun_trans only
+    fun_trans only
+    fun_trans only
+    fun_trans only
+    fun_trans only
+
+  save
+
+  apply Approx.exact
+
+  #exit
+    simp (config := {zeta := false, proj := false})
+    fun_trans only
+    
+    
+    let_unfold shoot
+    fun_trans
+    fun_trans
+    fun_trans
+    fun_trans
     fun_trans
 
-    conv => 
-      ext
-      let_add dshoot' (∂† shoot)
-      enter [dShoot']
-      rw[(sorry : ∂† shoot = dshoot')]
+    let_unfold dxy₁
+    flatten_let
+
+  save
+  -- set_option trace.Meta.Tactic.simp.unify true in
+  -- set_option trace.Meta.Tactic.simp.discharge true in
     
-    conv =>
-      pattern (adjointDifferential _)
-      
-    -- let_unfold shootx
-    -- fun_trans
-    -- fun_trans
-    -- let_unfold dxy₁
-
-
+  conv =>
+    enter[1]
+    
+    simp (config := {zeta := false}) only [Prod.neg_mk]
+    flatten_let
+    
 
     
 

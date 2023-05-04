@@ -1,7 +1,7 @@
 
 namespace Lean.Parser.Tactic.Conv
 
-  macro "no_op" : conv => `(tactic' => skip)
+  macro "no_op" : conv => `(conv| tactic' => skip)
 
   syntax "repeat' " convSeq : conv
   macro_rules
