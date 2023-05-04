@@ -13,37 +13,92 @@ open SciLean
 
 
 /-- choose a particular A -/
--- I want to build the function (x, y) -> (x + y, x - y)
--- Can I multiply it with the [1 1; -1 1] matrix? how do I do this in a way that SciLean
--- sees that it is manifestly smooth?
--- I took a look at `Pendulum2D.lean` which seems to not compile anymore.
-def A (x : ℝ^{2}) : ℝ^{2} := 
-  ⊞ i, 
-    let x₀ := x.get 0
-    let x₁ := x.get 1
-    let x' := #[x₀ + x₁, x₀ - x₁];
-    have H : x'.size = 2 := by simp;
-    let x' := x'.get (H ▸ i.toFin)
-    x'
-/--
-failed to synthesize instance
-  IsSmooth fun x => A x
--/
+-- the function (x, y) -> (x + y, x - y)
+def A (x : ℝ^{2}) : ℝ^{2} :=
+  ⊞ i, if i = 0 then x[0] + x[1] else x[0] - x[1]
+
+-- set_option trace.Meta.Tactic.fun_trans.rewrite true in
 function_properties A (x : ℝ^{2})
 argument x
-  IsLin := sorry_proof,
-  HasAdjoint := sorry_proof,
-  IsSmooth,
-  abbrev ∂ := λ dx => A dx by sorry_proof,
-  noncomputable abbrev † := λ x' => A† x' by sorry_proof,
-  HasAdjDiff,
-  noncomputable abbrev ∂† := λ dx' => A† dx' by sorry_proof
+  IsLin, HasAdjoint, IsSmooth, HasAdjDiff,
+  abbrev ∂ := λ dx => A dx by unfold A; fun_trans,
+  def † :=
+    λ x' => ⊞ i,
+      if i = 0 then x'[0] - x'[1] else x'[0] + x'[1] by sorry,
+  abbrev ∂† by unfold adjointDifferential; fun_trans; fun_trans; simp
 
-variable {n : USize}
 
 set_option trace.Meta.Tactic.fun_trans.rewrite true in
-#check (∇ x : ℝ^{n}, ⟪x, A x⟫)
-           rewrite_by
-             unfold gradient
-             fun_trans
-             simp
+def loss (x : ℝ^{2}) : ℝ := ⟪x, A x⟫
+
+function_properties loss (x : ℝ^{2})
+argument x
+  IsSmooth, HasAdjDiff,
+  abbrev ∂ := λ dx => (2 : ℝ) * ⟪dx, A x⟫ by {
+    simp[loss];
+    fun_trans; -- 'trans' makes me think of 'transitive'.
+    simp;
+    funext dx;
+    -- ⊢ ⟪dx, A x⟫ + ⟪x, A dx⟫ = 2 * ⟪dx, A x⟫
+    -- how do I prove this? The natural proof for me is to do this componentwise
+    sorry
+  }
+
+noncomputable def grad_loss (x : ℝ^{2}) : ℝ^{2} := ∇ loss x
+
+
+structure TrainLog where
+  point : ℝ^{2} -- current point on the circle
+  loss : ℝ -- loss value at current point
+  gradient_ambient : ℝ^{2} -- gradient at current point
+  gradient_circle : ℝ^{2} -- gradient at current point
+
+
+instance : HDiv (ℝ ^{n}) ℝ (ℝ^{n}) where
+  hDiv v r := ⊞ i, v[i] / r
+
+instance : HMul ℝ (ℝ ^{n}) (ℝ^{n}) where
+  hMul r v := ⊞ i, v[i] * r
+
+-- normalize a vector.
+def normalize (p : ℝ^{2}) : ℝ^{2} := p / ‖p‖
+
+-- project 'v' along 'direction'
+def project (v : ℝ^{2}) (direction: ℝ^{2}) : ℝ^{2} :=
+   ⟪v, direction⟫ * direction
+
+-- project point 'x' to lie on the circle.
+-- This is a retraction of (ℝ^2 - origin) onto the embedded S¹
+def circle_project (x : ℝ^{2}) := normalize x
+
+
+-- project a vector to the tangent space at 'p'
+-- by deleting the normal component
+def circle_tangent_space_project (p : ℝ^{2}) (vec : ℝ^{2}) : ℝ^{2} :=
+  vec - project (direction := p) vec
+
+
+noncomputable def TrainLog.calc (p : ℝ^{2}) : TrainLog where
+  point := p
+  loss := loss p
+  gradient_ambient := grad_loss p
+  gradient_circle := circle_tangent_space_project (p := p) (grad_loss p)
+
+
+def learning_rate : ℝ := 0.01
+
+noncomputable def TrainLog.nextPoint (step : TrainLog) : ℝ^{2} :=
+  circle_project <| step.point - learning_rate * step.gradient_circle
+
+/-
+TODO: how do I now compute with the `noncomputable` grad_loss?
+-/
+noncomputable def plot_loss (init: ℝ^{2}) (nsteps : ℕ) :
+  Array TrainLog := Id.run do
+    let mut cur : ℝ^{2} := init
+    let mut out := #[]
+    for _ in List.range nsteps do
+      let step := TrainLog.calc cur
+      out := out.push <| step
+      cur := step.nextPoint
+    return out
