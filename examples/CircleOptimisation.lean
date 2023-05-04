@@ -122,6 +122,6 @@ def plot_loss (init: ℝ^{2}) (nsteps : ℕ)
 def main : IO Unit := do
   let init : ℝ^{2} :=
     ⊞ i, if i = 0 then 1 else 0
-  let losses := plot_loss init 20
+  let losses := plot_loss init 1000
   for loss in losses do
     IO.println s!"{loss}"
