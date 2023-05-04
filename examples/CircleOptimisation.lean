@@ -49,7 +49,7 @@ noncomputable def grad_loss (x : ℝ^{2}) : ℝ^{2} := ∇ loss x
 
 structure TrainLog where
   point : ℝ^{2} -- current point on the circle
-  loss : ℝ -- loss value at current point
+  loss_at_point : ℝ -- loss value at current point
   gradient_ambient : ℝ^{2} -- gradient at current point
   gradient_circle : ℝ^{2} -- gradient at current point
 
@@ -80,7 +80,7 @@ def circle_tangent_space_project (p : ℝ^{2}) (vec : ℝ^{2}) : ℝ^{2} :=
 
 noncomputable def TrainLog.calc (p : ℝ^{2}) : TrainLog where
   point := p
-  loss := loss p
+  loss_at_point := loss p
   gradient_ambient := grad_loss p
   gradient_circle := circle_tangent_space_project (p := p) (grad_loss p)
 
