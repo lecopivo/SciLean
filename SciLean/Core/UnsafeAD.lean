@@ -2,10 +2,10 @@ import SciLean.Core.Defs
 
 namespace SciLean
 
-class UnsafeAD where
+class UnsafeAD : Prop where
   kaboom : False
 
-class IgnoreFunProp where
+class IgnoreFunProp : Prop where
   kaboom : False
 
 /-- 
@@ -16,7 +16,7 @@ The set of inconsistent rewrites is carefully chosen such that automatic differe
 Yes we agree, this is not an ideal state of affairs! Assuming inconsistency is not great but not having these rewrites would severely limit the usefullness of automatic differentiation. Hopefully, in the future we will have a better way to handle this. One potential solution would be for AD to also produce a set where the result is valid.
 -/
 macro (name:=unsafeADTactic) "unsafe_ad" : tactic => 
-  `(tactic| have unsafe_ad : UnsafeAD := sorry)
+  `(tactic| have unsafe_ad : UnsafeAD := sorry_proof)
 
 @[inherit_doc unsafeADTactic]
 macro (name:=unsafeADConv) "unsafe_ad" : conv => `(conv| tactic => unsafe_ad)
@@ -30,7 +30,7 @@ Every function is is now assumed to satisfy:
   - `HasAdjDiff`
 -/
 macro (name:=ignoreFunPropTactic) "ignore_fun_prop" : tactic => 
-  `(tactic| have ignore_fun_prop : IgnoreFunProp := sorry)
+  `(tactic| have ignore_fun_prop : IgnoreFunProp := sorry_proof)
 
 @[inherit_doc ignoreFunPropTactic] 
 macro (name:=ignoreFunPropConv) "ignore_fun_prop" : conv => `(conv| tactic => ignore_fun_prop)
