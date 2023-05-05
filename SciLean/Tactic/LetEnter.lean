@@ -58,11 +58,10 @@ example
       λ y => 
       let c := x + a + b + y
       let d := x + a + b
-      let a := a + a
       a + b + (let z := 10; c + z) + d + y)
     = 
     (λ x : Nat => 
-      let a := 666
+      let a := x
       let b := x + a
       λ y => 
       let c := x + a + b + y
@@ -72,6 +71,5 @@ example
 by
   conv => 
     lhs
-    enter_let a 1
-    rw[Nat.add_comm]
+    enter_let a
   
