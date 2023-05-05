@@ -30,7 +30,7 @@ export TestFunctions (TestFun)
 -- because ⟪r*x, y⟫ or ⟪y,x⟫ is meaningulf iff ⟪x,y⟫ is
 -- We are mainly interested if this holds for integrals i.e. when ⟪f, g⟫ = ∫ x, f x * g x
 class SemiHilbert (X) extends Vec X, Inner X, TestFunctions X where
-  inner_add : ∀ (x y z : X), TestFun x ∧ TestFun y ∧ TestFun z →
+  inner_add : ∀ (x y z : X), (TestFun x ∧ TestFun y) ∨ TestFun z →
     ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫
   inner_mul : ∀ (x y : X) (r : ℝ),
     ⟪r•x, y⟫ = r*⟪x, y⟫
