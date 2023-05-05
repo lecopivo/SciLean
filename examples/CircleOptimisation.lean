@@ -3,7 +3,7 @@ Copyright (c) 2023 Siddharth Bhat. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Siddharth Bhat
 
-Riemannian Gradient Descent on S1.
+Riemannian Gradient Descent on S¹.
 -/
 
 import SciLean
@@ -14,16 +14,13 @@ open SciLean
 instance : HDiv (ℝ ^{n}) ℝ (ℝ^{n}) where
   hDiv v r := ⊞ i, v[i] / r
 
-instance : HMul ℝ (ℝ ^{n}) (ℝ^{n}) where
-  hMul r v := ⊞ i, v[i] * r
 
-
-/-- choose a particular A -/
--- the function (x, y) -> (x + y, x - y)
+/-- choose a particular A: (x, y) ↦ (x + y, x - y) -/
 def A (x : ℝ^{2}) : ℝ^{2} :=
   ⊞ i, if i = 0 then x[0] + x[1] else x[0] - x[1]
 
--- set_option trace.Meta.Tactic.fun_trans.rewrite true in
+-- We can turn on debugging logging with
+--   set_option trace.Meta.Tactic.fun_trans.rewrite true in
 function_properties A (x : ℝ^{2})
 argument x
   IsLin, HasAdjoint, IsSmooth, HasAdjDiff,
@@ -34,7 +31,7 @@ argument x
   abbrev ∂† by unfold adjointDifferential; fun_trans; fun_trans; simp
 
 
-set_option trace.Meta.Tactic.fun_trans.rewrite true in
+-- Define the loss function.
 def loss (x : ℝ^{2}) : ℝ := ⟪x, A x⟫
 
 function_properties loss (x : ℝ^{2})
@@ -46,58 +43,67 @@ argument x
     simp;
     funext dx;
     -- ⊢ ⟪dx, A x⟫ + ⟪x, A dx⟫ = 2 * ⟪dx, A x⟫
-    -- how do I prove this? The natural proof for me is to do this componentwise
+    --   ⟪dx, A x⟫ + ⟪x, A dx⟫
+    --   = ⟪dx, A x⟫ + ⟪A† x, dx⟫  -- by definition of adjoint
+    --   = ⟪dx, A x⟫ + ⟪dx, A† x⟫  -- by symmetry of inner product
+    --   = ⟪dx, A x⟫ + ⟪dx, A x⟫   -- by A† = A
+    --   = 2 * ⟪dx, A x⟫           -- by ring
     sorry
   },
   abbrev ∂† by { unfold gradient; unfold loss; fun_trans; simp }
 
-noncomputable def grad_loss (x : ℝ^{2}) : ℝ^{2} := ∇ loss x
 
-def grad_loss' (x : ℝ^{2}) : ℝ^{2} :=
+/-- noncomputable version of gradient of loss -/
+noncomputable def gradLoss (x : ℝ^{2}) : ℝ^{2} := ∇ loss x
+
+/-- make gradLoss computable by transforming abstract gradient defn into computable
+    definition. -/
+def gradLoss' (x : ℝ^{2}) : ℝ^{2} :=
   (∇ loss x) rewrite_by {
     unfold gradient; unfold loss; fun_trans
 }
 
 
-structure TrainLog where
-  iteration : Nat
-  point : ℝ^{2} -- current point on the circle
-  loss_at_point : ℝ -- loss value at current point
-  gradient_ambient : ℝ^{2} -- gradient at current point
-  gradient_circle : ℝ^{2} -- gradient at current point
+/-- Data at each training iteration -/
+structure TrainIter where
+  iteration : Nat -- iteration count.
+  point : ℝ^{2} -- current point on the circle..
+  loss_at_point : ℝ -- loss value at current point.
+  gradAmbient : ℝ^{2} -- gradient at current point in ambient space.
+  gradSubmanifold : ℝ^{2} -- gradient at current point on the tagent space.
 
 
-instance : ToString TrainLog where
+instance : ToString TrainIter where
   toString log :=
    -- TODO: need ToString instances to show.
-   -- s!"p = {log.point} ; loss = {log.loss_at_point.val}; ∇ = {log.gradient_circle}"
    s!"{log.iteration} loss[{log.loss_at_point.val}]"
 
 
--- normalize a vector.
+/-- Normalize a vector. -/
 def normalize (p : ℝ^{2}) : ℝ^{2} := p / ‖p‖
 
--- project 'v' along 'direction'
+/-- Project 'v' along 'direction'. -/
 def project (v : ℝ^{2}) (direction: ℝ^{2}) : ℝ^{2} :=
-   ⟪v, direction⟫ * direction
+   ⟪v, direction⟫ • direction
 
--- project point 'x' to lie on the circle.
--- This is a retraction of (ℝ^2 - origin) onto the embedded S¹
+/-- Project point 'x' to lie on the circle.
+    This is a retraction of (ℝ^2 - origin) onto the embedded S¹. -/
 def circle_project (x : ℝ^{2}) := normalize x
 
 
--- project a vector to the tangent space at 'p'
--- by deleting the normal component
-def circle_tangent_space_project (p : ℝ^{2}) (vec : ℝ^{2}) : ℝ^{2} :=
+/-- project a vector to the tangent space at `p`
+    by deleting the normal component -/
+def projectToCircleTangentSpace (p : ℝ^{2}) (vec : ℝ^{2}) : ℝ^{2} :=
   vec - project (direction := p) vec
 
 
-def TrainLog.calc (i : Nat) (p : ℝ^{2}) : TrainLog where
+/-- Calculate gradient at current point -/
+def TrainIter.calcAtPoint (i : Nat) (p : ℝ^{2}) : TrainIter where
   iteration := i
   point := p
   loss_at_point := loss p
-  gradient_ambient := grad_loss' p
-  gradient_circle := circle_tangent_space_project (p := p) (grad_loss' p)
+  gradAmbient := gradLoss' p
+  gradSubmanifold := projectToCircleTangentSpace (p := p) (gradLoss' p)
 
 structure HyperParams where
   learningRate : ℝ := 0.01
@@ -105,16 +111,18 @@ structure HyperParams where
 def HyperParams.default : HyperParams := {}
 instance : Inhabited HyperParams where default := {}
 
-def TrainLog.nextPoint (hp : HyperParams) (step : TrainLog) : ℝ^{2} :=
-  circle_project <| step.point - hp.learningRate * step.gradient_circle
+/-- Step to the next point by gradient descent -/
+def TrainIter.nextPoint (hp : HyperParams) (step : TrainIter) : ℝ^{2} :=
+  circle_project <| step.point - hp.learningRate • step.gradSubmanifold
 
-def plot_loss (init: ℝ^{2}) (nsteps : ℕ)
+/-- run the gradient descent algorithm -/
+def gradientDescend (init: ℝ^{2}) (nsteps : ℕ)
   (hp : HyperParams := HyperParams.default) :
-  Array TrainLog := Id.run do
+  Array TrainIter := Id.run do
     let mut cur : ℝ^{2} := circle_project init
     let mut out := #[]
     for i in List.range nsteps do
-      let step := TrainLog.calc i cur
+      let step := TrainIter.calcAtPoint i cur
       out := out.push <| step
       cur := step.nextPoint hp
     return out
@@ -122,6 +130,6 @@ def plot_loss (init: ℝ^{2}) (nsteps : ℕ)
 def main : IO Unit := do
   let init : ℝ^{2} :=
     ⊞ i, if i = 0 then 1 else 0
-  let losses := plot_loss init 1000
+  let losses := gradientDescend init 1000
   for loss in losses do
     IO.println s!"{loss}"
