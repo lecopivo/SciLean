@@ -1,6 +1,8 @@
 import SciLean.Core
 import SciLean.Functions.Limit
 import SciLean.Alternatives
+import SciLean.Functions.Extend
+import SciLean.Functions.Interpolate
 
 import Mathlib.Topology.Basic
 
@@ -11,7 +13,7 @@ namespace SciLean
 noncomputable
 opaque odeSolve {X : Type} [Vec X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (t : ℝ) : X
 
-function_properties SciLean.odeSolve {X : Type} [Vec X] 
+function_properties SciLean.odeSolve {X : Type} [Vec X]
   (f : ℝ → X → X) [IsSmooth λ tx : ℝ×X => f tx.1 tx.2] 
   (t₀ : ℝ) (x₀ : X) (t : ℝ)
 argument (t₀,x₀,t)
@@ -351,21 +353,41 @@ theorem odeSolve_fixed_dt (stepper : (ℝ → X → X) → ℝ → X → ℝ →
 -- |___/\__\___| .__/ .__/\___|_| /__/
 --             |_|  |_|
 
+structure OdeStepper {X} [Vec X] (f : ℝ → X → X) where
+  stepper : ℝ → X → ℝ → X
+  -- The basic consistency condition is:
+  -- is_valid : ∀ t x, lim Δt → 0, (stepper t x Δt - stepper x) / Δt = f t x
+  -- there are probably others
+
 def forward_euler_step  (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X := x₀ + Δt • f t₀ x₀
 
+def forwardEulerStepper (f : ℝ → X → X) : OdeStepper f where
+  stepper := forward_euler_step f
 
 function_properties SciLean.forward_euler_step {X : Type} [Vec X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ)
 argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
   IsSmooth := by unfold forward_euler_step; sorry_proof,
+  noncomputable abbrev ∂ := λ dx₀ =>
+    dx₀ + Δt • (∂ x':=x₀;dx₀, f t₀ x')
+    -- forward_euler_step Tf t₀ (x₀,dx₀) Δt
+    by
+      unfold forward_euler_step
+      have : ∀ t, IsSmooth (f t) := sorry_proof      
+      fun_trans,
   noncomputable abbrev 𝒯 := λ dx₀ =>
     let Tf := λ t (xdx : X×X) => 𝒯 (λ x' => f t x') xdx.1 xdx.2
     forward_euler_step Tf t₀ (x₀,dx₀) Δt
     by
       unfold forward_euler_step
-      have : ∀ t, IsSmooth (f t) := sorry_proof      
-      unfold tangentMap -- bugs in tangentMap transform
+      funext dx₀
+      have : ∀ t, IsSmooth (f t) := sorry_proof
+      fun_trans
+      fun_trans
+      unfold tangentMap 
       fun_trans
       simp
+      done
+
 
 -- function_properties SciLean.forward_euler_step {X : Type} [SemiHilbert X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ)
 -- argument x₀  --[∀ t, HasAdjDiff λ (x : X) => f t x]
@@ -394,6 +416,9 @@ def midpoint_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X 
   let x' := x₀ + dt • f t₀ x₀
   x₀ + Δt • (f (t₀+dt) x')
 
+def midpointStepper (f : ℝ → X → X) : OdeStepper f where
+  stepper := midpoint_step f
+
 function_properties SciLean.midpoint_step {X : Type} [Vec X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ)
 argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
   IsSmooth := by unfold midpoint_step; sorry_proof,
@@ -411,6 +436,15 @@ argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
 theorem odeSolve_fixed_dt.midpoint_euler (f : ℝ → X → X)
   : odeSolve f = limit (λ n => odeSolve_fixed_dt_impl' n (midpoint_step f)) := sorry_proof
 
+
+noncomputable
+def backward_euler_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) := 
+  (λ x' => x' + Δt • f t₀ x')⁻¹ x₀
+
+noncomputable
+def implicit_midpoint_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) := 
+  (λ x' => x' + Δt • f (t₀ + Δt/2) (((1:ℝ)/2) • (x₀ + x')))⁻¹ x₀
+
 def runge_kutta4_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X :=
   let dt := Δt/2
   let k1 := f t₀ x₀
@@ -419,12 +453,39 @@ def runge_kutta4_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) 
   let k4 := f (t₀+Δt) (x₀ + Δt • k3)
   x₀ + (Δt/6) • (k1 + (2:ℝ)•k2 + (2:ℝ)•k3 + k4)
 
-
-
 --- This requires some conditions on the function ... or just add the conclusion as an assumption
 theorem odeSolve_fixed_dt.runge_kutta4 (f : ℝ → X → X)
   : odeSolve f = limit (λ n => odeSolve_fixed_dt_impl' n (runge_kutta4_step f)) := sorry_proof
 
+abbrev Stepper := ∀ {X} [Vec X], (ℝ → X → X) → (ℝ → X → ℝ → X)
+
+instance {X} [Vec X] (f : ℝ → X → X) 
+  : CoeFun (OdeStepper f) (λ _ => ℝ → X → ℝ → X) := ⟨λ s => s.stepper⟩
+
+def odeSolve_fixed_dt_array {X} [Vec X] (f : ℝ → X → X)
+  (stepper : Stepper) (n : Nat) (t₀ : ℝ) (x₀ : X) (T : ℝ) : Array X := Id.run do
+  let Δt := (T - t₀)/n
+  let mut x := x₀
+  let mut t := t₀
+  let mut xs := .mkEmpty (n+1)
+  xs := xs.push x
+  let step := stepper f
+  for _ in [0:n] do
+    x := step t x Δt
+    xs := xs.push x
+    t += Δt
+  xs
+
+theorem odeSolve_fixed_dt_on_interval {X} [Vec X] {f : ℝ → X → X} {t₀ : ℝ} {x₀ : X} 
+  (stepper : Stepper) (interpol : (ℤ→X) → (ℝ→X)) (T : ℝ)
+  : (λ t => odeSolve f t₀ x₀ t)
+    = 
+    limit λ n => 
+      let Δt := (T-t₀) / n
+      let toGrid := λ t : ℝ => (t - t₀)/Δt
+      let odeData := odeSolve_fixed_dt_array f stepper n t₀ x₀ T
+      λ t => interpol (extend1DFinStreak λ i => odeData.get i) (toGrid t)
+  := sorry
 
 #exit
 
@@ -504,3 +565,4 @@ theorem odeSolve.arg_f.diff_simp_alt {X W} [Vec X] [Vec W]
 --   : ∇ (λ x₀ => ∥odeSolve f t x₀ - y∥²) = 0 := 
 -- by 
 --   simp[gradient]; unfold hold; simp
+
