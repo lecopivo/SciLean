@@ -223,12 +223,12 @@ by
     fun_trans only
   
   -- precomputed forward pass with RK4 and 50 steps on the interval [0,T] and used linear interpolation
-  conv => 
+  conv =>
     enter [1]
     enter_let x
     conv =>
       rw[odeSolve_fixed_dt_on_interval
-          runge_kutta4_step
+          midpoint_step
           linearInterpolate1D
           T]
   
@@ -239,18 +239,32 @@ by
     enter [1]
     enter_let Rfx₂
     enter [dx₀']
-    rw[odeSolve_fixed_dt runge_kutta4_step]
+    rw[odeSolve_fixed_dt forward_euler_step]
       
-  approx_limit 50; intro backwardSteps; clean_up
+  approx_limit 10; intro backwardSteps; clean_up
 
   apply Approx.exact
 
-def aimStep (v₀ : ℝ^{2}) := aimToTarget v₀ (0.6:ℝ) (1:ℝ) (⊞ i, if i=0 then 2 else 0)
 
-#eval show IO Unit from do
+approx shoot := λ (t : ℝ) (v : ℝ^{2}) =>
+                 odeSolve (t₀ := 0) (x₀ := ((0:ℝ^{2}),v)) (t := t)
+                   (f := λ (t : ℝ) (x,v) => balisticMotion x v)
+by
+  rw[odeSolve_fixed_dt midpoint_step]
+      
+  approx_limit 50; intro steps; clean_up
+  
+
+def aimStep (v₀ : ℝ^{2}) := aimToTarget v₀ (1.0:ℝ) (1:ℝ) (⊞ i, if i=0 then 2 else 0)
+
+def main : IO Unit := do
 
   let mut v : ℝ^{2} := 0
 
-  for i in [0:20] do
+  for i in [0:200] do
     v := aimStep v
     IO.println v
+
+  let x := (shoot 1 v).1
+
+  IO.println s!"Final destination: {x}"
