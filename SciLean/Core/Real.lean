@@ -150,7 +150,15 @@ namespace Real
   notation "[[" p "]]" => if p then (1:ℝ) else (0:ℝ)
 
 
+  def toInt (x : ℝ) : ℤ := 
+    if x ≥ 0 then
+      x.toFloat.toUInt64.toNat
+    else
+      - (-x.toFloat).toUInt64.toNat
 
+  def ceilI (x : ℝ) : ℤ := x.ceil.toInt
+  def floorI (x : ℝ) : ℤ := x.floor.toInt
+  def roundI (x : ℝ) : ℤ := x.round.toInt
 
   -- instance : HPow ℝ ℤ ℝ := ⟨λ x n => x^(n : ℝ)⟩
   -- ⟨λ x n => 
