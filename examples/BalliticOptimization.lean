@@ -3,6 +3,7 @@ import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 import SciLean.Core.UnsafeAD
 import SciLean.Tactic.LetUtils
+import SciLean.Tactic.LetEnter
 import SciLean.Tactic.Basic
 
 open SciLean
@@ -91,10 +92,10 @@ open Lean Meta Elab Tactic Conv
 
 def balisticMotion (x v : ℝ^{2}) := (v, g - ‖v‖•v)
 
-function_properties balisticMotion  [UnsafeAD] (x v : ℝ^{2})
-argument (x,v)
+function_properties balisticMotion (x v : ℝ^{2})
+argument (x,v) [UnsafeAD]
   IsSmooth,
-  abbrev ∂ by unfold balisticMotion; fun_trans; fun_trans,
+  abbrev ∂ by unfold balisticMotion; fun_trans only; fun_trans only,
   def ∂† by unfold balisticMotion; fun_trans; flatten_let; fun_trans; simp,
   def ℛ by unfold balisticMotion; fun_trans; fun_trans; fun_trans; simp
 argument x
@@ -102,14 +103,13 @@ argument x
   HasAdjDiff,
   abbrev ∂† by unfold balisticMotion; fun_trans,
   abbrev ℛ by unfold balisticMotion; fun_trans
-argument v 
+argument v [UnsafeAD]
   IsSmooth,
   HasAdjDiff,
   def ∂† by unfold balisticMotion; fun_trans; fun_trans,
   def ℛ by unfold balisticMotion; fun_trans; fun_trans
 
 
-variable (v₀ : ℝ^{2}) (s : ℝ) (set : Settings)
 
 #check Lean.Expr.eta
 
@@ -122,24 +122,9 @@ variable (v₀ : ℝ^{2}) (s : ℝ) (set : Settings)
 
 #check Prod.neg_mk
 
-set_option trace.Meta.Tactic.simp.rewrite true in
-@[simp]
-theorem neg_prod_mk {α β} [Neg α] [Neg β] (a : α) (b : β)
-  : -(a,b) = (-a,-b) := by simp
-
-set_option trace.Meta.Tactic.simp.rewrite true in
-@[simp]
-theorem neg_prod_mk' {α β} [Neg α] [Neg β] (a : α) (b : β)
-  : -(⟨a,b⟩ : α×β) = (-a,-b) := by simp
-
-set_option trace.Meta.Tactic.simp.rewrite true in
-@[simp]
-theorem add_prod_mk {α β} [Add α] [Add β] (a a' : α) (b b' : β)
-  : (a,b) + (a',b') = (a+a',b+b') := by simp
 
 theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ) 
   : (∇ λ x => f x) = λ x => (ℛ f x).2 1 := by rfl
-
 
 syntax (name := project_conv) " project ": conv
 
@@ -155,25 +140,6 @@ open Lean Meta Elab Tactic Conv
     
 | _ => Lean.Elab.throwUnsupportedSyntax
 
-
--- example 
---   : (let a : Nat := 1
---      (a * a, a + a)).fst
---     =
---     sorry
---   := 
--- by
---   conv => 
---     lhs
---     project
---     simp (config := {zeta := false, beta := true, proj := true, singlePass := true})
-  
-
--- @[simp]
--- theorem prod_fst_simp {α β} (a : α) (b : β) : (a, b).fst = a := by rfl
-
--- @[simp]
--- theorem prod_snd_simp {α β} (a : α) (b : β) : (a, b).snd = b := by rfl
 open Lean.Parser.Tactic in
 macro "rw'" " [" s:simpLemma,* "]" : conv => 
   let s' : Syntax.TSepArray `Lean.Parser.Tactic.simpStar "," := ⟨s.1⟩ -- hack
@@ -203,44 +169,45 @@ by
 -- set_option trace.Meta.Tactic.simp.congr true in
 -- set_option trace.Meta.Tactic.simp.unify true in
 -- set_option trace.Meta.Tactic.simp.discharge true in
-noncomputable
-def aimToTarget (T : ℝ) (target : ℝ^{2}) : Approx (
-  let shoot := λ (t : ℝ) (v : ℝ^{2}) => 
-                 odeSolve (t₀ := 0) (x₀ := (0,v)) (t := t)
+macro "clean_up" : tactic => `(tactic| conv => enter[1]; dsimp (config := {zeta := false, proj:=false}); flatten_let)
+
+variable (v₀ : ℝ^{2}) (s : ℝ) (set : Settings)
+
+approx aimToTarget := λ (T : ℝ) (target : ℝ^{2}) =>
+  let shoot := λ (t : ℝ) (v : ℝ^{2}) =>
+                 odeSolve (t₀ := 0) (x₀ := ((0:ℝ^{2}),v)) (t := t)
                    (f := λ (t : ℝ) (x,v) => balisticMotion x v)
-  (λ v => (shoot T v).1)⁻¹ target) := 
+  (λ v => (shoot T v).1)⁻¹ target
 by
-  dsimp (config := {zeta := false})
+  clean_up
   
   conv =>
-    enter [1,shoot]
+    enter [1,shoot,T,target]
     rw [invFun_as_argmin _ _ sorry_proof]
     rw [argminFun.approx.gradientDescent v₀ s]
   
   approx_limit 1; intro gdSteps
-  
+  clean_up
+
   rw'[gradient_as_revDiff]
 
   unsafe_ad; ignore_fun_prop
-  
+
   conv =>
     enter [1]
     fun_trans only
     fun_trans only
     fun_trans only
     fun_trans only
-
-  save
 
   conv =>
     enter[1]; ext
+    enter[T,target]
     let_add Rshoot (ℛ (shoot T))
     enter [RShoot]
-    rw[(sorry : ℛ (shoot T) = Rshoot)]
-
+    rw[(sorry_proof : ℛ (shoot T) = Rshoot)]
+  
   let_unfold shoot
-
-  save
 
   conv =>
     enter [1]
@@ -251,108 +218,34 @@ by
     fun_trans only
     fun_trans only
 
-  save
-
-  apply Approx.exact
-
-  #exit
-    simp (config := {zeta := false, proj := false})
-    fun_trans only
-    
-    
-    let_unfold shoot
-    fun_trans
-    fun_trans
-    fun_trans
-    fun_trans
-    fun_trans
-
-    let_unfold dxy₁
-    flatten_let
-
-  save
-  -- set_option trace.Meta.Tactic.simp.unify true in
-  -- set_option trace.Meta.Tactic.simp.discharge true in
-    
-  conv =>
-    enter[1]
-    
-    simp (config := {zeta := false}) only [Prod.neg_mk]
-    flatten_let
-    
-
-    
-
-
-
-
-  apply Approx.exact
- 
-
-  -- set_option trace.Meta.Tactic.fun_trans.rewrite false in
-  -- fun_trans
-  -- conv in (reverseDifferential Prod.fst) => fun_trans; fun_trans
-  -- conv in (reverseDifferential Prod.fst) => fun_trans; fun_trans
-  -- dsimp (config := {zeta := false})
-  -- conv in (reverseDifferential _) =>
-  --   unfold balisticMotion
-    
+  conv => 
+    enter [1]
+    enter_let x
+    conv =>
+      rw[odeSolve_fixed_dt_on_interval
+          runge_kutta4_step
+          linearInterpolate1D
+          T]
   
+  approx_limit 50; intro forwardSteps; clean_up
+  
+  conv => 
+    enter [1]
+    enter_let Rfx₂
+    enter [dx₀']
+    rw[odeSolve_fixed_dt runge_kutta4_step]
+      
+  approx_limit 50; intro backwardSteps; clean_up
 
-  -- unfold gradient
-  -- unsafe_ad
-  -- ignore_fun_prop
-  -- fun_trans; fun_trans
-  -- flatten_let
-  -- flatten_let
-  -- conv in (adjointDifferential _ _) => fun_trans
-  -- dsimp (config := {zeta := false})
-  -- flatten_let
+  apply Approx.exact
 
 
+def aimStep (v₀ : ℝ^{2}) := aimToTarget v₀ (0.6:ℝ) (1:ℝ) (⊞ i, if i=0 then 2 else 0)
 
-#exit
-  match set with
-  | .adjForm =>
-    unfold gradient
-    unsafe_ad
-    ignore_fun_prop
-    fun_trans; fun_trans
-    -- alternatives_fst
-    unfold balisticMotion
-    fun_trans; fun_trans
-    flatten_let
+#eval show IO Unit from do
 
-#exit
+  let mut v : ℝ^{2} := 0
 
-    -- forward pass
-    conv in (odeSolve _ _ _ _) =>
-      rw [odeSolve_fixed_dt runge_kutta4_step]
-
-    approx_limit 10; intro n';
-    dsimp (config := {zeta := false})
-
-    -- backward pass
-    conv in (odeSolve _ _ _ _) =>
-      rw [odeSolve_fixed_dt runge_kutta4_step]
-
-    approx_limit 10; intro n'';
-    dsimp (config := {zeta := false})
-    
-    apply Approx.exact
-
-  | .backProp => 
-
-    conv in (odeSolve _ _ _ _) =>
-      rw [odeSolve_fixed_dt runge_kutta4_step]
-    
-    approx_limit 10; intro n'';
-    dsimp (config := {zeta := false})
-
-    unfold gradient
-    simp
-    unsafe_ad
-    ignore_fun_prop
-    -- fun_trans
-    apply Approx.exact
-
+  for i in [0:20] do
+    v := aimStep v
+    IO.println v
