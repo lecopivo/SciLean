@@ -181,6 +181,7 @@ approx aimToTarget := λ (T : ℝ) (target : ℝ^{2}) =>
 by
   clean_up
   
+  -- reformulate inverse as minimization and apply gradient descent
   conv =>
     enter [1,shoot,T,target]
     rw [invFun_as_argmin _ _ sorry_proof]
@@ -193,13 +194,15 @@ by
 
   unsafe_ad; ignore_fun_prop
 
+  -- run automatic differentiation, it gets blocked on `ℛ shoot`
   conv =>
     enter [1]
     fun_trans only
     fun_trans only
     fun_trans only
     fun_trans only
-
+  
+  -- deal with `ℛ shoot` manually
   conv =>
     enter[1]; ext
     enter[T,target]
@@ -209,6 +212,7 @@ by
   
   let_unfold shoot
 
+  -- run automatic differentiation on `shoot`, this formulates the adjoint problem
   conv =>
     enter [1]
     fun_trans only
@@ -217,7 +221,8 @@ by
     fun_trans only
     fun_trans only
     fun_trans only
-
+  
+  -- precomputed forward pass with RK4 and 50 steps on the interval [0,T] and used linear interpolation
   conv => 
     enter [1]
     enter_let x
@@ -229,6 +234,7 @@ by
   
   approx_limit 50; intro forwardSteps; clean_up
   
+  -- Use RK4 with 50 steps on the backward pass
   conv => 
     enter [1]
     enter_let Rfx₂
@@ -238,7 +244,6 @@ by
   approx_limit 50; intro backwardSteps; clean_up
 
   apply Approx.exact
-
 
 def aimStep (v₀ : ℝ^{2}) := aimToTarget v₀ (0.6:ℝ) (1:ℝ) (⊞ i, if i=0 then 2 else 0)
 
