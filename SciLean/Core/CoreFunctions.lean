@@ -220,7 +220,7 @@ argument y
   IsLin := sorry_proof, 
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dy => x•dy by sorry_proof,
-  abbrev 𝒯 := λ dy => (x•dy, x•dy) by sorry_proof
+  abbrev 𝒯 := λ dy => (x•y, x•dy) by sorry_proof
 
 function_properties HSMul.hSMul {X : Type} [SemiHilbert X] (x : ℝ) (y : X) : X
 argument y
