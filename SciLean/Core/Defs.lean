@@ -142,6 +142,25 @@ def invFun {α β} [Nonempty α] (f : α → β) : β → α := Function.invFun 
 
 instance invFun.instInverseNotation {α β} [Nonempty α] (f : α → β) : InverseNotation f (invFun f) := ⟨⟩
 
+-- argmin
+noncomputable
+opaque argminFun [Nonempty X] (f : X → ℝ) : X 
+
+-- TODO: move to notations
+macro " argmin " x:Lean.Parser.Term.funBinder " , " b:term:66 : term => `(argminFun λ $x => $b)
+
+@[app_unexpander argminFun] def unexpandArgmin : Lean.PrettyPrinter.Unexpander
+  | `($(_) λ $x => $b) => 
+    `(argmin $x, $b)
+  | _  => throw ()
+
+@[app_unexpander invFun] def unexpandInvFun : Lean.PrettyPrinter.Unexpander
+  | `($(_) $f) => 
+    `($f⁻¹)
+  | `($(_) $f $x) => 
+    `($f⁻¹ $x)
+  | _  => throw ()
+
 
 end OnSemiHilbertSpaces
 

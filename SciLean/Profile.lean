@@ -2,12 +2,6 @@ import Lean
 
 open Lean System IO 
 
-register_option profile_file : Bool :=  {
-  defValue := true
-  group    := ""
-  descr    := "Option to disable all #profile_file commands. This option is used when profiling so we do no start profiling while profiling."
-}
-
 def profileFile (file : FilePath) (flame : FilePath := "/home/tskrivan/Documents/Flame/build/bin/flame") : IO Unit := do
 
   let compile_output ← IO.Process.output {

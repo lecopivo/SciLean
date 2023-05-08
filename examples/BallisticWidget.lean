@@ -19,17 +19,12 @@ structure State where
   v : ℝ×ℝ
 deriving ToJson, FromJson
 
-local instance {frame : Frame} : CoeHead (Point frame) (ℝ^{2}) where
-  coe p := ⊞ i, if i = 0 then ⟨p.toAbsolute.1⟩ else ⟨p.toAbsolute.2⟩
+local instance {frame : Frame} : CoeHead (Point frame) (ℝ×ℝ) where
+  coe p := (⟨p.toAbsolute.1⟩, ⟨p.toAbsolute.2⟩)
 
-local instance {frame : Frame} : CoeTail (ℝ^{2}) (Point frame) where
-  coe x := .abs x[0].toFloat x[1].toFloat
+local instance {frame : Frame} : CoeTail (ℝ×ℝ) (Point frame) where
+  coe x := .abs x.1.toFloat x.2.toFloat
 
-local instance : Coe (ℝ^{2}) (ℝ×ℝ) where
-  coe x := (x[0],x[1])
-
-local instance : Coe (ℝ×ℝ) (ℝ^{2}) where
-  coe x := ⊞ i, if i = 0 then x.1 else x.2
 
 def isvg : InteractiveSvg State where
   init := { v := 0 }
@@ -39,7 +34,7 @@ def isvg : InteractiveSvg State where
   update time Δt action mouseStart mouseEnd selected getData state :=
 
     if let .some mouseEnd := mouseEnd then
-      let target : ℝ^{2} := mouseEnd
+      let target : ℝ×ℝ := mouseEnd
       let newVel := aimStep target state.v
       { v := newVel }
     else
