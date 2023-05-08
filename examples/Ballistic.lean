@@ -33,7 +33,7 @@ theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ)
   : (∇ λ x => f x) = λ x => (ℛ f x).2 1 := by rfl
 
 
-def balisticMotion (x v : ℝ×ℝ) := (v, g  - (5:ℝ) • v - ‖v‖•v)
+def balisticMotion (x v : ℝ×ℝ) := (v, g  - (5 + ‖v‖) • v)
 
 function_properties balisticMotion (x v : ℝ×ℝ)
 argument (x,v) [UnsafeAD] [IgnoreFunProp]
@@ -53,9 +53,8 @@ argument v [UnsafeAD]
 
 
 
-variable (v₀ : ℝ×ℝ) (optimizationRate : ℝ) 
-
-approx aimToTarget := λ (T : ℝ) (target : ℝ×ℝ) =>
+approx aimToTarget (v₀ : ℝ×ℝ) (optimizationRate : ℝ) := 
+  λ (T : ℝ) (target : ℝ×ℝ) =>
   let shoot := λ (t : ℝ) (v : ℝ×ℝ) =>
                  odeSolve (t₀ := 0) (x₀ := ((0:ℝ×ℝ),v)) (t := t)
                    (f := λ (t : ℝ) (x,v) => balisticMotion x v)
@@ -95,8 +94,11 @@ by
   conv =>
     enter [1]
     fun_trans only; fun_trans only; fun_trans only; fun_trans only
+
+  -- The adjoint problem consists of two steps, forward and backward pass.
+  -- We need to pick discretization for both of those passes.
   
-  -- precomputed forward pass with RK4 and 50 steps on the interval [0,T] and used linear interpolation
+  -- Precompute forward pass with midpoint method and 50 steps on the interval [0,T] and used linear interpolation
   conv =>
     enter [1]
     enter_let x
@@ -108,7 +110,7 @@ by
   
   approx_limit 50; intro forwardSteps; clean_up
   
-  -- Use RK4 with 50 steps on the backward pass
+  -- Use midpoint method with 50 steps on the backward pass
   conv => 
     enter [1]
     enter_let Rfx₂
@@ -120,9 +122,10 @@ by
   apply Approx.exact
 
 
--- Same as shoot caches trajectory on [0,T] interval
+/-- Generate `n` trajectory points in the interval [0,T] -/
 def shotTrajectoryPoints (n : ℕ) (T : ℝ) (v : ℝ×ℝ) : Array ((ℝ×ℝ)×(ℝ×ℝ)) := 
   odeSolve_fixed_dt_array (λ (t : ℝ) (x,v) => balisticMotion x v)
     midpoint_step n 0 (0,v) T
 
+/-- Do one step of optimization -/
 def aimStep (target : ℝ×ℝ) (v₀ : ℝ×ℝ) := aimToTarget v₀ (5.0:ℝ) (1:ℝ) target
