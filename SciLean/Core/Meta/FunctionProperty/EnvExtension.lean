@@ -10,12 +10,12 @@ open Lean Meta Std
 
 namespace SciLean
 
-
 namespace FunctionProperty
+-- initialize registerTraceClass `Meta.Tactic.function_properties
+initialize registerTraceClass `trace.FunProp.new_decl
 
 local instance : Ord (ArraySet Nat) := ⟨ArraySet.lexOrd⟩
 local instance : Ord Name := ⟨Name.quickCmp⟩
-
 
 structure Theorems where
   normalTheorem : Option Name
