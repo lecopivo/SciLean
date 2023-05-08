@@ -13,6 +13,7 @@ def profileFile (file : FilePath) (flame : FilePath := "/home/tskrivan/Documents
   let compile_output ← IO.Process.output {
     cmd := "lake"
     args := #["env", "lean", "-D", "trace.profiler=true", "-D", "pp.oneline=true", file.toString]
+    env := #[("LEAN_DISABLE_PROFILE_FILE", "1")]
   }
 
   if compile_output.exitCode != 0 then
@@ -58,19 +59,21 @@ def profileFile (file : FilePath) (flame : FilePath := "/home/tskrivan/Documents
 
 elab " #profile_file " path:ident : command => do
 
-  -- let doRun ← getBoolOption `profile_file
-
-  -- if doRun then
-
+  if (← IO.getEnv "LEAN_DISABLE_PROFILE_FILE").isNone then
     let file := (← IO.currentDir) / (path.getId.toString.replace "." FilePath.pathSeparator.toString ++ ".lean")
     profileFile file
-
+  
 
 elab " #profile_this_file " : command => do
 
-  -- let doRun ← getBoolOption `profile_file
-
-  -- if doRun then
+  if (← IO.getEnv "LEAN_DISABLE_PROFILE_FILE").isNone then
     let ctx ← readThe Elab.Command.Context
+    IO.println s!"Profiling file: {ctx.fileName}!"
     profileFile ctx.fileName
+  else
+    let ctx ← readThe Elab.Command.Context
+    IO.println s!"Attempting to profile: {ctx.fileName} but profiling is disabled!"
+    
+
+
 
