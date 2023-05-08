@@ -166,7 +166,7 @@ def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bo
   let normalTheoremType  ← mkForallFVars contextVars' (← mkEq defTargetVal defVal)
   let normalTheoremProof ← mkLambdaFVars contextVars' defProof
 
-  IO.println s!"Normal theorem for {transName}:\n{← ppExpr normalTheoremType}"
+  trace[FunProp.new_decl] s!"Normal theorem for {transName}:\n{← ppExpr normalTheoremType}"
 
   let theoremName := defName.appendAfter "_simp"
 
@@ -182,7 +182,7 @@ def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bo
 
   let compTheorem ← mkCompTheorem transName e xs contextVars defVal
 
-  IO.println s!"Composition theorem for {transName}:\n{← ppExpr compTheorem}"
+  trace[FunProp.new_decl] s!"Composition theorem for {transName}:\n{← ppExpr compTheorem}"
 
   let prf ← forallTelescope compTheorem λ contextVars statement => do
     -- TODO: Fill the proof here!!! 
