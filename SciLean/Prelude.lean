@@ -8,7 +8,7 @@ import SciLean.Notation
 -- Export symbols from Mathlib
 export SciLean.EnumType (sum)
 
-@[inline]
+@[inline, irreducible]
 def hold {α} (a : α) := a
 
 abbrev typeOf {α} (_ : α) := α

@@ -129,7 +129,7 @@ argument x₀
     -- alternatives 
     --   fst:
         λ dx₀' =>
-        let x := λ s => odeSolve f t₀ x₀ s 
+        let x := hold $ λ s => odeSolve f t₀ x₀ s 
         odeSolve (λ s dx' => - ∂† (x':= x s; dx'), f s x') t dx₀' t₀
       -- snd:
       --   λ dx₀' =>
@@ -143,7 +143,7 @@ argument x₀
       -- by sorry_proof
     by sorry_proof,
   noncomputable abbrev ℛ := 
-    let x := λ s => odeSolve f t₀ x₀ s
+    let x := hold $ λ s => odeSolve f t₀ x₀ s
     (x t, 
      λ dx₀' => 
        odeSolve (λ s dx' => - ∂† (x':= x s; dx'), f s x') t dx₀' t₀)
@@ -385,7 +385,7 @@ argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
       fun_trans
       unfold tangentMap 
       fun_trans
-      simp
+      try simp
       done
 
 

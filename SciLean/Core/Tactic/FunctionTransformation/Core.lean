@@ -215,14 +215,16 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
   let arity ← getConstArity constName
   if args.size = arity then
     let some (proof,thrm) ← applyCompTheorem transName constName args x
-      | throwError s!"Failed at applying composition theorem for transformation `{transName}` and function `{constName}`"
+      | trace[Meta.Tactic.fun_trans.rewrite] s!"Failed at applying composition theorem for transformation `{transName}` and function `{constName}`"
+        return none
     let statement ← inferType proof
     let rhs := statement.getArg! 2
     trace[Meta.Tactic.fun_trans.rewrite] s!"By composition theorem `{thrm}`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
 
     return .some (.visit (.mk rhs proof 0))
   else if args.size > arity then
-    throwError s!"Constant {constName} has too many applied arguments in {← ppExpr b}. TODO: handle this case!"
+    trace[Meta.Tactic.fun_trans.rewrite] s!"Constant {constName} has too many applied arguments in {← ppExpr b}. TODO: handle this case!"
+    return none
   else
     throwError s!"Constant {constName} has too few applied arguments in {← ppExpr b}. TODO: handle this case!"
 
@@ -365,12 +367,16 @@ def getFunctionTransform (e : Expr) : MetaM (Option (Name × Expr × Array Expr)
   else 
     return none
 
+
 /--
 Heuristic whether expression `e` is performing any meaningful computation. This 
 is used when normalizing let bindings. Computationally meaningless let bindings are
 removed.
 -/
 def _root_.Lean.Expr.doesComputation (e : Expr) : Bool := 
+  if e.isAppOf ``hold then
+    true
+  else
   match e with
   | .app f x => 
     -- TODO: generalize to any structure
@@ -384,7 +390,7 @@ def _root_.Lean.Expr.doesComputation (e : Expr) : Bool :=
         x.doesComputation
     else
       x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x
-  | .lam n t b bi => b.doesComputation
+  | .lam n t b bi => false -- b.doesComputation
   | .letE .. => true
   | _ => false
 

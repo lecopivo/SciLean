@@ -51,11 +51,9 @@ argument v [UnsafeAD]
   def ∂† by unfold balisticMotion; fun_trans; fun_trans,
   def ℛ by unfold balisticMotion; fun_trans; fun_trans
 
-
-
 approx aimToTarget (v₀ : ℝ×ℝ) (optimizationRate : ℝ) := 
   λ (T : ℝ) (target : ℝ×ℝ) =>
-  let shoot := λ (t : ℝ) (v : ℝ×ℝ) =>
+  let shoot := hold $ λ (t : ℝ) (v : ℝ×ℝ) =>
                  odeSolve (t₀ := 0) (x₀ := ((0:ℝ×ℝ),v)) (t := t)
                    (f := λ (t : ℝ) (x,v) => balisticMotion x v)
   (λ v => (shoot T v).1)⁻¹ target
@@ -76,10 +74,13 @@ by
   unsafe_ad; ignore_fun_prop
 
   -- run automatic differentiation, it gets blocked on `ℛ shoot`
+  set_option trace.Meta.Tactic.fun_trans.rewrite true in
+  set_option trace.Meta.Tactic.fun_trans.normalize_let true in
   conv =>
     enter [1]
-    fun_trans only; flatten_let; fun_trans only; fun_trans only
-  
+    fun_trans only;
+    fun_trans only; fun_trans only
+      
   -- deal with `ℛ shoot` manually
   conv =>
     enter[1]; ext
@@ -89,10 +90,11 @@ by
     rw[(sorry_proof : ℛ (shoot T) = Rshoot)]
   
   let_unfold shoot
-
+ 
   -- run automatic differentiation on `shoot`, this formulates the adjoint problem
   conv =>
     enter [1]
+    unfold hold
     fun_trans only; fun_trans only; fun_trans only; fun_trans only
 
   -- The adjoint problem consists of two steps, forward and backward pass.
@@ -113,7 +115,7 @@ by
   -- Use midpoint method with 50 steps on the backward pass
   conv => 
     enter [1]
-    enter_let Rfx₂
+    -- enter_let Rfx₂
     enter [dx₀']
     rw[odeSolve_fixed_dt midpoint_step]
       
