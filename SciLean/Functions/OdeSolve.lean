@@ -372,8 +372,9 @@ argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
     -- forward_euler_step Tf t₀ (x₀,dx₀) Δt
     by
       unfold forward_euler_step
-      have : ∀ t, IsSmooth (f t) := sorry_proof      
-      fun_trans,
+      have : ∀ t, IsSmooth (f t) := sorry_proof 
+      fun_trans
+      simp, -- WTF where did the goal `True` came from?
   noncomputable abbrev 𝒯 := λ dx₀ =>
     let Tf := λ t (xdx : X×X) => 𝒯 (λ x' => f t x') xdx.1 xdx.2
     forward_euler_step Tf t₀ (x₀,dx₀) Δt

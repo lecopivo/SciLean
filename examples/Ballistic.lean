@@ -33,6 +33,42 @@ theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ)
   : (∇ λ x => f x) = λ x => (ℛ f x).2 1 := by rfl
 
 
+-- example (Rx Ry : ℝ×((ℝ→(ℝ×ℝ))))
+--   : let Rfx := ((Rx.fst, Ry.fst), fun dx' : ℝ×ℝ => dx')
+--     -- Rfx.fst
+--     (Rfx.fst, fun dxy' => Prod.snd Rx (Prod.snd Rfx dxy').fst + Prod.snd Ry (Prod.snd Rfx dxy').snd)
+--     = 
+--     sorry
+--   := 
+-- by
+
+
+-- example (t : ℝ×ℝ)
+--   : let Ry :=
+--       (((t, fun dx' : ℝ×ℝ => dx').fst.snd, fun dxy' => ((0:ℝ), dxy')).fst, fun dxy' : ℝ×ℝ =>
+--         Prod.snd (t, fun dx' => dx') (Prod.snd ((t, fun dx' : ℝ×ℝ => dx').fst.snd, fun dxy' => ((0:ℝ), dxy')) dxy'));
+--     (((Rx.fst, Ry.fst), fun dx' => dx').fst, fun dxy' : ℝ×ℝ =>
+--       Prod.snd Rx (Prod.snd ((Rx.fst, Ry.fst), fun dx' : ℝ×ℝ => dx') dxy').fst +
+--         Prod.snd Ry (Prod.snd ((Rx.fst, Ry.fst), fun dx' : ℝ×ℝ => dx') dxy').snd)
+--     = 
+--     sorry
+--   := sorry
+
+set_option trace.Meta.Tactic.fun_trans.rewrite true in
+set_option trace.Meta.Tactic.fun_trans.normalize_let true in
+example 
+  : (∂† λ (xv : ℝ×ℝ) => (xv.2, let c := ‖xv.2‖²; c*c))
+    =
+    sorry
+  :=
+by
+  fun_trans only
+  fun_trans only
+  fun_trans only
+  fun_trans only
+  -- fun_trans
+  admit
+
 def balisticMotion (x v : ℝ×ℝ) := (v, g  - (5 + ‖v‖) • v)
 
 function_properties balisticMotion (x v : ℝ×ℝ)
@@ -48,7 +84,7 @@ argument x
 argument v [UnsafeAD]
   IsSmooth,
   HasAdjDiff,
-  def ∂† by unfold balisticMotion; fun_trans; fun_trans,
+  def ∂† by unfold balisticMotion; fun_trans; fun_trans; fun_trans,
   def ℛ by unfold balisticMotion; fun_trans; fun_trans
 
 approx aimToTarget (v₀ : ℝ×ℝ) (optimizationRate : ℝ) := 
@@ -94,8 +130,9 @@ by
   -- run automatic differentiation on `shoot`, this formulates the adjoint problem
   conv =>
     enter [1]
+    enter_let Rshoot
     unfold hold
-    fun_trans only; fun_trans only; fun_trans only; fun_trans only
+    fun_trans only; fun_trans only; fun_trans only; fun_trans only; fun_trans
 
   -- The adjoint problem consists of two steps, forward and backward pass.
   -- We need to pick discretization for both of those passes.
@@ -120,7 +157,7 @@ by
     rw[odeSolve_fixed_dt midpoint_step]
       
   approx_limit 50; intro backwardSteps; clean_up
-
+  unfold hold
   apply Approx.exact
 
 

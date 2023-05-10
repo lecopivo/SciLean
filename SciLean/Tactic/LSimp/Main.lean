@@ -12,6 +12,7 @@ import Lean.Meta.Tactic.Simp.Rewrite
 -- import Lean.Meta.Tactic.Simp.Main
 
 import SciLean.Lean.Meta.Basic
+import SciLean.Prelude
 
 open Lean Meta Simp
 
@@ -42,11 +43,36 @@ private def mkImpCongr (src : Expr) (r₁ r₂ : Result) : MetaM Result := do
 def isOfNatNatLit (e : Expr) : Bool :=
   e.isAppOfArity ``OfNat.ofNat 3 && e.appFn!.appArg!.isNatLit
 
--- private def reduceProj (e : Expr) : MetaM Expr := do
---   match (← reduceProj?' e) with
---   | some e => return e
---   | _      => return e
+/-- Reduces structure projection but it preserves let bindings unlike `Lean.Meta.reduceProj?`.
+-/
+def reduceProj? (e : Expr) : MetaM (Option Expr) := do
+  match e with
+  | Expr.proj _ _ (.fvar _) => return none -- do not reduce projections on fvars
+  | Expr.proj _ i c => 
+    letTelescope c λ xs b => do
+      let some b ← Meta.project? b i
+        | return none
+      mkLambdaFVars xs b
+  | _               => return none
 
+
+/-- This function differes in behavior to the original version `Lean.Meta.Simp.reduceProjFn?`
+code like
+```
+(let a := 10
+ (a*a, a+a)).1
+```
+the original `Lean.Meta.Simp.reduceProjFn?` reduces it to
+```
+(let a := 10; a)*(let a := 10; a)
+```
+but `SciLean.Tactic.LSimp.reduceProjFn?` reduces this to
+```
+let a := 10
+a*a
+```
+
+ -/
 private def reduceProjFn? (e : Expr) : SimpM (Option Expr) := do
   matchConst e.getAppFn (fun _ => pure none) fun cinfo _ => do
     match (← getProjectionFnInfo? cinfo.name) with
@@ -57,7 +83,7 @@ private def reduceProjFn? (e : Expr) : SimpM (Option Expr) := do
         match e? with
         | none   => pure none
         | some e =>
-          match (← reduceProj?' e.getAppFn) with
+          match (← reduceProj? e.getAppFn) with
           | some f => return some (mkAppN f e.getAppArgs)
           | none   => return none
       if projInfo.fromClass then
@@ -85,6 +111,7 @@ private def reduceProjFn? (e : Expr) : SimpM (Option Expr) := do
         -- `structure` projections
         reduceProjCont? (← unfoldDefinition? e)
 
+
 private def reduceFVar (cfg : Simp.Config) (e : Expr) : MetaM Expr := do
   if cfg.zeta then
     match (← getFVarLocalDecl e).value? with
@@ -92,6 +119,29 @@ private def reduceFVar (cfg : Simp.Config) (e : Expr) : MetaM Expr := do
     | none   => return e
   else
     return e
+
+private def doesComputation (e : Expr) : Bool :=
+  match e with
+  | .app f x => 
+    x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x || f.isAppOf ``hold
+  | .letE _ _ _ b _ => doesComputation b
+  | .mdata _ e => doesComputation e
+  | .proj _ _ e => doesComputation e
+  | _ => false
+
+private def reduceNoOpHeadFVar (e : Expr) : MetaM Expr := do
+  let f := e.getAppFn 
+  if f.isFVar then
+    match (← getFVarLocalDecl f).value? with
+    | some v => 
+      if doesComputation v then 
+        return e
+      else
+        return mkAppN v e.getAppArgs
+    | none   => return e
+  else
+    return e
+
 
 /--
   Return true if `declName` is the name of a definition of the form
@@ -176,6 +226,18 @@ private partial def dsimp (e : Expr) : M Expr := do
       if r.expr != e then
         return .visit r.expr
     let mut eNew ← reduce e
+
+    -- This block is the main difference between simp and lsimp
+    if eNew.isLet then
+      -- TODO: fuel in `flattenLet` should be optional 
+      -- TODO: add option if we want to split structure constructors
+      -- TODO: maybe add implementation of flattenLet here and make it recursive
+      eNew ← flattenLet 1000000 eNew
+
+    -- TODO: Add config option for this
+    -- unfolds fvars that are not doing computation(based on some heuristic)
+    eNew ← reduceNoOpHeadFVar eNew
+
     if cfg.zeta && eNew.isFVar then
       eNew ← reduceFVar cfg eNew
     if eNew != e then return .visit eNew else return .done e
@@ -656,7 +718,9 @@ where
       return { expr := (← dsimp e) }
 
   simpLet (e : Expr) : M Result := do
-    let Expr.letE n t v b _ := e | unreachable!
+    let e ← dsimp e
+    let Expr.letE n t v b _ := e 
+      | return { expr := e }
     if (← Simp.getConfig).zeta then
       return { expr := b.instantiate1 v }
     else
@@ -973,7 +1037,7 @@ def lsimpGoal (mvarId : MVarId) (ctx : Simp.Context) (discharge? : Option LSimp.
 def lsimpTargetStar (mvarId : MVarId) (ctx : Simp.Context) (discharge? : Option LSimp.Discharge := none)
     (usedSimps : UsedSimps := {}) : MetaM (TacticResultCNM × UsedSimps) := mvarId.withContext do
   let mut ctx := ctx
-  for h in (← getPropHyps) do
+  for h in (← Meta.getPropHyps) do 
     let localDecl ← h.getDecl
     let proof  := localDecl.toExpr
     let simpTheorems ← ctx.simpTheorems.addTheorem (.fvar h) proof

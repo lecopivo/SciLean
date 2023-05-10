@@ -125,15 +125,38 @@ where
   dsimpLocation ctx (expandOptLocation stx[5])
 
 
+example (f : Nat → Nat) :
+  (
+   let a := 
+     let b := f 10
+     let x := 5
+     let g := hold $ λ n => n + b + 10
+     let cd := (3, g (f 42))
+     b + cd.1 + g 10 + cd.2 + x
+   let z := a + 1
+   (a*a*z, a+a+z)).1
+  =
+  sorry
+  :=
+by
+  -- ldsimp (config := {zeta := false})
+  lsimp (config := {zeta := false}) only
 
+  -- dsimp (config := {zeta := false})
+  admit
 
-example :
-  (let a := 
-    let b := 10
-    b + 10
+example (f : Nat → Nat) :
+  (
+   let a := 
+     let b := f 10
+     b + 10
    (a*a, a+a)).1
   =
   sorry
   :=
 by
   ldsimp (config := {zeta := false})
+  -- lsimp (config := {zeta := false}) only
+
+  -- dsimp (config := {zeta := false})
+  admit

@@ -184,6 +184,8 @@ private partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array
 
   | .letE n t v b _ => 
     flatLetTelescopeImpl (fuel-1) v λ xs v' => do
+
+      -- TODO: Generalized to any structure constructor
       match splitPairs, v'.app4? ``Prod.mk with
       | true, .some (Fst, Snd, fst, snd) => 
         withLetDecl (n.appendAfter "₁") Fst fst λ fst' => 
@@ -264,6 +266,7 @@ def flattenLet (fuel : Nat) (e : Expr) (splitPairs := true) : MetaM Expr :=
 -/
 def reduceProj?' (e : Expr) : MetaM (Option Expr) := do
   match e with
+  | Expr.proj _ _ (.fvar _) => return none -- do not reduce projections on fvars
   | Expr.proj _ i c => 
     letTelescope c λ xs b => do
       let some b ← Meta.project? b i

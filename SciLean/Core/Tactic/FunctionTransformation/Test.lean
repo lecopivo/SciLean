@@ -1,6 +1,7 @@
 import SciLean.Core.Tactic.FunctionTransformation.Core
 import SciLean.Core.UnsafeAD
 import SciLean.Core.CoreFunctions
+import SciLean.Tactic.LSimp.Elab
 
 namespace SciLean
 
@@ -18,6 +19,7 @@ example
   :=
 by
   fun_trans
+  
 
 -- Level Set of a sphere
 
@@ -28,9 +30,12 @@ example (c : X) (r : ℝ)
     λ x dx => 2 * ⟪dx, x - c⟫
   := 
 by
-  conv => lhs; fun_trans
+  conv => lhs; fun_trans; fun_trans 
 
 set_option profiler true
+
+opaque x : ℝ
+opaque c : ℝ
 
 -- gradient
 example (c : X) (r : ℝ)
@@ -40,8 +45,8 @@ example (c : X) (r : ℝ)
   := 
 by
   unfold gradient
-  conv => lhs; fun_trans; simp (config := {zeta := false})
-
+  conv => lhs; fun_trans-- simp (config := {zeta := false})
+  
 example (x : X) : IsSmooth λ y : X => ⟪x,y⟫ := by infer_instance
 example (x : X) : IsSmooth (Inner.inner x)  := by infer_instance
 
@@ -57,6 +62,7 @@ by
     lhs; 
     fun_trans
     fun_trans
+    fun_trans
     simp
 
 
@@ -70,7 +76,7 @@ example (c : X) (r : ℝ)
   := 
 by
   unsafe_ad
-  conv => lhs; fun_trans
+  conv => lhs; fun_trans; fun_trans
 
 set_option profiler true
 
@@ -83,12 +89,13 @@ example (c : X) (r : ℝ)
 by
   unsafe_ad
   unfold gradient
-  conv => lhs; fun_trans
+  conv => lhs; fun_trans; fun_trans; fun_trans
 
 example (x : X) : IsSmooth λ y : X => ⟪x,y⟫ := by infer_instance
 example (x : X) : IsSmooth (Inner.inner x)  := by infer_instance
 
 
+set_option trace.Meta.Tactic.fun_trans.rewrite true in
 -- hessian
 example (c : X) (r : ℝ)
   : ∂ (∂ (x : X), (‖x - c‖ - r))
@@ -98,8 +105,11 @@ example (c : X) (r : ℝ)
   := 
 by
   unsafe_ad
-  conv => 
-    lhs; 
+  conv =>
+    lhs;
+    enter [x,dx₁,dx₂]
+    fun_trans
+    fun_trans
     fun_trans
     fun_trans
 

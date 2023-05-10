@@ -16,8 +16,7 @@ function_properties H {n : USize} [Nonempty (Idx n)] (m k : ℝ) (x p : ℝ^{n})
 argument x
   def ∂† by 
     unfold H
-    unsafe_ad
-    fun_trans; fun_trans; fun_trans
+    fun_trans; fun_trans; fun_trans; fun_trans; fun_trans -- x[i+1] - 2 * x[i] + x[i-1]
 argument p
   def ∂† by
     unfold H

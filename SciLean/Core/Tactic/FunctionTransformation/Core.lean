@@ -4,7 +4,7 @@ import Mathlib.Tactic.NormNum.Core
 import SciLean.Lean.Meta.Basic
 import SciLean.Data.Prod
 import SciLean.Core.Tactic.FunctionTransformation.Init
-import SciLean.Core.Tactic.FunctionTransformation.Simp
+import SciLean.Tactic.LSimp.Main
 
 import SciLean.Core.Meta.FunctionProperty.Apply
 
@@ -134,7 +134,6 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
               let proof ← mkAppNoTrailingM `SciLean.adjointDifferential.rule_piMap #[f]
               let statement ← inferType proof
               let rhs := statement.getArg! 2
-              dbg_trace s!"Array comp motive: {← ppExpr f}"
               trace[Meta.Tactic.fun_trans.rewrite] s!"By rule arrayMap `\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
               return .some (.visit (.mk rhs proof 0))
             else do
@@ -142,8 +141,6 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
               let proof ← mkAppNoTrailingM `SciLean.adjointDifferential.rule_piMapComp #[f,h]
               let statement ← inferType proof
               let rhs := statement.getArg! 2
-              dbg_trace s!"Array comp motive f: {← ppExpr f}"
-              dbg_trace s!"Array comp motive h: {← ppExpr h}"
               trace[Meta.Tactic.fun_trans.rewrite] s!"By rule arrayMapComp`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
               return .some (.visit (.mk rhs proof 0))
         return step
@@ -421,11 +418,11 @@ where
 
 def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
 
-  if post then 
-    if let .some e' ← normalizeLet? e then
-      trace[Meta.Tactic.fun_trans.normalize_let] s!"\n{← Meta.ppExpr e}\n==>\n{← Meta.ppExpr e'}"
+  -- if post then 
+  --   if let .some e' ← normalizeLet? e then
+  --     trace[Meta.Tactic.fun_trans.normalize_let] s!"\n{← Meta.ppExpr e}\n==>\n{← Meta.ppExpr e'}"
 
-      return .some (.visit (.mk e' none 0))
+  --     return .some (.visit (.mk e' none 0))
       
   
   if let .some (transName, f, args) ← getFunctionTransform e then
@@ -460,7 +457,7 @@ mutual
 
   /-- Traverses the given expression using simp and normalises any numbers it finds. -/
   partial def deriveSimp (e : Expr) : MetaM Simp.Result :=
-    (·.1) <$> Simp.main e ctx (methods := methods)
+    (·.1) <$> Tactic.LSimp.main e ctx (methods := methods)
 end
 
 
