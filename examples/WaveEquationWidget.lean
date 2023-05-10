@@ -35,12 +35,8 @@ def isvg (n) [Nonempty (Idx n)] : InteractiveSvg (State n) where
         let θ := Real.atan2 ⟨pos.toAbsolute.2⟩ ⟨pos.toAbsolute.1⟩
         for i in fullRange (Idx n) do
           let θ' := (2 * Real.pi * i.1) / n
-          let θ' := 
-            if θ' < Real.pi then
-              θ'
-            else
-              θ' - 2*Real.pi
-          let w := ‖θ - θ'‖ 
+          let θ' := if θ' ≤ Real.pi then θ' else θ' - 2*Real.pi
+          let w := min ‖θ - θ'‖ ‖θ - θ' + 2*Real.pi‖ 
           x[i] += Real.exp (- 50*w^2)
     solver m k 1 time (x,v) (time + Δt)
 
@@ -79,6 +75,5 @@ def init : UpdateResult (State 100) := {
              mousePos := none
              idToData := (isvg 100).render 0 none none (isvg 100).init |>.idToDataList}
 }
-
 
 #html <SvgWidget html={init.html} state={init.state}/>
