@@ -18,15 +18,31 @@ def frame : Frame where
   height := 400
 
 def isvg (n) [Nonempty (Idx n)] : InteractiveSvg (State n) where
-  init := (⊞ i, Real.sin (2*Real.pi*(i.1 : ℝ)/40),
+  init := (⊞ i, 0 * Real.sin (2*Real.pi*(i.1 : ℝ)/40),
            ⊞ i, 0)
 
   frame := frame
 
-  update time Δt action mouseStart mouseEnd selected getData state :=
-    let m := 1.0
-    let k := 10000.0
-    solver m k 1 ⟨time⟩ state ⟨0.01*Δt⟩
+  update time Δt action mouseStart mouseEnd selected getData state := Id.run do
+    let m : ℝ := 0.1
+    let k : ℝ := 50000.0
+    -- convert time to seconds
+    let time : ℝ := ⟨time⟩/1000 
+    let Δt : ℝ := ⟨Δt⟩/1000
+    let mut (x,v) := state
+    if let .some pos := mouseEnd then
+      if action.kind == .mousedown then
+        let θ := Real.atan2 ⟨pos.toAbsolute.2⟩ ⟨pos.toAbsolute.1⟩
+        for i in fullRange (Idx n) do
+          let θ' := (2 * Real.pi * i.1) / n
+          let θ' := 
+            if θ' < Real.pi then
+              θ'
+            else
+              θ' - 2*Real.pi
+          let w := ‖θ - θ'‖ 
+          x[i] += Real.exp (- 50*w^2)
+    solver m k 1 time (x,v) (time + Δt)
 
   render time mouseStart mouseEnd state :=
     {
@@ -63,5 +79,6 @@ def init : UpdateResult (State 100) := {
              mousePos := none
              idToData := (isvg 100).render 0 none none (isvg 100).init |>.idToDataList}
 }
+
 
 #html <SvgWidget html={init.html} state={init.state}/>

@@ -12,15 +12,17 @@ def H (m k : ℝ) (x p : ℝ^{n}) : ℝ :=
   let Δx := (1 : ℝ)/(n : ℝ)
   (Δx/(2*m)) * ‖p‖² + (Δx * k/2) * (∑ i, ‖x[i.shiftPos 1] - x[i]‖²)
 
+set_option trace.Meta.Tactic.lsimp.pre true in
+set_option trace.Meta.Tactic.lsimp.post true in
 function_properties H {n : USize} [Nonempty (Idx n)] (m k : ℝ) (x p : ℝ^{n}) : ℝ
 argument x
   def ∂† by 
     unfold H
-    fun_trans; fun_trans; fun_trans; fun_trans; fun_trans -- x[i+1] - 2 * x[i] + x[i-1]
+    fun_trans; fun_trans
 argument p
   def ∂† by
     unfold H
-    fun_trans; fun_trans; fun_trans
+    fun_trans; fun_trans
 
 
 approx solver (m k : ℝ) (steps : Nat)

@@ -53,7 +53,11 @@ def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry⟩
 
 def shiftPos (x : Idx n) (s : USize) := x + s
 def shiftNeg (x : Idx n) (s : USize) := x - s
-
+def shift (x : Idx n) (s : Int) := 
+  match s with
+  | .ofNat n => x.shiftPos n.toUSize
+  | .negSucc n => x.shiftNeg (n+1).toUSize
+  
 -- This does not work as intended :(
 
 instance : OfNat (Idx (no_index (n+1))) i where
