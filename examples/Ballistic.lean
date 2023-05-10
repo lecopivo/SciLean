@@ -32,60 +32,30 @@ theorem argminFun.approx.gradientDescent {X} [Hilbert X] {f : X → ℝ} (x₀ :
 theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ) 
   : (∇ λ x => f x) = λ x => (ℛ f x).2 1 := by rfl
 
+theorem hold_fun_swap {α β} (f : α → β) (x : α)
+  : f (hold x) = hold (f x) := by unfold hold; rfl
 
--- example (Rx Ry : ℝ×((ℝ→(ℝ×ℝ))))
---   : let Rfx := ((Rx.fst, Ry.fst), fun dx' : ℝ×ℝ => dx')
---     -- Rfx.fst
---     (Rfx.fst, fun dxy' => Prod.snd Rx (Prod.snd Rfx dxy').fst + Prod.snd Ry (Prod.snd Rfx dxy').snd)
---     = 
---     sorry
---   := 
--- by
+theorem hold_arg_swap {α β} (f : α → β) (x : α)
+  : hold f x = hold (f x) := by unfold hold; rfl
 
-
--- example (t : ℝ×ℝ)
---   : let Ry :=
---       (((t, fun dx' : ℝ×ℝ => dx').fst.snd, fun dxy' => ((0:ℝ), dxy')).fst, fun dxy' : ℝ×ℝ =>
---         Prod.snd (t, fun dx' => dx') (Prod.snd ((t, fun dx' : ℝ×ℝ => dx').fst.snd, fun dxy' => ((0:ℝ), dxy')) dxy'));
---     (((Rx.fst, Ry.fst), fun dx' => dx').fst, fun dxy' : ℝ×ℝ =>
---       Prod.snd Rx (Prod.snd ((Rx.fst, Ry.fst), fun dx' : ℝ×ℝ => dx') dxy').fst +
---         Prod.snd Ry (Prod.snd ((Rx.fst, Ry.fst), fun dx' : ℝ×ℝ => dx') dxy').snd)
---     = 
---     sorry
---   := sorry
-
-set_option trace.Meta.Tactic.fun_trans.rewrite true in
-set_option trace.Meta.Tactic.fun_trans.normalize_let true in
-example 
-  : (∂† λ (xv : ℝ×ℝ) => (xv.2, let c := ‖xv.2‖²; c*c))
-    =
-    sorry
-  :=
-by
-  fun_trans only
-  fun_trans only
-  fun_trans only
-  fun_trans only
-  -- fun_trans
-  admit
 
 def balisticMotion (x v : ℝ×ℝ) := (v, g  - (5 + ‖v‖) • v)
 
 function_properties balisticMotion (x v : ℝ×ℝ)
 argument (x,v) [UnsafeAD] [IgnoreFunProp]
-  abbrev ∂ by unfold balisticMotion; fun_trans; fun_trans; fun_trans,
-  def ∂† by unfold balisticMotion; fun_trans only; flatten_let; fun_trans; fun_trans,
-  def ℛ by unfold balisticMotion; fun_trans; flatten_let; fun_trans; fun_trans; simp
+  abbrev ∂ by unfold balisticMotion; fun_trans only,
+  def ∂† by unfold balisticMotion; fun_trans only; clean_up_simp,
+  def ℛ by unfold balisticMotion; fun_trans only; clean_up_simp
 argument x
   IsSmooth,
   HasAdjDiff,
-  abbrev ∂† by unfold balisticMotion; fun_trans,
-  abbrev ℛ by unfold balisticMotion; fun_trans
+  abbrev ∂† by unfold balisticMotion; fun_trans only,
+  abbrev ℛ by unfold balisticMotion; fun_trans only
 argument v [UnsafeAD]
   IsSmooth,
   HasAdjDiff,
-  def ∂† by unfold balisticMotion; fun_trans; fun_trans; fun_trans,
-  def ℛ by unfold balisticMotion; fun_trans; fun_trans
+  def ∂† by unfold balisticMotion; fun_trans only,
+  def ℛ by unfold balisticMotion; fun_trans only
 
 approx aimToTarget (v₀ : ℝ×ℝ) (optimizationRate : ℝ) := 
   λ (T : ℝ) (target : ℝ×ℝ) =>
@@ -110,12 +80,9 @@ by
   unsafe_ad; ignore_fun_prop
 
   -- run automatic differentiation, it gets blocked on `ℛ shoot`
-  set_option trace.Meta.Tactic.fun_trans.rewrite true in
-  set_option trace.Meta.Tactic.fun_trans.normalize_let true in
   conv =>
     enter [1]
-    fun_trans only;
-    fun_trans only; fun_trans only
+    fun_trans only
       
   -- deal with `ℛ shoot` manually
   conv =>
@@ -131,8 +98,9 @@ by
   conv =>
     enter [1]
     enter_let Rshoot
-    unfold hold
-    fun_trans only; fun_trans only; fun_trans only; fun_trans only; fun_trans
+    dsimp
+    rw[hold_arg_swap, hold_fun_swap reverseDifferential]
+    fun_trans only; clean_up_simp
 
   -- The adjoint problem consists of two steps, forward and backward pass.
   -- We need to pick discretization for both of those passes.
@@ -157,7 +125,6 @@ by
     rw[odeSolve_fixed_dt midpoint_step]
       
   approx_limit 50; intro backwardSteps; clean_up
-  unfold hold
   apply Approx.exact
 
 

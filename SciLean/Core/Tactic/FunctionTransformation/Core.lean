@@ -423,7 +423,8 @@ def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
   --     trace[Meta.Tactic.fun_trans.normalize_let] s!"\n{← Meta.ppExpr e}\n==>\n{← Meta.ppExpr e'}"
 
   --     return .some (.visit (.mk e' none 0))
-      
+  if post then
+    return none
   
   if let .some (transName, f, args) ← getFunctionTransform e then
     if let .some step ← main transName f then

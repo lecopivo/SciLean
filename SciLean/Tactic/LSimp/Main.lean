@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura
 
 This is modified version of Lean.Meta.Tactic.Simp.Main
+
+major changes are marked with 'lsimp modification'
 -/
 import Lean.Meta.Transform
 import Lean.Meta.Tactic.Replace
@@ -19,6 +21,11 @@ open Lean Meta Simp
 namespace SciLean.Tactic
 
 namespace LSimp
+
+initialize registerTraceClass `Meta.Tactic.lsimp.pre
+initialize registerTraceClass `Meta.Tactic.lsimp.step
+initialize registerTraceClass `Meta.Tactic.lsimp.post
+
 
 def mkCongrFun (r : Result) (a : Expr) : MetaM Result :=
   match r.proof? with
@@ -71,7 +78,6 @@ but `SciLean.Tactic.LSimp.reduceProjFn?` reduces this to
 let a := 10
 a*a
 ```
-
  -/
 private def reduceProjFn? (e : Expr) : SimpM (Option Expr) := do
   matchConst e.getAppFn (fun _ => pure none) fun cinfo _ => do
@@ -83,6 +89,8 @@ private def reduceProjFn? (e : Expr) : SimpM (Option Expr) := do
         match e? with
         | none   => pure none
         | some e =>
+          -- lsimp modification
+          -- here we are using modified version of `reduceProj?`
           match (← reduceProj? e.getAppFn) with
           | some f => return some (mkAppN f e.getAppArgs)
           | none   => return none
@@ -227,7 +235,8 @@ private partial def dsimp (e : Expr) : M Expr := do
         return .visit r.expr
     let mut eNew ← reduce e
 
-    -- This block is the main difference between simp and lsimp
+    -- lsimp modification
+    -- this cleans up let bindinds and unfolds computationally irrelevant let bindings
     if eNew.isLet then
       -- TODO: fuel in `flattenLet` should be optional 
       -- TODO: add option if we want to split structure constructors
@@ -320,15 +329,21 @@ where
     else
       let init := r.expr
       modify fun s => { s with numSteps := s.numSteps + 1 }
+      trace[Meta.Tactic.lsimp.pre] s!"lsimp pre on:\n{←ppExpr r.expr}"
       match (← pre r.expr) with
       | Step.done r'  => cacheResult cfg (← mkEqTrans r r')
       | Step.visit r' =>
         let r ← mkEqTrans r r'
+        trace[Meta.Tactic.lsimp.step] s!"lsimp step on:\n{←ppExpr r.expr}"
         let r ← mkEqTrans r (← simpStep r.expr)
+        trace[Meta.Tactic.lsimp.post] s!"lsimp post on:\n{←ppExpr r.expr}"
         match (← post r.expr) with
         | Step.done r'  => cacheResult cfg (← mkEqTrans r r')
         | Step.visit r' =>
           let r ← mkEqTrans r r'
+          -- lsimp modification
+          -- clean up expressions after rewrites
+          let r ← mkEqTrans r { expr := ← dsimp r.expr }
           if cfg.singlePass || init == r.expr then
             cacheResult cfg r
           else
@@ -718,9 +733,7 @@ where
       return { expr := (← dsimp e) }
 
   simpLet (e : Expr) : M Result := do
-    let e ← dsimp e
-    let Expr.letE n t v b _ := e 
-      | return { expr := e }
+    let Expr.letE n t v b _ := e | unreachable!
     if (← Simp.getConfig).zeta then
       return { expr := b.instantiate1 v }
     else
