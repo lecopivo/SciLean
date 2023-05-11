@@ -174,7 +174,7 @@ namespace LinMap
       -- It looks assymetrical but it is a consequence of `inner_proj_dualproj`
       --   ⟪x, y⟫ = ∑ i, 𝕡 i x * 𝕡' i y
       -- which also appears assymetrical
-      inner f g := ∑ i, ⟪f (𝕖 i), g (𝕖' i)⟫
+      inner f g := ∑ i, ⟪f (𝕖 i), g (𝕖' i)⟫ -- = ∑ i j, ⟪𝕖' i, 𝕖' j⟫ * ⟪f (𝕖 i), g (𝕖 j)⟫
 
     -- @[infer_tc_goals_rl]
     instance [FinVec X ι] [Hilbert Y] : TestFunctions (X ⊸ Y) where
