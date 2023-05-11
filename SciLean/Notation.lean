@@ -48,6 +48,13 @@ elab:max "∂†" x:term:max : term => withFreshMacroScope do
   elabTerm (← `(?m)) none
 
 
+class PartialDot {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
+
+elab:max "∂·" x:term:max : term => withFreshMacroScope do
+  _ ← synthInstance (← elabType (← `(PartialDot $x ?m)))
+  elabTerm (← `(?m)) none
+
+
 class Differential {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
 
 elab:max "ⅆ" x:term:max : term => withFreshMacroScope do
