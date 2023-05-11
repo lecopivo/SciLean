@@ -96,7 +96,12 @@ theorem dualBasis_ext {X ι} {_ : EnumType ι} [FinVec X ι] (x y : X)
 
 theorem inner_proj_dualProj {X ι} {_ : EnumType ι} [FinVec X ι] (x y : X)
   : ⟪x, y⟫ = ∑ i, 𝕡 i x * 𝕡' i y :=
-by sorry_proof
+by 
+  calc 
+    ⟪x, y⟫ = ∑ i j, ⟪(𝕡 i x) • 𝕖[X] i, (𝕡' j y) • 𝕖' j⟫ := by sorry_proof -- rw[← (FinVec.is_basis x), ← (FinVec.is_basis y)]
+         _ = ∑ i j, (𝕡 i x * 𝕡' j y) * ⟪𝕖[X] i, 𝕖' j⟫ := by sorry_proof -- use linearity of the sum
+         _ = ∑ i j, (𝕡 i x * 𝕡' j y) * [[i=j]] := by simp [FinVec.duality]
+         _ = ∑ i, 𝕡 i x * 𝕡' i y := sorry_proof -- summing over [[i=j]]  
 
 @[simp]
 theorem inner_basis_dualBasis {X ι} {_ : EnumType ι} [FinVec X ι] (i j : ι)
@@ -111,7 +116,11 @@ by sorry_proof
 @[simp]
 theorem inner_dualBasis_proj {X ι} {_ : EnumType ι} [FinVec X ι] (i : ι) (x : X)
   : ⟪x, 𝕖' i⟫ = 𝕡 i x :=
-by sorry_proof
+by 
+  calc
+    ⟪x, 𝕖' i⟫ = ⟪∑ j, 𝕡 j x • 𝕖[X] j, 𝕖' i⟫ := by sorry_proof -- rw[← (FinVec.is_basis x)]
+            _ = ∑ j, 𝕡 j x * [[j=i]] := by sorry_proof -- inner_basis_dualBasis and some linearity
+            _ = 𝕡 i x := by sorry_proof
 
 @[simp]
 theorem inner_basis_dualProj {X ι} {_ : EnumType ι} [FinVec X ι] (i : ι) (x : X)
