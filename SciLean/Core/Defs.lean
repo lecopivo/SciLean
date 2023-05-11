@@ -111,6 +111,16 @@ def adjointDifferential (f : X → Y) (x : X) (dy' : Y) : X := (∂ f x)† dy'
 @[default_instance]
 instance (f : X → Y) : PartialDagger f (adjointDifferential f) := ⟨⟩
 
+@[fun_trans_def]
+noncomputable
+def Smooth.adjointDifferential (f : X ⟿ Y) : (X ⟿ Y ⊸ X) := 
+  SmoothMap.mk (λ x => 
+    LinMap.mk (λ dy => SciLean.adjointDifferential f.1 x dy)
+    sorry_proof)
+  sorry_proof
+
+instance (f : X ⟿ Y) : PartialDagger f (Smooth.adjointDifferential f) := ⟨⟩
+
 
 -- ℛ
 
