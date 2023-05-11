@@ -59,14 +59,14 @@ def applyLetRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) :
       applyRule transName .letComp #[f,g]
 
 open Qq in
-/-- Applies letBinop or letComp rule to `T (λ x y => b)` as a simp step.
+/-- Applies swap or tries to apply piMap, piMapComp rule to `T (λ x y => b)` as a simp step.
   
   - `x` and `y` has to be lambda free variable
   - `b` is the body of the lambda function
   -/
 def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.Step) := do
 
-  -- Attempt applying `piMapComp` i.e. the case `λ g a => f a g (g (h a))`
+  -- Attempt applying `piMapComp` i.e. the case `λ (g : α → X) (a : α) => f a g (g (h a))`
   if let .forallE _ β X _ ← inferType x then
       -- rename variable to make the code more readable
       let α : Q(Type) ← inferType y
