@@ -13,7 +13,7 @@ noncomputable
 def tangentMapDep (f : X → Y) : 𝒯 X → 𝒯 Y := λ ⟨x,dx⟩ => ⟨f x, differentialDep f x dx⟩
 
 noncomputable 
-def tangentMapDep' (f : X → Y) (x : X) (dx : 𝒯[x] X) : (Σ' (y:Y) (_:𝒯[y] Y), (f x=y)) := ⟨f x, differentialDep f x dx, rfl⟩
+def tangentMapDep' (f : X → Y) (x : X) (dx : 𝒯[x] X) : (Σ' (y:Y) (dy : 𝒯[y] Y), (f x=y)) := ⟨f x, differentialDep f x dx, rfl⟩
 
 instance(priority:=mid-1) (f : X → Y) : Partial f (differentialDep f) := ⟨⟩
 instance(priority:=mid-1) (f : X → Y) : TangentMap f (tangentMapDep' f) := ⟨⟩
@@ -39,12 +39,15 @@ theorem differentialDep.of_comp
     =
     λ x dx =>
       -- option 1:
-      let ⟨y,dy,h⟩ := 𝒯 g x dx
-      h ▸ ∂ f y dy
+      let yy := 𝒯 g x dx
+      let y := yy.1
+      let dy := yy.2.1
+      ∂ f y dy
       -- option 2:
       -- let y := g x
       -- let dy := ∂ g x dx
       -- have h : y = g x := by admit
+
       -- h ▸ ∂ f y dy
       -- option 3:
       -- ∂ f (g x) (∂ g x dx)
