@@ -19,11 +19,11 @@ variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 --     3. ∂_dx (x:=x₀), f x           -- Can we parse this properly? What if `dx` is complicated, do we allow `∂_(dx)` ?
 --     4. ??
 -- macro "∂" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂ λ $x => $f)
-syntax diffBinderType  := ":" term
+syntax diffBinderType  := " : " term
 syntax diffBinderValue := ":=" term (";" term)?
 syntax diffBinder := ident (diffBinderType <|> diffBinderValue)?
-syntax "∂" diffBinder "," term:66 : term
-syntax "∂" "(" diffBinder ")" "," term:66 : term
+syntax "∂ " diffBinder ", " term:66 : term
+syntax "∂ " "(" diffBinder ")" ", " term:66 : term
 macro_rules
 | `(∂ $x:ident, $f) =>
   `(∂ λ $x => $f)
@@ -36,8 +36,36 @@ macro_rules
 | `(∂ ($b:diffBinder), $f) =>
   `(∂ $b, $f)
 
-syntax "ⅆ" diffBinder "," term:66 : term
-syntax "ⅆ" "(" diffBinder ")" "," term:66 : term
+@[app_unexpander differential] def unexpandDifferential : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $f:term $x $dx $y $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((∂ $x':ident:=$x;$dx, $b) $y $ys*)
+    | _  => `(∂ $f:term $x:term $dx $y $ys*)
+
+  | `($(_) $f:term $x $dx) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂ ($x':ident:=$x;$dx), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂ ($x':ident:=$x;$dx), $b)
+    | _  => `(∂ $f:term $x $dx)
+
+  | `($(_) $f:term $x) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂ ($x':ident:=$x), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂ ($x':ident:=$x), $b)
+    | _  => `(∂ $f:term $x)
+
+  | `($(_) $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂ $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂ ($x' : $ty), $b)
+    | _  => `(∂ $f)
+
+  | _  => throw ()
+
+
+syntax "ⅆ " diffBinder ", " term:66 : term
+syntax "ⅆ " "(" diffBinder ")" ", " term:66 : term
 macro_rules
 | `(ⅆ $x:ident, $f) =>
   `(ⅆ λ $x => $f)
@@ -47,6 +75,52 @@ macro_rules
   `((ⅆ λ $x => $f) $val)
 | `(ⅆ ($b:diffBinder), $f) =>
   `(ⅆ $b, $f)
+
+
+@[app_unexpander differentialScalar] def unexpandDifferentialScalar : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $f:term $x $y $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((ⅆ $x':ident:=$x, $b) $y $ys*)
+    | `(fun ($x':ident : $ty) => $b:term) => `((ⅆ $x':ident:=$x, $b) $y $ys*)
+    | _  => `(ⅆ $f:term $x:term $y $ys*)
+
+  | `($(_) $f:term $x) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(ⅆ ($x':ident:=$x), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(ⅆ ($x':ident:=$x), $b)
+    | _  => `(ⅆ $f:term $x)
+
+  | `($(_) $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(ⅆ $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(ⅆ ($x':ident : $ty), $b)
+    | _  => `(ⅆ $f)
+
+  | _  => throw ()
+
+
+@[app_unexpander Smooth.differentialScalar] def unexpandSmoothDifferentialScalar : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $f:term $x $y $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((ⅆ $x':ident:=$x, $b) $y $ys*)
+    | `(fun ($x':ident : $ty) => $b:term) => `((ⅆ $x':ident:=$x, $b) $y $ys*)
+    | _  => `(ⅆ $f:term $x:term $y $ys*)
+
+  | `($(_) $f:term $x) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(ⅆ ($x':ident:=$x), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(ⅆ ($x':ident:=$x), $b)
+    | _  => `(ⅆ $f:term $x)
+
+  | `($(_) $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(ⅆ $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(ⅆ ($x':ident : $ty), $b)
+    | _  => `(ⅆ $f)
+
+  | _  => throw ()
 
 
 --------------------------------------------------------------------------------

@@ -31,11 +31,11 @@ instance integral.instNotationIntegral
   : Integral f (integral f) := ⟨⟩
 
 
-syntax intBinderType := ":" term
-syntax intBinderSet  := "∈" term
+syntax intBinderType := " : " term
+syntax intBinderSet  := " ∈ " term
 syntax intBinder := ident (intBinderType <|> intBinderSet)?
-syntax "∫" intBinder "," term:66 : term
-syntax "∫" "(" intBinder ")" "," term:66 : term
+syntax "∫ " intBinder ", " term:66 : term
+syntax "∫ " "(" intBinder ")" ", " term:66 : term
 macro_rules
 | `(∫ $x:ident, $f) =>
   `(∫ (λ $x => $f))
@@ -47,6 +47,29 @@ macro_rules
   `(integral (λ $x => $f) $s)
 | `(∫ ($x:ident ∈ $s:term), $f) =>
   `(integral (λ $x => $f) $s)
+
+
+@[app_unexpander integral] def unexpandIntegral : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $f:term $Ω $y $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((∫ ($x':ident ∈ $Ω:term), $b) $y $ys*)
+    | `(fun ($x':ident : $ty) => $b:term) => `((∫ ($x':ident ∈ $Ω:term), $b) $y $ys*)
+    | _  => `(∫ $f:term $Ω $y $ys*)
+
+  | `($(_) $f:term $Ω) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∫ ($x':ident ∈ $Ω:term), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∫ ($x':ident ∈ $Ω:term), $b)
+    | _  => `(∫ $f:term $Ω)
+
+  | `($(_) $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∫ $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∫ ($x':ident : $ty), $b)
+    | _  => `(∫ $f:term)
+
+  | _  => throw ()
 
 
 --------------------------------------------------------------------------------

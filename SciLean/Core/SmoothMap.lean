@@ -34,6 +34,28 @@ open Lean.TSyntax.Compat in
 macro "fun"   xs:Lean.explicitBinders " ⟿ " b:term : term =>
   Lean.expandExplicitBinders `SciLean.SmoothMap.mk xs b
 
+@[app_unexpander SmoothMap.mk] def unexpandSmoothMapMk : Lean.PrettyPrinter.Unexpander
+
+  -- | `($(_) $f:term $x $y $ys*) =>
+  --   match f with
+  --   | `(fun $x':ident => $b:term) => `((ⅆ $x':ident:=$x, $b) $y $ys*)
+  --   | `(fun ($x':ident : $ty) => $b:term) => `((ⅆ $x':ident:=$x, $b) $y $ys*)
+  --   | _  => `(ⅆ $f:term $x:term $y $ys*)
+
+  -- | `($(_) $f:term $x) =>
+  --   match f with
+  --   | `(fun $x':ident => $b:term) => `(ⅆ ($x':ident:=$x), $b)
+  --   | `(fun ($x':ident : $ty) => $b:term) => `(ⅆ ($x':ident:=$x), $b)
+  --   | _  => `(ⅆ $f:term $x)
+
+  | `($(_) $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(fun $x':ident ⟿ $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(fun ($x':ident : $ty) ⟿ $b)
+    | _  => `(ⅆ $f)
+
+  | _  => throw ()
+
 
 class SmoothMapClass (F : Type _) (X Y : outParam <| Type _) [Vec X] [Vec Y]
   extends FunLike F X fun _ => Y where

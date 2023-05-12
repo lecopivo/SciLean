@@ -63,7 +63,6 @@ def Smooth.divergenceDiff (v : X ⟿ X ⊸ Y) := λ x ⟿ - ∑ i, ∂ v x (𝕖
 
 instance (v : X ⟿ X ⊸ Y) : PartialDot v (Smooth.divergenceDiff v) := ⟨⟩
 
-
 -- This is a component wise formulation of divergence theorem
 theorem divergence_theorem (f : X ⟿ ℝ) 
   (Ω : Set X) (S : Set X) -- ∂ Ω = S -- surface of Ω
@@ -268,18 +267,148 @@ theorem gradientVariational_comp (F : (X⟿Y) → (X⟿ℝ))
 
 #check SmoothMap.mk
 
-example (f : X⟿ℝ) : (∇ f' : X⟿ℝ, ∫ x, ‖∇ f x‖²) f = - 2 • ∇· (∇ f) := 
+instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : HasAdjDiff f := sorry_proof
+instance {X Y} [Vec X] [Vec Y] (f : X → Y) : IsSmooth f := sorry_proof
+
+theorem SmoothMap.mk.arg_f.pointwise 
+  (f : X → Y → Z) [IsSmooth λ (xy : X×Y) => f xy.1 xy.2]
+  : (∂† λ (g : X⟿Y) => λ x ⟿ f x (g x))
+    =
+    λ g dg' => λ x ⟿ ∂† (f x) (g x) (dg' x)
+  := sorry
+
+theorem SmoothMap.mk.arg_f.comp {U V} [SemiHilbert U] [SemiHilbert V]
+  (g : U → V) [HasAdjDiff g]
+  (f : V → X → Y) [IsSmooth λ vx : V×X => f vx.1 vx.2] -- [HasAdjDiff λ v => λ x ⟿ f v x]
+  : have : ∀ v, IsSmooth (f v) := sorry_proof
+    (∂† λ (u : U) => λ x ⟿ f (g u) x)
+    =
+    λ u du' => 
+      let v := g u
+      let df' := ∂† λ v => λ x ⟿ f v x
+      let dg' := ∂† g
+      dg' u (df' v du')
+  := sorry
+
+
+noncomputable
+def hihi (v : X ⟿ X) :=  ∇· v
+
+@[simp]
+theorem Smooth.gradient.arg_f.differential_simp
+  : ∂ (λ f : X⟿ℝ => ∇ f)
+    =
+    λ _ df => (gradient df)
+  := sorry_proof
+
+@[simp]
+theorem Smooth.gradient.arg_f.adjointDifferential_simp
+  : ∂† (λ f : X⟿ℝ => ∇ f)
+    =
+    λ f df' => - Smooth.divergence df' -- for some reason `∇· df'` does not work :(
+  := by
+  unfold SciLean.adjointDifferential
+  simp
+  done
+
+
+@[simp]
+theorem Smooth.differential.arg_f.differential_simp {X} [SemiHilbert X]
+  : ∂ (λ f : ℝ⟿X => ⅆ f)
+    =
+    λ _ df => (differentialScalar df) -- for some reason `ⅆ df` does not work :(
+  := sorry_proof
+
+@[simp]
+theorem Smooth.differential.arg_f.adjointDifferential_simp {X} [Hilbert X]
+  : ∂† (λ f : ℝ⟿X => ⅆ f)
+    =
+    λ _ df => - (differentialScalar df) -- for some reason `ⅆ df` does not work :(
+  := by
+  unfold SciLean.adjointDifferential
+  simp
+  done
+  
+@[simp]
+theorem smul_smoothmap_mk (f : X ⟿ Y) (r : ℝ)
+  : (λ x ⟿ r • f x) = r • f := by rfl
+
+example (f : X⟿ℝ) : (∇ f' : X⟿ℝ, ∫ x, ‖∇ f' x‖²) f = - (2:ℝ) • ∇· (∇ f) := 
 by
   conv => 
     lhs
-    rw[gradientVariational_comp (λ f' : X⟿ℝ => λ x ⟿ ‖∇ f x‖²)]
+    rw[gradientVariational_comp (λ f' : X⟿ℝ => λ x ⟿ ‖∇ f' x‖²)]
     dsimp
-
+    rw[adjointDifferential.rule_comp (λ (f : X⟿X) => λ x ⟿ ‖f x‖²) Smooth.gradient]
+    simp
+    rw[SmoothMap.mk.arg_f.pointwise λ x y => ‖y‖²]
+    simp [Inner.normSqr.arg_x.adjointDifferential_simp]
+  admit -- almost there
 
 
 variable (g : X⟿ℝ)
 #check (∇ (g' : X⟿ℝ), ∫ x, ‖∇ g' x‖²) g
-  
+
+
+theorem adjointDifferential.rule_scomb {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
+  (f : X → Y → Z) [HasAdjDiff λ xy : X×Y => f xy.1 xy.2]
+  (g : X → Y) [HasAdjDiff g]
+  : ∂† (λ x : X => f x (g x))
+    =
+    λ x dz => 
+      let y := g x
+      let dx₁ := ∂† (x':=x;dz), f x' y 
+      let dy  := ∂† (y':=y;dz), f x y'
+      let dx₂ := ∂† g x dy
+      dx₁ + dx₂ := sorry
+
+@[simp]
+theorem asdf {X Y} [Vec X] [Vec Y] (f g : X ⟿ Y) (x : X) : (f + g) x = f x + g x := sorry -- by simp
+
+@[simp]
+theorem asdff {X Y} [Vec X] [Vec Y] (f : X ⟿ Y) (r : ℝ) (x : X) : (r • f) x = r • f x := sorry -- by simp
+
+@[simp]
+theorem asdffg {X Y} [Vec X] [Vec Y] (f : X ⟿ Y) (x : X) : (-f) x = - (f x) := sorry -- by simp
+
+@[simp]
+theorem asdffgg {X Y} [Vec X] [Vec Y] (f : X → Y) (x : X) : (-f) x = - (f x) := by rfl -- by simp
+
+
+@[simp]
+theorem asdffggg {α β X : Type} [Vec X] (f : α → β → X) (a : α) (b : β) : (-f) a b = - (f a b) := by simp -- by simp
+
+
+@[simp]
+theorem asdfff {X Y} [Vec X] [Vec Y] (f : X → Y) (r : ℝ) (x : X) : (r • f) x = r • f x := sorry -- by simp
+
+@[simp]
+theorem hoho {X} [Vec X] (f : ℝ→X) (h : IsSmooth f) (t : ℝ) : ⅆ (SmoothMap.mk f h) t = ⅆ f t := by rfl
+
+@[simp]
+theorem adjDiff_as_gradient {X} [SemiHilbert X] (f : X → ℝ) (x : X) : ∂† f x 1 = ∇ f x := by rfl
+
+example (L : X → X → ℝ) 
+  : (∇ x : ℝ⟿X, ∫ t, L (x t) (ⅆ x t)) 
+    = λ x => 
+      λ t ⟿ ∇ (x':=x t), L x' (ⅆ x t)    -- (∂/∂x L) 
+              - ⅆ (t':=t), ∇ (v':=ⅆ x t'), L (x t') v' :=   -- d/dt (∂/∂ẋ L) 
+by
+  funext x; ext t
+  conv => 
+    lhs
+    rw[gradientVariational_comp (λ x : ℝ⟿X => λ t ⟿ L (x t) (ⅆ x t))]
+    dsimp
+    
+    rw[adjointDifferential.rule_scomb (λ (x : ℝ⟿X) (v : ℝ⟿X) => λ t ⟿ L (x t) (v t)) Smooth.differentialScalar]
+
+    simp (config := {zeta := false})
+    conv => 
+      simp (config := {zeta := false}) only [SmoothMap.mk.arg_f.pointwise λ t x' => L x' (ⅆ x t)]
+      simp (config := {zeta := false}) only [SmoothMap.mk.arg_f.pointwise λ t y => L (x t) y]
+    simp [Inner.normSqr.arg_x.adjointDifferential_simp]
+  simp
+  done
 
 
 -- instance oj  {X Y Y' Z} [Vec X] [Vec Y] [Vec Y'] [Vec Z] 

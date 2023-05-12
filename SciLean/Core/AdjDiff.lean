@@ -11,8 +11,8 @@ variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι κ : Type} [EnumType ι] [EnumType κ]
 
-syntax "∂†" diffBinder "," term:66 : term
-syntax "∂†" "(" diffBinder ")" "," term:66 : term
+syntax "∂† " diffBinder ", " term:66 : term
+syntax "∂† " "(" diffBinder ")" ", " term:66 : term
 macro_rules
 | `(∂† $x:ident, $f) =>
   `(∂† λ $x => $f)
@@ -25,12 +25,40 @@ macro_rules
 | `(∂† ($b:diffBinder), $f) =>
   `(∂† $b, $f)
 
+@[app_unexpander adjointDifferential] def unexpandAdjointDifferential : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $f:term $x $dx $y $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((∂† $x':ident:=$x;$dx, $b) $y $ys*)
+    | _  => `(∂† $f:term $x:term $dx $y $ys*)
+
+  | `($(_) $f:term $x $dx) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂† ($x':ident:=$x;$dx), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂† ($x':ident:=$x;$dx), $b)
+    | _  => `(∂† $f:term $x $dx)
+
+  | `($(_) $f:term $x) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂† ($x':ident:=$x), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂† ($x':ident:=$x), $b)
+    | _  => `(∂† $f:term $x)
+
+  | `($(_) $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂† $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂† ($x' : $ty), $b)
+    | _  => `(∂† $f)
+
+  | _  => throw ()
+
+
 -- Notation 
 -- ∇ s, f s         --> ∇ λ s => f s
 -- ∇ s : ℝ, f s     --> ∇ λ s : ℝ => f s
 -- ∇ s := t, f s    --> (∇ λ s => f s) t
-syntax "∇" diffBinder "," term:66 : term
-syntax "∇" "(" diffBinder ")" "," term:66 : term
+syntax "∇ " diffBinder ", " term:66 : term
+syntax "∇ " "(" diffBinder ")" ", " term:66 : term
 macro_rules 
 | `(∇ $x:ident, $f) =>
   `(∇ λ $x => $f)
@@ -41,6 +69,33 @@ macro_rules
 | `(∇ ($b:diffBinder), $f) =>
   `(∇ $b, $f)
 
+@[app_unexpander gradient] def unexpandGradient : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $f:term $x $y $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((∇ $x':ident:=$x, $b) $y $ys*)
+    | _  => `(∇ $f:term $x $y $ys*)
+
+  | `($(_) $f:term $x) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∇ ($x':ident:=$x), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∇ ($x':ident:=$x), $b)
+    | _  => `(∇ $f:term $x)
+
+  | `($(_) $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∇ $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∇ ($x' : $ty), $b)
+    | _  => `(∇ $f)
+
+  | _  => throw ()
+
+
+variable (f : X → ℝ) (x : X)
+
+#check ∇ f
+#check ∇ x', f x'
+#check ∇ x':=x, f x'
 
 
 variable {α β γ : Type}

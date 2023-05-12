@@ -136,13 +136,28 @@ namespace EnumType
     (← EnumType.forIn (0 : α) λ (i : ι) a => .yield (a + f i)).value
 
   open Lean.TSyntax.Compat in
-  macro "∑" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``EnumType.sum xs b
+  macro " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``EnumType.sum xs b
+
+  @[app_unexpander sum] def unexpandSum : Lean.PrettyPrinter.Unexpander
+    | `($(_) fun $x:ident => $b) => 
+      `(∑ $x:ident, $b)
+    | `($(_) fun ($x:ident : $ty:term) => $b) => 
+      `(∑ ($x:ident : $ty), $b)
+    | _  => throw ()
+
 
   @[specialize] def product {α} [One α] [Mul α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
     (← EnumType.forIn (1 : α) λ (i : ι) a => .yield (a * f i)).value
 
   open Lean.TSyntax.Compat in
-  macro "∏" xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
+  macro " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
+
+  @[app_unexpander product] def unexpandProduct : Lean.PrettyPrinter.Unexpander
+    | `($(_) fun $x:ident => $b) => 
+      `(∏ $x:ident, $b)
+    | `($(_) fun ($x:ident : $ty:term) => $b) => 
+      `(∏ ($x:ident : $ty), $b)
+    | _  => throw ()
 
   
   -- TODO: move this somewhere else
