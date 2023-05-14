@@ -8,6 +8,7 @@ import SciLean.Data.DataArray
 
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
+import SciLean.Data.Mesh.SurfaceMesh
 
 
 #exit

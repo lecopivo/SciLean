@@ -8,7 +8,9 @@ https://github.com/GeometryCollective/geometry-processing-js/blob/c7ea47ae808979
 -/
 
 import SciLean.Core
+import Lean.Data.HashMap
 
+open Lean Data
 
 -- abbrev V3 : Type := ℝ^{3}
 -- 3D vector.
@@ -18,8 +20,9 @@ structure V3 where
   z : ℝ
 
 /- index of vertices --/
-abbrev Index (name : Name) := Nat
+abbrev Index (_name : Name) := Nat
 abbrev Index.invalid : Index α := 424242
+abbrev Index.ofNat {name : Name} (n : Nat) : Index name := n
 
 structure Vertex where
   index : Index `Vertex := .invalid
@@ -29,6 +32,7 @@ deriving Inhabited
 /-- Half edge data structure -/
 structure Halfedge where
   index : Index `Halfedge := .invalid
+  next : Index `Halfedge := .invalid
   edge : Index `Edge := .invalid
   twin : Option (Index `Halfedge) := .none
   vertex : Index `Vertex := .invalid
@@ -53,7 +57,8 @@ structure Edge where
 deriving Inhabited
 
 structure Boundary where
-  gens : Array (Index `Halfedge) := #[]
+  face : (Index `Face)
+  -- gens : Array (Index `Halfedge) := #[]
 deriving Inhabited
 
 /-
@@ -138,14 +143,21 @@ def MeshBuilderM.modifyHalfedge (ix : Index ``Halfedge)
     let out := fn s.halfedges[ix]!
     (out, { s with halfedges := s.halfedges.set! ix out })
 
+def MeshBuilderM.modifyHalfedge_ (ix : Index ``Halfedge)
+  (fn : Halfedge → Halfedge) : MeshBuilderM Unit := do 
+  let _ ← MeshBuilderM.modifyHalfedge ix fn
+
 def MeshBuilderM.getHalfedge (ix : Index ``Halfedge) : MeshBuilderM Halfedge :=
   MeshBuilderM.modifyHalfedge ix id
 
 def MeshBuilderM.setHalfedge (ix : Index ``Halfedge) (v : Halfedge) : MeshBuilderM Halfedge :=
   MeshBuilderM.modifyHalfedge ix (fun _ => v)
 
+def MeshBuilderM.modifyBoundaries (f : Array Boundary → Array Boundary) : MeshBuilderM Unit :=
+  modify (fun s => { s with boundaries := f s.boundaries })
 
 -- ### Face accessors
+-- TODO: return the face
 def MeshBuilderM.newFace : MeshBuilderM (Index ``Face) :=
   fun s =>
    let ix := s.halfedges.size
@@ -153,11 +165,16 @@ def MeshBuilderM.newFace : MeshBuilderM (Index ``Face) :=
    let data := { data with index := ix }
    (ix, { s with faces := s.faces.push data })
 
+-- TODO: modify anything with the typeclass [IsPointerTo ``Face].
 def MeshBuilderM.modifyFace (ix : Index ``Face)
   (fn : Face → Face) : MeshBuilderM Face :=
   fun s =>
     let out := fn s.faces[ix]!
     (out, { s with faces := s.faces.set! ix out })
+
+def MeshBuilderM.modifyFace_ (ix : Index ``Face)
+  (fn : Face → Face) : MeshBuilderM Unit := do
+  let _ ← MeshBuilderM.modifyFace ix fn
 
 def MeshBuilderM.getFace (ix : Index ``Face) : MeshBuilderM Face :=
   MeshBuilderM.modifyFace ix id
@@ -178,26 +195,57 @@ def MeshBuilderM.setFace (ix : Index ``Face) (v : Face) : MeshBuilderM Face :=
 * (when this mesh contains any one or a combination of the following - non-manifold vertices,
 *  non-manifold edges, isolated vertices, isolated faces).
 
-indices: indexes of triangles, where each triangle is a contingous sequence of
+indices: indexes of triangles, where a triangle is a contingous sequence of 3 indexes, of the vertices
+  of the triangle.
 -/
-  for i in List.range positions.size do
+
+partial def MeshBuilderM.makeBoundary
+  (start : Halfedge)
+  (boundaryCycle : Array (Index ``Halfedge))
+  (he : Halfedge) : MeshBuilderM Unit :=  do
+  let bhIx ← newHalfedge
+  let boundaryCycle := boundaryCycle.push bhIx
+
+  -- create new face
+  let fIx ← newFace
+  -- TODO: check if this notion of boundary is correct?
+  modifyBoundaries fun boundaries => boundaries.push { face := fIx : Boundary }
+
+
+  -- grab the next halfedge along the boundary that does not have a twin halfedge
+  let mut nextHe := he
+  while nextHe.twin.isSome do {
+    nextHe ← getHalfedge (← getHalfedge nextHe.twin.get!).next
+  }
+
+  -- Set the current halfedge's attributes
+  modifyHalfedge_ bhIx (fun h => { h with vertex := nextHe.index })
+  modifyHalfedge_ bhIx (fun h => { h with edge := nextHe.edge })
+  modifyHalfedge_ bhIx (fun h => { h with onBoundary := true })
+
+  -- point the new halfedge and face to each other
+  modifyHalfedge_ bhIx (fun h => { h with face := fIx })
+  modifyFace_ fIx (fun f => { f with halfedge := bhIx })
+
+  -- point the new halfedge and he to each other
+  modifyHalfedge_ bhIx (fun h => { h with twin := he.index })
+  modifyHalfedge_ bhIx (fun h => { h with twin := he.index })
+ -- TODO: allow the `modifyHalfedge_` to take a typeclass called `IsHalfedgeIndex`.
+  modifyHalfedge_ he.index (fun h => { h with twin := he.index })
+
+  -- continue walk
+  let he := nextHe;
+  if he.index == start.index
+  then return
+  else makeBoundary start boundaryCycle he
+
+partial def MeshBuilderM.assertNoIsolatedVertices : MeshBuilderM Unit := return ()
+partial def MeshBuilderM.assertNoIsolatedFaces : MeshBuilderM Unit := return ()
+partial def MeshBuilderM.assertNoNonManifoldVertices : MeshBuilderM Unit := return ()
+
+partial def MeshBuilderM.build (positions : Array V3) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit :=
+  for i in List.range positions.size do {
     let vix ← newVertex
-
-
-/-
-    -- let indexToVertex : HashMap VIndex = new Map();
-    -- for (let i = 0; i < positions.length; i++) {
-    --         let v = new Vertex();
-    --         this.vertices[i] = v;
-    --         indexToVertex.set(i, v);
-    -- }
-
-    -- create and insert halfedges, edges and non boundary loop faces
-    let eIndex := 0;
-    -- let edgeCount = new Map();
-    let mut edgeCount := new HashMap
-    let mut hasTwinHalfedge := {}
- -/
     -- keeps track of halfedges between existing vertices.
     --   if a halfedge already exists, then we know that the halfedge
     --   we are constructing is a twin.
@@ -205,146 +253,87 @@ indices: indexes of triangles, where each triangle is a contingous sequence of
       HashMap (Index `Vertex × Index `Vertex) (Index `Halfedge) := {}
     let mut edgeCount :
       HashMap (Index `Vertex × Index `Vertex) Nat := {}
-    let mut hasTwinHalfedge :
-      HashMap (Index `Halfedge) Bool := {}
     let mut edgeCount :
-    for i in List.range (indices.size / 3) do
-        let I := i * 3
-        let f ← newFace
-        -- create a halfedge for each edge of the newly created face
-        for J in List.range 3 do
-          let _ ← newHalfedge -- make the new half edges
+    for i in List.range (indices.size / 3) do {
+      let I := i * 3
+      let f ← newFace
+      -- create a halfedge for each edge of the newly created face
+      for J in List.range 3 do {
+        let _ ← newHalfedge -- make the new half edges
+      }
+      for J in List.range 3 do { 
+        -- current halfedge goes from vertex i to vertex j
+        let K := (J + 1) % 3
+        let i := I + J
+        let j := I + K
+        -- set the current halfedge's attributes
+        modifyHalfedge i (fun he => { he with next := j })
+        modifyHalfedge i (fun he => { he with prev := I + (J + 3 - 1) % 3 })
+        modifyHalfedge i (fun he => { he with onBoundary := false })
+        -- hasTwinHalfedge.set(h, false);
 
-        for J in List.rnge 3 do
-          -- current halfedge goes from vertex i to vertex j
-          let K := (J + 1) % 3
-          let i := I + J
-          let j := I + K
-          -- set the current halfedge's attributes
-          modifyHalfedge i (fun he => { he with next := j })
-          modifyHalfedge i (fun he => { he with prev := I + (J + 3 - 1) % 3 })
-          modifyHalfedge i (fun he => { he with onBoundary := false })
-          -- hasTwinHalfedge.set(h, false);
+        -- point the new halfedge and vertex i to each other
+        -- let v = indexToVertex.get(i);
+        modifyHalfedge i (fun he => { he with vertex := indices[i]! })
+        modifyVertex indieces[i]! (fun v => { v with halfedge := i })
 
-          -- point the new halfedge and vertex i to each other
-          -- let v = indexToVertex.get(i);
-          modifyHalfedge i (fun he => { he with vertex := indices[i]! })
-          modifyVertex indieces[i]! (fun v => { v with halfedge := i })
+        -- point the new halfedge and face to each other
+        modifyHalfedge i (fun he => { he with face := f })
+        modifyFace f (fun f => { f with halfedge := i })
 
-          -- point the new halfedge and face to each other
-          modifyHalfedge i (fun he => { he with face := f })
-          modifyFace f (fun f => { f with halfedge := i })
+        -- swap if (i > j) to maintain invariant that (i < j)
+        let (i, j) := if i > j then (j, i) else (i, j)
+        match existingHalfedges.find (i, j) with
+        | .some twin' => { -- primed is pointer.
+          -- if a halfedge between vertex i and j has been
+          -- created in the past, then it is the twin halfedge
+          -- of the current halfedge
+          let h' := I + J -- TODO: cleanup
+          modifyHalfedge h' (fun h => { h with twin := twin' })
+          modifyHalfedge twin' (fun twin => { twin with twin := h' })
+          let twinEdge ← getHalfedge twin'
+          modifyHalfedge h' (fun h => { h with edge := twinEdge.edge })
 
-          -- swap if (i > j) to maintain invariant that (i < j)
-          let (i, j) := if i > j then (j, i) else (i, j)
-          match existingHalfedges.find (i, j) with
-          | .some twin' => -- primed is pointer.
-            -- if a halfedge between vertex i and j has been
-            -- created in the past, then it is the twin halfedge
-            -- of the current halfedge
-            let h' := I + J -- TODO: cleanup
-            modifyHalfedge h' (fun h => { h with twin := twin' })
-            modifyHalfedge twin' (fun twin => { twin with twin := h' })
-            let twinEdge ← getHalfedge twin'
-            modifyHalfedge h' (fun h => { h with edge := twinEdge.edge })
+          -- TODO: use `modify`.
+          edgeCount := edgeCount.insert key <| (edgeCount.get! key) + 1
+        }
+        | .none => {
+          -- create an edge and set its halfedge
+          let h := I + J -- TODO: cleanup
+          let e ← newEdge
+          modifyEdge e (fun e => { e with halfedge := h })
+          modifyHalfedge h (fun h => { h with edge := e })
+        }
+        -- record the newly created edge and halfedge from vertex i to j
+        existingHalfedges := existingHalfedges.insert (i, j) h
+        -- edgeCount := edgeCount.set (i, j) 1
 
-            hasTwinHalfedge := hasTwinHalfedge.insert h' true
-            hasTwinHalfedge := hasTwinHalfedge.insert twin' true
-            -- TODO: use `modify`.
-            edgeCount := edgeCount.insert key <| (edgeCount.get! key) + 1)
-          | .none =>
-            -- create an edge and set its halfedge
-            let h := I + J -- TODO: cleanup
-            let e ← newEdge
-            modifyEdge e (fun e => { e with halfedge := h })
-            modifyHalfedge h (fun h => { h with edge := e })
+        if edgeCount.get key > 2 then {
+          panic!("Mesh has non-manifold edges!")
+          return false
+        }
+      }
+    -- -- create and insert boundary halfedges and "imaginary" faces for boundary cycles
+    -- -- also create and insert corners.
+    -- -- Note that every vertex corresponds to the halfedge from that vertex to
+    -- --   the next one in the triangle.
+    -- for i in List.range indices.size do
+    --   let h ← getHalfedge i
+    --   -- If a halfedge has no twin halfedge, create a new face and
+    --   -- link it the corresponding boundary cycle
+    --   -- TODO: move this function into the function.
+    --   if  h.twin.isNone then
+    --     MeshBuilderM.makeBoundary h #[] h
 
-            -- record the newly created edge and halfedge from vertex i to j
-            existingHalfedges := existingHalfedges.insert (i, j) h
-            edgeCount := edgeCount.set (i, j) 1
-          if edgeCount.get key > 2 {
-            panic!("Mesh has non-manifold edges!");
-            return false;
-          }
-
-// ----------------------------------------------------
-
-    // create and insert boundary halfedges and "imaginary" faces for boundary cycles
-    // also create and insert corners
-    let hIndex = indices.length;
-    let cIndex = 0;
-    for (let i = 0; i < indices.length; i++) {
-            // if a halfedge has no twin halfedge, create a new face and
-            // link it the corresponding boundary cycle
-            let h = this.halfedges[i];
-            if (!hasTwinHalfedge.get(h)) {
-                    // create new face
-                    let f = new Face();
-                    this.boundaries.push(f);
-
-                    // walk along boundary cycle
-                    let boundaryCycle = [];
-                    let he = h;
-                    do {
-                            // create a new halfedge
-                            let bH = new Halfedge();
-                            this.halfedges[hIndex++] = bH;
-                            boundaryCycle.push(bH);
-
-                            // grab the next halfedge along the boundary that does not have a twin halfedge
-                            let nextHe = he.next;
-                            while (hasTwinHalfedge.get(nextHe)) {
-                                    nextHe = nextHe.twin.next;
-                            }
-
-                            // set the current halfedge's attributes
-                            bH.vertex = nextHe.vertex;
-                            bH.edge = he.edge;
-                            bH.onBoundary = true;
-
-                            // point the new halfedge and face to each other
-                            bH.face = f;
-                            f.halfedge = bH;
-
-                            // point the new halfedge and he to each other
-                            bH.twin = he;
-                            he.twin = bH;
-
-                            // continue walk
-                            he = nextHe;
-                    } while (he !== h);
-
-                    // link the cycle of boundary halfedges together
-                    let n = boundaryCycle.length;
-                    for (let j = 0; j < n; j++) {
-                            boundaryCycle[j].next = boundaryCycle[(j + n - 1) % n]; // boundary halfedges are linked in clockwise order
-                            boundaryCycle[j].prev = boundaryCycle[(j + 1) % n];
-                            hasTwinHalfedge.set(boundaryCycle[j], true);
-                            hasTwinHalfedge.set(boundaryCycle[j].twin, true);
-                    }
-            }
-
-            // point the newly created corner and its halfedge to each other
-            if (!h.onBoundary) {
-                    let c = new Corner();
-                    c.halfedge = h;
-                    h.corner = c;
-
-                    this.corners[cIndex++] = c;
-            }
+    --   -- point the newly created corner and its halfedge to each other
+    --   -- TODO: think about the maths here.
+    --   if ! (← getHalfedge i).onBoundary then
+    --     let cIx ← newCorner
+    --     modifyCorner cIx (fun c => { c with halfedge := h.index })
+    --     modifyHalfedge h.index (fun h => { h with corner := cIx })
+    -- assertNoIsolatedVertices
+    -- assertNoIsolatedFaces
+    -- assertNoNonManifoldVertices
     }
-
-    // check if mesh has isolated vertices, isolated faces or
-    // non-manifold vertices
-    if (this.hasIsolatedVertices() ||
-            this.hasIsolatedFaces() ||
-            this.hasNonManifoldVertices()) {
-            return false;
-    }
-
-    // index elements
-    this.indexElements();
-
-    return true;
-}
--/
+  }
+  return ()
