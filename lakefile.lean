@@ -38,7 +38,7 @@ require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master
 
 require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "master"
 
-require proofwidgets from git "https://github.com/EdAyers/ProofWidgets4"@"v0.0.6"
+require proofwidgets from git "https://github.com/EdAyers/ProofWidgets4"@"v0.0.7"
 
 
 /--

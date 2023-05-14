@@ -38,24 +38,24 @@ theorem hold_fun_swap {α β} (f : α → β) (x : α)
 theorem hold_arg_swap {α β} (f : α → β) (x : α)
   : hold f x = hold (f x) := by unfold hold; rfl
 
-
 def balisticMotion (x v : ℝ×ℝ) := (v, g  - (5 + ‖v‖) • v)
 
 function_properties balisticMotion (x v : ℝ×ℝ)
 argument (x,v) [UnsafeAD] [IgnoreFunProp]
-  abbrev ∂ by unfold balisticMotion; fun_trans only,
+  abbrev ∂ by unfold balisticMotion; fun_trans only; clean_up_simp,
   def ∂† by unfold balisticMotion; fun_trans only; clean_up_simp,
   def ℛ by unfold balisticMotion; fun_trans only; clean_up_simp
 argument x
   IsSmooth,
   HasAdjDiff,
-  abbrev ∂† by unfold balisticMotion; fun_trans only,
-  abbrev ℛ by unfold balisticMotion; fun_trans only
+  abbrev ∂† by unfold balisticMotion; fun_trans only; clean_up_simp,
+  abbrev ℛ by unfold balisticMotion; fun_trans only; clean_up_simp
 argument v [UnsafeAD]
   IsSmooth,
   HasAdjDiff,
-  def ∂† by unfold balisticMotion; fun_trans only,
-  def ℛ by unfold balisticMotion; fun_trans only
+  def ∂† by unfold balisticMotion; fun_trans only; clean_up_simp,
+  def ℛ by unfold balisticMotion; fun_trans only; clean_up_simp
+
 
 approx aimToTarget (v₀ : ℝ×ℝ) (optimizationRate : ℝ) := 
   λ (T : ℝ) (target : ℝ×ℝ) =>

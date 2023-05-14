@@ -16,13 +16,13 @@ namespace FunctionTransformation
 
 def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Expr) : SimpM (Option Simp.Step) := do
   let .some rule ← findFunTransRule? transName ruleType
-    | trace[Meta.Tactic.fun_trans.missing_rule] s!"Missing {ruleType} rule for `{transName}`."
+    | trace[Meta.Tactic.fun_trans.missing_rule] "Missing {ruleType} rule for `{transName}`."
       return none
 
   let proof ← mkAppNoTrailingM rule args
   let statement ← inferType proof
   let rhs := (← inferType proof).getArg! 2
-  trace[Meta.Tactic.fun_trans.rewrite] s!"By basic rule `{rule}`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
+  trace[Meta.Tactic.fun_trans.rewrite] "By basic rule `{← mkConst' rule}`\n{statement.getArg! 1}\n==>\n{rhs}"
   return .some (.visit (.mk rhs proof 0))
 
 
@@ -134,14 +134,14 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
               let proof ← mkAppNoTrailingM `SciLean.adjointDifferential.rule_piMap #[f]
               let statement ← inferType proof
               let rhs := statement.getArg! 2
-              trace[Meta.Tactic.fun_trans.rewrite] s!"By rule arrayMap `\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
+              trace[Meta.Tactic.fun_trans.rewrite] "By rule arrayMap `\n{statement.getArg! 1}\n==>\n{rhs}"
               return .some (.visit (.mk rhs proof 0))
             else do
               let f ← mkLambdaFVars #[y, x, gha] fbody
               let proof ← mkAppNoTrailingM `SciLean.adjointDifferential.rule_piMapComp #[f,h]
               let statement ← inferType proof
               let rhs := statement.getArg! 2
-              trace[Meta.Tactic.fun_trans.rewrite] s!"By rule arrayMapComp`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
+              trace[Meta.Tactic.fun_trans.rewrite] "By rule arrayMapComp`\n{statement.getArg! 1}\n==>\n{rhs}"
               return .some (.visit (.mk rhs proof 0))
         return step
 
@@ -201,26 +201,26 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
 
   let .some constName := F.constName?
     | 
-      trace[Meta.Tactic.fun_trans.rewrite] s!"Can handle only applications of contants! Got `{← ppExpr b}` which is an application of `{← ppExpr F}`"
+      trace[Meta.Tactic.fun_trans.rewrite] "Can handle only applications of contants! Got `{b}` which is an application of `{F}`"
       if F.isFVar && (← F.fvarId!.isLetVar) then
         let id := F.fvarId!
         let name ← id.getUserName
         let val := (← id.getValue?).get!
-        trace[Meta.Tactic.fun_trans.rewrite] s!"Transforming let binding: let {name} := {← ppExpr val}"
+        trace[Meta.Tactic.fun_trans.rewrite] "Transforming let binding: let {name} := {val}"
       return none
 
   let arity ← getConstArity constName
   if args.size = arity then
     let some (proof,thrm) ← applyCompTheorem transName constName args x
-      | trace[Meta.Tactic.fun_trans.rewrite] s!"Failed at applying composition theorem for transformation `{transName}` and function `{constName}`"
+      | trace[Meta.Tactic.fun_trans.rewrite] "Failed at applying composition theorem for transformation `{← mkConst' transName}` and function `{← mkConst' constName}`"
         return none
     let statement ← inferType proof
     let rhs := statement.getArg! 2
-    trace[Meta.Tactic.fun_trans.rewrite] s!"By composition theorem `{thrm}`\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
+    trace[Meta.Tactic.fun_trans.rewrite] "By composition theorem `{← mkConst' thrm}`\n{statement.getArg! 1}\n==>\n{rhs}"
 
     return .some (.visit (.mk rhs proof 0))
   else if args.size > arity then
-    trace[Meta.Tactic.fun_trans.rewrite] s!"Constant {constName} has too many applied arguments in {← ppExpr b}. TODO: handle this case!"
+    trace[Meta.Tactic.fun_trans.rewrite] "Constant {← mkConst' constName} has too many applied arguments in {b}. TODO: handle this case!"
     return none
   else
     throwError s!"Constant {constName} has too few applied arguments in {← ppExpr b}. TODO: handle this case!"
@@ -281,7 +281,7 @@ def tryStructureRule? (transName : Name) (x b : Expr) : SimpM (Option Simp.Step)
       let proof ← mkAppNoTrailingM rule #[f]
       let statement ← inferType proof
       let rhs := statement.getArg! 2
-      trace[Meta.Tactic.fun_trans.rewrite] s!"By structure rule {rule} `\n{← ppExpr (statement.getArg! 1)}\n==>\n{← ppExpr rhs}"
+      trace[Meta.Tactic.fun_trans.rewrite] "By structure rule {← mkConst' rule} `\n{statement.getArg! 1}\n==>\n{rhs}"
       return .some (.visit (.mk rhs proof 0))
 
   return step
@@ -290,7 +290,7 @@ def tryStructureRule? (transName : Name) (x b : Expr) : SimpM (Option Simp.Step)
   -/
 def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
 
-  trace[Meta.Tactic.fun_trans.step] s!"\n{← ppExpr f}"
+  trace[Meta.Tactic.fun_trans.step] "\n{f}"
 
   let f := if f.isLambda || f.isLet then f else (← etaExpand f)
 

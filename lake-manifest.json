@@ -4,13 +4,13 @@
  [{"git":
    {"url": "https://github.com/EdAyers/ProofWidgets4",
     "subDir?": null,
-    "rev": "66caee900bcd4103f9e8e7950cf02a062c91adec",
+    "rev": "066001572cec4513a762035b794bd7725f54224d",
     "name": "proofwidgets",
-    "inputRev?": "v0.0.6"}},
+    "inputRev?": "v0.0.7"}},
   {"git":
    {"url": "https://github.com/leanprover-community/mathlib4",
     "subDir?": null,
-    "rev": "ec018844ef9d2fe7826e00ffc3c8e9659d368607",
+    "rev": "759a5219eb74e3a4561f3f19b0a158d3befb2bf4",
     "name": "mathlib",
     "inputRev?": "master"}},
   {"git":
@@ -28,6 +28,6 @@
   {"git":
    {"url": "https://github.com/leanprover/std4",
     "subDir?": null,
-    "rev": "36da3801f429bde9ba3d965623c963493bdb4153",
+    "rev": "6006307d2ceb8743fea7e00ba0036af8654d0347",
     "name": "std",
     "inputRev?": "main"}}]}
