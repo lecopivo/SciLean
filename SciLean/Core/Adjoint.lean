@@ -1,6 +1,7 @@
 import SciLean.Core.Defs
 import SciLean.Core.HasAdjoint
 import SciLean.Core.Differential
+import SciLean.Core.Integral
 namespace SciLean
 
 variable {α β γ : Type}
@@ -8,6 +9,14 @@ variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
 variable {ι : Type} [EnumType ι]
 
+
+--------------------------------------------------------------------------------
+
+@[app_unexpander adjoint] def unexpandAdjoint : Lean.PrettyPrinter.Unexpander
+  | `($(_) $f:term $ys*) => `($f† $ys*)
+  | _  => throw ()
+
+--------------------------------------------------------------------------------
 
 @[fun_trans_rule]
 theorem adjoint.rule_id (X) [SemiHilbert X]
@@ -91,6 +100,23 @@ theorem adjoint.rule_snd (X Y) [SemiHilbert X] [SemiHilbert Y]
   : (λ (xy : X×Y) => xy.2)†
     =
     λ xy' => (0, xy') := sorry
+
+
+--------------------------------------------------------------------------------
+-- Higher order rules
+
+instance adjoint.arg_f.IsSmooth
+  (f : X → Y → Z) [IsSmooth λ (xy : X×Y) => f xy.1 xy.2] [∀ x, HasAdjoint λ y => f x y]
+  (g : X → Z) [IsSmooth g]
+  : IsSmooth (λ x => (f x)† (g x)) := sorry
+
+
+@[simp]
+theorem adjoint.rule_pi_smooth {X Y Z ι} [EnumType ι] [FinVec X ι] [Hilbert Y] [Hilbert Z]
+  (f : X → Y → Z) [∀ x, HasAdjoint (f x)] [IsSmooth fun (xy : X×Y) => f xy.1 xy.2]
+  : (fun (g : X ⟿ Y) => λ (x : X) ⟿ f x (g x))†
+    =
+    λ g' => λ (x : X) ⟿ (f x)† (g' x) := sorry
 
 
 #exit

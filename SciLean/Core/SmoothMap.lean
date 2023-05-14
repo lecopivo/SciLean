@@ -187,6 +187,43 @@ namespace SmoothMap
   instance : Vec (X ⟿ Y) := Vec.mkSorryProofs
 
   ------------------------------------------------------------------------------
+  -- Evaluation rules
+  ------------------------------------------------------------------------------
+
+  @[simp] 
+  theorem eval_neg (f : X ⟿ Y) (x : X)
+    : (-f) x = -(f x) := by rfl
+
+  @[simp] 
+  theorem eval_add (f g : X ⟿ Y) (x : X)
+    : (f + g) x = f x + g x := by rfl
+
+  @[simp] 
+  theorem eval_sub (f g : X ⟿ Y) (x : X)
+    : (f - g) x = f x - g x := by rfl
+
+  @[simp] 
+  theorem eval_mul (f g : X ⟿ ℝ) (x : X)
+    : (f * g) x = f x * g x := by rfl
+
+  @[simp] 
+  theorem eval_smul (f : X ⟿ Y) (x : X) (s : ℝ)
+    : (s • f) x = s • f x := by rfl
+
+  @[simp] 
+  theorem eval_hmul (f : X ⟿ ℝ) (g : X ⟿ Y) (x : X)
+    : (f * g) x = f x • g x := by rfl
+
+  @[simp] 
+  theorem eval_zero (x : X)
+    : (0 : X ⟿ Y) x = 0 := by rfl
+
+  @[simp] 
+  theorem eval_one (x : X) [One Y]
+    : (1 : X ⟿ Y) x = 1 := by rfl
+
+
+  ------------------------------------------------------------------------------
   -- Basic combinators like const, comp, curry, uncurry, prodMk, prodMap, pi
   ------------------------------------------------------------------------------
 

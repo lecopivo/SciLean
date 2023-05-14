@@ -42,5 +42,9 @@ instance (priority:=high) [inst : IgnoreFunProp] {X Y} [Vec X] [Vec Y] (f : X �
 instance (priority:=high) [inst : IgnoreFunProp] {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) 
   : HasAdjDiff f := inst.kaboom.elim
 
+instance (priority:=high) [inst : IgnoreFunProp] {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) 
+  : HasAdjoint f := inst.kaboom.elim
+
+
 instance (priority:=high) [inst : IgnoreFunProp] {X Y} [Nonempty X] (f : X → Y) 
   : IsInv f := inst.kaboom.elim

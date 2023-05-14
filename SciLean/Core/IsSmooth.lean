@@ -58,6 +58,15 @@ theorem IsSmooth.rule_snd
   : IsSmooth (λ xy : X×Y => xy.2) := sorry
 
 
+--------------------------------------------------------------------------------
+
+instance (priority := low-1) IsSmooth.rule_comp_binop {X Y₁ Y₂ Z} [Vec X] [Vec Y₁] [Vec Y₂] [Vec Z]
+  (f : Y₁ → Y₂ → Z) [IsSmooth λ (yy : Y₁×Y₂) => f yy.1 yy.2]
+  (g₁ : X → Y₁) [IsSmooth g₁]
+  (g₂ : X → Y₂) [IsSmooth g₂]
+  : IsSmooth (λ x => f (g₁ x) (g₂ x)) := sorry
+
+
 #exit
 
 instance IsSmooth1_to_IsSmoothT (f : X → Y) [inst : IsSmoothN 1 f] 

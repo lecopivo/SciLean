@@ -1,37 +1,11 @@
 import SciLean.Core.IsLin
 import SciLean.Core.Hilbert
+import SciLean.Core.Integral
 
 namespace SciLean
 
 open SciLean.Mathlib.Convenient
   
-
--- class HasAdjointNT {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
---   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] : Prop where
---   proof : has_adjoint (uncurryN n f) ∧ is_linear (uncurryN n f) ∧ is_smooth (uncurryN n f)
-
-
--- class HasAdjointN {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
---   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] extends HasAdjointNT n f : Prop
-
-
--- abbrev HasAdjointT {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointNT 1 f
--- abbrev HasAdjoint {X Y : Type} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) := HasAdjointN 1 f
-
--- --------------------------------------------------------------------------------
-
-
--- instance instHasAdjoint_is_IsLin {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
---   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] 
---   [inst : HasAdjointN n f]  : IsLinN n f := IsLinN.mk (toIsLinNT:=⟨sorry_proof,sorry_proof⟩)
-
--- instance instHasAdjoint_is_IsSmooth {X Y : Type} {Xs Y' : Type} [SemiHilbert Xs] [SemiHilbert Y'] 
---   (n : Nat) (f : X → Y) [Prod.Uncurry n (X → Y) Xs Y'] 
---   [HasAdjointN n f]  : IsSmoothNT n f := inferInstance
-
-
---------------------------------------------------------------------------------
-
 variable {α β : Type}
 variable {X Y Z W : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] [SemiHilbert W]
 variable {Y₁ Y₂ Y₃ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Y₃]
@@ -74,6 +48,15 @@ theorem HasAdjoint.rule_fst
 @[fun_prop_rule]
 theorem HasAdjoint.rule_snd
   : HasAdjoint (λ xy : X×Y => xy.2) := sorry
+
+--------------------------------------------------------------------------------
+
+instance HasAdjoint.rule_pi_smooth {X Y Z ι} [EnumType ι] [FinVec X ι] [Hilbert Y] [Hilbert Z]
+  (f : X → Y → Z) [IsSmooth λ (xy : X×Y) => f xy.1 xy.2] [∀ x, HasAdjoint λ y => f x y]
+  : HasAdjoint (fun (g : X⟿Y) => λ (x : X) ⟿ f x (g x)) := by sorry_proof
+
+
+
 
 #exit
 

@@ -1,202 +1,36 @@
 import SciLean.Core.Integral
 import SciLean.Core.CoreFunctions
+import SciLean.Core.VariationalCalculus
+import SciLean.Core.Tactic.FunctionTransformation.Core
 
 namespace SciLean
 
 variable {X Y ι : Type} [EnumType ι] [FinVec X ι] [Hilbert Y] [Hilbert Z]
 
-def hasVariationalDual (F : (X ⟿ Y) → Set X → ℝ) 
-  := ∃ (f : X ⟿ Y), ∀ Ω (φ : X ⟿ Y), F f Ω = ∫ x∈Ω, ⟪f x, φ x⟫
+-- def hasVariationalDual (F : (X ⟿ Y) → Set X → ℝ) 
+--   := ∃ (f : X ⟿ Y), ∀ Ω (φ : X ⟿ Y), F f Ω = ∫ x∈Ω, ⟪f x, φ x⟫
 
-noncomputable
-def variationalDual (F : (X ⟿ Y) → Set X → ℝ) : (X ⟿ Y) := 
-  match Classical.dec (hasVariationalDual F) with
-  | .isTrue h => Classical.choose h
-  | .isFalse _ => 0
+-- noncomputable
+-- def variationalDual (F : (X ⟿ Y) → Set X → ℝ) : (X ⟿ Y) := 
+--   match Classical.dec (hasVariationalDual F) with
+--   | .isTrue h => Classical.choose h
+--   | .isFalse _ => 0
 
-instance (F : (X ⟿ Y) → Set X → ℝ) : Dagger F (variationalDual F) := ⟨⟩
+-- instance (F : (X ⟿ Y) → Set X → ℝ) : Dagger F (variationalDual F) := ⟨⟩
 
-@[simp]
-theorem variationalDual.arg_F.adjoint_simp (F : (X ⟿ Y) → (X ⟿ ℝ)) -- [inst : HasAdjoint F]
-  : (fun f : X ⟿ Y => ∫ x, (F f).1 x)†
-    =
-    F† 1
-  := sorry_proof
-
-instance (priority := low+1) IsSmooth.rule_binop_comp {X Y₁ Y₂ Z} [Vec X] [Vec Y₁] [Vec Y₂] [Vec Z]
-  (f : Y₁ → Y₂ → Z) [IsSmooth λ (yy : Y₁×Y₂) => f yy.1 yy.2]
-  (g₁ : X → Y₁) [IsSmooth g₁]
-  (g₂ : X → Y₂) [IsSmooth g₂]
-  : IsSmooth (λ x => f (g₁ x) (g₂ x)) := sorry_proof
-
-instance adjoint.rule_binop {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
-  (f : X → Y → Z) [IsSmooth λ (xy : X×Y) => f xy.1 xy.2] [∀ x, HasAdjoint λ y => f x y]
-  (g : X → Z) [IsSmooth g] 
-  : IsSmooth (λ x => (f x)† (g x)) := sorry_proof
+-- @[simp]
+-- theorem variationalDual.arg_F.adjoint_simp (F : (X ⟿ Y) → (X ⟿ ℝ)) -- [inst : HasAdjoint F]
+--   : (fun f : X ⟿ Y => ∫ x, (F f).1 x)†
+--     =
+--     F† 1
+--   := sorry_proof
 
 
+-- instance adjoint.rule_binop {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
+--   (f : X → Y → Z) [IsSmooth λ (xy : X×Y) => f xy.1 xy.2] [∀ x, HasAdjoint λ y => f x y]
+--   (g : X → Z) [IsSmooth g] 
+--   : IsSmooth (λ x => (f x)† (g x)) := sorry_proof
 
--- theorem IsSmooth.rule_scomb {X Y Z} [Vec X] [Vec Y] [Vec Z]
---   (f : X → Y → Z) [IsSmooth λ (xy : X×Y) => f xy.1 xy.2]
---   (g : X → Y) [IsSmooth g]
---   : IsSmooth (λ x => f x (g x)) := sorry_proof
-
-
-example (f : X → Y → Z) [IsSmooth fun (xy : X×Y) => f xy.1 xy.2]
-  (g : X → Y) [IsSmooth g]
-  : IsSmooth λ x => f x (g x) := by infer_instance
-
-@[simp]
-theorem adjoint.rule_pi_smooth
-  (f : X → Y → Z) [∀ x, HasAdjoint (f x)] [IsSmooth fun (xy : X×Y) => f xy.1 xy.2]
-  : (fun (g : X ⟿ Y) => λ (x : X) ⟿ f x (g x))†
-    =
-    λ g' => λ (x : X) ⟿ (f x)† (g' x) := sorry_proof
-
-@[simp] 
-theorem smooth_one_eval {X Y} [Vec X] [Vec Y] (x : X) [One Y]
-  : (1 : X ⟿ Y) x = 1 := by rfl
-
-
-noncomputable 
-def Smooth.divergenceDiff (v : X ⟿ X ⊸ Y) := λ x ⟿ - ∑ i, ∂ v x (𝕖' i) (𝕖 i)  
-
-instance (v : X ⟿ X ⊸ Y) : PartialDot v (Smooth.divergenceDiff v) := ⟨⟩
-
--- This is a component wise formulation of divergence theorem
-theorem divergence_theorem (f : X ⟿ ℝ) 
-  (Ω : Set X) (S : Set X) -- ∂ Ω = S -- surface of Ω
-  (𝕟 : X → X) -- this should be the normal of Ω
-  : ∫ x∈Ω, ∂ f x (𝕖 i) 
-    =
-    ∫ x∈S, f x * ⟪𝕟 x, 𝕖 i⟫ -- not entirelly sure about the projection of the normal, it might be `⟪𝕟 x, 𝕖' i⟫`
-  := sorry
-
-@[simp]
-theorem Smooth.differential.arg_f.adjoint_simp 
-  : (Smooth.differential : (X⟿Y) → (X⟿X⊸Y))†
-    =
-    - Smooth.divergenceDiff
-  := 
-by
-
-  -- this is a setup for proving adjoint 
-  have Ω : Set X := sorry  -- this should be sufficiently regular, can be even a ball sufficently big to contain support of `v`
-  have f : X ⟿ Y := sorry
-  have v : X⟿X⊸Y := sorry -- this should be a test function vanishing outside of Ω
-  have : ∫ x∈Ω, ⟪∂ f x, v x⟫ = - ∫ x∈Ω, ⟪f x, ∂· v x⟫ := by
-   calc 
-     ∫ x∈Ω, ⟪∂ f x, v x⟫ = ∫ x∈Ω, ∑ i, ⟪∂ f x (𝕖 i), v x (𝕖' i)⟫ := by sorry
-
-     -- change of notation
-     _ = ∫ x∈Ω, ∑ i, ⟪(∂ (x':=x;𝕖 i), f.1 x'), v x (𝕖' i)⟫ := by sorry
-
-     -- product rule for differentiation
-     _ = ∫ x∈Ω, ∑ i, (∂ (x':=x;𝕖 i), ⟪f x', v x' (𝕖' i)⟫
-                      - 
-                      ⟪f x, (∂ (x':=x;𝕖 i), v x' (𝕖' i))⟫) := by sorry 
-
-     -- first therm vanishes by using greens theorem and the fact `v` vanishes on the boundary of Ω
-     _ = - ∫ x∈Ω, ∑ i, ⟪f x, (∂ (x':=x;𝕖 i), v x' (𝕖' i))⟫ := by sorry
-
-     -- change of notation and push sum inside
-     _ = - ∫ x∈Ω, ⟪f x, ∑ i, (∂ v x (𝕖' i) (𝕖 i))⟫ := by sorry
-
-     -- definition of divergence
-     _ = - ∫ x∈Ω, ⟪f x, ∂· v x⟫ := by sorry
-
-  sorry
-
-
--- ∂· ∂
--- ∇· ∇
-
-noncomputable
-def Smooth.divergenceAdjDiff {Y} {κ} [EnumType κ] [FinVec Y κ] (v : X⟿Y⊸X) :=
-  let dv := λ (x : X) (u : X) (u' : Y) => ∂ (x':=x;u), (v.1 x').1 u'
-  SmoothMap.mk (λ (x : X) => ∑ (i:κ) (j:ι), 𝕡 j (dv x (𝕖[X] j) (𝕖'[Y] i)) • 𝕖[Y] i) sorry_proof
-
-instance {Y} {κ} [EnumType κ] [FinVec Y κ] (v : X ⟿ Y ⊸ X) : Divergence v (Smooth.divergenceAdjDiff v) := ⟨⟩
-
-noncomputable
-def Smooth.divergence (v : X⟿X) :=
-  let dv := λ (x : X) (u : X) => ∂ (x':=x;u), v.1 x'
-  SmoothMap.mk (λ (x : X) => ∑ (j:ι), 𝕡 j (dv x (𝕖[X] j))) sorry_proof
-
-instance (v : X ⟿ X) : Divergence v (Smooth.divergence v) := ⟨⟩
-
-variable (f : X ⟿ ℝ)
-
-
-@[simp]
-theorem Smooth.adjointDifferential.arg_f.adjoint_simp {Y} {κ} [EnumType κ] [FinVec Y κ]
-  : (Smooth.adjointDifferential : (X⟿Y) → (X⟿Y⊸X))†
-    =
-    - Smooth.divergenceAdjDiff
-  := 
-by
-
-  -- this is a setup for proving adjoint 
-  have Ω : Set X := sorry  -- this should be sufficiently regular, can be even a ball sufficently big to contain support of `v`
-  have f : X ⟿ Y := sorry
-  have v : X⟿Y⊸X := sorry -- this should be a test function vanishing outside of Ω
-  have : ∫ x∈Ω, ⟪∂† f x, v x⟫ = - ∫ x∈Ω, ⟪f x, ∇· v x⟫ := by
-   calc 
-     ∫ x∈Ω, ⟪∂† f x, v x⟫ = ∫ x∈Ω, ∑ i, ⟪∂† f x (𝕖 i), v x (𝕖' i)⟫ := by sorry
-
-     -- adjoint of differential
-     _ = ∫ x∈Ω, ∑ i, ⟪𝕖 i, ∂ f x (v x (𝕖' i))⟫ := by sorry
-
-     -- change of notation
-     _ = ∫ x∈Ω, ∑ i, ⟪𝕖 i, (∂ (x':=x;(v x (𝕖' i))), f.1 x')⟫ := by sorry
-
-     -- pull out derivative
-     _ = ∫ x∈Ω, ∑ i, ∂ (x':=x;(v x (𝕖' i))), ⟪𝕖 i, f.1 x'⟫ := by sorry
-
-     -- rewrite (v x (𝕖' i)) into a basis
-     _ = ∫ x∈Ω, ∑ i j, 𝕡 j (v x (𝕖' i)) * ∂ (x':=x;𝕖 j), ⟪𝕖 i, f.1 x'⟫ := by sorry
-
-     -- product rule for differentiation
-     _ = ∫ x∈Ω, ∑ i j, (∂ (x':=x;𝕖 j), 𝕡 j (v x' (𝕖' i)) * ⟪𝕖 i, f.1 x'⟫ 
-                        -
-                        (𝕡 j (∂ (x':=x;𝕖[X] j), v x' (𝕖' i))) * ⟪𝕖 i, f.1 x⟫) := by sorry
-
-     -- the frist term dissapears thanks to the divergence theorem
-     _ = - ∫ x∈Ω, ∑ i j, - (𝕡 j (∂ (x':=x;𝕖[X] j), v x' (𝕖' i))) * ⟪𝕖 i, f.1 x⟫ := by sorry
-
-     -- definition of divergenceAdjDiff + `⟪x,y⟫ = ∑ i, ⟪𝕖' i, x⟫ * ⟪𝕖 i, y⟫`
-     _ = - ∫ x∈Ω, ⟪f x, ∇· v x⟫ := by sorry
-
-  sorry
-
-
-@[simp]
-theorem Smooth.gradient.arg_f.adjoint_simp 
-  : (Smooth.gradient : (X⟿ℝ) → (X⟿X))†
-    =
-    - Smooth.divergence
-  := sorry_proof
-
-
-@[simp]
-theorem Smooth.differentialScalar.arg_f.adjoint_simp {X} [Hilbert X]
-  : (Smooth.differentialScalar : (ℝ⟿X) → (ℝ⟿X))†
-    =
-    - Smooth.differentialScalar
-  := sorry_proof
-
-
-theorem Smooth.divergence.symmetric_form (v : X ⟿ X ⊸ Y)
-  : ∂· v
-    =
-    λ x ⟿ - ∑ i j, ⟪𝕖'[X] i, 𝕖' j⟫ • ∂ v x (𝕖 i) (𝕖 j)
-  := 
-by
-  -- calc 
-  --   𝕖' i = ∑ j, 𝕡 j (𝕖' i) • 𝕖 j   := by FinVec.is_basis (𝕖' i)
-  --      _ = ∑ j, ⟪𝕖' j, 𝕖' i⟫ • 𝕖 j := by ← inner_dualBasis_proj
-  -- then it is just linearity
-  sorry_proof
   
 --------------------------------------------------------------------------------
 -- Things to get working
@@ -212,44 +46,51 @@ variable (f : X ⟿ Y)
 #check (λ g : X ⟿ Y => ∫ x, ⟪g x, f x⟫)†
 #check (λ g : X ⟿ ℝ => ∫ x, g.1 x)†
 
+example (f : X⟿Y)
+  : HasAdjoint fun (g : X⟿Y) => λ (x : X) ⟿ ⟪f x, g x⟫ := by infer_instance
+
 example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪f x, g x⟫)† = f := 
 by
   conv => 
     lhs
-    rw[variationalDual.arg_F.adjoint_simp (fun g => fun x ⟿ ⟪f x, g x⟫)]
+    rw[variationalDual.arg_F.adjoint_simp (fun (g : X⟿Y) => fun x => ⟪f x, g x⟫)]
     rw[adjoint.rule_pi_smooth]
-    simp only [Inner.inner.arg_a3.adjoint_simp]
+    fun_trans only
     simp
 
 example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪g x, f x⟫)† = f := 
 by
+  ignore_fun_prop
   conv => 
     lhs
-    rw[variationalDual.arg_F.adjoint_simp (fun g => fun x ⟿ ⟪g x, f x⟫)]
+    rw[variationalDual.arg_F.adjoint_simp (fun g => fun x => ⟪g x, f x⟫)]
     rw[adjoint.rule_pi_smooth (λ x y => ⟪y, f x⟫)]
-    simp only [Inner.inner.arg_a2.adjoint_simp]
+    fun_trans only
     simp
 
 instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : HasAdjoint f := sorry_proof
+
 
 example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪∂ g x, ∂ f x⟫)† = - ∂· (∂ f) :=
 by
   conv => 
     lhs
-    rw[variationalDual.arg_F.adjoint_simp (fun g => fun x ⟿ ⟪∂ g x, ∂ f x⟫)]
+    rw[variationalDual.arg_F.adjoint_simp (fun g => fun x => ⟪∂ g x, ∂ f x⟫)]
     rw[adjoint.rule_comp (λ v => λ x ⟿ ⟪v x, ∂ f x⟫) Smooth.differential]
     simp only [adjoint.rule_pi_smooth (λ x y => ⟪y, ∂ f x⟫)]
-    simp only [Inner.inner.arg_a2.adjoint_simp]
+    conv => 
+      enter [2]
+      fun_trans only
     simp
 
 example (f : X⟿ℝ) : (λ g : X⟿ℝ => ∫ x, ⟪∇ g x, ∇ f x⟫)† = - ∇· (∇ f) := 
 by
   conv => 
     lhs
-    rw[variationalDual.arg_F.adjoint_simp (fun (g : X⟿ℝ) => fun x ⟿ ⟪∇ g x, ∇ f x⟫)]
+    rw[variationalDual.arg_F.adjoint_simp (fun (g : X⟿ℝ) => fun x => ⟪∇ g x, ∇ f x⟫)]
     rw[adjoint.rule_comp (λ v => λ x ⟿ ⟪v x, ∇ f x⟫) Smooth.gradient]
     simp only [adjoint.rule_pi_smooth (λ x y => ⟪y, ∇ f x⟫)]
-    simp only [Inner.inner.arg_a2.adjoint_simp]
+    fun_trans only
     simp
 
 
@@ -319,6 +160,10 @@ theorem Smooth.differential.arg_f.differential_simp {X} [SemiHilbert X]
     λ _ df => (differentialScalar df) -- for some reason `ⅆ df` does not work :(
   := sorry_proof
 
+
+#check Smooth.differentialScalar.arg_f.adjoint_simp
+
+
 @[simp]
 theorem Smooth.differential.arg_f.adjointDifferential_simp {X} [Hilbert X]
   : ∂† (λ f : ℝ⟿X => ⅆ f)
@@ -328,11 +173,8 @@ theorem Smooth.differential.arg_f.adjointDifferential_simp {X} [Hilbert X]
   unfold SciLean.adjointDifferential
   simp
   done
-  
-@[simp]
-theorem smul_smoothmap_mk (f : X ⟿ Y) (r : ℝ)
-  : (λ x ⟿ r • f x) = r • f := by rfl
 
+  
 example (f : X⟿ℝ) : (∇ f' : X⟿ℝ, ∫ x, ‖∇ f' x‖²) f = - (2:ℝ) • ∇· (∇ f) := 
 by
   conv => 
@@ -342,12 +184,9 @@ by
     rw[adjointDifferential.rule_comp (λ (f : X⟿X) => λ x ⟿ ‖f x‖²) Smooth.gradient]
     simp
     rw[SmoothMap.mk.arg_f.pointwise λ x y => ‖y‖²]
-    simp [Inner.normSqr.arg_x.adjointDifferential_simp]
+    fun_trans only
+    simp
   admit -- almost there
-
-
-variable (g : X⟿ℝ)
-#check (∇ (g' : X⟿ℝ), ∫ x, ‖∇ g' x‖²) g
 
 
 theorem adjointDifferential.rule_scomb {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
@@ -361,26 +200,6 @@ theorem adjointDifferential.rule_scomb {X Y Z} [SemiHilbert X] [SemiHilbert Y] [
       let dy  := ∂† (y':=y;dz), f x y'
       let dx₂ := ∂† g x dy
       dx₁ + dx₂ := sorry
-
-@[simp]
-theorem asdf {X Y} [Vec X] [Vec Y] (f g : X ⟿ Y) (x : X) : (f + g) x = f x + g x := sorry -- by simp
-
-@[simp]
-theorem asdff {X Y} [Vec X] [Vec Y] (f : X ⟿ Y) (r : ℝ) (x : X) : (r • f) x = r • f x := sorry -- by simp
-
-@[simp]
-theorem asdffg {X Y} [Vec X] [Vec Y] (f : X ⟿ Y) (x : X) : (-f) x = - (f x) := sorry -- by simp
-
-@[simp]
-theorem asdffgg {X Y} [Vec X] [Vec Y] (f : X → Y) (x : X) : (-f) x = - (f x) := by rfl -- by simp
-
-
-@[simp]
-theorem asdffggg {α β X : Type} [Vec X] (f : α → β → X) (a : α) (b : β) : (-f) a b = - (f a b) := by simp -- by simp
-
-
-@[simp]
-theorem asdfff {X Y} [Vec X] [Vec Y] (f : X → Y) (r : ℝ) (x : X) : (r • f) x = r • f x := sorry -- by simp
 
 @[simp]
 theorem hoho {X} [Vec X] (f : ℝ→X) (h : IsSmooth f) (t : ℝ) : ⅆ (SmoothMap.mk f h) t = ⅆ f t := by rfl
@@ -408,6 +227,7 @@ by
       simp (config := {zeta := false}) only [SmoothMap.mk.arg_f.pointwise λ t y => L (x t) y]
     simp [Inner.normSqr.arg_x.adjointDifferential_simp]
   simp
+  abel
   done
 
 

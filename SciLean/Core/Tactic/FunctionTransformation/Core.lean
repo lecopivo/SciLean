@@ -292,6 +292,8 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
 
   trace[Meta.Tactic.fun_trans.step] s!"\n{← ppExpr f}"
 
+  let f := if f.isLambda || f.isLet then f else (← etaExpand f)
+
   match f with
   | .lam .. => lambdaLetTelescope f λ xs b => do
 
