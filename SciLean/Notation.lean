@@ -37,15 +37,39 @@ open Elab Term Meta
 class Partial {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
 
 elab:max "∂ " x:term:max : term => withFreshMacroScope do
-  _ ← synthInstance (← elabType (← `(Partial $x ?m)))
-  elabTerm (← `(?m)) none
+
+  let x ←elabTerm x none
+  let X ← (reduce (skipTypes := false) (← inferType x))
+  let Y ← mkFreshTypeMVar
+  let y ← mkFreshExprMVar (some Y)
+
+  let C := mkAppN (← mkConst' ``Partial) #[X,x,Y,y]
+
+  _ ← synthInstance C
+  instantiateMVars y
+
+  -- old implementation
+  -- _ ← synthInstance (← elabType (← `(Partial $x ?m)))
+  -- elabTerm (← `(?m)) none
 
 
 class PartialDagger {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
 
 elab:max "∂† " x:term:max : term => withFreshMacroScope do
-  _ ← synthInstance (← elabType (← `(PartialDagger $x ?m)))
-  elabTerm (← `(?m)) none
+
+  let x ←elabTerm x none
+  let X ← (reduce (skipTypes := false) (← inferType x))
+  let Y ← mkFreshTypeMVar
+  let y ← mkFreshExprMVar (some Y)
+
+  let C := mkAppN (← mkConst' ``PartialDagger) #[X,x,Y,y]
+
+  _ ← synthInstance C
+  instantiateMVars y
+
+  -- old implementation
+  -- _ ← synthInstance (← elabType (← `(PartialDagger $x ?m)))
+  -- elabTerm (← `(?m)) none
 
 
 class PartialDot {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
@@ -110,8 +134,20 @@ elab x:term:71 " ⊗ " y:term:72 : term => withFreshMacroScope do
 class Integral {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
 
 elab:max "∫ " x:term:max : term => withFreshMacroScope do
-  _ ← synthInstance (← elabType (← `(Integral $x ?m)))
-  elabTerm (← `(?m)) none
+
+  let x ←elabTerm x none
+  let X ← (reduce (skipTypes := false) (← inferType x))
+  let Y ← mkFreshTypeMVar
+  let y ← mkFreshExprMVar (some Y)
+
+  let C := mkAppN (← mkConst' ``Integral) #[X,x,Y,y]
+
+  _ ← synthInstance C
+  instantiateMVars y
+
+  -- old implementation
+  -- _ ← synthInstance (← elabType (← `(Integral $x ?m)))
+  -- elabTerm (← `(?m)) none
 
 
 
