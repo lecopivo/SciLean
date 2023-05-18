@@ -40,6 +40,8 @@ require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "m
 
 require proofwidgets from git "https://github.com/EdAyers/ProofWidgets4"@"v0.0.7"
 
+require lspec from git "https://github.com/lurk-lab/LSpec"@"88f7d23"
+
 
 /--
 
