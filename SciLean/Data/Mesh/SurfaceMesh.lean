@@ -19,6 +19,12 @@ structure V3 where
   y : ℝ
   z : ℝ
 
+
+def V3.map (f: ℝ → ℝ) (v3 : V3) : V3 where
+  x := f v3.x
+  y := f v3.y
+  z := f v3.z
+
 /- index of vertices --/
 abbrev Index (_name : Name) := Nat
 abbrev Index.invalid : Index α := 424242
@@ -81,6 +87,8 @@ structure SurfaceMesh where
   boundaries : Array Boundary := {}
   -- generators : Array () [TODO: implement]
 
+instance : Inhabited SurfaceMesh where default := {}
+
 
 /-
 Computes the euler characteristic of this mesh.
@@ -90,8 +98,16 @@ def SurfaceMesh.eulerCharacteristic (s: SurfaceMesh) : ℕ :=
 
 -- # Monad to build surface meshes.
 inductive MeshBuilderError
-| nonManifoldEdge (i j : Index ``Vertex) 
-deriving Inhabited 
+| nonManifoldEdge (i j : Index ``Vertex)
+| parseError (err : String)
+deriving Inhabited
+
+def MeshBuilderError.toString : MeshBuilderError → String
+| nonManifoldEdge i j => s!"non-manifold edge {i} → {j}"
+| parseError err => err
+
+instance : ToString MeshBuilderError where
+  toString := MeshBuilderError.toString
 
 abbrev MeshBuilderM (α : Type) := EStateM MeshBuilderError SurfaceMesh α
 
@@ -130,7 +146,7 @@ def MeshBuilderM.modifyEdge (ix : Index ``Edge)
     EStateM.Result.ok out { s with edges := s.edges.set! ix out }
 
 def MeshBuilderM.modifyEdge_ (ix : Index ``Edge)
-  (fn : Edge → Edge) : MeshBuilderM Unit := do 
+  (fn : Edge → Edge) : MeshBuilderM Unit := do
   let _ ← MeshBuilderM.modifyEdge ix fn
 
 def MeshBuilderM.getEdge (ix : Index ``Edge) : MeshBuilderM Edge :=
@@ -153,7 +169,7 @@ def MeshBuilderM.modifyHalfedge (ix : Index ``Halfedge)
     EStateM.Result.ok out { s with halfedges := s.halfedges.set! ix out }
 
 def MeshBuilderM.modifyHalfedge_ (ix : Index ``Halfedge)
-  (fn : Halfedge → Halfedge) : MeshBuilderM Unit := do 
+  (fn : Halfedge → Halfedge) : MeshBuilderM Unit := do
   let _ ← MeshBuilderM.modifyHalfedge ix fn
 
 def MeshBuilderM.getHalfedge (ix : Index ``Halfedge) : MeshBuilderM Halfedge :=
@@ -278,7 +294,7 @@ partial def MeshBuilderM.assertNoIsolatedVertices : MeshBuilderM Unit := return 
 partial def MeshBuilderM.assertNoIsolatedFaces : MeshBuilderM Unit := return ()
 partial def MeshBuilderM.assertNoNonManifoldVertices : MeshBuilderM Unit := return ()
 
-partial def MeshBuilderM.build 
+partial def MeshBuilderM.build_
   (positions : Array V3) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit := do
   let mut existingHalfedges :
       HashMap (Index `Vertex × Index `Vertex) (Index `Halfedge) := {}
@@ -296,7 +312,7 @@ partial def MeshBuilderM.build
       for J in List.range 3 do {
         let _ ← newHalfedge -- make the new half edges
       }
-      for J in List.range 3 do { 
+      for J in List.range 3 do {
         -- current halfedge goes from vertex i to vertex j
         let K : Nat := (J + 1) % 3
         let i := I + J
@@ -369,3 +385,139 @@ partial def MeshBuilderM.build
     }
   }
 }
+
+def MeshBuilderM.run (mb : MeshBuilderM Unit) : Except MeshBuilderError SurfaceMesh :=
+  let emptySurfaceMesh : SurfaceMesh := {}
+  match EStateM.run mb emptySurfaceMesh with
+  | .ok () surfaceMesh => .ok surfaceMesh
+  | .error  err _ => .error err
+
+
+def SurfaceMesh.build (positions: Array V3) (indices: Array (Index ``Vertex)) :
+  Except MeshBuilderError SurfaceMesh :=
+  (MeshBuilderM.build_ positions indices).run
+
+def SurfaceMesh.build' (positions: Array V3) (indices: Array (Index ``Vertex)) :
+  Option SurfaceMesh :=
+  (build positions indices).toOption
+
+def SurfaceMesh.build! (positions: Array V3) (indices: Array (Index ``Vertex)) :
+  SurfaceMesh := (build' positions indices).get!
+
+/-
+-- TODO: figure out code organization for widgets.
+@[widget_module]
+def Mesh : Component SurfaceMesh where
+  javascript := include_str "../build" / "js" / "mesh.js"
+-/
+
+/- Random mesh generation -/
+
+/-- Generate a random floating point number in [0, 1] -/
+def randFloat01 [G : RandomGen γ] (gen : γ) : Float × γ := Id.run do
+  let (val, gen) := G.next gen
+  let (lo, hi) := G.range gen
+  return ((Float.ofNat <| val - lo) / (Float.ofNat <| hi - lo), gen)
+
+def randReal01 [G : RandomGen γ] (gen : γ) : ℝ × γ :=
+  let (float, gen) := randFloat01 gen
+  ({ val := float : ℝ }, gen)
+
+/-- Create a random vertex with coordinates sampled from uniform [0, 1] -/
+def randVertex01 [RandomGen γ] (gen : γ) : V3 × γ := Id.run do
+  let (val1, gen) := randReal01 gen
+  let (val2, gen) := randReal01 gen
+  let (val3, gen) := randReal01 gen
+  return ({ x := val1, y := val2, z := val3 }, gen)
+
+
+/-- Create `nvertices` random vertices with coordinates sampled from [-scale/2, scale/2] -/
+def randVertices [RandomGen γ]
+ (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array V3) × γ := Id.run do
+  let mut out : Array V3 := #[]
+  let mut gen := gen
+  for _ in List.range nvertices do
+    let (vertex, gen') := randVertex01 gen; gen := gen'
+    let vertex : V3 := vertex.map (fun coord => { val := (coord.val - 0.5) * scale })
+    out := out.push vertex
+  return (out, gen)
+
+
+/-- Create a random triangle face with three random vertices with indexes `[0..nvertices)` -/
+def randTriFace [RandomGen γ] (gen : γ) (nvertices : Nat) : (Array Nat) × γ := Id.run do
+  let (v1, gen) := randNat gen 0 (nvertices-1);
+  let (v2, gen) := randNat gen 0 (nvertices-1);
+  let (v3, gen) := randNat gen 0 (nvertices-1);
+  return (#[v1, v2, v3], gen)
+
+/-- Create a random mesh with `nfaces` random faces. Each face is generated by `randTriFace` -/
+def randTriFaces [RandomGen γ] (gen : γ) (nvertices : Nat) (nfaces : Nat) : (Array Nat) × γ := Id.run do
+  let mut out : Array Nat := #[]
+  let mut gen := gen
+  for _ in List.range nfaces do
+    let (face, gen') := randTriFace gen nvertices; gen := gen'
+    out := out.append face
+  return (out, gen)
+
+/-- Create a random mesh with `nvertices` vertices and `nfaces` faces -/
+def SurfaceMesh.rand [RandomGen γ] (gen : γ) (nvertices : Nat) (nfaces : Nat) :
+  (Except MeshBuilderError SurfaceMesh) × γ := Id.run do
+  let (vs, gen) := randVertices gen nvertices
+  let (fs, gen) := randTriFaces gen nvertices nfaces
+  return (SurfaceMesh.build vs fs, gen)
+
+
+/-- coerce a list of reals into a vector. Throws a ParseError if length of list is not 3 -/
+def V3.ofList : List ℝ → MeshBuilderM V3
+| [x, y, z] => pure { x := x, y := y, z := z }
+| xs => throw <| MeshBuilderError.parseError s!"unable to convert list to vertex '{xs}'"
+
+def V3.ofArray : Array ℝ → MeshBuilderM V3 :=
+  V3.ofList ∘ Array.toList
+
+/-- Load the mesh data from a .OFF format string -/
+def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
+  let mut vertices : Array V3 := #[]
+  let mut faces : Array Nat := #[]
+  let mut i := 0
+  if lines[i]!.trim != "OFF"
+  then throw <| MeshBuilderError.parseError s!"expected 'OFF' on line {i+1}. but found '{lines[i]!}' which is not .OFF"
+  i := i + 1
+
+  let [n_vertices, n_faces, _n_edges] := lines[i]!.trim.splitOn " "
+    | throw <| MeshBuilderError.parseError s!"expected number of vertices, faces, edges information on line {i+1}, but found '{lines[i]!}'"
+  i := i + 1
+
+  let .some n_vertices := n_vertices.toNat?
+    | throw <| MeshBuilderError.parseError s! "unable to parse num vertices {n_vertices}"
+
+  let .some n_faces := n_faces.toNat?
+    | throw <| MeshBuilderError.parseError s! "unable to parse num faces {n_faces}"
+
+  for _ in List.range n_vertices do
+    let coords_raw := lines[i]!.trim.splitOn " "
+    let mut v : Array ℝ := #[]
+    for coord in coords_raw do
+      let .ok coord := Lean.Json.Parser.num |>.run coord
+        | throw <| MeshBuilderError.parseError s!"unable to parse vertex coordinate {coord} on line {i+1}"
+        v := v.push { val := coord.toFloat : ℝ }
+    vertices := vertices.push (← V3.ofArray v)
+    i := i + 1
+
+  for _ in List.range n_faces do
+    let face_indexes_raw := lines[i]!.trim.splitOn " "
+    let mut f : Array Nat := #[]
+    for ix in face_indexes_raw.drop 1 do
+      let .some ix := ix.toNat?
+        | throw <| MeshBuilderError.parseError s!"unable to parse face index {ix} on line {i+1}"
+        f := f.push ix
+    faces := faces.append f
+    i := i + 1
+  MeshBuilderM.build_ vertices faces
+
+def SurfaceMesh.fromOFFFile (p : System.FilePath) : IO SurfaceMesh := do
+  let out : Except MeshBuilderError SurfaceMesh :=
+    (SurfaceMesh.fromOFFString (← IO.FS.lines p)).run
+  match out with
+  | .ok out => return out
+  | .error err => throw <| .userError err.toString

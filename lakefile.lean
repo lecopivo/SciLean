@@ -26,6 +26,10 @@ lean_exe Ballistic {
   root := `examples.Ballistic
 }
 
+lean_exe SurfaceMeshTests {
+  root := `examples.SurfaceMeshTests
+}
+
 lean_exe ForLoopTest {
   buildType := .release
   moreLinkArgs := #["-O3", "-UNDEBUG"]
