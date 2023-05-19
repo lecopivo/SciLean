@@ -27,6 +27,7 @@ lean_exe Ballistic {
 }
 
 lean_exe SurfaceMeshTests {
+  buildType := .debug
   root := `examples.SurfaceMeshTests
 }
 
