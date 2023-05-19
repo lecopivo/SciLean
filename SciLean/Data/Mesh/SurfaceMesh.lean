@@ -303,8 +303,9 @@ partial def MeshBuilderM.build_
       HashMap (Index `Vertex × Index `Vertex) (Index `Halfedge) := {}
   let mut edgeCount :
     HashMap (Index `Vertex × Index `Vertex) Nat := {}
-  -- pre-allocate all vertices for random access via faces.
+  modify (fun s => { s with positions := positions }) -- store positions in the SurfaceMesh
 
+  -- pre-allocate all vertices for random access via faces.
   for _ in List.range positions.size do {
       let _ ← newVertex
   }
@@ -366,7 +367,7 @@ partial def MeshBuilderM.build_
       }
     }
   }
-  dbg_trace "creating imaginary halfedges"
+  dbg_trace "creating imaginary halfedges" -- TODO: move traces into a separate file.
   -- create and insert boundary halfedges and "imaginary" faces for boundary cycles
   -- also create and insert corners.
   -- Note that every vertex corresponds to the halfedge from that vertex to
