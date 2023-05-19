@@ -337,11 +337,12 @@ partial def MeshBuilderM.build_
       let _ ← modifyHalfedge i (fun he => { he with face := f })
       let _ ← modifyFace f (fun f => { f with halfedge := i })
 
-      -- swap if (i > j) to maintain invariant that (i < j)
-      let (i, j) := if i > j then (j, i) else (i, j)
+      -- swap if (i > j) to maintain invariant that (i <= j)
+      let edgeKey := 
+        if i > j then (j, i) else (i, j)
       let hIx := I + J -- TODO: cleanup
-      match existingHalfedges.find? (i, j) with
-      | .some twin' => do { -- primed is pointer.
+      match existingHalfedges.find? edgeKey with
+      | .some twin' =>
         -- if a halfedge between vertex i and j has been
         -- created in the past, then it is the twin halfedge
         -- of the current halfedge
@@ -350,19 +351,18 @@ partial def MeshBuilderM.build_
         let twinEdge ← getHalfedge twin'
         let _ ← modifyHalfedge_ hIx (fun h => { h with edge := twinEdge.edge })
         edgeCount := 
-          let oldEdgeCount := edgeCount.findD (i, j) 0
-          edgeCount.insert (i, j) (oldEdgeCount + 1)
-      }
-      | .none => {
+          let oldEdgeCount := edgeCount.findD edgeKey 0
+          edgeCount.insert edgeKey (oldEdgeCount + 1)
+      | .none => 
         let e ← newEdge
         let _ ← modifyEdge e (fun e => { e with halfedge := hIx })
         let _ ← modifyHalfedge_ hIx (fun h => { h with edge := e })
-      }
+      
       -- record the newly created edge and halfedge from vertex i to j
-      existingHalfedges := existingHalfedges.insert (i, j) hIx
-      -- edgeCount := edgeCount.set (i, j) 1
-
-      if edgeCount.findD (i, j) 0 > 2 then {
+      edgeCount := edgeCount.set edgeKey 1
+      existingHalfedges := existingHalfedges.insert edgeKey hIx
+      
+      if edgeCount.findD edgeKey 0 > 2 then {
         throw <| MeshBuilderError.nonManifoldEdge i j
       }
     }
