@@ -1,0 +1,8 @@
+* Differentiation At
+
+The goal of these files is to define differentiation at a point. Thus have a rigorous handling of functions like =1/x=, =|x|=, =if P x then f x else g x= etc.
+
+
+
+
+

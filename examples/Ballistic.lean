@@ -1,5 +1,6 @@
 import SciLean
 import SciLean.Functions.OdeSolve
+import SciLean.Functions.GradientDescent
 import SciLean.Solver.Solver 
 import SciLean.Core.UnsafeAD
 import SciLean.Tactic.LetUtils
@@ -8,58 +9,23 @@ import SciLean.Tactic.Basic
 import SciLean.Profile
 
 open SciLean
-  
 
 def g : ℝ×ℝ := (0, -9.81)
-
-
-theorem invFun_as_argmin {X Y} [Nonempty X] [Hilbert X] [Hilbert Y] (f : X → Y) (y : Y) (hf : IsInv f)
-  : f⁻¹ y = argmin x, ‖f x - y‖² := sorry_proof
-
-
-def gradientDescent [Vec X] (gradf : X → X) (x₀ : X) (s : ℝ) (steps : Nat) : X := Id.run do
-  let mut x := x₀
-  for i in [0:steps] do
-    x := x - s • gradf x
-  x
-
-theorem argminFun.approx.gradientDescent {X} [Hilbert X] {f : X → ℝ} (x₀ : X) (s : ℝ)
-  : argmin x, f x 
-    =
-    limit λ n => gradientDescent (∇ f) x₀ s n
-  := sorry_proof
-
-theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ) 
-  : (∇ λ x => f x) = λ x => (ℛ f x).2 1 := by rfl
-
-theorem hold_fun_swap {α β} (f : α → β) (x : α)
-  : f (hold x) = hold (f x) := by unfold hold; rfl
-
-theorem hold_arg_swap {α β} (f : α → β) (x : α)
-  : hold f x = hold (f x) := by unfold hold; rfl
 
 def balisticMotion (x v : ℝ×ℝ) := (v, g  - (5 + ‖v‖) • v)
 
 function_properties balisticMotion (x v : ℝ×ℝ)
-argument (x,v) [UnsafeAD] [IgnoreFunProp]
-  abbrev ∂ by unfold balisticMotion; fun_trans only; clean_up_simp,
-  def ∂† by unfold balisticMotion; fun_trans only; clean_up_simp,
-  def ℛ by unfold balisticMotion; fun_trans only; clean_up_simp
+argument (x,v) [UnsafeAD]
+  abbrev ∂, def ∂†, def ℛ
 argument x
-  IsSmooth,
-  HasAdjDiff,
-  abbrev ∂† by unfold balisticMotion; fun_trans only; clean_up_simp,
-  abbrev ℛ by unfold balisticMotion; fun_trans only; clean_up_simp
+  IsSmooth, HasAdjDiff, abbrev ∂†, abbrev ℛ
 argument v [UnsafeAD]
-  IsSmooth,
-  HasAdjDiff,
-  def ∂† by unfold balisticMotion; fun_trans only; clean_up_simp,
-  def ℛ by unfold balisticMotion; fun_trans only; clean_up_simp
+  IsSmooth, HasAdjDiff, def ∂†, def ℛ
 
 
 approx aimToTarget (v₀ : ℝ×ℝ) (optimizationRate : ℝ) := 
   λ (T : ℝ) (target : ℝ×ℝ) =>
-  let shoot := hold $ λ (t : ℝ) (v : ℝ×ℝ) =>
+  let shoot := hold $ fun (t : ℝ) (v : ℝ×ℝ) =>
                  odeSolve (t₀ := 0) (x₀ := ((0:ℝ×ℝ),v)) (t := t)
                    (f := λ (t : ℝ) (x,v) => balisticMotion x v)
   (λ v => (shoot T v).1)⁻¹ target

@@ -1,0 +1,4 @@
+* Connection, Fiber Bundles and Covariat Derivative
+
+Goal:
+  - Define differential for dependently typed function =∂ : (f : (x : X)→Y x) → (x : X) → 𝒯[x] X → 𝒯[f x] (Y x) =

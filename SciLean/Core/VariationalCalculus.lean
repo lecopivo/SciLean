@@ -26,7 +26,10 @@ instance (F : (X ⟿ Y) → Set X → ℝ) : Dagger F (variationalDual F) := ⟨
   | `($(_) $f:term $ys*) => `($f† $ys*)
   | _  => throw ()
 
+#check integral
 
+-- maybe rename to integral.arg_f.variationalDual_rule_comp
+@[simp]
 theorem variationalDual.arg_F.adjoint_simp (F : (X ⟿ Y) → (X → ℝ)) [∀ f, IsSmooth (F f)] (h : HasAdjoint (λ f => λ x ⟿ F f x) := by infer_instance)
   : (fun f : X ⟿ Y => ∫ x, F f x)†
     =
@@ -35,13 +38,31 @@ theorem variationalDual.arg_F.adjoint_simp (F : (X ⟿ Y) → (X → ℝ)) [∀ 
 
 
 --------------------------------------------------------------------------------
+-- Variational Gradient
+--------------------------------------------------------------------------------
+
+noncomputable
+def gradientVariational (F : (X⟿Y) → Set X → ℝ) (f : X⟿Y) := (∂ F f)† 
+
+instance (F : (X⟿Y) → Set X → ℝ) : Nabla F (gradientVariational F) := ⟨⟩
+
+@[simp]
+theorem gradientVariational_comp (F : (X⟿Y) → (X⟿ℝ))
+  : (∇ λ f : X ⟿ Y => ∫ x, (F f).1 x)
+    =
+    λ f => ∂† F f 1
+  := sorry_proof
+
+
+
+--------------------------------------------------------------------------------
 -- Divergence ∂·
 --------------------------------------------------------------------------------
 
 noncomputable 
-def Smooth.divergenceDiff (v : X ⟿ X ⊸ Y) := λ x ⟿ - ∑ i, ∂ v x (𝕖' i) (𝕖 i)  
+def divergenceDiffSmooth (v : X ⟿ X ⊸ Y) := λ x ⟿ - ∑ i, ∂ v x (𝕖' i) (𝕖 i)  
 
-instance (v : X ⟿ X ⊸ Y) : PartialDot v (Smooth.divergenceDiff v) := ⟨⟩
+instance (v : X ⟿ X ⊸ Y) : PartialDot v (divergenceDiffSmooth v) := ⟨⟩
 
 
 --------------------------------------------------------------------------------
@@ -49,21 +70,27 @@ instance (v : X ⟿ X ⊸ Y) : PartialDot v (Smooth.divergenceDiff v) := ⟨⟩
 --------------------------------------------------------------------------------
 
 noncomputable
-def Smooth.divergenceAdjDiff {Y} {κ} [EnumType κ] [FinVec Y κ] (v : X⟿Y⊸X) :=
+def divergenceAdjDiffSmooth {Y} {κ} [EnumType κ] [FinVec Y κ] (v : X⟿Y⊸X) :=
   let dv := λ (x : X) (u : X) (u' : Y) => ∂ (x':=x;u), (v.1 x').1 u'
   SmoothMap.mk (λ (x : X) => ∑ (i:κ) (j:ι), 𝕡 j (dv x (𝕖[X] j) (𝕖'[Y] i)) • 𝕖[Y] i) sorry_proof
 
-instance {Y} {κ} [EnumType κ] [FinVec Y κ] (v : X ⟿ Y ⊸ X) : Divergence v (Smooth.divergenceAdjDiff v) := ⟨⟩
+instance {Y} {κ} [EnumType κ] [FinVec Y κ] (v : X ⟿ Y ⊸ X) : Divergence v (divergenceAdjDiffSmooth v) := ⟨⟩
 
 -- Classical divergence of a vector field
 
 noncomputable
-def Smooth.divergence (v : X⟿X) :=
-  let dv := λ (x : X) (u : X) => ∂ (x':=x;u), v.1 x'
-  SmoothMap.mk (λ (x : X) => ∑ (j:ι), 𝕡 j (dv x (𝕖[X] j))) sorry_proof
+def divergence (v : X→X) : X→ℝ:=
+  let dv := λ (x : X) (u : X) => ∂ (x':=x;u), v x'
+  (λ (x : X) => ∑ (j:ι), 𝕡 j (dv x (𝕖[X] j)))
+
+noncomputable
+def divergenceSmooth (v : X⟿X) : X⟿ℝ := 
+  SmoothMap.mk (divergence v.1) sorry_proof
+
+instance (v : X → X) : Divergence v (divergence v) := ⟨⟩
 
 @[default_instance]
-instance (v : X ⟿ X) : Divergence v (Smooth.divergence v) := ⟨⟩
+instance (v : X ⟿ X) : Divergence v (divergenceSmooth v) := ⟨⟩
 
 
 --------------------------------------------------------------------------------
@@ -78,15 +105,19 @@ instance (v : X ⟿ X) : Divergence v (Smooth.divergence v) := ⟨⟩
   | `($(_) $f:term $xs*) => `(∇ $f:term $xs*)
   | _  => throw ()
 
-@[app_unexpander Smooth.divergenceDiff] def unexpandSmoothDivergenceDiff : Lean.PrettyPrinter.Unexpander
+@[app_unexpander divergenceDiffSmooth] def unexpandSmoothDivergenceDiff : Lean.PrettyPrinter.Unexpander
   | `($(_) $f:term $xs*) => `(∂· $f:term $xs*)
   | _  => throw ()
 
-@[app_unexpander Smooth.divergenceAdjDiff] def unexpandSmoothDivergenceAdjDiff : Lean.PrettyPrinter.Unexpander
+@[app_unexpander divergenceAdjDiffSmooth] def unexpandSmoothDivergenceAdjDiff : Lean.PrettyPrinter.Unexpander
   | `($(_) $f:term $xs*) => `(∇· $f:term $xs*)
   | _  => throw ()
 
-@[app_unexpander Smooth.divergence] def unexpandSmoothDivergence : Lean.PrettyPrinter.Unexpander
+@[app_unexpander divergence] def unexpandDivergence : Lean.PrettyPrinter.Unexpander
+  | `($(_) $f:term $xs*) => `(∇· $f:term $xs*)
+  | _  => throw ()
+
+@[app_unexpander divergenceSmooth] def unexpandSmoothDivergence : Lean.PrettyPrinter.Unexpander
   | `($(_) $f:term $xs*) => `(∇· $f:term $xs*)
   | _  => throw ()
 
@@ -126,7 +157,7 @@ theorem divergence_theorem (f : X ⟿ ℝ)
 theorem Smooth.differential.arg_f.adjoint_simp 
   : (Smooth.differential : (X⟿Y) → (X⟿X⊸Y))†
     =
-    - Smooth.divergenceDiff
+    - divergenceDiffSmooth
   := 
 by
 
@@ -162,7 +193,7 @@ by
 theorem Smooth.adjointDifferential.arg_f.adjoint_simp {Y} {κ} [EnumType κ] [FinVec Y κ]
   : (Smooth.adjointDifferential : (X⟿Y) → (X⟿Y⊸X))†
     =
-    - Smooth.divergenceAdjDiff
+    - divergenceAdjDiffSmooth
   := 
 by
 
@@ -204,7 +235,7 @@ by
 theorem Smooth.gradient.arg_f.adjoint_simp 
   : (Smooth.gradient : (X⟿ℝ) → (X⟿X))†
     =
-    - Smooth.divergence
+    - divergenceSmooth
   := sorry_proof
 
 

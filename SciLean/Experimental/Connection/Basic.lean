@@ -4,20 +4,30 @@ import SciLean.Core.IsSmooth
 -- import SciLean.Core.DifferentialDep
 import Lean
 
-
 namespace SciLean
 
+/-- Diffeological space 
 
+wiki: https://en.wikipedia.org/wiki/Diffeology
+-/
 class Diff (X : Type) where
-  plots : Set (ℝ → X)
-  plot_const : ∀ x : X, (λ _ : ℝ => x) ∈ plots
-  plot_comp  : ∀ x : X, (λ _ : ℝ => x) ∈ plots
+  plots : ∀ n, Set ((Fin n → ℝ) → X)
+  plot_const : ∀ n (x : X), (λ _ : Fin n → ℝ => x) ∈ plots n
+  -- plot_local - locallity aximp
+  plot_comp  : ∀ (f : (Fin n → ℝ) → (Fin m → ℝ)) (p : (Fin m → ℝ) → X), 
+    IsSmooth f → p ∈ plots m → p ∘ f ∈ plots n
 
-class IsSmoothDep {X Y} [Diff X] [Diff Y] (f : X → Y)
+class IsSmoothDep {X Y} [Diff X] [Diff Y] (f : X → Y) where
+  maps_plot_to_plot : ∀ (n) (p : (Fin n → ℝ) → X),
+    p ∈ Diff.plots n → f ∘ p ∈ Diff.plots n
 
 instance : Diff ℝ := sorry
 
 instance {X : Type} {Y : X → Type} [Diff ((x : X) × Y x)] (x : X) : Diff (Y x) := sorry
+
+-- Can we make instance like this? Looks dangerous
+-- instance {X : Type} {Y : X → Type} [Diff ((x : X) × Y x)] : Diff X := sorry
+
 
 /--
 This probably defines Ehresmann connection on `(x : X) × Y x`
@@ -43,10 +53,8 @@ instance {X Y : Type} [Diff X] [Diff Y] : DiffBundle (λ _ : X => Y) := sorry
 class TangentSpace (X : Type) (TX : outParam $ X → Type) [Diff X] [∀ x, Vec (TX x)] extends DiffBundle TX where
   connection_linear : ∀ γ t s, IsSmoothDep γ → IsLin (connection γ t s)
 
-
 instance {X : Type} [Vec X] : Diff X := sorry
 instance {X : Type} [Vec X] : TangentSpace X (λ _ : X => X) := sorry
-
 
 def diff [Diff X] [∀ x, Vec (TX x)] [TangentSpace X TX] 
          [Diff Y] [∀ y, Vec (TY y)] [TangentSpace Y TY] 
@@ -55,12 +63,6 @@ def diff [Diff X] [∀ x, Vec (TX x)] [TangentSpace X TX]
 variable 
   {X : Type} {TX : X → Type} [Diff X] [∀ x, Vec (TX x)] [TangentSpace X TX] 
   (x : X) (dx : TX x)
-
-
-def bar : X → X := sorry
-
-def bar' := diff (bar (X:=X))
-
 
 
 -- Diff of pi type
@@ -101,20 +103,24 @@ def D
   let dy := h ▸ h'' _ (f (γ 0)) ▸ diff (λ t : ℝ => connection γ t 0 (f (γ t))) 0 1
   dy
 
-
 variable 
-  {X : Type} {TX : X → Type} [Diff X] [∀ x, Vec (TX x)] [TangentSpace X TX] 
-  {Y : X → Type} {TY : (x : X) → Y x → Type} [DiffBundle Y] [∀ x y, Vec (TY x y)] [∀ x, TangentSpace (Y x) (TY x)]
+  {X : Type} {TX : X → Type} [Diff X] [∀ x, Hilbert (TX x)] [TangentSpace X TX] 
+  {Y : X → Type} {TY : (x : X) → Y x → Type} [DiffBundle Y] [∀ x y, Hilbert (TY x y)] [∀ x, TangentSpace (Y x) (TY x)]
   (x : X) (dx : TX x)
-  
 
 instance (f : (x : X) → Y x) [IsSmoothDiff f] : DiffBundle λ x => TX x → TY x (f x) := sorry
 
-variable (foo : (x : X) → Y x) [IsSmoothDiff foo]
+-- noncomputable
+-- def kineticEnergy (x : ℝ → X) (y : (t : ℝ) → Y (x t)) [IsSmoothDiff x] [IsSmoothDiff y] (t : ℝ) : ℝ := 
+--   1/2 * ‖D y t 1‖²
 
-noncomputable 
-def foo' := D (D foo)
+variable (x : ℝ → X) [IsSmoothDiff x]
 
+#check λ t => diff x t 1  -- velocity
+#check λ t => D (λ t' => diff x t' 1) t 1 -- acceleration
 
-theorem kineticEnergy.arg_xv.IsSmooth' {T} [Diff T] (x : T → X) (y : (t : T) → Y (x t)) [IsSmoothDiff x] [IsSmoothDiff y] : ℝ := sorry
+noncomputable
+def velocity (x : ℝ → X) [IsSmoothDiff x] (t : ℝ) : TX (x t) := diff x t 1
 
+noncomputable
+def acceleration (x : ℝ → X) [IsSmoothDiff x] (t : ℝ) : TX (x t) := D (velocity x) t 1
