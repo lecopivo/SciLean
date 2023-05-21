@@ -98,6 +98,36 @@ variable (f : X → ℝ) (x : X)
 #check ∇ x':=x, f x'
 
 
+syntax "ℛ " diffBinder ", " term:66 : term
+syntax "ℛ " "(" diffBinder ")" ", " term:66 : term
+macro_rules
+| `(ℛ $x:ident, $f) =>
+  `(ℛ λ $x => $f)
+| `(ℛ $x:ident : $type:term, $f) =>
+  `(ℛ λ $x : $type => $f)
+| `(ℛ $x:ident := $val:term, $f) =>
+  `((ℛ λ $x => $f) $val)
+| `(ℛ ($b:diffBinder), $f) =>
+  `(ℛ $b, $f)
+
+@[app_unexpander reverseDifferential] def unexpandReverseDifferential : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $f:term $x $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((ℛ ($x':ident:=$x), $b) $ys*)
+    | `(fun ($x':ident : $ty) => $b:term) => `((ℛ ($x':ident := $x), $b) $ys*)
+    | _  => `(ℛ $f:term $x:term $ys*)
+
+  | `($(_) $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(ℛ $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(ℛ ($x':ident : $ty), $b)
+    | _  => `(ℛ $f:term)
+
+  | _  => throw ()
+
+
+
 variable {α β γ : Type}
 variable {X Y Z : Type} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z]
 variable {Y₁ Y₂ : Type} [SemiHilbert Y₁] [SemiHilbert Y₂]
