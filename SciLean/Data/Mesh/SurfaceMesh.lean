@@ -85,7 +85,6 @@ structure SurfaceMesh where
   corners    : Array Corner := {}
   halfedges  : Array Halfedge := {}
   boundaries : Array Boundary := {}
-  -- generators : Array () [TODO: implement]
 
 instance : Inhabited SurfaceMesh where default := {}
 
