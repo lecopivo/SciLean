@@ -871,7 +871,7 @@ def PrismRepr.barycenter (P : PrismRepr) : P.Space :=
     This implementation has bad numerical properties and it is thus serves mostly as a specification -/
 def PrismRepr.barycentricCoordSpec {P : PrismRepr} (p : FaceRepr) (_ : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space) : ℝ := 
   match P, p, x with
-  | .point, _, _ => 0
+  | .point, _, _ => 1
   | .cone _, .tip _, (t, _) => t
   | .cone _, .base p', (t, x') => 
     (1-t) * (barycentricCoordSpec p' sorry_proof ((1/(1-t)) • x'))
@@ -886,7 +886,7 @@ def PrismRepr.barycentricCoordSpec {P : PrismRepr} (p : FaceRepr) (_ : p.ofPrism
 -- Can we define different set of coordinates inductively?
 def PrismRepr.barycentricCoord {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space) : ℝ := 
   match P, p, x, h.1 with
-  | .point, _, _, _ => 0
+  | .point, _, _, _ => 1
   | .cone .point, .base _, (t, ()), _ => 1-t
   | .cone _, .tip _, (t, (_)), _ => t
   | .cone (.cone _), .base (.tip _), (_, (s, _)), _ => s

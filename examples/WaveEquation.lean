@@ -73,3 +73,29 @@ def main : IO Unit := do
 
 
 -- #eval main
+
+#check Id
+
+def foo (N : Nat) : Nat := Id.run do
+
+  let mut n := 0
+  for i in [0:N] do
+    n := n + i * i
+
+  return n
+
+
+#eval foo 10
+
+
+example 
+ : foo 10 = 285 := by native_decide
+
+
+example 
+ : foo 10 = 285 := 
+by 
+  unfold foo
+  unfold forIn 
+  simp [forIn]
+

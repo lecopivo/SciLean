@@ -8,9 +8,6 @@ namespace SciLean
 theorem invFun_as_argmin {X Y} [Nonempty X] [Hilbert X] [Hilbert Y] (f : X → Y) (y : Y) (hf : IsInv f)
   : f⁻¹ y = argmin x, ‖f x - y‖² := sorry_proof
 
-theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ) 
-  : (∇ λ x => f x) = λ x => (ℛ f x).2 1 := by rfl
-
 theorem hold_fun_swap {α β} (f : α → β) (x : α)
   : f (hold x) = hold (f x) := by unfold hold; rfl
 

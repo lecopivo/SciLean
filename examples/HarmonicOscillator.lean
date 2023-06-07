@@ -12,8 +12,9 @@ approx solver (m k : ℝ) (steps : Nat)
                              -∇ (x':=x), H m k x' p))
 by
   -- Unfold Hamiltonian and compute gradients
-  unfold H; unfold gradient
-  fun_trans; fun_trans; simp
+  unfold H
+  set_option trace.Meta.Tactic.fun_trans.rewrite true in
+  symdiff
 
   -- Apply RK4 method
   rw [odeSolve_fixed_dt runge_kutta4_step]

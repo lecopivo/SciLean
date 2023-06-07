@@ -2,3 +2,4 @@
 *~
 /lean_packages/*
 !/lean_packages/manifest.json
+/lake-packages
