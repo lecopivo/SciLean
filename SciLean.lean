@@ -9,36 +9,6 @@ import SciLean.Data.DataArray
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 
-import SciLean.Mathlib.Deriv.Core
-
-
-#exit
-
-import SciLean.Mechanics
-import SciLean.Operators.ODE
-import SciLean.Functions
-
-import SciLean.Data.GenericArray
-import SciLean.Data.DataArray
--- import SciLean.Data.Mesh
--- import SciLean.Data.Quotient
-
-import SciLean.Solver 
-import SciLean.Tactic.LiftLimit
-import SciLean.Tactic.FinishImpl
-
-import SciLean.Solver.Solver
-
--- import SciLean.Data.PowType
--- import SciLean.Solver 
--- import SciLean.Tactic.LiftLimit
--- import SciLean.Tactic.FinishImpl
--- import SciLean.Data.PowType
--- import SciLean.Core.Extra
--- import SciLean.Notation
--- import SciLean.Functions
-
-
 /-!
 
 SciLean
