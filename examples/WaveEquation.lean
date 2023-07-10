@@ -12,9 +12,9 @@ def H (m k : ℝ) (x p : ℝ^{n}) : ℝ :=
   let Δx := (1 : ℝ)/(n : ℝ)
   (Δx/(2*m)) * ‖p‖² + (Δx * k/2) * (∑ i, ‖x[i.shift 1] - x[i]‖²)
 
+
 /- set_option trace.Meta.Tactic.fun_trans.rewrite true in
  -/
-set_option trace.Meta.Tactic.simp.rewrite  true in
 function_properties H {n : USize} [Nonempty (Idx n)] (m k : ℝ) (x p : ℝ^{n}) : ℝ
 argument x
   def ∂† by 
@@ -73,29 +73,4 @@ def main : IO Unit := do
 
 
 -- #eval main
-
-#check Id
-
-def foo (N : Nat) : Nat := Id.run do
-
-  let mut n := 0
-  for i in [0:N] do
-    n := n + i * i
-
-  return n
-
-
-#eval foo 10
-
-
-example 
- : foo 10 = 285 := by native_decide
-
-
-example 
- : foo 10 = 285 := 
-by 
-  unfold foo
-  unfold forIn 
-  simp [forIn]
 

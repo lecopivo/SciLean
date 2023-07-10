@@ -58,7 +58,7 @@ open Lean.Meta
 --   : SimpExtension ← registerSimpAttr `my_simp "my own simp attribute"
 
 open Lean Elab Term Meta in
-elab "reduce_type_of" t:term : term => do
+elab:max " reduce_type_of " t:term : term => do
   let val ← elabTerm t none
   let typ ← inferType val
   let reduced ← reduce typ (skipTypes := false)

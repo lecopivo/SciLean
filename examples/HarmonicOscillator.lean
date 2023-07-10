@@ -13,7 +13,7 @@ approx solver (m k : ℝ) (steps : Nat)
 by
   -- Unfold Hamiltonian and compute gradients
   unfold H
-  set_option trace.Meta.Tactic.fun_trans.rewrite true in
+  -- set_option trace.Meta.Tactic.fun_trans.rewrite true in
   symdiff
 
   -- Apply RK4 method
@@ -44,3 +44,4 @@ def main : IO Unit := do
         IO.print "o"
     IO.println ""
 
+-- #eval main

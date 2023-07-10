@@ -9,6 +9,8 @@ import SciLean.Data.DataArray
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 
+import SciLean.Mathlib.Deriv.Core
+
 
 #exit
 

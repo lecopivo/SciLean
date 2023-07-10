@@ -13,7 +13,7 @@ open SciLean
 
 def g : ℝ×ℝ := (0, -9.81)
 
-def ballisticMotion (x v : ℝ×ℝ) := (v, g  - (5 + ‖v‖) • v)
+def ballisticMotion (x v : ℝ×ℝ) := (v, g - (5 + ‖v‖) • v)
 
 function_properties ballisticMotion (x v : ℝ×ℝ)
 argument (x,v) [UnsafeAD]
@@ -23,16 +23,16 @@ argument (x,v) [UnsafeAD]
 
 approx aimToTarget (v₀ : ℝ×ℝ) (optimizationRate : ℝ) := 
   λ (T : ℝ) (target : ℝ×ℝ) =>
-  let shoot := fun (t : ℝ) (v : ℝ×ℝ) =>
-                 odeSolve (t₀ := 0) (x₀ := ((0:ℝ×ℝ),v)) (t := t)
-                   (f := λ (t : ℝ) (x,v) => ballisticMotion x v)
-  (λ v => (shoot T v).1)⁻¹ target
+  let shoot := λ (v : ℝ×ℝ) =>
+                 odeSolve (t₀ := 0) (x₀ := ((0:ℝ×ℝ),v)) (t := T)
+                   (f := λ (t : ℝ) (x,v) => ballisticMotion x v) |>.fst
+  shoot⁻¹ target
 by
   clean_up
   
   -- reformulate inverse as minimization and apply gradient descent
   conv =>
-    enter [1,shoot,T,target]
+    enter [1,T,shoot,target]
     rw [invFun_as_argmin _ _ sorry_proof]
     rw [argminFun.approx.gradientDescent v₀ optimizationRate]
   
@@ -40,22 +40,11 @@ by
   clean_up
 
   unsafe_ad; ignore_fun_prop
-
+  
   -- run automatic differentiation, it gets blocked on `ℛ shoot`
   conv =>
-    enter [1,shoot,T,target,1]
-    autodiff
-
-  -- deal with `ℛ shoot` manually
-  let_unfold shoot; clean_up
-
-  -- run automatic differentiation on `shoot`, this formulates the adjoint problem
-  conv =>
-    enter_let Rxy
-    autodiff
-
-  -- The adjoint problem consists of two steps, forward and backward pass.
-  -- We need to pick discretization for both of those passes.
+    enter [1]
+    autodiff; autodiff
   
   -- Precompute forward pass with midpoint method and 50 steps on the interval [0,T] and used linear interpolation
   conv =>
@@ -70,7 +59,7 @@ by
   
   -- Use midpoint method with 50 steps on the backward pass
   conv => 
-    enter_let Rxy₂
+    --enter_let Rxy₂
     rw[odeSolve_fixed_dt midpoint_step]
       
   approx_limit 50; intro backwardSteps; clean_up

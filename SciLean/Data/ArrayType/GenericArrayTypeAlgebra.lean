@@ -14,7 +14,7 @@ example {X} [Vec X] : SMul ℝ X := by infer_instance
 -- example : ∀ (i : Idx), IsSmooth λ (x : Cont) => ∥x[i]∥² := by infer_instance -- apply λ
 
 -- instance (priority := low) [AddCommGroup Elem] [DistribMulAction ℝ Elem] : Vec Cont := Vec.mk
-instance (priority := low) [Vec Elem] : Vec Cont := Vec.mkSorryProofs -- Vec.mk
+instance (priority := low ) [Vec Elem] : Vec Cont := Vec.mkSorryProofs -- Vec.mk
 
 instance (priority := low) [Inner Elem] : Inner Cont where
   inner := λ f g => ∑ x, ⟪f[x], g[x]⟫
@@ -53,18 +53,17 @@ instance (priority := low) {κ} {_ : Index κ} [FinVec Elem κ] : BasisDuality C
   toDual   := GenericArrayType.map toDual
   fromDual := GenericArrayType.map fromDual
 
-set_option synthInstance.checkSynthOrder false in
+-- set_option synthInstance.checkSynthOrder false in
 instance (priority := low) [FinVec Elem Unit] : FinVec Cont Idx where
   is_basis := sorry_proof
   duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
   to_dual := sorry_proof
   from_dual := sorry_proof
 
-instance (priority := low-1) {κ : Type} {_ : Index κ} [FinVec Elem κ] : FinVec Cont (Idx×κ) where
-  is_basis := sorry_proof
-  duality := by intro (i,j) (i',j'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
-  to_dual := sorry_proof
-  from_dual := sorry_proof
-
-
+-- This is causing issues to synthesize `Vec Cont` from `Vec Elem`
+-- instance (priority := low-2) {κ : Type} {_ : Index κ} [FinVec Elem κ] : FinVec Cont (Idx×κ) where
+--   is_basis := sorry_proof
+--   duality := by intro (i,j) (i',j'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
+--   to_dual := sorry_proof
+--   from_dual := sorry_proof
 

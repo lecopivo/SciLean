@@ -8,10 +8,15 @@ import Mathlib.Topology.Basic
 
 namespace SciLean
 
--- TODO: Add Semi Group property for `f` that guarantees the existence
---       of solution for all times
+open Classical in
 noncomputable
-opaque odeSolve {X : Type} [Vec X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (t : ℝ) : X
+def odeSolve {X : Type} [Vec X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (t : ℝ) : X :=
+  if h : ∃ x : ℝ → X, ∀ t, 
+             ⅆ x t = f t (x t) 
+             ∧ 
+             x t₀ = x₀
+  then Classical.choose h t
+  else 0
 
 function_properties SciLean.odeSolve {X : Type} [Vec X]
   (f : ℝ → X → X) [IsSmooth λ tx : ℝ×X => f tx.1 tx.2] 

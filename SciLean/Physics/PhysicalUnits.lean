@@ -57,6 +57,7 @@ structure PhysicalQuantity (α : Type u) (unit : PhysicalUnit) where
   val : α 
 
 instance {α units} [Add α] : Add (PhysicalQuantity α units) := ⟨λ x y => ⟨x.val + y.val⟩⟩
+instance {α units} [Sub α] : Sub (PhysicalQuantity α units) := ⟨λ x y => ⟨x.val - y.val⟩⟩
 instance {α units} [OfNat α n] : OfNat (PhysicalQuantity α units) n := ⟨⟨OfNat.ofNat n⟩⟩
 
 instance {α β γ units units'} [HMul α β γ] 
@@ -79,6 +80,19 @@ instance {α β γ units'} [HDiv α β γ]
   : HDiv α (PhysicalQuantity β units') (PhysicalQuantity γ (1/units')) := 
   ⟨λ x y => ⟨x / y.val⟩⟩
 
+abbrev ensure_type (α : Type _) (a : α) := a
+
+open Lean Elab Term Meta in
+elab:max " reduce_type_of' " t:term : term => do
+  let val ← elabTerm t none
+  let typ ← inferType val
+  let reduced ← reduce typ (skipTypes := false)
+  mkAppM ``ensure_type #[reduced, val]
+
+macro (priority:=high) x:term:71 " * " y:term:70 : term =>
+  `((reduce_type_of' (HMul.hMul $x $y)))
+macro (priority:=high) x:term:71 " / " y:term:70 : term =>
+  `((reduce_type_of' (HDiv.hDiv $x $y)))
 
 declare_syntax_cat siunit (behavior := both)
 
@@ -238,20 +252,22 @@ example : ℝ[J*Hz⁻¹] = ℝ[J*s] := by rfl
 namespace PhysicalConstants 
   --- Source: https://en.wikipedia.org/wiki/Physical_constant#Table_of_physical_constants
 
-  def gravitationalConstant : ℝ[N*m²*kg⁻²] := ⟨6.674 * 10.0^(-11.0)⟩
+  def gravitationalConstant : ℝ[N*m²*kg⁻²] := ⟨(6.674 : ℝ) * 10.0^(-11.0 : ℝ)⟩
   abbrev G := gravitationalConstant
 
   def speedOfLight : ℝ[m*s⁻¹] := ⟨299792458.0⟩
   abbrev c := speedOfLight
 
-  def planckConstant : ℝ[J*Hz⁻¹] := ⟨6.62607015 * 10.0^(-34.0)⟩
+  def planckConstant : ℝ[J*Hz⁻¹] := ⟨(6.62607015 : ℝ) * 10.0^(-34.0 : ℝ)⟩
   abbrev h := planckConstant
   abbrev ℎ := planckConstant
 
-  def reducedPlanckConstant : ℝ[J*s] := h / Math.pi
+  def reducedPlanckConstant : ℝ[J*s] := h / Real.pi
   abbrev ℏ := reducedPlanckConstant
 
-  def electronMass : ℝ[kg] := ⟨9.1093837015 * 10.0^(-31.0)⟩
+  def electronMass : ℝ[kg] := ⟨(9.1093837015 : ℝ) * 10.0^(-31.0 : ℝ)⟩
   abbrev mₑ : ℝ[kg] := electronMass
 
 end PhysicalConstants
+
+

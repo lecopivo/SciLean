@@ -85,7 +85,7 @@ namespace Real
     le_antisymm := sorry
     le_total := sorry
     lt_iff_le_not_le := sorry
-    decidable_le := by infer_instance
+    decidableLE := by infer_instance
 
 
   -- instance : ZeroLEOneClass ℝ where
