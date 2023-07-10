@@ -18,7 +18,6 @@ theorem getElem.arg_cont.IsLin [Vec Elem] (idx : Idx) (dom)
   : IsLin (λ (cont : Cont) => getElem cont idx dom) := sorry_proof
 instance getElem.arg_cont.IsLin' [Vec Elem] {T : Type} [Vec T] (cont : T → Cont) (idx : Idx) (dom) [SciLean.IsLin cont] 
   : SciLean.IsLin (λ t => getElem (cont t) idx dom) := sorry_proof
-#exit
 
 instance getElem.arg_cont.IsSmooth [Vec Elem] (idx : Idx) (dom)
   : IsSmooth (λ (cont : Cont) => getElem cont idx dom) := sorry_proof
