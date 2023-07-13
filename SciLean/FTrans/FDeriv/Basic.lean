@@ -5,11 +5,13 @@ import Mathlib.Analysis.Calculus.FDeriv.Comp
 import Mathlib.Analysis.Calculus.FDeriv.Prod
 import Mathlib.Analysis.Calculus.FDeriv.Linear
 
+
 import SciLean.Tactic.LSimp.Elab
+import SciLean.FunctionSpaces.ContinuousLinearMap.Basic
 
 namespace SciLean
 
-open Filter Asymptotics ContinuousLinearMap Set Metric
+-- open Filter Asymptotics ContinuousLinearMap Set Metric
 
 
 -- Basic lambda calculus rules -------------------------------------------------
@@ -26,16 +28,6 @@ variable {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
 variable {ι : Type _} [Fintype ι]
 
 variable {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
-
-
--- #check ContinuousLinearMap.mk
-
--- def _root_.ContinuousLinearMap.mk' (f : X → Y) (h₁ : IsLinearMap K f := by sorry) (h₂ : Continuous f := by continuity)
---   : X →L[K] Y := ⟨⟨⟨f, h₁.map_add⟩, h₁.map_smul⟩, by aesop⟩
-
--- #check ContinuousLinearMap.mk' (K := K) fun (x : X) => x
-
--- macro " fun " x:ident " →L[" R:term "] " b:term : term => `(ContinuousLinearMap.mk' (K:=$R) fun $x => $b)
 
 
 @[ftrans]
@@ -59,11 +51,18 @@ theorem fderiv.let_rule_at
         let y := g x 
         f x y) x
     =
-    let y  := g x
-    let dg := fderiv K g x
-    let df := fderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y)
-    df.comp ((id K X).prod dg)
-  := by sorry_proof
+    fun dx =>L[K] 
+      let y  := g x
+      let dg := fderiv K g x
+      let df := fderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y)
+      df (dx, (dg dx)) := 
+by 
+  have h : (fun x => f x (g x)) = (fun xy : X×Y => f xy.1 xy.2) ∘ (fun x => (x, g x)) := by rfl
+  rw[h]
+  rw[fderiv.comp x hf (DifferentiableAt.prod (by simp) hg)]
+  rw[DifferentiableAt.fderiv_prod (by simp) hg]
+  ext dx; simp[ContinuousLinearMap.comp]
+  rfl
 
 
 theorem fderiv.let_rule
@@ -73,16 +72,14 @@ theorem fderiv.let_rule
        let y := g x
        f x y)
     =
-    fun x =>
+    fun x => fun dx =>L[K]
       let y  := g x
       let dg := fderiv K g x
       let df := fderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y)
-      df.comp ((id K X).prod dg)
-    -- fun x => fun dx →L[K]
-    --   let y  := g x
-    --   let dy := fderiv K g x dx
-    --   fderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y) (dx,dy)
-  := by sorry_proof
+      df (dx, (dg dx)) := 
+by
+  funext x
+  apply fderiv.let_rule_at x _ (hg x) _ (hf (x,g x))
 
 
 theorem fderiv.pi_rule_at
@@ -90,9 +87,8 @@ theorem fderiv.pi_rule_at
   (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt K (f i) x)
   : (fderiv K fun (x : X) (i : ι) => f i x) x
     = 
-    ContinuousLinearMap.pi fun i => fderiv K (f i) x
-    -- fun x => fun dx →L[K] fun i =>
-    --   fderiv K (f i) x dx
+    fun dx =>L[K] fun i =>
+      fderiv K (f i) x dx
   := fderiv_pi hf
 
 
@@ -100,10 +96,8 @@ theorem fderiv.pi_rule
   (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable K (f i))
   : (fderiv K fun (x : X) (i : ι) => f i x)
     = 
-    fun x => 
-      ContinuousLinearMap.pi fun i => fderiv K (f i) x
-    -- fun x => fun dx →L[K] fun i =>
-    --   fderiv K (f i) x dx
+    fun x => fun dx =>L[K] fun i =>
+      fderiv K (f i) x dx
   := by funext x; apply fderiv_pi (fun i => hf i x)
 
 
@@ -178,7 +172,7 @@ def fderiv.ftransInfo : FTrans.Info where
       let proof ← mkAppM ``fderiv.let_rule #[g,hg,f,hf]
       let rhs := (← inferType proof).getArg! 2
 
-      let goal : MVarId := sorry
+      -- let goal : MVarId := sorry
 
 
       dbg_trace "g = {← ppExpr g}"
@@ -189,9 +183,7 @@ def fderiv.ftransInfo : FTrans.Info where
 
   applyLambdaLambdaRule e := return none
 
-  discharger := 
-    let a : MacroM Syntax := `(tactic| simp)
-    sorry
+  discharger := `(tactic| simp)
 
 #check MacroM
 -- do
@@ -217,17 +209,25 @@ def fderiv.ftransInfo : FTrans.Info where
 #eval show Lean.CoreM Unit from do
   FTrans.infoExt.insert ``fderiv fderiv.ftransInfo
 
+set_option trace.Meta.Tactic.ftrans.step true
+set_option trace.Meta.Tactic.simp.rewrite true
+set_option trace.Meta.Tactic.simp.discharge true
+
+
 example :
   (fderiv K λ x : X => x)
   =
-  fun _ => 1
+  fun _ => fun dx =>L[K] dx
 := 
   by ftrans only; rfl
+
+
+#exit 
 
 example (x : X) :
   (fderiv K λ _ : Y => x)
   =
-  fun _ => 0
+  fun _ => fun dx =>L[K] 0
 := 
   by ftrans only
 

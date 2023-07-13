@@ -81,10 +81,10 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → SimpM (Option Expr) := fu
   Apply simp theorems marked with `ftrans`
 -/
 def applyTheorems (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option Simp.Step) := do
-  let .some ext ← getSimpExtension? "ftrans" | return none
+  let .some ext ← getSimpExtension? "ftrans_core" | return none
   let thms ← ext.getTheorems
 
-  if let some r ← Simp.rewrite? e thms.post thms.erased discharge? (tag := "pre") (rflOnly := false) then
+  if let some r ← Simp.rewrite? e thms.pre thms.erased discharge? (tag := "pre") (rflOnly := false) then
     return Simp.Step.visit r
   return Simp.Step.visit { expr := e }
 
@@ -97,10 +97,10 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
 
   trace[Meta.Tactic.ftrans.step] "{ftransName}\n{← ppExpr e}"
 
-  let s ← getThe Simp.State
-  let c : HashMap _ _ := s.cache
-  let keys ← c.foldM (fun s k r => do return s ++ s!"  key: {← ppExpr k} | value: {← ppExpr r.expr}\n") ""
-  trace[Meta.Tactic.ftrans.step] "cache:\n{keys}"
+  -- let s ← getThe Simp.State
+  -- let c : HashMap _ _ := s.cache
+  -- let keys ← c.foldM (fun s k r => do return s ++ s!"  key: {← ppExpr k} | value: {← ppExpr r.expr}\n") ""
+  -- trace[Meta.Tactic.ftrans.step] "cache:\n{keys}"
 
 
   match f with -- is `f` guaranteed to be in `ldsimp` normal form?
@@ -114,8 +114,8 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
     let e' ← mkLetFVars xs (info.replaceFTransFun e b)
     return .some (.visit (.mk e' none 0))
   -- | .lam .. => do
-  | _ =>
-    applyTheorems e (tacticToDischarge info.discharger)
+  | _ => do
+    applyTheorems e (tacticToDischarge (← liftM info.discharger))
   -- | _ => do
   --   let f' ← etaExpand f
   --   applyTheorems (info.replaceFTransFun e f') (fun e' => info.discharge e')

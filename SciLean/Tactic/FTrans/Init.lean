@@ -22,8 +22,9 @@ initialize registerTraceClass `Meta.Tactic.ftrans.rewrite
 
 /-- Simp attribute to mark function transformation rules.
 -/
-register_simp_attr ftrans
+register_simp_attr ftrans_core
 
+macro "ftrans" : attr => `(attr| ftrans_core ↓)
 
 /-- 
 Function Transformation Info
@@ -36,7 +37,10 @@ structure Info where
   replaceFTransFun (expr : Expr) (newFun : Expr) : Expr
   applyLambdaLetRule    (expr : Expr) : SimpM (Option Step)
   applyLambdaLambdaRule (expr : Expr) : SimpM (Option Step)
-  discharger : TSyntax `tactic
+  -- The CoreM monad is likely completely unecessary
+  -- I just do not know how to convert `(tactic| by simp) into Syntax without
+  -- having some kind of monad
+  discharger : CoreM (TSyntax `tactic)
 
 deriving Inhabited
 
