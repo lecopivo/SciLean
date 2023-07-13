@@ -8,6 +8,7 @@ import Mathlib.Analysis.Calculus.FDeriv.Linear
 
 import SciLean.Tactic.LSimp.Elab
 import SciLean.FunctionSpaces.ContinuousLinearMap.Basic
+import SciLean.FunctionSpaces.Differentiable.Basic
 
 namespace SciLean
 
@@ -32,14 +33,14 @@ variable {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpa
 
 @[ftrans]
 theorem fderiv.id_rule 
-  : (fderiv K fun x : X => x) = fun _ => ContinuousLinearMap.id K X -- fun _ => fun dx →L[K] dx 
-  := by funext x; simp
+  : (fderiv K fun x : X => x) = fun _ => fun dx =>L[K] dx
+  := by ext x dx; simp
 
 
 @[ftrans]
 theorem fderiv.const_rule (x : X)
-  : (fderiv K fun _ : Y => x) = fun _ => 0
-  := by funext x; simp
+  : (fderiv K fun _ : Y => x) = fun _ => fun dx =>L[K] 0
+  := by ext x dx; simp
 
 
 theorem fderiv.let_rule_at
@@ -183,7 +184,7 @@ def fderiv.ftransInfo : FTrans.Info where
 
   applyLambdaLambdaRule e := return none
 
-  discharger := `(tactic| simp)
+  discharger := `(tactic| differentiable)
 
 #check MacroM
 -- do
@@ -219,10 +220,7 @@ example :
   =
   fun _ => fun dx =>L[K] dx
 := 
-  by ftrans only; rfl
-
-
-#exit 
+  by ftrans only
 
 example (x : X) :
   (fderiv K λ _ : Y => x)
@@ -231,24 +229,13 @@ example (x : X) :
 := 
   by ftrans only
 
-theorem hihi (x : X) :
-  (fderiv K λ _ : Y => x)
-  =
-  fun _ => 0
-:= 
-  by ftrans only
-
-set_option trace.Meta.Tactic.ftrans.step true
-set_option trace.Meta.Tactic.simp.rewrite true
-set_option trace.Meta.Tactic.simp.discharge true
-
-
 example :
   (fderiv K λ x : X => (x + x) + (x + x) + (x + x))
   =
   fun _ => 0
   := by
   ftrans only
+  ext x dx; simp
   sorry
 
 example (x' : X) :
@@ -262,17 +249,15 @@ example (x' : X) :
   rw [HAdd.hAdd.arg_a4a5.fderiv_comp _ _  (by simp) (by simp)]
   sorry
 
-#exit
+
 example (x' : X) :
   (fderiv K λ x : X => x + x')
   =
-  fun _ => 0
+  fun _ => fun dx =>L[K] dx
   := by
- ftrans only
- sorry
+ ftrans only; simp
+ ext x dx; simp
 
-
-#exit
 
 -- set_option pp.all true 
 example :

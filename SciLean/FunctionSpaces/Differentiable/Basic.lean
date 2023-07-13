@@ -36,7 +36,7 @@ macro "differentiable" : tactic =>
 -- Basic rules -----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-namespace IsContinuousLinearMap
+namespace Differentiable
 
 variable 
   {R : Type _} [NontriviallyNormedField R]
