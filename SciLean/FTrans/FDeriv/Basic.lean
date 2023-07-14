@@ -10,10 +10,11 @@ import SciLean.Tactic.LSimp.Elab
 import SciLean.FunctionSpaces.ContinuousLinearMap.Basic
 import SciLean.FunctionSpaces.Differentiable.Basic
 
+import SciLean.Profile
+
 namespace SciLean
 
 -- open Filter Asymptotics ContinuousLinearMap Set Metric
-
 
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
@@ -102,33 +103,6 @@ theorem fderiv.pi_rule
   := by funext x; apply fderiv_pi (fun i => hf i x)
 
 
---------------------------------------------------------------------------------
-
-
-@[ftrans]
-theorem _root_.HAdd.hAdd.arg_a4a5.fderiv_comp
-  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
-  : (fderiv K fun x => f x + g x)
-    =
-    fderiv K f + fderiv K g
-  := sorry
-
--- @[ftrans]
--- theorem _root_.HAdd.hAdd.arg_a5.fderiv_comp
---   (x : X) (f : X → Y) (hf : Differentiable K f)
---   : (fderiv K (HAdd.hAdd)
---     =
---     fderiv K f + fderiv K g 
---   := sorry
-
-
-@[simp]
-theorem _root_.HAdd.hAdd.arg_a4a5.Differentiable
-  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
-  : Differentiable K fun x => f x + g x
-  := sorry
-
-
 -- Register `fderiv` as function transformation --------------------------------
 --------------------------------------------------------------------------------
 
@@ -179,14 +153,162 @@ def fderiv.ftransInfo : FTrans.Info where
       dbg_trace "g = {← ppExpr g}"
       dbg_trace "f = {← ppExpr f}"
       dbg_trace "rhs = {← ppExpr rhs}"
-      return .some (.visit (.mk rhs proof 0))
+       return .some (.visit (.mk rhs proof 0))
     | _ => return none
 
   applyLambdaLambdaRule e := return none
 
-  discharger := `(tactic| differentiable)
+  discharger := FTrans.tacticToDischarge (Syntax.mkLit ``tacticDifferentiable "differentiable")
 
-#check MacroM
+#eval show Lean.CoreM Unit from do
+  FTrans.FTransExt.insert ``fderiv fderiv.ftransInfo
+
+
+--------------------------------------------------------------------------------
+
+
+@[ftrans, ftrans_rule]
+theorem _root_.HAdd.hAdd.arg_a4a5.fderiv_comp
+  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+  : (fderiv K fun x => f x + g x)
+    =
+    fderiv K f + fderiv K g
+  := sorry
+
+set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.discharge true in
+example
+  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+  : (fderiv K fun x => f x + g x)
+    =
+    fderiv K f + fderiv K g
+  := by
+  ftrans only
+
+
+set_option trace.Meta.Tactic.simp.unify true in
+@[ftrans]
+theorem _root_.HAdd.hAdd.arg_a5.fderiv'
+  (y : Y) 
+  : (fderiv K (fun y' => HAdd.hAdd y y'))
+    =
+    fun y => fun dy =>L[K] dy
+  := by 
+  ftrans only
+  ftrans only
+
+@[ftrans]
+theorem _root_.HAdd.hAdd.arg_a5.fderiv''
+  (y : Y) 
+  : (fderiv K (fun y' => y + y'))
+    =
+    fun y => fun dy =>L[K] dy
+  := by ftrans only 
+
+set_option trace.Meta.Tactic.simp.unify true in
+@[ftrans]
+theorem _root_.HAdd.hAdd.arg_a4.fderiv
+  (y : Y) 
+  : (fderiv K (fun y' => y' + y))
+    =
+    fun y => fun dy =>L[K] dy
+  := by ftrans only  
+
+
+#eval show CoreM Unit from do
+  IO.println "hihi"
+  let s := FTrans.FTransRulesExt.getState (← getEnv)
+  IO.println s.toList
+
+
+set_option trace.Meta.Tactic.ftrans.step true in
+set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.discharge true in
+@[ftrans]
+theorem _root_.HAdd.hAdd.arg_a5.fderiv
+  (y : Y) 
+  : (fderiv K fun y' => y + y')
+    =
+    fun y => fun dy =>L[K] dy := 
+by 
+  -- rw[HAdd.hAdd.arg_a4a5.fderiv_comp]
+  -- rw[HAdd.hAdd.arg_a4a5.fderiv_comp _ _ (by differentiable) (by differentiable)]
+  ftrans only
+  ext; simp
+
+#exit
+-- @[ftrans]
+-- theorem _root_.HAdd.hAdd.arg_a5.fderiv_comp
+--   (x : X) (f : X → Y) (hf : Differentiable K f)
+--   : (fderiv K (HAdd.hAdd)
+--     =
+--     fderiv K f + fderiv K g 
+--   := sorry
+
+
+@[differentiable]
+theorem _root_.HAdd.hAdd.arg_a4a5.Differentiable
+  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+  : Differentiable K fun x => f x + g x
+  := sorry
+
+
+-- Prod.fst
+
+@[ftrans]
+theorem _root_.Prod.fst.arg_self.fderiv_at_comp
+  (x : X)
+  (f : X → Y×Z) (hf : DifferentiableAt K f x)
+  : fderiv K (fun x => (f x).1) x
+    =
+    fun dx =>L[K] (fderiv K f x dx).1
+:= sorry
+
+@[ftrans]
+theorem _root_.Prod.fst.arg_self.fderiv_comp
+  (f : X → Y×Z) (hf : Differentiable K f)
+  : fderiv K (fun x => (f x).1)
+    =
+    fun x => fun dx =>L[K] (fderiv K f x dx).1
+:= sorry
+
+@[ftrans_simp ↓ high]
+theorem _root_.Prod.fst.arg_self.fderiv
+  : fderiv K (fun xy : X×Y => xy.1)
+    =
+    fun _ => fun dxy =>L[K] dxy.1
+:= sorry
+
+
+-- Prod.snd
+
+@[ftrans]
+theorem _root_.Prod.snd.arg_self.fderiv_at_comp
+  (x : X)
+  (f : X → Y×Z) (hf : DifferentiableAt K f x)
+  : fderiv K (fun x => (f x).2) x
+    =
+    fun dx =>L[K] (fderiv K f x dx).2
+:= sorry
+
+@[ftrans]
+theorem _root_.Prod.snd.arg_self.fderiv_comp
+  (f : X → Y×Z) (hf : Differentiable K f)
+  : fderiv K (fun x => (f x).2)
+    =
+    fun x => fun dx =>L[K] (fderiv K f x dx).2
+:= sorry
+
+@[ftrans_simp ↓ high]
+theorem _root_.Prod.snd.arg_self.fderiv
+  : fderiv K (fun xy : X×Y => xy.2)
+    =
+    fun _ => fun dxy =>L[K] dxy.2
+:= sorry
+
+
+
+
 -- do
 --     let goal ← mkFreshExprMVar e
 --     try 
@@ -207,12 +329,19 @@ def fderiv.ftransInfo : FTrans.Info where
 
 
 
-#eval show Lean.CoreM Unit from do
-  FTrans.infoExt.insert ``fderiv fderiv.ftransInfo
+set_option trace.Meta.Tactic.simp true in
+set_option trace.Meta.Tactic.simp.discharge true in
+set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.ftrans.step true in
+-- @[ftrans]
+theorem _root_.HAdd.hAdd.arg_a4.fderiv_comp
+  (y : Y) (f : X → Y) (hf : Differentiable K f)
+  : (fderiv K fun x => f x + y)
+    =
+    fderiv K f
+  := by ftrans only; simp; rfl
 
-set_option trace.Meta.Tactic.ftrans.step true
-set_option trace.Meta.Tactic.simp.rewrite true
-set_option trace.Meta.Tactic.simp.discharge true
+#exit
 
 
 example :
@@ -229,8 +358,8 @@ example (x : X) :
 := 
   by ftrans only
 
-example :
-  (fderiv K λ x : X => (x + x) + (x + x) + (x + x))
+theorem hoho (f : X → X) (hf : Differentiable K f) :
+  (fderiv K λ x : X => (x + f (f (f x))) + (x + x))
   =
   fun _ => 0
   := by
@@ -244,11 +373,19 @@ example (x' : X) :
   fun _ => 0
   := by
   ftrans only
-  set_option trace.Meta.Tactic.simp.unify true in
   ftrans only
   rw [HAdd.hAdd.arg_a4a5.fderiv_comp _ _  (by simp) (by simp)]
   sorry
 
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+example :
+  (fderiv K λ x : X×X => x.1)
+  =
+  fun x => fun dx =>L[K] dx.1
+  := by ftrans only
+
+#exit
 
 example (x' : X) :
   (fderiv K λ x : X => x + x')

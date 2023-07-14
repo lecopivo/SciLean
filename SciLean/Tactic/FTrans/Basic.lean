@@ -9,47 +9,7 @@ import SciLean.Tactic.FTrans.Init
 
 open Lean Meta
 
-namespace SciLean
-
-namespace FTrans
-
-/-
-
-Glossary:
-
-  - function transformation expression - a valied expression that is a function transformation applied to a function
--/
-
-/-- 
-  Returns function transformation name and function being tranformed if `e` is function tranformation expression.
- -/
-def getFTrans? (e : Expr) : CoreM (Option (Name × Info × Expr)) := do
-  let .some ftransName := e.getAppFn.constName?
-    | return none
-
-  let .some info ← infoExt.find? ftransName
-    | return none
-
-  let .some f := info.getFTransFun? e
-    | return none
-
-  return (ftransName, info, f)
-
-/-- 
-  Returns function transformation info if `e` is function tranformation expression.
- -/
-def getFTransInfo? (e : Expr) : CoreM (Option Info) := do
-  let .some (_, info, _) ← getFTrans? e
-    | return none
-  return info
-
-/-- 
-  Returns function transformation info if `e` is function tranformation expression.
- -/
-def getFTransFun? (e : Expr) : CoreM (Option Expr) := do
-  let .some (_, _, f) ← getFTrans? e
-    | return none
-  return f
+namespace SciLean.FTrans
 
 
 open Elab Term in
@@ -81,12 +41,33 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → SimpM (Option Expr) := fu
   Apply simp theorems marked with `ftrans`
 -/
 def applyTheorems (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option Simp.Step) := do
-  let .some ext ← getSimpExtension? "ftrans_core" | return none
-  let thms ← ext.getTheorems
 
-  if let some r ← Simp.rewrite? e thms.pre thms.erased discharge? (tag := "pre") (rflOnly := false) then
-    return Simp.Step.visit r
+  -- using simplifier
+  -- let .some ext ← getSimpExtension? "ftrans_core" | return none
+  -- let thms ← ext.getTheorems
+
+  -- if let some r ← Simp.rewrite? e thms.pre thms.erased discharge? (tag := "pre") (rflOnly := false) then
+  --   return Simp.Step.visit r
+  -- return Simp.Step.visit { expr := e }
+
+  let .some (ftransName, _, f) ← getFTrans? e
+    | return none
+  
+  let .some funName :=
+     match f with 
+     | .app f _ => f.getAppFn.constName?
+     | .lam _ _ b _ => b.getAppFn.constName?
+     | _ => none
+   | return none
+
+  let candidates ← FTrans.getFTransRules funName ftransName
+  
+  for thm in candidates do
+    if let some result ← Meta.Simp.tryTheorem? e thm discharge? then
+      trace[Debug.Meta.Tactic.simp] "rewrite result {e} => {result.expr}"
+      return Simp.Step.visit result
   return Simp.Step.visit { expr := e }
+
 
 /-- Try to apply function transformation to `e`. Returns `none` if expression is not a function transformation applied to a function.
   -/
@@ -103,7 +84,7 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
   -- trace[Meta.Tactic.ftrans.step] "cache:\n{keys}"
 
 
-  match f with -- is `f` guaranteed to be in `ldsimp` normal form?
+  match (← etaExpand f) with -- is `f` guaranteed to be in `ldsimp` normal form?
   | .lam _ _ (.letE ..) _ => info.applyLambdaLetRule e
   | .lam _ _ (.lam  ..) _ => info.applyLambdaLambdaRule e
   -- | .lam _ t _ _  => 
@@ -115,10 +96,7 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
     return .some (.visit (.mk e' none 0))
   -- | .lam .. => do
   | _ => do
-    applyTheorems e (tacticToDischarge (← liftM info.discharger))
-  -- | _ => do
-  --   let f' ← etaExpand f
-  --   applyTheorems (info.replaceFTransFun e f') (fun e' => info.discharge e')
+    applyTheorems e info.discharger
 
 
 def tryFTrans? (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (post := false) : SimpM (Option Simp.Step) := do
