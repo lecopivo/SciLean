@@ -17,6 +17,8 @@ initialize registerTraceClass `Meta.Tactic.ftrans.step
 -- initialize registerTraceClass `Meta.Tactic.ftrans.missing_rule
 -- initialize registerTraceClass `Meta.Tactic.ftrans.normalize_let
 initialize registerTraceClass `Meta.Tactic.ftrans.rewrite
+initialize registerTraceClass `Meta.Tactic.ftrans.discharge
+initialize registerTraceClass `Meta.Tactic.ftrans.unify
 -- initialize registerTraceClass `Meta.Tactic.ftrans.lambda_special_cases
 
 
@@ -37,6 +39,8 @@ structure Info where
   replaceFTransFun (expr : Expr) (newFun : Expr) : Expr
   applyLambdaLetRule    (expr : Expr) : SimpM (Option Step)
   applyLambdaLambdaRule (expr : Expr) : SimpM (Option Step)
+  identityTheorem : Option Name
+  constantTheorem  : Option Name
   -- The CoreM monad is likely completely unecessary
   -- I just do not know how to convert `(tactic| by simp) into Syntax without
   -- having some kind of monad
@@ -169,16 +173,11 @@ def getFTransRules (funName ftransName : Name) : CoreM (Array SimpTheorem) := do
   let .some rules := rules.find? ftransName
     | return #[]
 
-  let env ← getEnv
-
   let rules : List SimpTheorem ← rules.toList.mapM fun r => do
-    let .some info := env.find? r
-      | panic! "hihi"
-    
     return { 
-      proof  := info.value!
+      proof  := mkConst r
       origin := .decl r
-      rfl    := false 
+      rfl    := false
     }
 
   return rules.toArray

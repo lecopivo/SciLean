@@ -35,23 +35,23 @@ macro "is_continuous_linear_map" : tactic =>
 
 
 def ContinuousLinearMap.mk'
-  (f : X → Y) (hf : IsContinuousLinearMap R f := by is_continuous_linear_map) 
+  (f : X → Y) (hf : IsContinuousLinearMap R f) 
   : X →L[R] Y :=
   ⟨⟨⟨f, hf.map_add'⟩, hf.map_smul'⟩, hf.cont⟩
 
 
 macro "fun " x:ident " =>L[" R:term "] " b:term : term =>
-  `(ContinuousLinearMap.mk' $R fun $x => $b)
+  `(ContinuousLinearMap.mk' $R (fun $x => $b) (by is_continuous_linear_map))
 
 macro "fun " x:ident " : " X:term " =>L[" R:term "] " b:term : term =>
-  `(ContinuousLinearMap.mk' $R fun ($x : $X) => $b)
+  `(ContinuousLinearMap.mk' $R (fun ($x : $X) => $b) (by is_continuous_linear_map))
 
 macro "fun " "(" x:ident " : " X:term ")" " =>L[" R:term "] " b:term : term =>
-  `(ContinuousLinearMap.mk' $R fun ($x : $X) => $b)
+  `(ContinuousLinearMap.mk' $R (fun ($x : $X) => $b) (by is_continuous_linear_map))
 
 @[app_unexpander ContinuousLinearMap.mk'] def unexpandContinuousLinearMapMk : Lean.PrettyPrinter.Unexpander
 
-  | `($(_) $R $f:term) =>
+  | `($(_) $R $f:term $hf:term) =>
     match f with
     | `(fun $x':ident => $b:term) => `(fun $x' =>L[$R] $b)
     | `(fun ($x':ident : $ty) => $b:term) => `(fun ($x' : $ty) =>L[$R] $b)
@@ -89,7 +89,11 @@ by
   apply g.1.1.2
   apply g.1.2
   apply g.2
+
+
   
+-- Basic lambda calculus rules -------------------------------------------------
+--------------------------------------------------------------------------------
 
 @[is_continuous_linear_map]
 theorem id_rule 
@@ -139,6 +143,7 @@ theorem morph_rule (f : X →L[R] Y) : IsContinuousLinearMap R fun x => f x :=
   by_morphism f (by simp)
 
 
+
 -- Id --------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -149,7 +154,8 @@ theorem _root_.id.arg_a.IsContinuousLinearMap
   by_morphism (ContinuousLinearMap.id R X) (by simp)
 
 
--- Prod ------------------------------------------------------------------------
+
+-- Prod.mk ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[is_continuous_linear_map]
@@ -161,6 +167,9 @@ theorem _root_.Prod.mk.arg_fstsnd.IsContinuousLinearMap_comp
   by_morphism ((fun x =>L[R] g x).prod (fun x =>L[R] f x)) 
   (by simp)
 
+
+-- Prod.fst --------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 @[is_continuous_linear_map]
 theorem _root_.Prod.fst.arg_self.IsContinuousLinearMap
@@ -179,6 +188,10 @@ theorem _root_.Prod.fst.arg_self.IsContinuousLinearMap_comp
   (by simp)
 
 
+
+-- Prod.snd --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
 @[is_continuous_linear_map]
 theorem _root_.Prod.snd.arg_self.IsContinuousLinearMap
   : IsContinuousLinearMap R fun (xy : X×Y) => xy.snd
@@ -196,28 +209,13 @@ theorem _root_.Prod.snd.arg_self.IsContinuousLinearMap_comp
   (by simp)
 
 
-section Tests
 
-variable (f : X → X) (hf : IsContinuousLinearMap R f) (g : X → X) (hg : IsContinuousLinearMap R g) (x : X) (h : X →L[R] X)
+-- HAdd.hAdd -------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
 
-#check fun x =>L[R] h x
-
-#check fun x =>L[R] (x : X)
-
-#check (fun x =>L[R] f x) x
-
-#check fun x =>L[R] f (f x)
-
-#check fun x =>L[R] (f x, x)
-
-variable (g : X → Y×Z)  (hg : Continuous g) (f : Y×Z → X) (hf : Continuous f)
-
-theorem hihi : Continuous (fun xy : X×Y => xy.1) := by continuity
-
-theorem huhu : Continuous (fun x => f (g x)) := by continuity
-
-theorem hehe : IsContinuousLinearMap R (@Prod.fst X Y) := by is_continuous_linear_map
-
-theorem hoho : Continuous (fun x : X => (g x).1) := by continuity
-
-
+@[is_continuous_linear_map]
+theorem _root_.HAdd.hAdd.arg_a4a5.IsContinuousLinearMap_comp
+  (f g : X → Y) (hf : IsContinuousLinearMap R f) (hg : IsContinuousLinearMap R g)
+  : IsContinuousLinearMap R fun x => f x + g x
+:= 
+  sorry

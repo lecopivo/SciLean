@@ -2,6 +2,8 @@ import Mathlib.Analysis.Calculus.FDeriv.Basic
 import Mathlib.Analysis.Calculus.FDeriv.Comp
 import Mathlib.Analysis.Calculus.FDeriv.Prod
 import Mathlib.Analysis.Calculus.FDeriv.Linear
+import Mathlib.Analysis.Calculus.FDeriv.Add
+
 
 import SciLean.FunctionSpaces.Differentiable.Init
 
@@ -119,14 +121,14 @@ theorem pi_rule_at
   (x : X)
   (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt R (f i) x)
   : DifferentiableAt R (fun x i => f i x) x
-:= by sorry
+  := by sorry
 
 
 @[differentiable]
 theorem pi_rule
   (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable R (f i))
   : Differentiable R (fun x i => f i x)
-:= fun x => pi_rule_at x f (fun i => hf i x)
+  := fun x => pi_rule_at x f (fun i => hf i x)
 
 
 -- Id --------------------------------------------------------------------------
@@ -134,20 +136,19 @@ theorem pi_rule
 
 @[differentiable]
 theorem _root_.id.arg_a.DifferentiableAt (x : X)
-  : DifferentiableAt R (id : X → X) x
-:= by simp
+  : DifferentiableAt R (id : X → X) x := by simp
 
 
 @[differentiable]
 theorem _root_.id.arg_a.Differentiable
-  : Differentiable R (id : X → X)
-:= by simp
+  : Differentiable R (id : X → X) := by simp
 
 
 -- Prod ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
--- Prod.mk 
+-- Prod.mk --------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 @[differentiable]
 theorem _root_.Prod.mk.arg_fstsnd.DifferentiableAt_comp
@@ -155,7 +156,7 @@ theorem _root_.Prod.mk.arg_fstsnd.DifferentiableAt_comp
   (g : X → Y) (hg : DifferentiableAt R g x)
   (f : X → Z) (hf : DifferentiableAt R f x)
   : DifferentiableAt R (fun x => (g x, f x)) x
-:= DifferentiableAt.prod hg hf
+  := DifferentiableAt.prod hg hf
 
 
 @[differentiable]
@@ -163,37 +164,60 @@ theorem _root_.Prod.mk.arg_fstsnd.Differentiable_comp
   (g : X → Y) (hg : Differentiable R g)
   (f : X → Z) (hf : Differentiable R f)
   : Differentiable R fun x => (g x, f x)
-:= Differentiable.prod hg hf
+  := Differentiable.prod hg hf
 
--- Prod.fst
+
+
+-- Prod.fst --------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 @[differentiable]
 theorem _root_.Prod.fst.arg_self.DifferentiableAt_comp 
   (x : X)
   (f : X → Y×Z) (hf : DifferentiableAt R f x)
   : DifferentiableAt R (fun x => (f x).1) x
-:= DifferentiableAt.fst hf
+  := DifferentiableAt.fst hf
 
 
 @[differentiable]
 theorem _root_.Prod.fst.arg_self.Differentiable_comp 
   (f : X → Y×Z) (hf : Differentiable R f)
   : Differentiable R (fun x => (f x).1)
-:= Differentiable.fst hf
+  := Differentiable.fst hf
 
--- Prod.snd
+
+
+-- Prod.snd --------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 @[differentiable]
 theorem _root_.Prod.snd.arg_self.DifferentiableAt_comp 
   (x : X)
   (f : X → Y×Z) (hf : DifferentiableAt R f x)
   : DifferentiableAt R (fun x => (f x).2) x
-:= DifferentiableAt.snd hf
+  := DifferentiableAt.snd hf
 
 
 @[differentiable]
 theorem _root_.Prod.snd.arg_self.Differentiable_comp 
   (f : X → Y×Z) (hf : Differentiable R f)
   : Differentiable R (fun x => (f x).2)
-:= Differentiable.snd hf
+  := Differentiable.snd hf
 
+
+
+-- HAdd.hAdd -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[differentiable]
+theorem _root_.HAdd.hAdd.arg_a4a5.DifferentiableAt_comp
+  (x : X) (f g : X → Y) (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x)
+  : DifferentiableAt R (fun x => f x + g x) x
+  := DifferentiableAt.add hf hg
+ 
+
+@[differentiable]
+theorem _root_.HAdd.hAdd.arg_a4a5.Differentiable_comp
+  (f g : X → Y) (hf : Differentiable R f) (hg : Differentiable R g)
+  : Differentiable R fun x => f x + g x
+  := fun x => _root_.HAdd.hAdd.arg_a4a5.DifferentiableAt_comp x f g (hf x) (hg x)

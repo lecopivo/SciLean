@@ -21,9 +21,9 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → SimpM (Option Expr) := fu
            So, we must not save references to them at `Term.State`. -/
         withoutModifyingStateWithInfoAndMessages do
           instantiateMVarDeclMVars mvar.mvarId!
+
           let goals ←
             withSynthesize (mayPostpone := false) do Tactic.run mvar.mvarId! (Tactic.evalTactic tacticCode *> Tactic.pruneSolvedGoals)
-          dbg_trace "number of trailing goals after solving {← ppExpr e} is {goals.length}"
 
           let result ← instantiateMVars mvar
           if result.hasExprMVar then
@@ -52,22 +52,57 @@ def applyTheorems (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM
 
   let .some (ftransName, _, f) ← getFTrans? e
     | return none
-  
-  let .some funName :=
-     match f with 
-     | .app f _ => f.getAppFn.constName?
-     | .lam _ _ b _ => b.getAppFn.constName?
-     | _ => none
-   | return none
+
+  let .some funName ←
+     match f with
+     | .app f _ => pure f.getAppFn.constName?
+     | .lam _ _ b _ => pure b.getAppFn.constName?
+     | .proj structName idx _ => do
+       let .some info := getStructureInfo? (← getEnv) structName
+         | pure none
+       pure (info.getProjFn? idx)
+     | _ => pure none
+   | pure none
 
   let candidates ← FTrans.getFTransRules funName ftransName
-  
+
   for thm in candidates do
     if let some result ← Meta.Simp.tryTheorem? e thm discharge? then
-      trace[Debug.Meta.Tactic.simp] "rewrite result {e} => {result.expr}"
       return Simp.Step.visit result
   return Simp.Step.visit { expr := e }
 
+
+def Info.applyIdentityRule (info : FTrans.Info) (e : Expr) : SimpM (Option Simp.Step) := do
+
+  let .some ruleName := info.identityTheorem
+    | return Simp.Step.visit { expr := e }
+
+  let thm : SimpTheorem := {
+    proof := mkConst ruleName
+    origin := .decl ruleName
+    rfl := false
+  }
+  
+  if let some result ← Meta.Simp.tryTheorem? e thm info.discharger then
+    return Simp.Step.visit result
+  return Simp.Step.visit { expr := e }
+
+
+def Info.applyConstantRule (info : FTrans.Info) (e : Expr) : SimpM (Option Simp.Step) := do
+
+  let .some ruleName := info.constantTheorem
+    | return Simp.Step.visit { expr := e }
+
+  let thm : SimpTheorem := {
+    proof := mkConst ruleName
+    origin := .decl ruleName
+    rfl := false
+  }
+  
+  if let some result ← Meta.Simp.tryTheorem? e thm info.discharger then
+    return Simp.Step.visit result
+  return Simp.Step.visit { expr := e }
+  
 
 /-- Try to apply function transformation to `e`. Returns `none` if expression is not a function transformation applied to a function.
   -/
@@ -78,23 +113,23 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
 
   trace[Meta.Tactic.ftrans.step] "{ftransName}\n{← ppExpr e}"
 
-  -- let s ← getThe Simp.State
-  -- let c : HashMap _ _ := s.cache
-  -- let keys ← c.foldM (fun s k r => do return s ++ s!"  key: {← ppExpr k} | value: {← ppExpr r.expr}\n") ""
-  -- trace[Meta.Tactic.ftrans.step] "cache:\n{keys}"
-
-
-  match (← etaExpand f) with -- is `f` guaranteed to be in `ldsimp` normal form?
+  match f with
   | .lam _ _ (.letE ..) _ => info.applyLambdaLetRule e
   | .lam _ _ (.lam  ..) _ => info.applyLambdaLambdaRule e
   -- | .lam _ t _ _  => 
   --   if let .some e' ← applyStructureRule
     -- check if `t` is a structure and apply specialized rule for structure projections
+  | .lam _ _ b _ => do
+    if b == .bvar 0 then
+      info.applyIdentityRule e
+    else if !(b.hasLooseBVar 0) then
+      info.applyConstantRule e
+    else
+      applyTheorems e info.discharger
   | .letE .. => letTelescope f λ xs b => do
     -- swap all let bindings and the function transformation
     let e' ← mkLetFVars xs (info.replaceFTransFun e b)
     return .some (.visit (.mk e' none 0))
-  -- | .lam .. => do
   | _ => do
     applyTheorems e info.discharger
 
@@ -102,8 +137,10 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
 def tryFTrans? (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (post := false) : SimpM (Option Simp.Step) := do
 
   if post then
+    -- trace[Meta.Tactic.ftrans.step] "post step on:\n{← ppExpr e}"
     return none
   else 
+    -- trace[Meta.Tactic.ftrans.step] "pre step on:\n{← ppExpr e}"
     main e discharge?
 
 variable (ctx : Simp.Context) (useSimp := true) in
