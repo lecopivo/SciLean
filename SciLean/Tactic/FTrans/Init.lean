@@ -1,11 +1,15 @@
+import Qq
 import Lean.Meta.Tactic.Simp.Types
 
 import Std.Data.RBMap.Alter
 
+import Mathlib.Data.FunLike.Basic
+
 import SciLean.Prelude
 import SciLean.Lean.MergeMapDeclarationExtension
+import SciLean.Lean.Meta.Basic
  
-open Lean Meta.Simp
+open Lean Meta.Simp Qq
 
 namespace SciLean.FTrans
 
@@ -14,7 +18,7 @@ namespace SciLean.FTrans
 -------------
 initialize registerTraceClass `Meta.Tactic.ftrans
 initialize registerTraceClass `Meta.Tactic.ftrans.step
--- initialize registerTraceClass `Meta.Tactic.ftrans.missing_rule
+initialize registerTraceClass `Meta.Tactic.ftrans.missing_rule
 -- initialize registerTraceClass `Meta.Tactic.ftrans.normalize_let
 initialize registerTraceClass `Meta.Tactic.ftrans.rewrite
 initialize registerTraceClass `Meta.Tactic.ftrans.discharge
@@ -28,58 +32,156 @@ register_simp_attr ftrans_simp
 
 macro "ftrans" : attr => `(attr| ftrans_simp ↓)
 
-/-- 
-Function Transformation Info
---
 
-Stores information and custom functionalities for a function transformation.
+open Meta Simp
+
+
+-- TODO: Move RewriteRule to a new file and add a custom version `tryTheorem?` with proper tracing
+
+/-- Rewrite rule can be either provided as a theorem or as a meta program
 -/
-structure Info where
-  getFTransFun? (expr : Expr) : Option Expr
-  replaceFTransFun (expr : Expr) (newFun : Expr) : Expr
-  applyLambdaLetRule    (expr : Expr) : SimpM (Option Step)
-  applyLambdaLambdaRule (expr : Expr) : SimpM (Option Step)
-  identityTheorem : Option Name
-  constantTheorem  : Option Name
-  -- The CoreM monad is likely completely unecessary
-  -- I just do not know how to convert `(tactic| by simp) into Syntax without
-  -- having some kind of monad
-  discharger : Expr → SimpM (Option Expr)
-
+inductive RewriteRule where
+  | thm  (name : Name) 
+  | eval (f : Expr → MetaM (Option Result))
 deriving Inhabited
 
-private def Info.merge! (ftrans : Name) (_ _ : Info) : Info :=
-panic! 
-s!"Two conflicting definitions for function transformation `{ftrans}` found!
 
-  Keep only one and remove the other."
+def RewriteRule.apply (r : RewriteRule) (discharger : Expr → SimpM (Option Expr)) (e : Expr) : SimpM (Option Result) := 
+  match r with
+  | eval f => f e
+  | thm name => do
 
-initialize FTransExt : MergeMapDeclarationExtension Info 
-  ← mkMergeMapDeclarationExtension ⟨Info.merge!, sorry_proof⟩
+    let thm : SimpTheorem := {
+      proof := mkConst name
+      origin := .decl name
+      rfl := false
+    }
 
+    let .some result ← Meta.Simp.tryTheorem? e thm discharger
+      | return none
+    return result
+
+
+structure FTransExt where
+  /-- Function transformation name -/
+  ftransName : Name
+  /-- Get function being transformed from function transformation expression -/
+  getFTransFun?    (expr : Expr) : Option Expr
+  /-- Replace function being transformed in function transformation expression -/
+  replaceFTransFun (expr : Expr) (newFun : Expr) : Expr
+  /-- Custom rule for transforming `fun x => x -/
+  identityRule     : Option RewriteRule
+  /-- Custom rule for transforming `fun x => y -/
+  constantRule    : Option RewriteRule
+  /-- Custom rule for transforming `fun x => let y := g x; f x y -/
+  lambdaLetRule    : Option RewriteRule
+  /-- Custom rule for transforming `fun x y => f x y -/
+  lambdaLambdaRule : Option RewriteRule
+  /-- Custom discharger for this function transformation -/
+  discharger       : Expr → MetaM (Option Expr)
+  /-- Name of this extension, keep the default value! -/
+  name : Name := by exact decl_name%
+deriving Inhabited
+
+
+def FTransExt.applyLambdaLetRule (ext : FTransExt) (e : Expr) : SimpM Step := do
+  let .some r := ext.lambdaLetRule 
+    | trace[Meta.Tactic.ftrans.missing_rule] "Missing lambda-let rule a rule for `{ext.ftransName}`"
+      return .visit { expr := e }
+
+  if let .some r ← r.apply (ext.discharger ·) e then
+    return .visit r
+  else
+    trace[Meta.Tactic.ftrans.discharge] "Failed applying lambda-let rule to `{← ppExpr e}"
+    return .visit { expr := e }
+
+def FTransExt.applyLambdaLambdaRule (ext : FTransExt) (e : Expr) : SimpM Step := do
+  let .some r := ext.lambdaLambdaRule 
+    | trace[Meta.Tactic.ftrans.missing_rule] "Missing lambda-lambda rule a rule for `{ext.ftransName}`"
+      return .visit { expr := e }
+
+  if let .some r ← r.apply (ext.discharger ·) e then
+    return .visit r
+  else
+    trace[Meta.Tactic.ftrans.discharge] "Failed applying lambda-lambda rule to `{← ppExpr e}"
+    return .visit { expr := e }
+
+def FTransExt.applyIdentityRule (ext : FTransExt) (e : Expr) : SimpM Step := do
+  let .some r := ext.identityRule 
+    | trace[Meta.Tactic.ftrans.missing_rule] "Missing identity rule a rule for `{ext.ftransName}`"
+      return .visit { expr := e }
+
+  if let .some r ← r.apply (ext.discharger ·) e then
+    return .visit r
+  else
+    trace[Meta.Tactic.ftrans.discharge] "Failed applying identity rule to `{← ppExpr e}"
+    return .visit { expr := e }
+
+def FTransExt.applyConstantRule (ext : FTransExt) (e : Expr) : SimpM Step := do
+  let .some r := ext.constantRule 
+    | trace[Meta.Tactic.ftrans.missing_rule] "Missing constant rule a rule for `{ext.ftransName}`"
+      return .visit { expr := e }
+
+  if let .some r ← r.apply (ext.discharger ·) e then
+    return .visit r
+  else
+    trace[Meta.Tactic.ftrans.discharge] "Failed applying constant rule to `{← ppExpr e}"
+    return .visit { expr := e }
+
+
+def mkFTransExt (n : Name) : ImportM FTransExt := do
+  let { env, opts, .. } ← read
+  IO.ofExcept <| unsafe env.evalConstCheck FTransExt opts ``FTransExt n
+
+
+initialize ftransExt : PersistentEnvExtension (Name × Name) (Name × FTransExt) (Std.RBMap Name FTransExt Name.quickCmp) ←
+  registerPersistentEnvExtension {
+    mkInitial := pure {}
+    addImportedFn := fun s => do
+
+      let mut r : Std.RBMap Name FTransExt Name.quickCmp := {}
+
+      for s' in s do
+        for (ftransName, extName) in s' do
+          let ext ← mkFTransExt extName
+          r := r.insert ftransName ext
+
+      pure r
+    addEntryFn := fun s (n, ext) => s.insert n ext
+    exportEntriesFn := fun s => s.valuesArray.map (fun ext => (ext.ftransName, ext.name))
+  }
 
 /-- 
   Returns function transformation name and function being tranformed if `e` is function tranformation expression.
  -/
-def getFTrans? (e : Expr) : CoreM (Option (Name × Info × Expr)) := do
-  let .some ftransName := e.getAppFn.constName?
+def getFTrans? (e : Expr) : CoreM (Option (Name × FTransExt × Expr)) := do
+  let .some ftransName := 
+      match e.getAppFn.constName? with
+      | none => none
+      | .some name => 
+        if name != ``FunLike.coe then
+          name
+        else if let .some ftrans := e.getArg? 4 then
+          ftrans.getAppFn.constName? 
+        else
+          none
     | return none
 
-  let .some info ← FTransExt.find? ftransName
+  let .some ext := (ftransExt.getState (← getEnv)).find? ftransName
     | return none
 
-  let .some f := info.getFTransFun? e
+  let .some f := ext.getFTransFun? e
     | return none
 
-  return (ftransName, info, f)
+  return (ftransName, ext, f)
 
 /-- 
   Returns function transformation info if `e` is function tranformation expression.
  -/
-def getFTransInfo? (e : Expr) : CoreM (Option Info) := do
-  let .some (_, info, _) ← getFTrans? e
+def getFTransExt? (e : Expr) : CoreM (Option FTransExt) := do
+  let .some (_, ext, _) ← getFTrans? e
     | return none
-  return info
+  return ext
 
 /-- 
   Returns function transformation info if `e` is function btranformation expression.
@@ -88,7 +190,6 @@ def getFTransFun? (e : Expr) : CoreM (Option Expr) := do
   let .some (_, _, f) ← getFTrans? e
     | return none
   return f
-
 
 
 --------------------------------------------------------------------------------
@@ -141,10 +242,10 @@ initialize funTransRuleAttr : TagAttribute ←
       MetaM.run' do
         forallTelescope rule λ _ eq => do
 
-          let .some (_,lhs,rhs) := eq.app3? ``Eq
+          let .some (_,lhs,_) := eq.app3? ``Eq
             | throwError s!"`{← ppExpr eq}` is not a rewrite rule!"
 
-          let .some (transName, transInfo, f) ← getFTrans? lhs
+          let .some (transName, _, f) ← getFTrans? lhs
             | throwError s!
 "`{← ppExpr eq}` is not a rewrite rule of known function transformaion!
 To register function transformation call:
@@ -154,11 +255,7 @@ To register function transformation call:
 ```
 where <name> is name of the function transformation and <info> is corresponding `FTrans.Info`. 
 "
-          let .some funName := 
-              match f with 
-              | .app f _ => f.getAppFn.constName?
-              | .lam _ _ b _ => b.getAppFn.constName?
-              | _ => none
+          let .some funName ← getFunHeadConst? f
             | throwError "Function being transformed is in invalid form!"
 
           FTransRulesExt.insert funName (FTransRules.empty.insert transName ruleName)

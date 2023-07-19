@@ -13,7 +13,7 @@ namespace SciLean.FTrans
 
 
 open Elab Term in
-def tacticToDischarge (tacticCode : Syntax) : Expr → SimpM (Option Expr) := fun e => do
+def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fun e => do
     let mvar ← mkFreshExprSyntheticOpaqueMVar e `simp.discharger
     let runTac? : TermElabM (Option Expr) :=
       try
@@ -42,27 +42,11 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → SimpM (Option Expr) := fu
 -/
 def applyTheorems (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option Simp.Step) := do
 
-  -- using simplifier
-  -- let .some ext ← getSimpExtension? "ftrans_core" | return none
-  -- let thms ← ext.getTheorems
-
-  -- if let some r ← Simp.rewrite? e thms.pre thms.erased discharge? (tag := "pre") (rflOnly := false) then
-  --   return Simp.Step.visit r
-  -- return Simp.Step.visit { expr := e }
-
   let .some (ftransName, _, f) ← getFTrans? e
     | return none
 
-  let .some funName ←
-     match f with
-     | .app f _ => pure f.getAppFn.constName?
-     | .lam _ _ b _ => pure b.getAppFn.constName?
-     | .proj structName idx _ => do
-       let .some info := getStructureInfo? (← getEnv) structName
-         | pure none
-       pure (info.getProjFn? idx)
-     | _ => pure none
-   | pure none
+  let .some funName ← getFunHeadConst? f
+    | return none
 
   let candidates ← FTrans.getFTransRules funName ftransName
 
@@ -70,68 +54,33 @@ def applyTheorems (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM
     if let some result ← Meta.Simp.tryTheorem? e thm discharge? then
       return Simp.Step.visit result
   return Simp.Step.visit { expr := e }
-
-
-def Info.applyIdentityRule (info : FTrans.Info) (e : Expr) : SimpM (Option Simp.Step) := do
-
-  let .some ruleName := info.identityTheorem
-    | return Simp.Step.visit { expr := e }
-
-  let thm : SimpTheorem := {
-    proof := mkConst ruleName
-    origin := .decl ruleName
-    rfl := false
-  }
-  
-  if let some result ← Meta.Simp.tryTheorem? e thm info.discharger then
-    return Simp.Step.visit result
-  return Simp.Step.visit { expr := e }
-
-
-def Info.applyConstantRule (info : FTrans.Info) (e : Expr) : SimpM (Option Simp.Step) := do
-
-  let .some ruleName := info.constantTheorem
-    | return Simp.Step.visit { expr := e }
-
-  let thm : SimpTheorem := {
-    proof := mkConst ruleName
-    origin := .decl ruleName
-    rfl := false
-  }
-  
-  if let some result ← Meta.Simp.tryTheorem? e thm info.discharger then
-    return Simp.Step.visit result
-  return Simp.Step.visit { expr := e }
   
 
 /-- Try to apply function transformation to `e`. Returns `none` if expression is not a function transformation applied to a function.
   -/
 def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option Simp.Step) := do
 
-  let .some (ftransName, info, f) ← getFTrans? e
+  let .some (ftransName, ext, f) ← getFTrans? e
     | return none
 
   trace[Meta.Tactic.ftrans.step] "{ftransName}\n{← ppExpr e}"
 
   match f with
-  | .lam _ _ (.letE ..) _ => info.applyLambdaLetRule e
-  | .lam _ _ (.lam  ..) _ => info.applyLambdaLambdaRule e
-  -- | .lam _ t _ _  => 
-  --   if let .some e' ← applyStructureRule
-    -- check if `t` is a structure and apply specialized rule for structure projections
-  | .lam _ _ b _ => do
-    if b == .bvar 0 then
-      info.applyIdentityRule e
-    else if !(b.hasLooseBVar 0) then
-      info.applyConstantRule e
-    else
-      applyTheorems e info.discharger
   | .letE .. => letTelescope f λ xs b => do
     -- swap all let bindings and the function transformation
-    let e' ← mkLetFVars xs (info.replaceFTransFun e b)
-    return .some (.visit (.mk e' none 0))
+    let e' ← mkLetFVars xs (ext.replaceFTransFun e b)
+    return .some (.visit { expr := e' })
+
+  | .lam _ _ (.bvar  0) _ => ext.applyIdentityRule e
+  | .lam _ _ (.letE ..) _ => ext.applyLambdaLetRule e
+  | .lam _ _ (.lam  ..) _ => ext.applyLambdaLambdaRule e
+  | .lam _ _ b _ => do
+    if !(b.hasLooseBVar 0) then
+      ext.applyConstantRule e
+    else
+      applyTheorems e (ext.discharger ·)
   | _ => do
-    applyTheorems e info.discharger
+    applyTheorems e (ext.discharger ·)
 
 
 def tryFTrans? (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (post := false) : SimpM (Option Simp.Step) := do
@@ -157,12 +106,15 @@ mutual
         Simp.andThen (← Simp.postDefault e discharge) (fun e' => tryFTrans? e' discharge (post := true))
       discharge? := discharge
     } else {
-      pre  := fun e ↦ Simp.andThen (.visit { expr := e }) (fun e' => tryFTrans? e' discharge)
-      post := fun e ↦ Simp.andThen (.visit { expr := e }) (fun e' => tryFTrans? e' discharge (post := true))
+      pre  := fun e ↦ do 
+        Simp.andThen (.visit { expr := e }) (fun e' => tryFTrans? e' discharge)
+      post := fun e ↦ do
+        Simp.andThen (.visit { expr := e }) (fun e' => tryFTrans? e' discharge (post := true))
       discharge? := discharge
     }
 
-  partial def deriveSimp (e : Expr) : MetaM Simp.Result :=
+  partial def deriveSimp (e : Expr) : MetaM Simp.Result := do
+    withTraceNode `ftrans (fun _ => return s!"ftrans of {← ppExpr e}") do
     (·.1) <$> Tactic.LSimp.main e ctx (methods := methods)
 end
 
@@ -183,7 +135,7 @@ def fTransAt (g : MVarId) (ctx : Simp.Context) (fvarIdsToSimp : Array FVarId)
     MetaM (Option (Array FVarId × MVarId)) := g.withContext do
   g.checkNotAssigned `norm_num
   let mut g := g
-  let mut toAssert := #[]
+  let mut toAssert := #[] 
   let mut replaced := #[]
   for fvarId in fvarIdsToSimp do
     let localDecl ← fvarId.getDecl

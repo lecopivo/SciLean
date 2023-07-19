@@ -15,6 +15,7 @@ def linearInterpolate1D {X} [Vec X] (f : Int → X) (x : ℝ) : X :=
   let f₁ := f (ix+1)
   f₀ + w • (f₁-f₀)
 
+#exit
 function_properties SciLean.linearInterpolate1D {X : Type} [Vec X] (f : Int → X) (x : ℝ)
 argument f 
   IsSmooth,

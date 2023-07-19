@@ -8,6 +8,8 @@ import SciLean.Data.DataArray
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 
+import SciLean.FTrans.FDeriv.Basic
+
 /-!
 
 SciLean

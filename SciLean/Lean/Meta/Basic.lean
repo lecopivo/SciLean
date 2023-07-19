@@ -17,6 +17,27 @@ def getConstArity (constName : Name) : m Nat := do
   let info ← getConstInfo constName
   return info.type.forallArity
 
+/-- Returns name of the head function of an expression
+
+Example:
+  `getFunHeadConst? q(fun x => x + x) = HAdd.hAdd`
+  `getFunHeadConst? q(fun x y => x + y) = HAdd.hAdd`
+  `getFunHeadConst? q(HAdd.hAdd 1) = HAdd.hAdd`
+  `getFunHeadConst? q(fun xy : X×Y => xy.2) = Prod.snd`
+  `getFunHeadConst? q(fun f x => f x) = none`
+-/
+def getFunHeadConst? (e : Expr) : MetaM (Option Name) :=
+  match e with
+  | .const name _ => return name
+  | .app f _ => return f.getAppFn.constName?
+  | .lam _ _ b _ => return b.getAppFn.constName?
+  | .proj structName idx _ => do
+     let .some info := getStructureInfo? (← getEnv) structName
+       | return none
+     return info.getProjFn? idx
+  | _ => return none
+
+
 /-- Changes structure projection back to function application. Left unchanged if not a projection.
 
 For example `proj ``Prod 0 xy` is changed to `mkApp ``Prod.fst #[xy]`.
