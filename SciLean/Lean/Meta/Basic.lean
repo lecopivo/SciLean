@@ -154,8 +154,8 @@ def mkUncurryFun (n : Nat) (f : Expr) : MetaM Expr := do
   forallTelescope (← inferType f) λ xs _ => do
     let xs := xs[0:n]
 
-    let xProdName : String ← xs.foldlM (init:="") λ n x => 
-      do return (n ++ toString (← x.fvarId!.getUserName))
+    let xProdName : Name ← xs.foldlM (init:="") λ n x => 
+      do return (n.append (← x.fvarId!.getUserName).eraseMacroScopes)
     let xProdType ← inferType (← mkProdElem xs)
 
     withLocalDecl xProdName default xProdType λ xProd => do

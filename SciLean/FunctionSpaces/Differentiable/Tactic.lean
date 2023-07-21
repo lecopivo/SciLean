@@ -4,6 +4,8 @@ import SciLean.Tactic.FProp.Notation
 import SciLean.FunctionSpaces.Differentiable.Basic
 import SciLean.Profile
 
+set_option profiler true
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -33,7 +35,7 @@ def Differentiable.fpropExt : FPropExt where
     else          
       e
 
-  identityRule     := fun e => 
+  identityRule    e :=
     let thm : SimpTheorem :=
     {
       proof  := mkConst ``Differentiable.id_rule 
@@ -42,7 +44,7 @@ def Differentiable.fpropExt : FPropExt where
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  constantRule     := fun e => 
+  constantRule    e :=
     let thm : SimpTheorem :=
     {
       proof  := mkConst ``Differentiable.const_rule 
@@ -51,7 +53,7 @@ def Differentiable.fpropExt : FPropExt where
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  lambdaLetRule    := fun e => 
+  lambdaLetRule    e := 
     let thm : SimpTheorem :=
     {
       proof  := mkConst ``Differentiable.let_rule 
@@ -60,7 +62,7 @@ def Differentiable.fpropExt : FPropExt where
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  lambdaLambdaRule := fun e =>
+  lambdaLambdaRule e :=
     let thm : SimpTheorem :=
     {
       proof  := mkConst ``Differentiable.pi_rule 
@@ -69,7 +71,7 @@ def Differentiable.fpropExt : FPropExt where
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  discharger := fun e => return none
+  discharger e := return none
 
 
 -- register fderiv
@@ -105,17 +107,27 @@ example (f : ℝ → ℝ) (hf : Differentiable ℝ f) : Differentiable ℝ (fun 
 example (f : ℝ → ℝ) (hf : Differentiable ℝ f) : Differentiable ℝ (fun x => f x) := by fprop
 example (f : ℝ → ℝ) (hf : Differentiable ℝ f) : Differentiable ℝ (fun x => f x + x) := by fprop
 example (f : ℝ → ℝ) (hf : Differentiable ℝ f) : Differentiable ℝ (fun x => f x + f x) := by fprop
+
+-- set_option trace.Meta.Tactic.fprop.step true
+
 example (f : ℝ → ℝ) (hf : Differentiable ℝ f) : Differentiable ℝ (fun x => f (f x)) := by (try fprop); sorry
+
+
+-- set_option trace.Meta.Tactic.fprop.unify true
+-- set_option trace.Meta.Tactic.fprop.apply true
+-- set_option trace.Meta.Tactic.fprop.discharge true
+
 
 example (op : ℝ → ℝ → ℝ) (hop : Differentiable ℝ (fun (x,y) => op x y)) 
   (f : ℝ → ℝ) (hf : Differentiable ℝ f)
   (g : ℝ → ℝ) (hg : Differentiable ℝ g)
   : Differentiable ℝ (fun x => op (f x) (g x)) := by (try fprop); sorry
 
+
 example 
   (g : ℝ → ℝ) (hg : Differentiable ℝ g)
   (f : ℝ → ℝ → ℝ) (hf : Differentiable ℝ (fun (x,y) => f x y))
-  : Differentiable ℝ (fun x => f x (g x)) := by (try fprop); sorry
+  : Differentiable ℝ (fun x => f x (g x)) := by fprop
 
 example 
   (g : ℝ → ℝ) (hg : Differentiable ℝ g)
@@ -128,10 +140,6 @@ example (f : ι → ℝ → ℝ) (i : ι) (hf : ∀ i, Differentiable ℝ (f i))
 example (f : ι → ℝ → ℝ) (i : ι) (hf : ∀ i, Differentiable ℝ (f i))
   : Differentiable ℝ (f i) := by fprop
 
--- set_option trace.Meta.Tactic.fprop.step true
--- set_option trace.Meta.Tactic.fprop.unify true
--- set_option trace.Meta.Tactic.fprop.apply true
--- set_option trace.Meta.Tactic.fprop.discharge true
 
 example [Fintype ι] (f : ℝ → ι → ℝ) (hf : ∀ i, Differentiable ℝ (fun x => f x i))
   : Differentiable ℝ (fun x i => f x i) := by fprop
@@ -166,6 +174,8 @@ theorem Prod.snd.arg_self.Differentiable_comp'
 example : Differentiable ℝ (fun x : ℝ => let y := x + x; y) := by fprop
 
 
+theorem hoho : Differentiable ℝ (fun x : ℝ => let y := x + x + x + x + x + (x + x + x + x + x + x + x + x + x + x + (x + x + x) + x) + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + (x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x + x + x + x); y + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x) := by fprop
 
-theorem hoho : Differentiable ℝ (fun x : ℝ => let y := x + x + x + x + x + (x + x + x + x + x + x + x + x + x + x + (x + x + x) + x) + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + (x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x) + x + x + x + x + x+ x + x + x + x + x + x + x; y + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x+ x + x + x + x + x + x + x) := by fprop
+
+
 

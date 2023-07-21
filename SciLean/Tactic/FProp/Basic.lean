@@ -13,6 +13,8 @@ def cache (e : Expr) (proof? : Option Expr) : FPropM (Option Expr) := -- return 
     return proof
 
 
+
+
 def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
   let mut arr : Array SimpTheorem := #[]
 
@@ -61,25 +63,30 @@ mutual
       trace[Meta.Tactic.fprop.step] "case let x := ..; ..\n{← ppExpr e}"
       let e' := ext.replaceFTransFun e b
       fprop (← mkLambdaFVars xs e')
+
     | .lam _ _ (.bvar  0) _ => 
       trace[Meta.Tactic.fprop.step] "case id\n{← ppExpr e}"
       applyIdentityRule ext e
+
     | .lam _ _ (.letE ..) _ => 
       trace[Meta.Tactic.fprop.step] "case let\n{← ppExpr e}"
       applyLambdaLetRule ext e
+
     | .lam _ _ (.lam  ..) _ => 
       trace[Meta.Tactic.fprop.step] "case pi\n{← ppExpr e}"
       applyLambdaLambdaRule ext e
+
     | .lam _ _ b _ => do
       if !(b.hasLooseBVar 0) then
         trace[Meta.Tactic.fprop.step] "case const\n{← ppExpr e}"
         applyConstantRule ext e
-      -- else if b.getAppFn.isFVar then
-      --   trace[Meta.Tactic.fprop.step] "case fvar app\n{← ppExpr e}"
-      --   return none
+      else if b.getAppFn.isFVar then
+        trace[Meta.Tactic.fprop.step] "case fvar app\n{← ppExpr e}"
+        applyFVarApp e ext.discharger
       else
         trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}"
         applyTheorems e (ext.discharger)
+
     | _ => do
       trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}"
       applyTheorems e (ext.discharger)
@@ -96,8 +103,32 @@ mutual
     applyLambdaLambdaRule (ext : FPropExt) (e : Expr) : FPropM (Option Expr) := do
       ext.lambdaLambdaRule e
 
+  partial def applyFVarApp (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
+    let .some (fpropName, _, F) ← getFProp? e
+      | return none
+
+    lambdaTelescope F fun xs b => do
+      if xs.size != 1 then 
+        panic! "invalid use of applyFVarApp! should be used only on fun x => (.fvar ..) y₁ .. yₙ"
+      let x := xs[0]!
+
+      let ys := b.getAppArgs
+      let f ← mkUncurryFun ys.size b.getAppFn
+
+      -- trivial case
+      if (← isDefEq f F) then
+        applyTheorems e discharge?
+      else
+
+        let g ← mkLambdaFVars #[x] (← mkProdElem ys) 
+
+        trace[Meta.Tactic.fprop.step] "composition case\n`{← ppExpr f} ∘ {← ppExpr g}`"
+        
+        return none
+
+
   partial def applyTheorems (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
-    let .some (fpropName, _, f) ← getFProp? e
+    let .some (fpropName, ext, f) ← getFProp? e
       | return none
 
     let candidates ←
@@ -110,7 +141,9 @@ mutual
     for thm in candidates do
       if let some proof ← tryTheorem? e thm discharge? then
         return proof
-    return none
+
+    ext.lambdaLetRule e
+    -- return none
 
 
   partial def synthesizeInstance (thmId : Origin) (x type : Expr) : MetaM Bool := do 
@@ -119,10 +152,10 @@ mutual
       if (← withReducibleAndInstances <| isDefEq x val) then
         return true
       else
-        trace[Meta.Tactic.simp.discharge] "{← ppOrigin thmId}, failed to assign instance{indentExpr type}\nsythesized value{indentExpr val}\nis not definitionally equal to{indentExpr x}"
+        trace[Meta.Tactic.fprop.discharge] "{← ppOrigin thmId}, failed to assign instance{indentExpr type}\nsythesized value{indentExpr val}\nis not definitionally equal to{indentExpr x}"
         return false
     | _ =>
-      trace[Meta.Tactic.simp.discharge] "{← ppOrigin thmId}, failed to synthesize instance{indentExpr type}"
+      trace[Meta.Tactic.fprop.discharge] "{← ppOrigin thmId}, failed to synthesize instance{indentExpr type}"
       return false
 
   partial def synthesizeArgs (thmId : Origin) (xs : Array Expr) (bis : Array BinderInfo) (discharge? : Expr → FPropM (Option Expr)) : FPropM Bool := do
