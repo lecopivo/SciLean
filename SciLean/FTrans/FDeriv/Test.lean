@@ -14,41 +14,58 @@ variable {ι : Type _} [Fintype ι]
 
 variable {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
 
-#profile_this_file
+example : NormedCommRing K := by infer_instance
+example : NormedAlgebra K K := by infer_instance
+
+example 
+  : fderiv K (fun (x : K) => x * x * x)
+    =
+    fun x => fun dx =>L[K] dx * x + dx * x  := 
+by 
+  ftrans only
+  set_option trace.Meta.Tactic.simp.rewrite true in
+  set_option trace.Meta.Tactic.simp.discharge true in
+  set_option trace.Meta.Tactic.simp.unify true in
+  set_option trace.Meta.Tactic.lsimp.pre true in
+  set_option trace.Meta.Tactic.lsimp.step true in
+  set_option trace.Meta.Tactic.lsimp.post true in
+  ftrans only
+  ext x; simp
+
 
 example 
   : fderiv K (fun (x : K) => x + x)
     =
-    0 := 
+    fun x => fun dx =>L[K]
+      dx + dx := 
 by 
-  ext x; simp
   ftrans only
-  sorry
+  ext x; simp
+
 
 example 
   : fderiv K (fun (x : K) => x + x + x)
     =
-    0 := 
+    fun x => fun dx =>L[K]
+      dx + dx + dx := 
 by 
-  ext x; simp
   ftrans only
-  sorry
+  ext x; simp
 
 example 
   : fderiv K (fun (x : K) => x + x + x + x)
     =
-    0 := 
+    fun x => fun dx =>L[K]
+      dx + dx + dx + dx := 
 by 
-  ext x; simp
   ftrans only
-  sorry
+  ext x; simp
 
 example 
   : fderiv K (fun (x : K) => x + x + x + x + x)
     =
-    0 := 
+    fun x => fun dx =>L[K]
+      dx + dx + dx + dx + dx := 
 by 
-  ext x; simp
   ftrans only
-  sorry
-
+  ext x; simp

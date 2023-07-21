@@ -76,6 +76,12 @@ theorem ContinuousLinearMap.mk'_eval
   (x : X) (f : X → Y) (hf : IsContinuousLinearMap R f) 
   : ContinuousLinearMap.mk' R (fun x => f x) hf x = f x := by rfl
 
+@[simp]
+theorem ContinuousLinearMap.mk'_eval'
+  (x : X) (f : X → Y) (hf : IsContinuousLinearMap R f) 
+  : (fun x' =>L[R] f x') x = f x := by rfl
+
+
 
 -- Basic rules -----------------------------------------------------------------
 --------------------------------------------------------------------------------

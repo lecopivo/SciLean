@@ -78,7 +78,7 @@ structure FTransExt where
   /-- Custom rule for transforming `fun x y => f x y -/
   lambdaLambdaRule : Option RewriteRule
   /-- Custom discharger for this function transformation -/
-  discharger       : Expr → MetaM (Option Expr)
+  discharger       : Expr → SimpM (Option Expr)
   /-- Name of this extension, keep the default value! -/
   name : Name := by exact decl_name%
 deriving Inhabited
@@ -155,6 +155,7 @@ initialize ftransExt : PersistentEnvExtension (Name × Name) (Name × FTransExt)
   Returns function transformation name and function being tranformed if `e` is function tranformation expression.
  -/
 def getFTrans? (e : Expr) : CoreM (Option (Name × FTransExt × Expr)) := do
+
   let .some ftransName := 
       match e.getAppFn.constName? with
       | none => none

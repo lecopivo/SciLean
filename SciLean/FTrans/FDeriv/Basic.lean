@@ -107,8 +107,8 @@ theorem fderiv.pi_rule
 
 open Lean Meta Qq
 
-def fderiv.discharger : Expr → MetaM (Option Expr) :=
-  FTrans.tacticToDischarge (Syntax.mkLit ``tacticDifferentiable "differentiable")
+def fderiv.discharger (e : Expr) : SimpM (Option Expr) :=
+  FTrans.tacticToDischarge (Syntax.mkLit ``tacticDifferentiable "differentiable") e
 
 open Lean Elab Term FTrans
 def fderiv.ftransExt : FTransExt where
@@ -171,20 +171,19 @@ theorem Prod.mk.arg_fstsnd.fderiv_at_comp
     fun dx =>L[K]
       (fderiv K g x dx, fderiv K f x dx) := 
 by 
-  sorry
+  apply DifferentiableAt.fderiv_prod hg hf
 
 
 @[ftrans_rule]
 theorem Prod.mk.arg_fstsnd.fderiv_comp
-  (x : X)
   (g : X → Y) (hg : Differentiable K g)
   (f : X → Z) (hf : Differentiable K f)
-  : fderiv K (fun x => (g x, f x)) x
-    =
-    fun dx =>L[K]
+  : fderiv K (fun x => (g x, f x))
+    =    
+    fun x => fun dx =>L[K]
       (fderiv K g x dx, fderiv K f x dx) := 
 by 
-  sorry
+  funext x; apply DifferentiableAt.fderiv_prod (hg x) (hf x)
 
  
 
@@ -197,8 +196,9 @@ theorem Prod.fst.arg_self.fderiv_at_comp
   (f : X → Y×Z) (hf : DifferentiableAt K f x)
   : fderiv K (fun x => (f x).1) x
     =
-    fun dx =>L[K] (fderiv K f x dx).1
-:= sorry
+    fun dx =>L[K] (fderiv K f x dx).1 := 
+by
+  apply fderiv.fst hf
 
 
 @[ftrans_rule]
@@ -206,8 +206,9 @@ theorem Prod.fst.arg_self.fderiv_comp
   (f : X → Y×Z) (hf : Differentiable K f)
   : fderiv K (fun x => (f x).1)
     =
-    fun x => fun dx =>L[K] (fderiv K f x dx).1
-:= sorry
+    fun x => fun dx =>L[K] (fderiv K f x dx).1 := 
+by
+  funext x; apply fderiv.fst (hf x)
 
 
 @[ftrans_rule]
@@ -215,7 +216,7 @@ theorem Prod.fst.arg_self.fderiv
   : fderiv K (fun xy : X×Y => xy.1)
     =  
     fun _ => fun dxy =>L[K] dxy.1
-:= by ftrans; sorry
+:= by funext xy; apply fderiv_fst
 
 
 
@@ -228,8 +229,10 @@ theorem Prod.snd.arg_self.fderiv_at_comp
   (f : X → Y×Z) (hf : DifferentiableAt K f x)
   : fderiv K (fun x => (f x).2) x
     =
-    fun dx =>L[K] (fderiv K f x dx).2
-:= sorry
+    fun dx =>L[K] (fderiv K f x dx).2 := 
+by
+  apply fderiv.snd hf
+
 
 
 @[ftrans_rule]
@@ -237,8 +240,9 @@ theorem Prod.snd.arg_self.fderiv_comp
   (f : X → Y×Z) (hf : Differentiable K f)
   : fderiv K (fun x => (f x).2)
     =
-    fun x => fun dx =>L[K] (fderiv K f x dx).2
-:= sorry
+    fun x => fun dx =>L[K] (fderiv K f x dx).2 :=
+by
+  funext x; apply fderiv.snd (hf x)
 
 
 @[ftrans_rule]
@@ -246,7 +250,7 @@ theorem Prod.snd.arg_self.fderiv
   : fderiv K (fun xy : X×Y => xy.2)
     =  
     fun _ => fun dxy =>L[K] dxy.2
-:= by ftrans; sorry
+:= by funext xy; apply fderiv_snd
 
 
 
@@ -319,6 +323,42 @@ theorem Neg.neg.arg_a2.fderiv_comp
     fun x => fun dx =>L[K]
       - fderiv K f x dx
   := by funext x; apply fderiv_neg
+
+
+-- HMul.hmul -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem HMul.hMul.arg_a4a5.fderiv_at_comp
+  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
+  (x : X) (f g : X → Y)
+  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  : (fderiv K fun x => f x * g x) x
+    =
+    let fx := f x
+    let gx := g x
+    fun dx =>L[K]
+      (fderiv K g x dx) * fx + (fderiv K f x dx) * gx := 
+by
+  ext dx
+  simp[fderiv_mul hf hg, mul_comm]; rfl
+
+
+@[ftrans_rule]
+theorem HMul.hMul.arg_a4a5.fderiv_comp
+  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
+  (f g : X → Y)
+  (hf : Differentiable K f) (hg : Differentiable K g)
+  : (fderiv K fun x => f x * g x)
+    =
+    fun x => 
+      let fx := f x
+      let gx := g x
+      fun dx =>L[K]
+        (fderiv K g x dx) * fx + (fderiv K f x dx) * gx := 
+by 
+  funext x; ext dx;
+  simp[fderiv_mul (hf x) (hg x), mul_comm]; rfl
 
 
 
