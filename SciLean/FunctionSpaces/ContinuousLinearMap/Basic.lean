@@ -70,7 +70,7 @@ theorem id_rule
   by_morphism (ContinuousLinearMap.id R X) (by simp)
 
 
-theorem zero_rule 
+theorem const_rule 
   : IsContinuousLinearMap R fun _ : X => (0 : Y) 
 := 
   by_morphism 0 (by simp)
@@ -136,7 +136,14 @@ def IsContinuousLinearMap.fpropExt : FPropExt where
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  constantRule _ := return none
+  constantRule e := 
+    let thm : SimpTheorem :=
+    {
+      proof  := mkConst ``IsContinuousLinearMap.const_rule 
+      origin := .decl ``IsContinuousLinearMap.const_rule 
+      rfl    := false
+    }
+    FProp.tryTheorem? e thm (fun _ => pure none)
 
   compRule e f g := do
     let .some R := e.getArg? 0
