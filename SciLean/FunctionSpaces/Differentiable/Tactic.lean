@@ -4,7 +4,7 @@ import SciLean.Tactic.FProp.Notation
 import SciLean.FunctionSpaces.Differentiable.Basic
 
 set_option profiler true
-set_option profiler.threshold 10 true
+set_option profiler.threshold 10
 
 example : Differentiable ℝ (fun x : ℝ => x) := by fprop
 
@@ -97,7 +97,9 @@ example : Differentiable ℝ (fun x : ℝ =>
   let x2 := x1
   let x3 := x2
   let x4 := x3
-  x4) := by fprop
+  let x5 := x4
+  let x6 := x5
+  x6) := by fprop
 
 
 example : Differentiable ℝ (fun x : ℝ => 

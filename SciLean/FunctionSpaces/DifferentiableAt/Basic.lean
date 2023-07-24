@@ -8,6 +8,7 @@ import Mathlib.Analysis.Calculus.Deriv.Inv
 
 import SciLean.FunctionSpaces.Differentiable.Init
 import SciLean.Tactic.FProp.Basic
+import SciLean.Tactic.FProp.Notation
 
 
 namespace SciLean
@@ -63,8 +64,6 @@ theorem pi_rule
   (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt R (f i) x)
   : DifferentiableAt R (fun x i => f i x) x
   := by apply differentiableAt_pi.2 hf
-
-
 
 
 end SciLean.DifferentiableAt
@@ -164,7 +163,9 @@ def DifferentiableAt.fpropExt : FPropExt where
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  discharger _ := return none
+  discharger e := 
+    FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
+
 
 -- register fderiv
 #eval show Lean.CoreM Unit from do

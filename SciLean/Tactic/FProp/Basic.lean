@@ -4,6 +4,31 @@ open Lean Meta Qq
 
 namespace SciLean.FProp
 
+open Elab Term in
+def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fun e => do
+    let mvar ← mkFreshExprSyntheticOpaqueMVar e `simp.discharger
+    let runTac? : TermElabM (Option Expr) :=
+      try
+        /- We must only save messages and info tree changes. Recall that `simp` uses temporary metavariables (`withNewMCtxDepth`).
+           So, we must not save references to them at `Term.State`. -/
+        withoutModifyingStateWithInfoAndMessages do
+          instantiateMVarDeclMVars mvar.mvarId!
+
+          let goals ←
+            withSynthesize (mayPostpone := false) do Tactic.run mvar.mvarId! (Tactic.evalTactic tacticCode *> Tactic.pruneSolvedGoals)
+
+          let result ← instantiateMVars mvar
+          if result.hasExprMVar then
+            return none
+          else
+            return some result
+      catch _ =>
+        return none
+    let (result?, _) ← runTac?.run {} {} 
+    
+    return result?
+
+
 /-- Takes lambda function `fun x => b` and splits it into composition of two functions. 
 
   Example:
@@ -159,11 +184,7 @@ mutual
       else
 
         trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f}) ∘ ({← ppExpr g})`"
-
-        let fg ← mkAppM ``Function.comp #[f,g]
-        let e' := ext.replaceFPropFun e fg
-        
-        fprop e' -- are we abusing `Function.comp` defeq here?
+        ext.compRule e f g
 
   partial def applyTheorems (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
     let .some (fpropName, ext, f) ← getFProp? e

@@ -236,8 +236,17 @@ theorem Prod.mk.arg_fstsnd.Differentiable_comp
   := Differentiable.prod hg hf
 
 
-
 -- Prod.fst --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[differentiable, fprop_rule]
+theorem Prod.fst.arg_self.Differentiable_comp 
+  (f : X → Y×Z) (hf : Differentiable R f)
+  : Differentiable R (fun x => (f x).1)
+  := Differentiable.fst hf
+
+
+-- Prod.snd --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[differentiable, fprop_rule]
@@ -245,7 +254,6 @@ theorem Prod.snd.arg_self.Differentiable_comp
   (f : X → Y×Z) (hf : Differentiable R f)
   : Differentiable R (fun x => (f x).2)
   := Differentiable.snd hf
-
 
 
 -- Function.comp ---------------------------------------------------------------

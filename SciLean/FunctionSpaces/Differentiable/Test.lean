@@ -47,7 +47,7 @@ example
   (x : R) (f : R → K) (g : R → K) 
   (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x) (hx : g x ≠ 0)
   : DifferentiableAt R (fun x => f x / g x) x 
-  := by differentiable
+  := by fprop
 
 
 example
@@ -56,7 +56,7 @@ example
   (x : R) (k : K) (g : R → K) 
    (hg : DifferentiableAt R g x) (hx : g x ≠ 0)
   : DifferentiableAt R (fun x => k / g x) x 
-  := by differentiable
+  := by fprop
 
 
 example
@@ -65,5 +65,5 @@ example
   (x : R) (f : R → K) (k : K)
   (hf : DifferentiableAt R f x) (hx : k ≠ 0)
   : DifferentiableAt R (fun x => f x / k) x 
-  := by differentiable
+  := by fprop
 
