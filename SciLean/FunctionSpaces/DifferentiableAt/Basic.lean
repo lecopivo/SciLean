@@ -6,7 +6,6 @@ import Mathlib.Analysis.Calculus.FDeriv.Add
 import Mathlib.Analysis.Calculus.FDeriv.Mul
 import Mathlib.Analysis.Calculus.Deriv.Inv
 
-import SciLean.FunctionSpaces.Differentiable.Init
 import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
 
