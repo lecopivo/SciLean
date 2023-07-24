@@ -4,6 +4,49 @@ open Lean Meta Qq
 
 namespace SciLean.FProp
 
+/-- Takes lambda function `fun x => b` and splits it into composition of two functions. 
+
+  Example:
+    fun x => f (g x)      ==>   f ∘ g 
+    fun x => f x + c      ==>   (fun y => y + c) ∘ f
+    fun x => f x + g x    ==>   (fun (y₁,y₂) => y₁ + y₂) ∘ (fun x => (f x, g x))
+ -/
+def splitLambdaToComp (e : Expr) : MetaM (Expr × Expr) := do
+  match e with 
+  | .lam name type b bi => 
+    withLocalDecl name bi type fun x => do
+      let b := b.instantiate1 x
+      let xId := x.fvarId!
+
+      let ys := b.getAppArgs
+      let mut f := b.getAppFn
+
+      let mut lctx ← getLCtx
+      let instances ← getLocalInstances
+
+      let mut ys' : Array Expr := #[]
+      let mut zs  : Array Expr := #[]
+
+      for y in ys, i in [0:ys.size] do
+        if y.containsFVar xId then
+          let zId ← withLCtx lctx instances mkFreshFVarId
+          lctx := lctx.mkLocalDecl zId (name.appendAfter (toString i)) (← inferType y)
+          let z := Expr.fvar zId
+          zs  := zs.push z
+          ys' := ys'.push y
+          f := f.app z
+        else
+          f := f.app y
+
+      let y' ← mkProdElem ys'
+      let g  ← mkLambdaFVars #[.fvar xId] y'
+
+      f ← withLCtx lctx instances (mkLambdaFVars zs f)
+      f ← mkUncurryFun zs.size f
+
+      return (f, g)
+    
+  | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
 def cache (e : Expr) (proof? : Option Expr) : FPropM (Option Expr) := -- return proof?
   match proof? with
@@ -11,8 +54,6 @@ def cache (e : Expr) (proof? : Option Expr) : FPropM (Option Expr) := -- return 
   | .some proof => do
     modify (fun s => { s with cache := s.cache.insert e proof} )
     return proof
-
-
 
 
 def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
@@ -41,7 +82,6 @@ mutual
   partial def fprop (e : Expr) : FPropM (Option Expr) := do
 
     if let .some proof := (← get).cache.find? e then
-      trace[Meta.Tactic.fprop.step] "cached\n{e}"
       return proof
     else
       forallTelescope e fun xs b => do
@@ -52,34 +92,45 @@ mutual
 
   partial def main (e : Expr) : FPropM (Option Expr) := do
 
-    -- move all leading binders into the local context
-
     let .some (fpropName, ext, f) ← getFProp? e
-      | -- not function property
-        return none
+      | return none
 
     match f with
     | .letE .. => letTelescope f fun xs b => do 
       trace[Meta.Tactic.fprop.step] "case let x := ..; ..\n{← ppExpr e}"
-      let e' := ext.replaceFTransFun e b
+      let e' := ext.replaceFPropFun e b
       fprop (← mkLambdaFVars xs e')
 
     | .lam _ _ (.bvar  0) _ => 
       trace[Meta.Tactic.fprop.step] "case id\n{← ppExpr e}"
-      applyIdentityRule ext e
+      ext.identityRule e
 
-    | .lam _ _ (.letE ..) _ => 
-      trace[Meta.Tactic.fprop.step] "case let\n{← ppExpr e}"
-      applyLambdaLetRule ext e
+    | .lam xName xType (.letE yName yType yValue body _) xBi => 
+      match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
+      | true, true =>
+        trace[Meta.Tactic.fprop.step] "case let\n{← ppExpr e}"
+        let f := Expr.lam xName xType (.lam yName yType body xBi) default
+        let g := Expr.lam xName xType yValue default
+        ext.lambdaLetRule e f g
+
+      | true, false => 
+        trace[Meta.Tactic.fprop.step] "case comp\n{← ppExpr e}"
+        let f := Expr.lam yName yType body xBi
+        let g := Expr.lam xName xType yValue default
+        ext.compRule e f g
+
+      | false, _ => 
+        let f := Expr.lam xName xType (body.lowerLooseBVars 1 1) xBi
+        FProp.fprop (ext.replaceFPropFun e f)
 
     | .lam _ _ (.lam  ..) _ => 
       trace[Meta.Tactic.fprop.step] "case pi\n{← ppExpr e}"
-      applyLambdaLambdaRule ext e
+      ext.lambdaLambdaRule e f
 
     | .lam _ _ b _ => do
       if !(b.hasLooseBVar 0) then
         trace[Meta.Tactic.fprop.step] "case const\n{← ppExpr e}"
-        applyConstantRule ext e
+        ext.constantRule e
       else if b.getAppFn.isFVar then
         trace[Meta.Tactic.fprop.step] "case fvar app\n{← ppExpr e}"
         applyFVarApp e ext.discharger
@@ -90,42 +141,29 @@ mutual
     | _ => do
       trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}"
       applyTheorems e (ext.discharger)
-  where
-    applyIdentityRule (ext : FPropExt) (e : Expr) : FPropM (Option Expr) := do
-      ext.identityRule e
-
-    applyConstantRule (ext : FPropExt) (e : Expr) : FPropM (Option Expr) := do
-      ext.constantRule e
-
-    applyLambdaLetRule (ext : FPropExt) (e : Expr) : FPropM (Option Expr) := do
-      ext.lambdaLetRule e
-
-    applyLambdaLambdaRule (ext : FPropExt) (e : Expr) : FPropM (Option Expr) := do
-      ext.lambdaLambdaRule e
 
   partial def applyFVarApp (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
-    let .some (fpropName, _, F) ← getFProp? e
+    let .some (fpropName, ext, F) ← getFProp? e
       | return none
 
-    lambdaTelescope F fun xs b => do
-      if xs.size != 1 then 
-        panic! "invalid use of applyFVarApp! should be used only on fun x => (.fvar ..) y₁ .. yₙ"
-      let x := xs[0]!
+    if ¬F.isLambda then
+      applyTheorems e discharge?
+    else
+      let (f, g) ← splitLambdaToComp F
 
-      let ys := b.getAppArgs
-      let f ← mkUncurryFun ys.size b.getAppFn
-
-      -- trivial case
+      -- trivial case and prevent infinite loop
       if (← isDefEq f F) then
+        trace[Meta.Tactic.fprop.step] "fvar app case: trivial"
+
         applyTheorems e discharge?
       else
 
-        let g ← mkLambdaFVars #[x] (← mkProdElem ys) 
+        trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f}) ∘ ({← ppExpr g})`"
 
-        trace[Meta.Tactic.fprop.step] "composition case\n`{← ppExpr f} ∘ {← ppExpr g}`"
+        let fg ← mkAppM ``Function.comp #[f,g]
+        let e' := ext.replaceFPropFun e fg
         
-        return none
-
+        fprop e' -- are we abusing `Function.comp` defeq here?
 
   partial def applyTheorems (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
     let .some (fpropName, ext, f) ← getFProp? e
@@ -138,15 +176,18 @@ mutual
         | .some funName => FProp.getFPropRules funName fpropName
         | none => getLocalRules fpropName
 
+    if candidates.size = 0 then
+      trace[Meta.Tactic.fprop.apply] "no suitable theorems found for {← ppExpr e}"
+
     for thm in candidates do
+      trace[Meta.Tactic.fprop.unify] "trying to apply {← ppOrigin thm.origin} to {← ppExpr e}"
       if let some proof ← tryTheorem? e thm discharge? then
         return proof
 
-    ext.lambdaLetRule e
+    return none -- ext.lambdaLetRule e
     -- return none
 
-
-  partial def synthesizeInstance (thmId : Origin) (x type : Expr) : MetaM Bool := do 
+  partial def synthesizeInstance (thmId : Origin) (x type : Expr) : MetaM Bool := do
     match (← trySynthInstance type) with
     | LOption.some val =>
       if (← withReducibleAndInstances <| isDefEq x val) then

@@ -8,7 +8,10 @@ import SciLean.Data.DataArray
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 
+import SciLean.Tactic.FTrans.Basic
+import SciLean.Tactic.FProp.Notation
 import SciLean.FTrans.FDeriv.Basic
+import SciLean.FunctionSpaces.Differentiable.Basic
 
 /-!
 
