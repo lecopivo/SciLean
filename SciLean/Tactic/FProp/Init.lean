@@ -18,6 +18,7 @@ namespace SciLean.FProp
 -------------
 initialize registerTraceClass `Meta.Tactic.fprop
 initialize registerTraceClass `Meta.Tactic.fprop.step
+initialize registerTraceClass `Meta.Tactic.fprop.cache
 initialize registerTraceClass `Meta.Tactic.fprop.missing_rule
 -- initialize registerTraceClass `Meta.Tactic.fprop.normalize_let
 initialize registerTraceClass `Meta.Tactic.fprop.rewrite
@@ -33,10 +34,11 @@ open Meta
 structure Config where
   -- config
 
-abbrev Cache := ExprMap Expr
+-- abbrev Cache := ExprMap Expr
 
 structure State where
-  cache        : Cache := {}
+  /-- Simp's cache is used as the `fprop` tactic is designed to be used inside of simp and utilize its cache -/
+  cache        : Simp.Cache := {}
 
 abbrev _root_.SciLean.FPropM := ReaderT FProp.Config $ StateRefT FProp.State MetaM
 

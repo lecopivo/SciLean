@@ -12,6 +12,7 @@ import SciLean.Tactic.FTrans.Basic
 import SciLean.Tactic.FProp.Notation
 import SciLean.FTrans.FDeriv.Basic
 import SciLean.FunctionSpaces.Differentiable.Basic
+import SciLean.FTrans.CDeriv.Basic
 
 /-!
 

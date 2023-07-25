@@ -77,7 +77,7 @@ def cache (e : Expr) (proof? : Option Expr) : FPropM (Option Expr) := -- return 
   match proof? with
   | .none => return none
   | .some proof => do
-    modify (fun s => { s with cache := s.cache.insert e proof} )
+    modify (fun s => { s with cache := s.cache.insert e { expr := q(True), proof? := proof} })
     return proof
 
 
@@ -90,10 +90,6 @@ def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
     
     if (type.getForallBody.getAppFn.constName? == .some fpropName) &&
        (var.kind ≠ Lean.LocalDeclKind.auxDecl) then
-       -- dbg_trace "adding `{← ppExpr var.toExpr} : {←ppExpr type}` to local rules to be applied"
-       -- dbg_trace "hasExprMVar {var.hasExprMVar}"
-       -- dbg_trace "hasValue {var.hasValue}"
-       -- dbg_trace "hasValue {repr var.kind}"
        arr := arr.push {
          proof := var.toExpr
          origin := .fvar var.fvarId
@@ -106,7 +102,8 @@ def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
 mutual 
   partial def fprop (e : Expr) : FPropM (Option Expr) := do
 
-    if let .some proof := (← get).cache.find? e then
+    if let .some { expr := _, proof? := .some proof } := (← get).cache.find? e then
+      trace[Meta.Tactic.fprop.cache] "cached result for {e}"
       return proof
     else
       forallTelescope e fun xs b => do
@@ -131,22 +128,29 @@ mutual
       ext.identityRule e
 
     | .lam xName xType (.letE yName yType yValue body _) xBi => 
+      -- We perform reduction because the type is quite often of the form 
+      -- `(fun x => Y) #0` which is just `Y`
+      let yType := yType.headBeta
+      if (yType.hasLooseBVar 0) then
+        throwError "dependent type encountered {← ppExpr (Expr.forallE xName xType yType default)}"
+
       match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
       | true, true =>
         trace[Meta.Tactic.fprop.step] "case let\n{← ppExpr e}"
-        let f := Expr.lam xName xType (.lam yName yType body xBi) default
+        let f := Expr.lam xName xType (.lam yName yType body default) xBi
         let g := Expr.lam xName xType yValue default
         ext.lambdaLetRule e f g
 
       | true, false => 
         trace[Meta.Tactic.fprop.step] "case comp\n{← ppExpr e}"
-        let f := Expr.lam yName yType body xBi
+        let f := Expr.lam yName yType body default
         let g := Expr.lam xName xType yValue default
         ext.compRule e f g
 
       | false, _ => 
         let f := Expr.lam xName xType (body.lowerLooseBVars 1 1) xBi
         FProp.fprop (ext.replaceFPropFun e f)
+
 
     | .lam _ _ (.lam  ..) _ => 
       trace[Meta.Tactic.fprop.step] "case pi\n{← ppExpr e}"
@@ -160,11 +164,14 @@ mutual
         trace[Meta.Tactic.fprop.step] "case fvar app\n{← ppExpr e}"
         applyFVarApp e ext.discharger
       else
-        trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}"
+        trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}\n"
         applyTheorems e (ext.discharger)
 
+    | .mvar _ => do
+      fprop (← instantiateMVars e)
+
     | _ => do
-      trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}"
+      trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}\n"
       applyTheorems e (ext.discharger)
 
   partial def applyFVarApp (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do

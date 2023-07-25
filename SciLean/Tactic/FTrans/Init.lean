@@ -73,6 +73,8 @@ structure FTransExt where
   identityRule     : Option RewriteRule
   /-- Custom rule for transforming `fun x => y -/
   constantRule    : Option RewriteRule
+  /-- Custom rule for transforming `fun x => f (g x)` or `fun x => let y := g x; f y -/
+  compRule    : Option RewriteRule
   /-- Custom rule for transforming `fun x => let y := g x; f x y -/
   lambdaLetRule    : Option RewriteRule
   /-- Custom rule for transforming `fun x y => f x y -/

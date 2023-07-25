@@ -145,8 +145,4 @@ theorem hoho : Differentiable ℝ (fun x : ℝ => let y := x + x + x + x + x + (
 
 example : Differentiable ℝ (fun x : ℝ => x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x) := by fprop
 
-example : Differentiable ℝ (fun x : ℝ => x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x) := by differentiable
-
-example : Differentiable ℝ (fun x : ℝ => let y := x + x; let z := x + y; let f := fun x : ℝ => x + x; f y + y + x + z) := by differentiable
-
 

@@ -10,7 +10,7 @@ import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Analysis.Calculus.Deriv.Inv 
 
 
-import SciLean.FunctionSpaces.ContinuousLinearMap.Basic
+import SciLean.FunctionSpaces.ContinuousLinearMap.Notation
 import SciLean.FunctionSpaces.Differentiable.Basic
 import SciLean.Tactic.FTrans.Basic
 
@@ -35,10 +35,42 @@ theorem fderiv.id_rule
   : (fderiv K fun x : X => x) = fun _ => fun dx =>L[K] dx
   := by ext x dx; simp
 
-
 theorem fderiv.const_rule (x : X)
   : (fderiv K fun _ : Y => x) = fun _ => fun dx =>L[K] 0
   := by ext x dx; simp
+
+theorem fderiv.comp_rule_at
+  (x : X)
+  (g : X → Y) (hg : DifferentiableAt K g x)
+  (f : Y → Z) (hf : DifferentiableAt K f (g x))
+  : (fderiv K fun x : X => f (g x)) x
+    =
+    let y := g x
+    fun dx =>L[K]
+      let dy := fderiv K g x dx
+      let dz := fderiv K f y dy
+      dz :=
+by 
+  rw[show (fun x => f (g x)) = f ∘ g by rfl]
+  rw[fderiv.comp x hf hg]
+  ext dx; simp
+
+theorem fderiv.comp_rule
+  (g : X → Y) (hg : Differentiable K g)
+  (f : Y → Z) (hf : Differentiable K f)
+  : (fderiv K fun x : X => f (g x))
+    =
+    fun x => 
+      let y := g x
+      fun dx =>L[K]
+        let dy := fderiv K g x dx
+        let dz := fderiv K f y dy
+        dz :=
+by 
+  funext x;
+  rw[show (fun x => f (g x)) = f ∘ g by rfl]
+  rw[fderiv.comp x (hf (g x)) (hg x)]
+  ext dx; simp
 
 
 theorem fderiv.let_rule_at
@@ -54,12 +86,14 @@ theorem fderiv.let_rule_at
     fun dx =>L[K]
       let dy := fderiv K g x dx
       let dz := fderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y) (dx, dy)
-      dz := 
-by 
+      dz :=
+by
   have h : (fun x => f x (g x)) = (fun xy : X×Y => f xy.1 xy.2) ∘ (fun x => (x, g x)) := by rfl
-  rw[h]
-  rw[fderiv.comp x hf (DifferentiableAt.prod (by simp) hg)]
-  rw[DifferentiableAt.fderiv_prod (by simp) hg]
+  conv => 
+    lhs
+    rw[h]
+    rw[fderiv.comp x hf (DifferentiableAt.prod (by simp) hg)]
+    rw[DifferentiableAt.fderiv_prod (by simp) hg]
   ext dx; simp[ContinuousLinearMap.comp]
   rfl
 
@@ -107,12 +141,19 @@ theorem fderiv.pi_rule
 
 open Lean Meta Qq
 
-def fderiv.discharger (e : Expr) : SimpM (Option Expr) :=
-  FTrans.tacticToDischarge (Syntax.mkLit ``tacticDifferentiable "differentiable") e
+def fderiv.discharger (e : Expr) : SimpM (Option Expr) := do
+  withTraceNode `fderiv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
+  let cache := (← get).cache
+  let config : FProp.Config := {}
+  let state  : FProp.State := { cache := cache }
+  let (proof?, state) ← FProp.fprop e |>.run config |>.run state
+  modify (fun simpState => { simpState with cache := state.cache })
+  return proof?
 
 open Lean Elab Term FTrans
 def fderiv.ftransExt : FTransExt where
   ftransName := ``fderiv
+
   getFTransFun? e := 
     if e.isAppOf ``fderiv then
 
@@ -131,6 +172,7 @@ def fderiv.ftransExt : FTransExt where
 
   identityRule     := .some <| .thm ``fderiv.id_rule
   constantRule     := .some <| .thm ``fderiv.const_rule
+  compRule         := .some <| .thm ``fderiv.comp_rule
   lambdaLetRule    := .some <| .thm ``fderiv.let_rule
   lambdaLambdaRule := .some <| .thm ``fderiv.pi_rule
 
