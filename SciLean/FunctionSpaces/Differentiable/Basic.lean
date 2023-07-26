@@ -299,3 +299,14 @@ def HDiv.hDiv.arg_a4a5.Differentiable_comp
   (hf : Differentiable R f) (hg : Differentiable R g) (hx : ∀ x, g x ≠ 0)
   : Differentiable R (fun x => f x / g x)
   := Differentiable.div hf hg hx
+
+
+
+-- HPow.hPow ---------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop_rule]
+def HPow.hPow.arg_a4a5.Differentiable_comp
+  (n : Nat) (f : X → R) (hf : Differentiable R f) 
+  : Differentiable R (fun x => f x ^ n)
+  := Differentiable.pow hf n

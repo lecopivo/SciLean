@@ -468,3 +468,30 @@ theorem HDiv.hDiv.arg_a4a5.fwdDeriv_comp
       (ydy.1 / zdz.1, (ydy.2 * zdz.1 - ydy.1 * zdz.2) / zdz.1^2) :=
 by 
   unfold fwdDeriv; ftrans
+
+
+-- HPow.hPow ---------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans_rule]
+def HPow.hPow.arg_a4.fwdDeriv_at_comp
+  (n : Nat) (x : X) (f : X → K) (hf : DifferentiableAt K f x) 
+  : fwdDeriv K (fun x => f x ^ n) x
+    =
+    fun dx =>
+      let ydy := fwdDeriv K f x dx
+      (ydy.1 ^ n, n * ydy.2 * (ydy.1 ^ (n-1))) :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+@[ftrans_rule]
+def HPow.hPow.arg_a4.fwdDeriv_comp
+  (n : Nat) (f : X → K) (hf : Differentiable K f) 
+  : fwdDeriv K (fun x => f x ^ n)
+    =
+    fun x dx =>
+      let ydy := fwdDeriv K f x dx
+      (ydy.1 ^ n, n * ydy.2 * (ydy.1 ^ (n-1))) :=
+by 
+  unfold fwdDeriv; ftrans

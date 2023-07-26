@@ -312,3 +312,12 @@ def HDiv.hDiv.arg_a4a5.DifferentiableAt_comp
   : DifferentiableAt R (fun x => f x / g x) x 
   := DifferentiableAt.div hf hg hx
 
+
+-- HPow.hPow ---------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop_rule]
+def HPow.hPow.arg_a4a5.DifferentiableAt_comp
+  (n : Nat) (x : X) (f : X → R) (hf : DifferentiableAt R f x) 
+  : DifferentiableAt R (fun x => f x ^ n) x
+  := DifferentiableAt.pow hf n
