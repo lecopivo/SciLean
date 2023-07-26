@@ -1,13 +1,13 @@
 import Mathlib.Analysis.InnerProductSpace.Adjoint
+import Mathlib.Analysis.InnerProductSpace.PiL2
 
 import SciLean.FunctionSpaces.ContinuousLinearMap.Basic
+import SciLean.FunctionSpaces.ContinuousLinearMap.Notation
+
 import SciLean.Tactic.FTrans.Basic
 
 import SciLean.Mathlib.Analysis.InnerProductSpace.Prod
 import SciLean.Profile
-
-namespace SciLean
-
 
 
 variable 
@@ -19,59 +19,72 @@ variable
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 
+-- TODO: move to mathlib
+instance {E : ι → Type _} [∀ i, UniformSpace (E i)] [∀ i, CompleteSpace (E i)] : CompleteSpace (PiLp 2 E) := by unfold PiLp; infer_instance
+
+
+-- Set up custom notation for adjoint. Mathlib's notation for adjoint seems to be broken
+instance (f : X →L[K] Y) : SciLean.Dagger f (ContinuousLinearMap.adjoint f : Y →L[K] X) := ⟨⟩
+variable (g : X → Y) (hg : SciLean.IsContinuousLinearMap K g)
+
+example 
+  : SciLean.IsContinuousLinearMap K fun (xy : X×₂Y) => xy.1 + (fun x =>L[K] g x)† xy.2 := by fprop
+
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
+namespace  ContinuousLinearMap.adjoint
 
--- noncomputable
--- def adjoint (f : X →L[K] Y) : Y →L[K] X := ContinuousLinearMap.adjoint f
+open SciLean
 
-instance (f : X →L[K] Y) : Dagger f (ContinuousLinearMap.adjoint f : Y →L[K] X) := ⟨⟩
-
-@[is_continuous_linear_map, instance]
-theorem t1 (f : X → Y → Z) (hf : IsContinuousLinearMap K (fun xy : X×Y => f xy.1 xy.2))
-  : IsContinuousLinearMap K (fun xy : X×₂Y => f xy.1 xy.2) := sorry
-
-
-variable   
-  (g : X → Y)      (hg : IsContinuousLinearMap K g)
-  (f : X → Y → Z) (hf : IsContinuousLinearMap K (fun xy : X×Y => f xy.1 xy.2))
-
-
-#check 
-  fun (z : Z) =>L[K]
-    let xy := ((fun xy : X×₂Y =>L[K] f xy.1 xy.2)†) z
-    let x' := ((fun x =>L[K] g x)†) xy.2
-    xy.1 + x' 
-
-
-
-#exit 
-#check ContinuousLinearMap.adjoint
-
-#check ContinuousLinearMap.adjoint_id
-
-open InnerProduct ContinuousLinearMap
-
-theorem adjoint.id_rule 
+theorem id_rule 
   : (fun (x : X) =>L[K] x)† = fun x =>L[K] x := 
 by
   have h : (fun (x : X) =>L[K] x) = ContinuousLinearMap.id K X := by rfl
   rw[h]; simp
 
--- @[is_continuous_linear_map]
--- theorem t2
---   : IsContinuousLinearMap K (fun xy : X×₂Y => xy.2) := by (try is_continuous_linear_map); sorry
 
-example
-  (f : X → Y → Z) (hf : IsContinuousLinearMap K (fun xy : X×Y => f xy.1 xy.2))
-  : IsContinuousLinearMap K (fun xy : X×₂Y => f xy.1 xy.2) := by is_continuous_linear_map
+theorem const_rule 
+  : (fun (x : X) =>L[K] (0 : Y))† = fun x =>L[K] 0 := 
+by
+  sorry
+
+theorem prod_rule
+  (g : X → Y) (hg : IsContinuousLinearMap K g)
+  (f : X → Z) (hf : IsContinuousLinearMap K f)
+  : ((fun x =>L[K] (g x, f x)) : X →L[K] Y×₂Z)†
+    =
+    fun yz : Y×₂Z =>L[K]
+      let x₁ := (fun x =>L[K] g x)† yz.1
+      let x₂ := (fun x =>L[K] f x)† yz.2
+      x₁ + x₂ := 
+by 
+  sorry
 
 
-theorem adjoint.let_rule 
+theorem comp_rule 
+  (g : X → Y) (hg : IsContinuousLinearMap K g)
+  (f : Y → Z) (hf : IsContinuousLinearMap K f)
+  : (fun x =>L[K] f (g x))†
+    =
+    fun z =>L[K]
+      let y := (fun y =>L[K] f y)† z
+      let x := (fun x =>L[K] g x)† y
+      x := 
+by
+  have h : (fun x =>L[K] f (g x))
+           =
+           (fun y =>L[K] f y).comp (fun x =>L[K] g x)
+         := by rfl
+  rw[h]
+  rw[ContinuousLinearMap.adjoint_comp]
+  ext dx; simp
+
+
+theorem let_rule 
   (g : X → Y)      (hg : IsContinuousLinearMap K g)
   (f : X → Y → Z) (hf : IsContinuousLinearMap K (fun xy : X×Y => f xy.1 xy.2))
   : (fun x =>L[K] let y := g x; f x y)†
-    = 
+    =
     fun z =>L[K]
       let xy := ((fun xy : X×₂Y =>L[K] f xy.1 xy.2)†) z
       let x' := ((fun x =>L[K] g x)†) xy.2
@@ -81,22 +94,30 @@ by
            =
            (fun xy : X×₂Y =>L[K] f xy.1 xy.2).comp (fun x =>L[K] (x, g x))
          := by rfl
-  rw[h]
-  rw[ContinuousLinearMap.adjoint_comp]
-  
-  sorry
+  rw[h, ContinuousLinearMap.adjoint_comp]
+  have h' : ((fun x =>L[K] (x, g x)) : X →L[K] X×₂Y)† 
+            = 
+            (fun (xy : X×₂Y) =>L[K] xy.1 + (fun x =>L[K] g x)† xy.2)
+          := by rw[prod_rule (fun x => x) (by fprop) g hg]; simp[id_rule]
+  rw[h']; rfl
 
-#exit 
-theorem fderiv.pi_rule_at
+
+#exit
+
+example : CompleteSpace ((i :ι) → E i) := by infer_instance
+
+open BigOperators
+
+set_option trace.Meta.Tactic.fprop.discharge true in
+theorem pi_rule
   (x : X)
-  (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt K (f i) x)
-  : (fderiv K fun (x : X) (i : ι) => f i x) x
+  (f : (i : ι) → X → E i) (hf : ∀ i, IsContinuousLinearMap K (f i))
+  : ((fun (x : X) =>L[K] fun (i : ι) => f i x) : X →L[K] PiLp 2 E)†
     = 
-    fun dx =>L[K] fun i =>
-      fderiv K (f i) x dx
-  := fderiv_pi hf
+    (fun x' =>L[K] ∑ i, (fun x =>L[K] f i x)† (x' i))
+  := sorry
 
-
+#exit
 
 
 noncomputable

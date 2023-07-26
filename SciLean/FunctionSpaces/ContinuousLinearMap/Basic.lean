@@ -1,5 +1,6 @@
 import Mathlib.Topology.Algebra.Module.Basic
 import Mathlib.Analysis.NormedSpace.Basic
+import Mathlib.Topology.UniformSpace.Pi
 
 import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
@@ -205,7 +206,7 @@ def IsContinuousLinearMap.fpropExt : FPropExt where
 
 open SciLean IsContinuousLinearMap ContinuousLinearMap
 
-variable 
+variable
   {R : Type _} [Semiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y]
@@ -218,8 +219,10 @@ variable
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem FunLike.coe.arg_f.IsContinuousLinearMap (f : X →L[R] Y) : IsContinuousLinearMap R fun x => f x := 
-  by_morphism f (by simp)
+theorem FunLike.coe.arg_f.IsContinuousLinearMap_comp  
+  (f : Y →L[R] Z) (g : X → Y) (hg : SciLean.IsContinuousLinearMap R g) 
+  : SciLean.IsContinuousLinearMap R (fun x => f (g x)) := 
+  by_morphism (f.comp (mk' R g hg)) (by simp)
 
 
 -- Id --------------------------------------------------------------------------
@@ -478,3 +481,22 @@ theorem HDiv.hDul.arg_a4.IsContinuousLinearMap_comp
 := 
   by_morphism (ContinuousLinearMap.divRight (mk' R f hf) y)
   (by simp)
+
+
+-- Finset.sum -------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+
+open BigOperators in
+@[fprop_rule]
+theorem Finset.sum.arg_f.IsContinuousLinearMap_comp
+  (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
+  : IsContinuousLinearMap R fun x => ∑ i in A, f x i := sorry
+
+-- do we need this one?
+-- open BigOperators in
+-- @[fprop_rule]
+-- theorem Finset.sum.arg_f.IsContinuousLinearMap_comp'
+--   (f : ι → X → Y) (hf : ∀ i, IsContinuousLinearMap R (f i)) (A : Finset ι)
+--   : IsContinuousLinearMap R fun (x : X) => ∑ i in A, f i x := sorry
+
