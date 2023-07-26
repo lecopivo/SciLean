@@ -142,13 +142,19 @@ theorem fderiv.pi_rule
 open Lean Meta Qq
 
 def fderiv.discharger (e : Expr) : SimpM (Option Expr) := do
-  withTraceNode `fderiv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
+  withTraceNode `fwdDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
   let config : FProp.Config := {}
   let state  : FProp.State := { cache := cache }
   let (proof?, state) ← FProp.fprop e |>.run config |>.run state
   modify (fun simpState => { simpState with cache := state.cache })
-  return proof?
+  if proof?.isSome then
+    return proof?
+  else
+    -- if `fprop` fails try assumption
+    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
+    let proof? ← tac e
+    return proof?
 
 open Lean Elab Term FTrans
 def fderiv.ftransExt : FTransExt where
@@ -469,3 +475,39 @@ theorem HDiv.hDiv.arg_a4a5.fderiv_comp
 by
   have h : ∀ (f : R → K) x, fderiv R f x 1 = deriv f x := by simp[deriv]
   ext x; simp[h]; apply deriv_div (hf x) (hg x) (hx x)
+
+
+-- HPow.hPow ---------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans_rule]
+def HPow.hPow.arg_a4.fderiv_at_comp
+  (n : Nat) (x : X) (f : X → K) (hf : DifferentiableAt K f x) 
+  : fderiv K (fun x => f x ^ n) x
+    =
+    fun dx =>L[K] n * fderiv K f x dx * (f x ^ (n-1)) :=
+by
+  induction n
+  case zero =>
+    simp; rfl
+  case succ n hn =>
+    ext dx
+    simp_rw[pow_succ]
+    rw[HMul.hMul.arg_a4a5.fderiv_at_comp x f _ (by fprop) (by fprop)]
+    rw[hn]
+    induction n
+    case zero => simp
+    case succ => 
+      rw[show ∀ (n : Nat), n.succ - 1 = n by simp]
+      rw[pow_succ]
+      simp; ring
+
+
+@[ftrans_rule]
+def HPow.hPow.arg_a4.fderiv_comp
+  (n : Nat) (f : X → K) (hf : Differentiable K f) 
+  : fderiv K (fun x => f x ^ n)
+    =
+    fun x => fun dx =>L[K] n * fderiv K f x dx * (f x ^ (n-1)) :=
+by
+  funext x; apply HPow.hPow.arg_a4.fderiv_at_comp n x f (hf x)
