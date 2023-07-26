@@ -3,145 +3,56 @@ import SciLean.Profile
 
 namespace SciLean
 
-/-- `BroadcastType tag X ι MX` says that `MX` is `ι`-many copies of `X`
-
-  `tag` is used to indicate the class of broadcasting types. For example, dense or sparse matrices are broadcast type for vectors.
-  -/
-class BroadcastType (tag : Name) (R : Type _) [Ring R] (ι : Type _) (X : Type _) (MX : outParam $ Type _) [AddCommGroup X] [Module R X] [AddCommGroup MX] [Module R MX] where
-  equiv  : MX ≃ₗ[R] (ι → X)
-
-
-
-
-variable 
-  {R : Type _} [Ring R]
-  {X : Type _} [AddCommGroup X] [Module R X]
-  {Y : Type _} [AddCommGroup Y] [Module R Y]
-  {MX : Type _} [AddCommGroup MX] [Module R MX]
-  {MY : Type _} [AddCommGroup MY] [Module R MY]
-  {ι : Type _} -- [Fintype ι]
-  {κ : Type _} -- [Fintype κ]
-  {E ME : κ → Type _} 
-  [∀ j, AddCommGroup (E j)] [∀ j, Module R (E j)]
-  [∀ j, AddCommGroup (ME j)] [∀ j, Module R (ME j)]
-
-
-def broadcast (tag : Name) [BroadcastType tag R ι X MX] [BroadcastType tag R ι Y MY] 
- (f : X → Y) : MX → MY := fun mx =>
-  (BroadcastType.equiv tag (R:=R)).invFun fun (i : ι) => f ((BroadcastType.equiv tag (R:=R)) mx i)
-
- 
-open BroadcastType in
-instance [BroadcastType tag R ι X MX] [BroadcastType tag R ι Y MY] : BroadcastType tag R ι (X×Y) (MX×MY) where
-  equiv := {
-    toFun  := fun (mx,my) i => (equiv tag (R:=R) mx i, 
-                                equiv tag (R:=R) my i)
-    invFun := fun xy => ((equiv tag (R:=R)).invFun fun i => (xy i).1, 
-                         (equiv tag (R:=R)).invFun fun i => (xy i).2) 
-    map_add'  := by intro x y; funext i; simp
-    map_smul' := by intro x y; funext i; simp
-    left_inv  := fun _ => by simp
-    right_inv := fun _ => by simp
-  }
-
-open BroadcastType in
-instance [∀ j, BroadcastType tag R ι (E j) (ME j)]
-  : BroadcastType tag R ι (∀ j, E j) (∀ j, ME j) where
-  equiv := {
-    toFun  := fun mx i j => equiv tag (R:=R) (mx j) i 
-    invFun := fun x j => (equiv tag (R:=R)).invFun (fun i => x i j)
-    map_add'  := by intro x y; funext i j; simp
-    map_smul' := by intro x y; funext i j; simp
-    left_inv  := fun _ => by simp
-    right_inv := fun _ => by simp
-  }
-
-open BroadcastType in
-instance : BroadcastType `normal R Unit X X where
-  equiv := {
-    toFun  := fun x _ => x
-    invFun := fun x => x ()
-    map_add'  := by intro x y; funext _; simp
-    map_smul' := by intro x y; funext _; simp
-    left_inv  := fun _ => by simp
-    right_inv := fun _ => by simp
-  }
-
--- open BroadcastType in
--- instance [BroadcastType `normal R (Fin n) X MX] : BroadcastType `normal R (Fin (n+1)) X (X×MX) where
---   equiv := {
---     toFun  := fun (x,mx) i =>
---       match i with
---       | ⟨0, _⟩ => x
---       | ⟨i'+1, h⟩ => 
---         let i' : Fin n := ⟨i', by aesop⟩
---         equiv `normal (R:=R) mx i'
---     invFun := fun x => (x 0, (equiv `normal (R:=R)).invFun fun i : Fin n => x ⟨i.1+1, by aesop⟩)
---     map_add'  := by intro x y; funext ⟨i,hi⟩; induction i; simp; rfl; simp
---     map_smul' := by intro x y; funext ⟨i,hi⟩; induction i; simp; rfl; simp
---     left_inv  := fun (x,mx) => by simp; rfl
---     right_inv := fun _ => by simp; funext ⟨i,hi⟩; induction i; simp; rfl
---   }
-
-
--- instance : Broadcast `EigenSparse ℝ^m (Eigen.SparseMatrix n m) (Fin n) where
--- instance : Broadcast `EigenDense ℝ^m (Eigen.Matrix n m) (Fin n) where
-
-
 noncomputable
 def fwdDeriv
   (K : Type _) [NontriviallyNormedField K]
-  (tag : Name) (ι : Type _)
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
-  {DX : Type _} [AddCommGroup DX] [Module K DX]
-  {DY : Type _} [AddCommGroup DY] [Module K DY]
-  [BroadcastType tag K ι X DX] [BroadcastType tag K ι Y DY]
-  (f : X → Y) (x : X) (dx : DX) : Y×DY :=
-  (f x, broadcast tag (R:=K) (ι:=ι) (fun dx => fderiv K f x dx) dx)
+  (f : X → Y) (x dx : X) : Y×Y :=
+  (f x, fderiv K f x dx)
+
 
 namespace fwdDeriv
 
 variable
   {K : Type _} [NontriviallyNormedField K]
-  {tag : Name} {ι : Type _}
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {DX : Type _} [AddCommGroup DX] [Module K DX] [BroadcastType tag K ι X DX]
-  {DY : Type _} [AddCommGroup DY] [Module K DY] [BroadcastType tag K ι Y DY]
-  {DZ : Type _} [AddCommGroup DZ] [Module K DZ] [BroadcastType tag K ι Z DZ]
-  {κ : Type _} [Fintype κ]
-  {E : κ → Type _} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace K (E j)]
-  {DE : κ → Type _} [∀ j, AddCommGroup (DE j)] [∀ j, Module K (DE j)]
-  [∀ j, BroadcastType tag K ι (E j) (DE j)]
-  
+  {ι : Type _} [Fintype ι]
+  {E : ι → Type _} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace K (E j)]
+
+
+-- Basic lambda calculus rules -------------------------------------------------
+--------------------------------------------------------------------------------
 
 theorem id_rule 
-  : fwdDeriv K tag ι (fun x : X => x) = fun x dx => (x,dx) :=
+  : fwdDeriv K (fun x : X => x) = fun x dx => (x,dx) :=
 by
-  unfold fwdDeriv; unfold broadcast
+  unfold fwdDeriv
   simp
 
+
 theorem const_rule (x :X)
-  : fwdDeriv K tag ι (fun y : Y => x) = fun y dy => (x, 0) :=
+  : fwdDeriv K (fun _ : Y => x) = fun y dy => (x, 0) :=
 by
-  unfold fwdDeriv; unfold broadcast
+  unfold fwdDeriv
   funext y dy
-  simp; rfl
+  simp
+
 
 theorem comp_rule 
   (g : X → Y) (hg : Differentiable K g)
   (f : Y → Z) (hf : Differentiable K f)
-  : fwdDeriv K tag ι (fun x : X => f (g x)) 
+  : fwdDeriv K (fun x : X => f (g x)) 
     = 
     fun x dx => 
-      let ydy := fwdDeriv K tag ι g x dx 
-      let zdz := fwdDeriv K tag ι f ydy.1 ydy.2 
+      let ydy := fwdDeriv K g x dx 
+      let zdz := fwdDeriv K f ydy.1 ydy.2 
       zdz :=
 by
-  unfold fwdDeriv; unfold broadcast
-  funext x dx; congr; funext i;
+  unfold fwdDeriv
+  funext x dx; congr
   rw[fderiv.comp_rule g hg f hf]
   simp
 
@@ -149,34 +60,83 @@ by
 theorem let_rule 
   (g : X → Y) (hg : Differentiable K g)
   (f : X → Y → Z) (hf : Differentiable K (fun (xy : X×Y) => f xy.1 xy.2))
-  : fwdDeriv K tag ι (fun x : X => let y := g x; f x y) 
+  : fwdDeriv K (fun x : X => let y := g x; f x y) 
     = 
     fun x dx => 
-      let ydy := fwdDeriv K tag ι g x dx 
-      let zdz := fwdDeriv K tag ι (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
+      let ydy := fwdDeriv K g x dx 
+      let zdz := fwdDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
       zdz :=
 by
-  unfold fwdDeriv; unfold broadcast
-  funext x dx; congr; funext i
-  rw[fderiv.let_rule g hg f hf]; 
-  simp; congr; simp
-
+  unfold fwdDeriv
+  funext x dx;
+  rw[fderiv.let_rule g hg f hf]
+  simp
 
 
 theorem pi_rule
-  (f : (j : κ) → X → E j) (hf : ∀ j, Differentiable K (f j))
-  : (fwdDeriv K tag ι fun (x : X) (j : κ) => f j x)
+  (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable K (f i))
+  : (fwdDeriv K fun (x : X) (i : ι) => f i x)
     = 
     fun x dx =>
-      (fun j => f j x, fun j => (fwdDeriv K tag ι (f j) x dx).2) := 
+      (fun i => f i x, fun i => (fwdDeriv K (f i) x dx).2) := 
 by 
-  unfold fwdDeriv; unfold broadcast
+  unfold fwdDeriv
   funext x; rw[fderiv_pi (fun i => hf i x)]
-  simp; funext dx; simp[BroadcastType.equiv]
+  simp
+
+
+theorem comp_rule_at
+  (x : X)
+  (g : X → Y) (hg : DifferentiableAt K g x)
+  (f : Y → Z) (hf : DifferentiableAt K f (g x))
+  : fwdDeriv K (fun x : X => f (g x)) x
+    = 
+    fun dx => 
+      let ydy := fwdDeriv K g x dx 
+      let zdz := fwdDeriv K f ydy.1 ydy.2 
+      zdz :=
+by
+  unfold fwdDeriv
+  funext dx; congr
+  rw[fderiv.comp_rule_at x g hg f hf]
+  simp
+
+
+theorem let_rule_at
+  (x : X)
+  (g : X → Y) (hg : DifferentiableAt K g x)
+  (f : X → Y → Z) (hf : DifferentiableAt K (fun (xy : X×Y) => f xy.1 xy.2) (x, g x))
+  : fwdDeriv K (fun x : X => let y := g x; f x y) x
+    = 
+    fun dx => 
+      let ydy := fwdDeriv K g x dx 
+      let zdz := fwdDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
+      zdz :=
+by
+  unfold fwdDeriv
+  funext dx;
+  rw[fderiv.let_rule_at x g hg f hf]
+  simp
+
+
+theorem pi_rule_at
+  (x : X)
+  (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt K (f i) x)
+  : (fwdDeriv K fun (x : X) (i : ι) => f i x) x
+    = 
+    fun dx =>
+      (fun i => f i x, fun i => (fwdDeriv K (f i) x dx).2) := 
+by 
+  unfold fwdDeriv
+  rw[fderiv.pi_rule_at x f hf]
+  simp
+
 
 
 -- Register `fwdDeriv` as function transformation ------------------------------
 --------------------------------------------------------------------------------
+#check `(tactic| assumption) 
+#check Lean.Syntax
 
 open Lean Meta Qq
 
@@ -187,7 +147,14 @@ def fwdDeriv.discharger (e : Expr) : SimpM (Option Expr) := do
   let state  : FProp.State := { cache := cache }
   let (proof?, state) ← FProp.fprop e |>.run config |>.run state
   modify (fun simpState => { simpState with cache := state.cache })
-  return proof?
+  if proof?.isSome then
+    return proof?
+  else
+    -- if `fprop` fails try assumption
+    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
+    let proof? ← tac e
+    return proof?
+
 
 open Lean Elab Term FTrans
 def fwdDeriv.ftransExt : FTransExt where
@@ -196,7 +163,7 @@ def fwdDeriv.ftransExt : FTransExt where
   getFTransFun? e := 
     if e.isAppOf ``fwdDeriv then
 
-      if let .some f := e.getArg? 19 then
+      if let .some f := e.getArg? 8 then
         some f
       else 
         none
@@ -205,7 +172,7 @@ def fwdDeriv.ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``fwdDeriv then
-      e.modifyArg (fun _ => f) 19
+      e.modifyArg (fun _ => f) 8
     else          
       e
 
@@ -223,22 +190,281 @@ def fwdDeriv.ftransExt : FTransExt where
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``fwdDeriv, fwdDeriv.ftransExt))
 
 
-example : BroadcastType tag K ι X DX := by infer_instance
+end SciLean.fwdDeriv
+
+--------------------------------------------------------------------------------
+-- Function Rules --------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+open SciLean
+
+variable 
+  {K : Type _} [NontriviallyNormedField K]
+  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
+  {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
+  {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
+  {ι : Type _} [Fintype ι]
+  {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
+
+
+-- Prod.mk -----------------------------------v---------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem Prod.mk.arg_fstsnd.fwdDeriv_at_comp
+  (x : X)
+  (g : X → Y) (hg : DifferentiableAt K g x)
+  (f : X → Z) (hf : DifferentiableAt K f x)
+  : fwdDeriv K (fun x => (g x, f x)) x
+    =
+    fun dx =>
+      let ydy := fwdDeriv K g x dx
+      let zdz := fwdDeriv K f x dx
+      ((ydy.1, zdz.1), (ydy.2, zdz.2)) := 
+by 
+  unfold fwdDeriv; ftrans
 
 
 @[ftrans_rule]
-theorem HAdd.hAdd.arg_a4a5.fderiv_comp 
-  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
-  : (fwdDeriv K tag ι fun x => f x + g x)
-    =
-    fun x dx => 
-      let ydy₁ := fwdDeriv K tag ι f x dx
-      let ydy₂ := fwdDeriv K tag ι g x dx
-      ydy₁ + ydy₂ := 
+theorem Prod.mk.arg_fstsnd.fwdDeriv_comp
+  (g : X → Y) (hg : Differentiable K g)
+  (f : X → Z) (hf : Differentiable K f)
+  : fwdDeriv K (fun x => (g x, f x))
+    =    
+    fun x dx =>
+      let ydy := fwdDeriv K g x dx
+      let zdz := fwdDeriv K f x dx
+      ((ydy.1, zdz.1), (ydy.2, zdz.2)) := 
 by 
-  funext x dx
-  unfold fwdDeriv; unfold broadcast
-  ftrans only
-  simp; rw[← map_add]; rfl
+  unfold fwdDeriv; ftrans
+
+ 
+
+-- Prod.fst --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem Prod.fst.arg_self.fwdDeriv_at_comp
+  (x : X)
+  (f : X → Y×Z) (hf : DifferentiableAt K f x)
+  : fwdDeriv K (fun x => (f x).1) x
+    =
+    fun dx =>
+      let yzdyz := fwdDeriv K f x dx
+      (yzdyz.1.1, yzdyz.2.1) := 
+by 
+  unfold fwdDeriv; ftrans
 
 
+@[ftrans_rule]
+theorem Prod.fst.arg_self.fwdDeriv_comp
+  (f : X → Y×Z) (hf : Differentiable K f)
+  : fwdDeriv K (fun x => (f x).1)
+    =
+    fun x dx =>
+      let yzdyz := fwdDeriv K f x dx
+      (yzdyz.1.1, yzdyz.2.1) :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+
+-- Prod.fst --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem Prod.snd.arg_self.fwdDeriv_at_comp
+  (x : X)
+  (f : X → Y×Z) (hf : DifferentiableAt K f x)
+  : fwdDeriv K (fun x => (f x).2) x
+    =
+    fun dx =>
+      let yzdyz := fwdDeriv K f x dx
+      (yzdyz.1.2, yzdyz.2.2) := 
+by 
+  unfold fwdDeriv; ftrans
+
+
+@[ftrans_rule]
+theorem Prod.snd.arg_self.fwdDeriv_comp
+  (f : X → Y×Z) (hf : Differentiable K f)
+  : fwdDeriv K (fun x => (f x).2)
+    =
+    fun x dx =>
+      let yzdyz := fwdDeriv K f x dx
+      (yzdyz.1.2, yzdyz.2.2) := 
+by 
+  unfold fwdDeriv; ftrans
+
+
+
+-- HAdd.hAdd -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem HAdd.hAdd.arg_a4a5.fwdDeriv_at_comp
+  (x : X) (f g : X → Y) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  : (fwdDeriv K fun x => f x + g x) x
+    =
+    fun dx =>
+      fwdDeriv K f x dx + fwdDeriv K g x dx := 
+by 
+  unfold fwdDeriv; ftrans
+
+
+@[ftrans_rule]
+theorem HAdd.hAdd.arg_a4a5.fwdDeriv_comp
+  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+  : (fwdDeriv K fun x => f x + g x)
+    =
+    fun x dx =>
+      fwdDeriv K f x dx + fwdDeriv K g x dx := 
+by 
+  unfold fwdDeriv; ftrans
+
+
+
+-- HSub.hSub -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem HSub.hSub.arg_a4a5.fwdDeriv_at_comp
+  (x : X) (f g : X → Y) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  : (fwdDeriv K fun x => f x - g x) x
+    =
+    fun dx =>
+      fwdDeriv K f x dx - fwdDeriv K g x dx := 
+by 
+  unfold fwdDeriv; ftrans
+
+
+@[ftrans_rule]
+theorem HSub.hSub.arg_a4a5.fwdDeriv_comp
+  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+  : (fwdDeriv K fun x => f x - g x)
+    =
+    fun x dx =>
+      fwdDeriv K f x dx - fwdDeriv K g x dx :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+
+-- Neg.neg ---------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem Neg.neg.arg_a2.fwdDeriv_at_comp
+  (x : X) (f : X → Y)
+  : (fwdDeriv K fun x => - f x) x
+    =
+    fun dx => - fwdDeriv K f x dx :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+@[ftrans_rule]
+theorem Neg.neg.arg_a2.fwdDeriv_comp
+  (f : X → Y)
+  : (fwdDeriv K fun x => - f x)
+    =
+    fun x dx => - fwdDeriv K f x dx :=
+by  
+  unfold fwdDeriv; ftrans
+
+
+-- HMul.hmul -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem HMul.hMul.arg_a4a5.fwdDeriv_at_comp
+  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
+  (x : X) (f g : X → Y)
+  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  : (fwdDeriv K fun x => f x * g x) x
+    =
+    fun dx =>
+      let ydy := (fwdDeriv K f x dx)
+      let zdz := (fwdDeriv K g x dx)
+      (ydy.1 * zdz.1, zdz.2 * ydy.1 + ydy.2 * zdz.1) :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+@[ftrans_rule]
+theorem HMul.hMul.arg_a4a5.fwdDeriv_comp
+  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
+  (f g : X → Y)
+  (hf : Differentiable K f) (hg : Differentiable K g)
+  : (fwdDeriv K fun x => f x * g x)
+    =
+    fun x dx =>
+      let ydy := (fwdDeriv K f x dx)
+      let zdz := (fwdDeriv K g x dx)
+      (ydy.1 * zdz.1, zdz.2 * ydy.1 + ydy.2 * zdz.1) :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+-- SMul.smul -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem SMul.smul.arg_a3a4.fwdDeriv_at_comp
+  (x : X) (f : X → K) (g : X → Y) 
+  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  : (fwdDeriv K fun x => f x • g x) x
+    =
+    fun dx =>
+      let ydy := (fwdDeriv K f x dx)
+      let zdz := (fwdDeriv K g x dx)
+      (ydy.1 • zdz.1, ydy.1 • zdz.2 + ydy.2 • zdz.1) :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+@[ftrans_rule]
+theorem SMul.smul.arg_a3a4.fwdDeriv_comp
+  (f : X → K) (g : X → Y) 
+  (hf : Differentiable K f) (hg : Differentiable K g)
+  : (fwdDeriv K fun x => f x • g x)
+    =
+    fun x dx =>
+      let ydy := (fwdDeriv K f x dx)
+      let zdz := (fwdDeriv K g x dx)
+      (ydy.1 • zdz.1, ydy.1 • zdz.2 + ydy.2 • zdz.1) :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+-- HDiv.hDiv -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem HDiv.hDiv.arg_a4a5.fwdDeriv_at_comp
+  {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
+  (x : R) (f : R → K) (g : R → K) 
+  (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x) (hx : g x ≠ 0)
+  : (fwdDeriv R fun x => f x / g x) x
+    =
+    fun dx =>
+      let ydy := (fwdDeriv R f x dx)
+      let zdz := (fwdDeriv R g x dx)
+      (ydy.1 / zdz.1, (ydy.2 * zdz.1 - ydy.1 * zdz.2) / zdz.1^2) :=
+by 
+  unfold fwdDeriv; ftrans
+
+
+@[ftrans_rule]
+theorem HDiv.hDiv.arg_a4a5.fwdDeriv_comp
+  {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
+  (f : R → K) (g : R → K) 
+  (hf : Differentiable R f) (hg : Differentiable R g) (hx : ∀ x, g x ≠ 0)
+  : (fwdDeriv R fun x => f x / g x)
+    =
+    fun x dx =>
+      let ydy := (fwdDeriv R f x dx)
+      let zdz := (fwdDeriv R g x dx)
+      (ydy.1 / zdz.1, (ydy.2 * zdz.1 - ydy.1 * zdz.2) / zdz.1^2) :=
+by 
+  unfold fwdDeriv; ftrans

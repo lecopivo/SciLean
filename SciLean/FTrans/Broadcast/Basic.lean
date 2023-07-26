@@ -18,7 +18,7 @@ def broadcast (tag : Name) (R : Type _) [Ring R]
   {Y : Type _} [AddCommGroup Y] [Module R Y]
   {MX : Type _} [AddCommGroup MX] [Module R MX]
   {MY : Type _} [AddCommGroup MY] [Module R MY]
-  (ι : Type _) [BroadcastType tag R ι X MX] [BroadcastType tag R ι Y MY] 
+  (ι : Type _) [BroadcastType tag R ι X MX] [BroadcastType tag R ι Y MY]
   (f : X → Y) : MX → MY := fun mx =>
   (BroadcastType.equiv tag (R:=R)).symm fun (i : ι) => f ((BroadcastType.equiv tag (R:=R)) mx i)
 
