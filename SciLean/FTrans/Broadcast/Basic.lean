@@ -1,11 +1,7 @@
 import SciLean.FTrans.Broadcast.BroadcastType 
 import SciLean.Tactic.FTrans.Basic
 
-import SciLean.Profile
-
 namespace SciLean
-
-set_option profiler true
 
 /--
 Broadcast vectorizes operations. For example, broadcasting multiplication `fun (x : ℝ) => c * x` will produce scalar multiplication `fun (x₁,...,xₙ) => (c*x₁,...,c*x₂)`.
