@@ -235,13 +235,14 @@ private partial def dsimp (e : Expr) : M Expr := do
         return .visit r.expr
     let mut eNew ← reduce e
 
+    -- temporarily disabled as it blows stack on some examples
     -- lsimp modification
     -- this cleans up let bindinds and unfolds computationally irrelevant let bindings
-    if eNew.isLet then
-      -- TODO: fuel in `flattenLet` should be optional 
-      -- TODO: add option if we want to split structure constructors
-      -- TODO: maybe add implementation of flattenLet here and make it recursive
-      eNew ← flattenLet 1000000 eNew
+    -- if eNew.isLet then
+    --   -- TODO: fuel in `flattenLet` should be optional 
+    --   -- TODO: add option if we want to split structure constructors
+    --   -- TODO: maybe add implementation of flattenLet here and make it recursive
+    --   eNew ← flattenLet 1000000 eNew
 
     -- TODO: Add config option for this
     -- unfolds fvars that are not doing computation(based on some heuristic)
