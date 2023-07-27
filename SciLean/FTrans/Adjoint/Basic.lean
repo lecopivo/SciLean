@@ -27,7 +27,6 @@ instance {E : ι → Type _} [∀ i, UniformSpace (E i)] [∀ i, CompleteSpace (
 
 -- Set up custom notation for adjoint. Mathlib's notation for adjoint seems to be broken
 instance (f : X →L[K] Y) : SciLean.Dagger f (ContinuousLinearMap.adjoint f : Y →L[K] X) := ⟨⟩
-variable (g : X → Y) (hg : SciLean.IsContinuousLinearMap K g)
 
 
 -- Basic lambda calculus rules -------------------------------------------------
@@ -237,7 +236,7 @@ by sorry
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem Prod.fst.arg_self.fderiv_comp
+theorem Prod.fst.arg_self.adjoint_comp
   (f : X → Y×Z) (hf : SciLean.IsContinuousLinearMap K f)
   : (fun x =>L[K] (f x).1)†
     =
@@ -250,7 +249,7 @@ by
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem Prod.snd.arg_self.fderiv_comp
+theorem Prod.snd.arg_self.adjoint_comp
   (f : X → Y×Z) (hf : SciLean.IsContinuousLinearMap K f)
   : (fun x =>L[K] (f x).2)†
     =

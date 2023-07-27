@@ -135,6 +135,15 @@ theorem fderiv.pi_rule
   := by funext x; apply fderiv_pi (fun i => hf i x)
 
 
+theorem fderiv.proj_rule
+  [DecidableEq ι] (i : ι)
+  : (fderiv K fun (x : (i : ι) → E i) => x i)
+    =
+    fun x => fun dx =>L[K] dx i := 
+by 
+  funext x; sorry
+
+
 
 -- Register `fderiv` as function transformation --------------------------------
 --------------------------------------------------------------------------------
