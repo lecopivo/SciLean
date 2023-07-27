@@ -234,6 +234,15 @@ variable
 -- FunLike.coe -----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+-- This one is necessary because of some issues with topology on product spaces
+-- This problem has to be a bug somewhere ...
+@[fprop_rule]
+theorem FunLike.coe.arg_f.IsContinuousLinearMap
+  (f : Y →L[R] Z) 
+  : SciLean.IsContinuousLinearMap R f := 
+  by_morphism f (by simp)
+
+
 @[fprop_rule]
 theorem FunLike.coe.arg_f.IsContinuousLinearMap_comp  
   (f : Y →L[R] Z) (g : X → Y) (hg : SciLean.IsContinuousLinearMap R g) 
