@@ -215,45 +215,240 @@ variable
 
 open SciLean
 
+
+
 -- Prod.mk ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-
-
-example
-  (g : X → Y) (hg : IsContinuousLinearMap K g)
-  (f : X → Z) (hf : IsContinuousLinearMap K f)
-  : IsContinuousLinearMap K
-    fun yz : Y×₂Z =>
-      (fun x =>L[K] g x)† yz.1 + (fun x =>L[K] f x)† yz.2 := by fprop
-
-
-set_option trace.Meta.Tactic.fprop.step true in
-set_option trace.Meta.Tactic.fprop.discharge true in
 @[ftrans_rule]
 theorem Prod.mk.arg_fstsnd.adjoint_comp
   (g : X → Y) (hg : IsContinuousLinearMap K g)
   (f : X → Z) (hf : IsContinuousLinearMap K f)
   : ((fun x =>L[K] (g x, f x)) : X →L[K] Y×₂Z)†
     =
-    fun yz =>L[K] 
-      -- (fun x =>L[K] g x)† yz.1 + (fun x =>L[K] f x)† yz.2 :=
+    fun yz =>L[K]
       let x₁ := (fun x =>L[K] g x)† yz.1
       let x₂ := (fun x =>L[K] f x)† yz.2
-      x₁ + x₂ := 
+      x₁ + x₂ :=
 by sorry
 
 
+-- Prod.fst --------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-
--- set_option trace.Meta.Tactic.ftrans.step true in
-set_option trace.Meta.flattenLet.step true in
-example
-  (g : X → Y) (hg : IsContinuousLinearMap K g)
-  (f : X → Z) (hf : IsContinuousLinearMap K f)
-  : ((fun x =>L[K] (g x, f x)) : X →L[K] Y×₂Z)†
+@[ftrans_rule]
+theorem Prod.fst.arg_self.fderiv_comp
+  (f : X → Y×Z) (hf : SciLean.IsContinuousLinearMap K f)
+  : (fun x =>L[K] (f x).1)†
     =
-    fun yz =>L[K]
-      (fun x =>L[K] g x)† yz.1 + (fun x =>L[K] f x)† yz.2 :=
-by ftrans only
+    (fun y =>L[K] ((fun x =>L[K] f x) : X →L[K] Y×₂Z)† (y,(0:Z))) :=
+by
+  sorry
 
+
+-- Prod.snd --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem Prod.snd.arg_self.fderiv_comp
+  (f : X → Y×Z) (hf : SciLean.IsContinuousLinearMap K f)
+  : (fun x =>L[K] (f x).2)†
+    =
+    (fun z =>L[K] ((fun x =>L[K] f x) : X →L[K] Y×₂Z)† ((0 :Y),z)) :=
+by
+  sorry
+
+
+-- HAdd.hAdd -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem HAdd.hAdd.arg_a4a5.adjoint_comp
+  (f g : X → Y) (hf : IsContinuousLinearMap K f) (hg : IsContinuousLinearMap K g)
+  : (fun x =>L[K] f x + g x)†
+    =
+    fun y =>L[K] 
+      let x₁ := (fun x =>L[K] f x)† y
+      let x₂ := (fun x =>L[K] g x)† y
+      x₁ + x₂ := 
+by
+  sorry
+
+
+-- HSub.hSub -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem HSub.hSub.arg_a4a5.adjoint_comp
+  (f g : X → Y) (hf : IsContinuousLinearMap K f) (hg : IsContinuousLinearMap K g)
+  : (fun x =>L[K] f x - g x)†
+    =
+    fun y =>L[K] 
+      let x₁ := (fun x =>L[K] f x)† y
+      let x₂ := (fun x =>L[K] g x)† y
+      x₁ - x₂ := 
+by
+  sorry
+
+
+-- Neg.neg ---------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans_rule]
+theorem Neg.neg.arg_a2.adjoint_comp
+  (f : X → Y) (hf : IsContinuousLinearMap K f)
+  : (fun x =>L[K] - f x)†
+    =
+    fun y =>L[K] - (fun x =>L[K] f x)† y := 
+by 
+  sorry
+
+
+-- HMul.hmul -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+open ComplexConjugate in
+@[ftrans_rule]
+theorem HMul.hMul.arg_a4.adjoint_comp
+  (c : K) (f : X → K) (hf : IsContinuousLinearMap K f)
+  : (fun x =>L[K] f x * c)†
+    =
+    fun y =>L[K] conj c • (fun x =>L[K] f x)† y :=
+by 
+  sorry
+
+open ComplexConjugate in
+@[ftrans_rule]
+theorem HMul.hMul.arg_a5.adjoint_comp
+  (c : K) (f : X → K) (hf : IsContinuousLinearMap K f)
+  : (fun x =>L[K] c * f x)†
+    =
+    fun y =>L[K] conj c • (fun x =>L[K] f x)† y :=
+by 
+  rw[show (fun x =>L[K] c * f x) = (fun x =>L[K] f x * c) by ext x; simp[mul_comm]]
+  apply HMul.hMul.arg_a4.adjoint_comp
+
+
+-- SMul.smul -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+open ComplexConjugate in
+@[ftrans_rule]
+theorem SMul.smul.arg_a0.adjoint_comp
+  (x' : X) (f : X → K) (hf : IsContinuousLinearMap K f)
+  : (fun x =>L[K] f x • x')†
+    =
+    fun y =>L[K] @inner K _ _ x' y • (fun x =>L[K] f x)† 1 :=
+by 
+  sorry
+
+open ComplexConjugate in
+@[ftrans_rule]
+theorem SMul.smul.arg_a1.adjoint_comp
+  (c : K) (g : X → Y) (hg : IsContinuousLinearMap K g)
+  : (fun x =>L[K] c • g x)†
+    =
+    fun y =>L[K] (conj c) • (fun x =>L[K] g x)† y :=
+by 
+  sorry
+
+
+-- HDiv.hDiv -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+open ComplexConjugate in
+@[ftrans_rule]
+theorem HDiv.hDiv.arg_a0.adjoint_comp
+  (f : X → K) (c : K)
+  (hf : IsContinuousLinearMap K f)
+  : (fun x =>L[K] f x / c)†
+    =
+    fun y =>L[K] (conj c)⁻¹ • (fun x =>L[K] f x)† y := 
+by
+  sorry
+
+
+
+-- Finset.sum ------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open BigOperators in
+@[ftrans_rule]
+theorem Finset.sum.arg_f.adjoint_comp
+  (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K fun x : X => f x i)
+  : (fun x =>L[K] ∑ i, f x i)†
+    =
+    (fun y =>L[K] ∑ i, (fun x =>L[K] f x i)† y) := 
+by
+  sorry
+
+
+-- d/ite -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans_rule]
+theorem ite.arg_te.adjoint_comp
+  (c : Prop) [dec : Decidable c]
+  (t e : X → Y) (ht : IsContinuousLinearMap K t) (he : IsContinuousLinearMap K e)
+  : (fun x =>L[K] ite c (t x) (e x))†
+    =
+    fun y =>L[K]
+      ite c ((fun x =>L[K] t x)† y) ((fun x =>L[K] e x)† y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]
+  case isFalse h => ext y; simp[h]
+
+@[ftrans_rule]
+theorem dite.arg_te.adjoint_comp
+  (c : Prop) [dec : Decidable c]
+  (t : c  → X → Y) (ht : ∀ p, IsContinuousLinearMap K (t p)) 
+  (e : ¬c → X → Y) (he : ∀ p, IsContinuousLinearMap K (e p))
+  : (fun x =>L[K] dite c (t · x) (e · x))†
+    =
+    fun y =>L[K]
+      dite c (fun p => (fun x =>L[K] t p x)† y) 
+             (fun p => (fun x =>L[K] e p x)† y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]
+  case isFalse h => ext y; simp[h]
+
+
+
+-- Inner -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+set_option trace.Meta.Tactic.fprop.discharge true in
+open ComplexConjugate in
+@[ftrans_rule]
+theorem Inner.inner.arg_a0.adjoint_comp
+  (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
+  : (fun x =>L[K] @inner K _ _ (f x) y)†
+    =
+    fun z =>L[K] (conj z) • (fun x =>L[K] f x)† y := 
+by
+  sorry
+
+@[ftrans_rule]
+theorem Inner.inner.arg_a1.adjoint_comp
+  (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
+  : (fun x =>L[K] @inner K _ _ y (f x))†
+    =
+    fun z =>L[K] z • (fun x =>L[K] f x)† y :=
+by
+  sorry
+
+
+-- conj/starRingEnd ------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open ComplexConjugate in
+@[ftrans_rule]
+theorem starRingEnd.arg_a0.adjoint_comp
+  (f : X → K) (hf : IsContinuousLinearMap K f)
+  : (fun x =>L[K] conj (f x))†
+    =
+    fun z =>L[K] (fun x =>L[K] f x)† z :=
+by
+  sorry

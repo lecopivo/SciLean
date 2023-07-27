@@ -1,6 +1,8 @@
 import Mathlib.Topology.Algebra.Module.Basic
-import Mathlib.Analysis.NormedSpace.Basic
 import Mathlib.Topology.UniformSpace.Pi
+import Mathlib.Analysis.NormedSpace.Basic
+import Mathlib.Analysis.InnerProductSpace.Basic
+
 
 import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
@@ -530,7 +532,7 @@ theorem Finset.sum.arg_f.IsContinuousLinearMap_comp
 --   : IsContinuousLinearMap R fun (x : X) => ∑ i in A, f i x := sorry
 
 
--- ite -------------------------------------------------------------------------
+-- d/ite -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[fprop_rule]
@@ -554,3 +556,46 @@ by
   induction dec
   case isTrue h  => simp[h]; apply ht
   case isFalse h => simp[h]; apply he
+
+
+-------------------------------------------------------------------------------- 
+
+section InnerProductSpace
+
+variable 
+  {K : Type _} [IsROrC K]
+  {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module K X]
+  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+
+
+-- Inner -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop_rule]
+theorem Inner.inner.arg_a0.IsContinuousLinearMap_comp
+  (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
+  : IsContinuousLinearMap K fun x => @inner K _ _ (f x) y :=
+by
+  sorry
+
+@[fprop_rule]
+theorem Inner.inner.arg_a1.IsContinuousLinearMap_comp
+  (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
+  : IsContinuousLinearMap K fun x => @inner K _ _ y (f x) :=
+by
+  sorry
+
+
+-- conj/starRingEnd ------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open ComplexConjugate in
+@[fprop_rule]
+theorem starRingEnd.arg_a0.IsContinuousLinearMap_comp
+  (f : X → K) (hf : IsContinuousLinearMap K f)
+  : IsContinuousLinearMap K fun x => conj (f x) :=
+by
+  sorry
+
+
+end InnerProductSpace
