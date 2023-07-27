@@ -100,18 +100,36 @@ by
   rw[h']; rfl
 
 
-#exit
 
 example : CompleteSpace ((i :ι) → E i) := by infer_instance
 
 open BigOperators
 
-set_option trace.Meta.Tactic.fprop.discharge true in
+-- set_option trace.Meta.Tactic.fprop.discharge true in
+-- set_option trace.Meta.Tactic.fprop.step true in
 theorem pi_rule
-  (x : X)
   (f : (i : ι) → X → E i) (hf : ∀ i, IsContinuousLinearMap K (f i))
   : ((fun (x : X) =>L[K] fun (i : ι) => f i x) : X →L[K] PiLp 2 E)†
     = 
     (fun x' =>L[K] ∑ i, (fun x =>L[K] f i x)† (x' i))
   := sorry
+
+
+set_option trace.Meta.Tactic.fprop.discharge true in
+-- theorem proj_rule [DecidableEq ι]
+--    (i : ι) 
+--   : (fun (f : PiLp 2 E) =>L[K] f i)†
+--     = 
+--     fun y =>L[K] ((fun j => if h : i=j then (h ▸ y) else (0 : E j)) : PiLp 2 E)
+--   := sorry
+
+theorem proj_rule [DecidableEq ι]
+   (i : ι) 
+  : (fun (f : PiLp 2 (fun _ => X)) =>L[K] f i)†
+    = 
+    fun x =>L[K] (fun j => if h : i=j then x else (0 : X))
+  := sorry
+
+
+
 

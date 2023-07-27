@@ -55,6 +55,11 @@ theorem pi_rule
   : Continuous (fun x i => f i x)
   := by continuity
 
+theorem proj_rule
+  (i : ι)
+  : Continuous (fun x : (i : ι) → E i => x i)
+  := by continuity
+
 
 end SciLean.Continuous
 
@@ -139,6 +144,15 @@ def Continuous.fpropExt : FPropExt where
     {
       proof  := mkConst ``Continuous.pi_rule 
       origin := .decl ``Continuous.pi_rule 
+      rfl    := false
+    }
+    FProp.tryTheorem? e thm (fun _ => pure none)
+
+  projRule e :=
+    let thm : SimpTheorem :=
+    {
+      proof  := mkConst ``Continuous.proj_rule 
+      origin := .decl ``Continuous.proj_rule 
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)

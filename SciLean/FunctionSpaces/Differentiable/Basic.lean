@@ -61,6 +61,11 @@ theorem pi_rule
   : Differentiable R (fun x i => f i x)
   := fun x => DifferentiableAt.pi_rule x f (fun i => hf i x)
 
+theorem proj_rule
+  (i : ι)
+  : Differentiable R (fun x : (i : ι) → E i => x i):= 
+by 
+  apply DifferentiableAt.proj_rule
 
 
 end SciLean.Differentiable
@@ -154,6 +159,16 @@ def Differentiable.fpropExt : FPropExt where
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
+
+  projRule e :=
+    let thm : SimpTheorem :=
+    {
+      proof  := mkConst ``DifferentiableAt.proj_rule 
+      origin := .decl ``DifferentiableAt.proj_rule 
+      rfl    := false
+    }
+    FProp.tryTheorem? e thm (fun _ => pure none)
+
 
   discharger _ := return none
 

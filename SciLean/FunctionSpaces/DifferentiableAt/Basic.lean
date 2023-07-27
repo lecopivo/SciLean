@@ -9,6 +9,7 @@ import Mathlib.Analysis.Calculus.Deriv.Inv
 import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
 
+import SciLean.FunctionSpaces.ContinuousLinearMap.Notation
 
 namespace SciLean
 
@@ -63,6 +64,14 @@ theorem pi_rule
   (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt R (f i) x)
   : DifferentiableAt R (fun x i => f i x) x
   := by apply differentiableAt_pi.2 hf
+
+
+theorem proj_rule
+  (i : ι) (x)
+  : DifferentiableAt R (fun x : (i : ι) → E i => x i) x := 
+by 
+  apply IsBoundedLinearMap.differentiableAt
+  apply ContinuousLinearMap.isBoundedLinearMap (fun (x : (i : ι) → E i) =>L[R] x i)
 
 
 end SciLean.DifferentiableAt
@@ -158,6 +167,15 @@ def DifferentiableAt.fpropExt : FPropExt where
     {
       proof  := mkConst ``DifferentiableAt.pi_rule 
       origin := .decl ``DifferentiableAt.pi_rule 
+      rfl    := false
+    }
+    FProp.tryTheorem? e thm (fun _ => pure none)
+
+  projRule e :=
+    let thm : SimpTheorem :=
+    {
+      proof  := mkConst ``DifferentiableAt.proj_rule 
+      origin := .decl ``DifferentiableAt.proj_rule 
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)

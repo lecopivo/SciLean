@@ -28,6 +28,31 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
     
     return result?
 
+def applyBVarApp (e : Expr) : FPropM (Option Expr) := do
+  let .some (fpropName, ext, F) ← getFProp? e
+    | return none
+
+  let .lam n t (.app f x) bi := F
+    | trace[Meta.Tactic.fprop.step] "bvar app step can't handle functions like {← ppExpr F}"
+      return none
+
+  if x.hasLooseBVars then
+    trace[Meta.Tactic.fprop.step] "bvar app step can't handle functions like {← ppExpr F}"
+    return none
+
+  
+  if f == .bvar 0 then
+    ext.projRule e
+  else
+    let g := .lam n t f bi
+    let gType ← inferType g
+    let fType := gType.getForallBody
+    if fType.hasLooseBVars then
+      trace[Meta.Tactic.fprop.step] "bvar app step can't handle dependent functions of type {← ppExpr fType} appearing in {← ppExpr F}"
+      return none
+
+    let h := .lam n fType  ((Expr.bvar 0).app x) bi
+    ext.compRule e h g
 
 /-- Takes lambda function `fun x => b` and splits it into composition of two functions. 
 
@@ -163,6 +188,9 @@ mutual
       else if b.getAppFn.isFVar then
         trace[Meta.Tactic.fprop.step] "case fvar app\n{← ppExpr e}"
         applyFVarApp e ext.discharger
+      else if b.getAppFn.isBVar then
+        trace[Meta.Tactic.fprop.step] "case bvar app\n{← ppExpr e}"
+        applyBVarApp e
       else
         trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}\n"
         applyTheorems e (ext.discharger)
@@ -212,8 +240,7 @@ mutual
       if let some proof ← tryTheorem? e thm discharge? then
         return proof
 
-    return none -- ext.lambdaLetRule e
-    -- return none
+    return none 
 
   partial def synthesizeInstance (thmId : Origin) (x type : Expr) : MetaM Bool := do
     match (← trySynthInstance type) with

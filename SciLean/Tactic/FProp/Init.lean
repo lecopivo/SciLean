@@ -54,6 +54,8 @@ structure _root_.SciLean.FPropExt where
   identityRule     (expr : Expr) : FPropM (Option Expr)
   /-- Custom rule for proving property of `fun x => y -/
   constantRule     (expr : Expr) : FPropM (Option Expr)
+  /-- Custom rule for proving property of `fun x => x i -/
+  projRule          (expr : Expr) : FPropM (Option Expr)
   /-- Custom rule for proving property of `fun x => f (g x)` or `fun x => let y := g x; f y` -/
   compRule         (expr f g : Expr) : FPropM (Option Expr)
   /-- Custom rule for proving property of `fun x => let y := g x; f x y -/

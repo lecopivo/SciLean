@@ -103,10 +103,16 @@ theorem pi_rule
   (by simp)
 
 
+theorem proj_rule (i : ι)
+  : IsContinuousLinearMap R fun f : (i : ι) → E i => f i
+:= 
+  by_morphism (ContinuousLinearMap.proj i) (by simp)
+
+
 end SciLean.IsContinuousLinearMap
 
 --------------------------------------------------------------------------------
--- Register Diferentiable ------------------------------------------------------
+-- Register IsContinuousLinearMap ----------------------------------------------
 --------------------------------------------------------------------------------
 
 open Lean Meta SciLean FProp
@@ -193,6 +199,16 @@ def IsContinuousLinearMap.fpropExt : FPropExt where
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
+
+  projRule e :=
+    let thm : SimpTheorem :=
+    {
+      proof  := mkConst ``IsContinuousLinearMap.proj_rule 
+      origin := .decl ``IsContinuousLinearMap.proj_rule 
+      rfl    := false
+    }
+    FProp.tryTheorem? e thm (fun _ => pure none)
+
 
   discharger _ := return none
 
@@ -486,12 +502,16 @@ theorem HDiv.hDul.arg_a4.IsContinuousLinearMap_comp
 -- Finset.sum -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
-
 open BigOperators in
 @[fprop_rule]
 theorem Finset.sum.arg_f.IsContinuousLinearMap_comp
   (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
-  : IsContinuousLinearMap R fun x => ∑ i in A, f x i := sorry
+  : IsContinuousLinearMap R fun x => ∑ i in A, f x i := 
+{
+  map_add'  := sorry
+  map_smul' := sorry
+  cont := sorry
+}
 
 -- do we need this one?
 -- open BigOperators in
@@ -500,3 +520,28 @@ theorem Finset.sum.arg_f.IsContinuousLinearMap_comp
 --   (f : ι → X → Y) (hf : ∀ i, IsContinuousLinearMap R (f i)) (A : Finset ι)
 --   : IsContinuousLinearMap R fun (x : X) => ∑ i in A, f i x := sorry
 
+
+-- ite -------------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop_rule]
+theorem ite.arg_te.IsContinuousLinearMap_comp
+  (c : Prop) [dec : Decidable c]
+  (t e : X → Y) (ht : IsContinuousLinearMap R t) (he : IsContinuousLinearMap R e)
+  : IsContinuousLinearMap R fun x => ite c (t x) (e x) := 
+by
+  induction dec
+  case isTrue h  => simp[h]; fprop
+  case isFalse h => simp[h]; fprop
+
+
+@[fprop_rule]
+theorem dite.arg_te.IsContinuousLinearMap_comp
+  (c : Prop) [dec : Decidable c]
+  (t : c  → X → Y) (ht : ∀ p, IsContinuousLinearMap R (t p)) 
+  (e : ¬c → X → Y) (he : ∀ p, IsContinuousLinearMap R (e p))
+  : IsContinuousLinearMap R fun x => dite c (t · x) (e · x) := 
+by
+  induction dec
+  case isTrue h  => simp[h]; apply ht
+  case isFalse h => simp[h]; apply he
