@@ -119,13 +119,6 @@ def Continuous.fpropExt : FPropExt where
     mkAppM ``Continuous.comp_rule #[g,hg,f,hf]
 
   lambdaLetRule _ f g := do
-    -- let thm : SimpTheorem :=
-    -- {
-    --   proof  := mkConst ``Continuous.let_rule 
-    --   origin := .decl ``Continuous.let_rule 
-    --   rfl    := false
-    -- }
-    -- FProp.tryTheorem? e thm (fun _ => pure none)
 
     let HF ← mkAppM ``Continuous #[(← mkUncurryFun 2 f)]
     let .some hf ← FProp.fprop HF
