@@ -65,12 +65,13 @@ def fvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Ste
 
   let (g, h) ← splitLambdaToComp f
 
-  -- trivial case? 
-  if (← isDefEq g f ) then
+  -- we are agresive with transparency here as we want to deal with type synonyms
+  -- the motivation is to handle `ProdLp`
+  if (← withTransparency .all <| isDefEq g f) then
     trace[Meta.Tactic.ftrans.step] "trivial case fvar app, nothing to be done\n{← ppExpr e}"
     return none
   else
-    trace[Meta.Tactic.ftrans.step] "case fvar app\n{← ppExpr e}"
+    trace[Meta.Tactic.ftrans.step] "case fvar app\n{← ppExpr e}\n=\n{g}\n∘\n{h}"
     ext.compRule e g h
 
 
@@ -88,8 +89,11 @@ def bvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Ste
       return none
 
     if g == (.bvar 0) then
-      let Lean.Expr.forallE iName iType type bi ← whnf xType
-        | trace[Meta.Tactic.ftrans.step] "can't handle this bvar app case, unexpected function type {← ppExpr xType}"
+      -- aggressively reduce to see through any possible type synonyms
+      -- the motivation is to handle `PiLp`
+      let xType' ← reduce (skipTypes := false) (← withTransparency TransparencyMode.all <| whnf xType)
+      let Lean.Expr.forallE iName iType type bi := xType'
+        | trace[Meta.Tactic.ftrans.step] "can't handle this bvar app case, unexpected function type {← ppExpr xType'}"
           return none
       ext.projRule e (.lam iName iType type bi) x
     else

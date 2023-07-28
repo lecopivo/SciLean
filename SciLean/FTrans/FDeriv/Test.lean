@@ -9,6 +9,8 @@ variable {K : Type _} [NontriviallyNormedField K]
 variable {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
 variable {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
 variable {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
+variable {Y₁ : Type _} [NormedAddCommGroup Y₁] [NormedSpace K Y₁]
+variable {Y₂ : Type _} [NormedAddCommGroup Y₂] [NormedSpace K Y₂]
 variable {ι : Type _} [Fintype ι]
 variable {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
 
@@ -121,3 +123,7 @@ example
     fun _ => fun dx =>L[K] dx i := 
 by 
   ftrans only
+
+
+
+

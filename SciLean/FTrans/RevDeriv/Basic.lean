@@ -38,13 +38,34 @@ by
 
 
 
-theorem const_rule (x :X)
+theorem const_rule (x : X)
   : revDeriv K (fun _ : Y => x) = fun y => (x, fun _ => 0) :=
 by
   unfold revDeriv
   funext _
   ftrans; ftrans
   ext _; simp
+
+
+theorem proj_rule [DecidableEq ι] (i : ι)
+  : revDeriv K (fun (x : PiLp 2 (fun (_ : ι) => X)) => x i) 
+    = 
+    fun x => 
+      (x i, fun dxi j => if i=j then dxi else (0 : X)) :=
+by
+  unfold revDeriv
+  funext _
+  ftrans; ftrans
+  set_option trace.Meta.Tactic.ftrans.step true in
+  set_option trace.Meta.Tactic.ftrans.unify true in
+  set_option trace.Meta.Tactic.ftrans.discharge true in
+  set_option trace.Meta.Tactic.simp.unify true in
+  set_option trace.Meta.Tactic.simp.rewrite true in
+  set_option trace.Meta.Tactic.simp.discharge true in
+  set_option pp.funBinderTypes true in
+  ftrans
+  ext _; simp
+
 
 
 theorem comp_rule 
@@ -216,11 +237,77 @@ def revDeriv.ftransExt : FTransExt where
     else          
       e
 
-  identityRule     := .some <| .thm ``id_rule
-  constantRule     := .some <| .thm ``const_rule
-  compRule         := .some <| .thm ``comp_rule
-  lambdaLetRule    := .some <| .thm ``let_rule
-  lambdaLambdaRule := .some <| .thm ``pi_rule
+  idRule    := tryNamedTheorem ``id_rule discharger
+  constRule := tryNamedTheorem ``const_rule discharger
+  projRule  := tryNamedTheorem ``proj_rule discharger
+  compRule  e f g := do
+    let .some K := e.getArg? 0
+      | return none
+
+    let mut thrms : Array SimpTheorem := #[]
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``comp_rule #[K, f, g]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``comp_rule_at #[K, f, g]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
+
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
+
+  letRule e f g := do
+    let .some K := e.getArg? 0
+      | return none
+
+    let mut thrms : Array SimpTheorem := #[]
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``let_rule #[K, f, g]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``let_rule_at #[K, f, g]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
+
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
+
+  piRule  e f := do
+    let .some K := e.getArg? 0
+      | return none
+
+    let mut thrms : Array SimpTheorem := #[]
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``pi_rule #[K, f]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``pi_rule_at #[K, f]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
+
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
 
   discharger := revDeriv.discharger
 

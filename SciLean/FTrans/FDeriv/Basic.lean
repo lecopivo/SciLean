@@ -44,8 +44,7 @@ theorem fderiv.const_rule (x : X)
 variable {Y}
 
 variable (E)
-theorem fderiv.proj_rule
-  [DecidableEq ι] (i : ι)
+theorem fderiv.proj_rule (i : ι)
   : (fderiv K fun (x : (i : ι) → E i) => x i)
     =
     fun x => fun dx =>L[K] dx i := 
