@@ -39,10 +39,13 @@ theorem fderiv.const_rule (x : X)
   : (fderiv K fun _ : Y => x) = fun _ => fun dx =>L[K] 0
   := by ext x dx; simp
 
+
+variable (K)
+
+
 theorem fderiv.comp_rule_at
-  (x : X)
-  (g : X → Y) (hg : DifferentiableAt K g x)
-  (f : Y → Z) (hf : DifferentiableAt K f (g x))
+  (f : Y → Z) (g : X → Y) (x : X)
+  (hf : DifferentiableAt K f (g x)) (hg : DifferentiableAt K g x)
   : (fderiv K fun x : X => f (g x)) x
     =
     let y := g x
@@ -55,9 +58,10 @@ by
   rw[fderiv.comp x hf hg]
   ext dx; simp
 
+
 theorem fderiv.comp_rule
-  (g : X → Y) (hg : Differentiable K g)
-  (f : Y → Z) (hf : Differentiable K f)
+  (f : Y → Z) (g : X → Y) 
+  (hf : Differentiable K f) (hg : Differentiable K g)
   : (fderiv K fun x : X => f (g x))
     =
     fun x => 
@@ -74,9 +78,9 @@ by
 
 
 theorem fderiv.let_rule_at
-  (x : X)
-  (g : X → Y) (hg : DifferentiableAt K g x)
-  (f : X → Y → Z) (hf : DifferentiableAt K (fun xy : X×Y => f xy.1 xy.2) (x, g x))
+  (f : X → Y → Z) (g : X → Y) (x : X)
+  (hf : DifferentiableAt K (fun xy : X×Y => f xy.1 xy.2) (x, g x)) 
+  (hg : DifferentiableAt K g x)
   : (fderiv K
       fun x : X =>
         let y := g x
@@ -99,8 +103,8 @@ by
 
 
 theorem fderiv.let_rule
-  (g : X → Y) (hg : Differentiable K g)
-  (f : X → Y → Z) (hf : Differentiable K fun xy : X×Y => f xy.1 xy.2)
+  (f : X → Y → Z) (g : X → Y) 
+  (hf : Differentiable K fun xy : X×Y => f xy.1 xy.2) (hg : Differentiable K g)
   : (fderiv K fun x : X =>
        let y := g x
        f x y)
@@ -113,27 +117,27 @@ theorem fderiv.let_rule
         dz := 
 by
   funext x
-  apply fderiv.let_rule_at x _ (hg x) _ (hf (x,g x))
+  apply fderiv.let_rule_at _ _ _ x (hf (x,g x)) (hg x)
 
 
 theorem fderiv.pi_rule_at
-  (x : X)
-  (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt K (f i) x)
-  : (fderiv K fun (x : X) (i : ι) => f i x) x
+  (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f · i) x)
+  : (fderiv K fun (x : X) (i : ι) => f x i) x
     = 
     fun dx =>L[K] fun i =>
-      fderiv K (f i) x dx
+      fderiv K (f · i) x dx
   := fderiv_pi hf
 
 
 theorem fderiv.pi_rule
-  (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable K (f i))
-  : (fderiv K fun (x : X) (i : ι) => f i x)
+  (f : X → (i : ι) → E i) (hf : ∀ i, Differentiable K (f · i))
+  : (fderiv K fun (x : X) (i : ι) => f x i)
     = 
     fun x => fun dx =>L[K] fun i =>
-      fderiv K (f i) x dx
+      fderiv K (f · i) x dx
   := by funext x; apply fderiv_pi (fun i => hf i x)
 
+variable {K}
 
 theorem fderiv.proj_rule
   [DecidableEq ι] (i : ι)
@@ -185,11 +189,77 @@ def fderiv.ftransExt : FTransExt where
     else          
       e
 
-  identityRule     := .some <| .thm ``fderiv.id_rule
-  constantRule     := .some <| .thm ``fderiv.const_rule
-  compRule         := .some <| .thm ``fderiv.comp_rule
-  lambdaLetRule    := .some <| .thm ``fderiv.let_rule
-  lambdaLambdaRule := .some <| .thm ``fderiv.pi_rule
+  idRule    := tryNamedTheorem ``fderiv.id_rule fderiv.discharger
+  constRule := tryNamedTheorem ``fderiv.const_rule fderiv.discharger
+  projRule  := tryNamedTheorem ``fderiv.proj_rule fderiv.discharger
+  compRule  e f g := do
+    let .some K := e.getArg? 0
+      | return none
+
+    let mut thrms : Array SimpTheorem := #[]
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``fderiv.comp_rule #[K, f, g]
+      origin := .decl ``fderiv.comp_rule
+      rfl := false
+    }
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``fderiv.comp_rule_at #[K, f, g]
+      origin := .decl ``fderiv.comp_rule
+      rfl := false
+    }
+
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
+
+  letRule e f g := do
+    let .some K := e.getArg? 0
+      | return none
+
+    let mut thrms : Array SimpTheorem := #[]
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``fderiv.let_rule #[K, f, g]
+      origin := .decl ``fderiv.comp_rule
+      rfl := false
+    }
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``fderiv.let_rule_at #[K, f, g]
+      origin := .decl ``fderiv.comp_rule
+      rfl := false
+    }
+
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
+
+  piRule  e f := do
+    let .some K := e.getArg? 0
+      | return none
+
+    let mut thrms : Array SimpTheorem := #[]
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``fderiv.pi_rule #[K, f]
+      origin := .decl ``fderiv.comp_rule
+      rfl := false
+    }
+
+    thrms := thrms.push {
+      proof := ← mkAppM ``fderiv.pi_rule_at #[K, f]
+      origin := .decl ``fderiv.comp_rule
+      rfl := false
+    }
+
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
 
   discharger := fderiv.discharger
 

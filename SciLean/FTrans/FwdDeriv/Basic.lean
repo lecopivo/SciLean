@@ -176,13 +176,84 @@ def fwdDeriv.ftransExt : FTransExt where
     else          
       e
 
-  identityRule     := .some <| .thm ``id_rule
-  constantRule     := .some <| .thm ``const_rule
-  compRule         := .some <| .thm ``comp_rule
-  lambdaLetRule    := .some <| .thm ``let_rule
-  lambdaLambdaRule := .some <| .thm ``pi_rule
+  idRule    := tryNamedTheorem ``fderiv.id_rule fderiv.discharger
+  constRule := tryNamedTheorem ``fderiv.const_rule fderiv.discharger
+  projRule  := tryNamedTheorem ``fderiv.proj_rule fderiv.discharger
+  compRule  e f g := do
 
-  discharger := fwdDeriv.discharger
+    let (args, bis, type) ← 
+      forallMetaTelescope (← inferType (← mkConstWithLevelParams ``fderiv.comp_rule))
+
+    let gf := args[11]!
+    let Hg := args[12]!
+    let mf := args[13]!
+    let Hf := args[14]!
+
+    mf.mvarId!.assign f
+    gf.mvarId!.assign g
+
+    let lhs := type.appFn!.appArg!
+    let rhs := type.appArg!
+
+    if ¬(← isDefEq e lhs) then
+      trace[Meta.Tactic.ftrans.unify] "{``fderiv.comp_rule}, failed to unify\n{lhs}\nwith\n{e}"
+      return none
+    else
+      
+      let .some hf ← fderiv.discharger Hf
+        | trace[Meta.Tactic.fprop.discharge] "{``fderiv.comp_rule},, failed to discharge hypotheses {Hf}"
+          return none
+
+      let .some hg ← fderiv.discharger Hg
+        | trace[Meta.Tactic.fprop.discharge] "{``fderiv.comp_rule},, failed to discharge hypotheses {Hg}"
+          return none
+
+      let proof ← mkAppM ``fderiv.comp_rule #[g, hg, f, hf]
+      
+      return .some (.visit { expr := (← instantiateMVars rhs), proof? := proof})
+
+  letRule e f g := do
+
+    let (args, bis, type) ← 
+      forallMetaTelescope (← inferType (← mkConstWithLevelParams ``fderiv.let_rule))
+
+    let gf := args[11]!
+    let Hg := args[12]!
+    let mf := args[13]!
+    let Hf := args[14]!
+
+    mf.mvarId!.assign f
+    gf.mvarId!.assign g
+
+    let lhs := type.appFn!.appArg!
+    let rhs := type.appArg!
+
+    if ¬(← isDefEq e lhs) then
+      trace[Meta.Tactic.ftrans.unify] "{``fderiv.let_rule}, failed to unify\n{lhs}\nwith\n{e}"
+      return none
+    else
+      
+      let .some hf ← fderiv.discharger Hf
+        | trace[Meta.Tactic.fprop.discharge] "{``fderiv.let_rule},, failed to discharge hypotheses {Hf}"
+          return none
+
+      let .some hg ← fderiv.discharger Hg
+        | trace[Meta.Tactic.fprop.discharge] "{``fderiv.let_rule},, failed to discharge hypotheses {Hg}"
+          return none
+
+      let proof ← mkAppM ``fderiv.let_rule #[g, hg, f, hf]
+      
+      return .some (.visit { expr := (← instantiateMVars rhs), proof? := proof})
+
+  piRule  e f := tryNamedTheorem ``fderiv.pi_rule fderiv.discharger e
+
+  discharger := fderiv.discharger
+  -- identityRule     := .some <| .thm ``id_rule
+  -- constantRule     := .some <| .thm ``const_rule
+  -- compRule         := .some <| .thm ``comp_rule
+  -- lambdaLetRule    := .some <| .thm ``let_rule
+  -- lambdaLambdaRule := .some <| .thm ``pi_rule
+
 
 
 -- register fderiv

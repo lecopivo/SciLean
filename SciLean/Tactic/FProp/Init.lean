@@ -50,17 +50,17 @@ structure _root_.SciLean.FPropExt where
   getFPropFun?     (expr : Expr) : Option Expr
   /-- Replace the function -/
   replaceFPropFun  (expr : Expr) (newFun : Expr) : Expr
-  /-- Custom rule for proving property of `fun x => x -/
+  /-- Custom rule for proving property of `fun x => x` -/
   identityRule     (expr : Expr) : FPropM (Option Expr)
-  /-- Custom rule for proving property of `fun x => y -/
+  /-- Custom rule for proving property of `fun x => y` -/
   constantRule     (expr : Expr) : FPropM (Option Expr)
-  /-- Custom rule for proving property of `fun x => x i -/
+  /-- Custom rule for proving property of `fun x => x i` -/
   projRule          (expr : Expr) : FPropM (Option Expr)
   /-- Custom rule for proving property of `fun x => f (g x)` or `fun x => let y := g x; f y` -/
   compRule         (expr f g : Expr) : FPropM (Option Expr)
-  /-- Custom rule for proving property of `fun x => let y := g x; f x y -/
+  /-- Custom rule for proving property of `fun x => let y := g x; f x y` -/
   lambdaLetRule    (expr f g : Expr) : FPropM (Option Expr)
-  /-- Custom rule for proving property of `fun x y => f x y -/
+  /-- Custom rule for proving property of `fun x y => f y x` -/
   lambdaLambdaRule (expr f : Expr) : FPropM (Option Expr)
   /-- Custom discharger for this function property - like proving (x≠0) -/
   discharger       : Expr → FPropM (Option Expr)

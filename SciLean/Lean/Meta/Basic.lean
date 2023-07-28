@@ -163,6 +163,51 @@ def mkUncurryFun (n : Nat) (f : Expr) : MetaM Expr := do
       mkLambdaFVars #[xProd] (← mkAppM' f xs').headBeta
 
 
+/-- Takes lambda function `fun x => b` and splits it into composition of two functions. 
+
+  Example:
+    fun x => f (g x)      ==>   f ∘ g 
+    fun x => f x + c      ==>   (fun y => y + c) ∘ f
+    fun x => f x + g x    ==>   (fun (y₁,y₂) => y₁ + y₂) ∘ (fun x => (f x, g x))
+ -/
+def splitLambdaToComp (e : Expr) : MetaM (Expr × Expr) := do
+  match e with 
+  | .lam name type b bi => 
+    withLocalDecl name bi type fun x => do
+      let b := b.instantiate1 x
+      let xId := x.fvarId!
+
+      let ys := b.getAppArgs
+      let mut f := b.getAppFn
+
+      let mut lctx ← getLCtx
+      let instances ← getLocalInstances
+
+      let mut ys' : Array Expr := #[]
+      let mut zs  : Array Expr := #[]
+
+      for y in ys, i in [0:ys.size] do
+        if y.containsFVar xId then
+          let zId ← withLCtx lctx instances mkFreshFVarId
+          lctx := lctx.mkLocalDecl zId (name.appendAfter (toString i)) (← inferType y)
+          let z := Expr.fvar zId
+          zs  := zs.push z
+          ys' := ys'.push y
+          f := f.app z
+        else
+          f := f.app y
+
+      let y' ← mkProdElem ys'
+      let g  ← mkLambdaFVars #[.fvar xId] y'
+
+      f ← withLCtx lctx instances (mkLambdaFVars zs f)
+      f ← mkUncurryFun zs.size f
+
+      return (f, g)
+    
+  | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
+
+
 @[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]
   (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α) 
   {α} (k : β → γ → δ → m α) : m α :=

@@ -37,13 +37,23 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
     return result?
 
 
+def tryNamedTheorem (thrm : Name) (discharger : Expr → SimpM (Option Expr)) (e : Expr) : SimpM (Option Simp.Step) := do
+
+  let thm : SimpTheorem := {
+    proof := mkConst thrm
+    origin := .decl thrm
+    rfl := false
+  }
+
+  let .some result ← Meta.Simp.tryTheorem? e thm discharger
+    | return none
+  return .some (.visit result)
+
+
 /--
   Apply simp theorems marked with `ftrans`
 -/
-def applyTheorems (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option Simp.Step) := do
-
-  let .some (ftransName, _, f) ← getFTrans? e
-    | return none
+def applyTheorems (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Step) := do
 
   let .some funName ← getFunHeadConst? f
     | return none
@@ -51,10 +61,55 @@ def applyTheorems (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM
   let candidates ← FTrans.getFTransRules funName ftransName
 
   for thm in candidates do
-    if let some result ← Meta.Simp.tryTheorem? e thm discharge? then
+    if let some result ← Meta.Simp.tryTheorem? e thm ext.discharger then
       return Simp.Step.visit result
-  return Simp.Step.visit { expr := e }
+  return none
+
+
+/-- Function transformation of `fun x => g x₁ ... xₙ` where `g` is a free variable
   
+  Arguments `ext, f` are assumed to be the result of `getFTrans? e`
+  -/
+def fvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Step) := do
+
+  let (g, h) ← splitLambdaToComp f
+
+  -- trivial case? 
+  if (← isDefEq g f ) then
+    trace[Meta.Tactic.ftrans.step] "trivial case fvar app, nothing to be done\n{← ppExpr e}"
+    return none
+  else
+    trace[Meta.Tactic.ftrans.step] "case fvar app\n{← ppExpr e}"
+    ext.compRule e g h
+
+
+/-- Function transformation of `fun x => g x₁ ... xₙ` where `g` is a bound variable
+  
+  Arguments `ext, f` are assumed to be the result of `getFTrans? e`
+  -/
+def bvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Step) := do
+
+  match f with
+
+  | .lam xName xType (.app g x) bi =>
+    if x.hasLooseBVars then
+      trace[Meta.Tactic.ftrans.step] "can't handle this bvar app case, unexpected dependency in argument {← ppExpr (.lam xName xType x bi)}"
+      return none
+
+    if g == (.bvar 0) then
+      ext.projRule e
+    else
+      let gType := (← inferType (.lam xName xType g bi)).getForallBody
+      if gType.hasLooseBVars then
+        trace[Meta.Tactic.ftrans.step] "can't handle this bvar app case, unexpected dependency in type of {← ppExpr (.lam xName xType g bi)}"
+        return none
+
+      let h₁ := Expr.lam (xName.appendAfter "'") gType ((Expr.bvar 0).app x) bi
+      let h₂ := Expr.lam xName xType g bi 
+      ext.compRule e h₁ h₂
+
+  | _ => return none
+
 
 /-- Try to apply function transformation to `e`. Returns `none` if expression is not a function transformation applied to a function.
   -/
@@ -63,24 +118,61 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
   let .some (ftransName, ext, f) ← getFTrans? e
     | return none
 
-  trace[Meta.Tactic.ftrans.step] "{ftransName}\n{← ppExpr e}"
 
   match f with
   | .letE .. => letTelescope f λ xs b => do
-    -- swap all let bindings and the function transformation
+    trace[Meta.Tactic.ftrans.step] "case let\n{← ppExpr e}"
     let e' ← mkLetFVars xs (ext.replaceFTransFun e b)
     return .some (.visit { expr := e' })
 
-  | .lam _ _ (.bvar  0) _ => ext.applyIdentityRule e
-  | .lam _ _ (.letE ..) _ => ext.applyLambdaLetRule e
-  | .lam _ _ (.lam  ..) _ => ext.applyLambdaLambdaRule e
+  | .lam _ _ (.bvar  0) _ => 
+    trace[Meta.Tactic.ftrans.step] "case id\n{← ppExpr e}"
+    ext.idRule e
+
+  | .lam xName xType (.letE yName yType yValue body _) xBi => 
+      -- quite often the type looks like `(fun _ => X) x` as residue from `FunLike.coe`
+      -- thus we do beta reduction
+      let yType := yType.headBeta
+      match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
+      | true, true =>
+        trace[Meta.Tactic.ftrans.step] "case let\n{← ppExpr e}"
+        let f := Expr.lam xName xType (.lam yName yType body default) xBi
+        let g := Expr.lam xName xType yValue default
+        ext.letRule e f g
+
+      | true, false => 
+        trace[Meta.Tactic.ftrans.step] "case comp\n{← ppExpr e}"
+        if (yType.hasLooseBVar 0) then
+          trace[Meta.Tactic.ftrans.step] "can't handle dependent type {← ppExpr (Expr.forallE xName xType yType default)}"
+          return none
+
+        let f := Expr.lam yName yType body default
+        let g := Expr.lam xName xType yValue default
+        ext.compRule e f g
+
+      | false, _ => 
+        let f := Expr.lam xName xType (body.lowerLooseBVars 1 1) xBi
+        return .some (.visit { expr := ext.replaceFTransFun e f })
+
+  | .lam _ _ (.lam  ..) _ => 
+    trace[Meta.Tactic.ftrans.step] "case pi\n{← ppExpr e}"
+    ext.piRule e f
+
   | .lam _ _ b _ => do
     if !(b.hasLooseBVar 0) then
-      ext.applyConstantRule e
+      trace[Meta.Tactic.ftrans.step] "case const\n{← ppExpr e}"
+      ext.constRule e
+    else if b.getAppFn.isFVar then
+      fvarAppStep e ext f
+    else if b.getAppFn.isBVar then
+      trace[Meta.Tactic.ftrans.step] "case bvar app\n{← ppExpr e}"
+      bvarAppStep e ext f
     else
-      applyTheorems e (ext.discharger ·)
+      trace[Meta.Tactic.ftrans.step] "case theorems\n{← ppExpr e}\n"
+      applyTheorems e ftransName ext f
+
   | _ => do
-    applyTheorems e (ext.discharger ·)
+    applyTheorems e ftransName ext f
 
 
 def tryFTrans? (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (post := false) : SimpM (Option Simp.Step) := do

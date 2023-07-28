@@ -36,31 +36,6 @@ macro "ftrans" : attr => `(attr| ftrans_simp ↓)
 open Meta Simp
 
 
--- TODO: Move RewriteRule to a new file and add a custom version `tryTheorem?` with proper tracing
-
-/-- Rewrite rule can be either provided as a theorem or as a meta program
--/
-inductive RewriteRule where
-  | thm  (name : Name) 
-  | eval (f : Expr → MetaM (Option Result))
-deriving Inhabited
-
-
-def RewriteRule.apply (r : RewriteRule) (discharger : Expr → SimpM (Option Expr)) (e : Expr) : SimpM (Option Result) := 
-  match r with
-  | eval f => f e
-  | thm name => do
-
-    let thm : SimpTheorem := {
-      proof := mkConst name
-      origin := .decl name
-      rfl := false
-    }
-
-    let .some result ← Meta.Simp.tryTheorem? e thm discharger
-      | return none
-    return result
-
 
 structure FTransExt where
   /-- Function transformation name -/
@@ -69,66 +44,23 @@ structure FTransExt where
   getFTransFun?    (expr : Expr) : Option Expr
   /-- Replace function being transformed in function transformation expression -/
   replaceFTransFun (expr : Expr) (newFun : Expr) : Expr
-  /-- Custom rule for transforming `fun x => x -/
-  identityRule     : Option RewriteRule
-  /-- Custom rule for transforming `fun x => y -/
-  constantRule    : Option RewriteRule
-  /-- Custom rule for transforming `fun x => f (g x)` or `fun x => let y := g x; f y -/
-  compRule    : Option RewriteRule
-  /-- Custom rule for transforming `fun x => let y := g x; f x y -/
-  lambdaLetRule    : Option RewriteRule
-  /-- Custom rule for transforming `fun x y => f x y -/
-  lambdaLambdaRule : Option RewriteRule
+  /-- Custom rule for transforming `fun x => x` -/
+  idRule      (expr : Expr) : SimpM (Option Simp.Step)
+  /-- Custom rule for transforming `fun x => y` -/
+  constRule   (expr : Expr) : SimpM (Option Simp.Step)
+  /-- Custom rule for transforming `fun x => x i` -/
+  projRule    (expr : Expr) : SimpM (Option Simp.Step)
+  /-- Custom rule for transforming `fun x => f (g x)` or `fun x => let y := g x; f y` -/
+  compRule    (expr f g : Expr) : SimpM (Option Simp.Step)
+  /-- Custom rule for transforming `fun x => let y := g x; f x y` -/
+  letRule     (expr f g : Expr) : SimpM (Option Simp.Step)
+  /-- Custom rule for transforming `fun x y => f x y` -/
+  piRule      (expr f : Expr) : SimpM (Option Simp.Step)
   /-- Custom discharger for this function transformation -/
   discharger       : Expr → SimpM (Option Expr)
   /-- Name of this extension, keep the default value! -/
   name : Name := by exact decl_name%
 deriving Inhabited
-
-
-def FTransExt.applyLambdaLetRule (ext : FTransExt) (e : Expr) : SimpM Step := do
-  let .some r := ext.lambdaLetRule 
-    | trace[Meta.Tactic.ftrans.missing_rule] "Missing lambda-let rule a rule for `{ext.ftransName}`"
-      return .visit { expr := e }
-
-  if let .some r ← r.apply (ext.discharger ·) e then
-    return .visit r
-  else
-    trace[Meta.Tactic.ftrans.discharge] "Failed applying lambda-let rule to `{← ppExpr e}"
-    return .visit { expr := e }
-
-def FTransExt.applyLambdaLambdaRule (ext : FTransExt) (e : Expr) : SimpM Step := do
-  let .some r := ext.lambdaLambdaRule 
-    | trace[Meta.Tactic.ftrans.missing_rule] "Missing lambda-lambda rule a rule for `{ext.ftransName}`"
-      return .visit { expr := e }
-
-  if let .some r ← r.apply (ext.discharger ·) e then
-    return .visit r
-  else
-    trace[Meta.Tactic.ftrans.discharge] "Failed applying lambda-lambda rule to `{← ppExpr e}"
-    return .visit { expr := e }
-
-def FTransExt.applyIdentityRule (ext : FTransExt) (e : Expr) : SimpM Step := do
-  let .some r := ext.identityRule 
-    | trace[Meta.Tactic.ftrans.missing_rule] "Missing identity rule a rule for `{ext.ftransName}`"
-      return .visit { expr := e }
-
-  if let .some r ← r.apply (ext.discharger ·) e then
-    return .visit r
-  else
-    trace[Meta.Tactic.ftrans.discharge] "Failed applying identity rule to `{← ppExpr e}"
-    return .visit { expr := e }
-
-def FTransExt.applyConstantRule (ext : FTransExt) (e : Expr) : SimpM Step := do
-  let .some r := ext.constantRule 
-    | trace[Meta.Tactic.ftrans.missing_rule] "Missing constant rule a rule for `{ext.ftransName}`"
-      return .visit { expr := e }
-
-  if let .some r ← r.apply (ext.discharger ·) e then
-    return .visit r
-  else
-    trace[Meta.Tactic.ftrans.discharge] "Failed applying constant rule to `{← ppExpr e}"
-    return .visit { expr := e }
 
 
 def mkFTransExt (n : Name) : ImportM FTransExt := do
