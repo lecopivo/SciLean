@@ -44,12 +44,12 @@ structure FTransExt where
   getFTransFun?    (expr : Expr) : Option Expr
   /-- Replace function being transformed in function transformation expression -/
   replaceFTransFun (expr : Expr) (newFun : Expr) : Expr
-  /-- Custom rule for transforming `fun x => x` -/
-  idRule      (expr : Expr) : SimpM (Option Simp.Step)
-  /-- Custom rule for transforming `fun x => y` -/
-  constRule   (expr : Expr) : SimpM (Option Simp.Step)
-  /-- Custom rule for transforming `fun x => x i` -/
-  projRule    (expr : Expr) : SimpM (Option Simp.Step)
+  /-- Custom rule for transforming `fun (x : X) => x` -/
+  idRule      (expr X : Expr) : SimpM (Option Simp.Step)
+  /-- Custom rule for transforming `fun (x : X)  => y` -/
+  constRule   (expr X y : Expr) : SimpM (Option Simp.Step)
+  /-- Custom rule for transforming `fun (x : (i' : ι) → X i') => x i` -/
+  projRule    (expr X i : Expr) : SimpM (Option Simp.Step)
   /-- Custom rule for transforming `fun x => f (g x)` or `fun x => let y := g x; f y` -/
   compRule    (expr f g : Expr) : SimpM (Option Simp.Step)
   /-- Custom rule for transforming `fun x => let y := g x; f x y` -/

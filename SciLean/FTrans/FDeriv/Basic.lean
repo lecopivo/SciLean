@@ -30,15 +30,20 @@ variable
 
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
-
+variable (K)
+variable (X)
 theorem fderiv.id_rule 
   : (fderiv K fun x : X => x) = fun _ => fun dx =>L[K] dx
   := by ext x dx; simp
+variable {X}
 
+variable (Y)
 theorem fderiv.const_rule (x : X)
   : (fderiv K fun _ : Y => x) = fun _ => fun dx =>L[K] 0
   := by ext x dx; simp
+variable {Y}
 
+variable (E)
 theorem fderiv.proj_rule
   [DecidableEq ι] (i : ι)
   : (fderiv K fun (x : (i : ι) → E i) => x i)
@@ -46,9 +51,7 @@ theorem fderiv.proj_rule
     fun x => fun dx =>L[K] dx i := 
 by 
   funext x; sorry
-
-
-variable (K)
+variable {E}
 
 
 theorem fderiv.comp_rule_at
@@ -189,77 +192,44 @@ def fderiv.ftransExt : FTransExt where
     else          
       e
 
-  idRule    := tryNamedTheorem ``fderiv.id_rule fderiv.discharger
-  constRule := tryNamedTheorem ``fderiv.const_rule fderiv.discharger
-  projRule  := tryNamedTheorem ``fderiv.proj_rule fderiv.discharger
-  compRule  e f g := do
-    let .some K := e.getArg? 0
-      | return none
+  idRule  e X := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``id_rule #[K, X], origin := .decl ``id_rule, rfl := false} ]
+      discharger e
 
-    let mut thrms : Array SimpTheorem := #[]
+  constRule e X y := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``const_rule #[K, X, y], origin := .decl ``const_rule, rfl := false} ]
+      discharger e
 
-    thrms := thrms.push {
-      proof := ← mkAppM ``fderiv.comp_rule #[K, f, g]
-      origin := .decl ``fderiv.comp_rule
-      rfl := false
-    }
+  projRule e X i := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``proj_rule #[K, X, i], origin := .decl ``proj_rule, rfl := false} ]
+      discharger e
 
-    thrms := thrms.push {
-      proof := ← mkAppM ``fderiv.comp_rule_at #[K, f, g]
-      origin := .decl ``fderiv.comp_rule
-      rfl := false
-    }
-
-    for thm in thrms do
-      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
-        return Simp.Step.visit result
-    return none
+  compRule e f g := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false},
+         { proof := ← mkAppM ``comp_rule_at #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
+      discharger e
 
   letRule e f g := do
-    let .some K := e.getArg? 0
-      | return none
-
-    let mut thrms : Array SimpTheorem := #[]
-
-    thrms := thrms.push {
-      proof := ← mkAppM ``fderiv.let_rule #[K, f, g]
-      origin := .decl ``fderiv.comp_rule
-      rfl := false
-    }
-
-    thrms := thrms.push {
-      proof := ← mkAppM ``fderiv.let_rule_at #[K, f, g]
-      origin := .decl ``fderiv.comp_rule
-      rfl := false
-    }
-
-    for thm in thrms do
-      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
-        return Simp.Step.visit result
-    return none
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false},
+         { proof := ← mkAppM ``let_rule_at #[K, f, g], origin := .decl ``let_rule, rfl := false} ]
+      discharger e
 
   piRule  e f := do
-    let .some K := e.getArg? 0
-      | return none
-
-    let mut thrms : Array SimpTheorem := #[]
-
-    thrms := thrms.push {
-      proof := ← mkAppM ``fderiv.pi_rule #[K, f]
-      origin := .decl ``fderiv.comp_rule
-      rfl := false
-    }
-
-    thrms := thrms.push {
-      proof := ← mkAppM ``fderiv.pi_rule_at #[K, f]
-      origin := .decl ``fderiv.comp_rule
-      rfl := false
-    }
-
-    for thm in thrms do
-      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
-        return Simp.Step.visit result
-    return none
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``pi_rule #[K, f], origin := .decl ``pi_rule, rfl := false},
+         { proof := ← mkAppM ``pi_rule_at #[K, f], origin := .decl ``pi_rule, rfl := false} ]
+      discharger e
 
   discharger := fderiv.discharger
 

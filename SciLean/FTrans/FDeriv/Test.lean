@@ -3,8 +3,6 @@ import SciLean.Profile
 
 open SciLean
 
-#profile_this_file
-
 set_option profiler true
 
 variable {K : Type _} [NontriviallyNormedField K]

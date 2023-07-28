@@ -37,18 +37,12 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
     return result?
 
 
-def tryNamedTheorem (thrm : Name) (discharger : Expr → SimpM (Option Expr)) (e : Expr) : SimpM (Option Simp.Step) := do
+def tryTheorems (thrms : Array SimpTheorem) (discharger : Expr → SimpM (Option Expr)) (e : Expr) : SimpM (Option Simp.Step) := do
 
-  let thm : SimpTheorem := {
-    proof := mkConst thrm
-    origin := .decl thrm
-    rfl := false
-  }
-
-  let .some result ← Meta.Simp.tryTheorem? e thm discharger
-    | return none
-  return .some (.visit result)
-
+  for thm in thrms do
+    if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+      return Simp.Step.visit result
+  return none
 
 /--
   Apply simp theorems marked with `ftrans`
@@ -60,10 +54,7 @@ def applyTheorems (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : 
 
   let candidates ← FTrans.getFTransRules funName ftransName
 
-  for thm in candidates do
-    if let some result ← Meta.Simp.tryTheorem? e thm ext.discharger then
-      return Simp.Step.visit result
-  return none
+  tryTheorems candidates ext.discharger e
 
 
 /-- Function transformation of `fun x => g x₁ ... xₙ` where `g` is a free variable
@@ -97,7 +88,10 @@ def bvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Ste
       return none
 
     if g == (.bvar 0) then
-      ext.projRule e
+      let Lean.Expr.forallE iName iType type bi ← whnf xType
+        | trace[Meta.Tactic.ftrans.step] "can't handle this bvar app case, unexpected function type {← ppExpr xType}"
+          return none
+      ext.projRule e (.lam iName iType type bi) x
     else
       let gType := (← inferType (.lam xName xType g bi)).getForallBody
       if gType.hasLooseBVars then
@@ -125,9 +119,9 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
     let e' ← mkLetFVars xs (ext.replaceFTransFun e b)
     return .some (.visit { expr := e' })
 
-  | .lam _ _ (.bvar  0) _ => 
+  | .lam _ xType (.bvar  0) _ => 
     trace[Meta.Tactic.ftrans.step] "case id\n{← ppExpr e}"
-    ext.idRule e
+    ext.idRule e xType 
 
   | .lam xName xType (.letE yName yType yValue body _) xBi => 
       -- quite often the type looks like `(fun _ => X) x` as residue from `FunLike.coe`
@@ -158,10 +152,10 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
     trace[Meta.Tactic.ftrans.step] "case pi\n{← ppExpr e}"
     ext.piRule e f
 
-  | .lam _ _ b _ => do
+  | .lam _ xType b _ => do
     if !(b.hasLooseBVar 0) then
       trace[Meta.Tactic.ftrans.step] "case const\n{← ppExpr e}"
-      ext.constRule e
+      ext.constRule e xType b
     else if b.getAppFn.isFVar then
       fvarAppStep e ext f
     else if b.getAppFn.isBVar then
