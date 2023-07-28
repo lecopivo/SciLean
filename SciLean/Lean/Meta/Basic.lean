@@ -116,6 +116,9 @@ For `#[x₁, .., xₙ]` create `(x₁, .., xₙ)`.
 -/
 def mkProdElem (xs : Array Expr) (mk := ``Prod.mk) : MetaM Expr := mkAppFoldrM mk xs
 
+def mkProdFst (x : Expr) : MetaM Expr := mkAppM ``Prod.fst #[x]
+def mkProdSnd (x : Expr) : MetaM Expr := mkAppM ``Prod.snd #[x]
+
 /--
 For `(x₀, .., xₙ₋₁)` return `xᵢ` but as a product projection.
 
