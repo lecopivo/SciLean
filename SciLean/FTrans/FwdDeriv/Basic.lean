@@ -29,21 +29,26 @@ variable
 theorem id_rule 
   : fwdDeriv K (fun x : X => x) = fun x dx => (x,dx) :=
 by
-  unfold fwdDeriv
-  simp
+  unfold fwdDeriv; ftrans
 
 
-theorem const_rule (x :X)
+theorem const_rule (x : X)
   : fwdDeriv K (fun _ : Y => x) = fun y dy => (x, 0) :=
 by
-  unfold fwdDeriv
-  funext y dy
-  simp
+  unfold fwdDeriv; ftrans
 
+
+theorem proj_rule [DecidableEq ι] (i : ι)
+  : fwdDeriv K (fun (x : (i : ι) → E i) => x i) = fun x dx => (x i, dx i) :=
+by
+  unfold fwdDeriv; ftrans
+
+
+variable (K)
 
 theorem comp_rule 
-  (g : X → Y) (hg : Differentiable K g)
-  (f : Y → Z) (hf : Differentiable K f)
+  (f : Y → Z) (g : X → Y) 
+  (hf : Differentiable K f) (hg : Differentiable K g)
   : fwdDeriv K (fun x : X => f (g x)) 
     = 
     fun x dx => 
@@ -51,15 +56,12 @@ theorem comp_rule
       let zdz := fwdDeriv K f ydy.1 ydy.2 
       zdz :=
 by
-  unfold fwdDeriv
-  funext x dx; congr
-  rw[fderiv.comp_rule g hg f hf]
-  simp
+  unfold fwdDeriv; ftrans
 
 
 theorem let_rule 
-  (g : X → Y) (hg : Differentiable K g)
-  (f : X → Y → Z) (hf : Differentiable K (fun (xy : X×Y) => f xy.1 xy.2))
+  (f : X → Y → Z) (g : X → Y)
+  (hf : Differentiable K (fun (xy : X×Y) => f xy.1 xy.2)) (hg : Differentiable K g)
   : fwdDeriv K (fun x : X => let y := g x; f x y) 
     = 
     fun x dx => 
@@ -67,28 +69,22 @@ theorem let_rule
       let zdz := fwdDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
       zdz :=
 by
-  unfold fwdDeriv
-  funext x dx;
-  rw[fderiv.let_rule g hg f hf]
-  simp
+  unfold fwdDeriv; ftrans
 
 
 theorem pi_rule
-  (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable K (f i))
-  : (fwdDeriv K fun (x : X) (i : ι) => f i x)
+  (f : X → (i : ι) → E i) (hf : ∀ i, Differentiable K (f · i))
+  : (fwdDeriv K fun (x : X) (i : ι) => f x i)
     = 
     fun x dx =>
-      (fun i => f i x, fun i => (fwdDeriv K (f i) x dx).2) := 
+      (fun i => f x i, fun i => (fwdDeriv K (f · i) x dx).2) := 
 by 
-  unfold fwdDeriv
-  funext x; rw[fderiv_pi (fun i => hf i x)]
-  simp
+  unfold fwdDeriv; ftrans
 
 
 theorem comp_rule_at
-  (x : X)
-  (g : X → Y) (hg : DifferentiableAt K g x)
-  (f : Y → Z) (hf : DifferentiableAt K f (g x))
+  (f : Y → Z) (g : X → Y) (x : X)
+  (hf : DifferentiableAt K f (g x)) (hg : DifferentiableAt K g x)
   : fwdDeriv K (fun x : X => f (g x)) x
     = 
     fun dx => 
@@ -96,16 +92,12 @@ theorem comp_rule_at
       let zdz := fwdDeriv K f ydy.1 ydy.2 
       zdz :=
 by
-  unfold fwdDeriv
-  funext dx; congr
-  rw[fderiv.comp_rule_at x g hg f hf]
-  simp
+  unfold fwdDeriv; ftrans
 
 
 theorem let_rule_at
-  (x : X)
-  (g : X → Y) (hg : DifferentiableAt K g x)
-  (f : X → Y → Z) (hf : DifferentiableAt K (fun (xy : X×Y) => f xy.1 xy.2) (x, g x))
+  (f : X → Y → Z) (g : X → Y) (x : X)  
+  (hf : DifferentiableAt K (fun (xy : X×Y) => f xy.1 xy.2) (x, g x)) (hg : DifferentiableAt K g x)
   : fwdDeriv K (fun x : X => let y := g x; f x y) x
     = 
     fun dx => 
@@ -113,34 +105,26 @@ theorem let_rule_at
       let zdz := fwdDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
       zdz :=
 by
-  unfold fwdDeriv
-  funext dx;
-  rw[fderiv.let_rule_at x g hg f hf]
-  simp
+  unfold fwdDeriv; ftrans
 
 
-theorem pi_rule_at
-  (x : X)
-  (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt K (f i) x)
-  : (fwdDeriv K fun (x : X) (i : ι) => f i x) x
-    = 
+theorem pi_rule_at  
+  (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f · i) x)
+  : (fwdDeriv K fun (x : X) (i : ι) => f x i) x
+    =
     fun dx =>
-      (fun i => f i x, fun i => (fwdDeriv K (f i) x dx).2) := 
+      (fun i => f x i, fun i => (fwdDeriv K (f · i) x dx).2) := 
 by 
-  unfold fwdDeriv
-  rw[fderiv.pi_rule_at x f hf]
-  simp
+  unfold fwdDeriv; ftrans
 
 
 
 -- Register `fwdDeriv` as function transformation ------------------------------
 --------------------------------------------------------------------------------
-#check `(tactic| assumption) 
-#check Lean.Syntax
 
 open Lean Meta Qq
 
-def fwdDeriv.discharger (e : Expr) : SimpM (Option Expr) := do
+def discharger (e : Expr) : SimpM (Option Expr) := do
   withTraceNode `fwdDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
   let config : FProp.Config := {}
@@ -157,7 +141,7 @@ def fwdDeriv.discharger (e : Expr) : SimpM (Option Expr) := do
 
 
 open Lean Elab Term FTrans
-def fwdDeriv.ftransExt : FTransExt where
+def ftransExt : FTransExt where
   ftransName := ``fwdDeriv
 
   getFTransFun? e := 
@@ -176,89 +160,84 @@ def fwdDeriv.ftransExt : FTransExt where
     else          
       e
 
-  idRule    := tryNamedTheorem ``fderiv.id_rule fderiv.discharger
-  constRule := tryNamedTheorem ``fderiv.const_rule fderiv.discharger
-  projRule  := tryNamedTheorem ``fderiv.proj_rule fderiv.discharger
+  idRule    := tryNamedTheorem ``id_rule discharger
+  constRule := tryNamedTheorem ``const_rule discharger
+  projRule  := tryNamedTheorem ``proj_rule discharger
   compRule  e f g := do
+    let .some K := e.getArg? 0
+      | return none
 
-    let (args, bis, type) ← 
-      forallMetaTelescope (← inferType (← mkConstWithLevelParams ``fderiv.comp_rule))
+    let mut thrms : Array SimpTheorem := #[]
 
-    let gf := args[11]!
-    let Hg := args[12]!
-    let mf := args[13]!
-    let Hf := args[14]!
+    thrms := thrms.push {
+      proof := ← mkAppM ``comp_rule #[K, f, g]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
 
-    mf.mvarId!.assign f
-    gf.mvarId!.assign g
+    thrms := thrms.push {
+      proof := ← mkAppM ``comp_rule_at #[K, f, g]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
 
-    let lhs := type.appFn!.appArg!
-    let rhs := type.appArg!
-
-    if ¬(← isDefEq e lhs) then
-      trace[Meta.Tactic.ftrans.unify] "{``fderiv.comp_rule}, failed to unify\n{lhs}\nwith\n{e}"
-      return none
-    else
-      
-      let .some hf ← fderiv.discharger Hf
-        | trace[Meta.Tactic.fprop.discharge] "{``fderiv.comp_rule},, failed to discharge hypotheses {Hf}"
-          return none
-
-      let .some hg ← fderiv.discharger Hg
-        | trace[Meta.Tactic.fprop.discharge] "{``fderiv.comp_rule},, failed to discharge hypotheses {Hg}"
-          return none
-
-      let proof ← mkAppM ``fderiv.comp_rule #[g, hg, f, hf]
-      
-      return .some (.visit { expr := (← instantiateMVars rhs), proof? := proof})
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
 
   letRule e f g := do
+    let .some K := e.getArg? 0
+      | return none
 
-    let (args, bis, type) ← 
-      forallMetaTelescope (← inferType (← mkConstWithLevelParams ``fderiv.let_rule))
+    let mut thrms : Array SimpTheorem := #[]
 
-    let gf := args[11]!
-    let Hg := args[12]!
-    let mf := args[13]!
-    let Hf := args[14]!
+    thrms := thrms.push {
+      proof := ← mkAppM ``let_rule #[K, f, g]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
 
-    mf.mvarId!.assign f
-    gf.mvarId!.assign g
+    thrms := thrms.push {
+      proof := ← mkAppM ``let_rule_at #[K, f, g]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
 
-    let lhs := type.appFn!.appArg!
-    let rhs := type.appArg!
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
 
-    if ¬(← isDefEq e lhs) then
-      trace[Meta.Tactic.ftrans.unify] "{``fderiv.let_rule}, failed to unify\n{lhs}\nwith\n{e}"
-      return none
-    else
-      
-      let .some hf ← fderiv.discharger Hf
-        | trace[Meta.Tactic.fprop.discharge] "{``fderiv.let_rule},, failed to discharge hypotheses {Hf}"
-          return none
+  piRule  e f := do
+    let .some K := e.getArg? 0
+      | return none
 
-      let .some hg ← fderiv.discharger Hg
-        | trace[Meta.Tactic.fprop.discharge] "{``fderiv.let_rule},, failed to discharge hypotheses {Hg}"
-          return none
+    let mut thrms : Array SimpTheorem := #[]
 
-      let proof ← mkAppM ``fderiv.let_rule #[g, hg, f, hf]
-      
-      return .some (.visit { expr := (← instantiateMVars rhs), proof? := proof})
+    thrms := thrms.push {
+      proof := ← mkAppM ``pi_rule #[K, f]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
 
-  piRule  e f := tryNamedTheorem ``fderiv.pi_rule fderiv.discharger e
+    thrms := thrms.push {
+      proof := ← mkAppM ``pi_rule_at #[K, f]
+      origin := .decl ``comp_rule
+      rfl := false
+    }
+
+    for thm in thrms do
+      if let some result ← Meta.Simp.tryTheorem? e thm discharger then
+        return Simp.Step.visit result
+    return none
 
   discharger := fderiv.discharger
-  -- identityRule     := .some <| .thm ``id_rule
-  -- constantRule     := .some <| .thm ``const_rule
-  -- compRule         := .some <| .thm ``comp_rule
-  -- lambdaLetRule    := .some <| .thm ``let_rule
-  -- lambdaLambdaRule := .some <| .thm ``pi_rule
-
 
 
 -- register fderiv
 #eval show Lean.CoreM Unit from do
-  modifyEnv (λ env => FTrans.ftransExt.addEntry env (``fwdDeriv, fwdDeriv.ftransExt))
+  modifyEnv (λ env => FTrans.ftransExt.addEntry env (``fwdDeriv, ftransExt))
 
 
 end SciLean.fwdDeriv
@@ -541,7 +520,7 @@ by
   unfold fwdDeriv; ftrans
 
 
--- HPow.hPow ---------------------------------------------------------------------
+-- HPow.hPow -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[ftrans_rule]

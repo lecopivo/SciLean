@@ -115,3 +115,11 @@ example
       fderiv K (f i) x dx
   := by ftrans only
 
+
+example
+  [DecidableEq ι] (i : ι)
+  : (fderiv K fun (x : (i : ι) → E i) => x i)
+    =
+    fun _ => fun dx =>L[K] dx i := 
+by 
+  ftrans only

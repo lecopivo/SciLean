@@ -39,6 +39,14 @@ theorem fderiv.const_rule (x : X)
   : (fderiv K fun _ : Y => x) = fun _ => fun dx =>L[K] 0
   := by ext x dx; simp
 
+theorem fderiv.proj_rule
+  [DecidableEq ι] (i : ι)
+  : (fderiv K fun (x : (i : ι) → E i) => x i)
+    =
+    fun x => fun dx =>L[K] dx i := 
+by 
+  funext x; sorry
+
 
 variable (K)
 
@@ -138,14 +146,6 @@ theorem fderiv.pi_rule
   := by funext x; apply fderiv_pi (fun i => hf i x)
 
 variable {K}
-
-theorem fderiv.proj_rule
-  [DecidableEq ι] (i : ι)
-  : (fderiv K fun (x : (i : ι) → E i) => x i)
-    =
-    fun x => fun dx =>L[K] dx i := 
-by 
-  funext x; sorry
 
 
 
