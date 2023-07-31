@@ -22,7 +22,7 @@ Arguments
 3. `ι` - index set specifying how many copies of `X` we are making
 4. `X` - type to broadcast/vectorize
   -/
-class BroadcastType (tag : Name) (R : Type _) [Ring R] (ι : Type _) (X : Type _) [AddCommGroup X] [Module R X] (MX : outParam $ Type _) [outParam $ AddCommGroup MX] [outParam $ Module R MX] where
+class BroadcastType (tag : Lean.Name) (R : Type _) [Ring R] (ι : Type _) (X : Type _) [AddCommGroup X] [Module R X] (MX : outParam $ Type _) [outParam $ AddCommGroup MX] [outParam $ Module R MX] where
   equiv  : MX ≃ₗ[R] (ι → X)
 
 
