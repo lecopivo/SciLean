@@ -13,6 +13,10 @@ open NNReal
 
 def ProdLp (p : ℝ) (α β : Type _) := α × β 
 
+abbrev ProdL2.mk {α β : Type _} (fst : α) (snd : β) : ProdLp 2 α β := (fst, snd)
+abbrev ProdL2.fst {α β : Type _} (self : ProdLp 2 α β) : α := self.1
+abbrev ProdL2.snd {α β : Type _} (self : ProdLp 2 α β) : β := self.2
+
 macro α:term:35 " ×[" p:term "] " β:term:36 : term => `(ProdLp $p $α $β)
 macro α:term:35 " ×₂ " β:term:36 : term => `(ProdLp 2 $α $β)
 

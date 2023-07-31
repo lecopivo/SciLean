@@ -63,7 +63,7 @@ def applyTheorems (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : 
   -/
 def fvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Step) := do
 
-  let (g, h) ← splitLambdaToComp f
+  let (g, h) ← splitLambdaToComp f ext.prodMk ext.prodFst ext.prodSnd
 
   -- we are agresive with transparency here as we want to deal with type synonyms
   -- the motivation is to handle `ProdLp`

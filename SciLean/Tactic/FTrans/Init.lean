@@ -58,6 +58,9 @@ structure FTransExt where
   piRule      (expr f : Expr) : SimpM (Option Simp.Step)
   /-- Custom discharger for this function transformation -/
   discharger       : Expr → SimpM (Option Expr)
+  prodMk  := ``Prod.mk
+  prodFst := ``Prod.fst
+  prodSnd := ``Prod.snd
   /-- Name of this extension, keep the default value! -/
   name : Name := by exact decl_name%
 deriving Inhabited

@@ -90,15 +90,20 @@ instance instInnerProductSpaceProdL2
 
 
 -- set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.ftrans.discharge true in
-set_option trace.Meta.Tactic.ftrans.step true in
-set_option trace.Meta.Tactic.simp.unify true in
+-- set_option trace.Meta.Tactic.ftrans.discharge true in
+-- set_option trace.Meta.Tactic.ftrans.step true in
+-- set_option trace.Meta.Tactic.simp.unify true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+
+set_option profiler true
+
 example
-  (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂)
+  (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂) (h : Y₁ → Y₁)
   (hf : IsContinuousLinearMap K (fun yy : Y₁×Y₂ => f yy.1 yy.2)) 
   (hg₁ : IsContinuousLinearMap K g₁)
   (hg₂ : IsContinuousLinearMap K g₂)
-  : (fun x =>L[K] f (g₁ x) (g₂ x))†
+  (hh : IsContinuousLinearMap K h)
+  : (fun x =>L[K] f (h (g₁ x)) (g₂ x))†
     =
     0
   :=

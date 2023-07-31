@@ -175,6 +175,10 @@ def ftransExt : FTransExt where
     else
       return e
 
+  prodMk := ``ProdL2.mk
+  prodFst := ``ProdL2.fst
+  prodSnd := ``ProdL2.snd
+
   idRule  e X := do
     let K := (e.getArg! 1).getArg! 0
     tryTheorems
@@ -199,30 +203,6 @@ def ftransExt : FTransExt where
 
   compRule e f g := do
     let K := (e.getArg! 1).getArg! 0
-    
-    let XY ← inferType g
-    let YZ ← inferType f
-
-    let two : Q(ℝ)  := q(2)
-    let fixProduct : Expr → Option Expr :=       
-      (fun e => 
-        if let .app (.app (.const name us) A) B := e then
-          if name == ``Prod then
-            mkApp3 (mkConst ``ProdLp us) two A B
-          else
-            none
-        else
-          none)
-
-    let X := XY.bindingDomain!.replace fixProduct
-    let Y := XY.bindingBody!.replace fixProduct
-    let Z := YZ.bindingBody!.replace fixProduct
-
-    let args : Array (Option Expr) := 
-       #[K, none, X, none, none, none, 
-                  Y, none, none, none, 
-                  Z, none, none, none, f, g]
-
     tryTheorems
       #[ { proof := ← withTransparency .all <| 
              mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
@@ -281,6 +261,30 @@ theorem Prod.mk.arg_fstsnd.adjoint_comp
 by sorry
 
 
+@[fprop_rule]
+theorem ProdL2.mk.arg_fstsnd.IsContinuousLinearMap_comp
+  (g : X → Y) (hg : IsContinuousLinearMap K g)
+  (f : X → Z) (hf : IsContinuousLinearMap K f)
+  : IsContinuousLinearMap K (fun x => ProdL2.mk (g x) (f x)) :=
+by 
+  unfold ProdL2.mk; fprop
+
+
+@[ftrans_rule]
+theorem ProdL2.mk.arg_fstsnd.adjoint_comp
+  (g : X → Y) (hg : IsContinuousLinearMap K g)
+  (f : X → Z) (hf : IsContinuousLinearMap K f)
+  : (fun x =>L[K] ProdL2.mk (g x) (f x))†
+    =
+    fun yz =>L[K]
+      let x₁ := (fun x =>L[K] g x)† yz.1
+      let x₂ := (fun x =>L[K] f x)† yz.2
+      x₁ + x₂ :=
+by 
+  unfold ProdL2.mk; ftrans
+
+
+
 -- Prod.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -294,6 +298,25 @@ by
   sorry
 
 
+@[fprop_rule]
+theorem ProdL2.fst.arg_self.IsContinuousLinearMap
+  (f : X → Y×₂Z) (hf : SciLean.IsContinuousLinearMap K f)
+  : IsContinuousLinearMap K (fun x => ProdL2.fst (f x)) :=
+by
+  unfold ProdL2.fst; fprop
+
+
+@[ftrans_rule]
+theorem ProdL2.fst.arg_self.adjoint_comp
+  (f : X → Y×₂Z) (hf : SciLean.IsContinuousLinearMap K f)
+  : (fun x =>L[K] ProdL2.fst (f x))†
+    =
+    (fun y =>L[K] ((fun x =>L[K] f x) : X →L[K] Y×₂Z)† (y,(0:Z))) :=
+by
+  unfold ProdL2.fst; ftrans
+
+
+
 -- Prod.snd --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -305,6 +328,25 @@ theorem Prod.snd.arg_self.adjoint_comp
     (fun z =>L[K] ((fun x =>L[K] f x) : X →L[K] Y×₂Z)† ((0 :Y),z)) :=
 by
   sorry
+
+
+@[fprop_rule]
+theorem ProdL2.snd.arg_self.IsContinuousLinearMap
+  (f : X → Y×₂Z) (hf : SciLean.IsContinuousLinearMap K f)
+  : IsContinuousLinearMap K (fun x => ProdL2.snd (f x)) :=
+by
+  unfold ProdL2.snd; fprop
+
+
+@[ftrans_rule]
+theorem ProdL2.snd.arg_self.adjoint_comp
+  (f : X → Y×₂Z) (hf : SciLean.IsContinuousLinearMap K f)
+  : (fun x =>L[K] ProdL2.snd (f x))†
+    =
+    (fun z =>L[K] ((fun x =>L[K] f x) : X →L[K] Y×₂Z)† ((0:Y),z)) :=
+by
+  unfold ProdL2.snd; ftrans
+
 
 
 -- HAdd.hAdd -------------------------------------------------------------------

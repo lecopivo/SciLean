@@ -19,6 +19,8 @@ def getConstArity (constName : Name) : m Nat := do
 
 /-- Returns name of the head function of an expression
 
+TODO: See through FunLike.coe
+
 Example:
   `getFunHeadConst? q(fun x => x + x) = HAdd.hAdd`
   `getFunHeadConst? q(fun x y => x + y) = HAdd.hAdd`
@@ -129,18 +131,18 @@ For example for `xyz : X × Y × Z`
   - `mkProdProj xyz 1 2` returns `xyz.snd`.
 -/
 def mkProdProj (x : Expr) (i : Nat) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM Expr := do
-  let X ← inferType x
-  if X.isAppOfArity ``Prod 2 then
-     match i, n with
-     | _, 0 => pure x
-     | _, 1 => pure x
-     | 0, _ => mkAppM fst #[x]
-     | i'+1, n'+1 => mkProdProj (← mkAppM snd #[x]) i' n'
-  else
-    if i = 0 then
-      return x
-    else
-      throwError "Failed `mkProdProj`, can't take {i}-th element of {← ppExpr x}. It has type {← ppExpr X} which is not a product type!"
+  -- let X ← inferType x
+  -- if X.isAppOfArity ``Prod 2 then
+  match i, n with
+  | _, 0 => pure x
+  | _, 1 => pure x
+  | 0, _ => mkAppM fst #[x]
+  | i'+1, n'+1 => mkProdProj (← withTransparency .all <| mkAppM snd #[x]) i' n'
+  -- else
+  --   if i = 0 then
+  --     return x
+  --   else
+  --     throwError "Failed `mkProdProj`, can't take {i}-th element of {← ppExpr x}. It has type {← ppExpr X} which is not a product type!"
 
 
 def mkProdSplitElem (xs : Expr) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Array Expr) := 
