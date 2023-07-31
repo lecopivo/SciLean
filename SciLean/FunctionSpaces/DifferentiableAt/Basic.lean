@@ -208,7 +208,7 @@ variable
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem id.arg_a.DifferentiableAt (x : X)
+theorem id.arg_a.DifferentiableAt_rule (x : X)
   : DifferentiableAt R (id : X → X) x := by simp
 
 
@@ -220,7 +220,7 @@ theorem id.arg_a.DifferentiableAt (x : X)
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem Prod.mk.arg_fstsnd.DifferentiableAt_comp
+theorem Prod.mk.arg_fstsnd.DifferentiableAt_rule
   (x : X)
   (g : X → Y) (hg : DifferentiableAt R g x)
   (f : X → Z) (hf : DifferentiableAt R f x)
@@ -232,7 +232,7 @@ theorem Prod.mk.arg_fstsnd.DifferentiableAt_comp
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem Prod.fst.arg_self.DifferentiableAt_comp 
+theorem Prod.fst.arg_self.DifferentiableAt_rule 
   (x : X)
   (f : X → Y×Z) (hf : DifferentiableAt R f x)
   : DifferentiableAt R (fun x => (f x).1) x
@@ -244,7 +244,7 @@ theorem Prod.fst.arg_self.DifferentiableAt_comp
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem Prod.snd.arg_self.DifferentiableAt_comp 
+theorem Prod.snd.arg_self.DifferentiableAt_rule 
   (x : X)
   (f : X → Y×Z) (hf : DifferentiableAt R f x)
   : DifferentiableAt R (fun x => (f x).2) x
@@ -256,7 +256,7 @@ theorem Prod.snd.arg_self.DifferentiableAt_comp
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem Function.comp.arg_x.DifferentiableAt_comp
+theorem Function.comp.arg_a0.DifferentiableAt_rule
   (x : X)
   (g : X → Y) (hg : DifferentiableAt R g x)
   (f : Y → Z) (hf : DifferentiableAt R f (g x))
@@ -268,7 +268,7 @@ theorem Function.comp.arg_x.DifferentiableAt_comp
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem Neg.neg.arg_a2.DifferentiableAt_comp
+theorem Neg.neg.arg_a0.DifferentiableAt_rule
   (x : X) (f : X → Y) (hf : DifferentiableAt R f x)
   : DifferentiableAt R (fun x => - f x) x
   := DifferentiableAt.neg hf
@@ -279,7 +279,7 @@ theorem Neg.neg.arg_a2.DifferentiableAt_comp
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem HAdd.hAdd.arg_a4a5.DifferentiableAt_comp
+theorem HAdd.hAdd.arg_a0a1.DifferentiableAt_rule
   (x : X) (f g : X → Y) (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x)
   : DifferentiableAt R (fun x => f x + g x) x
   := DifferentiableAt.add hf hg
@@ -290,39 +290,39 @@ theorem HAdd.hAdd.arg_a4a5.DifferentiableAt_comp
 --------------------------------------------------------------------------------
 
 @[fprop_rule]
-theorem HSub.hSub.arg_a4a5.DifferentiableAt_comp
+theorem HSub.hSub.arg_a0a1.DifferentiableAt_rule
   (x : X) (f g : X → Y) (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x)
   : DifferentiableAt R (fun x => f x - g x) x
   := DifferentiableAt.sub hf hg
  
 
--- HMul.hMul ---------------------------------------------------------------------
+-- HMul.hMul -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[fprop_rule]
-def HMul.hMul.arg_a4a5.DifferentiableAt_comp
+def HMul.hMul.arg_a0a1.DifferentiableAt_rule
   {Y : Type _} [TopologicalSpace Y] [NormedRing Y] [NormedAlgebra R Y] 
   (x : X) (f g : X → Y) (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x)
   : DifferentiableAt R (fun x => f x * g x) x 
   := DifferentiableAt.mul hf hg
 
 
--- SMul.sMul ---------------------------------------------------------------------
+-- SMul.sMul -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[fprop_rule]
-def SMul.sMul.arg_a4a5.DifferentiableAt_comp
+def HSMul.hSMul.arg_a0a1.DifferentiableAt_rule
   {Y : Type _} [TopologicalSpace Y] [NormedRing Y] [NormedAlgebra R Y] 
   (x : X) (f : X → R) (g : X → Y) (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x)
   : DifferentiableAt R (fun x => f x • g x) x 
   := DifferentiableAt.smul hf hg
 
 
--- HDiv.hDiv ---------------------------------------------------------------------
+-- HDiv.hDiv -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[fprop_rule]
-def HDiv.hDiv.arg_a4a5.DifferentiableAt_comp
+def HDiv.hDiv.arg_a0a1.DifferentiableAt_rule
   {R : Type _} [NontriviallyNormedField R]
   {K : Type _} [NontriviallyNormedField K] [NormedAlgebra R K]
   (x : R) (f : R → K) (g : R → K) 
@@ -331,11 +331,11 @@ def HDiv.hDiv.arg_a4a5.DifferentiableAt_comp
   := DifferentiableAt.div hf hg hx
 
 
--- HPow.hPow ---------------------------------------------------------------------
+-- HPow.hPow -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[fprop_rule]
-def HPow.hPow.arg_a4a5.DifferentiableAt_comp
+def HPow.hPow.arg_a0.DifferentiableAt_rule
   (n : Nat) (x : X) (f : X → R) (hf : DifferentiableAt R f x) 
   : DifferentiableAt R (fun x => f x ^ n) x
   := DifferentiableAt.pow hf n

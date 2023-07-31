@@ -28,6 +28,11 @@ instance {E : ι → Type _} [∀ i, UniformSpace (E i)] [∀ i, CompleteSpace (
 -- Set up custom notation for adjoint. Mathlib's notation for adjoint seems to be broken
 instance (f : X →L[K] Y) : SciLean.Dagger f (ContinuousLinearMap.adjoint f : Y →L[K] X) := ⟨⟩
 
+open Lean Meta in
+#eval show MetaM Unit from do
+
+  IO.println (``adjoint).getRoot
+  IO.println (``adjoint).getString
 
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------

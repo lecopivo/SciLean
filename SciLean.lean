@@ -8,11 +8,12 @@ import SciLean.Data.DataArray
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 
-import SciLean.Tactic.FTrans.Basic
-import SciLean.Tactic.FProp.Notation
 import SciLean.FTrans.FDeriv.Basic
-import SciLean.FunctionSpaces.Differentiable.Basic
 import SciLean.FTrans.CDeriv.Basic
+import SciLean.FTrans.FwdDeriv.Basic
+import SciLean.FTrans.RevDeriv.Basic
+import SciLean.FTrans.Adjoint.Basic
+import SciLean.FTrans.Broadcast.Basic
 
 /-!
 

@@ -23,6 +23,8 @@ initialize registerTraceClass `Meta.Tactic.ftrans.missing_rule
 initialize registerTraceClass `Meta.Tactic.ftrans.rewrite
 initialize registerTraceClass `Meta.Tactic.ftrans.discharge
 initialize registerTraceClass `Meta.Tactic.ftrans.unify
+
+initialize registerOption `linter.ftransDeclName { defValue := true, descr := "suggests declaration name for ftrans rule" }
 -- initialize registerTraceClass `Meta.Tactic.ftrans.lambda_special_cases
 
 
@@ -159,11 +161,12 @@ namespace FTransRules
 
 end FTransRules
 
-private def FTransRules.merge! (function : Name) (fp fp' : FTransRules) :  FTransRules :=
+private def FTransRules.merge! (_ : Name) (fp fp' : FTransRules) :  FTransRules :=
   fp.mergeWith (t₂ := fp') λ _ p q => p.union q
 
 initialize FTransRulesExt : MergeMapDeclarationExtension FTransRules 
   ← mkMergeMapDeclarationExtension ⟨FTransRules.merge!, sorry_proof⟩
+
 
 open Lean Qq Meta Elab Term in
 initialize funTransRuleAttr : TagAttribute ← 
@@ -191,10 +194,32 @@ To register function transformation call:
 #eval show Lean.CoreM Unit from do
   FTrans.FTransExt.insert <name> <info>
 ```
-where <name> is name of the function transformation and <info> is corresponding `FTrans.Info`. 
+where <name> is name of the function transformation and <info> is corresponding `FTrans.Info`.
 "
           let .some funName ← getFunHeadConst? f
             | throwError "Function being transformed is in invalid form!"
+
+          let depArgIds :=
+            match f with
+            | .lam _ _ body _ =>
+              body.getAppArgs
+                |>.mapIdx (fun i arg => if arg.hasLooseBVars then Option.some i.1 else none)
+                |>.filterMap id
+            | _ => #[f.getAppNumArgs]
+
+          let argNames ← getConstArgNames funName (fixAnonymousNames := true)
+          let depNames := depArgIds.map (fun i => argNames[i]!)
+
+          let argSuffix := "arg_" ++ depNames.foldl (·++·.toString) ""
+
+          let suggestedRuleName :=
+            funName |>.append argSuffix
+                    |>.append (transName.getString.append "_rule")
+
+
+          if (← getBoolOption `linter.ftransDeclName true) &&
+             ¬(suggestedRuleName.toString.isPrefixOf ruleName.toString) then
+            logWarning s!"suggested name for this rule is {suggestedRuleName}"
 
           FTransRulesExt.insert funName (FTransRules.empty.insert transName ruleName)
       )           
@@ -209,7 +234,7 @@ def getFTransRules (funName ftransName : Name) : CoreM (Array SimpTheorem) := do
     | return #[]
 
   let rules : List SimpTheorem ← rules.toList.mapM fun r => do
-    return { 
+    return {
       proof  := mkConst r
       origin := .decl r
       rfl    := false

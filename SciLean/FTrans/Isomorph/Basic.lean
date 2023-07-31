@@ -3,6 +3,8 @@ import Mathlib
 import Mathlib.Data.Real.Basic
 import SciLean.Tactic.FTrans.Basic
 
+import SciLean.Profile
+
 open Lean
 
 namespace SciLean
@@ -368,6 +370,7 @@ axiom Zero.zero.isomorphFloatToReal
     =
     (0 : ℝ)
 
+#profile_this_file
 
 @[simp]
 axiom One.one.isomorphFloatToReal 
@@ -375,6 +378,43 @@ axiom One.one.isomorphFloatToReal
     =
     (1 : ℝ)
 
+
+
+instance : CommRing Float where
+  zero_mul := by intros; apply (isoext `FloatToReal _ _).2; (repeat ftrans); try ring
+  mul_zero := by intros; apply (isoext `FloatToReal _ _).2; (repeat ftrans); try ring
+  mul_comm := by intros; apply (isoext `FloatToReal _ _).2; (repeat ftrans); try ring
+  left_distrib := by intros; apply (isoext `FloatToReal _ _).2; (repeat ftrans); try ring
+  right_distrib := by intros; apply (isoext `FloatToReal _ _).2; (repeat ftrans); try ring
+  mul_one := sorry_proof
+  one_mul := sorry_proof
+  npow n x := x.pow (n.toFloat)  --- TODO: change this implementation
+  npow_zero n := sorry_proof
+  npow_succ n x := sorry_proof
+  mul_assoc := sorry_proof
+  add_comm := sorry_proof
+  add_assoc := sorry_proof
+  add_zero := sorry_proof
+  zero_add := sorry_proof
+  add_left_neg := sorry_proof
+  nsmul n x := n.toFloat * x
+  nsmul_zero := sorry_proof
+  nsmul_succ n x := sorry_proof
+  sub_eq_add_neg a b := sorry_proof
+  natCast n := n.toFloat
+  natCast_zero := sorry_proof
+  natCast_succ := sorry_proof
+  intCast n := if n ≥ 0 then n.toNat.toFloat else -((-n).toNat).toFloat
+  intCast_ofNat := sorry_proof
+  intCast_negSucc := sorry_proof
+
+instance : Field Float where
+  exists_pair_ne := sorry_proof
+  div_eq_mul_inv := sorry_proof 
+  mul_inv_cancel := sorry_proof
+  inv_zero := sorry_proof
+
+#exit
 
 instance : Semigroup Float where
   mul_assoc := by 
@@ -445,13 +485,22 @@ instance : AddCommMonoid Float where
     simp; ftrans; rw[add_comm]
   
 instance : SubNegMonoid Float where
-  sub_eq_add_neg := sorry -- important
+  sub_eq_add_neg := by 
+    intro a b
+    apply (isoext `FloatToReal _ _).2
+    simp; ftrans; ftrans; rw[sub_eq_add_neg]
   
 instance : AddGroup Float where
-  add_left_neg := sorry
+  add_left_neg := by 
+    intro a
+    apply (isoext `FloatToReal _ _).2
+    simp; ftrans; ftrans
 
 instance : AddCommGroup Float where
-  add_comm := sorry
+  add_comm := by 
+    intro a b
+    apply (isoext `FloatToReal _ _).2
+    simp; ftrans; rw[add_comm]
 
 instance : Semiring Float where
   left_distrib := sorry 
@@ -462,8 +511,8 @@ instance : Semiring Float where
   one_mul := sorry
   mul_one := sorry
 
--- instance : Ring Float where
---   add_left_neg := sorry
+instance : Ring Float where
+  add_left_neg := sorry
   
 -- instance : Field Float where
 --   mul_comm := sorry

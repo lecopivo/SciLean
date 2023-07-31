@@ -17,6 +17,23 @@ def getConstArity (constName : Name) : m Nat := do
   let info ← getConstInfo constName
   return info.type.forallArity
 
+def getConstArgNames (constName : Name) (fixAnonymousNames := false) : m (Array Name) := do
+  let info ← getConstInfo constName
+  return getArgNames info.type #[] 0
+where
+  getArgNames (e : Expr) (names : Array Name) (i : Nat) : Array Name :=
+    match e with
+    | .forallE name _ body _ => 
+      if ¬fixAnonymousNames then
+        getArgNames body (names.push name) i
+      else 
+        if name.hasMacroScopes then
+          getArgNames body (names.push (name.eraseMacroScopes.appendAfter (toString i))) (i+1)
+        else
+          getArgNames body (names.push name) i
+    | _ => names
+
+
 /-- Returns name of the head function of an expression
 
 TODO: See through FunLike.coe

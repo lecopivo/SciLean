@@ -4,6 +4,7 @@ import Mathlib.Algebra.Module.Prod
 -- TODO: minimize this import, simp and aesop fail without it at some places
 import Mathlib.Analysis.Calculus.FDeriv.Basic
 
+import SciLean.Profile
 
 namespace SciLean
 
@@ -21,7 +22,7 @@ Arguments
 3. `ι` - index set specifying how many copies of `X` we are making
 4. `X` - type to broadcast/vectorize
   -/
-class BroadcastType (tag : Name) (R : Type _) [Ring R] (ι : Type _) (X : Type _) (MX : outParam $ Type _) [AddCommGroup X] [Module R X] [AddCommGroup MX] [Module R MX] where
+class BroadcastType (tag : Name) (R : Type _) [Ring R] (ι : Type _) (X : Type _) [AddCommGroup X] [Module R X] (MX : outParam $ Type _) [outParam $ AddCommGroup MX] [outParam $ Module R MX] where
   equiv  : MX ≃ₗ[R] (ι → X)
 
 
@@ -29,8 +30,8 @@ variable
   {R : Type _} [Ring R]
   {X : Type _} [AddCommGroup X] [Module R X]
   {Y : Type _} [AddCommGroup Y] [Module R Y]
-  {MX : Type _} [AddCommGroup MX] [Module R MX]
-  {MY : Type _} [AddCommGroup MY] [Module R MY]
+  {MX : outParam $ Type _} [outParam $ AddCommGroup MX] [outParam $ Module R MX]
+  {MY : outParam $ Type _} [outParam $ AddCommGroup MY] [outParam $ Module R MY]
   {ι : Type _} -- [Fintype ι]
   {κ : Type _} -- [Fintype κ]
   {E ME : κ → Type _} 
@@ -50,7 +51,6 @@ instance [BroadcastType tag R ι X MX] [BroadcastType tag R ι Y MY] : Broadcast
     left_inv  := fun _ => by simp
     right_inv := fun _ => by simp
   }
-
 
 open BroadcastType in
 instance [∀ j, BroadcastType tag R ι (E j) (ME j)]

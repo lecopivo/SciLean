@@ -53,19 +53,7 @@ theorem proj_rule [DecidableEq ι] (i : ι)
     fun x => 
       (x i, fun dxi j => if i=j then dxi else (0 : X)) :=
 by
-  unfold revDeriv
-  funext _
-  ftrans; ftrans
-  set_option trace.Meta.Tactic.ftrans.step true in
-  set_option trace.Meta.Tactic.ftrans.unify true in
-  set_option trace.Meta.Tactic.ftrans.discharge true in
-  set_option trace.Meta.Tactic.simp.unify true in
-  set_option trace.Meta.Tactic.simp.rewrite true in
-  set_option trace.Meta.Tactic.simp.discharge true in
-  set_option pp.funBinderTypes true in
-  ftrans only
-  ext _; simp
-
+  sorry
 
 
 theorem comp_rule 
@@ -83,9 +71,7 @@ theorem comp_rule
 by
   unfold revDeriv
   funext _
-  ftrans; ftrans
-  ext _; simp
-  sorry
+  ftrans; ftrans; simp; rfl
 
 
 theorem let_rule 
@@ -104,9 +90,8 @@ theorem let_rule
 by
   unfold revDeriv
   funext _
-  ftrans; ftrans
-  ext _; simp
-  sorry
+  ftrans; ftrans; simp;
+  ext _; simp; sorry
 
 
 open BigOperators in
@@ -119,22 +104,6 @@ theorem pi_rule
         (revDeriv K fun (x : X) => f i x) x
       (fun i => (xdf i).1, 
        fun dy => ∑ i, (xdf i).2 (dy i))
-       := 
-by
-  unfold revDeriv
-  funext _
-  ftrans; ftrans
-  ext _; simp
-  sorry
-
-
-open BigOperators in
-theorem proj_rule [DecidableEq ι] (i : ι)
-  : (revDeriv K fun (x : PiLp 2 (fun _ => X)) => x i)
-    =
-    fun x =>
-      (x i,
-       fun (dxi : X) j => if i=j then dxi else 0)
        := 
 by
   unfold revDeriv

@@ -17,8 +17,6 @@ import SciLean.Tactic.FTrans.Basic
 
 namespace SciLean
 
-set_option linter.unusedVariables false
-
 variable 
   {K : Type _} [NontriviallyNormedField K]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
@@ -258,7 +256,7 @@ variable
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem Prod.mk.arg_fstsnd.fderiv_at_comp
+theorem Prod.mk.arg_fstsnd.fderiv_rule_at
   (x : X)
   (g : X → Y) (hg : DifferentiableAt K g x)
   (f : X → Z) (hf : DifferentiableAt K f x)
@@ -271,7 +269,7 @@ by
 
 
 @[ftrans_rule]
-theorem Prod.mk.arg_fstsnd.fderiv_comp
+theorem Prod.mk.arg_fstsnd.fderiv_rule
   (g : X → Y) (hg : Differentiable K g)
   (f : X → Z) (hf : Differentiable K f)
   : fderiv K (fun x => (g x, f x))
@@ -287,7 +285,7 @@ by
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem Prod.fst.arg_self.fderiv_at_comp
+theorem Prod.fst.arg_self.fderiv_rule_at
   (x : X)
   (f : X → Y×Z) (hf : DifferentiableAt K f x)
   : fderiv K (fun x => (f x).1) x
@@ -298,7 +296,7 @@ by
 
 
 @[ftrans_rule]
-theorem Prod.fst.arg_self.fderiv_comp
+theorem Prod.fst.arg_self.fderiv_rule
   (f : X → Y×Z) (hf : Differentiable K f)
   : fderiv K (fun x => (f x).1)
     =
@@ -307,20 +305,12 @@ by
   funext x; apply fderiv.fst (hf x)
 
 
-@[ftrans_rule]
-theorem Prod.fst.arg_self.fderiv
-  : fderiv K (fun xy : X×Y => xy.1)
-    =  
-    fun _ => fun dxy =>L[K] dxy.1
-:= by funext xy; apply fderiv_fst
-
-
 
 -- Prod.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem Prod.snd.arg_self.fderiv_at_comp
+theorem Prod.snd.arg_self.fderiv_rule_at
   (x : X)
   (f : X → Y×Z) (hf : DifferentiableAt K f x)
   : fderiv K (fun x => (f x).2) x
@@ -332,7 +322,7 @@ by
 
 
 @[ftrans_rule]
-theorem Prod.snd.arg_self.fderiv_comp
+theorem Prod.snd.arg_self.fderiv_rule
   (f : X → Y×Z) (hf : Differentiable K f)
   : fderiv K (fun x => (f x).2)
     =
@@ -341,20 +331,12 @@ by
   funext x; apply fderiv.snd (hf x)
 
 
-@[ftrans_rule]
-theorem Prod.snd.arg_self.fderiv
-  : fderiv K (fun xy : X×Y => xy.2)
-    =  
-    fun _ => fun dxy =>L[K] dxy.2
-:= by funext xy; apply fderiv_snd
-
-
 
 -- HAdd.hAdd -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem HAdd.hAdd.arg_a4a5.fderiv_at_comp
+theorem HAdd.hAdd.arg_a0a1.fderiv_rule_at
   (x : X) (f g : X → Y) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
   : (fderiv K fun x => f x + g x) x
     =
@@ -364,7 +346,7 @@ theorem HAdd.hAdd.arg_a4a5.fderiv_at_comp
 
 
 @[ftrans_rule]
-theorem HAdd.hAdd.arg_a4a5.fderiv_comp
+theorem HAdd.hAdd.arg_a0a1.fderiv_rule
   (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
   : (fderiv K fun x => f x + g x)
     =
@@ -378,7 +360,7 @@ theorem HAdd.hAdd.arg_a4a5.fderiv_comp
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem HSub.hSub.arg_a4a5.fderiv_at_comp
+theorem HSub.hSub.arg_a0a1.fderiv_rule_at
   (x : X) (f g : X → Y) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
   : (fderiv K fun x => f x - g x) x
     =
@@ -388,7 +370,7 @@ theorem HSub.hSub.arg_a4a5.fderiv_at_comp
 
 
 @[ftrans_rule]
-theorem HSub.hSub.arg_a4a5.fderiv_comp
+theorem HSub.hSub.arg_a0a1.fderiv_rule
   (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
   : (fderiv K fun x => f x - g x)
     =
@@ -402,7 +384,7 @@ theorem HSub.hSub.arg_a4a5.fderiv_comp
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem Neg.neg.arg_a2.fderiv_at_comp
+theorem Neg.neg.arg_a0.fderiv_rule'
   (x : X) (f : X → Y)
   : (fderiv K fun x => - f x) x
     =
@@ -412,7 +394,7 @@ theorem Neg.neg.arg_a2.fderiv_at_comp
 
 
 @[ftrans_rule]
-theorem Neg.neg.arg_a2.fderiv_comp
+theorem Neg.neg.arg_a0.fderiv_rule
   (f : X → Y)
   : (fderiv K fun x => - f x)
     =
@@ -425,7 +407,7 @@ theorem Neg.neg.arg_a2.fderiv_comp
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem HMul.hMul.arg_a4a5.fderiv_at_comp
+theorem HMul.hMul.arg_a0a1.fderiv_rule_at
   {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
   (x : X) (f g : X → Y)
   (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
@@ -441,7 +423,7 @@ by
 
 
 @[ftrans_rule]
-theorem HMul.hMul.arg_a4a5.fderiv_comp
+theorem HMul.hMul.arg_a0a1.fderiv_rule
   {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
   (f g : X → Y)
   (hf : Differentiable K f) (hg : Differentiable K g)
@@ -462,7 +444,7 @@ by
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem SMul.smul.arg_a3a4.fderiv_at_comp
+theorem HSMul.hSMul.arg_a0a1.fderiv_rule_at
   (x : X) (f : X → K) (g : X → Y) 
   (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
   : (fderiv K fun x => f x • g x) x
@@ -475,7 +457,7 @@ theorem SMul.smul.arg_a3a4.fderiv_at_comp
 
 
 @[ftrans_rule]
-theorem SMul.smul.arg_a3a4.fderiv_comp
+theorem HSMul.hSMul.arg_a0a1.fderiv_rule
   (f : X → K) (g : X → Y) 
   (hf : Differentiable K f) (hg : Differentiable K g)
   : (fderiv K fun x => f x • g x)
@@ -493,7 +475,7 @@ theorem SMul.smul.arg_a3a4.fderiv_comp
 --------------------------------------------------------------------------------
 
 @[ftrans_rule]
-theorem HDiv.hDiv.arg_a4a5.fderiv_at_comp
+theorem HDiv.hDiv.arg_a0a1.fderiv_rule_at
   {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
   (x : R) (f : R → K) (g : R → K) 
   (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x) (hx : g x ≠ 0)
@@ -509,7 +491,7 @@ by
 
 
 @[ftrans_rule]
-theorem HDiv.hDiv.arg_a4a5.fderiv_comp
+theorem HDiv.hDiv.arg_a0a1.fderiv_rule
   {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
   (f : R → K) (g : R → K) 
   (hf : Differentiable R f) (hg : Differentiable R g) (hx : ∀ x, g x ≠ 0)
@@ -529,8 +511,8 @@ by
 -------------------------------------------------------------------------------- 
 
 @[ftrans_rule]
-def HPow.hPow.arg_a4.fderiv_at_comp
-  (n : Nat) (x : X) (f : X → K) (hf : DifferentiableAt K f x) 
+def HPow.hPow.arg_a0.fderiv_rule_at
+  (n : Nat) (x : X) (f : X → K) (hf : DifferentiableAt K f x)
   : fderiv K (fun x => f x ^ n) x
     =
     fun dx =>L[K] n * fderiv K f x dx * (f x ^ (n-1)) :=
@@ -541,21 +523,21 @@ by
   case succ n hn =>
     ext dx
     simp_rw[pow_succ]
-    rw[HMul.hMul.arg_a4a5.fderiv_at_comp x f _ (by fprop) (by fprop)]
+    rw[HMul.hMul.arg_a0a1.fderiv_rule_at x f _ (by fprop) (by fprop)]
     rw[hn]
     induction n
     case zero => simp
-    case succ => 
+    case succ =>
       rw[show ∀ (n : Nat), n.succ - 1 = n by simp]
       rw[pow_succ]
       simp; ring
 
 
 @[ftrans_rule]
-def HPow.hPow.arg_a4.fderiv_comp
-  (n : Nat) (f : X → K) (hf : Differentiable K f) 
+def HPow.hPow.arg_a0.fderiv_rule
+  (n : Nat) (f : X → K) (hf : Differentiable K f)
   : fderiv K (fun x => f x ^ n)
     =
     fun x => fun dx =>L[K] n * fderiv K f x dx * (f x ^ (n-1)) :=
 by
-  funext x; apply HPow.hPow.arg_a4.fderiv_at_comp n x f (hf x)
+  funext x; apply HPow.hPow.arg_a0.fderiv_rule_at n x f (hf x)
