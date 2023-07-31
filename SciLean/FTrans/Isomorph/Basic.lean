@@ -324,6 +324,44 @@ axiom HDiv.hDiv.arg_a0.isomorphFloatToReal (f : α → Float)
     fun x : α' => (isomorph `FloatToReal f x)⁻¹
 
 
+@[ftrans_rule]
+axiom Float.exp.arg_a0.isomorphFloatToReal (f : α → Float) 
+  : isomorph `FloatToReal (fun x => Float.exp (f x))
+    =
+    fun x => Real.exp (isomorph `FloatToReal f x)
+
+@[ftrans_rule]
+axiom Float.sin.arg_a0.isomorphFloatToReal (f : α → Float) 
+  : isomorph `FloatToReal (fun x => Float.sin (f x))
+    =
+    fun x => Real.sin (isomorph `FloatToReal f x)
+
+@[ftrans_rule]
+axiom Float.cos.arg_a0.isomorphFloatToReal (f : α → Float) 
+  : isomorph `FloatToReal (fun x => Float.cos (f x))
+    =
+    fun x => Real.cos (isomorph `FloatToReal f x)
+
+@[ftrans_rule]
+axiom Float.asin.arg_a0.isomorphFloatToReal (f : α → Float) 
+  : isomorph `FloatToReal (fun x => Float.asin (f x))
+    =
+    fun x => Real.arcsin (isomorph `FloatToReal f x)
+
+@[ftrans_rule]
+axiom Float.acos.arg_a0.isomorphFloatToReal (f : α → Float) 
+  : isomorph `FloatToReal (fun x => Float.acos (f x))
+    =
+    fun x => Real.arccos (isomorph `FloatToReal f x)
+
+@[ftrans_rule]
+axiom Float.atan.arg_a0.isomorphFloatToReal (f : α → Float) 
+  : isomorph `FloatToReal (fun x => Float.atan (f x))
+    =
+    fun x => Real.arctan (isomorph `FloatToReal f x)
+
+
+
 @[simp]
 axiom Zero.zero.isomorphFloatToReal 
   : floatToReal (0 : Float)
@@ -342,7 +380,7 @@ instance : Semigroup Float where
   mul_assoc := by 
     intro a b c
     apply (isoext `FloatToReal _ _).2
-    simp; ftrans; ftrans
+    ftrans; ftrans; ftrans
     rw[mul_assoc]
 
 
