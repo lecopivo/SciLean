@@ -152,8 +152,7 @@ variable {K}
 -- Register `fderiv` as function transformation --------------------------------
 --------------------------------------------------------------------------------
 
-open Lean Meta Qq
-
+open Lean Meta Qq in
 def fderiv.discharger (e : Expr) : SimpM (Option Expr) := do
   withTraceNode `fwdDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
@@ -169,7 +168,7 @@ def fderiv.discharger (e : Expr) : SimpM (Option Expr) := do
     let proof? ← tac e
     return proof?
 
-open Lean Elab Term FTrans
+open Lean Meta FTrans in
 def fderiv.ftransExt : FTransExt where
   ftransName := ``fderiv
 
@@ -232,6 +231,7 @@ def fderiv.ftransExt : FTransExt where
 
 
 -- register fderiv
+open Lean in
 #eval show Lean.CoreM Unit from do
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``fderiv, fderiv.ftransExt))
 
