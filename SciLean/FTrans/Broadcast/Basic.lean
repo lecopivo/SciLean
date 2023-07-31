@@ -239,7 +239,7 @@ variable
 --------------------------------------------------------------------------------
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.mk.arg_fstsnd.broadcast_rule
   (g : X → Y)
   (f : X → Z)
@@ -251,7 +251,7 @@ by
   funext mx; simp[broadcast, BroadcastType.equiv]
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.fst.arg_self.broadcast_rule
   (f : X → Y×Z)
   : broadcast tag R ι (fun x => (f x).1)
@@ -261,7 +261,7 @@ by
   funext mx; simp[broadcast, BroadcastType.equiv]
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.snd.arg_self.broadcast_rule
   (f : X → Y×Z)
   : broadcast tag R ι (fun x => (f x).2)
@@ -275,7 +275,7 @@ by
 -- HAdd.hAdd -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HAdd.hAdd.arg_a0a1.broadcast_rule (f g : X → Y)
   : (broadcast tag R ι fun x => f x + g x)
     =
@@ -289,7 +289,7 @@ by
 -- HSub.hSub -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HSub.hSub.arg_a0a1.broadcast_rule (f g : X → Y)
   : (broadcast tag R ι fun x => f x - g x)
     =
@@ -303,7 +303,7 @@ by
 -- Neg.neg ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem Neg.neg.arg_a0.broadcast_rule (f : X → Y)
   : (broadcast tag R ι fun x => - f x)
     =
@@ -316,7 +316,7 @@ by
 -- HMul.hmul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HMul.hMul.arg_a1.broadcast_rule
   (f : R → R) (c : R)
   : (broadcast tag R ι fun x => c * f x)
@@ -326,7 +326,7 @@ by
   funext mx; unfold broadcast; rw[← map_smul]; rfl
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem HMul.hMul.arg_a0.broadcast_rule
   {R : Type _} [CommRing R]
   {ι : Type _} {tag : Lean.Name}
@@ -343,7 +343,7 @@ by
 -- SMul.smul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HSMul.hSMul.arg_a1.broadcast_rule
   (c : R) (f : X → Y) 
   : (broadcast tag R ι fun x => c • f x)
@@ -354,7 +354,7 @@ by
 
 
 -- This has to be done for each `tag` reparatelly as we do not have access to elemntwise operations
-@[ftrans_rule]
+@[ftrans]
 theorem HSMul.hSMul.arg_a0.broadcast_rule
   (f : X → R) (y : Y) 
   [BroadcastType `Prod R (Fin n) X MX]

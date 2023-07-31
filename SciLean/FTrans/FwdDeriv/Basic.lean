@@ -231,7 +231,7 @@ variable
 -- Prod.mk -----------------------------------v---------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.mk.arg_fstsnd.fwdDeriv_rule_at
   (x : X)
   (g : X → Y) (hg : DifferentiableAt K g x)
@@ -246,7 +246,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.mk.arg_fstsnd.fwdDeriv_rule
   (g : X → Y) (hg : Differentiable K g)
   (f : X → Z) (hf : Differentiable K f)
@@ -264,7 +264,7 @@ by
 -- Prod.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.fst.arg_self.fwdDeriv_rule_at
   (x : X)
   (f : X → Y×Z) (hf : DifferentiableAt K f x)
@@ -277,7 +277,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.fst.arg_self.fwdDeriv_rule
   (f : X → Y×Z) (hf : Differentiable K f)
   : fwdDeriv K (fun x => (f x).1)
@@ -293,7 +293,7 @@ by
 -- Prod.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.snd.arg_self.fwdDeriv_rule_at
   (x : X)
   (f : X → Y×Z) (hf : DifferentiableAt K f x)
@@ -306,7 +306,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem Prod.snd.arg_self.fwdDeriv_rule
   (f : X → Y×Z) (hf : Differentiable K f)
   : fwdDeriv K (fun x => (f x).2)
@@ -322,7 +322,7 @@ by
 -- HAdd.hAdd -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HAdd.hAdd.arg_a0a1.fwdDeriv_rule_at
   (x : X) (f g : X → Y) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
   : (fwdDeriv K fun x => f x + g x) x
@@ -333,7 +333,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem HAdd.hAdd.arg_a0a1.fwdDeriv_rule
   (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
   : (fwdDeriv K fun x => f x + g x)
@@ -348,7 +348,7 @@ by
 -- HSub.hSub -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HSub.hSub.arg_a0a1.fwdDeriv_rule_at
   (x : X) (f g : X → Y) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
   : (fwdDeriv K fun x => f x - g x) x
@@ -359,7 +359,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem HSub.hSub.arg_a0a1.fwdDeriv_rule
   (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
   : (fwdDeriv K fun x => f x - g x)
@@ -374,7 +374,7 @@ by
 -- Neg.neg ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem Neg.neg.arg_a0.fwdDeriv_rule_at
   (x : X) (f : X → Y)
   : (fwdDeriv K fun x => - f x) x
@@ -384,7 +384,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem Neg.neg.arg_a0.fwdDeriv_rule
   (f : X → Y)
   : (fwdDeriv K fun x => - f x)
@@ -397,7 +397,7 @@ by
 -- HMul.hmul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HMul.hMul.arg_a0a1.fwdDeriv_rule_at
   {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
   (x : X) (f g : X → Y)
@@ -412,7 +412,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem HMul.hMul.arg_a0a1.fwdDeriv_rule
   {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
   (f g : X → Y)
@@ -430,7 +430,7 @@ by
 -- HSMul.hSMul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HSMul.hSMul.arg_a0a1.fwdDeriv_rule_at
   (x : X) (f : X → K) (g : X → Y) 
   (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
@@ -444,7 +444,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem HSMul.hSMul.arg_a0a1.fwdDeriv_rule
   (f : X → K) (g : X → Y) 
   (hf : Differentiable K f) (hg : Differentiable K g)
@@ -461,7 +461,7 @@ by
 -- HDiv.hDiv -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
+@[ftrans]
 theorem HDiv.hDiv.arg_a0a1.fwdDeriv_rule_at
   {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
   (x : R) (f : R → K) (g : R → K) 
@@ -476,7 +476,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 theorem HDiv.hDiv.arg_a0a1.fwdDeriv_rule
   {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
   (f : R → K) (g : R → K) 
@@ -494,7 +494,7 @@ by
 -- HPow.hPow -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
-@[ftrans_rule]
+@[ftrans]
 def HPow.hPow.arg_a0.fwdDeriv_rule_at
   (n : Nat) (x : X) (f : X → K) (hf : DifferentiableAt K f x) 
   : fwdDeriv K (fun x => f x ^ n) x
@@ -506,7 +506,7 @@ by
   unfold fwdDeriv; ftrans
 
 
-@[ftrans_rule]
+@[ftrans]
 def HPow.hPow.arg_a0.fwdDeriv_rule
   (n : Nat) (f : X → K) (hf : Differentiable K f) 
   : fwdDeriv K (fun x => f x ^ n)

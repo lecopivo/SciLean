@@ -28,11 +28,11 @@ initialize registerOption `linter.ftransDeclName { defValue := true, descr := "s
 -- initialize registerTraceClass `Meta.Tactic.ftrans.lambda_special_cases
 
 
-/-- Simp attribute to mark function transformation rules.
--/
-register_simp_attr ftrans_simp
+-- /-- Simp attribute to mark function transformation rules.
+-- -/
+-- register_simp_attr ftrans_simp
 
-macro "ftrans" : attr => `(attr| ftrans_simp ↓)
+-- macro "ftrans" : attr => `(attr| ftrans_simp ↓)
 
 
 open Meta Simp
@@ -171,7 +171,7 @@ initialize FTransRulesExt : MergeMapDeclarationExtension FTransRules
 open Lean Qq Meta Elab Term in
 initialize funTransRuleAttr : TagAttribute ← 
   registerTagAttribute 
-    `ftrans_rule
+    `ftrans
     "Attribute to tag the basic rules for a function transformation." 
     (validate := fun ruleName => do
       let env ← getEnv 

@@ -165,7 +165,7 @@ initialize FPropRulesExt : MergeMapDeclarationExtension FPropRules
 open Lean Qq Meta Elab Term in
 initialize funTransRuleAttr : TagAttribute ← 
   registerTagAttribute 
-    `fprop_rule
+    `fprop
     "Attribute to tag the basic rules for a function property." 
     (validate := fun ruleName => do
       let env ← getEnv 
