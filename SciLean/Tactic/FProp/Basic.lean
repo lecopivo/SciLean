@@ -88,11 +88,16 @@ mutual
       trace[Meta.Tactic.fprop.cache] "cached result for {e}"
       return proof
     else
-      forallTelescope e fun xs b => do
-        let .some proof ← main b
-          | return none
-        cache e (← mkLambdaFVars xs proof)
-
+      if e.isLet then
+        letTelescope e fun xs b => do
+          let .some proof ← main b
+            | return none
+          cache e (← mkLambdaFVars xs proof)
+      else 
+        forallTelescope e fun xs b => do
+          let .some proof ← main b
+            | return none
+          cache e (← mkLambdaFVars xs proof)
 
   partial def main (e : Expr) : FPropM (Option Expr) := do
 

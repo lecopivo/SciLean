@@ -10,11 +10,12 @@ open Lean.Parser.Tactic
 
 elab (name := fpropTac) "fprop" : tactic => do
   let goal ← getMainGoal
-  let goalType ← goal.getType
+  goal.withContext do
+    let goalType ← goal.getType
+  
+    let (.some proof, _) ← fprop goalType {} |>.run {}
+      | throwError "fprop was unable to prove `{← Meta.ppExpr goalType}`"
 
-  let (.some proof, _) ← fprop goalType {} |>.run {}
-    | throwError "fprop was unable to prove `{← Meta.ppExpr goalType}`"
-
-  goal.assign proof
+    goal.assign proof
 
 
