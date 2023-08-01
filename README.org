@@ -10,7 +10,7 @@ Lean is an expressive functional programming language that allows to formalize t
     - Code generation based on formal specification. Many problems any scientific computing or machine learning can be stated very easily e.g. find a minimizer of a function. We then provide tools how to turn such specification into a runnable code satisfying the specification, usually in an appropriate limit of used approximations.
     - Catalogization of numerical methods.
 
-  In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerfull and extensible library for scientific computing.
+  In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerful and extensible library for scientific computing.
 
   
 * Installation and running examples/tests
