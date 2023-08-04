@@ -130,7 +130,7 @@ def DifferentiableAt.fpropExt : FPropExt where
       | trace[Meta.Tactic.fprop.discharge] "Differentiable.comp_rule, failed to discharge hypotheses{HF}"
         return none
 
-    let HG ← mkAppM ``Differentiable #[R, g, x]
+    let HG ← mkAppM ``DifferentiableAt #[R, g, x]
     let .some hg ← FProp.fprop HG
       | trace[Meta.Tactic.fprop.discharge] "Differentiable.comp_rule, failed to discharge hypotheses{HG}"
         return none
@@ -150,12 +150,12 @@ def DifferentiableAt.fpropExt : FPropExt where
     let .some x := e.getArg? 9
       | return none
 
-    let HF ← mkAppM ``Differentiable #[R, (← mkUncurryFun 2 f)]
+    let HF ← mkAppM ``DifferentiableAt #[R, (← mkUncurryFun 2 f), (← mkProdElem #[x, ← mkAppM' g #[x]])]
     let .some hf ← FProp.fprop HF
       | trace[Meta.Tactic.fprop.discharge] "Differentiable.let_rule, failed to discharge hypotheses{HF}"
         return none
 
-    let HG ← mkAppM ``Differentiable #[R, g]
+    let HG ← mkAppM ``DifferentiableAt #[R, g, x]
     let .some hg ← FProp.fprop HG
       | trace[Meta.Tactic.fprop.discharge] "Differentiable.let_rule, failed to discharge hypotheses{HG}"
         return none
