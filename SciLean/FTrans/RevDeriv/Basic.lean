@@ -1,9 +1,14 @@
 import SciLean.FTrans.FDeriv.Basic
 import SciLean.FTrans.Adjoint.Basic
 
+import SciLean.FTrans.FDeriv.Alt
+import SciLean.FTrans.Adjoint.Alt
+
 import SciLean.Profile
 
 namespace SciLean
+
+-- #profile_this_filea
 
 noncomputable
 def revDeriv
@@ -11,7 +16,7 @@ def revDeriv
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
   (f : X → Y) (x : X) : Y×(Y→X) :=
-  (f x, (fderiv K f x)†)
+  (f x, adjoint' K (fderiv' K f x))
 
 
 namespace revDeriv
@@ -25,6 +30,8 @@ variable
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 
+
+
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -34,8 +41,6 @@ by
   unfold revDeriv
   funext _
   ftrans; ftrans
-  ext _; simp
-
 
 
 theorem const_rule (x : X)
@@ -44,7 +49,6 @@ by
   unfold revDeriv
   funext _
   ftrans; ftrans
-  ext _; simp
 
 
 theorem proj_rule [DecidableEq ι] (i : ι)
@@ -71,7 +75,7 @@ theorem comp_rule
 by
   unfold revDeriv
   funext _
-  ftrans; ftrans; simp; rfl
+  ftrans; ftrans
 
 
 theorem let_rule 
@@ -89,31 +93,86 @@ theorem let_rule
          dxdy.1 + dx)  :=
 by
   unfold revDeriv
-  funext _
-  ftrans; ftrans; simp;
-  ext _; simp; sorry
+  funext x
+  conv =>
+    lhs
+    ftrans only
+    ftrans only
+    enter [2, y]
+    rw[show 
+        (fun dx =>
+           let dy := fderiv' K (fun x => g x) x dx;
+           let dz := fderiv' K (fun xy => f xy.fst xy.snd) (x, y) (dx, dy);
+         dz)
+        =
+        fun dx =>
+          let dy := fderiv' K (fun x => g x) x dx;
+          let dz := fderiv' K (fun xy : X×₂Y => f xy.fst xy.snd) (x, y) (dx, dy);
+        dz
+        by funext dx; simp; sorry]
+  rw[_root_.SciLean.adjoint'.comp_rule K
+     (fderiv' K (fun xy : X×₂Y => f xy.fst xy.snd) (x, g x)) 
+     _
+     (by fprop) 
+     (by fprop)]
+  ftrans only
+  
 
 
 open BigOperators in
 theorem pi_rule
   (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable K (f i))
   : (revDeriv K (Y:= PiLp 2 E) fun (x : X) (i : ι) => f i x)
-    = 
+    =
     fun x =>
-      let xdf := fun i => 
+      let xdf := fun i =>
         (revDeriv K fun (x : X) => f i x) x
-      (fun i => (xdf i).1, 
+      (fun i => (xdf i).1,
        fun dy => ∑ i, (xdf i).2 (dy i))
-       := 
+       :=
 by
   unfold revDeriv
-  funext _
-  ftrans; ftrans
+  funext _; simp
+  set_option trace.Meta.Tactic.simp.unify true in
+  ftrans only
+  ftrans
   ext _; simp
   sorry
 
 
-#exit
+set_option profiler true in
+
+
+
+example
+  (f : Y → Z) (g : X → Y) (y : Y)
+  (hf : DifferentiableAt K f y) (hg : IsContinuousLinearMap K g)
+  : IsContinuousLinearMap K (fun dx => fderiv' K f y (g dx)) := by fprop
+
+example
+  (x : X)
+  (g : X → Y) (hg : DifferentiableAt K g x)
+  (f : Y → Z) (hf : DifferentiableAt K f (g x))
+  : let y : Nat := 1 + 1;
+    IsContinuousLinearMap K fun dy => fderiv' K (fun x0 => f x0) (g x) dy :=
+by
+  set_option trace.Meta.Tactic.fprop.discharge true in
+  set_option trace.Meta.Tactic.fprop.step true in
+  set_option trace.Meta.Tactic.fprop.unify true in
+  fprop
+
+
+example
+  (x : X)
+  (g : X → Y) (hg : DifferentiableAt K g x)
+  (f : Y → Z) (hf : DifferentiableAt K f (g x))
+  : let y := g x;
+    DifferentiableAt K (fun x0 => f x0) y :=
+by
+  intro y
+  fprop
+
+
 
 theorem comp_rule_at
   (x : X)
@@ -121,16 +180,20 @@ theorem comp_rule_at
   (f : Y → Z) (hf : DifferentiableAt K f (g x))
   : revDeriv K (fun x : X => f (g x)) x
     = 
-    fun dx => 
-      let ydy := revDeriv K g x dx 
-      let zdz := revDeriv K f ydy.1 ydy.2 
-      zdz :=
+    let ydg := revDeriv K g x 
+    let zdf := revDeriv K f ydg.1
+    (zdf.1,    
+     fun dz => 
+     ydg.2 (zdf.2 dz)) :=
 by
   unfold revDeriv
-  funext dx; congr
-  rw[fderiv.comp_rule_at x g hg f hf]
-  simp
+  simp; ftrans only; ftrans only
+  set_option trace.Meta.Tactic.ftrans.discharge true in
+  set_option trace.Meta.Tactic.fprop.discharge true in
+  ftrans only
 
+
+#exit
 
 theorem let_rule_at
   (x : X)
@@ -168,8 +231,7 @@ by
 #check `(tactic| assumption) 
 #check Lean.Syntax
 
-open Lean Meta Qq
-
+open Lean Meta Qq in
 def revDeriv.discharger (e : Expr) : SimpM (Option Expr) := do
   withTraceNode `revDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
@@ -186,7 +248,7 @@ def revDeriv.discharger (e : Expr) : SimpM (Option Expr) := do
     return proof?
 
 
-open Lean Elab Term FTrans
+open Lean Meta FTrans in
 def revDeriv.ftransExt : FTransExt where
   ftransName := ``revDeriv
 
