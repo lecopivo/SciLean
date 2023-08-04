@@ -270,6 +270,7 @@ inductive SimpLetCase where
   | nondep -- `let x := v; b` is equivalent to `(fun x => b) v`, and result type does not depend on `x`
 
 def getSimpLetCase (n : Name) (t : Expr) (b : Expr) : MetaM SimpLetCase := do
+  withTraceNode `simpLetCase (fun _ => pure "simpLetCase") do
   withLocalDeclD n t fun x => do
     let bx := b.instantiate1 x
     /- The following step is potentially very expensive when we have many nested let-decls.
