@@ -1,5 +1,5 @@
-import SciLean.Core.Vec
 import Mathlib.Analysis.InnerProductSpace.Basic
+import SciLean.Core.Vec
 
 namespace SciLean
 
@@ -22,9 +22,7 @@ instance (priority:=low) (K ι) (X : ι → Type)
 
 end Inner
 
-
 section TestFunctions 
-
 
 /-- TestFunctions defines a subset well behaved w.r.t. to the inner product. 
 For example:

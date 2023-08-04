@@ -11,9 +11,10 @@ open SciLean.Mathlib.Convenient
 
 section OnPlainVectorSpaces
 
-variable {α β γ : Type}
-variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z] 
-variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
+variable {α β γ : Type _}
+variable {K : Type _}
+variable {X Y Z : Type _} [Vec K X] [Vec K Y] [Vec K Z] 
+variable {Y₁ Y₂ : Type _} [Vec K Y₁] [Vec K Y₂]
 
 
 -- ∂ 

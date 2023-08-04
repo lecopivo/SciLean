@@ -1,12 +1,47 @@
--- import SciLean.Mathlib.Algebra.Module.Basic
 import Mathlib.Algebra.Module.Basic
-import SciLean.Mathlib.Data.Prod
-import SciLean.Mathlib.Data.Pi
-import SciLean.Mathlib.Data.PUnit
+import Mathlib.Data.IsROrC.Lemmas
+import Mathlib.Topology.Algebra.Module.LocallyConvex
 
-import SciLean.Core.Real
 
 namespace SciLean
+
+namespace Curve
+
+variable {K : Type u} [NontriviallyNormedField K] 
+variable {F : Type v} [AddCommGroup F] [Module K F] [TopologicalSpace F] -- [TopologicalAddGroup F] [ContinuousSMul K F]
+variable {E : Type w} [AddCommGroup E] [Module K E] [TopologicalSpace E] -- [TopologicalAddGroup E] [ContinuousSMul K E]
+
+open scoped Classical Topology BigOperators Filter ENNReal
+
+open Filter Asymptotics Set
+
+def HasDerivAtFilter (f : K → F) (f' : F) (x : K) (L : Filter K) :=
+  Tendsto (fun x' => (x' - x)⁻¹ • (f x' - f x)) L (nhds f')
+
+def HasDerivAt (f : K → F) (f' : F) (x : K) :=
+  HasDerivAtFilter f f' x (𝓝 x)
+
+def DifferentiableAt (f : K → F) (x : K) :=
+  ∃ f' : F, HasDerivAt f f' x
+
+noncomputable
+def deriv (f : K → F) (x : K) :=
+  if h : ∃ f', HasDerivAt f f' x then Classical.choose h else 0
+
+def Differentiable (f : K → F) :=
+  ∀ x, DifferentiableAt f x
+
+-- TODO: This should probably be true on small neighborhood of x not just *at* x
+def DifferentiableAtN (f : K → F) (x : K) (n : Nat) :=
+  match n with
+  | 0 => ContinuousAt f x
+  | n+1 => DifferentiableAt f x ∧ DifferentiableAtN (deriv f) x n
+
+def DifferentiableN (f : K → F) (n : Nat) := ∀ x, DifferentiableAtN f x n
+def SmoothAt        (f : K → F) (x : K)   := ∀ n, DifferentiableAtN f x n
+def Smooth          (f : K → F)           := ∀ x n, DifferentiableAtN f x n
+
+end Curve
 
 
 -- __   __      _             ___
@@ -16,53 +51,85 @@ namespace SciLean
 --                               |_|
 -- At the and we will use Convenient Vector Space. It is a special kind of topological vector space
 
-class Vec (X : Type u) extends AddCommGroup X, Module ℝ X
+class Vec (K : Type _) [IsROrC K] (X : Type _) 
+  extends 
+    AddCommGroup X,
+    Module K X,
+    TopologicalSpace X,
+    TopologicalAddGroup X,
+    ContinuousSMul K X
+  where
+    -- locally convex in some sense, mathlib definition is odd
+    -- mild completeness condition
+    scalar_wise_smooth : ∀ (c : K → X),
+      Curve.Smooth c
+      ↔ 
+      ∀ x' : X →L[K] K, Curve.Smooth (x'∘c)
 
 section CommonVectorSpaces
 
   variable {α β ι : Type u}
-  variable {U V} [Vec U] [Vec V]
+  variable {K : Type _} [IsROrC K]
+  variable {U V} [Vec K U] [Vec K V]
   variable {E : ι → Type v}
 
-  instance {X} [Vec X] : Inhabited X := ⟨0⟩
+  instance {X} [Vec K X] : Inhabited X := ⟨0⟩
 
-  instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
-  instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
-  instance : Module ℝ ℝ := Module.mk sorry sorry
-  instance : Vec ℝ := Vec.mk
+  -- instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
+  -- instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
+  -- instance : Module ℝ ℝ := Module.mk sorry sorry
+  -- instance : Vec ℝ := Vec.mk
 
 
-  abbrev AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α := AddSemigroup.mk sorry_proof
-  abbrev AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α := 
-    AddMonoid.mk (toAddSemigroup := AddSemigroup.mkSorryProofs) sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
-  abbrev SubNegMonoid.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α]  : SubNegMonoid α := 
-    SubNegMonoid.mk (toAddMonoid := AddMonoid.mkSorryProofs) sorry_proof zsmulRec sorry_proof sorry_proof sorry_proof
-  abbrev AddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddGroup α :=
-    AddGroup.mk (toSubNegMonoid := SubNegMonoid.mkSorryProofs) sorry_proof
-  abbrev AddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddCommGroup α :=
-    AddCommGroup.mk (toAddGroup := AddGroup.mkSorryProofs) sorry_proof
+  -- abbrev AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α := AddSemigroup.mk sorry_proof
+  -- abbrev AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α := 
+  --   AddMonoid.mk (toAddSemigroup := AddSemigroup.mkSorryProofs) sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
+  -- abbrev SubNegMonoid.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α]  : SubNegMonoid α := 
+  --   SubNegMonoid.mk (toAddMonoid := AddMonoid.mkSorryProofs) sorry_proof zsmulRec sorry_proof sorry_proof sorry_proof
+  -- abbrev AddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddGroup α :=
+  --   AddGroup.mk (toSubNegMonoid := SubNegMonoid.mkSorryProofs) sorry_proof
+  -- abbrev AddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddCommGroup α :=
+  --   AddCommGroup.mk (toAddGroup := AddGroup.mkSorryProofs) sorry_proof
 
-  abbrev MulAction.mkSorryProofs {α β} [Monoid α] [SMul α β] : MulAction α β := MulAction.mk sorry_proof sorry_proof
-  abbrev DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [SMul α β] : DistribMulAction α β := 
-    DistribMulAction.mk (toMulAction := MulAction.mkSorryProofs) sorry_proof sorry_proof
-  abbrev Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [SMul α β] : Module α β := 
-    Module.mk (toDistribMulAction := DistribMulAction.mkSorryProofs) sorry_proof sorry_proof
+  -- abbrev MulAction.mkSorryProofs {α β} [Monoid α] [SMul α β] : MulAction α β := MulAction.mk sorry_proof sorry_proof
+  -- abbrev DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [SMul α β] : DistribMulAction α β := 
+  --   DistribMulAction.mk (toMulAction := MulAction.mkSorryProofs) sorry_proof sorry_proof
+  -- abbrev Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [SMul α β] : Module α β := 
+  --   Module.mk (toDistribMulAction := DistribMulAction.mkSorryProofs) sorry_proof sorry_proof
 
-  abbrev Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [SMul ℝ α] : Vec α :=
-    Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs))
+  -- abbrev Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [SMul K α] : Vec K α :=
+  --   Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs))
     
-  instance [Vec U] : Vec (α → U) := Vec.mkSorryProofs
-  instance(priority:=low) (α : Type) (X : α → Type) [∀ a, Vec (X a)] : Vec ((a : α) → X a) := Vec.mkSorryProofs
-  instance [Vec U] [Vec V] : Vec (U × V) := Vec.mkSorryProofs
-  instance : Vec Unit := Vec.mkSorryProofs
+  instance [inst : Vec K U] : Vec K (α → U) := 
+    -- option 1:
+    -- Vec.mkSorryProofs
+    -- option 2:
+    -- have : Module K U := inst.toModule
+    -- Vec.mk
+    -- option 3:
+    by cases inst; apply Vec.mk (scalar_wise_smooth := sorry)
+
+
+  instance(priority:=low) (α : Type) (X : α → Type) [inst : ∀ a, Vec K (X a)] : Vec K ((a : α) → X a) := 
+    --Vec.mkSorryProofs
+    let _ : ∀ a, Module K (X a) := fun a => (inst a).toModule
+    let _ : ∀ a, TopologicalSpace (X a) := fun a => (inst a).toTopologicalSpace
+    let _ : ∀ a, TopologicalAddGroup (X a) := fun a => (inst a).toTopologicalAddGroup
+    let _ : ∀ a, ContinuousSMul K (X a) := fun a => (inst a).toContinuousSMul
+    Vec.mk (scalar_wise_smooth := sorry)
+
+  instance [instU : Vec K U] [instV : Vec K V] : Vec K (U × V) := 
+    by cases instU; cases instV; apply Vec.mk (scalar_wise_smooth := sorry)
+
+  instance : Vec K Unit := Vec.mk (scalar_wise_smooth := sorry)
 
 
   infix:30 "⊕" => Sum.elim  -- X⊕Y→Type
 
   instance instVecSum
     (X Y : Type) (TX : X → Type) (TY : Y → Type)  (xy : X⊕Y) 
-    [∀ x, Vec (TX x)] [∀ y, Vec (TY y)]
-    : Vec ((TX⊕TY) xy) 
+    [∀ x, Vec K (TX x)] [∀ y, Vec K (TY y)]
+    : Vec K ((TX⊕TY) xy) 
     :=
     match xy with
     | .inl _ => by dsimp; infer_instance
@@ -75,24 +142,22 @@ end CommonVectorSpaces
 
 section VecProp
 
-class VecProp {X : Type} [Vec X] (P : X → Prop) : Prop where
+class VecProp (K : Type _) [IsROrC K] {X : Type _} [Vec K X] (P : X → Prop) : Prop where
   add : ∀ x y, P x → P y → P (x + y)
   neg : ∀ x, P x → P (- x)
-  smul : ∀ (r : ℝ) x, P x → P (r • x)
+  smul : ∀ (r : K) x, P x → P (r • x)
   zero : P 0
 
-variable {X : Type} [Vec X] {P : X → Prop} [inst : VecProp P]
+
+variable {K : Type _} [IsROrC K] {X : Type _} [Vec K X] {P : X → Prop} [inst : VecProp K P]
 
 instance : Add {x : X // P x} := ⟨λ x y => ⟨x.1 + y.1, inst.add x.1 y.1 x.2 y.2⟩⟩
-instance : Sub {x : X // P x} := ⟨λ x y => ⟨x.1 - y.1, sorry⟩⟩
+instance : Sub {x : X // P x} := ⟨λ x y => ⟨x.1 - y.1, by simp[sub_eq_add_neg]; apply inst.add; apply x.2; apply inst.neg; apply y.2⟩⟩
 instance : Neg {x : X // P x} := ⟨λ x => ⟨- x.1, inst.neg x.1 x.2⟩⟩
-instance : SMul ℝ {x : X // P x} := ⟨λ r x => ⟨r • x.1, inst.smul r x.1 x.2⟩⟩
+instance : SMul K {x : X // P x} := ⟨λ r x => ⟨r • x.1, inst.smul r x.1 x.2⟩⟩
 
 instance : Zero {x : X // P x} := ⟨⟨0, inst.zero⟩⟩
 
--- This should get subset topology inherited from `X` 
--- Important: topology on `X→Y` is not the same as of `X ⟿ Y`
--- The question should Vec be ∞-complete? I'm not sure that it can be
-instance : Vec {x : X // P x} := Vec.mkSorryProofs
+-- instance : Vec K {x : X // P x} := sorry
 
 end VecProp
