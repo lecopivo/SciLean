@@ -207,7 +207,8 @@ mutual
   partial def synthesizeInstance (thmId : Origin) (x type : Expr) : MetaM Bool := do
     match (← trySynthInstance type) with
     | LOption.some val =>
-      if (← withReducibleAndInstances <| isDefEq x val) then
+      -- if (← withReducibleAndInstances <| isDefEq x val) then
+      if (← isDefEq x val) then
         return true
       else
         trace[Meta.Tactic.fprop.discharge] "{← ppOrigin thmId}, failed to assign instance{indentExpr type}\nsythesized value{indentExpr val}\nis not definitionally equal to{indentExpr x}"
