@@ -1,59 +1,88 @@
 import Lean
-import SciLean.Core
+import Std
+import Qq
+import Mathlib.Data.Real.Basic
+import Mathlib.Tactic.NormNum
+import Mathlib.Tactic.Ring
 
 namespace SciLean
 
--- abbrev ℝ := Float
--- instance : DecidableEq ℝ := λ x y => if x==y then .isTrue sorry else .isFalse sorry
-
--- structure PhysicalScale where
--- Change to rational numbers
--- Maybe change scale to positive rationals
 structure PhysicalUnit where
-  -- meter
-  mLog10Scale  : Int := 0
-  mPower      : Int   := 0
-  -- second 
-  sLog10Scale  : Int := 0
-  sPower      : Int   := 0
-  -- kilogram
-  kgLog10Scale : Int := 0
-  kgPower     : Int   := 0
+  scale : ℚ := 1
+  mPower : ℤ := 0
+  sPower : ℤ := 0
+  kgPower : ℤ := 0
 deriving DecidableEq
 
-def PhysicalUnit.scale (unit : PhysicalUnit) : Float := 
-    2^(Float.ofInt (unit.mLog10Scale + unit.sLog10Scale + unit.kgLog10Scale))
-
 instance : Mul PhysicalUnit := ⟨λ x y => 
-  { mLog10Scale  := x.mLog10Scale + y.mLog10Scale,
-    mPower      := x.mPower + y.mPower,
-    sLog10Scale  := x.sLog10Scale + y.sLog10Scale,
-    sPower      := x.sPower + y.sPower,
-    kgLog10Scale := x.kgLog10Scale + y.kgLog10Scale,
-    kgPower     := x.kgPower + y.kgPower }⟩
+  { scale := x.scale * y.scale
+    mPower  := x.mPower + y.mPower,
+    sPower  := x.sPower + y.sPower,
+    kgPower := x.kgPower + y.kgPower }⟩
 
 instance : Div PhysicalUnit := ⟨λ x y => 
-  { mLog10Scale  := x.mLog10Scale - y.mLog10Scale,
-    mPower      := x.mPower - y.mPower,
-    sLog10Scale  := x.sLog10Scale - y.sLog10Scale,
-    sPower      := x.sPower - y.sPower,
-    kgLog10Scale := x.kgLog10Scale - y.kgLog10Scale,
-    kgPower     := x.kgPower - y.kgPower }⟩
+  { scale  := x.scale / y.scale,
+    mPower  := x.mPower - y.mPower,
+    sPower  := x.sPower - y.sPower,
+    kgPower := x.kgPower - y.kgPower }⟩
 
 instance : HPow PhysicalUnit Int PhysicalUnit := ⟨λ x y => 
-  { mLog10Scale  := x.mLog10Scale * y,
-    mPower      := x.mPower * y,
-    sLog10Scale  := x.sLog10Scale * y,
-    sPower      := x.sPower * y,
-    kgLog10Scale := x.kgLog10Scale * y,
-    kgPower     := x.kgPower * y }⟩
+  { scale  := x.scale ^ y,
+    mPower  := x.mPower * y,
+    sPower  := x.sPower * y,
+    kgPower := x.kgPower * y }⟩
+
+instance : HPow PhysicalUnit Nat PhysicalUnit := ⟨λ x y => 
+  { scale  := x.scale ^ y,
+    mPower  := x.mPower * y,
+    sPower  := x.sPower * y,
+    kgPower := x.kgPower * y }⟩
 
 
-instance : OfNat PhysicalUnit 1 := ⟨{}⟩
+@[simp]
+theorem PhysicalUnit.div_to_mk (u v : PhysicalUnit)
+  : u / v
+    =
+    PhysicalUnit.mk (u.scale/v.scale) (u.mPower - v.mPower) (u.sPower - v.sPower) (u.kgPower - v.kgPower) := by rfl
+
+@[simp]
+theorem PhysicalUnit.mul_to_mk (u v : PhysicalUnit)
+  : u * v
+    =
+    PhysicalUnit.mk (u.scale*v.scale) (u.mPower + v.mPower) (u.sPower + v.sPower) (u.kgPower + v.kgPower) := by rfl
+
+@[simp]
+theorem PhysicalUnit.pow_mk (u : PhysicalUnit) (x : Int)
+  : u ^ x
+    =
+    PhysicalUnit.mk (u.scale^x) (u.mPower*x) (u.sPower*x) (u.kgPower*x) := by rfl
+
+@[simp]
+theorem PhysicalUnit.pow_mk' (u : PhysicalUnit) (x : Nat)
+  : u ^ x
+    =
+    PhysicalUnit.mk (u.scale^x) (u.mPower*x) (u.sPower*x) (u.kgPower*x) := by rfl
+
+instance : One PhysicalUnit := ⟨{}⟩
+
+@[simp]
+theorem PhysicalUnit.one_scale
+  : (1 : PhysicalUnit).scale = 1 := by rfl
+
+@[simp]
+theorem PhysicalUnit.one_mpower
+  : (1 : PhysicalUnit).mPower = 0 := by rfl
+
+@[simp]
+theorem PhysicalUnit.one_spower
+  : (1 : PhysicalUnit).sPower = 0 := by rfl
+
+@[simp]
+theorem hPhysicalUnit.one_kgpower
+  : (1 : PhysicalUnit).kgPower = 0 := by rfl
 
 
--- Maybe unit can be anything that is multiplicatie abelian group
-structure PhysicalQuantity (α : Type u) (unit : PhysicalUnit) where
+structure PhysicalQuantity (α : Type u) (unit : PhysicalUnit := {}) where
   val : α 
 
 instance {α units} [Add α] : Add (PhysicalQuantity α units) := ⟨λ x y => ⟨x.val + y.val⟩⟩
@@ -80,194 +109,149 @@ instance {α β γ units'} [HDiv α β γ]
   : HDiv α (PhysicalQuantity β units') (PhysicalQuantity γ (1/units')) := 
   ⟨λ x y => ⟨x / y.val⟩⟩
 
-abbrev ensure_type (α : Type _) (a : α) := a
-
-open Lean Elab Term Meta in
-elab:max " reduce_type_of' " t:term : term => do
-  let val ← elabTerm t none
-  let typ ← inferType val
-  let reduced ← reduce typ (skipTypes := false)
-  mkAppM ``ensure_type #[reduced, val]
-
-macro (priority:=high) x:term:71 " * " y:term:70 : term =>
-  `((reduce_type_of' (HMul.hMul $x $y)))
-macro (priority:=high) x:term:71 " / " y:term:70 : term =>
-  `((reduce_type_of' (HDiv.hDiv $x $y)))
-
-declare_syntax_cat siunit (behavior := both)
-
-syntax "unit" term  : siunit
-
-def meter : PhysicalUnit := { mPower := 1}
-macro "m"  : siunit => `(siunit| unit meter)
-
-def kilometer : PhysicalUnit := { mPower := 1, mLog10Scale := 3 }
-macro "km" : siunit => `(siunit| unit kilometer)
-
-def centimeter : PhysicalUnit := { mPower := 1, mLog10Scale := -2 }
-macro "cm" : siunit => `(siunit| unit centimeter)
-
-def millimeter : PhysicalUnit := { mPower := 1, mLog10Scale := -3 }
-macro "mm" : siunit => `(siunit| unit millimeter)
-
-def mile : PhysicalUnit := { mPower := 1, mLog10Scale := Float.log10 1609.34 |>.toUInt64.toNat}
-macro "mi" : siunit => `(siunit| unit mile)
-
-def yard : PhysicalUnit := { mPower := 1, mLog10Scale := Float.log10 0.9144 |>.toUInt64.toNat}
-macro "yd" : siunit => `(siunit| unit yard)
-
-def feet : PhysicalUnit := { mPower := 1, mLog10Scale := Float.log10 0.3048 |>.toUInt64.toNat}
-macro "ft" : siunit => `(siunit| unit feet)
-
-def inch : PhysicalUnit := { mPower := 1, mLog10Scale := Float.log10 0.0254 |>.toUInt64.toNat}
-macro "in" : siunit => `(siunit| unit inch)
+abbrev meter : PhysicalUnit := { mPower := 1}
+abbrev kilometer : PhysicalUnit := { mPower := 1, scale := 1000 }
+abbrev centimeter : PhysicalUnit := { mPower := 1, scale := (1:ℚ)/(100:ℚ) }
+abbrev millimeter : PhysicalUnit := { mPower := 1, scale := (1:ℚ)/(1000:ℚ) }
+abbrev mile : PhysicalUnit := { mPower := 1, scale := (160934:ℚ)/(100:ℚ) }
+abbrev second : PhysicalUnit := { sPower := 1 }
+abbrev minute : PhysicalUnit := { sPower := 1, scale := 60}
+abbrev hour : PhysicalUnit := { sPower := 1, scale := 360}
+abbrev day : PhysicalUnit := { sPower := 1, scale := 8640}
+abbrev kilogram : PhysicalUnit := { kgPower := 1 }
+abbrev gram : PhysicalUnit := { kgPower := 1, scale := (1:ℚ)/(1000:ℚ)}
+abbrev milligram : PhysicalUnit := { kgPower := 1, scale := (1:ℚ)/(1000000:ℚ)}
+abbrev hertz : PhysicalUnit := { sPower := -1 }
+abbrev newton : PhysicalUnit := { mPower := 1, sPower := -2, kgPower := 1 }
+abbrev pascal : PhysicalUnit := { mPower := -1, sPower := -2, kgPower := 1 }
+abbrev watt : PhysicalUnit := { mPower := 2, sPower := -3, kgPower := 1 }
+abbrev joule : PhysicalUnit := { mPower := 2, sPower := -2, kgPower := 1 }
 
 
-def hectare : PhysicalUnit := { mPower := 2, mLog10Scale := 4 }
-macro "ha" : siunit => `(siunit| unit hectare)
-
-def acre : PhysicalUnit := { mPower := 2, mLog10Scale := Float.log10 4046.86 |>.toUInt64.toNat}
-macro "ac" : siunit => `(siunit| unit acre)
-
-def second : PhysicalUnit := { sPower := 1 }
-macro "s" : siunit => `(siunit| unit second)
-
-def minute : PhysicalUnit := { sPower := 1, sLog10Scale := Float.log10 60 |>.toUInt64.toNat}
-macro "min" : siunit => `(siunit| unit minute)
-
-def hour : PhysicalUnit := { sPower := 1, sLog10Scale := Float.log10 360 |>.toUInt64.toNat}
-macro "h" : siunit => `(siunit| unit hour)
-
-def day : PhysicalUnit := { sPower := 1, sLog10Scale := Float.log10 8640 |>.toUInt64.toNat}
-macro "day" : siunit => `(siunit| unit day)
-
-def kilogram : PhysicalUnit := { kgPower := 1 }
-macro "kg" : siunit => `(siunit| unit kilogram)
-
-def gram : PhysicalUnit := { kgPower := 1, kgLog10Scale := -3}
-macro "g" : siunit => `(siunit| unit gram)
-
-def milligram : PhysicalUnit := { kgPower := 1, kgLog10Scale := -6}
-macro "mg" : siunit => `(siunit| unit milligram)
-
-def stone : PhysicalUnit := { kgPower := 1, kgLog10Scale := Float.log10 6.350288000002350941 |>.toUInt64.toNat}
-macro "st" : siunit => `(siunit| unit stone)
-
-def pound : PhysicalUnit := { kgPower := 1, kgLog10Scale := Float.log10 0.4535920000001679 |>.toUInt64.toNat}
-macro "Lb" : siunit => `(siunit| unit pound)
-
-def ounce : PhysicalUnit := { kgPower := 1, kgLog10Scale := Float.log10 0.028349500000010494777 |>.toUInt64.toNat}
-macro "oz" : siunit => `(siunit| unit ounce)
-
-
-def hertz : PhysicalUnit := { sPower := -1 }
-macro "Hz" : siunit => `(siunit| unit hertz)
-
-def newton : PhysicalUnit := { mPower := 1, sPower := -2, kgPower := 1 }
-macro "N" : siunit => `(siunit| unit newton)
-
-def pascal : PhysicalUnit := { mPower := -1, sPower := -2, kgPower := 1 }
-macro "Pa" : siunit => `(siunit| unit pascal)
-
-def watt : PhysicalUnit := { mPower := 2, sPower := -3, kgPower := 1 }
-macro "W" : siunit => `(siunit| unit watt)
-
-def joule : PhysicalUnit := { mPower := 2, sPower := -2, kgPower := 1 }
-macro "J" : siunit => `(siunit| unit joule)
-
-
-syntax siunit:71 "*" siunit:70 : siunit
-syntax siunit:71 "/" siunit:70 : siunit
-syntax siunit noWs "²" : siunit
-syntax siunit noWs "³" : siunit
-syntax siunit noWs "⁻¹" : siunit
-syntax siunit noWs "⁻²" : siunit
-syntax siunit noWs "⁻³" : siunit
-
-syntax "ℝ[" siunit "]" : term
+syntax term noWs "⟦" term "⟧ ": term
 
 macro_rules
-| `(siunit| $unit * $unit') => do
-  match (← Lean.expandMacros unit) with 
-  | `(siunit| unit $u) => 
-    match (← Lean.expandMacros unit') with
-    | `(siunit| unit $u') => 
-      `(siunit| unit ($u * $u'))
-    | _ => Lean.Macro.throwUnsupported
-  | _ => Lean.Macro.throwUnsupported
-| `(siunit| $unit / $unit') => do
-  match (← Lean.expandMacros unit) with 
-  | `(siunit| unit $u) => 
-    match (← Lean.expandMacros unit') with
-    | `(siunit| unit $u') => 
-      `(siunit| unit ($u / $u'))
-    | _ => Lean.Macro.throwUnsupported
-  | _ => Lean.Macro.throwUnsupported
-| `(siunit| $unit²) => do
-  match (← Lean.expandMacros unit) with
-  | `(siunit| unit $u) => `(siunit| unit $u^(2:Int))
-  | _ => Lean.Macro.throwUnsupported
-| `(siunit| $unit³) => do
-  match (← Lean.expandMacros unit) with
-  | `(siunit| unit $u) => `(siunit| unit $u^(3:Int))
-  | _ => Lean.Macro.throwUnsupported
-| `(siunit| $unit⁻¹) => do
-  match (← Lean.expandMacros unit) with
-  | `(siunit| unit $u) => `(siunit| unit $u^(-1:Int))
-  | _ => Lean.Macro.throwUnsupported
-| `(siunit| $unit⁻²) => do
-  match (← Lean.expandMacros unit) with
-  | `(siunit| unit $u) => `(siunit| unit $u^(-2:Int))
-  | _ => Lean.Macro.throwUnsupported
-| `(siunit| $unit⁻³) => do
-  match (← Lean.expandMacros unit) with
-  | `(siunit| unit $u) => `(siunit| unit $u^(-3:Int))
-  | _ => Lean.Macro.throwUnsupported
-| `(ℝ[ $units ]) => do
-  match (← Lean.expandMacros units) with
-  | `(siunit| unit $u) => `(PhysicalQuantity ℝ $u)
-  | _ => Lean.Macro.throwUnsupported
+| `(term| $X:term⟦ $unit:term ⟧) => `(PhysicalQuantity $X $unit)
+
+@[app_unexpander PhysicalQuantity] def unexpandPhysicalQuantity : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $α:term { scale := $a, mPower := $b, sPower := $c, kgPower := $d}) => do
+    let zero ← `(0)
+    let one ← `(1)
+    let meter := Lean.mkIdent ``meter
+    let second := Lean.mkIdent ``second
+    let kilogram := Lean.mkIdent ``kilogram
+    let unit : Array (Lean.TSyntax `term) ← #[(b,meter),(c,second),(d,kilogram)].filterMapM 
+      (fun (x,y) => do
+        if x == zero then 
+          pure none 
+        else if x == one then
+          pure (.some y)
+        else
+          pure $ .some (← `(term| $y ^ $x)))
+
+    let unit ← unit[1:].foldlM (init:=unit[0]!) (fun a b => `(term| $a * $b))
+
+    if a == one then
+      `(term| $α:term⟦$unit⟧)
+    else
+      `(term| $a * $α:term⟦$unit⟧)
+
+  | `($(_) $α:term $u) => `($α⟦$u⟧)
+
+  | _  => throw ()
+
+example : Float⟦millimeter*kilometer⟧ = Float⟦meter^2⟧ := by rfl
+example : ℚ⟦meter*second^(-1)⟧ = ℚ⟦second^(-1)*meter⟧ := by rfl
+example : ℕ⟦kilogram*milligram⟧ = ℕ⟦gram^2⟧ := by rfl
+example : Float⟦newton⟧  = Float⟦kilogram*meter*second^(-2)⟧ := by rfl
+
+open Lean Elab Term Meta Qq in
+elab (priority:=high) x:term:71 " * " y:term:70 : term => do
+  let x ← elabTerm x none
+  let y ← elabTerm y none 
+  let X ← inferType x
+  let Y ← inferType y
+  let z ← mkAppOptM ``HMul.hMul #[X,Y,none,none,x,y]
+  let Z ← inferType z
+  let r ← Mathlib.Meta.NormNum.deriveSimp 
+    { simpTheorems := #[← getSimpTheorems], 
+      congrTheorems := ← getSimpCongrTheorems} true Z
+  let Z' := r.expr
+  if ← isDefEq Z Z' then
+    let mul ← synthInstance (← mkAppOptM ``HMul #[X,Y,Z])
+    mkAppOptM ``HMul.hMul #[X,Y,Z',mul,x,y]
+  else
+    mkAppOptM ``cast #[none,none,r.proof?,z]
 
 
-open Lean Lean.Meta Lean.Elab Lean.Elab.Term in
-elab_rules : term
-| `(PhysicalQuantity $α $unit) => do
-  let α ← elabTerm α none
-  let unit ← reduce (← elabTerm unit (mkConst ``PhysicalUnit))
-  mkAppM ``PhysicalQuantity #[α, unit]
+open Lean Elab Term Meta Qq in
+elab (priority := high) x:term:66 " + " y:term:65 : term => do
+  let x ← elabTerm x none
+  let y ← elabTerm y none 
+
+  try 
+    mkAppOptM ``HAdd.hAdd #[none,none,none,none,x,y]
+  catch _ => 
+
+    let X ← inferType x
+    let Y ← inferType y
+
+    let ctx : Simp.Context := 
+      { simpTheorems := #[← getSimpTheorems], 
+        congrTheorems := ← getSimpCongrTheorems}
+
+    let rX ← Mathlib.Meta.NormNum.deriveSimp ctx true X
+    let rY ← Mathlib.Meta.NormNum.deriveSimp ctx true Y
+
+    let x' ← 
+      match rX.proof? with
+      | some proof => mkAppOptM ``cast #[X,rX.expr,proof,x]
+      | none => pure x
+    let y' ← 
+      match rY.proof? with
+      | some proof => mkAppOptM ``cast #[Y,rY.expr,proof,y]
+      | none => pure y
+
+    mkAppOptM ``HAdd.hAdd #[none,none,none,none,x',y']
 
 
-example : ℝ[mm*km] = ℝ[m²] := by rfl
-example : ℝ[m*s⁻¹] = ℝ[s⁻¹*m] := by rfl
-example : ℝ[kg*mg] = ℝ[g²] := by rfl
-
-example : ℝ[N]  = ℝ[kg*m*s⁻²] := by rfl
-example : ℝ[J]  = ℝ[N*m]   := by rfl
-example : ℝ[W]  = ℝ[J*s⁻¹] := by rfl
-example : ℝ[Pa] = ℝ[N*m⁻²] := by rfl
-
-example : ℝ[N*m²*kg⁻²] = ℝ[m³*kg⁻¹*s⁻²] := by rfl
-example : ℝ[J*Hz⁻¹] = ℝ[J*s] := by rfl
-
-namespace PhysicalConstants 
-  --- Source: https://en.wikipedia.org/wiki/Physical_constant#Table_of_physical_constants
-
-  def gravitationalConstant : ℝ[N*m²*kg⁻²] := ⟨(6.674 : ℝ) * 10.0^(-11.0 : ℝ)⟩
-  abbrev G := gravitationalConstant
-
-  def speedOfLight : ℝ[m*s⁻¹] := ⟨299792458.0⟩
-  abbrev c := speedOfLight
-
-  def planckConstant : ℝ[J*Hz⁻¹] := ⟨(6.62607015 : ℝ) * 10.0^(-34.0 : ℝ)⟩
-  abbrev h := planckConstant
-  abbrev ℎ := planckConstant
-
-  def reducedPlanckConstant : ℝ[J*s] := h / Real.pi
-  abbrev ℏ := reducedPlanckConstant
-
-  def electronMass : ℝ[kg] := ⟨(9.1093837015 : ℝ) * 10.0^(-31.0 : ℝ)⟩
-  abbrev mₑ : ℝ[kg] := electronMass
-
-end PhysicalConstants
+variable 
+  (v₁ : Float⟦meter*second^(-1:Int)⟧) (v₂ : Float⟦kilometer*hour^(-1:Int)⟧) (v₃ : Float⟦meter*hour^(-1:Int)⟧)
+  (t₁ : Float⟦second⟧) (t₂ : Float⟦hour⟧)
+  (a  : Float⟦meter*second^(-2:Int)⟧) 
+  (p : Float⟦pascal⟧) (V : Float⟦meter^3⟧) (R : Float⟦joule⟧) (F : Float⟦newton⟧)
 
 
+set_option pp.proofs.withType false
+
+
+#check v₁ * t₁   -- Float⟦m⟧
+#check v₂ * t₂   -- Float⟦1000*m⟧
+#check v₂ * t₁   -- Float⟦25/9*m*s⁻¹⟧    note: 1000/360 = 25/9
+#check (v₁ * t₁) + (a * t₁ * t₁) + (t₁ * a * t₁) + (t₁ * t₁ * a)  -- Float⟦m⟧
+
+#check_failure (v₁ * t₁) + (v₂ * t₂) -- fails to add Float⟦m⟧ and Float⟦1000*m⟧
+
+instance : One PhysicalUnit := ⟨{}⟩
+
+def uderiv {X Y : Type} {u v w : PhysicalUnit} (f : X⟦u⟧ → Y⟦v⟧) (x : X⟦u⟧) (dx : X⟦w⟧) : Y⟦(v*w)/u⟧ := sorry
+
+variable 
+  (u : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦meter*second^(-1:Int)⟧)
+  (p : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦pascal⟧)
+  (density : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦kilogram*meter^(-3:Int)⟧)
+  (ν : ℝ⟦(meter^(2:Int)) * second^(-1:Int)⟧)
+
+#check fun t x => (uderiv (u · x) t (1:ℝ⟦1⟧))                              -- ∂u/∂t
+                + (uderiv (u t ·) x (u t x))                                -- (u⬝∇)u
+                + (((1:ℝ⟦1⟧) / density t x) * uderiv (p t ·) x (1:ℝ⟦1⟧))   -- 1/ρ ∇p
+                + ν * uderiv ((uderiv (u t ·)) · (1:ℝ⟦1⟧)) x (1:ℝ⟦1⟧)      -- ν Δu
+
+
+def adjoint {X Y : Type} {u v : PhysicalUnit} (f : X⟦u⟧ → Y⟦v⟧) : Y⟦v⟧ → X⟦u⟧ := sorry
+
+def uderiv' {X Y : Type} {u v w : PhysicalUnit} [Group PhysicalUnit] (f : X⟦u⟧ → Y⟦v⟧) (x : X⟦u⟧) (dy : Y⟦w⟧) : X⟦(u*w)/v⟧ := 
+  let df := fun dx : X⟦(u*w)/v⟧ => uderiv f x dx
+  let df' := adjoint df
+  df' (cast (by congr; have h : w.scale = (v.scale * ((u.scale * w.scale) / v.scale)) / u.scale := sorry; cases w; simp at h; simp; exact h) dy)
