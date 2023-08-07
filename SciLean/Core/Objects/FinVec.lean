@@ -1,4 +1,4 @@
-import SciLean.Core.SemiInnerProductSpace
+import SciLean.Core.Objects.SemiInnerProductSpace
 
 open BigOperators ComplexConjugate
 
@@ -68,10 +68,10 @@ section Basis
   /-- `ⅇ'[X] i` is the i-th dual basis vector of type `X` -/
   macro:max "ⅇ'[" X:term "]" i:term : term => `(DualBasis.dualBasis (X:=$X) $i)
 
-  /-- `ⅆ i x` is projection of `x` onto i-th basis vector `ⅇ i` -/
-  prefix:max "ⅆ" => Basis.proj
-  /-- `ⅆ' i x` is projection of `x` onto i-th dual basis vector `ⅇ' i` -/
-  prefix:max "ⅆ'" => DualBasis.dualProj
+  /-- `ℼ i x` is projection of `x` onto i-th basis vector `ⅇ i` -/
+  prefix:max "ℼ" => Basis.proj
+  /-- `ℼ' i x` is projection of `x` onto i-th dual basis vector `ⅇ' i` -/
+  prefix:max "ℼ'" => DualBasis.dualProj
 
   instance {X Y ι κ K} [Basis ι K X] [Basis κ K Y] [Zero X] [Zero Y] : Basis (ι ⊕ κ) K (X × Y)  where
     basis := λ i =>
@@ -80,8 +80,8 @@ section Basis
       | Sum.inr iy => (0, ⅇ iy)
     proj := λ i x =>
       match i with
-      | Sum.inl ix => ⅆ ix x.1
-      | Sum.inr iy => ⅆ iy x.2
+      | Sum.inl ix => ℼ ix x.1
+      | Sum.inr iy => ℼ iy x.2
 
   instance {X Y ι κ K} [DualBasis ι K X] [DualBasis κ K Y] [Zero X] [Zero Y] : DualBasis (ι ⊕ κ) K (X × Y) where
     dualBasis := λ i =>
@@ -90,8 +90,8 @@ section Basis
       | Sum.inr iy => (0, ⅇ' iy)
     dualProj := λ i x =>
       match i with
-      | Sum.inl ix => ⅆ' ix x.1
-      | Sum.inr iy => ⅆ' iy x.2
+      | Sum.inl ix => ℼ' ix x.1
+      | Sum.inr iy => ℼ' iy x.2
 
   instance {X Y} [BasisDuality X] [BasisDuality Y] : BasisDuality (X×Y) where
     toDual := λ (x,y) => (BasisDuality.toDual x, BasisDuality.toDual y)
@@ -106,25 +106,25 @@ class OrthonormalBasis (ι K X : Type _) [Semiring K] [Basis ι K X] [Inner K X]
 /--
  -/
 class FinVec (ι : outParam $ Type _) (K : Type _) (X : Type _) [outParam $ Fintype ι] [IsROrC K] [DecidableEq ι] extends SemiInnerProductSpace K X, Basis ι K X, DualBasis ι K X, BasisDuality X where
-  is_basis : ∀ x : X, x = ∑ i : ι, ⅆ i x • ⅇ[X] i
+  is_basis : ∀ x : X, x = ∑ i : ι, ℼ i x • ⅇ[X] i
   duality : ∀ i j, ⟪ⅇ[X] i, ⅇ'[X] j⟫[K] = if i=j then 1 else 0
-  to_dual   : toDual   x = ∑ i,  ⅆ i x • ⅇ'[X] i
-  from_dual : fromDual x = ∑ i, ⅆ' i x •  ⅇ[X] i
+  to_dual   : toDual   x = ∑ i,  ℼ i x • ⅇ'[X] i
+  from_dual : fromDual x = ∑ i, ℼ' i x •  ⅇ[X] i
 
 theorem basis_ext {ι K X} {_ : Fintype ι} [DecidableEq ι] [IsROrC K] [FinVec ι K X] (x y : X)
-  : (∀ i, ⟪x, ⅇ i⟫[K] = ⟪y, ⅇ i⟫[K]) → (x = y) := sorry
+  : (∀ i, ⟪x, ⅇ i⟫[K] = ⟪y, ⅇ i⟫[K]) → (x = y) := sorry_proof
 
 theorem dualBasis_ext {ι K X} {_ : Fintype ι} [DecidableEq ι] [IsROrC K] [FinVec ι K X] (x y : X)
-  : (∀ i, ⟪x, ⅇ' i⟫[K] = ⟪y, ⅇ' i⟫[K]) → (x = y) := sorry
+  : (∀ i, ⟪x, ⅇ' i⟫[K] = ⟪y, ⅇ' i⟫[K]) → (x = y) := sorry_proof
 
 theorem inner_proj_dualProj {ι K X} {_ : Fintype ι} [DecidableEq ι] [IsROrC K] [FinVec ι K X] (x y : X)
-  : ⟪x, y⟫[K] = ∑ i, ⅆ i x * ⅆ' i y :=
+  : ⟪x, y⟫[K] = ∑ i, ℼ i x * ℼ' i y :=
 by 
   calc 
-    ⟪x, y⟫[K] = ∑ i, ∑ j, ⟪(ⅆ i x) • ⅇ[X] i, (ⅆ' j y) • ⅇ' j⟫[K] := by sorry -- rw[← (FinVec.is_basis x), ← (FinVec.is_basis y)]
-         _ = ∑ i, ∑ j, (ⅆ i x * ⅆ' j y) * ⟪ⅇ[X] i, ⅇ' j⟫[K] := by sorry -- use linearity of the sum
-         _ = ∑ i, ∑ j, (ⅆ i x * ⅆ' j y) * if i=j then 1 else 0 := by simp [FinVec.duality]
-         _ = ∑ i, ⅆ i x * ⅆ' i y := sorry -- summing over [[i=j]]  
+    ⟪x, y⟫[K] = ∑ i, ∑ j, ⟪(ℼ i x) • ⅇ[X] i, (ℼ' j y) • ⅇ' j⟫[K] := by sorry_proof -- rw[← (FinVec.is_basis x), ← (FinVec.is_basis y)]
+         _ = ∑ i, ∑ j, (ℼ i x * ℼ' j y) * ⟪ⅇ[X] i, ⅇ' j⟫[K] := by sorry_proof -- use linearity of the sum
+         _ = ∑ i, ∑ j, (ℼ i x * ℼ' j y) * if i=j then 1 else 0 := by simp [FinVec.duality]
+         _ = ∑ i, ℼ i x * ℼ' i y := sorry_proof -- summing over [[i=j]]  
 
 variable {ι K X} {_ : Fintype ι} [DecidableEq ι] [IsROrC K] [FinVec ι K X]
 
@@ -136,46 +136,46 @@ by apply FinVec.duality
 @[simp]
 theorem inner_dualBasis_basis  (i j : ι)
   : ⟪ⅇ'[X] i, ⅇ j⟫[K] = if i=j then 1 else 0 :=
-by sorry
+by sorry_proof
 
 @[simp]
 theorem inner_dualBasis_proj  (i : ι) (x : X)
-  : ⟪x, ⅇ' i⟫[K] = ⅆ i x :=
+  : ⟪x, ⅇ' i⟫[K] = ℼ i x :=
 by 
   calc
-    ⟪x, ⅇ' i⟫[K] = ⟪∑ j, ⅆ j x • ⅇ[X] j, ⅇ' i⟫[K] := by sorry -- rw[← (FinVec.is_basis x)]
-            _ = ∑ j, ⅆ j x * if j=i then 1 else 0 := by sorry -- inner_basis_dualBasis and some linearity
-            _ = ⅆ i x := by sorry
+    ⟪x, ⅇ' i⟫[K] = ⟪∑ j, ℼ j x • ⅇ[X] j, ⅇ' i⟫[K] := by sorry_proof -- rw[← (FinVec.is_basis x)]
+            _ = ∑ j, ℼ j x * if j=i then 1 else 0 := by sorry_proof -- inner_basis_dualBasis and some linearity
+            _ = ℼ i x := by sorry_proof
 
 @[simp]
 theorem inner_basis_dualProj (i : ι) (x : X)
-  : ⟪x, ⅇ i⟫[K] = ⅆ' i x :=
-by sorry
+  : ⟪x, ⅇ i⟫[K] = ℼ' i x :=
+by sorry_proof
 
 @[simp]
 theorem proj_basis (i j : ι)
-  : ⅆ i (ⅇ[X] j) = if i=j then 1 else 0 :=
+  : ℼ i (ⅇ[X] j) = if i=j then 1 else 0 :=
 by simp only [←inner_dualBasis_proj, inner_basis_dualBasis, eq_comm]; done
 
 @[simp]
 theorem dualProj_dualBasis (i j : ι)
-  : ⅆ' i (ⅇ'[X] j) = if i=j then 1 else 0 :=
+  : ℼ' i (ⅇ'[X] j) = if i=j then 1 else 0 :=
 by simp only [←inner_basis_dualProj, inner_dualBasis_basis, eq_comm]; done
 
 instance : FinVec Unit K K where
   is_basis := by simp[Basis.proj, Basis.basis]
   duality := by simp[Basis.proj, Basis.basis, DualBasis.dualProj, DualBasis.dualBasis, Inner.inner]; done
-  to_dual := by sorry
-  from_dual := by sorry
+  to_dual := by sorry_proof
+  from_dual := by sorry_proof
 
 instance : OrthonormalBasis Unit K K where
-  is_orthogonal  := sorry
-  is_orthonormal := sorry
+  is_orthogonal  := sorry_proof
+  is_orthonormal := sorry_proof
 
 -- @[infer_tc_goals_rl]
 instance {ι κ K X Y} {_ : Fintype ι} {_ : Fintype κ} [DecidableEq ι] [DecidableEq κ] [IsROrC K] [FinVec ι K X] [FinVec κ K Y]
   : FinVec (ι⊕κ) K (X×Y) where
-  is_basis := sorry
-  duality := sorry
-  to_dual := sorry
-  from_dual := sorry
+  is_basis := sorry_proof
+  duality := sorry_proof
+  to_dual := sorry_proof
+  from_dual := sorry_proof

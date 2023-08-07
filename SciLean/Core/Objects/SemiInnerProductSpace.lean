@@ -1,5 +1,5 @@
 import Mathlib.Analysis.InnerProductSpace.Basic
-import SciLean.Core.Vec
+import SciLean.Core.Objects.Vec
 
 namespace SciLean
 
@@ -24,7 +24,7 @@ end Inner
 
 section TestFunctions 
 
-/-- TestFunctions defines a subset well behaved w.r.t. to the inner product. 
+/-- TestFunctions defines a subset of well behaved elemets w.r.t. to the inner product. 
 For example:
   1. test function on `ℕ → ℝ` are sequences with only finitely many non-zero elements
   2. test function on `C∞(ℝ, ℝ)` are functions with compact support
@@ -104,19 +104,19 @@ instance : SemiInnerProductSpace K K where
   add_left := by simp[Inner.inner, add_mul]
   smul_left := by simp[Inner.inner, mul_assoc]
   conj_sym := by simp[Inner.inner,mul_comm]
-  inner_pos := by sorry
+  inner_pos := by sorry_proof
   inner_ext := 
     by 
       simp[Inner.inner, TestFunction]; 
       intro x
       constructor
       intro h; simp[h]
-      intro h; have q := h 1; induction q; (case mpr.inl => assumption); (case mpr.inr h => sorry)
-  is_lin_subspace := sorry
+      intro h; have q := h 1; induction q; (case mpr.inl => assumption); (case mpr.inr _ => sorry_proof)
+  is_lin_subspace := sorry_proof
   inner_with_testfun_is_continuous := by simp[Inner.inner]; continuity
 
 abbrev SemiInnerProductSpace.mkSorryProofs {α} [Vec K α] [Inner K α] [TestFunctions α] : SemiInnerProductSpace K α
-  := SemiInnerProductSpace.mk sorry sorry sorry sorry sorry sorry sorry
+  := SemiInnerProductSpace.mk sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
 
 instance (X Y) [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (X × Y) := SemiInnerProductSpace.mkSorryProofs
 

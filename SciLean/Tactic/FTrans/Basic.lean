@@ -2,7 +2,6 @@ import Std.Lean.Parser
 import Mathlib.Tactic.NormNum.Core
 
 import SciLean.Lean.Meta.Basic
-import SciLean.Data.Prod
 import SciLean.Tactic.LSimp.Main
 
 import SciLean.Tactic.FTrans.Init
@@ -10,7 +9,6 @@ import SciLean.Tactic.FTrans.Init
 open Lean Meta
 
 namespace SciLean.FTrans
-
 
 open Elab Term in
 def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fun e => do

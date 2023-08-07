@@ -5,9 +5,11 @@ import Std.Data.RBMap.Alter
 
 import Mathlib.Data.FunLike.Basic
 
-import SciLean.Prelude
+-- import SciLean.Prelude
+import SciLean.Core.SorryProof
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
+
  
 open Lean Meta.Simp Qq
 

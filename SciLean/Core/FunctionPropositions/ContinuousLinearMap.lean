@@ -34,6 +34,25 @@ theorem ContinuousLinearMap.mk'_eval
   (x : X) (f : X → Y) (hf : IsContinuousLinearMap R f) 
   : mk' R f hf x = f x := by rfl
 
+macro "fun " x:ident " =>L[" R:term "] " b:term : term =>
+  `(ContinuousLinearMap.mk' $R (fun $x => $b) (by fprop))
+
+macro "fun " x:ident " : " X:term " =>L[" R:term "] " b:term : term =>
+  `(ContinuousLinearMap.mk' $R (fun ($x : $X) => $b) (by fprop))
+
+macro "fun " "(" x:ident " : " X:term ")" " =>L[" R:term "] " b:term : term =>
+  `(ContinuousLinearMap.mk' $R (fun ($x : $X) => $b) (by fprop))
+
+@[app_unexpander ContinuousLinearMap.mk'] def unexpandContinuousLinearMapMk : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $R $f:term $_:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(fun $x' =>L[$R] $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(fun ($x' : $ty) =>L[$R] $b)
+    | `(fun $x':ident : $ty => $b:term) => `(fun $x' : $ty =>L[$R] $b)
+    | _  => throw ()
+  | _  => throw ()
+
 
 -- Basic rules -----------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -498,12 +517,12 @@ theorem HDiv.hDiv.arg_a0.IsContinuousLinearMap_rule
 open BigOperators in
 @[fprop]
 theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
-  (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
+  (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
   : IsContinuousLinearMap R fun x => ∑ i in A, f x i := 
 {
-  map_add'  := sorry
-  map_smul' := sorry
-  cont := sorry
+  map_add'  := sorry_proof
+  map_smul' := sorry_proof
+  cont := sorry_proof
 }
 
 -- do we need this one?
@@ -511,7 +530,7 @@ theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
 -- @[fprop]
 -- theorem Finset.sum.arg_f.IsContinuousLinearMap_rule'
 --   (f : ι → X → Y) (hf : ∀ i, IsContinuousLinearMap R (f i)) (A : Finset ι)
---   : IsContinuousLinearMap R fun (x : X) => ∑ i in A, f i x := sorry
+--   : IsContinuousLinearMap R fun (x : X) => ∑ i in A, f i x := sorry_proof
 
 
 -- d/ite -----------------------------------------------------------------------
@@ -555,17 +574,17 @@ variable
 
 @[fprop]
 theorem Inner.inner.arg_a0.IsContinuousLinearMap_rule
-  (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
+  (f : X → Y) (_ : IsContinuousLinearMap K f) (y : Y)
   : IsContinuousLinearMap K fun x => @inner K _ _ (f x) y :=
 by
-  sorry
+  sorry_proof
 
 @[fprop]
 theorem Inner.inner.arg_a1.IsContinuousLinearMap_rule
-  (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
+  (f : X → Y) (_ : IsContinuousLinearMap K f) (y : Y)
   : IsContinuousLinearMap K fun x => @inner K _ _ y (f x) :=
 by
-  sorry
+  sorry_proof
 
 
 -- conj/starRingEnd ------------------------------------------------------------
@@ -574,10 +593,10 @@ set_option linter.fpropDeclName false in
 open ComplexConjugate in
 @[fprop]
 theorem starRingEnd.arg_a.IsContinuousLinearMap_rule
-  (f : X → K) (hf : IsContinuousLinearMap K f)
+  (f : X → K) (_ : IsContinuousLinearMap K f)
   : IsContinuousLinearMap K fun x => conj (f x) :=
 by
-  sorry
+  sorry_proof
 
 
 end InnerProductSpace

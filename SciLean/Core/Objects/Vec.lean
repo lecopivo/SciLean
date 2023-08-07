@@ -2,9 +2,12 @@ import Mathlib.Algebra.Module.Basic
 import Mathlib.Data.IsROrC.Lemmas
 import Mathlib.Topology.Algebra.Module.LocallyConvex
 
+import SciLean.Core.SorryProof
 
 namespace SciLean
 
+
+-- TODO: move this section
 namespace Curve
 
 variable {K : Type u} [NontriviallyNormedField K] 
@@ -50,7 +53,12 @@ end Curve
 --   \_/\___\__|\__\___/_|   |___/ .__/\__,_\__\___|
 --                               |_|
 -- At the and we will use Convenient Vector Space. It is a special kind of topological vector space
+/-- Vectors space `X` over field `K`
 
+More precisely this is Convenient Vector Space which is a special class of vector spaces
+which allow very general definition of differentiability. In particular, the space `C∞(ℝ,ℝ)`, 
+smooth functions on real numbers, is Convenient Vector Spaces but fails to be Banach space.
+-/
 class Vec (K : Type _) [IsROrC K] (X : Type _) 
   extends 
     AddCommGroup X,
@@ -75,9 +83,9 @@ section CommonVectorSpaces
 
   instance {X} [Vec K X] : Inhabited X := ⟨0⟩
 
-  -- instance : MulAction ℝ ℝ := MulAction.mk sorry sorry
-  -- instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry sorry
-  -- instance : Module ℝ ℝ := Module.mk sorry sorry
+  -- instance : MulAction ℝ ℝ := MulAction.mk sorry_proof sorry_proof
+  -- instance : DistribMulAction ℝ ℝ := DistribMulAction.mk sorry_proof sorry_proof
+  -- instance : Module ℝ ℝ := Module.mk sorry_proof sorry_proof
   -- instance : Vec ℝ := Vec.mk
 
 
@@ -101,7 +109,7 @@ section CommonVectorSpaces
   --   Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs))
 
   instance [IsROrC K] : Vec K K where
-    scalar_wise_smooth := sorry
+    scalar_wise_smooth := sorry_proof
     
   instance [inst : Vec K U] : Vec K (α → U) := 
     -- option 1:
@@ -110,7 +118,7 @@ section CommonVectorSpaces
     -- have : Module K U := inst.toModule
     -- Vec.mk
     -- option 3:
-    by cases inst; apply Vec.mk (scalar_wise_smooth := sorry)
+    by cases inst; apply Vec.mk (scalar_wise_smooth := sorry_proof)
 
 
   instance(priority:=low) (α : Type) (X : α → Type) [inst : ∀ a, Vec K (X a)] : Vec K ((a : α) → X a) := 
@@ -119,12 +127,12 @@ section CommonVectorSpaces
     let _ : ∀ a, TopologicalSpace (X a) := fun a => (inst a).toTopologicalSpace
     let _ : ∀ a, TopologicalAddGroup (X a) := fun a => (inst a).toTopologicalAddGroup
     let _ : ∀ a, ContinuousSMul K (X a) := fun a => (inst a).toContinuousSMul
-    Vec.mk (scalar_wise_smooth := sorry)
+    Vec.mk (scalar_wise_smooth := sorry_proof)
 
   instance [instU : Vec K U] [instV : Vec K V] : Vec K (U × V) := 
-    by cases instU; cases instV; apply Vec.mk (scalar_wise_smooth := sorry)
+    by cases instU; cases instV; apply Vec.mk (scalar_wise_smooth := sorry_proof)
 
-  instance : Vec K Unit := Vec.mk (scalar_wise_smooth := sorry)
+  instance : Vec K Unit := Vec.mk (scalar_wise_smooth := sorry_proof)
 
 
   infix:30 "⊕" => Sum.elim  -- X⊕Y→Type
@@ -161,6 +169,6 @@ instance : SMul K {x : X // P x} := ⟨λ r x => ⟨r • x.1, inst.smul r x.1 x
 
 instance : Zero {x : X // P x} := ⟨⟨0, inst.zero⟩⟩
 
--- instance : Vec K {x : X // P x} := sorry
+-- instance : Vec K {x : X // P x} := sorry_proof
 
 end VecProp

@@ -1,17 +1,17 @@
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Real.NNReal
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
-
 import Mathlib.Analysis.InnerProductSpace.PiL2
-
 import Mathlib.Analysis.InnerProductSpace.Basic
+
+import SciLean.Core.SorryProof
 
 namespace SciLean
 
 open NNReal
 
 
-def ProdLp (p : ℝ) (α β : Type _) := α × β 
+def ProdLp (_ : ℝ) (α β : Type _) := α × β 
 
 abbrev ProdL2.mk {α β : Type _} (fst : α) (snd : β) : ProdLp 2 α β := (fst, snd)
 abbrev ProdL2.fst {α β : Type _} (self : ProdLp 2 α β) : α := self.1
@@ -61,8 +61,7 @@ instance instInner [IsROrC K]
 noncomputable
 instance instNorm
   [Norm α] [Norm β] : Norm (α ×[p] β) where
-  norm x := sorry
-
+  norm := fun (x,y) => (‖x‖^p + ‖y‖^p) ^ (1/p)
 
 
 instance 
@@ -77,32 +76,32 @@ instance
 noncomputable
 instance [MetricSpace α] [MetricSpace β]
   : MetricSpace (α ×[p] β) where
-  dist_self := sorry
-  dist_comm := sorry
-  dist_triangle := sorry
-  edist := sorry
-  edist_dist := sorry
+  dist_self := sorry_proof
+  dist_comm := sorry_proof
+  dist_triangle := sorry_proof
+  edist := fun x y => ENNReal.ofReal (dist x y)
+  edist_dist := sorry_proof
   toUniformSpace := by infer_instance
-  uniformity_dist := sorry
+  uniformity_dist := sorry_proof
   toBornology := sorry
-  cobounded_sets := sorry
-  eq_of_dist_eq_zero := sorry
+  cobounded_sets := sorry_proof
+  eq_of_dist_eq_zero := sorry_proof
 
 noncomputable
 instance [NormedAddCommGroup α] [NormedAddCommGroup β] 
   : NormedAddCommGroup (α ×[p] β) where
-  dist_eq := sorry
+  dist_eq := sorry_proof
 
 noncomputable
 instance [IsROrC K]
   [NormedAddCommGroup α] [InnerProductSpace K α] 
   [NormedAddCommGroup β] [InnerProductSpace K β] 
   : InnerProductSpace K (α ×₂ β) where
-  norm_sq_eq_inner := sorry
-  conj_symm := sorry
-  add_left := sorry
-  smul_left := sorry
-  norm_smul_le := sorry
+  norm_sq_eq_inner := sorry_proof
+  conj_symm := sorry_proof
+  add_left := sorry_proof
+  smul_left := sorry_proof
+  norm_smul_le := sorry_proof
 
 
 

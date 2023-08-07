@@ -81,7 +81,6 @@ theorem PhysicalUnit.one_spower
 theorem hPhysicalUnit.one_kgpower
   : (1 : PhysicalUnit).kgPower = 0 := by rfl
 
-
 structure PhysicalQuantity (α : Type u) (unit : PhysicalUnit := {}) where
   val : α 
 
@@ -127,6 +126,14 @@ abbrev pascal : PhysicalUnit := { mPower := -1, sPower := -2, kgPower := 1 }
 abbrev watt : PhysicalUnit := { mPower := 2, sPower := -3, kgPower := 1 }
 abbrev joule : PhysicalUnit := { mPower := 2, sPower := -2, kgPower := 1 }
 
+open Lean Meta Qq in
+#eval show MetaM Unit from do
+  let a := q((1:ℚ) + (1:ℚ))
+  let b := q((2:ℚ))
+  IO.println s!"Is {← ppExpr a} defeq to {b}: {← isDefEq a b}"
+  let a := q((3:ℚ) * (2:ℚ) / (3:ℚ))
+  let b := q((2:ℚ))
+  IO.println s!"Is {← ppExpr a} defeq to {← ppExpr b}: {← isDefEq a b}"
 
 syntax term noWs "⟦" term "⟧ ": term
 
@@ -178,6 +185,7 @@ elab (priority:=high) x:term:71 " * " y:term:70 : term => do
     { simpTheorems := #[← getSimpTheorems], 
       congrTheorems := ← getSimpCongrTheorems} true Z
   let Z' := r.expr
+  dbg_trace s!"Is {← ppExpr Z} defeq to {← ppExpr Z'}: {← isDefEq Z Z'}"
   if ← isDefEq Z Z' then
     let mul ← synthInstance (← mkAppOptM ``HMul #[X,Y,Z])
     mkAppOptM ``HMul.hMul #[X,Y,Z',mul,x,y]
@@ -255,3 +263,13 @@ def uderiv' {X Y : Type} {u v w : PhysicalUnit} [Group PhysicalUnit] (f : X⟦u�
   let df := fun dx : X⟦(u*w)/v⟧ => uderiv f x dx
   let df' := adjoint df
   df' (cast (by congr; have h : w.scale = (v.scale * ((u.scale * w.scale) / v.scale)) / u.scale := sorry; cases w; simp at h; simp; exact h) dy)
+
+
+
+variable 
+  (u : ℝ⟦time,s⟧ → ℝ⟦length,s'⟧ → ℝ⟦length*time^(-1),s''⟧)
+  (p : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦pascal⟧)
+  (density : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦kilogram*meter^(-3:Int)⟧)
+  (ν : ℝ⟦(meter^(2:Int)) * second^(-1:Int)⟧)
+
+def ucast {X : Type _} {u : PhysicalUnit} (v : PhysicalUnit) 

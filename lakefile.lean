@@ -40,6 +40,7 @@ require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "m
 
 require proofwidgets from git "https://github.com/EdAyers/ProofWidgets4"@"v0.0.7"
 
+set_option linter.unusedVariables false
 
 /--
 
