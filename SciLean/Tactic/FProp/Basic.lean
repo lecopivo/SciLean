@@ -14,7 +14,7 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
         withoutModifyingStateWithInfoAndMessages do
           instantiateMVarDeclMVars mvar.mvarId!
 
-          let goals ←
+          let _ ←
             withSynthesize (mayPostpone := false) do Tactic.run mvar.mvarId! (Tactic.evalTactic tacticCode *> Tactic.pruneSolvedGoals)
 
           let result ← instantiateMVars mvar
@@ -29,7 +29,7 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
     return result?
 
 def applyBVarApp (e : Expr) : FPropM (Option Expr) := do
-  let .some (fpropName, ext, F) ← getFProp? e
+  let .some (_, ext, F) ← getFProp? e
     | return none
 
   let .lam n t (.app f x) bi := F
@@ -101,7 +101,7 @@ mutual
 
   partial def main (e : Expr) : FPropM (Option Expr) := do
 
-    let .some (fpropName, ext, f) ← getFProp? e
+    let .some (_, ext, f) ← getFProp? e
       | return none
 
     match f with
@@ -165,7 +165,7 @@ mutual
       applyTheorems e (ext.discharger)
 
   partial def applyFVarApp (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
-    let .some (fpropName, ext, F) ← getFProp? e
+    let .some (_, ext, F) ← getFProp? e
       | return none
 
     if ¬F.isLambda then
@@ -184,7 +184,7 @@ mutual
         ext.compRule e f g
 
   partial def applyTheorems (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
-    let .some (fpropName, ext, f) ← getFProp? e
+    let .some (fpropName, _, f) ← getFProp? e
       | return none
 
     let candidates ←

@@ -62,9 +62,9 @@ smooth functions on real numbers, is Convenient Vector Spaces but fails to be Ba
 class Vec (K : Type _) [IsROrC K] (X : Type _) 
   extends 
     AddCommGroup X,
-    Module K X,
     TopologicalSpace X,
     TopologicalAddGroup X,
+    Module K X,
     ContinuousSMul K X
   where
     -- locally convex in some sense, mathlib definition is odd

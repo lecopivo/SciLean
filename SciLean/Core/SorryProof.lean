@@ -1,6 +1,6 @@
 namespace SciLean
 
-axiom sorryProofAxiom {P : Prop} : P 
+axiom sorryProofAxiom2 {P : Prop} : P 
 
 -- TODO: turn into elaborator and add option to trigger warning
 macro "sorry_proof" : term => do  `(sorryProofAxiom2)

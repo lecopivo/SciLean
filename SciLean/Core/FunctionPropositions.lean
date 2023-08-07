@@ -1,0 +1,3 @@
+import SciLean.Core.FunctionPropositions.ContinuousLinearMap
+import SciLean.Core.FunctionPropositions.Differentiable
+import SciLean.Core.FunctionPropositions.DifferentiableAt

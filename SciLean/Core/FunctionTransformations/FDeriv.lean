@@ -45,7 +45,7 @@ variable (E)
 theorem fderiv.proj_rule (i : ι)
   : (fderiv K fun (x : (i : ι) → E i) => x i)
     =
-    fun x => fun dx =>L[K] dx i := 
+    fun _ => fun dx =>L[K] dx i := 
 by 
   funext x; sorry_proof
 variable {E}

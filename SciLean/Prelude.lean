@@ -8,9 +8,6 @@ import SciLean.Notation
 -- Export symbols from Mathlib
 export SciLean.EnumType (sum)
 
-@[inline, irreducible]
-def hold {α} (a : α) := a
-
 abbrev typeOf {α} (_ : α) := α
 
 instance : Fact (x=x) := ⟨by rfl⟩

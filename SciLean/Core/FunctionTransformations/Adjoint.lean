@@ -5,6 +5,8 @@ import SciLean.Mathlib.Analysis.InnerProductSpace.Prod
 import SciLean.Tactic.FTrans.Basic
 import SciLean.Core.FunctionPropositions.ContinuousLinearMap
 
+import SciLean.Notation
+
 namespace ContinuousLinearMap.adjoint
 
 variable 
