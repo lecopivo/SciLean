@@ -3,9 +3,9 @@ import SciLean.Core.FunctionPropositions.IsDifferentiableAt
 
 import SciLean.Tactic.FTrans.Basic
 
-namespace SciLean
-
 set_option linter.unusedVariables false
+
+namespace SciLean
 
 variable 
   {K : Type _} [IsROrC K]
