@@ -123,11 +123,10 @@ def fpropExt : FPropExt where
 
   compRule e f g := do
     let .some K := e.getArg? 0 | return none
-    let .some x := e.getArg? 7 | return none
 
     let thm : SimpTheorem :=
     {
-      proof  := ← mkAppM ``comp_rule #[K,f,g,x]
+      proof  := ← mkAppM ``comp_rule #[K,f,g]
       origin := .decl ``comp_rule
       rfl    := false
     }
@@ -135,11 +134,10 @@ def fpropExt : FPropExt where
 
   lambdaLetRule e f g := do
     let .some K := e.getArg? 0 | return none
-    let .some x := e.getArg? 7 | return none
 
     let thm : SimpTheorem :=
     {
-      proof  := ← mkAppM ``let_rule #[K,f,g,x]
+      proof  := ← mkAppM ``let_rule #[K,f,g]
       origin := .decl ``let_rule
       rfl    := false
     }

@@ -1,11 +1,16 @@
-import SciLean.Core.FunctionTransformations.CDeriv
+import SciLean.Core.FunctionPropositions.HasAdjDiffAt
+import SciLean.Core.FunctionPropositions.HasAdjDiff
+
 import SciLean.Core.FunctionTransformations.SemiAdjoint
 
+  
 import SciLean.Profile
 
 set_option linter.unusedVariables false
 
 namespace SciLean
+
+
 
 noncomputable
 def revCDeriv
@@ -30,21 +35,45 @@ variable
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
+-- this one is dangerous as it can be applied to rhs again with g = fun x => x
+-- we need ftrans guard or something like that
+theorem _root_.SciLean.cderiv.arg_dx.semiAdjoint_rule
+  (f : Y → Z) (g : X → Y)
+  (hf : HasAdjDiff K f) (hg : HasSemiAdjoint K g)
+  : semiAdjoint K (fun dx => cderiv K f y (g dx))
+    =
+    fun dz => 
+      semiAdjoint K g (semiAdjoint K (cderiv K f y) dz) := 
+by
+  apply semiAdjoint.comp_rule K (cderiv K f y) g (hf.2 y) hg
+
+theorem _root_.SciLean.cderiv.arg_dx.semiAdjoint_rule_at
+  (f : Y → Z) (g : X → Y) (y : Y)
+  (hf : HasAdjDiffAt K f y) (hg : HasSemiAdjoint K g)
+  : semiAdjoint K (fun dx => cderiv K f y (g dx))
+    =
+    fun dz => 
+      semiAdjoint K g (semiAdjoint K (cderiv K f y) dz) := 
+by
+  apply semiAdjoint.comp_rule K (cderiv K f y) g hf.2 hg
+
+
+-- Basic lambda calculus rules -------------------------------------------------
+--------------------------------------------------------------------------------
+
 variable (X)
 theorem id_rule 
   : revCDeriv K (fun x : X => x) = fun x => (x, fun dx => dx) :=
 by
   unfold revCDeriv
-  funext _
-  ftrans; ftrans
+  funext _; ftrans; ftrans
 
 
 theorem const_rule (y : Y)
   : revCDeriv K (fun _ : X => y) = fun x => (y, fun _ => 0) :=
 by
   unfold revCDeriv
-  funext _
-  ftrans; ftrans
+  funext _; ftrans; ftrans
 variable{X}
 
 variable(E)
@@ -57,6 +86,7 @@ by
   unfold revCDeriv
   funext _; ftrans; ftrans
 variable {E}
+
 
 theorem comp_rule 
   (f : Y → Z) (g : X → Y) 
@@ -71,33 +101,36 @@ theorem comp_rule
          let dy := zdf.2 dz
          ydg.2 dy)  := 
 by
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
   unfold revCDeriv
-  funext _
-  ftrans; 
-  set_option trace.Meta.Tactic.simp.discharge true in
-  ftrans only
+  funext _; ftrans; ftrans
 
 
 theorem let_rule 
   (f : X → Y → Z) (g : X → Y) 
-  (hf : Differentiable K (fun (xy : X×Y) => f xy.1 xy.2)) (hg : Differentiable K g)
+  (hf : HasAdjDiff K (fun (xy : X×Y) => f xy.1 xy.2)) (hg : HasAdjDiff K g)
   : revCDeriv K (fun x : X => let y := g x; f x y) 
     = 
     fun x => 
-      let ydg := revCDeriv K g x 
-      let zdf := revCDeriv K (fun (xy : X×₂Y) => f xy.1 xy.2) (x,ydg.1)
+      let ydg := revCDeriv K g x
+      let zdf := revCDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydg.1)
       (zdf.1,
        fun dz => 
          let dxdy := zdf.2 dz
          let dx := ydg.2 dxdy.2
          dxdy.1 + dx)  :=
-by sorry_proof  -- here we are running to the problem that fderiv on `X×Y` is different from fderiv on `ProdLp p E`
+by
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv
+  funext _; ftrans; ftrans 
 
 
 open BigOperators in
 theorem pi_rule
-  (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable K (f i))
-  : (revCDeriv K (Y:= PiLp 2 E) fun (x : X) (i : ι) => f i x)
+  (f : (i : ι) → X → E i) (hf : ∀ i, HasAdjDiff K (f i))
+  : (revCDeriv K fun (x : X) (i : ι) => f i x)
     =
     fun x =>
       let xdf := fun i =>
@@ -105,11 +138,16 @@ theorem pi_rule
       (fun i => (xdf i).1,
        fun dy => ∑ i, (xdf i).2 (dy i))
        :=
-by sorry_proof  -- here we are running to the problem that fderiv on `(i:ι) → E i` is different from fderiv on `PiLp p E`
+by
+  have _ := fun i => (hf i).1
+  have _ := fun i => (hf i).2
+  unfold revCDeriv
+  funext _; ftrans; ftrans 
+
 
 theorem comp_rule_at
   (f : Y → Z) (g : X → Y) (x : X)
-  (hf : DifferentiableAt K f (g x)) (hg : DifferentiableAt K g x)
+  (hf : HasAdjDiffAt K f (g x)) (hg : HasAdjDiffAt K g x)
   : revCDeriv K (fun x : X => f (g x)) x
     = 
     let ydg := revCDeriv K g x
@@ -119,35 +157,50 @@ theorem comp_rule_at
        let dy := zdf.2 dz
        ydg.2 dy)  := 
 by
-  unfold revCDeriv
-  ftrans; ftrans; ext; simp
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; ftrans; simp
+  rw[cderiv.arg_dx.semiAdjoint_rule_at K f (cderiv K g x) (g x) (by fprop) (by fprop)]
 
 
 theorem let_rule_at
   (f : X → Y → Z) (g : X → Y) (x : X)
-  (hf : DifferentiableAt K (fun (xy : X×Y) => f xy.1 xy.2) (x,g x)) (hg : DifferentiableAt K g x)
-  : revCDeriv K (fun x : X => let y := g x; f x y) x
+  (hf : HasAdjDiffAt K (fun (xy : X×Y) => f xy.1 xy.2) (x, g x)) (hg : HasAdjDiffAt K g x)
+  : revCDeriv K (fun x : X => let y := g x; f x y) 
     = 
-    let ydg := revCDeriv K g x 
-    let zdf := revCDeriv K (fun (xy : X×₂Y) => f xy.1 xy.2) (x,ydg.1)
-    (zdf.1,
-     fun dz => 
-       let dxdy := zdf.2 dz
-       let dx := ydg.2 dxdy.2
-       dxdy.1 + dx)  :=
-by sorry_proof  -- here we are running to the problem that fderiv on `X×Y` is different from fderiv on `ProdLp p E`
+    fun x => 
+      let ydg := revCDeriv K g x
+      let zdf := revCDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydg.1)
+      (zdf.1,
+       fun dz => 
+         let dxdy := zdf.2 dz
+         let dx := ydg.2 dxdy.2
+         dxdy.1 + dx)  :=
+by
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv
+  funext _; simp; ftrans
+  sorry
 
 
 open BigOperators in
 theorem pi_rule_at
-  (f : (i : ι) → X → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f i) x)
-  : (revCDeriv K (Y:= PiLp 2 E) fun (x : X) (i : ι) => f i x) x
+  (f : (i : ι) → X → E i) (x : X) (hf : ∀ i, HasAdjDiffAt K (f i) x)
+  : (revCDeriv K fun (x : X) (i : ι) => f i x)
     =
-    let xdf := fun i =>
-      (revCDeriv K fun (x : X) => f i x) x
-    (fun i => (xdf i).1,
-     fun dy => ∑ i, (xdf i).2 (dy i)) :=
-by sorry_proof  -- here we are running to the problem that fderiv on `(i:ι) → E i` is different from fderiv on `PiLp p E`
+    fun x =>
+      let xdf := fun i =>
+        (revCDeriv K fun (x : X) => f i x) x
+      (fun i => (xdf i).1,
+       fun dy => ∑ i, (xdf i).2 (dy i))
+       :=
+by
+  have _ := fun i => (hf i).1
+  have _ := fun i => (hf i).2
+  unfold revCDeriv
+  funext _; ftrans; ftrans 
+  sorry
 
 
 -- Register `revCDeriv` as function transformation ------------------------------
@@ -177,7 +230,7 @@ def ftransExt : FTransExt where
   getFTransFun? e := 
     if e.isAppOf ``revCDeriv then
 
-      if let .some f := e.getArg? 10 then
+      if let .some f := e.getArg? 6 then
         some f
       else 
         none
@@ -186,7 +239,7 @@ def ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``revCDeriv then
-      e.modifyArg (fun _ => f) 10
+      e.modifyArg (fun _ => f) 6
     else          
       e
 
@@ -229,10 +282,10 @@ def ftransExt : FTransExt where
          { proof := ← mkAppM ``pi_rule_at #[K, f], origin := .decl ``pi_rule, rfl := false} ]
       discharger e
 
-  discharger := fderiv.discharger
+  discharger := discharger
 
 
--- register fderiv
+-- register revCDeriv
 open Lean in
 #eval show CoreM Unit from do
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``revCDeriv, ftransExt))
@@ -259,75 +312,80 @@ variable
 --------------------------------------------------------------------------------
 
 @[ftrans]
-theorem SciLean.ProdL2.mk.arg_fstsnd.revCDeriv_rule_at
+theorem Prod.mk.arg_fstsnd.revCDeriv_rule_at
   (g : X → Y) (f : X → Z) (x : X)
-  (hg : DifferentiableAt K g x) (hf : DifferentiableAt K f x)
-  : revCDeriv K (fun x => ProdL2.mk (g x) (f x)) x
+  (hg : HasAdjDiffAt K g x) (hf : HasAdjDiffAt K f x)
+  : revCDeriv K (fun x => (g x, f x)) x
     =
     let ydg := revCDeriv K g x
     let zdf := revCDeriv K f x
     ((ydg.1,zdf.1), fun dyz => ydg.2 dyz.1 + zdf.2 dyz.2) := 
-by sorry_proof
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
+
 
 @[ftrans]
-theorem SciLean.ProdL2.mk.arg_fstsnd.revCDeriv_rule
+theorem Prod.mk.arg_fstsnd.revCDeriv_rule
   (g : X → Y) (f : X → Z)
-  (hg : Differentiable K g) (hf : Differentiable K f)
-  : revCDeriv K (fun x => ProdL2.mk (g x) (f x))
+  (hg : HasAdjDiff K g) (hf : HasAdjDiff K f)
+  : revCDeriv K (fun x => (g x, f x))
     =
     fun x => 
       let ydg := revCDeriv K g x
       let zdf := revCDeriv K f x
       ((ydg.1,zdf.1), fun dyz => ydg.2 dyz.1 + zdf.2 dyz.2) := 
 by 
-  funext x
-  apply SciLean.ProdL2.mk.arg_fstsnd.revCDeriv_rule_at g f x (hg x) (hf x)
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
  
 
 -- ProdL2.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans]
-theorem SciLean.ProdL2.fst.arg_self.revCDeriv_rule_at
-  (f : X → Y×₂Z) (x : X) (hf : DifferentiableAt K f x)
-  : revCDeriv K (fun x => ProdL2.fst (f x)) x
-    =
-    let yzdf := revCDeriv K f x
-    (ProdL2.fst yzdf.1, fun dy => yzdf.2 (dy,0)) := 
-by sorry_proof
+-- @[ftrans]
+-- theorem SciLean.ProdL2.fst.arg_self.revCDeriv_rule_at
+--   (f : X → Y×Z) (x : X) (hf : HasAdjDiffAt K f x)
+--   : revCDeriv K (fun x => ProdL2.fst (f x)) x
+--     =
+--     let yzdf := revCDeriv K f x
+--     (ProdL2.fst yzdf.1, fun dy => yzdf.2 (dy,0)) := 
+-- by sorry_proof
 
-@[ftrans]
-theorem SciLean.ProdL2.fst.arg_self.revCDeriv_rule
-  (f : X → Y×₂Z) (hf : Differentiable K f)
-  : revCDeriv K (fun x => ProdL2.fst (f x))
-    =
-    fun x => 
-      let yzdf := revCDeriv K f x
-      (ProdL2.fst yzdf.1, fun dy => yzdf.2 (dy,0)) := 
-by sorry_proof
+-- @[ftrans]
+-- theorem SciLean.ProdL2.fst.arg_self.revCDeriv_rule
+--   (f : X → Y×₂Z) (hf : HasAdjDiff K f)
+--   : revCDeriv K (fun x => ProdL2.fst (f x))
+--     =
+--     fun x => 
+--       let yzdf := revCDeriv K f x
+--       (ProdL2.fst yzdf.1, fun dy => yzdf.2 (dy,0)) := 
+-- by sorry_proof
 
 
 -- ProdL2.snd --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans]
-theorem SciLean.ProdL2.snd.arg_self.revCDeriv_rule_at
-  (f : X → Y×₂Z) (x : X) (hf : DifferentiableAt K f x)
-  : revCDeriv K (fun x => ProdL2.snd (f x)) x
-    =
-    let yzdf := revCDeriv K f x
-    (ProdL2.snd yzdf.1, fun dz => yzdf.2 (0,dz)) := 
-by sorry_proof
+-- @[ftrans]
+-- theorem SciLean.ProdL2.snd.arg_self.revCDeriv_rule_at
+--   (f : X → Y×₂Z) (x : X) (hf : HasAdjDiffAt K f x)
+--   : revCDeriv K (fun x => ProdL2.snd (f x)) x
+--     =
+--     let yzdf := revCDeriv K f x
+--     (ProdL2.snd yzdf.1, fun dz => yzdf.2 (0,dz)) := 
+-- by sorry_proof
 
-@[ftrans]
-theorem SciLean.ProdL2.snd.arg_self.revCDeriv_rule
-  (f : X → Y×₂Z) (hf : Differentiable K f)
-  : revCDeriv K (fun x => ProdL2.snd (f x))
-    =
-    fun x => 
-      let yzdf := revCDeriv K f x
-      (ProdL2.snd yzdf.1, fun dz => yzdf.2 (0,dz)) := 
-by sorry_proof
+-- @[ftrans]
+-- theorem SciLean.ProdL2.snd.arg_self.revCDeriv_rule
+--   (f : X → Y×₂Z) (hf : HasAdjDiff K f)
+--   : revCDeriv K (fun x => ProdL2.snd (f x))
+--     =
+--     fun x => 
+--       let yzdf := revCDeriv K f x
+--       (ProdL2.snd yzdf.1, fun dz => yzdf.2 (0,dz)) := 
+-- by sorry_proof
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -335,24 +393,31 @@ by sorry_proof
 
 @[ftrans]
 theorem HAdd.hAdd.arg_a0a1.revCDeriv_rule_at
-  (f g : X → Y) (x : X) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  (f g : X → Y) (x : X) (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
   : (revCDeriv K fun x => f x + g x) x
     =
     let ydf := revCDeriv K f x
     let ydg := revCDeriv K g x
     (ydf.1 + ydg.1, fun dy => ydf.2 dy + ydg.2 dy) := 
-by sorry_proof
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
+
 
 @[ftrans]
 theorem HAdd.hAdd.arg_a0a1.revCDeriv_rule
-  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+  (f g : X → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : (revCDeriv K fun x => f x + g x)
     =
     fun x => 
       let ydf := revCDeriv K f x
       let ydg := revCDeriv K g x
       (ydf.1 + ydg.1, fun dy => ydf.2 dy + ydg.2 dy) := 
-by sorry_proof
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
 
 
 -- HSub.hSub -------------------------------------------------------------------
@@ -360,24 +425,31 @@ by sorry_proof
 
 @[ftrans]
 theorem HSub.hSub.arg_a0a1.revCDeriv_rule_at
-  (f g : X → Y) (x : X) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  (f g : X → Y) (x : X) (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
   : (revCDeriv K fun x => f x - g x) x
     =
     let ydf := revCDeriv K f x
     let ydg := revCDeriv K g x
     (ydf.1 - ydg.1, fun dy => ydf.2 dy - ydg.2 dy) := 
-by sorry_proof
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
+
 
 @[ftrans]
 theorem HSub.hSub.arg_a0a1.revCDeriv_rule
-  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+  (f g : X → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : (revCDeriv K fun x => f x - g x)
     =
     fun x => 
       let ydf := revCDeriv K f x
       let ydg := revCDeriv K g x
       (ydf.1 - ydg.1, fun dy => ydf.2 dy - ydg.2 dy) := 
-by sorry_proof
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
 
 
 -- Neg.neg ---------------------------------------------------------------------
@@ -390,34 +462,42 @@ theorem Neg.neg.arg_a0.revCDeriv_rule
     =
     let ydf := revCDeriv K f x
     (-ydf.1, fun dy => - ydf.2 dy) :=
-by sorry_proof
+by 
+  unfold revCDeriv; simp; ftrans; ftrans
 
 
 -- HMul.hmul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
+open ComplexConjugate
 
 @[ftrans]
 theorem HMul.hMul.arg_a0a1.revCDeriv_rule_at
   (f g : X → K) (x : X)
-  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
   : (revCDeriv K fun x => f x * g x) x
     =
     let ydf := revCDeriv K f x
     let zdg := revCDeriv K g x
-    (ydf.1 / zdg.1, fun dx' =>  zdg.1 • ydf.2 dx' + ydf.1 • zdg.2 dx') :=
-by sorry_proof
+    (ydf.1 * zdg.1, fun dx' =>  conj ydf.1 • zdg.2 dx' + conj zdg.1 • ydf.2 dx') :=
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
 
 @[ftrans]
 theorem HMul.hMul.arg_a0a1.revCDeriv_rule
   (f g : X → K)
-  (hf : Differentiable K f) (hg : Differentiable K g)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : (revCDeriv K fun x => f x * g x)
     =
     fun x => 
       let ydf := revCDeriv K f x
       let zdg := revCDeriv K g x
-      (ydf.1 / zdg.1, fun dx' =>  zdg.1 • ydf.2 dx' + ydf.1 • zdg.2 dx') :=
-by sorry_proof
+      (ydf.1 * zdg.1, fun dx' => conj ydf.1 • zdg.2 dx' + conj zdg.1 • ydf.2 dx') :=
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
 
 
 -- SMul.smul -------------------------------------------------------------------
@@ -426,25 +506,31 @@ by sorry_proof
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revCDeriv_rule_at
   (f : X → K) (g : X → Y) (x : X) 
-  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
   : (revCDeriv K fun x => f x • g x) x
     =
     let ydf := revCDeriv K f x
     let zdg := revCDeriv K g x
     (ydf.1 • zdg.1, fun dx' => ydf.2 (inner dx' zdg.1) + ydf.1 • zdg.2 dx') :=
-by sorry_proof
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp; sorry
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revCDeriv_rule
   (f : X → K) (g : X → Y)
-  (hf : Differentiable K f) (hg : Differentiable K g)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : (revCDeriv K fun x => f x • g x)
     =
     fun x => 
       let ydf := revCDeriv K f x
       let zdg := revCDeriv K g x
       (ydf.1 • zdg.1, fun dx' => ydf.2 (inner dx' zdg.1) + ydf.1 • zdg.2 dx') :=
-by sorry_proof
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; funext x; simp; sorry
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
@@ -453,47 +539,61 @@ by sorry_proof
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.revCDeriv_rule_at
   (f g : X → K) (x : X)
-  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) (hx : g x ≠ 0)
+  (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x) (hx : g x ≠ 0)
   : (revCDeriv K fun x => f x / g x) x
     =
     let ydf := revCDeriv K f x
     let zdg := revCDeriv K g x
     (ydf.1 / zdg.1, 
-     fun dx' => (1 / zdg.1^2) • (zdg.1 • ydf.2 dx' - ydf.1 • zdg.2 dx')) :=
-by sorry_proof
+     fun dx' => (1 / (conj zdg.1)^2) • (conj zdg.1 • ydf.2 dx' - conj ydf.1 • zdg.2 dx')) :=
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
+
 
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.revCDeriv_rule
   (f g : X → K)
-  (hf : Differentiable K f) (hg : Differentiable K g) (hx : ∀ x, g x ≠ 0)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : ∀ x, g x ≠ 0)
   : (revCDeriv K fun x => f x / g x)
     =
     fun x => 
       let ydf := revCDeriv K f x
       let zdg := revCDeriv K g x
       (ydf.1 / zdg.1, 
-       fun dx' => (1 / zdg.1^2) • (zdg.1 • ydf.2 dx' - ydf.1 • zdg.2 dx')) :=
-by sorry_proof
+       fun dx' => (1 / (conj zdg.1)^2) • (conj zdg.1 • ydf.2 dx' - conj ydf.1 • zdg.2 dx')) :=
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; ftrans; simp
 
 
--- HPow.hPow ---------------------------------------------------------------------
+-- HPow.hPow -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[ftrans]
 def HPow.hPow.arg_a0.revCDeriv_rule_at
-  (f : X → K) (x : X) (n : Nat) (hf : DifferentiableAt K f x) 
+  (f : X → K) (x : X) (n : Nat) (hf : HasAdjDiffAt K f x) 
   : revCDeriv K (fun x => f x ^ n) x
     =
     let ydf := revCDeriv K f x
-    (ydf.1 ^ n, fun dx' => (n * (ydf.1 ^ (n-1))) • ydf.2 dx') :=
-by sorry_proof
+    (ydf.1 ^ n, fun dx' => (n * conj ydf.1 ^ (n-1)) • ydf.2 dx') :=
+by 
+  have ⟨_,_⟩ := hf
+  unfold revCDeriv; simp; ftrans; ftrans; sorry_proof 
+  -- just missing (a * b) • x = b • a • x
 
 @[ftrans]
 def HPow.hPow.arg_a0.revCDeriv_rule
-  (f : X → K) (n : Nat) (hf : Differentiable K f) 
+  (f : X → K) (n : Nat) (hf : HasAdjDiff K f) 
   : revCDeriv K (fun x => f x ^ n)
     =
     fun x => 
       let ydf := revCDeriv K f x
-      (ydf.1 ^ n, fun dx' => (n * (ydf.1 ^ (n-1))) • ydf.2 dx') :=
-by sorry_proof
+      (ydf.1 ^ n, fun dx' => (n * (conj ydf.1 ^ (n-1))) • ydf.2 dx') :=
+by 
+  have ⟨_,_⟩ := hf
+  unfold revCDeriv; simp; ftrans; ftrans; simp; sorry_proof 
+  -- just missing (a * b) • x = b • a • x
+

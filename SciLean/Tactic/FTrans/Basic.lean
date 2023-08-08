@@ -50,7 +50,12 @@ def applyTheorems (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : 
   let .some funName ← getFunHeadConst? f
     | return none
 
+  trace[Meta.Tactic.ftrans.step] "case theorems for {funName}\n{← ppExpr e}"
+
   let candidates ← FTrans.getFTransRules funName ftransName
+
+  if candidates.size = 0 then
+    trace[Meta.Tactic.ftrans.step] "no theorems associated to {funName}"
 
   tryTheorems candidates ext.discharger e
 
@@ -164,7 +169,6 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
       trace[Meta.Tactic.ftrans.step] "case bvar app\n{← ppExpr e}"
       bvarAppStep e ext f
     else
-      trace[Meta.Tactic.ftrans.step] "case theorems\n{← ppExpr e}\n"
       applyTheorems e ftransName ext f
 
   | _ => do
