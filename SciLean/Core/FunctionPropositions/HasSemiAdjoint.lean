@@ -207,10 +207,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.HasSemiAdjoint_rule
-  : HasSemiAdjoint K (id : X → X)
-:= 
-  by_morphism (ContinuousLinearMap.id R X) (by simp)
-
+  : HasSemiAdjoint K (id : X → X) := by sorry_proof
 
 
 -- Prod.mk ---------------------------------------------------------------------
