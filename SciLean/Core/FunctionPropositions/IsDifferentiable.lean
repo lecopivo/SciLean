@@ -131,8 +131,8 @@ def fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``IsDifferentiable.pi_rule 
-      origin := .decl ``IsDifferentiable.pi_rule 
+      proof  := mkConst ``pi_rule 
+      origin := .decl ``pi_rule 
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -143,7 +143,7 @@ def fpropExt : FPropExt where
 
 -- register fderiv
 #eval show Lean.CoreM Unit from do
-  modifyEnv (λ env => FProp.fpropExt.addEntry env (``IsDifferentiable, IsDifferentiable.fpropExt))
+  modifyEnv (λ env => FProp.fpropExt.addEntry env (``IsDifferentiable, fpropExt))
 
 
 end SciLean.IsDifferentiable
