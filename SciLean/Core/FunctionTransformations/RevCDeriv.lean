@@ -11,20 +11,20 @@ noncomputable
 def revCDeriv
   (K : Type _) [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
-  {Y : Type _} [SemiInnerProductSpace K X]
+  {Y : Type _} [SemiInnerProductSpace K Y]
   (f : X → Y) (x : X) : Y×(Y→X) :=
-  (f x, semiAdjoint (cderiv K f x))
+  (f x, semiAdjoint K (cderiv K f x))
 
 
 namespace revCDeriv
 
 variable 
   (K : Type _) [IsROrC K]
-  {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
-  {Z : Type _} [NormedAddCommGroup Z] [InnerProductSpace K Z] [CompleteSpace Z]
+  {X : Type _} [SemiInnerProductSpace K X]
+  {Y : Type _} [SemiInnerProductSpace K Y]
+  {Z : Type _} [SemiInnerProductSpace K Z]
   {ι : Type _} [Fintype ι]
-  {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace K (E i)] [∀ i, CompleteSpace (E i)]
+  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
 -- Basic lambda calculus rules -------------------------------------------------
@@ -36,7 +36,7 @@ theorem id_rule
 by
   unfold revCDeriv
   funext _
-  ftrans; ftrans; ext; simp
+  ftrans; ftrans
 
 
 theorem const_rule (y : Y)
@@ -44,29 +44,23 @@ theorem const_rule (y : Y)
 by
   unfold revCDeriv
   funext _
-  ftrans; ftrans; ext; simp
+  ftrans; ftrans
 variable{X}
 
 variable(E)
 theorem proj_rule [DecidableEq ι] (i : ι)
-  : revCDeriv K (fun (x : PiLp 2 (fun (_ : ι) => X)) => x i)
+  : revCDeriv K (fun (x : (i:ι) → E i) => x i)
     = 
     fun x => 
-      (x i, fun dxi j => if i=j then dxi else (0 : X)) :=
+      (x i, fun dxi j => if h : i=j then h ▸ dxi else 0) :=
 by
   unfold revCDeriv
-  funext _; ext; dsimp; dsimp
-  -- Here we are in trouble because fderiv depends on the norm
-  have h : (fderiv K fun (x : PiLp 2 (fun (_ : ι) => X)) => x i)
-           =
-           fun _ => fun dx =>L[K] dx i := sorry_proof -- by apply fderiv.proj_rule 
-  rw[h]
-  dsimp; ftrans only; simp
+  funext _; ftrans; ftrans
 variable {E}
 
 theorem comp_rule 
   (f : Y → Z) (g : X → Y) 
-  (hf : Differentiable K f) (hg : Differentiable K g)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : revCDeriv K (fun x : X => f (g x))
     = 
     fun x =>
@@ -79,7 +73,9 @@ theorem comp_rule
 by
   unfold revCDeriv
   funext _
-  ftrans; ftrans; ext; simp
+  ftrans; 
+  set_option trace.Meta.Tactic.simp.discharge true in
+  ftrans only
 
 
 theorem let_rule 
@@ -246,17 +242,17 @@ end SciLean.revCDeriv
 
 --------------------------------------------------------------------------------
 -- Function Rules --------------------------------------------------------------
---------------------------------------------------------------------------------
+--------------------------------------------------------------------------------b
 
 open SciLean
 
 variable 
   {K : Type _} [IsROrC K]
-  {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
-  {Z : Type _} [NormedAddCommGroup Z] [InnerProductSpace K Z] [CompleteSpace Z]
+  {X : Type _} [SemiInnerProductSpace K X]
+  {Y : Type _} [SemiInnerProductSpace K Y]
+  {Z : Type _} [SemiInnerProductSpace K Z]
   {ι : Type _} [Fintype ι]
-  {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace K (E i)] [∀ i, CompleteSpace (E i)]
+  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
 -- Prod.mk -----------------------------------v---------------------------------

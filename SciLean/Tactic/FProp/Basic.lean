@@ -68,7 +68,7 @@ def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
 
   let lctx ← getLCtx
   for var in lctx do
-    let type := var.type
+    let type ← instantiateMVars var.type
     
     if (type.getForallBody.getAppFn.constName? == .some fpropName) &&
        (var.kind ≠ Lean.LocalDeclKind.auxDecl) then
@@ -83,6 +83,8 @@ def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
 -- returns proof of expression like given expression like `Differentiable K fun x => f x`
 mutual 
   partial def fprop (e : Expr) : FPropM (Option Expr) := do
+
+    let e ← instantiateMVars e
 
     if let .some { expr := _, proof? := .some proof } := (← get).cache.find? e then
       trace[Meta.Tactic.fprop.cache] "cached result for {e}"
@@ -191,7 +193,8 @@ mutual
       -- if function head is a constant we look up global theorem
       -- otherwise we use hypothesis from local context
       match (← getFunHeadConst? f) with
-        | .some funName => FProp.getFPropRules funName fpropName
+        | .some funName => 
+          pure <| (← FProp.getFPropRules funName fpropName).append (← getLocalRules fpropName)
         | none => getLocalRules fpropName
 
     if candidates.size = 0 then
@@ -208,7 +211,7 @@ mutual
     match (← trySynthInstance type) with
     | LOption.some val =>
       -- if (← withReducibleAndInstances <| isDefEq x val) then
-      if (← isDefEq x val) then
+      if (← withReducibleAndInstances <| isDefEq x val) then
         return true
       else
         trace[Meta.Tactic.fprop.discharge] "{← ppOrigin thmId}, failed to assign instance{indentExpr type}\nsythesized value{indentExpr val}\nis not definitionally equal to{indentExpr x}"
@@ -270,7 +273,7 @@ mutual
   partial def tryTheorem? (e : Expr) (thm : SimpTheorem) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
     withNewMCtxDepth do
       let val  ← thm.getValue
-      let type ← inferType val
+      let type ← instantiateMVars (← inferType val)
       let (xs, bis, type) ← forallMetaTelescope type
       let type ← instantiateMVars type
       tryTheoremCore xs bis val type e thm discharge?

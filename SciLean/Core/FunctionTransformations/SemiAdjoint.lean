@@ -23,10 +23,11 @@ variable (X)
 theorem id_rule 
   : semiAdjoint K (fun (x : X) => x) = fun x => x := by sorry_proof
 
+variable (Y)
 theorem const_rule 
   : semiAdjoint K (fun (_ : X) => (0 : Y)) = fun x => 0 := 
 by sorry_proof
-variable {X}
+variable {X Y}
 
 variable (E)
 theorem proj_rule [DecidableEq ι]
@@ -110,38 +111,38 @@ def ftransExt : FTransExt where
       e
 
   idRule  e X := do
-    let K := (e.getArg! 0).getArg! 0
+    let K := e.getArg! 0
     tryTheorems
       #[ { proof := ← mkAppM ``id_rule #[K, X], origin := .decl ``id_rule, rfl := false} ]
       discharger e
 
   constRule e X y := do
-    let K := (e.getArg! 0).getArg! 0
+    let K := e.getArg! 0
     tryTheorems
       #[ { proof := ← mkAppM ``const_rule #[K, X, (← inferType y)], origin := .decl ``const_rule, rfl := false} ]
       discharger e
 
   projRule e X i := do
-    let K := (e.getArg! 0).getArg! 0
+    let K := e.getArg! 0
     tryTheorems
       #[ { proof := ← mkAppM ``proj_rule #[K, X, i], origin := .decl ``proj_rule, rfl := false} ]
       discharger e
 
   compRule e f g := do
-    let K := (e.getArg! 0).getArg! 0
+    let K := e.getArg! 0
     tryTheorems
       #[ { proof := ← withTransparency .all <| 
              mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
       discharger e
 
   letRule e f g := do
-    let K := (e.getArg! 0).getArg! 0
+    let K := e.getArg! 0
     tryTheorems
       #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false} ]
       discharger e
 
   piRule  e f := do
-    let K := (e.getArg! 0).getArg! 0
+    let K := e.getArg! 0
     tryTheorems
       #[ { proof := ← mkAppM ``pi_rule #[K, f], origin := .decl ``pi_rule, rfl := false} ]
       discharger e
@@ -170,6 +171,7 @@ variable
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 open SciLean
+
 
 -- Prod.mk ---------------------------------------------------------------------
 --------------------------------------------------------------------------------

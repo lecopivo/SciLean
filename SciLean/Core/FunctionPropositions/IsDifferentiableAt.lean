@@ -93,7 +93,7 @@ def fpropExt : FPropExt where
     let thm : SimpTheorem :=
     {
       proof  := mkConst ``id_rule
-      origin := .decl ``IsDifferentiableAt.id_rule
+      origin := .decl ``id_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -110,8 +110,8 @@ def fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``IsDifferentiableAt.proj_rule 
-      origin := .decl ``IsDifferentiableAt.proj_rule 
+      proof  := mkConst ``proj_rule 
+      origin := .decl ``proj_rule 
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -155,7 +155,7 @@ def fpropExt : FPropExt where
 
 -- register fderiv
 #eval show Lean.CoreM Unit from do
-  modifyEnv (λ env => FProp.fpropExt.addEntry env (``IsDifferentiableAt, IsDifferentiableAt.fpropExt))
+  modifyEnv (λ env => FProp.fpropExt.addEntry env (``IsDifferentiableAt, fpropExt))
 
 
 end SciLean.IsDifferentiableAt

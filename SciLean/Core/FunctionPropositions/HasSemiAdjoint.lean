@@ -52,7 +52,7 @@ namespace HasSemiAdjoint
 
 
 variable (X)
-theorem id_rule (x : X)
+theorem id_rule
   : HasSemiAdjoint K (fun x : X => x) := 
 by 
   apply Exists.intro (fun x => x) _
@@ -204,10 +204,21 @@ variable
 -- Id --------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-
 @[fprop]
 theorem id.arg_a.HasSemiAdjoint_rule
   : HasSemiAdjoint K (id : X → X) := by sorry_proof
+
+
+-- Function.comp ---------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem Function.comp.arg_a0.HasSemiAdjoint_rule
+  (f : Y → Z) (g : X → Y)
+  (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
+  : HasSemiAdjoint K (f ∘ g) :=
+by
+  unfold Function.comp; fprop
 
 
 -- Prod.mk ---------------------------------------------------------------------

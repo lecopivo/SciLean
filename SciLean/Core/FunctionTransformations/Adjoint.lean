@@ -7,6 +7,8 @@ import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 
 import SciLean.Notation
 
+set_option linter.unusedVariables false
+
 namespace ContinuousLinearMap.adjoint
 
 variable 

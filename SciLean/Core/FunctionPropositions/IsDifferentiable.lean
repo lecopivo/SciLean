@@ -17,12 +17,12 @@ def IsDifferentiable (f : X → Y) : Prop := ∀ x, IsDifferentiableAt K f x
 namespace IsDifferentiable
 
 variable (X)
-theorem id_rule (x : X)
+theorem id_rule
   : IsDifferentiable K (fun x : X => x)
   := by sorry_proof
   
 
-theorem const_rule (y : Y) (x : X)
+theorem const_rule (y : Y)
   : IsDifferentiable K (fun _ : X => y)
   := by sorry_proof
 variable {X}

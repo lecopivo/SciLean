@@ -1,5 +1,8 @@
 import SciLean.Core.FunctionPropositions.Differentiable
 import SciLean.Core.FunctionPropositions.DifferentiableAt
+import SciLean.Core.FunctionPropositions.HasAdjDiff
+import SciLean.Core.FunctionPropositions.HasAdjDiffAt
+import SciLean.Core.FunctionPropositions.HasSemiAdjoint
 import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 import SciLean.Core.FunctionPropositions.IsDifferentiable
 import SciLean.Core.FunctionPropositions.IsDifferentiableAt

@@ -117,7 +117,7 @@ instance : SemiInnerProductSpace K K where
 
 
 -- Complete InnerProductSpace is SemiInnerProductSpace
-instance [IsROrC K] [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
+instance (priority:=low) [IsROrC K] [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   : SemiInnerProductSpace K X where
   scalar_wise_smooth := by sorry_proof
   TestFunction _ := True

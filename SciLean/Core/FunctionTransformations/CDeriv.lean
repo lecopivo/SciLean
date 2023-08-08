@@ -239,6 +239,31 @@ theorem id.arg_a.cderiv_rule
     fun _ => id := by unfold id; ftrans
 
 
+-- Function.comp ---------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem Function.comp.arg_a0.cderiv_rule_at
+  (f : Y → Z) (g : X → Y) (x : X)
+  (hf : IsDifferentiableAt K f (g x)) (hg : IsDifferentiableAt K g x)
+  : cderiv K (f ∘ g) x
+    =
+    fun dx => 
+      cderiv K f (g x) (cderiv K g x dx) := 
+by 
+  unfold Function.comp; ftrans
+
+@[ftrans]
+theorem Function.comp.arg_a0.cderiv_rule
+  (f : Y → Z) (g : X → Y)
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
+  : cderiv K (f ∘ g)
+    =
+    fun x => cderiv K f (g x) ∘ (cderiv K g x) := 
+by 
+  unfold Function.comp; ftrans
+
+
 -- Prod.mk -----------------------------------v---------------------------------
 --------------------------------------------------------------------------------
 
