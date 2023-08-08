@@ -31,7 +31,7 @@ For example:
 
 see `SemiInnerProductSpace` for more information
 -/
-class TestFunctions (X : Type) where
+class TestFunctions (X : Type _) where
   TestFunction : X → Prop
 
 export TestFunctions (TestFunction)
