@@ -8,15 +8,13 @@ import SciLean.Tactic.FProp.Notation
 
 namespace SciLean
 
-
 variable (R : Type _) [Semiring R]
     {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
     {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y]
 
 
 structure IsContinuousLinearMap (f : X → Y) : Prop where
-  map_add' : ∀ x y, f (x + y) = f x + f y
-  map_smul' : ∀ (r : R) (x : X), f (r • x) = r • f x
+  linear : IsLinearMap R f
   cont : Continuous f := by continuity
 
 
@@ -27,7 +25,7 @@ structure IsContinuousLinearMap (f : X → Y) : Prop where
 def ContinuousLinearMap.mk'
   (f : X → Y) (hf : IsContinuousLinearMap R f)
   : X →L[R] Y :=
-  ⟨⟨⟨f, hf.map_add'⟩, hf.map_smul'⟩, hf.cont⟩
+  ⟨⟨⟨f, hf.linear.map_add⟩, hf.linear.map_smul⟩, hf.cont⟩
 
 @[simp]
 theorem ContinuousLinearMap.mk'_eval
@@ -73,6 +71,7 @@ theorem by_morphism {f : X → Y} (g : X →L[R] Y) (h : ∀ x, f x = g x)
 by
   have h' : f = g := by funext x; apply h
   rw[h']
+  constructor
   constructor
   apply g.1.1.2
   apply g.1.2
@@ -520,8 +519,7 @@ theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
   (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
   : IsContinuousLinearMap R fun x => ∑ i in A, f x i := 
 {
-  map_add'  := sorry_proof
-  map_smul' := sorry_proof
+  linear := sorry_proof
   cont := sorry_proof
 }
 
