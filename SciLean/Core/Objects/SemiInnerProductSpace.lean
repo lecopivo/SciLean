@@ -115,6 +115,20 @@ instance : SemiInnerProductSpace K K where
   is_lin_subspace := sorry_proof
   inner_with_testfun_is_continuous := by simp[Inner.inner]; continuity
 
+
+-- Complete InnerProductSpace is SemiInnerProductSpace
+instance [IsROrC K] [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
+  : SemiInnerProductSpace K X where
+  scalar_wise_smooth := by sorry_proof
+  TestFunction _ := True
+  add_left := by sorry_proof
+  smul_left := by sorry_proof
+  conj_sym := by sorry_proof
+  inner_pos := by sorry_proof
+  inner_ext := by sorry_proof
+  is_lin_subspace := by sorry_proof
+  inner_with_testfun_is_continuous := by simp[Inner.inner]; continuity
+
 abbrev SemiInnerProductSpace.mkSorryProofs {α} [Vec K α] [Inner K α] [TestFunctions α] : SemiInnerProductSpace K α
   := SemiInnerProductSpace.mk sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
 
