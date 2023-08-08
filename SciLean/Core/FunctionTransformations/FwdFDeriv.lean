@@ -126,8 +126,7 @@ by
 -- Register `fwdFDeriv` as function transformation ------------------------------
 --------------------------------------------------------------------------------
 
-open Lean Meta Qq
-
+open Lean Meta Qq 
 def discharger (e : Expr) : SimpM (Option Expr) := do
   withTraceNode `fwdFDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
@@ -144,7 +143,7 @@ def discharger (e : Expr) : SimpM (Option Expr) := do
     return proof?
 
 
-open Lean Elab Term FTrans
+open Lean Elab Term FTrans in
 def ftransExt : FTransExt where
   ftransName := ``fwdFDeriv
 
@@ -207,6 +206,7 @@ def ftransExt : FTransExt where
 
 
 -- register fderiv
+open Lean in
 #eval show Lean.CoreM Unit from do
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``fwdFDeriv, ftransExt))
 
