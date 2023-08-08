@@ -9,7 +9,7 @@ import Mathlib.Analysis.Calculus.Deriv.Inv
 import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
 
-import SciLean.Core.FunctionPropositions.ContinuousLinearMap
+import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 
 namespace SciLean
 
