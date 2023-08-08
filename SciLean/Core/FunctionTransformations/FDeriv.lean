@@ -11,7 +11,7 @@ import Mathlib.Analysis.Calculus.Deriv.Inv
 
 import SciLean.Tactic.FTrans.Basic
 
-import SciLean.Core.FunctionPropositions.ContinuousLinearMap
+import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 import SciLean.Core.FunctionPropositions.DifferentiableAt
 import SciLean.Core.FunctionPropositions.Differentiable
 
@@ -47,7 +47,7 @@ theorem fderiv.proj_rule (i : ι)
     =
     fun _ => fun dx =>L[K] dx i := 
 by 
-  funext x; sorry_proof
+  funext x; sorry_proof -- somehow use fderiv_pi
 variable {E}
 
 

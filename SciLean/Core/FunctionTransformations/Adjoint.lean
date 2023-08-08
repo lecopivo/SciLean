@@ -3,7 +3,7 @@ import Mathlib.Analysis.InnerProductSpace.PiL2
 
 import SciLean.Mathlib.Analysis.InnerProductSpace.Prod
 import SciLean.Tactic.FTrans.Basic
-import SciLean.Core.FunctionPropositions.ContinuousLinearMap
+import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 
 import SciLean.Notation
 

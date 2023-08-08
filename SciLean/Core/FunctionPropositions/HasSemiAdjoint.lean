@@ -62,7 +62,7 @@ theorem const_rule
   : HasSemiAdjoint K (fun _ : X => (0:Y)) := 
 by 
   apply Exists.intro (fun _ => 0) _
-  simp; sorry
+  simp; sorry_proof
 variable {X}
 
 variable (E)

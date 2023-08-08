@@ -1,7 +1,4 @@
-import SciLean.Tactic.FProp.Basic
-import SciLean.Tactic.FProp.Notation
-
-import SciLean.Core.Objects.Vec
+import SciLean.Core.FunctionPropositions.IsDifferentiableAt
 
 set_option linter.unusedVariables false
 
@@ -15,12 +12,7 @@ variable
   {ι : Type _} [Fintype ι] 
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
-def IsDifferentiable (f : X → Y) : Prop :=
-  ∀ (c : K → X),
-      Curve.Differentiable c
-      →
-      Curve.Differentiable (f∘c)
-
+def IsDifferentiable (f : X → Y) : Prop := ∀ x, IsDifferentiableAt K f x
 
 namespace IsDifferentiable
 

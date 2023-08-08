@@ -1,47 +1,52 @@
+import SciLean.Core.FunctionPropositions.IsDifferentiable 
+import SciLean.Core.FunctionPropositions.IsDifferentiableAt
 
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.FDeriv.Prod
-import Mathlib.Analysis.Calculus.FDeriv.Linear
-import Mathlib.Analysis.Calculus.FDeriv.Add
-import Mathlib.Analysis.Calculus.FDeriv.Mul
-
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.Analysis.Calculus.Deriv.Inv 
+import SciLean.Tactic.FTrans.Basic
 
 namespace SciLean
 
 set_option linter.unusedVariables false
 
 variable 
-  {K : Type _} [NontriviallyNormedField K]
-  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
-  {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
+  {K : Type _} [IsROrC K]
+  {X : Type _} [Vec K X]
+  {Y : Type _} [Vec K Y]
+  {Z : Type _} [Vec K Z]
   {ι : Type _} [Fintype ι]
-  {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
+  {E : ι → Type _} [∀ i, Vec K (E i)]
 
 noncomputable
-def cderiv (K : Type _) [NontriviallyNormedField K]
-  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
-  (f : X → Y) (x dx : X) : Y := fderiv K f x dx
+def cderiv (K : Type _) [IsROrC K]
+  {X Y : Type _} [Vec K X] [Vec K Y]
+  (f : X → Y) (x dx : X) : Y := Curve.deriv (fun t : K => f (x + t•dx)) 0
 
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
-
+variable (K)
+variable (X)
 theorem cderiv.id_rule 
   : (cderiv K fun x : X => x) = fun _ => fun dx => dx
-  := by unfold cderiv; ext x dx; simp
+  := by sorry_proof
+variable {X}
 
+variable (Y)
 theorem cderiv.const_rule (x : X)
   : (cderiv K fun _ : Y => x) = fun _ => fun dx => 0
-  := by unfold cderiv; ext x dx; simp
+  := by sorry_proof
+variable {Y}
+
+variable (E)
+theorem cderiv.proj_rule (i : ι)
+  : (cderiv K fun (x : (i : ι) → E i) => x i)
+    =
+    fun _ => fun dx => dx i := 
+by sorry_proof
+variable {E}
+
 
 theorem cderiv.comp_rule_at
-  (x : X)
-  (g : X → Y) (hg : DifferentiableAt K g x)
-  (f : Y → Z) (hf : DifferentiableAt K f (g x))
+  (f : Y → Z) (g : X → Y) (x : X)
+  (hf : IsDifferentiableAt K f (g x)) (hg : IsDifferentiableAt K g x)
   : (cderiv K fun x : X => f (g x)) x
     =
     let y := g x
@@ -49,15 +54,12 @@ theorem cderiv.comp_rule_at
       let dy := cderiv K g x dx
       let dz := cderiv K f y dy
       dz :=
-by 
-  unfold cderiv; 
-  rw[show (fun x => f (g x)) = f ∘ g by rfl]
-  rw[fderiv.comp x hf hg]
-  ext dx; simp
+by sorry_proof
+
 
 theorem cderiv.comp_rule
-  (g : X → Y) (hg : Differentiable K g)
-  (f : Y → Z) (hf : Differentiable K f)
+  (f : Y → Z) (g : X → Y) 
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
   : (cderiv K fun x : X => f (g x))
     =
     fun x => 
@@ -66,18 +68,13 @@ theorem cderiv.comp_rule
         let dy := cderiv K g x dx
         let dz := cderiv K f y dy
         dz :=
-by 
-  unfold cderiv
-  funext x;
-  rw[show (fun x => f (g x)) = f ∘ g by rfl]
-  rw[fderiv.comp x (hf (g x)) (hg x)]
-  ext dx; simp
+by sorry_proof
 
 
 theorem cderiv.let_rule_at
-  (x : X)
-  (g : X → Y) (hg : DifferentiableAt K g x)
-  (f : X → Y → Z) (hf : DifferentiableAt K (fun xy : X×Y => f xy.1 xy.2) (x, g x))
+  (f : X → Y → Z) (g : X → Y) (x : X)
+  (hf : IsDifferentiableAt K (fun xy : X×Y => f xy.1 xy.2) (x, g x)) 
+  (hg : IsDifferentiableAt K g x)
   : (cderiv K
       fun x : X =>
         let y := g x
@@ -88,21 +85,12 @@ theorem cderiv.let_rule_at
       let dy := cderiv K g x dx
       let dz := cderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y) (dx, dy)
       dz :=
-by
-  unfold cderiv
-  have h : (fun x => f x (g x)) = (fun xy : X×Y => f xy.1 xy.2) ∘ (fun x => (x, g x)) := by rfl
-  conv => 
-    lhs
-    rw[h]
-    rw[fderiv.comp x hf (DifferentiableAt.prod (by simp) hg)]
-    rw[DifferentiableAt.fderiv_prod (by simp) hg]
-  ext dx; simp[ContinuousLinearMap.comp]
-  rfl
+by sorry_proof
 
 
 theorem cderiv.let_rule
-  (g : X → Y) (hg : Differentiable K g)
-  (f : X → Y → Z) (hf : Differentiable K fun xy : X×Y => f xy.1 xy.2)
+  (f : X → Y → Z) (g : X → Y) 
+  (hf : IsDifferentiable K fun xy : X×Y => f xy.1 xy.2) (hg : IsDifferentiable K g)
   : (cderiv K fun x : X =>
        let y := g x
        f x y)
@@ -113,56 +101,57 @@ theorem cderiv.let_rule
         let dy := cderiv K g x dx
         let dz := cderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y) (dx, dy)
         dz := 
-by
-  funext x
-  apply cderiv.let_rule_at x _ (hg x) _ (hf (x,g x))
+by sorry_proof
 
 
 theorem cderiv.pi_rule_at
-  (x : X)
-  (f : (i : ι) → X → E i) (hf : ∀ i, DifferentiableAt K (f i) x)
-  : (cderiv K fun (x : X) (i : ι) => f i x) x
+  (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, IsDifferentiableAt K (f · i) x)
+  : (cderiv K fun (x : X) (i : ι) => f x i) x
     = 
     fun dx => fun i =>
-      cderiv K (f i) x dx := 
-by
-  unfold cderiv
-  rw[fderiv_pi hf]
-  simp
+      cderiv K (f · i) x dx
+  := by sorry_proof
 
 
 theorem cderiv.pi_rule
-  (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable K (f i))
-  : (cderiv K fun (x : X) (i : ι) => f i x)
+  (f : X → (i : ι) → E i) (hf : ∀ i, IsDifferentiable K (f · i))
+  : (cderiv K fun (x : X) (i : ι) => f x i)
     = 
     fun x => fun dx => fun i =>
-      cderiv K (f i) x dx
-  := by unfold cderiv; funext x; rw[fderiv_pi (fun i => hf i x)]; simp
+      cderiv K (f · i) x dx
+  := by sorry_proof
+
+variable {K}
 
 
 
 -- Register `cderiv` as function transformation --------------------------------
 --------------------------------------------------------------------------------
-#exit
-open Lean Meta Qq
 
+open Lean Meta Qq in
 def cderiv.discharger (e : Expr) : SimpM (Option Expr) := do
-  withTraceNode `cderiv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
+  withTraceNode `fwdDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
   let config : FProp.Config := {}
   let state  : FProp.State := { cache := cache }
   let (proof?, state) ← FProp.fprop e |>.run config |>.run state
   modify (fun simpState => { simpState with cache := state.cache })
-  return proof?
+  if proof?.isSome then
+    return proof?
+  else
+    -- if `fprop` fails try assumption
+    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
+    let proof? ← tac e
+    return proof?
 
-open Lean Elab Term FTrans
+open Lean Meta FTrans in
 def cderiv.ftransExt : FTransExt where
   ftransName := ``cderiv
 
   getFTransFun? e := 
     if e.isAppOf ``cderiv then
 
-      if let .some f := e.getArg? 8 then
+      if let .some f := e.getArg? 6 then
         some f
       else 
         none
@@ -171,20 +160,54 @@ def cderiv.ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``cderiv then
-      e.modifyArg (fun _ => f) 8 
+      e.modifyArg (fun _ => f) 6
     else          
       e
 
-  identityRule     := .some <| .thm ``cderiv.id_rule
-  constantRule     := .some <| .thm ``cderiv.const_rule
-  compRule         := .some <| .thm ``cderiv.comp_rule
-  lambdaLetRule    := .some <| .thm ``cderiv.let_rule
-  lambdaLambdaRule := .some <| .thm ``cderiv.pi_rule
+  idRule  e X := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``id_rule #[K, X], origin := .decl ``id_rule, rfl := false} ]
+      discharger e
+
+  constRule e X y := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``const_rule #[K, X, y], origin := .decl ``const_rule, rfl := false} ]
+      discharger e
+
+  projRule e X i := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``proj_rule #[K, X, i], origin := .decl ``proj_rule, rfl := false} ]
+      discharger e
+
+  compRule e f g := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false},
+         { proof := ← mkAppM ``comp_rule_at #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
+      discharger e
+
+  letRule e f g := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false},
+         { proof := ← mkAppM ``let_rule_at #[K, f, g], origin := .decl ``let_rule, rfl := false} ]
+      discharger e
+
+  piRule  e f := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``pi_rule #[K, f], origin := .decl ``pi_rule, rfl := false},
+         { proof := ← mkAppM ``pi_rule_at #[K, f], origin := .decl ``pi_rule, rfl := false} ]
+      discharger e
 
   discharger := cderiv.discharger
 
 
 -- register cderiv
+open Lean in
 #eval show Lean.CoreM Unit from do
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``cderiv, cderiv.ftransExt))
 
@@ -195,213 +218,183 @@ end SciLean
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-variable 
-  {K : Type _} [NontriviallyNormedField K]
-  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
-  {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} [Fintype ι]
-  {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
-
 open SciLean
+
+variable 
+  {K : Type _} [IsROrC K]
+  {X : Type _} [Vec K X]
+  {Y : Type _} [Vec K Y]
+  {Z : Type _} [Vec K Z]
+  {ι : Type _} [Fintype ι]
+  {E : ι → Type _} [∀ i, Vec K (E i)]
+
 
 -- Prod.mk -----------------------------------v---------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem Prod.mk.arg_fstsnd.cderiv_at_comp
+@[ftrans]
+theorem Prod.mk.arg_fstsnd.cderiv_rule_at
   (x : X)
-  (g : X → Y) (hg : DifferentiableAt K g x)
-  (f : X → Z) (hf : DifferentiableAt K f x)
+  (g : X → Y) (hg : IsDifferentiableAt K g x)
+  (f : X → Z) (hf : IsDifferentiableAt K f x)
   : cderiv K (fun x => (g x, f x)) x
     =
     fun dx =>
       (cderiv K g x dx, cderiv K f x dx) := 
-by 
-  unfold SciLean.cderiv
-  rw[DifferentiableAt.fderiv_prod hg hf]
-  simp
+by sorry_proof
 
 
-@[ftrans_rule]
-theorem Prod.mk.arg_fstsnd.cderiv_comp
-  (g : X → Y) (hg : Differentiable K g)
-  (f : X → Z) (hf : Differentiable K f)
+
+@[ftrans]
+theorem Prod.mk.arg_fstsnd.cderiv_rule
+  (g : X → Y) (hg : IsDifferentiable K g)
+  (f : X → Z) (hf : IsDifferentiable K f)
   : cderiv K (fun x => (g x, f x))
     =    
     fun x => fun dx =>
       (cderiv K g x dx, cderiv K f x dx) := 
-by 
-  unfold cderiv; funext x; rw[DifferentiableAt.fderiv_prod (hg x) (hf x)]; simp
+by sorry_proof
+
 
  
 
 -- Prod.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem Prod.fst.arg_self.cderiv_at_comp
+@[ftrans]
+theorem Prod.fst.arg_self.cderiv_rule_at
   (x : X)
-  (f : X → Y×Z) (hf : DifferentiableAt K f x)
+  (f : X → Y×Z) (hf : IsDifferentiableAt K f x)
   : cderiv K (fun x => (f x).1) x
     =
     fun dx => (cderiv K f x dx).1 := 
-by
-  unfold cderiv
-  rw[fderiv.fst hf]
-  simp
+by sorry_proof
 
 
-@[ftrans_rule]
-theorem Prod.fst.arg_self.cderiv_comp
-  (f : X → Y×Z) (hf : Differentiable K f)
+
+@[ftrans]
+theorem Prod.fst.arg_self.cderiv_rule
+  (f : X → Y×Z) (hf : IsDifferentiable K f)
   : cderiv K (fun x => (f x).1)
     =
     fun x => fun dx => (cderiv K f x dx).1 := 
-by
-  unfold cderiv
-  funext x; rw[fderiv.fst (hf x)]; simp
+by sorry_proof
 
-
-@[ftrans_rule]
-theorem Prod.fst.arg_self.cderiv
-  : cderiv K (fun xy : X×Y => xy.1)
-    =  
-    fun _ => fun dxy => dxy.1
-:= by unfold cderiv; funext xy; rw[fderiv_fst]; simp
 
 
 -- Prod.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem Prod.snd.arg_self.cderiv_at_comp
+@[ftrans]
+theorem Prod.snd.arg_self.cderiv_rule_at
   (x : X)
-  (f : X → Y×Z) (hf : DifferentiableAt K f x)
+  (f : X → Y×Z) (hf : IsDifferentiableAt K f x)
   : cderiv K (fun x => (f x).2) x
     =
     fun dx => (cderiv K f x dx).2 := 
-by
-  unfold cderiv
-  rw[fderiv.snd hf]
-  simp
+by sorry_proof
 
 
-@[ftrans_rule]
-theorem Prod.snd.arg_self.cderiv_comp
-  (f : X → Y×Z) (hf : Differentiable K f)
+@[ftrans]
+theorem Prod.snd.arg_self.cderiv_rule
+  (f : X → Y×Z) (hf : IsDifferentiable K f)
   : cderiv K (fun x => (f x).2)
     =
     fun x => fun dx => (cderiv K f x dx).2 :=
-by
-  unfold cderiv
-  funext x; rw[fderiv.snd (hf x)]
-  simp
-
-@[ftrans_rule]
-theorem Prod.snd.arg_self.cderiv
-  : cderiv K (fun xy : X×Y => xy.2)
-    =  
-    fun _ => fun dxy => dxy.2
-:= by unfold cderiv; funext xy; rw[fderiv_snd]; simp
-
+by sorry_proof
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem HAdd.hAdd.arg_a4a5.cderiv_at_comp
-  (x : X) (f g : X → Y) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+@[ftrans]
+theorem HAdd.hAdd.arg_a0a1.cderiv_rule_at
+  (x : X) (f g : X → Y) (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x)
   : (cderiv K fun x => f x + g x) x
     =
     fun dx =>
       cderiv K f x dx + cderiv K g x dx
-  := by unfold cderiv; rw[fderiv_add hf hg]; simp
+  := by sorry_proof
 
 
-@[ftrans_rule]
-theorem HAdd.hAdd.arg_a4a5.cderiv_comp
-  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+@[ftrans]
+theorem HAdd.hAdd.arg_a0a1.cderiv_rule
+  (f g : X → Y) (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
   : (cderiv K fun x => f x + g x)
     =
     fun x => fun dx =>
       cderiv K f x dx + cderiv K g x dx
-  := by unfold cderiv; funext x; rw[fderiv_add (hf x) (hg x)]; simp
+  := by sorry_proof
+
 
 
 -- HSub.hSub -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem HSub.hSub.arg_a4a5.cderiv_at_comp
-  (x : X) (f g : X → Y) (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+@[ftrans]
+theorem HSub.hSub.arg_a0a1.cderiv_rule_at
+  (x : X) (f g : X → Y) (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x)
   : (cderiv K fun x => f x - g x) x
     =
     fun dx =>
       cderiv K f x dx - cderiv K g x dx
-  := by unfold cderiv; rw[fderiv_sub hf hg]; simp
+  := by sorry_proof
 
 
-@[ftrans_rule]
-theorem HSub.hSub.arg_a4a5.cderiv_comp
-  (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
+@[ftrans]
+theorem HSub.hSub.arg_a0a1.cderiv_rule
+  (f g : X → Y) (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
   : (cderiv K fun x => f x - g x)
     =
     fun x => fun dx =>
       cderiv K f x dx - cderiv K g x dx
-  := by unfold cderiv; funext x; rw[fderiv_sub (hf x) (hg x)]; simp
+  := by sorry_proof
 
 
 
 -- Neg.neg ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem Neg.neg.arg_a2.cderiv_at_comp
+@[ftrans]
+theorem Neg.neg.arg_a0.cderiv_rule'
   (x : X) (f : X → Y)
   : (cderiv K fun x => - f x) x
     =
     fun dx =>
       - cderiv K f x dx
-  := by unfold cderiv; rw[fderiv_neg]; simp
+  := by sorry_proof
 
 
-@[ftrans_rule]
-theorem Neg.neg.arg_a2.cderiv_comp
+@[ftrans]
+theorem Neg.neg.arg_a0.cderiv_rule
   (f : X → Y)
   : (cderiv K fun x => - f x)
     =
     fun x => fun dx =>
       - cderiv K f x dx
-  := by unfold cderiv; funext x; rw[fderiv_neg]; simp
+  := by sorry_proof
 
 
 -- HMul.hmul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem HMul.hMul.arg_a4a5.cderiv_at_comp
-  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
-  (x : X) (f g : X → Y)
-  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+@[ftrans]
+theorem HMul.hMul.arg_a0a1.cderiv_rule_at
+  (x : X) (f g : X → K)
+  (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x)
   : (cderiv K fun x => f x * g x) x
     =
     let fx := f x
     let gx := g x
     fun dx =>
       (cderiv K g x dx) * fx + (cderiv K f x dx) * gx := 
-by
-  unfold cderiv
-  ext dx
-  simp[fderiv_mul hf hg, mul_comm]; rfl
+by sorry_proof
 
 
-@[ftrans_rule]
-theorem HMul.hMul.arg_a4a5.cderiv_comp
-  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
-  (f g : X → Y)
-  (hf : Differentiable K f) (hg : Differentiable K g)
+@[ftrans]
+theorem HMul.hMul.arg_a0a1.cderiv_rule
+  (f g : X → K)
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
   : (cderiv K fun x => f x * g x)
     =
     fun x => 
@@ -409,81 +402,101 @@ theorem HMul.hMul.arg_a4a5.cderiv_comp
       let gx := g x
       fun dx =>
         (cderiv K g x dx) * fx + (cderiv K f x dx) * gx := 
-by 
-  unfold cderiv
-  funext x; ext dx;
-  simp[fderiv_mul (hf x) (hg x), mul_comm]
-  rfl
+by sorry_proof
 
 
 -- SMul.smul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem SMul.smul.arg_a3a4.cderiv_at_comp
+@[ftrans]
+theorem HSMul.hSMul.arg_a0a1.cderiv_rule_at
   (x : X) (f : X → K) (g : X → Y) 
-  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
+  (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x)
   : (cderiv K fun x => f x • g x) x
     =
     let k := f x
     let y := g x
     fun dx =>
-      k • (cderiv K g x dx) + (cderiv K f x dx) • y := 
-by
-  unfold cderiv
-  rw[fderiv_smul hf hg]
-  rfl
+      k • (cderiv K g x dx) + (cderiv K f x dx) • y  
+  := by sorry_proof
 
 
-@[ftrans_rule]
-theorem SMul.smul.arg_a3a4.cderiv_comp
+@[ftrans]
+theorem HSMul.hSMul.arg_a0a1.cderiv_rule
   (f : X → K) (g : X → Y) 
-  (hf : Differentiable K f) (hg : Differentiable K g)
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
   : (cderiv K fun x => f x • g x)
     =
     fun x => 
       let k := f x
       let y := g x
       fun dx =>
-        k • (cderiv K g x dx) + (cderiv K f x dx) • y := 
-by 
-  unfold cderiv;
-  funext x; rw[fderiv_smul (hf x) (hg x)]
-  rfl
+        k • (cderiv K g x dx) + (cderiv K f x dx) • y  
+  := by sorry_proof
+
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans_rule]
-theorem HDiv.hDiv.arg_a4a5.cderiv_at_comp
-  {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
-  (x : R) (f : R → K) (g : R → K)
-  (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x) (hx : g x ≠ 0)
-  : (cderiv R fun x => f x / g x) x
+@[ftrans]
+theorem HDiv.hDiv.arg_a0a1.cderiv_rule_at
+  (x : X) (f : X → K) (g : X → K) 
+  (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x) (hx : g x ≠ 0)
+  : (cderiv K fun x => f x / g x) x
     =
     let k := f x
     let k' := g x
     fun dx =>
-      ((cderiv R f x dx) * k' - k * (cderiv R g x dx)) / k'^2 := 
-by
-  unfold cderiv
-  have h : ∀ (f : R → K) x dx, fderiv R f x dx = dx • deriv f x := by simp[deriv]; sorry
-  ext dx; simp[h]; rw[deriv_div hf hg hx]; sorry -- rw[smul_div' dx (deriv f x * g x - f x * deriv g x) (g x ^ 2)]; simp[smul_div',smul_sub]
+      ((cderiv K f x dx) * k' - k * (cderiv K g x dx)) / k'^2 := 
+by sorry_proof
 
 
-@[ftrans_rule]
-theorem HDiv.hDiv.arg_a4a5.cderiv_comp
-  {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
-  (f : R → K) (g : R → K) 
-  (hf : Differentiable R f) (hg : Differentiable R g) (hx : ∀ x, g x ≠ 0)
-  : (cderiv R fun x => f x / g x)
+@[ftrans]
+theorem HDiv.hDiv.arg_a0a1.cderiv_rule
+  (f : X → K) (g : X → K) 
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g) (hx : ∀ x, g x ≠ 0)
+  : (cderiv K fun x => f x / g x)
     =
     fun x => 
       let k := f x
       let k' := g x
       fun dx =>
-        ((cderiv R f x dx) * k' - k * (cderiv R g x dx)) / k'^2 := 
+        ((cderiv K f x dx) * k' - k * (cderiv K g x dx)) / k'^2 := 
+by sorry_proof
+
+
+-- HPow.hPow ---------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans]
+def HPow.hPow.arg_a0.cderiv_rule_at
+  (n : Nat) (x : X) (f : X → K) (hf : IsDifferentiableAt K f x)
+  : cderiv K (fun x => f x ^ n) x
+    =
+    fun dx => n * cderiv K f x dx * (f x ^ (n-1)) :=
 by
-  funext x
-  apply HDiv.hDiv.arg_a4a5.cderiv_at_comp x f g (hf x) (hg x) (hx x)
+  induction n
+  case zero =>
+    simp; ftrans
+  case succ n hn =>
+    ext dx
+    simp_rw[pow_succ]
+    rw[HMul.hMul.arg_a0a1.cderiv_rule_at x f _ (by fprop) (by fprop)]
+    rw[hn]
+    induction n
+    case zero => simp
+    case succ =>
+      rw[show ∀ (n : Nat), n.succ - 1 = n by simp]
+      rw[pow_succ]
+      simp; ring
+
+
+@[ftrans]
+def HPow.hPow.arg_a0.cderiv_rule
+  (n : Nat) (f : X → K) (hf : IsDifferentiable K f)
+  : cderiv K (fun x => f x ^ n)
+    =
+    fun x => fun dx => n * cderiv K f x dx * (f x ^ (n-1)) :=
+by
+  funext x; apply HPow.hPow.arg_a0.cderiv_rule_at n x f (hf x)
