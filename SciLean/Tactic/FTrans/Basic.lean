@@ -57,6 +57,8 @@ def applyTheorems (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : 
   if candidates.size = 0 then
     trace[Meta.Tactic.ftrans.step] "no theorems associated to {funName}"
 
+  trace[Meta.Tactic.ftrans.theorems] "applicable theorems: {candidates.map fun c => c.origin.key}"
+
   tryTheorems candidates ext.discharger e
 
 

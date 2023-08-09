@@ -20,6 +20,7 @@ namespace SciLean.FTrans
 -------------
 initialize registerTraceClass `Meta.Tactic.ftrans
 initialize registerTraceClass `Meta.Tactic.ftrans.step
+initialize registerTraceClass `Meta.Tactic.ftrans.theorems
 initialize registerTraceClass `Meta.Tactic.ftrans.missing_rule
 -- initialize registerTraceClass `Meta.Tactic.ftrans.normalize_let
 initialize registerTraceClass `Meta.Tactic.ftrans.rewrite
