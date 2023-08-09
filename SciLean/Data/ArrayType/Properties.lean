@@ -492,3 +492,204 @@ by
   unfold revCDeriv; ftrans; ftrans; simp
 
 end OnSemiInnerProductSpace
+
+
+-- PushElem.pushElem -----------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+-- DropElem.dropElem -----------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+-- ReserveElem.reserveElem -----------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+-- ArrayType.mapIdx ------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+-- ArrayType.map ---------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+section OnNormedSpaces
+
+variable 
+  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
+  [NormedAddCommGroup Elem] [NormedSpace K Elem]
+
+@[fprop]
+theorem ArrayType.map.arg_f.IsContinuousLinearMap_rule 
+  (f : X → Elem → Elem) (arr : Cont)
+  (hf : IsContinuousLinearMap K f)
+  : IsContinuousLinearMap K (λ x => map (f x) arr) := sorry_proof
+
+@[fprop]
+theorem ArrayType.map.arg_arr.IsContinuousLinearMap_rule 
+  (f : Elem → Elem) (arr : X → Cont)
+  (harr : IsContinuousLinearMap K arr)
+  : IsContinuousLinearMap K (λ x => map f (arr x)) := sorry_proof
+
+@[fprop]
+theorem ArrayType.map.arg_farr.Differentiable_rule
+  (f : X → Elem → Elem) (arr : X → Cont)
+  (hf : Differentiable K (fun (xe : X×Elem) => f xe.1 xe.2))
+  (harr : Differentiable K arr)
+  : Differentiable K (λ x => map (f x) (arr x)) := sorry_proof
+
+@[fprop]
+theorem ArrayType.map.arg_farr.DifferentiableAt_rule
+  (f : X → Elem → Elem) (arr : X → Cont) (x : X)
+  (hf : ∀ i, DifferentiableAt K (fun (xe : X×Elem) => f xe.1 xe.2) (x, (arr x)[i]))
+  (harr : DifferentiableAt K arr x)
+  : DifferentiableAt K (λ x => map (f x) (arr x)) x := sorry_proof
+
+-- TODO: fderiv, fwdFDeriv, adjoint, revFDeriv
+
+end OnNormedSpaces
+
+section OnVec
+
+variable 
+  {X : Type _} [Vec K X]
+  [Vec K Elem]
+
+-- @[fprop]
+-- theorem ArrayType.map.arg_xs.IsDifferentiable_rule 
+--   (f : X → Cont) (idx : Idx) (dom)
+--   (hf : IsDifferentiable K f)
+--   : IsDifferentiable K (λ x => getElem (f x) idx dom) := sorry_proof
+
+-- @[fprop]
+-- theorem ArrayType.map.arg_xs.IsDifferentiableAt_rule 
+--   (f : X → Cont) (idx : Idx) (dom) (x : X)
+--   (hf : IsDifferentiableAt K f x)
+--   : IsDifferentiableAt K (λ x => getElem (f x) idx dom) x := sorry_proof
+
+@[ftrans]
+theorem ArrayType.map.arg_farr.cderiv_rule
+  (f : X → Elem → Elem) (arr : X → Cont)
+  (hf : IsDifferentiable K (fun (xe : X×Elem) => f xe.1 xe.2))
+  (harr : IsDifferentiable K arr)
+  : cderiv K (fun x => map (f x) (arr x))
+    =
+    fun x dx =>
+      let a  := arr x
+      let da := cderiv K arr x dx
+      let df := cderiv K (fun (xe : X×Elem) => f xe.1 xe.2)
+      introElem (fun i => df (x,a[i]) (dx,da[i])) :=
+by
+  sorry_proof
+
+@[ftrans]
+theorem ArrayType.map.arg_farr.cderiv_rule_at
+  (f : X → Elem → Elem) (arr : X → Cont)
+  (hf : ∀ i, IsDifferentiableAt K (fun (xe : X×Elem) => f xe.1 xe.2) (x, (arr x)[i]))
+  (harr : IsDifferentiableAt K arr x)
+  : cderiv K (fun x => map (f x) (arr x)) x
+    =
+    fun dx =>
+      let a  := arr x
+      let da := cderiv K arr x dx
+      introElem (fun i => 
+        cderiv K (fun (xe : X×Elem) => f xe.1 xe.2) (x,a[i]) (dx,da[i])) :=
+by
+  sorry_proof
+
+-- @[ftrans]
+-- theorem ArrayType.map.arg_xs.fwdCDeriv_rule
+--   (f : X → Cont) (idx : Idx) (dom)
+--   (hf : IsDifferentiable K f)
+--   : fwdCDeriv K (fun x => getElem (f x) idx dom)
+--     =
+--     fun x dx =>
+--       let ydy := fwdCDeriv K f x dx
+--       (getElem ydy.1 idx dom, getElem ydy.2 idx dom) :=
+-- by
+--   sorry_proof
+
+-- @[ftrans]
+-- theorem ArrayType.map.arg_xs.fwdCDeriv_rule_at
+--   (f : X → Cont) (idx : Idx) (dom) (x : X)
+--   (hf : IsDifferentiableAt K f x)
+--   : fwdCDeriv K (fun x => getElem (f x) idx dom) x
+--     =
+--     fun dx =>
+--       let ydy := fwdCDeriv K f x dx
+--       (getElem ydy.1 idx dom, getElem ydy.2 idx dom) :=
+-- by
+--   sorry_proof
+
+end OnVec
+
+section OnSemiInnerProductSpace
+
+variable 
+  {X : Type _} [SemiInnerProductSpace K X]
+  [SemiInnerProductSpace K Elem]
+
+-- @[fprop]
+-- theorem ArrayType.map.arg_xs.HasSemiAdjoint_rule
+--   (f : X → Cont) (idx : Idx) (dom) 
+--   (hf : HasSemiAdjoint K f)
+--   : HasSemiAdjoint K (fun x => getElem (f x) idx dom) := sorry_proof
+
+-- @[ftrans]
+-- theorem ArrayType.map.arg_xs.semiAdjoint_rule
+--   (f : X → Cont) (idx : Idx) (dom) 
+--   (hf : HasSemiAdjoint K f)
+--   : semiAdjoint K (fun x => getElem (f x) idx dom)
+--     =
+--     fun elem =>
+--       let cont : Cont := introElem fun i => if i=idx then elem else 0
+--       semiAdjoint K f cont :=
+-- by
+--   sorry_proof
+
+-- @[fprop]
+-- theorem ArrayType.map.arg_xs.HasAdjDiff_rule
+--   (f : X → Cont) (idx : Idx) (dom) 
+--   (hf : HasAdjDiff K f)
+--   : HasAdjDiff K (fun x => getElem (f x) idx dom) := sorry_proof
+
+-- @[ftrans]
+-- theorem ArrayType.map.arg_xs.revCDeriv_rule
+--   (f : X → Cont) (idx : Idx) (dom) 
+--   (hf : HasAdjDiff K f)
+--   : revCDeriv K (fun x => getElem (f x) idx dom)
+--     =
+--     fun x =>
+--       let ydf := revCDeriv K f x
+--       (getElem ydf.1 idx dom,
+--        fun delem => 
+--          let dcont : Cont := introElem fun i => if i=idx then delem else 0
+--          ydf.2 dcont) :=
+-- by
+--   have ⟨_,_⟩ := hf
+--   unfold revCDeriv; ftrans; ftrans; simp
+
+-- @[ftrans]
+-- theorem ArrayType.map.arg_xs.revCDeriv_rule_at
+--   (f : X → Cont) (idx : Idx) (dom) (x : X)
+--   (hf : HasAdjDiffAt K f x)
+--   : revCDeriv K (fun x => getElem (f x) idx dom) x
+--     =
+--     let ydf := revCDeriv K f x
+--     (getElem ydf.1 idx dom,
+--      fun delem => 
+--        let dcont : Cont := introElem fun i => if i=idx then delem else 0
+--        ydf.2 dcont) :=
+-- by
+--   have ⟨_,_⟩ := hf
+--   unfold revCDeriv; ftrans; ftrans; simp
+
+end OnSemiInnerProductSpace
+
+
+-- ArrayType.split -------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+-- ArrayType.append ------------------------------------------------------------
+--------------------------------------------------------------------------------

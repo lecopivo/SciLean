@@ -105,9 +105,6 @@ theorem getElem_modifyElem_neq [inst : ArrayType Cont Idx Elem] (arr : Cont) (i 
 def mapIdx [ArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
   let mut arr := arr
   for i in fullRange Idx do
-    -- This notation should correctly handle aliasing 
-    -- It should expand to `f := modifyElem f x (g x) True.intro`
-    -- This prevent from making copy of `f[x]`
     arr := modifyElem arr i (f i)
   arr
 
