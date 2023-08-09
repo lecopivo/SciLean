@@ -1,0 +1,9 @@
+* Scientific Computing in Lean 4
+
+Scientific computing has become increasingly complex, with one of the challenges being the translation of mathematical theory into computer code. The advanced mathematical concepts used in the theory are often difficult to express directly in code, leading to a disconnect between the theory and the resulting code. This can cause errors and make the code more difficult to understand.
+
+To address this challenge, we propose using an interactive theorem prover to bridge the gap between theory and code. Users can specify the problem, and then interactively modify the specification into executable code. For instance, the user may specify finding an initial condition for an ODE to minimize a certain function at a later time. Using specialized tactics, the user can then formulate corresponding adjoint problem, select a method for minimization, choose a time stepping scheme for solving differential equations, or apply symbolic or automatic differentiation.
+
+We use the Lean 4 programming language, which is well-suited for this task as it is both a general-purpose programming language and an interactive theorem prover. Furthermore, it has an extensive library of already formalized mathematics. Our current focus is on verified symbolic and automatic differentiation, with a particular emphasis on the comprehensive support for differentiating higher-order functions. This for example allows for symbolic variational calculus or formulation of adjoint problems.
+
+Our ultimate goal is to create a system that can be used by a wide audience to help them select the best computational method for their problems.

@@ -1,0 +1,10 @@
+
+
+* Automatic differentiation in Lean
+
+Automatic differentiation is a process of synthesizing a program computing the derivative of an another program. It is a crucial component of any machine learning, optimization or finite element framework. Similarly, closely related symbolic differentiation is a main part of many computer algebra systems.
+
+In this talk we will present an approach to automatic and symbolic differentiation in Lean as we would like to use Lean as a language for scientific computing and machine learning. The obvious motivation for doing so is to eliminate bugs. When training neural networks it can be difficult to asses if we are using incorrect network architecture, wrong training parameters or there is a bug in the gradient computation. Furthermore, in computational physics the code often talks about mathematically involved objects like Lie groups, connections, Clifford algebras etc. We believe that Lean's ability to talk about these objects directly can bring clarity and reduce cognitive load when writing such code.
+
+A big part of the talk will be devoted to the challenges presented by bringing automatic differentiation to Lean. The main problem comes from the difficulty of high-order unification. Often encountered when differentiating through various tensor contractions or doing calculus of variation. Other challenges are how to deal with non-vector space like types, differentiating through effectful code or handling reduced/local smoothness.
+
