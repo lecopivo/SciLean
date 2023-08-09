@@ -4,7 +4,7 @@ import SciLean.Data.Index
 namespace SciLean
 
 class SetElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
-  setElem : (const : Cont) → (idx : Idx) → (elem : Elem) → Cont
+  setElem : (cont : Cont) → (idx : Idx) → (elem : Elem) → Cont
 
 export SetElem (setElem)
 
