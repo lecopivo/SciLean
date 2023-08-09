@@ -1,5 +1,5 @@
-import SciLean.Prelude
-import SciLean.Core.Real
+import SciLean.Core.SorryProof
+-- import SciLean.Core.Real
 import SciLean.Data.Index
 
 namespace SciLean
@@ -28,7 +28,7 @@ structure ByteType (α : Type) where
   -- we can recover `a` from bytes
   fromByteArray_toByteArray : ∀ a b i h h', fromByteArray (toByteArray b i h a) i h' = a
   -- `toByteArray` does not affect other bytes
-  fromByteArray_toByteArray_other : ∀ a b i j h, (j < i) ∨ (i+size) ≤ j → (toByteArray b i h a).uget j sorry = b.uget j sorry
+  fromByteArray_toByteArray_other : ∀ a b i j h, (j < i) ∨ (i+size) ≤ j → (toByteArray b i h a).uget j sorry_proof = b.uget j sorry_proof
 
 /-- This rougly corresponds to Plain Old Data(POD)/Passive Data known from OOP
 
@@ -304,21 +304,3 @@ def Float.byteType : ByteType Float where
 
 instance : PlainDataType Float where
   btype := .inr Float.byteType
-
--------------- Real --------------------------------------------------
-----------------------------------------------------------------------
-
-def ℝ.byteType : ByteType ℝ where    
-  bytes := 8
-  h_size := sorry_proof
-
-  fromByteArray b i h := Float.byteType.fromByteArray b i h |>.toSciLeanReal
-  toByteArray b i h a := Float.byteType.toByteArray b i h a.toFloat
-
-  toByteArray_size := sorry_proof
-  fromByteArray_toByteArray := sorry_proof
-  fromByteArray_toByteArray_other := sorry_proof
-
-
-instance : PlainDataType ℝ where
-  btype := .inr ℝ.byteType

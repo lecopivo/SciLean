@@ -14,7 +14,7 @@ example {X} [Vec X] : SMul ℝ X := by infer_instance
 -- example : ∀ (i : Idx), IsSmooth λ (x : Cont) => ∥x[i]∥² := by infer_instance -- apply λ
 
 -- instance (priority := low) [AddCommGroup Elem] [DistribMulAction ℝ Elem] : Vec Cont := Vec.mk
-instance (priority := low ) [Vec Elem] : Vec Cont := Vec.mkSorryProofs -- Vec.mk
+instance (priority := low) [Vec Elem] : Vec Cont := Vec.mkSorryProofs -- Vec.mk
 
 instance (priority := low) [Inner Elem] : Inner Cont where
   inner := λ f g => ∑ x, ⟪f[x], g[x]⟫

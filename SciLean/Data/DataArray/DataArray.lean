@@ -1,6 +1,8 @@
 import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.ArrayType
 
+set_option linter.unusedVariables false
+
 namespace SciLean
 
 -- TODO: Quotient it out by trailing bits
@@ -21,7 +23,7 @@ def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α := -- pd.get a.da
     let ones : UInt8 := 255
     let mask    := (ones - (ones <<< bitType.bits))   -- 00000111 
     -- masking is note necessary if `fromBytes` correctly ignores unused bits
-    let byte    := mask &&& (arr.byteData.uget ofByte sorry >>> (inByte*bitType.bits))
+    let byte    := mask &&& (arr.byteData.uget ofByte sorry_proof >>> (inByte*bitType.bits))
     bitType.fromByte byte
   | .inr byteType => 
     byteType.fromByteArray arr.byteData (byteType.bytes * i.1) sorry_proof
@@ -102,6 +104,15 @@ instance : IntroElem (DataArrayN α ι) ι α where
 instance : IntroElem (DataArrayN α ι) ι α where
   introElem f := ⟨DataArray.intro f, sorry_proof⟩
 
+instance : ArrayType (DataArrayN α ι) ι α  where
+  ext := sorry_proof
+  getElem_setElem_eq := sorry_proof
+  getElem_setElem_neq := sorry_proof
+  getElem_introElem := sorry_proof
+
+instance : ArrayTypeNotation (DataArrayN α ι) ι α := ⟨⟩
+
+-- These instance might clasth with previous ones
 instance : PushElem (λ n => DataArrayN α (Idx n)) α where
   pushElem k val xs := ⟨xs.1.push k val, sorry_proof⟩
 
@@ -111,20 +122,14 @@ instance : DropElem (λ n => DataArrayN α (Idx n)) α where
 instance : ReserveElem (λ n => DataArrayN α (Idx n)) α where
   reserveElem k xs := ⟨xs.1.reserve k, sorry_proof⟩
 
-instance : ArrayType (DataArrayN α ι) ι α  where
-  ext := sorry_proof
-  getElem_setElem_eq := sorry_proof
-  getElem_setElem_neq := sorry_proof
-  getElem_introElem := sorry_proof
-
 instance : LinearArrayType (λ n => DataArrayN α (Idx n)) α where
-  toGenericArrayType := by infer_instance
+  toArrayType := by infer_instance
   pushElem_getElem := sorry_proof
   dropElem_getElem := sorry_proof
   reserveElem_id := sorry_proof
 
 
-instance {Cont ι α : Type} [Index ι] [Inhabited α] [pd : PlainDataType α] [GenericArrayType Cont ι α] : PlainDataType Cont where
+instance {Cont ι α : Type} [Index ι] [Inhabited α] [pd : PlainDataType α] [ArrayType Cont ι α] : PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType => 
       -- TODO: Fixme !!!!
@@ -162,69 +167,3 @@ instance {Cont ι α : Type} [Index ι] [Inhabited α] [pd : PlainDataType α] [
         fromByteArray_toByteArray_other := sorry_proof
       }
 
-
-  -- bytes : Nat
-  -- h_size : 1 < bytes  -- for one byte types use BitInfo
-  -- fromByteArray (b : ByteArray) (i : Nat) (h : i+bytes ≤ b.size) : α
-  -- toByteArray   (b : ByteArray) (i : Nat) (h : i+bytes ≤ b.size) (a : α) : ByteArray
-
-  -- -- `toByteArray` does not modify ByteArray size
-  -- toByteArray_size : ∀ b i h a, (toByteArray b i h a).size = b.size
-  -- -- we can recover `a` from bytes
-  -- fromByteArray_toByteArray : ∀ a b i h h', fromByteArray (toByteArray b i h a) i h' = a
-  -- -- `toByteArray` does not affect other bytes
-  -- fromByteArray_toByteArray_other : ∀ a b i j h, (j < i) ∨ (i+size) ≤ j → (toByteArray b i h a).get! j = b.get! j
-
-
-
-
--- ShortOptDataArray is prefered for PowType
--- @[defaultInstance]
--- instance : PowType (DataArrayN α (numOf ι)) ι α := PowType.mk 
-
--- ShortOptDataArray is prefered for PowType
--- @[defaultInstance]
--- instance : LinearPowType (DataArrayN α) α := LinearPowType.mk
-
-
-
--- #check ℝ^(Idx 3)
-
--- #eval ((λ [i] => i.1.toReal ) : ℝ^(Idx 100)) |>.map Math.sqrt
-
--- #eval ((λ [i] => i) : (Idx 3 × Idx 5)^(Idx 3 × Idx 5))
--- #eval ((λ [i] => i) : (Idx 3 × Idx 5)^(Idx 3 × Idx 5)).data
--- #eval ((λ [i] => i) : (Idx 3 × Idx 5)^(Idx 3 × Idx 5)).data.byteData
-
--- #eval (1,2,3,4)
-
--- #eval ((λ [i] => i) : (Idx 3 × Idx 2 × Idx 2)^(Idx 3 × Idx 2 × Idx 2))
--- #eval ((λ [i] => i) : (Idx 3 × Idx 2 × Idx 2)^(Idx 3 × Idx 2 × Idx 2)).data
--- #eval ((λ [i] => i) : (Idx 3 × Idx 2 × Idx 2)^(Idx 3 × Idx 2 × Idx 2)).data.byteData
-
--- #eval ((λ [i] => (i.1.toFloat, i.1.toFloat.sqrt)) : (Float × Float)^(Idx 17))
-
--- variable (x : ℝ^{n,m})
-
--- #check x
--- #check λ (i,j) => x[i,j]
--- #check ∑ i, x[i]
-
--- #check Id.run do
---   let mut a : ℝ^{10} := λ [i] => i.1
---   for (i,_) in Enumtype.fullRange a.Index do
---     a[i] *= 1000
---     a[i] += Math.sqrt i.1 + a[i]
---   a
-
--- #eval Id.run do
---   let mut a : (ℝ×ℝ)^{3,3} := λ [i,j] => (i.1,j.1)
---   for (i,li) in Enumtype.fullRange a.Index do
---     a[li] := (Math.sqrt a[li].1, Math.exp a[li].2)
---   a
-
--- #eval Id.run do
---   let mut a : ℝ^(Idx 3 × Idx 3) := 0
---   for ((i,j),li) in Enumtype.fullRange a.Index do
---     a[li] := if i = j then 1 else 0
---   a

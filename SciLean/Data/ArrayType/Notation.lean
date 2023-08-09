@@ -1,10 +1,12 @@
-import SciLean.Data.ArrayType.GenericArrayType
+import SciLean.Data.ArrayType.Basic
 
 namespace SciLean
 
 open Lean Parser 
 open TSyntax.Compat
 
+
+abbrev typeOf {α} (a : α) := α
 
 syntax (priority := high) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " := " term : doElem
 macro_rules
@@ -17,7 +19,7 @@ macro_rules
     let var ← `(y)
     let xi' ← xi.raw.replaceM (λ s => if s == lhs.raw then pure $ .some var else pure $ none)
     let g ← `(λ ($var : typeOf $lhs) => $xi')
-    `(doElem| $x:ident := GenericArrayType.modifyElem ($x:ident) $i $g)
+    `(doElem| $x:ident := ArrayType.modifyElem ($x:ident) $i $g)
   else 
     `(doElem| $x:ident := setElem ($x:ident) $i $xi)
 
@@ -48,75 +50,20 @@ macro_rules
 macro_rules
 | `(doElem| $x:ident[ $i:term ] -= $xi) => `(doElem| $x:ident[$i] := $x[$i] / $xi)
 
+class ArrayTypeNotation (Cont : outParam $ Type _) (Idx Elem : Type _)
 
+abbrev arrayTypeCont (Idx Elem) {Cont : outParam $ Type _} [ArrayTypeNotation Cont Idx Elem] := Cont
 
-section GenericArrayTypeNotation
+abbrev introElemNotation {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]  
+  (f : Idx → Elem)
+  : Cont 
+  := introElem (Cont := arrayTypeCont Idx Elem) f
 
-open Lean
+open Lean.TSyntax.Compat in
+macro "⊞ " xs:Lean.explicitBinders " => " b:term:66 : term => Lean.expandExplicitBinders ``introElemNotation xs b
 
--- syntax myFunBinder := " ( " ident  " : " term ("⇒" term)? " )"
-
--- syntax (priority:=high)  --(name:=lambdaParserWithGenericArrayType) 
---   " λ " myFunBinder* " => " term : term
-
--- macro_rules -- (kind := lambdaParserWithGenericArrayType) 
--- | `(λ ($x:ident : $X:term) => $b) => `(fun ($x : $X:term) => $b)
--- | `(λ ($f:ident : $X:term ⇒ $Y:term) => $b) =>
---   let XY := mkIdent s!"{X.raw.prettyPrint}⇒{Y.raw.prettyPrint}"
---   `(fun {$XY : Type} [GenericArrayType $XY $X $Y] ($f : $XY) => $b)
--- | `(λ $x:myFunBinder $xs:myFunBinder* => $b) =>
---   `(λ $x:myFunBinder => λ $xs:myFunBinder* => $b)
-
-
--- syntax vecType := " Vec "
-
--- syntax GenericArrayType := term " ⇒ " term
--- syntax myExplicitFunBinder := " *( " ident  " : " GenericArrayType  " )"
--- syntax myFunBinder := Parser.Term.funBinder <|> myExplicitFunBinder 
-
--- syntax (priority:=low)
---   " λ " myFunBinder* " => " term : term
-
--- macro_rules 
--- | `(λ *($f:ident : $X:term ⇒ $Y:term) $xs:myFunBinder* => $b) =>
---   let XY := mkIdent s!"{X.raw.prettyPrint}⇒{Y.raw.prettyPrint}"
---   if xs.size = 0 then
---     `(fun {$XY : Type} [GenericArrayType $XY $X $Y] ($f : $XY) => $b)
---   else
---     `(fun {$XY : Type} [GenericArrayType $XY $X $Y] ($f : $XY) => λ $xs* => $b)
--- -- | `(λ $x:myFunBinder $xs:myFunBinder* => $b) =>
--- --   `(λ $x:myFunBinder => λ $xs:myFunBinder* => $b)
--- -- | `(λ $x:funBinder => $b) => `(fun $x => $b)
-
--- #check λ (f : Nat ⇒ Float) (i : Nat) => f[i]
-#check λ (f : Nat → Float) (i) => f i
-#check λ (f : Nat → Float) i => f i
-
-end GenericArrayTypeNotation
-
--- This should be improved such that we can specify the type of arguments
--- This clashes with typeclass arguments, but who in their right mind
--- starts a lambda arguments with a typeclass?
--- syntax (name:=GenericArrayTypeIntroSyntax) "λ" "[" Lean.Parser.ident,+ "]" " ==> " term : term
-
--- macro_rules (kind := GenericArrayTypeIntroSyntax)
--- | `(λ [ $id1:ident ] ==> $b:term) => `(introElem λ $id1 => $b)
--- | `(λ [ $id1:ident, $id2:ident ] ==> $b:term) => `(introElem λ ($id1, $id2) => $b)
--- | `(λ [ $id1:ident, $id2:ident, $id3:ident ] ==> $b:term) => `(introElem λ ($id1, $id2, $id3) => $b)
-
-
--- syntax (name:=GenericArrayTypeIntroSyntax) "λ" funBinder+ " ==> " term : term
-
-
--- macro_rules (kind := GenericArrayTypeIntroSyntax)
--- | `(λ $xs:funBinder* ==> $b:term) => `(introElem λ $xs* => $b)
--- | `(λ [ $id1:ident, $id2:ident ] ==> $b:term) => `(introElem λ ($id1, $id2) => $b)
--- | `(λ [ $id1:ident, $id2:ident, $id3:ident ] ==> $b:term) => `(introElem λ ($id1, $id2, $id3) => $b)
-
-
--- variable {Cont} [GenericArrayType Cont (Fin 10) (Fin 10)]
--- #check ((λ i ==> (i : Fin 10)))
-
--- #check ((λ i ==> (i : Fin 10)))
-
+@[app_unexpander introElemNotation] def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:ident => $b) => 
+    `(⊞ $x:ident => $b)
+  | _  => throw ()
 

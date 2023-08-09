@@ -1,4 +1,7 @@
+import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.Group.Defs
+
+import SciLean.Core.SorryProof
 import SciLean.Mathlib.Data.ColProd
 import SciLean.Data.Idx
 
@@ -33,7 +36,6 @@ namespace EnumType
     match b with
     | .done b => b
     | .yield b => b
-
 
   instance {ι} [EnumType ι] : ForIn m (FullRange ι) ι where
     forIn := λ _ init f => do pure (← forIn init f).value 
@@ -158,6 +160,19 @@ namespace EnumType
     | `($(_) fun ($x:ident : $ty:term) => $b) => 
       `(∏ ($x:ident : $ty), $b)
     | _  => throw ()
+
+
+
+  instance {ι} [EnumType ι] : Fintype ι where
+    elems := {
+        val := Id.run do
+          let mut l : List ι := []
+          for i in fullRange ι do
+            l := i :: l
+          Multiset.ofList l.reverse
+        nodup := sorry_proof
+      }
+    complete := sorry_proof
 
   
   -- TODO: move this somewhere else

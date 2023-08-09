@@ -49,6 +49,7 @@ instance {n} : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨((x.1 + n) - (y%n))
 instance {n} : HMul USize (Idx n) (Idx n) := ⟨λ x y => ⟨(x * y.1)%n, sorry⟩⟩
 
 def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry⟩
+def toFloat {n} (i : Idx n) : Float := i.1.toNat.toFloat
 
 
 def shiftPos (x : Idx n) (s : USize) := x + s
