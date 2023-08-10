@@ -183,17 +183,56 @@ example : cderiv ℝ (fun x : ℝ => Id.run do
   y)
   = 0 := 
 by
-  set_option trace.Meta.Tactic.ftrans.step true in
-  set_option trace.Meta.Tactic.ftrans.theorems true in
+  -- set_option trace.Meta.Tactic.ftrans.step true in
+  -- set_option trace.Meta.Tactic.ftrans.theorems true in
   set_option trace.Meta.Tactic.simp.rewrite true in
-  set_option trace.Meta.Tactic.simp.discharge true in
-  set_option trace.Meta.Tactic.simp.unify true in
-  set_option trace.Meta.Tactic.fprop.discharge true in
-  set_option trace.Meta.Tactic.fprop.step true in
-  set_option pp.funBinderTypes true in
+  -- set_option trace.Meta.Tactic.simp.discharge true in
+  -- set_option trace.Meta.Tactic.simp.unify true in
+  -- set_option trace.Meta.Tactic.fprop.discharge true in
+  -- set_option trace.Meta.Tactic.fprop.step true in
+  -- set_option pp.funBinderTypes true in
+  -- set_option trace.Meta.isDefEq.onFailure true in
   ftrans only
 
 
+--- !!!!INVESTIGATE THIS!!!!
+example : cderiv ℝ 
+  (fun x : ℝ => do
+    let r ← pure (f := Id) x
+    let y := r
+    y)
+  = 0 := 
+by
+  -- set_option trace.Meta.Tactic.ftrans.step true in
+  -- set_option trace.Meta.Tactic.ftrans.theorems true in
+  set_option trace.Meta.Tactic.simp.rewrite true in
+  -- set_option trace.Meta.Tactic.simp.discharge true in
+  -- set_option trace.Meta.Tactic.simp.unify true in
+  -- set_option trace.Meta.Tactic.fprop.discharge true in
+  -- set_option trace.Meta.Tactic.fprop.step true in
+  -- set_option pp.funBinderTypes true in
+  -- set_option trace.Meta.isDefEq.onFailure true in
+  ftrans only
+
+
+
+
+example (col : Std.Range)
+  : IsDifferentiable ℝ (fun (xy : ℝ × ℝ) => do
+      let col : Std.Range := { start := 0, stop := 5, step := 1 }
+      let r ←
+        forIn col xy.snd (fun (i : ℕ) (r : ℝ) =>
+          let y := r;
+          let y := i * xy.fst;
+          do
+          pure PUnit.unit
+          pure (f:=Id) (ForInStep.yield y))
+      let y : ℝ := r
+      y)
+  := by fprop
+
+
+#exit
 example 
   : IsDifferentiable ℝ fun (xy : (ℝ × ℝ) × Id ℝ) =>
       let y := xy.snd;
