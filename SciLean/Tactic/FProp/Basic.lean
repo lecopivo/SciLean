@@ -123,6 +123,11 @@ mutual
       if (yType.hasLooseBVar 0) then
         throwError "dependent type encountered {← ppExpr (Expr.forallE xName xType yType default)}"
 
+      if ¬(yValue.hasLooseBVar 0) then
+        let body' := body.swapBVars 0 1
+        let e' := (.letE yName yType yValue (ext.replaceFPropFun e (.lam xName xType body' xBi)) false)
+        return ← FProp.fprop e'
+
       match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
       | true, true =>
         trace[Meta.Tactic.fprop.step] "case let\n{← ppExpr e}"
@@ -156,7 +161,6 @@ mutual
         trace[Meta.Tactic.fprop.step] "case bvar app\n{← ppExpr e}"
         applyBVarApp e
       else
-        trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}\n"
         applyTheorems e (ext.discharger)
 
     | .mvar _ => do
@@ -194,14 +198,17 @@ mutual
       -- otherwise we use hypothesis from local context
       match (← getFunHeadConst? f) with
         | .some funName => 
+          trace[Meta.Tactic.fprop.step] "case application of {funName}\n{← ppExpr e}\n"
           pure <| (← FProp.getFPropRules funName fpropName).append (← getLocalRules fpropName)
-        | none => getLocalRules fpropName
+        | none => 
+          trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}\n"
+          getLocalRules fpropName
 
     if candidates.size = 0 then
       trace[Meta.Tactic.fprop.apply] "no suitable theorems found for {← ppExpr e}"
 
     for thm in candidates do
-      trace[Meta.Tactic.fprop.unify] "trying to apply {← ppOrigin thm.origin} to {← ppExpr e}"
+      -- trace[Meta.Tactic.fprop.unify] "trying to apply {← ppOrigin thm.origin} to {← ppExpr e}"
       if let some proof ← tryTheorem? e thm discharge? then
         return proof
 

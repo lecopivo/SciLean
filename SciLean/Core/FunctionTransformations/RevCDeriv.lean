@@ -177,7 +177,7 @@ by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revCDeriv
-  funext _; simp; sorry
+  funext _; simp; sorry_proof
 
 
 open BigOperators in
@@ -196,7 +196,7 @@ by
   have _ := fun i => (hf i).2
   unfold revCDeriv
   funext _; ftrans; ftrans 
-  sorry
+  sorry_proof
 
 
 -- Register `revCDeriv` as function transformation ------------------------------
@@ -519,7 +519,7 @@ theorem HSMul.hSMul.arg_a0a1.revCDeriv_rule_at
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  unfold revCDeriv; simp; ftrans; ftrans; simp; sorry
+  unfold revCDeriv; simp; ftrans; ftrans; simp; sorry_proof
 
 
 example 
