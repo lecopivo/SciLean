@@ -4,7 +4,7 @@ namespace SciLean
 
 
 set_option linter.unusedVariables false in
-class FwdDerivMonad (K : Type _) [IsROrC K] (m : Type _ → Type _) (m' : outParam $ Type _ → Type _) [Monad m] [Monad m'] where
+class FwdDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ Type → Type) [Monad m] [Monad m'] where
   fwdDerivM {X : Type} {Y : Type} [Vec K X] [Vec K Y] : ∀ (f : X → m Y) (x dx : X), m' (Y × Y)
   fwdDerivValM : ∀ {X} [Vec K X], m X → m' (X × X)
 

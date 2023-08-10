@@ -46,7 +46,7 @@ Example:
   `getFunHeadConst? q(fun f x => f x) = none`
 -/
 def getFunHeadConst? (e : Expr) : MetaM (Option Name) :=
-  match e with
+  match e.consumeMData with
   | .const name _ => return name
   | .app f _ => return f.getAppFn.constName?
   | .lam _ _ b _ => return b.getAppFn.constName?
