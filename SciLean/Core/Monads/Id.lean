@@ -1,5 +1,4 @@
-import SciLean.Core.Objects.FinVec
-import SciLean.Core.FunctionTransformations.CDeriv
+import SciLean.Core.Monads.FwdDerivMonad
 
 namespace SciLean
 
@@ -8,11 +7,95 @@ variable
   {ι : Type _} [Fintype ι] [DecidableEq ι]
 
 instance [Vec K X] : Vec K (Id X) := by unfold Id; infer_instance
-instance [SemiInnerProductSpace K X] : SemiInnerProductSpace K (Id X) := by unfold Id; infer_instance
-instance [FinVec ι K X] : SemiInnerProductSpace K (Id X) := by unfold Id; infer_instance
+-- instance [SemiInnerProductSpace K X] : SemiInnerProductSpace K (Id X) := by unfold Id; infer_instance
+-- instance [FinVec ι K X] : SemiInnerProductSpace K (Id X) := by unfold Id; infer_instance
 
 
-instance [Vec K X] : Vec K (ForInStep X) := sorry
+  
+noncomputable
+instance : FwdDerivMonad K Id Id where
+  fwdDerivM f := fwdCDeriv K f
+  fwdDerivValM x := (x,0)
+  IsDifferentiableM f := IsDifferentiable K f
+  IsDifferentiableValM _ := True
+  fwdDerivM_pure f := by simp[pure]
+  fwdDerivM_bind := by intros; simp; ftrans
+  fwdDerivM_const y := by simp; ftrans
+  IsDifferentiableM_pure := by simp[pure]
+  IsDifferentiableM_bind := by simp[bind]; fprop
+  IsDifferentiableM_const y := by simp; fprop
+
+
+
+
+variable 
+  (K : Type _) [IsROrC K]
+  {X : Type} [Vec K X]
+  {Y : Type} [Vec K Y]
+  {Z : Type} [Vec K Z]
+  {E : ι → Type} [∀ i, Vec K (E i)]
+
+theorem IsDifferentiableValM.Id (x : Id X) : IsDifferentiableValM K x := True.intro
+
+noncomputable
+instance (S : Type _) [Vec K S] : FwdDerivMonad K (StateM S) (StateM (S×S)) where
+  fwdDerivM f := fun x dx sds => 
+    -- ((y,s'),(dy,ds'))
+    let r := fwdCDeriv K (fun (xs : _×S) => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
+    -- ((y,dy),(s',ds'))
+    ((r.1.1,r.2.1),(r.1.2, r.2.2))
+
+  fwdDerivValM x := fun sds => 
+    -- ((y,s'),(dy,ds'))
+    let r := fwdCDeriv K x sds.1 sds.2
+    -- ((y,dy),(s',ds'))
+    ((r.1.1,r.2.1),(r.1.2, r.2.2))
+
+  IsDifferentiableM f := IsDifferentiable K (fun (xs : _×S) => f xs.1 xs.2)
+  IsDifferentiableValM x := IsDifferentiable K x
+
+  fwdDerivM_pure f h := 
+    by 
+      simp[pure, StateT.pure, fwdCDeriv]
+      funext x dx sds
+      rw[Prod.mk.arg_fstsnd.cderiv_rule (K:=K) (fun xs : _×S => f xs.1) (by fprop) (fun xs : _×S => xs.2) (by fprop)]
+      ftrans; ftrans
+      
+  fwdDerivM_bind f g hf hg :=
+    by 
+      funext x dx sds
+      simp[fwdCDeriv, bind, StateT.bind, StateT.bind.match_1]
+      ftrans
+
+  fwdDerivM_const x hx :=
+    by 
+      funext sds
+      simp[fwdCDeriv, bind, StateT.bind, StateT.bind.match_1]
+      ftrans
+
+  IsDifferentiableM_pure f :=
+    by 
+      simp; constructor
+      case mp => 
+        intros
+        simp[pure, StateT.pure]
+        apply IsDifferentiable.comp_rule K (fun xs : _×S => (f xs.1, xs.2)) (fun xs => xs) (by fprop) (by fprop)
+      case mpr => 
+        intros
+        simp[pure, StateT.pure]
+        let g := Prod.fst ∘ (fun (xs : _×S) => pure (f:=StateM S) (f xs.fst) xs.snd) ∘ (fun x => (x,0))
+        have : IsDifferentiable K (Prod.fst ∘ (fun (xs : _×S) => pure (f:=StateM S) (f xs.fst) xs.snd) ∘ (fun x => (x,0))) := by fprop
+        have hg : IsDifferentiable K g := by fprop
+        rw[show f = g by rfl]
+        apply hg
+
+  IsDifferentiableM_IsDifferentiableValM y :=
+    by 
+      simp; constructor
+      intros; fprop
+      intro hy
+      apply IsDifferentiable.comp_rule K (fun xs : _×S => y xs.2) (fun s : S => (0,s)) hy (by fprop)
+
 
 
 variable {ρ : Type _} {α : Type _} [ForIn Id ρ α] {β : Type _}
@@ -21,6 +104,24 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
+
+
+@[fprop]
+theorem _root_.Id.run.arg_x.IsDifferentiable_rule
+  (a : X → Id Y)
+  (ha : IsDifferentiable K a)
+  : IsDifferentiable K (fun x => Id.run (a x)) := by unfold Id.run; fprop
+
+@[ftrans]
+theorem _root_.Id.run.arg_x.cderiv_rule (a : X → Id Y)
+  : cderiv K (fun x => Id.run (a x))
+    =
+    fun x dx => (cderiv K a x dx) := by unfold Id.run; ftrans
+
+
+
+instance [Vec K X] : Vec K (ForInStep X) := sorry
+
 
 
 @[fprop]
@@ -50,58 +151,6 @@ theorem _root_.ForIn.forIn.arg_bf.cderiv_rule [Vec K β]
       dr) := 
 by
   sorry_proof
-
-
-@[fprop]
-theorem _root_.Id.run.arg_x.IsDifferentiable_rule
-  (a : X → Id Y)
-  (ha : IsDifferentiable K a)
-  : IsDifferentiable K (fun x => Id.run (a x)) := by unfold Id.run; fprop
-
-
-@[ftrans]
-theorem _root_.Id.run.arg_x.cderiv_rule (a : X → Id Y)
-  : cderiv K (fun x => Id.run (a x))
-    =
-    fun x dx => (cderiv K a x dx) := by unfold Id.run; ftrans
-
-
-@[fprop] 
-theorem _root_.Bind.bind.arg_a0a1.IsDifferentiable_rule
-  (a0 : X → Id Y) (a1 : X → Y → Id Z)
-  (ha0 : IsDifferentiable K a0) (ha1 : IsDifferentiable K (fun (xy : X×Id Y) => a1 xy.1 xy.2))
-  : IsDifferentiable K (fun x => Bind.bind (a0 x) (a1 x)) := 
-by 
-  simp[Bind.bind]; fprop
-
-@[ftrans] 
-theorem _root_.Bind.bind.arg_a0a1.cderiv_rule
-  (a0 : X → Id Y) (a1 : X → Y → Id Z)
-  (ha0 : IsDifferentiable K a0) (ha1 : IsDifferentiable K (fun (xy : X×Id Y) => a1 xy.1 xy.2))
-  : cderiv K (fun x => Bind.bind (a0 x) (a1 x))
-    =
-    fun x dx => 
-      let a0x := a0 x
-      let da0 := cderiv K a0 x dx
-      let da1 := cderiv K (fun (xy : X×Y) => a1 xy.1 xy.2) (x, a0x) (dx, da0)
-      da1 := 
-by 
-  simp[Bind.bind]
-  ftrans only; funext x dx; congr 
-
-@[fprop]
-theorem _root_.Pure.pure.arg_a0.IsDifferentiable_rule
-  (a0 : X → Y)
-  (ha0 : IsDifferentiable K a0) 
-  : IsDifferentiable K (fun x => Pure.pure (f:=Id) (a0 x)) := by simp[Pure.pure]; fprop
-
-@[ftrans]
-theorem _root_.Pure.pure.arg_a0.cderiv_rule
-  (a0 : X → Y)
-  (ha0 : IsDifferentiable K a0) 
-  : cderiv K (fun x => Pure.pure (f:=Id) (a0 x))
-    =
-    cderiv K a0 := by simp[Pure.pure]
 
 
 @[fprop]
@@ -195,25 +244,34 @@ by
   ftrans only
 
 
+example : IsDifferentiable ℝ (fun (xy : ℝ × Id ℝ) =>
+      let y := xy.snd;
+      y) :=
+by
+  fprop
+
+set_option pp.notation false
 --- !!!!INVESTIGATE THIS!!!!
 example : cderiv ℝ 
-  (fun x : ℝ => do
-    let r ← pure (f := Id) x
-    let y := r
-    y)
+  (fun x : ℝ => 
+      bind (m:=Id) (pure x) fun r => 
+        let y := r;
+        y)
   = 0 := 
 by
   -- set_option trace.Meta.Tactic.ftrans.step true in
   -- set_option trace.Meta.Tactic.ftrans.theorems true in
   set_option trace.Meta.Tactic.simp.rewrite true in
-  -- set_option trace.Meta.Tactic.simp.discharge true in
+  set_option trace.Meta.Tactic.simp.discharge true in
   -- set_option trace.Meta.Tactic.simp.unify true in
-  -- set_option trace.Meta.Tactic.fprop.discharge true in
-  -- set_option trace.Meta.Tactic.fprop.step true in
-  -- set_option pp.funBinderTypes true in
+  set_option trace.Meta.Tactic.fprop.unify true in
+  set_option trace.Meta.Tactic.fprop.discharge true in
+  set_option trace.Meta.Tactic.fprop.step true in
+  set_option pp.funBinderTypes true in
+
   -- set_option trace.Meta.isDefEq.onFailure true in
   ftrans only
-
+  dsimp (config := {zeta := false})
 
 
 

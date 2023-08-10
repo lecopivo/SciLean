@@ -111,7 +111,7 @@ def fpropExt : FPropExt where
 
     let thm : SimpTheorem :=
     {
-      proof  := ← mkAppM ``comp_rule #[K, f,g]
+      proof  := ← mkAppM ``comp_rule #[K, f, g]
       origin := .decl ``comp_rule
       rfl    := false
     }
@@ -168,7 +168,18 @@ variable
 
 @[fprop]
 theorem id.arg_a.IsDifferentiable_rule
-  : IsDifferentiable K (id : X → X) := by sorry_proof
+  : IsDifferentiable K (id : X → X) := by simp[id]; fprop
+
+
+-- Function.comp ---------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem Function.comp.arg_a0.IsDifferentiable_rule
+  (f : Y → Z) (g : X → Y) 
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
+  : IsDifferentiable K (f ∘ g)
+  := by sorry_proof
 
 
 -- Prod ------------------------------------------------------------------------
@@ -205,17 +216,6 @@ theorem Prod.snd.arg_self.IsDifferentiable_rule
   : IsDifferentiable K (fun x => (f x).2)
   := by sorry_proof
 
-
-
--- Function.comp ---------------------------------------------------------------
---------------------------------------------------------------------------------
-
-@[fprop]
-theorem Function.comp.arg_a0.IsDifferentiable_rule
-  (f : Y → Z) (g : X → Y) 
-  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
-  : IsDifferentiable K (f ∘ g)
-  := by sorry_proof
 
 
 -- Neg.neg ---------------------------------------------------------------------
