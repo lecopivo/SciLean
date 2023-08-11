@@ -170,9 +170,8 @@ mutual
           trace[Meta.Tactic.fprop.step] "case const\n{← ppExpr e}"
           ext.constantRule e
         else 
-          let xBody' := xBody
-          let f' := Expr.lam xName xType xBody' xBi
-          let g := xBody'.getAppFn'
+          let f' := Expr.lam xName xType xBody xBi
+          let g := xBody.getAppFn'
 
           match g with 
           | .fvar .. => 
@@ -184,6 +183,8 @@ mutual
           | .const funName _ =>
             trace[Meta.Tactic.fprop.step] "case const app `{← ppExpr g}`.\n{← ppExpr e}"
             constAppCase e fpropName ext funName
+          | .mvar .. => 
+            fprop (← instantiateMVars e)
           | _ => 
             trace[Meta.Tactic.fprop.step] "unknown case, app function constructor: {g.ctorName}\n{← ppExpr e}\n"
             tryLocalTheorems e fpropName ext

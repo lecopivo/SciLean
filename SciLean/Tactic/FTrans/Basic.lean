@@ -42,15 +42,48 @@ def tryTheorems (thrms : Array SimpTheorem) (discharger : Expr → SimpM (Option
       return Simp.Step.visit result
   return none
 
+
+def letCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Step) := 
+  match f with
+  | .lam xName xType (.letE yName yType yValue body _) xBi => do
+    let yType  := yType.consumeMData
+    let yValue := yValue.consumeMData
+    let body  := body.consumeMData
+    -- We perform reduction because the type is quite often of the form 
+    -- `(fun x => Y) #0` which is just `Y` 
+    -- Usually this is caused by the usage of `FunLike`
+    let yType := yType.headBeta
+    if (yType.hasLooseBVar 0) then
+      throwError "dependent type encountered {← ppExpr (Expr.forallE xName xType yType default)}"
+
+    if ¬(yValue.hasLooseBVar 0) then
+      let body := body.swapBVars 0 1
+      let e' := (.letE yName yType yValue (ext.replaceFTransFun e (.lam xName xType body xBi)) false)
+      return .some (.visit { expr := e' })
+
+    match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
+    | true, true =>
+      trace[Meta.Tactic.ftrans.step] "case let\n{← ppExpr e}"
+      let f := Expr.lam xName xType (.lam yName yType body default) xBi
+      let g := Expr.lam xName xType yValue default
+      ext.letRule e f g
+
+    | true, false => 
+      trace[Meta.Tactic.ftrans.step] "case let simple\n{← ppExpr e}"
+      let f := Expr.lam yName yType body default
+      let g := Expr.lam xName xType yValue default
+      ext.compRule e f g
+
+    | false, _ => 
+      let f := Expr.lam xName xType (body.lowerLooseBVars 1 1) xBi
+      return .some (.visit { expr := ext.replaceFTransFun e f})
+  | _ => do
+    throwError "Invalid use of {`FTrans.letCase} on function:\n{← ppExpr f}"
+
 /--
   Apply simp theorems marked with `ftrans`
 -/
-def applyTheorems (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Step) := do
-
-  let .some funName ← getFunHeadConst? f
-    | return none
-
-  trace[Meta.Tactic.ftrans.step] "case theorems for {funName}\n{← ppExpr e}"
+def constAppStep (e : Expr) (ftransName : Name) (ext : FTransExt) (funName : Name) : SimpM (Option Simp.Step) := do
 
   let candidates ← FTrans.getFTransRules funName ftransName
 
@@ -121,60 +154,62 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
   let .some (ftransName, ext, f) ← getFTrans? e
     | return none
 
-
-  match f with
+  match f.consumeMData with
   | .letE .. => letTelescope f λ xs b => do
-    trace[Meta.Tactic.ftrans.step] "case let\n{← ppExpr e}"
+    trace[Meta.Tactic.ftrans.step] "case let x := ..; ..\n{← ppExpr e}"
     let e' ← mkLetFVars xs (ext.replaceFTransFun e b)
     return .some (.visit { expr := e' })
 
-  | .lam _ xType (.bvar  0) _ => 
-    trace[Meta.Tactic.ftrans.step] "case id\n{← ppExpr e}"
-    ext.idRule e xType 
+  | .lam xName xType xBody xBi => 
 
-  | .lam xName xType (.letE yName yType yValue body _) xBi => 
-      -- quite often the type looks like `(fun _ => X) x` as residue from `FunLike.coe`
-      -- thus we do beta reduction
-      let yType := yType.headBeta
-      match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
-      | true, true =>
-        trace[Meta.Tactic.ftrans.step] "case let\n{← ppExpr e}"
-        let f := Expr.lam xName xType (.lam yName yType body default) xBi
-        let g := Expr.lam xName xType yValue default
-        ext.letRule e f g
+    match xBody.consumeMData.headBeta.consumeMData with
+    | (.bvar 0) => 
+      trace[Meta.Tactic.ftrans.step] "case id\n{← ppExpr e}"
+      ext.idRule e xType 
 
-      | true, false => 
-        trace[Meta.Tactic.ftrans.step] "case comp\n{← ppExpr e}"
-        if (yType.hasLooseBVar 0) then
-          trace[Meta.Tactic.ftrans.step] "can't handle dependent type {← ppExpr (Expr.forallE xName xType yType default)}"
+    | .letE .. => 
+      letCase e ftransName ext f.consumeMData
+
+    | .lam  .. => 
+      trace[Meta.Tactic.ftrans.step] "case pi\n{← ppExpr e}"
+      ext.piRule e f
+
+    | .mvar .. => return .some (.visit  {expr := ← instantiateMVars e})
+
+    | xBody => do
+      if !(xBody.hasLooseBVar 0) then
+        trace[Meta.Tactic.ftrans.step] "case const\n{← ppExpr e}"
+        ext.constRule e xType xBody
+      else 
+        let f' := Expr.lam xName xType xBody xBi
+        let g := xBody.getAppFn'
+        match g with 
+        | .fvar .. => 
+          trace[Meta.Tactic.ftrans.step] "case fvar app `{← ppExpr g}`\n{← ppExpr e}"
+          fvarAppStep e ext f'
+        | .bvar .. => 
+          trace[Meta.Tactic.ftrans.step] "case bvar app\n{← ppExpr e}"
+          bvarAppStep e ext f'
+        | .const funName _ =>
+          trace[Meta.Tactic.ftrans.step] "case const app `{funName}`.\n{← ppExpr e}"
+          constAppStep e ftransName ext funName
+        | .mvar .. => do
+          return .some (.visit  { expr := ← instantiateMVars e })
+        | _ => 
+          trace[Meta.Tactic.ftrans.step] "unknown case, app function constructor: {g.ctorName}\n{← ppExpr e}\n"
           return none
 
-        let f := Expr.lam yName yType body default
-        let g := Expr.lam xName xType yValue default
-        ext.compRule e f g
+  | .mvar _ => do
+    return .some (.visit  {expr :=← instantiateMVars e})
 
-      | false, _ => 
-        let f := Expr.lam xName xType (body.lowerLooseBVars 1 1) xBi
-        return .some (.visit { expr := ext.replaceFTransFun e f })
-
-  | .lam _ _ (.lam  ..) _ => 
-    trace[Meta.Tactic.ftrans.step] "case pi\n{← ppExpr e}"
-    ext.piRule e f
-
-  | .lam _ xType b _ => do
-    if !(b.hasLooseBVar 0) then
-      trace[Meta.Tactic.ftrans.step] "case const\n{← ppExpr e}"
-      ext.constRule e xType b
-    else if b.getAppFn.isFVar then
-      fvarAppStep e ext f
-    else if b.getAppFn.isBVar then
-      trace[Meta.Tactic.ftrans.step] "case bvar app\n{← ppExpr e}"
-      bvarAppStep e ext f
-    else
-      applyTheorems e ftransName ext f
-
-  | _ => do
-    applyTheorems e ftransName ext f
+  | f => 
+    match f.getAppFn.consumeMData with
+    | .const funName _ => 
+      trace[Meta.Tactic.ftrans.step] "case const app `{funName}`.\n{← ppExpr e}"
+      constAppStep e ftransName ext funName
+    | _ => 
+      trace[Meta.Tactic.ftrans.step] "unknown case, expression constructor: {f.ctorName}\n{← ppExpr e}\n"
+      return none
 
 
 def tryFTrans? (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (post := false) : SimpM (Option Simp.Step) := do
