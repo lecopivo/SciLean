@@ -175,6 +175,49 @@ end IsDifferentiableM
 
 
 --------------------------------------------------------------------------------
+-- IsDifferentiableValM -----------------------------------------------------------
+--------------------------------------------------------------------------------
+namespace IsDifferentiableValM 
+
+open Lean Meta SciLean FProp
+def fpropExt : FPropExt where
+  fpropName := ``IsDifferentiableValM
+  getFPropFun? e := 
+    if e.isAppOf ``IsDifferentiableValM then
+
+      if let .some f := e.getArg? 9 then
+        some f
+      else 
+        none
+    else
+      none
+
+  replaceFPropFun e f := 
+    if e.isAppOf ``IsDifferentiableValM then
+      e.modifyArg (fun _ => f) 9 
+    else          
+      e
+  identityRule _ := return none 
+  constantRule _ := return none
+  projRule _ := return none
+  compRule _ _ _ := return none
+  lambdaLetRule _ _ _ := return none
+  lambdaLambdaRule _ _ := return none
+
+  discharger e := 
+    FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
+
+
+-- Register IsDiferentiableM --
+-------------------------------
+#eval show Lean.CoreM Unit from do
+  modifyEnv (λ env => FProp.fpropExt.addEntry env (``IsDifferentiableValM, fpropExt))
+
+
+end IsDifferentiableValM 
+
+
+--------------------------------------------------------------------------------
 -- fwdDerivM -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 namespace fwdDerivM
@@ -330,6 +373,7 @@ theorem Pure.pure.arg_a0.IsDifferentiableM_rule
 by 
   apply (FwdDerivMonad.IsDifferentiableM_pure a0).1 ha0
 
+
 @[ftrans]
 theorem Pure.pure.arg_a0.fwdDerivM_rule
   (a0 : X → Y)
@@ -339,6 +383,13 @@ theorem Pure.pure.arg_a0.fwdDerivM_rule
     fun x dx => pure (fwdCDeriv K a0 x dx) := 
 by 
   apply FwdDerivMonad.fwdDerivM_pure a0 ha0
+
+set_option linter.fpropDeclName false in
+@[fprop]
+theorem Pure.pure.IsDifferentiableValM_rule (x : X)
+  : IsDifferentiableValM K (pure (f:=m) x) := 
+  (FwdDerivMonad.IsDifferentiableM_const (pure x)).2 
+    ((FwdDerivMonad.IsDifferentiableM_pure (fun _ : Unit => x)).1 (by fprop))
 
 
 --------------------------------------------------------------------------------
