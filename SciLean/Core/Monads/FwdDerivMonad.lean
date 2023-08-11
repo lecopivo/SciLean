@@ -321,22 +321,43 @@ def ftransExt : FTransExt where
 
   constRule e X y := do
     let .some K := e.getArg? 0 | return none
+    let .some m' := e.getArg? 3 | return none
+    let .some M' := e.getArg? 5 | return none
+    let .some FDM := e.getArg? 6 | return none
+
+    let prf ← mkAppOptM ``const_rule #[K, none, none, m', none, M', FDM, X, none, none, none, y]
+
     tryTheorems
-      #[ { proof := ← mkAppM ``const_rule #[K, X, y], origin := .decl ``const_rule, rfl := false} ]
+      #[ { proof := prf, origin := .decl ``const_rule, rfl := false} ]
       discharger e
 
   projRule e X i := return none
 
   compRule e f g := do
     let .some K := e.getArg? 0 | return none
+    let .some m' := e.getArg? 3 | return none
+    let .some M' := e.getArg? 5 | return none
+    let .some FDM := e.getArg? 6 | return none
+
+    dbg_trace "applying let rule\n{← ppExpr f}\n{← ppExpr g}"
+    let prf ← mkAppOptM ``comp_rule #[K, none, none, m', none, M', FDM, none, none, none, none, none, none, none, none, f, g]
+    dbg_trace "success!"
+
+
     tryTheorems
-      #[ { proof := ← mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
+      #[ { proof := prf, origin := .decl ``comp_rule, rfl := false} ]
       discharger e
 
   letRule e f g := do
     let .some K := e.getArg? 0 | return none
+    let .some m' := e.getArg? 3 | return none
+    let .some M' := e.getArg? 5 | return none
+    let .some FDM := e.getArg? 6 | return none
+
+    let prf ← mkAppOptM ``let_rule #[K, none, none, m', none, M', FDM, none, none, none, none, none, none, none, none, f, g]
+
     tryTheorems
-      #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false} ]
+      #[ { proof := prf, origin := .decl ``let_rule, rfl := false} ]
       discharger e
 
   piRule  e f := return none

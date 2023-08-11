@@ -40,6 +40,15 @@ def ForInStep.return2Inv (x : ForInStep (α × β)) : ForInStep α × ForInStep 
   | .done (x,y) => (.done x, .done y)
 
 
+@[simp]
+theorem ForInStep.return2_return2Inv_yield {α β} (x : α × β)
+  : ForInStep.return2 (ForInStep.return2Inv (.yield x)) = .yield x := by rfl
+
+@[simp]
+theorem ForInStep.return2_return2Inv_done {α β} (x : α × β)
+  : ForInStep.return2 (ForInStep.return2Inv (.done x)) = .done x := by rfl
+
+
 
 -- we need some kind of lawful version of `ForIn` to be able to prove this
 @[fprop]
@@ -51,7 +60,7 @@ theorem ForIn.forIn.arg_bf.IsDifferentiableM_rule
 
 -- we need some kind of lawful version of `ForIn` to be able to prove this
 @[ftrans]
-theorem ForIn.forIn.arg_bf.fwdDerivM_rule [Vec K β]
+theorem ForIn.forIn.arg_bf.fwdDerivM_rule
   (range : ρ) (init : X → Y) (f : X → α → Y → m (ForInStep Y))
   (hinit : IsDifferentiable K init) (hf : ∀ a, IsDifferentiableM K (fun (xy : X×Y) => f xy.1 a xy.2))
   : fwdDerivM K (fun x => forIn range (init x) (f x)) 
@@ -135,22 +144,17 @@ theorem ForInStep.done.arg_a0.fwdCDeriv_rule
 #check Std.Range.instForInRangeNat
 
 
--- variable 
---   {K : Type _} [IsROrC K]
---   {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
---   [LawfulMonad m] [LawfulMonad m']
---   {ρ : Type _} {α : Type _} [ForIn m ρ α] [ForIn m' ρ α] {β : Type _}
---   {X : Type _} [Vec K X]
---   {Y : Type _} [Vec K Y]
---   {Z : Type _} [Vec K Z]
 variable [FwdDerivMonad ℝ m m']
 
+example 
+  : IsDifferentiable ℝ (fun x : ℝ => Id.run do
+  let mut y := x
+  for i in [0:5] do
+    y := i * y * y + x - x + i
+  pure y) := 
+by
+  fprop
 
-def a := IsDifferentiableM.let_rule ℝ (fun (x y : ℝ) => pure (f:=m) (x+y)) (fun x => 2*x)
-
-
-set_option pp.notation false
--- set_option pp.all true
 example 
   : IsDifferentiableM ℝ (fun x : ℝ => show m ℝ from do
   let mut y := x
@@ -160,92 +164,41 @@ example
 by
   fprop
 
-#exit
+-- set_option trace.Meta.Tactic.ftrans.step true in
+-- set_option trace.Meta.Tactic.ftrans.theorems true in
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+set_option trace.Meta.Tactic.simp.discharge true in
+set_option trace.Meta.Tactic.simp.unify true in
+-- set_option trace.Meta.Tactic.fprop.discharge true in
+-- set_option trace.Meta.Tactic.fprop.step true in
+set_option pp.notation false in
+set_option trace.Meta.Tactic.ftrans.step true in
+-- set_option pp.funBinderTypes true in
+-- set_option trace.Meta.isDefEq.onFailure true in
 
-
-example : cderiv ℝ (fun x : ℝ => Id.run do
+example : fwdCDeriv ℝ (fun x : ℝ => Id.run do
   let mut y := x
   for i in [0:5] do
-    y := i*x
-  y)
-  = 0 := 
-by
-  -- set_option trace.Meta.Tactic.ftrans.step true in
-  -- set_option trace.Meta.Tactic.ftrans.theorems true in
-  set_option trace.Meta.Tactic.simp.rewrite true in
-  -- set_option trace.Meta.Tactic.simp.discharge true in
-  -- set_option trace.Meta.Tactic.simp.unify true in
-  -- set_option trace.Meta.Tactic.fprop.discharge true in
-  -- set_option trace.Meta.Tactic.fprop.step true in
-  -- set_option pp.funBinderTypes true in
-  -- set_option trace.Meta.isDefEq.onFailure true in
-  ftrans only
-
-
-example : IsDifferentiable ℝ (fun (xy : ℝ × Id ℝ) =>
-      let y := xy.snd;
-      y) :=
-by
-  fprop
-
-set_option pp.notation false
---- !!!!INVESTIGATE THIS!!!!
-example : cderiv ℝ 
-  (fun x : ℝ => 
-      bind (m:=Id) (pure x) fun r => 
-        let y := r;
-        y)
-  = 0 := 
-by
-  -- set_option trace.Meta.Tactic.ftrans.step true in
-  -- set_option trace.Meta.Tactic.ftrans.theorems true in
-  set_option trace.Meta.Tactic.simp.rewrite true in
-  set_option trace.Meta.Tactic.simp.discharge true in
-  -- set_option trace.Meta.Tactic.simp.unify true in
-  set_option trace.Meta.Tactic.fprop.unify true in
-  set_option trace.Meta.Tactic.fprop.discharge true in
-  set_option trace.Meta.Tactic.fprop.step true in
-  set_option pp.funBinderTypes true in
-
-  -- set_option trace.Meta.isDefEq.onFailure true in
-  ftrans only
-  dsimp (config := {zeta := false})
-
-
-
-example (col : Std.Range)
-  : IsDifferentiable ℝ (fun (xy : ℝ × ℝ) => do
-      let col : Std.Range := { start := 0, stop := 5, step := 1 }
-      let r ←
-        forIn col xy.snd (fun (i : ℕ) (r : ℝ) =>
-          let y := r;
-          let y := i * xy.fst;
-          do
-          pure PUnit.unit
-          pure (f:=Id) (ForInStep.yield y))
-      let y : ℝ := r
-      y)
-  := by fprop
-
-
-#exit
-example 
-  : IsDifferentiable ℝ fun (xy : (ℝ × ℝ) × Id ℝ) =>
-      let y := xy.snd;
-      y
+    y := y * x
+  pure y) 
+  = 
+  fun x dx : ℝ => 0
   := 
 by
-  set_option trace.Meta.Tactic.fprop.step true in
-  fprop
+  -- dsimp
+  ftrans only
+  -- simp
 
 
+
+
+open Lean Qq in
+#eval show MetaM Unit from do
+  let e := q(Id.run do
+    let mut y := 0
+    for i in [0:5] do
+      y := y * 2
+    pure y) 
+
+  IO.println e
   
-
-#exit
-
-@[fprop]
-theorem _root_.ForIn.forIn.arg_bf.IsDifferentiable_rule [Vec K β] [Vec K X]
-  (range : ρ) (init : X → β) (f : X → α → β → Id (ForInStep β))
-  (hinit : IsDifferentiable K init) (hf : ∀ a, IsDifferentiable K (fun (xb : X×β) => f xb.1 a xb.2))
-  : cderiv K (fun x => forIn range (init x) (f x)) := sorry_proof
-
