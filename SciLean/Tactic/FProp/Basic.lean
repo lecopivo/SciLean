@@ -121,7 +121,7 @@ mutual
 
     | .lam xName xType xBody xBi => 
 
-      match xBody.consumeMData with
+      match xBody.consumeMData.headBeta.consumeMData with
       | (.bvar 0) => 
         trace[Meta.Tactic.fprop.step] "case id\n{← ppExpr e}"
         ext.identityRule e
@@ -170,7 +170,7 @@ mutual
           trace[Meta.Tactic.fprop.step] "case const\n{← ppExpr e}"
           ext.constantRule e
         else 
-          let xBody' := xBody.headBeta.consumeMData
+          let xBody' := xBody
           let f' := Expr.lam xName xType xBody' xBi
           let g := xBody'.getAppFn'
 
