@@ -231,7 +231,9 @@ def fpropExt : FPropExt where
     FProp.tryTheorem? e thm (fun _ => pure none)
 
 
-  discharger _ := return none
+  discharger e := 
+    FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
+
 
 -- register fderiv
 #eval show Lean.CoreM Unit from do

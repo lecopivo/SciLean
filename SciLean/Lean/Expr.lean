@@ -211,6 +211,14 @@ def myPrint : Expr → String
 | .letE n t v x _ => s!"let {n} := {v.myPrint}; {x.myPrint}"
 | _ => "??"
 
+/-- Remove all mdata for an expression -/
+def purgeMData : Expr → Expr
+| .app f x => .app f.purgeMData x.purgeMData
+| .lam n t b bi => .lam n t.purgeMData b.purgeMData bi
+| .letE n t v b d => .letE n t.purgeMData v.purgeMData b.purgeMData d
+| .forallE n t b bi => .forallE n t.purgeMData b.purgeMData bi
+| .mdata _ e => e.purgeMData
+| e => e
 
 
 #exit

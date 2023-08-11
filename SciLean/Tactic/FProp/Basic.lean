@@ -28,30 +28,28 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
     
     return result?
 
-def applyBVarApp (e : Expr) : FPropM (Option Expr) := do
-  let .some (_, ext, F) ← getFProp? e
-    | return none
+set_option linter.unusedVariables false in
+def bvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPropM (Option Expr) := do
 
-  let .lam n t (.app f x) bi := F
-    | trace[Meta.Tactic.fprop.step] "bvar app step can't handle functions like {← ppExpr F}"
+  let .lam n t (.app g x) bi := f
+    | trace[Meta.Tactic.fprop.step] "bvar app case can't handle functions like {← ppExpr f}"
       return none
 
   if x.hasLooseBVars then
-    trace[Meta.Tactic.fprop.step] "bvar app step can't handle functions like {← ppExpr F}"
+    trace[Meta.Tactic.fprop.step] "bvar app case can't handle functions like {← ppExpr f}"
     return none
-
   
-  if f == .bvar 0 then
+  if g == .bvar 0 then
     ext.projRule e
   else
-    let g := .lam n t f bi
+    let g := .lam n t g bi
     let gType ← inferType g
     let fType := gType.getForallBody
     if fType.hasLooseBVars then
-      trace[Meta.Tactic.fprop.step] "bvar app step can't handle dependent functions of type {← ppExpr fType} appearing in {← ppExpr F}"
+      trace[Meta.Tactic.fprop.step] "bvar app step can't handle dependent functions of type {← ppExpr fType} appearing in {← ppExpr f}"
       return none
 
-    let h := .lam n fType  ((Expr.bvar 0).app x) bi
+    let h := .lam n fType ((Expr.bvar 0).app x) bi
     ext.compRule e h g
 
 
@@ -84,135 +82,158 @@ def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
 mutual 
   partial def fprop (e : Expr) : FPropM (Option Expr) := do
 
-    let e ← instantiateMVars e
+    -- this is for testing whether mdata cause problems or not
+    -- let e := e.purgeMData
 
     if let .some { expr := _, proof? := .some proof } := (← get).cache.find? e then
       trace[Meta.Tactic.fprop.cache] "cached result for {e}"
       return proof
     else
-      if e.isLet then
+      match e with
+      | .letE .. => 
         letTelescope e fun xs b => do
-          let .some proof ← main b
+          let .some proof ← fprop b
             | return none
           cache e (← mkLambdaFVars xs proof)
-      else 
+      | .forallE .. => 
         forallTelescope e fun xs b => do
-          let .some proof ← main b
+          let .some proof ← fprop b
             | return none
           cache e (← mkLambdaFVars xs proof)
+      | .mdata _ e' => fprop e'
+      | .mvar _ => instantiateMVars e >>= fprop
+      | _ => 
+        let .some proof ← main e
+          | return none
+        cache e proof
+        
 
   partial def main (e : Expr) : FPropM (Option Expr) := do
 
-    let .some (_, ext, f) ← getFProp? e
+    let .some (fpropName, ext, f) ← getFProp? e
       | return none
 
-    match f with
+    match f.consumeMData with
     | .letE .. => letTelescope f fun xs b => do 
       trace[Meta.Tactic.fprop.step] "case let x := ..; ..\n{← ppExpr e}"
       let e' := ext.replaceFPropFun e b
       fprop (← mkLambdaFVars xs e')
 
-    | .lam _ _ (.bvar  0) _ => 
-      trace[Meta.Tactic.fprop.step] "case id\n{← ppExpr e}"
-      ext.identityRule e
+    | .lam xName xType xBody xBi => 
 
-    | .lam xName xType (.letE yName yType yValue body _) xBi => 
-      -- We perform reduction because the type is quite often of the form 
-      -- `(fun x => Y) #0` which is just `Y`
-      let yType := yType.headBeta
-      if (yType.hasLooseBVar 0) then
-        throwError "dependent type encountered {← ppExpr (Expr.forallE xName xType yType default)}"
+      match xBody.consumeMData with
+      | (.bvar 0) => 
+        trace[Meta.Tactic.fprop.step] "case id\n{← ppExpr e}"
+        ext.identityRule e
 
-      if ¬(yValue.hasLooseBVar 0) then
-        let body' := body.swapBVars 0 1
-        let e' := (.letE yName yType yValue (ext.replaceFPropFun e (.lam xName xType body' xBi)) false)
-        return ← FProp.fprop e'
+      | .letE yName yType yValue yBody _ => 
+        let yType  := yType.consumeMData
+        let yValue := yValue.consumeMData
+        let yBody  := yBody.consumeMData
+        -- We perform reduction because the type is quite often of the form 
+        -- `(fun x => Y) #0` which is just `Y` 
+        -- Usually this is caused by the usage of `FunLike`
+        let yType := yType.headBeta
+        if (yType.hasLooseBVar 0) then
+          throwError "dependent type encountered {← ppExpr (Expr.forallE xName xType yType default)}"
 
-      match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
-      | true, true =>
-        trace[Meta.Tactic.fprop.step] "case let\n{← ppExpr e}"
-        let f := Expr.lam xName xType (.lam yName yType body default) xBi
-        let g := Expr.lam xName xType yValue default
-        ext.lambdaLetRule e f g
+        if ¬(yValue.hasLooseBVar 0) then
+          let body := yBody.swapBVars 0 1
+          let e' := (.letE yName yType yValue (ext.replaceFPropFun e (.lam xName xType body xBi)) false)
+          return ← FProp.fprop e'
 
-      | true, false => 
-        trace[Meta.Tactic.fprop.step] "case comp\n{← ppExpr e}"
-        let f := Expr.lam yName yType body default
-        let g := Expr.lam xName xType yValue default
-        ext.compRule e f g
+        match (yBody.hasLooseBVar 0), (yBody.hasLooseBVar 1) with
+        | true, true =>
+          trace[Meta.Tactic.fprop.step] "case let\n{← ppExpr e}"
+          let f := Expr.lam xName xType (.lam yName yType yBody default) xBi
+          let g := Expr.lam xName xType yValue default
+          ext.lambdaLetRule e f g
 
-      | false, _ => 
-        let f := Expr.lam xName xType (body.lowerLooseBVars 1 1) xBi
-        FProp.fprop (ext.replaceFPropFun e f)
+        | true, false => 
+          trace[Meta.Tactic.fprop.step] "case let simple\n{← ppExpr e}"
+          let f := Expr.lam yName yType yBody default
+          let g := Expr.lam xName xType yValue default
+          ext.compRule e f g
 
+        | false, _ => 
+          let f := Expr.lam xName xType (yBody.lowerLooseBVars 1 1) xBi
+          FProp.fprop (ext.replaceFPropFun e f)
 
-    | .lam _ _ (.lam  ..) _ => 
-      trace[Meta.Tactic.fprop.step] "case pi\n{← ppExpr e}"
-      ext.lambdaLambdaRule e f
+      | .lam  .. => 
+        trace[Meta.Tactic.fprop.step] "case pi\n{← ppExpr e}"
+        ext.lambdaLambdaRule e f
 
-    | .lam _ _ b _ => do
-      if !(b.hasLooseBVar 0) then
-        trace[Meta.Tactic.fprop.step] "case const\n{← ppExpr e}"
-        ext.constantRule e
-      else if b.getAppFn.isFVar then
-        trace[Meta.Tactic.fprop.step] "case fvar app\n{← ppExpr e}"
-        applyFVarApp e ext.discharger
-      else if b.getAppFn.isBVar then
-        trace[Meta.Tactic.fprop.step] "case bvar app\n{← ppExpr e}"
-        applyBVarApp e
-      else
-        applyTheorems e (ext.discharger)
+      | .mvar .. => fprop (← instantiateMVars e)
+
+      | xBody => do
+        if !(xBody.hasLooseBVar 0) then
+          trace[Meta.Tactic.fprop.step] "case const\n{← ppExpr e}"
+          ext.constantRule e
+        else 
+          let xBody' := xBody.headBeta.consumeMData
+          let f' := Expr.lam xName xType xBody' xBi
+          let g := xBody'.getAppFn'
+
+          match g with 
+          | .fvar .. => 
+            trace[Meta.Tactic.fprop.step] "case fvar app `{← ppExpr g}`\n{← ppExpr e}"
+            fvarAppCase e fpropName ext f'
+          | .bvar .. => 
+            trace[Meta.Tactic.fprop.step] "case bvar app\n{← ppExpr e}"
+            bvarAppCase e fpropName ext f'
+          | .const funName _ =>
+            trace[Meta.Tactic.fprop.step] "case const app `{← ppExpr g}`.\n{← ppExpr e}"
+            constAppCase e fpropName ext funName
+          | _ => 
+            trace[Meta.Tactic.fprop.step] "unknown case, app function constructor: {g.ctorName}\n{← ppExpr e}\n"
+            tryLocalTheorems e fpropName ext
 
     | .mvar _ => do
       fprop (← instantiateMVars e)
 
-    | _ => do
-      trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}\n"
-      applyTheorems e (ext.discharger)
+    | f => 
+      match f.getAppFn.consumeMData with
+      | .const funName _ =>
+        trace[Meta.Tactic.fprop.step] "case const app `{funName}.\n{← ppExpr e}"
+        constAppCase e fpropName ext funName
+      | _ => 
+        trace[Meta.Tactic.fprop.step] "unknown case, expression constructor: {f.ctorName}\n{← ppExpr e}\n"
+        tryLocalTheorems e fpropName ext
 
-  partial def applyFVarApp (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
-    let .some (_, ext, F) ← getFProp? e
-      | return none
+  partial def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPropM (Option Expr) := do
+    let (f', g') ← splitLambdaToComp f
 
-    if ¬F.isLambda then
-      applyTheorems e discharge?
+    -- trivial case, this prevents an infinite loop
+    if (← isDefEq f' f) then
+      trace[Meta.Tactic.fprop.step] "fvar app case: trivial"
+      tryLocalTheorems e fpropName ext
     else
-      let (f, g) ← splitLambdaToComp F
+      trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f'}) ∘ ({← ppExpr g'})`"
+      ext.compRule e f' g'
 
-      -- trivial case and prevent infinite loop
-      if (← isDefEq f F) then
-        trace[Meta.Tactic.fprop.step] "fvar app case: trivial"
+  partial def constAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (funName : Name) : FPropM (Option Expr) := do
 
-        applyTheorems e discharge?
-      else
-
-        trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f}) ∘ ({← ppExpr g})`"
-        ext.compRule e f g
-
-  partial def applyTheorems (e : Expr) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
-    let .some (fpropName, _, f) ← getFProp? e
-      | return none
-
-    let candidates ←
-      -- if function head is a constant we look up global theorem
-      -- otherwise we use hypothesis from local context
-      match (← getFunHeadConst? f) with
-        | .some funName => 
-          trace[Meta.Tactic.fprop.step] "case application of {funName}\n{← ppExpr e}\n"
-          pure <| (← FProp.getFPropRules funName fpropName).append (← getLocalRules fpropName)
-        | none => 
-          trace[Meta.Tactic.fprop.step] "case other\n{← ppExpr e}\n"
-          getLocalRules fpropName
+    let candidates ← FProp.getFPropRules funName fpropName
 
     if candidates.size = 0 then
       trace[Meta.Tactic.fprop.apply] "no suitable theorems found for {← ppExpr e}"
 
     for thm in candidates do
-      -- trace[Meta.Tactic.fprop.unify] "trying to apply {← ppOrigin thm.origin} to {← ppExpr e}"
-      if let some proof ← tryTheorem? e thm discharge? then
+      if let some proof ← tryTheorem? e thm ext.discharger then
         return proof
 
-    return none 
+    -- if all fails try local rules
+    tryLocalTheorems e fpropName ext
+
+  partial def tryLocalTheorems (e : Expr) (fpropName : Name) (ext : FPropExt) : FPropM (Option Expr) := do
+
+    let candidates ← getLocalRules fpropName
+
+    for thm in candidates do
+      if let some proof ← tryTheorem? e thm ext.discharger then
+        return proof
+
+    return none
 
   partial def synthesizeInstance (thmId : Origin) (x type : Expr) : MetaM Bool := do
     match (← trySynthInstance type) with

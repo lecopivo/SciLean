@@ -48,8 +48,8 @@ Example:
 def getFunHeadConst? (e : Expr) : MetaM (Option Name) :=
   match e.consumeMData with
   | .const name _ => return name
-  | .app f _ => return f.getAppFn.constName?
-  | .lam _ _ b _ => return b.getAppFn.constName?
+  | .app f _ => return f.getAppFn'.constName?
+  | .lam _ _ b _ => return b.getAppFn'.constName?
   | .proj structName idx _ => do
      let .some info := getStructureInfo? (← getEnv) structName
        | return none
