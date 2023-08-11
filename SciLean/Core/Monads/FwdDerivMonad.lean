@@ -51,7 +51,7 @@ export FwdDerivMonad (fwdDerivM IsDifferentiableM fwdDerivValM IsDifferentiableV
 
 variable 
   (K : Type _) [IsROrC K]
-  {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
+  {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
   {X : Type} [Vec K X]
   {Y : Type} [Vec K Y]
@@ -139,10 +139,14 @@ def fpropExt : FPropExt where
 
   compRule e f g := do
     let .some K := e.getArg? 0 | return none
+    let .some m' := e.getArg? 3 | return none
+
+    let prf ← mkAppOptM ``comp_rule #[K, none,none,m',none,none,none,none,none,none,none,none,none,none, f,g]
+
 
     let thm : SimpTheorem :=
     {
-      proof  := ← mkAppM ``comp_rule #[K, f, g]
+      proof  := prf -- ← mkAppM ``comp_rule #[K, f, g]
       origin := .decl ``comp_rule
       rfl    := false
     }
@@ -150,10 +154,15 @@ def fpropExt : FPropExt where
 
   lambdaLetRule e f g := do
     let .some K := e.getArg? 0 | return none
+    let .some m' := e.getArg? 3 | return none
+    let .some M' := e.getArg? 5 | return none
+    let .some FDM := e.getArg? 6 | return none
+
+    let prf ← mkAppOptM ``let_rule #[K, none,none,m',none,M',FDM,none,none,none,none,none,none,none, f,g]
 
     let thm : SimpTheorem :=
     {
-      proof  := ← mkAppM ``let_rule #[K, f,g]
+      proof  := prf
       origin := .decl ``let_rule
       rfl    := false
     }

@@ -145,22 +145,20 @@ theorem ForInStep.done.arg_a0.fwdCDeriv_rule
 --   {Z : Type _} [Vec K Z]
 variable [FwdDerivMonad ℝ m m']
 
+
+def a := IsDifferentiableM.let_rule ℝ (fun (x y : ℝ) => pure (f:=m) (x+y)) (fun x => 2*x)
+
+
 set_option pp.notation false
 -- set_option pp.all true
-example : IsDifferentiableM ℝ (fun x : ℝ => show m ℝ from do
+example 
+  : IsDifferentiableM ℝ (fun x : ℝ => show m ℝ from do
   let mut y := x
   for i in [0:5] do
     y := i * y * y + x - x + i
   pure y) := 
 by
-  dsimp -- (config := {zeta := false})
-  have h : IsDifferentiableValM Real (pure (f:=m) PUnit.unit) := sorry
-  -- apply Bind.bind.arg_a0a1.IsDifferentiableM_rule
-  set_option trace.Meta.Tactic.fprop.step true in
-  set_option trace.Meta.Tactic.fprop.discharge true in
-  set_option trace.Meta.Tactic.fprop.apply true in
-  try fprop
-  sorry
+  fprop
 
 #exit
 
