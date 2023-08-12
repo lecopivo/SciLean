@@ -61,6 +61,21 @@ def letCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : SimpM 
       let e' := (.letE yName yType yValue (ext.replaceFTransFun e (.lam xName xType body xBi)) false)
       return .some (.visit { expr := e' })
 
+      -- -- swap lambda and let
+      -- let e' ← lambdaLetTelescope f fun xs b => do
+      --   let f' ← mkLambdaFVars (#[xs[0]!].append xs[2:]) b
+      --   let f'' ← mkLambdaFVars (#[xs[1]!, xs[0]!].append xs[2:]) b
+      --   let e'' := ext.replaceFTransFun e f''
+      --   trace[Meta.Tactic.ftrans.step] "function f'\n{← ppExpr f'}"
+      --   trace[Meta.Tactic.ftrans.step] "function f''\n{← ppExpr f''}"
+      --   trace[Meta.Tactic.ftrans.step] "new expr'\n{← ppExpr (ext.replaceFTransFun e f')}"
+      --   trace[Meta.Tactic.ftrans.step] "new expr''\n{← ppExpr e''}"
+      --   mkLambdaFVars #[xs[1]!] (ext.replaceFTransFun e f')
+      -- trace[Meta.Tactic.ftrans.step] "case move let out\n{← ppExpr e'}"
+      -- trace[Meta.Tactic.ftrans.step] "let value\n{← ppExpr yValue}"
+      -- trace[Meta.Tactic.ftrans.step] "let body\n{← ppExpr body}"
+      -- return .some (.visit { expr := e' })
+
     match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
     | true, true =>
       trace[Meta.Tactic.ftrans.step] "case let\n{← ppExpr e}"
@@ -167,14 +182,15 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
       trace[Meta.Tactic.ftrans.step] "case id\n{← ppExpr e}"
       ext.idRule e xType 
 
-    | .letE .. => 
-      letCase e ftransName ext f.consumeMData
+    | .letE yName yType yValue body d => 
+      let f' := Expr.lam xName xType (.letE yName yType yValue body d) xBi
+      letCase e ftransName ext f'
 
     | .lam  .. => 
       trace[Meta.Tactic.ftrans.step] "case pi\n{← ppExpr e}"
       ext.piRule e f
 
-    | .mvar .. => return .some (.visit  {expr := ← instantiateMVars e})
+    -- | .mvar .. => return .some (.visit  {expr := ← instantiateMVars e})
 
     | xBody => do
       if !(xBody.hasLooseBVar 0) then
@@ -193,14 +209,14 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
         | .const funName _ =>
           trace[Meta.Tactic.ftrans.step] "case const app `{funName}`.\n{← ppExpr e}"
           constAppStep e ftransName ext funName
-        | .mvar .. => do
-          return .some (.visit  { expr := ← instantiateMVars e })
+        -- | .mvar .. => do
+        --   return .some (.visit  { expr := ← instantiateMVars e })
         | _ => 
           trace[Meta.Tactic.ftrans.step] "unknown case, app function constructor: {g.ctorName}\n{← ppExpr e}\n"
           return none
 
-  | .mvar _ => do
-    return .some (.visit  {expr :=← instantiateMVars e})
+  -- | .mvar _ => do
+  --   return .some (.visit  {expr :=← instantiateMVars e})
 
   | f => 
     match f.getAppFn.consumeMData with

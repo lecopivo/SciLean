@@ -151,6 +151,8 @@ example
   let mut y := x
   for i in [0:5] do
     y := i * y * y + x - x + i
+    for j in [0:3] do
+      y := y * j + x
   pure y) := 
 by
   fprop
@@ -160,36 +162,83 @@ example
   let mut y := x
   for i in [0:5] do
     y := i * y * y + x - x + i
+    for j in [0:3] do
+      y := y * j + x
   pure y) := 
 by
   fprop
 
+
+
+example :
+    (fun x : Nat => show Id Nat from do
+      let mut y := x
+      for i in [0:5] do
+        y := y + i
+      y)
+    = fun _ => 0 :=
+by
+  dsimp (config := {zeta := false}) [Id.run]
+
+
+open Lean Meta Qq in
+#eval show MetaM Unit from do
+
+  let e := 
+   q(fun x =>
+      let col : Std.Range := { start := 0, stop := 5, step := 1 };
+      let y :=
+        forIn (m:=Id) col x fun i r =>
+          let y := r;
+          let y := y + i;
+          ForInStep.yield y;
+      y)
+
+  let e' ← 
+    lambdaLetTelescope e fun xs b => do
+      mkLambdaFVars (#[xs[1]!, xs[0]!].append xs[2:]) b
+
+  IO.println (← ppExpr e)
+  IO.println (← ppExpr e')
+
+
+
 -- set_option trace.Meta.Tactic.ftrans.step true in
 -- set_option trace.Meta.Tactic.ftrans.theorems true in
--- set_option trace.Meta.Tactic.simp.rewrite true in
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify true in
 -- set_option trace.Meta.Tactic.fprop.discharge true in
 -- set_option trace.Meta.Tactic.fprop.step true in
-set_option pp.notation false in
+-- set_option pp.notation false in
+-- set_option pp.funBinderTypes true in
+-- set_option trace.Meta.Tactic.ftrans.rewrite true in
 set_option trace.Meta.Tactic.ftrans.step true in
+-- set_option trace.Meta.Tactic.lsimp.step true in
+-- set_option trace.Meta.Tactic.lsimp.pre true in
+-- set_option trace.Meta.Tactic.lsimp.post true in
+
 -- set_option pp.funBinderTypes true in
 -- set_option trace.Meta.isDefEq.onFailure true in
 
-example : fwdCDeriv ℝ (fun x : ℝ => Id.run do
+example : fwdDerivM ℝ (fun x : ℝ => show m ℝ from do
   let mut y := x
   for i in [0:5] do
-    y := y * x
+    let z := y * x
+    y := z + x + y
   pure y) 
   = 
-  fun x dx : ℝ => 0
+  fun x dx : ℝ => pure 0
   := 
 by
-  -- dsimp
   ftrans only
+  -- simp (config := {zeta := false})
+  -- ftrans only
   -- simp
 
+  -- simp
 
+#exit
 
 
 open Lean Qq in

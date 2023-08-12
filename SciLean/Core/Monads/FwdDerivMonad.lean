@@ -313,7 +313,11 @@ def ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``fwdDerivM then
-      e.modifyArg (fun _ => f) 11
+      let fn := e.getAppFn'
+      let args := e.getAppArgs'
+      let args := args.set! 11 f
+      let e' := mkAppN fn args
+      e'
     else          
       e
 
@@ -339,10 +343,7 @@ def ftransExt : FTransExt where
     let .some M' := e.getArg? 5 | return none
     let .some FDM := e.getArg? 6 | return none
 
-    dbg_trace "applying let rule\n{← ppExpr f}\n{← ppExpr g}"
     let prf ← mkAppOptM ``comp_rule #[K, none, none, m', none, M', FDM, none, none, none, none, none, none, none, none, f, g]
-    dbg_trace "success!"
-
 
     tryTheorems
       #[ { proof := prf, origin := .decl ``comp_rule, rfl := false} ]
@@ -372,7 +373,74 @@ open Lean in
 
 
 end fwdDerivM
+
+
+--------------------------------------------------------------------------------
+-- fwdDerivValeM ---------------------------------------------------------------
+--------------------------------------------------------------------------------
+namespace fwdDerivValM
+
+open Lean Meta Qq in
+def discharger (e : Expr) : SimpM (Option Expr) := do
+  withTraceNode `fwdDerivValM_discharger (fun _ => return s!"discharge {← ppExpr e}") do
+  let cache := (← get).cache
+  let config : FProp.Config := {}
+  let state  : FProp.State := { cache := cache }
+  let (proof?, state) ← FProp.fprop e |>.run config |>.run state
+  modify (fun simpState => { simpState with cache := state.cache })
+  if proof?.isSome then
+    return proof?
+  else
+    -- if `fprop` fails try assumption
+    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
+    let proof? ← tac e
+    return proof?
+
+set_option linter.unusedVariables false in
+open Lean Meta FTrans in
+def ftransExt : FTransExt where
+  ftransName := ``fwdDerivValM
+
+  getFTransFun? e := 
+    if e.isAppOf ``fwdDerivValM then
+
+      if let .some f := e.getArg? 9 then
+        some f
+      else 
+        none
+    else
+      none
+
+  replaceFTransFun e f := 
+    if e.isAppOf ``fwdDerivValM then
+      let fn := e.getAppFn'
+      let args := e.getAppArgs'
+      let args := args.set! 9 f
+      let e' := mkAppN fn args
+      e'
+    else          
+      e
+
+  idRule  e X := return none
+  constRule e X y := return none
+  projRule e X i := return none
+  compRule e f g := return none
+  letRule e f g := return none
+  piRule  e f := return none
+
+  discharger := discharger
+
+
+-- register fwdDerivValM
+open Lean in
+#eval show Lean.CoreM Unit from do
+  modifyEnv (λ env => FTrans.ftransExt.addEntry env (``fwdDerivValM, ftransExt))
+
+end fwdDerivValM
+
+
 end SciLean
+
 
 
 --------------------------------------------------------------------------------
@@ -420,6 +488,20 @@ theorem Pure.pure.IsDifferentiableValM_rule (x : X)
   : IsDifferentiableValM K (pure (f:=m) x) := 
   (FwdDerivMonad.IsDifferentiableM_const (pure x)).2 
     ((FwdDerivMonad.IsDifferentiableM_pure (fun _ : Unit => x)).1 (by fprop))
+
+
+set_option linter.ftransDeclName false in
+@[ftrans]
+theorem Pure.pure.fwdDerivValM_rule (x : X)
+  : fwdDerivValM K (pure (f:=m) x)
+    =
+    pure (x,0) := 
+by
+  have h := FwdDerivMonad.fwdDerivM_const (K:=K) (X:=Unit) (pure (f:=m) x) (by fprop)
+  have h' := congrFun (congrFun h ()) ()
+  rw[← h']
+  rw[Pure.pure.arg_a0.fwdDerivM_rule]
+  ftrans; simp; fprop
 
 
 --------------------------------------------------------------------------------
