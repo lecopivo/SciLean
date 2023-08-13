@@ -34,23 +34,13 @@ instance (S : Type _) [Vec K S] : FwdDerivMonad K (StateM S) (StateM (S×S)) whe
       simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
       rw[Prod.mk.arg_fstsnd.fwdCDeriv_rule (K:=K) (fun xs : _×S => (xs.1, (f xs.1 xs.2).1)) (by fprop) (fun xs => (f xs.1 xs.2).2) (by fprop)]
       ftrans
-      
 
   IsDifferentiableM_pure f :=
     by 
-      simp; constructor
-      case mp => 
-        intros
-        simp[pure, StateT.pure]
-        apply IsDifferentiable.comp_rule K (fun xs : _×S => (f xs.1, xs.2)) (fun xs => xs) (by fprop) (by fprop)
-      case mpr => 
-        intros
-        simp[pure, StateT.pure]
-        let g := Prod.fst ∘ (fun (xs : _×S) => pure (f:=StateM S) (f xs.fst) xs.snd) ∘ (fun x => (x,0))
-        have : IsDifferentiable K (Prod.fst ∘ (fun (xs : _×S) => pure (f:=StateM S) (f xs.fst) xs.snd) ∘ (fun x => (x,0))) := by fprop
-        have hg : IsDifferentiable K g := by fprop
-        rw[show f = g by rfl]
-        apply hg
+      simp;
+      intros
+      simp[pure, StateT.pure]
+      apply Prod.mk.arg_fstsnd.IsDifferentiable_rule K (fun xs => xs.2) (fun xs : _×S => f xs.1) (by fprop) (by fprop)
 
   IsDifferentiableM_bind f g hf hg := 
     by
@@ -63,6 +53,13 @@ instance (S : Type _) [Vec K S] : FwdDerivMonad K (StateM S) (StateM (S×S)) whe
       simp; simp at hf
       simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
       apply Prod.mk.arg_fstsnd.IsDifferentiable_rule K (fun xs => (f xs.1 xs.2).2) (fun xs : _×S => (xs.1, (f xs.1 xs.2).1))  (by fprop) (by fprop)
+
+
+#eval 0
+
+
+
+
 
 
 

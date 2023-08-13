@@ -30,8 +30,9 @@ class RevDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
         pure ((x,ydf.1), fun dxy : X×Y => do let dx ← ydf.2 dxy.2; pure (dxy.1 + dx)))
 
 
-  HasAdjDiffM_pure {X : Type} {Y : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] (f : X → Y)
-    : HasAdjDiff K f ↔ HasAdjDiffM (fun x : X => pure (f x))
+  HasAdjDiffM_pure {X : Type} {Y : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] 
+    (f : X → Y) (hf : HasAdjDiff K f)
+    : HasAdjDiffM (fun x : X => pure (f x))
   HasAdjDiffM_bind {X Y Z: Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] [SemiInnerProductSpace K Z]
     (f : Y → m Z) (g : X → m Y) 
     (hf : HasAdjDiffM f) (hg : HasAdjDiffM g)
@@ -81,7 +82,7 @@ by
   rw[h]
   apply HasAdjDiffM_bind
   apply hy
-  apply (HasAdjDiffM_pure _).1
+  apply HasAdjDiffM_pure
   fprop
 variable {X}
 
@@ -94,7 +95,7 @@ by
            =
            fun x => pure (g x) >>= f) by simp]
   apply HasAdjDiffM_bind _ _ hf
-  apply (HasAdjDiffM_pure g).1 hg
+  apply HasAdjDiffM_pure g hg
 
 
 theorem let_rule 
@@ -108,7 +109,7 @@ by
            =
            fun x => pure (g' x) >>= f') by simp]
   apply HasAdjDiffM_bind _ _ hf
-  apply (HasAdjDiffM_pure g').1 
+  apply HasAdjDiffM_pure g'
   try fprop -- this should finish the proof 
   apply Prod.mk.arg_fstsnd.HasAdjDiff_rule
   fprop; apply hg
@@ -265,7 +266,7 @@ by
   simp [revDerivValM]
   fprop
   apply hy
-  apply (HasAdjDiffM_pure _).1; fprop
+  apply HasAdjDiffM_pure; fprop
 variable {X}
 
 theorem comp_rule
@@ -287,7 +288,7 @@ by
              =
              fun x => pure (g x) >>= f) by simp]
     rw[revDerivM_bind f (fun x => pure (g x)) 
-         hf ((HasAdjDiffM_pure _).1 hg)]
+         hf (HasAdjDiffM_pure _ hg)]
     simp[revDerivM_pure g hg]
 
 
@@ -313,7 +314,7 @@ by
     rw[show ((fun x => f x (g x))
              =
              fun x => pure (g' x) >>= f') by simp]
-    rw[revDerivM_bind f' (fun x => pure (g' x)) hf ((HasAdjDiffM_pure g').1 hg')]
+    rw[revDerivM_bind f' (fun x => pure (g' x)) hf (HasAdjDiffM_pure g' hg')]
     simp[revDerivM_pure (K:=K) g' hg']
     ftrans; simp
 
@@ -507,7 +508,7 @@ theorem Pure.pure.arg_a0.HasAdjDiffM_rule
   (ha0 : HasAdjDiff K a0) 
   : HasAdjDiffM K (fun x => Pure.pure (f:=m) (a0 x)) := 
 by 
-  apply (RevDerivMonad.HasAdjDiffM_pure a0).1 ha0
+  apply RevDerivMonad.HasAdjDiffM_pure a0 ha0
 
 
 @[ftrans]
@@ -529,7 +530,7 @@ theorem Pure.pure.HasAdjDiffValM_rule (x : X)
   : HasAdjDiffValM K (pure (f:=m) x) :=  
 by
   unfold HasAdjDiffValM
-  apply (RevDerivMonad.HasAdjDiffM_pure _).1
+  apply RevDerivMonad.HasAdjDiffM_pure
   fprop
 
 

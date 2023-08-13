@@ -68,6 +68,7 @@ def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
   for var in lctx do
     let type ← instantiateMVars var.type
     
+    -- TODO: maybe beta reduce type or call whnf
     if (type.getForallBody.getAppFn.constName? == .some fpropName) &&
        (var.kind ≠ Lean.LocalDeclKind.auxDecl) then
        arr := arr.push {

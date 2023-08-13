@@ -29,8 +29,9 @@ class FwdDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
         pure ((x,ydy.1),(dx,ydy.2)))
 
 
-  IsDifferentiableM_pure {X : Type} {Y : Type} [Vec K X] [Vec K Y] (f : X → Y)
-    : IsDifferentiable K f ↔ IsDifferentiableM (fun x : X => pure (f x))
+  IsDifferentiableM_pure {X : Type} {Y : Type} [Vec K X] [Vec K Y] 
+    (f : X → Y) (hf : IsDifferentiable K f)
+    : IsDifferentiableM (fun x : X => pure (f x))
   IsDifferentiableM_bind {X Y Z: Type} [Vec K X] [Vec K Y] [Vec K Z]
     (f : Y → m Z) (g : X → m Y) 
     (hf : IsDifferentiableM f) (hg : IsDifferentiableM g)
@@ -79,7 +80,7 @@ by
   rw[h]
   apply IsDifferentiableM_bind
   apply hy
-  apply (IsDifferentiableM_pure _).1
+  apply IsDifferentiableM_pure
   fprop
 variable {X}
 
@@ -92,7 +93,7 @@ by
            =
            fun x => pure (g x) >>= f) by simp]
   apply IsDifferentiableM_bind _ _ hf
-  apply (IsDifferentiableM_pure g).1 hg
+  apply IsDifferentiableM_pure g hg
 
 
 theorem let_rule 
@@ -106,7 +107,7 @@ by
            =
            fun x => pure (g' x) >>= f') by simp]
   apply IsDifferentiableM_bind _ _ hf
-  apply (IsDifferentiableM_pure g').1 
+  apply IsDifferentiableM_pure g'
   try fprop -- this should finish the proof 
   apply Prod.mk.arg_fstsnd.IsDifferentiable_rule
   apply hg
@@ -256,7 +257,7 @@ by
   simp [fwdDerivValM]
   fprop
   apply hy
-  apply (IsDifferentiableM_pure _).1; fprop
+  apply IsDifferentiableM_pure; fprop
 variable {X}
 
 theorem comp_rule
@@ -274,7 +275,7 @@ by
              =
              fun x => pure (g x) >>= f) by simp]
     rw[FwdDerivMonad.fwdDerivM_bind f (fun x => pure (g x)) 
-         hf ((FwdDerivMonad.IsDifferentiableM_pure _).1 hg)]
+         hf (FwdDerivMonad.IsDifferentiableM_pure _ hg)]
     simp[FwdDerivMonad.fwdDerivM_pure g hg]
 
 
@@ -295,7 +296,7 @@ by
     rw[show ((fun x => f x (g x))
              =
              fun x => pure (g' x) >>= f') by simp]
-    rw[fwdDerivM_bind f' (fun x => pure (g' x)) hf ((IsDifferentiableM_pure g').1 hg')]
+    rw[fwdDerivM_bind f' (fun x => pure (g' x)) hf (IsDifferentiableM_pure g' hg')]
     simp[fwdDerivM_pure (K:=K) g' hg']
     ftrans; simp
 
@@ -489,7 +490,7 @@ theorem Pure.pure.arg_a0.IsDifferentiableM_rule
   (ha0 : IsDifferentiable K a0) 
   : IsDifferentiableM K (fun x => Pure.pure (f:=m) (a0 x)) := 
 by 
-  apply (FwdDerivMonad.IsDifferentiableM_pure a0).1 ha0
+  apply FwdDerivMonad.IsDifferentiableM_pure a0 ha0
 
 
 @[ftrans]
@@ -509,7 +510,7 @@ theorem Pure.pure.IsDifferentiableValM_rule (x : X)
   : IsDifferentiableValM K (pure (f:=m) x) :=  
 by
   unfold IsDifferentiableValM
-  apply (FwdDerivMonad.IsDifferentiableM_pure _).1
+  apply FwdDerivMonad.IsDifferentiableM_pure
   fprop
 
 
