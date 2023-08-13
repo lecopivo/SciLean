@@ -211,7 +211,7 @@ where <name> is name of the function transformation and <info> is corresponding 
             | _ => #[f.getAppNumArgs]
 
           let argNames ← getConstArgNames funName (fixAnonymousNames := true)
-          let depNames := depArgIds.map (fun i => argNames[i]!)
+          let depNames := depArgIds.map (fun i => argNames[i]?.getD default)
 
           let argSuffix := "arg_" ++ depNames.foldl (·++·.toString) ""
 

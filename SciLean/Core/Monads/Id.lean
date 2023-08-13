@@ -12,16 +12,12 @@ instance [Vec K X] : Vec K (Id X) := by unfold Id; infer_instance
 noncomputable
 instance : FwdDerivMonad K Id Id where
   fwdDerivM f := fwdCDeriv K f
-  fwdDerivValM x := (x,0)
   IsDifferentiableM f := IsDifferentiable K f
-  IsDifferentiableValM _ := True
   fwdDerivM_pure f := by simp[pure]
   fwdDerivM_bind := by intros; simp; ftrans
-  fwdDerivM_const y := by simp; ftrans
   fwdDerivM_pair y := by intros; simp; ftrans
   IsDifferentiableM_pure := by simp[pure]
   IsDifferentiableM_bind := by simp[bind]; fprop
-  IsDifferentiableM_const y := by simp; fprop
   IsDifferentiableM_pair y := 
     by 
       intros; simp[bind]; -- fprop something goes wrong where :(

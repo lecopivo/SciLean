@@ -6,12 +6,9 @@ namespace SciLean
 set_option linter.unusedVariables false in
 class FwdDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ Type → Type) [Monad m] [Monad m'] where
   fwdDerivM {X : Type} {Y : Type} [Vec K X] [Vec K Y] : ∀ (f : X → m Y) (x dx : X), m' (Y × Y)
-  fwdDerivValM : ∀ {X} [Vec K X], m X → m' (X × X)
 
   IsDifferentiableM {X : Type} {Y : Type} [Vec K X] [Vec K Y]
     : ∀ (f : X → m Y), Prop
-  IsDifferentiableValM {X : Type} [Vec K X]
-    : ∀ (x : m X), Prop
 
   fwdDerivM_pure {X Y : Type} [Vec K X] [Vec K Y] (f : X → Y) (hf : IsDifferentiable K f)
     : fwdDerivM (fun x => pure (f:=m) (f x)) = fun x dx => pure (f:=m') (fwdCDeriv K f x dx)
@@ -23,8 +20,6 @@ class FwdDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
        fun x dx => do
          let ydy ← fwdDerivM g x dx
          fwdDerivM f ydy.1 ydy.2
-  fwdDerivM_const {X Y : Type} [Vec K X] [Vec K Y] (y : m Y) (hy : IsDifferentiableValM y)
-    : fwdDerivM (fun _ : X => y) = fun _ _ => fwdDerivValM y
   fwdDerivM_pair {X : Type} {Y : Type} [Vec K X] [Vec K Y] -- is this really necessary?
     (f : X → m Y) (hf : IsDifferentiableM f)
     : fwdDerivM (fun x => do let y ← f x; pure (x,y))
@@ -40,13 +35,12 @@ class FwdDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
     (f : Y → m Z) (g : X → m Y) 
     (hf : IsDifferentiableM f) (hg : IsDifferentiableM g)
     : IsDifferentiableM (fun x => g x >>= f)
-  IsDifferentiableM_const {X : Type} {Y : Type} [Vec K X] [Vec K Y]
-    : ∀ (y : m Y), IsDifferentiableValM y ↔ IsDifferentiableM (fun _ : X => y)
   IsDifferentiableM_pair {X : Type} {Y : Type} [Vec K X] [Vec K Y] -- is this really necessary?
     (f : X → m Y) (hf : IsDifferentiableM f)
     : IsDifferentiableM (fun x => do let y ← f x; pure (x,y))
 
-export FwdDerivMonad (fwdDerivM IsDifferentiableM fwdDerivValM IsDifferentiableValM)
+export FwdDerivMonad (fwdDerivM IsDifferentiableM)
+
 
 
 variable 
@@ -61,6 +55,13 @@ variable
 open FwdDerivMonad
 
 
+def fwdDerivValM (x : m X) : m' (X × X) := do
+  fwdDerivM K (fun _ : Unit => x) () ()
+
+def IsDifferentiableValM (x : m X) : Prop := 
+  IsDifferentiableM K (fun _ : Unit => x)
+
+
 --------------------------------------------------------------------------------
 -- IsDifferentiableM -----------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -72,7 +73,14 @@ variable (X)
 theorem const_rule (y : m Y) (hy : IsDifferentiableValM K y)
   : IsDifferentiableM K (fun _ : X => y) := 
 by 
-  apply (IsDifferentiableM_const y).1 hy
+  have h : (fun _ : X => y)
+           =
+           fun _ : X => pure () >>= fun _ => y := by simp
+  rw[h]
+  apply IsDifferentiableM_bind
+  apply hy
+  apply (IsDifferentiableM_pure _).1
+  fprop
 variable {X}
 
 theorem comp_rule
@@ -236,7 +244,19 @@ namespace fwdDerivM
 
 variable (X)
 theorem const_rule (y : m Y) (hy : IsDifferentiableValM K y)
-  : fwdDerivM K (fun _ : X => y) = fun _ _ => fwdDerivValM K y := by apply FwdDerivMonad.fwdDerivM_const _ hy
+  : fwdDerivM K (fun _ : X => y) = fun _ _ => fwdDerivValM K y := 
+by
+  have h : (fun _ : X => y)
+           =
+           fun _ : X => pure () >>= fun _ => y := by simp
+  rw[h]
+  rw[fwdDerivM_bind]
+  rw[fwdDerivM_pure]
+  ftrans
+  simp [fwdDerivValM]
+  fprop
+  apply hy
+  apply (IsDifferentiableM_pure _).1; fprop
 variable {X}
 
 theorem comp_rule
@@ -376,7 +396,7 @@ end fwdDerivM
 
 
 --------------------------------------------------------------------------------
--- fwdDerivValeM ---------------------------------------------------------------
+-- fwdDerivValM ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 namespace fwdDerivValM
 
@@ -482,12 +502,15 @@ theorem Pure.pure.arg_a0.fwdDerivM_rule
 by 
   apply FwdDerivMonad.fwdDerivM_pure a0 ha0
 
+
 set_option linter.fpropDeclName false in
 @[fprop]
 theorem Pure.pure.IsDifferentiableValM_rule (x : X)
-  : IsDifferentiableValM K (pure (f:=m) x) := 
-  (FwdDerivMonad.IsDifferentiableM_const (pure x)).2 
-    ((FwdDerivMonad.IsDifferentiableM_pure (fun _ : Unit => x)).1 (by fprop))
+  : IsDifferentiableValM K (pure (f:=m) x) :=  
+by
+  unfold IsDifferentiableValM
+  apply (FwdDerivMonad.IsDifferentiableM_pure _).1
+  fprop
 
 
 set_option linter.ftransDeclName false in
@@ -496,12 +519,8 @@ theorem Pure.pure.fwdDerivValM_rule (x : X)
   : fwdDerivValM K (pure (f:=m) x)
     =
     pure (x,0) := 
-by
-  have h := FwdDerivMonad.fwdDerivM_const (K:=K) (X:=Unit) (pure (f:=m) x) (by fprop)
-  have h' := congrFun (congrFun h ()) ()
-  rw[← h']
-  rw[Pure.pure.arg_a0.fwdDerivM_rule]
-  ftrans; simp; fprop
+by 
+  unfold fwdDerivValM; rw[FwdDerivMonad.fwdDerivM_pure]; ftrans; fprop
 
 
 --------------------------------------------------------------------------------
