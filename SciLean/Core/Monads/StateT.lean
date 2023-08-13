@@ -61,6 +61,164 @@ instance (S : Type _) [Vec K S] : FwdDerivMonad K (StateT S m) (StateT (S×S) m'
       simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
       fprop
 
+
+
+variable 
+  {S : Type _} [Vec K S]
+  {X : Type _} [Vec K X]
+  {Y : Type _} [Vec K Y]
+  {Z : Type _} [Vec K Z]
+
+-- getThe ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+set_option linter.fpropDeclName false in
+@[fprop]
+theorem _root_.getThe.arg.IsDifferentiableValM_rule
+  : IsDifferentiableValM K (m:=StateT S m) (getThe S) := 
+by 
+  simp[getThe, MonadStateOf.get, StateT.get,IsDifferentiableValM,IsDifferentiableM]
+  fprop
+
+
+set_option linter.ftransDeclName false in
+@[ftrans]
+theorem _root_.getThe.arg.fwdDerivValM_rule
+  : fwdDerivValM K (m:=StateT S m) (getThe S)
+    =
+    getThe (S×S) := 
+by 
+  simp[getThe, MonadStateOf.get, StateT.get,fwdDerivValM, fwdDerivM, pure, StateT.pure]
+  ftrans
+
+-- MonadState.get --------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+set_option linter.fpropDeclName false in
+@[fprop]
+theorem _root_.MonadState.get.arg.IsDifferentiableValM_rule
+  : IsDifferentiableValM K (m:=StateT S m) (get) := 
+by 
+  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,IsDifferentiableValM,IsDifferentiableM]
+  fprop
+
+set_option linter.ftransDeclName false in
+@[ftrans]
+theorem _root_.MonadState.get.arg.fwdDerivValM_rule
+  : fwdDerivValM K (m:=StateT S m) (get)
+    =
+    get := 
+by 
+  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,fwdDerivValM, fwdDerivM]
+  ftrans
+
+
+-- setThe ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem _root_.setThe.arg_s.IsDifferentiableM_rule
+  (s : X → S) (ha0 : IsDifferentiable K s)
+  : IsDifferentiableM K (m:=StateT S m) (fun x => setThe S (s x)) := 
+by 
+  simp[setThe, set, StateT.set, IsDifferentiableValM, IsDifferentiableM]
+  fprop
+
+
+@[ftrans]
+theorem _root_.setThe.arg_s.fwdDerivM_rule
+  (s : X → S) (hs : IsDifferentiable K s)
+  : fwdDerivM K (m:=StateT S m) (fun x => setThe S (s x))
+    = 
+    (fun x dx => do
+      let sds := fwdCDeriv K s x dx
+      setThe _ sds
+      pure ((),())) :=
+by 
+  simp[setThe, set, StateT.set,fwdDerivM,bind,Bind.bind, StateT.bind]
+  ftrans; congr
+
+
+-- MonadStateOf.set ------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem _root_.MonadStateOf.set.arg_a0.IsDifferentiableM_rule
+  (s : X → S) (ha0 : IsDifferentiable K s)
+  : IsDifferentiableM K (m:=StateT S m) (fun x => set (s x)) := 
+by 
+  simp[set, StateT.set, IsDifferentiableValM, IsDifferentiableM]
+  fprop
+
+
+@[ftrans]
+theorem _root_.MonadStateOf.set.arg_a0.fwdDerivM_rule
+  (s : X → S) (ha0 : IsDifferentiable K s)
+  : fwdDerivM K (m:=StateT S m) (fun x => set (s x))
+    = 
+    (fun x dx => do
+      let sds := fwdCDeriv K s x dx
+      set sds
+      pure ((),())) :=
+by 
+  simp[set, StateT.set,fwdDerivM, bind,Bind.bind, StateT.bind]
+  ftrans; congr
+
+
+-- modifyThe ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem _root_.modifyThe.arg_f.IsDifferentiableM_rule
+  (f : X → S → S) (ha0 : IsDifferentiable K (fun xs : X×S => f xs.1 xs.2))
+  : IsDifferentiableM K (m:=StateT S m) (fun x => modifyThe S (f x)) := 
+by 
+  simp[modifyThe, MonadStateOf.modifyGet, StateT.modifyGet, IsDifferentiableValM, IsDifferentiableM]
+  fprop
+
+
+@[ftrans]
+theorem _root_.modifyThe.arg_f.fwdDerivM_rule
+  (f : X → S → S) (ha0 : IsDifferentiable K (fun xs : X×S => f xs.1 xs.2))
+  : fwdDerivM K (m:=StateT S m) (fun x => modifyThe S (f x))
+    = 
+    (fun x dx => do
+      modifyThe (S×S) (fun sds =>  
+        let sds := fwdCDeriv K (fun xs : X×S => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
+        sds)
+      pure ((),())) :=
+by 
+  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdDerivM,bind,Bind.bind, StateT.bind]
+  ftrans; congr
+
+
+-- modify ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem _root_.modify.arg_f.IsDifferentiableM_rule
+  (f : X → S → S) (ha0 : IsDifferentiable K (fun xs : X×S => f xs.1 xs.2))
+  : IsDifferentiableM K (m:=StateT S m) (fun x => modify (f x)) := 
+by 
+  simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet, IsDifferentiableValM, IsDifferentiableM]
+  fprop
+
+
+@[ftrans]
+theorem _root_.modify.arg_f.fwdDerivM_rule
+  (f : X → S → S) (ha0 : IsDifferentiable K (fun xs : X×S => f xs.1 xs.2))
+  : fwdDerivM K (m:=StateT S m) (fun x => modify (f x))
+    = 
+    (fun x dx => do
+      modify (fun sds =>
+        let sds := fwdCDeriv K (fun xs : X×S => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
+        sds)
+      pure ((),())) :=
+by 
+  simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdDerivM,bind,Bind.bind, StateT.bind]
+  ftrans; congr
+
+
 end FwdDerivMonad
 
 
@@ -121,4 +279,180 @@ instance (S : Type _) [SemiInnerProductSpace K S] : RevDerivMonad K (StateT S m)
       simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
       fprop
 
+variable 
+  {S : Type _} [SemiInnerProductSpace K S]
+  {X : Type _} [SemiInnerProductSpace K X]
+  {Y : Type _} [SemiInnerProductSpace K Y]
+  {Z : Type _} [SemiInnerProductSpace K Z]
+
+-- getThe ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+set_option linter.fpropDeclName false in
+@[fprop]
+theorem _root_.getThe.arg.HasAdjDiffValM_rule
+  : HasAdjDiffValM K (m:=StateT S m) (getThe S) := 
+by 
+  simp[getThe, MonadStateOf.get, StateT.get,HasAdjDiffValM,HasAdjDiffM]
+  fprop
+
+
+set_option linter.ftransDeclName false in
+@[ftrans]
+theorem _root_.getThe.arg.revDerivValM_rule
+  : revDerivValM K (m:=StateT S m) (getThe S)
+    =
+    (do
+      pure ((← getThe S), fun ds => modifyThe S (fun ds' => ds + ds'))) := 
+by 
+  simp[getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, setThe, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet]
+  ftrans; simp
+
+-- MonadState.get --------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+set_option linter.fpropDeclName false in
+@[fprop]
+theorem _root_.MonadState.get.arg.HasAdjDiffValM_rule
+  : HasAdjDiffValM K (m:=StateT S m) (get) := 
+by 
+  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,HasAdjDiffValM,HasAdjDiffM]
+  fprop
+
+set_option linter.ftransDeclName false in
+@[ftrans]
+theorem _root_.MonadState.get.arg.revDerivValM_rule
+  : revDerivValM K (m:=StateT S m) (get)
+    =
+    (do
+      pure ((← get), fun ds => modify (fun ds' => ds + ds'))) := 
+by 
+  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, setThe, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet, modifyGet]
+  ftrans; simp
+
+
+-- setThe ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem _root_.setThe.arg_s.HasAdjDiffM_rule
+  (s : X → S) (ha0 : HasAdjDiff K s)
+  : HasAdjDiffM K (m:=StateT S m) (fun x => setThe S (s x)) := 
+by 
+  simp[setThe, set, StateT.set, HasAdjDiffValM, HasAdjDiffM]
+  fprop
+
+
+@[ftrans]
+theorem _root_.setThe.arg_s.revDerivM_rule
+  (s : X → S) (hs : HasAdjDiff K s)
+  : revDerivM K (m:=StateT S m) (fun x => setThe S (s x))
+    = 
+    (fun x => do
+      let sds := revCDeriv K s x
+      pure (← setThe S sds.1,
+            fun _ => do
+              let dx := sds.2 (← getThe S)
+              setThe S 0
+              pure dx)) :=
+by 
+  simp[setThe, set, StateT.set, revDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure]
+  ftrans; simp
+
+
+-- MonadStateOf.set ------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem _root_.MonadStateOf.set.arg_a0.HasAdjDiffM_rule
+  (s : X → S) (ha0 : HasAdjDiff K s)
+  : HasAdjDiffM K (m:=StateT S m) (fun x => set (s x)) := 
+by 
+  simp[set, StateT.set, HasAdjDiffValM, HasAdjDiffM]
+  fprop
+
+
+@[ftrans]
+theorem _root_.MonadStateOf.set.arg_a0.revDerivM_rule
+  (s : X → S) (ha0 : HasAdjDiff K s)
+  : revDerivM K (m:=StateT S m) (fun x => set (s x))
+    = 
+    (fun x => do
+      let sds := revCDeriv K s x
+      pure (← set sds.1,
+            fun _ => do
+              let dx := sds.2 (← get)
+              set (0:S)
+              pure dx)) :=
+by 
+  simp[setThe, set, StateT.set, revDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure, get]
+  ftrans; simp
+
+-- modifyThe ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem _root_.modifyThe.arg_f.HasAdjDiffM_rule
+  (f : X → S → S) (ha0 : HasAdjDiff K (fun xs : X×S => f xs.1 xs.2))
+  : HasAdjDiffM K (m:=StateT S m) (fun x => modifyThe S (f x)) := 
+by 
+  simp[modifyThe, MonadStateOf.modifyGet, StateT.modifyGet, HasAdjDiffValM, HasAdjDiffM]
+  fprop
+
+
+@[ftrans]
+theorem _root_.modifyThe.arg_f.revDerivM_rule
+  (f : X → S → S) (ha0 : HasAdjDiff K (fun xs : X×S => f xs.1 xs.2))
+  : revDerivM K (m:=StateT S m) (fun x => modifyThe S (f x))
+    = 
+    (fun x => do
+      let sdf := revCDeriv K (fun xs : X×S => f xs.1 xs.2) (x, ← getThe S)
+      setThe S sdf.1
+      pure ((),
+            fun _ => do
+              let dxs := sdf.2 (← getThe S)
+              setThe S dxs.2
+              pure dxs.1)) := 
+by 
+  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, setThe, set, StateT.set]
+  ftrans; simp; congr
+
+
+-- modify ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem _root_.modify.arg_f.HasAdjDiffM_rule
+  (f : X → S → S) (ha0 : HasAdjDiff K (fun xs : X×S => f xs.1 xs.2))
+  : HasAdjDiffM K (m:=StateT S m) (fun x => modify (f x)) := 
+by 
+  simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet, HasAdjDiffValM, HasAdjDiffM]
+  fprop
+
+
+@[ftrans]
+theorem _root_.modify.arg_f.revDerivM_rule
+  (f : X → S → S) (ha0 : HasAdjDiff K (fun xs : X×S => f xs.1 xs.2))
+  : revDerivM K (m:=StateT S m) (fun x => modify (f x))
+    = 
+    (fun x => do
+      let sdf := revCDeriv K (fun xs : X×S => f xs.1 xs.2) (x, ← get)
+      set sdf.1
+      pure ((),
+            fun _ => do
+              let dxs := sdf.2 (← get)
+              set dxs.2
+              pure dxs.1)) := 
+by 
+  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, setThe, set, StateT.set, get, pure, StateT.pure, modify]
+  ftrans; simp
+
+
+
 end RevDerivMonad
+
+
+
+#check ReaderM
+
+
