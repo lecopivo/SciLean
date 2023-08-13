@@ -382,7 +382,7 @@ def ftransExt : FTransExt where
     let .some M' := e.getArg? 5 | return none
     let .some RDM := e.getArg? 6 | return none
 
-    let prf ← mkAppOptM ``comp_rule #[K, none, none, m', none, M', RDM, none, none, none, none, none, none, none, none, f, g]
+    let prf ← mkAppOptM ``comp_rule #[K, none, none, m', none, M', RDM, none, none, none, none, none, none, none, f, g]
 
     tryTheorems
       #[ { proof := prf, origin := .decl ``comp_rule, rfl := false} ]
@@ -394,7 +394,7 @@ def ftransExt : FTransExt where
     let .some M' := e.getArg? 5 | return none
     let .some RDM := e.getArg? 6 | return none
 
-    let prf ← mkAppOptM ``let_rule #[K, none, none, m', none, M', RDM, none, none, none, none, none, none, none, none, f, g]
+    let prf ← mkAppOptM ``let_rule #[K, none, none, m', none, M', RDM, none, none, none, none, none, none, none, f, g]
 
     tryTheorems
       #[ { proof := prf, origin := .decl ``let_rule, rfl := false} ]
