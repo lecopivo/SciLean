@@ -12,6 +12,23 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
 
+-- 
+set_option pp.notation false in
+example
+  (init : X → Y) (f : X → Nat → Y → m Y)
+  (hinit : IsDifferentiable K init) (hf : ∀ a, IsDifferentiableM K (fun (xy : X×Y) => f xy.1 a xy.2))
+  : fwdDerivM K (fun x => forIn [0:3] (init x) (fun i y => do pure (ForInStep.yield (← f x i y)))) 
+    =
+    (fun x dx => do
+      let ydy₀ := fwdCDeriv K init x dx
+      forIn [0:3] ydy₀
+        fun a ydy => do 
+          let ydy ← fwdDerivM K (fun (xy : X×Y) => f xy.1 a xy.2) (x,ydy.1) (dx,ydy.2)
+          return .yield ydy) :=
+by
+  simp [forIn,Std.Range.forIn,Std.Range.forIn.loop,Std.Range.forIn.loop.match_1]
+  ftrans
+
 
 example 
   : IsDifferentiable K (fun x : K => Id.run do
