@@ -447,12 +447,6 @@ by
   simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, setThe, set, StateT.set, get, pure, StateT.pure, modify]
   ftrans; simp
 
-
-
 end RevDerivMonad
-
-
-
-#check ReaderM
 
 
