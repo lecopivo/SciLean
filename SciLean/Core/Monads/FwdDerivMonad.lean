@@ -349,7 +349,7 @@ def ftransExt : FTransExt where
     let .some M' := e.getArg? 5 | return none
     let .some FDM := e.getArg? 6 | return none
 
-    let prf ← mkAppOptM ``const_rule #[K, none, none, m', none, M', FDM, X, none, none, none, y]
+    let prf ← mkAppOptM ``const_rule #[K, none, none, m', none, M', FDM, none, none, X, none, none, none, y]
 
     tryTheorems
       #[ { proof := prf, origin := .decl ``const_rule, rfl := false} ]
