@@ -192,6 +192,28 @@ theorem ForIn.forIn.arg_bf.revDerivM_rule
 by
   sorry_proof
 
+theorem ForIn.forIn.arg_bf.revDerivM_rule_alternative [ForIn Id ρ α]
+  (init : X → Y) (f : X → Nat → Y → Y)
+  (hinit : HasAdjDiff K init) (hf : ∀ a, HasAdjDiff K (fun (xy : X×Y) => f xy.1 a xy.2))
+  : revDerivM K (fun x => forIn (m:=Id) (Std.Range.mk start stop step) (init x) (fun i y => .yield (f x i y))) 
+    =
+    (fun x => Id.run do
+      let (y₀,dinit') := revCDeriv K init x
+      let (y,ys) ← forIn (Std.Range.mk start stop step) (y₀,#[]) (fun i (y,ys) => 
+        let y' := f x i y
+        .yield (y', ys.push y'))
+      pure (y, 
+            fun dy => do
+              let (dx,dy) ← forIn (Std.Range.mk start stop step) ((0:X),dy) (fun i (dx,dy) => do 
+                let j := stop - ((i-start) + 1)
+                let yᵢ : Y := ys[j]!
+                let (dx',dy) := (revCDeriv K (fun (xy : X×Y) => f xy.1 i xy.2) (x,yᵢ)).2 dy
+                .yield (dx + dx', dy))
+              pure (dx + dinit' dy))) :=
+by
+  sorry_proof
+
+  
 
 -- Proof that the above theorem is true for the range [0:3] and function that does not break the for loop
 example
@@ -216,7 +238,7 @@ example
               pure (dxy.1 + ydinit.2 dxy.2))) :=
 by
   simp [revCDeriv,forIn,Std.Range.forIn,Std.Range.forIn.loop,Std.Range.forIn.loop.match_1, revCDeriv]
-  ftrans; 
+  ftrans
   simp[add_assoc, revCDeriv]
 
 
