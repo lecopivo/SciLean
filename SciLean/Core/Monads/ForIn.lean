@@ -18,6 +18,10 @@ open SciLean
 
 -- set_option linter.unusedVariables false
 
+def ForInStep.val : ForInStep α → α
+| .yield a => a
+| .done  a => a
+
 
 /-- Turns a pair of values each with yield/done annotation into a pair with
 a single yield/done annotation based on the first element. -/
@@ -215,7 +219,6 @@ by
   ftrans; 
   simp[add_assoc, revCDeriv]
 
-#exit
 
 @[fprop]
 theorem ForInStep.yield.arg_a0.HasAdjDiff_rule
@@ -223,20 +226,14 @@ theorem ForInStep.yield.arg_a0.HasAdjDiff_rule
   : HasAdjDiff K fun x => ForInStep.yield (a0 x) := by sorry_proof
 
 @[ftrans]
-theorem ForInStep.yield.arg_a0.cderiv_rule
-  (a0 : X → Y) (ha0 : HasAdjDiff K a0)
-  : cderiv K (fun x => ForInStep.yield (a0 x))
-    =
-    fun x dx => ForInStep.yield (cderiv K a0 x dx) := by sorry_proof
-
-@[ftrans]
 theorem ForInStep.yield.arg_a0.revCDeriv_rule
   (a0 : X → Y) (ha0 : HasAdjDiff K a0)
   : revCDeriv K (fun x => ForInStep.yield (a0 x))
     =
-    fun x dx => ForInStep.return2Inv (ForInStep.yield (revCDeriv K a0 x dx))
+    fun x => 
+      let ydf := revCDeriv K a0 x
+      (.yield ydf.1, fun y => ydf.2 y.val)
   := by sorry_proof
-
 
 @[fprop]
 theorem ForInStep.done.arg_a0.HasAdjDiff_rule
@@ -244,18 +241,13 @@ theorem ForInStep.done.arg_a0.HasAdjDiff_rule
   : HasAdjDiff K fun x => ForInStep.done (a0 x) := by sorry_proof
 
 @[ftrans]
-theorem ForInStep.done.arg_a0.cderiv_rule
-  (a0 : X → Y) (ha0 : HasAdjDiff K a0)
-  : cderiv K (fun x => ForInStep.done (a0 x))
-    =
-    fun x dx => ForInStep.done (cderiv K a0 x dx) := by sorry_proof
-
-@[ftrans]
 theorem ForInStep.done.arg_a0.revCDeriv_rule
   (a0 : X → Y) (ha0 : HasAdjDiff K a0)
   : revCDeriv K (fun x => ForInStep.done (a0 x))
     =
-    fun x dx => ForInStep.return2Inv (ForInStep.done (revCDeriv K a0 x dx))
+    fun x => 
+      let ydf := revCDeriv K a0 x
+      (.done ydf.1, fun y => ydf.2 y.val)
   := by sorry_proof
 
 end OnSemiInnerProductSpace
