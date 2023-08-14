@@ -1,13 +1,17 @@
-import SciLean.Core.Approx.ApproxSolution
+-- TODO: minimize this import
 import Mathlib.Analysis.Calculus.FDeriv.Basic
+
+import SciLean.Core.Approx.ApproxSolution
+import SciLean.Util.LimitNotation
 
 namespace SciLean
 
 abbrev Approx  {N : outParam $ Type _} (lN : Filter N) {α} [TopologicalSpace α] (a : α)  := ApproxSolution lN (fun x => a=x)
 
 abbrev Approx.exact {α} [TopologicalSpace α] {a : α} := ApproxSolution.exact a rfl
-def Approx.limit {N M α} [TopologicalSpace α] [Nonempty α] (lN : Filter N) (lM : Filter M) {aₙ : N → α} (x : (n : N) → Approx lM (aₙ n)) 
-  : Approx (lN.prod lM) (lim (lN.map aₙ)) := ApproxSolution.approx (λ n x => (aₙ n)=x) lN lM sorry sorry x
+abbrev Approx.limit {N} {lN : Filter N} (M) (lM : Filter M) 
+  {α} [TopologicalSpace α] [Nonempty α] {aₙ : N → α} (x : (n : N) → Approx lM (aₙ n)) 
+  : Approx (lN.prod lM) (lN.limit aₙ) := ApproxSolution.approx _ lN lM sorry sorry x
 
 
 instance {N α} [TopologicalSpace α] (lN : Filter N) (a : α) : CoeFun (Approx (lN:=lN) a) (λ _ => N → α) := ⟨λ approx => approx.val⟩
