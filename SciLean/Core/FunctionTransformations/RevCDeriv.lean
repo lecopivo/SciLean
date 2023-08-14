@@ -199,6 +199,7 @@ by
   sorry_proof
 
 
+
 -- Register `revCDeriv` as function transformation ------------------------------
 --------------------------------------------------------------------------------
 
@@ -611,4 +612,55 @@ by
   have ⟨_,_⟩ := hf
   unfold revCDeriv; simp; ftrans; ftrans; simp; sorry_proof 
   -- just missing (a * b) • x = b • a • x
+
+
+#exit
+#eval 0
+
+
+open BigOperators in
+theorem prod_rule_rec
+  (f : X×Y → X → Y → Z) (hf : HasAdjDiff K fun x : (X×Y)×X×Y => f x.1 x.2.1 x.2.2)
+  : (revCDeriv K fun (xy : X×Y) => f xy xy.1 xy.2)
+    =
+    fun x =>
+      let zdf := revCDeriv K (fun x : (X×Y)×X×Y => f x.1 x.2.1 x.2.2) (x,x.1,x.2)
+      (zdf.1, fun dz =>
+        let dx := zdf.2 dz
+        dx.1 + (dx.2.1, dx.2.2))
+       :=
+by
+  ftrans; simp
+
+
+section asdfasdf
+
+variable 
+  {K : Type} [IsROrC K]
+  {X : Type} [SemiInnerProductSpace K X]
+  {Y : Type} [SemiInnerProductSpace K Y]
+  {Z : Type} [SemiInnerProductSpace K Z]
+  {ι : Type} [Fintype ι] [DecidableEq ι]
+  {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
+
+
+open BigOperators in
+theorem pi_rule_rec
+  (f : (ι → X) → X → Y) (hf : HasAdjDiff K fun x : (ι→X)×X => f x.1 x.2)
+  : (revCDeriv K (fun (x : (ι→X)) (i:ι) => f x (x i)))
+    =
+    fun x =>
+      let zdf := fun i => revCDeriv K (fun (x : (ι→X)×X) => f x.1 x.2) (x,x i)
+      (fun i => (zdf i).1,
+       fun y i => (∑ j, ((zdf j).2 (y j)).1 i) + ((zdf i).2 (y i)).2) :=
+by
+  have h := revCDeriv.pi_rule K (E:=fun _ => Y) (fun (i : ι) (x : ι → X) => f x (x i))
+  rw[h]
+  have ⟨_,_⟩ := hf
+  ftrans
+  simp[revCDeriv]; funext x; simp
+  congr 
+  funext y i
+  simp 
+  sorry
 
