@@ -1,5 +1,6 @@
 import SciLean.Core.Monads.ForIn
 import SciLean.Tactic.LetFlatten
+import SciLean.Tactic.LetNormalize
 
 open SciLean
 
@@ -53,6 +54,14 @@ example
 by
   fprop
 
+
+set_option profiler true
+set_option trace.profiler.threshold 0
+
+
+set_option trace.Meta.Tactic.lsimp.pre true in
+
+set_option trace.Meta.Tactic.simp.rewrite true in
 example : fwdDerivM K (fun x : K => show m K from do
   let mut y := x
   for i in [0:5] do
@@ -69,7 +78,7 @@ example : fwdDerivM K (fun x : K => show m K from do
     pure ydy)
   := 
 by
-  (conv => lhs; ftrans only; ftrans only; let_flatten; dsimp (config := {zeta := false}); let_flatten; ftrans)
+  (conv => lhs; ftrans only; let_normalize; ftrans only; simp (config := {zeta := false}))
   simp
 
 
