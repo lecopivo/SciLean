@@ -48,6 +48,11 @@ axiom Neg.neg.arg_a0.isomorph_rule_RealToFloat (f : α → ℝ)
     =
     fun x : α' => - isomorph `RealToFloat f x
 
+@[ftrans]
+axiom Real.sqrt.arg_x.isomorph_rule_RealToFloat (f : α → ℝ)
+  : isomorph `RealToFloat (fun x => (f x).sqrt)
+    =
+    fun x : α' => (isomorph `RealToFloat f x).sqrt
 
 end RealToFloat
 
