@@ -67,3 +67,17 @@ macro "⊞ " xs:Lean.explicitBinders " => " b:term:66 : term => Lean.expandExpli
     `(⊞ $x:ident => $b)
   | _  => throw ()
 
+open Lean Elab Term in
+elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term =>
+  try 
+    let y ← elabTerm y none
+    let x ← elabTerm x none
+    let z ← Meta.mkAppOptM ``arrayTypeCont #[y,x,none,none]
+    return z
+  catch _ => do
+    return ← elabTerm (← `(HPow.hPow $x $y)) none
+
+@[app_unexpander arrayTypeCont] def unexpandArrayTypeCont : Lean.PrettyPrinter.Unexpander
+  | `($(_) $I $X) => 
+    `($X ^ $I)
+  | _  => throw ()
