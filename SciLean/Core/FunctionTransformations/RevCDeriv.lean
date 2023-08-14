@@ -613,12 +613,11 @@ by
   unfold revCDeriv; simp; ftrans; ftrans; simp; sorry_proof 
   -- just missing (a * b) • x = b • a • x
 
-
 #exit
 #eval 0
 
 
-open BigOperators in
+open BigOperators 
 theorem prod_rule_rec
   (f : X×Y → X → Y → Z) (hf : HasAdjDiff K fun x : (X×Y)×X×Y => f x.1 x.2.1 x.2.2)
   : (revCDeriv K fun (xy : X×Y) => f xy xy.1 xy.2)
@@ -631,6 +630,50 @@ theorem prod_rule_rec
        :=
 by
   ftrans; simp
+
+#eval 0
+
+theorem hohoho (f : ι → X → Y) (hf : ∀ i, HasSemiAdjoint K (f i)) 
+  : semiAdjoint K (fun (x : ι → X) => ∑ i, f i (x i))
+    =
+    fun y i => semiAdjoint K (f i) y
+  := sorry
+
+
+open BigOperators
+example (A : Fin n → Fin m → K) 
+  : (semiAdjoint K fun (x : Fin m → K) i => ∑ j, A i j * x j)
+    =
+    0 := 
+by
+  rw[semiAdjoint.pi_rule K (E:=fun _ => K) (fun (x : Fin m → K) (i : Fin n) => ∑ j, A i j * x j) (by fprop)]
+  conv =>
+    lhs
+    enter [x,2,i]
+    rw[hohoho _ (by fprop)]
+    --rw[Finset.sum.arg_f.semiAdjoint_rule K _ (by fprop)]
+  ftrans
+  simp
+  sorry
+
+
+
+example
+  (f : X×Y → X → Y → Z) (hf : HasAdjDiff K fun x : (X×Y)×X×Y => f x.1 x.2.1 x.2.2)
+  : (revCDeriv K fun (xy : X×Y) => f xy xy.1 xy.2)
+    =
+    fun x =>
+      let zdf := revCDeriv K (fun x : (X×Y)×X×Y => f x.1 x.2.1 x.2.2) (x,x.1,x.2)
+      (zdf.1, fun dz =>
+        let dx := zdf.2 dz
+        dx.1 + (dx.2.1, dx.2.2))
+       :=
+by
+  conv => 
+    simp
+    simp[prod_rule_rec]
+    simp[prod_rule_rec]
+  ftrans; ftrans; simp
 
 
 section asdfasdf
