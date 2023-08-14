@@ -186,7 +186,7 @@ def instantiateOnceNth (e v : Expr) (i : Nat) (nth : Nat) : Expr ⊕ Nat :=
     | .inl b' => .inl (.lam n t b' bi)
     | .inr a => .inr a
 
-  | .mdata d x => instantiateOnceNth x v i nth
+  | .mdata _ x => instantiateOnceNth x v i nth
 
   | _ => .inr 0
 
@@ -207,8 +207,8 @@ def myPrint : Expr → String
 | .const n _ => n.toString
 | .bvar n => s!"[{n}]"
 | .app f x => f.myPrint ++ " " ++ x.myPrint
-| .lam n t x bi => s!"fun {n} => {x.myPrint}"
-| .letE n t v x _ => s!"let {n} := {v.myPrint}; {x.myPrint}"
+| .lam n _ x _ => s!"fun {n} => {x.myPrint}"
+| .letE n _ v x _ => s!"let {n} := {v.myPrint}; {x.myPrint}"
 | _ => "??"
 
 /-- Remove all mdata for an expression -/
@@ -220,24 +220,3 @@ def purgeMData : Expr → Expr
 | .mdata _ e => e.purgeMData
 | e => e
 
-
-#exit
-
-open Qq
-#eval show MetaM Unit from do
-
-      
-  let e := q(let ab := (1,2)
-             let x  := 5
-             let cd := (7,42,666)
-             ab.1 + x + cd.2.1)
-
-  if let some e' := e.splitLetProd? then
-
-    IO.println (← Meta.ppExpr e')
-
-    IO.println ""
-
-    if let some e' := e'.splitLetProd? then
-
-      IO.println (← Meta.ppExpr e')

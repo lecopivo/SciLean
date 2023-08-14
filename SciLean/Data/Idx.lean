@@ -1,3 +1,5 @@
+import SciLean.Util.SorryProof
+
 namespace SciLean
 
 /--
@@ -30,22 +32,22 @@ def elim0.{u} {α : Sort u} : Idx 0 → α
 
 variable {n : USize}
 
-protected def ofUSize {n : USize} (a : USize) (h : n > 0) : Idx n :=
-  ⟨a % n, sorry⟩
+protected def ofUSize {n : USize} (a : USize) (_ : n > 0) : Idx n :=
+  ⟨a % n, sorry_proof⟩
 
-private theorem mlt {b : USize} : {a : USize} → a < n → b % n < n := sorry
+private theorem mlt {b : USize} : {a : USize} → a < n → b % n < n := sorry_proof
 
 -- shifting index with wrapping 
 -- We want these operations to be invertible in `x` for every `y`. Is that the case?
 -- Maybe we need to require that `n < USize.size/2`
 @[default_instance]
-instance {n} : HAdd (Idx n) USize (Idx n) := ⟨λ x y => ⟨(x.1 + y)%n, sorry⟩⟩
+instance {n} : HAdd (Idx n) USize (Idx n) := ⟨λ x y => ⟨(x.1 + y)%n, sorry_proof⟩⟩
 @[default_instance]
-instance {n} : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨((x.1 + n) - (y%n))%n, sorry⟩⟩
+instance {n} : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨((x.1 + n) - (y%n))%n, sorry_proof⟩⟩
 @[default_instance]
-instance {n} : HMul USize (Idx n) (Idx n) := ⟨λ x y => ⟨(x * y.1)%n, sorry⟩⟩
+instance {n} : HMul USize (Idx n) (Idx n) := ⟨λ x y => ⟨(x * y.1)%n, sorry_proof⟩⟩
 
-def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry⟩
+def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry_proof⟩
 def toFloat {n} (i : Idx n) : Float := i.1.toNat.toFloat
 
 
@@ -59,14 +61,14 @@ def shift (x : Idx n) (s : Int) :=
 -- This does not work as intended :(
 
 instance : OfNat (Idx (no_index (n+1))) i where
-  ofNat := Idx.ofUSize i.toUSize sorry
+  ofNat := Idx.ofUSize i.toUSize sorry_proof
 
 instance : Inhabited (Idx (no_index (n+1))) where
   default := 0
 
 
-instance (n : Nat) : Nonempty (Idx (no_index (OfNat.ofNat (n+1)))) := sorry
-instance (n : Nat) : OfNat (Idx (no_index (OfNat.ofNat (n+1)))) i := ⟨(i % (n+1)).toUSize, sorry⟩
+instance (n : Nat) : Nonempty (Idx (no_index (OfNat.ofNat (n+1)))) := sorry_proof
+instance (n : Nat) : OfNat (Idx (no_index (OfNat.ofNat (n+1)))) i := ⟨(i % (n+1)).toUSize, sorry_proof⟩
 
 
 
