@@ -1,3 +1,4 @@
+import SciLean.Util.SorryProof
 import SciLean.Data.EnumType
 
 namespace SciLean
@@ -29,19 +30,19 @@ instance : Index Empty where
   fromIdx := λ a => absurd (a := a.1<0) a.2 (by intro h; cases h)
   toIdx := λ a => (by induction a; done)
 
-  fromIdx_toIdx := sorry
-  toIdx_fromIdx := sorry
+  fromIdx_toIdx := sorry_proof
+  toIdx_fromIdx := sorry_proof
 
 
 instance : Index Unit where
   size := 1
   isValid := true
 
-  fromIdx := λ a => ()
-  toIdx := λ a => ⟨0, sorry⟩
+  fromIdx := λ _ => ()
+  toIdx := λ _ => ⟨0, sorry_proof⟩
 
-  fromIdx_toIdx := sorry
-  toIdx_fromIdx := sorry
+  fromIdx_toIdx := sorry_proof
+  toIdx_fromIdx := sorry_proof
 
 
 instance : Index (Idx n) where
@@ -67,11 +68,11 @@ instance [Index ι] [Index κ] : Index (ι×κ) where
   
   -- This has still some issues when overflow happends
   -- numOf := numOf ι * numOf κ
-  fromIdx := λ i => (fromIdx ⟨i.1 / size κ, sorry⟩, fromIdx ⟨i.1 % size κ, sorry⟩)
-  toIdx := λ (i,j) => ⟨(toIdx i).1 * size κ + (toIdx j).1, sorry⟩
+  fromIdx := λ i => (fromIdx ⟨i.1 / size κ, sorry_proof⟩, fromIdx ⟨i.1 % size κ, sorry_proof⟩)
+  toIdx := λ (i,j) => ⟨(toIdx i).1 * size κ + (toIdx j).1, sorry_proof⟩
   
-  fromIdx_toIdx := λ _ => sorry
-  toIdx_fromIdx := λ _ => sorry
+  fromIdx_toIdx := λ _ => sorry_proof
+  toIdx_fromIdx := λ _ => sorry_proof
 
 
 -- Row major ordering, this respects `<` defined on `ι × κ`
@@ -86,11 +87,11 @@ instance [Index ι] [Index κ] : Index (ι×ₗκ) where
   
   -- This has still some issues when overflow happends
   -- numOf := numOf ι * numOf κ
-  fromIdx := λ i => (fromIdx ⟨i.1 % size ι, sorry⟩, fromIdx ⟨i.1 / size ι, sorry⟩)
-  toIdx := λ (i,j) => ⟨(toIdx j).1 * size ι + (toIdx i).1, sorry⟩
+  fromIdx := λ i => (fromIdx ⟨i.1 % size ι, sorry_proof⟩, fromIdx ⟨i.1 / size ι, sorry_proof⟩)
+  toIdx := λ (i,j) => ⟨(toIdx j).1 * size ι + (toIdx i).1, sorry_proof⟩
   
-  fromIdx_toIdx := λ _ => sorry
-  toIdx_fromIdx := λ _ => sorry
+  fromIdx_toIdx := λ _ => sorry_proof
+  toIdx_fromIdx := λ _ => sorry_proof
 
   instance [Index ι] [Index κ] : Index (ι ⊕ κ) where
     size := (min ((size ι).toNat + (size κ).toNat) (USize.size -1)).toUSize
@@ -103,15 +104,15 @@ instance [Index ι] [Index κ] : Index (ι×ₗκ) where
  
     fromIdx := λ i => 
       if i.1 < size ι
-      then Sum.inl $ fromIdx ⟨i.1, sorry⟩ 
-      else Sum.inr $ fromIdx ⟨i.1 - size ι, sorry⟩
+      then Sum.inl $ fromIdx ⟨i.1, sorry_proof⟩ 
+      else Sum.inr $ fromIdx ⟨i.1 - size ι, sorry_proof⟩
     toIdx := λ ij => 
       match ij with
-      | Sum.inl i => ⟨(toIdx i).1, sorry⟩
-      | Sum.inr j => ⟨(toIdx j).1 + size ι, sorry⟩
+      | Sum.inl i => ⟨(toIdx i).1, sorry_proof⟩
+      | Sum.inr j => ⟨(toIdx j).1 + size ι, sorry_proof⟩
 
-    fromIdx_toIdx := λ _ => sorry
-    toIdx_fromIdx := λ _ => sorry
+    fromIdx_toIdx := λ _ => sorry_proof
+    toIdx_fromIdx := λ _ => sorry_proof
 
 
   -- TODO: revive parallel sum/join . I ditched ranges as the required decidable order, which is too much to ask sometimes
@@ -131,8 +132,8 @@ instance [Index ι] [Index κ] : Index (ι×ₗκ) where
   --   let mut tasks : Array (Task α) := Array.mkEmpty m.toNat
   --   let m := max 1 (min m n) -- cap min/max of `m` 
   --   let stride : USize := (n+m-1)/m
-  --   let mut start : Idx n := ⟨0,sorry⟩
-  --   let mut stop  : Idx n := ⟨stride-1, sorry⟩
+  --   let mut start : Idx n := ⟨0,sorry_proof⟩
+  --   let mut stop  : Idx n := ⟨stride-1, sorry_proof⟩
   --   for i in fullRange (Idx m) do
   --     let r : EnumType.Range ι := some (fromIdx start, fromIdx stop)
   --     let partialJoin : Unit → α := λ _ => Id.run do
@@ -141,8 +142,8 @@ instance [Index ι] [Index κ] : Index (ι×ₗκ) where
   --         a := op a (f i)
   --       a
   --     tasks := tasks.push (Task.spawn partialJoin)
-  --     start := ⟨min (start.1 + stride) (n-1), sorry⟩
-  --     stop  := ⟨min (stop.1 + stride) (n-1), sorry⟩
+  --     start := ⟨min (start.1 + stride) (n-1), sorry_proof⟩
+  --     stop  := ⟨min (stop.1 + stride) (n-1), sorry_proof⟩
 
   --   let mut a := unit
   --   for t in tasks do

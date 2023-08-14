@@ -1,7 +1,7 @@
 import SciLean.Core.FunctionTransformations.FDeriv
 import SciLean.Core.FunctionTransformations.Adjoint
 
-import SciLean.Profile
+import SciLean.Util.Profile
 
 set_option linter.unusedVariables false
 

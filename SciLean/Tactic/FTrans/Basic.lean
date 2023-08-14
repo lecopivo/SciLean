@@ -42,7 +42,7 @@ def tryTheorems (thrms : Array SimpTheorem) (discharger : Expr → SimpM (Option
       return Simp.Step.visit result
   return none
 
-
+set_option linter.unusedVariables false in
 def letCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Step) := 
   match f with
   | .lam xName xType (.letE yName yType yValue body _) xBi => do
@@ -164,7 +164,7 @@ def bvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Ste
 
 /-- Try to apply function transformation to `e`. Returns `none` if expression is not a function transformation applied to a function.
   -/
-def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option Simp.Step) := do
+def main (e : Expr) : SimpM (Option Simp.Step) := do
 
   let .some (ftransName, ext, f) ← getFTrans? e
     | return none
@@ -227,7 +227,7 @@ def main (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM (Option 
       trace[Meta.Tactic.ftrans.step] "unknown case, expression constructor: {f.ctorName}\n{← ppExpr e}\n"
       return none
 
-
+set_option linter.unusedVariables false in
 def tryFTrans? (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (post := false) : SimpM (Option Simp.Step) := do
 
   if post then
@@ -235,7 +235,7 @@ def tryFTrans? (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (post := f
     return none
   else 
     -- trace[Meta.Tactic.ftrans.step] "pre step on:\n{← ppExpr e}"
-    main e discharge?
+    main e
 
 variable (ctx : Simp.Context) (useSimp := true) in
 mutual

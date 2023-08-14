@@ -1,6 +1,6 @@
-import SciLean.Mathlib.Data.PUnit
-import SciLean.Mathlib.Data.Prod
-import SciLean.Mathlib.Data.Enumtype
+-- import SciLean.Mathlib.Data.PUnit
+-- import SciLean.Mathlib.Data.Prod
+-- import SciLean.Mathlib.Data.Enumtype
 import SciLean.Data.EnumType
  
 namespace SciLean

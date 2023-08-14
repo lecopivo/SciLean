@@ -6,7 +6,7 @@ import Std.Data.RBMap.Alter
 import Mathlib.Data.FunLike.Basic
 
 -- import SciLean.Prelude
-import SciLean.Core.SorryProof
+import SciLean.Util.SorryProof
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
 

@@ -2,7 +2,7 @@ import Mathlib.Algebra.Module.Basic
 import Mathlib.Data.IsROrC.Lemmas
 import Mathlib.Topology.Algebra.Module.LocallyConvex
 
-import SciLean.Core.SorryProof
+import SciLean.Util.SorryProof
 
 namespace SciLean
 

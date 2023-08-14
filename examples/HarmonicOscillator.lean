@@ -1,4 +1,4 @@
-import SciLean
+import SciLean.Core
 import SciLean.Functions.OdeSolve
 import SciLean.Solver.Solver 
 

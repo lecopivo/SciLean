@@ -7,7 +7,7 @@ import Mathlib.Data.FunLike.Basic
 
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
-import SciLean.Core.SorryProof
+import SciLean.Util.SorryProof
  
 open Lean Meta.Simp Qq
 

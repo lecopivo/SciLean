@@ -4,7 +4,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.Basic
 
-import SciLean.Core.SorryProof
+import SciLean.Util.SorryProof
 
 namespace SciLean
 
@@ -83,7 +83,7 @@ instance [MetricSpace α] [MetricSpace β]
   edist_dist := sorry_proof
   toUniformSpace := by infer_instance
   uniformity_dist := sorry_proof
-  toBornology := sorry
+  toBornology := sorry_data
   cobounded_sets := sorry_proof
   eq_of_dist_eq_zero := sorry_proof
 

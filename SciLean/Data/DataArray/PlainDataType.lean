@@ -1,5 +1,4 @@
-import SciLean.Core.SorryProof
--- import SciLean.Core.Real
+import SciLean.Util.SorryProof
 import SciLean.Data.Index
 
 namespace SciLean
@@ -202,7 +201,7 @@ def Idx.byteType (n : USize) (_ : 256 < n) : ByteType (Idx n) where
   bytes := byteSize n
   h_size := sorry_proof
 
-  fromByteArray b i h := Id.run do
+  fromByteArray b i _ := Id.run do
     let bytes  := byteSize n
     let ofByte := i * bytes
 
@@ -211,7 +210,7 @@ def Idx.byteType (n : USize) (_ : 256 < n) : ByteType (Idx n) where
       val := val + ((b[ofByte+j.1]'sorry_proof).toUSize <<< (j.1*(8:USize)))
     ⟨val, sorry_proof⟩
 
-  toByteArray b i h val := Id.run do
+  toByteArray b i _ val := Id.run do
     let bytes  := byteSize n
     let ofByte := i * bytes
 

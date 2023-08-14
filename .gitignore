@@ -4,3 +4,4 @@
 !/lean_packages/manifest.json
 /lake-packages
 /SciLean/Doodle/
+*.lean#

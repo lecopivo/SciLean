@@ -1,4 +1,4 @@
-import SciLean.Core.SorryProof
+import SciLean.Util.SorryProof
 import SciLean.Data.Index
 
 namespace SciLean

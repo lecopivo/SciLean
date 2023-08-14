@@ -6,7 +6,7 @@ open Lean Parser
 open TSyntax.Compat
 
 
-abbrev typeOf {α} (a : α) := α
+abbrev typeOf {α} (_ : α) := α
 
 syntax (priority := high) atomic(Lean.Parser.Term.ident) noWs "[" term "]" " := " term : doElem
 macro_rules

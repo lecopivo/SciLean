@@ -15,8 +15,9 @@ instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace Elem] : T
   isOpen_inter := sorry_proof
   isOpen_sUnion := sorry_proof
 
+noncomputable
 instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] : UniformSpace Cont where
-  uniformity := sorry
+  uniformity := sorry_data
   refl := sorry_proof
   symm := sorry_proof
   comp := sorry_proof

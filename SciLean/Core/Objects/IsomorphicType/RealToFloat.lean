@@ -1,4 +1,4 @@
-import SciLean.Core.SorryProof
+import SciLean.Util.SorryProof
 import SciLean.Core.Objects.IsomorphicType
 
 import Mathlib.Data.Real.Basic

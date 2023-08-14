@@ -1,0 +1,44 @@
+* Planned Modules
+
+** ODE
+   solvers for differential equation
+   
+** Geometry
+   Geometric shapes, curves
+
+   meshes might be in a separate module
+
+** SolversAndOptimizers
+   module containing various equation solvers or minimizers like Newton Solver or gradient descent
+
+   bindings to Cvx/CvxLean
+   
+** NumericalIntegration
+   solving integrals
+   
+** Interpolation  '
+   interpolating function on intervals, grids, etc.
+
+** FiniteElement
+   
+** Symbolic
+   Runtime symbolic polynomials, differential forms and geometric algebra
+
+** Eigen
+   Bindings to eigen
+
+** Cuda
+   Bindings to cuda libraries and probably some kind of kernel compiler
+
+** MaterialPointMethod
+   material point method
+   - grit to point and point to grid transfers
+
+** DEC
+   Discrete exterior calculus
+   - discrete differential forms
+   - co-tan laplacian
+
+** ClassicalMechanics
+   - Lagrangian and Hamiltonian mechanics
+   - motion of rigid bodies

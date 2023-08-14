@@ -1,6 +1,3 @@
--- import SciLean.Mathlib.Data.Enumtype
--- import SciLean.Core.Functions
-
 namespace SciLean
 
 /--

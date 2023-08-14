@@ -1,8 +1,8 @@
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.Group.Defs
 
-import SciLean.Core.SorryProof
-import SciLean.Mathlib.Data.ColProd
+import SciLean.Util.SorryProof
+import SciLean.Data.ColProd
 import SciLean.Data.Idx
 
 namespace SciLean
