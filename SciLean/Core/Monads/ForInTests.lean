@@ -1,4 +1,5 @@
 import SciLean.Core.Monads.ForIn
+import SciLean.Tactic.LetFlatten
 
 open SciLean
 
@@ -68,8 +69,8 @@ example : fwdDerivM K (fun x : K => show m K from do
     pure ydy)
   := 
 by
-  (conv => lhs; ftrans only; ftrans only)
-  simp; funext x dx; congr; funext i (y,dy); congr; simp
+  (conv => lhs; ftrans only; ftrans only; let_flatten; dsimp (config := {zeta := false}); let_flatten; ftrans)
+  simp
 
 
 -- example : fwdDerivM K (fun x : K => show m K from do
