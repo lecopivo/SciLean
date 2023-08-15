@@ -1,5 +1,4 @@
 import SciLean.Core.Monads.ForIn
-import SciLean.Tactic.LetFlatten
 import SciLean.Tactic.LetNormalize
 
 open SciLean
@@ -19,7 +18,7 @@ set_option pp.notation false in
 example
   (init : X → Y) (f : X → Nat → Y → m Y)
   (hinit : IsDifferentiable K init) (hf : ∀ a, IsDifferentiableM K (fun (xy : X×Y) => f xy.1 a xy.2))
-  : fwdDerivM K (fun x => forIn [0:3] (init x) (fun i y => do pure (ForInStep.yield (← f x i y)))) 
+  : fwdDerivM K (fun x => forIn [0:3] (init x) (fun i y => do pure (ForInStep.yield (← f x i y))))
     =
     (fun x dx => do
       let ydy₀ := fwdCDeriv K init x dx
