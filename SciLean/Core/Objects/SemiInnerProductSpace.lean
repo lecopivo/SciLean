@@ -1,5 +1,6 @@
 import Mathlib.Analysis.InnerProductSpace.Basic
 import SciLean.Core.Objects.Vec
+import SciLean.Core.NotationOverField
 
 namespace SciLean
 
@@ -8,6 +9,20 @@ open IsROrC ComplexConjugate BigOperators
 section Inner
 
 notation "⟪" x ", " y "⟫[" K "]" => @Inner.inner K _ _ x y
+
+namespace NotationOverField
+
+scoped elab "⟪" x:term ", " y:term "⟫" : term => do
+  let fieldName ← currentFieldName.get
+  let K := Lean.mkIdent fieldName
+  Lean.Elab.Term.elabTerm (← `(@Inner.inner $K _ _ $x $y)) none
+
+@[app_unexpander Inner.inner] def unexpandInner : Lean.PrettyPrinter.Unexpander
+  | `($(_) $x $y) => `(⟪$x, $y⟫)
+  | _ => throw ()
+
+end NotationOverField
+
 
 instance (K X Y) [Add K] [Inner K X] [Inner K Y] : Inner K (X × Y) where
   inner := λ (x,y) (x',y') => ⟪x,x'⟫[K] + ⟪y,y'⟫[K]

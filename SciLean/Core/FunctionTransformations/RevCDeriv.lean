@@ -287,8 +287,45 @@ open Lean in
 #eval show CoreM Unit from do
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``revCDeriv, ftransExt))
 
+end revCDeriv
 
-end SciLean.revCDeriv
+namespace NotationOverField
+
+scoped syntax "∇ " term:66 : term
+scoped syntax "∇ " diffBinder ", " term:66 : term
+scoped syntax "∇ " "(" diffBinder ")" ", " term:66 : term
+
+open Lean Elab Term Meta in
+elab_rules : term
+| `(∇ $f) => do
+  let K := mkIdent (← currentFieldName.get)
+  let KExpr ← elabTerm (← `($K)) none
+  let fExpr ← elabTerm f none
+  if let .some (X,Y) := (← inferType fExpr).arrow? then
+    if (← isDefEq KExpr Y) then
+      elabTerm (← `(fun x => (revCDeriv $K (Y:=$K) $f x).2 (1:$K))) none false
+    else
+      elabTerm (← `(fun x => (revCDeriv $K $f x).2)) none false
+  else
+    throwUnsupportedSyntax
+| `(∇ $x:ident, $f) => do
+  elabTerm (← `(∇ fun $x => $f)) none
+| `(∂ $x:ident : $type:term, $f) => do
+  elabTerm (← `(∇ fun $x : $type => $f)) none
+| `(∂ $x:ident := $val:term, $f) => do
+  elabTerm (← `((∇ fun $x => $f) $val)) none
+| `(∇ ($b:diffBinder), $f) => do
+  elabTerm (← `(∇ $b, $f)) none
+
+-- does not work :(
+@[app_unexpander revCDeriv] def unexpandRevCDeriv : Lean.PrettyPrinter.Unexpander
+  | `(fun x => ($(_) $K $f $x).snd $a) =>
+    `(∇ $f)
+  | _ => throw ()
+
+end NotationOverField
+
+end SciLean
 
 --------------------------------------------------------------------------------
 -- Function Rules --------------------------------------------------------------

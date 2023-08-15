@@ -1,5 +1,6 @@
 import SciLean.Core.FunctionPropositions.IsDifferentiable 
 import SciLean.Core.FunctionPropositions.IsDifferentiableAt
+import SciLean.Core.NotationOverField
 
 import SciLean.Tactic.FTrans.Basic
 
@@ -211,8 +212,74 @@ open Lean in
 #eval show Lean.CoreM Unit from do
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``cderiv, cderiv.ftransExt))
 
+--------------------------------------------------------------------------------
+-- Notation  -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+namespace NotationOverField
+
+syntax diffBinderType  := " : " term
+syntax diffBinderValue := ":=" term (";" term)?
+syntax diffBinder := ident (diffBinderType <|> diffBinderValue)?
+
+scoped syntax "∂ " term:66 : term
+scoped syntax "∂ " diffBinder ", " term:66 : term
+scoped syntax "∂ " "(" diffBinder ")" ", " term:66 : term
+
+open Lean Elab Term in
+elab_rules : term
+| `(∂ $f) => do
+  let K := mkIdent (← currentFieldName.get)
+  elabTerm (← `(cderiv $K $f)) none
+| `(∂ $x:ident, $f) => do
+  let K := mkIdent (← currentFieldName.get)
+  elabTerm (← `(cderiv $K fun $x => $f)) none
+| `(∂ $x:ident : $type:term, $f) => do
+  let K := mkIdent (← currentFieldName.get)
+  elabTerm (← `(cderiv $K fun $x : $type => $f)) none
+| `(∂ $x:ident := $val:term, $f) => do
+  let K := mkIdent (← currentFieldName.get)
+  elabTerm (← `((cderiv $K fun $x => $f) $val)) none
+| `(∂ $x:ident := $val:term ; $dir:term, $f) => do
+  let K := mkIdent (← currentFieldName.get)
+  elabTerm (← `((cderiv $K fun $x => $f) $val $dir)) none
+| `(∂ ($b:diffBinder), $f) => do
+  elabTerm (← `(∂ $b, $f)) none
+
+
+@[app_unexpander cderiv] def unexpandCDeriv : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $K $f:term $x $dx $y $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((∂ $x':ident:=$x;$dx, $b) $y $ys*)
+    | _  => `(∂ $f:term $x:term $dx $y $ys*)
+
+  | `($(_) $K $f:term $x $dx) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂ ($x':ident:=$x;$dx), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂ ($x':ident:=$x;$dx), $b)
+    | _  => `(∂ $f:term $x $dx)
+
+  | `($(_) $K $f:term $x) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂ ($x':ident:=$x), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂ ($x':ident:=$x), $b)
+    | _  => `(∂ $f:term $x)
+
+  | `($(_) $K $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂ $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂ ($x' : $ty), $b)
+    | _  => `(∂ $f)
+
+  | _  => throw ()
+
+
+end NotationOverField
 
 end SciLean
+
+
 
 --------------------------------------------------------------------------------
 -- Function Rules --------------------------------------------------------------
