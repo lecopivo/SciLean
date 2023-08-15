@@ -310,9 +310,9 @@ elab_rules : term
     throwUnsupportedSyntax
 | `(∇ $x:ident, $f) => do
   elabTerm (← `(∇ fun $x => $f)) none
-| `(∂ $x:ident : $type:term, $f) => do
+| `(∇ $x:ident : $type:term, $f) => do
   elabTerm (← `(∇ fun $x : $type => $f)) none
-| `(∂ $x:ident := $val:term, $f) => do
+| `(∇ $x:ident := $val:term, $f) => do
   elabTerm (← `((∇ fun $x => $f) $val)) none
 | `(∇ ($b:diffBinder), $f) => do
   elabTerm (← `(∇ $b, $f)) none
