@@ -1,4 +1,5 @@
 import SciLean.Core.FunctionTransformations.Isomorph.RealToFloat
+import SciLean.Core.Objects.IsReal
 
 namespace SciLean
 
@@ -97,3 +98,6 @@ instance : IsROrC Float where
   norm_sq_eq_def_ax := sorry_proof
   mul_im_I_ax := sorry_proof
 
+noncomputable
+instance : IsReal Float where
+  is_real := sorry_proof

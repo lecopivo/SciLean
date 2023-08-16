@@ -1,24 +1,46 @@
 import SciLean.Core
-import SciLean.Functions.OdeSolve
-import SciLean.Solver.Solver 
+import SciLean.Core.Approx.Basic
+import SciLean.Core.FloatAsReal
+import SciLean.Tactic.LetNormalize
+import SciLean.Util.RewriteBy
+import SciLean.Modules.DifferentialEquations.OdeSolve
+
+open_notation_over_field Float
 
 open SciLean
 
+open ComplexConjugate
+@[simp]
+theorem asdf  (a : Float)
+  : conj a = a := sorry
 
-def H (m k : ℝ) (x p : ℝ) := (1/(2*m)) * ‖p‖² + k/2 * ‖x‖²
 
-approx solver (m k : ℝ) (steps : Nat)
+def H (m k : Float) (x p : Float) := (1/(2*m)) * p*p + k/2 * x*x
+
+variable (m k : Float) (f : Float → Float)
+
+#check ∂ f
+#check ∇ x, f x
+#check ∇ (x:=m), f x
+
+#check (fun (t : Float) x p => ∇ (p':=p), H m k x p') rewrite_by
+  unfold H
+  ftrans; let_normalize; ring_nf
+
+#check odeSolve (λ t (x,p) => (H t t x p, H t t x p))
+
+approx solver (m k : Float) (steps : Nat)
   := odeSolve (λ t (x,p) => ( ∇ (p':=p), H m k x  p',
                              -∇ (x':=x), H m k x' p))
 by
   -- Unfold Hamiltonian and compute gradients
   unfold H
   -- set_option trace.Meta.Tactic.fun_trans.rewrite true in
-  symdiff
+  
 
-  -- Apply RK4 method
-  rw [odeSolve_fixed_dt runge_kutta4_step]
-  approx_limit steps; simp; intro steps';
+  -- -- Apply RK4 method
+  -- rw [odeSolve_fixed_dt runge_kutta4_step]
+  -- approx_limit steps; simp; intro steps';
 
 
 def main : IO Unit := do
