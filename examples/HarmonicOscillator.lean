@@ -9,36 +9,17 @@ open_notation_over_field Float
 
 open SciLean
 
-open ComplexConjugate
-@[simp]
-theorem asdf  (a : Float)
-  : conj a = a := sorry
-
-
 def H (m k : Float) (x p : Float) := (1/(2*m)) * p*p + k/2 * x*x
 
-variable (m k : Float) (f : Float → Float)
-
-#check ∂ f
-#check ∇ x, f x
-#check ∇ (x:=m), f x
-
-#check (fun (t : Float) x p => ∇ (p':=p), H m k x p') rewrite_by
-  unfold H
-  ftrans; let_normalize; ring_nf
-
-#check odeSolve (λ t (x,p) => (H t t x p, H t t x p))
-
-approx solver (m k : Float) (steps : Nat)
-  := odeSolve (λ t (x,p) => ( ∇ (p':=p), H m k x  p',
-                             -∇ (x':=x), H m k x' p))
+approx solver (m k : Float)
+  := odeSolve (λ (t : Float) (x,p) => ( ∇ (p':=p), H m k x  p',
+                                       -∇ (x':=x), H m k x' p))
 by
   -- Unfold Hamiltonian and compute gradients
   unfold H
-  -- set_option trace.Meta.Tactic.fun_trans.rewrite true in
+  ftrans; simp; ring_nf -- symbolic differentiation
   
-
-  -- -- Apply RK4 method
+  -- Apply RK4 method
   -- rw [odeSolve_fixed_dt runge_kutta4_step]
   -- approx_limit steps; simp; intro steps';
 
@@ -57,7 +38,7 @@ def main : IO Unit := do
 
   for _ in [0:50] do
   
-    (x, p) := solver m k substeps t (x, p) (t+Δt)
+    (x, p) := solver m k substeps t (t+Δt) (x, p) 
     t += Δt
 
     -- print

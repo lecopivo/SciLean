@@ -101,3 +101,19 @@ instance : IsROrC Float where
 noncomputable
 instance : IsReal Float where
   is_real := sorry_proof
+
+
+
+open ComplexConjugate
+@[simp]
+theorem conj_float  (a : Float)
+  : conj a = a := sorry_proof
+
+@[simp]
+theorem re_float  (a : Float)
+  : IsROrC.re a = a := by simp[Coe.coe]; sorry_proof
+
+open ComplexConjugate
+@[simp]
+theorem im_float  (a : Float)
+  : IsROrC.im a = (0 : Float) := sorry_proof
