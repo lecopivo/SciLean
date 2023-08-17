@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/tomass/Documents/EigenLean/cpp",
+  "command": "/usr/bin/g++ -DEigenLean_EXPORTS -isystem /usr/include/eigen3 -isystem /home/tomass/.elan/toolchains/leanprover--lean4---nightly-2022-04-01/include -fPIC -o CMakeFiles/EigenLean.dir/ldlt.cpp.o -c /home/tomass/Documents/EigenLean/cpp/ldlt.cpp",
+  "file": "/home/tomass/Documents/EigenLean/cpp/ldlt.cpp"
+}
+]

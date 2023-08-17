@@ -84,6 +84,43 @@ script tests (args) do
 
   return 0
 
+
+script compileEigen (args) do
+
+  -- make build directory
+  let makeBuildDir ← IO.Process.run {
+    cmd := "mkdir"
+    args := #["-p", "build/Eigen"]
+  }
+
+  -- run cmake
+  if ¬(← defaultBuildDir / "Eigen" / "Makefile" |>.pathExists) then
+    let runCMake ← IO.Process.spawn {
+      cmd := "cmake"
+      args := #[(← IO.currentDir) / "cpp" / "Eigen" |>.toString, 
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
+                "-DCMAKE_BUILD_TYPE=Release",
+                s!"-DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES={← getLeanIncludeDir}"]
+      cwd := defaultBuildDir / "Eigen" |>.toString
+      
+    }
+    let out ← runCMake.wait
+    if out != 0 then
+      return out
+
+  -- run make 
+  let runMake ← IO.Process.spawn {
+    cmd := "make"
+    args := #["-j"]
+    cwd := defaultBuildDir / "Eigen" |>.toString
+  }
+  let out ← runMake.wait
+  if out != 0 then
+    return out 
+
+  return 0
+
+
 /--
 
   Compiles literate lean file 'doc/literate/harmonic_oscillator.lean'
