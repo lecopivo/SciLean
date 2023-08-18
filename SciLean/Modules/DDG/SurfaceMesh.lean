@@ -8,22 +8,11 @@ https://github.com/GeometryCollective/geometry-processing-js/blob/c7ea47ae808979
 -/
 
 import SciLean.Core
+import SciLean.Data.DataArray.VecN
 import Lean.Data.HashMap
 
 open Lean Data
 
--- abbrev V3 : Type := ℝ^{3}
--- 3D vector.
-structure V3 where
-  x : Float
-  y : Float
-  z : Float
-
-
-def V3.map (f: Float → Float) (v3 : V3) : V3 where
-  x := f v3.x
-  y := f v3.y
-  z := f v3.z
 
 /- index of vertices --/
 abbrev Index (_name : Name) := Nat
@@ -78,7 +67,7 @@ deriving Inhabited
  * @property {Array.<module:Core.Halfedge[]>} generators An array of halfedge arrays, i.e.,
  -/
 structure SurfaceMesh where
-  positions  : Array V3 := {}
+  positions  : Array (SciLean.Vec3 Float) := {}
   vertices   : Array Vertex := {}
   edges      : Array Edge := {}
   faces      : Array Face := {}
@@ -297,7 +286,7 @@ partial def MeshBuilderM.assertNoIsolatedFaces : MeshBuilderM Unit := return ()
 partial def MeshBuilderM.assertNoNonManifoldVertices : MeshBuilderM Unit := return ()
 
 partial def MeshBuilderM.build_
-  (positions : Array V3) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit := do {
+  (positions : Array (SciLean.Vec3 Float)) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit := do {
   let mut existingHalfedges :
       HashMap (Index `Vertex × Index `Vertex) (Index `Halfedge) := {};
   let mut edgeCount :
@@ -337,17 +326,15 @@ partial def MeshBuilderM.build_
       let _ ← modifyFace f (fun f => { f with halfedge := i });
 
       -- swap if (i > j) to maintain invariant that (i <= j)
-      let edgeKey := 
+      let edgeKey :=
         let vi := indices[i]!;
         let vj := indices[j]!
         if vi <= vj then (vi, vj) else (vj, vi);
-      dbg_trace s!"adding edge {edgeKey}..."
       assert! edgeKey.fst <= edgeKey.snd
       let hIx := I + J; -- TODO: cleanup
       let oldEdgeCount := edgeCount.findD edgeKey 0;
       match existingHalfedges.find? edgeKey with
       | .some twin' => {
-        dbg_trace s!"edge {edgeKey} exists with twin {twin'}"
         -- if a halfedge between vertex i and j has been
         -- created in the past, then it is the twin halfedge
         -- of the current halfedge
@@ -359,26 +346,23 @@ partial def MeshBuilderM.build_
       }
       | .none => {
         let e ← newEdge;
-        dbg_trace s!"edge {edgeKey} does not exist. Made edge {e}"
         let _ ← modifyEdge e (fun e => { e with halfedge := hIx });
         let _ ← modifyHalfedge_ hIx (fun h => { h with edge := e });
         edgeCount := edgeCount.insert edgeKey 1;
       };
       -- record the newly created edge and halfedge from vertex i to j
       existingHalfedges := existingHalfedges.insert edgeKey hIx;
-      
+
       if edgeCount.findD edgeKey 0 > 2 then {
         throw <| MeshBuilderError.nonManifoldEdge i j;
       }
     }
   }
-  dbg_trace "creating imaginary halfedges"; -- TODO: move traces into a separate file.
   -- create and insert boundary halfedges and "imaginary" faces for boundary cycles
   -- also create and insert corners.
   -- Note that every vertex corresponds to the halfedge from that vertex to
   --   the next one in the triangle.
   for i in List.range indices.size do {
-    dbg_trace s!"getting halfedge {i}"
     let h ← getHalfedge i;
     -- If a halfedge has no twin halfedge, create a new face and
     -- link it the corresponding boundary cycle
@@ -390,7 +374,6 @@ partial def MeshBuilderM.build_
     -- TODO: think about the maths here.
     if ! (← getHalfedge i).onBoundary then {
       let cIx ← newCorner;
-      dbg_trace "new corner";
       let _ ← modifyCorner cIx (fun c => { c with halfedge := h.index });
       let _ ← modifyHalfedge h.index (fun h => { h with corner := cIx });
     }
@@ -406,15 +389,15 @@ def MeshBuilderM.run (mb : MeshBuilderM Unit) : Except MeshBuilderError SurfaceM
   | .error  err _ => .error err
 
 
-def SurfaceMesh.build (positions: Array V3) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build (positions: Array (SciLean.Vec3 Float)) (indices: Array (Index ``Vertex)) :
   Except MeshBuilderError SurfaceMesh :=
   (MeshBuilderM.build_ positions indices).run
 
-def SurfaceMesh.build' (positions: Array V3) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build' (positions: Array (SciLean.Vec3 Float)) (indices: Array (Index ``Vertex)) :
   Option SurfaceMesh :=
   (build positions indices).toOption
 
-def SurfaceMesh.build! (positions: Array V3) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build! (positions: Array (SciLean.Vec3 Float)) (indices: Array (Index ``Vertex)) :
   SurfaceMesh := (build' positions indices).get!
 
 /-
@@ -433,7 +416,7 @@ def randFloat01 [G : RandomGen γ] (gen : γ) : Float × γ := Id.run do
   return ((Float.ofNat <| val - lo) / (Float.ofNat <| hi - lo), gen)
 
 /-- Create a random vertex with coordinates sampled from uniform [0, 1] -/
-def randVertex01 [RandomGen γ] (gen : γ) : V3 × γ := Id.run do
+def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Vec3 Float × γ := Id.run do
   let (val1, gen) := randFloat01 gen
   let (val2, gen) := randFloat01 gen
   let (val3, gen) := randFloat01 gen
@@ -442,12 +425,12 @@ def randVertex01 [RandomGen γ] (gen : γ) : V3 × γ := Id.run do
 
 /-- Create `nvertices` random vertices with coordinates sampled from [-scale/2, scale/2] -/
 def randVertices [RandomGen γ]
- (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array V3) × γ := Id.run do
-  let mut out : Array V3 := #[]
+ (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array (SciLean.Vec3 Float)) × γ := Id.run do
+  let mut out : Array (SciLean.Vec3 Float) := #[]
   let mut gen := gen
   for _ in List.range nvertices do
     let (vertex, gen') := randVertex01 gen; gen := gen'
-    let vertex : V3 := vertex.map (fun coord => (coord - 0.5) * scale)
+    let vertex : (SciLean.Vec3 Float) := vertex.map (fun coord => (coord - 0.5) * scale)
     out := out.push vertex
   return (out, gen)
 
@@ -477,16 +460,16 @@ def SurfaceMesh.rand [RandomGen γ] (gen : γ) (nvertices : Nat) (nfaces : Nat) 
 
 
 /-- Coerce a list of reals into a vector. Throws a ParseError if length of list is not 3 -/
-def V3.ofList : List Float → MeshBuilderM V3
+def V3.ofList : List Float → MeshBuilderM (SciLean.Vec3 Float)
 | [x, y, z] => pure { x := x, y := y, z := z }
 | xs => throw <| MeshBuilderError.parseError s!"unable to convert list to vertex '{xs}'"
 
-def V3.ofArray : Array Float → MeshBuilderM V3 :=
-  V3.ofList ∘ Array.toList
+def V3.ofArray (xs : Array Float) : MeshBuilderM (SciLean.Vec3 Float) :=
+  return (SciLean.Vec3.ofArray xs)
 
 /-- Load the mesh data from a .OFF format string -/
 def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
-  let mut vertices : Array V3 := #[]
+  let mut vertices : Array (SciLean.Vec3 Float) := #[]
   let mut faces : Array Nat := #[]
   let mut i := 0
   if lines[i]!.trim != "OFF"
