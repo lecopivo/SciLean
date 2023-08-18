@@ -2,11 +2,11 @@ import SciLean.Data.DataArray.DataArray
 
 namespace SciLean
 
-structure Vec2 (α : Type) where 
+structure Vec2 (α : Type) where
   (x y : α)
 
 
-namespace Vec2 
+namespace Vec2
 
   def get (v : Vec2 α) (i : Idx 2) : α :=
     if i.1 = 0 then
@@ -19,7 +19,7 @@ namespace Vec2
       ⟨vi, v.y⟩
     else
       ⟨v.x, vi⟩
-    
+
   def intro (f : Idx 2 → α) : Vec2 α := ⟨f 0, f 1⟩
 
   instance : GetElem (Vec2 α) (Idx 2) α (λ _ _ => True) where
@@ -38,16 +38,16 @@ namespace Vec2
     getElem_introElem := sorry_proof
 
   instance [ba : PlainDataType α] : PlainDataType (Vec2 α) where
-    btype := 
+    btype :=
       match ba.btype with
-      | .inl bitType  => 
+      | .inl bitType  =>
         if h : 2 * bitType.bits ≤ 8 then
           .inl {
             bits := 2 * bitType.bits
             h_size := h
             fromByte := fun b =>
               let ones : UInt8 := 255
-              let mask    := (ones - (ones <<< bitType.bits))   -- 00000111 
+              let mask    := (ones - (ones <<< bitType.bits))   -- 00000111
               {
                 x := bitType.fromByte (b &&& mask)
                 y := bitType.fromByte ((b >>> bitType.bits) &&& mask)
@@ -62,7 +62,7 @@ namespace Vec2
           .inr {
             bytes := 2
             h_size := sorry_proof
-            fromByteArray := fun b i _ => 
+            fromByteArray := fun b i _ =>
               {
                 x := bitType.fromByte (b.uget i sorry_proof)
                 y := bitType.fromByte (b.uget (i+1) sorry_proof)
@@ -76,19 +76,19 @@ namespace Vec2
             fromByteArray_toByteArray := sorry_proof
             fromByteArray_toByteArray_other := sorry_proof
                                             }
-      | .inr byteType => 
+      | .inr byteType =>
           .inr {
             bytes := 2 * byteType.bytes
             h_size := sorry_proof
             fromByteArray := fun b i _ =>
               {
-                x := byteType.fromByteArray b i sorry_proof 
+                x := byteType.fromByteArray b i sorry_proof
                 y := byteType.fromByteArray b (i + byteType.bytes) sorry_proof
               }
             toByteArray := fun b i _ v => Id.run do
               let mut b := b
-              b := byteType.toByteArray b i sorry_proof v.x 
-              b := byteType.toByteArray b (i + byteType.bytes) sorry_proof v.y 
+              b := byteType.toByteArray b i sorry_proof v.x
+              b := byteType.toByteArray b (i + byteType.bytes) sorry_proof v.y
               b
             toByteArray_size := sorry_proof
             fromByteArray_toByteArray := sorry_proof
@@ -99,11 +99,20 @@ namespace Vec2
 end Vec2
 
 
-structure Vec3 (α : Type) where 
+structure Vec3 (α : Type) where
   (x y z : α)
 
 
-namespace Vec3 
+namespace Vec3
+  def ofArray [Inhabited α] (xs : Array α) : Vec3 α where
+    x := xs.get! 0
+    y := xs.get! 1
+    z := xs.get! 2
+
+  def map (f : α → β) (v : Vec3 α) : Vec3 β where
+    x := f v.x
+    y := f v.y
+    z := f v.z
 
   def get (v : Vec3 α) (i : Idx 3) : α :=
   if i.1 = 0 then
@@ -120,7 +129,7 @@ namespace Vec3
     ⟨v.x, vi, v.z⟩
   else
     ⟨v.x, v.y, vi⟩
-    
+
   def intro (f : Idx 3 → α) : Vec3 α := ⟨f 0, f 1, f 2⟩
 
   instance : GetElem (Vec3 α) (Idx 3) α (λ _ _ => True) where
@@ -139,16 +148,16 @@ namespace Vec3
     getElem_introElem := sorry_proof
 
   instance [ba : PlainDataType α] : PlainDataType (Vec3 α) where
-    btype := 
+    btype :=
       match ba.btype with
-      | .inl bitType  => 
+      | .inl bitType  =>
         if h : 3 * bitType.bits ≤ 8 then
           .inl {
             bits := 3 * bitType.bits
             h_size := h
             fromByte := fun b =>
               let ones : UInt8 := 255
-              let mask    := (ones - (ones <<< bitType.bits))   -- 00000111 
+              let mask    := (ones - (ones <<< bitType.bits))   -- 00000111
               {
                 x := bitType.fromByte (b &&& mask)
                 y := bitType.fromByte ((b >>> bitType.bits) &&& mask)
@@ -165,7 +174,7 @@ namespace Vec3
           .inr {
             bytes := 3
             h_size := sorry_proof
-            fromByteArray := fun b i _ => 
+            fromByteArray := fun b i _ =>
               {
                 x := bitType.fromByte (b.uget i sorry_proof)
                 y := bitType.fromByte (b.uget (i+1) sorry_proof)
@@ -181,21 +190,21 @@ namespace Vec3
             fromByteArray_toByteArray := sorry_proof
             fromByteArray_toByteArray_other := sorry_proof
                                             }
-      | .inr byteType => 
+      | .inr byteType =>
           .inr {
             bytes := 3 * byteType.bytes
             h_size := sorry_proof
             fromByteArray := fun b i _ =>
               {
-                x := byteType.fromByteArray b i sorry_proof 
+                x := byteType.fromByteArray b i sorry_proof
                 y := byteType.fromByteArray b (i + byteType.bytes) sorry_proof
                 z := byteType.fromByteArray b (i + 2 * byteType.bytes) sorry_proof
               }
             toByteArray := fun b i _ v => Id.run do
               let mut b := b
-              b := byteType.toByteArray b i sorry_proof v.x 
-              b := byteType.toByteArray b (i + byteType.bytes) sorry_proof v.y 
-              b := byteType.toByteArray b (i + 2 * byteType.bytes) sorry_proof v.z 
+              b := byteType.toByteArray b i sorry_proof v.x
+              b := byteType.toByteArray b (i + byteType.bytes) sorry_proof v.y
+              b := byteType.toByteArray b (i + 2 * byteType.bytes) sorry_proof v.z
               b
             toByteArray_size := sorry_proof
             fromByteArray_toByteArray := sorry_proof
@@ -205,10 +214,10 @@ namespace Vec3
 end Vec3
 
 
-structure Vec4 (α : Type) where 
+structure Vec4 (α : Type) where
   (x y z w : α)
 
-namespace Vec4 
+namespace Vec4
 
   def get (v : Vec4 α) (i : Idx 4) : α :=
   if i = 0 then
@@ -229,7 +238,7 @@ namespace Vec4
     ⟨v.x, v.y, vi, v.w⟩
   else
     ⟨v.x, v.y, v.z, vi⟩
-    
+
   def intro (f : Idx 4 → α) : Vec4 α := ⟨f 0, f 1, f 2, f 3⟩
 
   instance : GetElem (Vec4 α) (Idx 4) α (λ _ _ => True) where
@@ -248,16 +257,16 @@ namespace Vec4
     getElem_introElem := sorry_proof
 
   instance [ba : PlainDataType α] : PlainDataType (Vec4 α) where
-    btype := 
+    btype :=
       match ba.btype with
-      | .inl bitType  => 
+      | .inl bitType  =>
         if h : 4 * bitType.bits ≤ 8 then
           .inl {
             bits := 4 * bitType.bits
             h_size := h
             fromByte := fun b =>
               let ones : UInt8 := 255
-              let mask    := (ones - (ones <<< bitType.bits))   -- 00000111 
+              let mask    := (ones - (ones <<< bitType.bits))   -- 00000111
               {
                 x := bitType.fromByte (b &&& mask)
                 y := bitType.fromByte ((b >>> bitType.bits) &&& mask)
@@ -276,7 +285,7 @@ namespace Vec4
           .inr {
             bytes := 4
             h_size := sorry_proof
-            fromByteArray := fun b i _ => 
+            fromByteArray := fun b i _ =>
               {
                 x := bitType.fromByte (b.uget i sorry_proof)
                 y := bitType.fromByte (b.uget (i+1) sorry_proof)
@@ -294,26 +303,25 @@ namespace Vec4
             fromByteArray_toByteArray := sorry_proof
             fromByteArray_toByteArray_other := sorry_proof
                                             }
-      | .inr byteType => 
+      | .inr byteType =>
           .inr {
             bytes := 3 * byteType.bytes
             h_size := sorry_proof
             fromByteArray := fun b i _ =>
               {
-                x := byteType.fromByteArray b i sorry_proof 
+                x := byteType.fromByteArray b i sorry_proof
                 y := byteType.fromByteArray b (i + byteType.bytes) sorry_proof
                 z := byteType.fromByteArray b (i + 2 * byteType.bytes) sorry_proof
                 w := byteType.fromByteArray b (i + 3 * byteType.bytes) sorry_proof
               }
             toByteArray := fun b i _ v => Id.run do
               let mut b := b
-              b := byteType.toByteArray b i sorry_proof v.x 
-              b := byteType.toByteArray b (i + byteType.bytes) sorry_proof v.y 
-              b := byteType.toByteArray b (i + 2 * byteType.bytes) sorry_proof v.z 
+              b := byteType.toByteArray b i sorry_proof v.x
+              b := byteType.toByteArray b (i + byteType.bytes) sorry_proof v.y
+              b := byteType.toByteArray b (i + 2 * byteType.bytes) sorry_proof v.z
               b := byteType.toByteArray b (i + 3 * byteType.bytes) sorry_proof v.w
               b
             toByteArray_size := sorry_proof
             fromByteArray_toByteArray := sorry_proof
             fromByteArray_toByteArray_other := sorry_proof
           }
-
