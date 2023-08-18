@@ -21,7 +21,7 @@ variable
 
 
 -- TODO: move to mathlib
-instance {E : ι → Type _} [∀ i, UniformSpace (E i)] [∀ i, CompleteSpace (E i)] : CompleteSpace (PiLp 2 E) := by unfold PiLp; infer_instance
+instance {E : ι → Type _} [∀ i, UniformSpace (E i)] [∀ i, CompleteSpace (E i)] : CompleteSpace (PiLp 2 E) := by unfold PiLp; unfold WithLp; infer_instance
 
 
 -- Set up custom notation for adjoint. Mathlib's notation for adjoint seems to be broken

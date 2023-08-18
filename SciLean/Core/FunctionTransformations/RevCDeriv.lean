@@ -647,7 +647,7 @@ def HPow.hPow.arg_a0.revCDeriv_rule
       (ydf.1 ^ n, fun dx' => (n * (conj ydf.1 ^ (n-1))) • ydf.2 dx') :=
 by 
   have ⟨_,_⟩ := hf
-  unfold revCDeriv; simp; ftrans; ftrans; simp; sorry_proof 
+  unfold revCDeriv; simp; ftrans; ftrans; sorry_proof
   -- just missing (a * b) • x = b • a • x
 
 #exit
