@@ -5,6 +5,12 @@ on:
   push:
     branches: ["master"]
 
+  # Runs on PRs against master.
+  pull_request:
+    branches:
+      - master
+
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -20,7 +26,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   build: 
     runs-on: ubuntu-latest
     steps:
