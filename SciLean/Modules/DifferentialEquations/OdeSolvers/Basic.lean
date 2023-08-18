@@ -22,34 +22,78 @@ def forwardEulerStepper (f : K → X → X) : OdeStepper f where
   stepper t s x := x + (s-t) • f t x
   is_consistent := by ftrans
 
+
+@[ftrans]
+theorem _root_.Function.comp.arg_fga0.cderiv_rule {W : Type _} [Vec K W]
+  (f : W → Y → Z) (g : W → X → Y) (x : W → X)
+  (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
+  (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))
+  (hx : IsDifferentiable K x)
+  : cderiv K (fun w => ((f w) ∘ (g w)) (x w))
+    =
+    fun w dw => 
+      let dfdw := cderiv K f w dw
+      let dfdy := cderiv K (f w)
+      let dgdw := cderiv K g w dw
+      let dgdx := cderiv K (g w)
+      let dx := cderiv K x w dw
+      (dfdw (g w (x w))) 
+      + 
+      dfdy (g w (x w)) (dgdw (x w))
+      +
+      dfdy (g w (x w)) (dgdx (x w) dx)
+  := sorry_proof
+
+@[ftrans]
+theorem _root_.Function.comp.arg_fg.cderiv_rule {W : Type _} [Vec K W]
+  (f : W → Y → Z) (g : W → X → Y)
+  (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
+  (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))
+  : cderiv K (fun w => ((f w) ∘ (g w))) 
+    =
+    fun w dw => 
+      let df := cderiv K f w dw
+      let dg := cderiv K g w dw
+      fun x => (df (g w x)) + cderiv K (f w) (g w x) (dg x)
+  := sorry_proof
+
+
 @[ftrans]
 theorem _root_.Function.invFun.arg_a1.cderiv_rule
-  (f : X → Y)
-  : cderiv K (fun y => Function.invFun f y)
+  (f : Y → Z) (g : X → Z)
+  -- (hf : HasInvDiff K f) 
+  (hg : IsDifferentiable K g)
+  : cderiv K (fun x => Function.invFun f (g x))
     =
-    fun y dy => 
-      let x := Function.invFun f y
-      Function.invFun (cderiv K f x) dy :=
-by
-  sorry_proof
-
-variable (f : X → Y → Z)
-#check (cderiv K fun x => Function.invFun (f x) ∘ (f x)) rewrite_by 
-  simp[Function.comp.arg_a0.cderiv_rule _  sorry sorry]
+    fun x dx =>
+      let dz := cderiv K g x dx
+      let y := Function.invFun f (g x)
+      Function.invFun (cderiv K f y) dz := sorry
 
 
 @[ftrans]
 theorem _root_.Function.invFun.arg_f.cderiv_rule
-  (f : X → Y → Z)
+  (f : X → Y → Z) (z : X → Z)
   : cderiv K (fun x => Function.invFun (f x))
     =
-    fun x dx => 
-      
-      sorry :=
+    fun x dx z => 
+      let y := Function.invFun (f x) z
+      let dfdx_y := (cderiv K f x dx) y
+      let df'dy := cderiv K (Function.invFun (f x)) (f x y) (dfdx_y)
+      (-df'dy)
+  :=
 by
-  have h : 
-  sorry_proof
-
+  funext x dx
+  have bijective : ∀ x, Function.Bijective (f x) := sorry
+  have H : ((cderiv K (fun x => Function.invFun (f x) ∘ (f x)) x dx) ∘ (Function.invFun (f x)))
+           =
+           0 := by simp[Function.invFun_comp (bijective _).1]; ftrans
+  rw[← sub_zero (cderiv K (fun x => Function.invFun (f x)) x dx)]
+  rw[← H]
+  simp_rw[Function.comp.arg_fg.cderiv_rule (fun x => Function.invFun (f x)) f sorry sorry]
+  simp[Function.comp]
+  funext z
+  simp[show f x (Function.invFun (f x) z) = z from sorry]
 
 noncomputable
 def backwardEulerStepper (f : K → X → X) : OdeStepper f where
