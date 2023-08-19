@@ -292,8 +292,82 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
+  {W : Type _} [Vec K W]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
+
+
+-- Prod.mk -----------------------------------v---------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem Prod.mk.arg_fstsnd.cderiv_rule_at
+  (x : X)
+  (g : X → Y) (hg : IsDifferentiableAt K g x)
+  (f : X → Z) (hf : IsDifferentiableAt K f x)
+  : cderiv K (fun x => (g x, f x)) x
+    =
+    fun dx =>
+      (cderiv K g x dx, cderiv K f x dx) := 
+by sorry_proof
+
+
+
+@[ftrans]
+theorem Prod.mk.arg_fstsnd.cderiv_rule
+  (g : X → Y) (hg : IsDifferentiable K g)
+  (f : X → Z) (hf : IsDifferentiable K f)
+  : cderiv K (fun x => (g x, f x))
+    =    
+    fun x => fun dx =>
+      (cderiv K g x dx, cderiv K f x dx) := 
+by sorry_proof
+
+
+-- Prod.fst --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem Prod.fst.arg_self.cderiv_rule_at
+  (x : X)
+  (f : X → Y×Z) (hf : IsDifferentiableAt K f x)
+  : cderiv K (fun x => (f x).1) x
+    =
+    fun dx => (cderiv K f x dx).1 := 
+by sorry_proof
+
+
+
+@[ftrans]
+theorem Prod.fst.arg_self.cderiv_rule
+  (f : X → Y×Z) (hf : IsDifferentiable K f)
+  : cderiv K (fun x => (f x).1)
+    =
+    fun x => fun dx => (cderiv K f x dx).1 := 
+by sorry_proof
+
+
+
+-- Prod.snd --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem Prod.snd.arg_self.cderiv_rule_at
+  (x : X)
+  (f : X → Y×Z) (hf : IsDifferentiableAt K f x)
+  : cderiv K (fun x => (f x).2) x
+    =
+    fun dx => (cderiv K f x dx).2 := 
+by sorry_proof
+
+
+@[ftrans]
+theorem Prod.snd.arg_self.cderiv_rule
+  (f : X → Y×Z) (hf : IsDifferentiable K f)
+  : cderiv K (fun x => (f x).2)
+    =
+    fun x => fun dx => (cderiv K f x dx).2 :=
+by sorry_proof
 
 
 -- id --------------------------------------------------------------------------
@@ -330,81 +404,42 @@ theorem Function.comp.arg_a0.cderiv_rule
 by 
   unfold Function.comp; ftrans
 
-
--- Prod.mk -----------------------------------v---------------------------------
---------------------------------------------------------------------------------
+-- @[ftrans]
+-- theorem Function.comp.arg_fga0.cderiv_rule_at
+--   (f : W → Y → Z) (g : W → X → Y) (a0 : W → X) (w : W)
+--   (hf : IsDifferentiableAt K (fun wy : W×Y => f wy.1 wy.2) (w,g w (a0 w)))
+--   (hg : IsDifferentiableAt K (fun wx : W×X => g wx.1 wx.2) (w,a0 w))
+--   (ha0 : IsDifferentiableAt K a0 w)
+--   : cderiv K (fun w => ((f w) ∘ (g w)) (a0 w))
+--     =
+--     fun w dw => 
+--       let x  := a0 w
+--       let dx := cderiv K a0 w dw
+--       let y  := g w x
+--       let dy := cderiv K (fun wx : W×X => g wx.1 wx.2) (w,x) (dw,dx)
+--       let dz := cderiv K (fun wy : W×Y => f wy.1 wy.2) (w,y) (dw,dy)
+--       dz := 
+-- by 
+--   unfold Function.comp; ftrans
 
 @[ftrans]
-theorem Prod.mk.arg_fstsnd.cderiv_rule_at
-  (x : X)
-  (g : X → Y) (hg : IsDifferentiableAt K g x)
-  (f : X → Z) (hf : IsDifferentiableAt K f x)
-  : cderiv K (fun x => (g x, f x)) x
+theorem Function.comp.arg_fga0.cderiv_rule 
+  (f : W → Y → Z) (g : W → X → Y) (a0 : W → X)
+  (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
+  (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))
+  (ha0 : IsDifferentiable K a0)
+  : cderiv K (fun w => ((f w) ∘ (g w)) (a0 w))
     =
-    fun dx =>
-      (cderiv K g x dx, cderiv K f x dx) := 
-by sorry_proof
-
-
-
-@[ftrans]
-theorem Prod.mk.arg_fstsnd.cderiv_rule
-  (g : X → Y) (hg : IsDifferentiable K g)
-  (f : X → Z) (hf : IsDifferentiable K f)
-  : cderiv K (fun x => (g x, f x))
-    =    
-    fun x => fun dx =>
-      (cderiv K g x dx, cderiv K f x dx) := 
-by sorry_proof
-
-
- 
-
--- Prod.fst --------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-@[ftrans]
-theorem Prod.fst.arg_self.cderiv_rule_at
-  (x : X)
-  (f : X → Y×Z) (hf : IsDifferentiableAt K f x)
-  : cderiv K (fun x => (f x).1) x
-    =
-    fun dx => (cderiv K f x dx).1 := 
-by sorry_proof
-
-
-
-@[ftrans]
-theorem Prod.fst.arg_self.cderiv_rule
-  (f : X → Y×Z) (hf : IsDifferentiable K f)
-  : cderiv K (fun x => (f x).1)
-    =
-    fun x => fun dx => (cderiv K f x dx).1 := 
-by sorry_proof
-
-
-
--- Prod.fst --------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-@[ftrans]
-theorem Prod.snd.arg_self.cderiv_rule_at
-  (x : X)
-  (f : X → Y×Z) (hf : IsDifferentiableAt K f x)
-  : cderiv K (fun x => (f x).2) x
-    =
-    fun dx => (cderiv K f x dx).2 := 
-by sorry_proof
-
-
-@[ftrans]
-theorem Prod.snd.arg_self.cderiv_rule
-  (f : X → Y×Z) (hf : IsDifferentiable K f)
-  : cderiv K (fun x => (f x).2)
-    =
-    fun x => fun dx => (cderiv K f x dx).2 :=
-by sorry_proof
-
+    fun w dw => 
+      let x  := a0 w
+      let dx := cderiv K a0 w dw
+      let y  := g w x
+      let dy := cderiv K (fun wx : W×X => g wx.1 wx.2) (w,x) (dw,dx)
+      let dz := cderiv K (fun wy : W×Y => f wy.1 wy.2) (w,y) (dw,dy)
+      dz := 
+by 
+  unfold Function.comp; ftrans
+  
 
 -- HAdd.hAdd -------------------------------------------------------------------
 --------------------------------------------------------------------------------
