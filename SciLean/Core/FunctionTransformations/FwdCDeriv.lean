@@ -221,6 +221,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
+  {W : Type _} [Vec K W]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
@@ -287,7 +288,7 @@ by
 
 
 
--- Prod.fst --------------------------------------------------------------------
+-- Prod.snd --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[ftrans]
@@ -315,6 +316,24 @@ by
   unfold fwdCDeriv; ftrans
 
 
+-- Function.comp ---------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem Function.comp.arg_fga0.fwdCDeriv_rule 
+  (f : W → Y → Z) (g : W → X → Y) (a0 : W → X)
+  (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
+  (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))
+  (ha0 : IsDifferentiable K a0)
+  : fwdCDeriv K (fun w => ((f w) ∘ (g w)) (a0 w))
+    =
+    fun w dw => 
+      let xdx := fwdCDeriv K a0 w dw
+      let ydy := fwdCDeriv K (fun wx : W×X => g wx.1 wx.2) (w,xdx.1) (dw,xdx.2)
+      let zdz := fwdCDeriv K (fun wy : W×Y => f wy.1 wy.2) (w,ydy.1) (dw,ydy.2)
+      zdz := 
+by 
+  unfold Function.comp; ftrans
 
 -- HAdd.hAdd -------------------------------------------------------------------
 --------------------------------------------------------------------------------
