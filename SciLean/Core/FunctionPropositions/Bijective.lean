@@ -102,10 +102,21 @@ variable
 --------------------------------------------------------------------------------
 
 @[fprop]
+theorem Prod.mk.arg_fstsnd.Bijective_rule_simple
+  : Bijective (fun xy : X×Y => (xy.1, xy.2))
+  := by sorry_proof
+
+@[fprop]
+theorem Prod.mk.arg_fstsnd.Bijective_rule_simple'
+  : Bijective (fun xy : X×Y => (xy.2, xy.1))
+  := by sorry_proof
+
+
+@[fprop]
 theorem Prod.mk.arg_fstsnd.Bijective_rule
-  (f : X₁ → Y) (g : X₂ → Z) 
-  (hf : Bijective f) (hg : Bijective g)
-  : Bijective fun x : X₁×X₂ => (f x.1, g x.2)
+  (f : X₁ → Y) (g : X₂ → Z) (p₁ : X → X₁) (p₂ : X → X₂)
+  (hf : Bijective f) (hg : Bijective g) (hp : Bijective (fun x => (p₁ x, p₂ x)))
+  : Bijective (fun x : X => (f (p₁ x), g (p₂ x)))
   := by sorry_proof
 
 
