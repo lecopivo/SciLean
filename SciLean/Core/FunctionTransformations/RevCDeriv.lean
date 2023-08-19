@@ -338,6 +338,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
+  {W : Type _} [SemiInnerProductSpace K W]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
@@ -403,7 +404,7 @@ by
   unfold revCDeriv; ftrans; ftrans; simp
 
 
--- ProdL2.snd --------------------------------------------------------------------
+-- Prod.snd --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[ftrans]
@@ -428,6 +429,32 @@ theorem Prod.snd.arg_self.revCDeriv_rule
 by 
   have ⟨_,_⟩ := hf
   unfold revCDeriv; ftrans; ftrans; simp
+
+
+-- Function.comp ---------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem Function.comp.arg_fga0.revCDeriv_rule 
+  (f : W → Y → Z) (g : W → X → Y) (a0 : W → X)
+  (hf : HasAdjDiff K (fun wy : W×Y => f wy.1 wy.2))
+  (hg : HasAdjDiff K (fun wx : W×X => g wx.1 wx.2))
+  (ha0 : HasAdjDiff K a0)
+  : revCDeriv K (fun w => ((f w) ∘ (g w)) (a0 w))
+    =
+    fun w => 
+      let xda0 := revCDeriv K a0 w
+      let ydg := revCDeriv K (fun wx : W×X => g wx.1 wx.2) (w,xda0.1)
+      let zdf := revCDeriv K (fun wy : W×Y => f wy.1 wy.2) (w,ydg.1)
+      (zdf.1, 
+       fun dz => 
+         let dwy := zdf.2 dz
+         let dwx := ydg.2 dwy.2
+         let dw  := xda0.2 dwx.2
+         dwy.1 + dwx.1 + dw):= 
+
+by 
+  unfold Function.comp; ftrans; simp[add_assoc]
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
