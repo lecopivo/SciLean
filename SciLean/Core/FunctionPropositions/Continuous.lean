@@ -178,7 +178,7 @@ variable
 
 
 @[fprop]
-theorem id.arg_a.Continuous
+theorem id.arg_a.Continuous_rule
   : Continuous (id : X → X) := by continuity
 
 
@@ -189,7 +189,7 @@ theorem id.arg_a.Continuous
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.mk.arg_fstsnd.Continuous_comp
+theorem Prod.mk.arg_fstsnd.Continuous_rule
   (g : X → Y) (hg : Continuous g)
   (f : X → Z) (hf : Continuous f)
   : Continuous fun x => (g x, f x)
@@ -201,7 +201,7 @@ theorem Prod.mk.arg_fstsnd.Continuous_comp
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.fst.arg_self.Continuous_comp 
+theorem Prod.fst.arg_self.Continuous_rule 
   (f : X → Y×Z) (hf : Continuous f)
   : Continuous (fun x => (f x).1)
   := Continuous.fst hf
@@ -212,7 +212,7 @@ theorem Prod.fst.arg_self.Continuous_comp
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.snd.arg_self.Continuous_comp 
+theorem Prod.snd.arg_self.Continuous_rule 
   (f : X → Y×Z) (hf : Continuous f)
   : Continuous (fun x => (f x).2)
   := Continuous.snd hf
@@ -223,7 +223,7 @@ theorem Prod.snd.arg_self.Continuous_comp
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Function.comp.arg_x.Continuous_comp
+theorem Function.comp.arg_a0.Continuous_rule
   (f : Y → Z) (hf : Continuous f)
   (g : X → Y) (hg : Continuous g)
   : Continuous (f ∘ g)
@@ -235,7 +235,7 @@ theorem Function.comp.arg_x.Continuous_comp
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Neg.neg.arg_a2.Continuous_comp
+theorem Neg.neg.arg_a0.Continuous_rule
   [Neg Y] [ContinuousNeg Y]
   (f : X → Y) (hf : Continuous f) 
   : Continuous fun x => - f x 
@@ -248,7 +248,7 @@ theorem Neg.neg.arg_a2.Continuous_comp
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem HSub.hSub.arg_a4a5.Continuous_comp
+theorem HSub.hSub.arg_a0a1.Continuous_rule
   [Sub Y] [ContinuousSub Y]
   (f g : X → Y) (hf : Continuous f) (hg : Continuous g)
   : Continuous fun x => f x - g x
@@ -260,7 +260,7 @@ theorem HSub.hSub.arg_a4a5.Continuous_comp
 -------------------------------------------------------------------------------- 
 
 @[fprop]
-def HMul.hMul.arg_a4a5.Continuous_comp
+def HMul.hMul.arg_a0a1.Continuous_rule
   [Mul Y] [ContinuousMul Y]
   (f g : X → Y) (hf : Continuous f) (hg : Continuous g)
   : Continuous (fun x => f x * g x)
@@ -272,7 +272,7 @@ def HMul.hMul.arg_a4a5.Continuous_comp
 -------------------------------------------------------------------------------- 
 
 @[fprop]
-def SMul.sMul.arg_a4a5.Continuous_comp
+def HSMul.hSMul.arg_a0a1.Continuous_rule
   [SMul R Y] [ContinuousSMul R Y]
   (f : X → R) (g : X → Y) (hf : Continuous f) (hg : Continuous g)
   : Continuous (fun x => f x • g x)
@@ -285,7 +285,7 @@ def SMul.sMul.arg_a4a5.Continuous_comp
 
 
 @[fprop]
-def HDiv.hDiv.arg_a4a5.Continuous_comp
+def HDiv.hDiv.arg_a0a1.Continuous_rule
   [GroupWithZero K] [TopologicalSpace K] [ContinuousMul K] [HasContinuousInv₀ K]
   (f : R → K) (g : R → K) 
   (hf : Continuous f) (hg : Continuous g) (hx : ∀ x, g x ≠ 0)
