@@ -77,7 +77,8 @@ def Bijective.fpropExt : FPropExt where
   lambdaLambdaRule _ _ := return none
   projRule _ := return none
 
-  discharger _ := return none
+  discharger e := 
+    FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 -- register fderiv
 #eval show Lean.CoreM Unit from do
