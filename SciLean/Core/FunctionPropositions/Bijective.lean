@@ -262,3 +262,24 @@ def HSMul.hSMul.arg_a1.Bijective_rule_field
   := by sorry_proof
 
 
+
+-- HDiv.hDiv -------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+def HDiv.hDiv.arg_a0.Bijective_rule_group
+  [Group Y]
+  (f : X → Y) (y : Y)
+  (hf : Bijective f)
+  : Bijective (fun x => f x / y) := 
+by 
+  sorry_proof
+
+@[fprop]
+def HDiv.hDiv.arg_a0.Bijective_rule_field
+  [Field Y]
+  (f : X → Y) (y : Y)
+  (hf : Bijective f) (hy : y ≠ 0)
+  : Bijective (fun x => f x / y) := 
+by 
+  sorry_proof

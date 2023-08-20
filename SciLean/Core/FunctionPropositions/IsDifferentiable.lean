@@ -280,6 +280,15 @@ def HDiv.hDiv.arg_a0a1.IsDifferentiable_rule
   : IsDifferentiable K (fun x => f x / g x)
   := by sorry_proof
 
+@[fprop]
+def HDiv.hDiv.arg_a0.IsDifferentiable_rule
+  (f : X → K) (r : K)
+  (hf : IsDifferentiable K f) (hr : r ≠ 0)
+  : IsDifferentiable K (fun x => f x / r) := 
+by 
+  apply HDiv.hDiv.arg_a0a1.IsDifferentiable_rule <;> first | assumption | fprop | aesop
+
+
 
 -- HPow.hPow -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 

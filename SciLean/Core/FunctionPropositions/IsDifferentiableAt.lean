@@ -297,6 +297,14 @@ def HDiv.hDiv.arg_a0a1.IsDifferentiableAt_rule
   : IsDifferentiableAt K (fun x => f x / g x) x 
   := by sorry_proof
 
+@[fprop]
+def HDiv.hDiv.arg_a0.IsDifferentiableAt_rule
+  (x : X) (f : X → K) (r : K)
+  (hf : IsDifferentiableAt K f x) (hr : r ≠ 0)
+  : IsDifferentiableAt K (fun x => f x / r) x := 
+by 
+  apply HDiv.hDiv.arg_a0a1.IsDifferentiableAt_rule <;> first | assumption | fprop
+
 
 -- HPow.hPow -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 

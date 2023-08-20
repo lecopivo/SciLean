@@ -107,6 +107,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
+  {W : Type _} [Vec K W]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
@@ -216,7 +217,7 @@ by
 
 @[fprop]
 def HMul.hMul.arg_a1.Diffeomorphism_rule
-  (y : K) (f : X → K) (hf : Diffeomorphism K f) (hy : y≠0)
+  (y : K) (f : X → K) (hy : y≠0) (hf : Diffeomorphism K f) 
   : Diffeomorphism K (fun x => y * f x) := 
 by 
   have ⟨_,_,_⟩ := hf
@@ -225,28 +226,36 @@ by
   . fprop
   . ftrans; simp; fprop
 
-#exit
--- TODO: finish up cleaning up the theorems
 
 -- SMul.sMul -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[fprop]
-def HSMul.hSMul.arg_a0a1.Diffeomorphism_rule
-  (f : X → K) (g : X → Y) (hf : Diffeomorphism K f) (hg : Diffeomorphism K g)
-  : Diffeomorphism K (fun x => f x • g x)
-  := by sorry_proof
+def HSMul.hSMul.arg_a1.Diffeomorphism_rule
+  (r : K) (f : X → Y) (hr : r≠0) (hf : Diffeomorphism K f)
+  : Diffeomorphism K (fun x => r • f x) := 
+by 
+  have ⟨_,_,_⟩ := hf
+  constructor
+  . fprop
+  . fprop
+  . ftrans; simp; fprop
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 @[fprop]
-def HDiv.hDiv.arg_a0a1.Diffeomorphism_rule
-  (f : X → K) (g : X → K)
-  (hf : Diffeomorphism K f) (hg : Diffeomorphism K g) (hx : ∀ x, g x ≠ 0)
-  : Diffeomorphism K (fun x => f x / g x)
-  := by sorry_proof
+def HDiv.hDiv.arg_a0.Diffeomorphism_rule
+  (f : X → K) (r : K)
+  (hf : Diffeomorphism K f) (hr : r ≠ 0)
+  : Diffeomorphism K (fun x => f x / r) := 
+by 
+  have ⟨_,_,_⟩ := hf
+  constructor
+  . fprop
+  . fprop
+  . ftrans; sorry_proof 
 
 
 -- HPow.hPow -------------------------------------------------------------------
@@ -259,15 +268,11 @@ def HPow.hPow.arg_a0.Diffeomorphism_rule
   := by sorry_proof
 
 
-
 -- Function.invFun -------------------------------------------------------------
 -------------------------------------------------------------------------------- 
-variable (K)
-def Diffeomorphism (f : X → Y) :=
-  Function.Bijective f ∧ IsDifferentiable K f ∧  ∀ x, Function.Bijective (cderiv K f x)
-variable {K}
 
-open Function in
+open Function 
+
 @[fprop]
 theorem Function.invFun.arg_fa1.IsDifferentiable_rule
   (f : X → Y → Z) (g : W → X) (h : W → Z)
@@ -276,15 +281,7 @@ theorem Function.invFun.arg_fa1.IsDifferentiable_rule
   (hg : IsDifferentiable K g) (hh : IsDifferentiable K h)
   : IsDifferentiable K (fun w : W => invFun (f (g w)) (h w)) := sorry_proof
 
-open Function in
-example
-  (f : X → Y → Z)
-  (hf : ∀ x, Diffeomorphism K (f x)) 
-  (hf' : IsDifferentiable K (fun xy : X×Y => f xy.1 xy.2))
-  : IsDifferentiable K (fun xz : X×Z => invFun (f xz.1) xz.2) := by fprop
 
-
-open Function in
 @[ftrans]
 theorem Function.invFun.arg_a1.cderiv_rule 
   (f : Y → Z) (g : X → Z)
@@ -306,7 +303,6 @@ by
   sorry_proof
 
 
-open Function in
 @[ftrans]
 theorem Function.invFun.arg_f.cderiv_rule
   (f : X → Y → Z)
