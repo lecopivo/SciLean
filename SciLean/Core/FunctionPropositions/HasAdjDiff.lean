@@ -357,6 +357,9 @@ by
   constructor; fprop; ftrans; fprop
 
 
+
+--------------------------------------------------------------------------------
+
 section InnerProductSpace
 
 variable 

@@ -677,6 +677,43 @@ by
   unfold revCDeriv; simp; ftrans; ftrans; sorry_proof
   -- just missing (a * b) • x = b • a • x
 
+
+--------------------------------------------------------------------------------
+
+section InnerProductSpace
+
+variable 
+  {K : Type _} [IsROrC K]
+  {X : Type _} [SemiInnerProductSpace K X]
+  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+
+-- Inner -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open ComplexConjugate
+
+@[ftrans]
+theorem Inner.inner.arg_a0a1.revCDeriv_rule
+  (f : X → Y) (g : X → Y)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : (revCDeriv K fun x => ⟪f x, g x⟫[K])
+    =
+    fun x => 
+      let y₁df := revCDeriv K f x
+      let y₂dg := revCDeriv K g x
+      let dx₁ := y₁df.2 y₂dg.1
+      let dx₂ := y₂dg.2 y₁df.1
+      (⟪y₁df.1, y₂dg.1⟫[K],
+       fun dr => 
+         conj dr • dx₁ + dr • dx₂):=
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv
+  ftrans only
+  funext x; simp
+  ftrans
+
 #exit
 #eval 0
 
