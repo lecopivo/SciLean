@@ -24,51 +24,24 @@ def forwardEulerStepper (f : K → X → X) : OdeStepper f where
 
 
 @[ftrans]
-theorem _root_.Function.comp.arg_fga0.cderiv_rule {W : Type _} [Vec K W]
-  (f : W → Y → Z) (g : W → X → Y) (x : W → X)
-  (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
-  (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))
-  (hx : IsDifferentiable K x)
-  : cderiv K (fun w => ((f w) ∘ (g w)) (x w))
-    =
-    fun w dw => 
-      let dfdw := cderiv K f w dw
-      let dfdy := cderiv K (f w)
-      let dgdw := cderiv K g w dw
-      let dgdx := cderiv K (g w)
-      let dx := cderiv K x w dw
-      (dfdw (g w (x w))) 
-      + 
-      dfdy (g w (x w)) (dgdw (x w))
-      +
-      dfdy (g w (x w)) (dgdx (x w) dx)
-  := sorry_proof
-
-@[ftrans]
-theorem _root_.Function.comp.arg_fg.cderiv_rule {W : Type _} [Vec K W]
-  (f : W → Y → Z) (g : W → X → Y)
-  (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
-  (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))
-  : cderiv K (fun w => ((f w) ∘ (g w))) 
-    =
-    fun w dw => 
-      let df := cderiv K f w dw
-      let dg := cderiv K g w dw
-      fun x => (df (g w x)) + cderiv K (f w) (g w x) (dg x)
-  := sorry_proof
-
-
-@[ftrans]
 theorem _root_.Function.invFun.arg_a1.cderiv_rule
   (f : Y → Z) (g : X → Z)
   -- (hf : HasInvDiff K f) 
+  (hf : Function.Bijective f)
   (hg : IsDifferentiable K g)
   : cderiv K (fun x => Function.invFun f (g x))
     =
     fun x dx =>
       let dz := cderiv K g x dx
       let y := Function.invFun f (g x)
-      Function.invFun (cderiv K f y) dz := sorry
+      Function.invFun (cderiv K f y) dz :=
+by
+  funext x dx
+  have H : (cderiv K (f ∘ Function.invFun f) (g x))
+           =
+           id := by simp[show (f ∘ Function.invFun f) = id from sorry]; ftrans
+  have q : cderiv K f (Function.invFun f (g x)) (cderiv K (fun x => Function.invFun f (g x)) x dx) = cderiv K g x dx := sorry
+  sorry_proof
 
 
 @[ftrans]
@@ -307,4 +280,7 @@ theorem odeSolve.arg_f.diff_simp_alt {X W} [Vec X] [Vec W]
 --   : ∇ (λ x₀ => ∥odeSolve f t x₀ - y∥²) = 0 := 
 -- by 
 --   simp[gradient]; unfold hold; simp
+
+
+
 

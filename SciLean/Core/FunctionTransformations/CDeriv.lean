@@ -404,6 +404,22 @@ theorem Function.comp.arg_a0.cderiv_rule
 by 
   unfold Function.comp; ftrans
 
+@[ftrans]
+theorem Function.comp.arg_fg.cderiv_rule 
+  (f : W → Y → Z) (g : W → X → Y)
+  (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
+  (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))
+  : cderiv K (fun w => ((f w) ∘ (g w)))
+    =
+    fun w dw x => 
+      let y  := g w x
+      let dydw := cderiv K g w dw x
+      let dfdw := cderiv K f w dw y
+      let dfdy := cderiv K (f w) y dydw
+      dfdw + dfdy := 
+by 
+  unfold Function.comp; sorry_proof -- ftrans
+
 -- @[ftrans]
 -- theorem Function.comp.arg_fga0.cderiv_rule_at
 --   (f : W → Y → Z) (g : W → X → Y) (a0 : W → X) (w : W)
