@@ -653,3 +653,39 @@ def HPow.hPow.arg_a0.cderiv_rule
     fun x => fun dx => n * cderiv K f x dx * (f x ^ (n-1)) :=
 by
   funext x; apply HPow.hPow.arg_a0.cderiv_rule_at n x f (hf x)
+
+
+
+
+
+--------------------------------------------------------------------------------
+
+section InnerProductSpace
+
+variable 
+  {K : Type _} [IsROrC K]
+  {X : Type _} [Vec K X]
+  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+
+-- Inner -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open ComplexConjugate
+
+@[ftrans]
+theorem Inner.inner.arg_a0a1.cderiv_rule
+  (f : X → Y) (g : X → Y)
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
+  : cderiv K (fun x => ⟪f x, g x⟫[K])
+    =
+    fun x dx =>
+      let y₁ := f x
+      let dy₁ := cderiv K f x dx
+      let y₂ := g x
+      let dy₂ := cderiv K g x dx
+      ⟪dy₁, y₂⟫[K] + ⟪y₁, dy₂⟫[K] := 
+by 
+  sorry_proof
+
+
+end InnerProductSpace

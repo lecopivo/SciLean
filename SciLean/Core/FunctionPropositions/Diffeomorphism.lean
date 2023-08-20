@@ -3,7 +3,7 @@ import SciLean.Core.FunctionPropositions.IsDifferentiable
 
 import SciLean.Core.FunctionTransformations.CDeriv
 
--- set_option linter.unusedVariables false
+set_option linter.unusedVariables false
 
 namespace SciLean
 
@@ -299,7 +299,7 @@ by
   have H : (cderiv K (f ∘ invFun f) (g x))
            =
            id := by simp[show (f ∘ Function.invFun f) = id from sorry_proof]; ftrans
-  have q : cderiv K f (invFun f (g x)) (cderiv K (fun x => invFun f (g x)) x dx) = cderiv K g x dx := sorry
+  have q : cderiv K f (invFun f (g x)) (cderiv K (fun x => invFun f (g x)) x dx) = cderiv K g x dx := sorry_proof
   sorry_proof
 
 
@@ -327,3 +327,6 @@ by
   simp[comp]
   funext z
   simp[show f x (invFun (f x) z) = z from sorry_proof]
+
+
+

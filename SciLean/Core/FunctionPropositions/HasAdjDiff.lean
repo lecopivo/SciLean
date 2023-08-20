@@ -356,3 +356,28 @@ by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
+
+section InnerProductSpace
+
+variable 
+  {K : Type _} [IsROrC K]
+  {X : Type _} [SemiInnerProductSpace K X]
+  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+
+-- Inner -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open ComplexConjugate
+
+@[fprop]
+theorem Inner.inner.arg_a0a1.HasAdjDiff_rule
+  (f : X → Y) (g : X → Y)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : HasAdjDiff K fun x => ⟪f x, g x⟫[K] :=
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  constructor; fprop; ftrans; simp; fprop
+
+
+end InnerProductSpace

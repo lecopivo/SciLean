@@ -1,4 +1,5 @@
 import SciLean.Core.FunctionPropositions.Bijective
+import SciLean.Core.FunctionPropositions.Diffeomorphism
 import SciLean.Core.FunctionPropositions.Differentiable
 import SciLean.Core.FunctionPropositions.DifferentiableAt
 import SciLean.Core.FunctionPropositions.HasAdjDiff
