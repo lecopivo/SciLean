@@ -302,7 +302,8 @@ by
   have q : cderiv K f (invFun f (g x)) (cderiv K (fun x => invFun f (g x)) x dx) = cderiv K g x dx := sorry_proof
   sorry_proof
 
-
+-- Which rule is preferable? This one or the second one? 
+-- Probably the second as it has Function.inv fully applied
 @[ftrans]
 theorem Function.invFun.arg_f.cderiv_rule
   (f : X → Y → Z)
@@ -327,6 +328,32 @@ by
   simp[comp]
   funext z
   simp[show f x (invFun (f x) z) = z from sorry_proof]
+
+
+@[ftrans]
+theorem Function.invFun.arg_f.cderiv_rule'
+  (f : X → Y → Z) (z : Z)
+  (hf : ∀ x, Diffeomorphism K (f x)) 
+  (hf' : IsDifferentiable K (fun xy : X×Y => f xy.1 xy.2))
+  : cderiv K (fun x => invFun (f x) z)
+    =
+    fun x dx => 
+      let y := invFun (f x) z
+      let dfdx_y := (cderiv K f x dx) y
+      let df'dy := cderiv K (invFun (f x)) (f x y) (dfdx_y)
+      (-df'dy)
+  :=
+by
+  funext x dx
+  have H : ((cderiv K (fun x => invFun (f x) ∘ (f x)) x dx) ∘ (invFun (f x)) <| z)
+           =
+           0 := by simp[invFun_comp (hf _).1.1]; ftrans
+  rw[← sub_zero (cderiv K (fun x => Function.invFun (f x) z) x dx)]
+  rw[← H]
+  simp_rw[comp.arg_fg.cderiv_rule (K:=K) (fun x => invFun (f x)) f (by fprop) (by fprop)]
+  simp[comp]
+  simp[show f x (invFun (f x) z) = z from sorry_proof]
+  
 
 
 
