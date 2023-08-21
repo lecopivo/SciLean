@@ -21,6 +21,15 @@ def cderiv (K : Type _) [IsROrC K]
   {X Y : Type _} [Vec K X] [Vec K Y]
   (f : X → Y) (x dx : X) : Y := Curve.deriv (fun t : K => f (x + t•dx)) 0
 
+
+@[simp]
+theorem cderiv_apply
+  (f : X → Y → Z) (x dx : X) (y : Y)
+  : cderiv K f x dx y
+    =
+    cderiv K (fun x' => f x' y) x dx := sorry_proof
+
+
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 variable (K)
