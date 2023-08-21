@@ -1,83 +1,136 @@
 import SciLean.Modules.DifferentialEquations.OdeSolve
 import SciLean.Util.RewriteBy
-
+import SciLean.Util.Impl
+import SciLean.Util.SolveFun
 
 namespace SciLean
 
 variable 
-  {K : Type _} [IsROrC K] 
-  {X : Type _} [Vec K X]
-  {Y : Type _} [Vec K Y]
-  {Z : Type _} [Vec K Z]
+  {R : Type _} [IsROrC R] 
+  {X : Type _} [Vec R X]
+  {Y : Type _} [Vec R Y]
+  {Z : Type _} [Vec R Z]
 
-open_notation_over_field K
+open_notation_over_field R
 
-structure OdeStepper {K X} [IsROrC K] [Vec K X] (f : K → X → X) where
-  stepper (t s : K) (x : X) : X
-  -- The basic consistency condition is:
-  is_consistent : ∀ t x, (∂ (s:=t), stepper t s x) 1 = f t x
-  -- there are probably others
+/-- Value of a given type but its run time value has been erased. -/
+structure RunTimeErased (α) where
+  P : α → Prop
+  ex : ∃ a, P a
+  uniq : ∀ a a', P a → P a' → a = a'
 
-def forwardEulerStepper (f : K → X → X) : OdeStepper f where
-  stepper t s x := x + (s-t) • f t x
-  is_consistent := by ftrans
-
-
-@[ftrans]
-theorem _root_.Function.invFun.arg_a1.cderiv_rule
-  (f : Y → Z) (g : X → Z)
-  -- (hf : HasInvDiff K f) 
-  (hf : Function.Bijective f)
-  (hg : IsDifferentiable K g)
-  : cderiv K (fun x => Function.invFun f (g x))
-    =
-    fun x dx =>
-      let dz := cderiv K g x dx
-      let y := Function.invFun f (g x)
-      Function.invFun (cderiv K f y) dz :=
-by
-  funext x dx
-  have H : (cderiv K (f ∘ Function.invFun f) (g x))
-           =
-           id := by simp[show (f ∘ Function.invFun f) = id from sorry]; ftrans
-  have q : cderiv K f (Function.invFun f (g x)) (cderiv K (fun x => Function.invFun f (g x)) x dx) = cderiv K g x dx := sorry
-  sorry_proof
-
-
-@[ftrans]
-theorem _root_.Function.invFun.arg_f.cderiv_rule
-  (f : X → Y → Z) (z : X → Z)
-  : cderiv K (fun x => Function.invFun (f x))
-    =
-    fun x dx z => 
-      let y := Function.invFun (f x) z
-      let dfdx_y := (cderiv K f x dx) y
-      let df'dy := cderiv K (Function.invFun (f x)) (f x y) (dfdx_y)
-      (-df'dy)
-  :=
-by
-  funext x dx
-  have bijective : ∀ x, Function.Bijective (f x) := sorry
-  have H : ((cderiv K (fun x => Function.invFun (f x) ∘ (f x)) x dx) ∘ (Function.invFun (f x)))
-           =
-           0 := by simp[Function.invFun_comp (bijective _).1]; ftrans
-  rw[← sub_zero (cderiv K (fun x => Function.invFun (f x)) x dx)]
-  rw[← H]
-  simp_rw[Function.comp.arg_fg.cderiv_rule (fun x => Function.invFun (f x)) f sorry sorry]
-  simp[Function.comp]
-  funext z
-  simp[show f x (Function.invFun (f x) z) = z from sorry]
+def erase {α} (a : α) : RunTimeErased α := 
+  { P := fun x => x = a
+    ex := Exists.intro a rfl
+    uniq := by intro a b h h'; simp[h,h']
+  }
 
 noncomputable
-def backwardEulerStepper (f : K → X → X) : OdeStepper f where
-  stepper t s x := Function.invFun (fun x' => x' - (s-t) • f t x') x
-  is_consistent := by 
-    simp
-    set_option trace.Meta.Tactic.simp.unify true in 
-    ftrans only
-    sorry_proof
+def RunTimeErased.val {α} (a : RunTimeErased α) : α := Classical.choose a.ex
+
+@[simp]
+theorem val_erase (a : α) : (erase a).val = a := by sorry_proof
+
+instance : Coe α (RunTimeErased α) := ⟨fun a => erase a⟩
+noncomputable
+instance : Coe (RunTimeErased α) α := ⟨fun e => e.val⟩
+noncomputable
+instance : CoeFun (RunTimeErased (α→β)) (fun _ => α → β) := ⟨fun e => e.val⟩
+
+structure OdeStepperImpl (f : RunTimeErased (R → X → X)) where
+  stepper (t₁ t₂ : R) (x : X) : X
+  -- under what conditions on `f` is this stepper consistent?
+  consistency_condition : Prop
+  -- The basic consistency condition is:
+  -- TODO: This needs refinment!!!
+  is_consistent : consistency_condition → ∀ t₁ x, (∂ (t₂:=t₁), stepper t₁ t₂ x) 1 = f t₁ x
+  -- there are probably others
+
+abbrev OdeStepper (f : R → X → X) := OdeStepperImpl (erase f)
+
+def OdeStepper.IsConsistent {f : R → X → X} (s : OdeStepper f) : Prop := s.consistency_condition
+
+def forwardEuler (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
+  let Δt := t₂ - t₁
+  xₙ + Δt • f t₁ xₙ
+
+noncomputable
+def backwardEuler (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
+  let Δt := t₂ - t₁
+  solve x', x' = xₙ + Δt • f t₁ x'
+
+def explicitMidpoint (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
+  let Δt := t₂ - t₁
+  let x' := xₙ + (Δt/2) • f t₁ xₙ
+  let x'' := xₙ + Δt • f (t₁+(Δt/2)) x'
+  x''
+
+noncomputable
+def implicitMidpoint (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
+  let Δt := t₂ - t₁
+  solve x', x' = xₙ + Δt • f (t₁+(Δt/2)) ((1/2:R) • (xₙ + x'))
+
+def heunMethod (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
+  let Δt := t₂ - t₁
+  let x' := xₙ + Δt • f t₁ xₙ 
+  let x'' := xₙ + (Δt/2) • (f t₁ xₙ + f t₂ x')
+  x''
+
+noncomputable
+def crankNicolson (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
+  let Δt := t₂ - t₁
+  solve x', x' = xₙ + (Δt/2) • (f t₁ xₙ + f t₂ x')
+
+variable 
+  {R : Type _} [IsROrC R]
+  {X : Type _} [SemiInnerProductSpace R X]
+  {Y : Type _} [SemiInnerProductSpace R Y]
+  {Z : Type _} [SemiInnerProductSpace R Z]
 
 
+/-- Symplectic Euler integrator 
+
+Well behaved integragor for Hamiltonian systems
+
+Warning: This is symplectic integrator if `H q p = T p + V q`. 
+In more complicated cases use `implicitSymplecticEulerV1`.
+-/
+noncomputable
+def explicitSymplecticEuler (H : X → X → R) (Δt : R) (qₙ pₙ : X) : X×X :=
+  let p' := pₙ - Δt • ∇ (q:=qₙ), H q  pₙ
+  let q' := qₙ + Δt • ∇ (p:=p'), H qₙ p
+  (q', p')
+ 
+noncomputable
+def implicitSymplecticEulerV1 (H : X → X → R) (Δt : R) (qₙ pₙ : X) : X×X :=
+  solve q' p',
+    q' = qₙ + Δt • ∇ (p:=p'), H p  qₙ
+    ∧
+    p' = pₙ - Δt • ∇ (q:=qₙ), H p' q
+
+noncomputable
+def implicitSymplecticEulerV2 (H : X → X → R) (Δt : R) (qₙ pₙ : X) : X×X :=
+  solve q' p',
+    q' = qₙ + Δt • ∇ (s:=pₙ), H s q'
+    ∧
+    p' = pₙ - Δt • ∇ (s:=q'), H pₙ s
+
+theorem explicitSymplecticEuler_eq_implicitSymplecticEulerV1
+  (T V : X → R) 
+  (hT : HasAdjDiff R T) (hV : HasAdjDiff R V)
+  : explicitSymplecticEuler (fun q p => T p + V q)
+    =
+    implicitSymplecticEulerV1 (fun q p => T p + V q) := 
+by
+  unfold implicitSymplecticEulerV1
+  conv => 
+    rhs
+    ftrans; simp
+    -- solve for p'
+    -- solve for q'
+    -- ftrans
+  sorry_proof
+ 
 -- function_properties SciLean.forward_euler_step {X : Type} [Vec X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ)
 -- argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
 --   IsSmooth := by unfold forward_euler_step; sorry_proof,
