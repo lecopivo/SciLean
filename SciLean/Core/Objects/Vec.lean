@@ -121,7 +121,7 @@ section CommonVectorSpaces
     by cases inst; apply Vec.mk (scalar_wise_smooth := sorry_proof)
 
 
-  instance(priority:=low) (α : Type) (X : α → Type) [inst : ∀ a, Vec K (X a)] : Vec K ((a : α) → X a) := 
+  instance(priority:=low) (α : Type _) (X : α → Type _) [inst : ∀ a, Vec K (X a)] : Vec K ((a : α) → X a) := 
     --Vec.mkSorryProofs
     let _ : ∀ a, Module K (X a) := fun a => (inst a).toModule
     let _ : ∀ a, TopologicalSpace (X a) := fun a => (inst a).toTopologicalSpace
