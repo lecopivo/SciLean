@@ -1,8 +1,9 @@
 import Std.Logic
+import SciLean.Util.SorryProof
 
 namespace Array
 
-def partitionIdxM {m} [Monad m] (p : α → m Bool) (as : Array α) 
+def partitionIdxM {m} [Monad m] (as : Array α) (p : Fin as.size → α → m Bool) 
   : m (Array α × Array α × Array (Sum Nat Nat)) := 
 do
   let mut bs := #[]
@@ -10,8 +11,9 @@ do
   let mut ids : Array (Sum Nat Nat) := #[]
   let mut i := 0
   let mut j := 0
+  let mut idx := 0
   for a in as do
-    if ← p a then
+    if ← p ⟨idx, sorry_proof⟩ a then
       bs := bs.push a
       ids := ids.push (.inl i)
       i := i + 1
@@ -19,14 +21,18 @@ do
       cs := cs.push a
       ids := ids.push (.inr j)
       j := j + 1
+    idx := idx + 1
   return (bs, cs, ids)
 
-def partitionIdx (p : α → Bool) (as : Array α) 
+
+/-- Splits array into two based on function p. It also returns indices that can be used to merge two array back together.
+-/
+def splitIdx (as : Array α) (p : Fin as.size → α → Bool) 
   : Array α × Array α × Array (Sum Nat Nat) := 
 Id.run do
   as.partitionIdxM p
 
-def merge (ids : Array (Sum Nat Nat)) (bs cs : Array α) [Inhabited α] : Array α :=
+def mergeSplit (ids : Array (Sum Nat Nat)) (bs cs : Array α) [Inhabited α] : Array α :=
   ids.map λ id => 
     match id with
     | .inl i => bs[i]!
@@ -37,13 +43,13 @@ def riffle (xs ys : Array α) : Array α := Id.run do
   let m := min xs.size ys.size
   let M := max xs.size ys.size
   for i in [0:m] do
-    have : i < xs.size := sorry
-    have : i < ys.size := sorry
+    have : i < xs.size := sorry_proof
+    have : i < ys.size := sorry_proof
     zs := zs.push xs[i] 
     zs := zs.push ys[i]
   let xys := if xs.size < ys.size then ys else xs
   for i in [m:M] do
-    have : i < xys.size := sorry
+    have : i < xys.size := sorry_proof
     zs := zs.push xys[i]
   zs
 
@@ -59,7 +65,7 @@ def joinl [Inhabited β] (xs : Array α) (map : α → β) (op : β → β → �
 def joinrM [Monad m] [Inhabited β] (xs : Array α) (map : α → m β) (op : β → β → m β) : m β := do
   if h : 0 < xs.size then
     let n := xs.size - 1
-    have : n < xs.size := sorry
+    have : n < xs.size := sorry_proof
     xs[0:n].foldrM (init:=(← map xs[n])) λ x acc => do op (← map x) acc 
   else
     pure default
@@ -78,8 +84,8 @@ def lexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
   | .gt => return .gt
   | .eq => 
     for i in [0:as.size] do
-      have : i < as.size := sorry
-      have : i < bs.size := sorry
+      have : i < as.size := sorry_proof
+      have : i < bs.size := sorry_proof
       match compare as[i] bs[i] with
       | .lt => return .lt
       | .gt => return .gt
@@ -96,8 +102,8 @@ def colexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
   | .eq => 
     for i in [0:as.size] do
       let i := as.size - i - 1
-      have : i < as.size := sorry
-      have : i < bs.size := sorry
+      have : i < as.size := sorry_proof
+      have : i < bs.size := sorry_proof
       match compare as[i] bs[i] with
       | .lt => return .lt
       | .gt => return .gt

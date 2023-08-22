@@ -38,7 +38,7 @@ instance {X Y : Sort _} {Xs' Y' : outParam (Sort _)} [c : UncurryAll Y Xs' Y']
   : UncurryAll (X→Y) (X×Xs') Y' where
   uncurry := λ (f : X → Y) ((x,xs) : X×Xs') => c.uncurry (f x) xs
 
-abbrev uncurryAll {F : Type} {Xs Y : outParam Type} 
+abbrev uncurryAll {F : Sort _} {Xs Y : outParam (Sort _)} 
   (f : F) [UncurryAll F Xs Y] 
   := UncurryAll.uncurry f
 
