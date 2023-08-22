@@ -89,66 +89,6 @@ abbrev Prod.set {X Xs : Type} {Xᵢ : outParam Type}
 
 --------------------------------------------------------------------------------
 
-class Prod.Uncurry (n : Nat) (F : Type) (Xs : outParam Type) (Y : outParam Type) where
-  uncurry : F → Xs → Y
-
-attribute [reducible] Prod.Uncurry.uncurry
-
-@[reducible]
-instance (priority := low) {X Y : Type} : Prod.Uncurry 1 (X→Y) X Y where
-  uncurry := λ (f : X → Y) (x : X) => f x
-
-@[reducible]
-instance {X Y : Type} {Xs' Y' : outParam Type} [c : Prod.Uncurry n Y Xs' Y']
-  : Prod.Uncurry (n+1) (X→Y) (X×Xs') Y' where
-  uncurry := λ (f : X → Y) ((x,xs) : X×Xs') => c.uncurry (n:=n) (f x) xs
-
-abbrev uncurryN {F : Type} {Xs Y : outParam Type} 
-  (n : Nat) (f : F) [Prod.Uncurry n F Xs Y] 
-  := Prod.Uncurry.uncurry (n:=n) f
-
-----
-
-class Prod.UncurryAll (F : Sort _) (Xs : outParam (Sort _)) (Y : outParam (Sort _)) where
-  uncurry : F → Xs → Y
-
-attribute [reducible] Prod.UncurryAll.uncurry
-
-@[reducible]
-instance (priority := low) {X Y : Sort _} : Prod.UncurryAll (X→Y) X Y where
-  uncurry := λ (f : X → Y) (x : X) => f x
-
-@[reducible]
-instance {X Y : Sort _} {Xs' Y' : outParam (Sort _)} [c : Prod.UncurryAll Y Xs' Y']
-  : Prod.UncurryAll (X→Y) (X×Xs') Y' where
-  uncurry := λ (f : X → Y) ((x,xs) : X×Xs') => c.uncurry (f x) xs
-
-abbrev uncurryAll {F : Type} {Xs Y : outParam Type} 
-  (f : F) [Prod.UncurryAll F Xs Y] 
-  := Prod.UncurryAll.uncurry f
-
-
---------------------------------------------------------------------------------
-
-class Prod.Curry (n : Nat) (Xs : Type) (Y : Type) (F : outParam Type) where
-  curry : (Xs → Y) → F
-
-attribute [reducible] Prod.Curry.curry
-
-@[reducible]
-instance (priority := low) : Prod.Curry 1 X Y (X→Y) where
-  curry := λ (f : X → Y) => f
-
-@[reducible]
-instance {X Xs Y : Type} {F : outParam Type} [c : outParam $ Prod.Curry n Xs Y F] 
-  : Prod.Curry (n+1) (X×Xs) Y (X→F) where
-  curry := λ (f : X×Xs → Y) => (λ (x : X) => c.curry (n:=n) (λ y => f (x,y)))
-
-abbrev curryN {Xs Y : outParam $ Type} {F : outParam Type} 
-  (n : Nat) (f : Xs → Y) [outParam $ Prod.Curry n Xs Y F] := Prod.Curry.curry n f
-
---------------------------------------------------------------------------------
-
 section Tests
 
   example : (42,3.14159,"hello").get 0 = 42 := by rfl
@@ -165,11 +105,5 @@ section Tests
   example : ((42,3.14159),("hello","world")).sizeFlat = 4 := by rfl
 
   example : (42,3.14159,"hello").set 2 "world" = (42,3.14159,"world") := by rfl
-
-  example : uncurryN 3 (λ i j k : Nat => i + j) = λ (i,j,k) => i + j := by rfl
-  example : uncurryN 2 (λ i j k : Nat => i + j) = λ (i,j) k => i + j := by rfl
-
-  example : curryN 3 (λ ((i,j,k) : Nat×Nat×Nat) => i + j) = (λ i j k : Nat  => i + j) := by rfl
-  -- example : curryN 2 (λ ((i,j,k) : Nat×Nat×Nat) => i + j) = (λ (i : Nat) ((j,k) : Nat×Nat) => i + j) := by rfl
 
 end Tests
