@@ -107,6 +107,26 @@ abbrev uncurryN {F : Type} {Xs Y : outParam Type}
   (n : Nat) (f : F) [Prod.Uncurry n F Xs Y] 
   := Prod.Uncurry.uncurry (n:=n) f
 
+----
+
+class Prod.UncurryAll (F : Sort _) (Xs : outParam (Sort _)) (Y : outParam (Sort _)) where
+  uncurry : F → Xs → Y
+
+attribute [reducible] Prod.UncurryAll.uncurry
+
+@[reducible]
+instance (priority := low) {X Y : Sort _} : Prod.UncurryAll (X→Y) X Y where
+  uncurry := λ (f : X → Y) (x : X) => f x
+
+@[reducible]
+instance {X Y : Sort _} {Xs' Y' : outParam (Sort _)} [c : Prod.UncurryAll Y Xs' Y']
+  : Prod.UncurryAll (X→Y) (X×Xs') Y' where
+  uncurry := λ (f : X → Y) ((x,xs) : X×Xs') => c.uncurry (f x) xs
+
+abbrev uncurryAll {F : Type} {Xs Y : outParam Type} 
+  (f : F) [Prod.UncurryAll F Xs Y] 
+  := Prod.UncurryAll.uncurry f
+
 
 --------------------------------------------------------------------------------
 
