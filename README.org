@@ -33,7 +33,7 @@ Other examples in =examples= directory do not currently work.
 
 * Example: Simulation of harmonic oscillator
 
-  The idea behind this library is can be most easily demonstrated on an example. We will create simulation of a harmonic oscillator, full [[https://github.com/lecopivo/SciLean/blob/master/examples/HarmonicOscilator.lean][example]].
+  The idea behind this library is can be most easily demonstrated on an example. We will create simulation of a harmonic oscillator, full [[https://github.com/lecopivo/SciLean/blob/master/examples/HarmonicOscillator.lean][example]].
 
   Harmonic oscillator is defined by its energy/Hamiltonian. Lean allows us to write down the energy in very familiar form:
 #+begin_src
