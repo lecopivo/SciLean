@@ -281,7 +281,7 @@ open Lean Elab Tactic Conv
 
 
 
-open Function in
+open Function
 /-- 
 Rewrite `solve` as `invFun` 
 
@@ -295,9 +295,22 @@ theorem solve_as_invFun {α β : Type _} [Nonempty α] (f g : α → β) [AddGro
     =
     invFun (fun x => f x - g x) 0
   := sorry_proof
+
+
+theorem solve_as_invFun_lhs {α β : Type _} [Nonempty α] (f : α → β) (b : β) [AddGroup β] 
+  : (solve x, f x = b)
+    =
+    invFun f b
+  := sorry_proof
+
+theorem solve_as_invFun_rhs {α β : Type _} [Nonempty α] (f : α → β) (b : β) [AddGroup β] 
+  : (solve x, b = f x)
+    =
+    invFun f b
+  := sorry_proof
   
 
-macro "solve_as_inv" : conv => `(conv| (conv => pattern (solveFun _); rw[solve_as_invFun])) 
+macro "solve_as_inv" : conv => `(conv| (conv => pattern (solveFun _); first | rw[solve_as_invFun_lhs] | rw[solve_as_invFun_rhs] | rw[solve_as_invFun])) 
 
 example : (0,0,0) = (solve (a b c : Int), a+b+c=1 ∧ a-b+c=1 ∧ a-b-c=1) := 
 by
