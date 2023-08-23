@@ -1,8 +1,14 @@
 import Mathlib.Topology.Basic
+import SciLean.Util.SorryProof
 
 noncomputable
 def _root_.Filter.limit {β} [TopologicalSpace β] [Nonempty β] 
   (l : Filter α) (f : α → β) : β := lim (l.map f)
+
+@[simp]
+theorem Filter.limit_of_const {β} [TopologicalSpace β] [Nonempty β] 
+  (l : Filter α) (b : β) 
+  : limit l (fun _ => b) = b := sorry_proof
 
 namespace LimitNotation 
 open Lean.Parser.Term
