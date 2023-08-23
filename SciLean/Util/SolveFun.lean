@@ -1,30 +1,51 @@
 import Lean
 import Mathlib.Logic.Nonempty
+import Mathlib.Algebra.Group.Defs
+import Mathlib.Data.Int.Basic
+
+import SciLean.Data.Curry
 import SciLean.Lean.Meta.Basic
 import SciLean.Lean.Array
-import SciLean.Data.Curry
-import SciLean.Tactic.LetEnter
 import SciLean.Tactic.LetNormalize
+import SciLean.Util.SorryProof
 
 namespace SciLean
 
+set_option linter.unusedVariables false
+
 attribute [local instance] Classical.propDecidable
 
-def HasUniqueSolution {F Xs} [UncurryAll F Xs Prop] (P : F) :=
-  (∃ xs, uncurryAll P xs)
-  ∧
-  ∀ xs xs', uncurryAll P xs → uncurryAll P xs' → xs = xs'
+structure HasSolution {F Xs} [UncurryAll F Xs Prop] (P : F) : Prop where
+  ex : ∃ xs, uncurryAll P xs
+  
+structure HasUniqueSolution {F Xs} [UncurryAll F Xs Prop] (P : F) extends HasSolution P : Prop where
+  uniq : ∀ xs xs', uncurryAll P xs → uncurryAll P xs' → xs = xs'
 
+/-- Finds unique `(x₁, ..., xₙ)` such that `P x₁ ... xₙ` holds.
+
+TODO: Can we return a solution if it exists and it not necessarily unique? I'm not sure if we would be able to prove `decomposeSolution` then.
+-/
 noncomputable
 def solveFun {F : Sort _} {Xs : outParam (Type _)} [UncurryAll F Xs Prop] [Nonempty Xs] (f : F) : Xs :=
   if h : HasUniqueSolution f then
-    Classical.choose h.1
+    Classical.choose h.ex
   else
     Classical.arbitrary Xs
 
 
 open Lean Parser Elab Term in
-elab "solve" xs:funBinder* ", " b:term : term => do
+/-- Expresses the unique solution of a system of equations if it exists
+
+For example
+
+```
+solve x y, x + y = a ∧ x - y = b
+```
+returns a pair `(x,y)` that solve the above system
+
+The returned value is not specified if the system does not have an unique solution.
+-/
+elab (priority:=high) "solve" xs:funBinder* ", " b:term : term => do
   let stx ← `(fun $xs* => $b)
   let f ← elabTerm stx.raw none
   Meta.mkAppM ``solveFun #[f]
@@ -49,11 +70,11 @@ theorem decompose_has_unique_solution {Xs Ys Zs : Type _} [Nonempty Xs] [Nonempt
   : HasUniqueSolution P
     ↔
     HasUniqueSolution fun ys => Q₂ ys (solve zs, Q₁ ys zs)
-  := by sorry
+  := by sorry_proof
 
 
 
-/-- This theorem allows us to decompose one problem into two succesives problems
+/-- This theorem allows us to decompose one problem `P` into two succesives problems `Q₁` and `Q₂`.
 -/
 theorem decomposeSolution {Xs Ys Zs : Type _} [Nonempty Xs] [Nonempty Ys] [Nonempty Zs]
   (f : Ys → Zs → Xs)  -- decomposition of unknowns
@@ -68,14 +89,16 @@ theorem decomposeSolution {Xs Ys Zs : Type _} [Nonempty Xs] [Nonempty Ys] [Nonem
     let ys  := solve ys, Q₂ ys (zs' ys)
     let zs  := zs' ys
     f ys zs
-  := by sorry
+  := by sorry_proof
 
 namespace SolveFun
 
 
 open Lean Meta
 
-/-- Take and expresion of the form `P₁ ∧ ... ∧ Pₙ` and return array `#[P₁, ..., Pₙ]` -/
+/-- Take and expresion of the form `P₁ ∧ ... ∧ Pₙ` and return array `#[P₁, ..., Pₙ]` 
+
+It ignores bracketing, so both `(P₁ ∧ P₂) ∧ P₃` and `P₁ ∧ (P₂ ∧ P₃)` produce `#[P₁, P₂, P₃]`-/
 def splitAnd? (e : Expr) : MetaM (Array Expr) := do
   match e with
   | .mdata _ e' => splitAnd? e'
@@ -122,16 +145,24 @@ will return
 TODO: This should produce proof that those two terms are equal
 -/
 def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := do
-  IO.println s!"e:\n{← ppExpr e}\n"
   if e.isAppOfArity ``solveFun 5 then
     lambdaTelescope (e.getArg! 4) fun xs b => do
       let is := is.sortAndDeduplicate
       let js := js.sortAndDeduplicate
       let Ps ← splitAnd? b
 
-      if ¬(is.all (·<xs.size) ∧ js.all (·<Ps.size)) then
-        throwError "Error in solveForFrom: invalid index when looking for variable {is} and equations {js} in\n{← ppExpr e}"
+      if let .some i := is.find? (· ≥ xs.size) then
+        throwError "cant' decompose `solve` with respect to the unknown `{i}` as there are only {xs.size} unknowns"
 
+      if let .some j := js.find? (· ≥ Ps.size) then
+        throwError "cant' decompose `solve` with respect to the equation `{j}` as there are only {Ps.size} equations"
+
+      if ¬(is.size < xs.size) then
+        throwError "can't decompose `solve` with respect to all unknowns"
+
+      if ¬(js.size < Ps.size) then
+        throwError "can't decompose `solve` with respect to all equations"
+  
       let (ys,zs,ids) := xs.splitIdx (fun i _ => ¬(is.contains i.1))
       let (Qs₁,Qs₂,_) := Ps.splitIdx (fun j _ => js.contains j.1)
      
@@ -223,14 +254,18 @@ produces
 ```
 
 Warring: this tactic currently uses `sorry`!-/
-syntax (name:=solve_for) "solve_for " ident+ " from " num+ " := " term : conv 
+local syntax (name:=solve_for_core_tactic) "solve_for_core " ident+ " from " num+ " := " term : conv 
+
+@[inherit_doc solve_for_core_tactic]
+macro (name:=solve_for_tacitc) "solve_for " xs:ident+ " from " js:num+ " := " uniq:term : conv =>
+  `(conv| ((conv => pattern (solveFun _); solve_for_core $xs* from $js* := $uniq); let_normalize))
 
 
 open Lean Elab Tactic Conv
-@[tactic solve_for] def solveForTactic : Tactic := fun stx => 
+@[tactic solve_for_core_tactic] def solveForTactic : Tactic := fun stx => 
   withMainContext do
   match stx with
-  | `(conv| solve_for $xs* from $js* := $prf) => do
+  | `(conv| solve_for_core $xs* from $js* := $prf) => do
     let names := xs.map (fun x => x.getId)
     let js := js.map (fun j => j.getNat)
     let lhs ← getLhs
@@ -245,12 +280,42 @@ open Lean Elab Tactic Conv
   | _ => throwUnsupportedSyntax
 
 
--- example : (0,0,0) = (solve (a b c : Nat), a+b+c=1 ∧ a-b+c=1 ∧ a-b-c=1) := 
--- by
---   conv =>
---     rhs
---     solve_for b from 2 := sorry
---     conv => 
---       enter_let ac
---       solve_for a from 0 := sorry
---     let_normalize
+
+open Function in
+/-- 
+Rewrite `solve` as `invFun` 
+
+TODO: There might be slight inconsistency as `invFun` always tries to give you some kind of answer even if it is not uniquely determined but `solve` gives up if the answer is not unique.
+
+The issue is that I'm not sure if 
+`Classical.choose (∃ x, f x - g x = 0)` might not be the same as `Classical.choose (∃ x, f x = g x)` or is that 
+-/
+theorem solve_as_invFun {α β : Type _} [Nonempty α] (f g : α → β) [AddGroup β] 
+  : (solve x, f x = g x)
+    =
+    invFun (fun x => f x - g x) 0
+  := sorry_proof
+  
+
+macro "solve_as_inv" : conv => `(conv| (conv => pattern (solveFun _); rw[solve_as_invFun])) 
+
+example : (0,0,0) = (solve (a b c : Int), a+b+c=1 ∧ a-b+c=1 ∧ a-b-c=1) := 
+by
+  conv =>
+    rhs
+    solve_for b from 2 := sorry
+    solve_as_inv
+    solve_for a from 0 := sorry
+    solve_as_inv
+    solve_as_inv
+  sorry_proof
+
+
+
+example : (0,0) = solve (a b : Nat), (∀ c, a + b + c = c) ∧ (∀ c, a + c = c) :=
+by 
+  conv =>
+    rhs
+    solve_for a from 1 := sorry
+  sorry_proof
+
