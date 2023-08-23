@@ -11,6 +11,13 @@ theorem Filter.limit_of_const {β} [TopologicalSpace β] [Nonempty β]
   (l : Filter α) (b : β) 
   : limit l (fun _ => b) = b := sorry_proof
 
+
+set_option linter.unusedVariables false in
+theorem Filter.limit_of_continuous {α β} [TopologicalSpace α] [TopologicalSpace β] [Nonempty β] 
+  (a : α) (f : α → β) (hf : Continuous f)
+  : limit (nhds a) f = f a := sorry_proof
+
+
 namespace LimitNotation 
 open Lean.Parser.Term
 scoped macro " limit " n:funBinder " → " n':term ", " y:term : term => `((nhds $n').limit (fun $n => $y))
