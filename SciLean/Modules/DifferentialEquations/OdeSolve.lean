@@ -1,25 +1,31 @@
 import SciLean.Core
-import SciLean.Data.Prod
--- import SciLean.Functions.Limit
--- import SciLean.Alternatives
--- import SciLean.Functions.Extend
--- import SciLean.Functions.Interpolate
+import SciLean.Data.Curry
 
-import Mathlib.Topology.Basic
+set_option linter.unusedVariables false
 
 namespace SciLean
 
 variable {K : Type _} [IsROrC K] {X : Type _} [Vec K X]
 
+set_default_scalar K
+
+def IsOdeSolution (f : K → X → X) (t₀ : K) (x₀ : X) (x : K → X) : Prop :=
+  (∀ t, (∂ x) t = f t (x t))
+  ∧
+  x t₀ = x₀
+
+structure HasOdeSolution (f : K → X → X) : Prop where
+  ex : ∀ t₀ x₀, ∃ x, IsOdeSolution f t₀ x₀ x
+
+structure HasUniqueOdeSolution (f : K → X → X) extends HasOdeSolution f : Prop where
+  uniq : ∀ t₀ x₀ x x', IsOdeSolution f t₀ x₀ x → IsOdeSolution f t₀ x₀ x' → x = x'
+            
 open Classical in
 noncomputable
 def odeSolve (f : K → X → X) (t₀ t : K) (x₀ : X) : X :=
-  if h : ∃ x : K → X, ∀ t, 
-             cderiv K x t 1 = f t (x t) 
-             ∧ 
-             x t₀ = x₀
-  then Classical.choose h t
-  else (0 : X)
+  if h : HasUniqueOdeSolution f -- TODO: can we reduce it to just HasOdeSolution? 
+  then Classical.choose (h.ex t₀ x₀) t
+  else Classical.arbitrary X
 
 section OnVec
 
