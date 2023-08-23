@@ -4,6 +4,27 @@ import Qq
 namespace Lean.Expr
 
 
+@[match_pattern]
+def mkAppB (f a b : Expr) := mkApp (mkApp f a) b
+@[match_pattern]
+def mkApp2 (f a b : Expr) := mkAppB f a b
+@[match_pattern]
+def mkApp3 (f a b c : Expr) := mkApp (mkAppB f a b) c
+@[match_pattern]
+def mkApp4 (f a b c d : Expr) := mkAppB (mkAppB f a b) c d
+@[match_pattern]
+def mkApp5 (f a b c d e : Expr) := mkApp (mkApp4 f a b c d) e
+@[match_pattern]
+def mkApp6 (f a b c d e₁ e₂ : Expr) := mkAppB (mkApp4 f a b c d) e₁ e₂
+@[match_pattern]
+def mkApp7 (f a b c d e₁ e₂ e₃ : Expr) := mkApp3 (mkApp4 f a b c d) e₁ e₂ e₃
+@[match_pattern]
+def mkApp8 (f a b c d e₁ e₂ e₃ e₄ : Expr) := mkApp4 (mkApp4 f a b c d) e₁ e₂ e₃ e₄
+@[match_pattern]
+def mkApp9 (f a b c d e₁ e₂ e₃ e₄ e₅ : Expr) := mkApp5 (mkApp4 f a b c d) e₁ e₂ e₃ e₄ e₅
+@[match_pattern]
+def mkApp10 (f a b c d e₁ e₂ e₃ e₄ e₅ e₆ : Expr) := mkApp6 (mkApp4 f a b c d) e₁ e₂ e₃ e₄ e₅ e₆
+
 def explicitArgIds (e : Expr) : Array Nat := 
   run e #[] 0
 where run (e : Expr) (ids : Array Nat) (i : Nat) : Array Nat := 
