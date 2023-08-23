@@ -12,5 +12,6 @@ elab "open_notation_over_field" K:ident : command => do
   Lean.Elab.Command.elabCommand <| ← 
    `(open SciLean.NotationOverField)
 
+macro "set_default_scalar " K:ident : command => `(open_notation_over_field $K)
 
 
