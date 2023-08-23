@@ -1,5 +1,6 @@
 import Mathlib.Topology.Basic
 import SciLean.Util.SorryProof
+import Mathlib.Analysis.Calculus.FDeriv.Basic
 
 noncomputable
 def _root_.Filter.limit {β} [TopologicalSpace β] [Nonempty β] 
@@ -16,15 +17,18 @@ scoped macro " limit " n:funBinder " → " n':term ", " y:term : term => `((nhds
 scoped macro " limit " n:funBinder " → " "∞" ", " y:term : term => `((Filter.atTop).limit (fun $n => $y))
 scoped macro " limit " n:funBinder " ∈ " l:term ", " y:term : term => `(Filter.limit $l (fun $n => $y))
 
+
 @[app_unexpander Filter.limit] def unexpandFilterLimit : Lean.PrettyPrinter.Unexpander
 
   | `($(_) Filter.atTop fun $n => $y) =>
     `(limit $n → ∞, $y)
-  | `($(_) (nhds $x) fun $n => $y) =>
-    `(limit $n → $x, $y)
   | `($(_) $l fun $n => $y) =>
-    `(limit $n ∈ $l, $y)
-
+    match l with
+    | `(nhds $x) => `(limit $n → $x, $y)
+    | _ => `(limit $n ∈ $l, $y)
   | _  => throw ()
 
 end LimitNotation
+
+
+
