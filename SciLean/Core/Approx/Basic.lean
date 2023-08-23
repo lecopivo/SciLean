@@ -2,7 +2,7 @@
 import Mathlib.Analysis.Calculus.FDeriv.Basic
 
 import SciLean.Core.Approx.ApproxSolution
-import SciLean.Util.LimitNotation
+import SciLean.Util.Limit
 
 namespace SciLean
 
