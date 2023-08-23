@@ -20,19 +20,29 @@ theorem Filter.limit_of_continuous {α β} [TopologicalSpace α] [TopologicalSpa
 
 namespace LimitNotation 
 open Lean.Parser.Term
-scoped macro " limit " n:funBinder " → " n':term ", " y:term : term => `((nhds $n').limit (fun $n => $y))
-scoped macro " limit " n:funBinder " → " "∞" ", " y:term : term => `((Filter.atTop).limit (fun $n => $y))
-scoped macro " limit " n:funBinder " ∈ " l:term ", " y:term : term => `(Filter.limit $l (fun $n => $y))
+scoped macro "limit " n:funBinder " → " n':term ", " y:term : term => `((nhds $n').limit (fun $n => $y))
+scoped macro "limit " n:funBinder " → " "∞" ", " y:term : term => `((Filter.atTop).limit (fun $n => $y))
+scoped macro "limit " n:funBinder " ∈ " l:term ", " y:term : term => `(Filter.limit $l (fun $n => $y))
 
 
 @[app_unexpander Filter.limit] def unexpandFilterLimit : Lean.PrettyPrinter.Unexpander
 
   | `($(_) Filter.atTop fun $n => $y) =>
     `(limit $n → ∞, $y)
+
+  | `($(_) Filter.atTop fun $n $ns* => $y) =>
+    `(limit $n → ∞, fun $ns* => $y)
+
   | `($(_) $l fun $n => $y) =>
     match l with
     | `(nhds $x) => `(limit $n → $x, $y)
     | _ => `(limit $n ∈ $l, $y)
+
+  | `($(_) $l fun $n $ns* => $y) =>
+    match l with
+    | `(nhds $x) => `(limit $n → $x, fun $ns* => $y)
+    | _ => `(limit $n ∈ $l, fun $ns* => $y)
+
   | _  => throw ()
 
 end LimitNotation
