@@ -24,9 +24,11 @@ structure HasUniqueSolution {F Xs} [UncurryAll F Xs Prop] (P : F) extends HasSol
 /-- Finds unique `(x₁, ..., xₙ)` such that `P x₁ ... xₙ` holds.
 
 TODO: Can we return a solution if it exists and it not necessarily unique? I'm not sure if we would be able to prove `decomposeSolution` then.
+
+TODO: This is related to mathlib's `Classical.epsilon` i.e. the Hilbert epsilon function. Maybe redefine this function using it.
 -/
 noncomputable
-def solveFun {F : Sort _} {Xs : outParam (Type _)} [UncurryAll F Xs Prop] [Nonempty Xs] (f : F) : Xs :=
+def solveFun {F : Sort _} {Xs : outParam (Type _)} [UncurryAll F Xs Prop] [Nonempty Xs] (f : F /- Xs → ... → Prop -/) : Xs :=
   if h : HasUniqueSolution f then
     Classical.choose h.ex
   else
