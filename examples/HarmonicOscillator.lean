@@ -20,7 +20,8 @@ by
   ftrans; simp; ring_nf -- symbolic differentiation
   
   -- Apply RK4 method
-  -- rw [odeSolve_fixed_dt runge_kutta4_step]
+  rw [odeSolve_fixed_dt forwardEuler sorry sorry]
+  -- bubble_limit
   -- approx_limit steps; simp; intro steps';
 
 

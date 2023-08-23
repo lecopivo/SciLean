@@ -1,6 +1,11 @@
 import Mathlib.Topology.Basic
 import Mathlib.Topology.Separation
 import Mathlib.Order.Filter.Basic
+import SciLean.Util.Limit
+
+set_option linter.unusedVariables false
+
+open LimitNotation
 
 inductive ApproxSolution {α : Type _} : {N : Type _} → (lN : Filter N) → (spec : α → Prop) → Type _ 
 | exact {spec : α → Prop}
@@ -8,11 +13,11 @@ inductive ApproxSolution {α : Type _} : {N : Type _} → (lN : Filter N) → (s
     (h : spec impl)
     : ApproxSolution (⊤ : Filter Unit) spec
 
-| approx {N M} [TopologicalSpace α] {spec : α → Prop}
+| approx {N M} [TopologicalSpace α] [Nonempty α] {spec : α → Prop}
     (specₙ : N → α → Prop)
     (lN : Filter N) (lM : Filter M)
-    (consistent : ∀ (aₙ : N → α), (∀ n, specₙ n (aₙ n)) → (∀ a, lN.Tendsto aₙ (nhds a) → spec a))
-    (convergence : ∀ (aₙ : N → α), (∀ n, specₙ n (aₙ n)) → ∃ a, lN.Tendsto aₙ (nhds a))
+    (consistent : ∀ (aₙ : N → α), (∀ n, specₙ n (aₙ n)) → (∀ a, (a = limit n ∈ lN, aₙ n) → spec a))
+    (convergence : ∀ (a' : N → M → α), (∀ n, specₙ n (limit m ∈ lM, a' n m)) → ∃ a, a = limit (n,m) ∈ lN.prod lM, a' n m)
     (impl : (n : N) → ApproxSolution lM (specₙ n))
     : ApproxSolution (lN.prod lM) spec
 
@@ -25,6 +30,14 @@ match a with
 | approx _ _ _ _ _ impl => (impl p.1).val p.2
 
 
+noncomputable
+def ApproxSolution.limit {α N} {lN : Filter N} {spec : α → Prop}
+  (a : ApproxSolution lN spec) : α :=
+match a with
+| exact impl _ => impl
+| approx _ lN _ _ _ impl => limit n ∈ lN, (impl n).limit
+
+
 theorem approx_consistency {N} {lN : Filter N} {α} [TopologicalSpace α] [T2Space α] [Nonempty α] {spec : α → Prop}
   (approx : ApproxSolution lN spec)
   : ∀ a, lN.Tendsto approx.val (nhds a) → spec a :=
@@ -33,7 +46,7 @@ by
   case exact impl h => 
     simp[ApproxSolution.val]
     intro a h'
-    have : Filter.NeBot (⊤ : Filter Unit) := sorry
+    have : Filter.NeBot (⊤ : Filter Unit) := sorry_proof
     rw[tendsto_nhds_unique (a:=a) (b:=impl) h']
     apply h
     aesop
@@ -41,7 +54,7 @@ by
     simp[ApproxSolution.val]
     -- intro h
     let aₙ := λ n => lim (lM.map λ m => (impl n).val m)
-    sorry
+    sorry_proof
     -- have haₙ : ∀ n, specₙ n (aₙ n) := λ n => hn n ((hasLimit_split h).1 n)
     -- simp[limit_split h]
     -- have aₙ_def : ∀ n,  limit lM (fun m => ApproxSolution.val (impl n) m) = aₙ n := by intro n; rfl
@@ -54,7 +67,7 @@ by
 -- This is likely not true as it is currently stated. We likely need some extra assumption in the `.approx` constructor
 theorem approx_convergence {N} {lN : Filter N} {α} [TopologicalSpace α] {spec : α → Prop}
   (approx : ApproxSolution lN spec)
-  : ∃ a, lN.Tendsto approx.val (nhds a) := sorry
+  : ∃ a, lN.Tendsto approx.val (nhds a) := sorry_proof
 -- by
 --   induction approx
 --   case exact impl h => exact ⟨impl, sorry⟩

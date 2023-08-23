@@ -3,15 +3,22 @@ import Mathlib.Analysis.Calculus.FDeriv.Basic
 
 import SciLean.Core.Approx.ApproxSolution
 import SciLean.Util.Limit
+import SciLean.Util.SorryProof
 
 namespace SciLean
+
+open LimitNotation
 
 abbrev Approx  {N : outParam $ Type _} (lN : Filter N) {α} [TopologicalSpace α] (a : α)  := ApproxSolution lN (fun x => a=x)
 
 abbrev Approx.exact {α} [TopologicalSpace α] {a : α} := ApproxSolution.exact a rfl
 abbrev Approx.limit {N} {lN : Filter N} (M) (lM : Filter M) 
   {α} [TopologicalSpace α] [Nonempty α] {aₙ : N → α} (x : (n : N) → Approx lM (aₙ n)) 
-  : Approx (lN.prod lM) (lN.limit aₙ) := ApproxSolution.approx _ lN lM sorry sorry x
+  : Approx (lN.prod lM) (limit n ∈ lN, aₙ n) := 
+  ApproxSolution.approx _ lN lM 
+    (by intro aₙ' h a h'; simp[h,h'])
+    (by sorry_proof)
+    x
 
 
 instance {N α} [TopologicalSpace α] (lN : Filter N) (a : α) : CoeFun (Approx (lN:=lN) a) (λ _ => N → α) := ⟨λ approx => approx.val⟩
