@@ -1,4 +1,5 @@
 import SciLean.Core
+import SciLean.Core.FloatAsReal
 
 import SciLean.Data.ArrayType
 import SciLean.Data.DataArray

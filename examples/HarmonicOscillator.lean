@@ -3,7 +3,7 @@ import SciLean.Core.Approx.Basic
 import SciLean.Core.FloatAsReal
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.RewriteBy
-import SciLean.Modules.DifferentialEquations.OdeSolve
+import SciLean.Modules.DifferentialEquations
 
 open_notation_over_field Float
 
