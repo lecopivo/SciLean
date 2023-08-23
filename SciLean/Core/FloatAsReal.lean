@@ -66,12 +66,19 @@ instance : StarRing Float where
   star_mul := by simp[Function.Involutive, mul_comm] 
   star_add := by simp[Function.Involutive]
 
+instance : PartialOrder Float where
+  le_refl := sorry_proof
+  le_trans := sorry_proof
+  le_antisymm := sorry_proof
+  lt_iff_le_not_le := sorry_proof
+
 noncomputable
 instance : IsROrC Float where
   eq_of_dist_eq_zero := sorry_proof
   dist_eq := sorry_proof
   norm_mul' := sorry_proof
   lt_norm_lt := sorry_proof
+  le_iff_re_im := sorry_proof
   smul := fun r x => realToFloat r * x
   toFun := realToFloat
   map_one' := sorry_proof
