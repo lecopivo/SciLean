@@ -249,13 +249,37 @@ elab_rules : term
   else
     throwUnsupportedSyntax
 
-macro_rules
-| `(∂ $x:ident, $b)              => `(∂ fun $x => $b)
-| `(∂ $x:ident : $type:term, $b) => `(∂ fun $x : $type => $b)
-| `(∂ $x:ident := $val:term, $b) => `(∂ (fun $x => $b) $val)
-| `(∂ $x:ident := $val:term ; $dir:term, $b) => `(∂ (fun $x => $b) $val $dir)
-| `(∂ ($b:diffBinder), $f)       => `(∂ $b, $f)
+| `(∂ $x:ident, $b) => do
+  let K := mkIdent (← currentFieldName.get)
+  let KExpr ← elabTerm (← `($K)) none
+  let fExpr ← elabTerm (← `(fun $x => $b)) none
+  if let .some (X,Y) := (← inferType fExpr).arrow? then
+    if (← isDefEq KExpr X) then
+      elabTerm (← `(fun x => (cderiv $K (X:=$K) (fun $x => $b) x (1:$K)))) none false
+    else
+      elabTerm (← `(cderiv $K (fun $x => $b))) none false
+  else
+    throwUnsupportedSyntax
 
+| `(∂ $x:ident := $val:term, $b) => do
+  let K := mkIdent (← currentFieldName.get)
+  let KExpr ← elabTerm (← `($K)) none
+  let fExpr ← elabTerm (← `(fun $x => $b)) none
+  if let .some (X,Y) := (← inferType fExpr).arrow? then
+    if (← isDefEq KExpr X) then
+      elabTerm (← `((cderiv $K (X:=$K) (fun $x => $b) $val (1:$K)))) none false
+    else
+      elabTerm (← `(cderiv $K (fun $x => $b) $val)) none false
+  else
+    throwUnsupportedSyntax
+
+| `(∂ $x:ident := $val:term ; $dir:term, $b) => do
+  let K := mkIdent (← currentFieldName.get)
+  elabTerm (← `(cderiv $K (fun $x => $b) $val $dir)) none
+
+macro_rules
+| `(∂ $x:ident : $type:term, $b) => `(∂ fun $x : $type => $b)
+| `(∂ ($b:diffBinder), $f)       => `(∂ $b, $f)
 
 @[app_unexpander cderiv] def unexpandCDeriv : Lean.PrettyPrinter.Unexpander
 
@@ -263,6 +287,7 @@ macro_rules
     match f with
     | `(fun $x':ident => $b:term) => `((∂ $x':ident:=$x;$dx, $b) $y $ys*)
     | _  => `(∂ $f:term $x:term $dx $y $ys*)
+
 
   | `($(_) $K $f:term $x $dx) =>
     match f with
