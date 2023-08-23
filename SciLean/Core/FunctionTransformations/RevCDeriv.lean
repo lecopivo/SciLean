@@ -308,14 +308,12 @@ elab_rules : term
       elabTerm (← `(fun x => (revCDeriv $K $f x).2)) none false
   else
     throwUnsupportedSyntax
-| `(∇ $x:ident, $f) => do
-  elabTerm (← `(∇ fun $x => $f)) none
-| `(∇ $x:ident : $type:term, $f) => do
-  elabTerm (← `(∇ fun $x : $type => $f)) none
-| `(∇ $x:ident := $val:term, $f) => do
-  elabTerm (← `((∇ fun $x => $f) $val)) none
-| `(∇ ($b:diffBinder), $f) => do
-  elabTerm (← `(∇ $b, $f)) none
+
+macro_rules
+| `(∇ $x:ident, $f)              => `(∇ fun $x => $f)
+| `(∇ $x:ident : $type:term, $f) => `(∇ fun $x : $type => $f)
+| `(∇ $x:ident := $val:term, $f) => `((∇ fun $x => $f) $val)
+| `(∇ ($b:diffBinder), $f)       => `(∇ $b, $f)
 
 -- does not work :(
 @[app_unexpander revCDeriv] def unexpandRevCDeriv : Lean.PrettyPrinter.Unexpander
