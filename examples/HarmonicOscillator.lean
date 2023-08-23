@@ -5,6 +5,8 @@ import SciLean.Tactic.LetNormalize
 import SciLean.Util.RewriteBy
 import SciLean.Modules.DifferentialEquations
 
+import SciLean.Tactic.PullLimitOut
+
 open_notation_over_field Float
 
 open SciLean
@@ -21,6 +23,12 @@ by
   
   -- Apply RK4 method
   rw [odeSolve_fixed_dt forwardEuler sorry sorry]
+  conv => enter[2]; pull_limit_out := sorry
+  apply Approx.limit Unit ⊤
+  intro n
+
+
+  
   -- bubble_limit
   -- approx_limit steps; simp; intro steps';
 
