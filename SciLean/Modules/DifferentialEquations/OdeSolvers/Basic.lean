@@ -1,7 +1,6 @@
 import SciLean.Modules.DifferentialEquations.OdeSolve
-import SciLean.Util.RewriteBy
-import SciLean.Util.Impl
-import SciLean.Util.SolveFun
+import SciLean.Util.LimitNotation
+
 
 namespace SciLean
 
@@ -11,169 +10,35 @@ variable
   {Y : Type _} [Vec R Y]
   {Z : Type _} [Vec R Z]
 
-open_notation_over_field R
+set_default_scalar R
+open LimitNotation
 
-/-- Value of a given type but its run time value has been erased. -/
-structure RunTimeErased (α) where
-  P : α → Prop
-  ex : ∃ a, P a
-  uniq : ∀ a a', P a → P a' → a = a'
+/-- Can we integrate differential equation `∂ x t = f t (x t)` using `stepper` function?
 
-def erase {α} (a : α) : RunTimeErased α := 
-  { P := fun x => x = a
-    ex := Exists.intro a rfl
-    uniq := by intro a b h h'; simp[h,h']
-  }
+The function `stepper t₁ t₂ x₀` computes approximation of the solution `x t₂` under initial condition `x t₁ = x₀`
 
-noncomputable
-def RunTimeErased.val {α} (a : RunTimeErased α) : α := Classical.choose a.ex
-
-@[simp]
-theorem val_erase (a : α) : (erase a).val = a := by sorry_proof
-
-instance : Coe α (RunTimeErased α) := ⟨fun a => erase a⟩
-noncomputable
-instance : Coe (RunTimeErased α) α := ⟨fun e => e.val⟩
-noncomputable
-instance : CoeFun (RunTimeErased (α→β)) (fun _ => α → β) := ⟨fun e => e.val⟩
-
-structure OdeStepperImpl (f : RunTimeErased (R → X → X)) where
-  stepper (t₁ t₂ : R) (x : X) : X
-  -- under what conditions on `f` is this stepper consistent?
-  consistency_condition : Prop
-  -- The basic consistency condition is:
-  -- TODO: This needs refinment!!!
-  is_consistent : consistency_condition → ∀ t₁ x, (∂ (t₂:=t₁), stepper t₁ t₂ x) 1 = f t₁ x
-  -- there are probably others
-
-abbrev OdeStepper (f : R → X → X) := OdeStepperImpl (erase f)
-
-def OdeStepper.IsConsistent {f : R → X → X} (s : OdeStepper f) : Prop := s.consistency_condition
-
-def forwardEuler (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
-  let Δt := t₂ - t₁
-  xₙ + Δt • f t₁ xₙ
-
-noncomputable
-def backwardEuler (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
-  let Δt := t₂ - t₁
-  solve x', x' = xₙ + Δt • f t₁ x'
-
-def explicitMidpoint (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
-  let Δt := t₂ - t₁
-  let x' := xₙ + (Δt/2) • f t₁ xₙ
-  let x'' := xₙ + Δt • f (t₁+(Δt/2)) x'
-  x''
-
-noncomputable
-def implicitMidpoint (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
-  let Δt := t₂ - t₁
-  solve x', x' = xₙ + Δt • f (t₁+(Δt/2)) ((1/2:R) • (xₙ + x'))
-
-def heunMethod (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
-  let Δt := t₂ - t₁
-  let x' := xₙ + Δt • f t₁ xₙ 
-  let x'' := xₙ + (Δt/2) • (f t₁ xₙ + f t₂ x')
-  x''
-
-noncomputable
-def crankNicolson (f : R → X → X) (t₁ t₂ : R) (xₙ : X) : X :=
-  let Δt := t₂ - t₁
-  solve x', x' = xₙ + (Δt/2) • (f t₁ xₙ + f t₂ x')
-
-variable 
-  {R : Type _} [IsROrC R]
-  {X : Type _} [SemiInnerProductSpace R X]
-  {Y : Type _} [SemiInnerProductSpace R Y]
-  {Z : Type _} [SemiInnerProductSpace R Z]
-
-
-/-- Symplectic Euler integrator 
-
-Well behaved integragor for Hamiltonian systems
-
-Warning: This is symplectic integrator if `H q p = T p + V q`. 
-In more complicated cases use `implicitSymplecticEulerV1`.
+TODO: refine the conditions, we probably want consistency and convergence. Maybe integrability in `f` too? or integrability of `f` should be specified somewhere else?
 -/
-noncomputable
-def explicitSymplecticEuler (H : X → X → R) (Δt : R) (qₙ pₙ : X) : X×X :=
-  let p' := pₙ - Δt • ∇ (q:=qₙ), H q  pₙ
-  let q' := qₙ + Δt • ∇ (p:=p'), H qₙ p
-  (q', p')
- 
-noncomputable
-def implicitSymplecticEulerV1 (H : X → X → R) (Δt : R) (qₙ pₙ : X) : X×X :=
-  solve q' p',
-    q' = qₙ + Δt • ∇ (p:=p'), H p  qₙ
-    ∧
-    p' = pₙ - Δt • ∇ (q:=qₙ), H p' q
+structure IsOdeStepper (f : R → X → X) (stepper : R → R → X → X) where
+  consistent : ∀ t x, (limit Δt' → 0, ∂ Δt:=Δt', stepper t Δt x) = f t x
+  -- converges - something that it really converges
+  -- maybe integrability of `f` ?? 
+  
+def odeSolveFixedStep (stepper : R → R → X → X) (steps : Nat) (t₁ t₂ : R) (x₀ : X) : X := Id.run do
+  let Δt := (t₂-t₁)/steps
+  let mut x := x₀
+  let mut t := t₁
+  for _ in [0:steps] do
+    x := stepper t (t+Δt) x
+    t += Δt 
+  x
 
-noncomputable
-def implicitSymplecticEulerV2 (H : X → X → R) (Δt : R) (qₙ pₙ : X) : X×X :=
-  solve q' p',
-    q' = qₙ + Δt • ∇ (s:=pₙ), H s q'
-    ∧
-    p' = pₙ - Δt • ∇ (s:=q'), H pₙ s
+theorem odeSolve_fixed_dt (f : R → X → X) (stepper : (R → R → X → X)) 
+  (hf : HasUniqueOdeSolution f) (hstepper : IsOdeStepper f stepper)
+  : odeSolve f t₁ t₂ x₀ = limit n → ∞, odeSolveFixedStep stepper n t₁ t₂ xₒ := sorry_proof
 
-theorem explicitSymplecticEuler_eq_implicitSymplecticEulerV1
-  (T V : X → R) 
-  (hT : HasAdjDiff R T) (hV : HasAdjDiff R V)
-  : explicitSymplecticEuler (fun q p => T p + V q)
-    =
-    implicitSymplecticEulerV1 (fun q p => T p + V q) := 
-by
-  unfold implicitSymplecticEulerV1
-  conv => 
-    rhs
-    ftrans; simp
-    -- solve for p'
-    -- solve for q'
-    -- ftrans
-  sorry_proof
- 
--- function_properties SciLean.forward_euler_step {X : Type} [Vec X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ)
--- argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
---   IsSmooth := by unfold forward_euler_step; sorry_proof,
---   noncomputable abbrev ∂ := λ dx₀ =>
---     dx₀ + Δt • (∂ x':=x₀;dx₀, f t₀ x')
---     -- forward_euler_step Tf t₀ (x₀,dx₀) Δt
---     by
---       unfold forward_euler_step
---       have : ∀ t, IsSmooth (f t) := sorry_proof 
---       fun_trans
---       simp, -- WTF where did the goal `True` came from?
---   noncomputable abbrev 𝒯 := λ dx₀ =>
---     let Tf := λ t (xdx : X×X) => 𝒯 (λ x' => f t x') xdx.1 xdx.2
---     forward_euler_step Tf t₀ (x₀,dx₀) Δt
---     by
---       unfold forward_euler_step
---       funext dx₀
---       have : ∀ t, IsSmooth (f t) := sorry_proof
---       fun_trans
---       fun_trans
---       unfold tangentMap 
---       fun_trans
---       try simp
---       done
-
-
--- function_properties SciLean.forward_euler_step {X : Type} [SemiHilbert X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ)
--- argument x₀  --[∀ t, HasAdjDiff λ (x : X) => f t x]
-
---   noncomputable abbrev ℛ := 
---     let Rf := ℛ (λ x' => f t₀ x') x₀
---     (x₀ + Δt • Rf.1, λ y' => y' + Δt • Rf.2 y')
---     by
---       unfold forward_euler_step
---       ignore_fun_prop
---       conv => 
---         rhs
---         fun_trans
---       conv => 
---         lhs
---         fun_trans
 --       simp -- bugs in reverseMode transform
-    
+#exit    
 
 --- This requires some conditions on the function ... or just add the conclusion as an assumption
 theorem odeSolve_fixed_dt.forward_euler (f : ℝ → X → X)

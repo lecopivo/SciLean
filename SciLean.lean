@@ -3,6 +3,8 @@ import SciLean.Core
 import SciLean.Data.ArrayType
 import SciLean.Data.DataArray
 
+import SciLean.Modules.DifferentialEquations
+
 /-!
 
 SciLean

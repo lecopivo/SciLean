@@ -202,7 +202,7 @@ def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := 
       let uniqueProof ← mkFreshExprMVar unique
 
       -- somehow we should be able to combine everyting with the theorem `decomposeSolution` to obtain equality proof
-      let eqProof ← mkAppM ``sorryAx #[← mkEq e e', .const ``Bool.false []]
+      let eqProof ← mkAppOptM ``sorryProofAxiom #[← mkEq e e']
 
       -- if ¬(← isTypeCorrect eqProof) then
       --   throwError "something went wrong :("
