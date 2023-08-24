@@ -15,18 +15,29 @@ variable {α α' β β' γ γ' : Type _}
 -/
 axiom realFloatEquiv : ℝ ≃ Float 
 
-noncomputable
+
 scoped instance : IsomorphicType `RealToFloat ℝ Float where
-  equiv := realFloatEquiv
+  equiv := 
+  {
+    toFun  := panic! "attempting to convert real to float"
+    invFun := panic! "attempting to convert float to real"
+    left_inv := sorry_proof
+    right_inv := sorry_proof
+  }
 
-noncomputable
+
 scoped instance : IsomorphicType `FloatToReal Float ℝ where
-  equiv := realFloatEquiv.symm
+  equiv := 
+  {
+    toFun  := panic! "attempting to convert float to real"
+    invFun := panic! "attempting to convert real to float"
+    left_inv := sorry_proof
+    right_inv := sorry_proof
+  }
 
-noncomputable
+
 abbrev realToFloat (x : ℝ) : Float := IsomorphicType.equiv `RealToFloat x
 
-noncomputable
 abbrev floatToReal (x : Float) : ℝ := IsomorphicType.equiv `FloatToReal x
 
 

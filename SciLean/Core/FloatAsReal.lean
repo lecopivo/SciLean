@@ -37,19 +37,38 @@ instance : Field Float where
   mul_inv_cancel := sorry_proof
   inv_zero := sorry_proof
 
--- instance : LinearOrderedRing Float where
---   le_refl := sorry_proof
---   le_trans := sorry_proof
---   le_antisymm := sorry_proof
---   add_le_add_left := sorry_proof
---   zero_le_one := sorry_proof
---   mul_pos := sorry_proof
---   le_total := sorry_proof
---   decidableLE := fun x y => if h : x ≤ y then isTrue h else isFalse h
+instance : DecidableEq Float := fun x y => 
+  if x ≤ y && y ≤ x 
+  then .isTrue sorry_proof 
+  else .isFalse sorry_proof
 
--- instance : LinearOrderedField Float := LinearOrderedField.mk
+instance : LinearOrderedCommRing Float where
+  le_refl := sorry_proof
+  le_trans := sorry_proof
+  le_antisymm := sorry_proof
+  add_le_add_left := sorry_proof
+  zero_le_one := sorry_proof
+  mul_pos := sorry_proof
+  mul_comm := sorry_proof
+  le_total := sorry_proof
+  decidableLE := fun x y => if h : x≤y then .isTrue h else .isFalse h
+  min := fun a b => if a ≤ b then a else b
+  max := fun a b => if a ≤ b then b else a
+  min_def := sorry_proof
+  max_def := sorry_proof
+  compare x y :=   
+    if x < y then Ordering.lt
+    else if x = y then Ordering.eq
+    else Ordering.gt
+  compare_eq_compareOfLessAndEq := sorry_proof
+  lt_iff_le_not_le := sorry_proof
 
-noncomputable
+instance : LinearOrderedField Float where
+  mul_inv_cancel := sorry_proof
+  inv_zero := sorry_proof
+  div_eq_mul_inv := sorry_proof 
+
+
 instance : SeminormedRing Float where
   norm := fun x => floatToReal (Float.abs x)
   dist := fun x y => floatToReal (Float.abs (x - y))
@@ -66,19 +85,16 @@ instance : StarRing Float where
   star_mul := by simp[Function.Involutive, mul_comm] 
   star_add := by simp[Function.Involutive]
 
-instance : PartialOrder Float where
-  le_refl := sorry_proof
-  le_trans := sorry_proof
-  le_antisymm := sorry_proof
-  lt_iff_le_not_le := sorry_proof
-
-noncomputable
-instance : IsROrC Float where
+instance : DenselyNormedField Float where
   eq_of_dist_eq_zero := sorry_proof
   dist_eq := sorry_proof
   norm_mul' := sorry_proof
   lt_norm_lt := sorry_proof
-  le_iff_re_im := sorry_proof
+
+instance : StarRing Float where
+  star_add := sorry_proof
+
+instance : Algebra ℝ Float where
   smul := fun r x => realToFloat r * x
   toFun := realToFloat
   map_one' := sorry_proof
@@ -87,8 +103,18 @@ instance : IsROrC Float where
   map_add' := sorry_proof
   commutes' := sorry_proof
   smul_def' := sorry_proof
+
+instance : NormedField Float where
+  dist_eq := sorry_proof
+  norm_mul' := sorry_proof
+
+instance : NormedAlgebra ℝ Float where
   norm_smul_le := sorry_proof
+
+instance : CompleteSpace Float where
   complete := sorry_proof
+
+instance : IsROrC Float where
   re := ⟨⟨fun x => floatToReal x, sorry_proof⟩, sorry_proof⟩
   im := ⟨⟨fun _ => 0, sorry_proof⟩, sorry_proof⟩
   I := 0
@@ -104,11 +130,11 @@ instance : IsROrC Float where
   conj_I_ax := sorry_proof
   norm_sq_eq_def_ax := sorry_proof
   mul_im_I_ax := sorry_proof
+  le_iff_re_im := sorry_proof
 
-noncomputable
+
 instance : IsReal Float where
   is_real := sorry_proof
-
 
 
 open ComplexConjugate
