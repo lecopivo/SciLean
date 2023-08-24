@@ -9,11 +9,13 @@ namespace SciLean
 
 open LimitNotation
 
-abbrev Approx  {N : outParam $ Type _} (lN : Filter N) {α} [TopologicalSpace α] (a : α)  := ApproxSolution lN (fun x => a=x)
+variable {α} [TopologicalSpace α] [Nonempty α]
 
-abbrev Approx.exact {α} [TopologicalSpace α] {a : α} := ApproxSolution.exact a rfl
+abbrev Approx  {N : outParam $ Type _} (lN : Filter N) (a : α)  := ApproxSolution lN (fun x => a=x)
+
+abbrev Approx.exact {a : α} := ApproxSolution.exact a rfl
 abbrev Approx.limit {N} {lN : Filter N} (M) (lM : Filter M) 
-  {α} [TopologicalSpace α] [Nonempty α] {aₙ : N → α} (x : (n : N) → Approx lM (aₙ n)) 
+  {aₙ : N → α} (x : (n : N) → Approx lM (aₙ n)) 
   : Approx (lN.prod lM) (limit n ∈ lN, aₙ n) := 
   ApproxSolution.approx _ lN lM 
     (by intro aₙ' h a h'; simp[h,h'])
@@ -21,7 +23,7 @@ abbrev Approx.limit {N} {lN : Filter N} (M) (lM : Filter M)
     x
 
 
-instance {N α} [TopologicalSpace α] (lN : Filter N) (a : α) : CoeFun (Approx (lN:=lN) a) (λ _ => N → α) := ⟨λ approx => approx.val⟩
+instance {N} (lN : Filter N) (a : α) : CoeFun (Approx (lN:=lN) a) (λ _ => N → α) := ⟨λ approx => approx.val⟩
 
 syntax declModifiers "approx " declId bracketedBinder* (":" term)? ":=" term " by " tacticSeq : command
 

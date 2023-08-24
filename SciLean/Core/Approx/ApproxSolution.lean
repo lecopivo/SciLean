@@ -7,13 +7,13 @@ set_option linter.unusedVariables false
 
 open LimitNotation
 
-inductive ApproxSolution {α : Type _} : {N : Type _} → (lN : Filter N) → (spec : α → Prop) → Type _ 
+inductive ApproxSolution {α : Type _} [TopologicalSpace α] [Nonempty α] : {N : Type _} → (lN : Filter N) → (spec : α → Prop) → Type _ 
 | exact {spec : α → Prop}
     (impl : α)
     (h : spec impl)
     : ApproxSolution (⊤ : Filter Unit) spec
 
-| approx {N M} [TopologicalSpace α] [Nonempty α] {spec : α → Prop}
+| approx {N M} {spec : α → Prop}
     (specₙ : N → α → Prop)
     (lN : Filter N) (lM : Filter M)
     (consistent : ∀ (aₙ : N → α), (∀ n, specₙ n (aₙ n)) → (∀ a, (a = limit n ∈ lN, aₙ n) → spec a))
@@ -22,8 +22,10 @@ inductive ApproxSolution {α : Type _} : {N : Type _} → (lN : Filter N) → (s
     : ApproxSolution (lN.prod lM) spec
 
 
+variable {α} [TopologicalSpace α] [Nonempty α] 
+
 @[inline]
-def ApproxSolution.val {α N} {lN : Filter N} {spec : α → Prop}
+def ApproxSolution.val {N} {lN : Filter N} {spec : α → Prop}
   (a : ApproxSolution lN spec) (p : N) : α :=
 match a with
 | exact impl _ => impl
@@ -31,25 +33,26 @@ match a with
 
 
 noncomputable
-def ApproxSolution.limit {α N} {lN : Filter N} {spec : α → Prop}
+def ApproxSolution.limit {N} {lN : Filter N} {spec : α → Prop}
   (a : ApproxSolution lN spec) : α :=
 match a with
 | exact impl _ => impl
 | approx _ lN _ _ _ impl => limit n ∈ lN, (impl n).limit
 
 
-theorem approx_consistency {N} {lN : Filter N} {α} [TopologicalSpace α] [T2Space α] [Nonempty α] {spec : α → Prop}
+theorem approx_consistency {N} {lN : Filter N} [T2Space α] {spec : α → Prop}
   (approx : ApproxSolution lN spec)
-  : ∀ a, lN.Tendsto approx.val (nhds a) → spec a :=
+  : ∀ a, a = (limit n ∈ lN, approx.val n) → spec a :=
 by
   induction approx
   case exact impl h => 
     simp[ApproxSolution.val]
-    intro a h'
-    have : Filter.NeBot (⊤ : Filter Unit) := sorry_proof
-    rw[tendsto_nhds_unique (a:=a) (b:=impl) h']
-    apply h
-    aesop
+    sorry_proof
+    -- intro a h'
+    -- have : Filter.NeBot (⊤ : Filter Unit) := sorry_proof
+    -- rw[tendsto_nhds_unique (a:=a) (b:=impl) h']
+    -- apply h
+    -- aesop
   case approx specₙ lN lM consistent convergence impl hn =>
     simp[ApproxSolution.val]
     -- intro h
@@ -65,7 +68,7 @@ by
 
 
 -- This is likely not true as it is currently stated. We likely need some extra assumption in the `.approx` constructor
-theorem approx_convergence {N} {lN : Filter N} {α} [TopologicalSpace α] {spec : α → Prop}
+theorem approx_convergence {N} {lN : Filter N} {spec : α → Prop}
   (approx : ApproxSolution lN spec)
   : ∃ a, lN.Tendsto approx.val (nhds a) := sorry_proof
 -- by
