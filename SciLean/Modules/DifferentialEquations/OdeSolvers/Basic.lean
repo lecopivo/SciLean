@@ -20,7 +20,7 @@ The function `stepper t₀ Δt x₀` computes approximation of the solution `x (
 
 TODO: refine the conditions, we probably want consistency and convergence. Maybe integrability in `f` too? or integrability of `f` should be specified somewhere else?
 -/
-structure IsOdeStepper (f : R → X → X) (stepper : R → R → X → X) where
+structure IsOdeStepper (f : R → X → X) (stepper : R → R → X → X) : Prop where
   consistent : ∀ t x, (limit Δt' → 0, ∂ Δt:=Δt', stepper t Δt x) = f t x
   -- converges - something that it really converges
   -- maybe integrability of `f` ?? 
