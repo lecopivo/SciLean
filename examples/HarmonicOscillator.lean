@@ -46,4 +46,4 @@ def main : IO Unit := do
         IO.print "o"
     IO.println ""
 
-#eval main
+-- #eval main
