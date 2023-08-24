@@ -1,4 +1,5 @@
 import SciLean
+import SciLean.Core.Approx.ApproxLimit
 import SciLean.Tactic.LetNormalize
 import SciLean.Tactic.PullLimitOut
 import SciLean.Modules.DifferentialEquations
@@ -18,11 +19,9 @@ by
   ftrans; simp; ring_nf -- symbolic differentiation
   
   -- Apply RK4 method
-  rw [odeSolve_fixed_dt explicitMidpoint sorry_proof sorry_proof]
+  rw [odeSolve_fixed_dt rungeKutta4 sorry_proof]
   
-  conv => enter[2]; pull_limit_out := sorry_proof
-  apply Approx.limit _ _
-  intro n
+  approx_limit n := sorry_proof
 
 def main : IO Unit := do
 
@@ -47,4 +46,4 @@ def main : IO Unit := do
         IO.print "o"
     IO.println ""
 
--- #eval main
+#eval main

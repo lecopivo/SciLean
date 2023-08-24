@@ -36,6 +36,15 @@ noncomputable
 def crankNicolson (f : R → X → X) (tₙ Δt : R) (xₙ : X) : X :=
   solve x', x' = xₙ + (Δt/2) • (f tₙ xₙ + f (tₙ + Δt) x')
 
+
+def rungeKutta4 (f : R → X → X) (tₙ Δt : R) (xₙ : X) : X :=
+  let k₁ := f tₙ xₙ
+  let k₂ := f (tₙ + Δt/2) (xₙ + (Δt/2) • k₁)
+  let k₃ := f (tₙ + Δt/2) (xₙ + (Δt/2) • k₂)
+  let k₄ := f (tₙ + Δt) (xₙ + Δt • k₃)
+  xₙ + (Δt/6) • (k₁ + (2:R)•k₂ + (2:R)•k₃ + k₄)
+
+
 variable 
   {R : Type _} [IsROrC R]
   {X : Type _} [SemiInnerProductSpace R X]

@@ -36,7 +36,7 @@ def odeSolveFixedStep (stepper : R → R → X → X) (steps : Nat) (t₁ t₂ :
 
 
 theorem odeSolve_fixed_dt {f : R → X → X} (stepper : (R → X → X) → (R → R → X → X)) 
-  (hf : HasUniqueOdeSolution f) (hstepper : IsOdeStepper f (stepper f))
+  (h : HasUniqueOdeSolution f ∧ IsOdeStepper f (stepper f))
   : odeSolve f = fun t₀ t x₀ => limit n → ∞, odeSolveFixedStep (stepper f) n t₀ t x₀ := sorry_proof
 
 
