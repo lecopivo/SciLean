@@ -6,4 +6,4 @@ import SciLean.Core.Objects.IsReal
 import SciLean.Core.FunctionPropositions
 import SciLean.Core.FunctionTransformations
 
-
+import SciLean.Core.Approx.Basic

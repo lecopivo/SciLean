@@ -1,13 +1,9 @@
-import SciLean.Core
-import SciLean.Core.Approx.Basic
-import SciLean.Core.FloatAsReal
+import SciLean
 import SciLean.Tactic.LetNormalize
-import SciLean.Util.RewriteBy
+import SciLean.Tactic.PullLimitOut
 import SciLean.Modules.DifferentialEquations
 
-import SciLean.Tactic.PullLimitOut
-
-open_notation_over_field Float
+set_default_scalar Float
 
 open SciLean
 
@@ -22,16 +18,11 @@ by
   ftrans; simp; ring_nf -- symbolic differentiation
   
   -- Apply RK4 method
-  rw [odeSolve_fixed_dt forwardEuler sorry sorry]
-  conv => enter[2]; pull_limit_out := sorry
-  apply Approx.limit Unit ⊤
-  intro n
-
-
+  rw [odeSolve_fixed_dt explicitMidpoint sorry_proof sorry_proof]
   
-  -- bubble_limit
-  -- approx_limit steps; simp; intro steps';
-
+  conv => enter[2]; pull_limit_out := sorry_proof
+  apply Approx.limit _ _
+  intro n
 
 def main : IO Unit := do
 
