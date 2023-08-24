@@ -92,6 +92,7 @@ by
   have ⟨_,_⟩ := hV
   unfold implicitSymplecticEulerV1
   unfold explicitSymplecticEuler
+  unfold scalarGradient
   unfold revCDeriv
   conv => 
     rhs

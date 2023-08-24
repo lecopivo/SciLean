@@ -9,17 +9,6 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-noncomputable
-def revCDeriv
-  (K : Type _) [IsROrC K]
-  {X : Type _} [SemiInnerProductSpace K X]
-  {Y : Type _} [SemiInnerProductSpace K Y]
-  (f : X → Y) (x : X) : Y×(Y→X) :=
-  (f x, semiAdjoint K (cderiv K f x))
-
-
-namespace revCDeriv
-
 variable 
   (K : Type _) [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
@@ -27,6 +16,25 @@ variable
   {Z : Type _} [SemiInnerProductSpace K Z]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
+
+
+noncomputable
+def revCDeriv
+  (f : X → Y) (x : X) : Y×(Y→X) :=
+  (f x, semiAdjoint K (cderiv K f x))
+
+--@[ftrans_unfold]
+noncomputable 
+def gradient
+  (f : X → Y) (x : X) : Y→X := (revCDeriv K f x).2
+
+--@[ftrans_unfold]
+noncomputable 
+abbrev scalarGradient
+  (f : X → K) (x : X) : X := (revCDeriv K f x).2 1
+
+namespace revCDeriv
+
 
 
 -- Basic lambda calculus rules -------------------------------------------------
@@ -303,9 +311,9 @@ elab_rules : term
   let fExpr ← elabTerm f none
   if let .some (X,Y) := (← inferType fExpr).arrow? then
     if (← isDefEq KExpr Y) then
-      elabTerm (← `(fun x => (revCDeriv $K (Y:=$K) $f x).2 (1:$K))) none false
+      elabTerm (← `(scalarGradient $K $f)) none false
     else
-      elabTerm (← `(fun x => (revCDeriv $K $f x).2)) none false
+      elabTerm (← `(gradient $K $f)) none false
   else
     throwUnsupportedSyntax
 
@@ -316,9 +324,10 @@ macro_rules
 | `(∇ ($b:diffBinder), $f)       => `(∇ $b, $f)
 
 -- does not work :(
-@[app_unexpander revCDeriv] def unexpandRevCDeriv : Lean.PrettyPrinter.Unexpander
-  | `(fun x => ($(_) $K $f $x).snd $a) =>
+@[app_unexpander gradient] def unexpandRevCDeriv : Lean.PrettyPrinter.Unexpander
+  | `($(_) $K $f) =>
     `(∇ $f)
+
   | _ => throw ()
 
 end NotationOverField
@@ -329,7 +338,7 @@ end SciLean
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------b
 
-open SciLean
+open SciLean 
 
 variable 
   {K : Type _} [IsROrC K]

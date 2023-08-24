@@ -9,7 +9,7 @@ set_option linter.unusedVariables false
 namespace SciLean
 
 variable 
-  {K : Type _} [IsROrC K]
+  (K : Type _) [IsROrC K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
@@ -17,10 +17,11 @@ variable
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 noncomputable
-def cderiv (K : Type _) [IsROrC K]
-  {X Y : Type _} [Vec K X] [Vec K Y]
-  (f : X → Y) (x dx : X) : Y := Curve.deriv (fun t : K => f (x + t•dx)) 0
+def cderiv (f : X → Y) (x dx : X) : Y := Curve.deriv (fun t : K => f (x + t•dx)) 0
 
+--@[ftrans_unfold]
+noncomputable
+def scalarCDeriv (f : K → X) (t : K) : X := cderiv K f t 1
 
 @[simp]
 theorem cderiv_apply
@@ -32,7 +33,6 @@ theorem cderiv_apply
 
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
-variable (K)
 variable (X)
 theorem cderiv.id_rule 
   : (cderiv K fun x : X => x) = fun _ => fun dx => dx
@@ -240,46 +240,55 @@ elab_rules : term
 | `(∂ $f) => do
   let K := mkIdent (← currentFieldName.get)
   let KExpr ← elabTerm (← `($K)) none
-  let fExpr ← elabTerm f none
+  let fExpr ← withoutPostponing <| elabTermEnsuringType f none false
   if let .some (X,Y) := (← inferType fExpr).arrow? then
     if (← isDefEq KExpr X) then
-      elabTerm (← `(fun x => (cderiv $K (X:=$K) $f x (1:$K)))) none false
+      elabTerm (← `(scalarCDeriv $K $f)) none false
     else
       elabTerm (← `(cderiv $K $f)) none false
   else
     throwUnsupportedSyntax
 
-| `(∂ $x:ident, $b) => do
-  let K := mkIdent (← currentFieldName.get)
-  let KExpr ← elabTerm (← `($K)) none
-  let fExpr ← elabTerm (← `(fun $x => $b)) none
-  if let .some (X,Y) := (← inferType fExpr).arrow? then
-    if (← isDefEq KExpr X) then
-      elabTerm (← `(fun x => (cderiv $K (X:=$K) (fun $x => $b) x (1:$K)))) none false
-    else
-      elabTerm (← `(cderiv $K (fun $x => $b))) none false
-  else
-    throwUnsupportedSyntax
+macro_rules 
+| `(∂ $f $xs*) => `((∂ $f) $xs*)
 
-| `(∂ $x:ident := $val:term, $b) => do
-  let K := mkIdent (← currentFieldName.get)
-  let KExpr ← elabTerm (← `($K)) none
-  let fExpr ← elabTerm (← `(fun $x => $b)) none
-  if let .some (X,Y) := (← inferType fExpr).arrow? then
-    if (← isDefEq KExpr X) then
-      elabTerm (← `((cderiv $K (X:=$K) (fun $x => $b) $val (1:$K)))) none false
-    else
-      elabTerm (← `(cderiv $K (fun $x => $b) $val)) none false
-  else
-    throwUnsupportedSyntax
+-- | `(∂ $x:ident, $b) => do
+--   let K := mkIdent (← currentFieldName.get)
+--   let KExpr ← elabTerm (← `($K)) none
+--   let fExpr ← elabTerm (← `(fun $x => $b)) none
+--   if let .some (X,Y) := (← inferType fExpr).arrow? then
+--     if (← isDefEq KExpr X) then
+--       elabTerm (← `(scalarCDeriv $K (fun $x => $b))) none false
+--     else
+--       elabTerm (← `(cderiv $K (fun $x => $b))) none false
+--   else
+--     throwUnsupportedSyntax
 
-| `(∂ $x:ident := $val:term ; $dir:term, $b) => do
-  let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(cderiv $K (fun $x => $b) $val $dir)) none
+-- | `(∂ $x:ident := $val:term, $b) => do
+--   let K := mkIdent (← currentFieldName.get)
+--   let KExpr ← elabTerm (← `($K)) none
+--   let fExpr ← elabTerm (← `(fun $x => $b)) none
+--   if let .some (X,Y) := (← inferType fExpr).arrow? then
+--     if (← isDefEq KExpr X) then
+--       elabTerm (← `(scalarCDeriv $K (fun $x => $b) $val)) none false
+--     else
+--       elabTerm (← `(cderiv $K (fun $x => $b) $val)) none false
+--   else
+--     throwUnsupportedSyntax
+
+-- | `(∂ $x:ident := $val:term ; $dir:term, $b) => do
+--   let K := mkIdent (← currentFieldName.get)
+--   elabTerm (← `(cderiv $K (fun $x => $b) $val $dir)) none
+
+
 
 macro_rules
+| `(∂ $x:ident, $b) => `(∂ (fun $x => $b))
+| `(∂ $x:ident := $val:term, $b) => `(∂ (fun $x => $b) $val)
+| `(∂ $x:ident := $val:term ; $dir:term, $b) => `(∂ (fun $x => $b) $val $dir)
 | `(∂ $x:ident : $type:term, $b) => `(∂ fun $x : $type => $b)
 | `(∂ ($b:diffBinder), $f)       => `(∂ $b, $f)
+
 
 @[app_unexpander cderiv] def unexpandCDeriv : Lean.PrettyPrinter.Unexpander
 
@@ -308,6 +317,47 @@ macro_rules
     | _  => `(∂ $f)
 
   | _  => throw ()
+
+@[app_unexpander scalarCDeriv] def unexpandScalarCDeriv : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $K $f:term $x $y $ys*) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `((∂ $x':ident:=$x, $b) $y $ys*)
+    | _  => `(∂ $f:term $x:term $y $ys*)
+
+
+  | `($(_) $K $f:term $x) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂ ($x':ident:=$x), $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂ ($x':ident:=$x), $b)
+    | _  => `(∂ $f:term $x)
+
+  | `($(_) $K $f:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(∂ $x':ident, $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(∂ ($x' : $ty), $b)
+    | _  => `(∂ $f)
+
+  | _  => throw ()
+
+
+
+
+variable (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y : Y)
+set_default_scalar K
+
+#check ∂ f
+#check ∂ f x
+#check (∂ x', f x')
+#check (∂ x':=x, f x') dx + y
+#check ∂ x':=x;dx, f x' + y
+
+#check ∂ g
+#check ∂ g t
+#check (∂ t', g t')
+#check (∂ t':=t, g t')
+#check ∂ t':=t, g t' + x
+
 
 
 end NotationOverField
