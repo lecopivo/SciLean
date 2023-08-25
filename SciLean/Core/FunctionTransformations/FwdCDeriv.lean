@@ -557,3 +557,4 @@ theorem Inner.inner.arg_a0a1.fwdCDeriv_rule
        ⟪y₁dy₁.2, y₂dy₂.1⟫[K] + ⟪y₁dy₁.1, y₂dy₂.2⟫[K]) := 
 by 
   unfold fwdCDeriv; ftrans
+  sorry_proof

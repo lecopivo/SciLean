@@ -6,6 +6,15 @@ namespace SciLean
 
 open IsROrC ComplexConjugate BigOperators
 
+/-- Square of L₂ norm over the field `K` -/
+class Norm2 (K X : Type _) where
+  norm2 : X → K
+
+instance [Inner K X] : Norm2 K X where
+  norm2 x := Inner.inner x x
+
+notation "‖" x "‖₂²[" K "]" => @Norm2.norm2 K _ _ x
+
 section Inner
 
 notation "⟪" x ", " y "⟫[" K "]" => @Inner.inner K _ _ x y
@@ -77,7 +86,7 @@ https://en.wikipedia.org/wiki/Fundamental_lemma_of_the_calculus_of_variations
 
 This also allows a definition of adjoint between two semi-inner product spaces, see `semiAdjoint`.
 -/
-class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X, Inner K X, TestFunctions X where
+class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X, Inner K X, TestFunctions X, Norm2 K X where
   add_left : ∀ (x y z : X), (TestFunction x ∧ TestFunction y) ∨ TestFunction z →
     ⟪x + y, z⟫[K] = ⟪x, z⟫[K] + ⟪y, z⟫[K]
   smul_left : ∀ (x y : X) (r : K),   -- I thinkg here we do not need `TestFunction x ∨ TestFunction y`
@@ -89,6 +98,7 @@ class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X
   inner_ext : ∀ (x : X),
     ((x = 0) ↔ (∀ (ϕ : X), TestFunction ϕ → ⟪x, ϕ⟫[K] = 0))
   is_lin_subspace : VecProp K (X:=X) TestFunction
+  inner_norm2 : ∀ (x : X), ⟪x, x⟫[K] = ‖x‖₂²[K]
 
   inner_with_testfun_is_continuous : ∀ ϕ, TestFunction ϕ → Continuous (⟪·, ϕ⟫[K])
 
@@ -106,6 +116,10 @@ class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X
   --   1. ∀ t ∈ (-1,1),     ⟪γ t, γ t⟫ = ∞
   --   2. ∀ t ∈ ℝ \ (-1,1), ⟪γ t, γ t⟫ = 0
 
+/-- Almost Hilbert space but does not have to be complete. It is complete only in the sense of Convenient vector spaces.
+-/
+class SemiHilbert (K : Type _) [IsROrC K] (X : Type _) extends SemiInnerProductSpace K X where
+  test_functions_true : ∀ x, TestFunction x
 
 variable {K} [IsROrC K]
 
@@ -128,7 +142,11 @@ instance : SemiInnerProductSpace K K where
       intro h; simp[h]
       intro h; have q := h 1; induction q; (case mpr.inl => assumption); (case mpr.inr _ => sorry_proof)
   is_lin_subspace := sorry_proof
+  inner_norm2 := by simp[Norm2.norm2]
   inner_with_testfun_is_continuous := by simp[Inner.inner]; continuity
+
+instance : SemiHilbert K K where
+  test_functions_true := by simp[TestFunction]
 
 instance {K} [IsROrC K] : Inner K Unit where
   inner _ _ := 0
@@ -143,9 +161,11 @@ instance : SemiInnerProductSpace K Unit where
   inner_pos := by simp[Inner.inner]
   inner_ext := by simp[Inner.inner, TestFunction]; 
   is_lin_subspace := by constructor <;> simp[TestFunction]
+  inner_norm2 := by simp[Norm2.norm2, Inner.inner]
   inner_with_testfun_is_continuous := by simp[Inner.inner]; continuity
 
-
+instance : SemiHilbert K Unit where
+  test_functions_true := by simp[TestFunction]
 
 -- Complete InnerProductSpace is SemiInnerProductSpace
 instance (priority:=low) [IsROrC K] [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
@@ -158,10 +178,11 @@ instance (priority:=low) [IsROrC K] [NormedAddCommGroup X] [InnerProductSpace K 
   inner_pos := by sorry_proof
   inner_ext := by sorry_proof
   is_lin_subspace := by sorry_proof
+  inner_norm2 := by simp[Norm2.norm2]
   inner_with_testfun_is_continuous := by simp[Inner.inner]; continuity
 
 abbrev SemiInnerProductSpace.mkSorryProofs {α} [Vec K α] [Inner K α] [TestFunctions α] : SemiInnerProductSpace K α
-  := SemiInnerProductSpace.mk sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
+  := SemiInnerProductSpace.mk sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
 
 instance (X Y) [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (X × Y) := SemiInnerProductSpace.mkSorryProofs
 

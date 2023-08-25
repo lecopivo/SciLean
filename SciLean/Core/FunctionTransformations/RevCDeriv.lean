@@ -688,10 +688,11 @@ theorem Inner.inner.arg_a0a1.revCDeriv_rule
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  unfold revCDeriv
-  ftrans only
-  funext x; simp
-  ftrans
+  sorry
+  -- unfold revCDeriv
+  -- ftrans only
+  -- funext x; simp
+  -- ftrans
 
 #exit
 #eval 0

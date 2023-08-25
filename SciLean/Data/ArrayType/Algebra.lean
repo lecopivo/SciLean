@@ -5,7 +5,7 @@ namespace SciLean
 namespace GenericArrayType
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [ArrayType Cont Idx Elem] [Index Idx] 
+variable [Index Idx] 
 
 variable {K : Type _} [IsROrC K]
 
@@ -47,7 +47,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] : Vec K Cont w
   scalar_wise_smooth := sorry_proof
 
 
-instance (priority := low) [Inner K Elem] : Inner K Cont where
+instance (priority := low) [ArrayType Cont Idx Elem] [Inner K Elem] : Inner K Cont where
   inner := λ f g => ∑ x, ⟪f[x], g[x]⟫[K]
 
 instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions Elem] 
@@ -81,7 +81,6 @@ instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [
   add_left := sorry_proof
   smul_left := sorry_proof
 
-
 instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] 
   : SemiInnerProductSpace K Cont where
   add_left := sorry_proof
@@ -91,6 +90,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K El
   inner_ext := sorry_proof
   is_lin_subspace := sorry_proof
   inner_with_testfun_is_continuous := sorry_proof
+  inner_norm2 := by simp[Norm2.norm2]
 
 
 instance (priority := low) [ArrayType Cont Idx K] : Basis Idx K Cont where

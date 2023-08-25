@@ -1,5 +1,6 @@
 import SciLean.Core.FunctionTransformations.Isomorph.RealToFloat
 import SciLean.Core.Objects.IsReal
+import SciLean.Core.Objects.Scalar
 
 namespace SciLean
 
@@ -135,6 +136,35 @@ instance : IsROrC Float where
 
 instance : IsReal Float where
   is_real := sorry_proof
+
+
+instance : RealScalar Float where
+  toComplex x := ⟨floatToReal x, 0⟩
+  toReal x := floatToReal x
+
+  is_real := sorry_proof
+  
+  make x _ := x
+  make_def := by intros; simp; sorry_proof
+
+  real x := x
+  real_def := by intros; simp
+
+  imag _ := 0
+  imag_def := by intros; simp
+  
+  cos x := x.cos
+  cos_def := sorry_proof
+
+  tan x := x.tan
+  tan_def := sorry_proof
+
+  exp x := x.exp
+  exp_def := sorry_proof
+
+  sqrt x := x.sqrt
+  sqrt_def := sorry_proof
+  
 
 
 open ComplexConjugate

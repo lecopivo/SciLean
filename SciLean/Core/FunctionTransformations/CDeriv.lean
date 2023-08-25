@@ -607,30 +607,64 @@ by
 
 section InnerProductSpace
 
-variable 
-  {K : Type _} [IsROrC K]
-  {X : Type _} [Vec K X]
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+-- variable 
+--   {R : Type _} [RealScalar R]
+--   {K : Type _} [Scalar R K]
+--   {X : Type _} [Vec K X]
+--   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
 
 -- Inner -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
 open ComplexConjugate
 
+section OverReals
+
+variable 
+  {R : Type _} [RealScalar R]
+  {X : Type _} [Vec R X]
+  {Y : Type _} [SemiHilbert R Y]
+
+
 @[ftrans]
 theorem Inner.inner.arg_a0a1.cderiv_rule
   (f : X → Y) (g : X → Y)
-  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
-  : cderiv K (fun x => ⟪f x, g x⟫[K])
+  (hf : IsDifferentiable R f) (hg : IsDifferentiable R g)
+  : cderiv R (fun x => ⟪f x, g x⟫[R])
     =
     fun x dx =>
       let y₁ := f x
-      let dy₁ := cderiv K f x dx
+      let dy₁ := cderiv R f x dx
       let y₂ := g x
-      let dy₂ := cderiv K g x dx
-      ⟪dy₁, y₂⟫[K] + ⟪y₁, dy₂⟫[K] := 
+      let dy₂ := cderiv R g x dx
+      ⟪dy₁, y₂⟫[R] + ⟪y₁, dy₂⟫[R] := 
 by 
   sorry_proof
 
+-- instance {R : Type _} [RealScalar R]
+--          {K : Type _} [Scalar R K]
+--          : Coe R K := ⟨fun x => Scalar.make x 0⟩
+
+
+open Scalar in
+@[ftrans]
+theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule
+  (f : X → Y) 
+  (hf : IsDifferentiable R f)
+  : cderiv R (fun x => ‖f x‖₂²[R])
+    =
+    fun x dx => 2 * ⟪cderiv R f x dx, f x⟫[R] := 
+by
+  simp_rw [← SemiInnerProductSpace.inner_norm2] 
+  ftrans
+  simp
+  funext x dx
+  conv => 
+    lhs; enter[2]
+    rw [← SemiInnerProductSpace.conj_sym]
+  simp
+  ring
+
+end OverReals
 
 end InnerProductSpace

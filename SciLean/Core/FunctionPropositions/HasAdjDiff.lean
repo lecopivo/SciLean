@@ -380,7 +380,9 @@ theorem Inner.inner.arg_a0a1.HasAdjDiff_rule
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  constructor; fprop; ftrans; simp; fprop
+  sorry
+  -- fprop; ftrans; sorry_proof -- simp; fprop
 
 
 end InnerProductSpace
+

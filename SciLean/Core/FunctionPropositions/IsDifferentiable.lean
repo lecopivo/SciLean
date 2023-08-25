@@ -1,3 +1,4 @@
+import SciLean.Core.Objects.Scalar
 import SciLean.Core.Objects.SemiInnerProductSpace
 
 import SciLean.Core.FunctionPropositions.IsDifferentiableAt
@@ -308,9 +309,9 @@ def HPow.hPow.arg_a0.IsDifferentiable_rule
 section InnerProductSpace
 
 variable 
-  {K : Type _} [IsROrC K]
-  {X : Type _} [Vec K X]
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {R : Type _} [RealScalar R]
+  {X : Type _} [Vec R X]
+  {Y : Type _} [SemiHilbert R Y]
 
 -- Inner -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
@@ -320,8 +321,8 @@ open ComplexConjugate
 @[fprop]
 theorem Inner.inner.arg_a0a1.IsDifferentiable_rule
   (f : X → Y) (g : X → Y)
-  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
-  : IsDifferentiable K fun x => ⟪f x, g x⟫[K] :=
+  (hf : IsDifferentiable R f) (hg : IsDifferentiable R g)
+  : IsDifferentiable R fun x => ⟪f x, g x⟫[R] :=
 by 
   sorry_proof
 
