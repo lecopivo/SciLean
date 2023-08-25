@@ -141,3 +141,91 @@ info: ∇ (x':=x;dk), g x' + dx : X
 #check ∇ x':=x;dk, g x' + dx
 
 end Gradient
+
+
+
+section FwdCDeriv
+
+variable 
+  (K) [IsROrC K]
+  {X Y} [Vec K X] [Vec K Y]
+  (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y dy : Y)
+
+set_default_scalar K
+
+
+/-- 
+info: ∂> f : X → X → Y × Y
+-/
+#guard_msgs in
+#check ∂> f
+
+/--
+info: ∂> f x : X → Y × Y
+-/
+#guard_msgs in
+#check ∂> f x
+
+/--
+info: ∂> x', f x' : X → X → Y × Y
+-/
+#guard_msgs in
+#check (∂> x', f x')
+
+/--
+info: ∂> (x':=x;dx), f x' + (y, dy) : Y × Y
+-/
+#guard_msgs in
+#check (∂> x':=x, f x') dx + (y,dy)
+
+/--
+info: ∂> (x':=x;dx), f x' + (y, dy) : Y × Y
+-/
+#guard_msgs in
+#check ∂> x':=x;dx, f x' + (y,dy)
+
+end FwdCDeriv
+
+
+
+section RevCDeriv
+
+variable 
+  (K) [IsROrC K]
+  {X Y} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
+  (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y dy : Y)
+
+set_default_scalar K
+
+
+/-- 
+info: <∂ f : X → Y × (Y → X)
+-/
+#guard_msgs in
+#check <∂ f
+
+/--
+info: <∂ f x : Y × (Y → X)
+-/
+#guard_msgs in
+#check <∂ f x
+
+/--
+info: <∂ x', f x' : X → Y × (Y → X)
+-/
+#guard_msgs in
+#check (<∂ x', f x')
+
+/--
+info: <∂ (x':=x), f x' : Y × (Y → X)
+-/
+#guard_msgs in
+#check (<∂ x':=x, f x')
+
+/--
+info: <∂ (x':=x;dy), f x' : Y × X
+-/
+#guard_msgs in
+#check <∂ x':=x;dy, f x'
+
+end RevCDeriv

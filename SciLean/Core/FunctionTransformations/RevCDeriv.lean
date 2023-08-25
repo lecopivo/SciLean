@@ -24,6 +24,13 @@ def revCDeriv
   (f x, semiAdjoint K (cderiv K f x))
 
 --@[ftrans_unfold]
+noncomputable
+def revCDerivEval
+  (f : X → Y) (x : X) (dy : Y) : Y×X :=
+  let ydf := revCDeriv K f x
+  (ydf.1, ydf.2 dy)
+
+--@[ftrans_unfold]
 noncomputable 
 def gradient
   (f : X → Y) (x : X) : Y→X := (revCDeriv K f x).2
