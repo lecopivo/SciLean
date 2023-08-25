@@ -8,3 +8,5 @@ import SciLean.Core.FunctionTransformations
 
 import SciLean.Core.Approx.Basic
 import SciLean.Core.Approx.ApproxLimit
+
+import SciLean.Core.Notation

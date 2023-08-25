@@ -30,7 +30,7 @@ def gradient
 
 --@[ftrans_unfold]
 noncomputable 
-abbrev scalarGradient
+def scalarGradient
   (f : X → K) (x : X) : X := (revCDeriv K f x).2 1
 
 namespace revCDeriv
@@ -296,41 +296,6 @@ open Lean in
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``revCDeriv, ftransExt))
 
 end revCDeriv
-
-namespace NotationOverField
-
-scoped syntax "∇ " term:66 : term
-scoped syntax "∇ " diffBinder ", " term:66 : term
-scoped syntax "∇ " "(" diffBinder ")" ", " term:66 : term
-
-open Lean Elab Term Meta in
-elab_rules : term
-| `(∇ $f) => do
-  let K := mkIdent (← currentFieldName.get)
-  let KExpr ← elabTerm (← `($K)) none
-  let fExpr ← elabTerm f none
-  if let .some (X,Y) := (← inferType fExpr).arrow? then
-    if (← isDefEq KExpr Y) then
-      elabTerm (← `(scalarGradient $K $f)) none false
-    else
-      elabTerm (← `(gradient $K $f)) none false
-  else
-    throwUnsupportedSyntax
-
-macro_rules
-| `(∇ $x:ident, $f)              => `(∇ fun $x => $f)
-| `(∇ $x:ident : $type:term, $f) => `(∇ fun $x : $type => $f)
-| `(∇ $x:ident := $val:term, $f) => `((∇ fun $x => $f) $val)
-| `(∇ ($b:diffBinder), $f)       => `(∇ $b, $f)
-
--- does not work :(
-@[app_unexpander gradient] def unexpandRevCDeriv : Lean.PrettyPrinter.Unexpander
-  | `($(_) $K $f) =>
-    `(∇ $f)
-
-  | _ => throw ()
-
-end NotationOverField
 
 end SciLean
 
