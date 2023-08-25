@@ -16,7 +16,7 @@ approx solver (m k : Float)
 by
   -- Unfold Hamiltonian and compute gradients
   unfold H
-  unfold scalarGradient; ftrans; simp; ring_nf -- symbolic differentiation
+  symdiff
   
   -- Apply RK4 method
   rw [odeSolve_fixed_dt rungeKutta4 sorry_proof]
