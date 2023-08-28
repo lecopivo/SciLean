@@ -720,7 +720,7 @@ by
 @[ftrans]
 theorem SciLean.norm₂.arg_x.revCDeriv_rule_at
   (f : X → Y) (x : X)
-  (hf : HasAdjDiffAt R f x) (hx : x≠0)
+  (hf : HasAdjDiffAt R f x) (hx : f x≠0)
   : (revCDeriv R (fun x => ‖f x‖₂[R]) x)
     =
     let ydf := revCDeriv R f x

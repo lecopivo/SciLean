@@ -363,9 +363,9 @@ by
 section InnerProductSpace
 
 variable 
-  {K : Type _} [IsROrC K]
-  {X : Type _} [SemiInnerProductSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {R : Type} [RealScalar R]
+  {X : Type} [SemiInnerProductSpace R X]
+  {Y : Type} [SemiHilbert R Y]
 
 -- Inner -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
@@ -375,13 +375,21 @@ open ComplexConjugate
 @[fprop]
 theorem Inner.inner.arg_a0a1.HasAdjDiff_rule
   (f : X → Y) (g : X → Y)
-  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
-  : HasAdjDiff K fun x => ⟪f x, g x⟫[K] :=
+  (hf : HasAdjDiff R f) (hg : HasAdjDiff R g)
+  : HasAdjDiff R fun x => ⟪f x, g x⟫[R] :=
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  sorry
-  -- fprop; ftrans; sorry_proof -- simp; fprop
+  constructor; fprop; ftrans; fprop
+
+@[fprop]
+theorem SciLean.Norm2.norm2.arg_a0.HasAdjDiff_rule
+  (f : X → Y)
+  (hf : HasAdjDiff R f)
+  : HasAdjDiff R fun x => ‖f x‖₂²[R] :=
+by 
+  have ⟨_,_⟩ := hf
+  constructor; fprop; ftrans; fprop
 
 
 end InnerProductSpace

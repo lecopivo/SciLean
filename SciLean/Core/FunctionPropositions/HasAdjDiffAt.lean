@@ -363,3 +363,50 @@ by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
+
+
+--------------------------------------------------------------------------------
+
+section InnerProductSpace
+
+variable 
+  {R : Type} [RealScalar R]
+  {X : Type} [SemiInnerProductSpace R X]
+  {Y : Type} [SemiHilbert R Y]
+
+-- Inner -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open ComplexConjugate
+
+@[fprop]
+theorem Inner.inner.arg_a0a1.HasAdjDiffAt_rule
+  (f : X → Y) (g : X → Y) (x : X)
+  (hf : HasAdjDiffAt R f x) (hg : HasAdjDiffAt R g x)
+  : HasAdjDiffAt R (fun x => ⟪f x, g x⟫[R]) x :=
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  constructor; fprop; ftrans; fprop
+
+
+@[fprop]
+theorem SciLean.Norm2.norm2.arg_a0.HasAdjDiffAt_rule
+  (f : X → Y) (x : X)
+  (hf : HasAdjDiffAt R f x)
+  : HasAdjDiffAt R (fun x => ‖f x‖₂²[R]) x :=
+by 
+  have ⟨_,_⟩ := hf
+  constructor; fprop; ftrans; fprop
+
+@[fprop]
+theorem SciLean.norm₂.arg_a0.HasAdjDiffAt_rule
+  (f : X → Y) (x : X)
+  (hf : HasAdjDiffAt R f x) (hx : f x≠0)
+  : HasAdjDiffAt R (fun x => ‖f x‖₂[R]) x :=
+by 
+  have ⟨_,_⟩ := hf
+  constructor; fprop; ftrans; fprop
+
+
+end InnerProductSpace

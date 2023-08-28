@@ -353,7 +353,7 @@ by
 @[fprop]
 theorem SciLean.norm₂.arg_x.IsDifferentiableAt_rule
   (f : X → Y) (x : X)
-  (hf : IsDifferentiableAt R f x) 
+  (hf : IsDifferentiableAt R f x) (hx : f x≠0)
   : IsDifferentiableAt R (fun x => ‖f x‖₂[R]) x :=
 by 
   sorry_proof

@@ -578,7 +578,7 @@ open Scalar in
 @[ftrans]
 theorem SciLean.norm₂.arg_x.fwdCDeriv_rule
   (f : X → Y) (x : X)
-  (hf : IsDifferentiableAt R f x) (hx : x≠0)
+  (hf : IsDifferentiableAt R f x) (hx : f x≠0)
   : fwdCDeriv R (fun x => ‖f x‖₂[R]) x
     =
     fun dx => 

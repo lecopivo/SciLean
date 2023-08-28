@@ -607,12 +607,6 @@ by
 
 section InnerProductSpace
 
--- variable 
---   {R : Type _} [RealScalar R]
---   {K : Type _} [Scalar R K]
---   {X : Type _} [Vec K X]
---   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
-
 -- Inner -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
 
@@ -624,6 +618,22 @@ variable
   {R : Type _} [RealScalar R]
   {X : Type _} [Vec R X]
   {Y : Type _} [SemiHilbert R Y]
+
+
+@[ftrans]
+theorem Inner.inner.arg_a0a1.cderiv_rule_at
+  (f : X → Y) (g : X → Y) (x : X)
+  (hf : IsDifferentiableAt R f x) (hg : IsDifferentiableAt R g x)
+  : cderiv R (fun x => ⟪f x, g x⟫[R]) x
+    =
+    fun dx =>
+      let y₁ := f x
+      let dy₁ := cderiv R f x dx
+      let y₂ := g x
+      let dy₂ := cderiv R g x dx
+      ⟪dy₁, y₂⟫[R] + ⟪y₁, dy₂⟫[R] := 
+by 
+  sorry_proof
 
 
 @[ftrans]
@@ -639,7 +649,28 @@ theorem Inner.inner.arg_a0a1.cderiv_rule
       let dy₂ := cderiv R g x dx
       ⟪dy₁, y₂⟫[R] + ⟪y₁, dy₂⟫[R] := 
 by 
-  sorry_proof
+  funext x; apply Inner.inner.arg_a0a1.cderiv_rule_at f g x (hf x) (hg x)
+
+@[ftrans]
+theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule_at
+  (f : X → Y) (x : X)
+  (hf : IsDifferentiableAt R f x)
+  : cderiv R (fun x => ‖f x‖₂²[R]) x
+    =
+    fun dx => 
+      let y := f x
+      let dy := cderiv R f x dx
+      2 * ⟪dy, y⟫[R] := 
+by
+  simp_rw [← SemiInnerProductSpace.inner_norm2] 
+  ftrans
+  simp
+  funext dx
+  conv => 
+    lhs; enter[2]
+    rw [← SemiInnerProductSpace.conj_sym]
+  simp
+  ring
 
 @[ftrans]
 theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule
@@ -652,21 +683,13 @@ theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule
       let dy := cderiv R f x dx
       2 * ⟪dy, y⟫[R] := 
 by
-  simp_rw [← SemiInnerProductSpace.inner_norm2] 
-  ftrans
-  simp
-  funext x dx
-  conv => 
-    lhs; enter[2]
-    rw [← SemiInnerProductSpace.conj_sym]
-  simp
-  ring
+  funext x; apply SciLean.Norm2.norm2.arg_a0.cderiv_rule_at f x (hf x) 
 
 open Scalar in
 @[ftrans]
 theorem SciLean.norm₂.arg_x.cderiv_rule
   (f : X → Y) (x : X)
-  (hf : IsDifferentiableAt R f x) (hx : x≠0)
+  (hf : IsDifferentiableAt R f x) (hx : f x≠0)
   : cderiv R (fun x => ‖f x‖₂[R]) x
     =
     fun dx => 
