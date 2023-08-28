@@ -10,9 +10,14 @@ theorem cderiv_as_fwdCDeriv {K} [IsROrC K] {X Y} [Vec K X] [Vec K Y]
     =
     fun x dx => (fwdCDeriv K f x dx).2 := by rfl
 
-macro "symdiff" : tactic => do
-  `(tactic| 
-    (simp (config := {zeta := false}) only [cderiv_as_fwdCDeriv, scalarGradient, gradient, scalarCDeriv, revCDerivEval]
+
+macro "symdiff" : conv => do
+  `(conv| 
+    (simp (config := {failIfUnchanged := false, zeta := false}) only [cderiv_as_fwdCDeriv, scalarGradient, gradient, scalarCDeriv, revCDerivEval]
      ftrans
-     simp
+     simp (config := {failIfUnchanged := false})
      ring_nf))
+
+macro "symdiff" : tactic => do
+  `(tactic| conv => symdiff)
+
