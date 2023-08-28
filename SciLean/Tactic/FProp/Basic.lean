@@ -187,7 +187,7 @@ mutual
           | .mvar .. => 
             fprop (← instantiateMVars e)
           | _ => 
-            trace[Meta.Tactic.fprop.step] "unknown case, app function constructor: {g.ctorName}\n{← ppExpr e}\n"
+            trace[Meta.Tactic.fprop.step] "unknown case, app function {← ppExpr g} has constructor: {g.ctorName} \n{← ppExpr e}\n"
             tryLocalTheorems e fpropName ext
 
     | .mvar _ => do
@@ -198,8 +198,10 @@ mutual
       | .const funName _ =>
         trace[Meta.Tactic.fprop.step] "case const app `{funName}.\n{← ppExpr e}"
         constAppCase e fpropName ext funName
-      | _ => 
-        trace[Meta.Tactic.fprop.step] "unknown case, expression constructor: {f.ctorName}\n{← ppExpr e}\n"
+      | .mvar _ => do
+        fprop (← instantiateMVars e)
+      | g => 
+        trace[Meta.Tactic.fprop.step] "unknown case, expression app fn {← ppExpr g} has constructor: {g.ctorName}  \n{← ppExpr e}\n"
         tryLocalTheorems e fpropName ext
 
   partial def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPropM (Option Expr) := do
