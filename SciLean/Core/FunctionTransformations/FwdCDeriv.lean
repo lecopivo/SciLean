@@ -534,10 +534,10 @@ by
 
 section InnerProductSpace
 
-variable 
-  {K : Type _} [IsROrC K]
-  {X : Type _} [Vec K X]
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+variable
+  {R : Type _} [RealScalar R]
+  {X : Type _} [Vec R X]
+  {Y : Type _} [SemiHilbert R Y]
 
 -- Inner -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
@@ -547,14 +547,47 @@ open ComplexConjugate
 @[ftrans]
 theorem Inner.inner.arg_a0a1.fwdCDeriv_rule
   (f : X → Y) (g : X → Y)
-  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
-  : fwdCDeriv K (fun x => ⟪f x, g x⟫[K])
+  (hf : IsDifferentiable R f) (hg : IsDifferentiable R g)
+  : fwdCDeriv R (fun x => ⟪f x, g x⟫[R])
     =
     fun x dx =>
-      let y₁dy₁ := fwdCDeriv K f x dx
-      let y₂dy₂ := fwdCDeriv K g x dx
-      (⟪y₁dy₁.1, y₂dy₂.1⟫[K], 
-       ⟪y₁dy₁.2, y₂dy₂.1⟫[K] + ⟪y₁dy₁.1, y₂dy₂.2⟫[K]) := 
+      let y₁dy₁ := fwdCDeriv R f x dx
+      let y₂dy₂ := fwdCDeriv R g x dx
+      (⟪y₁dy₁.1, y₂dy₂.1⟫[R], 
+       ⟪y₁dy₁.2, y₂dy₂.1⟫[R] + ⟪y₁dy₁.1, y₂dy₂.2⟫[R]) := 
 by 
   unfold fwdCDeriv; ftrans
-  sorry_proof
+
+
+@[ftrans]
+theorem SciLean.Norm2.norm2.arg_a0.fwdCDeriv_rule
+  (f : X → Y) 
+  (hf : IsDifferentiable R f)
+  : fwdCDeriv R (fun x => ‖f x‖₂²[R])
+    =
+    fun x dx => 
+      let ydy := fwdCDeriv R f x dx
+      (‖ydy.1‖₂²[R], 2 * ⟪ydy.2, ydy.1⟫[R]) := 
+by
+  -- simp_rw [← SemiInnerProductSpace.inner_norm2]
+  simp[fwdCDeriv]
+  funext x dx
+  ftrans
+
+open Scalar in
+@[ftrans]
+theorem SciLean.norm₂.arg_x.fwdCDeriv_rule
+  (f : X → Y) (x : X)
+  (hf : IsDifferentiableAt R f x) (hx : x≠0)
+  : fwdCDeriv R (fun x => ‖f x‖₂[R]) x
+    =
+    fun dx => 
+      let ydy := fwdCDeriv R f x dx
+      let ynorm := ‖ydy.1‖₂[R]
+      (ynorm, ynorm⁻¹ * ⟪ydy.2,ydy.1⟫[R]) :=
+by
+  simp[fwdCDeriv]
+  funext dx
+  ftrans
+
+end InnerProductSpace

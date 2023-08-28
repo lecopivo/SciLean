@@ -370,8 +370,8 @@ by
 
 open ComplexConjugate in
 @[ftrans]
-theorem Inner.inner.arg_a0.semiAdjoint_rule
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+theorem Inner.inner.arg_a0.semiAdjoint_rule 
+  {Y : Type _} [SemiHilbert K Y]
   (f : X → Y) (hf : HasSemiAdjoint K f) (y : Y)
   : semiAdjoint K (fun x => ⟪f x, y⟫[K])
     =
@@ -380,7 +380,7 @@ by sorry_proof
 
 @[ftrans]
 theorem Inner.inner.arg_a1.semiAdjoint_rule
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {Y : Type _} [SemiHilbert K Y]
   (f : X → Y) (hf : HasSemiAdjoint K f) (y : Y)
   : semiAdjoint K (fun x => ⟪y, f x⟫[K])
     =

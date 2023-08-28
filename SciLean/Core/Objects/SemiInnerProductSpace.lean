@@ -1,5 +1,6 @@
 import Mathlib.Analysis.InnerProductSpace.Basic
 import SciLean.Core.Objects.Vec
+import SciLean.Core.Objects.Scalar
 import SciLean.Core.NotationOverField
 
 namespace SciLean
@@ -15,11 +16,41 @@ instance [Inner K X] : Norm2 K X where
 
 notation "‖" x "‖₂²[" K "]" => @Norm2.norm2 K _ _ x
 
+def norm₂ (K : Type _) {R X : Type _} [Scalar R K] [Norm2 K X] (x : X) : K := Scalar.sqrt (Norm2.norm2 x)
+
+notation "‖" x "‖₂[" K "]" => norm₂ K x
+
+@[simp]
+theorem norm₂_squared_nat {R K X : Type _} [Scalar R K] [Norm2 K X] (x : X)
+  : ‖x‖₂[K] ^ 2 = ‖x‖₂²[K] := by sorry_proof
+
+@[simp]
+theorem norm₂_squared {R K X : Type _} [Scalar R K] [Norm2 K X] (x : X)
+  : ‖x‖₂[K] ^ (2:K) = ‖x‖₂²[K] := by sorry_proof
+
 section Inner
 
 notation "⟪" x ", " y "⟫[" K "]" => @Inner.inner K _ _ x y
 
 namespace NotationOverField
+
+scoped elab "‖" x:term "‖₂²" : term => do
+  let fieldName ← currentFieldName.get
+  let K := Lean.mkIdent fieldName
+  Lean.Elab.Term.elabTerm (← `(@Norm2.norm2 $K _ _ $x)) none
+
+@[app_unexpander Norm2.norm2] def unexpandNorm2 : Lean.PrettyPrinter.Unexpander
+  | `($(_) $x) => `(‖ $x ‖₂²)
+  | _ => throw ()
+
+scoped elab "‖" x:term "‖₂" : term => do
+  let fieldName ← currentFieldName.get
+  let K := Lean.mkIdent fieldName
+  Lean.Elab.Term.elabTerm (← `(norm₂ $K $x)) none
+
+@[app_unexpander norm₂] def unexpandNorm₂ : Lean.PrettyPrinter.Unexpander
+  | `($(_) K $x) => `(‖ $x ‖₂)
+  | _ => throw ()
 
 scoped elab "⟪" x:term ", " y:term "⟫" : term => do
   let fieldName ← currentFieldName.get
@@ -33,7 +64,7 @@ scoped elab "⟪" x:term ", " y:term "⟫" : term => do
 end NotationOverField
 
 
-instance (K X Y) [Add K] [Inner K X] [Inner K Y] : Inner K (X × Y) where
+instance (K X Y) [AddCommMonoid K] [Inner K X] [Inner K Y] : Inner K (X × Y) where
   inner := λ (x,y) (x',y') => ⟪x,x'⟫[K] + ⟪y,y'⟫[K]
 
 instance (K X) [AddCommMonoid K] [Inner K X] (ι) [Fintype ι] : Inner K (ι → X) where
@@ -56,7 +87,7 @@ For example:
 see `SemiInnerProductSpace` for more information
 -/
 class TestFunctions (X : Type _) where
-  TestFunction : X → Prop
+  TestFunction : Set X
 
 export TestFunctions (TestFunction)
 
@@ -116,8 +147,9 @@ class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X
   --   1. ∀ t ∈ (-1,1),     ⟪γ t, γ t⟫ = ∞
   --   2. ∀ t ∈ ℝ \ (-1,1), ⟪γ t, γ t⟫ = 0
 
-/-- Almost Hilbert space but does not have to be complete. It is complete only in the sense of Convenient vector spaces.
--/
+/-- Almost Hilbert space but does not have to be complete. It is only c∞-complete.
+
+The important property is that the norm `‖x‖₂` and inner product `⟪x,y⟫` is meaningful for any `x y : X`. For general semi-inner prodcut space the norm and inner product is well defined only for `x ∈ TestFunction`-/
 class SemiHilbert (K : Type _) [IsROrC K] (X : Type _) extends SemiInnerProductSpace K X where
   test_functions_true : ∀ x, TestFunction x
 

@@ -327,4 +327,14 @@ by
   sorry_proof
 
 
+@[fprop]
+theorem SciLean.Norm2.norm2.arg_a0.IsDifferentiable_rule
+  (f : X → Y)
+  (hf : IsDifferentiable R f) 
+  : IsDifferentiable R fun x => ‖f x‖₂²[R] :=
+by 
+  simp[← SemiInnerProductSpace.inner_norm2]
+  fprop
+
+
 end InnerProductSpace

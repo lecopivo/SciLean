@@ -57,24 +57,11 @@ def letCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : SimpM 
       throwError "dependent type encountered {← ppExpr (Expr.forallE xName xType yType default)}"
 
     if ¬(yValue.hasLooseBVar 0) then
+      trace[Meta.Tactic.ftrans.step] "case trivial let\n{← ppExpr e}"
       let body := body.swapBVars 0 1
       let e' := (.letE yName yType yValue (ext.replaceFTransFun e (.lam xName xType body xBi)) false)
       return .some (.visit { expr := e' })
 
-      -- -- swap lambda and let
-      -- let e' ← lambdaLetTelescope f fun xs b => do
-      --   let f' ← mkLambdaFVars (#[xs[0]!].append xs[2:]) b
-      --   let f'' ← mkLambdaFVars (#[xs[1]!, xs[0]!].append xs[2:]) b
-      --   let e'' := ext.replaceFTransFun e f''
-      --   trace[Meta.Tactic.ftrans.step] "function f'\n{← ppExpr f'}"
-      --   trace[Meta.Tactic.ftrans.step] "function f''\n{← ppExpr f''}"
-      --   trace[Meta.Tactic.ftrans.step] "new expr'\n{← ppExpr (ext.replaceFTransFun e f')}"
-      --   trace[Meta.Tactic.ftrans.step] "new expr''\n{← ppExpr e''}"
-      --   mkLambdaFVars #[xs[1]!] (ext.replaceFTransFun e f')
-      -- trace[Meta.Tactic.ftrans.step] "case move let out\n{← ppExpr e'}"
-      -- trace[Meta.Tactic.ftrans.step] "let value\n{← ppExpr yValue}"
-      -- trace[Meta.Tactic.ftrans.step] "let body\n{← ppExpr body}"
-      -- return .some (.visit { expr := e' })
 
     match (body.hasLooseBVar 0), (body.hasLooseBVar 1) with
     | true, true =>

@@ -641,19 +641,16 @@ theorem Inner.inner.arg_a0a1.cderiv_rule
 by 
   sorry_proof
 
--- instance {R : Type _} [RealScalar R]
---          {K : Type _} [Scalar R K]
---          : Coe R K := ⟨fun x => Scalar.make x 0⟩
-
-
-open Scalar in
 @[ftrans]
 theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule
   (f : X → Y) 
   (hf : IsDifferentiable R f)
   : cderiv R (fun x => ‖f x‖₂²[R])
     =
-    fun x dx => 2 * ⟪cderiv R f x dx, f x⟫[R] := 
+    fun x dx => 
+      let y := f x
+      let dy := cderiv R f x dx
+      2 * ⟪dy, y⟫[R] := 
 by
   simp_rw [← SemiInnerProductSpace.inner_norm2] 
   ftrans
@@ -664,6 +661,21 @@ by
     rw [← SemiInnerProductSpace.conj_sym]
   simp
   ring
+
+open Scalar in
+@[ftrans]
+theorem SciLean.norm₂.arg_x.cderiv_rule
+  (f : X → Y) (x : X)
+  (hf : IsDifferentiableAt R f x) (hx : x≠0)
+  : cderiv R (fun x => ‖f x‖₂[R]) x
+    =
+    fun dx => 
+      let y := f x
+      let dy := cderiv R f x dx
+      ‖y‖₂[R]⁻¹ * ⟪dy,y⟫[R] :=
+by
+  sorry_proof
+
 
 end OverReals
 

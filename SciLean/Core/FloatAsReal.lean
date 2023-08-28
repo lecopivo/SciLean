@@ -164,6 +164,12 @@ instance : RealScalar Float where
 
   sqrt x := x.sqrt
   sqrt_def := sorry_proof
+
+  pow x y := x.pow y
+  pow_def := sorry_proof
+
+  abs x := x.abs
+  abs_def := sorry_proof
   
 
 

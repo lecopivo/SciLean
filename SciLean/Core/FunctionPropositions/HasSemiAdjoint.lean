@@ -401,7 +401,7 @@ section InnerProductSpace
 variable 
   {K : Type _} [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {Y : Type _} [SemiHilbert K Y]
 
 -- Inner -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 

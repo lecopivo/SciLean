@@ -2,6 +2,8 @@ import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
 
 import SciLean.Core.Objects.Vec
+import SciLean.Core.Objects.SemiInnerProductSpace
+import SciLean.Core.Objects.Scalar
 
 set_option linter.unusedVariables false
 
@@ -314,3 +316,47 @@ def HPow.hPow.arg_a0.IsDifferentiableAt_rule
   (n : Nat) (x : X) (f : X → K) (hf : IsDifferentiableAt K f x) 
   : IsDifferentiableAt K (fun x => f x ^ n) x
   := by sorry_proof
+
+
+--------------------------------------------------------------------------------
+
+section InnerProductSpace
+
+variable 
+  {R : Type _} [RealScalar R]
+  {X : Type _} [Vec R X]
+  {Y : Type _} [SemiHilbert R Y]
+
+-- Inner -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open ComplexConjugate
+
+@[fprop]
+theorem Inner.inner.arg_a0a1.IsDifferentiableAt_rule
+  (f : X → Y) (g : X → Y) (x : X)
+  (hf : IsDifferentiableAt R f x) (hg : IsDifferentiableAt R g x)
+  : IsDifferentiableAt R (fun x => ⟪f x, g x⟫[R]) x :=
+by 
+  sorry_proof
+
+
+@[fprop]
+theorem SciLean.Norm2.norm2.arg_a0.IsDifferentiableAt_rule
+  (f : X → Y) (x : X)
+  (hf : IsDifferentiableAt R f x) 
+  : IsDifferentiableAt R (fun x => ‖f x‖₂²[R]) x :=
+by 
+  simp[← SemiInnerProductSpace.inner_norm2]
+  fprop
+
+@[fprop]
+theorem SciLean.norm₂.arg_x.IsDifferentiableAt_rule
+  (f : X → Y) (x : X)
+  (hf : IsDifferentiableAt R f x) 
+  : IsDifferentiableAt R (fun x => ‖f x‖₂[R]) x :=
+by 
+  sorry_proof
+
+
+end InnerProductSpace

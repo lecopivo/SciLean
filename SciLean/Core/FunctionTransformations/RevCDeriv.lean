@@ -662,9 +662,10 @@ by
 section InnerProductSpace
 
 variable 
-  {K : Type _} [IsROrC K]
-  {X : Type _} [SemiInnerProductSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {R : Type _} [RealScalar R]
+  -- {K : Type _} [Scalar R K]
+  {X : Type _} [SemiInnerProductSpace R X]
+  {Y : Type _} [SemiHilbert R Y]
 
 -- Inner -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
@@ -674,25 +675,68 @@ open ComplexConjugate
 @[ftrans]
 theorem Inner.inner.arg_a0a1.revCDeriv_rule
   (f : X → Y) (g : X → Y)
-  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
-  : (revCDeriv K fun x => ⟪f x, g x⟫[K])
+  (hf : HasAdjDiff R f) (hg : HasAdjDiff R g)
+  : (revCDeriv R fun x => ⟪f x, g x⟫[R])
     =
     fun x => 
-      let y₁df := revCDeriv K f x
-      let y₂dg := revCDeriv K g x
+      let y₁df := revCDeriv R f x
+      let y₂dg := revCDeriv R g x
       let dx₁ := y₁df.2 y₂dg.1
       let dx₂ := y₂dg.2 y₁df.1
-      (⟪y₁df.1, y₂dg.1⟫[K],
+      (⟪y₁df.1, y₂dg.1⟫[R],
        fun dr => 
          conj dr • dx₁ + dr • dx₂):=
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  sorry
-  -- unfold revCDeriv
-  -- ftrans only
-  -- funext x; simp
-  -- ftrans
+  simp[revCDeriv]
+  funext x; simp
+  ftrans only
+  simp
+  ftrans
+
+
+@[ftrans]
+theorem SciLean.Norm2.norm2.arg_a0.revCDeriv_rule
+  (f : X → Y)
+  (hf : HasAdjDiff R f) 
+  : (revCDeriv R fun x => ‖f x‖₂²[R])
+    =
+    fun x => 
+      let ydf := revCDeriv R f x
+      let ynorm2 := ‖ydf.1‖₂²[R]
+      (ynorm2,
+       fun dr => 
+         ((2:R) * dr) • ydf.2 ydf.1):=
+by 
+  have ⟨_,_⟩ := hf
+  funext x; simp[revCDeriv]
+  ftrans only
+  simp
+  ftrans
+  simp[smul_smul]
+
+
+@[ftrans]
+theorem SciLean.norm₂.arg_x.revCDeriv_rule_at
+  (f : X → Y) (x : X)
+  (hf : HasAdjDiffAt R f x) (hx : x≠0)
+  : (revCDeriv R (fun x => ‖f x‖₂[R]) x)
+    =
+    let ydf := revCDeriv R f x
+    let ynorm := ‖ydf.1‖₂[R]
+    (ynorm,
+     fun dr => 
+       (ynorm⁻¹ * dr) • ydf.2 ydf.1):=
+by 
+  have ⟨_,_⟩ := hf
+  simp[revCDeriv]
+  ftrans only
+  simp
+  ftrans
+  funext dr; simp[smul_smul]
+
+end InnerProductSpace
 
 #exit
 #eval 0
