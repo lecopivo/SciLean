@@ -92,6 +92,9 @@ instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K El
   inner_with_testfun_is_continuous := sorry_proof
   inner_norm2 := by simp[Norm2.norm2]
 
+instance (priority := low) [ArrayType Cont Idx Elem] [SemiHilbert K Elem] 
+  : SemiHilbert K Cont where
+  test_functions_true := by simp[TestFunction]; intros; apply SemiHilbert.test_functions_true
 
 instance (priority := low) [ArrayType Cont Idx K] : Basis Idx K Cont where
   basis := λ i => introElem λ i' => (if i = i' then 1 else 0)
