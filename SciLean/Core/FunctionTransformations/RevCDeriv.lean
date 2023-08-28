@@ -143,12 +143,12 @@ by
 
 open BigOperators in
 theorem pi_rule
-  (f : (i : ι) → X → E i) (hf : ∀ i, HasAdjDiff K (f i))
-  : (revCDeriv K fun (x : X) (i : ι) => f i x)
+  (f :  X → (i : ι) → E i) (hf : ∀ i, HasAdjDiff K (f · i))
+  : (revCDeriv K fun (x : X) (i : ι) => f x i)
     =
     fun x =>
       let xdf := fun i =>
-        (revCDeriv K fun (x : X) => f i x) x
+        (revCDeriv K fun (x : X) => f x i) x
       (fun i => (xdf i).1,
        fun dy => ∑ i, (xdf i).2 (dy i))
        :=
@@ -199,12 +199,12 @@ by
 
 open BigOperators in
 theorem pi_rule_at
-  (f : (i : ι) → X → E i) (x : X) (hf : ∀ i, HasAdjDiffAt K (f i) x)
-  : (revCDeriv K fun (x : X) (i : ι) => f i x)
+  (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, HasAdjDiffAt K (f · i) x)
+  : (revCDeriv K fun (x : X) (i : ι) => f x i)
     =
     fun x =>
       let xdf := fun i =>
-        (revCDeriv K fun (x : X) => f i x) x
+        (revCDeriv K fun (x : X) => f x i) x
       (fun i => (xdf i).1,
        fun dy => ∑ i, (xdf i).2 (dy i))
        :=
