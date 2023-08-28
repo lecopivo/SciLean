@@ -2,6 +2,8 @@ import SciLean.Core.FunctionPropositions.HasAdjDiffAt
 import SciLean.Core.FunctionPropositions.HasAdjDiff
 
 import SciLean.Core.FunctionTransformations.SemiAdjoint
+
+import SciLean.Data.EnumType
   
 import SciLean.Util.Profile
 
@@ -640,8 +642,7 @@ def HPow.hPow.arg_a0.revCDeriv_rule_at
     (ydf.1 ^ n, fun dx' => (n * conj ydf.1 ^ (n-1)) • ydf.2 dx') :=
 by 
   have ⟨_,_⟩ := hf
-  unfold revCDeriv; simp; ftrans; ftrans; sorry_proof 
-  -- just missing (a * b) • x = b • a • x
+  unfold revCDeriv; simp; funext dx; ftrans; ftrans; simp[smul_smul]; ring_nf
 
 @[ftrans]
 def HPow.hPow.arg_a0.revCDeriv_rule
@@ -653,8 +654,52 @@ def HPow.hPow.arg_a0.revCDeriv_rule
       (ydf.1 ^ n, fun dx' => (n * (conj ydf.1 ^ (n-1))) • ydf.2 dx') :=
 by 
   have ⟨_,_⟩ := hf
-  unfold revCDeriv; simp; ftrans; ftrans; sorry_proof
-  -- just missing (a * b) • x = b • a • x
+  funext x
+  unfold revCDeriv; simp; funext dx; ftrans; ftrans; simp[smul_smul]; ring_nf
+
+
+-- EnumType.sum ----------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+open BigOperators in
+@[ftrans]
+theorem Finset.sum.arg_f.revCDeriv_rule {ι : Type _} [Fintype ι]
+  (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
+  : revCDeriv K (fun x => ∑ i, f x i)
+    =
+    fun x => 
+      let ydf := revCDeriv K (fun x i => f x i) x
+      (∑ i, ydf.1 i, 
+       fun dy => ydf.2 (fun _ => dy)) :=
+by
+  have _ := fun i => (hf i).1
+  have _ := fun i => (hf i).2
+  simp [revCDeriv]
+  funext x; simp
+  ftrans
+  sorry_proof
+
+
+-- EnumType.sum ----------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans]
+theorem SciLean.EnumType.sum.arg_f.revCDeriv_rule {ι : Type _} [EnumType ι]
+  (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
+  : revCDeriv K (fun x => ∑ i, f x i)
+    =
+    fun x => 
+      let ydf := revCDeriv K (fun x i => f x i) x
+      (∑ i, ydf.1 i, 
+       fun dy => ydf.2 (fun _ => dy)) :=
+by
+  have _ := fun i => (hf i).1
+  have _ := fun i => (hf i).2
+  simp [revCDeriv]
+  funext x; simp
+  ftrans
+  sorry_proof
+
 
 
 --------------------------------------------------------------------------------

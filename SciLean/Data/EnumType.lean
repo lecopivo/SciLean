@@ -143,6 +143,8 @@ namespace EnumType
   @[app_unexpander sum] def unexpandSum : Lean.PrettyPrinter.Unexpander
     | `($(_) fun $x:ident => $b) => 
       `(∑ $x:ident, $b)
+    | `($(_) fun $x:ident $xs:ident* => $b) => 
+      `(∑ $x:ident, fun $xs* => $b)
     | `($(_) fun ($x:ident : $ty:term) => $b) => 
       `(∑ ($x:ident : $ty), $b)
     | _  => throw ()
@@ -157,6 +159,8 @@ namespace EnumType
   @[app_unexpander product] def unexpandProduct : Lean.PrettyPrinter.Unexpander
     | `($(_) fun $x:ident => $b) => 
       `(∏ $x:ident, $b)
+    | `($(_) fun $x:ident $xs:ident* => $b) => 
+      `(∏ $x:ident, fun $xs* => $b)
     | `($(_) fun ($x:ident : $ty:term) => $b) => 
       `(∏ ($x:ident : $ty), $b)
     | _  => throw ()
