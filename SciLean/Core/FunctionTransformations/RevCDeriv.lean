@@ -3,7 +3,7 @@ import SciLean.Core.FunctionPropositions.HasAdjDiff
 
 import SciLean.Core.FunctionTransformations.SemiAdjoint
 
-import SciLean.Data.EnumType
+-- import SciLean.Data.EnumType
   
 import SciLean.Util.Profile
 

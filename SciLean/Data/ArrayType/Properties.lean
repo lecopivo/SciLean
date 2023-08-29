@@ -10,7 +10,7 @@ variable
   {K : Type _}
   [IsROrC K]
   {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-  [ArrayType Cont Idx Elem] [Index Idx] 
+  [ArrayType Cont Idx Elem] [Index Idx]
   
 
 -- GetElem.getElem -------------------------------------------------------------
@@ -22,11 +22,11 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   [NormedAddCommGroup Elem] [NormedSpace K Elem]
 
-@[fprop]
-theorem GetElem.getElem.arg_xs.IsContinuousLinearMap_rule 
-  (f : X → Cont) (idx : Idx) (dom)
-  (hf : IsContinuousLinearMap K f)
-  : IsContinuousLinearMap K (λ x => getElem (f x) idx dom) := sorry_proof
+-- @[fprop]
+-- theorem GetElem.getElem.arg_xs.IsContinuousLinearMap_rule 
+--   (f : X → Cont) (idx : Idx) (dom)
+--   (hf : IsContinuousLinearMap K f)
+--   : IsContinuousLinearMap K (λ x => getElem (f x) idx dom) := sorry_proof
 
 @[fprop]
 theorem GetElem.getElem.arg_xs.Differentiable_rule
@@ -359,13 +359,13 @@ theorem IntroElem.introElem.arg_f.IsContinuousLinearMap_rule
   : IsContinuousLinearMap K (λ x => introElem (Cont:=Cont) (f x)) := sorry_proof
 
 @[fprop]
-theorem IntroElem.introElem.arg_f.Differentiable_rule
+theorem IntroElem.introElem.arg_f.Differentiable_rule [Fintype Idx]
   (f : X → Idx → Elem)
   (hf : Differentiable K f)
   : Differentiable K (λ x => introElem (Cont:=Cont) (f x)) := sorry_proof
 
 @[fprop]
-theorem IntroElem.introElem.arg_f.DifferentiableAt_rule
+theorem IntroElem.introElem.arg_f.DifferentiableAt_rule [Fintype Idx]
   (f : X → Idx → Elem) (x : X)
   (hf : DifferentiableAt K f x) 
   : DifferentiableAt K (λ x => introElem (Cont:=Cont) (f x)) x := sorry_proof

@@ -109,32 +109,32 @@ instance (priority := low) [ArrayType Cont Idx K] : BasisDuality Cont where
   toDual   := fun x => x
   fromDual := fun x => x
 
-instance (priority := low) [ArrayType Cont Idx K] : FinVec Idx K Cont where
-  is_basis := sorry_proof
-  duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
-  to_dual := sorry_proof
-  from_dual := sorry_proof
+-- instance (priority := low) [ArrayType Cont Idx K] : FinVec Idx K Cont where
+--   is_basis := sorry_proof
+--   duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
+--   to_dual := sorry_proof
+--   from_dual := sorry_proof
 
 
--- These instances might cause problems
-instance (priority := low-1) [ArrayType Cont Idx Elem] {κ} [Index κ] [FinVec κ K Elem] : Basis (Idx×κ) K Cont where
-  basis := λ (i,j) => introElem λ i' => (if i = i' then ⅇ[Elem] j else 0)
-  proj := λ (i,j) x => ℼ j x[i]
+-- -- These instances might cause problems
+-- instance (priority := low-1) [ArrayType Cont Idx Elem] {κ} [Index κ] [FinVec κ K Elem] : Basis (Idx×κ) K Cont where
+--   basis := λ (i,j) => introElem λ i' => (if i = i' then ⅇ[Elem] j else 0)
+--   proj := λ (i,j) x => ℼ j x[i]
 
-instance (priority := low-1) [ArrayType Cont Idx Elem] {κ} [Index κ] [FinVec κ K Elem] : DualBasis (Idx×κ) K Cont where
-  dualBasis := λ (i,j) => introElem λ i' => (if i = i' then ⅇ'[Elem] j else 0)
-  dualProj := λ (i,j) x => ℼ' j x[i]
+-- instance (priority := low-1) [ArrayType Cont Idx Elem] {κ} [Index κ] [FinVec κ K Elem] : DualBasis (Idx×κ) K Cont where
+--   dualBasis := λ (i,j) => introElem λ i' => (if i = i' then ⅇ'[Elem] j else 0)
+--   dualProj := λ (i,j) x => ℼ' j x[i]
 
-open BasisDuality in
-instance (priority := low-1) [ArrayType Cont Idx Elem] {κ} [Index κ] [FinVec κ K Elem] : BasisDuality Cont where
-  toDual   := ArrayType.map toDual
-  fromDual := ArrayType.map fromDual
+-- open BasisDuality in
+-- instance (priority := low-1) [ArrayType Cont Idx Elem] {κ} [Index κ] [FinVec κ K Elem] : BasisDuality Cont where
+--   toDual   := ArrayType.map toDual
+--   fromDual := ArrayType.map fromDual
 
-instance (priority := low-1) [ArrayType Cont Idx Elem] {κ} [Index κ] [FinVec κ K Elem] : FinVec (Idx×κ) K Cont where
-  is_basis := sorry_proof
-  duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
-  to_dual := sorry_proof
-  from_dual := sorry_proof
+-- instance (priority := low-1) [ArrayType Cont Idx Elem] {κ} [Index κ] [FinVec κ K Elem] : FinVec (Idx×κ) K Cont where
+--   is_basis := sorry_proof
+--   duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
+--   to_dual := sorry_proof
+--   from_dual := sorry_proof
 
 -- This is causing issues to synthesize `Vec Cont` from `Vec Elem`
 -- instance (priority := low-2) {κ : Type} {_ : Index κ} [FinVec Elem κ] : FinVec Cont (Idx×κ) where

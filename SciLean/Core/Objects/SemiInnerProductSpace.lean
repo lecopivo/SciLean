@@ -3,6 +3,8 @@ import SciLean.Core.Objects.Vec
 import SciLean.Core.Objects.Scalar
 import SciLean.Core.NotationOverField
 
+import SciLean.Data.EnumType
+
 namespace SciLean
 
 open IsROrC ComplexConjugate BigOperators
@@ -69,6 +71,9 @@ instance (K X Y) [AddCommMonoid K] [Inner K X] [Inner K Y] : Inner K (X × Y) wh
 
 instance (K X) [AddCommMonoid K] [Inner K X] (ι) [Fintype ι] : Inner K (ι → X) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫[K]
+
+instance (K X) [AddCommMonoid K] [Inner K X] (ι) [EnumType ι] : Inner K (ι → X) where
+  inner := λ f g => EnumType.sum fun i => ⟪f i, g i⟫[K]
 
 instance (priority:=low) (K ι) (X : ι → Type) 
   [AddCommMonoid K] [∀ i, Inner K (X i)] [Fintype ι] 
@@ -219,6 +224,7 @@ abbrev SemiInnerProductSpace.mkSorryProofs {α} [Vec K α] [Inner K α] [TestFun
 instance (X Y) [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (X × Y) := SemiInnerProductSpace.mkSorryProofs
 
 instance (X) [SemiInnerProductSpace K X] (ι) [Fintype ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
+instance (X) [SemiInnerProductSpace K X] (ι) [EnumType ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
 instance (priority:=low) (ι) (X : ι → Type) [∀ i, SemiInnerProductSpace K (X i)] [Fintype ι] : SemiInnerProductSpace K ((i : ι) → X i) 
   := SemiInnerProductSpace.mkSorryProofs
 
