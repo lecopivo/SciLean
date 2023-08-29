@@ -1,8 +1,10 @@
 import Lean 
+-- import Mathlib
 
 namespace SciLean
 
 open Lean.Parser.Tactic.Conv
+open Lean.Elab.Tactic.Conv
 
 syntax:1 term "rewrite_by" convSeq : term
 
@@ -10,12 +12,17 @@ open Lean Elab Term Meta in
 elab_rules : term
 | `($x:term rewrite_by $rw:convSeq) => do
   let x ← elabTerm x none
-  let eq ← mkFreshExprMVar (← mkEq x x)
-  let goals ← Tactic.run eq.mvarId! do
-    let _ ← Tactic.evalTactic (← `(tactic| conv => lhs; ($rw)))
-    return ()
+  let (_, eq) ← mkConvGoalFor x
 
-  if goals.length ≠ 1 then
-    throwError "someting unexpected happend with rewrite_by"
+  let goals ← Tactic.run eq.mvarId! do
+    let (lhsNew, proof) ← convert x (Tactic.evalTactic (← `(conv| ($rw))))
+    updateLhs lhsNew proof
+    return ()
   
-  return (← (goals.get! 0).getType).getArg! 1
+  if goals.length = 0 then
+    throwError "this is a bug in rewrite_by"
+
+  if goals.length > 1 then
+    throwError s!"unsolved goals {← goals.mapM (fun g => do ppExpr (← g.getType))}"
+  
+  return (← (goals.get! 0).getType).consumeMData.getArg! 1
