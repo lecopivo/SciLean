@@ -167,16 +167,16 @@ namespace EnumType
 
 
 
-  instance {ι} [EnumType ι] : Fintype ι where
-    elems := {
-        val := Id.run do
-          let mut l : List ι := []
-          for i in fullRange ι do
-            l := i :: l
-          Multiset.ofList l.reverse
-        nodup := sorry_proof
-      }
-    complete := sorry_proof
+  -- instance {ι} [EnumType ι] : Fintype ι where
+  --   elems := {
+  --       val := Id.run do
+  --         let mut l : List ι := []
+  --         for i in fullRange ι do
+  --           l := i :: l
+  --         Multiset.ofList l.reverse
+  --       nodup := sorry_proof
+  --     }
+  --   complete := sorry_proof
 
   
   -- TODO: move this somewhere else
