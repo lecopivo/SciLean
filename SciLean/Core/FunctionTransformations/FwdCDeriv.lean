@@ -18,7 +18,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -222,7 +222,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -527,6 +527,32 @@ def HPow.hPow.arg_a0.fwdCDeriv_rule
       let ydy := fwdCDeriv K f x dx
       (ydy.1 ^ n, n * ydy.2 * (ydy.1 ^ (n-1))) :=
 by 
+  unfold fwdCDeriv; ftrans
+
+
+-- EnumType.sum ----------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans]
+theorem SciLean.EnumType.sum.arg_f.fwdCDeriv_rule_at
+  (f : X → ι → Y) (x : X) (hf : ∀ i, IsDifferentiableAt K (f · i) x)
+  : fwdCDeriv K (fun x => ∑ i, f x i) x
+    =
+    fun dx => 
+      let ydy := fwdCDeriv K (fun i => f · i) x dx
+      (∑ i, ydy.1 i, ∑ i, ydy.2 i) :=
+by
+  unfold fwdCDeriv; ftrans
+
+@[ftrans]
+theorem SciLean.EnumType.sum.arg_f.fwdCDeriv_rule
+  (f : X → ι → Y) (hf : ∀ i, IsDifferentiable K (f · i))
+  : fwdCDeriv K (fun x => ∑ i, f x i)
+    =
+    fun x dx => 
+      let ydy := fwdCDeriv K (fun i => f · i) x dx
+      (∑ i, ydy.1 i, ∑ i, ydy.2 i) :=
+by
   unfold fwdCDeriv; ftrans
 
 

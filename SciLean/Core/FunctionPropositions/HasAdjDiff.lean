@@ -284,7 +284,7 @@ by
 
 @[fprop]
 theorem HSub.hSub.arg_a0a1.HasAdjDiff_rule
-  (x : X) (f g : X → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  (f g : X → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : HasAdjDiff K (fun x => f x - g x) := 
 by 
   have ⟨_,_⟩ := hf
@@ -297,7 +297,7 @@ by
 
 @[fprop]
 def HMul.hMul.arg_a0a1.HasAdjDiff_rule
-  (x : X) (f g : X → K) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  (f g : X → K) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : HasAdjDiff K (fun x => f x * g x) := 
 by 
   have ⟨_,_⟩ := hf
@@ -356,6 +356,18 @@ by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
+
+-- EnumType.sum ----------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+theorem SciLean.EnumType.sum.arg_f.HasAdjDiff_rule
+  (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
+  : HasAdjDiff K (fun x => ∑ i, f x i) :=
+by
+  have _ := fun i => (hf i).1
+  have _ := fun i => (hf i).2
+  constructor; fprop; ftrans; fprop
 
 
 --------------------------------------------------------------------------------

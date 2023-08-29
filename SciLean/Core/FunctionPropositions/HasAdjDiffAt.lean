@@ -177,7 +177,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [Fintype ι] [DecidableEq ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
 
@@ -363,6 +363,17 @@ by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
+-- EnumType.sum ----------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+theorem SciLean.EnumType.sum.arg_f.HasAdjDiffAt_rule
+  (f : X → ι → Y) (x : X) (hf : ∀ i, HasAdjDiffAt K (fun x => f x i) x)
+  : HasAdjDiffAt K (fun x => ∑ i, f x i) x :=
+by
+  have _ := fun i => (hf i).1
+  have _ := fun i => (hf i).2
+  constructor; fprop; ftrans; fprop
 
 
 --------------------------------------------------------------------------------

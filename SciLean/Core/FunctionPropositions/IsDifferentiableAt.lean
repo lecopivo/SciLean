@@ -14,7 +14,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [Fintype ι] 
+  {ι : Type _} [EnumType ι] 
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
 def IsDifferentiableAt (f : X → Y) (x : X) : Prop :=
@@ -173,7 +173,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [Fintype ι] 
+  {ι : Type _} [EnumType ι] 
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
 
@@ -316,6 +316,17 @@ def HPow.hPow.arg_a0.IsDifferentiableAt_rule
   (n : Nat) (x : X) (f : X → K) (hf : IsDifferentiableAt K f x) 
   : IsDifferentiableAt K (fun x => f x ^ n) x
   := by sorry_proof
+
+
+-- EnumType.sum ----------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+theorem SciLean.EnumType.sum.arg_f.IsDifferentiableAt_rule
+  (f : X → ι → Y) (x : X) (hf : ∀ i, IsDifferentiableAt K (fun x => f x i) x)
+  : IsDifferentiableAt K (fun x => ∑ i, f x i) x :=
+by
+  sorry_proof
 
 
 --------------------------------------------------------------------------------

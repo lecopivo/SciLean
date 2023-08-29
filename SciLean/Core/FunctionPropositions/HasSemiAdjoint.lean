@@ -198,7 +198,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [Fintype ι] [DecidableEq ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
 -- Id --------------------------------------------------------------------------
@@ -339,13 +339,26 @@ by
 
 open BigOperators in
 @[fprop]
-theorem Finset.sum.arg_f.HasSemiAdjoint_rule
+theorem Finset.sum.arg_f.HasSemiAdjoint_rule {ι : Type _} [Fintype ι]
   (f : X → ι → Y) (_ : ∀ i, HasSemiAdjoint K fun x : X => f x i) (A : Finset ι)
   : HasSemiAdjoint K fun x => ∑ i in A, f x i := 
 by 
   unfold HasSemiAdjoint
   apply Exists.intro (fun (y' : Y) => ∑ i in A, semiAdjoint K (f · i) y' ) _
   sorry_proof
+
+-- EnumType.sum -------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+theorem SciLean.EnumType.sum.arg_f.HasSemiAdjoint_rule
+  (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K fun x : X => f x i)
+  : HasSemiAdjoint K fun x => ∑ i, f x i := 
+by 
+  -- unfold HasSemiAdjoint
+  -- apply Exists.intro (fun (y' : Y) => ∑ i, semiAdjoint K (f · i) y') _
+  sorry_proof
+
 
 -- do we need this one?
 -- open BigOperators in

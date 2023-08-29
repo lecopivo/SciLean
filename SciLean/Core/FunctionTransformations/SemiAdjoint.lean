@@ -166,7 +166,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 open SciLean
@@ -325,7 +325,20 @@ by
 
 open BigOperators in
 @[ftrans]
-theorem Finset.sum.arg_f.semiAdjoint_rule
+theorem Finset.sum.arg_f.semiAdjoint_rule {ι : Type _} [Fintype ι]
+  (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K (f · i))
+  : semiAdjoint K (fun x => ∑ i, f x i)
+    =
+    (fun y => ∑ i, semiAdjoint K (f · i) y) := 
+by
+  sorry_proof
+
+
+-- EnumType.sum ------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans]
+theorem SciLean.EnumType.sum.arg_f.semiAdjoint_rule
   (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K (f · i))
   : semiAdjoint K (fun x => ∑ i, f x i)
     =

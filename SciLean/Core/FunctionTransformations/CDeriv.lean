@@ -13,7 +13,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 noncomputable
@@ -238,7 +238,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -600,7 +600,28 @@ by
   funext x; apply HPow.hPow.arg_a0.cderiv_rule_at n x f (hf x)
 
 
+-- EnumType.sum ----------------------------------------------------------------
+-------------------------------------------------------------------------------- 
 
+@[ftrans]
+theorem SciLean.EnumType.sum.arg_f.cderiv_rule_at
+  (f : X → ι → Y) (x : X) (hf : ∀ i, IsDifferentiableAt K (f · i) x)
+  : cderiv K (fun x => ∑ i, f x i) x
+    =
+    fun dx => ∑ i, cderiv K (f · i) x dx :=
+by
+  sorry_proof
+
+
+
+@[ftrans]
+theorem SciLean.EnumType.sum.arg_f.cderiv_rule
+  (f : X → ι → Y) (hf : ∀ i, IsDifferentiable K (f · i))
+  : cderiv K (fun x => ∑ i, f x i)
+    =
+    fun x dx => ∑ i, cderiv K (f · i) x dx :=
+by
+  funext x; apply SciLean.EnumType.sum.arg_f.cderiv_rule_at f x (fun i => hf i x)
 
 
 --------------------------------------------------------------------------------
