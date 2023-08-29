@@ -16,8 +16,28 @@ structure NormalizeLetConfig where
   removeTrivialLet := true
   removeNoFVarLet := false  
   removeLambdaLet  := true
+  removeFVarProjLet := true
   splitStructureConstuctors := true
   reduceProjections := true
+
+
+/-- Is `e` in the form `p₁ (...(pₙ x))` where `pᵢ` are projections and `x` free variable?
+-/
+def isProjectionOfFVar (e : Expr) : MetaM Bool := do
+  match e with
+  | .mdata _ e => isProjectionOfFVar e
+  | .fvar _ => return true
+  | .app f x => 
+    if f.isProj then
+      isProjectionOfFVar x
+    else
+      let some projName := f.getAppFn'.constName? | return false
+      let some info ← getProjectionFnInfo? projName | return false
+      if info.numParams = f.getAppNumArgs then
+        isProjectionOfFVar x 
+      else
+        return false
+  | _ => return false
 
 
 /-- Normalizes let bindings in an expression 
@@ -83,14 +103,10 @@ let z₂ := g y
 ```
 -/
 partial def normalizeLet (e : Expr) (config : NormalizeLetConfig := {}) : MetaM Expr := do
-  -- dbg_trace s!"{← ppExpr e}\n"
   match e.consumeMData.headBeta with
   | .letE xName xType xValue xBody _ => do
     match (← normalizeLet xValue config).consumeMData with
     | .letE yName yType yValue yBody _ => 
-      -- dbg_trace s!"{← ppExpr e}"
-      -- dbg_trace s!"y := {← ppExpr yValue} : {← ppExpr yType} | x := {← ppExpr (yBody.instantiate1 yValue)}"
-      -- dbg_trace "\n"
       withLetDecl yName yType yValue fun y => 
       withLetDecl xName xType (yBody.instantiate1 y) fun x => do
         mkLambdaFVars #[y,x] (xBody.instantiate1 x) >>= normalizeLet (config:=config)
@@ -103,6 +119,9 @@ partial def normalizeLet (e : Expr) (config : NormalizeLetConfig := {}) : MetaM 
         return ← normalizeLet (xBody.instantiate1 xValue') config
 
       if xValue'.isLambda && config.removeLambdaLet then
+        return ← normalizeLet (xBody.instantiate1 xValue') config
+
+      if (← isProjectionOfFVar xValue') && config.removeFVarProjLet then
         return ← normalizeLet (xBody.instantiate1 xValue') config
 
       -- deconstruct constructors into bunch of let bindings
@@ -207,5 +226,4 @@ x2 + y5 + z3_fst + z3_snd : Nat
     x3 + y5 + z3.1 + z3.2)
     rewrite_by
       let_normalize
-
 
