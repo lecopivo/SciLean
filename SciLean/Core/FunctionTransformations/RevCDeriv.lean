@@ -16,7 +16,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
@@ -91,7 +91,7 @@ by
 variable{X}
 
 variable(E)
-theorem proj_rule [DecidableEq ι] (i : ι)
+theorem proj_rule (i : ι)
   : revCDeriv K (fun (x : (i:ι) → E i) => x i)
     = 
     fun x => 
@@ -141,7 +141,6 @@ by
   funext _; ftrans; ftrans 
 
 
-open BigOperators in
 theorem pi_rule
   (f :  X → (i : ι) → E i) (hf : ∀ i, HasAdjDiff K (f · i))
   : (revCDeriv K fun (x : X) (i : ι) => f x i)
@@ -197,7 +196,6 @@ by
   funext _; simp; sorry_proof
 
 
-open BigOperators in
 theorem pi_rule_at
   (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, HasAdjDiffAt K (f · i) x)
   : (revCDeriv K fun (x : X) (i : ι) => f x i)
@@ -320,7 +318,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
@@ -657,27 +655,6 @@ by
   funext x
   unfold revCDeriv; simp; funext dx; ftrans; ftrans; simp[smul_smul]; ring_nf
 
-
--- EnumType.sum ----------------------------------------------------------------
--------------------------------------------------------------------------------- 
-
-open BigOperators in
-@[ftrans]
-theorem Finset.sum.arg_f.revCDeriv_rule {ι : Type _} [Fintype ι]
-  (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
-  : revCDeriv K (fun x => ∑ i, f x i)
-    =
-    fun x => 
-      let ydf := revCDeriv K (fun x i => f x i) x
-      (∑ i, ydf.1 i, 
-       fun dy => ydf.2 (fun _ => dy)) :=
-by
-  have _ := fun i => (hf i).1
-  have _ := fun i => (hf i).2
-  simp [revCDeriv]
-  funext x; simp
-  ftrans
-  sorry_proof
 
 
 -- EnumType.sum ----------------------------------------------------------------

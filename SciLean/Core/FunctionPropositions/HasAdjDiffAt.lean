@@ -12,7 +12,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [Fintype ι] [DecidableEq ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
 def HasAdjDiffAt (f : X → Y) (x : X) : Prop :=

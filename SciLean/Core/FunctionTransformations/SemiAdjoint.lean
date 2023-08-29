@@ -11,7 +11,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 namespace semiAdjoint
@@ -60,7 +60,6 @@ theorem let_rule
       xy.1 + x' := 
 by sorry_proof
 
-open BigOperators in
 theorem pi_rule
   (f : X → (i : ι) → E i) (hf : ∀ i, HasSemiAdjoint K (f · i))
   : semiAdjoint K (fun (x : X) (i : ι) => f x i)

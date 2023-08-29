@@ -111,14 +111,14 @@ section CommonVectorSpaces
   instance [IsROrC K] : Vec K K where
     scalar_wise_smooth := sorry_proof
     
-  instance [inst : Vec K U] : Vec K (α → U) := 
-    -- option 1:
-    -- Vec.mkSorryProofs
-    -- option 2:
-    -- have : Module K U := inst.toModule
-    -- Vec.mk
-    -- option 3:
-    by cases inst; apply Vec.mk (scalar_wise_smooth := sorry_proof)
+  -- instance [inst : Vec K U] : Vec K (α → U) := 
+  --   -- option 1:
+  --   -- Vec.mkSorryProofs
+  --   -- option 2:
+  --   -- have : Module K U := inst.toModule
+  --   -- Vec.mk
+  --   -- option 3:
+  --   by cases inst; apply Vec.mk (scalar_wise_smooth := sorry_proof)
 
 
   instance(priority:=low) (α : Type _) (X : α → Type _) [inst : ∀ a, Vec K (X a)] : Vec K ((a : α) → X a) := 

@@ -13,7 +13,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [Fintype ι] [DecidableEq ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 def HasAdjDiff (f : X → Y)  : Prop := IsDifferentiable K f ∧ ∀ x, HasSemiAdjoint K (cderiv K f x)
@@ -174,7 +174,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [Fintype ι] [DecidableEq ι]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
 

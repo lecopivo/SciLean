@@ -1,3 +1,4 @@
+import Mathlib.Data.Fintype.Basic
 import SciLean.Util.SorryProof
 
 namespace SciLean
@@ -66,10 +67,19 @@ instance : OfNat (Idx (no_index (n+1))) i where
 instance : Inhabited (Idx (no_index (n+1))) where
   default := 0
 
+instance : Fintype (Idx n) where
+  elems := {
+      val := Id.run do
+        let mut l : List (Idx n) := []
+        for i in [0:n.toNat] do
+          l := ⟨i.toUSize, sorry_proof⟩ :: l
+        Multiset.ofList l.reverse
+      nodup := sorry_proof
+    }
+  complete := sorry_proof
+
 
 instance (n : Nat) : Nonempty (Idx (no_index (OfNat.ofNat (n+1)))) := sorry_proof
 instance (n : Nat) : OfNat (Idx (no_index (OfNat.ofNat (n+1)))) i := ⟨(i % (n+1)).toUSize, sorry_proof⟩
-
-
 
 -- #check (0 : Idx 10)
