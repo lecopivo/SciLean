@@ -100,4 +100,5 @@ by
     solve_for p' from 1 := sorry_proof
     solve_as_inv
     solve_as_inv
-  ftrans; ftrans; ftrans
+    unfold hold
+  ftrans; ftrans; ftrans;

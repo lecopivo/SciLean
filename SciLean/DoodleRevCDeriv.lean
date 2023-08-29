@@ -25,9 +25,19 @@ theorem cderiv.uncurry_rule (f : X → Y → Z)
       +
       cderiv K (fun y => f xy.1 y) xy.2 dxy.2 := sorry_proof
 
-set_option trace.Meta.Tactic.simp.rewrite true in
-theorem pi_add (f g : α → β) [Add β] (a :α)
-  : (f + g) a = f a + g a := by simp
+theorem revCDeriv.prod_rule
+  (f : X → Y → X×Y → Z) (hf : HasAdjDiff K (fun x : X×Y×(X×Y) => f x.1 x.2.1 x.2.2))
+  : revCDeriv K (fun xy : X × Y => f xy.1 xy.2 xy)
+    =
+    fun x =>
+      let ydf := revCDeriv K (fun x : X×Y×(X×Y) => f x.1 x.2.1 x.2.2) (x.1,x.2,x)
+      (ydf.1,
+       fun dz => 
+         let dxy := ydf.2 dz
+         (dxy.1, dxy.2.1) + dxy.2.2) := 
+by
+  -- simp [cderiv.uncurry_rule _ hf]
+  sorry_proof
 
 open BigOperators
 theorem revCDeriv.pi_rule_v1
@@ -61,8 +71,6 @@ by
 
 
 
-
-
 theorem revCDeriv.pi_rule_v1'
   (f : (i : ι) → X → (ι → X) → Y) (hf : ∀ i, HasAdjDiff K (fun x : X×(ι→X) => f i x.1 x.2))
   : (revCDeriv K fun (x : ι → X) (i : ι) => f i (x i) x)
@@ -88,6 +96,27 @@ by
     simp[cderiv.uncurry_rule (K:=K) (f i) (by fprop)]
     ftrans
   sorry_proof
+
+
+
+example 
+  : revCDeriv K (fun xy : X×Y => (xy.1,xy.2))
+    =
+    fun xy => 
+      (xy, fun dxy => dxy) := 
+by
+  conv => 
+    lhs; autodiff; enter[x]; let_normalize
+
+
+example 
+  : revCDeriv K (fun xy : X×Y => (xy.2,xy.1))
+    =
+    fun xy => 
+      ((xy.2,xy.1), fun dxy => (dxy.2, dxy.1)) := 
+by
+  conv => 
+    lhs; autodiff; enter[x]; let_normalize
 
 #eval 0
 

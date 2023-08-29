@@ -8,6 +8,7 @@ import SciLean.Lean.Meta.Basic
 import SciLean.Lean.Array
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.SorryProof
+import SciLean.Util.Hold
 
 namespace SciLean
 
@@ -174,7 +175,7 @@ def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := 
       let Q₁body ← mkAppFoldrM ``And Qs₁
       let Q₁ ← mkLambdaFVars zs Q₁body
 
-      let zs'Val ← mkLambdaFVars ys (← mkAppM ``solveFun #[Q₁])
+      let zs'Val ← mkAppM ``solveFun #[Q₁] >>= mkLambdaFVars ys >>= (mkAppM ``hold #[·]) -- (← mkAppM ``solveFun #[Q₁])
       withLetDecl (zsName.appendAfter "'") (← inferType zs'Val) zs'Val fun zs'Var => do
 
       let zs' ← mkProdSplitElem (← mkAppM' zs'Var ys) zs.size
