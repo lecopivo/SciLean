@@ -1,5 +1,6 @@
 import Lean
 import Qq
+import Std.Lean.Expr
 
 namespace Lean.Expr
 
@@ -240,4 +241,17 @@ def purgeMData : Expr → Expr
 | .forallE n t b bi => .forallE n t.purgeMData b.purgeMData bi
 | .mdata _ e => e.purgeMData
 | e => e
+
+
+def modArgRev (modifier : Expr → Expr) (i : Nat) (e : Expr) : Expr :=
+  match i, e with
+  |      0, .app f x => .app f (modifier x)
+  | (i'+1), .app f x => .app (modArgRev modifier i' f) x
+  | _, _ => e
+
+def modArg (modifier : Expr → Expr) (i : Nat) (e : Expr) (n := e.getAppNumArgs) : Expr :=
+  modArgRev modifier (n - i - 1) e
+
+def setArg (e : Expr) (i : Nat) (x : Expr) (n := e.getAppNumArgs) : Expr :=
+  e.modArg (fun _ => x) i n
 
