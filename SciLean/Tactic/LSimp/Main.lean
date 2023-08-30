@@ -170,7 +170,7 @@ where
       let f := e.getAppFn
       f.isConst && isMatcherCore env f.constName!
 
-private def unfold? (e : Expr) : SimpM (Option Expr) := do
+def unfold? (e : Expr) : SimpM (Option Expr) := do
   let f := e.getAppFn
   if !f.isConst then
     return none

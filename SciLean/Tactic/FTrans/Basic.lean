@@ -82,6 +82,17 @@ def letCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : SimpM 
   | _ => do
     throwError "Invalid use of {`FTrans.letCase} on function:\n{← ppExpr f}"
 
+def unfoldFunHead? (e : Expr) : SimpM (Option Expr) := do
+  lambdaLetTelescope e fun xs b => do
+    if let .some b' ← Tactic.LSimp.unfold? b then 
+      mkLambdaFVars xs b'
+    else if let .some b' ← withReducible <| unfoldDefinition? b then
+      mkLambdaFVars xs b'
+    else if let .some b' ← reduceRecMatcher? b then
+      mkLambdaFVars xs b'
+    else
+      return none
+
 /--
   Apply simp theorems marked with `ftrans`
 -/
@@ -149,14 +160,17 @@ def bvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Ste
   | _ => return none
 
 
+
 /-- Try to apply function transformation to `e`. Returns `none` if expression is not a function transformation applied to a function.
   -/
-def main (e : Expr) : SimpM (Option Simp.Step) := do
+partial def main (e : Expr) : SimpM (Option Simp.Step) := do
 
   let .some (ftransName, ext, f) ← getFTrans? e
     | return none
 
-  match f.consumeMData with
+  let f := f.consumeMData
+
+  match f with
   | .letE .. => letTelescope f λ xs b => do
     trace[Meta.Tactic.ftrans.step] "case let x := ..; ..\n{← ppExpr e}"
     let e' ← mkLetFVars xs (ext.replaceFTransFun e b)
@@ -193,23 +207,44 @@ def main (e : Expr) : SimpM (Option Simp.Step) := do
         | .bvar .. => 
           trace[Meta.Tactic.ftrans.step] "case bvar app\n{← ppExpr e}"
           bvarAppStep e ext f'
+        | .proj typeName idx _ => do
+          let .some info := getStructureInfo? (← getEnv) typeName | return none
+          let .some projName :=info.getProjFn? idx | return none
+          constAppStep e ftransName ext projName
         | .const funName _ =>
           trace[Meta.Tactic.ftrans.step] "case const app `{funName}`.\n{← ppExpr e}"
-          constAppStep e ftransName ext funName
-        -- | .mvar .. => do
-        --   return .some (.visit  { expr := ← instantiateMVars e })
+          match ← constAppStep e ftransName ext funName with
+          | .some step => return step
+          | .none => 
+            let .some f'' ← unfoldFunHead? f' | return none
+            trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr f'}`\n==>\n{← ppExpr f''}"
+            let e' := ext.replaceFTransFun e f''
+            let step : Simp.Step := .visit { expr := e' }
+            Simp.andThen step main
+
         | _ => 
           trace[Meta.Tactic.ftrans.step] "unknown case, app function constructor: {g.ctorName}\n{← ppExpr e}\n"
           return none
 
   -- | .mvar _ => do
   --   return .some (.visit  {expr :=← instantiateMVars e})
+  | .proj typeName idx _ => do
+    let .some info := getStructureInfo? (← getEnv) typeName | return none
+    let .some projName :=info.getProjFn? idx | return none
+    constAppStep e ftransName ext projName
 
   | f => 
     match f.getAppFn.consumeMData with
     | .const funName _ => 
       trace[Meta.Tactic.ftrans.step] "case const app `{funName}`.\n{← ppExpr e}"
-      constAppStep e ftransName ext funName
+      match ← constAppStep e ftransName ext funName with
+      | .some step => return step
+      | .none => 
+        let .some f' ← unfoldFunHead? f | return none
+        trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr f}`\n==>\n{← ppExpr f'}"
+        let step : Simp.Step := .visit { expr := ext.replaceFTransFun e f' }
+        Simp.andThen step main
+
     | _ => 
       trace[Meta.Tactic.ftrans.step] "unknown case, expression constructor: {f.ctorName}\n{← ppExpr e}\n"
       return none
@@ -330,7 +365,7 @@ Elaborates a call to `fun_trans only? [args]` or `norm_num1`.
 def elabFTrans (args : Syntax) (loc : Syntax)
     (simpOnly := false) (useSimp := true) : TacticM Unit := do
   let ctx ← getSimpContext args (!useSimp || simpOnly)
-  let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true}}
+  let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true, autoUnfold := true}}
   let g ← getMainGoal
   let res ← match expandOptLocation loc with
   | .targets hyps simplifyTarget => fTransAt g ctx (← getFVarIds hyps) simplifyTarget useSimp

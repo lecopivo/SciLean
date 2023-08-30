@@ -181,6 +181,10 @@ mutual
           | .bvar .. => 
             trace[Meta.Tactic.fprop.step] "case bvar app\n{← ppExpr e}"
             bvarAppCase e fpropName ext f'
+          | .proj typeName idx _ => do
+            let .some info := getStructureInfo? (← getEnv) typeName | return none
+            let .some projName := info.getProjFn? idx | return none
+            constAppCase e fpropName ext projName
           | .const funName _ =>
             trace[Meta.Tactic.fprop.step] "case const app `{← ppExpr g}`.\n{← ppExpr e}"
             constAppCase e fpropName ext funName
@@ -192,6 +196,11 @@ mutual
 
     | .mvar _ => do
       fprop (← instantiateMVars e)
+
+    | .proj typeName idx _ => do
+      let .some info := getStructureInfo? (← getEnv) typeName | return none
+      let .some projName := info.getProjFn? idx | return none
+      constAppCase e fpropName ext projName
 
     | f => 
       match f.getAppFn.consumeMData with
