@@ -102,21 +102,21 @@ theorem getElem_modifyElem_neq [inst : ArrayType Cont Idx Elem] (arr : Cont) (i 
 
 -- Maybe turn this into a class and this is a default implementation
 -- For certain types there might be a faster implementation
-def mapIdx [ArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
+def mapIdx [ArrayType Cont Idx Elem] [EnumType Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
   let mut arr := arr
   for i in fullRange Idx do
     arr := modifyElem arr i (f i)
   arr
 
 @[simp]
-theorem getElem_mapIdx [ArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
+theorem getElem_mapIdx [ArrayType Cont Idx Elem] [EnumType Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
   : (mapIdx f arr)[i] = f i arr[i] := sorry_proof
 
-def map [ArrayType Cont Idx Elem] [Index Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
+def map [ArrayType Cont Idx Elem] [EnumType Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
   mapIdx (λ _ => f) arr
 
 @[simp]
-theorem getElem_map [ArrayType Cont Idx Elem] [Index Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
+theorem getElem_map [ArrayType Cont Idx Elem] [EnumType Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
   : (map f arr)[i] = f arr[i] := sorry_proof
 
 instance [ArrayType Cont Idx Elem] [ToString Elem] [EnumType Idx] : ToString (Cont) := ⟨λ x => Id.run do
@@ -132,7 +132,7 @@ instance [ArrayType Cont Idx Elem] [ToString Elem] [EnumType Idx] : ToString (Co
 
 section Operations
 
-  variable [ArrayType Cont Idx Elem] [Index Idx] 
+  variable [ArrayType Cont Idx Elem] [EnumType Idx] 
 
   instance [Add Elem] : Add Cont := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
   instance [Sub Elem] : Sub Cont := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
