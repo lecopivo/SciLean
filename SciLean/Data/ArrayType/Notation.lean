@@ -68,12 +68,6 @@ def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
     `(⊞ $x:ident => $b)
   | _  => throw ()
 
-@[app_unexpander introElem] 
-def unexpandIntroElem : Lean.PrettyPrinter.Unexpander
-  | `($(_) fun $x:ident => $b) => 
-    `(⊞ $x:ident => $b)
-  | _  => throw ()
-
 
 open Lean Elab Term in
 elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term =>
