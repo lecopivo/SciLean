@@ -90,7 +90,7 @@ def Differentiable.fpropExt : FPropExt where
 
   replaceFPropFun e f := 
     if e.isAppOf ``Differentiable then
-      e.modifyArg (fun _ => f) 8 
+      e.setArg 8  f
     else          
       e
 

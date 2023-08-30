@@ -49,7 +49,7 @@ def Bijective.fpropExt : FPropExt where
 
   replaceFPropFun e f := 
     if e.isAppOf ``Bijective then
-      e.modifyArg (fun _ => f) 2
+      e.setArg 2 f
     else          
       e
 

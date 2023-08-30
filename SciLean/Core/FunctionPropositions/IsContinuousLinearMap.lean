@@ -151,7 +151,7 @@ def fpropExt : FPropExt where
 
   replaceFPropFun e f := 
     if e.isAppOf ``IsContinuousLinearMap then
-      e.modifyArg (fun _ => f) 10
+      e.setArg 10 f
     else          
       e
 

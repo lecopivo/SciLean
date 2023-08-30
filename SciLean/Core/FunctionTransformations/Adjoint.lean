@@ -170,7 +170,7 @@ def ftransExt : FTransExt where
       if ¬(args[4]!.isAppOf ``adjoint) then
         return e         
       
-      return e.modifyArg (fun _ => f) 5
+      return e.setArg 5 f
     else
       return e
 

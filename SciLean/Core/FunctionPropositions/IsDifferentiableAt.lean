@@ -87,7 +87,7 @@ def fpropExt : FPropExt where
 
   replaceFPropFun e f := 
     if e.isAppOf ``IsDifferentiableAt then
-      e.modifyArg (fun _ => f) 6 
+      e.setArg 6  f
     else          
       e
 

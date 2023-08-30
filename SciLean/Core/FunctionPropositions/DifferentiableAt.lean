@@ -96,7 +96,7 @@ def DifferentiableAt.fpropExt : FPropExt where
 
   replaceFPropFun e f := 
     if e.isAppOf ``DifferentiableAt then
-      e.modifyArg (fun _ => f) 8 
+      e.setArg 8  f
     else          
       e
 

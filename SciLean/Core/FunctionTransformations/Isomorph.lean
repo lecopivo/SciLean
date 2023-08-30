@@ -92,7 +92,7 @@ def ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``isomorph then
-      e.modifyArg (fun _ => f) 7
+      e.setArg 7 f
     else          
       e
 

@@ -153,7 +153,7 @@ def broadcast.ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``broadcast then
-      e.modifyArg (fun _ => f) 18
+      e.setArg 18 f
     else          
       e
 

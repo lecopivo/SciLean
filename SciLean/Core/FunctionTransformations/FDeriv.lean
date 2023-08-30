@@ -184,7 +184,7 @@ def fderiv.ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``fderiv then
-      e.modifyArg (fun _ => f) 8 
+      e.setArg 8  f
     else          
       e
 

@@ -87,7 +87,7 @@ def ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``invFun then
-      e.modifyArg (fun _ => f) 3
+      e.setArg 3 f
     else          
       e
 

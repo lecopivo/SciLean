@@ -83,7 +83,7 @@ def Continuous.fpropExt : FPropExt where
 
   replaceFPropFun e f := 
     if e.isAppOf ``Continuous then
-      e.modifyArg (fun _ => f) 4 
+      e.setArg 4  f
     else          
       e
 

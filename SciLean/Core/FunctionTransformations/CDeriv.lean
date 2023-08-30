@@ -170,7 +170,7 @@ def cderiv.ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``cderiv then
-      e.modifyArg (fun _ => f) 6
+      e.setArg 6 f
     else          
       e
 

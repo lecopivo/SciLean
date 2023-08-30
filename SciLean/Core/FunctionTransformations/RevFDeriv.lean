@@ -192,7 +192,7 @@ def ftransExt : FTransExt where
 
   replaceFTransFun e f := 
     if e.isAppOf ``revFDeriv then
-      e.modifyArg (fun _ => f) 10
+      e.setArg 10 f
     else          
       e
 

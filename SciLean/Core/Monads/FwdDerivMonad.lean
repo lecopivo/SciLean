@@ -129,7 +129,7 @@ def fpropExt : FPropExt where
 
   replaceFPropFun e f := 
     if e.isAppOf ``IsDifferentiableM then
-      e.modifyArg (fun _ => f) 11 
+      e.setArg 11  f
     else          
       e
 
@@ -212,7 +212,7 @@ def fpropExt : FPropExt where
 
   replaceFPropFun e f := 
     if e.isAppOf ``IsDifferentiableValM then
-      e.modifyArg (fun _ => f) 9 
+      e.setArg 9  f
     else          
       e
   identityRule _ := return none 
