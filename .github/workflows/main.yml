@@ -41,6 +41,8 @@ jobs:
         run: lake exe cache get
       - name: Build SciLean
         run: lake build
+      - name: Run Tests
+        run: make test
       - name: Run Examples
         run: make examples
       - name: Setup Pages
