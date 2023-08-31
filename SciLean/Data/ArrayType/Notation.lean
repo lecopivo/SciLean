@@ -60,7 +60,7 @@ abbrev introElemNotation {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNot
   := introElem (Cont := arrayTypeCont Idx Elem) f
 
 open Lean.TSyntax.Compat in
-macro "⊞ " xs:Lean.explicitBinders " => " b:term:66 : term => Lean.expandExplicitBinders ``introElemNotation xs b
+macro "⊞ " xs:Lean.explicitBinders " => " b:term:51 : term => Lean.expandExplicitBinders ``introElemNotation xs b
 
 @[app_unexpander introElemNotation] 
 def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
