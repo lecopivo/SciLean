@@ -46,7 +46,7 @@ instance (S : Type _) [Vec K S] : FwdDerivMonad K (StateT S m) (StateT (S×S) m'
 
   IsDifferentiableM_pure f hf :=
     by 
-      simp; simp at hf
+      simp
       fprop
 
   IsDifferentiableM_bind f g hf hg := 
@@ -264,7 +264,7 @@ instance (S : Type _) [SemiInnerProductSpace K S] : RevDerivMonad K (StateT S m)
 
   HasAdjDiffM_pure f hf :=
     by 
-      simp; simp at hf
+      simp
       fprop
 
   HasAdjDiffM_bind f g hf hg := 

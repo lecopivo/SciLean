@@ -1,6 +1,8 @@
 import SciLean.Core.Monads.FwdDerivMonad
 import SciLean.Core.Monads.Id
 
+set_option linter.unusedVariables false
+
 namespace SciLean
 
 variable 
