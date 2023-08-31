@@ -289,13 +289,19 @@ by
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Equiv.toFun.arg_a0.Bijective_rule (f : X ≃ Y) 
-  : Bijective (fun x => f.toFun x) := 
+theorem Equiv.toFun.arg_a0.Bijective_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
+  : Bijective (fun x => f.toFun (g x)) := 
 by
   sorry_proof
 
 @[fprop]
-theorem Equiv.invFun.arg_a0.Bijective_rule (f : X ≃ Y) 
-  : Bijective (fun x => f.invFun x) := 
+theorem FunLike.coe.arg_a.Bijective_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
+  : Bijective (fun x => f (g x)) := 
+by
+  fprop
+
+@[fprop]
+theorem Equiv.invFun.arg_a0.Bijective_rule (f : Y ≃ Z) (g : X → Z) (hf : Bijective g)
+  : Bijective (fun x => f.invFun (g x)) := 
 by
   sorry_proof
