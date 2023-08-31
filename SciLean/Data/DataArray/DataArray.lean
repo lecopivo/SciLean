@@ -129,7 +129,7 @@ instance : LinearArrayType (λ n => DataArrayN α (Idx n)) α where
   reserveElem_id := sorry_proof
 
 
-instance {Cont ι α : Type} [Index ι] [Inhabited α] [pd : PlainDataType α] [ArrayType Cont ι α] : PlainDataType Cont where
+instance {Cont ι α : Type}  [ArrayType Cont ι α] [Index ι] [Inhabited α] [pd : PlainDataType α] : PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType => 
       -- TODO: Fixme !!!!
