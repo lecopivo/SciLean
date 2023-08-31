@@ -31,9 +31,12 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
 
 def unfoldFunHead? (e : Expr) : MetaM (Option Expr) := do
   lambdaLetTelescope e fun xs b => do
-    if let .some b' ← withReducible <| unfoldDefinition? b then
+    let b' ← whnfI b
+    if ¬(b==b') then
+      trace[Meta.Tactic.fprop.step] s!"unfolding{← ppExpr b}\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else if let .some b' ← reduceRecMatcher? b then
+      trace[Meta.Tactic.fprop.step] s!"unfolding{← ppExpr b}\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else
       return none
@@ -252,7 +255,7 @@ mutual
     let candidates ← FProp.getFPropRules funName fpropName
 
     if candidates.size = 0 then
-      trace[Meta.Tactic.fprop.apply] "no suitable theorems found for {← ppExpr e}"
+      trace[Meta.Tactic.fprop.step] "no theorems found for {funName}"
 
     for thm in candidates do
       if let some proof ← tryTheorem? e thm ext.discharger then
