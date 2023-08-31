@@ -54,13 +54,6 @@ by
   fprop
 
 
-set_option profiler true
-set_option trace.profiler.threshold 0
-
-
-set_option trace.Meta.Tactic.lsimp.pre true in
-
-set_option trace.Meta.Tactic.simp.rewrite true in
 example : fwdDerivM K (fun x : K => show m K from do
   let mut y := x
   for i in [0:5] do
@@ -79,7 +72,10 @@ example : fwdDerivM K (fun x : K => show m K from do
 by
   (conv => lhs; ftrans only; let_normalize; ftrans only; simp (config := {zeta := false}))
   simp
-
+  funext x dx
+  congr
+  funext a (y,dy)
+  simp
 
 -- example : fwdDerivM K (fun x : K => show m K from do
 --   let mut y := x
