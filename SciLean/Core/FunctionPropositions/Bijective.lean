@@ -213,28 +213,28 @@ theorem HSub.hSub.arg_a1.Bijective_rule
 -------------------------------------------------------------------------------- 
 
 @[fprop]
-def HMul.hMul.arg_a0.Bijective_rule_group
+theorem HMul.hMul.arg_a0.Bijective_rule_group
   [Group Y]
   (f : X → Y) (y : Y) (hf : Bijective f)
   : Bijective (fun x => f x * y)
   := by sorry_proof
 
 @[fprop]
-def HMul.hMul.arg_a1.Bijective_rule_group
+theorem HMul.hMul.arg_a1.Bijective_rule_group
   [Group Y]
   (y : Y) (f : X → Y) (hf : Bijective f)
   : Bijective (fun x => y * f x)
   := by sorry_proof
 
 @[fprop]
-def HMul.hMul.arg_a0.Bijective_rule_field
+theorem HMul.hMul.arg_a0.Bijective_rule_field
   [Field Y]
   (f : X → Y) (y : Y) (hf : Bijective f) (hy : y ≠ 0)
   : Bijective (fun x => f x * y)
   := by sorry_proof
 
 @[fprop]
-def HMul.hMul.arg_a1.Bijective_rule_field
+theorem HMul.hMul.arg_a1.Bijective_rule_field
   [Field Y]
   (y : Y) (f : X → Y) (hf : Bijective f) (hy : y ≠ 0)
   : Bijective (fun x => y * f x)
@@ -247,7 +247,7 @@ def HMul.hMul.arg_a1.Bijective_rule_field
 
 
 @[fprop]
-def HSMul.hSMul.arg_a1.Bijective_rule_group
+theorem HSMul.hSMul.arg_a1.Bijective_rule_group
   [Group G] [MulAction G Y]
   (g : G) (f : X → Y) (hf : Bijective f)
   : Bijective (fun x => g • f x)
@@ -255,7 +255,7 @@ def HSMul.hSMul.arg_a1.Bijective_rule_group
 
 
 @[fprop]
-def HSMul.hSMul.arg_a1.Bijective_rule_field
+theorem HSMul.hSMul.arg_a1.Bijective_rule_field
   [Field R] [MulAction R Y]
   (r : R) (f : X → Y) (hf : Bijective f) (hr : r ≠ 0)
   : Bijective (fun x => r • f x)
@@ -267,7 +267,7 @@ def HSMul.hSMul.arg_a1.Bijective_rule_field
 -------------------------------------------------------------------------------- 
 
 @[fprop]
-def HDiv.hDiv.arg_a0.Bijective_rule_group
+theorem HDiv.hDiv.arg_a0.Bijective_rule_group
   [Group Y]
   (f : X → Y) (y : Y)
   (hf : Bijective f)
@@ -276,10 +276,26 @@ by
   sorry_proof
 
 @[fprop]
-def HDiv.hDiv.arg_a0.Bijective_rule_field
+theorem HDiv.hDiv.arg_a0.Bijective_rule_field
   [Field Y]
   (f : X → Y) (y : Y)
   (hf : Bijective f) (hy : y ≠ 0)
   : Bijective (fun x => f x / y) := 
 by 
+  sorry_proof
+
+
+-- Equiv.toFun/invFun ----------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem Equiv.toFun.arg_a0.Bijective_rule (f : X ≃ Y) 
+  : Bijective (fun x => f.toFun x) := 
+by
+  sorry_proof
+
+@[fprop]
+theorem Equiv.invFun.arg_a0.Bijective_rule (f : X ≃ Y) 
+  : Bijective (fun x => f.invFun x) := 
+by
   sorry_proof

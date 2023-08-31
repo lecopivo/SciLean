@@ -335,19 +335,21 @@ def HSMul.hSMul.arg_a1.invFun_rule_field
 
 
 
+-- Equiv.toFun/invFun ----------------------------------------------------------
+--------------------------------------------------------------------------------
 
-example : Bijective (fun xy : Int×Int => (id xy.1, xy.2)) := 
+@[ftrans]
+theorem Equiv.toFun.arg_a0.invFun_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
+  : Function.invFun (fun x => f.toFun (g x))
+    =
+    fun z => Function.invFun g (f.invFun z) := 
 by
-  -- set_option trace.Meta.Tactic.fprop.step true in
-  -- set_option trace.Meta.Tactic.fprop.unify true in
-  -- set_option trace.Meta.Tactic.fprop.discharge true in       
-  fprop
+  sorry_proof
 
-  
-
-
-  
-
-example : Bijective (fun xy : Nat×Nat => (xy.2, xy.1)) := 
-by 
-  fprop
+@[ftrans]
+theorem Equiv.invFun.arg_a0.invFun_rule (f : Y ≃ Z) (g : X → Z) (hf : Bijective g)
+  : Function.invFun (fun x => f.invFun (g x))
+    =
+    fun z => Function.invFun g (f.toFun z) := 
+by
+  sorry_proof
