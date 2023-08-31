@@ -182,6 +182,30 @@ section Operations
         break
     if le then isTrue sorry_proof else isFalse sorry_proof
 
+  @[simp]
+  theorem add_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Add Elem] [EnumType Idx] (f g: Idx → Elem)
+    : introElem (Cont:=Cont) f + introElem (Cont:=Cont) g
+      = 
+      introElem fun i => f i + g i  := by ext; simp[HAdd.hAdd, Add.add]
+
+  @[simp]
+  theorem sub_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Sub Elem] [EnumType Idx] (f g: Idx → Elem)
+    : introElem (Cont:=Cont) f - introElem (Cont:=Cont) g
+      = 
+      introElem fun i => f i - g i  := by ext; simp[HSub.hSub, Sub.sub]
+
+  @[simp]
+  theorem neg_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Neg Elem] [EnumType Idx] (f: Idx → Elem)
+    : - introElem (Cont:=Cont) f 
+      = 
+      introElem fun i => - f i  := by ext; simp[Neg.neg]
+
+  @[simp]
+  theorem smul_introElem {K Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [SMul K Elem] [EnumType Idx] (f : Idx → Elem) (a : K)
+    : a • introElem (Cont:=Cont) f
+      = 
+      introElem fun i => a • f i := by ext; simp[HSMul.hSMul, SMul.smul]
+
 end Operations
 
 @[simp]
