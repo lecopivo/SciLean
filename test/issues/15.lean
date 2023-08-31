@@ -8,4 +8,4 @@ example : IsDifferentiable ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z) := by dsimp;
 example 
   : (cderiv ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z))
     =
-    fun (_,_,z) (_,_,dz) => dz := by dsimp; ftrans only
+    fun (_,_,_) (_,_,dz) => dz := by dsimp; ftrans only

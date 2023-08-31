@@ -411,7 +411,7 @@ by
   constructor; fprop; ftrans; fprop
 
 @[fprop]
-theorem SciLean.norm₂.arg_a0.HasAdjDiffAt_rule
+theorem SciLean.norm₂.arg_x.HasAdjDiffAt_rule
   (f : X → Y) (x : X)
   (hf : HasAdjDiffAt R f x) (hx : f x≠0)
   : HasAdjDiffAt R (fun x => ‖f x‖₂[R]) x :=
