@@ -82,13 +82,22 @@ def letCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) : SimpM 
   | _ => do
     throwError "Invalid use of {`FTrans.letCase} on function:\n{← ppExpr f}"
 
+-- ugh this is awful, clean this up!
 def unfoldFunHead? (e : Expr) : SimpM (Option Expr) := do
   lambdaLetTelescope e fun xs b => do
+    -- let b' ← whnfI b -- this screws things up for some reason :(
+    -- if ¬(b==b') then
+    --   trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr b}`\n==>\n{← ppExpr b'}"
+    --   mkLambdaFVars xs b'
+    -- else 
     if let .some b' ← Tactic.LSimp.unfold? b then 
+      trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr b}`\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else if let .some b' ← withReducible <| unfoldDefinition? b then
+      trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr b}`\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else if let .some b' ← reduceRecMatcher? b then
+      trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr b}`\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else
       return none
@@ -217,7 +226,6 @@ partial def main (e : Expr) : SimpM (Option Simp.Step) := do
           | .some step => return step
           | .none => 
             let .some f'' ← unfoldFunHead? f' | return none
-            trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr f'}`\n==>\n{← ppExpr f''}"
             let e' := ext.replaceFTransFun e f''
             let step : Simp.Step := .visit { expr := e' }
             Simp.andThen step main
@@ -241,7 +249,6 @@ partial def main (e : Expr) : SimpM (Option Simp.Step) := do
       | .some step => return step
       | .none => 
         let .some f' ← unfoldFunHead? f | return none
-        trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr f}`\n==>\n{← ppExpr f'}"
         let step : Simp.Step := .visit { expr := ext.replaceFTransFun e f' }
         Simp.andThen step main
 

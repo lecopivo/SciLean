@@ -33,10 +33,10 @@ def unfoldFunHead? (e : Expr) : MetaM (Option Expr) := do
   lambdaLetTelescope e fun xs b => do
     let b' ← whnfI b
     if ¬(b==b') then
-      trace[Meta.Tactic.fprop.step] s!"unfolding{← ppExpr b}\n==>\n{← ppExpr b'}"
+      trace[Meta.Tactic.fprop.step] s!"unfolding\n{← ppExpr b}\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else if let .some b' ← reduceRecMatcher? b then
-      trace[Meta.Tactic.fprop.step] s!"unfolding{← ppExpr b}\n==>\n{← ppExpr b'}"
+      trace[Meta.Tactic.fprop.step] s!"unfolding\n{← ppExpr b}\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else
       return none
@@ -334,7 +334,7 @@ mutual
         trace[Meta.Tactic.fprop.apply] "{← ppSimpTheorem thm}, \n{e}"
         return proof
       else
-        trace[Meta.Tactic.fprop.unify] "failed to unify\n{type}\nwith\n{e}"
+        trace[Meta.Tactic.fprop.unify] "failed to unify {← ppSimpTheorem thm}\n{type}\nwith\n{e}"
         return none
 
   partial def tryTheorem? (e : Expr) (thm : SimpTheorem) (discharge? : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
