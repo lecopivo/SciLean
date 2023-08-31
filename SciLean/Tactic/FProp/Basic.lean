@@ -28,6 +28,17 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
     
     return result?
 
+
+def unfoldFunHead? (e : Expr) : MetaM (Option Expr) := do
+  lambdaLetTelescope e fun xs b => do
+    if let .some b' ← withReducible <| unfoldDefinition? b then
+      mkLambdaFVars xs b'
+    else if let .some b' ← reduceRecMatcher? b then
+      mkLambdaFVars xs b'
+    else
+      return none
+
+
 set_option linter.unusedVariables false in
 def bvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPropM (Option Expr) := do
 
@@ -114,7 +125,9 @@ mutual
     let .some (fpropName, ext, f) ← getFProp? e
       | return none
 
-    match f.consumeMData with
+    let f := f.consumeMData
+
+    match f with
     | .letE .. => letTelescope f fun xs b => do 
       trace[Meta.Tactic.fprop.step] "case let x := ..; ..\n{← ppExpr e}"
       let e' := ext.replaceFPropFun e b
@@ -187,7 +200,12 @@ mutual
             constAppCase e fpropName ext projName
           | .const funName _ =>
             trace[Meta.Tactic.fprop.step] "case const app `{← ppExpr g}`.\n{← ppExpr e}"
-            constAppCase e fpropName ext funName
+            match ← constAppCase e fpropName ext funName with
+            | some proof => return proof
+            | none => do
+              let .some f'' ← unfoldFunHead? f' | return none
+              let e' := ext.replaceFPropFun e f''
+              fprop e'
           | .mvar .. => 
             fprop (← instantiateMVars e)
           | _ => 
@@ -202,11 +220,16 @@ mutual
       let .some projName := info.getProjFn? idx | return none
       constAppCase e fpropName ext projName
 
-    | f => 
+    | f' => 
       match f.getAppFn.consumeMData with
       | .const funName _ =>
         trace[Meta.Tactic.fprop.step] "case const app `{funName}.\n{← ppExpr e}"
-        constAppCase e fpropName ext funName
+        match ← constAppCase e fpropName ext funName with
+        | some proof => return proof
+        | none => do
+          let .some f'' ← unfoldFunHead? f' | return none
+          let e' := ext.replaceFPropFun e f''
+          fprop e'
       | .mvar _ => do
         fprop (← instantiateMVars e)
       | g => 
