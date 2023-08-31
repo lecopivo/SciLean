@@ -68,13 +68,6 @@ def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
     `(⊞ $x:ident => $b)
   | _  => throw ()
 
-/-- Convert `introElem` to `introElemNotation` if possible to get nicer pretty printing.
--/
-@[simp]
-theorem introElem_introElemNotation {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem] (f : Idx → Elem)
-  : introElem (Cont:=Cont) f = introElemNotation f := by rfl
-
-
 open Lean Elab Term in
 elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term =>
   try 
