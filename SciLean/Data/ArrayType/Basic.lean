@@ -53,11 +53,12 @@ class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> out
           SetElem Cont Idx Elem,
           IntroElem Cont Idx Elem
   where
-  ext : ∀ f g : Cont, (∀ x : Idx, f[x] = g[x]) ↔ f = g
+  ext : ∀ f g : Cont, (∀ x : Idx, f[x] = g[x]) → f = g
   getElem_setElem_eq  : ∀ (x : Idx) (y : Elem) (f : Cont), (setElem f x y)[x] = y
   getElem_setElem_neq : ∀ (i j : Idx) (val : Elem) (arr : Cont), i ≠ j → (setElem arr i val)[j] = arr[j]
   getElem_introElem : ∀ f i, (introElem f)[i] = f i
 
+attribute [ext] ArrayType.ext
 attribute [simp] ArrayType.getElem_setElem_eq ArrayType.getElem_introElem
 attribute [default_instance] ArrayType.toGetElem ArrayType.toSetElem ArrayType.toIntroElem
 
@@ -85,6 +86,10 @@ namespace ArrayType
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
 
+@[simp]
+theorem introElem_getElem [ArrayType Cont Idx Elem] (cont : Cont)
+  : introElem (Cont:=Cont) (fun i => cont[i]) = cont := by ext; simp
+
 -- TODO: Make an inplace modification
 -- Maybe turn this into a class and this is a default implementation
 @[inline]
@@ -99,6 +104,7 @@ theorem getElem_modifyElem_eq [ArrayType Cont Idx Elem] (cont : Cont) (idx : Idx
 @[simp]
 theorem getElem_modifyElem_neq [inst : ArrayType Cont Idx Elem] (arr : Cont) (i j : Idx) (f : Elem → Elem)
   : i ≠ j → (modifyElem arr i f)[j] = arr[j] := by simp[modifyElem]; apply ArrayType.getElem_setElem_neq; done
+
 
 -- Maybe turn this into a class and this is a default implementation
 -- For certain types there might be a faster implementation
@@ -177,6 +183,13 @@ section Operations
     if le then isTrue sorry_proof else isFalse sorry_proof
 
 end Operations
+
+@[simp]
+theorem sum_introElem [EnumType Idx] [ArrayType Cont Idx Elem] [AddCommMonoid Elem] {ι} [EnumType ι] (f : ι → Idx → Elem) 
+  : ∑ j, introElem (Cont:=Cont) (fun i => f j i)
+    =
+    introElem fun i => ∑ j, f j i
+  := sorry_proof
 
 end ArrayType
 
