@@ -31,8 +31,7 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
 
 def unfoldFunHead? (e : Expr) : MetaM (Option Expr) := do
   lambdaLetTelescope e fun xs b => do
-    let b' ← whnfI b
-    if ¬(b==b') then
+    if let .some b' ← withTransparency .instances <| unfoldDefinition? b then
       trace[Meta.Tactic.fprop.step] s!"unfolding\n{← ppExpr b}\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else if let .some b' ← reduceRecMatcher? b then
@@ -203,12 +202,7 @@ mutual
             constAppCase e fpropName ext projName
           | .const funName _ =>
             trace[Meta.Tactic.fprop.step] "case const app `{← ppExpr g}`.\n{← ppExpr e}"
-            match ← constAppCase e fpropName ext funName with
-            | some proof => return proof
-            | none => do
-              let .some f'' ← unfoldFunHead? f' | return none
-              let e' := ext.replaceFPropFun e f''
-              fprop e'
+            constAppCase e fpropName ext funName
           | .mvar .. => 
             fprop (← instantiateMVars e)
           | _ => 
@@ -223,16 +217,11 @@ mutual
       let .some projName := info.getProjFn? idx | return none
       constAppCase e fpropName ext projName
 
-    | f' => 
+    | f => 
       match f.getAppFn.consumeMData with
       | .const funName _ =>
         trace[Meta.Tactic.fprop.step] "case const app `{funName}.\n{← ppExpr e}"
-        match ← constAppCase e fpropName ext funName with
-        | some proof => return proof
-        | none => do
-          let .some f'' ← unfoldFunHead? f' | return none
-          let e' := ext.replaceFPropFun e f''
-          fprop e'
+        constAppCase e fpropName ext funName 
       | .mvar _ => do
         fprop (← instantiateMVars e)
       | g => 
@@ -254,15 +243,26 @@ mutual
 
     let candidates ← FProp.getFPropRules funName fpropName
 
-    if candidates.size = 0 then
-      trace[Meta.Tactic.fprop.step] "no theorems found for {funName}"
+    if candidates.size ≠ 0 then
 
-    for thm in candidates do
-      if let some proof ← tryTheorem? e thm ext.discharger then
+      for thm in candidates do
+        if let some proof ← tryTheorem? e thm ext.discharger then
+          return proof
+
+      -- if all fails try local rules
+      tryLocalTheorems e fpropName ext
+
+    else
+      if let .some proof ← tryLocalTheorems e fpropName ext then
         return proof
+      else 
+        -- unfold definition if there are for candidate 
+        trace[Meta.Tactic.fprop.step] "no theorems found for {funName}"
+        let .some f := ext.getFPropFun? e | return none
+        let .some f'  ← unfoldFunHead? f | return none
+        let e' := ext.replaceFPropFun e f'
+        fprop e'
 
-    -- if all fails try local rules
-    tryLocalTheorems e fpropName ext
 
   partial def tryLocalTheorems (e : Expr) (fpropName : Name) (ext : FPropExt) : FPropM (Option Expr) := do
 

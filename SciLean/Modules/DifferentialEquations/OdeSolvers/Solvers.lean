@@ -1,5 +1,6 @@
 import SciLean.Modules.DifferentialEquations.OdeSolve
 import SciLean.Util.SolveFun
+import SciLean.Tactic.LetEnter
 
 namespace SciLean
 
@@ -88,17 +89,13 @@ theorem explicitSymplecticEuler_eq_implicitSymplecticEulerV1
     =
     implicitSymplecticEulerV1 (fun q p => T p + V q) := 
 by
-  have ⟨_,_⟩ := hT
-  have ⟨_,_⟩ := hV
   unfold implicitSymplecticEulerV1
   unfold explicitSymplecticEuler
-  unfold scalarGradient
-  unfold revCDeriv
   conv => 
     rhs
-    ftrans; simp
     solve_for p' from 1 := sorry_proof
     solve_as_inv
     solve_as_inv
     unfold hold
-  ftrans; ftrans; ftrans;
+  autodiff; autodiff; autodiff; apply True.intro
+  

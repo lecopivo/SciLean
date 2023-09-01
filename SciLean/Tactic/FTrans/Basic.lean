@@ -93,7 +93,7 @@ def unfoldFunHead? (e : Expr) : SimpM (Option Expr) := do
     if let .some b' ← Tactic.LSimp.unfold? b then 
       trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr b}`\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
-    else if let .some b' ← withReducible <| unfoldDefinition? b then
+    else if let .some b' ← withTransparency .instances <| unfoldDefinition? b then
       trace[Meta.Tactic.ftrans.step] s!"unfolding \n`{← ppExpr b}`\n==>\n{← ppExpr b'}"
       mkLambdaFVars xs b'
     else if let .some b' ← reduceRecMatcher? b then
@@ -105,16 +105,18 @@ def unfoldFunHead? (e : Expr) : SimpM (Option Expr) := do
 /--
   Apply simp theorems marked with `ftrans`
 -/
-def constAppStep (e : Expr) (ftransName : Name) (ext : FTransExt) (funName : Name) : SimpM (Option Simp.Step) := do
+def constAppStep (e : Expr) (ftransName : Name) (ext : FTransExt) (funName : Name) 
+  (noCandidatesCall : SimpM (Option Simp.Step)) -- return if there are no valid candidates
+  : SimpM (Option Simp.Step) := do
 
   let candidates ← FTrans.getFTransRules funName ftransName
 
-  if candidates.size = 0 then
+  if candidates.size ≠ 0 then
+    trace[Meta.Tactic.ftrans.theorems] "applicable theorems: {candidates.map fun c => c.origin.key}"
+    tryTheorems candidates ext.discharger e
+  else
     trace[Meta.Tactic.ftrans.step] "no theorems associated to {funName}"
-
-  trace[Meta.Tactic.ftrans.theorems] "applicable theorems: {candidates.map fun c => c.origin.key}"
-
-  tryTheorems candidates ext.discharger e
+    noCandidatesCall
 
 
 /-- Function transformation of `fun x => g x₁ ... xₙ` where `g` is a free variable
@@ -219,16 +221,15 @@ partial def main (e : Expr) : SimpM (Option Simp.Step) := do
         | .proj typeName idx _ => do
           let .some info := getStructureInfo? (← getEnv) typeName | return none
           let .some projName :=info.getProjFn? idx | return none
-          constAppStep e ftransName ext projName
+          constAppStep e ftransName ext projName (pure none)
         | .const funName _ =>
           trace[Meta.Tactic.ftrans.step] "case const app `{funName}`.\n{← ppExpr e}"
-          match ← constAppStep e ftransName ext funName with
-          | .some step => return step
-          | .none => 
-            let .some f'' ← unfoldFunHead? f' | return none
-            let e' := ext.replaceFTransFun e f''
-            let step : Simp.Step := .visit { expr := e' }
-            Simp.andThen step main
+          constAppStep e ftransName ext funName 
+            (do -- no candidates call
+              let .some f'' ← unfoldFunHead? f' | return none
+              let e' := ext.replaceFTransFun e f''
+              let step : Simp.Step := .visit { expr := e' }
+              Simp.andThen step main)
 
         | _ => 
           trace[Meta.Tactic.ftrans.step] "unknown case, app function constructor: {g.ctorName}\n{← ppExpr e}\n"
@@ -239,18 +240,18 @@ partial def main (e : Expr) : SimpM (Option Simp.Step) := do
   | .proj typeName idx _ => do
     let .some info := getStructureInfo? (← getEnv) typeName | return none
     let .some projName :=info.getProjFn? idx | return none
-    constAppStep e ftransName ext projName
+    constAppStep e ftransName ext projName (pure none)
 
   | f => 
     match f.getAppFn.consumeMData with
     | .const funName _ => 
       trace[Meta.Tactic.ftrans.step] "case const app `{funName}`.\n{← ppExpr e}"
-      match ← constAppStep e ftransName ext funName with
-      | .some step => return step
-      | .none => 
-        let .some f' ← unfoldFunHead? f | return none
-        let step : Simp.Step := .visit { expr := ext.replaceFTransFun e f' }
-        Simp.andThen step main
+      constAppStep e ftransName ext funName 
+        (do -- no candidates call
+          let .some f'' ← unfoldFunHead? f | return none
+          let e' := ext.replaceFTransFun e f''
+          let step : Simp.Step := .visit { expr := e' }
+          Simp.andThen step main)
 
     | _ => 
       trace[Meta.Tactic.ftrans.step] "unknown case, expression constructor: {f.ctorName}\n{← ppExpr e}\n"

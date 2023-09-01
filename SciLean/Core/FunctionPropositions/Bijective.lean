@@ -295,12 +295,6 @@ by
   sorry_proof
 
 @[fprop]
-theorem FunLike.coe.arg_a.Bijective_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
-  : Bijective (fun x => f (g x)) := 
-by
-  fprop
-
-@[fprop]
 theorem Equiv.invFun.arg_a0.Bijective_rule (f : Y ≃ Z) (g : X → Z) (hf : Bijective g)
   : Bijective (fun x => f.invFun (g x)) := 
 by
