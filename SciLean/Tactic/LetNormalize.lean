@@ -161,7 +161,7 @@ partial def normalizeLet (e : Expr) (config : NormalizeLetConfig := {}) : MetaM 
         normalizeLet (← mkLambdaFVars #[y] (.app f' (yBody.instantiate1 y))) config
       | x' => do
         if config.reduceProjections then
-          if let .some e' ← reduceProjFn?' (f'.app x') then
+          if let .some e' ← withReducible <| reduceProjFn?' (f'.app x') then
             return e'
 
         return (f'.app x')
