@@ -107,6 +107,12 @@ theorem ForInStep.yield.arg_a0.IsDifferentiable_rule
   (a0 : X → Y) (ha0 : IsDifferentiable K a0)
   : IsDifferentiable K fun x => ForInStep.yield (a0 x) := by sorry_proof
 
+-- this is a hack as with Id monad sometimes you do not need `pure` which trips `fprop` up
+@[fprop]
+theorem ForInStep.yield.arg_a0.IsDifferentiableM_rule
+  (a0 : X → Y) (ha0 : IsDifferentiable K a0)
+  : IsDifferentiableM (m:=Id) K fun x => ForInStep.yield (a0 x) := by sorry_proof
+
 @[ftrans]
 theorem ForInStep.yield.arg_a0.cderiv_rule
   (a0 : X → Y) (ha0 : IsDifferentiable K a0)
@@ -127,6 +133,12 @@ theorem ForInStep.yield.arg_a0.fwdCDeriv_rule
 theorem ForInStep.done.arg_a0.IsDifferentiable_rule
   (a0 : X → Y) (ha0 : IsDifferentiable K a0)
   : IsDifferentiable K fun x => ForInStep.done (a0 x) := by sorry_proof
+
+-- this is a hack as with Id monad sometimes you do not need `pure` which trips `fprop` up
+@[fprop]
+theorem ForInStep.done.arg_a0.IsDifferentiableM_rule
+  (a0 : X → Y) (ha0 : IsDifferentiable K a0)
+  : IsDifferentiableM (m:=Id) K fun x => ForInStep.done (a0 x) := by sorry_proof
 
 @[ftrans]
 theorem ForInStep.done.arg_a0.cderiv_rule
