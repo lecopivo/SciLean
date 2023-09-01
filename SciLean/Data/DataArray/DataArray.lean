@@ -14,6 +14,7 @@ structure DataArray (α : Type) [pd : PlainDataType α] where
 variable {α : Type} [pd : PlainDataType α]
 variable {ι} [Index ι]
 
+@[irreducible]
 def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α := -- pd.get a.data i sorry_proof
   match pd.btype with
   | .inl bitType => 
@@ -28,6 +29,7 @@ def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α := -- pd.get a.da
   | .inr byteType => 
     byteType.fromByteArray arr.byteData (byteType.bytes * i.1) sorry_proof
 
+@[irreducible]
 def DataArray.set (arr : DataArray α) (i : Idx arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
   match pd.btype with
   | .inl bitType => 
@@ -76,6 +78,7 @@ Currently this is inconsistent, we need to turn DataArray into quotient!
 -/
 theorem DataArray.ext (d d' : DataArray α) : (h : d.size = d'.size) → (∀ i, d.get i = d'.get (h ▸ i)) → d = d' := sorry_proof
 
+@[irreducible]
 def DataArray.intro (f : ι → α) : DataArray α := Id.run do
   let bytes := (pd.bytes (Index.size ι))
   let mut d : ByteArray := ByteArray.mkEmpty bytes.toNat
@@ -92,15 +95,15 @@ structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [Index ι] 
   data : DataArray α
   h_size : Index.size ι = data.size
 
+@[irreducible]
 instance : GetElem (DataArrayN α ι) ι α (λ _ _ => True) where
   getElem xs i _ := xs.1.get (xs.2 ▸ toIdx i)
 
+@[irreducible]
 instance : SetElem (DataArrayN α ι) ι α where
   setElem xs i xi := ⟨xs.1.set (xs.2 ▸ toIdx i) xi, sorry_proof⟩
 
-instance : IntroElem (DataArrayN α ι) ι α where
-  introElem f := ⟨DataArray.intro f, sorry_proof⟩
-
+@[irreducible]
 instance : IntroElem (DataArrayN α ι) ι α where
   introElem f := ⟨DataArray.intro f, sorry_proof⟩
 
