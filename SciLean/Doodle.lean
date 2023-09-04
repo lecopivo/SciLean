@@ -128,6 +128,31 @@ by
     autodiff
 
 
+example 
+  (A : ι → κ → K) (x : W → K ^ κ) (hx : HasAdjDiff K x)
+  : <∂ (fun w i => ∑ j, A i j * (x w)[j])
+    =
+    fun w => 
+      let xdx := <∂ x w
+      (fun i => ∑ j, A i j * xdx.1[j], 
+       fun dy => 
+         let dx := ⊞ j => ∑ i, A i j * dy i
+         xdx.2 dx)
+      := 
+      -- (fun i => ∑ j, A i j * x[j], 
+      --  fun dy => ⊞ j => ∑ i, A i j * dy i) :=
+by 
+  conv => 
+    lhs
+    conv => 
+      enter [x,2,x]
+      simp only [← sum_lambda_swap]
+    simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
+    simp (config := {zeta:=false}) only [revCDeriv.factor_through_getElem (K:=K) (fun j y i => A i j * y) x (fun i => i) sorry sorry sorry sorry]
+    autodiff
+    let_normalize
+    simp (config := {zeta:=false}) only
+    autodiff
 
 example 
   (A : ι → κ → K)
@@ -147,7 +172,33 @@ by
     autodiff
     autodiff
 
-#check DataArrayN K (ι×κ)
+example 
+  (A : ι → κ → K) (x : W → K ^ κ) (hx : HasAdjDiff K x)
+  : <∂ (fun w => ⊞ i => ∑ j, A i j * (x w)[j])
+    =
+    fun w => 
+      let xdx := <∂ x w
+      (⊞ i => ∑ j, A i j * xdx.1[j], 
+       fun dy => 
+         let dx := ⊞ j => ∑ i, A i j * dy[i]
+         xdx.2 dx)
+      := 
+      -- (fun i => ∑ j, A i j * x[j], 
+      --  fun dy => ⊞ j => ∑ i, A i j * dy i) :=
+by 
+  conv => 
+    lhs
+    conv => 
+      enter [x,2,x]
+      simp only [← ArrayType.sum_introElem]
+    simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
+    simp (config := {zeta:=false}) only [revCDeriv.factor_through_getElem (K:=K) (fun j y => ⊞ i => A i j * y) x (fun i => i) sorry sorry sorry sorry]
+    autodiff
+    -- autodiff -- for some reason it is unfolding let binding here :(
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+
 
 variable (A : DataArrayN K (ι×κ)) (i : ι) (j : κ)
 
