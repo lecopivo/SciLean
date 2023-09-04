@@ -17,6 +17,7 @@ variable
   {ι : Type _} [EnumType ι] 
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
+@[irreducible] -- we do not want to expand this definition as there are some performance issues with isDefEq, see #18
 def IsDifferentiableAt (f : X → Y) (x : X) : Prop :=
   ∀ (c : K → X),
       c 0 = x 
