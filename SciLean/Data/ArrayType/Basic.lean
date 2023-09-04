@@ -7,6 +7,7 @@ class SetElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
   setElem : (cont : Cont) → (idx : Idx) → (elem : Elem) → Cont
 
 export SetElem (setElem)
+attribute [irreducible] setElem
 
 -- class ModifyElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
 --   modifyElem : (x : Cont) → (i : Idx) → (f : Elem → Elem) → Cont
@@ -17,21 +18,25 @@ class IntroElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
   introElem : (f : Idx → Elem) → Cont
 
 export IntroElem (introElem)
+attribute [irreducible] introElem 
 
 class PushElem (Cont : USize → Type u) (Elem : outParam (Type w)) where
   pushElem (k : USize) (elem : Elem) : Cont n → Cont (n + k)
 
 export PushElem (pushElem)
+attribute [irreducible] pushElem
 
 class DropElem (Cont : USize → Type u) (Elem : outParam (Type w)) where
   dropElem (k : USize) : Cont (n + k) → Cont n
 
 export DropElem (dropElem)
+attribute [irreducible] dropElem
 
 class ReserveElem (Cont : USize → Type u) (Elem : outParam (Type w)) where
   reserveElem (k : USize) : Cont n → Cont n
 
 export ReserveElem (reserveElem)
+attribute [irreducible] reserveElem
 
 /-- This class says that `Cont` behaves like an array with `Elem` values indexed by `Idx`
 
