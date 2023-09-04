@@ -69,6 +69,13 @@ by
   (conv => lhs; autodiff)
 
 example
+  : (∇ (x : K ^ Idx 10), ∑ i, x[i])
+    =
+    fun x => ⊞ i => (1:K) :=
+by 
+  (conv => lhs; autodiff)
+
+example
   : (∇ (x : Fin 10 → K), ∑ i, ‖x i‖₂²)
     =
     fun x i => 2 * (x i) :=
@@ -81,5 +88,4 @@ example (A : Fin 5 → Fin 10 → K)
     fun _ dy j => ∑ i, A i j * dy i := 
 by 
   (conv => lhs; autodiff)
-
 
