@@ -5,7 +5,7 @@ namespace SciLean
 namespace GenericArrayType
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [Index Idx] 
+variable [EnumType Idx] 
 
 variable {K : Type _} [IsROrC K]
 
