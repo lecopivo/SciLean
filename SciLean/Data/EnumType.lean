@@ -16,7 +16,7 @@ class EnumType (ι : Type u) where
   
   -- Ther return type has `ForInStep` because it is useful to know if the loop 
   -- ended normall or if it was interupted. This way we can easily exit from nested loops
-  forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : ι → β → m (ForInStep β)) : m (ForInStep β)
+  forIn {m : Type v → Type w} [Monad m] {β : Type v} (init : β) (f : ι → β → m (ForInStep β)) : m (ForInStep β)
 
   -- something that foldM runs over all elements
 

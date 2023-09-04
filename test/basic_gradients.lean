@@ -8,11 +8,11 @@ import SciLean.Core.Simp.Sum
 open SciLean
 
 variable 
-  {K : Type} [RealScalar K]
-  {X : Type} [SemiInnerProductSpace K X]
-  {Y : Type} [SemiInnerProductSpace K Y]
-  {Z : Type} [SemiInnerProductSpace K Z]
-  {ι : Type} [EnumType ι]
+  {K : Type _} [RealScalar K]
+  {X : Type _} [SemiInnerProductSpace K X]
+  {Y : Type _} [SemiInnerProductSpace K Y]
+  {Z : Type _} [SemiInnerProductSpace K Z]
+  {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K 

@@ -75,7 +75,7 @@ instance (K X Y) [AddCommMonoid K] [Inner K X] [Inner K Y] : Inner K (X × Y) wh
 -- instance (K X) [AddCommMonoid K] [Inner K X] (ι) [EnumType ι] : Inner K (ι → X) where
 --   inner := λ f g => EnumType.sum fun i => ⟪f i, g i⟫[K]
 
-instance (priority:=low) (K ι) (X : ι → Type) 
+instance (priority:=low) (K ι) (X : ι → Type _) 
   [AddCommMonoid K] [∀ i, Inner K (X i)] [EnumType ι] 
   : Inner K ((i : ι) → X i) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫[K]
@@ -102,7 +102,7 @@ instance (X Y) [TestFunctions X] [TestFunctions Y] : TestFunctions (X×Y) where
 -- instance (X ι : Type _) [TestFunctions X]  : TestFunctions (ι → X) where
 --   TestFunction f := ∀ i, TestFunction (f i)
 
-instance (priority:=low) (ι : Type _) (X : ι → Type) [∀ i, TestFunctions (X i)]
+instance (priority:=low) (ι : Type _) (X : ι → Type _) [∀ i, TestFunctions (X i)]
   : TestFunctions ((i : ι) → X i) where
   TestFunction f := ∀ i, TestFunction (f i)
 
@@ -225,6 +225,6 @@ instance (X Y) [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInn
 
 -- instance (X) [SemiInnerProductSpace K X] (ι) [Fintype ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
 -- instance (X) [SemiInnerProductSpace K X] (ι) [EnumType ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
-instance (priority:=low) (ι) (X : ι → Type) [∀ i, SemiInnerProductSpace K (X i)] [EnumType ι] : SemiInnerProductSpace K ((i : ι) → X i) 
+instance (priority:=low) (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [EnumType ι] : SemiInnerProductSpace K ((i : ι) → X i) 
   := SemiInnerProductSpace.mkSorryProofs
 
