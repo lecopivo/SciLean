@@ -246,7 +246,7 @@ private partial def dsimp (e : Expr) : M Expr := do
 
     -- TODO: Add config option for this
     -- unfolds fvars that are not doing computation(based on some heuristic)
-    eNew ← reduceNoOpHeadFVar eNew
+    -- eNew ← reduceNoOpHeadFVar eNew
 
     if cfg.zeta && eNew.isFVar then
       eNew ← reduceFVar cfg eNew
