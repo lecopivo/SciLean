@@ -71,7 +71,7 @@ by
 example
   : (∇ (x : K ^ Idx 10), ∑ i, x[i])
     =
-    fun x => ⊞ i => (1:K) :=
+    fun x => ⊞ _ => (1:K) :=
 by 
   (conv => lhs; autodiff)
 
