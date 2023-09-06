@@ -102,7 +102,7 @@ let z₂ := g y
 (z₁, z₂)
 ```
 -/
-partial def letNormalize (e : Expr) (config : LetNormalizeConfig := {}) : MetaM Expr := do
+partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr := do
   match e.consumeMData.headBeta with
   | .letE xName xType xValue xBody _ => do
     match (← letNormalize xValue config).consumeMData with
@@ -115,7 +115,7 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig := {}) : MetaM 
       if (xValue'.isFVar) && config.removeTrivialLet then
         return ← letNormalize (xBody.instantiate1 xValue') config
 
-      if ¬(xValue.hasAnyFVar (fun _ => true)) && config.removeNoFVarLet then
+      if ¬(xValue.hasFVar) && config.removeNoFVarLet then
         return ← letNormalize (xBody.instantiate1 xValue') config
 
       if xValue'.isLambda && config.removeLambdaLet then
