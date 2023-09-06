@@ -391,3 +391,67 @@ def reduceProjFn?' (e : Expr) : MetaM (Option Expr) := do
         -- `structure` projections
         reduceProjCont? (← unfoldDefinition? e)
 
+
+
+
+namespace ReduceProjOfCtor
+
+private inductive Projection where
+| proj (typeName : Name) (idx : Nat)
+| function (f : Expr) (idx : Nat)
+
+private def Projection.index (p : Projection) : Nat :=
+  match p with
+  | .proj _ idx => idx
+  | .function _ idx => idx
+
+private def peelOfProjections (e : Expr) (projections : List Projection := []) : MetaM (Expr × List Projection) :=
+  match e with
+  | Expr.proj typeName idx e' => peelOfProjections e' ((.proj typeName idx) :: projections)
+  | .app f x => 
+    matchConst f.getAppFn (fun _ => pure (e,projections)) fun cinfo _ => do
+      match (← getProjectionFnInfo? cinfo.name) with
+      | none => return (e,projections)
+      | some projInfo => 
+        if projInfo.numParams = f.getAppNumArgs then
+          peelOfProjections x ((.function f projInfo.i) :: projections )
+        else
+          pure (e,projections)
+  | .mdata _ e' => peelOfProjections e' projections
+  | e' => pure (e',projections)
+  
+
+private def applyProjections (e : Expr) : List Projection → Expr
+  | [] => e
+  | (.proj typeName idx) :: ps => applyProjections (.proj typeName idx e) ps
+  | (.function f _) :: ps => applyProjections (f.app e) ps
+
+private def reduceProjections (e : Expr) (projections : List Projection) : CoreM Expr :=
+  match projections with
+  | [] => pure e
+  | p :: ps => 
+    matchConstCtor e.getAppFn (fun _ => pure (applyProjections e projections)) fun info _ => do
+      if e.getAppNumArgs = info.numParams + info.numFields then
+        reduceProjections (e.getArg! (info.numParams + p.index)) ps
+      else
+        pure (applyProjections e projections)
+
+end ReduceProjOfCtor
+
+open ReduceProjOfCtor in
+/-- Reduces structure projection of explicit constructors
+
+Examples:
+```
+((a,b),c).1.2  ==> b
+```
+
+```
+((a,b),c).1.2.1  ==> b.1
+```
+even if `b` is a free variable introduced by a let binding
+-/
+def reduceProjOfCtor (e : Expr) : MetaM Expr := do
+  let (e',ps) ← peelOfProjections e
+  reduceProjections e' ps
+
