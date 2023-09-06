@@ -150,12 +150,12 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig := {}) : MetaM 
         mkLambdaFVars #[x] (← letNormalize (xBody.instantiate1 x) config)
 
   | .app f x => do
-    match (← letNormalize f) with
+    match (← letNormalize f config) with
     | .letE yName yType yValue yBody _ => 
       withLetDecl yName yType yValue fun y => do
       letNormalize (← mkLambdaFVars #[y] (.app (yBody.instantiate1 y) x)) config
     | f' => 
-      match (← letNormalize x) with
+      match (← letNormalize x config) with
       | .letE yName yType yValue yBody _ => 
         withLetDecl yName yType yValue fun y => do
         letNormalize (← mkLambdaFVars #[y] (.app f' (yBody.instantiate1 y))) config
