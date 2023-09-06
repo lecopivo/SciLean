@@ -140,7 +140,7 @@ where
 
 set_option linter.unusedVariables false in
 open Lean Elab Tactic Conv in
-@[tactic SciLean.Tactic.LSimp.lsimp_conv] def evalDSimpConv : Tactic := fun stx => do
+@[tactic SciLean.Tactic.LSimp.ldsimp_conv] def evalDSimpConv : Tactic := fun stx => do
   let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false) 
 
   let e ← getLhs
