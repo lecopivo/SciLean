@@ -55,9 +55,10 @@ def isOfNatNatLit (e : Expr) : Bool :=
 def reduceProj? (e : Expr) : MetaM (Option Expr) := do
   match e with
   | Expr.proj _ _ (.fvar _) => return none -- do not reduce projections on fvars
-  | Expr.proj _ i c => 
+  | Expr.proj n i c => 
     letTelescope c λ xs b => do
-      let some b ← Meta.project? b i
+      -- let some b ← Meta.project? b i
+      let some b ← reduceProjOfCtor? (.proj n i b)
         | return none
       mkLambdaFVars xs b
   | _               => return none
@@ -378,7 +379,7 @@ where
     | none   => return { expr := e }
 
   simpProj (e : Expr) : M Result := do
-    match (← reduceProj?' e) with
+    match (← reduceProj? e) with
     | some e => return { expr := e }
     | none =>
       let s := e.projExpr!

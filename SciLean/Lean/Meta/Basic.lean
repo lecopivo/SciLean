@@ -436,6 +436,20 @@ private def reduceProjections (e : Expr) (projections : List Projection) : CoreM
       else
         pure (applyProjections e projections)
 
+
+/-- Return none if no projections happen
+-/
+private def reduceProjections? (e : Expr) (projections : List Projection) : CoreM (Option Expr) :=
+  match projections with
+  | [] => pure none
+  | p :: ps => 
+    matchConstCtor e.getAppFn (fun _ => pure none) fun info _ => do
+      if e.getAppNumArgs = info.numParams + info.numFields then
+        reduceProjections (e.getArg! (info.numParams + p.index)) ps
+      else
+        pure none
+
+
 end ReduceProjOfCtor
 
 open ReduceProjOfCtor in
@@ -454,4 +468,11 @@ even if `b` is a free variable introduced by a let binding
 def reduceProjOfCtor (e : Expr) : MetaM Expr := do
   let (e',ps) ← peelOfProjections e
   reduceProjections e' ps
+
+open ReduceProjOfCtor in
+/-- Reduces structure projection of explicit constructors
+-/
+def reduceProjOfCtor? (e : Expr) : MetaM (Option Expr) := do
+  let (e',ps) ← peelOfProjections e
+  reduceProjections? e' ps
 
