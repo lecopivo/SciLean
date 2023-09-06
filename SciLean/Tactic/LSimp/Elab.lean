@@ -101,6 +101,19 @@ where
   if tactic.simp.trace.get (← getOptions) then
     traceSimpCall stx usedSimps
 
+open Lean Elab Tactic Conv in
+@[tactic SciLean.Tactic.LSimp.lsimp_conv] def evalSimpConv : Tactic := fun stx => do
+  let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false) 
+
+  let e ← getLhs
+  let (r, usedSimps) ← dischargeWrapper.with fun discharge? =>
+    SciLean.Tactic.simp e ctx discharge?
+
+  updateLhs r.expr (← r.getProof' e)
+
+  if tactic.simp.trace.get (← getOptions) then
+    traceSimpCall stx usedSimps
+
 def dsimpLocation (ctx : Simp.Context) (loc : Location) : TacticM Unit := do
   match loc with
   | Location.targets hyps simplifyTarget =>
@@ -123,6 +136,20 @@ where
 @[tactic SciLean.Tactic.LSimp.ldsimp] def evalDSimp : Tactic := fun stx => do
   let { ctx, .. } ← withMainContext <| mkSimpContext stx (eraseLocal := false) (kind := .dsimp)
   dsimpLocation ctx (expandOptLocation stx[5])
+
+
+set_option linter.unusedVariables false in
+open Lean Elab Tactic Conv in
+@[tactic SciLean.Tactic.LSimp.lsimp_conv] def evalDSimpConv : Tactic := fun stx => do
+  let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false) 
+
+  let e ← getLhs
+  let (e', usedSimps) ← SciLean.Tactic.dsimp e ctx
+
+  changeLhs e'
+
+  if tactic.simp.trace.get (← getOptions) then
+    traceSimpCall stx usedSimps
 
 
 example (f : Nat → Nat) :
