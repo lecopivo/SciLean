@@ -17,6 +17,7 @@ structure LetNormalizeConfig where
   removeNoFVarLet := false  
   removeLambdaLet  := true
   removeFVarProjLet := true
+  pullLetOutLambda := true
   splitStructureConstuctors := true
   reduceProjections := true
 deriving Inhabited, BEq, Repr
@@ -170,12 +171,15 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
     withLocalDecl xName xBi xType fun x => do
       let xId := x.fvarId!
       let body' ← letNormalize (xBody.instantiate1 x) config
-      letTelescope body' fun ys b => do
-        let (out_ys, in_ys) ← ys.foldlM (init := (#[], #[])) fun (as, bs) a => do 
-          if (← a.fvarId!.usesFVar xId) || (← bs.anyM fun b => a.fvarId!.usesFVar b.fvarId!) 
-            then pure (as, bs.push a)
-            else pure (as.push a, bs) 
-        mkLambdaFVars (out_ys ++ #[x] ++ in_ys) b
+      if ¬config.pullLetOutLambda then
+        mkLambdaFVars #[x] body'   
+      else
+        letTelescope body' fun ys b => do
+          let (out_ys, in_ys) ← ys.foldlM (init := (#[], #[])) fun (as, bs) a => do 
+            if (← a.fvarId!.usesFVar xId) || (← bs.anyM fun b => a.fvarId!.usesFVar b.fvarId!) 
+              then pure (as, bs.push a)
+              else pure (as.push a, bs) 
+          mkLambdaFVars (out_ys ++ #[x] ++ in_ys) b
 
   | e => pure e
 
