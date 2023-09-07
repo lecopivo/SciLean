@@ -168,7 +168,14 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
 
   | .lam xName xType xBody xBi => 
     withLocalDecl xName xBi xType fun x => do
-      mkLambdaFVars #[x] (← letNormalize (xBody.instantiate1 x) config)
+      let xId := x.fvarId!
+      let body' ← letNormalize (xBody.instantiate1 x) config
+      letTelescope body' fun ys b => do
+        let (out_ys, in_ys) ← ys.foldlM (init := (#[], #[])) fun (as, bs) a => do 
+          if (← a.fvarId!.usesFVar xId) || (← bs.anyM fun b => a.fvarId!.usesFVar b.fvarId!) 
+            then pure (as, bs.push a)
+            else pure (as.push a, bs) 
+        mkLambdaFVars (out_ys ++ #[x] ++ in_ys) b
 
   | e => pure e
 
@@ -237,3 +244,27 @@ x2 + y5 + z3_fst + z3_snd : Nat
     rewrite_by
       let_normalize (config := {})
 
+
+
+/--
+info: fun x =>
+  let a := x + 1;
+  let b := x + a;
+  fun y =>
+  let c := x + y;
+  a + b + c : Nat → Nat → Nat
+-/
+#guard_msgs in
+#check 
+    (fun (x y : Nat) => 
+      let a := x + 1
+      let b := x + a
+      let c := x + y
+      a+b+c)
+    rewrite_by 
+      let_normalize
+--     =
+--     fun _ _ => 0 :=
+-- by
+--   let_normalize
+--   sorry_proof

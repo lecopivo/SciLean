@@ -4,7 +4,20 @@ import Std.Lean.Expr
 import SciLean.Lean.Expr 
 import SciLean.Lean.Array
 
-namespace Lean.Meta
+namespace Lean
+
+/-- Does free variable `x` uses free variable `y` in its type or value?
+-/
+def FVarId.usesFVar (x y : FVarId) : MetaM Bool := do
+  if (← x.getType).containsFVar y then
+    return true
+  else
+    match (← x.getValue?) with
+    | .none => return false
+    | .some val => return val.containsFVar y
+
+
+namespace Meta
 
 variable {m} [Monad m] [MonadEnv m] [MonadError m]
 
