@@ -201,11 +201,15 @@ def mkUncurryFun (n : Nat) (f : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd
     fun x => f (g x)      ==>   f ∘ g 
     fun x => f x + c      ==>   (fun y => y + c) ∘ f
     fun x => f x + g x    ==>   (fun (y₁,y₂) => y₁ + y₂) ∘ (fun x => (f x, g x))
+    fun x i => f (g₁ x i) (g₂ x i) i  ==>   (fun (y₁,y₂) i => f y₁ y₂ i) ∘' (fun x i => (g₁ x i, g₂ x i))
+    fun x i => x i        ==>   (fun x i => x i) ∘' (fun x i => x)
  -/
 def splitLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Expr × Expr) := do
   match e with 
-  | .lam name type b bi => 
-    withLocalDecl name bi type fun x => do
+  | .lam name _ _ _ => 
+    let e ← instantiateMVars e
+    lambdaTelescope e λ xs b => do
+      let x := xs[0]!
       let b := b.instantiate1 x
       let xId := x.fvarId!
 
@@ -217,6 +221,14 @@ def splitLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := `
 
       let mut ys' : Array Expr := #[]
       let mut zs  : Array Expr := #[]
+
+      if f.containsFVar xId then
+        let zId ← withLCtx lctx instances mkFreshFVarId
+        lctx := lctx.mkLocalDecl zId (name) (← inferType f)
+        let z := Expr.fvar zId
+        zs  := zs.push z
+        ys' := ys'.push f
+        f := z
 
       for y in ys, i in [0:ys.size] do
         if y.containsFVar xId then
@@ -230,9 +242,9 @@ def splitLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := `
           f := f.app y
 
       let y' ← mkProdElem ys' mk
-      let g  ← mkLambdaFVars #[.fvar xId] y'
+      let g  ← mkLambdaFVars xs y'
 
-      f ← withLCtx lctx instances (mkLambdaFVars zs f)
+      f ← withLCtx lctx instances (mkLambdaFVars (zs ++ xs[1:]) f)
       f ← mkUncurryFun zs.size f mk fst snd
 
       return (f, g)
