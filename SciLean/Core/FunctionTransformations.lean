@@ -6,6 +6,7 @@ import SciLean.Core.FunctionTransformations.FwdFDeriv
 import SciLean.Core.FunctionTransformations.InvFun
 import SciLean.Core.FunctionTransformations.RevFDeriv
 import SciLean.Core.FunctionTransformations.RevCDeriv
+import SciLean.Core.FunctionTransformations.RevDerivUpdate
 import SciLean.Core.FunctionTransformations.SemiAdjoint
 
 

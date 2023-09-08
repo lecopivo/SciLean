@@ -7,9 +7,8 @@ set_option linter.unusedVariables false
 section GenericArrayType
 
 variable 
-  {K : Type _}
-  [IsROrC K]
-  {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
+  {K : Type _} [IsROrC K]
+  {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
   [ArrayType Cont Idx Elem] [Index Idx]
   
 
@@ -155,6 +154,53 @@ theorem GetElem.getElem.arg_xs.revCDeriv_rule
 by
   have ⟨_,_⟩ := hf
   unfold revCDeriv; ftrans; ftrans; simp
+
+-- @[ftrans] -- this one is considered harmful as it introduces one hot vector
+theorem GetElem.getElem.arg_xs.revDerivUpdate_rule
+  (f : X → Cont) (idx : Idx) (dom) 
+  (hf : HasAdjDiff K f)
+  : revDerivUpdate K (fun x => getElem (f x) idx dom)
+    =
+    fun x =>
+      let ydf := revDerivUpdate K f x
+      (getElem ydf.1 idx dom,
+       fun delem (k : K) dx => 
+         let dcont := introElem fun i => if i = idx then delem else 0
+         ydf.2 dcont k dx) :=
+by
+  have ⟨_,_⟩ := hf
+  unfold revDerivUpdate; ftrans; ftrans; simp
+
+@[ftrans]
+theorem GetElem.getElem.arg_xs.revDerivUpdate_rule_simple 
+  (idx : Idx) (dom) 
+  : revDerivUpdate K (fun cont : Cont => getElem cont idx dom)
+    =
+    fun cont =>
+      (getElem cont idx dom,
+       fun delem k dcont => 
+         let dcont := ArrayType.modifyElem dcont idx (fun elem => elem + k • delem)
+         dcont) :=
+by
+  unfold revDerivUpdate; ftrans; sorry_proof
+
+theorem GetElem.getElem.arg_xs.revDerivUpdate_rule_pi
+  (f : X → Cont) (dom) 
+  (hf : HasAdjDiff K f)
+  : revDerivUpdate K (fun x idx => getElem (f x) idx dom)
+    =
+    fun x =>
+      let ydf := revDerivUpdate K f x
+      (fun idx => getElem ydf.1 idx dom,
+       fun delem (k : K) dx => 
+         let dcont := introElem delem
+         ydf.2 dcont k dx) :=
+by
+  have ⟨_,_⟩ := hf
+  unfold revDerivUpdate; ftrans;
+  funext x; simp; funext dy k dx; simp
+  -- ftrans -- fails to apply `semiAdjoint.pi_rule` because of some universe issues
+  sorry_proof
 
 @[ftrans]
 theorem GetElem.getElem.arg_xs.revCDeriv_rule_at

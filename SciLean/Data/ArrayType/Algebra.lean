@@ -4,7 +4,7 @@ import SciLean.Data.ArrayType.Basic
 namespace SciLean 
 namespace GenericArrayType
 
-variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
+variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
 variable [EnumType Idx] 
 
 variable {K : Type _} [IsROrC K]
