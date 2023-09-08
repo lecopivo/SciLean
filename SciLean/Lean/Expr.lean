@@ -255,3 +255,24 @@ def modArg (modifier : Expr → Expr) (i : Nat) (e : Expr) (n := e.getAppNumArgs
 def setArg (e : Expr) (i : Nat) (x : Expr) (n := e.getAppNumArgs) : Expr :=
   e.modArg (fun _ => x) i n
 
+
+/-- Returns number of leading lambda binders of an expression 
+
+Note: ignores meta data -/
+def getLamBinderNum (e : Expr) : Nat :=
+  go 0 e
+where
+  go (n : Nat) : Expr → Nat
+  | .lam _ _ b _ => go (n+1) b
+  | .mdata _ e => go n e
+  | _ => n
+
+
+/-- Get body of multiple bindings
+
+Note: ignores meta data -/
+def bindingBodyRec : Expr → Expr
+| .lam _ _ b _ => b.bindingBodyRec
+| .forallE _ _ b _ => b.bindingBodyRec
+| .mdata _ e => e.bindingBodyRec
+| e => e
