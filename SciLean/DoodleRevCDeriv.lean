@@ -63,6 +63,24 @@ by
   sorry_proof
 
 
+theorem GetElem.getElem.arg_xs.revCDeriv_pi_rule_aa {IX I J X : Type _} [ArrayType IX I X] [Index I] [EnumType J] [Nonempty J] [SemiInnerProductSpace K X]
+  (xs : W → IX) (h : J → I) 
+  (hxs : HasAdjDiff K xs) (hh : Function.Bijective h)
+  : (<∂ w, fun j => (xs w)[h j])
+    =
+    let ih := h.invFun
+    fun w => 
+      let xdx := <∂ xs w
+      (fun j : J => xdx.1[h j], 
+       fun dx =>
+         let dx := introElem fun i => dx (ih i)
+         xdx.2 dx) := 
+by
+  sorry_proof
+
+
+
+
 theorem revCDeriv.pi_uncurry_rule {ι κ} [EnumType ι] [EnumType κ]
   (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (fun x => f x i j))
   : (<∂ x, fun i j => f x i j)
@@ -71,6 +89,30 @@ theorem revCDeriv.pi_uncurry_rule {ι κ} [EnumType ι] [EnumType κ]
       let ydf := <∂ x':=x, fun ij : ι×κ => f x' ij.1 ij.2
       (fun i j => ydf.1 (i,j), 
        fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) := 
+by
+  sorry
+
+
+theorem revCDeriv.pi_curry_rule {ι κ} [EnumType ι] [EnumType κ]
+  (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (fun x => f x i j))
+  : (<∂ x, fun ij : ι×κ => f x ij.1 ij.2)
+    =
+    fun x =>
+      let ydf := <∂ x':=x, fun i j => f x' i j
+      (fun ij => ydf.1 ij.1 ij.2, 
+       fun dy => ydf.2 (fun i j => dy (i,j))) := 
+by
+  sorry
+
+
+theorem revCDeriv.pi_swap_rule {ι κ} [EnumType ι] [EnumType κ]
+  (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (fun x => f x i j))
+  : (<∂ x, fun i j => f x i j)
+    =
+    fun x =>
+      let ydf := <∂ x':=x, fun j i => f x' i j
+      (fun i j => ydf.1 j i, 
+       fun dy => ydf.2 (fun j i => dy i j)) := 
 by
   sorry
 
@@ -180,15 +222,15 @@ by
 variable {ι κ : Type} [Index κ] [Index ι] [Nonempty ι] [Nonempty κ] [PlainDataType K]
 
 
-theorem revCDeriv.pi_uncurry_rule (f : ι → κ → X → Y) (hf : ∀ i j, HasAdjDiff K (f i j))
-  : (<∂ x, fun i j => f i j x)
-    =
-    fun x =>
-      let ydf := <∂ x':=x, fun ij : ι×κ => f ij.1 ij.2 x'
-      (fun i j => ydf.1 (i,j), 
-       fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) := 
-by
-  sorry
+-- theorem revCDeriv.pi_uncurry_rule (f : ι → κ → X → Y) (hf : ∀ i j, HasAdjDiff K (f i j))
+--   : (<∂ x, fun i j => f i j x)
+--     =
+--     fun x =>
+--       let ydf := <∂ x':=x, fun ij : ι×κ => f ij.1 ij.2 x'
+--       (fun i j => ydf.1 (i,j), 
+--        fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) := 
+-- by
+--   sorry
 
 theorem revCDeriv.pi_introElem_rule (f : ι → κ → X → K) (hf : ∀ i j, HasAdjDiff K (f i j))
   : (<∂ x, fun i => ⊞ j => f i j x)
@@ -551,6 +593,14 @@ def splitLambdaToComp' (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := 
       let mut ys' : Array Expr := #[]
       let mut zs  : Array Expr := #[]
 
+      if f.containsFVar xId then
+        let zId ← withLCtx lctx instances mkFreshFVarId
+        lctx := lctx.mkLocalDecl zId (name) (← inferType f)
+        let z := Expr.fvar zId
+        zs  := zs.push z
+        ys' := ys'.push f
+        f := z
+
       for y in ys, i in [0:ys.size] do
         if y.containsFVar xId then
           let zId ← withLCtx lctx instances mkFreshFVarId
@@ -573,29 +623,6 @@ def splitLambdaToComp' (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := 
   | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
 
-/-- Returns number of leading lambda binders of an expression 
-
-Note: ignores meta data -/
-def _root_.Lean.Expr.getLamBinderNum (e : Expr) : Nat :=
-  go 0 e
-where
-  go (n : Nat) : Expr → Nat
-  | .lam _ _ b _ => go (n+1) b
-  | .mdata _ e => go n e
-  | _ => n
-
-/-- Get body of multiple bindings
-
-Note: ignores meta data -/
-def _root_.Lean.Expr.bindingBodyRec : Expr → Expr
-| .lam _ _ b _ => b.bindingBodyRec
-| .forallE _ _ b _ => b.bindingBodyRec
-| .mdata _ e => e.bindingBodyRec
-| e => e
-
-
-#check Prod.mk
-#check GetElem.getElem
 
 def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with 
   piRule := fun e F => do
@@ -624,10 +651,15 @@ def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with
       let f ← lambdaTelescope F fun xs b => 
         mkLambdaFVars #[xs[0]!] (b.getArg! 5)
 
+      let h ← lambdaTelescope F fun xs b => 
+        mkLambdaFVars #[xs[1]!] (b.getArg! 6)
+
       let .some K := e.getArg? 0 | return none
-      let thrm ← mkAppM ``GetElem.getElem.arg_xs.revCDeriv_pi_rule #[K, f]
+      let thrm1 ← mkAppM ``GetElem.getElem.arg_xs.revCDeriv_pi_rule #[K, f]
+      let thrm2 ← mkAppM ``GetElem.getElem.arg_xs.revCDeriv_pi_rule_aa #[K, f, h]
       SciLean.FTrans.tryTheorems
-        #[{ proof := thrm, origin := .decl ``GetElem.getElem.arg_xs.revCDeriv_pi_rule, rfl := false}]
+        #[{ proof := thrm1, origin := .decl ``GetElem.getElem.arg_xs.revCDeriv_pi_rule, rfl := false},
+          { proof := thrm2, origin := .decl ``GetElem.getElem.arg_xs.revCDeriv_pi_rule_aa, rfl := false}]
         revCDeriv.discharger e
 
     else if body.isAppOf ``Prod.mk then
@@ -651,6 +683,7 @@ def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with
         IO.println (← ppExpr g)
         if (← isDefEq F f) then
           IO.println s!"split is trivial" 
+          return none
         else
           IO.println s!"split is not trivial"
 
@@ -662,8 +695,9 @@ def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with
           #[ { proof := thrm, origin := .decl ``revCDeriv.pi_map_rule, rfl := false} ]
           revCDeriv.discharger e
 
-      catch _ => 
-        IO.println s!"failed splitting"
+      catch e => 
+        let m := Exception.toMessageData e
+        IO.println s!"failed splitting {← m.format}"
         return none
     }
  
@@ -673,6 +707,16 @@ open Lean in
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``revCDeriv, revCDeriv.modifiedFTransExt))
 
 variable (A : W → DataArrayN K (ι×κ)) (hA : HasAdjDiff K A) (x y : W → K^κ) (hx : HasAdjDiff K x) (hy : HasAdjDiff K y) (h : κ → κ) (hh : Function.Bijective h)
+
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+set_option trace.Meta.Tactic.simp.discharge true in
+set_option trace.Meta.Tactic.simp.unify true in
+#check
+  (<∂ (fun (x : ι → X) i => x i))
+  rewrite_by
+    ftrans only
+
 
 set_option trace.Meta.Tactic.simp.discharge true in
 set_option trace.Meta.Tactic.simp.rewrite true in
@@ -719,8 +763,10 @@ by
     autodiff
   sorry_proof
 
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.unify true in
+set_option profiler true
+
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify true in
 example 
   : <∂ (fun w j i => (A w)[(i,j)])
     =
@@ -732,9 +778,8 @@ by
     autodiff
   sorry_proof
 
-set_option profiler true
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.unify true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify true in
 example 
   : <∂ (fun w j i => (A w)[(i,j)] * (x w)[j])
     =
@@ -748,6 +793,15 @@ by
     let_normalize
     let_normalize
     simp (config := {zeta:=false})
+      [show (Function.invFun fun ji : κ×ι => (ji.snd, ji.fst))
+                =
+                fun ij : ι×κ => (ij.2, ij.1) by sorry]
+    simp (config := {zeta:=false}) only [revCDeriv.pi_curry_rule _ (fun w j i => (x w)[j]) sorry]
+    rw[revCDeriv.pi_swap_rule _ _ sorry]
+    rw[revCDeriv.pi_rule _ _ sorry]
+    ftrans only
+    let_normalize
+    let_normalize
   sorry_proof
 
 
@@ -789,3 +843,14 @@ by
   let (f, g) ← splitLambdaToComp' e
   IO.println (← ppExpr f)
   IO.println (← ppExpr g)
+
+
+
+open Qq
+
+
+
+  
+
+
+def pseudoInverse (A B : Q(Type)) (f : Q($A → $B)) : (C : Q(Type)) × (c : Q($C)) × (g : Q($A → $C)) := sorry
