@@ -3,6 +3,7 @@ import Std.Data.List.Basic
 import Std.Classes.SetNotation
 
 import SciLean.Lean.Array
+import SciLean.Util.SorryProof
 
 namespace SciLean
 
@@ -33,7 +34,22 @@ namespace ArraySet
 
   def _root_.Array.toArraySet (as : Array α) : ArraySet α where
     data := as.sortAndDeduplicate
-    isSet := sorry
+    isSet := sorry_proof
+
+  def mem (as : ArraySet α) (a : α) [DecidableEq α] : Bool := Id.run do
+    for a' in as.toArray do
+      if a' = a then
+        return true
+    return false
+
+  instance [DecidableEq α] : Membership α (ArraySet α) where
+    mem a as := as.mem a
+
+  instance [DecidableEq α] (a : α) (as : ArraySet α) : Decidable (a ∈ as) := 
+    if h : as.mem a then
+      .isTrue h
+    else
+      .isFalse h
   
   instance : HasSubset (ArraySet α) where
     Subset as bs := (List.Subset as.toList bs.toList)
@@ -43,7 +59,7 @@ namespace ArraySet
     let mut j := 0
     for h : i in [0:b.size] do
       if h' : (a.size - j) > (b.size - i) then
-        return isFalse sorry
+        return isFalse sorry_proof
       if h' : j < a.size then
         have _ := h.2
         match compare b[i] a[j] with
@@ -53,15 +69,15 @@ namespace ArraySet
         | .lt => 
           continue
         | .gt => 
-          return isFalse sorry
+          return isFalse sorry_proof
       else
         -- we have exhausted whole as
-        return isTrue sorry
+        return isTrue sorry_proof
 
     if j = a.size then
-      isTrue sorry
+      isTrue sorry_proof
     else
-      isFalse sorry
+      isFalse sorry_proof
 
   instance (a b : ArraySet α) [DecidableEq α] : Decidable (a = b) := Id.run do
     if h : a.size = b.size then
@@ -69,10 +85,10 @@ namespace ArraySet
         have : i < a.size := h'.2
         have : i < b.size := h ▸ h'.2
         if a[i] ≠ b[i] then
-          return isFalse sorry
-      return isTrue sorry
+          return isFalse sorry_proof
+      return isTrue sorry_proof
     else
-      return isFalse sorry
+      return isFalse sorry_proof
 
   def lexOrd [Ord α] (a b : ArraySet α) : Ordering := a.data.lexOrd b.data 
       
