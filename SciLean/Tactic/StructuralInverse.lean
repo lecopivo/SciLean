@@ -320,7 +320,7 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
         lambdaLetTelescope b' fun lets xs' => do
           let (xs', _) ← decomposeStructure xs'
           mkLambdaFVars (#[y] ++ lets) (← mkAppM' xmk xs').headBeta
-  | _ => throwError "asdf"
+  | _ => throwError "Error in `invertFunction`, not a lambda function!"
 
 
 
