@@ -96,6 +96,5 @@ by
     solve_for p' from 1 := sorry_proof
     solve_as_inv
     solve_as_inv
-    unfold hold
   autodiff; autodiff; autodiff; apply True.intro
   

@@ -175,7 +175,7 @@ def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := 
       let Q₁body ← mkAppFoldrM ``And Qs₁
       let Q₁ ← mkLambdaFVars zs Q₁body
 
-      let zs'Val ← mkAppM ``solveFun #[Q₁] >>= mkLambdaFVars ys >>= (mkAppM ``hold #[·]) -- (← mkAppM ``solveFun #[Q₁])
+      let zs'Val ← mkAppM ``solveFun #[Q₁] >>= mkLambdaFVars ys  -- >>= (mkAppM ``hold #[·]) -- (← mkAppM ``solveFun #[Q₁])
       withLetDecl (zsName.appendAfter "'") (← inferType zs'Val) zs'Val fun zs'Var => do
 
       let zs' ← mkProdSplitElem (← mkAppM' zs'Var ys) zs.size
@@ -261,7 +261,7 @@ local syntax (name:=solve_for_core_tactic) "solve_for_core " ident+ " from " num
 
 @[inherit_doc solve_for_core_tactic]
 macro (name:=solve_for_tacitc) "solve_for " xs:ident+ " from " js:num+ " := " uniq:term : conv =>
-  `(conv| ((conv => pattern (solveFun _); solve_for_core $xs* from $js* := $uniq); let_normalize))
+  `(conv| ((conv => pattern (solveFun _); solve_for_core $xs* from $js* := $uniq); let_normalize (config := {removeLambdaLet:=false})))
 
 
 open Lean Elab Tactic Conv
@@ -315,23 +315,35 @@ theorem solve_as_invFun_rhs {α β : Type _} [Nonempty α] (f : α → β) (b : 
 
 macro "solve_as_inv" : conv => `(conv| (conv => pattern (solveFun _); first | rw[solve_as_invFun_lhs] | rw[solve_as_invFun_rhs] | rw[solve_as_invFun])) 
 
-example : (0,0,0) = (solve (a b c : Int), a+b+c=1 ∧ a-b+c=1 ∧ a-b-c=1) := 
-by
-  conv =>
-    rhs
-    solve_for b from 2 := sorry
-    solve_as_inv
-    solve_for a from 0 := sorry
-    solve_as_inv
-    solve_as_inv
-  sorry_proof
 
 
+/--
+info: let b' := fun a c => invFun (fun b => a - b - c) 1;
+let a' := fun c => invFun (fun a => a + b' a c + c) 1;
+let c := invFun (fun c => a' c - b' (a' c) c + c) 1;
+let a := a' c;
+let b := b' a c;
+(a, b, c) : ℤ × ℤ × ℤ
+-/
+#guard_msgs in
+#check 
+  (solve (a b c : Int), a+b+c=1 ∧ a-b+c=1 ∧ a-b-c=1)
+  rewrite_by
+    solve_for b from 2 := sorry_proof
+    solve_as_inv
+    solve_for a from 0 := sorry_proof
+    solve_as_inv
+    solve_as_inv
 
-example : (0,0) = solve (a b : Nat), (∀ c, a + b + c = c) ∧ (∀ c, a + c = c) :=
-by 
-  conv =>
-    rhs
-    solve_for a from 1 := sorry
-  sorry_proof
+/--
+info: let a' := fun b => solve a, ∀ (c : ℕ), a + c = c;
+let b := solve b, ∀ (c : ℕ), a' b + b + c = c;
+let a := a' b;
+(a, b) : ℕ × ℕ
+-/
+#guard_msgs in
+#check
+  (solve (a b : Nat), (∀ c, a + b + c = c) ∧ (∀ c, a + c = c))
+  rewrite_by
+    solve_for a from 1 := sorry_proof
 
