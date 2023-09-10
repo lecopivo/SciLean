@@ -33,7 +33,7 @@ partial def decomposeStructure (e : Expr) : MetaM (Array Expr × Expr) := do
   
   let eis ← info.fieldNames.mapM (fun fname => do
     let projFn := getProjFnForField? (← getEnv) structName fname |>.get!
-    mkAppM projFn #[e] >>= reduceProjOfCtor)
+    mkAppM projFn #[e] >>= whnfR)
 
   let (eis,mks) := (← eis.mapM decomposeStructure).unzip
 
@@ -78,8 +78,8 @@ p₂ := fun ((a,b),(c,d),e) => (b,d)
 q  := fun ((a,c,e),(b,d)) => ((a,b),(c,d),e)
 ```
 -/
-def splitStructure (e : Expr) (split : Nat → Expr → Bool) : MetaM (Option (Expr × Expr × Expr)) := do
-  let X ← inferType e
+def splitStructure (e : Expr) (split : Nat → Expr → Bool) : MetaM (Option StructureDecomposition) := do
+  let ⟨u,X,_⟩ ← inferTypeQ e
   withLocalDecl `x default X fun x => do
     let (xis, xmk) ← decomposeStructure x
     let (eis, _) ← decomposeStructure e
@@ -91,39 +91,53 @@ def splitStructure (e : Expr) (split : Nat → Expr → Bool) : MetaM (Option (E
     
     let x₁ ← mkProdElem xis₁
     let x₂ ← mkProdElem xis₂
-    let p₁ ← mkLambdaFVars #[x] x₁
-    let p₂ ← mkLambdaFVars #[x] x₂
 
-    withLocalDecl `x₁ default (← inferType x₁) fun x₁' => do
-    withLocalDecl `x₂ default (← inferType x₂) fun x₂' => do
+    let ⟨v,X₁,x₁⟩ ← inferTypeQ x₁
+    let ⟨w,X₂,x₂⟩ ← inferTypeQ x₂
+
+    let p₁ : Q($X → $X₁) ← mkLambdaFVars #[x] x₁
+    let p₂ : Q($X → $X₂) ← mkLambdaFVars #[x] x₂
+
+    withLocalDecl `x₁ default X₁ fun x₁' => do
+    withLocalDecl `x₂ default X₂ fun x₂' => do
       let (xis₁', _) ← decomposeStructure x₁'
       let (xis₂', _) ← decomposeStructure x₂'
 
       let x' := (← mkAppM' xmk (ids.mergeSplit xis₁' xis₂')).headBeta
-      let q ← mkLambdaFVars #[x₁',x₂'] x'
+      let q : Q($X₁ → $X₂ → $X) ← mkLambdaFVars #[x₁',x₂'] x'
 
-      return (p₁,p₂,q)
+      let proof ← mkFreshExprMVarQ q(IsDecomposition $p₁ $p₂ $q)
 
+      let l ← proof.mvarId!.constructor
+      l.forM fun m => do
+        let (_,m') ← m.intros
+        m'.applyRefl
+      
+      return .some {u:=u, v:=v, w:=w, X:=X, X₁:=X₁, X₂:=X₂, p₁:=p₁, p₂:=p₂, q:=q, proof := proof}
 
+/-- Decomposition of the domain of a function `f : X → Y` as `X ≃ X₁×X₂` and provides `f' : X₁ → Y` such that `f = f' ∘ p₁` where `p₁ : X → X₁` is the projection onto the first component.
+`
+In other words, this claims that `f` does not use the `X₂` part of `X`.
+-/
 structure DomainDecomposition where
   {u : Level}
   Y : Q(Type u)
   dec : StructureDecomposition 
   f  : Q($dec.X → $Y)
   f' : Q($dec.X₁ → $Y)
-  proof : Q(∀ x, $f' ($dec.p₁ x) = $f x) -- proof of `∀ x, f' (domDec.p₁ x) = f x`
+  proof : Q(∀ x, $f' ($dec.p₁ x) = $f x)
 
-/-- Takes a function `f : X → Y` and find projections `p₁ : X → X₁`, `p₂ : X → X₂` and function `f' : X₁ → Y` such that `h : f = f' ∘ p₁`
-
-returns `(f, p₁, p₂, h)`
+/-- Take a function `f : X → Y` and find projections `p₁ : X → X₁`, `p₂ : X → X₂` and function `f' : X₁ → Y` such that `h : f = f' ∘ p₁`
 -/
-def factorDomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr × Expr × Expr)) := do
+def factorDomainThroughProjections (f : Expr) : MetaM (Option DomainDecomposition) := do
   let f ← instantiateMVars f
   match f with 
   | .lam xName xType xBody xBi => 
     withLocalDecl `x xBi xType fun x => do
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
+
+      let ⟨u, Y, _⟩ ← inferTypeQ b
 
       let (xis, xmk) ← decomposeStructure x
 
@@ -144,7 +158,7 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr × E
             match e with
             | .fvar id => pure (.done (if xId == id then xVar else .fvar id)) -- replace
             | e' => pure .continue)
-          (post := fun e => do pure (.done (← reduceProjOfCtor e))) -- clean up projections
+          (post := fun e => do pure (.done (← whnfR e))) -- clean up projections
 
         let usedXi : FVarIdSet := -- collect which xi's are used
           (← (b.collectFVars.run {})) 
@@ -155,17 +169,17 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr × E
         if notUsedXi.size = 0 then
           return none
 
-        let .some (p₁,p₂,_) ← splitStructure (← mkAppM' xmk xiVars).headBeta (fun i xi => usedXi.contains xi.fvarId!)
+        let .some dec ← splitStructure (← mkAppM' xmk xiVars).headBeta (fun i xi => usedXi.contains xi.fvarId!)
           | return none
 
         let xiVars' := xiVars.filter (fun xi => usedXi.contains xi.fvarId!)
-        let f' ← mkUncurryFun xiVars'.size (← mkLambdaFVars xiVars' b)
+        let f' : Q($dec.X₁ → $Y) ← mkUncurryFun xiVars'.size (← mkLambdaFVars xiVars' b)
+        let f : Q($dec.X → $Y) := f
 
-        let rhs := .lam xName xType (f'.app (p₁.app (.bvar 0))) xBi
-        let proof ← mkFreshExprMVar (← mkEq f rhs)
-        proof.mvarId!.applyRefl -- this should succeed 
+        let proof ← mkFreshExprMVarQ q(∀ x, $f' ($dec.p₁ x) = $f x)
+        proof.mvarId!.intros >>= fun (_,m) => m.applyRefl
 
-        return (f',p₁,p₂,proof)
+        return .some {u:= u, Y:=Y, dec:=dec, f:=f, f':=f', proof:=proof}
 
   | _ => throwError "Error in `factorDomainThroughProjections`, not a lambda function!"
 
@@ -182,7 +196,7 @@ structure CodomainDecomposition where
 
 returns `(f', q, y, h)`
 -/
-def factorCodomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr × Expr × Expr)) := do
+def factorCodomainThroughProjections (f : Expr) : MetaM (Option CodomainDecomposition) := do
   let f ← instantiateMVars f
   match f with 
   | .lam xName xType xBody xBi => 
@@ -190,19 +204,21 @@ def factorCodomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr ×
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
 
-      let .some (p₁,p₂,q) ← splitStructure b (fun _ bi => bi.containsFVar xId)
+      let ⟨u, X, x⟩ ← inferTypeQ x
+
+      let .some dec ← splitStructure b (fun _ bi => bi.containsFVar xId)
         | return none
 
       let reduceProj : Expr → MetaM Expr := fun e => 
-        transform e (post := fun x => do pure (.done (← reduceProjOfCtor x)))
-      let y ← reduceProj (← mkAppM' p₂ #[b]).headBeta
-      let f' ← mkLambdaFVars #[x] (← reduceProj (← mkAppM' p₁ #[b]).headBeta)
+        transform e (post := fun x => do pure (.done (← whnfR x)))
+      let y₂ : Q($dec.X₂) ← reduceProj (← mkAppM' dec.p₂ #[b]).headBeta
+      let f' : Q($X → $dec.X₁) ← mkLambdaFVars #[x] (← reduceProj (← mkAppM' dec.p₁ #[b]).headBeta)
+      let f : Q($X → $dec.X) := f
 
-      let rhs := .lam xName xType ((q.app (f'.app (.bvar 0))).app y) xBi
-      let proof ← mkFreshExprMVar (← mkEq f rhs)
-      proof.mvarId!.applyRefl
+      let proof ← mkFreshExprMVarQ q(∀ x, $dec.q ($f' x) $y₂ = $f x)
+      proof.mvarId!.intros >>= fun (_,m) => m.applyRefl
 
-      return (f', q, y, proof)
+      return .some {u:=u, X:=X, dec:=dec, f:=f, f':=f', y₂:=y₂, proof:=proof}
 
   | _ => throwError "Error in `factorCodomainThroughProjections`, not a lambda function!"
 
@@ -342,42 +358,49 @@ open Qq in
 #eval show MetaM Unit from do
 
   let e := q(fun xy : Int × Int × Int × Int => ((xy.snd.snd.snd, 2 * xy.fst), 3*xy.snd.fst))
-  let .some (f',p₁,p₂,h) ← factorDomainThroughProjections e
+  let .some ff ← factorDomainThroughProjections e
     | return ()
   IO.println (← ppExpr e)
-  IO.println (← ppExpr f')
-  IO.println (← ppExpr p₁)
-  IO.println (← ppExpr p₂)
+  IO.println (← ppExpr ff.f')
+  IO.println (← ppExpr ff.dec.p₁)
+  IO.println (← ppExpr ff.dec.p₂)
 
 
 
 #eval show MetaM Unit from do
 
-  let e := q(fun xy : Int × Int => (xy.fst, xy.snd, 1, 3))
-  let .some (f',q,y,h) ← factorCodomainThroughProjections e
+  let e := q(fun ((x,y) : Int × Int) => (x, y, 1, 3))
+  let .some ff ← factorCodomainThroughProjections e
     | return ()
   IO.println (← ppExpr e)
-  IO.println (← ppExpr f')
-  IO.println (← ppExpr q)
-  IO.println (← ppExpr y)
+  IO.println (← ppExpr ff.f')
+  IO.println (← ppExpr ff.dec.q)
+  IO.println (← ppExpr ff.y₂)
 
 
 
 #eval show MetaM Unit from do
 
   let e := q(fun xy : Int × Int => (xy.snd, 1))
-  let .some (f',q,y,h) ← factorCodomainThroughProjections e
+  let .some ff ← factorCodomainThroughProjections e
     | return ()
   IO.println (← ppExpr e)
-  IO.println (← ppExpr f')
-  IO.println (← ppExpr q)
-  IO.println (← ppExpr y)
+  IO.println (← ppExpr ff.f')
+  IO.println (← ppExpr ff.dec.q)
+  IO.println (← ppExpr ff.y₂)
 
-  let .some (f'',p₁,p₂,h) ← factorDomainThroughProjections f'
+  let .some ff ← factorDomainThroughProjections ff.f'
     | return ()
-  IO.println (← ppExpr f'')
-  IO.println (← ppExpr p₁)
-  IO.println (← ppExpr p₂)
+  IO.println (← ppExpr ff.f')
+  IO.println (← ppExpr ff.dec.p₁)
+  IO.println (← ppExpr ff.dec.p₂)
 
 
 
+example : 
+  ∀ (x : Int × Int × Int × Int),
+    ((x.fst, x.snd.fst, x.snd.snd.snd).fst, (x.fst, x.snd.fst, x.snd.snd.snd).snd.fst, x.snd.snd.fst,
+      (x.fst, x.snd.fst, x.snd.snd.snd).snd.snd) = x
+  :=
+by
+  intro x; rfl
