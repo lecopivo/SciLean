@@ -1,6 +1,7 @@
 import SciLean.Lean.Expr
 import SciLean.Lean.Meta.Basic
 
+import SciLean.Tactic.LetNormalize
 import Mathlib.Logic.Function.Basic
 
 namespace SciLean
@@ -33,7 +34,7 @@ partial def decomposeStructure (e : Expr) : MetaM (Array Expr × Expr) := do
   
   let eis ← info.fieldNames.mapM (fun fname => do
     let projFn := getProjFnForField? (← getEnv) structName fname |>.get!
-    mkAppM projFn #[e] >>= whnfR)
+    mkAppM projFn #[e] >>= reduceProjOfCtor)
 
   let (eis,mks) := (← eis.mapM decomposeStructure).unzip
 
@@ -223,6 +224,17 @@ def factorCodomainThroughProjections (f : Expr) : MetaM (Option CodomainDecompos
   | _ => throwError "Error in `factorCodomainThroughProjections`, not a lambda function!"
 
 
+/--
+This comparison is used to select the FVarIdSet with the least number of element but non-empty one! Thus zero size sets are bigger then everything else
+-/
+local instance : Ord (Nat×Expr×FVarIdSet) where
+  compare := fun (_,_,x) (_,_,y) =>
+    match x.size, y.size with
+    | 0, 0 => .eq
+    | 0, _ => .gt
+    | _, 0 => .lt
+    | _, _ => compare x.size y.size
+
 
 /-- Given equations `yᵢ = val x₁ ... xₙ`, express `xᵢ` as functions of `yᵢ`, where `xs = #[x₁,...,xₙ]`, `ys = #[y₁,...,yₙ]` are free variables and `vals = #[val₁,...,valₙ]` are value depending on `xs`
 
@@ -240,24 +252,48 @@ partial def invertValues (xs ys : Array Expr) (vals : Array Expr) : MetaM (Optio
 
   let .some x ← call vals {} | return none
   
-  return x[0]!.1
+  return x
 where
-  call (vals : Array (Nat×Expr×FVarIdSet)) (lets : Array (Expr × Expr)) : MetaM (Option (Array (Expr × Expr))) := do
+
+  resolve (lets : Array (Expr × Expr × Expr)) (zs : Array (Expr × Expr)) : MetaM Expr := do
+
+    if zs.size = lets.size then
+      let lets := lets.reverse
+      let (_, tmp) := lets.unzip
+      let (xs', _) := tmp.unzip
+      let (pxs, zs') := zs.unzip
+
+      let x := (← mkProdElem xs).replaceFVars pxs zs'
+      let x ← mkLambdaFVars (xs' ++ zs') x
+      return x
+
+    let i := zs.size 
+
+    let (x,x',val) := lets[i]!
+
+    let (z,z') := zs.unzip
+    let val := val.replaceFVars z z'
+
+    withLetDecl ((← x.fvarId!.getUserName).appendAfter "''") (← inferType val) val fun z' => do
+
+      resolve lets (zs.push (x, z'))
+
+
+  call (vals : Array (Nat×Expr×FVarIdSet)) 
+       (lets : Array (Expr × Expr × Expr))  -- #[(fvar xi, new fvar xi' resolving xi, new value of xi)]
+    : MetaM (Option Expr) := do
 
     if (lets.size = xs.size) then
-      let (pxs, xs') := lets.unzip
-      let x := (← mkProdElem xs).replaceFVars pxs xs'
-      let x ← mkLambdaFVars xs' x
-      return .some #[(x,default)]
+      return (← resolve lets.reverse #[])
 
     -- find value that depends only on one variable
-    let .some (i,val,varSet) := vals.find? (fun (_,_,varSet) => varSet.size == 1)
-      | -- probably turn this into a trace and return none
-        throwError "can't find a value to resolve w.r.t. one of the variables {← xs.mapM ppExpr} \nvalues: \n {← (vals.filterMap (fun (_,val,set) => if set.size > 0 then val else none) |>.mapM ppExpr)})"
-        -- return none
+    let (i,val,varSet) := vals.minI
 
-    let varId := varSet.toArray[0]!
-    let var := .fvar varId
+    if varSet.size = 0 then
+      throwError s!"got stuck on val {← ppExpr val} that does not have any free variables"
+    
+    let varArr := varSet.toArray.map Expr.fvar
+    let var := varArr[0]!
 
     -- invert this value
     let x' := 
@@ -265,18 +301,28 @@ where
         ys[i]!
       else
         ← mkAppM ``Function.invFun #[← mkLambdaFVars #[var] val, ys[i]!]
+  
+    let x' ← mkLambdaFVars varArr[1:] x'
 
-    withLetDecl ((←varId.getUserName).appendAfter "'") (←varId.getType) x' fun var' => do
+    withLetDecl ((←var.fvarId!.getUserName).appendAfter "'") (← inferType x') x' fun var' => do
+
+      let val' ← mkAppM' var' varArr[1:]
+      -- let val' := var'
+
+      let varSet := varSet.erase var.fvarId!
 
       -- remove the variable `var` from all the vales
       let mut vals := vals
       for (j,jval,jvarSet) in vals do 
         if j ≠ i then
-          vals := vals.set! j (j, jval.replaceFVar var var', jvarSet.erase var.fvarId!)
+          if jval.containsFVar var.fvarId! then
+            vals := vals.set! j (j, jval.replaceFVar var val', jvarSet.erase var.fvarId! |>.union varSet)
+          else
+            vals := vals.set! j (j, jval.replaceFVar var val', jvarSet.erase var.fvarId!)
         else
           vals := vals.set! i (i, default, {})
 
-      call vals (lets.push (var, var'))
+      call vals (lets.push (var, var', val'))
 
 
 
@@ -317,17 +363,29 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
         let .some b' ← invertValues xiVars yis bs
           | return none
 
+
         lambdaLetTelescope b' fun lets xs' => do
           let (xs', _) ← decomposeStructure xs'
-          mkLambdaFVars (#[y] ++ lets) (← mkAppM' xmk xs').headBeta
+          let f' ← mkLambdaFVars (#[y] ++ lets) (← mkAppM' xmk xs').headBeta 
+          let f' ← Meta.LetNormalize.letNormalize f' {removeLambdaLet:=false}
+          return f'
   | _ => throwError "Error in `invertFunction`, not a lambda function!"
 
 
 
 #eval show MetaM Unit from do
 
-  -- let e := q(fun x : Int × Int × Int => (x.snd.fst+2 + x.fst, x.fst*2, x.1 + x.2.1 + x.2.2))
-  let e := q(fun ((x,y,z) : Int × Int × Int) => (y+2 + x, x*2, x + y + z))
+  let e := q(fun ((x,y,z) : Int × Int × Int) => (y+2 + x, x*2 + y, x + y + z))
+
+  let .some f ← invertFunction e
+    | return ()
+  IO.println s!"inverse of {← ppExpr f}"
+
+def swap (xy : Int×Int) : Int × Int := (xy.2, xy.1)
+
+#eval show MetaM Unit from do
+
+  let e := q(fun (xyz : Int × Int × Int) => (xyz.1+2 + xyz.2.1 + xyz.2.2, swap xyz.2))
 
   let .some f ← invertFunction e
     | return ()
@@ -337,7 +395,7 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
 open Qq in
 #eval show MetaM Unit from do
 
-  let e := q(fun (x y : Nat) => (x + y, y))
+  let e := q(fun (x y : Nat) => (x + y, y + x))
 
   lambdaTelescope e fun xs b => do
 
@@ -404,3 +462,128 @@ example :
   :=
 by
   intro x; rfl
+
+
+/--
+This comparison is used to select the FVarIdSet with the least number of element but non-empty one! Thus zero size sets are bigger then everything else
+-/
+local instance : Ord (Nat×Expr×FVarIdSet) where
+  compare := fun (_,_,x) (_,_,y) =>
+    match x.size, y.size with
+    | 0, 0 => .eq
+    | 0, _ => .gt
+    | _, 0 => .lt
+    | _, _ => compare x.size y.size
+
+
+/-- Given equations `yᵢ = val x₁ ... xₙ`, express `xᵢ` as functions of `yᵢ`, where `xs = #[x₁,...,xₙ]`, `ys = #[y₁,...,yₙ]` are free variables and `vals = #[val₁,...,valₙ]` are value depending on `xs`
+
+The system of equations has to be of triangular nature, i.e. there is one equation that depends only one one `xᵢ`, next equation can depend only on two `xᵢ`, and so on.
+-/
+partial def invertValues' (xs ys : Array Expr) (vals : Array Expr) : MetaM (Option Expr) := do
+
+  let xIdSet : FVarIdSet := .fromArray (xs.map (fun x => x.fvarId!)) _
+
+  let mut vals ← vals.mapIdxM fun i val => do
+    let varSet : FVarIdSet := -- collect which xi's are used
+      (← (val.collectFVars.run {})) 
+      |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xIdSet
+    pure (i.1,val,varSet)
+
+  let .some x ← call vals {} | return none
+  
+  return x
+where
+
+  resolve (lets : Array (Expr × Expr × Expr)) (zs : Array (Expr × Expr)) : MetaM Expr := do
+
+    if zs.size = lets.size then
+      let lets := lets.reverse
+      let (_, tmp) := lets.unzip
+      let (xs', _) := tmp.unzip
+      let (pxs, zs') := zs.unzip
+
+      let x := (← mkProdElem xs).replaceFVars pxs zs'
+      let x ← mkLambdaFVars (xs' ++ zs') x
+      return x
+
+    let i := zs.size 
+
+    let (x,x',val) := lets[i]!
+
+    let (z,z') := zs.unzip
+    let val := val.replaceFVars z z'
+
+    withLetDecl ((← x.fvarId!.getUserName).appendAfter "''") (← inferType val) val fun z' => do
+
+      resolve lets (zs.push (x, z'))
+
+
+  call (vals : Array (Nat×Expr×FVarIdSet)) 
+       (lets : Array (Expr × Expr × Expr))  -- #[(fvar xi, new fvar xi' resolving xi, new value of xi)]
+    : MetaM (Option Expr) := do
+
+    if (lets.size = xs.size) then
+      return (← resolve lets.reverse #[])
+
+    -- find value that depends only on one variable
+    let (i,val,varSet) := vals.minI
+
+    if varSet.size = 0 then
+      throwError s!"got stuck on val {← ppExpr val} that does not have any free variables"
+    
+    let varArr := varSet.toArray.map Expr.fvar
+    let var := varArr[0]!
+
+    -- invert this value
+    let x' := 
+      if val.isFVar then
+        ys[i]!
+      else
+        ← mkAppM ``Function.invFun #[← mkLambdaFVars #[var] val, ys[i]!]
+  
+    let x' ← mkLambdaFVars varArr[1:] x'
+    IO.println (←ppExpr x')
+
+    withLetDecl ((←var.fvarId!.getUserName).appendAfter "'") (← inferType x') x' fun var' => do
+
+      let val' ← mkAppM' var' varArr[1:]
+      -- let val' := var'
+
+      let varSet := varSet.erase var.fvarId!
+
+      -- remove the variable `var` from all the vales
+      let mut vals := vals
+      for (j,jval,jvarSet) in vals do 
+        if j ≠ i then
+          if jval.containsFVar var.fvarId! then
+            vals := vals.set! j (j, jval.replaceFVar var val', jvarSet.erase var.fvarId! |>.union varSet)
+          else
+            vals := vals.set! j (j, jval.replaceFVar var val', jvarSet.erase var.fvarId!)
+        else
+          vals := vals.set! i (i, default, {})
+
+      call vals (lets.push (var, var', val'))
+
+
+
+#eval show MetaM Unit from do
+
+  let e := q(fun x y z : Int => (y+2 + x + z, x*2 + y*2 + z, x + y + z))
+
+  lambdaTelescope e fun xs b => do
+    let (bs,_) ← decomposeStructure b
+
+    let decls := bs.mapIdx fun i bi => 
+      (Name.appendAfter `y (toString i),
+       default,
+       fun _ => inferType bi)
+
+    withLocalDecls decls fun ys => do
+
+      let .some zs ← invertValues' xs ys bs
+        | throwError "failed"
+      
+      IO.println (← ppExpr zs)
+
+      pure ()
