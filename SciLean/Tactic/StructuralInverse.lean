@@ -160,7 +160,7 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option DomainDecompositio
             match e with
             | .fvar id => pure (.done (if xId == id then xVar else .fvar id)) -- replace
             | e' => pure .continue)
-          (post := fun e => do pure (.done (← whnfR e))) -- clean up projections
+          (post := fun e => do pure (.done (← reduceProjOfCtor e))) -- clean up projections
 
         let usedXi : FVarIdSet := -- collect which xi's are used
           (← (b.collectFVars.run {})) 
@@ -452,6 +452,17 @@ open Qq in
   IO.println (← ppExpr ff.y₂)
 
   let .some ff ← factorDomainThroughProjections ff.f'
+    | return ()
+  IO.println (← ppExpr ff.f')
+  IO.println (← ppExpr ff.dec.p₁)
+  IO.println (← ppExpr ff.dec.p₂)
+
+
+#eval show MetaM Unit from do
+
+  let e := q(fun xy : Int × Int => let a := 2 * xy.1; let b := 2 + xy.1; a + b)
+
+  let .some ff ← factorDomainThroughProjections e
     | return ()
   IO.println (← ppExpr ff.f')
   IO.println (← ppExpr ff.dec.p₁)
