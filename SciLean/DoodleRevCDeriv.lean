@@ -48,6 +48,30 @@ theorem revCDeriv.pi_prod_rule {ι} [EnumType ι]
 by
   sorry_proof
 
+theorem revCDeriv.pi_uncurry_rule {ι κ} [EnumType ι] [EnumType κ]
+  (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (fun x => f x i j))
+  : (<∂ x, fun i j => f x i j)
+    =
+    fun x =>
+      let ydf := <∂ x':=x, fun ij : ι×κ => f x' ij.1 ij.2
+      (fun i j => ydf.1 (i,j), 
+       fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) := 
+by
+  sorry
+
+
+theorem revCDeriv.pi_curry_rule {ι κ} [EnumType ι] [EnumType κ]
+  (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (fun x => f x i j))
+  : (<∂ x, fun ij : ι×κ => f x ij.1 ij.2)
+    =
+    fun x =>
+      let ydf := <∂ x':=x, fun i j => f x' i j
+      (fun ij => ydf.1 ij.1 ij.2, 
+       fun dy => ydf.2 (fun i j => dy (i,j))) := 
+by
+  sorry
+
+
 
 theorem GetElem.getElem.arg_xs.revCDeriv_pi_rule {IX I X} [ArrayType IX I X] [Index I] [SemiInnerProductSpace K X]
   (xs : W → IX) (hxs : HasAdjDiff K xs)
@@ -79,30 +103,33 @@ by
   sorry_proof
 
 
+structure IsDecomposition (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) : Prop where
+  is_dec : 
+    (∀ x, q (p₁ x) (p₂ x) = x)
+    ∧ 
+    (∀ x₁ x₂, p₁ (q x₁ x₂) = x₁ ∧ p₂ (q x₁ x₂) = x₂)
 
 
-theorem revCDeriv.pi_uncurry_rule {ι κ} [EnumType ι] [EnumType κ]
-  (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (fun x => f x i j))
-  : (<∂ x, fun i j => f x i j)
+theorem GetElem.getElem.arg_xs.revCDeriv_pi_rule_bb {IX I J X J₁ J₂ : Type _} [ArrayType IX I X] [Index I] [EnumType J] [Nonempty J] [EnumType J₁] [EnumType J₂] [SemiInnerProductSpace K X]
+  (xs : W → IX) (h : J → I) (h' : J₁ → I)
+  (p₁ : J → J₁) (p₂ : J → J₂) (q : J₁ → J₂ → J)
+  (hxs : HasAdjDiff K xs) (hdec : ∀ j, h' (p₁ j) = h j) (isDec : IsDecomposition p₁ p₂ q)
+  : (<∂ w, fun j => (xs w)[h j])
     =
-    fun x =>
-      let ydf := <∂ x':=x, fun ij : ι×κ => f x' ij.1 ij.2
-      (fun i j => ydf.1 (i,j), 
-       fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) := 
+    fun w => 
+      let xdx := <∂ w':=w, fun j₁ => (xs w')[h' j₁]
+      (fun j : J => xdx.1 (p₁ j), 
+       fun dx => 
+         let dx := fun j₁ => ∑ j₂, dx (q j₁ j₂)
+         xdx.2 dx) := 
 by
-  sorry
+  ftrans
+  funext x
+  simp [hdec]
+  funext dy
+  sorry_proof
 
 
-theorem revCDeriv.pi_curry_rule {ι κ} [EnumType ι] [EnumType κ]
-  (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (fun x => f x i j))
-  : (<∂ x, fun ij : ι×κ => f x ij.1 ij.2)
-    =
-    fun x =>
-      let ydf := <∂ x':=x, fun i j => f x' i j
-      (fun ij => ydf.1 ij.1 ij.2, 
-       fun dy => ydf.2 (fun i j => dy (i,j))) := 
-by
-  sorry
 
 
 theorem revCDeriv.pi_swap_rule {ι κ} [EnumType ι] [EnumType κ]
