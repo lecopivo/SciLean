@@ -171,6 +171,25 @@ def bvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Ste
   | _ => return none
 
 
+/-- Try to prove `FProp fun x => f x i` as composition `fun f => f i` `fun x => f x`
+-/
+def tryRemoveArg (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Step) := do
+  match f with
+  | .lam xName xType (.app g a) xBi => do
+
+    if a.hasLooseBVars then 
+      return none
+
+    withLocalDecl xName xBi xType fun x => do
+      let g := g.instantiate1 x
+
+      let f' := Expr.lam `f (← inferType g) ((Expr.bvar 0).app a) default
+      let g' ← mkLambdaFVars #[x] g
+
+      ext.compRule e f' g'
+
+  | _ => throwError "expected expression of the form `fun x => f x i`"
+
 
 /-- Try to apply function transformation to `e`. Returns `none` if expression is not a function transformation applied to a function.
   -/
@@ -223,6 +242,13 @@ partial def main (e : Expr) : SimpM (Option Simp.Step) := do
           let .some projName :=info.getProjFn? idx | return none
           constAppStep e ftransName ext projName (pure none)
         | .const funName _ =>
+          let numArgs := xBody.getAppNumArgs
+          let arity ← getConstArity funName
+          if numArgs > arity then
+            trace[Meta.Tactic.ftrans.step] s!"const app step, tring projection rule as number of arguments({numArgs}) is bigger then constant's({funName}) arity ({arity})"
+            let .some step ← tryRemoveArg e ext f' | pure ()
+            return step
+
           trace[Meta.Tactic.ftrans.step] "case const app `{funName}`.\n{← ppExpr e}"
           constAppStep e ftransName ext funName 
             (do -- no candidates call
