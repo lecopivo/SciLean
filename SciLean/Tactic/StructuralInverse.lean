@@ -2,6 +2,7 @@ import SciLean.Lean.Expr
 import SciLean.Lean.Meta.Basic
 
 import SciLean.Tactic.LetNormalize
+import SciLean.Util.RewriteBy
 import Mathlib.Logic.Function.Basic
 
 namespace SciLean
@@ -344,6 +345,9 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
       if xis.size == 1 then
         return none
 
+      if xis.size ≠ yis.size then
+        return none
+
       -- introduce new free variable for each `xi`
       let decls := (xis.mapIdx fun i xi => (xName.appendAfter (toString i), xBi, fun _ => inferType xi))
       withLocalDecls decls fun xiVars => do
@@ -464,109 +468,6 @@ by
   intro x; rfl
 
 
-/--
-This comparison is used to select the FVarIdSet with the least number of element but non-empty one! Thus zero size sets are bigger then everything else
--/
-local instance : Ord (Nat×Expr×FVarIdSet) where
-  compare := fun (_,_,x) (_,_,y) =>
-    match x.size, y.size with
-    | 0, 0 => .eq
-    | 0, _ => .gt
-    | _, 0 => .lt
-    | _, _ => compare x.size y.size
-
-
-/-- Given equations `yᵢ = val x₁ ... xₙ`, express `xᵢ` as functions of `yᵢ`, where `xs = #[x₁,...,xₙ]`, `ys = #[y₁,...,yₙ]` are free variables and `vals = #[val₁,...,valₙ]` are value depending on `xs`
-
-The system of equations has to be of triangular nature, i.e. there is one equation that depends only one one `xᵢ`, next equation can depend only on two `xᵢ`, and so on.
--/
-partial def invertValues' (xs ys : Array Expr) (vals : Array Expr) : MetaM (Option Expr) := do
-
-  let xIdSet : FVarIdSet := .fromArray (xs.map (fun x => x.fvarId!)) _
-
-  let mut vals ← vals.mapIdxM fun i val => do
-    let varSet : FVarIdSet := -- collect which xi's are used
-      (← (val.collectFVars.run {})) 
-      |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xIdSet
-    pure (i.1,val,varSet)
-
-  let .some x ← call vals {} | return none
-  
-  return x
-where
-
-  resolve (lets : Array (Expr × Expr × Expr)) (zs : Array (Expr × Expr)) : MetaM Expr := do
-
-    if zs.size = lets.size then
-      let lets := lets.reverse
-      let (_, tmp) := lets.unzip
-      let (xs', _) := tmp.unzip
-      let (pxs, zs') := zs.unzip
-
-      let x := (← mkProdElem xs).replaceFVars pxs zs'
-      let x ← mkLambdaFVars (xs' ++ zs') x
-      return x
-
-    let i := zs.size 
-
-    let (x,x',val) := lets[i]!
-
-    let (z,z') := zs.unzip
-    let val := val.replaceFVars z z'
-
-    withLetDecl ((← x.fvarId!.getUserName).appendAfter "''") (← inferType val) val fun z' => do
-
-      resolve lets (zs.push (x, z'))
-
-
-  call (vals : Array (Nat×Expr×FVarIdSet)) 
-       (lets : Array (Expr × Expr × Expr))  -- #[(fvar xi, new fvar xi' resolving xi, new value of xi)]
-    : MetaM (Option Expr) := do
-
-    if (lets.size = xs.size) then
-      return (← resolve lets.reverse #[])
-
-    -- find value that depends only on one variable
-    let (i,val,varSet) := vals.minI
-
-    if varSet.size = 0 then
-      throwError s!"got stuck on val {← ppExpr val} that does not have any free variables"
-    
-    let varArr := varSet.toArray.map Expr.fvar
-    let var := varArr[0]!
-
-    -- invert this value
-    let x' := 
-      if val.isFVar then
-        ys[i]!
-      else
-        ← mkAppM ``Function.invFun #[← mkLambdaFVars #[var] val, ys[i]!]
-  
-    let x' ← mkLambdaFVars varArr[1:] x'
-    IO.println (←ppExpr x')
-
-    withLetDecl ((←var.fvarId!.getUserName).appendAfter "'") (← inferType x') x' fun var' => do
-
-      let val' ← mkAppM' var' varArr[1:]
-      -- let val' := var'
-
-      let varSet := varSet.erase var.fvarId!
-
-      -- remove the variable `var` from all the vales
-      let mut vals := vals
-      for (j,jval,jvarSet) in vals do 
-        if j ≠ i then
-          if jval.containsFVar var.fvarId! then
-            vals := vals.set! j (j, jval.replaceFVar var val', jvarSet.erase var.fvarId! |>.union varSet)
-          else
-            vals := vals.set! j (j, jval.replaceFVar var val', jvarSet.erase var.fvarId!)
-        else
-          vals := vals.set! i (i, default, {})
-
-      call vals (lets.push (var, var', val'))
-
-
-
 #eval show MetaM Unit from do
 
   let e := q(fun x y z : Int => (y+2 + x + z, x*2 + y*2 + z, x + y + z))
@@ -581,9 +482,39 @@ where
 
     withLocalDecls decls fun ys => do
 
-      let .some zs ← invertValues' xs ys bs
+      let .some zs ← invertValues xs ys bs
         | throwError "failed"
       
       IO.println (← ppExpr zs)
 
       pure ()
+
+
+
+syntax (name := invert_fun_conv) "invert_fun" : conv
+
+open Lean Elab Tactic Conv in
+@[tactic invert_fun_conv] 
+def convInvertFun : Tactic
+| `(conv| invert_fun) => do
+  (← getMainGoal).withContext do
+
+    let lhs ← getLhs
+
+    let .some lhs' ← invertFunction lhs
+      | return ()
+
+    updateLhs lhs' (← mkSorry (← mkEq lhs lhs') false)
+
+| _ => Lean.Elab.throwUnsupportedSyntax
+
+
+
+
+#check 
+  (fun ((x,y,z) : Float × Float × Float) => (y+2 + x + z, x*2 + y*2 + z, x + y + z))
+  rewrite_by
+    simp
+
+
+
