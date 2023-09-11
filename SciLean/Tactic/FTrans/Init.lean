@@ -60,9 +60,24 @@ structure FTransExt where
   /-- Custom rule for transforming `fun x => let y := g x; f x y` -/
   letRule     (expr f g : Expr) : SimpM (Option Simp.Step)
   /-- Custom rule for transforming `fun x y => f x y` -/
-  piRule      (expr f : Expr) : SimpM (Option Simp.Step)
+  piRule      (expr f : Expr) : SimpM (Option Simp.Step) 
+
+  useRefinedPiRules := false
+  /-- Custom rule for transforming `fun x (y : Y) => f x` -/
+  piConstRule      (expr f Y : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x y z => f x y z` -/
+  piUncurryRule    (expr f : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x y => f (g x y) y` -/
+  piCompRule       (expr f g : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x y => let a := g x y; f x a y` -/
+  piLetRule        (expr f g : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x y => f (g x y)` -/
+  piSimpleCompRule (expr f g : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x y => f x y` if it can be written as `fun x y => f' x (p₁ y)` where `h : IsDecomposition p₁ p₂ q` -/
+  piFactorizeRule  (expr f' p₁ h : Expr) : SimpM (Option Simp.Step) := return none
+
   /-- Custom discharger for this function transformation -/
-  discharger       : Expr → SimpM (Option Expr)
+  discharger : Expr → SimpM (Option Expr)
   prodMk  := ``Prod.mk
   prodFst := ``Prod.fst
   prodSnd := ``Prod.snd
