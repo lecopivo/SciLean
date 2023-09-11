@@ -1,3 +1,5 @@
+import SciLean.Core.FunctionPropositions
+import SciLean.Core.FunctionTransformations
 import SciLean.Data.ArrayType.Algebra
 
 open SciLean

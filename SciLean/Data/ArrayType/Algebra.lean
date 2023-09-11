@@ -1,4 +1,4 @@
-import SciLean.Core
+import SciLean.Core.Objects.FinVec
 import SciLean.Data.ArrayType.Basic
 
 namespace SciLean 
