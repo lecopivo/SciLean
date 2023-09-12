@@ -80,6 +80,30 @@ partial def splitLetProd? (e : Expr) : Option Expr := do
 partial def splitLetProd (e : Expr) : Option Expr := e.splitLetProd?.getD e
 
 
+def _root_.Lean.Expr.mapLooseBVarIds (e : Expr) (f : Nat → Option Nat) (offset : Nat := 0) : Expr :=
+  if e.looseBVarRange ≤ offset then
+    e 
+  else
+    match e with
+    | .bvar i => 
+      if offset ≤ i then
+        match f (i-offset) with
+        | .some i' => .bvar (i' + offset)
+        | .none => .bvar i
+      else
+        .bvar i
+    | .proj typeName idx e => .proj typeName idx (e.mapLooseBVarIds f offset)
+    | .letE name type val body d =>
+      .letE name (type.mapLooseBVarIds f offset) (val.mapLooseBVarIds f offset) (body.mapLooseBVarIds f (offset+1)) d
+    | .forallE name type body bi => 
+      .forallE name (type.mapLooseBVarIds f offset) (body.mapLooseBVarIds f (offset+1)) bi
+    | .lam name type body bi => 
+      .lam name (type.mapLooseBVarIds f offset) (body.mapLooseBVarIds f (offset+1)) bi
+    | .app f' x => 
+      .app (f'.mapLooseBVarIds f offset) (x.mapLooseBVarIds f offset)
+    | .mdata data e => 
+      .mdata data (e.mapLooseBVarIds f offset)
+    | e => e
 
 /--
   Swaps bvars indices `i` and `j`
