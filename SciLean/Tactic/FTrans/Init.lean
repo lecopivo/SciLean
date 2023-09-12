@@ -10,6 +10,7 @@ import SciLean.Util.SorryProof
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
 
+import SciLean.Tactic.StructuralInverse
  
 open Lean Meta.Simp Qq
 
@@ -40,8 +41,36 @@ initialize registerOption `linter.ftransDeclName { defValue := true, descr := "s
 
 open Meta Simp
 
+def _root_.Function.Inverse (g : β → α) (f : α → β) :=
+  Function.LeftInverse g f ∧ Function.RightInverse g f
 
 
+/-- Data for `fun x i => f x (h i)` case when `h` is invertible
+-/
+structure PiInvData where
+  -- {u v w u' v' w' : Level}
+  {X Y I I₁ I₂ J : Q(Type)}
+  (f : Q($X → $J → $Y))
+  (h  : Q($I → $J))
+  (h' : Q($J → $I))
+  (is_inverse : Q(Function.Inverse $h' $h))
+
+/-- Data for `fun x i => f x (h i)` case when `h` admits left inverse/is surjective
+
+The domain of `h` is decomposed into `I₁×I₂` and inverse `h'` between `I₂` and `J` is provided
+-/
+structure PiLInvData where
+  -- {u v w u' v' w' : Level}
+  {X Y I I₁ I₂ J : Q(Type)}
+  (f : Q($X → $J → $Y))
+  (h  : Q($I → $J))
+  (h' : Q($I₁ → $J → $I₂))
+  (p₁ : Q($I → $I₁))
+  (p₂ : Q($I → $I₂))
+  (q  : Q($I₁ → $I₂ → $I))
+  (is_dec : Q(IsDecomposition $p₁ $p₂ $q))
+  (is_inverse : Q(∀ i₁, Function.Inverse ($h' i₁) (fun i₂ => $h ($q i₁ i₂))))
+  
 structure FTransExt where
   /-- Function transformation name -/
   ftransName : Name
@@ -63,19 +92,23 @@ structure FTransExt where
   piRule      (expr f : Expr) : SimpM (Option Simp.Step) 
 
   useRefinedPiRules := false
-  /-- Custom rule for transforming `fun x (y : Y) => f x` -/
-  piConstRule      (expr f Y : Expr) : SimpM (Option Simp.Step) := return none
-  /-- Custom rule for transforming `fun x y z => f x y z` -/
+  /-- Custom rule for transforming `fun (x : I → X) (i : I) => x i` -/
+  piIdRule         (expr X I : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x (i : I) => f x` -/
+  piConstRule      (expr f I : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x i j => f x i j` -/
   piUncurryRule    (expr f : Expr) : SimpM (Option Simp.Step) := return none
-  /-- Custom rule for transforming `fun x y => f (g x y) y` -/
+  /-- Custom rule for transforming `fun x i => f (g x i) i` -/
   piCompRule       (expr f g : Expr) : SimpM (Option Simp.Step) := return none
-  /-- Custom rule for transforming `fun x y => let a := g x y; f x a y` -/
+  /-- Custom rule for transforming `fun x i => let y := g x i; f x y i` -/
   piLetRule        (expr f g : Expr) : SimpM (Option Simp.Step) := return none
-  /-- Custom rule for transforming `fun x y => f (g x y)` -/
+  /-- Custom rule for transforming `fun x i => f (g x i)` -/
   piSimpleCompRule (expr f g : Expr) : SimpM (Option Simp.Step) := return none
-  /-- Custom rule for transforming `fun x y => f x y` if it can be written as `fun x y => f' x (p₁ y)` where `h : IsDecomposition p₁ p₂ q` -/
-  piFactorizeRule  (expr f' p₁ h : Expr) : SimpM (Option Simp.Step) := return none
-
+  /-- Custom rule for transforming `fun x i => f x (h i)` when `h` has inverse -/
+  piInvRule  (expr : Expr) (data : PiInvData) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x i => f x (h i)` when `h` has left inverse  -/
+  piLInvRule (expr : Expr) (data : PiLInvData) : SimpM (Option Simp.Step) := return none
+  
   /-- Custom discharger for this function transformation -/
   discharger : Expr → SimpM (Option Expr)
   prodMk  := ``Prod.mk
