@@ -832,6 +832,70 @@ by
   sorry_proof
 
 
+
+
+set_option trace.Meta.Tactic.fprop.unify true in
+
+
+example 
+  : <∂ (fun w j => 
+            let a := (2:K) * (x w)[j]
+            let b := (2:K) + (x w)[j]
+            a + b)
+    =
+    0 := 
+by   
+  simp (config := {zeta:=false}) only [revCDeriv.revCDeriv.pi_let_rule K (fun w a j => let b := (2:K) + (x w)[j]; a + b) (fun w j => (2:K) * (x w)[j]) sorry sorry]
+
+  simp (config := {zeta:=false}) only [revCDeriv.revCDeriv.pi_let_rule K (fun (wx : W×(κ→K)) (b : K) j =>  wx.2 j + b) (fun (wx : W×(κ→K)) j => (2:K) + (x wx.1)[j]) sorry sorry]
+
+  simp (config := {zeta:=false}) only [revCDeriv.revCDeriv.pi_comp_rule K (fun (xy : K×K) j => xy.1 + xy.2) (fun (wx : (W×(κ→K))×(κ→K)) j => (Prod.snd wx.fst j, Prod.snd wx j)) sorry sorry]
+
+  let_normalize (config := {removeLambdaLet := false})
+
+  -- conv =>
+  --   enter_let ydg
+  --   autodiff
+  --   unfold gradient
+  --   autodiff
+  --   let_normalize (config := {removeLambdaLet := false, removeNoFVarLet:=true})
+  -- let_normalize
+
+  -- checkpoint
+  
+  -- conv =>
+  --   enter_let ydg
+  --   autodiff
+  --   unfold gradient
+  --   autodiff
+  --   let_normalize (config := {removeLambdaLet := false, removeNoFVarLet:=true})
+  -- let_normalize
+
+  -- checkpoint
+
+  -- autodiff
+  -- conv =>
+  --   enter [a]
+  --   lhs
+  --   enter [w,a,b]
+  --   enter_let zdf
+  --   autodiff
+  
+    
+  -- let_normalize
+  -- ftrans
+  -- unfold gradient
+  -- ftrans
+  -- let_normalize (config := {removeLambdaLet := false})
+  -- let_normalize (config := {removeLambdaLet := false})
+  
+  -- ftrans
+
+  
+  -- rw[h]
+  -- simp (config := {zeta:=false}) only [revCDeriv.revCDeriv.pi_let_rule _ (fun w a j => let b := 2 + (x w)[j]; a + b) (fun w j => 2 * (x w)[j]) sorry sorry]
+
+
 #eval show MetaM Unit from do 
   withLocalDeclQ `x default q(Float → DataArrayN Float (Idx 10)) fun x => do
   let e := q(fun w i => ($x w)[i])
