@@ -264,8 +264,14 @@ where
       let (xs', _) := tmp.unzip
       let (pxs, zs') := zs.unzip
 
+      let xIdSet : FVarIdSet := .fromArray (xs.map (fun x => x.fvarId!)) _
+      let resolvedIdSet : FVarIdSet := .fromArray (pxs.map (fun x => x.fvarId!)) _
+      let unresolvedIdSet := xIdSet.diff resolvedIdSet
+      let uxs := unresolvedIdSet.toArray.map Expr.fvar
+
       let x := (← mkProdElem xs).replaceFVars pxs zs'
-      let x ← mkLambdaFVars (xs' ++ zs') x
+      let x ← mkLambdaFVars (uxs ++ xs' ++ zs') x
+      let x ← mkUncurryFun uxs.size x
       return x
 
     let i := zs.size 
@@ -284,14 +290,12 @@ where
        (lets : Array (Expr × Expr × Expr))  -- #[(fvar xi, new fvar xi' resolving xi, new value of xi)]
     : MetaM (Option Expr) := do
 
-    if (lets.size = xs.size) then
-      return (← resolve lets.reverse #[])
-
     -- find value that depends only on one variable
     let (i,val,varSet) := vals.minI
 
+    -- not valid value to resolve anymore 
     if varSet.size = 0 then
-      throwError s!"got stuck on val {← ppExpr val} that does not have any free variables"
+      return (← resolve lets.reverse #[])
     
     let varArr := varSet.toArray.map Expr.fvar
     let var := varArr[0]!
@@ -345,7 +349,7 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
       if xis.size == 1 then
         return none
 
-      if xis.size ≠ yis.size then
+      if xis.size < yis.size then
         return none
 
       -- introduce new free variable for each `xi`
@@ -379,7 +383,7 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
 
 #eval show MetaM Unit from do
 
-  let e := q(fun ((x,y,z) : Int × Int × Int) => (y+2 + x, x*2 + y, x + y + z))
+  let e := q(fun ((x,y,z) : Int × Int × Int) => (x*2 + y))
 
   let .some f ← invertFunction e
     | return ()
@@ -399,13 +403,13 @@ def swap (xy : Int×Int) : Int × Int := (xy.2, xy.1)
 open Qq in
 #eval show MetaM Unit from do
 
-  let e := q(fun (x y : Nat) => (x + y, y + x))
+  let e := q(fun (x y z : Nat) => (x + z, x + y + z, y))
 
   lambdaTelescope e fun xs b => do
 
     let (bs, _) ← decomposeStructure b
 
-    let decls := bs.mapIdx (fun i bi => (Name.appendAfter `y (toString i),default,fun _ => inferType bi))
+    let decls := bs.mapIdx (fun i bi => (Name.appendAfter `y (toString i), default, fun _ => inferType bi))
 
     withLocalDecls decls fun ys => do
 
@@ -521,11 +525,12 @@ def convInvertFun : Tactic
 
 
 
-
-#check 
-  (fun ((x,y,z) : Float × Float × Float) => (y+2 + x + z, x*2 + y*2 + z, x + y + z))
-  rewrite_by
-    simp
-
-
-
+example 
+  : (fun ((x,y,z) : Float × Float × Float) => (y+2 + x + z, x*2 + y*2 + z, x+y+z))
+    =
+    fun x => x :=
+by
+  conv => 
+    lhs
+    invert_fun
+  sorry
