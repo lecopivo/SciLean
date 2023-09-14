@@ -218,24 +218,26 @@ def piLetCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr)
         trace[Meta.Tactic.ftrans.rewrite] "removing unused let\n{← ppExpr e}\n==>\n{← ppExpr e'}"
         return ← ftrans e'
 
+      -- -- removes `let y := x i`
+      -- -- This is higly dubuious hack to preven certain infinite for loop
+      -- if let .app (.bvar _) (.bvar _) := yValue then
+      --   let f' := (body.instantiate1 yValue)
+      --   let f' := Expr.lam iName iType f' iBi
+      --   let f' := Expr.lam xName xType f' xBi
+      --   let e' := ext.replaceFTransFun e f'
+      --   trace[Meta.Tactic.ftrans.rewrite] "removing trivial let\n{← ppExpr e}\n==>\n{← ppExpr e'}"
+      --   return ← ftrans e'
 
-      if let .app (.bvar _) (.bvar _) := yValue then
-        let f' := (body.instantiate1 yValue)
-        let f' := Expr.lam iName iType f' iBi
-        let f' := Expr.lam xName xType f' xBi
-        let e' := ext.replaceFTransFun e f'
-        trace[Meta.Tactic.ftrans.rewrite] "removing trivial let\n{← ppExpr e}\n==>\n{← ppExpr e'}"
-        return ← ftrans e'
-
-      -- This is higly dubuious hack to preven certain infinite for loop
-      if let .app (Expr.mkApp3 (.const name _) _ _ (.bvar _)) (.bvar _) := yValue then
-        if name == ``Prod.snd then
-        let f' := (body.instantiate1 yValue)
-        let f' := Expr.lam iName iType f' iBi
-        let f' := Expr.lam xName xType f' xBi
-        let e' := ext.replaceFTransFun e f'
-        trace[Meta.Tactic.ftrans.rewrite] "removing trivial let\n{← ppExpr e}\n==>\n{← ppExpr e'}"
-        return ← ftrans e'
+      -- -- removes `let y := Prod.snd x i`
+      -- -- This is higly dubuious hack to preven certain infinite for loop
+      -- if let .app (Expr.mkApp3 (.const name _) _ _ (.bvar _)) (.bvar _) := yValue then
+      --   if name == ``Prod.snd then
+      --   let f' := (body.instantiate1 yValue)
+      --   let f' := Expr.lam iName iType f' iBi
+      --   let f' := Expr.lam xName xType f' xBi
+      --   let e' := ext.replaceFTransFun e f'
+      --   trace[Meta.Tactic.ftrans.rewrite] "removing trivial let\n{← ppExpr e}\n==>\n{← ppExpr e'}"
+      --   return ← ftrans e'
 
       match (yValue.hasLooseBVar 1), (yValue.hasLooseBVar 0) with
       -- let y := constant
@@ -267,15 +269,23 @@ def piLetCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr)
         -- body always depend on `y` otherwise we deal with it earlier
         match (body.hasLooseBVar 2), (body.hasLooseBVar 1) with
         -- let y := g x i; f y
-        -- let y := g x i; f y i
-        | false, false | false, true => 
+        | false, false =>
+          let f := 
+            Expr.lam yName yType (binderInfo := default)
+              (body.lowerLooseBVars 1 1)
+
+            trace[Meta.Tactic.ftrans.step] "case `T fun x i => let y := g x i; f y` \n{← ppExpr e}"
+            return ← ext.piElemWiseCompRule e f g
+
+        -- T fun x i => let y := g x i; f y i
+        | false, true => 
           -- right now there does not seem to be the need to distinguish between these two cases
           let f := 
             Expr.lam yName yType (binderInfo := default)
               (.lam iName iType (binderInfo := iBi)
                 (body.mapLooseBVarIds #[1,0].get?))
 
-          trace[Meta.Tactic.ftrans.step] "case pi comp\n{← ppExpr e}"
+          trace[Meta.Tactic.ftrans.step] "case `T fun x i => let y := g x i; f y i` \n{← ppExpr e}"
           return ← ext.piCompRule e f g
 
         -- let y := g x i; f x y
@@ -322,13 +332,43 @@ def piCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (ftrans :
       | .letE .. => 
         piLetCase e ftransName ext f ftrans
       | body => 
-        -- try decompose as  f (g x) i
 
-        -- try decompose as  f x (h i)
+        if body.isAppOfArity ``Prod.mk 4 then
+          let g₁ := Expr.lam xName xType (.lam iName iType (body.getArg! 2) iBi) xBi
+          let g₂ := Expr.lam xName xType (.lam iName iType (body.getArg! 3) iBi) xBi
+          return ← ext.piProdRule e g₁ g₂
 
-        return none
+        -- eta reduction if possible
+        if let .app f' (.bvar 0) := body then 
+          if ¬(f'.hasLooseBVar 0) then
+            let f' := Expr.lam xName xType (f'.lowerLooseBVars 1 1) xBi
+            let e' := ext.replaceFTransFun e f'
+            return ← ftrans e'
+
+
+        let (f',g') ← splitHighOrderLambdaToComp f
+        trace[Meta.Tactic.ftrans.step] "case pi comp\n{← ppExpr e}\n{← ppExpr f}\n{←ppExpr f'}\n{← isDefEq f' f}"
+        -- nontrivial split!
+        if ¬(← isDefEq f' f) then
+          return ← ext.compRule e f' g'
+
+        
+        -- if body is appropriate application of constant we convert to pointwise transformation
+        matchConst body.getAppFn (fun _ => return none)
+          fun info _ => do
+            let constArity := info.type.forallArity
+            let args := body.getAppArgs
+
+            if args.size == constArity then
+              let (f',g') ← elemWiseSplitHighOrderLambdaToComp f
+  
+              if ¬(← isDefEq g' f) then
+                return ← ext.piElemWiseCompRule e f' g'
+
+            return none
+
+        -- return none
     | _ => throwError "expected expression of the form `fun x i => f x i`"
-
 
 
 /-- Try to apply function transformation to `e`. Returns `none` if expression is not a function transformation applied to a function.

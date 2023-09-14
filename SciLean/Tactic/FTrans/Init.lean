@@ -98,8 +98,12 @@ structure FTransExt where
   piConstRule      (expr f I : Expr) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i j => f x i j` -/
   piUncurryRule    (expr f : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x i => (f x i, g x i)` -/
+  piProdRule    (expr f g : Expr) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i => f (g x i) i` -/
   piCompRule       (expr f g : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x i => f (g x i) i` -/
+  piElemWiseCompRule       (expr f g : Expr) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i => let y := g x i; f x y i` -/
   piLetRule        (expr f g : Expr) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i => f (g x i)` -/

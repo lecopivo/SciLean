@@ -1,9 +1,9 @@
 import SciLean.Core.FunctionTransformations.RevCDeriv
 import SciLean.Core.Notation.RevCDeriv
 import SciLean.Core.FloatAsReal
+import SciLean.Util.Limit
 
 open SciLean
-
 
 variable 
   {K : Type} [RealScalar K]
@@ -21,6 +21,10 @@ variable
 
 set_default_scalar K 
 
+
+open LimitNotation
+
+instance {K X} [Inv K] [HSMul K X X] : HDiv X K X := ⟨fun x r => r⁻¹ • x⟩
 
 -- set_option trace.Meta.Tactic.simp.unify true
 -- set_option trace.Meta.Tactic.simp.discharge true
@@ -49,7 +53,7 @@ by
     ftrans only
 
 
-set_option trace.Meta.Tactic.ftrans.step true 
+
 example (f : X → κ → Y) (hf : ∀ j, HasAdjDiff K (f · j))
   : (revCDeriv K fun x (i : ι) (j : κ) => f x j)
     =
@@ -62,7 +66,7 @@ by
     lhs
     ftrans only
 
-set_option trace.Meta.Tactic.ftrans.rewrite true 
+
 example (g : ι → Y) (h : ι → X → Y)
   : revCDeriv K (fun (x : X) (i : ι) => let y := 2 • x; g i)
     =
@@ -83,7 +87,6 @@ theorem asdf' (g : X → K) : HasAdjDiff K (fun x => foo (g x)) := sorry
 @[ftrans] 
 theorem asdf (g : X → K) : revCDeriv K (fun x => foo (g x)) = fun x => let ydg := revCDeriv K g x; (foo ydg.1, fun dz => ydg.2 (fooD ydg.1 dz)) := sorry
 
-set_option trace.Meta.Tactic.simp.rewrite true
 example (f : K → K) (hf : HasAdjDiff K f)
   : revCDeriv K (fun (x : ι →  K) (i : ι)=> 
       let x₁ := foo (x i)
@@ -100,11 +103,29 @@ by
     ftrans
     let_normalize
     let_normalize
+    let_normalize
+
+
+example (f : K → ι → K) (hf : ∀ i,  HasAdjDiff K (f · i))
+  : revCDeriv K (fun (x : K) (i : ι)=> 
+      let x₁ := foo (2 * f x i)
+      let x₂ := foo x₁
+      let x₃ := foo x₂
+      let x₄ := foo x₃
+      let x₅ := foo x₄
+      x₅)
+    =
+    0 :=
+by
+  conv =>
+    lhs
+    ftrans
+    let_normalize
+    let_normalize
+    let_normalize
 
 
 
-
-set_option trace.Meta.Tactic.simp.rewrite true
 example {K} [RealScalar K]
   : revCDeriv K (fun (x : K) => 
       let x₁ := x * x; 
@@ -123,7 +144,60 @@ by
     let_normalize
 
 
-set_option trace.Meta.Tactic.simp.rewrite true
+example {K} [RealScalar K]
+  : revCDeriv K (fun (x : K) => 
+      let x₁ := x + x; 
+      let x₂ := x₁ + x; 
+      let x₃ := x₂ + x; 
+      let x₄ := x₃ + x; 
+      let x₅ := x₄ + x; 
+      x₅)
+    =
+    0 :=
+by
+  conv =>
+    lhs
+    ftrans
+    let_normalize 
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+
+
+example {K} [RealScalar K] (f : K → K) (hf : HasAdjDiff K f)
+  : revCDeriv K (fun (x : K) => 
+      let x₁ := f x; 
+      let x₂ := x₁ * x₁; 
+      let x₃ := x₂ * x₁; 
+      let x₄ := x₃ * x₁; 
+      let x₅ := x₄ * x₁; 
+      x₅)
+    =
+    0 :=
+by
+  conv =>
+    lhs
+    ftrans
+    let_normalize 
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+    let_normalize
+    simp (config := {zeta:=false})
+    
+
+
+
 example {K} [RealScalar K]
   : revCDeriv Float (fun (x : Float) => 
       let x₁ := x * x; 
@@ -149,11 +223,46 @@ by
     let_normalize (config := {removeNoFVarLet:=true})
     simp (config := {zeta:=false})
     let_normalize (config := {removeNoFVarLet:=true})
+    simp
     -- simp (config := {zeta:=false})
     -- let_normalize (config := {removeNoFVarLet:=true})
     -- simp (config := {zeta:=false})
     -- let_normalize (config := {removeNoFVarLet:=true})
 
+set_option trace.Meta.Tactic.simp.rewrite true
+-- set_option trace.Meta.Tactic.simp.unify true
+-- set_option trace.Meta.Tactic.simp.discharge true
+
+example 
+  : revCDeriv Float (fun (xy : (Fin 10 → Float)×(Fin 10 → Float)) i => xy.1 i)
+    =
+    fun xy => 
+      (fun i => xy.1 i,
+       fun dz => 
+         (fun i => dz i, 0)):=
+by
+  conv => 
+    lhs
+    ftrans only
+
+
+example 
+  : revCDeriv Float (fun (x : Fin 10 → Float) (i : Fin 10) => i * x i * x i)
+    =
+    0 :=
+by
+  conv =>
+    lhs
+    ftrans only
+    let_normalize (config := {removeFVarProjLet := false})
+    simp (config := {zeta := false})
+    let_normalize (config := {removeFVarProjLet := false})
+    simp (config := {zeta := false})
+    let_normalize (config := {removeFVarProjLet := false})
+    simp (config := {zeta := false})
+
+    -- ftrans only
+  sorry_proof
 
 set_option trace.Meta.Tactic.simp.rewrite true
 example 
@@ -168,6 +277,7 @@ by
   conv =>
     lhs
     ftrans
+    let_normalize
     let_normalize
 
 
@@ -185,6 +295,7 @@ by
   conv =>
     lhs
     ftrans only
+    let_normalize
     let_normalize
 
 

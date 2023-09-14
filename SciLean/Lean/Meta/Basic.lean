@@ -252,6 +252,180 @@ def splitLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := `
   | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
 
+inductive LambdaSplit where
+  /-- Result of splitting a lambda function as `fun x => f (g x)` -/
+  | comp (f g : Expr) 
+  /-- Result of splitting a lambda function as `fun x i₁ ... iₙ => f (g x i₁ ... iₙ)` -/
+  | piComp (f g : Expr) (comp : Expr → Expr → Expr)
+
+/-- 
+This function decomposes function as
+```
+fun x i₁ .. iₙ => b
+=
+fun x i₁ ... iₙ => f (g x) i₁ ... iₙ
+=
+f ∘ g
+```
+
+For example, for `f' : Y → I → Z` and `g' : X → I → Y`
+```
+fun x i => f' (g' x i) i
+=
+fun x i => f'' (g' x) i
+=
+f'' ∘ g'
+```
+where `f'' = fun (y' : I → Y) i => f' (y' i) i`
+-/
+def splitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Expr × Expr) := do
+  match e with 
+  | .lam name _ _ _ => 
+    let e ← instantiateMVars e
+    lambdaTelescope e λ xs b => do
+      let x := xs[0]!
+      let b := b.instantiate1 x
+      let xId := x.fvarId!
+
+      let ys := b.getAppArgs
+      let mut f := b.getAppFn
+
+      let mut lctx ← getLCtx
+      let instances ← getLocalInstances
+
+      -- trailing arguments
+      let is := xs[1:].toArray
+
+      -- `ys` that depend on `x`
+      let mut ys' : Array Expr := #[]
+      -- `ys` that depend on `x` and all `is` that appear are turned into lambda
+      let mut ys'' : Array Expr := #[]
+      -- fvars for `y` that are abstracted over `is`
+      let mut yFVars : Array Expr := #[]
+      -- `yVars` with corresponding `is` applied
+      let mut yVals  : Array Expr := #[]
+
+      if f.containsFVar xId then
+        let is' := is.filter (fun i => f.containsFVar i.fvarId!)
+        let yFVarType ← mkLambdaFVars is' (← inferType f)
+        let yId ← withLCtx lctx instances mkFreshFVarId
+        lctx := lctx.mkLocalDecl yId (name) yFVarType
+        let yFVar := Expr.fvar yId
+        let yVal ← mkAppM' yFVar is'
+        yFVars := yFVars.push yFVar
+        yVals := yVals.push yVal
+        ys' := ys'.push f
+        ys'' := ys''.push (← mkLambdaFVars is' f)
+        f := yVal
+
+      for y in ys, i in [0:ys.size] do
+        if y.containsFVar xId then
+          -- is it repeated argument?
+          if let .some i ← ys'.findIdxM? (fun y' => isDefEq y y') then
+            -- reuse already introduce fvar
+            f := f.app yVals[i]!
+          else
+
+            -- filter trailing arguments that appear in this `y`
+            let is' := is.filter (fun i => y.containsFVar i.fvarId!)
+            let yFVarType ← mkForallFVars is' (← inferType y)
+  
+            -- introduce new fvar
+            let yId ← withLCtx lctx instances mkFreshFVarId
+            lctx := lctx.mkLocalDecl yId (name.appendAfter (toString i)) yFVarType
+            let yFVar := Expr.fvar yId
+            let yVal := mkAppN yFVar is'
+            yFVars := yFVars.push yFVar
+            yVals := yVals.push yVal 
+            ys' := ys'.push y
+            ys'' := ys''.push (← mkLambdaFVars is' y)
+            f := f.app yVal
+        else
+          f := f.app y
+
+      let y' ← mkProdElem ys'' mk
+      let g  ← mkLambdaFVars #[x] y'
+
+      f ← withLCtx lctx instances (mkLambdaFVars (yFVars ++ is) f)
+      f ← mkUncurryFun yFVars.size f mk fst snd
+
+      return (f, g)
+    
+  | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
+
+
+
+/-- 
+This function finds decomposition:
+```
+fun x i₁ .. iₙ => b
+=
+fun x i₁ ... iₙ => f (g x i₁ ... iₙ) i₁ ... iₙ
+```
+-/
+def elemWiseSplitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Expr × Expr) := do
+  match e with 
+  | .lam name _ _ _ => 
+    let e ← instantiateMVars e
+    lambdaTelescope e λ xs b => do
+      let x := xs[0]!
+      let b := b.instantiate1 x
+      let xId := x.fvarId!
+
+      let ys := b.getAppArgs
+      let mut f := b.getAppFn
+
+      let mut lctx ← getLCtx
+      let instances ← getLocalInstances
+
+      -- trailing arguments
+      let is := xs[1:].toArray
+
+      -- `ys` that depend on `x`
+      let mut ys' : Array Expr := #[]
+      -- fvars for `y` that are abstracted over `is`
+      let mut yFVars : Array Expr := #[]
+
+      if f.containsFVar xId then
+        let yFVarType ← inferType f
+        let yId ← withLCtx lctx instances mkFreshFVarId
+        lctx := lctx.mkLocalDecl yId (name) yFVarType
+        let yFVar := Expr.fvar yId
+        yFVars := yFVars.push yFVar
+        ys' := ys'.push f
+        f := yFVar
+
+      for y in ys, i in [0:ys.size] do
+        if y.containsFVar xId then
+          -- is it repeated argument?
+          if let .some i ← ys'.findIdxM? (fun y' => isDefEq y y') then
+            -- reuse already introduce fvar
+            f := f.app yFVars[i]!
+          else
+
+            let yFVarType ← inferType y
+  
+            -- introduce new fvar
+            let yId ← withLCtx lctx instances mkFreshFVarId
+            lctx := lctx.mkLocalDecl yId (name.appendAfter (toString i)) yFVarType
+            let yFVar := Expr.fvar yId
+            yFVars := yFVars.push yFVar
+            ys' := ys'.push y
+            f := f.app yFVar
+        else
+          f := f.app y
+
+      let y' ← mkProdElem ys' mk
+      let g  ← mkLambdaFVars xs y'
+
+      f ← withLCtx lctx instances (mkLambdaFVars (yFVars ++ is) f)
+      f ← mkUncurryFun yFVars.size f mk fst snd
+
+      return (f, g)
+    
+  | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
+
+
 @[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]
   (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α) 
   {α} (k : β → γ → δ → m α) : m α :=
