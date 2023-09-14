@@ -272,7 +272,8 @@ def piLetCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr)
         | false, false =>
           let f := 
             Expr.lam yName yType (binderInfo := default)
-              (body.lowerLooseBVars 1 1)
+              (.lam iName iType (binderInfo := iBi)
+                (body.mapLooseBVarIds #[1,0].get?))
 
             trace[Meta.Tactic.ftrans.step] "case `T fun x i => let y := g x i; f y` \n{← ppExpr e}"
             return ← ext.piElemWiseCompRule e f g
