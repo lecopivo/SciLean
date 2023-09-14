@@ -172,9 +172,9 @@ namespace LinMap
     instance [FinVec X ι] [Hilbert Y] : Inner (X ⊸ Y) where
       -- This should be the correct version of the inner product
       -- It looks assymetrical but it is a consequence of `inner_proj_dualproj`
-      --   ⟪x, y⟫ = ∑ i, 𝕡 i x * 𝕡' i y
+      --   ⟪x, y⟫ = ∑ i, ℼ i x * ℼ' i y
       -- which also appears assymetrical
-      inner f g := ∑ i, ⟪f (𝕖 i), g (𝕖' i)⟫ -- = ∑ i j, ⟪𝕖' i, 𝕖' j⟫ * ⟪f (𝕖 i), g (𝕖 j)⟫
+      inner f g := ∑ i, ⟪f (ⅇ i), g (ⅇ' i)⟫ -- = ∑ i j, ⟪ⅇ' i, ⅇ' j⟫ * ⟪f (ⅇ i), g (ⅇ j)⟫
 
     -- @[infer_tc_goals_rl]
     instance [FinVec X ι] [Hilbert Y] : TestFunctions (X ⊸ Y) where
@@ -188,13 +188,13 @@ namespace LinMap
 
     -- @[infer_tc_goals_rl]
     instance [FinVec X ι] [FinVec Y κ] : Basis (X ⊸ Y) (ι×κ) ℝ where
-      basis := λ (i,j) => LinMap.mk (λ x => 𝕡 i x • 𝕖[Y] j) sorry_proof
-      proj := λ (i,j) f => 𝕡 j (f (𝕖 i))
+      basis := λ (i,j) => LinMap.mk (λ x => ℼ i x • ⅇ[Y] j) sorry_proof
+      proj := λ (i,j) f => ℼ j (f (ⅇ i))
 
     -- @[infer_tc_goals_rl]
     instance [FinVec X ι] [FinVec Y κ] : DualBasis (X ⊸ Y) (ι×κ) ℝ where
-      dualBasis := λ (i,j) => LinMap.mk (λ x => 𝕡' i x • 𝕖'[Y] j) sorry_proof
-      dualProj := λ (i,j) f => 𝕡' j (f (𝕖' i))
+      dualBasis := λ (i,j) => LinMap.mk (λ x => ℼ' i x • ⅇ'[Y] j) sorry_proof
+      dualProj := λ (i,j) f => ℼ' j (f (ⅇ' i))
 
     open BasisDuality in
     -- @[infer_tc_goals_rl]
@@ -208,8 +208,8 @@ namespace LinMap
       duality := by 
         intro (i,j) (i',j'); simp[Basis.basis, DualBasis.dualBasis, Inner.inner];
         -- This should be:
-        --  ∑ i_i, ⟪[[i=i_]] * 𝕖 j, [[i'=i_1]] 𝕖' j'⟫
-        --  [[i=i']] * ⟪𝕖 j, 𝕖' j'⟫
+        --  ∑ i_i, ⟪[[i=i_]] * ⅇ j, [[i'=i_1]] ⅇ' j'⟫
+        --  [[i=i']] * ⟪ⅇ j, ⅇ' j'⟫
         --  [[i=i']] * [[j=j']]
         sorry_proof
       to_dual := by
@@ -217,18 +217,18 @@ namespace LinMap
         intro f; ext x; 
         simp[FinVec.to_dual,FinVec.from_dual]
         -- Now the goal is:
-        --   ∑ j, 𝕡 j (f (∑ i, 𝕡' i x * 𝕖 i)) * 𝕖' j
+        --   ∑ j, ℼ j (f (∑ i, ℼ' i x * ⅇ i)) * ⅇ' j
         --   =
-        --   ∑ (i,j), 𝕡 j (f (𝕖 i)) * 𝕡' i x * 𝕖' j
+        --   ∑ (i,j), ℼ j (f (ⅇ i)) * ℼ' i x * ⅇ' j
         sorry_proof
       from_dual := by
         simp [BasisDuality.fromDual, DualBasis.dualProj, Basis.basis]
         intro f; ext x; 
         simp[FinVec.to_dual,FinVec.from_dual]
         -- Now the goal is:
-        --   ∑ j, 𝕡' j (f (∑ i, 𝕡 i x * 𝕖' i)) * 𝕖 j
+        --   ∑ j, ℼ' j (f (∑ i, ℼ i x * ⅇ' i)) * ⅇ j
         --   =
-        --   ∑ (i,j), 𝕡' j (f (𝕖' i)) * 𝕡' i x * 𝕖 j
+        --   ∑ (i,j), ℼ' j (f (ⅇ' i)) * ℼ' i x * ⅇ j
         sorry_proof
 
   end FinVec 
