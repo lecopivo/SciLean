@@ -20,6 +20,7 @@ structure LetNormalizeConfig where
   pullLetOutLambda := true
   splitStructureConstuctors := true
   reduceProjections := true
+  removeNumConst := true
 deriving Inhabited, BEq, Repr
 
 /-- Is `e` in the form `p₁ (...(pₙ x))` where `pᵢ` are projections and `x` free variable?
@@ -123,6 +124,11 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
         return ← letNormalize (xBody.instantiate1 xValue') config
 
       if (← isProjectionOfFVar xValue') && config.removeFVarProjLet then
+        return ← letNormalize (xBody.instantiate1 xValue') config
+
+      if config.removeNumConst && 
+         (xValue'.isAppOfArity' ``OfNat.ofNat 3 || 
+          xValue'.isAppOfArity' ``OfScientific.ofScientific 5) then
         return ← letNormalize (xBody.instantiate1 xValue') config
 
       -- deconstruct constructors into bunch of let bindings
@@ -246,7 +252,7 @@ x2 + y5 + z3_fst + z3_snd : Nat
       (let z1 := 1; z1 + z1, let z2 := 2; z2 * z2)
     x3 + y5 + z3.1 + z3.2)
     rewrite_by
-      let_normalize (config := {})
+      let_normalize (config := {removeNumConst := false})
 
 
 
