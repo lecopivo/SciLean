@@ -288,7 +288,8 @@ example
       let x₂ := x₁ + x₁
       let x₃ := x₂ + x₂
       let x₄ := x₃ + x₃
-      x₄)
+      let x₅ := x₄ + x₄
+      x₅)
     =
     0 :=
 by
@@ -320,6 +321,28 @@ by
     simp (config := {zeta:=false})
     let_normalize (config := {removeNoFVarLet := true})
     let_normalize
+
+set_option trace.Meta.Tactic.simp.rewrite true
+example 
+  : revCDeriv K (fun (x : ι → X) (i : ι) => 
+      let x₁ := x i + x i;
+      let x₂ := x₁ + x i; 
+      let x₃ := x₂ + x i; 
+      x₃)
+    =
+    0 :=
+by
+  conv =>
+    lhs
+    ftrans only
+    let_normalize
+    let_normalize (config := {removeNoFVarLet := true})
+    simp (config := {zeta:=false})
+    let_normalize (config := {removeNoFVarLet := true})
+    simp (config := {zeta:=false})
+    let_normalize (config := {removeNoFVarLet := true})
+    simp (config := {zeta:=false})
+    let_normalize (config := {removeNoFVarLet := true})
 
 #exit
 

@@ -338,7 +338,7 @@ by
   sorry_proof
 
 
-theorem pi_let_rule'
+theorem pi_let_rule
   (f : X → Y → ι → Z) (g : X → ι → Y)
   (hf : ∀ i, HasAdjDiff K (fun xy : X×Y => f xy.1 xy.2 i))
   (hg : ∀ j, HasAdjDiff K (g · j))
@@ -346,7 +346,32 @@ theorem pi_let_rule'
     = 
     fun x => 
       let ydg := revCDeriv K g x
-      let zdf := revCDeriv K (fun (xy : X×(ι →Y)) i => let y := xy.2 i; f xy.1 y i) (x,ydg.1)
+      let zdf₁ := revCDeriv K (fun (x : X) i => f x (ydg.1 i) i) x
+      let zdf₂ := fun i => let y := ydg.1 i; revCDeriv K (fun y => f x y i) y
+      (fun i => (zdf₂ i).1,
+       fun dz => 
+         let dy := fun i => (zdf₂ i).2 (dz i)
+         zdf₁.2 dz + ydg.2 dy) := 
+by
+  have _ := fun i => (hf i).1
+  have _ := fun i => (hf i).2
+  have _ := fun i => (hg i).1
+  have _ := fun i => (hg i).2
+  unfold revCDeriv
+  funext _; ftrans -- ftrans - semiAdjoint.pi_rule fails because of some universe issues
+  simp
+  sorry_proof
+
+
+theorem pi_let_rule''
+  (f : X → Y → ι → Z) (g : X → ι → Y)
+  (hf : ∀ i, HasAdjDiff K (fun xy : X×Y => f xy.1 xy.2 i))
+  (hg : ∀ j, HasAdjDiff K (g · j))
+  : (revCDeriv K fun x i => let y := g x i; f x y i)
+    = 
+    fun x => 
+      let ydg := revCDeriv K g x
+      let zdf := revCDeriv K (fun (xy : X×(ι →Y)) i => f xy.1 (xy.2 i) i) (x, fun i => let y := ydg.1 i; y)
       (zdf.1,
        fun dz => 
          let dxy := zdf.2 dz
@@ -361,7 +386,7 @@ by
   simp
   sorry_proof
 
-theorem pi_let_rule
+theorem pi_let_rule'
   (f : X → Y → ι → Z) (g : X → ι → Y)
   (hf : ∀ i, HasAdjDiff K (fun xy : X×Y => f xy.1 xy.2 i))
   (hg : ∀ j, HasAdjDiff K (g · j))
