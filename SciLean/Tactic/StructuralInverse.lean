@@ -237,9 +237,31 @@ local instance : Ord (Nat×Expr×FVarIdSet) where
     | _, _ => compare x.size y.size
 
 
-/-- Given equations `yᵢ = val x₁ ... xₙ`, express `xᵢ` as functions of `yᵢ`, where `xs = #[x₁,...,xₙ]`, `ys = #[y₁,...,yₙ]` are free variables and `vals = #[val₁,...,valₙ]` are value depending on `xs`
+open Qq
+structure EquationsInverse where
+  {u v : Level}
+  {X : Q(Type u)}
+  {Y : Q(Type v)}
+  (f  : Q($X → $Y))
+  (f' : Q($Y → $X))
 
-The system of equations has to be of triangular nature, i.e. there is one equation that depends only one one `xᵢ`, next equation can depend only on two `xᵢ`, and so on.
+open Qq
+structure EquationsLeftInverse where
+  {u v u₁ u₂ : Level}
+  {X : Q(Type u)}
+  {Y  : Q(Type v)}
+  {X₁ : Q(Type u₁)}
+  {X₂ : Q(Type u₂)}
+  (f  : Q($X → $Y))
+  (f' : Q($X₁ → $Y → $X₂))
+  (q : Q($X₁ → $X₂ → $X))
+  (p₁ : Q($X → $X₁))
+  (p₂ : Q($X → $X₂))
+  (right_inv : Q(∀ x₁ y, ($f ($q x₁ ($f' x₁ y))) = y))
+  (left_inv : Q(∀ x, $f' ($p₁ x) ($f x) = $p₂ x))
+
+
+/-- Given equations `yᵢ = valᵢ x₁ ...  xₙ`, express `xᵢ` as functions of `yᵢ`, where `xs = #[x₁,...,xₙ]`, `ys = #[y₁,...,yₙ]` are free variables and `vals = #[val₁,...,valₙ]` are value depending on `xs`
 -/
 partial def invertValues (xs ys : Array Expr) (vals : Array Expr) : MetaM (Option Expr) := do
 
@@ -269,10 +291,15 @@ where
       let unresolvedIdSet := xIdSet.diff resolvedIdSet
       let uxs := unresolvedIdSet.toArray.map Expr.fvar
 
-      let x := (← mkProdElem xs).replaceFVars pxs zs'
-      let x ← mkLambdaFVars (uxs ++ xs' ++ zs') x
-      let x ← mkUncurryFun uxs.size x
-      return x
+      if uxs.size = 0 then
+        let x := (← mkProdElem xs).replaceFVars pxs zs'
+        let x ← mkLambdaFVars (xs' ++ zs') x
+        return x
+      else
+        let x := (← mkProdElem xs).replaceFVars pxs zs'
+        let x ← mkLambdaFVars (uxs ++ xs' ++ zs') x
+        let x ← mkUncurryFun uxs.size x
+        return x
 
     let i := zs.size 
 
@@ -330,6 +357,96 @@ where
       call vals (lets.push (var, var', val'))
 
 
+structure SystemInverse where
+  lctx : LocalContext
+  /-- array of new let fvars -/
+  letVars : Array Expr 
+  /-- array of xVars that have been succesfully eliminated and replaced by yVars -/
+  resolvedXVars : Array Expr 
+  /-- array of xVars that have not been succesfully eliminated and still appear in xVals -/
+  unresolvedXVars : Array Expr
+  xVals : Array Expr
+
+
+/-- Given equations `yᵢ = valᵢ x₁ ...  xₙ`, express `xᵢ` as functions of `yᵢ`, where `xs = #[x₁,...,xₙ]`, `ys = #[y₁,...,yₙ]` are free variables and `vals = #[val₁,...,valₙ]` are value depending on `xs`
+-/
+partial def invertValues' (xVars yVars yVals : Array Expr) : MetaM (Option Expr) := do
+
+  let xIdSet : FVarIdSet := .fromArray (xVars.map (fun x => x.fvarId!)) _
+
+  -- data is and array of (yId, value, set of xId aprearing in value)
+  let mut eqs ← yVals.mapIdxM fun i val => do
+    let varSet : FVarIdSet := -- collect which xi's are used
+      (← (val.collectFVars.run {})) 
+      |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xIdSet
+    pure (i.1,val,varSet)
+
+  let mut xVars' : Array Expr := #[]
+  let mut xVals' : Array Expr := #[]
+  
+  -- forward pass
+  for i in [0:yVals.size] do
+
+    -- find the yVal with the minimal number of xVals in it
+    let (j,yVal,varSet) := eqs.minI
+
+    -- not valid value to resolve anymore 
+    if varSet.size = 0 then
+      throwError "can't invert value {← ppExpr yVal} as it does not depend on any x"
+
+    let varArr := varSet.toArray.map Expr.fvar
+
+    -- pick x we want to resolve, taking the first one might not be the best ides
+    let xVar' := varArr[0]!
+
+    -- new value of x but it can still depend on x that have not been resolved
+    let xVal' := 
+      if yVal.isFVar then
+        yVars[j]!
+      else
+        ← mkAppM ``Function.invFun #[← mkLambdaFVars #[xVar'] yVal, yVars[j]!]
+
+    xVars' := xVars'.push xVar'
+    xVals' := xVals'.push xVal'
+
+    let varSet := varSet.erase xVar'.fvarId!
+
+    -- remove the variable `var` from all the vales
+    for (k,kval,kvarSet) in eqs do 
+      if j ≠ k then
+        if kval.containsFVar xVar'.fvarId! then
+          eqs := eqs.set! k (k, kval.replaceFVar xVar' xVal', kvarSet.erase xVar'.fvarId! |>.union varSet)
+        else
+          eqs := eqs.set! k (k, kval.replaceFVar xVar' xVal', kvarSet.erase xVar'.fvarId!)
+      else
+        eqs := eqs.set! j (j, default, {})
+
+  let mut lctx ← getLCtx
+  let  instances ← getLocalInstances
+
+  xVars' := xVars'.reverse
+  xVals' := xVals'.reverse
+
+  let mut zVars : Array Expr := #[]
+
+  for i in [0:xVars'.size] do
+
+    let xVar' := xVars'[i]!
+    let xVal' := xVals'[i]!
+    let xId := xVar'.fvarId!
+    
+    let zId ← withLCtx lctx instances mkFreshFVarId
+    let zVar := Expr.fvar zId
+    let zVal := xVal'.replaceFVars xVars' zVars
+    zVars := zVars.push zVar
+
+    lctx := lctx.mkLetDecl zId (← xId.getUserName) (← xId.getType) zVal
+    
+    pure ()
+
+  let xVals := xVars.map (fun xVar => xVar.replaceFVars xVars' zVars)
+  return none
+
 
 /-- 
 -/
@@ -349,6 +466,8 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
       if xis.size == 1 then
         return none
 
+      -- can't have more equations then unknowns
+      -- such system is overdetermined
       if xis.size < yis.size then
         return none
 
@@ -373,8 +492,10 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
 
 
         lambdaLetTelescope b' fun lets xs' => do
+          let i₁ := lets[0]!
+          let lets := lets[1:]
           let (xs', _) ← decomposeStructure xs'
-          let f' ← mkLambdaFVars (#[y] ++ lets) (← mkAppM' xmk xs').headBeta 
+          let f' ← mkLambdaFVars (#[i₁,y] ++ lets) (← mkAppM' xmk xs').headBeta 
           let f' ← Meta.LetNormalize.letNormalize f' {removeLambdaLet:=false}
           return f'
   | _ => throwError "Error in `invertFunction`, not a lambda function!"
@@ -383,7 +504,7 @@ def invertFunction (f : Expr) : MetaM (Option Expr) := do
 
 #eval show MetaM Unit from do
 
-  let e := q(fun ((x,y,z) : Int × Int × Int) => (x*2 + y))
+  let e := q(fun ((x,y,z) : Int × Int × Int) => (x+y+z))
 
   let .some f ← invertFunction e
     | return ()
