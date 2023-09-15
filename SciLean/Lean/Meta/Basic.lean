@@ -311,7 +311,7 @@ def splitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) 
         let yId ← withLCtx lctx instances mkFreshFVarId
         lctx := lctx.mkLocalDecl yId (name) yFVarType
         let yFVar := Expr.fvar yId
-        let yVal ← mkAppM' yFVar is'
+        let yVal := mkAppN yFVar is'
         yFVars := yFVars.push yFVar
         yVals := yVals.push yVal
         ys' := ys'.push f
