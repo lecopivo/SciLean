@@ -46,6 +46,47 @@ partial def splitStructureElem (e : Expr) : MetaM (Array Expr × Expr) := do
   
   return (eis.flatten, mk)
 
+
+/-- Decomposes an element `e` that is a nested application of constructors
+
+For example, calling this function on `x : (Nat×Nat)×Nat` returns `(#[x.1.1, x.1.2, x.1], fun a b c => ((a,b),c))`
+-/
+partial def splitByCtors (e : Expr) : MetaM (Array Expr × Expr) := do
+  let E ← inferType e
+  let idE := .lam `x E (.bvar 0) default
+
+  let .const structName lvls := E.getAppFn'
+    | return (#[e], idE)
+
+  let .some info := getStructureInfo? (← getEnv) structName
+    | return (#[e], idE)
+
+  let ctorVal := getStructureCtor (← getEnv) structName
+
+  if E.getAppNumArgs != ctorVal.numParams then
+    return (#[e], idE)
+
+  if ctorVal.numFields ≤ 1 then
+    return (#[e], idE)
+  
+  let eis ← info.fieldNames.mapM (fun fname => do
+    let projFn := getProjFnForField? (← getEnv) structName fname |>.get!
+    mkAppM projFn #[e] >>= reduceProjOfCtor)
+
+  let (eis,mks) := (← eis.mapM splitStructureElem).unzip
+
+  -- this implementation of combining `mks` together works but it is probably not very efficient
+  let mk := mkAppN (.const ctorVal.name lvls) E.getAppArgs
+  let mk ← mks.foldlM (init:=mk)
+    (fun mk mki => do
+      forallTelescope (← inferType mki) fun xs _ => do
+        let mk ← mkAppM' mk #[(←mkAppM' mki xs).headBeta]
+        forallTelescope (← inferType mk) fun ys _ => do
+          mkLambdaFVars (ys++xs) (←mkAppM' mk ys).headBeta)
+  
+  return (eis.flatten, mk)
+
+
 structure IsDecomposition (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) : Prop where
   proj_mk  : ∀ x, q (p₁ x) (p₂ x) = x
   mk_proj₁ : ∀ x₁ x₂, p₁ (q x₁ x₂) = x₁

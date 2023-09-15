@@ -170,12 +170,12 @@ def bvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPro
   else
     let g := .lam n t g bi
     let gType ← inferType g
-    let fType := gType.getForallBody
-    if fType.hasLooseBVars then
-      trace[Meta.Tactic.fprop.step] "bvar app step can't handle dependent functions of type {← ppExpr fType} appearing in {← ppExpr f}"
-      return none
+    let .some (_,fType) := gType.arrow?
+      | trace[Meta.Tactic.fprop.step] "bvar app step can't handle dependent functions of type {← ppExpr gType} appearing in {← ppExpr f}"
+        return none
 
     let h := .lam n fType ((Expr.bvar 0).app x) bi
+    trace[Meta.Tactic.fprop.step] "bvar app step composition\n{←ppExpr h}\n\n{← ppExpr g}"
     ext.compRule e h g
 
 

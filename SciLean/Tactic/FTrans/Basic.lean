@@ -2,13 +2,14 @@ import Std.Lean.Parser
 import Mathlib.Tactic.NormNum.Core
 
 import SciLean.Lean.Meta.Basic
-import SciLean.Tactic.LSimp.Main
-
 import SciLean.Tactic.FTrans.Init
+import SciLean.Tactic.LSimp.Main
+import SciLean.Tactic.StructuralInverse
 
-open Lean Meta Qq
 
 namespace SciLean.FTrans
+
+open Lean Meta Qq
 
 open Elab Term in
 def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fun e => do
@@ -218,27 +219,6 @@ def piLetCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr)
         trace[Meta.Tactic.ftrans.rewrite] "removing unused let\n{← ppExpr e}\n==>\n{← ppExpr e'}"
         return ← ftrans e'
 
-      -- -- removes `let y := x i`
-      -- -- This is higly dubuious hack to preven certain infinite for loop
-      -- if let .app (.bvar _) (.bvar _) := yValue then
-      --   let f' := (body.instantiate1 yValue)
-      --   let f' := Expr.lam iName iType f' iBi
-      --   let f' := Expr.lam xName xType f' xBi
-      --   let e' := ext.replaceFTransFun e f'
-      --   trace[Meta.Tactic.ftrans.rewrite] "removing trivial let\n{← ppExpr e}\n==>\n{← ppExpr e'}"
-      --   return ← ftrans e'
-
-      -- -- removes `let y := Prod.snd x i`
-      -- -- This is higly dubuious hack to preven certain infinite for loop
-      -- if let .app (Expr.mkApp3 (.const name _) _ _ (.bvar _)) (.bvar _) := yValue then
-      --   if name == ``Prod.snd then
-      --   let f' := (body.instantiate1 yValue)
-      --   let f' := Expr.lam iName iType f' iBi
-      --   let f' := Expr.lam xName xType f' xBi
-      --   let e' := ext.replaceFTransFun e f'
-      --   trace[Meta.Tactic.ftrans.rewrite] "removing trivial let\n{← ppExpr e}\n==>\n{← ppExpr e'}"
-      --   return ← ftrans e'
-
       match (yValue.hasLooseBVar 1), (yValue.hasLooseBVar 0) with
       -- let y := constant
       | false, false => 
@@ -346,17 +326,41 @@ def piCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (ftrans :
             let e' := ext.replaceFTransFun e f'
             return ← ftrans e'
 
-
         let (f',g') ← splitHighOrderLambdaToComp f
         trace[Meta.Tactic.ftrans.step] "case pi comp\n{← ppExpr e}\n{← ppExpr f}\n{←ppExpr f'}\n{← isDefEq f' f}"
+        trace[Meta.Tactic.ftrans.step] "{← ppExpr g'}"
+
         -- nontrivial split!
         if ¬(← isDefEq f' f) then
           return ← ext.compRule e f' g'
 
-        
-        -- if body is appropriate application of constant we convert to pointwise transformation
-        matchConst body.getAppFn (fun _ => return none)
-          fun info _ => do
+        match body.getAppFn with
+        | .bvar _ | .fvar _ => do
+          withLocalDecl xName default xType fun x => do
+            let g := (Expr.lam iName iType body iBi).instantiate1 x
+            let (g',h') ← splitLambdaToComp g
+
+            trace[Meta.Tactic.ftrans.step] "case pi change of variables\n{← ppExpr e}\n{← ppExpr g'}\n{← ppExpr h'}"
+
+            let .some (hinv, goals) ← structuralInverse h'
+              | trace[Meta.Tactic.ftrans.step] "unable to invert {← ppExpr h'}"
+                return none
+            
+            match hinv with
+            | .full finv => 
+              if (← isDefEq finv.invFun h') then
+                trace[Meta.Tactic.ftrans.step] "identity case, nothing to be done"
+                return none
+              else
+                trace[Meta.Tactic.ftrans.step] "computed inverse {← ppExpr finv.invFun}"
+                return none
+            | .right rinv => 
+              trace[Meta.Tactic.ftrans.step] "only right inverse, skipping for now"
+              return none
+        | Expr.const constName _ => do
+          match (← getEnv).find? constName with
+          | none => return none
+          | some info => 
             let constArity := info.type.forallArity
             let args := body.getAppArgs
 
@@ -367,6 +371,8 @@ def piCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (ftrans :
                 return ← ext.piElemWiseCompRule e f' g'
 
             return none
+
+        | _ => return none
 
         -- return none
     | _ => throwError "expected expression of the form `fun x i => f x i`"
