@@ -42,3 +42,9 @@
 ** ClassicalMechanics
    - Lagrangian and Hamiltonian mechanics
    - motion of rigid bodies
+
+** DDG
+  - Discrete differential geometry.
+  - Surface Mesh.
+  - Tree/Cotree algorithm to compute homology.
+  - Sparse Laplacian construction for geodesics, parallel transport. 

@@ -11,7 +11,7 @@ import SciLean.Core
 import SciLean.Data.DataArray.VecN
 import Lean.Data.HashMap
 
-open Lean Data
+open Lean 
 
 
 /- index of vertices --/
@@ -513,3 +513,37 @@ def SurfaceMesh.fromOFFFile (p : System.FilePath) : IO SurfaceMesh := do
   match out with
   | .ok out => return out
   | .error err => throw <| .userError err.toString
+
+
+
+-- TODO: we can ask this of a halfedge as well. We need a better API for this,
+-- maybe arranged using flags? (vertex ⊂ edge ⊂ face), go find the paper on 
+-- computing homology where I saw this!
+def SurfaceMesh.getAdjacentVertex (s : SurfaceMesh) (h : Index `Halfedge) : (Index `Vertex × Index `Halfedge) := 
+  let twin := s.halfedges[h]!.twin.get!
+  let v := s.halfedges[twin]!.vertex
+  let next := s.halfedges[twin]!.next
+  (v, next)
+
+-- TODO: do we have a notion of a generator?
+partial def SurfaceMesh.getAdjacentVertices (s : SurfaceMesh) (start : Index `Vertex) : Array (Index `Vertex) := 
+  let startHe := s.vertices[start]!.halfedge
+  go (justStarted := true) (start := startHe) (cur := startHe) #[]
+  where
+   go (justStarted: Bool) (start : Index `Halfedge) (cur : Index `Halfedge) (out : Array (Index `Vertex)) :=
+    if !justStarted && cur == start
+    then out 
+    else 
+      let (v, next) := getAdjacentVertex s cur 
+      go (justStarted := false) (start := start) (cur := next) (out := out.push v)
+
+def SurfaceMesh.getAdjacentHalfedge (s : SurfaceMesh) (he : Index `Halfedge) : Index `Halfedge := 
+  s.halfedges[he]!.next
+
+partial def SurfaceMesh.getAdjacentHalfedges (s : SurfaceMesh) (he : Index `Halfedge) : Array (Index `Halfedge) := 
+  go (s.getAdjacentHalfedge he) #[he]
+  where
+   go (cur : Index `Halfedge) (out : Array (Index `Vertex)) := 
+     if cur == he
+     then out
+     else go (s.getAdjacentHalfedge cur) (out.push cur)
