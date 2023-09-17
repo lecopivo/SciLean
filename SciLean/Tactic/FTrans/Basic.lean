@@ -285,6 +285,38 @@ def piLetCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr)
     | _ => throwError "expected expression of the form `fun x i => let y := g x i; f x y i`"
   | _ => throwError "expected expression of the form `fun x i => let y := g x i; f x y i`"
 
+
+def piChangeOfVarsCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (ftrans : Expr → SimpM (Option Simp.Step)) : SimpM (Option Simp.Step) := do
+  match f with 
+  | .lam xName xType (.lam iName iType body iBi) xBi => do
+    withLocalDecl xName default xType fun x => do
+
+      let g := (Expr.lam iName iType body iBi).instantiate1 x
+
+      let (g',h') ← splitLambdaToComp g
+
+      if (← isDefEq h' g') then
+        return none
+
+      trace[Meta.Tactic.ftrans.step] "case pi change of variables\n{← ppExpr e}\n{← ppExpr g'}\n{← ppExpr h'}"
+
+      let .some (hinv, goals) ← structuralInverse h'
+        | trace[Meta.Tactic.ftrans.step] "unable to invert {← ppExpr h'}"
+          return none
+
+      match hinv with
+      | .full finv => 
+        if (← isDefEq finv.invFun h') then
+          return none
+        else
+          trace[Meta.Tactic.ftrans.step] "computed inverse {← ppExpr finv.invFun}"
+          return ← ext.piInvRule e (← mkLambdaFVars #[x] g') finv
+      | .right rinv => 
+        trace[Meta.Tactic.ftrans.step] "only right inverse, skipping for now"
+        return ← ext.piRInvRule e (← mkLambdaFVars #[x] g') rinv
+  | _ => throwError "expected expression of the form `fun x i => f x i`"
+
+
 private def peelOffBVarArgs (bvarId : Nat) (e : Expr) (n : Nat := 0) : Expr × Nat :=
   match e with
   | .app f x => 
@@ -293,7 +325,12 @@ private def peelOffBVarArgs (bvarId : Nat) (e : Expr) (n : Nat := 0) : Expr × N
     else 
       (.app f x, n)
   | e => (e, n)
- 
+
+/--
+  This function is expecting expressions like:
+  -- 1. bvar app - fun x i => f i.1 i.2.1 i.2.2
+  -- 2. fvar app - fun x i => f x i.1 i.2.1 i.2.2   
+ -/
 def piBFVarAppCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (ftrans : Expr → SimpM (Option Simp.Step)) : SimpM (Option Simp.Step) := do
   match f with 
   | .lam xName xType (.lam iName iType body iBi) xBi => do
@@ -305,37 +342,16 @@ def piBFVarAppCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (
     withLocalDecl xName default xType fun x => do
       let g := (Expr.lam iName iType body iBi).instantiate1 x
       let .some (Is,Y) := (← inferType g).arrow?
-       |  throwError "unexpected type {← inferType g} in pi bvar/fvar app case
-"
-      let (g',h') ← splitLambdaToComp g
+       |  throwError "unexpected type {← inferType g} in pi bvar/fvar app case"
 
-      trace[Meta.Tactic.ftrans.step] "case pi change of variables\n{← ppExpr e}\n{← ppExpr g'}\n{← ppExpr h'}"
+      let (body', n) := peelOffBVarArgs 0 body
 
-      let .some (hinv, goals) ← structuralInverse h'
-        | trace[Meta.Tactic.ftrans.step] "unable to invert {← ppExpr h'}"
-          return none
+      if body'.hasLooseBVar 0 then
+        trace[Meta.Tactic.ftrans.step] "unable to curry back trailing arguments"
+        return none
 
-      match hinv with
-      | .full finv => 
-        if (← isDefEq finv.invFun h') then
-          trace[Meta.Tactic.ftrans.step] "identity case, nothing to be done"
-          -- now we are expecting that we are dealing with expressions like
-          -- 1. bvar app - fun x i => f i.1 i.2.1 i.2.2
-          -- 2. fvar app - fun x i => f x i.1 i.2.1 i.2.2   
-          let (body', n) := peelOffBVarArgs 0 body
-
-          if body'.hasLooseBVar 0 then
-            trace[Meta.Tactic.ftrans.step] "unable to curry back trailing arguments"
-            return none
-
-          let g := Expr.lam xName xType (body'.lowerLooseBVars 1 1) xBi
-          return ← ext.piCurryNRule e g Is Y n 
-        else
-          trace[Meta.Tactic.ftrans.step] "computed inverse {← ppExpr finv.invFun}"
-          return ← ext.piInvRule e (← mkLambdaFVars #[x] g') finv
-      | .right rinv => 
-        trace[Meta.Tactic.ftrans.step] "only right inverse, skipping for now"
-        return ← ext.piRInvRule e (← mkLambdaFVars #[x] g') rinv
+      let g := Expr.lam xName xType (body'.lowerLooseBVars 1 1) xBi
+      return ← ext.piCurryNRule e g Is Y n 
 
   | _ => throwError "expected expression of the form `fun x i => f x i`"
 
@@ -356,10 +372,18 @@ def piConstAppCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (
         let args := body.getAppArgs
 
         if args.size == constArity then
-          let (f',g') ← elemWiseSplitHighOrderLambdaToComp f
 
-          if ¬(← isDefEq g' f) then
-            return ← ext.piElemWiseCompRule e f' g'
+          let candidates ← FTrans.getFTransPiRules constName ftransName
+          
+          let step? ← tryTheorems candidates ext.discharger e
+
+          match step? with
+          | .some step => return step
+          | none =>
+            let (f',g') ← elemWiseSplitHighOrderLambdaToComp f
+
+            if ¬(← isDefEq g' f) then
+              return ← ext.piElemWiseCompRule e f' g'
 
         return none
 
@@ -412,6 +436,9 @@ def piCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (ftrans :
         -- nontrivial split!
         if ¬(← isDefEq f' f) then
           return ← ext.compRule e f' g'
+
+        if let .some step ← piChangeOfVarsCase e ftransName ext f ftrans then
+          return step
 
         let fn := body.getAppFn
         

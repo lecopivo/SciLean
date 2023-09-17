@@ -82,25 +82,19 @@ example
 by
   (conv => lhs; autodiff)
 
-set_option trace.Meta.Tactic.simp.rewrite true in
 example (A : Idx 5 → Idx 10 → K)
   : (∇ (x : K ^ Idx 10), fun i => ∑ j, A i j * x[j])
     =
     fun _ dy => ⊞ j => ∑ i, A i j * dy i := 
 by 
-  (conv => 
-    lhs
-    unfold gradient
-    ftrans only)
+  (conv => lhs; autodiff)
 
-
-example 
+example
   : (∇ (x : Fin 10 → K), fun i => x i)
     =
     fun _ dx => dx :=
 by
   (conv => lhs; autodiff)
-  
 
 example 
   : (∇ (x : Fin 5 → Fin 10 → K), fun i j => x i j)
@@ -109,7 +103,6 @@ example
 by
   (conv => lhs; autodiff)
 
-
 example
   : (∇ (x : Fin 5 → Fin 10 → Fin 15→ K), fun i j k => x i j k)
     =
@@ -117,14 +110,12 @@ example
 by
   (conv => lhs; autodiff)
 
-
 example
   : (∇ (x : Fin 5 → Fin 10 → Fin 15→ K), fun k i j => x i j k)
     =
     fun _ dx i j k => dx k i j :=
 by
   (conv => lhs; autodiff)
-
 
 -- TODO remove `hf'` assumption, is should be automatically deduced from `hf` once #23 is resolved
 example (f : X → Fin 5 → Fin 10 → Fin 15→ K) (hf : ∀ i j k, HasAdjDiff K (f · i j k))
@@ -138,26 +129,20 @@ by
   (conv => lhs; autodiff)
 
 
-
-set_option trace.Meta.Tactic.simp.rewrite true in
 example 
-  : (<∂ (x : K ^ Idx 10), fun (ij : Idx 5 × Idx 10) => x[ij.snd])
+  : (∇ (x : K ^ Idx 10), fun (ij : Idx 5 × Idx 10) => x[ij.snd])
     =
-    0 := 
+    fun _ dx => ⊞ j => ∑ i, dx (i,j) := 
 by
-  conv => 
-    lhs
-    ftrans only
-    let_normalize
+  (conv => lhs; autodiff)
 
 
-set_option trace.Meta.Tactic.simp.rewrite
 example 
   : (∇ (x : K ^ Idx 10), fun i => x[i])
     =
     fun _ dx => ⊞ i => dx i :=
 by
-  (conv => lhs; unfold gradient; ftrans only)
+  (conv => lhs; autodiff)
   
 
 example 

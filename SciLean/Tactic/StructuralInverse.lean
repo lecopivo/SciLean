@@ -70,13 +70,18 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     -- find the yVal with the minimal number of xVals in it
     let (j,yVal,varSet) := eqs.minI
 
+    let yType ← inferType yVal
+
     -- we can't invert if equation does not depen't on any x
     if varSet.size = 0 then
       return none 
 
     let varArr := varSet.toArray.map Expr.fvar
     -- pick x we want to resolve, taking the first one might not be the best ides
-    let xVar' := varArr[0]!
+    let .some xVarId ← varArr.findIdxM? fun var => do pure (← isDefEq yType (← inferType var))
+      | return none
+    let xVar' := varArr[xVarId]!
+    let varArrOther := varArr.eraseIdx xVarId
 
     let xName ← xVar'.fvarId!.getUserName
 
@@ -99,7 +104,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let xResId ← withLCtx lctx instances <| mkFreshFVarId
     let xResVar := Expr.fvar xResId
     let xResVal ← withLCtx lctx instances <| 
-      mkLambdaFVars varArr[1:] xVal'
+      mkLambdaFVars varArrOther xVal'
     let xResType ← withLCtx lctx instances <| 
       inferType xResVal
     lctx := lctx.mkLetDecl xResId (xName.appendAfter "'") xResType xResVal
