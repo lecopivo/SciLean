@@ -309,7 +309,7 @@ theorem Function.invFun.arg_f.cderiv_rule
   (f : X → Y → Z)
   (hf : ∀ x, Diffeomorphism K (f x)) 
   (hf' : IsDifferentiable K (fun xy : X×Y => f xy.1 xy.2))
-  : cderiv K (fun x => invFun (f x))
+  : cderiv K (fun x z => invFun (f x) z)
     =
     fun x dx z => 
       let y := invFun (f x) z

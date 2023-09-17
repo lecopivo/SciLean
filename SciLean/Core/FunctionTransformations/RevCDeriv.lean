@@ -3,7 +3,7 @@ import SciLean.Core.FunctionPropositions.HasAdjDiff
 
 import SciLean.Core.FunctionTransformations.SemiAdjoint
 
--- import SciLean.Data.EnumType
+import SciLean.Data.Curry
   
 import SciLean.Util.Profile
 
@@ -268,6 +268,19 @@ by
   sorry_proof
 
 
+variable (X)
+theorem pi_curryn_rule {IX : Type _} (Is : Type _) (n : Nat) [UncurryN n IX Is X] [CurryN n Is X IX] [SemiInnerProductSpace K IX] [EnumType Is] 
+  (f : W → IX) (hf : HasAdjDiff K f)
+  : revCDeriv K (fun (w : W) (i : Is) => uncurryN n (f w) i) 
+    =
+    fun w => 
+      let ydf := revCDeriv K f w
+      (uncurryN n ydf.1,
+       fun dx => ydf.2 (curryN n dx)) := 
+by
+  sorry_proof
+variable {X}
+
 theorem pi_comp_rule_simple
   (f : Y → Z) (g : X → ι → Y)
   (hf : HasAdjDiff K f)
@@ -478,31 +491,43 @@ by
   simp
   sorry_proof
 
-theorem revCDeriv.pi_uncurry_rule {ι κ} [EnumType ι] [EnumType κ]
-  (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (f · i j))
-  : (revCDeriv K fun x i j => f x i j)
+
+theorem pi_inv_rule
+  (f : X → κ → Y) (h : ι → κ) (h' : κ → ι) (hh : Function.Inverse h' h)
+  (hf : ∀ j, HasAdjDiff K (f · j)) 
+  : (revCDeriv K fun x i => f x (h i))
     =
-    fun x =>
-      let ydf := revCDeriv K (fun x' (ij : ι×κ) => f x' ij.1 ij.2) x
-      (fun i j => ydf.1 (i,j), 
-       fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) := 
+    fun x => 
+      let ydf := revCDeriv K f x
+      (fun i => ydf.1 (h i),
+       fun dy => 
+         ydf.2 (fun j => dy (h' j))) := 
 by
-  have _ := fun i j => (hf i j).1
-  have _ := fun i j => (hf i j).2
-  unfold revCDeriv 
-  funext _; ftrans; -- ftrans - semiAdjoint.pi_rule fails because of some universe issues
-  simp
   sorry_proof
 
-
-theorem revCDeriv.pi_curry_rule {ι κ} [EnumType ι] [EnumType κ]
-  (f : X → ι → κ → Y) (hf : ∀ i j, HasAdjDiff K (f · i j))
-  : (revCDeriv K fun x (ij : ι×κ) => f x ij.1 ij.2)
+theorem pi_rinv_rule' {ι₁ ι₂: Type _} [EnumType ι₁] [EnumType ι₂]
+  (f : X → κ → Y) (h : ι → κ) (h' : ι₁ → κ → ι) (hh : ∀ i₁, Function.RightInverse (h' i₁) h)
+  (p₁ : ι → ι₁) (p₂ : ι → ι₂) (q : ι₁ → ι₂ → ι) (dec : Meta.IsDecomposition p₁ p₂ q)
+  (hf : ∀ j, HasSemiAdjoint K (f · j)) 
+  : (semiAdjoint K fun x i => f x (h i))
     =
-    fun x =>
-      let ydf := revCDeriv K (fun x' i j => f x' i j) x
-      (fun ij => ydf.1 ij.1 ij.2, 
-       fun dy => ydf.2 (fun i j => dy (i,j))) := 
+    fun x' => 
+      let f' := semiAdjoint K f
+      f' fun j => ∑ i₁, (x' (h' i₁ j)) :=
+by
+  sorry_proof
+
+-- TODO these are not sufficient conditions for this to be true, we need that `h'` induces isomorphism `ι≃ι₁×κ` 
+theorem pi_rinv_rule {ι₁ : Type _} [EnumType ι₁]
+  (f : X → κ → Y) (h : ι → κ) (h' : ι₁ → κ → ι) (hh : ∀ i₁, Function.RightInverse (h' i₁) h)
+  (hf : ∀ j, HasAdjDiff K (f · j)) 
+  : (revCDeriv K fun x i => f x (h i))
+    =
+    fun x => 
+      let ydf := revCDeriv K f x
+      (fun i => ydf.1 (h i),
+       fun dy => 
+         ydf.2 (fun j => ∑ i₁, dy (h' i₁ j))) := 
 by
   sorry_proof
 
@@ -606,6 +631,12 @@ def ftransExt : FTransExt where
       #[ { proof := ← mkAppM ``pi_uncurry_rule #[K, f], origin := .decl ``pi_uncurry_rule, rfl := false} ]
       discharger e
 
+  piCurryNRule e f Is Y n := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``pi_curryn_rule #[K, Y, Is, mkNatLit n, f], origin := .decl ``pi_curryn_rule, rfl := false} ]
+      discharger e
+
   piCompRule e f g := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
@@ -624,11 +655,22 @@ def ftransExt : FTransExt where
       #[ { proof := ← mkAppM ``pi_prod_rule #[K, f, g], origin := .decl ``pi_prod_rule, rfl := false} ]
       discharger e
 
-
   piLetRule e f g := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
       #[ { proof := ← mkAppM ``pi_let_rule #[K, f, g], origin := .decl ``pi_let_rule, rfl := false} ]
+      discharger e
+
+  piInvRule e f inv := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``pi_inv_rule #[K, f, inv.f, inv.invFun, inv.is_inv], origin := .decl ``pi_inv_rule, rfl := false} ]
+      discharger e
+
+  piRInvRule e f rinv := do
+    let .some K := e.getArg? 0 | return none
+    tryTheorems
+      #[ { proof := ← mkAppM ``pi_rinv_rule #[K, f, rinv.f, rinv.invFun, rinv.right_inv], origin := .decl ``pi_rinv_rule, rfl := false} ]
       discharger e
 
   discharger := discharger

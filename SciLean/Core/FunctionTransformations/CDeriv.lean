@@ -320,7 +320,7 @@ by sorry_proof
 
 @[ftrans]
 theorem id.arg_a.cderiv_rule
-  : cderiv K (id : X → X) 
+  : cderiv K (fun x : X => id x) 
     =
     fun _ => id := by unfold id; ftrans
 
@@ -332,7 +332,7 @@ theorem id.arg_a.cderiv_rule
 theorem Function.comp.arg_a0.cderiv_rule_at
   (f : Y → Z) (g : X → Y) (x : X)
   (hf : IsDifferentiableAt K f (g x)) (hg : IsDifferentiableAt K g x)
-  : cderiv K (f ∘ g) x
+  : cderiv K (fun x => (f ∘ g) x) x
     =
     fun dx => 
       cderiv K f (g x) (cderiv K g x dx) := 
@@ -343,7 +343,7 @@ by
 theorem Function.comp.arg_a0.cderiv_rule
   (f : Y → Z) (g : X → Y)
   (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
-  : cderiv K (f ∘ g)
+  : cderiv K (fun x => (f ∘ g) x)
     =
     fun x => cderiv K f (g x) ∘ (cderiv K g x) := 
 by 
@@ -354,7 +354,7 @@ theorem Function.comp.arg_fg.cderiv_rule
   (f : W → Y → Z) (g : W → X → Y)
   (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
   (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))
-  : cderiv K (fun w => ((f w) ∘ (g w)))
+  : cderiv K (fun w x => ((f w) ∘ (g w)) x)
     =
     fun w dw x => 
       let y  := g w x

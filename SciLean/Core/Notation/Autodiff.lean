@@ -1,5 +1,6 @@
 import SciLean.Core.Notation.Symdiff
 import SciLean.Tactic.LetNormalize
+import SciLean.Data.Curry
 
 namespace SciLean
 
@@ -10,7 +11,7 @@ macro "autodiff" : conv => do
     (simp (config := {failIfUnchanged := false, zeta := false}) only [cderiv_as_fwdCDeriv, scalarGradient, gradient, scalarCDeriv,revCDerivEval]
      ftrans only
      let_normalize
-     simp (config := {failIfUnchanged := false, zeta := false})))
+     simp (config := {failIfUnchanged := false, zeta := false}) [uncurryN, UncurryN.uncurry, curryN, CurryN.curry]))
 
 macro "autodiff" : tactic => do
   `(tactic| conv => autodiff)

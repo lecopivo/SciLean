@@ -156,7 +156,7 @@ by sorry_proof
 
 @[ftrans]
 theorem id.arg_a.invFun_rule
-  : invFun (id : X → X)
+  : invFun (fun x : X => id x)
     = 
     id := by unfold id; ftrans
 
@@ -168,7 +168,7 @@ theorem id.arg_a.invFun_rule
 theorem Function.comp.arg_a0.invFun_rule
   (f : Y → Z) (g : X → Y)
   (hf : Bijective f) (hg : Bijective g)
-  : invFun (f ∘ g)
+  : invFun (fun x => (f ∘ g) x)
     = 
     invFun g ∘ invFun f
   := by unfold Function.comp; ftrans

@@ -157,6 +157,23 @@ by
   have ⟨_,_⟩ := hf
   unfold revCDeriv; ftrans; ftrans; simp
 
+@[ftrans]
+theorem GetElem.getElem.arg_xs_idx.revCDeriv_rule
+  (f : X → Cont) (dom) 
+  (hf : HasAdjDiff K f)
+  : revCDeriv K (fun x idx => getElem (f x) idx dom)
+    =
+    fun x =>
+      let ydf := revCDeriv K f x
+      (fun idx => getElem ydf.1 idx dom,
+       fun delem => 
+         let dx := introElem delem
+         ydf.2 dx) := 
+by
+  have ⟨_,_⟩ := hf
+  unfold revCDeriv; ftrans
+  sorry_proof
+
 -- @[ftrans] -- this one is considered harmful as it introduces one hot vector
 theorem GetElem.getElem.arg_xs.revDerivUpdate_rule
   (f : X → Cont) (idx : Idx) (dom) 

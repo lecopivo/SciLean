@@ -534,9 +534,8 @@ by
   fprop
 
 
-set_option linter.ftransDeclName false in
 @[ftrans]
-theorem Pure.pure.revDerivValM_rule (x : X)
+theorem Pure.pure.arg.revDerivValM_rule (x : X)
   : revDerivValM K (pure (f:=m) x)
     =
     pure (x,fun dy => pure 0) := 

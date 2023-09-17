@@ -1,7 +1,6 @@
 import SciLean.Tactic.StructureDecomposition
 import SciLean.Tactic.LetNormalize
-
-import Mathlib.Logic.Function.Basic
+import SciLean.Data.Function
 
 namespace SciLean.Meta
 
@@ -164,6 +163,7 @@ structure FullInverse where
   {Y : Q(Type v)}
   (f  : Q($X → $Y))
   (invFun : Q($Y → $X))
+  (is_inv : Q(Function.Inverse $invFun $f))
   
 open Qq
 /--
@@ -250,14 +250,14 @@ def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarI
           let f : Q($X → $Y) := f
           let b := (← mkAppM' xmk eqInv.xVals).headBeta
 
-
           if eqInv.unresolvedXVars.size = 0 then
             let invFun : Q($Y → $X) ← mkLambdaFVars (#[y] ++ eqInv.letVars) b
             let invFun ← Meta.LetNormalize.letNormalize invFun {removeLambdaLet:=false}
 
+            let is_inv ← mkSorry q(Function.Inverse $invFun $f) false
 
             let finv : FullInverse := {
-              u := u, v := v, X := X, Y := Y, f := f, invFun := invFun
+              u := u, v := v, X := X, Y := Y, f := f, invFun := invFun, is_inv := is_inv
             }
             
             return .some (.full finv, goals)

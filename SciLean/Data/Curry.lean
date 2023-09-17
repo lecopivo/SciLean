@@ -1,5 +1,29 @@
-
+import SciLean.Util.SorryProof
 namespace SciLean
+
+--------------------------------------------------------------------------------
+
+class FunNArgs (n : Nat) (F : Sort _) (Xs : outParam <| Sort _) (Y : outParam <| Sort _) where
+  uncurry : F → Xs → Y
+  curry : (Xs → Y) → F
+  is_equiv : curry ∘ uncurry = id ∧ uncurry ∘ curry = id
+
+attribute [reducible] FunNArgs.uncurry FunNArgs.curry
+
+@[reducible]
+instance (priority := low) {X Y : Sort _} : FunNArgs 1 (X→Y) X Y where
+  uncurry := λ (f : X → Y) (x : X) => f x
+  curry := λ (f : X → Y) (x : X) => f x
+  is_equiv := by constructor <;> rfl
+
+@[reducible]
+instance (priority := low) {X Xs Y F : Sort _} [fn : FunNArgs n F Xs Y] : FunNArgs (n+1) (X→F) (X×Xs) Y where
+  uncurry := λ (f : X → F) ((x,xs) : X×Xs) => fn.uncurry (n:=n) (f x) xs
+  curry := λ (f : X×Xs → Y) (x : X) => fn.curry (n:=n) (fun xs => f (x,xs))
+  is_equiv := 
+    by constructor
+       . funext x xs; simp; sorry_proof
+       . funext f (x,xs); simp; sorry_proof
 
 
 --------------------------------------------------------------------------------

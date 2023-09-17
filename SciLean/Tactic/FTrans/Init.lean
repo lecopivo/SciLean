@@ -11,6 +11,9 @@ import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
 
 import SciLean.Tactic.StructuralInverse
+
+import SciLean.Data.Function
+import SciLean.Data.ArraySet
  
 open Lean Meta.Simp Qq
 
@@ -41,15 +44,14 @@ initialize registerOption `linter.ftransDeclName { defValue := true, descr := "s
 
 open Meta Simp
 
-def _root_.Function.Inverse (g : β → α) (f : α → β) :=
-  Function.LeftInverse g f ∧ Function.RightInverse g f
-
-
 /-- Data for `fun x i => f x (h i)` case when `h` is invertible
 -/
 structure PiInvData where
-  -- {u v w u' v' w' : Level}
-  {X Y I I₁ I₂ J : Q(Type)}
+  {u v w w' : Level}
+  {X : Q(Type u)}
+  {Y : Q(Type v)}
+  {I : Q(Type w)}
+  {J : Q(Type w')}
   (f : Q($X → $J → $Y))
   (h  : Q($I → $J))
   (h' : Q($J → $I))
@@ -98,6 +100,8 @@ structure FTransExt where
   piConstRule      (expr f I : Expr) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i j => f x i j` -/
   piUncurryRule    (expr f : Expr) : SimpM (Option Simp.Step) := return none
+  /-- Custom rule for transforming `fun x (is : Is) => uncurryN n (f x) is` where `uncurryN n (f x)` has type `Is → Y` -/
+  piCurryNRule    (expr f Is Y : Expr) (n : Nat) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i => (f x i, g x i)` -/
   piProdRule    (expr f g : Expr) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i => f (g x i) i` -/
@@ -109,9 +113,9 @@ structure FTransExt where
   /-- Custom rule for transforming `fun x i => f (g x i)` -/
   piSimpleCompRule (expr f g : Expr) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i => f x (h i)` when `h` has inverse -/
-  piInvRule  (expr : Expr) (data : PiInvData) : SimpM (Option Simp.Step) := return none
+  piInvRule  (expr f : Expr) (inv : FullInverse) : SimpM (Option Simp.Step) := return none
   /-- Custom rule for transforming `fun x i => f x (h i)` when `h` has left inverse  -/
-  piLInvRule (expr : Expr) (data : PiLInvData) : SimpM (Option Simp.Step) := return none
+  piRInvRule (expr f : Expr) (rinv : RightInverse) : SimpM (Option Simp.Step) := return none
   
   /-- Custom discharger for this function transformation -/
   discharger : Expr → SimpM (Option Expr)
@@ -193,24 +197,56 @@ def getFTransFun? (e : Expr) : CoreM (Option Expr) := do
 
 initialize registerTraceClass `trace.Tactic.ftrans.new_property
 
+structure FTransRule where
+  -- ftransName : Name
+  -- constName : Name
+  ruleName : Name
+  priority : Nat := 1000
+  /-- Set of active argument indices in this rule
+  For example:
+   - rule `∂ (fun x => @HAdd.hAdd _ _ _ _ (f x) (g x)) = ...` has `argIds = #[4,5]` 
+   - rule `∂ (fun x => @HAdd.hAdd _ _ _ _ (f x) y) = ...` has `argIds = #[4]` -/
+  argIds : ArraySet Nat
+  /-- Set of trailing argument indices in this rule
+  For example: 
+  - rule `∂ (fun x i => @getElem _ _ _ _ _ (f x) i dom ` has `piArgs = #[6]`
+  - rule `∂ (fun f x => @Function.invFun _ _ _ f x` has `piArgs = #[4]`
+  - rule `∂ (fun x => (f x) + (g x)` has `piArgs = #[]`
+  -/
+  piIds : ArraySet Nat
+
+def FTransRule.cmp (a b : FTransRule) : Ordering :=
+  match a.piIds.lexOrd b.piIds with
+  | .lt => .lt 
+  | .gt => .gt 
+  | .eq => 
+    match a.argIds.lexOrd b.argIds with
+    | .lt => .lt
+    | .gt => .gt
+    | .eq => 
+      match compare a.priority b.priority with
+      | .lt => .lt
+      | .gt => .gt
+      | .eq => a.ruleName.quickCmp b.ruleName
+
 local instance : Ord Name := ⟨Name.quickCmp⟩
 /-- 
-This holds a collection of property theorems for a fixed constant
+This holds a collection of function transformation rules for a fixed constant
 -/
-def FTransRules := Std.RBMap Name (Std.RBSet Name compare /- maybe (Std.RBSet SimTheorem ...) -/) compare
+def FTransRules := Std.RBMap Name (Std.RBSet FTransRule FTransRule.cmp) compare
 
 namespace FTransRules
 
   instance : Inhabited FTransRules := by unfold FTransRules; infer_instance
-  instance : ToString FTransRules := ⟨fun s => toString (s.toList.map fun (n,r) => (n,r.toList))⟩
+  -- instance : ToString FTransRules := ⟨fun s => toString (s.toList.map fun (n,r) => (n,r.toList))⟩
 
   variable (fp : FTransRules)
 
-  def insert (property : Name) (thrm : Name) : FTransRules := 
-    fp.alter property (λ p? =>
+  def insert (ftransName : Name) (rule : FTransRule) : FTransRules := 
+    fp.alter ftransName (λ p? =>
       match p? with
-      | some p => some (p.insert thrm)
-      | none => some (Std.RBSet.empty.insert thrm))
+      | some p => some (p.insert rule)
+      | none => some (Std.RBSet.empty.insert rule))
 
   def empty : FTransRules := Std.RBMap.empty
 
@@ -251,35 +287,89 @@ To register function transformation call:
 ```
 where <name> is name of the function transformation and <info> is corresponding `FTrans.Info`.
 "
-          let .some funName ← getFunHeadConst? f
-            | throwError "Function being transformed is in invalid form!"
+           
+          -- in rare cases `f` is not a function
+          -- for example this is case for monadic `fwdDerivValM`
+          if ¬f.isLambda then
+            let .const funName _ := f.getAppFn
+              | throwError "Function being transformed is in invalid form! The head of {← ppExpr f} is not a constant but it is {f.ctorName}!"
+            
+            if (← inferType f).isForall then
+              throwError "Function being transformed is in invalid form! Function has to appear in fully applied form!"
+            
+            let ftransRule : FTransRule := {
+              ruleName := ruleName
+              argIds := #[].toArraySet
+              piIds := #[].toArraySet
+            }
 
-          let depArgIds :=
-            match f with
-            | .lam _ _ body _ =>
-              body.getAppArgs
-                |>.mapIdx (fun i arg => if arg.hasLooseBVars then Option.some i.1 else none)
-                |>.filterMap id
-            | _ => #[f.getAppNumArgs]
+            FTransRulesExt.insert funName (FTransRules.empty.insert transName ftransRule)
 
-          let argNames ← getConstArgNames funName (fixAnonymousNames := true)
-          let depNames := depArgIds.map (fun i => argNames[i]?.getD default)
+          else
 
-          let argSuffix := "arg_" ++ depNames.foldl (·++·.toString) ""
+            lambdaTelescope f fun xs b => do
+              let .some x := xs[0]?
+                | throwError "Function being transformed is in invalid form! It has to be a lambda function!"
+              let .const funName _ := b.getAppFn
+                | throwError "Function being transformed is in invalid form! The head of {← ppExpr b} is not a constant but it is {b.ctorName}!"
+              if xs.size > 2 then
+                throwError "Function being transformed is in invalid form! Only one trailing argument is currently supported!"
 
-          let suggestedRuleName :=
-            funName |>.append argSuffix
-                    |>.append (transName.getString.append "_rule")
+              let xId := x.fvarId!
 
+              let arity ← getConstArity funName
+              let args := b.getAppArgs
 
-          if (← getBoolOption `linter.ftransDeclName true) &&
-             ¬(suggestedRuleName.toString.isPrefixOf ruleName.toString) then
-            logWarning s!"suggested name for this rule is {suggestedRuleName}"
+              if args.size ≠ arity then
+                throwError "Function being transformed is in invalid form! Function has to appear in fully applied form!"
 
-          FTransRulesExt.insert funName (FTransRules.empty.insert transName ruleName)
+              let argIds := 
+                args.mapIdx (fun i arg => if arg.containsFVar xId then .some i.1 else none)
+                    |>.filterMap id
+
+              let piIds ← 
+                if let .some y := xs[1]? then
+                  let yId := y.fvarId!
+                  let piArgs := 
+                    args.mapIdx (fun i arg => if arg.containsFVar yId then .some (i.1,arg) else none) 
+                        |>.filterMap id
+                  if piArgs.size ≠ 1 then
+                    throwError "Function being transformed is in invalid form! Trailing argument `{← ppExpr y}` can appear in only one argument, but it appears in `{← piArgs.mapM (fun (_,arg) => ppExpr arg)}`"
+                  pure (piArgs.map (fun (i,_) => i))
+                else
+                  pure #[]
+
+              let argNames ← getConstArgNames funName (fixAnonymousNames := true)
+              let depName := 
+                argIds.map (fun i => argNames[i]?.getD default)
+                      |>.foldl (·++·.toString) ""
+
+              let piName := 
+                piIds.map (fun i => argNames[i]?.getD default)
+                      |>.foldl (·++·.toString) ""
+
+              let argSuffix := 
+                "arg" ++ if depName ≠ "" then "_" ++ depName else ""
+                      ++ if piName ≠ "" then "_" ++ piName else ""
+
+              let suggestedRuleName :=
+                funName |>.append argSuffix
+                        |>.append (transName.getString.append "_rule")
+
+              if (← getBoolOption `linter.ftransDeclName true) &&
+                 ¬(suggestedRuleName.toString.isPrefixOf ruleName.toString) then
+                logWarning s!"suggested name for this rule is {suggestedRuleName}"
+
+              let ftransRule : FTransRule := {
+                ruleName := ruleName
+                argIds := argIds.toArraySet
+                piIds := piIds.toArraySet
+              }
+
+              FTransRulesExt.insert funName (FTransRules.empty.insert transName ftransRule)
       )           
 
-open Meta in
+
 def getFTransRules (funName ftransName : Name) : CoreM (Array SimpTheorem) := do
 
   let .some rules ← FTransRulesExt.find? funName
@@ -288,12 +378,36 @@ def getFTransRules (funName ftransName : Name) : CoreM (Array SimpTheorem) := do
   let .some rules := rules.find? ftransName
     | return #[]
 
-  let rules : List SimpTheorem ← rules.toList.mapM fun r => do
-    return {
-      proof  := mkConst r
-      origin := .decl r
-      rfl    := false
-    }
+  let rules : List SimpTheorem ← rules.toList.filterMapM fun r => do
+    if r.piIds.size ≠ 0 then
+      return none
+    else
+      return .some {
+        proof  := mkConst r.ruleName
+        origin := .decl r.ruleName
+        rfl    := false
+      }
+
+  return rules.toArray
+
+
+def getFTransPiRules (funName ftransName : Name) : CoreM (Array SimpTheorem) := do
+
+  let .some rules ← FTransRulesExt.find? funName
+    | return #[]
+
+  let .some rules := rules.find? ftransName
+    | return #[]
+
+  let rules : List SimpTheorem ← rules.toList.filterMapM fun r => do
+    if r.piIds.size = 0 then
+      return none
+    else
+      return .some {
+        proof  := mkConst r.ruleName
+        origin := .decl r.ruleName
+        rfl    := false
+      }
 
   return rules.toArray
 

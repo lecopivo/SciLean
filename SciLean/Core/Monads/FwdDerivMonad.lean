@@ -503,10 +503,9 @@ theorem Pure.pure.arg_a0.fwdDerivM_rule
 by 
   apply FwdDerivMonad.fwdDerivM_pure a0 ha0
 
-
 set_option linter.fpropDeclName false in
 @[fprop]
-theorem Pure.pure.IsDifferentiableValM_rule (x : X)
+theorem Pure.pure.arg.IsDifferentiableValM_rule (x : X)
   : IsDifferentiableValM K (pure (f:=m) x) :=  
 by
   unfold IsDifferentiableValM
@@ -514,7 +513,6 @@ by
   fprop
 
 
-set_option linter.ftransDeclName false in
 @[ftrans]
 theorem Pure.pure.fwdDerivValM_rule (x : X)
   : fwdDerivValM K (pure (f:=m) x)
