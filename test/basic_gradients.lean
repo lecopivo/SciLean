@@ -117,6 +117,20 @@ example
 by
   (conv => lhs; autodiff)
 
+example 
+  : (∇ (x : Fin 10 → K), fun ij : Fin 5 × Fin 10 => x ij.2)
+    =
+    fun _ dx i => ∑ j, dx (j,i) :=
+by
+  (conv => lhs; autodiff)
+
+example 
+  : (∇ (x : Fin 5 → K), fun ij : Fin 5 × Fin 10 => x ij.1)
+    =
+    fun _ dx i => ∑ j, dx (i,j) :=
+by
+  (conv => lhs; autodiff)
+
 -- TODO remove `hf'` assumption, is should be automatically deduced from `hf` once #23 is resolved
 example (f : X → Fin 5 → Fin 10 → Fin 15→ K) (hf : ∀ i j k, HasAdjDiff K (f · i j k))
   (hf' : HasAdjDiff K f)
