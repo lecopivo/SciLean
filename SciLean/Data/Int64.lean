@@ -1,6 +1,7 @@
+import SciLean.Util.SorryProof
+
 namespace SciLean
 
-@[unbox]
 structure Int64 : Type where
   val : USize
 
@@ -24,8 +25,26 @@ instance : Sub Int64 := ⟨fun x y => ⟨x.toUSize - y.toUSize⟩⟩
 instance : Neg Int64 := ⟨fun x   => ⟨(0:USize) - (x.toUSize)⟩⟩
 instance : Mul Int64 := ⟨fun x y => ⟨x.toUSize * y.toUSize⟩⟩
 
+def Int64.comp (x y : Int64) : Ordering :=
+  match x.isNegative, y.isNegative with
+  | true, false => .lt
+  | false, true => .gt
+  | true, true => compare x.1 y.1
+  | false, false => compare x.1 y.1
 
+instance : LE Int64 := ⟨fun x y => x.comp y != .gt⟩
+instance : LT Int64 := ⟨fun x y => x.comp y == .lt⟩
 
+instance Int64.decLt (a b : Int64) : Decidable (a < b) := 
+  if h : a.comp b == .lt then
+    .isTrue h
+  else
+    .isFalse h
 
+instance Int64.decLe (a b : Int64) : Decidable (a ≤ b) :=
+  if h : a.comp b != .gt then
+    .isTrue h
+  else
+    .isFalse h
 
-
+instance : DecidableEq Int64 := fun x y => if _h : x.1 = y.1 then .isTrue sorry_proof else .isFalse sorry_proof
