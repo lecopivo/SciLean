@@ -181,3 +181,27 @@ example
     fun _ dx i j k => dx k i j :=
 by
   (conv => lhs; autodiff)
+
+
+example 
+  : (∇ (x : Fin 10 → K), fun i j => x i * x j)
+    = 
+    fun x dx i => ∑ j, x j * dx i j + ∑ j, x j * dx j i:=
+by
+  (conv => lhs; autodiff)
+
+
+example 
+  : (∇ (x : Fin 10 → K), fun (i : Fin 10) (j : Fin 5) => x (i+j))
+    = 
+    fun x dy i => ∑ (j : Fin 5), dy (i - j) j :=
+by
+  (conv => lhs; autodiff; autodiff)
+
+
+-- example (w : Fin 5 → K)
+--   : (∇ (x : Fin 10 → K), fun (i : Fin 10) (j : Fin 5) => w j * x (i + j))
+--     = 
+--     fun x dy => sorry :=
+-- by
+--   (conv => lhs; autodiff; autodiff)

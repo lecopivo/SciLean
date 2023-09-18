@@ -312,7 +312,7 @@ def piChangeOfVarsCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Exp
           trace[Meta.Tactic.ftrans.step] "computed inverse {← ppExpr finv.invFun}"
           return ← ext.piInvRule e (← mkLambdaFVars #[x] g') finv
       | .right rinv => 
-        trace[Meta.Tactic.ftrans.step] "only right inverse, skipping for now"
+        trace[Meta.Tactic.ftrans.step] "computed right inverse {← ppExpr rinv.invFun}"
         return ← ext.piRInvRule e (← mkLambdaFVars #[x] g') rinv
   | _ => throwError "expected expression of the form `fun x i => f x i`"
 

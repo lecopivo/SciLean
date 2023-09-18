@@ -505,17 +505,6 @@ theorem pi_inv_rule
 by
   sorry_proof
 
-theorem pi_rinv_rule' {ι₁ ι₂: Type _} [EnumType ι₁] [EnumType ι₂]
-  (f : X → κ → Y) (h : ι → κ) (h' : ι₁ → κ → ι) (hh : ∀ i₁, Function.RightInverse (h' i₁) h)
-  (p₁ : ι → ι₁) (p₂ : ι → ι₂) (q : ι₁ → ι₂ → ι) (dec : Meta.IsDecomposition p₁ p₂ q)
-  (hf : ∀ j, HasSemiAdjoint K (f · j)) 
-  : (semiAdjoint K fun x i => f x (h i))
-    =
-    fun x' => 
-      let f' := semiAdjoint K f
-      f' fun j => ∑ i₁, (x' (h' i₁ j)) :=
-by
-  sorry_proof
 
 -- TODO these are not sufficient conditions for this to be true, we need that `h'` induces isomorphism `ι≃ι₁×κ` 
 theorem pi_rinv_rule {ι₁ : Type _} [EnumType ι₁]
@@ -527,7 +516,7 @@ theorem pi_rinv_rule {ι₁ : Type _} [EnumType ι₁]
       let ydf := revCDeriv K f x
       (fun i => ydf.1 (h i),
        fun dy => 
-         ydf.2 (fun j => ∑ i₁, dy (h' i₁ j))) := 
+         ydf.2 (fun j => ∑ i, dy (h' i j))) := 
 by
   sorry_proof
 
