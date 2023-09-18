@@ -262,6 +262,18 @@ theorem HSMul.hSMul.arg_a1.Bijective_rule_field
   := by sorry_proof
 
 
+-- VAdd.vAdd -------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+
+@[fprop]
+theorem HVAdd.hVAdd.arg_a1.Bijective_rule_group
+  [AddGroup G] [AddAction G Y]
+  (g : G) (f : X → Y) (hf : Bijective f)
+  : Bijective (fun x => g +ᵥ f x)
+  := by sorry_proof
+
+
 
 -- HDiv.hDiv -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 

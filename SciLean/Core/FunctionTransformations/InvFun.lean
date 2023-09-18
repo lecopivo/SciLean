@@ -334,6 +334,20 @@ def HSMul.hSMul.arg_a1.invFun_rule_field
   := by sorry_proof
 
 
+-- VAdd.vAdd -------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+
+@[ftrans]
+def HVAdd.hVAdd.arg_a1.invFun_rule_group
+  [AddGroup G] [AddAction G Y]
+  (g : G) (f : X → Y) (hf : Bijective f)
+  : invFun (fun x => g +ᵥ f x)
+    =
+    fun y =>
+      invFun f (-g +ᵥ y)
+  := by sorry_proof
+
 
 -- Equiv.toFun/invFun ----------------------------------------------------------
 --------------------------------------------------------------------------------
