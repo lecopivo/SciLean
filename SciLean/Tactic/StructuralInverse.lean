@@ -8,6 +8,8 @@ set_option linter.unusedVariables false
 
 open Lean Meta Qq
 
+initialize registerTraceClass `Meta.Tactic.structuralInverse.step
+
 /--
 This comparison is used to select the FVarIdSet with the least number of element but non-empty one! Thus zero size sets are bigger then everything else
 -/
@@ -33,6 +35,30 @@ private structure SystemInverse where
   xVals : Array Expr
 
 
+private def equationsToString (yVals fVals : Array Expr) : MetaM String :=
+  yVals.zip fVals 
+    |>.joinlM (fun (y,val) => do pure s!"{← ppExpr y} = {← ppExpr val}") 
+              (fun s s' => pure (s ++ "\n" ++ s'))
+
+
+private def partiallyResolvedSystemToString 
+  (lctx : LocalContext) (xResVars' yVals : Array Expr) 
+  (eqs : Array (Nat × Expr × FVarIdSet)) : MetaM String := do
+  withLCtx lctx (← getLocalInstances) do
+    let lets ← xResVars'.joinlM (fun var => do pure s!"let {← var.fvarId!.getUserName} := {← ppExpr (← var.fvarId!.getValue?).get!}")
+                                 (fun s s' => pure (s ++ "\n" ++ s'))
+    let (yVals', fVals') := eqs.filterMap (fun (i,val,idset) => if idset.size = 0 then none else .some (yVals[i]!, val))
+         |>.unzip
+    pure s!"{lets}\n{← equationsToString yVals' fVals'}"
+
+private def afterBackwardPassSystemToString 
+  (lctx : LocalContext) (xResVars' xVars'' xVars xVals : Array Expr) := do
+  withLCtx lctx (← getLocalInstances) do
+    let lets ← (xResVars' ++ xVars'').joinlM (fun var => do pure s!"let {← var.fvarId!.getUserName} := {← ppExpr (← var.fvarId!.getValue?).get!}")
+                                 (fun s s' => pure (s ++ "\n" ++ s'))
+    pure s!"{lets}\n{← equationsToString xVars xVals}"
+    
+
 /-- 
 Solves the system of m-equations in n-variables
 ```
@@ -46,6 +72,8 @@ Returns values of `xᵢ` in terms of `yⱼ`.
 If `n>m` then the values `xᵢ` can depend also on other `xₖ`. The set `n-m` xs
 -/
 private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Option (SystemInverse × Array MVarId)) := do
+
+  trace[Meta.Tactic.structuralInverse.step] "inverting system in variables {← xVars.mapM ppExpr}\n{← equationsToString yVals fVals}"
 
   let xIdSet : FVarIdSet := .fromArray (xVars.map (fun x => x.fvarId!)) _
 
@@ -83,6 +111,8 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let xVar' := varArr[xVarId]!
     let varArrOther := varArr.eraseIdx xVarId
 
+    trace[Meta.Tactic.structuralInverse.step] "resolving {xVar'} from {yVals[j]!} = {← withLCtx lctx instances <| ppExpr yVal}"
+
     let xName ← xVar'.fvarId!.getUserName
 
     -- new value of x but it can still depend on x that have not been resolved
@@ -98,7 +128,10 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
         pure (f, .some goal)
 
     if let .some goal := goal? then
+      trace[Meta.Tactic.structuralInverse.step] "new obligation {← withLCtx lctx instances <| ppExpr (← goal.getType)}"
       goals := goals.push goal
+
+    trace[Meta.Tactic.structuralInverse.step] "resolved {← ppExpr xVar'} with {← withLCtx lctx instances <| ppExpr xVal'}"
 
     -- xRes is a function resolving x given all unresolved xs
     let xResId ← withLCtx lctx instances <| mkFreshFVarId
@@ -109,7 +142,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
       inferType xResVal
     lctx := lctx.mkLetDecl xResId (xName.appendAfter "'") xResType xResVal
 
-    let xVal'' := mkAppN xResVar varArr[1:]
+    let xVal'' := mkAppN xResVar varArrOther
 
     xVars' := xVars'.push xVar'
     xVals' := xVals'.push xVal''
@@ -127,6 +160,12 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
       else
         (j, default, {})
 
+    let (yVals',fVals') := 
+      eqs.filterMap (fun (i,val,idset) => if idset.size = 0 then none else .some (yVals[i]!, val))
+         |>.unzip
+    trace[Meta.Tactic.structuralInverse.step] "system after resolving {← ppExpr xVar'}\n{← partiallyResolvedSystemToString lctx xResVars' yVals eqs}"
+
+
   let mut xVars'' : Array Expr := #[]
 
   -- backward pass
@@ -143,10 +182,11 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let xVal'' := xVal'.replaceFVars xVars'[0:i] xVars''
     xVars'' := xVars''.push xVar''
 
-    lctx := lctx.mkLetDecl xId'' (← xId.getUserName) (← xId.getType) xVal''
-
+    lctx := lctx.mkLetDecl xId'' ((← xId.getUserName).appendAfter "''") (← xId.getType) xVal''
 
   let xVals := xVars.map (fun xVar => xVar.replaceFVars xVars' xVars'')
+
+  trace[Meta.Tactic.structuralInverse.step] "system after backward pass\n{← afterBackwardPassSystemToString lctx xResVars' xVars'' xVars xVals}"
 
   let resolvedIdSet : FVarIdSet := .fromArray (xVars'.map (fun x => x.fvarId!)) _
   let unresolvedIdSet := xIdSet.diff resolvedIdSet
