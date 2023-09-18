@@ -213,6 +213,23 @@ example  (w : Idx' (-5) 5 → K)
     fun _x dy i => ∑ (j : Idx' (-5) 5), w j * dy (-j.1 +ᵥ i) :=
 by
   conv => lhs; autodiff; autodiff
+
+
+example  (w : K ^ Idx' (-5) 5)
+  : (∇ (x : K ^ Idx 10), ⊞ (i : Idx 10) => ∑ j, w[j] * x[j.1 +ᵥ i])
+    = 
+    fun _x dy => ⊞ i => ∑ (j : Idx' (-5) 5), w[j] * dy[-j.1 +ᵥ i] :=
+by
+  conv => lhs; autodiff; autodiff; simp
+
+
+example  (w : K ^ (Idx' (-5) 5 × Idx' (-5) 5))
+  : (∇ (x : K ^ (Idx 10 × Idx 10)), ⊞ (i : Idx 10 × Idx 10) => ∑ j, w[j] * x[(j.1.1 +ᵥ i.1, j.2.1 +ᵥ i.2)])
+    = 
+    fun _x dy => 
+      ⊞ i => ∑ j, w[j] * dy[(-j.fst.1 +ᵥ i.fst, -j.snd.1 +ᵥ i.snd)] :=
+by
+  conv => lhs; autodiff; autodiff; simp
   
   
 
