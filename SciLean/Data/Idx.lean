@@ -43,17 +43,19 @@ private theorem mlt {b : USize} : {a : USize} → a < n → b % n < n := sorry_p
 -- We want these operations to be invertible in `x` for every `y`. Is that the case?
 -- Maybe we need to require that `n < USize.size/2`
 @[default_instance]
-instance {n} : HAdd (Idx n) USize (Idx n) := ⟨λ x y => ⟨(x.1 + y)%n, sorry_proof⟩⟩
+instance : HAdd (Idx n) USize (Idx n) := ⟨λ x y => ⟨(x.1 + y)%n, sorry_proof⟩⟩
 @[default_instance]
-instance {n} : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨((x.1 + n) - (y + n))%n, sorry_proof⟩⟩
+instance : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨((x.1 + n) - (y + n))%n, sorry_proof⟩⟩
 @[default_instance]
-instance {n} : HMul USize (Idx n) (Idx n) := ⟨λ x y => ⟨(x * y.1)%n, sorry_proof⟩⟩
+instance : HMul USize (Idx n) (Idx n) := ⟨λ x y => ⟨(x * y.1)%n, sorry_proof⟩⟩
 
 @[default_instance]
-instance {n} : HAdd (Idx n) Int64 (Idx n) := ⟨λ x y => ⟨(x.1 + y.1 + n)%n, sorry_proof⟩⟩
+instance : HAdd (Idx n) Int64 (Idx n) := ⟨λ x y => ⟨(x.1 + y.1 + n)%n, sorry_proof⟩⟩
 @[default_instance]
-instance {n} : HSub (Idx n) Int64 (Idx n) := ⟨λ x y => ⟨(x.1 - (y.1 + n))%n, sorry_proof⟩⟩
+instance : HSub (Idx n) Int64 (Idx n) := ⟨λ x y => ⟨(x.1 - (y.1 + n))%n, sorry_proof⟩⟩
 
+@[default_instance]
+instance : VAdd Int64 (Idx n) := ⟨λ x y => y + x⟩
 
 def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry_proof⟩
 def toFloat {n} (i : Idx n) : Float := i.1.toNat.toFloat
@@ -88,6 +90,7 @@ instance : Fintype (Idx n) where
 
 instance (n : Nat) : Nonempty (Idx (no_index (OfNat.ofNat (n+1)))) := sorry_proof
 instance (n : Nat) : OfNat (Idx (no_index (OfNat.ofNat (n+1)))) i := ⟨(i % (n+1)).toUSize, sorry_proof⟩
+
 
 end Idx
 
@@ -134,7 +137,4 @@ instance : Fintype (Idx n) where
 instance : Inhabited (Idx' (no_index (-a)) (no_index a)) where
   default := ⟨0, sorry_proof⟩
 instance : Nonempty (Idx' (no_index (-a)) (no_index a)) := by infer_instance
-
-
-
 

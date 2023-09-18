@@ -19,6 +19,8 @@ def Int64.absValue (n : Int64) : USize :=
 def Int64.abs (n : Int64) : Int64 := ⟨n.absValue⟩
 def Int64.toFloat (n : Int64) : Float := if n.isPositive then n.toUSize.toNat.toFloat else -((0:USize) - (n.toUSize)).toNat.toFloat
 
+def _root_.USize.toInt64 (x : USize) : Int64 := ⟨x⟩
+
 instance : ToString Int64 := ⟨fun i => if i.isPositive then toString i.absValue else s!"-{i.absValue}"⟩
 instance : OfNat Int64 n := ⟨⟨n.toUSize⟩⟩
 instance : Add Int64 := ⟨fun x y => ⟨x.toUSize + y.toUSize⟩⟩

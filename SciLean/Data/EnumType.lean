@@ -89,6 +89,25 @@ namespace EnumType
     forIn := Idx.forIn
   }
 
+  @[inline]
+  partial def Idx'.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Idx' a b → β → m (ForInStep β)) :=
+      let rec @[specialize] forLoop (i : Int64) (val : β) (_ := (⟨init⟩ : Inhabited β)) : m (ForInStep β) := do
+        if _h : i ≤ b then
+          match (← f ⟨i,sorry_proof⟩ val) with
+          | ForInStep.done val  => pure (.done val)
+          | ForInStep.yield val => forLoop (i + 1) val
+        else
+          pure (.yield val)
+      forLoop a init
+
+  @[inline]
+  partial instance : EnumType (Idx' a b) :=
+  {
+    decEq := by infer_instance
+
+    forIn := Idx'.forIn
+  }
+
 
   -- /-- Embeds `ForInStep β` to `FoInStep (ForInStep β)`, useful for exiting from double for loops.
   -- -/

@@ -55,6 +55,16 @@ instance : Index (Idx n) where
   fromIdx_toIdx := by simp
   toIdx_fromIdx := by simp
 
+instance : Index (Idx' a b) where
+  size := let n := b - a; if 0 < n then n.toUSize else 0
+  isValid := true
+
+  fromIdx i := ⟨i.1.toInt64 + a, sorry_proof⟩
+  toIdx i := ⟨(i.1 - a).1, sorry_proof⟩
+  
+  fromIdx_toIdx := sorry_proof
+  toIdx_fromIdx := sorry_proof
+
 
 -- Row major ordering, this respects `<` defined on `ι × κ`
 instance [Index ι] [Index κ] : Index (ι×κ) where  
