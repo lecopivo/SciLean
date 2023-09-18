@@ -1,5 +1,6 @@
 import Mathlib.Data.Fintype.Basic
 import SciLean.Util.SorryProof
+import SciLean.Data.Int64
 
 namespace SciLean
 
@@ -44,9 +45,15 @@ private theorem mlt {b : USize} : {a : USize} → a < n → b % n < n := sorry_p
 @[default_instance]
 instance {n} : HAdd (Idx n) USize (Idx n) := ⟨λ x y => ⟨(x.1 + y)%n, sorry_proof⟩⟩
 @[default_instance]
-instance {n} : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨((x.1 + n) - (y%n))%n, sorry_proof⟩⟩
+instance {n} : HSub (Idx n) USize (Idx n) := ⟨λ x y => ⟨((x.1 + n) - (y + n))%n, sorry_proof⟩⟩
 @[default_instance]
 instance {n} : HMul USize (Idx n) (Idx n) := ⟨λ x y => ⟨(x * y.1)%n, sorry_proof⟩⟩
+
+@[default_instance]
+instance {n} : HAdd (Idx n) Int64 (Idx n) := ⟨λ x y => ⟨(x.1 + y.1 + n)%n, sorry_proof⟩⟩
+@[default_instance]
+instance {n} : HSub (Idx n) Int64 (Idx n) := ⟨λ x y => ⟨(x.1 - (y.1 + n))%n, sorry_proof⟩⟩
+
 
 def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry_proof⟩
 def toFloat {n} (i : Idx n) : Float := i.1.toNat.toFloat
@@ -82,4 +89,52 @@ instance : Fintype (Idx n) where
 instance (n : Nat) : Nonempty (Idx (no_index (OfNat.ofNat (n+1)))) := sorry_proof
 instance (n : Nat) : OfNat (Idx (no_index (OfNat.ofNat (n+1)))) i := ⟨(i % (n+1)).toUSize, sorry_proof⟩
 
--- #check (0 : Idx 10)
+end Idx
+
+--------------------------------------------------------------------------------
+
+
+
+/-- `Idx' a b = {x : Int64 // a ≤ x ∧ x ≤ b}`
+
+WARRNING: Needs serious revision such that overflows are handled correctly!
+-/
+structure Idx' (a b : Int64) where
+  val : Int64
+  property : a ≤ val ∧ val ≤ b
+  -- Maybe add this assumption then adding two `Idx n` won't cause overflow
+  -- not_too_big : n < (USize.size/2).toUSize
+deriving DecidableEq
+
+instance : ToString (Idx' a b) := ⟨λ i => toString i.1⟩
+
+instance {a b} : LT (Idx' a b) where
+  lt a b := a.val < b.val
+
+instance {a b} : LE (Idx' a b) where
+  le a b := a.val ≤ b.val
+
+namespace Idx'
+
+variable {a b : Int64}
+
+def toFloat (i : Idx' a b) : Float := i.1.toFloat
+  
+instance : Fintype (Idx n) where
+  elems := {
+      val := Id.run do
+        let mut l : List (Idx n) := []
+        for i in [0:n.toNat] do
+          l := ⟨i.toUSize, sorry_proof⟩ :: l
+        Multiset.ofList l.reverse
+      nodup := sorry_proof
+    }
+  complete := sorry_proof
+
+instance : Inhabited (Idx' (no_index (-a)) (no_index a)) where
+  default := ⟨0, sorry_proof⟩
+instance : Nonempty (Idx' (no_index (-a)) (no_index a)) := by infer_instance
+
+
+
+
