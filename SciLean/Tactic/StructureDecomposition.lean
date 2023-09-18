@@ -55,11 +55,11 @@ partial def splitStructureElem (e : Expr) : MetaM (Array Expr × Expr) := do
   let .const structName lvls := E.getAppFn'
     | return (#[e], idE)
 
-  if ¬(← simpleDataStructure structName) then
-    return (#[e], idE)
-
   let .some info := getStructureInfo? (← getEnv) structName
     | return (#[e], idE)
+
+  if ¬(← simpleDataStructure structName) then
+    return (#[e], idE)
 
   let ctorVal := getStructureCtor (← getEnv) structName
 

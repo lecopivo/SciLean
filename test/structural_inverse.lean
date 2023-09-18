@@ -47,7 +47,6 @@ info: fun ij1 y => (y.snd, ij1, y.fst)
     | throwError "failed to invert"
   IO.println (← ppExpr f'.invFun)  
 
-
 /-- 
 info: fun y => (y.snd.fst, y.snd.snd, y.fst)
 -/
@@ -57,3 +56,36 @@ info: fun y => (y.snd.fst, y.snd.snd, y.fst)
   let .some (.full f', _) ← structuralInverse f
     | throwError "failed to invert"
   IO.println (← ppExpr f'.invFun)  
+
+
+/--
+info: fun x1 y =>
+  let x0' := fun x1 => Function.invFun (fun x0 => x0 + x1) y.snd;
+  let x2' := fun x1 => Function.invFun (fun x2 => x0' x1 + x1 + x2) y.fst;
+  let x2'' := x2' x1;
+  let x0'' := x0' x1;
+  (x0'', x1, x2'')
+-/
+#guard_msgs in
+#eval show MetaM Unit from do
+
+  let e := q(fun ((x,y,z) : Int × Int × Int) => (x+y+z,x+y))
+
+  let .some (.right inv, _) ← structuralInverse e
+    | return ()
+
+  IO.println (← ppExpr inv.invFun)
+
+
+/--
+info: fun x1 y => (y.snd, x1, y.fst)
+-/
+#guard_msgs in
+#eval show MetaM Unit from do
+
+  let e := q(fun ((x,_y,z) : Int × Int × Int) => (z,x))
+
+  let .some (.right inv,_goals) ← structuralInverse e
+    | return ()
+
+  IO.println (← ppExpr inv.invFun)
