@@ -8,6 +8,7 @@ import SciLean.Core.FunctionTransformations
 import SciLean.Core.Monads
 import SciLean.Core.Notation
 import SciLean.Core.Simp
+import SciLean.Core.Data
 
 import SciLean.Core.Approx.Basic
 import SciLean.Core.Approx.ApproxLimit

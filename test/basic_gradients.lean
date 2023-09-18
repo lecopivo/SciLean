@@ -199,9 +199,20 @@ by
   (conv => lhs; autodiff; autodiff)
 
 
--- example (w : Fin 5 → K)
---   : (∇ (x : Fin 10 → K), fun (i : Fin 10) (j : Fin 5) => w j * x (i + j))
---     = 
---     fun x dy => sorry :=
--- by
---   (conv => lhs; autodiff; autodiff)
+example  (w : Idx' (-5) 5 → K)
+  : (∇ (x : Idx 10 → K), fun (i : Idx 10) (j : Idx' (-5) 5) => w j * x (j.1 +ᵥ i))
+    = 
+    fun _x dy i => ∑ (j : Idx' (-5) 5), w j * dy (-j.1 +ᵥ i) j :=
+by
+  conv => lhs; autodiff; autodiff
+
+
+example  (w : Idx' (-5) 5 → K)
+  : (∇ (x : Idx 10 → K), fun (i : Idx 10) => ∑ j, w j * x (j.1 +ᵥ i))
+    = 
+    fun _x dy i => ∑ (j : Idx' (-5) 5), w j * dy (-j.1 +ᵥ i) :=
+by
+  conv => lhs; autodiff; autodiff
+  
+  
+
