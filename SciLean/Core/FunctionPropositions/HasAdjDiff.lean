@@ -375,9 +375,9 @@ by
 section InnerProductSpace
 
 variable 
-  {R : Type} [RealScalar R]
-  {X : Type} [SemiInnerProductSpace R X]
-  {Y : Type} [SemiHilbert R Y]
+  {R : Type _} [RealScalar R]
+  {X : Type _} [SemiInnerProductSpace R X]
+  {Y : Type _} [SemiHilbert R Y]
 
 -- Inner -----------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
