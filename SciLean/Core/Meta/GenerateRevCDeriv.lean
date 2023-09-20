@@ -1,10 +1,12 @@
 import SciLean.Core.Objects.FinVec
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.Notation
+import SciLean.Core.Meta.GenerateInit
 
 namespace SciLean.Meta
 
 open Lean Meta Qq
+
 
 def isTypeQ (e : Expr) : MetaM (Option ((u : Level) × Q(Type $u))) := do
   let u ← mkFreshLevelMVar
@@ -15,33 +17,45 @@ def isTypeQ (e : Expr) : MetaM (Option ((u : Level) × Q(Type $u))) := do
 /-- Returns `(id, u, K)` where `K` is infered field type with universe level `u`
 
 The index `id` tells that arguments `args[id:]` have already `K` in its local context with valid `IsROrC K` instances. -/
-def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × Q(Type $u))) := do
+def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × (K : Q(Type $u)) × Q(IsROrC $K))) := do
 
+  let mut K? : Option Expr := none
   for arg in args do
     let type ← inferType arg
 
     if type.isAppOf ``IsROrC then
-      return ← isTypeQ (type.getArg! 0)
+      K? := type.getArg! 0
+      break
 
     if type.isAppOf ``Scalar then
-      return ← isTypeQ (type.getArg! 1)
+      K? := type.getArg! 0
+      break
 
     if type.isAppOf ``RealScalar then
-      return ← isTypeQ (type.getArg! 0)
+      K? := type.getArg! 0
+      break
 
     if type.isAppOf ``Vec then
-      return ← isTypeQ (type.getArg! 0)
+      K? := type.getArg! 0
+      break
 
     if type.isAppOf ``SemiInnerProductSpace then
-      return ← isTypeQ (type.getArg! 0)
+      K? := type.getArg! 0
+      break
 
     if type.isAppOf ``SemiHilbert then
-      return ← isTypeQ (type.getArg! 0)
+      K? := type.getArg! 0
+      break
 
     if type.isAppOf ``FinVec then
-      return ← isTypeQ (type.getArg! 1)
+      K? := type.getArg! 1
+      break
 
-  return none
+  let .some K := K? | return none
+  let .some ⟨u,K⟩ ← isTypeQ K | return none
+  let isROrC ← synthInstanceQ q(IsROrC $K)
+
+  return .some ⟨u,K,isROrC⟩
 
 def firstExplicitNonTypeIdx (xs : Array Expr) : MetaM Nat := do
   let mut i := 0
@@ -53,6 +67,42 @@ def firstExplicitNonTypeIdx (xs : Array Expr) : MetaM Nat := do
     i := i + 1
   return i
 
+
+
+/-- Checks that type `X` has instance of `SemiInnerProductSpace K ·`. Throws error if instance does not exists. 
+
+TODO: return suggested class to make this succeed. 
+For example:
+- for `X = α` suggest class `SemiInnerProductSpace K α`
+- for `X = ι → α` suggest classes `EnumType ι` and `SemiInnerProductSpace K α`.
+- for `X = DataArrayN α ι` suggest classes `Index ι` and `SemiInnerProductSpace K α`.
+-/
+def  checkObjInstances (K : Expr) (X : Expr) : MetaM Unit := do
+  -- check that return type form SemiInnerProductSpace
+  let .some _semiInnerProductSpace ← synthInstance? (← mkAppM ``SemiInnerProductSpace #[K, X])
+    | throwError "unable to synthesize `SemiInnerProductSpace` for the type {← ppExpr X}"
+
+/-- Checks that types of `xᵢ` and `b` has instances of `SemiInnerProductSpace K ·`. Throws error if instance does not exists.
+ -/
+def  checkArgInstances (K : Expr) (xs : Array Expr) : MetaM Unit := do
+  -- check that all arguments form SemiInnerProductSpace
+  for x in xs do
+    let X ← inferType x
+    checkObjInstances K X
+     
+
+/-- Check that types of `ys` do not depend on fvars `xs` -/
+def checkNoDependentTypes (xs ys : Array Expr) : MetaM Unit := do
+  for y in ys do
+    let Y ← inferType y
+    if let .some x := xs.find? (fun x => Y.containsFVar x.fvarId!) then
+      throwError s!"the type of ({← ppExpr y} : {← ppExpr (← inferType y)}) depends on the argument {← ppExpr x}, dependent types like this are not supported"
+ 
+
+/-- Make local declarations is we have an array of names and types. -/
+def mkLocalDecls [MonadControlT MetaM n] [Monad n] 
+  (names : Array Name) (bi : BinderInfo) (types : Array Expr) : Array (Name × BinderInfo × (Array Expr → n Expr)) :=
+  types.mapIdx (fun i type => (names[i]!, bi, fun _ : Array Expr => pure type))
 
 /-- 
 Replaces `<∂ fᵢ x` with `Tfᵢ` in `e`
@@ -69,12 +119,9 @@ def eliminateTransArgFun (e : Expr) (argFuns transArgFuns transArgFunVars : Arra
         pure .noMatch
       else
         if let .some i ← transArgFuns.findIdxM? (isDefEq · x) then
-          IO.println s!"replacing {← ppExpr x} with {← ppExpr transArgFunVars[i]!}"
           pure (.yield transArgFunVars[i]!)
         else 
           pure .noMatch)
-
-  IO.println s!"transformed function with arguments eliminated succesfully \n{← ppExpr e'}"
 
   if let .some i := argFuns.findIdx? (fun argFun => e'.containsFVar argFun.fvarId!) then
     throwError "Failed to elimate {← ppExpr argFuns[i]!} out of transformed function{←ppExpr e}\n it is expected that {← ppExpr argFuns[i]!} appears only in {← ppExpr transArgFuns[i]!}"
@@ -94,47 +141,28 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax
     let argNames := argIds.toArray.map (fun i => xsNames[i]!)
     let argName := "arg_" ++ argNames.foldl (init := "") (·++ toString ·)
 
-    IO.println s!"arguments {← args.mapM fun arg => do pure s!"({←ppExpr arg} : {← ppExpr (← inferType arg)})"}"
+    trace[Meta.generate_ftrans] "generating revCDeriv for {constName} in arguments {← args.mapM fun arg => do pure s!"({←ppExpr arg} : {← ppExpr (← inferType arg)})"}"
 
-    let .some ⟨u,K⟩ ← getFieldOutOfContextQ xs
+    let .some ⟨u,K,_isROrC⟩ ← getFieldOutOfContextQ xs
       | throwError "unable to figure out what is the field"
 
-    IO.println s!"detected field {← ppExpr K}"
+    trace[Meta.generate_ftrans] "detected field {← ppExpr K}"
 
-    let _isROrC ← synthInstanceQ q(IsROrC $K)
+    -- few checks that we can do what we want to do
+    checkObjInstances K type
+    checkArgInstances K args
+    checkNoDependentTypes args xs
 
-    -- check that return type form SemiInnerProductSpace
-    let .some _semiInnerProductSpace ← synthInstance? (← mkAppM ``SemiInnerProductSpace #[K, type])
-      | throwError "unable to synthesize `SemiInnerProductSpace` for the return type {← ppExpr type}"
-
-    -- check that all arguments form SemiInnerProductSpace
-    for arg in args do
-      let argType ← inferType arg
-      let .some _semiInnerProductSpace ← synthInstance? (← mkAppM ``SemiInnerProductSpace #[K, argType])
-        | throwError "unable to synthesize `SemiInnerProductSpace {← ppExpr K} {← ppExpr argType}` for the argument {← ppExpr arg}"
-      
-    IO.println "all necessary types form SemiInnerProductSpace!"
-
-    -- check for dependent types
-    for x in xs do
-      let X ← inferType x
-      if let .some arg := args.find? (fun arg => X.containsFVar arg.fvarId!) then
-        throwError s!"argument ({← ppExpr x} : {← ppExpr (← inferType x)}) depends on the argument {← ppExpr arg}, dependent types like this are not supported"
-
-    -- let vLvlName := `v
+    let vLvlName := `v
     -- let v ← mkFreshLevelMVar
-    -- let v := Level.param vLvlName
-    withLocalDeclQ `W .implicit q(Type) fun W => do
+    let v := Level.param vLvlName
+    withLocalDeclQ `W .implicit q(Type $v) fun W => do
     withLocalDeclQ `instW .instImplicit q(SemiInnerProductSpace $K $W) fun instW => do
-    withLocalDeclQ (u:=levelOne) `w .default W fun w => do
+    withLocalDeclQ (u:=v) `w .default W fun w => do
 
     -- argFuns are selected arguments parametrized by `W`
-    let argFunDecls ← 
-      args.mapM (fun arg => do
-        let name ← arg.fvarId!.getUserName
-        let bi : BinderInfo := .default
-        let type ← mkArrow W (← inferType arg)
-        pure (name, bi, fun _ : Array Expr => pure (f:=TermElabM) type))
+    let argFunDecls :=
+      mkLocalDecls argNames .default (← args.mapM fun arg => do mkArrow W (← inferType arg))
 
     withLocalDecls argFunDecls fun argFuns => do
 
@@ -145,6 +173,8 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax
           let xs' := Array.mergeSplit splitIds args' otherArgs
           let f ← mkLambdaFVars ((#[w] : Array Expr) ++ args') (mkAppN (← mkConst' constName) xs')
           mkAppM ``revCDeriv #[K,f]
+
+      trace[Meta.generate_ftrans] "lhs for revCDeriv rule\n{← ppExpr lhs}"
 
       let argFunPropDecls ← 
         argFuns.mapM (fun argFun => do
@@ -157,11 +187,7 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax
 
       let (rhs, proof) ← elabConvRewrite lhs conv
 
-      IO.println s!"lhs: {← ppExpr lhs}"
-      IO.println s!"rhs: {← ppExpr rhs}"
-
-      if ¬(← isDefEq (← mkEq lhs rhs) (← inferType proof)) then
-        throwError "generated proof is not type correct, expected proof of\n{← ppExpr (← mkEq lhs rhs)}\nbut got proof of\n{← ppExpr (← inferType proof)}"
+      trace[Meta.generate_ftrans] "rhs for revCDeriv rule\n{← ppExpr rhs}"
 
       let .lam _ _ b _ := rhs
         | throwError "transformed function should be in the form `fun w => ...` but got\n{← ppExpr rhs}"
@@ -170,13 +196,9 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax
 
       let transArgFuns ← argFuns.mapM (fun argFun => mkAppM ``revCDeriv #[K, argFun, w])
 
-      let transArgFunDecls ←
-        argFuns.mapIdxM (fun i argFun => do
-          let name := (← argFun.fvarId!.getUserName)
-          let name := name.appendAfter "d" |>.appendAfter (toString name)
-          let bi : BinderInfo := .default
-          let type ← inferType transArgFuns[i]!
-          pure (name, bi, fun _ : Array Expr => pure (f:=TermElabM) type))
+      let transArgNames := argNames.map (fun n => n.appendAfter "d" |>.appendAfter (toString n))
+      let transArgFunDecls := 
+        mkLocalDecls transArgNames .default (← liftM <| transArgFuns.mapM inferType)
 
       withLocalDecls transArgFunDecls fun transArgFunVars => do
 
@@ -191,7 +213,7 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax
       let fvars := xs'[0:idx] ++ (#[W,instW] : Array Expr) ++ xs'[idx:]
       let transFun ← instantiateMVars (← mkLambdaFVars fvars b')
       let transFunName := constName.append argName |>.append "revCDeriv"
-      IO.println s!"revCDeriv def fun\n{← ppExpr transFun}"
+      trace[Meta.generate_ftrans] "generated revCDeriv function {transFunName}\n{← ppExpr transFun}"
 
       let transFunInfo : DefinitionVal := 
       {
@@ -200,7 +222,7 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax
         value := transFun
         hints := .regular 0
         safety := .safe
-        levelParams := info.levelParams
+        levelParams := vLvlName :: info.levelParams
       }
 
       addAndCompile (.defnDecl transFunInfo)
@@ -209,56 +231,43 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax
       let fvars := xs'[0:idx] ++ (#[W, instW] : Array Expr) ++ xs'[idx:] ++ argFunProps
       let ruleProof ← instantiateMVars (← mkLambdaFVars fvars proof)
       let ruleName := constName.append argName |>.append "revCDeriv_rule"
-      IO.println s!"revCDeriv rule\n{← ppExpr (← inferType ruleProof)}"
+      trace[Meta.generate_ftrans] "revCDeriv rule {ruleName}\n{← ppExpr (← inferType ruleProof)}"
 
       let ruleInfo : TheoremVal := 
       {
         name  := ruleName
         type  := (← inferType ruleProof)
         value := ruleProof
-        levelParams := info.levelParams
+        levelParams := vLvlName :: info.levelParams
       }
 
       addDecl (.thmDecl ruleInfo)
 
-      -- turn ftransArgFunVars to let bindings
-      let mut lctx ← getLCtx
-      for transArgFunVar in transArgFunVars, transArgFun in transArgFuns do
-        lctx := lctx.modifyLocalDecl transArgFunVar.fvarId!
-          fun decl => 
-            match decl with
-            | .cdecl index fvarId userName type _ kind =>
-              .ldecl index fvarId userName type transArgFun false kind
-            | _ => unreachable!
+      withLetDecls argNames transArgFuns fun transArgFunLets => do
 
-      withLCtx lctx (← getLocalInstances) do
-
-        let xs' := Array.mergeSplit splitIds transArgFunVars otherArgs
+        let xs' := Array.mergeSplit splitIds transArgFunLets otherArgs
         let fvars := xs'[0:idx] ++ (#[W,instW] : Array Expr) ++ xs'[idx:]
-        -- TODO: !!!replace transformedFun with new declaration!!!
-        let rhs ← mkLambdaFVars ((#[w] : Array Expr) ++ transArgFunVars) (← mkAppOptM transFunName (fvars.map .some))
+        let rhs ← 
+          mkLambdaFVars 
+            ((#[w] : Array Expr) ++ transArgFunLets) 
+            (← mkAppOptM transFunName (fvars.map .some))
 
         let xs' := Array.mergeSplit splitIds argFuns otherArgs
         let fvars := xs'[0:idx] ++ (#[W, instW] : Array Expr) ++ xs'[idx:] ++ argFunProps
         let ruleDef ← instantiateMVars (← mkForallFVars fvars (← mkEq lhs rhs))
         let ruleDefName := constName.append argName |>.append "revCDeriv_rule_def"
-        IO.println s!"revCDeriv rule def\n{← ppExpr ruleDef}"
+        trace[Meta.generate_ftrans] "revCDeriv def rule {ruleDefName}\n{← ppExpr ruleDef}"
 
         let ruleDefInfo : TheoremVal := 
         {
           name  := ruleDefName
           type  := ruleDef
           value := ruleProof
-          levelParams := info.levelParams
+          levelParams := vLvlName :: info.levelParams
         }
 
         addDecl (.thmDecl ruleDefInfo)
 
-        pure ()
-
-    pure ()
-
-def mymul {K : Type} [IsROrC K] (x y : K) := x * y * x * y
 
 open Lean.Parser.Tactic.Conv in
 syntax "#generate_revCDeriv" term num* " by " convSeq : command
@@ -267,18 +276,9 @@ elab_rules : command
 | `(#generate_revCDeriv $fnStx $argIds:num* by $rw:convSeq) => do
   Command.liftTermElabM do
     let a := argIds.map (fun a => a.getNat)
-    IO.println a
     let fn ← elabTerm fnStx none
     let .some constName := fn.getAppFn'.constName?
       | throwError "unknown function {fnStx}"
     generateRevCDeriv constName a.toArraySet (← `(conv| ($rw)))
 
 
-#generate_revCDeriv mymul 2 3 by unfold mymul; autodiff
-#generate_revCDeriv mymul 2 by unfold mymul; autodiff
-#generate_revCDeriv mymul 3 by unfold mymul; autodiff
-
-#print mymul.arg_x.revCDeriv
-#print mymul.arg_xy.revCDeriv
-#check mymul.arg_xy.revCDeriv_rule
-#check mymul.arg_y.revCDeriv_rule_def
