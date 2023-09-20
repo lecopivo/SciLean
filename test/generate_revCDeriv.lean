@@ -12,21 +12,21 @@ def mymul {K : Type u} [instK : IsROrC K] (x y : K) := x * y
 
 
 /--
-info: mymul.arg_x.revCDeriv.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SemiInnerProductSpace K W]
+info: mymul.arg_x.revCDeriv.{w, u} {K : Type u} [instK : IsROrC K] {W : Type w} [instW : SemiInnerProductSpace K W]
   (xdx : K × (K → W)) (y : K) : K × (K → W)
 -/
 #guard_msgs in
 #check mymul.arg_x.revCDeriv
 
 /--
-info: mymul.arg_xy.revCDeriv.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SemiInnerProductSpace K W]
+info: mymul.arg_xy.revCDeriv.{w, u} {K : Type u} [instK : IsROrC K] {W : Type w} [instW : SemiInnerProductSpace K W]
   (xdx ydy : K × (K → W)) : K × (K → W)
 -/
 #guard_msgs in
 #check mymul.arg_xy.revCDeriv
 
 /--
-info: mymul.arg_y.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SemiInnerProductSpace K W]
+info: mymul.arg_y.revCDeriv_rule_def.{w, u} {K : Type u} [instK : IsROrC K] {W : Type w} [instW : SemiInnerProductSpace K W]
   (x : K) (y : W → K) (hy : HasAdjDiff K y) :
   (<∂ w,
       let y := y w;
@@ -40,7 +40,7 @@ info: mymul.arg_y.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W :
 
 
 /--
-info: mymul.arg_xy.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SemiInnerProductSpace K W]
+info: mymul.arg_xy.revCDeriv_rule_def.{w, u} {K : Type u} [instK : IsROrC K] {W : Type w} [instW : SemiInnerProductSpace K W]
   (x y : W → K) (hx : HasAdjDiff K x) (hy : HasAdjDiff K y) :
   (<∂ w,
       let x := x w;
@@ -54,4 +54,18 @@ info: mymul.arg_xy.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W 
 #guard_msgs in
 #check mymul.arg_xy.revCDeriv_rule_def
 
+
+variable 
+  {K : Type u} [RealScalar K]
+
+def matmul {ι : Type v} {κ : Type v'} [EnumType.{v,u,u} ι] [EnumType κ] (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * x j
+
+
+#generate_revCDeriv matmul 7 by unfold matmul; autodiff
+#generate_revCDeriv matmul 6 by unfold matmul; autodiff
+#generate_revCDeriv matmul 6 7 by unfold matmul; autodiff
+
+-- #generate_revCDeriv matmul x | i by unfold matmul; autodiff
+-- #generate_revCDeriv matmul A | i by unfold matmul; autodiff
+-- #generate_revCDeriv matmul A x | i by unfold matmul; autodiff
 
