@@ -81,13 +81,31 @@ def eliminateTransArgFun (e : Expr) (argFuns transArgFuns transArgFunVars : Arra
 
   return e'
 
+partial def withLetDecls [Inhabited α] -- [MonadControlT MetaM n] [Monad n]
+  (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α := 
+  loop #[]
+where
+  loop [Inhabited α] (acc : Array Expr) : MetaM α := do
+    let i := acc.size
+    if h : i < vals.size then
+      let val := vals[i]
+      let type ← inferType val
+      withLetDecl names[i]! type val fun x => loop (acc.push x)
+    else
+      k acc
 
-def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) : MetaM Unit := do
+open Lean Elab Term
+
+def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax `conv) : TermElabM Unit := do
   let info ← getConstInfoDefn constName
 
   forallTelescope info.type fun xs type => do
 
     let (args, otherArgs, splitIds) := xs.splitIdx (fun i _ => i.1 ∈ argIds)
+
+    let xsNames ← getConstArgNames constName true
+    let argNames := argIds.toArray.map (fun i => xsNames[i]!)
+    let argName := "arg_" ++ argNames.foldl (init := "") (·++ toString ·)
 
     IO.println s!"arguments {← args.mapM fun arg => do pure s!"({←ppExpr arg} : {← ppExpr (← inferType arg)})"}"
 
@@ -114,7 +132,7 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) : MetaM Unit :=
     for x in xs do
       let X ← inferType x
       if let .some arg := args.find? (fun arg => X.containsFVar arg.fvarId!) then
-        throwError s!"argument ({← ppExpr x} : {← inferType x >>= ppExpr}) depends on the argument {← ppExpr arg}, dependent types like this are not supported"
+        throwError s!"argument ({← ppExpr x} : {← ppExpr (← inferType x)}) depends on the argument {← ppExpr arg}, dependent types like this are not supported"
 
     -- let vLvlName := `v
     -- let v ← mkFreshLevelMVar
@@ -129,28 +147,28 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) : MetaM Unit :=
         let name ← arg.fvarId!.getUserName
         let bi : BinderInfo := .default
         let type ← mkArrow W (← inferType arg)
-        pure (name, bi, fun _ : Array Expr => pure (f:=MetaM) type))
+        pure (name, bi, fun _ : Array Expr => pure (f:=TermElabM) type))
 
     withLocalDecls argFunDecls fun argFuns => do
 
       let argFunApps := argFuns.map (fun argFun => argFun.app w)
 
-      let xs' := Array.mergeSplit splitIds argFunApps otherArgs
-
-      let f ← mkLambdaFVars #[w] (mkAppN (← mkConst' constName) xs')
-      let lhs ← mkAppM ``revCDeriv #[K,f]
+      let lhs ← 
+        withLetDecls argNames argFunApps fun args' => do
+          let xs' := Array.mergeSplit splitIds args' otherArgs
+          let f ← mkLambdaFVars ((#[w] : Array Expr) ++ args') (mkAppN (← mkConst' constName) xs')
+          mkAppM ``revCDeriv #[K,f]
 
       let argFunPropDecls ← 
         argFuns.mapM (fun argFun => do
           let name := (← argFun.fvarId!.getUserName).appendBefore "h"
           let bi : BinderInfo := .default
           let type ← mkAppM ``HasAdjDiff #[K,argFun]
-          pure (name, bi, fun _ : Array Expr => pure (f:=MetaM) type))
+          pure (name, bi, fun _ : Array Expr => pure (f:=TermElabM) type))
 
       withLocalDecls argFunPropDecls fun argFunProps => do
 
-      let constId := mkIdent constName
-      let (rhs, proof) ← rewriteByConv lhs (← `(conv| (unfold $constId; autodiff)))
+      let (rhs, proof) ← elabConvRewrite lhs conv
 
       IO.println s!"lhs: {← ppExpr lhs}"
       IO.println s!"rhs: {← ppExpr rhs}"
@@ -168,9 +186,10 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) : MetaM Unit :=
       let transArgFunDecls ←
         argFuns.mapIdxM (fun i argFun => do
           let name := (← argFun.fvarId!.getUserName)
+          let name := name.appendAfter "d" |>.appendAfter (toString name)
           let bi : BinderInfo := .default
           let type ← inferType transArgFuns[i]!
-          pure (name, bi, fun _ : Array Expr => pure (f:=MetaM) type))
+          pure (name, bi, fun _ : Array Expr => pure (f:=TermElabM) type))
 
       withLocalDecls transArgFunDecls fun transArgFunVars => do
 
@@ -184,7 +203,7 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) : MetaM Unit :=
       let xs' := Array.mergeSplit splitIds transArgFunVars otherArgs
       let fvars := xs'[0:idx] ++ (#[W,instW] : Array Expr) ++ xs'[idx:]
       let transFun ← instantiateMVars (← mkLambdaFVars fvars b')
-      let transFunName := constName.append "arg_" |>.append "revCDeriv"
+      let transFunName := constName.append argName |>.append "revCDeriv"
       IO.println s!"revCDeriv def fun\n{← ppExpr transFun}"
 
       let transFunInfo : DefinitionVal := 
@@ -202,7 +221,7 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) : MetaM Unit :=
       let xs' := Array.mergeSplit splitIds argFuns otherArgs
       let fvars := xs'[0:idx] ++ (#[W, instW] : Array Expr) ++ xs'[idx:] ++ argFunProps
       let ruleProof ← instantiateMVars (← mkLambdaFVars fvars proof)
-      let ruleName := constName.append "arg_" |>.append "revCDeriv_rule"
+      let ruleName := constName.append argName |>.append "revCDeriv_rule"
       IO.println s!"revCDeriv rule\n{← ppExpr (← inferType ruleProof)}"
 
       let ruleInfo : TheoremVal := 
@@ -235,7 +254,7 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) : MetaM Unit :=
         let xs' := Array.mergeSplit splitIds argFuns otherArgs
         let fvars := xs'[0:idx] ++ (#[W, instW] : Array Expr) ++ xs'[idx:] ++ argFunProps
         let ruleDef ← instantiateMVars (← mkForallFVars fvars (← mkEq lhs rhs))
-        let ruleDefName := constName.append "arg_" |>.append "revCDeriv_rule_def"
+        let ruleDefName := constName.append argName |>.append "revCDeriv_rule_def"
         IO.println s!"revCDeriv rule def\n{← ppExpr ruleDef}"
 
         let ruleDefInfo : TheoremVal := 
@@ -252,35 +271,27 @@ def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) : MetaM Unit :=
 
     pure ()
 
-def mymul {K : Type} [IsROrC K] (x y : K) := x * y
+def mymul {K : Type} [IsROrC K] (x y : K) := x * y * x * y
 
-variable {K : Type} [IsROrC K] {W : Type v} [SemiInnerProductSpace K W]
+open Lean.Parser.Tactic.Conv in
+syntax "#generate_revCDeriv" term num* " by " convSeq : command
 
-set_default_scalar K
-
-set_option trace.Meta.Tactic.fprop.discharge true in
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.unify true in
-example (x y : W → K) (hx : HasAdjDiff K x) (hy : HasAdjDiff K y)
-  : (<∂ w, mymul (x w) (y w))
-    =
-    sorry :=
-by
-  unfold mymul
-  ftrans only
+elab_rules : command
+| `(#generate_revCDeriv $fnStx $argIds:num* by $rw:convSeq) => do
+  Command.liftTermElabM do
+    let a := argIds.map (fun a => a.getNat)
+    IO.println a
+    let fn ← elabTerm fnStx none
+    let .some constName := fn.getAppFn'.constName?
+      | throwError "unknown function {fnStx}"
+    generateRevCDeriv constName a.toArraySet (← `(conv| ($rw)))
 
 
-set_option pp.funBinderTypes true in
--- set_option trace.Meta.Tactic.ftrans.step true in
--- set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.fprop.discharge true in
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.unify true in
-set_option trace.Meta.Tactic.ftrans.step true in
-#eval show MetaM Unit from do
-  -- generateRevCDeriv ``norm2 #[4].toArraySet
-  generateRevCDeriv ``mymul #[2,3].toArraySet
+#generate_revCDeriv mymul 2 3 by unfold mymul; autodiff
+#generate_revCDeriv mymul 2 by unfold mymul; autodiff
+#generate_revCDeriv mymul 3 by unfold mymul; autodiff
 
-#print mymul.arg_.revCDeriv
-#check mymul.arg_.revCDeriv_rule
-#check mymul.arg_.revCDeriv_rule_def
+#print mymul.arg_x.revCDeriv
+#print mymul.arg_xy.revCDeriv
+#check mymul.arg_xy.revCDeriv_rule
+#check mymul.arg_y.revCDeriv_rule_def
