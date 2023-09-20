@@ -1,6 +1,6 @@
-import SciLean.Core.Meta.GenerateRevCDeriv
+import SciLean.Core
 
-open Lean
+open Lean SciLean
 
 set_option linter.unusedVariables false 
 
@@ -12,22 +12,22 @@ def mymul {K : Type u} [instK : IsROrC K] (x y : K) := x * y
 
 
 /--
-info: mymul.arg_x.revCDeriv.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SciLean.SemiInnerProductSpace K W]
+info: mymul.arg_x.revCDeriv.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SemiInnerProductSpace K W]
   (xdx : K × (K → W)) (y : K) : K × (K → W)
 -/
 #guard_msgs in
 #check mymul.arg_x.revCDeriv
 
 /--
-info: mymul.arg_xy.revCDeriv.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SciLean.SemiInnerProductSpace K W]
+info: mymul.arg_xy.revCDeriv.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SemiInnerProductSpace K W]
   (xdx ydy : K × (K → W)) : K × (K → W)
 -/
 #guard_msgs in
 #check mymul.arg_xy.revCDeriv
 
 /--
-info: mymul.arg_y.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v}
-  [instW : SciLean.SemiInnerProductSpace K W] (x : K) (y : W → K) (hy : SciLean.HasAdjDiff K y) :
+info: mymul.arg_y.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SemiInnerProductSpace K W]
+  (x : K) (y : W → K) (hy : HasAdjDiff K y) :
   (<∂ w,
       let y := y w;
       mymul x y) =
@@ -40,9 +40,8 @@ info: mymul.arg_y.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W :
 
 
 /--
-info: mymul.arg_xy.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v}
-  [instW : SciLean.SemiInnerProductSpace K W] (x y : W → K) (hx : SciLean.HasAdjDiff K x)
-  (hy : SciLean.HasAdjDiff K y) :
+info: mymul.arg_xy.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W : Type v} [instW : SemiInnerProductSpace K W]
+  (x y : W → K) (hx : HasAdjDiff K x) (hy : HasAdjDiff K y) :
   (<∂ w,
       let x := x w;
       let y := y w;
@@ -54,3 +53,5 @@ info: mymul.arg_xy.revCDeriv_rule_def.{v, u} {K : Type u} [instK : IsROrC K] {W 
 -/
 #guard_msgs in
 #check mymul.arg_xy.revCDeriv_rule_def
+
+
