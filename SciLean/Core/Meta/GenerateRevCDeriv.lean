@@ -81,19 +81,6 @@ def eliminateTransArgFun (e : Expr) (argFuns transArgFuns transArgFunVars : Arra
 
   return e'
 
-partial def withLetDecls [Inhabited α] -- [MonadControlT MetaM n] [Monad n]
-  (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α := 
-  loop #[]
-where
-  loop [Inhabited α] (acc : Array Expr) : MetaM α := do
-    let i := acc.size
-    if h : i < vals.size then
-      let val := vals[i]
-      let type ← inferType val
-      withLetDecl names[i]! type val fun x => loop (acc.push x)
-    else
-      k acc
-
 open Lean Elab Term
 
 def generateRevCDeriv (constName : Name) (argIds : ArraySet Nat) (conv : TSyntax `conv) : TermElabM Unit := do

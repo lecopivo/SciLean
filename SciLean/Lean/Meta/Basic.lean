@@ -426,6 +426,20 @@ def elemWiseSplitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Pr
   | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
 
+partial def withLetDecls [Inhabited α] -- [MonadControlT MetaM n] [Monad n]
+  (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α := 
+  loop #[]
+where
+  loop [Inhabited α] (acc : Array Expr) : MetaM α := do
+    let i := acc.size
+    if h : i < vals.size then
+      let val := vals[i]
+      let type ← inferType val
+      withLetDecl names[i]! type val fun x => loop (acc.push x)
+    else
+      k acc
+
+
 @[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]
   (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α) 
   {α} (k : β → γ → δ → m α) : m α :=
