@@ -425,6 +425,11 @@ def elemWiseSplitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Pr
     
   | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
+/-- Make local declarations is we have an array of names and types. -/
+def mkLocalDecls [MonadControlT MetaM n] [Monad n] 
+  (names : Array Name) (bi : BinderInfo) (types : Array Expr) : Array (Name × BinderInfo × (Array Expr → n Expr)) :=
+  types.mapIdx (fun i type => (names[i]!, bi, fun _ : Array Expr => pure type))
+
 
 partial def withLetDecls [Inhabited α] -- [MonadControlT MetaM n] [Monad n]
   (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α := 
@@ -688,4 +693,19 @@ open ReduceProjOfCtor in
 def reduceProjOfCtor? (e : Expr) : MetaM (Option Expr) := do
   let (e',ps) ← peelOfProjections e
   reduceProjections? e' ps
+
+open Qq 
+
+def isTypeQ (e : Expr) : MetaM (Option ((u : Level) × Q(Type $u))) := do
+  let u ← mkFreshLevelMVar
+  let .some e ← checkTypeQ e q(Type $u)
+    | return none
+  return .some ⟨u, e⟩
+
+def _root_.Lean.LocalContext.toString (lctx : LocalContext) : MetaM String :=
+  lctx.decls.toArray.joinlM 
+    (fun decl? => do
+      let .some decl := decl? | return ""
+      return s!"{decl.userName} : {← ppExpr decl.type}")
+    (fun a b => pure (a++"\n"++b))
 
