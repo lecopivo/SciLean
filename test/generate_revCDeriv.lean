@@ -59,7 +59,7 @@ info: mymul.arg_xy.revCDeriv_rule_def.{w, u} {K : Type u} [instK : IsROrC K] {W 
 #check mymul.arg_xy.revCDeriv_rule_def
 
 
-variable 
+variable
   {K : Type u} [RealScalar K]
   {ι : Type v} {κ : Type v'} [EnumType ι] [EnumType κ]
 
@@ -67,7 +67,7 @@ set_default_scalar K
 
 def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * x j
 
-#generate_revCDeriv matmul A x by unfold matmul; autodiff; autodiff;
+#generate_revCDeriv matmul A x by unfold matmul; autodiff; autodiff
 #generate_revCDeriv matmul A | i by unfold matmul; autodiff; autodiff
 #generate_revCDeriv matmul x | i by unfold matmul; autodiff; autodiff
 
@@ -77,4 +77,4 @@ def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * 
 
 -- need to fix ftrans for this to work
 -- #generate_revCDeriv matmul A x | i by unfold matmul; autodiff; autodiff
-
+ 

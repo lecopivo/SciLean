@@ -322,6 +322,8 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
       }
 
       addDecl (.thmDecl ruleDefInfo)
+      FTrans.funTransRuleAttr.attr.add ruleDefName (← `(attr|ftrans)) .global
+
 
 open Lean.Parser.Tactic in
 def generateHasAdjDiff (constName : Name) (mainNames trailingNames : Array Name) (tac : TSyntax ``tacticSeq) : TermElabM Unit := do
