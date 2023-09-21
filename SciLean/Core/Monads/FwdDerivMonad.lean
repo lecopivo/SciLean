@@ -514,7 +514,7 @@ by
 
 
 @[ftrans]
-theorem Pure.pure.fwdDerivValM_rule (x : X)
+theorem Pure.pure.arg.fwdDerivValM_rule (x : X)
   : fwdDerivValM K (pure (f:=m) x)
     =
     pure (x,0) := 

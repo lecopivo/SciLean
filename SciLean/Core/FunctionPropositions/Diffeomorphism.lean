@@ -305,7 +305,7 @@ by
 -- Which rule is preferable? This one or the second one? 
 -- Probably the second as it has Function.inv fully applied
 @[ftrans]
-theorem Function.invFun.arg_f.cderiv_rule
+theorem Function.invFun.arg_f_a1.cderiv_rule
   (f : X → Y → Z)
   (hf : ∀ x, Diffeomorphism K (f x)) 
   (hf' : IsDifferentiable K (fun xy : X×Y => f xy.1 xy.2))

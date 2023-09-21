@@ -79,7 +79,7 @@ variable
 
 
 @[fprop]
-theorem Id.run.arg_x.HasAdjDiffM_rule
+theorem Id.run.arg_x.HasAdjDiff_rule
   (a : X → Id Y) (ha : HasAdjDiffM K a)
   : HasAdjDiff K (fun x => Id.run (a x)) := ha
 

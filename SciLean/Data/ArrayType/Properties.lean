@@ -158,7 +158,7 @@ by
   unfold revCDeriv; ftrans; ftrans; simp
 
 @[ftrans]
-theorem GetElem.getElem.arg_xs_idx.revCDeriv_rule
+theorem GetElem.getElem.arg_xs_i.revCDeriv_rule
   (f : X → Cont) (dom) 
   (hf : HasAdjDiff K f)
   : revCDeriv K (fun x idx => getElem (f x) idx dom)

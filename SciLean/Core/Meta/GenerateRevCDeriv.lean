@@ -355,7 +355,7 @@ def generateHasAdjDiff (constName : Name) (mainNames trailingNames : Array Name)
 
     addDecl (.thmDecl info)
 
-
+    FProp.funTransRuleAttr.attr.add name (← `(attr|fprop)) .global
 
 
 open Lean.Parser.Tactic.Conv 

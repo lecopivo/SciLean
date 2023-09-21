@@ -350,7 +350,7 @@ by
   unfold Function.comp; ftrans
 
 @[ftrans]
-theorem Function.comp.arg_fg.cderiv_rule 
+theorem Function.comp.arg_fg_a0.cderiv_rule 
   (f : W → Y → Z) (g : W → X → Y)
   (hf : IsDifferentiable K (fun wy : W×Y => f wy.1 wy.2))
   (hg : IsDifferentiable K (fun wx : W×X => g wx.1 wx.2))

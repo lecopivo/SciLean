@@ -24,6 +24,9 @@ do
     idx := idx + 1
   return (bs, cs, ids)
 
+def splitM {α : Type _} {m : Type _ → Type _} [Monad m] (as : Array α) (p : α → m Bool) : m (Array α × Array α) :=
+  as.foldlM (init := (#[], #[])) fun (as, bs) a => do
+    pure <| if ← p a then (as.push a, bs) else (as, bs.push a)
 
 /-- Splits array into two based on function p. It also returns indices that can be used to merge two array back together.
 -/

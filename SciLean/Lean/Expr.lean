@@ -300,3 +300,10 @@ def bindingBodyRec : Expr → Expr
 | .forallE _ _ b _ => b.bindingBodyRec
 | .mdata _ e => e.bindingBodyRec
 | e => e
+
+
+def letBodyRec' (e : Expr) : Expr :=
+  match e with
+  | .letE _ _ _ b _ => b.letBodyRec'
+  | .mdata _ e => e.letBodyRec'
+  | e => e
