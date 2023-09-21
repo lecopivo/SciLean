@@ -10,6 +10,10 @@ def mymul {K : Type u} [instK : IsROrC K] (x y : K) := x * y
 #generate_revCDeriv mymul x by unfold mymul; autodiff
 #generate_revCDeriv mymul y by unfold mymul; autodiff
 
+#generate_HasAdjDiff mymul x y by unfold mymul; fprop
+#generate_HasAdjDiff mymul x by unfold mymul; fprop
+#generate_HasAdjDiff mymul y by unfold mymul; fprop
+
 
 /--
 info: mymul.arg_x.revCDeriv.{w, u} {K : Type u} [instK : IsROrC K] {W : Type w} [instW : SemiInnerProductSpace K W] (x y : K)
@@ -66,6 +70,10 @@ def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * 
 #generate_revCDeriv matmul A x by unfold matmul; autodiff; autodiff;
 #generate_revCDeriv matmul A | i by unfold matmul; autodiff; autodiff
 #generate_revCDeriv matmul x | i by unfold matmul; autodiff; autodiff
+
+#generate_HasAdjDiff matmul A x by unfold matmul; fprop
+#generate_HasAdjDiff matmul A x | i by unfold matmul; fprop
+#generate_HasAdjDiff matmul A | i by unfold matmul; fprop
 
 -- need to fix ftrans for this to work
 -- #generate_revCDeriv matmul A x | i by unfold matmul; autodiff; autodiff

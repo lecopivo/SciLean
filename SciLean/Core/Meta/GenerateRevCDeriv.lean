@@ -16,6 +16,7 @@ structure GenerateData where
   orgCtx : Array Expr 
   /-- extended orgCtx such that types form appropriate vector space, group or whatever is necessary -/
   ctx : Array Expr 
+
   /-- main fvars, main arguments we perform function transformation in -/
   mainArgs : Array Expr
   /-- unused fvars -/
@@ -24,6 +25,9 @@ structure GenerateData where
   trailingArgs : Array Expr
   /-- argument kinds, this allows to glue arguments back together with mergeArgs and mergeArgs' -/
   argKinds : Array ArgKind
+
+  /-- names of main arguments guaranteed to be in the same order as mainArgs -/
+  mainNames : Array Name
 
   /-- auxiliary type we perform transformation in -/
   W : Expr
@@ -45,7 +49,6 @@ structure GenerateData where
   
   /-- level parameters -/
   levelParams : List Name
-
 
 
 /-- Introduce new fvars such that the type `type` have instance of `SemiInnerProductSpace K ·` -/
@@ -167,6 +170,8 @@ private def withGenerateData {α : Type _} [Inhabited α]
           unusedArgs := unusedArgs
           trailingArgs := trailingArgs
           argKinds := argKinds
+
+          mainNames := mainNames
           
           W := W
           w := w
@@ -237,7 +242,7 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
 
     let dArgDecls := 
       mkLocalDecls (n := TermElabM)
-        (mainNames.map (fun n => n.appendBefore "d" |>.appendAfter "'"))
+        (data.mainNames.map (fun n => n.appendBefore "d" |>.appendAfter "'"))
         .default 
         (← liftM <| data.mainArgs.mapM (fun arg => do mkArrow (← inferType arg) data.W))
 
@@ -289,7 +294,7 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
 
     addDecl (.thmDecl ruleInfo)
 
-    withLetDecls mainNames transArgFuns fun transArgFunLets => do
+    withLetDecls data.mainNames transArgFuns fun transArgFunLets => do
 
       let argVals ← transArgFunLets.mapM (fun x => mkAppM ``Prod.fst #[x])
       let dArgVals ← transArgFunLets.mapM (fun x => mkAppM ``Prod.snd #[x])
@@ -318,12 +323,45 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
 
       addDecl (.thmDecl ruleDefInfo)
 
+open Lean.Parser.Tactic in
+def generateHasAdjDiff (constName : Name) (mainNames trailingNames : Array Name) (tac : TSyntax ``tacticSeq) : TermElabM Unit := do
+  
+  withGenerateData constName mainNames trailingNames fun data => do
+    
+    let statement ← mkAppM ``HasAdjDiff #[data.K, data.f]
+    trace[Meta.generate_ftrans] "statement for HasAdjDiff\n{← ppExpr statement}"
+
+    let proof ← Meta.mkFreshExprMVar statement
+
+    let goals ← Tactic.run proof.mvarId! do
+      Tactic.evalTactic tac
+
+    if ¬goals.isEmpty then
+      throwError s!"unsolved goals {← liftM <| goals.mapM (fun m => m.getType >>= ppExpr)}"
+
+    let args := data.ctx ++ #[data.W] ++ data.ctxW ++ mergeArgs' data.argFuns data.unusedArgs data.argKinds ++ data.argFunProps
+    let proof ← instantiateMVars (← mkLambdaFVars args proof)
+    let type ← inferType proof
+    let name := constName.append data.declSuffix |>.append "HasAdjDiff_rule"
+    trace[Meta.generate_ftrans] "HasAdjDiff rule for `{constName}`\n{← ppExpr type}"
+
+    let info : TheoremVal := 
+    {
+      name  := name
+      type  := type
+      value := proof
+      levelParams := data.levelParams
+    }
+
+    addDecl (.thmDecl info)
+
 
 
 
 open Lean.Parser.Tactic.Conv 
 -- syntax "#generate_revCDeriv" term num* " by " convSeq : command
 syntax "#generate_revCDeriv" term ident* ("|" ident*)? " by " convSeq : command
+syntax "#generate_HasAdjDiff" term ident* ("|" ident*)? " by " tacticSeq : command
 
 
 elab_rules : command
@@ -338,3 +376,17 @@ elab_rules : command
     let .some constName := fn.getAppFn'.constName?
       | throwError "unknown function {fnStx}"
     generateRevCDeriv constName mainArgs trailingArgs (← `(conv| ($rw)))
+
+
+elab_rules : command
+| `(#generate_HasAdjDiff $fnStx $mainArgs:ident* $[| $trailingArgs:ident* ]? by $prf:tacticSeq) => do
+  Command.liftTermElabM do
+    let mainArgs := mainArgs.map (fun a => a.getId)
+    let trailingArgs : Array Name := 
+      match trailingArgs with
+      | .some trailingArgs => trailingArgs.map (fun a => a.getId)
+      | none => #[]
+    let fn ← elabTerm fnStx none
+    let .some constName := fn.getAppFn'.constName?
+      | throwError "unknown function {fnStx}"
+    generateHasAdjDiff constName mainArgs trailingArgs prf
