@@ -197,7 +197,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.Differentiable_rule
-  : Differentiable R (id : X → X) := by simp
+  : Differentiable R (fun x : X => id x) := by simp
 
 
 -- Prod ------------------------------------------------------------------------
@@ -241,7 +241,7 @@ theorem Prod.snd.arg_self.Differentiable_rule
 theorem Function.comp.arg_a0.Differentiable_rule
   (f : Y → Z) (hf : Differentiable R f)
   (g : X → Y) (hg : Differentiable R g)
-  : Differentiable R (f ∘ g)
+  : Differentiable R (fun x => (f ∘ g) x)
   := Differentiable.comp hf hg
 
 

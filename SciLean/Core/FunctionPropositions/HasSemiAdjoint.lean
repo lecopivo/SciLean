@@ -206,7 +206,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.HasSemiAdjoint_rule
-  : HasSemiAdjoint K (id : X → X) := by sorry_proof
+  : HasSemiAdjoint K (fun x : X => id x) := by sorry_proof
 
 
 -- Function.comp ---------------------------------------------------------------
@@ -216,7 +216,7 @@ theorem id.arg_a.HasSemiAdjoint_rule
 theorem Function.comp.arg_a0.HasSemiAdjoint_rule
   (f : Y → Z) (g : X → Y)
   (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
-  : HasSemiAdjoint K (f ∘ g) :=
+  : HasSemiAdjoint K (fun x : X => (f ∘ g) x) :=
 by
   unfold Function.comp; fprop
 

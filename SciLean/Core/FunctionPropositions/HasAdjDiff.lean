@@ -183,7 +183,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.HasAdjDiff_rule (x : X)
-  : HasAdjDiff K (id : X → X) := by constructor; fprop; ftrans; fprop
+  : HasAdjDiff K (fun x : X => id x) := by constructor; fprop; ftrans; fprop
 
 
 -- Prod ------------------------------------------------------------------------
@@ -247,7 +247,7 @@ by
 theorem Function.comp.arg_a0.HasAdjDiff_rule
   (g : X → Y) (hg : HasAdjDiff K g)
   (f : Y → Z) (hf : HasAdjDiff K f)
-  : HasAdjDiff K (f ∘ g) := 
+  : HasAdjDiff K (fun x => (f ∘ g) x) := 
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg

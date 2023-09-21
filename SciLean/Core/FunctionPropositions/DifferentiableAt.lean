@@ -209,7 +209,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.DifferentiableAt_rule (x : X)
-  : DifferentiableAt R (id : X → X) x := by simp
+  : DifferentiableAt R (fun x : X => id x) x := by simp
 
 
 
@@ -260,7 +260,7 @@ theorem Function.comp.arg_a0.DifferentiableAt_rule
   (x : X)
   (g : X → Y) (hg : DifferentiableAt R g x)
   (f : Y → Z) (hf : DifferentiableAt R f (g x))
-  : DifferentiableAt R (f ∘ g) x
+  : DifferentiableAt R (fun x => (f ∘ g) x) x
   := DifferentiableAt.comp x hf hg
 
 

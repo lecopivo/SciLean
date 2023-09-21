@@ -8,6 +8,7 @@ import Mathlib.Data.FunLike.Basic
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
 import SciLean.Util.SorryProof
+import SciLean.Tactic.AnalyzeConstLambda
  
 open Lean Meta.Simp Qq
 
@@ -187,33 +188,19 @@ To register function transformation call:
 ```
 where <name> is name of the function transformation and <ext> is corresponding `FPropExp`. 
 "
-          let .some funName ← getFunHeadConst? f
-            | throwError "Function being transformed is in invalid form!"
 
-          let depArgIds :=
-            match f with
-            | .lam _ _ body _ =>
-              body.getAppArgs
-                |>.mapIdx (fun i arg => if arg.hasLooseBVars then Option.some i.1 else none)
-                |>.filterMap id
-            | _ => #[f.getAppNumArgs]
-
-          let argNames ← getConstArgNames funName (fixAnonymousNames := true)
-          let depNames := depArgIds.map (fun i => argNames[i]?.getD default)
-
-          let argSuffix := "arg_" ++ depNames.foldl (·++·.toString) ""
+          let data ← analyzeConstLambda f
 
           let suggestedRuleName :=
-            funName |>.append argSuffix
-                    |>.append (transName.getString.append "_rule")
-
+            data.constName 
+              |>.append data.declSuffix
+              |>.append (transName.getString.append "_rule")
 
           if (← getBoolOption `linter.fpropDeclName true) &&
              ¬(suggestedRuleName.toString.isPrefixOf ruleName.toString) then
             logWarning s!"suggested name for this rule is {suggestedRuleName}"
 
-
-          FPropRulesExt.insert funName (FPropRules.empty.insert transName ruleName)
+          FPropRulesExt.insert data.constName (FPropRules.empty.insert transName ruleName)
       )           
 
 open Meta in

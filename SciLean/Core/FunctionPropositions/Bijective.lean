@@ -126,7 +126,7 @@ theorem Prod.mk.arg_fstsnd.Bijective_rule
 
 @[fprop]
 theorem id.arg_a.Bijective_rule
-  : Bijective (id : X → X) := by unfold id; fprop
+  : Bijective (fun x : X => id x) := by unfold id; fprop
 
 
 -- Function.comp ---------------------------------------------------------------
@@ -136,7 +136,7 @@ theorem id.arg_a.Bijective_rule
 theorem Function.comp.arg_a0.Bijective_rule
   (f : Y → Z) (hf : Bijective f)
   (g : X → Y) (hg : Bijective g)
-  : Bijective (f ∘ g)
+  : Bijective (fun x => (f ∘ g) x)
   := Bijective.comp hf hg
 
 

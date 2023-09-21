@@ -183,7 +183,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.IsDifferentiableAt_rule (x : X)
-  : IsDifferentiableAt K (id : X → X) x := by sorry_proof
+  : IsDifferentiableAt K (fun x : X => id x) x := by sorry_proof
 
 
 
@@ -234,7 +234,7 @@ theorem Function.comp.arg_a0.IsDifferentiableAt_rule
   (x : X)
   (g : X → Y) (hg : IsDifferentiableAt K g x)
   (f : Y → Z) (hf : IsDifferentiableAt K f (g x))
-  : IsDifferentiableAt K (f ∘ g) x
+  : IsDifferentiableAt K (fun x => (f ∘ g) x) x
   := by sorry_proof
 
 

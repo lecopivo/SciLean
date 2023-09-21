@@ -263,7 +263,7 @@ variable
 @[fprop]
 theorem FunLike.coe.arg_a.IsContinuousLinearMap_rule
   (f : Y →L[R] Z) 
-  : IsContinuousLinearMap R f := 
+  : IsContinuousLinearMap R (fun y => f y) := 
   by_morphism f (by simp)
 
 
@@ -280,7 +280,7 @@ theorem FunLike.coe.arg_a.IsContinuousLinearMap_rule'
 
 @[fprop]
 theorem id.arg_a.IsContinuousLinearMap_rule
-  : IsContinuousLinearMap R (id : X → X)
+  : IsContinuousLinearMap R (fun x : X => id x)
 := 
   by_morphism (ContinuousLinearMap.id R X) (by simp)
 

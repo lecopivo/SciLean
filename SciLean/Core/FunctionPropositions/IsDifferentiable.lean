@@ -171,7 +171,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.IsDifferentiable_rule
-  : IsDifferentiable K (id : X → X) := by simp[id]; fprop
+  : IsDifferentiable K (fun x : X => id x) := by simp[id]; fprop
 
 
 -- Function.comp ---------------------------------------------------------------
@@ -181,7 +181,7 @@ theorem id.arg_a.IsDifferentiable_rule
 theorem Function.comp.arg_a0.IsDifferentiable_rule
   (f : Y → Z) (g : X → Y) 
   (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
-  : IsDifferentiable K (f ∘ g)
+  : IsDifferentiable K (fun x => (f ∘ g) x)
   := by sorry_proof
 
 

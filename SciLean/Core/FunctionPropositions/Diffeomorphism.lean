@@ -117,7 +117,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.Diffeomorphism_rule
-  : Diffeomorphism K (id : X → X) := 
+  : Diffeomorphism K (fun x : X => id x) := 
 by 
   simp[id]; fprop
 
@@ -129,7 +129,7 @@ by
 theorem Function.comp.arg_a0.Diffeomorphism_rule
   (f : Y → Z) (g : X → Y) 
   (hf : Diffeomorphism K f) (hg : Diffeomorphism K g)
-  : Diffeomorphism K (f ∘ g)
+  : Diffeomorphism K (fun x => (f ∘ g) x)
   := by simp[Function.comp]; fprop
 
 
@@ -324,7 +324,7 @@ by
            0 := by simp[invFun_comp (hf _).1.1]; ftrans
   rw[← sub_zero (cderiv K (fun x => Function.invFun (f x)) x dx)]
   rw[← H]
-  simp_rw[comp.arg_fg.cderiv_rule (K:=K) (fun x => invFun (f x)) f (by fprop) (by fprop)]
+  simp_rw[comp.arg_fg_a0.cderiv_rule (K:=K) (fun x => invFun (f x)) f (by fprop) (by fprop)]
   simp[comp]
   funext z
   simp[show f x (invFun (f x) z) = z from sorry_proof]
@@ -350,7 +350,7 @@ by
            0 := by simp[invFun_comp (hf _).1.1]; ftrans
   rw[← sub_zero (cderiv K (fun x => Function.invFun (f x) z) x dx)]
   rw[← H]
-  simp_rw[comp.arg_fg.cderiv_rule (K:=K) (fun x => invFun (f x)) f (by fprop) (by fprop)]
+  simp_rw[comp.arg_fg_a0.cderiv_rule (K:=K) (fun x => invFun (f x)) f (by fprop) (by fprop)]
   simp[comp]
   simp[show f x (invFun (f x) z) = z from sorry_proof]
   
