@@ -149,3 +149,45 @@ def checkNoDependentTypes (xs ys : Array Expr) : MetaM Unit := do
     let Y ← inferType y
     if let .some x := xs.find? (fun x => Y.containsFVar x.fvarId!) then
       throwError s!"the type of ({← ppExpr y} : {← ppExpr (← inferType y)}) depends on the argument {← ppExpr x}, dependent types like this are not supported"
+
+structure GenerateData where
+  /-- field over which we are currently working -/
+  K : Expr
+  
+  /-- original context fvars of a function, these are types, instances and implicit arguments -/
+  orgCtx : Array Expr 
+  /-- extended orgCtx such that types form appropriate vector space, group or whatever is necessary -/
+  ctx : Array Expr 
+
+  /-- main fvars, main arguments we perform function transformation in -/
+  mainArgs : Array Expr
+  /-- unused fvars -/
+  unusedArgs : Array Expr
+  /-- trailing fvars -/
+  trailingArgs : Array Expr
+  /-- argument kinds, this allows to glue arguments back together with mergeArgs and mergeArgs' -/
+  argKinds : Array ArgKind
+
+  /-- names of main arguments guaranteed to be in the same order as mainArgs -/
+  mainNames : Array Name
+
+  /-- auxiliary type we perform transformation in -/
+  W : Expr
+  /-- fvar of type W -/
+  w : Expr
+  /-- fvars making W into vector space, group, or what ever is necessary -/
+  ctxW : Array Expr
+
+  /-- function we are working with as a function of `w` -/
+  f : Expr
+ 
+  /-- fvars that that are main arguments parametrized by W-/
+  argFuns : Array Expr
+  /-- fvars for properties about argFun -/
+  argFunProps : Array Expr
+
+  /-- declaration suffix based on argument names used to generate rule name -/
+  declSuffix : String
+  
+  /-- level parameters -/
+  levelParams : List Name

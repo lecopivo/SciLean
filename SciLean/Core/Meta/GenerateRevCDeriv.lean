@@ -5,50 +5,9 @@ namespace SciLean.Meta
 
 open Lean Meta Qq
 
-namespace GenerateProperty
+namespace GenerateRevCDeriv
 
-
-structure GenerateData where
-  /-- field over which we are currently working -/
-  K : Expr
-  
-  /-- original context fvars of a function, these are types, instances and implicit arguments -/
-  orgCtx : Array Expr 
-  /-- extended orgCtx such that types form appropriate vector space, group or whatever is necessary -/
-  ctx : Array Expr 
-
-  /-- main fvars, main arguments we perform function transformation in -/
-  mainArgs : Array Expr
-  /-- unused fvars -/
-  unusedArgs : Array Expr
-  /-- trailing fvars -/
-  trailingArgs : Array Expr
-  /-- argument kinds, this allows to glue arguments back together with mergeArgs and mergeArgs' -/
-  argKinds : Array ArgKind
-
-  /-- names of main arguments guaranteed to be in the same order as mainArgs -/
-  mainNames : Array Name
-
-  /-- auxiliary type we perform transformation in -/
-  W : Expr
-  /-- fvar of type W -/
-  w : Expr
-  /-- fvars making W into vector space, group, or what ever is necessary -/
-  ctxW : Array Expr
-
-  /-- function we are working with as a function of `w` -/
-  f : Expr
- 
-  /-- fvars that that are main arguments parametrized by W-/
-  argFuns : Array Expr
-  /-- fvars for properties about argFun -/
-  argFunProps : Array Expr
-
-  /-- declaration suffix based on argument names used to generate rule name -/
-  declSuffix : String
-  
-  /-- level parameters -/
-  levelParams : List Name
+open GenerateProperty
 
 
 /-- Introduce new fvars such that the type `type` have instance of `SemiInnerProductSpace K ·` -/
@@ -213,11 +172,11 @@ def eliminateTransArgFun (e : Expr) (argFuns transArgFuns transArgFunVars : Arra
 
   return e'
 
-end GenerateProperty
+end GenerateRevCDeriv
 
 open Lean Elab Term
 
-open GenerateProperty
+open GenerateRevCDeriv GenerateProperty
 
 def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) (conv : TSyntax `conv) : TermElabM Unit := do
   
