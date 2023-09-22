@@ -14,3 +14,4 @@ import SciLean.Core.Approx.Basic
 import SciLean.Core.Approx.ApproxLimit
 
 import SciLean.Core.Meta.GenerateRevCDeriv
+import SciLean.Core.Meta.GenerateFwdCDeriv
