@@ -113,6 +113,14 @@ where
       | _ => 
         throwError "dont' know how to extend context for the type `{← ppExpr X}`"
 
+partial def withVecs {α : Type _}
+  (K : Expr) (Xs : Array Expr) (k : Array Expr → MetaM α) : MetaM α := do
+  loop Xs.toList #[]
+where 
+  loop (Xs' : List Expr) (acc : Array Expr) : MetaM α :=
+    match Xs' with
+    | [] => k acc
+    | X :: Xs => withVec K X (fun acc' => loop Xs (acc ++ acc'))
 
 /-- Modifies the local context such that `X` has instance `SemiInnerProductSpace K X`
 
@@ -167,6 +175,15 @@ where
             k (acc.push inst)
       | _ => 
         throwError "dont' know how to extend context for the type `{← ppExpr X}`"
+
+partial def withSemiInnerProductSpaces {α : Type _}
+  (K : Expr) (Xs : Array Expr) (k : Array Expr → MetaM α) : MetaM α := do
+  loop Xs.toList #[]
+where 
+  loop (Xs' : List Expr) (acc : Array Expr) : MetaM α :=
+    match Xs' with
+    | [] => k acc
+    | X :: Xs => withSemiInnerProductSpace K X (fun acc' => loop Xs (acc ++ acc'))
 
 
 /-- Modifies the local context such that `X` has instance `SemiHilbert K X`
@@ -227,4 +244,11 @@ where
         throwError "dont' know how to extend context for the type `{← ppExpr X}`"
 
 
-
+partial def withSemiHilberts {α : Type _}
+  (K : Expr) (Xs : Array Expr) (k : Array Expr → MetaM α) : MetaM α := do
+  loop Xs.toList #[]
+where 
+  loop (Xs' : List Expr) (acc : Array Expr) : MetaM α :=
+    match Xs' with
+    | [] => k acc
+    | X :: Xs => withSemiHilbert K X (fun acc' => loop Xs (acc ++ acc'))
