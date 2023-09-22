@@ -19,7 +19,7 @@ The callback `k` is called as `k vars' vals'`
 - `vars'` parametrizing fvars can cause other fvars to be parametrized too. `vars'` is an array containing all fvars that have been parametrized
 - `vals'` are values with original vars `x` replaced with `x w`
 -/
-def withParametrizedVars (w : Expr) (vars vals : Array Expr) 
+def withParametrizedFVars (w : Expr) (vars vals : Array Expr) 
   (k : Array Expr → Array Expr → MetaM α) : MetaM α := do
   let mut vals := vals
   let mut lctx ← getLCtx
