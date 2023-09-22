@@ -9,38 +9,10 @@ open Lean Meta Qq
 namespace SciLean
 
 variable {α : Type _} 
+variable [MonadControlT MetaM n] [Monad n]
 
 
-/-- 
-Modifies the local context such that all free variables `vars` are turned from 
-`x : X` into `x : W → X` and replaces all occurances of `x` with `x w` in `vals`.
-
-The callback `k` is called as `k vars' vals'` where:
-- `vars'` is an array containing all fvars that have been parametrized
-  parametrizing fvars can cause other fvars to be parametrized too thus `vars'`
-  can differ from `vars`
-- `vals'` are values with original vars `x` replaced with `x w`
-
-Example of parametrizing local context:
-```
-α : Sort u
-c : Prop
-h : Decidable c
-t : α
-e : α
-```
-with `vars := #[c,t]` and `vals := #[Decidable.casesOn h (fun x => e) fun x => t]`
-produces local context
-```
-α : Sort u
-c : W → Prop
-h : (w : W) → Decidable (c w)
-t : W → α
-e : α
-```
-and calls `k #[c,h,t] #[Decidable.casesOn (h w) (fun x => e) fun x => t w]`
--/
-def withParametrizedFVars (w : Expr) (vars vals : Array Expr) 
+private def withParametrizedFVarsImpl (w : Expr) (vars vals : Array Expr) 
   (k : Array Expr → Array Expr → MetaM α) : MetaM α := do
   let mut vals := vals
   let mut lctx ← getLCtx
@@ -86,6 +58,40 @@ def withParametrizedFVars (w : Expr) (vars vals : Array Expr)
   let vals' := vals.map (fun val => val.replaceFVars replaceFVars replaceVals)
 
   withLCtx lctx (← getLocalInstances) (k vars' vals')
+
+
+/-- 
+Modifies the local context such that all free variables `vars` are turned from 
+`x : X` into `x : W → X` and replaces all occurances of `x` with `x w` in `vals`.
+
+The callback `k` is called as `k vars' vals'` where:
+- `vars'` is an array containing all fvars that have been parametrized
+  parametrizing fvars can cause other fvars to be parametrized too thus `vars'`
+  can differ from `vars`
+- `vals'` are values with original vars `x` replaced with `x w`
+
+Example of parametrizing local context:
+```
+α : Sort u
+c : Prop
+h : Decidable c
+t : α
+e : α
+```
+with `vars := #[c,t]` and `vals := #[Decidable.casesOn h (fun x => e) fun x => t]`
+produces local context
+```
+α : Sort u
+c : W → Prop
+h : (w : W) → Decidable (c w)
+t : W → α
+e : α
+```
+and calls `k #[c,h,t] #[Decidable.casesOn (h w) (fun x => e) fun x => t w]`
+-/
+def withParametrizedFVars (w : Expr) (vars vals : Array Expr) 
+  (k : Array Expr → Array Expr → n α) : n α := do
+  map2MetaM (fun k => withParametrizedFVarsImpl w vars vals k) k
 
 
 /--
