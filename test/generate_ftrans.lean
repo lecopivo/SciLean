@@ -10,9 +10,17 @@ def mymul {K : Type u} [instK : IsROrC K] (x y : K) := x * y
 #generate_revCDeriv mymul x by unfold mymul; autodiff
 #generate_revCDeriv mymul y by unfold mymul; autodiff
 
-#generate_HasAdjDiff mymul x y by unfold mymul; fprop
-#generate_HasAdjDiff mymul x by unfold mymul; fprop
-#generate_HasAdjDiff mymul y by unfold mymul; fprop
+#generate_fwdCDeriv mymul x y 
+  prop_by unfold mymul; fprop
+  trans_by unfold mymul; autodiff
+
+#generate_fwdCDeriv mymul x
+  prop_by unfold mymul; fprop
+  trans_by unfold mymul; autodiff
+
+#generate_fwdCDeriv mymul y
+  prop_by unfold mymul; fprop
+  trans_by unfold mymul; autodiff
 
 
 /--
@@ -57,6 +65,26 @@ info: mymul.arg_xy.revCDeriv_rule_def.{w, u} {K : Type u} [instK : IsROrC K] {W 
 -/
 #guard_msgs in
 #check mymul.arg_xy.revCDeriv_rule_def
+
+
+/--
+info: mymul.arg_xy.fwdCDeriv_rule_def.{w, u} {K : Type u} [instK : IsROrC K] {W : Type w} [inst_0 : Vec K W] (x y : W → K)
+  (hx : IsDifferentiable K x) (hy : IsDifferentiable K y) :
+  ∂> w, mymul (x w) (y w) = fun w dw =>
+    let xdx := ∂> x w dw;
+    let ydy := ∂> y w dw;
+    mymul.arg_xy.fwdCDeriv xdx.fst ydy.fst xdx.snd ydy.snd
+-/
+#guard_msgs in
+#check mymul.arg_xy.fwdCDeriv_rule_def
+
+
+/--
+info: mymul.arg_xy.IsDifferentiable_rule.{w, u} {K : Type u} [instK : IsROrC K] {W : Type w} [inst_0 : Vec K W] (x y : W → K)
+  (hx : IsDifferentiable K x) (hy : IsDifferentiable K y) : IsDifferentiable K fun w => mymul (x w) (y w)
+-/
+#guard_msgs in
+#check mymul.arg_xy.IsDifferentiable_rule
 
 
 variable
