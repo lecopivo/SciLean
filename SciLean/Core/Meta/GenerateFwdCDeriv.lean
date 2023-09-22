@@ -28,6 +28,8 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
     let (mainArgs, unusedArgs, trailingArgs, argKinds) 
       ← splitArgs args mainNames trailingNames
 
+    let type ← mkForallFVars trailingArgs type
+
     -- ensure that `mainNames` are in the right order
     let mainNames ← mainArgs.mapM (fun arg => arg.fvarId!.getUserName)
   
@@ -167,8 +169,6 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       }
 
       addDecl (.thmDecl ruleWithDefInfo)
-      
-    pure ()
 
 
 open Lean.Parser.Tactic.Conv 
