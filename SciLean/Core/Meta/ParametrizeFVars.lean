@@ -1,6 +1,7 @@
 import Lean
 import Qq
 
+import Std.Tactic.GuardMsgs
 import SciLean.Lean.Meta.Basic
 
 open Lean Meta Qq
@@ -9,15 +10,35 @@ namespace SciLean
 
 variable {α : Type _} 
 
-#check withLocalDecl
 
-/-- Modifies the local context such that all free variables `vars` are
-turned from `x : X` into `x : W → X` and replaces all occurances of `x` with `x w` 
-in `vals`.
+/-- 
+Modifies the local context such that all free variables `vars` are turned from 
+`x : X` into `x : W → X` and replaces all occurances of `x` with `x w` in `vals`.
 
-The callback `k` is called as `k vars' vals'`
-- `vars'` parametrizing fvars can cause other fvars to be parametrized too. `vars'` is an array containing all fvars that have been parametrized
+The callback `k` is called as `k vars' vals'` where:
+- `vars'` is an array containing all fvars that have been parametrized
+  parametrizing fvars can cause other fvars to be parametrized too thus `vars'`
+  can differ from `vars`
 - `vals'` are values with original vars `x` replaced with `x w`
+
+Example of parametrizing local context:
+```
+α : Sort u
+c : Prop
+h : Decidable c
+t : α
+e : α
+```
+with `vars := #[c,t]` and `vals := #[Decidable.casesOn h (fun x => e) fun x => t]`
+produces local context
+```
+α : Sort u
+c : W → Prop
+h : (w : W) → Decidable (c w)
+t : W → α
+e : α
+```
+and calls `k #[c,h,t] #[Decidable.casesOn (h w) (fun x => e) fun x => t w]`
 -/
 def withParametrizedFVars (w : Expr) (vars vals : Array Expr) 
   (k : Array Expr → Array Expr → MetaM α) : MetaM α := do
@@ -67,7 +88,19 @@ def withParametrizedFVars (w : Expr) (vars vals : Array Expr)
   withLCtx lctx (← getLocalInstances) (k vars' vals')
 
 
-
+/--
+info: Decidable.casesOn h (fun x => e) fun x => t
+α : Sort u
+c : W → Prop
+h : (w : W) → Decidable (c w)
+t : W → α
+e : α
+W : Type
+w : W
+#[c, h, t]
+#[Decidable.casesOn (h w) (fun x => e) fun x => t w]
+-/
+#guard_msgs in
 #eval show MetaM Unit from do
 
   let info ← getConstInfoDefn ``ite
@@ -81,7 +114,7 @@ def withParametrizedFVars (w : Expr) (vars vals : Array Expr)
     withLocalDecl `w .default W fun w => do
 
       let vars := #[xs[1]!, xs[3]!]
-      withParametrizedVars w vars #[b] fun vars' vals' => do
+      withParametrizedFVars w vars #[b] fun vars' vals' => do
 
         IO.println (← (← getLCtx).toString)
         IO.println (← vars'.mapM ppExpr)
