@@ -430,6 +430,11 @@ def mkLocalDecls [MonadControlT MetaM n] [Monad n]
   (names : Array Name) (bi : BinderInfo) (types : Array Expr) : Array (Name × BinderInfo × (Array Expr → n Expr)) :=
   types.mapIdx (fun i type => (names[i]!, bi, fun _ : Array Expr => pure type))
 
+/-- Simpler version of `withLocalDecls` that can't deal with dependent types but has simpler signature -/
+def withLocalDecls' [Inhabited α] [MonadControlT MetaM n] [Monad n]
+  (names : Array Name) (bi : BinderInfo) (types : Array Expr) (k : Array Expr → n α) : n α := 
+  withLocalDecls (mkLocalDecls names bi types) k
+
 
 partial def withLetDecls [Inhabited α] -- [MonadControlT MetaM n] [Monad n]
   (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α := 
@@ -443,6 +448,11 @@ where
       withLetDecl names[i]! type val fun x => loop (acc.push x)
     else
       k acc
+
+-- issues with Inhabited that I do not know how to deal with :(
+-- def withLetDecls' [Inhabited α] [MonadControlT MetaM n] [Monad n]
+--   (names : Array Name) (vals : Array Expr) (k : Array Expr → n α) : n α := 
+--   map1MetaM (fun k => withLetDeclsImpl names vals k) k
 
 
 @[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]

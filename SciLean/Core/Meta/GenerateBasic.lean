@@ -9,6 +9,19 @@ open Lean Meta Qq
 
 namespace GenerateProperty
 
+
+open Elab Lean.Parser.Tactic in
+def elabProof (goal : Expr) (tac : TSyntax ``tacticSeq) : TermElabM Expr := do
+
+  let proof ← mkFreshExprMVar goal
+  let goals ← Tactic.run proof.mvarId! do
+    Tactic.evalTactic tac
+
+  if ¬goals.isEmpty then
+    throwError s!"failed to prove {← ppExpr goal}\nunsolved goals {← liftM <| goals.mapM (fun m => m.getType >>= ppExpr)}"
+  
+  return ← instantiateMVars proof
+
 /-- Returns `(id, u, K)` where `K` is infered field type with universe level `u`
 
 The index `id` tells that arguments `args[id:]` have already `K` in its local context with valid `IsROrC K` instances. -/

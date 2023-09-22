@@ -193,6 +193,16 @@ where
     | e                => return .yield e
 
 
+/-- Replaces `xᵢ` with `yᵢ`, subterms of e with loose bvars are ignored. -/
+def replaceExprs (e : Expr) (xs ys : Array Expr) : MetaM Expr := 
+  e.replaceM (fun e' => do
+    if e'.hasLooseBVars then
+      return .noMatch
+    else
+      for x in xs, y in ys do
+        if (← Meta.isDefEq x e') then
+          return .yield y
+      return .noMatch)
 
 /-- Replace `nth`-th occurance of bound variable i in `e` with `v`.
 
