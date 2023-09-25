@@ -7,6 +7,7 @@ package scilean
 lean_lib SciLean {
   -- precompileModules := true
   roots := #[`SciLean]
+  buildType := .debug
 }
 
 

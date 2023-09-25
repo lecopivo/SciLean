@@ -49,6 +49,12 @@ def inDualSpanningCotree (s : SurfaceMesh) (faceParent : IndexTree `Face) (h : I
    let f' : Index `Face := s.halfedges[s.halfedges[h]!.twin.get!]!.face
    faceParent[f]! == f' || faceParent[f']! == f
 
+/-
+Closed term extraction produces a weird closed term that
+crashes at init time.
+-/
+set_option trace.compiler.ir.result true in
+set_option compiler.extract_closed false in
 partial def SurfaceMesh.sharedHalfedge (s : SurfaceMesh) (f g : Index `Face) : Index `Halfedge := Id.run <| do
   for h in s.getAdjacentHalfedges f do
     let twin := s.halfedges[h]!.twin.get!
@@ -57,6 +63,7 @@ partial def SurfaceMesh.sharedHalfedge (s : SurfaceMesh) (f g : Index `Face) : I
     then return h
     else continue
   panic! "have two faces without adjacent edge!"
+
 
 partial def dualSpanningCotree (s : SurfaceMesh) (vertexParent : IndexTree `Vertex) : IndexTree `Face :=
   go [root] (IndexTree.fullyDisconnected s.faces.size)
@@ -94,7 +101,6 @@ Furthermore, this does not lie in the kernel of the boundary operator, so if we 
 and add up the oriented halfedges, we would not get this loop.
 -/
 def HomologyGenerator : Type := Array (Index `Halfedge)
-
 
 partial def mkGenerator (s : SurfaceMesh)
   (faceParent : IndexTree `Face)

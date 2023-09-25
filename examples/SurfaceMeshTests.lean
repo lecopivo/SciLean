@@ -16,6 +16,10 @@ def testTetrahedron : IO Bool := do
   IO.println s!"tetrahedron #vertices: {mesh.vertices.size}"
   IO.println s!"tetrahedron #edges: {mesh.edges.size}"
   IO.println s!"tetrahedron  #faces: {mesh.faces.size}"
+
+  let adjacentTo0 ← mesh.getAdjacentHalfEdges (0 : Index `Face)
+  IO.println s!"tetrahedron halfedges adjacent to 0: {adjacentTo0}
+
   assert! mesh.eulerCharacteristic == 2
   return true
 
