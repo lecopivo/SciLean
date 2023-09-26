@@ -178,6 +178,21 @@ def bvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPro
     trace[Meta.Tactic.fprop.step] "bvar app step composition\n{←ppExpr h}\n\n{← ppExpr g}"
     ext.compRule e h g
 
+def evalSplit (e : Expr) : MetaM (Option (Expr×Expr)) := do
+  match e with
+  | .lam xName xType (.app f x) xBi => 
+    if x.hasLooseBVars then
+      return none
+    withLocalDecl xName xBi xType fun xVar => do
+      let f := f.instantiate1 xVar
+      let F ← inferType f
+      -- can't handle dependent types right now
+      if F.containsFVar xVar.fvarId! then
+        return none
+      let f' := Expr.lam `y F ((Expr.bvar 0).app x) .default
+      let g' ← mkLambdaFVars #[xVar] f
+      return (f', g')
+  | _ => return none
 
 def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) 
   (fprop : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
@@ -185,6 +200,18 @@ def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr)
 
   -- trivial case, this prevents an infinite loop
   if (← isDefEq f' f) then
+
+    -- this is a bit of a hack
+    if let .some (f', g') ← evalSplit f then
+      trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f'}) ∘ ({← ppExpr g'})`"
+      let step? ← 
+        try
+          ext.compRule e f' g'
+        catch e => 
+          pure none
+      let .some step := step? | pure ()
+      return step
+      
     trace[Meta.Tactic.fprop.step] "fvar app case: trivial"
     tryLocalTheorems e fpropName ext fprop
   else

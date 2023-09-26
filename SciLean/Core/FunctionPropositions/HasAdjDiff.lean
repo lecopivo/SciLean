@@ -362,11 +362,10 @@ by
 
 @[fprop]
 theorem SciLean.EnumType.sum.arg_f.HasAdjDiff_rule
-  (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
+  (f : X → ι → Y) (hf : HasAdjDiff K f)
   : HasAdjDiff K (fun x => ∑ i, f x i) :=
 by
-  have _ := fun i => (hf i).1
-  have _ := fun i => (hf i).2
+  have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
 

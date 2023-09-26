@@ -97,22 +97,22 @@ set_default_scalar K
 def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * x j
 
 #generate_revCDeriv matmul A x 
-  prop_by unfold matmul; sorry_proof
+  prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
 
 #generate_revCDeriv matmul A | i 
-  prop_by unfold matmul; sorry_proof
+  prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
 
 #generate_revCDeriv matmul x | i 
-  prop_by unfold matmul; sorry_proof
+  prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
 
 -- TODO: right name is not being generated!!!
 -- it should be `matmul.arg_A_i.revCDeriv`
-#check matmul.arg_A.revCDeriv
+-- #check matmul.arg_A.revCDeriv
 -- it should be `matmul.arg_x_i.revCDeriv`
-#check matmul.arg_x.revCDeriv
+-- #check matmul.arg_x.revCDeriv
 
 -- need to fix ftrans for this to work
 -- #generate_revCDeriv matmul A x | i by unfold matmul; autodiff; autodiff

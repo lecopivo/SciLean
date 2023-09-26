@@ -301,6 +301,17 @@ where
   | .mdata _ e => go n e
   | _ => n
 
+/-- Returns number of leading forall binders of an expression 
+
+Note: ignores meta data -/
+def getForallBinderNum (e : Expr) : Nat :=
+  go 0 e
+where
+  go (n : Nat) : Expr → Nat
+  | .forallE _ _ b _ => go (n+1) b
+  | .mdata _ e => go n e
+  | _ => n
+
 
 /-- Get body of multiple bindings
 
