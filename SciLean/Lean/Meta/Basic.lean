@@ -729,3 +729,28 @@ def _root_.Lean.LocalContext.toString (lctx : LocalContext) : MetaM String :=
       return s!"{decl.userName} : {← ppExpr decl.type}")
     (fun a b => pure (a++"\n"++b))
 
+
+
+def mkCurryFun (n : Nat) (f : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM Expr := do
+  if n ≤ 1 then
+    return f
+  else
+    let .forallE xName xType _ _ := (← inferType f)
+      | throwError "can't curry `{← ppExpr f}` not a function"
+
+    withLocalDecl xName .default xType fun x => do
+      let xs ← mkProdSplitElem x n fst snd
+      let xNames := xs.mapIdx fun i _ => xName.appendAfter (toString i)
+      let xTypes ← xs.mapM inferType
+      withLocalDecls' xNames .default xTypes fun xVars => do
+        let x' ← mkProdElem xVars mk
+        let b := (f.app x').headBeta
+        
+        let b ← Meta.transform b
+          (post := fun e => do 
+            if (← isType e) 
+            then return .done e 
+            else return .done (← reduceProjOfCtor e))
+
+        mkLambdaFVars xVars b
+
