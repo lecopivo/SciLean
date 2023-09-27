@@ -97,21 +97,13 @@ set_default_scalar K
 
 def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * x j
 
--- #generate_revCDeriv matmul A x 
---   prop_by unfold matmul; fprop
---   trans_by unfold matmul; autodiff; autodiff
+#generate_revCDeriv matmul A x 
+  prop_by unfold matmul; fprop
+  trans_by unfold matmul; autodiff; autodiff
 
 #generate_revCDeriv matmul A x | i
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff; autodiff
-
-
-#eval 0
-
-
-#print matmul.arg_Ax.revCDeriv
-
-#exit
 
 #generate_revCDeriv matmul A | i 
   prop_by unfold matmul; fprop
@@ -125,22 +117,13 @@ def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * 
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
 
--- #generate_fwdCDeriv matmul A | i 
---   prop_by unfold matmul; fprop
---   trans_by unfold matmul; autodiff; autodiff
+#generate_fwdCDeriv matmul A 
+  prop_by unfold matmul; fprop
+  trans_by unfold matmul; autodiff; autodiff
 
--- #generate_fwdCDeriv matmul x | i 
---   prop_by unfold matmul; fprop
---   trans_by unfold matmul; ftrans only; autodiff; autodiff
-
--- TODO: right name is not being generated!!!
--- it should be `matmul.arg_A_i.revCDeriv`
--- #check matmul.arg_A.revCDeriv
--- it should be `matmul.arg_x_i.revCDeriv`
--- #check matmul.arg_x.revCDeriv
-
--- need to fix ftrans for this to work
--- #generate_revCDeriv matmul A x | i by unfold matmul; autodiff; autodiff
+#generate_fwdCDeriv matmul x
+  prop_by unfold matmul; fprop
+  trans_by unfold matmul; autodiff; autodiff
  
 
 -- TODO: make this work even if there is no `[IsROrC K]` in the type signature
