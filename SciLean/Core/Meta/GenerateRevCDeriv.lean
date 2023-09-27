@@ -104,7 +104,7 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name)
 
       -- calling `analyzeConstLambda` here is bit of an overkill as we are only
       -- interested in `declSuffix`
-      let lhsData ← analyzeConstLambda (← mkLambdaFVars #[w] lhsrhs[0]!)
+      let lhsData ← analyzeConstLambda f
 
       let revDerivFunName := 
         constName.append lhsData.declSuffix |>.append "revCDeriv"
