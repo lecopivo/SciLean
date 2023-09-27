@@ -97,9 +97,21 @@ set_default_scalar K
 
 def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * x j
 
-#generate_revCDeriv matmul A x 
+-- #generate_revCDeriv matmul A x 
+--   prop_by unfold matmul; fprop
+--   trans_by unfold matmul; autodiff; autodiff
+
+#generate_revCDeriv matmul A x | i
   prop_by unfold matmul; fprop
-  trans_by unfold matmul; autodiff; autodiff
+  trans_by unfold matmul; autodiff; autodiff; autodiff
+
+
+#eval 0
+
+
+#print matmul.arg_Ax.revCDeriv
+
+#exit
 
 #generate_revCDeriv matmul A | i 
   prop_by unfold matmul; fprop

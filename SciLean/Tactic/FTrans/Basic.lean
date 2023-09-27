@@ -5,7 +5,7 @@ import SciLean.Lean.Meta.Basic
 import SciLean.Tactic.FTrans.Init
 import SciLean.Tactic.LSimp.Main
 import SciLean.Tactic.StructuralInverse
-
+import SciLean.Tactic.AnalyzeLambda
 
 namespace SciLean.FTrans
 
@@ -384,6 +384,26 @@ def piConstAppCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (
 
             if ¬(← isDefEq g' f) then
               return ← ext.piElemWiseCompRule e f' g'
+
+        if args.size > constArity then
+          let info ← analyzeLambda f
+          if info.trailingArgCase == .trivialUncurried then
+            let f' ← liftM <|
+              withLocalDecl xName xBi xType fun x => do
+                mkCurryFun info.trailingIds.size (f.app x).headBeta
+                >>=
+                mkLambdaFVars #[x]
+            
+            -- only proceed when curried `f` can be eta reduced
+            -- that way we get rid of some trailing aguments
+            -- if f' is not eta expanded then in the next step we would uncurry 
+            -- it again and get into infinite looop
+            if let .some f' := f'.etaExpanded? then
+
+              let .some (_,Y') := (← inferType f).arrow? | return none
+              let .some (_,Y) := Y'.arrow? | return none
+  
+              return ← ext.piCurryNRule e f' iType Y info.trailingIds.size
 
         return none
 
