@@ -58,7 +58,12 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       mkLocalDecls (n:=TermElabM)
         (mainNames.map (fun n => n.appendBefore "h")) 
         .default
-        (← mainArgs.mapM (fun arg => mkAppM ``HasAdjDiff #[K,arg]))
+        (← mainArgs.mapM (fun arg => do 
+          lambdaTelescope (← etaExpand arg) fun xs b => do
+            let f := (← mkLambdaFVars #[xs[0]!] b).eta
+            let prop ← mkAppM ``HasAdjDiff #[K,f]
+            mkForallFVars xs[1:] prop))
+
 
     withLocalDecls decls fun mainArgProps => do
 

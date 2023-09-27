@@ -1,4 +1,5 @@
 import SciLean.Tactic.FProp.Init
+import SciLean.Tactic.AnalyzeLambda
 
 open Lean Meta Qq
 
@@ -129,7 +130,18 @@ def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
 
   return arr
 
+structure LocalRule where
+  fvar  : FVarId
+  proof : Expr
+  mainIds : ArraySet Nat
+  trailingIds : ArraySet Nat
 
+def toFullyAppliedForm (f : Expr) : MetaM Expr := do
+  lambdaTelescope f fun xs b => do
+    let b ← whnf b
+    withDefault do forallTelescopeReducing (← inferType b) fun xs' _ => 
+      mkLambdaFVars (xs++xs') (mkAppN b xs').headBeta
+    
 def tryLocalTheorems (e : Expr) (fpropName : Name) (ext : FPropExt) 
   (fprop : Expr → FPropM (Option Expr))
   : FPropM (Option Expr) := do
@@ -141,6 +153,55 @@ def tryLocalTheorems (e : Expr) (fpropName : Name) (ext : FPropExt)
       return proof
 
   return none
+
+def getLocalRulesForFVar (fId : FVarId) (fpropName : Name) (ext : FPropExt) : MetaM (Array LocalRule) := do
+
+  let mut arr : Array LocalRule := #[]
+
+  let lctx ← getLCtx
+  for var in lctx do
+    if (var.kind = Lean.LocalDeclKind.auxDecl) then
+      continue
+
+    let type ← instantiateMVars var.type
+
+    let rule? : Option LocalRule ← 
+      forallTelescopeReducing var.type fun xs type => do
+        if ¬(type.isAppOf' fpropName) then
+          return none
+        let .some f := ext.getFPropFun? type
+          | return none
+        let f ← toFullyAppliedForm f
+        let info ← analyzeLambda f
+        if (info.headFunInfo.isFVar fId) then
+          return .some {
+            fvar := var.fvarId
+            proof := var.toExpr
+            mainIds := info.mainIds
+            trailingIds := info.trailingIds
+          }
+        pure none
+    
+    let .some rule := rule?
+      | continue
+
+    arr := arr.push rule
+
+  return arr
+
+-- def tryLocalTheoremsForFVar (e : Expr) (fpropName : Name) (ext : FPropExt) 
+  
+--   (fprop : Expr → FPropM (Option Expr))
+--   : FPropM (Option Expr) := do
+
+--   let candidates ← getLocalRules fpropName
+
+--   for thm in candidates do
+--     if let some proof ← tryTheorem?' e thm ext.discharger fprop then
+--       return proof
+
+--   return none
+
 
 
 def unfoldFunHead? (e : Expr) : MetaM (Option Expr) := do
@@ -201,19 +262,28 @@ def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr)
   -- trivial case, this prevents an infinite loop
   if (← isDefEq f' f) then
 
-    -- this is a bit of a hack
-    if let .some (f', g') ← evalSplit f then
-      trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f'}) ∘ ({← ppExpr g'})`"
-      let step? ← 
-        try
-          ext.compRule e f' g'
-        catch e => 
-          pure none
-      let .some step := step? | pure ()
-      return step
+    -- -- this is a bit of a hack
+    -- if let .some (f', g') ← evalSplit f then
+    --   trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f'}) ∘ ({← ppExpr g'})`"
+    --   let step? ← 
+    --     try
+    --       ext.compRule e f' g'
+    --     catch e => 
+    --       pure none
+    --   let .some step := step? | pure ()
+    --   return step
       
     trace[Meta.Tactic.fprop.step] "fvar app case: trivial"
-    tryLocalTheorems e fpropName ext fprop
+    let step? ← tryLocalTheorems e fpropName ext fprop
+    
+    if let .some step := step? then
+      return step
+
+    if let .some (_,Y) := (← inferType f).arrow? then
+      if Y.isForall then
+        return ← fprop (ext.replaceFPropFun e (← etaExpand f))
+
+    return none
   else
     trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f'}) ∘ ({← ppExpr g'})`"
     ext.compRule e f' g'
@@ -408,6 +478,9 @@ mutual
 
     | .mvar _ => do
       fprop (← instantiateMVars e)
+
+    | .fvar _ => do
+      fprop (ext.replaceFPropFun e (← etaExpand f))
 
     | .proj typeName idx _ => do
       let .some info := getStructureInfo? (← getEnv) typeName | return none

@@ -113,7 +113,7 @@ by
 
 open BigOperators in
 theorem pi_rule
-  (f : X → (i : ι) → E i) (hf : IsContinuousLinearMap K f)
+  (f : X → (i : ι) → E i) (hf : ∀ i, IsContinuousLinearMap K (f · i))
   : ((fun (x : X) =>L[K] fun (i : ι) => f x i) : X →L[K] PiLp 2 E)†
     = 
     (fun x' =>L[K] ∑ i, (fun x =>L[K] f x i)† (x' i))
@@ -463,7 +463,7 @@ by
 open BigOperators in
 @[ftrans]
 theorem Finset.sum.arg_f.adjoint_rule
-  (f : X → ι → Y) (hf : IsContinuousLinearMap K f)
+  (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K (f · i))
   : (fun x =>L[K] ∑ i, f x i)†
     =
     (fun y =>L[K] ∑ i, (fun x =>L[K] f x i)† y) := 

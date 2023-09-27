@@ -108,6 +108,27 @@ def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * 
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
 
+
+-- set_option trace.Meta.Tactic.ftrans.step true in
+-- #check 
+--   (∂> (x : Fin 10 → Fin 10 → K), x 1 4)
+--   rewrite_by
+--     ftrans only
+  
+
+-- #generate_fwdCDeriv matmul A x 
+--   prop_by unfold matmul; fprop
+--   trans_by unfold matmul; autodiff; autodiff
+
+-- #generate_fwdCDeriv matmul A | i 
+--   prop_by unfold matmul; fprop
+--   trans_by unfold matmul; ftrans only; autodiff; autodiff
+
+-- #generate_fwdCDeriv matmul x | i 
+--   prop_by unfold matmul; fprop
+--   trans_by unfold matmul; ftrans only; autodiff; autodiff
+
+
 -- TODO: right name is not being generated!!!
 -- it should be `matmul.arg_A_i.revCDeriv`
 -- #check matmul.arg_A.revCDeriv

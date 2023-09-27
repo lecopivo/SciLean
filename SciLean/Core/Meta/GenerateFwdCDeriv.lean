@@ -57,7 +57,11 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       mkLocalDecls (n:=TermElabM)
         (mainNames.map (fun n => n.appendBefore "h")) 
         .default
-        (← mainArgs.mapM (fun arg => mkAppM ``IsDifferentiable #[K,arg]))
+        (← mainArgs.mapM (fun arg => do 
+          lambdaTelescope (← etaExpand arg) fun xs b => do
+            let f := (← mkLambdaFVars #[xs[0]!] b).eta
+            let prop ← mkAppM ``IsDifferentiable #[K,f]
+            mkForallFVars xs[1:] prop))
 
     withLocalDecls decls fun mainArgProps => do
 
@@ -73,11 +77,11 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       let (rhs, proof) ← elabConvRewrite rhs conv
       let isDiffProof ← elabProof isDiff tac
     
-      let .lam _ _ (.lam _ _ rhsBody _) _ := rhs
-        | throwError "unexpected result after function transformation, expecting `fun w dw => ...` but got\n{←ppExpr rhs}"
+      -- let .lam _ _ (.lam _ _ rhsBody _) _ := rhs
+      --   | throwError "unexpected result after function transformation, expecting `fun w dw => ...` but got\n{←ppExpr rhs}"
 
       withLocalDecl `dw .default W fun dw => do
-      let rhsBody := rhsBody.instantiate #[dw,w]
+      let rhsBody := (mkAppN rhs #[w,dw]).headBeta -- rhsBody.instantiate #[dw,w]
       let dargs ← mainArgs.mapM (fun arg => mkAppM ``fwdCDeriv #[K,arg,w,dw])
 
       let fwdDerivFun ← 

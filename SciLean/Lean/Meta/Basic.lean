@@ -103,6 +103,16 @@ def getExplicitArgs (e : Expr) : MetaM (Option (Name×Array Expr)) := do
   return (funName, explicitArgs)
 
 
+/-- Eta expansion, but adds at most `n` binders
+-/
+def etaExpandN (e : Expr) (n : Nat) : MetaM Expr := 
+  withDefault do forallTelescopeReducing (← inferType e) fun xs _ => mkLambdaFVars xs[0:n] (mkAppN e xs[0:n])
+
+/-- Eta expansion, it also beta reduces the body
+-/
+def etaExpand' (e : Expr) : MetaM Expr := 
+  withDefault do forallTelescopeReducing (← inferType e) fun xs _ => mkLambdaFVars xs (mkAppN e xs).headBeta
+
 
 /--
   Same as `mkAppM` but does not leave trailing implicit arguments.
