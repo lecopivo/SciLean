@@ -90,6 +90,7 @@ info: mymul.arg_xy.IsDifferentiable_rule.{w, u} {K : Type u} [instK : IsROrC K] 
 
 variable
   {K : Type u} [RealScalar K]
+  {X : Type u} [SemiInnerProductSpace K X]
   {ι : Type v} {κ : Type v'} [EnumType ι] [EnumType κ]
 
 set_default_scalar K
@@ -107,27 +108,18 @@ def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * 
 #generate_revCDeriv matmul x | i 
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
-
-
--- set_option trace.Meta.Tactic.ftrans.step true in
--- #check 
---   (∂> (x : Fin 10 → Fin 10 → K), x 1 4)
---   rewrite_by
---     ftrans only
   
-
--- #generate_fwdCDeriv matmul A x 
---   prop_by unfold matmul; fprop
---   trans_by unfold matmul; autodiff; autodiff
+#generate_fwdCDeriv matmul A x
+  prop_by unfold matmul; fprop
+  trans_by unfold matmul; autodiff; autodiff
 
 -- #generate_fwdCDeriv matmul A | i 
 --   prop_by unfold matmul; fprop
---   trans_by unfold matmul; ftrans only; autodiff; autodiff
+--   trans_by unfold matmul; autodiff; autodiff
 
 -- #generate_fwdCDeriv matmul x | i 
 --   prop_by unfold matmul; fprop
 --   trans_by unfold matmul; ftrans only; autodiff; autodiff
-
 
 -- TODO: right name is not being generated!!!
 -- it should be `matmul.arg_A_i.revCDeriv`

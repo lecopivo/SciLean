@@ -160,7 +160,7 @@ def bvarAppStep (e : Expr) (ext : FTransExt) (f : Expr) : SimpM (Option Simp.Ste
           return none
       ext.projRule e (.lam iName iType type bi) x
     else
-      let gType := (← inferType (.lam xName xType g bi)).getForallBody
+      let gType := (← inferType (.lam xName xType g bi)).bindingBody!
       if gType.hasLooseBVars then
         trace[Meta.Tactic.ftrans.step] "can't handle this bvar app case, unexpected dependency in type of {← ppExpr (.lam xName xType g bi)}"
         return none
