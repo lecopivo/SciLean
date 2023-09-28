@@ -97,6 +97,18 @@ section Basis
     toDual := λ (x,y) => (BasisDuality.toDual x, BasisDuality.toDual y)
     fromDual := λ (x,y) => (BasisDuality.fromDual x, BasisDuality.fromDual y)
 
+  instance {ι κ K X} [DecidableEq ι] [Basis κ K X] [Zero X] : Basis (ι×κ) K (ι → X) where
+    basis := fun (i,j) i' => if i = i' then ⅇ j else 0
+    proj := fun (i,j) x => ℼ j (x i)
+
+  instance {ι κ K X} [DecidableEq ι] [DualBasis κ K X] [Zero X] : DualBasis (ι×κ) K (ι → X) where
+    dualBasis := fun (i,j) i' => if i = i' then ⅇ' j else 0
+    dualProj := fun (i,j) x => ℼ' j (x i)
+
+  instance {ι X : Type _} [BasisDuality X] : BasisDuality (ι → X) where
+    toDual := λ x i => BasisDuality.toDual (x i)
+    fromDual := λ x i => BasisDuality.fromDual (x i)
+
 end Basis
 
 class OrthonormalBasis (ι K X : Type _) [Semiring K] [Basis ι K X] [Inner K X] : Prop where
@@ -126,7 +138,7 @@ by
          _ = ∑ i, ∑ j, (ℼ i x * ℼ' j y) * if i=j then 1 else 0 := by simp [FinVec.duality]
          _ = ∑ i, ℼ i x * ℼ' i y := sorry_proof -- summing over [[i=j]]  
 
-variable {ι K X} {_ : EnumType ι} [IsROrC K] [FinVec ι K X]
+variable {ι K X} [EnumType ι] [IsROrC K] [FinVec ι K X]
 
 @[simp]
 theorem inner_basis_dualBasis (i j : ι)
@@ -158,6 +170,11 @@ theorem proj_basis (i j : ι)
 by simp only [←inner_dualBasis_proj, inner_basis_dualBasis, eq_comm]; done
 
 @[simp]
+theorem proj_zero 
+  : ℼ i (0 : X) = 0 :=
+by sorry_proof
+
+@[simp]
 theorem dualProj_dualBasis (i j : ι)
   : ℼ' i (ⅇ'[X] j) = if i=j then 1 else 0 :=
 by simp only [←inner_basis_dualProj, inner_dualBasis_basis, eq_comm]; done
@@ -173,8 +190,21 @@ instance : OrthonormalBasis Unit K K where
   is_orthonormal := sorry_proof
 
 -- @[infer_tc_goals_rl]
-instance {ι κ K X Y} {_ : EnumType ι} {_ : EnumType κ} [IsROrC K] [FinVec ι K X] [FinVec κ K Y]
+instance {ι κ K X Y} [EnumType ι] [EnumType κ] [IsROrC K] [FinVec ι K X] [FinVec κ K Y]
   : FinVec (ι⊕κ) K (X×Y) where
+  is_basis := sorry_proof
+  duality := sorry_proof
+  to_dual := sorry_proof
+  from_dual := sorry_proof
+
+-- this might require `FinVec` instance, without it we probably do not know that `⟪0,x⟫ = 0`
+instance [EnumType ι] [EnumType κ] [Zero X] [Basis κ K X] [OrthonormalBasis κ K X] : OrthonormalBasis (ι×κ) K (ι → X) where
+  is_orthogonal  := by simp[Inner.inner, Basis.basis]; sorry_proof
+  is_orthonormal := by simp[Inner.inner, Basis.basis]; sorry_proof
+
+
+instance {ι κ K X} [EnumType ι] [EnumType κ] [IsROrC K] [FinVec κ K X]
+  : FinVec (ι×κ) K (ι → X) where
   is_basis := sorry_proof
   duality := sorry_proof
   to_dual := sorry_proof
