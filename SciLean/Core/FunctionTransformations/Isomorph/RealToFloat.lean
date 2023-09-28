@@ -54,6 +54,64 @@ axiom Real.sqrt.arg_x.isomorph_rule_RealToFloat (f : α → ℝ)
     =
     fun x : α' => (isomorph `RealToFloat f x).sqrt
 
+
+@[ftrans]
+theorem Prod.fst.arg_self.isomorph_rule {α α' β₁ β₂ β₁' β₂' : Sort _} 
+  [IsomorphicType `RealToFloat α α']
+  [IsomorphicType `RealToFloat β₁ β₁']
+  [IsomorphicType `RealToFloat β₂ β₂']
+  (f : α → β₁×β₂) 
+  : isomorph `RealToFloat (fun x => (f x).1)
+    =
+    fun x => ((isomorph `RealToFloat f) x).1 :=
+by
+  funext x
+  unfold isomorph
+  unfold instIsomorphicTypeRealToFloatProd
+  unfold IsomorphicType.equiv
+  simp
+
+@[ftrans]
+theorem Prod.snd.arg_self.isomorph_rule {α α' β₁ β₂ β₁' β₂' : Sort _} 
+  [IsomorphicType `RealToFloat α α']
+  [IsomorphicType `RealToFloat β₁ β₁']
+  [IsomorphicType `RealToFloat β₂ β₂']
+  (f : α → β₁×β₂) 
+  : isomorph `RealToFloat (fun x => (f x).2)
+    =
+    fun x => ((isomorph `RealToFloat f) x).2 :=
+by
+  funext x
+  unfold isomorph
+  unfold instIsomorphicTypeRealToFloatProd
+  unfold IsomorphicType.equiv
+  simp
+
+
+@[ftrans]
+axiom And.arg_ab.isomorph_rule {α α' : Sort _} [IsomorphicType `RealToFloat α α']
+  (f : α → Prop) (g : α → Prop)
+  : isomorph `RealToFloat (fun x => f x ∧ g x)
+    =
+    fun x => isomorph `RealToFloat f x ∧ isomorph `RealToFloat g x 
+
+
+@[ftrans]
+axiom LE.le.arg_a0a1.isomorph_rule {α α' : Sort _} [IsomorphicType `RealToFloat α α']
+  (f : α → ℝ) (g : α → ℝ)
+  : isomorph `RealToFloat (fun x => f x ≤ g x)
+    =
+    fun x => isomorph `RealToFloat f x ≤ isomorph `RealToFloat g x 
+
+
+@[ftrans]
+axiom Real.exp.arg_x.isomorph_rule {α α' : Sort _} [IsomorphicType `RealToFloat α α']
+  (f : α → ℝ)
+  : isomorph `RealToFloat (fun x => Real.exp (f x))
+    =
+    fun x => Float.exp (isomorph `RealToFloat f x)
+
+
 end RealToFloat
 
 section FloatToReal

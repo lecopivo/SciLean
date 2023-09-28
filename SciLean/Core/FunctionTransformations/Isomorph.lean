@@ -115,7 +115,7 @@ def ftransExt : FTransExt where
       trace[Meta.Tactic.ftrans.step] "can't handle this bvar app case, projection rule for dependent function of type {← ppExpr X} is not supported"
       return none
     tryTheorems
-      #[ { proof := ← mkAppM ``proj_rule #[X, tag, i], origin := .decl ``proj_rule, rfl := false} ]
+      #[ { proof := ← mkAppM ``proj_rule #[X', tag, i], origin := .decl ``proj_rule, rfl := false} ]
       discharger e
 
   compRule e f g := do
