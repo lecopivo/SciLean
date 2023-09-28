@@ -178,6 +178,11 @@ theorem proj_basis (i j : ι)
 by simp only [←inner_dualBasis_proj, inner_basis_dualBasis, eq_comm]; done
 
 @[simp]
+theorem proj_zero (i : ι)
+  : ℼ i (0 : X) = 0 :=
+by sorry_proof
+
+@[simp]
 theorem dualProj_dualBasis (i j : ι)
   : ℼ' i (ⅇ'[X] j) = if i=j then 1 else 0 :=
 by simp only [←inner_basis_dualProj, inner_dualBasis_basis, eq_comm]; done
