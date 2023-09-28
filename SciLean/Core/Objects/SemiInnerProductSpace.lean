@@ -225,6 +225,6 @@ instance (X Y) [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInn
 
 -- instance (X) [SemiInnerProductSpace K X] (ι) [Fintype ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
 -- instance (X) [SemiInnerProductSpace K X] (ι) [EnumType ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
-instance (priority:=low) (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [EnumType ι] : SemiInnerProductSpace K ((i : ι) → X i) 
+instance (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [EnumType ι] : SemiInnerProductSpace K ((i : ι) → X i) 
   := SemiInnerProductSpace.mkSorryProofs
 

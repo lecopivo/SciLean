@@ -90,8 +90,8 @@ info: mymul.arg_xy.IsDifferentiable_rule.{w, u} {K : Type u} [instK : IsROrC K] 
 
 variable
   {K : Type u} [RealScalar K]
-  {X : Type u} [SemiInnerProductSpace K X]
-  {ι : Type v} {κ : Type v'} [EnumType ι] [EnumType κ]
+  {X : Type v} [SemiInnerProductSpace K X]
+  {ι : Type} {κ : Type} [EnumType ι] [EnumType κ]
 
 set_default_scalar K
 
@@ -99,7 +99,7 @@ def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * 
 
 #generate_revCDeriv matmul A x 
   prop_by unfold matmul; fprop
-  trans_by unfold matmul; autodiff; autodiff
+  trans_by unfold matmul; ftrans only; autodiff; autodiff
 
 #generate_revCDeriv matmul A x | i
   prop_by unfold matmul; fprop

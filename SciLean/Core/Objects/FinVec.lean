@@ -12,8 +12,8 @@ The class `FinVec ι K X` guarantees that any element `x : X` can be writtens as
 ```
 -/
 class Basis (ι : outParam $ Type v) (K : outParam $ Type w)(X : Type u)  where
-  basis : ι → X
-  proj  : ι → X → K
+  basis (i : ι) : X
+  proj  (i : ι) (x : X) : K
 
 /-- Dual basis of the space `X` over the field `K` indexed by `ι` 
 
@@ -27,16 +27,16 @@ and that it is dual to the normal basis
 ```
 -/
 class DualBasis (ι  : outParam $ Type v) (K : outParam $ Type w) (X : Type u) where
-  dualBasis : ι → X
-  dualProj  : ι → X → K
+  dualBasis (i : ι) : X
+  dualProj  (i : ι) (x : X) : K
 
 /-- This should somehow relate to raising and lowering indices but I forgot how.
 
 TODO: add explanation why this is useful
 -/
 class BasisDuality (X : Type u) where
-  toDual   : X → X  -- transforms basis vectors to dual basis vectors
-  fromDual : X → X  -- transforma dual basis vectors to basis vectors
+  toDual   (x : X) : X  -- transforms basis vectors to dual basis vectors
+  fromDual (x : X) : X  -- transforma dual basis vectors to basis vectors
 
 section Basis
 
@@ -178,11 +178,6 @@ theorem proj_basis (i j : ι)
 by simp only [←inner_dualBasis_proj, inner_basis_dualBasis, eq_comm]; done
 
 @[simp]
-theorem proj_zero 
-  : ℼ i (0 : X) = 0 :=
-by sorry_proof
-
-@[simp]
 theorem dualProj_dualBasis (i j : ι)
   : ℼ' i (ⅇ'[X] j) = if i=j then 1 else 0 :=
 by simp only [←inner_basis_dualProj, inner_dualBasis_basis, eq_comm]; done
@@ -211,16 +206,17 @@ instance [EnumType ι] [EnumType κ] [Zero X] [Basis κ K X] [OrthonormalBasis �
   is_orthonormal := by simp[Inner.inner, Basis.basis]; sorry_proof
 
 
-instance (priority:=high) {ι K} [EnumType ι] [IsROrC K]
+instance (priority:=high) {ι : Type} {K : Type v} [EnumType ι] [IsROrC K]
   : FinVec ι K (ι → K) where
   is_basis := sorry_proof
   duality := sorry_proof
   to_dual := sorry_proof
   from_dual := sorry_proof
 
-instance {ι κ K X} [EnumType ι] [EnumType κ] [IsROrC K] [FinVec κ K X]
+instance {ι κ : Type} {K X : Type _} [EnumType ι] [EnumType κ] [IsROrC K] [FinVec κ K X]
   : FinVec (ι×κ) K (ι → X) where
   is_basis := sorry_proof
   duality := sorry_proof
   to_dual := sorry_proof
   from_dual := sorry_proof
+
