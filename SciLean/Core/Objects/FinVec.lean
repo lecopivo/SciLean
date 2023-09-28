@@ -109,6 +109,14 @@ section Basis
     toDual := λ x i => BasisDuality.toDual (x i)
     fromDual := λ x i => BasisDuality.fromDual (x i)
 
+  instance (priority:=high) {ι K : Type _} [DecidableEq ι] [IsROrC K] : Basis ι K (ι → K) where
+    basis := fun i j => if i = j then 1 else 0
+    proj := fun i x => x i
+
+  instance (priority:=high) {ι K : Type _} [DecidableEq ι] [IsROrC K] : DualBasis ι K (ι → K) where
+    dualBasis := fun i j => if i = j then 1 else 0
+    dualProj := fun i x => x i
+
 end Basis
 
 class OrthonormalBasis (ι K X : Type _) [Semiring K] [Basis ι K X] [Inner K X] : Prop where
@@ -202,6 +210,13 @@ instance [EnumType ι] [EnumType κ] [Zero X] [Basis κ K X] [OrthonormalBasis �
   is_orthogonal  := by simp[Inner.inner, Basis.basis]; sorry_proof
   is_orthonormal := by simp[Inner.inner, Basis.basis]; sorry_proof
 
+
+instance (priority:=high) {ι K} [EnumType ι] [IsROrC K]
+  : FinVec ι K (ι → K) where
+  is_basis := sorry_proof
+  duality := sorry_proof
+  to_dual := sorry_proof
+  from_dual := sorry_proof
 
 instance {ι κ K X} [EnumType ι] [EnumType κ] [IsROrC K] [FinVec κ K X]
   : FinVec (ι×κ) K (ι → X) where
