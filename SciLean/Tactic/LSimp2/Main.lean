@@ -196,8 +196,29 @@ def unfold? (e : Expr) : SimpM (Option Expr) := do
   else
     return none
 
+private partial def appLetNormalize (e : Expr) : MetaM Expr := do
+  if ¬e.consumeMData.isApp then
+    return e
+  else
+    let fn := e.getAppFn'
+    let args := e.getAppArgs'
+    if ¬(fn.isLet || args.any (·.isLet)) then
+      return e
+    letTelescope fn fun fnxs fnb => do
+      withLets args #[] #[] fun argxs argbs => do
+        mkLetFVars (fnxs++argxs) (mkAppN fnb argbs)
+where
+  withLets (args argxs argbs : Array Expr) (k : Array Expr → Array Expr → MetaM Expr) : MetaM Expr :=
+    let i := argbs.size
+    if i=args.size then
+      k argxs argbs
+    else
+      letTelescope args[i]! fun xs arg => 
+        withLets args (argxs++xs) (argbs.push arg) k
+
 private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
   let cfg := (← read).config
+  let e ← appLetNormalize e
   if e.getAppFn.isMVar then
     let e' ← instantiateMVars e
     if e' != e then
@@ -366,6 +387,7 @@ private def filterLetValues (vals vars : Array Expr) : Array Expr × Array Nat :
       r := r.push var
       is := is.push i
   (r, is)
+      
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
   checkMaxHeartbeats "simp"
