@@ -316,7 +316,7 @@ where
 /-- Merge two sets of free variables where `fvars2` can depend on `fvars1`.
 It tries to push free variables in `fvars2` to the front as much as possible.
 
-Example: consider expression
+The main application is to move let bindings out of lambdas, consider expression:
 ```
   fun x y => 
     let a := x
@@ -324,7 +324,16 @@ Example: consider expression
     let c := 42
     ..
 ```
-calling `mergeFVars #[x,y] #[a,b,c]` will return `#[c,x,a,y,b]
+calling `mergeFVars #[x,y] #[a,b,c]` will return `#[c,x,a,y,b] thus we can rewrite
+above functions as
+```
+  let c := 42
+  fun x =>
+    let a := x
+    fun y => 
+      let b := a + y
+      ..
+```
  -/
 private def mergeFVars (fvars1 fvars2 : Array Expr) : MetaM (Array Expr) := do
   let (a,b) ← fvars1.foldrM (init := (fvars2, (#[] : Array Expr))) 
