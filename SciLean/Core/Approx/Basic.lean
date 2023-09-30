@@ -7,7 +7,7 @@ import SciLean.Util.SorryProof
 
 namespace SciLean
 
-open LimitNotation
+open Notation
 
 variable {α} [TopologicalSpace α] [Nonempty α]
 

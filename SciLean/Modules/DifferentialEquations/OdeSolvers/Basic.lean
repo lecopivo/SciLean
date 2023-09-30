@@ -12,7 +12,7 @@ variable
   {Z : Type _} [Vec R Z]
 
 set_default_scalar R
-open LimitNotation
+open Notation
 
 /-- Can we integrate differential equation `∂ x t = f t (x t)` using `stepper` function?
 

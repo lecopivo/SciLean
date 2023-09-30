@@ -59,6 +59,5 @@ open Conv
 
 | _ => Lean.Elab.throwUnsupportedSyntax
 
-open LimitNotation
 
   

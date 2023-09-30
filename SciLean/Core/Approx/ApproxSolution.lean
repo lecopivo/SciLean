@@ -5,7 +5,9 @@ import SciLean.Util.Limit
 
 set_option linter.unusedVariables false
 
-open LimitNotation
+namespace SciLean
+
+open Notation
 
 inductive ApproxSolution {α : Type _} [TopologicalSpace α] [Nonempty α] : {N : Type _} → (lN : Filter N) → (spec : α → Prop) → Type _ 
 | exact {spec : α → Prop}
