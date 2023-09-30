@@ -306,7 +306,7 @@ theorem _root_.getThe.arg.revDerivValM_rule
       pure ((← getThe S), fun ds => modifyThe S (fun ds' => ds + ds'))) := 
 by 
   simp[getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, setThe, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet]
-  ftrans; simp
+  ftrans
 
 -- MonadState.get --------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -328,7 +328,7 @@ theorem _root_.MonadState.get.arg.revDerivValM_rule
       pure ((← get), fun ds => modify (fun ds' => ds + ds'))) := 
 by 
   simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, setThe, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet, modifyGet]
-  ftrans; simp
+  ftrans
 
 
 -- setThe ----------------------------------------------------------------------

@@ -6,7 +6,7 @@ import SciLean.Data.DataArray
 
 import SciLean.Modules.DifferentialEquations
 
-import SciLean.Tactic.LSimp.Elab
+import SciLean.Tactic.LSimp2.Elab
 
 /-!
 

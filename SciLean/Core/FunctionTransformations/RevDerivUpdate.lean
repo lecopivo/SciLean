@@ -76,7 +76,7 @@ by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revDerivUpdate
-  funext _; ftrans; ftrans
+  funext _; ftrans; ftrans; simp
 
 
 theorem let_rule 
@@ -96,7 +96,7 @@ by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revDerivUpdate
-  funext x; ftrans; ftrans 
+  funext x; ftrans; ftrans; simp 
   funext dz k dx
   simp[add_assoc]
   have h : IsLinearMap K (semiAdjoint K (cderiv K g x)) := sorry_proof
@@ -124,7 +124,7 @@ by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
   unfold revDerivUpdate
-  funext _; ftrans; ftrans 
+  funext _; ftrans; ftrans; simp
   funext dy dx
   sorry_proof
 

@@ -81,7 +81,8 @@ theorem comp_rule
 by
   unfold revFDeriv
   funext _
-  ftrans; ftrans; ext; simp
+  ftrans; ftrans; simp
+  ext; simp
 
 
 theorem let_rule 
@@ -126,7 +127,7 @@ theorem comp_rule_at
        ydg.2 dy)  := 
 by
   unfold revFDeriv
-  ftrans; ftrans; ext; simp
+  ftrans; ftrans; simp; ext; simp
 
 
 theorem let_rule_at

@@ -122,7 +122,7 @@ by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revCDeriv
-  funext _; ftrans; ftrans
+  funext _; ftrans; ftrans; simp
 
 
 theorem let_rule 
@@ -142,7 +142,7 @@ by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revCDeriv
-  funext _; ftrans; ftrans 
+  funext _; ftrans; ftrans; simp
 
 
 theorem pi_rule
@@ -159,7 +159,7 @@ by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
   unfold revCDeriv
-  funext _; ftrans; ftrans 
+  funext _; ftrans; ftrans; simp 
 
 
 theorem comp_rule_at

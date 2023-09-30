@@ -3,7 +3,7 @@ import Mathlib.Tactic.NormNum.Core
 
 import SciLean.Lean.Meta.Basic
 import SciLean.Tactic.FTrans.Init
-import SciLean.Tactic.LSimp.Main
+import SciLean.Tactic.LSimp2.Main
 import SciLean.Tactic.StructuralInverse
 import SciLean.Tactic.AnalyzeLambda
 

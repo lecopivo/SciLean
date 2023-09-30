@@ -231,7 +231,6 @@ private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
     let e' := e.eta
     if e' != e then
       return (← reduce e')
-  -- TODO: eta reduction
   if cfg.proj then
     match (← reduceProjFn? e) with
     | some e => return (← reduce e)
