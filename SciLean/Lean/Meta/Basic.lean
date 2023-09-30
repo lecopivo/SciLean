@@ -446,11 +446,11 @@ def withLocalDecls' [Inhabited α] [MonadControlT MetaM n] [Monad n]
   withLocalDecls (mkLocalDecls names bi types) k
 
 
-partial def withLetDecls [Inhabited α] -- [MonadControlT MetaM n] [Monad n]
+private partial def withLetDeclsImpl
   (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α := 
   loop #[]
 where
-  loop [Inhabited α] (acc : Array Expr) : MetaM α := do
+  loop (acc : Array Expr) : MetaM α := do
     let i := acc.size
     if h : i < vals.size then
       let val := vals[i]
@@ -459,10 +459,9 @@ where
     else
       k acc
 
--- issues with Inhabited that I do not know how to deal with :(
--- def withLetDecls' [Inhabited α] [MonadControlT MetaM n] [Monad n]
---   (names : Array Name) (vals : Array Expr) (k : Array Expr → n α) : n α := 
---   map1MetaM (fun k => withLetDeclsImpl names vals k) k
+def withLetDecls [MonadControlT MetaM n] [Monad n]
+  (names : Array Name) (vals : Array Expr) (k : Array Expr → n α) : n α := 
+  map1MetaM (fun k => withLetDeclsImpl names vals k) k
 
 
 @[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]
@@ -709,6 +708,9 @@ def reduceProjOfCtor (e : Expr) : MetaM Expr := do
 
 open ReduceProjOfCtor in
 /-- Reduces structure projection of explicit constructors
+
+For example, `(x,y,z).2.1.1` reduces to `y.1` even if `y` is reducible definition 
+or let fvar.
 -/
 def reduceProjOfCtor? (e : Expr) : MetaM (Option Expr) := do
   let (e',ps) ← peelOfProjections e

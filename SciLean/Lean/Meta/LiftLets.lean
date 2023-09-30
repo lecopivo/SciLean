@@ -5,16 +5,12 @@ Authors: Kyle Miller, Tomas Skrivan
 -/
 import Lean
 import Qq
+
 import SciLean.Lean.Meta.Basic
+import SciLean.Lean.Meta.Structure
+import SciLean.Lean.Meta.Replace
 
-/-!
-# The `lift_lets` tactic
-
-This module defines a tactic `lift_lets` that can be used to pull `let` bindings as far out
-of an expression as possible.
--/
-
-open Lean Elab Parser Meta Tactic
+open Lean Elab Parser Meta Tactic SciLean
 
 /-- Configuration for `Lean.Expr.liftLets` and the `lift_lets` tactic. -/
 structure Lean.Expr.LiftLetsConfig where
@@ -24,147 +20,15 @@ structure Lean.Expr.LiftLetsConfig where
   This test is by syntactic equality, not definitional equality.
   The default is to merge. -/
   merge : Bool := true
-
-/-- Is `e` function type with no dependent types?
--/
-def isSimpleFunType (e : Expr) : Bool :=
-  if ¬e.consumeMData.isForall then false else go e
-where 
-  go (e : Expr) : Bool :=
-    match e with
-    | .forallE _ t b _ => 
-      if t.hasLooseBVars || b.hasLooseBVars then
-        false
-      else
-        go b
-    | .mdata _ e => go e
-    | _ => true
-
-
-private def buildMk (mk : Expr) (mks : List Expr) (vars vals : Array Expr) : MetaM Expr :=
-  match mks with 
-  | [] => mkLambdaFVars vars (mkAppN mk vals)
-  | mk' :: mks' => 
-    lambdaTelescope mk' fun xs b => 
-      buildMk mk mks' (vars++xs) (vals.push b)              
-
-/-- Decomposes an element `e` that is a nested application of constructors
-
-For example, calling this function on `x : (Nat×Nat)×Nat` returns `(#[x.1.1, x.1.2, x.1], fun a b c => ((a,b),c))`
--/
-private partial def splitByCtorsImpl (e : Expr) : MetaM (Array Expr × Expr) := do
-
-  let E ← inferType e
-  let idE := Expr.lam `x E (.bvar 0) default
-
-  let .const structName _ := E.getAppFn'
-    | return (#[e], idE)
-
-  -- not structure
-  let .some _ := getStructureInfo? (← getEnv) structName
-    | return (#[e], idE)
-
-  let ctorVal := getStructureCtor (← getEnv) structName
-
-  let fn := e.getAppFn
-  let args := e.getAppArgs'
-
-  -- not application of ctor
-  if fn.constName? ≠ .some ctorVal.name then 
-    return (#[e], idE)
-    
-  -- not fully applied ctor
-  if args.size ≠ ctorVal.numParams + ctorVal.numFields then
-    return (#[e], idE)
-
-  let mk := mkAppN fn args[0:ctorVal.numParams]
-
-  -- if ¬(isSimpleFunType (← inferType mk)) then
-  --   return (#[e], idE)
-
-  let fields : Array _ := args[ctorVal.numParams : ctorVal.numParams + ctorVal.numFields]
-  let (eis, mks) := (← fields.mapM splitByCtorsImpl).unzip
-
-  let mk ← buildMk mk mks.toList #[] #[]
-
-  return (eis.flatten, mk)
-
-
-/-- Decomposes an element `e` that is a nested application of constructors
-
-For example, calling this function on `x : (Nat×Nat)×Nat` returns `(#[x.1.1, x.1.2, x.1], fun a b c => ((a,b),c))`
--/
-def splitByCtors (e : Expr) : MetaM (Option (Array Expr × Expr)) := do
-  let r ← splitByCtorsImpl e
-  if r.1.size = 1 then
-    return none
-  else
-    return r
-
-
-inductive ReplacePost where
-  | yield (e : Expr)
-  | done (e : Expr)
-
-
-def ReplacePost.val (r : ReplacePost) : Expr :=
-  match r with
-  | yield e  => e
-  | done e => e
-
-
-private partial def replaceFVarAndPostImpl (e : Expr) (id : FVarId) (val : Expr) (post : Expr → MetaM ReplacePost) : MetaM ReplacePost :=
-  if ¬e.hasFVar then
-    return .done e
-  else
-  match e with
-  | .fvar id' => 
-    if id' == id then
-      return .yield val
-    else
-      return .done e
-  | .app f x => do
-    match ← replaceFVarAndPostImpl f id val post, ← replaceFVarAndPostImpl x id val post with
-    | .yield f', .yield x'
-    | .yield f', .done x'
-    | .done f', .yield x' => post (.app f' x')
-    | .done f', .done x' => return .done (.app f' x')
-  | .lam n t b bi => do
-    let t' ← replaceFVarAndPostImpl t id val post
-    withLocalDecl n bi t'.val fun var => do
-      match t', ← replaceFVarAndPostImpl (b.instantiate1 var) id val post with
-      | .yield _, .yield b' 
-      | .yield _, .done b' 
-      | .done _, .yield b' => post (← mkLambdaFVars #[var] b')
-      | .done _, .done b' => return .done (← mkLambdaFVars #[var] b')
-  | .forallE n t b bi => do
-    let t' ← replaceFVarAndPostImpl t id val post
-    withLocalDecl n bi t'.val fun var => do
-      match t', ← replaceFVarAndPostImpl (b.instantiate1 var) id val post with
-      | .yield _, .yield b' 
-      | .yield _, .done b' 
-      | .done _, .yield b' => post (← mkForallFVars #[var] b')
-      | .done _, .done b' => return .done (← mkForallFVars #[var] b')
-  | .letE n t v b _ => do
-    let t' ← replaceFVarAndPostImpl t id val post
-    withLocalDecl n .default t'.val fun var => do
-      match ← replaceFVarAndPostImpl v id val post, ← replaceFVarAndPostImpl (b.instantiate1 var) id val post with
-      | .yield v', .yield b'
-      | .yield v', .done b'
-      | .done v', .yield b' =>
-        post (.letE n (← inferType v') v' (b'.abstract #[var]) false)
-      | .done v', .done b' =>
-        return .done (.letE n (← inferType v') v' (b'.abstract #[var]) false)
-  | .mdata _ e => replaceFVarAndPostImpl e id val post
-  | .proj n i e => do
-    match ← replaceFVarAndPostImpl e id val post with
-    | .yield e' => post (.proj n i e')
-    | .done e' => return .done (.proj n i e')
-  | .mvar _ => do replaceFVarAndPostImpl (← instantiateMVars e) id val post
-  | e => return .done e
-
-
-def replaceFVarAndPost (e : Expr) (id : FVarId) (val : Expr) (post : Expr → MetaM ReplacePost) : MetaM Expr := do pure (← replaceFVarAndPostImpl e id val post).val
+  /-- Whether to split lets with structure constructors. Let bindings like
+  `let a := (x,y)` will be split into two let bindings `let a0 := x; let a1 := y` -/
+  splitCtors : Bool := true
+  /-- Whether remove let bindings if the the value is just a fvar. -/
+  removeFVar : Bool := true
+  /-- Whether remove let bindings if the the value is a numerical constant i.e. OfNat or OfScientific -/
+  removeNum : Bool := true
+  /-- Whether remove let bindings if the the value is a lambda function -/
+  removeLambda : Bool := true
 
 
 /--
@@ -190,21 +54,26 @@ private partial def Lean.Expr.liftLetsAux (config : LiftLetsConfig) (e : Expr) (
             return decl.type == t' && decl.value? == some v')
           if let some fvar' := fvar? then
             return ← (b.instantiate1 fvar').liftLetsAux config fvars f
-        match ← splitByCtors v' with
-        | .some (vs', mk') => 
-          let ns := (Array.range vs'.size).map fun i => n.appendAfter (toString i)
-          withLetDecls ns vs' fun fvars' =>
-          withLocalDecl n .default t' fun fvar => do
-            let fvar' := (mkAppN mk' fvars').headBeta
-            let b' ← replaceFVarAndPost (b.instantiate1 fvar) fvar.fvarId! fvar'
-              (post := fun e => do
-                match ← reduceProjOfCtor? e with
-                | .some e' => return .yield e'
-                | .none => return .done e)
-            b'.liftLetsAux config (fvars ++ fvars') f
-        | .none => 
-          withLetDecl n t' v' fun fvar =>
-            (b.instantiate1 fvar).liftLetsAux config (fvars.push fvar) f
+
+        if config.splitCtors then
+          if let .some (vs', _, mk') ← splitByCtors? v' then 
+            let names := (Array.range vs'.size).map fun i => n.appendAfter (toString i)
+            return ← withLetDecls names vs' fun fvars' => do
+              let fvar' := (mkAppN mk' fvars').headBeta
+              let mut b' ← instantiate1AndProject b t' fvar'
+              let mut fvars'' := #[]
+              for v' in vs', fvar' in fvars' do
+                if removeLet v' then
+                  b' := b'.replaceFVar fvar' v'
+                else
+                  fvars'' := fvars''.push fvar'
+              b'.liftLetsAux config (fvars ++ fvars'') f
+
+        if removeLet v' then
+          return ← (b.instantiate1 v').liftLetsAux config fvars f
+
+        withLetDecl n t' v' fun fvar =>
+          (b.instantiate1 fvar).liftLetsAux config (fvars.push fvar) f
   | .app x y =>
     x.liftLetsAux config fvars fun fvars x' => y.liftLetsAux config fvars fun fvars y' =>
       f fvars (.app x' y')
@@ -243,6 +112,25 @@ where
     | .letE n t v b _ =>
       withLetDecl n t v fun fvar => insideLets (b.instantiate1 fvar) (fvars.push fvar) f
     | _ => f fvars e
+  /-- Replaces `.bvar 0` of type `t` in `e` with `val` and potentially reduce projections -/
+  instantiate1AndProject (e : Expr) (t : Expr) (val : Expr) : MetaM Expr := do
+    withLocalDeclD .anonymous t fun fvar => do
+      replaceFVarAndPost (e.instantiate1 fvar) fvar.fvarId! val
+        (post := fun e => do
+          match ← reduceProjOfCtor? e with
+          | .some e' => return .yield e'
+          | .none => return .done e)
+  removeLet (v : Expr) : Bool := 
+    if config.removeFVar && v.isFVar then
+      true
+    else if config.removeNum && 
+      (v.isAppOfArity' ``OfNat.ofNat 3 || 
+       v.isAppOfArity' ``OfScientific.ofScientific 5) then
+      true
+    else if config.removeLambda && v.isLambda then
+      true
+    else
+      false
 
 /-- Take all the `let`s in an expression and move them outwards as far as possible.
 All top-level `let`s are added to the local context, and then `f` is called with the list
@@ -254,6 +142,31 @@ Use `e.liftLets mkLetFVars` to get a defeq expression with all `let`s lifted as 
 def Lean.Expr.liftLets (e : Expr) (f : Array Expr → Expr → MetaM Expr)
     (config : LiftLetsConfig := {}) : MetaM Expr :=
   e.liftLetsAux config #[] f
+
+
+def Lean.Expr.letNormalize (e : Expr)
+    (config : LiftLetsConfig := {}) : MetaM Expr :=
+  e.liftLetsAux config #[] mkLetFVars
+
+
+
+
+-- open Qq
+-- #eval show MetaM Unit from do
+
+--   let e := q(  
+--     fun x y => 
+--       let a := x
+--       let b := a + y
+--       let c := 42
+--       x + y + a + b + c)
+
+--   lambdaLetTelescope e fun xs b => do
+--     let xs' ← mergeFVars xs[0:2] xs[2:]
+
+--     IO.println (← xs'.mapM ppExpr)
+
+#exit
 
 
 open Qq
@@ -269,10 +182,12 @@ open Qq
     let d := 
       let e := 11
       a + 4 + e + x
-    a + d
+    let z := a + d
+    let w := z
+    w
     )
 
-  let e' ← e.liftLets mkLetFVars
+  let e' ← e.letNormalize (config := {removeNum := true})
 
   IO.println (← ppExpr e')
   
@@ -358,31 +273,30 @@ open Qq
   let a75 := a74
   let a76 := a75
   let a77 := a76
-  let a78 := a77
+  let a78 := a77 + $x.1
   let a79 := a78
   let a80 := a79
   let a81 := a80
   let a82 := a81
   let a83 := a82
-  let a84 := a83 + $x.1
-  let a85 := a84
+  let a84 := a83
+  let a85 := a84 + $x.2.1
   let a86 := a85
   let a87 := a86
   let a88 := a87
   let a89 := a88
   let a90 := a89
-  let a91 := a90 + $x.2.1
-  let a92 := a91
+  let a91 := a90
+  let a92 := a91 + $x.2.2
   let a93 := a92
   let a94 := a93
   let a95 := a94
   let a96 := a95
-  let a97 := a96 + $x.2.2
+  let a97 := a96
   let a98 := a97
   let a99 := a98
   let a100 := a99
   a100)
-
 
   let e' ← replaceFVarAndPost e x.fvarId! q((1,2,3)) 
     (fun e => do
@@ -390,4 +304,5 @@ open Qq
       match ← reduceProjOfCtor? e with
       | .some e' => return .yield e'
       | .none => return .done e)
+
   IO.println (← ppExpr e')

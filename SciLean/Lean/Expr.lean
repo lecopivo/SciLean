@@ -80,7 +80,7 @@ partial def splitLetProd? (e : Expr) : Option Expr := do
 partial def splitLetProd (e : Expr) : Option Expr := e.splitLetProd?.getD e
 
 
-def _root_.Lean.Expr.mapLooseBVarIds (e : Expr) (f : Nat → Option Nat) (offset : Nat := 0) : Expr :=
+def mapLooseBVarIds (e : Expr) (f : Nat → Option Nat) (offset : Nat := 0) : Expr :=
   if e.looseBVarRange ≤ offset then
     e 
   else
@@ -328,3 +328,19 @@ def letBodyRec' (e : Expr) : Expr :=
   | .letE _ _ _ b _ => b.letBodyRec'
   | .mdata _ e => e.letBodyRec'
   | e => e
+
+
+/-- Is `e` function type with no dependent types?
+-/
+def isSimpleFunType (e : Expr) : Bool :=
+  if ¬e.consumeMData.isForall then false else go e
+where 
+  go (e : Expr) : Bool :=
+    match e with
+    | .forallE _ t b _ => 
+      if t.hasLooseBVars || b.hasLooseBVars then
+        false
+      else
+        go b
+    | .mdata _ e => go e
+    | _ => true
