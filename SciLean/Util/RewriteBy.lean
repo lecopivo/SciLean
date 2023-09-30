@@ -35,5 +35,6 @@ syntax:1 term "rewrite_by" convSeq : term
 elab_rules : term
 | `($x:term rewrite_by $rw:convSeq) => do
   let x ← elabTerm x none
+  synthesizeSyntheticMVarsNoPostponing
   let (x',_eq) ← elabConvRewrite x (← `(conv| ($rw)))
   return x'
