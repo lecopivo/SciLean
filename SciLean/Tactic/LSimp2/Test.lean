@@ -26,9 +26,9 @@ open SciLean
     let w := z + 0
     w)
   rewrite_by
-    lsimp (config := {zeta:=false})
+    lsimp (config := {zeta:=false}) 
 
-set_option pp.all true in
+
 def foo := 
   (fun x : Nat => 
     let a := 
@@ -48,7 +48,6 @@ def foo :=
     w)
   rewrite_by
     lsimp (config := {zeta:=false})
-
 
 
 set_option trace.Meta.Tactic.simp.rewrite true in
@@ -74,4 +73,4 @@ example
 by
   conv => lhs; lsimp (config := {zeta := false})
   sorry
-  
+

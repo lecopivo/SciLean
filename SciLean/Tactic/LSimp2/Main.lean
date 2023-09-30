@@ -335,6 +335,30 @@ private def mergeFVars (fvars1 fvars2 : Array Expr) : MetaM (Array Expr) := do
   let r := a ++ b
   return r
 
+private def removeLet (v : Expr) : Bool := 
+  if v.isFVar then
+    true
+  else if
+    (v.isAppOfArity' ``OfNat.ofNat 3 || 
+     v.isAppOfArity' ``OfScientific.ofScientific 5) then
+    true
+  else if v.isLambda then
+    true
+  else
+    false
+
+private def filterLetValues (vals vars : Array Expr) : Array Expr × Array Expr × Array Expr := Id.run do
+  let mut r := Array.mkEmpty vals.size
+  let mut vals' := Array.mkEmpty vars.size
+  let mut vars' := Array.mkEmpty vars.size
+  for val in vals, var in vars do
+    if removeLet val then
+      r := r.push val
+    else
+      r := r.push var
+      vals' := vals'.push val
+      vars' := vars'.push var
+  (r, vals', vars')
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
   checkMaxHeartbeats "simp"
@@ -775,27 +799,37 @@ where
       | SimpLetCase.nondep =>
         let rv ← simp v
         letTelescope rv.expr fun fvars v' => do
-          let (vs', _, mk') := (← splitByCtors? v').getD (#[],#[],default)
-          let names := (Array.range vs'.size).map fun i => n.appendAfter (toString i)
-          withLetDecls names vs' fun fvars' => do
-            if vs'.size ≠ 0 then
-              IO.println s!"let split of {← liftM <|  ppExpr v'} into {← liftM <| vs'.mapM ppExpr}"
+          match ← splitByCtors? v' with
+          | .none => 
             withLocalDeclD n t fun x => do
-              let bx := b.instantiate1 x  -- if we split v' intor vs' then we need to pass new fvars
+              let bx := b.instantiate1 x
               let rbx ← simp bx
               let hb? ← match rbx.proof? with
                 | none => pure none
                 | some h => pure (some (← mkLambdaFVars #[x] h))
-              let e' ← 
-                if vs'.size = 0 then 
-                  mkLetFVars fvars (mkLet n t v' (← rbx.expr.abstractM #[x]))
-                else
-                  mkLetFVars (fvars ++ fvars') ((← rbx.expr.abstractM #[x]).instantiate1 (mk'.beta fvars'))
+              let e' ← mkLetFVars fvars (mkLet n t v' (← rbx.expr.abstractM #[x]))
               match rv.proof?, hb? with
              | none,   none   => return { expr := e' }
              | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h) }
              | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
-      | SimpLetCase.nondepDepVar =>
+          | .some (vs', _, mk') => 
+            let names := (Array.range vs'.size).map fun i => n.appendAfter (toString i)
+            let types ← liftM <| vs'.mapM inferType
+            withLocalDecls' names .default types fun xs => do
+              -- let (xs', vs'', xs'') := filterLetValues vs' xs
+              let bx := b.instantiate1 (mk'.beta xs)
+              let rbx ← simp bx
+              let hb? ← match rbx.proof? with
+                | none => pure none
+                | some h => pure (some (← mkUncurryFun xs.size (← mkLambdaFVars xs h)))
+              let e' ← 
+                withLetDecls names vs' fun fvars' =>
+                  mkLetFVars (fvars ++ fvars') (rbx.expr.replaceFVars xs fvars')
+              match rv.proof?, hb? with
+             | none,   none   => return { expr := e' }
+             | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkUncurryFun xs.size (← mkLambdaFVars xs rbx.expr)) h) }
+             | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
+        | SimpLetCase.nondepDepVar =>
         let v' ← dsimp v
         withLocalDeclD n t fun x => do
           let bx := b.instantiate1 x
