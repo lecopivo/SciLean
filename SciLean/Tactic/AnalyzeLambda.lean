@@ -131,8 +131,10 @@ Decompose function as `fun x i₁ ... iₙ => f (g x) (h i₁ ... iₙ)`
 `f = fun y₁ ... yₘ i₁ ... iₙ => f' y₁ ... yₘ`
 -/
 partial def analyzeLambda (e : Expr) : MetaM LambdaInfo := do
-  IO.println s!"analyzing {← ppExpr e}"
   lambdaTelescope e fun xs body => do
+    
+    if xs.size = 0 then
+      throwError "lambda expected in analyzeLambda"
 
     -- if `body` is a projection turn it into application of projection function
     let body := (← revertStructureProj body).headBeta
@@ -190,7 +192,6 @@ partial def analyzeLambda (e : Expr) : MetaM LambdaInfo := do
         let a'' ← mkProdElem as''
         if ← isDefEq ys[0]! a'' then
           trailingCase := .trivialUncurried
-      
 
   
     return {
@@ -205,7 +206,7 @@ partial def analyzeLambda (e : Expr) : MetaM LambdaInfo := do
 
 open Qq 
 
-
+#exit 
 def LambdaInfo.print (info : LambdaInfo) : IO Unit := do
   IO.println s!"arity: {info.arity}"
   IO.println s!"argNum: {info.argNum}"
@@ -268,10 +269,6 @@ def LambdaInfo.print (info : LambdaInfo) : IO Unit := do
   let info ← analyzeLambda e
   info.print
 
-#eval show MetaM Unit from do
-  let e := q(@Prod.fst (Fin 10 → Float) (Fin 5 → Float))
-  let info ← analyzeLambda e
-  info.print
 
 #eval show MetaM Unit from do
   let e := q(fun (x : (Fin 10 → Float) × (Fin 5 → Float)) (i : Fin 10 × Fin 5) => x.1 i.1)
