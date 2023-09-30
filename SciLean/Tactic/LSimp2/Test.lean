@@ -15,7 +15,7 @@ def ar : Array Nat := #[1,2,3,4,5]
     let a := 
       let b := 
         let a := 10
-        ((a,20),30)
+        ((a,20), 30)
       let i : Fin 5 := ⟨3, by simp⟩
       let c := 
         let a := b.1.2 + 10
@@ -23,13 +23,14 @@ def ar : Array Nat := #[1,2,3,4,5]
       0 + b.2 + c + id (4 + 0)
     let d :=  
       let e := 11
-      id (a + 4 + id (e + x))
+      let foo := (fun i : Nat => i * 2, fun i : Nat => i * 3)
+      id (a + 4 + foo.2 (id (e + x)))
     let z := (let y := 42; a + y) + d
     let w := z + 0
     w)
   rewrite_by
-    lsimp (config := {zeta:=false})
-
+    lsimp (config := {zeta:=false, singlePass := true})
+    lsimp (config := {zeta:=false, singlePass := true})
 
 
 def foo := 

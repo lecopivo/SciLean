@@ -260,20 +260,6 @@ private partial def dsimp (e : Expr) : M Expr := do
       if r.expr != e then
         return .visit r.expr
     let mut eNew ← reduce e
-
-    -- temporarily disabled as it blows stack on some examples
-    -- lsimp modification
-    -- this cleans up let bindinds and unfolds computationally irrelevant let bindings
-    -- if eNew.isLet then
-    --   -- TODO: fuel in `flattenLet` should be optional 
-    --   -- TODO: add option if we want to split structure constructors
-    --   -- TODO: maybe add implementation of flattenLet here and make it recursive
-    --   eNew ← flattenLet 1000000 eNew
-
-    -- TODO: Add config option for this
-    -- unfolds fvars that are not doing computation(based on some heuristic)
-    -- eNew ← reduceNoOpHeadFVar eNew
-
     if cfg.zeta && eNew.isFVar then
       eNew ← reduceFVar cfg eNew
     if eNew != e then return .visit eNew else return .done e
@@ -386,6 +372,12 @@ private def filterLetValues (vals vars : Array Expr) : Array Expr × Array Nat :
       r := r.push var
       is := is.push i
   (r, is)
+
+theorem let_simp_congr {α β} (f : α → β) {x x' : α} {y' : β}
+  (hx : x = x') (hf : f x' = y') : f x = y' := by rw[hx,hf]
+
+private def mkLetRemoveCongr (f hx hf : Expr) : MetaM Expr := 
+  mkAppM ``let_simp_congr #[f,hx,hf]
       
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
@@ -424,9 +416,6 @@ where
         | Step.done r'  => cacheResult cfg (← mkEqTrans r r')
         | Step.visit r' =>
           let r ← mkEqTrans r r'
-          -- lsimp modification
-          -- clean up expressions after rewrites
-          let r ← mkEqTrans r { expr := ← dsimp r.expr }
           if cfg.singlePass || init == r.expr then
             cacheResult cfg r
           else
@@ -827,6 +816,13 @@ where
       | SimpLetCase.nondep =>
         let rv ← simp v
         letTelescope rv.expr fun fvars v' => do
+          -- this does not seem to work :( 
+          -- if removeLet v' then
+          --   let bv := b.instantiate1 v'
+          --   let rbv ← simp bv
+          --   let e' ← mkLetFVars fvars rbv.expr
+          --   return { expr := e', proof? := some (← mkLetRemoveCongr (Expr.lam n t b .default) (← rv.getProof) (← mkLetFVars fvars (← rbv.getProof))) }
+          -- else
           match ← splitByCtors? v' with
           | .none => 
             withLocalDeclD n t fun x => do
