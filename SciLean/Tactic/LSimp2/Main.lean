@@ -347,18 +347,16 @@ private def removeLet (v : Expr) : Bool :=
   else
     false
 
-private def filterLetValues (vals vars : Array Expr) : Array Expr × Array Expr × Array Expr := Id.run do
+private def filterLetValues (vals vars : Array Expr) : Array Expr × Array Nat := Id.run do
   let mut r := Array.mkEmpty vals.size
-  let mut vals' := Array.mkEmpty vars.size
-  let mut vars' := Array.mkEmpty vars.size
-  for val in vals, var in vars do
+  let mut is := Array.mkEmpty vars.size
+  for val in vals, var in vars, i in [0:vals.size] do
     if removeLet val then
       r := r.push val
     else
       r := r.push var
-      vals' := vals'.push val
-      vars' := vars'.push var
-  (r, vals', vars')
+      is := is.push i
+  (r, is)
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
   checkMaxHeartbeats "simp"
@@ -812,23 +810,31 @@ where
              | none,   none   => return { expr := e' }
              | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h) }
              | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
-          | .some (vs', _, mk') => 
+          | .some (vs', projs, mk') => 
             let names := (Array.range vs'.size).map fun i => n.appendAfter (toString i)
             let types ← liftM <| vs'.mapM inferType
             withLocalDecls' names .default types fun xs => do
-              -- let (xs', vs'', xs'') := filterLetValues vs' xs
+              -- let (xs', is) := filterLetValues vs' xs
               let bx := b.instantiate1 (mk'.beta xs)
               let rbx ← simp bx
               let hb? ← match rbx.proof? with
                 | none => pure none
-                | some h => pure (some (← mkUncurryFun xs.size (← mkLambdaFVars xs h)))
+                | some h => 
+                  let h' ←
+                    withLocalDeclD n t fun x => do
+                      mkLambdaFVars #[x] (h.replaceFVars xs (projs.map (fun proj => proj.beta #[x])))
+                  pure (some h')
               let e' ← 
                 withLetDecls names vs' fun fvars' =>
                   mkLetFVars (fvars ++ fvars') (rbx.expr.replaceFVars xs fvars')
               match rv.proof?, hb? with
-             | none,   none   => return { expr := e' }
-             | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkUncurryFun xs.size (← mkLambdaFVars xs rbx.expr)) h) }
-             | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
+              | none,   none   => return { expr := e' }
+              | some h, none   => 
+                let b' ←
+                  withLocalDeclD n t fun x => do
+                    mkLambdaFVars #[x] (rbx.expr.replaceFVars xs (projs.map (fun proj => proj.beta #[x])))
+                return { expr := e', proof? := some (← mkLetValCongr b' h) }
+              | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
         | SimpLetCase.nondepDepVar =>
         let v' ← dsimp v
         withLocalDeclD n t fun x => do
