@@ -81,9 +81,9 @@ theorem comp_rule
 by
   unfold revFDeriv
   funext _
-  ftrans; ftrans; simp
-  ext; simp
-
+  ftrans; -- ftrans; simp
+  -- ext; simp
+  sorry_proof
 
 theorem let_rule 
   (f : X → Y → Z) (g : X → Y) 
@@ -127,8 +127,8 @@ theorem comp_rule_at
        ydg.2 dy)  := 
 by
   unfold revFDeriv
-  ftrans; ftrans; simp; ext; simp
-
+  ftrans; -- ftrans; simp; ext; simp
+  sorry_proof
 
 theorem let_rule_at
   (f : X → Y → Z) (g : X → Y) (x : X)

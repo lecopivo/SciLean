@@ -73,7 +73,7 @@ example
     =
     fun x => ⊞ _ => (1:K) :=
 by 
-  (conv => lhs; unfold scalarGradient; ftrans only; autodiff)
+  (conv => lhs; autodiff)
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, ‖x i‖₂²)
@@ -204,7 +204,7 @@ example  (w : Idx' (-5) 5 → K)
     = 
     fun _x dy i => ∑ (j : Idx' (-5) 5), w j * dy (-j.1 +ᵥ i) j :=
 by
-  conv => lhs; autodiff; autodiff
+  conv => lhs; autodiff
 
 
 example  (w : Idx' (-5) 5 → K)
@@ -212,7 +212,7 @@ example  (w : Idx' (-5) 5 → K)
     = 
     fun _x dy i => ∑ (j : Idx' (-5) 5), w j * dy (-j.1 +ᵥ i) :=
 by
-  conv => lhs; autodiff; autodiff
+  conv => lhs; autodiff
 
 
 example  (w : K ^ Idx' (-5) 5)
@@ -220,7 +220,7 @@ example  (w : K ^ Idx' (-5) 5)
     = 
     fun _x dy => ⊞ i => ∑ (j : Idx' (-5) 5), w[j] * dy[-j.1 +ᵥ i] :=
 by
-  conv => lhs; autodiff; autodiff; simp
+  conv => lhs; autodiff
 
 
 example  (w : K ^ (Idx' (-5) 5 × Idx' (-5) 5))
@@ -230,8 +230,7 @@ example  (w : K ^ (Idx' (-5) 5 × Idx' (-5) 5))
       -- ⊞ i => ∑ j, w[j] * dy[(-j.fst.1 +ᵥ i.fst, -j.snd.1 +ᵥ i.snd)] :=
       ⊞ i => ∑ (j : (Idx' (-5) 5 × Idx' (-5) 5)), w[(j.2,j.1)] * dy[(-j.2.1 +ᵥ i.fst, -j.1.1 +ᵥ i.snd)] :=
 by
-  conv => 
-    lhs; autodiff; autodiff; simp
+  conv => lhs; unfold gradient; ftrans; simp
   
   
 

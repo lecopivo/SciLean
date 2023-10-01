@@ -373,11 +373,20 @@ private def filterLetValues (vals vars : Array Expr) : Array Expr × Array Nat :
       is := is.push i
   (r, is)
 
-theorem let_simp_congr {α β} (f : α → β) {x x' : α} {y' : β}
+theorem let_simp_congr {α β} (f : α → β) (x x' : α) (y' : β)
   (hx : x = x') (hf : f x' = y') : f x = y' := by rw[hx,hf]
 
-private def mkLetRemoveCongr (f hx hf : Expr) : MetaM Expr := 
-  mkAppM ``let_simp_congr #[f,hx,hf]
+theorem let_remove_congr {α β} (f : α → β) (x x' : α) (y' : β)
+  (hx : x = x') (hf : f x' = y') : (let y := x; f y) = y' := by rw[hx,hf]
+
+private def mkLetRemoveCongr (f x x' y' hx hf : Expr) : MetaM Expr := 
+  mkAppM ``let_simp_congr #[f,x,x',y',hx,hf]
+
+private def mkCast (e : Expr) (E' : Expr) : MetaM Expr := do
+  let proof ← mkFreshExprMVar (← mkEq (←inferType e) E')
+  proof.mvarId!.refl
+  mkAppM ``cast #[proof, e]
+
       
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
@@ -808,60 +817,70 @@ where
 
   simpLet (e : Expr) : M Result := do
     let Expr.letE n t v b _ := e | unreachable!
-    if (← Simp.getConfig).zeta then
-      return { expr := b.instantiate1 v }
+    if (← Simp.getConfig).zeta || ¬b.hasLooseBVars then
+      -- return { expr := b.instantiate1 v }
+      return ← simp (b.instantiate1 v)
     else
       match (← getSimpLetCase n t b) with
       | SimpLetCase.dep => return { expr := (← dsimp e) }
       | SimpLetCase.nondep =>
         let rv ← simp v
-        letTelescope rv.expr fun fvars v' => do
-          -- this does not seem to work :( 
-          -- if removeLet v' then
-          --   let bv := b.instantiate1 v'
-          --   let rbv ← simp bv
-          --   let e' ← mkLetFVars fvars rbv.expr
-          --   return { expr := e', proof? := some (← mkLetRemoveCongr (Expr.lam n t b .default) (← rv.getProof) (← mkLetFVars fvars (← rbv.getProof))) }
-          -- else
-          match ← splitByCtors? v' with
-          | .none => 
-            withLocalDeclD n t fun x => do
-              let bx := b.instantiate1 x
-              let rbx ← simp bx
-              let hb? ← match rbx.proof? with
-                | none => pure none
-                | some h => pure (some (← mkLambdaFVars #[x] h))
-              let e' ← mkLetFVars fvars (mkLet n t v' (← rbx.expr.abstractM #[x]))
-              match rv.proof?, hb? with
-             | none,   none   => return { expr := e' }
-             | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h) }
-             | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
-          | .some (vs', projs, mk') => 
-            let names := (Array.range vs'.size).map fun i => n.appendAfter (toString i)
-            let types ← liftM <| vs'.mapM inferType
-            withLocalDecls' names .default types fun xs => do
-              -- let (xs', is) := filterLetValues vs' xs
-              let bx := b.instantiate1 (mk'.beta xs)
-              let rbx ← simp bx
-              let hb? ← match rbx.proof? with
-                | none => pure none
-                | some h => 
-                  let h' ←
-                    withLocalDeclD n t fun x => do
-                      mkLambdaFVars #[x] (h.replaceFVars xs (projs.map (fun proj => proj.beta #[x])))
-                  pure (some h')
-              let e' ← 
-                withLetDecls names vs' fun fvars' =>
-                  mkLetFVars (fvars ++ fvars') (rbx.expr.replaceFVars xs fvars')
-              match rv.proof?, hb? with
-              | none,   none   => return { expr := e' }
-              | some h, none   => 
-                let b' ←
-                  withLocalDeclD n t fun x => do
-                    mkLambdaFVars #[x] (rbx.expr.replaceFVars xs (projs.map (fun proj => proj.beta #[x])))
-                return { expr := e', proof? := some (← mkLetValCongr b' h) }
-              | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
-        | SimpLetCase.nondepDepVar =>
+
+        if removeLet rv.expr then
+          let e' := b.instantiate1 rv.expr
+          let proof? ← do
+              match rv.proof? with
+              | none => pure none
+              | some h => pure <| .some (← mkCongrArg (.lam n t b .default) h)
+          let r : Result := {
+            expr := e'
+            proof? := proof?
+          }
+          let r' ← simp e'
+          return ← mkEqTrans r r'
+
+        else if rv.expr.isLet then
+          letTelescope rv.expr fun fvars v' => do
+            let e' ← mkLetFVars fvars (.letE n t v' b false)
+            let proof? ← do
+              match rv.proof? with
+              | none => pure none
+              | some h => pure <| .some (← mkLetValCongr (.lam n t b .default) h)
+            let r : Result := {
+              expr := e'
+              proof? := proof?
+            }
+            let r' ← simp e'
+            return ← mkEqTrans r r'
+
+        else if let .some (vs, projs, mk) ← splitByCtors? rv.expr then
+          let names := (Array.range vs.size).map fun i => n.appendAfter (toString i)
+          let e' ← 
+            withLetDecls names vs fun fvars' =>
+              mkLetFVars fvars' (b.instantiate1 (mk.beta fvars'))
+          let r : Result ← do
+            let b' ←
+              withLocalDeclD n t fun x => do
+                mkLambdaFVars #[x] (b.instantiate1 (mk.beta <| projs.map (fun proj => proj.beta #[x])))
+            let proof ← mkLetValCongr b' (← rv.getProof)
+            pure (Result.mk (expr := e') (proof? := .some proof) 0)
+          let r' ← simp e'
+          return ← mkEqTrans r r'
+
+        else
+        withLocalDeclD n t fun x => do
+          let bx := b.instantiate1 x
+          let rbx ← simp bx
+          let hb? ← match rbx.proof? with
+            | none => pure none
+            | some h => pure (some (← mkLambdaFVars #[x] h))
+          let e' := mkLet n t rv.expr (← rbx.expr.abstractM #[x])
+          match rv.proof?, hb? with
+          | none,   none   => return { expr := e' }
+          | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h) }
+          | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
+
+      | SimpLetCase.nondepDepVar =>
         let v' ← dsimp v
         withLocalDeclD n t fun x => do
           let bx := b.instantiate1 x

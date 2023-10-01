@@ -124,7 +124,7 @@ by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
   unfold revDerivUpdate
-  funext _; ftrans; ftrans; simp
+  funext _; ftrans; ftrans; -- simp
   funext dy dx
   sorry_proof
 

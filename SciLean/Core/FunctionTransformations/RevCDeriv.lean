@@ -159,7 +159,7 @@ by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
   unfold revCDeriv
-  funext _; ftrans; ftrans; simp
+  funext _; ftrans; ftrans
 
 
 theorem comp_rule_at
@@ -346,7 +346,7 @@ by
   have _ := fun i => (hg i).1
   have _ := fun i => (hg i).2
   unfold revCDeriv
-  funext _; ftrans -- ftrans - semiAdjoint.pi_rule fails because of some universe issues
+  funext _; -- ftrans -- ftrans - semiAdjoint.pi_rule fails because of some universe issues
   simp
   sorry_proof
 
@@ -395,7 +395,7 @@ by
   have _ := fun i => (hg i).1
   have _ := fun i => (hg i).2
   unfold revCDeriv
-  funext _; ftrans -- ftrans - semiAdjoint.pi_rule fails because of some universe issues
+  funext _; -- ftrans -- ftrans - semiAdjoint.pi_rule fails because of some universe issues
   simp
   sorry_proof
 
@@ -418,7 +418,7 @@ by
   have _ := fun i => (hg i).1
   have _ := fun i => (hg i).2
   unfold revCDeriv
-  funext _; -- ftrans - semiAdjoint.pi_rule fails because of some universe issues
+  funext _; -- ftrans -- ftrans - semiAdjoint.pi_rule fails because of some universe issues
   simp
   sorry_proof
 
