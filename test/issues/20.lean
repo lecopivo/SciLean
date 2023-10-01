@@ -1,6 +1,6 @@
 import Std.Tactic.GuardMsgs
 import SciLean.Util.RewriteBy
-import SciLean.Tactic.LSimp.Elab
+import SciLean.Tactic.LSimp2.Elab
 import SciLean.Tactic.LetNormalize
 
 open SciLean
@@ -8,9 +8,9 @@ open SciLean
 
 /--
 info: fun i =>
-  let j := 42;
-  let foo := ((i * j, i + j), i ^ j, i / j);
-  foo.fst : Nat → Nat × Nat
+  let foo0 := i * 42;
+  let foo1 := i + 42;
+  (foo0, foo1) : Nat → Nat × Nat
 -/
 #guard_msgs in
 #check 
@@ -24,9 +24,9 @@ info: fun i =>
 
 /--
 info: fun i =>
-  (let j := 42;
-    let foo := ((i * j, i + j), i ^ j, i / j);
-    foo).fst : Nat → Nat × Nat
+  let foo0 := i * 42;
+  let foo1 := i + 42;
+  (foo0, foo1) : Nat → Nat × Nat
 -/
 #guard_msgs in
 #check 
@@ -35,14 +35,16 @@ info: fun i =>
        let foo := ((i * j, i+j), (i ^ j, i / j))
        foo).fst)
    rewrite_by
-     ldsimp (config := {zeta:=false}) only
+     lsimp (config := {zeta:=false}) only
 
 
 /--
 info: fun i =>
-  (let j := 42;
-    let foo := ((i * j, i + j), i ^ j, i / j);
-    foo.fst).snd : Nat → Nat
+  let foo0 := i * 42;
+  let foo1 := i + 42;
+  let foo2 := i ^ 42;
+  let foo3 := i / 42;
+  ((foo0, foo1), foo2, foo3).fst.snd : Nat → Nat
 -/
 #guard_msgs in
 #check 
@@ -56,9 +58,8 @@ info: fun i =>
 
 /--
 info: fun i =>
-  let j := 42;
-  let foo := ((i * j, i + j), i ^ j, i / j);
-  foo.fst.snd : Nat → Nat
+  let foo1 := i + 42;
+  foo1 : Nat → Nat
 -/
 #guard_msgs in
 #check 
@@ -71,13 +72,13 @@ info: fun i =>
 
 
 /--
-info: let a := 42;
+info: let a := hold 42;
 a : Nat
 -/
 #guard_msgs in
 #check 
-  (let a := 42
-   let b := 7
+  (let a := hold 42
+   let b := hold 7
    (a,b)).1
   rewrite_by
     lsimp (config := {zeta:=false}) only
