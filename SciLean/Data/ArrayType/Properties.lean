@@ -203,7 +203,8 @@ theorem GetElem.getElem.arg_xs.revDerivUpdate_rule_simple
 by
   unfold revDerivUpdate; ftrans; sorry_proof
 
-theorem GetElem.getElem.arg_xs.revDerivUpdate_rule_pi
+@[ftrans]
+theorem GetElem.getElem.arg_xs_i.revDerivUpdate_rule
   (f : X → Cont) (dom) 
   (hf : HasAdjDiff K f)
   : revDerivUpdate K (fun x idx => getElem (f x) idx dom)
@@ -404,6 +405,27 @@ by
   have ⟨_,_⟩ := hcont
   have ⟨_,_⟩ := helem
   unfold revCDeriv; ftrans; ftrans; simp
+
+
+@[ftrans]
+theorem SetElem.setElem.arg_contelem.revDerivUpdate_rule
+  (cont : X → Cont) (idx : Idx) (elem : X → Elem) 
+  (hcont : HasAdjDiff K cont) (helem : HasAdjDiff K elem)
+  : revDerivUpdate K (fun x => setElem (cont x) idx (elem x))
+    =
+    fun x =>
+      let cdc := revDerivUpdate K cont x
+      let ede := revDerivUpdate K elem x
+      (setElem cdc.1 idx ede.1,
+       fun dcont' k dx => 
+         let delem' := dcont'[idx]
+         ede.2 delem' k (cdc.2 (setElem dcont' idx 0) k dx)
+         ) := 
+by
+  have ⟨_,_⟩ := hcont
+  have ⟨_,_⟩ := helem
+  unfold revDerivUpdate; ftrans; ftrans; simp[add_assoc]
+
 
 end OnSemiInnerProductSpace
 
