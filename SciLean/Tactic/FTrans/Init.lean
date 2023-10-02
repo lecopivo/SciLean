@@ -319,9 +319,9 @@ def getFTransRules (funName ftransName : Name) : CoreM (Array SimpTheorem) := do
     | return #[]
 
   let rules : List SimpTheorem ← rules.toList.filterMapM fun r => do
-    if r.trailingIds.size ≠ 0 then
-      return none
-    else
+    -- if r.trailingIds.size ≠ 0 then
+    --   return none
+    -- else
       return .some {
         proof  := mkConst r.ruleName
         origin := .decl r.ruleName
