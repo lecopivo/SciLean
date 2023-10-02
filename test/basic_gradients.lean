@@ -1,5 +1,4 @@
 import SciLean
-import SciLean.Util.Profile
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.RewriteBy
 
