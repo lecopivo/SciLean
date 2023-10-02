@@ -217,6 +217,7 @@ where
         withLets args (argxs++xs) (argbs.push arg) k
 
 private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
+  withTraceNode `lsimp (fun _ => do pure s!"lsimp reduce") do
   let cfg := (← read).config
   let e ← appLetNormalize e
   if e.getAppFn.isMVar then
@@ -282,7 +283,7 @@ inductive SimpLetCase where
   | nondep -- `let x := v; b` is equivalent to `(fun x => b) v`, and result type does not depend on `x`
 
 def getSimpLetCase (n : Name) (t : Expr) (b : Expr) : MetaM SimpLetCase := do
-  withTraceNode `simpLetCase (fun _ => pure "simpLetCase") do
+  withTraceNode `simpLetCase (fun _ => pure "lsimp let case") do
   withLocalDeclD n t fun x => do
     let bx := b.instantiate1 x
     /- The following step is potentially very expensive when we have many nested let-decls.
@@ -390,6 +391,7 @@ private def mkCast (e : Expr) (E' : Expr) : MetaM Expr := do
       
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
+  withTraceNode `lsimp (fun _ => do pure s!"lsimp") do
   checkMaxHeartbeats "simp"
   let cfg ← Simp.getConfig
   if (← isProof e) then
@@ -816,6 +818,7 @@ where
       return { expr := (← dsimp e) }
 
   simpLet (e : Expr) : M Result := do
+    withTraceNode `lsimp (fun _ => do pure s!"lsimpLet") do
     let Expr.letE n t v b _ := e | unreachable!
     if (← Simp.getConfig).zeta || ¬b.hasLooseBVars then
       -- return { expr := b.instantiate1 v }
@@ -827,6 +830,7 @@ where
         let rv ← simp v
 
         if removeLet rv.expr then
+          withTraceNode `lsimp (fun _ => do pure s!"lsimpLet remove let") do
           let e' := b.instantiate1 rv.expr
           let proof? ← do
               match rv.proof? with
@@ -840,6 +844,7 @@ where
           return ← mkEqTrans r r'
 
         else if rv.expr.isLet then
+          withTraceNode `lsimp (fun _ => do pure s!"lsimpLet flatten let") do
           letTelescope rv.expr fun fvars v' => do
             let e' ← mkLetFVars fvars (.letE n t v' b false)
             let proof? ← do
@@ -854,6 +859,7 @@ where
             return ← mkEqTrans r r'
 
         else if let .some (vs, projs, mk) ← splitByCtors? rv.expr then
+          withTraceNode `lsimp (fun _ => do pure s!"lsimpLet split let") do
           let names := (Array.range vs.size).map fun i => n.appendAfter (toString i)
           let e' ← 
             withLetDecls names vs fun fvars' =>
@@ -868,6 +874,7 @@ where
           return ← mkEqTrans r r'
 
         else
+        withTraceNode `lsimp (fun _ => do pure s!"lsimpLet normal") do
         withLocalDeclD n t fun x => do
           let bx := b.instantiate1 x
           let rbx ← simp bx

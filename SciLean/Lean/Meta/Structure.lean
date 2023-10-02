@@ -66,6 +66,7 @@ private partial def splitByCtorsImpl (e : Expr) : MetaM (Array Expr × Array Exp
 For example, calling this function on `x : (Nat×Nat)×Nat` returns `(#[x.1.1, x.1.2, x.1], fun a b c => ((a,b),c))`
 -/
 def splitByCtors? (e : Expr) : MetaM (Option (Array Expr × Array Expr × Expr)) := do
+  withTraceNode `splitByCtors (fun _ => do pure s!"splitByCtors") do
   let r ← splitByCtorsImpl e
   if r.1.size = 1 then
     return none

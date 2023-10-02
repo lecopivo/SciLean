@@ -479,6 +479,8 @@ partial def main (e : Expr) : SimpM (Option Simp.Step) := do
   let .some (ftransName, ext, f) ← getFTrans? e
     | return none
 
+  withTraceNode `ftrans (fun _ => do pure s!"ftrans") do
+
   let f := f.consumeMData
 
   match f with
@@ -595,7 +597,6 @@ mutual
     }
 
   partial def deriveSimp (e : Expr) : MetaM Simp.Result := do
-    withTraceNode `ftrans (fun _ => return s!"ftrans of {← ppExpr e}") do
     (·.1) <$> Tactic.LSimp.main e ctx (methods := methods)
 end
 
