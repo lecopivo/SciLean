@@ -6,7 +6,7 @@ def profileFile (file : FilePath) (flame : FilePath := "/home/tskrivan/Documents
 
   let compile_output ← IO.Process.output {
     cmd := "lake"
-    args := #["env", "lean", "-D", "trace.profiler=true", "-D", "pp.oneline=true", file.toString]
+    args := #["env", "lean", "-D", "trace.profiler=true", "-D", "pp.oneline=true", "-D", "trace.profiler.threshold=5", file.toString]
     env := #[("LEAN_DISABLE_PROFILE_FILE", "1")]
   }
 

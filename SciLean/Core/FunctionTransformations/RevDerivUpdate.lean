@@ -5,9 +5,6 @@ import SciLean.Core.FunctionTransformations.SemiAdjoint
 
 import SciLean.Tactic.LetNormalize
 
--- import SciLean.Data.EnumType
-  
-import SciLean.Util.Profile
 
 set_option linter.unusedVariables false
 

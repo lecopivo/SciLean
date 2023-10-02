@@ -4,8 +4,6 @@ import SciLean.Core.FunctionPropositions.HasAdjDiff
 import SciLean.Core.FunctionTransformations.SemiAdjoint
 
 import SciLean.Data.Curry
-  
-import SciLean.Util.Profile
 
 set_option linter.unusedVariables false
 

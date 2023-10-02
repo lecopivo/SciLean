@@ -4,8 +4,6 @@ import Mathlib.Algebra.Module.Prod
 -- TODO: minimize this import, simp and aesop fail without it at some places
 import Mathlib.Analysis.Calculus.FDeriv.Basic
 
-import SciLean.Util.Profile
-
 namespace SciLean
 
 /-- 

@@ -1,5 +1,4 @@
 import SciLean.Core.FunctionTransformations.FDeriv
-import SciLean.Util.Profile
 
 namespace SciLean
 
