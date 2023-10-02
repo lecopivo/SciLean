@@ -113,7 +113,7 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       let isDiffRuleName := 
         constName.append lhsData.declSuffix |>.append "HasAdjDiff_rule"
 
-      let xs' := ctx ++ #[W] ++ instW ++ vecInsts ++ args ++ mainArgProps
+      let xs' := ctx ++ #[W] ++ instW ++ vecInsts ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
       let isDiffRule ← mkForallFVars xs' isDiff >>= instantiateMVars
       let isDiffProof ← mkLambdaFVars xs' isDiffProof >>= instantiateMVars
 

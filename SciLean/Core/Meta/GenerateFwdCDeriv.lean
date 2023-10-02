@@ -112,7 +112,7 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       let isDiffRuleName := 
         constName.append lhsData.declSuffix |>.append "IsDifferentiable_rule"
 
-      let xs' := ctx ++ #[W] ++ instW ++ vecInsts ++ args ++ mainArgProps
+      let xs' := ctx ++ #[W] ++ instW ++ vecInsts ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
       let isDiffRule ← mkForallFVars xs' isDiff
       let isDiffProof ← mkLambdaFVars xs' isDiffProof
 
