@@ -732,3 +732,54 @@ by
 end OverReals
 
 end InnerProductSpace
+
+-- cderiv ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem SciLean.cderiv.arg_dx.IsDifferentiableAt_rule
+  (f : Y → Z) (g : X → Y) (y : Y) (dx : X)
+  (hf : IsDifferentiableAt K f y) (hg : IsDifferentiableAt K g dx)
+  : IsDifferentiableAt K (fun dx' => cderiv K f y (g dx')) dx :=
+by
+  sorry_proof
+
+@[fprop]
+theorem SciLean.cderiv.arg_dx.IsDifferentiable_rule
+  (f : Y → Z) (g : X → Y) (y : Y)
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
+  : IsDifferentiable K (fun dx' => cderiv K f y (g dx')) :=
+by
+  intro dx
+  apply SciLean.cderiv.arg_dx.IsDifferentiableAt_rule
+  apply (hf y)
+  apply (hg dx)
+
+
+@[ftrans]
+theorem SciLean.cderiv.arg_dx.cderiv_rule_at
+  (f : Y → Z) (g : X → Y) (y : Y) (dx : X)
+  (hf : IsDifferentiableAt K f y) (hg : IsDifferentiableAt K g dx)
+  : cderiv K (fun dx' => cderiv K f y (g dx')) dx
+    =
+    fun ddx => 
+      let dy := g dx
+      let ddy := cderiv K g dx ddx
+      cderiv K f dy ddy :=
+by
+  sorry_proof
+
+@[ftrans]
+theorem SciLean.cderiv.arg_dx.cderiv_rule
+  (f : Y → Z) (g : X → Y) (y : Y)
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
+  : cderiv K (fun dx => cderiv K f y (g dx))
+    =
+    fun dx ddx => 
+      let dy := g dx
+      let ddy := cderiv K g dx ddx
+      cderiv K f dy ddy :=
+by
+  funext dx
+  apply cderiv.arg_dx.cderiv_rule_at _ _ _ _ (hf y) (hg dx)
+    
