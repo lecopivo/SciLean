@@ -674,7 +674,7 @@ end SciLean
 
 --------------------------------------------------------------------------------
 -- Function Rules --------------------------------------------------------------
---------------------------------------------------------------------------------b
+--------------------------------------------------------------------------------
 
 open SciLean 
 
@@ -688,7 +688,7 @@ variable
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
--- Prod.mk -----------------------------------v---------------------------------
+-- Prod.mk ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[ftrans]
@@ -1125,4 +1125,40 @@ by
   funext dr; simp[smul_smul]
 
 end InnerProductSpace
+
+
+-- semiAdjoint -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem SciLean.semiAdjoint.arg_a3.cderiv_rule
+  (f : X → Y) (a0 : W → Y) (ha0 : IsDifferentiable K a0)
+  : cderiv K (fun w => semiAdjoint K f (a0 w)) 
+    =
+    fun w dw => 
+      let dy := cderiv K a0 w dw
+      semiAdjoint K f dy :=
+by
+  -- derivative of linear map is the map itself
+  -- but this needs a bit more careful reasoning because we do not assume 
+  -- (hf : HasSemiAdjoint K f) and realy that `semiAdjoint K f = 0` if `f` does 
+  -- not have adjoint
+  sorry_proof
+
+
+@[ftrans]
+theorem SciLean.semiAdjoint.arg_a3.revCDeriv_rule
+  (f : X → Y) (a0 : W → Y) (hf : HasSemiAdjoint K f) (ha0 : HasAdjDiff K a0)
+  : revCDeriv K (fun w => semiAdjoint K f (a0 w)) 
+    =
+    fun w => 
+      let ada := revCDeriv K a0 w
+      (semiAdjoint K f ada.1,
+       fun dx => 
+         ada.2 (f dx)) := 
+by
+  have ⟨_,_⟩ := ha0
+  unfold revCDeriv
+  funext x; simp; ftrans; ftrans
+
 

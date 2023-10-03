@@ -23,12 +23,20 @@ def cderiv (f : X → Y) (x dx : X) : Y := Curve.deriv (fun t : K => f (x + t•
 noncomputable
 def scalarCDeriv (f : K → X) (t : K) : X := cderiv K f t 1
 
+-- Basic identities ------------------------------------------------------------
+--------------------------------------------------------------------------------
+
 @[simp]
 theorem cderiv_apply
   (f : X → Y → Z) (x dx : X) (y : Y)
   : cderiv K f x dx y
     =
     cderiv K (fun x' => f x' y) x dx := sorry_proof
+
+@[simp]
+theorem cderiv_zero
+  (f : X → Y) (x : X)
+  : cderiv K f x 0 = 0 := by sorry_proof
 
 
 -- Basic lambda calculus rules -------------------------------------------------

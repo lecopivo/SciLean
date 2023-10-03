@@ -166,6 +166,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
+  {W : Type _} [SemiInnerProductSpace K W]
   {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
@@ -411,3 +412,19 @@ theorem starRingEnd.arg_a0.semiAdjoint_rule
     =
     fun z => semiAdjoint K f z :=
 by sorry_proof
+
+
+-- semiAdjoint -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem SciLean.semiAdjoint.arg_a3.semiAdjoint_rule
+  (f : X → Y) (a3 : W → Y) (hf : HasSemiAdjoint K f) (ha3 : HasSemiAdjoint K a3)
+  : semiAdjoint K (fun w => semiAdjoint K f (a3 w)) 
+    =
+    fun x => 
+      let y := f x
+      semiAdjoint K a3 y :=
+by
+  sorry_proof
+

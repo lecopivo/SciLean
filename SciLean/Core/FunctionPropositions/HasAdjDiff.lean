@@ -174,6 +174,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
+  {W : Type _} [SemiInnerProductSpace K W]
   {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
@@ -404,4 +405,31 @@ by
 
 
 end InnerProductSpace
+
+
+-- semiAdjoint -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem SciLean.semiAdjoint.arg_a3.IsDifferentiable_rule {W : Type _} [Vec K W]
+  (f : X → Y) (a0 : W → Y) (ha0 : IsDifferentiable K a0)
+  : IsDifferentiable K (fun w => semiAdjoint K f (a0 w)) := 
+by
+  unfold semiAdjoint
+  match Classical.dec (HasSemiAdjoint K f) with
+  | isTrue h => sorry_proof -- TODO: f† exists and is smooth linear map
+  | isFalse h => simp[h]; fprop
+
+@[fprop]
+theorem SciLean.semiAdjoint.arg_a3.HasAdjDiff_rule
+  (f : X → Y) (a0 : W → Y) (ha0 : HasAdjDiff K a0)
+  : HasAdjDiff K (fun w => semiAdjoint K f (a0 w)) := 
+by
+  unfold semiAdjoint
+  match Classical.dec (HasSemiAdjoint K f) with
+  | isTrue h => sorry_proof -- TODO: f† exists and is smooth linear map
+  | isFalse h => simp[h]; fprop
+
+
+
 

@@ -22,6 +22,14 @@ def HasSemiAdjoint (f : X → Y) : Prop :=
    -- maybe add: ∀ x, TestFunction x → TestFunction (f x) - I think this is important for proving linearity of f'
    -- maybe add: ∀ y, TestFunction y → TestFunction (f' y)
 
+/-- Generalization of adjoint of linear map `f : X → Y`.
+
+If `f : X → Y` is linear map between Hilbert spaces then `semiAdjoint K f = adjoint K f`.
+
+`semiAdjoint` is a generalization of adjoint to spaces that are not necessarily complete 
+and might have inner product defined only on a dense subset, see `SemiInnerProductSpace`
+for more information.
+ -/
 noncomputable
 def semiAdjoint (f : X → Y) :=
   match Classical.dec (HasSemiAdjoint K f) with
@@ -198,8 +206,10 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
+  {W : Type _} [SemiInnerProductSpace K W]
   {ι : Type _} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
+
 
 -- Id --------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -438,3 +448,16 @@ by
 
 
 end InnerProductSpace
+
+
+-- semiAdjoint -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem SciLean.semiAdjoint.arg_a3.HasSemiAdjoint_rule
+  (f : X → Y) (a0 : W → Y) (hf : HasSemiAdjoint K f) (ha0 : HasSemiAdjoint K a0)
+  : HasSemiAdjoint K (fun w => semiAdjoint K f (a0 w)) :=
+by
+  sorry_proof
+
+
