@@ -61,6 +61,18 @@ by
   sorry_proof
 
 
+theorem SciLean.cderiv.arg_a3.semiAdjoint_rule
+  (f : X → Y) (x : X) (a0 : W → X) (ha0 : HasSemiAdjoint K a0)
+  : semiAdjoint K (fun w => cderiv K f x (a0 w)) 
+    =
+    fun dy => 
+      let dx := semiAdjoint K (cderiv K f x) dy
+      semiAdjoint K a0 dx :=
+by
+  sorry_proof
+
+
+
 namespace revCDeriv
 
 
@@ -226,6 +238,14 @@ by
   unfold revCDeriv; ftrans; simp
   rw[cderiv.arg_dx.semiAdjoint_rule_at K f (cderiv K g x) (g x) (by fprop) (by fprop)]
 
+
+example (g : X → Y) (x : X)
+  (hg : HasAdjDiffAt K g x) 
+  : IsDifferentiableAt K (fun x' => g x + cderiv K g x (x' - x)) x :=
+by
+  have ⟨_,_⟩ := hg
+  fprop 
+
 theorem comp_rule_at'
   (f : Y → Z) (g : X → Y) (x : X)
   (hf : HasAdjDiffAt K f (g x)) (hg : HasAdjDiffAt K g x)
@@ -240,7 +260,8 @@ by
   unfold revCDeriv; simp; ftrans; simp
   rw[cderiv.arg_dx.semiAdjoint_rule_at K f (cderiv K g x) (g x) (by fprop) (by fprop)]
   rw[cderiv.comp_rule_at K f (fun x' => g x + cderiv K g x (x' - x)) x (by simp; fprop) (by sorry_proof)]
-  
+  ftrans; simp
+  rw[SciLean.cderiv.arg_a3.semiAdjoint_rule _ _ _ (cderiv K g x) (by fprop)]
 
 
 theorem let_rule_at
@@ -261,6 +282,27 @@ by
   have ⟨_,_⟩ := hg
   unfold revCDeriv
   funext _; simp; sorry_proof
+
+
+theorem let_rule_at'
+  (f : X → Y → Z) (g : X → Y) (x : X)
+  (hf : HasAdjDiffAt K (fun (x,y) => f x y) (x, g x)) (hg : HasAdjDiffAt K g x)
+  : revCDeriv K (fun x : X => f x (g x)) x
+    = 
+    let ydg := revCDeriv K g x
+    let zdf := revCDeriv K (fun x' => f x' (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x
+    zdf := 
+by
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; simp
+  rw[cderiv.arg_dx.semiAdjoint_rule_at K _ (fun dx => (dx, cderiv K g x dx)) (x, g x) (by fprop) (by fprop)]
+  let f' := fun (x,y) => f x y
+  rw[cderiv.comp_rule_at K f' (fun x' => (x', g x + cderiv K g x (x' - x))) x (by simp; fprop) (by fprop)]
+  conv => 
+    rhs
+    ftrans
+    rw[SciLean.cderiv.arg_a3.semiAdjoint_rule _ _ _ (fun dx => (dx, cderiv K g x dx)) (by fprop)]
 
 
 theorem pi_rule_at
@@ -1197,15 +1239,6 @@ end InnerProductSpace
 
 -- this should not apply for `a0 = (fun x => x)`
 -- @[ftrans] 
-theorem SciLean.cderiv.arg_a3.semiAdjoint_rule
-  (f : X → Y) (x : X) (a0 : W → X) (ha0 : HasSemiAdjoint K a0)
-  : semiAdjoint K (fun w => cderiv K f x (a0 w)) 
-    =
-    fun dy => 
-      let dx := semiAdjoint K (cderiv K f x) dy
-      semiAdjoint K a0 dx :=
-by
-  sorry_proof
 
 
 set_option trace.Meta.Tactic.simp.rewrite true in
