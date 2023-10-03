@@ -230,60 +230,6 @@ def getLocalRulesForFVar (fId : FVarId) (fpropName : Name) (ext : FPropExt) : Me
 
   return arr
 
--- def tryLocalTheoremsForFVar (e : Expr) (fpropName : Name) (ext : FPropExt) 
-  
---   (fprop : Expr → FPropM (Option Expr))
---   : FPropM (Option Expr) := do
-
---   let candidates ← getLocalRules fpropName
-
---   for thm in candidates do
---     if let some proof ← tryTheorem?' e thm ext.discharger fprop then
---       return proof
-
---   return none
-
-
-    -- -- try to unfold fvar by local equality 
-    -- let prf? : Option Expr ← do
-    --   let .some f := ext.getFPropFun? e | return none
-    --   let .some (f', hf?) ← unfoldFunHead? f | return none
-    --   match hf? with
-    --   | none => 
-    --     let e' := ext.replaceFPropFun e f'
-    --     fprop e'
-    --   | .some hf => 
-    --     let e' := ext.replaceFPropFun e f'
-    --     let .some proof ← fprop e' | return none
-    --     -- proof that `e = e'`
-    --     let he ← 
-    --       withLocalDeclD `f (← inferType f) fun fVar => do
-    --         let e_ ← mkLambdaFVars #[fVar] (ext.replaceFPropFun e fVar)
-    --         mkCongrArg e_ hf
-    --     return (← mkEqMPR he proof)
-
-    -- if let .some prf := prf? then
-    --   return prf
-
-  
-  -- for 
-  --   if let .fvar id := b.getAppFn then
-  --     -- find local decl with proof `.fvar id = ...`
-  --     if let .some hDecl := (← getLCtx).findDecl?
-  --         (fun decl => 
-  --           if let .some (_,lhs, rhs) := decl.type.app3? ``Eq
-  --           then if lhs == .fvar id then .some decl
-  --                else none
-  --           else none) then
-  --       -- check that `.fvar id` is not one of `xs`
-  --       if xs.all (fun x => x != .fvar id) then
-  --         let f ← mkLambdaFVars #[.fvar id] e
-  --         let proof ← mkCongrArg f (Expr.fvar hDecl.fvarId)
-  --         let rhs := hDecl.type.getArg! 2
-  --         let e' := f.beta #[rhs]
-  --         trace[Meta.Tactic.fprop.step] s!"unfolding fvar\n{← ppExpr (.fvar id)}\n==>\n{← ppExpr rhs}"
-  --         return .some (e', .some proof)
-
 
 def unfoldFunHead? (e : Expr) : MetaM (Option Expr) := do
   lambdaLetTelescope e fun xs b => do
