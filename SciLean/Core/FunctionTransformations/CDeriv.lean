@@ -763,9 +763,8 @@ theorem SciLean.cderiv.arg_dx.cderiv_rule_at
   : cderiv K (fun dx' => cderiv K f y (g dx')) dx
     =
     fun ddx => 
-      let dy := g dx
       let ddy := cderiv K g dx ddx
-      cderiv K f dy ddy :=
+      cderiv K f y ddy :=
 by
   sorry_proof
 
@@ -776,9 +775,8 @@ theorem SciLean.cderiv.arg_dx.cderiv_rule
   : cderiv K (fun dx => cderiv K f y (g dx))
     =
     fun dx ddx => 
-      let dy := g dx
       let ddy := cderiv K g dx ddx
-      cderiv K f dy ddy :=
+      cderiv K f y ddy :=
 by
   funext dx
   apply cderiv.arg_dx.cderiv_rule_at _ _ _ _ (hf y) (hg dx)
