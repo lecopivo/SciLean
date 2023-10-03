@@ -36,6 +36,15 @@ def semiAdjoint (f : X → Y) :=
   | isTrue h => Classical.choose h
   | isFalse _ => 0
 
+-- Basic identities ------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[simp]
+theorem semiAdjoint_zero
+  (f : X → Y)
+  : semiAdjoint K f 0 = 0 := by sorry_proof
+
+
 def semi_inner_ext (x x' : X)
   : (∀ φ, TestFunction φ → ⟪x, φ⟫[K] = ⟪x', φ⟫[K])
     →
@@ -55,6 +64,9 @@ by
   rw[semiAdjoint_choose _ hf]
   rw[← Classical.choose_spec hf φ y hφ]
 
+
+-- Lambda calculus rules -------------------------------------------------------
+--------------------------------------------------------------------------------
 
 namespace HasSemiAdjoint 
 

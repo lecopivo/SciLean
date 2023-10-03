@@ -44,6 +44,23 @@ noncomputable
 def scalarGradient
   (f : X → K) (x : X) : X := (revCDeriv K f x).2 1
 
+
+@[ftrans]
+theorem semiAdjoint.arg_a3.cderiv_rule
+  (f : X → Y) (a0 : W → Y) (ha0 : IsDifferentiable K a0)
+  : cderiv K (fun w => semiAdjoint K f (a0 w)) 
+    =
+    fun w dw => 
+      let dy := cderiv K a0 w dw
+      semiAdjoint K f dy :=
+by
+  -- derivative of linear map is the map itself
+  -- but this needs a bit more careful reasoning because we do not assume 
+  -- (hf : HasSemiAdjoint K f) and realy that `semiAdjoint K f = 0` if `f` does 
+  -- not have adjoint
+  sorry_proof
+
+
 namespace revCDeriv
 
 
@@ -122,6 +139,21 @@ by
   unfold revCDeriv
   funext _; ftrans; ftrans; simp
 
+theorem comp_rule'
+  (f : Y → Z) (g : X → Y) 
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : revCDeriv K (fun x : X => f (g x))
+    = 
+    fun x =>
+      let ydg := revCDeriv K g x
+      let zdf := revCDeriv K (fun x' => f (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x
+      zdf := 
+by
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv
+  funext _; simp; ftrans
+
 
 theorem let_rule 
   (f : X → Y → Z) (g : X → Y) 
@@ -141,6 +173,23 @@ by
   have ⟨_,_⟩ := hg
   unfold revCDeriv
   funext _; ftrans; ftrans; simp
+
+
+theorem let_rule'
+  (f : X → Y → Z) (g : X → Y) 
+  (hf : HasAdjDiff K (fun (x,y) => f x y)) (hg : HasAdjDiff K g)
+  : revCDeriv K (fun x : X => f x (g x))
+    = 
+    fun x =>
+      let ydg := revCDeriv K g x
+      let zdf := revCDeriv K (fun x' => f x' (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x
+      zdf := 
+by
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv
+  funext _; simp; ftrans
+
 
 
 theorem pi_rule
@@ -176,6 +225,22 @@ by
   have ⟨_,_⟩ := hg
   unfold revCDeriv; ftrans; simp
   rw[cderiv.arg_dx.semiAdjoint_rule_at K f (cderiv K g x) (g x) (by fprop) (by fprop)]
+
+theorem comp_rule_at'
+  (f : Y → Z) (g : X → Y) (x : X)
+  (hf : HasAdjDiffAt K f (g x)) (hg : HasAdjDiffAt K g x)
+  : revCDeriv K (fun x : X => f (g x)) x
+    = 
+    let ydg := revCDeriv K g x
+    let zdf := revCDeriv K (fun x' => f (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x
+    zdf := 
+by
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revCDeriv; simp; ftrans; simp
+  rw[cderiv.arg_dx.semiAdjoint_rule_at K f (cderiv K g x) (g x) (by fprop) (by fprop)]
+  rw[cderiv.comp_rule_at K f (fun x' => g x + cderiv K g x (x' - x)) x (by simp; fprop) (by sorry_proof)]
+  
 
 
 theorem let_rule_at
@@ -1129,22 +1194,6 @@ end InnerProductSpace
 
 -- semiAdjoint -----------------------------------------------------------------
 --------------------------------------------------------------------------------
-
-@[ftrans]
-theorem SciLean.semiAdjoint.arg_a3.cderiv_rule
-  (f : X → Y) (a0 : W → Y) (ha0 : IsDifferentiable K a0)
-  : cderiv K (fun w => semiAdjoint K f (a0 w)) 
-    =
-    fun w dw => 
-      let dy := cderiv K a0 w dw
-      semiAdjoint K f dy :=
-by
-  -- derivative of linear map is the map itself
-  -- but this needs a bit more careful reasoning because we do not assume 
-  -- (hf : HasSemiAdjoint K f) and realy that `semiAdjoint K f = 0` if `f` does 
-  -- not have adjoint
-  sorry_proof
-
 
 -- this should not apply for `a0 = (fun x => x)`
 -- @[ftrans] 
