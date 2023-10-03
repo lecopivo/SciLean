@@ -204,17 +204,32 @@ def getLocalRulesForFVar (fId : FVarId) (fpropName : Name) (ext : FPropExt) : Me
 
 
 
-def unfoldFunHead? (e : Expr) : MetaM (Option Expr) := do
+def unfoldFunHead? (e : Expr) : MetaM (Option (Expr × Option Expr)) := do
   lambdaLetTelescope e fun xs b => do
     if let .some b' ← withTransparency .instances <| unfoldDefinition? b then
       trace[Meta.Tactic.fprop.step] s!"unfolding\n{← ppExpr b}\n==>\n{← ppExpr b'}"
-      mkLambdaFVars xs b'
+      return .some (← mkLambdaFVars xs b', none)
     else if let .some b' ← reduceRecMatcher? b then
       trace[Meta.Tactic.fprop.step] s!"unfolding\n{← ppExpr b}\n==>\n{← ppExpr b'}"
-      mkLambdaFVars xs b'
-    else
-      return none
+      return .some (← mkLambdaFVars xs b', none)
 
+    if let .fvar id := b.getAppFn then
+      -- find local decl with proof `.fvar id = ...`
+      if let .some hDecl := (← getLCtx).findDecl?
+          (fun decl => 
+            if let .some (_,lhs, rhs) := decl.type.app3? ``Eq
+            then if lhs == .fvar id then .some decl
+                 else none
+            else none) then
+        -- check that `.fvar id` is not one of `xs`
+        if xs.all (fun x => x != .fvar id) then
+          let f ← mkLambdaFVars #[.fvar id] e
+          let proof ← mkCongrArg f (Expr.fvar hDecl.fvarId)
+          let rhs := hDecl.type.getArg! 2
+          let e' := f.beta #[rhs]
+          trace[Meta.Tactic.fprop.step] s!"unfolding fvar\n{← ppExpr (.fvar id)}\n==>\n{← ppExpr rhs}"
+          return .some (e', .some proof)
+    return none
 
 def bvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPropM (Option Expr) := do
 
@@ -283,6 +298,27 @@ def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr)
       if Y.isForall then
         return ← fprop (ext.replaceFPropFun e (← etaExpand f))
 
+    -- try to unfold fvar by local equality 
+    let prf? : Option Expr ← do
+      let .some f := ext.getFPropFun? e | return none
+      let .some (f', hf?) ← unfoldFunHead? f | return none
+      match hf? with
+      | none => 
+        let e' := ext.replaceFPropFun e f'
+        fprop e'
+      | .some hf => 
+        let e' := ext.replaceFPropFun e f'
+        let .some proof ← fprop e' | return none
+        -- proof that `e = e'`
+        let he ← 
+          withLocalDeclD `f (← inferType f) fun fVar => do
+            let e_ ← mkLambdaFVars #[fVar] (ext.replaceFPropFun e fVar)
+            mkCongrArg e_ hf
+        return (← mkEqMPR he proof)
+
+    if let .some prf := prf? then
+      return prf
+
     return none
   else
     trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f'}) ∘ ({← ppExpr g'})`"
@@ -350,9 +386,20 @@ def constAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (funName : Name)
       -- unfold definition if there are for candidate 
       trace[Meta.Tactic.fprop.step] "no theorems found for {funName}"
       let .some f := ext.getFPropFun? e | return none
-      let .some f'  ← unfoldFunHead? f | return none
-      let e' := ext.replaceFPropFun e f'
-      fprop e'
+      let .some (f', hf?) ← unfoldFunHead? f | return none
+      match hf? with
+      | none => 
+        let e' := ext.replaceFPropFun e f'
+        fprop e'
+      | .some hf => 
+        let e' := ext.replaceFPropFun e f'
+        let .some proof ← fprop e' | return none
+        -- proof that `e = e'`
+        let he ← 
+          withLocalDeclD `f (← inferType f) fun fVar => do
+            let e_ ← mkLambdaFVars #[fVar] (ext.replaceFPropFun e fVar)
+            mkCongrArg e_ hf
+        return (← mkEqMPR he proof)
 
 /-- Try to prove `FProp fun x => f x i` as composition `fun f => f i` `fun x => f x`
 -/
