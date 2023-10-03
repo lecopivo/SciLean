@@ -1146,6 +1146,20 @@ by
   sorry_proof
 
 
+-- this should not apply for `a0 = (fun x => x)`
+-- @[ftrans] 
+theorem SciLean.cderiv.arg_a3.semiAdjoint_rule
+  (f : X → Y) (x : X) (a0 : W → X) (ha0 : HasSemiAdjoint K a0)
+  : semiAdjoint K (fun w => cderiv K f x (a0 w)) 
+    =
+    fun dy => 
+      let dx := semiAdjoint K (cderiv K f x) dy
+      semiAdjoint K a0 dx :=
+by
+  sorry_proof
+
+
+set_option trace.Meta.Tactic.simp.rewrite true in
 @[ftrans]
 theorem SciLean.semiAdjoint.arg_a3.revCDeriv_rule
   (f : X → Y) (a0 : W → Y) (hf : HasSemiAdjoint K f) (ha0 : HasAdjDiff K a0)
