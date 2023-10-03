@@ -211,13 +211,13 @@ def ftransExt : FTransExt where
   compRule e f g := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
-      #[ { proof := ← mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
+      #[ { proof := ← mkAppM ``comp_rule' #[K, f, g], origin := .decl ``comp_rule', rfl := false} ]
       discharger e
 
   letRule e f g := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
-      #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false} ]
+      #[ { proof := ← mkAppM ``let_rule' #[K, f, g], origin := .decl ``let_rule', rfl := false} ]
       discharger e
 
   piRule  e f := do
@@ -340,36 +340,37 @@ by
 -- Function.comp ---------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans]
-theorem Function.comp.arg_fga0.revDerivUpdate_rule 
-  (f : W → Y → Z) (g : W → X → Y) (a0 : W → X)
-  (hf : HasAdjDiff K (fun wy : W×Y => f wy.1 wy.2))
-  (hg : HasAdjDiff K (fun wx : W×X => g wx.1 wx.2))
-  (ha0 : HasAdjDiff K a0)
-  : revDerivUpdate K (fun w => ((f w) ∘ (g w)) (a0 w))
-    =
-    fun w => 
-      let xda0 := revDerivUpdate K a0 w
-      let ydg := revDerivUpdate K (fun wx : W×X => g wx.1 wx.2) (w,xda0.1)
-      let zdf := revDerivUpdate K (fun wy : W×Y => f wy.1 wy.2) (w,ydg.1)
-      (zdf.1, 
-       fun dz k dw => 
-         let dwy := zdf.2 dz k (dw,0)
-         let dwx := ydg.2 dwy.2 1 (dwy.1,0)
-         let dw  := xda0.2 dwx.2 1 dwx.1
-         dw) := 
-by 
-  unfold Function.comp; ftrans
-  funext w
-  simp[revDerivUpdate]
-  funext dz k dx
-  have h : IsLinearMap K (semiAdjoint K (cderiv K (fun x0x1 => g x0x1.fst x0x1.snd) (w, a0 w))) := sorry_proof
-  have h' : IsLinearMap K (Prod.snd : W×X→X) := sorry_proof
-  have h'' : IsLinearMap K (semiAdjoint K (cderiv K a0 w)) := sorry_proof
-  rw[h.map_smul]
-  rw[h'.map_smul]
-  rw[h''.map_smul]
-  simp
+-- @[ftrans]
+-- theorem Function.comp.arg_fga0.revDerivUpdate_rule 
+--   (f : W → Y → Z) (g : W → X → Y) (a0 : W → X)
+--   (hf : HasAdjDiff K (fun wy : W×Y => f wy.1 wy.2))
+--   (hg : HasAdjDiff K (fun wx : W×X => g wx.1 wx.2))
+--   (ha0 : HasAdjDiff K a0)
+--   : revDerivUpdate K (fun w => ((f w) ∘ (g w)) (a0 w))
+--     =
+--     fun w => 
+--       let xda0 := revDerivUpdate K a0 w
+--       let ydg := revDerivUpdate K (fun wx : W×X => g wx.1 wx.2) (w,xda0.1)
+--       let zdf := revDerivUpdate K (fun wy : W×Y => f wy.1 wy.2) (w,ydg.1)
+--       (zdf.1, 
+--        fun dz k dw => 
+--          let dwy := zdf.2 dz k (dw,0)
+--          let dwx := ydg.2 dwy.2 1 (dwy.1,0)
+--          let dw  := xda0.2 dwx.2 1 dwx.1
+--          dw) := 
+-- by 
+--   sorry_proof
+--   unfold Function.comp; ftrans
+--   funext w
+--   simp[revDerivUpdate]
+--   funext dz k dx
+--   have h : IsLinearMap K (semiAdjoint K (cderiv K (fun x0x1 => g x0x1.fst x0x1.snd) (w, a0 w))) := sorry_proof
+--   have h' : IsLinearMap K (Prod.snd : W×X→X) := sorry_proof
+--   have h'' : IsLinearMap K (semiAdjoint K (cderiv K a0 w)) := sorry_proof
+--   rw[h.map_smul]
+--   rw[h'.map_smul]
+--   rw[h''.map_smul]
+--   simp
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -594,7 +595,7 @@ theorem SciLean.Norm2.norm2.arg_a0.revDerivUpdate_rule
       let ynorm2 := ‖ydf.1‖₂²[R]
       (ynorm2,
        fun dr k dx => 
-          ydf.2 ydf.1 (k * 2 * dr) dx):=
+          ydf.2 ydf.1 (k * 2 * dr) dx) :=
 by 
   have ⟨_,_⟩ := hf
   funext x; simp[revDerivUpdate]

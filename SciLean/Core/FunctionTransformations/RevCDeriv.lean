@@ -158,8 +158,7 @@ theorem comp_rule'
     = 
     fun x =>
       let ydg := revCDeriv K g x
-      let zdf := revCDeriv K (fun x' => f (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x
-      zdf := 
+      revCDeriv K (fun x' => f (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x := 
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
@@ -194,8 +193,7 @@ theorem let_rule'
     = 
     fun x =>
       let ydg := revCDeriv K g x
-      let zdf := revCDeriv K (fun x' => f x' (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x
-      zdf := 
+      revCDeriv K (fun x' => f x' (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x := 
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
@@ -252,8 +250,7 @@ theorem comp_rule_at'
   : revCDeriv K (fun x : X => f (g x)) x
     = 
     let ydg := revCDeriv K g x
-    let zdf := revCDeriv K (fun x' => f (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x
-    zdf := 
+    revCDeriv K (fun x' => f (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x := 
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
@@ -290,8 +287,7 @@ theorem let_rule_at'
   : revCDeriv K (fun x : X => f x (g x)) x
     = 
     let ydg := revCDeriv K g x
-    let zdf := revCDeriv K (fun x' => f x' (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x
-    zdf := 
+    revCDeriv K (fun x' => f x' (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x := 
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
@@ -688,21 +684,21 @@ def ftransExt : FTransExt where
     let .some K := e.getArg? 0 | return none
     tryTheorems
       #[ { proof := ← mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false},
-         { proof := ← mkAppM ``comp_rule_at #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
+         { proof := ← mkAppM ``comp_rule_at #[K, f, g], origin := .decl ``comp_rule_at, rfl := false} ]
       discharger e
 
   letRule e f g := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
-      #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false},
-         { proof := ← mkAppM ``let_rule_at #[K, f, g], origin := .decl ``let_rule, rfl := false} ]
+      #[ { proof := ← mkAppM ``let_rule' #[K, f, g], origin := .decl ``let_rule', rfl := false},
+         { proof := ← mkAppM ``let_rule_at' #[K, f, g], origin := .decl ``let_rule_at', rfl := false} ]
       discharger e
 
   piRule  e f := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
       #[ { proof := ← mkAppM ``pi_rule #[K, f], origin := .decl ``pi_rule, rfl := false},
-         { proof := ← mkAppM ``pi_rule_at #[K, f], origin := .decl ``pi_rule, rfl := false} ]
+         { proof := ← mkAppM ``pi_rule_at #[K, f], origin := .decl ``pi_rule_at, rfl := false} ]
       discharger e
 
   useRefinedPiRules := true
@@ -886,27 +882,27 @@ by
 -- Function.comp ---------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[ftrans]
-theorem Function.comp.arg_fga0.revCDeriv_rule 
-  (f : W → Y → Z) (g : W → X → Y) (a0 : W → X)
-  (hf : HasAdjDiff K (fun wy : W×Y => f wy.1 wy.2))
-  (hg : HasAdjDiff K (fun wx : W×X => g wx.1 wx.2))
-  (ha0 : HasAdjDiff K a0)
-  : revCDeriv K (fun w => ((f w) ∘ (g w)) (a0 w))
-    =
-    fun w => 
-      let xda0 := revCDeriv K a0 w
-      let ydg := revCDeriv K (fun wx : W×X => g wx.1 wx.2) (w,xda0.1)
-      let zdf := revCDeriv K (fun wy : W×Y => f wy.1 wy.2) (w,ydg.1)
-      (zdf.1, 
-       fun dz => 
-         let dwy := zdf.2 dz
-         let dwx := ydg.2 dwy.2
-         let dw  := xda0.2 dwx.2
-         dwy.1 + dwx.1 + dw):= 
+-- @[ftrans]
+-- theorem Function.comp.arg_fga0.revCDeriv_rule 
+--   (f : W → Y → Z) (g : W → X → Y) (a0 : W → X)
+--   (hf : HasAdjDiff K (fun wy : W×Y => f wy.1 wy.2))
+--   (hg : HasAdjDiff K (fun wx : W×X => g wx.1 wx.2))
+--   (ha0 : HasAdjDiff K a0)
+--   : revCDeriv K (fun w => ((f w) ∘ (g w)) (a0 w))
+--     =
+--     fun w => 
+--       let xda0 := revCDeriv K a0 w
+--       let ydg := revCDeriv K (fun wx : W×X => g wx.1 wx.2) (w,xda0.1)
+--       let zdf := revCDeriv K (fun wy : W×Y => f wy.1 wy.2) (w,ydg.1)
+--       (zdf.1, 
+--        fun dz => 
+--          let dwy := zdf.2 dz
+--          let dwx := ydg.2 dwy.2
+--          let dw  := xda0.2 dwx.2
+--          dwy.1 + dwx.1 + dw):= 
 
-by 
-  unfold Function.comp; ftrans; simp[add_assoc]
+-- by 
+--   unfold Function.comp; ftrans; simp[add_assoc]
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -1241,7 +1237,6 @@ end InnerProductSpace
 -- @[ftrans] 
 
 
-set_option trace.Meta.Tactic.simp.rewrite true in
 @[ftrans]
 theorem SciLean.semiAdjoint.arg_a3.revCDeriv_rule
   (f : X → Y) (a0 : W → Y) (hf : HasSemiAdjoint K f) (ha0 : HasAdjDiff K a0)
