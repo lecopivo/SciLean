@@ -415,7 +415,7 @@ theorem _root_.modifyThe.arg_f.revDerivM_rule
               pure dxs.1)) := 
 by 
   simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, setThe, set, StateT.set]
-  ftrans; simp; congr
+  ftrans; congr
 
 
 -- modify ----------------------------------------------------------------------

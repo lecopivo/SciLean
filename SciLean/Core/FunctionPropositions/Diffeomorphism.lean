@@ -213,7 +213,7 @@ by
   constructor
   . fprop
   . fprop
-  . ftrans; simp; fprop
+  . ftrans; fprop
 
 @[fprop]
 def HMul.hMul.arg_a1.Diffeomorphism_rule
@@ -224,7 +224,7 @@ by
   constructor
   . fprop
   . fprop
-  . ftrans; simp; fprop
+  . ftrans; fprop
 
 
 -- SMul.sMul -------------------------------------------------------------------
@@ -239,7 +239,7 @@ by
   constructor
   . fprop
   . fprop
-  . ftrans; simp; fprop
+  . ftrans; fprop
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
@@ -255,7 +255,7 @@ by
   constructor
   . fprop
   . fprop
-  . ftrans; sorry_proof 
+  . ftrans; sorry_proof
 
 
 -- HPow.hPow -------------------------------------------------------------------

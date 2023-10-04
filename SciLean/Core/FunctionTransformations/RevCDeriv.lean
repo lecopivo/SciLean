@@ -1245,11 +1245,35 @@ theorem SciLean.semiAdjoint.arg_a3.revCDeriv_rule
     fun w => 
       let ada := revCDeriv K a0 w
       (semiAdjoint K f ada.1,
-       fun dx => 
-         ada.2 (f dx)) := 
+       fun dx => ada.2 (f dx)) := 
 by
   have ⟨_,_⟩ := ha0
   unfold revCDeriv
   funext x; simp; ftrans; ftrans
 
+
+-- slightly odd rules that are needed when dealing with expressions like:
+--
+--  let ydg := <∂ (x':=x), g x'
+--  <∂ (x':=x), semiAdjoint K ydg.2 (x' - x)
+--
+-- here we need to know that `ydg.2` has semi-adjoint
+--
+-- TODO: `fprop` is not designed to use rules like this! It works mainly by accident
+--       fom the support for monadic `fwd/revCDerivValM`. This should have first 
+--       class support.
+@[fprop]
+theorem Prod.snd.arg.IsDifferentiable_rule_of_revCDeriv 
+  (f : X → Y) (x : X) (hf : HasAdjDiff K f) 
+  : IsDifferentiable K (revCDeriv K f x).2 := by unfold revCDeriv; simp; fprop
+
+@[fprop]
+theorem Prod.snd.arg.HasSemiAdjoint_rule_revCDeriv 
+  (f : X → Y) (x : X) (hf : HasAdjDiff K f) 
+  : HasSemiAdjoint K (revCDeriv K f x).2 := by unfold revCDeriv; simp; fprop
+
+@[fprop]
+theorem Prod.snd.arg.HasAdjDiff_rule_revCDeriv 
+  (f : X → Y) (x : X)
+  : HasAdjDiff K (revCDeriv K f x).2 := by unfold revCDeriv; simp; fprop
 
