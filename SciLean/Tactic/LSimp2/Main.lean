@@ -228,10 +228,11 @@ private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
     let e' := e.headBeta
     if e' != e then
       return (← reduce e')
-  if cfg.eta then
-    let e' := e.eta
-    if e' != e then
-      return (← reduce e')
+  -- this replaces `fun x => c + x` with `HAdd.hAdd c` which is undesirable
+  -- if cfg.eta then
+  --   let e' := e.eta
+  --   if e' != e then
+  --     return (← reduce e')
   if cfg.proj then
     match (← reduceProjFn? e) with
     | some e => return (← reduce e)
@@ -257,6 +258,13 @@ private partial def dsimp (e : Expr) : M Expr := do
         return .visit r.expr
     return .continue
   let post (e : Expr) : M TransformStep := do
+    -- lsimp modification               
+    -- remove unsued let bindings
+    let e := 
+      if e.isLet && ¬e.letBody!.hasLooseBVars then
+        e.letBody!
+      else
+        e
     if let Step.visit r ← rewritePost e (fun _ => pure none) (rflOnly := true) then
       if r.expr != e then
         return .visit r.expr
@@ -435,6 +443,9 @@ where
         | Step.done r'  => cacheResult cfg (← mkEqTrans r r')
         | Step.visit r' =>
           let r ← mkEqTrans r r'
+          -- lsimp modification
+          -- clean up expressions after rewrites
+          let r ← mkEqTrans r { expr := ← dsimp r.expr }
           if cfg.singlePass || init == r.expr then
             cacheResult cfg r
           else

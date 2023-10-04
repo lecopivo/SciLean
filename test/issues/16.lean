@@ -45,4 +45,4 @@ example (f : Nat ≃ Nat)
 example (f : Nat ≃ Nat)
   : Function.invFun (fun x => f.symm x)
     =
-    fun x => f x := by ftrans; ftrans
+    fun x => f x := by ftrans

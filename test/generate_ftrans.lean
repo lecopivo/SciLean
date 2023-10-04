@@ -8,7 +8,7 @@ def mymul {K : Type u} [instK : IsROrC K] (x y : K) := x * y
 
 #generate_revCDeriv mymul x y 
   prop_by unfold mymul; fprop
-  trans_by unfold mymul; autodiff
+  trans_by unfold mymul; autodiff; autodiff; autodiff; autodiff
 
 #generate_revCDeriv mymul x
   prop_by unfold mymul; fprop
@@ -99,7 +99,7 @@ def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * 
 
 #generate_revCDeriv matmul A x 
   prop_by unfold matmul; fprop
-  trans_by unfold matmul; ftrans only; autodiff; autodiff
+  trans_by unfold matmul; autodiff; autodiff; autodiff; autodiff
 
 #generate_revCDeriv matmul A x | i
   prop_by unfold matmul; fprop
