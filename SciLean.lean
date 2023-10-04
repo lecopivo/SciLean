@@ -8,6 +8,8 @@ import SciLean.Modules.DifferentialEquations
 
 import SciLean.Tactic.LSimp2.Elab
 
+import SciLean.Util.Profile
+
 /-!
 
 SciLean
