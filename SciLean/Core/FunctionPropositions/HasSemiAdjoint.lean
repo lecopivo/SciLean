@@ -467,9 +467,11 @@ end InnerProductSpace
 
 @[fprop]
 theorem SciLean.semiAdjoint.arg_a3.HasSemiAdjoint_rule
-  (f : X → Y) (a0 : W → Y) (hf : HasSemiAdjoint K f) (ha0 : HasSemiAdjoint K a0)
+  (f : X → Y) (a0 : W → Y) (ha0 : HasSemiAdjoint K a0)
   : HasSemiAdjoint K (fun w => semiAdjoint K f (a0 w)) :=
 by
+  -- either `f` has semiadjoint then the total adjoint id `a0† f†`
+  -- or `f` does not have semiadjoint and `f†` is zero thus map and that has adjoint
   sorry_proof
 
 

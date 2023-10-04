@@ -4,7 +4,7 @@ open SciLean
 
 variable 
   {K : Type _} [IsROrC K]
-  {α : Type _}
+  {α : Type}
 
 example (i : α) : IsDifferentiable K (fun (xy : (α → K) × (α → K)) => xy.fst i) := by fprop
 

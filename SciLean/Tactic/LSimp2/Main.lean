@@ -228,10 +228,11 @@ private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
     let e' := e.headBeta
     if e' != e then
       return (← reduce e')
-  if cfg.eta then
-    let e' := e.eta
-    if e' != e then
-      return (← reduce e')
+  -- this replaces `fun x => c + x` with `HAdd.hAdd c` which is undesirable
+  -- if cfg.eta then
+  --   let e' := e.eta
+  --   if e' != e then
+  --     return (← reduce e')
   if cfg.proj then
     match (← reduceProjFn? e) with
     | some e => return (← reduce e)
@@ -257,6 +258,13 @@ private partial def dsimp (e : Expr) : M Expr := do
         return .visit r.expr
     return .continue
   let post (e : Expr) : M TransformStep := do
+    -- lsimp modification               
+    -- remove unsued let bindings
+    let e := 
+      if e.isLet && ¬e.letBody!.hasLooseBVars then
+        e.letBody!
+      else
+        e
     if let Step.visit r ← rewritePost e (fun _ => pure none) (rflOnly := true) then
       if r.expr != e then
         return .visit r.expr
@@ -388,6 +396,14 @@ private def mkCast (e : Expr) (E' : Expr) : MetaM Expr := do
   proof.mvarId!.refl
   mkAppM ``cast #[proof, e]
 
+
+theorem let_congr_eq {α : Sort u} {β : Sort v} {a a' : α} {b b' : α → β}
+    (h₁ : a = a') (h₂ : ∀ x, x = a' → b x = b' x) : (let x := a; b x) = (let x := a'; b' x) :=
+by
+  rw[h₁]; rw[h₂ a' rfl]
+
+private def mkLetCongrEq (h₁ h₂ : Expr) : MetaM Expr :=
+  mkAppM ``let_congr_eq #[h₁, h₂]
       
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
@@ -427,6 +443,9 @@ where
         | Step.done r'  => cacheResult cfg (← mkEqTrans r r')
         | Step.visit r' =>
           let r ← mkEqTrans r r'
+          -- lsimp modification
+          -- clean up expressions after rewrites
+          let r ← mkEqTrans r { expr := ← dsimp r.expr }
           if cfg.singlePass || init == r.expr then
             cacheResult cfg r
           else
@@ -876,16 +895,18 @@ where
         else
         withTraceNode `lsimp (fun _ => do pure s!"lsimpLet normal") do
         withLocalDeclD n t fun x => do
+        withLocalDeclD n (← mkEq x rv.expr) fun hx => do
           let bx := b.instantiate1 x
           let rbx ← simp bx
           let hb? ← match rbx.proof? with
             | none => pure none
-            | some h => pure (some (← mkLambdaFVars #[x] h))
-          let e' := mkLet n t rv.expr (← rbx.expr.abstractM #[x])
+            | some h => pure (some (← mkLambdaFVars #[x,hx] h))
+          let b' := rbx.expr.replaceFVar hx (← mkEqRefl x)
+          let e' := mkLet n t rv.expr (← b'.abstractM #[x])
           match rv.proof?, hb? with
           | none,   none   => return { expr := e' }
           | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h) }
-          | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
+          | _,      some h => return { expr := e', proof? := some (← mkLetCongrEq (← rv.getProof) h) }
 
       | SimpLetCase.nondepDepVar =>
         let v' ← dsimp v
