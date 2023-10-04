@@ -1,5 +1,6 @@
 import SciLean.Core.Objects.Scalar
 import SciLean.Core.Objects.SemiInnerProductSpace
+import SciLean.Core.Objects.FinVec
 
 import SciLean.Core.FunctionPropositions.IsDifferentiableAt
 
@@ -272,6 +273,20 @@ def HSMul.hSMul.arg_a0a1.IsDifferentiable_rule
   : IsDifferentiable K (fun x => f x • g x)
   := by sorry_proof
 
+@[fprop]
+theorem HSMul.hSMul.arg_a1.IsDifferentiable_rule_nat
+  (c : ℕ) (f : X → Y) (hf : IsDifferentiable K f)
+  : IsDifferentiable K fun x => c • f x :=
+by
+  sorry_proof
+
+@[fprop]
+theorem HSMul.hSMul.arg_a1.IsDifferentiable_rule_int
+  (c : ℤ) (f : X → Y) (hf : IsDifferentiable K f)
+  : IsDifferentiable K fun x => c • f x :=
+by
+  sorry_proof
+
 
 -- HDiv.hDiv -------------------------------------------------------------------
 -------------------------------------------------------------------------------- 
@@ -348,3 +363,34 @@ by
 
 
 end InnerProductSpace
+
+--------------------------------------------------------------------------------
+
+namespace SciLean
+section OnFinVec 
+
+
+variable 
+  {K : Type _} [IsROrC K]
+  {IX : Type} [EnumType IX] {X : Type _} [FinVec IX K X]
+  {IY : Type} [EnumType IY] {Y : Type _} [FinVec IY K Y]
+  {IZ : Type} [EnumType IZ] {Z : Type _} [FinVec IZ K Z]
+
+@[fprop]
+theorem Basis.proj.arg_x.IsDifferentiable_rule (i : IX)
+  : IsDifferentiable K (fun x : X => ℼ i x) := by sorry_proof
+
+@[fprop]
+theorem DualBasis.dualProj.arg_x.IsDifferentiable_rule (i : IX)
+  : IsDifferentiable K (fun x : X => ℼ' i x) := by sorry_proof
+
+@[fprop]
+theorem BasisDuality.toDual.arg_x.IsDifferentiable_rule
+  : IsDifferentiable K (fun x : X => BasisDuality.toDual x) := by sorry_proof
+
+@[fprop]
+theorem BasisDuality.fromDual.arg_x.IsDifferentiable_rule
+  : IsDifferentiable K (fun x : X => BasisDuality.fromDual x) := by sorry_proof
+
+end OnFinVec
+end SciLean
