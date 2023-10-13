@@ -193,13 +193,12 @@ theorem let_rule'
     = 
     fun x =>
       let ydg := revCDeriv K g x
-      revCDeriv K (fun x' => f x' (ydg.1 + semiAdjoint K ydg.2 (x' - x))) x := 
+      revCDeriv K (fun x' => f (x+x') (ydg.1 + semiAdjoint K ydg.2 x')) 0 := 
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revCDeriv
   funext _; simp; ftrans
-
 
 
 theorem pi_rule
@@ -690,8 +689,8 @@ def ftransExt : FTransExt where
   letRule e f g := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
-      #[ { proof := ← mkAppM ``let_rule' #[K, f, g], origin := .decl ``let_rule', rfl := false},
-         { proof := ← mkAppM ``let_rule_at' #[K, f, g], origin := .decl ``let_rule_at', rfl := false} ]
+      #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false},
+         { proof := ← mkAppM ``let_rule_at #[K, f, g], origin := .decl ``let_rule_at, rfl := false} ]
       discharger e
 
   piRule  e f := do

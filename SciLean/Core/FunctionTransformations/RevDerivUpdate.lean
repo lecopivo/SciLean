@@ -18,6 +18,10 @@ def revDerivUpdate
   (f : X → Y) (x : X) : Y×(Y→K→X→X) :=
   (f x, fun dy k dx => dx + k • semiAdjoint K (cderiv K f x) dy)
 
+-- @[fprop]
+-- theorem asdf (f : X → Y) (x : X) (k : K) (hf : HasAdjDiff K f)
+--   : HasSemiAdjoint K (fun y => (revDerivUpdate K f x).2 y k 0) := by unfold revDerivUpdate; ftrans; fprop
+
 
 namespace revDerivUpdate
 
@@ -76,7 +80,7 @@ theorem comp_rule'
     = 
     fun x =>
       let ydg := revDerivUpdate K g x
-      let zdf := revDerivUpdate K (fun x' => f (ydg.1 + semiAdjoint K (ydg.2 · 1 0) (x' -x))) x
+      let zdf := revDerivUpdate K (fun x' => f (ydg.1 + semiAdjoint K (ydg.2 · 1 0) x')) 0
       zdf := 
 by
   have ⟨_,_⟩ := hf
@@ -115,7 +119,7 @@ theorem let_rule'
     = 
     fun x => 
       let ydg := revDerivUpdate K g x
-      let zdf := revDerivUpdate K (fun x' => f x' (ydg.1 + semiAdjoint K (ydg.2 · 1 0) (x' - x))) x
+      let zdf := revDerivUpdate K (fun x' => f (x + x') (ydg.1 + semiAdjoint K (ydg.2 · 1 0) x')) 0
       zdf :=
 by
   have ⟨_,_⟩ := hf
@@ -211,13 +215,13 @@ def ftransExt : FTransExt where
   compRule e f g := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
-      #[ { proof := ← mkAppM ``comp_rule' #[K, f, g], origin := .decl ``comp_rule', rfl := false} ]
+      #[ { proof := ← mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
       discharger e
 
   letRule e f g := do
     let .some K := e.getArg? 0 | return none
     tryTheorems
-      #[ { proof := ← mkAppM ``let_rule' #[K, f, g], origin := .decl ``let_rule', rfl := false} ]
+      #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false} ]
       discharger e
 
   piRule  e f := do

@@ -1,6 +1,7 @@
 import SciLean
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.RewriteBy
+import SciLean.Tactic.LSimp2.Elab
 
 open SciLean
 
