@@ -359,28 +359,47 @@ private def mergeFVars (fvars1 fvars2 : Array Expr) : MetaM (Array Expr) := do
   let r := a ++ b
   return r
 
-private def removeLet (v : Expr) : Bool := 
+/-- Is `e` in the form `p₁ (...(pₙ x))` where `pᵢ` are projections and `x` free variable?
+-/
+def isProjectionOfFVar (e : Expr) : MetaM Bool := do
+  match e with
+  | .mdata _ e => isProjectionOfFVar e
+  | .fvar _ => return true
+  | .proj _ _ x => isProjectionOfFVar x
+  | .app f x => 
+    let some projName := f.getAppFn'.constName? | return false
+    let some info ← getProjectionFnInfo? projName | return false
+    if info.numParams = f.getAppNumArgs then
+      isProjectionOfFVar x 
+    else
+      return false
+  | _ => return false
+
+
+private def removeLet (v : Expr) : MetaM Bool := do
   if v.isFVar then
-    true
+    return true
+  else if ← isProjectionOfFVar v then
+    return true
   else if
     (v.isAppOfArity' ``OfNat.ofNat 3 || 
      v.isAppOfArity' ``OfScientific.ofScientific 5) then
-    true
+    return true
   else if v.isLambda then
-    true
+    return true
   else
-    false
+    return false
 
-private def filterLetValues (vals vars : Array Expr) : Array Expr × Array Nat := Id.run do
+private def filterLetValues (vals vars : Array Expr) : MetaM (Array Expr × Array Nat) := do
   let mut r := Array.mkEmpty vals.size
   let mut is := Array.mkEmpty vars.size
   for val in vals, var in vars, i in [0:vals.size] do
-    if removeLet val then
+    if ← removeLet val then
       r := r.push val
     else
       r := r.push var
       is := is.push i
-  (r, is)
+  return (r, is)
 
 theorem let_simp_congr {α β} (f : α → β) (x x' : α) (y' : β)
   (hx : x = x') (hf : f x' = y') : f x = y' := by rw[hx,hf]
@@ -848,7 +867,7 @@ where
       | SimpLetCase.nondep =>
         let rv ← simp v
 
-        if removeLet rv.expr then
+        if ← removeLet rv.expr then
           withTraceNode `lsimp (fun _ => do pure s!"lsimpLet remove let") do
           let e' := b.instantiate1 rv.expr
           let proof? ← do
