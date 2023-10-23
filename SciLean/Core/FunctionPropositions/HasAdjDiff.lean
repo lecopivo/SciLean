@@ -323,7 +323,7 @@ open ComplexConjugate in
 @[fprop]
 theorem HSMul.hSMul.arg_a0a1.HasAdjDiff_rule
   {Y : Type _} [SemiHilbert K Y]
-  (x : X) (f : X → K) (g : X → Y) 
+  (f : X → K) (g : X → Y) 
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : HasAdjDiff K (fun x => f x • g x) :=
 by 
