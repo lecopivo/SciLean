@@ -1035,7 +1035,7 @@ by
 
 
 example 
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {Y : Type _} [SemiHilbert K Y]
   (f : X → K) (g : X → Y) (x : X)
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   (hf' : HasSemiAdjoint K f)
@@ -1045,7 +1045,7 @@ example
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revCDeriv_rule
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {Y : Type _} [SemiHilbert K Y]
   (f : X → K) (g : X → Y)
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : (revCDeriv K fun x => f x • g x)

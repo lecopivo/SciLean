@@ -288,7 +288,7 @@ by sorry_proof
 open ComplexConjugate in
 @[ftrans]
 theorem HSMul.hSMul.arg_a0.semiAdjoint_rule
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {Y : Type _} [SemiHilbert K Y]
   (y' : Y) (f : X → K) (hf : HasSemiAdjoint K f)
   : semiAdjoint K (fun x => f x • y')
     =

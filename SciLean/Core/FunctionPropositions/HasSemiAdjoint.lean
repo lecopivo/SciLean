@@ -325,7 +325,7 @@ by sorry_proof
 
 @[fprop]
 theorem HSMul.hSMul.arg_a0.HasSemiAdjoint_rule
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {Y : Type _} [SemiHilbert K Y]
   (f : X → K) (y : Y) (hf : HasSemiAdjoint K f)
   : HasSemiAdjoint K fun x => f x • y := 
 by 

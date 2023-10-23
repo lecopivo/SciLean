@@ -328,7 +328,7 @@ by
 
 @[fprop]
 def HSMul.hSMul.arg_a0a1.HasAdjDiffAt_rule
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {Y : Type _} [SemiHilbert K Y]
   (x : X) (f : X → K) (g : X → Y) 
   (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
   : HasAdjDiffAt K (fun x => f x • g x) x := 

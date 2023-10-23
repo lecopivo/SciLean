@@ -463,7 +463,7 @@ by
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revDerivUpdate_rule
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+  {Y : Type _} [SemiHilbert K Y]
   (f : X → K) (g : X → Y)
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : (revDerivUpdate K fun x => f x • g x)

@@ -319,16 +319,16 @@ by
   constructor; fprop; ftrans; fprop
 
 
-
+open ComplexConjugate in
 @[fprop]
-def HSMul.hSMul.arg_a0a1.HasAdjDiff_rule
-  {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
+theorem HSMul.hSMul.arg_a0a1.HasAdjDiff_rule
+  {Y : Type _} [SemiHilbert K Y]
   (x : X) (f : X → K) (g : X → Y) 
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
-  : HasAdjDiff K (fun x => f x • g x) := 
+  : HasAdjDiff K (fun x => f x • g x) :=
 by 
-  have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
+  have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
 
