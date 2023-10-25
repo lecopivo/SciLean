@@ -222,6 +222,10 @@
     - [[https://arxiv.org/abs/1802.04730][Tensor Comprehensions: Framework-Agnostic High-Performance Machine Learning Abstractions]]
     - [[https://doi.org/10.1145/3498710][Provably Correct, Asymptotically Efficient, Higher-Order Reverse-Mode Automatic Differentiation, 2022]]
 
+    - [[https://openreview.net/forum?id=SJxJtYkPG][A Language and Compiler View on Differentiable Programming, 2023]]
+    - [[https://arxiv.org/abs/2212.09801][Denotationally Correct, Purely Functional, Efficient Reverse-mode Automatic Differentiation, 2023]]
+    - [[https://arxiv.org/abs/2212.10307][Efficient and Sound Differentiable Programming in a Functional Array-Processing Language, 2021]]
+
 *** Math Foundation
 
     - [[https://www.mat.univie.ac.at/~kriegl/Skripten/apbook.pdf][The Convenient Setting of Global Analysis, 2008]]
@@ -247,8 +251,14 @@
     - [[https://www.springer.com/gp/book/9780817636548][Categorical Combinators, Sequential Algorithms, and Functional Programming, 1993]]
     - [[https://www.math.mcgill.ca/rags/difftl/MSCS-Differential_Categories.pdf][Differential categories, 2006]]
     - [[https://arxiv.org/abs/1006.3140][A convenient differential category, 2010]]
+      
+*** Blog posts
+
+    - [[https://ocramz.github.io/haskell/automatic-differentiation/2021/07/19/ad-delcont.html][Purely-functional reverse-mode automatic differentiation with delimited continuations]]
 
 *** Presentations
+
+
 
     - [[http://www.math.mcgill.ca/rags/JAC/Poster/poster2-JAC-Apr13-handout-6up.pdf][A categorical description of the essential structure of differential calculus, 2013]]
     - [[http://www.appliedcategorytheory.org/wp-content/uploads/2017/09/Jason-Morton-An-approach-to-computational-category-theory.pdf][An approach to computational category theory, 2015]]
