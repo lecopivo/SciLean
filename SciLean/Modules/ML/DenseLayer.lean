@@ -1,19 +1,25 @@
 import SciLean
+import SciLean.Core.Meta.GenerateRevCDeriv'
+import SciLean.Util.Profile
+import SciLean.Tactic.LSimp2.Main
+
 -- import SciLean.Data.DataArray
 -- import SciLean.Data.Prod
 -- import SciLean.Util.Profile
+
+-- #profile_this_file
 
 namespace SciLean
 
 
 variable 
   -- {R : Type _} [RealScalar R]
-  {K : Type _} [IsROrC K]
-  {W : Type _} [Vec K W]
+  {K : Type} [RealScalar K]
+  {W : Type} [Vec K W]
 
 set_default_scalar K
 
-variable {α β κ ι : Type} [Index α] [Index κ] [Index β] [Index ι] [PlainDataType K] [PlainDataType R]
+variable {α β κ ι : Type} [Index.{0,0,0} α]  [Index.{0,0,0} β] [Index.{0,0,0} κ] [Index.{0,0,0} ι] [PlainDataType K] [PlainDataType R]
 
 variable (κ)
 def denseLazy (weights : κ → ι → K) (bias : κ → K) (x : ι → K) (j : κ) : K := 
@@ -21,38 +27,48 @@ def denseLazy (weights : κ → ι → K) (bias : κ → K) (x : ι → K) (j : 
 variable {κ}
 
 
-#generate_revCDeriv denseLazy weights bias x
-  prop_by unfold denseLazy; fprop
-  trans_by unfold denseLazy; ftrans
+example : SemiInnerProductSpace K ((κ → ι → K) × (κ → K) × (ι → K)) := by infer_instance
 
-#generate_revCDeriv denseLazy weights bias x | j
-  prop_by unfold denseLazy; fprop
-  trans_by unfold denseLazy; ftrans; simp (config := {zeta:=false}) only [curryN,uncurryN, CurryN.curry, UncurryN.uncurry]; ftrans 
+set_option profiler true 
+set_option profiler.threshold 10
 
-attribute [ftrans] denseLazy.arg_weightsbiasx_j.revCDeriv_rule_def
--- attribute [ftrans] denseLazy.arg_weightsbiasx.revCDeriv_rule_def
+set_option trace.Meta.Tactic.simp.rewrite true in
+#generate_revCDeriv' denseLazy weights bias x | j
+  prop_by unfold denseLazy; fprop
+  trans_by 
+    unfold denseLazy
+    ftrans only
+    lsimp (config := {zeta := false})
+
 
 variable (κ)
 def dense (weights : DataArrayN K (κ×ι)) (bias : K^κ) (x : K^ι) : K^κ := 
   -- ⊞ j => ∑ i, weights[(j,i)] * x[i] + bias[j]
   ⊞ j => denseLazy κ (fun j i => weights[(j,i)]) (fun j => bias[j]) (fun i => x[i]) j
 variable {κ}
-set_option pp.funBinderTypes true in
--- set_option trace.Meta.Tactic.fprop.unify true in
--- set_option trace.Meta.Tactic.fprop.discharge true in
--- set_option trace.Meta.Tactic.fprop.step true in
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.unify true in
-set_option trace.Meta.Tactic.ftrans.step true in
-#generate_revCDeriv dense weights bias x
-  prop_by unfold dense; fprop
-  trans_by unfold dense; ftrans; ftrans only
 
+#generate_revCDeriv' dense weights bias x
+  prop_by unfold dense; fprop
+  trans_by unfold dense; ftrans only
 
 #eval 0
 
 
-#check denseLazy.arg_weightsbiasx_j.revCDeriv
+#check dense.arg_weightsbiasx.revCDeriv_rule
+
+variable (x : K^(Idx 20)) 
+
+
+#check (revCDeriv K fun (w,w',w'',w''',b,b',b'',b''') => 
+  x |> dense (Idx 5) w' b'
+    |> dense (Idx 10) w b
+    |> dense (Idx 20) w'' b''
+    |> dense (Idx 20) w''' b''')
+  rewrite_by
+    ftrans only
+    lsimp (config := {zeta:=false}) only
+
+#exit
 
 set_option trace.Meta.Tactic.ftrans.step true
 set_option trace.Meta.Tactic.ftrans.theorems true
@@ -224,3 +240,12 @@ section denseDerivTest
 end denseDerivTest
 
 
+structure Decomposition (X X₁ X₂ : Type) where
+  split : X → X₁ × X₂
+  merge : X₁ → X₂ → X
+
+
+example : (g : G) [Curry Xs Y] (dec : Decomposition Xs Xs₁ Xs₂) (f : F) [Curry F (Y×Xs₁) Z]
+  : revCDeriv fun xs => 
+      let y := uncurry' g xs
+      uncurry' f (y, dec.split xs)

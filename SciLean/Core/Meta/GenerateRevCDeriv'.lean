@@ -34,10 +34,11 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
     let (mainArgs, unusedArgs, trailingArgs, argKinds)
       ← splitArgs args mainNames trailingNames
 
+    let returnType ← mkForallFVars trailingArgs returnType
+
     -- ensure that `mainNames` and `trailingNames` are in the right order
     let mainNames ← mainArgs.mapM (fun arg => arg.fvarId!.getUserName)
     let trailingNames ← trailingArgs.mapM (fun arg => arg.fvarId!.getUserName)
-
     -- sufix used in declaration names indicating which arguments are main and trailing
     let argSuffix' := 
       "arg_" ++ mainNames.foldl (init:="") (·++toString ·)
@@ -54,6 +55,9 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
       mkUncurryFun mainArgs.size
 
 
+    let mainTypes ← liftM <| mainArgs.mapM inferType
+    withSemiInnerProductSpaces K (mainTypes.push returnType) fun extraInsts => do
+
     -- Simple Rules ------------------------------------------------------------
 
     -- HasAdjDiff rule --
@@ -68,7 +72,7 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
     let propProof ← elabProof funProp tac
 
     let hasAdjDiffName := constName.append argSuffix' |>.append "HasAdjDiff_rule_simple"
-    let hasAdjDiffProof ← mkLambdaFVars (ctx++unusedArgs++trailingArgs) propProof
+    let hasAdjDiffProof ← mkLambdaFVars (ctx++extraInsts++unusedArgs++trailingArgs) propProof >>= instantiateMVars
     let hasAdjDiffInfo : TheoremVal := 
     {
       name  := hasAdjDiffName
@@ -86,9 +90,10 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
     let lhs ← mkAppM ``revCDeriv #[K, f]
     let (rhs,proof) ← elabConvRewrite lhs conv
 
-    let revDerivFunName := constName.append argSuffix |>.append "revCDeriv"
+    let xs := ctx++extraInsts++mergeArgs' mainArgs unusedArgs argKinds
     let revDerivFun ← liftM <|
-      mkLambdaFVars (ctx++mergeArgs' mainArgs unusedArgs argKinds) (rhs.beta #[(← mkProdElem mainArgs)])
+      mkLambdaFVars xs (rhs.beta #[(← mkProdElem mainArgs)])
+    let revDerivFunName := constName.append argSuffix |>.append "revCDeriv"
     let (revDerivFun,_) ← elabConvRewrite revDerivFun (← `(conv| lsimp (config := {zeta:=false}) only))
     let revDerivFunInfo : DefinitionVal := 
     {
@@ -106,9 +111,9 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
     -- revCDeriv rule without definition --
     ---------------------------------------
 
-    let xs := (ctx++unusedArgs)
-    let rule_simple ← mkForallFVars xs (← mkEq lhs rhs)
-    let rule_simple_proof ← mkLambdaFVars xs proof
+    let xs := (ctx++extraInsts++unusedArgs)
+    let rule_simple ← mkForallFVars xs (← mkEq lhs rhs) >>= instantiateMVars
+    let rule_simple_proof ← mkLambdaFVars xs proof >>= instantiateMVars
 
     let ruleSimpleName := constName.append argSuffix |>.append "revCDeriv_rule_simple"
     let ruleSimpleInfo : TheoremVal := 
@@ -124,15 +129,15 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
     -- revCDeriv rule with definition --
     ------------------------------------
 
-    let xs := (ctx++unusedArgs)
+    let xs := (ctx++extraInsts++unusedArgs)
     let p ← mkProdElem mainArgs
     let rhs' ←
       withLocalDeclD `x (← inferType p) fun pVar => do
         let ps ← mkProdSplitElem pVar mainArgs.size
-        let xs := (ctx++mergeArgs' ps unusedArgs argKinds)
+        let xs := (ctx++extraInsts++mergeArgs' ps unusedArgs argKinds)
         mkLambdaFVars #[pVar] (mkAppN (.const revDerivFunName lvls) xs)
-    let rule_simple_def ← mkForallFVars xs (← mkEq lhs rhs')
-    let rule_simple_def_proof ← mkLambdaFVars xs proof
+    let rule_simple_def ← mkForallFVars xs (← mkEq lhs rhs') >>= instantiateMVars
+    let rule_simple_def_proof ← mkLambdaFVars xs proof >>= instantiateMVars
 
     let ruleSimpleDefName := constName.append argSuffix |>.append "revCDeriv_rule_def_simple"
     let ruleSimpleDefInfo : TheoremVal := 
@@ -180,10 +185,10 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
       let (.some propProof, _) ← HasAdjDiff.fpropExt.compRule prop f₁ f₂ |>.run {} |>.run {}
         | throwError "failed to create composition rule for HasAdjDiff"
 
-      let xs := ctx ++ #[W] ++ instW ++ mergeArgs mainArgs unusedArgs trailingArgs argKinds ++ mainArgProps
-      let hasAdjDiffName := constName.append argSuffix |>.append "HasAdjDiff_rule"
-      let hasAdjDiffRule ← mkForallFVars xs prop
-      let hasAdjDiffProof ← mkLambdaFVars xs propProof
+      let xs := ctx ++ extraInsts ++ #[W] ++ instW ++ mergeArgs mainArgs unusedArgs trailingArgs argKinds ++ mainArgProps
+      let hasAdjDiffName := constName.append argSuffix' |>.append "HasAdjDiff_rule"
+      let hasAdjDiffRule ← mkForallFVars xs prop >>= instantiateMVars
+      let hasAdjDiffProof ← mkLambdaFVars xs propProof >>= instantiateMVars
       let hasAdjDiffInfo : TheoremVal := 
       {
         name  := hasAdjDiffName
@@ -211,11 +216,11 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
 
       let rhs' := step.result.expr
       let h' ← step.result.getProof
-      let (rhs'', h'') ← elabConvRewrite rhs' (← `(conv| ftrans))
+      let (rhs'', h'') ← elabConvRewrite rhs' (← `(conv| ftrans only))
       
-      let xs := ctx ++ #[W] ++ instW ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
-      let rule ← mkForallFVars xs (← mkEq lhs rhs'')
-      let ruleProof ← mkLambdaFVars xs (← mkEqTrans h' h'')
+      let xs := ctx ++ extraInsts ++ #[W] ++ instW ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
+      let rule ← mkForallFVars xs (← mkEq lhs rhs'') >>= instantiateMVars
+      let ruleProof ← mkLambdaFVars xs (← mkEqTrans h' h'') >>= instantiateMVars
 
 
       let ruleName := constName.append argSuffix |>.append "revCDeriv_rule"
@@ -285,7 +290,6 @@ def add (x y : X) : X := x + y
 #check add.arg_xy.revCDeriv_rule_simple
 #check add.arg_xy.revCDeriv_rule_def_simple
 #check add.arg_xy.HasAdjDiff_rule_simple
-
 
 def smul {X : Type} [SemiHilbert K X]
  (x : K) (y : X) : X := x • y
