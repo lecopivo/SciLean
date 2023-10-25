@@ -23,5 +23,5 @@ example
 by
   conv => 
     lhs
-    ftrans; ftrans
+    ftrans; ftrans; simp
   

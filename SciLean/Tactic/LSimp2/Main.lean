@@ -249,30 +249,34 @@ private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
   | none => return e
 
 private partial def dsimp (e : Expr) : M Expr := do
-  let cfg ← Simp.getConfig
-  unless cfg.dsimp do
-    return e
-  let pre (e : Expr) : M TransformStep := do
-    if let Step.visit r ← rewritePre e (fun _ => pure none) (rflOnly := true) then
-      if r.expr != e then
-        return .visit r.expr
-    return .continue
-  let post (e : Expr) : M TransformStep := do
-    -- lsimp modification               
-    -- remove unsued let bindings
-    let e := 
-      if e.isLet && ¬e.letBody!.hasLooseBVars then
-        e.letBody!
-      else
-        e
-    if let Step.visit r ← rewritePost e (fun _ => pure none) (rflOnly := true) then
-      if r.expr != e then
-        return .visit r.expr
-    let mut eNew ← reduce e
-    if cfg.zeta && eNew.isFVar then
-      eNew ← reduceFVar cfg eNew
-    if eNew != e then return .visit eNew else return .done e
-  transform (usedLetOnly := cfg.zeta) e (pre := pre) (post := post)
+  return e
+  -- let cfg ← Simp.getConfig
+  -- withTraceNode `ldsimp (fun _ => pure s!"ldsimp {cfg.dsimp}") do
+  -- unless cfg.dsimp do
+  --   return e
+  -- let pre (e : Expr) : M TransformStep := do
+  --   withTraceNode `ldsimp (fun _ => pure "ldsimp pre") do
+  --   if let Step.visit r ← rewritePre e (fun _ => pure none) (rflOnly := true) then
+  --     if r.expr != e then
+  --       return .visit r.expr
+  --   return .continue
+  -- let post (e : Expr) : M TransformStep := do
+  --   withTraceNode `ldsimp (fun _ => pure "ldsimp post") do
+  --   -- lsimp modification               
+  --   -- remove unsued let bindings
+  --   let e := 
+  --     if e.isLet && ¬e.letBody!.hasLooseBVars then
+  --       e.letBody!
+  --     else
+  --       e
+  --   if let Step.visit r ← rewritePost e (fun _ => pure none) (rflOnly := true) then
+  --     if r.expr != e then
+  --       return .visit r.expr
+  --   let mut eNew ← reduce e
+  --   if cfg.zeta && eNew.isFVar then
+  --     eNew ← reduceFVar cfg eNew
+  --   if eNew != e then return .visit eNew else return .done e
+  -- transform (usedLetOnly := cfg.zeta) e (pre := pre) (post := post)
 
 instance : Inhabited (M α) where
   default := fun _ _ _ => default
@@ -924,8 +928,16 @@ where
           let e' := mkLet n t rv.expr (← b'.abstractM #[x])
           match rv.proof?, hb? with
           | none,   none   => return { expr := e' }
-          | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h) }
-          | _,      some h => return { expr := e', proof? := some (← mkLetCongrEq (← rv.getProof) h) }
+          | some h, none   => do
+            let proof ← 
+              withTraceNode `lsimp (fun _ => do pure s!"lsimpLet val congr proof") do
+                mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h
+            return { expr := e', proof? := some proof }
+          | _,      some h => 
+            let proof ← 
+              withTraceNode `lsimp (fun _ => do pure s!"lsimpLet congr proof") do
+                mkLetCongrEq (← rv.getProof) h
+            return { expr := e', proof? := some proof }
 
       | SimpLetCase.nondepDepVar =>
         let v' ← dsimp v

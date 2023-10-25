@@ -11,7 +11,8 @@ macro "autodiff" : conv => do
   `(conv|
     (lsimp (config := {failIfUnchanged := false, zeta := false, singlePass := true}) only [cderiv_as_fwdCDeriv, scalarGradient, gradient, scalarCDeriv,revCDerivEval]
      ftrans only
-     lsimp (config := {failIfUnchanged := false, zeta := false}) [uncurryN, UncurryN.uncurry, curryN, CurryN.curry]))
+     simp (config := {zeta:=false}) only [uncurryN, UncurryN.uncurry, CurryN.curry, curryN]
+     lsimp (config := {failIfUnchanged := false, zeta := false})))
 
 macro "autodiff" : tactic => do
   `(tactic| conv => autodiff)

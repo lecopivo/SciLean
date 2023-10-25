@@ -36,7 +36,8 @@ theorem id_rule
 by
   unfold revFDeriv
   funext _
-  ftrans; ftrans; ext; simp
+  ftrans; ftrans; ext; simp; simp
+  
 
 
 theorem const_rule (y : Y)
@@ -44,7 +45,7 @@ theorem const_rule (y : Y)
 by
   unfold revFDeriv
   funext _
-  ftrans; ftrans; ext; simp
+  ftrans; ftrans; ext; simp; simp
 variable{X}
 
 variable(E)

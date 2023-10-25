@@ -3,6 +3,7 @@ import Mathlib.Tactic.NormNum.Core
 
 import SciLean.Lean.Meta.Basic
 import SciLean.Tactic.FTrans.Init
+import SciLean.Tactic.FTrans.Simp
 import SciLean.Tactic.LSimp2.Main
 import SciLean.Tactic.StructuralInverse
 import SciLean.Tactic.AnalyzeLambda
@@ -584,9 +585,9 @@ mutual
   partial def methods : Simp.Methods :=
     if useSimp then {
       pre  := fun e ↦ do
-        Simp.andThen (← Simp.preDefault e discharge) (fun e' => tryFTrans? e' discharge)
+        Simp.andThen (← withTraceNode `lsimp (fun _ => do pure s!"lsimp default pre") do Simp.preDefault e discharge) (fun e' => tryFTrans? e' discharge)
       post := fun e ↦ do
-        Simp.andThen (← Simp.postDefault e discharge) (fun e' => tryFTrans? e' discharge (post := true))
+        Simp.andThen (← withTraceNode `lsimp (fun _ => do pure s!"lsimp default post") do Simp.postDefault e discharge) (fun e' => tryFTrans? e' discharge (post := true))
       discharge? := discharge
     } else {
       pre  := fun e ↦ do 
@@ -652,11 +653,15 @@ def fTransAt (g : MVarId) (ctx : Simp.Context) (fvarIdsToSimp : Array FVarId)
 
 open Qq Lean Meta Elab Tactic Term
 
+def getFTransTheorems : CoreM SimpTheorems := do
+  let ext ← Lean.Meta.getSimpExtension? "ftrans_simp"
+  ext.get!.getTheorems
+
 /-- Constructs a simp context from the simp argument syntax. -/
-def getSimpContext (args : Syntax) (simpOnly := false) :
+def getFTransContext (args : Syntax) (simpOnly := false) :
     TacticM Simp.Context := do
   let simpTheorems ←
-    if simpOnly then simpOnlyBuiltins.foldlM (·.addConst ·) {} else getSimpTheorems
+    if simpOnly then simpOnlyBuiltins.foldlM (·.addConst ·) {} else getFTransTheorems
   let mut { ctx, starArg } ← elabSimpArgs args (eraseLocal := false) (kind := .simp)
     { simpTheorems := #[simpTheorems], congrTheorems := ← getSimpCongrTheorems }
   unless starArg do return ctx
@@ -679,8 +684,8 @@ Elaborates a call to `fun_trans only? [args]` or `norm_num1`.
 -- FIXME: had to inline a bunch of stuff from `mkSimpContext` and `simpLocation` here
 def elabFTrans (args : Syntax) (loc : Syntax)
     (simpOnly := false) (useSimp := true) : TacticM Unit := do
-  let ctx ← getSimpContext args (!useSimp || simpOnly)
-  let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true, autoUnfold := true}}
+  let ctx ← getFTransContext args (!useSimp || simpOnly)
+  let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true, dsimp := false, decide := false}}
   let g ← getMainGoal
   let res ← match expandOptLocation loc with
   | .targets hyps simplifyTarget => fTransAt g ctx (← getFVarIds hyps) simplifyTarget useSimp
@@ -699,8 +704,10 @@ open Lean Elab Tactic Lean.Parser.Tactic
 
 syntax (name := fTransConv) "ftrans" &" only"? (simpArgs)? : conv
 
+
 /-- Elaborator for `norm_num` conv tactic. -/
 @[tactic fTransConv] def elabFTransConv : Tactic := fun stx ↦ withMainContext do
-  let ctx ← getSimpContext stx[2] !stx[1].isNone
-  let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true}}
+  let ctx ← getFTransContext stx[2] !stx[1].isNone
+  let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true, dsimp := false, decide := false}}
   Conv.applySimpResult (← deriveSimp ctx (← instantiateMVars (← Conv.getLhs)) (useSimp := true))
+

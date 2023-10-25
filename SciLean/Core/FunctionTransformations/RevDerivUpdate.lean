@@ -52,7 +52,8 @@ theorem proj_rule (i : ι)
       (x i, fun dxi k dx j => if h : i=j then dx j + k • h ▸ dxi else dx j) :=
 by
   unfold revDerivUpdate
-  funext _; ftrans; ftrans; funext dxi k dx j; simp; sorry_proof
+  funext _; ftrans; ftrans; 
+  simp; funext dxi k dx j; simp; sorry_proof
 variable {E}
 
 theorem comp_rule 
@@ -149,7 +150,7 @@ by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
   unfold revDerivUpdate
-  funext _; ftrans; ftrans; -- simp
+  funext _; ftrans; ftrans; simp
   funext dy dx
   sorry_proof
 

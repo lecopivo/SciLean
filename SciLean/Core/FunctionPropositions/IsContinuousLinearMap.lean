@@ -5,6 +5,7 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 
 import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
+import SciLean.Tactic.FTrans.Init
 
 namespace SciLean
 
@@ -27,7 +28,7 @@ def ContinuousLinearMap.mk'
   : X →L[R] Y :=
   ⟨⟨⟨f, hf.linear.map_add⟩, hf.linear.map_smul⟩, hf.cont⟩
 
-@[simp]
+@[simp, ftrans_simp]
 theorem ContinuousLinearMap.mk'_eval
   (x : X) (f : X → Y) (hf : IsContinuousLinearMap R f) 
   : mk' R f hf x = f x := by rfl

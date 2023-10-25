@@ -149,7 +149,7 @@ by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revCDeriv
-  funext _; ftrans; ftrans; simp
+  funext _; ftrans; ftrans
 
 theorem comp_rule'
   (f : Y → Z) (g : X → Y) 
@@ -163,7 +163,7 @@ by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revCDeriv
-  funext _; simp; ftrans
+  funext _; simp; ftrans; 
 
 
 theorem let_rule 
@@ -183,7 +183,7 @@ by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revCDeriv
-  funext _; ftrans; ftrans; simp
+  funext _; ftrans; ftrans
 
 
 theorem let_rule'

@@ -35,6 +35,7 @@ instance (S : Type _) [Vec K S] : FwdDerivMonad K (StateT S m) (StateT (S×S) m'
       simp at hf; simp at hg
       simp[fwdCDeriv, bind, StateT.bind, StateT.bind.match_1]
       ftrans
+      simp
 
   fwdDerivM_pair f hf := 
     by
@@ -90,6 +91,7 @@ theorem _root_.getThe.arg.fwdDerivValM_rule
 by 
   simp[getThe, MonadStateOf.get, StateT.get,fwdDerivValM, fwdDerivM, pure, StateT.pure]
   ftrans
+  simp
 
 -- MonadState.get --------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -111,7 +113,7 @@ theorem _root_.MonadState.get.arg.fwdDerivValM_rule
 by 
   simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,fwdDerivValM, fwdDerivM]
   ftrans
-
+  simp
 
 -- -- setThe ----------------------------------------------------------------------
 -- --------------------------------------------------------------------------------
@@ -162,7 +164,7 @@ theorem _root_.MonadStateOf.set.arg_a0.fwdDerivM_rule
       pure ((),())) :=
 by 
   simp[set, StateT.set,fwdDerivM, bind,Bind.bind, StateT.bind]
-  ftrans; congr
+  ftrans; congr; simp; rfl
 
 
 -- modifyThe ----------------------------------------------------------------------
@@ -189,7 +191,7 @@ theorem _root_.modifyThe.arg_f.fwdDerivM_rule
       pure ((),())) :=
 by 
   simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdDerivM,bind,Bind.bind, StateT.bind]
-  ftrans; congr
+  ftrans; congr; simp; rfl
 
 
 -- modify ----------------------------------------------------------------------
@@ -216,7 +218,7 @@ theorem _root_.modify.arg_f.fwdDerivM_rule
       pure ((),())) :=
 by 
   simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdDerivM,bind,Bind.bind, StateT.bind]
-  ftrans; congr
+  ftrans; congr; simp; rfl
 
 
 end FwdDerivMonad
@@ -306,7 +308,7 @@ theorem _root_.getThe.arg.revDerivValM_rule
       pure ((← getThe S), fun ds => modifyThe S (fun ds' => ds + ds'))) := 
 by 
   simp[getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet]
-  ftrans
+  ftrans; simp
 
 -- MonadState.get --------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -328,7 +330,7 @@ theorem _root_.MonadState.get.arg.revDerivValM_rule
       pure ((← get), fun ds => modify (fun ds' => ds + ds'))) := 
 by 
   simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet, modifyGet]
-  ftrans
+  ftrans; simp
 
 
 -- -- setThe ----------------------------------------------------------------------
@@ -386,7 +388,7 @@ theorem _root_.MonadStateOf.set.arg_a0.revDerivM_rule
               pure dx)) :=
 by 
   simp[set, StateT.set, revDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure, get]
-  ftrans
+  ftrans; simp
 
 -- -- modifyThe ----------------------------------------------------------------------
 -- --------------------------------------------------------------------------------
@@ -445,7 +447,7 @@ theorem _root_.modify.arg_f.revDerivM_rule
               pure dxs.1)) := 
 by 
   simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, set, StateT.set, get, pure, StateT.pure, modify]
-  ftrans
+  ftrans; simp
 
 end RevDerivMonad
 

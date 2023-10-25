@@ -321,7 +321,7 @@ by
   funext x dx
   have H : ((cderiv K (fun x => invFun (f x) ∘ (f x)) x dx) ∘ (invFun (f x)))
            =
-           0 := by simp[invFun_comp (hf _).1.1]; ftrans
+           0 := by simp[invFun_comp (hf _).1.1]; ftrans; simp
   rw[← sub_zero (cderiv K (fun x => Function.invFun (f x)) x dx)]
   rw[← H]
   simp_rw[comp.arg_fg_a0.cderiv_rule (K:=K) (fun x => invFun (f x)) f (by fprop) (by fprop)]

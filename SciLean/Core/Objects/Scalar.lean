@@ -6,6 +6,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
 import SciLean.Util.SorryProof
+import SciLean.Tactic.FTrans.Init
 
 namespace SciLean
 
@@ -93,7 +94,7 @@ instance {R K} [Scalar R K] : HPow K K K := ⟨fun x y => Scalar.pow x y⟩
 
 open ComplexConjugate 
 
-@[simp]
+@[simp, ftrans_simp]
 theorem conj_for_real_scalar {R} [RealScalar R] (r : R)
   : conj r = r := sorry_proof
 
