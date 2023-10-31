@@ -322,7 +322,7 @@ theorem HSMul.hSMul.arg_a1.HasAdjDiffAt_rule
   : HasAdjDiffAt K (fun x => c • g x) x :=
 by 
   have ⟨_,_⟩ := hg
-  constructor; fprop; ftrans; simp; fprop
+  constructor; fprop; ftrans; fprop
 
 
 
