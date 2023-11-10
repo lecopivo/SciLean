@@ -59,7 +59,7 @@ instance : VAdd Int64 (Idx n) := ⟨λ x y => y + x⟩
 
 def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry_proof⟩
 def toFloat {n} (i : Idx n) : Float := i.1.toNat.toFloat
-
+def toFin' {n : Nat} (i : Idx n.toUSize) : Fin n := ⟨i.1.toNat, sorry_proof⟩
 
 def shiftPos (x : Idx n) (s : USize) := x + s
 def shiftNeg (x : Idx n) (s : USize) := x - s
