@@ -54,6 +54,10 @@ class ArrayTypeNotation (Cont : outParam $ Type _) (Idx Elem : Type _)
 
 abbrev arrayTypeCont (Idx Elem) {Cont : outParam $ Type _} [ArrayTypeNotation Cont Idx Elem] := Cont
 
+
+-- Notation: ⊞ i => f i --
+--------------------------
+
 abbrev introElemNotation {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]  
   (f : Idx → Elem)
   : Cont 
@@ -62,15 +66,38 @@ abbrev introElemNotation {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNot
 open Lean.TSyntax.Compat in
 macro "⊞ " xs:Lean.explicitBinders " => " b:term:51 : term => Lean.expandExplicitBinders ``introElemNotation xs b
 
-macro " ⊞[" xs:term,* "] " : term => do
-  let n := Syntax.mkNumLit (toString xs.getElems.size)
-  `(term| ⊞ (i : Idx $n) => #[$xs,*][i.toFin'])
-
 @[app_unexpander introElemNotation] 
 def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:ident => $b) => 
     `(⊞ $x:ident => $b)
   | _  => throw ()
+
+
+-- Notation: ⊞[1,2,3] --
+------------------------
+
+/-- Converts array to the canonical ArrayType
+
+  WARNING: Does not do what expected for arrays of size bigger or equal then USize.size
+    For example, array of size USize.size is converted to an array of size zero
+  -/
+def _root_.Array.toArrayType {Elem} (a : Array Elem) (n : USize) (_h : n = a.size.toUSize) 
+  {Cont} [ArrayType Cont (Idx n) Elem] [ArrayTypeNotation Cont (Idx n) Elem] 
+  : Cont := ⊞ (i : Idx n) => a[i.1]'sorry_proof
+
+macro " ⊞[" xs:term,* "] " : term => do
+  let n := Syntax.mkNumLit (toString xs.getElems.size)
+  `(term| Array.toArrayType #[$xs,*] $n (by rfl))
+
+@[app_unexpander Array.toArrayType] 
+def unexpandArrayToArrayType : Lean.PrettyPrinter.Unexpander
+  | `($(_) #[$ys,*] $_*) =>     
+    `(⊞[$ys,*])
+  | _  => throw ()
+
+
+-- Notation: Float ^ Idx n --
+-----------------------------
 
 open Lean Elab Term in
 elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term =>
