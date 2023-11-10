@@ -1,6 +1,6 @@
 import Lean 
 
-inductive ListN (α : Type) : Nat → Type
+inductive ListN (α : Type u) : Nat → Type u
   | nil : ListN α 0
   | cons {n} (x : α) (xs : ListN α n) : ListN α (n+1)
 
@@ -19,6 +19,8 @@ where
     match l with
     | .nil => a
     | .cons x xs => go (a.push x) xs
+
+instance [ToString α] : ToString (ListN α n) := ⟨fun l => toString l.toList ++ "'"⟩
 
 
 @[simp]
@@ -90,3 +92,5 @@ def unexpandListNCons : Lean.PrettyPrinter.Unexpander
   | `($(_) $x [$xs',*]') =>
     `([$x, $xs',*]')
   | _  => throw ()
+
+

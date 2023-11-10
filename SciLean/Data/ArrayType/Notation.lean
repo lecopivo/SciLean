@@ -1,5 +1,6 @@
 import SciLean.Data.ArrayType.Basic
-
+import SciLean.Data.ListN
+import Qq
 namespace SciLean
 
 open Lean Parser 
@@ -76,24 +77,26 @@ def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
 -- Notation: ⊞[1,2,3] --
 ------------------------
 
-/-- Converts array to the canonical ArrayType
 
-  WARNING: Does not do what expected for arrays of size bigger or equal then USize.size
-    For example, array of size USize.size is converted to an array of size zero
-  -/
-def _root_.Array.toArrayType {Elem} (a : Array Elem) (n : USize) (_h : n = a.size.toUSize) 
-  {Cont} [ArrayType Cont (Idx n) Elem] [ArrayTypeNotation Cont (Idx n) Elem] 
-  : Cont := ⊞ (i : Idx n) => a[i.1]'sorry_proof
+syntax (name:=arrayTypeLiteral) " ⊞[" term,* "] " : term
 
-macro " ⊞[" xs:term,* "] " : term => do
-  let n := Syntax.mkNumLit (toString xs.getElems.size)
-  `(term| Array.toArrayType #[$xs,*] $n (by rfl))
+open Lean Meta Elab Term Qq
+macro_rules 
+ | `(⊞[ $x:term, $xs:term,* ]) => do 
+   let n := Syntax.mkNumLit (toString (xs.getElems.size + 1))   
+   `(ListN.toArrayType (arrayTypeCont (Idx ($n).toUSize) (typeOf $x)) [$x,$xs,*]')
+  -- let n := Syntax.mkNumLit (toString xs.getElems.size)
+  -- `(term| ListN.toArrayType (arrayType #[$xs,*] $n (by rfl))
 
 @[app_unexpander Array.toArrayType] 
 def unexpandArrayToArrayType : Lean.PrettyPrinter.Unexpander
   | `($(_) #[$ys,*] $_*) =>     
     `(⊞[$ys,*])
   | _  => throw ()
+
+-- variable {CC : USize → Type} [∀ n, ArrayType (CC n) (Idx n) Float] [∀ n, ArrayTypeNotation (CC n) (Idx n) Float]
+-- #check [1.0,2.0,3.0]'.toArrayType (CC 3)
+-- #check ⊞[1.0,2.0,3.0]
 
 
 -- Notation: Float ^ Idx n --

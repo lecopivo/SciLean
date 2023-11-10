@@ -1,5 +1,6 @@
 import SciLean.Util.SorryProof
 import SciLean.Data.Index
+import SciLean.Data.ListN 
 
 namespace SciLean
 
@@ -131,7 +132,7 @@ theorem getElem_map [ArrayType Cont Idx Elem] [EnumType Idx] (f : Elem → Elem)
 
 instance [ArrayType Cont Idx Elem] [ToString Elem] [EnumType Idx] : ToString (Cont) := ⟨λ x => Id.run do
   let mut fst := true
-  let mut s := "["
+  let mut s := "⊞["
   for i in fullRange Idx do
     if fst then
       s := s ++ toString x[i]
@@ -139,6 +140,25 @@ instance [ArrayType Cont Idx Elem] [ToString Elem] [EnumType Idx] : ToString (Co
     else
       s := s ++ ", " ++ toString x[i]
   s ++ "]"⟩
+
+/-- Converts array to ArrayType
+
+  WARNING: Does not do what expected for arrays of size bigger or equal then USize.size
+    For example, array of size USize.size is converted to an array of size zero
+  -/
+def _root_.Array.toArrayType {n Elem} (Cont : Type u) [ArrayType Cont (SciLean.Idx n) Elem]
+  (a : Array Elem) (_h : n = a.size.toUSize) : Cont := 
+  introElem fun (i : SciLean.Idx n) => a[i.1]'sorry_proof
+
+/-- Converts ListN to ArrayType
+
+  WARNING: Does not do what expected for lists of size bigger or equal then USize.size
+    For example, array of size USize.size is converted to an array of size zero
+  -/
+def _root_.ListN.toArrayType {n Elem} (Cont : Type) [ArrayType Cont (SciLean.Idx (n.toUSize)) Elem] 
+  (l : ListN Elem n) : Cont := 
+  introElem fun i => l.toArray[i.1.toNat]'sorry_proof
+
 
 section Operations
 
