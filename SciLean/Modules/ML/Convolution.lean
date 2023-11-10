@@ -1,57 +1,50 @@
 import SciLean.Core
 import SciLean.Data.DataArray
 import SciLean.Data.Prod
+import SciLean.Core.Meta.GenerateRevCDeriv'
+
 
 namespace SciLean
 
 variable 
-  {R : Type _} [RealScalar R]
-  {K : Type _} [Scalar R K]
+  {R : Type} [RealScalar R]
 
 set_default_scalar R
 
-variable {α β κ ι} [Index α] [Index κ] [Index β] [Index ι] [PlainDataType K] [PlainDataType R]
+variable {α β κ ι} [Index α] [Index κ] [Index β] [Index ι] [PlainDataType R]
 
-variable (κ)
-def dense (weights : DataArrayN K (κ×ι)) (bias : DataArrayN K κ) (x : DataArrayN K ι) : DataArrayN K κ := 
-  ⊞ j => ∑ i, weights[(j,i)] * x[i] + bias[j]
-variable {κ}
-
-
-section denseDerivTest
-  variable (weights : DataArrayN R (κ×ι)) (bias : DataArrayN R κ) (x : DataArrayN R ι)
-
-  #check 
-    ∇ x, dense κ weights bias x
-    rewrite_by
-      unfold dense; symdiff
-
-  #check 
-    ∇ bias, dense κ weights bias x
-    rewrite_by
-      unfold dense; symdiff
-
-  #check 
-    ∇ weights, dense κ weights bias x
-    rewrite_by
-      unfold dense; symdiff
-
-end denseDerivTest
-
+#check AddAction
 
 -- This is probably broken when overflow happens
-def idxAction (j : Idx m) : Idx n ≃ Idx n where
+def idxShift (j : Idx m) : Idx n ≃ Idx n where
   toFun i := ⟨((n + i.1 + j.1) - (m >>> 1)) % n, sorry_proof⟩
   invFun i := ⟨((n + i.1 + (m >>> 1)) - j.1) % n, sorry_proof⟩
   left_inv := sorry_proof
   right_inv := sorry_proof
 
 -- This is probably broken when overflow happens
-def idx2Action (j : Idx m × Idx m') : Idx n × Idx n' ≃ Idx n × Idx n' where
-  toFun i := (idxAction j.1 i.1, idxAction j.2 i.2)
-  invFun i := ((idxAction j.1).invFun i.1, (idxAction j.2).invFun i.2)
+def idxShift' (j : Idx' m₁ m₂) : Idx n ≃ Idx n where
+  toFun i := ⟨((n + i.1 + j.1) - (m >>> 1)) % n, sorry_proof⟩
+  invFun i := ⟨((n + i.1 + (m >>> 1)) - j.1) % n, sorry_proof⟩
   left_inv := sorry_proof
   right_inv := sorry_proof
+
+
+-- This is probably broken when overflow happens
+def idx2Shift (j : Idx m × Idx m') : Idx n × Idx n' ≃ Idx n × Idx n' where
+  toFun i := (idxShift j.1 i.1, idxShift j.2 i.2)
+  invFun i := ((idxShift j.1).invFun i.1, (idxShift j.2).invFun i.2)
+  left_inv := sorry_proof
+  right_inv := sorry_proof
+
+
+-- This is probably broken when overflow happens
+def idx2Shift' (j : Idx' m₁ m₂ × Idx' m₁' m₂') : Idx n × Idx n' ≃ Idx n × Idx n' where
+  toFun i := (idxShift j.1 i.1, idxShift j.2 i.2)
+  invFun i := ((idxShift j.1).invFun i.1, (idxShift j.2).invFun i.2)
+  left_inv := sorry_proof
+  right_inv := sorry_proof
+
 
 
 def idxSplit2 (h : n % 2 = 0) : Idx n ≃ Idx (n/2) × Idx 2 where
@@ -81,18 +74,57 @@ example : Function.invFun (fun (i : Idx n) => idxSplit2 sorry i)
           =
           fun j => (idxSplit2 sorry).invFun j := by ftrans
 
+
+variable (κ) 
+
+/-- 
+  @param α indexing set of 
+  -/
+def convolutionLazy [Nonempty ι]
+  (indexAction : κ → ι≃ι) 
+  (weights : κ → R) (bias : ι → R) (x : ι → R) 
+  (i : ι) : R := 
+  ∑ j, weights j * x (indexAction j i) + bias i
+
+variable {κ}
+
+
+#generate_revCDeriv' convolutionLazy weights bias x | i
+  prop_by unfold convolutionLazy; fprop
+  trans_by 
+    unfold convolutionLazy
+    autodiff
+
+#eval 0
+
+#check convolutionLazy.arg_weightsbiasx_i.revCDeriv
+
+def conv2d {m₁ m₂ n₁ n₂} [Nonempty (Idx n₁)] [Nonempty (Idx n₂)]
+  (weights : R ^ (Idx m₁ × Idx m₂)) (bias : R ^ (Idx n₁ × Idx n₂)) (x : R ^ (Idx n₁ × Idx n₂)) 
+  : R ^ (Idx n₁ × Idx n₂) := 
+  introElem fun ij => convolutionLazy (Idx m₁ × Idx m₂) idx2Shift (fun i => weights[i]) (fun i => bias[i]) (fun i => x[i]) ij
+
+
+#generate_revCDeriv' conv2d weights bias x
+  prop_by unfold conv2d; fprop
+  trans_by 
+    unfold conv2d
+    autodiff
+
+-- #check fun (n : Nat) ≃> n +ᵥ n
+
 variable (α κ) 
 
 def convolution 
-  (indexAction : κ → ι≃ι) (weights : DataArrayN K (α×κ)) 
-  (bias : DataArrayN K (α×β×ι)) (x : DataArrayN K (β×ι)) 
-  : DataArrayN K ((α×β)×ι) := 
-  introElem fun ((a,b),i) => ∑ j, weights[(a,j)] * x[(b, indexAction j • i)] + bias[(a,b,i)]
+  (indexAction : κ → ι≃ι) (weights : DataArrayN R (α×κ)) 
+  (bias : DataArrayN R (α×β×ι)) (x : DataArrayN R (β×ι)) 
+  : DataArrayN R ((α×β)×ι) := 
+  introElem fun ((a,b),i) => ∑ j, weights[(a,j)] * x[(b, indexAction j i)] + bias[(a,b,i)]
 
 variable {α κ}
 
 /-- **WARNING**: This works correctly only for `op := ·+·` right now -/
-def pool [EnumType κ'] (split : ι ≃ κ×κ') (op : K → K → K) (x : DataArrayN K (β×ι)) : DataArrayN K (β×κ) := 
+def pool [EnumType κ'] (split : ι ≃ κ×κ') (op : R → R → R) (x : DataArrayN R (β×ι)) : DataArrayN R (β×κ) := 
   introElem fun (b,j) => Id.run do
       let mut val := 0
       for j' in fullRange κ' do
@@ -218,7 +250,7 @@ def relu (ε x : R) := x - Scalar.sqrt (x*x + ε)
 
 def mnits_model := 
   fun (w₁,b₁,w₂,b₂,w₃,b₃) (x : DataArrayN R (Unit×(Idx 28 × Idx 28))) => 
-    x |> convolution (Idx 32) (Idx 3 × Idx 3) idx2Action w₁ b₁
+    x |> convolution (Idx 32) (Idx 3 × Idx 3) idx2Shift w₁ b₁
       |> ArrayType.map (fun x : R => x - Scalar.abs x)
       |> pool (idx2Split2 (by native_decide)) (·+·)
       |> dense (Idx 100) w₂ b₂
