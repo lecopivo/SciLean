@@ -2,11 +2,11 @@ import Lean
 
 open Lean System IO 
 
-def profileFile (file : FilePath) (flame : FilePath := "/home/tskrivan/Documents/Flame/build/bin/flame") : IO Unit := do
+def profileFile (file : FilePath) (flame : FilePath := "/home/tskrivan/Documents/Flame/build/bin/flame") (threshold : Nat := 5) : IO Unit := do
 
   let compile_output ← IO.Process.output {
     cmd := "lake"
-    args := #["env", "lean", "-D", "trace.profiler=true", "-D", "pp.oneline=true", "-D", "trace.profiler.threshold=5", file.toString]
+    args := #["env", "lean", "-D", "trace.profiler=true", "-D", "pp.oneline=true", "-D", s!"trace.profiler.threshold={threshold}", file.toString]
     env := #[("LEAN_DISABLE_PROFILE_FILE", "1")]
   }
 
@@ -64,6 +64,17 @@ elab " #profile_this_file " : command => do
     let ctx ← readThe Elab.Command.Context
     IO.println s!"Profiling file: {ctx.fileName}!"
     profileFile ctx.fileName
+  else
+    let ctx ← readThe Elab.Command.Context
+    IO.println s!"Attempting to profile: {ctx.fileName} but profiling is disabled!"
+
+
+elab " #profile_this_file " threshold:num : command => do
+
+  if (← IO.getEnv "LEAN_DISABLE_PROFILE_FILE").isNone then
+    let ctx ← readThe Elab.Command.Context
+    IO.println s!"Profiling file: {ctx.fileName}!"
+    profileFile ctx.fileName (threshold:=threshold.getNat)
   else
     let ctx ← readThe Elab.Command.Context
     IO.println s!"Attempting to profile: {ctx.fileName} but profiling is disabled!"
