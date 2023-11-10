@@ -23,8 +23,8 @@ info: fun ij1 y =>
 
 /--
 info: fun ij1 y =>
-  let ij0' := fun ij2 => Function.invFun (fun ij0 => ij0 + ij2) y.fst;
-  let ij2' := fun ij1 => Function.invFun (fun ij2 => ij1 + ij0' ij2 + ij2) y.snd;
+  let ij0' := fun ij2 => Function.invFun (fun ij0 => ij0 + ij2) y.1;
+  let ij2' := fun ij1 => Function.invFun (fun ij2 => ij1 + ij0' ij2 + ij2) y.2;
   let ij2'' := ij2' ij1;
   let ij0'' := ij0' ij2'';
   (ij0'', ij1, ij2'')
@@ -35,10 +35,10 @@ info: fun ij1 y =>
   let f := q(fun ij : Int × Int × Int => (ij.1 + ij.2.2, ij.2.1 + ij.1 + ij.2.2))
   let .some (.right f', _) ← structuralInverse f
     | throwError "failed to invert"
-  IO.println (← ppExpr f'.invFun)  
+  IO.println (← ppExpr f'.invFun) 
 
 /-- 
-info: fun ij1 y => (y.snd, ij1, y.fst)
+info: fun ij1 y => (y.2, ij1, y.1)
 -/
 #guard_msgs in
 #eval show MetaM Unit from do
@@ -48,7 +48,7 @@ info: fun ij1 y => (y.snd, ij1, y.fst)
   IO.println (← ppExpr f'.invFun)  
 
 /-- 
-info: fun y => (y.snd.fst, y.snd.snd, y.fst)
+info: fun y => (y.2.1, y.2.2, y.1)
 -/
 #guard_msgs in
 #eval show MetaM Unit from do
@@ -60,8 +60,8 @@ info: fun y => (y.snd.fst, y.snd.snd, y.fst)
 
 /--
 info: fun x1 y =>
-  let x0' := fun x1 => Function.invFun (fun x0 => x0 + x1) y.snd;
-  let x2' := fun x1 => Function.invFun (fun x2 => x0' x1 + x1 + x2) y.fst;
+  let x0' := fun x1 => Function.invFun (fun x0 => x0 + x1) y.2;
+  let x2' := fun x1 => Function.invFun (fun x2 => x0' x1 + x1 + x2) y.1;
   let x2'' := x2' x1;
   let x0'' := x0' x1;
   (x0'', x1, x2'')
@@ -78,7 +78,7 @@ info: fun x1 y =>
 
 
 /--
-info: fun x1 y => (y.snd, x1, y.fst)
+info: fun x1 y => (y.2, x1, y.1)
 -/
 #guard_msgs in
 #eval show MetaM Unit from do

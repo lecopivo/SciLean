@@ -62,7 +62,7 @@ by
            =
            fun _ => fun dx =>L[K] dx i := sorry_proof -- by apply fderiv.proj_rule 
   rw[h]
-  dsimp; ftrans only; simp
+  dsimp; ftrans only; sorry_proof -- do not understand why simp does not solve this
 variable {E}
 
 theorem comp_rule 

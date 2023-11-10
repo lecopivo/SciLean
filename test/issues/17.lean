@@ -10,7 +10,7 @@ variable
 set_default_scalar K
 
 /--
-info: (∂> (x':=x;dx), f x').snd : Y
+info: (∂> (x':=x;dx), f x').2 : Y
 -/
 #guard_msgs in
 #check 

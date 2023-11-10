@@ -32,9 +32,12 @@ def traceSimpCall (stx : Syntax) (usedSimps : Simp.UsedSimps) : MetaM Unit := do
   let env ← getEnv
   for (thm, _) in usedSimps.toArray.qsort (·.2 < ·.2) do
     match thm with
-    | .decl declName => -- global definitions in the environment
-      if env.contains declName && !simpOnlyBuiltins.contains declName then
-        args := args.push (← `(Parser.Tactic.simpLemma| $(mkIdent (← unresolveNameGlobal declName)):ident))
+    | .decl declName inv => -- global definitions in the environment
+      if env.contains declName && (inv || !simpOnlyBuiltins.contains declName) then
+        args := args.push (if inv then
+          (← `(Parser.Tactic.simpLemma| ← $(mkIdent (← unresolveNameGlobal declName)):ident))
+        else
+          (← `(Parser.Tactic.simpLemma| $(mkIdent (← unresolveNameGlobal declName)):ident)))
     | .fvar fvarId => -- local hypotheses in the context
       if let some ldecl := lctx.find? fvarId then
         localsOrStar := localsOrStar.bind fun locals =>

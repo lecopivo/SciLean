@@ -31,7 +31,7 @@ instance : RevDerivMonad K Id Id where
   revDerivM f := revCDeriv K f
   HasAdjDiffM f := HasAdjDiff K f
   revDerivM_pure f := by simp[pure]
-  revDerivM_bind := by intros; simp; ftrans
+  revDerivM_bind := by intros; simp; ftrans; rfl
   revDerivM_pair y := by intros; simp; ftrans
   HasAdjDiffM_pure := by simp[pure]
   HasAdjDiffM_bind := by simp[bind]; fprop

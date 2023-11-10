@@ -50,7 +50,7 @@ info: mymul.arg_y.revCDeriv_rule_def.{w, u} {K : Type u} [instK : IsROrC K] {W :
   (x : K) (y : W → K) (hy : HasAdjDiff K y) :
   <∂ w, mymul x (y w) = fun w =>
     let ydy' := <∂ y w;
-    mymul.arg_y.revCDeriv x ydy'.fst ydy'.snd
+    mymul.arg_y.revCDeriv x ydy'.1 ydy'.2
 -/
 #guard_msgs in
 #check mymul.arg_y.revCDeriv_rule_def
@@ -62,7 +62,7 @@ info: mymul.arg_xy.revCDeriv_rule_def.{w, u} {K : Type u} [instK : IsROrC K] {W 
   <∂ w, mymul (x w) (y w) = fun w =>
     let xdx' := <∂ x w;
     let ydy' := <∂ y w;
-    mymul.arg_xy.revCDeriv xdx'.fst ydy'.fst xdx'.snd ydy'.snd
+    mymul.arg_xy.revCDeriv xdx'.1 ydy'.1 xdx'.2 ydy'.2
 -/
 #guard_msgs in
 #check mymul.arg_xy.revCDeriv_rule_def
@@ -74,7 +74,7 @@ info: mymul.arg_xy.fwdCDeriv_rule_def.{w, u} {K : Type u} [instK : IsROrC K] {W 
   ∂> w, mymul (x w) (y w) = fun w dw =>
     let xdx := ∂> x w dw;
     let ydy := ∂> y w dw;
-    mymul.arg_xy.fwdCDeriv xdx.fst ydy.fst xdx.snd ydy.snd
+    mymul.arg_xy.fwdCDeriv xdx.1 ydy.1 xdx.2 ydy.2
 -/
 #guard_msgs in
 #check mymul.arg_xy.fwdCDeriv_rule_def

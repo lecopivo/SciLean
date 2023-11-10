@@ -430,7 +430,7 @@ private def mkLetCongrEq (h₁ h₂ : Expr) : MetaM Expr :=
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
   withTraceNode `lsimp (fun _ => do pure s!"lsimp") do
-  checkMaxHeartbeats "simp"
+  checkSystem "simp"
   let cfg ← Simp.getConfig
   if (← isProof e) then
     return { expr := e }

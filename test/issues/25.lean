@@ -25,4 +25,4 @@ by
   -- failed to synthesize
   --   SemiInnerProductSpace K (X → X)
   -- ftrans 
-  sorry
+  sorry_proof

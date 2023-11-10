@@ -59,7 +59,7 @@ theorem comp_rule
       let zdz := fwdFDeriv K f ydy.1 ydy.2 
       zdz :=
 by
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 theorem let_rule 
@@ -72,7 +72,7 @@ theorem let_rule
       let zdz := fwdFDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
       zdz :=
 by
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 theorem pi_rule
@@ -95,7 +95,7 @@ theorem comp_rule_at
       let zdz := fwdFDeriv K f ydy.1 ydy.2 
       zdz :=
 by
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 theorem let_rule_at
@@ -108,7 +108,7 @@ theorem let_rule_at
       let zdz := fwdFDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
       zdz :=
 by
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 theorem pi_rule_at  
@@ -408,7 +408,7 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule_at
       let zdz := (fwdFDeriv K g x dx)
       (ydy.1 * zdz.1, zdz.2 * ydy.1 + ydy.2 * zdz.1) :=
 by 
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 @[ftrans]
@@ -423,7 +423,7 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule
       let zdz := (fwdFDeriv K g x dx)
       (ydy.1 * zdz.1, zdz.2 * ydy.1 + ydy.2 * zdz.1) :=
 by 
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 -- HSMul.hSMul -------------------------------------------------------------------
@@ -440,7 +440,7 @@ theorem HSMul.hSMul.arg_a0a1.fwdFDeriv_rule_at
       let zdz := (fwdFDeriv K g x dx)
       (ydy.1 • zdz.1, ydy.1 • zdz.2 + ydy.2 • zdz.1) :=
 by 
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 @[ftrans]
@@ -454,7 +454,7 @@ theorem HSMul.hSMul.arg_a0a1.fwdFDeriv_rule
       let zdz := (fwdFDeriv K g x dx)
       (ydy.1 • zdz.1, ydy.1 • zdz.2 + ydy.2 • zdz.1) :=
 by 
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
@@ -472,7 +472,7 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at
       let zdz := (fwdFDeriv R g x dx)
       (ydy.1 / zdz.1, (ydy.2 * zdz.1 - ydy.1 * zdz.2) / zdz.1^2) :=
 by 
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 @[ftrans]
@@ -487,7 +487,7 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule
       let zdz := (fwdFDeriv R g x dx)
       (ydy.1 / zdz.1, (ydy.2 * zdz.1 - ydy.1 * zdz.2) / zdz.1^2) :=
 by 
-  unfold fwdFDeriv; ftrans
+  unfold fwdFDeriv; ftrans; simp
 
 
 -- HPow.hPow -------------------------------------------------------------------
