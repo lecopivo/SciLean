@@ -128,7 +128,6 @@ theorem ForInStep.yield.arg_a0.fwdCDeriv_rule
     fun x dx => ForInStep.return2Inv (ForInStep.yield (fwdCDeriv K a0 x dx))
   := by sorry_proof
 
-
 @[fprop]
 theorem ForInStep.done.arg_a0.IsDifferentiable_rule
   (a0 : X → Y) (ha0 : IsDifferentiable K a0)
@@ -261,10 +260,25 @@ theorem ForInStep.yield.arg_a0.HasAdjDiff_rule
   (a0 : X → Y) (ha0 : HasAdjDiff K a0)
   : HasAdjDiff K fun x => ForInStep.yield (a0 x) := by sorry_proof
 
+@[fprop]
+theorem ForInStep.yield.arg_a0.HasAdjDiffM_rule
+  (a0 : X → Y) (ha0 : HasAdjDiff K a0)
+  : HasAdjDiffM (m:=Id) K fun x => ForInStep.yield (a0 x) := by sorry_proof
+
 @[ftrans]
 theorem ForInStep.yield.arg_a0.revCDeriv_rule
   (a0 : X → Y) (ha0 : HasAdjDiff K a0)
   : revCDeriv K (fun x => ForInStep.yield (a0 x))
+    =
+    fun x => 
+      let ydf := revCDeriv K a0 x
+      (.yield ydf.1, fun y => ydf.2 y.val)
+  := by sorry_proof
+
+@[ftrans]
+theorem ForInStep.yield.arg_a0.revDerivM_rule
+  (a0 : X → Y) (ha0 : HasAdjDiff K a0)
+  : revDerivM (m:=Id) K (fun x => ForInStep.yield (a0 x))
     =
     fun x => 
       let ydf := revCDeriv K a0 x
@@ -276,10 +290,25 @@ theorem ForInStep.done.arg_a0.HasAdjDiff_rule
   (a0 : X → Y) (ha0 : HasAdjDiff K a0)
   : HasAdjDiff K fun x => ForInStep.done (a0 x) := by sorry_proof
 
+@[fprop]
+theorem ForInStep.done.arg_a0.HasAdjDiffM_rule
+  (a0 : X → Y) (ha0 : HasAdjDiff K a0)
+  : HasAdjDiffM (m:=Id) K fun x => ForInStep.done (a0 x) := by sorry_proof
+
 @[ftrans]
 theorem ForInStep.done.arg_a0.revCDeriv_rule
   (a0 : X → Y) (ha0 : HasAdjDiff K a0)
   : revCDeriv K (fun x => ForInStep.done (a0 x))
+    =
+    fun x => 
+      let ydf := revCDeriv K a0 x
+      (.done ydf.1, fun y => ydf.2 y.val)
+  := by sorry_proof
+
+@[ftrans]
+theorem ForInStep.done.arg_a0.revDerivM_rule
+  (a0 : X → Y) (ha0 : HasAdjDiff K a0)
+  : revDerivM (m:=Id) K (fun x => ForInStep.done (a0 x))
     =
     fun x => 
       let ydf := revCDeriv K a0 x
