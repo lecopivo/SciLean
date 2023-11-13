@@ -364,11 +364,16 @@ def ftransExt : FTransExt where
 
   constRule e X y := do
     let .some K := e.getArg? 0 | return none
+    let .some m := e.getArg? 2 | return none
     let .some m' := e.getArg? 3 | return none
     let .some M' := e.getArg? 5 | return none
     let .some RDM := e.getArg? 6 | return none
+    let .some Y := e.getArg? 8 | return none
 
-    let prf ← mkAppOptM ``const_rule #[K, none, none, m', none, M', RDM, none, X, none, none, none, y]
+
+    let prf ← mkAppOptM ``const_rule #[K, none, m, m', none, M', RDM, none, X, none, Y, none]
+    -- this is a hack to deal with Id monad
+    let prf := prf.app y
 
     tryTheorems
       #[ { proof := prf, origin := .decl ``const_rule, rfl := false} ]
