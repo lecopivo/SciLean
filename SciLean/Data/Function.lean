@@ -32,7 +32,11 @@ def Function.joinlD (f : ι → α) (op : α → α → α) (default : α) : α 
   return a
 
 
-/-- Reverse derivative of `Function.foldl` using arrays
+/-- Reverse derivative of `Function.foldl` w.r.t. `f` and `init`. It is implemented using `Array`.
+
+  TODO: 
+    1. needs beter implementation but that requires refining EnumType and Index
+    2. add a version with DataArray
 -/
 def Function.foldl.revDeriv_arrayImpl {α β : Type} [Add α] [Add β] [ToString β] 
   (f : ι → α) (op : β → α → β) (dop : β → α → β → β×α) (init : β) : β × (β → Array α×β) := Id.run do
