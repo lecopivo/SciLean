@@ -556,6 +556,36 @@ by
   unfold fwdCDeriv; ftrans
 
 
+-- d/ite -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans]
+theorem ite.arg_te.fwdCDeriv_rule
+  (c : Prop) [dec : Decidable c] (t e : X → Y)
+  : fwdCDeriv K (fun x => ite c (t x) (e x))
+    =
+    fun y =>
+      ite c (fwdCDeriv K t y) (fwdCDeriv K e y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]; simp[h]
+  case isFalse h => ext y; simp[h]; simp[h]
+
+@[ftrans]
+theorem dite.arg_te.fwdCDeriv_rule
+  (c : Prop) [dec : Decidable c]
+  (t : c  → X → Y) (e : ¬c → X → Y)
+  : fwdCDeriv K (fun x => dite c (t · x) (e · x))
+    =
+    fun y =>
+      dite c (fun p => fwdCDeriv K (t p) y) 
+             (fun p => fwdCDeriv K (e p) y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]; simp[h]
+  case isFalse h => ext y; simp[h]; simp[h]
+
+
 --------------------------------------------------------------------------------
 
 section InnerProductSpace

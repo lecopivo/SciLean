@@ -1148,6 +1148,35 @@ by
   sorry_proof
 
 
+-- d/ite -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans]
+theorem ite.arg_te.revCDeriv_rule
+  (c : Prop) [dec : Decidable c] (t e : X → Y)
+  : revCDeriv K (fun x => ite c (t x) (e x))
+    =
+    fun y =>
+      ite c (revCDeriv K t y) (revCDeriv K e y) := 
+by
+  induction dec
+  case isTrue h  => ext y <;> simp[h]
+  case isFalse h => ext y <;> simp[h]
+
+@[ftrans]
+theorem dite.arg_te.revCDeriv_rule
+  (c : Prop) [dec : Decidable c]
+  (t : c  → X → Y) (e : ¬c → X → Y)
+  : revCDeriv K (fun x => dite c (t · x) (e · x))
+    =
+    fun y =>
+      dite c (fun p => revCDeriv K (t p) y) 
+             (fun p => revCDeriv K (e p) y) := 
+by
+  induction dec
+  case isTrue h  => ext y <;> simp[h]
+  case isFalse h => ext y <;> simp[h]
+
 
 --------------------------------------------------------------------------------
 

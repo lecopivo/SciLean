@@ -369,6 +369,31 @@ by
   have := fun i => (hf i).1
   constructor; fprop; ftrans; fprop
 
+-- d/ite -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+theorem ite.arg_te.HasAdjDiff_rule
+  (c : Prop) [dec : Decidable c] (t e : X → Y)
+  (ht : HasAdjDiff K t) (he : HasAdjDiff K e)
+  : HasAdjDiff K (fun x => ite c (t x) (e x)) :=
+by
+  induction dec
+  case isTrue h  => simp[ht,h]
+  case isFalse h => simp[he,h]
+
+@[fprop]
+theorem dite.arg_te.HasAdjDiff_rule
+  (c : Prop) [dec : Decidable c]
+  (t : c → X → Y) (e : ¬c → X → Y)
+  (ht : ∀ h, HasAdjDiff K (t h)) (he : ∀ h, HasAdjDiff K (e h))
+  : HasAdjDiff K (fun x => dite c (t · x) (e · x)) :=
+by
+  induction dec
+  case isTrue h  => simp[ht,h]
+  case isFalse h => simp[he,h]
+
+
 
 --------------------------------------------------------------------------------
 

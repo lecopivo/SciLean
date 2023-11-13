@@ -574,3 +574,56 @@ by
 
   rw [FwdDerivMonad.fwdDerivM_bind _ _ hf hg]
   simp [FwdDerivMonad.fwdDerivM_pair a0 ha0]
+
+
+-- d/ite -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+theorem ite.arg_te.IsDifferentiableM_rule
+  (c : Prop) [dec : Decidable c] (t e : X → m Y)
+  (ht : IsDifferentiableM K t) (he : IsDifferentiableM K e)
+  : IsDifferentiableM K (fun x => ite c (t x) (e x)) :=
+by
+  induction dec
+  case isTrue h  => simp[ht,h]
+  case isFalse h => simp[he,h]
+
+
+@[ftrans]
+theorem ite.arg_te.fwdDerivM_rule
+  (c : Prop) [dec : Decidable c] (t e : X → m Y)
+  : fwdDerivM K (fun x => ite c (t x) (e x))
+    =
+    fun y =>
+      ite c (fwdDerivM K t y) (fwdDerivM K e y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]
+  case isFalse h => ext y; simp[h]
+
+
+@[fprop]
+theorem dite.arg_te.IsDifferentiableM_rule
+  (c : Prop) [dec : Decidable c]
+  (t : c → X → m Y) (e : ¬c → X → m Y)
+  (ht : ∀ h, IsDifferentiableM K (t h)) (he : ∀ h, IsDifferentiableM K (e h))
+  : IsDifferentiableM K (fun x => dite c (fun h => t h x) (fun h => e h x)) :=
+by
+  induction dec
+  case isTrue h  => simp[ht,h]
+  case isFalse h => simp[he,h]
+
+
+@[ftrans]
+theorem dite.arg_te.fwdDerivM_rule
+  (c : Prop) [dec : Decidable c] 
+  (t : c → X → m Y) (e : ¬c → X → m Y)
+  : fwdDerivM K (fun x => dite c (fun h => t h x) (fun h => e h x))
+    =
+    fun y =>
+      dite c (fun h => fwdDerivM K (t h) y) (fun h => fwdDerivM K (e h) y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]
+  case isFalse h => ext y; simp[h]

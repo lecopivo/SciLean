@@ -600,3 +600,57 @@ by
 
   rw [RevDerivMonad.revDerivM_bind _ _ hf hg]
   simp [RevDerivMonad.revDerivM_pair a0 ha0]
+
+
+
+-- d/ite -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+theorem ite.arg_te.HasAdjDiffM_rule
+  (c : Prop) [dec : Decidable c] (t e : X → m Y)
+  (ht : HasAdjDiffM K t) (he : HasAdjDiffM K e)
+  : HasAdjDiffM K (fun x => ite c (t x) (e x)) :=
+by
+  induction dec
+  case isTrue h  => simp[ht,h]
+  case isFalse h => simp[he,h]
+
+
+@[ftrans]
+theorem ite.arg_te.revDerivM_rule
+  (c : Prop) [dec : Decidable c] (t e : X → m Y)
+  : revDerivM K (fun x => ite c (t x) (e x))
+    =
+    fun y =>
+      ite c (revDerivM K t y) (revDerivM K e y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]
+  case isFalse h => ext y; simp[h]
+
+
+@[fprop]
+theorem dite.arg_te.HasAdjDiffM_rule
+  (c : Prop) [dec : Decidable c]
+  (t : c → X → m Y) (e : ¬c → X → m Y)
+  (ht : ∀ h, HasAdjDiffM K (t h)) (he : ∀ h, HasAdjDiffM K (e h))
+  : HasAdjDiffM K (fun x => dite c (fun h => t h x) (fun h => e h x)) :=
+by
+  induction dec
+  case isTrue h  => simp[ht,h]
+  case isFalse h => simp[he,h]
+
+
+@[ftrans]
+theorem dite.arg_te.revDerivM_rule
+  (c : Prop) [dec : Decidable c] 
+  (t : c → X → m Y) (e : ¬c → X → m Y)
+  : revDerivM K (fun x => dite c (fun h => t h x) (fun h => e h x))
+    =
+    fun y =>
+      dite c (fun h => revDerivM K (t h) y) (fun h => revDerivM K (e h) y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]
+  case isFalse h => ext y; simp[h]

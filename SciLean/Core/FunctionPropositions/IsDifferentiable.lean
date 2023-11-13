@@ -328,6 +328,30 @@ theorem SciLean.EnumType.sum.arg_f.IsDifferentiable_rule
 by
   sorry_proof
 
+-- d/ite -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+theorem ite.arg_te.IsDifferentiable_rule
+  (c : Prop) [dec : Decidable c] (t e : X → Y)
+  (ht : IsDifferentiable K t) (he : IsDifferentiable K e)
+  : IsDifferentiable K (fun x => ite c (t x) (e x)) :=
+by
+  induction dec
+  case isTrue h  => simp[ht,h]
+  case isFalse h => simp[he,h]
+
+@[fprop]
+theorem dite.arg_te.IsDifferentiable_rule
+  (c : Prop) [dec : Decidable c]
+  (t : c → X → Y) (e : ¬c → X → Y)
+  (ht : ∀ h, IsDifferentiable K (t h)) (he : ∀ h, IsDifferentiable K (e h))
+  : IsDifferentiable K (fun x => dite c (t · x) (e · x)) :=
+by
+  induction dec
+  case isTrue h  => simp[ht,h]
+  case isFalse h => simp[he,h]
+
 
 --------------------------------------------------------------------------------
 

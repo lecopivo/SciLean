@@ -632,6 +632,37 @@ by
   funext x; apply SciLean.EnumType.sum.arg_f.cderiv_rule_at f x (fun i => hf i x)
 
 
+-- d/ite -----------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[ftrans]
+theorem ite.arg_te.cderiv_rule
+  (c : Prop) [dec : Decidable c] (t e : X → Y)
+  : cderiv K (fun x => ite c (t x) (e x))
+    =
+    fun y =>
+      ite c (cderiv K t y) (cderiv K e y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]
+  case isFalse h => ext y; simp[h]
+
+@[ftrans]
+theorem dite.arg_te.cderiv_rule
+  (c : Prop) [dec : Decidable c]
+  (t : c  → X → Y) (e : ¬c → X → Y)
+  : cderiv K (fun x => dite c (t · x) (e · x))
+    =
+    fun y =>
+      dite c (fun p => cderiv K (t p) y) 
+             (fun p => cderiv K (e p) y) := 
+by
+  induction dec
+  case isTrue h  => ext y; simp[h]
+  case isFalse h => ext y; simp[h]
+
+
+
 --------------------------------------------------------------------------------
 
 section InnerProductSpace
