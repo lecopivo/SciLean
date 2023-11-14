@@ -48,11 +48,11 @@ def DataArray.set (arr : DataArray α) (i : Idx arr.size) (val : α) : DataArray
 /-- Capacity of an array. The return type is `Squash Nat` as the capacity is is just an implementation detail and should not affect semantics of the program. -/
 def DataArray.capacity (arr : DataArray α) : Squash USize := Quot.mk _ (pd.capacity (arr.byteData.size.toUSize))
 /-- Makes sure that `arr` fits at least `n` elements of `α` -/
-def DataArray.reserve  (arr : DataArray α) (n : USize) : DataArray α := 
-  if (pd.capacity (arr.byteData.size.toUSize)) ≤ n then
+def DataArray.reserve  (arr : DataArray α) (capacity : USize) : DataArray α := 
+  if (pd.capacity (arr.byteData.size.toUSize)) ≤ capacity then
     arr
   else Id.run do
-    let newBytes := pd.bytes n
+    let newBytes := pd.bytes capacity
     let mut arr' : DataArray α := ⟨ByteArray.mkEmpty newBytes.toNat, arr.size, sorry_proof⟩
     -- copy over the old data
     for i in fullRange (Idx arr.size) do
@@ -60,10 +60,17 @@ def DataArray.reserve  (arr : DataArray α) (n : USize) : DataArray α :=
       arr' := arr'.set i (arr.get i)
     arr'
 
+def DataArray.mkEmpty (capacity : USize) : DataArray α := Id.run do
+  let mut a : DataArray α :=
+    { byteData := .mkEmpty 0
+      size := 0
+      h_size := by sorry_proof }
+  a.reserve capacity
+
 
 def DataArray.drop (arr : DataArray α) (k : USize) : DataArray α := ⟨arr.byteData, arr.size - k, sorry_proof⟩
 
-def DataArray.push (arr : DataArray α) (k : USize := 1) (val : α) : DataArray α := Id.run do
+def DataArray.push (arr : DataArray α) (val : α) (k : USize := 1) : DataArray α := Id.run do
   let oldSize := arr.size
   let newSize := arr.size + k
   let mut arr' := arr.reserve newSize
@@ -77,6 +84,22 @@ def DataArray.push (arr : DataArray α) (k : USize := 1) (val : α) : DataArray 
 Currently this is inconsistent, we need to turn DataArray into quotient!
 -/
 theorem DataArray.ext (d d' : DataArray α) : (h : d.size = d'.size) → (∀ i, d.get i = d'.get (h ▸ i)) → d = d' := sorry_proof
+
+def DataArray.swap (arr : DataArray α) (i j : Idx arr.size) : DataArray α := 
+  let ai := arr.get i
+  let aj := arr.get j
+  let arr := arr.set i aj
+  let arr := arr.set ⟨j.1, sorry_proof⟩ ai
+  arr
+
+def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
+  let mut arr := arr
+  let n := arr.size 
+  for i in [0:n.toNat/2] do
+    let i' : Idx arr.size := ⟨i.toUSize, sorry_proof⟩
+    let j' : Idx arr.size := ⟨n - i.toUSize - 1, sorry_proof⟩
+    arr := arr.swap i' j'
+  arr
 
 @[irreducible]
 def DataArray.intro (f : ι → α) : DataArray α := Id.run do
@@ -115,9 +138,8 @@ instance : ArrayType (DataArrayN α ι) ι α  where
 
 instance : ArrayTypeNotation (DataArrayN α ι) ι α := ⟨⟩
 
--- These instance might clasth with previous ones
 instance : PushElem (λ n => DataArrayN α (Idx n)) α where
-  pushElem k val xs := ⟨xs.1.push k val, sorry_proof⟩
+  pushElem k val xs := ⟨xs.1.push val k, sorry_proof⟩
 
 instance : DropElem (λ n => DataArrayN α (Idx n)) α where
   dropElem k xs := ⟨xs.1.drop k, sorry_proof⟩
@@ -132,7 +154,7 @@ instance : LinearArrayType (λ n => DataArrayN α (Idx n)) α where
   reserveElem_id := sorry_proof
 
 
-instance {Cont ι α : Type}  [ArrayType Cont ι α] [Index ι] [Inhabited α] [pd : PlainDataType α] : PlainDataType Cont where
+instance {Cont ι α : Type} [ArrayType Cont ι α] [Index ι] [Inhabited α] [pd : PlainDataType α] : PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType => 
       -- TODO: Fixme !!!!
