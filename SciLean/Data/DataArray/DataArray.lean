@@ -5,6 +5,14 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
+#check Array.mkArray
+
+def _root_.ByteArray.mkArray (n : Nat) (v : UInt8) : ByteArray := Id.run do
+  let mut a : ByteArray := .mkEmpty n
+  for i in [0:n] do
+    a := a.push v
+  a
+
 -- TODO: Quotient it out by trailing bits
 structure DataArray (α : Type) [pd : PlainDataType α] where
   byteData : ByteArray
@@ -49,24 +57,21 @@ def DataArray.set (arr : DataArray α) (i : Idx arr.size) (val : α) : DataArray
 def DataArray.capacity (arr : DataArray α) : Squash USize := Quot.mk _ (pd.capacity (arr.byteData.size.toUSize))
 /-- Makes sure that `arr` fits at least `n` elements of `α` -/
 def DataArray.reserve  (arr : DataArray α) (capacity : USize) : DataArray α := 
-  if (pd.capacity (arr.byteData.size.toUSize)) ≤ capacity then
+  if capacity ≤ (pd.capacity (arr.byteData.size.toUSize)) then
     arr
   else Id.run do
     let newBytes := pd.bytes capacity
-    let mut arr' : DataArray α := ⟨ByteArray.mkEmpty newBytes.toNat, arr.size, sorry_proof⟩
+    let mut arr' : DataArray α := ⟨ByteArray.mkArray newBytes.toNat 0, arr.size, sorry_proof⟩
     -- copy over the old data
     for i in fullRange (Idx arr.size) do
-      arr' := ⟨arr'.byteData.push 0, arr.size, sorry_proof⟩
-      arr' := arr'.set i (arr.get i)
+      arr' := arr'.set ⟨i.1,sorry_proof⟩ (arr.get i)
     arr'
 
 def DataArray.mkEmpty (capacity : USize) : DataArray α := Id.run do
-  let mut a : DataArray α :=
-    { byteData := .mkEmpty 0
-      size := 0
-      h_size := by sorry_proof }
-  a.reserve capacity
-
+  let newBytes := pd.bytes capacity
+  { byteData := .mkArray newBytes.toNat 0
+    size := 0
+    h_size := by sorry_proof }
 
 def DataArray.drop (arr : DataArray α) (k : USize) : DataArray α := ⟨arr.byteData, arr.size - k, sorry_proof⟩
 
@@ -104,9 +109,7 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
 @[irreducible]
 def DataArray.intro (f : ι → α) : DataArray α := Id.run do
   let bytes := (pd.bytes (Index.size ι))
-  let mut d : ByteArray := ByteArray.mkEmpty bytes.toNat
-  for _ in fullRange (Idx bytes) do
-    d := d.push 0
+  let mut d : ByteArray := ByteArray.mkArray bytes.toNat 0
   let mut d' : DataArray α := ⟨d, (Index.size ι), sorry_proof⟩
   let mut li : USize := 0
   for i in fullRange ι do
@@ -191,4 +194,5 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [Index ι] [Inhabited α] [p
         fromByteArray_toByteArray := sorry_proof
         fromByteArray_toByteArray_other := sorry_proof
       }
+
 
