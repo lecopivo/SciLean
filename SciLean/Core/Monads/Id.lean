@@ -89,4 +89,69 @@ theorem Id.run.arg_x.revCDeriv_rule (a : X → Id Y)
     =
     fun x => (revDerivM K a x) := by rfl
 
+
+-- some normalizations for Id monad because it is pain in the ass to work with
+-- as one can often abuse defEq
+
+@[ftrans_simp]
+theorem revDerivM_eq_revCDeriv_on_Id (f : X → Y)
+  : revDerivM (m:=Id) K f = fun x => pure (revCDeriv K f x) := by rfl
+
+@[ftrans_simp]
+theorem revDerivM_eq_revCDeriv_on_Id' (f : X → Id Y)
+  : revDerivM K f = revCDeriv K f := by set_option pp.all true in rfl
+
+@[fprop]
+theorem Pure.pure.arg_a0.HasAdjDiff_rule
+  (a0 : X → Y)
+  (ha0 : HasAdjDiff K a0) 
+  : HasAdjDiff K (fun x => Pure.pure (f:=Id) (a0 x)) := 
+by 
+  simp[Pure.pure]; fprop
+
+@[fprop]
+theorem Bind.bind.arg_a0a1.HasAdjDiff_rule_on_Id
+  (a0 : X → Y) (a1 : X → Y → Z)
+  (ha0 : HasAdjDiff K a0) (ha1 : HasAdjDiff K (fun (x,y) => a1 x y))
+  : HasAdjDiff K (fun x => Bind.bind (m:=Id) (a0 x) (a1 x)) := by simp[Bind.bind]; fprop
+
+
+@[ftrans]
+theorem Bind.bind.arg_a0a1.revDerivM_rule_on_Id
+  (a0 : X → Y) (a1 : X → Y → Z)
+  (ha0 : HasAdjDiff K a0) (ha1 : HasAdjDiff K (fun (x,y) => a1 x y))
+  : (revDerivM (m:=Id) K (fun x => Bind.bind (a0 x) (a1 x)))
+    =
+    fun x => 
+      let ydg' := revCDeriv K a0 x
+      let zdf' := revCDeriv K (fun (x,y) => a1 x y) (x,ydg'.1)
+      (zdf'.1,
+       fun dz' => 
+         let dxy' := zdf'.2 dz'
+         let dx' := ydg'.2 dxy'.2
+         dxy'.1 + dx') := 
+by 
+  simp[revDerivM]; ftrans
+
+-- @[ftrans]
+-- This theorem causes some downstream issue in simp when applying congruence lemmas
+-- The issue seems that there is some defEq abuse that stop working
+theorem Bind.bind.arg_a0a1.revCDeriv_rule_on_Id
+  (a0 : X → Y) (a1 : X → Y → Z)
+  (ha0 : HasAdjDiff K a0) (ha1 : HasAdjDiff K (fun (x,y) => a1 x y))
+  : (revCDeriv K (fun x => Bind.bind (m:=Id) (a0 x) (a1 x)))
+    =
+    fun x => 
+      let ydg' := revCDeriv K a0 x
+      let zdf' := revCDeriv K (fun (x,y) => a1 x y) (x,ydg'.1)
+      (zdf'.1,
+       fun dz' => 
+         let dxy' := zdf'.2 dz'
+         let dx' := ydg'.2 dxy'.2
+         dxy'.1 + dx') := 
+by 
+  simp (config := {zeta:=false}) [Bind.bind]; ftrans; rfl
+
+
+
 end OnSemiInnerProductSpace

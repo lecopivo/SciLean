@@ -226,6 +226,34 @@ variable
   {W : Type _} [SemiInnerProductSpace K W]
 
 
+/-- Reverse pass of a for loop
+
+  See `Forin.arg_bf.revCDeriv_rule_dataArrayImpl` how it relates to reverse derivative of for loop.
+
+  -- WARNING: `dx'` and `dw` behave differently
+     - `df'` computes gradient in `dx'` 
+     - `df'` computes update to gradient in `dw` 
+  
+  The value of `df'` should be:
+    df' = fun w i x dx' dw => 
+      ((∇ (x':=x;dx'), f w i x'), (dw + ∇ (w':=w;dx'), f w' i x))
+
+  -/
+def ForIn.arg_bf.revPass_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
+  (df' : W → ι → X → X → W → X×W) (w : W) (xs : DataArray X) (dx' : X) : X×W := Id.run do
+  let n := Index.size ι
+  let mut dx' := dx'
+  let mut dw : W := 0
+  for i in [0:n.toNat] do
+    let j' : Idx n := ⟨n-i.toUSize-1,sorry_proof⟩
+    let j : ι := fromIdx j'
+    let xj := xs.get ⟨j'.1, sorry_proof⟩
+    let dxw' := df' w j xj dx' dw
+    dx' := dxw'.1
+    dw := dxw'.2
+  (dx',dw)
+
+
 /--
   -- WARNING: `dx'` and `dw` behave differently
      - `df'` computes gradient in `dx'` 
@@ -238,30 +266,16 @@ variable
 def ForIn.arg_bf.revDeriv_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
   (init : X) (f : W → ι → X → X) (df' : W → ι → X → X → W → X×W) (w : W)
   : X×(X→X×W) :=
-  let n := Index.size ι
-  if n = 0 then
-    (init, fun _ => 0)
-  else Id.run do
+  Id.run do
+    let n := Index.size ι
     -- forward pass
     let mut xs : DataArray X := .mkEmpty n
     let mut x := init
     for i in fullRange ι do
       xs := xs.push x
       x := f w i x
-    (x, fun dx' => Id.run do
-      -- backward pass
-      -- TODO: implemente reverse ranges!
-      let mut dx' := dx'
-      let mut dw : W := 0
-      for i in [0:n.toNat] do
-        let j' : Idx n := ⟨n-i.toUSize-1,sorry_proof⟩
-        let j : ι := fromIdx j'
-        let xj := xs.get ⟨j'.1, sorry_proof⟩
-        let (dx'',dw') := df' w j xj dx' dw
-        dx' := dx''
-        dw := dw'
-      (dx',dw))
-
+    (x, fun dx' => ForIn.arg_bf.revPass_dataArrayImpl df' w xs dx')
+  
 
 @[ftrans]
 theorem ForIn.forIn.arg_bf.revDerivM_rule' [Index ι] [PlainDataType X] [PlainDataType W]
@@ -480,3 +494,5 @@ theorem Function.reduceD.arg_fdefault.revCDeriv_rule
 
 
 end OnSemiInnerProductSpace
+
+
