@@ -16,12 +16,81 @@ instance [Vec K X] : Vec K (ForInStep X) := sorry
 instance [SemiInnerProductSpace K X] : SemiInnerProductSpace K (ForInStep X) := sorry
 
 
+
+-- TODO: transport vec structure from Prod
+instance [Vec K X] [Vec K Y] : Vec K (MProd X Y) := sorry
+instance [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (MProd X Y) := sorry
+
+
+@[fprop]
+theorem _root_.MProd.mk.arg_fstsnd.HasAdjDiff_rule 
+  [SemiInnerProductSpace K W] [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
+  (f : W → X) (g : W → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : HasAdjDiff K (fun w => MProd.mk (f w) (g w)) := by sorry_proof
+
+
+@[ftrans]
+theorem _root_.MProd.mk.arg_fstsnd.revCDeriv_rule
+  [SemiInnerProductSpace K W] [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
+  (f : W → X) (g : W → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : revCDeriv K (fun w => MProd.mk (f w) (g w))
+    =
+    fun w => 
+      let xdf' := revCDeriv K f w
+      let ydg' := revCDeriv K g w
+      (MProd.mk xdf'.1 ydg'.1, 
+       fun dxy => 
+         xdf'.2 dxy.1 + ydg'.2 dxy.2) := 
+by 
+  sorry_proof
+
+
+@[fprop]
+theorem _root_.MProd.fst.arg_self.HasAdjDiff_rule 
+  [SemiInnerProductSpace K W] [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
+  (f : W → MProd X Y) (hf : HasAdjDiff K f)
+  : HasAdjDiff K (fun w => (f w).1) := by sorry_proof
+
+@[ftrans]
+theorem _root_.MProd.fst.arg_self.revCDeriv_rule 
+  [SemiInnerProductSpace K W] [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
+  (f : W → MProd X Y) (hf : HasAdjDiff K f)
+  : revCDeriv K (fun w => (f w).1)
+    =
+    fun w => 
+      let xydxy := revCDeriv K f w
+      (xydxy.1.1, fun dw => xydxy.2 (MProd.mk dw 0)) := by sorry_proof
+
+@[fprop]
+theorem _root_.MProd.snd.arg_self.HasAdjDiff_rule 
+  [SemiInnerProductSpace K W] [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
+  (f : W → MProd X Y) (hf : HasAdjDiff K f)
+  : HasAdjDiff K (fun w => (f w).2) := by sorry_proof
+
+@[ftrans]
+theorem _root_.MProd.snd.arg_self.revCDeriv_rule 
+  [SemiInnerProductSpace K W] [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
+  (f : W → MProd X Y) (hf : HasAdjDiff K f)
+  : revCDeriv K (fun w => (f w).2)
+    =
+    fun w => 
+      let xydxy := revCDeriv K f w
+      (xydxy.1.2, fun dw => xydxy.2 (MProd.mk 0 dw)) := by sorry_proof
+
+
 end SciLean
 open SciLean
 
 def ForInStep.val : ForInStep α → α
 | .yield a => a
 | .done  a => a
+
+
+@[simp, ftrans_simp]
+theorem ForInStep.val_yield (a : α) : ForInStep.val (.yield a) = a := by rfl
+
+@[simp, ftrans_simp]
+theorem ForInStep.val_done (a : α) : ForInStep.val (.done a) = a := by rfl
 
 
 /-- Turns a pair of values each with yield/done annotation into a pair with
@@ -51,13 +120,13 @@ theorem ForInStep.return2_return2Inv_done {α β} (x : α × β)
 section OnVec
 
 variable 
-  {K : Type _} [IsROrC K]
+  {K : Type} [IsROrC K]
   {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
-  {ρ : Type _} {α : Type _} [ForIn m ρ α] [ForIn m' ρ α] {β : Type _}
-  {X : Type _} [Vec K X]
-  {Y : Type _} [Vec K Y]
-  {Z : Type _} [Vec K Z]
+  {ρ : Type} {α : Type _} [ForIn m ρ α] [ForIn m' ρ α] {β : Type _}
+  {X : Type} [Vec K X]
+  {Y : Type} [Vec K Y]
+  {Z : Type} [Vec K Z]
 
 --------------------------------------------------------------------------------
 -- ForIn.forIn -----------------------------------------------------------------
@@ -164,6 +233,7 @@ theorem ForInStep.done.arg_a0.fwdCDeriv_rule
     fun x dx => ForInStep.return2Inv (ForInStep.done (fwdCDeriv K a0 x dx))
   := by sorry_proof
 
+
 end OnVec
 
 
@@ -173,14 +243,14 @@ end OnVec
 section OnSemiInnerProductSpace
 
 variable 
-  {K : Type _} [IsROrC K]
+  {K : Type} [IsROrC K]
   {m m'} [Monad m] [Monad m'] [RevDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
-  {ρ : Type _} {α : Type _} [ForIn m ρ α] [ForIn m' ρ α] {β : Type _}
-  {X : Type _} [SemiInnerProductSpace K X]
-  {Y : Type _} [SemiInnerProductSpace K Y]
-  {Z : Type _} [SemiInnerProductSpace K Z]
-  {W : Type _} [SemiInnerProductSpace K W]
+  {ρ : Type} {α : Type _} [ForIn m ρ α] [ForIn m' ρ α] {β : Type _}
+  {X : Type} [SemiInnerProductSpace K X]
+  {Y : Type} [SemiInnerProductSpace K Y]
+  {Z : Type} [SemiInnerProductSpace K Z]
+  {W : Type} [SemiInnerProductSpace K W]
 
 
 --------------------------------------------------------------------------------
@@ -231,6 +301,24 @@ by
   sorry_proof
 
 
+/-- Forward pass of a for loop implemented using `DataArray`
+  -/
+def ForIn.forIn.arg_bf.fwdPass_dataArrayImpl [Index ι] [PlainDataType X]
+  (init : X) (f : ι → X → ForInStep X)
+  : X×DataArray X := Id.run do
+  let n := Index.size ι
+
+  -- forward pass
+  let mut xs : DataArray X := .mkEmpty n
+  forIn (fullRange ι) (init, DataArray.mkEmpty (α:=X) n)
+    fun i (x,xs) =>
+      let xs := xs.push x
+      match f i x with
+      | .done x' => .done (x', xs)
+      | .yield x' => .yield (x', xs)
+
+
+
 /-- Reverse pass of a for loop implemented using `DataArray`
 
   See `Forin.arg_bf.revCDeriv_rule_dataArrayImpl` how it relates to reverse derivative of for loop.
@@ -245,7 +333,7 @@ by
     df' = fun w i x dx' dw => 
       ((∇ (x':=x;dx'), f w i x'), (dw + ∇ (w':=w;dx'), f w' i x))
   -/
-def ForIn.arg_bf.revPass_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
+def ForIn.forIn.arg_bf.revPass_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
   (df' : W → ι → X → X → W → X×W) (w : W) (xs : DataArrayN X ι) (dx' : X) : X×W := Id.run do
   let n := Index.size ι
   let mut dx' := dx'
@@ -259,6 +347,19 @@ def ForIn.arg_bf.revPass_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataTy
   (dx',dw)
 
 
+def ForIn.forIn.arg_bf.revPass_dataArrayImpl' [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
+  (df' : ι → X → X → W → X×W) (xs : DataArray X) (dx' : X) : X×W := Id.run do
+  let n := xs.size
+  let mut dxw := (dx',0)
+  for i in [0:n.toNat] do
+    let i' : Idx xs.size := ⟨n-i.toUSize-1,sorry_proof⟩
+    let j : ι := fromIdx ⟨n-i.toUSize-1,sorry_proof⟩
+    let xj := xs.get i'
+    dxw := df' j xj dxw.1 dxw.2
+  dxw
+
+
+
 /-- Reverse derivative of a for loop
 
   WARNING: `dx'` and `dw` behave differently
@@ -270,7 +371,7 @@ def ForIn.arg_bf.revPass_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataTy
       ((∇ (x':=x;dx'), f w i x'), (dw + ∇ (w':=w;dx'), f w' i x))
 -/
 def ForIn.arg_bf.revDeriv_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
-  (init : X) (f : W → ι → X → X) (df' : W → ι → X → X → W → X×W) (w : W)
+  (init : X) (f : W → ι → X → X) (df' : ι → X → X → W → X×W) (w : W)
   : X×(X→X×W) :=
   Id.run do
     let n := Index.size ι
@@ -280,8 +381,7 @@ def ForIn.arg_bf.revDeriv_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataT
     for i in fullRange ι do
       xs := xs.push x
       x := f w i x
-    let xs' : DataArrayN X ι := ⟨xs, sorry_proof⟩
-    (x, fun dx' => ForIn.arg_bf.revPass_dataArrayImpl df' w xs' dx')
+    (x, fun dx' => ForIn.forIn.arg_bf.revPass_dataArrayImpl' df' xs dx')
 
 
 /-- The do notation leaves the for loop body in a strange form `do pure PUnit.unit; pure <| ForInStep.yield (f w i y))`
@@ -309,33 +409,31 @@ theorem ForIn.forIn.arg_bf.revCDeriv_rule_normalization [Index ι]
 
 @[ftrans]
 theorem ForIn.forIn.arg_bf.revCDeriv_rule_def [Index ι] [PlainDataType X] [PlainDataType W]
-  (init : W → X) (f : W → ι → X → X)
+  (init : W → X) (f : W → ι → X → ForInStep X)
   (hinit : HasAdjDiff K init) (hf : ∀ i, HasAdjDiff K (fun (w,x) => f w i x))
-  : revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => ForInStep.yield (f w i y)))
+  : revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => f w i y))
     =
     fun w => (Id.run do
       let n := Index.size ι
       let initdinit := revCDeriv K init w
 
+      let xxs := ForIn.forIn.arg_bf.fwdPass_dataArrayImpl initdinit.1 (f w)
       -- forward pass
-      let mut xs : DataArray X := .mkEmpty n
-      let mut x := initdinit.1
-      for i in fullRange ι do
-        xs := xs.push x
-        x := f w i x
-      let xs' : DataArrayN X ι := ⟨xs, sorry_proof⟩
+      let mut xs := xxs.2
+      let mut x := xxs.1
 
-      let revPassBody := hold fun w i x dx' dw =>
-        let dwx' := gradient K (fun (w',x') => f w' i x') (w,x) dx'
+      let revPassBody := hold fun i x dx' dw =>
+        let dwx' := gradient K (fun (w',x') => (f w' i x').val) (w,x) dx'
         (dwx'.2, dw + dwx'.1)
 
       (x, 
        fun dx' =>
          -- reverse pass
-         let dxw' := ForIn.arg_bf.revPass_dataArrayImpl revPassBody w xs' dx'
+         let dxw' := ForIn.forIn.arg_bf.revPass_dataArrayImpl' revPassBody xs dx'
          initdinit.2 dxw'.1 + dxw'.2)) :=
 by
   sorry_proof
+
 
   
 --------------------------------------------------------------------------------
@@ -372,6 +470,11 @@ theorem ForInStep.yield.arg_a0.revDerivM_rule
       (.yield ydf.1, fun y => ydf.2 y.val)
   := by sorry_proof
 
+
+--------------------------------------------------------------------------------
+-- ForInStep.done --------------------------------------------------------------
+--------------------------------------------------------------------------------
+
 @[fprop]
 theorem ForInStep.done.arg_a0.HasAdjDiff_rule
   (a0 : X → Y) (ha0 : HasAdjDiff K a0)
@@ -400,6 +503,41 @@ theorem ForInStep.done.arg_a0.revDerivM_rule
     fun x => 
       let ydf := revCDeriv K a0 x
       (.done ydf.1, fun y => ydf.2 y.val)
+  := by sorry_proof
+
+
+--------------------------------------------------------------------------------
+-- ForInStep.val --------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem ForInStep.val.arg_a0.HasAdjDiff_rule
+  (a0 : X → ForInStep Y) (ha0 : HasAdjDiff K a0)
+  : HasAdjDiff K fun x => ForInStep.val (a0 x) := by sorry_proof
+
+@[fprop]
+theorem ForInStep.val.arg_a0.HasAdjDiffM_rule
+  (a0 : X → ForInStep Y) (ha0 : HasAdjDiff K a0)
+  : HasAdjDiffM (m:=Id) K fun x => ForInStep.val (a0 x) := by sorry_proof
+
+@[ftrans]
+theorem ForInStep.val.arg_a0.revCDeriv_rule
+  (a0 : X → ForInStep Y) (ha0 : HasAdjDiff K a0)
+  : revCDeriv K (fun x => ForInStep.val (a0 x))
+    =
+    fun x => 
+      let ydf := revCDeriv K a0 x
+      (ydf.1.val, fun y => ydf.2 (.yield y))
+  := by sorry_proof
+
+@[ftrans]
+theorem ForInStep.val.arg_a0.revDerivM_rule
+  (a0 : X → ForInStep Y) (ha0 : HasAdjDiff K a0)
+  : revDerivM (m:=Id) K (fun x => ForInStep.val (a0 x))
+    =
+    fun x => 
+      let ydf := revCDeriv K a0 x
+      (ydf.1.val, fun y => ydf.2 (.yield y))
   := by sorry_proof
 
 

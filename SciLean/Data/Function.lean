@@ -33,7 +33,18 @@ def Function.reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (d
   return a
 
 def Function.reduceD (f : ι → α) (op : α → α → α) (default : α) : α :=
-  Id.run <| Function.reduceMD f (fun x y => pure (f:=Id) op x y) default
+  let n := Index.size ι
+  if n = 0 then
+    default
+  else 
+    let a := f (fromIdx ⟨0,sorry_proof⟩)
+    Function.foldl 
+      (fun i : Idx (n-1) => 
+        let i : Idx n := ⟨i.1+1, sorry_proof⟩
+        let i : ι := fromIdx i
+        f i)
+      op
+      a
 
 abbrev Function.reduce [Inhabited α] (f : ι → α) (op : α → α → α) : α := 
   f.reduceD op default

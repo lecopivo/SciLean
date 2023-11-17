@@ -53,7 +53,7 @@ variable
   {X : Type} [Vec K X]
   {Y : Type} [Vec K Y]
   {Z : Type} [Vec K Z]
-  {E : ι → Type} [∀ i, Vec K (E i)]
+  {E : ι → Type _} [∀ i, Vec K (E i)]
 
 @[fprop]
 theorem Id.run.arg_x.IsDifferentiable_rule
@@ -75,7 +75,7 @@ variable
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
-  {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
+  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
 @[fprop]

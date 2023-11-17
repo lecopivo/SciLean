@@ -7,14 +7,64 @@ open SciLean
 
 
 variable 
-  {K : Type _} [IsROrC K]
+  {K : Type} [IsROrC K]
   {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
-  {ρ : Type _} {α : Type _} [ForIn m ρ α] [ForIn m' ρ α] {β : Type _}
-  {X : Type _} [Vec K X]
-  {Y : Type _} [Vec K Y]
-  {Z : Type _} [Vec K Z]
+  {ρ : Type} {α : Type _} [ForIn m ρ α] [ForIn m' ρ α] {β : Type _}
+  {X : Type} [Vec K X]
+  {Y : Type} [Vec K Y]
+  {Z : Type} [Vec K Z]
 
+variable [PlainDataType K]
+
+#check
+  ((gradient K (fun x : K => Id.run do
+    let mut y := 1.0
+    for i in fullRange (Idx 3) do
+      if i.1 = 1 then
+        break
+      y := y * x 
+    y))
+    rewrite_by
+      unfold gradient
+      ftrans
+      ftrans
+      ftrans
+      unfold gradient
+      ftrans
+      ftrans)
+
+set_option trace.Meta.Tactic.fprop.step true in
+example (z) :
+  SciLean.HasAdjDiff K fun (w : K) =>
+        forIn (m:=Id) (fullRange (Idx 3)) (MProd.mk 1.0 z) fun (i : SciLean.Idx 3) (r : MProd K K) =>
+          let y := r.fst * w + r.snd;
+          let z := r.snd + y;
+          ForInStep.yield (MProd.mk y z) := by fprop
+variable [PlainDataType (MProd K K)]
+set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.discharge true in
+set_option trace.Meta.Tactic.simp.rewrite true in
+set_option trace.Meta.Tactic.ftrans.step true in
+set_option pp.funBinderTypes true in
+#check
+  ((gradient K (fun x : K => Id.run do
+    let mut y := 1.0
+    let mut z := y + 10.0
+    for i in fullRange (Idx 3) do
+      y := y * x + z
+      z := z + y
+    y))
+    rewrite_by
+      unfold gradient
+      ftrans
+      ftrans
+      ftrans
+      ftrans
+      unfold gradient
+      ftrans)
+
+#check MProd
 
 -- 
 set_option pp.notation false in
@@ -97,9 +147,6 @@ by
       ftrans)
   ⊞[5.0,6,7] 1
 
-variable (y y' : Id Float × (Id Float → Float)) (b' : Id Float × (Id Float → Float) → Float) (b : Float × (Float → Float) → Float) (q : y' = y)  (h : ∀ (x : Id Float × (Id Float → Float)), x = y → let z : Float × (Float → Float) := x; (b z = b' z))
-
-#check Tactic.LSimp.let_congr_eq (α := Float × (Float → Float)) q h
 
 set_option trace.Meta.Tactic.simp.discharge true in
 set_option trace.Meta.Tactic.fprop.discharge true in
