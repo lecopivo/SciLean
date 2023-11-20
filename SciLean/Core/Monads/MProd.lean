@@ -26,6 +26,17 @@ theorem MProd.mk.arg_fstsnd.IsDifferentiable_rule
   (f : W → X) (g : W → Y) (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
   : IsDifferentiable K (fun w => MProd.mk (f w) (g w)) := by sorry_proof
 
+@[ftrans]
+theorem MProd.mk.arg_fstsnd.cderiv_rule
+  (f : W → X) (g : W → Y) (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
+  : cderiv K (fun w => MProd.mk (f w) (g w))
+    =
+    fun w dw => 
+      let dx := cderiv K f w dw
+      let dy := cderiv K g w dw
+      ⟨dx,dy⟩ :=
+by 
+  sorry_proof
 
 @[ftrans]
 theorem MProd.mk.arg_fstsnd.fwdCDeriv_rule
@@ -37,8 +48,7 @@ theorem MProd.mk.arg_fstsnd.fwdCDeriv_rule
       let ydy := fwdCDeriv K g w dw
       (⟨xdx.1,ydy.1⟩, ⟨xdx.2,ydy.2⟩) :=
 by 
-  sorry_proof
-
+  unfold fwdCDeriv; ftrans
 
 @[fprop]
 theorem MProd.fst.arg_self.IsDifferentiable_rule 
@@ -80,12 +90,28 @@ variable
   {W : Type _} [SemiInnerProductSpace K W]
 
 -- TODO: transport structure from Prod
-instance [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (MProd X Y) := sorry
+instance [Inner K X] [Inner K Y] : Inner K (MProd X Y) := 
+  ⟨fun ⟨x,y⟩ ⟨x',y'⟩ => Inner.inner x x' + Inner.inner y y'⟩
+
+instance [TestFunctions X] [TestFunctions Y] : TestFunctions (MProd X Y) where
+  TestFunction := fun ⟨x,y⟩ => TestFunction x ∧ TestFunction y
+
+instance [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (MProd X Y) := SemiInnerProductSpace.mkSorryProofs
+
+@[fprop]
+theorem MProd.mk.arg_fstsnd.HasSemiAdjoint_rule 
+  (f : W → X) (g : W → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
+  : HasSemiAdjoint K (fun w => MProd.mk (f w) (g w)) := by sorry_proof
+
 
 @[fprop]
 theorem MProd.mk.arg_fstsnd.HasAdjDiff_rule 
   (f : W → X) (g : W → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
-  : HasAdjDiff K (fun w => MProd.mk (f w) (g w)) := by sorry_proof
+  : HasAdjDiff K (fun w => MProd.mk (f w) (g w)) := 
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  constructor; fprop; ftrans; fprop
 
 
 @[ftrans]
@@ -101,7 +127,6 @@ theorem MProd.mk.arg_fstsnd.revCDeriv_rule
          xdf'.2 dxy.1 + ydg'.2 dxy.2) := 
 by 
   sorry_proof
-
 
 @[fprop]
 theorem MProd.fst.arg_self.HasAdjDiff_rule 
