@@ -167,29 +167,15 @@ def ForIn.forIn.arg_bf.fwdPass_dataArrayImpl [Index ι] [PlainDataType X]
       ((∇ (x':=x;dx'), f w i x'), (dw + ∇ (w':=w;dx'), f w' i x))
   -/
 def ForIn.forIn.arg_bf.revPass_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
-  (df' : W → ι → X → X → W → X×W) (w : W) (xs : DataArrayN X ι) (dx' : X) : X×W := Id.run do
-  let n := Index.size ι
-  let mut dx' := dx'
-  let mut dw : W := 0
-  for i in [0:n.toNat] do
-    let j : ι := fromIdx ⟨n-i.toUSize-1,sorry_proof⟩
-    let xj := xs[j]
-    let dxw' := df' w j xj dx' dw
-    dx' := dxw'.1
-    dw := dxw'.2
-  (dx',dw)
-
-
-def ForIn.forIn.arg_bf.revPass_dataArrayImpl' [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
-  (df' : ι → X → X → W → X×W) (xs : DataArray X) (dx' : X) : X×W := Id.run do
+  (df' : ι → X → W → X → W×X) (xs : DataArray X) (dx' : X) : W×X := Id.run do
   let n := xs.size
-  let mut dxw := (dx',0)
+  let mut dwx := (0,dx')
   for i in [0:n.toNat] do
     let i' : Idx xs.size := ⟨n-i.toUSize-1,sorry_proof⟩
     let j : ι := fromIdx ⟨n-i.toUSize-1,sorry_proof⟩
     let xj := xs.get i'
-    dxw := df' j xj dxw.1 dxw.2
-  dxw
+    dwx := df' j xj dwx.1 dwx.2
+  dwx
 
 
 
@@ -200,12 +186,12 @@ def ForIn.forIn.arg_bf.revPass_dataArrayImpl' [Index ι] [PlainDataType X] [Plai
      - `df'` computes update to gradient in `dw` 
   
   The value of `df'` should be:
-    df' = fun w i x dx' dw => 
+    df' = fun w i x dw dx' => 
       ((∇ (x':=x;dx'), f w i x'), (dw + ∇ (w':=w;dx'), f w' i x))
 -/
 def ForIn.arg_bf.revDeriv_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
-  (init : X) (f : W → ι → X → X) (df' : ι → X → X → W → X×W) (w : W)
-  : X×(X→X×W) :=
+  (init : X) (f : ι → X → X) (df' : ι → X → W → X → W×X)
+  : X×(X→W×X) :=
   Id.run do
     let n := Index.size ι
     -- forward pass
@@ -213,8 +199,8 @@ def ForIn.arg_bf.revDeriv_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataT
     let mut x := init
     for i in fullRange ι do
       xs := xs.push x
-      x := f w i x
-    (x, fun dx' => ForIn.forIn.arg_bf.revPass_dataArrayImpl' df' xs dx')
+      x := f i x
+    (x, fun dx' => ForIn.forIn.arg_bf.revPass_dataArrayImpl df' xs dx')
 
 
 -- /-- The do notation leaves the for loop body in a strange form `do pure PUnit.unit; pure <| ForInStep.yield (f w i y))`
@@ -255,15 +241,44 @@ theorem ForIn.forIn.arg_bf.revCDeriv_rule_def [Index ι] [PlainDataType X] [Plai
       let mut xs := xxs.2
       let mut x := xxs.1
 
-      let revPassBody := hold fun i x dx' dw =>
+      let revPassBody := hold fun i x dw dx' =>
         let dwx' := gradient K (fun (w',x') => (f w' i x').val) (w,x) dx'
-        (dwx'.2, dw + dwx'.1)
+        (dw + dwx'.1, dwx'.2)
 
       (x, 
        fun dx' =>
          -- reverse pass
-         let dxw' := ForIn.forIn.arg_bf.revPass_dataArrayImpl' revPassBody xs dx'
-         initdinit.2 dxw'.1 + dxw'.2)) :=
+         let dwx' := ForIn.forIn.arg_bf.revPass_dataArrayImpl revPassBody xs dx'
+         initdinit.2 dwx'.2 + dwx'.1)) :=
+by
+  sorry_proof
+
+
+-- @[ftrans]
+-- disables for now because downstream `ForInStep.yield.arg_a0.revDerivUpdate_rule` is 
+-- causing some issues with Id monad and congr lemmas in simp
+theorem ForIn.forIn.arg_bf.revCDeriv_rule_def' [Index ι] [PlainDataType X] [PlainDataType W]
+  (init : W → X) (f : W → ι → X → ForInStep X)
+  (hinit : HasAdjDiff K init) (hf : ∀ i, HasAdjDiff K (fun (w,x) => f w i x))
+  : revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => f w i y))
+    =
+    fun w => (Id.run do
+      let n := Index.size ι
+      let initdinit := revCDeriv K init w
+
+      let xxs := ForIn.forIn.arg_bf.fwdPass_dataArrayImpl initdinit.1 (f w)
+      -- forward pass
+      let mut xs := xxs.2
+      let mut x := xxs.1
+
+      let revPassBody := hold fun i x dw dx' =>
+        (revDerivUpdate K (fun (w',x') => (f w' i x').val) (w,x)).2 dx' 1 (dw,0)
+
+      (x, 
+       fun dx' =>
+         -- reverse pass
+         let dwx' := ForIn.forIn.arg_bf.revPass_dataArrayImpl revPassBody xs dx'
+         initdinit.2 dwx'.2 + dwx'.1)) :=
 by
   sorry_proof
 

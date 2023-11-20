@@ -175,6 +175,7 @@ by
   sorry_proof
 
 -- @[ftrans] -- this one is considered harmful as it introduces one hot vector
+@[ftrans]
 theorem GetElem.getElem.arg_xs.revDerivUpdate_rule
   (f : X → Cont) (idx : Idx) (dom) 
   (hf : HasAdjDiff K f)
@@ -221,6 +222,26 @@ by
   funext x; simp; funext dy k dx; simp
   -- ftrans -- fails to apply `semiAdjoint.pi_rule` because of some universe issues
   sorry_proof
+
+-- @[ftrans]
+-- theorem GetElem.getElem.arg_xs.revDerivUpdate_rule
+--   (f : X → Cont) (dom) 
+--   (hf : HasAdjDiff K f)
+--   : revDerivUpdate K (fun x idx => getElem (f x) idx dom)
+--     =
+--     fun x =>
+--       let ydf := revDerivUpdate K f x
+--       (fun idx => getElem ydf.1 idx dom,
+--        fun delem (k : K) dx => 
+--          let dcont := introElem delem
+--          ydf.2 dcont k dx) :=
+-- by
+--   have ⟨_,_⟩ := hf
+--   unfold revDerivUpdate; ftrans;
+--   funext x; simp; funext dy k dx; simp
+--   -- ftrans -- fails to apply `semiAdjoint.pi_rule` because of some universe issues
+--   sorry_proof
+
 
 @[ftrans]
 theorem GetElem.getElem.arg_xs.revCDeriv_rule_at

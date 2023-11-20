@@ -148,6 +148,18 @@ theorem MProd.mk.arg_fstsnd.HasSemiAdjoint_rule
   (f : W → X) (g : W → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
   : HasSemiAdjoint K (fun w => MProd.mk (f w) (g w)) := by sorry_proof
 
+@[ftrans]
+theorem MProd.mk.arg_fstsnd.semiAdjoint_rule
+  (f : W → X) (g : W → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
+  : semiAdjoint K (fun w => MProd.mk (f w) (g w))
+    =
+    fun xy : MProd X Y => 
+      let w₁ := semiAdjoint K f xy.1
+      let w₂ := semiAdjoint K g xy.2
+      w₁ + w₂ := 
+by 
+  sorry_proof
+
 
 @[fprop]
 theorem MProd.mk.arg_fstsnd.HasAdjDiff_rule 
@@ -173,6 +185,27 @@ theorem MProd.mk.arg_fstsnd.revCDeriv_rule
 by 
   sorry_proof
 
+@[ftrans]
+theorem MProd.mk.arg_fstsnd.revDerivUpdate_rule
+  (f : W → X) (g : W → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : revDerivUpdate K (fun w => MProd.mk (f w) (g w))
+    =
+    fun w => 
+      let xdf' := revDerivUpdate K f w
+      let ydg' := revDerivUpdate K g w
+      (MProd.mk xdf'.1 ydg'.1, 
+       fun dxy k dw => 
+         xdf'.2 dxy.1 k (ydg'.2 dxy.2 k dw)) := 
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revDerivUpdate
+  ftrans; funext x; simp
+  funext dy k dx
+  ftrans
+  sorry_proof
+
+
 @[fprop]
 theorem MProd.fst.arg_self.HasAdjDiff_rule 
   (f : W → MProd X Y) (hf : HasAdjDiff K f)
@@ -187,6 +220,17 @@ theorem MProd.fst.arg_self.revCDeriv_rule
       let xydxy := revCDeriv K f w
       (xydxy.1.1, fun dw => xydxy.2 (MProd.mk dw 0)) := by sorry_proof
 
+
+@[ftrans]
+theorem MProd.fst.arg_self.revDerivUpdate_rule 
+  (f : W → MProd X Y) (hf : HasAdjDiff K f)
+  : revDerivUpdate K (fun w => (f w).1)
+    =
+    fun w => 
+      let xydxy := revDerivUpdate K f w
+      (xydxy.1.1, fun dx' k dw => xydxy.2 (MProd.mk dx' 0) k dw) := by sorry_proof
+
+
 @[fprop]
 theorem MProd.snd.arg_self.HasAdjDiff_rule 
   (f : W → MProd X Y) (hf : HasAdjDiff K f)
@@ -199,7 +243,16 @@ theorem MProd.snd.arg_self.revCDeriv_rule
     =
     fun w => 
       let xydxy := revCDeriv K f w
-      (xydxy.1.2, fun dw => xydxy.2 (MProd.mk 0 dw)) := by sorry_proof
+      (xydxy.1.2, fun dy' => xydxy.2 (MProd.mk 0 dy')) := by sorry_proof
+
+@[ftrans]
+theorem MProd.snd.arg_self.revDerivUpdate_rule 
+  (f : W → MProd X Y) (hf : HasAdjDiff K f)
+  : revDerivUpdate K (fun w => (f w).2)
+    =
+    fun w => 
+      let xydxy := revDerivUpdate K f w
+      (xydxy.1.2, fun dy' k dw => xydxy.2 (MProd.mk 0 dy') k dw) := by sorry_proof
 
 
 end OnSemiInnerProductSpace

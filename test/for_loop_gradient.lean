@@ -4,7 +4,6 @@ open SciLean
 
 set_default_scalar Float
 
-
 def foo := 
   ((gradient Float (fun x : Float ^ Idx 3 => Id.run do
     let mut prod := 1

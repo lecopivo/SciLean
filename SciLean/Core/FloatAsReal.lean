@@ -10,7 +10,7 @@ instance : CommRing Float where
   mul_comm := by intros; apply isomorph.ext `FloatToReal; simp; ftrans; rw[mul_comm]
   left_distrib := by intros;  apply isomorph.ext `FloatToReal; simp; ftrans; simp; ftrans; simp; rw[mul_add]
   right_distrib := by intros; apply isomorph.ext `FloatToReal; simp; ftrans; simp; ftrans; simp; rw[add_mul]
-  mul_one := by intros; apply isomorph.ext `FloatToReal; simp; ftrans; simp
+  mul_one := by intros; apply isomorph.ext `FloatToReal; simp; ftrans
   one_mul := by intros; apply isomorph.ext `FloatToReal; simp; ftrans; simp
   npow n x := x.pow (n.toFloat)  --- TODO: change this implementation
   npow_zero n := sorry_proof
