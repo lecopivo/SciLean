@@ -2,6 +2,7 @@ import SciLean.Core.Monads.ForIn
 import SciLean.Tactic.LetNormalize
 import SciLean.Core.FloatAsReal
 import SciLean.Core.Notation
+import SciLean.Data.DataArray
 
 open SciLean
 
@@ -29,9 +30,7 @@ variable [PlainDataType K]
       unfold gradient
       ftrans
       ftrans
-      ftrans
       unfold gradient
-      ftrans
       ftrans)
 
 set_option trace.Meta.Tactic.fprop.step true in
@@ -41,7 +40,9 @@ example (z) :
           let y := r.fst * w + r.snd;
           let z := r.snd + y;
           ForInStep.yield (MProd.mk y z) := by fprop
-variable [PlainDataType (MProd K K)]
+
+variable [RealScalar K]
+
 set_option trace.Meta.Tactic.simp.unify true in
 set_option trace.Meta.Tactic.simp.discharge true in
 set_option trace.Meta.Tactic.simp.rewrite true in
@@ -59,12 +60,76 @@ set_option pp.funBinderTypes true in
       unfold gradient
       ftrans
       ftrans
+      unfold gradient
+      ftrans; ftrans)
+
+#check MProd
+
+
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+def foo := 
+  ((gradient Float (fun x : Float ^ Idx 3 => Id.run do
+    let mut prod := 1
+    let mut sum := 0.0
+    for i in fullRange (Idx 3) do
+      prod := prod * x[i]
+      sum := sum + x[i]
+    (prod,sum)))
+    rewrite_by
+      unfold gradient
       ftrans
       ftrans
       unfold gradient
       ftrans)
 
-#check MProd
+set_option trace.Meta.Tactic.simp.rewrite true in
+def bar := 
+  ((gradient Float (fun x : Float ^ Idx 3 => Id.run do
+    let mut prod := 1
+    let mut sum := 0.0
+    let mut norm2 := 0.0
+    -- let mut norm2 := 0.0
+    for i in fullRange (Idx 3) do
+      prod := prod * x[i]
+      sum := sum + x[i]
+      norm2 := norm2 + x[i]*x[i]
+    (prod,sum,norm2)))
+    rewrite_by
+      unfold gradient
+      ftrans
+      ftrans
+      unfold gradient
+      ftrans)
+
+#eval (bar ⊞[6.0, 7, 8] (1,0,0))
+#eval (bar ⊞[6.0, 7, 8] (0,1,0))
+#eval (bar ⊞[6.0, 7, 8] (0,0,1))
+
+#eval
+  ((gradient Float (fun x : Float ^ Idx 3 => Id.run do
+    let mut prod := 1
+    let mut sum := 0.0
+    let mut norm2 := 0.0
+    -- let mut norm2 := 0.0
+    for i in fullRange (Idx 3) do
+      prod := prod * x[i]
+      sum := sum + x[i]
+      norm2 := norm2 + x[i]*x[i]
+      -- norm2 : norm2 + x[i]*x[i]
+    (prod,sum,norm2)) ⊞[6.0,7,8] (0,0,1))
+    rewrite_by
+      unfold gradient
+      ftrans
+      ftrans
+      simp (config := {zeta:=false})
+      ftrans
+      unfold gradient
+      ftrans
+      ftrans
+      simp (config := {zeta:=false}))
+
+
 
 -- 
 set_option pp.notation false in

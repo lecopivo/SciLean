@@ -6,9 +6,57 @@ set_option linter.unusedVariables false
 
 open SciLean
 
+
+instance [Add X] [Add Y] : Add (MProd X Y) := ⟨fun ⟨x,y⟩ ⟨x',y'⟩ => ⟨x+x', y+y'⟩⟩
+instance [Sub X] [Sub Y] : Sub (MProd X Y) := ⟨fun ⟨x,y⟩ ⟨x',y'⟩ => ⟨x-x', y-y'⟩⟩
+instance [Neg X] [Neg Y] : Neg (MProd X Y) := ⟨fun ⟨x,y⟩ => ⟨-x, -y⟩⟩
+instance [SMul K X] [SMul K Y] : SMul K (MProd X Y) := ⟨fun k ⟨x,y⟩ => ⟨k•x, k•y⟩⟩
+instance [Zero X] [Zero Y] : Zero (MProd X Y) := ⟨⟨0,0⟩⟩
+instance [TopologicalSpace X] [TopologicalSpace Y] : TopologicalSpace (MProd X Y) := sorry
+
+instance [IsROrC K] [Vec K X] [Vec K Y] : Vec K (MProd X Y) := Vec.mkSorryProofs
+
+
+section Simps
+
+@[simp, ftrans_simp]
+theorem MProd.mk_fst (x : X) (y : Y)
+  : (MProd.mk x y).1 = x := by simp
+
+@[simp, ftrans_simp]
+theorem MProd.mk_snd (x : X) (y : Y)
+  : (MProd.mk x y).2 = y := by simp
+
+
+@[simp, ftrans_simp]
+theorem MProd.add_mk [Add X] [Add Y] (x x' : X) (y y' : Y)
+  : MProd.mk x y + MProd.mk x' y'
+    =
+    MProd.mk (x+x') (y+y') := by rfl
+
+@[simp, ftrans_simp]
+theorem MProd.sub_mk [Sub X] [Sub Y] (x x' : X) (y y' : Y)
+  : MProd.mk x y - MProd.mk x' y'
+    =
+    MProd.mk (x-x') (y-y') := by rfl
+
+@[simp, ftrans_simp]
+theorem MProd.smul_mk [SMul K X] [SMul K Y] (k : K) (x : X) (y : Y)
+  : k • MProd.mk x y 
+    =
+    MProd.mk (k•x) (k•y) := by rfl
+
+@[simp, ftrans_simp]
+theorem MProd.neg_mk [Neg X] [Neg Y] (x : X) (y : Y)
+  : - MProd.mk x y 
+    =
+    MProd.mk (-x) (-y) := by rfl
+
+
+end Simps
+
 variable 
   {K : Type _} [IsROrC K]
-
 
 section OnVec
 
@@ -16,9 +64,6 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {W : Type _} [Vec K W]
-
--- TODO: transport vec structure from Prod
-instance [Vec K X] [Vec K Y] : Vec K (MProd X Y) := sorry
 
 
 @[fprop]

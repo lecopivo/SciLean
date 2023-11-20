@@ -93,13 +93,13 @@ theorem Id.run.arg_x.revCDeriv_rule (a : X → Id Y)
 -- some normalizations for Id monad because it is pain in the ass to work with
 -- as one can often abuse defEq
 
-@[ftrans_simp]
-theorem revDerivM_eq_revCDeriv_on_Id (f : X → Y)
-  : revDerivM (m:=Id) K f = fun x => pure (revCDeriv K f x) := by rfl
+-- @[ftrans_simp]
+-- theorem revDerivM_eq_revCDeriv_on_Id (f : X → Y)
+--   : revDerivM (m:=Id) K f = fun x => pure (revCDeriv K f x) := by rfl
 
-@[ftrans_simp]
-theorem revDerivM_eq_revCDeriv_on_Id' (f : X → Id Y)
-  : revDerivM K f = revCDeriv K f := by set_option pp.all true in rfl
+-- @[ftrans_simp]
+-- theorem revDerivM_eq_revCDeriv_on_Id' (f : X → Id Y)
+--   : revDerivM K f = revCDeriv K f := by set_option pp.all true in rfl
 
 @[fprop]
 theorem Pure.pure.arg_a0.HasAdjDiff_rule

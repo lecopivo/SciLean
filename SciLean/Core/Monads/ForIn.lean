@@ -217,27 +217,27 @@ def ForIn.arg_bf.revDeriv_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataT
     (x, fun dx' => ForIn.forIn.arg_bf.revPass_dataArrayImpl' df' xs dx')
 
 
-/-- The do notation leaves the for loop body in a strange form `do pure PUnit.unit; pure <| ForInStep.yield (f w i y))`
-  Marking this theorem with `ftrans` is a bit of a hack. It normalizes the body to `ForInStep.yield (f w i y)`.
-  -/
-@[ftrans]
-theorem ForIn.forIn.arg_bf.revDerivM_rule_normalization [Index ι]
-  (init : W → X) (f : W → ι → X → X)
-  : revDerivM K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => do pure PUnit.unit; pure <| ForInStep.yield (f w i y)))
-    =
-    revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => ForInStep.yield (f w i y))) := by rfl
+-- /-- The do notation leaves the for loop body in a strange form `do pure PUnit.unit; pure <| ForInStep.yield (f w i y))`
+--   Marking this theorem with `ftrans` is a bit of a hack. It normalizes the body to `ForInStep.yield (f w i y)`.
+--   -/
+-- @[ftrans]
+-- theorem ForIn.forIn.arg_bf.revDerivM_rule_normalization [Index ι]
+--   (init : W → X) (f : W → ι → X → X)
+--   : revDerivM K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => do pure PUnit.unit; pure <| ForInStep.yield (f w i y)))
+--     =
+--     revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => ForInStep.yield (f w i y))) := by rfl
 
 
 
-/-- The do notation leaves the for loop body in a strange form `do pure PUnit.unit; pure <| ForInStep.yield (f w i y))`
-  Marking this theorem with `ftrans` is a bit of a hack. It normalizes the body to `ForInStep.yield (f w i y)`.
-  -/
-@[ftrans]
-theorem ForIn.forIn.arg_bf.revCDeriv_rule_normalization [Index ι]
-  (init : W → X) (f : W → ι → X → X)
-  : revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => do pure PUnit.unit; pure <| ForInStep.yield (f w i y)))
-    =
-    revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => ForInStep.yield (f w i y))) := by rfl
+-- /-- The do notation leaves the for loop body in a strange form `do pure PUnit.unit; pure <| ForInStep.yield (f w i y))`
+--   Marking this theorem with `ftrans` is a bit of a hack. It normalizes the body to `ForInStep.yield (f w i y)`.
+--   -/
+-- @[ftrans]
+-- theorem ForIn.forIn.arg_bf.revCDeriv_rule_normalization [Index ι]
+--   (init : W → X) (f : W → ι → X → X)
+--   : revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => do pure PUnit.unit; pure <| ForInStep.yield (f w i y)))
+--     =
+--     revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => ForInStep.yield (f w i y))) := by rfl
 
 
 @[ftrans]
