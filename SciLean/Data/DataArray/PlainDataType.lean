@@ -180,6 +180,113 @@ instance instPlainDataTypeProd [ta : PlainDataType α] [tb : PlainDataType β] :
     | .inr aByteType, .inl bBitType  => .inr <| Prod.byteTypeBitTypeProd aByteType bBitType 
     | .inr aByteType, .inr bByteType => .inr <| Prod.byteTypeProd aByteType bByteType 
 
+
+--------------- MProd -------------------------------------------------
+----------------------------------------------------------------------
+-- TODO: somehow reuse implementation for Prod rather then copy paste
+
+def MProd.bitTypeMProd {α β} (ta : BitType α) (tb : BitType β) : BitType (MProd α β) ⊕ ByteType (MProd α β) :=
+  if h : ta.bits + tb.bits ≤ 8 then
+    .inl {
+      bits   := ta.bits + tb.bits
+      h_size := h
+
+      fromByte := λ byte => 
+        -- Maybe the mask is not necessary of `fromByte` correctly ignores unused bits
+        let ones  := (255 : UInt8)
+        let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111   
+        let bMask := (ones - (ones <<< tb.bits)) <<< ta.bits -- e.g. 00011000
+        ⟨ta.fromByte (aMask &&& byte), tb.fromByte ((bMask &&& byte) >>> ta.bits)⟩
+      toByte   := λ ⟨a,b⟩ => 
+        -- let ones  := (255 : UInt8)
+        -- let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111   
+        -- let bMask := (ones - (ones <<< tb.bits)) <<< ta.bits -- e.g. 00011000
+        let aByte := ta.toByte a
+        let bByte := tb.toByte b
+        -- Masking is not necessary if `toByte` correctly sets unused bits to zero
+        aByte /- &&& aMask -/ + (bByte <<< ta.bits) /- &&& bMask -/
+        
+      fromByte_toByte := sorry_proof
+    }
+  else
+    .inr {
+      bytes := 2
+      h_size := by sorry_proof
+
+      fromByteArray := λ b i _ => 
+        let aByte := b[2*i]'sorry_proof
+        let bByte := b[2*i+1]'sorry_proof
+        ⟨ta.fromByte aByte, tb.fromByte bByte⟩
+      toByteArray := λ arr i _ ⟨a,b⟩ =>
+        arr |>.uset (2*i) (ta.toByte a) sorry_proof
+            |>.uset (2*i+1) (tb.toByte b) sorry_proof
+
+      toByteArray_size := sorry_proof
+      fromByteArray_toByteArray := sorry_proof
+      fromByteArray_toByteArray_other := sorry_proof
+    }
+
+def MProd.bitTypeByteTypeMProd {α β} (ta : BitType α) (tb : ByteType β) : ByteType (MProd α β) :=
+  {
+    bytes := tb.bytes + 1
+    h_size := sorry_proof
+
+    fromByteArray := λ arr i _ => 
+      let aByte := arr[i]'sorry_proof
+      ⟨ta.fromByte aByte, tb.fromByteArray arr (i+1) sorry_proof⟩
+    toByteArray := λ arr i _ ⟨a,b⟩ =>
+      arr |>.uset i (ta.toByte a) sorry_proof
+          |> (tb.toByteArray · (i+1) sorry_proof b)
+
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+def MProd.byteTypeBitTypeMProd {α β} (ta : ByteType α) (tb : BitType β) : ByteType (MProd α β) :=
+  {
+    bytes := ta.bytes + 1
+    h_size := sorry_proof
+
+    fromByteArray := λ arr i _ => 
+      let bByte := arr[i + ta.bytes]'sorry_proof
+      ⟨ta.fromByteArray arr i sorry_proof, tb.fromByte bByte⟩
+    toByteArray := λ arr i _ ⟨a,b⟩ =>
+      arr |> (ta.toByteArray · i sorry_proof a)
+          |>.uset (i + ta.bytes) (tb.toByte b) sorry_proof
+
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+
+def MProd.byteTypeMProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType (MProd α β) :=
+  {
+    bytes := ta.bytes + tb.bytes
+    h_size := sorry_proof
+
+    fromByteArray := λ arr i _ => 
+      ⟨ta.fromByteArray arr i sorry_proof,
+       tb.fromByteArray arr (i+ta.bytes) sorry_proof⟩
+    toByteArray := λ arr i _ ⟨a,b⟩ =>
+      arr |> (ta.toByteArray · (i) sorry_proof a)
+          |> (tb.toByteArray · (i+ta.bytes) sorry_proof b)
+
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+instance instPlainDataTypeMProd [ta : PlainDataType α] [tb : PlainDataType β] : PlainDataType (MProd α β) where
+  btype :=
+    match ta.btype, tb.btype with
+    | .inl aBitType,  .inl bBitType  => MProd.bitTypeMProd aBitType bBitType
+    | .inl aBitType,  .inr bByteType => .inr <| MProd.bitTypeByteTypeMProd aBitType bByteType
+    | .inr aByteType, .inl bBitType  => .inr <| MProd.byteTypeBitTypeMProd aByteType bBitType 
+    | .inr aByteType, .inr bByteType => .inr <| MProd.byteTypeMProd aByteType bByteType 
+
+
 --------------- Idx n ------------------------------------------------
 ----------------------------------------------------------------------
 
