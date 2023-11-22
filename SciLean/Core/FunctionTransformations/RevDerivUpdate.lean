@@ -24,10 +24,22 @@ def revDerivUpdate
 --   : HasSemiAdjoint K (fun y => (revDerivUpdate K f x).2 y k 0) := by unfold revDerivUpdate; ftrans; fprop
 
 @[simp, ftrans_simp]
-theorem revDerivProj_fst (f : X → Y) (x : X)
+theorem revDerivUpdate_fst (f : X → Y) (x : X)
   : (revDerivUpdate K f x).1 = f x :=
 by
   rfl
+
+@[simp, ftrans_simp]
+theorem revDerivUpdate_snd_zero (f : X → Y) (x dx : X)
+  : (revDerivUpdate K f x).2 0 dx = dx := 
+by
+  simp[revDerivUpdate]
+
+@[simp, ftrans_simp]
+theorem revDerivUpdate_snd_zero' (f : X → Y) (x : X) (dy : Y)
+  : (revDerivUpdate K f x).2 dy 0 = (revCDeriv K f x).2 dy := 
+by
+  simp[revDerivUpdate]
 
 
 namespace revDerivUpdate

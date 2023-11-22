@@ -50,6 +50,13 @@ theorem revCDeriv_fst (f : X → Y) (x : X)
 by
   rfl
 
+@[simp, ftrans_simp]
+theorem revCDeriv_snd_zero (f : X → Y) (x : X)
+  : (revCDeriv K f x).2 0 = 0 := 
+by
+  simp[revCDeriv]
+
+
 @[ftrans]
 theorem semiAdjoint.arg_a3.cderiv_rule
   (f : X → Y) (a0 : W → Y) (ha0 : IsDifferentiable K a0)

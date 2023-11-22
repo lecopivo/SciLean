@@ -38,7 +38,7 @@ by
 
 /-- Every type is `StructLike` with `Unit` as index set.
 -/
-instance (priority:=low) : StructLike α Unit (fun _ => α) where
+instance (priority:=low) instStructLikeDefault : StructLike α Unit (fun _ => α) where
   proj := fun x _ => x
   make := fun f => f ()
   modify := fun _ f x => f x

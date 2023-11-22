@@ -30,13 +30,23 @@ class SemiInnerProductSpaceStruct (K X I XI) [StructLike X I XI] [IsROrC K] [Enu
   inner_proj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪proj x i, proj x' i⟫[K]
   testFun_proj : ∀ (x : X), TestFunction x ↔ (∀ i, TestFunction (proj x i))
 
+instance (priority:=low) {X} [Vec K X] : VecStruct K X Unit (fun _ => X) where
+  proj_add := by simp[StructLike.proj]
+  proj_smul := by simp[StructLike.proj]
+  proj_zero := by simp[StructLike.proj]
+  proj_continuous := sorry_proof
+  make_continuous := sorry_proof
+
+instance (priority:=low) {X} [SemiInnerProductSpace K X] : SemiInnerProductSpaceStruct K X Unit (fun _ => X) where
+  inner_proj := sorry_proof
+  testFun_proj := sorry_proof
+
 
 @[reducible]
 instance [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] (i : I ⊕ J) : Vec K (Prod.TypeFun EI FJ i) := 
   match i with
   | .inl _ => by infer_instance
   | .inr _ => by infer_instance
-
 
 instance [Vec K E] [Vec K F] [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] 
   [VecStruct K E I EI] [VecStruct K F J FJ]
