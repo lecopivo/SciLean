@@ -4,7 +4,7 @@ import SciLean.Data.Prod
 import SciLean.Core.Meta.GenerateRevCDeriv'
 
 import SciLean.Core.FloatAsReal
-
+import SciLean.Core.Function
 
 namespace SciLean
 
@@ -15,29 +15,6 @@ set_default_scalar R
 
 variable {κ ι κ'} [Index κ] [Index κ'] [Index ι] [PlainDataType R]
 
-def _root_.Function.reduce {ι α} [Index ι] [Inhabited α] (f : ι → α) (op : α → α → α) : α := Id.run do
-  let n := Index.size ι
-  if 0 = n then
-    return default
-  else
-    let mut a ← f (fromIdx ⟨0, sorry_proof⟩)
-    for i in [1:n.toNat] do
-       a ← op a (← f (fromIdx ⟨i.toUSize, sorry_proof⟩))
-    return a
-
-theorem _root_.Function.reducte.arg_f.revCDeriv {ι K X} [Index ι] [IsROrC K] [SemiInnerProductSpace K X]
-  (f : ι → X) (dop : X → X×X) : X × (X → (ι→X)) := Id.run do
-  let n := Index.size ι
-  if 0 = n then
-    return (default, 0)
-  let mut  a : Array X := Array.mkEmpty n.toNat
-  let mut da : Array X := Array.mkEmpty n.toNat
-  
-  sorry
-
-#eval (fun i : Idx 5 => i.1).reduce (·+·)
-
-#check ForInStep.yield
 
 example
   {ι X : Type} [Index ι]
@@ -105,6 +82,10 @@ def poolLazy
   (op : R → R → R)
   (x : ι → R)
   (j : κ) : R := 
-  Index.joinl (fun j' : κ' => x (indexSplit.symm (j,j'))) op
+  Function.reduce (fun j' : κ' => x (indexSplit.symm (j,j'))) op
 
 variable {κ}
+
+#generate_revCDeriv' poolLazy x | j
+  prop_by unfold poolLazy; fprop
+  trans_by unfold poolLazy; ftrans
