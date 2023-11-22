@@ -106,3 +106,48 @@ theorem make_smul (k : K) (f : (i : I) →  XI i)
 by
   apply StructLike.ext
   simp[VecStruct.proj_smul]
+
+
+@[simp]
+theorem make_nsmul (k : ℕ) (f : (i : I) →  XI i)
+  : k • make (X:=X) f 
+    =
+    make (fun i => k • f i) :=
+by
+  apply StructLike.ext
+  sorry_proof
+
+
+@[simp]
+theorem make_zsmul (k : ℤ) (f : (i : I) →  XI i)
+  : k • make (X:=X) f 
+    =
+    make (fun i => k • f i) :=
+by
+  apply StructLike.ext
+  sorry_proof
+
+
+@[simp]
+theorem make_neg (f : (i : I) →  XI i)
+  : - make (X:=X) f
+    =
+    make (fun i => - f i) :=
+by
+  apply StructLike.ext; intro i
+  conv => lhs; enter[1]; equals (-1) • make (X:=X) f => simp
+  simp only [make_zsmul]
+  simp
+
+
+@[simp]
+theorem make_sub (f g : (i : I) →  XI i)
+  : make (X:=X) f - make g 
+    =
+    make (fun i => f i - g i) :=
+by
+  apply StructLike.ext; intro i
+  conv => lhs; enter[1]; equals make (X:=X) f + (-1) • make g => simp[sub_eq_add_neg]
+  simp [sub_eq_add_neg]
+
+
