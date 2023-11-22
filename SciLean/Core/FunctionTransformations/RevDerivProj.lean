@@ -37,6 +37,20 @@ def revDerivProjUpdate
   (ydf'.1, fun i de dx => dx + ydf'.2 i de)
 
 
+
+@[simp, ftrans_simp]
+theorem revDerivProj_fst (f : X → E) (x : X)
+  : (revDerivProj K f x).1 = f x :=
+by
+  rfl
+
+@[simp, ftrans_simp]
+theorem revDerivProjUpdate_fst (f : X → E) (x : X)
+  : (revDerivProjUpdate K f x).1 = f x :=
+by
+  rfl
+
+
 --------------------------------------------------------------------------------
 
 
@@ -180,10 +194,10 @@ theorem revDerivProjUpdate.comp_rule
       let zdf' := revDerivProj K f ydg'.1
       (zdf'.1,
        fun i de dx => 
-         ydg'.2 (zdf'.2 i de) 1 dx) := 
+         ydg'.2 (zdf'.2 i de) dx) := 
 by
   funext x
-  simp[revDerivProjUpdate,revDerivProj.comp_rule]
+  simp[revDerivProjUpdate,revDerivProj.comp_rule _ _ _ hf hg]
   constructor
   . sorry
   . 

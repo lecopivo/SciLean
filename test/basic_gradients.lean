@@ -230,7 +230,6 @@ example  (w : K ^ (Idx' (-5) 5 × Idx' (-5) 5))
       ⊞ i => ∑ (j : (Idx' (-5) 5 × Idx' (-5) 5)), w[(j.2,j.1)] * dy[(-j.2.1 +ᵥ i.fst, -j.1.1 +ᵥ i.snd)] :=
 by
   conv => lhs; unfold gradient; ftrans
-  sorry_proof
   
   
 

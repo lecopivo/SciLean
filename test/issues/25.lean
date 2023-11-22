@@ -15,7 +15,7 @@ example
     = 
     fun x =>
       let ydg := revDerivUpdate K g x
-      let zdf := revDerivUpdate K (fun x' => f (ydg.1 + semiAdjoint K (ydg.2 · 1 0) (x' - x))) x
+      let zdf := revDerivUpdate K (fun x' => f (ydg.1 + semiAdjoint K (ydg.2 · 0) (x' - x))) x
       zdf := 
 by
   have ⟨_,_⟩ := hf

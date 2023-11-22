@@ -44,6 +44,11 @@ noncomputable
 def scalarGradient
   (f : X → K) (x : X) : X := (revCDeriv K f x).2 1
 
+@[simp, ftrans_simp]
+theorem revCDeriv_fst (f : X → Y) (x : X)
+  : (revCDeriv K f x).1 = f x :=
+by
+  rfl
 
 @[ftrans]
 theorem semiAdjoint.arg_a3.cderiv_rule

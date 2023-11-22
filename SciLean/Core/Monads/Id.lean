@@ -30,9 +30,9 @@ noncomputable
 instance : RevDerivMonad K Id Id where
   revDerivM f := revCDeriv K f
   HasAdjDiffM f := HasAdjDiff K f
-  revDerivM_pure f := by simp[pure]
+  revDerivM_pure f := by simp[pure,revCDeriv]
   revDerivM_bind := by intros; simp; ftrans; rfl
-  revDerivM_pair y := by intros; simp; ftrans
+  revDerivM_pair y := by intros; simp; ftrans; simp[revCDeriv]
   HasAdjDiffM_pure := by simp[pure]
   HasAdjDiffM_bind := by simp[bind]; fprop
   HasAdjDiffM_pair y := 
@@ -131,7 +131,7 @@ theorem Bind.bind.arg_a0a1.revDerivM_rule_on_Id
          let dx' := ydg'.2 dxy'.2
          dxy'.1 + dx') := 
 by 
-  simp[revDerivM]; ftrans
+  simp[revDerivM]; ftrans; simp[revCDeriv]
 
 -- @[ftrans]
 -- This theorem causes some downstream issue in simp when applying congruence lemmas
