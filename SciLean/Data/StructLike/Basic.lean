@@ -6,13 +6,34 @@ namespace SciLean
 
 open Function
 
-class StructLike (E : Sort _) (I : outParam (Sort _)) (EI : outParam <| I → Sort _) where
-  proj : E → (i : I) → (EI i)
-  make : ((i : I) → (EI i)) → E
-  modify : (i : I) → (EI i → EI i) → (E → E)
-  left_inv : LeftInverse proj intro
-  right_inv : RightInverse proj intro
-  -- TODO: theorem about modify
+class StructLike (X : Sort _) (I : outParam (Sort _)) (XI : outParam <| I → Sort _) where
+  proj (x : X) (i : I) : (XI i)
+  make (f : (i : I) → (XI i)) : X
+  modify (i : I) (f : XI i → XI i) (x : X) : X
+  left_inv : LeftInverse proj make
+  right_inv : RightInverse proj make
+  proj_modify : ∀ i f x, 
+    proj (modify i f x) i = f (proj x i)
+  proj_modify' : ∀ i j f x, 
+    i ≠ j → proj (modify i f x) j = proj x j
+
+namespace StructLike
+
+variable {X I XI} [StructLike X I XI]
+
+attribute [simp] proj_modify proj_modify'
+
+@[simp]
+theorem proj_make (f : (i : I) → XI i) (i : I)
+  : proj (X:=X) (make f) i = f i := by apply congr_fun; apply left_inv
+
+@[simp]
+theorem make_proj (x : X)
+  : make (X:=X) (fun i => proj x i) = x := by apply right_inv
+
+theorem ext (x x' : X) : (∀ i, proj x i = proj x' i) → x = x' := 
+by
+  intro h; rw[← make_proj x]; rw[← make_proj x']; simp[h]
 
 
 /-- Every type is `StructLike` with `Unit` as index set.
@@ -21,14 +42,16 @@ instance (priority:=low) : StructLike α Unit (fun _ => α) where
   proj := fun x _ => x
   make := fun f => f ()
   modify := fun _ f x => f x
-  left_inv := sorry_proof
-  right_inv := sorry_proof
+  left_inv := by simp[LeftInverse]
+  right_inv := by simp[Function.RightInverse, LeftInverse]
+  proj_modify := by simp
+  proj_modify' := by simp
 
 --------------------------------------------------------------------------------
 -- Pi --------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) 
+instance (priority:=low+1) 
   (I : Type _) (E : I → Type _)
   (J : I → Type _) (EJ : (i : I) → (J i) → Type _)
   [∀ (i : I), StructLike (E i) (J i) (EJ i)] [DecidableEq I]
@@ -40,8 +63,10 @@ instance (priority:=low)
       StructLike.modify (h▸j) (h▸f) (x i')
     else
       (x i')
-  left_inv := sorry_proof
-  right_inv := sorry_proof
+  left_inv := by simp[LeftInverse]
+  right_inv := by simp[Function.RightInverse, LeftInverse]
+  proj_modify := by simp
+  proj_modify' := by sorry_proof
 
 instance
   (E I J : Type _) (EI : I → Type _)
@@ -50,13 +75,14 @@ instance
   proj := fun f (j,i) => StructLike.proj (f j) i
   make := fun f j => StructLike.make fun i => f (j,i)
   modify := fun (j,i) f x j' =>   
-    if h : j=j' then
+    if j=j' then
       StructLike.modify i f (x j)
     else
       (x j')
-      
-  left_inv := sorry_proof
-  right_inv := sorry_proof
+  left_inv := by simp[LeftInverse]
+  right_inv := by simp[Function.RightInverse, LeftInverse]
+  proj_modify := by simp
+  proj_modify' := by intro (j,i) (j',i') f x _h; simp; sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -80,31 +106,16 @@ instance [StructLike E I EI] [StructLike F J FJ]
     match i with
     | .inl a => (StructLike.modify a f x, y)
     | .inr b => (x, StructLike.modify b f y)
-  left_inv := sorry_proof
-  right_inv := sorry_proof
+  left_inv := by intro x; funext i; induction i <;> simp[LeftInverse]
+  right_inv := by simp[Function.RightInverse, LeftInverse]
+  proj_modify := by simp
+  proj_modify' := by intro i j f x h; induction j <;> induction i <;> (simp at h; simp (disch:=assumption))
 
 
 
 --------------------------------------------------------------------------------
 -- TODO: Add some lawfulness w.r.t. to +,•,0
 
-@[simp]
-theorem StruckLike.make_zero
-  {X I : Type}  {XI : I → Type} [StructLike X I XI] 
-  [Zero X] [∀ i, Zero (XI i)]
-  : StructLike.make (E:=X) (fun _ => 0)
-    =
-    0 :=
-by
-  sorry
 
+  
 
-@[simp]
-theorem StruckLike.make_add
-  {X I : Type}  {XI : I → Type} [StructLike X I XI] 
-  [Zero X] [∀ i, Zero (XI i)]
-  : StructLike.make (E:=X) (fun _ => 0)
-    =
-    0 :=
-by
-  sorry

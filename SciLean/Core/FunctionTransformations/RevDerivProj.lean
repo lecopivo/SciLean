@@ -14,11 +14,13 @@ variable
   {W : Type _} [SemiInnerProductSpace K W]
   {ι : Type _} [EnumType ι]
   {E I : Type _} {EI : I → Type _} 
-  [StructLike E I EI]
+  [StructLike E I EI] [EnumType I]
   [SemiInnerProductSpace K E] [∀ i, SemiInnerProductSpace K (EI i)]
+  [SemiInnerProductSpaceStruct K E I EI]
   {F J : Type _} {FJ : J → Type _} 
-  [StructLike F J FJ]
+  [StructLike F J FJ] [EnumType J]
   [SemiInnerProductSpace K F] [∀ j, SemiInnerProductSpace K (FJ j)]
+  [SemiInnerProductSpaceStruct K F J FJ]
 
 noncomputable
 def revDerivProj
@@ -31,9 +33,8 @@ def revDerivProj
 noncomputable
 def revDerivProjUpdate
   (f : X → E) (x : X) : E×((i : I)→EI i→X→X) :=
-  let ydf' := revDerivUpdate K f x
-  (ydf'.1, fun i de dx => 
-    ydf'.2 (have := Classical.propDecidable; StructLike.make fun i' => if h:i=i' then h▸de else 0) 1 dx)
+  let ydf' := revDerivProj K f x
+  (ydf'.1, fun i de dx => dx + ydf'.2 i de)
 
 
 --------------------------------------------------------------------------------
@@ -61,10 +62,18 @@ theorem revDerivProjUpdate.id_rule
        fun i de dx => 
          StructLike.modify i (fun ei => ei + de) dx) := 
 by
-  simp[revDerivProjUpdate]
-  ftrans
-  sorry_proof
+  funext x
+  simp[revDerivProjUpdate, revDerivProj.id_rule]
+  funext i de dx
+  apply StructLike.ext
+  intro i'
+  if h : i=i' then
+    subst h; simp
+  else
+    simp[StructLike.proj_modify' _ _ _ _ h, h]
+
 variable {E}
+
 
 variable (Y)
 theorem revDerivProj.const_rule (x : E)
@@ -84,8 +93,8 @@ theorem revDerivProjUpdate.const_rule (x : E)
       (x,
        fun i de dx => dx) := 
 by
-  simp[revDerivProjUpdate];
-  ftrans
+  simp[revDerivProjUpdate,revDerivProj.const_rule]
+
 variable {Y}
 
 
@@ -103,7 +112,21 @@ theorem revDerivProj.proj_rule [DecidableEq I] (i : ι)
         else 
           0) := 
 by
-  sorry_proof
+  simp[revDerivProj]
+  ftrans
+  funext x; simp
+  funext j dxj i'
+  apply StructLike.ext
+  intro j'
+  if h:i=i' then
+    subst h; simp
+    if h:j=j' then
+      subst h; simp
+    else
+      simp[h]
+  else
+    simp[h]
+
 
 
 theorem revDerivProjUpdate.proj_rule [DecidableEq I] (i : ι)
@@ -116,7 +139,19 @@ theorem revDerivProjUpdate.proj_rule [DecidableEq I] (i : ι)
         else 
           df i') := 
 by
-  sorry_proof
+  funext x;
+  simp[revDerivProjUpdate, revDerivProj.proj_rule]
+  funext j dxj f i'
+  apply StructLike.ext
+  intro j'
+  if h :i=i' then
+    subst h; simp
+    if h:j=j' then
+      subst h; simp
+    else
+      simp[h]
+  else
+    simp[h]
 
 
 theorem revDerivProj.comp_rule
@@ -131,7 +166,8 @@ theorem revDerivProj.comp_rule
        fun i de => 
          ydg'.2 (zdf'.2 i de)) := 
 by
-  sorry_proof
+  simp[revDerivProj]
+  ftrans
 
 
 theorem revDerivProjUpdate.comp_rule
@@ -146,7 +182,16 @@ theorem revDerivProjUpdate.comp_rule
        fun i de dx => 
          ydg'.2 (zdf'.2 i de) 1 dx) := 
 by
-  sorry_proof
+  funext x
+  simp[revDerivProjUpdate,revDerivProj.comp_rule]
+  constructor
+  . sorry
+  . 
+    funext i de dx
+    if h :i=i' then
+      subst h; simp
+    else
+      simp[h]
 
 
 theorem revDerivProj.let_rule
