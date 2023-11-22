@@ -194,14 +194,14 @@ theorem MProd.mk.arg_fstsnd.revDerivUpdate_rule
       let xdf' := revDerivUpdate K f w
       let ydg' := revDerivUpdate K g w
       (MProd.mk xdf'.1 ydg'.1, 
-       fun dxy k dw => 
-         xdf'.2 dxy.1 k (ydg'.2 dxy.2 k dw)) := 
+       fun dxy dw => 
+         xdf'.2 dxy.1 (ydg'.2 dxy.2 dw)) := 
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   unfold revDerivUpdate
   ftrans; funext x; simp
-  funext dy k dx
+  funext dy dx
   ftrans
   sorry_proof
 
@@ -228,7 +228,7 @@ theorem MProd.fst.arg_self.revDerivUpdate_rule
     =
     fun w => 
       let xydxy := revDerivUpdate K f w
-      (xydxy.1.1, fun dx' k dw => xydxy.2 (MProd.mk dx' 0) k dw) := by sorry_proof
+      (xydxy.1.1, fun dx' dw => xydxy.2 (MProd.mk dx' 0) dw) := by sorry_proof
 
 
 @[fprop]
@@ -252,7 +252,7 @@ theorem MProd.snd.arg_self.revDerivUpdate_rule
     =
     fun w => 
       let xydxy := revDerivUpdate K f w
-      (xydxy.1.2, fun dy' k dw => xydxy.2 (MProd.mk 0 dy') k dw) := by sorry_proof
+      (xydxy.1.2, fun dy' dw => xydxy.2 (MProd.mk 0 dy') dw) := by sorry_proof
 
 
 end OnSemiInnerProductSpace

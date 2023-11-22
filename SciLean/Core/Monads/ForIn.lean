@@ -272,7 +272,7 @@ theorem ForIn.forIn.arg_bf.revCDeriv_rule_def' [Index ι] [PlainDataType X] [Pla
       let mut x := xxs.1
 
       let revPassBody := hold fun i x dw dx' =>
-        (revDerivUpdate K (fun (w',x') => (f w' i x').val) (w,x)).2 dx' 1 (dw,0)
+        (revDerivUpdate K (fun (w',x') => (f w' i x').val) (w,x)).2 dx' (dw,0)
 
       (x, 
        fun dx' =>

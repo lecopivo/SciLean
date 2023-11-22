@@ -167,7 +167,7 @@ theorem ForInStep.yield.arg_a0.revDerivUpdate_rule
     =
     fun x => 
       let ydf := revDerivUpdate K a0 x
-      (.yield ydf.1, fun dy k dx => ydf.2 dy.val k dx)
+      (.yield ydf.1, fun dy dx => ydf.2 dy.val dx)
   := by sorry_proof
 
 
@@ -213,7 +213,7 @@ theorem ForInStep.done.arg_a0.revDerivUpdate_rule
     =
     fun x => 
       let ydf := revDerivUpdate K a0 x
-      (.done ydf.1, fun dy k dx => ydf.2 dy.val k dx)
+      (.done ydf.1, fun dy dx => ydf.2 dy.val dx)
   := by sorry_proof
 
 @[ftrans]
@@ -258,7 +258,7 @@ theorem ForInStep.val.arg_a0.revDerivUpdate_rule
     =
     fun x => 
       let ydf := revDerivUpdate K a0 x
-      (ydf.1.val, fun dy k dx => ydf.2 (.yield dy) k dx)
+      (ydf.1.val, fun dy dx => ydf.2 (.yield dy) dx)
   := by sorry_proof
 
 @[ftrans]

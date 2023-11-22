@@ -184,9 +184,9 @@ theorem GetElem.getElem.arg_xs.revDerivUpdate_rule
     fun x =>
       let ydf := revDerivUpdate K f x
       (getElem ydf.1 idx dom,
-       fun delem (k : K) dx => 
+       fun delem dx => 
          let dcont := introElem fun i => if i = idx then delem else 0
-         ydf.2 dcont k dx) :=
+         ydf.2 dcont dx) :=
 by
   have ⟨_,_⟩ := hf
   unfold revDerivUpdate; ftrans; ftrans; simp
@@ -198,8 +198,8 @@ theorem GetElem.getElem.arg_xs.revDerivUpdate_rule_simple
     =
     fun cont =>
       (getElem cont idx dom,
-       fun delem k dcont => 
-         let dcont := ArrayType.modifyElem dcont idx (fun elem => elem + k • delem)
+       fun delem dcont => 
+         let dcont := ArrayType.modifyElem dcont idx (fun elem => elem + delem)
          dcont) :=
 by
   unfold revDerivUpdate; ftrans; sorry_proof
@@ -213,13 +213,13 @@ theorem GetElem.getElem.arg_xs_i.revDerivUpdate_rule
     fun x =>
       let ydf := revDerivUpdate K f x
       (fun idx => getElem ydf.1 idx dom,
-       fun delem (k : K) dx => 
+       fun delem dx => 
          let dcont := introElem delem
-         ydf.2 dcont k dx) :=
+         ydf.2 dcont dx) :=
 by
   have ⟨_,_⟩ := hf
   unfold revDerivUpdate; ftrans;
-  funext x; simp; funext dy k dx; simp
+  -- funext x; simp; funext dy k dx; simp
   -- ftrans -- fails to apply `semiAdjoint.pi_rule` because of some universe issues
   sorry_proof
 
@@ -438,9 +438,9 @@ theorem SetElem.setElem.arg_contelem.revDerivUpdate_rule
       let cdc := revDerivUpdate K cont x
       let ede := revDerivUpdate K elem x
       (setElem cdc.1 idx ede.1,
-       fun dcont' k dx => 
+       fun dcont' dx => 
          let delem' := dcont'[idx]
-         ede.2 delem' k (cdc.2 (setElem dcont' idx 0) k dx)
+         ede.2 delem' (cdc.2 (setElem dcont' idx 0) dx)
          ) := 
 by
   have ⟨_,_⟩ := hcont
