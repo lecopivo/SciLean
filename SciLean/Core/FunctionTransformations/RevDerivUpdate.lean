@@ -424,7 +424,7 @@ theorem HSMul.hSMul.arg_a0a1.revDerivUpdate_rule
     fun x => 
       let ydf := revDerivUpdate K f x
       let zdg := revDerivUpdate K g x
-
+      (ydf.1 • zdg.1, fun dy dx => ydf.2 (inner zdg.1 dy) (zdg.2 (conj ydf.1•dy) dx)) :=
 by 
   unfold revDerivUpdate; 
   funext x; ftrans; simp[mul_assoc,mul_comm,add_assoc]; sorry_proof
@@ -444,16 +444,14 @@ theorem HDiv.hDiv.arg_a0a1.revDerivUpdate_rule
       let zdg := revDerivUpdate K g x
       (ydf.1 / zdg.1, 
        -- fun dy k dx => (1 / (conj zdg.1)^2) • (conj zdg.1 • ydf.2 dy - conj ydf.1 • zdg.2 dy)) :=
-       fun dy k dx =>  
+       fun dy dx =>  
          let factor := ((conj zdg.1)^2)⁻¹
-         zdg.2 dy (k * factor * (-conj ydf.1)) (ydf.2 dy (k * factor * conj zdg.1) dx)) :=
+         let dy := factor * dy
+         zdg.2 (-conj ydf.1 * dy) (ydf.2 (conj zdg.1 * dy) dx)) :=
 
 by 
-  have ⟨_,_⟩ := hf
-  have ⟨_,_⟩ := hg
-  unfold revDerivUpdate; simp; ftrans; ftrans; simp
-  funext x; simp; funext dy k dx
-  simp[add_assoc,smul_smul,smul_sub,sub_eq_add_neg,mul_assoc]
+  unfold revDerivUpdate; 
+  funext x; ftrans; simp[mul_assoc,mul_comm,add_assoc]; sorry_proof
 
 
 -- HPow.hPow -------------------------------------------------------------------
@@ -467,11 +465,10 @@ def HPow.hPow.arg_a0.revDerivUpdate_rule
     fun x => 
       let ydf := revDerivUpdate K f x
       (ydf.1 ^ n, 
-       fun dy k dx => ydf.2 dy (k * n * (conj ydf.1 ^ (n-1))) dx) :=
+       fun dy dx => ydf.2 (n * (conj ydf.1 ^ (n-1)) * dy) dx) :=
 by 
-  have ⟨_,_⟩ := hf
-  funext x
-  unfold revDerivUpdate; simp; funext dy k dx; ftrans; ftrans; simp[smul_smul]; ring_nf
+  unfold revDerivUpdate; 
+  funext x; ftrans; simp[mul_assoc,mul_comm,add_assoc]; funext dy dx; sorry_proof
 
 
 
@@ -486,14 +483,12 @@ theorem SciLean.EnumType.sum.arg_f.revDerivUpdate_rule {ι : Type _} [EnumType �
     fun x => 
       let ydf := fun i => revDerivUpdate K (fun x => f x i) x
       (∑ i, (ydf i).1, 
-       fun dy k dx => revDerivUpdate.fun_fold (fun i : ι => (ydf i).2 dy k) dx) :=
+       fun dy dx => revDerivUpdate.fun_fold (fun i : ι => (ydf i).2 dy) dx) :=
 by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
   simp [revDerivUpdate]
-  funext x; simp; funext dy k dx
-  ftrans
-  sorry_proof
+  funext x; simp; sorry_proof
 
 
 
@@ -524,19 +519,15 @@ theorem Inner.inner.arg_a0a1.revDerivUpdate_rule
       let dx₁ := y₁df.2 y₂dg.1
       let dx₂ := y₂dg.2 y₁df.1
       (⟪y₁df.1, y₂dg.1⟫[R],
-       fun dr k dx => 
+       fun dr dx => 
          -- conj dr • dx₁ + dr • dx₂):=
-         y₂dg.2 y₁df.1 (k * dr) (y₁df.2 y₂dg.1 (k * conj dr) dx) ) := 
+         y₂dg.2 (dr • y₁df.1) (y₁df.2 (conj dr • y₂dg.1) dx) ) := 
 
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   simp[revDerivUpdate]
-  funext x; simp; funext dr k dx
-  ftrans
-  simp
-  ftrans
-  simp [smul_smul,add_assoc]
+  funext x; simp; sorry_proof
 
 
 @[ftrans]
@@ -549,15 +540,15 @@ theorem SciLean.Norm2.norm2.arg_a0.revDerivUpdate_rule
       let ydf := revDerivUpdate R f x
       let ynorm2 := ‖ydf.1‖₂²[R]
       (ynorm2,
-       fun dr k dx => 
-          ydf.2 ydf.1 (k * 2 * dr) dx) :=
+       fun dr dx => 
+          ydf.2 (((2:R)*dr)•ydf.1) dx) :=
 by 
   have ⟨_,_⟩ := hf
   funext x; simp[revDerivUpdate]
   ftrans only
   simp
   ftrans
-  simp[smul_smul,mul_assoc]
+  sorry_proof
 
 
 @[ftrans]
@@ -569,15 +560,15 @@ theorem SciLean.norm₂.arg_x.revDerivUpdate_rule_at
     let ydf := revDerivUpdate R f x
     let ynorm := ‖ydf.1‖₂[R]
     (ynorm,
-     fun dr k dx => 
-       ydf.2 ydf.1 (k * ynorm⁻¹ * dr) dx):=
+     fun dr dx => 
+       ydf.2 ((ynorm⁻¹ * dr)•ydf.1) dx):=
 by 
   have ⟨_,_⟩ := hf
   simp[revDerivUpdate]
   ftrans only
   simp
   ftrans
-  funext dr; simp[smul_smul,mul_assoc]
+  funext dr; sorry_proof
 
 end InnerProductSpace
 
