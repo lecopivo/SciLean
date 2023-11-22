@@ -351,7 +351,7 @@ by
 
 @[fprop]
 def HPow.hPow.arg_a0.HasAdjDiff_rule
-  (n : Nat) (x : X) (f : X → K) (hf : HasAdjDiff K f)
+  (n : Nat) (f : X → K) (hf : HasAdjDiff K f)
   : HasAdjDiff K (fun x => f x ^ n) := 
 by 
   have ⟨_,_⟩ := hf
