@@ -3,7 +3,7 @@ import SciLean.Core.FunctionPropositions.HasAdjDiff
 
 import SciLean.Core.FunctionTransformations.SemiAdjoint
 
-import SciLean.Data.StructLike
+import SciLean.Data.StructType.Algebra
 
 import SciLean.Data.Curry
 
@@ -20,11 +20,11 @@ variable
   {ι : Type _} [EnumType ι]
   {κ : Type _} [EnumType κ]
   {E I : Type _} {EI : I → Type _} 
-  [StructLike E I EI] [EnumType I]
+  [StructType E I EI] [EnumType I]
   [SemiInnerProductSpace K E] [∀ i, SemiInnerProductSpace K (EI i)]
   [SemiInnerProductSpaceStruct K E I EI]
   {F J : Type _} {FJ : J → Type _} 
-  [StructLike F J FJ] [EnumType J]
+  [StructType F J FJ] [EnumType J]
   [SemiInnerProductSpace K F] [∀ j, SemiInnerProductSpace K (FJ j)]
   [SemiInnerProductSpaceStruct K F J FJ]
 
@@ -46,7 +46,7 @@ def revDerivProj [DecidableEq I]
   (f : X → E) (x : X) : E×((i : I)→EI i→X) :=
   let ydf' := revDeriv K f x
   (ydf'.1, fun i de => 
-    ydf'.2 (StructLike.oneHot i de))
+    ydf'.2 (oneHot i de))
 
 noncomputable
 def revDerivProjUpdate [DecidableEq I]
@@ -313,7 +313,7 @@ theorem id_rule
     fun x => 
       (x,
        fun i de => 
-         StructLike.oneHot i de) := 
+         oneHot i de) := 
 by
   simp[revDerivProj, revDeriv.id_rule]
 
@@ -336,7 +336,7 @@ theorem proj_rule [DecidableEq I] (i : ι)
     fun f => 
       (f i, fun j dxj i' => 
         if i=i' then
-          StructLike.oneHot j dxj
+          oneHot j dxj
         else 
           0) := 
 by
@@ -374,7 +374,7 @@ by
 
 theorem pi_rule
   (f :  X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i))
-  : (@revDerivProj K _ _ _ _ Unit (fun _ => ι→Y) (StructLike.instStructLikeDefault) _ _ _ fun (x : X) (i : ι) => f x i)
+  : (@revDerivProj K _ _ _ _ Unit (fun _ => ι→Y) (StructType.instStructTypeDefault) _ _ _ fun (x : X) (i : ι) => f x i)
     =
     fun x =>
       let ydf := revDerivProjUpdate K f x
@@ -404,7 +404,7 @@ theorem id_rule
     fun x => 
       (x,
        fun i de dx => 
-         StructLike.modify i (fun ei => ei + de) dx) := 
+         structModify i (fun ei => ei + de) dx) := 
 by
   funext x
   simp[revDerivProjUpdate, revDerivProj.id_rule]
@@ -429,14 +429,14 @@ theorem proj_rule [DecidableEq I] (i : ι)
     fun f => 
       (f i, fun j dxj df i' =>
         if i=i' then
-          StructLike.modify j (fun xj => xj + dxj) (df i')
+          structModify j (fun xj => xj + dxj) (df i')
         else 
           df i') := 
 by
   funext x;
   simp[revDerivProjUpdate, revDerivProj.proj_rule]
   funext j dxj f i'
-  apply StructLike.ext
+  apply structExt
   intro j'
   if h :i=i' then
     subst h; simp
@@ -480,7 +480,7 @@ by
 
 theorem pi_rule
   (f :  X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i))
-  : (@revDerivProjUpdate K _ _ _ _ Unit (fun _ => ι→Y) (StructLike.instStructLikeDefault) _ _ _ fun (x : X) (i : ι) => f x i)
+  : (@revDerivProjUpdate K _ _ _ _ Unit (fun _ => ι→Y) (StructType.instStructTypeDefault) _ _ _ fun (x : X) (i : ι) => f x i)
     =
     fun x =>
       let ydf := revDerivProjUpdate K f x
@@ -726,9 +726,7 @@ def ftransExt : FTransExt where
 
   idRule  e X := do
     let .some K := e.getArg? 0 | return none
-    IO.println "hih"
     let proof ← mkAppOptM ``id_rule #[K,none, X,none,none,none,none,none]
-    IO.println s!"proof of {← inferType proof}"
     tryTheorems
       #[ { proof := ← mkAppOptM ``id_rule #[K,none, X,none,none,none,none,none], origin := .decl ``id_rule, rfl := false} ]
       discharger e
@@ -879,9 +877,9 @@ variable
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
-  {X' Xi : Type} {XI : Xi → Type} [StructLike X' Xi XI] [EnumType Xi]
-  {Y' Yi : Type} {YI : Yi → Type} [StructLike Y' Yi YI] [EnumType Yi]
-  {Z' Zi : Type} {ZI : Zi → Type} [StructLike Z' Zi ZI] [EnumType Zi]
+  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [EnumType Xi]
+  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [EnumType Yi]
+  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [EnumType Zi]
   [SemiInnerProductSpace K X'] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpaceStruct K X' Xi XI]
   [SemiInnerProductSpace K Y'] [∀ i, SemiInnerProductSpace K (YI i)] [SemiInnerProductSpaceStruct K Y' Yi YI]
   [SemiInnerProductSpace K Z'] [∀ i, SemiInnerProductSpace K (ZI i)] [SemiInnerProductSpaceStruct K Z' Zi ZI]
@@ -937,10 +935,10 @@ theorem Prod.mk.arg_fstsnd.revDerivProj_rule
          | .inr j => zdf.2 j dyz) := 
 by
   unfold revDerivProj
-  funext x; ftrans; simp
+  funext x; ftrans; simp[revDerivUpdate]
   funext i dyz
   induction i <;>
-    { simp[StructLike.make,StructLike.oneHot]
+    { simp[oneHot,structMake]
       apply congr_arg
       congr; funext i; congr; funext h
       subst h; rfl
@@ -980,7 +978,7 @@ theorem Prod.fst.arg_self.revDeriv_rule
       (yzdf.1.1, fun dy => yzdf.2 (.inl ()) dy) := 
 by 
   have ⟨_,_⟩ := hf
-  unfold revDerivProj; unfold revDeriv; ftrans; ftrans; simp[StructLike.make, StructLike.oneHot]
+  unfold revDerivProj; unfold revDeriv; ftrans; ftrans; simp[structMake, oneHot]
 
 @[ftrans]
 theorem Prod.fst.arg_self.revDerivUpdate_rule
@@ -1007,7 +1005,7 @@ by
   unfold revDerivProj
   funext x; ftrans; simp[revDerivProj]
   funext e dxy
-  simp[StructLike.make, StructLike.oneHot]
+  simp[structMake, oneHot]
   apply congr_arg
   congr; funext i; congr; funext h; subst h; rfl
 
@@ -1039,7 +1037,7 @@ theorem Prod.snd.arg_self.revDeriv_rule
       (yzdf.1.2, fun dy => yzdf.2 (.inr ()) dy) := 
 by 
   have ⟨_,_⟩ := hf
-  unfold revDerivProj; unfold revDeriv; ftrans; ftrans; simp[StructLike.make, StructLike.oneHot]
+  unfold revDerivProj; unfold revDeriv; ftrans; ftrans; simp[structMake, oneHot]
 
 @[ftrans]
 theorem Prod.snd.arg_self.revDerivUpdate_rule
@@ -1066,7 +1064,7 @@ by
   unfold revDerivProj
   funext x; ftrans; simp[revDerivProj]
   funext e dxy
-  simp[StructLike.make, StructLike.oneHot]
+  simp[structMake, oneHot]
   apply congr_arg
   congr; funext i; congr; funext h; subst h; rfl
 
@@ -1297,7 +1295,7 @@ theorem HMul.hMul.arg_a0a1.revDerivProj_rule
       (ydf.1 * zdg.1, fun _ dy => ydf.2 ((conj zdg.1)*dy) (zdg.2 (conj ydf.1* dy))) :=
 by 
   unfold revDerivProj
-  ftrans; simp[StructLike.oneHot, StructLike.make]
+  ftrans; simp[oneHot, structMake]
 
 @[ftrans]
 theorem HMul.hMul.arg_a0a1.revDerivProjUpdate_rule
@@ -1352,7 +1350,7 @@ by
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revDerivProj_rule
-  {Y Yi : Type} {YI : Yi → Type} [StructLike Y Yi YI] [EnumType Yi]
+  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [EnumType Yi]
   [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
   (f : X → K) (g : X → Y)
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
@@ -1361,14 +1359,14 @@ theorem HSMul.hSMul.arg_a0a1.revDerivProj_rule
     fun x => 
       let ydf := revDerivUpdate K f x
       let zdg := revDerivProj K g x
-      (ydf.1 • zdg.1, fun i (dy : YI i) => ydf.2 (inner (StructLike.proj zdg.1 i) dy) (zdg.2 i (conj ydf.1•dy))) :=
+      (ydf.1 • zdg.1, fun i (dy : YI i) => ydf.2 (inner (structProj zdg.1 i) dy) (zdg.2 i (conj ydf.1•dy))) :=
 by 
   unfold revDerivProj
   ftrans; simp[revDerivUpdate,smul_push,revDeriv]
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revDerivProjUpdate_rule
-  {Y Yi : Type} {YI : Yi → Type} [StructLike Y Yi YI] [EnumType Yi]
+  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [EnumType Yi]
   [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
   (f : X → K) (g : X → Y)
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
@@ -1377,7 +1375,7 @@ theorem HSMul.hSMul.arg_a0a1.revDerivProjUpdate_rule
     fun x => 
       let ydf := revDerivUpdate K f x
       let zdg := revDerivProjUpdate K g x
-      (ydf.1 • zdg.1, fun i (dy : YI i) dx => ydf.2 (inner (StructLike.proj zdg.1 i) dy) (zdg.2 i (conj ydf.1•dy) dx)) :=
+      (ydf.1 • zdg.1, fun i (dy : YI i) dx => ydf.2 (inner (structProj zdg.1 i) dy) (zdg.2 i (conj ydf.1•dy) dx)) :=
 by 
   unfold revDerivProjUpdate
   ftrans; simp[revDerivUpdate,add_assoc]
@@ -1436,7 +1434,7 @@ theorem HDiv.hDiv.arg_a0a1.revDerivProj_rule
        fun _ dx' => (1 / (conj zdg.1)^2) • (zdg.2 (-conj ydf.1 • dx') (conj zdg.1 • ydf.2 dx'))) :=
 by 
   unfold revDerivProj
-  ftrans; simp[StructLike.oneHot, StructLike.make]
+  ftrans; simp[oneHot, structMake]
 
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.revDerivProjUpdate_rule
@@ -1496,7 +1494,7 @@ def HPow.hPow.arg_a0.revDerivProj_rule
       let ydf := revDeriv K f x
       (ydf.1 ^ n, fun _ dx' => ydf.2 ((n : K) * (conj ydf.1 ^ (n-1)) * dx')) :=
 by 
-  unfold revDerivProj; ftrans; simp[StructLike.oneHot,StructLike.make]
+  unfold revDerivProj; ftrans; simp[oneHot,structMake]
 
 @[ftrans]
 def HPow.hPow.arg_a0.revDerivProjUpdate_rule
@@ -1508,7 +1506,7 @@ def HPow.hPow.arg_a0.revDerivProjUpdate_rule
       (ydf.1 ^ n, 
        fun _ dy dx => ydf.2 (n * (conj ydf.1 ^ (n-1)) * dy) dx) :=
 by 
-  unfold revDerivProjUpdate; ftrans; simp[StructLike.oneHot,StructLike.make,revDerivUpdate]
+  unfold revDerivProjUpdate; ftrans; simp[oneHot,structMake,revDerivUpdate]
 
 
 -- EnumType.sum ----------------------------------------------------------------
@@ -1763,7 +1761,7 @@ theorem Inner.inner.arg_a0a1.revDerivProj_rule
          y₂dg.2 (dr • y₁df.1) (y₁df.2 (dr • y₂dg.1))) :=
 by 
   simp[revDerivProj]
-  ftrans; simp[StructLike.oneHot, StructLike.make]
+  ftrans; simp[oneHot, structMake]
 
 @[ftrans]
 theorem Inner.inner.arg_a0a1.revDerivProjUpdate_rule
@@ -1836,7 +1834,7 @@ theorem SciLean.Norm2.norm2.arg_a0.revDerivProj_rule
 by 
   have ⟨_,_⟩ := hf
   funext x; simp[revDerivProj]
-  ftrans; simp[StructLike.oneHot,StructLike.make]
+  ftrans; simp[oneHot,structMake]
 
 @[ftrans]
 theorem SciLean.Norm2.norm2.arg_a0.revDerivProjUpdate_rule
@@ -1907,7 +1905,7 @@ theorem SciLean.norm₂.arg_x.revDerivProj_rule_at
 by 
   have ⟨_,_⟩ := hf
   simp[revDerivProj]
-  ftrans only; simp[StructLike.oneHot, StructLike.make]
+  ftrans only; simp[oneHot, structMake]
 
 @[ftrans]
 theorem SciLean.norm₂.arg_x.revDerivProjUpdate_rule_at

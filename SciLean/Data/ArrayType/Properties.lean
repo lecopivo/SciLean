@@ -9,8 +9,8 @@ set_option linter.unusedVariables false
 section GenericArrayType
 
 variable 
-  {K : Type _} [IsROrC K]
-  {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
+  {K : Type} [IsROrC K]
+  {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
   [ArrayType Cont Idx Elem] [Index Idx]
   
 
@@ -48,7 +48,7 @@ end OnNormedSpaces
 section OnVec
 
 variable 
-  {X : Type _} [Vec K X]
+  {X : Type} [Vec K X]
   [Vec K Elem]
 
 @[fprop]
@@ -114,7 +114,7 @@ end OnVec
 section OnSemiInnerProductSpace
 
 variable 
-  {X : Type _} [SemiInnerProductSpace K X]
+  {X : Type} [SemiInnerProductSpace K X]
   [SemiInnerProductSpace K Elem]
 
 @[fprop]
@@ -158,6 +158,21 @@ by
   unfold revCDeriv; ftrans; ftrans; simp
 
 @[ftrans]
+theorem GetElem.getElem.arg_xs.revCDeriv_rule_at
+  (f : X → Cont) (idx : Idx) (dom) (x : X)
+  (hf : HasAdjDiffAt K f x)
+  : revCDeriv K (fun x => getElem (f x) idx dom) x
+    =
+    let ydf := revCDeriv K f x
+    (getElem ydf.1 idx dom,
+     fun delem => 
+       let dcont : Cont := introElem fun i => if i=idx then delem else 0
+       ydf.2 dcont) :=
+by
+  have ⟨_,_⟩ := hf
+  unfold revCDeriv; ftrans; ftrans; simp
+
+@[ftrans]
 theorem GetElem.getElem.arg_xs_i.revCDeriv_rule
   (f : X → Cont) (dom) 
   (hf : HasAdjDiff K f)
@@ -174,89 +189,77 @@ by
   unfold revCDeriv; ftrans
   sorry_proof
 
--- @[ftrans] -- this one is considered harmful as it introduces one hot vector
+
+instance {Cont Idx Elem} [ArrayType Cont Idx Elem] [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => ElemI i) where
+  structProj := sorry
+  structMake := sorry
+  structModify := sorry
+  left_inv := sorry
+  right_inv := sorry
+  structProj_structModify := sorry
+  structProj_structModify' := sorry
+  
+
+@[ftrans]
+theorem GetElem.getElem.arg_xs.revDeriv_rule
+  (f : X → Cont) (idx : Idx) (dom)
+  (hf : HasAdjDiff K f)
+  : revDeriv K (fun x => getElem (f x) idx dom)
+    =
+    fun x =>
+      let ydf := revDerivProj K f x
+      (getElem ydf.1 idx dom,
+       fun delem => ydf.2 (idx,()) delem) :=
+by
+  have ⟨_,_⟩ := hf
+  unfold revDeriv; ftrans; ftrans
+  funext x; simp[revDerivProj,revDeriv]
+  funext delem;
+  congr; apply ArrayType.ext; -- needs proper StructType instance for ArrayType
+  sorry_proof
+
 @[ftrans]
 theorem GetElem.getElem.arg_xs.revDerivUpdate_rule
-  (f : X → Cont) (idx : Idx) (dom) 
+  (f : X → Cont) (idx : Idx) (dom)
   (hf : HasAdjDiff K f)
   : revDerivUpdate K (fun x => getElem (f x) idx dom)
     =
     fun x =>
-      let ydf := revDerivUpdate K f x
+      let ydf := revDerivProjUpdate K f x
       (getElem ydf.1 idx dom,
-       fun delem dx => 
-         let dcont := introElem fun i => if i = idx then delem else 0
-         ydf.2 dcont dx) :=
+       fun delem dx => ydf.2 (idx,()) delem dx) :=
 by
-  have ⟨_,_⟩ := hf
-  unfold revDerivUpdate; ftrans; ftrans; simp
+  unfold revDerivUpdate; ftrans; ftrans; simp[revDerivProjUpdate]
+
 
 @[ftrans]
-theorem GetElem.getElem.arg_xs.revDerivUpdate_rule_simple 
-  (idx : Idx) (dom) 
-  : revDerivUpdate K (fun cont : Cont => getElem cont idx dom)
-    =
-    fun cont =>
-      (getElem cont idx dom,
-       fun delem dcont => 
-         let dcont := ArrayType.modifyElem dcont idx (fun elem => elem + delem)
-         dcont) :=
-by
-  unfold revDerivUpdate; ftrans; sorry_proof
-
-@[ftrans]
-theorem GetElem.getElem.arg_xs_i.revDerivUpdate_rule
-  (f : X → Cont) (dom) 
+theorem GetElem.getElem.arg_xs.revDerivProj_rule
+  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  [SemiInnerProductSpaceStruct K Elem I ElemI]
+  (f : X → Cont) (idx : Idx) (dom)
   (hf : HasAdjDiff K f)
-  : revDerivUpdate K (fun x idx => getElem (f x) idx dom)
+  : revDerivProj K (fun x => getElem (f x) idx dom)
     =
     fun x =>
-      let ydf := revDerivUpdate K f x
-      (fun idx => getElem ydf.1 idx dom,
-       fun delem dx => 
-         let dcont := introElem delem
-         ydf.2 dcont dx) :=
+      let ydf := revDerivProj K f x
+      (getElem ydf.1 idx dom,
+       fun i delem => ydf.2 (idx,i) delem) :=
 by
-  have ⟨_,_⟩ := hf
-  unfold revDerivUpdate; ftrans;
-  -- funext x; simp; funext dy k dx; simp
-  -- ftrans -- fails to apply `semiAdjoint.pi_rule` because of some universe issues
   sorry_proof
 
--- @[ftrans]
--- theorem GetElem.getElem.arg_xs.revDerivUpdate_rule
---   (f : X → Cont) (dom) 
---   (hf : HasAdjDiff K f)
---   : revDerivUpdate K (fun x idx => getElem (f x) idx dom)
---     =
---     fun x =>
---       let ydf := revDerivUpdate K f x
---       (fun idx => getElem ydf.1 idx dom,
---        fun delem (k : K) dx => 
---          let dcont := introElem delem
---          ydf.2 dcont k dx) :=
--- by
---   have ⟨_,_⟩ := hf
---   unfold revDerivUpdate; ftrans;
---   funext x; simp; funext dy k dx; simp
---   -- ftrans -- fails to apply `semiAdjoint.pi_rule` because of some universe issues
---   sorry_proof
-
-
 @[ftrans]
-theorem GetElem.getElem.arg_xs.revCDeriv_rule_at
-  (f : X → Cont) (idx : Idx) (dom) (x : X)
-  (hf : HasAdjDiffAt K f x)
-  : revCDeriv K (fun x => getElem (f x) idx dom) x
+theorem GetElem.getElem.arg_xs.revDerivProjUpdate_rule
+  (f : X → Cont) (idx : Idx) (dom)
+  (hf : HasAdjDiff K f)
+  : revDerivProjUpdate K (fun x => getElem (f x) idx dom)
     =
-    let ydf := revCDeriv K f x
-    (getElem ydf.1 idx dom,
-     fun delem => 
-       let dcont : Cont := introElem fun i => if i=idx then delem else 0
-       ydf.2 dcont) :=
+    fun x =>
+      let ydf := revDerivProjUpdate K f x
+      (getElem ydf.1 idx dom,
+       fun i delem dx => ydf.2 (idx,i) delem dx) :=
 by
-  have ⟨_,_⟩ := hf
-  unfold revCDeriv; ftrans; ftrans; simp
+  sorry_proof
+
 
 end OnSemiInnerProductSpace
 
@@ -446,6 +449,7 @@ by
   have ⟨_,_⟩ := hcont
   have ⟨_,_⟩ := helem
   unfold revDerivUpdate; ftrans; ftrans; simp[add_assoc]
+  sorry_proof
 
 
 end OnSemiInnerProductSpace
