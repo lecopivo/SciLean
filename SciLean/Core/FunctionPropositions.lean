@@ -8,3 +8,4 @@ import SciLean.Core.FunctionPropositions.HasSemiAdjoint
 import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 import SciLean.Core.FunctionPropositions.IsDifferentiable
 import SciLean.Core.FunctionPropositions.IsDifferentiableAt
+import SciLean.Core.FunctionPropositions.IsLinearMap
