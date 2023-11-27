@@ -1,1 +1,11 @@
-import SciLean.Core.Simp.Sum
+import Lean
+
+register_simp_attr add_pull
+register_simp_attr add_push
+register_simp_attr sub_pull
+register_simp_attr sub_push
+register_simp_attr neg_pull
+register_simp_attr neg_push
+register_simp_attr smul_pull
+register_simp_attr smul_push
+

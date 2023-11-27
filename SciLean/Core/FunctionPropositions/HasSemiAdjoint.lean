@@ -2,6 +2,8 @@ import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
 
 import SciLean.Core.Objects.SemiInnerProductSpace
+import SciLean.Core.FunctionPropositions.IsLinearMap
+import SciLean.Core.Simp
 
 set_option linter.unusedVariables false
 
@@ -31,16 +33,73 @@ and might have inner product defined only on a dense subset, see `SemiInnerProdu
 for more information.
  -/
 noncomputable
-def semiAdjoint (f : X → Y) :=
+def semiAdjoint (f : X → Y) (y : Y) : X :=
   match Classical.dec (HasSemiAdjoint K f) with
-  | isTrue h => Classical.choose h
+  | isTrue h => Classical.choose h y
   | isFalse _ => 0
 
 -- Basic identities ------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[simp]
-theorem semiAdjoint_zero
+-- there should be a command to generate these push/pull  theorems
+@[neg_pull]
+theorem semiAdjoint.arg_y.neg_pull 
+  (f : X → Y) (y : Y)
+  : semiAdjoint K f (-y)
+    =
+    - semiAdjoint K f y := sorry_proof
+
+@[neg_push]
+theorem semiAdjoint.arg_y.neg_push 
+  (f : X → Y) (y : Y)
+  : - semiAdjoint K f y
+    =
+    semiAdjoint K f (-y) := sorry_proof
+
+@[add_pull]
+theorem semiAdjoint.arg_y.add_pull 
+  (f : X → Y) (y y : Y)
+  : semiAdjoint K f (y+y')
+    =
+    semiAdjoint K f y + semiAdjoint K f y' := sorry_proof
+
+@[add_push]
+theorem semiAdjoint.arg_y.add_push
+  (f : X → Y) (y y' : Y)
+  : semiAdjoint K f y + semiAdjoint K f y'
+    =
+    semiAdjoint K f (y+y') := sorry_proof
+
+@[sub_pull]
+theorem semiAdjoint.arg_y.sub_pull 
+  (f : X → Y) (y y' : Y)
+  : semiAdjoint K f (y-y')
+    =
+    semiAdjoint K f y - semiAdjoint K f y' := sorry_proof
+
+@[sub_push]
+theorem semiAdjoint.arg_y.sub_push
+  (f : X → Y) (y : Y)
+  : semiAdjoint K f y - semiAdjoint K f y'
+    =
+    semiAdjoint K f (y-y') := sorry_proof
+
+@[smul_pull]
+theorem semiAdjoint.arg_y.smul_pull 
+  (f : X → Y) (y : Y) (k : K)
+  : semiAdjoint K f (k•y)
+    =
+    k • semiAdjoint K f y := sorry_proof
+
+@[smul_push]
+theorem semiAdjoint.arg_y.smul_push 
+  (f : X → Y) (y : Y) (k : K)
+  : k • semiAdjoint K f y
+    =
+    semiAdjoint K f (k•y) := sorry_proof
+
+@[simp, ftrans_simp]
+theorem semiAdjoint.arg_y.zero
   (f : X → Y)
   : semiAdjoint K f 0 = 0 := by sorry_proof
 
