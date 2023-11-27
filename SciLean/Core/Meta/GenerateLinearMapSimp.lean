@@ -166,6 +166,43 @@ def generateLinearMapSimps (isLinearMapTheorem : Name) : MetaM Unit := do
     for thrm in simps do
       generateLinearMapSimp ctx isLinearMap thrm (isSimpAttr:=false) (makeSimp:=true)
 
+
+/-- This commands generates simp lemmas for given linear function.
+
+The commands is used as
+```
+#generate_linear_map_simps thrmName
+```
+where `thrmName` is a name of a theorem that states that function `f` is linear i.e. `IsLinearMap K f`.
+
+The command generates theorems
+```
+@[add_push] theorem add_push (x x' : X) : f x + f x' = f (x + x') := ... 
+@[add_pull] theorem add_pull (x x' : X) : f (x + x') = f x + f x' := ...
+@[sub_push] theorem sub_push (x x' : X) : f x - f x' = f (x - x') := ...
+@[sub_pull] theorem sub_pull (x x' : X) : f (x - x') = f x - f x' := ...
+@[neg_push] theorem neg_push (x : X)    : - f x = f (- x) := ...
+@[neg_pull] theorem neg_pull (x : X)    : f (- x) = - f x := ...
+@[smul_push] theorem smul_push (x : X) (k : K) : k • f x = f (k • x) := ...
+@[smul_pull] theorem smul_pull (x : X) (k : K) : f (k • x) = k • f x := ...
+@[simp] theorem app_zero : f 0 = 0 := ...
+```
+All the above attributes are simp attributes. The ideas is that you can propagate 
+arithmetic operations by calling `simp` e.g. `simp only [add_pull]`.
+
+
+The command also supports functions jointly linear in two arguments. If we have
+`g : X → Y → Z` and `g_is_linear₂ : IsLinear K fun (x,y) => g x y` then
+```
+#generate_linear_map_simps g_is_linear₂
+```
+generates theorems like
+```
+@[add_push] theorem add_push (x x' : X) (y y' : Y) : g x y + g x' y' = g (x + x') (y + y') := ... 
+...
+```
+
+-/
 syntax (name:=genLinMapSimpsNotation) "#generate_linear_map_simps " ident : command
 
 open Lean Elab Term Command
