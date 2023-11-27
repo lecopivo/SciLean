@@ -2,8 +2,6 @@ import SciLean
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.RewriteBy
 
-import SciLean.Core.Simp.Sum
-
 open SciLean
 
 variable 
