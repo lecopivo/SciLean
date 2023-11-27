@@ -1186,7 +1186,6 @@ theorem HSub.hSub.arg_a0a1.revDerivProj_rule
 by 
   unfold revDerivProjUpdate; unfold revDerivProj
   ftrans; simp[revDerivUpdate, neg_pull,revDeriv]
-  sorry_proof
 
 
 @[ftrans]
@@ -1200,5 +1199,51 @@ theorem HSub.hSub.arg_a0a1.revDerivProjUpdate_rule
       (ydf.1 - ydg.1, fun i dy dx => ydg.2 i (-dy) (ydf.2 i dy dx)) := 
 by 
   unfold revDerivProjUpdate
-  ftrans; simp[revDerivProjUpdate]
-  sorry_proof
+  ftrans; simp[revDerivProjUpdate, neg_pull, revDerivProj, revDeriv,add_assoc]
+
+
+-- Neg.neg ---------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem Neg.neg.arg_a0.revDeriv_rule
+  (f : X → Y) (x : X) 
+  : (revDeriv K fun x => - f x) x
+    =
+    let ydf := revDeriv K f x
+    (-ydf.1, fun dy => - ydf.2 dy) :=
+by 
+  unfold revDeriv; simp; ftrans; ftrans
+
+@[ftrans]
+theorem Neg.neg.arg_a0.revDerivUpdate_rule
+  (f : X → Y)
+  : (revDerivUpdate K fun x => - f x)
+    =
+    fun x => 
+      let ydf := revDerivUpdate K f x
+      (-ydf.1, fun dy dx => ydf.2 (-dy) dx) :=
+by 
+  unfold revDerivUpdate; funext x; ftrans; simp[neg_pull,revDeriv]
+
+@[ftrans]
+theorem Neg.neg.arg_a0.revDerivProj_rule
+  (f : X → Y)
+  : (revDerivProj K fun x => - f x)
+    =
+    fun x => 
+      let ydf := revDerivProj K f x
+      (-ydf.1, fun i dy => ydf.2 i (-dy)) :=
+by 
+  unfold revDerivProj; ftrans; simp[neg_pull,revDeriv]
+
+@[ftrans]
+theorem Neg.neg.arg_a0.revDerivProjUpdate_rule
+  (f : X → Y)
+  : (revDerivProjUpdate K fun x => - f x)
+    =
+    fun x => 
+      let ydf := revDerivProjUpdate K f x
+      (-ydf.1, fun i dy dx => ydf.2 i (-dy) dx) :=
+by 
+  unfold revDerivProjUpdate; ftrans

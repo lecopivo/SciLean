@@ -1,5 +1,6 @@
 import SciLean.Core.Objects.SemiInnerProductSpace
 import SciLean.Core.Objects.FinVec
+import SciLean.Core.Simp
 import SciLean.Data.StructLike.Basic
 
 set_option linter.unusedVariables false
@@ -24,6 +25,10 @@ class VecStruct (K X I XI) [StructLike X I XI] [IsROrC K] [Vec K X] [∀ i, Vec 
   make_continuous : Continuous (fun f => make (X:=X) f)
 
 attribute [simp] VecStruct.proj_add VecStruct.proj_smul VecStruct.proj_zero
+
+@[neg_pull]
+theorem oneHot.arg_xi.neg_pull [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I) (xi : XI i)
+  : StructLike.oneHot (X:=X) i (- xi) = - StructLike.oneHot (X:=X) i xi := sorry_proof
 
 @[simp]
 theorem oneHot_zero [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I)
