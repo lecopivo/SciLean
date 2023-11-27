@@ -7,7 +7,7 @@ namespace SciLean
 
 open Function
 
-class StructType (X : Sort _) (I : outParam (Sort _)) (XI : outParam <| I → Sort _) where
+class StructType (X : Sort _) (I : (Sort _)) (XI : outParam <| I → Sort _) where
   structProj (x : X) (i : I) : (XI i)
   structMake (f : (i : I) → (XI i)) : X
   structModify (i : I) (f : XI i → XI i) (x : X) : X
@@ -38,7 +38,7 @@ theorem structProj_structMake (f : (i : I) → XI i) (i : I)
 
 @[simp, ftrans_simp]
 theorem structMake_structProj (x : X)
-  : structMake (X:=X) (fun i => structProj x i) = x := by apply right_inv
+  : structMake (X:=X) (fun (i : I) => structProj x i) = x := by apply right_inv
 
 @[simp, ftrans_simp]
 theorem structProj_oneHot [DecidableEq I] [∀ (i : I), Zero (XI i)] (xi : XI i)
@@ -51,9 +51,9 @@ by
   simp[oneHot]
   if h':i=j then simp [h'] at h else simp[h']
 
-theorem _root_.SciLean.structExt (x x' : X) : (∀ i, structProj x i = structProj x' i) → x = x' := 
+theorem _root_.SciLean.structExt (x x' : X) : (∀ i : I, structProj x i = structProj x' i) → x = x' := 
 by
-  intro h; rw[← structMake_structProj x]; rw[← structMake_structProj x']; simp[h]
+  intro h; rw[← structMake_structProj (I:=I) x]; rw[← structMake_structProj (I:=I) x']; simp[h]
 
 
 --------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ instance (priority:=low+1) instStrucTypePi
   structMake := fun f i => StructType.structMake fun j => f ⟨i,j⟩
   structModify := fun ⟨i,j⟩ f x i' => 
     if h : i'=i then
-      StructType.structModify (h▸j) (h▸f) (x i')
+      StructType.structModify (I:=J i') (h▸j) (h▸f) (x i')
     else
       (x i')
   left_inv := by simp[LeftInverse]

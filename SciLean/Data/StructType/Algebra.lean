@@ -22,10 +22,10 @@ variable
 
 open StructType in
 class VecStruct (K X I XI) [StructType X I XI] [IsROrC K] [Vec K X] [∀ i, Vec K (XI i)] : Prop where
-  structProj_add : ∀ i (x x' : X), structProj (x + x') i = structProj x i + structProj x' i
-  structProj_smul : ∀ i (k : K) (x : X), structProj (k • x) i = k • structProj x i
-  structProj_continuous : Continuous (fun (x : X) i =>  structProj x i)
-  structMake_continuous : Continuous (fun f => structMake (X:=X) f)
+  structProj_add : ∀ (i : I) (x x' : X), structProj (x + x') i = structProj x i + structProj x' i
+  structProj_smul : ∀ (i : I) (k : K) (x : X), structProj (k • x) i = k • structProj x i
+  structProj_continuous : Continuous (fun (x : X) (i : I) =>  structProj x i)
+  structMake_continuous : Continuous (fun (f : (i : I) → XI i) => structMake (X:=X) f)
 
 
 --------------------------------------------------------------------------------
@@ -86,12 +86,12 @@ attribute [simp, ftrans_simp]
   
 @[fprop]
 theorem structProj.arg_x.IsLinearMap_rule
-  (x : W → X) (hx : IsLinearMap K x)
+  (x : W → X) (i : I) (hx : IsLinearMap K x)
   : IsLinearMap K fun w => structProj (x w) i := sorry_proof
 
 @[fprop]
 theorem structProj.arg_x.IsDifferentiable_rule
-  (x : W → X) (hx : IsDifferentiable K x)
+  (x : W → X) (i : I) (hx : IsDifferentiable K x)
   : IsDifferentiable K fun w => structProj (x w) i := sorry_proof
 
 
@@ -122,9 +122,9 @@ theorem structMake.arg_f.IsDifferentiable_rule
 
 @[simp, ftrans_simp]
 theorem structMake_zero
-  : structMake (X:=X) (fun _ => 0) = 0 :=
+  : structMake (X:=X) (fun _ : I => 0) = 0 :=
 by
-  apply structExt; simp
+  apply structExt (I:=I); simp
 
 end StructType
 
@@ -152,7 +152,7 @@ theorem oneHot.arg_xi.IsDifferentiable_rule
 theorem add_oneHot_eq_structModify (i : I) (xi : XI i) (x : X)
   : x + oneHot (X:=X) i xi = structModify i (fun xi' => xi' + xi) x := 
 by
-  apply structExt; simp
+  apply structExt (I:=I); simp
   intro j
   if h:i=j then
     subst h; simp
@@ -175,7 +175,7 @@ end VecStruct
 open StructType in
 class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [IsROrC K] [EnumType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)] extends VecStruct K X I XI : Prop where
   inner_structProj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪structProj x i, structProj x' i⟫[K]
-  testFun_structProj : ∀ (x : X), TestFunction x ↔ (∀ i, TestFunction (structProj x i))
+  testFun_structProj : ∀ (x : X), TestFunction x ↔ (∀ i : I, TestFunction (structProj x i))
 
 
 --------------------------------------------------------------------------------
