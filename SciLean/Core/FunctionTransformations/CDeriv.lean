@@ -727,6 +727,18 @@ by
   case isFalse h => ext y; simp[h]
 
 
+-- not sure about the differentiability condition on `e`
+theorem ite.arg_chte.cderiv_rule
+  (c : X → Prop) [dec : ∀ x, Decidable (c x)] (t e : X → Y)
+  (ht : ∀ x ∈ closure c, IsDifferentiableAt K t x) (he : ∀ x ∈ (interior c)ᶜ, IsDifferentiableAt K e x)
+  (hc : (∀ x, x ∈ frontier c → cderiv K t x = cderiv K e x))
+  : cderiv K (fun x => ite (c x) (t x) (e x))
+    =
+    fun y =>
+      ite (c y) (cderiv K t y) (cderiv K e y) := 
+by
+  sorry_proof
+
 
 --------------------------------------------------------------------------------
 
