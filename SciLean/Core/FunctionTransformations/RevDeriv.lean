@@ -1312,3 +1312,74 @@ theorem HMul.hMul.arg_a0a1.revDerivProjUpdate_rule
 by 
   unfold revDerivProjUpdate
   ftrans; simp[revDerivUpdate,add_assoc]
+
+
+
+-- SMul.smul -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[ftrans]
+theorem HSMul.hSMul.arg_a0a1.revDeriv_rule
+  {Y : Type} [SemiHilbert K Y]
+  (f : X → K) (g : X → Y)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : (revDeriv K fun x => f x • g x)
+    =
+    fun x => 
+      let ydf := revDerivUpdate K f x
+      let zdg := revDeriv K g x
+      (ydf.1 • zdg.1, fun dx' => ydf.2 (inner zdg.1 dx') (conj ydf.1 • zdg.2 dx')) :=
+by 
+  have ⟨_,_⟩ := hf
+  have ⟨_,_⟩ := hg
+  unfold revDeriv; unfold revDerivUpdate; ftrans; ftrans; simp[revDeriv]
+
+
+@[ftrans]
+theorem HSMul.hSMul.arg_a0a1.revDerivUpdate_rule
+  {Y : Type} [SemiHilbert K Y]
+  (f : X → K) (g : X → Y)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : (revDerivUpdate K fun x => f x • g x)
+    =
+    fun x => 
+      let ydf := revDerivUpdate K f x
+      let zdg := revDerivUpdate K g x
+      (ydf.1 • zdg.1, fun dy dx => ydf.2 (inner zdg.1 dy) (zdg.2 (conj ydf.1•dy) dx)) :=
+by 
+  unfold revDerivUpdate; 
+  funext x; ftrans; simp[mul_assoc,add_assoc,revDerivUpdate,revDeriv,smul_push]
+
+@[ftrans]
+theorem HSMul.hSMul.arg_a0a1.revDerivProj_rule
+  {Y Yi : Type} {YI : Yi → Type} [StructLike Y Yi YI] [EnumType Yi]
+  [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
+  (f : X → K) (g : X → Y)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : (revDerivProj K fun x => f x • g x)
+    =
+    fun x => 
+      let ydf := revDerivUpdate K f x
+      let zdg := revDerivProj K g x
+      (ydf.1 • zdg.1, fun i (dy : YI i) => ydf.2 (inner (StructLike.proj zdg.1 i) dy) (zdg.2 i (conj ydf.1•dy))) :=
+by 
+  unfold revDerivProj
+  ftrans; simp[revDerivUpdate,smul_push,revDeriv]
+
+@[ftrans]
+theorem HSMul.hSMul.arg_a0a1.revDerivProjUpdate_rule
+  {Y Yi : Type} {YI : Yi → Type} [StructLike Y Yi YI] [EnumType Yi]
+  [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
+  (f : X → K) (g : X → Y)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
+  : (revDerivProjUpdate K fun x => f x • g x)
+    =
+    fun x => 
+      let ydf := revDerivUpdate K f x
+      let zdg := revDerivProjUpdate K g x
+      (ydf.1 • zdg.1, fun i (dy : YI i) dx => ydf.2 (inner (StructLike.proj zdg.1 i) dy) (zdg.2 i (conj ydf.1•dy) dx)) :=
+by 
+  unfold revDerivProjUpdate
+  ftrans; simp[revDerivUpdate,add_assoc]
+
+

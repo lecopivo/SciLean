@@ -30,6 +30,12 @@ attribute [simp] VecStruct.proj_add VecStruct.proj_smul VecStruct.proj_zero
 theorem oneHot.arg_xi.neg_pull [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I) (xi : XI i)
   : StructLike.oneHot (X:=X) i (- xi) = - StructLike.oneHot (X:=X) i xi := sorry_proof
 
+
+@[smul_push]
+theorem oneHot.arg_xi.smul_push [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I) (xi : XI i) (k : K)
+  : k • StructLike.oneHot (X:=X) i xi = StructLike.oneHot (X:=X) i (k•xi) := sorry_proof
+
+
 @[simp]
 theorem oneHot_zero [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I)
   : StructLike.oneHot (X:=X) i 0 = (0 : X) := sorry_proof
@@ -46,6 +52,14 @@ open StructLike in
 class SemiInnerProductSpaceStruct (K X I XI) [StructLike X I XI] [IsROrC K] [EnumType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)] extends VecStruct K X I XI : Prop where
   inner_proj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪proj x i, proj x' i⟫[K]
   testFun_proj : ∀ (x : X), TestFunction x ↔ (∀ i, TestFunction (proj x i))
+
+@[simp]
+theorem inner_oneHot_eq_inner_proj [StructLike X I XI] [EnumType I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
+  : ⟪x, StructLike.oneHot i xi⟫[K] = ⟪StructLike.proj x i, xi⟫[K] := sorry_proof
+
+@[simp]
+theorem inner_oneHot_eq_inner_proj' [StructLike X I XI] [EnumType I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
+  : ⟪StructLike.oneHot i xi, x⟫[K] = ⟪xi, StructLike.proj x i⟫[K] := sorry_proof
 
 instance (priority:=low) {X} [Vec K X] : VecStruct K X Unit (fun _ => X) where
   proj_add := by simp[StructLike.proj]
