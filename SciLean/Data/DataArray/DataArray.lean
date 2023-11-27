@@ -5,7 +5,6 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-#check Array.mkArray
 
 def _root_.ByteArray.mkArray (n : Nat) (v : UInt8) : ByteArray := Id.run do
   let mut a : ByteArray := .mkEmpty n

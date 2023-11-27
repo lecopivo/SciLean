@@ -31,6 +31,13 @@ theorem proj_make (f : (i : I) → XI i) (i : I)
 theorem make_proj (x : X)
   : make (X:=X) (fun i => proj x i) = x := by apply right_inv
 
+def oneHot [DecidableEq I] [∀ i, Zero (XI i)] (i : I) (xi : XI i) : X := 
+  StructLike.make fun i' =>
+    if h : i=i' then
+      h▸xi
+    else
+      0
+
 theorem ext (x x' : X) : (∀ i, proj x i = proj x' i) → x = x' := 
 by
   intro h; rw[← make_proj x]; rw[← make_proj x']; simp[h]
