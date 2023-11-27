@@ -20,33 +20,82 @@ open StructLike in
 class VecStruct (K X I XI) [StructLike X I XI] [IsROrC K] [Vec K X] [∀ i, Vec K (XI i)] : Prop where
   proj_add : ∀ i (x x' : X), proj (x + x') i = proj x i + proj x' i
   proj_smul : ∀ i (k : K) (x : X), proj (k • x) i = k • proj x i
-  proj_zero : ∀ i, proj (0 : X) i = 0
   proj_continuous : Continuous (fun (x : X) i =>  proj x i)
   make_continuous : Continuous (fun f => make (X:=X) f)
 
-attribute [simp] VecStruct.proj_add VecStruct.proj_smul VecStruct.proj_zero
+attribute [simp, ftrans_simp] VecStruct.proj_add VecStruct.proj_smul
 
-@[neg_pull]
-theorem oneHot.arg_xi.neg_pull [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I) (xi : XI i)
-  : StructLike.oneHot (X:=X) i (- xi) = - StructLike.oneHot (X:=X) i xi := sorry_proof
 
+--------------------------------------------------------------------------------
+-- VecStruct simps -------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+section VecStruct 
+open StructLike
+
+variable {X XI} 
+  [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI]
+
+-- TODO prove that `proj`, `make` and `oneHot` are linear functions and generate pull/push theorems
+-- probably mark `proj.arg_x.add_pull` and `proj.arg_x.smul_pull` with simp and ftrans_simp attributes
+-- probably mark `make.arg_f.add_push` and `make.arg_x.smul_push` with simp and ftrans_simp attributes
+--               `make.arg_f.sub_push`, `make.arg_f.neg_push`, ...
+
+
+@[simp,ftrans_simp]
+theorem VecStruct.proj_zero (i : I)
+  : proj (0 : X) i = (0 : XI i) := sorry_proof
+
+-- the following theorems about oneHot should be automatically generated from linearity of `oneHot` in `xi`
 
 @[smul_push]
-theorem oneHot.arg_xi.smul_push [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I) (xi : XI i) (k : K)
-  : k • StructLike.oneHot (X:=X) i xi = StructLike.oneHot (X:=X) i (k•xi) := sorry_proof
+theorem oneHot.arg_xi.smul_push  (i : I) (xi : XI i) (k : K)
+  : k • StructLike.oneHot (X:=X) i xi = StructLike.oneHot (X:=X) i (k•xi) := 
+by
+  apply StructLike.ext; intro j
+  simp[StructLike.oneHot]
+  if h : i=j then subst h; simp else simp[h]
 
+@[smul_pull]
+theorem oneHot.arg_xi.smul_pull (i : I) (xi : XI i) (k : K)
+  : oneHot (X:=X) i (k•xi) = k • oneHot (X:=X) i xi := 
+by
+  apply StructLike.ext; intro j
+  simp[oneHot]
+  if h : i=j then subst h; simp else simp[h]
+
+@[neg_push]
+theorem oneHot.arg_xi.neg_push (i : I) (xi : XI i)
+  : - oneHot (X:=X) i xi = oneHot (X:=X) i (- xi) := 
+by
+  apply ext; intro j
+  have h : ∀ (x : X), -x = (-1:K)•x := by simp
+  simp [h,smul_push]
+
+@[neg_pull]
+theorem oneHot.arg_xi.neg_pull (i : I) (xi : XI i)
+  : oneHot (X:=X) i (- xi) = - oneHot (X:=X) i xi := 
+by
+  apply ext; intro j
+  have h : ∀ (x : X), -x = (-1:K)•x := by simp
+  simp [h,smul_push]
 
 @[simp]
-theorem oneHot_zero [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I)
-  : StructLike.oneHot (X:=X) i 0 = (0 : X) := sorry_proof
+theorem oneHot_zero (i : I)
+  : oneHot (X:=X) i 0 = (0 : X) := sorry_proof
 
 @[simp]
-theorem add_oneHot_eq_modify [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I) (xi : XI i) (x : X)
-  : x + StructLike.oneHot (X:=X) i xi = StructLike.modify i (fun xi' => xi' + xi) x := sorry_proof
+theorem add_oneHot_eq_modify (i : I) (xi : XI i) (x : X)
+  : x + oneHot (X:=X) i xi = modify i (fun xi' => xi' + xi) x := sorry_proof
 
 @[simp]
-theorem add_oneHot_eq_modify' [StructLike X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI] (i : I) (xi : XI i) (x : X)
-  : StructLike.oneHot (X:=X) i xi + x = StructLike.modify i (fun xi' => xi + xi') x := sorry_proof
+theorem add_oneHot_eq_modify' (i : I) (xi : XI i) (x : X)
+  : oneHot (X:=X) i xi + x = modify i (fun xi' => xi + xi') x := sorry_proof
+
+end VecStruct 
+
+
+--------------------------------------------------------------------------------
 
 open StructLike in
 class SemiInnerProductSpaceStruct (K X I XI) [StructLike X I XI] [IsROrC K] [EnumType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)] extends VecStruct K X I XI : Prop where
@@ -64,7 +113,6 @@ theorem inner_oneHot_eq_inner_proj' [StructLike X I XI] [EnumType I] [∀ i, Sem
 instance (priority:=low) {X} [Vec K X] : VecStruct K X Unit (fun _ => X) where
   proj_add := by simp[StructLike.proj]
   proj_smul := by simp[StructLike.proj]
-  proj_zero := by simp[StructLike.proj]
   proj_continuous := sorry_proof
   make_continuous := sorry_proof
 
@@ -84,7 +132,6 @@ instance [Vec K E] [Vec K F] [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)]
   : VecStruct K (E×F) (I⊕J) (Prod.TypeFun EI FJ) where
   proj_add := by simp[StructLike.proj]
   proj_smul := by simp[StructLike.proj]
-  proj_zero := by simp[StructLike.proj]
   proj_continuous := sorry_proof
   make_continuous := sorry_proof
 

@@ -73,7 +73,17 @@ instance (priority:=low+1)
   left_inv := by simp[LeftInverse]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   proj_modify := by simp
-  proj_modify' := by sorry_proof
+  proj_modify' := by 
+    intro ⟨i,j⟩ ⟨i',j'⟩; intros _ _ H; simp
+    if h: i' = i then
+      subst h
+      if h': j=j' then
+        simp[h'] at H
+      else
+        simp[proj_modify' _ _ _ _ h']
+    else 
+      simp[h]
+
 
 instance
   (E I J : Type _) (EI : I → Type _)
@@ -89,7 +99,16 @@ instance
   left_inv := by simp[LeftInverse]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   proj_modify := by simp
-  proj_modify' := by intro (j,i) (j',i') f x _h; simp; sorry_proof
+  proj_modify' := by 
+    intro (j,i) (j',i') f x H; simp
+    if h: j = j' then
+      subst h
+      if h': i=i' then
+        simp[h'] at H
+      else
+        simp[h']
+    else 
+      simp[h]
 
 
 --------------------------------------------------------------------------------
@@ -118,10 +137,6 @@ instance [StructLike E I EI] [StructLike F J FJ]
   proj_modify := by simp
   proj_modify' := by intro i j f x h; induction j <;> induction i <;> (simp at h; simp (disch:=assumption))
 
-
-
---------------------------------------------------------------------------------
--- TODO: Add some lawfulness w.r.t. to +,•,0
 
 
   
