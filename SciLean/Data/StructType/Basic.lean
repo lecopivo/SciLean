@@ -82,6 +82,26 @@ instance (priority:=low) instStructTypeDefault : StructType α Unit (fun _ => α
 -- Pi --------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+instance (priority:=low+1) instStrucTypePiSimple
+  (I : Type _) (E : I → Type _) [DecidableEq I]
+  : StructType (∀ i, E i) I E where
+  structProj := fun f i => f i
+  structMake := fun f i => f i
+  structModify := fun i g f i' => 
+    if h : i'=i then
+      h ▸ (g (f i))
+    else
+      (f i')
+  left_inv := by simp[LeftInverse]
+  right_inv := by simp[Function.RightInverse, LeftInverse]
+  structProj_structModify := by simp
+  structProj_structModify' := by 
+    intro i i'; intros _ _ H; simp
+    if h: i' = i then
+      simp [h] at H
+    else 
+      simp[h]
+
 instance (priority:=low+1) instStrucTypePi
   (I : Type _) (E : I → Type _)
   (J : I → Type _) (EJ : (i : I) → (J i) → Type _)
@@ -108,6 +128,25 @@ instance (priority:=low+1) instStrucTypePi
     else 
       simp[h]
 
+instance instStrucTypeArrowSimple
+  (E J : Type _) [DecidableEq J]
+  : StructType (J → E) J (fun _ => E) where
+  structProj := fun f j => f j
+  structMake := fun f j => f j
+  structModify := fun j g f j' =>   
+    if j=j' then
+      g (f j')
+    else
+      (f j')
+  left_inv := by simp[LeftInverse]
+  right_inv := by simp[Function.RightInverse, LeftInverse]
+  structProj_structModify := by simp
+  structProj_structModify' := by 
+    intro j j' f x H; simp
+    if h: j = j' then
+      simp [h] at H
+    else 
+      simp[h]
 
 instance instStrucTypeArrow
   (E I J : Type _) (EI : I → Type _)

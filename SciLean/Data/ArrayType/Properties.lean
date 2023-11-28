@@ -198,7 +198,15 @@ instance {Cont Idx Elem} [ArrayType Cont Idx Elem] [StructType Elem I ElemI] : S
   right_inv := sorry
   structProj_structModify := sorry
   structProj_structModify' := sorry
-  
+
+instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont Idx (fun _ => Elem) where
+  structProj := sorry
+  structMake := sorry
+  structModify := sorry
+  left_inv := sorry
+  right_inv := sorry
+  structProj_structModify := sorry
+  structProj_structModify' := sorry
 
 @[ftrans]
 theorem GetElem.getElem.arg_xs.revDeriv_rule
@@ -207,9 +215,9 @@ theorem GetElem.getElem.arg_xs.revDeriv_rule
   : revDeriv K (fun x => getElem (f x) idx dom)
     =
     fun x =>
-      let ydf := revDerivProj K f x
+      let ydf := revDerivProj K Idx f x
       (getElem ydf.1 idx dom,
-       fun delem => ydf.2 (idx,()) delem) :=
+       fun delem => ydf.2 idx delem) :=
 by
   have ⟨_,_⟩ := hf
   unfold revDeriv; ftrans; ftrans
@@ -225,9 +233,9 @@ theorem GetElem.getElem.arg_xs.revDerivUpdate_rule
   : revDerivUpdate K (fun x => getElem (f x) idx dom)
     =
     fun x =>
-      let ydf := revDerivProjUpdate K f x
+      let ydf := revDerivProjUpdate K Idx f x
       (getElem ydf.1 idx dom,
-       fun delem dx => ydf.2 (idx,()) delem dx) :=
+       fun delem dx => ydf.2 idx delem dx) :=
 by
   unfold revDerivUpdate; ftrans; ftrans; simp[revDerivProjUpdate]
 
@@ -238,10 +246,10 @@ theorem GetElem.getElem.arg_xs.revDerivProj_rule
   [SemiInnerProductSpaceStruct K Elem I ElemI]
   (f : X → Cont) (idx : Idx) (dom)
   (hf : HasAdjDiff K f)
-  : revDerivProj K (fun x => getElem (f x) idx dom)
+  : revDerivProj K I (fun x => getElem (f x) idx dom)
     =
     fun x =>
-      let ydf := revDerivProj K f x
+      let ydf := revDerivProj K (Idx×I) f x
       (getElem ydf.1 idx dom,
        fun i delem => ydf.2 (idx,i) delem) :=
 by
@@ -249,12 +257,14 @@ by
 
 @[ftrans]
 theorem GetElem.getElem.arg_xs.revDerivProjUpdate_rule
+  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  [SemiInnerProductSpaceStruct K Elem I ElemI]
   (f : X → Cont) (idx : Idx) (dom)
   (hf : HasAdjDiff K f)
-  : revDerivProjUpdate K (fun x => getElem (f x) idx dom)
+  : revDerivProjUpdate K I (fun x => getElem (f x) idx dom)
     =
     fun x =>
-      let ydf := revDerivProjUpdate K f x
+      let ydf := revDerivProjUpdate K (Idx×I) f x
       (getElem ydf.1 idx dom,
        fun i delem dx => ydf.2 (idx,i) delem dx) :=
 by
