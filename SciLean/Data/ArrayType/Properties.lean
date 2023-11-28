@@ -29,17 +29,17 @@ variable
 --   (hf : IsContinuousLinearMap K f)
 --   : IsContinuousLinearMap K (λ x => getElem (f x) idx dom) := sorry_proof
 
-@[fprop]
-theorem GetElem.getElem.arg_xs.Differentiable_rule
-  (f : X → Cont) (idx : Idx) (dom)
-  (hf : Differentiable K f)
-  : Differentiable K (λ x => getElem (f x) idx dom) := sorry_proof
+-- @[fprop]
+-- theorem GetElem.getElem.arg_xs.Differentiable_rule
+--   (f : X → Cont) (idx : Idx) (dom)
+--   (hf : Differentiable K f)
+--   : Differentiable K (λ x => getElem (f x) idx dom) := sorry_proof
 
-@[fprop]
-theorem GetElem.getElem.arg_xs.DifferentiableAt_rule
-  (f : X → Cont) (idx : Idx) (dom) (x : X)
-  (hf : DifferentiableAt K f x)
-  : DifferentiableAt K (λ x => getElem (f x) idx dom) x := sorry_proof
+-- @[fprop]
+-- theorem GetElem.getElem.arg_xs.DifferentiableAt_rule
+--   (f : X → Cont) (idx : Idx) (dom) (x : X)
+--   (hf : DifferentiableAt K f x)
+--   : DifferentiableAt K (λ x => getElem (f x) idx dom) x := sorry_proof
 
 -- TODO: fderiv, fwdFDeriv, adjoint, revFDeriv
 
@@ -285,23 +285,23 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   [NormedAddCommGroup Elem] [NormedSpace K Elem]
 
-@[fprop]
-theorem SetElem.setElem.arg_elem.IsContinuousLinearMap_rule 
-  (cont : X → Cont) (idx : Idx) (elem : X → Elem)
-  (hcont : IsContinuousLinearMap K cont) (helem : IsContinuousLinearMap K elem)
-  : IsContinuousLinearMap K (λ x => setElem (0:Cont) idx (elem x)) := sorry_proof
+-- @[fprop]
+-- theorem SetElem.setElem.arg_elem.IsContinuousLinearMap_rule 
+--   (cont : X → Cont) (idx : Idx) (elem : X → Elem)
+--   (hcont : IsContinuousLinearMap K cont) (helem : IsContinuousLinearMap K elem)
+--   : IsContinuousLinearMap K (λ x => setElem (0:Cont) idx (elem x)) := sorry_proof
 
-@[fprop]
-theorem SetElem.setElem.arg_contelem.Differentiable_rule
-  (cont : X → Cont) (idx : Idx) (elem : X → Elem)
-  (hcont : Differentiable K cont) (helem : Differentiable K elem)
-  : Differentiable K (λ x => setElem (cont x) idx (elem x)) := sorry_proof
+-- @[fprop]
+-- theorem SetElem.setElem.arg_contelem.Differentiable_rule
+--   (cont : X → Cont) (idx : Idx) (elem : X → Elem)
+--   (hcont : Differentiable K cont) (helem : Differentiable K elem)
+--   : Differentiable K (λ x => setElem (cont x) idx (elem x)) := sorry_proof
 
-@[fprop]
-theorem SetElem.setElem.arg_contelem.DifferentiableAt_rule
-  (cont : X → Cont) (idx : Idx) (elem : X → Elem) (x : X)
-  (hcont : DifferentiableAt K cont x) (helem : DifferentiableAt K elem x)
-  : DifferentiableAt K (λ x => setElem (cont x) idx (elem x)) x := sorry_proof
+-- @[fprop]
+-- theorem SetElem.setElem.arg_contelem.DifferentiableAt_rule
+--   (cont : X → Cont) (idx : Idx) (elem : X → Elem) (x : X)
+--   (hcont : DifferentiableAt K cont x) (helem : DifferentiableAt K elem x)
+--   : DifferentiableAt K (λ x => setElem (cont x) idx (elem x)) x := sorry_proof
 
 end OnNormedSpaces
 
@@ -474,23 +474,23 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   [NormedAddCommGroup Elem] [NormedSpace K Elem]
 
-@[fprop]
-theorem IntroElem.introElem.arg_f.IsContinuousLinearMap_rule 
-  (f : X → Idx → Elem)
-  (hf : IsContinuousLinearMap K f)
-  : IsContinuousLinearMap K (λ x => introElem (Cont:=Cont) (f x)) := sorry_proof
+-- @[fprop]
+-- theorem IntroElem.introElem.arg_f.IsContinuousLinearMap_rule 
+--   (f : X → Idx → Elem)
+--   (hf : IsContinuousLinearMap K f)
+--   : IsContinuousLinearMap K (λ x => introElem (Cont:=Cont) (f x)) := sorry_proof
 
-@[fprop]
-theorem IntroElem.introElem.arg_f.Differentiable_rule [Fintype Idx]
-  (f : X → Idx → Elem)
-  (hf : Differentiable K f)
-  : Differentiable K (λ x => introElem (Cont:=Cont) (f x)) := sorry_proof
+-- @[fprop]
+-- theorem IntroElem.introElem.arg_f.Differentiable_rule [Fintype Idx]
+--   (f : X → Idx → Elem)
+--   (hf : Differentiable K f)
+--   : Differentiable K (λ x => introElem (Cont:=Cont) (f x)) := sorry_proof
 
-@[fprop]
-theorem IntroElem.introElem.arg_f.DifferentiableAt_rule [Fintype Idx]
-  (f : X → Idx → Elem) (x : X)
-  (hf : DifferentiableAt K f x) 
-  : DifferentiableAt K (λ x => introElem (Cont:=Cont) (f x)) x := sorry_proof
+-- @[fprop]
+-- theorem IntroElem.introElem.arg_f.DifferentiableAt_rule [Fintype Idx]
+--   (f : X → Idx → Elem) (x : X)
+--   (hf : DifferentiableAt K f x) 
+--   : DifferentiableAt K (λ x => introElem (Cont:=Cont) (f x)) x := sorry_proof
 
 end OnNormedSpaces
 
@@ -641,31 +641,31 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   [NormedAddCommGroup Elem] [NormedSpace K Elem]
 
-@[fprop]
-theorem ArrayType.map.arg_f.IsContinuousLinearMap_rule 
-  (f : X → Elem → Elem) (arr : Cont)
-  (hf : IsContinuousLinearMap K f)
-  : IsContinuousLinearMap K (λ x => map (f x) arr) := sorry_proof
+-- @[fprop]
+-- theorem ArrayType.map.arg_f.IsContinuousLinearMap_rule 
+--   (f : X → Elem → Elem) (arr : Cont)
+--   (hf : IsContinuousLinearMap K f)
+--   : IsContinuousLinearMap K (λ x => map (f x) arr) := sorry_proof
 
-@[fprop]
-theorem ArrayType.map.arg_arr.IsContinuousLinearMap_rule 
-  (f : Elem → Elem) (arr : X → Cont)
-  (harr : IsContinuousLinearMap K arr)
-  : IsContinuousLinearMap K (λ x => map f (arr x)) := sorry_proof
+-- @[fprop]
+-- theorem ArrayType.map.arg_arr.IsContinuousLinearMap_rule 
+--   (f : Elem → Elem) (arr : X → Cont)
+--   (harr : IsContinuousLinearMap K arr)
+--   : IsContinuousLinearMap K (λ x => map f (arr x)) := sorry_proof
 
-@[fprop]
-theorem ArrayType.map.arg_farr.Differentiable_rule
-  (f : X → Elem → Elem) (arr : X → Cont)
-  (hf : Differentiable K (fun (xe : X×Elem) => f xe.1 xe.2))
-  (harr : Differentiable K arr)
-  : Differentiable K (λ x => map (f x) (arr x)) := sorry_proof
+-- @[fprop]
+-- theorem ArrayType.map.arg_farr.Differentiable_rule
+--   (f : X → Elem → Elem) (arr : X → Cont)
+--   (hf : Differentiable K (fun (xe : X×Elem) => f xe.1 xe.2))
+--   (harr : Differentiable K arr)
+--   : Differentiable K (λ x => map (f x) (arr x)) := sorry_proof
 
-@[fprop]
-theorem ArrayType.map.arg_farr.DifferentiableAt_rule
-  (f : X → Elem → Elem) (arr : X → Cont) (x : X)
-  (hf : ∀ i, DifferentiableAt K (fun (xe : X×Elem) => f xe.1 xe.2) (x, (arr x)[i]))
-  (harr : DifferentiableAt K arr x)
-  : DifferentiableAt K (λ x => map (f x) (arr x)) x := sorry_proof
+-- @[fprop]
+-- theorem ArrayType.map.arg_farr.DifferentiableAt_rule
+--   (f : X → Elem → Elem) (arr : X → Cont) (x : X)
+--   (hf : ∀ i, DifferentiableAt K (fun (xe : X×Elem) => f xe.1 xe.2) (x, (arr x)[i]))
+--   (harr : DifferentiableAt K arr x)
+--   : DifferentiableAt K (λ x => map (f x) (arr x)) x := sorry_proof
 
 -- TODO: fderiv, fwdFDeriv, adjoint, revFDeriv
 

@@ -1154,7 +1154,7 @@ theorem SciLean.EnumType.sum.arg_f.revCDeriv_rule {ι : Type _} [EnumType ι]
 by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
-  simp [revCDeriv]
+  unfold revCDeriv
   funext x; simp
   ftrans
   sorry_proof
@@ -1222,7 +1222,7 @@ theorem Inner.inner.arg_a0a1.revCDeriv_rule
 by 
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  simp[revCDeriv]
+  unfold revCDeriv
   funext x; simp
   ftrans only
   simp

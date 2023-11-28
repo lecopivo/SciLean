@@ -61,8 +61,11 @@ example
           let ydy ← fwdDerivM K (fun (xy : X×Y) => f xy.1 a xy.2) (x,ydy.1) (dx,ydy.2)
           return .yield ydy) :=
 by
+  funext
   simp [forIn,Std.Range.forIn,Std.Range.forIn.loop,Std.Range.forIn.loop.match_1]
   ftrans
+  rfl
+    
 
 --------------------------------------------------------------------------------
 

@@ -30,7 +30,7 @@ noncomputable
 instance : RevDerivMonad K Id Id where
   revDerivM f := revCDeriv K f
   HasAdjDiffM f := HasAdjDiff K f
-  revDerivM_pure f := by simp[pure,revCDeriv]
+  revDerivM_pure f := by intros; funext; simp[pure,revCDeriv]
   revDerivM_bind := by intros; simp; ftrans; rfl
   revDerivM_pair y := by intros; simp; ftrans; simp[revCDeriv]
   HasAdjDiffM_pure := by simp[pure]

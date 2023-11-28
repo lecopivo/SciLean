@@ -22,7 +22,7 @@ theorem id_rule
     =
     fun (x : α') => x :=
 by
-  simp[isomorph]
+  funext _; simp[isomorph]
 
 
 theorem const_rule (y : β)
@@ -30,7 +30,7 @@ theorem const_rule (y : β)
     =
     fun (_ : α') => (IsomorphicType.equiv tag) y :=
 by
-  simp[isomorph]
+  funext _; simp[isomorph]
 
 variable {α}
 variable (β)
@@ -40,7 +40,7 @@ theorem proj_rule
     =
     fun (f : α' → β') => f ((IsomorphicType.equiv tag) x) :=
 by
-  simp[isomorph, invIsomorph, IsomorphicType.equiv]
+  funext _; simp[isomorph, invIsomorph, IsomorphicType.equiv]
 variable {β}
 
 theorem comp_rule 
@@ -49,7 +49,7 @@ theorem comp_rule
     =
     fun x => isomorph tag f (isomorph tag g x) := 
 by
-  simp[isomorph]
+  funext _; simp[isomorph]
 
 theorem let_rule 
   (f : α → β → γ) (g : α → β)

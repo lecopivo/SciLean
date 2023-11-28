@@ -625,10 +625,9 @@ theorem SciLean.Norm2.norm2.arg_a0.fwdCDeriv_rule
       let ydy := fwdCDeriv R f x dx
       (‖ydy.1‖₂²[R], 2 * ⟪ydy.2, ydy.1⟫[R]) := 
 by
-  -- simp_rw [← SemiInnerProductSpace.inner_norm2]
-  simp[fwdCDeriv]
+  unfold fwdCDeriv
   funext x dx
-  ftrans
+  ftrans; simp
 
 open Scalar in
 @[ftrans]
@@ -642,8 +641,8 @@ theorem SciLean.norm₂.arg_x.fwdCDeriv_rule
       let ynorm := ‖ydy.1‖₂[R]
       (ynorm, ynorm⁻¹ * ⟪ydy.2,ydy.1⟫[R]) :=
 by
-  simp[fwdCDeriv]
+  unfold fwdCDeriv
   funext dx
-  ftrans
+  ftrans; simp
 
 end InnerProductSpace

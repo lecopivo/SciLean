@@ -24,8 +24,8 @@ instance (S : Type _) [Vec K S] : FwdDerivMonad K (StateT S m) (StateT (S×S) m'
 
   fwdDerivM_pure f h := 
     by 
+      intros; funext;
       simp[pure, StateT.pure, fwdCDeriv]
-      funext x dx sds
       ftrans
       simp [fwdCDeriv]
       
@@ -89,6 +89,7 @@ theorem _root_.getThe.arg.fwdDerivValM_rule
     =
     getThe (S×S) := 
 by 
+  funext
   simp[getThe, MonadStateOf.get, StateT.get,fwdDerivValM, fwdDerivM, pure, StateT.pure]
   ftrans
   simp
@@ -111,6 +112,7 @@ theorem _root_.MonadState.get.arg.fwdDerivValM_rule
     =
     get := 
 by 
+  funext
   simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,fwdDerivValM, fwdDerivM]
   ftrans
   simp
@@ -163,6 +165,7 @@ theorem _root_.MonadStateOf.set.arg_a0.fwdDerivM_rule
       set sds
       pure ((),())) :=
 by 
+  funext
   simp[set, StateT.set,fwdDerivM, bind,Bind.bind, StateT.bind]
   ftrans; congr; simp; rfl
 
@@ -190,6 +193,7 @@ theorem _root_.modifyThe.arg_f.fwdDerivM_rule
         sds)
       pure ((),())) :=
 by 
+  funext
   simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdDerivM,bind,Bind.bind, StateT.bind]
   ftrans; congr; simp; rfl
 
@@ -217,6 +221,7 @@ theorem _root_.modify.arg_f.fwdDerivM_rule
         sds)
       pure ((),())) :=
 by 
+  funext
   simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdDerivM,bind,Bind.bind, StateT.bind]
   ftrans; congr; simp; rfl
 
@@ -241,10 +246,10 @@ instance (S : Type _) [SemiInnerProductSpace K S] : RevDerivMonad K (StateT S m)
 
   revDerivM_pure f h := 
     by 
+      funext
       simp[pure, StateT.pure, revCDeriv]
-      funext x s
       ftrans
-      simp [revCDeriv]
+      simp [revCDeriv]; rfl
       
   revDerivM_bind f g hf hg :=
     by 
@@ -262,7 +267,7 @@ instance (S : Type _) [SemiInnerProductSpace K S] : RevDerivMonad K (StateT S m)
       simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
       ftrans only
       simp
-      congr; funext ysdf; congr; funext dx ds; congr; funext (dx,ds); simp
+      congr; funext ysdf; congr; funext dx ds; congr; funext (dx,ds); simp; rfl
 
   HasAdjDiffM_pure f hf :=
     by 
@@ -307,8 +312,9 @@ theorem _root_.getThe.arg.revDerivValM_rule
     (do
       pure ((← getThe S), fun ds => modifyThe S (fun ds' => ds + ds'))) := 
 by 
+  funext
   simp[getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet]
-  ftrans; simp
+  ftrans; simp; congr
 
 -- MonadState.get --------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -329,8 +335,9 @@ theorem _root_.MonadState.get.arg.revDerivValM_rule
     (do
       pure ((← get), fun ds => modify (fun ds' => ds + ds'))) := 
 by 
+  funext
   simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet, modifyGet]
-  ftrans; simp
+  ftrans; simp; congr
 
 
 -- -- setThe ----------------------------------------------------------------------
@@ -387,8 +394,9 @@ theorem _root_.MonadStateOf.set.arg_a0.revDerivM_rule
               set (0:S)
               pure dx)) :=
 by 
+  funext
   simp[set, StateT.set, revDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure, get]
-  ftrans; simp
+  ftrans; simp; congr; funext; simp[StateT.get, StateT.bind,StateT.set,StateT.pure]
 
 -- -- modifyThe ----------------------------------------------------------------------
 -- --------------------------------------------------------------------------------
@@ -446,8 +454,9 @@ theorem _root_.modify.arg_f.revDerivM_rule
               set dxs.2
               pure dxs.1)) := 
 by 
+  funext
   simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, set, StateT.set, get, pure, StateT.pure, modify]
-  ftrans; simp
+  ftrans; simp; congr; funext; simp[StateT.bind,StateT.pure,StateT.get,StateT.set]
 
 end RevDerivMonad
 

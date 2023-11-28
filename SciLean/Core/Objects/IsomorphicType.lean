@@ -61,8 +61,8 @@ instance : IsomorphicType tag (α → β) (α' → β') where
   equiv := {
     toFun := fun f => isomorph tag f
     invFun := fun f => invIsomorph tag f
-    left_inv := by simp[-isomorph.app, Function.LeftInverse, IsomorphicType.equiv, isomorph, invIsomorph]
-    right_inv := by simp[Function.LeftInverse, Function.RightInverse, IsomorphicType.equiv, isomorph, invIsomorph]
+    left_inv := by intro f; funext x; simp [-isomorph.app, IsomorphicType.equiv, isomorph, invIsomorph]
+    right_inv := by intro f; funext x; simp[IsomorphicType.equiv, isomorph, invIsomorph]
   }
 
 instance (P : Prop) : IsomorphicType tag P P where
