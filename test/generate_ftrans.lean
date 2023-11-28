@@ -1,5 +1,4 @@
 import SciLean.Core
-import SciLean.Core.Meta.GenerateRevCDeriv'
 
 open Lean SciLean
 
