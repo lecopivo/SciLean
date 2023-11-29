@@ -344,3 +344,34 @@ where
         go b
     | .mdata _ e => go e
     | _ => true
+
+
+/-- 
+Apply the given arguments to `f`, introduce let binding for every argument 
+that beta-reduces. 
+
+Examples:
+- `betaWithLet (fun x y => t x y) #[]` ==> `fun x y => t x y`
+- `betaWithLet (fun x y => t x y) #[a]` ==> `let x:=a; fun y => t x y`
+- `betaWithLet (fun x y => t x y) #[a, b]` ==> `let x:=a; let y:=b; t x y`
+- `betaWithLet (fun x y => t x y) #[a, b, c, d]` ==> `let x:=a; let y:=b; t x y c d`
+
+TODO: maybe introduce let binding only if the variable appears multiple times
+-/
+partial def betaWithLet (f : Expr) (args : Array Expr) : Expr :=
+  go f 0
+where
+  go (e : Expr) (i : Nat) : Expr := 
+    if h : i<args.size then
+      match e with
+      | .lam n t b _ => .letE n t (args[i]'h) (go b (i+1)) false
+      | .letE n t v b dep => .letE n t v (go b i) dep
+      | .mdata _ e => (go e i)
+      | _ => mkAppN e args[i:]
+    else
+      e
+
+/-- `(fun x => e) a` ==> `e[x/a]`. -/
+def headBetaWithLet (e : Expr) : Expr :=
+  let f := e.getAppFn
+  if f.isHeadBetaTargetFn false then betaWithLet f e.getAppArgs else e
