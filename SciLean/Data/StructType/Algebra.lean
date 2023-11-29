@@ -20,12 +20,140 @@ variable
   [StructType F J FJ]
 
 
-open StructType in
-class VecStruct (K X I XI) [StructType X I XI] [IsROrC K] [Vec K X] [∀ i, Vec K (XI i)] : Prop where
+--------------------------------------------------------------------------------
+-- Algebra instances for Sum.rec ------------------------------------------
+--------------------------------------------------------------------------------
+-- There are some issues with defEq 
+
+@[reducible]
+instance [∀ i, Zero (EI i)] [∀ j, Zero (FJ j)] (i : I ⊕ J) : Zero (Sum.rec EI FJ i) := 
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, Add (EI i)] [∀ j, Add (FJ j)] (i : I ⊕ J) : Add (Sum.rec EI FJ i) := 
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, SMul K (EI i)] [∀ j, SMul K (FJ j)] (i : I ⊕ J) : SMul K (Sum.rec EI FJ i) := 
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, Neg (EI i)] [∀ j, Neg (FJ j)] (i : I ⊕ J) : Neg (Sum.rec EI FJ i) := 
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, Sub (EI i)] [∀ j, Sub (FJ j)] (i : I ⊕ J) : Sub (Sum.rec EI FJ i) := 
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)] (i : I ⊕ J) : TopologicalSpace (Sum.rec EI FJ i) := 
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] (i : I ⊕ J) : Vec K (Sum.rec EI FJ i) := Vec.mkSorryProofs
+-- all the proofs should be solvable `by induction i <;> infer_instance`
+
+@[reducible]
+instance [∀ i, Inner K (EI i)] [∀ j, Inner K (FJ j)] (i : I ⊕ J) : Inner K (Sum.rec EI FJ i) := 
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, TestFunctions (EI i)] [∀ j, TestFunctions (FJ j)] (i : I ⊕ J) : TestFunctions (Sum.rec EI FJ i) := 
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)] (i : I ⊕ J) 
+  : SemiInnerProductSpace K (Sum.rec EI FJ i) := SemiInnerProductSpace.mkSorryProofs
+
+@[reducible]
+instance [∀ i, SemiHilbert K (EI i)] [∀ j, SemiHilbert K (FJ j)] (i : I ⊕ J) 
+  : SemiHilbert K (Sum.rec EI FJ i) where
+  test_functions_true := by induction i <;> apply SemiHilbert.test_functions_true
+
+-- instance [∀ i, FinVec ι K (EI i)] [∀ j, FinVec ι K (FJ j)] (i : I ⊕ J) 
+--   : FinVec ι K (Sum.rec EI FJ i) := 
+--   match i with
+--   | .inl _ => by infer_instance
+--   | .inr _ => by infer_instance
+
+--------------------------------------------------------------------------------
+-- Algebraic struct classes ----------------------------------------------------
+--------------------------------------------------------------------------------
+
+class ZeroStruct (X I XI) [StructType X I XI] [Zero X] [∀ i, Zero (XI i)] : Prop where
+  structProj_zero : ∀ (i : I), structProj (0 : X) i = 0
+
+class AddStruct (X I XI) [StructType X I XI] [Add X] [∀ i, Add (XI i)] : Prop where
   structProj_add : ∀ (i : I) (x x' : X), structProj (x + x') i = structProj x i + structProj x' i
+
+class SMulStruct (K X I XI) [StructType X I XI] [SMul K X] [∀ i, SMul K (XI i)] : Prop where
   structProj_smul : ∀ (i : I) (k : K) (x : X), structProj (k • x) i = k • structProj x i
-  structProj_continuous : Continuous (fun (x : X) (i : I) =>  structProj x i)
-  structMake_continuous : Continuous (fun (f : (i : I) → XI i) => structMake (X:=X) f)
+
+class VecStruct (K X I XI) [StructType X I XI] [IsROrC K] [Vec K X] [∀ i, Vec K (XI i)] 
+  extends ZeroStruct X I XI, AddStruct X I XI, SMulStruct K X I XI : Prop 
+  where
+    structProj_continuous : Continuous (fun (x : X) (i : I) =>  structProj x i)
+    structMake_continuous : Continuous (fun (f : (i : I) → XI i) => structMake (X:=X) f)
+
+--------------------------------------------------------------------------------
+-- ZeroStruct instances ---------------------------------------------------------
+--------------------------------------------------------------------------------
+
+instance (priority:=low) instZeroStructDefault 
+  {X} [Zero X] : ZeroStruct X Unit (fun _ => X) where
+  structProj_zero := by simp[structProj]
+
+instance instZeroStructProd
+  [Zero E] [Zero F] [∀ i, Zero (EI i)] [∀ j, Zero (FJ j)] 
+  [ZeroStruct E I EI] [ZeroStruct F J FJ]
+  : ZeroStruct (E×F) (I⊕J) (Sum.rec EI FJ) where
+  structProj_zero := by simp[structProj, ZeroStruct.structProj_zero]
+
+
+--------------------------------------------------------------------------------
+-- AddStruct instances ---------------------------------------------------------
+--------------------------------------------------------------------------------
+
+instance (priority:=low) instAddStructDefault 
+  {X} [Add X] : AddStruct X Unit (fun _ => X) where
+  structProj_add := by simp[structProj]
+
+instance instAddStructProd
+  [Add E] [Add F] [∀ i, Add (EI i)] [∀ j, Add (FJ j)] 
+  [AddStruct E I EI] [AddStruct F J FJ]
+  : AddStruct (E×F) (I⊕J) (Sum.rec EI FJ) where
+  structProj_add := by simp[structProj, AddStruct.structProj_add]
+
+
+--------------------------------------------------------------------------------
+-- SMulStruct instances ---------------------------------------------------------
+--------------------------------------------------------------------------------
+
+instance (priority:=low) instSMulStructDefault 
+  {X} [SMul K X] : SMulStruct K X Unit (fun _ => X) where
+  structProj_smul := by simp[structProj]
+
+instance instSMulStructProd
+  [SMul K E] [SMul K F] [∀ i, SMul K (EI i)] [∀ j, SMul K (FJ j)] 
+  [SMulStruct K E I EI] [SMulStruct K F J FJ]
+  : SMulStruct K (E×F) (I⊕J) (Sum.rec EI FJ) where
+  structProj_smul := by simp[structProj, SMulStruct.structProj_smul]
 
 
 --------------------------------------------------------------------------------
@@ -34,23 +162,16 @@ class VecStruct (K X I XI) [StructType X I XI] [IsROrC K] [Vec K X] [∀ i, Vec 
 
 instance (priority:=low) instVecStructDefault 
   {X} [Vec K X] : VecStruct K X Unit (fun _ => X) where
+  structProj_zero := by simp[structProj]
   structProj_add := by simp[structProj]
   structProj_smul := by simp[structProj]
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof
 
-@[reducible]
-instance [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] (i : I ⊕ J) : Vec K (Prod.TypeFun EI FJ i) := 
-  match i with
-  | .inl _ => by infer_instance
-  | .inr _ => by infer_instance
-
 instance instVecStructProd
-  [Vec K E] [Vec K F] [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] 
+  [Vec K E] [Vec K F] [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)]
   [VecStruct K E I EI] [VecStruct K F J FJ]
-  : VecStruct K (E×F) (I⊕J) (Prod.TypeFun EI FJ) where
-  structProj_add := by simp[structProj, VecStruct.structProj_add]
-  structProj_smul := by simp[structProj, VecStruct.structProj_smul]
+  : VecStruct K (E×F) (I⊕J) (Sum.rec EI FJ) where
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof
 
@@ -187,28 +308,15 @@ instance (priority:=low) {X} [SemiInnerProductSpace K X] : SemiInnerProductSpace
   testFun_structProj := sorry_proof
 
 
-instance [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)] (i : I ⊕ J) 
-  : SemiInnerProductSpace K (Prod.TypeFun EI FJ i) :=
-  match i with
-  | .inl _ => by infer_instance
-  | .inr _ => by infer_instance
-
-
 instance 
   [SemiInnerProductSpace K E] [SemiInnerProductSpace K F] 
   [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)] 
   [EnumType I] [EnumType J]
   [SemiInnerProductSpaceStruct K E I EI] [SemiInnerProductSpaceStruct K F J FJ]
-  : SemiInnerProductSpaceStruct K (E×F) (I⊕J) (Prod.TypeFun EI FJ) := sorry_proof
+  : SemiInnerProductSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
   -- inner_structProj := sorry_proof
   -- testFun_structProj := sorry_proof
 
-
-instance [∀ i, FinVec ι K (EI i)] [∀ j, FinVec ι K (FJ j)] (i : I ⊕ J) 
-  : FinVec ι K (Prod.TypeFun EI FJ i) := 
-  match i with
-  | .inl _ => by infer_instance
-  | .inr _ => by infer_instance
 
 @[simp, ftrans_simp]
 theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [EnumType I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
@@ -219,4 +327,58 @@ theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [EnumType I] [∀ i, Sem
   : ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
 
 
+
+--------------------------------------------------------------------------------
+-- Prod simp lemmas
+-- TODO: move somewhere else
+--------------------------------------------------------------------------------
+
+section OneHotSimp
+
+variable   
+  [Zero E] [∀ i, Zero (EI i)] [ZeroStruct E I EI]
+  [Zero F] [∀ j, Zero (FJ j)] [ZeroStruct F J FJ]
+  [DecidableEq I] [DecidableEq J]
+
+@[simp, ftrans_simp]
+theorem oneHot_inl_fst (i : I) (xi : EI i)
+  : (oneHot (X:=E×F) (I:=I⊕J) (.inl i) xi).1
+    =
+    oneHot i xi := 
+by 
+  simp[oneHot, structMake]; 
+  congr; funext; congr
+  funext h; subst h; rfl
+
+@[simp, ftrans_simp]
+theorem oneHot_inl_snd (i : I) (xi : EI i)
+  : (oneHot (X:=E×F) (I:=I⊕J) (.inl i) xi).2
+    =
+    (0 : F) := 
+by 
+  simp[oneHot, structMake]
+  apply structExt (I:=J)
+  simp[ZeroStruct.structProj_zero]
+
+@[simp, ftrans_simp]
+theorem oneHot_inr_fst (j : J) (yj : FJ j)
+  : (oneHot (X:=E×F) (I:=I⊕J) (.inr j) yj).1
+    =
+    (0 : E) := 
+by 
+  simp[oneHot, structMake]
+  apply structExt (I:=I)
+  simp[ZeroStruct.structProj_zero]
+
+@[simp, ftrans_simp]
+theorem oneHot_inr_snd (j : J) (yj : FJ j)
+  : (oneHot (X:=E×F) (I:=I⊕J) (.inr j) yj).2
+    =
+    oneHot j yj := 
+by 
+  simp[oneHot, structMake]; 
+  congr; funext; congr
+  funext h; subst h; rfl
+
+end OneHotSimp
 

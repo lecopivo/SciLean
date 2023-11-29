@@ -5,6 +5,15 @@ import Mathlib.Algebra.SMulWithZero
 
 namespace SciLean
 
+-- basic algebraic operations
 attribute [ftrans_simp] Prod.mk_add_mk Prod.mk_mul_mk Prod.smul_mk Prod.mk_sub_mk Prod.neg_mk Prod.vadd_mk add_zero zero_add sub_zero zero_sub sub_self neg_zero mul_zero zero_mul zero_smul smul_zero smul_eq_mul smul_neg eq_self iff_self mul_one one_mul one_smul Prod.fst_zero Prod.snd_zero
 
+-- simp theorems for `Equiv`
 attribute [ftrans_simp] Equiv.invFun_as_coe Equiv.symm_symm
+
+-- simp theorems for `if _ then _ else _`
+attribute [ftrans_simp] dite_eq_ite eq_self ite_true ite_false dite_true dite_false
+
+-- simp theorems for `Sum`
+attribute [ftrans_simp] Sum.inr.injEq Sum.inl.injEq
+

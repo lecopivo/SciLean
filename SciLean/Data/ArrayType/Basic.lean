@@ -130,7 +130,7 @@ def map [ArrayType Cont Idx Elem] [EnumType Idx] (f : Elem → Elem) (arr : Cont
 theorem getElem_map [ArrayType Cont Idx Elem] [EnumType Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
   : (map f arr)[i] = f arr[i] := sorry_proof
 
-instance [ArrayType Cont Idx Elem] [ToString Elem] [EnumType Idx] : ToString (Cont) := ⟨λ x => Id.run do
+instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem] [EnumType Idx] : ToString (Cont) := ⟨λ x => Id.run do
   let mut fst := true
   let mut s := "⊞["
   for i in fullRange Idx do
@@ -164,24 +164,24 @@ section Operations
 
   variable [ArrayType Cont Idx Elem] [EnumType Idx] 
 
-  instance [Add Elem] : Add Cont := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
-  instance [Sub Elem] : Sub Cont := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
-  instance [Mul Elem] : Mul Cont := ⟨λ f g => mapIdx (λ x fx => fx * g[x]) f⟩
-  instance [Div Elem] : Div Cont := ⟨λ f g => mapIdx (λ x fx => fx / g[x]) f⟩
+  instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
+  instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
+  instance (priority:=low) [Mul Elem] : Mul Cont := ⟨λ f g => mapIdx (λ x fx => fx * g[x]) f⟩
+  instance (priority:=low) [Div Elem] : Div Cont := ⟨λ f g => mapIdx (λ x fx => fx / g[x]) f⟩
 
-  -- instance {R} [HMul R Elem Elem] : HMul R Cont Cont := ⟨λ r f => map (λ fx => r*(fx : Elem)) f⟩
-  instance {R} [SMul R Elem] : SMul R Cont := ⟨λ r f => map (λ fx => r•(fx : Elem)) f⟩
+  -- instance (priority:=low) {R} [HMul R Elem Elem] : HMul R Cont Cont := ⟨λ r f => map (λ fx => r*(fx : Elem)) f⟩
+  instance (priority:=low) {R} [SMul R Elem] : SMul R Cont := ⟨λ r f => map (λ fx => r•(fx : Elem)) f⟩
 
-  instance [Neg Elem] : Neg Cont := ⟨λ f => map (λ fx => -(fx : Elem)) f⟩
-  instance [Inv Elem] : Inv Cont := ⟨λ f => map (λ fx => (fx : Elem)⁻¹) f⟩
+  instance (priority:=low) [Neg Elem] : Neg Cont := ⟨λ f => map (λ fx => -(fx : Elem)) f⟩
+  instance (priority:=low) [Inv Elem] : Inv Cont := ⟨λ f => map (λ fx => (fx : Elem)⁻¹) f⟩
 
-  instance [One Elem]  : One Cont  := ⟨introElem λ _ : Idx => 1⟩
-  instance [Zero Elem] : Zero Cont := ⟨introElem λ _ : Idx => 0⟩
+  instance (priority:=low) [One Elem]  : One Cont  := ⟨introElem λ _ : Idx => 1⟩
+  instance (priority:=low) [Zero Elem] : Zero Cont := ⟨introElem λ _ : Idx => 0⟩
 
-  instance [LT Elem] : LT Cont := ⟨λ f g => ∀ x, f[x] < g[x]⟩ 
-  instance [LE Elem] : LE Cont := ⟨λ f g => ∀ x, f[x] ≤ g[x]⟩
+  instance (priority:=low) [LT Elem] : LT Cont := ⟨λ f g => ∀ x, f[x] < g[x]⟩ 
+  instance (priority:=low) [LE Elem] : LE Cont := ⟨λ f g => ∀ x, f[x] ≤ g[x]⟩
 
-  instance [DecidableEq Elem] : DecidableEq Cont := 
+  instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont := 
     λ f g => Id.run do
       let mut eq : Bool := true
       for x in fullRange Idx do
@@ -190,7 +190,7 @@ section Operations
           break
       if eq then isTrue sorry_proof else isFalse sorry_proof
 
-  instance [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) : Decidable (f < g) := Id.run do
+  instance (priority:=low) [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) : Decidable (f < g) := Id.run do
     let mut lt : Bool := true
     for x in fullRange Idx do
       if ¬(f[x] < g[x]) then
@@ -198,7 +198,7 @@ section Operations
         break
     if lt then isTrue sorry_proof else isFalse sorry_proof
 
-  instance [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) : Decidable (f ≤ g) := Id.run do
+  instance (priority:=low) [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) : Decidable (f ≤ g) := Id.run do
     let mut le : Bool := true
     for x in fullRange Idx do
       if ¬(f[x] ≤ g[x]) then

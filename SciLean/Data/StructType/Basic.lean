@@ -79,6 +79,11 @@ instance (priority:=low) instStructTypeDefault : StructType α Unit (fun _ => α
   structProj_structModify := by simp
   structProj_structModify' := by simp
 
+@[simp, ftrans_simp]
+theorem oneHot_unit {X} [Zero X] (x : X) 
+  : oneHot (X:=X) (I:=Unit) () x = x := by rfl
+
+
 -- Pi --------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -177,13 +182,9 @@ instance instStrucTypeArrow
 -- Prod ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-abbrev _root_.Prod.TypeFun {I J: Type _} (EI : I → Type _) (FJ : J → Type _) (i : Sum I J) : Type _ :=
-  match i with
-  | .inl a => EI a
-  | .inr b => FJ b
-
-instance instStrucTypeProd [StructType E I EI] [StructType F J FJ] 
-  : StructType (E×F) (Sum I J) (Prod.TypeFun EI FJ) where
+instance instStrucTypeProd 
+  [StructType E I EI] [StructType F J FJ] 
+  : StructType (E×F) (Sum I J) (Sum.rec EI FJ) where
   structProj := fun (x,y) i =>
     match i with
     | .inl a => StructType.structProj x a
@@ -199,7 +200,46 @@ instance instStrucTypeProd [StructType E I EI] [StructType F J FJ]
   structProj_structModify := by simp
   structProj_structModify' := by intro i j f x h; induction j <;> induction i <;> (simp at h; simp (disch:=assumption))
 
+-- @[simp, ftrans_simp]
+-- theorem structMake_sum_match [StructType E I EI] [StructType F J FJ] (f : (i : I) → EI i) (g : (j : J) → FJ j)
+--   : structMake (X:=E×F) (I:=I⊕J) (fun | .inl i => f i | .inr j => g j)
+--     =
+--     (structMake (X:=E) f, structMake (X:=F) g) := 
+-- by
+--   simp[structMake]
 
+-- @[simp low, ftrans_simp low]
+-- theorem structModify_inl [StructType E I EI] [StructType F J FJ] (i : I) (f : EI i → EI i) (xy : E×F)
+--   : structModify (I:=I⊕J) (.inl i) f xy 
+--     =
+--     {xy with fst := structModify i f xy.1} := 
+-- by
+--   conv => 
+--     lhs
+--     simp[structModify]
 
+-- @[simp, ftrans_simp]
+-- theorem structModify_inl' [StructType E I EI] [StructType F J FJ] (i : I) (f : EI i → EI i) (x : E) (y : F)
+--   : structModify (I:=I⊕J) (.inl i) f (x, y)
+--     =
+--     (structModify i f x, y) := 
+-- by
+--   conv => 
+--     lhs
+--     simp[structModify]
   
+-- @[simp low, ftrans_simp low]
+-- theorem structModify_inr [StructType E I EI] [StructType F J FJ] (j : J) (f : FJ j → FJ j) (xy : E×F)
+--   : structModify (I:=I⊕J) (.inr j) f xy 
+--     =
+--     (xy.1, structModify j f xy.2) := 
+-- by
+--   simp[structModify]
 
+-- @[simp, ftrans_simp]
+-- theorem structModify_inr' [StructType E I EI] [StructType F J FJ] (j : J) (f : FJ j → FJ j) (x : E) (y : F)
+--   : structModify (I:=I⊕J) (.inr j) f (x, y)
+--     =
+--     (x, structModify j f y) := 
+-- by
+--   simp[structModify]
