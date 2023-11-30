@@ -9,7 +9,7 @@ import Mathlib.Data.FunLike.Basic
 import SciLean.Util.SorryProof
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
-
+import SciLean.Lean.ToSSA
 import SciLean.Tactic.StructuralInverse
 import SciLean.Tactic.AnalyzeConstLambda
 
@@ -33,6 +33,7 @@ initialize registerTraceClass `Meta.Tactic.ftrans.discharge
 initialize registerTraceClass `Meta.Tactic.ftrans.unify
 
 initialize registerOption `linter.ftransDeclName { defValue := true, descr := "suggests declaration name for ftrans rule" }
+initialize registerOption `linter.ftransSsaRhs { defValue := false, descr := "check if right hand side of ftrans rule is in single static asigment form" }
 -- initialize registerTraceClass `Meta.Tactic.ftrans.lambda_special_cases
 
 register_simp_attr ftrans_simp
@@ -269,7 +270,7 @@ initialize funTransRuleAttr : TagAttribute ←
       MetaM.run' do
         forallTelescope rule λ _ eq => do
 
-          let .some (_,lhs,_) := eq.app3? ``Eq
+          let .some (_,lhs,rhs) := eq.app3? ``Eq
             | throwError s!"`{← ppExpr eq}` is not a rewrite rule!"
 
           let .some (transName, _, f) ← getFTrans? lhs
@@ -282,6 +283,12 @@ To register function transformation call:
 ```
 where <name> is name of the function transformation and <info> is corresponding `FTrans.Info`.
 "
+
+          if (← getBoolOption `linter.ftransSsaRhs true) then
+            let rhs' ← rhs.toSSA #[]
+            if ¬(rhs.eqv rhs') then
+              logWarning s!"right hand side is not in single static assigment form, expected form:\n{←ppExpr rhs'}"
+          
           let data ← analyzeConstLambda f
 
           let suggestedRuleName :=
