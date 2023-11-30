@@ -73,6 +73,7 @@ by
 -- Register `isomorph` as function transformation -------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 open Lean Meta Qq in
 def discharger (e : Expr) : SimpM (Option Expr) := return none
 

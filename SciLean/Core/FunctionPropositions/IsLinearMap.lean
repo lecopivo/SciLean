@@ -5,6 +5,8 @@ import SciLean.Core.Objects.FinVec
 import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
 
+set_option linter.unusedVariables false
+
 variable {R X Y Z ι : Type _} {E : ι → Type _}
   [Semiring R] 
   [AddCommGroup X] [Module R X]

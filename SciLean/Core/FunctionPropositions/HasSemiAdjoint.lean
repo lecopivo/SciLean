@@ -525,7 +525,7 @@ end InnerProductSpace
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem SciLean.semiAdjoint.arg_a3.HasSemiAdjoint_rule
+theorem SciLean.semiAdjoint.arg_y.HasSemiAdjoint_rule
   (f : X → Y) (a0 : W → Y) (ha0 : HasSemiAdjoint K a0)
   : HasSemiAdjoint K (fun w => semiAdjoint K f (a0 w)) :=
 by

@@ -418,7 +418,7 @@ by sorry_proof
 --------------------------------------------------------------------------------
 
 @[ftrans]
-theorem SciLean.semiAdjoint.arg_a3.semiAdjoint_rule
+theorem SciLean.semiAdjoint.arg_y.semiAdjoint_rule
   (f : X → Y) (a3 : W → Y) (hf : HasSemiAdjoint K f) (ha3 : HasSemiAdjoint K a3)
   : semiAdjoint K (fun w => semiAdjoint K f (a3 w)) 
     =

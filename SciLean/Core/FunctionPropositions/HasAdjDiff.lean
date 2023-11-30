@@ -436,7 +436,7 @@ end InnerProductSpace
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem SciLean.semiAdjoint.arg_a3.IsDifferentiable_rule {W : Type _} [Vec K W]
+theorem SciLean.semiAdjoint.arg_y.IsDifferentiable_rule {W : Type _} [Vec K W]
   (f : X → Y) (a0 : W → Y) (ha0 : IsDifferentiable K a0)
   : IsDifferentiable K (fun w => semiAdjoint K f (a0 w)) := 
 by
@@ -446,7 +446,7 @@ by
   | isFalse h => simp[h]; fprop
 
 @[fprop]
-theorem SciLean.semiAdjoint.arg_a3.HasAdjDiff_rule
+theorem SciLean.semiAdjoint.arg_y.HasAdjDiff_rule
   (f : X → Y) (a0 : W → Y) (ha0 : HasAdjDiff K a0)
   : HasAdjDiff K (fun w => semiAdjoint K f (a0 w)) := 
 by

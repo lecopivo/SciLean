@@ -58,7 +58,7 @@ by
 
 
 @[ftrans]
-theorem semiAdjoint.arg_a3.cderiv_rule
+theorem semiAdjoint.arg_y.cderiv_rule
   (f : X → Y) (a0 : W → Y) (ha0 : IsDifferentiable K a0)
   : cderiv K (fun w => semiAdjoint K f (a0 w)) 
     =
@@ -1280,7 +1280,7 @@ end InnerProductSpace
 
 
 @[ftrans]
-theorem SciLean.semiAdjoint.arg_a3.revCDeriv_rule
+theorem SciLean.semiAdjoint.arg_y.revCDeriv_rule
   (f : X → Y) (a0 : W → Y) (hf : HasSemiAdjoint K f) (ha0 : HasAdjDiff K a0)
   : revCDeriv K (fun w => semiAdjoint K f (a0 w)) 
     =

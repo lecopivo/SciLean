@@ -8,6 +8,8 @@ import SciLean.Tactic.LSimp2.Main
 import SciLean.Tactic.StructuralInverse
 import SciLean.Tactic.AnalyzeLambda
 
+set_option linter.unusedVariables false
+
 namespace SciLean.FTrans
 
 open Lean Meta Qq

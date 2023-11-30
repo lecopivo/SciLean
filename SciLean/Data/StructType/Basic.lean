@@ -107,6 +107,7 @@ instance (priority:=low+1) instStrucTypePiSimple
     else 
       simp[h]
 
+set_option linter.unusedVariables false in
 instance (priority:=low+1) instStrucTypePi
   (I : Type _) (E : I → Type _)
   (J : I → Type _) (EJ : (i : I) → (J i) → Type _)
@@ -156,7 +157,7 @@ instance instStrucTypeArrowSimple
 instance instStrucTypeArrow
   (E I J : Type _) (EI : I → Type _)
   [StructType E I EI] [DecidableEq J]
-  : StructType (J → E) (J×I) (fun (j,i) => EI i) where
+  : StructType (J → E) (J×I) (fun (_,i) => EI i) where
   structProj := fun f (j,i) => StructType.structProj (f j) i
   structMake := fun f j => StructType.structMake fun i => f (j,i)
   structModify := fun (j,i) f x j' =>   
