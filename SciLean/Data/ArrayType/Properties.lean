@@ -189,25 +189,6 @@ by
   unfold revCDeriv; ftrans
   sorry_proof
 
-
-instance {Cont Idx Elem} [ArrayType Cont Idx Elem] [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => ElemI i) where
-  structProj := sorry
-  structMake := sorry
-  structModify := sorry
-  left_inv := sorry
-  right_inv := sorry
-  structProj_structModify := sorry
-  structProj_structModify' := sorry
-
-instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont Idx (fun _ => Elem) where
-  structProj := sorry
-  structMake := sorry
-  structModify := sorry
-  left_inv := sorry
-  right_inv := sorry
-  structProj_structModify := sorry
-  structProj_structModify' := sorry
-
 @[ftrans]
 theorem GetElem.getElem.arg_xs.revDeriv_rule
   (f : X → Cont) (idx : Idx) (dom)
@@ -442,6 +423,27 @@ by
 
 
 @[ftrans]
+theorem SetElem.setElem.arg_contelem.revDeriv_rule
+  (cont : X → Cont) (idx : Idx) (elem : X → Elem) 
+  (hcont : HasAdjDiff K cont) (helem : HasAdjDiff K elem)
+  : revDeriv K (fun x => setElem (cont x) idx (elem x))
+    =
+    fun x => 
+      let cdc := revDeriv K cont x
+      let ede := revDerivUpdate K elem x
+      (setElem cdc.1 idx ede.1,
+       fun dcont' => 
+         let delem' := dcont'[idx]
+         let dcont' := setElem dcont' idx 0
+         let dx := cdc.2 dcont'
+         ede.2 delem' dx) :=
+by
+  have ⟨_,_⟩ := hcont
+  have ⟨_,_⟩ := helem
+  unfold revDeriv; ftrans; ftrans; simp[revDerivUpdate,revDeriv]
+
+
+@[ftrans]
 theorem SetElem.setElem.arg_contelem.revDerivUpdate_rule
   (cont : X → Cont) (idx : Idx) (elem : X → Elem) 
   (hcont : HasAdjDiff K cont) (helem : HasAdjDiff K elem)
@@ -453,14 +455,96 @@ theorem SetElem.setElem.arg_contelem.revDerivUpdate_rule
       (setElem cdc.1 idx ede.1,
        fun dcont' dx => 
          let delem' := dcont'[idx]
-         ede.2 delem' (cdc.2 (setElem dcont' idx 0) dx)
-         ) := 
+         let dcont' := setElem dcont' idx 0
+         let dx := cdc.2 dcont' dx
+         ede.2 delem' dx) := 
 by
   have ⟨_,_⟩ := hcont
   have ⟨_,_⟩ := helem
-  unfold revDerivUpdate; ftrans; ftrans; simp[add_assoc]
-  sorry_proof
+  unfold revDerivUpdate; ftrans; ftrans; simp[add_assoc,revDerivUpdate]
 
+
+@[ftrans]
+theorem SetElem.setElem.arg_contelem.revDerivProj_rule
+  (cont : X → Cont) (idx : Idx) (elem : X → Elem) 
+  (hcont : HasAdjDiff K cont) (helem : HasAdjDiff K elem)
+  : revDerivProj K Idx (fun x => setElem (cont x) idx (elem x))
+    =
+    fun x => 
+      let cdc := revDerivProj K Idx cont x
+      let ede := revDeriv K elem x
+      (setElem cdc.1 idx ede.1,
+       fun i dei => 
+         if i = idx then 
+           ede.2 dei
+         else
+           cdc.2 i dei) :=
+by
+  unfold revDerivProj; ftrans; ftrans; simp[revDerivUpdate,revDeriv]
+  funext x; simp; funext i dei
+  if h : i = idx then
+    subst h
+    simp[ArrayType.getElem_structProj, ArrayType.setElem_structModify]
+    sorry_proof
+  else 
+    simp[h,ArrayType.getElem_structProj, ArrayType.setElem_structModify]
+    sorry_proof
+
+
+@[ftrans]
+theorem SetElem.setElem.arg_contelem.revDerivProj_rule'
+  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  [SemiInnerProductSpaceStruct K Elem I ElemI]
+  (cont : X → Cont) (idx : Idx) (elem : X → Elem) 
+  (hcont : HasAdjDiff K cont) (helem : HasAdjDiff K elem)
+  : revDerivProj K (Idx×I) (fun x => setElem (cont x) idx (elem x))
+    =
+    fun x => 
+      let cdc := revDerivProj K (Idx×I) cont x
+      let ede := revDerivProj K I elem x
+      (setElem cdc.1 idx ede.1,
+       fun (i,j) deij => 
+         if i = idx then 
+           ede.2 j deij
+         else
+           cdc.2 (i,j) deij) :=
+by
+  unfold revDerivProj; ftrans; ftrans; simp[revDerivUpdate,revDeriv]
+  funext x; simp; funext (i,j) deij
+  if h : i = idx then
+    subst h
+    simp[ArrayType.getElem_structProj, ArrayType.setElem_structModify]
+    sorry_proof
+  else 
+    simp[h,ArrayType.getElem_structProj, ArrayType.setElem_structModify]
+    sorry_proof
+
+
+@[ftrans]
+theorem SetElem.setElem.arg_contelem.revDerivProjUpdate_rule'
+  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  [SemiInnerProductSpaceStruct K Elem I ElemI]
+  (cont : X → Cont) (idx : Idx) (elem : X → Elem) 
+  (hcont : HasAdjDiff K cont) (helem : HasAdjDiff K elem)
+  : revDerivProjUpdate K (Idx×I) (fun x => setElem (cont x) idx (elem x))
+    =
+    fun x => 
+      let cdc := revDerivProjUpdate K (Idx×I) cont x
+      let ede := revDerivProjUpdate K I elem x
+      (setElem cdc.1 idx ede.1,
+       fun (i,j) deij dx => 
+         if i = idx then 
+           ede.2 j deij dx
+         else
+           cdc.2 (i,j) deij dx) :=
+by
+  unfold revDerivProjUpdate; ftrans; ftrans; simp[revDerivProjUpdate]
+  funext x; simp; funext (i,j) deij
+  if h : i = idx then
+    subst h
+    simp[ArrayType.getElem_structProj, ArrayType.setElem_structModify]
+  else 
+    simp[h,ArrayType.getElem_structProj, ArrayType.setElem_structModify]
 
 end OnSemiInnerProductSpace
 
@@ -613,6 +697,66 @@ by
   have ⟨_,_⟩ := hf
   unfold revCDeriv; ftrans; ftrans; simp
 
+
+@[ftrans]
+theorem IntroElem.introElem.arg_f.revDeriv_rule
+  (f : X → Idx → Elem)  
+  (hf : HasAdjDiff K f) 
+  : revDeriv K (fun x => introElem (Cont:=Cont) (f x))
+    =
+    fun x =>
+      let fdf := revDeriv K f x
+      (introElem fdf.1,
+       fun dc => fdf.2 (fun i => dc[i])) :=
+by
+  have ⟨_,_⟩ := hf
+  unfold revDeriv; ftrans; ftrans; simp
+
+@[ftrans]
+theorem IntroElem.introElem.arg_f.revDerivUpdate_rule
+  (f : X → Idx → Elem)  
+  (hf : HasAdjDiff K f) 
+  : revDerivUpdate K (fun x => introElem (Cont:=Cont) (f x))
+    =
+    fun x =>
+      let fdf := revDerivUpdate K f x
+      (introElem fdf.1,
+       fun dc dx => fdf.2 (fun i => dc[i]) dx) :=
+by
+  unfold revDerivUpdate; ftrans
+
+@[ftrans]
+theorem IntroElem.introElem.arg_f.revDerivProj_rule
+  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  [SemiInnerProductSpaceStruct K Elem I ElemI]
+  (f : X → Idx → Elem)  
+  (hf : HasAdjDiff K f) 
+  : revDerivProj K (Idx×I) (fun x => introElem (Cont:=Cont) (f x))
+    =
+    fun x =>
+      let fdf := revDerivProj K (Idx×I) f x
+      (introElem fdf.1,
+       fun ij de => fdf.2 ij de) :=
+by
+  unfold revDerivProj; ftrans; ftrans; simp
+  funext x; simp; funext i de
+  apply congr_arg; sorry_proof
+  
+@[ftrans]
+theorem IntroElem.introElem.arg_f.revDerivProjUpdate_rule
+  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  [SemiInnerProductSpaceStruct K Elem I ElemI]
+  (f : X → Idx → Elem)  
+  (hf : HasAdjDiff K f) 
+  : revDerivProjUpdate K (Idx×I) (fun x => introElem (Cont:=Cont) (f x))
+    =
+    fun x =>
+      let fdf := revDerivProjUpdate K (Idx×I) f x
+      (introElem fdf.1,
+       fun ij de dx => fdf.2 ij de dx) :=
+by
+  unfold revDerivProjUpdate; ftrans
+ 
 end OnSemiInnerProductSpace
 
 

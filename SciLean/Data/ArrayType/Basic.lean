@@ -94,7 +94,6 @@ variable
   {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
   [ArrayType Cont Idx Elem]
 
-
 @[ext]
 theorem ext (x y : Cont) : (∀ i, x[i] = y[i]) → x = y := 
 by
@@ -190,6 +189,15 @@ def _root_.Array.toArrayType {n Elem} (Cont : Type u) [ArrayType Cont (SciLean.I
 def _root_.ListN.toArrayType {n Elem} (Cont : Type) [ArrayType Cont (SciLean.Idx (n.toUSize)) Elem] 
   (l : ListN Elem n) : Cont := 
   introElem fun i => l.toArray[i.1.toNat]'sorry_proof
+
+instance {Cont Idx Elem} [ArrayType Cont Idx Elem] [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => ElemI i) where
+  structProj := fun x (i,j) => structProj x[i] j
+  structMake := fun f => introElem fun i => structMake fun j => f (i,j)
+  structModify := fun (i,j) f x => modifyElem x i (fun xi => structModify j f xi)
+  left_inv := by intro x; simp
+  right_inv := by intro x; simp
+  structProj_structModify := by intro x; simp
+  structProj_structModify' := by intro (i,j) (i',j') _ _ h; sorry_proof
 
 
 section Operations
