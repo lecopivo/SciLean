@@ -20,6 +20,7 @@ class StructType (X : Sort _) (I : (Sort _)) (XI : outParam <| I → Sort _) whe
 
 attribute [simp, ftrans_simp] StructType.structProj_structModify StructType.structProj_structModify'
 export StructType (structProj structMake structModify)
+attribute [simp, ftrans_simp] structProj structMake structModify 
 
 def oneHot {X I XI} [StructType X I XI] [DecidableEq I] [∀ i, Zero (XI i)] (i : I) (xi : XI i) : X := 
   structMake fun i' =>

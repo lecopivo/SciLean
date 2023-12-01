@@ -1027,11 +1027,7 @@ theorem Prod.fst.arg_self.revDerivProj_rule
 by
   unfold revDerivProj
   funext x; ftrans; simp[revDerivProj]
-  funext e dxy
-  simp[structMake, oneHot]
-  apply congr_arg
-  congr; funext i; congr; funext h; subst h; rfl
-
+ 
 @[ftrans]
 theorem Prod.fst.arg_self.revDerivProjUpdate_rule
   (f : W → X'×Y) (hf : HasAdjDiff K f)
@@ -1085,10 +1081,6 @@ theorem Prod.snd.arg_self.revDerivProj_rule
 by
   unfold revDerivProj
   funext x; ftrans; simp[revDerivProj]
-  funext e dxy
-  simp[structMake, oneHot]
-  apply congr_arg
-  congr; funext i; congr; funext h; subst h; rfl
 
 @[ftrans]
 theorem Prod.snd.arg_self.revDerivProjUpdate_rule

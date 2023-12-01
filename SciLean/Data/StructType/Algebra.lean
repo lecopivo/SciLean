@@ -341,44 +341,26 @@ variable
   [DecidableEq I] [DecidableEq J]
 
 @[simp, ftrans_simp]
-theorem oneHot_inl_fst (i : I) (xi : EI i)
-  : (oneHot (X:=E×F) (I:=I⊕J) (.inl i) xi).1
+theorem oneHot_inl (i : I) (xi : EI i)
+  : (oneHot (X:=E×F) (I:=I⊕J) (.inl i) xi)
     =
-    oneHot i xi := 
-by 
-  simp[oneHot, structMake]; 
-  congr; funext; congr
-  funext h; subst h; rfl
-
-@[simp, ftrans_simp]
-theorem oneHot_inl_snd (i : I) (xi : EI i)
-  : (oneHot (X:=E×F) (I:=I⊕J) (.inl i) xi).2
-    =
-    (0 : F) := 
+    (oneHot i xi, 0) := 
 by 
   simp[oneHot, structMake]
-  apply structExt (I:=J)
-  simp[ZeroStruct.structProj_zero]
+  constructor
+  . congr; funext; congr; funext h; subst h; rfl
+  . apply structExt (I:=J); simp [ZeroStruct.structProj_zero]
 
 @[simp, ftrans_simp]
-theorem oneHot_inr_fst (j : J) (yj : FJ j)
-  : (oneHot (X:=E×F) (I:=I⊕J) (.inr j) yj).1
+theorem oneHot_inr (j : J) (xj : FJ j)
+  : (oneHot (X:=E×F) (I:=I⊕J) (.inr j) xj)
     =
-    (0 : E) := 
+    (0, oneHot j xj) := 
 by 
   simp[oneHot, structMake]
-  apply structExt (I:=I)
-  simp[ZeroStruct.structProj_zero]
-
-@[simp, ftrans_simp]
-theorem oneHot_inr_snd (j : J) (yj : FJ j)
-  : (oneHot (X:=E×F) (I:=I⊕J) (.inr j) yj).2
-    =
-    oneHot j yj := 
-by 
-  simp[oneHot, structMake]; 
-  congr; funext; congr
-  funext h; subst h; rfl
+  constructor
+  . apply structExt (I:=I); simp [ZeroStruct.structProj_zero]
+  . congr; funext; congr; funext h; subst h; rfl
 
 end OneHotSimp
 
