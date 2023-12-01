@@ -127,19 +127,18 @@ theorem introElem_getElem [ArrayType Cont Idx Elem] (cont : Cont)
 
 -- TODO: Make an inplace modification
 -- Maybe turn this into a class and this is a default implementation
-def modifyElem [GetElem Cont Idx Elem λ _ _ => True] [SetElem Cont Idx Elem]
+def _root_.SciLean.modifyElem [GetElem Cont Idx Elem λ _ _ => True] [SetElem Cont Idx Elem]
   (arr : Cont) (i : Idx) (f : Elem → Elem) : Cont := 
-  structModify i f arr
+  let xi := arr[i]
+  setElem arr i (f xi)
 
-set_option trace.Meta.Tactic.simp.discharge true in
-set_option trace.Meta.Tactic.simp.unify true in
 @[simp]
 theorem getElem_modifyElem_eq [ArrayType Cont Idx Elem] (cont : Cont) (idx : Idx) (f : Elem → Elem)
-  : (modifyElem cont idx f)[idx] = f cont[idx] := by simp[getElem_structProj,modifyElem]; done
+  : (modifyElem cont idx f)[idx] = f cont[idx] := by simp[getElem_structProj,modifyElem,setElem_structModify]; done
 
 @[simp]
 theorem getElem_modifyElem_neq [inst : ArrayType Cont Idx Elem] (arr : Cont) (i j : Idx) (f : Elem → Elem)
-  : i ≠ j → (modifyElem arr i f)[j] = arr[j] := by intro h; simp [h,modifyElem, getElem_structProj,modifyElem]; done
+  : i ≠ j → (modifyElem arr i f)[j] = arr[j] := by intro h; simp [h,modifyElem, getElem_structProj,modifyElem,setElem_structModify]; done
 
 
 -- Maybe turn this into a class and this is a default implementation

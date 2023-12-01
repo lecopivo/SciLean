@@ -135,7 +135,7 @@ instance : IntroElem (DataArrayN α ι) ι α where
 instance : StructType (DataArrayN α ι) ι (fun _ => α) where
   structProj x i := x[i]
   structMake f := introElem f
-  structModify i f x := setElem x i (f x[i])
+  structModify i f x := modifyElem x i f
   left_inv := sorry_proof
   right_inv := sorry_proof
   structProj_structModify  := sorry_proof

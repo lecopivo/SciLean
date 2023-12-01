@@ -11,8 +11,6 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
--- set_option linter.ftransSsaRhs true
-
 variable 
   (K I : Type _) [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
@@ -148,10 +146,10 @@ theorem proj_rule (i : I)
   : revDeriv K (fun (x : (i:I) → EI i) => x i)
     = 
     fun x => 
-      (x i, fun dxi j => if h : i=j then h ▸ dxi else 0) :=
+      (x i, fun dxi => oneHot i dxi) :=
 by
   unfold revDeriv
-  funext _; ftrans; ftrans
+  funext _; ftrans; ftrans; simp[oneHot]
 variable (I)
 variable {EI}
 
@@ -199,13 +197,10 @@ theorem pi_rule
   : (revDeriv K fun (x : X) (i : I) => f x i)
     =
     fun x =>
-      let xdf := revDerivProjUpdate K I f x
-      (fun i => xdf.1 i,
-       fun dy => Id.run do
-         let mut dx : X := 0
-         for i in fullRange I do
-           dx := xdf.2 i (dy i) dx
-         dx) :=
+      let xdf := fun i => revDerivUpdate K (f · i) x
+      (fun i => (xdf i).1, 
+       fun dy => 
+         Function.repeatIdx (fun (i : I) dx => (xdf i).2 (dy i) dx) 0) :=
 by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
@@ -245,12 +240,10 @@ theorem proj_rule (i : I)
   : revDerivUpdate K (fun (x : (i:I) → EI i) => x i)
     = 
     fun x => 
-      (x i, fun dxi dx j => if h : i=j then dx j + h ▸ dxi else dx j) :=
+      (x i, fun dxi dx => structModify i (fun dxi' => dxi' + dxi) dx) :=
 by
   unfold revDerivUpdate
   simp [revDeriv.proj_rule]
-  funext _; ftrans; ftrans; 
-  simp; funext dxi dx j; simp; sorry_proof
 variable (I)
 variable {EI}
 
@@ -293,13 +286,10 @@ theorem pi_rule
   : (revDerivUpdate K fun (x : X) (i : I) => f x i)
     =
     fun x =>
-      let xdf := revDerivProjUpdate K I f x
-      (fun i => xdf.1 i,
-       fun dy dx => Id.run do
-         let mut dx := dx
-         for i in fullRange I do
-           dx := xdf.2 i (dy i) dx
-         dx) :=
+      let xdf := fun i => revDerivUpdate K (f · i) x
+      (fun i => (xdf i).1,
+       fun dy dx => 
+         Function.repeatIdx (fun (i : I) dx => (xdf i).2 (dy i) dx) dx) :=
 by
   unfold revDerivUpdate
   simp [revDeriv.pi_rule _ _ hf, revDerivUpdate]
@@ -342,14 +332,21 @@ variable {Y}
 theorem proj_rule [DecidableEq I] (i : ι)
   : revDerivProj K I (fun (f : ι → E) => f i)
     = 
-    fun f => 
-      (f i, fun j dxj i' => 
-        if i=i' then
-          oneHot j dxj
-        else 
-          0) := 
+    fun f : ι → E => 
+      (f i, fun j dxj => oneHot (X:=ι→E) (I:=ι×I) (i,j) dxj) := 
 by
-  unfold revDerivProj; simp[revDeriv.proj_rule]
+  unfold revDerivProj; simp[revDeriv.proj_rule, oneHot]
+  funext x; simp; funext j de i'
+  if h:i=i' then
+    subst h
+    simp; congr; funext j'
+    if h':j=j' then
+      subst h'
+      simp
+    else
+      simp[h']
+  else
+    simp[h]
 
 theorem comp_rule
   (f : Y → E) (g : X → Y)
@@ -386,13 +383,10 @@ theorem pi_rule
   : (revDerivProj K Unit fun (x : X) (i : ι) => f x i)
     =
     fun x =>
-      let ydf := revDerivProjUpdate K ι f x
-      (fun i => ydf.1 i, 
-       fun _ df => Id.run do
-         let mut dx : X := 0
-         for i in fullRange ι do
-           dx := ydf.2 i (df i) dx
-         dx) := 
+      let ydf := fun i => revDerivUpdate K (f · i) x
+      (fun i => (ydf i).1, 
+       fun _ df => 
+         Function.repeatIdx (fun i dx => (ydf i).2 (df i) dx) (0 : X)) := 
 by
   sorry_proof
 
@@ -447,10 +441,11 @@ by
   funext j dxj f i'
   apply structExt (I:=I)
   intro j'
-  if h :i=i' then
+  if h :i'=i then
     subst h; simp
   else
-    simp[h]
+    have h' : i≠i' := by intro h''; simp[h''] at h
+    simp[h,h',Function.update]
 
 
 theorem comp_rule
@@ -492,13 +487,9 @@ theorem pi_rule
   : (revDerivProjUpdate K Unit fun (x : X) (i : ι) => f x i)
     =
     fun x =>
-      let ydf := revDerivProjUpdate K ι f x
-      (fun i => ydf.1 i, 
-       fun _ df dx => Id.run do
-         let mut dx : X := dx
-         for i in fullRange ι do
-           dx := ydf.2 i (df i) dx
-         dx) := 
+      let ydf := fun i => revDerivUpdate K (f · i) x
+      (fun i => (ydf i).1, 
+       fun _ df dx => Function.repeatIdx (fun i dx => (ydf i).2 (df i) dx) dx) := 
 by
   conv => lhs; unfold revDerivProjUpdate
   simp [revDerivProj.pi_rule _ _ hf,add_assoc,add_comm]
@@ -1614,13 +1605,9 @@ theorem SciLean.EnumType.sum.arg_f.revDeriv_rule {ι : Type} [EnumType ι]
   : revDeriv K (fun x => ∑ i, f x i)
     =
     fun x => 
-      let ydf := revDerivProjUpdate K ι f x
-      (∑ i, ydf.1 i, 
-       fun dy => Id.run do
-         let mut dx := 0
-         for i in fullRange ι do
-           dx := ydf.2 i dy dx
-         dx) :=
+      let ydf := fun i => revDerivUpdate K (f · i) x
+      (∑ i, (ydf i).1, 
+       fun dy => Function.repeatIdx (fun i dx => (ydf i).2 dy dx) 0) :=
 by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
@@ -1634,13 +1621,9 @@ theorem SciLean.EnumType.sum.arg_f.revDerivUpdate_rule {ι : Type} [EnumType ι]
   : revDerivUpdate K (fun x => ∑ i, f x i)
     =
     fun x => 
-      let ydf := revDerivProjUpdate K ι f x
-      (∑ i, ydf.1 i, 
-       fun dy dx => Id.run do
-         let mut dx := dx
-         for i in fullRange ι do
-           dx := ydf.2 i dy dx
-         dx) :=
+      let ydf := fun i => revDerivUpdate K (f · i) x
+      (∑ i, (ydf i).1, 
+       fun dy dx => Function.repeatIdx (fun i dx => (ydf i).2 dy dx) dx) :=
 by
   simp[revDerivUpdate]
   ftrans
@@ -1653,15 +1636,11 @@ theorem SciLean.EnumType.sum.arg_f.revDerivProj_rule {ι : Type} [EnumType ι]
   : revDerivProj K Yi (fun x => ∑ i, f x i)
     =
     fun x => 
-      let ydf := revDerivProjUpdate K (ι×Yi) f x
-      (∑ i, ydf.1 i, 
-       fun i dy => Id.run do
-         let mut dx : X := 0
-         for j in fullRange ι do
-           dx := ydf.2 (j,i) dy dx
-         dx) :=
+      let ydf := fun i => revDerivProjUpdate K Yi (f · i) x
+      (∑ i, (ydf i).1, 
+       fun j dy => Function.repeatIdx (fun (i : ι) dx => (ydf i).2 j dy dx) 0) :=
 by
-  funext; simp[revDerivProj]; ftrans; simp; sorry_proof
+  funext; simp[revDerivProj]; ftrans; sorry_proof
 
 
 @[ftrans]
@@ -1670,15 +1649,11 @@ theorem SciLean.EnumType.sum.arg_f.revDerivProjUpdate_rule {ι : Type} [EnumType
   : revDerivProjUpdate K Yi (fun x => ∑ i, f x i)
     =
     fun x => 
-      let ydf := revDerivProjUpdate K (ι×Yi) f x
-      (∑ i, ydf.1 i, 
-       fun i dy dx => Id.run do
-         let mut dx : X := dx
-         for j in fullRange ι do
-           dx := ydf.2 (j,i) dy dx
-         dx) :=
+      let ydf := fun i => revDerivProjUpdate K Yi (f · i) x
+      (∑ i, (ydf i).1, 
+       fun j dy dx => Function.repeatIdx (fun (i : ι) dx => (ydf i).2 j dy dx) dx) :=
 by
-  funext; simp[revDerivProjUpdate]; ftrans; simp; sorry_proof
+  funext; simp[revDerivProjUpdate]; ftrans; sorry_proof
 
 
 -- d/ite -----------------------------------------------------------------------

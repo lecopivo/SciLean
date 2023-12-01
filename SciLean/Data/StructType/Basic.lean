@@ -93,11 +93,7 @@ instance (priority:=low+1) instStrucTypePiSimple
   : StructType (∀ i, E i) I E where
   structProj := fun f i => f i
   structMake := fun f i => f i
-  structModify := fun i g f i' => 
-    if h : i'=i then
-      h ▸ (g (f i))
-    else
-      (f i')
+  structModify := fun i g f => Function.modify f i g
   left_inv := by simp[LeftInverse]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
@@ -116,11 +112,7 @@ instance (priority:=low+1) instStrucTypePi
   : StructType (∀ i, E i) ((i : I) × (J i)) (fun ⟨i,j⟩ => EJ i j) where
   structProj := fun f ⟨i,j⟩ => StructType.structProj (f i) j
   structMake := fun f i => StructType.structMake fun j => f ⟨i,j⟩
-  structModify := fun ⟨i,j⟩ f x i' => 
-    if h : i'=i then
-      StructType.structModify (I:=J i') (h▸j) (h▸f) (x i')
-    else
-      (x i')
+  structModify := fun ⟨i,j⟩ f x => Function.modify x i (StructType.structModify (I:=J i) j f)
   left_inv := by simp[LeftInverse]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
@@ -140,17 +132,13 @@ instance instStrucTypeArrowSimple
   : StructType (J → E) J (fun _ => E) where
   structProj := fun f j => f j
   structMake := fun f j => f j
-  structModify := fun j g f j' =>   
-    if j=j' then
-      g (f j')
-    else
-      (f j')
+  structModify := fun j g f => Function.modify f j g
   left_inv := by simp[LeftInverse]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
   structProj_structModify' := by 
     intro j j' f x H; simp
-    if h: j = j' then
+    if h: j' = j then
       simp [h] at H
     else 
       simp[h]
@@ -161,17 +149,13 @@ instance instStrucTypeArrow
   : StructType (J → E) (J×I) (fun (_,i) => EI i) where
   structProj := fun f (j,i) => StructType.structProj (f j) i
   structMake := fun f j => StructType.structMake fun i => f (j,i)
-  structModify := fun (j,i) f x j' =>   
-    if j=j' then
-      StructType.structModify i f (x j)
-    else
-      (x j')
+  structModify := fun (j,i) f x => Function.modify x j (StructType.structModify i f)
   left_inv := by simp[LeftInverse]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
   structProj_structModify' := by 
     intro (j,i) (j',i') f x H; simp
-    if h: j = j' then
+    if h: j'=j then
       subst h
       if h': i=i' then
         simp[h'] at H

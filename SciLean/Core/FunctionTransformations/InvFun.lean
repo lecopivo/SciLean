@@ -62,7 +62,7 @@ def discharger (e : Expr) : SimpM (Option Expr) := do
   let config : FProp.Config := {}
   let state  : FProp.State := { cache := cache }
   let (proof?, state) ← FProp.fprop e |>.run config |>.run state
-  modify (fun simpState => { simpState with cache := state.cache })
+  _root_.modify (fun simpState => { simpState with cache := state.cache })
   if proof?.isSome then
     return proof?
   else
