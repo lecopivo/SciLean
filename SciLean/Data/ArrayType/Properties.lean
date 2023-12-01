@@ -52,6 +52,13 @@ variable
   [Vec K Elem]
 
 @[fprop]
+theorem GetElem.getElem.arg_xs.IsLinearMap_rule_simple
+  (idx : Idx) (dom)
+  : IsLinearMap K (fun xs : Cont => getElem xs idx dom) := sorry_proof
+
+#generate_linear_map_simps GetElem.getElem.arg_xs.IsLinearMap_rule_simple
+
+@[fprop]
 theorem GetElem.getElem.arg_xs.IsDifferentiable_rule 
   (f : X → Cont) (idx : Idx) (dom)
   (hf : IsDifferentiable K f)
@@ -291,6 +298,17 @@ section OnVec
 variable 
   {X : Type _} [Vec K X]
   [Vec K Elem]
+
+@[fprop]
+theorem SetElem.setElem.arg_cont.IsLinearMap_rule_simple (idx : Idx)
+  : IsLinearMap K (fun xs : Cont => setElem xs idx 0) := sorry_proof
+
+@[fprop]
+theorem SetElem.setElem.arg_elem.IsLinearMap_rule_simple (idx : Idx)
+  : IsLinearMap K (fun elem : Elem => setElem (0 : Cont) idx elem) := sorry_proof
+
+#generate_linear_map_simps SciLean.SetElem.setElem.arg_cont.IsLinearMap_rule_simple
+#generate_linear_map_simps SciLean.SetElem.setElem.arg_elem.IsLinearMap_rule_simple
 
 @[fprop]
 theorem SetElem.setElem.arg_contelem.IsDifferentiable_rule 
@@ -583,6 +601,12 @@ section OnVec
 variable 
   {X : Type _} [Vec K X]
   [Vec K Elem]
+
+@[fprop]
+theorem IntroElem.introElem.arg_f.IsLinearMap_rule_simple
+  : IsLinearMap K (fun f : Idx → Elem => introElem (Cont:=Cont) f) := sorry_proof
+
+#generate_linear_map_simps SciLean.IntroElem.introElem.arg_f.IsLinearMap_rule_simple
 
 @[fprop]
 theorem IntroElem.introElem.arg_f.IsDifferentiable_rule 

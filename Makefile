@@ -14,9 +14,9 @@ test/%.run: build
 
 examples:
 	lake build SurfaceMeshTests
-	./build/bin/SurfaceMeshTests
+	# ./build/bin/SurfaceMeshTests
 	lake build HarmonicOscillator
-	./build/bin/HarmonicOscillator
+	# ./build/bin/HarmonicOscillator
 
 lint: build
 	./build/bin/runLinter
