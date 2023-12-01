@@ -284,7 +284,7 @@ To register function transformation call:
 where <name> is name of the function transformation and <info> is corresponding `FTrans.Info`.
 "
 
-          if (← getBoolOption `linter.ftransSsaRhs true) then
+          if (← getBoolOption `linter.ftransSsaRhs) then
             let rhs' ← rhs.toSSA #[]
             if ¬(rhs.eqv rhs') then
               logWarning s!"right hand side is not in single static assigment form, expected form:\n{←ppExpr rhs'}"
@@ -296,7 +296,7 @@ where <name> is name of the function transformation and <info> is corresponding 
               |>.append data.declSuffix
               |>.append (transName.getString.append "_rule")
 
-          if (← getBoolOption `linter.ftransDeclName true) &&
+          if (← getBoolOption `linter.ftransDeclName) &&
              ¬(suggestedRuleName.toString.isPrefixOf ruleName.toString) then
             logWarning s!"suggested name for this rule is {suggestedRuleName}"
 

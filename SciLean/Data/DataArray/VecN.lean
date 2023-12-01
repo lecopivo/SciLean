@@ -31,11 +31,19 @@ namespace Vec2
   instance : IntroElem (Vec2 α) (Idx 2) α where
     introElem := intro
 
+  instance : StructType (Vec2 α) (Idx 2) (fun _ => α) where
+    structProj x i := x[i]
+    structMake f := introElem f
+    structModify i f x := setElem x i (f x[i])
+    left_inv := sorry_proof
+    right_inv := sorry_proof
+    structProj_structModify  := sorry_proof
+    structProj_structModify' := sorry_proof
+
   instance : ArrayType (Vec2 α) (Idx 2) α where
-    ext := sorry_proof
-    getElem_setElem_eq  := sorry_proof
-    getElem_setElem_neq := sorry_proof
-    getElem_introElem := sorry_proof
+    getElem_structProj   := by intros; rfl
+    setElem_structModify := by intros; rfl
+    introElem_structMake := by intros; rfl
 
   instance [ba : PlainDataType α] : PlainDataType (Vec2 α) where
     btype :=
@@ -141,11 +149,19 @@ namespace Vec3
   instance : IntroElem (Vec3 α) (Idx 3) α where
     introElem := intro
 
+  instance : StructType (Vec3 α) (Idx 3) (fun _ => α) where
+    structProj x i := x[i]
+    structMake f := introElem f
+    structModify i f x := setElem x i (f x[i])
+    left_inv := sorry_proof
+    right_inv := sorry_proof
+    structProj_structModify  := sorry_proof
+    structProj_structModify' := sorry_proof
+
   instance : ArrayType (Vec3 α) (Idx 3) α where
-    ext := sorry_proof
-    getElem_setElem_eq  := sorry_proof
-    getElem_setElem_neq := sorry_proof
-    getElem_introElem := sorry_proof
+    getElem_structProj   := by intros; rfl
+    setElem_structModify := by intros; rfl
+    introElem_structMake := by intros; rfl
 
   instance [ba : PlainDataType α] : PlainDataType (Vec3 α) where
     btype :=
@@ -250,11 +266,19 @@ namespace Vec4
   instance : IntroElem (Vec4 α) (Idx 4) α where
     introElem := intro
 
+  instance : StructType (Vec4 α) (Idx 4) (fun _ => α) where
+    structProj x i := x[i]
+    structMake f := introElem f
+    structModify i f x := setElem x i (f x[i])
+    left_inv := sorry_proof
+    right_inv := sorry_proof
+    structProj_structModify  := sorry_proof
+    structProj_structModify' := sorry_proof
+
   instance : ArrayType (Vec4 α) (Idx 4) α where
-    ext := sorry_proof
-    getElem_setElem_eq  := sorry_proof
-    getElem_setElem_neq := sorry_proof
-    getElem_introElem := sorry_proof
+    getElem_structProj   := by intros; rfl
+    setElem_structModify := by intros; rfl
+    introElem_structMake := by intros; rfl
 
   instance [ba : PlainDataType α] : PlainDataType (Vec4 α) where
     btype :=

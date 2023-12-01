@@ -1,5 +1,6 @@
 import SciLean.Core.Objects.FinVec
 import SciLean.Data.ArrayType.Basic
+import SciLean.Data.StructType.Algebra
 
 namespace SciLean 
 namespace GenericArrayType
@@ -143,3 +144,21 @@ instance (priority := low) [ArrayType Cont Idx K] : BasisDuality Cont where
 --   to_dual := sorry_proof
 --   from_dual := sorry_proof
 
+
+
+instance [ArrayType Cont Idx Elem] [Zero Elem] : ZeroStruct Cont Idx (fun _ => Elem) where
+  structProj_zero := by intro i; simp[OfNat.ofNat,Zero.zero,ArrayType.introElem_structMake]
+
+instance [ArrayType Cont Idx Elem] [Add Elem] : AddStruct Cont Idx (fun _ => Elem) where
+  structProj_add := by intro i; simp[HAdd.hAdd, Add.add,ArrayType.introElem_structMake, ← ArrayType.getElem_structProj]
+
+instance {K} [ArrayType Cont Idx Elem] [SMul K Elem] : SMulStruct K Cont Idx (fun _ => Elem) where
+  structProj_smul := by intro i k x; simp[HSMul.hSMul, SMul.smul,ArrayType.introElem_structMake, ← ArrayType.getElem_structProj]
+
+instance {K} [IsROrC K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Cont Idx (fun _ => Elem) where
+  structProj_continuous := sorry_proof
+  structMake_continuous := sorry_proof
+
+instance {K} [IsROrC K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] : SemiInnerProductSpaceStruct K Cont Idx (fun _ => Elem) where
+  inner_structProj := sorry_proof
+  testFun_structProj := sorry_proof

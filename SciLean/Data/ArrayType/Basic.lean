@@ -1,6 +1,7 @@
 import SciLean.Util.SorryProof
 import SciLean.Data.Index
 import SciLean.Data.ListN 
+import SciLean.Data.StructType.Basic
 
 namespace SciLean
 
@@ -39,6 +40,7 @@ class ReserveElem (Cont : USize → Type u) (Elem : outParam (Type w)) where
 export ReserveElem (reserveElem)
 attribute [irreducible] reserveElem
 
+
 /-- This class says that `Cont` behaves like an array with `Elem` values indexed by `Idx`
 
 Examples for `Idx = Fin n` and `Elem = ℝ` are: `ArrayN ℝ n` or `ℝ^{n}`
@@ -57,15 +59,13 @@ Alternative notation:
 class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam)
   extends GetElem Cont Idx Elem (λ _ _ => True),
           SetElem Cont Idx Elem,
-          IntroElem Cont Idx Elem
+          IntroElem Cont Idx Elem,
+          StructType Cont Idx (fun _ => Elem)
   where
-  ext : ∀ f g : Cont, (∀ x : Idx, f[x] = g[x]) → f = g
-  getElem_setElem_eq  : ∀ (x : Idx) (y : Elem) (f : Cont), (setElem f x y)[x] = y
-  getElem_setElem_neq : ∀ (i j : Idx) (val : Elem) (arr : Cont), i ≠ j → (setElem arr i val)[j] = arr[j]
-  getElem_introElem : ∀ f i, (introElem f)[i] = f i
+  getElem_structProj   : ∀ (x : Cont) (i : Idx), x[i] = structProj x i
+  setElem_structModify : ∀ (x : Cont) (i : Idx) (xi : Elem), setElem x i xi = structModify i (fun _ => xi) x
+  introElem_structMake : ∀ (f : Idx → Elem), introElem f = structMake f
 
-attribute [ext] ArrayType.ext
-attribute [simp] ArrayType.getElem_setElem_eq ArrayType.getElem_introElem
 attribute [default_instance] ArrayType.toGetElem ArrayType.toSetElem ArrayType.toIntroElem
 
 class LinearArrayType (Cont : USize → Type u) (Elem : Type w |> outParam)
@@ -90,7 +90,37 @@ instance {T} {Y : outParam Type} [inst : LinearArrayType T Y] (n) : ArrayType (T
 
 namespace ArrayType
 
-variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
+variable 
+  {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
+  [ArrayType Cont Idx Elem]
+
+
+@[ext]
+theorem ext (x y : Cont) : (∀ i, x[i] = y[i]) → x = y := 
+by
+  intros h
+  apply structExt (I:=Idx)
+  simp[getElem_structProj] at h
+  exact h
+
+@[simp] 
+theorem getElem_setElem_eq (i : Idx) (xi : Elem) (x : Cont)
+  : (setElem x i xi)[i] = xi :=
+by
+  simp[setElem_structModify, getElem_structProj]
+
+@[simp] 
+theorem getElem_setElem_neq (i j : Idx) (xi : Elem) (x : Cont)
+  : (i≠j) → (setElem x i xi)[j] = x[j] :=
+by
+  intro h
+  simp (discharger:=assumption) [setElem_structModify, getElem_structProj]
+
+@[simp]
+theorem getElem_introElem (f : Idx → Elem) (i : Idx)
+  : (introElem (Cont:=Cont) f)[i] = f i :=
+by
+  simp[introElem_structMake, getElem_structProj]
 
 @[simp]
 theorem introElem_getElem [ArrayType Cont Idx Elem] (cont : Cont)
@@ -100,15 +130,17 @@ theorem introElem_getElem [ArrayType Cont Idx Elem] (cont : Cont)
 -- Maybe turn this into a class and this is a default implementation
 def modifyElem [GetElem Cont Idx Elem λ _ _ => True] [SetElem Cont Idx Elem]
   (arr : Cont) (i : Idx) (f : Elem → Elem) : Cont := 
-  setElem arr i (f (arr[i]))
+  structModify i f arr
 
+set_option trace.Meta.Tactic.simp.discharge true in
+set_option trace.Meta.Tactic.simp.unify true in
 @[simp]
 theorem getElem_modifyElem_eq [ArrayType Cont Idx Elem] (cont : Cont) (idx : Idx) (f : Elem → Elem)
-  : (modifyElem cont idx f)[idx] = f cont[idx] := by simp[modifyElem]; done
+  : (modifyElem cont idx f)[idx] = f cont[idx] := by simp[getElem_structProj,modifyElem]; done
 
 @[simp]
 theorem getElem_modifyElem_neq [inst : ArrayType Cont Idx Elem] (arr : Cont) (i j : Idx) (f : Elem → Elem)
-  : i ≠ j → (modifyElem arr i f)[j] = arr[j] := by simp[modifyElem]; apply ArrayType.getElem_setElem_neq; done
+  : i ≠ j → (modifyElem arr i f)[j] = arr[j] := by intro h; simp [h,modifyElem, getElem_structProj,modifyElem]; done
 
 
 -- Maybe turn this into a class and this is a default implementation
@@ -233,7 +265,7 @@ section Operations
 end Operations
 
 @[simp]
-theorem sum_introElem [EnumType Idx] [ArrayType Cont Idx Elem] [AddCommMonoid Elem] {ι} [EnumType ι] (f : ι → Idx → Elem) 
+theorem sum_introElem [EnumType Idx] [ArrayType Cont Idx Elem] [AddCommMonoid Elem] {ι} [EnumType ι] (f : ι → Idx → Elem)
   : ∑ j, introElem (Cont:=Cont) (fun i => f j i)
     =
     introElem fun i => ∑ j, f j i

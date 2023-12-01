@@ -132,11 +132,19 @@ instance : SetElem (DataArrayN α ι) ι α where
 instance : IntroElem (DataArrayN α ι) ι α where
   introElem f := ⟨DataArray.intro f, sorry_proof⟩
 
+instance : StructType (DataArrayN α ι) ι (fun _ => α) where
+  structProj x i := x[i]
+  structMake f := introElem f
+  structModify i f x := setElem x i (f x[i])
+  left_inv := sorry_proof
+  right_inv := sorry_proof
+  structProj_structModify  := sorry_proof
+  structProj_structModify' := sorry_proof
+
 instance : ArrayType (DataArrayN α ι) ι α  where
-  ext := sorry_proof
-  getElem_setElem_eq := sorry_proof
-  getElem_setElem_neq := sorry_proof
-  getElem_introElem := sorry_proof
+  getElem_structProj   := by intros; rfl
+  setElem_structModify := by intros; rfl
+  introElem_structMake := by intros; rfl
 
 instance : ArrayTypeNotation (DataArrayN α ι) ι α := ⟨⟩
 
