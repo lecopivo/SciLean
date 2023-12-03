@@ -102,7 +102,22 @@ def unexpandArrayToArrayType : Lean.PrettyPrinter.Unexpander
 -- Notation: Float ^ Idx n --
 -----------------------------
 
-open Lean Elab Term in
+class SHPow {α : Sort u} {β : Sort v} {γ : outParam (Sort w)} (a :α) (b : β) (c : outParam γ)
+def SHPow.pow {α β γ} (a : α) (b : β) {c : γ} [SHPow a b c] := c
+
+instance {Cont Idx Elem} [ArrayTypeNotation Cont Idx Elem] : SHPow Elem Idx (arrayTypeCont Idx Elem)  := ⟨⟩
+instance {α β γ} (x : α) (y : β) [HPow α β γ] : SHPow x y (HPow.hPow x y):= ⟨⟩
+open Lean Elab Term Meta in
+elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term => withFreshMacroScope do
+  let x ← elabTerm (← `(SHPow.pow $x $y)) none
+  return x.getArg! 5
+
+/- #check K ^ (κ×ι)
+#eval 2 ^ 3
+
+ -/
+
+/- open Lean Elab Term in
 elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term =>
   try 
     let y ← elabTerm y none
@@ -111,7 +126,7 @@ elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term =>
     return z
   catch _ => do
     return ← elabTerm (← `(HPow.hPow $x $y)) none
-
+ -/
 @[app_unexpander arrayTypeCont] def unexpandArrayTypeCont : Lean.PrettyPrinter.Unexpander
   | `($(_) $I $X) => 
     `($X ^ $I)
