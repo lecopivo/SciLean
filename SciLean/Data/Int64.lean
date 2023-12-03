@@ -27,6 +27,12 @@ instance : Add Int64 := ⟨fun x y => ⟨x.toUSize + y.toUSize⟩⟩
 instance : Sub Int64 := ⟨fun x y => ⟨x.toUSize - y.toUSize⟩⟩
 instance : Neg Int64 := ⟨fun x   => ⟨(0:USize) - (x.toUSize)⟩⟩
 instance : Mul Int64 := ⟨fun x y => ⟨x.toUSize * y.toUSize⟩⟩
+instance : Div Int64 := ⟨fun x y => 
+  match x.isPositive, y.isPositive with
+  | true, true => ⟨x.toUSize / y.toUSize⟩
+  | false, true => -⟨(-x).toUSize / y.toUSize⟩
+  | true, false => -⟨x.toUSize / (-y).toUSize⟩
+  | false, false => ⟨(-x).toUSize / (-y).toUSize⟩⟩
 
 def Int64.comp (x y : Int64) : Ordering :=
   match x.isNegative, y.isNegative with
@@ -51,3 +57,4 @@ instance Int64.decLe (a b : Int64) : Decidable (a ≤ b) :=
     .isFalse h
 
 instance : DecidableEq Int64 := fun x y => if _h : x.1 = y.1 then .isTrue sorry_proof else .isFalse sorry_proof
+
