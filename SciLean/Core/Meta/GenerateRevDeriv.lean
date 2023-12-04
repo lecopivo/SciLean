@@ -28,8 +28,8 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
 
     let (ctx, args) ← splitToCtxAndArgs xs
     
-    let .some ⟨_u,K,_isROrC⟩ ← getFieldOutOfContextQ ctx
-      | throwError "unable to figure out what is the field"
+    let .some ⟨_u,K,_isROrC⟩ ← getFieldOutOfContextQ xs
+      | throwError "can't figure what is the canonical field, maybe `ℝ`, `ℂ` or `Float`? This is a bug most likely, please report!"
 
     trace[Meta.generate_ftrans] "detected field {← ppExpr K}"
 

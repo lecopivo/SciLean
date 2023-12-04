@@ -1,6 +1,7 @@
 import SciLean.Core.Objects.FinVec
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.Meta.GenerateInit
+import SciLean.Data.ArrayType.Notation
 import SciLean.Tactic.LetNormalize
 
 namespace SciLean.Meta
@@ -59,11 +60,16 @@ def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × (K
       K? := type.getArg! 1
       break
 
+    if type.isAppOf ``arrayTypeCont then
+      K? := type.getArg! 1
+      break
+
   let .some K := K? | return none
   let .some ⟨u,K⟩ ← isTypeQ K | return none
   let isROrC ← synthInstanceQ q(IsROrC $K)
 
   return .some ⟨u,K,isROrC⟩
+
 
 
 /-- Split free variables to "context variables" and "arguments"
