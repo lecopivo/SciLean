@@ -20,7 +20,7 @@ macro_rules
     let var ← `(y)
     let xi' ← xi.raw.replaceM (λ s => if s == lhs.raw then pure $ .some var else pure $ none)
     let g ← `(λ ($var : typeOf $lhs) => $xi')
-    `(doElem| $x:ident := ArrayType.modifyElem ($x:ident) $i $g)
+    `(doElem| $x:ident := modifyElem ($x:ident) $i $g)
   else 
     `(doElem| $x:ident := setElem ($x:ident) $i $xi)
 
@@ -77,7 +77,6 @@ def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
 -- Notation: ⊞[1,2,3] --
 ------------------------
 
-
 syntax (name:=arrayTypeLiteral) " ⊞[" term,* "] " : term
 
 open Lean Meta Elab Term Qq
@@ -101,6 +100,8 @@ def unexpandArrayToArrayType : Lean.PrettyPrinter.Unexpander
 
 -- Notation: Float ^ Idx n --
 -----------------------------
+
+namespace ArrayType.PowerNotation
 
 class SHPow {α : Sort u} {β : Sort v} {γ : outParam (Sort w)} (a :α) (b : β) (c : outParam γ)
 def SHPow.pow {α β γ} (a : α) (b : β) {c : γ} [SHPow a b c] := c
@@ -131,3 +132,74 @@ elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term =>
   | `($(_) $I $X) => 
     `($X ^ $I)
   | _  => throw ()
+
+
+-- Notation: Float^[10,20] --
+-----------------------------
+
+declare_syntax_cat dimSpec
+syntax term : dimSpec
+syntax (priority:=high) "[" dimSpec,+ "]" : dimSpec
+syntax "[" term ":" term "]": dimSpec
+
+/-- Array notation or iterated function
+
+**iterated function** `f^[n]` call `f` n-times e.g. `f^[3] = f∘f∘f`
+
+**type product** `Float^[n]` array of n elemts with values in `Float`
+
+The array notation is quite flexible and allows you to create arrays indexed with various types. 
+Examples where `n m k l : USize`, `a b : Int64` and `ι κ : Type` are types with `Index _` instance:
+- `Float^[n]` index type: `Idx n` i.e. numbers `0,...,n-1`
+- `Float^[n,m]` index type: `Idx n × Idx m` i.e. paris `(0,0),(0,1),...,(1,0),(1,1),...,(n-1,m-1)`
+- `Float^[[-a:b]]` index type :`Idx' (-a) b` i.e. closed interval from `-a` to `b` (`={-a, -a+1, ..., b-1, b}`)
+- `Float^[k,l,m]` index type: `Idx k × Idx l × Idx m` - type product is right associated by default
+- `Float^[[k,l],m]` index type: `(Idx k × Idx l) × Idx m`  - left associated product requires explicit brackets
+- `Float^[ι]` index type `ι` - generic type with `Index ι` instances
+- `Float^[ι,[10,[-a:b]],κ]` index type: `ι × (Idx 10 × Idx' (-a) b) × κ` - mix of all above
+-/
+syntax (name:=typeIntPower) (priority:=high) term "^[" dimSpec,* "]" : term 
+
+open Lean Meta Elab Term Qq
+partial def expand' (l : List (TSyntax `dimSpec)) : TermElabM Expr := 
+  match l with
+  | []  => default
+  | [t] => 
+    match t with
+    | `(dimSpec| $n:term) => do
+      try 
+        let n ← elabTerm n q(USize)
+        return ← mkAppM ``Idx #[n]
+      catch _ =>
+        return ← elabTerm n none
+    | `(dimSpec| [$n:term : $m:term]) => do elabTerm (← `(Idx' $n $m)) none
+    | `(dimSpec| [$ds:dimSpec,*]) => expand' ds.getElems.toList
+    | _ => throwError "unexpected type power syntax"
+  | t :: l' =>  do
+    let a ← expand' [t]
+    let b ← expand' l'
+    mkAppM ``Prod #[a,b]
+
+  
+open Lean Meta Elab Term  
+elab_rules (kind:=typeIntPower) : term
+| `($x:term ^[$ns,*]) => do
+  let X ← elabTerm x none
+
+  if ¬(← inferType X).isSort then
+    if ns.getElems.size != 1 then
+      throwUnsupportedSyntax
+    else
+      match ns.getElems[0]! with
+      | `(dimSpec| $n:term) => 
+        let f ← elabTerm x none
+        let n ← elabTerm n q(Nat)
+        return ← mkAppM ``Nat.iterate #[f,n]
+      | _ => throwUnsupportedSyntax
+
+  let Y ← expand' ns.getElems.toList  
+  let C ← mkFreshTypeMVar
+  let inst ← synthInstance <| mkAppN (← mkConst ``ArrayTypeNotation) #[C,Y,X]
+  return ← instantiateMVars <| mkAppN (← mkConst ``arrayTypeCont) #[Y,X,C,inst]
+
+end ArrayType.PowerNotation
