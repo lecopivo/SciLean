@@ -36,6 +36,10 @@ lean_exe SurfaceMeshTests {
   root := `examples.SurfaceMeshTests
 }
 
+lean_exe MNISTClassifier where
+  root := `examples.MNISTClassifier
+
+
 
 meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
