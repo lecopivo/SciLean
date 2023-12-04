@@ -919,11 +919,60 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   [SemiInnerProductSpace K Elem]
 
--- @[fprop]
--- theorem ArrayType.map.arg_xs.HasSemiAdjoint_rule
---   (f : X → Cont) (idx : Idx) (dom) 
---   (hf : HasSemiAdjoint K f)
---   : HasSemiAdjoint K (fun x => getElem (f x) idx dom) := sorry_proof
+@[fprop]
+theorem ArrayType.map.arg_farr.HasAdjDiff_rule
+  (f : X → Elem → Elem) (arr : X → Cont)
+  (hf : HasAdjDiff K (fun (xe : X×Elem) => f xe.1 xe.2)) (harr : HasAdjDiff K arr)
+  : HasAdjDiff K (fun x => map (f x) (arr x)) := sorry_proof
+
+
+@[ftrans]
+theorem ArrayType.map.arg_arr.revDeriv_rule
+  (f : Elem → Elem) (arr : X → Cont)
+  (hf : HasAdjDiff K f) (harr : HasAdjDiff K arr)
+  : revDeriv K (fun x => map f (arr x))
+    =
+    fun x => 
+      let fdf := revDeriv K f
+      let ada := revDeriv K arr x
+      let a := ada.1
+      (map f a, 
+       fun da => 
+         let da := mapIdx (fun i dai => (fdf a[i]).2 dai) da
+         ada.2 da) := sorry_proof
+
+
+@[ftrans]
+theorem ArrayType.map.arg_arr.revDerivUpdate_rule
+  (f : Elem → Elem) (arr : X → Cont)
+  (hf : HasAdjDiff K f) (harr : HasAdjDiff K arr)
+  : revDerivUpdate K (fun x => map f (arr x))
+    =
+    fun x => 
+      let fdf := revDeriv K f
+      let ada := revDerivUpdate K arr x
+      let a := ada.1
+      (map f a, 
+       fun da dx => 
+         let da := mapIdx (fun i dai => let df := (fdf a[i]).2; df dai) da
+         ada.2 da dx) := sorry_proof
+
+
+-- @[ftrans]
+-- theorem ArrayType.map.arg_farr.revDeriv_rule
+--   (f : X → Elem → Elem) (arr : X → Cont)
+--   (hf : HasAdjDiff K (fun (xe : X×Elem) => f xe.1 xe.2)) (harr : HasAdjDiff K arr)
+--   : revDeriv K (fun x => map (f x) (arr x))
+--     =
+--     fun x => 
+--       let fdf := revDerivUpdate K (fun (x,e) => f x e)
+--       let a := arr x
+--       (map (f x) a, 
+--        fun da => 
+--          Function.repeatIdx (init:=(0 : X)) fun i dx => 
+--            let dai := da[i]
+--            let ai := a[i]
+--            ((fdf (x,ai)).2 dai (dx,0)).1) := sorry_proof
 
 -- @[ftrans]
 -- theorem ArrayType.map.arg_xs.semiAdjoint_rule
