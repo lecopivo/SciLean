@@ -65,7 +65,7 @@ abbrev introElemNotation {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNot
   := introElem (Cont := arrayTypeCont Idx Elem) f
 
 open Lean.TSyntax.Compat in
-macro "⊞ " x:term " => " b:term:51 : term => `(introElem fun $x => $b)
+macro "⊞ " x:term " => " b:term:51 : term => `(introElemNotation fun $x => $b)
 
 @[app_unexpander introElemNotation] 
 def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
@@ -180,13 +180,13 @@ partial def expand' (l : List (TSyntax `dimSpec)) : TermElabM Expr :=
     let b ← expand' l'
     mkAppM ``Prod #[a,b]
 
-  
+
 open Lean Meta Elab Term  
 elab_rules (kind:=typeIntPower) : term
 | `($x:term ^[$ns,*]) => do
   let X ← elabTerm x none
 
-  if ¬(← inferType X).isSort then
+  if ¬(← isType (← inferType X)) then
     if ns.getElems.size != 1 then
       throwUnsupportedSyntax
     else
@@ -200,7 +200,8 @@ elab_rules (kind:=typeIntPower) : term
   let Y ← expand' ns.getElems.toList  
   let C ← mkFreshTypeMVar
   let inst ← synthInstance <| mkAppN (← mkConst ``ArrayTypeNotation) #[C,Y,X]
-  return ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,none,inst]
+  let C ← whnfR (← instantiateMVars C)
+  return ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,C,inst]
 
 end ArrayType.PowerNotation
 
