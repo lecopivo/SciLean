@@ -5,3 +5,8 @@
 /lake-packages
 /SciLean/Doodle/
 *.lean#
+*.idx3-ubyte
+*.idx1-ubyte
+*.olean
+/.lake/
+SciLean/Doodle*
