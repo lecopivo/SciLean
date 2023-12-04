@@ -2,17 +2,9 @@
 -- import SciLean
 import SciLean.Data.DataArray
 import SciLean.Core.FloatAsReal
-import SciLean.Modules.ML.Dense
-import SciLean.Modules.ML.Convolution
-import SciLean.Modules.ML.Pool
 
 open SciLean
 open IO FS System
-
-open NotationOverField
-set_default_scalar Float
-set_option synthInstance.maxSize 2000
-
 
 def checkFileExists (path : FilePath) : IO Unit := do
   
@@ -109,24 +101,3 @@ def printDigit (digit : Float^[28,28]) : IO Unit := do
     IO.println "|"
 
 
-def main : IO Unit := do
-
-  let trainNum := 1000
-  let trainImages ← loadImages "data/train-images.idx3-ubyte" trainNum
-  let trainLabels ← loadLabels "data/train-labels.idx1-ubyte" trainNum
-
-  let testNum := 0
-  let testImages ← loadImages "data/t10k-images.idx3-ubyte" testNum
-  let testLabels ← loadLabels "data/t10k-labels.idx1-ubyte" testNum
-
-  IO.println ""
-  
-  IO.println s!"label: {trainLabels[2]!}"
-  IO.println "+----------------------------+"
-  printDigit trainImages[2]!
-  IO.println "+----------------------------+"
-  
-  for img in trainImages do
-    printDigit img
-    IO.println "+----------------------------+"
-    IO.sleep 100
