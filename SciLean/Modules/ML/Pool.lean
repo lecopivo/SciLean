@@ -3,7 +3,7 @@ import SciLean.Data.DataArray
 import SciLean.Data.Prod
 import Mathlib
 
-namespace SciLean
+namespace SciLean.ML
 
 variable 
   {R : Type} [RealScalar R] [PlainDataType R]

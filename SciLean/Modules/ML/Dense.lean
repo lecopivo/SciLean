@@ -1,5 +1,5 @@
-import SciLean
-import SciLean.Core.Meta.GenerateRevCDeriv'
+import SciLean.Core
+import SciLean.Data.DataArray
 
 namespace SciLean.ML
 
