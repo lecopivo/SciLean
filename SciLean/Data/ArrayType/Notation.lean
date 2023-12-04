@@ -142,7 +142,7 @@ syntax term : dimSpec
 syntax (priority:=high) "[" dimSpec,+ "]" : dimSpec
 syntax "[" term ":" term "]": dimSpec
 
-/-- Array notation or iterated function
+/-- `x^[y]` is either array type or iterated function depending on the type of `x`.
 
 **iterated function** `f^[n]` call `f` n-times e.g. `f^[3] = f∘f∘f`
 
@@ -200,6 +200,7 @@ elab_rules (kind:=typeIntPower) : term
   let Y ← expand' ns.getElems.toList  
   let C ← mkFreshTypeMVar
   let inst ← synthInstance <| mkAppN (← mkConst ``ArrayTypeNotation) #[C,Y,X]
-  return ← instantiateMVars <| mkAppN (← mkConst ``arrayTypeCont) #[Y,X,C,inst]
+  return ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,none,inst]
 
 end ArrayType.PowerNotation
+
