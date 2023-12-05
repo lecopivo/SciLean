@@ -32,22 +32,28 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
     else
       toComplex (make x y) = ⟨toReal x, toReal y⟩
 
-  real : K → R
+  real (x : K) : R
   real_def : ∀ x, toReal (real x) = IsROrC.re (toComplex x)
 
-  imag : K → R
+  imag (x : K) : R
   imag_def : ∀ x, toReal (imag x) = IsROrC.im (toComplex x)
+
+  sin (x : K) : K
+  sin_def : ∀ x, toComplex (sin x) = Complex.sin (toComplex x)
   
-  cos : K → K
+  cos (x : K) : K
   cos_def : ∀ x, toComplex (cos x) = Complex.cos (toComplex x)
 
-  tan : K → K
+  tan (x : K) : K
   tan_def : ∀ x, toComplex (tan x) = Complex.tan (toComplex x)
 
-  exp : K → K
+  exp (x : K) : K
   exp_def : ∀ x, toComplex (exp x) = Complex.exp (toComplex x)
 
-  sqrt : K → K
+  tanh (x : K) : K
+  tanh_def : ∀ x, toComplex (tanh x) = Complex.tanh (toComplex x)
+
+  sqrt (x : K) : K
   sqrt_def : ∀ x, 
     if ∀ y : K, im y = 0 then
       -- for reals
@@ -56,7 +62,7 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
       -- for complex
       toComplex (sqrt x) = (toComplex x).cpow (1/2)
 
-  pow : K → K → K 
+  pow (x y : K) : K 
   pow_def : ∀ x y,
     if ∀ z : K, im z = 0 then
       -- for reals
@@ -65,7 +71,7 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
       -- for complex
       toComplex (pow x y) = toComplex x ^ toComplex y
 
-  abs : K → R
+  abs (x : K) : R
   abs_def : ∀ x, toReal (abs x) = Complex.abs (toComplex x)
 
   -- exp2 : K → K
@@ -112,6 +118,9 @@ instance : Scalar ℝ ℂ where
 
   imag x := x.im
   imag_def := by intros; simp
+
+  sin x := x.sin
+  sin_def := by intros; simp
   
   cos x := x.cos
   cos_def := by intros; simp
@@ -121,6 +130,9 @@ instance : Scalar ℝ ℂ where
 
   exp x := x.exp
   exp_def := by intros; simp
+
+  tanh x := x.tanh
+  tanh_def := by intros; simp
 
   sqrt x := x.cpow (1/2)
   sqrt_def := by simp; sorry_proof
@@ -144,6 +156,9 @@ noncomputable instance : RealScalar ℝ where
 
   imag _ := 0
   imag_def := by intros; simp
+
+  sin x := x.sin
+  sin_def := by intros; simp[Real.sin]; sorry_proof
   
   cos x := x.cos
   cos_def := by intros; simp[Real.cos]; sorry_proof
@@ -153,6 +168,9 @@ noncomputable instance : RealScalar ℝ where
 
   exp x := x.exp
   exp_def := by intros; simp[Real.exp]; sorry_proof
+
+  tanh x := x.tanh
+  tanh_def := by intros; simp[Real.tanh]; sorry_proof
 
   sqrt x := x.sqrt
   sqrt_def := by intros; simp

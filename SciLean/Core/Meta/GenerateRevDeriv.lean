@@ -273,7 +273,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
 
 open Lean.Parser.Tactic.Conv 
 
-syntax "#generate_revDeriv" term ident* ("|" ident*)? " prop_by " tacticSeq " trans_by " convSeq : command
+syntax "#generate_revDeriv" term ident* ("|" ident*)? " prop_by " tacticSeq ("abbrev")? " trans_by " convSeq : command
 
 elab_rules : command
 | `(#generate_revDeriv $fnStx $mainArgs:ident* $[| $trailingArgs:ident* ]? prop_by $t:tacticSeq trans_by $rw:convSeq) => do
@@ -287,4 +287,17 @@ elab_rules : command
     let .some constName := fn.getAppFn'.constName?
       | throwError "unknown function {fnStx}"
     generateRevDeriv constName mainArgs trailingArgs .withDef t (← `(conv| ($rw)))
+
+-- TODO: simplify because the only difference is in the last line `withDef -> noDef`
+| `(#generate_revDeriv $fnStx $mainArgs:ident* $[| $trailingArgs:ident* ]? prop_by $t:tacticSeq abbrev trans_by $rw:convSeq) => do
+  Command.liftTermElabM do
+    let mainArgs := mainArgs.map (fun a => a.getId)
+    let trailingArgs : Array Name := 
+      match trailingArgs with
+      | .some trailingArgs => trailingArgs.map (fun a => a.getId)
+      | none => #[]
+    let fn ← elabTerm fnStx none
+    let .some constName := fn.getAppFn'.constName?
+      | throwError "unknown function {fnStx}"
+    generateRevDeriv constName mainArgs trailingArgs .noDef t (← `(conv| ($rw)))
 

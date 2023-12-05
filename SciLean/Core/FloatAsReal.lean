@@ -152,6 +152,9 @@ instance : RealScalar Float where
 
   imag _ := 0
   imag_def := by intros; simp
+
+  sin x := x.sin
+  sin_def := sorry_proof
   
   cos x := x.cos
   cos_def := sorry_proof
@@ -161,6 +164,9 @@ instance : RealScalar Float where
 
   exp x := x.exp
   exp_def := sorry_proof
+
+  tanh x := x.tanh
+  tanh_def := sorry_proof
 
   sqrt x := x.sqrt
   sqrt_def := sorry_proof

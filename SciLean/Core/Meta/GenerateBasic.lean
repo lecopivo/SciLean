@@ -37,7 +37,7 @@ def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × (K
       break
 
     if type.isAppOf ``Scalar then
-      K? := type.getArg! 0
+      K? := type.getArg! 1
       break
 
     if type.isAppOf ``RealScalar then
