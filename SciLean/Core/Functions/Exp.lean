@@ -44,5 +44,5 @@ by
 
 #generate_revDeriv exp x
   prop_by unfold HasAdjDiff; constructor; fprop; ftrans; fprop
-  trans_by unfold revDeriv; ftrans; ftrans
+  abbrev trans_by unfold revDeriv; ftrans; ftrans
 
