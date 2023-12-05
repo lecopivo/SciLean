@@ -4,6 +4,8 @@ import SciLean.Core.FunctionPropositions.HasAdjDiffAt
 
 import SciLean.Core.FunctionTransformations.CDeriv
 
+import Lean.Meta.Tactic.Assumption
+
 set_option linter.unusedVariables false
 
 namespace SciLean
@@ -152,8 +154,15 @@ def fpropExt : FPropExt where
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  discharger e := 
-    FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
+  discharger e := do
+    if let .some prf ← Lean.Meta.findLocalDeclWithType? e then
+      return .some (.fvar prf)
+    else
+      if e.isAppOf ``fpropParam then
+        trace[Meta.Tactic.fprop.unsafe] s!"discharging with sorry: {← ppExpr e}"
+        return .some <| ← mkAppOptM ``sorryProofAxiom #[e.appArg!]
+      else
+        return none
 
 
 -- register fderiv
@@ -338,7 +347,7 @@ by
 @[fprop]
 def HDiv.hDiv.arg_a0a1.HasAdjDiff_rule
   (f : X → K) (g : X → K) 
-  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : ∀ x, g x ≠ 0)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : fpropParam (∀ x, g x ≠ 0))
   : HasAdjDiff K (fun x => f x / g x) := 
 by 
   have ⟨_,_⟩ := hf

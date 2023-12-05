@@ -613,7 +613,7 @@ theorem HSMul.hSMul.arg_a0a1.cderiv_rule
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.cderiv_rule_at
   (x : X) (f : X → K) (g : X → K) 
-  (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x) (hx : g x ≠ 0)
+  (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x) (hx : fpropParam (g x ≠ 0))
   : (cderiv K fun x => f x / g x) x
     =
     let k := f x
@@ -622,11 +622,10 @@ theorem HDiv.hDiv.arg_a0a1.cderiv_rule_at
       ((cderiv K f x dx) * k' - k * (cderiv K g x dx)) / k'^2 := 
 by sorry_proof
 
-
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.cderiv_rule
   (f : X → K) (g : X → K) 
-  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g) (hx : ∀ x, g x ≠ 0)
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g) (hx : fpropParam (∀ x, g x ≠ 0))
   : (cderiv K fun x => f x / g x)
     =
     fun x => 

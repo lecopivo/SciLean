@@ -12,7 +12,17 @@ import SciLean.Tactic.AnalyzeConstLambda
  
 open Lean Meta.Simp Qq
 
-namespace SciLean.FProp
+namespace SciLean
+
+/-- Gadget for marking parameters for `fprop` and `ftrans` tactics.
+
+Parameters marked like this are usually hard to prove. Right now, they are 
+usually discharged with sorry.
+-/
+@[reducible] def fpropParam (α : Sort u) : Sort u := α
+
+
+namespace FProp
 
 
 -- Tracing --
@@ -26,9 +36,11 @@ initialize registerTraceClass `Meta.Tactic.fprop.rewrite
 initialize registerTraceClass `Meta.Tactic.fprop.discharge
 initialize registerTraceClass `Meta.Tactic.fprop.unify
 initialize registerTraceClass `Meta.Tactic.fprop.apply
+initialize registerTraceClass `Meta.Tactic.fprop.unsafe
 -- initialize registerTraceClass `Meta.Tactic.fprop.lambda_special_cases
 
 initialize registerOption `linter.fpropDeclName { defValue := true, descr := "suggests declaration name for fprop rule" }
+
 
 
 open Meta 

@@ -516,10 +516,14 @@ def discharger (e : Expr) : SimpM (Option Expr) := do
   if proof?.isSome then
     return proof?
   else
-    -- if `fprop` fails try assumption
-    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
-    let proof? ← tac e
-    return proof?
+    if let .some prf ← Lean.Meta.findLocalDeclWithType? e then
+      return .some (.fvar prf)
+    else
+      if e.isAppOf ``fpropParam then
+        trace[Meta.Tactic.fprop.unsafe] s!"discharging with sorry: {← ppExpr e}"
+        return .some <| ← mkAppOptM ``sorryProofAxiom #[e.appArg!]
+      else
+        return none
 
 
 open Lean Meta FTrans in
@@ -608,10 +612,14 @@ def discharger (e : Expr) : SimpM (Option Expr) := do
   if proof?.isSome then
     return proof?
   else
-    -- if `fprop` fails try assumption
-    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
-    let proof? ← tac e
-    return proof?
+    if let .some prf ← Lean.Meta.findLocalDeclWithType? e then
+      return .some (.fvar prf)
+    else
+      if e.isAppOf ``fpropParam then
+        trace[Meta.Tactic.fprop.unsafe] s!"discharging with sorry: {← ppExpr e}"
+        return .some <| ← mkAppOptM ``sorryProofAxiom #[e.appArg!]
+      else
+        return none
 
 
 open Lean Meta FTrans in
@@ -698,10 +706,14 @@ def discharger (e : Expr) : SimpM (Option Expr) := do
   if proof?.isSome then
     return proof?
   else
-    -- if `fprop` fails try assumption
-    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
-    let proof? ← tac e
-    return proof?
+    if let .some prf ← Lean.Meta.findLocalDeclWithType? e then
+      return .some (.fvar prf)
+    else
+      if e.isAppOf ``fpropParam then
+        trace[Meta.Tactic.fprop.unsafe] s!"discharging with sorry: {← ppExpr e}"
+        return .some <| ← mkAppOptM ``sorryProofAxiom #[e.appArg!]
+      else
+        return none
 
 
 open Lean Meta FTrans in
@@ -794,10 +806,14 @@ def discharger (e : Expr) : SimpM (Option Expr) := do
   if proof?.isSome then
     return proof?
   else
-    -- if `fprop` fails try assumption
-    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
-    let proof? ← tac e
-    return proof?
+    if let .some prf ← Lean.Meta.findLocalDeclWithType? e then
+      return .some (.fvar prf)
+    else
+      if e.isAppOf ``fpropParam then
+        trace[Meta.Tactic.fprop.unsafe] s!"discharging with sorry: {← ppExpr e}"
+        return .some <| ← mkAppOptM ``sorryProofAxiom #[e.appArg!]
+      else
+        return none
 
 
 open Lean Meta FTrans in
@@ -1469,7 +1485,7 @@ by
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.revDeriv_rule
   (f g : X → K)
-  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : ∀ x, g x ≠ 0)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : fpropParam (∀ x, g x ≠ 0))
   : (revDeriv K fun x => f x / g x)
     =
     fun x => 
@@ -1486,7 +1502,7 @@ by
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.revDerivUpdate_rule
   (f g : X → K)
-  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : ∀ x, g x ≠ 0)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : fpropParam (∀ x, g x ≠ 0))
   : (revDerivUpdate K fun x => f x / g x)
     =
     fun x => 
@@ -1506,7 +1522,7 @@ by
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.revDerivProj_rule
   (f g : X → K)
-  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : ∀ x, g x ≠ 0)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : fpropParam (∀ x, g x ≠ 0))
   : (revDerivProj K Unit fun x => f x / g x)
     =
     fun x => 
@@ -1521,7 +1537,7 @@ by
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.revDerivProjUpdate_rule
   (f g : X → K)
-  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : ∀ x, g x ≠ 0)
+  (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : fpropParam (∀ x, g x ≠ 0))
   : (revDerivProjUpdate K Unit fun x => f x / g x)
     =
     fun x => 
