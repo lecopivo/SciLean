@@ -67,6 +67,14 @@ def shift (x : Idx n) (s : Int) :=
   match s with
   | .ofNat n => x.shiftPos n.toUSize
   | .negSucc n => x.shiftNeg (n+1).toUSize
+
+/-- Splits index `i : Idx (n*m)` into `(i / n, i % n)`-/
+def prodSplit (i : Idx (n*m)) : Idx n × Idx m := 
+  (⟨i.1 / n, sorry_proof⟩, ⟨i.1 % n, sorry_proof⟩)
+
+/-- Splits index `i : Idx (n*m)` into `(i / m, i % m)`-/
+def prodSplit' (i : Idx (n*m)) : Idx m × Idx n := 
+  (⟨i.1 % m, sorry_proof⟩, ⟨i.1 / m, sorry_proof⟩)
   
 -- This does not work as intended :(
 
