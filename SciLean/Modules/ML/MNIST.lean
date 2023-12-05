@@ -17,9 +17,9 @@ def mnist (w x) :=
       |> map gelu
       |> avgPool
       |> dense 100 w₂ b₂
-      |> map gelu
-      |> dense 10 w₃ b₃) w x
-      |> softMax 1
+      |> map gelu 
+      |> dense 10 w₃ b₃
+      |> softMax 1) w x
 
 #generate_revDeriv mnist w x
   prop_by unfold mnist; simp[mnist.match_1]; fprop
