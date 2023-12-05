@@ -4,6 +4,8 @@ import Mathlib.Data.Complex.Exponential
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
 
 import SciLean.Util.SorryProof
 import SciLean.Tactic.FTrans.Init
@@ -91,6 +93,16 @@ See `Scalar` for motivation for this class.
 class RealScalar (R : semiOutParam (Type _)) extends Scalar R R where
   is_real : ∀ x : R, im x = 0
 
+  asin (x : R) : R
+  asin_def : ∀ x, toReal (asin x) = Real.arcsin (toReal x)
+  
+  acos (x : R) : R
+  acos_def : ∀ x, toReal (acos x) = Real.arccos (toReal x)
+
+  atan (x : R) : R
+  atan_def : ∀ x, toReal (atan x) = Real.arctan (toReal x)
+
+def RealScalar.pi [RealScalar R] : R := RealScalar.acos (-1)
 
 instance {R K} [Scalar R K] : HPow K K K := ⟨fun x y => Scalar.pow x y⟩
 
@@ -165,6 +177,15 @@ noncomputable instance : RealScalar ℝ where
 
   tan x := x.tan
   tan_def := by intros; simp[Real.tan]; sorry_proof
+
+  asin x := x.arcsin
+  asin_def := by intros; simp
+
+  acos x := x.arccos
+  acos_def := by intros; simp
+
+  atan x := x.arctan
+  atan_def := by intros; simp
 
   exp x := x.exp
   exp_def := by intros; simp[Real.exp]; sorry_proof

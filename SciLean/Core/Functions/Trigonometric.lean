@@ -45,7 +45,7 @@ by
 
 #generate_revDeriv sin x
   prop_by unfold HasAdjDiff; constructor; fprop; ftrans; fprop
-  trans_by unfold revDeriv; ftrans; ftrans
+  abbrev trans_by unfold revDeriv; ftrans; ftrans
 
 
 --------------------------------------------------------------------------------
@@ -120,4 +120,13 @@ by
 
 #generate_revDeriv tanh x
   prop_by unfold HasAdjDiff; constructor; fprop; ftrans; fprop
-  trans_by unfold revDeriv; ftrans; ftrans
+  abbrev trans_by 
+    unfold revDeriv; ftrans; ftrans
+    enter [x] 
+    -- we just need to replace `tanh x` with `t`, there should be a tactic for it
+    -- or common subexpression optimization should do it
+    equals (let t := tanh x;
+            let dt := 1 - t ^ 2;
+            (t, fun y => (starRingEnd K) dt * y)) => rfl
+
+

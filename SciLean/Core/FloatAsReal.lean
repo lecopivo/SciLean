@@ -162,6 +162,15 @@ instance : RealScalar Float where
   tan x := x.tan
   tan_def := sorry_proof
 
+  asin x := x.asin
+  asin_def := sorry_proof
+  
+  acos x := x.acos
+  acos_def := sorry_proof
+
+  atan x := x.atan
+  atan_def := sorry_proof
+
   exp x := x.exp
   exp_def := sorry_proof
 

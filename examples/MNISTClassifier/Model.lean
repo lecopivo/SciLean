@@ -4,6 +4,7 @@ import SciLean.Core.FloatAsReal
 import SciLean.Modules.ML.Dense
 import SciLean.Modules.ML.Convolution
 import SciLean.Modules.ML.Pool
+import SciLean.Modules.ML.Activation
 
 open SciLean
 open IO FS System
@@ -16,10 +17,10 @@ open ML ArrayType in
 def model (w x) := 
   (fun ((w₁,b₁),(w₂,b₂),(w₃,b₃)) (x : Float^[1,28,28]) =>
     x |> conv2d 32 1 w₁ b₁
-      |> map (fun x => x^2)
+      |> map gelu
       |> avgPool
       |> dense 100 w₂ b₂
-      |> map (fun x => x^2)
+      |> map gelu
       |> dense 10 w₃ b₃) w x
       -- |> softMax
 
