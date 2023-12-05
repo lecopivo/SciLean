@@ -18,8 +18,10 @@ def Int64.absValue (n : Int64) : USize :=
 
 def Int64.abs (n : Int64) : Int64 := ⟨n.absValue⟩
 def Int64.toFloat (n : Int64) : Float := if n.isPositive then n.toUSize.toNat.toFloat else -((0:USize) - (n.toUSize)).toNat.toFloat
+def Int64.toNat (n : Int64) : Nat := if n.isPositive then n.toUSize.toNat else 0
 
 def _root_.USize.toInt64 (x : USize) : Int64 := ⟨x⟩
+def _root_.Nat.toInt64 (x : Nat) : Int64 := ⟨x.toUSize⟩
 
 instance : ToString Int64 := ⟨fun i => if i.isPositive then toString i.absValue else s!"-{i.absValue}"⟩
 instance : OfNat Int64 n := ⟨⟨n.toUSize⟩⟩
@@ -33,6 +35,13 @@ instance : Div Int64 := ⟨fun x y =>
   | false, true => -⟨(-x).toUSize / y.toUSize⟩
   | true, false => -⟨x.toUSize / (-y).toUSize⟩
   | false, false => ⟨(-x).toUSize / (-y).toUSize⟩⟩
+
+instance : Mod Int64 := ⟨fun x y => 
+  match x.isPositive, y.isPositive with
+  | true, true => ⟨x.toUSize % y.toUSize⟩
+  | false, true => -⟨(-x).toUSize % y.toUSize⟩
+  | true, false => ⟨x.toUSize % (-y).toUSize⟩
+  | false, false => -⟨(-x).toUSize % (-y).toUSize⟩⟩
 
 def Int64.comp (x y : Int64) : Ordering :=
   match x.isNegative, y.isNegative with
