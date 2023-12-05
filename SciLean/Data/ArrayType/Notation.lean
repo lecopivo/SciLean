@@ -66,6 +66,7 @@ abbrev introElemNotation {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNot
 
 open Lean.TSyntax.Compat in
 macro "⊞ " x:term " => " b:term:51 : term => `(introElemNotation fun $x => $b)
+macro "⊞ " x:term " : " X:term " => " b:term:51 : term => `(introElemNotation fun ($x : $X) => $b)
 
 @[app_unexpander introElemNotation] 
 def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
