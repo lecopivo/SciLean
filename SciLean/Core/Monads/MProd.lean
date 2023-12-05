@@ -1,3 +1,4 @@
+import SciLean.Core.FunctionTransformations
 import SciLean.Core.Monads.FwdDerivMonad
 import SciLean.Core.Monads.Id
 import SciLean.Data.DataArray

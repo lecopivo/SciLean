@@ -1,5 +1,6 @@
 import SciLean.Core
 import SciLean.Data.DataArray
+import SciLean.Data.ArrayType
 import SciLean.Data.Prod
 
 namespace SciLean.ML

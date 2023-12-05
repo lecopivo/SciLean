@@ -49,11 +49,14 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
   tan (x : K) : K
   tan_def : ∀ x, toComplex (tan x) = Complex.tan (toComplex x)
 
+  tanh (x : K) : K
+  tanh_def : ∀ x, toComplex (tanh x) = Complex.tanh (toComplex x)
+
   exp (x : K) : K
   exp_def : ∀ x, toComplex (exp x) = Complex.exp (toComplex x)
 
-  tanh (x : K) : K
-  tanh_def : ∀ x, toComplex (tanh x) = Complex.tanh (toComplex x)
+  log (x : K) : K
+  log_def : ∀ x, toComplex (log x) = Complex.log (toComplex x)
 
   sqrt (x : K) : K
   sqrt_def : ∀ x, 
@@ -77,7 +80,6 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
   abs_def : ∀ x, toReal (abs x) = Complex.abs (toComplex x)
 
   -- exp2 : K → K
-  -- log : K → K
   -- log2 : K → K
   -- log10 : K → K
   -- pow : K → K → K
@@ -143,6 +145,9 @@ instance : Scalar ℝ ℂ where
   exp x := x.exp
   exp_def := by intros; simp
 
+  log x := x.log
+  log_def := by intros; simp
+
   tanh x := x.tanh
   tanh_def := by intros; simp
 
@@ -189,6 +194,9 @@ noncomputable instance : RealScalar ℝ where
 
   exp x := x.exp
   exp_def := by intros; simp[Real.exp]; sorry_proof
+
+  log x := x.log
+  log_def := by intros; simp[Real.log]; sorry_proof
 
   tanh x := x.tanh
   tanh_def := by intros; simp[Real.tanh]; sorry_proof

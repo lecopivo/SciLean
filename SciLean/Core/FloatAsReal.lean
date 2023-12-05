@@ -174,6 +174,9 @@ instance : RealScalar Float where
   exp x := x.exp
   exp_def := sorry_proof
 
+  log x := x.log
+  log_def := sorry_proof
+
   tanh x := x.tanh
   tanh_def := sorry_proof
 

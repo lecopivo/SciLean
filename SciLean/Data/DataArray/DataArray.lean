@@ -1,5 +1,6 @@
 import SciLean.Data.DataArray.PlainDataType
-import SciLean.Data.ArrayType
+import SciLean.Data.ArrayType.Basic
+import SciLean.Data.ArrayType.Notation
 
 set_option linter.unusedVariables false
 
@@ -113,7 +114,7 @@ def DataArray.intro (f : ι → α) : DataArray α := Id.run do
   let mut li : USize := 0
   for i in fullRange ι do
     d' := d'.set ⟨li, sorry_proof⟩ (f i)
-    li += 1
+    li := li + 1
   d'
 
 structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [Index ι] where
@@ -193,7 +194,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [Index ι] [Inhabited α] [p
           let mut lj : USize := 0
           for j in fullRange ι do
             let idx := (i + lj*αByteType.bytes)
-            lj += 1
+            lj := lj + 1
             b := αByteType.toByteArray b idx sorry_proof c[j]
           b
 

@@ -2,6 +2,7 @@ import SciLean.Core
 import SciLean.Core.Functions.Exp
 import SciLean.Core.Meta.GenerateRevDeriv
 import SciLean.Data.DataArray
+import SciLean.Data.ArrayType
 import SciLean.Data.Prod
 import Mathlib
 
@@ -18,9 +19,6 @@ def softMax
   let w := ∑ i, x[i]
   (1/w) • x
 
-
-set_option trace.Meta.Tactic.simp.discharge true
-set_option trace.Meta.Tactic.simp.unify true
 #generate_revDeriv softMax x
   prop_by unfold softMax; fprop
   trans_by unfold softMax; ftrans
