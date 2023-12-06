@@ -23,6 +23,7 @@ export Index (toIdx fromIdx)
 
 namespace Index
 
+@[macro_inline]
 instance : Index Empty where
   size := 0
   isValid := true
@@ -33,7 +34,7 @@ instance : Index Empty where
   fromIdx_toIdx := sorry_proof
   toIdx_fromIdx := sorry_proof
 
-
+@[macro_inline]
 instance : Index Unit where
   size := 1
   isValid := true
@@ -44,7 +45,7 @@ instance : Index Unit where
   fromIdx_toIdx := sorry_proof
   toIdx_fromIdx := sorry_proof
 
-
+@[macro_inline]
 instance : Index (Idx n) where
   size := n
   isValid := true
@@ -67,6 +68,7 @@ instance : Index (Idx' a b) where
 
 
 -- Row major ordering, this respects `<` defined on `ι × κ`
+@[macro_inline]
 instance [Index ι] [Index κ] : Index (ι×κ) where  
   size := (min ((size ι).toNat * (size κ).toNat) (USize.size -1)).toUSize
   isValid := 
@@ -86,6 +88,7 @@ instance [Index ι] [Index κ] : Index (ι×κ) where
 
 
 -- Row major ordering, this respects `<` defined on `ι × κ`
+@[macro_inline]
 instance [Index ι] [Index κ] : Index (ι×ₗκ) where  
   size := (min ((size ι).toNat * (size κ).toNat) (USize.size -1)).toUSize
   isValid := 
