@@ -5,6 +5,8 @@ import SciLean.Data.Prod
 
 namespace SciLean.ML
 
+set_option synthInstance.maxSize 2000
+
 variable 
   {R : Type} [RealScalar R] [PlainDataType R]
 
@@ -18,6 +20,4 @@ def conv2d
 #generate_revDeriv conv2d weights bias x
   prop_by unfold conv2d; fprop
   trans_by unfold conv2d; ftrans
-
-#exit
 
