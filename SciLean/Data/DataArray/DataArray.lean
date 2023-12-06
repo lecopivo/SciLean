@@ -106,30 +106,36 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
     arr := arr.swap i' j'
   arr
 
+
 @[irreducible]
 def DataArray.intro (f : ι → α) : DataArray α := Id.run do
   let bytes := (pd.bytes (Index.size ι))
-  let mut d : ByteArray := ByteArray.mkArray bytes.toNat 0
+  let d : ByteArray := ByteArray.mkArray bytes.toNat 0
   let mut d' : DataArray α := ⟨d, (Index.size ι), sorry_proof⟩
-  let mut li : USize := 0
   for i in fullRange ι do
-    d' := d'.set ⟨li, sorry_proof⟩ (f i)
-    li := li + 1
+    d' := d'.set ⟨(toIdx i).1,sorry_proof⟩ (f i)
   d'
+
+  -- let d' : DataArray α := ⟨d, (Index.size ι), sorry_proof⟩
+  -- let rec @[specialize] go : Nat → DataArray α → DataArray α 
+  --   | 0, d => d
+  --   | n+1, d => 
+  --     go n (d.set ⟨n.toUSize, sorry_proof⟩ (f (fromIdx ⟨n.toUSize, sorry_proof⟩)))
+  -- go (Index.size ι).toNat d'
 
 structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [Index ι] where
   data : DataArray α
   h_size : Index.size ι = data.size
 
-@[irreducible]
+@[inline]
 instance : GetElem (DataArrayN α ι) ι α (λ _ _ => True) where
-  getElem xs i _ := xs.1.get (xs.2 ▸ toIdx i)
+  getElem xs i _ := xs.1.get ((toIdx i).cast xs.2)
 
-@[irreducible]
+@[inline]
 instance : SetElem (DataArrayN α ι) ι α where
-  setElem xs i xi := ⟨xs.1.set (xs.2 ▸ toIdx i) xi, sorry_proof⟩
+  setElem xs i xi := ⟨xs.1.set ((toIdx i).cast xs.2) xi, sorry_proof⟩
 
-@[irreducible]
+@[inline]
 instance : IntroElem (DataArrayN α ι) ι α where
   introElem f := ⟨DataArray.intro f, sorry_proof⟩
 

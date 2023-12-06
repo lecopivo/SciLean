@@ -64,6 +64,12 @@ def toFin' {n : Nat} (i : Idx n.toUSize) : Fin n := ⟨i.1.toNat, sorry_proof⟩
 def _root_.USize.toFloat (n : USize) : Float := n.toNat.toFloat
 def toFloat {n} (i : Idx n) : Float := i.1.toFloat
 
+@[macro_inline]
+def cast (i : Idx n) (h : n = m) : Idx m := ⟨i.1, by rw[← h]; apply i.2⟩
+
+@[macro_inline]
+def cast' (i : Idx n) (h : m = n) : Idx m := ⟨i.1, by rw[h]; apply i.2⟩
+
 def shiftPos (x : Idx n) (s : USize) := x + s
 def shiftNeg (x : Idx n) (s : USize) := x - s
 def shift (x : Idx n) (s : Int) := 
