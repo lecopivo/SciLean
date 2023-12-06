@@ -2,6 +2,7 @@ import SciLean.Util.SorryProof
 import SciLean.Data.Index
 import SciLean.Data.ListN 
 import SciLean.Data.StructType.Basic
+import SciLean.Data.Function
 
 namespace SciLean
 
@@ -278,6 +279,46 @@ theorem sum_introElem [EnumType Idx] [ArrayType Cont Idx Elem] [AddCommMonoid El
     introElem fun i => ∑ j, f j i
   := sorry_proof
 
+
+section UsefulFunctions
+
+
+variable 
+  [ArrayType Cont Idx Elem] [Index Idx]
+  [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx] 
+
+def argMaxCore (cont : Cont ) : Idx × Elem :=
+  Function.reduceD 
+    (fun i => (i,cont[i]))
+    (fun (i,e) (i',e') => if e < e' then (i',e') else (i,e))
+    (default, cont[default])
+
+def max (cont : Cont) : Elem :=
+  Function.reduceD 
+    (fun i => cont[i])
+    (fun e e' => if e < e' then e' else e)
+    (cont[default])
+
+def idxMax (cont : Cont) : Idx := (argMaxCore cont).1
+
+
+def argMinCore (cont : Cont ) : Idx × Elem :=
+  Function.reduceD 
+    (fun i => (i,cont[i]))
+    (fun (i,e) (i',e') => if e' < e then (i',e') else (i,e))
+    (default, cont[default])
+
+def min (cont : Cont) : Elem :=
+  Function.reduceD 
+    (fun i => cont[i])
+    (fun e e' => if e < e' then e' else e)
+    (cont[default])
+
+def idxMin (cont : Cont) : Idx := (argMinCore cont).1
+
+end UsefulFunctions
+
+
 end ArrayType
 
 
@@ -302,3 +343,4 @@ namespace ArrayType
       else y[⟨i.1-n, sorry_proof⟩]
 
 end ArrayType
+
