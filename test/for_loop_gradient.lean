@@ -5,7 +5,7 @@ open SciLean
 set_default_scalar Float
 
 def foo := 
-  ((gradient Float (fun x : Float ^ Idx 3 => Id.run do
+  ((SciLean.gradient Float (fun x : Float ^ Idx 3 => Id.run do
     let mut prod := 1
     let mut sum := 0.0
     for i in fullRange (Idx 3) do
@@ -13,10 +13,10 @@ def foo :=
       sum := sum + x[i]
     (prod,sum)))
     rewrite_by
-      unfold gradient
+      unfold SciLean.gradient
       ftrans
       ftrans
-      unfold gradient
+      unfold SciLean.gradient
       ftrans)
 
 /--
@@ -32,7 +32,7 @@ info: ⊞[0.000000, 0.000000, 0.000000]
 #eval foo ⊞[6.0,7,8] (0,0)
 
 def bar := 
-  ((gradient Float (fun x : Float ^ Idx 3 => Id.run do
+  ((SciLean.gradient Float (fun x : Float ^ Idx 3 => Id.run do
     let mut prod := 1
     let mut sum := 0.0
     let mut norm2 := 0.0
@@ -43,10 +43,10 @@ def bar :=
       norm2 := norm2 + x[i]*x[i]
     (prod,sum,norm2)))
     rewrite_by
-      unfold gradient
+      unfold SciLean.gradient
       ftrans
       ftrans
-      unfold gradient
+      unfold SciLean.gradient
       ftrans)
 
 /--
