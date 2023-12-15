@@ -14,6 +14,9 @@ variable
 
 set_default_scalar K 
 
+macro "clean_up" : conv => `(conv| (simp (config:={zeta:=false}) only[oneHot,structModify,structMake,dite_eq_ite,eq_self,ite_true,ite_false,dite_true,dite_false,SciLean.conj_for_real_scalar,Sum.inr.injEq,Sum.inl.injEq,Prod.snd_zero, Prod.fst_zero]; ftrans only))
+
+
 example 
   : revDeriv K (fun xy : X×Y => (xy.1,xy.2))
     =
@@ -65,7 +68,6 @@ example
         (dy.fst, dy_1.fst, dy_2.fst, dy_3)) :=
 by
   conv => lhs; ftrans
-
 
 
 --------------------------------------------------------------------------------

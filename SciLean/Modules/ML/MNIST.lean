@@ -26,7 +26,7 @@ def mnist (w x) :=
 
 #generate_revDeriv mnist w
   prop_by unfold mnist; simp[mnist.match_1]; fprop
-  trans_by unfold mnist; simp[mnist.match_1]; ftrans
+  trans_by unfold mnist; ftrans
 
 
 abbrev weightsType (_f : α → β → γ) := α
@@ -35,11 +35,3 @@ abbrev outputType (_f : α → β → γ) := γ
 
 def mnist.initWeights := Random.rand (weightsType ML.mnist) |> IO.runRand
 
-
-#eval 0
-
-
-set_option trace.Meta.Tactic.simp.rewrite true in
-#check (fun x => (revDerivUpdate Float fun w => mnist w x)) 
-  rewrite_by 
-    unfold mnist; ftrans

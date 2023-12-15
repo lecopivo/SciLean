@@ -438,6 +438,16 @@ by
   constructor; fprop; ftrans; fprop
 
 
+@[fprop]
+theorem SciLean.norm₂.arg_x.HasAdjDiff_rule
+  (f : X → Y)
+  (hf : HasAdjDiff R f) (hfz : fpropParam <| ∀ x, f x ≠ 0)
+  : HasAdjDiff R fun x => ‖f x‖₂[R] :=
+by 
+  have ⟨_,_⟩ := hf
+  constructor; sorry_proof; sorry_proof
+
+
 end InnerProductSpace
 
 

@@ -64,6 +64,10 @@ def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × (K
       K? := type.getArg! 1
       break
 
+    if type.isAppOf ``Float then
+      K? := type
+      break
+
   let .some K := K? | return none
   let .some ⟨u,K⟩ ← isTypeQ K | return none
   let isROrC ← synthInstanceQ q(IsROrC $K)

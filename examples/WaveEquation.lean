@@ -1,44 +1,42 @@
 import SciLean
-import SciLean.Functions.OdeSolve
-import SciLean.Solver.Solver 
-import SciLean.Data.IdxProperties
+import SciLean.Core.Approx.ApproxLimit
+import SciLean.Tactic.LetNormalize
+import SciLean.Tactic.PullLimitOut
+import SciLean.Modules.DifferentialEquations
+import SciLean.Core.Meta.GenerateRevCDeriv'
 
 open SciLean
 
 variable {n : USize} [Nonempty (Idx n)]
 
+set_option synthInstance.maxSize 20000
+open NotationOverField
+set_default_scalar Float
+
 -- set_option trace.Meta.synthInstance true in
-def H (m k : ℝ) (x p : ℝ^{n}) : ℝ := 
-  let Δx := (1 : ℝ)/(n : ℝ)
-  (Δx/(2*m)) * ‖p‖² + (Δx * k/2) * (∑ i, ‖x[i.shift 1] - x[i]‖²)
+def H (m k : Float) (x p : Float^[n]) : Float := 
+  let Δx := 1.0/n.toFloat
+  (Δx/(2*m)) * ‖p‖₂² + (Δx * k/2) * (∑ i, ‖x[i.shift 1] - x[i]‖₂²)
 
 
-/- set_option trace.Meta.Tactic.fun_trans.rewrite true in
- -/
-function_properties H {n : USize} [Nonempty (Idx n)] (m k : ℝ) (x p : ℝ^{n}) : ℝ
-argument x
-  def ∂† by 
-    unfold H
-    fun_trans only; fun_trans
-argument p
-  def ∂† by
-    unfold H
-    fun_trans only; fun_trans only; simp (config := {zeta := false})
+#generate_revCDeriv' H x p
+  prop_by unfold H; fprop
+  trans_by unfold H; ftrans; ftrans; ftrans
 
 
-approx solver (m k : ℝ) (steps : Nat)
+approx solver (m k : Float)
   :=  odeSolve (λ t (x,p) => ( ∇ (p':=p), H (n:=n) m k x p',
                               -∇ (x':=x), H (n:=n) m k x' p))
-
 by
   -- Unfold Hamiltonian definition and compute gradients
-  unfold gradient
-  fun_trans
+  unfold scalarGradient
+  ftrans; simp (config:={zeta:=false}); ftrans
 
   -- Apply RK4 method
-  rw [odeSolve_fixed_dt runge_kutta4_step]
-  approx_limit steps; simp; intro steps'
+  rw [odeSolve_fixed_dt (R:=Float) rungeKutta4 sorry_proof]
 
+  approx_limit steps := sorry_proof
+  
 
 def main : IO Unit := do
 
@@ -47,24 +45,24 @@ def main : IO Unit := do
   let k := 10000.0
 
   let N : USize := 100
-  have h : Nonempty (Idx N) := sorry
+  -- have h : Nonempty (Idx N) := sorry
 
   let Δt := 0.1
-  let x₀ : (ℝ^{N}) := ⊞ (i : Idx N), (Real.sin ((i.1 : ℝ)/10))
-  let p₀ : (ℝ^{N}) := ⊞ i, (0 : ℝ)
+  let x₀ : Float^[N] := ⊞ (i : Idx N) => (Scalar.sin (i.1.toFloat/10))
+  let p₀ : Float^[N] := ⊞ i => (0 : Float)
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
   for i in [0:1000] do
   
-    (x, p) := solver m k substeps t (x, p) (t+Δt)
+    (x, p) := solver m k (substeps,()) t (t+Δt) (x, p) 
     t += Δt
 
     let M : USize := 20
     for m in fullRange (Idx M) do
       for n in fullRange (Idx N) do
         let xi := x[n]
-        if (2*m.1 - M)/(M : ℝ) - xi < 0  then
+        if (2*m.1.toFloat - M.toFloat)/(M.toFloat) - xi < 0  then
           IO.print "x"
         else
           IO.print "."

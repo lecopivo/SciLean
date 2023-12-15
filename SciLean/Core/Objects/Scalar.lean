@@ -92,7 +92,7 @@ This class allows us to write code independent of particular implementation of r
 
 See `Scalar` for motivation for this class.
 -/
-class RealScalar (R : semiOutParam (Type _)) extends Scalar R R where
+class RealScalar (R : semiOutParam (Type _)) extends Scalar R R, LinearOrder R where
   is_real : ∀ x : R, im x = 0
 
   asin (x : R) : R
@@ -161,6 +161,7 @@ instance : Scalar ℝ ℂ where
   abs_def := by intros; simp
 
 
+
 noncomputable instance : RealScalar ℝ where
   toComplex x := ⟨x,0⟩
   toReal x := x
@@ -211,3 +212,35 @@ noncomputable instance : RealScalar ℝ where
   abs_def := by intros; simp[Complex.abs]; sorry_proof
 
   is_real := by intros; simp
+
+
+  le_total := by sorry_proof
+
+  decidableLE x y :=
+    have := Classical.propDecidable
+    if h : x ≤ y then
+      .isTrue h
+    else
+      .isFalse h
+
+  decidableEq x y := 
+    have := Classical.propDecidable
+    if h : x = y then
+      .isTrue h
+    else
+      .isFalse h
+
+  decidableLT x y :=
+    have := Classical.propDecidable
+    if h : x < y then
+      .isTrue h
+    else
+      .isFalse h
+
+  min := fun a b => if a ≤ b then a else b
+  max := fun a b => if a ≤ b then b else a
+  min_def := by sorry_proof 
+  max_def := by sorry_proof
+  compare a b := compareOfLessAndEq a b
+  compare_eq_compareOfLessAndEq := by
+    compareOfLessAndEq_rfl

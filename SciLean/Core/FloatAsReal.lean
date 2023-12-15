@@ -189,6 +189,15 @@ instance : RealScalar Float where
   abs x := x.abs
   abs_def := sorry_proof
   
+  le_total := by sorry_proof
+  decidableLE := inferInstance
+  decidableEq := inferInstance
+  decidableLT := inferInstance
+
+  min_def := by sorry_proof 
+  max_def := by sorry_proof
+  compare x y := compare x y
+  compare_eq_compareOfLessAndEq := by sorry_proof
 
 
 open ComplexConjugate

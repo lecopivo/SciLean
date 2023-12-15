@@ -65,12 +65,20 @@ example
 by 
   (conv => lhs; autodiff)
 
+-- example
+--   : (∇ (x : K ^ Idx 10), ∑ i, ‖x[i+1] - x[i]‖₂²)
+--     =
+--     fun x => ⊞ _ => (1:K) :=
+-- by 
+--   (conv => lhs; unfold scalarGradient; ftrans)
+
 example
   : (∇ (x : K ^ Idx 10), ∑ i, x[i])
     =
     fun x => ⊞ _ => (1:K) :=
 by 
   (conv => lhs; autodiff)
+
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, ‖x i‖₂²)
@@ -228,5 +236,6 @@ example  (w : K ^ (Idx' (-5) 5 × Idx' (-5) 5))
       -- ⊞ i => ∑ (j : (Idx' (-5) 5 × Idx' (-5) 5)), w[(j.2,j.1)] * dy[(-j.2.1 +ᵥ i.fst, -j.1.1 +ᵥ i.snd)] :=
 by
   conv => lhs; unfold SciLean.gradient; ftrans
+  sorry_proof
   
 

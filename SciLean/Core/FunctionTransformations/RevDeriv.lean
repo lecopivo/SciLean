@@ -2009,4 +2009,76 @@ by
   simp[revDerivProjUpdate]
   ftrans only; simp[revDeriv,revDerivUpdate,smul_pull]
 
+
+@[ftrans]
+theorem SciLean.norm₂.arg_x.revDeriv_rule
+  (f : X → Y) (hf : HasAdjDiff R f) (hx : fpropParam <| ∀ x, f x≠0)
+  : (revDeriv R (fun x => ‖f x‖₂[R]))
+    =
+    fun x => 
+      let ydf := revDeriv R f x
+      let ynorm := ‖ydf.1‖₂[R]
+      (ynorm,
+       fun dr => 
+         (ynorm⁻¹ * dr) • ydf.2 ydf.1):=
+by 
+  have ⟨_,_⟩ := hf
+  simp[revDeriv]
+  ftrans only
+  sorry_proof
+
+@[ftrans]
+theorem SciLean.norm₂.arg_x.revDerivUpdate_rule
+  (f : X → Y) (hf : HasAdjDiff R f) (hx : fpropParam <| ∀ x, f x≠0)
+  : (revDerivUpdate R (fun x => ‖f x‖₂[R]))
+    =
+    fun x => 
+      let ydf := revDerivUpdate R f x
+      let ynorm := ‖ydf.1‖₂[R]
+      (ynorm,
+       fun dr dx => 
+         ydf.2 ((ynorm⁻¹ * dr)•ydf.1) dx):=
+by 
+  have ⟨_,_⟩ := hf
+  simp[revDerivUpdate]
+  ftrans only
+  sorry_proof
+  -- simp
+  -- ftrans
+  -- funext dr; simp[revDeriv,smul_pull]
+
+@[ftrans]
+theorem SciLean.norm₂.arg_x.revDerivProj_rule
+  (f : X → Y) (hf : HasAdjDiff R f) (hx : fpropParam <| ∀ x, f x≠0)
+  : (revDerivProj R Unit (fun x => ‖f x‖₂[R]))
+    =
+    fun x =>
+      let ydf := revDeriv R f x
+      let ynorm := ‖ydf.1‖₂[R]
+      (ynorm,
+       fun _ dr => 
+         (ynorm⁻¹ * dr) • ydf.2 ydf.1):=
+by 
+  have ⟨_,_⟩ := hf
+  simp[revDerivProj]
+  ftrans only; 
+  sorry_proof -- simp[oneHot, structMake]
+
+@[ftrans]
+theorem SciLean.norm₂.arg_x.revDerivProjUpdate_rule
+  (f : X → Y) (hf : HasAdjDiff R f) (hx : fpropParam <| ∀ x, f x≠0)
+  : (revDerivProjUpdate R Unit (fun x => ‖f x‖₂[R]))
+    =
+    fun x => 
+       let ydf := revDerivUpdate R f x
+       let ynorm := ‖ydf.1‖₂[R]
+       (ynorm,
+        fun _ dr dx => 
+          ydf.2 ((ynorm⁻¹ * dr)•ydf.1) dx) :=
+by 
+  have ⟨_,_⟩ := hf
+  simp[revDerivProjUpdate]
+  ftrans only; simp[revDeriv,revDerivUpdate,smul_pull]
+  sorry_proof
+
 end InnerProductSpace

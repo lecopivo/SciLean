@@ -26,7 +26,7 @@ def generateRevCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
 
     let (ctx, args) ← splitToCtxAndArgs xs
     
-    let .some ⟨_u,K,_isROrC⟩ ← getFieldOutOfContextQ ctx
+    let .some ⟨_u,K,_isROrC⟩ ← getFieldOutOfContextQ xs
       | throwError "unable to figure out what is the field"
 
     trace[Meta.generate_ftrans] "detected field {← ppExpr K}"
@@ -253,6 +253,7 @@ elab_rules : command
       | throwError "unknown function {fnStx}"
     generateRevCDeriv constName mainArgs trailingArgs .withDef t (← `(conv| ($rw)))
 
+#exit
 
 variable 
   {K : Type} [RealScalar K]
