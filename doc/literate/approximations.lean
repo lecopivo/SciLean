@@ -10,9 +10,9 @@ Approximations
 ==============
 
 Scientific computing is full of approximations. SciLean attempts to provide
-tools to manage these approximations and easity swap between them.
+tools to manage these approximations and easily swap between them.
 
-As a starting example we will look into computing the square root function. 
+As a starting example we will look into computing the square root function.
 Looking at wikipedia there are two basic methods: Babylonian_  and Bakhshali_.
 
 .. _Babylonian: https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
@@ -27,9 +27,9 @@ In code
 
 -/
 
-def sqrtBabylonian (n : Nat) (x₀ : ℝ) (y : ℝ) : ℝ := 
+def sqrtBabylonian (n : Nat) (x₀ : ℝ) (y : ℝ) : ℝ :=
 match n with
-| 0   => x₀ 
+| 0   => x₀
 | n+1 => sqrtBabylonian n ((x₀ + y/x₀)/2) y
 
 /-!
@@ -53,13 +53,13 @@ In code
 def sqrtBakhshali (n : Nat) (x₀ : ℝ) (y : ℝ) : ℝ :=
   match n with
   | 0 => x₀
-  | n+1 => 
+  | n+1 =>
     let aₙ := (y - x₀*x₀)/(2*x₀)
-    let bₙ := x₀ + aₙ 
+    let bₙ := x₀ + aₙ
     let x₁ := bₙ - aₙ*aₙ/(2*bₙ)
     sqrtBakhshali n x₁ y
 
-/-! 
+/-!
 Let's test it out to compute :math:`\sqrt{2} = 1.41421356237\dots`
 -/
 #eval sqrtBabylonian 2 1 2 -- 1.416667
@@ -75,13 +75,13 @@ Sqrt Specification
 ------------------
 
 Because Lean is a proof assistant it allows us to define the square root
-function precisely. The downside is that such function will be noncomputable. 
-This might sound completely pointless, how it is useful to define a function 
+function precisely. The downside is that such function will be noncomputable.
+This might sound completely pointless, how it is useful to define a function
 that we can not run? The advantage is that we can disentangle the program
-specification from its implementation. 
+specification from its implementation.
 
-The square root function is defined in mathlib_, we do not provide the 
-full definition here just 
+The square root function is defined in mathlib_, we do not provide the
+full definition here just
 
 .. _mathlib: https://leanprover-community.github.io/mathlib_docs/data/real/sqrt.html#real.sqrt
 
@@ -100,12 +100,12 @@ def real.sqrt (x : ℝ) : ℝ := sorry
   This either opens up a can of worms about consistency or floating point arithmetics.
   And I do not want to get into that right now ...)
 
-The `real.sqrt` function satisfies two main properties. The first one, 
-called `real.mul_self_sqrt`_, for non-negative :math:`x` we have 
-:math:`\sqrt{x} \sqrt{x} = x`. The second one, called `real.sqrt_eq_zero_of_nonpos`_, 
+The `real.sqrt` function satisfies two main properties. The first one,
+called `real.mul_self_sqrt`_, for non-negative :math:`x` we have
+:math:`\sqrt{x} \sqrt{x} = x`. The second one, called `real.sqrt_eq_zero_of_nonpos`_,
 for negative :math:`x` the :math:`\sqrt{x}` is defined to be zero. In math class
 square root of negative number is usually not defined, however in type theory
-this does not work so well. This is similar to division by zero, in 
+this does not work so well. This is similar to division by zero, in
 Lean we have `1/0 = 0`, you can read about this more on Kevin Buzzard's page_.
 
 .. _page: https://xenaproject.wordpress.com/2020/07/05/division-by-zero-in-type-theory-a-faq/
@@ -116,17 +116,17 @@ Lean we have `1/0 = 0`, you can read about this more on Kevin Buzzard's page_.
 
  -/
 
-theorem real.mul_self_sqrt {x : ℝ} (h : 0 ≤ x) 
+theorem real.mul_self_sqrt {x : ℝ} (h : 0 ≤ x)
   : real.sqrt x * real.sqrt x = x := sorry
 
 @[simp]
-theorem real.sqrt_eq_zero_of_nonpos {x : ℝ} (h : ¬(0 ≤ x)) 
+theorem real.sqrt_eq_zero_of_nonpos {x : ℝ} (h : ¬(0 ≤ x))
   : real.sqrt x = 0 := sorry
 
 /-!
 
-In particular, we can proof that the Babylonian and Bakhshali method 
-converge to the square root. Again we omit the proofs here again, but 
+In particular, we can proof that the Babylonian and Bakhshali method
+converge to the square root. Again we omit the proofs here again, but
 it is well in the capability of Lean and mathlib to do so.
 
  -/
@@ -140,11 +140,11 @@ theorem sqrtBakhshali.limit {x : ℝ} (y₀ : ℝ) (hy : y₀ ≥ 0) (hx : 0 ≤
 /-!
 
 To build an approximation, we state `approx sqrtApprox := real.sqrt` followed
-by instructions how to construct such approximation. The type of `sqrtApprox` is 
+by instructions how to construct such approximation. The type of `sqrtApprox` is
 `Approx real.sqrt`, which is an object holding couple of useful informations
 about the approximation:
 
-  1. Parameters to controll the accuracy of the approximation.
+  1. Parameters to control the accuracy of the approximation.
   2. Options to switch between different approximations.
   3. Under what conditions this approximation is actually valid.
 
@@ -152,19 +152,19 @@ Here is the Lean code to generate the approximation
  -/
 
 approx sqrtApprox := real.sqrt
-by 
-  conv => 
+by
+  conv =>
     trace_state
     enter [1] -- Step into `Approx ...`
     enter [x] -- introduce the argument `x`
 
-    if h : 0 ≤ x then 
+    if h : 0 ≤ x then
       -- For positive `x` we apply the Babylonian method
       rw [sqrtBabylonian.limit (x/2) (sorry) h]
     else
       -- For negative `x` we know the result is zero
       rw [real.sqrt_eq_zero_of_nonpos h]
-  
+
   -- We pick 4 steps as default
   approx_limit 4; intro n
 
@@ -172,7 +172,7 @@ by
 
 (TODO: Add parameter to switch between Babylonian and Bakhshali.)
 
-To get the value of an approximation we need to call `.val!` 
+To get the value of an approximation we need to call `.val!`
 
  -/
 
