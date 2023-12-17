@@ -44,7 +44,7 @@
 
   Any lambda function can be rewritten in terms of SKI combinators. The identity combinator $I x = x$, the constant combinator $K x y = x$ and the generalized composition combinator $S f g x = f x (g x)$. In some way any program is just one lambda function thus to perform a source code transformation we need to know how does the transformation act on these combinators.
 
-  In the case of differentiation and smootheness we are in luck as it plays nice with all these three combinators. As mentioned earlier, there are two main components to our source code transformations. The simplification rules and rules to prove function smootheness.
+  In the case of differentiation and smoothness we are in luck as it plays nice with all these three combinators. As mentioned earlier, there are two main components to our source code transformations. The simplification rules and rules to prove function smoothness.
 
   The smoothness rules are as follows
   $$
@@ -79,7 +79,7 @@
     : ∂ (λ x => f x (g x)) = λ x dx => ∂ f x dx (g x) + ∂ (f x) (g x) (∂ g x dx) := ...
   $$
 
-  The differential of indentity function is identity function, this is just a special case of the fact that differential of linear function it that linear function itself. The next one is that differential of a constant function is zero.
+  The differential of identity function is identity function, this is just a special case of the fact that differential of linear function it that linear function itself. The next one is that differential of a constant function is zero.
   The last one is a mix of chain rule and product rule. Chain rule is obtained if $f$ does not depend on the $x$ argument. The product rule if $f x y = (h x) * y$ for some function h, then $∂ (λ x => (h x)*(g x)) = (∂ h x dx) * (g x) + (h x) * (∂ g x dx)$.
 
 
@@ -94,7 +94,7 @@
   This instance is crucial but fairly dangerous as it can introduce new function arguments and lead the type class inference astray. Therefore it has lower priority then all other instances.
   Relate this to infinite products! 
 
-  All of the source code transformations in this work follow very similar pattern. They introduce a class of types, like vector space, finite type etc, function property, like smoothenss, linearity, invertibility etc., that is used as a condition for code transformation and finally the code transformation itself, like differentiation, adjunction, inversion etc.
+  All of the source code transformations in this work follow very similar pattern. They introduce a class of types, like vector space, finite type etc, function property, like smoothness, linearity, invertibility etc., that is used as a condition for code transformation and finally the code transformation itself, like differentiation, adjunction, inversion etc.
 
   The code transformations differ slightly in how they handle individual combinators. For example, when dealing with linearity the theorem for S combinator is very restrictive on the function $f$ or the theorem about constant functions does hold at all, i.e. constant function is not linear. We will talk about this later.
   
@@ -158,7 +158,7 @@ The situation is different with other source code transformations like function 
   <f x, y> = <x, f† y>    forall x y
   $$
 
-  Using this notation for adjunction/tranposition the gradient is
+  Using this notation for adjunction/transposition the gradient is
   $$
   ∇ f x = (∂ f x)† 1
   $$
@@ -166,16 +166,16 @@ The situation is different with other source code transformations like function 
 
   Now the problem is that we want to work with higher order functions. For example we would like to compute the gradient of a function with type $(R ~~> R) -> R$. This comes a lot in physics or in the study of partial differential equations. For example, the gradient of the Dirichlet energy $∫ |∇ u|²$ is the Laplacian equation $Δ u$ or the gradient of action integral $∫ L(x,x',t)$ is the Euler-Lagrange equation ... . Or compute the adjoint for a one dimensional Sobel filter $F u_i = u_(i+1) - u_i$ where $u_i : Z -> R$.
 
-  We will not go to details here as full explanation requires some familiarity with functional analysis and distributsion and it is given in the next optional subsection. Let's give a summary here. We define Semi-Hilbert spaces and for those we define the notion of function adjunction. If SemiHilbert space is just a vector space with inner product, adjunction is the well known transposition. However, spaces like $Z -> R$ or $R ~~> R$ are not inner product spaces but are SemiHilbert spaces.
+  We will not go to details here as full explanation requires some familiarity with functional analysis and distribution and it is given in the next optional subsection. Let's give a summary here. We define Semi-Hilbert spaces and for those we define the notion of function adjunction. If SemiHilbert space is just a vector space with inner product, adjunction is the well known transposition. However, spaces like $Z -> R$ or $R ~~> R$ are not inner product spaces but are SemiHilbert spaces.
 
-  Each SemiHilbert space has to define a subset of its function at ~test functions~. For $Z -> R$ these are functions with only finitely many non-zero elements. For $R ~~> R$ those are functions that are non-zero only on some finite interval. Next SemiHilber space defines something like inner product, $<.,.> : X -> Test Functions X -> R$. But as you can see the second argument can accept only test functions. For $Z -> R$ this is $Σ_i u_i v_i$, not that this makes sense only because only finitelem many terms are non-zero. For $R ~~> R$ it is $∫ f(x)g(x) dx$, again this makes sense as we can restrict the integration only to the finite interval on which $g$ is non-zero. The last main property is that if $<f,g> = 0$ for every test function $g$ then $f=0$. This is know as fundamental lemma of variational calculus. The abstract definition of Semi Hilbert space is exactly tailored to allow easy computations on variational calculus.
+  Each SemiHilbert space has to define a subset of its function at ~test functions~. For $Z -> R$ these are functions with only finitely many non-zero elements. For $R ~~> R$ those are functions that are non-zero only on some finite interval. Next SemiHilbert space defines something like inner product, $<.,.> : X -> Test Functions X -> R$. But as you can see the second argument can accept only test functions. For $Z -> R$ this is $Σ_i u_i v_i$, not that this makes sense only because only finitely many terms are non-zero. For $R ~~> R$ it is $∫ f(x)g(x) dx$, again this makes sense as we can restrict the integration only to the finite interval on which $g$ is non-zero. The last main property is that if $<f,g> = 0$ for every test function $g$ then $f=0$. This is know as fundamental lemma of variational calculus. The abstract definition of Semi Hilbert space is exactly tailored to allow easy computations on variational calculus.
 
-  Now the function $F : X -> Y$ between Semi Hilber spaces has adjoint if it preserves test functions and is linear and continuous and there is a linear, continuous function $F† : Y -> X$ that preserves test functions and satisfy
+  Now the function $F : X -> Y$ between Semi Hilbert spaces has adjoint if it preserves test functions and is linear and continuous and there is a linear, continuous function $F† : Y -> X$ that preserves test functions and satisfy
   $$
   <F x, y>_Y = <x, F† y>_X  forall x y test functions
   $$
 
-  To give and exmaple, for $F u = u_(i+1) - u_i$
+  To give and example, for $F u = u_(i+1) - u_i$
   $$
   Σ_i (u_(i+1) - u_i) v_i = (Σ_i u_(i+1) v_i) - (Σ_i u_i v_i) = (Σ_i u_i v_(i-1)) - (Σ_i u_i v_i) = Σ_i u_i (v_(i-1) - v_i)
   $$
@@ -204,7 +204,7 @@ The situation is different with other source code transformations like function 
 
 ** Semi-Hilbert spaces
   
-  But the space $R ~~> R$ does not really have an innner product. The only candidate would be $<f,g> = ∫ f(x) g(x) dx$ but this does not have to be well defined as there is no integrability condition on $f$ and $g$. One traditionally work with L^2 space but again, this is a Banach space and we do not want to work with those. There is even a theorem that the space of all smooth function from R to R do not form a Banach space i.e. there is no way to define a norm on this spaces.
+  But the space $R ~~> R$ does not really have an inner product. The only candidate would be $<f,g> = ∫ f(x) g(x) dx$ but this does not have to be well defined as there is no integrability condition on $f$ and $g$. One traditionally work with L^2 space but again, this is a Banach space and we do not want to work with those. There is even a theorem that the space of all smooth function from R to R do not form a Banach space i.e. there is no way to define a norm on this spaces.
 
   Thus can we define adjunction without introducing inner product? Yes we can! With the help of distributions. Any function $R ~~> R$ can be understood as a distribution, that is a linear functional on test functions. And linear maps between distributions have a well defined adjoints! So we can take a linear function $F : (R ~~> R) -> (R ~~> R)$ that has the property that for test function ϕ the function $F ϕ$ is again a test function. Then this function defines a function on distributions $F' : D'(R) -> D'(R)$. This function has an adjoint in distributional sense: $F'† : D'(R) -> D'(R)$. Now the question is if there is a function $F† : (R ~~> R) -> (R ~~> R)$ that preserves test functions and when interpreted as a function between distributions $F†' : D'(R) -> D'(R)$, do we have equality $F†' = F'†$?
 
