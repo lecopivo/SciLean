@@ -8,11 +8,11 @@ import SciLean.Core.FunctionTransformations.RevCDeriv
 
 namespace SciLean.NotationOverField
 
-scoped syntax "<∂ " term+ : term
+scoped syntax "<∂ " term:66 : term
 scoped syntax "<∂ " diffBinder ", " term:66 : term
 scoped syntax "<∂ " "(" diffBinder ")" ", " term:66 : term
 
-scoped syntax "<∂! " term+ : term
+scoped syntax "<∂! " term:66 : term
 scoped syntax "<∂! " diffBinder ", " term:66 : term
 scoped syntax "<∂! " "(" diffBinder ")" ", " term:66 : term
 

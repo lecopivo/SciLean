@@ -5,11 +5,11 @@ import SciLean.Core.Notation.CDeriv
 
 namespace SciLean.NotationOverField
 
-scoped syntax (name:=gradNotation1) "∇ " term+ : term
+scoped syntax (name:=gradNotation1) "∇ " term:66 : term
 scoped syntax "∇ " diffBinder ", " term:66 : term
 scoped syntax "∇ " "(" diffBinder ")" ", " term:66 : term
 
-scoped syntax "∇! " term+ : term
+scoped syntax "∇! " term:66 : term
 scoped syntax "∇! " diffBinder ", " term:66 : term
 scoped syntax "∇! " "(" diffBinder ")" ", " term:66 : term
 

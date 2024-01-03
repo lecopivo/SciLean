@@ -10,11 +10,11 @@ syntax diffBinderType  := " : " term
 syntax diffBinderValue := ":=" term (";" term)?
 syntax diffBinder := ident (diffBinderType <|> diffBinderValue)?
 
-scoped syntax "∂ " term+ : term
+scoped syntax "∂ " term:66 : term
 scoped syntax "∂ " diffBinder ", " term:66 : term
 scoped syntax "∂ " "(" diffBinder ")" ", " term:66 : term
 
-scoped syntax "∂! " term+ : term
+scoped syntax "∂! " term:66 : term
 scoped syntax "∂! " diffBinder ", " term:66 : term
 scoped syntax "∂! " "(" diffBinder ")" ", " term:66 : term
 

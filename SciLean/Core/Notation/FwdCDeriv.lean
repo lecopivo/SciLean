@@ -8,19 +8,19 @@ import SciLean.Core.FunctionTransformations.FwdCDeriv
 namespace SciLean.NotationOverField
 
 
-scoped syntax "∂> " term+ : term
+scoped syntax "∂> " term:66 : term
 scoped syntax "∂> " diffBinder ", " term:66 : term
 scoped syntax "∂> " "(" diffBinder ")" ", " term:66 : term
 
-scoped syntax "∂>! " term+ : term
+scoped syntax "∂>! " term:66 : term
 scoped syntax "∂>! " diffBinder ", " term:66 : term
 scoped syntax "∂>! " "(" diffBinder ")" ", " term:66 : term
 
 open Lean Elab Term Meta in
 elab_rules : term
-| `(∂> $f $xs*) => do
+| `(∂> $f $x $xs*) => do
   let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(fwdCDeriv $K $f $xs*)) none
+  elabTerm (← `(fwdCDeriv $K $f $x $xs*)) none
 
 | `(∂> $f) => do
   let K := mkIdent (← currentFieldName.get)

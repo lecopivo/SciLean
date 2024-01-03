@@ -17,12 +17,21 @@ set_default_scalar K
 #check ∂ (x:=1), x*x
 #check ∂ (x:=0.1), x*x
 #check ∂ (x:=((1:K),(2:K))), (x + x)
+#check 
+  let df := ∂ (fun x : K×K => (x.1 + x.2*x.1)) (0,0)
+  df (0,0)
+
 
 #check ∂! (fun x : K => x^2)
 #check ∂! (fun x : K×K => x + x)
 #check ∂! (fun x => x*x) 1
 #check ∂! (x:=((1:K),(2:K))), (x + x)
 #check ∂! (x:=1), x*x
+
+
+#check ∂ (fun x : K => x*x)
+       =
+       (fun x => x + x)
 
 variable {X} [Vec K X] (f : X → X)
 
@@ -70,7 +79,9 @@ set_default_scalar K
 
 #check ∂>! x : K×K, (x.1 + x.2*x.1)
 #check ∂>! x:=(1:K);2, (x + x*x)
-
+#check 
+  let a := ∂> (fun x : K×K => (x.1 + x.2*x.1))
+  a (0,0)
 
 
 --------------------------------------------------------------------------------
