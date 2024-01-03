@@ -34,19 +34,19 @@ macro_rules
 open Elab Term Meta
 
 
-class Partial {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
+-- class Partial {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
 
-elab:max "∂ " x:term:max : term => withFreshMacroScope do
+-- elab:max "∂ " x:term:max : term => withFreshMacroScope do
 
-  let x ←elabTerm x none
-  let X ← (reduce (skipTypes := false) (← inferType x))
-  let Y ← mkFreshTypeMVar
-  let y ← mkFreshExprMVar (some Y)
+--   let x ←elabTerm x none
+--   let X ← (reduce (skipTypes := false) (← inferType x))
+--   let Y ← mkFreshTypeMVar
+--   let y ← mkFreshExprMVar (some Y)
 
-  let C := mkAppN (← mkConst' ``Partial) #[X,x,Y,y]
+--   let C := mkAppN (← mkConst' ``Partial) #[X,x,Y,y]
 
-  _ ← synthInstance C
-  instantiateMVars y
+--   _ ← synthInstance C
+--   instantiateMVars y
 
   -- old implementation
   -- _ ← synthInstance (← elabType (← `(Partial $x ?m)))
@@ -94,11 +94,11 @@ elab:max (priority:=high) x:term:max "†" : term => withFreshMacroScope do
   elabTerm (← `(?m)) none
 
 
-class Nabla {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
+-- class Nabla {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)
 
-elab:max "∇ " x:term:max : term => withFreshMacroScope do
-  _ ← synthInstance (← elabType (← `(Nabla $x ?m)))
-  elabTerm (← `(?m)) none
+-- elab:max "∇ " x:term:max : term => withFreshMacroScope do
+--   _ ← synthInstance (← elabType (← `(Nabla $x ?m)))
+--   elabTerm (← `(?m)) none
 
 
 class Divergence {α : Sort u} (a : α) {β : outParam $ Sort v} (b : outParam β)

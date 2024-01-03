@@ -9,7 +9,7 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
@@ -34,12 +34,12 @@ def revCDerivEval
   let ydf := revCDeriv K f x
   (ydf.1, ydf.2 dy)
 
---@[ftrans_unfold]
+@[ftrans_simp]
 noncomputable 
 def gradient
   (f : X → Y) (x : X) : Y→X := (revCDeriv K f x).2
 
---@[ftrans_unfold]
+@[ftrans_simp]
 noncomputable 
 def scalarGradient
   (f : X → K) (x : X) : X := (revCDeriv K f x).2 1

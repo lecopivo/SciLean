@@ -479,6 +479,8 @@ def piCase (e : Expr) (ftransName : Name) (ext : FTransExt) (f : Expr) (ftrans :
   -/
 partial def main (e : Expr) : SimpM (Option Simp.Step) := do
 
+  let e := e.headBeta
+
   let .some (ftransName, ext, f) ← getFTrans? e
     | return none
 

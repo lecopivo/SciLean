@@ -22,9 +22,10 @@ variable
 noncomputable
 def cderiv (f : X → Y) (x dx : X) : Y := Curve.deriv (fun t : K => f (x + t•dx)) 0
 
---@[ftrans_unfold]
+@[ftrans_simp]
 noncomputable
 def scalarCDeriv (f : K → X) (t : K) : X := cderiv K f t 1
+
 
 -- Basic identities ------------------------------------------------------------
 --------------------------------------------------------------------------------

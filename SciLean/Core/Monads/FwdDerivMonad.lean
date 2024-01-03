@@ -68,9 +68,14 @@ def IsDifferentiableValM (x : m X) : Prop :=
 --------------------------------------------------------------------------------
 namespace IsDifferentiableM 
 
--- id_rule does not make sense
-
 variable (X)
+theorem pure_rule 
+  : IsDifferentiableM (m:=m) K (fun x : X => pure x) := 
+by
+  apply IsDifferentiableM_pure
+  fprop
+
+
 theorem const_rule (y : m Y) (hy : IsDifferentiableValM K y)
   : IsDifferentiableM K (fun _ : X => y) := 
 by 
@@ -133,7 +138,13 @@ def fpropExt : FPropExt where
     else          
       e
 
-  identityRule _ := return none 
+  identityRule e := do
+    let .some K := e.getArg? 0 | return none
+    let .some m := e.getArg? 2 | return none
+    let .some m' := e.getArg? 3 | return none
+    let .some X := e.getArg? 7 | return none
+    let prf ← mkAppOptM ``pure_rule #[K, none, m, m', none, none, none, X, none]
+    return prf 
 
   constantRule e := 
     let thm : SimpTheorem :=
@@ -149,9 +160,15 @@ def fpropExt : FPropExt where
   compRule e f g := do
     let .some K := e.getArg? 0 | return none
     let .some m' := e.getArg? 3 | return none
+    let .some monadM := e.getArg? 4 | return none
+    let .some monadM' := e.getArg? 5 | return none
+    let .some X := e.getArg? 7 | return none
+    let .some Z := e.getArg? 8 | return none
+    let .some vecZ := e.getArg? 10 | return none
+    let .some (_,Y) := (← inferType g).arrow? | return none
 
-    let prf ← mkAppOptM ``comp_rule #[K, none,none,m',none,none,none,none,none,none,none,none,none,none, f,g]
-
+    let prf ← mkAppOptM ``comp_rule #[K, none,none,m',monadM,monadM',none,none,X,none,Y,none,Z,vecZ]
+    let prf := prf.mkApp2 f g
 
     let thm : SimpTheorem :=
     {
@@ -164,10 +181,15 @@ def fpropExt : FPropExt where
   lambdaLetRule e f g := do
     let .some K := e.getArg? 0 | return none
     let .some m' := e.getArg? 3 | return none
-    let .some M' := e.getArg? 5 | return none
-    let .some FDM := e.getArg? 6 | return none
+    let .some monadM := e.getArg? 4 | return none
+    let .some monadM' := e.getArg? 5 | return none
+    let .some X := e.getArg? 7 | return none
+    let .some Z := e.getArg? 8 | return none
+    let .some vecZ := e.getArg? 10 | return none
+    let .some (_,Y) := (← inferType g).arrow? | return none
 
-    let prf ← mkAppOptM ``let_rule #[K, none,none,m',none,M',FDM,none,none,none,none,none,none,none, f,g]
+    let prf ← mkAppOptM ``let_rule #[K, none,none,m',monadM,monadM',none,none,X,none,Y,none,Z,vecZ]
+    let prf := prf.mkApp2 f g
 
     let thm : SimpTheorem :=
     {
@@ -240,10 +262,14 @@ end IsDifferentiableValM
 --------------------------------------------------------------------------------
 namespace fwdDerivM
 
--- id_rule does not make sense
-
-
 variable (X)
+theorem pure_rule 
+  : fwdDerivM (m:=m) K (fun x : X => pure x) = fun x dx => pure (x, dx) := 
+by 
+  rw [fwdDerivM_pure _ (by fprop)]
+  ftrans
+
+
 theorem const_rule (y : m Y) (hy : IsDifferentiableValM K y)
   : fwdDerivM K (fun _ : X => y) = fun _ _ => fwdDerivValM K y := 
 by
@@ -342,7 +368,15 @@ def ftransExt : FTransExt where
     else          
       e
 
-  idRule  e X := return none
+  idRule  e X := do
+    -- let .some K := e.getArg? 0 | return none
+    -- let .some m := e.getArg? 2 | return none
+    -- let .some m' := e.getArg? 3 | return none
+    -- let .some X := e.getArg? 7 | return none
+    -- let prf ← mkAppOptM ``pure_rule #[K, none, m, m', none, none, none, X, none]
+    -- let .some (_,_,rhs) := (← inferType prf).eq? | return none
+    -- return .some (.visit {expr := rhs, proof? := prf})
+    return none
 
   constRule e X y := do
     let .some K := e.getArg? 0 | return none
@@ -360,11 +394,17 @@ def ftransExt : FTransExt where
 
   compRule e f g := do
     let .some K := e.getArg? 0 | return none
+    let .some m := e.getArg? 2 | return none
     let .some m' := e.getArg? 3 | return none
     let .some M' := e.getArg? 5 | return none
     let .some FDM := e.getArg? 6 | return none
+    let .some X := e.getArg? 7 | return none
+    let .some Z := e.getArg? 8 | return none
+    let .some (Y,_) := (←inferType f).arrow? | return none
+    let .some vecZ := e.getArg? 10 | return none
 
-    let prf ← mkAppOptM ``comp_rule #[K, none, none, m', none, M', FDM, none, none, none, none, none, none, none, none, f, g]
+    let prf ← mkAppOptM ``comp_rule #[K, none, none, m', none, M', FDM, none, none, X, none, Y, none, Z, vecZ]
+    let prf := prf.mkApp2 f g
 
     tryTheorems
       #[ { proof := prf, origin := .decl ``comp_rule, rfl := false} ]
@@ -372,11 +412,17 @@ def ftransExt : FTransExt where
 
   letRule e f g := do
     let .some K := e.getArg? 0 | return none
+    let .some m := e.getArg? 2 | return none
     let .some m' := e.getArg? 3 | return none
     let .some M' := e.getArg? 5 | return none
     let .some FDM := e.getArg? 6 | return none
+    let .some (X,YmZ) := (←inferType f).arrow? | return none
+    let .some (Y,mZ) := (YmZ).arrow? | return none
+    let .some Z := e.getArg? 8 | return none
+    let .some vecZ := e.getArg? 10 | return none
 
-    let prf ← mkAppOptM ``let_rule #[K, none, none, m', none, M', FDM, none, none, none, none, none, none, none, none, f, g]
+    let prf ← mkAppOptM ``let_rule #[K, none, m, m', none, M', FDM, none, none, X, none, Y, none, Z, vecZ]
+    let prf := prf.mkApp2 f g
 
     tryTheorems
       #[ { proof := prf, origin := .decl ``let_rule, rfl := false} ]

@@ -179,7 +179,7 @@ variable
 
 @[fprop]
 theorem id.arg_a.Continuous_rule
-  : Continuous (id : X → X) := by continuity
+  : Continuous (fun x : X => id x) := by continuity
 
 
 -- Prod ------------------------------------------------------------------------
@@ -226,8 +226,19 @@ theorem Prod.snd.arg_self.Continuous_rule
 theorem Function.comp.arg_a0.Continuous_rule
   (f : Y → Z) (hf : Continuous f)
   (g : X → Y) (hg : Continuous g)
-  : Continuous (f ∘ g)
+  : Continuous (fun x => (f ∘ g) x)
   := Continuous.comp hf hg
+
+
+-- HAdd.hAdd -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fprop]
+theorem HAdd.hAdd.arg_a0a1.Continuous_rule
+  [Add Y] [ContinuousAdd Y]
+  (f g : X → Y) (hf : Continuous f) (hg : Continuous g)
+  : Continuous fun x => f x + g x
+  := by continuity
 
 
 

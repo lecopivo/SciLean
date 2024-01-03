@@ -10,16 +10,37 @@ syntax diffBinderType  := " : " term
 syntax diffBinderValue := ":=" term (";" term)?
 syntax diffBinder := ident (diffBinderType <|> diffBinderValue)?
 
-scoped syntax "∂ " term:66 : term
+scoped syntax "∂ " term+ : term
 scoped syntax "∂ " diffBinder ", " term:66 : term
 scoped syntax "∂ " "(" diffBinder ")" ", " term:66 : term
 
+scoped syntax "∂! " term+ : term
+scoped syntax "∂! " diffBinder ", " term:66 : term
+scoped syntax "∂! " "(" diffBinder ")" ", " term:66 : term
+
 open Lean Elab Term Meta in
 elab_rules : term
-| `(∂ $f) => do
+| `(∂ $f $x $xs*) => do
   let K := mkIdent (← currentFieldName.get)
   let KExpr ← elabTerm (← `($K)) none
-  let fExpr ← withoutPostponing <| elabTermEnsuringType f none false
+  let X ← inferType (← elabTerm x none)
+  let Y ← mkFreshTypeMVar
+  let XY ← mkArrow X Y
+  -- X might also be infered by the function `f`
+  let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
+  let .some (X,_) := (← inferType fExpr).arrow? | return ← throwUnsupportedSyntax
+  if (← isDefEq KExpr X) && xs.size = 0 then
+    elabTerm (← `(scalarCDeriv $K $f $x $xs*)) none false
+  else
+    elabTerm (← `(cderiv $K $f $x $xs*)) none false
+
+| `(∂ $f) => do
+  let K := mkIdent (← currentFieldName.get)
+  let X ← mkFreshTypeMVar
+  let Y ← mkFreshTypeMVar
+  let XY ← mkArrow X Y
+  let KExpr ← elabTerm (← `($K)) none
+  let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
   if let .some (X,_) := (← inferType fExpr).arrow? then
     if (← isDefEq KExpr X) then
       elabTerm (← `(scalarCDeriv $K $f)) none false
@@ -35,11 +56,20 @@ elab_rules : term
 
 
 macro_rules
-| `(∂ $f $xs*) => `((∂ $f) $xs*)
 | `(∂ $x:ident, $b) => `(∂ (fun $x => $b))
 | `(∂ $x:ident := $val:term, $b) => `(∂ (fun $x => $b) $val)
 | `(∂ $x:ident : $type:term, $b) => `(∂ fun $x : $type => $b)
 | `(∂ ($b:diffBinder), $f)       => `(∂ $b, $f)
+
+macro_rules
+-- in some cases it is still necessary to call ftrans multiple times
+-- | `(∂! $f $xs*) => `((∂ $f $xs*) rewrite_by ftrans; ftrans; ftrans) 
+| `(∂! $f) => `((∂ $f) rewrite_by ftrans; ftrans; ftrans) 
+| `(∂! $x:ident, $b) => `(∂! (fun $x => $b))
+| `(∂! $x:ident := $val:term, $b) => `(∂! (fun $x => $b) $val)
+| `(∂! $x:ident := $val:term;$dir:term, $b) => `(((∂ $x:ident:=$val;$dir, $b) rewrite_by ftrans; ftrans; ftrans))
+| `(∂! $x:ident : $type:term, $b) => `(∂! fun $x : $type => $b)
+| `(∂! ($b:diffBinder), $f)       => `(∂! $b, $f)
 
 
 @[app_unexpander cderiv] def unexpandCDeriv : Lean.PrettyPrinter.Unexpander

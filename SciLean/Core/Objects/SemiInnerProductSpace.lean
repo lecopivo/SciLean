@@ -222,9 +222,14 @@ abbrev SemiInnerProductSpace.mkSorryProofs {α} [Vec K α] [Inner K α] [TestFun
   := SemiInnerProductSpace.mk sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof sorry_proof
 
 instance (X Y) [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (X × Y) := SemiInnerProductSpace.mkSorryProofs
+instance (X Y) [SemiHilbert K X] [SemiHilbert K Y] : SemiHilbert K (X × Y) where
+  test_functions_true := by intro (x,y); simp[TestFunction]; constructor <;> apply SemiHilbert.test_functions_true
 
 -- instance (X) [SemiInnerProductSpace K X] (ι) [Fintype ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
 -- instance (X) [SemiInnerProductSpace K X] (ι) [EnumType ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
 instance (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [EnumType ι] : SemiInnerProductSpace K ((i : ι) → X i) 
   := SemiInnerProductSpace.mkSorryProofs
+
+instance (ι) (X : ι → Type _) [∀ i, SemiHilbert K (X i)] [EnumType ι] : SemiHilbert K ((i : ι) → X i) where
+  test_functions_true := by simp[TestFunction]; intro f i; apply SemiHilbert.test_functions_true
 

@@ -1,9 +1,14 @@
 import SciLean.Core
--- import SciLean.Functions.Limit
+import SciLean.Core.Functions.ArgMinMax
+import SciLean.Util.Limit
 
 namespace SciLean
 
-variable {R} [IsROrC R]
+open Notation
+
+variable {R} [RealScalar R]
+
+set_default_scalar R
 
 def gradientDescent [Vec R X] (gradf : X → X) (x₀ : X) (s : R) (steps : Nat) : X := Id.run do
   let mut x := x₀
@@ -12,7 +17,7 @@ def gradientDescent [Vec R X] (gradf : X → X) (x₀ : X) (s : R) (steps : Nat)
   x
 
 theorem argminFun.approx.gradientDescent {X} [SemiHilbert R X] {f : X → R} (x₀ : X) (s : R)
-  : argmin x, f x 
+  : (argmin x, f x)
     =
-    limit λ n => gradientDescent (∇ f) x₀ s n
+    limit n → ∞, gradientDescent (∇ f) x₀ s n
   := sorry_proof

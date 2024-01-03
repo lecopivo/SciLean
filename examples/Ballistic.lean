@@ -1,6 +1,9 @@
 import Mathlib
 import SciLean
 
+import SciLean.Core.Functions.ArgMinMax
+import SciLean.Modules.SolversAndOptimizers.GradientDescent
+
 open SciLean
 
 open NotationOverField 
@@ -27,9 +30,6 @@ macro_rules
 --     `(⊞[$ys,*])
 --   | _  => throw ()
 
-
-
-
 def g := ⊞[0.0, -9.81]
 
 def ballisticMotion (x v : Float^[2]) := (v, g - (5.0 + ‖v‖₂) • v)
@@ -39,19 +39,29 @@ def ballisticMotion (x v : Float^[2]) := (v, g - (5.0 + ‖v‖₂) • v)
   trans_by unfold ballisticMotion; ftrans
 
 
-approx aimToTarget (v₀ : Float×Float) (optimizationRate : Float) := 
-  λ (T : Float) (target : Float×Float) =>
-  let shoot := λ (v : Float×Float) =>
-                 odeSolve (t₀ := 0) (x₀ := ((0:Float×Float),v)) (t := T)
+noncomputable
+approx aimToTarget (v₀ : Float^[2]) (optimizationRate : Float) := 
+  λ (T : Float) (target : Float^[2]) =>
+  let shoot := λ (v : Float^[2]) =>
+                 odeSolve (t₀ := 0) (x₀ := ((0:Float^[2]),v)) (t := T)
                    (f := λ (t : Float) (x,v) => ballisticMotion x v) |>.fst
-  shoot⁻¹ target
+  Function.invFun shoot target
 by
   
   -- reformulate inverse as minimization and apply gradient descent
   conv =>
     enter [2,T,target,shoot]
-    -- rw [invFun_as_argmin _ _ sorry_proof]
-    -- rw [argminFun.approx.gradientDescent v₀ optimizationRate]
+    rw [invFun_as_min_norm2 (R:=Float) _ _ sorry_proof]
+    rw [argminFun.approx.gradientDescent v₀ optimizationRate]
+  
+  approx_limit n := sorry_proof
+
+  unfold scalarGradient
+  set_option trace.Meta.Tactic.simp.discharge true in
+  set_option trace.Meta.Tactic.ftrans.step true in
+  set_option trace.Meta.Tactic.ftrans.theorems true in
+  set_option trace.Meta.Tactic.simp.unify true in
+  ftrans
 
 
 #exit  
