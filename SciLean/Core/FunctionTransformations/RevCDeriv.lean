@@ -640,7 +640,7 @@ by
 
 open Lean Meta Qq in
 def discharger (e : Expr) : SimpM (Option Expr) := do
-  withTraceNode `revCDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
+  withTraceNode `revDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
   let config : FProp.Config := {}
   let state  : FProp.State := { cache := cache }
@@ -649,10 +649,14 @@ def discharger (e : Expr) : SimpM (Option Expr) := do
   if proof?.isSome then
     return proof?
   else
-    -- if `fprop` fails try assumption
-    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
-    let proof? ← tac e
-    return proof?
+    if let .some prf ← Lean.Meta.findLocalDeclWithType? e then
+      return .some (.fvar prf)
+    else
+      if e.isAppOf ``fpropParam then
+        trace[Meta.Tactic.fprop.unsafe] s!"discharging with sorry: {← ppExpr e}"
+        return .some <| ← mkAppOptM ``sorryProofAxiom #[e.appArg!]
+      else
+        return none
 
 
 open Lean Meta FTrans in
