@@ -822,9 +822,8 @@ theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule
 by
   funext x; apply SciLean.Norm2.norm2.arg_a0.cderiv_rule_at f x (hf x) 
 
-open Scalar in
 @[ftrans]
-theorem SciLean.norm₂.arg_x.cderiv_rule
+theorem SciLean.norm₂.arg_x.cderiv_rule_at
   (f : X → Y) (x : X)
   (hf : IsDifferentiableAt R f x) (hx : f x≠0)
   : cderiv R (fun x => ‖f x‖₂[R]) x
@@ -835,6 +834,21 @@ theorem SciLean.norm₂.arg_x.cderiv_rule
       ‖y‖₂[R]⁻¹ * ⟪dy,y⟫[R] :=
 by
   sorry_proof
+
+
+@[ftrans]
+theorem SciLean.norm₂.arg_x.cderiv_rule
+  (f : X → Y)
+  (hf : IsDifferentiable R f) (hx : fpropParam (∀ x, f x≠0))
+  : cderiv R (fun x => ‖f x‖₂[R])
+    =
+    fun x dx => 
+      let y := f x
+      let dy := cderiv R f x dx
+      ‖y‖₂[R]⁻¹ * ⟪dy,y⟫[R] :=
+by
+  funext x
+  rw [SciLean.norm₂.arg_x.cderiv_rule_at f x (hf x) (hx x)]
 
 
 end OverReals

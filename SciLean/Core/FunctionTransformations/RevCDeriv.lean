@@ -1251,6 +1251,29 @@ by
 
 
 @[ftrans]
+theorem SciLean.norm₂.arg_x.revCDeriv_rule
+  (f : X → Y)
+  (hf : HasAdjDiff R f) (hx : fpropParam (∀ x, f x≠0))
+  : (revCDeriv R (fun x => ‖f x‖₂[R]))
+    =
+    fun x => 
+      let ydf := revCDeriv R f x
+      let ynorm := ‖ydf.1‖₂[R]
+      (ynorm,
+       fun dr => 
+         (ynorm⁻¹ * dr) • ydf.2 ydf.1) :=
+by 
+  have ⟨_,_⟩ := hf
+  unfold revCDeriv
+  unfold fpropParam at hx
+  ftrans only
+  simp
+  ftrans
+  funext dr; simp[smul_smul]
+  sorry_proof
+
+
+@[ftrans]
 theorem SciLean.norm₂.arg_x.revCDeriv_rule_at
   (f : X → Y) (x : X)
   (hf : HasAdjDiffAt R f x) (hx : f x≠0)
