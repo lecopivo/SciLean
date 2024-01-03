@@ -1,19 +1,26 @@
 import SciLean.Core.Notation.CDeriv
 import SciLean.Core.FunctionTransformations.RevCDeriv
 
+
 --------------------------------------------------------------------------------
 -- Notation  -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 namespace SciLean.NotationOverField
 
-
-scoped syntax "<∂ " term:66 : term
+scoped syntax "<∂ " term+ : term
 scoped syntax "<∂ " diffBinder ", " term:66 : term
 scoped syntax "<∂ " "(" diffBinder ")" ", " term:66 : term
 
+scoped syntax "<∂! " term+ : term
+scoped syntax "<∂! " diffBinder ", " term:66 : term
+scoped syntax "<∂! " "(" diffBinder ")" ", " term:66 : term
+
 open Lean Elab Term Meta in
 elab_rules : term
+| `(<∂ $f $xs*) => do
+  let K := mkIdent (← currentFieldName.get)
+  elabTerm (← `(revCDeriv $K $f $xs*)) none
 | `(<∂ $f) => do
   let K := mkIdent (← currentFieldName.get)
   elabTerm (← `(revCDeriv $K $f)) none
@@ -22,11 +29,18 @@ elab_rules : term
   elabTerm (← `(revCDerivEval $K (fun $x => $b) $val $codir)) none
 
 macro_rules
-| `(<∂ $f $xs*) => `((<∂ $f) $xs*)
 | `(<∂ $x:ident, $b) => `(<∂ (fun $x => $b))
 | `(<∂ $x:ident := $val:term, $b) => `(<∂ (fun $x => $b) $val)
 | `(<∂ $x:ident : $type:term, $b) => `(<∂ fun $x : $type => $b)
 | `(<∂ ($b:diffBinder), $f)       => `(<∂ $b, $f)
+
+macro_rules
+| `(<∂! $f $xs*) => `((<∂ $f $xs*) rewrite_by ftrans; ftrans; ftrans)
+| `(<∂! $f) => `((<∂ $f) rewrite_by ftrans; ftrans; ftrans)
+| `(<∂! $x:ident, $b) => `(<∂! (fun $x => $b))
+| `(<∂! $x:ident := $val:term, $b) => `(<∂! (fun $x => $b) $val)
+| `(<∂! $x:ident : $type:term, $b) => `(<∂! fun $x : $type => $b)
+| `(<∂! ($b:diffBinder), $f)       => `(<∂! $b, $f)
 
 
 @[app_unexpander revCDeriv] def unexpandRevCDeriv : Lean.PrettyPrinter.Unexpander
