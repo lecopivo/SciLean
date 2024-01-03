@@ -1270,7 +1270,6 @@ by
   simp
   ftrans
   funext dr; simp[smul_smul]
-  sorry_proof
 
 
 @[ftrans]
