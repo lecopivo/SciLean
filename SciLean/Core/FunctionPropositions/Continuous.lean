@@ -305,3 +305,12 @@ def HDiv.hDiv.arg_a0a1.Continuous_rule
 
 
 
+-- HPow.hPow -------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
+
+@[fprop]
+def HPow.hPow.arg_a0.Continuous_rule
+  {R : Type _} [NontriviallyNormedField R]
+  (n : Nat) (f : X → R) (hf : Continuous f) 
+  : Continuous (fun x => f x ^ n)
+  := Continuous.pow hf n

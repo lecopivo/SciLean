@@ -1,4 +1,3 @@
-import Mathlib
 import SciLean
 
 import SciLean.Core.Functions.ArgMinMax

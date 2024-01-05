@@ -13,14 +13,16 @@ namespace SciLean.Meta
 open GenerateProperty
 
 def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name) 
-  (tac : TSyntax ``tacticSeq) (conv : TSyntax `conv) : TermElabM Unit := do
+  (tac : TSyntax ``tacticSeq) (conv : TSyntax `conv) 
+  (extraBinders : Array Syntax) : TermElabM Unit := do
   let info ← getConstInfoDefn constName
 
   forallTelescope info.type fun xs type => do
+  elabBinders extraBinders fun extraCtx => do
 
     let (ctx, args) ← splitToCtxAndArgs xs
     
-    let .some ⟨_u,K,_isROrC⟩ ← getFieldOutOfContextQ ctx
+    let .some ⟨_u,K,_isROrC⟩ ← getFieldOutOfContextQ (xs++extraCtx)
       | throwError "unable to figure out what is the field"
 
     trace[Meta.generate_ftrans] "detected field {← ppExpr K}"
@@ -98,7 +100,7 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
             throwError "failed to eliminate auxiliary variable `{← ppExpr dw}` from\n{← ppExpr rhsBody'}"
 
           let args := ctx ++ vecInsts ++ mergeArgs' ys unusedArgs argKinds ++ dys
-          let fwdDerivFun ← mkLambdaFVars args rhsBody'
+          let fwdDerivFun ← mkLambdaFVars args rhsBody' >>= instantiateMVars
           pure fwdDerivFun
 
       -- calling `analyzeConstLambda` here is bit of an overkill as we are only
@@ -112,9 +114,9 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       let isDiffRuleName := 
         constName.append lhsData.declSuffix |>.append "IsDifferentiable_rule"
 
-      let xs' := ctx ++ #[W] ++ instW ++ vecInsts ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
-      let isDiffRule ← mkForallFVars xs' isDiff
-      let isDiffProof ← mkLambdaFVars xs' isDiffProof
+      let xs' := ctx ++ extraCtx ++ #[W] ++ instW ++ vecInsts ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
+      let isDiffRule ← mkForallFVars xs' isDiff >>= instantiateMVars
+      let isDiffProof ← mkLambdaFVars xs' isDiffProof >>= instantiateMVars
 
       let isDiffInfo : TheoremVal := 
       {
@@ -127,8 +129,8 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       addDecl (.thmDecl isDiffInfo)
       FProp.funTransRuleAttr.attr.add isDiffRuleName (← `(attr|fprop)) .global
 
-      let rule ← mkForallFVars xs' (← mkEq lhs rhs)
-      let proof ← mkLambdaFVars xs' proof
+      let rule ← mkForallFVars xs' (← mkEq lhs rhs)  >>= instantiateMVars
+      let proof ← mkLambdaFVars xs' proof  >>= instantiateMVars
 
       let ruleInfo : TheoremVal := 
       {
@@ -150,7 +152,11 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
         levelParams := info.levelParams
       }
 
-      addAndCompile (.defnDecl fwdDerivFunInfo)
+      addDecl (.defnDecl fwdDerivFunInfo)
+      try 
+        compileDecl (.defnDecl fwdDerivFunInfo)
+      catch _ =>
+        trace[Meta.generate_ftrans] "failed to compile declaration {fwdDerivFunName}"
 
       let rhsWithDef ← do
         let names := mainNames.map (fun n => Name.mkSimple s!"{n}d{n}")
@@ -162,7 +168,7 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
           let body := (mkAppN (.const fwdDerivFunName lvls) args)
           mkLambdaFVars (#[w,dw] ++ ydys) body
 
-      let ruleWithDef ← mkForallFVars xs' (← mkEq lhs rhsWithDef)
+      let ruleWithDef ← mkForallFVars xs' (← mkEq lhs rhsWithDef) >>= instantiateMVars
 
       let ruleWithDefInfo : TheoremVal := 
       {
@@ -173,14 +179,18 @@ def generateFwdCDeriv (constName : Name) (mainNames trailingNames : Array Name)
       }
 
       addDecl (.thmDecl ruleWithDefInfo)
+      FTrans.funTransRuleAttr.attr.add ruleWithDefName (← `(attr|ftrans)) .global
 
+
+
+syntax extraAssumptions := "assume" bracketedBinder*
 
 open Lean.Parser.Tactic.Conv 
 -- syntax "#generate_revCDeriv" term num* " by " convSeq : command
-syntax "#generate_fwdCDeriv" term ident* ("|" ident*)? " prop_by " tacticSeq " trans_by " convSeq : command
+syntax "#generate_fwdCDeriv" term ident* ("|" ident*)? (extraAssumptions)? " prop_by " tacticSeq " trans_by " convSeq : command
 
 elab_rules : command
-| `(#generate_fwdCDeriv $fnStx $mainArgs:ident* $[| $trailingArgs:ident* ]? prop_by $t:tacticSeq trans_by $rw:convSeq) => do
+| `(#generate_fwdCDeriv $fnStx $mainArgs:ident* $[| $trailingArgs:ident* ]? $[$as:extraAssumptions]? prop_by $t:tacticSeq trans_by $rw:convSeq) => do
   Command.liftTermElabM do
     let mainArgs := mainArgs.map (fun a => a.getId)
     let trailingArgs : Array Name := 
@@ -190,4 +200,11 @@ elab_rules : command
     let fn ← elabTerm fnStx none
     let .some constName := fn.getAppFn'.constName?
       | throwError "unknown function {fnStx}"
-    generateFwdCDeriv constName mainArgs trailingArgs t (← `(conv| ($rw)))
+    let extraBinders : Array Syntax := 
+      match as with
+      | .none => #[]
+      | .some s =>
+        match s with
+        | `(extraAssumptions| assume $bs:bracketedBinder*) => bs
+        | _ => #[]
+    generateFwdCDeriv constName mainArgs trailingArgs t (← `(conv| ($rw))) extraBinders

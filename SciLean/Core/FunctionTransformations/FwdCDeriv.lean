@@ -22,6 +22,10 @@ variable
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
+theorem fwdCDeriv_of_linear (f : X → Y) (hf : IsSmoothLinearMap K f)
+  : fwdCDeriv K f = fun x dx => (f x, f dx) := by unfold fwdCDeriv; simp [cderiv_of_linear _ hf]
+
+
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 

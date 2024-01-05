@@ -59,7 +59,7 @@ theorem comp_rule
       let zdz := fwdFDeriv K f ydy.1 ydy.2 
       zdz :=
 by
-  unfold fwdFDeriv; ftrans; simp
+  unfold fwdFDeriv; ftrans
 
 
 theorem let_rule 

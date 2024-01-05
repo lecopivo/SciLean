@@ -14,13 +14,13 @@ open ArrayType
 
 instance : Inhabited (Idx 10) := ⟨0⟩
 
-def mnist (w x) := 
+def mnist (w x) :=
   (fun ((w₁,b₁),(w₂,b₂),(w₃,b₃)) (x : Float^[1,28,28]) =>
     x |> conv2d 8 1 w₁ b₁
       |> map gelu
       |> avgPool
       |> dense 30 w₂ b₂
-      |> map gelu 
+      |> map gelu
       |> dense 10 w₃ b₃
       |> softMax 0.1) w x
 
@@ -34,4 +34,3 @@ abbrev inputType (_f : α → β → γ) := β
 abbrev outputType (_f : α → β → γ) := γ
 
 def mnist.initWeights := Random.rand (weightsType ML.mnist) |> IO.runRand
-

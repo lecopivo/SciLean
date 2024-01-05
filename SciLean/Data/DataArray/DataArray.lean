@@ -20,7 +20,7 @@ structure DataArray (α : Type) [pd : PlainDataType α] where
   h_size : (pd.bytes size).toNat ≤ byteData.size
 
 variable {α : Type} [pd : PlainDataType α]
-variable {ι} [Index ι]
+variable {ι} [Index.{0,0,0} ι]
 
 @[irreducible]
 def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α := -- pd.get a.data i sorry_proof
@@ -170,6 +170,10 @@ instance : LinearArrayType (λ n => DataArrayN α (Idx n)) α where
   dropElem_getElem := sorry_proof
   reserveElem_id := sorry_proof
 
+def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type) [Index.{0,0,0} κ] 
+  (hs : Index.size κ = Index.size ι)
+  : DataArrayN α κ := 
+  ⟨x.data, by simp[hs,x.h_size]⟩
 
 instance {Cont ι α : Type} [ArrayType Cont ι α] [Index ι] [Inhabited α] [pd : PlainDataType α] : PlainDataType Cont where
   btype := match pd.btype with

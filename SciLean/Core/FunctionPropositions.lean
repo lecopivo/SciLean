@@ -2,6 +2,7 @@ import SciLean.Core.FunctionPropositions.Bijective
 import SciLean.Core.FunctionPropositions.Diffeomorphism
 import SciLean.Core.FunctionPropositions.Differentiable
 import SciLean.Core.FunctionPropositions.DifferentiableAt
+import SciLean.Core.FunctionPropositions.Continuous
 import SciLean.Core.FunctionPropositions.HasAdjDiff
 import SciLean.Core.FunctionPropositions.HasAdjDiffAt
 import SciLean.Core.FunctionPropositions.HasSemiAdjoint

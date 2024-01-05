@@ -580,6 +580,60 @@ def tryFTrans? (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (post := f
     -- trace[Meta.Tactic.ftrans.step] "pre step on:\n{← ppExpr e}"
     main e
 
+
+namespace CustomPrePost
+
+open Lean.Meta.Simp in
+def _root_.Lean.Meta.Simp.Result.then (r r' : Result) : MetaM Result := do
+  match r.proof?, r'.proof? with
+  | .some p, .some p' => return { expr := r'.expr, proof? := .some (← mkEqTrans p p') }
+  | .some p, .none => return { expr := r'.expr, proof? := .some p }
+  | .none, _ => return r'
+
+open Lean.Meta.Simp in
+/-- Keep on rewriting if possible unlike `Lean.Meta.Simp.rewritePre` -/
+def rewritePre (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (rflOnly := false) : SimpM Step := do
+  let mut cont := true
+  let mut r : Result := {expr := e}
+  while cont do
+    cont := false
+    for thms in (← read).simpTheorems do
+      if let some r' ← rewrite? r.expr thms.pre thms.erased discharge? (tag := "pre") (rflOnly := rflOnly) then
+        r ← r.then r'
+        cont := true
+        break
+  return .visit r
+
+open Lean.Meta.Simp in
+/-- Keep on rewriting if possible unlike `Lean.Meta.Simp.rewritePre` -/
+def rewritePost (e : Expr) (discharge? : Expr → SimpM (Option Expr)) (rflOnly := false) : SimpM Step := do
+  let mut cont := true
+  let mut r : Result := {expr := e}
+  while cont do
+    cont := false
+    for thms in (← read).simpTheorems do
+      if let some r' ← rewrite? r.expr thms.post thms.erased discharge? (tag := "post") (rflOnly := rflOnly) then
+        r ← r.then r'
+        cont := true
+        break
+  return .visit r
+
+open Lean.Meta.Simp in
+def pre (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM Step := do
+  let s ← rewritePre e discharge?
+  andThen s tryRewriteUsingDecide?
+
+open Lean.Meta.Simp in
+def post (e : Expr) (discharge? : Expr → SimpM (Option Expr)) : SimpM Step := do
+  let s ← rewritePost e discharge?
+  let s ← andThen s (simpMatch? discharge?)
+  let s ← andThen s simpArith?
+  let s ← andThen s tryRewriteUsingDecide?
+  andThen s tryRewriteCtorEq?
+
+namespace CustomPrePost
+
+
 variable (ctx : Simp.Context) (useSimp := true) in
 mutual
   -- This custom discharger is a residue of the code for `norm_num`
@@ -589,9 +643,9 @@ mutual
   partial def methods : Simp.Methods :=
     if useSimp then {
       pre  := fun e ↦ do
-        Simp.andThen (← withTraceNode `lsimp (fun _ => do pure s!"lsimp default pre") do Simp.preDefault e discharge) (fun e' => tryFTrans? e' discharge)
+        Simp.andThen (← withTraceNode `lsimp (fun _ => do pure s!"lsimp default pre") do CustomPrePost.pre e discharge) (fun e' => tryFTrans? e' discharge)
       post := fun e ↦ do
-        Simp.andThen (← withTraceNode `lsimp (fun _ => do pure s!"lsimp default post") do Simp.postDefault e discharge) (fun e' => tryFTrans? e' discharge (post := true))
+        Simp.andThen (← withTraceNode `lsimp (fun _ => do pure s!"lsimp default post") do CustomPrePost.post e discharge) (fun e' => tryFTrans? e' discharge (post := true))
       discharge? := discharge
     } else {
       pre  := fun e ↦ do 
@@ -714,4 +768,3 @@ syntax (name := fTransConv) "ftrans" &" only"? (simpArgs)? : conv
   let ctx ← getFTransContext stx[2] !stx[1].isNone
   let ctx := {ctx with config := {ctx.config with iota := true, zeta := false, singlePass := true, dsimp := false, decide := false}}
   Conv.applySimpResult (← deriveSimp ctx (← instantiateMVars (← Conv.getLhs)) (useSimp := true))
-

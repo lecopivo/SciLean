@@ -106,7 +106,8 @@ where
   loop {u} (K : Q(Type $u)) (X : Expr) (acc : Array Expr) (k : Array Expr → MetaM α) : MetaM α := do
     let cls ← mkAppM ``Vec #[K, X]
     match ← synthInstance? cls with
-    | .some _ => k acc
+    | .some _ => 
+      k acc
     | none => 
       match X with
       | .forallE _ _ Y _ => 

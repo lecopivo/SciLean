@@ -72,12 +72,8 @@ theorem fderiv.comp_rule
   (hf : Differentiable K f) (hg : Differentiable K g)
   : (fderiv K fun x : X => f (g x))
     =
-    fun x => 
-      let y := g x
-      fun dx =>L[K]
-        let dy := fderiv K g x dx
-        let dz := fderiv K f y dy
-        dz :=
+    fun x => fun dx =>L[K] fderiv K f (g x) (fderiv K g x dx)
+         :=
 by 
   funext x;
   rw[show (fun x => f (g x)) = f ∘ g by rfl]

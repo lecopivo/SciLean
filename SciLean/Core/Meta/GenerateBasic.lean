@@ -68,6 +68,10 @@ def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × (K
       K? := type
       break
 
+    if type.isAppOf ``Real then
+      K? := type
+      break
+
   let .some K := K? | return none
   let .some ⟨u,K⟩ ← isTypeQ K | return none
   let isROrC ← synthInstanceQ q(IsROrC $K)
@@ -92,14 +96,14 @@ def splitToCtxAndArgs (xs : Array Expr) : MetaM (Array Expr × Array Expr) := do
       break
     i := i + 1
 
-  -- check that the rest of arguments is ok
-  for j in [i:xs.size] do
-    let x := xs[j]!
-    let X ← inferType x
-    if (← x.fvarId!.getBinderInfo) != .default then
-      throwError "function has invalid signature, undexpected non-explicit argument `({← ppExpr x} : {← ppExpr X})`"
-    if X.bindingBodyRec.isType then
-      throwError "function has invalid signature, undexpected type argument `({← ppExpr x} : {← ppExpr X})`"
+  -- -- check that the rest of arguments is ok
+  -- for j in [i:xs.size] do
+  --   let x := xs[j]!
+  --   let X ← inferType x
+  --   if (← x.fvarId!.getBinderInfo) != .default then
+  --     throwError "function has invalid signature, undexpected non-explicit argument `({← ppExpr x} : {← ppExpr X})`"
+  --   if X.bindingBodyRec.isType then
+  --     throwError "function has invalid signature, undexpected type argument `({← ppExpr x} : {← ppExpr X})`"
 
   return (xs[0:i],xs[i:])
 

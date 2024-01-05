@@ -1,8 +1,11 @@
 import SciLean.Core.FunctionPropositions.IsDifferentiable 
 import SciLean.Core.FunctionPropositions.IsDifferentiableAt
 import SciLean.Core.FunctionPropositions.IsLinearMap
+import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
 import SciLean.Core.NotationOverField
 import SciLean.Core.Simp
+
+import SciLean.Core.Meta.GenerateLinearMapSimp
 
 import SciLean.Tactic.FTrans.Basic
 
@@ -30,6 +33,10 @@ def scalarCDeriv (f : K → X) (t : K) : X := cderiv K f t 1
 -- Basic identities ------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+variable {K}
+theorem cderiv_of_linear (f : X → Y) (hf : IsSmoothLinearMap K f)
+  : cderiv K f = fun x dx => f dx := sorry_proof
+
 @[simp, ftrans_simp]
 theorem cderiv_apply
   (f : X → Y → Z) (x dx : X) (y : Y)
@@ -38,72 +45,18 @@ theorem cderiv_apply
     cderiv K (fun x' => f x' y) x dx := sorry_proof
 
 @[fprop] 
+theorem cderiv.arg_dx.IsLinearMap_rule_simple
+  (f : X → Y) (x : X)
+  : IsLinearMap K (fun dx => cderiv K f x dx) := sorry_proof
+
+#generate_linear_map_simps SciLean.cderiv.arg_dx.IsLinearMap_rule_simple
+
+@[fprop]
 theorem cderiv.arg_dx.IsLinearMap_rule
   (f : X → Y) (x : X) (dx : W → X) (hdx : IsLinearMap K dx)
-  : IsLinearMap K (fun w => cderiv K f x (dx w)) := sorry_proof
+  : IsLinearMap K (fun w => cderiv K f x (dx w)) := by sorry_proof
 
--- there should be a command to generate these push/pull  theorems
-@[neg_pull]
-theorem cderiv.arg_dx.neg_pull 
-  (f : X → Y) (x : X) (dx : X) 
-  : cderiv K f x (-dx)
-    =
-    - cderiv K f x dx := sorry_proof
-
-@[neg_push]
-theorem cderiv.arg_dx.neg_push 
-  (f : X → Y) (x : X) (dx : X) 
-  : - cderiv K f x dx
-    =
-    cderiv K f x (-dx) := sorry_proof
-
-@[add_pull]
-theorem cderiv.arg_dx.add_pull 
-  (f : X → Y) (x : X) (dx dx' : X) 
-  : cderiv K f x (dx+dx')
-    =
-    cderiv K f x dx + cderiv K f x dx' := sorry_proof
-
-@[add_push]
-theorem cderiv.arg_dx.add_push
-  (f : X → Y) (x : X) (dx dx' : X) 
-  : cderiv K f x dx + cderiv K f x dx'
-    =
-    cderiv K f x (dx+dx') := sorry_proof
-
-@[sub_pull]
-theorem cderiv.arg_dx.sub_pull 
-  (f : X → Y) (x : X) (dx dx' : X) 
-  : cderiv K f x (dx-dx')
-    =
-    cderiv K f x dx - cderiv K f x dx' := sorry_proof
-
-@[sub_push]
-theorem cderiv.arg_dx.sub_push
-  (f : X → Y) (x : X) (dx dx' : X) 
-  : cderiv K f x dx - cderiv K f x dx'
-    =
-    cderiv K f x (dx-dx') := sorry_proof
-
-@[smul_pull]
-theorem cderiv.arg_dx.smul_pull 
-  (f : X → Y) (x : X) (dx : X) (k : K)
-  : cderiv K f x (k•dx)
-    =
-    k • cderiv K f x dx := sorry_proof
-
-@[smul_push]
-theorem cderiv.arg_dx.smul_push 
-  (f : X → Y) (x : X) (dx : X) (k : K)
-  : k • cderiv K f x dx
-    =
-    cderiv K f x (k•dx) := sorry_proof
-
-@[simp, ftrans_simp]
-theorem cderiv_zero
-  (f : X → Y) (x : X)
-  : cderiv K f x 0 = 0 := by sorry_proof
-
+variable (K)
 
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
