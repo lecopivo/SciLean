@@ -1091,5 +1091,3 @@ end OnSemiInnerProductSpace
 
 -- ArrayType.append ------------------------------------------------------------
 --------------------------------------------------------------------------------
-Nat × ArrayN Nat n
-Unit ⊕ Unit   or Unit ⊕ Fin n

@@ -287,7 +287,7 @@ section UsefulFunctions
 
 
 variable 
-  [ArrayType Cont Idx Elem] [Index Idx]
+  [ArrayType Cont Idx Elem] [IndexType Idx] [DecidableEq Idx]
   [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx] 
 
 def argMaxCore (cont : Cont ) : Idx × Elem :=
