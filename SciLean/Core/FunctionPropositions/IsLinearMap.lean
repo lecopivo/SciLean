@@ -309,15 +309,15 @@ by
   case isFalse h => simp[h]; apply he
 
 
+open LeanColls
 namespace SciLean
 section OnFinVec 
 
-
 variable 
   {K : Type _} [IsROrC K]
-  {IX : Type} [EnumType IX] {X : Type _} [FinVec IX K X]
-  {IY : Type} [EnumType IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type} [EnumType IZ] {Z : Type _} [FinVec IZ K Z]
+  {IX : Type} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+  {IY : Type} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+  {IZ : Type} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
 @[fprop]
 theorem Basis.proj.arg_x.IsLinearMap_rule (i : IX)

@@ -6,6 +6,8 @@ import SciLean.Core.FunctionPropositions.IsDifferentiableAt
 
 set_option linter.unusedVariables false
 
+open LeanColls
+
 namespace SciLean
 
 variable 
@@ -13,7 +15,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι] 
+  {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
 def IsDifferentiable (f : X → Y) : Prop := ∀ x, IsDifferentiableAt K f x
@@ -163,7 +165,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
 
@@ -388,16 +390,16 @@ by
 end InnerProductSpace
 
 --------------------------------------------------------------------------------
-
+open LeanColls
 namespace SciLean
 section OnFinVec 
 
 
 variable 
   {K : Type _} [IsROrC K]
-  {IX : Type} [EnumType IX] {X : Type _} [FinVec IX K X]
-  {IY : Type} [EnumType IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type} [EnumType IZ] {Z : Type _} [FinVec IZ K Z]
+  {IX : Type} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+  {IY : Type} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+  {IZ : Type} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
 @[fprop]
 theorem Basis.proj.arg_x.IsDifferentiable_rule (i : IX)

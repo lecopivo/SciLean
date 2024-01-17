@@ -4,8 +4,12 @@ import Mathlib.Algebra.Group.Defs
 import SciLean.Util.SorryProof
 import SciLean.Data.ColProd
 import SciLean.Data.Idx
+import SciLean.Data.IndexType
+
+import LeanColls
 
 namespace SciLean
+open LeanColls
 
 -- -- range given by the first and the last element(inclusive!)
 -- def EnumType.Range (α : Type u) := Option (α × α)
@@ -170,37 +174,6 @@ namespace EnumType
       | .done b => pure (.done b)
       | .yield b => EnumType.forIn (init:=b) λ j b => f (.inr j) b
   }
-
-  @[specialize] def sum {α} [Zero α] [Add α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
-    (← EnumType.forIn (0 : α) λ (i : ι) a => .yield (a + f i)).value
-
-  open Lean.TSyntax.Compat in
-  macro " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``EnumType.sum xs b
-
-  @[app_unexpander sum] def unexpandSum : Lean.PrettyPrinter.Unexpander
-    | `($(_) fun $x:ident => $b) => 
-      `(∑ $x:ident, $b)
-    | `($(_) fun $x:ident $xs:ident* => $b) => 
-      `(∑ $x:ident, fun $xs* => $b)
-    | `($(_) fun ($x:ident : $ty:term) => $b) => 
-      `(∑ ($x:ident : $ty), $b)
-    | _  => throw ()
-
-
-  @[specialize] def product {α} [One α] [Mul α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
-    (← EnumType.forIn (1 : α) λ (i : ι) a => .yield (a * f i)).value
-
-  open Lean.TSyntax.Compat in
-  macro " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
-
-  @[app_unexpander product] def unexpandProduct : Lean.PrettyPrinter.Unexpander
-    | `($(_) fun $x:ident => $b) => 
-      `(∏ $x:ident, $b)
-    | `($(_) fun $x:ident $xs:ident* => $b) => 
-      `(∏ $x:ident, fun $xs* => $b)
-    | `($(_) fun ($x:ident : $ty:term) => $b) => 
-      `(∏ ($x:ident : $ty), $b)
-    | _  => throw ()
 
 
 

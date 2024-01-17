@@ -7,6 +7,8 @@ import SciLean.Core.Simp
 
 set_option linter.unusedVariables false
 
+open LeanColls
+
 namespace SciLean
 
 variable 
@@ -14,7 +16,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
 def HasSemiAdjoint (f : X → Y) : Prop :=
@@ -278,7 +280,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
 

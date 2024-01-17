@@ -3,8 +3,11 @@ import SciLean.Data.Index
 import SciLean.Data.ListN 
 import SciLean.Data.StructType.Basic
 import SciLean.Data.Function
+import LeanColls
 
 namespace SciLean
+
+open LeanColls
 
 class SetElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) where
   setElem : (cont : Cont) → (idx : Idx) → (elem : Elem) → Cont
@@ -144,27 +147,27 @@ theorem getElem_modifyElem_neq [inst : ArrayType Cont Idx Elem] (arr : Cont) (i 
 
 -- Maybe turn this into a class and this is a default implementation
 -- For certain types there might be a faster implementation
-def mapIdx [ArrayType Cont Idx Elem] [EnumType Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
+def mapIdx [ArrayType Cont Idx Elem] [IndexType Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
   let mut arr := arr
-  for i in fullRange Idx do
+  for i in IndexType.univ Idx do
     arr := modifyElem arr i (f i)
   arr
 
 @[simp]
-theorem getElem_mapIdx [ArrayType Cont Idx Elem] [EnumType Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
+theorem getElem_mapIdx [ArrayType Cont Idx Elem] [IndexType Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
   : (mapIdx f arr)[i] = f i arr[i] := sorry_proof
 
-def map [ArrayType Cont Idx Elem] [EnumType Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
+def map [ArrayType Cont Idx Elem] [IndexType Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
   mapIdx (λ _ => f) arr
 
 @[simp]
-theorem getElem_map [ArrayType Cont Idx Elem] [EnumType Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
+theorem getElem_map [ArrayType Cont Idx Elem] [IndexType Idx] (f : Elem → Elem) (arr : Cont) (i : Idx)
   : (map f arr)[i] = f arr[i] := sorry_proof
 
-instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem] [EnumType Idx] : ToString (Cont) := ⟨λ x => Id.run do
+instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem] [IndexType Idx] : ToString (Cont) := ⟨λ x => Id.run do
   let mut fst := true
   let mut s := "⊞["
-  for i in fullRange Idx do
+  for i in IndexType.univ Idx do
     if fst then
       s := s ++ toString x[i]
       fst := false
@@ -202,7 +205,7 @@ instance {Cont Idx Elem} [ArrayType Cont Idx Elem] [StructType Elem I ElemI] : S
 
 section Operations
 
-  variable [ArrayType Cont Idx Elem] [EnumType Idx] 
+  variable [ArrayType Cont Idx Elem] [IndexType Idx] 
 
   instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
   instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
@@ -224,7 +227,7 @@ section Operations
   instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont := 
     λ f g => Id.run do
       let mut eq : Bool := true
-      for x in fullRange Idx do
+      for x in IndexType.univ Idx do
         if f[x] ≠ g[x] then
           eq := false
           break
@@ -232,7 +235,7 @@ section Operations
 
   instance (priority:=low) [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) : Decidable (f < g) := Id.run do
     let mut lt : Bool := true
-    for x in fullRange Idx do
+    for x in IndexType.univ Idx do
       if ¬(f[x] < g[x]) then
         lt := false
         break
@@ -240,32 +243,32 @@ section Operations
 
   instance (priority:=low) [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) : Decidable (f ≤ g) := Id.run do
     let mut le : Bool := true
-    for x in fullRange Idx do
+    for x in IndexType.univ Idx do
       if ¬(f[x] ≤ g[x]) then
         le := false
         break
     if le then isTrue sorry_proof else isFalse sorry_proof
 
   @[simp]
-  theorem add_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Add Elem] [EnumType Idx] (f g: Idx → Elem)
+  theorem add_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Add Elem] [IndexType Idx] (f g: Idx → Elem)
     : introElem (Cont:=Cont) f + introElem (Cont:=Cont) g
       = 
       introElem fun i => f i + g i  := by ext; simp[HAdd.hAdd, Add.add]
 
   @[simp]
-  theorem sub_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Sub Elem] [EnumType Idx] (f g: Idx → Elem)
+  theorem sub_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Sub Elem] [IndexType Idx] (f g: Idx → Elem)
     : introElem (Cont:=Cont) f - introElem (Cont:=Cont) g
       = 
       introElem fun i => f i - g i  := by ext; simp[HSub.hSub, Sub.sub]
 
   @[simp]
-  theorem neg_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Neg Elem] [EnumType Idx] (f: Idx → Elem)
+  theorem neg_introElem {Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [Neg Elem] [IndexType Idx] (f: Idx → Elem)
     : - introElem (Cont:=Cont) f 
       = 
       introElem fun i => - f i  := by ext; simp[Neg.neg]
 
   @[simp]
-  theorem smul_introElem {K Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [SMul K Elem] [EnumType Idx] (f : Idx → Elem) (a : K)
+  theorem smul_introElem {K Cont Idx Elem : Type _} [ArrayType Cont Idx Elem] [SMul K Elem] [IndexType Idx] (f : Idx → Elem) (a : K)
     : a • introElem (Cont:=Cont) f
       = 
       introElem fun i => a • f i := by ext; simp[HSMul.hSMul, SMul.smul]
@@ -273,7 +276,7 @@ section Operations
 end Operations
 
 @[simp]
-theorem sum_introElem [EnumType Idx] [ArrayType Cont Idx Elem] [AddCommMonoid Elem] {ι} [EnumType ι] (f : ι → Idx → Elem)
+theorem sum_introElem [IndexType Idx] [ArrayType Cont Idx Elem] [AddCommMonoid Elem] {ι} [IndexType ι] (f : ι → Idx → Elem)
   : ∑ j, introElem (Cont:=Cont) (fun i => f j i)
     =
     introElem fun i => ∑ j, f j i

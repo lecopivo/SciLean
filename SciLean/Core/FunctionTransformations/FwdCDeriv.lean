@@ -1,5 +1,7 @@
 import SciLean.Core.FunctionTransformations.CDeriv
 
+open LeanColls
+
 namespace SciLean
 
 noncomputable
@@ -18,7 +20,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -218,7 +220,7 @@ end SciLean.fwdCDeriv
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-open SciLean
+open SciLean LeanColls
 
 variable 
   {K : Type _} [IsROrC K]
@@ -226,7 +228,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 

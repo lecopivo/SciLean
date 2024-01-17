@@ -5,6 +5,8 @@ import SciLean.Core.FunctionTransformations.CDeriv
 
 set_option linter.unusedVariables false
 
+open LeanColls
+
 namespace SciLean
 
 variable 
@@ -12,7 +14,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
 def HasAdjDiffAt (f : X → Y) (x : X) : Prop :=
@@ -170,6 +172,7 @@ end SciLean.HasAdjDiffAt
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+open LeanColls
 open SciLean
 
 variable 
@@ -177,7 +180,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
 
 
@@ -367,7 +370,7 @@ by
 -------------------------------------------------------------------------------- 
 
 @[fprop]
-theorem SciLean.EnumType.sum.arg_f.HasAdjDiffAt_rule
+theorem SciLean.sum.arg_f.HasAdjDiffAt_rule
   (f : X → ι → Y) (x : X) (hf : ∀ i, HasAdjDiffAt K (f · i) x)
   : HasAdjDiffAt K (fun x => ∑ i, f x i) x :=
 by

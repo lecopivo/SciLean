@@ -2,11 +2,13 @@ import SciLean.Core.Objects.FinVec
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.StructType.Algebra
 
+open LeanColls
+
 namespace SciLean 
 namespace GenericArrayType
 
 variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
-variable [EnumType Idx] 
+variable [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
 
 variable {K : Type _} [IsROrC K]
 

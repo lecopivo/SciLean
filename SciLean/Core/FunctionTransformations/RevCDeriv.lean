@@ -7,7 +7,9 @@ import SciLean.Data.Curry
 
 set_option linter.unusedVariables false
 
-namespace SciLean
+open LeanColls
+
+namespace SciLean 
 
 variable
   (K : Type _) [IsROrC K]
@@ -17,8 +19,8 @@ variable
   {Y₂ : Type _} [SemiInnerProductSpace K Y₂]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [EnumType ι]
-  {κ : Type _} [EnumType κ]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {κ : Type _} [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
@@ -383,7 +385,7 @@ by
 
 
 variable (X)
-theorem pi_curryn_rule {IX : Type _} (Is : Type _) (n : Nat) [UncurryN n IX Is X] [CurryN n Is X IX] [SemiInnerProductSpace K IX] [EnumType Is] 
+theorem pi_curryn_rule {IX : Type _} (Is : Type _) (n : Nat) [UncurryN n IX Is X] [CurryN n Is X IX] [SemiInnerProductSpace K IX] [IndexType Is] 
   (f : W → IX) (hf : HasAdjDiff K f)
   : revCDeriv K (fun (w : W) (i : Is) => uncurryN n (f w) i) 
     =
@@ -621,7 +623,7 @@ by
 
 
 -- TODO these are not sufficient conditions for this to be true, we need that `h'` induces isomorphism `ι≃ι₁×κ` 
-theorem pi_rinv_rule {ι₁ : Type _} [EnumType ι₁]
+theorem pi_rinv_rule {ι₁ : Type _} [IndexType ι₁]
   (f : X → κ → Y) (h : ι → κ) (h' : ι₁ → κ → ι) (hh : ∀ i₁, Function.RightInverse (h' i₁) h)
   (hf : ∀ j, HasAdjDiff K (f · j)) 
   : (revCDeriv K fun x i => f x (h i))
@@ -796,7 +798,7 @@ end SciLean
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-open SciLean 
+open SciLean LeanColls
 
 variable 
   {K : Type _} [IsROrC K]
@@ -804,7 +806,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
@@ -1147,7 +1149,7 @@ by
 -------------------------------------------------------------------------------- 
 
 @[ftrans]
-theorem SciLean.EnumType.sum.arg_f.revCDeriv_rule {ι : Type _} [EnumType ι]
+theorem SciLean.sum.arg_f.revCDeriv_rule {ι : Type _} [IndexType ι]
   (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
   : revCDeriv K (fun x => ∑ i, f x i)
     =

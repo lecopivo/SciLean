@@ -6,6 +6,7 @@ import SciLean.Core.NotationOverField
 import SciLean.Data.EnumType
 
 namespace SciLean
+open LeanColls
 
 open IsROrC ComplexConjugate
 
@@ -72,11 +73,11 @@ instance (K X Y) [AddCommMonoid K] [Inner K X] [Inner K Y] : Inner K (X × Y) wh
 -- instance (K X) [AddCommMonoid K] [Inner K X] (ι) [Fintype ι] : Inner K (ι → X) where
 --   inner := λ f g => ∑ i, ⟪f i, g i⟫[K]
 
--- instance (K X) [AddCommMonoid K] [Inner K X] (ι) [EnumType ι] : Inner K (ι → X) where
---   inner := λ f g => EnumType.sum fun i => ⟪f i, g i⟫[K]
+-- instance (K X) [AddCommMonoid K] [Inner K X] (ι) [IndexType ι] : Inner K (ι → X) where
+--   inner := λ f g => IndexType.sum fun i => ⟪f i, g i⟫[K]
 
 instance (priority:=low) (K ι) (X : ι → Type _) 
-  [AddCommMonoid K] [∀ i, Inner K (X i)] [EnumType ι] 
+  [AddCommMonoid K] [∀ i, Inner K (X i)] [IndexType ι] 
   : Inner K ((i : ι) → X i) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫[K]
 
@@ -226,10 +227,10 @@ instance (X Y) [SemiHilbert K X] [SemiHilbert K Y] : SemiHilbert K (X × Y) wher
   test_functions_true := by intro (x,y); simp[TestFunction]; constructor <;> apply SemiHilbert.test_functions_true
 
 -- instance (X) [SemiInnerProductSpace K X] (ι) [Fintype ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
--- instance (X) [SemiInnerProductSpace K X] (ι) [EnumType ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
-instance (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [EnumType ι] : SemiInnerProductSpace K ((i : ι) → X i) 
+-- instance (X) [SemiInnerProductSpace K X] (ι) [IndexType ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
+instance (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [IndexType ι] : SemiInnerProductSpace K ((i : ι) → X i) 
   := SemiInnerProductSpace.mkSorryProofs
 
-instance (ι) (X : ι → Type _) [∀ i, SemiHilbert K (X i)] [EnumType ι] : SemiHilbert K ((i : ι) → X i) where
+instance (ι) (X : ι → Type _) [∀ i, SemiHilbert K (X i)] [IndexType ι] [LawfulIndexType ι] : SemiHilbert K ((i : ι) → X i) where
   test_functions_true := by simp[TestFunction]; intro f i; apply SemiHilbert.test_functions_true
 

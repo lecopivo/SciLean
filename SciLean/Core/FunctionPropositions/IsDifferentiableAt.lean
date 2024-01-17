@@ -7,6 +7,8 @@ import SciLean.Core.Objects.Scalar
 
 set_option linter.unusedVariables false
 
+open LeanColls
+
 namespace SciLean
 
 variable 
@@ -14,7 +16,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι] 
+  {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
 @[irreducible] -- we do not want to expand this definition as there are some performance issues with isDefEq, see #18
@@ -174,7 +176,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι] 
+  {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)] 
 
 

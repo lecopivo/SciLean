@@ -7,12 +7,14 @@ open SciLean
 
 set_option linter.unusedVariables false
 
+open LeanColls
+
 section GenericArrayType
 
 variable 
   {K : Type} [IsROrC K]
   {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-  [ArrayType Cont Idx Elem] [Index Idx]
+  [ArrayType Cont Idx Elem] [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
   
 
 -- GetElem.getElem -------------------------------------------------------------
@@ -231,7 +233,7 @@ by
 
 @[ftrans]
 theorem GetElem.getElem.arg_xs.revDerivProj_rule
-  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  {I ElemI} [StructType Elem I ElemI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (ElemI i)]
   [SemiInnerProductSpaceStruct K Elem I ElemI]
   (f : X → Cont) (idx : Idx) (dom)
   (hf : HasAdjDiff K f)
@@ -246,7 +248,7 @@ by
 
 @[ftrans]
 theorem GetElem.getElem.arg_xs.revDerivProjUpdate_rule
-  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  {I ElemI} [StructType Elem I ElemI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (ElemI i)]
   [SemiInnerProductSpaceStruct K Elem I ElemI]
   (f : X → Cont) (idx : Idx) (dom)
   (hf : HasAdjDiff K f)
@@ -512,7 +514,7 @@ by
 
 @[ftrans]
 theorem SetElem.setElem.arg_contelem.revDerivProj_rule'
-  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  {I ElemI} [StructType Elem I ElemI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (ElemI i)]
   [SemiInnerProductSpaceStruct K Elem I ElemI]
   (cont : X → Cont) (idx : Idx) (elem : X → Elem) 
   (hcont : HasAdjDiff K cont) (helem : HasAdjDiff K elem)
@@ -541,7 +543,7 @@ by
 
 @[ftrans]
 theorem SetElem.setElem.arg_contelem.revDerivProjUpdate_rule'
-  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  {I ElemI} [StructType Elem I ElemI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (ElemI i)]
   [SemiInnerProductSpaceStruct K Elem I ElemI]
   (cont : X → Cont) (idx : Idx) (elem : X → Elem) 
   (hcont : HasAdjDiff K cont) (helem : HasAdjDiff K elem)
@@ -752,7 +754,7 @@ by
 
 @[ftrans]
 theorem IntroElem.introElem.arg_f.revDerivProj_rule
-  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  {I ElemI} [StructType Elem I ElemI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (ElemI i)]
   [SemiInnerProductSpaceStruct K Elem I ElemI]
   (f : X → Idx → Elem)  
   (hf : HasAdjDiff K f) 
@@ -769,7 +771,7 @@ by
   
 @[ftrans]
 theorem IntroElem.introElem.arg_f.revDerivProjUpdate_rule
-  {I ElemI} [StructType Elem I ElemI] [EnumType I] [∀ i, SemiInnerProductSpace K (ElemI i)]
+  {I ElemI} [StructType Elem I ElemI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (ElemI i)]
   [SemiInnerProductSpaceStruct K Elem I ElemI]
   (f : X → Idx → Elem)  
   (hf : HasAdjDiff K f) 
@@ -938,10 +940,13 @@ theorem ArrayType.map.arg_farr.revDeriv_rule
       let a := ada.1
       (map (f x) a, 
        fun da => 
-         let (dx,da) := Function.repeatIdx (init:=((0 : X),da)) 
-           (fun (i : Idx) dxa => 
-             let dxai := (fdf (x,a[i])).2 dxa.2[i] (dxa.1,0)
-             (dxai.1, setElem dxa.2 i dxai.2)) 
+         let (dx,da) := 
+           Fold.fold 
+             (IndexType.univ Idx)
+             (fun dxa (i : Idx) => 
+               let dxai := (fdf (x,a[i])).2 dxa.2[i] (dxa.1,0)
+               (dxai.1, setElem dxa.2 i dxai.2))
+             ((0 : X),da)
          ada.2 da dx) := sorry_proof
 
 
@@ -1086,3 +1091,5 @@ end OnSemiInnerProductSpace
 
 -- ArrayType.append ------------------------------------------------------------
 --------------------------------------------------------------------------------
+Nat × ArrayN Nat n
+Unit ⊕ Unit   or Unit ⊕ Fin n

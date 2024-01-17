@@ -9,6 +9,8 @@ import SciLean.Data.Curry
 
 set_option linter.unusedVariables false
 
+open LeanColls
+
 namespace SciLean
 
 variable 
@@ -17,14 +19,14 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [EnumType ι]
-  {κ : Type _} [EnumType κ]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {κ : Type _} [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
   {E : Type _} {EI : I → Type _} 
-  [StructType E I EI] [EnumType I]
+  [StructType E I EI] [IndexType I] [LawfulIndexType I] [DecidableEq I]
   [SemiInnerProductSpace K E] [∀ i, SemiInnerProductSpace K (EI i)]
   [SemiInnerProductSpaceStruct K E I EI]
   {F J : Type _} {FJ : J → Type _} 
-  [StructType F J FJ] [EnumType J]
+  [StructType F J FJ] [IndexType J] [LawfulIndexType J] [DecidableEq J]
   [SemiInnerProductSpace K F] [∀ j, SemiInnerProductSpace K (FJ j)]
   [SemiInnerProductSpaceStruct K F J FJ]
 
@@ -200,7 +202,8 @@ theorem pi_rule
       let xdf := fun i => revDerivUpdate K (f · i) x
       (fun i => (xdf i).1, 
        fun dy => 
-         Function.repeatIdx (fun (i : I) dx => (xdf i).2 (dy i) dx) 0) :=
+         Fold.fold (IndexType.univ I) (fun dx i => (xdf i).2 (dy i) dx) 0) := 
+         -- Function.repeatIdx (fun (i : I) dx => (xdf i).2 (dy i) dx) 0) :=
 by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
@@ -289,7 +292,8 @@ theorem pi_rule
       let xdf := fun i => revDerivUpdate K (f · i) x
       (fun i => (xdf i).1,
        fun dy dx => 
-         Function.repeatIdx (fun (i : I) dx => (xdf i).2 (dy i) dx) dx) :=
+         Fold.fold (IndexType.univ I) (fun dx i => (xdf i).2 (dy i) dx) dx) := 
+         -- Function.repeatIdx (fun (i : I) dx => (xdf i).2 (dy i) dx) dx) :=
 by
   unfold revDerivUpdate
   simp [revDeriv.pi_rule _ _ hf, revDerivUpdate]
@@ -386,7 +390,8 @@ theorem pi_rule
       let ydf := fun i => revDerivUpdate K (f · i) x
       (fun i => (ydf i).1, 
        fun _ df => 
-         Function.repeatIdx (fun i dx => (ydf i).2 (df i) dx) (0 : X)) := 
+         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 (df i) dx) (0 : X)) := 
+         -- Function.repeatIdx (fun i dx => (ydf i).2 (df i) dx) (0 : X)) := 
 by
   sorry_proof
 
@@ -489,7 +494,9 @@ theorem pi_rule
     fun x =>
       let ydf := fun i => revDerivUpdate K (f · i) x
       (fun i => (ydf i).1, 
-       fun _ df dx => Function.repeatIdx (fun i dx => (ydf i).2 (df i) dx) dx) := 
+       fun _ df dx => 
+         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 (df i) dx) dx) := 
+         -- Function.repeatIdx (fun i dx => (ydf i).2 (df i) dx) dx) := 
 by
   conv => lhs; unfold revDerivProjUpdate
   simp [revDerivProj.pi_rule _ _ hf,add_assoc,add_comm]
@@ -901,14 +908,14 @@ variable
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
-  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [EnumType Xi]
-  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [EnumType Yi]
-  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [EnumType Zi]
+  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IndexType Xi] [LawfulIndexType Xi] [DecidableEq Xi]
+  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IndexType Yi] [LawfulIndexType Yi] [DecidableEq Yi]
+  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IndexType Zi] [LawfulIndexType Zi] [DecidableEq Zi]
   [SemiInnerProductSpace K X'] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpaceStruct K X' Xi XI]
   [SemiInnerProductSpace K Y'] [∀ i, SemiInnerProductSpace K (YI i)] [SemiInnerProductSpaceStruct K Y' Yi YI]
   [SemiInnerProductSpace K Z'] [∀ i, SemiInnerProductSpace K (ZI i)] [SemiInnerProductSpaceStruct K Z' Zi ZI]
   {W : Type} [SemiInnerProductSpace K W]
-  {ι : Type} [EnumType ι]
+  {ι : Type} [IndexType ι] [LawfulIndexType ι]
 
 
 
@@ -1437,7 +1444,7 @@ by
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revDerivProj_rule
-  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [EnumType Yi]
+  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IndexType Yi] [LawfulIndexType Yi] [DecidableEq Yi]
   [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
   (f : X → K) (g : X → Y)
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
@@ -1457,7 +1464,7 @@ by
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revDerivProjUpdate_rule
-  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [EnumType Yi]
+  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IndexType Yi] [LawfulIndexType Yi] [DecidableEq Yi]
   [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
   (f : X → K) (g : X → Y)
   (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
@@ -1616,14 +1623,16 @@ by
 -------------------------------------------------------------------------------- 
 
 @[ftrans]
-theorem SciLean.EnumType.sum.arg_f.revDeriv_rule {ι : Type} [EnumType ι]
+theorem SciLean.EnumType.sum.arg_f.revDeriv_rule {ι : Type} [IndexType ι] [LawfulIndexType ι]
   (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
   : revDeriv K (fun x => ∑ i, f x i)
     =
     fun x => 
       let ydf := fun i => revDerivUpdate K (f · i) x
       (∑ i, (ydf i).1, 
-       fun dy => Function.repeatIdx (fun i dx => (ydf i).2 dy dx) 0) :=
+       fun dy => 
+         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 dy dx) 0) := 
+         -- Function.repeatIdx (fun i dx => (ydf i).2 dy dx) 0) :=
 by
   have _ := fun i => (hf i).1
   have _ := fun i => (hf i).2
@@ -1632,14 +1641,16 @@ by
 
 
 @[ftrans]
-theorem SciLean.EnumType.sum.arg_f.revDerivUpdate_rule {ι : Type} [EnumType ι]
+theorem SciLean.sum.arg_f.revDerivUpdate_rule {ι : Type} [IndexType ι] [LawfulIndexType ι]
   (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
   : revDerivUpdate K (fun x => ∑ i, f x i)
     =
     fun x => 
       let ydf := fun i => revDerivUpdate K (f · i) x
       (∑ i, (ydf i).1, 
-       fun dy dx => Function.repeatIdx (fun i dx => (ydf i).2 dy dx) dx) :=
+       fun dy dx =>
+         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 dy dx) dx) := 
+         -- Function.repeatIdx (fun i dx => (ydf i).2 dy dx) dx) :=
 by
   simp[revDerivUpdate]
   ftrans
@@ -1647,27 +1658,31 @@ by
 
 
 @[ftrans]
-theorem SciLean.EnumType.sum.arg_f.revDerivProj_rule {ι : Type} [EnumType ι]
+theorem SciLean.sum.arg_f.revDerivProj_rule {ι : Type} [IndexType ι] [LawfulIndexType ι]
   (f : X → ι → Y') (hf : ∀ i, HasAdjDiff K (fun x => f x i))
   : revDerivProj K Yi (fun x => ∑ i, f x i)
     =
     fun x => 
       let ydf := fun i => revDerivProjUpdate K Yi (f · i) x
       (∑ i, (ydf i).1, 
-       fun j dy => Function.repeatIdx (fun (i : ι) dx => (ydf i).2 j dy dx) 0) :=
+       fun j dy => 
+         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 j dy dx) 0) := 
+         -- Function.repeatIdx (fun (i : ι) dx => (ydf i).2 j dy dx) 0) :=
 by
   funext; simp[revDerivProj]; ftrans; sorry_proof
 
 
 @[ftrans]
-theorem SciLean.EnumType.sum.arg_f.revDerivProjUpdate_rule {ι : Type} [EnumType ι]
+theorem SciLean.sum.arg_f.revDerivProjUpdate_rule {ι : Type} [IndexType ι] [LawfulIndexType ι]
   (f : X → ι → Y') (hf : ∀ i, HasAdjDiff K (fun x => f x i))
   : revDerivProjUpdate K Yi (fun x => ∑ i, f x i)
     =
     fun x => 
       let ydf := fun i => revDerivProjUpdate K Yi (f · i) x
       (∑ i, (ydf i).1, 
-       fun j dy dx => Function.repeatIdx (fun (i : ι) dx => (ydf i).2 j dy dx) dx) :=
+       fun j dy dx => 
+         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 j dy dx) dx) := 
+         -- Function.repeatIdx (fun (i : ι) dx => (ydf i).2 j dy dx) dx) :=
 by
   funext; simp[revDerivProjUpdate]; ftrans; sorry_proof
 

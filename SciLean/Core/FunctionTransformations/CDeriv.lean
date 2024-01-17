@@ -11,6 +11,8 @@ import SciLean.Tactic.FTrans.Basic
 
 set_option linter.unusedVariables false
 
+open LeanColls
+
 namespace SciLean
 
 variable 
@@ -19,7 +21,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 noncomputable
@@ -258,6 +260,7 @@ end SciLean
 --------------------------------------------------------------------------------
 
 open SciLean
+open LeanColls
 
 variable 
   {K : Type _} [IsROrC K]
@@ -265,7 +268,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 

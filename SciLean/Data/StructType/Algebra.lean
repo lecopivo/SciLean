@@ -9,11 +9,15 @@ import SciLean.Tactic.AnalyzeConstLambda
 
 set_option linter.unusedVariables false
 
+open LeanColls
+
 namespace SciLean
 
 variable
   (K : Type _) [IsROrC K]
-  {ι κ : Type _} [EnumType ι] [EnumType κ]
+  {ι κ : Type _} 
+  [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] 
+  [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
   {E I : Type _} {EI : I → Type _}
   [StructType E I EI]
   {F J : Type _} {FJ : J → Type _}
@@ -294,7 +298,7 @@ end VecStruct
 --------------------------------------------------------------------------------
 
 open StructType in
-class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [IsROrC K] [EnumType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)] extends VecStruct K X I XI : Prop where
+class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [IsROrC K] [IndexType I] [LawfulIndexType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)] extends VecStruct K X I XI : Prop where
   inner_structProj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪structProj x i, structProj x' i⟫[K]
   testFun_structProj : ∀ (x : X), TestFunction x ↔ (∀ i : I, TestFunction (structProj x i))
 
@@ -311,7 +315,7 @@ instance (priority:=low) {X} [SemiInnerProductSpace K X] : SemiInnerProductSpace
 instance 
   [SemiInnerProductSpace K E] [SemiInnerProductSpace K F] 
   [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)] 
-  [EnumType I] [EnumType J]
+  [IndexType I] [LawfulIndexType I] [IndexType J] [LawfulIndexType J]
   [SemiInnerProductSpaceStruct K E I EI] [SemiInnerProductSpaceStruct K F J FJ]
   : SemiInnerProductSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
   -- inner_structProj := sorry_proof
@@ -319,11 +323,11 @@ instance
 
 
 @[simp, ftrans_simp]
-theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [EnumType I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
+theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
   : ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
 
 @[simp, ftrans_simp]
-theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [EnumType I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
+theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
   : ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
 
 
