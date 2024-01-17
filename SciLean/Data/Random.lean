@@ -54,7 +54,7 @@ def mkInt64Gen (s : USize := 0) : Int64Gen :=
   let s2 := q % 2147483398
   ⟨s1 + 1, s2 + 1⟩
 
-instance : Random Float where
+instance : Random Id Float where
   random := do
     let N := 1000000000000 -- 1e12
     let n ← randBound Nat 0 N (by decide)
@@ -62,14 +62,14 @@ instance : Random Float where
     let x := 2*x - 1
     return x
 
-instance [Random α] [Random β] : Random (α × β) where
+instance [Random Id α] [Random Id β] : Random Id (α × β) where
   random := do
     let a ← rand α
     let b ← rand β
     return (a,b)
 
 open Random 
-instance {ι} [Index ι] [PlainDataType R] [Random R] [Zero R] : Random (R^ι) where
+instance {ι} [Index ι] [PlainDataType R] [Random Id R] [Zero R] : Random Id (R^ι) where
   random := do
     let mut x : R^ι := 0
     for i in fullRange ι do
