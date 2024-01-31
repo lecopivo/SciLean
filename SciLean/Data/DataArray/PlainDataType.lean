@@ -2,6 +2,7 @@ import SciLean.Util.SorryProof
 import SciLean.Data.Index
 
 namespace SciLean
+open LeanColls
 
 def _root_.UInt8.toUSize (x : UInt8) : USize := x.toUInt32.toUSize
 def _root_.USize.toUInt8 (x : USize) : UInt8 := x.toUInt32.toUInt8
@@ -27,7 +28,7 @@ structure ByteType (α : Type) where
   -- we can recover `a` from bytes
   fromByteArray_toByteArray : ∀ a b i h h', fromByteArray (toByteArray b i h a) i h' = a
   -- `toByteArray` does not affect other bytes
-  fromByteArray_toByteArray_other : ∀ a b i j h, (j < i) ∨ (i+size) ≤ j → (toByteArray b i h a).uget j sorry_proof = b.uget j sorry_proof
+  fromByteArray_toByteArray_other : ∀ a b i j h, (j < i) ∨ (i + bytes) ≤ j → (toByteArray b i h a).uget j sorry_proof = b.uget j sorry_proof
 
 /-- This rougly corresponds to Plain Old Data(POD)/Passive Data known from OOP
 
@@ -46,16 +47,16 @@ class PlainDataType (α : Type) where
   -- ext           -- extensionality of ByteData i.e. if ∀ i h h', get d i h = get d' i h' → d = d'
 
 /- How many bytes are needed to hold n elements of type α -/
-def PlainDataType.bytes {α : Type} (pd : PlainDataType α) (n : USize) : USize :=
+def PlainDataType.bytes {α : Type} (pd : PlainDataType α) (n : Nat) : Nat :=
   match pd.btype with
-  | .inl bitType => (n + ((8/bitType.bits) - 1).toUSize) / (8/bitType.bits).toUSize
-  | .inr byteType => byteType.bytes * n
+  | .inl bitType => (n + ((8/bitType.bits) - 1).toNat) / (8/bitType.bits).toNat
+  | .inr byteType => byteType.bytes.toNat * n
 
 /-- How many `α` can fit into a buffer with `byteNum` bytes -/
-def PlainDataType.capacity {α : Type} (pd : PlainDataType α) (byteNum : USize) : USize :=
+def PlainDataType.capacity {α : Type} (pd : PlainDataType α) (byteNum : Nat) : Nat :=
   match pd.btype with
-  | .inl bitType => byteNum * (8/bitType.bits.toUSize)
-  | .inr byteType => byteNum / byteType.bytes
+  | .inl bitType => byteNum * (8/bitType.bits.toNat)
+  | .inr byteType => byteNum / byteType.bytes.toNat
 
 
 --------------- Prod -------------------------------------------------
