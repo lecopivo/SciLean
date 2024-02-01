@@ -12,11 +12,11 @@ class RevDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
 
   revDerivM_pure {X Y : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] (f : X → Y) (hf : HasAdjDiff K f)
     : revDerivM (fun x => pure (f:=m) (f x)) = fun x => let ydf := revCDeriv K f x; pure (ydf.1, fun dy => pure (ydf.2 dy))
-  revDerivM_bind 
-    {X Y Z : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] [SemiInnerProductSpace K Z] 
+  revDerivM_bind
+    {X Y Z : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] [SemiInnerProductSpace K Z]
     (f : Y → m Z) (g : X → m Y) (hf : HasAdjDiffM f) (hg : HasAdjDiffM g)
-     : revDerivM (fun x => g x >>= f) 
-       = 
+     : revDerivM (fun x => g x >>= f)
+       =
        fun x => do
          let ydg ← revDerivM g x
          let zdf ← revDerivM f ydg.1
@@ -30,11 +30,11 @@ class RevDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
         pure ((x,ydf.1), fun dxy : X×Y => do let dx ← ydf.2 dxy.2; pure (dxy.1 + dx)))
 
 
-  HasAdjDiffM_pure {X : Type} {Y : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] 
+  HasAdjDiffM_pure {X : Type} {Y : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
     (f : X → Y) (hf : HasAdjDiff K f)
     : HasAdjDiffM (fun x : X => pure (f x))
   HasAdjDiffM_bind {X Y Z: Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] [SemiInnerProductSpace K Z]
-    (f : Y → m Z) (g : X → m Y) 
+    (f : Y → m Z) (g : X → m Y)
     (hf : HasAdjDiffM f) (hg : HasAdjDiffM g)
     : HasAdjDiffM (fun x => g x >>= f)
   HasAdjDiffM_pair {X : Type} {Y : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] -- is this really necessary?
@@ -45,7 +45,7 @@ class RevDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
 export RevDerivMonad (revDerivM HasAdjDiffM)
 
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [RevDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
@@ -61,21 +61,21 @@ open RevDerivMonad
 def revDerivValM (x : m X) : m (X × (X → m' Unit)) := do
   revDerivM K (fun _ : Unit => x) ()
 
-def HasAdjDiffValM (x : m X) : Prop := 
+def HasAdjDiffValM (x : m X) : Prop :=
   HasAdjDiffM K (fun _ : Unit => x)
 
 
 --------------------------------------------------------------------------------
 -- HasAdjDiffM -----------------------------------------------------------
 --------------------------------------------------------------------------------
-namespace HasAdjDiffM 
+namespace HasAdjDiffM
 
 -- id_rule does not make sense
 
 variable (X)
 theorem const_rule (y : m Y) (hy : HasAdjDiffValM K y)
-  : HasAdjDiffM K (fun _ : X => y) := 
-by 
+  : HasAdjDiffM K (fun _ : X => y) :=
+by
   have h : (fun _ : X => y)
            =
            fun _ : X => pure () >>= fun _ => y := by simp
@@ -98,7 +98,7 @@ by
   apply HasAdjDiffM_pure g hg
 
 
-theorem let_rule 
+theorem let_rule
   (f : X → Y → m Z) (g : X → Y)
   (hf : HasAdjDiffM K (fun xy : X×Y => f xy.1 xy.2)) (hg : HasAdjDiff K g)
   : HasAdjDiffM K (fun x => let y := g x; f x y) :=
@@ -110,33 +110,33 @@ by
            fun x => pure (g' x) >>= f') by simp]
   apply HasAdjDiffM_bind _ _ hf
   apply HasAdjDiffM_pure g'
-  try fprop -- this should finish the proof 
+  try fprop -- this should finish the proof
   apply Prod.mk.arg_fstsnd.HasAdjDiff_rule
   fprop; apply hg
-  
+
 
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``HasAdjDiffM
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``HasAdjDiffM then
 
       if let .some f := e.getArg? 11 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``HasAdjDiffM then
       e.setArg 11  f
-    else          
+    else
       e
 
-  identityRule _ := return none 
+  identityRule _ := return none
 
-  constantRule e := 
+  constantRule e :=
     let thm : SimpTheorem :=
     {
       proof  := mkConst ``const_rule
@@ -180,7 +180,7 @@ def fpropExt : FPropExt where
 
   lambdaLambdaRule _ _ := return none
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -190,41 +190,41 @@ def fpropExt : FPropExt where
   modifyEnv (λ env => FProp.fpropExt.addEntry env (``HasAdjDiffM, fpropExt))
 
 
-end HasAdjDiffM 
+end HasAdjDiffM
 
 
 
 --------------------------------------------------------------------------------
 -- HasAdjDiffValM -----------------------------------------------------------
 --------------------------------------------------------------------------------
-namespace HasAdjDiffValM 
+namespace HasAdjDiffValM
 
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``HasAdjDiffValM
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``HasAdjDiffValM then
 
       if let .some f := e.getArg? 9 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``HasAdjDiffValM then
       e.setArg 9  f
-    else          
+    else
       e
-  identityRule _ := return none 
+  identityRule _ := return none
   constantRule _ := return none
   projRule _ := return none
   compRule _ _ _ := return none
   lambdaLetRule _ _ _ := return none
   lambdaLambdaRule _ _ := return none
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -234,7 +234,7 @@ def fpropExt : FPropExt where
   modifyEnv (λ env => FProp.fpropExt.addEntry env (``HasAdjDiffValM, fpropExt))
 
 
-end HasAdjDiffValM 
+end HasAdjDiffValM
 
 
 --------------------------------------------------------------------------------
@@ -247,14 +247,14 @@ namespace revDerivM
 
 variable (X)
 theorem const_rule (y : m Y) (hy : HasAdjDiffValM K y)
-  : revDerivM K (fun _ : X => y) 
-    = 
-    (fun _ => do 
+  : revDerivM K (fun _ : X => y)
+    =
+    (fun _ => do
       let ydy ← revDerivValM K y
-      pure (ydy.1, 
-            fun dy' => do 
+      pure (ydy.1,
+            fun dy' => do
               let _ ← ydy.2 dy'
-              pure 0)) := 
+              pure 0)) :=
 by
   have h : (fun _ : X => y)
            =
@@ -272,12 +272,12 @@ variable {X}
 theorem comp_rule
   (f : Y → m Z) (g : X → Y)
   (hf : HasAdjDiffM K f) (hg : HasAdjDiff K g)
-  : revDerivM K (fun x => f (g x)) 
+  : revDerivM K (fun x => f (g x))
     =
     (fun x => do
       let ydg := revCDeriv K g x
       let zdf ← revDerivM K f ydg.1
-      pure (zdf.1, 
+      pure (zdf.1,
             fun dz => do
               let dy ← zdf.2 dz
               pure (ydg.2 dy))) :=
@@ -287,12 +287,12 @@ by
     rw[show ((fun x => f (g x))
              =
              fun x => pure (g x) >>= f) by simp]
-    rw[revDerivM_bind f (fun x => pure (g x)) 
+    rw[revDerivM_bind f (fun x => pure (g x))
          hf (HasAdjDiffM_pure _ hg)]
     simp[revDerivM_pure g hg]
 
 
-theorem let_rule 
+theorem let_rule
   (f : X → Y → m Z) (g : X → Y)
   (hf : HasAdjDiffM K (fun xy : X×Y => f xy.1 xy.2)) (hg : HasAdjDiff K g)
   : revDerivM K (fun x => f x (g x))
@@ -340,24 +340,24 @@ open Lean Meta FTrans in
 def ftransExt : FTransExt where
   ftransName := ``revDerivM
 
-  getFTransFun? e := 
+  getFTransFun? e :=
     if e.isAppOf ``revDerivM then
 
       if let .some f := e.getArg? 11 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFTransFun e f := 
+  replaceFTransFun e f :=
     if e.isAppOf ``revDerivM then
       let fn := e.getAppFn'
       let args := e.getAppArgs'
       let args := args.set! 11 f
       let e' := mkAppN fn args
       e'
-    else          
+    else
       e
 
   idRule  e X := return none
@@ -445,24 +445,24 @@ open Lean Meta FTrans in
 def ftransExt : FTransExt where
   ftransName := ``revDerivValM
 
-  getFTransFun? e := 
+  getFTransFun? e :=
     if e.isAppOf ``revDerivValM then
 
       if let .some f := e.getArg? 9 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFTransFun e f := 
+  replaceFTransFun e f :=
     if e.isAppOf ``revDerivValM then
       let fn := e.getAppFn'
       let args := e.getAppArgs'
       let args := args.set! 9 f
       let e' := mkAppN fn args
       e'
-    else          
+    else
       e
 
   idRule  e X := return none
@@ -489,11 +489,11 @@ end SciLean
 
 --------------------------------------------------------------------------------
 
-section CoreFunctionProperties 
+section CoreFunctionProperties
 
 open SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {m m'} [Monad m] [Monad m'] [RevDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
@@ -510,29 +510,29 @@ variable
 @[fprop]
 theorem Pure.pure.arg_a0.HasAdjDiffM_rule
   (a0 : X → Y)
-  (ha0 : HasAdjDiff K a0) 
-  : HasAdjDiffM K (fun x => Pure.pure (f:=m) (a0 x)) := 
-by 
+  (ha0 : HasAdjDiff K a0)
+  : HasAdjDiffM K (fun x => Pure.pure (f:=m) (a0 x)) :=
+by
   apply RevDerivMonad.HasAdjDiffM_pure a0 ha0
 
 
 @[ftrans]
 theorem Pure.pure.arg_a0.revDerivM_rule
   (a0 : X → Y)
-  (ha0 : HasAdjDiff K a0) 
+  (ha0 : HasAdjDiff K a0)
   : revDerivM K (fun x => pure (f:=m) (a0 x))
     =
     (fun x => do
       let ydf := revCDeriv K a0 x
-      pure (ydf.1, fun dy => pure (ydf.2 dy))):= 
-by 
+      pure (ydf.1, fun dy => pure (ydf.2 dy))):=
+by
   apply RevDerivMonad.revDerivM_pure a0 ha0
 
 
 set_option linter.fpropDeclName false in
 @[fprop]
 theorem Pure.pure.HasAdjDiffValM_rule (x : X)
-  : HasAdjDiffValM K (pure (f:=m) x) :=  
+  : HasAdjDiffValM K (pure (f:=m) x) :=
 by
   unfold HasAdjDiffValM
   apply RevDerivMonad.HasAdjDiffM_pure
@@ -543,8 +543,8 @@ by
 theorem Pure.pure.arg.revDerivValM_rule (x : X)
   : revDerivValM K (pure (f:=m) x)
     =
-    pure (x,fun dy => pure 0) := 
-by 
+    pure (x,fun dy => pure 0) :=
+by
   unfold revDerivValM; rw[RevDerivMonad.revDerivM_pure]; ftrans; fprop
 
 
@@ -552,22 +552,22 @@ by
 -- Bind.bind -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop] 
+@[fprop]
 theorem Bind.bind.arg_a0a1.HasAdjDiffM_rule
   (a0 : X → m Y) (a1 : X → Y → m Z)
   (ha0 : HasAdjDiffM K a0) (ha1 : HasAdjDiffM K (fun (xy : X×Y) => a1 xy.1 xy.2))
-  : HasAdjDiffM K (fun x => Bind.bind (a0 x) (a1 x)) := 
-by 
+  : HasAdjDiffM K (fun x => Bind.bind (a0 x) (a1 x)) :=
+by
   let g := fun x => do
     let y ← a0 x
     pure (x,y)
   let f := fun xy : X×Y => a1 xy.1 xy.2
 
-  rw[show (fun x => Bind.bind (a0 x) (a1 x)) 
-          = 
+  rw[show (fun x => Bind.bind (a0 x) (a1 x))
+          =
           fun x => g x >>= f by simp]
 
-  have hg : HasAdjDiffM K (fun x => do let y ← a0 x; pure (x,y)) := 
+  have hg : HasAdjDiffM K (fun x => do let y ← a0 x; pure (x,y)) :=
     by apply RevDerivMonad.HasAdjDiffM_pair a0 ha0
   have hf : HasAdjDiffM K f := by fprop
 
@@ -575,28 +575,28 @@ by
 
 
 
-@[ftrans] 
+@[ftrans]
 theorem Bind.bind.arg_a0a1.revDerivM_rule
   (a0 : X → m Y) (a1 : X → Y → m Z)
   (ha0 : HasAdjDiffM K a0) (ha1 : HasAdjDiffM K (fun (xy : X×Y) => a1 xy.1 xy.2))
   : (revDerivM K (fun x => Bind.bind (a0 x) (a1 x)))
-    = 
+    =
     (fun x => do
-      let ydg ← revDerivM K a0 x 
+      let ydg ← revDerivM K a0 x
       let zdf ← revDerivM K (fun (xy : X×Y) => a1 xy.1 xy.2) (x,ydg.1)
-      pure (zdf.1, 
+      pure (zdf.1,
             fun dz => do
               let dxy ← zdf.2 dz
               let dx ← ydg.2 dxy.2
-              pure (dxy.1 + dx))) := 
+              pure (dxy.1 + dx))) :=
 by
   let g := fun x => do
     let y ← a0 x
     pure (x,y)
   let f := fun xy : X×Y => a1 xy.1 xy.2
 
-  rw[show (fun x => Bind.bind (a0 x) (a1 x)) 
-          = 
+  rw[show (fun x => Bind.bind (a0 x) (a1 x))
+          =
           fun x => g x >>= f by simp]
 
   have hg : HasAdjDiffM K (fun x => do let y ← a0 x; pure (x,y)) :=
@@ -607,9 +607,9 @@ by
   simp [RevDerivMonad.revDerivM_pair a0 ha0]
 
 
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 -- d/ite -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem ite.arg_te.HasAdjDiffM_rule
@@ -628,7 +628,7 @@ theorem ite.arg_te.revDerivM_rule
   : revDerivM K (fun x => ite c (t x) (e x))
     =
     fun y =>
-      ite c (revDerivM K t y) (revDerivM K e y) := 
+      ite c (revDerivM K t y) (revDerivM K e y) :=
 by
   induction dec
   case isTrue h  => ext y; simp[h]
@@ -649,12 +649,12 @@ by
 
 @[ftrans]
 theorem dite.arg_te.revDerivM_rule
-  (c : Prop) [dec : Decidable c] 
+  (c : Prop) [dec : Decidable c]
   (t : c → X → m Y) (e : ¬c → X → m Y)
   : revDerivM K (fun x => dite c (fun h => t h x) (fun h => e h x))
     =
     fun y =>
-      dite c (fun h => revDerivM K (t h) y) (fun h => revDerivM K (e h) y) := 
+      dite c (fun h => revDerivM K (t h) y) (fun h => revDerivM K (e h) y) :=
 by
   induction dec
   case isTrue h  => ext y; simp[h]

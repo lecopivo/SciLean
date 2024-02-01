@@ -30,7 +30,7 @@ def ContinuousLinearMap.mk'
 
 @[simp, ftrans_simp]
 theorem ContinuousLinearMap.mk'_eval
-  (x : X) (f : X → Y) (hf : IsContinuousLinearMap R f) 
+  (x : X) (f : X → Y) (hf : IsContinuousLinearMap R f)
   : mk' R f hf x = f x := by rfl
 
 @[simp]
@@ -62,16 +62,16 @@ macro "fun " "(" x:ident " : " X:term ")" " =>L[" R:term "] " b:term : term =>
 
 namespace IsContinuousLinearMap
 
-variable 
+variable
   {R : Type _} [Semiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y]
   {Z : Type _} [TopologicalSpace Z] [AddCommMonoid Z] [Module R Z]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, TopologicalSpace (E i)] [∀ i, AddCommMonoid (E i)] [∀ i, Module R (E i)]
-  
 
-theorem by_morphism {f : X → Y} (g : X →L[R] Y) (h : ∀ x, f x = g x) 
+
+theorem by_morphism {f : X → Y} (g : X →L[R] Y) (h : ∀ x, f x = g x)
   : IsContinuousLinearMap R f :=
 by
   have h' : f = g := by funext x; apply h
@@ -83,45 +83,45 @@ by
   apply g.2
 
 
-  
+
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
 open ContinuousLinearMap
 
-theorem id_rule 
-  : IsContinuousLinearMap R fun x : X => x 
-:= 
+theorem id_rule
+  : IsContinuousLinearMap R fun x : X => x
+:=
   by_morphism (ContinuousLinearMap.id R X) (by simp)
 
 
-theorem const_rule 
-  : IsContinuousLinearMap R fun _ : X => (0 : Y) 
-:= 
+theorem const_rule
+  : IsContinuousLinearMap R fun _ : X => (0 : Y)
+:=
   by_morphism 0 (by simp)
 
 
-theorem comp_rule 
+theorem comp_rule
   (g : X → Y) (hg : IsContinuousLinearMap R g)
   (f : Y → Z) (hf : IsContinuousLinearMap R f)
-  : IsContinuousLinearMap R fun x => f (g x) 
-:= 
-  by_morphism ((mk' R f hf).comp (mk' R g hg)) 
+  : IsContinuousLinearMap R fun x => f (g x)
+:=
+  by_morphism ((mk' R f hf).comp (mk' R g hg))
   (by simp[ContinuousLinearMap.comp])
 
 
-theorem let_rule 
+theorem let_rule
   (g : X → Y) (hg : IsContinuousLinearMap R g)
   (f : X → Y → Z) (hf : IsContinuousLinearMap R (fun (xy : X×Y) => f xy.1 xy.2))
   : IsContinuousLinearMap R fun x => let y := g x; f x y
-:= 
-  by_morphism ((mk' R (fun (xy : X×Y) => f xy.1 xy.2) hf).comp ((ContinuousLinearMap.id R X).prod (mk' R g hg))) 
+:=
+  by_morphism ((mk' R (fun (xy : X×Y) => f xy.1 xy.2) hf).comp ((ContinuousLinearMap.id R X).prod (mk' R g hg)))
   (by simp[ContinuousLinearMap.comp])
 
 
 theorem pi_rule
   (f : (i : ι) → X → E i) (hf : ∀ i, IsContinuousLinearMap R (f i))
-  : IsContinuousLinearMap R (fun x i => f i x) 
+  : IsContinuousLinearMap R (fun x i => f i x)
 :=
   by_morphism (ContinuousLinearMap.pi fun i => (mk' R (fun x => f i x) (hf i)))
   (by simp)
@@ -129,7 +129,7 @@ theorem pi_rule
 
 theorem proj_rule (i : ι)
   : IsContinuousLinearMap R fun f : (i : ι) → E i => f i
-:= 
+:=
   by_morphism (ContinuousLinearMap.proj i) (by simp)
 
 
@@ -140,36 +140,36 @@ theorem proj_rule (i : ι)
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``IsContinuousLinearMap
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``IsContinuousLinearMap then
 
       if let .some f := e.getArg? 10 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``IsContinuousLinearMap then
       e.setArg 10 f
-    else          
+    else
       e
 
   identityRule    e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``IsContinuousLinearMap.id_rule 
-      origin := .decl ``IsContinuousLinearMap.id_rule 
+      proof  := mkConst ``IsContinuousLinearMap.id_rule
+      origin := .decl ``IsContinuousLinearMap.id_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  constantRule e := 
+  constantRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``IsContinuousLinearMap.const_rule 
-      origin := .decl ``IsContinuousLinearMap.const_rule 
+      proof  := mkConst ``IsContinuousLinearMap.const_rule
+      origin := .decl ``IsContinuousLinearMap.const_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -193,8 +193,8 @@ def fpropExt : FPropExt where
   lambdaLetRule e f g := do
     -- let thm : SimpTheorem :=
     -- {
-    --   proof  := mkConst ``IsContinuousLinearMap.let_rule 
-    --   origin := .decl ``IsContinuousLinearMap.let_rule 
+    --   proof  := mkConst ``IsContinuousLinearMap.let_rule
+    --   origin := .decl ``IsContinuousLinearMap.let_rule
     --   rfl    := false
     -- }
     -- FProp.tryTheorem? e thm (fun _ => pure none)
@@ -216,8 +216,8 @@ def fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``IsContinuousLinearMap.pi_rule 
-      origin := .decl ``IsContinuousLinearMap.pi_rule 
+      proof  := mkConst ``IsContinuousLinearMap.pi_rule
+      origin := .decl ``IsContinuousLinearMap.pi_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -225,14 +225,14 @@ def fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``IsContinuousLinearMap.proj_rule 
-      origin := .decl ``IsContinuousLinearMap.proj_rule 
+      proof  := mkConst ``IsContinuousLinearMap.proj_rule
+      origin := .decl ``IsContinuousLinearMap.proj_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -263,15 +263,15 @@ variable
 -- This problem has to be a bug somewhere ...
 @[fprop]
 theorem FunLike.coe.arg_a.IsContinuousLinearMap_rule
-  (f : Y →L[R] Z) 
-  : IsContinuousLinearMap R (fun y => f y) := 
+  (f : Y →L[R] Z)
+  : IsContinuousLinearMap R (fun y => f y) :=
   by_morphism f (by simp)
 
 
 @[fprop]
 theorem FunLike.coe.arg_a.IsContinuousLinearMap_rule'
-  (f : Y →L[R] Z) (g : X → Y) (hg : IsContinuousLinearMap R g) 
-  : IsContinuousLinearMap R (fun x => f (g x)) := 
+  (f : Y →L[R] Z) (g : X → Y) (hg : IsContinuousLinearMap R g)
+  : IsContinuousLinearMap R (fun x => f (g x)) :=
   by_morphism (f.comp (mk' R g hg)) (by simp)
 
 
@@ -282,7 +282,7 @@ theorem FunLike.coe.arg_a.IsContinuousLinearMap_rule'
 @[fprop]
 theorem id.arg_a.IsContinuousLinearMap_rule
   : IsContinuousLinearMap R (fun x : X => id x)
-:= 
+:=
   by_morphism (ContinuousLinearMap.id R X) (by simp)
 
 
@@ -295,8 +295,8 @@ theorem Prod.mk.arg_fstsnd.IsContinuousLinearMap_rule
   (g : X → Y) (hg : IsContinuousLinearMap R g)
   (f : X → Z) (hf : IsContinuousLinearMap R f)
   : IsContinuousLinearMap R fun x => (g x, f x)
-:= 
-  by_morphism ((mk' R g hg).prod (mk' R f hf)) 
+:=
+  by_morphism ((mk' R g hg).prod (mk' R f hf))
   (by simp)
 
 
@@ -308,7 +308,7 @@ theorem Prod.mk.arg_fstsnd.IsContinuousLinearMap_rule
 theorem Prod.fst.arg_self.IsContinuousLinearMap_rule
   (f : X → Y×Z) (hf : IsContinuousLinearMap R f)
   : IsContinuousLinearMap R fun (x : X) => (f x).fst
-:= 
+:=
   by_morphism ((ContinuousLinearMap.fst R Y Z).comp (mk' R f hf))
   (by simp)
 
@@ -321,130 +321,130 @@ theorem Prod.fst.arg_self.IsContinuousLinearMap_rule
 theorem Prod.snd.arg_self.IsContinuousLinearMap_rule
   (f : X → Y×Z) (hf : IsContinuousLinearMap R f)
   : IsContinuousLinearMap R fun (x : X) => (f x).snd
-:= 
+:=
   by_morphism ((ContinuousLinearMap.snd R Y Z).comp (mk' R f hf))
   (by simp)
 
 
 
 -- Neg.neg ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
-theorem Neg.neg.arg_a0.IsContinuousLinearMap_rule 
+theorem Neg.neg.arg_a0.IsContinuousLinearMap_rule
   {R : Type _} [Ring R]
   {X : Type _} [TopologicalSpace X] [AddCommGroup X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommGroup Y] [Module R Y] [TopologicalAddGroup Y]
   (f : X → Y) (hf : IsContinuousLinearMap R f)
   : IsContinuousLinearMap R fun x => - f x
-:= 
+:=
   by_morphism (ContinuousLinearMap.neg.neg (mk' R f hf))
   (by simp[ContinuousLinearMap.neg])
 
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HAdd.hAdd.arg_a0a1.IsContinuousLinearMap_rule [ContinuousAdd Y]
   (f g : X → Y) (hf : IsContinuousLinearMap R f) (hg : IsContinuousLinearMap R g)
   : IsContinuousLinearMap R fun x => f x + g x
-:= 
+:=
   by_morphism (ContinuousLinearMap.add.add (mk' R f hf) (mk' R g hg))
   (by simp[ContinuousLinearMap.add])
 
 
 
 -- HSub.hSub -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
-theorem HSub.hSub.arg_a0a1.IsContinuousLinearMap_rule 
+theorem HSub.hSub.arg_a0a1.IsContinuousLinearMap_rule
   {R : Type _} [Ring R]
   {X : Type _} [TopologicalSpace X] [AddCommGroup X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommGroup Y] [Module R Y] [TopologicalAddGroup Y]
   (f g : X → Y) (hf : IsContinuousLinearMap R f) (hg : IsContinuousLinearMap R g)
   : IsContinuousLinearMap R fun x => f x - g x
-:= 
+:=
   by_morphism (ContinuousLinearMap.sub.sub (mk' R f hf) (mk' R g hg))
   (by simp[ContinuousLinearMap.sub])
 
 
 
 -- HMul.hMul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
-def ContinuousLinearMap.mul_left 
-  {R : Type _} [CommSemiring R] 
-  {X : Type _} [TopologicalSpace X] [Semiring X] [Algebra R X] [TopologicalSemiring X] 
-  (x' : X) 
-  : X →L[R] X := 
-  ⟨⟨⟨fun x => x' * x, 
-    by apply mul_add⟩, 
-    by simp⟩, 
+def ContinuousLinearMap.mul_left
+  {R : Type _} [CommSemiring R]
+  {X : Type _} [TopologicalSpace X] [Semiring X] [Algebra R X] [TopologicalSemiring X]
+  (x' : X)
+  : X →L[R] X :=
+  ⟨⟨⟨fun x => x' * x,
+    by apply mul_add⟩,
+    by simp⟩,
     by continuity⟩
 
 
-def ContinuousLinearMap.mul_right 
-  {R : Type _} [CommSemiring R] 
-  {X : Type _} [TopologicalSpace X] [Semiring X] [Algebra R X] [TopologicalSemiring X] 
-  (x' : X) 
-  : X →L[R] X := 
-  ⟨⟨⟨fun x => x * x', 
-    fun a b => add_mul a b x'⟩, 
-    by simp⟩, 
+def ContinuousLinearMap.mul_right
+  {R : Type _} [CommSemiring R]
+  {X : Type _} [TopologicalSpace X] [Semiring X] [Algebra R X] [TopologicalSemiring X]
+  (x' : X)
+  : X →L[R] X :=
+  ⟨⟨⟨fun x => x * x',
+    fun a b => add_mul a b x'⟩,
+    by simp⟩,
     by continuity⟩
 
 
 @[fprop]
 theorem HMul.hMul.arg_a0.IsContinuousLinearMap_rule
-  {R : Type _} [CommSemiring R] 
+  {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
-  {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra R Y] [TopologicalSemiring Y] 
+  {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra R Y] [TopologicalSemiring Y]
   (f : X → Y) (hf : IsContinuousLinearMap R f)
-  (y' : Y) 
+  (y' : Y)
   : IsContinuousLinearMap R fun x => f x * y'
-:= 
+:=
   by_morphism (ContinuousLinearMap.comp (ContinuousLinearMap.mul_right y') (mk' R f hf))
   (by simp[ContinuousLinearMap.mul_right])
 
 
 @[fprop]
 theorem HMul.hMul.arg_a1.IsContinuousLinearMap_rule
-  {R : Type _} [CommSemiring R] 
+  {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
-  {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra R Y] [TopologicalSemiring Y] 
+  {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra R Y] [TopologicalSemiring Y]
   (f : X → Y) (hf : IsContinuousLinearMap R f)
-  (y' : Y) 
+  (y' : Y)
   : IsContinuousLinearMap R fun x => y' * f x
-:= 
+:=
   by_morphism (ContinuousLinearMap.comp (ContinuousLinearMap.mul_left y') (mk' R f hf))
   (by simp[ContinuousLinearMap.mul_left])
 
 
 
 -- Smul.smul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 /-- Creates `fun x =>L[R] r • g x` -/
-def ContinuousLinearMap.smulLeft 
+def ContinuousLinearMap.smulLeft
   {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y] [ContinuousConstSMul R Y]
   (g : X →L[R] Y)
-  (r : R) 
-  : X →L[R] Y := 
-  let f : Y →L[R] Y := 
-    ⟨⟨⟨fun x => r • x, 
-      DistribMulAction.smul_add r⟩, 
-      smul_comm r⟩, 
+  (r : R)
+  : X →L[R] Y :=
+  let f : Y →L[R] Y :=
+    ⟨⟨⟨fun x => r • x,
+      DistribMulAction.smul_add r⟩,
+      smul_comm r⟩,
       ContinuousConstSMul.continuous_const_smul r⟩
   f.comp g
 
 
 @[simp]
-def ContinuousLinearMap.smul_left 
+def ContinuousLinearMap.smul_left
   {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y] [ContinuousConstSMul R Y]
@@ -457,41 +457,41 @@ def ContinuousLinearMap.smul_left
 theorem HSMul.hSMul.arg_a0.IsContinuousLinearMap_rule
   [TopologicalSpace R] [ContinuousSMul R Y]
   (f : X → R) (hf : IsContinuousLinearMap R f)
-  (y : Y) 
+  (y : Y)
   : IsContinuousLinearMap R fun x => f x • y
-:= 
+:=
   by_morphism (ContinuousLinearMap.smulRight (mk' R f hf) y)
   (by simp)
 
 
 @[fprop]
-theorem HSMul.hSMul.arg_a1.IsContinuousLinearMap_rule 
+theorem HSMul.hSMul.arg_a1.IsContinuousLinearMap_rule
   {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y] [ContinuousConstSMul R Y]
   (c : R)
   (f : X → Y) (hf : IsContinuousLinearMap R f)
   : IsContinuousLinearMap R fun x => c • f x
-:= 
+:=
   by_morphism (ContinuousLinearMap.smulLeft (mk' R f hf) c)
   (by simp)
 
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 /-- Creates `fun x =>L[R] g x / y` -/
 def ContinuousLinearMap.divRight
   {R : Type _} [NontriviallyNormedField R]
   {K : Type _} [NontriviallyNormedField K] [NormedAlgebra R K]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
-  (g : X →L[R] K) (y : K) 
-  : X →L[R] K := 
-  let f : K →L[R] K := 
-    ⟨⟨⟨fun x => x / y, 
-      by apply fun a b => add_div a b y⟩, 
-      by intro r x; simp; (repeat rw[div_eq_inv_mul]); apply mul_smul_comm⟩, 
+  (g : X →L[R] K) (y : K)
+  : X →L[R] K :=
+  let f : K →L[R] K :=
+    ⟨⟨⟨fun x => x / y,
+      by apply fun a b => add_div a b y⟩,
+      by intro r x; simp; (repeat rw[div_eq_inv_mul]); apply mul_smul_comm⟩,
       by continuity⟩
   f.comp g
 
@@ -510,21 +510,21 @@ theorem HDiv.hDiv.arg_a0.IsContinuousLinearMap_rule
   {R : Type _} [NontriviallyNormedField R]
   {K : Type _} [NontriviallyNormedField K] [NormedAlgebra R K]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
-  (f : X → K) (hf : IsContinuousLinearMap R f) (y : K) 
+  (f : X → K) (hf : IsContinuousLinearMap R f) (y : K)
   : IsContinuousLinearMap R fun x => f x / y
-:= 
+:=
   by_morphism (ContinuousLinearMap.divRight (mk' R f hf) y)
   (by simp)
 
 
 -- Finset.sum -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open BigOperators in
 @[fprop]
 theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
   (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
-  : IsContinuousLinearMap R fun x => ∑ i in A, f x i := 
+  : IsContinuousLinearMap R fun x => ∑ i in A, f x i :=
 {
   linear := sorry_proof
   cont := sorry_proof
@@ -539,13 +539,13 @@ theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
 
 
 -- d/ite -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem ite.arg_te.IsContinuousLinearMap_rule
   (c : Prop) [dec : Decidable c]
   (t e : X → Y) (ht : IsContinuousLinearMap R t) (he : IsContinuousLinearMap R e)
-  : IsContinuousLinearMap R fun x => ite c (t x) (e x) := 
+  : IsContinuousLinearMap R fun x => ite c (t x) (e x) :=
 by
   induction dec
   case isTrue h  => simp[h]; fprop
@@ -555,27 +555,27 @@ by
 @[fprop]
 theorem dite.arg_te.IsContinuousLinearMap_rule
   (c : Prop) [dec : Decidable c]
-  (t : c  → X → Y) (ht : ∀ p, IsContinuousLinearMap R (t p)) 
+  (t : c  → X → Y) (ht : ∀ p, IsContinuousLinearMap R (t p))
   (e : ¬c → X → Y) (he : ∀ p, IsContinuousLinearMap R (e p))
-  : IsContinuousLinearMap R fun x => dite c (t · x) (e · x) := 
+  : IsContinuousLinearMap R fun x => dite c (t · x) (e · x) :=
 by
   induction dec
   case isTrue h  => simp[h]; apply ht
   case isFalse h => simp[h]; apply he
 
 
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 section InnerProductSpace
 
-variable 
+variable
   {K : Type _} [IsROrC K]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module K X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
 
 
 -- Inner -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem Inner.inner.arg_a0.IsContinuousLinearMap_rule
@@ -593,7 +593,7 @@ by
 
 
 -- conj/starRingEnd ------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 set_option linter.fpropDeclName false in
 open ComplexConjugate in
 @[fprop]

@@ -7,17 +7,17 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [Fintype ι] 
-  {E : ι → Type _} [∀ i, Vec K (E i)] 
+  {ι : Type _} [Fintype ι]
+  {E : ι → Type _} [∀ i, Vec K (E i)]
 
 structure Diffeomorphism (f : X → Y) : Prop where
-  bijective : Function.Bijective f 
-  differentiable : IsDifferentiable K f 
+  bijective : Function.Bijective f
+  differentiable : IsDifferentiable K f
   locally_diffeo : ∀ x, Function.Bijective (cderiv K f x)
 
 namespace Diffeomorphism
@@ -43,20 +43,20 @@ theorem comp_rule
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``Diffeomorphism
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``Diffeomorphism then
 
       if let .some f := e.getArg? 6 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``Diffeomorphism then
       e.setArg 6  f
-    else          
+    else
       e
 
   identityRule    e := do
@@ -85,7 +85,7 @@ def fpropExt : FPropExt where
   lambdaLetRule _ _ _ := return none
   lambdaLambdaRule _ _ := return none
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -102,14 +102,14 @@ end SciLean.Diffeomorphism
 
 open SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
   {ι : Type _} [Fintype ι]
-  {E : ι → Type _} [∀ i, Vec K (E i)] 
+  {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
 -- Id --------------------------------------------------------------------------
@@ -117,8 +117,8 @@ variable
 
 @[fprop]
 theorem id.arg_a.Diffeomorphism_rule
-  : Diffeomorphism K (fun x : X => id x) := 
-by 
+  : Diffeomorphism K (fun x : X => id x) :=
+by
   simp[id]; fprop
 
 
@@ -127,7 +127,7 @@ by
 
 @[fprop]
 theorem Function.comp.arg_a0.Diffeomorphism_rule
-  (f : Y → Z) (g : X → Y) 
+  (f : Y → Z) (g : X → Y)
   (hf : Diffeomorphism K f) (hg : Diffeomorphism K g)
   : Diffeomorphism K (fun x => (f ∘ g) x)
   := by simp[Function.comp]; fprop
@@ -139,8 +139,8 @@ theorem Function.comp.arg_a0.Diffeomorphism_rule
 @[fprop]
 theorem Neg.neg.arg_a0.Diffeomorphism_rule
   (f : X → Y) (hf : Diffeomorphism K f)
-  : Diffeomorphism K (fun x => - f x) := 
-by 
+  : Diffeomorphism K (fun x => - f x) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
@@ -154,8 +154,8 @@ by
 @[fprop]
 theorem HAdd.hAdd.arg_a0.Diffeomorphism_rule
   (f : X → Y) (y : Y) (hf : Diffeomorphism K f)
-  : Diffeomorphism K (fun x => f x + y) := 
-by 
+  : Diffeomorphism K (fun x => f x + y) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
@@ -165,14 +165,14 @@ by
 @[fprop]
 theorem HAdd.hAdd.arg_a1.Diffeomorphism_rule
   (y : Y) (f : X → Y) (hf : Diffeomorphism K f)
-  : Diffeomorphism K (fun x => y + f x) := 
-by 
+  : Diffeomorphism K (fun x => y + f x) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
   . fprop
   . ftrans; fprop
- 
+
 
 
 -- HSub.hSub -------------------------------------------------------------------
@@ -181,8 +181,8 @@ by
 @[fprop]
 theorem HSub.hSub.arg_a0.Diffeomorphism_rule
   (f : X → Y) (y : Y) (hf : Diffeomorphism K f)
-  : Diffeomorphism K (fun x => f x - y) := 
-by 
+  : Diffeomorphism K (fun x => f x - y) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
@@ -192,8 +192,8 @@ by
 @[fprop]
 theorem HSub.hSub.arg_a1.Diffeomorphism_rule
   (y : Y) (f : X → Y) (hf : Diffeomorphism K f)
-  : Diffeomorphism K (fun x => y - f x) := 
-by 
+  : Diffeomorphism K (fun x => y - f x) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
@@ -202,13 +202,13 @@ by
 
 
 -- HMul.hMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HMul.hMul.arg_a0.Diffeomorphism_rule
   (f : X → K) (y : K) (hf : Diffeomorphism K f) (hy : y≠0)
-  : Diffeomorphism K (fun x => f x * y) := 
-by 
+  : Diffeomorphism K (fun x => f x * y) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
@@ -217,9 +217,9 @@ by
 
 @[fprop]
 def HMul.hMul.arg_a1.Diffeomorphism_rule
-  (y : K) (f : X → K) (hy : y≠0) (hf : Diffeomorphism K f) 
-  : Diffeomorphism K (fun x => y * f x) := 
-by 
+  (y : K) (f : X → K) (hy : y≠0) (hf : Diffeomorphism K f)
+  : Diffeomorphism K (fun x => y * f x) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
@@ -228,13 +228,13 @@ by
 
 
 -- SMul.sMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HSMul.hSMul.arg_a1.Diffeomorphism_rule
   (r : K) (f : X → Y) (hr : r≠0) (hf : Diffeomorphism K f)
-  : Diffeomorphism K (fun x => r • f x) := 
-by 
+  : Diffeomorphism K (fun x => r • f x) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
@@ -243,14 +243,14 @@ by
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HDiv.hDiv.arg_a0.Diffeomorphism_rule
   (f : X → K) (r : K)
   (hf : Diffeomorphism K f) (hr : r ≠ 0)
-  : Diffeomorphism K (fun x => f x / r) := 
-by 
+  : Diffeomorphism K (fun x => f x / r) :=
+by
   have ⟨_,_,_⟩ := hf
   constructor
   . fprop
@@ -259,38 +259,38 @@ by
 
 
 -- HPow.hPow -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HPow.hPow.arg_a0.Diffeomorphism_rule
-  (n : Nat) (f : X → K) (hf : Diffeomorphism K f) 
+  (n : Nat) (f : X → K) (hf : Diffeomorphism K f)
   : Diffeomorphism K (fun x => f x ^ n)
   := by sorry_proof
 
 
 -- Function.invFun -------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
-open Function 
+open Function
 
 @[fprop]
 theorem Function.invFun.arg_fa1.IsDifferentiable_rule
   (f : X → Y → Z) (g : W → X) (h : W → Z)
-  (hf : ∀ x, Diffeomorphism K (f x)) 
+  (hf : ∀ x, Diffeomorphism K (f x))
   (hf' : IsDifferentiable K (fun xy : X×Y => f xy.1 xy.2))
   (hg : IsDifferentiable K g) (hh : IsDifferentiable K h)
   : IsDifferentiable K (fun w : W => invFun (f (g w)) (h w)) := sorry_proof
 
 
 @[ftrans]
-theorem Function.invFun.arg_a1.cderiv_rule 
+theorem Function.invFun.arg_a1.cderiv_rule
   (f : Y → Z) (g : X → Z)
   (hf : Diffeomorphism K f) (hg : IsDifferentiable K g)
   : cderiv K (fun x => invFun f (g x))
     =
-    fun x dx => 
+    fun x dx =>
       let z := g x
-      let dz := cderiv K g x dx 
+      let dz := cderiv K g x dx
       let y := invFun f z
       let dy := invFun (cderiv K f y) dz
       dy :=
@@ -302,16 +302,16 @@ by
   have q : cderiv K f (invFun f (g x)) (cderiv K (fun x => invFun f (g x)) x dx) = cderiv K g x dx := sorry_proof
   sorry_proof
 
--- Which rule is preferable? This one or the second one? 
+-- Which rule is preferable? This one or the second one?
 -- Probably the second as it has Function.inv fully applied
 @[ftrans]
 theorem Function.invFun.arg_f_a1.cderiv_rule
   (f : X → Y → Z)
-  (hf : ∀ x, Diffeomorphism K (f x)) 
+  (hf : ∀ x, Diffeomorphism K (f x))
   (hf' : IsDifferentiable K (fun xy : X×Y => f xy.1 xy.2))
   : cderiv K (fun x z => invFun (f x) z)
     =
-    fun x dx z => 
+    fun x dx z =>
       let y := invFun (f x) z
       let dfdx_y := (cderiv K f x dx) y
       let df'dy := cderiv K (invFun (f x)) (f x y) (dfdx_y)
@@ -333,11 +333,11 @@ by
 @[ftrans]
 theorem Function.invFun.arg_f.cderiv_rule'
   (f : X → Y → Z) (z : Z)
-  (hf : ∀ x, Diffeomorphism K (f x)) 
+  (hf : ∀ x, Diffeomorphism K (f x))
   (hf' : IsDifferentiable K (fun xy : X×Y => f xy.1 xy.2))
   : cderiv K (fun x => invFun (f x) z)
     =
-    fun x dx => 
+    fun x dx =>
       let y := invFun (f x) z
       let dfdx_y := (cderiv K f x dx) y
       let df'dy := cderiv K (invFun (f x)) (f x y) (dfdx_y)
@@ -353,7 +353,3 @@ by
   simp_rw[comp.arg_fg_a0.cderiv_rule (K:=K) (fun x => invFun (f x)) f (by fprop) (by fprop)]
   simp[comp]
   simp[show f x (invFun (f x) z) = z from sorry_proof]
-  
-
-
-

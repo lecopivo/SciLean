@@ -10,4 +10,3 @@ instance : AddGroup Int64 where
   add_zero := sorry_proof
   add_left_neg := sorry_proof
   sub_eq_add_neg := sorry_proof
-  

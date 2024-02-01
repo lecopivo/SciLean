@@ -4,7 +4,7 @@ import SciLean.Tactic.FTrans.Basic
 
 set_option linter.unusedVariables false
 
-variable 
+variable
   {X : Type _} [Nonempty X]
   {Y : Type _} [Nonempty Y]
   {Z : Type _} [Nonempty Z]
@@ -19,26 +19,26 @@ namespace Function.invFun
 --------------------------------------------------------------------------------
 
 variable (X)
-theorem id_rule 
-  : invFun (fun (x : X) => x) 
-    = 
+theorem id_rule
+  : invFun (fun (x : X) => x)
+    =
     fun x => x := by sorry_proof
 
 variable {X}
 
-theorem comp_rule 
-  (f : Y → Z) (g : X → Y) 
+theorem comp_rule
+  (f : Y → Z) (g : X → Y)
   (hf : Bijective f) (hg : Bijective g)
   : invFun (fun x => f (g x))
     =
     fun z =>
       let y := invFun f z
       let x := invFun g y
-      x := 
+      x :=
 by sorry_proof
 
 
-theorem let_rule 
+theorem let_rule
   (f : X₂ → Y → Z) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂)
   (hf : Bijective (fun xy : X₂×Y => f xy.1 xy.2)) (hg : Bijective g) (hp : Bijective (fun x => (p₁ x, p₂ x)))
   : invFun (fun x => let y := g (p₁ x); f (p₂ x) y)
@@ -47,7 +47,7 @@ theorem let_rule
       let x₂y := invFun (fun xy : X₂×Y => f xy.1 xy.2) z
       let x₁ := invFun g x₂y.2
       let x := invFun (fun x => (p₁ x, p₂ x)) (x₁,x₂y.1)
-      x := 
+      x :=
 by sorry_proof
 
 
@@ -75,20 +75,20 @@ open Lean Elab Term FTrans
 def ftransExt : FTransExt where
   ftransName := ``invFun
 
-  getFTransFun? e := 
+  getFTransFun? e :=
     if e.isAppOf ``invFun then
 
       if let .some f := e.getArg? 3 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFTransFun e f := 
+  replaceFTransFun e f :=
     if e.isAppOf ``invFun then
       e.setArg 3 f
-    else          
+    else
       e
 
   idRule  e X := do
@@ -101,7 +101,7 @@ def ftransExt : FTransExt where
 
   compRule e f g := do
     tryTheorems
-      #[ { proof := ← 
+      #[ { proof := ←
              mkAppM ``comp_rule #[f, g], origin := .decl ``comp_rule, rfl := false} ]
       discharger e
 
@@ -123,7 +123,7 @@ end Function.invFun
 
 open SciLean Function
 
-variable 
+variable
   {X : Type _} [Nonempty X]
   {Y : Type _} [Nonempty Y]
   {Z : Type _} [Nonempty Z]
@@ -146,8 +146,8 @@ theorem Prod.mk.arg_fstsnd.invFun_rule
     fun yz =>
       let x₁ := invFun f yz.1
       let x₂ := invFun g yz.2
-      let x  := invFun (fun x => (p₁ x, p₂ x)) (x₁,x₂) 
-      x := 
+      let x  := invFun (fun x => (p₁ x, p₂ x)) (x₁,x₂)
+      x :=
 by sorry_proof
 
 
@@ -157,7 +157,7 @@ by sorry_proof
 @[ftrans]
 theorem id.arg_a.invFun_rule
   : invFun (fun x : X => id x)
-    = 
+    =
     id := by unfold id; ftrans
 
 
@@ -169,7 +169,7 @@ theorem Function.comp.arg_a0.invFun_rule
   (f : Y → Z) (g : X → Y)
   (hf : Bijective f) (hg : Bijective g)
   : invFun (fun x => (f ∘ g) x)
-    = 
+    =
     invFun g ∘ invFun f
   := by unfold Function.comp; ftrans
 
@@ -181,7 +181,7 @@ theorem Function.comp.arg_a0.invFun_rule
 @[ftrans]
 theorem Neg.neg.arg_a0.invFun_rule
   [AddGroup Y]
-  (f : X → Y) (hf : Bijective f) 
+  (f : X → Y) (hf : Bijective f)
   : invFun (fun x => - f x)
     =
     fun y =>
@@ -195,10 +195,10 @@ theorem Neg.neg.arg_a0.invFun_rule
 @[ftrans]
 theorem Inv.inv.arg_a0.invFun_rule_group
   [Group Y]
-  (f : X → Y) (hf : Bijective f) 
+  (f : X → Y) (hf : Bijective f)
   : invFun (fun x => (f x)⁻¹)
     =
-    fun y => 
+    fun y =>
       invFun f (y⁻¹)
   := by sorry_proof
 
@@ -209,7 +209,7 @@ theorem Inv.inv.arg_a0.invFun_rule_field
   (f : X → Y) (hf : Bijective f) (hf' : ∀ x, f x ≠ 0)
   : invFun (fun x => (f x)⁻¹)
     =
-    fun y => 
+    fun y =>
       invFun f (y⁻¹)
   := by sorry_proof
 
@@ -220,20 +220,20 @@ theorem Inv.inv.arg_a0.invFun_rule_field
 @[ftrans]
 theorem HAdd.hAdd.arg_a0.invFun_rule
   [AddGroup Y]
-  (f : X → Y) (y : Y) (hf : Bijective f) 
+  (f : X → Y) (y : Y) (hf : Bijective f)
   : invFun (fun x => f x + y)
     =
-    fun y' => 
+    fun y' =>
       invFun f (y' - y)
   := by sorry_proof
 
 @[ftrans]
 theorem HAdd.hAdd.arg_a1.invFun_rule
   [AddGroup Y]
-  (y : Y)  (f : X → Y) (hf : Bijective f) 
+  (y : Y)  (f : X → Y) (hf : Bijective f)
   : invFun (fun x => y + f x)
     =
-    fun y' => 
+    fun y' =>
       invFun f (-y + y')
   := by sorry_proof
 
@@ -244,7 +244,7 @@ theorem HAdd.hAdd.arg_a1.invFun_rule
 @[ftrans]
 theorem HSub.hSub.arg_a0.invFun_rule
   [AddGroup Y]
-  (f : X → Y) (y : Y) (hf : Bijective f) 
+  (f : X → Y) (y : Y) (hf : Bijective f)
   : invFun (fun x => f x - y)
     =
     fun y' =>
@@ -255,7 +255,7 @@ theorem HSub.hSub.arg_a0.invFun_rule
 @[ftrans]
 theorem HSub.hSub.arg_a1.invFun_rule
   [AddGroup Y]
-   (y : Y) (f : X → Y) (hf : Bijective f) 
+   (y : Y) (f : X → Y) (hf : Bijective f)
   : invFun (fun x => y - f x )
     =
     fun y' =>
@@ -265,7 +265,7 @@ theorem HSub.hSub.arg_a1.invFun_rule
 
 
 -- HMul.hMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[ftrans]
 def HMul.hMul.arg_a0.invFun_rule_group
@@ -273,7 +273,7 @@ def HMul.hMul.arg_a0.invFun_rule_group
   (f : X → Y) (y : Y) (hf : Bijective f)
   : invFun (fun x => f x * y)
     =
-    fun y' => 
+    fun y' =>
       invFun f (y' / y)
   := by sorry_proof
 
@@ -283,7 +283,7 @@ def HMul.hMul.arg_a1.invFun_rule_group
   (y : Y) (f : X → Y) (hf : Bijective f)
   : invFun (fun x => y * f x)
     =
-    fun y' => 
+    fun y' =>
       invFun f (y⁻¹ * y')
   := by sorry_proof
 
@@ -292,7 +292,7 @@ def HMul.hMul.arg_a0.invFun_rule_field
   [Field Y]
   (f : X → Y) (y : Y) (hf : Bijective f) (hy : y ≠ 0)
   : invFun (fun x => f x * y)
-    = 
+    =
     fun y' =>
       invFun f (y'/y)
   := by sorry_proof
@@ -309,7 +309,7 @@ def HMul.hMul.arg_a1.invFun_rule_field
 
 
 -- SMul.sMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 
 @[ftrans]
@@ -335,7 +335,7 @@ def HSMul.hSMul.arg_a1.invFun_rule_field
 
 
 -- VAdd.vAdd -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 
 @[ftrans]
@@ -356,7 +356,7 @@ def HVAdd.hVAdd.arg_a1.invFun_rule_group
 theorem Equiv.toFun.arg_a0.invFun_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
   : Function.invFun (fun x => f.toFun (g x))
     =
-    fun z => Function.invFun g (f.invFun z) := 
+    fun z => Function.invFun g (f.invFun z) :=
 by
   sorry_proof
 
@@ -364,6 +364,6 @@ by
 theorem Equiv.invFun.arg_a0.invFun_rule (f : Y ≃ Z) (g : X → Z) (hf : Bijective g)
   : Function.invFun (fun x => f.invFun (g x))
     =
-    fun z => Function.invFun g (f.toFun z) := 
+    fun z => Function.invFun g (f.toFun z) :=
 by
   sorry_proof

@@ -5,11 +5,11 @@ import SciLean.Core.Hom.LinMap
 namespace SciLean
 
   -- #check Set
-  
+
   -- class HasIntegral {X} (X : Type) [Vec X] where
   --   intDom : Set (Set X) -- integrable domains
   --   isIntegrable {Y} [Vec Y] (f : X → Y) : Prop
-  --   integral (f : X → Y) (h : isIntegrable f) (Ω ∈ intDom) 
+  --   integral (f : X → Y) (h : isIntegrable f) (Ω ∈ intDom)
 
 
   -- The argument are most likely:
@@ -26,7 +26,7 @@ namespace SciLean
   class IntegrableDomain (X : Type) where
     Dom : Type
 
-  noncomputable 
+  noncomputable
   def indicatorFunction {α} (Ω : α → Prop) (a : α) : ℝ :=
     match Classical.propDecidable (Ω a) with
       | isTrue  _ => 1
@@ -52,7 +52,7 @@ namespace SciLean
   | smul (s : ℝ) (Ω : LocIntDom.Repr X) : LocIntDom.Repr X
 
   noncomputable
-  def LocIntDom.Repr.indicatorFun {X} [FinVec X ι] (Ω : LocIntDom.Repr X) : X → ℝ := 
+  def LocIntDom.Repr.indicatorFun {X} [FinVec X ι] (Ω : LocIntDom.Repr X) : X → ℝ :=
   match Ω with
   | set Ω' _ _ => indicatorFunction Ω'
   | sum Ω₁ Ω₂  => Ω₁.indicatorFun + Ω₂.indicatorFun
@@ -63,16 +63,16 @@ namespace SciLean
 
   def LocIntDom (X : Type) [FinVec X ι] : Type := Quot (LocIntDom.Repr.Eq (X:=X))
 
-  instance {X} [FinVec X ι] : Add (LocIntDom X) := 
+  instance {X} [FinVec X ι] : Add (LocIntDom X) :=
     ⟨(λ Ω₁ => (λ Ω₂ => Quot.mk _ (.sum Ω₁ Ω₂)) |> (Quot.lift · sorry)) |> (Quot.lift · sorry)⟩
- 
-  instance {X} [FinVec X ι] : HMul ℝ (LocIntDom X) (LocIntDom X) := 
+
+  instance {X} [FinVec X ι] : HMul ℝ (LocIntDom X) (LocIntDom X) :=
     ⟨λ s => (λ Ω => Quot.mk _ (.smul s Ω)) |> (Quot.lift · sorry)⟩
 
   -- Empty set
-  instance {X} [FinVec X ι] : Zero (LocIntDom X) := 
+  instance {X} [FinVec X ι] : Zero (LocIntDom X) :=
     ⟨Quot.mk _ (.set (λ _ => False) sorry sorry)⟩
- 
+
 
   -- Probably Riemann integrability on domain Ω
   class IsIntegrable [FinVec X ι] [Vec Y] (f : X → Y) (Ω : IntDom X) : Prop
@@ -83,8 +83,8 @@ namespace SciLean
   -- IMPORTANT: We choose to integrate only over **bounded** domains.
   --            This way the function `λ (f : X⟿Y) => ∫ x, f x` can be linear.
   -- QUESTION: Do we need Y to be complete? For example smooth function
-  --   with compact support do not form closed subspace in `ℝ ⟿ ℝ`. 
-  --   Can we have `γ : ℝ ⟿ {f : ℝ ⟿ ℝ // TestFun f}` such that 
+  --   with compact support do not form closed subspace in `ℝ ⟿ ℝ`.
+  --   Can we have `γ : ℝ ⟿ {f : ℝ ⟿ ℝ // TestFun f}` such that
   --   `∫ t ∈ [0,1], γ.1` is not a `TestFun`?
   def integral {X Y : Type} [FinVec X ι] [Vec Y] (f : X → Y) (Ω : LocIntDom X) : Y := sorry
 
@@ -102,20 +102,20 @@ namespace SciLean
     integral f := integral f
 
    -- some basic properties about linearity, domain and relation to derivative
-    
+
   -- class HasVarDual {X Y : Type} {P : (X → Y) → Prop} [FinVec X ι] [Hilbert Y] (F : {g : X → Y // P g} → IntDom X → ℝ) where
   --   has_var_dual : ∃ f' : X → Y, ∀ g,
   --     F g = integral λ x => ⟪f' x, g.1 x⟫
 
     -- some continuity condition on smooth or integrable functions or something like that
     -- F should be trivial on non-smooth/non-integrable functions
-    -- Effectivelly functions like F = λ f => ∫ x, (f x) 
-      
+    -- Effectivelly functions like F = λ f => ∫ x, (f x)
+
   -- export Integral (integral)
 
   -- abbrev integral {Fun : Type} {Dom Result : outParam Type} [outParam $ Integral Fun Dom Result] (f : Fun) (Ω : Dom) : Result := Integral.integral f Ω
 
-  --- Notation 
+  --- Notation
   --  - ∫ f          -- shorthand for the next
   --  - ∫ x, f x     -- Return function from subset to integral over that subset
   --  - ∫ x ∈ Ω, f x -- Integrate over particular subset
@@ -128,15 +128,15 @@ namespace SciLean
   macro "∫" f:term:66 : term => `(Integral.integral $f)
   macro "∫" x:Lean.Parser.Term.funBinder "," fx:term:66 : term => `(∫ λ $x => $fx)
   -- ∫ (x,y), f x y  -- does not work :(
-  
+
   -- We should probably require for `R` to be of the form `... → ℝ`
   -- Otherwise it does not make sense
-  -- Unfortunatelly I do not know how to nest integrals :( 
+  -- Unfortunatelly I do not know how to nest integrals :(
   -- class HasVarDual {Fun R} [SemiHilbert Fun] [One Fun] [Integral Fun R] (F : Fun → R) : Prop where
   --   hasVarDual : ∃ A : Fun → Fun, HasAdjoint A ∧ (∀ f, F f = ∫ (A f))
     -- There is something magical about the type `R` that ensures uniqueness of A
-    -- Ohh yeah `R` is really big ... 
-    --   for example for `Fun = ℝ^{n}` the `R` would be `(Fin n → Bool) → ℝ` 
+    -- Ohh yeah `R` is really big ...
+    --   for example for `Fun = ℝ^{n}` the `R` would be `(Fin n → Bool) → ℝ`
     --   i.e. we have to provide `Fin n → Bool` to specify over which indices to sum over
     --   the `(Fin n → Bool) → ℝ` is waaay bigger then `ℝ^{n}`
 
@@ -161,7 +161,7 @@ namespace SciLean
       A† 1
     | isFalse _ => 0
 
-  #check Vec 
+  #check Vec
 
   -- This should be immediate from the definition
   @[simp]
@@ -184,14 +184,14 @@ namespace SciLean
   --   varDual := sorry
 
 
-  -- noncomputable 
-  -- def varDual {Fun R} [SemiHilbert Fun] [One Fun] [Integral Fun R] (F : Fun → R) : Fun := 
+  -- noncomputable
+  -- def varDual {Fun R} [SemiHilbert Fun] [One Fun] [Integral Fun R] (F : Fun → R) : Fun :=
   --   match Classical.propDecidable (HasVarDual F) with
-  --   | isTrue h => 
+  --   | isTrue h =>
   --     let A := Classical.choose h.hasVarDual
   --     A† 1
   --   | isFalse _ => 0
-  
+
   variable {X Y Z} [FinVec X ι] [Vec Y] [Vec Z]
 
   #check varDual λ (f : X ⟿ ℝ) => ∫ x, f x
@@ -202,23 +202,23 @@ namespace SciLean
   -- instance SmoothMap.val.arg_f.isSmooth : IsSmooth (λ f : X⟿Y => f.1) := by infer_instance
 
   -- We can't prove linearity of differential directly
-  -- instance (F : (X⟿Y) → (X → Y)) [IsLin F] [∀ f, IsSmooth (F f)] 
+  -- instance (F : (X⟿Y) → (X → Y)) [IsLin F] [∀ f, IsSmooth (F f)]
   --   : IsLin λ (f : X⟿Y) => ∂ (F f) := by infer_instance
-  -- instance (F : (X⟿Y) → (X → Y)) [IsSmooth F] [∀ f, IsSmooth (F f)] 
+  -- instance (F : (X⟿Y) → (X → Y)) [IsSmooth F] [∀ f, IsSmooth (F f)]
   --   : IsSmooth λ (f : X⟿Y) => ∂ (F f) := by infer_instance
 
-  instance (F : Z → X → Y) [IsLin F] [∀ f, IsSmooth (F f)] 
+  instance (F : Z → X → Y) [IsLin F] [∀ f, IsSmooth (F f)]
     : IsLin λ (z : Z) => ∫ x, F z x := sorry
-  instance (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)] 
+  instance (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)]
     : IsSmooth λ (z : Z) => ∫ x, F z x := sorry
 
   -- IMPORTANT: This is true only when we integrate over bounded domains!
   --            Double check this is really true
   @[simp]
-  theorem diff_integral (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)] 
+  theorem diff_integral (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)]
     : ∂ (λ z => ∫ x, F z x) = λ z dz => ∫ x, ∂ F z dz x := sorry
 
-  -- instance (f : X → Y → Z) [IsSmooth F] [∀ f, IsSmooth (F f)] 
+  -- instance (f : X → Y → Z) [IsSmooth F] [∀ f, IsSmooth (F f)]
   --   (g : X → Y) [IsSmooth
   --   : IsSmooth λ (z : Z) => ∫ x, F z x := sorry
   example : IsSmooth fun (f : X ⟿ Y) x => (2 : ℝ) * f x := by infer_instance
@@ -226,14 +226,14 @@ namespace SciLean
   example : IsSmooth λ f : ℝ⟿ℝ => λ x => differential f.1 x 1 := by infer_instance
 
   instance diff.arg_x.comp.isSmooth' {X Y Z} [Vec X] [Vec Y] [Vec Z] [Vec W]
-    (f : Y → Z → W) [IsSmooth f] [∀ y, IsSmooth (f y)] 
+    (f : Y → Z → W) [IsSmooth f] [∀ y, IsSmooth (f y)]
     (g : X → Y) [IsSmooth g]
     : IsSmooth (λ x => ∂ (f (g x))) := sorry
 
   example (f : ℝ⟿ℝ) : IsSmooth λ x => ∂ f x 1 := by infer_instance
-  
+
   instance : IsSmooth fun (f : ℝ⟿ℝ) => ∂ f := sorry
-  
+
   -- set_option trace.Meta.synthInstance true in
   -- TODO: Simplify
   instance {X Y} [Vec X] [Vec Y] : IsSmooth fun (f : X⟿Y) x dx  => ∂ f x dx := sorry
@@ -264,7 +264,7 @@ namespace SciLean
 
   #check ∫ x, f x
   #check ∫ x, g x
-  
+
   example : ∂ (λ f : X⟿ℝ => ∫ x, f x) = λ (f df : X⟿ℝ) => ∫ x, df x := by simp
   example : ∂ (λ f : X⟿ℝ => ∫ x, ∥f x∥²) = λ (f df : X⟿ℝ) => ∫ x, 2 * df x * f x := by simp
 
@@ -279,7 +279,7 @@ namespace SciLean
   -- -- Defined only if it has variational dual otherwise zero function
   -- def varDual : ((X ⟿ Y) → LocIntDom X → ℝ) → (X ⟿ Y) := sorry
 
-      
+
 
   -- instance {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] : VarDual (X ⟿ Y) (LocIntDom X → ℝ) where
   --   varDual := varDual
@@ -297,7 +297,7 @@ namespace SciLean
 
 
   @[simp]
-  theorem varDual_fun {Y} [Hilbert Y] (F : (X ⟿ Y) → (X ⟿ ℝ)) [HasAdjoint F] 
+  theorem varDual_fun {Y} [Hilbert Y] (F : (X ⟿ Y) → (X ⟿ ℝ)) [HasAdjoint F]
     : varDual (λ f : X ⟿ Y => ∫ x, F f x) = F† (λ _ ⟿ 1) := by simp
 
   -- @[simp]
@@ -310,7 +310,7 @@ namespace SciLean
   instance pointwise_has_adjoint' {Y Z} [Hilbert Y] [Hilbert Z] (A : Y → X → Z) [∀ x, HasAdjoint (λ y => A y x)] [IsSmooth A] [∀ y, IsSmooth (A y)]
     : HasAdjoint (λ f : X ⟿ Y => λ x ⟿ A (f x) x) := sorry
 
-  -- instance comp_adjoint {A B C} [Hilbert A] [Hilbert B] [Hilbert C] 
+  -- instance comp_adjoint {A B C} [Hilbert A] [Hilbert B] [Hilbert C]
   --   (F : (X → B) → X → (X → C)) [∀ (f : X -> B) y, IsSmooth (λ x => F f y x)] --[HasAdjoint (λ f : X ⟿ B => λ x ⟿ F f.1 x)] [IsSmooth λ f : X->B => F f]
   --   (G : (X → A) → X → (X → B)) [∀ (f : X -> A) y, IsSmooth (λ x => G f y x)] --[HasAdjoint (λ f : X ⟿ A => λ x ⟿ G f.1 x)] [IsSmooth λ f : X->A => G f]
   --   : HasAdjoint (λ f : X ⟿ A => λ x ⟿ F (G f.1 x) x x) := sorry
@@ -324,14 +324,14 @@ namespace SciLean
     : Subtype.val f x = smoothEval x f := by simp[smoothEval]
 
   -- @[simp]
-  -- theorem hihih {A B C} [Hilbert A] [Hilbert B] [Hilbert C] 
+  -- theorem hihih {A B C} [Hilbert A] [Hilbert B] [Hilbert C]
   --   (G : X → (X → A) → (X → B)) [∀ f, IsSmooth (G f)]
   --   (F : X → (X → B) → (X → C)) [∀ f, IsSmooth (F f)]
   --   [∀ f, IsSmooth (λ x => F x (G x f) x)]
   --   [∀ f, IsSmooth (λ x => F x f x)]
   --   [∀ f, IsSmooth (λ x => G x f x)]
-  --   : (λ f : X ⟿ A => λ x ⟿ F x (G x f) x) 
-  --     = 
+  --   : (λ f : X ⟿ A => λ x ⟿ F x (G x f) x)
+  --     =
   --     (λ f : X ⟿ B => λ x ⟿ F x f x) ∘ (λ f : X ⟿ A => λ x ⟿ G x f x)
   --   := by funext f; ext x; simp[Compose.compose]; done
 
@@ -355,12 +355,12 @@ namespace SciLean
 
   -- instance {X Y} [Vec X] [Vec Y] : HMul (X ⟿ ℝ) (X ⟿ Y) (X ⟿ Y) := ⟨λ f g => λ x ⟿ f x * g x⟩
 
-  instance {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z] 
+  instance {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z]
     [HMul X Y Z] [IsSmooth λ (x : X) (y : Y) => x * y] [∀ x : X, IsSmooth (λ (y : Y) => x * y)]
     : HMul (W ⟿ X) (W ⟿ Y) (W ⟿ Z) := ⟨λ f g => λ x ⟿ f x * g x⟩
 
   @[simp]
-  theorem pointwise_mul_smooth_map {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z] 
+  theorem pointwise_mul_smooth_map {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z]
     [HMul X Y Z] [IsSmooth λ (x : X) (y : Y) => x * y] [∀ x : X, IsSmooth (λ (y : Y) => x * y)]
     (f : W ⟿ X) (g : W ⟿ Y) (w : W)
     : (f * g) w = f w * g w := by simp[HMul.hMul, Mul.mul]; done
@@ -370,19 +370,19 @@ namespace SciLean
     (f g : X ⟿ Y) (x : X)
     : (f + g) x = f x + g x := by simp[HAdd.hAdd, Add.add]; done
 
-  instance {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z] 
+  instance {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z]
     [HMul X Y Z] [IsSmooth λ (x : X) (y : Y) => x * y] [∀ x : X, IsSmooth (λ (y : Y) => x * y)]
     : IsSmooth (λ (f : W ⟿ X) (g : W ⟿ Y) => f * g) := by simp[HMul.hMul, Mul.mul]; infer_instance; done
 
-  instance {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z] 
+  instance {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z]
     [HMul X Y Z] [IsSmooth λ (x : X) (y : Y) => x * y] [∀ x : X, IsSmooth (λ (y : Y) => x * y)]
-    (f : W ⟿ X) 
+    (f : W ⟿ X)
     : IsSmooth (λ (g : W ⟿ Y) => f * g) := by simp[HMul.hMul, Mul.mul]; infer_instance; done
 
   -- theorem smooth_smul_norm_v2 (y : Y)
   --   : (λ (x : ℝ) ⟿ x * y) = (λ (x : ℝ) ⟿ x) * (λ (_ : ℝ) ⟿ y) := by ext x; simp[HMul.hMul, Mul.mul]
 
-  theorem smooth_hmul_norm {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z] 
+  theorem smooth_hmul_norm {W X Y Z} [Vec W] [Vec X] [Vec Y] [Vec Z]
     [HMul X Y Z] [IsSmooth λ (x : X) (y : Y) => x * y] [∀ x : X, IsSmooth (λ (y : Y) => x * y)]
     (f : W → X) [IsSmooth f]
     (g : W → Y) [IsSmooth g]
@@ -415,7 +415,7 @@ namespace SciLean
     : IsSmooth λ (g₂ : X ⟿ Y₂) => Smooth.diag f g₁ g₂ := sorry
 
   @[simp]
-  theorem smooth_diag {X Y₁ Y₂} [Vec X] [Vec Y₁] [Vec Y₂] 
+  theorem smooth_diag {X Y₁ Y₂} [Vec X] [Vec Y₁] [Vec Y₂]
     (f : Y₁ → Y₂ → Z)  [IsSmooth f] [∀ y₁, IsSmooth (f y₁)]
     (g₁ : X → Y₁) [IsSmooth g₁]
     (g₂ : X → Y₂) [IsSmooth g₂]
@@ -443,14 +443,14 @@ namespace SciLean
     hasAdjoint := sorry,
     adj_simp := f' * g by sorry,
     hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
-    adjDiff_simp 
+    adjDiff_simp
   argument g
     isLin := sorry,
     isSmooth, diff_simp,
     hasAdjoint := sorry,
     adj_simp := g' * f by sorry,
     hasAdjDiff := by constructor; infer_instance; simp; infer_instance,
-    adjDiff_simp 
+    adjDiff_simp
 
   @[simp]
   theorem smooth_diag_pw_inner {Y} [Hilbert Y]
@@ -465,7 +465,7 @@ namespace SciLean
     : (λ x => ⟪g₁ x, g₂ x⟫) = (Smooth.pw_inner (λ x ⟿ g₁ x) (λ x ⟿ g₂ x)).1 := by unfold Smooth.pw_inner; simp
 
   @[simp]
-  theorem smooth_diag_eval {X Y₁ Y₂} [Vec X] [Vec Y₁] [Vec Y₂] 
+  theorem smooth_diag_eval {X Y₁ Y₂} [Vec X] [Vec Y₁] [Vec Y₂]
     (f : Y₁ ⟿ Y₂ ⟿ Z) (g₁ : X ⟿ Y₁) (g₂ : X ⟿ Y₂) (x : X)
     : (Smooth.diag f g₁ g₂ x) = f (g₁ x) (g₂ x) := by unfold Smooth.diag; simp
 
@@ -494,7 +494,7 @@ namespace SciLean
   theorem smooth_const_eval {X Y} [Vec X] [Vec Y] (x : X) (y : Y) : Smooth.const x y = x := by rfl
 
   -- example : (λ (x y : ℝ) ⟿ x * y * x) = 0 :=
-  -- by 
+  -- by
   --   simp
   --   simp only [smooth_smul_norm_v1_id]
   --   simp only [smooth_hmul_norm]
@@ -564,7 +564,7 @@ namespace SciLean
   theorem mor_mul_adj_left {Y} [SemiHilbert Y] (g : X ⟿ ℝ)
     : (λ (f : X ⟿ Y) => g * f)† = (λ (f' : X ⟿ Y) => g * f') := sorry
 
-  instance (g : X ⟿ ℝ) 
+  instance (g : X ⟿ ℝ)
     : HasAdjoint (λ (f : X ⟿ ℝ) => f * g) := sorry
 
   @[simp]
@@ -576,11 +576,11 @@ namespace SciLean
   --   : (λ (f : X ⟿ ℝ) => f * g)† = (λ (f' : X ⟿ ℝ) => f' * g) := sorry
 
   example : (λ (f : ℝ ⟿ ℝ) => (λ x ⟿ x * f x))† = λ f' => Smooth.id * f' := by simp
-  example (g : ℝ ⟿ ℝ) 
-    : (λ (f : ℝ ⟿ ℝ) => (λ x ⟿ g x * f x * x))† 
-      = 
-      λ f' => λ x ⟿ g x * f' x * x := 
-  by 
+  example (g : ℝ ⟿ ℝ)
+    : (λ (f : ℝ ⟿ ℝ) => (λ x ⟿ g x * f x * x))†
+      =
+      λ f' => λ x ⟿ g x * f' x * x :=
+  by
     simp[hold]; funext f'; ext x; simp
 
   example : (λ (f : ℝ ⟿ ℝ) => (λ x ⟿ f x + f x * x))† = λ (f' : ℝ ⟿ ℝ) (x : ℝ) ⟿ f' x + f' x * x:= by simp[hold]
@@ -593,15 +593,15 @@ namespace SciLean
       (λ f : ℝ ⟿ ℝ => G f)
       =
       (λ f : ℝ ⟿ ℝ => λ x ⟿ f x * x) :=
-  by 
+  by
     simp only[]; simp only[smooth_mul_norm]; done
-      
+
   -- set_option trace.Meta.synthInstance true in
   example {Y} [Hilbert Y]
     : HasAdjoint (λ f : ℝ ⟿ ℝ => λ x ⟿ x * f x * x) :=
   by
     simp; infer_instance
-  
+
   example
     : SciLean.HasAdjoint fun (f : X ⟿ ℝ) => λ x ⟿ f x := by simp; infer_instance
 
@@ -640,12 +640,12 @@ namespace SciLean
 
   example (g : X ⟿ ℝ)
     : SciLean.HasAdjoint fun (f : X ⟿ ℝ) => λ x ⟿ f x * g x := by infer_instance
-  
+
   -- set_option trace.Meta.Tactic.simp.discharge true in
   -- set_option trace.Meta.Tactic.simp.rewrite true in
   example (g : X ⟿ ℝ)
-    : varDual (λ f : X ⟿ ℝ => ∫ λ x ⟿ g x * f x) = g := 
-  by 
+    : varDual (λ f : X ⟿ ℝ => ∫ λ x ⟿ g x * f x) = g :=
+  by
     simp; ext x; simp; done
 
   example {Y} [Hilbert Y] (g : X ⟿ Y) :
@@ -653,29 +653,29 @@ namespace SciLean
   by
     simp; infer_instance
 
-  example {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] (g : X ⟿ Y) 
-    : varDual (λ f : X ⟿ Y => ∫ λ x ⟿ ⟪f x, g x⟫) = g := 
-  by 
+  example {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] (g : X ⟿ Y)
+    : varDual (λ f : X ⟿ Y => ∫ λ x ⟿ ⟪f x, g x⟫) = g :=
+  by
     simp; ext x; simp; done
 
   example {X Y ι} [Enumtype ι] [FinVec X ι] [Hilbert Y] (g : X ⟿ Y) (c : ℝ)
-    : varDual (λ f : X ⟿ Y => ∫ λ x ⟿ c * ⟪f x, g x⟫) = c * g := 
-  by 
+    : varDual (λ f : X ⟿ Y => ∫ λ x ⟿ c * ⟪f x, g x⟫) = c * g :=
+  by
     simp; ext x; simp; done
 
   class Divergence (Fun : Type) (Diff : outParam Type) where
     divergence : Fun → Diff
 
   export Divergence (divergence)
-  
+
   @[defaultInstance]
   noncomputable
-  instance divergence_of_differential_mor {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] 
+  instance divergence_of_differential_mor {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y]
     : Divergence (X ⟿ X ⊸ Y) (X ⟿ Y) where
     divergence f := λ x ⟿ ∑ i, ∂ f x (𝔼 i) (𝔼 i)
 
   noncomputable
-  instance divergence_of_differential {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y] 
+  instance divergence_of_differential {X Y ι} [Enumtype ι] [FinVec X ι] [SemiHilbert Y]
     : Divergence (X → X → Y) (X → Y) where
     divergence f := λ x => ∑ i, ∂ f x (𝔼 i) (𝔼 i)
 
@@ -693,7 +693,7 @@ namespace SciLean
 
   syntax "∇·" diffBinder "," term:66 : term
   syntax "∇·" "(" diffBinder ")" "," term:66 : term
-  macro_rules 
+  macro_rules
   | `(∇· $x:ident, $f) =>
     `(∇· λ $x => $f)
   | `(∇· $x:ident : $type:term, $f) =>
@@ -703,7 +703,7 @@ namespace SciLean
   | `(∇· ($b:diffBinder), $f) =>
     `(∇· $b, $f)
 
-  instance {Y} [SemiHilbert Y] 
+  instance {Y} [SemiHilbert Y]
     : HasAdjoint (λ f : X ⟿ Y => ∂ f) := sorry
 
   @[simp]
@@ -715,7 +715,7 @@ namespace SciLean
     : (λ f : X ⟿ X ⊸ Y => ∇· f)† = λ f' : X ⟿ Y => - ∂ f' := sorry
 
   theorem linear_has_adjoint_on_finvec {X Y ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] (f : X → Y) [IsLin f] : HasAdjoint f := sorry
-  theorem smooth_has_adjdiff_on_finvec {X Y ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] (f : X → Y) [IsSmooth f] : HasAdjDiff f := 
+  theorem smooth_has_adjdiff_on_finvec {X Y ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ] (f : X → Y) [IsSmooth f] : HasAdjDiff f :=
     ⟨by infer_instance, by intro x; apply linear_has_adjoint_on_finvec⟩
 
   -- On finite dimensional vector spaces, every linear map has adjoint
@@ -727,21 +727,21 @@ namespace SciLean
   instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjDiff f] : IsSmooth λ x dy => ∂† f x dy := sorry
   instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjDiff f] (x : X) : IsSmooth λ dy => ∂† f x dy := sorry
   instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) [HasAdjDiff f] (x : X) : IsLin λ dy => ∂† f x dy := sorry
-  
+
   -- This can be meaningfully defined only on finitely dimensional vector spaces for now
   -- Otherwise I would need special notation for `{f : X → Y // HasAdjDiff f}` that that is just getting too complicated
-  noncomputable 
+  noncomputable
   instance adjoint_differential_mor {X Y ι κ} [Enumtype ι] [Enumtype κ] [FinVec X ι] [FinVec Y κ]
     : AdjointDifferential (X ⟿ Y) (X ⟿ Y ⊸ X) where
     adjointDifferential f := λ x ⟿ λ dy ⊸ ∂† f.1 x dy
-  
+
   -- fails to prove linearity on rhs
   -- @[simp]
   -- theorem adjDiff_adjoint {Y κ} [Enumtype κ] [FinVec Y κ]
   --   : (λ f : X ⟿ Y => ∂† f)† = λ f' : X ⟿ Y ⊸ X => - ∇· (λ x ⟿ λ dx ⊸ ((f' x).1)† dx) := sorry
 
-  example {Y} [Hilbert Y] (g : X ⟿ Y) (c : X) 
-    : IsSmooth (λ (x : X) => ∂ g c) := by infer_instance 
+  example {Y} [Hilbert Y] (g : X ⟿ Y) (c : X)
+    : IsSmooth (λ (x : X) => ∂ g c) := by infer_instance
 
   -- Why does this fail????
   -- #check (λ {Y} [Hilbert Y] (g : X ⟿ Y) (f : X ⟿ Y) => λ x ⟿ ⟪∂ f x, ∂ g x⟫)
@@ -749,12 +749,12 @@ namespace SciLean
   set_option pp.funBinderTypes true in
   set_option synthInstance.maxSize 2048 in
   -- set_option synthInstance.maxHeartbeats 200000 in
-  example {Y} [Hilbert Y] (g : X ⟿ Y) 
+  example {Y} [Hilbert Y] (g : X ⟿ Y)
     : HasAdjoint (λ (f : X ⟿ Y) => λ x ⟿ ⟪∂ f x, ∂ g x⟫) := by simp; infer_instance; done
 
   set_option synthInstance.maxSize 2048 in
-  example {Y} [Hilbert Y] (g : X ⟿ Y) 
-    : (λ (f : X ⟿ Y) => λ x ⟿ ⟪∂ f x, ∂ g x⟫)† = λ g' => - divergence (g' * ∂ g) := by simp; unfold hold; simp done 
+  example {Y} [Hilbert Y] (g : X ⟿ Y)
+    : (λ (f : X ⟿ Y) => λ x ⟿ ⟪∂ f x, ∂ g x⟫)† = λ g' => - divergence (g' * ∂ g) := by simp; unfold hold; simp done
 
   -- noncomputable
   -- def dd {X} [Vec X] (f : ℝ ⟿ X) : ℝ ⟿ X := λ t ⟿ ∂ f t 1
@@ -777,8 +777,8 @@ namespace SciLean
 
   -- set_option synthInstance.maxSize 2048 in
   example {X} [Hilbert X] (y : ℝ ⟿ X) (L : X → ℝ) [HasAdjDiff L] [IsSmooth L]
-    : (λ (dy : ℝ ⟿ X) => λ t ⟿ ∂ L (ⅆ y t) (ⅆ dy t))† 1 
-      = 
+    : (λ (dy : ℝ ⟿ X) => λ t ⟿ ∂ L (ⅆ y t) (ⅆ dy t))† 1
+      =
       - ⅆ t; ∇ L (ⅆ y t)
   :=
   by
@@ -787,13 +787,13 @@ namespace SciLean
 
   example (L : X → ℝ) [HasAdjDiff L] [IsSmooth L]
     : (∇ (y : ℝ ⟿ X), λ t ⟿ L (ⅆ y t))
-      = 
+      =
       λ y => - ⅆ t; ∇ L (ⅆ y t)
       -- λ y => λ t ⟿ - ∂ (∇ L) (ⅆ y t) (ⅆ (ⅆ y) t) -- can't prove smoothness right now
   :=
   by
-    conv => 
-      lhs 
+    conv =>
+      lhs
       simp[One.one, OfNat.ofNat, gradient]
       simp only [adjointDifferential]
       simp
@@ -801,8 +801,8 @@ namespace SciLean
 
 
   example {X} [Hilbert X] (y : ℝ ⟿ X) (L : X → ℝ) [HasAdjDiff L] [IsSmooth L]
-    : (λ (dy : ℝ ⟿ X) => λ t ⟿ ∂ L (y t) (dy t))† 1 
-      = 
+    : (λ (dy : ℝ ⟿ X) => λ t ⟿ ∂ L (y t) (dy t))† 1
+      =
       λ t ⟿ ∇ L (y t)
   :=
   by
@@ -811,7 +811,7 @@ namespace SciLean
 
   example {X} [Hilbert X] (y : ℝ ⟿ X) (L : X → ℝ) [HasAdjDiff L] [IsSmooth L]
     : (∇ (y' : ℝ ⟿ X), λ t ⟿ L (y' t)) y
-      = 
+      =
       λ t ⟿ ∇ L (y t)
   :=
   by
@@ -872,7 +872,7 @@ namespace SciLean
   -- set_option trace.Meta.synthInstance true in
   -- set_option trace.Meta.synthInstance.resume false in
   -- set_option trace.Meta.synthInstance.tryResolve false in
-  example (f df : X ⟿ Y) : IsLin λ x => (∂ (fun (f' : X ⟿ Y) => ∂ f') f df) x := 
+  example (f df : X ⟿ Y) : IsLin λ x => (∂ (fun (f' : X ⟿ Y) => ∂ f') f df) x :=
   by
     admit -- infer_instance
 
@@ -883,7 +883,7 @@ namespace SciLean
   set_option synthInstance.maxSize 2048 in
   example : ∀ (x : X), IsSmooth fun (f : X ⟿ Y) => (2 : ℝ) * f x := by infer_instance
 
-  @[simp] 
+  @[simp]
   theorem integral_diff (F : Z → X → Y) [IsSmooth F] [∀ f, IsSmooth (F f)]
     : (∂ λ (z : Z) => ∫ x, F z x) = λ z dz => ∫ x, ∂ F z dz x := sorry
 
@@ -913,8 +913,8 @@ namespace SciLean
   example : (∂ λ (f : X⟿ℝ) => ∫ x, ∥∇ f.1 x∥²) = λ (f df : X⟿ℝ) => ∫ x, (2:ℝ)*⟪∇ df.1 x, ∇ f.1 x⟫ := sorry
   -- example : (δ λ (f : X⟿ℝ) => ∫ x, ∥∇ f.1 x∥²) = λ (f : X⟿ℝ) => 2 * f := by simp
 
-  -- example (L : X → X → ℝ) [IsSmooth L] [∀ x, IsSmooth (L x)] 
-  --   : ∂ (λ (x : ℝ ⟿ X) => ∫ t, L (x t) (∂ x.1 t 1)) 
-  --     = 
-  --     λ x dx => ∫ t, ∂ L (x t) (dx t) (∂ x.1 t 1) + 
+  -- example (L : X → X → ℝ) [IsSmooth L] [∀ x, IsSmooth (L x)]
+  --   : ∂ (λ (x : ℝ ⟿ X) => ∫ t, L (x t) (∂ x.1 t 1))
+  --     =
+  --     λ x dx => ∫ t, ∂ L (x t) (dx t) (∂ x.1 t 1) +
   --                    ∂ (L (x t)) (∂ x.1 t 1) (∂ dx.1 t 1) := sorry

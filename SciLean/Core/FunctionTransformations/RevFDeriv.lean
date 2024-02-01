@@ -18,7 +18,7 @@ def revFDeriv
 
 namespace revFDeriv
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
@@ -31,13 +31,13 @@ variable
 --------------------------------------------------------------------------------
 
 variable (X)
-theorem id_rule 
+theorem id_rule
   : revFDeriv K (fun x : X => x) = fun x => (x, fun dx => dx) :=
 by
   unfold revFDeriv
   funext _
   ftrans; ftrans; ext; simp; simp
-  
+
 
 
 theorem const_rule (y : Y)
@@ -51,8 +51,8 @@ variable{X}
 variable(E)
 theorem proj_rule [DecidableEq ι] (i : ι)
   : revFDeriv K (fun (x : PiLp 2 (fun (_ : ι) => X)) => x i)
-    = 
-    fun x => 
+    =
+    fun x =>
       (x i, fun dxi j => if i=j then dxi else (0 : X)) :=
 by
   unfold revFDeriv
@@ -60,23 +60,23 @@ by
   -- Here we are in trouble because fderiv depends on the norm
   have h : (fderiv K fun (x : PiLp 2 (fun (_ : ι) => X)) => x i)
            =
-           fun _ => fun dx =>L[K] dx i := sorry_proof -- by apply fderiv.proj_rule 
+           fun _ => fun dx =>L[K] dx i := sorry_proof -- by apply fderiv.proj_rule
   rw[h]
   dsimp; ftrans only; sorry_proof -- do not understand why simp does not solve this
 variable {E}
 
-theorem comp_rule 
-  (f : Y → Z) (g : X → Y) 
+theorem comp_rule
+  (f : Y → Z) (g : X → Y)
   (hf : Differentiable K f) (hg : Differentiable K g)
   : revFDeriv K (fun x : X => f (g x))
-    = 
+    =
     fun x =>
       let ydg := revFDeriv K g x
       let zdf := revFDeriv K f ydg.1
       (zdf.1,
        fun dz =>
          let dy := zdf.2 dz
-         ydg.2 dy)  := 
+         ydg.2 dy)  :=
 by
   unfold revFDeriv
   funext _
@@ -84,16 +84,16 @@ by
   -- ext; simp
   sorry_proof
 
-theorem let_rule 
-  (f : X → Y → Z) (g : X → Y) 
+theorem let_rule
+  (f : X → Y → Z) (g : X → Y)
   (hf : Differentiable K (fun (xy : X×Y) => f xy.1 xy.2)) (hg : Differentiable K g)
-  : revFDeriv K (fun x : X => let y := g x; f x y) 
-    = 
-    fun x => 
-      let ydg := revFDeriv K g x 
+  : revFDeriv K (fun x : X => let y := g x; f x y)
+    =
+    fun x =>
+      let ydg := revFDeriv K g x
       let zdf := revFDeriv K (fun (xy : X×₂Y) => f xy.1 xy.2) (x,ydg.1)
       (zdf.1,
-       fun dz => 
+       fun dz =>
          let dxdy := zdf.2 dz
          let dx := ydg.2 dxdy.2
          dxdy.1 + dx)  :=
@@ -117,13 +117,13 @@ theorem comp_rule_at
   (f : Y → Z) (g : X → Y) (x : X)
   (hf : DifferentiableAt K f (g x)) (hg : DifferentiableAt K g x)
   : revFDeriv K (fun x : X => f (g x)) x
-    = 
+    =
     let ydg := revFDeriv K g x
     let zdf := revFDeriv K f ydg.1
     (zdf.1,
      fun dz =>
        let dy := zdf.2 dz
-       ydg.2 dy)  := 
+       ydg.2 dy)  :=
 by
   unfold revFDeriv
   ftrans; -- ftrans; simp; ext; simp
@@ -133,11 +133,11 @@ theorem let_rule_at
   (f : X → Y → Z) (g : X → Y) (x : X)
   (hf : DifferentiableAt K (fun (xy : X×Y) => f xy.1 xy.2) (x,g x)) (hg : DifferentiableAt K g x)
   : revFDeriv K (fun x : X => let y := g x; f x y) x
-    = 
-    let ydg := revFDeriv K g x 
+    =
+    let ydg := revFDeriv K g x
     let zdf := revFDeriv K (fun (xy : X×₂Y) => f xy.1 xy.2) (x,ydg.1)
     (zdf.1,
-     fun dz => 
+     fun dz =>
        let dxdy := zdf.2 dz
        let dx := ydg.2 dxdy.2
        dxdy.1 + dx)  :=
@@ -180,20 +180,20 @@ open Lean Meta FTrans in
 def ftransExt : FTransExt where
   ftransName := ``revFDeriv
 
-  getFTransFun? e := 
+  getFTransFun? e :=
     if e.isAppOf ``revFDeriv then
 
       if let .some f := e.getArg? 10 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFTransFun e f := 
+  replaceFTransFun e f :=
     if e.isAppOf ``revFDeriv then
       e.setArg 10 f
-    else          
+    else
       e
 
   idRule  e X := do
@@ -252,7 +252,7 @@ end SciLean.revFDeriv
 
 open SciLean
 
-variable 
+variable
   {K : Type _} [IsROrC K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
@@ -272,7 +272,7 @@ theorem SciLean.ProdL2.mk.arg_fstsnd.revFDeriv_rule_at
     =
     let ydg := revFDeriv K g x
     let zdf := revFDeriv K f x
-    ((ydg.1,zdf.1), fun dyz => ydg.2 dyz.1 + zdf.2 dyz.2) := 
+    ((ydg.1,zdf.1), fun dyz => ydg.2 dyz.1 + zdf.2 dyz.2) :=
 by sorry_proof
 
 @[ftrans]
@@ -281,14 +281,14 @@ theorem SciLean.ProdL2.mk.arg_fstsnd.revFDeriv_rule
   (hg : Differentiable K g) (hf : Differentiable K f)
   : revFDeriv K (fun x => ProdL2.mk (g x) (f x))
     =
-    fun x => 
+    fun x =>
       let ydg := revFDeriv K g x
       let zdf := revFDeriv K f x
-      ((ydg.1,zdf.1), fun dyz => ydg.2 dyz.1 + zdf.2 dyz.2) := 
-by 
+      ((ydg.1,zdf.1), fun dyz => ydg.2 dyz.1 + zdf.2 dyz.2) :=
+by
   funext x
   apply SciLean.ProdL2.mk.arg_fstsnd.revFDeriv_rule_at g f x (hg x) (hf x)
- 
+
 
 -- ProdL2.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -299,7 +299,7 @@ theorem SciLean.ProdL2.fst.arg_self.revFDeriv_rule_at
   : revFDeriv K (fun x => ProdL2.fst (f x)) x
     =
     let yzdf := revFDeriv K f x
-    (ProdL2.fst yzdf.1, fun dy => yzdf.2 (dy,0)) := 
+    (ProdL2.fst yzdf.1, fun dy => yzdf.2 (dy,0)) :=
 by sorry_proof
 
 @[ftrans]
@@ -307,9 +307,9 @@ theorem SciLean.ProdL2.fst.arg_self.revFDeriv_rule
   (f : X → Y×₂Z) (hf : Differentiable K f)
   : revFDeriv K (fun x => ProdL2.fst (f x))
     =
-    fun x => 
+    fun x =>
       let yzdf := revFDeriv K f x
-      (ProdL2.fst yzdf.1, fun dy => yzdf.2 (dy,0)) := 
+      (ProdL2.fst yzdf.1, fun dy => yzdf.2 (dy,0)) :=
 by sorry_proof
 
 
@@ -322,7 +322,7 @@ theorem SciLean.ProdL2.snd.arg_self.revFDeriv_rule_at
   : revFDeriv K (fun x => ProdL2.snd (f x)) x
     =
     let yzdf := revFDeriv K f x
-    (ProdL2.snd yzdf.1, fun dz => yzdf.2 (0,dz)) := 
+    (ProdL2.snd yzdf.1, fun dz => yzdf.2 (0,dz)) :=
 by sorry_proof
 
 @[ftrans]
@@ -330,9 +330,9 @@ theorem SciLean.ProdL2.snd.arg_self.revFDeriv_rule
   (f : X → Y×₂Z) (hf : Differentiable K f)
   : revFDeriv K (fun x => ProdL2.snd (f x))
     =
-    fun x => 
+    fun x =>
       let yzdf := revFDeriv K f x
-      (ProdL2.snd yzdf.1, fun dz => yzdf.2 (0,dz)) := 
+      (ProdL2.snd yzdf.1, fun dz => yzdf.2 (0,dz)) :=
 by sorry_proof
 
 
@@ -346,7 +346,7 @@ theorem HAdd.hAdd.arg_a0a1.revFDeriv_rule_at
     =
     let ydf := revFDeriv K f x
     let ydg := revFDeriv K g x
-    (ydf.1 + ydg.1, fun dy => ydf.2 dy + ydg.2 dy) := 
+    (ydf.1 + ydg.1, fun dy => ydf.2 dy + ydg.2 dy) :=
 by sorry_proof
 
 @[ftrans]
@@ -354,10 +354,10 @@ theorem HAdd.hAdd.arg_a0a1.revFDeriv_rule
   (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
   : (revFDeriv K fun x => f x + g x)
     =
-    fun x => 
+    fun x =>
       let ydf := revFDeriv K f x
       let ydg := revFDeriv K g x
-      (ydf.1 + ydg.1, fun dy => ydf.2 dy + ydg.2 dy) := 
+      (ydf.1 + ydg.1, fun dy => ydf.2 dy + ydg.2 dy) :=
 by sorry_proof
 
 
@@ -371,7 +371,7 @@ theorem HSub.hSub.arg_a0a1.revFDeriv_rule_at
     =
     let ydf := revFDeriv K f x
     let ydg := revFDeriv K g x
-    (ydf.1 - ydg.1, fun dy => ydf.2 dy - ydg.2 dy) := 
+    (ydf.1 - ydg.1, fun dy => ydf.2 dy - ydg.2 dy) :=
 by sorry_proof
 
 @[ftrans]
@@ -379,10 +379,10 @@ theorem HSub.hSub.arg_a0a1.revFDeriv_rule
   (f g : X → Y) (hf : Differentiable K f) (hg : Differentiable K g)
   : (revFDeriv K fun x => f x - g x)
     =
-    fun x => 
+    fun x =>
       let ydf := revFDeriv K f x
       let ydg := revFDeriv K g x
-      (ydf.1 - ydg.1, fun dy => ydf.2 dy - ydg.2 dy) := 
+      (ydf.1 - ydg.1, fun dy => ydf.2 dy - ydg.2 dy) :=
 by sorry_proof
 
 
@@ -391,7 +391,7 @@ by sorry_proof
 
 @[ftrans]
 theorem Neg.neg.arg_a0.revFDeriv_rule
-  (f : X → Y) (x : X) 
+  (f : X → Y) (x : X)
   : (revFDeriv K fun x => - f x) x
     =
     let ydf := revFDeriv K f x
@@ -419,7 +419,7 @@ theorem HMul.hMul.arg_a0a1.revFDeriv_rule
   (hf : Differentiable K f) (hg : Differentiable K g)
   : (revFDeriv K fun x => f x * g x)
     =
-    fun x => 
+    fun x =>
       let ydf := revFDeriv K f x
       let zdg := revFDeriv K g x
       (ydf.1 / zdg.1, fun dx' =>  zdg.1 • ydf.2 dx' + ydf.1 • zdg.2 dx') :=
@@ -431,7 +431,7 @@ by sorry_proof
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.revFDeriv_rule_at
-  (f : X → K) (g : X → Y) (x : X) 
+  (f : X → K) (g : X → Y) (x : X)
   (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
   : (revFDeriv K fun x => f x • g x) x
     =
@@ -446,7 +446,7 @@ theorem HSMul.hSMul.arg_a0a1.revFDeriv_rule
   (hf : Differentiable K f) (hg : Differentiable K g)
   : (revFDeriv K fun x => f x • g x)
     =
-    fun x => 
+    fun x =>
       let ydf := revFDeriv K f x
       let zdg := revFDeriv K g x
       (ydf.1 • zdg.1, fun dx' => ydf.2 (inner dx' zdg.1) + ydf.1 • zdg.2 dx') :=
@@ -464,7 +464,7 @@ theorem HDiv.hDiv.arg_a0a1.revFDeriv_rule_at
     =
     let ydf := revFDeriv K f x
     let zdg := revFDeriv K g x
-    (ydf.1 / zdg.1, 
+    (ydf.1 / zdg.1,
      fun dx' => (1 / zdg.1^2) • (zdg.1 • ydf.2 dx' - ydf.1 • zdg.2 dx')) :=
 by sorry_proof
 
@@ -474,20 +474,20 @@ theorem HDiv.hDiv.arg_a0a1.revFDeriv_rule
   (hf : Differentiable K f) (hg : Differentiable K g) (hx : ∀ x, g x ≠ 0)
   : (revFDeriv K fun x => f x / g x)
     =
-    fun x => 
+    fun x =>
       let ydf := revFDeriv K f x
       let zdg := revFDeriv K g x
-      (ydf.1 / zdg.1, 
+      (ydf.1 / zdg.1,
        fun dx' => (1 / zdg.1^2) • (zdg.1 • ydf.2 dx' - ydf.1 • zdg.2 dx')) :=
 by sorry_proof
 
 
 -- HPow.hPow ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[ftrans]
 def HPow.hPow.arg_a0.revFDeriv_rule_at
-  (f : X → K) (x : X) (n : Nat) (hf : DifferentiableAt K f x) 
+  (f : X → K) (x : X) (n : Nat) (hf : DifferentiableAt K f x)
   : revFDeriv K (fun x => f x ^ n) x
     =
     let ydf := revFDeriv K f x
@@ -496,10 +496,10 @@ by sorry_proof
 
 @[ftrans]
 def HPow.hPow.arg_a0.revFDeriv_rule
-  (f : X → K) (n : Nat) (hf : Differentiable K f) 
+  (f : X → K) (n : Nat) (hf : Differentiable K f)
   : revFDeriv K (fun x => f x ^ n)
     =
-    fun x => 
+    fun x =>
       let ydf := revFDeriv K f x
       (ydf.1 ^ n, fun dx' => (n * (ydf.1 ^ (n-1))) • ydf.2 dx') :=
 by sorry_proof

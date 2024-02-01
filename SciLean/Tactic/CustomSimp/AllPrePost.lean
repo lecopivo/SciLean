@@ -40,5 +40,3 @@ open Lean.Elab.Tactic Lean.Elab.Tactic.Conv in
   let lhs ← getLhs
   let (result, _) ← dischargeWrapper.with fun d? => SciLean.Meta.CustomSimp.simp lhs ctx (discharge? := d?) #[] #[]
   applySimpResult result
-
-

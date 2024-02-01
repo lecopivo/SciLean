@@ -15,7 +15,7 @@ variable {Y₁ Y₂ : Type} [Vec Y₁] [Vec Y₂]
 -- maybe provide notation  `∂[dx] (x:=x₀), f x = ∂ f x₀ dx` and its variants
 -- Variants
 --     1. ∂[dx] (x:=x₀), f x          -- `∂[dx]` would be directional derivative operator
---     2. ∂ (x:=x₀,dx), f x           -- this has weird version without `x₀` ∂ (x:=;dx), f x 
+--     2. ∂ (x:=x₀,dx), f x           -- this has weird version without `x₀` ∂ (x:=;dx), f x
 --     3. ∂_dx (x:=x₀), f x           -- Can we parse this properly? What if `dx` is complicated, do we allow `∂_(dx)` ?
 --     4. ??
 -- macro "∂" x:Lean.Parser.Term.funBinder "," f:term:66 : term => `(∂ λ $x => $f)
@@ -155,18 +155,18 @@ theorem differential.rule_pi
     =
     λ g dg a => ∂ (f a) (g a) (dg a) := sorry
 
-theorem differential.rule_const' 
+theorem differential.rule_const'
   : ∂ (λ (x : X) (y : Y) => x)
     =
     λ x dx y => dx := sorry
 
 @[fun_trans_rule]
-theorem differential.rule_swap 
+theorem differential.rule_swap
   (f : α → X → Y) [∀ a, IsSmooth (f a)]
   : ∂ (λ (x : X) (a : α) => f a x)
     =
-    λ x dx a => ∂ (f a) x dx := 
-by 
+    λ x dx a => ∂ (f a) x dx :=
+by
   rw[differential.rule_comp (λ (g : α → X) (a : α) => f a (g a)) (λ x a => x)]
   simp[differential.rule_pi, differential.rule_const']
   done
@@ -179,7 +179,7 @@ theorem differential.rule_eval (X) [Vec X] (a : α)
 
 set_option pp.all true in
 @[fun_trans_rule]
-theorem differential.rule_prodMk 
+theorem differential.rule_prodMk
   (f : X → Y) [IsSmooth f]
   (g : X → Z) [IsSmooth g]
   : ∂ (λ x => (f x, g x))
@@ -187,25 +187,25 @@ theorem differential.rule_prodMk
     λ x dx => (∂ f x dx, ∂ g x dx) := sorry
 
 @[fun_trans_rule]
-theorem differential.rule_letComp 
+theorem differential.rule_letComp
   (f : Y → Z) [IsSmooth f]
   (g : X → Y) [IsSmooth g]
   : ∂ (λ (x : X) => let y := g x; f y)
     =
     λ x dx =>
       let y  := g x
-      let dy := ∂ g x dx 
+      let dy := ∂ g x dx
       ∂ f y dy := sorry
 
 @[fun_trans_rule]
-theorem differential.rule_letBinop 
+theorem differential.rule_letBinop
   (f : X → Y → Z) [IsSmooth λ xy : X×Y => f xy.1 xy.2]
   (g : X → Y) [IsSmooth g]
   : ∂ (λ (x : X) => let y := g x; f x y)
     =
     λ x dx =>
       let y  := g x
-      let dy := ∂ g x dx 
+      let dy := ∂ g x dx
       ∂ (λ xy => f xy.1 xy.2) (x,y) (dx,dy) := sorry
 
 @[fun_trans]
@@ -243,7 +243,7 @@ theorem tangentMap.rule_comp
   (g : X → Y) [IsSmooth g]
   : 𝒯 (λ x : X => f (g x))
     =
-    λ x dx => 
+    λ x dx =>
       let ydy := 𝒯 g x dx
       𝒯 f ydy.1 ydy.2 := sorry
 
@@ -252,21 +252,21 @@ theorem tangentMap.rule_pi
   (f : α → X → Y) [∀ a, IsSmooth (f a)]
   : 𝒯 (λ (g : α → X) (a : α) => f a (g a))
     =
-    λ g dg => (λ a => f a (g a), 
+    λ g dg => (λ a => f a (g a),
                λ a => ∂ (f a) (g a) (dg a)) := sorry
 
-theorem tangentMap.rule_const' 
+theorem tangentMap.rule_const'
   : 𝒯 (λ (x : X) (y : Y) => x)
     =
     λ x dx => (λ y => x, λ y => dx) := sorry
 
 @[fun_trans_rule]
-theorem tangentMap.rule_swap 
+theorem tangentMap.rule_swap
   (f : α → X → Y) [∀ a, IsSmooth (f a)]
   : 𝒯 (λ (x : X) (a : α) => f a x)
     =
-    λ x dx => (λ a => f a x, λ a => ∂ (f a) x dx) := 
-by 
+    λ x dx => (λ a => f a x, λ a => ∂ (f a) x dx) :=
+by
   rw[tangentMap.rule_comp (λ (g : α → X) (a : α) => f a (g a)) (λ x a => x)]
   simp[tangentMap.rule_pi, tangentMap.rule_const']
   done
@@ -278,34 +278,34 @@ theorem tangentMap.rule_eval (X) [Vec X] (a : α)
     λ f df => (f a, df a) := sorry
 
 @[fun_trans_rule]
-theorem tangentMap.rule_prodMk 
+theorem tangentMap.rule_prodMk
   (f : X → Y) [IsSmooth f]
   (g : X → Z) [IsSmooth g]
   : 𝒯 (λ x => (f x, g x))
     =
-    λ x dx => 
+    λ x dx =>
       let ydy := 𝒯 f x dx
       let zdz := 𝒯 g x dx
       ((ydy.1, zdz.1), (ydy.2, zdz.2)) := sorry
 
 @[fun_trans_rule]
-theorem tangentMap.rule_letBinop 
+theorem tangentMap.rule_letBinop
   (f : X → Y → Z) [IsSmooth λ xy : X×Y => f xy.1 xy.2]
   (g : X → Y) [IsSmooth g]
   : 𝒯 (λ (x : X) => let y := g x; f x y)
     =
     λ x dx =>
-      let ydy := 𝒯 g x dx 
+      let ydy := 𝒯 g x dx
       𝒯 (λ xy => f xy.1 xy.2) (x,y) (dx,dy) := sorry
 
 @[fun_trans_rule]
-theorem tangentMap.rule_letComp 
+theorem tangentMap.rule_letComp
   (f : Y → Z) [IsSmooth f]
   (g : X → Y) [IsSmooth g]
   : 𝒯 (λ (x : X) => let y := g x; f y)
     =
     λ x dx =>
-      let ydy := 𝒯 g x dx 
+      let ydy := 𝒯 g x dx
       𝒯 f ydy.1 ydy.2 := sorry
 
 @[fun_trans]
@@ -325,20 +325,20 @@ theorem tangentMap.rule_snd (X Y) [Vec X] [Vec Y]
 -- Smooth Differential --
 --------------------------------------------------------------------------------
 
--- instance differential.arg_dx.isSmooth (f : X → Y) [IsSmoothT f] (x : X) 
+-- instance differential.arg_dx.isSmooth (f : X → Y) [IsSmoothT f] (x : X)
 --   : IsSmoothT (λ dx => ∂ f x dx) := by (try infer_instance); sorry_proof
--- instance differential.arg_dx.isLin    (f : X → Y) [IsSmoothT f] (x : X) 
+-- instance differential.arg_dx.isLin    (f : X → Y) [IsSmoothT f] (x : X)
 --   : IsLinT (λ dx => ∂ f x dx) := by (try infer_instance); sorry_proof
--- instance differential.arg_x.isSmooth  (f : X → Y) [IsSmoothT f] 
+-- instance differential.arg_x.isSmooth  (f : X → Y) [IsSmoothT f]
 --   : IsSmoothT (λ x => λ dx ⊸ ∂ f x dx) := by (try infer_instance); sorry_proof
--- instance differential.arg_x.isSmooth' (f : X → Y) [IsSmoothT f] 
+-- instance differential.arg_x.isSmooth' (f : X → Y) [IsSmoothT f]
 --   : IsSmoothT (λ x => λ dx ⟿ ∂ f x dx) := by (try infer_instance); sorry_proof
 
 
--- instance differential.arg_y.isLin 
---   (f : X → Y → Z) [IsSmoothT f] [∀ x, IsLinT (f x)] (x dx) 
+-- instance differential.arg_y.isLin
+--   (f : X → Y → Z) [IsSmoothT f] [∀ x, IsLinT (f x)] (x dx)
 --   : IsLinT (λ y => ∂ f x dx y) := by (try infer_instance); sorry_proof
--- instance differential.arg_y.isSmooth (f : X → Y → Z) [IsSmoothNT 2 f] (x dx) 
+-- instance differential.arg_y.isSmooth (f : X → Y → Z) [IsSmoothNT 2 f] (x dx)
 --   : IsSmoothT (λ y => ∂ f x dx y) := by (try infer_instance); sorry_proof
 
 -- instance differential.arg_x.comp.isSmooth {X Y Z} [Vec X] [Vec Y] [Vec Z] [Vec W]
@@ -376,15 +376,15 @@ theorem tangentMap.rule_snd (X Y) [Vec X] [Vec Y]
 -- noncomputable
 -- abbrev Smooth.differentialScalar (f : ℝ ⟿ X) : ℝ ⟿ X := λ t ⟿ ((∂ f t) 1)
 
--- @[default_instance] 
--- instance differentialScalar.instDifferentialNotation (f : ℝ → X) 
+-- @[default_instance]
+-- instance differentialScalar.instDifferentialNotation (f : ℝ → X)
 --   : Differential f (differentialScalar f) := ⟨⟩
 
--- instance Smooth.differentialScalar.instDifferentialNotation (f : ℝ ⟿ X) 
+-- instance Smooth.differentialScalar.instDifferentialNotation (f : ℝ ⟿ X)
 --   : Differential f (Smooth.differentialScalar f) := ⟨⟩
 
- 
--- Notation 
+
+-- Notation
 -- ⅆ s, f s         --> ⅆ λ s => f s
 -- ⅆ s : ℝ, f s     --> ⅆ λ s : ℝ => f s
 -- ⅆ s := t, f s    --> (ⅆ λ s => f s) t
@@ -454,7 +454,7 @@ instance differential.arg_x_dxy.isSmooth (f : X → Y → Z) [∀ x, IsSmoothT (
 instance differential.arg_f_xdxy.isSmooth (f : U → X → Y → Z) [∀ u x, IsSmoothT (f u x)] [∀ u, IsSmoothT (λ x => λ y ⟿ f u x y)] [IsSmoothT (λ u => λ x y ⟿ f u x y)]
   : IsSmoothT (λ u => λ x dx y ⟿ ∂ (f u) x dx y) := by (try infer_instance); sorry_proof
 
-  
+
 --------------------------------------------------------------------------------
 -- Differential Rules --
 --------------------------------------------------------------------------------
@@ -462,19 +462,19 @@ instance differential.arg_f_xdxy.isSmooth (f : U → X → Y → Z) [∀ u x, Is
 -- -- I: X⟿X
 
 -- @[diff]
--- theorem differential_rule_I 
+-- theorem differential_rule_I
 --   : ∂ (λ x : X => x) = λ _ dx => dx := sorry_proof
 
 
 -- -- K: X⟿Y⟿X
 
 -- @[diff]
--- theorem differential_rule_K₂ (x : X) 
+-- theorem differential_rule_K₂ (x : X)
 --   : ∂ (λ _ : Y => x) = λ _ _ => 0 := sorry_proof
 
 -- set_option trace.Meta.Tactic.simp.rewrite true in
 -- @[diff]
--- theorem differential_rule_K₁ 
+-- theorem differential_rule_K₁
 --   : ∂ (λ (x : X) (_ : Y) => x) = λ _ dx _ => dx := sorry_proof
 
 
@@ -484,17 +484,17 @@ instance differential.arg_f_xdxy.isSmooth (f : U → X → Y → Z) [∀ u x, Is
 -- theorem differential_rule_S₃
 --   (f : X → Y → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y] -- [IsSmoothN 2 f]
 --   (g : X → Y)  [IsSmoothT g]
---   : ∂ (λ x => f x (g x)) 
---     = 
---     λ x dx => 
+--   : ∂ (λ x => f x (g x))
+--     =
+--     λ x dx =>
 --       let (y,dy) := 𝒯 g x dx
 --       ∂ f x dx y + ∂ (f x) y dy
 --   := sorry_proof
 
 -- instance (f : U → X → Y → Z) [∀ u x, IsSmoothT (f u x)] [∀ u, IsSmoothT (λ x => λ y ⟿ f u x y)] [IsSmoothT (λ u => λ x y ⟿ f u x y)]
 --   (g : U → X) [IsSmoothT g]
---   : IsSmoothT λ u => λ y ⟿ f u (g u) y := 
--- by 
+--   : IsSmoothT λ u => λ y ⟿ f u (g u) y :=
+-- by
 --   try infer_instance
 --   have : IsSmoothT fun u => λ u' y ⟿ f u (g u') y := by (try infer_instance); apply IsSmoothT_rule_S₁ (λ u x y => f u y x) (λ v _ => g v)
 --   apply IsSmoothT_duplicate_argument (λ u u' => λ y ⟿ f u (g u') y)
@@ -525,25 +525,25 @@ theorem differential.of_swap (f : α → X → Y) [∀ i, IsSmoothT (f i)]
 
 @[simp ↓ low-1, diff low-1, simp_guard g (λ x => x)]
 theorem differential.of_comp
-  (f : Y → Z) [IsSmoothT f] 
+  (f : Y → Z) [IsSmoothT f]
   (g : X → Y) [IsSmoothT g]
-  : ∂ (λ x => f (g x)) 
-    = 
-    λ x dx => 
+  : ∂ (λ x => f (g x))
+    =
+    λ x dx =>
       let (y,dy) := (𝒯 g) x dx
       -- let y := g x
       -- let dy := ∂ g x dx
-      ∂ f y dy 
+      ∂ f y dy
   := sorry_proof
 
 @[simp ↓ low-2, diff low-2, simp_guard g₁ Prod.fst, g₂ Prod.snd]
 theorem differential.of_diag
-  (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y] 
+  (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y]
   (g₁ : X → Y₁) [IsSmoothT g₁]
   (g₂ : X → Y₂) [IsSmoothT g₂]
-  : ∂ (λ x => f (g₁ x) (g₂ x)) 
-    = 
-    λ x dx => 
+  : ∂ (λ x => f (g₁ x) (g₂ x))
+    =
+    λ x dx =>
       let (y₁,dy₁) := 𝒯 g₁ x dx
       let (y₂,dy₂) := 𝒯 g₂ x dx
       let df := ∂ (uncurryN 2 f)
@@ -552,16 +552,16 @@ theorem differential.of_diag
       -- let y₂ := g₂ x
       -- let dy₂ := ∂ g₂ x dx
       df (y₁,y₂) (dy₁,dy₂)
-      -- ∂ f y₁ dy₁ y₂ +  ∂ (f y₁) y₂ dy₂ 
+      -- ∂ f y₁ dy₁ y₂ +  ∂ (f y₁) y₂ dy₂
   := sorry_proof
 
-/-- Last resort theorem that changes tangent map to normal differential 
+/-- Last resort theorem that changes tangent map to normal differential
 
 Bilinear maps should usually provide a rewrite rule for `𝒯 (uncurryN 2 f)`
 -/
 @[simp ↓ low-5, diff low-5]
 theorem differential.of_uncurryN (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y]
-  : ∂ (uncurryN 2 f) 
+  : ∂ (uncurryN 2 f)
     =
     λ (y₁,y₂) (dy₁,dy₂) =>
     ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂
@@ -570,7 +570,7 @@ theorem differential.of_uncurryN (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f 
 @[simp ↓ low, diff low]
 theorem differential.of_parm
   (f : X → α → Y) [IsSmoothT f] (a : α)
-  : ∂ (λ x => f x a) = λ x dx => ∂ f x dx a := 
+  : ∂ (λ x => f x a) = λ x dx => ∂ f x dx a :=
 by
   rw[differential.of_swap (λ a x => f x a)]
 
@@ -591,22 +591,22 @@ theorem tangentMap.of_id
 
 @[simp ↓, diff]
 theorem tangentMap.of_const (x : X)
-  : 𝒯 (λ y : Y => x) = λ y dy => (x,0) 
+  : 𝒯 (λ y : Y => x) = λ y dy => (x,0)
   := by symdiff; done
 
 @[simp ↓ low-3, diff]
 theorem tangentMap.of_swap (f : α → X → Y) [∀ i, IsSmoothT (f i)]
-  : 𝒯 (λ x a => f a x) = λ x dx => (λ a => f a x, λ a => ∂ (f a) x dx) 
+  : 𝒯 (λ x a => f a x) = λ x dx => (λ a => f a x, λ a => ∂ (f a) x dx)
   := by symdiff; done
 
 set_option trace.Meta.Tactic.simp true in
 set_option trace.Meta.Tactic.simp.unify false in
 @[simp ↓ low-1, diff, simp_guard g (λ x => x)]
 theorem tangentMap.of_comp
-  (f : Y → Z) [IsSmoothT f] 
-  (g : X → Y) [IsSmoothT g] 
-  : 𝒯 (λ x => f (g x)) 
-    = 
+  (f : Y → Z) [IsSmoothT f]
+  (g : X → Y) [IsSmoothT g]
+  : 𝒯 (λ x => f (g x))
+    =
     λ x dx =>
       let (y,dy) := 𝒯 g x dx
       𝒯 f y dy
@@ -619,21 +619,21 @@ theorem tangentMap.of_diag
   (g₁ : X → Y₁) [IsSmoothT g₁]
   (g₂ : X → Y₂) [IsSmoothT g₂]
   : 𝒯 (λ x => f (g₁ x) (g₂ x))
-    = 
-    λ x dx => 
+    =
+    λ x dx =>
       let (y₁,dy₁) := 𝒯 g₁ x dx
       let (y₂,dy₂) := 𝒯 g₂ x dx
       -- (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
       𝒯 (uncurryN 2 f) (y₁,y₂) (dy₁,dy₂)
   := by simp[tangentMap]; done
 
-/-- Last resort theorem that changes tangent map to normal differential 
+/-- Last resort theorem that changes tangent map to normal differential
 
 Bilinear maps should usually provide a rewrite rule for `𝒯 (uncurryN 2 f)`
 -/
 @[simp ↓ low-5, diff low-5]
 theorem tangentMap.of_uncurryN (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y]
-  : 𝒯 (uncurryN 2 f) 
+  : 𝒯 (uncurryN 2 f)
     =
     λ (y₁,y₂) (dy₁,dy₂) =>
     (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
@@ -642,7 +642,7 @@ theorem tangentMap.of_uncurryN (f : Y₁ → Y₂ → Z) [∀ x, IsSmoothT (f x)
 @[simp ↓ low, diff]
 theorem tangentMap.of_parm
   (f : X → α → Y) [IsSmoothT f] (a : α)
-  : 𝒯 (λ x => f x a) = λ x dx => let (f',df') := 𝒯 f x dx; (f' a, df' a) 
+  : 𝒯 (λ x => f x a) = λ x dx => let (f',df') := 𝒯 f x dx; (f' a, df' a)
   := by simp[tangentMap]; done
 
 @[simp ↓, diff]
@@ -655,7 +655,7 @@ theorem tangentMap.of_eval
 --   (f : X → Y → Z) [∀ x, IsSmoothT (f x)] [IsSmoothT λ x => λ y ⟿ f x y]
 --   : ∂ (λ (xy : (X×Y)) => f xy.1 xy.2) = λ (x,y) (dx,dy) => ∂ f x dx y + ∂ (f x) y dy := sorry_proof
 
---   -- : ∂ (λ ((x,y) : (X×Y)) => f x y) = λ (x,y) (dx,dy) => ∂ f x dx y + ∂ (f x) y dy := sorry_proof 
+--   -- : ∂ (λ ((x,y) : (X×Y)) => f x y) = λ (x,y) (dx,dy) => ∂ f x dx y + ∂ (f x) y dy := sorry_proof
 
 -- @[simp ↓ low, diff]
 -- theorem uncurry.arg_xy.parm1.diff_simp
@@ -669,18 +669,18 @@ theorem tangentMap.of_eval
 
 /-- Differential of linear function is the function itself.
 
-This theorem is too general and we do not want to try to apply it 
-every time we try to differentiate something. That is why it it has 
+This theorem is too general and we do not want to try to apply it
+every time we try to differentiate something. That is why it it has
 low priority and more importantly it asks for `IsLin` and not for `IsLinT`.
 Only elementary functions(that are not composite composite) are allowed
 to be differentiated with this theorem. -/
 
-@[simp low, diff] 
+@[simp low, diff]
 theorem tangentMap_of_linear (f : X → Y) [IsLin f]
   : 𝒯 f = λ x dx => (f x, f dx) := by simp[tangentMap]; done
 
 
-@[simp low, diff] 
+@[simp low, diff]
 theorem diff_of_linear_2_1 (f : X → Y → Z) [IsLinN 2 f] : ∂ f = λ _ dx _ => f dx 0 := sorry_proof
-@[simp low, diff] 
+@[simp low, diff]
 theorem diff_of_linear_2_2 (f : X → Y → Z) [IsLinN 2 f] (x : X) : ∂ (λ y => f x y) = λ _ dy => f 0 dy := sorry_proof

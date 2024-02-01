@@ -20,7 +20,7 @@ def elabProof (goal : Expr) (tac : TSyntax ``tacticSeq) : TermElabM Expr := do
 
   if ¬goals.isEmpty then
     throwError s!"failed to prove {← ppExpr goal}\nunsolved goals {← liftM <| goals.mapM (fun m => m.getType >>= ppExpr)}"
-  
+
   return ← instantiateMVars proof
 
 /-- Returns `(id, u, K)` where `K` is infered field type with universe level `u`
@@ -91,7 +91,7 @@ def splitToCtxAndArgs (xs : Array Expr) : MetaM (Array Expr × Array Expr) := do
   let mut i := 0
   for x in xs do
     let X ← inferType x
-    if (← x.fvarId!.getBinderInfo) == .default && 
+    if (← x.fvarId!.getBinderInfo) == .default &&
        ¬X.bindingBodyRec.isType then
       break
     i := i + 1
@@ -121,8 +121,8 @@ inductive  ArgKind where
 
 /-- split arguments into main, unused and trailing by providing names of main and trailing args -/
 def splitArgs (args : Array Expr) (mainNames trailingNames : Array Name)
-  : MetaM (Array Expr × Array Expr × Array Expr × Array ArgKind) := do 
-  
+  : MetaM (Array Expr × Array Expr × Array Expr × Array ArgKind) := do
+
   let mut main : Array Expr := #[]
   let mut unused : Array Expr := #[]
   let mut trailing : Array Expr := #[]
@@ -148,7 +148,7 @@ def splitArgs (args : Array Expr) (mainNames trailingNames : Array Name)
 
   if trailing.size ≠ trailingNames.size then
     throwError "unrecoginezed trailing argument, TODO: determine which one"
-  
+
   return (main, unused, trailing, argKind)
 
 def mergeArgs (main unused trailing : Array Expr) (argKinds : Array ArgKind) : Array Expr := Id.run do
@@ -180,11 +180,11 @@ def checkNoDependentTypes (xs ys : Array Expr) : MetaM Unit := do
 structure GenerateData where
   /-- field over which we are currently working -/
   K : Expr
-  
+
   /-- original context fvars of a function, these are types, instances and implicit arguments -/
-  orgCtx : Array Expr 
+  orgCtx : Array Expr
   /-- extended orgCtx such that types form appropriate vector space, group or whatever is necessary -/
-  ctx : Array Expr 
+  ctx : Array Expr
 
   /-- main fvars, main arguments we perform function transformation in -/
   mainArgs : Array Expr
@@ -207,7 +207,7 @@ structure GenerateData where
 
   /-- function we are working with as a function of `w` -/
   f : Expr
- 
+
   /-- fvars that that are main arguments parametrized by W-/
   argFuns : Array Expr
   /-- fvars for properties about argFun -/
@@ -215,6 +215,6 @@ structure GenerateData where
 
   /-- declaration suffix based on argument names used to generate rule name -/
   declSuffix : String
-  
+
   /-- level parameters -/
   levelParams : List Name

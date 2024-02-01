@@ -3,16 +3,16 @@ import SciLean.Data.DataArray.DataArray
 namespace SciLean
 
 -- TODO: In the future this will be probably replaced by `α × α` but currently a struct like this has better performance(at least I was told so :)
-structure Vec2 (α : Type) where 
+structure Vec2 (α : Type) where
   (x y : α)
 
-structure Vec3 (α : Type) where 
+structure Vec3 (α : Type) where
   (x y z : α)
 
-structure Vec4 (α : Type) where 
+structure Vec4 (α : Type) where
   (x y z w : α)
 
-namespace Vec2 
+namespace Vec2
 
   def get (v : Vec2 α) (i : Idx 2) : α :=
     if i.1 = 0 then
@@ -25,7 +25,7 @@ namespace Vec2
       ⟨vi, v.y⟩
     else
       ⟨v.x, vi⟩
-    
+
   def intro (f : Idx 2 → α) : Vec2 α := ⟨f ⟨0,sorry⟩, f ⟨1,sorry⟩⟩
 
   instance : GetElem (Vec2 α) (Idx 2) α (λ _ _ => True) where
@@ -39,7 +39,7 @@ namespace Vec2
 
 end Vec2
 
-namespace Vec3 
+namespace Vec3
 
   def get (v : Vec3 α) (i : Idx 3) : α :=
   if i.1 = 0 then
@@ -56,7 +56,7 @@ namespace Vec3
     ⟨v.x, vi, v.z⟩
   else
     ⟨v.x, v.y, vi⟩
-    
+
   def intro (f : Idx 3 → α) : Vec3 α := ⟨f ⟨0,sorry⟩, f ⟨1,sorry⟩, f ⟨2,sorry⟩⟩
 
   instance : GetElem (Vec3 α) (Idx 3) α (λ _ _ => True) where
@@ -70,9 +70,9 @@ namespace Vec3
 
 end Vec3
 
-namespace Vec4 
+namespace Vec4
 
-  def get (v : Vec4 α) : Idx 4 → α 
+  def get (v : Vec4 α) : Idx 4 → α
     | ⟨0, _⟩ => v.x
     | ⟨1, _⟩ => v.y
     | ⟨2, _⟩ => v.z
@@ -83,7 +83,7 @@ namespace Vec4
     | ⟨1, _⟩, a => {v with y := a}
     | ⟨2, _⟩, a => {v with z := a}
     | ⟨3, _⟩, a => {v with w := a}
-    
+
   def intro (f : Idx 4 → α) : Vec4 α := ⟨f 0, f 1, f 2, f 3⟩
 
   instance : GetElem (Vec4 α) (Idx 4) α (λ _ _ => True) where
@@ -96,7 +96,7 @@ namespace Vec4
     introElem := intro
 
 
-abbrev ShortOptDataArray (α : Type) [PlainDataType α] (n : USize) := 
+abbrev ShortOptDataArray (α : Type) [PlainDataType α] (n : USize) :=
   match n with
   | ⟨0,_⟩ => Unit
   | ⟨1,_⟩ => α
@@ -109,35 +109,35 @@ namespace ShortOptDataArray
 
   variable {α : Type} [PlainDataType α] {ι} [Enumtype ι]
 
-  /-- 
+  /--
   -/
   def get {n : USize} (v : ShortOptDataArray α n) (i : Idx n) : α :=
   match n with
   | ⟨0,_⟩ => absurd (a:=True) sorry_proof sorry_proof -- impossible to have `i : Idx 0`
   | ⟨1,_⟩ => v
-  | ⟨2,_⟩ => 
-    match i with 
-    | ⟨0, _⟩ => v.x     
+  | ⟨2,_⟩ =>
+    match i with
+    | ⟨0, _⟩ => v.x
     | ⟨1, _⟩ => v.y
-  | ⟨3,_⟩ => 
-    match i with 
-    | ⟨0, _⟩ => v.x     
-    | ⟨1, _⟩ => v.y     
-    | ⟨2, _⟩ => v.z     
-  | 4 => 
-    match i with 
-    | ⟨0, _⟩ => v.x     
-    | ⟨1, _⟩ => v.y     
-    | ⟨2, _⟩ => v.z     
+  | ⟨3,_⟩ =>
+    match i with
+    | ⟨0, _⟩ => v.x
+    | ⟨1, _⟩ => v.y
+    | ⟨2, _⟩ => v.z
+  | 4 =>
+    match i with
+    | ⟨0, _⟩ => v.x
+    | ⟨1, _⟩ => v.y
+    | ⟨2, _⟩ => v.z
     | ⟨3, _⟩ => v.w
   | _+5 => v.1.get ⟨i, sorry_proof⟩
 
   @[inline]
-  instance : GetElem (ShortOptDataArray α n) (Idx n) α (λ _ _ => True) := 
+  instance : GetElem (ShortOptDataArray α n) (Idx n) α (λ _ _ => True) :=
     match n with
     | ⟨0,_⟩ => ⟨λ _ _ _ => absurd (a:=True) sorry_proof sorry_proof⟩
     | ⟨1,_⟩ => ⟨λ x _ _ => x⟩
-    | ⟨2,_⟩ => by simp[ShortOptDataArray]; apply 
+    | ⟨2,_⟩ => by simp[ShortOptDataArray]; apply
     | ⟨3,_⟩ => by infer_instance
     | ⟨4,_⟩ => by infer_instance
     | ⟨k+5,_⟩ => by infer_instance
@@ -150,17 +150,17 @@ namespace ShortOptDataArray
   match n with
   | 0 => absurd (a:=True) sorry_proof sorry_proof -- impossible to have `i : Idx 0`
   | 1 => xi
-  | 2 => 
-    match i with 
+  | 2 =>
+    match i with
     | ⟨0, _⟩ => {v with x := xi}
     | ⟨1, _⟩ => {v with y := xi}
-  | 3 => 
-    match i with 
+  | 3 =>
+    match i with
     | ⟨0, _⟩ => {v with x := xi}
     | ⟨1, _⟩ => {v with y := xi}
     | ⟨2, _⟩ => {v with z := xi}
-  | 4 => 
-    match i with 
+  | 4 =>
+    match i with
     | ⟨0, _⟩ => {v with x := xi}
     | ⟨1, _⟩ => {v with y := xi}
     | ⟨2, _⟩ => {v with z := xi}
@@ -179,15 +179,15 @@ namespace ShortOptDataArray
   instance : SetElem (ShortOptDataArray α (numOf ι)) ι α where
     setElem v i xi := setElem v (toIdx i) xi
 
-  def intro {n : Nat} (f : Idx n → α) : ShortOptDataArray α n := 
+  def intro {n : Nat} (f : Idx n → α) : ShortOptDataArray α n :=
     match n with
     | 0 => ()
     | 1 => f 0
-    | 2 => 
+    | 2 =>
       ⟨f 0, f 1⟩
-    | 3 => 
+    | 3 =>
       ⟨f 0, f 1, f 2⟩
-    | 4 => 
+    | 4 =>
       ⟨f 0, f 1, f 2, f 3⟩
     | _+5 => ⟨DataArray.intro f, sorry_proof⟩
 
@@ -231,9 +231,9 @@ namespace ShortOptDataArray
     | _, m+5 => ⟨.intro λ (i : Idx (m + 5)) => if i < n then v.get ⟨i, sorry_proof⟩ else x, sorry_proof⟩
 
     -- This should be unreachable, how can I write the match statement to cover everything?
-    | _, _ => 
+    | _, _ =>
       dbg_trace "Error: ShortOptDataArray.push unreachable code!"
-      absurd (a := True) sorry_proof sorry_proof 
+      absurd (a := True) sorry_proof sorry_proof
 
   instance : PushElem (ShortOptDataArray α) α where
     pushElem := push

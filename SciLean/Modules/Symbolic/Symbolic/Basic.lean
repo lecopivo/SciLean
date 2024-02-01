@@ -37,36 +37,36 @@ def Monomial.toExpr {V K} (m : Monomial V K) : Expr V K :=
 
 instance {V K} [Zero K] : Inhabited (Monomial V K) := ⟨0, []⟩
 
-def Monomial.toString {V K} [ToString V] [ToString K] (m : Monomial V K) : String := 
+def Monomial.toString {V K} [ToString V] [ToString K] (m : Monomial V K) : String :=
   s!"{m.coeff} " ++ ((m.vars.map λ v => s!" x[{v}]") |> String.join)
 
--- TODO: Move this somewhere 
-inductive Comparison : Type where 
+-- TODO: Move this somewhere
+inductive Comparison : Type where
   | lt | eq | gt
 
 open Comparison in
 instance : ToString Comparison :=
   ⟨λ c => match c with | lt => "lt" | eq => "eq" | gt => "gt"⟩
-          
+
 def List.decGradedLexComparison {α}
   [LT α] [∀ a b : α, Decidable (a < b)] [DecidableEq α]
   (l1 l2 : List α) : Comparison
   :=
     match l1, l2 with
-    | x1 :: xs1, x2 :: xs2 => 
+    | x1 :: xs1, x2 :: xs2 =>
      if x1 == x2 then
        decGradedLexComparison xs1 xs2
-     else 
-       let n1 := xs1.length 
+     else
+       let n1 := xs1.length
        let n2 := xs2.length
        if n1 == n2 then
          if x1 < x2 then
            Comparison.lt
          else
-           Comparison.gt 
+           Comparison.gt
        else if n1 < n2 then
          Comparison.lt
-       else 
+       else
          Comparison.gt
      | [], x2 :: xs2 => Comparison.lt
      | x1 :: xs1 , [] => Comparison.gt
@@ -83,14 +83,14 @@ def List.decGradedLexLt {α}
   | gt => false
 
 #eval #[[1], [0,0], [0,1]].qsort List.decGradedLexLt
-    
+
 def Monomial.decComparison {V K}
   [LT V] [∀ x y : V, Decidable (x < y)] [DecidableEq V]
   [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
-  (m1 m2 : Monomial V K) : Comparison 
-  := 
+  (m1 m2 : Monomial V K) : Comparison
+  :=
   match List.decGradedLexComparison m1.vars m2.vars with
-  | Comparison.eq => 
+  | Comparison.eq =>
     if m1.coeff == m2.coeff then
       Comparison.eq
     else if m1.coeff < m2.coeff then
@@ -119,7 +119,7 @@ def Monomial.decEq {V K}
   | _ => false
 
 def Monomial.symReduce {ι K} [LT ι] [∀ i j : ι, Decidable (i < j)] [Inhabited ι]
-  (m : Monomial ι K) : Monomial ι K := 
+  (m : Monomial ι K) : Monomial ι K :=
   ⟨m.coeff, (m.vars.toArray.qsort (λ i j => i < j)).toList⟩
 
 
@@ -135,14 +135,14 @@ namespace Expr
 
   instance {V K} : Zero (Expr V K) := ⟨zero⟩
   instance {V K} : One (Expr V K) := ⟨one⟩
-  
+
   inductive EqAlgebra {V K} [Add K] [Mul K] [One K] : Expr V K → Expr V K → Prop where
   -- additive commutative group
   | add_assoc (p q r : Expr V K) : EqAlgebra ((p + q) + r) (p + (q + r))
   | add_comm (p q : Expr V K)    : EqAlgebra (p + q) (q + p)
   | zero_add (p : Expr V K)      : EqAlgebra (0 + p) p
   | add_neg (p : Expr V K)       : EqAlgebra (p + - p) 0
-  
+
   -- left K Module
   | smul_add (a : K) (p q : Expr V K)  : EqAlgebra (a * (p + q)) (r * p + r * q)
   | smul_smul (a b : K) (p : Expr V K) : EqAlgebra (a * (b * p)) ((a * b) * p)
@@ -171,7 +171,7 @@ namespace Expr
   inductive EqAntiCommutative {V K} : Expr V K → Expr V K → Prop where
   | mul_anti_comm (p q : Expr V K) : EqAntiCommutative (p * q) (- (q * p))
 
-  def toVal {X V K} [Add X] [Neg X] [Mul X] [Zero X] [One X] [HMul K X X] 
+  def toVal {X V K} [Add X] [Neg X] [Mul X] [Zero X] [One X] [HMul K X X]
     (e : Expr V K) (vars : V → X) : X :=
     match e with
     | zero => 0
@@ -228,9 +228,9 @@ namespace Expr
       m
     | smul a x => x.expand_to_monomials.map λ m => ⟨a*m.coeff, m.vars⟩
 
-  def expand {V K} [One K] [Zero K] [Neg K] [Mul K] 
-    (e : Expr V K) : (Expr V K) 
-    := 
+  def expand {V K} [One K] [Zero K] [Neg K] [Mul K]
+    (e : Expr V K) : (Expr V K)
+    :=
     Id.run do
       let m := e.expand_to_monomials
 
@@ -239,19 +239,19 @@ namespace Expr
         e' := e' + m[i].toExpr
       e'
 
-  -- partial def expand {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K := 
+  -- partial def expand {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K :=
   --   match e with
   --   | 0 => zero
-  --   | 1 => one 
+  --   | 1 => one
   --   | var v => var v
   --   | - (- x) => (expand x)
   --   | - (smul a x) => expand ((-a) * x)
   --   | - x => - (expand x)
-  --   | x + y => 
+  --   | x + y =>
   --     match (expand x), (expand y) with
   --     | x', y' + y'' => expand ((x' + y') + y'')
   --     | x', y' => x' + y'
-  --   | x * y => 
+  --   | x * y =>
   --     match (expand x), (expand y) with
   --     | x' + x'', y' + y'' => expand (x' * y' + x' * y'' + x'' * y' + x'' * y'')
   --     | x', y' + y'' => expand (x' * y' + x' * y'')
@@ -263,7 +263,7 @@ namespace Expr
   --     | x', neg y' => expand $ neg $ expand (x' * y')
   --     | neg x', y' => expand $ neg $ expand (x' * y')
   --     | x', y' => x' * y'
-  --   | smul a x => 
+  --   | smul a x =>
   --     match (expand x) with
   --     | x' + x'' => expand (a * x' + a * x'')
   --     | smul b x' => expand ((a*b) * x')
@@ -276,12 +276,12 @@ namespace Expr
     match e with
     | x * var b =>
       match (sort_vars x) with
-      | x' * var a => 
-        if a < b 
+      | x' * var a =>
+        if a < b
         then x' * var a * var b
         else (sort_vars (x' * var b)) * var a
-      | var a => 
-        if a < b 
+      | var a =>
+        if a < b
         then var a * var b
         else var b * var a
       | x' => x' * var b
@@ -292,7 +292,7 @@ namespace Expr
     | x => x
 
   -- -- This does not work as I would hope
-  -- partial def reduce {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K := 
+  -- partial def reduce {V K} [Mul K] [Neg K] (e : Expr V K) : Expr V K :=
   --   match e with
   --   | 0 + x => reduce $ x
   --   | x + 0 => reduce $ x
@@ -331,9 +331,9 @@ namespace Expr
     | x * y => simplify x * simplify y
     | smul a x => if a == 0 then 0 else smul a (simplify x)
     | x => x
-  
 
-  --- expand all brackes, factor `smul` from products,  
+
+  --- expand all brackes, factor `smul` from products,
   def algebra_norm_form {V K} (e : Expr V K) : Expr V K := sorry
 
 
@@ -345,7 +345,7 @@ namespace Expr
     | x * y => x.diff v * y + x * y.diff v
     | smul a x => a * x.diff v
     | _ => 0
- 
+
   open Expr in
   def toString {V K} [ToString V] [ToString K] (e : Expr V K): String :=
     match e with
@@ -380,14 +380,14 @@ end Symbolic
 def Quot.lift_arg2 {X Y} {r : X → X → Prop} (f : X → X → Y) (h : ∀ x y y', r y y' → f x y = f x y') : X → Quot r → Y
   := (λ x => Quot.lift (f x) (h x))
 
-def Quot.lift₂ {X Y} {r : X → X → Prop} (f : X → X → Y) 
+def Quot.lift₂ {X Y} {r : X → X → Prop} (f : X → X → Y)
   (h : ∀ x y y', r y y' → f x y = f x y')
   (h' : ∀ x x', r x x' → (Quot.lift_arg2 f h) x = (Quot.lift_arg2 f h) x')
-  : Quot r → Quot r → Y := 
+  : Quot r → Quot r → Y :=
   (λ x y =>
     Quot.lift (Quot.lift_arg2 f h) h' x y)
 
-section BasicDefinitions 
+section BasicDefinitions
   open Symbolic Expr
 
   variable (V : Type) (K : Type) [Add K] [Mul K] [One K]
@@ -401,15 +401,15 @@ section BasicDefinitions
       (EqAlgebraOverV x y))
 
   def ExteriorAlgebra := Quot
-    (λ x y : Expr V K => 
-      (EqAlgebra x y) ∨ 
-      (EqAlgebraOverV x y) ∨ 
+    (λ x y : Expr V K =>
+      (EqAlgebra x y) ∨
+      (EqAlgebraOverV x y) ∨
       (EqAntiCommutative x y))
 
-  class TensorMul (X : Type u) where 
+  class TensorMul (X : Type u) where
     tmul : X → X → X
 
-  class OuterMul (X : Type u) where 
+  class OuterMul (X : Type u) where
     omul : X → X → X
 
   infixl:75 " ⊗ " => TensorMul.tmul
@@ -424,19 +424,19 @@ namespace TensorAlgebra
 
   open Symbolic
 
-  instance : Add (TensorAlgebra V K) := 
+  instance : Add (TensorAlgebra V K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩
 
-  instance : TensorMul (TensorAlgebra V K) := 
+  instance : TensorMul (TensorAlgebra V K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.mul) sorry sorry x y⟩
 
-  instance : Neg (TensorAlgebra V K) := 
+  instance : Neg (TensorAlgebra V K) :=
     ⟨λ x => Quot.mk _ <| Quot.lift (Expr.neg) sorry x⟩
 
-  instance : HMul K (TensorAlgebra V K) (TensorAlgebra V K) := 
+  instance : HMul K (TensorAlgebra V K) (TensorAlgebra V K) :=
     ⟨λ a x => Quot.mk _ <| Quot.lift (Expr.smul a) sorry x⟩
 
-  variable [ToString V] [ToString K] 
+  variable [ToString V] [ToString K]
 
   open Expr in
   def toString (e : Expr V K): String :=
@@ -470,19 +470,19 @@ namespace ExteriorAlgebra
 
   open Symbolic
 
-  instance : Add (ExteriorAlgebra V K) := 
+  instance : Add (ExteriorAlgebra V K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.add) sorry sorry x y⟩
 
-  instance : OuterMul (ExteriorAlgebra V K) := 
+  instance : OuterMul (ExteriorAlgebra V K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (Expr.mul) sorry sorry x y⟩
 
-  instance : Neg (ExteriorAlgebra V K) := 
+  instance : Neg (ExteriorAlgebra V K) :=
     ⟨λ x => Quot.mk _ <| Quot.lift (Expr.neg) sorry x⟩
 
-  instance : HMul K (ExteriorAlgebra V K) (ExteriorAlgebra V K) := 
+  instance : HMul K (ExteriorAlgebra V K) (ExteriorAlgebra V K) :=
     ⟨λ a x => Quot.mk _ <| Quot.lift (Expr.smul a) sorry x⟩
 
-  variable [ToString V] [ToString K] 
+  variable [ToString V] [ToString K]
 
   open Expr in
   def toString (e : Expr V K): String :=
@@ -518,7 +518,7 @@ namespace NewApproach
 structure FreeAbelRepr where
   coef : Array Int
 
-instance : Add FreeAbelRepr := 
+instance : Add FreeAbelRepr :=
   ⟨λ a b => Id.run do
     let mut r : Array Int := #[]
     if a.1.size > b.1.size then
@@ -529,7 +529,7 @@ instance : Add FreeAbelRepr :=
         r := r.set (!i) (a.1[i] + b.1[i])
     ⟨r⟩⟩
 
-instance : Sub FreeAbelRepr := 
+instance : Sub FreeAbelRepr :=
   ⟨λ a b => Id.run do
     let mut r : Array Int := #[]
     if a.1.size > b.1.size then
@@ -540,7 +540,7 @@ instance : Sub FreeAbelRepr :=
         r := r.set (!i) (a.1[i] - b.1[i])
     ⟨r⟩⟩
 
-instance : Neg FreeAbelRepr := 
+instance : Neg FreeAbelRepr :=
   ⟨λ a => ⟨a.1.map λ ai => -ai⟩⟩
 
 instance : Zero FreeAbelRepr := ⟨⟨#[]⟩⟩
@@ -557,13 +557,13 @@ def FreeAbelRepr.toString (a : FreeAbelRepr) (s op : String) : String := Id.run 
   let mut r := ""
   for i in [0:a.1.size] do
     if a.1[i] ≠ 0 then
-      let xi := 
-        if a.1[i] = 1 
-        then s!"{s}⟦{i}⟧" 
-        else s!"{s}⟦{i}⟧^{a.1[i]}" 
-      if r = "" then 
+      let xi :=
+        if a.1[i] = 1
+        then s!"{s}⟦{i}⟧"
+        else s!"{s}⟦{i}⟧^{a.1[i]}"
+      if r = "" then
         r := xi
-      else 
+      else
         r := s!"{r} {op} {xi}"
   if r = "" then
     "1"
@@ -573,27 +573,27 @@ def FreeAbelRepr.toString (a : FreeAbelRepr) (s op : String) : String := Id.run 
 def FreeAbel := Quot FreeAbelRepr.Eq
 
 instance : Add FreeAbel :=
-  ⟨Quot.lift₂ 
+  ⟨Quot.lift₂
     (λ x y : FreeAbelRepr => Quot.mk _ (x + y)) sorry sorry⟩
 
 instance : Sub FreeAbel :=
-  ⟨Quot.lift₂ 
+  ⟨Quot.lift₂
     (λ x y : FreeAbelRepr => Quot.mk _ (x - y)) sorry sorry⟩
 
 instance : Neg FreeAbel :=
-  ⟨Quot.lift 
+  ⟨Quot.lift
     (λ x : FreeAbelRepr => Quot.mk _ (-x)) sorry⟩
 
 instance : Zero FreeAbel := ⟨Quot.mk _ 0⟩
 
 def FreeAbel.decEq (a b : FreeAbel) : Bool :=
-  Quot.lift₂ 
-    (λ x y => x.decEq y) 
-    sorry sorry 
+  Quot.lift₂
+    (λ x y => x.decEq y)
+    sorry sorry
     a b
 
 instance : DecidableEq FreeAbel :=
-  λ a b : FreeAbel => 
+  λ a b : FreeAbel =>
     if a.decEq b then
       isTrue sorry
     else
@@ -609,9 +609,9 @@ inductive FreeMonoid.Lt {X} [LT X] : FreeMonoid X → FreeMonoid X → Prop  whe
   | grading  {xs ys : FreeMonoid X}
              (h : xs.1.length < ys.1.length) : Lt xs ys
   | lex_head {x y : X} {xs ys : FreeMonoid X}
-             (h : x < y) (h' : xs.1.length = ys.1.length) 
+             (h : x < y) (h' : xs.1.length = ys.1.length)
              : Lt ⟨x :: xs.1⟩ ⟨y :: ys.1⟩
-  | lex_tail {x : X} {xs ys : FreeMonoid X} (h : Lt xs ys) 
+  | lex_tail {x : X} {xs ys : FreeMonoid X} (h : Lt xs ys)
              : Lt ⟨x :: xs.1⟩ ⟨x :: ys.1⟩
 
 instance {X} [LT X] : LT (FreeMonoid X) := ⟨FreeMonoid.Lt⟩
@@ -631,7 +631,7 @@ abbrev compare {X} [LT X] [DecComp X] (x y : X) : DecComparison x y := DecComp.c
 
 instance : DecComp Nat :=
   ⟨λ x y =>
-    if h : x = y 
+    if h : x = y
     then cpEq h
     else if h : x < y
     then cpLt h
@@ -639,7 +639,7 @@ instance : DecComp Nat :=
 
 instance : DecComp Int :=
   ⟨λ x y =>
-    if h : x = y 
+    if h : x = y
     then cpEq h
     else if h : x < y
     then cpLt h
@@ -652,12 +652,12 @@ def FreeMonoid.compare {X} [LT X] [DecComp X] (x y : List X) : DecComparison (X 
   | [], y :: ys => cpLt sorry
   | x' :: xs, y' :: ys =>
     match DecComp.compare x' y' with
-    | cpEq h => 
+    | cpEq h =>
       match compare xs ys with
       | cpEq h' => cpEq sorry  -- here is maybe aproblem, as I'm not sure if `⟨x⟩ = ⟨y⟩ → x = y`
       | cpLt h' => cpLt sorry
       | cpGt h' => cpGt sorry
-    | cpLt h => 
+    | cpLt h =>
       match DecComp.compare xs.length ys.length with
       | cpEq h' => cpLt (FreeMonoid.Lt.lex_head h h')
       | cpLt h' => cpLt sorry
@@ -669,17 +669,17 @@ def FreeMonoid.compare {X} [LT X] [DecComp X] (x y : List X) : DecComparison (X 
       | cpGt h' => cpGt sorry
 
 instance {X} [LT X] [DecComp X] : DecComp (FreeMonoid X) := ⟨λ x y => FreeMonoid.compare x.1 y.1⟩
-  
+
 -- sorts variables assuming:
 --   1. x * y = y * x
-def FreeMonoid.symSort {X} [Ord X] (m : FreeMonoid X) 
+def FreeMonoid.symSort {X} [Ord X] (m : FreeMonoid X)
   : FreeMonoid X := sorry
 
-theorem FreeMonoid.symSortIdmp {X} [Ord X] (m : FreeMonoid X) 
+theorem FreeMonoid.symSortIdmp {X} [Ord X] (m : FreeMonoid X)
   : m.symSort.symSort = m.symSort := sorry
 
 -- sorts variables assuming:
---   1. x * y = - y * x 
+--   1. x * y = - y * x
 --   2. x * x = sig x
 def FreeMonoid.altSort {X K} [LT X] [DecComp X] [Mul K] [One K] [Neg K]
   (m : FreeMonoid X) (sig : X → K) : K × FreeMonoid X := sorry
@@ -688,8 +688,8 @@ def FreeMonoid.altSort {X K} [LT X] [DecComp X] [Mul K] [One K] [Neg K]
 inductive FreeMonoid.AltSorted {X} [LT X] : FreeMonoid X → Prop where
   | one : AltSorted 1
   | var (x : X) : AltSorted (⟨[x]⟩)
-  | mul (x y : X) (m : FreeMonoid X) 
-        (h : AltSorted (⟨[y]⟩*m)) 
+  | mul (x y : X) (m : FreeMonoid X)
+        (h : AltSorted (⟨[y]⟩*m))
         (lt  : x < y) : AltSorted (⟨[x,y]⟩*m)
 
 theorem FreeMonoid.altSortIdmpCoef {X K} [LT X] [DecComp X] [Mul K] [One K] [Neg K]
@@ -709,7 +709,7 @@ class Coef (X : Type) (K : outParam $ Type) [outParam $ Monoid K] [outParam $ Mu
   smul_coef : ∀ (a : K) (x : X), coef (a * x) = a * coef x
   coef_base_ext : ∀ x, ((coef x = coef y) ∧ (base x = base y)) ↔ (x = y)
 
-class Rank (X : Type) where 
+class Rank (X : Type) where
   rank : X → Int
 
 namespace SymMonomial
@@ -723,38 +723,38 @@ variable {X K} [Enumtype X] [DecidableEq K] [Zero K] [One K] [Mul K]
 instance [One K] : One (Repr X K) := ⟨⟨1, (0 : FreeAbel)⟩⟩
 instance [Zero K] : Zero (Repr X K) := ⟨⟨0, (0 : FreeAbel)⟩⟩
 
-instance : Mul (Repr X K) := 
-  ⟨λ x y => 
-    if (x.coef = 0) ∨ (y.coef = 0) 
+instance : Mul (Repr X K) :=
+  ⟨λ x y =>
+    if (x.coef = 0) ∨ (y.coef = 0)
     then 0
     else ⟨x.coef * y.coef , x.vars + y.vars⟩⟩
 
-instance [Div K] : Div (Repr X K) := 
-  ⟨λ x y => 
-    if (x.coef = 0) ∨ (y.coef = 0) 
+instance [Div K] : Div (Repr X K) :=
+  ⟨λ x y =>
+    if (x.coef = 0) ∨ (y.coef = 0)
     then 0
     else ⟨x.coef / y.coef , x.vars - y.vars⟩⟩
 
-instance [Inv K] : Inv (Repr X K) := 
-  ⟨λ x => 
-     if x.coef = 0 
+instance [Inv K] : Inv (Repr X K) :=
+  ⟨λ x =>
+     if x.coef = 0
      then 0
      else ⟨x.coef⁻¹, -x.vars⟩⟩
 
-instance : HMul K (Repr X K) (Repr X K) := 
-  ⟨λ a x => 
+instance : HMul K (Repr X K) (Repr X K) :=
+  ⟨λ a x =>
     if a = 0 ∨ x.coef = 0
     then 0
     else ⟨a * x.coef, x.vars⟩⟩
 
-def Repr.Eq (x y : Repr X K) : Prop := 
-  ((x.coef = 0) ∧ (y.coef = 0)) 
-  ∨ 
+def Repr.Eq (x y : Repr X K) : Prop :=
+  ((x.coef = 0) ∧ (y.coef = 0))
+  ∨
   (x = y)
 
 end SymMonomial
 
-def SymMonomial (X : Type) (K : Type) [Enumtype X] [Zero K] := 
+def SymMonomial (X : Type) (K : Type) [Enumtype X] [Zero K] :=
   Quot (SymMonomial.Repr.Eq (X := X) (K := K))
 
 namespace SymMonomial
@@ -764,16 +764,16 @@ namespace SymMonomial
   instance : One  (SymMonomial X K) := ⟨Quot.mk _ 1⟩
   instance : Zero (SymMonomial X K) := ⟨Quot.mk _ 0⟩
 
-  instance : Mul (SymMonomial X K) := 
+  instance : Mul (SymMonomial X K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x y => x * y) sorry sorry x y⟩
 
-  instance [Div K] : Div (SymMonomial X K) := 
+  instance [Div K] : Div (SymMonomial X K) :=
     ⟨λ x y => Quot.mk _ <| Quot.lift₂ (λ x y => x / y) sorry sorry x y⟩
 
-  instance [Inv K] : Inv (SymMonomial X K) := 
+  instance [Inv K] : Inv (SymMonomial X K) :=
     ⟨λ x => Quot.mk _ <| Quot.lift (λ x => x⁻¹) sorry x⟩
 
-  instance : HMul K (SymMonomial X K) (SymMonomial X K) := 
+  instance : HMul K (SymMonomial X K) (SymMonomial X K) :=
     ⟨λ a x => Quot.mk _ <| Quot.lift
       (λ x => a * x) sorry x⟩
 
@@ -790,11 +790,11 @@ namespace AltMonomial
     variable {X K sig} [LT X] [DecComp X]
              [Mul K] [Zero K] [One K] [Neg K]
 
-    instance : Mul (Repr X K sig) := 
+    instance : Mul (Repr X K sig) :=
       ⟨λ x y => ⟨x.coef * y.coef, x.vars * y.vars⟩⟩
-    instance : HMul K (Repr X K sig) (Repr X K sig) := 
+    instance : HMul K (Repr X K sig) (Repr X K sig) :=
       ⟨λ a x => ⟨a * x.coef, x.vars⟩⟩
-    instance [Neg K] : Neg (Repr X K sig) := 
+    instance [Neg K] : Neg (Repr X K sig) :=
       ⟨λ x => ⟨-x.coef, x.vars⟩⟩
 
     instance : Zero (Repr X K sig) := ⟨⟨0,1⟩⟩
@@ -802,11 +802,11 @@ namespace AltMonomial
 
     def RedForm (m : Repr X K sig) : Prop :=
       ((m.coef = 0) ∧ (m.vars = 1))
-      ∨ 
+      ∨
       ((m.coef ≠ 0) ∧ (m.vars.AltSorted))
 
-    abbrev RedRepr (X K sig) [LT X] [Zero K] 
-      := {x' : Repr X K sig // x'.RedForm} 
+    abbrev RedRepr (X K sig) [LT X] [Zero K]
+      := {x' : Repr X K sig // x'.RedForm}
 
     def reduce (x : Repr X K sig) : RedRepr X K sig
       := let (a', x') := x.vars.altSort sig
@@ -819,11 +819,11 @@ namespace AltMonomial
 
     def NormForm (m : Repr X K sig) : Prop :=
       ((m.coef = 0) ∧ (m.vars = 1))
-      ∨ 
+      ∨
       ((m.coef ≠ 0) ∧ (m.vars.AltSorted))
 
-    abbrev NormRepr (X K sig) [LT X] [Zero K] 
-      := {x' : Repr X K sig // x'.NormForm} 
+    abbrev NormRepr (X K sig) [LT X] [Zero K]
+      := {x' : Repr X K sig // x'.NormForm}
 
     def normalize (x : Repr X K sig) [DecidableEq K] : NormRepr X K sig
       := let y := x.reduce.1
@@ -862,23 +862,23 @@ namespace AltMonomial
            [CommMonoid K] [Zero K] [Neg K]
 
   -- def beq (x y : AltMonomial X K sig)
-  --   : Bool := 
+  --   : Bool :=
   --   (x.1.coef = y.1.coef) ∧ (x.1.vars.1 = y.1.vars.1)
 
-  -- instance : DecidableEq (AltMonomial X K sig) := 
+  -- instance : DecidableEq (AltMonomial X K sig) :=
   --   (λ x y =>
   --      match x.beq y with
   --      | true  => isTrue sorry
   --      | false => isFalse sorry)
 
-  instance : Mul (AltMonomial X K sig) := 
-    ⟨λ x y => 
-      Quot.mk _ <| Quot.lift₂ 
-      (λ x y => Repr.reduce (x.1 * y.1)) 
+  instance : Mul (AltMonomial X K sig) :=
+    ⟨λ x y =>
+      Quot.mk _ <| Quot.lift₂
+      (λ x y => Repr.reduce (x.1 * y.1))
       sorry sorry x y⟩
 
-  instance : HMul K (AltMonomial X K sig) (AltMonomial X K sig) := 
-    ⟨λ a x => 
+  instance : HMul K (AltMonomial X K sig) (AltMonomial X K sig) :=
+    ⟨λ a x =>
       Quot.mk _ <| Quot.lift
       (λ x => !⟨a * x.1.coef, x.1.vars⟩) -- No need for reduction here
       sorry x⟩
@@ -887,7 +887,7 @@ namespace AltMonomial
   instance : One  (AltMonomial X K sig) := ⟨Quot.mk _ !1⟩
 
   -- Define `AltMonoid`
-  instance : Monoid (AltMonomial X K sig) := 
+  instance : Monoid (AltMonomial X K sig) :=
   {
     mul_assoc := sorry  -- I think for this we need K to be commutative monoid
     mul_one := sorry
@@ -907,7 +907,7 @@ namespace AltMonomial
 
   def base (x : AltMonomial X K sig) [DecidableEq K] : AltMonomial X K sig :=
     Quot.mk _ <| Quot.lift
-      (λ x => 
+      (λ x =>
         if x.1.coef = (0 : K)
         then !⟨1,1⟩
         else !⟨1,x.1.vars⟩) sorry x
@@ -932,12 +932,12 @@ namespace AltMonomial
   --     Quot.lift₂ (λ x y => (y.1.coef = 0 → x.1.coef = 0) ∧ x.1.vars ≤ y.1.vars) sorry sorry x y⟩
 
   -- We can compare monoials based on rank
-  -- But we can get only `less or *equal*` as we cannot determine 
+  -- But we can get only `less or *equal*` as we cannot determine
   -- zero monomial without decidable equality on K
   -- def rankLe (x y : AltMonomial X K sig) [DecidableEq K] : Bool :=
-  --   Quot.lift₂ 
+  --   Quot.lift₂
   --     (λ x y =>
-  --       if x.1.coeff = 0 
+  --       if x.1.coeff = 0
   --       then true
   --       else if x.2.coeff = 0
   --       then false
@@ -949,8 +949,8 @@ namespace AltMonomial
   --     ) sorry sorry x y
 
   -- def rankLt (x y : AltMonomial X K sig) [DecidableEq K] : Bool :=
-  --   Quot.lift₂ 
-  --     (λ x y => 
+  --   Quot.lift₂
+  --     (λ x y =>
   --       match compare (X := FreeMonoid X) x.1.vars y.1.vars with
   --       | cpEq _ => if y.1.coef = 0 then false else true
   --       | cpLt _ => true
@@ -986,7 +986,7 @@ namespace Algebra
     | add (0 :: xs) => reduce (add xs)
     | mul [x] => reduce x
     | mul (1 :: xs) => reduce (mul xs)
-    | mul (mon x :: xs) => 
+    | mul (mon x :: xs) =>
       match reduce (mul xs) with
       | mul (mon y :: xs') => reduce (mul (mon (x * y) :: xs))
       | smul a x' => reduce (mul [mon (a * x), x'])
@@ -1004,7 +1004,7 @@ namespace Algebra
       | mul xs' => mul (x :: xs')
       | xs' => mul [x, xs']
     | x => x
-  
+
   def Repr.isMon {X K} (x : Repr X K) : Bool :=
   match x with
   | mon _ => true
@@ -1024,39 +1024,39 @@ namespace Algebra
   -- | mon_id (x : X) : RedForm ([mon x])
   -- | mul_list (x : Repr X K)
   --            (xs : List (Repr X K))
-  --            (h : xs ≠ [] ∨ xs 
+  --            (h : xs ≠ [] ∨ xs
   -- | add_red (x : (Repr X K))
   --           (xs : List (Repr X K))
-  --           (h : xs ≠ []) 
+  --           (h : xs ≠ [])
   --           (h' : x ≠ 0 ∨ xs ≠ [0])
   --           (h'' : )
   --           -- addition is non tirivial
   --           (h : xs.size > 2)
   --           -- elements must be reduced, non-zero and can't be addition
-  --           (h' : ∀ i : Fin xs.size, 
+  --           (h' : ∀ i : Fin xs.size,
   --                 let xi := xs.get i
-  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (¬ xi.isAdd)) 
+  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (¬ xi.isAdd))
   --           : RedForm (add xs)
-  
+
   -- inductive Repr.RedForm {X K} [One X] [Zero X] : Repr X K → Prop where
   -- | mon_id (x : X) : RedForm (mon x)
-  -- | add_red (xs : Array (Repr X K)) 
+  -- | add_red (xs : Array (Repr X K))
   --           -- addition is non tirivial
   --           (h : xs.size > 2)
   --           -- elements must be reduced, non-zero and can't be addition
-  --           (h' : ∀ i : Fin xs.size, 
+  --           (h' : ∀ i : Fin xs.size,
   --                 let xi := xs.get i
-  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (¬ xi.isAdd)) 
+  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (¬ xi.isAdd))
   --           : RedForm (add xs)
-  -- | mul_red (xs : Array (Repr X K)) 
+  -- | mul_red (xs : Array (Repr X K))
   --           -- product is non trivial
   --           (h : xs.size > 2)
   --           -- every element of a product should be reduced
   --           -- and can't be zero or one
-  --           (h' : ∀ i, let xi := xs.get i 
-  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (xi ≠ 1)) 
+  --           (h' : ∀ i, let xi := xs.get i
+  --                 (RedForm xi) ∧ (xi ≠ 0) ∧ (xi ≠ 1))
   --           -- consecutive elements can be monomials
-  --           (h' : ∀ i : Fin (xs.size - 1), 
+  --           (h' : ∀ i : Fin (xs.size - 1),
   --                 let xi      := xs.get !i.1
   --                 let xi_succ := xs.get !(i.1+1)
   --                 ¬(xi.isMon ∧ xi_succ.isMon))
@@ -1067,11 +1067,11 @@ namespace Algebra
   --            (h' : x.isAdd)
   --            : RedForm (smul a x)
 
-  -- def Repr.reduce {X K} [Ring K] [Monoid X] : Repr X K → Repr X K 
+  -- def Repr.reduce {X K} [Ring K] [Monoid X] : Repr X K → Repr X K
   -- | add zero x => reduce x
   -- | add x zero => reduce x
   -- | mul (mon x) (mon y) => mon (x * y)
-  -- | add 
+  -- | add
   -- | mul x (mon 1) => reduce x
 
 
@@ -1079,9 +1079,9 @@ namespace Algebra
   -- inductive NormRepr {X K} [One X] [Zero X] : Repr X K → Prop where
   -- | zero_id : NormRepr zero
   -- | mon_id (x : X) : NormRepr (mon x)
-  -- | add_lassoc (x : Repr X K) (y : X) (h : NormRepr x) 
+  -- | add_lassoc (x : Repr X K) (y : X) (h : NormRepr x)
   --              (h' : x ≠ zero) (h'' : y ≠ 0) : NormRepr (add x (mon y))
-    
+
 
 end Algebra
 

@@ -1,5 +1,5 @@
 
-namespace SciLean 
+namespace SciLean
 
 structure ArrayN (α : Type) (n : Nat) where
   data : Array α
@@ -14,4 +14,3 @@ instance [Inhabited α] : Inhabited (ArrayN α n) :=
     data := .mkArray n default
     h_size := by simp
   }⟩
-

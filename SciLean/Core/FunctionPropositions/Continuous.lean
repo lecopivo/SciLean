@@ -16,18 +16,18 @@ namespace SciLean
 
 namespace Continuous
 
-variable 
+variable
   {X : Type _} [TopologicalSpace X]
   {Y : Type _} [TopologicalSpace Y]
   {Z : Type _} [TopologicalSpace Z]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, TopologicalSpace  (E i)]
-  
+
 
 theorem id_rule
   : Continuous (fun x : X => x)
   := by continuity
-  
+
 
 theorem const_rule (x : X)
   : Continuous (fun _ : Y => x)
@@ -44,8 +44,8 @@ theorem comp_rule
 theorem let_rule
   (g : X → Y) (hg : Continuous g)
   (f : X → Y → Z) (hf : Continuous (fun (xy : X×Y) => f xy.1 xy.2))
-  : Continuous (fun x => let y := g x; f x y) 
-  := by 
+  : Continuous (fun x => let y := g x; f x y)
+  := by
   rw[(by rfl : (fun x => let y := g x; f x y) = (fun (xy : X×Y) => f xy.1 xy.2)∘(fun x => (x,g x)))]
   apply (Continuous.comp hf (by continuity))
 
@@ -71,27 +71,27 @@ end SciLean.Continuous
 open Lean Meta SciLean FProp
 def Continuous.fpropExt : FPropExt where
   fpropName := ``Continuous
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``Continuous then
 
       if let .some f := e.getArg? 4 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``Continuous then
       e.setArg 4  f
-    else          
+    else
       e
 
   identityRule    e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``Continuous.id_rule 
-      origin := .decl ``Continuous.id_rule 
+      proof  := mkConst ``Continuous.id_rule
+      origin := .decl ``Continuous.id_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -99,8 +99,8 @@ def Continuous.fpropExt : FPropExt where
   constantRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``Continuous.const_rule 
-      origin := .decl ``Continuous.const_rule 
+      proof  := mkConst ``Continuous.const_rule
+      origin := .decl ``Continuous.const_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -135,8 +135,8 @@ def Continuous.fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``Continuous.pi_rule 
-      origin := .decl ``Continuous.pi_rule 
+      proof  := mkConst ``Continuous.pi_rule
+      origin := .decl ``Continuous.pi_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -144,8 +144,8 @@ def Continuous.fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``Continuous.proj_rule 
-      origin := .decl ``Continuous.proj_rule 
+      proof  := mkConst ``Continuous.proj_rule
+      origin := .decl ``Continuous.proj_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -162,9 +162,9 @@ def Continuous.fpropExt : FPropExt where
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-open SciLean Continuous 
+open SciLean Continuous
 
-variable 
+variable
   {X : Type _} [TopologicalSpace X]
   {Y : Type _} [TopologicalSpace Y]
   {Z : Type _} [TopologicalSpace Z]
@@ -201,7 +201,7 @@ theorem Prod.mk.arg_fstsnd.Continuous_rule
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.fst.arg_self.Continuous_rule 
+theorem Prod.fst.arg_self.Continuous_rule
   (f : X → Y×Z) (hf : Continuous f)
   : Continuous (fun x => (f x).1)
   := Continuous.fst hf
@@ -212,7 +212,7 @@ theorem Prod.fst.arg_self.Continuous_rule
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.snd.arg_self.Continuous_rule 
+theorem Prod.snd.arg_self.Continuous_rule
   (f : X → Y×Z) (hf : Continuous f)
   : Continuous (fun x => (f x).2)
   := Continuous.snd hf
@@ -248,8 +248,8 @@ theorem HAdd.hAdd.arg_a0a1.Continuous_rule
 @[fprop]
 theorem Neg.neg.arg_a0.Continuous_rule
   [Neg Y] [ContinuousNeg Y]
-  (f : X → Y) (hf : Continuous f) 
-  : Continuous fun x => - f x 
+  (f : X → Y) (hf : Continuous f)
+  : Continuous fun x => - f x
   := by continuity
 
 
@@ -268,7 +268,7 @@ theorem HSub.hSub.arg_a0a1.Continuous_rule
 
 
 -- HMul.hMul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HMul.hMul.arg_a0a1.Continuous_rule
@@ -280,7 +280,7 @@ def HMul.hMul.arg_a0a1.Continuous_rule
 
 
 -- SMul.sMul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HSMul.hSMul.arg_a0a1.Continuous_rule
@@ -292,13 +292,13 @@ def HSMul.hSMul.arg_a0a1.Continuous_rule
 
 
 -- HDiv.hDiv ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 
 @[fprop]
 def HDiv.hDiv.arg_a0a1.Continuous_rule
   [GroupWithZero K] [TopologicalSpace K] [ContinuousMul K] [HasContinuousInv₀ K]
-  (f : R → K) (g : R → K) 
+  (f : R → K) (g : R → K)
   (hf : Continuous f) (hg : Continuous g) (hx : ∀ x, g x ≠ 0)
   : Continuous (fun x => f x / g x)
   := Continuous.div hf hg hx
@@ -306,11 +306,11 @@ def HDiv.hDiv.arg_a0a1.Continuous_rule
 
 
 -- HPow.hPow -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HPow.hPow.arg_a0.Continuous_rule
   {R : Type _} [NontriviallyNormedField R]
-  (n : Nat) (f : X → R) (hf : Continuous f) 
+  (n : Nat) (f : X → R) (hf : Continuous f)
   : Continuous (fun x => f x ^ n)
   := Continuous.pow hf n

@@ -13,4 +13,3 @@ partial def String.splitToByteChunks (str : String) (chunkByteSize : Nat) : Arra
     chunks := chunks.push (Substring.mk str s s')
     s := s'
   chunks
-

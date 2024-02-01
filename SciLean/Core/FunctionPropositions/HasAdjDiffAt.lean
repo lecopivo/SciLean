@@ -9,29 +9,29 @@ open LeanColls
 
 namespace SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
+  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 def HasAdjDiffAt (f : X → Y) (x : X) : Prop :=
-  IsDifferentiableAt K f x ∧ 
+  IsDifferentiableAt K f x ∧
   HasSemiAdjoint K (cderiv K f x)
 
 namespace HasAdjDiffAt
 
 variable (X)
 theorem id_rule (x : X)
-  : HasAdjDiffAt K (fun x : X => x) x := 
-by 
+  : HasAdjDiffAt K (fun x : X => x) x :=
+by
   constructor; fprop; ftrans; fprop
-  
+
 theorem const_rule (y : Y) (x : X)
-  : HasAdjDiffAt K (fun _ : X => y) x := 
-by 
+  : HasAdjDiffAt K (fun _ : X => y) x :=
+by
   constructor; fprop; ftrans; fprop
 
 variable {X}
@@ -39,8 +39,8 @@ variable {X}
 variable (E)
 theorem proj_rule
   (i : ι) (x)
-  : HasAdjDiffAt K (fun x : (i : ι) → E i => x i) x := 
-by 
+  : HasAdjDiffAt K (fun x : (i : ι) → E i => x i) x :=
+by
   constructor; fprop; ftrans; fprop
 
 variable {E}
@@ -48,8 +48,8 @@ variable {E}
 theorem comp_rule
   (f : Y → Z) (g : X → Y) (x : X)
   (hf : HasAdjDiffAt K f (g x)) (hg : HasAdjDiffAt K g x)
-  : HasAdjDiffAt K (fun x => f (g x)) x := 
-by 
+  : HasAdjDiffAt K (fun x => f (g x)) x :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
@@ -58,17 +58,17 @@ theorem let_rule
   (f : X → Y → Z) (g : X → Y) (x : X)
   (hf : HasAdjDiffAt K (fun (xy : X×Y) => f xy.1 xy.2) (x, g x))
   (hg : HasAdjDiffAt K g x)
-  : HasAdjDiffAt K (fun x => let y := g x; f x y) x := 
-by 
+  : HasAdjDiffAt K (fun x => let y := g x; f x y) x :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
-  
+
 theorem pi_rule
   (f : (i : ι) → X → E i) (x : X)
   (hf : ∀ i, HasAdjDiffAt K (f i) x)
-  : HasAdjDiffAt K (fun x i => f i x) x := 
-by 
+  : HasAdjDiffAt K (fun x i => f i x) x :=
+by
   have := fun i => (hf i).1
   have := fun i => (hf i).2
   constructor; fprop; ftrans; fprop
@@ -81,20 +81,20 @@ by
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``HasAdjDiffAt
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``HasAdjDiffAt then
 
       if let .some f := e.getArg? 6 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``HasAdjDiffAt then
       e.setArg 6  f
-    else          
+    else
       e
 
   identityRule    e := do
@@ -118,8 +118,8 @@ def fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``HasAdjDiffAt.proj_rule 
-      origin := .decl ``HasAdjDiffAt.proj_rule 
+      proof  := mkConst ``HasAdjDiffAt.proj_rule
+      origin := .decl ``HasAdjDiffAt.proj_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -151,13 +151,13 @@ def fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``HasAdjDiffAt.pi_rule 
-      origin := .decl ``HasAdjDiffAt.pi_rule 
+      proof  := mkConst ``HasAdjDiffAt.pi_rule
+      origin := .decl ``HasAdjDiffAt.pi_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -175,13 +175,13 @@ end SciLean.HasAdjDiffAt
 open LeanColls
 open SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
+  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
 -- Id --------------------------------------------------------------------------
@@ -203,8 +203,8 @@ theorem Prod.mk.arg_fstsnd.HasAdjDiffAt_rule
   (x : X)
   (g : X → Y) (hg : HasAdjDiffAt K g x)
   (f : X → Z) (hf : HasAdjDiffAt K f x)
-  : HasAdjDiffAt K (fun x => (g x, f x)) x := 
-by 
+  : HasAdjDiffAt K (fun x => (g x, f x)) x :=
+by
   have ⟨_,_⟩ := hg
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
@@ -214,11 +214,11 @@ by
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.fst.arg_self.HasAdjDiffAt_rule 
+theorem Prod.fst.arg_self.HasAdjDiffAt_rule
   (x : X)
   (f : X → Y×Z) (hf : HasAdjDiffAt K f x)
-  : HasAdjDiffAt K (fun x => (f x).1) x := 
-by 
+  : HasAdjDiffAt K (fun x => (f x).1) x :=
+by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
@@ -228,11 +228,11 @@ by
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.snd.arg_self.HasAdjDiffAt_rule 
+theorem Prod.snd.arg_self.HasAdjDiffAt_rule
   (x : X)
   (f : X → Y×Z) (hf : HasAdjDiffAt K f x)
-  : HasAdjDiffAt K (fun x => (f x).2) x := 
-by 
+  : HasAdjDiffAt K (fun x => (f x).2) x :=
+by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
@@ -257,8 +257,8 @@ theorem Function.comp.arg_a0.HasAdjDiffAt_rule
   (x : X)
   (g : X → Y) (hg : HasAdjDiffAt K g x)
   (f : Y → Z) (hf : HasAdjDiffAt K f (g x))
-  : HasAdjDiffAt K (fun x => (f ∘ g) x) x := 
-by 
+  : HasAdjDiffAt K (fun x => (f ∘ g) x) x :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
@@ -270,8 +270,8 @@ by
 @[fprop]
 theorem Neg.neg.arg_a0.HasAdjDiffAt_rule
   (x : X) (f : X → Y) (hf : HasAdjDiffAt K f x)
-  : HasAdjDiffAt K (fun x => - f x) x := 
-by 
+  : HasAdjDiffAt K (fun x => - f x) x :=
+by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
@@ -282,8 +282,8 @@ by
 @[fprop]
 theorem HAdd.hAdd.arg_a0a1.HasAdjDiffAt_rule
   (x : X) (f g : X → Y) (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
-  : HasAdjDiffAt K (fun x => f x + g x) x := 
-by 
+  : HasAdjDiffAt K (fun x => f x + g x) x :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
@@ -295,35 +295,35 @@ by
 @[fprop]
 theorem HSub.hSub.arg_a0a1.HasAdjDiffAt_rule
   (x : X) (f g : X → Y) (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
-  : HasAdjDiffAt K (fun x => f x - g x) x := 
-by 
+  : HasAdjDiffAt K (fun x => f x - g x) x :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
- 
+
 
 -- HMul.hMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HMul.hMul.arg_a0a1.HasAdjDiffAt_rule
   (x : X) (f g : X → K) (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
-  : HasAdjDiffAt K (fun x => f x * g x) x := 
-by 
+  : HasAdjDiffAt K (fun x => f x * g x) x :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
 
 
 -- SMul.sMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open ComplexConjugate in
 @[fprop]
 theorem HSMul.hSMul.arg_a1.HasAdjDiffAt_rule
   (c : K) (g : X → Y) (x : X) (hg : HasAdjDiffAt K g x)
   : HasAdjDiffAt K (fun x => c • g x) x :=
-by 
+by
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
 
@@ -332,42 +332,42 @@ by
 @[fprop]
 def HSMul.hSMul.arg_a0a1.HasAdjDiffAt_rule
   {Y : Type _} [SemiHilbert K Y]
-  (x : X) (f : X → K) (g : X → Y) 
+  (x : X) (f : X → K) (g : X → Y)
   (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x)
-  : HasAdjDiffAt K (fun x => f x • g x) x := 
-by 
+  : HasAdjDiffAt K (fun x => f x • g x) x :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HDiv.hDiv.arg_a0a1.HasAdjDiffAt_rule
-  (x : X) (f : X → K) (g : X → K) 
+  (x : X) (f : X → K) (g : X → K)
   (hf : HasAdjDiffAt K f x) (hg : HasAdjDiffAt K g x) (hx : g x ≠ 0)
-  : HasAdjDiffAt K (fun x => f x / g x) x := 
-by 
+  : HasAdjDiffAt K (fun x => f x / g x) x :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
 
 
 -- HPow.hPow -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HPow.hPow.arg_a0.HasAdjDiffAt_rule
-  (n : Nat) (x : X) (f : X → K) (hf : HasAdjDiffAt K f x) 
-  : HasAdjDiffAt K (fun x => f x ^ n) x := 
-by 
+  (n : Nat) (x : X) (f : X → K) (hf : HasAdjDiffAt K f x)
+  : HasAdjDiffAt K (fun x => f x ^ n) x :=
+by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
 -- EnumType.sum ----------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem SciLean.sum.arg_f.HasAdjDiffAt_rule
@@ -383,13 +383,13 @@ by
 
 section InnerProductSpace
 
-variable 
+variable
   {R : Type} [RealScalar R]
   {X : Type} [SemiInnerProductSpace R X]
   {Y : Type} [SemiHilbert R Y]
 
 -- Inner -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open ComplexConjugate
 
@@ -398,7 +398,7 @@ theorem Inner.inner.arg_a0a1.HasAdjDiffAt_rule
   (f : X → Y) (g : X → Y) (x : X)
   (hf : HasAdjDiffAt R f x) (hg : HasAdjDiffAt R g x)
   : HasAdjDiffAt R (fun x => ⟪f x, g x⟫[R]) x :=
-by 
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor; fprop; ftrans; fprop
@@ -409,7 +409,7 @@ theorem SciLean.Norm2.norm2.arg_a0.HasAdjDiffAt_rule
   (f : X → Y) (x : X)
   (hf : HasAdjDiffAt R f x)
   : HasAdjDiffAt R (fun x => ‖f x‖₂²[R]) x :=
-by 
+by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 
@@ -418,7 +418,7 @@ theorem SciLean.norm₂.arg_x.HasAdjDiffAt_rule
   (f : X → Y) (x : X)
   (hf : HasAdjDiffAt R f x) (hx : f x≠0)
   : HasAdjDiffAt R (fun x => ‖f x‖₂[R]) x :=
-by 
+by
   have ⟨_,_⟩ := hf
   constructor; fprop; ftrans; fprop
 

@@ -4,7 +4,7 @@ import SciLean.Data.Index
 def Function.Inverse (g : β → α) (f : α → β) :=
   Function.LeftInverse g f ∧ Function.RightInverse g f
 
-open SciLean 
+open SciLean
 open LeanColls
 
 variable {α β}
@@ -36,7 +36,7 @@ def Function.reduceD (f : ι → α) (op : α → α → α) (default : α) : α
   let n := IndexType.card ι
   if n = 0 then
     default
-  else 
+  else
     Id.run do
     let mut a := f (IndexType.fromFin ⟨0,sorry_proof⟩)
     for i in [0:n-1] do
@@ -44,7 +44,7 @@ def Function.reduceD (f : ι → α) (op : α → α → α) (default : α) : α
       a := op a (f (IndexType.fromFin i))
     a
 
-abbrev Function.reduce [Inhabited α] (f : ι → α) (op : α → α → α) : α := 
+abbrev Function.reduce [Inhabited α] (f : ι → α) (op : α → α → α) : α :=
   f.reduceD op default
 
 section FunctionModify
@@ -52,7 +52,7 @@ section FunctionModify
 variable {α : Sort u} {β : α → Sort v} {α' : Sort w} [DecidableEq α] [DecidableEq α']
 
 /-- Similar to `Function.update` but `g` specifies how to change the value at `a'`. -/
-def Function.modify (f : ∀ a, β a) (a' : α) (g : β a' → β a') (a : α) : β a := 
+def Function.modify (f : ∀ a, β a) (a' : α) (g : β a' → β a') (a : α) : β a :=
   Function.update f a' (g (f a')) a
 
 @[simp]
@@ -72,7 +72,7 @@ def Function.repeatIdx (f : ι → α → α) (init : α) : α := Id.run do
     x := f i x
   x
 
-def Function.repeat (n : Nat) (f : α → α) (init : α) : α := 
+def Function.repeat (n : Nat) (f : α → α) (init : α) : α :=
   repeatIdx (fun (_ : Fin n) x => f x) init
 
 
@@ -82,12 +82,12 @@ theorem Function.repeatIdx_update {α : Type _} (f : ι → α → α) (g : ι �
     =
     fun i => f i (g i) := sorry_proof
 
-/-- Specialized formulation of `Function.repeatIdx_update` which is sometimes more 
+/-- Specialized formulation of `Function.repeatIdx_update` which is sometimes more
 succesfull with unification -/
 @[simp]
 theorem Function.repeatIdx_update' {α : Type _} (f : ι → α) (g : ι → α) (op : α → α → α)
   : repeatIdx (fun i g' => Function.update g' i (op (g' i) (f i))) g
     =
-    fun i => op (g i) (f i) := 
+    fun i => op (g i) (f i) :=
 by
   apply Function.repeatIdx_update (f := fun i x => op x (f i))

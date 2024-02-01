@@ -1,6 +1,6 @@
 import SciLean.Quot.Basic
 
-partial def Nat.toSubscript (n : Nat) : String := 
+partial def Nat.toSubscript (n : Nat) : String :=
   let rec impl (k : Nat) : String :=
     if k≠0 then
       match k%10 with
@@ -17,12 +17,12 @@ partial def Nat.toSubscript (n : Nat) : String :=
       | _ => ""
     else
       ""
-  if n=0 then 
+  if n=0 then
     "₀"
   else
     impl n
 
-partial def Nat.toSupscript (n : Nat) : String := 
+partial def Nat.toSupscript (n : Nat) : String :=
   let rec impl (k : Nat) : String :=
     if k≠0 then
       match k%10 with
@@ -39,7 +39,7 @@ partial def Nat.toSupscript (n : Nat) : String :=
       | _ => ""
     else
       ""
-  if n=0 then 
+  if n=0 then
     "₀"
   else
     impl n
@@ -50,7 +50,7 @@ class ToDebugString (α : Type u) where
 namespace SciLean.Quot'
 
   -- class QForm {α} (S : Rel α) where
-  --   RedForm  : α → Prop 
+  --   RedForm  : α → Prop
   --   NormForm : α → Prop
   --   norm_red : ∀ x, NormForm x → RedForm x
   --   norm_eq  : ∀ x y, S x y → NormForm x → NormForm y → x = y
@@ -89,8 +89,8 @@ namespace SciLean.Quot'
     | normLvl, normLvl => isTrue sorry
     | _, _ => isFalse sorry
 
-    instance : HAdd Level Nat Level := 
-    ⟨λ l n' => 
+    instance : HAdd Level Nat Level :=
+    ⟨λ l n' =>
       match l with
       | redLvl n => redLvl (n + n')
       | normLvl => normLvl⟩
@@ -103,7 +103,7 @@ namespace SciLean.Quot'
 
   class QForm {α} (S : Rel α) where
     -- normLvl : Nat
-    RedForm  : Level → α → Prop 
+    RedForm  : Level → α → Prop
     redform_norm : ∀ x y, S x y → RedForm normLvl x → RedForm normLvl y → x = y
     redform_zero : ∀ x, RedForm rawLvl x = True
     redform_succ : ∀ x n, RedForm (n+(1 : Nat)) x → RedForm n x
@@ -125,7 +125,7 @@ namespace SciLean.Quot'
   --   preserve_norm : ∀ x : α, NormForm S x → NormForm R (f x)
 
   ---
-  
+
   class QReduce {α} (S : Rel α) (lvl : Level) [QForm S] where
     reduce : α → α
     is_reduce : ∀ x, RedForm S lvl (reduce x)
@@ -155,7 +155,7 @@ namespace SciLean.Quot'
   abbrev Normalize (α) := Reduce α normLvl
 
   abbrev normalize {α} (a : α) [Normalize α] : α := Reduce.reduce normLvl a
-  
+
   -- class Normalize (α) where
   --   normalize : α → α
   --   id_normalize : ∀ x : α, normalize x = x
@@ -169,7 +169,7 @@ namespace SciLean.Quot'
   -- export Normalize (normalize)
 
   ---
-  
+
   -- class QNormalize {α} (S : Rel α) [QForm S] where
   --   normalize : α → α
   --   is_normalize : ∀ x, NormForm S (normalize x)
@@ -183,7 +183,7 @@ namespace SciLean.Quot'
     lvl : Level
     h : RedForm S lvl x
 
-  namespace QRepr 
+  namespace QRepr
 
     variable {α} {S : Rel α} [QForm S]
 
@@ -195,21 +195,21 @@ namespace SciLean.Quot'
     -- def lift₂ (f : Repr → Repr' → Repr'') (x : QRepr R) (x' : QRepr R') : QRepr R'' :=
     --   raw (f x.repr x'.repr)
 
-    -- def liftHom (f : Repr → Repr') (h : SHom R R' f) (x : QRepr R) : QRepr R' := 
+    -- def liftHom (f : Repr → Repr') (h : SHom R R' f) (x : QRepr R) : QRepr R' :=
     --   match x with
     --   | raw x => raw (f x)
     --   | red  x h' => red  (f x) (h.preserve_red x h')
     --   | norm x h' => norm (f x) (h.preserve_norm x h')
 
-    -- @[simp] 
+    -- @[simp]
     -- theorem lift_hom_repr (f : Repr → Repr') (h : SHom R R' f) (x : QRepr R)
     --   : (liftHom f h x).repr = f x.repr
-    --   := 
-    --   by induction x 
+    --   :=
+    --   by induction x
     --      repeat simp[liftHom]
     --      done
 
-    -- def liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f) 
+    -- def liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f)
     --   (x : QRepr R) (y : QRepr R') : QRepr R'' :=
     --   match x, y with
     --   | red x hx,  red y hy  => red  (f x y) (h.preserve_red  x y hx hy)
@@ -258,8 +258,8 @@ namespace Quot'
     lift' normLvl f
 
   def lift₂ (f : α → β → γ) [hom : IsQHom₂ S R T f] : Quot' S → Quot' R → Quot' T :=
-  Quot.lift (λ x => 
-    Quot.lift (λ y => ⟦⟨f x.repr y.repr, rawLvl, sorry⟩⟧               
+  Quot.lift (λ x =>
+    Quot.lift (λ y => ⟦⟨f x.repr y.repr, rawLvl, sorry⟩⟧
       ) sorry
     ) sorry
 
@@ -270,9 +270,9 @@ namespace Quot'
   }
 
   instance [QNormalize S] [DecidableEq α] : DecidableEq (Quot' S) :=
-    λ a b => 
-      if a.nrepr = b.nrepr 
-      then (isTrue sorry) 
+    λ a b =>
+      if a.nrepr = b.nrepr
+      then (isTrue sorry)
       else (isFalse sorry)
 
   variable (x : Quot' S) [QNormalize S]
@@ -282,13 +282,13 @@ namespace Quot'
   #check x.nrepr
 
   constant toDebugString (x : Quot' S) [ToString α] : String :=
-    Quot.lift (λ x => s!"⟦{x.repr}⟧{match x.lvl with 
-                                    | redLvl n => n.toSubscript 
+    Quot.lift (λ x => s!"⟦{x.repr}⟧{match x.lvl with
+                                    | redLvl n => n.toSubscript
                                     | normLvl => "∞"}") sorry x
 
 end Quot'
 
-  
+
 
 
   -- TODO:

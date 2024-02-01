@@ -7,7 +7,7 @@ import SciLean.Data.DataArray
 open SciLean
 
 
-variable 
+variable
   {K : Type} [IsROrC K]
   {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
@@ -24,7 +24,7 @@ variable [PlainDataType K]
     for i in fullRange (Idx 3) do
       if i.1 = 1 then
         break
-      y := y * x 
+      y := y * x
     y))
     rewrite_by
       unfold gradient
@@ -68,7 +68,7 @@ set_option pp.funBinderTypes true in
 
 
 set_option trace.Meta.Tactic.simp.rewrite true in
-def foo := 
+def foo :=
   ((gradient Float (fun x : Float ^ Idx 3 => Id.run do
     let mut prod := 1
     let mut sum := 0.0
@@ -84,7 +84,7 @@ def foo :=
       ftrans)
 
 set_option trace.Meta.Tactic.simp.rewrite true in
-def bar := 
+def bar :=
   ((gradient Float (fun x : Float ^ Idx 3 => Id.run do
     let mut prod := 1
     let mut sum := 0.0
@@ -131,7 +131,7 @@ def bar :=
 
 
 
--- 
+--
 set_option pp.notation false in
 example
   (init : X → Y) (f : X → Nat → Y → m Y)
@@ -141,7 +141,7 @@ example
     (fun x dx => do
       let ydy₀ := fwdCDeriv K init x dx
       forIn [0:3] ydy₀
-        fun a ydy => do 
+        fun a ydy => do
           let ydy ← fwdDerivM K (fun (xy : X×Y) => f xy.1 a xy.2) (x,ydy.1) (dx,ydy.2)
           return .yield ydy) :=
 by
@@ -149,25 +149,25 @@ by
   ftrans
 
 
-example 
+example
   : IsDifferentiable K (fun x : K => Id.run do
   let mut y := x
   for i in [0:5] do
     y := i * y * y + x - x + i
     for j in [0:3] do
       y := y * j + x
-  pure y) := 
+  pure y) :=
 by
   fprop
 
-example 
+example
   : IsDifferentiableM K (fun x : K => show m K from do
   let mut y := x
   for i in [0:5] do
     y := i * y * y + x - x + i
     for j in [0:3] do
       y := y * j + x
-  pure y) := 
+  pure y) :=
 by
   fprop
 
@@ -177,8 +177,8 @@ example : fwdDerivM K (fun x : K => show m K from do
   for i in [0:5] do
     let z := y * x
     y := z + x + y + i
-  pure y) 
-  = 
+  pure y)
+  =
   (fun x dx => do
     let mut ydy := (x,dx)
     for i in [0:5] do
@@ -186,13 +186,13 @@ example : fwdDerivM K (fun x : K => show m K from do
       let dz := dx * ydy.1 + ydy.2 * x
       ydy := (z + x + ydy.1 + i, dz + dx + ydy.2)
     pure ydy)
-  := 
+  :=
 by
   (conv => lhs; ftrans; ftrans; simp (config := {zeta := false}))
   simp
 
 -- @[ftrans_simp]
--- theorem revDerivM_eq_revCDeriv_on_Id' 
+-- theorem revDerivM_eq_revCDeriv_on_Id'
 --   [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] (x : X) (f : X → Y)
 --   : revDerivM K fun f = revCDeriv K f := by set_option pp.all true in rfl
 
@@ -240,8 +240,8 @@ set_option pp.notation false in
 --   for i in [0:5] do
 --     let z := y * x
 --     y := z + x + y
---   pure y) 
---   = 
+--   pure y)
+--   =
 --   (fun x dx => do
 --     let mut y := x
 --     let mut dy := dx
@@ -251,7 +251,7 @@ set_option pp.notation false in
 --       y := z + x + y
 --       dy := dz + dx + dy
 --     pure (y,dy))
---   := 
+--   :=
 -- by
 --   ftrans only; ftrans only
 --   simp[bind]; funext x dx;  congr

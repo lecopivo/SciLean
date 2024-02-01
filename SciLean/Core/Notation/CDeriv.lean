@@ -63,8 +63,8 @@ macro_rules
 
 macro_rules
 -- in some cases it is still necessary to call ftrans multiple times
--- | `(∂! $f $xs*) => `((∂ $f $xs*) rewrite_by ftrans; ftrans; ftrans) 
-| `(∂! $f) => `((∂ $f) rewrite_by ftrans; ftrans; ftrans) 
+-- | `(∂! $f $xs*) => `((∂ $f $xs*) rewrite_by ftrans; ftrans; ftrans)
+| `(∂! $f) => `((∂ $f) rewrite_by ftrans; ftrans; ftrans)
 | `(∂! $x:ident, $b) => `(∂! (fun $x => $b))
 | `(∂! $x:ident := $val:term, $b) => `(∂! (fun $x => $b) $val)
 | `(∂! $x:ident := $val:term;$dir:term, $b) => `(((∂ $x:ident:=$val;$dir, $b) rewrite_by ftrans; ftrans; ftrans))

@@ -4,7 +4,7 @@ open SciLean
 
 section CDeriv
 
-variable 
+variable
   (K) [IsROrC K]
   {X Y} [Vec K X] [Vec K Y]
   (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y : Y)
@@ -12,7 +12,7 @@ variable
 set_default_scalar K
 
 
-/-- 
+/--
 info: ∂ f : X → X → Y
 -/
 #guard_msgs in
@@ -146,7 +146,7 @@ end Gradient
 
 section FwdCDeriv
 
-variable 
+variable
   (K) [IsROrC K]
   {X Y} [Vec K X] [Vec K Y]
   (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y dy : Y)
@@ -154,7 +154,7 @@ variable
 set_default_scalar K
 
 
-/-- 
+/--
 info: ∂> f : X → X → Y × Y
 -/
 #guard_msgs in
@@ -190,7 +190,7 @@ end FwdCDeriv
 
 section RevCDeriv
 
-variable 
+variable
   (K) [IsROrC K]
   {X Y} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
   (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y dy : Y)
@@ -198,7 +198,7 @@ variable
 set_default_scalar K
 
 
-/-- 
+/--
 info: <∂ f : X → Y × (Y → X)
 -/
 #guard_msgs in

@@ -8,15 +8,15 @@ open Lean Meta Qq
 
 namespace SciLean
 
-variable {α : Type _} 
+variable {α : Type _}
 variable [MonadControlT MetaM n] [Monad n]
 
 
-private def withParametrizedFVarsImpl (w : Expr) (vars vals : Array Expr) 
+private def withParametrizedFVarsImpl (w : Expr) (vars vals : Array Expr)
   (k : Array Expr → Array Expr → MetaM α) : MetaM α := do
   let mut vals := vals
   let mut lctx ← getLCtx
-  
+
   let wId := w.fvarId!
   let wName ← wId.getUserName
   let W ← inferType w
@@ -60,8 +60,8 @@ private def withParametrizedFVarsImpl (w : Expr) (vars vals : Array Expr)
   withLCtx lctx (← getLocalInstances) (k vars' vals')
 
 
-/-- 
-Modifies the local context such that all free variables `vars` are turned from 
+/--
+Modifies the local context such that all free variables `vars` are turned from
 `x : X` into `x : W → X` and replaces all occurances of `x` with `x w` in `vals`.
 
 The callback `k` is called as `k vars' vals'` where:
@@ -89,7 +89,7 @@ e : α
 ```
 and calls `k #[c,h,t] #[Decidable.casesOn (h w) (fun x => e) fun x => t w]`
 -/
-def withParametrizedFVars (w : Expr) (vars vals : Array Expr) 
+def withParametrizedFVars (w : Expr) (vars vals : Array Expr)
   (k : Array Expr → Array Expr → n α) : n α := do
   map2MetaM (fun k => withParametrizedFVarsImpl w vars vals k) k
 
@@ -116,7 +116,7 @@ w : W
     IO.println (← ppExpr b)
 
 
-    withLocalDecl `W .default q(Type) fun W => 
+    withLocalDecl `W .default q(Type) fun W =>
     withLocalDecl `w .default W fun w => do
 
       let vars := #[xs[1]!, xs[3]!]
@@ -125,4 +125,3 @@ w : W
         IO.println (← (← getLCtx).toString)
         IO.println (← vars'.mapM ppExpr)
         IO.println (← vals'.mapM ppExpr)
-

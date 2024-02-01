@@ -14,12 +14,12 @@ private def getContext : MetaM Simp.Context := do
 private def pre (letName : Name) (state : IO.Ref (MVarId ⊕ Nat)) (e : Expr) : SimpM Simp.Step := do
   match ← state.get with
   | .inl _ => return Simp.Step.visit { expr := e }
-  | .inr n => 
+  | .inr n =>
   if e.isLet && e.letName! = letName then
     if n ≠ 0 then
       state.set (.inr (n-1))
       return Simp.Step.visit { expr := e }
-    else 
+    else
       let (rhs, newGoal) ← mkConvGoalFor e.letValue!
       state.set (.inl newGoal.mvarId!)
       let proof ← mkCongrArg (.lam e.letName! e.letType! e.letBody! default) newGoal
@@ -32,17 +32,17 @@ private def pre (letName : Name) (state : IO.Ref (MVarId ⊕ Nat)) (e : Expr) : 
 
 `enter_let x n` focuses on `(n-1)`th occurrence of let binding `let x := _`
 -/
-syntax (name := let_enter) " enter_let" ident (num)? : conv 
+syntax (name := let_enter) " enter_let" ident (num)? : conv
 
-@[tactic let_enter] 
+@[tactic let_enter]
 def convLetEnter : Tactic
-| `(conv| enter_let $id:ident $[$n]?) => withMainContext do  
+| `(conv| enter_let $id:ident $[$n]?) => withMainContext do
     let lhs ← getLhs
     let n := n.map (λ n => n.getNat) |>.getD 0
     let state ← IO.mkRef (.inr n)
     let ctx ← getContext
     let (result, _) ← Simp.main lhs ctx (methods := { pre := pre id.getId state })
-    let .inl subgoal ← state.get  
+    let .inl subgoal ← state.get
       | throwError "'let_enter' conv tacitc failed, let binding '{id.getId}' not found!"
     (← getRhs).mvarId!.assign result.expr
     (← getMainGoal).assign (← result.getProof)
@@ -51,25 +51,24 @@ def convLetEnter : Tactic
 
 
 
-example 
-  : (λ x : Nat => 
+example
+  : (λ x : Nat =>
       let a := x
       let b := x + a
-      λ y => 
+      λ y =>
       let c := x + a + b + y
       let d := x + a + b
       a + b + (let z := 10; c + z) + d + y)
-    = 
-    (λ x : Nat => 
+    =
+    (λ x : Nat =>
       let a := x
       let b := x + a
-      λ y => 
+      λ y =>
       let c := x + a + b + y
       let d := x + a + b
       a + b + (let z := 10; c + z) + d + y)
-  := 
+  :=
 by
-  conv => 
+  conv =>
     lhs
     enter_let a
-  

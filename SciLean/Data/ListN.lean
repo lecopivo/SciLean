@@ -1,4 +1,4 @@
-import Lean 
+import Lean
 
 inductive ListN (α : Type u) : Nat → Type u
   | nil : ListN α 0
@@ -15,7 +15,7 @@ def toArray (l : ListN α n) : Array α := Id.run do
   let mut a : Array α := .mkEmpty n
   go a l
 where
-  go {m} (a : Array α) (l : ListN α m) : Array α := 
+  go {m} (a : Array α) (l : ListN α m) : Array α :=
     match l with
     | .nil => a
     | .cons x xs => go (a.push x) xs
@@ -36,28 +36,28 @@ instance [Mul α] : Mul (ListN α n) := ⟨fun x y => x.map₂ (·*·) y⟩
 instance [Div α] : Div (ListN α n) := ⟨fun x y => x.map₂ (·/·) y⟩
 
 
-@[simp] 
+@[simp]
 theorem add_elemwise {n : Nat} [Add α]
   (x y : α) (xs ys : ListN α n)
   : (ListN.cons x xs) + (ListN.cons y ys)
     =
     (ListN.cons (x+y) (xs + ys)) := by rfl
 
-@[simp] 
+@[simp]
 theorem sub_elemwise {n : Nat} [Sub α]
   (x y : α) (xs ys : ListN α n)
   : (ListN.cons x xs) - (ListN.cons y ys)
     =
     (ListN.cons (x-y) (xs - ys)) := by rfl
 
-@[simp] 
+@[simp]
 theorem mul_elemwise {n : Nat} [Mul α]
   (x y : α) (xs ys : ListN α n)
   : (ListN.cons x xs) * (ListN.cons y ys)
     =
     (ListN.cons (x*y) (xs * ys)) := by rfl
 
-@[simp] 
+@[simp]
 theorem div_elemwise {n : Nat} [Div α]
   (x y : α) (xs ys : ListN α n)
   : (ListN.cons x xs) / (ListN.cons y ys)
@@ -73,7 +73,7 @@ theorem div_elemwise {n : Nat} [Div α]
 syntax "[" term,* "]'" : term
 
 open Lean in
-macro_rules 
+macro_rules
 | `(term| []') => `(ListN.nil)
 | `(term| [$x:term]') => `(ListN.cons $x .nil)
 | `(term| [$x:term, $xs:term,*]') => do
@@ -84,7 +84,7 @@ macro_rules
 def unexpandListNNil : Lean.PrettyPrinter.Unexpander
   | `($(_)) =>
     `([]')
-  
+
 @[app_unexpander ListN.cons]
 def unexpandListNCons : Lean.PrettyPrinter.Unexpander
   | `($(_) $x []') =>
@@ -92,5 +92,3 @@ def unexpandListNCons : Lean.PrettyPrinter.Unexpander
   | `($(_) $x [$xs',*]') =>
     `([$x, $xs',*]')
   | _  => throw ()
-
-

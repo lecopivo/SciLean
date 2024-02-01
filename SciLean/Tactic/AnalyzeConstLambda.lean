@@ -21,13 +21,13 @@ structure ConstLambdaData where
 def analyzeConstLambda (e : Expr) : MetaM ConstLambdaData := do
   let e ← zetaReduce e
   lambdaTelescope e fun xs b => do
-    
+
     let constName ←
       match b.getAppFn' with
       | .const name _ => pure name
       | _ => throwError "{← ppExpr b.getAppFn'} is expected to be a constant"
 
-    let args := b.getAppArgs 
+    let args := b.getAppArgs
     let argNames ← getConstArgNames constName true
 
     -- check we have enough arguments
@@ -50,7 +50,7 @@ def analyzeConstLambda (e : Expr) : MetaM ConstLambdaData := do
     let x := xs[0]!
     let xId := x.fvarId!
     let ys := xs[1:].toArray
-    
+
     let mut main : Array Name := #[]
     let mut unused : Array Name := #[]
     let mut trailing : Array Name := #[]
@@ -69,7 +69,7 @@ def analyzeConstLambda (e : Expr) : MetaM ConstLambdaData := do
         mainIds := mainIds.push i
       else
         unused := unused.push argNames[i]!
-    
+
     let mut declSuffix := "arg"
     if main.size ≠ 0 then
       declSuffix := declSuffix ++ "_" ++ main.joinl (fun n => toString n) (·++·)

@@ -9,7 +9,7 @@ open Lean Meta Qq
 
 /-- Is it structure containing only plain data i.e. no propositions, no types, no dependent types, no functions
 -/
-def simpleDataStructure (structName : Name) : MetaM Bool := do  
+def simpleDataStructure (structName : Name) : MetaM Bool := do
 
   let ctor := getStructureCtor (← getEnv) structName
 
@@ -32,16 +32,16 @@ def simpleDataStructure (structName : Name) : MetaM Bool := do
 
     if stop then
       return false
-    
+
   return true
 
 
 private def buildMk (mk : Expr) (mks : List Expr) (vars vals : Array Expr) : MetaM Expr :=
-  match mks with 
+  match mks with
   | [] => mkLambdaFVars vars (mkAppN mk vals)
-  | mk' :: mks' => 
-    lambdaTelescope mk' fun xs b => 
-      buildMk mk mks' (vars++xs) (vals.push b)              
+  | mk' :: mks' =>
+    lambdaTelescope mk' fun xs b =>
+      buildMk mk mks' (vars++xs) (vals.push b)
 
 
 /-- Decomposes an element `e` of possible nested structure and returns a function put it back together.
@@ -68,17 +68,17 @@ partial def splitStructureElem (e : Expr) : MetaM (Array Expr × Expr) := do
 
   if ctorVal.numFields ≤ 1 then
     return (#[e], idE)
-  
+
   let eis ← info.fieldNames.mapM (fun fname => do
     let projFn := getProjFnForField? (← getEnv) structName fname |>.get!
     mkAppM projFn #[e] >>= reduceProjOfCtor)
 
   let (eis,mks) := (← eis.mapM splitStructureElem).unzip
-  
+
   -- this implementation of combining `mks` together works but it is probably not very efficient
   let mk := mkAppN (.const ctorVal.name lvls) E.getAppArgs
   let mk ← buildMk mk mks.toList #[] #[]
-  
+
   return (eis.flatten, mk)
 
 
@@ -103,9 +103,9 @@ partial def splitByCtors (e : Expr) : MetaM (Array Expr × Array Expr × Expr) :
   let fn := e.getAppFn
   let args := e.getAppArgs'
 
-  if fn.constName? ≠ .some ctorVal.name then 
+  if fn.constName? ≠ .some ctorVal.name then
     return (#[e], #[idE], idE)
-    
+
   if args.size ≠ ctorVal.numParams + ctorVal.numFields then
     return (#[e], #[idE], idE)
 
@@ -115,8 +115,8 @@ partial def splitByCtors (e : Expr) : MetaM (Array Expr × Array Expr × Expr) :
   let (eis, tmp) := (← fields.mapM splitByCtors).unzip
   let (projs, mks) := tmp.unzip
 
-  let projs := projs 
-    |>.mapIdx (fun idx projs' => 
+  let projs := projs
+    |>.mapIdx (fun idx projs' =>
        projs'.map (fun proj' => Expr.lam `x E (proj'.app (Expr.proj structName idx (.bvar 0))).headBeta default))
     |>.flatten
 
@@ -166,7 +166,7 @@ def decomposeStructure (e : Expr) (split : Nat → Expr → Bool) : MetaM (Optio
 
     if xis₁.size = 0 || xis₂.size = 0 then
       return none
-    
+
     let x₁ ← mkProdElem xis₁
     let x₂ ← mkProdElem xis₂
 
@@ -190,7 +190,7 @@ def decomposeStructure (e : Expr) (split : Nat → Expr → Bool) : MetaM (Optio
       l.forM fun m => do
         let (_,m') ← m.intros
         m'.applyRefl
-      
+
       return .some {u:=u, v:=v, w:=w, X:=X, X₁:=X₁, X₂:=X₂, p₁:=p₁, p₂:=p₂, q:=q, proof := proof}
 
 /-- Decomposition of the domain of a function `f : X → Y` as `X ≃ X₁×X₂` and provides `f' : X₁ → Y` such that `f = f' ∘ p₁` where `p₁ : X → X₁` is the projection onto the first component.
@@ -200,7 +200,7 @@ In other words, this claims that `f` does not use the `X₂` part of `X`.
 structure DomainDecomposition where
   {u : Level}
   Y : Q(Type u)
-  dec : StructureDecomposition 
+  dec : StructureDecomposition
   f  : Q($dec.X → $Y)
   f' : Q($dec.X₁ → $Y)
   proof : Q(∀ x, $f' ($dec.p₁ x) = $f x)
@@ -209,8 +209,8 @@ structure DomainDecomposition where
 -/
 def factorDomainThroughProjections (f : Expr) : MetaM (Option DomainDecomposition) := do
   let f ← instantiateMVars f
-  match f with 
-  | .lam xName xType xBody xBi => 
+  match f with
+  | .lam xName xType xBody xBi =>
     withLocalDecl `x xBi xType fun x => do
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
@@ -231,16 +231,16 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option DomainDecompositio
         let xVar := (← mkAppM' xmk xiVars).headBeta
 
         -- replace `x` with new free variables `xiVars`
-        let b ← transform b 
-          (pre := fun e => 
+        let b ← transform b
+          (pre := fun e =>
             match e with
             | .fvar id => pure (.done (if xId == id then xVar else .fvar id)) -- replace
             | e' => pure .continue)
           (post := fun e => do pure (.done (← reduceProjOfCtor e))) -- clean up projections
 
         let usedXi : FVarIdSet := -- collect which xi's are used
-          (← (b.collectFVars.run {})) 
-          |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xiSet 
+          (← (b.collectFVars.run {}))
+          |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xiSet
 
         let notUsedXi : FVarIdSet := (xiSet.diff usedXi)
 
@@ -264,7 +264,7 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option DomainDecompositio
 structure CodomainDecomposition where
   {u : Level}
   X : Q(Type u)
-  dec : StructureDecomposition 
+  dec : StructureDecomposition
   f  : Q($X → $dec.X)
   f' : Q($X → $dec.X₁)
   y₂ : Q($dec.X₂)
@@ -276,8 +276,8 @@ returns `(f', q, y, h)`
 -/
 def factorCodomainThroughProjections (f : Expr) : MetaM (Option CodomainDecomposition) := do
   let f ← instantiateMVars f
-  match f with 
-  | .lam xName xType xBody xBi => 
+  match f with
+  | .lam xName xType xBody xBi =>
     withLocalDecl `x xBi xType fun x => do
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
@@ -287,7 +287,7 @@ def factorCodomainThroughProjections (f : Expr) : MetaM (Option CodomainDecompos
       let .some dec ← decomposeStructure b (fun _ bi => bi.containsFVar xId)
         | return none
 
-      let reduceProj : Expr → MetaM Expr := fun e => 
+      let reduceProj : Expr → MetaM Expr := fun e =>
         transform e (post := fun x => do pure (.done (← whnfR x)))
       let y₂ : Q($dec.X₂) ← reduceProj (← mkAppM' dec.p₂ #[b]).headBeta
       let f' : Q($X → $dec.X₁) ← mkLambdaFVars #[x] (← reduceProj (← mkAppM' dec.p₁ #[b]).headBeta)

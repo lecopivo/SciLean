@@ -1,11 +1,11 @@
 import SciLean.Core
 import SciLean.Data.ArrayType.GenericArrayType
 
-namespace SciLean 
+namespace SciLean
 namespace GenericArrayType
 
 variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-variable [GenericArrayType Cont Idx Elem] [Index Idx] 
+variable [GenericArrayType Cont Idx Elem] [Index Idx]
 
 -- The above instance is giving problems in the following examples.
 -- TOOD: investigate
@@ -19,14 +19,14 @@ instance (priority := low) [Vec Elem] : Vec Cont := Vec.mkSorryProofs -- Vec.mk
 instance (priority := low) [Inner Elem] : Inner Cont where
   inner := λ f g => ∑ x, ⟪f[x], g[x]⟫
 
-instance (priority := low) [Vec Elem] [TestFunctions Elem] 
+instance (priority := low) [Vec Elem] [TestFunctions Elem]
   : TestFunctions Cont where
   TestFun f := ∀ x, TestFun (f[x])
 
-instance (priority := low) [SemiHilbert Elem] 
+instance (priority := low) [SemiHilbert Elem]
   : SemiHilbert Cont := SemiHilbert.mkSorryProofs
 
-instance (priority := low) [Hilbert Elem] 
+instance (priority := low) [Hilbert Elem]
   : Hilbert Cont where
   all_are_test := sorry_proof
 
@@ -66,4 +66,3 @@ instance (priority := low) [FinVec Elem Unit] : FinVec Cont Idx where
 --   duality := by intro (i,j) (i',j'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
 --   to_dual := sorry_proof
 --   from_dual := sorry_proof
-

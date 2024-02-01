@@ -34,10 +34,10 @@ open Prism
     IO.println s!"face: {e.repr.toString} | id: {i} | dim: {e.repr.toPrism.toCanonical.toString}"
     i := i + 1
 
-  
+
 
 -- def testFaceIterable (P : Prism) : IO Unit := do
 
 --   for fDim in [0:P.dim+1] do
 
---     for face in 
+--     for face in

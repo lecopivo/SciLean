@@ -39,17 +39,17 @@ theorem infer_HasAdjDiffDep {X Y : Type} {Xs Y' : Type} [SemiHilbertDiff Xs] [Se
 --------------------------------------------------------------------------------
 
 
---- Removing arguments - generalized this 
+--- Removing arguments - generalized this
 
 instance HasAdjDiffDep2_apply_2 (f : X → Y → Z) [HasAdjDiffDepNT 2 f] (y : Y)
   : HasAdjDiffDepT (λ x => f x y) := sorry_proof
 
 instance HasAdjDiffDep2_apply_1 (f : X → Y → Z) [inst : HasAdjDiffDepNT 2 f] (x : X)
-  : HasAdjDiffDepT (λ y => f x y) := 
+  : HasAdjDiffDepT (λ y => f x y) :=
 by
   have is := inst.proof.1
   have ia := inst.proof.2
- 
+
   apply infer_HasAdjDiffDep; intro x; simp; admit
 
 instance (f : X → Y → Z → W) [HasAdjDiffDepNT 3 f] (y z)
@@ -62,7 +62,7 @@ instance (f : X → Y → Z → W) [HasAdjDiffDepNT 3 f] (x y)
   : HasAdjDiffDepT (λ z => f x y z) := sorry_proof
 
 
---- Adding arguments - generalized this 
+--- Adding arguments - generalized this
 
 instance HasAdjDiffDep_add_extra_2_1 (f : X → Y) [hf : HasAdjDiffDepT f]
   : HasAdjDiffDepNT 2 (λ (z : Z) x => f x) := sorry_proof
@@ -97,8 +97,8 @@ instance const.arg_x.hasAdjDiffDep
 
 
 instance const.arg_y.hasAdjDiffDep (x : X)
-  : HasAdjDiffDepT (λ (y : Y) => x) := 
-by 
+  : HasAdjDiffDepT (λ (y : Y) => x) :=
+by
   apply infer_HasAdjDiffDep; intro;
   simp; sorry --infer_instance
 
@@ -109,38 +109,38 @@ by
   have is := λ x => (inst x).proof.1
   have ia := λ x => (inst x).proof.2
   apply infer_HasAdjDiffDep; intro y;
-  unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll;   
+  unfold uncurryN; unfold Prod.Uncurry.uncurry; unfold instUncurryOfNatNatInstOfNatNatForAll;
   simp; sorry -- infer_instance; done
 
 
-instance (priority := mid-1) subst.arg_x.hasAdjDiffDep 
+instance (priority := mid-1) subst.arg_x.hasAdjDiffDep
   (f : X → Y → Z) [instf : HasAdjDiffDepNT 2 f]
-  (g : X → Y) [instg : HasAdjDiffDepT g] 
-  : HasAdjDiffDepT (λ x => f x (g x)) := 
+  (g : X → Y) [instg : HasAdjDiffDepT g]
+  : HasAdjDiffDepT (λ x => f x (g x)) :=
 by
   have isf := instf.proof.1
   have iaf := instf.proof.2
   have isg := instg.proof.1
   have iag := instg.proof.2
 
-  apply infer_HasAdjDiffDep; intro; 
+  apply infer_HasAdjDiffDep; intro;
   simp[uncurryN, Prod.Uncurry.uncurry, tangentMap]; admit
 
-instance (priority := mid-1) subst2.arg_x.hasAdjDiffDep 
+instance (priority := mid-1) subst2.arg_x.hasAdjDiffDep
   (f : X → Y → Y₁ → Z) [HasAdjDiffDepNT 3 f]
   (g : X → Y → Y₁) [HasAdjDiffDepNT 2 g] :
   HasAdjDiffDepNT 2 (λ x y => f x y (g x y)) := sorry_proof
 
-instance (priority := mid-1) subst3.arg_x.hasAdjDiffDep 
+instance (priority := mid-1) subst3.arg_x.hasAdjDiffDep
   (f : X → Y → Z → Y₁ → W) [HasAdjDiffDepNT 4 f]
   (g : X → Y → Z → Y₁) [HasAdjDiffDepNT 3 g] :
   HasAdjDiffDepNT 3 (λ x y z => f x y z (g x y z)) := sorry_proof
 
 
 instance comp.arg_x.hasAdjDiffDep
-  (f : Y → Z) [instf : HasAdjDiffDepT f] 
+  (f : Y → Z) [instf : HasAdjDiffDepT f]
   (g : X → Y) [instg : HasAdjDiffDepT g]
-  : HasAdjDiffDepT (λ x => f (g x)) := by infer_instance 
+  : HasAdjDiffDepT (λ x => f (g x)) := by infer_instance
 
 instance {Ws W' : Type} [SemiHilbertDiff Ws] [SemiHilbertDiff W']
   (f : Z → W) [Prod.Uncurry n W Ws W'] [HasAdjDiffDepNT (n+1) f]
@@ -157,30 +157,30 @@ instance comp2.arg_x.HasAdjDiffDep
   (f : Y₁ → Y₂ → Z) [HasAdjDiffDepNT 2 f]
   (g₁ : X → Y → Y₁) [HasAdjDiffDepNT 2 g₁]
   (g₂ : X → Y → Y₂) [HasAdjDiffDepNT 2 g₂]
-  : HasAdjDiffDepNT 2 (λ x y => f (g₁ x y) (g₂ x y)) := 
+  : HasAdjDiffDepNT 2 (λ x y => f (g₁ x y) (g₂ x y)) :=
 by
   have : HasAdjDiffDepNT 3 fun x y => f (g₁ x y) := by infer_instance
-  infer_instance 
+  infer_instance
 
-instance comp3.arg_x.HasAdjDiffDep 
+instance comp3.arg_x.HasAdjDiffDep
   (f : Y₁ → Y₂ → Y₃ → W) [HasAdjDiffDepNT 3 f]
   (g₁ : X → Y → Z → Y₁) [HasAdjDiffDepNT 3 g₁]
   (g₂ : X → Y → Z → Y₂) [HasAdjDiffDepNT 3 g₂]
   (g₃ : X → Y → Z → Y₃) [HasAdjDiffDepNT 3 g₃]
-  : HasAdjDiffDepNT 3 (λ x y z => f (g₁ x y z) (g₂ x y z) (g₃ x y z)) := 
+  : HasAdjDiffDepNT 3 (λ x y z => f (g₁ x y z) (g₂ x y z) (g₃ x y z)) :=
 by
   -- have : HasAdjDiffDepNT 4 fun x y z => f (g₁ x y z) (g₂ x y z) := by apply hoho
   infer_instance
 
 instance diag.arg_x.hasAdjDiffDep
-  (f : Y₁ → Y₂ → Z) [instf : HasAdjDiffDepNT 2 f] 
+  (f : Y₁ → Y₂ → Z) [instf : HasAdjDiffDepNT 2 f]
   (g₁ : X → Y₁) [instg1 : HasAdjDiffDepT g₁]
   (g₂ : X → Y₂) [instg2 : HasAdjDiffDepT g₂]
   : HasAdjDiffDepT (λ x => f (g₁ x) (g₂ x)) := by infer_instance
 
 instance eval.arg_x.parm1.hasAdjDiffDep
   (f : X → ι → Z) [inst : HasAdjDiffDepT f] (i : ι)
-  : HasAdjDiffDepT (λ x => f x i) := 
+  : HasAdjDiffDepT (λ x => f x i) :=
   by
     have := inst.proof.1
     have := inst.proof.2
@@ -193,17 +193,17 @@ instance comp.arg_x.parm1.hasAdjDiffDep
   (a : α)
   (f : Y → α → Z) [HasAdjDiffDepT λ y => f y a]
   (g : X → Y) [HasAdjDiffDepT g]
-  : HasAdjDiffDepT λ x => f (g x) a := 
-  by 
+  : HasAdjDiffDepT λ x => f (g x) a :=
+  by
     apply comp.arg_x.hasAdjDiffDep (λ y => f y a) g
     done
 
 instance diag.arg_x.parm1.hasAdjDiffDep
   (a : α)
   (f : Y₁ → Y₂ → α → Z) [HasAdjDiffDepNT 2 λ y₁ y₂ => f y₁ y₂ a]
-  (g₁ : X → Y₁) [HasAdjDiffDepT g₁] 
+  (g₁ : X → Y₁) [HasAdjDiffDepT g₁]
   (g₂ : X → Y₂) [HasAdjDiffDepT g₂]
-  : HasAdjDiffDepT λ x => f (g₁ x) (g₂ x) a := 
-  by 
+  : HasAdjDiffDepT λ x => f (g₁ x) (g₂ x) a :=
+  by
     apply diag.arg_x.hasAdjDiffDep (λ y₁ y₂ => f y₁ y₂ a) g₁ g₂
     done

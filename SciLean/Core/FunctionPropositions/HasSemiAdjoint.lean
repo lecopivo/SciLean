@@ -11,16 +11,16 @@ open LeanColls
 
 namespace SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
+  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 def HasSemiAdjoint (f : X → Y) : Prop :=
-   ∃ f' : Y → X, 
+   ∃ f' : Y → X,
      ∀ x y, TestFunction x → ⟪y, f x⟫[K] = ⟪f' y, x⟫[K]
    -- at some point I was convinced that these conditions are important
    -- maybe add: ∀ x, TestFunction x → TestFunction (f x) - I think this is important for proving linearity of f'
@@ -30,7 +30,7 @@ def HasSemiAdjoint (f : X → Y) : Prop :=
 
 If `f : X → Y` is linear map between Hilbert spaces then `semiAdjoint K f = adjoint K f`.
 
-`semiAdjoint` is a generalization of adjoint to spaces that are not necessarily complete 
+`semiAdjoint` is a generalization of adjoint to spaces that are not necessarily complete
 and might have inner product defined only on a dense subset, see `SemiInnerProductSpace`
 for more information.
  -/
@@ -45,21 +45,21 @@ def semiAdjoint (f : X → Y) (y : Y) : X :=
 
 -- there should be a command to generate these push/pull  theorems
 @[neg_pull]
-theorem semiAdjoint.arg_y.neg_pull 
+theorem semiAdjoint.arg_y.neg_pull
   (f : X → Y) (y : Y)
   : semiAdjoint K f (-y)
     =
     - semiAdjoint K f y := sorry_proof
 
 @[neg_push]
-theorem semiAdjoint.arg_y.neg_push 
+theorem semiAdjoint.arg_y.neg_push
   (f : X → Y) (y : Y)
   : - semiAdjoint K f y
     =
     semiAdjoint K f (-y) := sorry_proof
 
 @[add_pull]
-theorem semiAdjoint.arg_y.add_pull 
+theorem semiAdjoint.arg_y.add_pull
   (f : X → Y) (y y : Y)
   : semiAdjoint K f (y+y')
     =
@@ -73,7 +73,7 @@ theorem semiAdjoint.arg_y.add_push
     semiAdjoint K f (y+y') := sorry_proof
 
 @[sub_pull]
-theorem semiAdjoint.arg_y.sub_pull 
+theorem semiAdjoint.arg_y.sub_pull
   (f : X → Y) (y y' : Y)
   : semiAdjoint K f (y-y')
     =
@@ -87,14 +87,14 @@ theorem semiAdjoint.arg_y.sub_push
     semiAdjoint K f (y-y') := sorry_proof
 
 @[smul_pull]
-theorem semiAdjoint.arg_y.smul_pull 
+theorem semiAdjoint.arg_y.smul_pull
   (f : X → Y) (y : Y) (k : K)
   : semiAdjoint K f (k•y)
     =
     k • semiAdjoint K f y := sorry_proof
 
 @[smul_push]
-theorem semiAdjoint.arg_y.smul_push 
+theorem semiAdjoint.arg_y.smul_push
   (f : X → Y) (y : Y) (k : K)
   : k • semiAdjoint K f y
     =
@@ -129,28 +129,28 @@ by
 -- Lambda calculus rules -------------------------------------------------------
 --------------------------------------------------------------------------------
 
-namespace HasSemiAdjoint 
+namespace HasSemiAdjoint
 
 
 variable (X)
 theorem id_rule
-  : HasSemiAdjoint K (fun x : X => x) := 
-by 
+  : HasSemiAdjoint K (fun x : X => x) :=
+by
   apply Exists.intro (fun x => x) _
   simp
-  
-theorem const_rule 
-  : HasSemiAdjoint K (fun _ : X => (0:Y)) := 
-by 
+
+theorem const_rule
+  : HasSemiAdjoint K (fun _ : X => (0:Y)) :=
+by
   apply Exists.intro (fun _ => 0) _
   simp; sorry_proof
 variable {X}
 
 variable (E)
-theorem proj_rule 
+theorem proj_rule
   (i : ι)
-  : HasSemiAdjoint K (fun x : (i : ι) → E i => x i) := 
-by 
+  : HasSemiAdjoint K (fun x : (i : ι) → E i => x i) :=
+by
   apply Exists.intro (fun (y : E i) j => if h : i=j then h▸y else 0) _
   sorry_proof
 variable {E}
@@ -158,8 +158,8 @@ variable {E}
 theorem comp_rule
   (f : Y → Z) (g : X → Y)
   (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
-  : HasSemiAdjoint K (fun x => f (g x)) := 
-by 
+  : HasSemiAdjoint K (fun x => f (g x)) :=
+by
   apply Exists.intro (fun z => semiAdjoint K g (semiAdjoint K f z)) _
   sorry_proof
 
@@ -167,16 +167,16 @@ theorem let_rule
   (f : X → Y → Z) (g : X → Y)
   (hf : HasSemiAdjoint K (fun (xy : X×Y) => f xy.1 xy.2))
   (hg : HasSemiAdjoint K g)
-  : HasSemiAdjoint K (fun x => let y := g x; f x y) := 
-by 
+  : HasSemiAdjoint K (fun x => let y := g x; f x y) :=
+by
   apply Exists.intro (fun z => semiAdjoint K (fun x => (x, g x)) (semiAdjoint K (fun (xy : X×Y) => f xy.1 xy.2) z)) _
   sorry_proof
-  
+
 theorem pi_rule
   (f : (i : ι) → X → E i)
   (hf : ∀ i, HasSemiAdjoint K (f i))
-  : HasSemiAdjoint K (fun x i => f i x) := 
-by 
+  : HasSemiAdjoint K (fun x i => f i x) :=
+by
   -- apply Exists.intro (fun g => ∑ i, semiAdjoint K (f i) (g i)) _
   sorry_proof
 
@@ -187,36 +187,36 @@ by
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``HasSemiAdjoint
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``HasSemiAdjoint then
 
       if let .some f := e.getArg? 6 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``HasSemiAdjoint then
       e.setArg 6 f
-    else          
+    else
       e
 
   identityRule    e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``id_rule 
-      origin := .decl ``id_rule 
+      proof  := mkConst ``id_rule
+      origin := .decl ``id_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  constantRule e := 
+  constantRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``const_rule 
-      origin := .decl ``const_rule 
+      proof  := mkConst ``const_rule
+      origin := .decl ``const_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -224,8 +224,8 @@ def fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``proj_rule 
-      origin := .decl ``proj_rule 
+      proof  := mkConst ``proj_rule
+      origin := .decl ``proj_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -255,13 +255,13 @@ def fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``pi_rule 
-      origin := .decl ``pi_rule 
+      proof  := mkConst ``pi_rule
+      origin := .decl ``pi_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 -- register fderiv
@@ -274,14 +274,14 @@ end SciLean.HasSemiAdjoint
 
 open SciLean HasSemiAdjoint ContinuousLinearMap
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
   {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)] 
+  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
 -- Id --------------------------------------------------------------------------
@@ -311,7 +311,7 @@ by
 theorem Prod.mk.arg_fstsnd.HasSemiAdjoint_rule
   (g : X → Y) (hg : HasSemiAdjoint K g)
   (f : X → Z) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun x => (g x, f x) := 
+  : HasSemiAdjoint K fun x => (g x, f x) :=
 by sorry_proof
 
 
@@ -321,7 +321,7 @@ by sorry_proof
 @[fprop]
 theorem Prod.fst.arg_self.HasSemiAdjoint_rule
   (f : X → Y×Z) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun (x : X) => (f x).fst := 
+  : HasSemiAdjoint K fun (x : X) => (f x).fst :=
 by sorry_proof
 
 
@@ -331,113 +331,113 @@ by sorry_proof
 @[fprop]
 theorem Prod.snd.arg_self.HasSemiAdjoint_rule
   (f : X → Y×Z) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun (x : X) => (f x).snd := 
+  : HasSemiAdjoint K fun (x : X) => (f x).snd :=
 by sorry_proof
 
 
 -- Neg.neg ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
-theorem Neg.neg.arg_a0.HasSemiAdjoint_rule 
+theorem Neg.neg.arg_a0.HasSemiAdjoint_rule
   (f : X → Y)
-  : HasSemiAdjoint K fun x => - f x := 
+  : HasSemiAdjoint K fun x => - f x :=
 by sorry_proof
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HAdd.hAdd.arg_a0a1.HasSemiAdjoint_rule [ContinuousAdd Y]
   (f g : X → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
-  : HasSemiAdjoint K fun x => f x + g x := 
+  : HasSemiAdjoint K fun x => f x + g x :=
 by sorry_proof
 
 
 -- HSub.hSub -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
-theorem HSub.hSub.arg_a0a1.HasSemiAdjoint_rule 
+theorem HSub.hSub.arg_a0a1.HasSemiAdjoint_rule
   (f g : X → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
-  : HasSemiAdjoint K fun x => f x - g x := 
+  : HasSemiAdjoint K fun x => f x - g x :=
 by sorry_proof
 
 
 -- HMul.hMul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HMul.hMul.arg_a0.HasSemiAdjoint_rule
   (f : X → K) (y' : K) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun x => f x * y' := 
+  : HasSemiAdjoint K fun x => f x * y' :=
 by sorry_proof
 
 @[fprop]
 theorem HMul.hMul.arg_a1.HasSemiAdjoint_rule
-  (y' : K) (f : X → K) (hf : HasSemiAdjoint K f)   
-  : HasSemiAdjoint K fun x => y' * f x := 
+  (y' : K) (f : X → K) (hf : HasSemiAdjoint K f)
+  : HasSemiAdjoint K fun x => y' * f x :=
 by sorry_proof
 
 
 -- Smul.smul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HSMul.hSMul.arg_a0.HasSemiAdjoint_rule
   {Y : Type _} [SemiHilbert K Y]
   (f : X → K) (y : Y) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun x => f x • y := 
-by 
+  : HasSemiAdjoint K fun x => f x • y :=
+by
   apply Exists.intro (fun (y' : Y) => ⟪y,y'⟫[K] • semiAdjoint K f 1) _
   sorry_proof
 
 open ComplexConjugate in
 @[fprop]
-theorem HSMul.hSMul.arg_a1.HasSemiAdjoint_rule 
+theorem HSMul.hSMul.arg_a1.HasSemiAdjoint_rule
   (c : K) (f : X → Y) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun x => c • f x := 
-by 
+  : HasSemiAdjoint K fun x => c • f x :=
+by
   apply Exists.intro (fun (y' : Y) => conj c • semiAdjoint K f y') _
   sorry_proof
 
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open ComplexConjugate in
 @[fprop]
 theorem HDiv.hDiv.arg_a0.HasSemiAdjoint_rule
-  (f : X → K) (hf : HasSemiAdjoint K f) (y : K) 
-  : HasSemiAdjoint K fun x => f x / y := 
-by 
+  (f : X → K) (hf : HasSemiAdjoint K f) (y : K)
+  : HasSemiAdjoint K fun x => f x / y :=
+by
   apply Exists.intro (fun (y' : K) => (1/conj y) • semiAdjoint K f y') _
   sorry_proof
 
 
 -- Finset.sum -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open BigOperators in
 @[fprop]
 theorem Finset.sum.arg_f.HasSemiAdjoint_rule {ι : Type _} [Fintype ι]
   (f : X → ι → Y) (_ : ∀ i, HasSemiAdjoint K fun x : X => f x i) (A : Finset ι)
-  : HasSemiAdjoint K fun x => ∑ i in A, f x i := 
-by 
+  : HasSemiAdjoint K fun x => ∑ i in A, f x i :=
+by
   unfold HasSemiAdjoint
   apply Exists.intro (fun (y' : Y) => ∑ i in A, semiAdjoint K (f · i) y' ) _
   sorry_proof
 
 -- EnumType.sum -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem SciLean.EnumType.sum.arg_f.HasSemiAdjoint_rule
   (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K fun x : X => f x i)
-  : HasSemiAdjoint K fun x => ∑ i, f x i := 
-by 
+  : HasSemiAdjoint K fun x => ∑ i, f x i :=
+by
   -- unfold HasSemiAdjoint
   -- apply Exists.intro (fun (y' : Y) => ∑ i, semiAdjoint K (f · i) y') _
   sorry_proof
@@ -451,7 +451,7 @@ by
 --   : HasSemiAdjoint K fun (x : X) => ∑ i in A, f i x := sorry_proof
 
 -- conj/starRingEnd ------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 set_option linter.fpropDeclName false in
 open ComplexConjugate in
@@ -464,13 +464,13 @@ by
 
 
 -- d/ite -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem ite.arg_te.HasSemiAdjoint_rule
   (c : Prop) [dec : Decidable c]
   (t e : X → Y) (ht : HasSemiAdjoint K t) (he : HasSemiAdjoint K e)
-  : HasSemiAdjoint K fun x => ite c (t x) (e x) := 
+  : HasSemiAdjoint K fun x => ite c (t x) (e x) :=
 by
   induction dec
   case isTrue h  => simp[h]; fprop
@@ -480,26 +480,26 @@ by
 @[fprop]
 theorem dite.arg_te.HasSemiAdjoint_rule
   (c : Prop) [dec : Decidable c]
-  (t : c  → X → Y) (ht : ∀ p, HasSemiAdjoint K (t p)) 
+  (t : c  → X → Y) (ht : ∀ p, HasSemiAdjoint K (t p))
   (e : ¬c → X → Y) (he : ∀ p, HasSemiAdjoint K (e p))
-  : HasSemiAdjoint K fun x => dite c (t · x) (e · x) := 
+  : HasSemiAdjoint K fun x => dite c (t · x) (e · x) :=
 by
   induction dec
   case isTrue h  => simp[h]; apply ht
   case isFalse h => simp[h]; apply he
 
 
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 section InnerProductSpace
 
-variable 
+variable
   {K : Type _} [IsROrC K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiHilbert K Y]
 
 -- Inner -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open ComplexConjugate
 
@@ -507,7 +507,7 @@ open ComplexConjugate
 theorem Inner.inner.arg_a0.HasSemiAdjoint_rule
   (f : X → Y) (_ : HasSemiAdjoint K f) (y : Y)
   : HasSemiAdjoint K fun x => ⟪f x, y⟫[K] :=
-by 
+by
   apply Exists.intro (fun (c : K) => (conj c) • semiAdjoint K f y) _
   sorry_proof
 
@@ -515,7 +515,7 @@ by
 theorem Inner.inner.arg_a1.HasSemiAdjoint_rule
   (f : X → Y) (_ : HasSemiAdjoint K f) (y : Y)
   : HasSemiAdjoint K fun x => ⟪y, f x⟫[K] :=
-by 
+by
   apply Exists.intro (fun (c : K) => c • semiAdjoint K f y) _
   sorry_proof
 
@@ -534,5 +534,3 @@ by
   -- either `f` has semiadjoint then the total adjoint id `a0† f†`
   -- or `f` does not have semiadjoint and `f†` is zero thus map and that has adjoint
   sorry_proof
-
-

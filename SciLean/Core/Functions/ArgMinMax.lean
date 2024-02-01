@@ -12,7 +12,7 @@ structure HasMinimum {α β} [LT β] (f : α → β) : Prop where
   has_min : ∃ a, ∀ a', a ≠ a' → f a < f a'
 
 
-/-- Finds `x : α` that minimizes of `f x`. 
+/-- Finds `x : α` that minimizes of `f x`.
 
 Return default value of `α` if such `x` does not exist.
 -/
@@ -30,7 +30,7 @@ def argMinN {F : Type _} {Xs Y : outParam (Type _)} [UncurryAll F Xs Y] [Nonempt
 
 
 open Lean Parser Elab Term in
-/-- `argmin x y, f x y` returns `(x,y)` that minimizes `f x y`. 
+/-- `argmin x y, f x y` returns `(x,y)` that minimizes `f x y`.
 
 Return default values if such `x,y` does not exist.
 -/
@@ -50,7 +50,7 @@ structure HasMaximum {α β} [LT β] (f : α → β) : Prop where
   has_max : ∃ a, ∀ a', a ≠ a' → f a' < f a
 
 
-/-- Finds `x : α` that maximizes of `f x`. 
+/-- Finds `x : α` that maximizes of `f x`.
 
 Return default value of `α` if such `x` does not exist.
 -/
@@ -68,7 +68,7 @@ def argMaxN {F : Type _} {Xs Y : outParam (Type _)} [UncurryAll F Xs Y] [Nonempt
 
 
 open Lean Parser Elab Term in
-/-- `argmax x y, f x y` returns `(x,y)` that maximizes `f x y`. 
+/-- `argmax x y, f x y` returns `(x,y)` that maximizes `f x y`.
 
 Return default values if such `x,y` does not exist.
 -/
@@ -87,6 +87,5 @@ macro "argmax" xs:funBinder* ", " b:term : term => do
 
 open Function
 theorem invFun_as_min_norm2 {R} [RealScalar R] {X Y} [Nonempty X] [SemiInnerProductSpace R Y]
-  (f : X → Y) (y : Y) (hf : Bijective f) 
+  (f : X → Y) (y : Y) (hf : Bijective f)
   : invFun f y = argmin x, ‖f x - y‖₂²[R] := sorry_proof
-

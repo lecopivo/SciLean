@@ -26,29 +26,29 @@ def mkApp9 (f a b c d e₁ e₂ e₃ e₄ e₅ : Expr) := mkApp5 (mkApp4 f a b c
 @[match_pattern]
 def mkApp10 (f a b c d e₁ e₂ e₃ e₄ e₅ e₆ : Expr) := mkApp6 (mkApp4 f a b c d) e₁ e₂ e₃ e₄ e₅ e₆
 
-def explicitArgIds (e : Expr) : Array Nat := 
+def explicitArgIds (e : Expr) : Array Nat :=
   run e #[] 0
-where run (e : Expr) (ids : Array Nat) (i : Nat) : Array Nat := 
+where run (e : Expr) (ids : Array Nat) (i : Nat) : Array Nat :=
   match e with
-  | .forallE _ _ e' bi => 
-    if bi.isExplicit then 
+  | .forallE _ _ e' bi =>
+    if bi.isExplicit then
       run e' (ids.push i) (i+1)
-    else 
+    else
       run e' ids (i+1)
-  | .lam _ _ e' bi => 
-    if bi.isExplicit then 
+  | .lam _ _ e' bi =>
+    if bi.isExplicit then
       run e' (ids.push i) (i+1)
-    else 
+    else
       run e' ids (i+1)
   | _ => ids
 
 partial def flattenLet? (e : Expr) : Option Expr := do
   match e with
-  | .letE xName xType xVal xBody _ => 
+  | .letE xName xType xVal xBody _ =>
     match xVal with
     | .letE yName yType yVal yBody _ =>
 
-      let e' := 
+      let e' :=
         .letE yName yType yVal
           (.letE xName xType yBody (xBody.liftLooseBVars 1 1) default) default
 
@@ -66,9 +66,9 @@ partial def splitLetProd? (e : Expr) : Option Expr := do
   match e with
   | .letE xyName xyType xyVal xyBody _ =>
     if let .some (X,Y,x,y) := xyVal.app4? ``Prod.mk then
-      
+
       let xy := mkApp4 xyVal.getAppFn X Y (.bvar 1) (.bvar 0)
-      let e' := 
+      let e' :=
         Expr.letE (xyName.appendAfter "₁") X x
           (.letE (xyName.appendAfter "₂") Y y ((xyBody.liftLooseBVars 1 2).instantiate1 xy) default) default
 
@@ -82,10 +82,10 @@ partial def splitLetProd (e : Expr) : Option Expr := e.splitLetProd?.getD e
 
 def mapLooseBVarIds (e : Expr) (f : Nat → Option Nat) (offset : Nat := 0) : Expr :=
   if e.looseBVarRange ≤ offset then
-    e 
+    e
   else
     match e with
-    | .bvar i => 
+    | .bvar i =>
       if offset ≤ i then
         match f (i-offset) with
         | .some i' => .bvar (i' + offset)
@@ -95,13 +95,13 @@ def mapLooseBVarIds (e : Expr) (f : Nat → Option Nat) (offset : Nat := 0) : Ex
     | .proj typeName idx e => .proj typeName idx (e.mapLooseBVarIds f offset)
     | .letE name type val body d =>
       .letE name (type.mapLooseBVarIds f offset) (val.mapLooseBVarIds f offset) (body.mapLooseBVarIds f (offset+1)) d
-    | .forallE name type body bi => 
+    | .forallE name type body bi =>
       .forallE name (type.mapLooseBVarIds f offset) (body.mapLooseBVarIds f (offset+1)) bi
-    | .lam name type body bi => 
+    | .lam name type body bi =>
       .lam name (type.mapLooseBVarIds f offset) (body.mapLooseBVarIds f (offset+1)) bi
-    | .app f' x => 
+    | .app f' x =>
       .app (f'.mapLooseBVarIds f offset) (x.mapLooseBVarIds f offset)
-    | .mdata data e => 
+    | .mdata data e =>
       .mdata data (e.mapLooseBVarIds f offset)
     | e => e
 
@@ -113,7 +113,7 @@ def mapLooseBVarIds (e : Expr) (f : Nat → Option Nat) (offset : Nat := 0) : Ex
 
   TODO: This has to have a better implementation, but I'm still beyond confused with how bvar indices work
 -/
-def swapBVars (e : Expr) (i j : Nat) : Expr := 
+def swapBVars (e : Expr) (i j : Nat) : Expr :=
 
   let swapBVarArray : Array Expr := Id.run do
     let mut a : Array Expr := .mkEmpty e.looseBVarRange
@@ -125,7 +125,7 @@ def swapBVars (e : Expr) (i j : Nat) : Expr :=
 
 
 inductive ReplaceStep where
-| noMatch 
+| noMatch
 | done (e : Expr)
 | yield (e : Expr)
 
@@ -145,7 +145,7 @@ where
   | .done eNew => return (.done eNew)
   | .yield eNew => return (.yield eNew)
   | .noMatch    => match e with
-    | .forallE _ d b _ => 
+    | .forallE _ d b _ =>
       match ← run d with
       | .done d => return .done (e.updateForallE! d b)
       | .yield d =>
@@ -153,7 +153,7 @@ where
       | .done b => return .done (e.updateForallE! d b)
       | .yield b => return .yield (e.updateForallE! d b)
 
-    | .lam _ d b _     => 
+    | .lam _ d b _     =>
       match ← run d with
       | .done d => return .done (e.updateLambdaE! d b)
       | .yield d =>
@@ -161,12 +161,12 @@ where
       | .done b => return .done (e.updateLambdaE! d b)
       | .yield b => return .yield (e.updateLambdaE! d b)
 
-    | .mdata _ b       => 
+    | .mdata _ b       =>
       match ← run b with
       | .done b => return .done (e.updateMData! b)
       | .yield b => return .yield (e.updateMData! b)
 
-    | .letE _ t v b _  => 
+    | .letE _ t v b _  =>
       match ← run t with
       | .done t => return .done (e.updateLet! t v b)
       | .yield t =>
@@ -177,7 +177,7 @@ where
       | .done b => return .done (e.updateLet! t v b)
       | .yield b => return .yield (e.updateLet! t v b)
 
-    | .app f a         => 
+    | .app f a         =>
       match ← run f with
       | .done f => return .done (e.updateApp! f a)
       | .yield f =>
@@ -185,7 +185,7 @@ where
       | .done a => return .done (e.updateApp! f a)
       | .yield a => return .yield (e.updateApp! f a)
 
-    | .proj _ _ b      => 
+    | .proj _ _ b      =>
       match ← run b with
       | .done b => return .done (e.updateProj! b)
       | .yield b => return .yield (e.updateProj! b)
@@ -194,7 +194,7 @@ where
 
 
 /-- Replaces `xᵢ` with `yᵢ`, subterms of e with loose bvars are ignored. -/
-def replaceExprs (e : Expr) (xs ys : Array Expr) : MetaM Expr := 
+def replaceExprs (e : Expr) (xs ys : Array Expr) : MetaM Expr :=
   e.replaceM (fun e' => do
     if e'.hasLooseBVars then
       return .noMatch
@@ -212,11 +212,11 @@ WARRNING: Currently it ignores types.
 -/
 def instantiateOnceNth (e v : Expr) (i : Nat) (nth : Nat) : Expr ⊕ Nat :=
   match e with
-  | .bvar j => 
+  | .bvar j =>
     if i = j then
-      if nth = 0 then 
-        .inl v 
-      else 
+      if nth = 0 then
+        .inl v
+      else
         .inr 1
     else
       .inr 0
@@ -224,20 +224,20 @@ def instantiateOnceNth (e v : Expr) (i : Nat) (nth : Nat) : Expr ⊕ Nat :=
   | .app f x =>
     match instantiateOnceNth x v i nth with
     | .inl x' => .inl (.app f x')
-    | .inr a => 
+    | .inr a =>
     match instantiateOnceNth f v i (nth-a) with
     | .inl f' => .inl (.app f' x)
     | .inr b => .inr (a+b)
 
-  | .letE n t y b _ => 
+  | .letE n t y b _ =>
     match instantiateOnceNth y v i nth with
     | .inl y' => .inl (.letE n t y' b false)
-    | .inr a => 
+    | .inr a =>
     match instantiateOnceNth b v (i+1) (nth-a) with
     | .inl b' => .inl (.letE n t y b' false)
     | .inr b => .inr (a+b)
 
-  | .lam n t b bi => 
+  | .lam n t b bi =>
     match instantiateOnceNth b v (i+1) nth with
     | .inl b' => .inl (.lam n t b' bi)
     | .inr a => .inr a
@@ -257,9 +257,9 @@ def instantiateOnce (e v : Expr) (i : Nat) (nth := 0) : Expr :=
   match instantiateOnceNth e v i nth with
   | .inl e' => e'
   | _ => e
-  
 
-def myPrint : Expr → String 
+
+def myPrint : Expr → String
 | .const n _ => n.toString
 | .bvar n => s!"[{n}]"
 | .app f x => f.myPrint ++ " " ++ x.myPrint
@@ -290,7 +290,7 @@ def setArg (e : Expr) (i : Nat) (x : Expr) (n := e.getAppNumArgs) : Expr :=
   e.modArg (fun _ => x) i n
 
 
-/-- Returns number of leading lambda binders of an expression 
+/-- Returns number of leading lambda binders of an expression
 
 Note: ignores meta data -/
 def getLamBinderNum (e : Expr) : Nat :=
@@ -301,7 +301,7 @@ where
   | .mdata _ e => go n e
   | _ => n
 
-/-- Returns number of leading forall binders of an expression 
+/-- Returns number of leading forall binders of an expression
 
 Note: ignores meta data -/
 def getForallBinderNum (e : Expr) : Nat :=
@@ -334,10 +334,10 @@ def letBodyRec' (e : Expr) : Expr :=
 -/
 def isSimpleFunType (e : Expr) : Bool :=
   if ¬e.consumeMData.isForall then false else go e
-where 
+where
   go (e : Expr) : Bool :=
     match e with
-    | .forallE _ t b _ => 
+    | .forallE _ t b _ =>
       if t.hasLooseBVars || b.hasLooseBVars then
         false
       else
@@ -346,9 +346,9 @@ where
     | _ => true
 
 
-/-- 
-Apply the given arguments to `f`, introduce let binding for every argument 
-that beta-reduces. 
+/--
+Apply the given arguments to `f`, introduce let binding for every argument
+that beta-reduces.
 
 Examples:
 - `betaWithLet (fun x y => t x y) #[]` ==> `fun x y => t x y`
@@ -361,7 +361,7 @@ TODO: maybe introduce let binding only if the variable appears multiple times
 partial def betaWithLet (f : Expr) (args : Array Expr) : Expr :=
   go f 0
 where
-  go (e : Expr) (i : Nat) : Expr := 
+  go (e : Expr) (i : Nat) : Expr :=
     if h : i<args.size then
       match e with
       | .lam n t b _ => .letE n t (args[i]'h) (go b (i+1)) false

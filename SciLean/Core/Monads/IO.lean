@@ -1,7 +1,7 @@
 import SciLean.Util.SorryProof
 
 /-- When we want to differentiate w.r.t to IO.Ref we need to have a separate IO.Ref
-that holds the derivative. We define IO.DRef which is just a IO.Ref but tied to 
+that holds the derivative. We define IO.DRef which is just a IO.Ref but tied to
 particular IO.Ref through its type.
 -/
 def IO.DRef (a : IO.Ref α) : Type := IO.Ref α
@@ -24,7 +24,7 @@ opaque IsDifferentiableIO (f : X → IO Y) : Prop
 opaque fwdDerivIO (f : X → IO Y) : X → X → IO (Y × Y)
 
 axiom Bind.bind.arg_x.fwdDerivIO_rule {X Y Z : Type}
-  (f : Y → IO Z) (g : X → IO Y) 
+  (f : Y → IO Z) (g : X → IO Y)
   (hf : IsDifferentiableIO f) (hg : IsDifferentiableIO g)
   : fwdDerivIO (fun x => g x >>= f)
     =

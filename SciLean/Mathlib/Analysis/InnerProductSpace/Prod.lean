@@ -11,7 +11,7 @@ namespace SciLean
 open NNReal
 
 
-def ProdLp (_ : ℝ) (α β : Type _) := α × β 
+def ProdLp (_ : ℝ) (α β : Type _) := α × β
 
 abbrev ProdL2.mk {α β : Type _} (fst : α) (snd : β) : ProdLp 2 α β := (fst, snd)
 abbrev ProdL2.fst {α β : Type _} (self : ProdLp 2 α β) : α := self.1
@@ -25,20 +25,20 @@ namespace ProdLp
 variable {α b : Type _} {p : ℝ}
 
 
-instance 
-  [AddGroup α] [AddGroup β] : AddGroup (α ×[p] β) 
+instance
+  [AddGroup α] [AddGroup β] : AddGroup (α ×[p] β)
   := by unfold ProdLp; infer_instance
 
 -- @[reducible]
--- instance [AddCommMonoid α] [AddCommMonoid β] 
---   : AddCommMonoid (α ×[p] β) 
+-- instance [AddCommMonoid α] [AddCommMonoid β]
+--   : AddCommMonoid (α ×[p] β)
 --   := by unfold ProdLp; infer_instance
 
-instance 
-  [AddCommGroup α] [AddCommGroup β] : AddCommGroup (α ×[p] β) 
+instance
+  [AddCommGroup α] [AddCommGroup β] : AddCommGroup (α ×[p] β)
   := by unfold ProdLp; infer_instance
 
-instance [Semiring K] [AddCommGroup α] [Module K α] [AddCommGroup β] [Module K β] 
+instance [Semiring K] [AddCommGroup α] [Module K α] [AddCommGroup β] [Module K β]
   : Module K (α ×[p] β) := by unfold ProdLp; infer_instance
 
 noncomputable
@@ -48,7 +48,7 @@ instance instDist [Dist α] [Dist β] : Dist (α ×[p] β) where
 
 -- Dist
 -- PseudoMetricSpace
--- MetricSpace 
+-- MetricSpace
 
 -- Norm
 
@@ -64,12 +64,12 @@ instance instNorm
   norm := fun (x,y) => (‖x‖^p + ‖y‖^p) ^ (1/p)
 
 
-instance 
+instance
   [UniformSpace α] [UniformSpace β]
   : UniformSpace (α ×[p] β) := by unfold ProdLp; infer_instance
 
-instance 
-  [UniformSpace α] [CompleteSpace α] 
+instance
+  [UniformSpace α] [CompleteSpace α]
   [UniformSpace β] [CompleteSpace β]
   : CompleteSpace (α ×[p] β) :=  by unfold ProdLp; infer_instance
 
@@ -88,14 +88,14 @@ instance [MetricSpace α] [MetricSpace β]
   eq_of_dist_eq_zero := sorry_proof
 
 noncomputable
-instance [NormedAddCommGroup α] [NormedAddCommGroup β] 
+instance [NormedAddCommGroup α] [NormedAddCommGroup β]
   : NormedAddCommGroup (α ×[p] β) where
   dist_eq := sorry_proof
 
 noncomputable
 instance [IsROrC K]
-  [NormedAddCommGroup α] [InnerProductSpace K α] 
-  [NormedAddCommGroup β] [InnerProductSpace K β] 
+  [NormedAddCommGroup α] [InnerProductSpace K α]
+  [NormedAddCommGroup β] [InnerProductSpace K β]
   : InnerProductSpace K (α ×₂ β) where
   norm_sq_eq_inner := sorry_proof
   conj_symm := sorry_proof
@@ -106,7 +106,7 @@ instance [IsROrC K]
 
 
 -- -- TODO: move to mathlib
--- instance 
+-- instance
 --   {K : Type _} [IsROrC K]
 --   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
 --   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]

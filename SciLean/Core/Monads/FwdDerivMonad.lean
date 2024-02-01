@@ -12,11 +12,11 @@ class FwdDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
 
   fwdDerivM_pure {X Y : Type} [Vec K X] [Vec K Y] (f : X → Y) (hf : IsDifferentiable K f)
     : fwdDerivM (fun x => pure (f:=m) (f x)) = fun x dx => pure (f:=m') (fwdCDeriv K f x dx)
-  fwdDerivM_bind 
-    {X Y Z : Type} [Vec K X] [Vec K Y] [Vec K Z] 
+  fwdDerivM_bind
+    {X Y Z : Type} [Vec K X] [Vec K Y] [Vec K Z]
     (f : Y → m Z) (g : X → m Y) (hf : IsDifferentiableM f) (hg : IsDifferentiableM g)
-     : fwdDerivM (fun x => g x >>= f) 
-       = 
+     : fwdDerivM (fun x => g x >>= f)
+       =
        fun x dx => do
          let ydy ← fwdDerivM g x dx
          fwdDerivM f ydy.1 ydy.2
@@ -29,11 +29,11 @@ class FwdDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ T
         pure ((x,ydy.1),(dx,ydy.2)))
 
 
-  IsDifferentiableM_pure {X : Type} {Y : Type} [Vec K X] [Vec K Y] 
+  IsDifferentiableM_pure {X : Type} {Y : Type} [Vec K X] [Vec K Y]
     (f : X → Y) (hf : IsDifferentiable K f)
     : IsDifferentiableM (fun x : X => pure (f x))
   IsDifferentiableM_bind {X Y Z: Type} [Vec K X] [Vec K Y] [Vec K Z]
-    (f : Y → m Z) (g : X → m Y) 
+    (f : Y → m Z) (g : X → m Y)
     (hf : IsDifferentiableM f) (hg : IsDifferentiableM g)
     : IsDifferentiableM (fun x => g x >>= f)
   IsDifferentiableM_pair {X : Type} {Y : Type} [Vec K X] [Vec K Y] -- is this really necessary?
@@ -44,7 +44,7 @@ export FwdDerivMonad (fwdDerivM IsDifferentiableM)
 
 
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
@@ -59,26 +59,26 @@ open FwdDerivMonad
 def fwdDerivValM (x : m X) : m' (X × X) := do
   fwdDerivM K (fun _ : Unit => x) () ()
 
-def IsDifferentiableValM (x : m X) : Prop := 
+def IsDifferentiableValM (x : m X) : Prop :=
   IsDifferentiableM K (fun _ : Unit => x)
 
 
 --------------------------------------------------------------------------------
 -- IsDifferentiableM -----------------------------------------------------------
 --------------------------------------------------------------------------------
-namespace IsDifferentiableM 
+namespace IsDifferentiableM
 
 variable (X)
-theorem pure_rule 
-  : IsDifferentiableM (m:=m) K (fun x : X => pure x) := 
+theorem pure_rule
+  : IsDifferentiableM (m:=m) K (fun x : X => pure x) :=
 by
   apply IsDifferentiableM_pure
   fprop
 
 
 theorem const_rule (y : m Y) (hy : IsDifferentiableValM K y)
-  : IsDifferentiableM K (fun _ : X => y) := 
-by 
+  : IsDifferentiableM K (fun _ : X => y) :=
+by
   have h : (fun _ : X => y)
            =
            fun _ : X => pure () >>= fun _ => y := by simp
@@ -101,7 +101,7 @@ by
   apply IsDifferentiableM_pure g hg
 
 
-theorem let_rule 
+theorem let_rule
   (f : X → Y → m Z) (g : X → Y)
   (hf : IsDifferentiableM K (fun xy : X×Y => f xy.1 xy.2)) (hg : IsDifferentiable K g)
   : IsDifferentiableM K (fun x => let y := g x; f x y) :=
@@ -113,29 +113,29 @@ by
            fun x => pure (g' x) >>= f') by simp]
   apply IsDifferentiableM_bind _ _ hf
   apply IsDifferentiableM_pure g'
-  try fprop -- this should finish the proof 
+  try fprop -- this should finish the proof
   apply Prod.mk.arg_fstsnd.IsDifferentiable_rule
   apply hg
   fprop
-  
+
 
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``IsDifferentiableM
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``IsDifferentiableM then
 
       if let .some f := e.getArg? 11 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``IsDifferentiableM then
       e.setArg 11  f
-    else          
+    else
       e
 
   identityRule e := do
@@ -144,9 +144,9 @@ def fpropExt : FPropExt where
     let .some m' := e.getArg? 3 | return none
     let .some X := e.getArg? 7 | return none
     let prf ← mkAppOptM ``pure_rule #[K, none, m, m', none, none, none, X, none]
-    return prf 
+    return prf
 
-  constantRule e := 
+  constantRule e :=
     let thm : SimpTheorem :=
     {
       proof  := mkConst ``const_rule
@@ -201,7 +201,7 @@ def fpropExt : FPropExt where
 
   lambdaLambdaRule _ _ := return none
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -211,40 +211,40 @@ def fpropExt : FPropExt where
   modifyEnv (λ env => FProp.fpropExt.addEntry env (``IsDifferentiableM, fpropExt))
 
 
-end IsDifferentiableM 
+end IsDifferentiableM
 
 
 --------------------------------------------------------------------------------
 -- IsDifferentiableValM -----------------------------------------------------------
 --------------------------------------------------------------------------------
-namespace IsDifferentiableValM 
+namespace IsDifferentiableValM
 
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``IsDifferentiableValM
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``IsDifferentiableValM then
 
       if let .some f := e.getArg? 9 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``IsDifferentiableValM then
       e.setArg 9  f
-    else          
+    else
       e
-  identityRule _ := return none 
+  identityRule _ := return none
   constantRule _ := return none
   projRule _ := return none
   compRule _ _ _ := return none
   lambdaLetRule _ _ _ := return none
   lambdaLambdaRule _ _ := return none
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -254,7 +254,7 @@ def fpropExt : FPropExt where
   modifyEnv (λ env => FProp.fpropExt.addEntry env (``IsDifferentiableValM, fpropExt))
 
 
-end IsDifferentiableValM 
+end IsDifferentiableValM
 
 
 --------------------------------------------------------------------------------
@@ -263,15 +263,15 @@ end IsDifferentiableValM
 namespace fwdDerivM
 
 variable (X)
-theorem pure_rule 
-  : fwdDerivM (m:=m) K (fun x : X => pure x) = fun x dx => pure (x, dx) := 
-by 
+theorem pure_rule
+  : fwdDerivM (m:=m) K (fun x : X => pure x) = fun x dx => pure (x, dx) :=
+by
   rw [fwdDerivM_pure _ (by fprop)]
   ftrans
 
 
 theorem const_rule (y : m Y) (hy : IsDifferentiableValM K y)
-  : fwdDerivM K (fun _ : X => y) = fun _ _ => fwdDerivValM K y := 
+  : fwdDerivM K (fun _ : X => y) = fun _ _ => fwdDerivValM K y :=
 by
   have h : (fun _ : X => y)
            =
@@ -289,7 +289,7 @@ variable {X}
 theorem comp_rule
   (f : Y → m Z) (g : X → Y)
   (hf : IsDifferentiableM K f) (hg : IsDifferentiable K g)
-  : fwdDerivM K (fun x => f (g x)) 
+  : fwdDerivM K (fun x => f (g x))
     =
     fun x dx =>
       let ydy := fwdCDeriv K g x dx
@@ -300,12 +300,12 @@ by
     rw[show ((fun x => f (g x))
              =
              fun x => pure (g x) >>= f) by simp]
-    rw[FwdDerivMonad.fwdDerivM_bind f (fun x => pure (g x)) 
+    rw[FwdDerivMonad.fwdDerivM_bind f (fun x => pure (g x))
          hf (FwdDerivMonad.IsDifferentiableM_pure _ hg)]
     simp[FwdDerivMonad.fwdDerivM_pure g hg]
 
 
-theorem let_rule 
+theorem let_rule
   (f : X → Y → m Z) (g : X → Y)
   (hf : IsDifferentiableM K (fun xy : X×Y => f xy.1 xy.2)) (hg : IsDifferentiable K g)
   : fwdDerivM K (fun x => f x (g x))
@@ -348,24 +348,24 @@ open Lean Meta FTrans in
 def ftransExt : FTransExt where
   ftransName := ``fwdDerivM
 
-  getFTransFun? e := 
+  getFTransFun? e :=
     if e.isAppOf ``fwdDerivM then
 
       if let .some f := e.getArg? 11 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFTransFun e f := 
+  replaceFTransFun e f :=
     if e.isAppOf ``fwdDerivM then
       let fn := e.getAppFn'
       let args := e.getAppArgs'
       let args := args.set! 11 f
       let e' := mkAppN fn args
       e'
-    else          
+    else
       e
 
   idRule  e X := do
@@ -468,24 +468,24 @@ open Lean Meta FTrans in
 def ftransExt : FTransExt where
   ftransName := ``fwdDerivValM
 
-  getFTransFun? e := 
+  getFTransFun? e :=
     if e.isAppOf ``fwdDerivValM then
 
       if let .some f := e.getArg? 9 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFTransFun e f := 
+  replaceFTransFun e f :=
     if e.isAppOf ``fwdDerivValM then
       let fn := e.getAppFn'
       let args := e.getAppArgs'
       let args := args.set! 9 f
       let e' := mkAppN fn args
       e'
-    else          
+    else
       e
 
   idRule  e X := return none
@@ -512,11 +512,11 @@ end SciLean
 
 --------------------------------------------------------------------------------
 
-section CoreFunctionProperties 
+section CoreFunctionProperties
 
 open SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
@@ -533,26 +533,26 @@ variable
 @[fprop]
 theorem Pure.pure.arg_a0.IsDifferentiableM_rule
   (a0 : X → Y)
-  (ha0 : IsDifferentiable K a0) 
-  : IsDifferentiableM K (fun x => Pure.pure (f:=m) (a0 x)) := 
-by 
+  (ha0 : IsDifferentiable K a0)
+  : IsDifferentiableM K (fun x => Pure.pure (f:=m) (a0 x)) :=
+by
   apply FwdDerivMonad.IsDifferentiableM_pure a0 ha0
 
 
 @[ftrans]
 theorem Pure.pure.arg_a0.fwdDerivM_rule
   (a0 : X → Y)
-  (ha0 : IsDifferentiable K a0) 
+  (ha0 : IsDifferentiable K a0)
   : fwdDerivM K (fun x => pure (f:=m) (a0 x))
     =
-    fun x dx => pure (fwdCDeriv K a0 x dx) := 
-by 
+    fun x dx => pure (fwdCDeriv K a0 x dx) :=
+by
   apply FwdDerivMonad.fwdDerivM_pure a0 ha0
 
 set_option linter.fpropDeclName false in
 @[fprop]
 theorem Pure.pure.arg.IsDifferentiableValM_rule (x : X)
-  : IsDifferentiableValM K (pure (f:=m) x) :=  
+  : IsDifferentiableValM K (pure (f:=m) x) :=
 by
   unfold IsDifferentiableValM
   apply FwdDerivMonad.IsDifferentiableM_pure
@@ -563,8 +563,8 @@ by
 theorem Pure.pure.arg.fwdDerivValM_rule (x : X)
   : fwdDerivValM K (pure (f:=m) x)
     =
-    pure (x,0) := 
-by 
+    pure (x,0) :=
+by
   unfold fwdDerivValM; rw[FwdDerivMonad.fwdDerivM_pure]; ftrans; fprop
 
 
@@ -572,22 +572,22 @@ by
 -- Bind.bind -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop] 
+@[fprop]
 theorem Bind.bind.arg_a0a1.IsDifferentiableM_rule
   (a0 : X → m Y) (a1 : X → Y → m Z)
   (ha0 : IsDifferentiableM K a0) (ha1 : IsDifferentiableM K (fun (xy : X×Y) => a1 xy.1 xy.2))
-  : IsDifferentiableM K (fun x => Bind.bind (a0 x) (a1 x)) := 
-by 
+  : IsDifferentiableM K (fun x => Bind.bind (a0 x) (a1 x)) :=
+by
   let g := fun x => do
     let y ← a0 x
     pure (x,y)
   let f := fun xy : X×Y => a1 xy.1 xy.2
 
-  rw[show (fun x => Bind.bind (a0 x) (a1 x)) 
-          = 
+  rw[show (fun x => Bind.bind (a0 x) (a1 x))
+          =
           fun x => g x >>= f by simp]
 
-  have hg : IsDifferentiableM K (fun x => do let y ← a0 x; pure (x,y)) := 
+  have hg : IsDifferentiableM K (fun x => do let y ← a0 x; pure (x,y)) :=
     by apply FwdDerivMonad.IsDifferentiableM_pair a0 ha0
   have hf : IsDifferentiableM K f := by fprop
 
@@ -595,23 +595,23 @@ by
 
 
 
-@[ftrans] 
+@[ftrans]
 theorem Bind.bind.arg_a0a1.fwdDerivM_rule
   (a0 : X → m Y) (a1 : X → Y → m Z)
   (ha0 : IsDifferentiableM K a0) (ha1 : IsDifferentiableM K (fun (xy : X×Y) => a1 xy.1 xy.2))
   : (fwdDerivM K (fun x => Bind.bind (a0 x) (a1 x)))
-    = 
+    =
     (fun x dx => do
       let ydy ← fwdDerivM K a0 x dx
-      fwdDerivM K (fun (xy : X×Y) => a1 xy.1 xy.2) (x, ydy.1) (dx, ydy.2)) := 
+      fwdDerivM K (fun (xy : X×Y) => a1 xy.1 xy.2) (x, ydy.1) (dx, ydy.2)) :=
 by
   let g := fun x => do
     let y ← a0 x
     pure (x,y)
   let f := fun xy : X×Y => a1 xy.1 xy.2
 
-  rw[show (fun x => Bind.bind (a0 x) (a1 x)) 
-          = 
+  rw[show (fun x => Bind.bind (a0 x) (a1 x))
+          =
           fun x => g x >>= f by simp]
 
   have hg : IsDifferentiableM K (fun x => do let y ← a0 x; pure (x,y)) :=
@@ -623,7 +623,7 @@ by
 
 
 -- d/ite -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem ite.arg_te.IsDifferentiableM_rule
@@ -642,7 +642,7 @@ theorem ite.arg_te.fwdDerivM_rule
   : fwdDerivM K (fun x => ite c (t x) (e x))
     =
     fun y =>
-      ite c (fwdDerivM K t y) (fwdDerivM K e y) := 
+      ite c (fwdDerivM K t y) (fwdDerivM K e y) :=
 by
   induction dec
   case isTrue h  => ext y; simp[h]
@@ -663,12 +663,12 @@ by
 
 @[ftrans]
 theorem dite.arg_te.fwdDerivM_rule
-  (c : Prop) [dec : Decidable c] 
+  (c : Prop) [dec : Decidable c]
   (t : c → X → m Y) (e : ¬c → X → m Y)
   : fwdDerivM K (fun x => dite c (fun h => t h x) (fun h => e h x))
     =
     fun y =>
-      dite c (fun h => fwdDerivM K (t h) y) (fun h => fwdDerivM K (e h) y) := 
+      dite c (fun h => fwdDerivM K (t h) y) (fun h => fwdDerivM K (e h) y) :=
 by
   induction dec
   case isTrue h  => ext y; simp[h]

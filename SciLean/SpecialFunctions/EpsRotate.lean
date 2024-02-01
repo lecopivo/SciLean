@@ -16,10 +16,10 @@ namespace SciLean
   --   isSmooth, diff, hasAdjDiff, adjDiff
 
   -- function_properties εsinr1Sqrt.arg_x.diff (ε : ℝ) [Fact (ε≠0)] (x : ℝ) (dx : ℝ) : ℝ
-  -- argument x 
+  -- argument x
   --   isSmooth, diff, hasAdjDiff, adjDiff
   -- argument dx
-  --   isLin := by simp[diff]; infer_instance done, 
+  --   isLin := by simp[diff]; infer_instance done,
   --   isSmooth, diff_simp, hasAdjDiff, adjDiff_simp
 
 
@@ -28,14 +28,14 @@ namespace SciLean
   --   isSmooth, diff, hasAdjDiff, adjDiff
 
   -- function_properties εcosr2Sqrt.arg_x.diff (ε : ℝ) [Fact (ε≠0)] (x : ℝ) (dx : ℝ) : ℝ
-  -- argument x 
+  -- argument x
   --   isSmooth, diff, hasAdjDiff, adjDiff
   -- argument dx
-  --   isLin := by simp[diff]; infer_instance done, 
+  --   isLin := by simp[diff]; infer_instance done,
   --   isSmooth, diff_simp, hasAdjDiff, adjDiff_simp
 
 
-  -- def εrotate (ε : ℝ) (ω x : ℝ^(3:ℕ)) : ℝ^(3:ℕ) := 
+  -- def εrotate (ε : ℝ) (ω x : ℝ^(3:ℕ)) : ℝ^(3:ℕ) :=
   --   x + εsinr1Sqrt ε ∥ω∥² * cross ω x - εcosr2Sqrt ε ∥ω∥² * cross ω (cross ω x)
   -- argument x
   --   isLin, isSmooth, diff_simp := εrotate ε ω dx by simp[εrotate],
@@ -53,10 +53,9 @@ namespace SciLean
   --   isSmooth, diff, hasAdjDiff, adjDiff
   -- argument dω
   --   isLin := by simp[diff]; infer_instance; done,
-  --   isSmooth, 
+  --   isSmooth,
   --   diff_simp := εrotate.arg_ω.diff ε ω ddω x by simp[diff]; done,
-  --   hasAdjoint := sorry, 
+  --   hasAdjoint := sorry,
   --   adj_simp := εrotate.arg_ω.adjDiff ε ω dω' x by admit,
-  --   hasAdjDiff, 
+  --   hasAdjDiff,
   --   adjDiff_simp := εrotate.arg_ω.adjDiff ε ω ddω' x by simp[SciLean.adjDiff]; unfold hold; simp done
-

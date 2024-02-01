@@ -44,7 +44,7 @@ set_option trace.Meta.Tactic.simp true in
 set_option trace.Meta.Tactic.simp.unify true in
 set_option trace.Meta.Tactic.simp.discharge true in
 example (op : Nat → Nat → Nat) (a b c : Nat) :
-  op (foo (foo a)) (foo $ op (foo (foo 0)) (foo $ op b c)) = 0 := 
+  op (foo (foo a)) (foo $ op (foo (foo 0)) (foo $ op b c)) = 0 :=
 by
   -- debug_simp [↓foo_zero]
   debug_simp [↓foo_fun_zero]

@@ -39,18 +39,18 @@ theorem adjoint.rule_pi
     =
     λ g' i => (f i)† (g' i) := sorry
 
-theorem adjoint.rule_const' 
+theorem adjoint.rule_const'
   : (λ (x : X) (i : ι) => x)†
     =
     λ x' => EnumType.sum λ i => x' i := sorry
 
 @[fun_trans_rule]
-theorem adjoint.rule_swap 
+theorem adjoint.rule_swap
   (f : ι → X → Y) [∀ i, HasAdjoint (f i)]
   : (λ (x : X) (i : ι) => f i x)†
     =
-    λ x' => ∑ i, (f i)† (x' i) := 
-by 
+    λ x' => ∑ i, (f i)† (x' i) :=
+by
   rw[adjoint.rule_comp (λ (g : ι → X) (i : ι) => f i (g i)) (λ x i => x)]
   simp[adjoint.rule_pi, adjoint.rule_const']
   done
@@ -62,7 +62,7 @@ theorem adjoint.rule_eval (X) [SemiHilbert X] (i : ι)
     λ f' i' => [[i=i']] • f' := sorry
 
 @[fun_trans_rule]
-theorem adjoint.rule_prodMk 
+theorem adjoint.rule_prodMk
   (f : X → Y) [HasAdjoint f]
   (g : X → Z) [HasAdjoint g]
   : (λ x => (f x, g x))†
@@ -70,7 +70,7 @@ theorem adjoint.rule_prodMk
     λ x' => f† x'.1 + g† x'.2 := sorry
 
 @[fun_trans_rule]
-theorem adjoint.rule_letBinop 
+theorem adjoint.rule_letBinop
   (f : X → Y → Z) [HasAdjoint λ xy : X×Y => f xy.1 xy.2]
   (g : X → Y) [HasAdjoint g]
   : (λ (x : X) => let y := g x; f x y)†
@@ -80,7 +80,7 @@ theorem adjoint.rule_letBinop
       xy.1 + g† xy.2 := sorry
 
 @[fun_trans_rule]
-theorem adjoint.rule_letComp 
+theorem adjoint.rule_letComp
   (f : Y → Z) [HasAdjoint f]
   (g : X → Y) [HasAdjoint g]
   : (λ (x : X) => let y := g x; f y)†
@@ -161,37 +161,37 @@ theorem const.arg_y.adj_simp
 
 @[simp ↓ low-3, diff low-3]
 theorem swap.arg_y.adj_simp
-  (f : ι → Y → Z) [∀ i, HasAdjointT (f i)] 
+  (f : ι → Y → Z) [∀ i, HasAdjointT (f i)]
   : (λ y i => f i y)† = λ g => ∑ i, (f i)† (g i) := sorry_proof
 
 @[simp ↓ low-4, diff low-4]
 theorem swapDep.arg_y.adj_simp
   {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [EnumType ι]
-  (f : (i : ι) → Y → Z i) [∀ i, HasAdjointT (f i)] 
+  (f : (i : ι) → Y → Z i) [∀ i, HasAdjointT (f i)]
   : (λ y i => f i y)† = λ g => ∑ i, (f i)† (g i) := sorry_proof
 
 -- @[simp ↓ (low-1), diff low-4, simp_guard g (λ x => x)]
 theorem scomb.arg_x.adj_simp
   (f : X → Y → Z) [HasAdjointNT 2 f]
   (g : X → Y) [HasAdjointT g]
-  : (λ x => f x (g x))† 
+  : (λ x => f x (g x))†
     =
     λ z' =>
       let (x',y') := (uncurryN 2 f)† z'
-      x' + g† y'  
+      x' + g† y'
   := sorry_proof
-  
+
 @[simp ↓ low, diff low-3, simp_guard g (λ x => x)]
 theorem comp.arg_x.adj_simp
-  (f : Y → Z) [HasAdjointT f] 
-  (g : X → Y) [HasAdjointT g] 
+  (f : Y → Z) [HasAdjointT f]
+  (g : X → Y) [HasAdjointT g]
   : (λ x => f (g x))† = λ z => g† (f† z) := sorry_proof
 
 -- @[simp ↓ low]
 -- theorem subst.arg_x.adj_simp
---   (f : X → Y → Z) [HasAdjoint (λ ((x,y) : X × Y) => f x y)] 
---   (g : X → Y) [HasAdjoint g] 
---   : (λ x => f x (g x))† 
+--   (f : X → Y → Z) [HasAdjoint (λ ((x,y) : X × Y) => f x y)]
+--   (g : X → Y) [HasAdjoint g]
+--   : (λ x => f x (g x))†
 --     = λ z =>
 --         let f' := (λ (x,y) => f x y)†
 --         (f' z).1 + g† (f' z).2
@@ -200,21 +200,21 @@ theorem comp.arg_x.adj_simp
 -- TODO: add simp guard!
 @[simp ↓ low, diff low, simp_guard g₁ Prod.fst, g₂ Prod.snd]
 theorem diag.arg_x.adj_simp
-  (f : Y₁ → Y₂ → Z) [HasAdjointNT 2 f] 
-  (g₁ : X → Y₁) [HasAdjointT g₁] 
-  (g₂ : X → Y₂) [HasAdjointT g₂] 
-  : (λ x => f (g₁ x) (g₂ x))† 
-    = λ z => 
+  (f : Y₁ → Y₂ → Z) [HasAdjointNT 2 f]
+  (g₁ : X → Y₁) [HasAdjointT g₁]
+  (g₂ : X → Y₂) [HasAdjointT g₂]
+  : (λ x => f (g₁ x) (g₂ x))†
+    = λ z =>
       let (y₁, y₂) := (uncurryN 2 f)† z
       (g₁† y₁) + (g₂† y₂)
 := by sorry_proof
 
--- This prevents an infinite loop when using `adjoint_of_diag` 
+-- This prevents an infinite loop when using `adjoint_of_diag`
 -- with `g₁ = Prod.fst` and `g₂ = Prod.snd`
 -- @[simp ↓ low+1, diff low+1]
 -- theorem diag.arg_x.adj_simp_safeguard
 --   (f : X → Y → Z) [HasAdjointNT 2 f]
---   : adjoint (λ xy => f xy.1 xy.2) = (uncurryN 2 f)† := by rfl; done 
+--   : adjoint (λ xy => f xy.1 xy.2) = (uncurryN 2 f)† := by rfl; done
 
 @[simp ↓ low, diff low]
 theorem eval.arg_f.adj_simp
@@ -233,8 +233,8 @@ theorem evalDep.arg_f.adj_simp
 theorem eval.arg_x.parm1.adj_simp
   (f : X → ι → Z) [HasAdjointT f] (i : ι)
   : (λ x => f x i)† = (λ x' => f† (λ j => ([[i = j]] • x')))
-:= 
-by 
+:=
+by
   rw [comp.arg_x.adj_simp (λ (x : ι → Z) => x i) f]
   simp; done
 
@@ -243,8 +243,8 @@ theorem evalDep.arg_x.parm1.adj_simp
   {ι Y} {Z : ι → Type} [SemiHilbert Y] [∀ i, SemiHilbert (Z i)] [EnumType ι]
   (f : X → (i : ι) → Z i) [HasAdjointT f] (i : ι)
   : (λ x => f x i)† = (λ x' => f† (λ j => (if h : i = j then h ▸ x' else 0)))
-:= 
-by 
+:=
+by
   rw [comp.arg_x.adj_simp (λ (x : (i : ι) → Z i) => x i) f]
   simp; done
 
@@ -253,13 +253,13 @@ by
 --------------------------------------------------------------------------------
 
 unif_hint comp.arg_x.adj_simp.unif_hint_1 (f? : Y → Z)
-  (f :  Y → α → Z) (g  : X → Y) (a : α)  
+  (f :  Y → α → Z) (g  : X → Y) (a : α)
 where
   f? =?= λ x => f x a
-  |- 
+  |-
   (λ x => f? (g x))† =?= (λ x => f (g x) a)†
 
-unif_hint comp.arg_x.adj_simp.unif_hint_2 (f? : Y → Z)  
+unif_hint comp.arg_x.adj_simp.unif_hint_2 (f? : Y → Z)
   (f  : Y → α → β → Z) (g  : X → Y) (a : α) (b : β)
 where
   f? =?= λ x => f x a b
@@ -267,7 +267,7 @@ where
   (λ x => f? (g x))† =?= (λ x => f (g x) a b)†
 
 unif_hint comp.arg_x.adj_simp.unif_hint_3 (f? : Y → Z)
-  (f  : Y → α → β → γ → Z) (g  : X → Y) (a : α) (b : β) (c : γ)  
+  (f  : Y → α → β → γ → Z) (g  : X → Y) (a : α) (b : β) (c : γ)
 where
   f? =?= λ x => f x a b c
   |-
@@ -285,21 +285,21 @@ where
 
 unif_hint diag.arg_x.adj_simp.unif_hint_1 (f? : Y₁ → Y₂ → Z)
   (f : Y₁ → Y₂ → α → Z) (g₁ : X → Y₁) (g₂ : X → Y₂) (a : α)
-where  
+where
   f? =?= λ y₁ y₂ => f y₁ y₂ a
   |-
-  (λ x => f? (g₁ x) (g₂ x))† =?= (λ x => f (g₁ x) (g₂ x) a)† 
+  (λ x => f? (g₁ x) (g₂ x))† =?= (λ x => f (g₁ x) (g₂ x) a)†
 
 unif_hint diag.arg_x.adj_simp.unif_hint_2 (f? : Y₁ → Y₂ → Z)
   (f : Y₁ → Y₂ → α → β → Z) (g₁ : X → Y₁) (g₂ : X → Y₂) (a : α) (b : β)
-where  
+where
   f? =?= λ y₁ y₂ => f y₁ y₂ a b
   |-
-  (λ x => f? (g₁ x) (g₂ x))† =?= (λ x => f (g₁ x) (g₂ x) a b)† 
+  (λ x => f? (g₁ x) (g₂ x))† =?= (λ x => f (g₁ x) (g₂ x) a b)†
 
 unif_hint diag.arg_x.adj_simp.unif_hint_3 (f? : Y₁ → Y₂ → Z)
   (f : Y₁ → Y₂ → α → β → γ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂) (a : α) (b : β) (c : γ)
-where  
+where
   f? =?= λ y₁ y₂ => f y₁ y₂ a b c
   |-
-  (λ x => f? (g₁ x) (g₂ x))† =?= (λ x => f (g₁ x) (g₂ x) a b c)† 
+  (λ x => f? (g₁ x) (g₂ x))† =?= (λ x => f (g₁ x) (g₂ x) a b c)†

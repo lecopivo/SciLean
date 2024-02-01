@@ -9,5 +9,3 @@ import SciLean.Core.FunctionTransformations.RevCDeriv
 import SciLean.Core.FunctionTransformations.RevDeriv
 -- import SciLean.Core.FunctionTransformations.RevDerivUpdate
 import SciLean.Core.FunctionTransformations.SemiAdjoint
-
-

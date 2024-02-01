@@ -1,6 +1,6 @@
 import Lean
 
-open Lean System IO 
+open Lean System IO
 
 def profileFile (file : FilePath) (flame : FilePath := "/home/tskrivan/Documents/Flame/build/bin/flame") (threshold : Nat := 5) : IO Unit := do
 
@@ -56,7 +56,7 @@ elab " #profile_file " path:ident : command => do
   if (← IO.getEnv "LEAN_DISABLE_PROFILE_FILE").isNone then
     let file := (← IO.currentDir) / (path.getId.toString.replace "." FilePath.pathSeparator.toString ++ ".lean")
     profileFile file
-  
+
 
 elab " #profile_this_file " : command => do
 
@@ -78,7 +78,3 @@ elab " #profile_this_file " threshold:num : command => do
   else
     let ctx ← readThe Elab.Command.Context
     IO.println s!"Attempting to profile: {ctx.fileName} but profiling is disabled!"
-    
-
-
-

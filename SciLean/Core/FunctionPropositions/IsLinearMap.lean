@@ -8,10 +8,10 @@ import SciLean.Tactic.FProp.Notation
 set_option linter.unusedVariables false
 
 variable {R X Y Z ι : Type _} {E : ι → Type _}
-  [Semiring R] 
+  [Semiring R]
   [AddCommGroup X] [Module R X]
   [AddCommGroup Y] [Module R Y]
-  [AddCommGroup Z] [Module R Z]  
+  [AddCommGroup Z] [Module R Z]
   [∀ i, AddCommMonoid (E i)] [∀ i, Module R (E i)]
 
 
@@ -22,9 +22,9 @@ namespace IsLinearMap
 variable (X R)
 theorem id_rule
   : IsLinearMap R (fun x : X => x) := by sorry_proof
-  
+
 variable (Y)
-theorem const_zero_rule 
+theorem const_zero_rule
   : IsLinearMap R (fun _ : X => (0 : Y))
   := by sorry_proof
 variable {Y}
@@ -57,20 +57,20 @@ theorem pi_rule
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``IsLinearMap
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``IsLinearMap then
 
       if let .some f := e.getArg? 8 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``IsLinearMap then
       e.setArg 8  f
-    else          
+    else
       e
 
   identityRule    e := do
@@ -94,8 +94,8 @@ def fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``IsLinearMap.proj_rule 
-      origin := .decl ``IsLinearMap.proj_rule 
+      proof  := mkConst ``IsLinearMap.proj_rule
+      origin := .decl ``IsLinearMap.proj_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -125,13 +125,13 @@ def fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``pi_rule 
-      origin := .decl ``pi_rule 
+      proof  := mkConst ``pi_rule
+      origin := .decl ``pi_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -144,10 +144,10 @@ end IsLinearMap
 
 
 variable {R X Y Z ι : Type _} {E : ι → Type _}
-  [Semiring R] 
+  [Semiring R]
   [AddCommGroup X] [Module R X]
   [AddCommGroup Y] [Module R Y]
-  [AddCommGroup Z] [Module R Z]  
+  [AddCommGroup Z] [Module R Z]
   [∀ i, AddCommGroup (E i)] [∀ i, Module R (E i)]
 
 
@@ -158,18 +158,18 @@ variable {R X Y Z ι : Type _} {E : ι → Type _}
 
 @[fprop]
 theorem id.arg_a.IsLinearMap_rule
-  : IsLinearMap R (fun x : X => id x) := 
+  : IsLinearMap R (fun x : X => id x) :=
 by
   sorry_proof
- 
+
 -- Prod.mk ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fprop]
 theorem Prod.mk.arg_fstsnd.IsLinearMap_rule
-  (f : X → Z) (g : X → Y) 
+  (f : X → Z) (g : X → Y)
   (hf : IsLinearMap R f) (hg : IsLinearMap R g)
-  : IsLinearMap R fun x => (g x, f x) := 
+  : IsLinearMap R fun x => (g x, f x) :=
 by
   sorry_proof
 
@@ -180,7 +180,7 @@ by
 @[fprop]
 theorem Prod.fst.arg_self.IsLinearMap_rule
   (f : X → Y×Z) (hf : IsLinearMap R f)
-  : IsLinearMap R fun (x : X) => (f x).fst := 
+  : IsLinearMap R fun (x : X) => (f x).fst :=
 by
   sorry_proof
 
@@ -191,39 +191,39 @@ by
 @[fprop]
 theorem Prod.snd.arg_self.IsLinearMap_rule
   (f : X → Y×Z) (hf : IsLinearMap R f)
-  : IsLinearMap R fun (x : X) => (f x).snd := 
+  : IsLinearMap R fun (x : X) => (f x).snd :=
 by
   sorry_proof
 
 
 -- Neg.neg ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
-theorem Neg.neg.arg_a0.IsLinearMap_rule 
+theorem Neg.neg.arg_a0.IsLinearMap_rule
   (f : X → Y) (hf : IsLinearMap R f)
-  : IsLinearMap R fun x => - f x := 
+  : IsLinearMap R fun x => - f x :=
 by
   sorry_proof
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HAdd.hAdd.arg_a0a1.IsLinearMap_rule
   (f g : X → Y) (hf : IsLinearMap R f) (hg : IsLinearMap R g)
   : IsLinearMap R fun x => f x + g x :=
-by 
+by
   sorry_proof
 
 
 
 -- HSub.hSub -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
-theorem HSub.hSub.arg_a0a1.IsLinearMap_rule 
+theorem HSub.hSub.arg_a0a1.IsLinearMap_rule
   (f g : X → Y) (hf : IsLinearMap R f) (hg : IsLinearMap R g)
   : IsLinearMap R fun x => f x - g x :=
 by
@@ -231,13 +231,13 @@ by
 
 
 -- HMul.hMul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HMul.hMul.arg_a0.IsLinearMap_rule
   (f : X → R) (hf : IsLinearMap R f)
-  (y' : R) 
-  : IsLinearMap R fun x => f x * y' := 
+  (y' : R)
+  : IsLinearMap R fun x => f x * y' :=
 by
   sorry_proof
 
@@ -245,24 +245,24 @@ by
 @[fprop]
 theorem HMul.hMul.arg_a1.IsLinearMap_rule
   (f : X → R) (hf : IsLinearMap R f)
-  (y' : R) 
-  : IsLinearMap R fun x => y' * f x := 
-by  
+  (y' : R)
+  : IsLinearMap R fun x => y' * f x :=
+by
   sorry_proof
 
 
 -- Smul.smul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HSMul.hSMul.arg_a0.IsLinearMap_rule
   (f : X → R) (y : Y) (hf : IsLinearMap R f)
   : IsLinearMap R fun x => f x • y :=
-by 
+by
   sorry_proof
 
 @[fprop]
-theorem HSMul.hSMul.arg_a1.IsLinearMap_rule 
+theorem HSMul.hSMul.arg_a1.IsLinearMap_rule
   (c : R) (f : X → Y) (hf : IsLinearMap R f)
   : IsLinearMap R fun x => c • f x :=
 by
@@ -284,13 +284,13 @@ by
 
 
 -- d/ite -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem ite.arg_te.IsLinearMap_rule
   (c : Prop) [dec : Decidable c]
   (t e : X → Y) (ht : IsLinearMap R t) (he : IsLinearMap R e)
-  : IsLinearMap R fun x => ite c (t x) (e x) := 
+  : IsLinearMap R fun x => ite c (t x) (e x) :=
 by
   induction dec
   case isTrue h  => simp[h]; fprop
@@ -300,9 +300,9 @@ by
 @[fprop]
 theorem dite.arg_te.IsLinearMap_rule
   (c : Prop) [dec : Decidable c]
-  (t : c  → X → Y) (ht : ∀ p, IsLinearMap R (t p)) 
+  (t : c  → X → Y) (ht : ∀ p, IsLinearMap R (t p))
   (e : ¬c → X → Y) (he : ∀ p, IsLinearMap R (e p))
-  : IsLinearMap R fun x => dite c (t · x) (e · x) := 
+  : IsLinearMap R fun x => dite c (t · x) (e · x) :=
 by
   induction dec
   case isTrue h  => simp[h]; apply ht
@@ -311,9 +311,9 @@ by
 
 open LeanColls
 namespace SciLean
-section OnFinVec 
+section OnFinVec
 
-variable 
+variable
   {K : Type _} [IsROrC K]
   {IX : Type} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
   {IY : Type} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]

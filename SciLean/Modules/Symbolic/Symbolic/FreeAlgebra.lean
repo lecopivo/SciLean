@@ -8,7 +8,7 @@ namespace SciLean
 open Symbolic
 
 def FreeAlgebra (V : Type) (K : Type) [Add K] [Mul K] [One K] [Neg K]
-  := 
+  :=
   Quot
   (λ x y : Expr V K =>
     (Expr.EqAlgebra x y))
@@ -17,7 +17,7 @@ namespace FreeAlgebra
 
   variable {V : Type} {K : Type} [Add K] [Mul K] [One K] [Neg K]
 
-  namespace Expr 
+  namespace Expr
 
     open Symbolic.Expr
 
@@ -34,22 +34,22 @@ namespace FreeAlgebra
     -- Operations normalizing arithmetics on K and scalar multiplication
     -- However they do not apply associativity or distributivity
     -- Do we to apply associativity?
-    -- Distributivity definitely not, for example we want to keep 
+    -- Distributivity definitely not, for example we want to keep
     -- polynomials in Horner form 1 + x * (1 + x * (1 + x)) for faster evaluation
 
-    def add : Expr V K → Expr V K → Expr V K 
+    def add : Expr V K → Expr V K → Expr V K
       | x, 0 => x
       | 0, y => y
       | x, y => x + y
 
-    def sub : Expr V K → Expr V K → Expr V K 
+    def sub : Expr V K → Expr V K → Expr V K
       | x, 0 => x
       | 0, y => - y
       | x, - y => x + y
       | x, smul a y => x + (-a) * y
       | x, y => x + - y
 
-    def mul : Expr V K → Expr V K → Expr V K 
+    def mul : Expr V K → Expr V K → Expr V K
       | 0, y => 0
       | x, 0 => 0
       | 1, y => y
@@ -121,7 +121,7 @@ namespace FreeAlgebra
     [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
     (x : FreeAlgebra ι K) : FreeAlgebra ι K :=
     Quot.mk _ <|
-    Quot.lift 
+    Quot.lift
       (λ e : Expr ι K =>
          e |> expand_to_monomials
            |> (Array.qsort · Monomial.decLt)
@@ -147,5 +147,3 @@ namespace FreeAlgebra
   #eval y.expand
 
 end FreeAlgebra
-
-

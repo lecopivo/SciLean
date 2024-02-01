@@ -34,13 +34,13 @@ instance : CommRing Float where
 
 instance : Field Float where
   exists_pair_ne := sorry_proof
-  div_eq_mul_inv := sorry_proof 
+  div_eq_mul_inv := sorry_proof
   mul_inv_cancel := sorry_proof
   inv_zero := sorry_proof
 
-instance : DecidableEq Float := fun x y => 
-  if x ≤ y && y ≤ x 
-  then .isTrue sorry_proof 
+instance : DecidableEq Float := fun x y =>
+  if x ≤ y && y ≤ x
+  then .isTrue sorry_proof
   else .isFalse sorry_proof
 
 instance : LinearOrderedCommRing Float where
@@ -57,7 +57,7 @@ instance : LinearOrderedCommRing Float where
   max := fun a b => if a ≤ b then b else a
   min_def := sorry_proof
   max_def := sorry_proof
-  compare x y :=   
+  compare x y :=
     if x < y then Ordering.lt
     else if x = y then Ordering.eq
     else Ordering.gt
@@ -67,7 +67,7 @@ instance : LinearOrderedCommRing Float where
 instance : LinearOrderedField Float where
   mul_inv_cancel := sorry_proof
   inv_zero := sorry_proof
-  div_eq_mul_inv := sorry_proof 
+  div_eq_mul_inv := sorry_proof
 
 
 instance : SeminormedRing Float where
@@ -82,8 +82,8 @@ instance : SeminormedRing Float where
 
 instance : StarRing Float where
   star := fun x => x
-  star_involutive := by simp[Function.Involutive] 
-  star_mul := by simp[Function.Involutive, mul_comm] 
+  star_involutive := by simp[Function.Involutive]
+  star_mul := by simp[Function.Involutive, mul_comm]
   star_add := by simp[Function.Involutive]
 
 instance : DenselyNormedField Float where
@@ -143,7 +143,7 @@ instance : RealScalar Float where
   toReal x := floatToReal x
 
   is_real := sorry_proof
-  
+
   make x _ := x
   make_def := by intros; simp; sorry_proof
 
@@ -155,7 +155,7 @@ instance : RealScalar Float where
 
   sin x := x.sin
   sin_def := sorry_proof
-  
+
   cos x := x.cos
   cos_def := sorry_proof
 
@@ -164,7 +164,7 @@ instance : RealScalar Float where
 
   asin x := x.asin
   asin_def := sorry_proof
-  
+
   acos x := x.acos
   acos_def := sorry_proof
 
@@ -188,13 +188,13 @@ instance : RealScalar Float where
 
   abs x := x.abs
   abs_def := sorry_proof
-  
+
   le_total := by sorry_proof
   decidableLE := inferInstance
   decidableEq := inferInstance
   decidableLT := inferInstance
 
-  min_def := by sorry_proof 
+  min_def := by sorry_proof
   max_def := by sorry_proof
   compare x y := compare x y
   compare_eq_compareOfLessAndEq := by sorry_proof

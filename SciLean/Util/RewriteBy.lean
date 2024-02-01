@@ -1,4 +1,4 @@
-import Lean 
+import Lean
 -- import Mathlib
 
 namespace SciLean
@@ -6,7 +6,7 @@ namespace SciLean
 open Lean.Parser.Tactic.Conv
 open Lean.Elab.Tactic.Conv
 
-open Lean Elab Term Meta 
+open Lean Elab Term Meta
 
 def elabConvRewrite (e : Expr) (stx : TSyntax `conv) : TermElabM (Expr × Expr) := do
   let (rhs, eq) ← mkConvGoalFor e

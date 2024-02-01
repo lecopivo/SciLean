@@ -33,7 +33,7 @@ structure FPropertyTheorems where
   definition : Option Expr
 deriving BEq, Inhabited
 
-/-- 
+/--
 This holds properties of a function
 -/
 def FProperties := Std.RBMap FProperty (Std.RBMap (ArraySet Nat) FPropertyTheorems compare) compare
@@ -45,8 +45,8 @@ structure FPropertiesMap where
   properties : Std.HashMap Expr FProperties
 
 
-def analyzeLCtx (lctx : LocalContext) (localInsts : LocalInstances) : MetaM FPropertiesMap := 
-  withLCtx lctx localInsts do 
+def analyzeLCtx (lctx : LocalContext) (localInsts : LocalInstances) : MetaM FPropertiesMap :=
+  withLCtx lctx localInsts do
     let mut fprops : FPropertiesMap := ⟨{}⟩
     for decl in lctx do
       -- To understand this code let's work with two examples:
@@ -57,9 +57,9 @@ def analyzeLCtx (lctx : LocalContext) (localInsts : LocalInstances) : MetaM FPro
       let F := decl.type.getAppFn
       if let some (propertyName,_) := F.const? then
         let lambda := decl.type.appArg!
-        lambdaTelescope lambda λ xs b => 
-          
-          
-        
+        lambdaTelescope lambda λ xs b =>
+
+
+
       sorry
     sorry

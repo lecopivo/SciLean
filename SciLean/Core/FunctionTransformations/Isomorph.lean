@@ -6,7 +6,7 @@ open Lean
 
 namespace SciLean
 
-variable 
+variable
   {α β γ : Type _}
   {α' β' γ' : outParam (Type _)}
   (tag : Name)
@@ -17,7 +17,7 @@ variable
 namespace isomorph
 
 variable (α)
-theorem id_rule 
+theorem id_rule
   : isomorph tag (fun (x : α) => x)
     =
     fun (x : α') => x :=
@@ -34,7 +34,7 @@ by
 
 variable {α}
 variable (β)
-theorem proj_rule 
+theorem proj_rule
   (x : α)
   : isomorph tag (fun (f : α → β) => f x)
     =
@@ -43,29 +43,29 @@ by
   funext _; simp[isomorph, invIsomorph, IsomorphicType.equiv]
 variable {β}
 
-theorem comp_rule 
+theorem comp_rule
   (f : β → γ) (g : α → β)
   : isomorph tag (fun x => f (g x))
     =
-    fun x => isomorph tag f (isomorph tag g x) := 
+    fun x => isomorph tag f (isomorph tag g x) :=
 by
   funext _; simp[isomorph]
 
-theorem let_rule 
+theorem let_rule
   (f : α → β → γ) (g : α → β)
   : isomorph tag (fun x => let y := g x; f x y)
     =
-    fun x' => 
+    fun x' =>
       let y' := isomorph tag g x'
-      isomorph tag (fun (xy : α×β) => f xy.1 xy.2) (x', y') := 
+      isomorph tag (fun (xy : α×β) => f xy.1 xy.2) (x', y') :=
 by
   funext x'; simp[isomorph, IsomorphicType.equiv, -isomorph.app]
 
-theorem pi_rule 
-  (f : α → β → γ) 
+theorem pi_rule
+  (f : α → β → γ)
   : isomorph tag (fun x y => f x y)
     =
-    fun x' => isomorph tag (f ((IsomorphicType.equiv tag).symm x')) := 
+    fun x' => isomorph tag (f ((IsomorphicType.equiv tag).symm x')) :=
 by
   funext x'; simp[isomorph, IsomorphicType.equiv]
 
@@ -81,20 +81,20 @@ open Lean Meta FTrans
 def ftransExt : FTransExt where
   ftransName := ``isomorph
 
-  getFTransFun? e := 
+  getFTransFun? e :=
     if e.isAppOf ``isomorph then
 
       if let .some f := e.getArg? 7 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFTransFun e f := 
+  replaceFTransFun e f :=
     if e.isAppOf ``isomorph then
       e.setArg 7 f
-    else          
+    else
       e
 
   idRule  e X := do
@@ -144,5 +144,3 @@ def ftransExt : FTransExt where
 -- register isomorph
 #eval show Lean.CoreM Unit from do
   modifyEnv (λ env => FTrans.ftransExt.addEntry env (``isomorph, isomorph.ftransExt))
-
-

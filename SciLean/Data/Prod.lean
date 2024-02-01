@@ -1,9 +1,9 @@
-/- 
+/-
 
-  In this file we provide some goodies for Prod 
+  In this file we provide some goodies for Prod
 
-  Namely 
-    1. index access: 
+  Namely
+    1. index access:
        `(42, 1.0, "hello").get 2 == "hello"`
     2. index set:
        `(42,3.14159,"hello").set 2 "world" = (42,3.14159,"world")`
@@ -11,7 +11,7 @@
        `curryN 3 (λ ((i,j,k) : Nat×Nat×Nat) => i + j) = (λ i j k => i + j)`
     4. uncurry function
        `uncurryN 3 (λ i j k : Nat => i + j) = λ (i,j,k) => i + j`
- -/ 
+ -/
 
 ----------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ def Prod.size {α β : Type} [Prod.Size β] (_ : α × β) : Nat := Prod.Size.si
 Counts all types, so `A×B` has flat size 2 and `(A×B)×C` have both `A×B×C` flat size 3.
  -/
 @[reducible]
-def Prod.sizeFlat {α β : Type} [Prod.SizeFlat α] [Prod.SizeFlat β] 
+def Prod.sizeFlat {α β : Type} [Prod.SizeFlat α] [Prod.SizeFlat β]
   (_ : α × β) : Nat := Prod.SizeFlat.sizeFlat (α × β)
 
 --------------------------------------------------------------------------------
@@ -81,10 +81,10 @@ instance (priority := low) : Prod.Set X 0 X := ⟨λ x x₀ => x₀⟩
 instance : Prod.Set (X×Y) 0 X := ⟨λ (x,y) x₀ => (x₀,y)⟩
 
 @[reducible]
-instance {X Y : Type} {Yₙ : outParam Type} [pg : Prod.Set Y n Yₙ] 
+instance {X Y : Type} {Yₙ : outParam Type} [pg : Prod.Set Y n Yₙ]
   : Prod.Set (X×Y) (n+1) Yₙ := ⟨λ (x,y) y₀ => (x, pg.seti (i:=n) y y₀)⟩
 
-abbrev Prod.set {X Xs : Type} {Xᵢ : outParam Type} 
+abbrev Prod.set {X Xs : Type} {Xᵢ : outParam Type}
   (i : Nat) [pg : Prod.Set (X×Xs) i Xᵢ] (x : X×Xs) (xi) := pg.seti (i:=i) x xi
 
 --------------------------------------------------------------------------------

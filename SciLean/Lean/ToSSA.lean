@@ -18,7 +18,7 @@ partial def toSSA.impl (e : Expr) (fvars : Array Expr) : MetaM (Expr × Array Ex
     let args := e.getAppArgs
     let infos := (← getFunInfoNArgs fn args.size).paramInfo
     goApp fn args infos fvars 0 #[]
-  | .lam n t b bi => 
+  | .lam n t b bi =>
     withLocalDecl n bi t fun x => do
       let b := b.instantiate1 x
       let lctx ← getLCtx
@@ -45,7 +45,7 @@ where
             return ← goApp fn args infos fvars (i+1) lets
 
         let arg := args[i]
-        let (arg', lets', lctx') ← toSSA.impl arg fvars 
+        let (arg', lets', lctx') ← toSSA.impl arg fvars
         withLCtx lctx' (← getLocalInstances) do
           if arg'.consumeMData.isApp then
             withLetDecl Name.anonymous (← inferType arg') arg' fun argVar => do
@@ -71,7 +71,7 @@ def toSSA (e : Expr) (fvars : Array Expr) : MetaM Expr := do
 
 
 -- open Qq Elab Term
--- #eval show TermElabM Unit from do 
+-- #eval show TermElabM Unit from do
 
 --   withLocalDeclDQ `x q(Nat) fun x => do
 

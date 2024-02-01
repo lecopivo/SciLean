@@ -14,18 +14,18 @@ syntax argumentProperties := "argument" argSpec bracketedBinder* argProp,+
 syntax "function_properties" ident bracketedBinder* (":" term)? argumentProperties+  : command
 
 macro_rules
-| `(function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec $assumptions:bracketedBinder* $argProp:argProp) => do 
+| `(function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec $assumptions:bracketedBinder* $argProp:argProp) => do
   `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec $assumptions* $argProp:argProp)
-| `(function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec $assumptions:bracketedBinder* $argProp:argProp , $argProps,*) => do 
+| `(function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg:argSpec $assumptions:bracketedBinder* $argProp:argProp , $argProps,*) => do
   `(function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg $assumptions* $argProp:argProp
     function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? argument $arg $assumptions* $argProps:argProp,*)
-| `(function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? $ap:argumentProperties $aps:argumentProperties*) => do 
+| `(function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? $ap:argumentProperties $aps:argumentProperties*) => do
   `(function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? $ap
     function_properties $id:ident $parms:bracketedBinder* $[: $retType:term]? $aps:argumentProperties*)
 
 
-private def argSpecNames (argSpec : TSyntax ``argSpec) : Array Name := 
-  match argSpec with 
+private def argSpecNames (argSpec : TSyntax ``argSpec) : Array Name :=
+  match argSpec with
   | `(argSpec| $id:ident) => #[id.getId]
   | `(argSpec| ($id:ident, $ids:ident,*)) => #[id.getId].append (ids.getElems.map λ id => id.getId)
   | _ => #[]
@@ -41,7 +41,7 @@ syntax noncomp := "noncomputable"
 syntax (noncomp)? defOrAbbrev "funTrans" ident bracketedBinder* defProofOrConv : argProp
 
 elab_rules : command
-| `(function_property $id $parms* $[: $retType:term]? 
+| `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec $assumptions1*
     funProp $propId $spaceId $assumptions2* := $proof) => do
 
@@ -51,7 +51,7 @@ elab_rules : command
 
       let propName := propId.getId
       let spaceName := spaceId.getId
-  
+
       let argNames : Array Name := argSpecNames argSpec
 
       let explicitArgs := (← contextVars.filterM λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
@@ -63,7 +63,7 @@ elab_rules : command
           if let .some fvar := arg.fvarId? then
             let name' ← fvar.getUserName
             pure (name' == name)
-          else 
+          else
             pure false)
         match idx? with
         | some idx => pure idx
@@ -74,7 +74,7 @@ elab_rules : command
       addFunPropDecl propName spaceName e xs contextVars proof
 
 elab_rules : command
-| `(function_property $id $parms* $[: $retType]? 
+| `(function_property $id $parms* $[: $retType]?
     argument $argSpec $assumptions1*
     $[$nc:noncomp]? $doa:defOrAbbrev funTrans $transId $assumptions2* $doc:defProofOrConv) => do
 
@@ -83,8 +83,8 @@ elab_rules : command
     Term.elabBinders (parms |>.append assumptions1 |>.append assumptions2) λ contextVars => do
 
       let transName := transId.getId
-  
-      let argNames : Array Name := argSpecNames  argSpec 
+
+      let argNames : Array Name := argSpecNames  argSpec
 
       let explicitArgs := (← contextVars.filterM λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
       let e ← mkAppM id.getId explicitArgs
@@ -95,7 +95,7 @@ elab_rules : command
           if let .some fvar := arg.fvarId? then
             let name' ← fvar.getUserName
             pure (name' == name)
-          else 
+          else
             pure false)
         match idx? with
         | some idx => pure idx
@@ -110,7 +110,7 @@ elab_rules : command
         | _ => throwUnsupportedSyntax
 
       let funDefStx ←
-        match doc with 
+        match doc with
         | `(defProofOrConv| := $t by $p) => pure (.valProof t p)
         | `(defProofOrConv| by $c) => pure (.conv c)
         | _ => throwUnsupportedSyntax
@@ -121,13 +121,13 @@ elab_rules : command
 syntax " IsSmooth " bracketedBinder* (":=" term)? : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec $assumptions1*
     IsSmooth $assumptions2* $[:= $proof]?) => do
   let prop : Ident := mkIdent ``IsSmooth
   let space : Ident := mkIdent ``Vec
   let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec $assumptions1*
     funProp $prop $space $assumptions2* := $prf)
 
@@ -135,13 +135,13 @@ macro_rules
 syntax " IsLin " bracketedBinder* (":=" term)? : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     IsLin $extraAssumptions* $[:= $proof]?) => do
   let prop : Ident := mkIdent ``IsLin
   let space : Ident := mkIdent ``Vec
   let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     funProp $prop $space $extraAssumptions* := $prf)
 
@@ -149,13 +149,13 @@ macro_rules
 syntax " HasAdjoint " bracketedBinder* (":=" term)? : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     HasAdjoint $extraAssumptions* $[:= $proof]?) => do
   let prop : Ident := mkIdent ``HasAdjoint
   let space : Ident := mkIdent ``SemiHilbert
   let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     funProp $prop $space $extraAssumptions* := $prf)
 
@@ -163,13 +163,13 @@ macro_rules
 syntax " HasAdjDiff " bracketedBinder* (":=" term)? : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     HasAdjDiff $extraAssumptions* $[:= $proof]?) => do
   let prop : Ident := mkIdent ``HasAdjDiff
   let space : Ident := mkIdent ``SemiHilbert
   let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     funProp $prop $space $extraAssumptions* := $prf)
 
@@ -177,13 +177,13 @@ macro_rules
 syntax " IsInv " bracketedBinder* (":=" term)? : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     IsInv $extraAssumptions* $[:= $proof]?) => do
   let prop : Ident := mkIdent ``IsInv
   let space : Ident := mkIdent ``Nonempty
   let prf := proof.getD (← `(term| by first | (unfold $id; infer_instance) | infer_instance))
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     funProp $prop $space $extraAssumptions* := $prf)
 
@@ -192,44 +192,44 @@ macro_rules
 syntax (noncomp)? defOrAbbrev "∂" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev ∂ $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``differential
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
 
 syntax (noncomp)? defOrAbbrev "𝒯" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev 𝒯 $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``tangentMap
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
 
 syntax (noncomp)? defOrAbbrev "†" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev † $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``adjoint
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
 
 syntax (noncomp)? defOrAbbrev "∂†" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev ∂† $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``adjointDifferential
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)
 
@@ -247,10 +247,10 @@ macro_rules
 syntax (noncomp)? defOrAbbrev "⁻¹" bracketedBinder* defProofOrConv : argProp
 
 macro_rules
-| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]? 
+| `(function_property $id:ident $parms:bracketedBinder* $[: $retType:term]?
     argument $argSpec:argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev ⁻¹ $extraAssumptions* $doc:defProofOrConv) => do
   let trans : Ident := mkIdent ``invFun
-  `(function_property $id $parms* $[: $retType:term]? 
+  `(function_property $id $parms* $[: $retType:term]?
     argument $argSpec  $assumptions1*
     $[$nc]? $doa:defOrAbbrev funTrans $trans $extraAssumptions* $doc:defProofOrConv)

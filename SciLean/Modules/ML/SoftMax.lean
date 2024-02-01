@@ -8,13 +8,13 @@ import Mathlib
 
 namespace SciLean.ML
 
-variable 
+variable
   {R : Type} [RealScalar R] [PlainDataType R] [LT R] [∀ x y : R, Decidable (x < y)]
 
 set_default_scalar R
 
 def softMax [RealScalar R]
-  {ι} [Index ι] [Inhabited ι] (r : R) (x : R^ι) : R^ι := 
+  {ι} [Index ι] [Inhabited ι] (r : R) (x : R^ι) : R^ι :=
   let m := ArrayType.max x
   let x := ArrayType.map (fun xi => Scalar.exp (r*(xi-m))) x
   let w := ∑ i, x[i]
@@ -22,6 +22,5 @@ def softMax [RealScalar R]
 
 #generate_revDeriv softMax x
   prop_by unfold softMax; fprop
-  trans_by 
+  trans_by
     unfold softMax; ftrans
-

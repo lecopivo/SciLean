@@ -11,7 +11,7 @@ import SciLean.Core.FunctionPropositions.DifferentiableAt
 namespace SciLean
 
 
-variable 
+variable
   (R : Type _) [NontriviallyNormedField R]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace R X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace R Y]
@@ -23,19 +23,19 @@ variable
 
 namespace Differentiable
 
-variable 
+variable
   {R : Type _} [NontriviallyNormedField R]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace R X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace R Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace R Z]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace R (E i)]
-  
+
 
 theorem id_rule
   : Differentiable R (fun x : X => x)
   := by simp
-  
+
 
 theorem const_rule (x : X)
   : Differentiable R (fun _ : Y => x)
@@ -52,7 +52,7 @@ theorem comp_rule
 theorem let_rule
   (g : X → Y) (hg : Differentiable R g)
   (f : X → Y → Z) (hf : Differentiable R (fun (xy : X×Y) => f xy.1 xy.2))
-  : Differentiable R (fun x => let y := g x; f x y) 
+  : Differentiable R (fun x => let y := g x; f x y)
   := by apply fun x => DifferentiableAt.let_rule x g (hg x) f (hf (x, g x))
 
 
@@ -63,8 +63,8 @@ theorem pi_rule
 
 theorem proj_rule
   (i : ι)
-  : Differentiable R (fun x : (i : ι) → E i => x i):= 
-by 
+  : Differentiable R (fun x : (i : ι) → E i => x i):=
+by
   apply DifferentiableAt.proj_rule
 
 
@@ -78,27 +78,27 @@ end SciLean.Differentiable
 open Lean Meta SciLean FProp
 def Differentiable.fpropExt : FPropExt where
   fpropName := ``Differentiable
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``Differentiable then
 
       if let .some f := e.getArg? 8 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``Differentiable then
       e.setArg 8  f
-    else          
+    else
       e
 
   identityRule    e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``Differentiable.id_rule 
-      origin := .decl ``Differentiable.id_rule 
+      proof  := mkConst ``Differentiable.id_rule
+      origin := .decl ``Differentiable.id_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -106,8 +106,8 @@ def Differentiable.fpropExt : FPropExt where
   constantRule    e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``Differentiable.const_rule 
-      origin := .decl ``Differentiable.const_rule 
+      proof  := mkConst ``Differentiable.const_rule
+      origin := .decl ``Differentiable.const_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -131,8 +131,8 @@ def Differentiable.fpropExt : FPropExt where
   lambdaLetRule e f g := do
     -- let thm : SimpTheorem :=
     -- {
-    --   proof  := mkConst ``Differentiable.let_rule 
-    --   origin := .decl ``Differentiable.let_rule 
+    --   proof  := mkConst ``Differentiable.let_rule
+    --   origin := .decl ``Differentiable.let_rule
     --   rfl    := false
     -- }
     -- FProp.tryTheorem? e thm (fun _ => pure none)
@@ -154,8 +154,8 @@ def Differentiable.fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``Differentiable.pi_rule 
-      origin := .decl ``Differentiable.pi_rule 
+      proof  := mkConst ``Differentiable.pi_rule
+      origin := .decl ``Differentiable.pi_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -163,8 +163,8 @@ def Differentiable.fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``DifferentiableAt.proj_rule 
-      origin := .decl ``DifferentiableAt.proj_rule 
+      proof  := mkConst ``DifferentiableAt.proj_rule
+      origin := .decl ``DifferentiableAt.proj_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -181,9 +181,9 @@ def Differentiable.fpropExt : FPropExt where
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-open SciLean Differentiable 
+open SciLean Differentiable
 
-variable 
+variable
   {R : Type _} [NontriviallyNormedField R]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace R X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace R Y]
@@ -218,7 +218,7 @@ theorem Prod.mk.arg_fstsnd.Differentiable_rule
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.fst.arg_self.Differentiable_rule 
+theorem Prod.fst.arg_self.Differentiable_rule
   (f : X → Y×Z) (hf : Differentiable R f)
   : Differentiable R (fun x => (f x).1)
   := Differentiable.fst hf
@@ -228,7 +228,7 @@ theorem Prod.fst.arg_self.Differentiable_rule
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.snd.arg_self.Differentiable_rule 
+theorem Prod.snd.arg_self.Differentiable_rule
   (f : X → Y×Z) (hf : Differentiable R f)
   : Differentiable R (fun x => (f x).2)
   := Differentiable.snd hf
@@ -251,8 +251,8 @@ theorem Function.comp.arg_a0.Differentiable_rule
 
 @[fprop]
 theorem Neg.neg.arg_a0.Differentiable_rule
-  (f : X → Y) (hf : Differentiable R f) 
-  : Differentiable R fun x => - f x 
+  (f : X → Y) (hf : Differentiable R f)
+  : Differentiable R fun x => - f x
   := fun x => Neg.neg.arg_a0.DifferentiableAt_rule x f (hf x)
 
 
@@ -280,11 +280,11 @@ theorem HSub.hSub.arg_a0a1.Differentiable_rule
 
 
 -- HMul.hMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HMul.hMul.arg_a0a1.Differentiable_rule
-  {Y : Type _} [TopologicalSpace Y] [NormedRing Y] [NormedAlgebra R Y] 
+  {Y : Type _} [TopologicalSpace Y] [NormedRing Y] [NormedAlgebra R Y]
   (f g : X → Y) (hf : Differentiable R f) (hg : Differentiable R g)
   : Differentiable R (fun x => f x * g x)
   := Differentiable.mul hf hg
@@ -292,7 +292,7 @@ def HMul.hMul.arg_a0a1.Differentiable_rule
 
 
 -- SMul.sMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HSMul.hSMul.arg_a0a1.Differentiable_rule
@@ -304,13 +304,13 @@ def HSMul.hSMul.arg_a0a1.Differentiable_rule
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HDiv.hDiv.arg_a0a1.Differentiable_rule
   {R : Type _} [NontriviallyNormedField R]
   {K : Type _} [NontriviallyNormedField K] [NormedAlgebra R K]
-  (f : R → K) (g : R → K) 
+  (f : R → K) (g : R → K)
   (hf : Differentiable R f) (hg : Differentiable R g) (hx : ∀ x, g x ≠ 0)
   : Differentiable R (fun x => f x / g x)
   := Differentiable.div hf hg hx
@@ -318,10 +318,10 @@ def HDiv.hDiv.arg_a0a1.Differentiable_rule
 
 
 -- HPow.hPow -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HPow.hPow.arg_a0.Differentiable_rule
-  (n : Nat) (f : X → R) (hf : Differentiable R f) 
+  (n : Nat) (f : X → R) (hf : Differentiable R f)
   : Differentiable R (fun x => f x ^ n)
   := Differentiable.pow hf n

@@ -11,7 +11,7 @@ set_option linter.unusedVariables false
 
 namespace ContinuousLinearMap.adjoint
 
-variable 
+variable
   {K : Type _} [IsROrC K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
@@ -34,51 +34,51 @@ instance (f : X →L[K] Y) : SciLean.Dagger f (ContinuousLinearMap.adjoint f : Y
 open SciLean
 
 variable (X) (K)
-theorem id_rule 
-  : (fun (x : X) =>L[K] x)† = fun x =>L[K] x := 
+theorem id_rule
+  : (fun (x : X) =>L[K] x)† = fun x =>L[K] x :=
 by
   have h : (fun (x : X) =>L[K] x) = ContinuousLinearMap.id K X := by rfl
   rw[h]; simp
 
 
 variable (Y)
-theorem const_rule 
-  : (fun (x : X) =>L[K] (0 : Y))† = fun x =>L[K] 0 := 
+theorem const_rule
+  : (fun (x : X) =>L[K] (0 : Y))† = fun x =>L[K] 0 :=
 by
   sorry_proof
 variable {Y}
 
 theorem proj_rule [DecidableEq ι]
-   (i : ι) 
+   (i : ι)
   : (fun (f : PiLp 2 (fun _ => X)) =>L[K] f i)†
-    = 
+    =
     fun x =>L[K] (fun j => if i=j then x else (0 : X))
   := sorry_proof
 variable {X}
 
 
 theorem prod_rule
-  (f : X → Y) (g : X → Z) 
+  (f : X → Y) (g : X → Z)
   (hf : IsContinuousLinearMap K f) (hg : IsContinuousLinearMap K g)
   : ((fun x =>L[K] (f x, g x)) : X →L[K] Y×₂Z)†
     =
     fun yz : Y×₂Z =>L[K]
       let x₁ := (fun x =>L[K] f x)† yz.1
       let x₂ := (fun x =>L[K] g x)† yz.2
-      x₁ + x₂ := 
-by 
+      x₁ + x₂ :=
+by
   sorry_proof
 
 
-theorem comp_rule 
-  (f : Y → Z) (g : X → Y) 
+theorem comp_rule
+  (f : Y → Z) (g : X → Y)
   (hf : IsContinuousLinearMap K f) (hg : IsContinuousLinearMap K g)
   : (fun x =>L[K] f (g x))†
     =
     fun z =>L[K]
       let y := (fun y =>L[K] f y)† z
       let x := (fun x =>L[K] g x)† y
-      x := 
+      x :=
 by
   have h : (fun x =>L[K] f (g x))
            =
@@ -89,23 +89,23 @@ by
   ext dx; simp
 
 
-theorem let_rule 
-  (f : X → Y → Z) (g : X → Y)      
+theorem let_rule
+  (f : X → Y → Z) (g : X → Y)
   (hf : IsContinuousLinearMap K (fun xy : X×Y => f xy.1 xy.2)) (hg : IsContinuousLinearMap K g)
   : (fun x =>L[K] let y := g x; f x y)†
     =
     fun z =>L[K]
       let xy := ((fun xy : X×₂Y =>L[K] f xy.1 xy.2)†) z
       let x' := ((fun x =>L[K] g x)†) xy.2
-      xy.1 + x' := 
+      xy.1 + x' :=
 by
   have h : (fun x =>L[K] let y := g x; f x y)
            =
            (fun xy : X×₂Y =>L[K] f xy.1 xy.2).comp (fun x =>L[K] (x, g x))
          := by rfl
   rw[h, ContinuousLinearMap.adjoint_comp]
-  have h' : ((fun x =>L[K] (x, g x)) : X →L[K] X×₂Y)† 
-            = 
+  have h' : ((fun x =>L[K] (x, g x)) : X →L[K] X×₂Y)†
+            =
             (fun (xy : X×₂Y) =>L[K] xy.1 + (fun x =>L[K] g x)† xy.2)
           := by rw[prod_rule K (fun x => x) g (by fprop) hg]; simp[id_rule]
   rw[h']; rfl
@@ -115,7 +115,7 @@ open BigOperators in
 theorem pi_rule
   (f : X → (i : ι) → E i) (hf : ∀ i, IsContinuousLinearMap K (f · i))
   : ((fun (x : X) =>L[K] fun (i : ι) => f x i) : X →L[K] PiLp 2 E)†
-    = 
+    =
     (fun x' =>L[K] ∑ i, (fun x =>L[K] f x i)† (x' i))
   := sorry_proof
 
@@ -148,7 +148,7 @@ def ftransExt : FTransExt where
   getFTransFun? e := Id.run do
     let (name, args) := e.getAppFnArgs
     if name == ``FunLike.coe && args.size = 6 then
-      
+
       if ¬(args[4]!.isAppOf ``adjoint) then
         return none
 
@@ -166,10 +166,10 @@ def ftransExt : FTransExt where
   replaceFTransFun e f := Id.run do
     let (name, args) := e.getAppFnArgs
     if name == ``FunLike.coe && args.size = 6 then
-      
+
       if ¬(args[4]!.isAppOf ``adjoint) then
-        return e         
-      
+        return e
+
       return e.setArg 5 f
     else
       return e
@@ -203,7 +203,7 @@ def ftransExt : FTransExt where
   compRule e f g := do
     let K := (e.getArg! 1).getArg! 0
     tryTheorems
-      #[ { proof := ← withTransparency .all <| 
+      #[ { proof := ← withTransparency .all <|
              mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
       discharger e
 
@@ -233,7 +233,7 @@ end ContinuousLinearMap.adjoint
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-variable 
+variable
   {K : Type _} [IsROrC K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
@@ -265,7 +265,7 @@ theorem SciLean.ProdL2.mk.arg_fstsnd.IsContinuousLinearMap_rule
   (g : X → Y) (hg : IsContinuousLinearMap K g)
   (f : X → Z) (hf : IsContinuousLinearMap K f)
   : IsContinuousLinearMap K (fun x => ProdL2.mk (g x) (f x)) :=
-by 
+by
   unfold ProdL2.mk; fprop
 
 
@@ -279,7 +279,7 @@ theorem SciLean.ProdL2.mk.arg_fstsnd.adjoint_rule
       let x₁ := (fun x =>L[K] g x)† yz.1
       let x₂ := (fun x =>L[K] f x)† yz.2
       x₁ + x₂ :=
-by 
+by
   unfold ProdL2.mk; ftrans
 
 
@@ -356,10 +356,10 @@ theorem HAdd.hAdd.arg_a0a1.adjoint_rule
   (f g : X → Y) (hf : IsContinuousLinearMap K f) (hg : IsContinuousLinearMap K g)
   : (fun x =>L[K] f x + g x)†
     =
-    fun y =>L[K] 
+    fun y =>L[K]
       let x₁ := (fun x =>L[K] f x)† y
       let x₂ := (fun x =>L[K] g x)† y
-      x₁ + x₂ := 
+      x₁ + x₂ :=
 by
   sorry_proof
 
@@ -372,10 +372,10 @@ theorem HSub.hSub.arg_a0a1.adjoint_rule
   (f g : X → Y) (hf : IsContinuousLinearMap K f) (hg : IsContinuousLinearMap K g)
   : (fun x =>L[K] f x - g x)†
     =
-    fun y =>L[K] 
+    fun y =>L[K]
       let x₁ := (fun x =>L[K] f x)† y
       let x₂ := (fun x =>L[K] g x)† y
-      x₁ - x₂ := 
+      x₁ - x₂ :=
 by
   sorry_proof
 
@@ -388,8 +388,8 @@ theorem Neg.neg.arg_a0.adjoint_rule
   (f : X → Y) (hf : IsContinuousLinearMap K f)
   : (fun x =>L[K] - f x)†
     =
-    fun y =>L[K] - (fun x =>L[K] f x)† y := 
-by 
+    fun y =>L[K] - (fun x =>L[K] f x)† y :=
+by
   sorry_proof
 
 
@@ -403,7 +403,7 @@ theorem HMul.hMul.arg_a0.adjoint_rule
   : (fun x =>L[K] f x * c)†
     =
     fun y =>L[K] conj c • (fun x =>L[K] f x)† y :=
-by 
+by
   sorry_proof
 
 open ComplexConjugate in
@@ -413,7 +413,7 @@ theorem HMul.hMul.arg_a1.adjoint_rule
   : (fun x =>L[K] c * f x)†
     =
     fun y =>L[K] conj c • (fun x =>L[K] f x)† y :=
-by 
+by
   rw[show (fun x =>L[K] c * f x) = (fun x =>L[K] f x * c) by ext x; simp[mul_comm]]
   apply HMul.hMul.arg_a0.adjoint_rule
 
@@ -428,7 +428,7 @@ theorem HSMul.hSMul.arg_a0.adjoint_rule
   : (fun x =>L[K] f x • x')†
     =
     fun y =>L[K] @inner K _ _ x' y • (fun x =>L[K] f x)† 1 :=
-by 
+by
   sorry_proof
 
 open ComplexConjugate in
@@ -438,7 +438,7 @@ theorem HSMul.hSMul.arg_a1.adjoint_rule
   : (fun x =>L[K] c • g x)†
     =
     fun y =>L[K] (conj c) • (fun x =>L[K] g x)† y :=
-by 
+by
   sorry_proof
 
 
@@ -452,13 +452,13 @@ theorem HDiv.hDiv.arg_a0.adjoint_rule
   (hf : IsContinuousLinearMap K f)
   : (fun x =>L[K] f x / c)†
     =
-    fun y =>L[K] (conj c)⁻¹ • (fun x =>L[K] f x)† y := 
+    fun y =>L[K] (conj c)⁻¹ • (fun x =>L[K] f x)† y :=
 by
   sorry_proof
 
 
 -- Finset.sum ------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open BigOperators in
 @[ftrans]
@@ -466,13 +466,13 @@ theorem Finset.sum.arg_f.adjoint_rule
   (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K (f · i))
   : (fun x =>L[K] ∑ i, f x i)†
     =
-    (fun y =>L[K] ∑ i, (fun x =>L[K] f x i)† y) := 
+    (fun y =>L[K] ∑ i, (fun x =>L[K] f x i)† y) :=
 by
   sorry_proof
 
 
 -- d/ite -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[ftrans]
 theorem ite.arg_te.adjoint_rule
@@ -481,7 +481,7 @@ theorem ite.arg_te.adjoint_rule
   : (fun x =>L[K] ite c (t x) (e x))†
     =
     fun y =>L[K]
-      ite c ((fun x =>L[K] t x)† y) ((fun x =>L[K] e x)† y) := 
+      ite c ((fun x =>L[K] t x)† y) ((fun x =>L[K] e x)† y) :=
 by
   induction dec
   case isTrue h  => ext y; simp[h]
@@ -490,13 +490,13 @@ by
 @[ftrans]
 theorem dite.arg_te.adjoint_rule
   (c : Prop) [dec : Decidable c]
-  (t : c  → X → Y) (ht : ∀ p, IsContinuousLinearMap K (t p)) 
+  (t : c  → X → Y) (ht : ∀ p, IsContinuousLinearMap K (t p))
   (e : ¬c → X → Y) (he : ∀ p, IsContinuousLinearMap K (e p))
   : (fun x =>L[K] dite c (t · x) (e · x))†
     =
     fun y =>L[K]
-      dite c (fun p => (fun x =>L[K] t p x)† y) 
-             (fun p => (fun x =>L[K] e p x)† y) := 
+      dite c (fun p => (fun x =>L[K] t p x)† y)
+             (fun p => (fun x =>L[K] e p x)† y) :=
 by
   induction dec
   case isTrue h  => ext y; simp[h]
@@ -504,7 +504,7 @@ by
 
 
 -- Inner -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open ComplexConjugate in
 @[ftrans]
@@ -512,7 +512,7 @@ theorem Inner.inner.arg_a0.adjoint_rule
   (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
   : (fun x =>L[K] @inner K _ _ (f x) y)†
     =
-    fun z =>L[K] (conj z) • (fun x =>L[K] f x)† y := 
+    fun z =>L[K] (conj z) • (fun x =>L[K] f x)† y :=
 by
   sorry_proof
 
@@ -527,7 +527,7 @@ by
 
 
 -- conj/starRingEnd ------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 set_option linter.ftransDeclName false in
 open ComplexConjugate in
 @[ftrans]

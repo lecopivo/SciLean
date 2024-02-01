@@ -7,8 +7,8 @@ namespace SciLean
 Shape parametrized by `P` living in `X`
 -/
 structure Shape {P X} [TopologicalSpace X] (toSet : P → Set X) where
-  params : P  
-  
+  params : P
+
   is_closed : ∀ p, IsClosed (toSet p)
 
 namespace Shape
@@ -25,11 +25,11 @@ namespace Shape
   ------------------------------------------------------------------------------
   -- Locate
   ------------------------------------------------------------------------------
-  inductive Location | inside | boundary | outside 
+  inductive Location | inside | boundary | outside
   deriving Inhabited, BEq, Repr
 
-  noncomputable 
-  def locateSpec (s : Shape toSet) (x : X) : Location := 
+  noncomputable
+  def locateSpec (s : Shape toSet) (x : X) : Location :=
     have := Classical.propDecidable
     if (x ∈ s.interior) then
       .inside
@@ -47,7 +47,7 @@ namespace Shape
   def locate [HasLocate toSet] (s : Shape toSet) (x : X) := HasLocate.locate s x
 
   ------------------------------------------------------------------------------
-  -- Level Set 
+  -- Level Set
   ------------------------------------------------------------------------------
   def IsLevelSet {R : Type _} [Zero R] [Ord R] (f : Shape toSet → X → R) (s : Shape toSet) (x : X) : Prop :=
     match compare 0 (f s x) with
@@ -62,7 +62,7 @@ namespace Shape
 
   def levelSet {R} [Zero R] [Ord R] [HasLevelSet R toSet] (s : Shape toSet) (x : X) := HasLevelSet.levelSet s x
 
-  def locateFromLevelSet (R : Type _) [Zero R] [Ord R] [HasLevelSet R toSet] : HasLocate toSet := 
+  def locateFromLevelSet (R : Type _) [Zero R] [Ord R] [HasLevelSet R toSet] : HasLocate toSet :=
   {
     locate := λ s x =>
       match compare 0 (s.levelSet x) with
@@ -75,9 +75,9 @@ namespace Shape
 
   ------------------------------------------------------------------------------
   -- Signed Distance Function
-  ------------------------------------------------------------------------------  
-  noncomputable 
-  def sdfSpec [EDist X] (s : Shape toSet) (x : X) : EReal := 
+  ------------------------------------------------------------------------------
+  noncomputable
+  def sdfSpec [EDist X] (s : Shape toSet) (x : X) : EReal :=
     have := Classical.propDecidable
     if ¬(x ∈ s.asSet) then
       sInf {edist x y | y ∈ s.asSet}
@@ -96,10 +96,10 @@ namespace Shape
   class HasSdf (R : outParam $ Type _) [IsReal R] [EDist X] (toSet : P → Set X) where
     sdf (s : Shape toSet) (x : X) : ExtendedReal R
     is_sdf : IsSdf sdf
-  
+
   def sdf {R} [IsReal R] [EDist X] [HasSdf R toSet] (s : Shape toSet) (x : X) := HasSdf.sdf s x
 
-  def locateFromSdf {R} [IsReal R] [Ord R] [EDist X] [HasSdf R toSet] : HasLocate toSet := 
+  def locateFromSdf {R} [IsReal R] [Ord R] [EDist X] [HasSdf R toSet] : HasLocate toSet :=
   {
     locate := λ s x =>
       match compare 0 (s.sdf x) with
@@ -113,7 +113,7 @@ namespace Shape
   -- Closest Point
   ------------------------------------------------------------------------------
   /--
-  Finds a closest point on the boundary of `s` to the point `x` and also tells you if 
+  Finds a closest point on the boundary of `s` to the point `x` and also tells you if
   `x` is inside/outside or on the boundary of `s`.
   If the closest point is not unique, it will just pick one.
   -/
@@ -121,13 +121,13 @@ namespace Shape
     closestPointLoc (s : Shape toSet) (x : X) : (Option X) × Location
     is_closest_point : (sorry : Prop)
 
-  def closestPoint [HasClosestPoint toSet] (s : Shape toSet) (x : X) : Option X := 
+  def closestPoint [HasClosestPoint toSet] (s : Shape toSet) (x : X) : Option X :=
     (HasClosestPoint.closestPointLoc s x).1
 
-  def closestPointLoc [HasClosestPoint toSet] (s : Shape toSet) (x : X) : (Option X) × Location := 
+  def closestPointLoc [HasClosestPoint toSet] (s : Shape toSet) (x : X) : (Option X) × Location :=
     HasClosestPoint.closestPointLoc s x
 
-  
+
   ------------------------------------------------------------------------------
   -- Shape Transform
   ------------------------------------------------------------------------------
@@ -140,17 +140,17 @@ namespace Shape
   -- Common transformations
   abbrev HasReflect (p : P → Set X) := HasTransform p Neg.neg
   abbrev HasTranslate (p : P → Set X) := ∀ t, HasTransform p λ x => x + t
-  abbrev HasRotate (R : Type) [Group R] [LieGroup.SO R X] (p : P → Set X)  
+  abbrev HasRotate (R : Type) [Group R] [LieGroup.SO R X] (p : P → Set X)
     := ∀ r : R, HasTransform p λ x => r • x
-  abbrev HasScale (p : P → Set X)  
+  abbrev HasScale (p : P → Set X)
     := ∀ s : ℝ, HasTransform p λ x => s • x
   abbrev HasMirror (p : P → Set X) := ∀ n : X, HasTransform p λ x => x - ((2 : ℝ) * ⟪x,n⟫) • n
 
   abbrev reflect [HasReflect p] (s : Shape p) := s.trans Neg.neg
   abbrev translate [HasTranslate p] (s : Shape p) (t : X) := s.trans λ x => x + t
   abbrev rotate {R : Type} [Group R] [LieGroup.SO R X] [HasRotate R p]
-    (s : Shape p) (r : R) := s.trans λ x => r • x 
-  abbrev scale [HasScale p] (s : Shape p) (r : ℝ) := s.trans λ x => r • x 
+    (s : Shape p) (r : R) := s.trans λ x => r • x
+  abbrev scale [HasScale p] (s : Shape p) (r : ℝ) := s.trans λ x => r • x
   abbrev mirror [HasMirror p] (s : Shape p) (n : X) := s.trans λ x => x - ((2 : ℝ) * ⟪x,n⟫) • n
 
 
@@ -159,9 +159,9 @@ namespace Shape
   ------------------------------------------------------------------------------
   class HasMinkowskiSum (toSet₁ : P → Set X) (toSet₂ : Q → Set X) (toSet₃ : outParam $ R → Set X) where
     sum : P → Q → R
-    is_sum : ∀ p q z, 
-      (z ∈ toSet₃ (sum p q)) 
-      ↔ 
+    is_sum : ∀ p q z,
+      (z ∈ toSet₃ (sum p q))
+      ↔
       ∃ (x y : X), (z = x + y) ∧ (x ∈ toSet₁ p) ∧ (y ∈ toSet₂ q)
 
 
@@ -173,14 +173,14 @@ namespace Shape
     -- evaluate signed distance of minkowski sum of A,-B at the origin
 
   class HasDist (p : P → Set X) (q : Q → Set X) where
-    dist (A : Shape p) (B : Shape q) : ℝ 
+    dist (A : Shape p) (B : Shape q) : ℝ
     is_dist : ∀ A B, distSpec A B = dist A B
 
   def dist [HasDist p q] (A : Shape p) (B : Shape q) : ℝ := HasDist.dist A B
   @[simp] theorem dist_spec [HasDist p q] (A : Shape p) (B : Shape q)
     : distSpec A B = dist A B := by apply HasDist.is_dist
 
-  
+
 
 
 end Shape

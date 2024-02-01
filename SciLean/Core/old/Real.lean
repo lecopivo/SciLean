@@ -16,10 +16,10 @@ def _root_.Int.toReal (n : Int) : ℝ := (Float.ofInt n).toSciLeanReal
 
 namespace Real
 
-  abbrev toRealFun (f : Float → Float) : ℝ → ℝ 
+  abbrev toRealFun (f : Float → Float) : ℝ → ℝ
     := λ x => ⟨f x.val⟩
 
-  abbrev toRealFun₂ (f : Float → Float → Float) : ℝ → ℝ → ℝ 
+  abbrev toRealFun₂ (f : Float → Float → Float) : ℝ → ℝ → ℝ
     := λ x y => ⟨f x.val y.val⟩
 
   def sin (θ : ℝ) : ℝ := toRealFun Float.sin θ
@@ -59,19 +59,19 @@ namespace Real
       | .error msg => .error msg
       | .ok x => .ok ⟨x⟩
 
-  
+
   instance : LT ℝ := ⟨λ x y => x.toFloat < y.toFloat⟩
   instance : LE ℝ := ⟨λ x y => x.toFloat ≤ y.toFloat⟩
   -- This should override 2.0 interperting as a Float
   -- @[defaultInstance mid+1]
   instance (priority := high) : OfScientific ℝ := ⟨λ m e d => ⟨instOfScientificFloat.1 m e d⟩⟩
 
-  instance (x y : ℝ) : Decidable (x < y) :=                         
+  instance (x y : ℝ) : Decidable (x < y) :=
     if x.val < y.val
     then isTrue sorry_proof
     else isFalse sorry_proof
 
-  instance (x y : ℝ) : Decidable (x ≤ y) :=                         
+  instance (x y : ℝ) : Decidable (x ≤ y) :=
     if x.val ≤ y.val
     then isTrue sorry_proof
     else isFalse sorry_proof
@@ -90,7 +90,7 @@ namespace Real
 
   -- instance : ZeroLEOneClass ℝ where
   --   zero_le_one := sorry_proof
-  
+
   -- @[irreducible]
   instance : Add ℝ := ⟨λ x y => ⟨x.val + y.val⟩⟩
   -- @[irreducible]
@@ -102,21 +102,21 @@ namespace Real
   -- @[irreducible]
   instance : Neg ℝ := ⟨λ x => ⟨-x.val⟩⟩
 
-  instance : Zero ℝ := ⟨0.0⟩  
+  instance : Zero ℝ := ⟨0.0⟩
   instance : One ℝ  := ⟨1.0⟩
   -- instance : OfNat ℝ n := ⟨Float.ofNat n⟩
   -- instance : OfScientific ℝ := ⟨instOfScientificFloat.1⟩
 
   def max (x y : ℝ) : ℝ := if x < y then y else x
   def min (x y : ℝ) : ℝ := if x < y then x else y
-  def clamp (x min max : ℝ) : ℝ := 
-    if x < min then 
-      min 
+  def clamp (x min max : ℝ) : ℝ :=
+    if x < min then
+      min
     else if max < x then
       max
     else
       x
-  def sign (x : ℝ) := 
+  def sign (x : ℝ) :=
     if 0 < x then
       1
     else if x = 0 then
@@ -150,7 +150,7 @@ namespace Real
   notation "[[" p "]]" => if p then (1:ℝ) else (0:ℝ)
 
 
-  def toInt (x : ℝ) : ℤ := 
+  def toInt (x : ℝ) : ℤ :=
     if x ≥ 0 then
       x.toFloat.toUInt64.toNat
     else
@@ -161,7 +161,7 @@ namespace Real
   def roundI (x : ℝ) : ℤ := x.round.toInt
 
   -- instance : HPow ℝ ℤ ℝ := ⟨λ x n => x^(n : ℝ)⟩
-  -- ⟨λ x n => 
+  -- ⟨λ x n =>
   --   match n with
   --   | Int.ofNat   k => x^(k : ℝ)
   --   | Int.negSucc k => x^(-(k+1) : ℝ)⟩
@@ -172,7 +172,7 @@ namespace Real
 --   ofNat : Nat → α
 
 
---   instance : Ring ℝ := 
+--   instance : Ring ℝ :=
 -- {
 -- }
 
@@ -266,7 +266,7 @@ namespace Real
 
   instance : Field ℝ where
     exists_pair_ne := sorry_proof
-    div_eq_mul_inv := sorry_proof 
+    div_eq_mul_inv := sorry_proof
     mul_inv_cancel := sorry_proof
     inv_zero := sorry_proof
     -- fpow n x := x^(n : ℝ)   ---------  !!!
@@ -305,6 +305,3 @@ namespace Real
   -- }
 
 end Real
-
-
-

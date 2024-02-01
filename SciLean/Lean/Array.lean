@@ -3,8 +3,8 @@ import SciLean.Util.SorryProof
 
 namespace Array
 
-def partitionIdxM {m} [Monad m] (as : Array α) (p : Fin as.size → α → m Bool) 
-  : m (Array α × Array α × Array (Sum Nat Nat)) := 
+def partitionIdxM {m} [Monad m] (as : Array α) (p : Fin as.size → α → m Bool)
+  : m (Array α × Array α × Array (Sum Nat Nat)) :=
 do
   let mut bs := #[]
   let mut cs := #[]
@@ -30,13 +30,13 @@ def splitM {α : Type _} {m : Type _ → Type _} [Monad m] (as : Array α) (p : 
 
 /-- Splits array into two based on function p. It also returns indices that can be used to merge two array back together.
 -/
-def splitIdx (as : Array α) (p : Fin as.size → α → Bool) 
-  : Array α × Array α × Array (Sum Nat Nat) := 
+def splitIdx (as : Array α) (p : Fin as.size → α → Bool)
+  : Array α × Array α × Array (Sum Nat Nat) :=
 Id.run do
   as.partitionIdxM p
 
 def mergeSplit (ids : Array (Sum Nat Nat)) (bs cs : Array α) [Inhabited α] : Array α :=
-  ids.map λ id => 
+  ids.map λ id =>
     match id with
     | .inl i => bs[i]!
     | .inr j => cs[j]!
@@ -48,7 +48,7 @@ def riffle (xs ys : Array α) : Array α := Id.run do
   for i in [0:m] do
     have : i < xs.size := sorry_proof
     have : i < ys.size := sorry_proof
-    zs := zs.push xs[i] 
+    zs := zs.push xs[i]
     zs := zs.push ys[i]
   let xys := if xs.size < ys.size then ys else xs
   for i in [m:M] do
@@ -69,7 +69,7 @@ def joinrM [Monad m] [Inhabited β] (xs : Array α) (map : α → m β) (op : β
   if h : 0 < xs.size then
     let n := xs.size - 1
     have : n < xs.size := sorry_proof
-    xs[0:n].foldrM (init:=(← map xs[n])) λ x acc => do op (← map x) acc 
+    xs[0:n].foldrM (init:=(← map xs[n])) λ x acc => do op (← map x) acc
   else
     pure default
 
@@ -85,7 +85,7 @@ def lexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
   match compare as.size bs.size with
   | .lt => return .lt
   | .gt => return .gt
-  | .eq => 
+  | .eq =>
     for i in [0:as.size] do
       have : i < as.size := sorry_proof
       have : i < bs.size := sorry_proof
@@ -102,7 +102,7 @@ def colexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
   match compare as.size bs.size with
   | .lt => return .lt
   | .gt => return .gt
-  | .eq => 
+  | .eq =>
     for i in [0:as.size] do
       let i := as.size - i - 1
       have : i < as.size := sorry_proof
@@ -112,4 +112,3 @@ def colexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
       | .gt => return .gt
       | .eq => continue
     return .eq
-

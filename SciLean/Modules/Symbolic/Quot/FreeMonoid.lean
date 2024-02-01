@@ -13,7 +13,7 @@ class DecidableCp (X : Type u) [LT X] where
 instance [LT α] [DecidableEq α] [∀ a b : α, Decidable (a < b)] : DecidableCp α :=
 {
   compare := λ x y =>
-    if h : x = y 
+    if h : x = y
     then cpEq h
     else if h : x < y
     then cpLt h
@@ -25,7 +25,7 @@ instance [LT α] [DecidableEq α] [∀ a b : α, Decidable (a < b)] : DecidableC
 instance : DecidableCp ℕ :=
 {
   compare := λ x y =>
-    if h : x = y 
+    if h : x = y
     then cpEq h
     else if h : x < y
     then cpLt h
@@ -76,7 +76,7 @@ namespace FreeMonoid
   #eval x.toString " ⊗ "
   #eval x
 
-  instance {X} : Monoid (FreeMonoid X) := 
+  instance {X} : Monoid (FreeMonoid X) :=
   {
     mul_assoc := sorry
     mul_one := sorry
@@ -90,20 +90,20 @@ namespace FreeMonoid
 --   (l1 l2 : List α) : Comparison
 --   :=
 --     match l1, l2 with
---     | x1 :: xs1, x2 :: xs2 => 
+--     | x1 :: xs1, x2 :: xs2 =>
 --      if x1 == x2 then
 --        decGradedLexComparison xs1 xs2
---      else 
---        let n1 := xs1.length 
+--      else
+--        let n1 := xs1.length
 --        let n2 := xs2.length
 --        if n1 == n2 then
 --          if x1 < x2 then
 --            Comparison.lt
 --          else
---            Comparison.gt 
+--            Comparison.gt
 --        else if n1 < n2 then
 --          Comparison.lt
---        else 
+--        else
 --          Comparison.gt
 --      | [], x2 :: xs2 => Comparison.lt
 --      | x1 :: xs1 , [] => Comparison.gt
@@ -121,10 +121,10 @@ namespace FreeMonoid
 
   -- Graded lexicographical ordering
   inductive lt {X : Type u} [LT X] : FreeMonoid X → FreeMonoid X → Prop where
-  | rank (m m' : FreeMonoid X) (h : m.rank < m'.rank) 
+  | rank (m m' : FreeMonoid X) (h : m.rank < m'.rank)
     : lt m m'
   | head (m m' : FreeMonoid X) (h : m.rank = m'.rank)
-         (x y : X) (h' : x < y)                       
+         (x y : X) (h' : x < y)
     : lt (⟨[x]⟩*m) (⟨[y]⟩*m')
   | tail (m m' : FreeMonoid X) (x : X) (h : lt m m')
     : lt (⟨[x]⟩*m) (⟨[x]⟩*m')
@@ -133,15 +133,15 @@ namespace FreeMonoid
 
   example : DecidableCp ℕ := by infer_instance
 
-  def gradedLt {X} [LT X] [DecidableCp X] -- [∀ x y : X, Decidable (x < y)] [DecidableEq X] 
+  def gradedLt {X} [LT X] [DecidableCp X] -- [∀ x y : X, Decidable (x < y)] [DecidableEq X]
     (l l' : List X)
     : Ordering :=
     match decCp l.length l'.length with
     | cpLt h => Ordering.lt
     | cpGt h => Ordering.gt
-    | cpEq h => 
+    | cpEq h =>
       match l, l' with
-      | x :: xs, y :: ys => 
+      | x :: xs, y :: ys =>
         match decCp x y with
         | cpLt h => Ordering.lt
         | cpGt h => Ordering.gt
@@ -166,31 +166,30 @@ namespace FreeMonoid
     --   cpGt sorry
     -- else
     --   match m.1, m'.1 with
-    --   | x :: xs, y :: ys => 
+    --   | x :: xs, y :: ys =>
     --     match compare x y with
-    --     | 
+    --     |
     --   | [], y :: ys => cpLt sorry
     --   | x :: xs, [] => cpGt sorry
     --   | [], [] => cpEq sorry
     -- match m.1, m'.1 with
-    -- | x1 :: xs1, x2 :: xs2 => 
+    -- | x1 :: xs1, x2 :: xs2 =>
     --  if x1 = x2 then
     --    decCp ⟨xs1⟩ ⟨xs2⟩
-    --  else 
-    --    let n1 := xs1.length 
+    --  else
+    --    let n1 := xs1.length
     --    let n2 := xs2.length
     --    if n1 == n2 then
     --      if x1 < x2 then
     --        Comparison.lt
     --      else
-    --        Comparison.gt 
+    --        Comparison.gt
     --    else if n1 < n2 then
     --      Comparison.lt
-    --    else 
+    --    else
     --      Comparison.gt
     --  | [], x2 :: xs2 => Comparison.lt
     --  | x1 :: xs1 , [] => Comparison.gt
     --  | [], [] => Comparison.eq
 
 end FreeMonoid
-

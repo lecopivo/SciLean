@@ -8,7 +8,7 @@ open Lean Meta Elab Elab.Term
 -- Maybe add option to write logical formulas in simp guard
 -- something like @[simp_guard (n = 0) || (m = n)]
 
-/-- Prevent applying the theorem if the specified argument is equation to the specified value. 
+/-- Prevent applying the theorem if the specified argument is equation to the specified value.
 
 Warning: It only works with custom simplifiers! Normal simplifier ignores this.
 
@@ -36,13 +36,13 @@ initialize simpGuardAttr : ParametricAttribute (Array (Nat × Expr × Nat)) ←
           let info ← getConstInfo name
 
           let nth ← forallTelescope info.type λ args _ => do
-            let i? ← args.findIdxM? 
+            let i? ← args.findIdxM?
               (λ arg => do
                 let argDecl ← getFVarLocalDecl arg
                 pure (argDecl.userName = id.getId))
             match i? with
             | some i => pure i
-            | none => throwError "Theorem does not have an argument with the name `{id.getId}`"  
+            | none => throwError "Theorem does not have an argument with the name `{id.getId}`"
 
           -- `valueFun` is a function taking all theorem arguments [0,..,nth) and returning guard value
           let (valFun, numMVars) ← forallBoundedTelescope info.type nth λ args _ => do
@@ -50,7 +50,7 @@ initialize simpGuardAttr : ParametricAttribute (Array (Nat × Expr × Nat)) ←
             let value ← abstractMVars value
 
             pure (← mkLambdaFVars args value.expr, value.numMVars)
-         
+
           pure (nth, valFun, numMVars)
       | _ => Elab.throwUnsupportedSyntax
   }

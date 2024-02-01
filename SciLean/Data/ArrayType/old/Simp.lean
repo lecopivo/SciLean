@@ -12,7 +12,3 @@ theorem sum_setElem_zero [Vec Elem] (f : Idx → Elem) :
 @[simp]
 theorem sum_setElem_zero' [Vec Elem] (f : Idx → Elem) (g : Idx → Idx) [IsInv g] :
   ∑ (i : Idx), setElem (0 : Cont) (g i) (f i) = introElem (λ i => f (g⁻¹ i)) := sorry_proof
-
-
-
-

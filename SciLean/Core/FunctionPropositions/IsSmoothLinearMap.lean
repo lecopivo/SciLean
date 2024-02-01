@@ -5,13 +5,13 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι] 
-  {E : ι → Type _} [∀ i, Vec K (E i)] 
+  {ι : Type _} [EnumType ι]
+  {E : ι → Type _} [∀ i, Vec K (E i)]
 
 def IsSmoothLinearMap (f : X → Y) : Prop :=
   IsLinearMap K f ∧ IsDifferentiable K f
@@ -24,9 +24,9 @@ namespace IsSmoothLinearMap
 variable (X)
 theorem id_rule
   : IsSmoothLinearMap K (fun x : X => x) := by constructor <;> fprop
-  
+
 variable (Y)
-theorem const_zero_rule 
+theorem const_zero_rule
   : IsSmoothLinearMap K (fun _ : X => (0 : Y))
   := by constructor <;> fprop
 variable {Y}
@@ -39,7 +39,7 @@ variable {X}
 theorem comp_rule
   (f : Y → Z) (g : X → Y)
   (hf : IsSmoothLinearMap K f) (hg : IsSmoothLinearMap K g)
-  : IsSmoothLinearMap K (fun x => f (g x)) := 
+  : IsSmoothLinearMap K (fun x => f (g x)) :=
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
@@ -48,8 +48,8 @@ by
 theorem let_rule
   (f : X → Y → Z) (g : X → Y)
   (hf : IsSmoothLinearMap K (fun (x,y) => f x y)) (hg : IsSmoothLinearMap K g)
-  : IsSmoothLinearMap K (fun x => f x (g x)) := 
-by 
+  : IsSmoothLinearMap K (fun x => f x (g x)) :=
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor <;> fprop
@@ -57,7 +57,7 @@ by
 
 theorem pi_rule
   (f : X → (i : ι) → E i) (hf : ∀ i, IsSmoothLinearMap K (f · i))
-  : IsSmoothLinearMap K fun x i => f x i := 
+  : IsSmoothLinearMap K fun x i => f x i :=
 by
   have := fun i => (hf i).1
   have := fun i => (hf i).2
@@ -71,20 +71,20 @@ by
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``IsSmoothLinearMap
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``IsSmoothLinearMap then
 
       if let .some f := e.getArg? 6 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``IsSmoothLinearMap then
       e.setArg 6  f
-    else          
+    else
       e
 
   identityRule    e := do
@@ -108,8 +108,8 @@ def fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``proj_rule 
-      origin := .decl ``proj_rule 
+      proof  := mkConst ``proj_rule
+      origin := .decl ``proj_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -139,13 +139,13 @@ def fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``pi_rule 
-      origin := .decl ``pi_rule 
+      proof  := mkConst ``pi_rule
+      origin := .decl ``pi_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -160,13 +160,13 @@ end SciLean.IsSmoothLinearMap
 
 open SciLean
 
-variable 
+variable
   {K : Type _} [IsROrC K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι] 
-  {E : ι → Type _} [∀ i, Vec K (E i)] 
+  {ι : Type _} [EnumType ι]
+  {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
 -- Id --------------------------------------------------------------------------
@@ -175,18 +175,18 @@ variable
 
 @[fprop]
 theorem id.arg_a.IsSmoothLinearMap_rule
-  : IsSmoothLinearMap K (fun x : X => id x) := 
+  : IsSmoothLinearMap K (fun x : X => id x) :=
 by
   constructor <;> fprop
- 
+
 -- Prod.mk ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fprop]
 theorem Prod.mk.arg_fstsnd.IsSmoothLinearMap_rule
-  (f : X → Z) (g : X → Y) 
+  (f : X → Z) (g : X → Y)
   (hf : IsSmoothLinearMap K f) (hg : IsSmoothLinearMap K g)
-  : IsSmoothLinearMap K fun x => (g x, f x) := 
+  : IsSmoothLinearMap K fun x => (g x, f x) :=
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
@@ -199,7 +199,7 @@ by
 @[fprop]
 theorem Prod.fst.arg_self.IsSmoothLinearMap_rule
   (f : X → Y×Z) (hf : IsSmoothLinearMap K f)
-  : IsSmoothLinearMap K fun (x : X) => (f x).fst := 
+  : IsSmoothLinearMap K fun (x : X) => (f x).fst :=
 by
   have ⟨_,_⟩ := hf
   constructor <;> fprop
@@ -211,32 +211,32 @@ by
 @[fprop]
 theorem Prod.snd.arg_self.IsSmoothLinearMap_rule
   (f : X → Y×Z) (hf : IsSmoothLinearMap K f)
-  : IsSmoothLinearMap K fun (x : X) => (f x).snd := 
+  : IsSmoothLinearMap K fun (x : X) => (f x).snd :=
 by
   have ⟨_,_⟩ := hf
   constructor <;> fprop
 
 
 -- Neg.neg ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
-theorem Neg.neg.arg_a0.IsSmoothLinearMap_rule 
+theorem Neg.neg.arg_a0.IsSmoothLinearMap_rule
   (f : X → Y) (hf : IsSmoothLinearMap K f)
-  : IsSmoothLinearMap K fun x => - f x := 
+  : IsSmoothLinearMap K fun x => - f x :=
 by
   have ⟨_,_⟩ := hf
   constructor <;> fprop
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HAdd.hAdd.arg_a0a1.IsSmoothLinearMap_rule
   (f g : X → Y) (hf : IsSmoothLinearMap K f) (hg : IsSmoothLinearMap K g)
   : IsSmoothLinearMap K fun x => f x + g x :=
-by 
+by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor <;> fprop
@@ -244,10 +244,10 @@ by
 
 
 -- HSub.hSub -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
-theorem HSub.hSub.arg_a0a1.IsSmoothLinearMap_rule 
+theorem HSub.hSub.arg_a0a1.IsSmoothLinearMap_rule
   (f g : X → Y) (hf : IsSmoothLinearMap K f) (hg : IsSmoothLinearMap K g)
   : IsSmoothLinearMap K fun x => f x - g x :=
 by
@@ -257,44 +257,44 @@ by
 
 
 -- -- HMul.hMul ---------------------------------------------------------------------
--- -------------------------------------------------------------------------------- 
+-- --------------------------------------------------------------------------------
 
 -- @[fprop]
 -- theorem HMul.hMul.arg_a0.IsSmoothLinearMap_rule
 --   (f : X → Y) (hf : IsSmoothLinearMap K f)
---   (y' : Y) 
+--   (y' : Y)
 --   : IsSmoothLinearMap K fun x => f x * y'
--- := 
+-- :=
 --   by_morphism (ContinuousLinearMap.comp (ContinuousLinearMap.mul_right y') (mk' K f hf))
 --   (by simp[ContinuousLinearMap.mul_right])
 
 
 -- @[fprop]
 -- theorem HMul.hMul.arg_a1.IsSmoothLinearMap_rule
---   {R : Type _} [CommSemiring R] 
+--   {R : Type _} [CommSemiring R]
 --   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module K X]
---   {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra K Y] [TopologicalSemiring Y] 
+--   {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra K Y] [TopologicalSemiring Y]
 --   (f : X → Y) (hf : IsSmoothLinearMap K f)
---   (y' : Y) 
+--   (y' : Y)
 --   : IsSmoothLinearMap K fun x => y' * f x
--- := 
+-- :=
 --   by_morphism (ContinuousLinearMap.comp (ContinuousLinearMap.mul_left y') (mk' K f hf))
 --   (by simp[ContinuousLinearMap.mul_left])
 
 
 -- Smul.smul ---------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem HSMul.hSMul.arg_a0.IsSmoothLinearMap_rule
   (f : X → K) (y : Y) (hf : IsSmoothLinearMap K f)
   : IsSmoothLinearMap K fun x => f x • y :=
-by 
+by
   have ⟨_,_⟩ := hf
   constructor <;> fprop
 
 @[fprop]
-theorem HSMul.hSMul.arg_a1.IsSmoothLinearMap_rule 
+theorem HSMul.hSMul.arg_a1.IsSmoothLinearMap_rule
   (c : K) (f : X → Y) (hf : IsSmoothLinearMap K f)
   : IsSmoothLinearMap K fun x => c • f x :=
 by
@@ -319,13 +319,13 @@ by
 
 
 -- d/ite -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem ite.arg_te.IsSmoothLinearMap_rule
   (c : Prop) [dec : Decidable c]
   (t e : X → Y) (ht : IsSmoothLinearMap K t) (he : IsSmoothLinearMap K e)
-  : IsSmoothLinearMap K fun x => ite c (t x) (e x) := 
+  : IsSmoothLinearMap K fun x => ite c (t x) (e x) :=
 by
   induction dec
   case isTrue h  => simp[h]; fprop
@@ -335,9 +335,9 @@ by
 @[fprop]
 theorem dite.arg_te.IsSmoothLinearMap_rule
   (c : Prop) [dec : Decidable c]
-  (t : c  → X → Y) (ht : ∀ p, IsSmoothLinearMap K (t p)) 
+  (t : c  → X → Y) (ht : ∀ p, IsSmoothLinearMap K (t p))
   (e : ¬c → X → Y) (he : ∀ p, IsSmoothLinearMap K (e p))
-  : IsSmoothLinearMap K fun x => dite c (t · x) (e · x) := 
+  : IsSmoothLinearMap K fun x => dite c (t · x) (e · x) :=
 by
   induction dec
   case isTrue h  => simp[h]; apply ht
@@ -345,9 +345,9 @@ by
 
 open LeanColls
 namespace SciLean
-section OnFinVec 
+section OnFinVec
 
-variable 
+variable
   {K : Type _} [IsROrC K]
   {IX : Type} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
   {IY : Type} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]

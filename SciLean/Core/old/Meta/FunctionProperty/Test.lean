@@ -15,30 +15,30 @@ instance {X Y} [Vec X] [Vec Y] (x : X): IsSmooth (λ xy : X×Y => xy.1) := sorry
 instance {X Y} [Vec X] [Vec Y] (x : X): IsSmooth (λ xy : X×Y => xy.2) := sorry
 
 @[simp]
-theorem diff_id {X} [Vec X] 
-  : ∂ (λ x : X => x) 
+theorem diff_id {X} [Vec X]
+  : ∂ (λ x : X => x)
     =
     λ x dx => dx := sorry
 
 @[simp]
 theorem diff_const {X} [Vec X] (x : X)
-  : ∂ (λ y : Y => x) 
+  : ∂ (λ y : Y => x)
     =
     λ y dy => 0 := sorry
 
 @[simp]
 theorem diff_comp {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g]
-  : ∂ (λ x => f (g x)) 
+  : ∂ (λ x => f (g x))
     =
     λ x dx => ∂ f (g x) (∂ g x dx) := sorry
 
 @[simp]
 theorem tangentMap_comp {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g]
-  : 𝒯 (λ x => f (g x)) 
+  : 𝒯 (λ x => f (g x))
     =
-    λ x dx => 
-      let (y,dy) := 𝒯 g x dx 
-      𝒯 f y dy 
+    λ x dx =>
+      let (y,dy) := 𝒯 g x dx
+      𝒯 f y dy
   := sorry
 
 @[simp]
@@ -51,15 +51,15 @@ theorem adjoint_comp {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] (f 
 
 @[simp]
 theorem diff_prodMk {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y) (g : X → Z) [IsSmooth f] [IsSmooth g]
-  : ∂ (λ x => (f x, g x)) 
+  : ∂ (λ x => (f x, g x))
     =
     λ x dx => (∂ f x dx, ∂ g x dx) := sorry
 
 @[simp]
 theorem tangentMap_prodMk {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y) (g : X → Z) [IsSmooth f] [IsSmooth g]
-  : 𝒯 (λ x => (f x, g x)) 
+  : 𝒯 (λ x => (f x, g x))
     =
-    λ x dx => 
+    λ x dx =>
       let (y,dy) := 𝒯 f x dx
       let (z,dz) := 𝒯 g x dx
       ((y,z), (dy,dz)) := sorry
@@ -68,7 +68,7 @@ theorem tangentMap_prodMk {X Y Z} [Vec X] [Vec Y] [Vec Z] (f : X → Y) (g : X �
 theorem adjoint_prodMk {X Y Z} [SemiHilbert X] [SemiHilbert Y] [SemiHilbert Z] (f : X → Y) (g : X → Z) [HasAdjoint f] [HasAdjoint g]
   : (λ x => (f x, g x))†
     =
-    λ (y,z) => 
+    λ (y,z) =>
       f† y + g† z := sorry
 
 
@@ -86,7 +86,7 @@ argument (x,y) [Vec X]
   IsLin    := sorry,
   IsSmooth := by apply isLin_isSmooth,
   abbrev ∂ := λ dx dy => dx + dy by sorry,
-  abbrev 𝒯 := λ dx dy => (x + y, dx + dy) by sorry 
+  abbrev 𝒯 := λ dx dy => (x + y, dx + dy) by sorry
 argument (x,y) [SemiHilbert X]
   HasAdjoint := sorry,
   HasAdjDiff := sorry,

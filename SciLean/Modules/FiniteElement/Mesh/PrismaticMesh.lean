@@ -5,18 +5,18 @@ namespace SciLean
   structure MeshPos (S : PrismaticSet) where
     prism : Prism
     elem : S.Elem prism
-    pos : prism.Space 
+    pos : prism.Space
 
 
   -- Mesh embeded in a vector space X
-  -- It should extend PrismaticSet, but there is some problem with 
+  -- It should extend PrismaticSet, but there is some problem with
   structure PrismaticMesh (X : Type) [Vec X] extends PrismaticSet where
     toPos : (MeshPos toPrismaticSet) → X
 
     -- Continuity across faces
     toPos_face (Q P : Prism) (ι : Inclusion Q P) (e : Elem P) (x : ℝ^{Q.dim.toUSize}) (h : Q.InPrism x)
       : toPos ⟨P, e, ι.faceInclusion x⟩ = toPos ⟨Q, face ι e, x⟩
-    
+
   namespace PrismaticMesh
 
   class ClosestPoint {X} [Vec X] (M : PrismaticMesh X) where
@@ -35,7 +35,7 @@ namespace SciLean
     if a > b then
       a' := b
       b' := a
-    else 
+    else
       a' := a
       b' := b
 
@@ -51,12 +51,12 @@ namespace SciLean
 
     (a',b',c')
 
-  
+
   open Prism in
-  def size {X} [Hilbert X] {M : PrismaticMesh X} {P} (e : M.Elem P) : ℝ := 
+  def size {X} [Hilbert X] {M : PrismaticMesh X} {P} (e : M.Elem P) : ℝ :=
     match P with
     | ⟨.point, _⟩ => 1
-    | ⟨.cone .point, _⟩ => 
+    | ⟨.cone .point, _⟩ =>
       let p0 := M.toPos ⟨_, M.face segment.point0 e, 0⟩
       let p1 := M.toPos ⟨_, M.face segment.point1 e, 0⟩
       ‖p1-p0‖
@@ -71,10 +71,10 @@ namespace SciLean
 
 
   variable {X Y} [Vec X] [Vec Y] (M : PrismaticMesh X) (N : PrismaticMesh Y)
-  
+
   def prod {X Y} [Vec X] [Vec Y] (M : PrismaticMesh X) (N : PrismaticMesh Y) : PrismaticMesh (X×Y) :=
-    PrismaticMesh.mk (M.toPrismaticSet.prod N.toPrismaticSet) 
-      (λ p => 
+    PrismaticMesh.mk (M.toPrismaticSet.prod N.toPrismaticSet)
+      (λ p =>
         let dim₁ := p.elem.dec.fst.dim.toUSize
         let dim₂ := p.elem.dec.snd.dim.toUSize
         let x₁ : ℝ^{dim₁} := ⊞ i, p.pos[⟨i.1, sorry_proof⟩]
@@ -83,21 +83,21 @@ namespace SciLean
         let p₂ : MeshPos N.toPrismaticSet := ⟨p.elem.dec.snd, p.elem.snd, x₂⟩
         let pos₁ := M.toPos p₁
         let pos₂ := N.toPos p₂
-        (pos₁, pos₂)) 
+        (pos₁, pos₂))
       sorry_proof
 
-  instance {X Y} [Vec X] [Vec Y] 
+  instance {X Y} [Vec X] [Vec Y]
     (M : PrismaticMesh X) [M.ClosestPoint]
     (N : PrismaticMesh Y) [N.ClosestPoint]
     : PrismaticMesh.ClosestPoint (M.prod N) where
-      closestPoint := λ (x,y) => 
-        let p₁ := M.closestPoint x        
+      closestPoint := λ (x,y) =>
+        let p₁ := M.closestPoint x
         let p₂ := N.closestPoint y
         let P := p₁.prism * p₂.prism
         let decP := P.decomposeBy p₁.prism
-        ⟨P, 
-        ⟨decP, cast sorry_proof p₁.elem, cast sorry_proof p₂.elem⟩, 
-        ⊞ i, if i.1 < p₁.prism.dim.toUSize 
+        ⟨P,
+        ⟨decP, cast sorry_proof p₁.elem, cast sorry_proof p₂.elem⟩,
+        ⊞ i, if i.1 < p₁.prism.dim.toUSize
                then p₁.pos[⟨i.1, sorry_proof⟩]
                else p₂.pos[⟨i.1 - p₁.prism.dim.toUSize, sorry_proof⟩]⟩
       closestPoint_toPos := sorry_proof

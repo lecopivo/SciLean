@@ -9,12 +9,12 @@ variable {R : Type} [RealScalar R]
 
 open Scalar RealScalar
 
-def gelu (x : R) : R := 
+def gelu (x : R) : R :=
   let c := sqrt (2/pi)
-  x * (1 + tanh (c * x * (1 + 0.044715 * x^2))) 
+  x * (1 + tanh (c * x * (1 + 0.044715 * x^2)))
 
 #generate_revDeriv gelu x
   prop_by unfold gelu; fprop
-  trans_by 
+  trans_by
     unfold gelu
     ftrans

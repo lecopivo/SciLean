@@ -23,11 +23,11 @@ initialize registerTraceClass `Meta.Tactic.fun_trans_rule
 
 register_simp_attr fun_trans
 
-initialize funTransDefAttr : TagAttribute ← 
-  registerTagAttribute 
-    `fun_trans_def 
-    "Attribute to tag the definition of a function transformation." 
-    (validate := fun _ => pure () /- TODO: Check if it is a valid definition. Get a first explicit argument and check that it has type of `α → β` and return another function. -/)           
+initialize funTransDefAttr : TagAttribute ←
+  registerTagAttribute
+    `fun_trans_def
+    "Attribute to tag the definition of a function transformation."
+    (validate := fun _ => pure () /- TODO: Check if it is a valid definition. Get a first explicit argument and check that it has type of `α → β` and return another function. -/)
 
 inductive FunTransRuleType where
   | id    -- T (λ x => x)
@@ -38,7 +38,7 @@ inductive FunTransRuleType where
 
   | eval       -- T (λ f => f x)
   | piMap      -- T (λ g a => f a (g a))
-  | piMapComp  -- T (λ g a => f a (g (h a)) g)  where (g : X → Y), (f : X → Y → (X → Y) → Z) 
+  | piMapComp  -- T (λ g a => f a (g (h a)) g)  where (g : X → Y), (f : X → Y → (X → Y) → Z)
 
   | prodMap   -- T (λ x => (f x, g x))
 
@@ -70,17 +70,17 @@ def FunTransRuleType.expectedForm (ruleType : FunTransRuleType) : String :=
 def FunTransRuleType.all : List FunTransRuleType := [.id,.const,.comp,.swap,.eval,.piMap,.piMapComp,.prodMap,.letComp,.letBinop]
 
 private def merge (transName : Name) (as bs : RBMap FunTransRuleType Name compare) : RBMap FunTransRuleType Name compare :=
-  as.mergeBy (t₂ := bs) (λ type ruleName ruleName' => 
-    if ruleName == ruleName' then 
-      ruleName 
-    else 
+  as.mergeBy (t₂ := bs) (λ type ruleName ruleName' =>
+    if ruleName == ruleName' then
+      ruleName
+    else
       panic! s!"Two incopatible `{type}` rules for `{transName}`.\nKeep only one of `{ruleName}` or `{ruleName'}` and remove the other!")
 
 abbrev FunTransRuleMap := RBMap FunTransRuleType Name compare
 
 initialize FunTransRuleExt : MergeMapDeclarationExtension FunTransRuleMap ← mkMergeMapDeclarationExtension ⟨merge, sorry⟩
 
-variable {m} [Monad m] [MonadEnv m] 
+variable {m} [Monad m] [MonadEnv m]
 
 def insertFunTransRule (transName : Name) (type : FunTransRuleType) (ruleName : Name) : m Unit := do
   let m : FunTransRuleMap := {}
@@ -108,7 +108,7 @@ def getFunTransEq (eq : Expr) : MetaM (Name × Expr) := do
       let env ← getEnv
       let lhs := eq.getArg! 1
 
-      if let .some funTransName := lhs.getAppFn.constName? then 
+      if let .some funTransName := lhs.getAppFn.constName? then
 
         if ¬(funTransDefAttr.hasTag env funTransName) then
           throwError s!"Constant `{funTransName}` is not a valid function transformation. Maybe it is missing an attribute, fix by adding `attribute [fun_trans_def] {funTransName}`"
@@ -128,7 +128,7 @@ def isIdRule (rule : Expr) : MetaM Bool :=
     let (_, F) ← getFunTransEq eq
 
     lambdaTelescope F λ xs b => do
-      
+
       if xs.size ≠ 1 then
         return false
 
@@ -139,8 +139,8 @@ def isIdRule (rule : Expr) : MetaM Bool :=
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
-      if explicitArgs.size≠1 || 
+
+      if explicitArgs.size≠1 ||
          explicitArgs[0]! != X then
          throwError "Id rule expects exacly one explicit argument `{← ppExpr X}`!"
 
@@ -152,7 +152,7 @@ def isConstRule (rule : Expr) : MetaM Bool :=
   forallTelescope rule λ contextVars eq => do
 
     let (_, F) ← getFunTransEq eq
-    
+
     lambdaTelescope F λ xs b => do
 
       if xs.size ≠ 1 then
@@ -165,7 +165,7 @@ def isConstRule (rule : Expr) : MetaM Bool :=
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
+
       if explicitArgs.size≠2 ||
          explicitArgs[0]! != Y ||
          explicitArgs[1]! != x then
@@ -179,7 +179,7 @@ def isCompRule (rule : Expr) : MetaM Bool :=
   forallTelescope rule λ contextVars eq => do
 
     let (_, F) ← getFunTransEq eq
-    
+
     lambdaTelescope F λ xs b => do
 
       if xs.size ≠ 1 then
@@ -195,17 +195,17 @@ def isCompRule (rule : Expr) : MetaM Bool :=
       let f : Q($Y → $Z) := f
       let g : Q($X → $Y) := (b.getArg! 0).getAppFn
 
-      try 
+      try
         let b' := q($f ($g $x))
 
         if ¬(← isDefEq b' b) then
           return false
 
-      catch _ => 
+      catch _ =>
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
+
       if explicitArgs.size≠2 ||
          explicitArgs[0]! != f ||
          explicitArgs[1]! != g then
@@ -220,7 +220,7 @@ def isSwapRule (rule : Expr) : MetaM Bool :=
   forallTelescope rule λ contextVars eq => do
 
     let (_, F) ← getFunTransEq eq
-    
+
     lambdaTelescope F λ xs b => do
 
       if xs.size ≠ 2 then
@@ -237,14 +237,14 @@ def isSwapRule (rule : Expr) : MetaM Bool :=
 
       let b' := q($f $x $y)
 
-      try 
+      try
         if ¬(← isDefEq b' b) then
           return false
       catch _ =>
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
+
       if explicitArgs.size≠1 ||
          explicitArgs[0]! != f then
          throwError "Const rule expects exacly one explicit argument `{← ppExpr f}`!"
@@ -258,7 +258,7 @@ def isEvalRule (rule : Expr) : MetaM Bool :=
   forallTelescope rule λ contextVars eq => do
 
     let (_, F) ← getFunTransEq eq
-    
+
     lambdaTelescope F λ xs b => do
 
       if xs.size ≠ 1 then
@@ -272,22 +272,22 @@ def isEvalRule (rule : Expr) : MetaM Bool :=
 
       let b' := q($f $a)
 
-      try 
+      try
         if ¬(← isDefEq b' b) then
           return false
-      catch _ => 
+      catch _ =>
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
-      if explicitArgs.size≠2 || 
+
+      if explicitArgs.size≠2 ||
          explicitArgs[0]! != X ||
          explicitArgs[1]! != a then
          throwError "Comp rule expects exacly two explicit arguments `{← ppExpr X}` and `{← ppExpr a}`!"
 
       return true
 
-/-- Is `rule` equal to (modulo some implicit arguments) `∀ (f : α → X → Y), T (fun (g : α → X) (a : α) => f a (g a) = ...` ? 
+/-- Is `rule` equal to (modulo some implicit arguments) `∀ (f : α → X → Y), T (fun (g : α → X) (a : α) => f a (g a) = ...` ?
   On success returns `f, h` -/
 def isPiMapRule (rule : Expr) : MetaM Bool := do
 
@@ -315,14 +315,14 @@ def isPiMapRule (rule : Expr) : MetaM Bool := do
 
       let b' := q($f $a ($g $a))
 
-      try 
+      try
         if ¬(← isDefEq b' b) then
           return false
-      catch _ => 
+      catch _ =>
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
+
       if explicitArgs.size≠1 ||
          explicitArgs[0]! != f then
          throwError "PiMap rule expects exacly one explicit argument `{← ppExpr f}`!"
@@ -330,7 +330,7 @@ def isPiMapRule (rule : Expr) : MetaM Bool := do
       return true
 
 
-/-- Is `rule` equal to (modulo some implicit arguments) `∀ (f : α → (β → X) → X → Y) (h : α → β), T (fun (g : β → X) (a : α) => f a g (g (h a)) = ...` ? 
+/-- Is `rule` equal to (modulo some implicit arguments) `∀ (f : α → (β → X) → X → Y) (h : α → β), T (fun (g : β → X) (a : α) => f a g (g (h a)) = ...` ?
   On success returns `f, h` -/
 def isPiMapCompRule (rule : Expr) : MetaM Bool := do
 
@@ -339,7 +339,7 @@ def isPiMapCompRule (rule : Expr) : MetaM Bool := do
     let (_, F) ← getFunTransEq eq
 
     lambdaTelescope F λ xs b => do
-      
+
       if xs.size ≠ 2 then
         return false
 
@@ -367,8 +367,8 @@ def isPiMapCompRule (rule : Expr) : MetaM Bool := do
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
-      if explicitArgs.size≠2 || 
+
+      if explicitArgs.size≠2 ||
          explicitArgs[0]! != f ||
          explicitArgs[1]! != h then
          throwError "PiMapComp rule expects exacly two explicit arguments `{← ppExpr f}` and `{← ppExpr h}`!"
@@ -382,7 +382,7 @@ def isProdMapRule (rule : Expr) : MetaM Bool :=
   forallTelescope rule λ contextVars eq => do
 
     let (_, F) ← getFunTransEq eq
-    
+
     lambdaTelescope F λ xs b => do
 
       if xs.size ≠ 1 then
@@ -406,7 +406,7 @@ def isProdMapRule (rule : Expr) : MetaM Bool :=
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
+
       if explicitArgs.size≠2 ||
          explicitArgs[0]! != f ||
          explicitArgs[1]! != g then
@@ -421,7 +421,7 @@ def isLetCompRule (rule : Expr) : MetaM Bool :=
   forallTelescope rule λ contextVars eq => do
 
     let (_, F) ← getFunTransEq eq
-    
+
     lambdaTelescope F λ xs b => do
 
       if xs.size ≠ 1 then
@@ -451,7 +451,7 @@ def isLetCompRule (rule : Expr) : MetaM Bool :=
 
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
+
       if explicitArgs.size≠2 ||
          explicitArgs[0]! != f ||
          explicitArgs[1]! != g then
@@ -460,12 +460,12 @@ def isLetCompRule (rule : Expr) : MetaM Bool :=
       return true
 
 /-- Is `rule` equal to (modulo implicit arguments) `∀ (f : Y → Z) (g : X → Y), T λ (x : X) => let y := g x; f x y = ...`? -/
-def isLetBinopRule (rule : Expr) : MetaM Bool := 
+def isLetBinopRule (rule : Expr) : MetaM Bool :=
 
   forallTelescope rule λ contextVars eq => do
 
     let (_, F) ← getFunTransEq eq
-    
+
     lambdaTelescope F λ xs b => do
 
       if xs.size ≠ 1 then
@@ -490,8 +490,8 @@ def isLetBinopRule (rule : Expr) : MetaM Bool :=
         return false
 
       let explicitArgs ← contextVars.filterM (λ x => do pure (← x.fvarId!.getBinderInfo).isExplicit)
-      
-      if explicitArgs.size≠2 || 
+
+      if explicitArgs.size≠2 ||
          explicitArgs[0]! != f ||
          explicitArgs[1]! != g then
          throwError "LetBinop rule expects exacly two explicit arguments `{← ppExpr f}` and `{← ppExpr g}`!"
@@ -499,13 +499,13 @@ def isLetBinopRule (rule : Expr) : MetaM Bool :=
       return true
 
 open Lean Qq Meta Elab Term in
-initialize funTransRuleAttr : TagAttribute ← 
-  registerTagAttribute 
+initialize funTransRuleAttr : TagAttribute ←
+  registerTagAttribute
     `fun_trans_rule
-    "Attribute to tag the basic rules for a function transformation." 
+    "Attribute to tag the basic rules for a function transformation."
     (validate := fun name => do
-      let env ← getEnv 
-      let .some info := env.find? name 
+      let env ← getEnv
+      let .some info := env.find? name
         | throwError s!"Can't find a constant named `{name}`!"
 
       let rule := info.type
@@ -515,48 +515,48 @@ initialize funTransRuleAttr : TagAttribute ←
         let funTransName ← forallTelescope rule λ _ eq => do
           pure (← getFunTransEq eq).fst
 
-        if ← isIdRule rule then 
+        if ← isIdRule rule then
           insertFunTransRule funTransName .id name
           return ()
 
-        if ← isConstRule rule then 
+        if ← isConstRule rule then
           insertFunTransRule funTransName .const name
           return ()
 
-        if ← isCompRule rule then 
+        if ← isCompRule rule then
           insertFunTransRule funTransName .comp name
           return ()
 
-        if ← isSwapRule rule then 
+        if ← isSwapRule rule then
           insertFunTransRule funTransName .swap name
           return ()
 
-        if ← isEvalRule rule then 
+        if ← isEvalRule rule then
           insertFunTransRule funTransName .eval name
           return ()
 
-        if ← isPiMapRule rule then 
+        if ← isPiMapRule rule then
           insertFunTransRule funTransName .piMap name
           return ()
 
-        if ← isPiMapCompRule rule then 
+        if ← isPiMapCompRule rule then
           insertFunTransRule funTransName .piMapComp name
           return ()
 
-        if ← isProdMapRule rule then 
+        if ← isProdMapRule rule then
           insertFunTransRule funTransName .prodMap name
           return ()
 
-        if ← isLetCompRule rule then 
+        if ← isLetCompRule rule then
           insertFunTransRule funTransName .letComp name
           return ()
 
-        if ← isLetBinopRule rule then 
+        if ← isLetBinopRule rule then
           insertFunTransRule funTransName .letBinop name
           return ()
 
         throwError s!"Unrecognised function transformation rule!\nPossible forms of a rule are:\n{FunTransRuleType.all.map (λ rule => ("  " ++ toString funTransName ++ " " ++ rule.expectedForm ++ '\n'.toString)) |> String.join}"
-      )           
+      )
 
 
 -- Function propositions are currently solved via type class resolutio

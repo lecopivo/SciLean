@@ -9,7 +9,7 @@ namespace Prism
 
 -- The result is a pair:
 --   1. element is point,segment or triangle
---   2. element is position of the closets point in the local coordinates 
+--   2. element is position of the closets point in the local coordinates
 -- -/
 def closestOnTriangle (x : ℝ^{2}) (fromRef toRef : ℝ^{2} → ℝ^{2}) : (f : Face triangle) × ℝ^{f.dim} :=
   let y := toRef x
@@ -32,7 +32,7 @@ def closestOnTriangle (x : ℝ^{2}) (fromRef toRef : ℝ^{2} → ℝ^{2}) : (f :
     else if 1 ≤ t then
       -- point 1
       Sigma.mk triangle.point1.toFace 0
-    else 
+    else
       -- edge 0
       let t : ℝ^{1} := λ [i] => t
       Sigma.mk triangle.edge0.toFace t
@@ -48,7 +48,7 @@ def closestOnTriangle (x : ℝ^{2}) (fromRef toRef : ℝ^{2} → ℝ^{2}) : (f :
     else if 1 ≤ t then
       -- point 2
       Sigma.mk triangle.point2.toFace 0
-    else 
+    else
       -- edge 1
       let t : ℝ^{1} := λ [i] => t
       Sigma.mk triangle.edge1.toFace t
@@ -63,24 +63,24 @@ def closestOnTriangle (x : ℝ^{2}) (fromRef toRef : ℝ^{2} → ℝ^{2}) : (f :
     else if 1 ≤ t then
       -- point 2
       Sigma.mk triangle.point2.toFace 0
-    else 
+    else
       -- edge 2
       let t : ℝ^{1} := λ [i] => t
       Sigma.mk triangle.edge2.toFace t
-  else 
+  else
     Sigma.mk triangle.topFace y
 
-  
-/-- Finds the closest point to `x` on the prism `P` that is linearly deformed by `fromRef` 
+
+/-- Finds the closest point to `x` on the prism `P` that is linearly deformed by `fromRef`
 
 The output is pair (f, y) where `f` is the face of `P` on which the closest point lies and `y` is the location of the closets poin in local coordinates
 -/
-def closestPoint (P : Prism) (x : P.Space) (fromRef toRef : P.Space → P.Space) : (f : Face P) × ℝ^{f.dim} := 
+def closestPoint (P : Prism) (x : P.Space) (fromRef toRef : P.Space → P.Space) : (f : Face P) × ℝ^{f.dim} :=
   match P with
   | ⟨.point, _⟩ =>
     Sigma.mk ⟨.point, sorry_proof, sorry_proof⟩ 0
 
-  | ⟨.cone .point, _⟩ => 
+  | ⟨.cone .point, _⟩ =>
     let y : ℝ^{1} := toRef x
     if y[0] ≤ 0 then
       Sigma.mk segment.point0.toFace.anyDim 0
@@ -89,10 +89,8 @@ def closestPoint (P : Prism) (x : P.Space) (fromRef toRef : P.Space → P.Space)
     else
       Sigma.mk segment.topFace.anyDim y
 
-  | ⟨.cone (.cone .point), _⟩ => closestOnTriangle x fromRef toRef 
+  | ⟨.cone (.cone .point), _⟩ => closestOnTriangle x fromRef toRef
 
   | _ => panic! s!"Closest point is not implemented for prism {P}!"
 
 -- def closestOnSegment (x : ℝ) (fromRef toRef : ℝ^
-
-

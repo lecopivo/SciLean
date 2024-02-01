@@ -34,7 +34,7 @@ def splitParms (parms : Array Syntax) (name : Name) : MacroM (Array Syntax × Sy
   for p in parms do
     if found then
       postParms := postParms.push p
-    else if ((p[1].getIdAt 0) != name) then 
+    else if ((p[1].getIdAt 0) != name) then
       preParms := preParms.push p
     else
       found := true
@@ -58,25 +58,25 @@ def getExplicitArgs (binders : Array Syntax) : (Array Syntax) := Id.run do
 ---    b       = `([Vec X])
 ---
 ---  output is: `((X : Type) [Vec X] (x : X))
-def addBinder (binders : TSyntaxArray `Lean.Parser.Term.bracketedBinder) (b : TSyntax `Lean.Parser.Term.bracketedBinder) 
+def addBinder (binders : TSyntaxArray `Lean.Parser.Term.bracketedBinder) (b : TSyntax `Lean.Parser.Term.bracketedBinder)
   : TSyntaxArray `Lean.Parser.Term.bracketedBinder := Id.run do
   let n := binders.size
 
   for i in [0:n] do
     for p in binders[n-i-1]!.raw[1].getArgs do
       match b.raw.find? (λ q => q == p) with
-      | some _ => 
+      | some _ =>
         return binders.insertAt ⟨n - i, sorry⟩ b
       | none   =>
         continue
-    
+
   binders.push b
 
 
--- def addBinders (binders : Array Syntax) (bs : Array Syntax) : Array Syntax := 
+-- def addBinders (binders : Array Syntax) (bs : Array Syntax) : Array Syntax :=
 --   bs.foldr (λ b binders => addBinder binders b) binders
 
-def addBinders (binders bs : TSyntaxArray `Lean.Parser.Term.bracketedBinder) : TSyntaxArray `Lean.Parser.Term.bracketedBinder := 
+def addBinders (binders bs : TSyntaxArray `Lean.Parser.Term.bracketedBinder) : TSyntaxArray `Lean.Parser.Term.bracketedBinder :=
   Array.foldr (λ b binders => addBinder binders b) binders bs
 
 declare_syntax_cat argProp (behavior := both)
@@ -89,18 +89,18 @@ j
 -- This seems overly complicated
 -- TODO: incorporate `argParms into `parms before calling `argument_property
 ---      This way you do not have to deal with `argParms when defining cusom `argument_property
-macro_rules 
-| `(function_properties $id:ident $parms:bracketedBinder* : $retType 
+macro_rules
+| `(function_properties $id:ident $parms:bracketedBinder* : $retType
     argument $x:ident $argParms:bracketedBinder* $prop:argProp) =>
 
     let allParms := addBinders parms argParms
     `(argument_property $x:ident $id:ident $allParms:bracketedBinder* : $retType where $prop)
 
-| `(function_properties $id:ident $parms:bracketedBinder* : $retType 
+| `(function_properties $id:ident $parms:bracketedBinder* : $retType
     argument $x:ident $argParms:bracketedBinder* $props:argProp,* , $prop:argProp) => do
 
     let allParms := addBinders parms argParms
-    `(function_properties $id:ident $parms:bracketedBinder* : $retType 
+    `(function_properties $id:ident $parms:bracketedBinder* : $retType
       argument $x $argParms* $props.getElems:argProp,*
       argument_property $x:ident $id:ident $allParms:bracketedBinder* : $retType where $prop)
 

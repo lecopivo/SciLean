@@ -27,8 +27,8 @@ def tacticToDischarge (tacticCode : Syntax) : Expr → MetaM (Option Expr) := fu
             return some result
       catch _ =>
         return none
-    let (result?, _) ← runTac?.run {} {} 
-    
+    let (result?, _) ← runTac?.run {} {}
+
     return result?
 
 
@@ -47,8 +47,8 @@ def synthesizeInstance (thmId : Origin) (x type : Expr) : MetaM Bool := do
     return false
 
 
-def synthesizeArgs (thmId : Origin) (xs : Array Expr) (bis : Array BinderInfo) 
-  (discharge? : Expr → FPropM (Option Expr)) (fprop : Expr → FPropM (Option Expr)) 
+def synthesizeArgs (thmId : Origin) (xs : Array Expr) (bis : Array BinderInfo)
+  (discharge? : Expr → FPropM (Option Expr)) (fprop : Expr → FPropM (Option Expr))
   : FPropM Bool := do
   for x in xs, bi in bis do
     let type ← inferType x
@@ -75,7 +75,7 @@ def synthesizeArgs (thmId : Origin) (xs : Array Expr) (bis : Array BinderInfo)
       if (← isProp type) then
         if let .some proof ← discharge? type then
           if (← isDefEq x proof) then
-            continue 
+            continue
           else do
             trace[Meta.Tactic.fprop.discharge] "{← ppOrigin thmId}, failed to assign proof{indentExpr type}"
             return false
@@ -86,7 +86,7 @@ def synthesizeArgs (thmId : Origin) (xs : Array Expr) (bis : Array BinderInfo)
   return true
 
 
-def tryTheoremCore (xs : Array Expr) (bis : Array BinderInfo) (val : Expr) (type : Expr) (e : Expr) (thm : SimpTheorem) 
+def tryTheoremCore (xs : Array Expr) (bis : Array BinderInfo) (val : Expr) (type : Expr) (e : Expr) (thm : SimpTheorem)
   (discharge? : Expr → FPropM (Option Expr)) (fprop : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
   if (← isDefEq type e) then
     unless (← synthesizeArgs thm.origin xs bis discharge? fprop) do
@@ -102,7 +102,7 @@ def tryTheoremCore (xs : Array Expr) (bis : Array BinderInfo) (val : Expr) (type
     return none
 
 
-def tryTheorem?' (e : Expr) (thm : SimpTheorem) 
+def tryTheorem?' (e : Expr) (thm : SimpTheorem)
   (discharge? : Expr → FPropM (Option Expr)) (fprop : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
   withNewMCtxDepth do
     let val  ← thm.getValue
@@ -118,7 +118,7 @@ def getLocalRules (fpropName : Name) : MetaM (Array SimpTheorem) := do
   let lctx ← getLCtx
   for var in lctx do
     let type ← instantiateMVars var.type
-    
+
     -- TODO: maybe beta reduce type or call whnf
     if (type.getForallBody.getAppFn.constName? == .some fpropName) &&
        (var.kind ≠ Lean.LocalDeclKind.auxDecl) then
@@ -139,7 +139,7 @@ structure LocalRule where
 def toFullyAppliedForm (f : Expr) : MetaM Expr := do
   lambdaTelescope f fun xs b => do
     let b ← whnf b
-    withDefault do forallTelescopeReducing (← inferType b) fun xs' _ => 
+    withDefault do forallTelescopeReducing (← inferType b) fun xs' _ =>
       mkLambdaFVars (xs++xs') (mkAppN b xs').headBeta
 
 private def getLocalDef? (id : FVarId) : MetaM (Option LocalDecl) := do
@@ -150,7 +150,7 @@ private def getLocalDef? (id : FVarId) : MetaM (Option LocalDecl) := do
          return .some decl
      return none
 
-/-- Does `e` contain fvar that has local definition? i.e. local hypothesis that 
+/-- Does `e` contain fvar that has local definition? i.e. local hypothesis that
 `fvar id = ...`
 
 If it contains such fvar, replace it with its definition and return modified
@@ -179,11 +179,11 @@ def tryAfterFVarUnfold? (e : Expr) (fprop : Expr → FPropM (Option Expr)) : FPr
   let .some (e',he) ← unfoldFVar? e | return none
 
   let .some prf ← fprop e' | return none
-  
+
   return ← mkEqMPR he prf
 
-    
-def tryLocalTheorems (e : Expr) (fpropName : Name) (ext : FPropExt) 
+
+def tryLocalTheorems (e : Expr) (fpropName : Name) (ext : FPropExt)
   (fprop : Expr → FPropM (Option Expr))
   : FPropM (Option Expr) := do
 
@@ -206,7 +206,7 @@ def getLocalRulesForFVar (fId : FVarId) (fpropName : Name) (ext : FPropExt) : Me
 
     let type ← instantiateMVars var.type
 
-    let rule? : Option LocalRule ← 
+    let rule? : Option LocalRule ←
       forallTelescopeReducing var.type fun xs type => do
         if ¬(type.isAppOf' fpropName) then
           return none
@@ -222,7 +222,7 @@ def getLocalRulesForFVar (fId : FVarId) (fpropName : Name) (ext : FPropExt) : Me
             trailingIds := info.trailingIds
           }
         pure none
-    
+
     let .some rule := rule?
       | continue
 
@@ -251,7 +251,7 @@ def bvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPro
   if x.hasLooseBVars then
     trace[Meta.Tactic.fprop.step] "bvar app case can't handle functions like {← ppExpr f}"
     return none
-  
+
   if g == .bvar 0 then
     ext.projRule e
   else
@@ -267,7 +267,7 @@ def bvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) : FPro
 
 def evalSplit (e : Expr) : MetaM (Option (Expr×Expr)) := do
   match e with
-  | .lam xName xType (.app f x) xBi => 
+  | .lam xName xType (.app f x) xBi =>
     if x.hasLooseBVars then
       return none
     withLocalDecl xName xBi xType fun xVar => do
@@ -281,7 +281,7 @@ def evalSplit (e : Expr) : MetaM (Option (Expr×Expr)) := do
       return (f', g')
   | _ => return none
 
-def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) 
+def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr)
   (fprop : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
   let (f', g') ← splitLambdaToComp f
 
@@ -291,17 +291,17 @@ def fvarAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr)
     -- -- this is a bit of a hack
     -- if let .some (f', g') ← evalSplit f then
     --   trace[Meta.Tactic.fprop.step] "fvar app case: decomposed into `({← ppExpr f'}) ∘ ({← ppExpr g'})`"
-    --   let step? ← 
+    --   let step? ←
     --     try
     --       ext.compRule e f' g'
-    --     catch e => 
+    --     catch e =>
     --       pure none
     --   let .some step := step? | pure ()
     --   return step
-      
+
     trace[Meta.Tactic.fprop.step] "fvar app case: trivial"
     let step? ← tryLocalTheorems e fpropName ext fprop
-    
+
     if let .some step := step? then
       return step
 
@@ -321,8 +321,8 @@ def letCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) (fprop : E
     let yType  := yType.consumeMData
     let yValue := yValue.consumeMData
     let yBody  := yBody.consumeMData
-    -- We perform reduction because the type is quite often of the form 
-    -- `(fun x => Y) #0` which is just `Y` 
+    -- We perform reduction because the type is quite often of the form
+    -- `(fun x => Y) #0` which is just `Y`
     -- Usually this is caused by the usage of `FunLike`
     let yType := yType.headBeta
     if (yType.hasLooseBVar 0) then
@@ -340,13 +340,13 @@ def letCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) (fprop : E
       let g := Expr.lam xName xType yValue default
       ext.lambdaLetRule e f g
 
-    | true, false => 
+    | true, false =>
       trace[Meta.Tactic.fprop.step] "case let simple\n{← ppExpr e}"
       let f := Expr.lam yName yType yBody default
       let g := Expr.lam xName xType yValue default
       ext.compRule e f g
 
-    | false, _ => 
+    | false, _ =>
       let f := Expr.lam xName xType (yBody.lowerLooseBVars 1 1) xBi
       fprop (ext.replaceFPropFun e f)
 
@@ -354,7 +354,7 @@ def letCase (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) (fprop : E
   | _ => throwError "expected expression of the form `fun x => lam y := ..; ..`"
 
 
-def constAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (funName : Name) 
+def constAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (funName : Name)
   (fprop : Expr → FPropM (Option Expr))
   : FPropM (Option Expr) := do
 
@@ -372,8 +372,8 @@ def constAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (funName : Name)
   else
     if let .some proof ← tryLocalTheorems e fpropName ext fprop then
       return proof
-    else 
-      -- unfold definition if there are for candidate 
+    else
+      -- unfold definition if there are for candidate
       trace[Meta.Tactic.fprop.step] "no theorems found for {funName}"
       let unfoldProof? : Option Expr ← do
         let .some f := ext.getFPropFun? e | return none
@@ -388,12 +388,12 @@ def constAppCase (e : Expr) (fpropName : Name) (ext : FPropExt) (funName : Name)
 
 /-- Try to prove `FProp fun x => f x i` as composition `fun f => f i` `fun x => f x`
 -/
-def tryRemoveArg (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr) 
+def tryRemoveArg (e : Expr) (fpropName : Name) (ext : FPropExt) (f : Expr)
   (fprop : Expr → FPropM (Option Expr)) : FPropM (Option Expr) := do
   match f with
   | .lam xName xType (.app g a) xBi => do
 
-    if a.hasLooseBVars then 
+    if a.hasLooseBVars then
       return none
 
     withLocalDecl xName xBi xType fun x => do
@@ -415,7 +415,7 @@ def cache (e : Expr) (proof? : Option Expr) : FPropM (Option Expr) := -- return 
 
 
 -- returns proof of expression like given expression like `Differentiable K fun x => f x`
-mutual 
+mutual
   partial def fprop (e : Expr) : FPropM (Option Expr) := do
 
     -- this is for testing whether mdata cause problems or not
@@ -426,23 +426,23 @@ mutual
       return proof
     else
       match e with
-      | .letE .. => 
+      | .letE .. =>
         letTelescope e fun xs b => do
           let .some proof ← fprop b
             | return none
           cache e (← mkLambdaFVars xs proof)
-      | .forallE .. => 
+      | .forallE .. =>
         forallTelescope e fun xs b => do
           let .some proof ← fprop b
             | return none
           cache e (← mkLambdaFVars xs proof)
       | .mdata _ e' => fprop e'
       | .mvar _ => instantiateMVars e >>= fprop
-      | _ => 
+      | _ =>
         let .some proof ← main e
           | return none
         cache e proof
-        
+
 
   partial def main (e : Expr) : FPropM (Option Expr) := do
 
@@ -452,22 +452,22 @@ mutual
     let f := f.consumeMData
 
     match f with
-    | .letE .. => letTelescope f fun xs b => do 
+    | .letE .. => letTelescope f fun xs b => do
       trace[Meta.Tactic.fprop.step] "case let x := ..; ..\n{← ppExpr e}"
       let e' := ext.replaceFPropFun e b
       fprop (← mkLambdaFVars xs e')
 
-    | .lam xName xType xBody xBi => 
+    | .lam xName xType xBody xBi =>
 
       match xBody.consumeMData.headBeta.consumeMData with
-      | (.bvar 0) => 
+      | (.bvar 0) =>
         trace[Meta.Tactic.fprop.step] "case id\n{← ppExpr e}"
         ext.identityRule e
 
-      | .letE .. => 
+      | .letE .. =>
         letCase e fpropName ext f fprop
 
-      | .lam  .. => 
+      | .lam  .. =>
         trace[Meta.Tactic.fprop.step] "case pi\n{← ppExpr e}"
         ext.lambdaLambdaRule e f
 
@@ -477,15 +477,15 @@ mutual
         if !(xBody.hasLooseBVar 0) then
           trace[Meta.Tactic.fprop.step] "case const\n{← ppExpr e}"
           ext.constantRule e
-        else 
+        else
           let f' := Expr.lam xName xType xBody xBi
           let g := xBody.getAppFn'
 
-          match g with 
-          | .fvar .. => 
+          match g with
+          | .fvar .. =>
             trace[Meta.Tactic.fprop.step] "case fvar app `{← ppExpr g}`\n{← ppExpr e}"
             fvarAppCase e fpropName ext f' fprop
-          | .bvar .. => 
+          | .bvar .. =>
             trace[Meta.Tactic.fprop.step] "case bvar app\n{← ppExpr e}"
             bvarAppCase e fpropName ext f'
           | .proj typeName idx _ => do
@@ -502,9 +502,9 @@ mutual
 
             trace[Meta.Tactic.fprop.step] "case const app `{← ppExpr g}`.\n{← ppExpr e}"
             constAppCase e fpropName ext funName fprop
-          | .mvar .. => 
+          | .mvar .. =>
             fprop (← instantiateMVars e)
-          | _ => 
+          | _ =>
             trace[Meta.Tactic.fprop.step] "unknown case, app function {← ppExpr g} has constructor: {g.ctorName} \n{← ppExpr e}\n"
             tryLocalTheorems e fpropName ext fprop
 
@@ -519,20 +519,20 @@ mutual
       let .some projName := info.getProjFn? idx | return none
       constAppCase e fpropName ext projName fprop
 
-    | f => 
+    | f =>
       match f.getAppFn.consumeMData with
-      | .const funName _ => 
+      | .const funName _ =>
         -- do we have to worry about overly applied constants here? and try to apply tryRemoveArg
         trace[Meta.Tactic.fprop.step] "case const app `{funName}.\n{← ppExpr e}"
         constAppCase e fpropName ext funName fprop
       | .mvar _ => do
         fprop (← instantiateMVars e)
-      | g => 
+      | g =>
         trace[Meta.Tactic.fprop.step] "unknown case, expression app fn {← ppExpr g} has constructor: {g.ctorName}  \n{← ppExpr e}\n"
         tryLocalTheorems e fpropName ext fprop
 
 end
 
 
-def tryTheorem? (e : Expr) (thm : SimpTheorem) (discharge? : Expr → FPropM (Option Expr)) 
+def tryTheorem? (e : Expr) (thm : SimpTheorem) (discharge? : Expr → FPropM (Option Expr))
   : FPropM (Option Expr) := tryTheorem?' e thm discharge? fprop

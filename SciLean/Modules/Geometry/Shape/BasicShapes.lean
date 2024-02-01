@@ -12,7 +12,7 @@ namespace SciLean
 
 namespace Shape
 
--- A great inspiration for this file is this amazing argicle on basic shapes and 
+-- A great inspiration for this file is this amazing argicle on basic shapes and
 -- their distance function: https://iquilezles.org/articles/distfunctions/
 
 ------------------------------------------------------------------------------
@@ -23,20 +23,20 @@ structure AxisAlignedBoxAtOrigin.Params (X) {ι : Type} {_:Enumtype ι} [FinVec 
   radius : ℝ^ι
   radius_valid : ∀ i, 0 ≤ radius[i] -- we do not want empty box
 
-def AxisAlignedBoxAtOrigin.toSet {X ι : Type} [Enumtype ι] [FinVec X ι] (p : Params X) (x : X) : Prop := 
+def AxisAlignedBoxAtOrigin.toSet {X ι : Type} [Enumtype ι] [FinVec X ι] (p : Params X) (x : X) : Prop :=
   ∀ i : ι, (Real.abs (𝕡 i x)) ≤ p.radius[i]
 
 abbrev AxisAlignedBoxAtOrigin (X : Type) {ι} {_ : Enumtype ι} [FinVec X ι] := Shape (AxisAlignedBoxAtOrigin.toSet (X:=X) (ι:=ι))
 
 abbrev AxisAlignedBox (X : Type) {ι} {_:Enumtype ι} [FinVec X ι] := Shape (translatedSet (AxisAlignedBoxAtOrigin.toSet (X:=X) (ι:=ι)))
 
-abbrev Box (X R : Type) {ι} {_:Enumtype ι} [FinVec X ι] [Group R] [LieGroup.SO R X] 
+abbrev Box (X R : Type) {ι} {_:Enumtype ι} [FinVec X ι] [Group R] [LieGroup.SO R X]
   := Shape (rigidTransformSet R (AxisAlignedBoxAtOrigin.toSet (X:=X) (ι:=ι)))
 
-def mkAxisAlignedBox {X : Type} {ι} {_:Enumtype ι} [FinVec X ι] (min max : X) 
-  : AxisAlignedBox X := 
-  let p : AxisAlignedBoxAtOrigin.Params X := 
-    { 
+def mkAxisAlignedBox {X : Type} {ι} {_:Enumtype ι} [FinVec X ι] (min max : X)
+  : AxisAlignedBox X :=
+  let p : AxisAlignedBoxAtOrigin.Params X :=
+    {
       radius := ⊞ i, (0.5 : ℝ) * (𝕡 i max - 𝕡 i min).abs
       radius_valid := sorry
     }
@@ -79,14 +79,14 @@ namespace AxisAlignedBoxAtOrigin
 
       return cornerDist.sqrt + sideDist.min 0
     is_sdf := sorry
-  
+
   instance : HasReflect (toSet (X:=X) (ι:=ι)) where
     trans := λ p => p
     is_trans := sorry
 
-  instance : HasScale (toSet (X:=X) (ι:=ι)) := λ s => 
+  instance : HasScale (toSet (X:=X) (ι:=ι)) := λ s =>
   {
-    trans := λ ⟨p, h⟩ => 
+    trans := λ ⟨p, h⟩ =>
       {
         radius := ⊞ i, s.abs * p[i]
         radius_valid := sorry
@@ -102,7 +102,7 @@ end AxisAlignedBoxAtOrigin
 ------------------------------------------------------------------------------
 
 structure BallAtOrigin.Params (X : Type) [Hilbert X] where
-  radius : ℝ 
+  radius : ℝ
   radius_valid : 0 ≤ radius
 
 namespace BallAtOrigin.Params
@@ -111,13 +111,13 @@ namespace BallAtOrigin.Params
 
   def sdf (x : X) := ‖x‖ - p.radius
 
-  def sdfGrad (x : X) := (∇ (sdf p) x) 
+  def sdfGrad (x : X) := (∇ (sdf p) x)
     rewrite_by
       unfold sdf; unfold gradient
       unsafe_ad
       fun_trans
 
-  def sdfHess (x : X) (u v : X) := (∂ (∂ (sdf p)) x u v) 
+  def sdfHess (x : X) (u v : X) := (∂ (∂ (sdf p)) x u v)
     rewrite_by
       unfold sdf; unfold gradient
       unsafe_ad
@@ -127,29 +127,29 @@ namespace BallAtOrigin.Params
 
   def levelSet (x : X) := ‖x‖² - p.radius^2
 
-  def levelSetGrad (x : X) := (∇ (levelSet p) x) 
+  def levelSetGrad (x : X) := (∇ (levelSet p) x)
     rewrite_by
       unfold levelSet; unfold gradient
       fun_trans
 
-  def levelSetHess (x u v: X) := (∂ (∂ (levelSet p)) x u v) 
+  def levelSetHess (x u v: X) := (∂ (∂ (levelSet p)) x u v)
     rewrite_by
       unfold levelSet; unfold gradient
       fun_trans; simp; fun_trans
 
 end BallAtOrigin.Params
 
-def BallAtOrigin.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop := 
+def BallAtOrigin.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop :=
   ‖x‖ ≤ p.radius
 
 abbrev BallAtOrigin (X : Type) {ι : Type} {_ : Enumtype ι} [FinVec X ι] := Shape (BallAtOrigin.toSet (X:=X))
 
-def mkBallAtOrigin (X) {ι} {_:Enumtype ι} [FinVec X ι] (radius : ℝ) 
+def mkBallAtOrigin (X) {ι} {_:Enumtype ι} [FinVec X ι] (radius : ℝ)
   : BallAtOrigin X := ⟨radius.abs, sorry⟩
 
 abbrev Ball (X) {ι} {_:Enumtype ι} [FinVec X ι] := Shape (translatedSet (BallAtOrigin.toSet (X:=X)))
 
-def mkBall {X} {ι} {_:Enumtype ι} [FinVec X ι] (center : X) (radius : ℝ) 
+def mkBall {X} {ι} {_:Enumtype ι} [FinVec X ι] (center : X) (radius : ℝ)
   : Ball X := (mkBallAtOrigin X radius).mkTranslated center
 
 namespace BallAtOrigin
@@ -165,20 +165,20 @@ namespace BallAtOrigin
   instance : HasSdf (toSet (X:=X)) where
     sdf := λ s x => ‖x‖ - s.params.radius
     is_sdf := sorry
-  
+
   instance : HasReflect (toSet (X:=X)) where
     trans := λ p => p
     is_trans := sorry
 
-  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r => 
+  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r =>
   {
     trans := λ p => p
     is_trans := sorry
    }
 
-  instance : HasScale (toSet (X:=X)) := λ s => 
+  instance : HasScale (toSet (X:=X)) := λ s =>
   {
-    trans := λ ⟨r, h⟩ => 
+    trans := λ ⟨r, h⟩ =>
       {
         radius := s.abs * r
         radius_valid := sorry
@@ -202,10 +202,10 @@ def Capsule.sdf {X} [Hilbert X] (a b : X) (r : ℝ) (x : X) : ℝ :=
   let xa := x - a
   let ba := (b - a)
   let ba := (1/‖ba‖) • ba
-  let h := ⟪xa, ba⟫.clamp 0 1 
+  let h := ⟪xa, ba⟫.clamp 0 1
   ‖xa - h•ba‖ - r
 
-def Capsule.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop := 
+def Capsule.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop :=
   Capsule.sdf p.point1 p.point2 p.radius x ≤ 0
 
 abbrev Capsule (X ι : Type) [Enumtype ι] [FinVec X ι] := Shape (Capsule.toSet (X:=X))
@@ -215,27 +215,27 @@ namespace Capsule
   variable {X} [Hilbert X]
 
   instance : HasLevelSet (toSet (X:=X)) where
-    levelSet := λ s x => 
+    levelSet := λ s x =>
       let xa := x - s.params.point1
       let ba := (s.params.point2 - s.params.point1)
       let ba := (1/‖ba‖) • ba
-      let h := ⟪xa, ba⟫.clamp 0 1 
+      let h := ⟪xa, ba⟫.clamp 0 1
       ‖xa - h•ba‖² - s.params.radius.1^2
     is_level_set := sorry
 
   instance : HasLocate (toSet (X:=X)) := locateFromLevelSet
 
   instance : HasSdf (toSet (X:=X)) where
-    sdf := λ s x => 
+    sdf := λ s x =>
       let xa := x - s.params.point1
       let ba := (s.params.point2 - s.params.point1)
       let ba := (1/‖ba‖) • ba
-      let h := ⟪xa, ba⟫.clamp 0 1 
+      let h := ⟪xa, ba⟫.clamp 0 1
       ‖xa - h•ba‖ - s.params.radius
     is_sdf := sorry
-  
+
   instance : HasReflect (toSet (X:=X)) where
-    trans := λ p => 
+    trans := λ p =>
       {
         point1 := - p.point1
         point2 := - p.point2
@@ -243,9 +243,9 @@ namespace Capsule
       }
     is_trans := sorry
 
-  instance : HasTranslate (toSet (X:=X)) := λ t => 
+  instance : HasTranslate (toSet (X:=X)) := λ t =>
   {
-    trans := λ p => 
+    trans := λ p =>
       {
         point1 := p.point1 + t
         point2 := p.point2 + t
@@ -254,9 +254,9 @@ namespace Capsule
     is_trans := sorry
    }
 
-  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r => 
+  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r =>
   {
-    trans := λ p => 
+    trans := λ p =>
       {
         point1 := r • p.point1
         point2 := r • p.point2
@@ -282,7 +282,7 @@ structure RoundCone.Params (X : Type) [Hilbert X] where
   r2 : ℝ
   valid : 0 ≤ r1 ∧ 0 ≤ r2
 
-namespace RoundCone.Params 
+namespace RoundCone.Params
 
   variable {X} [Hilbert X] (p : RoundCone.Params X)
 
@@ -295,7 +295,7 @@ namespace RoundCone.Params
   def a2 := p.l2 - p.rr^2
   def il2 := 1.0 / p.l2
 
-  def sdf (x : X) := 
+  def sdf (x : X) :=
     let pa := x - p.a
     let y  := ⟪pa,p.ba⟫
     let z  := y - p.l2
@@ -304,11 +304,11 @@ namespace RoundCone.Params
     let z2 := z*z*p.l2
 
     let k := p.rr.sign*p.rr*p.rr*x2
-    if (z.sign*p.a2*z2 > k) then 
+    if (z.sign*p.a2*z2 > k) then
       (x2 + z2).sqrt * p.il2 - p.r2
-    else if (y.sign*p.a2*y2 < k) then 
+    else if (y.sign*p.a2*y2 < k) then
       (x2 + y2).sqrt * p.il2 - p.r1
-    else 
+    else
     ((x2*p.a2*p.il2).sqrt+y*p.rr)*p.il2 - p.r1
 
   set_option synthInstance.maxSize 2000
@@ -326,7 +326,7 @@ namespace RoundCone.Params
 end RoundCone.Params
 
 
-def RoundCone.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop := 
+def RoundCone.toSet {X} [Hilbert X] (p : Params X) (x : X) : Prop :=
   p.sdf x ≤ 0
 
 abbrev RoundCone (X : Type) [Hilbert X] := Shape (RoundCone.toSet (X:=X))
@@ -341,9 +341,9 @@ namespace RoundCone
     is_sdf := sorry
 
   instance : HasLocate (toSet (X:=X)) := locateFromSdf
-  
+
   instance : HasReflect (toSet (X:=X)) where
-    trans := λ p => 
+    trans := λ p =>
       {
         a := - p.a
         b := - p.b
@@ -353,9 +353,9 @@ namespace RoundCone
       }
     is_trans := sorry
 
-  instance : HasTranslate (toSet (X:=X)) := λ t => 
+  instance : HasTranslate (toSet (X:=X)) := λ t =>
   {
-    trans := λ p => 
+    trans := λ p =>
       {
         a := p.a + t
         b := p.b + t
@@ -366,9 +366,9 @@ namespace RoundCone
     is_trans := sorry
    }
 
-  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r => 
+  instance (R : Type) [Group R] [LieGroup.SO R X] : HasRotate R (toSet (X:=X)) := λ r =>
   {
-    trans := λ p => 
+    trans := λ p =>
       {
         a := r • p.a
         b := r • p.b
@@ -379,11 +379,11 @@ namespace RoundCone
     is_trans := sorry
    }
 
-  instance : HasScale (toSet (X:=X)) := λ s => 
+  instance : HasScale (toSet (X:=X)) := λ s =>
   {
-    trans := λ p => 
+    trans := λ p =>
       {
-        a := s•p.a 
+        a := s•p.a
         b := s•p.b
         r1 := s.abs*p.r1
         r2 := s.abs*p.r2

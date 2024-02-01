@@ -13,12 +13,12 @@ namespace SciLean.Prism
     def beq {P deg} (d e : LagDOF P deg) : Bool :=
       match d, e with
       | point _, point _ => true
-      | cone _ _ i d', cone _ _ j e' => 
+      | cone _ _ i d', cone _ _ j e' =>
         if h : i = j then
           beq d' (h ▸ e')
         else
           false
-      | prod _ _ _ dp dq, prod _ _ _ ep eq => 
+      | prod _ _ _ dp dq, prod _ _ _ ep eq =>
         beq dp ep ∧ beq dq eq
 
     instance {P deg} : DecidableEq (LagDOF P deg) :=
@@ -37,7 +37,7 @@ namespace SciLean.Prism
       match P with
       | Prism.point => some $ point deg
       | Prism.cone P => some $ cone P deg (!0) (zeroDOF P)
-      | Prism.prod P Q => 
+      | Prism.prod P Q =>
         match first P deg, first Q deg with
         | some dofP, some dofQ => prod P Q deg dofP dofQ
         | _, _ => none -- This case should not happen, maybe panic? or use some confusion
@@ -45,34 +45,34 @@ namespace SciLean.Prism
     def next {P deg} (dof : LagDOF P deg) : Option (LagDOF P deg) :=
       match P, dof with
       | _, point _ => none
-      | _, cone P deg i dof => 
+      | _, cone P deg i dof =>
         match next dof with
         | some dof' => cone P deg i dof'
-        | none => 
+        | none =>
           if i.1+1 <= deg then
             match first P (i+1) with
             | some dof' => cone P deg (!(i+1)) dof'
             | none => none -- this should not happen
-          else 
+          else
             none
-      | _, prod P Q deg dofP dofQ => 
+      | _, prod P Q deg dofP dofQ =>
         match next dofP with
         | some dofP' => prod P Q deg dofP' dofQ
-        | none => 
+        | none =>
           match first P deg, next dofQ with
           | some dofP', some dofQ' => prod P Q deg dofP' dofQ'
           | _, _ => none
-    
+
     def toPos {P deg} (dof : LagDOF P deg) : P.𝔼 :=
       if deg == 0 then
         P.barycenter
-      else 
+      else
         match P, dof with
         | _, point d => 0
-        | _, cone P deg i dof => 
+        | _, cone P deg i dof =>
           let w := (i.1 : ℝ)/(deg : ℝ)
           (1-w, w*dof.toPos)
-        | _, prod P Q deg dofP dofQ => 
+        | _, prod P Q deg dofP dofQ =>
           (dofP.toPos, dofQ.toPos)
 
 

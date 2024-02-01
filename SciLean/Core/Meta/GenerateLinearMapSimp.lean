@@ -7,9 +7,9 @@ import SciLean.Tactic.AnalyzeConstLambda
 namespace SciLean
 
 
-section HelperTheorems 
+section HelperTheorems
 
-variable 
+variable
   {K} [IsROrC K] {X Y Z} [Vec K X] [Vec K Y] [Vec K Z]
   {f : X → Y} (hf : IsLinearMap K f)
 
@@ -37,72 +37,72 @@ theorem _root_.IsLinearMap.neg_push (x : X)
 theorem _root_.IsLinearMap.neg_pull (x : X)
   : f (- x) = - f x := by rw[hf.map_neg]
 
-theorem _root_.IsLinearMap.app_zero 
+theorem _root_.IsLinearMap.app_zero
   : f 0 = 0 := by rw[hf.map_zero]
 
 variable {g : X → Y → Z} (hg : IsLinearMap K fun xy : X×Y => g xy.1 xy.2)
 
 theorem _root_.IsLinearMap.add_push₂ (x x' : X) (y y' : Y)
-  : g x y + g x' y' = g (x + x') (y + y') := 
-by 
+  : g x y + g x' y' = g (x + x') (y + y') :=
+by
   have h := hg.map_add (x,y) (x',y')
   simp at h; rw[h]
-  
+
 theorem _root_.IsLinearMap.add_pull₂  (x x' : X) (y y' : Y)
-  : g (x + x') (y + y') = g x y + g x' y' := 
-by 
+  : g (x + x') (y + y') = g x y + g x' y' :=
+by
   have h := hg.map_add (x,y) (x',y')
   simp at h; rw[h]
 
 theorem _root_.IsLinearMap.sub_push₂ (x x' : X) (y y' : Y)
-  : g x y - g x' y' = g (x - x') (y - y') := 
-by 
+  : g x y - g x' y' = g (x - x') (y - y') :=
+by
   have h := hg.map_sub (x,y) (x',y')
   simp at h; rw[h]
-  
+
 theorem _root_.IsLinearMap.sub_pull₂  (x x' : X) (y y' : Y)
-  : g (x - x') (y - y') = g x y - g x' y' := 
-by 
+  : g (x - x') (y - y') = g x y - g x' y' :=
+by
   have h := hg.map_sub (x,y) (x',y')
   simp at h; rw[h]
 
 theorem _root_.IsLinearMap.smul_push₂ (x : X) (y : Y) (k : K)
-  : k • g x y = g (k • x) (k • y) := 
-by 
-  have h := hg.map_smul k (x,y) 
+  : k • g x y = g (k • x) (k • y) :=
+by
+  have h := hg.map_smul k (x,y)
   simp at h; rw[h]
 
 theorem _root_.IsLinearMap.smul_pull₂ (x : X) (y : Y) (k : K)
-  : g (k • x) (k • y) = k • g x y  := 
-by 
-  have h := hg.map_smul k (x,y) 
+  : g (k • x) (k • y) = k • g x y  :=
+by
+  have h := hg.map_smul k (x,y)
   simp at h; rw[h]
 
 theorem _root_.IsLinearMap.neg_push₂ (x : X) (y : Y)
-  : - g x y = g (- x) (- y) := 
+  : - g x y = g (- x) (- y) :=
 by
-  have h := hg.map_neg (x,y) 
+  have h := hg.map_neg (x,y)
   simp at h; rw[h]
 
 theorem _root_.IsLinearMap.neg_pull₂ (x : X) (y : Y)
-  : g (- x) (- y) = - g x y := 
+  : g (- x) (- y) = - g x y :=
 by
-  have h := hg.map_neg (x,y) 
+  have h := hg.map_neg (x,y)
   simp at h; rw[h]
 
 theorem _root_.IsLinearMap.app_zero₂
-  : g 0 0 = 0 := 
+  : g 0 0 = 0 :=
 by
-  have h := hg.map_zero 
+  have h := hg.map_zero
   simp at h; rw[h]
-  
 
-end HelperTheorems 
+
+end HelperTheorems
 
 
 open Lean Meta
-def generateLinearMapSimp 
-  (ctx : Array Expr) (isLinearMap : Expr) 
+def generateLinearMapSimp
+  (ctx : Array Expr) (isLinearMap : Expr)
   (thrmName : Name) (isSimpAttr : Bool := true) (makeSimp : Bool := false) : MetaM Unit := do
 
   let f := (← inferType isLinearMap).getArg! 8
@@ -114,12 +114,12 @@ def generateLinearMapSimp
   let mut fullThrmName := (``IsLinearMap).append thrmName
   if data.mainArgs.size = 2 then
     fullThrmName := fullThrmName.appendAfter "₂"
-  
+
   let proof ← mkAppM fullThrmName #[isLinearMap]
   let proof ← mkLambdaFVars ctx proof
   let statement ← inferType proof
 
-  let thrmVal : TheoremVal := 
+  let thrmVal : TheoremVal :=
   {
     name  := data.constName |>.append data.declSuffix |>.append thrmName
     type  := statement
@@ -147,7 +147,7 @@ def generateLinearMapSimp
 open Lean Meta
 /-- Generates bunch of simp theorems given a proof that function is linear.
 
-The provided theorem should be in the simple form `IsLinearMap K (fun x => foo x)` 
+The provided theorem should be in the simple form `IsLinearMap K (fun x => foo x)`
 Not in the composition form `IsLinearMap K (fun x => foo (f x))`
 -/
 def generateLinearMapSimps (isLinearMapTheorem : Name) : MetaM Unit := do
@@ -155,11 +155,11 @@ def generateLinearMapSimps (isLinearMapTheorem : Name) : MetaM Unit := do
   let info ← getConstInfo isLinearMapTheorem
 
   lambdaTelescope info.value! fun ctx isLinearMap => do
-    
+
     let pullpush := [`add_pull,`add_push,`sub_pull,`sub_push,`smul_pull,`smul_push,`neg_pull,`neg_push]
 
     for thrm in pullpush do
-      generateLinearMapSimp ctx isLinearMap thrm 
+      generateLinearMapSimp ctx isLinearMap thrm
 
     let simps := [`app_zero]
 
@@ -177,7 +177,7 @@ where `thrmName` is a name of a theorem that states that function `f` is linear 
 
 The command generates theorems
 ```
-@[add_push] theorem add_push (x x' : X) : f x + f x' = f (x + x') := ... 
+@[add_push] theorem add_push (x x' : X) : f x + f x' = f (x + x') := ...
 @[add_pull] theorem add_pull (x x' : X) : f (x + x') = f x + f x' := ...
 @[sub_push] theorem sub_push (x x' : X) : f x - f x' = f (x - x') := ...
 @[sub_pull] theorem sub_pull (x x' : X) : f (x - x') = f x - f x' := ...
@@ -187,7 +187,7 @@ The command generates theorems
 @[smul_pull] theorem smul_pull (x : X) (k : K) : f (k • x) = k • f x := ...
 @[simp] theorem app_zero : f 0 = 0 := ...
 ```
-All the above attributes are simp attributes. The ideas is that you can propagate 
+All the above attributes are simp attributes. The ideas is that you can propagate
 arithmetic operations by calling `simp` e.g. `simp only [add_pull]`.
 
 
@@ -198,7 +198,7 @@ The command also supports functions jointly linear in two arguments. If we have
 ```
 generates theorems like
 ```
-@[add_push] theorem add_push (x x' : X) (y y' : Y) : g x y + g x' y' = g (x + x') (y + y') := ... 
+@[add_push] theorem add_push (x x' : X) (y y' : Y) : g x y + g x' y' = g (x + x') (y + y') := ...
 ...
 ```
 
@@ -206,6 +206,6 @@ generates theorems like
 syntax (name:=genLinMapSimpsNotation) "#generate_linear_map_simps " ident : command
 
 open Lean Elab Term Command
-elab_rules : command 
+elab_rules : command
 | `(#generate_linear_map_simps $thrm) => do
   liftTermElabM <| generateLinearMapSimps thrm.getId

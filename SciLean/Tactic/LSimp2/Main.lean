@@ -56,7 +56,7 @@ def isOfNatNatLit (e : Expr) : Bool :=
 def reduceProj? (e : Expr) : MetaM (Option Expr) := do
   match e with
   | Expr.proj _ _ (.fvar _) => return none -- do not reduce projections on fvars
-  | Expr.proj n i c => 
+  | Expr.proj n i c =>
     letTelescope c λ xs b => do
       -- let some b ← Meta.project? b i
       let some b ← reduceProjOfCtor? (.proj n i b)
@@ -132,7 +132,7 @@ private def reduceFVar (cfg : Simp.Config) (e : Expr) : MetaM Expr := do
 
 private def doesComputation (e : Expr) : Bool :=
   match e with
-  | .app f x => 
+  | .app f x =>
     x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x || f.isAppOf ``hold
   | .letE _ _ _ b _ => doesComputation b
   | .mdata _ e => doesComputation e
@@ -140,11 +140,11 @@ private def doesComputation (e : Expr) : Bool :=
   | _ => false
 
 private def reduceNoOpHeadFVar (e : Expr) : MetaM Expr := do
-  let f := e.getAppFn 
+  let f := e.getAppFn
   if f.isFVar then
     match (← getFVarLocalDecl f).value? with
-    | some v => 
-      if doesComputation v then 
+    | some v =>
+      if doesComputation v then
         return e
       else
         return mkAppN v e.getAppArgs
@@ -213,7 +213,7 @@ where
     if i=args.size then
       k argxs argbs
     else
-      letTelescope args[i]! fun xs arg => 
+      letTelescope args[i]! fun xs arg =>
         withLets args (argxs++xs) (argbs.push arg) k
 
 private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
@@ -261,9 +261,9 @@ private partial def dsimp (e : Expr) : M Expr := do
     return .continue
   let post (e : Expr) : M TransformStep := do
     withTraceNode `ldsimp (fun _ => pure "ldsimp post") do
-    -- lsimp modification               
+    -- lsimp modification
     -- remove unsued let bindings
-    let e := 
+    let e :=
       if e.isLet && ¬e.letBody!.hasLooseBVars then
         e.letBody!
       else
@@ -336,7 +336,7 @@ It tries to push free variables in `fvars2` to the front as much as possible.
 
 The main application is to move let bindings out of lambdas, consider expression:
 ```
-  fun x y => 
+  fun x y =>
     let a := x
     let b := a + y
     let c := 42
@@ -348,13 +348,13 @@ above functions as
   let c := 42
   fun x =>
     let a := x
-    fun y => 
+    fun y =>
       let b := a + y
       ..
 ```
  -/
 private def mergeFVars (fvars1 fvars2 : Array Expr) : MetaM (Array Expr) := do
-  let (a,b) ← fvars1.foldrM (init := (fvars2, (#[] : Array Expr))) 
+  let (a,b) ← fvars1.foldrM (init := (fvars2, (#[] : Array Expr)))
     fun fvar (fvars, r) => do
       let deps ← collectForwardDeps #[fvar] false
       let (fvarsDep, fvarsNoDep) := fvars.partition deps.contains
@@ -369,11 +369,11 @@ def isProjectionOfFVar (e : Expr) : MetaM Bool := do
   | .mdata _ e => isProjectionOfFVar e
   | .fvar _ => return true
   | .proj _ _ x => isProjectionOfFVar x
-  | .app f x => 
+  | .app f x =>
     let some projName := f.getAppFn'.constName? | return false
     let some info ← getProjectionFnInfo? projName | return false
     if info.numParams = f.getAppNumArgs then
-      isProjectionOfFVar x 
+      isProjectionOfFVar x
     else
       return false
   | _ => return false
@@ -385,7 +385,7 @@ private def removeLet (v : Expr) : MetaM Bool := do
   else if ← isProjectionOfFVar v then
     return true
   else if
-    (v.isAppOfArity' ``OfNat.ofNat 3 || 
+    (v.isAppOfArity' ``OfNat.ofNat 3 ||
      v.isAppOfArity' ``OfScientific.ofScientific 5) then
     return true
   else if v.isLambda then
@@ -410,7 +410,7 @@ theorem let_simp_congr {α β} (f : α → β) (x x' : α) (y' : β)
 theorem let_remove_congr {α β} (f : α → β) (x x' : α) (y' : β)
   (hx : x = x') (hf : f x' = y') : (let y := x; f y) = y' := by rw[hx,hf]
 
-private def mkLetRemoveCongr (f x x' y' hx hf : Expr) : MetaM Expr := 
+private def mkLetRemoveCongr (f x x' y' hx hf : Expr) : MetaM Expr :=
   mkAppM ``let_simp_congr #[f,x,x',y',hx,hf]
 
 private def mkCast (e : Expr) (E' : Expr) : MetaM Expr := do
@@ -426,7 +426,7 @@ by
 
 private def mkLetCongrEq (h₁ h₂ : Expr) : MetaM Expr :=
   mkAppM ``let_congr_eq #[h₁, h₂]
-      
+
 
 partial def simp (e : Expr) : M Result := withIncRecDepth do
   withTraceNode `lsimp (fun _ => do pure s!"lsimp") do
@@ -902,7 +902,7 @@ where
         else if let .some (vs, projs, mk) ← splitByCtors? rv.expr then
           withTraceNode `lsimp (fun _ => do pure s!"lsimpLet split let") do
           let names := (Array.range vs.size).map fun i => n.appendAfter (toString i)
-          let e' ← 
+          let e' ←
             withLetDecls names vs fun fvars' =>
               mkLetFVars fvars' (b.instantiate1 (mk.beta fvars'))
           let r : Result ← do
@@ -928,12 +928,12 @@ where
           match rv.proof?, hb? with
           | none,   none   => return { expr := e' }
           | some h, none   => do
-            let proof ← 
+            let proof ←
               withTraceNode `lsimp (fun _ => do pure s!"lsimpLet val congr proof") do
                 mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h
             return { expr := e', proof? := some proof }
-          | _,      some h => 
-            let proof ← 
+          | _,      some h =>
+            let proof ←
               withTraceNode `lsimp (fun _ => do pure s!"lsimpLet congr proof") do
                 mkLetCongrEq (← rv.getProof) h
             return { expr := e', proof? := some proof }
@@ -1236,7 +1236,7 @@ def lsimpGoal (mvarId : MVarId) (ctx : Simp.Context) (discharge? : Option LSimp.
 def lsimpTargetStar (mvarId : MVarId) (ctx : Simp.Context) (discharge? : Option LSimp.Discharge := none)
     (usedSimps : UsedSimps := {}) : MetaM (TacticResultCNM × UsedSimps) := mvarId.withContext do
   let mut ctx := ctx
-  for h in (← Meta.getPropHyps) do 
+  for h in (← Meta.getPropHyps) do
     let localDecl ← h.getDecl
     let proof  := localDecl.toExpr
     let simpTheorems ← ctx.simpTheorems.addTheorem (.fvar h) proof

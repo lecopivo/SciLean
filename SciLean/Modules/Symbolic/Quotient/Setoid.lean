@@ -2,7 +2,7 @@ import SciLean.Prelude
 import SciLean.Data.Quotient.Lattice
 import SciLean.AutoImpl
 
-/-- Function between Setoids 
+/-- Function between Setoids
   Not sure about the name: Morphism, QFunction, QuotFun, QuotientFun, SetoidFun
   -/
 class Setoid.Morphism {α : Type u} {β : Type v} [Setoid α] [Setoid β] (f : α → β) : Prop where
@@ -14,9 +14,9 @@ class Setoid.Morphism₂ {α : Type u} {β : Type v} {γ : Type w} [Setoid α] [
 class Setoid.Map {α : Type u} {β : Type v} [Setoid α] (f : α → β) : Prop where
   is_sound : ∀ a a', a ≈ a' → f a = f a'
 
-noncomputable 
+noncomputable
 def Quotient.repr {α : Type u} [inst : Setoid α] (a : Quotient inst) : α := Classical.choose a.exists_rep
-     
+
 namespace Setoid
 
   variable {α : Type u} [SA : Setoid α]
@@ -28,19 +28,19 @@ namespace Setoid
 
   instance comp_is_mor (f : β → γ) [mf : Morphism f] (g : α → β) [mg : Morphism g]
     : Morphism (λ x => f (g x)) where
-    is_sound := 
-  by 
+    is_sound :=
+  by
     intros; apply mf.is_sound; apply mg.is_sound; assumption; done
 
   instance comp_is_map (f : β → δ) [mf : Map f] (g : α → β) [mg : Morphism g]
     : Map (λ x => f (g x)) where
     is_sound :=
-  by 
+  by
     intros; apply mf.is_sound; apply mg.is_sound; assumption; done
 
   instance scomb_is_mor (f : α → β → γ) [mf : Morphism₂ f] (g : α → β) [mg : Morphism g]
     : Morphism (λ x => f x (g x)) where
-    is_sound := 
+    is_sound :=
   by
     intros; apply mf.is_sound; assumption; apply mg.is_sound; assumption; done
 
@@ -81,13 +81,13 @@ namespace Setoid
     -- variable {α : Type u} {β : Type v} {γ : Type w} [SA : Setoid α] [SB : Setoid β] [SC : Setoid γ]
 
 
-    -- instance [HAdd α β γ] [Morphism₂ λ (x : α) (y : β) => x + y] : HAdd (Quotient SA) (Quotient SB) (Quotient SC) 
+    -- instance [HAdd α β γ] [Morphism₂ λ (x : α) (y : β) => x + y] : HAdd (Quotient SA) (Quotient SB) (Quotient SC)
     --   := ⟨λ x y => ⟦x.repr + y.repr⟧ rewrite_by simp⟩
-    -- instance [HSub α β γ] [Morphism₂ λ (x : α) (y : β) => x - y] : HSub (Quotient SA) (Quotient SB) (Quotient SC) 
+    -- instance [HSub α β γ] [Morphism₂ λ (x : α) (y : β) => x - y] : HSub (Quotient SA) (Quotient SB) (Quotient SC)
     --   := ⟨λ x y => ⟦x.repr - y.repr⟧ rewrite_by simp⟩
-    -- instance [HMul α β γ] [Morphism₂ λ (x : α) (y : β) => x * y] : HMul (Quotient SA) (Quotient SB) (Quotient SC) 
+    -- instance [HMul α β γ] [Morphism₂ λ (x : α) (y : β) => x * y] : HMul (Quotient SA) (Quotient SB) (Quotient SC)
     --   := ⟨λ x y => ⟦x.repr * y.repr⟧ rewrite_by simp⟩
-    -- instance [HDiv α β γ] [Morphism₂ λ (x : α) (y : β) => x / y] : HDiv (Quotient SA) (Quotient SB) (Quotient SC) 
+    -- instance [HDiv α β γ] [Morphism₂ λ (x : α) (y : β) => x / y] : HDiv (Quotient SA) (Quotient SB) (Quotient SC)
     --   := ⟨λ x y => ⟦x.repr / y.repr⟧ rewrite_by simp⟩
 
     -- instance [Zero α] : One (Quotient SA) := ⟨⟦0⟧⟩
@@ -96,6 +96,3 @@ namespace Setoid
   end Operations
 
 end Setoid
-
-
-

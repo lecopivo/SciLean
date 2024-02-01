@@ -26,9 +26,9 @@ private structure SystemInverse where
   /-- context holding additional let fvars that have been introduced during solving -/
   lctx : LocalContext
   /-- array of new let fvars -/
-  letVars : Array Expr 
+  letVars : Array Expr
   /-- array of xVars that have been succesfully eliminated and replaced by yVals -/
-  resolvedXVars : Array Expr 
+  resolvedXVars : Array Expr
   /-- array of xVars that have not been succesfully eliminated and still appear in xVals -/
   unresolvedXVars : Array Expr
   /-- values of xVars in terms of yVals and potentialy few xVars that have not been eliminated -/
@@ -36,13 +36,13 @@ private structure SystemInverse where
 
 
 private def equationsToString (yVals fVals : Array Expr) : MetaM String :=
-  yVals.zip fVals 
-    |>.joinlM (fun (y,val) => do pure s!"{← ppExpr y} = {← ppExpr val}") 
+  yVals.zip fVals
+    |>.joinlM (fun (y,val) => do pure s!"{← ppExpr y} = {← ppExpr val}")
               (fun s s' => pure (s ++ "\n" ++ s'))
 
 
-private def partiallyResolvedSystemToString 
-  (lctx : LocalContext) (xResVars' yVals : Array Expr) 
+private def partiallyResolvedSystemToString
+  (lctx : LocalContext) (xResVars' yVals : Array Expr)
   (eqs : Array (Nat × Expr × FVarIdSet)) : MetaM String := do
   withLCtx lctx (← getLocalInstances) do
     let lets ← xResVars'.joinlM (fun var => do pure s!"let {← var.fvarId!.getUserName} := {← ppExpr (← var.fvarId!.getValue?).get!}")
@@ -51,15 +51,15 @@ private def partiallyResolvedSystemToString
          |>.unzip
     pure s!"{lets}\n{← equationsToString yVals' fVals'}"
 
-private def afterBackwardPassSystemToString 
+private def afterBackwardPassSystemToString
   (lctx : LocalContext) (xResVars' xVars'' xVars xVals : Array Expr) := do
   withLCtx lctx (← getLocalInstances) do
     let lets ← (xResVars' ++ xVars'').joinlM (fun var => do pure s!"let {← var.fvarId!.getUserName} := {← ppExpr (← var.fvarId!.getValue?).get!}")
                                  (fun s s' => pure (s ++ "\n" ++ s'))
     pure s!"{lets}\n{← equationsToString xVars xVals}"
-    
 
-/-- 
+
+/--
 Solves the system of m-equations in n-variables
 ```
 y₁ = f₁ x₁ ... xₙ
@@ -67,7 +67,7 @@ y₁ = f₁ x₁ ... xₙ
 yₘ = fₘ x₁ ... xₙ
 ```
 
-Returns values of `xᵢ` in terms of `yⱼ`. 
+Returns values of `xᵢ` in terms of `yⱼ`.
 
 If `n>m` then the values `xᵢ` can depend also on other `xₖ`. The set `n-m` xs
 -/
@@ -80,7 +80,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
   -- data is and array of (yId, value, set of xId aprearing in value)
   let mut eqs ← fVals.mapIdxM fun i val => do
     let varSet : FVarIdSet := -- collect which xi's are used
-      (← (val.collectFVars.run {})) 
+      (← (val.collectFVars.run {}))
       |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xIdSet
     pure (i.1,val,varSet)
 
@@ -102,7 +102,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
 
     -- we can't invert if equation does not depen't on any x
     if varSet.size = 0 then
-      return none 
+      return none
 
     let varArr := varSet.toArray.map Expr.fvar
     -- pick x we want to resolve, taking the first one might not be the best ides
@@ -116,10 +116,10 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let xName ← xVar'.fvarId!.getUserName
 
     -- new value of x but it can still depend on x that have not been resolved
-    let (xVal',goal?) ← 
+    let (xVal',goal?) ←
       if yVal.isFVar then
         pure (yVals[j]!, none)
-      else 
+      else
         withLCtx lctx instances <| do
         let g ← mkLambdaFVars #[xVar'] yVal
         let hg ← mkAppM ``Function.Bijective #[g]
@@ -136,9 +136,9 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     -- xRes is a function resolving x given all unresolved xs
     let xResId ← withLCtx lctx instances <| mkFreshFVarId
     let xResVar := Expr.fvar xResId
-    let xResVal ← withLCtx lctx instances <| 
+    let xResVal ← withLCtx lctx instances <|
       mkLambdaFVars varArrOther xVal'
-    let xResType ← withLCtx lctx instances <| 
+    let xResType ← withLCtx lctx instances <|
       inferType xResVal
     lctx := lctx.mkLetDecl xResId (xName.appendAfter "'") xResType xResVal
 
@@ -151,7 +151,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let varSet := varSet.erase xVar'.fvarId!
 
     -- remove the variable `var` from all the other equations
-    eqs := eqs.map fun (k,kval,kvarSet) => 
+    eqs := eqs.map fun (k,kval,kvarSet) =>
       if j ≠ k then
         if kval.containsFVar xVar'.fvarId! then
           (k, kval.replaceFVar xVar' xVal'', kvarSet.erase xVar'.fvarId! |>.union varSet)
@@ -160,7 +160,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
       else
         (j, default, {})
 
-    let (yVals',fVals') := 
+    let (yVals',fVals') :=
       eqs.filterMap (fun (i,val,idset) => if idset.size = 0 then none else .some (yVals[i]!, val))
          |>.unzip
     trace[Meta.Tactic.structuralInverse.step] "system after resolving {← ppExpr xVar'}\n{← partiallyResolvedSystemToString lctx xResVars' yVals eqs}"
@@ -176,7 +176,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let xVar' := xVars'[i]!
     let xVal' := xVals'[i]!
     let xId := xVar'.fvarId!
-    
+
     let xId'' ← withLCtx lctx instances mkFreshFVarId
     let xVar'' := Expr.fvar xId''
     let xVal'' := xVal'.replaceFVars xVars'[0:i] xVars''
@@ -209,11 +209,11 @@ structure FullInverse where
   (f  : Q($X → $Y))
   (invFun : Q($Y → $X))
   (is_inv : Q(Function.Inverse $invFun $f))
-  
+
 open Qq
 /--
-  Holds right inverse to the function `f : X → Y`. 
-  
+  Holds right inverse to the function `f : X → Y`.
+
   Further more it provides decomposition `X ≃ X₁×X₂` such that `f` restricted to only `X₂` is fully invertible.
 -/
 structure RightInverse where
@@ -231,7 +231,7 @@ inductive FunctionInverse where
 
 /-- Compute inverse of a function `f : X → Y` where both `X` and `Y` are possible nested strustures
 
-For example 
+For example
 ```
 fun (x,(y,z)) => ((x+y, x), z)
 ==>
@@ -250,14 +250,14 @@ Returns also a list of pending goals proving that individual inversions are poss
 -/
 def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarId)) := do
   let f ← instantiateMVars f
-  match f with 
-  | .lam xName xType xBody xBi => 
+  match f with
+  | .lam xName xType xBody xBi =>
     withLocalDecl `x xBi xType fun x => do
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
       let yType ← inferType b
       withLocalDecl `y xBi yType fun y => do
-      
+
       let (xis, xmk) ← splitStructureElem x
       let (yis, ymk) ← splitStructureElem y
 
@@ -276,8 +276,8 @@ def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarI
         let xVar := (← mkAppM' xmk xiVars).headBeta
 
         -- replace `x` with new free variables `xiVars`
-        let b ← transform b 
-          (pre := fun e => 
+        let b ← transform b
+          (pre := fun e =>
             match e with
             | .fvar id => pure (.done (if xId == id then xVar else .fvar id)) -- replace
             | e' => pure .continue)
@@ -304,7 +304,7 @@ def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarI
             let finv : FullInverse := {
               u := u, v := v, X := X, Y := Y, f := f, invFun := invFun, is_inv := is_inv
             }
-            
+
             return .some (.full finv, goals)
           else
             let x₁Val ← mkProdElem eqInv.unresolvedXVars
@@ -315,7 +315,7 @@ def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarI
             let p₁ : Q($X → $X₁) ← mkLambdaFVars #[x] (x₁Val.replaceFVars xiVars xis)
             let p₂ : Q($X → $X₂) ← mkLambdaFVars #[x] (x₂Val.replaceFVars xiVars xis)
 
-            let q : Q($X₁ → $X₂ → $X) ← 
+            let q : Q($X₁ → $X₂ → $X) ←
               withLocalDecl `x₁ default (← inferType x₁Val) fun x₁Var => do
               withLocalDecl `x₂ default (← inferType x₂Val) fun x₂Var => do
                 let (x₁s, _) ← splitStructureElem x₁Var

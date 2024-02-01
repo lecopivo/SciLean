@@ -36,7 +36,7 @@ wiki: https://en.wikipedia.org/wiki/Passive_data_structure
 
 We distinguish between two main types of POD. `BitType` a type that is smaller or equal to a byte and `ByteType` that takes up multiple bytes. The main motivation is an efficient storage of `Array Bool` where `Bool` takes up only a single bit, so we can fit 8 bools into a single byte and achieve significant memore reduction.
 
-Potentially surprising edge case is array of fixed length, i.e. the type `{a : Array α // a.size = n}`. It is `PlainDataType` if `α` is `PlainDataType`. However, `Array α` is not `PlainDataType`, even if `α` is `PlainDataType`, as it does not have a fixed byte size. 
+Potentially surprising edge case is array of fixed length, i.e. the type `{a : Array α // a.size = n}`. It is `PlainDataType` if `α` is `PlainDataType`. However, `Array α` is not `PlainDataType`, even if `α` is `PlainDataType`, as it does not have a fixed byte size.
 -/
 class PlainDataType (α : Type) where
   btype : BitType α ⊕ ByteType α
@@ -68,21 +68,21 @@ def Prod.bitTypeProd {α β} (ta : BitType α) (tb : BitType β) : BitType (α �
       bits   := ta.bits + tb.bits
       h_size := h
 
-      fromByte := λ byte => 
+      fromByte := λ byte =>
         -- Maybe the mask is not necessary of `fromByte` correctly ignores unused bits
         let ones  := (255 : UInt8)
-        let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111   
+        let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111
         let bMask := (ones - (ones <<< tb.bits)) <<< ta.bits -- e.g. 00011000
         (ta.fromByte (aMask &&& byte), tb.fromByte ((bMask &&& byte) >>> ta.bits))
-      toByte   := λ (a,b) => 
+      toByte   := λ (a,b) =>
         -- let ones  := (255 : UInt8)
-        -- let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111   
+        -- let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111
         -- let bMask := (ones - (ones <<< tb.bits)) <<< ta.bits -- e.g. 00011000
         let aByte := ta.toByte a
         let bByte := tb.toByte b
         -- Masking is not necessary if `toByte` correctly sets unused bits to zero
         aByte /- &&& aMask -/ + (bByte <<< ta.bits) /- &&& bMask -/
-        
+
       fromByte_toByte := sorry_proof
     }
   else
@@ -90,7 +90,7 @@ def Prod.bitTypeProd {α β} (ta : BitType α) (tb : BitType β) : BitType (α �
       bytes := 2
       h_size := by sorry_proof
 
-      fromByteArray := λ b i _ => 
+      fromByteArray := λ b i _ =>
         let aByte := b[2*i]'sorry_proof
         let bByte := b[2*i+1]'sorry_proof
         (ta.fromByte aByte, tb.fromByte bByte)
@@ -108,7 +108,7 @@ def Prod.bitTypeByteTypeProd {α β} (ta : BitType α) (tb : ByteType β) : Byte
     bytes := tb.bytes + 1
     h_size := sorry_proof
 
-    fromByteArray := λ arr i _ => 
+    fromByteArray := λ arr i _ =>
       let aByte := arr[i]'sorry_proof
       (ta.fromByte aByte, tb.fromByteArray arr (i+1) sorry_proof)
     toByteArray := λ arr i _ (a,b) =>
@@ -125,7 +125,7 @@ def Prod.byteTypeBitTypeProd {α β} (ta : ByteType α) (tb : BitType β) : Byte
     bytes := ta.bytes + 1
     h_size := sorry_proof
 
-    fromByteArray := λ arr i _ => 
+    fromByteArray := λ arr i _ =>
       let bByte := arr[i + ta.bytes]'sorry_proof
       (ta.fromByteArray arr i sorry_proof, tb.fromByte bByte)
     toByteArray := λ arr i _ (a,b) =>
@@ -143,7 +143,7 @@ def Prod.byteTypeProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType (
     bytes := ta.bytes + tb.bytes
     h_size := sorry_proof
 
-    fromByteArray := λ arr i _ => 
+    fromByteArray := λ arr i _ =>
       (ta.fromByteArray arr i sorry_proof,
        tb.fromByteArray arr (i+ta.bytes) sorry_proof)
     toByteArray := λ arr i _ (a,b) =>
@@ -162,7 +162,7 @@ def Prod.byteTypeProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType (
 This instance makes a diamond together with `instPlainDataTypeEnumtype`  when `α` and `β` are `Enumtype`. Using this instance is less computationally intensive when writting and reading from `DataArra` but it consumes more memory. The `instPlainDataTypeEnumtype` is doing the exact opposite.
 
 Example: `Fin (2^4+1) × Fin (2^4-1)`
-  
+
 As Product:
   The type `Fin (2^4+1)` needs 5 bits.
   The type `Fin (2^4-1)` needs 4 bits.
@@ -171,15 +171,15 @@ As Product:
 As Enumtype:
   `Fin (2^4+1) × Fin (2^4-1) ≈ Fin (2^8-1)`
   The type `Fin (2^8-1)` needs 8 bits thus only a single byte as `instPlainDataTypeEnumtype`
-    
+
 -/
 instance instPlainDataTypeProd [ta : PlainDataType α] [tb : PlainDataType β] : PlainDataType (α×β) where
   btype :=
     match ta.btype, tb.btype with
     | .inl aBitType,  .inl bBitType  => Prod.bitTypeProd aBitType bBitType
     | .inl aBitType,  .inr bByteType => .inr <| Prod.bitTypeByteTypeProd aBitType bByteType
-    | .inr aByteType, .inl bBitType  => .inr <| Prod.byteTypeBitTypeProd aByteType bBitType 
-    | .inr aByteType, .inr bByteType => .inr <| Prod.byteTypeProd aByteType bByteType 
+    | .inr aByteType, .inl bBitType  => .inr <| Prod.byteTypeBitTypeProd aByteType bBitType
+    | .inr aByteType, .inr bByteType => .inr <| Prod.byteTypeProd aByteType bByteType
 
 
 --------------- MProd -------------------------------------------------
@@ -192,21 +192,21 @@ def MProd.bitTypeMProd {α β} (ta : BitType α) (tb : BitType β) : BitType (MP
       bits   := ta.bits + tb.bits
       h_size := h
 
-      fromByte := λ byte => 
+      fromByte := λ byte =>
         -- Maybe the mask is not necessary of `fromByte` correctly ignores unused bits
         let ones  := (255 : UInt8)
-        let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111   
+        let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111
         let bMask := (ones - (ones <<< tb.bits)) <<< ta.bits -- e.g. 00011000
         ⟨ta.fromByte (aMask &&& byte), tb.fromByte ((bMask &&& byte) >>> ta.bits)⟩
-      toByte   := λ ⟨a,b⟩ => 
+      toByte   := λ ⟨a,b⟩ =>
         -- let ones  := (255 : UInt8)
-        -- let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111   
+        -- let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111
         -- let bMask := (ones - (ones <<< tb.bits)) <<< ta.bits -- e.g. 00011000
         let aByte := ta.toByte a
         let bByte := tb.toByte b
         -- Masking is not necessary if `toByte` correctly sets unused bits to zero
         aByte /- &&& aMask -/ + (bByte <<< ta.bits) /- &&& bMask -/
-        
+
       fromByte_toByte := sorry_proof
     }
   else
@@ -214,7 +214,7 @@ def MProd.bitTypeMProd {α β} (ta : BitType α) (tb : BitType β) : BitType (MP
       bytes := 2
       h_size := by sorry_proof
 
-      fromByteArray := λ b i _ => 
+      fromByteArray := λ b i _ =>
         let aByte := b[2*i]'sorry_proof
         let bByte := b[2*i+1]'sorry_proof
         ⟨ta.fromByte aByte, tb.fromByte bByte⟩
@@ -232,7 +232,7 @@ def MProd.bitTypeByteTypeMProd {α β} (ta : BitType α) (tb : ByteType β) : By
     bytes := tb.bytes + 1
     h_size := sorry_proof
 
-    fromByteArray := λ arr i _ => 
+    fromByteArray := λ arr i _ =>
       let aByte := arr[i]'sorry_proof
       ⟨ta.fromByte aByte, tb.fromByteArray arr (i+1) sorry_proof⟩
     toByteArray := λ arr i _ ⟨a,b⟩ =>
@@ -249,7 +249,7 @@ def MProd.byteTypeBitTypeMProd {α β} (ta : ByteType α) (tb : BitType β) : By
     bytes := ta.bytes + 1
     h_size := sorry_proof
 
-    fromByteArray := λ arr i _ => 
+    fromByteArray := λ arr i _ =>
       let bByte := arr[i + ta.bytes]'sorry_proof
       ⟨ta.fromByteArray arr i sorry_proof, tb.fromByte bByte⟩
     toByteArray := λ arr i _ ⟨a,b⟩ =>
@@ -267,7 +267,7 @@ def MProd.byteTypeMProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType
     bytes := ta.bytes + tb.bytes
     h_size := sorry_proof
 
-    fromByteArray := λ arr i _ => 
+    fromByteArray := λ arr i _ =>
       ⟨ta.fromByteArray arr i sorry_proof,
        tb.fromByteArray arr (i+ta.bytes) sorry_proof⟩
     toByteArray := λ arr i _ ⟨a,b⟩ =>
@@ -284,8 +284,8 @@ instance instPlainDataTypeMProd [ta : PlainDataType α] [tb : PlainDataType β] 
     match ta.btype, tb.btype with
     | .inl aBitType,  .inl bBitType  => MProd.bitTypeMProd aBitType bBitType
     | .inl aBitType,  .inr bByteType => .inr <| MProd.bitTypeByteTypeMProd aBitType bByteType
-    | .inr aByteType, .inl bBitType  => .inr <| MProd.byteTypeBitTypeMProd aByteType bBitType 
-    | .inr aByteType, .inr bByteType => .inr <| MProd.byteTypeMProd aByteType bByteType 
+    | .inr aByteType, .inl bBitType  => .inr <| MProd.byteTypeBitTypeMProd aByteType bBitType
+    | .inr aByteType, .inr bByteType => .inr <| MProd.byteTypeMProd aByteType bByteType
 
 
 --------------- Idx n ------------------------------------------------
@@ -297,7 +297,7 @@ def Idx.byteSize (n : USize) : USize := (Idx.bitSize n + 7) / 8
 
 
 -- INCONSISTENT: This breaks consistency with (n=0) as we could make `Idx 0` from a byte
--- Adding assumption (n≠0) is really annoying, what to do about this? 
+-- Adding assumption (n≠0) is really annoying, what to do about this?
 def Idx.bitType (n : USize) (_ : n ≤ 256) : BitType (Idx n) where
   bits := (bitSize n).toUInt8
   h_size := sorry_proof
@@ -326,16 +326,16 @@ def Idx.byteType (n : USize) (_ : 256 < n) : ByteType (Idx n) where
     for j in fullRange (Idx bytes) do
       b := b.uset (ofByte+j.1) (val.1 >>> (j.1*(8:USize))).toUInt8 sorry_proof
     b
-    
+
   toByteArray_size := sorry_proof
   fromByteArray_toByteArray := sorry_proof
   fromByteArray_toByteArray_other := sorry_proof
 
 -- INCONSISTENT: This breaks consistency see Idx.bitType
 instance (n) : PlainDataType (Idx n) where
-  btype := 
+  btype :=
     if h : n ≤ 256
-    then .inl (Idx.bitType n h) 
+    then .inl (Idx.bitType n h)
     else .inr (Idx.byteType n (by simp at h; apply h))
 
 -------------- Index ----------------------------------------------
@@ -354,7 +354,7 @@ def Index.byteType (α : Type) [Index α] (hn : 256 < Index.size α ) : ByteType
 
   fromByteArray b i h := fromIdx <| (Idx.byteType (Index.size α) hn).fromByteArray b i h
   toByteArray b i h a := (Idx.byteType (Index.size α) hn).toByteArray b i h (toIdx a)
-    
+
   toByteArray_size := sorry_proof
   fromByteArray_toByteArray := sorry_proof
   fromByteArray_toByteArray_other := sorry_proof
@@ -367,7 +367,7 @@ def Index.byteType (α : Type) [Index α] (hn : 256 < Index.size α ) : ByteType
 This instance makes a diamond together with `instPlainDataTypeProd`. Using this instance is more computationally intensive when writting and reading from `DataArra` but it consumes less memory. The `instPlainDataTypeProd` is doing the exact opposite.
 
 Example: `Idx (2^4+1) × Idx (2^4-1)`
-  
+
 As Product:
   The type `Idx (2^4+1)` needs 5 bits.
   The type `Idx (2^4-1)` needs 4 bits.
@@ -376,10 +376,10 @@ As Product:
 As Index:
   `Idx (2^4+1) × Idx (2^4-1) ≈ Idx (2^8-1)`
   The type `Idx (2^8-1)` needs 8 bits thus only a single byte as `instPlainDataTypeIndex`
-    
+
 -/
 instance (priority := low) instPlainDataTypeIndex  {α : Type} [Index α] : PlainDataType α where
-  btype := 
+  btype :=
     if h : (Index.size α) ≤ 256
     then .inl (Index.bitType α h)
     else .inr (Index.byteType α (by simp at h; apply h))
@@ -391,7 +391,7 @@ def Float.byteType : ByteType Float where
   bytes := 8
   h_size := sorry_proof
 
-  fromByteArray arr i _ := 
+  fromByteArray arr i _ :=
     if i % 8 = 0 then
       let arr : FloatArray := cast sorry_proof arr
       arr[i/8]'sorry_proof

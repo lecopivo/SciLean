@@ -1,12 +1,12 @@
 import SciLean.Modules.DifferentialEquations.OdeSolve
 import SciLean.Util.Limit
 
-set_option linter.unusedVariables false 
+set_option linter.unusedVariables false
 
 namespace SciLean
 
-variable 
-  {R : Type _} [IsROrC R] 
+variable
+  {R : Type _} [IsROrC R]
   {X : Type _} [Vec R X]
   {Y : Type _} [Vec R Y]
   {Z : Type _} [Vec R Z]
@@ -23,31 +23,31 @@ TODO: refine the conditions, we probably want consistency and convergence. Maybe
 structure IsOdeStepper (f : R → X → X) (stepper : R → R → X → X) : Prop where
   consistent : ∀ t x, (limit Δt' → 0, ∂ Δt:=Δt', stepper t Δt x) = f t x
   -- converges - something that it really converges
-  -- maybe integrability of `f` ?? 
-  
+  -- maybe integrability of `f` ??
+
 def odeSolveFixedStep (stepper : R → R → X → X) (steps : Nat) (t₁ t₂ : R) (x₀ : X) : X := Id.run do
   let Δt := (t₂-t₁)/steps
   let mut x := x₀
   let mut t := t₁
   for _ in [0:steps] do
     x := stepper t Δt x
-    t += Δt 
+    t += Δt
   x
 
 
-theorem odeSolve_fixed_dt {f : R → X → X} (stepper : (R → X → X) → (R → R → X → X)) 
+theorem odeSolve_fixed_dt {f : R → X → X} (stepper : (R → X → X) → (R → R → X → X))
   (h : HasUniqueOdeSolution f ∧ IsOdeStepper f (stepper f))
   : odeSolve f = fun t₀ t x₀ => limit n → ∞, odeSolveFixedStep (stepper f) n t₀ t x₀ := sorry_proof
 
 
-  
 
-#exit 
-theorem odeSolve_fixed_dt_on_interval {X} [Vec X] {f : ℝ → X → X} {t₀ : ℝ} {x₀ : X} 
+
+#exit
+theorem odeSolve_fixed_dt_on_interval {X} [Vec X] {f : ℝ → X → X} {t₀ : ℝ} {x₀ : X}
   (stepper : Stepper) (interpol : (ℤ→X) → (ℝ→X)) (T : ℝ)
   : (λ t => odeSolve f t₀ x₀ t)
-    = 
-    limit λ n => 
+    =
+    limit λ n =>
       let Δt := (T-t₀) / n
       let toGrid := λ t : ℝ => (t - t₀)/Δt
       let odeData := odeSolve_fixed_dt_array f stepper n t₀ x₀ T

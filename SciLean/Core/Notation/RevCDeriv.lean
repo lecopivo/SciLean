@@ -66,7 +66,7 @@ macro_rules
     match f with
     | `(fun $x':ident => $b:term) => `(<∂ ($x':ident:=$x;$dy), $b)
     | `(fun ($x':ident : $_) => $b:term) => `(<∂ ($x':ident:=$x;$dy), $b)
-    | _  => throw () 
+    | _  => throw ()
 
   | _ => throw ()
 

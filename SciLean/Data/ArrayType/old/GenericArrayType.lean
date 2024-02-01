@@ -68,16 +68,16 @@ class LinearGenericArrayType (Cont : USize → Type u) (Elem : Type w |> outPara
   where
   toGenericArrayType : ∀ n, GenericArrayType (Cont n) (Idx n) Elem
 
-  pushElem_getElem : ∀ n k val (i : Idx (n+k)) (x : Cont n), n ≤ i.1 → 
+  pushElem_getElem : ∀ n k val (i : Idx (n+k)) (x : Cont n), n ≤ i.1 →
     have : ∀ n', GetElem (Cont n') (Idx n') Elem (λ _ _ => True) := λ n' => (toGenericArrayType n').toGetElem
     (pushElem k val x)[i] = val
 
-  dropElem_getElem : ∀ n k (i : Idx n) (x : Cont (n+k)), 
+  dropElem_getElem : ∀ n k (i : Idx n) (x : Cont (n+k)),
     have : ∀ n', GetElem (Cont n') (Idx n') Elem (λ _ _ => True) := λ n' => (toGenericArrayType n').toGetElem
     (dropElem k x)[i] = x[(⟨i.1, sorry_proof⟩ : Idx (n+k))]
 
   reserveElem_id : ∀ (x : Cont n) (k), reserveElem k x = x
-  
+
 
 instance {T} {Y : outParam Type} [inst : LinearGenericArrayType T Y] (n) : GenericArrayType (T n) (Idx n) Y := inst.toGenericArrayType n
 
@@ -89,7 +89,7 @@ variable {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
 -- Maybe turn this into a class and this is a default implementation
 @[inline]
 def modifyElem [GetElem Cont Idx Elem λ _ _ => True] [SetElem Cont Idx Elem]
-  (arr : Cont) (i : Idx) (f : Elem → Elem) : Cont := 
+  (arr : Cont) (i : Idx) (f : Elem → Elem) : Cont :=
   setElem arr i (f (arr[i]))
 
 @[simp]
@@ -105,7 +105,7 @@ theorem getElem_modifyElem_neq [inst : GenericArrayType Cont Idx Elem] (arr : Co
 def mapIdx [GenericArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → Elem) (arr : Cont) : Cont := Id.run do
   let mut arr := arr
   for i in fullRange Idx do
-    -- This notation should correctly handle aliasing 
+    -- This notation should correctly handle aliasing
     -- It should expand to `f := modifyElem f x (g x) True.intro`
     -- This prevent from making copy of `f[x]`
     arr := modifyElem arr i (f i)
@@ -115,7 +115,7 @@ def mapIdx [GenericArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → El
 theorem getElem_mapIdx [GenericArrayType Cont Idx Elem] [Index Idx] (f : Idx → Elem → Elem) (arr : Cont) (i : Idx)
   : (mapIdx f arr)[i] = f i arr[i] := sorry_proof
 
-def map [GenericArrayType Cont Idx Elem] [Index Idx] (f : Elem → Elem) (arr : Cont) : Cont := 
+def map [GenericArrayType Cont Idx Elem] [Index Idx] (f : Elem → Elem) (arr : Cont) : Cont :=
   mapIdx (λ _ => f) arr
 
 @[simp]
@@ -123,7 +123,7 @@ theorem getElem_map [GenericArrayType Cont Idx Elem] [Index Idx] (f : Elem → E
   : (map f arr)[i] = f arr[i] := sorry_proof
 
 
--- instance [GenericArrayType Cont Idx Elem] [ToString Elem] [Index Idx] : ToString (Cont) := ⟨λ a => 
+-- instance [GenericArrayType Cont Idx Elem] [ToString Elem] [Index Idx] : ToString (Cont) := ⟨λ a =>
 --   match Iterable.first (ι:=Idx) with
 --   | some fst => Id.run do
 --     let mut s : String := s!"'[{a[fst]}"
@@ -135,7 +135,7 @@ theorem getElem_map [GenericArrayType Cont Idx Elem] [Index Idx] (f : Elem → E
 
 section Operations
 
-  variable [GenericArrayType Cont Idx Elem] [Index Idx] 
+  variable [GenericArrayType Cont Idx Elem] [Index Idx]
 
   instance [Add Elem] : Add Cont := ⟨λ f g => mapIdx (λ x fx => fx + g[x]) f⟩
   instance [Sub Elem] : Sub Cont := ⟨λ f g => mapIdx (λ x fx => fx - g[x]) f⟩
@@ -151,10 +151,10 @@ section Operations
   instance [One Elem]  : One Cont  := ⟨introElem λ _ : Idx => 1⟩
   instance [Zero Elem] : Zero Cont := ⟨introElem λ _ : Idx => 0⟩
 
-  instance [LT Elem] : LT Cont := ⟨λ f g => ∀ x, f[x] < g[x]⟩ 
+  instance [LT Elem] : LT Cont := ⟨λ f g => ∀ x, f[x] < g[x]⟩
   instance [LE Elem] : LE Cont := ⟨λ f g => ∀ x, f[x] ≤ g[x]⟩
 
-  instance [DecidableEq Elem] : DecidableEq Cont := 
+  instance [DecidableEq Elem] : DecidableEq Cont :=
     λ f g => Id.run do
       let mut eq : Bool := true
       for x in fullRange Idx do
@@ -189,9 +189,9 @@ namespace GenericArrayType
   variable {Cont : USize → Type} {Elem : Type |> outParam}
   variable [LinearGenericArrayType Cont Elem]
 
-  def empty : Cont 0 := introElem λ i => 
-    absurd (a := ∃ n : USize, n < 0) 
-           (Exists.intro i.1 i.2) 
+  def empty : Cont 0 := introElem λ i =>
+    absurd (a := ∃ n : USize, n < 0)
+           (Exists.intro i.1 i.2)
            (by intro h; have h' := h.choose_spec; cases h'; done)
 
   def split {n m : USize} (x : Cont (n+m)) : Cont n × Cont m :=

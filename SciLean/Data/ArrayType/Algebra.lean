@@ -4,7 +4,7 @@ import SciLean.Data.StructType.Algebra
 
 open LeanColls
 
-namespace SciLean 
+namespace SciLean
 namespace GenericArrayType
 
 variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
@@ -53,12 +53,12 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] : Vec K Cont w
 instance (priority := low) [ArrayType Cont Idx Elem] [Inner K Elem] : Inner K Cont where
   inner := λ f g => ∑ x, ⟪f[x], g[x]⟫[K]
 
-instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions Elem] 
+instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions Elem]
   : TestFunctions Cont where
   TestFunction x := ∀ i, TestFunction (x[i])
 
 -- noncomputable
--- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] 
+-- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem]
 --   : NormedAddCommGroup Cont where
 --   norm := fun x => (∑ i, ‖x[i]‖^2).sqrt
 --   dist_self := sorry_proof
@@ -67,7 +67,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions
 --   edist_dist := sorry_proof
 --   eq_of_dist_eq_zero := sorry_proof
 
--- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace K Elem] 
+-- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace K Elem]
 --   : NormedSpace K Cont where
 --   one_smul := sorry_proof
 --   mul_smul := sorry_proof
@@ -77,14 +77,14 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions
 --   zero_smul := sorry_proof
 --   norm_smul_le := sorry_proof
 
--- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [InnerProductSpace K Elem] 
+-- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [InnerProductSpace K Elem]
 --   : InnerProductSpace K Cont where
 --   norm_sq_eq_inner := sorry_proof
 --   conj_symm := sorry_proof
 --   add_left := sorry_proof
 --   smul_left := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] 
+instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem]
   : SemiInnerProductSpace K Cont where
   add_left := sorry_proof
   smul_left := sorry_proof
@@ -95,7 +95,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K El
   inner_with_testfun_is_continuous := sorry_proof
   inner_norm2 := by simp[Norm2.norm2]
 
-instance (priority := low) [ArrayType Cont Idx Elem] [SemiHilbert K Elem] 
+instance (priority := low) [ArrayType Cont Idx Elem] [SemiHilbert K Elem]
   : SemiHilbert K Cont where
   test_functions_true := by simp[TestFunction]; intros; apply SemiHilbert.test_functions_true
 

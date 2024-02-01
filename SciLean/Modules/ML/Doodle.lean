@@ -6,18 +6,18 @@ open SciLean ML
 
 -- #profile_this_file
 
-variable 
+variable
   {R : Type} [RealScalar R]
   [PlainDataType R]
 
 set_default_scalar R
 
 
-variable (x : R^(Idx 20)) 
+variable (x : R^(Idx 20))
 
 -- set_option profiler true in
 
-#check (revCDeriv R fun (w,w',w'',b,b',b'') => 
+#check (revCDeriv R fun (w,w',w'',b,b',b'') =>
   x |> dense (Idx 5) w' b'
     |> dense (Idx 10) w b
     |> dense (Idx 20) w'' b'')
@@ -25,7 +25,7 @@ variable (x : R^(Idx 20))
     autodiff
 
 
-#check (revCDeriv R fun (w,w',w'',w''',w'''',b,b',b'',b''',b'''') => 
+#check (revCDeriv R fun (w,w',w'',w''',w'''',b,b',b'',b''',b'''') =>
   x |> dense (Idx 5) w' b'
     |> dense (Idx 10) w b
     |> dense (Idx 20) w'' b''
@@ -62,18 +62,18 @@ variable (x : R^(Idx 20))
 
 #exit
 
-example (a : Nat) (b : Nat) 
+example (a : Nat) (b : Nat)
   : (b,a,a,0) + (b,a,a,a,a,a,a,a,a,b,b) + 0 = (b+b,a+a,a+a,a,a,a,a,a,a,b,b) := by simp
 
 example (a : K)
   : (a,0) + (a,a,a,a,a,a,a,a,a,a,a) + 0 = (a+a,a,a,a,a,a,a,a,a,a,a) := by simp
 
-example (a : K ^ Idx 10) (b : K ^ Idx 20) 
+example (a : K ^ Idx 10) (b : K ^ Idx 20)
   : (a,0) + (a,a,a,a,a,a,a,a,a,b,b) + 0 = (a+a,a,a,a,a,a,a,a,a,b,b) := by simp
 
 
 set_option trace.Meta.Tactic.simp.discharge true in
-example (a : K ^ Idx 10) (b : K ^ Idx 20) 
+example (a : K ^ Idx 10) (b : K ^ Idx 20)
   : (b,a,a,0) + (b,a,a,a,a,a,a,a,a,b,b) + 0 = (b+b,a+a,a+a,a,a,a,a,a,a,b,b) := by simp
 
 
@@ -83,8 +83,8 @@ example (a : K ^ Idx 10)
 
 
 variable (a : Nat)
-#check 
-  (a + 
+#check
+  (a +
     (a + d
     let x := a + a
     x))
@@ -104,9 +104,9 @@ example [SemiInnerProductSpace K W]
   : <∂ (fun (x : ((W × DataArrayN K (κ × ι)) × K ^ κ) × K ^ ι) (j : κ) =>
         denseLazy κ (fun (j : κ) (i : ι) => x.fst.fst.snd[(j, i)]) (fun (j : κ) => x.fst.snd[j]) (fun (i : ι) => x.snd[i]) j)
     =
-    fun _ => 0 := 
+    fun _ => 0 :=
 by
-  conv => 
+  conv =>
     lhs
     ftrans only
 
@@ -143,7 +143,7 @@ example (x : W → DataArrayN K ι) (hx : HasAdjDiff K x)
 --   withLocalDecl `hx default HX fun hx => do
 
 --   let H := q(IsDifferentiable Float fun w => ⊞ i => ($x w)[i])
---   let h ← mkFreshExprMVar H 
+--   let h ← mkFreshExprMVar H
 --   IO.println (← isDefEq hx h)
 
 
@@ -159,19 +159,19 @@ example (x : W → DataArrayN K ι) (hx : HasAdjDiff K x)
 --   withLocalDecl `hx default HX fun hx => do
 
 --   let H := q(IsDifferentiable Float fun w => ⊞ i => ($x w)[i])
---   let h ← mkFreshExprMVar H 
+--   let h ← mkFreshExprMVar H
 --   IO.println (← isDefEq hx h)
 
 -- set_option maxHeartbeats 50000
 
-  
--- set_option trace.Meta.Tactic.fprop.step true in 
+
+-- set_option trace.Meta.Tactic.fprop.step true in
 -- set_option trace.Meta.Tactic.fprop.unify true in
 -- set_option trace.Meta.Tactic.fprop.discharge true in
 
-example 
+example
   (x : Float → DataArrayN Float (Idx 10)) (hx : IsDifferentiable Float x)
-  : IsDifferentiable Float (fun w => ⊞ i => (x w)[i]) := 
+  : IsDifferentiable Float (fun w => ⊞ i => (x w)[i]) :=
 by
   fprop
 
@@ -183,22 +183,22 @@ set_default_scalar Float
 #check <∂ w, x w
 
 
-example 
+example
   : (<∂ w, ∑ i, (x w)[i])
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ sorry :=
 by
   sorry
 
 set_option trace.Meta.Tactic.simp.discharge true in
 set_option trace.Meta.Tactic.simp.rewrite true in
-#check 
+#check
   <∂ w, ∑ i, (x w)[i]
   rewrite_by
     simp (config := {zeta := false}) only [SciLean.EnumType.sum.arg_f.revCDeriv_rule _ sorry]
     simp (config := {zeta := false}) only [SciLean.revCDeriv.pi_rule _ _ sorry]
-    
+
 
     simp (config := {zeta := false}) only
     ftrans only
@@ -206,7 +206,7 @@ set_option trace.Meta.Tactic.simp.rewrite true in
 
 
 @[fprop]
-theorem dense.arg_weightsbiasx.IsDifferentiable_rule 
+theorem dense.arg_weightsbiasx.IsDifferentiable_rule
   (weights : W → DataArrayN K (κ×ι)) (bias : W → DataArrayN K κ) (x : W → DataArrayN K ι)
   (hweights : IsDifferentiable K weights) (hbias : IsDifferentiable K bias) (hx : IsDifferentiable K x)
   : IsDifferentiable K fun w => dense κ (weights w) (bias w) (x w) :=
@@ -222,11 +222,11 @@ theorem dense.arg_weightsbiasx.fwdCDeriv_rule
   : (fwdCDeriv K fun w => dense κ (weights w) (bias w) (x w) )
     =
     ((fwdCDeriv K fun w => dense κ (weights w) (bias w) (x w))
-     rewrite_by unfold dense; unfold denseLazy; autodiff) := 
+     rewrite_by unfold dense; unfold denseLazy; autodiff) :=
 by
   unfold dense; unfold denseLazy
   conv => lhs; autodiff
-  
+
 
 set_option trace.Meta.Tactic.ftrans.step true in
 @[ftrans]
@@ -236,7 +236,7 @@ theorem dense.arg_weightsbiasx.revCDeriv_rule  {W : Type} [SemiInnerProductSpace
   : (revCDeriv K fun w => dense κ (weights w) (bias w) (x w) )
     =
     ((revCDeriv K fun w => dense κ (weights w) (bias w) (x w))
-     rewrite_by unfold dense; unfold denseLazy; autodiff; autodiff) := 
+     rewrite_by unfold dense; unfold denseLazy; autodiff; autodiff) :=
 by
   sorry
 
@@ -245,17 +245,17 @@ by
 section denseDerivTest
   variable (weights : DataArrayN R (κ×ι)) (bias : DataArrayN R κ) (x : DataArrayN R ι)
 
-  #check 
+  #check
     ∇ x, dense κ weights bias x
     rewrite_by
       unfold dense; symdiff
 
-  #check 
+  #check
     ∇ bias, dense κ weights bias x
     rewrite_by
       unfold dense; symdiff
 
-  #check 
+  #check
     ∇ weights, dense κ weights bias x
     rewrite_by
       unfold dense; symdiff
@@ -269,6 +269,6 @@ structure Decomposition (X X₁ X₂ : Type) where
 
 
 example : (g : G) [Curry Xs Y] (dec : Decomposition Xs Xs₁ Xs₂) (f : F) [Curry F (Y×Xs₁) Z]
-  : revCDeriv fun xs => 
+  : revCDeriv fun xs =>
       let y := uncurry' g xs
       uncurry' f (y, dec.split xs)

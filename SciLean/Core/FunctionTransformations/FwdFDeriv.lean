@@ -28,7 +28,7 @@ variable
 variable (K)
 
 variable (X)
-theorem id_rule 
+theorem id_rule
   : fwdFDeriv K (fun x : X => x) = fun x dx => (x,dx) :=
 by
   unfold fwdFDeriv; ftrans
@@ -49,26 +49,26 @@ by
 variable {E}
 
 
-theorem comp_rule 
-  (f : Y → Z) (g : X → Y) 
+theorem comp_rule
+  (f : Y → Z) (g : X → Y)
   (hf : Differentiable K f) (hg : Differentiable K g)
-  : fwdFDeriv K (fun x : X => f (g x)) 
-    = 
-    fun x dx => 
-      let ydy := fwdFDeriv K g x dx 
-      let zdz := fwdFDeriv K f ydy.1 ydy.2 
+  : fwdFDeriv K (fun x : X => f (g x))
+    =
+    fun x dx =>
+      let ydy := fwdFDeriv K g x dx
+      let zdz := fwdFDeriv K f ydy.1 ydy.2
       zdz :=
 by
   unfold fwdFDeriv; ftrans
 
 
-theorem let_rule 
+theorem let_rule
   (f : X → Y → Z) (g : X → Y)
   (hf : Differentiable K (fun (xy : X×Y) => f xy.1 xy.2)) (hg : Differentiable K g)
-  : fwdFDeriv K (fun x : X => let y := g x; f x y) 
-    = 
-    fun x dx => 
-      let ydy := fwdFDeriv K g x dx 
+  : fwdFDeriv K (fun x : X => let y := g x; f x y)
+    =
+    fun x dx =>
+      let ydy := fwdFDeriv K g x dx
       let zdz := fwdFDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
       zdz :=
 by
@@ -78,10 +78,10 @@ by
 theorem pi_rule
   (f : X → (i : ι) → E i) (hf : ∀ i, Differentiable K (f · i))
   : (fwdFDeriv K fun (x : X) (i : ι) => f x i)
-    = 
+    =
     fun x dx =>
-      (fun i => f x i, fun i => (fwdFDeriv K (f · i) x dx).2) := 
-by 
+      (fun i => f x i, fun i => (fwdFDeriv K (f · i) x dx).2) :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -89,35 +89,35 @@ theorem comp_rule_at
   (f : Y → Z) (g : X → Y) (x : X)
   (hf : DifferentiableAt K f (g x)) (hg : DifferentiableAt K g x)
   : fwdFDeriv K (fun x : X => f (g x)) x
-    = 
-    fun dx => 
-      let ydy := fwdFDeriv K g x dx 
-      let zdz := fwdFDeriv K f ydy.1 ydy.2 
+    =
+    fun dx =>
+      let ydy := fwdFDeriv K g x dx
+      let zdz := fwdFDeriv K f ydy.1 ydy.2
       zdz :=
 by
   unfold fwdFDeriv; ftrans; simp
 
 
 theorem let_rule_at
-  (f : X → Y → Z) (g : X → Y) (x : X)  
+  (f : X → Y → Z) (g : X → Y) (x : X)
   (hf : DifferentiableAt K (fun (xy : X×Y) => f xy.1 xy.2) (x, g x)) (hg : DifferentiableAt K g x)
   : fwdFDeriv K (fun x : X => let y := g x; f x y) x
-    = 
-    fun dx => 
-      let ydy := fwdFDeriv K g x dx 
+    =
+    fun dx =>
+      let ydy := fwdFDeriv K g x dx
       let zdz := fwdFDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
       zdz :=
 by
   unfold fwdFDeriv; ftrans; simp
 
 
-theorem pi_rule_at  
+theorem pi_rule_at
   (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f · i) x)
   : (fwdFDeriv K fun (x : X) (i : ι) => f x i) x
     =
     fun dx =>
-      (fun i => f x i, fun i => (fwdFDeriv K (f · i) x dx).2) := 
-by 
+      (fun i => f x i, fun i => (fwdFDeriv K (f · i) x dx).2) :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -125,7 +125,7 @@ by
 -- Register `fwdFDeriv` as function transformation ------------------------------
 --------------------------------------------------------------------------------
 
-open Lean Meta Qq 
+open Lean Meta Qq
 def discharger (e : Expr) : SimpM (Option Expr) := do
   withTraceNode `fwdFDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
@@ -146,20 +146,20 @@ open Lean Elab Term FTrans in
 def ftransExt : FTransExt where
   ftransName := ``fwdFDeriv
 
-  getFTransFun? e := 
+  getFTransFun? e :=
     if e.isAppOf ``fwdFDeriv then
 
       if let .some f := e.getArg? 8 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFTransFun e f := 
+  replaceFTransFun e f :=
     if e.isAppOf ``fwdFDeriv then
       e.setArg 8 f
-    else          
+    else
       e
 
   idRule  e X := do
@@ -218,7 +218,7 @@ end SciLean.fwdFDeriv
 
 open SciLean
 
-variable 
+variable
   {K : Type _} [NontriviallyNormedField K]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
@@ -240,8 +240,8 @@ theorem Prod.mk.arg_fstsnd.fwdFDeriv_rule_at
     fun dx =>
       let ydy := fwdFDeriv K g x dx
       let zdz := fwdFDeriv K f x dx
-      ((ydy.1, zdz.1), (ydy.2, zdz.2)) := 
-by 
+      ((ydy.1, zdz.1), (ydy.2, zdz.2)) :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -250,15 +250,15 @@ theorem Prod.mk.arg_fstsnd.fwdFDeriv_rule
   (g : X → Y) (hg : Differentiable K g)
   (f : X → Z) (hf : Differentiable K f)
   : fwdFDeriv K (fun x => (g x, f x))
-    =    
+    =
     fun x dx =>
       let ydy := fwdFDeriv K g x dx
       let zdz := fwdFDeriv K f x dx
-      ((ydy.1, zdz.1), (ydy.2, zdz.2)) := 
-by 
+      ((ydy.1, zdz.1), (ydy.2, zdz.2)) :=
+by
   unfold fwdFDeriv; ftrans
 
- 
+
 
 -- Prod.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -271,8 +271,8 @@ theorem Prod.fst.arg_self.fwdFDeriv_rule_at
     =
     fun dx =>
       let yzdyz := fwdFDeriv K f x dx
-      (yzdyz.1.1, yzdyz.2.1) := 
-by 
+      (yzdyz.1.1, yzdyz.2.1) :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -284,7 +284,7 @@ theorem Prod.fst.arg_self.fwdFDeriv_rule
     fun x dx =>
       let yzdyz := fwdFDeriv K f x dx
       (yzdyz.1.1, yzdyz.2.1) :=
-by 
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -300,8 +300,8 @@ theorem Prod.snd.arg_self.fwdFDeriv_rule_at
     =
     fun dx =>
       let yzdyz := fwdFDeriv K f x dx
-      (yzdyz.1.2, yzdyz.2.2) := 
-by 
+      (yzdyz.1.2, yzdyz.2.2) :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -312,8 +312,8 @@ theorem Prod.snd.arg_self.fwdFDeriv_rule
     =
     fun x dx =>
       let yzdyz := fwdFDeriv K f x dx
-      (yzdyz.1.2, yzdyz.2.2) := 
-by 
+      (yzdyz.1.2, yzdyz.2.2) :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -327,8 +327,8 @@ theorem HAdd.hAdd.arg_a0a1.fwdFDeriv_rule_at
   : (fwdFDeriv K fun x => f x + g x) x
     =
     fun dx =>
-      fwdFDeriv K f x dx + fwdFDeriv K g x dx := 
-by 
+      fwdFDeriv K f x dx + fwdFDeriv K g x dx :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -338,8 +338,8 @@ theorem HAdd.hAdd.arg_a0a1.fwdFDeriv_rule
   : (fwdFDeriv K fun x => f x + g x)
     =
     fun x dx =>
-      fwdFDeriv K f x dx + fwdFDeriv K g x dx := 
-by 
+      fwdFDeriv K f x dx + fwdFDeriv K g x dx :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -353,8 +353,8 @@ theorem HSub.hSub.arg_a0a1.fwdFDeriv_rule_at
   : (fwdFDeriv K fun x => f x - g x) x
     =
     fun dx =>
-      fwdFDeriv K f x dx - fwdFDeriv K g x dx := 
-by 
+      fwdFDeriv K f x dx - fwdFDeriv K g x dx :=
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -365,7 +365,7 @@ theorem HSub.hSub.arg_a0a1.fwdFDeriv_rule
     =
     fun x dx =>
       fwdFDeriv K f x dx - fwdFDeriv K g x dx :=
-by 
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -379,7 +379,7 @@ theorem Neg.neg.arg_a0.fwdFDeriv_rule_at
   : (fwdFDeriv K fun x => - f x) x
     =
     fun dx => - fwdFDeriv K f x dx :=
-by 
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -389,7 +389,7 @@ theorem Neg.neg.arg_a0.fwdFDeriv_rule
   : (fwdFDeriv K fun x => - f x)
     =
     fun x dx => - fwdFDeriv K f x dx :=
-by  
+by
   unfold fwdFDeriv; ftrans
 
 
@@ -398,7 +398,7 @@ by
 
 @[ftrans]
 theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule_at
-  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
+  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y]
   (x : X) (f g : X → Y)
   (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
   : (fwdFDeriv K fun x => f x * g x) x
@@ -407,13 +407,13 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule_at
       let ydy := (fwdFDeriv K f x dx)
       let zdz := (fwdFDeriv K g x dx)
       (ydy.1 * zdz.1, zdz.2 * ydy.1 + ydy.2 * zdz.1) :=
-by 
+by
   unfold fwdFDeriv; ftrans; simp
 
 
 @[ftrans]
 theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule
-  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] 
+  {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y]
   (f g : X → Y)
   (hf : Differentiable K f) (hg : Differentiable K g)
   : (fwdFDeriv K fun x => f x * g x)
@@ -422,7 +422,7 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule
       let ydy := (fwdFDeriv K f x dx)
       let zdz := (fwdFDeriv K g x dx)
       (ydy.1 * zdz.1, zdz.2 * ydy.1 + ydy.2 * zdz.1) :=
-by 
+by
   unfold fwdFDeriv; ftrans; simp
 
 
@@ -431,7 +431,7 @@ by
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.fwdFDeriv_rule_at
-  (x : X) (f : X → K) (g : X → Y) 
+  (x : X) (f : X → K) (g : X → Y)
   (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
   : (fwdFDeriv K fun x => f x • g x) x
     =
@@ -439,13 +439,13 @@ theorem HSMul.hSMul.arg_a0a1.fwdFDeriv_rule_at
       let ydy := (fwdFDeriv K f x dx)
       let zdz := (fwdFDeriv K g x dx)
       (ydy.1 • zdz.1, ydy.1 • zdz.2 + ydy.2 • zdz.1) :=
-by 
+by
   unfold fwdFDeriv; ftrans; simp
 
 
 @[ftrans]
 theorem HSMul.hSMul.arg_a0a1.fwdFDeriv_rule
-  (f : X → K) (g : X → Y) 
+  (f : X → K) (g : X → Y)
   (hf : Differentiable K f) (hg : Differentiable K g)
   : (fwdFDeriv K fun x => f x • g x)
     =
@@ -453,7 +453,7 @@ theorem HSMul.hSMul.arg_a0a1.fwdFDeriv_rule
       let ydy := (fwdFDeriv K f x dx)
       let zdz := (fwdFDeriv K g x dx)
       (ydy.1 • zdz.1, ydy.1 • zdz.2 + ydy.2 • zdz.1) :=
-by 
+by
   unfold fwdFDeriv; ftrans; simp
 
 
@@ -463,7 +463,7 @@ by
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at
   {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
-  (x : R) (f : R → K) (g : R → K) 
+  (x : R) (f : R → K) (g : R → K)
   (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x) (hx : g x ≠ 0)
   : (fwdFDeriv R fun x => f x / g x) x
     =
@@ -471,14 +471,14 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at
       let ydy := (fwdFDeriv R f x dx)
       let zdz := (fwdFDeriv R g x dx)
       (ydy.1 / zdz.1, (ydy.2 * zdz.1 - ydy.1 * zdz.2) / zdz.1^2) :=
-by 
+by
   unfold fwdFDeriv; ftrans; simp
 
 
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule
   {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
-  (f : R → K) (g : R → K) 
+  (f : R → K) (g : R → K)
   (hf : Differentiable R f) (hg : Differentiable R g) (hx : ∀ x, g x ≠ 0)
   : (fwdFDeriv R fun x => f x / g x)
     =
@@ -486,32 +486,32 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule
       let ydy := (fwdFDeriv R f x dx)
       let zdz := (fwdFDeriv R g x dx)
       (ydy.1 / zdz.1, (ydy.2 * zdz.1 - ydy.1 * zdz.2) / zdz.1^2) :=
-by 
+by
   unfold fwdFDeriv; ftrans; simp
 
 
 -- HPow.hPow -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[ftrans]
 def HPow.hPow.arg_a0.fwdFDeriv_rule_at
-  (n : Nat) (x : X) (f : X → K) (hf : DifferentiableAt K f x) 
+  (n : Nat) (x : X) (f : X → K) (hf : DifferentiableAt K f x)
   : fwdFDeriv K (fun x => f x ^ n) x
     =
     fun dx =>
       let ydy := fwdFDeriv K f x dx
       (ydy.1 ^ n, n * ydy.2 * (ydy.1 ^ (n-1))) :=
-by 
+by
   unfold fwdFDeriv; ftrans
 
 
 @[ftrans]
 def HPow.hPow.arg_a0.fwdFDeriv_rule
-  (n : Nat) (f : X → K) (hf : Differentiable K f) 
+  (n : Nat) (f : X → K) (hf : Differentiable K f)
   : fwdFDeriv K (fun x => f x ^ n)
     =
     fun x dx =>
       let ydy := fwdFDeriv K f x dx
       (ydy.1 ^ n, n * ydy.2 * (ydy.1 ^ (n-1))) :=
-by 
+by
   unfold fwdFDeriv; ftrans

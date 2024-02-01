@@ -8,9 +8,9 @@ namespace SciLean.Meta
 private def mkAlgebraInstance (algName : Name) (declName : Name) : TermElabM Unit := do
   let env ← getEnv
   match getStructureInfo? env declName with
-  | some info => do  
+  | some info => do
     let structType ← Meta.inferType (mkConst info.structName)
-    let instValue ← Meta.forallTelescope structType λ xs _ => 
+    let instValue ← Meta.forallTelescope structType λ xs _ =>
     do
       let strct ← Meta.mkAppOptM info.structName (xs.map some)
       Meta.mkLambdaFVars xs (← Meta.mkAppM (`SciLean.Meta |>.append algName |>.append `sorryMk) #[strct, (mkConst ``Unit.unit)])
@@ -28,7 +28,7 @@ private def mkAlgebraInstance (algName : Name) (declName : Name) : TermElabM Uni
        }
     addAndCompile instDecl
     Attribute.add instName "instance" default
-  | none => 
+  | none =>
     pure default
 
 -- The (_ : Unit) argument is there to only force that all the classes are infered when we apply `mkAppM`
@@ -168,5 +168,3 @@ initialize
   registerDerivingHandler ``AddGroup mkAddGroupHandler
   registerDerivingHandler ``AddCommGroup mkAddCommGroupHandler
   registerDerivingHandler ``Vec mkVecHandler
-
-

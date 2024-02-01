@@ -15,20 +15,20 @@ namespace SciLean
 
 open Classical
 
-/-- `K` are real or complex numbers over real numbers `R` 
+/-- `K` are real or complex numbers over real numbers `R`
 
-This class allows us to write code independent of particular implementation of real or complex numbers. 
+This class allows us to write code independent of particular implementation of real or complex numbers.
 
 The main motivation for this class is to treat floating point numbers as real numbers but to minimize the impact of such unsoundness. We can write code with valid proofs and only at the last step before compilation provide inconsistent instance `Scalar Float Float`.
 
 An alternative approach to get executable code would be to add a custom compiler step which would replace every occurance of real or complex numbers with their floating point equivalent. Implementing such compiler step turned out to be quite a non-trivial task thus we are taking this type class approach. -/
 class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC K where
   -- used for specification
-  toComplex : K → ℂ 
+  toComplex : K → ℂ
   toReal    : R → ℝ
 
   make : R → R → K
-  make_def : ∀ x y : R, 
+  make_def : ∀ x y : R,
     if ∀ y : K, im y = 0 then
       toComplex (make x y) = ⟨toReal x, 0⟩
     else
@@ -42,7 +42,7 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
 
   sin (x : K) : K
   sin_def : ∀ x, toComplex (sin x) = Complex.sin (toComplex x)
-  
+
   cos (x : K) : K
   cos_def : ∀ x, toComplex (cos x) = Complex.cos (toComplex x)
 
@@ -59,7 +59,7 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
   log_def : ∀ x, toComplex (log x) = Complex.log (toComplex x)
 
   sqrt (x : K) : K
-  sqrt_def : ∀ x, 
+  sqrt_def : ∀ x,
     if ∀ y : K, im y = 0 then
       -- for reals
       IsROrC.re (toComplex (sqrt x)) = Real.sqrt (IsROrC.re (toComplex x))
@@ -67,7 +67,7 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
       -- for complex
       toComplex (sqrt x) = (toComplex x).cpow (1/2)
 
-  pow (x y : K) : K 
+  pow (x y : K) : K
   pow_def : ∀ x y,
     if ∀ z : K, im z = 0 then
       -- for reals
@@ -86,9 +86,9 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
   -- cbrt : K → K
 
 
-/-- `R` behaves as real numbers 
+/-- `R` behaves as real numbers
 
-This class allows us to write code independent of particular implementation of real numbers. 
+This class allows us to write code independent of particular implementation of real numbers.
 
 See `Scalar` for motivation for this class.
 -/
@@ -97,7 +97,7 @@ class RealScalar (R : semiOutParam (Type _)) extends Scalar R R, LinearOrder R w
 
   asin (x : R) : R
   asin_def : ∀ x, toReal (asin x) = Real.arcsin (toReal x)
-  
+
   acos (x : R) : R
   acos_def : ∀ x, toReal (acos x) = Real.arccos (toReal x)
 
@@ -110,9 +110,9 @@ instance {R K} [Scalar R K] : HPow K K K := ⟨fun x y => Scalar.pow x y⟩
 
   -- floor
   -- ceil
-  
 
-open ComplexConjugate 
+
+open ComplexConjugate
 
 @[simp, ftrans_simp]
 theorem conj_for_real_scalar {R} [RealScalar R] (r : R)
@@ -135,7 +135,7 @@ instance : Scalar ℝ ℂ where
 
   sin x := x.sin
   sin_def := by intros; simp
-  
+
   cos x := x.cos
   cos_def := by intros; simp
 
@@ -177,7 +177,7 @@ noncomputable instance : RealScalar ℝ where
 
   sin x := x.sin
   sin_def := by intros; simp[Real.sin]; sorry_proof
-  
+
   cos x := x.cos
   cos_def := by intros; simp[Real.cos]; sorry_proof
 
@@ -204,7 +204,7 @@ noncomputable instance : RealScalar ℝ where
 
   sqrt x := x.sqrt
   sqrt_def := by intros; simp
-  
+
   pow x y := x.rpow y
   pow_def := by intros; simp; rfl
 
@@ -223,7 +223,7 @@ noncomputable instance : RealScalar ℝ where
     else
       .isFalse h
 
-  decidableEq x y := 
+  decidableEq x y :=
     have := Classical.propDecidable
     if h : x = y then
       .isTrue h
@@ -239,7 +239,7 @@ noncomputable instance : RealScalar ℝ where
 
   min := fun a b => if a ≤ b then a else b
   max := fun a b => if a ≤ b then b else a
-  min_def := by sorry_proof 
+  min_def := by sorry_proof
   max_def := by sorry_proof
   compare a b := compareOfLessAndEq a b
   compare_eq_compareOfLessAndEq := by

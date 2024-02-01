@@ -4,15 +4,15 @@ import SciLean.Core.IsSmoothDep
 namespace SciLean
 
 variable {X Y Z W Y₁ Y₂ Y₃} [Diff X] [Diff Y] [Diff Z] [Diff W] [Diff Y₁] [Diff Y₂] [Diff Y₃]
-  {α β γ : Type} 
+  {α β γ : Type}
 
-noncomputable 
+noncomputable
 def differentialDep (f : X → Y) : (x : X) → 𝒯[x] X → 𝒯[f x] Y := sorry
 
-noncomputable 
+noncomputable
 def tangentMapDep (f : X → Y) : 𝒯 X → 𝒯 Y := λ ⟨x,dx⟩ => ⟨f x, differentialDep f x dx⟩
 
-noncomputable 
+noncomputable
 def tangentMapDep' (f : X → Y) (x : X) (dx : 𝒯[x] X) : (Σ' (y:Y) (dy : 𝒯[y] Y), (f x=y)) := ⟨f x, differentialDep f x dx, rfl⟩
 
 instance(priority:=mid-1) (f : X → Y) : Partial f (differentialDep f) := ⟨⟩
@@ -58,11 +58,11 @@ theorem differentialDep.of_diag
   (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f]
   (g₁ : X → Y₁) [IsSmoothDepT g₁]
   (g₂ : X → Y₂) [IsSmoothDepT g₂]
-  : ∂ (λ x => f (g₁ x) (g₂ x)) 
-    = 
-    λ x dx => 
+  : ∂ (λ x => f (g₁ x) (g₂ x))
+    =
+    λ x dx =>
       let ⟨y₁,dy₁,h₁⟩ := 𝒯 g₁ x dx
-      let ⟨y₂,dy₂,h₂⟩ := 𝒯 g₂ x dx 
+      let ⟨y₂,dy₂,h₂⟩ := 𝒯 g₂ x dx
       -- let y₁ := g₁ x
       -- let dy₁ := ∂ g₁ x dx
       -- let y₂ := g₂ x
@@ -73,7 +73,7 @@ theorem differentialDep.of_diag
 
 @[simp ↓ low-5]
 theorem differentialDep.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f]
-  : ∂ (uncurryN 2 f) 
+  : ∂ (uncurryN 2 f)
     =
     λ (y₁,y₂) (dy₁,dy₂) =>
     ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂
@@ -82,7 +82,7 @@ theorem differentialDep.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f
 @[simp ↓ low]
 theorem differentialDep.of_parm
   (f : X → α → Y) [IsSmoothDepT f] (a : α)
-  : ∂ (λ x => f x a) = λ x dx => ∂ f x dx a := 
+  : ∂ (λ x => f x a) = λ x dx => ∂ f x dx a :=
 by
   rw[differentialDep.of_swap (λ a x => f x a)]
 
@@ -93,14 +93,14 @@ theorem differentialDep.of_eval
 
 @[simp ↓]
 theorem Prod.fst.arg_xy.diffDep_simp
-  : ∂ (Prod.fst : X×Y → X) 
+  : ∂ (Prod.fst : X×Y → X)
     =
     λ xy dxy => dxy.1
   := sorry_proof
 
 @[simp ↓]
 theorem Prod.snd.arg_xy.diffDep_simp
-  : ∂ (Prod.snd : X×Y → Y) 
+  : ∂ (Prod.snd : X×Y → Y)
     =
     λ xy dxy => dxy.2
   := sorry_proof
@@ -128,9 +128,9 @@ theorem tangentMapDep.of_swap (f : α → X → Y) [∀ i, IsSmoothDepT (f i)]
 theorem tangentMapDep.of_comp
   (f : Y → Z) [IsSmoothDepT f]
   (g : X → Y) [IsSmoothDepT g]
-  : 𝒯 (λ x => f (g x)) 
-    = 
-    λ x dx => 
+  : 𝒯 (λ x => f (g x))
+    =
+    λ x dx =>
       let ⟨y,dy,h⟩ := 𝒯 g x dx
       h ▸ 𝒯 f y dy
   := by simp[tangentMapDep']; done
@@ -141,39 +141,39 @@ theorem tangentMapDep.of_diag
   (g₁ : X → Y₁) [IsSmoothDepT g₁]
   (g₂ : X → Y₂) [IsSmoothDepT g₂]
   : 𝒯 (λ x => f (g₁ x) (g₂ x))
-    = 
-    λ x dx => 
-      let ⟨y₁,dy₁,h₁⟩ := 𝒯 g₁ x dx 
+    =
+    λ x dx =>
+      let ⟨y₁,dy₁,h₁⟩ := 𝒯 g₁ x dx
       let ⟨y₂,dy₂,h₂⟩ := 𝒯 g₂ x dx
       -- (f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂)
       h₁ ▸ h₂ ▸ 𝒯 (uncurryN 2 f) (y₁,y₂) (dy₁,dy₂)
-  := by 
+  := by
     funext x dx
     simp[tangentMapDep']
     done
 
 
 
-/-- Last resort theorem that changes tangent map to normal differential 
+/-- Last resort theorem that changes tangent map to normal differential
 
 Bilinear maps should usually provide a rewrite rule for `𝒯 (uncurryN 2 f)`
 -/
 @[simp ↓ low-5]
 theorem tangentMapDep.of_uncurryN (f : Y₁ → Y₂ → Z) [IsSmoothDepNT 2 f]
-  : 𝒯 (uncurryN 2 f) 
+  : 𝒯 (uncurryN 2 f)
     =
     λ  (y₁,y₂) (dy₁,dy₂) =>
     ⟨f y₁ y₂, ∂ f y₁ dy₁ y₂ + ∂ (f y₁) y₂ dy₂, rfl⟩
-  := by 
+  := by
     simp[tangentMapDep']
     done
 
 @[simp ↓ low]
 theorem tangentMapDep.of_parm
   (f : X → α → Y) [IsSmoothDepT f] (a : α)
-  : 𝒯 (λ x => f x a) 
-    = 
-    λ x dx => 
+  : 𝒯 (λ x => f x a)
+    =
+    λ x dx =>
       let ⟨f',df',h⟩ := 𝒯 f x dx
       ⟨f' a, df' a, by rw[h]; done⟩
   := by simp[tangentMapDep']; done
@@ -181,9 +181,9 @@ theorem tangentMapDep.of_parm
 @[simp ↓]
 theorem tangentMapDep.of_eval
   (a : α)
-  : 𝒯 (λ f : α → Y => f a) 
-    = 
-    λ f df => 
+  : 𝒯 (λ f : α → Y => f a)
+    =
+    λ f df =>
       ⟨f a, df a, rfl⟩
   := by simp[tangentMapDep']; done
 

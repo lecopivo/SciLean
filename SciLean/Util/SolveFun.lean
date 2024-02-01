@@ -18,7 +18,7 @@ attribute [local instance] Classical.propDecidable
 
 structure HasSolution {F Xs} [UncurryAll F Xs Prop] (P : F) : Prop where
   ex : ∃ xs, uncurryAll P xs
-  
+
 structure HasUniqueSolution {F Xs} [UncurryAll F Xs Prop] (P : F) extends HasSolution P : Prop where
   uniq : ∀ xs xs', uncurryAll P xs → uncurryAll P xs' → xs = xs'
 
@@ -99,7 +99,7 @@ namespace SolveFun
 
 open Lean Meta
 
-/-- Take and expresion of the form `P₁ ∧ ... ∧ Pₙ` and return array `#[P₁, ..., Pₙ]` 
+/-- Take and expresion of the form `P₁ ∧ ... ∧ Pₙ` and return array `#[P₁, ..., Pₙ]`
 
 It ignores bracketing, so both `(P₁ ∧ P₂) ∧ P₃` and `P₁ ∧ (P₂ ∧ P₃)` produce `#[P₁, P₂, P₃]`-/
 def splitAnd? (e : Expr) : MetaM (Array Expr) := do
@@ -125,9 +125,9 @@ Returns:
 
 3. proof obligation that the decomposed problem has unique solution
 
---- 
+---
 
-For example calling `solveForFrom · #[1,3] #[0,1]` on 
+For example calling `solveForFrom · #[1,3] #[0,1]` on
 
 ```
   solve x y z w, P ∧ Q ∧ R ∧ T
@@ -138,7 +138,7 @@ will return
 ```
   let yw' := fun x z => solve y w, P ∧ Q
 
-  fun (x,z) := solve x z, R ∧ T     
+  fun (x,z) := solve x z, R ∧ T
 
   let (y,w) := yw' x z
 
@@ -165,10 +165,10 @@ def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := 
 
       if ¬(js.size < Ps.size) then
         throwError "can't decompose `solve` with respect to all equations"
-  
+
       let (ys,zs,ids) := xs.splitIdx (fun i _ => ¬(is.contains i.1))
       let (Qs₁,Qs₂,_) := Ps.splitIdx (fun j _ => js.contains j.1)
-     
+
       let zsName ← zs.joinlM (fun z => z.fvarId!.getUserName) (fun a b => pure <| a.appendAfter b.toString)
       let ysName ← ys.joinlM (fun y => y.fvarId!.getUserName) (fun a b => pure <| a.appendAfter b.toString)
 
@@ -192,7 +192,7 @@ def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := 
       let zsVal ← mkAppM' zs'Var (← mkProdSplitElem ysVar ys.size)
       withLetDecl zsName (← inferType zsVal) zsVal fun zsVar => do
 
-      let xs ← ids.mapM (fun id : Sum Nat Nat => 
+      let xs ← ids.mapM (fun id : Sum Nat Nat =>
         match id with
         | .inl i => mkProdProj ysVar i ys.size
         | .inr i => mkProdProj zsVar i zs.size)
@@ -217,7 +217,7 @@ def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := 
 
 def solveForNameFrom (e : Expr) (names : Array Name) (js : Array Nat) : MetaM (Expr×Expr×MVarId) := do
   if e.isAppOfArity ``solveFun 5 then do
-    let is ← lambdaTelescope (e.getArg! 4) fun xs _ => 
+    let is ← lambdaTelescope (e.getArg! 4) fun xs _ =>
       names.mapM (fun name => do
         let .some i ← xs.findIdxM? (fun x => do pure <| (← x.fvarId!.getUserName) = name)
           | throwError "no unknown with the name `{name}`"
@@ -225,14 +225,14 @@ def solveForNameFrom (e : Expr) (names : Array Name) (js : Array Nat) : MetaM (E
     solveForFrom e is js
   else
     throwError "not an expression of the form `solve x₁ .. xₙ, P₁ ∧ ... ∧ Pₘ`"
-      
 
 
 
-open Lean Parser Syntax 
 
-/-- 
-Tactic `solve_for y w from 0 1 := uniq` will decompose `solve x y z w, ...` problem 
+open Lean Parser Syntax
+
+/--
+Tactic `solve_for y w from 0 1 := uniq` will decompose `solve x y z w, ...` problem
 by first solving for `y` and `w` from `0`th and `2`th equations and then solving the rest.
 You have to provide proof `uniq` that the decomposed problem has unique solution.
 
@@ -249,7 +249,7 @@ produces
 ```
   let yw' := fun x z => solve y w, P ∧ Q
 
-  fun (x,z) := solve x z, R ∧ T     
+  fun (x,z) := solve x z, R ∧ T
 
   let (y,w) := yw' x z
 
@@ -257,7 +257,7 @@ produces
 ```
 
 Warring: this tactic currently uses `sorry`!-/
-local syntax (name:=solve_for_core_tactic) "solve_for_core " ident+ " from " num+ " := " term : conv 
+local syntax (name:=solve_for_core_tactic) "solve_for_core " ident+ " from " num+ " := " term : conv
 
 @[inherit_doc solve_for_core_tactic]
 macro (name:=solve_for_tacitc) "solve_for " xs:ident+ " from " js:num+ " := " uniq:term : conv =>
@@ -265,14 +265,14 @@ macro (name:=solve_for_tacitc) "solve_for " xs:ident+ " from " js:num+ " := " un
 
 
 open Lean Elab Tactic Conv
-@[tactic solve_for_core_tactic] def solveForTactic : Tactic := fun stx => 
+@[tactic solve_for_core_tactic] def solveForTactic : Tactic := fun stx =>
   withMainContext do
   match stx with
   | `(conv| solve_for_core $xs* from $js* := $prf) => do
     let names := xs.map (fun x => x.getId)
     let js := js.map (fun j => j.getNat)
     let lhs ← getLhs
-    
+
     let (lhs', eq, uniqueMVar) ← withMainContext <| solveForNameFrom lhs names js
 
     let uniqueProof ← elabTerm prf (← uniqueMVar.getType)
@@ -285,35 +285,35 @@ open Lean Elab Tactic Conv
 
 
 open Function
-/-- 
-Rewrite `solve` as `invFun` 
+/--
+Rewrite `solve` as `invFun`
 
 TODO: There might be slight inconsistency as `invFun` always tries to give you some kind of answer even if it is not uniquely determined but `solve` gives up if the answer is not unique.
 
-The issue is that I'm not sure if 
-`Classical.choose (∃ x, f x - g x = 0)` might not be the same as `Classical.choose (∃ x, f x = g x)` or is that 
+The issue is that I'm not sure if
+`Classical.choose (∃ x, f x - g x = 0)` might not be the same as `Classical.choose (∃ x, f x = g x)` or is that
 -/
-theorem solve_as_invFun {α β : Type _} [Nonempty α] (f g : α → β) [AddGroup β] 
+theorem solve_as_invFun {α β : Type _} [Nonempty α] (f g : α → β) [AddGroup β]
   : (solve x, f x = g x)
     =
     invFun (fun x => f x - g x) 0
   := sorry_proof
 
 
-theorem solve_as_invFun_lhs {α β : Type _} [Nonempty α] (f : α → β) (b : β) [AddGroup β] 
+theorem solve_as_invFun_lhs {α β : Type _} [Nonempty α] (f : α → β) (b : β) [AddGroup β]
   : (solve x, f x = b)
     =
     invFun f b
   := sorry_proof
 
-theorem solve_as_invFun_rhs {α β : Type _} [Nonempty α] (f : α → β) (b : β) [AddGroup β] 
+theorem solve_as_invFun_rhs {α β : Type _} [Nonempty α] (f : α → β) (b : β) [AddGroup β]
   : (solve x, b = f x)
     =
     invFun f b
   := sorry_proof
-  
 
-macro "solve_as_inv" : conv => `(conv| (conv => pattern (solveFun _); first | rw[solve_as_invFun_lhs] | rw[solve_as_invFun_rhs] | rw[solve_as_invFun])) 
+
+macro "solve_as_inv" : conv => `(conv| (conv => pattern (solveFun _); first | rw[solve_as_invFun_lhs] | rw[solve_as_invFun_rhs] | rw[solve_as_invFun]))
 
 
 
@@ -326,7 +326,7 @@ let b := b' a c;
 (a, b, c) : ℤ × ℤ × ℤ
 -/
 #guard_msgs in
-#check 
+#check
   (solve (a b c : Int), a+b+c=1 ∧ a-b+c=1 ∧ a-b-c=1)
   rewrite_by
     solve_for b from 2 := sorry_proof
@@ -346,4 +346,3 @@ let a := a' b;
   (solve (a b : Nat), (∀ c, a + b + c = c) ∧ (∀ c, a + c = c))
   rewrite_by
     solve_for a from 1 := sorry_proof
-

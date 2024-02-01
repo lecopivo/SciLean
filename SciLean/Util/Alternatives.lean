@@ -1,15 +1,15 @@
 import Lean
 namespace SciLean
 
-/-- 
+/--
 Gadget structure providing a term that is either `a` or `b`.
 
-Sometimes you know that a certain term has multiple alternative forms and you do not want to pick one or the other. The decision which version should 
+Sometimes you know that a certain term has multiple alternative forms and you do not want to pick one or the other. The decision which version should
 -/
 structure Alternatives {α} (a b : α) where
   eq : a = b
 
-@[irreducible] 
+@[irreducible]
 def Alternatives.choose {α} (a b : α) (ap : Alternatives a b) : α := a
 
 theorem Alternatives.pick_fst {α} {a b : α} (ap : Alternatives a b)
@@ -18,7 +18,7 @@ theorem Alternatives.pick_fst {α} {a b : α} (ap : Alternatives a b)
 theorem Alternatives.pick_snd {α} {a b : α} (ap : Alternatives a b)
   : ap.choose = b := by unfold Alternatives.choose; rw [ap.eq]
 
-/-- Term equal either to `x` or `y`. 
+/-- Term equal either to `x` or `y`.
 
 Pick `x` by calling tactic `alternatives_fst` or `y` by calling `alternatives_snd`
 
@@ -29,14 +29,14 @@ alternatives
   fst: 8
   snd: 2^3
   by native_decide
-```  
+```
 
 This is a term equal to `8` or `2^3`, each form might be usefull in different scenarios.
 -/
-macro " alternatives " linebreak " fst: " a:term linebreak " snd: " b:term  linebreak " by " proof:tacticSeq : term => 
+macro " alternatives " linebreak " fst: " a:term linebreak " snd: " b:term  linebreak " by " proof:tacticSeq : term =>
   `(Alternatives.choose $a $b (Alternatives.mk (by $proof)))
 
-macro " alternatives " linebreak " fst: " a:term linebreak " snd: " b:term  linebreak " by' " proof:term : term => 
+macro " alternatives " linebreak " fst: " a:term linebreak " snd: " b:term  linebreak " by' " proof:term : term =>
   `(Alternatives.choose $a $b (Alternatives.mk $proof))
 
 
@@ -47,17 +47,17 @@ macro " alternatives_snd " : conv => `(conv| simp (config := {zeta := false}) on
 
 
 @[app_unexpander Alternatives.choose] def unexpandAlternativecChoose : Lean.PrettyPrinter.Unexpander
-  | `($(_) $a $b $ap) => 
+  | `($(_) $a $b $ap) =>
     `(alternatives
        fst: $a
        snd: $b
        by' _)
-  | `($(_) $a $b $ap $x) => 
+  | `($(_) $a $b $ap $x) =>
     `(alternatives
        fst: $a $x
        snd: $b $x
        by' _)
-  | `($(_) $a $b $ap $x $y) => 
+  | `($(_) $a $b $ap $x $y) =>
     `(alternatives
        fst: $a $x $y
        snd: $b $x $y
@@ -66,17 +66,15 @@ macro " alternatives_snd " : conv => `(conv| simp (config := {zeta := false}) on
 
 
 variable (a b : Nat) (h : a = b)
-#check 
-  alternatives 
-    fst: 
-      λ x : Nat => 
+#check
+  alternatives
+    fst:
+      λ x : Nat =>
         let y := x + x + x + x
         y + y
-    snd: 
-      λ x : Nat => 
+    snd:
+      λ x : Nat =>
         let y := x + x + x + x
         let y := x + x + x + x
         x + x + x + x
     by sorry
-
-

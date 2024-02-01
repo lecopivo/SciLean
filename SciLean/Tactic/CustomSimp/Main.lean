@@ -83,9 +83,9 @@ def simp (e : Expr) (ctx : Simp.Context) (discharge? : Option Simp.Discharge := 
     (pres posts : Array (Expr → SimpM Simp.Step))
     (usedSimps : UsedSimps := {})
     : MetaM (Simp.Result × UsedSimps) :=
-do 
+do
   profileitM Exception "simp" (← getOptions) do
-  let methods := 
+  let methods :=
     (match discharge? with
     | none => DefaultMethods.methods
     | some d => { pre := (preDefault · d), post := (Simp.postDefault · d), discharge? := d })
@@ -108,7 +108,7 @@ def applySimpResultToTarget (mvarId : MVarId) (target : Expr) (r : Simp.Result) 
 
 /-- See `simpTarget`. This method assumes `mvarId` is not assigned, and we are already using `mvarId`s local context. -/
 def simpTargetCore (mvarId : MVarId) (ctx : Simp.Context) (discharge? : Option Simp.Discharge := none)
-    (mayCloseGoal := true) (pres posts : Array (Expr → SimpM Simp.Step)) (usedSimps : UsedSimps := {}) 
+    (mayCloseGoal := true) (pres posts : Array (Expr → SimpM Simp.Step)) (usedSimps : UsedSimps := {})
     : MetaM (Option MVarId × UsedSimps) := do
   let target ← instantiateMVars (← mvarId.getType)
   let (r, usedSimps) ← simp target ctx discharge? pres posts usedSimps

@@ -12,18 +12,18 @@ variable [LinearGenericArrayType Cont Elem]
 -- dropElem
 --------------------------------------------------------------------------------
 
-function_properties SciLean.DropElem.dropElem 
-  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] Vec Elem] 
-  {n : Nat} (k : Nat) (cont : Cont (n+k)) 
+function_properties SciLean.DropElem.dropElem
+  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] Vec Elem]
+  {n : Nat} (k : Nat) (cont : Cont (n+k))
 argument cont
   IsLin := sorry_proof,
-  IsSmooth := sorry_proof,  
+  IsSmooth := sorry_proof,
   abbrev ∂ := λ dcont => dropElem k dcont by sorry_proof,
   abbrev 𝒯 := λ dcont => (dropElem k cont, dropElem k dcont) by sorry_proof
 
-function_properties SciLean.DropElem.dropElem 
-  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] SemiHilbert Elem] 
-  {n : Nat} (k : Nat) (cont : Cont (n+k)) 
+function_properties SciLean.DropElem.dropElem
+  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] SemiHilbert Elem]
+  {n : Nat} (k : Nat) (cont : Cont (n+k))
 argument cont
   HasAdjoint := sorry_proof,
   abbrev † := λ cont' => pushElem k 0 cont' by sorry_proof,
@@ -36,8 +36,8 @@ argument cont
 -- pushElem
 --------------------------------------------------------------------------------
 
-function_properties SciLean.PushElem.pushElem 
-  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] Vec Elem] 
+function_properties SciLean.PushElem.pushElem
+  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] Vec Elem]
   {n : Nat} (k : Nat) (elem : Elem) (cont : Cont n)
 argument (elem, cont)
   IsLin := sorry_proof,
@@ -46,7 +46,7 @@ argument (elem, cont)
   abbrev 𝒯 := λ delem dcont => (pushElem k elem cont, pushElem k delem dcont) by sory_proof
 argument cont
   IsLin [Fact (elem=0)] := sorry_proof,
-  IsSmooth := sorry_proof, 
+  IsSmooth := sorry_proof,
   abbrev ∂ := λ dcont => pushElem k 0 dcont by sorry_proof,
   abbrev 𝒯 := λ dcont => (pushElem k elem cont, pushElem k 0 dcont) by sorry_proof
 argument elem
@@ -55,8 +55,8 @@ argument elem
   abbrev ∂ := λ delem => pushElem k delem 0 by sorry_proof,
   abbrev 𝒯 := λ delem => (pushElem k elem cont, pushElem k delem 0) by sorry_proof
 
-function_properties SciLean.PushElem.pushElem 
-  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] SemiHilbert Elem] 
+function_properties SciLean.PushElem.pushElem
+  {Cont : Nat → Type} {Elem : Type |> outParam} [LinearGenericArrayType Cont Elem] SemiHilbert Elem]
   {n : Nat} (k : Nat) (elem : Elem) (cont : Cont n)
 argument (elem, cont)
   HasAdjoint := sorry_proof,

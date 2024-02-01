@@ -24,7 +24,7 @@ elab_rules (kind:=gradNotation1) : term
   let XY ← mkArrow X Y
   -- Y might also be infered by the function `f`
   let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
-  let .some (_,Y) := (← inferType fExpr).arrow? 
+  let .some (_,Y) := (← inferType fExpr).arrow?
     | return ← throwUnsupportedSyntax
   if (← isDefEq KExpr Y) then
     elabTerm (← `(scalarGradient $K $f $x $xs*)) none false

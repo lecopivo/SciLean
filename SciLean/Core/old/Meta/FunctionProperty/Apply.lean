@@ -11,7 +11,7 @@ Get statement for `T (λ t => f x₁ .. xₙ) = ...`
 def applyCompTheorem (funTrans function : Name) (xs : Array Expr) (t : Expr) : MetaM (Option (Expr×Name)) := do
 
   let tId := t.fvarId!
-  
+
   -- Find `xs` that depend on `t`
   let mut depArgIds : Array Nat := #[]
   for i in [0:xs.size] do
@@ -31,15 +31,14 @@ def applyCompTheorem (funTrans function : Name) (xs : Array Expr) (t : Expr) : M
 
     if depArgIds' ⊆ args then
       let mut ys := xs
-    
+
       -- abstract `t` in all arguments in the composition theorem
       for i in args.data do
         ys := ys.set! i (← mkLambdaFVars #[t] ys[i]!)
 
       let explicitArgIds ← getConstExplicitArgIds function
       let explicitYs := explicitArgIds.map (λ i => ys[i]!)
-      
+
       return some ((← mkAppNoTrailingM compTheorem explicitYs), compTheorem)
 
   return none
-  

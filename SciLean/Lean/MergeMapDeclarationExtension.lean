@@ -2,7 +2,7 @@
 import Std.Data.RBMap.Alter
 import SciLean.Lean.Array
 
-open Lean 
+open Lean
 
 namespace Lean
 
@@ -14,7 +14,7 @@ structure MergeMapDeclarationExtension.Merge (α) where
 
 open MergeMapDeclarationExtension in
 /--
-Similar to `MapDeclarationExtension` but it allows you have insert declarations that were not declared in the same file. 
+Similar to `MapDeclarationExtension` but it allows you have insert declarations that were not declared in the same file.
 However, you have to provide how to merge the values and to guarantee consistency i.e. merging should be associative and commutative.
 -/
 def MergeMapDeclarationExtension (α)
@@ -26,7 +26,7 @@ def mkMergeMapDeclarationExtension [Inhabited α] (merge : Merge α) (name : Nam
   registerPersistentEnvExtension {
     name          := name
     mkInitial     := pure default
-    addImportedFn := fun s => 
+    addImportedFn := fun s =>
       let m := (s.map λ s' => .ofArray s' _) |>.joinl id λ a b => .mergeWith merge.1 a b
       pure m
     addEntryFn    := fun s (n,val') => (s.alter n (λ val? => match val? with | .some val => merge.1 n val val' | none => val'))

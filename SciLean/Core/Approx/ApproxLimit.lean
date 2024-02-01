@@ -25,9 +25,9 @@ where `<proof>` is a proof that this approximation is indeed valid
 
 Warning: The validity proof is not completely correct right now
 -/
-syntax (name:=approx_limit_tactic) "approx_limit " ident " := " term : tactic 
+syntax (name:=approx_limit_tactic) "approx_limit " ident " := " term : tactic
 
-@[tactic approx_limit_tactic] 
+@[tactic approx_limit_tactic]
 def approxLimitTactic : Tactic
 | `(tactic| approx_limit $n:ident := $prf:term) => do
   let mainGoal ← getMainGoal
@@ -46,4 +46,3 @@ def approxLimitTactic : Tactic
   evalTactic (← `(tactic| apply Approx.limit _ _))
   evalTactic (← `(tactic| intros $n))
 | _ => throwUnsupportedSyntax
-

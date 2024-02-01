@@ -1,6 +1,6 @@
 namespace SciLean
 
-axiom sorryProofAxiom {P : Prop} : P 
+axiom sorryProofAxiom {P : Prop} : P
 macro "sorry_proof" : term => do  `(sorryProofAxiom)
 macro "sorry_proof" : tactic => `(tactic| apply sorry_proof)
 

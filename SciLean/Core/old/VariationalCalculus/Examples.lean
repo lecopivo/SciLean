@@ -6,7 +6,7 @@ import SciLean.Core.Tactic.FunctionTransformation.Core
 namespace SciLean
 
 variable {X Y ι : Type} [EnumType ι] [FinVec X ι] [Hilbert Y] [Hilbert Z]
-  
+
 --------------------------------------------------------------------------------
 -- Things to get working
 --------------------------------------------------------------------------------
@@ -24,19 +24,19 @@ variable (f : X ⟿ Y)
 example (f : X⟿Y)
   : HasAdjoint fun (g : X⟿Y) => λ (x : X) ⟿ ⟪f x, g x⟫ := by infer_instance
 
-example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪f x, g x⟫)† = f := 
+example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪f x, g x⟫)† = f :=
 by
-  conv => 
+  conv =>
     lhs
     rw[variationalDual.arg_F.adjoint_simp (fun (g : X⟿Y) => fun x => ⟪f x, g x⟫)]
     rw[adjoint.rule_pi_smooth]
     fun_trans only
     simp
 
-example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪g x, f x⟫)† = f := 
+example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪g x, f x⟫)† = f :=
 by
   ignore_fun_prop
-  conv => 
+  conv =>
     lhs
     rw[variationalDual.arg_F.adjoint_simp (fun g => fun x => ⟪g x, f x⟫)]
     rw[adjoint.rule_pi_smooth (λ x y => ⟪y, f x⟫)]
@@ -48,19 +48,19 @@ instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : HasAdjoint f := s
 
 example (f : X⟿Y) : (λ g : X⟿Y => ∫ x, ⟪∂ g x, ∂ f x⟫)† = - ∂· (∂ f) :=
 by
-  conv => 
+  conv =>
     lhs
     rw[variationalDual.arg_F.adjoint_simp (fun g => fun x => ⟪∂ g x, ∂ f x⟫)]
     rw[adjoint.rule_comp (λ v => λ x ⟿ ⟪v x, ∂ f x⟫) Smooth.differential]
     simp only [adjoint.rule_pi_smooth (λ x y => ⟪y, ∂ f x⟫)]
-    conv => 
+    conv =>
       enter [2]
       fun_trans only
     simp
 
-example (f : X⟿ℝ) : (λ g : X⟿ℝ => ∫ x, ⟪∇ g x, ∇ f x⟫)† = - ∇· (∇ f) := 
+example (f : X⟿ℝ) : (λ g : X⟿ℝ => ∫ x, ⟪∇ g x, ∇ f x⟫)† = - ∇· (∇ f) :=
 by
-  conv => 
+  conv =>
     lhs
     rw[variationalDual.arg_F.adjoint_simp (fun (g : X⟿ℝ) => fun x => ⟪∇ g x, ∇ f x⟫)]
     rw[adjoint.rule_comp (λ v => λ x ⟿ ⟪v x, ∇ f x⟫) Smooth.gradient]
@@ -81,7 +81,7 @@ theorem gradientVariational_comp (F : (X⟿Y) → (X⟿ℝ))
 instance {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) : HasAdjDiff f := sorry_proof
 instance {X Y} [Vec X] [Vec Y] (f : X → Y) : IsSmooth f := sorry_proof
 
-theorem SmoothMap.mk.arg_f.pointwise 
+theorem SmoothMap.mk.arg_f.pointwise
   (f : X → Y → Z) [IsSmooth λ (xy : X×Y) => f xy.1 xy.2]
   : (∂† λ (g : X⟿Y) => λ x ⟿ f x (g x))
     =
@@ -94,7 +94,7 @@ theorem SmoothMap.mk.arg_f.comp {U V} [SemiHilbert U] [SemiHilbert V]
   : have : ∀ v, IsSmooth (f v) := sorry_proof
     (∂† λ (u : U) => λ x ⟿ f (g u) x)
     =
-    λ u du' => 
+    λ u du' =>
       let v := g u
       let df' := ∂† λ v => λ x ⟿ f v x
       let dg' := ∂† g
@@ -141,10 +141,10 @@ theorem Smooth.differential.arg_f.adjointDifferential_simp {X} [Hilbert X]
   simp
   done
 
-  
-example (f : X⟿ℝ) : (∇ f' : X⟿ℝ, ∫ x, ‖∇ f' x‖²) f = - (2:ℝ) • ∇· (∇ f) := 
+
+example (f : X⟿ℝ) : (∇ f' : X⟿ℝ, ∫ x, ‖∇ f' x‖²) f = - (2:ℝ) • ∇· (∇ f) :=
 by
-  conv => 
+  conv =>
     lhs
     rw[gradientVariational_comp (λ f' : X⟿ℝ => λ x ⟿ ‖∇ f' x‖²)]
     dsimp
@@ -161,9 +161,9 @@ theorem adjointDifferential.rule_scomb {X Y Z} [SemiHilbert X] [SemiHilbert Y] [
   (g : X → Y) [HasAdjDiff g]
   : ∂† (λ x : X => f x (g x))
     =
-    λ x dz => 
+    λ x dz =>
       let y := g x
-      let dx₁ := ∂† (x':=x;dz), f x' y 
+      let dx₁ := ∂† (x':=x;dz), f x' y
       let dy  := ∂† (y':=y;dz), f x y'
       let dx₂ := ∂† g x dy
       dx₁ + dx₂ := sorry
@@ -171,27 +171,25 @@ theorem adjointDifferential.rule_scomb {X Y Z} [SemiHilbert X] [SemiHilbert Y] [
 @[simp]
 theorem adjDiff_as_gradient {X} [SemiHilbert X] (f : X → ℝ) (x : X) : ∂† f x 1 = ∇ f x := by rfl
 
-example (L : X → X → ℝ) 
-  : (∇ x : ℝ⟿X, ∫ t, L (x t) (ⅆ x t)) 
-    = λ x => 
-      λ t ⟿ ∇ (x':=x t), L x' (ⅆ x t)    -- (∂/∂x L) 
-              - ⅆ (t':=t), ∇ (v':=ⅆ x t'), L (x t') v' :=   -- d/dt (∂/∂ẋ L) 
+example (L : X → X → ℝ)
+  : (∇ x : ℝ⟿X, ∫ t, L (x t) (ⅆ x t))
+    = λ x =>
+      λ t ⟿ ∇ (x':=x t), L x' (ⅆ x t)    -- (∂/∂x L)
+              - ⅆ (t':=t), ∇ (v':=ⅆ x t'), L (x t') v' :=   -- d/dt (∂/∂ẋ L)
 by
   funext x; ext t
-  conv => 
+  conv =>
     lhs
     rw[gradientVariational_comp (λ x : ℝ⟿X => λ t ⟿ L (x t) (ⅆ x t))]
     dsimp
-    
+
     rw[adjointDifferential.rule_scomb (λ (x : ℝ⟿X) (v : ℝ⟿X) => λ t ⟿ L (x t) (v t)) Smooth.differentialScalar]
 
     simp (config := {zeta := false})
-    conv => 
+    conv =>
       simp (config := {zeta := false}) only [SmoothMap.mk.arg_f.pointwise λ t x' => L x' (ⅆ x t)]
       simp (config := {zeta := false}) only [SmoothMap.mk.arg_f.pointwise λ t y => L (x t) y]
     simp [Inner.normSqr.arg_x.adjointDifferential_simp]
   simp
   abel
   done
-
-

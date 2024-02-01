@@ -123,7 +123,7 @@ elab:max "ℛ " x:term:max : term => withFreshMacroScope do
 
 
 
-class OTimes {α : Sort u} {β : Sort v} (a : α) (b : β) {γ : outParam $ Sort w} (c :  outParam γ) 
+class OTimes {α : Sort u} {β : Sort v} (a : α) (b : β) {γ : outParam $ Sort w} (c :  outParam γ)
 
 elab x:term:71 " ⊗ " y:term:72 : term => withFreshMacroScope do
   _ ← synthInstance (← elabType (← `(OTimes $x $y ?m)))

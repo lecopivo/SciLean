@@ -6,7 +6,7 @@ open LeanColls
 
 namespace SciLean
 
-/-- Basis of the space `X` over the field `K` indexed by `ι` 
+/-- Basis of the space `X` over the field `K` indexed by `ι`
 
 The class `FinVec ι K X` guarantees that any element `x : X` can be writtens as:
 ```
@@ -17,7 +17,7 @@ class Basis (ι : outParam $ Type v) (K : outParam $ Type w)(X : Type u)  where
   basis (i : ι) : X
   proj  (i : ι) (x : X) : K
 
-/-- Dual basis of the space `X` over the field `K` indexed by `ι` 
+/-- Dual basis of the space `X` over the field `K` indexed by `ι`
 
 The class `FinVec ι K X` guarantees that any element `x : X` can be writtens as:
 ```
@@ -42,19 +42,19 @@ class BasisDuality (X : Type u) where
 
 section Basis
 
-  instance (K : Type _) [IsROrC K] : Basis Unit K K := 
+  instance (K : Type _) [IsROrC K] : Basis Unit K K :=
   {
     basis := λ _ => 1
     proj  := λ _ x => x
   }
 
-  instance (K : Type _) [IsROrC K] : DualBasis Unit K K := 
+  instance (K : Type _) [IsROrC K] : DualBasis Unit K K :=
   {
     dualBasis := λ _ => 1
     dualProj  := λ _ x => x
   }
 
-  instance (K : Type _) [IsROrC K] : BasisDuality K := 
+  instance (K : Type _) [IsROrC K] : BasisDuality K :=
   {
     toDual := λ x => x
     fromDual  := λ x => x
@@ -141,12 +141,12 @@ theorem dualBasis_ext {ι K X} {_ : IndexType ι} [LawfulIndexType ι] [Decidabl
 
 theorem inner_proj_dualProj {ι K X} {_ : IndexType ι} [LawfulIndexType ι] [DecidableEq ι] [IsROrC K] [FinVec ι K X] (x y : X)
   : ⟪x, y⟫[K] = ∑ i, ℼ i x * ℼ' i y :=
-by 
-  calc 
+by
+  calc
     ⟪x, y⟫[K] = ∑ i, ∑ j, ⟪(ℼ i x) • ⅇ[X] i, (ℼ' j y) • ⅇ' j⟫[K] := by sorry_proof -- rw[← (FinVec.is_basis x), ← (FinVec.is_basis y)]
          _ = ∑ i, ∑ j, (ℼ i x * ℼ' j y) * ⟪ⅇ[X] i, ⅇ' j⟫[K] := by sorry_proof -- use linearity of the sum
          _ = ∑ i, ∑ j, (ℼ i x * ℼ' j y) * if i=j then 1 else 0 := by simp [FinVec.duality]
-         _ = ∑ i, ℼ i x * ℼ' i y := sorry_proof -- summing over [[i=j]]  
+         _ = ∑ i, ℼ i x * ℼ' i y := sorry_proof -- summing over [[i=j]]
 
 variable {ι K X} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [IsROrC K] [FinVec ι K X]
 
@@ -226,4 +226,3 @@ instance {ι κ : Type} {K X : Type _} [IndexType ι] [IndexType κ] [LawfulInde
   duality := sorry_proof
   to_dual := sorry_proof
   from_dual := sorry_proof
-

@@ -1,4 +1,4 @@
-import Lean 
+import Lean
 open Lean
 
 namespace Lean

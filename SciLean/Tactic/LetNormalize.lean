@@ -14,7 +14,7 @@ open Lean Meta Elab Tactic Conv
 
 structure LetNormalizeConfig where
   removeTrivialLet := true
-  removeNoFVarLet := false  
+  removeNoFVarLet := false
   removeLambdaLet  := true
   removeFVarProjLet := true
   pullLetOutLambda := true
@@ -29,20 +29,20 @@ def isProjectionOfFVar (e : Expr) : MetaM Bool := do
   match e with
   | .mdata _ e => isProjectionOfFVar e
   | .fvar _ => return true
-  | .app f x => 
+  | .app f x =>
     if f.isProj then
       isProjectionOfFVar x
     else
       let some projName := f.getAppFn'.constName? | return false
       let some info ← getProjectionFnInfo? projName | return false
       if info.numParams = f.getAppNumArgs then
-        isProjectionOfFVar x 
+        isProjectionOfFVar x
       else
         return false
   | _ => return false
 
 
-/-- Normalizes let bindings in an expression 
+/-- Normalizes let bindings in an expression
 
 Two main normalizations are:
 
@@ -108,8 +108,8 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
   match e.consumeMData.headBeta with
   | .letE xName xType xValue xBody _ => do
     match (← letNormalize xValue config).consumeMData with
-    | .letE yName yType yValue yBody _ => 
-      withLetDecl yName yType yValue fun y => 
+    | .letE yName yType yValue yBody _ =>
+      withLetDecl yName yType yValue fun y =>
       withLetDecl xName xType (yBody.instantiate1 y) fun x => do
         mkLambdaFVars #[y,x] (xBody.instantiate1 x) >>= letNormalize (config:=config)
 
@@ -126,14 +126,14 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
       if (← isProjectionOfFVar xValue') && config.removeFVarProjLet then
         return ← letNormalize (xBody.instantiate1 xValue') config
 
-      if config.removeNumConst && 
-         (xValue'.isAppOfArity' ``OfNat.ofNat 3 || 
+      if config.removeNumConst &&
+         (xValue'.isAppOfArity' ``OfNat.ofNat 3 ||
           xValue'.isAppOfArity' ``OfScientific.ofScientific 5) then
         return ← letNormalize (xBody.instantiate1 xValue') config
 
       -- deconstruct constructors into bunch of let bindings
       if config.splitStructureConstuctors then
-        if let .some (ctor, args) := xValue'.constructorApp? (← getEnv) then 
+        if let .some (ctor, args) := xValue'.constructorApp? (← getEnv) then
           if let .some info := getStructureInfo? (← getEnv) xType.getAppFn.constName! then
             let mut lctx ← getLCtx
             let insts ← getLocalInstances
@@ -158,12 +158,12 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
 
   | .app f x => do
     match (← letNormalize f config) with
-    | .letE yName yType yValue yBody _ => 
+    | .letE yName yType yValue yBody _ =>
       withLetDecl yName yType yValue fun y => do
       letNormalize (← mkLambdaFVars #[y] (.app (yBody.instantiate1 y) x)) config
-    | f' => 
+    | f' =>
       match (← letNormalize x config) with
-      | .letE yName yType yValue yBody _ => 
+      | .letE yName yType yValue yBody _ =>
         withLetDecl yName yType yValue fun y => do
         letNormalize (← mkLambdaFVars #[y] (.app f' (yBody.instantiate1 y))) config
       | x' => do
@@ -173,18 +173,18 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
 
         return (f'.app x')
 
-  | .lam xName xType xBody xBi => 
+  | .lam xName xType xBody xBi =>
     withLocalDecl xName xBi xType fun x => do
       let xId := x.fvarId!
       let body' ← letNormalize (xBody.instantiate1 x) config
       if ¬config.pullLetOutLambda then
-        mkLambdaFVars #[x] body'   
+        mkLambdaFVars #[x] body'
       else
         letTelescope body' fun ys b => do
-          let (out_ys, in_ys) ← ys.foldlM (init := (#[], #[])) fun (as, bs) a => do 
-            if (← a.fvarId!.usesFVar xId) || (← bs.anyM fun b => a.fvarId!.usesFVar b.fvarId!) 
+          let (out_ys, in_ys) ← ys.foldlM (init := (#[], #[])) fun (as, bs) a => do
+            if (← a.fvarId!.usesFVar xId) || (← bs.anyM fun b => a.fvarId!.usesFVar b.fvarId!)
               then pure (as, bs.push a)
-              else pure (as.push a, bs) 
+              else pure (as.push a, bs)
           mkLambdaFVars (out_ys ++ #[x] ++ in_ys) b
 
   | e => pure e
@@ -194,11 +194,11 @@ declare_config_elab elabLetNormalizeConfig  LetNormalizeConfig
 
 syntax config := atomic(" (" &"config") " := " withoutPosition(term) ")"
 
-syntax (name := let_normalize) "let_normalize" (config)? : conv 
+syntax (name := let_normalize) "let_normalize" (config)? : conv
 
-@[tactic let_normalize] 
+@[tactic let_normalize]
 def convLetNormalize : Tactic
-| `(conv| let_normalize $(cfg)?) =>   
+| `(conv| let_normalize $(cfg)?) =>
   withTraceNode `let_normalize (fun _ => return "let_normalize") do
   (← getMainGoal).withContext do
 
@@ -209,7 +209,7 @@ def convLetNormalize : Tactic
 
     let lhs ← getLhs
     let lhs' ← letNormalize lhs cfg
-    
+
     changeLhs lhs'
 | _ => Lean.Elab.throwUnsupportedSyntax
 
@@ -235,16 +235,16 @@ let z3_snd := z2 * z2;
 x2 + y5 + z3_fst + z3_snd : Nat
 -/
 #guard_msgs in
-#check 
+#check
     (let x3 :=
-      let x2 := 
+      let x2 :=
         let x1 := 10
         x1 + 5
       x2
-    let h1 := 
+    let h1 :=
       let h2 := 2
       h2 + 1
-    let y5 := 
+    let y5 :=
       let y1 := 4
       let y2 := 5
       (let y3 := 14; let f1 := fun x => let fy1 := let fy2 := 4; fy2; let fy3 := x + x; x + 100 + fy1 + fy3; y1 + y3 + f1 h1) + (let y4 := 56; y2 + y4)
@@ -265,13 +265,13 @@ info: fun x =>
   a + b + c : Nat → Nat → Nat
 -/
 #guard_msgs in
-#check 
-    (fun (x y : Nat) => 
+#check
+    (fun (x y : Nat) =>
       let a := x + 1
       let b := x + a
       let c := x + y
       a+b+c)
-    rewrite_by 
+    rewrite_by
       let_normalize
 --     =
 --     fun _ _ => 0 :=

@@ -10,7 +10,7 @@ namespace SciLean
 -- TODO: move this section
 namespace Curve
 
-variable {K : Type u} [NontriviallyNormedField K] 
+variable {K : Type u} [NontriviallyNormedField K]
 variable {F : Type v} [AddCommGroup F] [Module K F] [TopologicalSpace F] -- [TopologicalAddGroup F] [ContinuousSMul K F]
 variable {E : Type w} [AddCommGroup E] [Module K E] [TopologicalSpace E] -- [TopologicalAddGroup E] [ContinuousSMul K E]
 
@@ -56,11 +56,11 @@ end Curve
 /-- Vectors space `X` over field `K`
 
 More precisely this is Convenient Vector Space which is a special class of vector spaces
-which allow very general definition of differentiability. In particular, the space `C∞(ℝ,ℝ)`, 
+which allow very general definition of differentiability. In particular, the space `C∞(ℝ,ℝ)`,
 smooth functions on real numbers, is Convenient Vector Spaces but fails to be Banach space.
 -/
-class Vec (K : Type _) [IsROrC K] (X : Type _) 
-  extends 
+class Vec (K : Type _) [IsROrC K] (X : Type _)
+  extends
     AddCommGroup X,
     TopologicalSpace X,
     TopologicalAddGroup X,
@@ -71,7 +71,7 @@ class Vec (K : Type _) [IsROrC K] (X : Type _)
     -- mild completeness condition
     scalar_wise_smooth : ∀ (c : K → X),
       Curve.Smooth c
-      ↔ 
+      ↔
       ∀ x' : X →L[K] K, Curve.Smooth (x'∘c)
 
 section CommonVectorSpaces
@@ -90,9 +90,9 @@ section CommonVectorSpaces
 
 
   abbrev AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α := AddSemigroup.mk sorry_proof
-  abbrev AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α := 
+  abbrev AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α :=
     AddMonoid.mk (toAddSemigroup := AddSemigroup.mkSorryProofs) sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
-  abbrev SubNegMonoid.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α]  : SubNegMonoid α := 
+  abbrev SubNegMonoid.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α]  : SubNegMonoid α :=
     SubNegMonoid.mk (toAddMonoid := AddMonoid.mkSorryProofs) sorry_proof zsmulRec sorry_proof sorry_proof sorry_proof
   abbrev AddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddGroup α :=
     AddGroup.mk (toSubNegMonoid := SubNegMonoid.mkSorryProofs) sorry_proof
@@ -100,14 +100,14 @@ section CommonVectorSpaces
     AddCommGroup.mk (toAddGroup := AddGroup.mkSorryProofs) sorry_proof
 
   abbrev MulAction.mkSorryProofs {α β} [Monoid α] [SMul α β] : MulAction α β := MulAction.mk sorry_proof sorry_proof
-  abbrev DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [SMul α β] : DistribMulAction α β := 
+  abbrev DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [SMul α β] : DistribMulAction α β :=
     DistribMulAction.mk (toMulAction := MulAction.mkSorryProofs) sorry_proof sorry_proof
-  abbrev Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [SMul α β] : Module α β := 
+  abbrev Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [SMul α β] : Module α β :=
     Module.mk (toDistribMulAction := DistribMulAction.mkSorryProofs) sorry_proof sorry_proof
 
   abbrev ContinuousAdd.mkSorryProofs {α} [Add α] [TopologicalSpace α] : ContinuousAdd α := ContinuousAdd.mk sorry_proof
   abbrev ContinuousNeg.mkSorryProofs {α} [Neg α] [TopologicalSpace α] : ContinuousNeg α := ContinuousNeg.mk sorry_proof
-  abbrev TopologicalAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] := 
+  abbrev TopologicalAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :=
    @TopologicalAddGroup.mk α _ (AddGroup.mkSorryProofs) (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
 
   abbrev ContinuousSMul.mkSorryProofs {α} [SMul K α] [TopologicalSpace α] : ContinuousSMul K α := ContinuousSMul.mk sorry_proof
@@ -117,8 +117,8 @@ section CommonVectorSpaces
 
   instance [IsROrC K] : Vec K K where
     scalar_wise_smooth := sorry_proof
-    
-  -- instance [inst : Vec K U] : Vec K (α → U) := 
+
+  -- instance [inst : Vec K U] : Vec K (α → U) :=
   --   -- option 1:
   --   -- Vec.mkSorryProofs
   --   -- option 2:
@@ -128,7 +128,7 @@ section CommonVectorSpaces
   --   by cases inst; apply Vec.mk (scalar_wise_smooth := sorry_proof)
 
 
-  instance(priority:=low) (α : Type _) (X : α → Type _) [inst : ∀ a, Vec K (X a)] : Vec K ((a : α) → X a) := 
+  instance(priority:=low) (α : Type _) (X : α → Type _) [inst : ∀ a, Vec K (X a)] : Vec K ((a : α) → X a) :=
     --Vec.mkSorryProofs
     let _ : ∀ a, Module K (X a) := fun a => (inst a).toModule
     let _ : ∀ a, TopologicalSpace (X a) := fun a => (inst a).toTopologicalSpace
@@ -136,7 +136,7 @@ section CommonVectorSpaces
     let _ : ∀ a, ContinuousSMul K (X a) := fun a => (inst a).toContinuousSMul
     Vec.mk (scalar_wise_smooth := sorry_proof)
 
-  instance [instU : Vec K U] [instV : Vec K V] : Vec K (U × V) := 
+  instance [instU : Vec K U] [instV : Vec K V] : Vec K (U × V) :=
     by cases instU; cases instV; apply Vec.mk (scalar_wise_smooth := sorry_proof)
 
   instance : Vec K Unit := Vec.mk (scalar_wise_smooth := sorry_proof)
@@ -145,9 +145,9 @@ section CommonVectorSpaces
   infix:30 "⊕" => Sum.elim  -- X⊕Y→Type
 
   instance instVecSum
-    (X Y : Type) (TX : X → Type) (TY : Y → Type)  (xy : X⊕Y) 
+    (X Y : Type) (TX : X → Type) (TY : Y → Type)  (xy : X⊕Y)
     [∀ x, Vec K (TX x)] [∀ y, Vec K (TY y)]
-    : Vec K ((TX⊕TY) xy) 
+    : Vec K ((TX⊕TY) xy)
     :=
     match xy with
     | .inl _ => by dsimp; infer_instance

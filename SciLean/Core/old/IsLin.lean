@@ -15,12 +15,12 @@ variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 variable {Y₁ Y₂ Y₃ : Type} [Vec Y₁] [Vec Y₂] [Vec Y₃]
 
 @[fun_prop_rule]
-theorem IsLin.rule_id 
+theorem IsLin.rule_id
   : IsLin (λ x : X => x) := sorry
 
 
 @[fun_prop_rule]
-theorem IsLin.rule_comp 
+theorem IsLin.rule_comp
   (f : Y → Z) [IsLin f]
   (g : X → Y) [IsLin g]
   : IsLin (λ x => f (g x)) := sorry
@@ -41,7 +41,7 @@ theorem IsLin.rule_eval (a : α)
   : IsLin (λ (f : α → X)  => f a) := sorry
 
 @[fun_prop_rule]
-theorem IsLin.rule_comp_eval 
+theorem IsLin.rule_comp_eval
   (a : α) (f : X → α → Y) [IsLin f]
   : IsLin (λ x => f x a) := IsLin.rule_comp (λ g : α → Y => g a) f
 
@@ -83,39 +83,39 @@ instance linear_add_extra_3_3 (f : X → Y → W) [IsLinNT 2 f]
 -- Core IsLin Instances --
 --------------------------------------------------------------------------------
 
-instance id.arg_x.isLin 
+instance id.arg_x.isLin
   : IsLinT λ x : X => x := sorry_proof
 
 -- I think this is waying that `(λ x y => x : X ⊸ Y → X)` not `(λ x y => x : X ⊸ Y ⟿ X)`
-instance const.arg_xy.isLin 
+instance const.arg_xy.isLin
   : IsLinT λ (x : X) (y : Y) => x := sorry_proof
 
-instance (priority := low) swap.arg_y.isLin 
-  (f : α → Y → Z) [∀ x, IsLinT (f x)] 
+instance (priority := low) swap.arg_y.isLin
+  (f : α → Y → Z) [∀ x, IsLinT (f x)]
   : IsLinT (λ y x => f x y) := sorry
 
-instance parm.arg_x.isLin 
-  (f : X → β → Z) [IsLinT f] (y : β) 
+instance parm.arg_x.isLin
+  (f : X → β → Z) [IsLinT f] (y : β)
   : IsLinT (λ x => f x y) := sorry
 
-instance (priority := mid-1) subst.arg_x.isLin 
+instance (priority := mid-1) subst.arg_x.isLin
   (f : X → Y → Z) [IsLinNT 2 f]
   (g : X → Y) [IsLinT g] :
   IsLinT (λ x => f x (g x)) := sorry
 
-instance (priority := mid-1) subst2.arg_x.isLin 
+instance (priority := mid-1) subst2.arg_x.isLin
   (f : X → Y → Y₁ → Z) [IsLinNT 3 f]
   (g : X → Y → Y₁) [IsLinNT 2 g] :
   IsLinNT 2 (λ x y => f x y (g x y)) := sorry
 
-instance (priority := mid-1) subst3.arg_x.isLin 
+instance (priority := mid-1) subst3.arg_x.isLin
   (f : X → Y → Z → Y₁ → W) [IsLinNT 4 f]
   (g : X → Y → Z → Y₁) [IsLinNT 3 g] :
   IsLinNT 3 (λ x y z => f x y z (g x y z)) := sorry
 
-instance comp.arg_x.isLin 
+instance comp.arg_x.isLin
   (f : Y → Z) [IsLinT f]
-  (g : X → Y) [IsLinT g] 
+  (g : X → Y) [IsLinT g]
   : IsLinT (λ x => f (g x)) := by infer_instance
 
 
@@ -134,16 +134,16 @@ instance comp2.arg_x.isLin
   (f : Y₁ → Y₂ → Z) [IsLinNT 2 f]
   (g₁ : X → Y → Y₁) [IsLinNT 2 g₁]
   (g₂ : X → Y → Y₂) [IsLinNT 2 g₂]
-  : IsLinNT 2 (λ x y => f (g₁ x y) (g₂ x y)) := 
+  : IsLinNT 2 (λ x y => f (g₁ x y) (g₂ x y)) :=
 by
-  infer_instance 
+  infer_instance
 
-instance comp3.arg_x.isLin 
+instance comp3.arg_x.isLin
   (f : Y₁ → Y₂ → Y₃ → W) [IsLinNT 3 f]
   (g₁ : X → Y → Z → Y₁) [IsLinNT 3 g₁]
   (g₂ : X → Y → Z → Y₂) [IsLinNT 3 g₂]
   (g₃ : X → Y → Z → Y₃) [IsLinNT 3 g₃]
-  : IsLinNT 3 (λ x y z => f (g₁ x y z) (g₂ x y z) (g₃ x y z)) := 
+  : IsLinNT 3 (λ x y z => f (g₁ x y z) (g₂ x y z) (g₃ x y z)) :=
 by
   infer_instance
 
@@ -158,4 +158,3 @@ by
 -- instance LinMap.mk'.arg_f.isSmooth {X Y W} [Vec X] [Vec Y] [Vec W]
 --   (f : W → X → Y) [IsSmoothNT 2 f] [∀ w, IsLinT (f w)]
 --   : IsSmoothT λ w => λ x ⊸ f w x := by (try infer_instance); sorry_proof
-

@@ -11,19 +11,19 @@ open LeanColls
 
 namespace SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {ι : Type _} [IndexType ι]
-  {E : ι → Type _} [∀ i, Vec K (E i)] 
+  {E : ι → Type _} [∀ i, Vec K (E i)]
 
 @[irreducible] -- we do not want to expand this definition as there are some performance issues with isDefEq, see #18
 def IsDifferentiableAt (f : X → Y) (x : X) : Prop :=
   ∀ (c : K → X),
-      c 0 = x 
-      → 
+      c 0 = x
+      →
       Curve.DifferentiableAt c 0
       →
       Curve.DifferentiableAt (f∘c) 0
@@ -35,7 +35,7 @@ variable (X)
 theorem id_rule (x : X)
   : IsDifferentiableAt K (fun x : X => x) x
   := by sorry_proof
-  
+
 
 theorem const_rule (y : Y) (x : X)
   : IsDifferentiableAt K (fun _ : X => y) x
@@ -45,7 +45,7 @@ variable {X}
 variable (E)
 theorem proj_rule
   (i : ι) (x)
-  : IsDifferentiableAt K (fun x : (i : ι) → E i => x i) x := 
+  : IsDifferentiableAt K (fun x : (i : ι) → E i => x i) x :=
 by sorry_proof
 variable {E}
 
@@ -60,9 +60,9 @@ theorem let_rule
   (f : X → Y → Z) (g : X → Y) (x : X)
   (hf : IsDifferentiableAt K (fun (xy : X×Y) => f xy.1 xy.2) (x, g x))
   (hg : IsDifferentiableAt K g x)
-  : IsDifferentiableAt K (fun x => let y := g x; f x y) x := 
+  : IsDifferentiableAt K (fun x => let y := g x; f x y) x :=
 by sorry_proof
-  
+
 theorem pi_rule
   (f : (i : ι) → X → E i) (x : X)
   (hf : ∀ i, IsDifferentiableAt K (f i) x)
@@ -78,20 +78,20 @@ theorem pi_rule
 open Lean Meta SciLean FProp
 def fpropExt : FPropExt where
   fpropName := ``IsDifferentiableAt
-  getFPropFun? e := 
+  getFPropFun? e :=
     if e.isAppOf ``IsDifferentiableAt then
 
       if let .some f := e.getArg? 6 then
         some f
-      else 
+      else
         none
     else
       none
 
-  replaceFPropFun e f := 
+  replaceFPropFun e f :=
     if e.isAppOf ``IsDifferentiableAt then
       e.setArg 6  f
-    else          
+    else
       e
 
   identityRule    e := do
@@ -115,8 +115,8 @@ def fpropExt : FPropExt where
   projRule e :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``proj_rule 
-      origin := .decl ``proj_rule 
+      proof  := mkConst ``proj_rule
+      origin := .decl ``proj_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
@@ -148,13 +148,13 @@ def fpropExt : FPropExt where
   lambdaLambdaRule e _ :=
     let thm : SimpTheorem :=
     {
-      proof  := mkConst ``IsDifferentiableAt.pi_rule 
-      origin := .decl ``IsDifferentiableAt.pi_rule 
+      proof  := mkConst ``IsDifferentiableAt.pi_rule
+      origin := .decl ``IsDifferentiableAt.pi_rule
       rfl    := false
     }
     FProp.tryTheorem? e thm (fun _ => pure none)
 
-  discharger e := 
+  discharger e :=
     FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
 
 
@@ -171,13 +171,13 @@ end SciLean.IsDifferentiableAt
 
 open SciLean
 
-variable 
+variable
   (K : Type _) [IsROrC K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {ι : Type _} [IndexType ι]
-  {E : ι → Type _} [∀ i, Vec K (E i)] 
+  {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
 -- Id --------------------------------------------------------------------------
@@ -208,7 +208,7 @@ theorem Prod.mk.arg_fstsnd.IsDifferentiableAt_rule
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.fst.arg_self.IsDifferentiableAt_rule 
+theorem Prod.fst.arg_self.IsDifferentiableAt_rule
   (x : X)
   (f : X → Y×Z) (hf : IsDifferentiableAt K f x)
   : IsDifferentiableAt K (fun x => (f x).1) x
@@ -220,7 +220,7 @@ theorem Prod.fst.arg_self.IsDifferentiableAt_rule
 --------------------------------------------------------------------------------
 
 @[fprop]
-theorem Prod.snd.arg_self.IsDifferentiableAt_rule 
+theorem Prod.snd.arg_self.IsDifferentiableAt_rule
   (x : X)
   (f : X → Y×Z) (hf : IsDifferentiableAt K f x)
   : IsDifferentiableAt K (fun x => (f x).2) x
@@ -248,7 +248,7 @@ theorem Neg.neg.arg_a0.IsDifferentiableAt_rule
   (x : X) (f : X → Y) (hf : IsDifferentiableAt K f x)
   : IsDifferentiableAt K (fun x => - f x) x
   := by sorry_proof
- 
+
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -259,7 +259,7 @@ theorem HAdd.hAdd.arg_a0a1.IsDifferentiableAt_rule
   (x : X) (f g : X → Y) (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x)
   : IsDifferentiableAt K (fun x => f x + g x) x
   := by sorry_proof
- 
+
 
 
 -- HSub.hSub -------------------------------------------------------------------
@@ -270,59 +270,59 @@ theorem HSub.hSub.arg_a0a1.IsDifferentiableAt_rule
   (x : X) (f g : X → Y) (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x)
   : IsDifferentiableAt K (fun x => f x - g x) x
   := by sorry_proof
- 
+
 
 -- HMul.hMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HMul.hMul.arg_a0a1.IsDifferentiableAt_rule
   (x : X) (f g : X → K) (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x)
-  : IsDifferentiableAt K (fun x => f x * g x) x 
+  : IsDifferentiableAt K (fun x => f x * g x) x
   := by sorry_proof
 
 
 -- SMul.sMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HSMul.hSMul.arg_a0a1.IsDifferentiableAt_rule
   (x : X) (f : X → K) (g : X → Y) (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x)
-  : IsDifferentiableAt K (fun x => f x • g x) x 
+  : IsDifferentiableAt K (fun x => f x • g x) x
   := by sorry_proof
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HDiv.hDiv.arg_a0a1.IsDifferentiableAt_rule
-  (x : X) (f : X → K) (g : X → K) 
+  (x : X) (f : X → K) (g : X → K)
   (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x) (hx : g x ≠ 0)
-  : IsDifferentiableAt K (fun x => f x / g x) x 
+  : IsDifferentiableAt K (fun x => f x / g x) x
   := by sorry_proof
 
 @[fprop]
 def HDiv.hDiv.arg_a0.IsDifferentiableAt_rule
   (x : X) (f : X → K) (r : K)
   (hf : IsDifferentiableAt K f x) (hr : r ≠ 0)
-  : IsDifferentiableAt K (fun x => f x / r) x := 
-by 
+  : IsDifferentiableAt K (fun x => f x / r) x :=
+by
   apply HDiv.hDiv.arg_a0a1.IsDifferentiableAt_rule <;> first | assumption | fprop
 
 
 -- HPow.hPow -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 def HPow.hPow.arg_a0.IsDifferentiableAt_rule
-  (n : Nat) (x : X) (f : X → K) (hf : IsDifferentiableAt K f x) 
+  (n : Nat) (x : X) (f : X → K) (hf : IsDifferentiableAt K f x)
   : IsDifferentiableAt K (fun x => f x ^ n) x
   := by sorry_proof
 
 
 -- EnumType.sum ----------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 @[fprop]
 theorem SciLean.EnumType.sum.arg_f.IsDifferentiableAt_rule
@@ -336,13 +336,13 @@ by
 
 section InnerProductSpace
 
-variable 
+variable
   {R : Type _} [RealScalar R]
   {X : Type _} [Vec R X]
   {Y : Type _} [SemiHilbert R Y]
 
 -- Inner -----------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 open ComplexConjugate
 
@@ -351,16 +351,16 @@ theorem Inner.inner.arg_a0a1.IsDifferentiableAt_rule
   (f : X → Y) (g : X → Y) (x : X)
   (hf : IsDifferentiableAt R f x) (hg : IsDifferentiableAt R g x)
   : IsDifferentiableAt R (fun x => ⟪f x, g x⟫[R]) x :=
-by 
+by
   sorry_proof
 
 
 @[fprop]
 theorem SciLean.Norm2.norm2.arg_a0.IsDifferentiableAt_rule
   (f : X → Y) (x : X)
-  (hf : IsDifferentiableAt R f x) 
+  (hf : IsDifferentiableAt R f x)
   : IsDifferentiableAt R (fun x => ‖f x‖₂²[R]) x :=
-by 
+by
   simp[← SemiInnerProductSpace.inner_norm2]
   fprop
 
@@ -369,7 +369,7 @@ theorem SciLean.norm₂.arg_x.IsDifferentiableAt_rule
   (f : X → Y) (x : X)
   (hf : IsDifferentiableAt R f x) (hx : f x≠0)
   : IsDifferentiableAt R (fun x => ‖f x‖₂[R]) x :=
-by 
+by
   sorry_proof
 
 

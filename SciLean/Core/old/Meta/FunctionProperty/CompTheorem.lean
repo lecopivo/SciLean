@@ -3,7 +3,7 @@ import SciLean.Lean.Meta.Basic
 
 namespace SciLean
 
-set_option linter.unusedVariables false 
+set_option linter.unusedVariables false
 
 open Lean Parser.Term Lean.Elab Meta
 
@@ -20,17 +20,17 @@ private def mkProdFVarName (xs : Array Expr) : MetaM Name := do
 private def createCompositionImpl (e : Expr) (xs : Array Expr) (k : (T : Expr) → (t : Expr) → (ys : Array Expr) → (e' : Expr) → MetaM α) : MetaM α := do
   withLocalDecl `T .implicit (mkSort levelOne) λ T => do
     withLocalDecl `t .default T λ t => do
-      
+
       let xIds := xs.map λ x => x.fvarId!
 
-      -- We are not using `withLocalDecls` as it requires `Inhabited α` and that 
+      -- We are not using `withLocalDecls` as it requires `Inhabited α` and that
       -- does not play well with map4MetaM
       let mut lctx ← getLCtx
       let mut i := lctx.numIndices
       let mut ys : Array Expr := .mkEmpty xs.size
-      for id in xIds do 
+      for id in xIds do
         let name ← id.getUserName
-        let bi ← id.getBinderInfo 
+        let bi ← id.getBinderInfo
         let type ← mkArrow T (← id.getType)
         let yId ← mkFreshFVarId
         ys := ys.push (mkFVar yId)
@@ -46,18 +46,18 @@ private def createCompositionImpl (e : Expr) (xs : Array Expr) (k : (T : Expr) �
 
 variable [MonadControlT MetaM n] [Monad n]
 
-/-- 
+/--
   For every free variable `x : X` introduce `y : T → X` and replace every `x` in `e` with `y t`.
 
   Then call `k` on `e` providing the newly introduces `T`, `t`, `ys`
   -/
-def createComposition  (e : Expr) (xs : Array Expr) (k : (T : Expr) → (t : Expr) → (ys : Array Expr) → (e' : Expr) → n α) : n α := 
+def createComposition  (e : Expr) (xs : Array Expr) (k : (T : Expr) → (t : Expr) → (ys : Array Expr) → (e' : Expr) → n α) : n α :=
   map4MetaM (fun k => createCompositionImpl e xs k) k
 
 
-/-- 
-  For every free variable `x : X`, elements of `xs`, introduce `y : T → X`, elements of `ys`, and: 
-    - replace every `x` in `e` with `y t` 
+/--
+  For every free variable `x : X`, elements of `xs`, introduce `y : T → X`, elements of `ys`, and:
+    - replace every `x` in `e` with `y t`
     - replace every `x` in `other` with `y`.
   where `{T : Type} (t : T)` are newly introduced free variables
 
@@ -65,15 +65,15 @@ def createComposition  (e : Expr) (xs : Array Expr) (k : (T : Expr) → (t : Exp
 
   NOTE: Most likely this operation makes sense only if `other` is a list of free variables
   -/
-def createCompositionOther (e : Expr) (xs : Array Expr) (other : Array Expr) 
+def createCompositionOther (e : Expr) (xs : Array Expr) (other : Array Expr)
   (k : (T : Expr) → (t : Expr) →  (ys : Array Expr) → (other' : Array Expr) → (e' : Expr) → n α) : n α := do
 
-  createComposition e xs λ T t ys e => do 
-    
-    let other := other.map λ e' => 
+  createComposition e xs λ T t ys e => do
+
+    let other := other.map λ e' =>
       e'.replace (λ e'' => Id.run do
         for (x, y) in xs.zip ys do
-          if e'' == x then 
+          if e'' == x then
             return some y
         return none)
 
@@ -91,7 +91,7 @@ def mkCompTheoremFunProp (funProp spaceName : Name) (e : Expr) (xs : Array Expr)
         let bi := BinderInfo.instImplicit
         let type ← mkAppM funProp #[y]
         pure (name, bi, λ _ => pure type)
-  
+
       withLocalDecls funPropDecls λ ysProp => do
         let vars := #[T,SpaceT]
           |>.append abstractOver
@@ -132,7 +132,7 @@ def mkCompTheoremDifferential (e : Expr) (xs : Array Expr) (contextVars : Array 
           let mut i := lctx.numIndices
           let mut xs'  : Array Expr := .mkEmpty xs.size
           let mut dxs' : Array Expr := .mkEmpty xs.size
-          for y in ys do 
+          for y in ys do
             let id := y.fvarId!
             let  xName := (← id.getUserName).appendAfter "'"
             let dxName := xName.appendBefore "d"
@@ -150,10 +150,10 @@ def mkCompTheoremDifferential (e : Expr) (xs : Array Expr) (contextVars : Array 
 
           withLCtx lctx (← getLocalInstances) do
 
-            let rhs ← 
+            let rhs ←
               mkLambdaFVars xs defVal -- abstract old xs
               >>=
-              λ e => mkAppM' e xs' >>= pure ∘ Expr.headBeta  -- replace xs with xs' 
+              λ e => mkAppM' e xs' >>= pure ∘ Expr.headBeta  -- replace xs with xs'
               >>=
               λ e => mkAppM' e dxs' >>= pure ∘ Expr.headBeta -- apply dxs'
               >>=
@@ -194,7 +194,7 @@ def mkCompTheoremTangentMap (e : Expr) (xs : Array Expr) (contextVars : Array Ex
           let mut lctx ← getLCtx
           let mut i := lctx.numIndices
           let mut Txs' : Array Expr := .mkEmpty xs.size
-          for y in ys do 
+          for y in ys do
             let id := y.fvarId!
             let  xName := (← id.getUserName).appendAfter "'"
             let TxName := xName.appendBefore "T"
@@ -213,7 +213,7 @@ def mkCompTheoremTangentMap (e : Expr) (xs : Array Expr) (contextVars : Array Ex
 
             let rhs ← do
               let mut e ← mkLambdaFVars xs defVal -- abstract old xs
-              e ← mkAppM' e xs' >>= pure ∘ Expr.headBeta  -- replace xs with xs' 
+              e ← mkAppM' e xs' >>= pure ∘ Expr.headBeta  -- replace xs with xs'
               e ← mkAppM' e dxs' >>= pure ∘ Expr.headBeta -- apply dxs'
               e ← mkLambdaFVars Txs' e
               mkLambdaFVars #[t,dt] e  -- abstract over t and dt
@@ -248,7 +248,7 @@ def mkCompTheoremAdjoint (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
           let contextVars := #[T,SpaceT]
             |>.append contextVars
             |>.append ysProp
-            
+
           let xName'' := xName'.appendAfter "'"
           let xVal'' := (← mkAppM' defVal #[x']).headBeta
           let xType'' ← inferType xVal''
@@ -256,7 +256,7 @@ def mkCompTheoremAdjoint (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
           withLetDecl xName'' xType'' xVal'' λ x'' => do
 
             let yVals' ← ys.mapIdxM λ i y => do
-                let y ← mkAppM ``adjoint #[y] 
+                let y ← mkAppM ``adjoint #[y]
                 mkAppM' y #[← mkProdProj x'' i ys.size]
 
             let ySum ← mkAppFoldlM ``HAdd.hAdd yVals'
@@ -298,7 +298,7 @@ def mkCompTheoremAdjDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
           let mut lctx ← getLCtx
           let mut i := lctx.numIndices
           let mut xs'  : Array Expr := .mkEmpty xs.size
-          for y in ys do 
+          for y in ys do
             let id := y.fvarId!
             let  xName := (← id.getUserName).appendAfter "'"
             let  xVal ← mkAppM' y #[t]
@@ -323,7 +323,7 @@ def mkCompTheoremAdjDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
 
               let dxVals ← mkProdSplitElem dxs xs.size
 
-              let xdxVals ← (ys.zip dxVals).mapM 
+              let xdxVals ← (ys.zip dxVals).mapM
                 λ (y,dx) => mkAppM ``adjointDifferential #[y, t, dx]
 
               let sum ← mkAppFoldlM ``HAdd.hAdd xdxVals
@@ -359,7 +359,7 @@ def mkCompTheoremRevDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
         let mut lctx ← getLCtx
         let mut i := lctx.numIndices
         let mut Rxs : Array Expr := .mkEmpty xs.size
-        for y in ys do 
+        for y in ys do
           let id := y.fvarId!
           let RxName := (← id.getUserName).appendBefore "R"
           let RxVal ← mkAppM ``reverseDifferential #[y, t]
@@ -398,7 +398,7 @@ def mkCompTheoremRevDiff (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
                   let dxVals ← mkProdSplitElem dxs xs.size
                   let dxFuns ← Rxs.mapM λ Rx => mkProdSnd Rx
 
-                  let xdxVals ← (dxFuns.zip dxVals).mapM 
+                  let xdxVals ← (dxFuns.zip dxVals).mapM
                     λ (df,dx) => mkAppM' df #[dx]
 
                   let sum ← mkAppFoldlM ``HAdd.hAdd xdxVals
@@ -435,7 +435,7 @@ def mkCompTheoremInvFun (e : Expr) (xs : Array Expr) (contextVars : Array Expr) 
           let contextVars := #[T,SpaceT]
             |>.append contextVars
             |>.push gIsInv
-            
+
           let xName'' := xName'.appendAfter "'"
           let xVal'' := (← mkAppM' defVal #[x']).headBeta
           let xType'' ← inferType xVal''
@@ -466,4 +466,3 @@ def mkCompTheorem (transName : Name) (e : Expr) (xs : Array Expr) (contextVars :
     mkCompTheoremInvFun e xs contextVars defVal  >>= instantiateMVars
   else
     throwError "Error in `mkCompTheorem`, unrecognized function transformation `{transName}`."
-

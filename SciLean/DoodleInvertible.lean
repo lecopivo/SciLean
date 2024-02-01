@@ -6,7 +6,7 @@ set_option linter.unusedVariables false
 
 open Lean Meta Qq
 
-set_option pp.funBinderTypes true 
+set_option pp.funBinderTypes true
 
 /-- Decomposes an element `e` of possible nested structure and returns a function put it back together.
 
@@ -29,7 +29,7 @@ partial def decomposeStructure (e : Expr) : MetaM (Array Expr × Expr) := do
 
   if ctorVal.numFields ≤ 1 then
     return (#[e], idE)
-  
+
   let eis ← info.fieldNames.mapM (fun fname => do
     let projFn := getProjFnForField? (← getEnv) structName fname |>.get!
     mkAppM projFn #[e] >>= reduceProjOfCtor)
@@ -44,11 +44,11 @@ partial def decomposeStructure (e : Expr) : MetaM (Array Expr × Expr) := do
         let mk ← mkAppM' mk #[(←mkAppM' mki xs).headBeta]
         forallTelescope (← inferType mk) fun ys _ => do
           mkLambdaFVars (ys++xs) (←mkAppM' mk ys).headBeta)
-  
+
   return (eis.flatten, mk)
 
 
-/-- Takes a type `X` of a nested structure  and splits it into two `X₁` and `X₂`. 
+/-- Takes a type `X` of a nested structure  and splits it into two `X₁` and `X₂`.
 Returns function `p₁ : X → X₁`, `p₂ : X → X₂` and `q : X₁ → X₂ → X` that are inverse of each other.
 
 Example:
@@ -72,7 +72,7 @@ def splitStructure (e : Expr) (split : Nat → Expr → Bool) : MetaM (Option (E
 
     if xis₁.size = 0 || xis₂.size = 0 then
       return none
-    
+
     let x₁ ← mkProdElem xis₁
     let x₂ ← mkProdElem xis₂
     let p₁ ← mkLambdaFVars #[x] x₁
@@ -95,8 +95,8 @@ returns `(f, p₁, p₂, h)`
 -/
 def factorDomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr × Expr × Expr)) := do
   let f ← instantiateMVars f
-  match f with 
-  | .lam xName xType xBody xBi => 
+  match f with
+  | .lam xName xType xBody xBi =>
     withLocalDecl `x xBi xType fun x => do
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
@@ -115,16 +115,16 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr × E
         let xVar := (← mkAppM' xmk xiVars).headBeta
 
         -- replace `x` with new free variables `xiVars`
-        let b ← transform b 
-          (pre := fun e => 
+        let b ← transform b
+          (pre := fun e =>
             match e with
             | .fvar id => pure (.done (if xId == id then xVar else .fvar id)) -- replace
             | e' => pure .continue)
           (post := fun e => do pure (.done (← reduceProjOfCtor e))) -- clean up projections
 
         let usedXi : FVarIdSet := -- collect which xi's are used
-          (← (b.collectFVars.run {})) 
-          |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xiSet 
+          (← (b.collectFVars.run {}))
+          |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xiSet
 
         let notUsedXi : FVarIdSet := (xiSet.diff usedXi)
 
@@ -139,7 +139,7 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr × E
 
         let rhs := .lam xName xType (f'.app (p₁.app (.bvar 0))) xBi
         let proof ← mkFreshExprMVar (← mkEq f rhs)
-        proof.mvarId!.applyRefl -- this should succeed 
+        proof.mvarId!.applyRefl -- this should succeed
 
         return (f',p₁,p₂,proof)
 
@@ -152,8 +152,8 @@ returns `(f', q, y, h)`
 -/
 def factorCodomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr × Expr × Expr)) := do
   let f ← instantiateMVars f
-  match f with 
-  | .lam xName xType xBody xBi => 
+  match f with
+  | .lam xName xType xBody xBi =>
     withLocalDecl `x xBi xType fun x => do
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
@@ -161,7 +161,7 @@ def factorCodomainThroughProjections (f : Expr) : MetaM (Option (Expr × Expr ×
       let .some (p₁,p₂,q) ← splitStructure b (fun _ bi => bi.containsFVar xId)
         | return none
 
-      let reduceProj : Expr → MetaM Expr := fun e => 
+      let reduceProj : Expr → MetaM Expr := fun e =>
         transform e (post := fun x => do pure (.done (← reduceProjOfCtor x)))
       let y ← reduceProj (← mkAppM' p₂ #[b]).headBeta
       let f' ← mkLambdaFVars #[x] (← reduceProj (← mkAppM' p₁ #[b]).headBeta)
@@ -202,8 +202,8 @@ def StructuralInverseResult.funCompl : StructuralInverseResult → Expr
 
 def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
   let e ← instantiateMVars e
-  match e with 
-  | .lam xName xType xBody xBi => 
+  match e with
+  | .lam xName xType xBody xBi =>
     withLocalDecl `x xBi xType fun x => do
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
@@ -220,10 +220,10 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
             let xiSet : FVarIdSet := RBTree.fromArray (xiVars.map fun xi => xi.fvarId!) _
 
             let xVar := (← mkAppM' xmk xiVars).headBeta
-  
+
             -- replace `x` with new free variables `xiVars`
-            let b ← transform b 
-              (pre := fun e => 
+            let b ← transform b
+              (pre := fun e =>
                 match e with
                 | .fvar id => pure (.done (if xId == id then xVar else .fvar id)) -- replace
                 | e' => pure .continue)
@@ -234,13 +234,13 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
             let mut bjxSet : Array FVarIdSet := #[] -- set of x fvars used in j-th equation
             for j in [0:bjs.size] do
               let bj := bjs[j]!
-              let bjFVars : FVarIdSet := -- collect which xi's 
-                (← (bj.collectFVars.run {})) 
-                |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xiSet 
+              let bjFVars : FVarIdSet := -- collect which xi's
+                (← (bj.collectFVars.run {}))
+                |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xiSet
               bjxSet := bjxSet.push bjFVars
-              if bjFVars.size ≠ 1 then 
+              if bjFVars.size ≠ 1 then
                 throwError "can't invert as the expression {← ppExpr bj} depends on multiple components of the input {← (bjFVars.toArray.map (.fvar)).mapM ppExpr}"
-              
+
             let usedXi : FVarIdSet := bjxSet.foldl (init:={}) (fun x y => x.mergeBy (fun _ _ _ => ()) y)
             let notUsedXi : FVarIdSet := (xiSet.diff usedXi)
 
@@ -260,7 +260,7 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
                 for j in [0:bjs.size] do
                   let bj := bjs[j]!
                   let xi := Expr.fvar bjxSet[j]!.toArray[0]!
-                  let gj ← 
+                  let gj ←
                     if bj.isFVar then
                       pure yjs[j]!
                     else
@@ -297,7 +297,7 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
                 else if i = i' then
                   i := i + 1
                   continue
-                else 
+                else
                   for i'' in [i:i'] do
                     missing_is := missing_is.push i''
                   i := i' + 1
@@ -318,7 +318,7 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
                 else if j = j' then
                   j := j + 1
                   continue
-                else 
+                else
                   for j'' in [j:j'] do
                     missing_js := missing_js.push j''
                   j := j' + 1
@@ -345,7 +345,7 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
 
                 let xis' ← itoj''.mapM (fun (i,j) => do
                   let bj := bjs[j]!
-                  if bj.isFVar then 
+                  if bj.isFVar then
                     pure yjs[j]!
                   else
                     let gj ← mkLambdaFVars #[xiVars[i]!] bj
@@ -356,12 +356,12 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
                 let f' ← mkLambdaFVars #[x] (← mkProdElem (missing_is.map (fun i => xis[i]!)))
                 return .surjection invf f'
 
-            
+
             -- bijection
             if missing_is.size == 0 then
               let xis' ← itoj.mapM (fun (i,j) => do
                 let bj := bjs[j]!
-                if bj.isFVar then 
+                if bj.isFVar then
                   pure yjs[j]!
                 else
                   let gj ← mkLambdaFVars #[xiVars[i]!] bj
@@ -472,8 +472,8 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
   IO.println (← ppExpr f'')
   IO.println (← ppExpr p₁)
   IO.println (← ppExpr p₂)
-  
-  
+
+
 
 
 -- X → Y
@@ -482,8 +482,4 @@ def structuralInverse (e : Expr) : MetaM StructuralInverseResult := do
 
 -- X₁×X₂ → Y, p₁ : X → X₁, p₂ : X → X₂, g : Y → X₁
 
--- ∑ ij, x[ij.1] * y[ij] = ∑ i, x[i] ∑ j, 
-
-
-
-
+-- ∑ ij, x[ij.1] * y[ij] = ∑ i, x[i] ∑ j,

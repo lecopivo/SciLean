@@ -6,8 +6,8 @@ namespace SciLean
 
   def LineSet : PrismaticSet :=
   {
-    Elem := λ P => 
-      match P with 
+    Elem := λ P =>
+      match P with
       | ⟨.point, _⟩ => Int
       | ⟨.cone .point, _⟩ => Int
       | _ => Empty
@@ -30,8 +30,8 @@ namespace SciLean
 
 
   instance : LineSet.Coface where
-    CofaceIndex := 
-      λ {Q} _ P => 
+    CofaceIndex :=
+      λ {Q} _ P =>
       match Q, P with
       -- neighbours of a point
       | ⟨.point, _⟩, ⟨.point, _⟩ => Unit
@@ -45,20 +45,20 @@ namespace SciLean
       -- all the rest is empty
       | _, _ => Empty
 
-    coface := 
-      λ {Q} e P id => 
+    coface :=
+      λ {Q} e P id =>
       match Q, P with
       -- neighbours of a point
-      | ⟨.point, _⟩, ⟨.point, _⟩ => 
+      | ⟨.point, _⟩, ⟨.point, _⟩ =>
         (⟨.point, sorry_proof, sorry_proof⟩, e)
-      | ⟨.point, _⟩, ⟨.cone .point, _⟩ => 
+      | ⟨.point, _⟩, ⟨.cone .point, _⟩ =>
         let e : Int := e
-        if id = 0 
+        if id = 0
         then (⟨.tip .point, sorry_proof, sorry_proof⟩, e-1)
         else (⟨.base .point, sorry_proof, sorry_proof⟩, e)
 
       -- neighbours of a segment is the segment itself
-      | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => 
+      | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ =>
         (⟨.cone .point, sorry_proof, sorry_proof⟩, e)
       | _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
 
@@ -69,7 +69,7 @@ namespace SciLean
     match P with
     | ⟨.point, _⟩ => by simp[PrismaticSet.Elem, LineSet]; infer_instance
     | ⟨.cone .point, _⟩ => by simp[PrismaticSet.Elem, LineSet]; infer_instance
-    | _ => 
+    | _ =>
       let enum : Enumtype Empty := by infer_instance
       cast sorry_proof enum
 
@@ -84,17 +84,17 @@ namespace SciLean
      | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ => by simp[LineSet, PrismaticSet.Coface.CofaceIndex, PrismaticSet.CofaceIndex]; infer_instance
 
      -- all the rest is empty
-     | _, _ => 
+     | _, _ =>
        let enum : Enumtype Empty := by infer_instance
        cast sorry_proof enum
 
 
-  def LineMesh : PrismaticMesh ℝ := 
+  def LineMesh : PrismaticMesh ℝ :=
     PrismaticMesh.mk LineSet
-      (toPos := λ p => 
+      (toPos := λ p =>
         match p with
         | ⟨⟨.point, _⟩, e, _⟩ => (reduce_type_of e)
-        | ⟨⟨.cone .point, _⟩, e, x⟩ => 
+        | ⟨⟨.cone .point, _⟩, e, x⟩ =>
           let e : Int := e
           let x : ℝ := x
           e + x
@@ -105,15 +105,15 @@ namespace SciLean
 
 
   instance : LineMesh.ClosestPoint where
-      closestPoint := λ x => 
-        let nx : Int := 
-          if 0 ≤ x 
-          then  (Float.floor  x.toFloat).toUInt64.toNat 
+      closestPoint := λ x =>
+        let nx : Int :=
+          if 0 ≤ x
+          then  (Float.floor  x.toFloat).toUInt64.toNat
           else -(Float.ceil (-x.toFloat)).toUInt64.toNat
         let ix := x - nx
         if ix = 0 then
           ⟨Prism.point, nx, 0⟩
-        else 
+        else
           let ix : ℝ^{1} := λ [i] => ix
           ⟨Prism.segment, nx, ix⟩
       closestPoint_toPos := sorry_proof

@@ -3,9 +3,9 @@ import SciLean.Quot.Monomial
 
 namespace SciLean
 
-namespace Algebra 
+namespace Algebra
 
-  -- M monomials  
+  -- M monomials
   -- K ring
   inductive Repr (M K X : Type u) : Type u where
   | mon (m : M) : Repr M K X
@@ -30,8 +30,8 @@ namespace Algebra
       | add x y => s!"({toString s_add s_mul s_lmul x}{s_add}{toString s_add s_mul s_lmul y})"
       | mul x y => s!"{toString s_add s_mul s_lmul x}{s_mul}{toString s_add s_mul s_lmul y}"
       | lmul c x => s!"{c}{s_lmul}{toString s_add s_mul s_lmul x}"
-    
-    instance {M K X} [ToString M] [ToString K] : ToString (Repr M K X) := 
+
+    instance {M K X} [ToString M] [ToString K] : ToString (Repr M K X) :=
     ⟨ λ x => x.toString " + " " * " " * "⟩
 
     def RedFormFromNot {M K X} (notForm : Repr M K X → Prop) (x : Repr M K X) : Prop :=
@@ -53,22 +53,22 @@ namespace Algebra
     | red1_lmul_mon (m : M) (c : K)               : NotRed1Form (c * (mon m : Repr M K X))
     -- no double scalar multiplication
     | red1_lmul_lmul (x : Repr M K X) (c c' : K)  : NotRed1Form (c * (c' * x))
-    -- left addition association 
+    -- left addition association
     | red1_add_assoc (x y z : Repr M K X)         : NotRed1Form (x + (y + z))
 
     def Red1Form {M K X} : Repr M K X → Prop := RedFormFromNot NotRed1Form
 
     partial def reduce1 {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] -- [DecidableEq M] --[Monomial M X K]
       (x : Repr M K X) : Repr M K X
-      := 
+      :=
       match x with
-      | x * y => 
+      | x * y =>
         match reduce1 x, reduce1 y with
         | mon x, mon y => mon (x*y)
         | x, lmul c y' => reduce1 $ (reduce1 $ lmul c x) * y'
         | x, y' * y'' => reduce1 $ x * y' * y''
         | x, y => x * y
-      | lmul c x => 
+      | lmul c x =>
         match reduce1 x with
         | mon x => mon (c*x)
         | x * y => reduce1 (c*x)*y
@@ -104,20 +104,20 @@ namespace Algebra
     def Red2Form {M K X} [Zero M] [LT X] [Monomial M K X] : Repr M K X → Prop := RedFormFromNot NotRed2Form
 
     open Monomial
-    partial def reduce2 {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] 
+    partial def reduce2 {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X]
       [DecidableEq M] [Zero M] [One M]
       [DecidableEq K] [LT X] [DecidableCp X]
       (x : Repr M K X) : Repr M K X
       :=
       match reduce1 x with
-      | x + y => 
+      | x + y =>
         match reduce2 x, reduce2 y with
-        | mon x', mon y' => 
+        | mon x', mon y' =>
           match decCp (base K x') ((base K y') : X) with
           | cpEq h => reduce2 $ mon $ intro ((coef X x' + coef X y') : K) ((base K x') : X)
           | cpLt h => if x' = 0 then mon y' else mon x' + mon y'
           | cpGt h => if y' = 0 then mon x' else mon y' + mon x'
-        | x'' + mon x', mon y' => 
+        | x'' + mon x', mon y' =>
           match decCp (base K x') ((base K y') : X) with
           | cpEq h => reduce2 $ x'' + (mon $ intro ((coef X x' + coef X y') : K) ((base K x') : X))
           | cpLt h => if x' = 0 then x'' + mon y' else x'' + mon x' + mon y'
@@ -126,33 +126,33 @@ namespace Algebra
       | x * y =>
         match reduce2 x, reduce2 y with
         | mon x', mon y' => mon (x'*y')
-        | mon x', y' => 
-          if x' = 0 
+        | mon x', y' =>
+          if x' = 0
           then mon 0
-          else if x' = 1 
+          else if x' = 1
           then y'
           else mon x' * y'
         | x', mon y' =>
-          if y' = 0 
+          if y' = 0
           then mon 0
-          else if y' = 1 
+          else if y' = 1
           then x'
           else x' * mon y'
         | x', y' => x' * y'
       | lmul c x =>
         if c = 0 then
-          mon 0 
+          mon 0
         else
-          reduce1 $ lmul c (reduce2 x) 
+          reduce1 $ lmul c (reduce2 x)
       | x => x
 
     @[simp]
-    theorem reduce2_idempotent  {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] 
+    theorem reduce2_idempotent  {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X]
       [DecidableEq M] [Zero M] [One M]
       [DecidableEq K] [LT X] [DecidableCp X]
       (x : Repr M K X) : reduce2 (reduce2 x) = reduce2 x := sorry
 
-    theorem reduce2_sound  {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] 
+    theorem reduce2_sound  {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X]
       [DecidableEq M] [Zero M] [One M]
       [DecidableEq K] [LT X] [DecidableCp X]
       (x : Repr M K X) : Red2Form (reduce2 x) := sorry
@@ -167,13 +167,13 @@ namespace Algebra
     def NormForm {M K X} [Zero M] [LT X] [Monomial M K X] : Repr M K X → Prop := RedFormFromNot NotNormForm
 
     open Monomial
-    partial def normalize {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] 
+    partial def normalize {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X]
       [DecidableEq M] [Zero M] [One M]
       [DecidableEq K] [LT X] [DecidableCp X]
       (x : Repr M K X) : Repr M K X
       :=
     match reduce2 x with
-    | x * y => 
+    | x * y =>
       match normalize x, normalize y with
       | x', y' + y'' => normalize (x' * y' + x' * y'')
       | x' + x'', y' => normalize (x' * y' + x'' * y')
@@ -185,12 +185,12 @@ namespace Algebra
     | x => x
 
     @[simp]
-    theorem normalize_idempotent  {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] 
+    theorem normalize_idempotent  {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X]
       [DecidableEq M] [Zero M] [One M]
       [DecidableEq K] [LT X] [DecidableCp X]
       (x : Repr M K X) : normalize (normalize x) = normalize x := sorry
 
-    theorem normalize_sound  {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] 
+    theorem normalize_sound  {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X]
       [DecidableEq M] [Zero M] [One M]
       [DecidableEq K] [LT X] [DecidableCp X]
       (x : Repr M K X) : NormForm (normalize x) := sorry
@@ -212,11 +212,11 @@ namespace Algebra
 
     | lmul_mon  (c : K) (m : M) : AlgEq M K X (lmul c (mon m)) (mon (c * m))
     -- TODO: Am I missing something here?
-  
+
     open Quot' in
     instance {M K X} [Zero M] [One M] [Add K] [LT X] [Monomial M K X] : QForm (AlgEq M K X) :=
     {
-      RedForm  := λ lvl x => 
+      RedForm  := λ lvl x =>
         match lvl with
         | redLvl 0 => True
         | redLvl 1 => Red1Form x
@@ -238,7 +238,7 @@ namespace Algebra
       preserve_stronger := sorry
     }
 
-    instance {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] 
+    instance {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X]
       [DecidableEq M] [Zero M] [One M]
       [DecidableEq K] [LT X] [DecidableCp X]
       [Monomial M K X] : QReduce (AlgEq M K X) (redLvl 2) :=
@@ -249,7 +249,7 @@ namespace Algebra
       preserve_stronger := sorry
     }
 
-    instance {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X] 
+    instance {M K X} [Add K] [Mul K] [Zero K] [Monomial M K X]
       [DecidableEq M] [Zero M] [One M]
       [DecidableEq K] [LT X] [DecidableCp X]
       [Monomial M K X] : QReduce (AlgEq M K X) (normLvl) :=
@@ -284,14 +284,14 @@ namespace Algebra
     example : ((2:ℤ)*x + x*((0:ℤ)*x + (0:ℤ)*y) |>.reduce2 |> toString) = "2*[0]" := by native_decide
     example : ((2:ℤ)*x + x*((0:ℤ)*x + (0:ℤ)*y + one) |>.reduce2 |> toString) = "3*[0]" := by native_decide
     example : ((2:ℤ)*x + (5:ℤ)*((2:ℤ)*x + x + (0:ℤ)*y) |>.reduce2 |> toString) = "17*[0]" := by native_decide
-    example : (((2:ℤ)*x + y)*((2:ℤ)*x + (1:ℤ)*y + (10:ℤ)*one + x*y) |>.reduce2 |> toString) 
+    example : (((2:ℤ)*x + y)*((2:ℤ)*x + (1:ℤ)*y + (10:ℤ)*one + x*y) |>.reduce2 |> toString)
               = "(2*[0] + [1]) * (((10*1 + 2*[0]) + [1]) + [0]*[1])" := by native_decide
 
-    example : ((5:ℤ)*(x + y)*((2:ℤ)*x + x + (3:ℤ)*y) |>.normalize |> toString) 
+    example : ((5:ℤ)*(x + y)*((2:ℤ)*x + x + (3:ℤ)*y) |>.normalize |> toString)
               = "((15*[0]*[0] + 30*[0]*[1]) + 15*[1]*[1])" := by native_decide
-    example : (((2:ℤ)*x + y)*((2:ℤ)*x + (1:ℤ)*y + (10:ℤ)*one + x*y) |>.normalize |> toString) 
+    example : (((2:ℤ)*x + y)*((2:ℤ)*x + (1:ℤ)*y + (10:ℤ)*one + x*y) |>.normalize |> toString)
               = "((((((20*[0] + 10*[1]) + 4*[0]*[0]) + 4*[0]*[1]) + [1]*[1]) + 2*[0]*[0]*[1]) + [0]*[1]*[1])" := by native_decide
-    example : ((2:ℤ)*x + (3:ℤ)*x*((5:ℤ)*(x + y)) |>.normalize |> toString) 
+    example : ((2:ℤ)*x + (3:ℤ)*x*((5:ℤ)*(x + y)) |>.normalize |> toString)
               = "((2*[0] + 15*[0]*[0]) + 15*[0]*[1])" := by native_decide
 
   end Test
@@ -367,23 +367,23 @@ namespace Algebra
     gsmul_succ' := sorry
     gsmul_neg' := sorry
     add_left_neg := sorry
-    
+
     intCast n := (n : K)*(1 : Algebra M K X lvl)
     intCast_ofNat := sorry
     intCast_negSucc := sorry
 
 end Algebra
 
-abbrev Polynomial (K ι) [Ring K] [DecidableEq K] [LT ι] [DecidableCp ι] 
+abbrev Polynomial (K ι) [Ring K] [DecidableEq K] [LT ι] [DecidableCp ι]
   := Algebra (SymMonomial K ι) K (FreeMonoid ι) (lvl := Quot'.redLvl 2)
 
-abbrev AltPolynomial (K ι) [Ring K] [DecidableEq K] [LT ι] [DecidableCp ι] 
+abbrev AltPolynomial (K ι) [Ring K] [DecidableEq K] [LT ι] [DecidableCp ι]
   := Algebra (AltMonomial K ι) K (FreeMonoid ι) (lvl := Quot'.redLvl 2)
 
 namespace Polynomial
 
   open Algebra.Repr
-  
+
   open Quot'
 
   def x : Polynomial Int Nat := ⟦⟨mon ⟦⟨⟨1, ⟨[0]⟩⟩, normLvl, sorry⟩⟧, normLvl, sorry⟩⟧

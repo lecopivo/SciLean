@@ -55,7 +55,7 @@ argument xy
 --------------------------------------------------------------------------------
 
 function_properties Prod.mk {X Y : Type} [Vec X] [Vec Y] (x : X) (y : Y) : X×Y
-argument (x,y) 
+argument (x,y)
   IsLin, IsSmooth,
   abbrev ∂ := λ dx dy => (dx, dy) by sorry_proof,
   abbrev 𝒯 := λ dx dy => ((x,y),(dx, dy)) by sorry_proof
@@ -95,14 +95,14 @@ argument (x,y)
 
 function_properties Neg.neg {X : Type} [Vec X] (x : X) : X
 argument x
-  IsLin := sorry_proof, 
+  IsLin := sorry_proof,
   IsSmooth := sorry_proof,
-  abbrev ∂ := λ dx => -dx by simp[differential.of_linear], 
+  abbrev ∂ := λ dx => -dx by simp[differential.of_linear],
   abbrev 𝒯 := λ dx => (-x, -dx) by simp[tangentMap,differential.of_linear]
 
 function_properties Neg.neg {X} [SemiHilbert X] (x : X) : X
 argument x
-  HasAdjoint := sorry_proof, 
+  HasAdjoint := sorry_proof,
   abbrev † := λ x' => -x' by sorry_proof,
   HasAdjDiff := sorry_proof,
   abbrev ∂† := λ dx' => -dx' by sorry_proof,
@@ -212,12 +212,12 @@ argument (x,y)
   abbrev ∂ := λ dx dy => dx•y + x•dy by sorry_proof,
   abbrev 𝒯 := λ dx dy => (x•y, dx•y + x•dy) by sorry_proof
 argument x
-  IsLin := sorry_proof, 
+  IsLin := sorry_proof,
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx => dx•y by sorry_proof,
   abbrev 𝒯 := λ dx => (x•y, dx•y) by sorry_proof
 argument y
-  IsLin := sorry_proof, 
+  IsLin := sorry_proof,
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dy => x•dy by sorry_proof,
   abbrev 𝒯 := λ dy => (x•y, x•dy) by sorry_proof
@@ -229,7 +229,7 @@ argument y
   HasAdjDiff := sorry_proof,
   abbrev ∂† := λ dy' => x•dy' by sorry_proof,
   abbrev ℛ := (x•y, λ dy' => x•dy') by sorry_proof
-  
+
 function_properties HSMul.hSMul {X : Type} [Hilbert X] (x : ℝ) (y : X) : X
 argument (x,y)
   HasAdjDiff := sorry_proof, --  by apply HasAdjDiffN.mk'; symdiff; sorry_proof,
@@ -238,14 +238,14 @@ argument (x,y)
 argument x
   HasAdjoint := sorry_proof,
   abbrev † := λ x' => ⟪x',y⟫ by sorry_proof,
-  HasAdjDiff := by sorry_proof, 
+  HasAdjDiff := by sorry_proof,
   abbrev ∂† := λ dx' => ⟪dx',y⟫ by sorry_proof,
   abbrev ℛ := (x•y, λ dx' => ⟪dx',y⟫) by sorry_proof
 
 function_properties HSMul.hSMul {X : Type} [Vec X] (x : ℝ) (y : X) : X
 argument y
   IsInv [Fact (x≠0)] := sorry_proof,
-  abbrev ⁻¹ [Fact (x≠0)] := λ y' => x⁻¹ • y' by sorry_proof 
+  abbrev ⁻¹ [Fact (x≠0)] := λ y' => x⁻¹ • y' by sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -262,17 +262,17 @@ argument (x,y)
   abbrev ∂† := λ dxy' => (dxy'*y, x*dxy') by sorry_proof,
   abbrev ℛ := (x*y, λ dxy' => (dxy'*y, x*dxy')) by sorry_proof
 argument x
-  IsLin := sorry_proof, 
+  IsLin := sorry_proof,
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx => dx*y by sorry_proof,
   abbrev 𝒯 := λ dx => (x*y, dx*y) by sorry_proof,
   HasAdjoint := sorry_proof,
   abbrev † := λ x' => x'*y by sorry_proof,
-  HasAdjDiff := by sorry_proof, 
+  HasAdjDiff := by sorry_proof,
   abbrev ∂† := λ dx' => dx'*y by sorry_proof,
   abbrev ℛ := (x*y, λ dx' => dx'*y) by sorry_proof
 argument y
-  IsLin := sorry_proof, 
+  IsLin := sorry_proof,
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dy => x*dy by sorry_proof,
   abbrev 𝒯 := λ dy => (x*y, x*dy) by sorry_proof,
@@ -295,7 +295,7 @@ argument y
 -- HDiv.hDiv - x/y
 --------------------------------------------------------------------------------
 
-function_properties HDiv.hDiv (x y : ℝ) 
+function_properties HDiv.hDiv (x y : ℝ)
 argument x
   IsLin := sorry,
   IsSmooth := sorry,
@@ -306,7 +306,7 @@ argument x
   abbrev ℛ := let iy := 1/y; (x*iy, λ dx' => dx'*iy) by sorry
 
 
-function_properties HDiv.hDiv [UnsafeAD] (x y : ℝ) 
+function_properties HDiv.hDiv [UnsafeAD] (x y : ℝ)
 argument (x,y)
   IsSmooth := sorry,
   abbrev ∂ := λ dx dy => (dx*y - x*dy) / (y^2)  by sorry,
@@ -316,7 +316,7 @@ argument (x,y)
   abbrev ℛ := let iy := 1/y; (x*iy, λ dxy' => let s := dxy' * iy^2; (s * y, - s * x)) by sorry
 
 function_properties HDiv.hDiv {X : Type} [GroupWithZero X] (x y : X)
-argument x 
+argument x
   IsInv [Fact (y≠0)] := sorry_proof,
   abbrev ⁻¹ [Fact (y≠0)] := λ x' => x'*y by sorry_proof
 argument y
@@ -328,7 +328,7 @@ argument y
 -- Inv.inv - x⁼¹
 --------------------------------------------------------------------------------
 
-function_properties Inv.inv [UnsafeAD] (x : ℝ) 
+function_properties Inv.inv [UnsafeAD] (x : ℝ)
 argument x
   IsSmooth := sorry,
   abbrev ∂ := let ix := x⁻¹; λ dx => -dx * ix^2  by sorry,
@@ -338,7 +338,7 @@ argument x
   abbrev ℛ := let ix := x⁻¹; (ix, λ dx' => -dx' * ix^2) by sorry
 
 function_properties Inv.inv {X : Type} [GroupWithZero X] (x : X)
-argument x 
+argument x
   IsInv := sorry_proof,
   abbrev ⁻¹ := λ x' => x'⁻¹ by sorry_proof
 
@@ -352,12 +352,12 @@ argument (x,y)
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx dy => ⟪dx,y⟫ + ⟪x,dy⟫ by sorry_proof,
   abbrev 𝒯 := λ dx dy => (⟪x,y⟫, ⟪dx,y⟫ + ⟪x,dy⟫) by sorry_proof,
-  HasAdjDiff := sorry_proof, 
+  HasAdjDiff := sorry_proof,
   abbrev ∂† := λ dxy' => (dxy'•y, dxy'•x) by sorry_proof,
   abbrev ℛ := (⟪x,y⟫, λ dxy' => (dxy'•y, dxy'•x)) by sorry_proof
-argument x 
+argument x
   IsLin := sorry_proof,
-  IsSmooth := sorry_proof, 
+  IsSmooth := sorry_proof,
   abbrev ∂ := λ dx => ⟪dx,y⟫ by sorry_proof,
   abbrev 𝒯 := λ dx => (⟪x,y⟫, ⟪dx,y⟫) by sorry_proof,
   HasAdjoint := sorry_proof,
@@ -367,7 +367,7 @@ argument x
   abbrev ℛ := (⟪x,y⟫,λ dx' => dx'•y) by sorry_proof
 argument y
   IsLin := sorry_proof,
-  IsSmooth := sorry_proof, 
+  IsSmooth := sorry_proof,
   abbrev ∂ := λ dy => ⟪x,dy⟫ by sorry_proof,
   abbrev 𝒯 := λ dy => (⟪x,y⟫, ⟪x,dy⟫) by sorry_proof,
   HasAdjoint := sorry_proof,
@@ -382,7 +382,7 @@ argument y
 --------------------------------------------------------------------------------
 
 function_properties SciLean.Inner.normSqr {X : Type} [Hilbert X] (x : X) : ℝ
-argument x 
+argument x
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx => 2*⟪dx,x⟫ by sorry_proof,
   abbrev 𝒯 := λ dx => (‖x‖², 2*⟪dx,x⟫) by sorry_proof,
@@ -395,7 +395,7 @@ argument x
 -- Inner.norm - ∥·∥
 --------------------------------------------------------------------------------
 
-function_properties SciLean.Inner.norm [UnsafeAD] {X} [Hilbert X] (x : X) 
+function_properties SciLean.Inner.norm [UnsafeAD] {X} [Hilbert X] (x : X)
 argument x
   IsSmooth := sorry,
   abbrev ∂ := λ dx => ⟪dx, x⟫/‖x‖ by sorry,
@@ -440,7 +440,7 @@ argument f
   IsSmooth := sorry_proof,
   abbrev ∂ := λ df => df x by sorry_proof,
   abbrev 𝒯 := λ df => (f x, df x) by sorry_proof
-argument x 
+argument x
   IsSmooth := sorry_proof,
   noncomputable abbrev ∂ := λ dx => ∂ f x dx by sorry_proof,
   noncomputable abbrev 𝒯 := λ dx => 𝒯 f x dx by sorry_proof
@@ -452,7 +452,7 @@ argument x
 
 -- TODO: Make this work!
 -- function_properties SciLean.SmoothMap.mk {X Y : Type} [Vec X] [Vec Y] (f : X → Y) (hf : IsSmooth f)
--- argument f 
+-- argument f
 --   IsLin [IsLin λ tx => f tx.1 tx.2] := sorry_proof,
 --   IsSmooth [IsSmooth λ tx => f tx.1 tx.2] := sorry_proof,
 --   abbrev ∂ [IsSmooth λ tx => f tx.1 tx.2] := λ df => df by sorry_proof
@@ -467,12 +467,12 @@ argument (f,x)
   IsSmooth := sorry_proof,
   abbrev ∂ := λ df dx => df x + f dx by sorry_proof,
   abbrev 𝒯 := λ df dx => (f x, df x + f dx) by sorry_proof
-argument f 
+argument f
   IsLin := sorry_proof,
   IsSmooth := sorry_proof,
   abbrev ∂ := λ df => df x by sorry_proof,
   abbrev 𝒯 := λ df => (f x, df x) by sorry_proof
-argument x 
+argument x
   IsLin := sorry_proof,
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx => f dx by sorry_proof,
@@ -491,13 +491,13 @@ argument f
 -- LinMap.mk'
 --------------------------------------------------------------------------------
 
--- instance SmoothMap.mk'.arg_f.prolongation.isSmoothT {X Y W} [Vec X] [Vec Y] [Vec W] 
+-- instance SmoothMap.mk'.arg_f.prolongation.isSmoothT {X Y W} [Vec X] [Vec Y] [Vec W]
 --   (f : W → X → Y) [IsSmoothNT 2 f]
 --   : IsSmoothT (λ w => λ x ⟿ f w x) := sorry_proof
 
--- instance SmoothMap.mk'.arg_f.prolongation.diff_simp {X Y W} [Vec X] [Vec Y] [Vec W] 
+-- instance SmoothMap.mk'.arg_f.prolongation.diff_simp {X Y W} [Vec X] [Vec Y] [Vec W]
 --   (f : W → X → Y) [IsSmoothNT 2 f]
---   : ∂ (λ w => λ x ⟿ f w x) 
+--   : ∂ (λ w => λ x ⟿ f w x)
 --     =
 --     λ w dw => λ x ⟿ ∂ f w dw x:= sorry_proof
 
@@ -519,55 +519,55 @@ argument (t,e)
   abbrev † := λ te' => if c then (te', 0) else (0, te') by sorry,
   HasAdjDiff := sorry,
   abbrev ∂† := λ dte' => if c then (dte', 0) else (0, dte') by sorry,
-  abbrev ℛ := 
-    if c then 
-      (t, λ dte' => (dte', 0)) 
-    else 
+  abbrev ℛ :=
+    if c then
+      (t, λ dte' => (dte', 0))
+    else
       (e, λ dte' => (0, dte')) by sorry
 
 -- These theorems have to be done by had as `function_property` can't handle dependant types
 -- and `ite` has this `(c : Prop) [Decidable c]` which is currently not handled well
 
 @[fun_trans]
-theorem ite.arg_te.IsSmooth' [UnsafeAD] 
-  {X Y} [Vec X] [Vec Y] 
-  (c : X → Prop) [∀ x, Decidable (c x)] 
+theorem ite.arg_te.IsSmooth' [UnsafeAD]
+  {X Y} [Vec X] [Vec Y]
+  (c : X → Prop) [∀ x, Decidable (c x)]
   (t : X → Y) (e : X → Y) [IsSmooth t] [IsSmooth e]
   : IsSmooth (λ x => if c x then t x else e x)
   := UnsafeAD.kaboom.elim
 
 @[fun_trans]
-theorem ite.arg_te.HasAdjDiff' [UnsafeAD] 
-  {X Y} [SemiHilbert X] [SemiHilbert Y] 
-  (c : X → Prop) [∀ x, Decidable (c x)] 
+theorem ite.arg_te.HasAdjDiff' [UnsafeAD]
+  {X Y} [SemiHilbert X] [SemiHilbert Y]
+  (c : X → Prop) [∀ x, Decidable (c x)]
   (t : X → Y) (e : X → Y) [HasAdjDiff t] [HasAdjDiff e]
   : HasAdjDiff (λ x => if c x then t x else e x)
   := UnsafeAD.kaboom.elim
 
 @[fun_trans]
-theorem ite.arg_te.differential_simp' [UnsafeAD] 
-  {X Y} [Vec X] [Vec Y] 
-  (c : X → Prop) [∀ x, Decidable (c x)] 
+theorem ite.arg_te.differential_simp' [UnsafeAD]
+  {X Y} [Vec X] [Vec Y]
+  (c : X → Prop) [∀ x, Decidable (c x)]
   (t : X → Y) (e : X → Y) [IsSmooth t] [IsSmooth e]
   : ∂ (λ x => if c x then t x else e x)
     =
-    λ x dx => if c x then ∂ t x dx else ∂ e x dx 
+    λ x dx => if c x then ∂ t x dx else ∂ e x dx
   := UnsafeAD.kaboom.elim
 
 @[fun_trans]
-theorem ite.arg_te.tangentMap_simp' [UnsafeAD] 
-  {X Y} [Vec X] [Vec Y] 
-  (c : X → Prop) [∀ x, Decidable (c x)] 
+theorem ite.arg_te.tangentMap_simp' [UnsafeAD]
+  {X Y} [Vec X] [Vec Y]
+  (c : X → Prop) [∀ x, Decidable (c x)]
   (t : X → Y) (e : X → Y) [IsSmooth t] [IsSmooth e]
   : ∂ (λ x => if c x then t x else e x)
     =
-    λ x dx => if c x then ∂ t x dx else ∂ e x dx 
+    λ x dx => if c x then ∂ t x dx else ∂ e x dx
   := UnsafeAD.kaboom.elim
 
 @[fun_trans]
-theorem ite.arg_te.adjointDifferential_simp' [UnsafeAD] 
-  {X Y} [SemiHilbert X] [SemiHilbert Y] 
-  (c : X → Prop) [∀ x, Decidable (c x)] 
+theorem ite.arg_te.adjointDifferential_simp' [UnsafeAD]
+  {X Y} [SemiHilbert X] [SemiHilbert Y]
+  (c : X → Prop) [∀ x, Decidable (c x)]
   (t : X → Y) (e : X → Y) [HasAdjDiff t] [HasAdjDiff e]
   : ∂† (λ x => if c x then t x else e x)
     =
@@ -575,9 +575,9 @@ theorem ite.arg_te.adjointDifferential_simp' [UnsafeAD]
   := UnsafeAD.kaboom.elim
 
 @[fun_trans]
-theorem ite.arg_te.reverseDifferential_simp' [UnsafeAD] 
-  {X Y} [SemiHilbert X] [SemiHilbert Y] 
-  (c : X → Prop) [∀ x, Decidable (c x)] 
+theorem ite.arg_te.reverseDifferential_simp' [UnsafeAD]
+  {X Y} [SemiHilbert X] [SemiHilbert Y]
+  (c : X → Prop) [∀ x, Decidable (c x)]
   (t : X → Y) (e : X → Y) [HasAdjDiff t] [HasAdjDiff e]
   : ℛ (λ x => if c x then t x else e x)
     =

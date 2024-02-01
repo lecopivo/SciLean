@@ -9,7 +9,7 @@ namespace SciLean
 
 open Notation
 
-inductive ApproxSolution {α : Type _} [TopologicalSpace α] [Nonempty α] : {N : Type _} → (lN : Filter N) → (spec : α → Prop) → Type _ 
+inductive ApproxSolution {α : Type _} [TopologicalSpace α] [Nonempty α] : {N : Type _} → (lN : Filter N) → (spec : α → Prop) → Type _
 | exact {spec : α → Prop}
     (impl : α)
     (h : spec impl)
@@ -24,7 +24,7 @@ inductive ApproxSolution {α : Type _} [TopologicalSpace α] [Nonempty α] : {N 
     : ApproxSolution (lN.prod lM) spec
 
 
-variable {α} [TopologicalSpace α] [Nonempty α] 
+variable {α} [TopologicalSpace α] [Nonempty α]
 
 @[inline]
 def ApproxSolution.val {N} {lN : Filter N} {spec : α → Prop}
@@ -47,7 +47,7 @@ theorem approx_consistency {N} {lN : Filter N} [T2Space α] {spec : α → Prop}
   : ∀ a, a = (limit n ∈ lN, approx.val n) → spec a :=
 by
   induction approx
-  case exact impl h => 
+  case exact impl h =>
     simp[ApproxSolution.val]
     sorry_proof
     -- intro a h'
@@ -76,10 +76,6 @@ theorem approx_convergence {N} {lN : Filter N} {spec : α → Prop}
 -- by
 --   induction approx
 --   case exact impl h => exact ⟨impl, sorry⟩
---   case approx specₙ lN lM consistent convergence impl hn => 
---     simp[ApproxSolution.val]    
+--   case approx specₙ lN lM consistent convergence impl hn =>
+--     simp[ApproxSolution.val]
 --     sorry
-
-
-
-

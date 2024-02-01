@@ -55,7 +55,7 @@ def isOfNatNatLit (e : Expr) : Bool :=
 def reduceProj? (e : Expr) : MetaM (Option Expr) := do
   match e with
   | Expr.proj _ _ (.fvar _) => return none -- do not reduce projections on fvars
-  | Expr.proj n i c => 
+  | Expr.proj n i c =>
     letTelescope c λ xs b => do
       -- let some b ← Meta.project? b i
       let some b ← reduceProjOfCtor? (.proj n i b)
@@ -131,7 +131,7 @@ private def reduceFVar (cfg : Simp.Config) (e : Expr) : MetaM Expr := do
 
 private def doesComputation (e : Expr) : Bool :=
   match e with
-  | .app f x => 
+  | .app f x =>
     x.isFVar || x.isBVar || f.isFVar || x.isBVar || doesComputation f || doesComputation x || f.isAppOf ``hold
   | .letE _ _ _ b _ => doesComputation b
   | .mdata _ e => doesComputation e
@@ -139,11 +139,11 @@ private def doesComputation (e : Expr) : Bool :=
   | _ => false
 
 private def reduceNoOpHeadFVar (e : Expr) : MetaM Expr := do
-  let f := e.getAppFn 
+  let f := e.getAppFn
   if f.isFVar then
     match (← getFVarLocalDecl f).value? with
-    | some v => 
-      if doesComputation v then 
+    | some v =>
+      if doesComputation v then
         return e
       else
         return mkAppN v e.getAppArgs
@@ -240,7 +240,7 @@ private partial def dsimp (e : Expr) : M Expr := do
     -- lsimp modification
     -- this cleans up let bindinds and unfolds computationally irrelevant let bindings
     -- if eNew.isLet then
-    --   -- TODO: fuel in `flattenLet` should be optional 
+    --   -- TODO: fuel in `flattenLet` should be optional
     --   -- TODO: add option if we want to split structure constructors
     --   -- TODO: maybe add implementation of flattenLet here and make it recursive
     --   eNew ← flattenLet 1000000 eNew
@@ -1053,7 +1053,7 @@ def lsimpGoal (mvarId : MVarId) (ctx : Simp.Context) (discharge? : Option LSimp.
 def lsimpTargetStar (mvarId : MVarId) (ctx : Simp.Context) (discharge? : Option LSimp.Discharge := none)
     (usedSimps : UsedSimps := {}) : MetaM (TacticResultCNM × UsedSimps) := mvarId.withContext do
   let mut ctx := ctx
-  for h in (← Meta.getPropHyps) do 
+  for h in (← Meta.getPropHyps) do
     let localDecl ← h.getDecl
     let proof  := localDecl.toExpr
     let simpTheorems ← ctx.simpTheorems.addTheorem (.fvar h) proof
@@ -1096,4 +1096,3 @@ def ldsimpGoal (mvarId : MVarId) (ctx : Simp.Context) (simplifyTarget : Bool := 
         mvarId ← mvarId.replaceTargetDefEq targetNew
       pure () -- FIXME: bug in do notation if this is removed?
     return (some mvarId, usedSimps)
-

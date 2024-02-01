@@ -8,11 +8,11 @@ namespace SciLean
 
     Not sure about the name: LeveledSetoid, RankedSetoid, Gradedsetoid?
     -/
- 
-class GradedSetoid (α : Type u) (Lvl : outParam (Type v)) [outParam (BoundedLattice Lvl)] 
+
+class GradedSetoid (α : Type u) (Lvl : outParam (Type v)) [outParam (BoundedLattice Lvl)]
   extends Setoid α, BoundedLattice Lvl where
   OfLevel (a : α) (lvl : Lvl) : Prop
-  
+
   lvl_order : ∀ (x : α) (l l' : Lvl), OfLevel x l → l ≤ l' → OfLevel x l'
   every_top  : ∀ x : α, OfLevel x ⊤
   unique_bottom : ∀ x y : α, x ≈ y → OfLevel x ⊥ → OfLevel y ⊥ → x = y
@@ -73,10 +73,10 @@ namespace GradedSetoid.Repr
       -- We have to include `maxLvl` to guarantee that the reduction is at least maxLvl
       ⟨Reduce.reduce (lvl ⊓ maxLvl) a.1, (lvl ⊓ maxLvl), Reduce.reduce_lvl a.1, sorry_proof⟩
 
-  instance (lvl : Lvl) [Reduce α (lvl ⊓ maxLvl)] 
+  instance (lvl : Lvl) [Reduce α (lvl ⊓ maxLvl)]
     : Setoid.Morphism (λ (a : GradedSetoid.Repr α maxLvl) => a.reduce lvl) := sorry_proof
 
-  abbrev normalize [inst : Reduce α ⊥] (a : GradedSetoid.Repr α maxLvl) : GradedSetoid.Repr α maxLvl := 
+  abbrev normalize [inst : Reduce α ⊥] (a : GradedSetoid.Repr α maxLvl) : GradedSetoid.Repr α maxLvl :=
     have h : ⊥ = (⊥ ⊓ maxLvl : Lvl) := sorry_proof
     have : Reduce α (⊥ ⊓ maxLvl) := h ▸ inst
     a.reduce ⊥
@@ -121,12 +121,12 @@ instance : LT TwoLevel where
 instance : DecidableRel (. ≤ . : TwoLevel → TwoLevel → Prop) :=
   λ x y => match x, y with
            | .any, .canonical => isFalse (by simp[LE.le]; done)
-           | _, _ => isTrue (by simp[LE.le]; sorry_proof) 
+           | _, _ => isTrue (by simp[LE.le]; sorry_proof)
 
 instance : DecidableRel (. < . : TwoLevel → TwoLevel → Prop) :=
   λ x y => match x, y with
            | .canonical, .any => isTrue (by simp[LT.lt]; done)
-           | _, _ => isFalse (by simp[LT.lt]; sorry_proof) 
+           | _, _ => isFalse (by simp[LT.lt]; sorry_proof)
 
 instance : LinearOrder TwoLevel where
   le_refl := sorry_proof
@@ -146,7 +146,7 @@ instance : GreatestLowerBound TwoLevel where
 
 instance : LowestUpperBound TwoLevel where
   lub x y := match x, y with
-             | .any, _ => .any 
+             | .any, _ => .any
              | _, .any => .any
              | .canonical, .canonical => .canonical
 
