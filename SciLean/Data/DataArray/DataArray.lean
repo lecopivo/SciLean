@@ -177,60 +177,51 @@ instance : Indexed (DataArrayN α ι) ι α where
   set xs i x := xs.set i x
   update xs i f := xs.modify i f
 
-instance [DecidableEq ι] : LawfulIndexed (DataArrayN α ι) ι α where
-  get_ofFn   := sorry_proof
-  get_set    := sorry_proof
-  get_update := sorry_proof
+instance : LawfulIndexed (DataArrayN α ι) ι α where
+  get_ofFn := sorry_proof
+  get_set_eq := sorry_proof
+  get_set_neq := sorry_proof
+  update_set_get := sorry_proof
 
-@[inline]
-instance : GetElem (DataArrayN α ι) ι α (λ _ _ => True) where
-  getElem xs i _ := xs.1.get ((IndexType.toFin i).cast xs.2)
+instance : ArrayType (DataArrayN α ι) ι α where
+  get_injective := sorry_proof
 
-@[inline]
-instance : SetElem (DataArrayN α ι) ι α where
-  setElem xs i xi := ⟨xs.1.set ((IndexType.toFin i).cast xs.2) xi, sorry_proof⟩
+-- @[inline]
+-- instance : GetElem (DataArrayN α ι) ι α (λ _ _ => True) where
+--   getElem xs i _ := xs.1.get ((IndexType.toFin i).cast xs.2)
 
-@[inline]
-instance : IntroElem (DataArrayN α ι) ι α where
-  introElem f := ⟨DataArray.intro f, sorry_proof⟩
+-- @[inline]
+-- instance : SetElem (DataArrayN α ι) ι α where
+--   setElem xs i xi := ⟨xs.1.set ((IndexType.toFin i).cast xs.2) xi, sorry_proof⟩
 
-instance : StructType (DataArrayN α ι) ι (fun _ => α) where
-  structProj x i := x.get i
-  structMake f := introElem f
-  structModify i f x := modifyElem x i f
-  left_inv := sorry_proof
-  right_inv := sorry_proof
-  structProj_structModify  := sorry_proof
-  structProj_structModify' := sorry_proof
+-- @[inline]
+-- instance : IntroElem (DataArrayN α ι) ι α where
+--   introElem f := ⟨DataArray.intro f, sorry_proof⟩
 
-instance : ArrayType (DataArrayN α ι) ι α  where
-  getElem_structProj   := by intros; rfl
-  setElem_structModify := by intros; rfl
-  introElem_structMake := by intros; rfl
+-- instance : StructType (DataArrayN α ι) ι (fun _ => α) where
+--   structProj x i := x.get i
+--   structMake f := Indexed.ofFn f
+--   structModify i f x := Indexed.update x i f
+--   left_inv := sorry_proof
+--   right_inv := sorry_proof
+--   structProj_structModify  := sorry_proof
+--   structProj_structModify' := sorry_proof
 
 instance : ArrayTypeNotation (DataArrayN α ι) ι α := ⟨⟩
 
-instance : PushElem (λ n => DataArrayN α (Fin n)) α where
-  pushElem k val xs := ⟨xs.1.push val k, sorry_proof⟩
-
-instance : DropElem (λ n => DataArrayN α (Fin n)) α where
-  dropElem k xs := ⟨xs.1.drop k, sorry_proof⟩
-
-instance : ReserveElem (λ n => DataArrayN α (Fin n)) α where
-  reserveElem k xs := ⟨xs.1.reserve k, sorry_proof⟩
-
-instance : LinearArrayType (λ n => DataArrayN α (Fin n)) α where
-  toArrayType := by infer_instance
-  pushElem_getElem := sorry_proof
-  dropElem_getElem := sorry_proof
-  reserveElem_id := sorry_proof
+-- instance : LinearArrayType (λ n => DataArrayN α (Fin n)) α where
+--   toArrayType := by infer_instance
+--   pushElem_getElem := sorry_proof
+--   dropElem_getElem := sorry_proof
+--   reserveElem_id := sorry_proof
 
 def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type) [IndexType κ]
   (hs : IndexType.card κ = IndexType.card ι)
   : DataArrayN α κ :=
   ⟨x.data, by simp[hs,x.h_size]⟩
 
-instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α] [pd : PlainDataType α] : PlainDataType Cont where
+instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α] [pd : PlainDataType α] :
+    PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType =>
       -- TODO: Fixme !!!!
@@ -239,7 +230,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
         h_size := sorry_proof
 
         fromByteArray := λ b i h =>
-          introElem (λ j => panic! "not implemented!")
+          Indexed.ofFn (λ j => panic! "not implemented!")
         toByteArray   := λ b i h c => panic! "not implemented!"
         toByteArray_size := sorry_proof
         fromByteArray_toByteArray := sorry_proof
@@ -251,7 +242,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
         h_size := sorry_proof
 
         fromByteArray := λ b i h =>
-          introElem (λ j =>
+          Indexed.ofFn (λ j =>
             let Fin := (i + (IndexType.toFin j).1.toUSize *αByteType.bytes)
             αByteType.fromByteArray b Fin sorry_proof)
         toByteArray   := λ b i h c => Id.run do

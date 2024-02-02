@@ -1,14 +1,15 @@
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ListN
 import Qq
+
+
 namespace SciLean
 
 open Lean Parser
 open TSyntax.Compat
-
+open LeanColls
 
 abbrev typeOf {α} (_ : α) := α
-
 
 class ArrayTypeNotation (Cont : outParam $ Type _) (Idx Elem : Type _)
 
@@ -18,10 +19,10 @@ abbrev arrayTypeCont (Idx Elem) {Cont : outParam $ Type _} [ArrayTypeNotation Co
 -- Notation: ⊞ i => f i --
 --------------------------
 
-abbrev introElemNotation {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]
+abbrev introElemNotation {Cont Idx Elem} [DecidableEq Idx] [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]
   (f : Idx → Elem)
   : Cont
-  := introElem (Cont := arrayTypeCont Idx Elem) f
+  := Indexed.ofFn (C := arrayTypeCont Idx Elem) f
 
 open Lean.TSyntax.Compat in
 macro "⊞ " x:term " => " b:term:51 : term => `(introElemNotation fun $x => $b)

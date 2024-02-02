@@ -100,11 +100,11 @@ instance (priority := low) [ArrayType Cont Idx Elem] [SemiHilbert K Elem]
   test_functions_true := by simp[TestFunction]; intros; apply SemiHilbert.test_functions_true
 
 instance (priority := low) [ArrayType Cont Idx K] : Basis Idx K Cont where
-  basis := λ i => introElem λ i' => (if i = i' then 1 else 0)
+  basis := λ i => ⊞ i' => (if i = i' then 1 else 0)
   proj := λ i x => x[i]
 
 instance (priority := low) [ArrayType Cont Idx K] : DualBasis Idx K Cont where
-  dualBasis := λ i => introElem λ i' => (if i = i' then 1 else 0)
+  dualBasis := λ i => ⊞ i' => (if i = i' then 1 else 0)
   dualProj := λ i x => x[i]
 
 open BasisDuality in
@@ -149,13 +149,13 @@ instance (priority := low) [ArrayType Cont Idx K] : BasisDuality Cont where
 
 
 instance [ArrayType Cont Idx Elem] [Zero Elem] : ZeroStruct Cont Idx (fun _ => Elem) where
-  structProj_zero := by intro i; simp[OfNat.ofNat,Zero.zero,ArrayType.introElem_structMake]
+  structProj_zero := by intro i; simp[OfNat.ofNat,Zero.zero]
 
 instance [ArrayType Cont Idx Elem] [Add Elem] : AddStruct Cont Idx (fun _ => Elem) where
-  structProj_add := by intro i; simp[HAdd.hAdd, Add.add,ArrayType.introElem_structMake, ← ArrayType.getElem_structProj]
+  structProj_add := by intro i; simp[HAdd.hAdd, Add.add]
 
 instance {K} [ArrayType Cont Idx Elem] [SMul K Elem] : SMulStruct K Cont Idx (fun _ => Elem) where
-  structProj_smul := by intro i k x; simp[HSMul.hSMul, SMul.smul,ArrayType.introElem_structMake, ← ArrayType.getElem_structProj]
+  structProj_smul := by intro i k x; simp[HSMul.hSMul, SMul.smul]
 
 instance {K} [IsROrC K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Cont Idx (fun _ => Elem) where
   structProj_continuous := sorry_proof

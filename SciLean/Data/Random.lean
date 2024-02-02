@@ -69,9 +69,9 @@ instance [Random Id α] [Random Id β] : Random Id (α × β) where
     return (a,b)
 
 open Random
-instance {ι} [Index ι] [PlainDataType R] [Random Id R] [Zero R] : Random Id (R^ι) where
+instance {ι} [IndexType ι] [PlainDataType R] [Random Id R] [Zero R] : Random Id (R^ι) where
   random := do
     let mut x : R^ι := 0
-    for i in fullRange ι do
+    for i in IndexType.univ ι do
       x[i] ← random (α:=R)
     return x

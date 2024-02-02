@@ -1,49 +1,41 @@
 import SciLean.Data.DataArray.DataArray
 
+open LeanColls
+
 namespace SciLean
 
+#exit
 structure Vec2 (α : Type) where
   (x y : α)
 
-
 namespace Vec2
 
-  def get (v : Vec2 α) (i : Idx 2) : α :=
+  def get (v : Vec2 α) (i : Fin 2) : α :=
     if i.1 = 0 then
       v.x
     else
       v.y
 
-  def set (v : Vec2 α) (i : Idx 2) (vi : α) : Vec2 α :=
+  def set (v : Vec2 α) (i : Fin 2) (vi : α) : Vec2 α :=
     if i.1 = 0 then
       ⟨vi, v.y⟩
     else
       ⟨v.x, vi⟩
 
-  def intro (f : Idx 2 → α) : Vec2 α := ⟨f 0, f 1⟩
+  def intro (f : Fin 2 → α) : Vec2 α := ⟨f 0, f 1⟩
 
-  instance : GetElem (Vec2 α) (Idx 2) α (λ _ _ => True) where
-    getElem v i _ := v.get i
-
-  instance : SetElem (Vec2 α) (Idx 2) α where
-    setElem v i xi := v.set i xi
-
-  instance : IntroElem (Vec2 α) (Idx 2) α where
-    introElem := intro
-
-  instance : StructType (Vec2 α) (Idx 2) (fun _ => α) where
-    structProj x i := x[i]
-    structMake f := introElem f
-    structModify i f x := setElem x i (f x[i])
+  instance : StructType (Vec2 α) (Fin 2) (fun _ => α) where
+    structProj := get
+    structMake := intro
+    structModify i f x := set x i (f (get x i))
     left_inv := sorry_proof
     right_inv := sorry_proof
     structProj_structModify  := sorry_proof
     structProj_structModify' := sorry_proof
 
+  instance : Indexed (Vec2 α) (Fin 2) α where
+
   instance : ArrayType (Vec2 α) (Idx 2) α where
-    getElem_structProj   := by intros; rfl
-    setElem_structModify := by intros; rfl
-    introElem_structMake := by intros; rfl
 
   instance [ba : PlainDataType α] : PlainDataType (Vec2 α) where
     btype :=
