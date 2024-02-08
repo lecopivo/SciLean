@@ -51,24 +51,24 @@ def convLetEnter : Tactic
 
 
 
-example
-  : (λ x : Nat =>
-      let a := x
-      let b := x + a
-      λ y =>
-      let c := x + a + b + y
-      let d := x + a + b
-      a + b + (let z := 10; c + z) + d + y)
-    =
-    (λ x : Nat =>
-      let a := x
-      let b := x + a
-      λ y =>
-      let c := x + a + b + y
-      let d := x + a + b
-      a + b + (let z := 10; c + z) + d + y)
-  :=
-by
-  conv =>
-    lhs
-    enter_let a
+-- example
+--   : (λ x : Nat =>
+--       let a := x
+--       let b := x + a
+--       λ y =>
+--       let c := x + a + b + y
+--       let d := x + a + b
+--       a + b + (let z := 10; c + z) + d + y)
+--     =
+--     (λ x : Nat =>
+--       let a := x
+--       let b := x + a
+--       λ y =>
+--       let c := x + a + b + y
+--       let d := x + a + b
+--       a + b + (let z := 10; c + z) + d + y)
+--   :=
+-- by
+--   conv =>
+--     lhs
+--     enter_let a

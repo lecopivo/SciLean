@@ -154,7 +154,7 @@ def getFTrans? (e : Expr) : CoreM (Option (Name × FTransExt × Expr)) := do
       match e.getAppFn.constName? with
       | none => none
       | .some name =>
-        if name != ``FunLike.coe then
+        if name != ``DFunLike.coe then
           name
         else if let .some ftrans := e.getArg? 4 then
           ftrans.getAppFn.constName?

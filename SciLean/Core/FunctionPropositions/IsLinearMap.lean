@@ -1,4 +1,4 @@
-import Mathlib.Algebra.Module.LinearMap
+import Mathlib.Algebra.Module.LinearMap.Basic
 import Mathlib.Algebra.Module.Prod
 import SciLean.Core.Objects.FinVec
 

@@ -98,7 +98,7 @@ private def reduceProjFn? (e : Expr) : SimpM (Option Expr) := do
           | none   => return none
       if projInfo.fromClass then
         -- `class` projection
-        if (← read).isDeclToUnfold cinfo.name then
+        if (← getContext).isDeclToUnfold cinfo.name then
           /-
           If user requested `class` projection to be unfolded, we set transparency mode to `.instances`,
           and invoke `unfoldDefinition?`.
@@ -179,7 +179,7 @@ def unfold? (e : Expr) : SimpM (Option Expr) := do
   let fName := f.constName!
   if (← isProjectionFn fName) then
     return none -- should be reduced by `reduceProjFn?`
-  let ctx ← read
+  let ctx ← getContext
   if ctx.config.autoUnfold then
     if ctx.simpTheorems.isErased (.decl fName) then
       return none
@@ -218,7 +218,7 @@ where
 
 private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
   withTraceNode `lsimp (fun _ => do pure s!"lsimp reduce") do
-  let cfg := (← read).config
+  let cfg := (← getContext).config
   let e ← appLetNormalize e
   if e.getAppFn.isMVar then
     let e' ← instantiateMVars e
@@ -248,18 +248,18 @@ private partial def reduce (e : Expr) : SimpM Expr := withIncRecDepth do
     reduce e'
   | none => return e
 
-private partial def dsimp (e : Expr) : M Expr := do
+private partial def dsimp (e : Expr) : SimpM Expr := do
   let cfg ← Simp.getConfig
   withTraceNode `ldsimp (fun _ => pure s!"ldsimp {cfg.dsimp}") do
   unless cfg.dsimp do
     return e
-  let pre (e : Expr) : M TransformStep := do
+  let pre (e : Expr) : SimpM TransformStep := do
     withTraceNode `ldsimp (fun _ => pure "ldsimp pre") do
-    if let Step.visit r ← rewritePre e (fun _ => pure none) (rflOnly := true) then
+    if let Step.visit r ← rewritePre (rflOnly := true) e then
       if r.expr != e then
         return .visit r.expr
     return .continue
-  let post (e : Expr) : M TransformStep := do
+  let post (e : Expr) : SimpM TransformStep := do
     withTraceNode `ldsimp (fun _ => pure "ldsimp post") do
     -- lsimp modification
     -- remove unsued let bindings
@@ -268,7 +268,7 @@ private partial def dsimp (e : Expr) : M Expr := do
         e.letBody!
       else
         e
-    if let Step.visit r ← rewritePost e (fun _ => pure none) (rflOnly := true) then
+    if let Step.visit r ← rewritePost (rflOnly := true) e then
       if r.expr != e then
         return .visit r.expr
     let mut eNew ← reduce e
@@ -277,13 +277,13 @@ private partial def dsimp (e : Expr) : M Expr := do
     if eNew != e then return .visit eNew else return .done e
   transform (usedLetOnly := cfg.zeta) e (pre := pre) (post := post)
 
-instance : Inhabited (M α) where
+instance : Inhabited (SimpM α) where
   default := fun _ _ _ => default
 
-partial def lambdaTelescopeDSimp (e : Expr) (k : Array Expr → Expr → M α) : M α := do
+partial def lambdaTelescopeDSimp (e : Expr) (k : Array Expr → Expr → SimpM α) : SimpM α := do
   go #[] e
 where
-  go (xs : Array Expr) (e : Expr) : M α := do
+  go (xs : Array Expr) (e : Expr) : SimpM α := do
     match e with
     | .lam n d b c => withLocalDecl n c (← dsimp d) fun x => go (xs.push x) (b.instantiate1 x)
     | e => k xs e
@@ -428,7 +428,7 @@ private def mkLetCongrEq (h₁ h₂ : Expr) : MetaM Expr :=
   mkAppM ``let_congr_eq #[h₁, h₂]
 
 
-partial def simp (e : Expr) : M Result := withIncRecDepth do
+partial def simp (e : Expr) : SimpM Result := withIncRecDepth do
   withTraceNode `lsimp (fun _ => do pure s!"lsimp") do
   checkSystem "simp"
   let cfg ← Simp.getConfig
@@ -446,7 +446,7 @@ partial def simp (e : Expr) : M Result := withIncRecDepth do
   simpLoop { expr := e }
 
 where
-  simpLoop (r : Result) : M Result := do
+  simpLoop (r : Result) : SimpM Result := do
     let cfg ← Simp.getConfig
     if (← get).numSteps > cfg.maxSteps then
       throwError "simp failed, maximum number of steps exceeded"
@@ -473,7 +473,7 @@ where
           else
             simpLoop r
 
-  simpStep (e : Expr) : M Result := do
+  simpStep (e : Expr) : SimpM Result := do
     match e with
     | Expr.mdata m e   => let r ← simp e; return { r with expr := mkMData m r.expr }
     | Expr.proj ..     => simpProj e
@@ -488,7 +488,7 @@ where
     | Expr.mvar ..     => return { expr := (← instantiateMVars e) }
     | Expr.fvar ..     => return { expr := (← reduceFVar (← Simp.getConfig) e) }
 
-  simpLit (e : Expr) : M Result := do
+  simpLit (e : Expr) : SimpM Result := do
     match e.natLit? with
     | some n =>
       /- If `OfNat.ofNat` is marked to be unfolded, we do not pack orphan nat literals as `OfNat.ofNat` applications
@@ -499,7 +499,7 @@ where
         return { expr := (← mkNumeral (mkConst ``Nat) n) }
     | none   => return { expr := e }
 
-  simpProj (e : Expr) : M Result := do
+  simpProj (e : Expr) : SimpM Result := do
     match (← reduceProj? e) with
     | some e => return { expr := e }
     | none =>
@@ -525,7 +525,7 @@ where
       else
         return { expr := (← dsimp e) }
 
-  congrArgs (r : Result) (args : Array Expr) : M Result := do
+  congrArgs (r : Result) (args : Array Expr) : SimpM Result := do
     if args.isEmpty then
       return r
     else
@@ -543,7 +543,7 @@ where
         i := i + 1
       return r
 
-  visitFn (e : Expr) : M Result := do
+  visitFn (e : Expr) : SimpM Result := do
     let f := e.getAppFn
     let fNew ← simp f
     if fNew.expr == f then
@@ -557,7 +557,7 @@ where
         proof ← Meta.mkCongrFun proof arg
       return { expr := eNew, proof? := proof }
 
-  mkCongrSimp? (f : Expr) : M (Option CongrTheorem) := do
+  mkCongrSimp? (f : Expr) : SimpM (Option CongrTheorem) := do
     if f.isConst then if (← isMatcher f.constName!) then
       -- We always use simple congruence theorems for auxiliary match applications
       return none
@@ -575,7 +575,7 @@ where
       return thm?
 
   /-- Try to use automatically generated congruence theorems. See `mkCongrSimp?`. -/
-  tryAutoCongrTheorem? (e : Expr) : M (Option Result) := do
+  tryAutoCongrTheorem? (e : Expr) : SimpM (Option Result) := do
     let f := e.getAppFn
     -- TODO: cache
     let some cgrThm ← mkCongrSimp? f | return none
@@ -664,7 +664,7 @@ where
       /- See comment above. This is reachable if `hasCast == true`. The `rhs` is not structurally equal to `mkAppN f argsNew` -/
       return some { expr := rhs }
 
-  congrDefault (e : Expr) : M Result := do
+  congrDefault (e : Expr) : SimpM Result := do
     if let some result ← tryAutoCongrTheorem? e then
       mkEqTrans result (← visitFn result.expr)
     else
@@ -672,7 +672,7 @@ where
         congrArgs (← simp f) args
 
   /-- Process the given congruence theorem hypothesis. Return true if it made "progress". -/
-  processCongrHypothesis (h : Expr) : M Bool := do
+  processCongrHypothesis (h : Expr) : SimpM Bool := do
     forallTelescopeReducing (← inferType h) fun xs hType => withNewLemmas xs do
       let lhs ← instantiateMVars hType.appFn!.appArg!
       let r ← simp lhs
@@ -706,7 +706,7 @@ where
         return r.proof?.isSome || (xs.size > 0 && lhs != r.expr)
 
   /-- Try to rewrite `e` children using the given congruence theorem -/
-  trySimpCongrTheorem? (c : SimpCongrTheorem) (e : Expr) : M (Option Result) := withNewMCtxDepth do
+  trySimpCongrTheorem? (c : SimpCongrTheorem) (e : Expr) : SimpM (Option Result) := withNewMCtxDepth do
     trace[Debug.Meta.Tactic.simp.congr] "{c.theoremName}, {e}"
     let thm ← mkConstWithFreshMVarLevels c.theoremName
     let (xs, bis, type) ← forallMetaTelescopeReducing (← inferType thm)
@@ -754,7 +754,7 @@ where
     else
       return none
 
-  congr (e : Expr) : M Result := do
+  congr (e : Expr) : SimpM Result := do
     let f := e.getAppFn
     if f.isConst then
       let congrThms ← Simp.getSimpCongrTheorems
@@ -767,7 +767,7 @@ where
     else
       congrDefault e
 
-  simpApp (e : Expr) : M Result := do
+  simpApp (e : Expr) : SimpM Result := do
     let e ← reduce e
     if !e.isApp then
       simp e
@@ -777,10 +777,10 @@ where
     else
       congr e
 
-  simpConst (e : Expr) : M Result :=
+  simpConst (e : Expr) : SimpM Result :=
     return { expr := (← reduce e) }
 
-  withNewLemmas {α} (xs : Array Expr) (f : M α) : M α := do
+  withNewLemmas {α} (xs : Array Expr) (f : SimpM α) : SimpM α := do
     if (← Simp.getConfig).contextual then
       let mut s ← Simp.getSimpTheorems
       let mut updated := false
@@ -795,7 +795,7 @@ where
     else
       f
 
-  simpLambda (e : Expr) : M Result :=
+  simpLambda (e : Expr) : SimpM Result :=
     withParent e <| lambdaTelescopeDSimp e fun xs e => withNewLemmas xs do
       let r ← simp e
       letTelescope r.expr fun ys b => do
@@ -808,7 +808,7 @@ where
             mkFunExt (← mkLambdaFVars #[x] h)
           return { expr := eNew, proof? := p }
 
-  simpArrow (e : Expr) : M Result := do
+  simpArrow (e : Expr) : SimpM Result := do
     trace[Debug.Meta.Tactic.simp] "arrow {e}"
     let p := e.bindingDomain!
     let q := e.bindingBody!
@@ -843,7 +843,7 @@ where
     else
       mkImpCongr e rp (← simp q)
 
-  simpForall (e : Expr) : M Result := withParent e do
+  simpForall (e : Expr) : SimpM Result := withParent e do
     trace[Debug.Meta.Tactic.simp] "forall {e}"
     if e.isArrow then
       simpArrow e
@@ -858,7 +858,7 @@ where
     else
       return { expr := (← dsimp e) }
 
-  simpLet (e : Expr) : M Result := do
+  simpLet (e : Expr) : SimpM Result := do
     withTraceNode `lsimp (fun _ => do pure s!"lsimpLet") do
     let Expr.letE n t v b _ := e | unreachable!
     if (← Simp.getConfig).zeta || ¬b.hasLooseBVars then
@@ -950,7 +950,7 @@ where
             let h ← mkLambdaFVars #[x] h
             return { expr := e', proof? := some (← mkLetBodyCongr v' h) }
 
-  cacheResult (cfg : Simp.Config) (r : Result) : M Result := do
+  cacheResult (cfg : Simp.Config) (r : Result) : SimpM Result := do
     if cfg.memoize then
       let dischargeDepth := (← readThe Simp.Context).dischargeDepth
       modify fun s => { s with cache := s.cache.insert e { r with dischargeDepth } }
