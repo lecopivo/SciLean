@@ -5,8 +5,6 @@ open MeasureTheory ENNReal BigOperators Finset
 
 namespace SciLean.Prob
 
-opaque _root_.Float.toReal (x : Float) : ℝ
-
 variable {R} [RealScalar R]
 
 def flip (x : R) : Rand Bool := {
@@ -62,12 +60,12 @@ variable
 theorem flip_integral (θ : R) (f : Bool → X) :
     ∫ x, f x ∂(flip θ).μ = θ • f true + (1-θ) • f false := by
 
-  simp [flip,rand_simp]
+  simp [flip,rand_simp]; sorry -- some odd smul with R and ℝ casting
 
 theorem flip_expectedValue (θ : ℝ) (f : Bool → X) :
     (flip θ).E f = θ • f true + (1-θ) • f false := by
 
-  simp[Rand.E,Rand.expectedValue,rand_simp]
+  simp[Rand.E,rand_simp]
 
 theorem dflip_expectedValueChange (f : Bool → X) :
     dflip.dE f = f true - f false := by

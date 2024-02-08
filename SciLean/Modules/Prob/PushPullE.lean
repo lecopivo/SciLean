@@ -22,6 +22,12 @@ theorem weightByDensity'_pull_mean (p q : R) (x : Rand (X×X)) :
 theorem weightByDensity'_bind (p q : R) (x : Rand (X×X)) :
     (let x' ~ x; pure (weightByDensity' p q x')) = weightByDensityM' p q x := by rfl
 
+-- @[rand_push_E]
+-- theorem ite_push_E {c} [Decidable c] (t f : FDRand X) (φ : X → Y) :
+--     (if c then t else f).fdE φ = if c then t.fdE φ else f.fdE φ := by
+--   if h : c then simp[h] else simp[h]
+
+
 @[rand_push_E]
 theorem ite_push_fdE {c} [Decidable c] (t f : FDRand X) (φ : X → Y) :
     (if c then t else f).fdE φ = if c then t.fdE φ else f.fdE φ := by

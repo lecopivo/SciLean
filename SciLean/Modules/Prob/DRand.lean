@@ -56,6 +56,9 @@ open Rand
 -- todo: some smoothenss
 theorem ext (x y : DRand X) : (∀ φ, x.action φ = y.action φ) → x = y := sorry
 
+def dirac (x : X) : DRand X := {
+  action := fun φ => φ x
+}
 
 ----------------------------------------------------------------------------------------------------
 -- Semi monadic operations -------------------------------------------------------------------------
@@ -204,6 +207,10 @@ instance : Add (DRand X) := ⟨fun x y => {
   action := fun φ => x.action φ + y.action φ
 }⟩
 
+instance : Sub (DRand X) := ⟨fun x y => {
+  action := fun φ => x.action φ - y.action φ
+}⟩
+
 noncomputable
 instance : SMul ℝ (DRand X) := ⟨fun s x => {
   action := fun φ => s • (x.action φ)
@@ -281,9 +288,17 @@ theorem density_of_zero (μ : Measure X):
     (0 : DRand X).density R μ = 0 := sorry
 
 @[simp,rand_simp]
+theorem density_of_add (x y : DRand X) (μ : Measure X):
+    (x + y).density R μ = x.density R μ + y.density R μ := sorry
+
+@[simp,rand_simp]
+theorem density_of_sub (x y : DRand X) (μ : Measure X):
+    (x - y).density R μ = x.density R μ - y.density R μ := sorry
+
+@[simp,rand_simp]
 theorem density_smul (x : DRand X) (s : R) (μ : Measure X) :
-    (s • x).density R μ = fun x' => x.density R μ x' := sorry
+    (s • x).density R μ = fun x' => s • x.density R μ x' := sorry
 
 @[simp,rand_simp]
 theorem rdensity_smul (x : DRand X) (s : ℝ) (μ : Measure X) :
-    (s • x).rdensity μ = fun x' => x.rdensity μ x' := sorry
+    (s • x).rdensity μ = fun x' => s • x.rdensity μ x' := sorry

@@ -204,7 +204,7 @@ theorem integral_bind (x : Rand X) (f : X → Rand Y) (φ : Y → Z) (hf : Measu
 
 
 noncomputable
-abbrev E (x : Rand X) (φ : X → Y) : Y := ∫ x', φ x' ∂x.μ
+def E (x : Rand X) (φ : X → Y) : Y := ∫ x', φ x' ∂x.μ
 
 @[rand_simp,simp,rand_push_E]
 theorem pure_E (x : X) (φ : X → Y) :
@@ -273,3 +273,37 @@ theorem bind_rpdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
 theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
     (x.bind f).pdf R ν = fun y => ∫ x', ((f x').pdf R ν y) ∂x.μ := by
   funext y; simp[Rand.pdf,Rand.bind,Rand.pure]; sorry
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Combine -----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+variable {R}
+def combine (x y : Rand X) (θ : R) : Rand X := {
+  μ := x.μ
+  is_prob := sorry
+  rand := fun g => do
+    let g : StdGen := g.down
+    let N := 1000000000000000
+    let (n,g) := _root_.randNat g 0 N
+    let θ' := (n : R) / (N : R)
+    if θ' ≤ θ then
+      y.rand (← ULiftable.up g)
+    else
+      x.rand (← ULiftable.up g)
+
+}
+
+/-- `x +[θ] y` return random variable `(1-θ)*x + θ*y`.
+In other words
+- `x` is generated with probability `1-θ`
+- `y` is generated with probability `θ` -/
+scoped macro x:term:65 " +[" θ:term "] " y:term:64 : term => `(term| combine $x $y $θ)
+
+
+open Lean Parser
+@[app_unexpander Rand.combine] def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
+| `($(_) $x $y $θ) => do Pure.pure (← `(term| $x +[$θ] $y)).raw
+| _ => throw ()

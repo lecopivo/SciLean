@@ -160,6 +160,10 @@ theorem fdE_as_E {rx : FDRand X} {φ : X → Y} (rx' : Rand X) :
 
 theorem fdE'_as_E {rx : FDRand X} {φ : X → Y×Y} (rx' : Rand X) :
   rx.fdE' φ = rx'.E (fun x => weightByDensity' (rx.val.pdf R rx'.μ x) (rx.dval.density R rx'.μ x) (φ x)) := sorry
+
+theorem fdE'_as_E_simple {r : Rand X} {φ : X → Y×Y}  :
+  (FDRand.mk r 0).fdE' φ = r.E φ := sorry
+
 variable {R}
 
 noncomputable

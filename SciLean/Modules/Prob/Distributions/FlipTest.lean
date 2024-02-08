@@ -1,9 +1,7 @@
-import SciLean.Modules.Prob.Flip
 import SciLean.Modules.Prob.Tactic
+import SciLean.Modules.Prob.Distributions.Flip
 
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.FDeriv.Add
-import Mathlib.Analysis.Calculus.FDeriv.Mul
+import Mathlib.Tactic.FieldSimp
 
 import Mathlib.Lean.Expr
 
@@ -11,12 +9,13 @@ open MeasureTheory ENNReal BigOperators Finset
 
 namespace SciLean.Prob
 
-macro "simp'" : conv => `(conv| simp (config := {zeta:=false}) (disch:=sorry))
 
-variable {R} [RealScalar R]
+-- variable {X} [SMul R X] [AddCommGroup X] [Module R X] [MeasurableSpace X]
+variable {R} [RealScalar R] [ToString R]
 
-noncomputable
-def test (θ : ℝ) : Rand ℝ :=
+
+
+def test (θ : R) : Rand R :=
   let b ~ (flip θ)
   if b then
     Rand.pure 0
@@ -24,28 +23,69 @@ def test (θ : ℝ) : Rand ℝ :=
     Rand.pure (-θ/2)
 
 
-noncomputable
-def dtest :=
-  derive_mean_fwdDeriv
-    (fun θ => test θ)
+def fdtest_v1 :=
+  derive_mean_fwdDeriv R :
+    (fun θ : R => test θ)
   by
     enter [θ,dθ]; dsimp
     unfold test
 
     rand_AD
     rand_push_E
-    rand_fdE_as_E (flip θ)
-    -- rand_fdE_as_E (flip ((θ + 1/2)/2))
+    rand_fdE_as_E R, (flip θ)
     simp'
     rand_pull_E
 
 
+def fdtest_v2 :=
+  derive_mean_fwdDeriv R :
+    (fun θ : R => test θ)
+  by
+    enter [θ,dθ]; dsimp
+    unfold test
+
+    rand_AD
+    rand_push_E
+    rand_fdE_as_E R, (flip ((θ+1/2)/2))
+    simp'
+    rand_pull_E
+
+
+def fdtest_v1_mean (θ dθ : R) := (fdtest_v1 θ dθ).mean
+  rewrite_by
+    unfold fdtest_v1
+    rand_compute_mean
+
+
+def fdtest_v2_mean (θ dθ: R) := (fdtest_v2 θ dθ).mean
+  rewrite_by
+    unfold fdtest_v2
+    rand_compute_mean
+
+
+theorem fdtest_mean_v1_eq_v2  (θ dθ : ℝ) : fdtest_v1_mean θ dθ = fdtest_v2_mean θ dθ := by
+  unfold fdtest_v1_mean fdtest_v2_mean
+  field_simp (disch:=sorry)
+  constructor <;> ring
+
+
+#eval fdtest_v1_mean 0.8 1.0
+#eval fdtest_v2_mean 0.8 1.0
+
+
+#eval show IO Unit from do
+
+  let θ : Float := 0.8
+  let n := 1000
+
+  IO.println s!"Exact value:            {fdtest_v1_mean θ 1.0}"
+  print_mean_variance (fdtest_v1 θ 1.0) n " for v1"
+  print_mean_variance (fdtest_v2 θ 1.0) n " for v2"
+
+
 
 noncomputable
-def _root_.Bool.toReal (b : Bool) : ℝ := if b then 1 else 0
-
-noncomputable
-def test2 (θ : ℝ) : Rand ℝ :=
+def test2 (θ : R) : Rand R :=
   let b ~ (flip θ)
   if b then
     Rand.pure 0
@@ -56,19 +96,45 @@ def test2 (θ : ℝ) : Rand ℝ :=
     else
       Rand.pure (-θ/2)
 
-
-set_option trace.Meta.Tactic.simp.rewrite true in
-noncomputable
-def dtest2 :=
-  derive_mean_fwdDeriv
-    (fun θ => test2 θ)
+def fdtest2_v1 :=
+  derive_mean_fwdDeriv R :
+    (fun θ : R => test2 θ)
   by
     enter [θ,dθ]; dsimp
     unfold test2
 
     rand_AD
     rand_push_E
-    rand_fdE_as_E (flip θ)
-    -- rand_fdE_as_E (flip ((θ + 1/2)/2))
+    rand_fdE_as_E R, (flip θ)
     simp'
     rand_pull_E
+
+
+def fdtest2_v2 :=
+  derive_mean_fwdDeriv R :
+    (fun θ : R => test2 θ)
+  by
+    enter [θ,dθ]; dsimp
+    unfold test2
+
+    rand_AD
+    rand_push_E
+    rand_fdE_as_E R, (flip ((θ+1/2)/2))
+    simp'
+    rand_pull_E
+
+
+def fdtest2_mean (θ dθ: R) := (fdtest2_v1 θ dθ).mean
+  rewrite_by
+    unfold fdtest2_v1
+    rand_compute_mean
+
+
+#eval show IO Unit from do
+
+  let θ : Float := 0.8
+  let n := 1000
+
+  IO.println s!"Exact value:            {fdtest2_mean θ 1.0}"
+  print_mean_variance (fdtest2_v1 θ 1.0) n " for v1"
+  print_mean_variance (fdtest2_v2 θ 1.0) n " for v2"

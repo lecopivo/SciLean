@@ -1,26 +1,28 @@
-import Probly.RandFwdDeriv
+import SciLean.Modules.Prob.RandFwdDeriv
+import SciLean.Core.FloatAsReal
 
 open MeasureTheory ENNReal BigOperators Finset
 
-namespace Probly
+namespace SciLean.Prob
 
-#check Measure.smul_apply
+open Rand
 
-variable (a b : ℝ)
-#check (ENNReal.ofReal (1/|a-b|))
+variable {R} [RealScalar R]
 
-def uniform (a b : ℝ) : Rand ℝ := {
+instance {R} [RealScalar R] : MeasureSpace R := sorry
+
+def uniform (a b : R) : Rand R := {
   μ := erase (1 • volume.restrict (Set.uIcc a b) )
   is_prob := sorry
   rand := sorry
 }
 
 -- TODO: this is incorrect if `a>b`
-def duniform (a b da db : ℝ) : DRand ℝ := {
-  action := fun φ => db * φ b - da * φ a
+def duniform (a b da db : R) : DRand R := {
+  action := fun φ => (Scalar.toReal R db) * φ b - (Scalar.toReal R da) * φ a
 }
 
-def fduniform (a b da db : ℝ) : FDRand ℝ := {
+def fduniform (a b da db : R) : FDRand R := {
   val := uniform a b
   dval := duniform a b da db
 }
@@ -55,31 +57,31 @@ variable
 
 
 @[simp,rand_AD]
-theorem uniform.arg_ab.randDeriv_rule (a b : W → ℝ) (ha : Differentiable ℝ a) (hb : Differentiable ℝ b) :
+theorem uniform.arg_ab.randDeriv_rule (a b : W → R) (ha : Differentiable ℝ a) (hb : Differentiable ℝ b) :
     randDeriv (fun w => uniform (a w) (b w))
     =
     fun w dw =>
       let da := fderiv ℝ a w dw
       let db := fderiv ℝ b w dw
-      duniform (a w) (b w) da db := sorry
+      (db • DRand.dirac (b w) - da • DRand.dirac (a w)) := sorry
 
 
 @[simp,rand_AD]
-theorem uniform.arg_ab.randFwdDeriv_rule (a b: W → ℝ) (ha : Differentiable ℝ a) (hb : Differentiable ℝ b) :
+theorem uniform.arg_ab.randFwdDeriv_rule (a b : W → R) (ha : Differentiable ℝ a) (hb : Differentiable ℝ b) :
     randFwdDeriv (fun w => uniform (a w) (b w))
     =
     fun w dw =>
-      let ada := fwdDeriv ℝ a w dw
-      let bdb := fwdDeriv ℝ b w dw
-      fduniform ada.1 bdb.1 ada.2 bdb.2 := by
- 
+      let ada := fwdFDeriv ℝ a w dw
+      let bdb := fwdFDeriv ℝ b w dw
+      ⟨uniform ada.1 bdb.1, bdb.2 • DRand.dirac bdb.1 - ada.2 • DRand.dirac ada.1⟩ := by
+
   funext w dw
-  simp (disch:=sorry) [randFwdDeriv,fwdDeriv,fduniform]
+  simp (disch:=first | assumption | sorry) [randFwdDeriv,fwdFDeriv,fduniform]
 
 
 @[simp,rand_AD]
 theorem uniform.arg_x.randFwdDeriv_rule_siple :
-    randFwdDeriv (fun ab : ℝ×ℝ => uniform ab.1 ab.2)
+    randFwdDeriv (fun ab : R×R => uniform ab.1 ab.2)
     =
     fun ab dab =>
-      fduniform ab.1 ab.2 dab.1 dab.2 := sorry
+      ⟨uniform ab.1 ab.2, duniform ab.1 ab.2 dab.1 dab.2⟩ := sorry
