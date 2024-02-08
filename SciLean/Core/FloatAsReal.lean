@@ -141,6 +141,8 @@ instance : IsReal Float where
 instance : RealScalar Float where
   toComplex x := ⟨floatToReal x, 0⟩
   toReal x := floatToReal x
+  ofReal x := realToFloat x
+  ofComplex x := realToFloat x.re
 
   is_real := sorry_proof
 

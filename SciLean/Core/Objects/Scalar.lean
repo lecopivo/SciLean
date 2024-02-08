@@ -26,6 +26,8 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
   -- used for specification
   toComplex : K → ℂ
   toReal    : R → ℝ
+  ofReal    : ℝ → R
+  ofComplex : ℂ → K -- If `K` model reals then this function should ignore the imaginary part
 
   make : R → R → K
   make_def : ∀ x y : R,
@@ -123,6 +125,8 @@ noncomputable
 instance : Scalar ℝ ℂ where
   toComplex x := x
   toReal x := x
+  ofReal x := x
+  ofComplex x := x
 
   make x y := ⟨x,y⟩
   make_def := by intros; simp; sorry_proof
@@ -165,6 +169,8 @@ instance : Scalar ℝ ℂ where
 noncomputable instance : RealScalar ℝ where
   toComplex x := ⟨x,0⟩
   toReal x := x
+  ofReal x := x
+  ofComplex x := x.re
 
   make x _ := x
   make_def := by intros; simp
