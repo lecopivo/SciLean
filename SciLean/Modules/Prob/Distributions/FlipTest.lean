@@ -63,24 +63,24 @@ def fdtest_v2_mean (θ dθ: R) := (fdtest_v2 θ dθ).mean
     rand_compute_mean
 
 
-theorem fdtest_mean_v1_eq_theory (θ dθ : ℝ) (h : θ - 1 ≠ 0) : 
+theorem fdtest_mean_v1_eq_theory (θ dθ : ℝ) (h : θ - 1 ≠ 0) :
     fdtest_v1_mean θ dθ = (θ * (θ - 1) /2, dθ * (θ - 1/2)) := by
   unfold fdtest_v1_mean
   field_simp (disch:=(first | aesop))
   constructor <;> ring
 
--- theorem fdtest_mean_v2_eq_theory (θ dθ : ℝ) (h : θ ≠ 3/2) : 
+-- theorem fdtest_mean_v2_eq_theory (θ dθ : ℝ) (h : θ ≠ 3/2) :
 --     fdtest_v2_mean θ dθ = (θ * (θ - 1) /2, dθ * (θ - 1/2)) := by
---   unfold fdtest_v2_mean 
+--   unfold fdtest_v2_mean
 --   have : 2 * 2 - (θ * 2 + 1) ≠ 0 := by sorry
 --   have : θ * 2 + 1 - 2 * 2 ≠ 0 := by sorry
 --   field_simp (disch:=(first | aesop))
 --   constructor <;> ring
 
--- theorem fdtest_mean_v1_eq_v2  (θ dθ : ℝ) (h : θ ≠ 1) (h' : θ ≠ 3/2) : 
+-- theorem fdtest_mean_v1_eq_v2  (θ dθ : ℝ) (h : θ ≠ 1) (h' : θ ≠ 3/2) :
 --     fdtest_v1_mean θ dθ = fdtest_v2_mean θ dθ := by
 --   unfold fdtest_v1_mean fdtest_v2_mean
---   have : θ - 1 ≠ 0 := by sorry 
+--   have : θ - 1 ≠ 0 := by sorry
 --   have : 2 * 2 - (θ * 2 + 1) ≠ 0 := sorry
 --   have : θ * 2 + 1 - 2 * 2 ≠ 0 := sorry
 --   field_simp (disch:=first | aesop)
@@ -152,3 +152,61 @@ def fdtest2_mean (θ dθ: R) := (fdtest2_v1 θ dθ).mean
   IO.println s!"Exact value:            {fdtest2_mean θ 1.0}"
   print_mean_variance (fdtest2_v1 θ 1.0) n " for v1"
   print_mean_variance (fdtest2_v2 θ 1.0) n " for v2"
+
+
+
+
+def fdtest_v3 (ω : R) :=
+  derive_mean_fwdDeriv R :
+    (fun θ : R => test θ)
+  by
+    enter [θ,dθ]; dsimp
+    unfold test
+
+    rand_AD
+    rand_push_E
+    rand_fdE_as_E R, (flip ω)
+    simp'
+    rand_pull_E
+
+
+
+/-- compute first and second moments of `fdtest_v3 ω θ`  -/
+noncomputable
+def fdtest_variance (ω θ : R) : Rand (R×R×R×R) :=
+  let (y,dy) ~ fdtest_v3 ω θ 1
+  Rand.pure (y*y, y, dy*dy, dy)
+
+
+def fdtest_variance_fwdDeriv (θ : R) :=
+  derive_mean_fwdDeriv R :
+    (fun ω : R => fdtest_variance ω θ)
+  by
+    enter [ω,dω]; dsimp
+    unfold fdtest_variance
+    unfold fdtest_v3
+
+
+    rand_AD --
+    rand_push_E
+    rand_fdE_as_E R, (flip ω)
+    simp'
+    rand_pull_E
+
+
+
+#exit
+
+/-- compute variance of `fdtest_v3 ω θ`  -/
+noncomputable
+def fdtest_variance (ω θ : R) : R×R :=
+
+  let (y2, y, dy2, dy) := Rand.mean <|
+    let (y,dy) ~ fdtest_v3 ω θ 1
+    Rand.pure (y*y, y, dy*dy, dy)
+
+  (y2 - y*y, dy2 - dy)
+
+
+def fdtest_variance_fwdDeriv (θ : R) :=
+  derive_rand_fwdDeriv

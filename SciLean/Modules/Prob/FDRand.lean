@@ -138,6 +138,14 @@ theorem bind_fdE (x : FDRand X) (f : X → FDRand Y) (φ : Y → Z) :
 
   simp (disch:=sorry) only [bind,fdpure,fdE,fdE',rand_simp,rand_push_E]
 
+@[simp,rand_push_E]
+theorem bind_fdE' (x : FDRand X) (f : X → FDRand Y) (φ : Y → Z×Z) :
+    ((x.bind f).fdE' φ)
+    =
+    (x.fdE' (fun x' => (f x').fdE' φ)) := by
+
+  simp (disch:=sorry) only [bind,fdpure,fdE,fdE',rand_simp,rand_push_E,add_assoc]
+
 
 @[simp,rand_push_E]
 theorem FDRand_mk_zero_fdE (x : Rand X) (φ : X → X) :

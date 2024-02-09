@@ -53,7 +53,8 @@ theorem FDRand.pure.arg_x.randFwdDeriv_rule (x : W → X) (hx : Differentiable �
     randFwdDeriv (fun w => pure (x w))
     =
     fun w dw =>
-      fdpure (x w) (fderiv ℝ x w dw) := by
+      let xdx := fwdFDeriv ℝ x w dw
+      fdpure xdx.1 xdx.2 := by
 
   unfold randFwdDeriv fdpure
   simp (disch:=first | apply hx | sorry) only [rand_simp,fwdFDeriv]

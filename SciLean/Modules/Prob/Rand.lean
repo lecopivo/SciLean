@@ -70,7 +70,7 @@ theorem is_measurable {f : X → Rand Y} (hf : Measurable f) :
 
 
 ----------------------------------------------------------------------------------------------------
--- Probability of an event  ------------------------------------------------------------------------
+-- Probability of an event  ------------------------------------------------------------------2------
 ----------------------------------------------------------------------------------------------------
 
 noncomputable
@@ -221,6 +221,11 @@ theorem zero_E (x : Rand X)  :
     x.E (fun _ => (0 :Y )) = 0 := by
   simp only [E,integral_zero]
 
+@[rand_simp,simp]
+theorem add_E (x : Rand X) (φ ψ : X → Y)  :
+    x.E (fun x => φ x + ψ x) = x.E φ + x.E ψ := by
+  simp only [E]; sorry -- linearity of integral
+
 @[simp]
 theorem expectedValue_smul (x : Rand X) (φ : X → ℝ) (y : Y) :
     x.E (fun x' => φ x' • y) = x.E φ • y := by sorry
@@ -277,8 +282,8 @@ open Classical in
 @[rand_simp,simp]
 theorem pdf_wrt_add (x : Rand X) (μ ν : Measure X) :
     x.pdf R (μ + ν)
-    = 
-    fun x' => 
+    =
+    fun x' =>
       if x.μ ⟂ₘ μ then 0 else x.pdf R μ x'
       +
       if x.μ ⟂ₘ ν then 0 else x.pdf R ν x' := sorry
@@ -319,29 +324,6 @@ open Lean Parser
 
 @[rand_simp,simp]
 theorem combine_pdf (x y : Rand X) (μ : Measure X) (θ : R) :
-    (x +[θ] y).pdf R μ 
-    = 
+    (x +[θ] y).pdf R μ
+    =
     fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry
-
-
-open Classical in
-@[rand_simp,simp]
-theorem combine_pdf_2 (x : Rand X) (r s : Rand X) (θ : R) :
-    x.pdf R (r +[θ] s).μ
-    = 
-    fun x' => 
-      if x.μ ⟂ₘ r.μ.out then 0 else (1-θ)⁻¹ * x.pdf R r.μ x'
-      +
-      if x.μ ⟂ₘ s.μ.out then 0 else θ⁻¹ * x.pdf R s.μ x' := sorry
-
-
-@[rand_simp,simp]
-theorem not_self_singular (x : Rand X) : (x.μ ⟂ₘ x.μ.out) = False := sorry
-
-@[rand_simp,simp]
-theorem mutally_singular_of_combine (x y z : Rand X) (θ : R) : 
-  (x.μ ⟂ₘ (y +[θ] z).μ.out) 
-  = 
-  (x.μ ⟂ₘ y.μ.out) ∧ (x.μ ⟂ₘ z.μ.out) := sorry
-
-

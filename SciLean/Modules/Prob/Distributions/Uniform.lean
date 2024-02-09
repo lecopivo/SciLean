@@ -9,12 +9,18 @@ open Rand
 
 variable {R} [RealScalar R]
 
-instance {R} [RealScalar R] : MeasureSpace R := sorry
+instance {R} [RealScalar R] : MeasureSpace R where
+  volume := sorry
 
 def uniform (a b : R) : Rand R := {
   μ := erase (1 • volume.restrict (Set.uIcc a b) )
   is_prob := sorry
-  rand := sorry
+  rand := fun g => do
+    let g : StdGen := g.down
+    let N := 1000000000000000
+    let (n,g) := _root_.randNat g 0 N
+    let w := (n : R) / (N : R)
+    return (a + w*(b-a),(← ULiftable.up g))
 }
 
 -- TODO: this is incorrect if `a>b`
@@ -27,42 +33,32 @@ def fduniform (a b da db : R) : FDRand R := {
   dval := duniform a b da db
 }
 
-variable (a b : R) (θ : R)
+@[rand_simp,simp]
+theorem uniform_pure_mutally_singular (a b c : R) (h : a≠b) : (uniform a b).μ ⟂ₘ (Rand.pure c).μ.out := sorry
 
 @[rand_simp,simp]
-theorem uniform_pure_mutally_singular (a b c : R) : (uniform a b).μ ⟂ₘ (Rand.pure c).μ.out := sorry
+theorem uniform_pure_mutally_singular' (a b c : R) (h : a≠b) : (Rand.pure c).μ ⟂ₘ (uniform a b).μ.out  := sorry
 
 @[rand_simp,simp]
-theorem uniform_pure_mutally_singular' (a b c : R) : (Rand.pure c).μ ⟂ₘ (uniform a b).μ.out  := sorry
+theorem uniform_pdf (a b : R) (θ θ' : R) (h : a < b) :
+    (uniform a b).pdf R (uniform a b +[θ] (Rand.pure a +[θ'] Rand.pure b)).μ
+    =
+    (fun x =>
+      if a < x ∧ x < b then (1-θ)⁻¹ else 0) := sorry
 
--- set_option trace.Meta.Tactic.simp.discharge true in
--- set_option trace.Meta.Tactic.simp.unify true in
-set_option trace.Meta.Tactic.simp.rewrite true in
-#check (uniform a b).pdf R (uniform a b +[θ] uniform a b).μ
-  rewrite_by
-    simp
-    simp only [not_self_singular, mutally_singular_of_combine]
-    simp
-
-#exit
-
--- @[rand_simp,simp]
--- theorem uniform.pdf_wrt_uniform (θ θ' : ℝ) :
---     (uniform θ).pdf' (uniform θ').a
---     =
---     fun b => if b then θ / θ' else (1-θ) / (1-θ') := by sorry
-
--- @[rand_simp,simp]
--- theorem duniform.density_wrt_uniform (θ : ℝ) :
---     duniform.density (uniform θ).a
---     =
---     fun b => if b then 1 / θ else 1 / (θ-1) := by sorry
-
--- @[rand_simp,simp]
--- theorem uniform.pdf (x : ℝ) (hx : x ∈ Set.Icc 0 1) :
---     (uniform x).pdf' .count
---     =
---     fun b => if b then x else (1-x) := by sorry
+@[rand_simp,simp]
+theorem duniform_density (a b da db : R) (θ θ' : R) (h : a < b) :
+    (duniform a b da db).density R (uniform a b +[θ] (Rand.pure a +[θ'] Rand.pure b)).μ
+    =
+    (fun x =>
+      if a < x ∧ x < b then
+        (1-θ)⁻¹
+      else if x = a then
+        - da * θ⁻¹ * (1-θ')⁻¹
+      else if x = b then
+        db * θ⁻¹ * θ'⁻¹
+      else
+        0) := sorry
 
 
 variable
@@ -81,7 +77,7 @@ theorem uniform.arg_ab.randDeriv_rule (a b : W → R) (ha : Differentiable ℝ a
     fun w dw =>
       let da := fderiv ℝ a w dw
       let db := fderiv ℝ b w dw
-      (db • DRand.dirac (b w) - da • DRand.dirac (a w)) := sorry
+      (duniform (a w) (b w) da db) := sorry
 
 
 @[simp,rand_AD]
@@ -91,7 +87,7 @@ theorem uniform.arg_ab.randFwdDeriv_rule (a b : W → R) (ha : Differentiable �
     fun w dw =>
       let ada := fwdFDeriv ℝ a w dw
       let bdb := fwdFDeriv ℝ b w dw
-      ⟨uniform ada.1 bdb.1, bdb.2 • DRand.dirac bdb.1 - ada.2 • DRand.dirac ada.1⟩ := by
+      ⟨uniform ada.1 bdb.1, duniform ada.1 bdb.1 ada.2 bdb.2⟩ := by
 
   funext w dw
   simp (disch:=first | assumption | sorry) [randFwdDeriv,fwdFDeriv,fduniform]
