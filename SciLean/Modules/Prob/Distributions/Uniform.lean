@@ -27,6 +27,24 @@ def fduniform (a b da db : R) : FDRand R := {
   dval := duniform a b da db
 }
 
+variable (a b : R) (θ : R)
+
+@[rand_simp,simp]
+theorem uniform_pure_mutally_singular (a b c : R) : (uniform a b).μ ⟂ₘ (Rand.pure c).μ.out := sorry
+
+@[rand_simp,simp]
+theorem uniform_pure_mutally_singular' (a b c : R) : (Rand.pure c).μ ⟂ₘ (uniform a b).μ.out  := sorry
+
+-- set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.rewrite true in
+#check (uniform a b).pdf R (uniform a b +[θ] uniform a b).μ
+  rewrite_by
+    simp
+    simp only [not_self_singular, mutally_singular_of_combine]
+    simp
+
+#exit
 
 -- @[rand_simp,simp]
 -- theorem uniform.pdf_wrt_uniform (θ θ' : ℝ) :

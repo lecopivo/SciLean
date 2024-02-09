@@ -268,12 +268,20 @@ theorem bind_rpdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
     (x.bind f).rpdf ν = fun y => ∫ x', ((f x').rpdf ν y) ∂x.μ := by
   funext y; simp[Rand.pdf,Rand.bind,Rand.pure]; sorry
 
-
 @[rand_simp,simp]
 theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
     (x.bind f).pdf R ν = fun y => ∫ x', ((f x').pdf R ν y) ∂x.μ := by
   funext y; simp[Rand.pdf,Rand.bind,Rand.pure]; sorry
 
+open Classical in
+@[rand_simp,simp]
+theorem pdf_wrt_add (x : Rand X) (μ ν : Measure X) :
+    x.pdf R (μ + ν)
+    = 
+    fun x' => 
+      if x.μ ⟂ₘ μ then 0 else x.pdf R μ x'
+      +
+      if x.μ ⟂ₘ ν then 0 else x.pdf R ν x' := sorry
 
 
 ----------------------------------------------------------------------------------------------------
@@ -282,7 +290,7 @@ theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
 
 variable {R}
 def combine (x y : Rand X) (θ : R) : Rand X := {
-  μ := x.μ
+  μ := erase ((ENNReal.ofReal (Scalar.toReal R (1-θ))) • x.μ + (ENNReal.ofReal (Scalar.toReal R θ)) • y.μ)
   is_prob := sorry
   rand := fun g => do
     let g : StdGen := g.down
@@ -307,3 +315,33 @@ open Lean Parser
 @[app_unexpander Rand.combine] def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
 | `($(_) $x $y $θ) => do Pure.pure (← `(term| $x +[$θ] $y)).raw
 | _ => throw ()
+
+
+@[rand_simp,simp]
+theorem combine_pdf (x y : Rand X) (μ : Measure X) (θ : R) :
+    (x +[θ] y).pdf R μ 
+    = 
+    fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry
+
+
+open Classical in
+@[rand_simp,simp]
+theorem combine_pdf_2 (x : Rand X) (r s : Rand X) (θ : R) :
+    x.pdf R (r +[θ] s).μ
+    = 
+    fun x' => 
+      if x.μ ⟂ₘ r.μ.out then 0 else (1-θ)⁻¹ * x.pdf R r.μ x'
+      +
+      if x.μ ⟂ₘ s.μ.out then 0 else θ⁻¹ * x.pdf R s.μ x' := sorry
+
+
+@[rand_simp,simp]
+theorem not_self_singular (x : Rand X) : (x.μ ⟂ₘ x.μ.out) = False := sorry
+
+@[rand_simp,simp]
+theorem mutally_singular_of_combine (x y z : Rand X) (θ : R) : 
+  (x.μ ⟂ₘ (y +[θ] z).μ.out) 
+  = 
+  (x.μ ⟂ₘ y.μ.out) ∧ (x.μ ⟂ₘ z.μ.out) := sorry
+
+
