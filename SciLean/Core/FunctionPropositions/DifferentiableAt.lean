@@ -312,7 +312,6 @@ def HMul.hMul.arg_a0a1.DifferentiableAt_rule
 
 @[fprop]
 def HSMul.hSMul.arg_a0a1.DifferentiableAt_rule
-  {Y : Type _} [TopologicalSpace Y] [NormedRing Y] [NormedAlgebra R Y]
   (x : X) (f : X → R) (g : X → Y) (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x)
   : DifferentiableAt R (fun x => f x • g x) x
   := DifferentiableAt.smul hf hg

@@ -34,7 +34,7 @@ def normal (μ σ : ℝ) : Distribution ℝ :=
 
 noncomputable
 def dnormal (μ σ dμ dσ : ℝ) : Distribution ℝ :=
-  fun φ =>  ∫ x, φ x * dgaussian μ σ dμ dσ x
+  ⟨fun φ =>  ∫ x, dgaussian μ σ dμ dσ x • φ x⟩
 
 noncomputable
 def fdnormal (a b da db : ℝ) : FDistribution ℝ := {
@@ -47,7 +47,7 @@ def fdnormal (a b da db : ℝ) : FDistribution ℝ := {
 theorem normal.differentiableAt (μ σ : X → ℝ) (φ : ℝ → ℝ) (x : X) (hσφ : σ x ≠ 0 ∨ DifferentiableAt ℝ φ (μ x))
     (hμ : DifferentiableAt ℝ μ x) (hσ : DifferentiableAt ℝ σ x)
     /- assume that φ is dominated by some polynomial and measurable -/ :
-    DifferentiableAt ℝ (fun x' => normal (μ x') (σ x') φ) x := by simp[normal]; sorry
+    DifferentiableAt ℝ (fun x' => ⟪normal (μ x') (σ x'), φ⟫) x := by simp[normal]; sorry
 
 
 
@@ -55,8 +55,8 @@ theorem normal.differentiableAt (μ σ : X → ℝ) (φ : ℝ → ℝ) (x : X) (
 theorem normal.bind._arg_xf.differentiableAt (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (φ : Z → ℝ) (x : X) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hσ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
-    (hf : DifferentiableUnderIntegralAt (fun x y => f x y φ) sorry x) :
-    DifferentiableAt ℝ (fun x' => bind (normal (μ x') (σ x')) (f x') φ) x := by
+    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) sorry x) :
+    DifferentiableAt ℝ (fun x' => ⟪normal (μ x') (σ x') >>= (f x'), φ⟫) x := by
 
   simp[normal,bind]
   sorry -- apply hf.diff
@@ -68,13 +68,13 @@ theorem normal.distribDeriv_comp
     (μ σ : X → ℝ) (x dx : X) (φ : ℝ → ℝ) (hab : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     /- assume that φ is dominated by some polynomial and measurable -/ :
-    distribDeriv (fun x : X => normal (μ x) (σ x)) x dx φ
+    ⟪distribDeriv (fun x : X => normal (μ x) (σ x)) x dx, φ⟫
     =
     let μ' := μ x
     let dμ := fderiv ℝ μ x dx
     let σ' := σ x
     let dσ := fderiv ℝ σ x dx
-    dnormal μ' σ' dμ dσ φ := by
+    ⟪dnormal μ' σ' dμ dσ, φ⟫ := by
 
   simp[normal,dnormal,bind,distribDeriv]
   sorry
@@ -85,16 +85,16 @@ theorem normal.bind.arg_xf.distribDeriv_rule
     (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → ℝ) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
-    (hf : DifferentiableUnderIntegralAt (fun x y => f x y φ) sorry x) :
-    distribDeriv (fun x' => bind (normal (μ x') (σ x')) (f x')) x dx φ
+    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) sorry x) :
+    ⟪distribDeriv (fun x' => bind (normal (μ x') (σ x')) (f x')) x dx, φ⟫
     =
     let μ' := μ x
     let dμ := fderiv ℝ μ x dx
     let σ' := σ x
     let dσ := fderiv ℝ σ x dx
-    bind (dnormal μ' σ' dμ dσ) (f x ·) φ
+    ⟪dnormal μ' σ' dμ dσ >>= (f x ·), φ⟫
     +
-    bind (normal μ' σ') (fun y => distribDeriv (f · y) x dx) φ := by
+    ⟪normal μ' σ', fun y => ⟪distribDeriv (f · y) x dx, φ⟫⟫ := by
 
   simp [distribDeriv, normal, dnormal, bind]
   sorry
@@ -105,14 +105,14 @@ theorem normal.distribFwdDeriv_comp
     (μ σ : X → ℝ) (x dx : X) (φ : ℝ → ℝ×ℝ) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     /- integrability condition on φ -/:
-    distribFwdDeriv (fun x : X => normal (μ x) (σ x)) x dx φ
+    ⟪distribFwdDeriv (fun x : X => normal (μ x) (σ x)) x dx, φ⟫
     =
     let μdμ := fwdFDeriv ℝ μ x dx
     let σdσ := fwdFDeriv ℝ σ x dx
-    fdnormal μdμ.1 σdσ.1 μdμ.2 σdσ.2 φ := by
+    ⟪fdnormal μdμ.1 σdσ.1 μdμ.2 σdσ.2, φ⟫ := by
 
   unfold distribFwdDeriv
-  simp (disch := assumption) only [FDistribution_apply, distribDeriv_comp]
+  simp (disch := assumption) only [fdaction_mk_apply, distribDeriv_comp]
   rfl
 
 
@@ -121,14 +121,14 @@ theorem normal.bind.arg_xf.distribFwdDeriv_rule
     (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → ℝ×ℝ) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `ha` and `hb`
-    (hf : DifferentiableUnderIntegralAt (fun x y => f x y (fun x => (φ x).1)) sorry x) :
-    distribFwdDeriv (fun x' => bind (normal (μ x') (σ x')) (f x')) x dx φ
+    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, fun x => (φ x).1⟫) sorry x) :
+    ⟪distribFwdDeriv (fun x' => bind (normal (μ x') (σ x')) (f x')) x dx, φ⟫
     =
     let μdμ := fwdFDeriv ℝ μ x dx
     let σdσ := fwdFDeriv ℝ σ x dx
-    (fdnormal μdμ.1 σdσ.1 μdμ.2 σdσ.2) (fun y => distribFwdDeriv (f · y) x dx φ) := by
+    ⟪fdnormal μdμ.1 σdσ.1 μdμ.2 σdσ.2, fun y => ⟪distribFwdDeriv (f · y) x dx, φ⟫⟫ := by
 
   unfold distribFwdDeriv fdnormal fwdFDeriv
-  simp (disch := assumption) only [FDistribution_apply, distribDeriv_rule, bind, Pi.add_apply]
+  simp (disch := assumption) only [fdaction_mk_apply, distribDeriv_rule, bind, Pi.add_apply]
   simp
   sorry -- linearity of normal in `φ`

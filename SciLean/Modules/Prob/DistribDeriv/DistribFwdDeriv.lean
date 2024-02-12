@@ -15,27 +15,23 @@ structure FDistribution (X : Type _) where
   val  : Distribution X
   dval : Distribution X
 
--- instance : FunLike (FDistribution X) (X → ℝ) (fun _ => ℝ×ℝ) where
---   coe := fun f φ => (f.val φ, f.dval φ)
---   coe_injective' := sorry
-
-instance : FunLike (FDistribution X) (X → ℝ×ℝ) (fun _ => ℝ×ℝ) where
-  coe := fun f φ => (f.val (fun x => (φ x).1), (f.dval (fun x => (φ x).1)) + (f.val (fun x => (φ x).2)))
-  coe_injective' := sorry
-
+instance : DistributionActionNotation (FDistribution X) (X → Y×Y) (Y×Y) where
+  action := fun f φ => (⟪f.val, fun x => (φ x).1⟫, ⟪f.dval, fun x => (φ x).1⟫ + ⟪f.val, fun x => (φ x).2⟫)
 
 @[simp]
-theorem FDistribution_apply (val dval : Distribution X) (φ : X → ℝ×ℝ) :
-    FDistribution.mk val dval φ = (val (fun x => (φ x).1), (dval (fun x => (φ x).1)) + (val (fun x => (φ x).2))) := by rfl
+theorem fdaction_mk_apply (val dval : Distribution X) (φ : X → ℝ×ℝ) :
+    ⟪FDistribution.mk val dval, φ⟫ = (⟪val, fun x => (φ x).1⟫, ⟪dval, fun x => (φ x).1⟫ + ⟪val, fun x => (φ x).2⟫) := by rfl
 
+theorem fdaction_unfold (f' : FDistribution X) (φ : X → ℝ×ℝ) :
+    ⟪f', φ⟫ = (⟪f'.val, fun x => (φ x).1⟫, ⟪f'.dval, fun x => (φ x).1⟫ + ⟪f'.val, fun x => (φ x).2⟫) := by rfl
 
 instance : Monad FDistribution where
   pure := fun x => { val := pure x, dval := 0 }
   bind := fun x f =>
-    ⟨(Bind.bind x.val (fun x' => (f x').val)),
-       Bind.bind x.dval (fun x' => (f x').val)
-       +
-       Bind.bind x.val (fun x' => (f x').dval)⟩
+    ⟨(x.val >>= (fun x' => (f x').val)),
+     (x.dval >>= (fun x' => (f x').val))
+     +
+     (x.val >>= (fun x' => (f x').dval))⟩
 
 
 ----------------------------------------------------------------------------------------------------
@@ -55,32 +51,30 @@ theorem distribFwdDeriv_const (a : Distribution α) :
 
 
 -- WARNING: uses `distribDeriv_comp` axiom
-theorem distribFwdDeriv_comp (f : Y → Distribution Z) (g : X → Y) (x dx : X) (φ : Z → ℝ×ℝ)
+theorem distribFwdDeriv_comp (f : Y → Distribution Z) (g : X → Y) (x dx : X) (φ : Z → W×W)
     (hf : DistribDifferentiable f) (hg : DifferentiableAt ℝ g x) :
-    distribFwdDeriv (fun x : X => (f (g x))) x dx φ
+    ⟪distribFwdDeriv (fun x : X => (f (g x))) x dx, φ⟫
     =
     let ydy := fwdFDeriv ℝ g x dx
-    distribFwdDeriv f ydy.1 ydy.2 φ := by
+    ⟪distribFwdDeriv f ydy.1 ydy.2, φ⟫ := by
 
-  simp (disch:=assumption) [distribFwdDeriv,fwdFDeriv, distribDeriv_comp]
+  simp (disch := assumption) only [action, distribFwdDeriv, fwdFDeriv]
+  simp (disch := assumption) only [distribution_action_normalize, distribDeriv_comp]
 
 
 -- WARNING: uses `Rand.bind.arg_xf.distribDeriv_rule`
 theorem FDistribution.bind.arg_xf.distribFwdDeriv_rule
     (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → ℝ×ℝ) (x dx : X)
     (hg : DistribDifferentiable g) (hf : DistribDifferentiable (fun (x,y) => f x y)) :
-    distribFwdDeriv (fun x' => Bind.bind (g x') (f x')) x dx φ
+    ⟪distribFwdDeriv (fun x' => Bind.bind (g x') (f x')) x dx, φ⟫
     =
-    (distribFwdDeriv g x dx) (fun y => distribFwdDeriv (f · y) x dx φ)  := by
+    ⟪distribFwdDeriv g x dx, fun y => ⟪distribFwdDeriv (f · y) x dx, φ⟫⟫  := by
 
-  simp (disch:=assumption) [distribFwdDeriv, fwdFDeriv, Rand.bind.arg_xf.distribDeriv_rule]
-
-  constructor
-
-  . rfl
-  . simp[add_assoc]
-    sorry -- DistribDifferentiable should have linearity in φ
-
+  simp (disch := assumption) only
+    [distribFwdDeriv, fdaction_mk_apply, action_bind,
+     Bind.bind.arg_xf.distribDeriv_rule, Prod.mk.injEq, true_and, add_assoc]
+  congr
+  . sorry -- DistribDifferentiable should imply linearity of `⟪f', ·⟫`
 
 
 
@@ -89,8 +83,8 @@ theorem FDistribution.bind.arg_xf.distribFwdDeriv_rule
 
 @[simp ↓]
 theorem ite.arg_te.distribFwdDeriv_rule {c} [Decidable c] (t e : X → Distribution Y) (φ : Y → ℝ×ℝ) :
-    distribFwdDeriv (fun x => if c then t x else e x) x dx φ
+    ⟪distribFwdDeriv (fun x => if c then t x else e x) x dx, φ⟫
     =
-    if c then distribFwdDeriv t x dx φ else distribFwdDeriv e x dx φ := by
+    if c then ⟪distribFwdDeriv t x dx, φ⟫ else ⟪distribFwdDeriv e x dx, φ⟫ := by
 
   if h : c then simp[h] else simp[h]

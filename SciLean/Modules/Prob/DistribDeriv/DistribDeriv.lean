@@ -13,14 +13,14 @@ variable
 noncomputable
 def distribDeriv
     (f : X → Distribution Y) (x dx : X) : Distribution Y :=
-  fun φ => fderiv ℝ (fun x' => (f x') φ) x dx
+  ⟨fun φ => fderiv ℝ (⟪f ·, φ⟫) x dx⟩
 
 
 /-- Differentiable function in distributional sense. No clue how to define this :)
 
 Can we define this such that these  theorems hold?
   1. distribDeriv_comp
-  2. Rand.bind.arg_xf.distribDeriv_rule
+  2. Bind.bind.arg_xf.distribDeriv_rule
 
 -/
 opaque DistribDifferentiable (f : X → Distribution Y) : Prop
@@ -34,35 +34,36 @@ theorem distribDeriv_const (a : Distribution α) :
 
 
 theorem fderiv_distribDeriv (f : X → Distribution Y) (φ : Y → ℝ) (x dx : X) :
-  fderiv ℝ (fun x' => f x' φ) x dx
+  fderiv ℝ (fun x' => (f x').action φ) x dx
   =
-  distribDeriv f x dx φ := rfl
-
+  ⟪distribDeriv f x dx, φ⟫ := rfl
 
 --
 axiom distribDeriv_comp
     {X} [NormedAddCommGroup X] [NormedSpace ℝ X]
     {Y Z} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
-    (f : Y → Distribution Z) (g : X → Y) (x dx : X) (φ : Z → ℝ)
+    (f : Y → Distribution Z) (g : X → Y) (x dx : X) (φ : Z → W)
     (hf : DistribDifferentiable f) (hg : DifferentiableAt ℝ g x) :
-    distribDeriv (fun x : X => (f (g x))) x dx φ
+    ⟪distribDeriv (fun x : X => (f (g x))) x dx, φ⟫
     =
     let y := g x
     let dy := fderiv ℝ g x dx
-    distribDeriv f y dy φ
+    ⟪distribDeriv f y dy, φ⟫
 
+
+variable  (y : Distribution Y) (g : X → Distribution Y) (f : X → Y → Distribution Z)
 
 
 -- TODO: mark as axiom - unfortunatelly it add bunch of extra assumptions
-theorem Rand.bind.arg_xf.distribDeriv_rule
+theorem Bind.bind.arg_xf.distribDeriv_rule
     {X Y Z} [NormedAddCommGroup X] [NormedSpace ℝ X]
     (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → ℝ) (w dw : X)
     (hg : DistribDifferentiable g) (hf : DistribDifferentiable (fun (x,y) => f x y)) :
-    distribDeriv (fun w => bind (g w) (f w)) w dw φ
+    ⟪distribDeriv (fun w => (g w) >>= (f w)) w dw, φ⟫
     =
-    bind (distribDeriv g w dw) (f w · ) φ
+    ⟪(distribDeriv g w dw) >>= (f w · ), φ⟫
     +
-    bind (g w) (fun x => distribDeriv (f · x) w dw) φ := sorry
+    ⟪(g w) >>= (fun x => distribDeriv (f · x) w dw), φ⟫ := sorry
 
 
 theorem fderiv_uncurry (f : X → Y → Z) (xy dxy : X×Y) (hf : DifferentiableAt ℝ (fun (x,y) => f x y) xy)  :

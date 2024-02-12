@@ -22,7 +22,29 @@ variable
   {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [FiniteDimensional ℝ Y] [MeasurableSpace Y]
   {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [FiniteDimensional ℝ Z] [MeasurableSpace Z]
 
-abbrev Distribution (X) := (X → ℝ) → ℝ
+structure Distribution (X : Type u) where
+  action : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → (X → Y) → Y
+
+class DistributionActionNotation (Distrib TestFun : Type _) (Result : outParam <| Type _) where
+  action : Distrib → TestFun → Result
+
+export DistributionActionNotation (action)
+
+scoped notation "⟪" f' ", " φ "⟫" => DistributionActionNotation.action f' φ
+
+instance : DistributionActionNotation (Distribution X) (X → Y) Y where
+  action := fun f φ => Distribution.action f φ
+
+
+/-- Prefer `DistributionActionNotation.action` over `Distribution.action` -/
+@[simp]
+theorem distribution_action_normalize (f : Distribution X) (φ : X → Y) :
+    f.action φ = ⟪f, φ⟫ := by rfl
+
+@[simp]
+theorem action_mk_apply (f : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → (X → Y) → Y) (φ : X → Y) :
+    ⟪Distribution.mk f, φ⟫ = f φ := by rfl
+
 
 
 ----------------------------------------------------------------------------------------------------
@@ -32,8 +54,8 @@ abbrev Distribution (X) := (X → ℝ) → ℝ
 -- def dirac (x : X) : Distribution X := fun φ => φ x
 
 instance : Monad Distribution where
-  pure := fun x φ => φ x
-  bind := fun x f φ => x (fun x' => (f x') φ)
+  pure := fun x => ⟨fun φ => φ x⟩
+  bind := fun x f => ⟨fun φ => ⟪x, fun x' => ⟪(f x'), φ⟫⟫⟩
 
 
 instance : LawfulMonad Distribution where
@@ -47,15 +69,19 @@ instance : LawfulMonad Distribution where
   seqRight_eq    := by intros; rfl
   pure_seq       := by intros; rfl
 
+@[simp]
+theorem action_bind (x : Distribution X) (f : X → Distribution Y) (φ : Y → W) :
+    ⟪x >>= f, φ⟫ = ⟪x, fun x' => ⟪f x', φ⟫⟫ := by rfl
+
 
 ----------------------------------------------------------------------------------------------------
 -- Arithmetics -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-instance : Zero (Distribution X) := ⟨fun _φ => 0⟩
-instance : Add (Distribution X) := ⟨fun f g φ => f φ + g φ⟩
-instance : Sub (Distribution X) := ⟨fun f g φ => f φ - g φ⟩
-noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f φ => r • f φ⟩
+instance : Zero (Distribution X) := ⟨⟨fun _φ => 0⟩⟩
+instance : Add (Distribution X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ + ⟪g, φ⟫⟩⟩
+instance : Sub (Distribution X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ - ⟪g, φ⟫⟩⟩
+noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f => ⟨fun φ => r • ⟪f, φ⟫⟩⟩
 
 
 
@@ -65,16 +91,13 @@ noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f φ => r • f �
 
 open Classical in
 noncomputable
-def _root_.MeasureTheory.Measure.toDistribution (μ : Measure X) : Distribution X := fun φ =>
-  if Integrable φ μ then
-    ∫ x, φ x ∂μ
-  else
-    0
+def _root_.MeasureTheory.Measure.toDistribution (μ : Measure X) :
+    Distribution X := ⟨fun φ => ∫ x, φ x ∂μ⟩
 
 
 def Distribution.IsMeasure (f : Distribution X) : Prop :=
-  ∃ (μ : Measure X),
-    ∀ φ, f φ = μ.toDistribution φ
+  ∃ (μ : Measure X), ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] (φ : X → Y),
+      ⟪f, φ⟫ = ∫ x, φ x ∂μ
 
 open Classical
 noncomputable
@@ -87,8 +110,10 @@ def Distribution.measure (f' : Distribution X) : Measure X :=
 def Distribution.IsSignedMeasure (f : Distribution X) : Prop :=
   -- Use SignedMeasure but I'm not sure how to write the integral then
   ∃ (μpos μneg : Measure X),
-    (IsFiniteMeasure μpos ∧ IsFiniteMeasure μneg) ∧
-    ∀ φ, f φ = ∫ x, φ x ∂μpos - ∫ x, φ x ∂μneg
+    (IsFiniteMeasure μpos ∧ IsFiniteMeasure μneg)
+    ∧
+    ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] (φ : X → Y),
+    ⟪f, φ⟫ = ∫ x, φ x ∂μpos - ∫ x, φ x ∂μneg
 
 open Classical
 noncomputable
@@ -101,26 +126,8 @@ def Distribution.signedMeasure (f' : Distribution X) : SignedMeasure X :=
   else
     0
 
-
 @[simp]
-theorem apply_measure_as_distribution (μ : Measure X) (φ : X → ℝ) :
-     μ.toDistribution φ = ∫ x, φ x ∂μ := by
-
-  simp[Measure.toDistribution, integral, (inferInstance : CompleteSpace ℝ)]
-  intro h'
-  if h : Integrable φ μ then
-    contradiction
-  else
-    simp [h]
-
+theorem apply_measure_as_distribution (μ : Measure X) (φ : X → Y) :
+     ⟪μ.toDistribution, φ⟫ = ∫ x, φ x ∂μ := by rfl
 
 theorem Distribution.density (x y : Distribution X) : X → ℝ≥0∞ := x.measure.rnDeriv y.measure
-
-
-----------------------------------------------------------------------------------------------------
--- Extension ---------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-noncomputable
-def Distribution.extendApply (x : Distribution X) (φ : X → Y) : Y :=
-    sorry
