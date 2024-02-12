@@ -57,7 +57,7 @@ variable  (y : Distribution Y) (g : X → Distribution Y) (f : X → Y → Distr
 -- TODO: mark as axiom - unfortunatelly it add bunch of extra assumptions
 theorem Bind.bind.arg_xf.distribDeriv_rule
     {X Y Z} [NormedAddCommGroup X] [NormedSpace ℝ X]
-    (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → ℝ) (w dw : X)
+    (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → W) (w dw : X)
     (hg : DistribDifferentiable g) (hf : DistribDifferentiable (fun (x,y) => f x y)) :
     ⟪distribDeriv (fun w => (g w) >>= (f w)) w dw, φ⟫
     =

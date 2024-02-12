@@ -44,7 +44,7 @@ def fdnormal (a b da db : ℝ) : FDistribution ℝ := {
 
 
 -- @[fprop]
-theorem normal.differentiableAt (μ σ : X → ℝ) (φ : ℝ → ℝ) (x : X) (hσφ : σ x ≠ 0 ∨ DifferentiableAt ℝ φ (μ x))
+theorem normal.differentiableAt (μ σ : X → ℝ) (φ : ℝ → W) (x : X) (hσφ : σ x ≠ 0 ∨ DifferentiableAt ℝ φ (μ x))
     (hμ : DifferentiableAt ℝ μ x) (hσ : DifferentiableAt ℝ σ x)
     /- assume that φ is dominated by some polynomial and measurable -/ :
     DifferentiableAt ℝ (fun x' => ⟪normal (μ x') (σ x'), φ⟫) x := by simp[normal]; sorry
@@ -52,7 +52,7 @@ theorem normal.differentiableAt (μ σ : X → ℝ) (φ : ℝ → ℝ) (x : X) (
 
 
 -- @[fprop]
-theorem normal.bind._arg_xf.differentiableAt (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (φ : Z → ℝ) (x : X) (hσ₀ : σ x ≠ 0)
+theorem normal.bind._arg_xf.differentiableAt (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (φ : Z → W) (x : X) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hσ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
     (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) sorry x) :
@@ -65,7 +65,7 @@ theorem normal.bind._arg_xf.differentiableAt (μ σ : X → ℝ) (f : X → ℝ 
 
 @[simp]
 theorem normal.distribDeriv_comp
-    (μ σ : X → ℝ) (x dx : X) (φ : ℝ → ℝ) (hab : σ x ≠ 0)
+    (μ σ : X → ℝ) (x dx : X) (φ : ℝ → W) (hab : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     /- assume that φ is dominated by some polynomial and measurable -/ :
     ⟪distribDeriv (fun x : X => normal (μ x) (σ x)) x dx, φ⟫
@@ -82,7 +82,7 @@ theorem normal.distribDeriv_comp
 
 @[simp]
 theorem normal.bind.arg_xf.distribDeriv_rule
-    (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → ℝ) (hσ₀ : σ x ≠ 0)
+    (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → W) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
     (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) sorry x) :
@@ -102,7 +102,7 @@ theorem normal.bind.arg_xf.distribDeriv_rule
 
 @[simp]
 theorem normal.distribFwdDeriv_comp
-    (μ σ : X → ℝ) (x dx : X) (φ : ℝ → ℝ×ℝ) (hσ₀ : σ x ≠ 0)
+    (μ σ : X → ℝ) (x dx : X) (φ : ℝ → W×W) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     /- integrability condition on φ -/:
     ⟪distribFwdDeriv (fun x : X => normal (μ x) (σ x)) x dx, φ⟫
@@ -118,7 +118,7 @@ theorem normal.distribFwdDeriv_comp
 
 @[simp]
 theorem normal.bind.arg_xf.distribFwdDeriv_rule
-    (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → ℝ×ℝ) (hσ₀ : σ x ≠ 0)
+    (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → W×W) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `ha` and `hb`
     (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, fun x => (φ x).1⟫) sorry x) :
@@ -130,5 +130,4 @@ theorem normal.bind.arg_xf.distribFwdDeriv_rule
 
   unfold distribFwdDeriv fdnormal fwdFDeriv
   simp (disch := assumption) only [fdaction_mk_apply, distribDeriv_rule, bind, Pi.add_apply]
-  simp
   sorry -- linearity of normal in `φ`

@@ -19,10 +19,10 @@ instance : DistributionActionNotation (FDistribution X) (X → Y×Y) (Y×Y) wher
   action := fun f φ => (⟪f.val, fun x => (φ x).1⟫, ⟪f.dval, fun x => (φ x).1⟫ + ⟪f.val, fun x => (φ x).2⟫)
 
 @[simp]
-theorem fdaction_mk_apply (val dval : Distribution X) (φ : X → ℝ×ℝ) :
+theorem fdaction_mk_apply (val dval : Distribution X) (φ : X → W×W) :
     ⟪FDistribution.mk val dval, φ⟫ = (⟪val, fun x => (φ x).1⟫, ⟪dval, fun x => (φ x).1⟫ + ⟪val, fun x => (φ x).2⟫) := by rfl
 
-theorem fdaction_unfold (f' : FDistribution X) (φ : X → ℝ×ℝ) :
+theorem fdaction_unfold (f' : FDistribution X) (φ : X → W×W) :
     ⟪f', φ⟫ = (⟪f'.val, fun x => (φ x).1⟫, ⟪f'.dval, fun x => (φ x).1⟫ + ⟪f'.val, fun x => (φ x).2⟫) := by rfl
 
 instance : Monad FDistribution where
@@ -64,17 +64,17 @@ theorem distribFwdDeriv_comp (f : Y → Distribution Z) (g : X → Y) (x dx : X)
 
 -- WARNING: uses `Rand.bind.arg_xf.distribDeriv_rule`
 theorem FDistribution.bind.arg_xf.distribFwdDeriv_rule
-    (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → ℝ×ℝ) (x dx : X)
+    (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → W×W) (x dx : X)
     (hg : DistribDifferentiable g) (hf : DistribDifferentiable (fun (x,y) => f x y)) :
     ⟪distribFwdDeriv (fun x' => Bind.bind (g x') (f x')) x dx, φ⟫
     =
     ⟪distribFwdDeriv g x dx, fun y => ⟪distribFwdDeriv (f · y) x dx, φ⟫⟫  := by
 
-  simp (disch := assumption) only
+  simp (disch := assumption)
     [distribFwdDeriv, fdaction_mk_apply, action_bind,
      Bind.bind.arg_xf.distribDeriv_rule, Prod.mk.injEq, true_and, add_assoc]
-  congr
-  . sorry -- DistribDifferentiable should imply linearity of `⟪f', ·⟫`
+  sorry -- linearity of ⟪g x, ·⟫
+
 
 
 
@@ -82,7 +82,7 @@ theorem FDistribution.bind.arg_xf.distribFwdDeriv_rule
 
 
 @[simp ↓]
-theorem ite.arg_te.distribFwdDeriv_rule {c} [Decidable c] (t e : X → Distribution Y) (φ : Y → ℝ×ℝ) :
+theorem ite.arg_te.distribFwdDeriv_rule {c} [Decidable c] (t e : X → Distribution Y) (φ : Y → W×W) :
     ⟪distribFwdDeriv (fun x => if c then t x else e x) x dx, φ⟫
     =
     if c then ⟪distribFwdDeriv t x dx, φ⟫ else ⟪distribFwdDeriv e x dx, φ⟫ := by

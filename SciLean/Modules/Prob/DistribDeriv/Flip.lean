@@ -20,13 +20,13 @@ def fdflip (θ dθ : ℝ) : FDistribution Bool := ⟨flip θ, dflip dθ⟩
 
 
 -- @[fprop]
-theorem flip.differentiableAt (f : X → ℝ) (φ : Bool → ℝ) (x : X)
+theorem flip.differentiableAt (f : X → ℝ) (φ : Bool → W) (x : X)
     (hf : DifferentiableAt ℝ f x) :
     DifferentiableAt ℝ (fun x => ⟪flip (f x), φ⟫) x := by dsimp[flip,action]; fprop
 
 
 -- @[fprop]
-theorem flip.bind._arg_xf.differentiableAt (g : X → ℝ) (f : X → Bool → Distribution Z) (φ : Z → ℝ) (x : X)
+theorem flip.bind._arg_xf.differentiableAt (g : X → ℝ) (f : X → Bool → Distribution Z) (φ : Z → W) (x : X)
     (hg : DifferentiableAt ℝ g x) (hf : ∀ b, DifferentiableAt ℝ (fun x => ⟪f x b, φ⟫) x)  :
     DifferentiableAt ℝ (fun x => ⟪(flip (g x)) >>= (f x), φ⟫) x := by
 
@@ -67,7 +67,7 @@ theorem flip.bind.arg_xf.distribDeriv_rule
 
 
 @[simp ↓]
-theorem flip.distribFwdDeriv_comp (f : X → ℝ) (x dx : X) (φ : Bool → ℝ×ℝ)
+theorem flip.distribFwdDeriv_comp (f : X → ℝ) (x dx : X) (φ : Bool → W×W)
     (hg : DifferentiableAt ℝ f x) :
     ⟪distribFwdDeriv (fun x : X => flip (f x)) x dx, φ⟫
     =
@@ -78,9 +78,10 @@ theorem flip.distribFwdDeriv_comp (f : X → ℝ) (x dx : X) (φ : Bool → ℝ�
   simp (disch := assumption) only [fdaction_mk_apply, distribDeriv_comp,fwdFDeriv]
 
 
+
 @[simp ↓]
 theorem flip.bind.arg_xf.distribFwdDeriv_rule
-    (g : X → ℝ) (f : X → Bool → Distribution Z) (x dx) (φ : Z → ℝ×ℝ)
+    (g : X → ℝ) (f : X → Bool → Distribution Z) (x dx) (φ : Z → W×W)
     (hg : DifferentiableAt ℝ g x) (hf : ∀ b, DifferentiableAt ℝ (fun x => ⟪f x b, fun x => (φ x).1⟫) x) :
     ⟪distribFwdDeriv (fun x' => bind (flip (g x')) (f x')) x dx, φ⟫
     =
@@ -89,5 +90,5 @@ theorem flip.bind.arg_xf.distribFwdDeriv_rule
 
   unfold distribFwdDeriv fdflip
   simp (disch := assumption) [fdaction_mk_apply, distribDeriv_rule, Pi.smul_apply, smul_eq_mul,  Prod.mk.injEq]
-  simp (disch := assumption) [bind, flip, smul_eq_mul, fwdFDeriv, Pi.smul_apply, true_and,sub_eq_add_neg,action]
-  ring
+  simp (disch := assumption) [bind, flip, smul_eq_mul, fwdFDeriv, Pi.smul_apply, true_and,sub_eq_add_neg,action,distribDeriv]
+  sorry
