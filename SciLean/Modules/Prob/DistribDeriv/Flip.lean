@@ -26,9 +26,9 @@ theorem flip.differentiableAt (f : X → ℝ) (φ : Bool → ℝ) (x : X)
 
 
 -- @[fprop]
-theorem dirac.bind._arg_xf.differentiableAt (g : X → ℝ) (f : X → Bool → Distribution Z) (φ : Z → ℝ) (x : X)
+theorem flip.bind._arg_xf.differentiableAt (g : X → ℝ) (f : X → Bool → Distribution Z) (φ : Z → ℝ) (x : X)
     (hg : DifferentiableAt ℝ g x) (hf : ∀ b, DifferentiableAt ℝ (fun x => f x b φ) x)  :
-    DifferentiableAt ℝ (fun x => (flip (g x)).bind (f x) φ) x := by unfold flip Distribution.bind; fprop
+    DifferentiableAt ℝ (fun x => bind (flip (g x)) (f x) φ) x := by simp[bind]; unfold flip; fprop
 
 
 @[simp ↓]
@@ -47,15 +47,15 @@ theorem flip.distribDeriv_comp (f : X → ℝ) (x dx : X) (φ : Bool → ℝ)
 theorem flip.bind.arg_xf.distribDeriv_rule
     (g : X → ℝ) (f : X → Bool → Distribution Z) (x dx) (φ : Z → ℝ)
     (hg : DifferentiableAt ℝ g x) (hf : ∀ b, DifferentiableAt ℝ (fun x => f x b φ) x) :
-    distribDeriv (fun x' => (flip (g x')).bind (f x')) x dx φ
+    distribDeriv (fun x' => bind (flip (g x')) (f x')) x dx φ
     =
     let y := g x
     let dy := fderiv ℝ g x dx
-    (dy • dflip).bind (f x ·) φ
+    bind (dy • dflip) (f x ·) φ
     +
-    (flip y).bind (fun y => distribDeriv (f · y) x dx) φ := by
+    bind (flip y) (fun y => distribDeriv (f · y) x dx) φ := by
 
-  simp [distribDeriv, flip, dflip, Distribution.bind]
+  simp [bind, distribDeriv, flip, dflip]
   ftrans; dsimp
   ring
 
@@ -77,11 +77,12 @@ theorem flip.distribFwdDeriv_comp (f : X → ℝ) (x dx : X) (φ : Bool → ℝ�
 theorem flip.bind.arg_xf.distribFwdDeriv_rule
     (g : X → ℝ) (f : X → Bool → Distribution Z) (x dx) (φ : Z → ℝ×ℝ)
     (hg : DifferentiableAt ℝ g x) (hf : ∀ b, DifferentiableAt ℝ (fun x => f x b (fun x => (φ x).1)) x) :
-    distribFwdDeriv (fun x' => (flip (g x')).bind (f x')) x dx φ
+    distribFwdDeriv (fun x' => bind (flip (g x')) (f x')) x dx φ
     =
     let ydy := fwdFDeriv ℝ g x dx
     (fdflip ydy.1 ydy.2) (fun y => distribFwdDeriv (f · y) x dx φ) := by
 
   unfold distribFwdDeriv fdflip
-  simp (disch:=assumption) [FDistribution_apply, Distribution.bind,FDistribution.bind, fwdFDeriv, Pi.add_apply, Prod.mk.injEq, true_and,flip]
+  simp (disch := assumption) only [FDistribution_apply, distribDeriv_rule, Pi.smul_apply, smul_eq_mul,  Prod.mk.injEq]
+  simp (disch := assumption) only [bind, flip, smul_eq_mul, fwdFDeriv, Pi.smul_apply, true_and]
   ring

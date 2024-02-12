@@ -29,11 +29,13 @@ theorem FDistribution_apply (val dval : Distribution X) (φ : X → ℝ×ℝ) :
     FDistribution.mk val dval φ = (val (fun x => (φ x).1), (dval (fun x => (φ x).1)) + (val (fun x => (φ x).2))) := by rfl
 
 
-@[simp]
-def FDistribution.bind (x : FDistribution X) (f : X → FDistribution Y) : FDistribution Y :=
-  ⟨x.val.bind (fun x' => (f x').val), x.dval.bind (fun x' => (f x').val) + x.val.bind (fun x' => (f x').dval)⟩
-
-
+instance : Monad FDistribution where
+  pure := fun x => { val := pure x, dval := 0 }
+  bind := fun x f =>
+    ⟨(Bind.bind x.val (fun x' => (f x').val)),
+       Bind.bind x.dval (fun x' => (f x').val)
+       +
+       Bind.bind x.val (fun x' => (f x').dval)⟩
 
 
 ----------------------------------------------------------------------------------------------------
@@ -67,7 +69,7 @@ theorem distribFwdDeriv_comp (f : Y → Distribution Z) (g : X → Y) (x dx : X)
 theorem FDistribution.bind.arg_xf.distribFwdDeriv_rule
     (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → ℝ×ℝ) (x dx : X)
     (hg : DistribDifferentiable g) (hf : DistribDifferentiable (fun (x,y) => f x y)) :
-    distribFwdDeriv (fun x' => (g x').bind (f x')) x dx φ
+    distribFwdDeriv (fun x' => Bind.bind (g x') (f x')) x dx φ
     =
     (distribFwdDeriv g x dx) (fun y => distribFwdDeriv (f · y) x dx φ)  := by
 
@@ -76,5 +78,19 @@ theorem FDistribution.bind.arg_xf.distribFwdDeriv_rule
   constructor
 
   . rfl
-  . simp[Distribution.bind,add_assoc]
+  . simp[add_assoc]
     sorry -- DistribDifferentiable should have linearity in φ
+
+
+
+
+----------------------------------------------------------------------------------------------------
+
+
+@[simp ↓]
+theorem ite.arg_te.distribFwdDeriv_rule {c} [Decidable c] (t e : X → Distribution Y) (φ : Y → ℝ×ℝ) :
+    distribFwdDeriv (fun x => if c then t x else e x) x dx φ
+    =
+    if c then distribFwdDeriv t x dx φ else distribFwdDeriv e x dx φ := by
+
+  if h : c then simp[h] else simp[h]

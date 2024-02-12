@@ -52,11 +52,11 @@ theorem Rand.bind.arg_xf.distribDeriv_rule
     {X Y Z} [NormedAddCommGroup X] [NormedSpace ℝ X]
     (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → ℝ) (w dw : X)
     (hg : DistribDifferentiable g) (hf : DistribDifferentiable (fun (x,y) => f x y)) :
-    distribDeriv (fun w => (g w).bind (f w)) w dw φ
+    distribDeriv (fun w => bind (g w) (f w)) w dw φ
     =
-    (distribDeriv g w dw).bind (f w · ) φ
+    bind (distribDeriv g w dw) (f w · ) φ
     +
-    (g w).bind (fun x => distribDeriv (f · x) w dw) φ := sorry
+    bind (g w) (fun x => distribDeriv (f · x) w dw) φ := sorry
 
 
 theorem fderiv_uncurry (f : X → Y → Z) (xy dxy : X×Y) (hf : DifferentiableAt ℝ (fun (x,y) => f x y) xy)  :

@@ -44,9 +44,9 @@ theorem uniform.bind._arg_xf.differentiableAt (a b : X → ℝ) (f : X → ℝ �
     (ha : DifferentiableAt ℝ a x) (hb : DifferentiableAt ℝ b x)
     -- TODO: weaken 'hf' such that we still need `ha` and `hb`
     (hf : DifferentiableUnderIntegralAt (fun x y => f x y φ) (fun x' => volume.restrict (Set.uIcc (a x') (b x'))) x) :
-    DifferentiableAt ℝ (fun x => (uniform (a x) (b x)).bind (f x) φ) x := by
+    DifferentiableAt ℝ (fun x => bind (uniform (a x) (b x)) (f x) φ) x := by
 
-  simp[uniform,Distribution.bind]
+  simp[uniform,bind]
   apply DifferentiableAt.mul
   . sorry
   . apply hf.diff
@@ -68,7 +68,7 @@ theorem uniform.distribDeriv_comp
     let db := fderiv ℝ b x dx
     duniform a' b' da db φ := by
 
-  simp[uniform,duniform,Distribution.bind,distribDeriv]
+  simp[uniform,duniform,bind,distribDeriv]
   rw[fderiv_mul (by sorry) (by sorry)]
 
   sorry
@@ -80,17 +80,17 @@ theorem uniform.bind.arg_xf.distribDeriv_rule
     (ha : DifferentiableAt ℝ a x) (hb : DifferentiableAt ℝ b x)
     -- TODO: weaken 'hf' such that we still need `ha` and `hb`
     (hf : DifferentiableUnderIntegralAt (fun x y => f x y φ) (fun x' => volume.restrict (Set.uIcc (a x') (b x'))) x) :
-    distribDeriv (fun x' => (uniform (a x') (b x')).bind (f x')) x dx φ
+    distribDeriv (fun x' => (uniform (a x') (b x')) >>= (f x')) x dx φ
     =
     let a' := a x
     let da := fderiv ℝ a x dx
     let b' := b x
     let db := fderiv ℝ b x dx
-    (duniform a' b' da db).bind (f x ·) φ
+    bind (duniform a' b' da db) (f x ·) φ
     +
     (uniform a' b') (fun y => distribDeriv (f · y) x dx φ) := by
 
-  simp [distribDeriv, uniform, duniform, Distribution.bind]
+  simp [distribDeriv, uniform, duniform, bind]
   rw[fderiv_mul (by sorry) (by sorry)]
 
   sorry
@@ -121,13 +121,13 @@ theorem uniform.bind.arg_xf.distribFwdDeriv_rule
     (ha : DifferentiableAt ℝ a x) (hb : DifferentiableAt ℝ b x)
     -- TODO: weaken 'hf' such that we still need `ha` and `hb`
     (hf : DifferentiableUnderIntegralAt (fun x y => f x y (fun x => (φ x).1)) (fun x' => volume.restrict (Set.uIcc (a x') (b x'))) x) :
-    distribFwdDeriv (fun x' => (uniform (a x') (b x')).bind (f x')) x dx φ
+    distribFwdDeriv (fun x' => bind (uniform (a x') (b x')) (f x')) x dx φ
     =
     let ada := fwdFDeriv ℝ a x dx
     let bdb := fwdFDeriv ℝ b x dx
     (fduniform ada.1 bdb.1 ada.2 bdb.2) (fun y => distribFwdDeriv (f · y) x dx φ) := by
 
   unfold distribFwdDeriv fduniform fwdFDeriv
-  simp (disch := first | assumption | sorry) only [FDistribution_apply, distribDeriv_rule, FDistribution.bind, Pi.add_apply, Distribution.bind]
+  simp (disch := first | assumption | sorry) only [FDistribution_apply, distribDeriv_rule, bind, Pi.add_apply, bind]
   simp
   sorry -- linearity of uniform in `φ`

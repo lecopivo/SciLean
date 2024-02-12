@@ -56,9 +56,9 @@ theorem normal.bind._arg_xf.differentiableAt (μ σ : X → ℝ) (f : X → ℝ 
     (hμ : DifferentiableAt ℝ μ x) (hσ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
     (hf : DifferentiableUnderIntegralAt (fun x y => f x y φ) sorry x) :
-    DifferentiableAt ℝ (fun x' => (normal (μ x') (σ x')).bind (f x') φ) x := by
+    DifferentiableAt ℝ (fun x' => bind (normal (μ x') (σ x')) (f x') φ) x := by
 
-  simp[normal,Distribution.bind]
+  simp[normal,bind]
   sorry -- apply hf.diff
 
 
@@ -76,7 +76,7 @@ theorem normal.distribDeriv_comp
     let dσ := fderiv ℝ σ x dx
     dnormal μ' σ' dμ dσ φ := by
 
-  simp[normal,dnormal,Distribution.bind,distribDeriv]
+  simp[normal,dnormal,bind,distribDeriv]
   sorry
 
 
@@ -86,17 +86,17 @@ theorem normal.bind.arg_xf.distribDeriv_rule
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
     (hf : DifferentiableUnderIntegralAt (fun x y => f x y φ) sorry x) :
-    distribDeriv (fun x' => (normal (μ x') (σ x')).bind (f x')) x dx φ
+    distribDeriv (fun x' => bind (normal (μ x') (σ x')) (f x')) x dx φ
     =
     let μ' := μ x
     let dμ := fderiv ℝ μ x dx
     let σ' := σ x
     let dσ := fderiv ℝ σ x dx
-    (dnormal μ' σ' dμ dσ).bind (f x ·) φ
+    bind (dnormal μ' σ' dμ dσ) (f x ·) φ
     +
-    (normal μ' σ').bind (fun y => distribDeriv (f · y) x dx) φ := by
+    bind (normal μ' σ') (fun y => distribDeriv (f · y) x dx) φ := by
 
-  simp [distribDeriv, normal, dnormal, Distribution.bind]
+  simp [distribDeriv, normal, dnormal, bind]
   sorry
 
 
@@ -122,13 +122,13 @@ theorem normal.bind.arg_xf.distribFwdDeriv_rule
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `ha` and `hb`
     (hf : DifferentiableUnderIntegralAt (fun x y => f x y (fun x => (φ x).1)) sorry x) :
-    distribFwdDeriv (fun x' => (normal (μ x') (σ x')).bind (f x')) x dx φ
+    distribFwdDeriv (fun x' => bind (normal (μ x') (σ x')) (f x')) x dx φ
     =
     let μdμ := fwdFDeriv ℝ μ x dx
     let σdσ := fwdFDeriv ℝ σ x dx
     (fdnormal μdμ.1 σdσ.1 μdμ.2 σdσ.2) (fun y => distribFwdDeriv (f · y) x dx φ) := by
 
   unfold distribFwdDeriv fdnormal fwdFDeriv
-  simp (disch := assumption) only [FDistribution_apply, distribDeriv_rule, FDistribution.bind, Pi.add_apply,Distribution.bind]
+  simp (disch := assumption) only [FDistribution_apply, distribDeriv_rule, bind, Pi.add_apply]
   simp
   sorry -- linearity of normal in `φ`

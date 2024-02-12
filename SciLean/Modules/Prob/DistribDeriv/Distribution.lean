@@ -28,34 +28,11 @@ abbrev Distribution (X) := (X → ℝ) → ℝ
 -- Monadic structure -------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- monadic pure
 def dirac (x : X) : Distribution X := fun φ => φ x
-
-def Distribution.bind (x : Distribution X) (f : X → Distribution Y) : Distribution Y :=
-  fun φ => x (fun x' => (f x') φ)
-
-@[simp]
-theorem bind_bind (x : Distribution X) (g : X → Distribution Y) (f : Y → Distribution Z) :
-    ((x.bind g).bind f) = (x.bind (fun x => (g x).bind f)) := by rfl
-
-@[simp]
-theorem bind_dirac_apply (x : Distribution X) (f : X → Y) (φ : Y → ℝ) :
-    (x.bind (fun x' => dirac (f x'))) φ
-    =
-    x (fun x' => φ (f x')) := by rfl
-
-@[simp]
-theorem dirac_bind (x : X) (f : X → Distribution Y) :
-    ((dirac x).bind f)
-    =
-    f x := by rfl
-
-def join (x : Distribution (Distribution X)) : Distribution X := x.bind id
-
 
 instance : Monad Distribution where
   pure := dirac
-  bind := Distribution.bind
+  bind := fun x f φ => x (fun x' => (f x') φ)
 
 instance : LawfulMonad Distribution where
   bind_pure_comp := by intros; rfl
@@ -67,6 +44,7 @@ instance : LawfulMonad Distribution where
   seqLeft_eq     := by intros; rfl
   seqRight_eq    := by intros; rfl
   pure_seq       := by intros; rfl
+
 
 
 ----------------------------------------------------------------------------------------------------

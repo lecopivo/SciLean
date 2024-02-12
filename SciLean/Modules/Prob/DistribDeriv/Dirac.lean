@@ -25,7 +25,7 @@ theorem dirac.differentiableAt (f : X → Y) (φ : Y → ℝ) (x : X)
 -- @[fprop]
 theorem dirac.bind._arg_xf.differentiableAt (g : X → Y) (f : X → Y → Distribution Z) (φ : Z → ℝ) (x : X)
     (hg : DifferentiableAt ℝ g x) (hf : DifferentiableAt ℝ (fun (x,y) => f x y φ) (x, g x))  :
-    DifferentiableAt ℝ (fun x => (dirac (g x)).bind (f x) φ) x := by dsimp[dirac]; fprop
+    DifferentiableAt ℝ (fun x => bind (dirac (g x)) (f x) φ) x := by dsimp[bind,dirac]; fprop
 
 
 
@@ -49,15 +49,15 @@ theorem dirac.distribDeriv_comp (f : X → Y) (x dx : X) (φ : Y → ℝ)
 theorem dirac.bind.arg_xf.distribDeriv_rule
     (g : X → Y) (f : X → Y → Distribution Z) (x dx) (φ : Z → ℝ)
     (hg : DifferentiableAt ℝ g x) (hf : DifferentiableAt ℝ (fun (x,y) => f x y φ) (x, g x)) :
-    distribDeriv (fun x' => (dirac (g x')).bind (f x')) x dx φ
+    distribDeriv (fun x' => bind (dirac (g x')) (f x')) x dx φ
     =
     let y := g x
     let dy := fderiv ℝ g x dx
-    (diracDeriv y dy).bind (f x ·) φ
+    bind (diracDeriv y dy) (f x ·) φ
     +
     distribDeriv (f · y) x dx φ := by
 
-  simp [distribDeriv, dirac, diracDeriv, Distribution.bind]
+  simp [bind, distribDeriv, dirac, diracDeriv]
   ftrans; dsimp
   rw[fderiv_uncurry (fun x y => f x y φ) (x, g x) _ hf]
   simp only [add_comm]
@@ -76,17 +76,19 @@ theorem dirac.distribFwdDeriv_comp (f : X → Y) (x dx : X) (φ : Y → ℝ×ℝ
   simp (disch:=first | assumption | fprop) [FDistribution_apply, distribDeriv_comp, diracFwdDeriv, fwdFDeriv]
 
 
-
 @[simp]
 theorem dirac.bind.arg_xf.distribFwdDeriv_rule
     (g : X → Y) (f : X → Y → Distribution Z) (x dx) (φ : Z → ℝ×ℝ)
     (hg : DifferentiableAt ℝ g x) (hf : DifferentiableAt ℝ (fun (x,y) => f x y (fun x => (φ x).1)) (x, g x)) :
-    distribFwdDeriv (fun x' => (dirac (g x')).bind (f x')) x dx φ
+    distribFwdDeriv (fun x' => bind (dirac (g x')) (f x')) x dx φ
     =
     let ydy := fwdFDeriv ℝ g x dx
     distribFwdDeriv (fun (x,y) => f x y) (x,ydy.1) (dx,ydy.2) φ := by
 
-  unfold distribFwdDeriv distribDeriv;
-  simp only [dirac_bind, FDistribution_apply, Prod.mk.injEq]
-  ftrans;
-  simp only [fwdFDeriv, ContinuousLinearMap.mk'_eval, and_self]
+  unfold distribFwdDeriv;
+  simp (disch := assumption) only [FDistribution_apply, distribDeriv_rule, Prod.mk.injEq]
+  constructor
+  . rfl
+  . simp (disch := assumption) only [bind, diracDeriv, distribDeriv, dirac, fwdFDeriv, add_left_inj]
+    rw[fderiv_uncurry (fun x y => f x y (fun x => (φ x).1)) _ _ hf]
+    ring
