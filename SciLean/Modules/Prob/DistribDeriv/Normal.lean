@@ -1,5 +1,7 @@
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.Analysis.Calculus.FDeriv.Mul
+import Mathlib.Probability.Distributions.Gaussian
+
 
 import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
 import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
@@ -14,7 +16,7 @@ variable
   {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [FiniteDimensional ℝ Z] [MeasurableSpace Z]
 
 
-open MeasureTheory
+open MeasureTheory ProbabilityTheory
 
 noncomputable
 def gaussian (μ σ : ℝ) (x : ℝ) : ℝ :=
@@ -27,7 +29,8 @@ def dgaussian (μ σ dμ dσ : ℝ) (x : ℝ) : ℝ :=
   σ⁻¹ * (dμ * x' - dσ * (1 - x'^2)) * gaussian μ σ x
 
 noncomputable
-def normal (μ σ : ℝ) : Distribution ℝ := fun φ => ∫ x, φ x * gaussian μ σ x
+def normal (μ σ : ℝ) : Distribution ℝ :=
+  (gaussianReal μ (σ^2).toNNReal).toDistribution
 
 noncomputable
 def dnormal (μ σ dμ dσ : ℝ) : Distribution ℝ :=
@@ -41,10 +44,10 @@ def fdnormal (a b da db : ℝ) : FDistribution ℝ := {
 
 
 -- @[fprop]
-theorem normal.differentiableAt (μ σ : X → ℝ) (φ : ℝ → ℝ) (x : X) (hσ₀ : σ x ≠ 0)
+theorem normal.differentiableAt (μ σ : X → ℝ) (φ : ℝ → ℝ) (x : X) (hσφ : σ x ≠ 0 ∨ DifferentiableAt ℝ φ (μ x))
     (hμ : DifferentiableAt ℝ μ x) (hσ : DifferentiableAt ℝ σ x)
     /- assume that φ is dominated by some polynomial and measurable -/ :
-    DifferentiableAt ℝ (fun x => normal (μ x) (σ x) φ) x := by dsimp[normal]; sorry
+    DifferentiableAt ℝ (fun x' => normal (μ x') (σ x') φ) x := by simp[normal]; sorry
 
 
 
@@ -53,7 +56,7 @@ theorem normal.bind._arg_xf.differentiableAt (μ σ : X → ℝ) (f : X → ℝ 
     (hμ : DifferentiableAt ℝ μ x) (hσ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
     (hf : DifferentiableUnderIntegralAt (fun x y => f x y φ) sorry x) :
-    DifferentiableAt ℝ (fun x => (normal (μ x) (σ x)).bind (f x) φ) x := by
+    DifferentiableAt ℝ (fun x' => (normal (μ x') (σ x')).bind (f x') φ) x := by
 
   simp[normal,Distribution.bind]
   sorry -- apply hf.diff
