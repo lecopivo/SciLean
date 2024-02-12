@@ -9,7 +9,7 @@ import Mathlib.MeasureTheory.Integral.Bochner
 import SciLean.Core
 import SciLean.Core.FunctionPropositions.Differentiable
 
-open MeasureTheory 
+open MeasureTheory
 
 namespace SciLean.Prob
 
@@ -23,6 +23,7 @@ variable
 
 abbrev Distribution (X) := (X → ℝ) → ℝ
 
+
 ----------------------------------------------------------------------------------------------------
 -- Monadic structure -------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -30,7 +31,7 @@ abbrev Distribution (X) := (X → ℝ) → ℝ
 -- monadic pure
 def dirac (x : X) : Distribution X := fun φ => φ x
 
-def Distribution.bind (x : Distribution X) (f : X → Distribution Y) : Distribution Y := 
+def Distribution.bind (x : Distribution X) (f : X → Distribution Y) : Distribution Y :=
   fun φ => x (fun x' => (f x') φ)
 
 @[simp]
@@ -52,6 +53,22 @@ theorem dirac_bind (x : X) (f : X → Distribution Y) :
 def join (x : Distribution (Distribution X)) : Distribution X := x.bind id
 
 
+instance : Monad Distribution where
+  pure := dirac
+  bind := Distribution.bind
+
+instance : LawfulMonad Distribution where
+  bind_pure_comp := by intros; rfl
+  bind_map       := by intros; rfl
+  pure_bind      := by intros; rfl
+  bind_assoc     := by intros; rfl
+  map_const      := by intros; rfl
+  id_map         := by intros; rfl
+  seqLeft_eq     := by intros; rfl
+  seqRight_eq    := by intros; rfl
+  pure_seq       := by intros; rfl
+
+
 ----------------------------------------------------------------------------------------------------
 -- Arithmetics -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -62,13 +79,12 @@ instance : Sub (Distribution X) := ⟨fun f g φ => f φ - g φ⟩
 noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f φ => r • f φ⟩
 
 
-
 ----------------------------------------------------------------------------------------------------
 -- Measures as distributions -----------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
 open Classical in
-noncomputable 
+noncomputable
 def _root_.MeasureTheory.Measure.toDistribution (μ : Measure X) : Distribution X := fun φ =>
   if Integrable φ μ then
     ∫ x, φ x ∂μ
@@ -116,4 +132,3 @@ theorem apply_measure_as_distribution (μ : Measure X) (φ : X → ℝ) :
     contradiction
   else
     simp [h]
-

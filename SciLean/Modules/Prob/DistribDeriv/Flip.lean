@@ -61,7 +61,7 @@ theorem flip.bind.arg_xf.distribDeriv_rule
 
 
 @[simp ↓]
-theorem flip.distribFwdDeriv_comp (f : X → ℝ) (x dx : X) (φ : Bool → ℝ)
+theorem flip.distribFwdDeriv_comp (f : X → ℝ) (x dx : X) (φ : Bool → ℝ×ℝ)
     (hg : DifferentiableAt ℝ f x) :
     distribFwdDeriv (fun x : X => flip (f x)) x dx φ
     =
@@ -75,13 +75,13 @@ theorem flip.distribFwdDeriv_comp (f : X → ℝ) (x dx : X) (φ : Bool → ℝ)
 
 @[simp ↓]
 theorem flip.bind.arg_xf.distribFwdDeriv_rule
-    (g : X → ℝ) (f : X → Bool → Distribution Z) (x dx) (φ : Z → ℝ)
-    (hg : DifferentiableAt ℝ g x) (hf : ∀ b, DifferentiableAt ℝ (fun x => f x b φ) x) :
+    (g : X → ℝ) (f : X → Bool → Distribution Z) (x dx) (φ : Z → ℝ×ℝ)
+    (hg : DifferentiableAt ℝ g x) (hf : ∀ b, DifferentiableAt ℝ (fun x => f x b (fun x => (φ x).1)) x) :
     distribFwdDeriv (fun x' => (flip (g x')).bind (f x')) x dx φ
     =
     let ydy := fwdFDeriv ℝ g x dx
-    (fdflip ydy.1 ydy.2).bind (fun y => distribFwdDeriv (f · y) x dx) φ := by
+    (fdflip ydy.1 ydy.2) (fun y => distribFwdDeriv (f · y) x dx φ) := by
 
   unfold distribFwdDeriv fdflip
-  simp only [FDistribution_apply, FDistribution.bind, fwdFDeriv, Pi.add_apply, Prod.mk.injEq, true_and]
-  rw[flip.bind.arg_xf.distribDeriv_rule] <;> assumption
+  simp (disch:=assumption) [FDistribution_apply, Distribution.bind,FDistribution.bind, fwdFDeriv, Pi.add_apply, Prod.mk.injEq, true_and,flip]
+  ring

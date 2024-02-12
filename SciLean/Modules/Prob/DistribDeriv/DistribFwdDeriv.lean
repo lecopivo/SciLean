@@ -15,13 +15,18 @@ structure FDistribution (X : Type _) where
   val  : Distribution X
   dval : Distribution X
 
-instance : FunLike (FDistribution X) (X → ℝ) (fun _ => ℝ×ℝ) where
-  coe := fun f φ => (f.val φ, f.dval φ)
+-- instance : FunLike (FDistribution X) (X → ℝ) (fun _ => ℝ×ℝ) where
+--   coe := fun f φ => (f.val φ, f.dval φ)
+--   coe_injective' := sorry
+
+instance : FunLike (FDistribution X) (X → ℝ×ℝ) (fun _ => ℝ×ℝ) where
+  coe := fun f φ => (f.val (fun x => (φ x).1), (f.dval (fun x => (φ x).1)) + (f.val (fun x => (φ x).2)))
   coe_injective' := sorry
 
+
 @[simp]
-theorem FDistribution_apply (val dval : Distribution X) (φ : X → ℝ) :
-    FDistribution.mk val dval φ = (val φ, dval φ) := by rfl
+theorem FDistribution_apply (val dval : Distribution X) (φ : X → ℝ×ℝ) :
+    FDistribution.mk val dval φ = (val (fun x => (φ x).1), (dval (fun x => (φ x).1)) + (val (fun x => (φ x).2))) := by rfl
 
 
 @[simp]
@@ -48,7 +53,7 @@ theorem distribFwdDeriv_const (a : Distribution α) :
 
 
 -- WARNING: uses `distribDeriv_comp` axiom
-theorem distribFwdDeriv_comp (f : Y → Distribution Z) (g : X → Y) (x dx : X) (φ : Z → ℝ)
+theorem distribFwdDeriv_comp (f : Y → Distribution Z) (g : X → Y) (x dx : X) (φ : Z → ℝ×ℝ)
     (hf : DistribDifferentiable f) (hg : DifferentiableAt ℝ g x) :
     distribFwdDeriv (fun x : X => (f (g x))) x dx φ
     =
@@ -60,10 +65,16 @@ theorem distribFwdDeriv_comp (f : Y → Distribution Z) (g : X → Y) (x dx : X)
 
 -- WARNING: uses `Rand.bind.arg_xf.distribDeriv_rule`
 theorem FDistribution.bind.arg_xf.distribFwdDeriv_rule
-    (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → ℝ) (x dx : X)
+    (g : X → Distribution Y) (f : X → Y → Distribution Z) (φ : Z → ℝ×ℝ) (x dx : X)
     (hg : DistribDifferentiable g) (hf : DistribDifferentiable (fun (x,y) => f x y)) :
     distribFwdDeriv (fun x' => (g x').bind (f x')) x dx φ
     =
-    (distribFwdDeriv g x dx).bind (fun y => distribFwdDeriv (f · y) x dx) φ  := by
+    (distribFwdDeriv g x dx) (fun y => distribFwdDeriv (f · y) x dx φ)  := by
 
   simp (disch:=assumption) [distribFwdDeriv, fwdFDeriv, Rand.bind.arg_xf.distribDeriv_rule]
+
+  constructor
+
+  . rfl
+  . simp[Distribution.bind,add_assoc]
+    sorry -- DistribDifferentiable should have linearity in φ

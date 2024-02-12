@@ -87,7 +87,7 @@ theorem uniform.bind.arg_xf.distribDeriv_rule
     let db := fderiv ℝ b x dx
     (duniform a' b' da db).bind (f x ·) φ
     +
-    (uniform a' b').bind (fun y => distribDeriv (f · y) x dx) φ := by
+    (uniform a' b') (fun y => distribDeriv (f · y) x dx φ) := by
 
   simp [distribDeriv, uniform, duniform, Distribution.bind]
   rw[fderiv_mul (by sorry) (by sorry)]
@@ -97,7 +97,7 @@ theorem uniform.bind.arg_xf.distribDeriv_rule
 
 @[simp]
 theorem uniform.distribFwdDeriv_comp
-    (a b : X → ℝ) (x dx : X) (φ : ℝ → ℝ) (hab : a x ≠ b x)
+    (a b : X → ℝ) (x dx : X) (φ : ℝ → ℝ×ℝ) (hab : a x ≠ b x)
     (ha : DifferentiableAt ℝ a x) (hb : DifferentiableAt ℝ b x)
     (hφa : ContinuousAt φ (a x)) (hφb : ContinuousAt φ (b x))
     /- integrability condition on φ -/:
@@ -108,22 +108,25 @@ theorem uniform.distribFwdDeriv_comp
     fduniform ada.1 bdb.1 ada.2 bdb.2 φ := by
 
   unfold distribFwdDeriv
-  simp (disch := assumption) only [FDistribution_apply, distribDeriv_comp]
+  -- set up `fprop` for ContinuousAt
+  simp (disch := first | assumption | sorry) only [FDistribution_apply, distribDeriv_comp]
   rfl
 
 
 
 @[simp]
 theorem uniform.bind.arg_xf.distribFwdDeriv_rule
-    (a b : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → ℝ) (hab : a x ≠ b x)
+    (a b : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → ℝ×ℝ) (hab : a x ≠ b x)
     (ha : DifferentiableAt ℝ a x) (hb : DifferentiableAt ℝ b x)
     -- TODO: weaken 'hf' such that we still need `ha` and `hb`
-    (hf : DifferentiableUnderIntegralAt (fun x y => f x y φ) (fun x' => volume.restrict (Set.uIcc (a x') (b x'))) x) :
+    (hf : DifferentiableUnderIntegralAt (fun x y => f x y (fun x => (φ x).1)) (fun x' => volume.restrict (Set.uIcc (a x') (b x'))) x) :
     distribFwdDeriv (fun x' => (uniform (a x') (b x')).bind (f x')) x dx φ
     =
     let ada := fwdFDeriv ℝ a x dx
     let bdb := fwdFDeriv ℝ b x dx
-    (fduniform ada.1 bdb.1 ada.2 bdb.2).bind (fun y => distribFwdDeriv (f · y) x dx) φ := by
+    (fduniform ada.1 bdb.1 ada.2 bdb.2) (fun y => distribFwdDeriv (f · y) x dx φ) := by
 
   unfold distribFwdDeriv fduniform fwdFDeriv
-  simp (disch := assumption) only [FDistribution_apply, distribDeriv_rule, FDistribution.bind, Pi.add_apply]
+  simp (disch := first | assumption | sorry) only [FDistribution_apply, distribDeriv_rule, FDistribution.bind, Pi.add_apply, Distribution.bind]
+  simp
+  sorry -- linearity of uniform in `φ`
