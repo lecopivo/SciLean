@@ -33,6 +33,12 @@ theorem distribDeriv_const (a : Distribution α) :
     fun w dw => 0 := by unfold distribDeriv; simp; rfl
 
 
+theorem fderiv_distribDeriv (f : X → Distribution Y) (φ : Y → ℝ) (x dx : X) :
+  fderiv ℝ (fun x' => f x' φ) x dx
+  =
+  distribDeriv f x dx φ := rfl
+
+
 --
 axiom distribDeriv_comp
     {X} [NormedAddCommGroup X] [NormedSpace ℝ X]

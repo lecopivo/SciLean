@@ -1,5 +1,6 @@
 import Mathlib.MeasureTheory.Measure.GiryMonad
 import Mathlib.MeasureTheory.Measure.VectorMeasure
+import Mathlib.MeasureTheory.Decomposition.Lebesgue
 import Mathlib.Analysis.Calculus.FDeriv.Basic
 import Mathlib.Analysis.Calculus.FDeriv.Comp
 import Mathlib.Analysis.Calculus.Deriv.Basic
@@ -9,7 +10,7 @@ import Mathlib.MeasureTheory.Integral.Bochner
 import SciLean.Core
 import SciLean.Core.FunctionPropositions.Differentiable
 
-open MeasureTheory
+open MeasureTheory ENNReal
 
 namespace SciLean.Prob
 
@@ -28,11 +29,12 @@ abbrev Distribution (X) := (X → ℝ) → ℝ
 -- Monadic structure -------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-def dirac (x : X) : Distribution X := fun φ => φ x
+-- def dirac (x : X) : Distribution X := fun φ => φ x
 
 instance : Monad Distribution where
-  pure := dirac
+  pure := fun x φ => φ x
   bind := fun x f φ => x (fun x' => (f x') φ)
+
 
 instance : LawfulMonad Distribution where
   bind_pure_comp := by intros; rfl
@@ -46,7 +48,6 @@ instance : LawfulMonad Distribution where
   pure_seq       := by intros; rfl
 
 
-
 ----------------------------------------------------------------------------------------------------
 -- Arithmetics -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -55,6 +56,7 @@ instance : Zero (Distribution X) := ⟨fun _φ => 0⟩
 instance : Add (Distribution X) := ⟨fun f g φ => f φ + g φ⟩
 instance : Sub (Distribution X) := ⟨fun f g φ => f φ - g φ⟩
 noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f φ => r • f φ⟩
+
 
 
 ----------------------------------------------------------------------------------------------------
@@ -72,7 +74,7 @@ def _root_.MeasureTheory.Measure.toDistribution (μ : Measure X) : Distribution 
 
 def Distribution.IsMeasure (f : Distribution X) : Prop :=
   ∃ (μ : Measure X),
-    ∀ φ, μ.toDistribution φ = ∫ x, φ x ∂μ
+    ∀ φ, f φ = μ.toDistribution φ
 
 open Classical
 noncomputable
@@ -110,3 +112,15 @@ theorem apply_measure_as_distribution (μ : Measure X) (φ : X → ℝ) :
     contradiction
   else
     simp [h]
+
+
+theorem Distribution.density (x y : Distribution X) : X → ℝ≥0∞ := x.measure.rnDeriv y.measure
+
+
+----------------------------------------------------------------------------------------------------
+-- Extension ---------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+noncomputable
+def Distribution.extendApply (x : Distribution X) (φ : X → Y) : Y :=
+    sorry
