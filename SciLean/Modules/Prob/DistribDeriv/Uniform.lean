@@ -70,6 +70,7 @@ theorem uniform.distribDeriv_comp
 
   simp[uniform,duniform,Distribution.bind,distribDeriv]
   rw[fderiv_mul (by sorry) (by sorry)]
+
   sorry
 
 
