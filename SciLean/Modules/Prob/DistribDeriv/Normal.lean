@@ -10,10 +10,10 @@ import SciLean.Modules.Prob.DerivUnderIntegralSign
 namespace SciLean.Prob
 
 variable
-  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [FiniteDimensional ℝ W] [MeasurableSpace W]
-  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [FiniteDimensional ℝ X] [MeasurableSpace X]
-  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [FiniteDimensional ℝ Y] [MeasurableSpace Y]
-  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [FiniteDimensional ℝ Z] [MeasurableSpace Z]
+  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
+  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 
 open MeasureTheory ProbabilityTheory
@@ -55,7 +55,7 @@ theorem normal.differentiableAt (μ σ : X → ℝ) (φ : ℝ → W) (x : X) (h�
 theorem normal.bind._arg_xf.differentiableAt (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (φ : Z → W) (x : X) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hσ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
-    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) sorry x) :
+    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) (fun x => (gaussianReal (μ x) ((σ x)^2).toNNReal)) x) :
     DifferentiableAt ℝ (fun x' => ⟪normal (μ x') (σ x') >>= (f x'), φ⟫) x := by
 
   simp[normal,bind]
@@ -85,7 +85,7 @@ theorem normal.bind.arg_xf.distribDeriv_rule
     (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → W) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `hμ` and `hσ`
-    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) sorry x) :
+    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) (fun x => (gaussianReal (μ x) ((σ x)^2).toNNReal)) x) :
     ⟪distribDeriv (fun x' => bind (normal (μ x') (σ x')) (f x')) x dx, φ⟫
     =
     let μ' := μ x
@@ -121,7 +121,7 @@ theorem normal.bind.arg_xf.distribFwdDeriv_rule
     (μ σ : X → ℝ) (f : X → ℝ → Distribution Z) (x dx) (φ : Z → W×W) (hσ₀ : σ x ≠ 0)
     (hμ : DifferentiableAt ℝ μ x) (hμ : DifferentiableAt ℝ σ x)
     -- TODO: weaken 'hf' such that we still need `ha` and `hb`
-    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, fun x => (φ x).1⟫) sorry x) :
+    (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) (fun x => (gaussianReal (μ x) ((σ x)^2).toNNReal)) x) :
     ⟪distribFwdDeriv (fun x' => bind (normal (μ x') (σ x')) (f x')) x dx, φ⟫
     =
     let μdμ := fwdFDeriv ℝ μ x dx

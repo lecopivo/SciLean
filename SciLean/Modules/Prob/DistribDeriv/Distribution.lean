@@ -17,13 +17,13 @@ namespace SciLean.Prob
 local notation "∞" => (⊤ : ℕ∞)
 
 variable
-  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [FiniteDimensional ℝ W] [MeasurableSpace W]
-  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [FiniteDimensional ℝ X] [MeasurableSpace X]
-  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [FiniteDimensional ℝ Y] [MeasurableSpace Y]
-  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [FiniteDimensional ℝ Z] [MeasurableSpace Z]
+  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
+  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 structure Distribution (X : Type u) where
-  action : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → (X → Y) → Y
+  action : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → [CompleteSpace Y] → (X → Y) → Y
 
 class DistributionActionNotation (Distrib TestFun : Type _) (Result : outParam <| Type _) where
   action : Distrib → TestFun → Result
@@ -42,8 +42,18 @@ theorem distribution_action_normalize (f : Distribution X) (φ : X → Y) :
     f.action φ = ⟪f, φ⟫ := by rfl
 
 @[simp]
-theorem action_mk_apply (f : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → (X → Y) → Y) (φ : X → Y) :
+theorem action_mk_apply
+    (f : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → [CompleteSpace Y] →  (X → Y) → Y) (φ : X → Y) :
     ⟪Distribution.mk f, φ⟫ = f φ := by rfl
+
+@[ext]
+theorem Distribution.ext (x y : Distribution X) :
+    (∀ {Y : Type u} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y), ⟪x,φ⟫ = ⟪y,φ⟫)
+    →
+    x = y := by
+
+  induction x; induction y; simp only [action_mk_apply, mk.injEq]
+  intro h; funext _ _ _ _ φ; apply (h φ)
 
 
 
@@ -90,18 +100,22 @@ noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f => ⟨fun φ =>
 ----------------------------------------------------------------------------------------------------
 
 open Classical in
+@[coe]
 noncomputable
-def _root_.MeasureTheory.Measure.toDistribution (μ : Measure X) :
+def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X} (μ : Measure X) :
     Distribution X := ⟨fun φ => ∫ x, φ x ∂μ⟩
+
+noncomputable
+instance : Coe (@Measure X (borel X)) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
 
 
 def Distribution.IsMeasure (f : Distribution X) : Prop :=
-  ∃ (μ : Measure X), ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] (φ : X → Y),
+  ∃ (μ : @Measure X (borel X)), ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y),
       ⟪f, φ⟫ = ∫ x, φ x ∂μ
 
 open Classical
 noncomputable
-def Distribution.measure (f' : Distribution X) : Measure X :=
+def Distribution.measure (f' : Distribution X) : @Measure X (borel X) :=
   if h : f'.IsMeasure then
     choose h
   else
@@ -109,15 +123,15 @@ def Distribution.measure (f' : Distribution X) : Measure X :=
 
 def Distribution.IsSignedMeasure (f : Distribution X) : Prop :=
   -- Use SignedMeasure but I'm not sure how to write the integral then
-  ∃ (μpos μneg : Measure X),
+  ∃ (μpos μneg : @Measure X (borel X)),
     (IsFiniteMeasure μpos ∧ IsFiniteMeasure μneg)
     ∧
-    ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] (φ : X → Y),
+    ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y),
     ⟪f, φ⟫ = ∫ x, φ x ∂μpos - ∫ x, φ x ∂μneg
 
 open Classical
 noncomputable
-def Distribution.signedMeasure (f' : Distribution X) : SignedMeasure X :=
+def Distribution.signedMeasure (f' : Distribution X) : @SignedMeasure X (borel X) :=
   if h : f'.IsSignedMeasure then
     let μpos := choose h
     let μneg := choose (choose_spec h)
@@ -127,7 +141,7 @@ def Distribution.signedMeasure (f' : Distribution X) : SignedMeasure X :=
     0
 
 @[simp]
-theorem apply_measure_as_distribution (μ : Measure X) (φ : X → Y) :
+theorem apply_measure_as_distribution {X} {_ : MeasurableSpace X} (μ : Measure X) (φ : X → Y) :
      ⟪μ.toDistribution, φ⟫ = ∫ x, φ x ∂μ := by rfl
 
 theorem Distribution.density (x y : Distribution X) : X → ℝ≥0∞ := x.measure.rnDeriv y.measure

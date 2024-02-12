@@ -4,10 +4,10 @@ import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
 namespace SciLean.Prob
 
 variable
-  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [FiniteDimensional ℝ W] [MeasurableSpace W]
-  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [FiniteDimensional ℝ X] [MeasurableSpace X]
-  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [FiniteDimensional ℝ Y] [MeasurableSpace Y]
-  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [FiniteDimensional ℝ Z] [MeasurableSpace Z]
+  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
+  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 
 noncomputable

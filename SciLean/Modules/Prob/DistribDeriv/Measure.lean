@@ -8,15 +8,15 @@ import SciLean.Modules.Prob.DerivUnderIntegralSign
 namespace SciLean.Prob
 
 variable
-  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [FiniteDimensional ℝ W] [MeasurableSpace W]
-  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [FiniteDimensional ℝ X] [MeasurableSpace X]
-  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [FiniteDimensional ℝ Y] [MeasurableSpace Y]
-  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [FiniteDimensional ℝ Z] [MeasurableSpace Z]
+  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
+  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 
 open MeasureTheory
 
-theorem Measure.toDistribution.arg_μ.DifferentiableAt_rule (μ : X → Measure Y) (φ : Y → W) (x : X)
+theorem Measure.toDistribution.arg_μ.DifferentiableAt_rule (μ : X → @Measure Y (borel Y)) (φ : Y → W) (x : X)
     (hφ : DifferentiableUnderIntegralAt (fun _ y => φ y) μ x) :
     DifferentiableAt ℝ (fun x => ⟪(μ x).toDistribution, φ⟫) x := by
 
@@ -24,7 +24,7 @@ theorem Measure.toDistribution.arg_μ.DifferentiableAt_rule (μ : X → Measure 
   apply hφ.diff
 
 
-theorem measure.bind._arg_xf.differentiableAt (μ : X → Measure Y) (f : X → Y → Distribution Z) (φ : Z → W) (x : X)
+theorem measure.bind._arg_xf.differentiableAt (μ : X → @Measure Y (borel Y)) (f : X → Y → Distribution Z) (φ : Z → W) (x : X)
     (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) μ x) :
     DifferentiableAt ℝ (fun x => ⟪(μ x).toDistribution >>= (f x), φ⟫) x := by
 
@@ -35,7 +35,7 @@ theorem measure.bind._arg_xf.differentiableAt (μ : X → Measure Y) (f : X → 
 -- I think this is unnecessary once `fun_prop` support's custom function coercions
 @[simp ↓]
 theorem measure.distribDeriv_comp
-    (f : X → Y) (μ : Y → Measure Z) (x dx : X) (φ : Z → W)
+    (f : X → Y) (μ : Y → @Measure Z (borel Z)) (x dx : X) (φ : Z → W)
     (hf : DifferentiableAt ℝ f x)
     (hφ : DifferentiableUnderIntegralAt (fun _ y => φ y) μ (f x)) :
     ⟪distribDeriv (fun x' => (μ (f x')).toDistribution) x dx, φ⟫
@@ -51,7 +51,7 @@ theorem measure.distribDeriv_comp
 
 @[simp ↓]
 theorem measure.bind.arg_xf.distribDeriv_rule
-    (μ : X → Measure Y) (f : X → Y → Distribution Z) (x dx) (φ : Z → W)
+    (μ : X → @Measure Y (borel Y)) (f : X → Y → Distribution Z) (x dx) (φ : Z → W)
     (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) μ x) :
     ⟪distribDeriv (fun x' => (μ x').toDistribution >>= (f x')) x dx, φ⟫
     =
@@ -65,7 +65,7 @@ theorem measure.bind.arg_xf.distribDeriv_rule
 
 @[simp ↓]
 theorem measure.distribFwdDeriv_comp
-    (f : X → Y) (μ : Y → Measure Z) (x dx : X) (φ : Z → W×W)
+    (f : X → Y) (μ : Y → @Measure Z (borel Z)) (x dx : X) (φ : Z → W×W)
     (hf : DifferentiableAt ℝ f x)
     (hφ : DifferentiableUnderIntegralAt (fun x y => φ y) μ (f x)) :
     ⟪distribFwdDeriv (fun x : X => (μ (f x)).toDistribution) x dx, φ⟫
@@ -84,7 +84,7 @@ theorem measure.distribFwdDeriv_comp
 
 @[simp ↓]
 theorem measure.bind.arg_xf.distribFwdDeriv_rule
-    (μ : X → Measure Y) (f : X → Y → Distribution Z) (x dx) (φ : Z → W×W)
+    (μ : X → @Measure Y (borel Y)) (f : X → Y → Distribution Z) (x dx) (φ : Z → W×W)
     (hf : DifferentiableUnderIntegralAt (fun x y => ⟪f x y, φ⟫) μ x) :
     ⟪distribFwdDeriv (fun x' => (μ x').toDistribution >>= (f x')) x dx, φ⟫
     =

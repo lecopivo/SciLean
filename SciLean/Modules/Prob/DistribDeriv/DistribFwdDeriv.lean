@@ -3,12 +3,11 @@ import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
 namespace SciLean.Prob
 
 
-
 variable
-  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [FiniteDimensional ℝ W] [MeasurableSpace W]
-  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [FiniteDimensional ℝ X] [MeasurableSpace X]
-  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [FiniteDimensional ℝ Y] [MeasurableSpace Y]
-  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [FiniteDimensional ℝ Z] [MeasurableSpace Z]
+  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
+  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 
 structure FDistribution (X : Type _) where
@@ -60,6 +59,7 @@ theorem distribFwdDeriv_comp (f : Y → Distribution Z) (g : X → Y) (x dx : X)
 
   simp (disch := assumption) only [action, distribFwdDeriv, fwdFDeriv]
   simp (disch := assumption) only [distribution_action_normalize, distribDeriv_comp]
+
 
 
 -- WARNING: uses `Rand.bind.arg_xf.distribDeriv_rule`

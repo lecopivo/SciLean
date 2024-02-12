@@ -9,7 +9,7 @@ namespace SciLean.Prob
 
 variable
   {X} [NormedAddCommGroup X] [NormedSpace ℝ X]
-  {Y} [MeasurableSpace Y]
+  {Y} {_ : MeasurableSpace Y}
   {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z]
 
 

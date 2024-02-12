@@ -1,13 +1,17 @@
 import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
 import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
 
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+
 namespace SciLean.Prob
 
+open MeasureTheory
+
 variable
-  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [FiniteDimensional ℝ W] [MeasurableSpace W]
-  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [FiniteDimensional ℝ X] [MeasurableSpace X]
-  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [FiniteDimensional ℝ Y] [MeasurableSpace Y]
-  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [FiniteDimensional ℝ Z] [MeasurableSpace Z]
+  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
+  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 
 noncomputable
@@ -15,6 +19,14 @@ def pureDeriv (x dx : X) : Distribution X := ⟨fun φ => fderiv ℝ φ x dx⟩
 
 noncomputable
 def pureFwdDeriv (x dx : X) : FDistribution X := { val := pure x, dval := pureDeriv x dx }
+
+
+theorem pure_as_dirac (x : X) : (pure x : Distribution X) = (@Measure.dirac _ (borel X) x).toDistribution := by
+  ext
+  have : @MeasurableSingletonClass X (borel X) := sorry
+  simp [pure]
+  rw[@MeasureTheory.integral_dirac _ _ _ _ _ (borel X) _]
+
 
 @[fprop]
 theorem pure.differentiableAt (f : X → Y) (φ : Y → W) (x : X)
