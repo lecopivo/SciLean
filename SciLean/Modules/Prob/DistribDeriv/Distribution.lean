@@ -22,6 +22,7 @@ variable
   {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
   {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
+/-- Generalized function with domain `X` -/
 structure Distribution (X : Type u) where
   action : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → [CompleteSpace Y] → (X → Y) → Y
 
@@ -106,42 +107,35 @@ def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X} (μ 
     Distribution X := ⟨fun φ => ∫ x, φ x ∂μ⟩
 
 noncomputable
-instance : Coe (@Measure X (borel X)) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
+instance {X} [TopologicalSpace X] : Coe (@Measure X (borel X)) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
 
 
-def Distribution.IsMeasure (f : Distribution X) : Prop :=
+def Distribution.IsMeasure {X} [TopologicalSpace X] (f : Distribution X) : Prop :=
   ∃ (μ : @Measure X (borel X)), ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y),
       ⟪f, φ⟫ = ∫ x, φ x ∂μ
 
 open Classical
 noncomputable
-def Distribution.measure (f' : Distribution X) : @Measure X (borel X) :=
+def Distribution.measure {X} [TopologicalSpace X] (f' : Distribution X) : @Measure X (borel X) :=
   if h : f'.IsMeasure then
     choose h
   else
     0
 
-def Distribution.IsSignedMeasure (f : Distribution X) : Prop :=
-  -- Use SignedMeasure but I'm not sure how to write the integral then
-  ∃ (μpos μneg : @Measure X (borel X)),
-    (IsFiniteMeasure μpos ∧ IsFiniteMeasure μneg)
-    ∧
-    ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y),
-    ⟪f, φ⟫ = ∫ x, φ x ∂μpos - ∫ x, φ x ∂μneg
-
-open Classical
-noncomputable
-def Distribution.signedMeasure (f' : Distribution X) : @SignedMeasure X (borel X) :=
-  if h : f'.IsSignedMeasure then
-    let μpos := choose h
-    let μneg := choose (choose_spec h)
-    have ⟨_,_⟩ := (choose_spec (choose_spec h)).1
-    μpos.toSignedMeasure - μneg.toSignedMeasure
-  else
-    0
-
 @[simp]
-theorem apply_measure_as_distribution {X} {_ : MeasurableSpace X} (μ : Measure X) (φ : X → Y) :
+theorem apply_measure_as_distribution  {X} [TopologicalSpace X]  (μ : @Measure X (borel X)) (φ : X → Y) :
      ⟪μ.toDistribution, φ⟫ = ∫ x, φ x ∂μ := by rfl
 
-theorem Distribution.density (x y : Distribution X) : X → ℝ≥0∞ := x.measure.rnDeriv y.measure
+
+/- under what conditions is this true??? -/
+theorem action_is_integral  {X} [TopologicalSpace X] {Y} [TopologicalSpace Y]
+    (x : @Measure X (borel X)) (f : X → @Measure Y (borel Y))
+    (φ : Y → Z) (hφ : ∀ x, Integrable φ (f x)) :
+    ⟪x.toDistribution >>= (fun x => (f x).toDistribution), φ⟫
+    =
+    ∫ y, φ y ∂(@Measure.bind _ _ (borel _) (borel _) x f) := by
+
+  simp
+  sorry
+
+theorem Distribution.density {X} [TopologicalSpace X] (x y : Distribution X) : X → ℝ≥0∞ := x.measure.rnDeriv y.measure
