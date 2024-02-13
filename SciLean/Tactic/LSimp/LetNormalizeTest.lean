@@ -8,9 +8,50 @@ opaque id' {α} (a : α) : α := a
 
 axiom hihi {α} (a : α) : id' a = a
 
--- #profile_this_file 1
+-- #profile_this_file 5
 set_option profiler true
-set_option profiler.threshold 1
+set_option profiler.threshold 5
+
+open Lean Meta in
+/-- Reduces structure projection but it preserves let bindings unlike `Lean.Meta.reduceProj?`.
+-/
+def reduceProj? (e : Expr) : MetaM (Option Expr) := do
+  match e with
+  | Expr.proj _ _ (.fvar _) => return none -- do not reduce projections on fvars
+  | Expr.proj n i c =>
+    letTelescope c λ xs b => do
+      -- let some b ← Meta.project? b i
+      let some b ← reduceProjOfCtor? (.proj n i b)
+        | return none
+      mkLambdaFVars xs b
+  | _               => return none
+
+
+
+open Lean Meta in
+simproc proj_print (_) := fun e => do
+
+  matchConst e.getAppFn (fun _ => return .continue) fun cinfo _ => do
+    let .some _ ← getProjectionFnInfo? cinfo.name | return .continue
+    let .some e' ← _root_.reduceProj? ((← unfoldDefinition? e).getD e) | return .continue
+    return .continue <| some { expr := e' }
+
+example :
+  (let a := id 7
+   let b := a + 42
+   (a,b)).2
+  =
+  let a := id 7
+  let b := a + 42
+  b := by
+
+  conv =>
+    lhs
+    simp (config := {zeta := false}) [↓proj_print]
+
+#exit
+
+  -- return .continue
 
 #check
     (let x3 :=
@@ -31,7 +72,6 @@ set_option profiler.threshold 1
     x3 + y5 + z3.1 + z3.2)
     rewrite_by
       simp (config:={singlePass:=true,zeta:=false,dsimp:=false}) only [↓let_normalize]
-
 
 
 
