@@ -67,7 +67,7 @@
   {"url": "https://github.com/lecopivo/LeanColls.git",
    "type": "git",
    "subDir": null,
-   "rev": "55b1421b0aa763c5025a139acc1440fc40aaa762",
+   "rev": "c972b96fdc6e2b4aadb66b2c85d0370fefaae9e4",
    "name": "leancolls",
    "manifestFile": "lake-manifest.json",
    "inputRev": "main",
