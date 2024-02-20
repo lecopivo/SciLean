@@ -6,7 +6,8 @@ import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
 import SciLean.Core.Meta.GenerateLinearMapSimp
 
 -- import SciLean.Tactic.FTrans.Basic
-
+import Mathlib.Tactic.FunTrans.Attr
+import Mathlib.Tactic.FunTrans.Elab
 
 set_option linter.unusedVariables false
 
@@ -23,6 +24,7 @@ variable
   {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
+@[fun_trans]
 noncomputable
 def cderiv (f : X → Y) (x dx : X) : Y := Curve.deriv (fun t : K => f (x + t•dx)) 0
 
@@ -35,6 +37,7 @@ def scalarCDeriv (f : K → X) (t : K) : X := cderiv K f t 1
 --------------------------------------------------------------------------------
 
 variable {K}
+@[fun_trans]
 theorem cderiv_of_linear (f : X → Y) (hf : IsSmoothLinearMap K f)
   : cderiv K f = fun x dx => f dx := sorry_proof
 
@@ -62,18 +65,21 @@ variable (K)
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 variable (X)
+@[fun_trans]
 theorem cderiv.id_rule
   : (cderiv K fun x : X => x) = fun _ => fun dx => dx
   := by sorry_proof
 variable {X}
 
 variable (Y)
+@[fun_trans]
 theorem cderiv.const_rule (x : X)
   : (cderiv K fun _ : Y => x) = fun _ => fun dx => 0
   := by sorry_proof
 variable {Y}
 
 variable (E)
+@[fun_trans]
 theorem cderiv.proj_rule (i : ι)
   : (cderiv K fun (x : (i : ι) → E i) => x i)
     =
@@ -81,10 +87,10 @@ theorem cderiv.proj_rule (i : ι)
 by sorry_proof
 variable {E}
 
-
+@[fun_trans]
 theorem cderiv.comp_rule_at
   (f : Y → Z) (g : X → Y) (x : X)
-  (hf : IsDifferentiableAt K f (g x)) (hg : IsDifferentiableAt K g x)
+  (hf : CDifferentiableAt K f (g x)) (hg : CDifferentiableAt K g x)
   : (cderiv K fun x : X => f (g x)) x
     =
     let y := g x
@@ -94,10 +100,10 @@ theorem cderiv.comp_rule_at
       dz :=
 by sorry_proof
 
-
+@[fun_trans]
 theorem cderiv.comp_rule
   (f : Y → Z) (g : X → Y)
-  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
+  (hf : CDifferentiable K f) (hg : CDifferentiable K g)
   : (cderiv K fun x : X => f (g x))
     =
     fun x =>
@@ -108,11 +114,11 @@ theorem cderiv.comp_rule
         dz :=
 by sorry_proof
 
-
+@[fun_trans]
 theorem cderiv.let_rule_at
   (f : X → Y → Z) (g : X → Y) (x : X)
-  (hf : IsDifferentiableAt K (fun xy : X×Y => f xy.1 xy.2) (x, g x))
-  (hg : IsDifferentiableAt K g x)
+  (hf : CDifferentiableAt K ↿f (x, g x))
+  (hg : CDifferentiableAt K g x)
   : (cderiv K
       fun x : X =>
         let y := g x
@@ -125,10 +131,10 @@ theorem cderiv.let_rule_at
       dz :=
 by sorry_proof
 
-
+@[fun_trans]
 theorem cderiv.let_rule
   (f : X → Y → Z) (g : X → Y)
-  (hf : IsDifferentiable K fun xy : X×Y => f xy.1 xy.2) (hg : IsDifferentiable K g)
+  (hf : CDifferentiable K fun xy : X×Y => f xy.1 xy.2) (hg : CDifferentiable K g)
   : (cderiv K fun x : X =>
        let y := g x
        f x y)
@@ -142,17 +148,18 @@ theorem cderiv.let_rule
 by sorry_proof
 
 
+@[fun_trans]
 theorem cderiv.pi_rule_at
-  (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, IsDifferentiableAt K (f · i) x)
+  (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, CDifferentiableAt K (f · i) x)
   : (cderiv K fun (x : X) (i : ι) => f x i) x
     =
     fun dx => fun i =>
       cderiv K (f · i) x dx
   := by sorry_proof
 
-
+@[fun_trans]
 theorem cderiv.pi_rule
-  (f : X → (i : ι) → E i) (hf : ∀ i, IsDifferentiable K (f · i))
+  (f : X → (i : ι) → E i) (hf : ∀ i, CDifferentiable K (f · i))
   : (cderiv K fun (x : X) (i : ι) => f x i)
     =
     fun x => fun dx => fun i =>
@@ -160,6 +167,7 @@ theorem cderiv.pi_rule
   := by sorry_proof
 
 variable {K}
+#exit
 
 
 
