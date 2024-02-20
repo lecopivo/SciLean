@@ -1,6 +1,3 @@
-import SciLean.Tactic.FProp.Basic
-import SciLean.Tactic.FProp.Notation
-
 import SciLean.Core.Objects.SemiInnerProductSpace
 import SciLean.Core.FunctionPropositions.IsLinearMap
 import SciLean.Core.Simp

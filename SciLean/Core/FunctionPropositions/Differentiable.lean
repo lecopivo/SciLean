@@ -8,6 +8,8 @@ import Mathlib.Analysis.Calculus.Deriv.Inv
 
 import SciLean.Core.FunctionPropositions.DifferentiableAt
 
+import Mathlib.Tactic.FunProp.Differentiable
+
 namespace SciLean
 
 
@@ -34,38 +36,36 @@ variable
 
 theorem id_rule
   : Differentiable R (fun x : X => x)
-  := by simp
+  := by fun_prop
 
 
 theorem const_rule (x : X)
   : Differentiable R (fun _ : Y => x)
-  := by simp
+  := by fun_prop
 
 
 theorem comp_rule
   (g : X → Y) (hg : Differentiable R g)
   (f : Y → Z) (hf : Differentiable R f)
   : Differentiable R (fun x => f (g x))
-  := Differentiable.comp hf hg
+  := by fun_prop
 
 
 theorem let_rule
   (g : X → Y) (hg : Differentiable R g)
   (f : X → Y → Z) (hf : Differentiable R (fun (xy : X×Y) => f xy.1 xy.2))
   : Differentiable R (fun x => let y := g x; f x y)
-  := by apply fun x => DifferentiableAt.let_rule x g (hg x) f (hf (x, g x))
+  := by fun_prop
 
 
 theorem pi_rule
   (f : (i : ι) → X → E i) (hf : ∀ i, Differentiable R (f i))
   : Differentiable R (fun x i => f i x)
-  := fun x => DifferentiableAt.pi_rule x f (fun i => hf i x)
+  := by fun_prop
 
 theorem proj_rule
   (i : ι)
-  : Differentiable R (fun x : (i : ι) → E i => x i):=
-by
-  apply DifferentiableAt.proj_rule
+  : Differentiable R (fun x : (i : ι) → E i => x i):= by fun_prop
 
 
 end SciLean.Differentiable

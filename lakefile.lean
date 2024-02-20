@@ -15,11 +15,6 @@ lean_lib SciLean.Tactic.LSimp.LetNormalize where
   roots := #[`SciLean.Tactic.LSimp.LetNormalize]
 
 
-lean_lib mathlib_tactics_compile where
-  precompileModules := true
-  roots := #[`Mathlib.Tactic.FunProp]
-
-
 lean_exe WaveEquation {
   root := `examples.WaveEquation
 }
