@@ -1,13 +1,12 @@
-import SciLean.Core.FunctionPropositions.IsDifferentiable
-import SciLean.Core.FunctionPropositions.IsDifferentiableAt
-import SciLean.Core.FunctionPropositions.IsLinearMap
+import SciLean.Core.FunctionPropositions.CDifferentiable
 import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
-import SciLean.Core.NotationOverField
-import SciLean.Core.Simp
+-- import SciLean.Core.NotationOverField
+-- import SciLean.Core.Simp
 
 import SciLean.Core.Meta.GenerateLinearMapSimp
 
-import SciLean.Tactic.FTrans.Basic
+-- import SciLean.Tactic.FTrans.Basic
+
 
 set_option linter.unusedVariables false
 
@@ -46,17 +45,17 @@ theorem cderiv_apply
     =
     cderiv K (fun x' => f x' y) x dx := sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem cderiv.arg_dx.IsLinearMap_rule_simple
-  (f : X → Y) (x : X)
+  (f : X → Y) (x : X) (hf : CDifferentiableAt K f x)
   : IsLinearMap K (fun dx => cderiv K f x dx) := sorry_proof
 
 #generate_linear_map_simps SciLean.cderiv.arg_dx.IsLinearMap_rule_simple
 
-@[fprop]
+@[fun_prop]
 theorem cderiv.arg_dx.IsLinearMap_rule
-  (f : X → Y) (x : X) (dx : W → X) (hdx : IsLinearMap K dx)
-  : IsLinearMap K (fun w => cderiv K f x (dx w)) := by sorry_proof
+  (f : X → Y) (x : X) (dx : W → X) (hf : CDifferentiableAt K f x) (hdx : IsLinearMap K dx)
+  : IsLinearMap K (fun w => cderiv K f x (dx w)) := by fun_prop
 
 variable (K)
 
@@ -171,14 +170,14 @@ open Lean Meta Qq in
 def cderiv.discharger (e : Expr) : SimpM (Option Expr) := do
   withTraceNode `fwdDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
   let cache := (← get).cache
-  let config : FProp.Config := {}
-  let state  : FProp.State := { cache := cache }
-  let (proof?, state) ← FProp.fprop e |>.run config |>.run state
+  let config : Fun_prop.Config := {}
+  let state  : Fun_prop.State := { cache := cache }
+  let (proof?, state) ← Fun_prop.fun_prop e |>.run config |>.run state
   modify (fun simpState => { simpState with cache := state.cache })
   if proof?.isSome then
     return proof?
   else
-    -- if `fprop` fails try assumption
+    -- if `fun_prop` fails try assumption
     let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
     let proof? ← tac e
     return proof?
@@ -570,7 +569,7 @@ theorem HSMul.hSMul.arg_a0a1.cderiv_rule
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.cderiv_rule_at
   (x : X) (f : X → K) (g : X → K)
-  (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x) (hx : fpropParam (g x ≠ 0))
+  (hf : IsDifferentiableAt K f x) (hg : IsDifferentiableAt K g x) (hx : fun_propParam (g x ≠ 0))
   : (cderiv K fun x => f x / g x) x
     =
     let k := f x
@@ -582,7 +581,7 @@ by sorry_proof
 @[ftrans]
 theorem HDiv.hDiv.arg_a0a1.cderiv_rule
   (f : X → K) (g : X → K)
-  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g) (hx : fpropParam (∀ x, g x ≠ 0))
+  (hf : IsDifferentiable K f) (hg : IsDifferentiable K g) (hx : fun_propParam (∀ x, g x ≠ 0))
   : (cderiv K fun x => f x / g x)
     =
     fun x =>
@@ -609,7 +608,7 @@ by
   case succ n hn =>
     ext dx
     simp_rw[pow_succ]
-    rw[HMul.hMul.arg_a0a1.cderiv_rule_at x f _ (by fprop) (by fprop)]
+    rw[HMul.hMul.arg_a0a1.cderiv_rule_at x f _ (by fun_prop) (by fun_prop)]
     rw[hn]
     induction n
     case zero => simp
@@ -795,7 +794,7 @@ by
 @[ftrans]
 theorem SciLean.norm₂.arg_x.cderiv_rule
   (f : X → Y)
-  (hf : IsDifferentiable R f) (hx : fpropParam (∀ x, f x≠0))
+  (hf : IsDifferentiable R f) (hx : fun_propParam (∀ x, f x≠0))
   : cderiv R (fun x => ‖f x‖₂[R])
     =
     fun x dx =>
@@ -814,7 +813,7 @@ end InnerProductSpace
 -- cderiv ----------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem SciLean.cderiv.arg_dx.IsDifferentiableAt_rule
   (f : Y → Z) (g : X → Y) (y : Y) (dx : X)
   (hf : IsDifferentiableAt K f y) (hg : IsDifferentiableAt K g dx)
@@ -822,7 +821,7 @@ theorem SciLean.cderiv.arg_dx.IsDifferentiableAt_rule
 by
   sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem SciLean.cderiv.arg_dx.IsDifferentiable_rule
   (f : Y → Z) (g : X → Y) (y : Y)
   (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)

@@ -1,8 +1,8 @@
 import SciLean.Core.FunctionPropositions.CDifferentiable
 import SciLean.Core.FunctionPropositions.HasSemiAdjoint
-import SciLean.Core.FunctionPropositions.HasAdjDiffAt
+-- import SciLean.Core.FunctionPropositions.HasAdjDiffAt
 
-import SciLean.Core.FunctionTransformations.CDeriv
+-- import SciLean.Core.FunctionTransformations.CDeriv
 
 import Lean.Meta.Tactic.Assumption
 
