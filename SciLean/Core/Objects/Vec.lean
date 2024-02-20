@@ -35,14 +35,19 @@ def Differentiable (f : K → F) :=
   ∀ x, DifferentiableAt f x
 
 -- TODO: This should probably be true on small neighborhood of x not just *at* x
-def DifferentiableAtN (f : K → F) (x : K) (n : Nat) :=
+def ContDiffAt' (f : K → F) (x : K) (n : ℕ) :=
   match n with
   | 0 => ContinuousAt f x
-  | n+1 => DifferentiableAt f x ∧ DifferentiableAtN (deriv f) x n
+  | (n+1) => DifferentiableAt f x ∧ ContDiffAt' (deriv f) x n
 
-def DifferentiableN (f : K → F) (n : Nat) := ∀ x, DifferentiableAtN f x n
-def SmoothAt        (f : K → F) (x : K)   := ∀ n, DifferentiableAtN f x n
-def Smooth          (f : K → F)           := ∀ x n, DifferentiableAtN f x n
+def ContDiffAt (f : K → F) (x : K) (n : ℕ∞) :=
+  match n with
+  | .none => ∀ n', ContDiffAt' f x n'
+  | .some n' => ContDiffAt' f x n'
+
+abbrev ContDiff (f : K → F) (n : ℕ∞) := ∀ x, ContDiffAt f x n
+abbrev SmoothAt        (f : K → F) (x : K)   := ContDiffAt f x ⊤
+abbrev Smooth          (f : K → F)           := ContDiff f ⊤
 
 end Curve
 

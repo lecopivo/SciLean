@@ -1,4 +1,4 @@
-import SciLean.Core.FunctionPropositions.IsDifferentiable
+import SciLean.Core.FunctionPropositions.CDifferentiable
 import SciLean.Core.FunctionPropositions.HasSemiAdjoint
 import SciLean.Core.FunctionPropositions.HasAdjDiffAt
 

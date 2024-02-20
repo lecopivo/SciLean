@@ -1,7 +1,7 @@
 import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
 import SciLean.Core.Simp
 
-import SciLean.Tactic.FTrans.Init
+-- import SciLean.Tactic.FTrans.Init
 import SciLean.Tactic.AnalyzeConstLambda
 
 namespace SciLean
