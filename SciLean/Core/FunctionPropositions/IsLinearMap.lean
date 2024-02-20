@@ -151,15 +151,15 @@ theorem HSMul.hSMul.arg_a0.IsLinearMap_rule
   let b := (mk' _ hf)
   by_linear_map (a.comp b) (by simp)
 
--- @[fun_prop]
--- theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_nat
---     (c : ℕ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x :=
---   sorry_proof
+@[fun_prop]
+theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_nat
+    (c : ℕ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x :=
+  sorry_proof
 
--- @[fun_prop]
--- theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_int
---     (c : ℤ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x :=
---   sorry_proof
+@[fun_prop]
+theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_int
+    (c : ℤ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x :=
+  sorry_proof
 
 -- d/ite -----------------------------------------------------------------------
 --------------------------------------------------------------------------------
