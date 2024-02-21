@@ -46,16 +46,21 @@ def semiAdjoint (f : X → Y) (y : Y) : X :=
 -- Basic identities ------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-
-theorem semiAdjoint.arg_y.IsLinearMap_rule (f : X → Y) : IsLinearMap K (fun y => semiAdjoint K f y) := sorry_proof
+/-- `semiAdjoint K f ·` is always linear because either `f` has adjoint and is linear or
+`semiAdjoint K f ·` is zero function and thus linear too. -/
+@[fun_prop]
+theorem semiAdjoint.arg_y.IsLinearMap_rule (f : X → Y) :
+    IsLinearMap K (fun y => semiAdjoint K f y) := sorry_proof
 
 #generate_linear_map_simps SciLean.semiAdjoint.arg_y.IsLinearMap_rule
-
 
 def semi_inner_ext (x x' : X)
   : (∀ φ, TestFunction φ → ⟪x, φ⟫[K] = ⟪x', φ⟫[K])
     →
     x = x' := sorry_proof
+
+def semiAdjoint_move (x : X) (y : Y) (hx : TestFunction x) (f : X → Y) (hf : HasSemiAdjoint K f) :
+   ⟪semiAdjoint K f y, x⟫[K] = ⟪y, f x⟫[K] := sorry_proof
 
 theorem semiAdjoint_choose {f : X → Y} (hf : HasSemiAdjoint K f)
   : semiAdjoint K f = Classical.choose hf := sorry_proof
@@ -71,54 +76,41 @@ by
   rw[semiAdjoint_choose _ hf]
   rw[← Classical.choose_spec hf φ y hφ]
 
-
 -- Lambda calculus rules -------------------------------------------------------
 --------------------------------------------------------------------------------
 
 namespace HasSemiAdjoint
 
-
-variable (X)
 @[fun_prop]
-theorem id_rule
-  : HasSemiAdjoint K (fun x : X => x) :=
-by
+theorem id_rule : HasSemiAdjoint K (fun x : X => x) := by
   apply Exists.intro (fun x => x) _
   simp
 
 @[fun_prop]
-theorem const_rule
-  : HasSemiAdjoint K (fun _ : X => (0:Y)) :=
-by
+theorem const_rule : HasSemiAdjoint K (fun _ : X => (0:Y)) := by
   apply Exists.intro (fun _ => 0) _
   simp; sorry_proof
-variable {X}
-
 
 @[fun_prop]
 theorem comp_rule
-  (f : Y → Z) (g : X → Y)
-  (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
-  : HasSemiAdjoint K (fun x => f (g x)) :=
-by
+    (f : Y → Z) (g : X → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g) :
+    HasSemiAdjoint K (fun x => f (g x)) := by
   apply Exists.intro (fun z => semiAdjoint K g (semiAdjoint K f z)) _
-  sorry_proof
+  intros; rw[semiAdjoint_move]; rw[semiAdjoint_move]
+  sorry_proof -- HasSemiAdjoint should preserve test functions
+  repeat assumption
 
 @[fun_prop]
-theorem apply_rule
-  (i : ι)
-  : HasSemiAdjoint K (fun x : (i : ι) → E i => x i) :=
-by
+theorem apply_rule (i : ι) :
+    HasSemiAdjoint K (fun x : (i : ι) → E i => x i) := by
   apply Exists.intro (fun (y : E i) j => if h : i=j then h▸y else 0) _
-  sorry_proof
+  intros; simp[Inner.inner]; sorry_proof
 
 @[fun_prop]
 theorem pi_rule
-  (f : X → (i : ι) → E i)
-  (hf : ∀ i, HasSemiAdjoint K (f · i))
-  : HasSemiAdjoint K (fun x i => f x i) :=
-by
-  -- apply Exists.intro (fun g => ∑ i, semiAdjoint K (f i) (g i)) _
+    (f : X → (i : ι) → E i) (hf : ∀ i, HasSemiAdjoint K (f · i)) :
+    HasSemiAdjoint K (fun x i => f x i) := by
+  -- apply Exists.intro (fun g => ∑ i, semiAdjoint K (f · i) (g i)) _
   sorry_proof
 
 
@@ -141,10 +133,14 @@ variable
 
 @[fun_prop]
 theorem Prod.mk.arg_fstsnd.HasSemiAdjoint_rule
-  (g : X → Y) (hg : HasSemiAdjoint K g)
-  (f : X → Z) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun x => (g x, f x) :=
-by sorry_proof
+    (g : X → Y) (hg : HasSemiAdjoint K g)
+    (f : X → Z) (hf : HasSemiAdjoint K f) :
+    HasSemiAdjoint K fun x => (g x, f x) := by
+  apply Exists.intro (fun yz => semiAdjoint K g yz.1 + semiAdjoint K f yz.2) _
+  intros; dsimp[Inner.inner]
+  rw[SemiInnerProductSpace.add_left]
+  rw[semiAdjoint_move]; rw[semiAdjoint_move]
+  repeat aesop
 
 
 -- Prod.fst --------------------------------------------------------------------
@@ -152,9 +148,12 @@ by sorry_proof
 
 @[fun_prop]
 theorem Prod.fst.arg_self.HasSemiAdjoint_rule
-  (f : X → Y×Z) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun (x : X) => (f x).fst :=
-by sorry_proof
+    (f : X → Y×Z) (hf : HasSemiAdjoint K f) :
+    HasSemiAdjoint K fun (x : X) => (f x).fst := by
+  apply Exists.intro (fun y => semiAdjoint K f (y,0)) _
+  intros; rw[semiAdjoint_move]; simp[Inner.inner]
+  sorry_proof
+  repeat assumption
 
 
 -- Prod.snd --------------------------------------------------------------------
@@ -162,9 +161,12 @@ by sorry_proof
 
 @[fun_prop]
 theorem Prod.snd.arg_self.HasSemiAdjoint_rule
-  (f : X → Y×Z) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun (x : X) => (f x).snd :=
-by sorry_proof
+    (f : X → Y×Z) (hf : HasSemiAdjoint K f) :
+    HasSemiAdjoint K fun (x : X) => (f x).snd := by
+  apply Exists.intro (fun z => semiAdjoint K f (0,z)) _
+  intros; rw[semiAdjoint_move]; simp[Inner.inner]
+  sorry_proof
+  repeat assumption
 
 
 -- Neg.neg ---------------------------------------------------------------------
@@ -172,9 +174,12 @@ by sorry_proof
 
 @[fun_prop]
 theorem Neg.neg.arg_a0.HasSemiAdjoint_rule
-  (f : X → Y)
-  : HasSemiAdjoint K fun x => - f x :=
-by sorry_proof
+    (f : X → Y) : HasSemiAdjoint K fun x => - f x := by
+  have : HasSemiAdjoint K f := sorry_proof -- do a split on this
+  apply Exists.intro (fun y => semiAdjoint K f (-y)) _
+  intros; rw[semiAdjoint_move]; simp[Inner.inner]
+  sorry_proof
+  repeat assumption
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -182,9 +187,8 @@ by sorry_proof
 
 @[fun_prop]
 theorem HAdd.hAdd.arg_a0a1.HasSemiAdjoint_rule [ContinuousAdd Y]
-  (f g : X → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
-  : HasSemiAdjoint K fun x => f x + g x :=
-by sorry_proof
+    (f g : X → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g) :
+    HasSemiAdjoint K fun x => f x + g x := by sorry_proof
 
 
 -- HSub.hSub -------------------------------------------------------------------
@@ -192,9 +196,9 @@ by sorry_proof
 
 @[fun_prop]
 theorem HSub.hSub.arg_a0a1.HasSemiAdjoint_rule
-  (f g : X → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
-  : HasSemiAdjoint K fun x => f x - g x :=
-by sorry_proof
+    (f g : X → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g) :
+    HasSemiAdjoint K fun x => f x - g x := by
+  sorry_proof
 
 
 -- HMul.hMul ---------------------------------------------------------------------
@@ -266,7 +270,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem SciLean.EnumType.sum.arg_f.HasSemiAdjoint_rule
+theorem SciLean.IndexType.sum.arg_f.HasSemiAdjoint_rule
   (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K fun x : X => f x i)
   : HasSemiAdjoint K fun x => ∑ i, f x i :=
 by
