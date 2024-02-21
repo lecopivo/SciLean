@@ -150,6 +150,14 @@ variable
 
 -- Prod.mk --------------------------------------------------------------------
 --------------------------------------------------------------------------------
+set_option trace.Meta.Tactic.fun_trans true in
+@[fun_prop]
+theorem Prod.mk.arg_fstsnd.HasAdjDiffAt_rule (x : X)
+    (g : X → Y) (hg : HasAdjDiffAt K g x)
+    (f : X → Z) (hf : HasAdjDiffAt K f x) :
+    HasAdjDiffAt K (fun x => (g x, f x)) x := by
+  constructor; fun_prop; fun_trans; fun_prop
+
 
 @[fun_prop]
 theorem Prod.mk.arg_fstsnd.HasAdjDiff_rule
@@ -157,9 +165,7 @@ theorem Prod.mk.arg_fstsnd.HasAdjDiff_rule
   (f : X → Z) (hf : HasAdjDiff K f)
   : HasAdjDiff K (fun x => (g x, f x)) :=
 by
-  have ⟨_,_⟩ := hg
-  have ⟨_,_⟩ := hf
-  constructor; fun_prop; ftrans; fun_prop
+  intros x; constructor; fun_prop; fun_trans; fun_prop
 
 
 -- Prod.fst --------------------------------------------------------------------
@@ -171,7 +177,7 @@ theorem Prod.fst.arg_self.HasAdjDiff_rule
   : HasAdjDiff K (fun x => (f x).1) :=
 by
   have ⟨_,_⟩ := hf
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 
@@ -184,7 +190,7 @@ theorem Prod.snd.arg_self.HasAdjDiff_rule
   : HasAdjDiff K (fun x => (f x).2) :=
 by
   have ⟨_,_⟩ := hf
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- cderiv ----------------------------------------------------------------------
@@ -210,7 +216,7 @@ theorem Function.comp.arg_a0.HasAdjDiff_rule
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- Neg.neg ---------------------------------------------------------------------
@@ -222,7 +228,7 @@ theorem Neg.neg.arg_a0.HasAdjDiff_rule
   : HasAdjDiff K (fun x => - f x) :=
 by
   have ⟨_,_⟩ := hf
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -235,7 +241,7 @@ theorem HAdd.hAdd.arg_a0a1.HasAdjDiff_rule
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- HSub.hSub -------------------------------------------------------------------
@@ -248,7 +254,7 @@ theorem HSub.hSub.arg_a0a1.HasAdjDiff_rule
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- HMul.hMul -------------------------------------------------------------------
@@ -261,7 +267,7 @@ def HMul.hMul.arg_a0a1.HasAdjDiff_rule
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- SMul.sMul -------------------------------------------------------------------
@@ -274,7 +280,7 @@ theorem HSMul.hSMul.arg_a1.HasAdjDiff_rule
   : HasAdjDiff K (fun x => c • g x) :=
 by
   have ⟨_,_⟩ := hg
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 open ComplexConjugate in
@@ -287,7 +293,7 @@ theorem HSMul.hSMul.arg_a0a1.HasAdjDiff_rule
 by
   have ⟨_,_⟩ := hg
   have ⟨_,_⟩ := hf
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
@@ -301,7 +307,7 @@ def HDiv.hDiv.arg_a0a1.HasAdjDiff_rule
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- HPow.hPow -------------------------------------------------------------------
@@ -313,7 +319,7 @@ def HPow.hPow.arg_a0.HasAdjDiff_rule
   : HasAdjDiff K (fun x => f x ^ n) :=
 by
   have ⟨_,_⟩ := hf
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 -- EnumType.sum ----------------------------------------------------------------
@@ -325,7 +331,7 @@ theorem SciLean.EnumType.sum.arg_f.HasAdjDiff_rule
   : HasAdjDiff K (fun x => ∑ i, f x i) :=
 by
   have := fun i => (hf i).1
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 -- d/ite -----------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -375,7 +381,7 @@ theorem Inner.inner.arg_a0a1.HasAdjDiff_rule
 by
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 @[fun_prop]
 theorem SciLean.Norm2.norm2.arg_a0.HasAdjDiff_rule
@@ -384,7 +390,7 @@ theorem SciLean.Norm2.norm2.arg_a0.HasAdjDiff_rule
   : HasAdjDiff R fun x => ‖f x‖₂²[R] :=
 by
   have ⟨_,_⟩ := hf
-  constructor; fun_prop; ftrans; fun_prop
+  constructor; fun_prop; fun_trans; fun_prop
 
 
 @[fun_prop]

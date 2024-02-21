@@ -232,9 +232,8 @@ by
 open ComplexConjugate in
 @[fun_prop]
 theorem HSMul.hSMul.arg_a1.HasSemiAdjoint_rule
-  (c : K) (f : X → Y) (hf : HasSemiAdjoint K f)
-  : HasSemiAdjoint K fun x => c • f x :=
-vby
+    (c : K) (f : X → Y) (hf : HasSemiAdjoint K f) :
+    HasSemiAdjoint K fun x => c • f x := by
   apply Exists.intro (fun (y' : Y) => conj c • semiAdjoint K f y') _
   sorry_proof
 
