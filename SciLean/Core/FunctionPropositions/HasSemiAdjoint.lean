@@ -52,6 +52,11 @@ def semiAdjoint (f : X → Y) (y : Y) : X :=
 theorem semiAdjoint.arg_y.IsLinearMap_rule (f : X → Y) :
     IsLinearMap K (fun y => semiAdjoint K f y) := sorry_proof
 
+@[fun_prop]
+theorem semiAdjoint.arg_y.CDifferentiable_rule (f : X → Y) (hf : CDifferentiable K f) :
+    CDifferentiable K (fun y => semiAdjoint K f y) := sorry_proof
+
+
 #generate_linear_map_simps SciLean.semiAdjoint.arg_y.IsLinearMap_rule
 
 def semi_inner_ext (x x' : X)
