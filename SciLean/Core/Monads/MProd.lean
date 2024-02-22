@@ -1,7 +1,7 @@
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.Monads.FwdDerivMonad
-import SciLean.Core.Monads.Id
-import SciLean.Data.DataArray
+-- import SciLean.Core.Monads.Id
+-- import SciLean.Data.DataArray
 
 set_option linter.unusedVariables false
 
@@ -67,14 +67,14 @@ variable
   {W : Type _} [Vec K W]
 
 
-@[fprop]
-theorem MProd.mk.arg_fstsnd.IsDifferentiable_rule
-  (f : W → X) (g : W → Y) (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
-  : IsDifferentiable K (fun w => MProd.mk (f w) (g w)) := by sorry_proof
+@[fun_prop]
+theorem MProd.mk.arg_fstsnd.CDifferentiable_rule
+  (f : W → X) (g : W → Y) (hf : CDifferentiable K f) (hg : CDifferentiable K g)
+  : CDifferentiable K (fun w => MProd.mk (f w) (g w)) := by sorry_proof
 
-@[ftrans]
+@[fun_trans]
 theorem MProd.mk.arg_fstsnd.cderiv_rule
-  (f : W → X) (g : W → Y) (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
+  (f : W → X) (g : W → Y) (hf : CDifferentiable K f) (hg : CDifferentiable K g)
   : cderiv K (fun w => MProd.mk (f w) (g w))
     =
     fun w dw =>
@@ -84,44 +84,44 @@ theorem MProd.mk.arg_fstsnd.cderiv_rule
 by
   sorry_proof
 
-@[ftrans]
-theorem MProd.mk.arg_fstsnd.fwdCDeriv_rule
-  (f : W → X) (g : W → Y) (hf : IsDifferentiable K f) (hg : IsDifferentiable K g)
-  : fwdCDeriv K (fun w => MProd.mk (f w) (g w))
+@[fun_trans]
+theorem MProd.mk.arg_fstsnd.fwdDeriv_rule
+  (f : W → X) (g : W → Y) (hf : CDifferentiable K f) (hg : CDifferentiable K g)
+  : fwdDeriv K (fun w => MProd.mk (f w) (g w))
     =
     fun w dw =>
-      let xdx := fwdCDeriv K f w dw
-      let ydy := fwdCDeriv K g w dw
+      let xdx := fwdDeriv K f w dw
+      let ydy := fwdDeriv K g w dw
       (⟨xdx.1,ydy.1⟩, ⟨xdx.2,ydy.2⟩) :=
 by
-  unfold fwdCDeriv; ftrans
+  unfold fwdDeriv; fun_trans
 
-@[fprop]
-theorem MProd.fst.arg_self.IsDifferentiable_rule
-  (f : W → MProd X Y) (hf : IsDifferentiable K f)
-  : IsDifferentiable K (fun w => (f w).1) := by sorry_proof
+@[fun_prop]
+theorem MProd.fst.arg_self.CDifferentiable_rule
+  (f : W → MProd X Y) (hf : CDifferentiable K f)
+  : CDifferentiable K (fun w => (f w).1) := by sorry_proof
 
-@[ftrans]
-theorem MProd.fst.arg_self.fwdCDeriv_rule
-  (f : W → MProd X Y) (hf : IsDifferentiable K f)
-  : fwdCDeriv K (fun w => (f w).1)
+@[fun_trans]
+theorem MProd.fst.arg_self.fwdDeriv_rule
+  (f : W → MProd X Y) (hf : CDifferentiable K f)
+  : fwdDeriv K (fun w => (f w).1)
     =
     fun w dw =>
-      let xydxy := fwdCDeriv K f w dw
+      let xydxy := fwdDeriv K f w dw
       (xydxy.1.1, xydxy.2.1) := by sorry_proof
 
-@[fprop]
-theorem MProd.snd.arg_self.IsDifferentiable_rule
-  (f : W → MProd X Y) (hf : IsDifferentiable K f)
-  : IsDifferentiable K (fun w => (f w).2) := by sorry_proof
+@[fun_prop]
+theorem MProd.snd.arg_self.CDifferentiable_rule
+  (f : W → MProd X Y) (hf : CDifferentiable K f)
+  : CDifferentiable K (fun w => (f w).2) := by sorry_proof
 
-@[ftrans]
-theorem MProd.snd.arg_self.fwdCDeriv_rule
-  (f : W → MProd X Y) (hf : IsDifferentiable K f)
-  : fwdCDeriv K (fun w => (f w).2)
+@[fun_trans]
+theorem MProd.snd.arg_self.fwdDeriv_rule
+  (f : W → MProd X Y) (hf : CDifferentiable K f)
+  : fwdDeriv K (fun w => (f w).2)
     =
     fun w dw =>
-      let xydxy := fwdCDeriv K f w dw
+      let xydxy := fwdDeriv K f w dw
       (xydxy.1.2, xydxy.2.2) := by sorry_proof
 
 
@@ -144,12 +144,12 @@ instance [TestFunctions X] [TestFunctions Y] : TestFunctions (MProd X Y) where
 
 instance [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (MProd X Y) := SemiInnerProductSpace.mkSorryProofs
 
-@[fprop]
+@[fun_prop]
 theorem MProd.mk.arg_fstsnd.HasSemiAdjoint_rule
   (f : W → X) (g : W → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
   : HasSemiAdjoint K (fun w => MProd.mk (f w) (g w)) := by sorry_proof
 
-@[ftrans]
+@[fun_trans]
 theorem MProd.mk.arg_fstsnd.semiAdjoint_rule
   (f : W → X) (g : W → Y) (hf : HasSemiAdjoint K f) (hg : HasSemiAdjoint K g)
   : semiAdjoint K (fun w => MProd.mk (f w) (g w))
@@ -162,31 +162,28 @@ by
   sorry_proof
 
 
-@[fprop]
+@[fun_prop]
 theorem MProd.mk.arg_fstsnd.HasAdjDiff_rule
   (f : W → X) (g : W → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : HasAdjDiff K (fun w => MProd.mk (f w) (g w)) :=
 by
-  have ⟨_,_⟩ := hf
-  have ⟨_,_⟩ := hg
-  constructor; fprop; ftrans; fprop
+  intro x; constructor; fun_prop; fun_trans; fun_prop
 
 
-@[ftrans]
-theorem MProd.mk.arg_fstsnd.revCDeriv_rule
+@[fun_trans]
+theorem MProd.mk.arg_fstsnd.revDeriv_rule
   (f : W → X) (g : W → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
-  : revCDeriv K (fun w => MProd.mk (f w) (g w))
+  : revDeriv K (fun w => MProd.mk (f w) (g w))
     =
     fun w =>
-      let xdf' := revCDeriv K f w
-      let ydg' := revCDeriv K g w
+      let xdf' := revDeriv K f w
+      let ydg' := revDeriv K g w
       (MProd.mk xdf'.1 ydg'.1,
        fun dxy =>
-         xdf'.2 dxy.1 + ydg'.2 dxy.2) :=
-by
+         xdf'.2 dxy.1 + ydg'.2 dxy.2) := by
   sorry_proof
 
-@[ftrans]
+@[fun_trans]
 theorem MProd.mk.arg_fstsnd.revDerivUpdate_rule
   (f : W → X) (g : W → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g)
   : revDerivUpdate K (fun w => MProd.mk (f w) (g w))
@@ -198,31 +195,28 @@ theorem MProd.mk.arg_fstsnd.revDerivUpdate_rule
        fun dxy dw =>
          xdf'.2 dxy.1 (ydg'.2 dxy.2 dw)) :=
 by
-  have ⟨_,_⟩ := hf
-  have ⟨_,_⟩ := hg
   unfold revDerivUpdate
-  ftrans; funext x; simp
+  fun_trans; funext x; simp
   funext dy dx
-  ftrans
-  sorry_proof
+  simp[add_assoc]; rw[add_comm]
 
 
-@[fprop]
+@[fun_prop]
 theorem MProd.fst.arg_self.HasAdjDiff_rule
   (f : W → MProd X Y) (hf : HasAdjDiff K f)
   : HasAdjDiff K (fun w => (f w).1) := by sorry_proof
 
-@[ftrans]
-theorem MProd.fst.arg_self.revCDeriv_rule
+@[fun_trans]
+theorem MProd.fst.arg_self.revDeriv_rule
   (f : W → MProd X Y) (hf : HasAdjDiff K f)
-  : revCDeriv K (fun w => (f w).1)
+  : revDeriv K (fun w => (f w).1)
     =
     fun w =>
-      let xydxy := revCDeriv K f w
+      let xydxy := revDeriv K f w
       (xydxy.1.1, fun dw => xydxy.2 (MProd.mk dw 0)) := by sorry_proof
 
 
-@[ftrans]
+@[fun_trans]
 theorem MProd.fst.arg_self.revDerivUpdate_rule
   (f : W → MProd X Y) (hf : HasAdjDiff K f)
   : revDerivUpdate K (fun w => (f w).1)
@@ -232,21 +226,21 @@ theorem MProd.fst.arg_self.revDerivUpdate_rule
       (xydxy.1.1, fun dx' dw => xydxy.2 (MProd.mk dx' 0) dw) := by sorry_proof
 
 
-@[fprop]
+@[fun_prop]
 theorem MProd.snd.arg_self.HasAdjDiff_rule
   (f : W → MProd X Y) (hf : HasAdjDiff K f)
   : HasAdjDiff K (fun w => (f w).2) := by sorry_proof
 
-@[ftrans]
-theorem MProd.snd.arg_self.revCDeriv_rule
+@[fun_trans]
+theorem MProd.snd.arg_self.revDeriv_rule
   (f : W → MProd X Y) (hf : HasAdjDiff K f)
-  : revCDeriv K (fun w => (f w).2)
+  : revDeriv K (fun w => (f w).2)
     =
     fun w =>
-      let xydxy := revCDeriv K f w
+      let xydxy := revDeriv K f w
       (xydxy.1.2, fun dy' => xydxy.2 (MProd.mk 0 dy')) := by sorry_proof
 
-@[ftrans]
+@[fun_trans]
 theorem MProd.snd.arg_self.revDerivUpdate_rule
   (f : W → MProd X Y) (hf : HasAdjDiff K f)
   : revDerivUpdate K (fun w => (f w).2)
