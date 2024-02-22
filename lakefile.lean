@@ -9,10 +9,10 @@ lean_lib SciLean {
   roots := #[`SciLean]
 }
 
-lean_lib SciLean.Tactic.LSimp.LetNormalize where
+lean_lib CompileTactics where
   -- options for SciLean.Tactic.MySimpProc (and below) modules
   precompileModules := true
-  roots := #[`SciLean.Tactic.LSimp.LetNormalize]
+  roots := #[`SciLean.Tactic.LSimp.LetNormalize, `SciLean.Tactic.MathlibCompiledTactics]
 
 
 lean_exe WaveEquation {
