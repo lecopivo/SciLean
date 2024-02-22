@@ -1,9 +1,7 @@
-import SciLean.Core.FunctionPropositions.HasAdjDiffAt
 import SciLean.Core.FunctionPropositions.HasAdjDiff
-
 import SciLean.Core.FunctionTransformations.SemiAdjoint
 
-import SciLean.Data.Curry
+#exit -- old file  but keep it for all the specialized pi rules -
 
 set_option linter.unusedVariables false
 
