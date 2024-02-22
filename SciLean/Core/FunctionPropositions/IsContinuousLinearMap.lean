@@ -3,9 +3,7 @@ import Mathlib.Topology.UniformSpace.Pi
 import Mathlib.Analysis.NormedSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
 
-import SciLean.Tactic.FProp.Basic
-import SciLean.Tactic.FProp.Notation
-import SciLean.Tactic.FTrans.Init
+import SciLean.Core.FunctionPropositions.IsLinearMap
 
 namespace SciLean
 
