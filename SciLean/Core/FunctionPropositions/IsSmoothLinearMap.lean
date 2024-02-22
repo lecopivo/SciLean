@@ -16,7 +16,7 @@ variable
 
 @[fun_prop]
 def IsSmoothLinearMap (f : X → Y) : Prop :=
-  IsLinearMap K f ∧ CDifferentiable K f
+  IsLinearMap K f ∧ CDifferentiable K f -- todo: probably change to `CContDiff K ∞ f`
 
 
 --------------------------------------------------------------------------------
