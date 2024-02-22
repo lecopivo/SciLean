@@ -1,5 +1,10 @@
 import Mathlib.Logic.Equiv.Basic
 
+import Mathlib.Tactic.FunTrans.Attr
+import Mathlib.Tactic.FunTrans.Elab
+
+import SciLean.Tactic.FTrans.Simp
+
 open Lean
 
 namespace SciLean
@@ -21,6 +26,7 @@ variable {α β γ : Type _}
   [IsomorphicType tag β β']
   [IsomorphicType tag γ γ']
 
+@[fun_trans]
 def isomorph (f : α → β) (a' : α') : β' :=
     a' |> (IsomorphicType.equiv tag (α:=α)).symm
        |> f
@@ -31,7 +37,7 @@ def invIsomorph (f : α' → β') (a : α) : β :=
       |> f
       |> (IsomorphicType.equiv tag).symm
 
-@[simp]
+@[simp, ftrans_simp]
 theorem isomorph.app (f : α → β) (x : α)
   : (IsomorphicType.equiv tag) (f x) = isomorph tag f (IsomorphicType.equiv tag x) :=
 by
