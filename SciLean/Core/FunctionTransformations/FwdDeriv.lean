@@ -1,19 +1,18 @@
 import SciLean.Core.FunctionTransformations.CDeriv
 import SciLean.Core.Meta.ToAnyPoint
 
-open LeanColls
-
-namespace SciLean
-
-namespace fwdDeriv
+open SciLean
 
 variable
   {K : Type _} [IsROrC K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
+  {W : Type _} [Vec K W]
   {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
+
+namespace SciLean
 
 variable (K)
 
@@ -22,6 +21,8 @@ noncomputable
 def fwdDeriv (f : X → Y) (x dx : X) : Y×Y := (f x, cderiv K f x dx)
 
 variable {K}
+
+namespace fwdDeriv
 
 
 -- Basic lambda calculus rules -------------------------------------------------
@@ -80,16 +81,6 @@ theorem pi_rule_at (x : X)
 
 
 open SciLean LeanColls
-
-variable
-  {K : Type _} [IsROrC K]
-  {X : Type _} [Vec K X]
-  {Y : Type _} [Vec K Y]
-  {Z : Type _} [Vec K Z]
-  {W : Type _} [Vec K W]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {E : ι → Type _} [∀ i, Vec K (E i)]
-
 
 -- Prod.mk -----------------------------------v---------------------------------
 --------------------------------------------------------------------------------
