@@ -11,7 +11,8 @@
 
 -- import SciLean.Util.Profile
 
-import SciLean.Core.FunctionTransformations.RevDeriv
+import SciLean.Core.FunctionTransformations
+import SciLean.Core.FunctionPropositions
 import SciLean.Tactic.LSimp.LetNormalize
 import SciLean.Tactic.MathlibCompiledTactics
 
