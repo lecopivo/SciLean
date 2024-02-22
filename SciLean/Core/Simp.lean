@@ -2,6 +2,8 @@ import Lean
 
 register_simp_attr add_pull
 register_simp_attr add_push
+register_simp_attr sum_push
+register_simp_attr sum_pull
 register_simp_attr sub_pull
 register_simp_attr sub_push
 register_simp_attr neg_pull
