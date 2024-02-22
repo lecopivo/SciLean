@@ -5,6 +5,8 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
+#exit -- old file that needs rework and fundamental change in fun_trans and fun_prop
+
 open ContinuousLinearMap
 
 noncomputable
