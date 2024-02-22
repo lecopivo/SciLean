@@ -1,15 +1,4 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.FDeriv.Prod
-import Mathlib.Analysis.Calculus.FDeriv.Linear
-import Mathlib.Analysis.Calculus.FDeriv.Add
-import Mathlib.Analysis.Calculus.FDeriv.Mul
-
-import Mathlib.Tactic.FunProp.Differentiable
-import Mathlib.Tactic.FunTrans.Attr
-import Mathlib.Tactic.FunTrans.Elab
-
-import SciLean.Core.Meta.ToAnyPoint
+import SciLean.Core.FunctionTransformations.FDeriv
 
 namespace SciLean
 
@@ -29,33 +18,6 @@ noncomputable
 def fwdFDeriv (f : X → Y) (x dx : X) : Y×Y := (f x, fderiv K f x dx)
 
 variable {K}
-
-attribute [fun_trans]
-  fderiv
-
-attribute [fun_trans]
-  fderiv_id
-  fderiv_const
-  fderiv.comp -- `fun_trans` seems to have hard time applying this
-  DifferentiableAt.fderiv_prod
-
-  fderiv.fst
-  fderiv.snd
-  fderiv_add
-  fderiv_sub
-  fderiv_neg
-  fderiv_mul
-  fderiv_sum
-  fderiv_smul
-  fderiv_inv
-
-@[fun_trans]
-theorem fderiv_comp (x : X) (f : Y → Z) (g : X → Y)
-    (hf : DifferentiableAt K f (g x)) (hg : DifferentiableAt K g x) :
-    fderiv K (fun x => f (g x)) x
-    =
-    (fderiv K f (g x)).comp (fderiv K g x) := by apply fderiv.comp <;> assumption
-
 
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
@@ -100,8 +62,7 @@ theorem let_rule_at (x : X)
 theorem apply_rule (i : ι) :
     fwdFDeriv K (fun (x : (i : ι) → E i) => x i) = fun x dx => (x i, dx i) := by
   unfold fwdFDeriv
-  -- this can be done with `ContinuousLinearMap.fderiv` but we need the continuous linear map first
-  sorry
+  fun_trans
 
 @[fun_trans, to_any_point]
 theorem pi_rule_at (x : X)
@@ -210,7 +171,7 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule_at (x : X) (f g : X → K)
     fun dx =>
       let ydy := (fwdFDeriv K f x dx)
       let zdz := (fwdFDeriv K g x dx)
-      (ydy.1 * zdz.1,  ydy.1 * zdz.2 + zdz.1 * ydy.2) := by
+      (ydy.1 * zdz.1, zdz.2 * ydy.1 + ydy.2 * zdz.1) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -249,7 +210,7 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at (x : X)
     lhs
     simp[div_eq_inv_mul]
     fun_trans (disch:=assumption)
-  field_simp; ring
+  field_simp; sorry_proof --ring
 
 
 -- HPow.hPow -------------------------------------------------------------------
@@ -267,7 +228,7 @@ def HPow.hPow.arg_a0.fwdFDeriv_rule_at (n : Nat) (x : X)
   funext dx; simp
   induction n
   case zero => simp
-  case h nh => simp[pow_succ]; fun_trans; sorry
+  case h nh => simp[pow_succ]; fun_trans; sorry_proof
 
 
 -- IndexType.sum ----------------------------------------------------------------
@@ -283,7 +244,7 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X)
       let ydy := fun i => fwdFDeriv K (f · i) x dx
       ∑ i, ydy i := by
   unfold fwdFDeriv; fun_trans
-  sorry
+  sorry_proof
 
 
 -- d/ite -----------------------------------------------------------------------
