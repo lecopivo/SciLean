@@ -1,11 +1,8 @@
 import SciLean.Core.FunctionPropositions.CDifferentiable
 import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
--- import SciLean.Core.NotationOverField
--- import SciLean.Core.Simp
 
 import SciLean.Core.Meta.GenerateLinearMapSimp
 
--- import SciLean.Tactic.FTrans.Basic
 import Mathlib.Tactic.FunTrans.Attr
 import Mathlib.Tactic.FunTrans.Elab
 
