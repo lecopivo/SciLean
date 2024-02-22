@@ -207,7 +207,7 @@ theorem Prod.fst.arg_self.cderiv_rule_at (x : X)
     (f : X → Y×Z) (hf : CDifferentiableAt K f x) :
     cderiv K (fun x => (f x).1) x
     =
-    fun dx => (cderiv K f x dx).1 := by sorry_proof --fun_trans
+    fun dx => (cderiv K f x dx).1 := by fun_trans
 
 @[fun_trans]
 theorem Prod.fst.arg_self.cderiv_rule
@@ -225,7 +225,7 @@ theorem Prod.snd.arg_self.cderiv_rule_at (x : X)
     (f : X → Y×Z) (hf : CDifferentiableAt K f x) :
     cderiv K (fun x => (f x).2) x
     =
-    fun dx => (cderiv K f x dx).2 := by sorry_proof -- fun_trans
+    fun dx => (cderiv K f x dx).2 := by fun_trans
 
 @[fun_trans]
 theorem Prod.snd.arg_self.cderiv_rule
@@ -244,7 +244,7 @@ theorem HAdd.hAdd.arg_a0a1.cderiv_rule_at (x : X)
     (cderiv K fun x => f x + g x) x
     =
     fun dx =>
-      cderiv K f x dx + cderiv K g x dx := by sorry_proof --fun_trans
+      cderiv K f x dx + cderiv K g x dx := by fun_trans
 
 
 @[fun_trans]
@@ -265,7 +265,7 @@ theorem HSub.hSub.arg_a0a1.cderiv_rule_at (x : X)
     (cderiv K fun x => f x - g x) x
     =
     fun dx =>
-      cderiv K f x dx - cderiv K g x dx := by sorry_proof --fun_trans
+      cderiv K f x dx - cderiv K g x dx := by fun_trans
 
 
 @[fun_trans]
@@ -284,7 +284,7 @@ theorem HSub.hSub.arg_a0a1.cderiv_rule
 theorem Neg.neg.arg_a0.cderiv_rule' (x : X) (f : X → Y) :
     (cderiv K fun x => - f x) x
     =
-    fun dx => - cderiv K f x dx := by sorry_proof -- fun_trans
+    fun dx => - cderiv K f x dx := by sorry_proof
 
 @[fun_trans]
 theorem Neg.neg.arg_a0.cderiv_rule (f : X → Y) :
@@ -298,7 +298,7 @@ theorem Neg.neg.arg_a0.cderiv_rule (f : X → Y) :
 
 @[fun_trans]
 theorem HMul.hMul.arg_a0a1.cderiv_rule_at (x : X) (f g : X → K)
-  (hf : CDifferentiableAt K f x) (hg : CDifferentiableAt K g x) :
+    (hf : CDifferentiableAt K f x) (hg : CDifferentiableAt K g x) :
     (cderiv K fun x => f x * g x) x
     =
     let fx := f x
@@ -367,7 +367,7 @@ theorem HDiv.hDiv.arg_a0a1.cderiv_rule (f : X → K) (g : X → K)
       let k' := g x
       fun dx =>
         ((cderiv K f x dx) * k' - k * (cderiv K g x dx)) / k'^2 := by
-  funext x; fun_trans (disch:=sorry); sorry_proof
+  funext x; fun_trans (disch:=assumption); sorry_proof
 
 
 
@@ -400,28 +400,28 @@ def HPow.hPow.arg_a0.cderiv_rule (n : Nat)
   funext x; fun_trans
 
 
--- EnumType.sum ----------------------------------------------------------------
+-- IndexType.sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-theorem SciLean.EnumType.sum.arg_f.cderiv_rule_at
+theorem IndexType.sum.arg_f.cderiv_rule_at
   (f : X → ι → Y) (x : X) (hf : ∀ i, CDifferentiableAt K (f · i) x)
   : cderiv K (fun x => ∑ i, f x i) x
     =
     fun dx => ∑ i, cderiv K (f · i) x dx :=
 by
+  fun_trans
   sorry_proof
 
 
-
 @[fun_trans]
-theorem SciLean.EnumType.sum.arg_f.cderiv_rule
+theorem IndexType.sum.arg_f.cderiv_rule
   (f : X → ι → Y) (hf : ∀ i, CDifferentiable K (f · i))
   : cderiv K (fun x => ∑ i, f x i)
     =
     fun x dx => ∑ i, cderiv K (f · i) x dx :=
 by
-  funext x; apply SciLean.EnumType.sum.arg_f.cderiv_rule_at f x (fun i => hf i x)
+  funext x; fun_trans
 
 
 -- d/ite -----------------------------------------------------------------------

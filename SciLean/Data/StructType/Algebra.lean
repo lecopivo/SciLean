@@ -60,13 +60,15 @@ instance [∀ i, Sub (EI i)] [∀ j, Sub (FJ j)] (i : I ⊕ J) : Sub (Sum.rec EI
   | .inr _ => by infer_instance
 
 @[reducible]
-instance [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)] (i : I ⊕ J) : TopologicalSpace (Sum.rec EI FJ i) :=
+instance [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)] (i : I ⊕ J) :
+    TopologicalSpace (Sum.rec EI FJ i) :=
   match i with
   | .inl _ => by infer_instance
   | .inr _ => by infer_instance
 
 @[reducible]
-instance [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] (i : I ⊕ J) : Vec K (Sum.rec EI FJ i) := Vec.mkSorryProofs
+instance [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] (i : I ⊕ J) : Vec K (Sum.rec EI FJ i) :=
+  Vec.mkSorryProofs
 -- all the proofs should be solvable `by induction i <;> infer_instance`
 
 @[reducible]
@@ -76,7 +78,8 @@ instance [∀ i, Inner K (EI i)] [∀ j, Inner K (FJ j)] (i : I ⊕ J) : Inner K
   | .inr _ => by infer_instance
 
 @[reducible]
-instance [∀ i, TestFunctions (EI i)] [∀ j, TestFunctions (FJ j)] (i : I ⊕ J) : TestFunctions (Sum.rec EI FJ i) :=
+instance [∀ i, TestFunctions (EI i)] [∀ j, TestFunctions (FJ j)] (i : I ⊕ J) :
+    TestFunctions (Sum.rec EI FJ i) :=
   match i with
   | .inl _ => by infer_instance
   | .inr _ => by infer_instance
@@ -90,8 +93,8 @@ instance [∀ i, SemiHilbert K (EI i)] [∀ j, SemiHilbert K (FJ j)] (i : I ⊕ 
   : SemiHilbert K (Sum.rec EI FJ i) where
   test_functions_true := by induction i <;> apply SemiHilbert.test_functions_true
 
--- instance [∀ i, FinVec ι K (EI i)] [∀ j, FinVec ι K (FJ j)] (i : I ⊕ J)
---   : FinVec ι K (Sum.rec EI FJ i) :=
+-- instance [∀ i, FinVec ι K (EI i)] [∀ j, FinVec ι K (FJ j)] (i : I ⊕ J) :
+--     FinVec ι K (Sum.rec EI FJ i) :=
 --   match i with
 --   | .inl _ => by infer_instance
 --   | .inr _ => by infer_instance
@@ -197,7 +200,7 @@ namespace StructType
 -- structProj ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem structProj.arg_x.IsLinearMap_rule_simple (i : I)
   : IsLinearMap K fun (x : X) => structProj x i := sorry_proof
 
@@ -209,21 +212,21 @@ attribute [simp, ftrans_simp]
   structProj.arg_x.neg_pull
   structProj.arg_x.smul_pull
 
-@[fprop]
+@[fun_prop]
 theorem structProj.arg_x.IsLinearMap_rule
   (x : W → X) (i : I) (hx : IsLinearMap K x)
   : IsLinearMap K fun w => structProj (x w) i := sorry_proof
 
-@[fprop]
-theorem structProj.arg_x.IsDifferentiable_rule
-  (x : W → X) (i : I) (hx : IsDifferentiable K x)
-  : IsDifferentiable K fun w => structProj (x w) i := sorry_proof
+@[fun_prop]
+theorem structProj.arg_x.CDifferentiable_rule
+  (x : W → X) (i : I) (hx : CDifferentiable K x)
+  : CDifferentiable K fun w => structProj (x w) i := sorry_proof
 
 
 -- structMake ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem structMake.arg_f.IsLinearMap_rule_simple
   : IsLinearMap K fun (f : (i : I) → XI i) => structMake (X:=X) f := sorry_proof
 
@@ -235,15 +238,15 @@ attribute [simp, ftrans_simp]
   structMake.arg_f.neg_push
   structMake.arg_f.smul_push
 
-@[fprop]
+@[fun_prop]
 theorem structMake.arg_f.IsLinearMap_rule
   (f : W →  (i : I) → XI i) (hf : IsLinearMap K f)
   : IsLinearMap K fun w => structMake (X:=X) (f w) := sorry_proof
 
-@[fprop]
-theorem structMake.arg_f.IsDifferentiable_rule
-  (f : W →  (i : I) → XI i) (hf : IsDifferentiable K f)
-  : IsDifferentiable K fun w => structMake (X:=X) (f w) := sorry_proof
+@[fun_prop]
+theorem structMake.arg_f.CDifferentiable_rule
+  (f : W →  (i : I) → XI i) (hf : CDifferentiable K f)
+  : CDifferentiable K fun w => structMake (X:=X) (f w) := sorry_proof
 
 @[simp, ftrans_simp]
 theorem structMake_zero
@@ -257,23 +260,23 @@ end StructType
 -- oneHot ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem oneHot.arg_xi.IsLinearMap_rule_simple (i : I)
   : IsLinearMap K fun (xi : XI i) => oneHot (X:=X) i xi := sorry_proof
 
 #generate_linear_map_simps SciLean.oneHot.arg_xi.IsLinearMap_rule_simple
 
-@[fprop]
+@[fun_prop]
 theorem oneHot.arg_xi.IsLinearMap_rule
   (i : I) (xi : W → XI i) (hxi : IsLinearMap K xi)
-  : IsLinearMap K fun w => oneHot (X:=X) i (xi w) := sorry_proof
+  : IsLinearMap K fun w => oneHot (X:=X) i (xi w) := by fun_prop
 
-@[fprop]
-theorem oneHot.arg_xi.IsDifferentiable_rule
-  (i : I) (xi : W → XI i) (hxi : IsDifferentiable K xi)
-  : IsDifferentiable K fun w => oneHot (X:=X) i (xi w) := sorry_proof
+@[fun_prop]
+theorem oneHot.arg_xi.CDifferentiable_rule
+  (i : I) (xi : W → XI i) (hxi : CDifferentiable K xi)
+  : CDifferentiable K fun w => oneHot (X:=X) i (xi w) := sorry_proof
 
-@[simp]
+@[simp, ftrans_simp]
 theorem add_oneHot_eq_structModify (i : I) (xi : XI i) (x : X)
   : x + oneHot (X:=X) i xi = structModify i (fun xi' => xi' + xi) x :=
 by
@@ -284,7 +287,7 @@ by
   else
     simp[h]
 
-@[simp]
+@[simp, ftrans_simp]
 theorem add_oneHot_eq_structModify' (i : I) (xi : XI i) (x : X)
   : oneHot (X:=X) i xi + x = structModify i (fun xi' => xi + xi') x :=
 by
@@ -298,16 +301,21 @@ end VecStruct
 --------------------------------------------------------------------------------
 
 open StructType in
-class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [IsROrC K] [IndexType I] [LawfulIndexType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)] extends VecStruct K X I XI : Prop where
-  inner_structProj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪structProj x i, structProj x' i⟫[K]
-  testFun_structProj : ∀ (x : X), TestFunction x ↔ (∀ i : I, TestFunction (structProj x i))
+class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [IsROrC K] [IndexType I]
+  [LawfulIndexType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)]
+  extends
+    VecStruct K X I XI : Prop
+  where
+    inner_structProj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪structProj x i, structProj x' i⟫[K]
+    testFun_structProj : ∀ (x : X), TestFunction x ↔ (∀ i : I, TestFunction (structProj x i))
 
 
 --------------------------------------------------------------------------------
 -- SemiInnerProductSpaceStruct instances ---------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) {X} [SemiInnerProductSpace K X] : SemiInnerProductSpaceStruct K X Unit (fun _ => X) where
+instance (priority:=low) {X} [SemiInnerProductSpace K X] :
+    SemiInnerProductSpaceStruct K X Unit (fun _ => X) where
   inner_structProj := sorry_proof
   testFun_structProj := sorry_proof
 
@@ -316,19 +324,23 @@ instance
   [SemiInnerProductSpace K E] [SemiInnerProductSpace K F]
   [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)]
   [IndexType I] [LawfulIndexType I] [IndexType J] [LawfulIndexType J]
-  [SemiInnerProductSpaceStruct K E I EI] [SemiInnerProductSpaceStruct K F J FJ]
-  : SemiInnerProductSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
+  [SemiInnerProductSpaceStruct K E I EI] [SemiInnerProductSpaceStruct K F J FJ] :
+  SemiInnerProductSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
   -- inner_structProj := sorry_proof
   -- testFun_structProj := sorry_proof
 
 
 @[simp, ftrans_simp]
-theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
-  : ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
+theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I] [LawfulIndexType I]
+    [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
+    [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
+    ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
 
 @[simp, ftrans_simp]
-theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I] [LawfulIndexType I] [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X] [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X)
-  : ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
+theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I] [LawfulIndexType I]
+    [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
+    [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
+    ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
 
 
 

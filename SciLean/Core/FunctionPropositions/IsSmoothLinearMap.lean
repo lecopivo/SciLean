@@ -3,6 +3,7 @@ import SciLean.Core.FunctionPropositions.CDifferentiable
 
 set_option linter.unusedVariables false
 
+open LeanColls
 namespace SciLean
 
 variable
@@ -10,7 +11,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 @[fun_prop]
@@ -73,7 +74,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [EnumType ι]
+  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -175,6 +176,16 @@ theorem HSMul.hSMul.arg_a1.IsSmoothLinearMap_rule_nat
 theorem HSMul.hSMul.arg_a1.IsSmoothLinearMap_rule_int
     (c : ℤ) (f : X → Y) (hf : IsSmoothLinearMap K f) : IsSmoothLinearMap K fun x => c • f x := by
   constructor <;> fun_prop
+
+
+-- IndexType.sum ----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_prop]
+theorem IndexType.sum.arg_f.IsSmoothLinearMap_rule
+    (f : X → ι → Y) (hf : ∀ i, IsSmoothLinearMap K (f · i)) :
+    IsSmoothLinearMap K fun x => ∑ i, f x i := by constructor <;> fun_prop
+
 
 
 -- d/ite -----------------------------------------------------------------------

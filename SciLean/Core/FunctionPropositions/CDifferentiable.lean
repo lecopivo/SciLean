@@ -334,8 +334,8 @@ def HPow.hPow.arg_a0.CDifferentiableAt_rule
 
 
 
--- EnumType.sum ----------------------------------------------------------------
---------------------------------------------------------------------------------
+-- IndexType.sum ----------------------------------------------------------------
+---------------------------------------------------------------------------------
 
 
 @[fun_prop]
@@ -348,7 +348,7 @@ by
 
 @[fun_prop]
 theorem IndexType.sum.arg_f.CDifferentiable_rule
-  (f : X → ι → Y) (x : X) (hf : ∀ i, CDifferentiable K (fun x => f x i))
+  (f : X → ι → Y) (hf : ∀ i, CDifferentiable K (fun x => f x i))
   : CDifferentiable K (fun x => ∑ i, f x i) :=
 by
   sorry_proof

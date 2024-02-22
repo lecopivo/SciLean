@@ -184,7 +184,9 @@ instance instStrucTypeProd
   left_inv := by intro x; funext i; induction i <;> simp[LeftInverse]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
-  structProj_structModify' := by intro i j f x h; induction j <;> induction i <;> (simp at h; simp (disch:=assumption))
+  structProj_structModify' := by
+    intro i j f x h
+    induction j <;> induction i <;> (simp at h; simp (disch:=assumption))
 
 -- @[simp, ftrans_simp]
 -- theorem structMake_sum_match [StructType E I EI] [StructType F J FJ] (f : (i : I) → EI i) (g : (j : J) → FJ j)

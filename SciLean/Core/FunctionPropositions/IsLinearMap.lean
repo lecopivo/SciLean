@@ -9,7 +9,7 @@ import SciLean.Tactic.FProp.Notation
 set_option linter.unusedVariables false
 
 --------------------------------------------------------------------------------
-
+open LeanColls
 namespace IsLinearMap
 
 attribute [fun_prop] IsLinearMap
@@ -78,6 +78,7 @@ variable {R X Y Z ι : Type _} {E : ι → Type _}
   [AddCommGroup X] [Module R X]
   [AddCommGroup Y] [Module R Y]
   [AddCommGroup Z] [Module R Z]
+  [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   [∀ i, AddCommGroup (E i)] [∀ i, Module R (E i)]
 
 theorem by_linear_map {f : X → Y} (g : X →ₗ[R] Y) (h : ∀ x, f x = g x) :
@@ -160,6 +161,15 @@ theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_nat
 theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_int
     (c : ℤ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x :=
   sorry_proof
+
+-- IndexType.sum ----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_prop]
+theorem IndexType.sum.arg_f.IsLinearMap_rule
+  (f : X → ι → Y) (hf : ∀ i, IsLinearMap R (f · i))
+  : IsLinearMap R fun x => ∑ i, f x i := by sorry_proof
+
 
 -- d/ite -----------------------------------------------------------------------
 --------------------------------------------------------------------------------
