@@ -1,7 +1,11 @@
-import SciLean.Core.FinVec
-import SciLean.Core.Tactic.FunctionTransformation.Init
+import SciLean.Core.Objects.FinVec
+
+import Mathlib.Tactic.FunTrans.Attr
+import Mathlib.Tactic.FunTrans.Elab
 
 namespace SciLean
+
+#exit -- very old file that needs to be completely redone
 
 variable {X Y Z : Type _} [Vec X] [Vec Y] [Vec Z]
 
