@@ -1,11 +1,12 @@
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.Analysis.InnerProductSpace.PiL2
-
 import SciLean.Mathlib.Analysis.InnerProductSpace.Prod
-import SciLean.Tactic.FTrans.Basic
+
 import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 
 import SciLean.Notation
+
+#exit -- right now `adjoint` can't work with `fun_trans` as it transforms bundles morphism
 
 set_option linter.unusedVariables false
 
@@ -119,114 +120,6 @@ theorem pi_rule
     (fun x' =>L[K] ∑ i, (fun x =>L[K] f x i)† (x' i))
   := sorry_proof
 
-
-
--- Register `adjoint` as function transformation -------------------------------
---------------------------------------------------------------------------------
-
-open Lean Meta Qq
-
-def discharger (e : Expr) : SimpM (Option Expr) := do
-  withTraceNode `fwdDeriv_discharger (fun _ => return s!"discharge {← ppExpr e}") do
-  let cache := (← get).cache
-  let config : FProp.Config := {}
-  let state  : FProp.State := { cache := cache }
-  let (proof?, state) ← FProp.fprop e |>.run config |>.run state
-  modify (fun simpState => { simpState with cache := state.cache })
-  if proof?.isSome then
-    return proof?
-  else
-    -- if `fprop` fails try assumption
-    let tac := FTrans.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption")
-    let proof? ← tac e
-    return proof?
-
-open Lean Elab Term FTrans
-def ftransExt : FTransExt where
-  ftransName := ``adjoint
-
-  getFTransFun? e := Id.run do
-    let (name, args) := e.getAppFnArgs
-    if name == ``FunLike.coe && args.size = 6 then
-
-      if ¬(args[4]!.isAppOf ``adjoint) then
-        return none
-
-      let f := args[5]!
-      if f.isAppOf ``ContinuousLinearMap.mk' then
-        if let .some f' := f.getArg? 10 then
-          return f'
-        else
-          return f
-      else
-        return f
-
-    return none
-
-  replaceFTransFun e f := Id.run do
-    let (name, args) := e.getAppFnArgs
-    if name == ``FunLike.coe && args.size = 6 then
-
-      if ¬(args[4]!.isAppOf ``adjoint) then
-        return e
-
-      return e.setArg 5 f
-    else
-      return e
-
-  prodMk := ``ProdL2.mk
-  prodFst := ``ProdL2.fst
-  prodSnd := ``ProdL2.snd
-
-  idRule  e X := do
-    let K := (e.getArg! 1).getArg! 0
-    tryTheorems
-      #[ { proof := ← mkAppM ``id_rule #[K, X], origin := .decl ``id_rule, rfl := false} ]
-      discharger e
-
-  constRule e X y := do
-    let K := (e.getArg! 1).getArg! 0
-    tryTheorems
-      #[ { proof := ← mkAppM ``const_rule #[K, X, (← inferType y)], origin := .decl ``const_rule, rfl := false} ]
-      discharger e
-
-  projRule e X i := do
-    let K := (e.getArg! 1).getArg! 0
-    let X' := X.bindingBody!
-    if X'.hasLooseBVars then
-      trace[Meta.Tactic.ftrans.step] "can't handle this bvar app case, projection rule for dependent function of type {← ppExpr X} is not supported"
-      return none
-    tryTheorems
-      #[ { proof := ← mkAppM ``proj_rule #[K, X', i], origin := .decl ``proj_rule, rfl := false} ]
-      discharger e
-
-  compRule e f g := do
-    let K := (e.getArg! 1).getArg! 0
-    tryTheorems
-      #[ { proof := ← withTransparency .all <|
-             mkAppM ``comp_rule #[K, f, g], origin := .decl ``comp_rule, rfl := false} ]
-      discharger e
-
-  letRule e f g := do
-    let K := (e.getArg! 1).getArg! 0
-    tryTheorems
-      #[ { proof := ← mkAppM ``let_rule #[K, f, g], origin := .decl ``let_rule, rfl := false} ]
-      discharger e
-
-  piRule  e f := do
-    let K := (e.getArg! 1).getArg! 0
-    tryTheorems
-      #[ { proof := ← mkAppM ``pi_rule #[K, f], origin := .decl ``pi_rule, rfl := false} ]
-      discharger e
-
-  discharger := discharger
-
-
--- register adjoint
-#eval show Lean.CoreM Unit from do
-  modifyEnv (λ env => FTrans.ftransExt.addEntry env (``adjoint, adjoint.ftransExt))
-
-end ContinuousLinearMap.adjoint
 
 
 --------------------------------------------------------------------------------
