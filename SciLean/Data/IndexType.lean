@@ -14,7 +14,7 @@ instance : LawfulIndexType Unit where
 
 namespace SciLean
 -- use lean colls
-export LeanColls (IndexType IndexType.card IndexType.univ IndexType.toFin IndexType.fromFin)
+export LeanColls (IndexType IndexType.card IndexType.univ IndexType.toFin IndexType.fromFin LawfulIndexType)
 end SciLean
 
 namespace IndexType
