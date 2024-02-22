@@ -1,5 +1,6 @@
 import SciLean.Core.Objects.SemiInnerProductSpace
 import SciLean.Core.FunctionPropositions.IsLinearMap
+import SciLean.Core.FunctionPropositions.CDifferentiable
 import SciLean.Core.Simp
 import SciLean.Core.Meta.GenerateLinearMapSimp
 

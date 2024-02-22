@@ -6,6 +6,8 @@ import SciLean.Core.Objects.FinVec
 import SciLean.Tactic.FProp.Basic
 import SciLean.Tactic.FProp.Notation
 
+import SciLean.Core.Meta.GenerateLinearMapSimp
+
 set_option linter.unusedVariables false
 
 --------------------------------------------------------------------------------
@@ -70,7 +72,8 @@ theorem LinearMap_coe.apply_left (f : Y →ₗ[R] Z) (g : X → Y) (hg : IsLinea
 
 end CommSemiring
 
-
+end IsLinearMap
+open IsLinearMap
 
 section Semiring
 variable {R X Y Z ι : Type _} {E : ι → Type _}
@@ -103,6 +106,11 @@ theorem Prod.fst.arg_self.IsLinearMap_rule
     (f : X → Y×Z) (hf : IsLinearMap R f) : IsLinearMap R fun (x : X) => (f x).fst :=
   by_linear_map ((LinearMap.fst _ _ _).comp (mk' _ hf)) (by simp)
 
+theorem Prod.fst.arg_self.IsLinearMap_rule_simple :
+    IsLinearMap R fun (xy : X×Y) => xy.1 := by fun_prop
+
+-- #generate_linear_map_simps Prod.fst.arg_self.IsLinearMap_rule_simple
+
 
 -- Prod.snd --------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -111,6 +119,20 @@ theorem Prod.fst.arg_self.IsLinearMap_rule
 theorem Prod.snd.arg_self.IsLinearMap_rule
     (f : X → Y×Z) (hf : IsLinearMap R f) : IsLinearMap R fun (x : X) => (f x).snd :=
   by_linear_map ((LinearMap.snd _ _ _).comp (mk' _ hf)) (by simp)
+
+
+theorem Prod.snd.arg_self.IsLinearMap_rule_simple :
+    IsLinearMap R fun (xy : X×Y) => xy.2 := by fun_prop
+
+-- #generate_linear_map_simps Prod.snd.arg_self.IsLinearMap_rule_simple
+
+--------------------------------------------------------------------------------
+
+
+theorem Prod.mk.arg_fstsnd.IsLinearMap_rule_simple
+  : IsLinearMap R fun xy : X×Y => (xy.1, xy.2) := by fun_prop
+
+-- #generate_linear_map_simps Prod.mk.arg_fstsnd.IsLinearMap_rule_simple
 
 
 -- Neg.neg ---------------------------------------------------------------------
@@ -173,6 +195,7 @@ theorem IndexType.sum.arg_f.IsLinearMap_rule
 
 -- d/ite -----------------------------------------------------------------------
 --------------------------------------------------------------------------------
+
 
 @[fun_prop]
 theorem ite.arg_te.IsLinearMap_rule
@@ -241,7 +264,7 @@ theorem HMul.hMul.arg_a1.IsLinearMap_rule
 
 
 end CommSemiring
-end IsLinearMap
+
 
 open LeanColls
 namespace SciLean
@@ -257,17 +280,25 @@ variable
 theorem Basis.proj.arg_x.IsLinearMap_rule (i : IX) :
     IsLinearMap K (fun x : X => ℼ i x) := by sorry_proof
 
+#generate_linear_map_simps SciLean.Basis.proj.arg_x.IsLinearMap_rule
+
 @[fun_prop]
 theorem DualBasis.dualProj.arg_x.IsLinearMap_rule (i : IX) :
     IsLinearMap K (fun x : X => ℼ' i x) := by sorry_proof
+
+#generate_linear_map_simps SciLean.DualBasis.dualProj.arg_x.IsLinearMap_rule
 
 @[fun_prop]
 theorem BasisDuality.toDual.arg_x.IsLinearMap_rule :
     IsLinearMap K (fun x : X => BasisDuality.toDual x) := by sorry_proof
 
+#generate_linear_map_simps SciLean.BasisDuality.toDual.arg_x.IsLinearMap_rule
+
 @[fun_prop]
 theorem BasisDuality.fromDual.arg_x.IsLinearMap_rule :
     IsLinearMap K (fun x : X => BasisDuality.fromDual x) := by sorry_proof
+
+#generate_linear_map_simps SciLean.BasisDuality.fromDual.arg_x.IsLinearMap_rule
 
 end OnFinVec
 end SciLean

@@ -1,9 +1,12 @@
-import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
+-- import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
+import SciLean.Core.Objects.Vec
+import SciLean.Data.IndexType
 import SciLean.Core.Simp
 
 -- import SciLean.Tactic.FTrans.Init
 import SciLean.Tactic.AnalyzeConstLambda
 
+open LeanColls
 namespace SciLean
 
 

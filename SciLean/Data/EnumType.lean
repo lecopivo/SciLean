@@ -11,8 +11,6 @@ import LeanColls
 namespace SciLean
 open LeanColls
 
--- use lean colls
-export LeanColls (IndexType IndexType.card IndexType.univ IndexType.toFin IndexType.fromFin)
 
 
 -- -- range given by the first and the last element(inclusive!)
