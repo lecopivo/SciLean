@@ -4,13 +4,6 @@ open LeanColls
 
 namespace SciLean
 
-noncomputable
-def fwdCDeriv
-  (K : Type _) [IsROrC K]
-  {X : Type _} [Vec K X]
-  {Y : Type _} [Vec K Y]
-  (f : X → Y) (x dx : X) : Y×Y :=
-  (f x, cderiv K f x dx)
 
 
 namespace fwdCDeriv
@@ -23,9 +16,12 @@ variable
   {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
-
-theorem fwdCDeriv_of_linear (f : X → Y) (hf : IsSmoothLinearMap K f)
-  : fwdCDeriv K f = fun x dx => (f x, f dx) := by unfold fwdCDeriv; simp [cderiv_of_linear _ hf]
+variable (K)
+noncomputable
+def fwdDeriv
+  (f : X → Y) (x dx : X) : Y×Y :=
+  (f x, cderiv K f x dx)
+variable {K}
 
 
 -- Basic lambda calculus rules -------------------------------------------------
