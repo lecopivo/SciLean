@@ -7,7 +7,7 @@ import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.MeasureTheory.Integral.Bochner
 
-import SciLean.Core
+-- import SciLean.Core
 import SciLean.Core.FunctionPropositions.Differentiable
 
 open MeasureTheory ENNReal

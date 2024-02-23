@@ -2,7 +2,7 @@ import Mathlib.Analysis.Calculus.FDeriv.Basic
 import Mathlib.Analysis.Calculus.FDeriv.Comp
 import Mathlib.Analysis.Calculus.Deriv.Basic
 
-import SciLean.Core
+import SciLean.Core.FunctionTransformations
 import SciLean.Modules.Prob.DRand
 
 namespace SciLean.Prob

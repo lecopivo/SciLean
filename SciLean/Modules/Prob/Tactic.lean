@@ -6,7 +6,6 @@ import SciLean.Modules.Prob.RandFwdDeriv
 import SciLean.Modules.Prob.PushPullE
 import SciLean.Modules.Prob.ADTheorems
 
-import SciLean.Core
 
 namespace SciLean.Prob
 
@@ -62,12 +61,36 @@ elab " derive_mean_fwdDeriv " R:term " : " f:term " by " t:convSeq : term => do
     mkLambdaFVars xs f'
 
 
+open Lean Meta Elab.Term Parser.Tactic.Conv in
+elab " derive_random_approx " R:term " : " e:term " by " t:convSeq : term => do
+  --
+  let e ← elabTerm (← `(term| $e rewrite_by $t)).raw none
+
+  unless (e.isAppOfArity ``Rand.mean 5) do
+    throwError "deriving probabilistic derivative should end with a term of the form `Rand.mean _`"
+
+  let e'' := e.getArg! 4
+
+  return e''
+
+
 /-- this function is for testing purposes and should be moved somewhere else -/
 def print_mean_variance {R} [RealScalar R] [ToString R] (r : Rand (R×R)) (n : ℕ) (msg : String) : IO Unit := do
   let mut xs : Array (R×R) := #[]
   for _ in [0:n] do
     xs := xs.push (← r.get)
 
-  let mean := ((1:R)/n) • xs.foldl (init:=0) (fun s x => s + x)
+  let mean := ((1:R)/n) • xs.foldl (init:=(0:R×R)) (fun s x => s + x)
   let var := ((1:R)/(n-1)) •  xs.foldl (init:=(0:R×R)) (fun s x => s + ((x.1 - mean.1)^2, (x.2-mean.2)^2))
+  IO.println s!"Estimates value{msg}: {mean} ± {var}"
+
+
+
+def print_mean_variance1 {R} [RealScalar R] [ToString R] (r : Rand R) (n : ℕ) (msg : String) : IO Unit := do
+  let mut xs : Array R := #[]
+  for _ in [0:n] do
+    xs := xs.push (← r.get)
+
+  let mean := ((1:R)/n) • xs.foldl (init:=(0:R)) (fun s x => s + x)
+  let var := Scalar.sqrt (((1:R)/(n-1)) •  xs.foldl (init:=(0:R)) (fun s x => s + (x - mean)^2))
   IO.println s!"Estimates value{msg}: {mean} ± {var}"
