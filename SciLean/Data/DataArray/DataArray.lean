@@ -118,7 +118,7 @@ def DataArray.intro (f : ι → α) : DataArray α := Id.run do
     d' := d'.set ⟨(IndexType.toFin i).1,sorry_proof⟩ (f i)
   d'
 
-structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [IndexType ι] where
+structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [IndexType.{0,0} ι] where
   data : DataArray α
   h_size : IndexType.card ι = data.size
 
