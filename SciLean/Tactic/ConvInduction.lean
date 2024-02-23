@@ -62,8 +62,6 @@ syntax (name:=conv_induction_list) "induction_list" ident (ident)? (ident)? (ide
 
     let list := Expr.fvar decl.fvarId
     let lhsFun ← mkLambdaFVars #[list] lhs
-    IO.println (← ppExpr (← inferType list))
-    IO.println ((← instantiateMVars (← inferType list)).isAppOf ``List)
     let .some type := (← instantiateMVars (← inferType list)).app1? ``List
       | throwError "{← ppExpr list} is not a list"
 
@@ -74,34 +72,29 @@ syntax (name:=conv_induction_list) "induction_list" ident (ident)? (ident)? (ide
     let prev := prev.map (fun x => x.getId) |>.getD (Name.appendAfter `prev "✝")
     let eq := eq.map     (fun x => x.getId) |>.getD (Name.appendAfter `eq "✝")
 
-    IO.println "hihi"
-
     let (lhs',prf) ←
       withLocalDeclD head type fun head => do
-      withLocalDeclD tail (← inferType lhs) fun tail => do
+      withLocalDeclD tail (← inferType list) fun tail => do
       withLocalDeclD prev (← inferType lhs) fun prev => do
       let eqLhs := lhsFun.beta #[tail]
       withLocalDeclD eq (← mkEq eqLhs prev) fun eq => do
 
         let (xSucc, eqSucc) ← convert (lhsFun.beta #[(← mkAppM ``List.cons #[head,tail])]) (Tactic.evalTactic succConv)
 
-        IO.println "hi 2"
         let motive := Expr.lam default (← inferType list) (← inferType lhs) default
         let base := x₀
         let succ ← mkLambdaFVars #[head,tail,prev] xSucc
         let recDef ← mkLambdaFVars #[list] (← mkAppOptM ``List.recOn #[none,motive, list, base, succ])
-        IO.println s!"recDef: {← ppExpr recDef}"
-        return (0,1)
 
-        -- let motive ← mkLambdaFVars #[head] ((← inferType eq).replaceFVar head (recDef.beta #[tail]))
-        -- withLocalDeclD `eq (motive.beta #[head]) fun eq' => do
-        -- let base := eq₀
-        -- let succ ← mkLambdaFVars #[tail,eq'] (eqSucc.replaceFVars #[tail,eq] #[recDef.beta #[head], eq'])
-        -- let recProof ← mkAppOptM ``List.recOn #[motive,list,base,succ]
-        -- IO.println "hi 4"
-        -- return (recDef.beta #[list],recProof)
+        let motive ← mkLambdaFVars #[list] ((← inferType eq).replaceFVars #[prev,tail] #[recDef.beta #[list], list])
+        withLocalDeclD `eq (motive.beta #[tail]) fun eq' => do
+        let base := eq₀
+        let succ ← mkLambdaFVars #[head,tail,eq'] (eqSucc.replaceFVars #[prev,eq] #[recDef.beta #[tail], eq'])
+        let recProof ← mkAppOptM ``List.recOn #[type,motive,list,base,succ]
 
-    -- updateLhs lhs' prf
+        return (recDef.beta #[list],recProof)
+
+    updateLhs lhs' prf
 
 | _ => throwUnsupportedSyntax
 
@@ -113,8 +106,19 @@ syntax (name:=conv_induction_list) "induction_list" ident (ident)? (ident)? (ide
 --     induction n n' xₙ eq
 --       . simp
 --       . rw[thm1,eq]
-#check List.map (α:=Nat) (β:=Nat) id rewrite_by
-  enter [l]
-  induction_list l head tail prev eq
-    . simp[List.map]
-    . simp[List.map,eq]
+-- #check List.map (α:=Nat) (β:=Nat) id rewrite_by
+--   enter [l]
+--   induction_list l head tail prev eq
+--     . simp[List.map]
+--     . simp[List.map,eq]
+
+-- def _root_.List.reduce (f : α → β → β)  (l : List α) (init : β) : β :=
+--   match l with
+--   | [] => init
+--   | x :: xs =>  f x (reduce f xs init)
+
+-- #check (fun l => 2 * List.reduce (init:=0) (·+·) l) rewrite_by
+--   enter [l]
+--   induction_list l head tail prev eq
+--     . simp[List.reduce]
+--     . simp[List.reduce]; rw[Nat.mul_add,eq]
