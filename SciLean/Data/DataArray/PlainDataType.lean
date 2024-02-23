@@ -288,6 +288,20 @@ instance instPlainDataTypeMProd [ta : PlainDataType α] [tb : PlainDataType β] 
     | .inr aByteType, .inr bByteType => .inr <| MProd.byteTypeMProd aByteType bByteType
 
 
+--------------- Bool n ------------------------------------------------
+-----------------------------------------------------------------------
+
+def Bool.bitType : BitType Bool where
+  bits := 1
+  h_size := by aesop
+  fromByte b := if (b &&& 1) == 1 then true else false
+  toByte b := if b == true then 1 else 0
+  fromByte_toByte := sorry_proof
+
+instance : PlainDataType Bool where
+  btype := .inl Bool.bitType
+
+
 --------------- Idx n ------------------------------------------------
 ----------------------------------------------------------------------
 
