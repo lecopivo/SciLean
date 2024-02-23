@@ -62,7 +62,7 @@ elab " derive_mean_fwdDeriv " R:term " : " f:term " by " t:convSeq : term => do
 
 
 open Lean Meta Elab.Term Parser.Tactic.Conv in
-elab " derive_random_approx " R:term " : " e:term " by " t:convSeq : term => do
+elab " derive_random_approx " e:term " by " t:convSeq : term => do
   --
   let e ← elabTerm (← `(term| $e rewrite_by $t)).raw none
 
