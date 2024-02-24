@@ -12,9 +12,7 @@ import Mathlib.MeasureTheory.Measure.GiryMonad
 
 open MeasureTheory ENNReal BigOperators Finset
 
-namespace SciLean.Prob
-
-
+namespace SciLean
 
 abbrev erase (a : α) : Erased α := .mk a
 
@@ -41,14 +39,14 @@ structure Rand (X : Type _)  where
 
 /-- Probability measure of a random variable -/
 noncomputable
-def Rand.ℙ {X} [TopologicalSpace X] (x : Rand X) := x.spec.out.measure
+def Rand.ℙ {X} [MeasurableSpace X] (x : Rand X) := x.spec.out.measure
 
 /-- Specification of `x : Rand X` is really saying that it is a probability measure. -/
-class LawfulRand (x : Rand X) [TopologicalSpace X] where
+class LawfulRand (x : Rand X) [MeasurableSpace X] where
   is_measure : x.spec.out.IsMeasure
   is_prob : IsProbabilityMeasure x.ℙ
 
-variable {X} [TopologicalSpace X]
+variable {X} [MeasurableSpace X]
 
 instance (x : Rand X) [inst : LawfulRand x] : IsProbabilityMeasure (x.ℙ) := inst.is_prob
 
@@ -101,6 +99,14 @@ instance : LawfulMonad Rand where
   pure_seq       := by intros; ext; simp[Bind.bind,Pure.pure,Seq.seq,Functor.map]
 
 
+-- this needs some integrability and lawfulness of Rand
+theorem Rand.swap_bind (f : X → Y → Z) (x : Rand X) (y : Rand Y) :
+    (do let x' ← x; let y' ← y; pure (f x' y'))
+    =
+    (do let y' ← y; let x' ← x; pure (f x' y')) := by
+  sorry_proof
+
+
 ----------------------------------------------------------------------------------------------------
 -- Arithmetics -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -131,10 +137,9 @@ section ExpectedValue
 
 variable
   {R} [RealScalar R]
-  [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X]
+  [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X] [MeasurableSpace X]
   [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
   [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
-
 
 
 noncomputable
@@ -179,6 +184,12 @@ theorem expectedValue_as_mean (x : Rand X) (φ : X → Y) :
     x.E φ = (x >>=(fun x' => pure (φ x'))).mean := by
   simp [bind,mean,pure,E]
 
+@[simp]
+theorem pure_mean (x : X) : (pure (f:=Rand) x).mean = x := by simp[mean]
+
+@[rand_push_E]
+theorem bind_mean (x : Rand X) (f : X → Rand Y) :
+    (x >>= f).mean = x.E (fun x' => (f x').mean) := by simp[mean,rand_push_E]
 
 -- Again we might add this as a definit property of `Rand`
 --  (It would not work for `Distribution` as integrating constant function yields that constant
@@ -199,8 +210,8 @@ end ExpectedValue
 
 variable
   (R) [RealScalar R]
-  [TopologicalSpace X] -- [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X]
-  [TopologicalSpace Y] -- [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  [MeasurableSpace X] -- [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X]
+  [MeasurableSpace Y] -- [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
   -- [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 
@@ -214,12 +225,12 @@ variable
 
 /-- Probability density function of `x` w.r.t. the measure `ν`. -/
 noncomputable
-def pdf {X} [TopologicalSpace X] (x : Rand X) (ν : @Measure X (borel _)) : X → R :=
+def pdf (x : Rand X) (ν : Measure X) : X → R :=
   fun x' => Scalar.ofReal R (Measure.rnDeriv x.ℙ ν x').toReal
 
 variable {R}
 -- noncomputable
--- abbrev rpdf (x : Rand X) (ν : @Measure X (borel _)) : X → ℝ :=
+-- abbrev rpdf (x : Rand X) (ν : Measure X) : X → ℝ :=
 --   fun x' => x.pdf (lebesgue) ℝ ν x'
 
 @[rand_simp,simp]
@@ -230,18 +241,18 @@ theorem pdf_wrt_self (x : Rand X) [LawfulRand x] : x.pdf R x.ℙ = 1 := sorry
 --   funext x; unfold rpdf; rw[pdf_wrt_self]
 
 -- @[rand_simp,simp]
--- theorem bind_rpdf (ν : @Measure Y (borel _)) (x : Rand X) (f : X → Rand Y) :
+-- theorem bind_rpdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
 --     (x.bind f).rpdf R ν = fun y => ∫ x', ((f x').rpdf ν y) ∂x.ℙ := by
 --   funext y; simp[Rand.pdf,Rand.bind,Rand.pure]; sorry
 
 @[rand_simp,simp]
-theorem bind_pdf (ν : @Measure Y (borel _)) (x : Rand X) (f : X → Rand Y) :
+theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
     (x >>= f).pdf R ν = fun y => ∫ x', ((f x').pdf R ν y) ∂x.ℙ := by
   funext y; simp[Rand.pdf,Bind.bind,Pure.pure]; sorry
 
 -- open Classical in
 -- @[rand_simp,simp]
--- theorem pdf_wrt_add (x : Rand X) (μ ν : @Measure X (borel _)) :
+-- theorem pdf_wrt_add (x : Rand X) (μ ν : Measure X) :
 --     x.pdf R (μ + ν)
 --     =
 --     fun x' =>
@@ -282,57 +293,10 @@ open Lean Parser
 
 
 @[rand_simp]
-theorem combine_pdf (x y : Rand X) (μ : @Measure X (borel _)) (θ : R) :
+theorem combine_pdf (x y : Rand X) (μ : Measure X) (θ : R) :
     (x +[θ] y).pdf R μ
     =
     fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry
 
 
-
 ----------------------------------------------------------------------------------------------------
-#exit
-variable (C : ℕ → Type) [∀ n, NormedAddCommGroup (C n)] [∀ n, NormedSpace ℝ (C n)] [∀ n, CompleteSpace (C n)]
-variable (D : ℕ → Type) [∀ n, NormedAddCommGroup (D n)] [∀ n, NormedSpace ℝ (D n)] [∀ n, CompleteSpace (D n)]
-
--- under what condition is this true??? I think `f` has to be affine
-theorem push_to_E (f : X → Rand Y) (x : Rand Z) (φ : Z → X) :
-    (f (x.E φ)).E id = x.E (fun z => (f (φ z)).E id) := by
-  conv => rand_pull_E
-  simp[mean,id]
-  unfold id
-  conv => rand_push_E
-  sorry
-
--- this requires that `f` is affine
-theorem push_to_E' (f : X → Y) (x : Rand Z) (φ : Z → X) :
-    (f (x.E φ)) = x.E (fun z => f (φ z)) := sorry
-
-theorem E_induction (x₀ : C 0) (r : (n : Nat) → Rand (D n)) (f : (n : ℕ) → C n → D n → (C (n+1))) :
-    Nat.recOn (motive:=C) n x₀ (fun n x => (r n).E (f n x))
-    =
-    (Nat.recOn (motive:=fun n => Rand (C n)) n (pure x₀) (fun n x => do let x' ← x; let y ← r n; pure (f n x' y))).mean := by
-  induction n
-  case zero => simp[mean]
-  case succ n hn =>
-    simp[hn,mean]
-    conv => rand_pull_E
-    simp
-    conv =>
-      lhs
-      enter[1,2,x',1]
-      unfold mean
-      simp[push_to_E' (f:=(f n · x'))]
-
-
-
-theorem E_induction (x₀ : C 0) (f : (n : ℕ) → C n → Rand (C (n+1))) :
-    Nat.recOn (motive:=C) n x₀ (fun n x => (f n x).E id)
-    =
-    (Nat.recOn (motive:=fun n => Rand (C n)) n (pure x₀) (fun n x => do let x' ← x; f n x')).mean := by
-  induction n
-  case zero => simp[mean]
-  case succ n hn =>
-    simp[hn,mean]
-    simp[push_to_E (f:=f n)]
-    conv => rand_push_E
-    simp

@@ -138,6 +138,11 @@ theorem HSMul.hSMul.arg_a1.IsAffineMap_rule
     (c : R) (f : X → Y) (hf : IsAffineMap R f) : IsAffineMap R fun x => c • f x := sorry_proof
 
 @[fun_prop]
+theorem HSMul.hSMul.arg_a1.IsAffineMap_rule' {S} [CommRing S] [Module S X] [Module S Y] [SMul S R] [IsScalarTower S R Y]
+    (c : R) (f : X → Y) (hf : IsAffineMap R f) : IsAffineMap S fun x => c • f x := sorry_proof
+
+
+@[fun_prop]
 theorem HSMul.hSMul.arg_a1.IsAffineMap_rule_nat
     (c : ℕ) (f : X → Y) (hf : IsAffineMap R f) : IsAffineMap R fun x => c • f x := sorry_proof
 

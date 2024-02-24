@@ -101,38 +101,38 @@ def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X} (μ 
     Distribution X := ⟨fun φ => ∫ x, φ x ∂μ⟩
 
 noncomputable
-instance {X} [TopologicalSpace X] : Coe (@Measure X (borel X)) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
+instance {X} [MeasurableSpace X] : Coe (Measure X) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
 
 -- I'm a bit unsure about this definition
 -- For example under what conditions `x.IsMeasure → ∀ x', (f x').IsMeasure → (x >>= f).IsMeasure`
 -- I'm a bit affraid that with this definition this might never be true as you can always pick
 -- really nasty `φ` to screw up the integral
 -- So I think that there has to be some condition on `φ`. Likely they should be required to be test funcions
-def Distribution.IsMeasure {X} [TopologicalSpace X] (f : Distribution X) : Prop :=
-  ∃ (μ : @Measure X (borel X)), ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y),
+def Distribution.IsMeasure {X} [MeasurableSpace X] (f : Distribution X) : Prop :=
+  ∃ (μ : Measure X), ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y),
       ⟪f, φ⟫ = ∫ x, φ x ∂μ
 
 open Classical
 noncomputable
-def Distribution.measure {X} [TopologicalSpace X] (f' : Distribution X) : @Measure X (borel X) :=
+def Distribution.measure {X} [MeasurableSpace X] (f' : Distribution X) : Measure X :=
   if h : f'.IsMeasure then
     choose h
   else
     0
 
 @[simp]
-theorem apply_measure_as_distribution  {X} [TopologicalSpace X]  (μ : @Measure X (borel X)) (φ : X → Y) :
+theorem apply_measure_as_distribution  {X} [MeasurableSpace X]  (μ : Measure X) (φ : X → Y) :
      ⟪μ.toDistribution, φ⟫ = ∫ x, φ x ∂μ := by rfl
 
 
 /- under what conditions is this true??? -/
-theorem action_is_integral  {X} [TopologicalSpace X] {Y} [TopologicalSpace Y]
-    (x : @Measure X (borel X)) (f : X → @Measure Y (borel Y))
+theorem action_is_integral  {X} [MeasurableSpace X] {Y} [MeasurableSpace Y]
+    (x : Measure X) (f : X → Measure Y)
     (φ : Y → Z) (hφ : ∀ x, Integrable φ (f x)) :
     ⟪x.toDistribution >>= (fun x => (f x).toDistribution), φ⟫
     =
-    ∫ y, φ y ∂(@Measure.bind _ _ (borel _) (borel _) x f) := by
+    ∫ y, φ y ∂(@Measure.bind _ _ _ _ x f) := by
   sorry_proof
 
-theorem Distribution.density {X} [TopologicalSpace X] (x y : Distribution X) : X → ℝ≥0∞ :=
+theorem Distribution.density {X} [MeasurableSpace X] (x y : Distribution X) : X → ℝ≥0∞ :=
   x.measure.rnDeriv y.measure
