@@ -125,14 +125,16 @@ instance [Add X] : HAdd (Rand X) X (Rand X) := ⟨fun x x' => do
 -- Expected Value ----------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-variable
-  {R} [RealScalar R]
-  [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X]
-  [NormedAddCommGroup Y] [NormedSpace R X] [NormedSpace ℝ Y] [CompleteSpace Y]
-  [NormedAddCommGroup Z] [NormedSpace R X] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 
 section ExpectedValue
+
+variable
+  {R} [RealScalar R]
+  [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X]
+  [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
+
 
 
 noncomputable
@@ -194,6 +196,14 @@ end ExpectedValue
 -- Probability density function --------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+
+variable
+  (R) [RealScalar R]
+  [TopologicalSpace X] -- [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X]
+  [TopologicalSpace Y] -- [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  -- [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
+
+
 -- variable (R) [RealScalar R]
 
 -- variable
@@ -201,11 +211,10 @@ end ExpectedValue
 --   [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
 --   [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
-variable (R)
 
 /-- Probability density function of `x` w.r.t. the measure `ν`. -/
 noncomputable
-def pdf (x : Rand X) (ν : @Measure X (borel _)) : X → R :=
+def pdf {X} [TopologicalSpace X] (x : Rand X) (ν : @Measure X (borel _)) : X → R :=
   fun x' => Scalar.ofReal R (Measure.rnDeriv x.ℙ ν x').toReal
 
 variable {R}
