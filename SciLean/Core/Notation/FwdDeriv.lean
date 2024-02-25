@@ -1,5 +1,5 @@
 import SciLean.Core.Notation.CDeriv
-import SciLean.Core.FunctionTransformations.FwdCDeriv
+import SciLean.Core.FunctionTransformations.FwdDeriv
 
 --------------------------------------------------------------------------------
 -- Notation  -------------------------------------------------------------------
@@ -20,11 +20,11 @@ open Lean Elab Term Meta in
 elab_rules : term
 | `(∂> $f $x $xs*) => do
   let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(fwdCDeriv $K $f $x $xs*)) none
+  elabTerm (← `(fwdDeriv $K $f $x $xs*)) none
 
 | `(∂> $f) => do
   let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(fwdCDeriv $K $f)) none
+  elabTerm (← `(fwdDeriv $K $f)) none
 
 
 macro_rules
@@ -36,8 +36,8 @@ macro_rules
 
 
 macro_rules
-| `(∂>! $f $xs*) => `((∂> $f $xs*) rewrite_by ftrans; ftrans; ftrans)
-| `(∂>! $f) => `((∂> $f) rewrite_by ftrans; ftrans; ftrans)
+| `(∂>! $f $xs*) => `((∂> $f $xs*) rewrite_by fun_trans; fun_trans; fun_trans)
+| `(∂>! $f) => `((∂> $f) rewrite_by fun_trans; fun_trans; fun_trans)
 | `(∂>! $x:ident, $b) => `(∂>! (fun $x => $b))
 | `(∂>! $x:ident := $val:term, $b) => `(∂>! (fun $x => $b) $val)
 | `(∂>! $x:ident : $type:term, $b) => `(∂>! fun $x : $type => $b)
@@ -45,7 +45,7 @@ macro_rules
 | `(∂>! ($b:diffBinder), $f)       => `(∂>! $b, $f)
 
 
-@[app_unexpander fwdCDeriv] def unexpandFwdCDeriv : Lean.PrettyPrinter.Unexpander
+@[app_unexpander fwdDeriv] def unexpandFwdDeriv : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $_ $f:term $x $dx) =>
     match f with
