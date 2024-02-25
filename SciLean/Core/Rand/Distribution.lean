@@ -1,6 +1,8 @@
 import Mathlib.MeasureTheory.Measure.GiryMonad
 import Mathlib.MeasureTheory.Decomposition.Lebesgue
 
+import SciLean.Core.Objects.Vec
+import SciLean.Core.Objects.Scalar
 import SciLean.Util.SorryProof
 
 open MeasureTheory ENNReal
@@ -10,15 +12,17 @@ namespace SciLean
 local notation "∞" => (⊤ : ℕ∞)
 
 variable
-  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
-  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
-  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
-  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
+  {R} [RealScalar R]
+  {W} [Vec R W] -- [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
+  {X} [Vec R X] -- [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+  {Y} [Vec R Y] [Vec ℝ Y] -- [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Z} [Vec R Z] -- [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
+
 
 /-- Generalized function with domain `X`
 todo: consider renaming it to GeneralizedFunction X. -/
 structure Distribution (X : Type u) where
-  action : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → [CompleteSpace Y] → (X → Y) → Y
+  action : {Y : Type u} → [Vec ℝ Y] → (X → Y) → Y
 
 class DistributionActionNotation (Distrib TestFun : Type _) (Result : outParam <| Type _) where
   action : Distrib → TestFun → Result
