@@ -4,8 +4,8 @@ import SciLean.Core.FunctionTransformations
 import SciLean.Core.Notation.CDeriv
 import SciLean.Core.Notation.FwdDeriv
 
-import Mathlib.MeasureTheory.Measure.Haar.Basic
-import Mathlib.MeasureTheory.Constructions.Pi
+-- import Mathlib.MeasureTheory.Measure.Haar.Basic
+-- import Mathlib.MeasureTheory.Constructions.Pi
 
 import SciLean.Tactic.ConvInduction
 
@@ -16,65 +16,31 @@ namespace SciLean
 variable
   {R} [RealScalar R]
   {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {X} [FinVec ι R X]
-  {Y} [SemiHilbert R Y]
-  {U} [Vec R U]
-  {W} [Vec R W]
+  {X} [FinVec ι R X] [Module ℝ X] [MeasureSpace X]
+  {Y} [SemiHilbert R Y] [Module ℝ Y]
+  {U} [Vec R U] [Module ℝ U]
+  {W} [Vec R W] [Module ℝ W]
   {α} [MeasurableSpace α]
 
 set_default_scalar R
 
-def sphere (x : X) (r : R) := {x : X // ‖x‖₂[R] = r}
-def ball (x : X) (r : R) := {x : X // ‖x‖₂[R] < r}
+def sphere (x : X) (r : R) := {y : X // ‖y-x‖₂[R] = r}
+def ball   (x : X) (r : R) := {y : X  | ‖y-x‖₂[R] < r}
 
 instance (x : X) (r : R) : MeasureSpace (sphere x r) := sorry
-
-noncomputable
-def integral (f : α → U) (μ : Measure α) : U := sorry
-
-open Lean Parser  Term
-syntax (priority:=high) "∫' " funBinder  ", " term ("∂" term)? : term
-
-macro_rules
-| `(∫' $x:funBinder, $b) => `(integral (fun $x => $b) (by volume_tac))
-| `(∫' $x:funBinder, $b ∂$μ) => `(integral (fun $x => $b) $μ)
-
-#check DFunLike.coe
 
 #check ∫' (y : (sphere (0:X) (1:R))), y.1
 
 def harmonic_function (u : X → Y) : Prop := ∀ x (r : R), u x = ∫' (y : sphere x r), u y.1
+
+def poisson_function (f : X → Y) (u : X → Y) : Prop := ∀ x (r : R), u x = ∫' (y : sphere x r), u y.1 + ∫' y in ball x r, f y
 
 theorem integral_to_unit_sphere (x : X) (r : R) (u : X → Y) :
     (∫' (x' : sphere x r), u x'.1)
     =
     r^2 • ∫' (x' : sphere (0:X) (1:R)), u (x + r • x'.1) := sorry_proof
 
-
-@[fun_prop]
-theorem integral_diff {α} [MeasureSpace α] (u : W → α → U) (hu : ∀ x, CDifferentiable R (u · x)) :
-    CDifferentiable R (fun w => ∫' x, u w x) := sorry_proof
-
-
-@[fun_trans]
-theorem integral_cderiv {α} [MeasureSpace α] (u : W → α → U) (hf : ∀ x, CDifferentiable R (u · x)) :
-    (∂ w, ∫' x, u w x)
-    =
-    fun w dw => ∫' x, ∂ (u · x) w dw := sorry_proof
-
-@[fun_trans]
-theorem integral_fwdDeriv {α} [MeasureSpace α] (u : W → α → U) (hf : ∀ x, CDifferentiable R (u · x)) :
-    (∂> w, ∫' x, u w x)
-    =
-    fun w dw => ∫' x, ∂> (u · x) w dw := sorry_proof
-
-
-theorem integral_lambda_push {α β : Type _} [MeasurableSpace α] (u : β → α → U) (μ : Measure α) :
-   (fun y => integral (fun x => u y x) μ)
-   =
-   integral (fun x y => u y x) μ := sorry
-
-
+#exit
 variable
     {C : ℕ → Type} [∀ n, Vec R (C n)] [∀ n, MeasurableSpace (C n)]
     {D : ℕ → Type} [∀ n, MeasurableSpace (D n)]

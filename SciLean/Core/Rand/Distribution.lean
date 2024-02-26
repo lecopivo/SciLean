@@ -3,6 +3,7 @@ import Mathlib.MeasureTheory.Decomposition.Lebesgue
 
 import SciLean.Core.Objects.Vec
 import SciLean.Core.Objects.Scalar
+import SciLean.Core.Rand.CIntegral
 import SciLean.Util.SorryProof
 
 open MeasureTheory ENNReal
@@ -13,46 +14,52 @@ local notation "∞" => (⊤ : ℕ∞)
 
 variable
   {R} [RealScalar R]
-  {W} [Vec R W] -- [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
+  {W} [Vec R W] [Module ℝ W]-- [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
   {X} [Vec R X] -- [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
-  {Y} [Vec R Y] [Vec ℝ Y] -- [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Y} [Vec R Y] [Module ℝ Y] -- [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
   {Z} [Vec R Z] -- [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 
 /-- Generalized function with domain `X`
 todo: consider renaming it to GeneralizedFunction X. -/
 structure Distribution (X : Type u) where
-  action : {Y : Type u} → (X → Y) → Y
+  /- This should probably be a continuation from `X` to locally convex space `Y`.
+  Unfortunatelly mathlib does not have integration of functions with values in locally convex sp.
+  Also over what field should the module be? -/
+  action : {Y : Type u} → [AddCommGroup Y] → [Module ℝ Y] → (X → Y) → Y
 
-class DistributionActionNotation (Distrib TestFun : Type _) (Result : outParam <| Type _) where
-  action : Distrib → TestFun → Result
+-- class DistributionActionNotation (Distrib TestFun : Type _) (Result : outParam <| Type _) where
+--   action : Distrib → TestFun → Result
 
-export DistributionActionNotation (action)
+-- export DistributionActionNotation (action)
 
-scoped notation "⟪" f' ", " φ "⟫" => DistributionActionNotation.action f' φ
+scoped notation "⟪" f' ", " φ "⟫" => Distribution.action f' φ
 
-instance : DistributionActionNotation (Distribution X) (X → Y) Y where
-  action := fun f φ => Distribution.action f φ
+-- instance : DistributionActionNotation (Distribution X) (X → Y) Y where
+--   action := fun f φ => Distribution.action f φ
 
 
-/-- Prefer `DistributionActionNotation.action` over `Distribution.action` -/
-@[simp]
-theorem distribution_action_normalize (f : Distribution X) (φ : X → Y) :
-    f.action φ = ⟪f, φ⟫ := by rfl
+-- /-- Prefer `DistributionActionNotation.action` over `Distribution.action` -/
+-- @[simp]
+-- theorem distribution_action_normalize (f : Distribution X) (φ : X → Y) :
+--     f.action φ = ⟪f, φ⟫ := by rfl
 
 @[simp]
 theorem action_mk_apply (f : {Y : Type u} → (X → Y) → Y) (φ : X → Y) :
     ⟪Distribution.mk f, φ⟫ = f φ := by rfl
 
+variable (x : Distribution X) (φ : X → Y)
+
+#check ⟪x,φ⟫
+
 @[ext]
 theorem Distribution.ext (x y : Distribution X) :
-    (∀ {Y : Type u} (φ : X → Y), ⟪x,φ⟫ = ⟪y,φ⟫)
+    (∀ {Y : Type _} [AddCommGroup Y] [Module ℝ Y] (φ : X → Y), ⟪x,φ⟫ = ⟪y,φ⟫)
     →
     x = y := by
 
   induction x; induction y; simp only [action_mk_apply, mk.injEq]
-  intro h; funext _ φ; apply (h φ)
-
+  intro h; funext; tauto
 
 
 ----------------------------------------------------------------------------------------------------
@@ -98,13 +105,13 @@ theorem action_bind (x : Distribution X) (f : X → Distribution Y) (φ : Y → 
 ----------------------------------------------------------------------------------------------------
 
 -- open Classical in
--- @[coe]
--- noncomputable
--- def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X} (μ : Measure X) :
---     Distribution X := ⟨fun φ => ∫ x, φ x ∂μ⟩
+@[coe]
+noncomputable
+def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X} (μ : Measure X) :
+    Distribution X := ⟨fun φ => ∫' x, φ x ∂μ⟩
 
--- noncomputable
--- instance {X} [MeasurableSpace X] : Coe (Measure X) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
+noncomputable
+instance {X} [MeasurableSpace X] : Coe (Measure X) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
 
 -- I'm a bit unsure about this definition
 -- For example under what conditions `x.IsMeasure → ∀ x', (f x').IsMeasure → (x >>= f).IsMeasure`
@@ -113,8 +120,8 @@ theorem action_bind (x : Distribution X) (f : X → Distribution Y) (φ : Y → 
 -- So I think that there has to be some condition on `φ`. Likely they should be required to be test funcions
 
 def Distribution.IsMeasure {X} [MeasurableSpace X] (f : Distribution X) : Prop :=
-  ∃ (μ : Measure X), ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y),
-      ⟪f, φ⟫ = ∫ x, φ x ∂μ
+  ∃ (μ : Measure X), ∀ {Y : Type _} [AddCommGroup Y] [Module ℝ Y] (φ : X → Y),
+      ⟪f, φ⟫ = ∫' x, φ x ∂μ
 
 open Classical
 noncomputable

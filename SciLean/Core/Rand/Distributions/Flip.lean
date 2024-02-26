@@ -46,22 +46,16 @@ theorem flip.measure (θ : R) :
 
 
 variable
-  {W} [NormedAddCommGroup W] [NormedSpace ℝ W] [NormedSpace R W] [MeasurableSpace W]
-  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [NormedSpace R X] [CompleteSpace X] [MeasurableSpace X]
-  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [NormedSpace R Y] [MeasurableSpace Y]
-  {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [NormedSpace R Z] [MeasurableSpace Z]
-  {α} [MeasurableSpace α]
-  {β} [MeasurableSpace β]
-
+  {X} [AddCommGroup X] [Module R X] [Module ℝ X]
 
 @[rand_simp,simp]
 theorem flip.integral (θ : R) (f : Bool → X) :
-    ∫ x, f x ∂(flip θ).ℙ = θ • f true + (1-θ) • f false := by
+    ∫' x, f x ∂(flip θ).ℙ = θ • f true + (1-θ) • f false := by
   simp [rand_simp,flip.measure]; sorry_proof
 
 theorem flip.E (θ : R) (f : Bool → X) :
     (flip θ).E f = θ • f true + (1-θ) • f false := by
-  simp only [Rand.E_as_integral,flip.integral]
+  simp only [Rand.E_as_cintegral,flip.integral]
 
 theorem add_as_flip_E {x y : X} (θ : R) (h : θ ∈ Set.Ioo 0 1) :
     x + y = (flip θ).E (fun b => if b then θ⁻¹ • x else (1-θ)⁻¹ • y) := by

@@ -100,7 +100,7 @@ instance : LawfulMonad Rand where
 
 
 -- this needs some integrability and lawfulness of Rand
-theorem Rand.swap_bind (f : X → Y → Z) (x : Rand X) (y : Rand Y) :
+theorem swap_bind (f : X → Y → Z) (x : Rand X) (y : Rand Y) :
     (do let x' ← x; let y' ← y; pure (f x' y'))
     =
     (do let y' ← y; let x' ← x; pure (f x' y')) := by
@@ -137,16 +137,20 @@ section ExpectedValue
 
 variable
   {R} [RealScalar R]
-  [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X] [MeasurableSpace X]
-  [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
-  [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
+  [MeasurableSpace X]
+  [AddCommGroup Y] [Module ℝ Y]
+  [AddCommGroup Z] [Module ℝ Z]
+  -- [AddCommGroup U] [TopologicalSpace U] [TopologicalAddGroup U] [Module ℝ U] [LocallyConveUSpace ℝ U]
+  {U} [AddCommGroup U] [Module ℝ U]
 
+#check LocallyConvexSpace
 
 noncomputable
 def E (x : Rand X) (φ : X → Y) : Y := ⟪x.spec.out, φ⟫
 
-theorem E_as_integral (x : Rand X) [lr : LawfulRand x] (φ : X → Y) :
-    x.E φ = ∫ x, φ x ∂x.ℙ := by
+theorem E_as_cintegral
+    (x : Rand X) [lr : LawfulRand x] (φ : X → U) :
+    x.E φ = ∫' x, φ x ∂x.ℙ := by
   simp [Rand.ℙ, Distribution.measure, lr.is_measure]
   have q := lr.is_measure
   rw[← Classical.choose_spec q φ]
@@ -164,17 +168,23 @@ theorem bind_E (x : Rand X) (f : X → Rand Y) (φ : Y → Z) :
 -- consider adding as a property inside of `Distribution` or `Rand`
 @[simp, rand_push_E]
 theorem zero_E (x : Rand X) [LawfulRand x] :
-    x.E (fun _ => (0 : Y)) = 0 := by simp[E_as_integral]
+    x.E (fun _ => (0 : U)) = 0 := by simp[E_as_cintegral]
 
 @[rand_simp,simp]
-theorem add_E (x : Rand X) [LawfulRand x] (φ ψ : X → Y) (hφ : Integrable φ x.ℙ) (hψ : Integrable ψ x.ℙ) :
+theorem add_E (x : Rand X) [LawfulRand x] (φ ψ : X → U)
+    (hφ : CIntegrable φ x.ℙ) (hψ : CIntegrable ψ x.ℙ) :
     x.E (fun x => φ x + ψ x) = x.E φ + x.E ψ := by
-  simp[E_as_integral]; rw[integral_add] <;> assumption
+  simp[E_as_cintegral]; rw[cintegral_add] <;> assumption
 
 -- we might add this to the definition of Rand and I think it won't require
 -- integrability of `φ` nor lawfulness of `x`
 theorem smul_E (x : Rand X) (φ : X → ℝ) (y : Y) :
     x.E (fun x' => φ x' • y) = x.E φ • y := by sorry
+
+
+section Mean
+
+variable [AddCommGroup X] [Module ℝ X]
 
 noncomputable
 def mean (x : Rand X) : X := x.E id
@@ -199,6 +209,8 @@ theorem mean_add  (x : Rand X) (x' : X) : x.mean + x' = (x  + x').mean := by
 theorem mean_add' (x : Rand X) (x' : X) : x' + x.mean = (x' +  x).mean := by
   simp[HAdd.hAdd,mean,E,pure,bind]; sorry_proof
 
+end Mean
+
 
 end ExpectedValue
 
@@ -209,25 +221,16 @@ end ExpectedValue
 
 
 variable
-  (R) [RealScalar R]
-  [MeasurableSpace X] -- [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X]
-  [MeasurableSpace Y] -- [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
-  -- [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
+  {R} [RealScalar R]
+  [MeasurableSpace X]
+  [MeasurableSpace Y]
 
 
--- variable (R) [RealScalar R]
-
--- variable
---   [NormedAddCommGroup X] [NormedSpace R X] [NormedSpace ℝ X] [CompleteSpace X]
---   [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
---   [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
-
-
+variable (R)
 /-- Probability density function of `x` w.r.t. the measure `ν`. -/
 noncomputable
 def pdf (x : Rand X) (ν : Measure X) : X → R :=
   fun x' => Scalar.ofReal R (Measure.rnDeriv x.ℙ ν x').toReal
-
 variable {R}
 -- noncomputable
 -- abbrev rpdf (x : Rand X) (ν : Measure X) : X → ℝ :=
@@ -266,37 +269,37 @@ theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
 ----------------------------------------------------------------------------------------------------
 
 
--- def combine (x y : Rand X) (θ : R) : Rand X := {
---   spec := erase ⟨fun φ => (Scalar.toReal R (1-θ)) • x.E φ + (Scalar.toReal R θ) • y.E φ⟩
---   rand := fun g => do
---     let g : StdGen := g.down
---     let N := 1000000000000000
---     let (n,g) := _root_.randNat g 0 N
---     let θ' := (n : R) / (N : R)
---     if θ' ≤ θ then
---       y.rand (← ULiftable.up g)
---     else
---       x.rand (← ULiftable.up g)
--- }
+def combine (x y : Rand X) (θ : R) : Rand X := {
+  spec := erase ⟨fun φ => (Scalar.toReal R (1-θ)) • x.E φ + (Scalar.toReal R θ) • y.E φ⟩
+  rand := fun g => do
+    let g : StdGen := g.down
+    let N := 1000000000000000
+    let (n,g) := _root_.randNat g 0 N
+    let θ' := (n : R) / (N : R)
+    if θ' ≤ θ then
+      y.rand (← ULiftable.up g)
+    else
+      x.rand (← ULiftable.up g)
+}
 
--- /-- `x +[θ] y` return random variable `(1-θ)*x + θ*y`.
--- In other words
--- - `x` is generated with probability `1-θ`
--- - `y` is generated with probability `θ` -/
--- scoped macro x:term:65 " +[" θ:term "] " y:term:64 : term => `(term| combine $x $y $θ)
-
-
--- open Lean Parser
--- @[app_unexpander Rand.combine] def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
--- | `($(_) $x $y $θ) => do Pure.pure (← `(term| $x +[$θ] $y)).raw
--- | _ => throw ()
+/-- `x +[θ] y` return random variable `(1-θ)*x + θ*y`.
+In other words
+- `x` is generated with probability `1-θ`
+- `y` is generated with probability `θ` -/
+scoped macro x:term:65 " +[" θ:term "] " y:term:64 : term => `(term| combine $x $y $θ)
 
 
--- @[rand_simp]
--- theorem combine_pdf (x y : Rand X) (μ : Measure X) (θ : R) :
---     (x +[θ] y).pdf R μ
---     =
---     fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry
+open Lean Parser
+@[app_unexpander Rand.combine] def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
+| `($(_) $x $y $θ) => do Pure.pure (← `(term| $x +[$θ] $y)).raw
+| _ => throw ()
+
+
+@[rand_simp]
+theorem combine_pdf (x y : Rand X) (μ : Measure X) (θ : R) :
+    (x +[θ] y).pdf R μ
+    =
+    fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry
 
 
 ----------------------------------------------------------------------------------------------------
