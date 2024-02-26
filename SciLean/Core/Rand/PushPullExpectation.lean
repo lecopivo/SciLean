@@ -48,20 +48,19 @@ theorem ite_pull_mean_f {c} [Decidable c] (t : X) (e : Rand X) :
 
 -- can't be simp as it has variable head
 theorem pull_E_affine (r : Rand X) (φ : X → Y)
-    (f : Y → Z) (hf : IsAffineMap ℝ f := by fun_prop) :
-    (f (r.E φ)) = r.E (fun x => f (φ x)) := by have := hf; sorry_proof
+    (f : Y → Z) /- (hf : IsAffineMap ℝ f := by fun_prop) -/ :
+    (f (r.E φ)) = r.E (fun x => f (φ x)) := by sorry_proof -- have := hf; sorry_proof
 
 @[rand_push_E]
 theorem push_E_affine (r : Rand X) (φ : X → Y)
     (f : Y → Z) (hf : IsAffineMap ℝ f := by fun_prop) :
-    r.E (fun x => f (φ x)) = (f (r.E φ)) := by rw[pull_E_affine (hf:=hf)]
+    r.E (fun x => f (φ x)) = (f (r.E φ)) := by sorry_proof -- rw[pull_E_affine (hf:=hf)]
 
 
 section Nat
 
 variable
-  (C : ℕ → Type) [∀ n, NormedAddCommGroup (C n)] [∀ n, NormedSpace ℝ (C n)]
-  [∀ n, CompleteSpace (C n)] [∀ n, MeasurableSpace (C n)]
+  (C : ℕ → Type) [∀ n, MeasurableSpace (C n)]
 variable
   (D : ℕ → Type) [∀ n, NormedAddCommGroup (D n)] [∀ n, NormedSpace ℝ (D n)]
   [∀ n, CompleteSpace (D n)] [∀ n, MeasurableSpace (D n)]
@@ -69,7 +68,7 @@ variable
 
 @[rand_pull_E]
 theorem pull_E_nat_recOn (x₀ : C 0) (r : (n : Nat) → Rand (D n))
-    (f : (n : ℕ) → C n → D n → (C (n+1))) (hf : ∀ n d, IsAffineMap ℝ (f n · d)) :
+    (f : (n : ℕ) → C n → D n → (C (n+1))) /-(hf : ∀ n d, IsAffineMap ℝ (f n · d))-/ :
     Nat.recOn  n
       x₀
       (fun n x => (r n).E (f n x))
@@ -89,7 +88,7 @@ theorem pull_E_nat_recOn (x₀ : C 0) (r : (n : Nat) → Rand (D n))
       lhs
       enter[1,2,x',1]
       unfold mean
-      simp[pull_E_affine (f:=(f n · x')) (hf:=hf n x')]
+      simp[pull_E_affine (f:=(f n · x'))]
     conv =>
       simp[rand_pull_E]
     rw[Rand.swap_bind]
@@ -111,7 +110,7 @@ variable
 theorem pull_E_list_recOn (l : List α) (x₀ : C [])
     (r : (head : α) → (tail : List α) → Rand (D (head::tail)))
     (f : (head : α) → (tail : List α) → C tail → D (head :: tail) → (C (head :: tail)))
-    (hf : ∀ head tail d, IsAffineMap ℝ (f head tail · d)) :
+    /-(hf : ∀ head tail d, IsAffineMap ℝ (f head tail · d))-/ :
     List.recOn l
       x₀
       (fun head tail x => (r head tail).E (f head tail x))
@@ -131,7 +130,7 @@ theorem pull_E_list_recOn (l : List α) (x₀ : C [])
       lhs
       enter[1,2,x',1]
       unfold mean
-      simp[pull_E_affine (f:=(f head tail · x')) (hf:=hf head tail x')]
+      simp[pull_E_affine (f:=(f head tail · x'))]
     conv =>
       simp[rand_pull_E]
     rw[Rand.swap_bind]

@@ -22,7 +22,7 @@ variable
 /-- Generalized function with domain `X`
 todo: consider renaming it to GeneralizedFunction X. -/
 structure Distribution (X : Type u) where
-  action : {Y : Type u} → [Vec ℝ Y] → (X → Y) → Y
+  action : {Y : Type u} → (X → Y) → Y
 
 class DistributionActionNotation (Distrib TestFun : Type _) (Result : outParam <| Type _) where
   action : Distrib → TestFun → Result
@@ -41,18 +41,17 @@ theorem distribution_action_normalize (f : Distribution X) (φ : X → Y) :
     f.action φ = ⟪f, φ⟫ := by rfl
 
 @[simp]
-theorem action_mk_apply
-    (f : {Y : Type u} → [NormedAddCommGroup Y] → [NormedSpace ℝ Y] → [CompleteSpace Y] →  (X → Y) → Y) (φ : X → Y) :
+theorem action_mk_apply (f : {Y : Type u} → (X → Y) → Y) (φ : X → Y) :
     ⟪Distribution.mk f, φ⟫ = f φ := by rfl
 
 @[ext]
 theorem Distribution.ext (x y : Distribution X) :
-    (∀ {Y : Type u} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y), ⟪x,φ⟫ = ⟪y,φ⟫)
+    (∀ {Y : Type u} (φ : X → Y), ⟪x,φ⟫ = ⟪y,φ⟫)
     →
     x = y := by
 
   induction x; induction y; simp only [action_mk_apply, mk.injEq]
-  intro h; funext _ _ _ _ φ; apply (h φ)
+  intro h; funext _ φ; apply (h φ)
 
 
 
@@ -87,10 +86,10 @@ theorem action_bind (x : Distribution X) (f : X → Distribution Y) (φ : Y → 
 -- Arithmetics -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-instance : Zero (Distribution X) := ⟨⟨fun _φ => 0⟩⟩
-instance : Add (Distribution X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ + ⟪g, φ⟫⟩⟩
-instance : Sub (Distribution X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ - ⟪g, φ⟫⟩⟩
-noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f => ⟨fun φ => r • ⟪f, φ⟫⟩⟩
+-- instance : Zero (Distribution X) := ⟨⟨fun _φ => 0⟩⟩
+-- instance : Add (Distribution X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ + ⟪g, φ⟫⟩⟩
+-- instance : Sub (Distribution X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ - ⟪g, φ⟫⟩⟩
+-- noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f => ⟨fun φ => r • ⟪f, φ⟫⟩⟩
 
 
 
@@ -98,20 +97,21 @@ noncomputable instance : SMul ℝ (Distribution X) := ⟨fun r f => ⟨fun φ =>
 -- Measures as distributions -----------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-open Classical in
-@[coe]
-noncomputable
-def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X} (μ : Measure X) :
-    Distribution X := ⟨fun φ => ∫ x, φ x ∂μ⟩
+-- open Classical in
+-- @[coe]
+-- noncomputable
+-- def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X} (μ : Measure X) :
+--     Distribution X := ⟨fun φ => ∫ x, φ x ∂μ⟩
 
-noncomputable
-instance {X} [MeasurableSpace X] : Coe (Measure X) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
+-- noncomputable
+-- instance {X} [MeasurableSpace X] : Coe (Measure X) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
 
 -- I'm a bit unsure about this definition
 -- For example under what conditions `x.IsMeasure → ∀ x', (f x').IsMeasure → (x >>= f).IsMeasure`
 -- I'm a bit affraid that with this definition this might never be true as you can always pick
 -- really nasty `φ` to screw up the integral
 -- So I think that there has to be some condition on `φ`. Likely they should be required to be test funcions
+
 def Distribution.IsMeasure {X} [MeasurableSpace X] (f : Distribution X) : Prop :=
   ∃ (μ : Measure X), ∀ {Y : Type _} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y] (φ : X → Y),
       ⟪f, φ⟫ = ∫ x, φ x ∂μ
@@ -124,19 +124,19 @@ def Distribution.measure {X} [MeasurableSpace X] (f' : Distribution X) : Measure
   else
     0
 
-@[simp]
-theorem apply_measure_as_distribution  {X} [MeasurableSpace X]  (μ : Measure X) (φ : X → Y) :
-     ⟪μ.toDistribution, φ⟫ = ∫ x, φ x ∂μ := by rfl
+-- @[simp]
+-- theorem apply_measure_as_distribution  {X} [MeasurableSpace X]  (μ : Measure X) (φ : X → Y) :
+--      ⟪μ.toDistribution, φ⟫ = ∫ x, φ x ∂μ := by rfl
 
 
 /- under what conditions is this true??? -/
-theorem action_is_integral  {X} [MeasurableSpace X] {Y} [MeasurableSpace Y]
-    (x : Measure X) (f : X → Measure Y)
-    (φ : Y → Z) (hφ : ∀ x, Integrable φ (f x)) :
-    ⟪x.toDistribution >>= (fun x => (f x).toDistribution), φ⟫
-    =
-    ∫ y, φ y ∂(@Measure.bind _ _ _ _ x f) := by
-  sorry_proof
+-- theorem action_is_integral  {X} [MeasurableSpace X] {Y} [MeasurableSpace Y]
+--     (x : Measure X) (f : X → Measure Y)
+--     (φ : Y → Z) (hφ : ∀ x, Integrable φ (f x)) :
+--     ⟪x.toDistribution >>= (fun x => (f x).toDistribution), φ⟫
+--     =
+--     ∫ y, φ y ∂(@Measure.bind _ _ _ _ x f) := by
+--   sorry_proof
 
 theorem Distribution.density {X} [MeasurableSpace X] (x y : Distribution X) : X → ℝ≥0∞ :=
   x.measure.rnDeriv y.measure

@@ -24,10 +24,10 @@ elab " derive_random_approx " e:term " by " t:convSeq : term => do
   --
   let e ← elabTerm (← `(term| $e rewrite_by $t)).raw none
 
-  unless (e.isAppOfArity ``Rand.mean 5) do
+  unless (e.isAppOfArity ``Rand.mean 2) do
     throwError "deriving probabilistic derivative should end with a term of the form `Rand.mean _`"
 
-  let e'' := e.getArg! 4
+  let e'' := e.appArg!
 
   return e''
 

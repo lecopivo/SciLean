@@ -266,37 +266,37 @@ theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
 ----------------------------------------------------------------------------------------------------
 
 
-def combine (x y : Rand X) (θ : R) : Rand X := {
-  spec := erase ⟨fun φ => (Scalar.toReal R (1-θ)) • x.E φ + (Scalar.toReal R θ) • y.E φ⟩
-  rand := fun g => do
-    let g : StdGen := g.down
-    let N := 1000000000000000
-    let (n,g) := _root_.randNat g 0 N
-    let θ' := (n : R) / (N : R)
-    if θ' ≤ θ then
-      y.rand (← ULiftable.up g)
-    else
-      x.rand (← ULiftable.up g)
-}
+-- def combine (x y : Rand X) (θ : R) : Rand X := {
+--   spec := erase ⟨fun φ => (Scalar.toReal R (1-θ)) • x.E φ + (Scalar.toReal R θ) • y.E φ⟩
+--   rand := fun g => do
+--     let g : StdGen := g.down
+--     let N := 1000000000000000
+--     let (n,g) := _root_.randNat g 0 N
+--     let θ' := (n : R) / (N : R)
+--     if θ' ≤ θ then
+--       y.rand (← ULiftable.up g)
+--     else
+--       x.rand (← ULiftable.up g)
+-- }
 
-/-- `x +[θ] y` return random variable `(1-θ)*x + θ*y`.
-In other words
-- `x` is generated with probability `1-θ`
-- `y` is generated with probability `θ` -/
-scoped macro x:term:65 " +[" θ:term "] " y:term:64 : term => `(term| combine $x $y $θ)
-
-
-open Lean Parser
-@[app_unexpander Rand.combine] def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
-| `($(_) $x $y $θ) => do Pure.pure (← `(term| $x +[$θ] $y)).raw
-| _ => throw ()
+-- /-- `x +[θ] y` return random variable `(1-θ)*x + θ*y`.
+-- In other words
+-- - `x` is generated with probability `1-θ`
+-- - `y` is generated with probability `θ` -/
+-- scoped macro x:term:65 " +[" θ:term "] " y:term:64 : term => `(term| combine $x $y $θ)
 
 
-@[rand_simp]
-theorem combine_pdf (x y : Rand X) (μ : Measure X) (θ : R) :
-    (x +[θ] y).pdf R μ
-    =
-    fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry
+-- open Lean Parser
+-- @[app_unexpander Rand.combine] def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
+-- | `($(_) $x $y $θ) => do Pure.pure (← `(term| $x +[$θ] $y)).raw
+-- | _ => throw ()
+
+
+-- @[rand_simp]
+-- theorem combine_pdf (x y : Rand X) (μ : Measure X) (θ : R) :
+--     (x +[θ] y).pdf R μ
+--     =
+--     fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry
 
 
 ----------------------------------------------------------------------------------------------------

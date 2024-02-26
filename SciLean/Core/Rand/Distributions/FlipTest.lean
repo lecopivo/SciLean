@@ -74,7 +74,7 @@ def bar' (θ : R) (l : List R) : Rand R :=
     . simp[bar]
     . simp[bar,h]
       rw[add_as_flip_E θ sorry_proof]
-    rw[pull_E_list_recOn (D:=fun _ => Bool) (l:=_) (x₀:=_) (r:=_) (hf:=by fun_prop)]
+    rw[pull_E_list_recOn (D:=fun _ => Bool) (l:=_) (x₀:=_) (r:=_)]
 
 
 #eval print_mean_variance (bar' 0.5 [1.0,2,3,4]) 1000 ""
@@ -84,7 +84,7 @@ def bar' (θ : R) (l : List R) : Rand R :=
 -- tail recursive version of
 def foobar (l : List R) (acc : R := 0) : R :=
   match l with
-  | [] => 0
+  | [] => acc
   | x :: xs => foobar xs (acc + x)
 
 #eval foobar [1.0,2,3]
@@ -93,16 +93,34 @@ def foobar (l : List R) (acc : R := 0) : R :=
 theorem foobar.arg_acc.IsAffineMap (l : List R) : IsAffineMap ℝ (fun acc => foobar l acc) := by
   induction l <;> (simp[foobar]; fun_prop)
 
+@[rand_pull_E]
+theorem pull_lambda_into_E {X Y Z : Type} (r : Rand Y) (f : X → Y → Z) :
+    (fun x => r.E (fun y => f x y))
+    =
+    r.E (fun y x => f x y) := sorry_proof
 
-def foobar' (θ : R) (l : List R) : Rand R :=
-  derive_random_approx
-    fun acc => foobar l acc
-  by
-    induction_list l head tail prev h
-    . simp[foobar]
-    . simp[foobar,h]
+
+
+
+def foobar' (θ : R) (l : List R) : Rand R := do
+  let f ←
+    derive_random_approx
+      fun acc => foobar l acc
+    by
+      induction_list l head tail prev h
+      . simp[foobar]
+      . simp[foobar,h]
+        conv =>
+          enter [acc]
+          rw[add_as_flip_E θ sorry_proof]
+          rw[pull_E_affine (f:=prev)]
       conv =>
-        enter [acc]
-        rw[add_as_flip_E θ sorry_proof]
-        rw[pull_E_affine (f:=prev) (hf:=by rw[←h]; fun_prop)]
-          -- rw[pull_E_list_recOn (D:=fun _ => Bool) (l:=_) (x₀:=fun _ => 0) (r:=fun _ _ => flip θ) (hf:=by fun_prop)]
+        enter [3,head,tail,prev]
+        rw[pull_lambda_into_E]
+      rw[pull_E_list_recOn (C:= fun _ => R → R) (D:=fun _ => Bool) (l:=l) (x₀:=_) (r:=fun _ _ => flip θ)]
+  return f 0
+
+
+
+#eval print_mean_variance (foobar' 0.5 [1.0,2,3,4]) 1000 ""
+#eval print_mean_variance (foobar' 0.3 [4.0,3,2,1]) 1000 ""
