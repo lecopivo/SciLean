@@ -31,6 +31,11 @@ lean_exe Ballistic {
   root := `examples.Ballistic
 }
 
+lean_exe WalkOnSpheres {
+  root := `examples.WalkOnSpheres
+}
+
+
 lean_exe ForLoopTest {
   buildType := .release
   moreLinkArgs := #["-O3", "-UNDEBUG"]

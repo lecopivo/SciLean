@@ -27,7 +27,7 @@ Alternative notation:
      Common use: `let array : Cont := λ [x] => f x` where the type asscription `: Cont` is important.
 -/
 class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam)
-    extends Indexed Cont Idx Elem, LawfulIndexed Cont Idx Elem where
+    extends Indexed.{_,_,_,0} Cont Idx Elem, LawfulIndexed.{_,_,_,0} Cont Idx Elem where
   get_injective : Function.Injective (Indexed.get (C:=Cont))
 
 

@@ -5,10 +5,10 @@ import SciLean.Data.StructType.Algebra
 open LeanColls
 
 namespace SciLean
-namespace GenericArrayType
+namespace ArrayType
 
 variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
-variable [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
+variable {Idx : Type _} [IndexType.{_,0} Idx] [LawfulIndexType.{_,0} Idx] [DecidableEq Idx]
 
 variable {K : Type _} [IsROrC K]
 
@@ -112,11 +112,17 @@ instance (priority := low) [ArrayType Cont Idx K] : BasisDuality Cont where
   toDual   := fun x => x
   fromDual := fun x => x
 
--- instance (priority := low) [ArrayType Cont Idx K] : FinVec Idx K Cont where
---   is_basis := sorry_proof
---   duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
---   to_dual := sorry_proof
---   from_dual := sorry_proof
+instance [ArrayType Cont Idx K] : OrthonormalBasis Idx K Cont where
+  is_orthogonal := sorry_proof
+  is_orthonormal := sorry_proof
+
+instance (priority := low) [ArrayType Cont Idx K] : FinVec Idx K Cont where
+  is_basis := sorry_proof
+  duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
+  to_dual := sorry_proof
+  from_dual := sorry_proof
+
+
 
 
 -- -- These instances might cause problems

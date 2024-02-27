@@ -10,6 +10,8 @@ structure Vec2 where
 
 namespace Vec2
 
+  notation "v[" x ", " y "]" => Vec2.mk x y
+
   def get (v : Vec2) (i : Fin 2) : Float :=
     if i.1 = 0 then
       v.x
@@ -23,6 +25,15 @@ namespace Vec2
       ⟨v.x, vi⟩
 
   def intro (f : Fin 2 → Float) : Vec2 := ⟨f 0, f 1⟩
+
+  def normalize (v : Vec2) : Vec2 :=
+    let r := (v.x*v.x + v.y*v.y).sqrt
+    let ir := 1/r
+    if r != 0 then
+      v[ir*v.x,ir*v.y]
+    else
+      v[1,0]
+
 
   instance : StructType Vec2 (Fin 2) (fun _ => Float) where
     structProj := get
@@ -74,8 +85,6 @@ namespace Vec2
       fromByteArray_toByteArray_other := sorry_proof
     }
 
-  notation "v[" x ", " y "]" => Vec2.mk x y
-
 end Vec2
 
 
@@ -83,6 +92,8 @@ structure Vec3 where
   (x y z : Float)
 
 namespace Vec3
+
+  notation "v[" x ", " y ", " z "]" => Vec3.mk x y z
 
   def get (v : Vec3) (i : Fin 3) : Float :=
     if i.1 = 0 then
@@ -94,13 +105,21 @@ namespace Vec3
 
   def set (v : Vec3) (i : Fin 3) (vi : Float) : Vec3 :=
     if i.1 = 0 then
-      ⟨vi, v.y, v.z⟩
+      v[vi, v.y, v.z]
     else if i.1 = 1 then
-      ⟨v.x, vi, v.z⟩
+      v[v.x, vi, v.z]
     else
-      ⟨v.x, v.y, vi⟩
+      v[v.x, v.y, vi]
 
-  def intro (f : Fin 3 → Float) : Vec3 := ⟨f 0, f 1, f 2⟩
+  def intro (f : Fin 3 → Float) : Vec3 := v[f 0, f 1, f 2]
+
+  def normalize (v : Vec3) : Vec3 :=
+    let r := (v.x*v.x + v.y*v.y + v.z*v.z).sqrt
+    let ir := 1/r
+    if r != 0 then
+      v[ir*v.x,ir*v.y,ir*v.z]
+    else
+      v[1,0,0]
 
   instance : StructType Vec3 (Fin 3) (fun _ => Float) where
     structProj := get
@@ -154,6 +173,5 @@ namespace Vec3
       fromByteArray_toByteArray_other := sorry_proof
     }
 
-  notation "v[" x ", " y ", " z "]" => Vec3.mk x y z
 
 end Vec3

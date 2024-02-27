@@ -11,8 +11,15 @@ namespace SciLean.Prob
 variable {R} [RealScalar R]
 
 
-variable (R)
+open Scalar in
+def boxMuller (u v : R) : R×R :=
+  let tau : R := 2 * RealScalar.pi
+  let r := sqrt (-2*log u)
+  let θ := tau*v
+  (r * cos θ, r * sin θ)
 
+
+variable (R)
 
 def generateNormalV1 : Rand R := do
   return (← go 12 0) - 6
