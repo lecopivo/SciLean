@@ -40,11 +40,15 @@ def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
 
 syntax (name:=arrayTypeLiteral) " ⊞[" term,* "] " : term
 
+--- ListN.toArrayType (arrayTypeCont (Fin $n) (typeOf $x)) [$x,$xs,*]'
+
 open Lean Meta Elab Term Qq
 macro_rules
+ | `(⊞[ $x:term ]) => do
+   `(Indexed.ofFn (C:=(arrayTypeCont (Fin 1) (typeOf $x))) fun i : Fin 1 => $x)
  | `(⊞[ $x:term, $xs:term,* ]) => do
    let n := Syntax.mkNumLit (toString (xs.getElems.size + 1))
-   `(ListN.toArrayType (arrayTypeCont (Fin $n) (typeOf $x)) [$x,$xs,*]')
+   `(Indexed.ofFn (C:=(arrayTypeCont (Fin $n) (typeOf $x))) fun i : Fin $n => #[$x,$xs,*].get i)
   -- let n := Syntax.mkNumLit (toString xs.getElems.size)
   -- `(term| ListN.toArrayType (arrayType #[$xs,*] $n (by rfl))
 
