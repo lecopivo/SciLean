@@ -16,6 +16,10 @@ import SciLean.Core.FunctionPropositions
 import SciLean.Tactic.LSimp.LetNormalize
 import SciLean.Tactic.MathlibCompiledTactics
 
+import SciLean.Data.ArrayType
+import SciLean.Data.DataArray
+
+
 /-!
 
 SciLean

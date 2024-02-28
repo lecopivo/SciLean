@@ -7,6 +7,7 @@ namespace SciLean
 
 structure Vec2 where
   (x y : Float)
+  deriving Inhabited
 
 namespace Vec2
 
@@ -90,6 +91,7 @@ end Vec2
 
 structure Vec3 where
   (x y z : Float)
+  deriving Inhabited
 
 namespace Vec3
 

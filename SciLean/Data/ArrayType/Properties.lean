@@ -16,6 +16,7 @@ variable
   {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
   [ArrayType Cont Idx Elem] [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
 
+#exit
 
 -- GetElem.getElem -------------------------------------------------------------
 --------------------------------------------------------------------------------
