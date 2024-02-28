@@ -209,6 +209,36 @@ def walkOnSpheres (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : 
   pure (f' x)
 
 
+def walkOnSpheres.manualImpl (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : Rand Y := do
+  match n with
+  | 0 => pure (g x)
+  | n+1 => do
+    let y ← (uniform (sphere (0:Vec3) 1.0))
+    walkOnSpheres.manualImpl φ g n (x + φ x • y)
+
+
+def _root_.SciLean.Vec3.add (u v : Vec3) : Vec3 := ⟨u.x+v.x, u.y+v.y, u.z+v.z⟩
+def _root_.SciLean.Vec3.smul (s : Float) (u : Vec3) : Vec3 := ⟨s * u.x, s * u.y, s * u.z⟩
+
+def walkOnSpheres.manualImplV2 (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : Rand Y := do
+  match n with
+  | 0 => pure (g x)
+  | n+1 => do
+    let y ← (uniform (sphere (0:Vec3) 1.0))
+    walkOnSpheres.manualImpl φ g n (x.add (Vec3.smul (φ x) y))
+
+
+-- | Rand.mean
+--     (rec_val n
+--       | 0 => pure fun (x : Vec3) => g x
+--       | n + 1, x => fun => do
+--       let x' ← x
+--       let y' ← uniform ↑(sphere 0 1.0)
+--       pure
+--           (↑(Measure.rnDeriv volume (uniform ↑(sphere 0 1.0)).ℙ y') • fun (x : Vec3) => (π⁻¹ * 4⁻¹) • x' (x + φ x • ↑y')))
+
+
+
 #exit
 #check Nat
 

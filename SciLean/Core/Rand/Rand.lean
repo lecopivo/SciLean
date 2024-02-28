@@ -35,7 +35,7 @@ structure Rand (X : Type _)  where
     2. we can get more generality with distributions when differentiating measure valued functions
   -/
   spec : Erased (Distribution X)
-  rand : _root_.Rand X   -- ugh why doesn't mathlib have `Mathlib` namespace?
+  rand : StateM StdGen X   -- ugh why doesn't mathlib have `Mathlib` namespace?
 
 /-- Probability measure of a random variable -/
 noncomputable
@@ -71,9 +71,9 @@ axiom ext (x y : Rand X) : x.spec.out = y.spec.out → x = y
 
 /-- Generate rundom number using IO randomness -/
 def get (x : Rand X) : IO X := do
-  let stdGen ← ULiftable.up IO.stdGenRef.get
+  let stdGen ← IO.stdGenRef.get
   let (res, new) := x.rand stdGen
-  let _ ← ULiftable.up (IO.stdGenRef.set new.down)
+  let _ ← IO.stdGenRef.set new
   pure res
 
 
@@ -268,18 +268,28 @@ theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
 -- Combine -----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+variable (R)
+@[inline] -- inlining seems to have quite implact on performance
+def _root_.SciLean.uniformI : Rand R := {
+  spec :=
+    erase (⟨fun φ => ∫' x in Set.Icc (0:R) (1:R), φ x ∂sorry⟩) -- todo: add volume to RealScalar
+  rand :=
+    fun g => do
+    let N := stdRange.2
+    let (n,g) := stdNext g
+    let y := (NatCast.natCast n : R) / (NatCast.natCast N : R)
+    pure (y, g)
+}
+variable {R}
 
 def combine (x y : Rand X) (θ : R) : Rand X := {
   spec := erase ⟨fun φ => (Scalar.toReal R (1-θ)) • x.E φ + (Scalar.toReal R θ) • y.E φ⟩
   rand := fun g => do
-    let g : StdGen := g.down
-    let N := 1000000000000000
-    let (n,g) := _root_.randNat g 0 N
-    let θ' := (n : R) / (N : R)
+    let (θ',g) := (uniformI R).rand g
     if θ' ≤ θ then
-      y.rand (← ULiftable.up g)
+      y.rand g
     else
-      x.rand (← ULiftable.up g)
+      x.rand g
 }
 
 /-- `x +[θ] y` return random variable `(1-θ)*x + θ*y`.

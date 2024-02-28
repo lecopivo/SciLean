@@ -204,8 +204,8 @@ def letCase (e : Expr) : SimpM Step := do
       if let .some r ← letSplit? rv n t b then
         return .continue <| some r
 
-      if let .some r ← letFlatten? rv n t b then
-        return .done <|  r
+      -- if let .some r ← letFlatten? rv n t b then
+      --   return .done <|  r
 
       withLocalDeclD n t fun x => do
         let bx := b.instantiate1 x
@@ -242,10 +242,26 @@ def lambdaCase (e : Expr) : SimpM Step := do
           return .continue <| some { expr := eNew, proof? := p }
 
 
+def appCase (e : Expr) : SimpM Step := do
+  let args := e.getAppArgs
+  unless args.any (fun arg => arg.isLet) do return .continue
+
+  withTraceNode `Meta.Tactic.let_normalize (fun _ => return s!"normalizing app") do
+
+  let e ← go e #[] #[] fun ys xs f => mkLambdaFVars ys (mkAppN f xs)
+  return .visit { expr := e }
+where
+  go (e : Expr) (ys xs : Array Expr) (k : Array Expr → Array Expr → Expr → MetaM Expr) : MetaM Expr :=
+    match e with
+    | .app f x =>
+      letTelescope x fun ys' b => do
+        go f (ys'++ys) (xs.push b) k
+    | e => k ys xs.reverse e
 
 simproc_decl let_normalize (_) := fun e => do
 
   match e with
   | .letE .. => return ← letCase e
-  | .lam .. => return ← lambdaCase e
+  -- | .lam .. => return ← lambdaCase e
+  -- | .app .. => return ← appCase e
   | _ => return .continue

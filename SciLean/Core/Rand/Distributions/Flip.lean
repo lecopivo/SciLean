@@ -14,12 +14,9 @@ def flip (x : R) : Rand Bool := {
     erase ⟨fun φ => t • φ true + f • φ false⟩
   rand :=
     fun g => do
-    let g : StdGen := g.down
-    let N := 1000000000000000
-    let (n,g) := _root_.randNat g 0 N
-    let y := (n : R) / (N : R)
+    let (y,g) := (uniformI R).rand g
     let b := if y ≤ x then true else false
-    pure (b, ← ULiftable.up g)
+    pure (b, g)
 }
 
 instance (θ : R) : LawfulRand (flip θ) where
