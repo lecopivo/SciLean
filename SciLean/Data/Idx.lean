@@ -60,8 +60,8 @@ instance : VAdd Int64 (Idx n) := ⟨λ x y => y + x⟩
 def toFin {n} (i : Idx n) : Fin n.toNat := ⟨i.1.toNat, sorry_proof⟩
 def toFin' {n : Nat} (i : Idx n.toUSize) : Fin n := ⟨i.1.toNat, sorry_proof⟩
 
-@[extern c inline "(double)#1"]
-def _root_.USize.toFloat (n : USize) : Float := n.toNat.toFloat
+-- @[extern c inline "(double)#1"]
+def _root_.USize.toFloat (n : USize) : Float := n.toUInt64.toFloat
 def toFloat {n} (i : Idx n) : Float := i.1.toFloat
 
 @[macro_inline]

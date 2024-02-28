@@ -200,7 +200,7 @@ theorem HSMul.hSMul.arg_a0a1.fwdDeriv_rule_at (x : X)
 @[fun_trans, to_any_point]
 theorem HDiv.hDiv.arg_a0a1.fwdDeriv_rule_at (x : X)
     (f : X → K) (g : X → K)
-    (hf : CDifferentiableAt K f x) (hg : CDifferentiableAt K g x) (hx : g x ≠ 0) :
+    (hf : CDifferentiableAt K f x) (hg : CDifferentiableAt K g x) /-(hx : g x ≠ 0)-/ :
     (fwdDeriv K fun x => f x / g x) x
     =
     fun dx =>
@@ -309,7 +309,7 @@ theorem SciLean.Norm2.norm2.arg_a0.fwdDeriv_rule_at (x : X)
 open Scalar in
 @[fun_trans, to_any_point]
 theorem SciLean.norm₂.arg_x.fwdDeriv_rule_at (x : X)
-    (f : X → Y) (hf : CDifferentiableAt R f x) (hx : f x≠0) :
+    (f : X → Y) (hf : CDifferentiableAt R f x) /-(hx : f x≠0)-/ :
     fwdDeriv R (fun x => ‖f x‖₂[R]) x
     =
     fun dx =>

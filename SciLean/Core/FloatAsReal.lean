@@ -25,10 +25,10 @@ instance : CommRing Float where
   nsmul_zero := sorry_proof
   nsmul_succ n x := sorry_proof
   sub_eq_add_neg a b := sorry_proof
-  natCast n := n.toFloat
+  natCast n := n.toUSize.toFloat
   natCast_zero := sorry_proof
   natCast_succ := sorry_proof
-  intCast n := if n ≥ 0 then n.toNat.toFloat else -((-n).toNat).toFloat
+  intCast n := if n ≥ 0 then n.toNat.toUInt64.toFloat else -((-n).toNat.toUInt64).toFloat
   intCast_ofNat := sorry_proof
   intCast_negSucc := sorry_proof
 

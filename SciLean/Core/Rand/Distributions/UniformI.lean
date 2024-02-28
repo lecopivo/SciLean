@@ -7,22 +7,6 @@ namespace SciLean.Prob
 
 variable {R} [RealScalar R]
 
-
-variable (R)
-/-- Uniform random number between `0` and `1`. -/
-def uniformI : Rand R := {
-  spec :=
-    erase (⟨fun φ => ∫' x in Set.Icc (0:R) (1:R), φ x ∂sorry⟩) -- todo: add volume to RealScalar
-  rand :=
-    fun g => do
-    let g : StdGen := g.down
-    let N := 1000000000000000
-    let (n,g) := _root_.randNat g 0 N
-    let y := (n : R) / (N : R)
-    pure (y, ← ULiftable.up g)
-}
-variable {R}
-
 instance : LawfulRand (uniformI R) where
   is_measure := sorry_proof
   is_prob    := sorry_proof
