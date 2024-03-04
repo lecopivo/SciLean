@@ -8,7 +8,7 @@ namespace SciLean
 namespace ArrayType
 
 variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
-variable {Idx : Type _} [IndexType.{_,0} Idx] [LawfulIndexType.{_,0} Idx] [DecidableEq Idx]
+variable {Idx : Type _} [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
 
 variable {K : Type _} [IsROrC K]
 
@@ -100,11 +100,11 @@ instance (priority := low) [ArrayType Cont Idx Elem] [SemiHilbert K Elem]
   test_functions_true := by simp[TestFunction]; intros; apply SemiHilbert.test_functions_true
 
 instance (priority := low) [ArrayType Cont Idx K] : Basis Idx K Cont where
-  basis := λ i => ⊞ i' => (if i = i' then 1 else 0)
+  basis := λ i => Indexed.ofFn fun i' => (if i = i' then 1 else 0)
   proj := λ i x => x[i]
 
 instance (priority := low) [ArrayType Cont Idx K] : DualBasis Idx K Cont where
-  dualBasis := λ i => ⊞ i' => (if i = i' then 1 else 0)
+  dualBasis := λ i => Indexed.ofFn fun i' => (if i = i' then 1 else 0)
   dualProj := λ i x => x[i]
 
 open BasisDuality in

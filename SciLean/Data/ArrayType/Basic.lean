@@ -27,7 +27,7 @@ Alternative notation:
      Common use: `let array : Cont := λ [x] => f x` where the type asscription `: Cont` is important.
 -/
 class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam)
-    extends Indexed Cont Idx Elem, LawfulIndexed Cont Idx Elem where
+    extends Indexed.{u,v,w,w} Cont Idx Elem, LawfulIndexed.{u,v,w,w} Cont Idx Elem where
   get_injective : Function.Injective (Indexed.get (C:=Cont))
 
 
@@ -44,7 +44,7 @@ instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont Idx (fun _ 
 namespace ArrayType
 
 variable
-  {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
+  {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
   [IndexType Idx] [outParam <| DecidableEq Idx] [LawfulIndexType Idx]
   [ArrayType Cont Idx Elem]
 
@@ -108,10 +108,6 @@ instance [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => Elem
   structProj_structModify' := by intro (i,j) (i',j') _ _ _; sorry_proof
 
 
-macro "⊞[" C:term "] " i:term " => " b:term : term => `(Indexed.ofFn (C:=$C) fun $i => $b)
-macro "⊞" i:term " => " b:term : term => `(Indexed.ofFn fun $i => $b)
-
-
 
 section Operations
 
@@ -126,8 +122,8 @@ section Operations
   instance (priority:=low) [Neg Elem] : Neg Cont := ⟨λ f => mapMono (λ fx => -(fx : Elem)) f⟩
   instance (priority:=low) [Inv Elem] : Inv Cont := ⟨λ f => mapMono (λ fx => (fx : Elem)⁻¹) f⟩
 
-  instance (priority:=low) [One Elem]  : One Cont  := ⟨⊞ (_ : Idx) => 1⟩
-  instance (priority:=low) [Zero Elem] : Zero Cont := ⟨⊞ (_ : Idx) => 0⟩
+  instance (priority:=low) [One Elem]  : One Cont  := ⟨Indexed.ofFn fun (_ : Idx) => 1⟩
+  instance (priority:=low) [Zero Elem] : Zero Cont := ⟨Indexed.ofFn fun (_ : Idx) => 0⟩
 
   instance (priority:=low) [LT Elem] : LT Cont := ⟨λ f g => ∀ x, f[x] < g[x]⟩
   instance (priority:=low) [LE Elem] : LE Cont := ⟨λ f g => ∀ x, f[x] ≤ g[x]⟩
