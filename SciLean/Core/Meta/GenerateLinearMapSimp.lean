@@ -26,7 +26,7 @@ theorem _root_.IsLinearMap.add_pull (x x' : X)
 theorem _root_.IsLinearMap.sum_push
   {K} [IsROrC K] {X : Type u} {Y : Type v} [Vec K X] [Vec K Y]
   {f : X → Y} (hf : IsLinearMap K f)
-  (ι : Type) [IndexType.{0,u} ι] [IndexType.{0,v} ι] (x : ι → X)
+  (ι : Type) [IndexType.{_,v} ι] [IndexType.{_,u} ι] (x : ι → X)
   : (∑ i, f (x i)) = f (∑ i, x i) := by sorry_proof
 
 theorem _root_.IsLinearMap.sum_pull

@@ -58,14 +58,12 @@ namespace Vec2
     get := get
     update u i f := set u i (f (get u i))
 
-
   instance : ArrayType Vec2 (Fin 2) Float where
     get_injective := sorry_proof
     get_ofFn := sorry_proof
     get_set_eq := sorry_proof
-    get_set_neq := sorry_proof
-    update_set_get := sorry_proof
-
+    get_set_ne := sorry_proof
+    update_eq_set_get := sorry_proof
 
   instance : PlainDataType Vec2 where
     btype := .inr {
@@ -150,8 +148,8 @@ namespace Vec3
     get_injective := sorry_proof
     get_ofFn := sorry_proof
     get_set_eq := sorry_proof
-    get_set_neq := sorry_proof
-    update_set_get := sorry_proof
+    get_set_ne := sorry_proof
+    update_eq_set_get := sorry_proof
 
 
   instance : PlainDataType Vec3 where

@@ -180,8 +180,8 @@ instance : Indexed (DataArrayN α ι) ι α where
 instance : LawfulIndexed (DataArrayN α ι) ι α where
   get_ofFn := sorry_proof
   get_set_eq := sorry_proof
-  get_set_neq := sorry_proof
-  update_set_get := sorry_proof
+  get_set_ne := sorry_proof
+  update_eq_set_get := sorry_proof
 
 instance : ArrayType (DataArrayN α ι) ι α where
   get_injective := sorry_proof

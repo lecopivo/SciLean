@@ -20,10 +20,10 @@ end SciLean
 namespace IndexType
 
 
-variable {ι} [IndexType ι]
+variable {ι : Type v} [IndexType ι]
 
-@[specialize] def sum {α} [Zero α] [Add α] (f : ι → α) : α :=
-  Fold.fold (IndexType.univ ι) (fun s i => s + f i) 0
+@[specialize] def sum {α : Type u} [Zero α] [Add α] (f : ι → α) : α :=
+  Fold.fold (β:=α) (C:=IndexType.Univ ι) (τ:=ι) (IndexType.univ ι) (fun (s : α) (i : ι) => s + f i) (0 : α)
 
 def reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (default : α) : m α := do
   let n := IndexType.card ι
