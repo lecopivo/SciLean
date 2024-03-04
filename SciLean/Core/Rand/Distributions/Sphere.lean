@@ -7,6 +7,10 @@ import SciLean.Core.Notation.CDeriv
 import SciLean.Core.Notation.FwdDeriv
 import SciLean.Tactic.LSimp.LetNormalize
 import SciLean.Tactic.LetNormalize
+import SciLean.Tactic.LetNormalize2
+-- import Mathlib.Tactic.LiftLets
+import SciLean.Util.Profile
+
 
 open MeasureTheory
 
@@ -23,7 +27,7 @@ variable
 def sphere (x : X) (r : R) := {y : X | ‖y-x‖₂[R] = r}
 def ball   (x : X) (r : R) := {y : X | ‖y-x‖₂[R] < r}
 
-instance (x : X) (r : R) : MeasureSpace (sphere x r) := sorry
+1instance (x : X) (r : R) : MeasureSpace (sphere x r) := sorry
 instance (x : X) (r : R) [ToString X] : ToString (sphere x r) := ⟨fun x => toString x.1⟩
 
 end Geometry
@@ -48,8 +52,84 @@ def mkSphereMap' (f : Vec3 → Vec3) (x : Vec3) : Vec3 :=
   let x' := (1/xnorm) • x
   let y := f x'
   let ynorm := ‖y‖₂[Float]
-  (xnorm / ynorm) • y
+  let s := (xnorm / ynorm)
+  s • y
 
+
+variable (x dx v : Vec3) (s : Float)
+
+#check Lean.Meta.lambdaTelescope
+
+
+open Lean Meta
+simproc_decl lift_lets_simproc (_) := fun e => do
+  let E ← inferType e
+  if (← Meta.isClass? E).isSome then return .continue
+  let e ← e.liftLets2 (fun xs b => do
+      if xs.size ≠ 0
+      then mkLetFVars xs (← Simp.dsimp b)
+      else pure b) {}
+  return .visit {expr:=e}
+
+
+open Lean Meta
+simproc_decl post_check (_) := fun e => do
+    IO.println s!"running post on  {← ppExpr e}"
+    let e' ← Simp.dsimp e
+    return .visit {expr := e'}
+
+
+variable (f : Vec3 → Vec3) (hf : CDifferentiable Float f)
+
+macro "autodiff" : conv =>
+  `(conv| fun_trans (config:={zeta:=false,singlePass:=true}) (disch:=sorry) only [ftrans_simp,lift_lets_simproc])
+
+-- set_option trace.Meta.Tactic.fun_trans true in
+-- set_option trace.Meta.Tactic.fun_prop true
+#check (∂> x' : Vec3, mkSphereMap' f x')
+  rewrite_by
+    unfold mkSphereMap'
+    conv =>
+      enter [x]
+      autodiff
+      autodiff
+
+
+set_option trace.Meta.Tactic.fun_trans true in
+#check (fwdDeriv Float fun x' : Vec3 =>
+      let x' := (x',x').1
+      x')
+  rewrite_by
+    enter [x]
+    autodiff
+    autodiff
+
+
+
+
+
+-- set_option trace.Meta.Tactic.fun_trans true in
+-- set_option trace.Meta.Tactic.fun_trans.rewrite true in
+#check (∂ x' : Vec3,
+      let x' := s • x'
+      x')
+  rewrite_by
+    autodiff
+
+
+#check (∂ x' : Vec3,
+      let x' := s • x'
+      let y := (fun x => v + x) x';
+      y)
+  rewrite_by
+    autodiff
+
+#check (∂ x' : Vec3,
+      let x' := s • x'
+      let y := (fun x => v + s • x + x) x';
+      y)
+  rewrite_by
+    autodiff
 
 def det2 (A : Vec2 → Vec2) : Float :=
   let u := A v[1,0]
@@ -67,25 +147,33 @@ def det3 (A : Vec3 → Vec3) : Float :=
 
 noncomputable
 def sphereMapDensity (f : Vec3 → Vec3) (x : Vec3) : Float :=
-  let J := fun dx => ∂ x':=x;dx, mkSphereMap' f x'
-  det3 J
+  det3 (fun dx => ∂ x':=x;dx, mkSphereMap' f x')
 
 def elongate (s : Float) (v : Vec3) (x : Vec3) : Vec3 :=
   ((s - 1) * ⟪v, x⟫[Float]) • v + x
 
 
+-- #profile_this_file
+
+set_option profiler true
+
+noncomputable
 def elongateDensity (s : Float) (v : Vec3) (x : Vec3) : Float := (sphereMapDensity (elongate s v) x)
   rewrite_by
     unfold sphereMapDensity elongate mkSphereMap'
 
-    fun_trans (config:={zeta:=false,singlePass:=true}) (disch:=sorry) only
-    let_normalize
-    simp (config:={zeta:=false,proj:=false,singlePass:=true}) only [ftrans_simp]
-    let_normalize
+    -- simp (config:={zeta:=false,singlePass:=true}) (disch:=sorry) only
+    --   [↓Mathlib.Meta.FunTrans.fun_trans_simproc,↓Tactic.let_normalize,lift_lets_simproc, ftrans_simp]
+
+    autodiff
+    autodiff
+    simp (config:={zeta:=false}) only [lift_lets_simproc]
+    -- simp (config:={zeta:=false}) only [lift_lets_simproc]
+    -- simp (config:={zeta:=false}) [Tactic.let_normalize]
+    -- let_normalize
+    -- simp (config:={zeta:=false,proj:=false,singlePass:=true}) only [ftrans_simp]
+    -- let_normalize
 
     --  simp (config:={zeta:=false,proj:=false,singlePass:=true}) only [ftrans_simp,Tactic.let_normalize]
 
 #check Nat
-
-#eval elongateDensity 2 v[1,0,0] v[0.5,0.5,0.5].normalize
-#eval elongateDensity 10 v[1,0,0] v[1,0,0]
