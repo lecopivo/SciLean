@@ -210,7 +210,7 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at (x : X)
     lhs
     simp[div_eq_inv_mul]
     fun_trans (disch:=assumption)
-  field_simp; sorry_proof --ring
+  field_simp ; sorry_proof --ring
 
 
 -- HPow.hPow -------------------------------------------------------------------

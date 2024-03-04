@@ -1047,9 +1047,8 @@ theorem HDiv.hDiv.arg_a0a1.revDeriv_rule
       (ydf.1 / zdg.1,
        fun dx' => (1 / (conj zdg.1)^2) • (zdg.2 (-conj ydf.1 • dx') (conj zdg.1 • ydf.2 dx'))) := by
   unfold revDeriv; simp
-  conv => lhs; fun_trans
+  conv => lhs; fun_trans (disch:=assumption)
   simp[revDerivUpdate,smul_push,neg_pull,revDeriv,smul_add,smul_sub, ← sub_eq_add_neg]
-  sorry_proof -- todo: fix fun_trans to use discharger
 
 @[fun_trans]
 theorem HDiv.hDiv.arg_a0a1.revDerivUpdate_rule
@@ -1067,9 +1066,8 @@ theorem HDiv.hDiv.arg_a0a1.revDerivUpdate_rule
          ((zdg.2 (a • dx') (ydf.2 (b • dx') dx)))) := by
   funext
   simp[revDerivUpdate]
-  conv => lhs; fun_trans
+  conv => lhs; fun_trans (disch:=assumption)
   simp[revDerivUpdate,smul_push,neg_pull,revDeriv,smul_add,smul_sub,add_assoc,mul_assoc]
-  sorry_proof -- todo: fix fun_trans to use discharger
 
 
 @[fun_trans]
@@ -1084,8 +1082,7 @@ theorem HDiv.hDiv.arg_a0a1.revDerivProj_rule
        fun _ dx' => (1 / (conj zdg.1)^2) • (zdg.2 (-conj ydf.1 • dx') (conj zdg.1 • ydf.2 dx'))) :=
 by
   unfold revDerivProj
-  fun_trans; simp[oneHot, structMake]
-  sorry_proof -- todo: fix fun_trans to use discharger
+  fun_trans (disch:=assumption); simp[oneHot, structMake]
 
 @[fun_trans]
 theorem HDiv.hDiv.arg_a0a1.revDerivProjUpdate_rule
@@ -1103,8 +1100,8 @@ theorem HDiv.hDiv.arg_a0a1.revDerivProjUpdate_rule
          ((zdg.2 (a • dx') (ydf.2 (b • dx') dx)))) :=
 by
   unfold revDerivProjUpdate
-  fun_trans; simp[revDerivUpdate,revDeriv,add_assoc,neg_pull,mul_assoc,smul_push]
-  sorry_proof -- todo: fix fun_trans to use discharger
+  fun_trans (disch:=assumption)
+  simp[revDerivUpdate,revDeriv,add_assoc,neg_pull,mul_assoc,smul_push]
 
 
 -- HPow.hPow -------------------------------------------------------------------
@@ -1476,9 +1473,8 @@ theorem SciLean.norm₂.arg_x.revDeriv_rule_at
      fun dr =>
        (ynorm⁻¹ * dr) • ydf.2 ydf.1) := by
   simp[revDeriv]
-  sorry_proof
-  -- fun_trans
-  -- funext dr; simp[smul_smul]
+  fun_trans (disch:=assumption) only
+  simp[smul_smul]
 
 @[fun_trans]
 theorem SciLean.norm₂.arg_x.revDerivUpdate_rule_at
@@ -1491,11 +1487,8 @@ theorem SciLean.norm₂.arg_x.revDerivUpdate_rule_at
      fun dr dx =>
        ydf.2 ((ynorm⁻¹ * dr)•ydf.1) dx) := by
   simp[revDerivUpdate]
-  sorry_proof
-  -- fun_trans only
-  -- simp
-  -- fun_trans
-  -- funext dr; simp[revDeriv,smul_pull]
+  fun_trans (disch:=assumption) only
+  simp[revDeriv,smul_pull]
 
 @[fun_trans]
 theorem SciLean.norm₂.arg_x.revDerivProj_rule_at
@@ -1508,8 +1501,7 @@ theorem SciLean.norm₂.arg_x.revDerivProj_rule_at
      fun _ dr =>
        (ynorm⁻¹ * dr) • ydf.2 ydf.1):= by
   simp[revDerivProj]
-  sorry_proof
-  -- fun_trans only; simp[oneHot, structMake]
+  fun_trans (disch:=assumption) only; simp[oneHot, structMake]
 
 @[fun_trans]
 theorem SciLean.norm₂.arg_x.revDerivProjUpdate_rule_at
@@ -1524,12 +1516,12 @@ theorem SciLean.norm₂.arg_x.revDerivProjUpdate_rule_at
 by
   have ⟨_,_⟩ := hf
   simp[revDerivProjUpdate]
-  sorry_proof
-  -- fun_trans only; simp[revDeriv,revDerivUpdate,smul_pull]
+  fun_trans (disch:=assumption) only
+  simp[revDeriv,revDerivUpdate,smul_pull]
 
 @[fun_trans]
 theorem SciLean.norm₂.arg_x.revDeriv_rule
-    (f : X → Y) (hf : HasAdjDiff R f) (hx : fpropParam <| ∀ x, f x≠0) :
+    (f : X → Y) (hf : HasAdjDiff R f) (hx : ∀ x, f x≠0) :
     (revDeriv R (fun x => ‖f x‖₂[R]))
     =
     fun x =>
@@ -1539,14 +1531,14 @@ theorem SciLean.norm₂.arg_x.revDeriv_rule
        fun dr =>
          (ynorm⁻¹ * dr) • ydf.2 ydf.1):=
 by
-  simp[revDeriv]
-  sorry_proof
-  -- fun_trans only
-  -- sorry_proof
+  unfold revDeriv
+  funext x; simp
+  fun_trans (disch:=assumption)
+  simp[smul_smul]
 
 @[fun_trans]
 theorem SciLean.norm₂.arg_x.revDerivUpdate_rule
-    (f : X → Y) (hf : HasAdjDiff R f) (hx : fpropParam <| ∀ x, f x≠0) :
+    (f : X → Y) (hf : HasAdjDiff R f) (hx : ∀ x, f x≠0) :
     (revDerivUpdate R (fun x => ‖f x‖₂[R]))
     =
     fun x =>
@@ -1556,17 +1548,14 @@ theorem SciLean.norm₂.arg_x.revDerivUpdate_rule
        fun dr dx =>
          ydf.2 ((ynorm⁻¹ * dr)•ydf.1) dx):=
 by
-  simp[revDerivUpdate]
-  sorry_proof
-  -- fun_trans only
-  -- sorry_proof
-  -- simp
-  -- fun_trans
-  -- funext dr; simp[revDeriv,smul_pull]
+  unfold revDerivUpdate
+  funext x; simp
+  fun_trans (disch:=assumption) only
+  simp[revDeriv,smul_pull]
 
 @[fun_trans]
 theorem SciLean.norm₂.arg_x.revDerivProj_rule
-    (f : X → Y) (hf : HasAdjDiff R f) (hx : fpropParam <| ∀ x, f x≠0) :
+    (f : X → Y) (hf : HasAdjDiff R f) (hx : ∀ x, f x≠0) :
     (revDerivProj R Unit (fun x => ‖f x‖₂[R]))
     =
     fun x =>
@@ -1575,14 +1564,14 @@ theorem SciLean.norm₂.arg_x.revDerivProj_rule
       (ynorm,
        fun _ dr =>
          (ynorm⁻¹ * dr) • ydf.2 ydf.1) := by
-  simp[revDerivProj]
-  sorry_proof
-  -- fun_trans only;
-  -- sorry_proof -- simp[oneHot, structMake]
+  unfold revDerivProj
+  funext x; simp
+  fun_trans (disch:=assumption) only
+  simp[oneHot, structMake]
 
 @[fun_trans]
 theorem SciLean.norm₂.arg_x.revDerivProjUpdate_rule
-    (f : X → Y) (hf : HasAdjDiff R f) (hx : fpropParam <| ∀ x, f x≠0) :
+    (f : X → Y) (hf : HasAdjDiff R f) (hx : ∀ x, f x≠0) :
     (revDerivProjUpdate R Unit (fun x => ‖f x‖₂[R]))
     =
     fun x =>
@@ -1591,9 +1580,9 @@ theorem SciLean.norm₂.arg_x.revDerivProjUpdate_rule
        (ynorm,
         fun _ dr dx =>
           ydf.2 ((ynorm⁻¹ * dr)•ydf.1) dx) := by
-  simp[revDerivProjUpdate]
-  sorry_proof
-  -- fun_trans only; simp[revDeriv,revDerivUpdate,smul_pull]
-  -- sorry_proof
+  unfold revDerivProjUpdate
+  funext x; simp
+  fun_trans (disch:=assumption) only
+  simp[revDeriv,revDerivUpdate,smul_pull]
 
 end InnerProductSpace
