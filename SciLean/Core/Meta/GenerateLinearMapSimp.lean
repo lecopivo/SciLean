@@ -224,4 +224,5 @@ syntax (name:=genLinMapSimpsNotation) "#generate_linear_map_simps " ident : comm
 open Lean Elab Term Command
 elab_rules : command
 | `(#generate_linear_map_simps $thrm) => do
-  liftTermElabM <| generateLinearMapSimps thrm.getId
+  let thmName ← resolveGlobalConstNoOverload thrm
+  liftTermElabM <| generateLinearMapSimps thmName
