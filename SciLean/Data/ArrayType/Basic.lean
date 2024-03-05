@@ -155,37 +155,68 @@ section Operations
         break
     if le then isTrue sorry_proof else isFalse sorry_proof
 
-  @[simp]
+  @[simp, ftrans_simp]
   theorem add_ofFn [Add Elem] (f g: Idx → Elem)
     : Indexed.ofFn (C:=Cont) f + Indexed.ofFn (C:=Cont) g
       =
       Indexed.ofFn fun i => f i + g i  := by apply ArrayType.ext (Idx:=Idx); simp[HAdd.hAdd, Add.add]
 
-  @[simp]
+  @[simp, ftrans_simp]
   theorem sub_ofFn [Sub Elem] (f g: Idx → Elem)
     : Indexed.ofFn (C:=Cont) f - Indexed.ofFn (C:=Cont) g
       =
       Indexed.ofFn fun i => f i - g i  := by apply ArrayType.ext (Idx:=Idx); simp[HSub.hSub, Sub.sub]
 
-  @[simp]
+  @[simp, ftrans_simp]
   theorem neg_ofFn [Neg Elem] (f: Idx → Elem)
     : - Indexed.ofFn (C:=Cont) f
       =
       Indexed.ofFn fun i => - f i  := by apply ArrayType.ext (Idx:=Idx); simp[Neg.neg]
 
-  @[simp]
+  @[simp, ftrans_simp]
   theorem smul_ofFn [SMul K Elem] (f : Idx → Elem) (a : K)
     : a • Indexed.ofFn (C:=Cont) f
       =
       Indexed.ofFn fun i => a • f i := by apply ArrayType.ext (Idx:=Idx); simp[HSMul.hSMul, SMul.smul];
 
-  @[simp]
+  @[simp, ftrans_simp]
   theorem sum_ofFn [AddCommMonoid Elem] {ι} [IndexType ι] (f : ι → Idx → Elem)
     : ∑ j, Indexed.ofFn (C:=Cont) (fun i => f j i)
       =
       Indexed.ofFn fun i => ∑ j, f j i
     := sorry_proof
 
+  @[simp, ftrans_simp]
+  theorem add_get [Add Elem] (x y : Cont) (i : Idx) :
+      (x + y)[i] = x[i] + y[i] := by simp[HAdd.hAdd,Add.add]
+
+  @[simp, ftrans_simp]
+  theorem sub_get [Sub Elem] (x y : Cont) (i : Idx) :
+      (x - y)[i] = x[i] - y[i] := by simp[HSub.hSub,Sub.sub]
+
+  @[simp, ftrans_simp]
+  theorem mul_get [Mul Elem] (x y : Cont) (i : Idx) :
+      (x * y)[i] = x[i] * y[i] := by simp[HMul.hMul,Mul.mul]
+
+  @[simp, ftrans_simp]
+  theorem div_get [Div Elem] (x y : Cont) (i : Idx) :
+      (x / y)[i] = x[i] / y[i] := by simp[HDiv.hDiv,Div.div]
+
+  @[simp, ftrans_simp]
+  theorem smul_get {R} [SMul R Elem] (r : R) (x : Cont) (i : Idx) :
+      (r • x)[i] = r • x[i] := by simp[HSMul.hSMul,SMul.smul]
+
+  @[simp, ftrans_simp]
+  theorem neg_get [Neg Elem] (x : Cont) (i : Idx) :
+      (- x)[i] = - x[i] := by simp[Neg.neg]
+
+  @[simp, ftrans_simp]
+  theorem one_get [One Elem] (i : Idx) :
+      (1 : Cont)[i] = 1 := by simp[One.one,OfNat.ofNat]
+
+  @[simp, ftrans_simp]
+  theorem zero_get [Zero Elem] (i : Idx) :
+      (0 : Cont)[i] = 0 := by simp[Zero.zero,OfNat.ofNat]
 
 end Operations
 
