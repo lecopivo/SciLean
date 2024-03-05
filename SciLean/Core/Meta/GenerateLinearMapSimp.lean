@@ -12,8 +12,13 @@ namespace SciLean
 
 section HelperTheorems
 
+universe u'
+
 variable
-  {K} [IsROrC K] {X Y Z : Type _} [Vec K X] [Vec K Y] [Vec K Z]
+  {K : Type u'} [CommSemiring K]
+  {X : Type u} [AddCommGroup X] [Module K X]
+  {Y : Type v} [AddCommGroup Y] [Module K Y]
+  {Z : Type w} [AddCommGroup Z] [Module K Z]
   {f : X → Y} (hf : IsLinearMap K f)
 
 
@@ -23,16 +28,20 @@ theorem _root_.IsLinearMap.add_push (x x' : X)
 theorem _root_.IsLinearMap.add_pull (x x' : X)
   : f (x + x') = f x + f x' := by rw[hf.map_add]
 
+-- todo: this is not sufficiently universe polymorphic
+--       and somethimes forces to write non-universe polymorphic code
+--       fix this
 theorem _root_.IsLinearMap.sum_push
-  {K} [IsROrC K] {X : Type u} {Y : Type v} [Vec K X] [Vec K Y]
   {f : X → Y} (hf : IsLinearMap K f)
-  (ι : Type) [IndexType.{_,v} ι] [IndexType.{_,u} ι] (x : ι → X)
+  (ι : Type) [IndexType.{_,u} ι] [IndexType.{_,v} ι] (x : ι → X)
   : (∑ i, f (x i)) = f (∑ i, x i) := by sorry_proof
 
+-- todo: this is not sufficiently universe polymorphic
+--       and somethimes forces to write non-universe polymorphic code
+--       fix this
 theorem _root_.IsLinearMap.sum_pull
-  {K} [IsROrC K] {X : Type u} {Y : Type v} [Vec K X] [Vec K Y]
   {f : X → Y} (hf : IsLinearMap K f)
-  (ι : Type) [IndexType.{0,u} ι] [IndexType.{0,v} ι] (x : ι → X)
+  (ι : Type) [IndexType.{_,u} ι] [IndexType.{_,v} ι] (x : ι → X)
   : f (∑ i, x i) = ∑ i, f (x i) := by sorry_proof
 
 theorem _root_.IsLinearMap.sub_push (x x' : X)
@@ -172,7 +181,7 @@ def generateLinearMapSimps (isLinearMapTheorem : Name) : MetaM Unit := do
 
   lambdaTelescope info.value! fun ctx isLinearMap => do
 
-    let pullpush := [`add_pull,`add_push, `sum_push, `sum_pull, `sub_pull,`sub_push,`smul_pull,`smul_push,`neg_pull,`neg_push]
+    let pullpush := [`add_pull,`add_push, `sub_pull,`sub_push,`smul_pull,`smul_push,`neg_pull,`neg_push]
 
     for thrm in pullpush do
       generateLinearMapSimp ctx isLinearMap thrm

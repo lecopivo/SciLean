@@ -1,6 +1,5 @@
 import SciLean.Core.FunctionPropositions.CDifferentiable
 import SciLean.Core.FunctionPropositions.HasSemiAdjoint
--- import SciLean.Core.FunctionPropositions.HasAdjDiffAt
 
 import SciLean.Core.FunctionTransformations.CDeriv
 
@@ -29,15 +28,15 @@ def HasAdjDiff (f : X → Y) : Prop := ∀ x, HasAdjDiffAt K f x
 
 
 @[fun_prop]
-theorem HasAjdDiff.hasAdjDiffAt (f : X → Y) (x) (hf : HasAdjDiff K f) :
+theorem HasAdjDiff.hasAdjDiffAt (f : X → Y) (x) (hf : HasAdjDiff K f) :
     HasAdjDiffAt K f x := hf x
 
 @[fun_prop]
-theorem HasAjdDiffAt.cdifferentiableAt (f : X → Y) (x) (hf : HasAdjDiffAt K f x) :
+theorem HasAdjDiffAt.cdifferentiableAt (f : X → Y) (x) (hf : HasAdjDiffAt K f x) :
     CDifferentiableAt K f x := hf.1
 
 @[fun_prop]
-theorem HasAjdDiff.cdifferentiable (f : X → Y) (hf : HasAdjDiff K f) :
+theorem HasAdjDiff.cdifferentiable (f : X → Y) (hf : HasAdjDiff K f) :
     CDifferentiable K f := fun x => (hf x).1
 
 @[fun_prop]
@@ -47,6 +46,18 @@ theorem cderiv.arg_dx.hasSemiAdjointAt (f : X → Y) (x) (hf : HasAdjDiffAt K f 
 @[fun_prop]
 theorem cderiv.arg_dx.hasSemiAdjoint (f : X → Y) (x) (hf : HasAdjDiff K f) :
     HasSemiAdjoint K (cderiv K f x) := by fun_prop
+
+@[fun_prop]
+theorem HasSemiAdjoint.hasAdjDiff (f : X → Y) (hf : HasSemiAdjoint K f) :
+    HasAdjDiff K f := by
+  intro x
+  constructor
+  . fun_prop
+  . fun_trans; fun_prop
+
+
+----------------------------------------------------------------------------------------------------
+-- Lambda calculus rules ---------------------------------------------------------------------------
 
 @[fun_prop]
 theorem HasAdjDiffAt.id_rule (x) : HasAdjDiffAt K (fun x : X => x) x := by

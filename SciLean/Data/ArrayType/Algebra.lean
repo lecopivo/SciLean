@@ -37,7 +37,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [AddCommGroup Elem] : AddCo
   add_zero  := sorry_proof
   add_left_neg := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module K Elem] : Module K Cont where
+instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module R Elem] : Module R Cont where
   one_smul := sorry_proof
   mul_smul := sorry_proof
   smul_zero := sorry_proof

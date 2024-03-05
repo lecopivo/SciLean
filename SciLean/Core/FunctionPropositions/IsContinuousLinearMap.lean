@@ -4,6 +4,7 @@ import Mathlib.Analysis.NormedSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
 
 import SciLean.Core.FunctionPropositions.IsLinearMap
+import SciLean.Core.FunctionPropositions.Differentiable
 
 namespace SciLean
 
@@ -127,6 +128,7 @@ variable
   {Z : Type _} [TopologicalSpace Z] [AddCommMonoid Z] [Module R Z]
   {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, TopologicalSpace (E i)] [∀ i, AddCommMonoid (E i)] [∀ i, Module R (E i)]
+
 
 
 -- FunLike.coe -----------------------------------------------------------------
@@ -417,6 +419,24 @@ by
   induction dec
   case isTrue h  => simp[h]; apply ht
   case isFalse h => simp[h]; apply he
+
+
+
+section NormedSpace
+
+variable
+  {K : Type _} [IsROrC K]
+  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
+  {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
+
+--------------------------------------------------------------------------------
+-- Differentiable --------------------------------------------------------------
+
+@[fun_prop]
+theorem isContinuousLinearMap_differentiable (f : X → Y) (hf : IsContinuousLinearMap K f) :
+    Differentiable K f := by have := hf; sorry_proof
+
+end NormedSpace
 
 
 --------------------------------------------------------------------------------

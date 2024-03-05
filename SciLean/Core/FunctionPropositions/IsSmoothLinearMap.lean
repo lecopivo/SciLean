@@ -24,9 +24,9 @@ def IsSmoothLinearMap (f : X → Y) : Prop :=
 namespace IsSmoothLinearMap
 
 @[fun_prop]
-theorem isLinearMap (f : X → Y) (hf : IsSmoothLinearMap K f) : IsLinearMap K f := hf.1
+theorem isLinearMap {f : X → Y} (hf : IsSmoothLinearMap K f) : IsLinearMap K f := hf.1
 @[fun_prop]
-theorem cdifferentiable (f : X → Y) (hf : IsSmoothLinearMap K f) : CDifferentiable K f := hf.2
+theorem cdifferentiable {f : X → Y} (hf : IsSmoothLinearMap K f) : CDifferentiable K f := hf.2
 
 variable (X)
 @[fun_prop]
@@ -219,9 +219,9 @@ section OnFinVec
 
 variable
   {K : Type _} [IsROrC K]
-  {IX : Type} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
-  {IY : Type} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
+  {IX : Type _} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+  {IY : Type _} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+  {IZ : Type _} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
 @[fun_prop]
 theorem Basis.proj.arg_x.IsSmoothLinearMap_rule (i : IX)
