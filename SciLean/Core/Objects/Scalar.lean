@@ -123,7 +123,6 @@ noncomputable
 def Scalar.toENNReal {R} [RealScalar R] (x : R) : ENNReal :=
   .ofReal (Scalar.toReal R x)
 
-#check ENNReal.ofReal
 @[simp, ftrans_simp]
 theorem Scalar.oftoENNReal {R} [RealScalar R] (x : R) :
     Scalar.ofENNReal (Scalar.toENNReal x)
