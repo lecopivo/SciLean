@@ -3,9 +3,8 @@ import SciLean.Core.Meta.ExtendContext
 import SciLean.Core.Meta.ParametrizeFVars
 import SciLean.Tactic.LetNormalize
 import SciLean.Tactic.AnalyzeConstLambda
-import SciLean.Tactic.LSimp2.Elab
-import SciLean.Lean.Name
-import SciLean.Core.Notation
+-- import SciLean.Lean.Name
+-- import SciLean.Core.Notation
 
 namespace SciLean.Meta
 
@@ -96,7 +95,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
     let revDerivFun ← liftM <|
       mkLambdaFVars xs (rhs.beta #[(← mkProdElem mainArgs)])
     let revDerivFunName := constName.append argSuffix |>.append "revDeriv"
-    let (revDerivFun,_) ← elabConvRewrite revDerivFun (← `(conv| lsimp (config := {zeta:=false}) only))
+    let (revDerivFun,_) ← elabConvRewrite revDerivFun (← `(conv| simp (config := {zeta:=false}) only))
     let revDerivFunInfo : DefinitionVal :=
     {
       name  := revDerivFunName
@@ -215,7 +214,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
 
       let rhs' := step.result.expr
       let h' ← step.result.getProof
-      let rwTac ← `(conv| (ftrans))
+      let rwTac ← `(conv| (fun_trans))
       let (rhs'', h'') ← elabConvRewrite rhs' rwTac
 
       let xs := ctx ++ extraInsts ++ #[W] ++ instW ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
