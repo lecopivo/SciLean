@@ -26,3 +26,5 @@ attribute [ftrans_simp] Sum.inr.injEq Sum.inl.injEq
 
 -- complex
 attribute [ftrans_simp] Complex.conj_I
+
+attribute [ftrans_simp] Pi.zero_apply Pi.add_apply Pi.sub_apply Pi.mul_apply Pi.neg_apply Pi.one_apply Pi.smul_apply Pi.pow_apply
