@@ -1171,14 +1171,16 @@ theorem IndexType.sum.arg_f.revDeriv_rule
   : revDeriv K (fun x => ∑ i, f x i)
     =
     fun x =>
-      let ydf := fun i => revDerivUpdate K (f · i) x
-      (∑ i, (ydf i).1,
+      let ydf := revDeriv K f x
+      (∑ i, ydf.1 i,
        fun dy =>
-         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 dy dx) 0) :=
+         ydf.2 (fun _ => dy)) :=
 by
   unfold revDeriv
+  fun_trans;
+  funext x; simp; funext dy;
+  conv => rhs; rw[cderiv.pi_rule (hf := by fun_prop)];
   fun_trans
-  funext x; simp; funext dy; rfl
 
 
 @[fun_trans]
@@ -1187,39 +1189,43 @@ theorem IndexType.sum.arg_f.revDerivUpdate_rule
     revDerivUpdate K (fun x => ∑ i, f x i)
     =
     fun x =>
-      let ydf := fun i => revDerivUpdate K (f · i) x
-      (∑ i, (ydf i).1,
+      let ydf := revDerivUpdate K f x
+      (∑ i, ydf.1 i,
        fun dy dx =>
-         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 dy dx) dx) := by
+         ydf.2 (fun _ => dy) dx) := by
   unfold revDerivUpdate
   conv => lhs; fun_trans
-  funext x; simp; funext dy dx; simp[revDerivUpdate]
-  sorry_proof
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revDerivProj_rule
+theorem IndexType.sum.arg_f.revDerivProj_rule [DecidableEq ι]
     (f : X → ι → Y') (hf : ∀ i, HasAdjDiff K (fun x => f x i)) :
     revDerivProj K Yi (fun x => ∑ i, f x i)
     =
     fun x =>
-      let ydf := fun i => revDerivProjUpdate K Yi (f · i) x
-      (∑ i, (ydf i).1,
+      -- this is not optimal
+      -- we should have but right now there is no appropriate StrucLike instance
+      -- let ydf := revDerivProj K Yi f x
+      let ydf := revDerivProjUpdate K (ι×Yi) f x
+      (∑ i, ydf.1 i,
        fun j dy =>
-         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 j dy dx) 0) := by
-  funext; simp[revDerivProj]; fun_trans; rfl
+         Fold.fold (IndexType.univ ι) (fun dx i => ydf.2 (i,j) dy dx) 0) := by
+  unfold revDerivProj
+  conv => lhs; fun_trans
+  sorry_proof
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revDerivProjUpdate_rule
+theorem IndexType.sum.arg_f.revDerivProjUpdate_rule [DecidableEq ι]
     (f : X → ι → Y') (hf : ∀ i, HasAdjDiff K (fun x => f x i)) :
     revDerivProjUpdate K Yi (fun x => ∑ i, f x i)
     =
     fun x =>
-      let ydf := fun i => revDerivProjUpdate K Yi (f · i) x
-      (∑ i, (ydf i).1,
+      let ydf := revDerivProjUpdate K (ι×Yi) f x
+      (∑ i, ydf.1 i,
        fun j dy dx =>
-         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 j dy dx) dx) := by
-  funext; simp[revDerivProjUpdate]; fun_trans; sorry_proof
+         Fold.fold (IndexType.univ ι) (fun dx i => ydf.2 (i,j) dy dx) dx) := by
+  sorry_proof
+
 
 end IndexTypeSum
 
