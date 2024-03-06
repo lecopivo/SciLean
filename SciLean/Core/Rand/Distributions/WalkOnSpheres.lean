@@ -22,12 +22,14 @@ variable {Y : Type} [SemiHilbert Float Y] [Module ℝ Y] [IsScalarTower ℝ Floa
 set_default_scalar Float
 
 
+def pi' := 3.14159265359
+
 open RealScalar in
 noncomputable
 def harmonicRec (n : ℕ) (φ : Vec3 → Float) (g : Vec3 → Y) (x : Vec3) : Y :=
   match n with
   | 0 => g x
-  | m+1 => (4*(pi:Float))⁻¹ • ∫' (x' : sphere (0:Vec3) (1:Float)), harmonicRec m φ g (x + φ x • x'.1)
+  | m+1 => (4*(pi':Float))⁻¹ • ∫' (x' : sphere (0:Vec3) (1:Float)), harmonicRec m φ g (x + φ x • x'.1)
 
 
 def walkOnSpheres (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : Rand Y := do
