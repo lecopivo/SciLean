@@ -109,7 +109,7 @@ instance (priority:=low+1) instStrucTypePi
   (I : Type _) (E : I → Type _)
   (J : I → Type _) (EJ : (i : I) → (J i) → Type _)
   [∀ (i : I), StructType (E i) (J i) (EJ i)] [DecidableEq I]
-  : StructType (∀ i, E i) ((i : I) × (J i)) (fun ⟨i,j⟩ => EJ i j) where
+  : StructType (∀ i, E i) ((i : I) × (J i)) (fun ij => EJ ij.1 ij.2) where
   structProj := fun f ⟨i,j⟩ => StructType.structProj (f i) j
   structMake := fun f i => StructType.structMake fun j => f ⟨i,j⟩
   structModify := fun ⟨i,j⟩ f x => Function.modify x i (StructType.structModify (I:=J i) j f)
@@ -146,7 +146,7 @@ instance instStrucTypeArrowSimple
 instance instStrucTypeArrow
   (E I J : Type _) (EI : I → Type _)
   [StructType E I EI] [DecidableEq J]
-  : StructType (J → E) (J×I) (fun (_,i) => EI i) where
+  : StructType (J → E) (J×I) (fun ji => EI ji.2) where
   structProj := fun f (j,i) => StructType.structProj (f j) i
   structMake := fun f j => StructType.structMake fun i => f (j,i)
   structModify := fun (j,i) f x => Function.modify x j (StructType.structModify i f)
