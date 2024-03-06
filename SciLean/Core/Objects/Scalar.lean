@@ -114,6 +114,29 @@ instance {R K} [Scalar R K] : HPow K K K := ⟨fun x y => Scalar.pow x y⟩
   -- ceil
 
 
+@[coe]
+def Scalar.ofENNReal {R} [RealScalar R] (x : ENNReal) : R :=
+  Scalar.ofReal R x.toReal
+
+@[coe]
+noncomputable
+def Scalar.toENNReal {R} [RealScalar R] (x : R) : ENNReal :=
+  .ofReal (Scalar.toReal R x)
+
+#check ENNReal.ofReal
+@[simp, ftrans_simp]
+theorem Scalar.oftoENNReal {R} [RealScalar R] (x : R) :
+    Scalar.ofENNReal (Scalar.toENNReal x)
+    =
+    max x 0 := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.oftoReal {R} [RealScalar R] (x : R) :
+    Scalar.ofReal R (Scalar.toReal R x)
+    =
+    x := sorry_proof
+
+
 open ComplexConjugate
 
 @[simp, ftrans_simp]
