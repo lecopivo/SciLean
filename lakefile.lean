@@ -12,7 +12,7 @@ lean_lib SciLean {
 lean_lib CompileTactics where
   -- options for SciLean.Tactic.MySimpProc (and below) modules
   precompileModules := true
-  roots := #[`SciLean.Tactic.LSimp.LetNormalize, `SciLean.Tactic.LetNormalize2, `SciLean.Tactic.MathlibCompiledTactics]
+  roots := #[`SciLean.Tactic.LSimp.LetNormalize,`SciLean.Tactic.MathlibCompiledTactics]
 
 
 
