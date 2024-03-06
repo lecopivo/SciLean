@@ -7,4 +7,6 @@ import SciLean.Core.Rand.Tactic
 import SciLean.Core.Rand.Distributions.Flip
 import SciLean.Core.Rand.Distributions.UniformI
 import SciLean.Core.Rand.Distributions.Normal
+import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Core.Rand.Distributions.Sphere
 import SciLean.Core.Rand.Distributions.WalkOnSpheres
