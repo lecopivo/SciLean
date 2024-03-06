@@ -28,14 +28,12 @@ instance (x : X) (r : R) : MeasureSpace (sphere x r) := sorry
 instance (x : X) (r : R) [ToString X] : ToString (sphere x r) := ⟨fun x => toString x.1⟩
 
 
-def pi'' : R := 3.14159265359
-
 open RealScalar in
 @[simp, ftrans_simp]
 theorem sphere_volume (x : X) (r : R) :
    volume (Set.univ : Set (sphere x r))
    =
-   Scalar.toENNReal (4 * pi'' * r^(2:Nat)) := sorry_proof
+   Scalar.toENNReal (4 * pi * r^(2:Nat)) := sorry_proof
 
 
 end Geometry
@@ -47,7 +45,7 @@ instance (x : Vec3) (r : Float) : UniformRand (sphere x r) where
     spec := erase ⟨fun φ => φ ⟨v[1,0,0],sorry_proof⟩⟩
     rand := Rand.rand <| do
       let z := 2*(← uniformI Float) - 1
-      let θ := 2*pi''*(← uniformI Float)
+      let θ := 2*pi*(← uniformI Float)
       let r := sqrt (1 - z*z)
       pure ⟨v[r*cos θ, r*sin θ, z], sorry_proof⟩}
 
@@ -56,7 +54,7 @@ open RealScalar in
 theorem uniform_sphere_density (x : Vec3) (r : Float) :
   (volume : Measure (sphere x r)).rnDeriv (uniform (sphere x r)).ℙ
   =
-  fun y => ENNReal.ofReal <| Scalar.toReal Float (4*pi''*r^2) := sorry_proof
+  fun y => ENNReal.ofReal <| Scalar.toReal Float (4*pi*r^2) := sorry_proof
 
 
 def mkSphereMap (f : Vec3 → Vec3) (x : Vec3) : Vec3 :=
