@@ -59,32 +59,32 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions
     TestFunctions Cont where
   TestFunction x := ∀ i, TestFunction (x[i])
 
-noncomputable
-instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
-    NormedAddCommGroup Cont where
-  norm := fun x => (∑ i, ‖x[i]‖^2).sqrt
-  dist_self := sorry_proof
-  dist_comm := sorry_proof
-  dist_triangle := sorry_proof
-  edist_dist := sorry_proof
-  eq_of_dist_eq_zero := sorry_proof
+-- noncomputable
+-- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
+--     NormedAddCommGroup Cont where
+--   norm := fun x => (∑ i, ‖x[i]‖^2).sqrt
+--   dist_self := sorry_proof
+--   dist_comm := sorry_proof
+--   dist_triangle := sorry_proof
+--   edist_dist := sorry_proof
+--   eq_of_dist_eq_zero := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace K Elem] :
-    NormedSpace K Cont where
-  one_smul := sorry_proof
-  mul_smul := sorry_proof
-  smul_zero := sorry_proof
-  smul_add := sorry_proof
-  add_smul := sorry_proof
-  zero_smul := sorry_proof
-  norm_smul_le := sorry_proof
+-- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace K Elem] :
+--     NormedSpace K Cont where
+--   one_smul := sorry_proof
+--   mul_smul := sorry_proof
+--   smul_zero := sorry_proof
+--   smul_add := sorry_proof
+--   add_smul := sorry_proof
+--   zero_smul := sorry_proof
+--   norm_smul_le := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [InnerProductSpace K Elem] :
-    InnerProductSpace K Cont where
-  norm_sq_eq_inner := sorry_proof
-  conj_symm := sorry_proof
-  add_left := sorry_proof
-  smul_left := sorry_proof
+-- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [InnerProductSpace K Elem] :
+--     InnerProductSpace K Cont where
+--   norm_sq_eq_inner := sorry_proof
+--   conj_symm := sorry_proof
+--   add_left := sorry_proof
+--   smul_left := sorry_proof
 
 instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] :
     SemiInnerProductSpace K Cont where
