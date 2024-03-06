@@ -1,9 +1,6 @@
 import Mathlib.Data.Erased
 import Mathlib.Control.Random
 
--- import SciLean.Modules.Prob.Init
--- import SciLean.Modules.Prob.Simps
--- import SciLean.Modules.Prob.Tactic
 import SciLean.Core.Objects.Scalar
 import SciLean.Core.Rand.Distribution
 import SciLean.Core.Rand.SimpAttr
@@ -35,9 +32,10 @@ structure Rand (X : Type _)  where
     2. we can get more generality with distributions when differentiating measure valued functions
   -/
   spec : Erased (Distribution X)
-  rand : StateM StdGen X   -- ugh why doesn't mathlib have `Mathlib` namespace?
+  rand : StateM StdGen X
 
 /-- Probability measure of a random variable -/
+@[pp_dot]
 noncomputable
 def Rand.ℙ {X} [MeasurableSpace X] (x : Rand X) := x.spec.out.measure
 
@@ -143,8 +141,7 @@ variable
   -- [AddCommGroup U] [TopologicalSpace U] [TopologicalAddGroup U] [Module ℝ U] [LocallyConveUSpace ℝ U]
   {U} [AddCommGroup U] [Module ℝ U]
 
-#check LocallyConvexSpace
-
+@[pp_dot]
 noncomputable
 def E (x : Rand X) (φ : X → Y) : Y := ⟪x.spec.out, φ⟫
 
@@ -179,7 +176,7 @@ theorem add_E (x : Rand X) [LawfulRand x] (φ ψ : X → U)
 -- we might add this to the definition of Rand and I think it won't require
 -- integrability of `φ` nor lawfulness of `x`
 theorem smul_E (x : Rand X) (φ : X → ℝ) (y : Y) :
-    x.E (fun x' => φ x' • y) = x.E φ • y := by sorry
+    x.E (fun x' => φ x' • y) = x.E φ • y := by sorry_proof
 
 
 section Mean
@@ -251,7 +248,7 @@ theorem pdf_wrt_self (x : Rand X) [LawfulRand x] : x.pdf R x.ℙ = 1 := sorry
 @[rand_simp,simp]
 theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
     (x >>= f).pdf R ν = fun y => ∫ x', ((f x').pdf R ν y) ∂x.ℙ := by
-  funext y; simp[Rand.pdf,Bind.bind,Pure.pure]; sorry
+  funext y; simp[Rand.pdf,Bind.bind,Pure.pure]; sorry_proof
 
 -- open Classical in
 -- @[rand_simp,simp]
@@ -309,7 +306,7 @@ open Lean Parser
 theorem combine_pdf (x y : Rand X) (μ : Measure X) (θ : R) :
     (x +[θ] y).pdf R μ
     =
-    fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry
+    fun x' => (1-θ) * x.pdf R μ x' + θ * y.pdf R μ x' := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------

@@ -1,21 +1,15 @@
 import SciLean.Core.Rand.Rand
 import SciLean.Core.Rand.Tactic
-import SciLean.Core.Rand.Distributions.UniformI
-import SciLean.Core.Rand.Distributions.Normal
+import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Core.Rand.Distributions.Sphere
+
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.Notation.CDeriv
 import SciLean.Core.Notation.FwdDeriv
-import SciLean.Tactic.LSimp.LetNormalize
 
 import SciLean.Core.FloatAsReal
 import SciLean.Tactic.LetUtils
 import SciLean.Tactic.LetEnter
-
-import SciLean.Data.DataArray
-import SciLean.Data.ArrayType.Algebra
-
--- import Mathlib.MeasureTheory.Measure.Haar.Basic
--- import Mathlib.MeasureTheory.Constructions.Pi
 
 import SciLean.Tactic.ConvInduction
 
@@ -62,136 +56,20 @@ def unexpandNatRec : Lean.PrettyPrinter.Unexpander
   | _ => throw ()
 
 
-section Geometry
-
-variable
-  {R} [RealScalar R]
-  {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {X} [FinVec ι R X] [Module ℝ X] [MeasureSpace X]
-
-def sphere (x : X) (r : R) := {y : X | ‖y-x‖₂[R] = r}
-def ball   (x : X) (r : R) := {y : X | ‖y-x‖₂[R] < r}
-
-instance (x : X) (r : R) : MeasureSpace (sphere x r) := sorry
-instance (x : X) (r : R) [ToString X] : ToString (sphere x r) := ⟨fun x => toString x.1⟩
-
-end Geometry
-
-instance : LawfulIndexType (Fin n) where
-  toFin_leftInv  := by intro _; rfl
-  toFin_rightInv := by intro _; rfl
-
-section Rand
-
-@[coe]
-def _root_.SciLean.Scalar.ofENNReal {R} [RealScalar R] (x : ENNReal) : R :=
-  Scalar.ofReal R x.toReal
-
-@[coe]
-noncomputable
-def _root_.SciLean.Scalar.toENNReal {R} [RealScalar R] (x : R) : ENNReal :=
-  .ofReal (Scalar.toReal R x)
-
-@[simp]
-theorem _root_.SciLean.Scalar.oftoENNReal {R} [RealScalar R] (x : R) :
-    Scalar.ofENNReal (Scalar.toENNReal x)
-    =
-    abs x := sorry_proof
-
-variable
-  {R} [RealScalar R]
-  {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {X} [FinVec ι R X] [Module ℝ X] [MeasureSpace X]
-
-class UniformRand (X : Type _) where
-  uniform : Rand X
-
-def uniform (X : Type _) [UniformRand X] : Rand X := UniformRand.uniform
-
-abbrev π : Float := RealScalar.pi
-
-
-open Prob Scalar in
-instance (x : Vec3) (r : Float) : UniformRand (sphere x r) where
-  uniform := {
-    spec := erase sorry
-    rand := Rand.rand <| do
-      let z := 2*(← uniformI Float) - 1
-      let θ := 2*π*(← uniformI Float)
-      let r := sqrt (1 - z*z)
-      pure ⟨v[r*cos θ, r*sin θ, z], sorry_proof⟩}
-
-
-theorem uniform_sphere_density (x : Vec3) (r : Float) (y : sphere x r) :
-  (volume : Measure (sphere x r)).rnDeriv (uniform (sphere x r)).ℙ y
-  =
-  Scalar.toENNReal (4.0*π) := sorry_proof
-
-@[simp]
-theorem uniform_sphere_density' (x : Vec3) (r : Float) (y : sphere x r) :
-  Scalar.ofENNReal ((volume : Measure (sphere x r)).rnDeriv (uniform (sphere x r)).ℙ y)
-  =
-  4.0*π := sorry_proof
-
-
-set_default_scalar Float
-
-#eval show IO Unit from do
-  let x ← (uniform (sphere (0:Vec3) 1.0)).get
-  IO.println x
-  IO.println (‖x.1‖₂)
-
-
-noncomputable
-def _root_.MeasureTheory.Measure.rdensity {α} [MeasurableSpace α] (R : Type _) [RealScalar R] (μ ν : Measure α) : α → R :=
-  fun x => Scalar.ofReal R (μ.rnDeriv ν x).toReal
-
-attribute [pp_dot] Rand.ℙ Rand.E
-
-theorem integral_as_uniform_E (R) [RealScalar R] {Y} [AddCommGroup Y] [Module R Y] [Module ℝ Y]
-    (f : X → Y) (μ : Measure X) [UniformRand X] :
-    ∫' (x : X), f x ∂μ
-    =
-
-    (uniform X).E (fun x =>
-      let density :=(Scalar.ofENNReal (R:=R) (μ.rnDeriv (uniform X).ℙ x))
-      density • f x) := sorry
-
-theorem integral_as_uniform_E' {Y} [AddCommGroup Y] [Module ℝ Y]
-    (f : X → Y) (μ : Measure X) [UniformRand X] :
-    ∫' (x : X), f x ∂μ
-    =
-    (uniform X).E (fun x =>
-      let density := (μ.rnDeriv (uniform X).ℙ x)
-      density.toReal • f x) := sorry
-
-
-end Rand
-
-attribute [coe] Scalar.ofReal
-theorem normalize_smul {X} [SMul ℝ X]
-  (R) [RealScalar R] [SMul R X] [IsScalarTower ℝ R X]
-  (r : ℝ) (x : X) :
-  r • x = (Scalar.ofReal R r) • x := sorry_proof
-
 
 
 variable {Y : Type} [SemiHilbert Float Y] [Module ℝ Y] [IsScalarTower ℝ Float Y]
 set_default_scalar Float
 
 
-
-
+open RealScalar in
 noncomputable
 def harmonicRec (n : ℕ) (φ : Vec3 → Float) (g : Vec3 → Y) (x : Vec3) : Y :=
   match n with
   | 0 => g x
-  | m+1 => (4*π)⁻¹ • ∫' (x' : sphere (0:Vec3) 1.0), harmonicRec m φ g (x + φ x • x'.1)
+  | m+1 => (4*(pi:Float))⁻¹ • ∫' (x' : sphere (0:Vec3) (1:Float)), harmonicRec m φ g (x + φ x • x'.1)
 
 
-
-
-set_option pp.funBinderTypes true in
 def walkOnSpheres (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : Rand Y := do
   let f : Rand (Vec3 → Y) :=
     derive_random_approx
@@ -207,35 +85,6 @@ def walkOnSpheres (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : 
       simp (config:={zeta:=false})
   let f' ← f
   pure (f' x)
-
-
-def walkOnSpheres.manualImpl (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : Rand Y := do
-  match n with
-  | 0 => pure (g x)
-  | n+1 => do
-    let y ← (uniform (sphere (0:Vec3) 1.0))
-    walkOnSpheres.manualImpl φ g n (x + φ x • y)
-
-
-def _root_.SciLean.Vec3.add (u v : Vec3) : Vec3 := ⟨u.x+v.x, u.y+v.y, u.z+v.z⟩
-def _root_.SciLean.Vec3.smul (s : Float) (u : Vec3) : Vec3 := ⟨s * u.x, s * u.y, s * u.z⟩
-
-def walkOnSpheres.manualImplV2 (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : Rand Y := do
-  match n with
-  | 0 => pure (g x)
-  | n+1 => do
-    let y ← (uniform (sphere (0:Vec3) 1.0))
-    walkOnSpheres.manualImpl φ g n (x.add (Vec3.smul (φ x) y))
-
-
--- | Rand.mean
---     (rec_val n
---       | 0 => pure fun (x : Vec3) => g x
---       | n + 1, x => fun => do
---       let x' ← x
---       let y' ← uniform ↑(sphere 0 1.0)
---       pure
---           (↑(Measure.rnDeriv volume (uniform ↑(sphere 0 1.0)).ℙ y') • fun (x : Vec3) => (π⁻¹ * 4⁻¹) • x' (x + φ x • ↑y')))
 
 
 
