@@ -115,6 +115,7 @@ instance {R K} [Scalar R K] : HPow K K K := ⟨fun x y => Scalar.pow x y⟩
 
 
 @[coe]
+noncomputable
 def Scalar.ofENNReal {R} [RealScalar R] (x : ENNReal) : R :=
   Scalar.ofReal R x.toReal
 
