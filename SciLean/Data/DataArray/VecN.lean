@@ -175,3 +175,20 @@ namespace Vec3
 
 
 end Vec3
+
+
+----------------------------------------------------------------------------------------------------
+-- Useful functions involving Vec ------------------------------------------------------------------
+
+def det2 (A : Vec2 → Vec2) : Float :=
+  let u := A v[1,0]
+  let v := A v[0,1]
+  u.x * v.y - u.y * v.x
+
+def det3 (A : Vec3 → Vec3) : Float :=
+  let u := A v[1,0,0]
+  let v := A v[0,1,0]
+  let w := A v[0,0,1]
+  u.x * (v.y * w.z - v.z * w.y)
+  - u.y * (v.x * w.z - v.z * w.x)
+  + u.z * (v.x * w.y - v.y * w.x)
