@@ -12,6 +12,11 @@ instance : LawfulIndexType Unit where
  toFin_leftInv  := by intro x; aesop
  toFin_rightInv := by intro x; rfl
 
+instance : LawfulIndexType (Fin n) where
+  toFin_leftInv := by intro x; rfl
+  toFin_rightInv := by intro x; rfl
+
+
 namespace SciLean
 -- use lean colls
 export LeanColls (IndexType IndexType.card IndexType.univ IndexType.toFin IndexType.fromFin LawfulIndexType)
