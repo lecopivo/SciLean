@@ -1,11 +1,10 @@
 import SciLean
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.RewriteBy
-import SciLean.Tactic.LSimp2.Elab
 
 open SciLean
 
-variable 
+variable
   {K : Type} [RealScalar K]
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
@@ -13,23 +12,23 @@ variable
   {ι : Type} [EnumType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
-set_default_scalar K 
+set_default_scalar K
 
-example 
+example
   : <∂ xy : X×Y, (xy.1,xy.2)
     =
     fun x => (x, fun dyz => dyz) :=
 by
   conv => lhs; autodiff
 
-example 
+example
   : <∂ xy : X×Y, (xy.2,xy.1)
     =
     fun x => ((x.snd, x.fst), fun dyz => (dyz.snd, dyz.fst)) :=
 by
   conv => lhs; autodiff
 
-variable (f : Y → X → X) 
+variable (f : Y → X → X)
   (hf : HasAdjDiff K (fun yx : Y×X => f yx.1 yx.2))
   (hf₁ : ∀ x, HasAdjDiff K (fun y => f y x))
   (hf₂ : ∀ y, HasAdjDiff K (fun x => f y x))
@@ -50,7 +49,7 @@ example
 by
   conv => lhs; autodiff
 
-example 
+example
   : <∂ yy : Y×Y×Y×Y, f yy.1 (f yy.2.1 (f yy.2.2.1 (f yy.2.2.2 x)))
     =
     fun x_1 =>
