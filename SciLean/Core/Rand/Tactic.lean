@@ -23,6 +23,7 @@ open Lean Meta Elab.Term Parser.Tactic.Conv in
 elab " derive_random_approx " e:term " by " t:convSeq : term => do
   --
   let e ← elabTerm (← `(term| $e rewrite_by $t)).raw none
+  let e := e.eta
 
   unless (e.isAppOf ``Rand.mean) do
     throwError "deriving probabilistic derivative should end with a term of the form `Rand.mean _`"
