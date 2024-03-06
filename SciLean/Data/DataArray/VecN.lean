@@ -63,7 +63,8 @@ namespace Vec2
     get_ofFn := sorry_proof
     get_set_eq := sorry_proof
     get_set_ne := sorry_proof
-    update_eq_set_get := sorry_proof
+    get_update_eq := sorry_proof
+    get_update_ne := sorry_proof
 
   instance : PlainDataType Vec2 where
     btype := .inr {
@@ -149,7 +150,8 @@ namespace Vec3
     get_ofFn := sorry_proof
     get_set_eq := sorry_proof
     get_set_ne := sorry_proof
-    update_eq_set_get := sorry_proof
+    get_update_eq := sorry_proof
+    get_update_ne := sorry_proof
 
 
   instance : PlainDataType Vec3 where

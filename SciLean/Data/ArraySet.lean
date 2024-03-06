@@ -1,6 +1,5 @@
 import Std.Data.Array.Merge
 import Std.Data.List.Basic
-import Std.Classes.SetNotation
 
 import SciLean.Lean.Array
 import SciLean.Util.SorryProof

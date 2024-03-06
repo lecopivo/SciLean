@@ -42,7 +42,7 @@ variable
   [NormedAddCommGroup Elem] [NormedSpace K Elem]
 
 @[fun_prop]
-theorem LeanColls.Indexed.get.arg_cont.IsContinuousLinearMap_rule_simple :
+theorem LeanColls.Indexed.get.arg_cont.IsContinuousLinearMap_rule_simple (idx : Idx) :
     IsContinuousLinearMap K (λ cont : Cont => cont[idx]) := sorry_proof
 
 -- automatically infer: Differentiable, DifferentiableAt, ContDiff, fderiv, fwdFDeriv

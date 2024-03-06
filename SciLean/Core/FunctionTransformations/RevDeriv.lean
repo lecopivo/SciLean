@@ -138,7 +138,6 @@ theorem const_rule (y : Y) :
     revDeriv K (fun _ : X => y) = fun x => (y, fun _ => 0) := by
   unfold revDeriv
   fun_trans
-  simp_rw[semiAdjoint.const_rule] -- todo: fix fun_trans to pick up `semiAdjoint.const_rule`
 
 @[fun_trans]
 theorem comp_rule
@@ -154,7 +153,7 @@ theorem comp_rule
          let dy := zdf.2 dz
          ydg.2 dy)  := by
   unfold revDeriv
-  (conv => lhs; fun_trans)  -- todo: fun_trans throws when applied to the rhs
+  fun_trans
 
 
 example
@@ -182,8 +181,8 @@ theorem let_rule
          let dxdy := zdf.2 dz
          let dx := ydg.2 dxdy.2 dxdy.1
          dx)  := by
-  unfold revDeriv
-  (conv => lhs; fun_trans) -- todo: fun_trans throws when applied to the rhs
+  unfold revDerivUpdate revDeriv
+  fun_trans
 
 @[fun_trans]
 theorem apply_rule (i : I) :
@@ -604,7 +603,7 @@ theorem Prod.fst.arg_self.revDeriv_rule
       let yzdf := revDerivProj K (Unit⊕Unit) f x
       (yzdf.1.1, fun dy => yzdf.2 (.inl ()) dy) := by
   unfold revDerivProj; unfold revDeriv
-  conv => lhs; fun_trans
+  fun_trans
 
 @[fun_trans]
 theorem Prod.fst.arg_self.revDerivUpdate_rule
@@ -654,7 +653,7 @@ theorem Prod.snd.arg_self.revDeriv_rule
       let yzdf := revDerivProj K (Unit⊕Unit) f x
       (yzdf.1.2, fun dy => yzdf.2 (.inr ()) dy) := by
   unfold revDerivProj; unfold revDeriv
-  conv => lhs; fun_trans
+  fun_trans
 
 @[fun_trans]
 theorem Prod.snd.arg_self.revDerivUpdate_rule
@@ -772,7 +771,7 @@ theorem HSub.hSub.arg_a0a1.revDeriv_rule
          let dy' := -dy
          ydg.2 dy' dx) := by
   unfold revDerivUpdate; unfold revDeriv;
-  conv => lhs; fun_trans
+  fun_trans
   funext x; simp; funext dy; simp only [neg_pull, ← sub_eq_add_neg]
 
 @[fun_trans]
@@ -976,8 +975,8 @@ theorem HSMul.hSMul.arg_a0a1.revDeriv_rule
          let dx := zdg.2 dy'
          let dx := conj ydf.1 • dx
          ydf.2 dk dx) := by
-  unfold revDeriv; unfold revDerivUpdate
-  conv => lhs; fun_trans
+  unfold revDerivUpdate; unfold revDeriv
+  fun_trans
 
 @[fun_trans]
 theorem HSMul.hSMul.arg_a0a1.revDerivUpdate_rule
@@ -1047,7 +1046,7 @@ theorem HDiv.hDiv.arg_a0a1.revDeriv_rule
       (ydf.1 / zdg.1,
        fun dx' => (1 / (conj zdg.1)^2) • (zdg.2 (-conj ydf.1 • dx') (conj zdg.1 • ydf.2 dx'))) := by
   unfold revDeriv; simp
-  conv => lhs; fun_trans (disch:=assumption)
+  fun_trans (disch:=assumption)
   simp[revDerivUpdate,smul_push,neg_pull,revDeriv,smul_add,smul_sub, ← sub_eq_add_neg]
 
 @[fun_trans]
@@ -1066,7 +1065,7 @@ theorem HDiv.hDiv.arg_a0a1.revDerivUpdate_rule
          ((zdg.2 (a • dx') (ydf.2 (b • dx') dx)))) := by
   funext
   simp[revDerivUpdate]
-  conv => lhs; fun_trans (disch:=assumption)
+  fun_trans (disch:=assumption)
   simp[revDerivUpdate,smul_push,neg_pull,revDeriv,smul_add,smul_sub,add_assoc,mul_assoc]
 
 
@@ -1194,7 +1193,7 @@ theorem IndexType.sum.arg_f.revDerivUpdate_rule
        fun dy dx =>
          ydf.2 (fun _ => dy) dx) := by
   unfold revDerivUpdate
-  conv => lhs; fun_trans
+  fun_trans
 
 @[fun_trans]
 theorem IndexType.sum.arg_f.revDerivProj_rule [DecidableEq ι]
@@ -1210,7 +1209,7 @@ theorem IndexType.sum.arg_f.revDerivProj_rule [DecidableEq ι]
        fun j dy =>
          Fold.fold (IndexType.univ ι) (fun dx i => ydf.2 (i,j) dy dx) 0) := by
   unfold revDerivProj
-  conv => lhs; fun_trans
+  fun_trans
   sorry_proof
 
 

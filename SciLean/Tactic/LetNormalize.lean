@@ -1,7 +1,7 @@
 import Lean.Elab.Tactic.ElabTerm
 import Lean.Elab.Tactic.Conv.Basic
 
-import Std.Tactic.GuardMsgs
+import Lean.Elab.GuardMsgs
 
 import SciLean.Lean.Meta.Basic
 import SciLean.Lean.Expr
@@ -133,7 +133,7 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
 
       -- deconstruct constructors into bunch of let bindings
       if config.splitStructureConstuctors then
-        if let .some (ctor, args) := xValue'.constructorApp? (← getEnv) then
+        if let .some (ctor, args) ← constructorApp? xValue' then
           if let .some info := getStructureInfo? (← getEnv) xType.getAppFn.constName! then
             let mut lctx ← getLCtx
             let insts ← getLocalInstances

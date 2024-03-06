@@ -621,14 +621,12 @@ def reduceProjFn?' (e : Expr) : MetaM (Option Expr) := do
         unless e.getAppNumArgs > projInfo.numParams do
           return none
         let major := e.getArg! projInfo.numParams
-        unless major.isConstructorApp (← getEnv) do
+        unless ← isConstructorApp major do
           return none
         reduceProjCont? (← withDefault <| unfoldDefinition? e)
       else
         -- `structure` projections
         reduceProjCont? (← unfoldDefinition? e)
-
-
 
 
 namespace ReduceProjOfCtor

@@ -172,7 +172,7 @@ theorem HSMul.hSMul.arg_a0.IsLinearMap_rule
     (f : X → R) (y : Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => f x • y :=
   let a : R →ₗ[R] Y := mk' _ (isLinearMap_smul' y)
   let b := (mk' _ hf)
-  by_linear_map (a.comp b) (by simp)
+  by_linear_map (a.comp b) (by simp (config:={zetaDelta:=true}))
 
 @[fun_prop]
 theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_nat
@@ -240,7 +240,7 @@ theorem HSMul.hSMul.arg_a1.IsLinearMap_rule
     (c : R) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x :=
   let a : Y →ₗ[R] Y := mk' _ (isLinearMap_smul c)
   let b := (mk' _ hf)
-  by_linear_map (a.comp b) (by simp)
+  by_linear_map (a.comp b) (by simp (config:={zetaDelta:=true}))
 
 
 @[fun_prop]
