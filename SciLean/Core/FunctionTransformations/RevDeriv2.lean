@@ -47,6 +47,21 @@ def revDeriv2Proj
   (structProj ydf.1 i,
    fun dyi => ydf.2 (oneHot i dyi))
 
+structure HasRevDeriv2At (f : W → X → Y) (f' : Y×(Y→W→(W×X))) (w : W) (x : X) : Prop where
+  hasAdjDiff : HasAdjDiffAt K (fun (w,x) => f w x) (w,x)
+  revDeriv2  : revDeriv2 K f w x = f'
+
+structure HasRevDeriv2At' (f : W → X → Y) (y : Y) (f' : (Y→W→(W×X))) (w : W) (x : X) : Prop where
+  hasAdjDiff : HasAdjDiffAt K (fun (w,x) => f w x) (w,x)
+  val : y = f w x
+  deriv : f' = fun dy =>
+    let (dw,dx) := semiAdjoint K (cderiv K (fun (w,x) => f w x) (w,x)) dy
+    fun dw' => (dw'+dw, dx)
+
+structure HasRevDerivProj2At (f : W → X → Y)  (f' : (i : I) → YI i×(YI i→W→(W×X))) (w : W) (x : X)  : Prop where
+  hasAdjDiff : HasAdjDiffAt K (fun (w,x) => f w x) (w,x)
+  revDeriv2  : ∀ i, revDeriv2Proj K I f w x i = f' i
+
 
 --------------------------------------------------------------------------------
 -- Lambda calculus rules for revDeriv2 ------------------------------------------
@@ -63,6 +78,15 @@ by
   unfold revDeriv2
   funext x y; fun_trans
 
+theorem id1_rule_has :
+  HasRevDeriv2At K
+    (fun (w : W) (x : X) => w)
+    (w, fun dy dw => (dw+dy, 0))
+    w x := by
+  constructor
+  . fun_prop
+  . fun_trans [revDeriv2]
+
 theorem id2_rule
   : revDeriv2 K (fun (w : W) (x : X) => x)
     =
@@ -72,6 +96,15 @@ by
   unfold revDeriv2
   funext x y; fun_trans
 
+theorem id2_rule_has :
+  HasRevDeriv2At K
+    (fun (w : W) (x : X) => x)
+    (x, fun dy dw => (dw, dy))
+    w x := by
+  constructor
+  . fun_prop
+  . fun_trans [revDeriv2]
+
 theorem const_rule (y : Y)
   : revDeriv2 K (fun (_ : W) (_ : X) => y)
     =
@@ -79,8 +112,15 @@ theorem const_rule (y : Y)
 by
   unfold revDeriv2
   funext x y; simp; fun_trans
-  sorry_proof
 
+theorem const_rule_has (y : Y) :
+  HasRevDeriv2At K
+    (fun (w : W) (x : X) => y)
+    (y, fun dy dw => (dw, 0))
+    w x := by
+  constructor
+  . fun_prop
+  . fun_trans [revDeriv2]
 
 theorem let_rule
   (f : W → X → Y → Z) (g : W → X → Y)
@@ -102,6 +142,42 @@ by
   conv => lhs; fun_trans
   simp; funext dy dw'
   sorry_proof
+
+
+
+theorem let_rule_has (w : W) (x : X)
+    (g : W → X → Y) (g' : Y×(Y → (W×X) → ((W×X)×Unit)))
+    (hg : HasRevDeriv2At K (fun (w,x) (_:Unit) => g w x) g' (w,x) ())
+    (f : W → X → Y → Z) (f' : Z×(Z → W → (W×(X×Y))))
+    (hf : HasRevDeriv2At K (fun w (x,y) => f w x y) f' w (x, g w x))
+    (r : Z×(Z→W→(W×X)))
+    (hr : r = (f'.1,
+               fun dz dw =>
+                 let dwxy := f'.2 dz dw
+                 let dxy := g'.2 dwxy.2.2 (dwxy.1, dwxy.2.1)
+                 dxy.1)) :
+    HasRevDeriv2At K
+      (fun w x => f w x (g w x))
+      r
+      w x := by
+  rw[hr]
+  have : HasAdjDiffAt K (fun (w,x) => g w x) (w,x) := sorry_proof
+  have : HasAdjDiffAt K (fun (w,x,y) => f w x y) (w,x,g w x) := sorry_proof
+  constructor
+  . fun_prop
+  . sorry_proof
+    -- unfold revDeriv2
+    -- fun_trans
+    -- =
+    -- fun w x =>
+    --   let ydg := revDeriv2 K (fun (wx : W×X) (_ : Unit) => g wx.1 wx.2) (w,x) ()
+    --   let zdf := revDeriv2 K (fun w (xy : X×Y) => f w xy.1 xy.2) w (x,ydg.1)
+    --   (zdf.1,
+    --    fun dz dx =>
+    --      let dxyz := zdf.2 dz dx
+    --      let dxy := ydg.2 dxyz.2.2 (dxyz.1,dxyz.2.1)
+    --      dxy.1) := sorry
+
 
 example : SemiInnerProductSpace K ((i : I) → EI i) := by apply instSemiInnerProductSpaceForAll
 theorem pi_rule
