@@ -18,3 +18,10 @@ open Lean Meta Qq in
   let H := q(CDifferentiable Float fun w => ⊞ i => ($x w)[i])
   let h ← mkFreshExprMVar H
   IO.println (← isDefEq hx h)
+
+
+example
+  (x : Float → DataArrayN Float (Fin 10)) (hx : CDifferentiable Float x)
+  : CDifferentiable Float (fun w => ⊞ i => (x w)[i]) :=
+by
+  fun_prop [SciLean.introElemNotation]
