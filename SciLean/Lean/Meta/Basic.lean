@@ -1,7 +1,7 @@
 import Lean
 import Std.Lean.Expr
 
-import SciLean.Lean.Expr 
+import SciLean.Lean.Expr
 import SciLean.Lean.Array
 
 namespace Lean
@@ -36,10 +36,10 @@ def getConstArgNames (constName : Name) (fixAnonymousNames := false) : m (Array 
 where
   getArgNames (e : Expr) (names : Array Name) (i : Nat) : Array Name :=
     match e with
-    | .forallE name _ body _ => 
+    | .forallE name _ body _ =>
       if ¬fixAnonymousNames then
         getArgNames body (names.push name) i
-      else 
+      else
         if name.hasMacroScopes then
           getArgNames body (names.push (name.eraseMacroScopes.appendAfter (toString i))) (i+1)
         else
@@ -91,7 +91,7 @@ def revertStructureProj (e : Expr) : MetaM Expr :=
 def getExplicitArgs (e : Expr) : MetaM (Option (Name×Array Expr)) := do
   let .some (funName, _) := e.getAppFn.const?
     | return none
-  
+
   let n ← getConstArity funName
   let explicitArgIds ← getConstExplicitArgIds funName
 
@@ -99,18 +99,18 @@ def getExplicitArgs (e : Expr) : MetaM (Option (Name×Array Expr)) := do
 
   let explicitArgs := explicitArgIds.foldl (init := #[])
     λ a id => if h : id < args.size then a.push args[id] else a
-  
+
   return (funName, explicitArgs)
 
 
 /-- Eta expansion, but adds at most `n` binders
 -/
-def etaExpandN (e : Expr) (n : Nat) : MetaM Expr := 
+def etaExpandN (e : Expr) (n : Nat) : MetaM Expr :=
   withDefault do forallTelescopeReducing (← inferType e) fun xs _ => mkLambdaFVars xs[0:n] (mkAppN e xs[0:n])
 
 /-- Eta expansion, it also beta reduces the body
 -/
-def etaExpand' (e : Expr) : MetaM Expr := 
+def etaExpand' (e : Expr) : MetaM Expr :=
   withDefault do forallTelescopeReducing (← inferType e) fun xs _ => mkLambdaFVars xs (mkAppN e xs).headBeta
 
 
@@ -185,7 +185,7 @@ def mkProdProj (x : Expr) (i : Nat) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod
   --     throwError "Failed `mkProdProj`, can't take {i}-th element of {← ppExpr x}. It has type {← ppExpr X} which is not a product type!"
 
 
-def mkProdSplitElem (xs : Expr) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Array Expr) := 
+def mkProdSplitElem (xs : Expr) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Array Expr) :=
   (Array.mkArray n 0)
     |>.mapIdx (λ i _ => i.1)
     |>.mapM (λ i => mkProdProj xs i n fst snd)
@@ -196,7 +196,7 @@ def mkUncurryFun (n : Nat) (f : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd
   forallTelescope (← inferType f) λ xs _ => do
     let xs := xs[0:n]
 
-    let xProdName : String ← xs.foldlM (init:="") λ n x => 
+    let xProdName : String ← xs.foldlM (init:="") λ n x =>
       do return (n ++ toString (← x.fvarId!.getUserName).eraseMacroScopes)
     let xProdType ← inferType (← mkProdElem xs mk)
 
@@ -205,18 +205,18 @@ def mkUncurryFun (n : Nat) (f : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd
       mkLambdaFVars #[xProd] (← mkAppM' f xs').headBeta
 
 
-/-- Takes lambda function `fun x => b` and splits it into composition of two functions. 
+/-- Takes lambda function `fun x => b` and splits it into composition of two functions.
 
   Example:
-    fun x => f (g x)      ==>   f ∘ g 
+    fun x => f (g x)      ==>   f ∘ g
     fun x => f x + c      ==>   (fun y => y + c) ∘ f
     fun x => f x + g x    ==>   (fun (y₁,y₂) => y₁ + y₂) ∘ (fun x => (f x, g x))
     fun x i => f (g₁ x i) (g₂ x i) i  ==>   (fun (y₁,y₂) i => f y₁ y₂ i) ∘' (fun x i => (g₁ x i, g₂ x i))
     fun x i => x i        ==>   (fun x i => x i) ∘' (fun x i => x)
  -/
 def splitLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Expr × Expr) := do
-  match e with 
-  | .lam name _ _ _ => 
+  match e with
+  | .lam name _ _ _ =>
     let e ← instantiateMVars e
     lambdaTelescope e λ xs b => do
       let x := xs[0]!
@@ -258,17 +258,17 @@ def splitLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := `
       f ← mkUncurryFun zs.size f mk fst snd
 
       return (f, g)
-    
+
   | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
 
 inductive LambdaSplit where
   /-- Result of splitting a lambda function as `fun x => f (g x)` -/
-  | comp (f g : Expr) 
+  | comp (f g : Expr)
   /-- Result of splitting a lambda function as `fun x i₁ ... iₙ => f (g x i₁ ... iₙ)` -/
   | piComp (f g : Expr) (comp : Expr → Expr → Expr)
 
-/-- 
+/--
 This function decomposes function as
 ```
 fun x i₁ .. iₙ => b
@@ -289,8 +289,8 @@ f'' ∘ g'
 where `f'' = fun (y' : I → Y) i => f' (y' i) i`
 -/
 def splitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Expr × Expr) := do
-  match e with 
-  | .lam name _ _ _ => 
+  match e with
+  | .lam name _ _ _ =>
     let e ← instantiateMVars e
     lambdaTelescope e λ xs b => do
       let x := xs[0]!
@@ -339,14 +339,14 @@ def splitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) 
             -- filter trailing arguments that appear in this `y`
             let is' := is.filter (fun i => y.containsFVar i.fvarId!)
             let yFVarType ← mkForallFVars is' (← inferType y)
-  
+
             -- introduce new fvar
             let yId ← withLCtx lctx instances mkFreshFVarId
             lctx := lctx.mkLocalDecl yId (name.appendAfter (toString i)) yFVarType
             let yFVar := Expr.fvar yId
             let yVal := mkAppN yFVar is'
             yFVars := yFVars.push yFVar
-            yVals := yVals.push yVal 
+            yVals := yVals.push yVal
             ys' := ys'.push y
             ys'' := ys''.push (← mkLambdaFVars is' y)
             f := f.app yVal
@@ -360,12 +360,12 @@ def splitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) 
       f ← mkUncurryFun yFVars.size f mk fst snd
 
       return (f, g)
-    
+
   | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
 
 
-/-- 
+/--
 This function finds decomposition:
 ```
 fun x i₁ .. iₙ => b
@@ -374,8 +374,8 @@ fun x i₁ ... iₙ => f (g x i₁ ... iₙ) i₁ ... iₙ
 ```
 -/
 def elemWiseSplitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Expr × Expr) := do
-  match e with 
-  | .lam name _ _ _ => 
+  match e with
+  | .lam name _ _ _ =>
     let e ← instantiateMVars e
     lambdaTelescope e λ xs b => do
       let x := xs[0]!
@@ -414,7 +414,7 @@ def elemWiseSplitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Pr
           else
 
             let yFVarType ← inferType y
-  
+
             -- introduce new fvar
             let yId ← withLCtx lctx instances mkFreshFVarId
             lctx := lctx.mkLocalDecl yId (name.appendAfter (toString i)) yFVarType
@@ -432,22 +432,22 @@ def elemWiseSplitHighOrderLambdaToComp (e : Expr) (mk := ``Prod.mk) (fst := ``Pr
       f ← mkUncurryFun yFVars.size f mk fst snd
 
       return (f, g)
-    
+
   | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
 /-- Make local declarations is we have an array of names and types. -/
-def mkLocalDecls [MonadControlT MetaM n] [Monad n] 
+def mkLocalDecls [MonadControlT MetaM n] [Monad n]
   (names : Array Name) (bi : BinderInfo) (types : Array Expr) : Array (Name × BinderInfo × (Array Expr → n Expr)) :=
   types.mapIdx (fun i type => (names[i]!, bi, fun _ : Array Expr => pure type))
 
 /-- Simpler version of `withLocalDecls` that can't deal with dependent types but has simpler signature -/
 def withLocalDecls' [Inhabited α] [MonadControlT MetaM n] [Monad n]
-  (names : Array Name) (bi : BinderInfo) (types : Array Expr) (k : Array Expr → n α) : n α := 
+  (names : Array Name) (bi : BinderInfo) (types : Array Expr) (k : Array Expr → n α) : n α :=
   withLocalDecls (mkLocalDecls names bi types) k
 
 
 private partial def withLetDeclsImpl
-  (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α := 
+  (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α :=
   loop #[]
 where
   loop (acc : Array Expr) : MetaM α := do
@@ -460,22 +460,22 @@ where
       k acc
 
 def withLetDecls [MonadControlT MetaM n] [Monad n]
-  (names : Array Name) (vals : Array Expr) (k : Array Expr → n α) : n α := 
+  (names : Array Name) (vals : Array Expr) (k : Array Expr → n α) : n α :=
   map1MetaM (fun k => withLetDeclsImpl names vals k) k
 
 
 @[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]
-  (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α) 
+  (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α)
   {α} (k : β → γ → δ → m α) : m α :=
   controlAt MetaM fun runInBase => f (fun b c d => runInBase <| k b c d)
 
-@[inline] def map4MetaM [MonadControlT MetaM m] [Monad m] 
-  (f : forall {α}, (β → γ → δ → ε → MetaM α) → MetaM α) 
+@[inline] def map4MetaM [MonadControlT MetaM m] [Monad m]
+  (f : forall {α}, (β → γ → δ → ε → MetaM α) → MetaM α)
   {α} (k : β → γ → δ → ε → m α) : m α :=
   controlAt MetaM fun runInBase => f (fun b c d e => runInBase <| k b c d e)
 
 
-private def letTelescopeImpl (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := 
+private def letTelescopeImpl (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α :=
   lambdaLetTelescope e λ xs b => do
     if let .some i ← xs.findIdxM? (λ x => do pure ¬(← x.fvarId!.isLetVar)) then
       k xs[0:i] (← mkLambdaFVars xs[i:] b)
@@ -484,7 +484,7 @@ private def letTelescopeImpl (e : Expr) (k : Array Expr → Expr → MetaM α) :
 
 variable [MonadControlT MetaM n] [Monad n]
 
-def letTelescope (e : Expr) (k : Array Expr → Expr → n α) : n α := 
+def letTelescope (e : Expr) (k : Array Expr → Expr → n α) : n α :=
   map2MetaM (fun k => letTelescopeImpl e k) k
 
 
@@ -493,41 +493,41 @@ private partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array
     k #[] e
   else
   match e with
-  | .app f x => 
+  | .app f x =>
 
     -- we want to normalize let bindings only on value level
     -- also it was blowing the stack on complicated type class projections
     if ¬((← inferType x).isType) then
-      flatLetTelescopeImpl (fuel-1) f λ xs f' => 
-        flatLetTelescopeImpl (fuel-1) x λ ys x' => 
+      flatLetTelescopeImpl (fuel-1) f λ xs f' =>
+        flatLetTelescopeImpl (fuel-1) x λ ys x' =>
           k (xs.append ys) (.app f' x')
-    else 
+    else
       k #[] e
 
-  | .letE n t v b _ => 
+  | .letE n t v b _ =>
     flatLetTelescopeImpl (fuel-1) v λ xs v' => do
 
       -- TODO: Generalized to any structure constructor
       match splitPairs, v'.app4? ``Prod.mk with
-      | true, .some (Fst, Snd, fst, snd) => 
-        withLetDecl (n.appendAfter "₁") Fst fst λ fst' => 
+      | true, .some (Fst, Snd, fst, snd) =>
+        withLetDecl (n.appendAfter "₁") Fst fst λ fst' =>
           withLetDecl (n.appendAfter "₂") Snd snd λ snd' => do
             let p ← mkAppM ``Prod.mk #[fst', snd']
-            flatLetTelescopeImpl (fuel-1) (← mkLetFVars #[fst', snd'] (b.instantiate1 p)) λ ys b' => 
+            flatLetTelescopeImpl (fuel-1) (← mkLetFVars #[fst', snd'] (b.instantiate1 p)) λ ys b' =>
               k (xs.append ys) b'
 
-      | _, _ => 
+      | _, _ =>
         withLetDecl n t v' λ v'' =>
-          flatLetTelescopeImpl (fuel-1) (b.instantiate1 v'') λ ys b' => 
+          flatLetTelescopeImpl (fuel-1) (b.instantiate1 v'') λ ys b' =>
             k ((xs.push v'').append ys) b'
 
-  | .lam n t b bi => 
-    withLocalDecl n bi t λ x => 
+  | .lam n t b bi =>
+    withLocalDecl n bi t λ x =>
       flatLetTelescopeImpl (fuel-1) (b.instantiate1 x) λ ys b' => do
 
         -- find where can we split ys
         let mut i := 0
-        for y in ys do 
+        for y in ys do
           if let .some yVal ← y.fvarId!.getValue? then
             if yVal.containsFVar x.fvarId! then
               break
@@ -536,10 +536,10 @@ private partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array
 
         k ys[0:i] (← mkLambdaFVars #[x] (← mkLetFVars ys[i:] b'))
 
-  | .mdata _ e => 
+  | .mdata _ e =>
     flatLetTelescopeImpl (fuel-1) e k
 
-  | _ => 
+  | _ =>
     k #[] e
 
 
@@ -547,25 +547,25 @@ private partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array
 
 Example:
 ```
-let a := 
+let a :=
   let b := (10, 12)
   20
 f a b
-```     
+```
 
 It will run `k #[b₁, b₂, a] (f a (b₁,b₂))` where `b₁ := 10, b₂ := 12, a := 20`.
 
 
 If `splitPairs` is `false`, it will run `k #[b, a] (f a b)`
 -/
-def flatLetTelescope (fuel : Nat) (e : Expr) (k : Array Expr → Expr → n α) (splitPairs := true) : n α := 
+def flatLetTelescope (fuel : Nat) (e : Expr) (k : Array Expr → Expr → n α) (splitPairs := true) : n α :=
   map2MetaM (fun k => flatLetTelescopeImpl fuel e k splitPairs) k
 
 /-- Flattens let bindings and splits let binding of pairs.
 
 Example:
 ```
-let a := 
+let a :=
   let b := (10, 12)
   (b.1, 3 * b.2)
 a.2
@@ -579,8 +579,8 @@ let a₂ := 3 * (b₁, b₂).snd;
 (a₁, a₂).snd
 ```
 -/
-def flattenLet (fuel : Nat) (e : Expr) (splitPairs := true) : MetaM Expr := 
-  flatLetTelescope (splitPairs:=splitPairs) fuel e λ xs e' => 
+def flattenLet (fuel : Nat) (e : Expr) (splitPairs := true) : MetaM Expr :=
+  flatLetTelescope (splitPairs:=splitPairs) fuel e λ xs e' =>
     mkLetFVars xs e'
 
 
@@ -589,7 +589,7 @@ def flattenLet (fuel : Nat) (e : Expr) (splitPairs := true) : MetaM Expr :=
 def reduceProj?' (e : Expr) : MetaM (Option Expr) := do
   match e with
   | Expr.proj _ _ (.fvar _) => return none -- do not reduce projections on fvars
-  | Expr.proj _ i c => 
+  | Expr.proj _ i c =>
     letTelescope c λ xs b => do
       let some b ← Meta.project? b i
         | return none
@@ -621,14 +621,12 @@ def reduceProjFn?' (e : Expr) : MetaM (Option Expr) := do
         unless e.getAppNumArgs > projInfo.numParams do
           return none
         let major := e.getArg! projInfo.numParams
-        unless major.isConstructorApp (← getEnv) do
+        unless ← isConstructorApp major do
           return none
         reduceProjCont? (← withDefault <| unfoldDefinition? e)
       else
         -- `structure` projections
         reduceProjCont? (← unfoldDefinition? e)
-
-
 
 
 namespace ReduceProjOfCtor
@@ -645,18 +643,18 @@ private def Projection.index (p : Projection) : Nat :=
 private def peelOfProjections (e : Expr) (projections : List Projection := []) : MetaM (Expr × List Projection) :=
   match e with
   | Expr.proj typeName idx e' => peelOfProjections e' ((.proj typeName idx) :: projections)
-  | .app f x => 
+  | .app f x =>
     matchConst f.getAppFn (fun _ => pure (e,projections)) fun cinfo _ => do
       match (← getProjectionFnInfo? cinfo.name) with
       | none => return (e,projections)
-      | some projInfo => 
+      | some projInfo =>
         if projInfo.numParams = f.getAppNumArgs then
           peelOfProjections x ((.function f projInfo.i) :: projections )
         else
           pure (e,projections)
   | .mdata _ e' => peelOfProjections e' projections
   | e' => pure (e',projections)
-  
+
 
 private def applyProjections (e : Expr) : List Projection → Expr
   | [] => e
@@ -666,7 +664,7 @@ private def applyProjections (e : Expr) : List Projection → Expr
 private def reduceProjections (e : Expr) (projections : List Projection) : CoreM Expr :=
   match projections with
   | [] => pure e
-  | p :: ps => 
+  | p :: ps =>
     matchConstCtor e.getAppFn (fun _ => pure (applyProjections e projections)) fun info _ => do
       if e.getAppNumArgs = info.numParams + info.numFields then
         reduceProjections (e.getArg! (info.numParams + p.index)) ps
@@ -679,7 +677,7 @@ private def reduceProjections (e : Expr) (projections : List Projection) : CoreM
 private def reduceProjections? (e : Expr) (projections : List Projection) : CoreM (Option Expr) :=
   match projections with
   | [] => pure none
-  | p :: ps => 
+  | p :: ps =>
     matchConstCtor e.getAppFn (fun _ => pure none) fun info _ => do
       if e.getAppNumArgs = info.numParams + info.numFields then
         reduceProjections (e.getArg! (info.numParams + p.index)) ps
@@ -709,14 +707,14 @@ def reduceProjOfCtor (e : Expr) : MetaM Expr := do
 open ReduceProjOfCtor in
 /-- Reduces structure projection of explicit constructors
 
-For example, `(x,y,z).2.1.1` reduces to `y.1` even if `y` is reducible definition 
+For example, `(x,y,z).2.1.1` reduces to `y.1` even if `y` is reducible definition
 or let fvar.
 -/
 def reduceProjOfCtor? (e : Expr) : MetaM (Option Expr) := do
   let (e',ps) ← peelOfProjections e
   reduceProjections? e' ps
 
-open Qq 
+open Qq
 
 def isTypeQ (e : Expr) : MetaM (Option ((u : Level) × Q(Type $u))) := do
   let u ← mkFreshLevelMVar
@@ -725,7 +723,7 @@ def isTypeQ (e : Expr) : MetaM (Option ((u : Level) × Q(Type $u))) := do
   return .some ⟨u, e⟩
 
 def _root_.Lean.LocalContext.toString (lctx : LocalContext) : MetaM String :=
-  lctx.decls.toArray.joinlM 
+  lctx.decls.toArray.joinlM
     (fun decl? => do
       let .some decl := decl? | return ""
       return s!"{decl.userName} : {← ppExpr decl.type}")
@@ -747,12 +745,11 @@ def mkCurryFun (n : Nat) (f : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd :
       withLocalDecls' xNames .default xTypes fun xVars => do
         let x' ← mkProdElem xVars mk
         let b := (f.app x').headBeta
-        
+
         let b ← Meta.transform b
-          (post := fun e => do 
-            if (← isType e) 
-            then return .done e 
+          (post := fun e => do
+            if (← isType e)
+            then return .done e
             else return .done (← reduceProjOfCtor e))
 
         mkLambdaFVars xVars b
-

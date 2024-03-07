@@ -1,4 +1,4 @@
-import Lean 
+import Lean
 import Qq
 
 import SciLean.Lean.Meta.Basic
@@ -9,25 +9,25 @@ open Lean Meta
 namespace SciLean
 
 
-inductive HeadFunInfo 
-  | const (constName : Name) (arity : Nat) 
+inductive HeadFunInfo
+  | const (constName : Name) (arity : Nat)
   | fvar (id : FVarId) (arity : Nat)
   | bvar (i : Nat) (arity : Nat)
 
 
-def HeadFunInfo.arity (info : HeadFunInfo) : Nat := 
+def HeadFunInfo.arity (info : HeadFunInfo) : Nat :=
   match info with
   | .const _ n => n
   | .fvar _ n => n
   | .bvar _ n => n
 
-def HeadFunInfo.ctorName (info : HeadFunInfo) : Name := 
+def HeadFunInfo.ctorName (info : HeadFunInfo) : Name :=
   match info with
   | .const _ _ => ``const
   | .fvar _ _ => ``fvar
   | .bvar _ _ => ``bvar
 
-def HeadFunInfo.isFVar (info : HeadFunInfo) (id : FVarId) : Bool := 
+def HeadFunInfo.isFVar (info : HeadFunInfo) (id : FVarId) : Bool :=
   match info with
   | .const _ _ => false
   | .fvar id' _ => id == id'
@@ -36,7 +36,7 @@ def HeadFunInfo.isFVar (info : HeadFunInfo) (id : FVarId) : Bool :=
 
 inductive MainArgCase where
   /-- there are no main arguments -/
-  | noMainArg 
+  | noMainArg
   /-- Main arguments are just `x` i.e. `x = (a'₁, ..., a'ₖ)` where `a' = mainIds.map (fun i => aᵢ)` are main arguments -/
   | trivialUncurried
   /-- Main arguments are just functions of `x` and do not depend on `yⱼ`
@@ -59,13 +59,13 @@ inductive TrailingArgCase where
   /-- there are no trailing arguments -/
   | noTrailingArg
 
-  /-- Trailing arguments are exactly equal to `yⱼ` 
+  /-- Trailing arguments are exactly equal to `yⱼ`
   i.e. `yⱼ = a''ⱼ` where `a'' := trailingArgs.map (fun i => aᵢ)` -/
   | trivial
 
-  /-- Traling arguments are just `y₀` i.e. `n=1` and `y₀ = (a''₁, ..., a''ₖ)` 
-  where `a'' := trailingIds.map (fun i => aᵢ)` 
-  
+  /-- Traling arguments are just `y₀` i.e. `n=1` and `y₀ = (a''₁, ..., a''ₖ)`
+  where `a'' := trailingIds.map (fun i => aᵢ)`
+
   It is guaranteed that `k>1`, when `k=1` then we are in `TrailingArgCase.trivial` case -/
   | trivialUncurried
 
@@ -80,10 +80,10 @@ inductive TrailingArgCase where
   (·∘h) ∘ (fun x a''₁ ... a''ₖ => f a₀ ... aₘ₋₁
   ```
   where the function `f'` is now in `TrailingArgCase.trivial` case
-  (constructing such `f'` is a bit tricky as it potentially requires to also 
+  (constructing such `f'` is a bit tricky as it potentially requires to also
   use `h` to replace `yⱼ` with `a''` in main arguments)
    -/
-  | nonTrivial 
+  | nonTrivial
 deriving DecidableEq, Repr
 
 
@@ -115,9 +115,9 @@ Returns `HeadFunInfo.bvar` if the head function is fvar and one of `xs`
 -/
 private def analyzeHeadFun (fn : Expr) (xs : Array Expr) : MetaM HeadFunInfo := do
   match fn with
-  | .const name _ => 
+  | .const name _ =>
     pure (.const name (← getConstArity name))
-  | .fvar id => 
+  | .fvar id =>
     let arity := (← inferType fn).forallArity
     if let .some i := xs.findIdx? (fun x => x.fvarId! == id) then
       pure (.bvar i arity)
@@ -132,13 +132,13 @@ Decompose function as `fun x i₁ ... iₙ => f (g x) (h i₁ ... iₙ)`
 -/
 partial def analyzeLambda (e : Expr) : MetaM LambdaInfo := do
   lambdaTelescope e fun xs body => do
-    
+
     if xs.size = 0 then
       throwError "lambda expected in analyzeLambda"
 
     -- if `body` is a projection turn it into application of projection function
     let body := (← revertStructureProj body).headBeta
-    
+
 
     let fn := body.getAppFn'
     let args := body.getAppArgs
@@ -159,7 +159,7 @@ partial def analyzeLambda (e : Expr) : MetaM LambdaInfo := do
     let mut mainCase : MainArgCase := .noMainArg
     let mut trailingCase : TrailingArgCase := .noTrailingArg
 
-    for arg in args, i in [0:args.size] do 
+    for arg in args, i in [0:args.size] do
       let ys' := ys.filter (fun y => arg.containsFVar y.fvarId!)
 
       if arg.containsFVar xId then
@@ -178,7 +178,7 @@ partial def analyzeLambda (e : Expr) : MetaM LambdaInfo := do
       if (← isDefEq x a') then
         mainCase := .trivialUncurried
       else
-        mainCase := .nonTrivailNoTrailing 
+        mainCase := .nonTrivailNoTrailing
 
     -- determina trailing arg case
     if as''.size ≠ 0 then
@@ -187,26 +187,26 @@ partial def analyzeLambda (e : Expr) : MetaM LambdaInfo := do
       if ys.size = as''.size then
         if ← (Array.range ys.size).allM (fun i => isDefEq ys[i]! as''[i]!) then
           trailingCase := .trivial
-      
+
       if ys.size = 1 && as''.size > 1 then
         let a'' ← mkProdElem as''
         if ← isDefEq ys[0]! a'' then
           trailingCase := .trivialUncurried
 
-  
+
     return {
       arity := xs.size
       argNum := args.size
       headFunInfo := fnInfo
       mainIds := mainIds.toArraySet
-      trailingIds := trailingIds.toArraySet     
+      trailingIds := trailingIds.toArraySet
       mainArgCase := mainCase
       trailingArgCase := trailingCase
     }
 
-open Qq 
+open Qq
 
-#exit 
+#exit
 def LambdaInfo.print (info : LambdaInfo) : IO Unit := do
   IO.println s!"arity: {info.arity}"
   IO.println s!"argNum: {info.argNum}"
@@ -303,4 +303,3 @@ def LambdaInfo.print (info : LambdaInfo) : IO Unit := do
   let e := q(fun (A : (Fin 1 → Fin 2 → Fin 3 → Fin 4 → Fin 5 → Fin 6 → Float)) (i : Fin 4 × Fin 1 × Fin 6) => A i.2.1 $i₂ $i₃ i.1 $i₅ i.2.2)
 
   let _ ← analyzeLambda e
-

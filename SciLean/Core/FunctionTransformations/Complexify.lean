@@ -1,11 +1,15 @@
-import SciLean.Core.FinVec
-import SciLean.Core.Tactic.FunctionTransformation.Init
+import SciLean.Core.Objects.FinVec
+
+import Mathlib.Tactic.FunTrans.Attr
+import Mathlib.Tactic.FunTrans.Elab
 
 namespace SciLean
 
+#exit -- very old file that needs to be completely redone
+
 variable {X Y Z : Type _} [Vec X] [Vec Y] [Vec Z]
 
--- IsAnalytic 
+-- IsAnalytic
 @[fun_prop_def]
 structure IsAnalytic [Vec X] [Vec Y] (f : X → Y)
   -- function is equal to its power series
@@ -47,7 +51,7 @@ instance : Inv (ComplexExtension ℝ)
 
 instance : Div (ComplexExtension ℝ)
   := ⟨λ ⟨x1,x2⟩ ⟨y1, y2⟩ => let iy2 := (y1*y1 + y2*y2)⁻¹; ⟨(x1*y1+x2*y2)*iy2, (x2*y1 - x1*y2)*iy2⟩⟩
-  
+
 instance [One X] : One (ComplexExtension X) := ⟨⟨1,0⟩⟩
 instance : Zero (ComplexExtension X) := ⟨⟨0,0⟩⟩
 
@@ -68,7 +72,7 @@ instance [Basis X ι K] : Basis (ComplexExtension X) (ι⊕ι) K where
     match i with
     | .inl i => ⟨𝕖 i, 0⟩
     | .inr i => ⟨0, 𝕖 i⟩
-  proj := λ i => 
+  proj := λ i =>
     match i with
     | .inl i => λ x => 𝕡 i x.real
     | .inr i => λ x => 𝕡 i x.imag
@@ -78,7 +82,7 @@ instance [DualBasis X ι K] : DualBasis (ComplexExtension X) (ι⊕ι) K where
     match i with
     | .inl i => ⟨𝕖' i, 0⟩
     | .inr i => ⟨0, 𝕖' i⟩
-  dualProj := λ i => 
+  dualProj := λ i =>
     match i with
     | .inl i => λ x => 𝕡' i x.real
     | .inr i => λ x => 𝕡' i x.imag
@@ -105,19 +109,19 @@ instance [ToString X] : ToString (ComplexExtension X) := ⟨λ ⟨x,y⟩ => s!"{
 
 def Complex.exp (z : ℂ) : ℂ := (z.real.exp) • ⟨Real.cos z.imag, Real.sin z.imag⟩
 
-def Complex.cos (z : ℂ) : ℂ := 
+def Complex.cos (z : ℂ) : ℂ :=
   let cx := Real.cos z.real
   let sx := Real.sin z.real
   let ey := Real.exp z.imag
   let iey2 := ey^(-2)
-  (ey * (2:ℝ)⁻¹) • ⟨cx * (1 + iey2), - sx * (1 - iey2)⟩ 
+  (ey * (2:ℝ)⁻¹) • ⟨cx * (1 + iey2), - sx * (1 - iey2)⟩
 
-def Complex.sin (z : ℂ) : ℂ := 
+def Complex.sin (z : ℂ) : ℂ :=
   let cx := Real.cos z.real
   let sx := Real.sin z.real
   let ey := Real.exp z.imag
   let iey2 := ey^(-2)
-  (ey * (2:ℝ)⁻¹) • ⟨sx * (1 + iey2), cx * (1 - iey2)⟩ 
+  (ey * (2:ℝ)⁻¹) • ⟨sx * (1 + iey2), cx * (1 - iey2)⟩
 
 def Complex.cos' (z : ℂ) : ℂ := (2:ℝ)⁻¹ • (Complex.exp (⟨0,1⟩*z) + Complex.exp (-⟨0,1⟩*z))
 def Complex.sin' (z : ℂ) : ℂ := ((2:ℝ)•(⟨0,1⟩:ℂ))⁻¹ * (Complex.exp (⟨0,1⟩*z) - Complex.exp (-⟨0,1⟩*z))
@@ -137,7 +141,7 @@ theorem mul_complex_mk [Add X] [Sub X] [Mul X] (x y a b : X)
   := by rfl
 
 @[simp]
-theorem neg_complex_mk [Neg X] (x y : X) 
+theorem neg_complex_mk [Neg X] (x y : X)
   : - (⟨x,y⟩ : ComplexExtension X)
     =
     ⟨-x, -y⟩
@@ -169,7 +173,7 @@ instance Inner.inner.arg_x.IsAnalytic {X} [Hilbert X] (y : X)
 
 @[simp]
 theorem Inner.inner.arg_x.complexify_simp {X} [Hilbert X] (y : X)
-  : complexify (λ x => ⟪x, y⟫) 
+  : complexify (λ x => ⟪x, y⟫)
     =
     λ x => ⟨ ⟪x.real,y⟫, ⟪x.imag,y⟫ ⟩
   := sorry
@@ -179,7 +183,7 @@ instance Inner.inner.arg_y.IsAnalytic {X} [Hilbert X] (x : X)
 
 @[simp]
 theorem Inner.inner.arg_y.complexify_simp {X} [Hilbert X] (x : X)
-  : complexify (λ y => ⟪x, y⟫) 
+  : complexify (λ y => ⟪x, y⟫)
     =
     λ y => ⟨ ⟪x,y.real⟫, ⟪x,y.imag⟫ ⟩
   := sorry
@@ -188,10 +192,10 @@ instance Inner.inner.arg_xy.IsAnalytic {X} [Hilbert X]
   : IsAnalytic (λ xy : X×X => ⟪xy.1, xy.2⟫) := sorry
 
 @[simp]
-theorem Inner.inner.arg_xy.complexify_simp {X} [Hilbert X] 
-  : complexify (λ xy : X × X => ⟪xy.1, xy.2⟫) 
+theorem Inner.inner.arg_xy.complexify_simp {X} [Hilbert X]
+  : complexify (λ xy : X × X => ⟪xy.1, xy.2⟫)
     =
-    λ xy => 
+    λ xy =>
       ⟨ ⟪xy.real.1, xy.real.2⟫ - ⟪xy.imag.1, xy.imag.2⟫, ⟪xy.real.1, xy.imag.2⟫ + ⟪xy.imag.1, xy.real.2⟫ ⟩
   := sorry
 
@@ -200,9 +204,9 @@ instance Inner.inner.arg_xy.IsAnalytic' {X} [Hilbert X] {T} [Vec T] (x y : T →
 
 @[simp]
 theorem Inner.inner.arg_xy.complexify_simp' {X} [Hilbert X] {T} [Vec T] (x y : T → X)
-  : complexify (λ t => ⟪x t, y t⟫) 
+  : complexify (λ t => ⟪x t, y t⟫)
     =
-    λ t => 
+    λ t =>
       let x' := complexify x t
       let y' := complexify y t
       ⟨ ⟪x'.real, y'.real⟫ - ⟪x'.imag, y'.imag⟫, ⟪x'.real, y'.imag⟫ + ⟪x'.imag, y'.real⟫ ⟩

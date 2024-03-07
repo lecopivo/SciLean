@@ -10,11 +10,11 @@ namespace SciLean
 
 @[fun_prop_def]
 structure IsLin {X Y : Type _} [Vec X] [Vec Y] (f : X → Y) : Prop where
- isLin : TensorProduct.is_linear f 
+ isLin : TensorProduct.is_linear f
  isSmooth : IsSmooth f
 
 structure LinMap (X Y : Type _) [Vec X] [Vec Y] where
-  toFun : X → Y 
+  toFun : X → Y
   isLin_toFun : IsLin toFun := by infer_instance
 
 /-- `X --o Y` is the space of all linear maps between `X` and `Y`.
@@ -62,7 +62,7 @@ namespace LinMap
     map_isLin f := f.isLin_toFun
     coe f := f.toFun
     coe_injective' := sorry_proof
-    
+
   @[simp]
   theorem toFun_eq_coe {f : X ⊸ Y} : f.toFun = (f : X → Y) :=
     rfl
@@ -95,7 +95,7 @@ namespace LinMap
     LinMap.mk (λ x => x) sorry
 
   @[simp]
-  theorem coe_id : ⇑(LinMap.id : X ⊸ X) = _root_.id := 
+  theorem coe_id : ⇑(LinMap.id : X ⊸ X) = _root_.id :=
     rfl
 
   @[simp]
@@ -103,7 +103,7 @@ namespace LinMap
     rfl
 
   ------------------------------------------------------------------------------
-  -- X ⊸ Y is vector space 
+  -- X ⊸ Y is vector space
   ------------------------------------------------------------------------------
 
   theorem show_is_lin_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⊸ Y) : (f = g) → IsLin f :=
@@ -133,8 +133,8 @@ namespace LinMap
   def sub' : X×X ⊸ X := LinMap.mk (λ (x,y) => x-y) sorry
   def mul' : ℝ×ℝ ⊸ ℝ := LinMap.mk (λ (x,y) => x*y) sorry
 
-  -- def tassocl : 
-  -- def tassocr : 
+  -- def tassocl :
+  -- def tassocr :
   def unit' : ℝ → X ⊸ ℝ⊗X := λ r => LinMap.mk (λ x => r⊗x) sorry
   def counit : ℝ⊗X ⊸ X := LinMap.mk ((λ rx => rx.map' (λ r x => r • x) sorry)) sorry
 
@@ -164,7 +164,7 @@ namespace LinMap
 
   def _root_.SciLean.TensorProduct.map (f : X ⊸ Y ⊸ Z) (xy : X⊗Y) : Z := xy.map' (λ x y => f x y) sorry_proof
 
-  section FinVec 
+  section FinVec
 
     variable {X Y : Type _} {ι κ} {_ : EnumType ι} {_ : EnumType κ}
 
@@ -203,9 +203,9 @@ namespace LinMap
       fromDual := λ f => LinMap.mk (λ x => fromDual (f (toDual x))) sorry_proof
 
     -- @[infer_tc_goals_rl]
-    instance [FinVec X ι] [FinVec Y κ] : FinVec (X ⊸ Y) (ι×κ) where     
+    instance [FinVec X ι] [FinVec Y κ] : FinVec (X ⊸ Y) (ι×κ) where
       is_basis := sorry_proof
-      duality := by 
+      duality := by
         intro (i,j) (i',j'); simp[Basis.basis, DualBasis.dualBasis, Inner.inner];
         -- This should be:
         --  ∑ i_i, ⟪[[i=i_]] * ⅇ j, [[i'=i_1]] ⅇ' j'⟫
@@ -214,7 +214,7 @@ namespace LinMap
         sorry_proof
       to_dual := by
         simp [BasisDuality.toDual, Basis.proj, DualBasis.dualBasis]
-        intro f; ext x; 
+        intro f; ext x;
         simp[FinVec.to_dual,FinVec.from_dual]
         -- Now the goal is:
         --   ∑ j, ℼ j (f (∑ i, ℼ' i x * ⅇ i)) * ⅇ' j
@@ -223,7 +223,7 @@ namespace LinMap
         sorry_proof
       from_dual := by
         simp [BasisDuality.fromDual, DualBasis.dualProj, Basis.basis]
-        intro f; ext x; 
+        intro f; ext x;
         simp[FinVec.to_dual,FinVec.from_dual]
         -- Now the goal is:
         --   ∑ j, ℼ' j (f (∑ i, ℼ i x * ⅇ' i)) * ⅇ j
@@ -231,7 +231,7 @@ namespace LinMap
         --   ∑ (i,j), ℼ' j (f (ⅇ' i)) * ℼ' i x * ⅇ j
         sorry_proof
 
-  end FinVec 
+  end FinVec
 
 
   ------------------------------------------------------------------------------
@@ -239,13 +239,13 @@ namespace LinMap
   ------------------------------------------------------------------------------
 
 
-  def curry' (f : X ⊗ Y ⊸ Z) : (X ⊸ Y ⊸ Z) := 
-    LinMap.mk (λ x => 
-      LinMap.mk (λ y => f (x ⊗ y)) 
-      sorry_proof) 
+  def curry' (f : X ⊗ Y ⊸ Z) : (X ⊸ Y ⊸ Z) :=
+    LinMap.mk (λ x =>
+      LinMap.mk (λ y => f (x ⊗ y))
+      sorry_proof)
     sorry_proof
 
-  def uncurry' (f : X ⊸ Y ⊸ Z) : (X ⊗ Y ⊸ Z) := 
+  def uncurry' (f : X ⊸ Y ⊸ Z) : (X ⊗ Y ⊸ Z) :=
     LinMap.mk (λ xy => xy.map' (λ x y => f x y) sorry_proof) sorry_proof
 
   def fst : X×Y ⊸ X := LinMap.mk (λ (x,_) => x) sorry_proof
@@ -257,8 +257,8 @@ namespace LinMap
   @[simp] theorem fst_eval (xy : X×Y) : fst xy = xy.1 := by simp[fst]
   @[simp] theorem snd_eval (xy : X×Y) : snd xy = xy.2 := by simp[snd]
 
-  def tprod : X ⊸ Y ⊸ X⊗Y := 
-    LinMap.mk (λ x => 
+  def tprod : X ⊸ Y ⊸ X⊗Y :=
+    LinMap.mk (λ x =>
       LinMap.mk (λ y => x⊗y)
       (show_is_lin_via (curry' LinMap.id x) (by ext y; simp)))
     (show_is_lin_via (curry' LinMap.id) (by ext x y; simp))
@@ -266,7 +266,7 @@ namespace LinMap
   -- noncomputable
   -- def tpmap : (X⊸Y) ⊸ (X⊸Z) ⊸ (X⊸Y⊗Z) := ⟨λ f => ⟨λ g => ⟨λ x => (f x ⊗ g x), sorry_proof⟩, sorry_proof⟩, sorry_proof⟩
   -- noncomputable
-  -- def tfmap : (X⊸Z) ⊸ (Y⊸W) ⊸ (X⊗Y⊸Z⊗W) := ⟨λ f => ⟨λ g => ⟨λ xy => 
+  -- def tfmap : (X⊸Z) ⊸ (Y⊸W) ⊸ (X⊗Y⊸Z⊗W) := ⟨λ f => ⟨λ g => ⟨λ xy =>
   --   let ⟨_,x,y⟩ := xy.repr
   --   ∑ i, f (x i) ⊗ g (y i), sorry_proof⟩, sorry_proof⟩, sorry_proof⟩
 
@@ -278,7 +278,7 @@ namespace LinMap
 
   -- -- I don't think this is a valid map
   -- -- noncomputable
-  -- -- def tfmap' : (X→Z) ⊸ (Y→W) ⊸ (X⊗Y→Z⊗W) := ⟨λ f => ⟨ λ g => λ xy => 
+  -- -- def tfmap' : (X→Z) ⊸ (Y→W) ⊸ (X⊗Y→Z⊗W) := ⟨λ f => ⟨ λ g => λ xy =>
   -- --   let ⟨_,x,y⟩ := xy.repr
   -- --   ∑ i, f (x i) ⊗ g (y i), sorry_proof⟩, sorry_proof⟩
 
@@ -295,19 +295,19 @@ namespace LinMap
   -- noncomputable
   -- def tpair : X⊸Y⊸X⊗Y := curry' id
 
-  
-  -- def assocl : X×(Y×Z) ⊸ (X×Y)×Z := 
+
+  -- def assocl : X×(Y×Z) ⊸ (X×Y)×Z :=
   --   let F : X×(Y×Z) ⊸ (X×Y)×Z := pmap ((pmap (fst, (comp' fst snd))), (comp' snd snd))
-  --   ⟨λ (x,(y,z)) => ((x,y),z), 
-  --    by 
+  --   ⟨λ (x,(y,z)) => ((x,y),z),
+  --    by
   --      have h : (λ (x,(y,z)) => ((x,y),z)) = F.1 := by simp[pmap, comp', fst, snd]
   --      rw[h]
   --      apply F.2⟩
 
-  -- def assocr : (X×Y)×Z ⊸ X×(Y×Z) := 
+  -- def assocr : (X×Y)×Z ⊸ X×(Y×Z) :=
   --   let F : (X×Y)×Z ⊸ X×(Y×Z) := pmap ((comp' fst fst), (pmap ((comp' snd fst), snd)))
   --   ⟨λ ((x,y),z) => (x,(y,z)),
-  --    by 
+  --    by
   --      have h : (λ ((x,y),z) => (x,(y,z))) = F.1 := by simp[pmap, comp', fst, snd]
   --      rw[h]
   --      apply F.2⟩
@@ -319,7 +319,7 @@ namespace LinMap
   -- theorem assocr_eval (xyz : (X×Y)×Z) : assocr xyz = (xyz.1.1,(xyz.1.2,xyz.2)) := rfl
 
   -- noncomputable
-  -- def tassocl : X⊗(Y⊗Z) ⊸ (X⊗Y)⊗Z := ⟨λ xyz => 
+  -- def tassocl : X⊗(Y⊗Z) ⊸ (X⊗Y)⊗Z := ⟨λ xyz =>
   --   let ⟨_,x,yz⟩ := xyz.repr
   --   let y := λ i => (yz i).repr.snd.fst
   --   let z := λ i => (yz i).repr.snd.snd
@@ -327,7 +327,7 @@ namespace LinMap
   --   sorry_proof⟩
 
   -- noncomputable
-  -- def tassocr : (X⊗Y)⊗Z ⊸ X⊗(Y⊗Z) := ⟨λ xyz => 
+  -- def tassocr : (X⊗Y)⊗Z ⊸ X⊗(Y⊗Z) := ⟨λ xyz =>
   --   let ⟨_,xy,z⟩ := xyz.repr
   --   let x := λ i => (xy i).repr.snd.fst
   --   let y := λ i => (xy i).repr.snd.snd
@@ -340,7 +340,7 @@ namespace LinMap
   -- theorem swap_eval (xy : (X×Y)) : swap xy = (xy.2, xy.1) := rfl
 
   -- noncomputable
-  -- def tswap : (X⊗Y) ⊸ (Y⊗X) := ⟨λ xy => 
+  -- def tswap : (X⊗Y) ⊸ (Y⊗X) := ⟨λ xy =>
   --   let ⟨_,x,y⟩ := xy.repr
   --   ∑ i, y i ⊗ x i,
   --   sorry_proof⟩
@@ -359,7 +359,7 @@ namespace LinMap
   -- -- TODO: This function is perfectly computable, make it so
   -- -- only the proof of linearity goes via noncomputable tensor product
   -- noncomputable
-  -- def comp : (Y ⊸ Z) ⊸ (X ⊸ Y) ⊸ (X ⊸ Z) := 
+  -- def comp : (Y ⊸ Z) ⊸ (X ⊸ Y) ⊸ (X ⊸ Z) :=
   --   let F₁ : (Y⊸Z)⊗((X⊸Y)⊗X) ⊸ Z := comp' teval (tfmap id teval)
   --   curry' (curry' (comp' F₁ tassocr))
 
@@ -373,7 +373,7 @@ namespace LinMap
   -- -- theorem const_eval (f : Y⊸Z) (g : X ⊸ Y) (x : X) : comp f g x = f (g x) := rfl
 
   -- noncomputable
-  -- def uncurry : (X ⊸ Y ⊸ Z) ⊸ (X⊗Y ⊸ Z) := 
+  -- def uncurry : (X ⊸ Y ⊸ Z) ⊸ (X⊗Y ⊸ Z) :=
   --   let F : ((X⊸Y⊸Z)⊗X)⊗Y ⊸ Z := comp teval (tfmap teval id)
 
   --   let G₁ : (X⊗Y ⊸ (X⊸Y⊸Z)⊗(X⊗Y)) ⊸ (X⊗Y ⊸ Z) := comp (comp' F tassocl)
@@ -382,9 +382,9 @@ namespace LinMap
 
   -- -- @[simp]
   -- -- theorem Smooth.uncurry_eval (f : X ⊸ Y ⊸ Z) (xy : X×Y) : Smooth.uncurry f xy = f xy.1 xy.2 := by rfl
-  
+
   -- noncomputable
-  -- def curry : (X ⊗ Y ⊸ Z) ⊸ (X ⊸ Y ⊸ Z) := 
+  -- def curry : (X ⊗ Y ⊸ Z) ⊸ (X ⊸ Y ⊸ Z) :=
 
   --   let G : ((X⊗Y⊸Z)⊗Y)⊗X ⊸ Z := comp (comp (uncurry' id) (tfmap id tswap)) tassocr
 
@@ -400,18 +400,18 @@ namespace LinMap
   -- -- theorem Smooth.curry_eval (f : X×Y ⊸ Z) (x : X) (y : Y) : Smooth.curry f x y = f (x,y) := by rfl
 
   -- -- TODO: make it computable
-  -- noncomputable 
-  -- def prod : (X → Y ⊸ Z) ⊸ (X→Y) ⊸ (X→Z) := 
+  -- noncomputable
+  -- def prod : (X → Y ⊸ Z) ⊸ (X→Y) ⊸ (X→Z) :=
   --   let F : (X → Y ⊸ Z) ⊸ (X→Y) ⊸ (X → Y ⊸ Z)⊗(X→Y) := tpair
   --   let G₁ : (X → Y ⊸ Z)⊗(X→Y) ⊸ (X → (Y⊸Z)⊗Y) := uncurry tpmap'
   --   let G₂ : (X → (Y⊸Z)⊗Y) ⊸ (X→Z) := comp'' teval
-    
+
   --   comp (comp (comp G₂ G₁)) F
 
   -- @[simp]
   -- theorem prod_eval (f : X → Y ⊸ Z) : prod f (λ _ => y) x = f x y := sorry_proof
 
-  -- -- def scomb : (X⊸Y⊸Z) ⊸ (X⊸Y) ⊸ X ⊸ Z := 
+  -- -- def scomb : (X⊸Y⊸Z) ⊸ (X⊸Y) ⊸ X ⊸ Z :=
   -- --   let F₁ : (X⊸Y⊸Z)⊗(X⊸Y)⊗X ⊸ (X⊗Y⊸Z)⊗(X⊗Y) := tfmap uncurry (tpmap snd teval)
   -- --   comp (curry) (curry (comp eval F₁))
 
@@ -421,8 +421,7 @@ namespace LinMap
 
   -- -- def Smooth.pmapDep : ((i : ι)→(E i)) ⊸ ((i : ι)→(F i)) ⊸ ((i : ι)→(E i)×(F i)) := ⟨λ f => ⟨λ g => λ x => (f x, g x), sorry⟩, sorry⟩
   -- -- def Smooth.fmapDep : ((i : ι)→(E i)) ⊸ ((j : κ)→(E' j)) ⊸ ((ij : (ι×κ))→(E ij.1)×(E' ij.2)) := ⟨λ f => ⟨λ g => λ (i,j) => (f i, g j), sorry⟩, sorry⟩
-  -- -- def Smooth.prodDep : ((i : ι) → E i ⊸ F i) ⊸ ((i : ι) → E i) ⊸ ((i : ι) → F i) := sorry 
+  -- -- def Smooth.prodDep : ((i : ι) → E i ⊸ F i) ⊸ ((i : ι) → E i) ⊸ ((i : ι) → F i) := sorry
 
 
   -- end Linear
-

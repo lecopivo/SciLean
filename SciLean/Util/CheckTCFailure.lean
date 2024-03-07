@@ -4,7 +4,7 @@ open Lean Elab Command Term Meta
 #check synthInstance
 #check MetaM
 
-/-- Checks if typeclass fails to be synthesized. The failure has to be proper i.e. max hearthbeat is not reached thus all options are exhausted. 
+/-- Checks if typeclass fails to be synthesized. The failure has to be proper i.e. max hearthbeat is not reached thus all options are exhausted.
 
 TODO: Make more robust! The command currently just checks the error message. Also check for reaching max size. -/
 syntax (name := check_tc_failure) "#check_tc_failure" term : command
@@ -25,7 +25,7 @@ def Lean.MessageData.type : MessageData → String
 
 @[command_elab check_tc_failure]
 def checkTCFailureImpl : CommandElab := fun stx => do
-  try 
+  try
     let _ ← liftTermElabM (withoutErrToSorry (elabTerm stx[1] none))
     logError "Unexpected success!"
   catch e =>
@@ -33,7 +33,7 @@ def checkTCFailureImpl : CommandElab := fun stx => do
     let msg' := msg |>.dropWhile (· != '\n') |>.drop 1 |>.dropWhile (· != '\n') |>.drop 1
     if msg'.startsWith "(deterministic) timeout at 'typeclass', maximum number of heartbeats" then
       logError s!"Typeclass synthesis failed by reaching the maximum number of heartbeats!"
-    else 
+    else
       logInfo s!"Proper typeclass failure!\n{msg}"
 
 class C (n : Nat)

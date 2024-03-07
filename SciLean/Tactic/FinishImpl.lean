@@ -4,7 +4,7 @@ import Lean
 import Lean.Meta.Basic
 import Lean.Elab.Tactic.Basic
 
-open Lean 
+open Lean
 open Lean.Meta
 open Lean.Elab.Tactic
 
@@ -23,12 +23,12 @@ set_option synthInstance.maxHeartbeats 10000
 
 --     assignExprMVar mvarId (← mkAppM `Impl.pure #[spec])
 
---     return [mvarId]  
+--     return [mvarId]
 
 syntax (name := finish_impl) "finish_impl" (colGt term:max)* : tactic
 
 @[tactic finish_impl] def tacticFinishImpl : Tactic
-| `(tactic| finish_impl) => do 
+| `(tactic| finish_impl) => do
           -- let mainGoal ← getMainGoal
           -- Check if `mainGoal` is in the form of `Impl a` and test if `a` is computable
           evalTactic (← `(tactic| apply SciLean.ImplSpec.pure _ (by rfl)))

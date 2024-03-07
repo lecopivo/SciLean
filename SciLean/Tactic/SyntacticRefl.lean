@@ -8,7 +8,7 @@ open Lean.Elab.Tactic Lean Meta in
   let goalType ← goal.getType
   match goalType.app3? ``Eq with
   | none => throwTacticEx `stx_rfl goal m!"equality expected"
-  | some (_,lhs,rhs) => 
+  | some (_,lhs,rhs) =>
 
     let lhs ← instantiateMVars lhs
     let rhs ← instantiateMVars rhs
@@ -18,8 +18,8 @@ open Lean.Elab.Tactic Lean Meta in
     if lhs == rhs then
       goal.applyRefl
     else
-      throwTacticEx `stx_rfl goal m!"{← Lean.Meta.ppExpr lhs} and {← Lean.Meta.ppExpr rhs} are not syntactically equal!"  
+      throwTacticEx `stx_rfl goal m!"{← Lean.Meta.ppExpr lhs} and {← Lean.Meta.ppExpr rhs} are not syntactically equal!"
 
-example : 0 = 0 := 
+example : 0 = 0 :=
 by
   stx_rfl

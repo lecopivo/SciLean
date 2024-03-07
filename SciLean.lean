@@ -1,15 +1,11 @@
 import SciLean.Core
-import SciLean.Core.FloatAsReal
+
+import SciLean.Tactic.MathlibCompiledTactics
+import SciLean.Tactic.Autodiff
 
 import SciLean.Data.ArrayType
 import SciLean.Data.DataArray
 
-import SciLean.Modules.DifferentialEquations
--- import SciLean.Modules.ML
-
-import SciLean.Tactic.LSimp2.Elab
-
-import SciLean.Util.Profile
 
 /-!
 
@@ -21,4 +17,3 @@ SciLean
 
 
 -/
-

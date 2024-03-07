@@ -20,7 +20,7 @@ namespace SciLean.Tactic.LSimp
 open Lean Elab Tactic
 open TSyntax.Compat
 
-open Lean Meta 
+open Lean Meta
 
 def traceSimpCall (stx : Syntax) (usedSimps : Simp.UsedSimps) : MetaM Unit := do
   let mut stx := stx
@@ -103,7 +103,7 @@ where
 
 open Lean Elab Tactic Conv in
 @[tactic SciLean.Tactic.LSimp.lsimp_conv] def evalSimpConv : Tactic := fun stx => do
-  let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false) 
+  let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false)
 
   let e ← getLhs
   let (r, usedSimps) ← dischargeWrapper.with fun discharge? =>
@@ -141,7 +141,7 @@ where
 set_option linter.unusedVariables false in
 open Lean Elab Tactic Conv in
 @[tactic SciLean.Tactic.LSimp.ldsimp_conv] def evalDSimpConv : Tactic := fun stx => do
-  let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false) 
+  let { ctx, dischargeWrapper } ← withMainContext <| mkSimpContext stx (eraseLocal := false)
 
   let e ← getLhs
   let (e', usedSimps) ← SciLean.Tactic.dsimp e ctx
@@ -154,7 +154,7 @@ open Lean Elab Tactic Conv in
 
 example (f : Nat → Nat) :
   (
-   let a := 
+   let a :=
      let b := f 10
      let x := 5
      let g := hold $ λ n => n + b + 10
@@ -174,7 +174,7 @@ by
 
 example (f : Nat → Nat) :
   (
-   let a := 
+   let a :=
      let b := f 10
      b + 10
    (a*a, a+a)).1

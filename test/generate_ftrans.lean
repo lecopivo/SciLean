@@ -1,12 +1,12 @@
-import SciLean.Core
+import SciLean
 
 open Lean SciLean
 
-set_option linter.unusedVariables false 
+set_option linter.unusedVariables false
 
 def mymul {K : Type u} [instK : IsROrC K] (x y : K) := x * y
 
-#generate_revCDeriv mymul x y 
+#generate_revCDeriv mymul x y
   prop_by unfold mymul; fprop
   trans_by unfold mymul; autodiff
 
@@ -14,11 +14,11 @@ def mymul {K : Type u} [instK : IsROrC K] (x y : K) := x * y
   prop_by unfold mymul; fprop
   trans_by unfold mymul; autodiff
 
-#generate_revCDeriv mymul y 
+#generate_revCDeriv mymul y
   prop_by unfold mymul; fprop
   trans_by unfold mymul; autodiff
 
-#generate_fwdCDeriv mymul x y 
+#generate_fwdCDeriv mymul x y
   prop_by unfold mymul; fprop
   trans_by unfold mymul; autodiff
 
@@ -97,7 +97,7 @@ set_default_scalar K
 
 def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * x j
 
-#generate_revCDeriv matmul A x 
+#generate_revCDeriv matmul A x
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff
 
@@ -105,29 +105,29 @@ def matmul  (A : ι → κ → K) (x : κ → K) (i : ι) : K := ∑ j, A i j * 
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff
 
-#generate_revCDeriv matmul A | i 
+#generate_revCDeriv matmul A | i
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
 
-#generate_revCDeriv matmul x | i 
+#generate_revCDeriv matmul x | i
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
-  
+
 #generate_fwdCDeriv matmul A x
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
 
-#generate_fwdCDeriv matmul A 
+#generate_fwdCDeriv matmul A
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
 
 #generate_fwdCDeriv matmul x
   prop_by unfold matmul; fprop
   trans_by unfold matmul; autodiff; autodiff
- 
+
 
 -- TODO: make this work even if there is no `[IsROrC K]` in the type signature
--- in this case it will just say that `K` and `α` are vector spaces over some new 
+-- in this case it will just say that `K` and `α` are vector spaces over some new
 -- field `R` with `[IsROrC R]`
 def pairWithScalar {K α ι : Type _} [IsROrC K]
   (r : K) (x : α) := (r,x)

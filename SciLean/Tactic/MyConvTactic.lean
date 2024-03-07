@@ -1,7 +1,7 @@
 import Lean.Elab.Tactic.ElabTerm
 import Lean.Elab.Tactic.Conv.Basic
 
-namespace Lean.Elab.Tactic.Conv 
+namespace Lean.Elab.Tactic.Conv
 open Meta
 
 
@@ -56,12 +56,12 @@ def foo {α} (a : α) := a
   | _ => throwUnsupportedSyntax
 
 
-example (x y z : Nat) : (x + y) + z = (x + (foo y + z)) := 
+example (x y z : Nat) : (x + y) + z = (x + (foo y + z)) :=
 by
   conv =>
     enter [1,1,2]
     add_foo; (tactic => unfold foo; rfl)
-    
+
   .
   apply Nat.add_assoc
   done

@@ -3,7 +3,7 @@ import SciLean.Quot.Basic
 namespace SciLean.Quot'
 
   class QForm {α} (S : Rel α) where
-    RedForm  : α → Prop 
+    RedForm  : α → Prop
     NormForm : α → Prop
     norm_red : ∀ x, NormForm x → RedForm x
     norm_eq  : ∀ x y, S x y → NormForm x → NormForm y → x = y
@@ -17,7 +17,7 @@ namespace SciLean.Quot'
     preserve_norm : ∀ x : α, NormForm S x → NormForm R (f x)
 
   ---
-  
+
   class QReduce {α} (S : Rel α) [QForm S] where
     reduce : α → α
     is_reduce : ∀ x, RedForm S (reduce x)
@@ -29,7 +29,7 @@ namespace SciLean.Quot'
     id_reduce : ∀ x : α, reduce x = x
 
   ---
-  
+
   class QNormalize {α} (S : Rel α) [QForm S] where
     normalize : α → α
     is_normalize : ∀ x, NormForm S (normalize x)
@@ -47,7 +47,7 @@ namespace SciLean.Quot'
     | red  (x : α) (h : RedForm S x)  : QRepr S
     | norm (x : α) (h : NormForm S x) : QRepr S
 
-  namespace QRepr 
+  namespace QRepr
 
     variable {α} {S : Rel α} [QForm S]
 
@@ -84,21 +84,21 @@ namespace SciLean.Quot'
     -- def lift₂ (f : Repr → Repr' → Repr'') (x : QRepr R) (x' : QRepr R') : QRepr R'' :=
     --   raw (f x.repr x'.repr)
 
-    -- def liftHom (f : Repr → Repr') (h : SHom R R' f) (x : QRepr R) : QRepr R' := 
+    -- def liftHom (f : Repr → Repr') (h : SHom R R' f) (x : QRepr R) : QRepr R' :=
     --   match x with
     --   | raw x => raw (f x)
     --   | red  x h' => red  (f x) (h.preserve_red x h')
     --   | norm x h' => norm (f x) (h.preserve_norm x h')
 
-    -- @[simp] 
+    -- @[simp]
     -- theorem lift_hom_repr (f : Repr → Repr') (h : SHom R R' f) (x : QRepr R)
     --   : (liftHom f h x).repr = f x.repr
-    --   := 
-    --   by induction x 
+    --   :=
+    --   by induction x
     --      repeat simp[liftHom]
     --      done
 
-    -- def liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f) 
+    -- def liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f)
     --   (x : QRepr R) (y : QRepr R') : QRepr R'' :=
     --   match x, y with
     --   | red x hx,  red y hy  => red  (f x y) (h.preserve_red  x y hx hy)
@@ -144,7 +144,7 @@ namespace Quot'
 
 end Quot'
 
-  
+
 
 
   -- TODO:

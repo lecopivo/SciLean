@@ -2,6 +2,7 @@ import Lean
 
 import SciLean.Core.Approx.Basic
 import SciLean.Tactic.PullLimitOut
+import SciLean.Lean.Meta.Basic
 
 namespace SciLean
 
@@ -25,25 +26,27 @@ where `<proof>` is a proof that this approximation is indeed valid
 
 Warning: The validity proof is not completely correct right now
 -/
-syntax (name:=approx_limit_tactic) "approx_limit " ident " := " term : tactic 
+syntax (name:=approx_limit_tactic) "approx_limit " ident " := " term : tactic
 
-@[tactic approx_limit_tactic] 
+open Lean Meta in
+@[tactic approx_limit_tactic]
 def approxLimitTactic : Tactic
 | `(tactic| approx_limit $n:ident := $prf:term) => do
   let mainGoal ← getMainGoal
   let goal ← instantiateMVars (← mainGoal.getType)
-  if ¬(goal.isAppOfArity' ``Approx 6) then
+
+  Lean.Meta.letTelescope goal fun xs goal' => do
+  if ¬(goal'.isAppOfArity' ``Approx 6) then
     throwError "the goal is not `Approx _ _`"
 
-  let .app f a := goal | panic! "unreachable code in approxLimitTactic"
+  let .app f a := goal' | panic! "unreachable code in approxLimitTactic"
   let a' ← pullLimitOut a
-  let goal' := f.app a'
+  let goal'' ← mkLambdaFVars xs (f.app a')
   let limitPullProof ← elabTerm (← `($prf)) (← Meta.mkEq a a')
-  let mainGoal ← mainGoal.replaceTargetEq goal' (← Meta.mkAppM ``congr_arg #[f,limitPullProof])
+  let mainGoal ← mainGoal.replaceTargetEq goal'' (← mkLambdaFVars xs (← Meta.mkAppM ``congr_arg #[f,limitPullProof]))
   setGoals [mainGoal]
 
   -- TODO: this probably should be done manually as these holes should not become new goals
   evalTactic (← `(tactic| apply Approx.limit _ _))
   evalTactic (← `(tactic| intros $n))
 | _ => throwUnsupportedSyntax
-

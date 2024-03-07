@@ -1,6 +1,6 @@
-import SciLean.Core.FunctionTransformations.RevCDeriv
-import SciLean.Core.Notation.Autodiff
+import SciLean.Core.FunctionTransformations.RevDeriv
 import SciLean.Core.Notation.CDeriv
+import SciLean.Tactic.Autodiff
 
 
 namespace SciLean.NotationOverField
@@ -24,7 +24,7 @@ elab_rules (kind:=gradNotation1) : term
   let XY ← mkArrow X Y
   -- Y might also be infered by the function `f`
   let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
-  let .some (_,Y) := (← inferType fExpr).arrow? 
+  let .some (_,Y) := (← inferType fExpr).arrow?
     | return ← throwUnsupportedSyntax
   if (← isDefEq KExpr Y) then
     elabTerm (← `(scalarGradient $K $f $x $xs*)) none false
@@ -53,7 +53,7 @@ macro_rules
 | `(∇ ($b:diffBinder), $f)       => `(∇ $b, $f)
 
 macro_rules
-| `(∇! $f)                        => `((∇ $f) rewrite_by ftrans; ftrans; ftrans)
+| `(∇! $f)                        => `((∇ $f) rewrite_by dsimp (config:={zeta:=false}) [gradient, scalarGradient]; autodiff; autodiff; autodiff)
 | `(∇! $x:ident, $f)              => `(∇! fun $x => $f)
 | `(∇! $x:ident : $type:term, $f) => `(∇! fun $x : $type => $f)
 | `(∇! $x:ident := $val:term, $f) => `(∇! (fun $x => $f) $val)

@@ -9,13 +9,13 @@ namespace SciLean.Meta
 def mkBinaryOpInstance (className opName : Name) (declName : Name) : TermElabM Unit := do
   let env ← getEnv
   match getStructureInfo? env declName with
-  | some info => do  
+  | some info => do
     let structType ← Meta.inferType (mkConst info.structName)
-    let instValue ← Meta.forallTelescope structType λ xs _ => 
+    let instValue ← Meta.forallTelescope structType λ xs _ =>
     do
       let strct ← Meta.mkAppOptM info.structName (xs.map some)
-      let binOp ← Meta.withLocalDecl `x default strct λ x => 
-                   Meta.withLocalDecl `y default strct λ y => do 
+      let binOp ← Meta.withLocalDecl `x default strct λ x =>
+                   Meta.withLocalDecl `y default strct λ y => do
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
           fields := fields.push (← Meta.mkAppM opName #[x.proj info.structName i, y.proj info.structName i])
@@ -36,7 +36,7 @@ def mkBinaryOpInstance (className opName : Name) (declName : Name) : TermElabM U
        }
     addAndCompile instDecl
     Attribute.add instName "instance" default
-  | none => 
+  | none =>
     pure default
 
 def mkBinaryOpHandler (className opName : Name) (declNames : Array Name) : CommandElabM Bool := do
@@ -51,12 +51,12 @@ def mkBinaryOpHandler (className opName : Name) (declNames : Array Name) : Comma
 def mkUnaryOpInstance (className opName : Name) (declName : Name) : TermElabM Unit := do
   let env ← getEnv
   match getStructureInfo? env declName with
-  | some info => do  
+  | some info => do
     let structType ← Meta.inferType (mkConst info.structName)
-    let instValue ← Meta.forallTelescope structType λ xs _ => 
+    let instValue ← Meta.forallTelescope structType λ xs _ =>
     do
       let strct ← Meta.mkAppOptM info.structName (xs.map some)
-      let op ← Meta.withLocalDecl `x default strct λ x => do 
+      let op ← Meta.withLocalDecl `x default strct λ x => do
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
           fields := fields.push (← Meta.mkAppM opName #[x.proj info.structName i])
@@ -77,7 +77,7 @@ def mkUnaryOpInstance (className opName : Name) (declName : Name) : TermElabM Un
        }
     addAndCompile instDecl
     Attribute.add instName "instance" default
-  | none => 
+  | none =>
     pure default
 
 def mkUnaryOpHandler (className opName : Name) (declNames : Array Name) : CommandElabM Bool := do
@@ -92,11 +92,11 @@ def mkUnaryOpHandler (className opName : Name) (declNames : Array Name) : Comman
 def mkNullaryOpInstance (className opName : Name) (declName : Name) : TermElabM Unit := do
   let env ← getEnv
   match getStructureInfo? env declName with
-  | some info => do  
+  | some info => do
     let structType ← Meta.inferType (mkConst info.structName)
     let instValue ← Meta.forallTelescope structType λ xs _ => do
       let strct ← Meta.mkAppOptM info.structName (xs.map some)
-      let op ← Meta.withLocalDecl `x default strct λ x => do  
+      let op ← Meta.withLocalDecl `x default strct λ x => do
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
           fields := fields.push (← Meta.mkAppOptM opName #[← Meta.inferType (x.proj info.structName i),none])
@@ -117,7 +117,7 @@ def mkNullaryOpInstance (className opName : Name) (declName : Name) : TermElabM 
        }
     addAndCompile instDecl
     Attribute.add instName "instance" default
-  | none => 
+  | none =>
     pure default
 
 def mkNullaryOpHandler (className opName : Name) (declNames : Array Name) : CommandElabM Bool := do
@@ -132,13 +132,13 @@ def mkNullaryOpHandler (className opName : Name) (declNames : Array Name) : Comm
 def mkSMulOpInstance (declName : Name) : TermElabM Unit := do
   let env ← getEnv
   match getStructureInfo? env declName with
-  | some info => do  
+  | some info => do
     let structType ← Meta.inferType (mkConst info.structName)
-    let instValue ← Meta.forallTelescope structType λ xs _ => 
+    let instValue ← Meta.forallTelescope structType λ xs _ =>
     do
       let strct ← Meta.mkAppOptM info.structName (xs.map some)
-      let binOp ← Meta.withLocalDecl `s default (mkConst ``SciLean.Real) λ s => 
-                   Meta.withLocalDecl `x default strct λ x => do 
+      let binOp ← Meta.withLocalDecl `s default (mkConst ``SciLean.Real) λ s =>
+                   Meta.withLocalDecl `x default strct λ x => do
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
           fields := fields.push (← Meta.mkAppM ``SMul.smul #[s, x.proj info.structName i])
@@ -180,9 +180,3 @@ initialize
   registerDerivingHandler ``Zero (mkNullaryOpHandler ``Zero ``Zero.zero)
   registerDerivingHandler ``One  (mkNullaryOpHandler ``One ``One.one)
   registerDerivingHandler ``SMul mkSMulOpHandler
-
-
-
-
-
-

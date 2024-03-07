@@ -9,7 +9,7 @@ import Mathlib.Tactic.Ring
 import SciLean.Util.RewriteBy
 import SciLean.Data.Index
 
-/- 
+/-
 This norm num extension is by Kyle Miller
 source: https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/norm_num.20for.20USize/near/405939157
 -/
@@ -68,7 +68,7 @@ syntax (name:=deduceBy) "deduce_by " conv : tactic
 namespace DeduceBy
 open Qq Lean Meta
 
-/-- 
+/--
 Assuming that `a` has mvar `m` and `b` is an expression.
 
 Return mvar `m` and value `x` for it such that `a=b` is likely to hold.
@@ -77,30 +77,30 @@ Examples:
 - `a = 4 * ?m + 2`, `b = 2*n` => `(?m, (2*n-2)/4)`
 -/
 partial def invertNat (a b : Q(Nat)) : MetaM (Q(Nat) × Q(Nat)) := do
-  if a.isMVar then 
+  if a.isMVar then
     return (a,b)
   else
     match a with
-    | ~q($x * $y) => 
-      if x.hasMVar 
+    | ~q($x * $y) =>
+      if x.hasMVar
       then invertNat x q($b / $y)
       else invertNat y q($b / $x)
-    | ~q($x / $y) => 
-      if x.hasMVar 
+    | ~q($x / $y) =>
+      if x.hasMVar
       then invertNat x q($b * $y)
       else invertNat y q($x / $b)
-    | ~q($x + $y) => 
-      if x.hasMVar 
+    | ~q($x + $y) =>
+      if x.hasMVar
       then invertNat x q($b - $y)
       else invertNat y q($b - $x)
-    | ~q($x - $y) => 
-      if x.hasMVar 
+    | ~q($x - $y) =>
+      if x.hasMVar
       then invertNat x q($b + $y)
       else invertNat y q($x - $b)
-    | _ => 
+    | _ =>
       throwError s!"`decuce_by` does not support Nat operation {← ppExpr a}"
 
-/-- 
+/--
 Assuming that `a` has mvar `m` and `b` is an expression.
 
 Return mvar `m` and value `x` for it such that `a=b` is likely to hold.
@@ -109,32 +109,32 @@ Examples:
 - `a = 4 * ?m + 2`, `b = 2*n` => `(?m, (2*n-2)/4)`
 -/
 partial def invertUSize (a b : Q(USize)) : MetaM (Q(USize) × Q(USize)) := do
-  if a.isMVar then 
+  if a.isMVar then
     return (a,b)
   else
     match a with
-    | ~q($x * $y) => 
-      if x.hasMVar 
+    | ~q($x * $y) =>
+      if x.hasMVar
       then invertUSize x q($b / $y)
       else invertUSize y q($b / $x)
-    | ~q($x / $y) => 
-      if x.hasMVar 
+    | ~q($x / $y) =>
+      if x.hasMVar
       then invertUSize x q($b * $y)
       else invertUSize y q($x / $b)
-    | ~q($x + $y) => 
-      if x.hasMVar 
+    | ~q($x + $y) =>
+      if x.hasMVar
       then invertUSize x q($b - $y)
       else invertUSize y q($b - $x)
-    | ~q($x - $y) => 
-      if x.hasMVar 
+    | ~q($x - $y) =>
+      if x.hasMVar
       then invertUSize x q($b + $y)
       else invertUSize y q($x - $b)
-    | _ => 
+    | _ =>
       throwError s!"`decuce_by` does not support USize operation {← ppExpr a}"
 
 
 open Lean Meta Elab Tactic Qq
-@[tactic deduceBy]  
+@[tactic deduceBy]
 partial def deduceByTactic : Tactic
 | `(tactic| deduce_by $t:conv) => do
 
@@ -148,14 +148,14 @@ partial def deduceByTactic : Tactic
   let (goal,a,b) ←
     if lhs.hasMVar then
       pure (goal,lhs,rhs)
-    else 
+    else
       let goal' ← mkFreshExprMVar (← mkEq rhs lhs)
       goal.assign (← mkEqSymm goal')
       pure (goal'.mvarId!,rhs,lhs)
 
   let A ← inferType a
   if A == q(Nat) || A == q(USize) then
-    let (m,x) ← 
+    let (m,x) ←
       if A == q(Nat)
       then invertNat a b
       else invertUSize a b
@@ -170,8 +170,3 @@ partial def deduceByTactic : Tactic
     a.mvarId!.assign b'
     goal.assign prf
 | _ => throwUnsupportedSyntax
-
-
-
-
-

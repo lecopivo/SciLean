@@ -23,7 +23,7 @@ structure Theorems where
   definition : Option Name
 deriving BEq, Inhabited
 
-/-- 
+/--
 This holds a collection of property theorems for a fixed constant
 -/
 def FProperty := Std.RBMap Name (Std.RBMap (ArraySet Nat) Theorems compare) compare
@@ -34,7 +34,7 @@ namespace FProperty
 
   variable (fp : FProperty)
 
-  def insert (property : Name) (argIds : ArraySet Nat) (thrms : Theorems) : FProperty := 
+  def insert (property : Name) (argIds : ArraySet Nat) (thrms : Theorems) : FProperty :=
     fp.alter property (λ p? =>
       match p? with
       | some p => some (p.insert argIds thrms)
@@ -46,17 +46,17 @@ end FProperty
 
 
 private def merge! (function : Name) (fp fp' : FProperty) : FProperty :=
-  fp.mergeWith (t₂ := fp') λ property p q => 
+  fp.mergeWith (t₂ := fp') λ property p q =>
     p.mergeWith (t₂ := q) λ args thrms thrms' =>
-      if thrms == thrms' then 
+      if thrms == thrms' then
         thrms
-      else 
-        panic! 
+      else
+        panic!
 s!"Two conflicting function properties for
   function: `{function}`
   property: `{property}`
   arguments: `{args}`
-  
+
   option 1:
   normal theorem: `{thrms.normalTheorem}`
   composition theorem: `{thrms.compTheorem}`
@@ -68,28 +68,28 @@ s!"Two conflicting function properties for
   Keep only one and remove the other."
 
 
-initialize FunctionPropertyExt : MergeMapDeclarationExtension FProperty 
+initialize FunctionPropertyExt : MergeMapDeclarationExtension FProperty
   ← mkMergeMapDeclarationExtension ⟨merge!, sorry_proof⟩
 
 variable {m} [Monad m] [MonadEnv m] [MonadError m]
 
 /--
-The calling convention for composition theorem is that if we have a fucntion with 
+The calling convention for composition theorem is that if we have a fucntion with
 `n` explicit arguments, i.e. `function x₁ .. xₙ`, then `compTheorem y₁ .. yₙ` where
 the type of `yᵢ` is `T → Xᵢ` for `i ∈ argIds` and `Xᵢ` for `i ∉ argIds`
 -/
-def checkCompTheoremCallingConvention 
+def checkCompTheoremCallingConvention
   (function : Name) (argIds : ArraySet Nat) (compTheorem : Name) : m Unit := do
 
   -- TODO: update this function
   -- These checks were to restrictive in case of dependent types
   --  for example `ite.arg_te.differential_simp'` was failing it
-  --  
-  
+  --
+
   -- let fArgIds ← getConstExplicitArgIds function
   -- let tArgIds ← getConstExplicitArgIds compTheorem
 
-  -- if fArgIds.size ≠ tArgIds.size then 
+  -- if fArgIds.size ≠ tArgIds.size then
   --   throwError s!"Failed checking composition theorem calling convention!\nComposition theorem `{compTheorem}` has to have the same number of explicit arguments as the function `{function}`!"
 
   -- if ¬(argIds ⊆ fArgIds.toArraySet) then
@@ -100,14 +100,14 @@ def checkCompTheoremCallingConvention
   -- let T : Expr := .. somehow find out what `T` is
 
   -- for i in [0:fArgIds.size] do
-  
+
   --   let fi := fArgIds[i]!
   --   let ti := fArgIds[i]!
 
   --   let Xᵢ ← inferType xᵢ
   --   let Yᵢ ← inferType yᵢ
 
-  --   if fi ∈ argIds then 
+  --   if fi ∈ argIds then
   --     if Xᵢ ≠ mkArrow T Yᵢ then
   --       throwError ".."
   --   else
@@ -116,17 +116,17 @@ def checkCompTheoremCallingConvention
 
   pure ()
 
-def addFunctionProperty (function property : Name) (argIds : ArraySet Nat) 
+def addFunctionProperty (function property : Name) (argIds : ArraySet Nat)
   (normalTheorem compTheorem definition : Option Name) : m Unit := do
 
   if let .some thrm := compTheorem then
     checkCompTheoremCallingConvention function argIds thrm
 
-  FunctionPropertyExt.insert function 
+  FunctionPropertyExt.insert function
     (FProperty.empty.insert property argIds ⟨normalTheorem, compTheorem, definition⟩)
 
-def getFunctionProperty (function property : Name) 
-  : m (Option (Std.RBMap (ArraySet Nat) Theorems compare)) := 
+def getFunctionProperty (function property : Name)
+  : m (Option (Std.RBMap (ArraySet Nat) Theorems compare)) :=
 do
   let some properties ← FunctionPropertyExt.find? function
     | return none
@@ -135,7 +135,7 @@ do
     | return none
 
   return propMap
-  
+
 
 
 def printFunctionProperties (function : Name) : CoreM Unit := do
@@ -153,4 +153,3 @@ def printFunctionProperties (function : Name) : CoreM Unit := do
 end  FunctionProperty
 
 export FunctionProperty (FunctionPropertyExt addFunctionProperty getFunctionProperty printFunctionProperties)
-

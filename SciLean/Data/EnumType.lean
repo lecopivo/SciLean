@@ -4,8 +4,14 @@ import Mathlib.Algebra.Group.Defs
 import SciLean.Util.SorryProof
 import SciLean.Data.ColProd
 import SciLean.Data.Idx
+import SciLean.Data.IndexType
+
+import LeanColls
 
 namespace SciLean
+open LeanColls
+
+
 
 -- -- range given by the first and the last element(inclusive!)
 -- def EnumType.Range (α : Type u) := Option (α × α)
@@ -13,21 +19,21 @@ namespace SciLean
 class EnumType (ι : Type u) where
 
   decEq : DecidableEq ι
-  
-  -- Ther return type has `ForInStep` because it is useful to know if the loop 
+
+  -- Ther return type has `ForInStep` because it is useful to know if the loop
   -- ended normall or if it was interupted. This way we can easily exit from nested loops
   forIn {m : Type v → Type w} [Monad m] {β : Type v} (init : β) (f : ι → β → m (ForInStep β)) : m (ForInStep β)
 
   -- something that foldM runs over all elements
 
   -- The slight issue is with ranges over `ι×κ` where we do not simply run
-  -- from the first element to the last element but rather we run over all elements `(i,j)` 
+  -- from the first element to the last element but rather we run over all elements `(i,j)`
   -- such that `i` is in the range and `j` is in the range
 structure EnumType.FullRange (α : Type u)
 
 def fullRange (ι) [EnumType ι] : EnumType.FullRange ι := EnumType.FullRange.mk
 
-namespace EnumType 
+namespace EnumType
 
   instance [inst : EnumType ι] : DecidableEq ι := inst.decEq
 
@@ -38,14 +44,14 @@ namespace EnumType
     | .yield b => b
 
   instance {ι} [EnumType ι] : ForIn m (FullRange ι) ι where
-    forIn := λ _ init f => do pure (← forIn init f).value 
+    forIn := λ _ init f => do pure (← forIn init f).value
 
   instance : EnumType Empty :=
   {
     decEq := by infer_instance
     forIn := λ init _ => pure (.yield init)
   }
-  
+
   instance : EnumType Unit :=
   {
     decEq := by infer_instance
@@ -53,7 +59,7 @@ namespace EnumType
   }
 
   @[inline] partial def Fin.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Fin n → β → m (ForInStep β)) := do
-      -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler 
+      -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler
       -- seems to have much better time optimizing code with `StateT`
       let rec @[specialize] forLoop (i : Nat) (b : β) : StateT Bool m β := do
         if h : i < n then
@@ -68,7 +74,7 @@ namespace EnumType
       else
         return (ForInStep.yield val)
 
-  @[inline] 
+  @[inline]
   instance : EnumType (Fin n) :=
   {
     decEq := by infer_instance
@@ -77,7 +83,7 @@ namespace EnumType
 
   @[inline]
   partial def Idx.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Idx n → β → m (ForInStep β)) := do
-      -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler 
+      -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler
       -- seems to have much better time optimizing code with `StateT`
       let rec @[specialize] forLoop (i : USize) (b : β) : StateT Bool m β := do
         if h : i < n then
@@ -102,7 +108,7 @@ namespace EnumType
 
   @[inline]
   partial def Idx'.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Idx' a b → β → m (ForInStep β)) := do
-      -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler 
+      -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler
       -- seems to have much better time optimizing code with `StateT`
       let rec @[specialize] forLoop (i : Int64) (val : β) : StateT Bool m β := do
         if _h : i ≤ b then
@@ -129,8 +135,8 @@ namespace EnumType
 
   -- /-- Embeds `ForInStep β` to `FoInStep (ForInStep β)`, useful for exiting from double for loops.
   -- -/
-  -- @[inline] 
-  -- private def forInStepDouble {m} [Monad m] {β : Type u} (x : m (ForInStep β)) 
+  -- @[inline]
+  -- private def forInStepDouble {m} [Monad m] {β : Type u} (x : m (ForInStep β))
   --   : m (ForInStep (ForInStep β)) := do
   --   match (← x) with
   --   | .done x => return .done (.done x)
@@ -142,8 +148,8 @@ namespace EnumType
   {
     decEq := by infer_instance
 
-    forIn := λ {m} _ {β} init f => 
-      EnumType.forIn (init:=init) λ (i : ι) (b : β) => 
+    forIn := λ {m} _ {β} init f =>
+      EnumType.forIn (init:=init) λ (i : ι) (b : β) =>
         EnumType.forIn (init:=b) λ (j : κ) (b' : β) => f (i,j) b'
   }
 
@@ -152,8 +158,8 @@ namespace EnumType
   {
     decEq := by infer_instance
 
-    forIn := λ {m} _ {β} init f => 
-      EnumType.forIn (init:=init) λ (j : κ) (b : β) => 
+    forIn := λ {m} _ {β} init f =>
+      EnumType.forIn (init:=init) λ (j : κ) (b : β) =>
         EnumType.forIn (init:=b) λ (i : ι) (b' : β) => f (i,j) b'
   }
 
@@ -171,37 +177,6 @@ namespace EnumType
       | .yield b => EnumType.forIn (init:=b) λ j b => f (.inr j) b
   }
 
-  @[specialize] def sum {α} [Zero α] [Add α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
-    (← EnumType.forIn (0 : α) λ (i : ι) a => .yield (a + f i)).value
-
-  open Lean.TSyntax.Compat in
-  macro " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``EnumType.sum xs b
-
-  @[app_unexpander sum] def unexpandSum : Lean.PrettyPrinter.Unexpander
-    | `($(_) fun $x:ident => $b) => 
-      `(∑ $x:ident, $b)
-    | `($(_) fun $x:ident $xs:ident* => $b) => 
-      `(∑ $x:ident, fun $xs* => $b)
-    | `($(_) fun ($x:ident : $ty:term) => $b) => 
-      `(∑ ($x:ident : $ty), $b)
-    | _  => throw ()
-
-
-  @[specialize] def product {α} [One α] [Mul α] {ι} [EnumType ι] (f : ι → α) : α := Id.run do
-    (← EnumType.forIn (1 : α) λ (i : ι) a => .yield (a * f i)).value
-
-  open Lean.TSyntax.Compat in
-  macro " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
-
-  @[app_unexpander product] def unexpandProduct : Lean.PrettyPrinter.Unexpander
-    | `($(_) fun $x:ident => $b) => 
-      `(∏ $x:ident, $b)
-    | `($(_) fun $x:ident $xs:ident* => $b) => 
-      `(∏ $x:ident, fun $xs* => $b)
-    | `($(_) fun ($x:ident : $ty:term) => $b) => 
-      `(∏ ($x:ident : $ty), $b)
-    | _  => throw ()
-
 
 
   -- instance {ι} [EnumType ι] : Fintype ι where
@@ -215,7 +190,7 @@ namespace EnumType
   --     }
   --   complete := sorry_proof
 
-  
+
   -- TODO: move this somewhere else
   -- namespace Tests
 

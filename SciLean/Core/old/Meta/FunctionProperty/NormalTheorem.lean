@@ -3,7 +3,7 @@ import SciLean.Lean.Meta.Basic
 
 namespace SciLean
 
-set_option linter.unusedVariables false 
+set_option linter.unusedVariables false
 
 open Lean Parser.Term Lean.Elab Meta
 
@@ -19,7 +19,7 @@ private def mkProdFVarName (xs : Array Expr) : MetaM Name := do
 
 /--
 For expression `e` and free variables `xs = #[x₁, .., xₙ]`
-Return 
+Return
 ```
 FunProp (uncurryN n λ x₁ .. xₙ => e)
 ```
@@ -27,7 +27,7 @@ FunProp (uncurryN n λ x₁ .. xₙ => e)
 def mkNormalTheoremLhsFunProp (funProp : Name) (e : Expr) (xs : Array Expr) : MetaM Expr := do
 
   -- P = FunProp (uncurryN n λ x₁' .. xₙ' => e)
-  let P ← 
+  let P ←
     mkUncurryFun xs.size (← mkLambdaFVars xs e)
     -- mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
     >>=
@@ -37,14 +37,14 @@ def mkNormalTheoremLhsFunProp (funProp : Name) (e : Expr) (xs : Array Expr) : Me
 
 
 def mkNormalTheoremFunProp (funProp : Name) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) : MetaM Expr := do
-  let statement ← mkNormalTheoremLhsFunProp funProp e xs 
+  let statement ← mkNormalTheoremLhsFunProp funProp e xs
 
   -- filter out xs from contextVars
-  let contextVars := contextVars.filter 
-    λ var => 
+  let contextVars := contextVars.filter
+    λ var =>
       if xs.find? (λ x => var == x) |>.isSome then
         false
-      else 
+      else
         true
 
   mkForallFVars contextVars statement >>= instantiateMVars
@@ -52,7 +52,7 @@ def mkNormalTheoremFunProp (funProp : Name) (e : Expr) (xs : Array Expr) (contex
 
 /--
 For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
-Return 
+Return
 ```
 λ dx₁ .. dxₙ => ∂ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ']) (x₁, .., xₙ) (dx₁, .., dxₙ)
 ```
@@ -63,7 +63,7 @@ def mkNormalTheoremLhsDifferential (e : Expr) (xs : Array Expr) : MetaM Expr := 
   let nExpr := mkNatLit n
 
   -- f' = ∂ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
-  let f' ← 
+  let f' ←
     mkUncurryFun n (← mkLambdaFVars xs e)
     -- mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
     >>=
@@ -77,7 +77,7 @@ def mkNormalTheoremLhsDifferential (e : Expr) (xs : Array Expr) : MetaM Expr := 
     pure (name, bi, λ _ => pure type)
 
   withLocalDecls dxDecls λ dxs => do
-    
+
     let xsProd  ← mkProdElem xs
     let dxsProd ← mkProdElem dxs
 
@@ -85,7 +85,7 @@ def mkNormalTheoremLhsDifferential (e : Expr) (xs : Array Expr) : MetaM Expr := 
 
 /--
 For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
-Return 
+Return
 ```
 λ dx₁ .. dxₙ => 𝒯 (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ']) (x₁, .., xₙ) (dx₁, .., dxₙ)
 ```
@@ -96,7 +96,7 @@ def mkNormalTheoremLhsTangentMap (e : Expr) (xs : Array Expr) : MetaM Expr := do
   let nExpr := mkNatLit n
 
   -- f' = 𝒯 (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
-  let f' ← 
+  let f' ←
     mkUncurryFun n (← mkLambdaFVars xs e)
     -- mkAppNoTrailingM ``uncurryN #[nExpr, ← mkLambdaFVars xs e]
     >>=
@@ -110,7 +110,7 @@ def mkNormalTheoremLhsTangentMap (e : Expr) (xs : Array Expr) : MetaM Expr := do
     pure (name, bi, λ _ => pure type)
 
   withLocalDecls dxDecls λ dxs => do
-    
+
     let xsProd  ← mkProdElem xs
     let dxsProd ← mkProdElem dxs
 
@@ -119,23 +119,23 @@ def mkNormalTheoremLhsTangentMap (e : Expr) (xs : Array Expr) : MetaM Expr := do
 
 /--
 For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
-Return 
+Return
 ```
 λ (xs' : X₁ × .. Xₙ) => (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])† xs'
 ```
 where `xᵢ : Xᵢ`
  -/
 def mkNormalTheoremLhsAdjoint (e : Expr) (xs : Array Expr) : MetaM Expr := do
-  
+
   let n := xs.size
   let nExpr := mkNatLit n
 
   -- f' = (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])†
-  let f' ← 
+  let f' ←
     mkUncurryFun n (← mkLambdaFVars xs e)
     >>=
     λ e' => mkAppM ``adjoint #[e']
-  
+
   let xsProdName := (← mkProdFVarName xs).appendAfter "'"
   let bi : BinderInfo := default
   let xsProdType ← inferType e --(← mkProdElem xs)
@@ -147,23 +147,23 @@ def mkNormalTheoremLhsAdjoint (e : Expr) (xs : Array Expr) : MetaM Expr := do
 
 /--
 For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
-Return 
+Return
 ```
 λ (dxs' : X₁ × .. Xₙ) => ∂† (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])† (x₁, .., xₙ) dxs'
 ```
 where `xᵢ : Xᵢ`
  -/
 def mkNormalTheoremLhsAdjDiff (e : Expr) (xs : Array Expr) : MetaM Expr := do
-  
+
   let n := xs.size
   let nExpr := mkNatLit n
 
   -- f' = ∂† (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
-  let f' ← 
+  let f' ←
     mkUncurryFun n (← mkLambdaFVars xs e)
     >>=
     λ e' => mkAppM ``adjointDifferential #[e']
-  
+
   let dxsName := (← mkProdFVarName xs).appendBefore "d" |>.appendAfter "'"
   let bi : BinderInfo := .default
   let dxsType ← inferType e
@@ -177,22 +177,22 @@ def mkNormalTheoremLhsAdjDiff (e : Expr) (xs : Array Expr) : MetaM Expr := do
 
 /--
 For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
-Return 
+Return
 ```
 ℛ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])† (x₁, .., xₙ)'
 ```
  -/
 def mkNormalTheoremLhsRevDiff (e : Expr) (xs : Array Expr) : MetaM Expr := do
-  
+
   let n := xs.size
   let nExpr := mkNatLit n
 
   -- f' = ℛ (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])
-  let f' ← 
+  let f' ←
     mkUncurryFun n (← mkLambdaFVars xs e)
     >>=
     λ e' => mkAppM ``reverseDifferential #[e']
-  
+
   let xsProd  ← mkProdElem xs
 
   mkAppM' f' #[xsProd]
@@ -200,23 +200,23 @@ def mkNormalTheoremLhsRevDiff (e : Expr) (xs : Array Expr) : MetaM Expr := do
 
 /--
 For expression `e = f y₁ .. yₘ` and free variables `xs = #[x₁, .., xₙ]`
-Return 
+Return
 ```
 λ (xs' : X₁ × .. Xₙ) => (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])⁻¹ xs'
 ```
 where `xᵢ : Xᵢ`
  -/
 def mkNormalTheoremLhsInvFun (e : Expr) (xs : Array Expr) : MetaM Expr := do
-  
+
   let n := xs.size
   let nExpr := mkNatLit n
 
   -- f' = (uncurryN n λ x₁' .. xₙ' => f y₁[xᵢ:=xᵢ'] .. yₘ[xᵢ:=xᵢ'])†
-  let f' ← 
+  let f' ←
     mkUncurryFun n (← mkLambdaFVars xs e)
     >>=
     λ e' => mkAppM ``invFun #[e']
-  
+
   let xsProdName := (← mkProdFVarName xs).appendAfter "'"
   let bi : BinderInfo := default
   let xsProdType ← inferType e --(← mkProdElem xs)
@@ -253,18 +253,18 @@ def mkNormalTheoremRhsType (transName : Name) (e : Expr) (xs : Array Expr) : Met
 def maybeFilterContextVars (transName : Name) (xs : Array Expr) (contextVars : Array Expr) : Array Expr :=
   if (transName == ``adjoint) ||
      (transName == ``invFun) then
-    contextVars.filter 
-      λ var => 
+    contextVars.filter
+      λ var =>
         if xs.find? (λ x => var == x) |>.isSome then
           false
-        else 
+        else
           true
     else
       contextVars
 
 def mkNormalTheorem (transName : Name) (e : Expr) (xs : Array Expr) (contextVars : Array Expr) (defVal : Expr) : MetaM Expr := do
 
-  let lhs ← mkNormalTheoremLhs transName e xs 
+  let lhs ← mkNormalTheoremLhs transName e xs
 
   let contextVars := maybeFilterContextVars transName xs contextVars
 

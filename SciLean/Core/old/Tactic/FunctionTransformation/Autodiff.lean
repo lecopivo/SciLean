@@ -5,16 +5,16 @@ import SciLean.Tactic.Basic
 namespace SciLean
 
 
-theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ) 
+theorem gradient_as_revDiff {X} [SemiHilbert X] (f : X → ℝ)
   : (∇ f) = λ x => (ℛ f x).2 1 := by rfl
 
-theorem adjDiff_as_revDiff {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y) 
+theorem adjDiff_as_revDiff {X Y} [SemiHilbert X] [SemiHilbert Y] (f : X → Y)
   : (∂† x, f x) = λ x => (ℛ f x).2 := by rfl
 
-theorem differential_as_tangentMap {X Y} [Vec X] [Vec Y] (f : X → Y) 
+theorem differential_as_tangentMap {X Y} [Vec X] [Vec Y] (f : X → Y)
   : (∂ f) = λ x dx => (𝒯 f x dx).2 := by rfl
 
-theorem differentialScalar_as_tangentMap {X} [Vec X] (f : ℝ → X) 
+theorem differentialScalar_as_tangentMap {X} [Vec X] (f : ℝ → X)
   : (ⅆ f) = λ x => (𝒯 f x 1).2 := by rfl
 
 

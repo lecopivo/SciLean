@@ -1,8 +1,8 @@
 import Mathlib.Algebra.Field.Defs
 import Mathlib.GroupTheory.GroupAction.Defs
+import Mathlib.Tactic.FunProp
 
-import SciLean.Tactic.FProp.Basic
-import SciLean.Tactic.FProp.Notation
+import SciLean.Util.SorryProof
 
 set_option linter.unusedVariables false
 
@@ -13,82 +13,27 @@ open Function
 
 namespace Function.Bijective
 
-variable 
+variable
   {X : Type _} [Nonempty X]
   {Y : Type _} [Nonempty Y]
   {Z : Type _} [Nonempty Z]
-  
 
+attribute [fun_prop] Bijective
+
+@[fun_prop]
 theorem id_rule
   : Bijective (fun x : X => x)
   := bijective_id
-  
 
+@[fun_prop]
 theorem comp_rule
-  (f : Y → Z) (g : X → Y) 
+  (f : Y → Z) (g : X → Y)
   (hf : Bijective f) (hg : Bijective g)
   : Bijective (fun x => f (g x))
   := Bijective.comp hf hg
 
 
---------------------------------------------------------------------------------
--- Register Bijective ----------------------------------------------------------
---------------------------------------------------------------------------------
-
-open Lean Meta SciLean FProp
-def Bijective.fpropExt : FPropExt where
-  fpropName := ``Bijective
-  getFPropFun? e := 
-    if e.isAppOf ``Bijective then
-      if let .some f := e.getArg? 2 then
-        some f
-      else 
-        none
-    else
-      none
-
-  replaceFPropFun e f := 
-    if e.isAppOf ``Bijective then
-      e.setArg 2 f
-    else          
-      e
-
-  identityRule e :=
-    let thm : SimpTheorem :=
-    {
-      proof  := mkConst ``id_rule 
-      origin := .decl ``id_rule 
-      rfl    := false
-    }
-    FProp.tryTheorem? e thm (fun _ => pure none)
-
-  constantRule _ := return none
-
-  compRule e f g := do
-    let thm : SimpTheorem :=
-    {
-      proof  := ← mkAppM ``comp_rule #[f,g]
-      origin := .decl ``comp_rule 
-      rfl    := false
-    }
-    FProp.tryTheorem? e thm (fun _ => pure none)
-
-  lambdaLetRule _ _ _ := return none
-  lambdaLambdaRule _ _ := return none
-  projRule _ := return none
-
-  discharger e := 
-    FProp.tacticToDischarge (Syntax.mkLit ``Lean.Parser.Tactic.assumption "assumption") e
-
--- register fderiv
-#eval show Lean.CoreM Unit from do
-  modifyEnv (λ env => FProp.fpropExt.addEntry env (``Bijective, Bijective.fpropExt))
-
-
-end Function.Bijective
-
-
-variable 
+variable
   {X : Type _} [Nonempty X]
   {X₁ : Type _} [Nonempty X₁]
   {X₂ : Type _} [Nonempty X₂]
@@ -102,18 +47,18 @@ variable
 -- Prod.mk --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem Prod.mk.arg_fstsnd.Bijective_rule_simple
   : Bijective (fun xy : X×Y => (xy.1, xy.2))
   := by sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem Prod.mk.arg_fstsnd.Bijective_rule_simple'
   : Bijective (fun xy : X×Y => (xy.2, xy.1))
   := by sorry_proof
 
 
-@[fprop]
+@[fun_prop]
 theorem Prod.mk.arg_fstsnd.Bijective_rule
   (f : X₁ → Y) (g : X₂ → Z) (p₁ : X → X₁) (p₂ : X → X₂)
   (hf : Bijective f) (hg : Bijective g) (hp : Bijective (fun x => (p₁ x, p₂ x)))
@@ -124,15 +69,15 @@ theorem Prod.mk.arg_fstsnd.Bijective_rule
 -- Id --------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem id.arg_a.Bijective_rule
-  : Bijective (fun x : X => id x) := by unfold id; fprop
+  : Bijective (fun x : X => id x) := by unfold id; fun_prop
 
 
 -- Function.comp ---------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem Function.comp.arg_a0.Bijective_rule
   (f : Y → Z) (hf : Bijective f)
   (g : X → Y) (hg : Bijective g)
@@ -144,26 +89,26 @@ theorem Function.comp.arg_a0.Bijective_rule
 -- Neg.neg ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem Neg.neg.arg_a0.Bijective_rule
   [AddGroup Y]
-  (f : X → Y) (hf : Bijective f) 
-  : Bijective fun x => - f x 
+  (f : X → Y) (hf : Bijective f)
+  : Bijective fun x => - f x
   := by sorry_proof
 
 
 -- Inv.inv ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem Inv.inv.arg_a0.Bijective_rule_group
   [Group Y]
-  (f : X → Y) (hf : Bijective f) 
+  (f : X → Y) (hf : Bijective f)
   : Bijective fun x => (f x)⁻¹
   := by sorry_proof
 
 
-@[fprop]
+@[fun_prop]
 theorem Inv.inv.arg_a0.Bijective_rule_field
   [Field Y]
   (f : X → Y) (hf : Bijective f) (hf' : ∀ x, f x ≠ 0)
@@ -174,17 +119,17 @@ theorem Inv.inv.arg_a0.Bijective_rule_field
 -- HAdd.hAdd -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem HAdd.hAdd.arg_a0.Bijective_rule
   [AddGroup Y]
-  (f : X → Y) (y : Y) (hf : Bijective f) 
+  (f : X → Y) (y : Y) (hf : Bijective f)
   : Bijective fun x => f x + y
   := by sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem HAdd.hAdd.arg_a1.Bijective_rule
   [AddGroup Y]
-  (y : Y)  (f : X → Y) (hf : Bijective f) 
+  (y : Y)  (f : X → Y) (hf : Bijective f)
   : Bijective fun x => y + f x
   := by sorry_proof
 
@@ -192,48 +137,48 @@ theorem HAdd.hAdd.arg_a1.Bijective_rule
 -- HSub.hSub -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem HSub.hSub.arg_a0.Bijective_rule
   [AddGroup Y]
-  (f : X → Y) (y : Y) (hf : Bijective f) 
+  (f : X → Y) (y : Y) (hf : Bijective f)
   : Bijective fun x => f x - y
   := by sorry_proof
 
 
-@[fprop]
+@[fun_prop]
 theorem HSub.hSub.arg_a1.Bijective_rule
   [AddGroup Y]
-   (y : Y) (f : X → Y) (hf : Bijective f) 
-  : Bijective fun x => y - f x 
+   (y : Y) (f : X → Y) (hf : Bijective f)
+  : Bijective fun x => y - f x
   := by sorry_proof
 
 
 
 -- HMul.hMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem HMul.hMul.arg_a0.Bijective_rule_group
   [Group Y]
   (f : X → Y) (y : Y) (hf : Bijective f)
   : Bijective (fun x => f x * y)
   := by sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem HMul.hMul.arg_a1.Bijective_rule_group
   [Group Y]
   (y : Y) (f : X → Y) (hf : Bijective f)
   : Bijective (fun x => y * f x)
   := by sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem HMul.hMul.arg_a0.Bijective_rule_field
   [Field Y]
   (f : X → Y) (y : Y) (hf : Bijective f) (hy : y ≠ 0)
   : Bijective (fun x => f x * y)
   := by sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem HMul.hMul.arg_a1.Bijective_rule_field
   [Field Y]
   (y : Y) (f : X → Y) (hf : Bijective f) (hy : y ≠ 0)
@@ -243,10 +188,10 @@ theorem HMul.hMul.arg_a1.Bijective_rule_field
 
 
 -- SMul.sMul -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 
-@[fprop]
+@[fun_prop]
 theorem HSMul.hSMul.arg_a1.Bijective_rule_group
   [Group G] [MulAction G Y]
   (g : G) (f : X → Y) (hf : Bijective f)
@@ -254,7 +199,7 @@ theorem HSMul.hSMul.arg_a1.Bijective_rule_group
   := by sorry_proof
 
 
-@[fprop]
+@[fun_prop]
 theorem HSMul.hSMul.arg_a1.Bijective_rule_field
   [Field R] [MulAction R Y]
   (r : R) (f : X → Y) (hf : Bijective f) (hr : r ≠ 0)
@@ -263,10 +208,10 @@ theorem HSMul.hSMul.arg_a1.Bijective_rule_field
 
 
 -- VAdd.vAdd -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 
-@[fprop]
+@[fun_prop]
 theorem HVAdd.hVAdd.arg_a1.Bijective_rule_group
   [AddGroup G] [AddAction G Y]
   (g : G) (f : X → Y) (hf : Bijective f)
@@ -276,38 +221,38 @@ theorem HVAdd.hVAdd.arg_a1.Bijective_rule_group
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem HDiv.hDiv.arg_a0.Bijective_rule_group
   [Group Y]
   (f : X → Y) (y : Y)
   (hf : Bijective f)
-  : Bijective (fun x => f x / y) := 
-by 
+  : Bijective (fun x => f x / y) :=
+by
   sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem HDiv.hDiv.arg_a0.Bijective_rule_field
   [Field Y]
   (f : X → Y) (y : Y)
   (hf : Bijective f) (hy : y ≠ 0)
-  : Bijective (fun x => f x / y) := 
-by 
+  : Bijective (fun x => f x / y) :=
+by
   sorry_proof
 
 
 -- Equiv.toFun/invFun ----------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fprop]
+@[fun_prop]
 theorem Equiv.toFun.arg_a0.Bijective_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
-  : Bijective (fun x => f.toFun (g x)) := 
+  : Bijective (fun x => f (g x)) :=
 by
   sorry_proof
 
-@[fprop]
+@[fun_prop]
 theorem Equiv.invFun.arg_a0.Bijective_rule (f : Y ≃ Z) (g : X → Z) (hf : Bijective g)
-  : Bijective (fun x => f.invFun (g x)) := 
+  : Bijective (fun x => f.invFun (g x)) :=
 by
   sorry_proof

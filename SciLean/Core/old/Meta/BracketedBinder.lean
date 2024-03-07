@@ -2,7 +2,7 @@ import Lean.Parser
 
 namespace SciLean
 
-open Lean Parser.Term 
+open Lean Parser.Term
 
 abbrev BracketedBinder := TSyntax ``bracketedBinder
 
@@ -15,7 +15,7 @@ def BracketedBinder.getIdents (b : BracketedBinder) : Array Ident :=
 
 def BracketedBinder.getIdent (b : BracketedBinder) : Ident :=
   b.getIdents.getD 0 default
-  
+
 def BracketedBinder.getType (b : BracketedBinder) : TSyntax `term :=
   match b with
   | `(bracketedBinderF| ($x* : $X)) => X
@@ -44,13 +44,13 @@ def BracketedBinder.split (b : BracketedBinder) : MacroM (Array BracketedBinder)
 
 def BracketedBinder.modifyIdent (b : BracketedBinder) (f : Ident → Ident) : MacroM BracketedBinder :=
   match b with
-  | `(bracketedBinderF| ($x* $[: $X]?)) => 
+  | `(bracketedBinderF| ($x* $[: $X]?)) =>
     let x' := x.map (λ ident => let ident : Ident := ⟨ident.raw⟩; f ident)
     `(bracketedBinderF| ($x'* $[: $X]?))
-  | `(bracketedBinderF| {$x* $[: $X]?}) => 
+  | `(bracketedBinderF| {$x* $[: $X]?}) =>
     let x' := x.map (λ ident => let ident : Ident := ⟨ident.raw⟩; f ident)
     `(bracketedBinderF| {$x'* $[: $X]?})
-  | `(bracketedBinderF| [$[$x :]? $X]) => 
+  | `(bracketedBinderF| [$[$x :]? $X]) =>
     let x' := x.map f
     `(bracketedBinderF| [$[$x' :]? $X])
   | _ => default
@@ -61,5 +61,3 @@ def BracketedBinder.toFunBinder (b : BracketedBinder) : MacroM (TSyntax ``Parser
   | `(bracketedBinderF| {$x : $X}) => let x : Ident := ⟨x.raw⟩; `(funBinder| {$x : $X})  -- TODO: remove the hack ⟨x.raw⟩
   | `(bracketedBinderF| [$[$x :]? $X]) => `(funBinder| [$X])
   | _ => default
-
-

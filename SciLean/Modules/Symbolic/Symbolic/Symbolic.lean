@@ -2,7 +2,7 @@ import Mathlib
 import SciLean.Mathlib.Algebra.Module.Basic
 
 class Symbolic {Repr : Type} (R : Repr → Repr → Prop) where
-  RedForm  : Repr → Prop 
+  RedForm  : Repr → Prop
   NormForm : Repr → Prop
   norm_red : ∀ x, NormForm x → RedForm x
   R_norm  : ∀ x y, R x y → NormForm x → NormForm y → x = y
@@ -14,7 +14,7 @@ namespace Symbolic
   -- define RedHom  -- preserving RefForm
   -- define NormHom -- preserving RefForm
   -- define their Hom₂ variants
-  section Hom 
+  section Hom
     variable {Repr Repr'}
       (R  : Repr  → Repr  → Prop) [Symbolic R]
       (R' : Repr' → Repr' → Prop) [Symbolic R']
@@ -47,7 +47,7 @@ namespace Symbolic
     (R : Repr → Repr → Prop) [Symbolic R]
     (R' : Repr' → Repr' → Prop) [Symbolic R']
     (R'' : Repr'' → Repr'' → Prop) [Symbolic R'']
-    (f : Repr → Repr' → Repr'') : Prop where 
+    (f : Repr → Repr' → Repr'') : Prop where
       is_hom₂ : ∀ (x y : Repr) (x' y' : Repr'), R x y → R' x' y' → R'' (f x x') (f y y')
       preserve_red  : ∀ x x', RedForm R x → RedForm R' x' → RedForm R'' (f x x')
       preserve_norm : ∀ x x', NormForm R x → NormForm R' x' → NormForm R'' (f x x')
@@ -59,7 +59,7 @@ namespace Symbolic
     reduce_of_norm : ∀ x, NormForm R x → NormForm R (reduce x) -- does not destroy norm form
 
   -- symbolic reduction on quotient will be identity
-  class Reduce (X : Type u) where 
+  class Reduce (X : Type u) where
     reduce : X → X
     id_reduce : ∀ x : X, reduce x = x
 
@@ -69,7 +69,7 @@ namespace Symbolic
     R_normalize : ∀ x, R x (normalize x)
 
   -- symbolic normalization on quotient will be identity
-  class Normalize (X : Type u) where 
+  class Normalize (X : Type u) where
     normalize : X → X
     id_normalize : ∀ x : X, normalize x = x
 
@@ -79,7 +79,7 @@ namespace Symbolic
     | red  (x : Repr) (h : RedForm R x)  : SRepr R
     | norm (x : Repr) (h : NormForm R x) : SRepr R
 
-  namespace SRepr 
+  namespace SRepr
 
     variable {Repr} {R : Repr → Repr → Prop} [Symbolic R]
 
@@ -118,21 +118,21 @@ namespace Symbolic
     def lift₂ (f : Repr → Repr' → Repr'') (x : SRepr R) (x' : SRepr R') : SRepr R'' :=
       raw (f x.repr x'.repr)
 
-    def liftHom (f : Repr → Repr') (h : SHom R R' f) (x : SRepr R) : SRepr R' := 
+    def liftHom (f : Repr → Repr') (h : SHom R R' f) (x : SRepr R) : SRepr R' :=
       match x with
       | raw x => raw (f x)
       | red  x h' => red  (f x) (h.preserve_red x h')
       | norm x h' => norm (f x) (h.preserve_norm x h')
 
-    @[simp] 
+    @[simp]
     theorem lift_hom_repr (f : Repr → Repr') (h : SHom R R' f) (x : SRepr R)
       : (liftHom f h x).repr = f x.repr
-      := 
-      by induction x 
+      :=
+      by induction x
          repeat simp[liftHom]
          done
 
-    def liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f) 
+    def liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f)
       (x : SRepr R) (y : SRepr R') : SRepr R'' :=
       match x, y with
       | red x hx,  red y hy  => red  (f x y) (h.preserve_red  x y hx hy)
@@ -168,7 +168,7 @@ namespace Symbolic
 
   def SQuot.lift {α : Sort u} (f : Repr → α) (h : ∀ x x' : Repr, R x x' → f x = f x')
     : SQuot R → α
-    := Quot.lift (λ x => f x.repr) 
+    := Quot.lift (λ x => f x.repr)
          (by intros a b
              induction a
              repeat(
@@ -181,15 +181,15 @@ namespace Symbolic
     : SQuot R → α
     := Quot.lift (λ x => f x) h
 
-  def SQuot.liftHom (f : Repr → Repr') (h : SHom R R' f) 
+  def SQuot.liftHom (f : Repr → Repr') (h : SHom R R' f)
     : SQuot R → SQuot R'
-    := Quot.lift (λ x' => Quot.mk _ (SRepr.liftHom f h x')) 
+    := Quot.lift (λ x' => Quot.mk _ (SRepr.liftHom f h x'))
         (by intro a b req
             apply Quot.sound
             induction a
-            repeat 
+            repeat
               (induction b
-               repeat 
+               repeat
                  (simp at req
                   apply h.is_hom
                   assumption))
@@ -205,7 +205,7 @@ namespace Symbolic
       : SQuot R → SQuot R' → SQuot R''
       := Quot.lift (λ x' => Quot.lift (λ y' => Quot.mk _ (f x' y')) sorry) sorry
 
-  def SQuot.liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f) 
+  def SQuot.liftHom₂ (f : Repr → Repr' → Repr'') (h : SHom₂ R R' R'' f)
     : SQuot R → SQuot R' → SQuot R''
     := Quot.lift (λ x' => Quot.lift (λ y' => Quot.mk _ (SRepr.liftHom₂ f h x' y')) sorry) sorry
 
@@ -221,7 +221,7 @@ namespace Symbolic
     id_normalize := sorry
   }
 
-  
+
 
   -- variable {Repr : Type} {RedForm : Repr → Prop} {NormForm : Repr → Prop}
 
@@ -239,13 +239,13 @@ namespace Symbolic
 
   -- -- Lift reduction preserving function `Repr → Repr'` to Symbolic
   -- def liftHom {Repr' : Type} {RedForm' NormForm' : Repr' → Prop}
-  --   (f : Repr → Repr') 
+  --   (f : Repr → Repr')
   --   (h  : ∀ x : Repr, RedForm x → RedForm' (f x))
   --   (h' : ∀ x : Repr, NormForm x → NormForm' (f x))
-  --   (x : Symbolic Repr RedForm NormForm) 
+  --   (x : Symbolic Repr RedForm NormForm)
   --   : Symbolic Repr' RedForm' NormForm'
   --   :=
-  --   match x with 
+  --   match x with
   --   | raw  x => raw (f x)
   --   | red  x g => red  (f x) (h  x g)
   --   | norm x g => norm (f x) (h' x g)
@@ -255,11 +255,11 @@ namespace Symbolic
   --   (h : ∀ x y : Repr, R x y → NormForm x → NormForm y → x = y)
   --   := Quot (λ x y : Symbolic Repr RedForm NormForm => R x y)
 
-  -- variable {R : outParam $ Repr → Repr → Prop} 
+  -- variable {R : outParam $ Repr → Repr → Prop}
   --   {RedForm NormForm : outParam $ Repr → Prop}
   --   {H : outParam $ ∀ x y : Repr, R x y → NormForm x → NormForm y → x = y}
 
-  -- def Symb.lift {α : Sort u} (f : Repr → α) (h : ∀ x y : Repr, R x y → f x = f y) 
+  -- def Symb.lift {α : Sort u} (f : Repr → α) (h : ∀ x y : Repr, R x y → f x = f y)
   --   (x : Symb R RedForm NormForm H) : α
   --   := Quot.lift (λ x => f x) (by intro a b; induction a; induction b;
   --                                 repeat (simp; apply h)
@@ -272,7 +272,7 @@ namespace Symbolic
   --                                   repeat (simp; apply (h b))
   --                                   done)
 
-  -- def Symb.lift₂ {α : Sort u} (f : Repr → Repr → α) 
+  -- def Symb.lift₂ {α : Sort u} (f : Repr → Repr → α)
   --     (h  : ∀ x y y' : Repr, R y y' → f x y = f x y')
   --     (h' : ∀ (x x' : Repr), R x x' → liftSnd (RedForm := RedForm) (NormForm := NormForm) (H := H) f h x = liftSnd f h x')
   --     (x y : Symb R RedForm NormForm H) : α
@@ -280,16 +280,16 @@ namespace Symbolic
 
   -- constant toString [ToString Repr] (x : Symb R RedForm NormForm H) : String
   --     := Symb.lift (λ r => toString r) sorry (x)
-    
+
   -- -- `reduce` function should send representative to its reduced form
   -- class Reduce (X : Type) where
   --   reduce : X → X
   --   reduce_id : ∀ x, reduce x = x
 
-  -- def lift_reduce (reduce : Repr → Repr) 
+  -- def lift_reduce (reduce : Repr → Repr)
   --   (h  : ∀ x, RedForm (reduce x)) (h' : ∀ x, NormForm x → RedForm x)
   --   (x : Symbolic Repr RedForm NormForm) : (Symbolic Repr RedForm NormForm)
-  --   := 
+  --   :=
   --   match x with
   --   | raw x => red (reduce x) (h x)
   --   | x => x
@@ -299,10 +299,10 @@ namespace Symbolic
   --   normalize : X → X
   --   normalize_id : ∀ x, normalize x = x
 
-  -- def lift_normalize (normalize : Repr → Repr) 
+  -- def lift_normalize (normalize : Repr → Repr)
   --   (h  : ∀ x, NormForm (normalize x))
   --   (x : Symbolic Repr RedForm NormForm) : (Symbolic Repr RedForm NormForm)
-  --   := 
+  --   :=
   --   match x with
   --   | raw x   => norm (normalize x) (h x)
   --   | red x _ => norm (normalize x) (h x)
@@ -313,14 +313,14 @@ end Symbolic
 inductive List.Sorted {X : Type u} [LE X] : List X → Prop where
 | empty : Sorted []
 | singl (x : X) : Sorted [x]
-| head  (x y : X) (ys : List X) (h : x ≤ y) (h' : Sorted (y :: ys)) 
+| head  (x y : X) (ys : List X) (h : x ≤ y) (h' : Sorted (y :: ys))
         : Sorted (x :: y :: ys)
 
 inductive List.StrictlySorted {X : Type u} [LT X] : List X → Prop where
 | empty : StrictlySorted []
 | singl (x : X) : StrictlySorted [x]
-| head  (x y : X) (ys : List X) (h : x < y) 
-        (h' : StrictlySorted (y :: ys)) 
+| head  (x y : X) (ys : List X) (h : x < y)
+        (h' : StrictlySorted (y :: ys))
         : StrictlySorted (x :: y :: ys)
 
 structure FreeMonoid (X : Type u) where
@@ -339,15 +339,15 @@ namespace FreeMonoid
 end FreeMonoid
 
 
-namespace Monomial 
+namespace Monomial
 
   structure Repr (X : Type u) (K : Type v) where
     coef : K
     base : FreeMonoid X
 
-  instance {X K} [Mul K] : Mul (Repr X K) := 
+  instance {X K} [Mul K] : Mul (Repr X K) :=
     ⟨λ x y => ⟨x.coef * y.coef, x.base * y.base⟩⟩
-  instance {X K} [Mul K] : HMul K (Repr X K) (Repr X K) := 
+  instance {X K} [Mul K] : HMul K (Repr X K) (Repr X K) :=
     ⟨λ a x => ⟨a * x.coef, x.base⟩⟩
 
   def Repr.rank {X K} (x : Repr X K) : Nat := x.base.rank
@@ -376,7 +376,7 @@ namespace Monomial
     R_norm   := sorry -- this is probably hard as I need CommRing for it
   }
 
-end Monomial 
+end Monomial
 
 
 open Symbolic Monomial in
@@ -404,17 +404,17 @@ namespace AltMonomial
 
   instance [DecCompar X] : Reduce (AltMonomial X K) :=
   {
-    reduce := sorry  
+    reduce := sorry
     id_reduce := sorry
   }
 
   instance [DecCompar X] [DecidableEq K] : Normalize (AltMonomial X K) :=
   {
-    normalize := sorry  
+    normalize := sorry
     id_normalize := sorry
   }
 
-  -- TODO: change these definitions 
+  -- TODO: change these definitions
   --       add reduction
   instance : Mul  (AltMonomial X K) := ⟨λ x' y' => (SQuot.lift₂ (λ x y => (x * y)) sorry) x' y' |> Reduce.reduce⟩
   instance [Mul K] : HMul K (AltMonomial X K) (AltMonomial X K) := ⟨λ c => SQuot.lift (λ x => SQuot.rmk (c * x)) sorry⟩
@@ -438,4 +438,3 @@ namespace AltMonomial
   }
 
 end AltMonomial
-

@@ -3,9 +3,8 @@ import SciLean.Core.Meta.ExtendContext
 import SciLean.Core.Meta.ParametrizeFVars
 import SciLean.Tactic.LetNormalize
 import SciLean.Tactic.AnalyzeConstLambda
-import SciLean.Tactic.LSimp2.Elab
-import SciLean.Lean.Name
-import SciLean.Core.Notation
+-- import SciLean.Lean.Name
+-- import SciLean.Core.Notation
 
 namespace SciLean.Meta
 
@@ -27,7 +26,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
   forallTelescope info.type fun xs returnType => do
 
     let (ctx, args) ← splitToCtxAndArgs xs
-    
+
     let .some ⟨_u,K,_isROrC⟩ ← getFieldOutOfContextQ xs
       | throwError "can't figure what is the canonical field, maybe `ℝ`, `ℂ` or `Float`? This is a bug most likely, please report!"
 
@@ -42,14 +41,14 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
     let mainNames ← mainArgs.mapM (fun arg => arg.fvarId!.getUserName)
     let trailingNames ← trailingArgs.mapM (fun arg => arg.fvarId!.getUserName)
     -- sufix used in declaration names indicating which arguments are main and trailing
-    let argSuffix' := 
+    let argSuffix' :=
       "arg_" ++ mainNames.foldl (init:="") (·++toString ·)
-    let argSuffix := 
-      if trailingArgs.size = 0 then 
+    let argSuffix :=
+      if trailingArgs.size = 0 then
         argSuffix'
-      else 
+      else
         argSuffix' ++ trailingNames.foldl (init:="_") (·++toString ·)
-  
+
     let lvls := info.levelParams.map fun p => Level.param p
     let f ← liftM <|
       mkLambdaFVars (mainArgs++trailingArgs) (mkAppN (Expr.const constName lvls) xs)
@@ -75,7 +74,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
 
     let hasAdjDiffName := constName.append argSuffix' |>.append "HasAdjDiff_rule_simple"
     let hasAdjDiffProof ← mkLambdaFVars (ctx++extraInsts++unusedArgs++trailingArgs) propProof >>= instantiateMVars
-    let hasAdjDiffInfo : TheoremVal := 
+    let hasAdjDiffInfo : TheoremVal :=
     {
       name  := hasAdjDiffName
       type  := (← inferType hasAdjDiffProof)
@@ -96,8 +95,8 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
     let revDerivFun ← liftM <|
       mkLambdaFVars xs (rhs.beta #[(← mkProdElem mainArgs)])
     let revDerivFunName := constName.append argSuffix |>.append "revDeriv"
-    let (revDerivFun,_) ← elabConvRewrite revDerivFun (← `(conv| lsimp (config := {zeta:=false}) only))
-    let revDerivFunInfo : DefinitionVal := 
+    let (revDerivFun,_) ← elabConvRewrite revDerivFun (← `(conv| simp (config := {zeta:=false}) only))
+    let revDerivFunInfo : DefinitionVal :=
     {
       name  := revDerivFunName
       type  := (← inferType revDerivFun)
@@ -118,7 +117,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
     let rule_simple_proof ← mkLambdaFVars xs proof >>= instantiateMVars
 
     let ruleSimpleName := constName.append argSuffix |>.append "revDeriv_rule_simple"
-    let ruleSimpleInfo : TheoremVal := 
+    let ruleSimpleInfo : TheoremVal :=
     {
       name  := ruleSimpleName
       type  := rule_simple
@@ -142,7 +141,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
     let rule_simple_def_proof ← mkLambdaFVars xs proof >>= instantiateMVars
 
     let ruleSimpleDefName := constName.append argSuffix |>.append "revDeriv_rule_def_simple"
-    let ruleSimpleDefInfo : TheoremVal := 
+    let ruleSimpleDefInfo : TheoremVal :=
     {
       name  := ruleSimpleDefName
       type  := rule_simple_def
@@ -155,7 +154,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
     match ruleType with
     | .withDef =>
       FTrans.funTransRuleAttr.attr.add ruleSimpleDefName (← `(attr|ftrans)) .global
-    | .noDef => 
+    | .noDef =>
       FTrans.funTransRuleAttr.attr.add ruleSimpleName (← `(attr|ftrans)) .global
 
     -- Composition Rules -------------------------------------------------------
@@ -169,7 +168,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
     withLocalDecls' (mainNames.map (fun n => n.appendBefore "h"))
                     .default
                     (← mainArgs.mapM fun x => mkAppM ``HasAdjDiff #[K,x]) fun mainArgProps => do
-      
+
       let f₁ := f'
       let f₂ ← mkLambdaFVars #[w] (← mkProdElem (mainArgs.map (fun arg => arg.app w)))
 
@@ -188,7 +187,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
       let hasAdjDiffName := constName.append argSuffix' |>.append "HasAdjDiff_rule"
       let hasAdjDiffRule ← mkForallFVars xs prop >>= instantiateMVars
       let hasAdjDiffProof ← mkLambdaFVars xs propProof >>= instantiateMVars
-      let hasAdjDiffInfo : TheoremVal := 
+      let hasAdjDiffInfo : TheoremVal :=
       {
         name  := hasAdjDiffName
         type  := hasAdjDiffRule
@@ -215,16 +214,16 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
 
       let rhs' := step.result.expr
       let h' ← step.result.getProof
-      let rwTac ← `(conv| (ftrans))
+      let rwTac ← `(conv| (fun_trans))
       let (rhs'', h'') ← elabConvRewrite rhs' rwTac
-      
+
       let xs := ctx ++ extraInsts ++ #[W] ++ instW ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
       let rule ← mkForallFVars xs (← mkEq lhs rhs'') >>= instantiateMVars
       let ruleProof ← mkLambdaFVars xs (← mkEqTrans h' h'') >>= instantiateMVars
 
 
       let ruleName := constName.append argSuffix |>.append "revDeriv_rule"
-      let ruleInfo : TheoremVal := 
+      let ruleInfo : TheoremVal :=
       {
         name  := ruleName
         type  := rule
@@ -252,14 +251,14 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
       let rhs' := step.result.expr
       let h' ← step.result.getProof
       let (rhs'', h'') ← elabConvRewrite rhs' rwTac
-      
+
       let xs := ctx ++ extraInsts ++ #[W] ++ instW ++ mergeArgs' mainArgs unusedArgs argKinds ++ mainArgProps
       let rule ← mkForallFVars xs (← mkEq lhs rhs'') >>= instantiateMVars
       let ruleProof ← mkLambdaFVars xs (← mkEqTrans h' h'') >>= instantiateMVars
 
 
       let ruleName := constName.append argSuffix |>.append "revDerivUpdate_rule"
-      let ruleInfo : TheoremVal := 
+      let ruleInfo : TheoremVal :=
       {
         name  := ruleName
         type  := rule
@@ -271,7 +270,7 @@ def generateRevDeriv (constName : Name) (mainNames trailingNames : Array Name) (
       FTrans.funTransRuleAttr.attr.add ruleName (← `(attr|ftrans)) .global
 
 
-open Lean.Parser.Tactic.Conv 
+open Lean.Parser.Tactic.Conv
 
 syntax "#generate_revDeriv" term ident* ("|" ident*)? " prop_by " tacticSeq ("abbrev")? " trans_by " convSeq : command
 
@@ -279,7 +278,7 @@ elab_rules : command
 | `(#generate_revDeriv $fnStx $mainArgs:ident* $[| $trailingArgs:ident* ]? prop_by $t:tacticSeq trans_by $rw:convSeq) => do
   Command.liftTermElabM do
     let mainArgs := mainArgs.map (fun a => a.getId)
-    let trailingArgs : Array Name := 
+    let trailingArgs : Array Name :=
       match trailingArgs with
       | .some trailingArgs => trailingArgs.map (fun a => a.getId)
       | none => #[]
@@ -292,7 +291,7 @@ elab_rules : command
 | `(#generate_revDeriv $fnStx $mainArgs:ident* $[| $trailingArgs:ident* ]? prop_by $t:tacticSeq abbrev trans_by $rw:convSeq) => do
   Command.liftTermElabM do
     let mainArgs := mainArgs.map (fun a => a.getId)
-    let trailingArgs : Array Name := 
+    let trailingArgs : Array Name :=
       match trailingArgs with
       | .some trailingArgs => trailingArgs.map (fun a => a.getId)
       | none => #[]
@@ -300,4 +299,3 @@ elab_rules : command
     let .some constName := fn.getAppFn'.constName?
       | throwError "unknown function {fnStx}"
     generateRevDeriv constName mainArgs trailingArgs .noDef t (← `(conv| ($rw)))
-

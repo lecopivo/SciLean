@@ -6,14 +6,14 @@ namespace SciLean
 
   function_properties Math.sin (x : ℝ) : ℝ
   argument x
-    isSmooth   := sorry, 
+    isSmooth   := sorry,
     diff_simp  := dx * Math.cos x by sorry,
     hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
     adjDiff_simp := dx' * Math.cos x by simp[adjointDifferential]; done
 
   function_properties Math.cos (x : ℝ) : ℝ
   argument x
-    isSmooth   := sorry, 
+    isSmooth   := sorry,
     diff_simp  := -dx * Math.sin x by sorry,
     hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
     adjDiff_simp := -dx' * Math.sin x by simp[adjointDifferential]; unfold hold; simp; admit
@@ -30,7 +30,7 @@ namespace SciLean
   abbrev Math.sinc := Math.sinr1
 
   function_properties Math.sinr1 (x : ℝ) : ℝ
-  argument x 
+  argument x
     isSmooth := sorry,
     diff_simp := dx * (- x * Math.sinr3 x + x * Math.cosr2 x) by sorry,
     hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
@@ -47,9 +47,9 @@ namespace SciLean
   --------------------------------------------------------------------
   -- Sin and Cos with halfed powers
 
-  def Math.sinr1Sqrt (x : ℝ) : ℝ := 
+  def Math.sinr1Sqrt (x : ℝ) : ℝ :=
     if x = 0 then 1 else
-    if x > 0 then Math.sinr1 (Math.sqrt x) 
+    if x > 0 then Math.sinr1 (Math.sqrt x)
     else panic! "Implement sinr1Sqrt for negative values!"
   def Math.sinr3Sqrt (x : ℝ) : ℝ := if x = 0 then -1/6  else (Math.sinr1Sqrt x - 1) / x
   def Math.sinr5Sqrt (x : ℝ) : ℝ := if x = 0 then 1/120 else (Math.sinr3Sqrt x + 1/6) / x
@@ -74,7 +74,7 @@ namespace SciLean
     adjDiff_simp by simp[adjointDifferential]; unfold hold; simp
 
   function_properties Math.cosr2Sqrt (x : ℝ) : ℝ
-  argument x 
+  argument x
     isSmooth  := sorry,
     diff_simp := -dx/2 * (sinr3Sqrt x + 2 * cosr4Sqrt x) by sorry,
     hasAdjDiff := by constructor; infer_instance; simp; infer_instance; done,
@@ -85,4 +85,3 @@ namespace SciLean
 
   @[simp]
   theorem Math.sinc.of_norm_is_sinr1Sqrt {X} [Hilbert X] (x : X) : Math.sinc ∥x∥ = Math.sinr1Sqrt ∥x∥² := sorry
-

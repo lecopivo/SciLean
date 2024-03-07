@@ -4,14 +4,14 @@ import Qq
 
 import SciLean.Util.Limit
 
-open Lean 
+open Lean
 open Lean.Meta
 open Lean.Elab.Tactic
 
 open Qq in
 def pullLimitOut (e : Expr) : MetaM Expr := do
   let e ← instantiateMVars e
-  let .some limitExpr := e.find? 
+  let .some limitExpr := e.find?
     (fun e => e.isAppOf' ``Filter.limit && e.getAppNumArgs ≥ 0)
     | throwError s!"no limit found in {← ppExpr e}"
   let xType   := limitExpr.getArg!' 0
@@ -28,7 +28,7 @@ def pullLimitOut (e : Expr) : MetaM Expr := do
     let e' ← Meta.transform e
       (pre := λ e => do
         let (fName, args) := e.getAppFnArgs
-        if fName == ``Filter.limit && args.size ≥ 6 then 
+        if fName == ``Filter.limit && args.size ≥ 6 then
           let type'   := args[0]!
           let filter' := args[4]!
           let f := limitExpr.getArg!' 5
@@ -38,7 +38,7 @@ def pullLimitOut (e : Expr) : MetaM Expr := do
             return .continue
         else
           return .continue)
-    
+
     mkAppM ``Filter.limit #[filter, ← mkLambdaFVars #[x] e']
 
 
@@ -47,7 +47,7 @@ syntax (name := pull_limit_out) "pull_limit_out" " := " term: conv
 open Conv
 
 @[tactic pull_limit_out] def pullLimitOutTactic : Tactic
-| `(conv| pull_limit_out := $prf) => do  
+| `(conv| pull_limit_out := $prf) => do
   (← getMainGoal).withContext do
     let lhs ← getLhs
     let lhs' ← pullLimitOut lhs
@@ -58,6 +58,3 @@ open Conv
     updateLhs lhs' eqProof
 
 | _ => Lean.Elab.throwUnsupportedSyntax
-
-
-  

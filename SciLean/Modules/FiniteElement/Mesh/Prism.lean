@@ -47,17 +47,17 @@ abbrev Space (P : Prism) := ℝ^{P.dim'}
   -- TODO: Right now the space looks like ℝ×ℝ×Unit for square or triange. This should be changed! -/
 abbrev Space' (P : Prism) := P.repr.Space
 
-def inPrism (P : Prism) (x : ℝ^{P.dim'}) : Bool := 
+def inPrism (P : Prism) (x : ℝ^{P.dim'}) : Bool :=
   match P with
   | ⟨.point, _⟩ => x = 0
-  | ⟨.cone Q, _⟩ => 
+  | ⟨.cone Q, _⟩ =>
     let Q : Prism := ⟨Q, sorry_proof⟩
-    let x : ℝ^{Q.dim' + 1} := cast sorry_proof x 
+    let x : ℝ^{Q.dim' + 1} := cast sorry_proof x
     let t : ℝ := x[⟨Q.dim', sorry_proof⟩]
     let y : ℝ^{Q.dim'} := ⊞ i, x[⟨i.1, sorry_proof⟩]
     if t = 1 then
       x = 0
-    else 
+    else
       Q.inPrism (1/(1-t) • y)
   | ⟨.prod P₁ P₂, _⟩ =>
     let P₁ : Prism := ⟨P₁, sorry_proof⟩
@@ -96,7 +96,7 @@ def cube    := segment*square
 
 -- example : Foo point = Int   := by rfl
 -- example : Foo segment = Int := by rfl
--- example : Foo square = Float  := by rfl 
+-- example : Foo square = Float  := by rfl
 -- example : Foo cube = Empty  := by rfl
 
 -- def a : Foo point   := (5 : Int)
@@ -115,7 +115,7 @@ def prismCount : (dim : Nat) → Nat
   | 2 => 2
   | 3 => 4
   | 4 => 9
-  | 5 => 20 
+  | 5 => 20
   | 6 => 48
   | 7 => 115
   | _ => panic! "Number of prism for dim>4 is currently unknown! Implement this!"
@@ -128,7 +128,7 @@ def prismCumCount : (dim : Nat) → Nat
   | 2 => 4
   | 3 => 8
   | 4 => 17
-  | 5 => 37 
+  | 5 => 37
   | 6 => 85
   | 7 => 200
   | _ => panic! "Number of prism for dim>4 is currently unknown! Implement this!"
@@ -222,7 +222,7 @@ def prismToFin (P : Prism) : Fin (prismCount P.dim) :=
   | ⟨.prod (.cone .point) (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨7, sorry_proof⟩
   | ⟨.prod (.cone (.cone .point)) (.cone (.cone .point)), _⟩ => ⟨8, sorry_proof⟩
 
-  | P => 
+  | P =>
     have : Inhabited (Fin (prismCount P.dim)) := cast sorry_proof (⟨0, sorry_proof⟩ : Fin 1)
     panic! "Getting prism from Fin n is not implemented for dim > 4!"
 
@@ -239,19 +239,19 @@ def firstFace (P : Prism) (n : Option Nat := none) : Option (Face P n) :=
 
 
 /-- For prism `P = P₁ × ... × Pₘ` return `[P₁, ..., Pₘ]` i.e. list of all product factors. -/
-def prodSplit (P : Prism) : List (Prism) := 
-  if P.1 = .point 
+def prodSplit (P : Prism) : List (Prism) :=
+  if P.1 = .point
   then []
-  else P.1.prodSplit.map (λ Pi => ⟨Pi, sorry_proof⟩) 
+  else P.1.prodSplit.map (λ Pi => ⟨Pi, sorry_proof⟩)
 
 
-opaque prodTally (P : Prism) : List (Prism × Nat) := 
+opaque prodTally (P : Prism) : List (Prism × Nat) :=
   -- This implementation exploits the fact that P.prodSplit is ordered!
   let prod := P.prodSplit
   match prod.head? with
   | some head =>
     let (last, tally) : (Prism × Nat) × List (Prism × Nat) :=
-      prod.tail.foldl (λ ((current,count), tally') P => 
+      prod.tail.foldl (λ ((current,count), tally') P =>
         if P = current then
           ((current, count + 1), tally')
         else
@@ -261,7 +261,7 @@ opaque prodTally (P : Prism) : List (Prism × Nat) :=
   | none => []
 
 /-- For a list `[(P₁,n₁), ... , (Pₘ,nₘ)]` construct `P = P₁^n₁ × ... × Pₘ^nₘ` -/
-def listProd (Ps : List (Prism × Nat)) : Prism := 
+def listProd (Ps : List (Prism × Nat)) : Prism :=
   let rec prod (Qs : List (Prism × Nat)) : PrismRepr :=
     match Qs with
     | [] => .point
@@ -270,7 +270,7 @@ def listProd (Ps : List (Prism × Nat)) : Prism :=
     | (P, n+1) :: Ps => P.1 * prod ((P,n) :: Ps)
   ⟨prod Ps |>.toCanonical, by simp⟩
 
-def primePowers (P : Prism) : ArrayN Nat (primePrismCumCount P.dim) := 
+def primePowers (P : Prism) : ArrayN Nat (primePrismCumCount P.dim) :=
   match P with
   -- 0D
   | ⟨.point, _⟩ => ⟨#[], by simp[dim]⟩
@@ -316,18 +316,18 @@ theorem dim_repr {n : Nat} (f : Face P n)
 abbrev anyDim (f : Face P n) : Face P := ⟨f.1, f.2, by simp⟩
 -- instance : Coe (Face P n) (Face P) := ⟨λ f => f.anyDim⟩
 
-def comp (f : Face P n) (g : Face f.toPrism m) : Face P m := 
-  ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2,toPrism]; done)) 
-   (by simp[g.2, toPrism,f.2]; done), 
-   by simp[f.repr_ofPrism], 
+def comp (f : Face P n) (g : Face f.toPrism m) : Face P m :=
+  ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2,toPrism]; done))
+   (by simp[g.2, toPrism,f.2]; done),
+   by simp[f.repr_ofPrism],
    by simp; cases m; simp; simp; done⟩
 
 @[simp]
-theorem comp_toPrism (f : Face P n) (g : Face f.toPrism m) 
+theorem comp_toPrism (f : Face P n) (g : Face f.toPrism m)
   : (f.comp g).toPrism = g.toPrism := by simp[comp,toPrism]
 
 @[simp]
-theorem comp_dim (f : Face P n) (g : Face f.toPrism m) 
+theorem comp_dim (f : Face P n) (g : Face f.toPrism m)
   : (f.comp g).dim = g.dim := by simp[comp,dim]
 
 def tip (P : Prism) : Face (P.cone) (some 0) := ⟨.tip P.repr, by simp[FaceRepr.ofPrism,Prism.cone], by simp[FaceRepr.dim, FaceRepr.toPrism]⟩
@@ -337,13 +337,13 @@ def base (f : Face P n) : Face (P.cone) n := ⟨.base f.repr, sorry_proof, sorry
 local instance : Add (Option Nat) := ⟨λ n m => match n, m with | some n, some m => n+m | _, _ => none⟩
 def prod (f : Face P n) (g : Face Q m) : Face (P.prod Q) (n+m) := ⟨f.repr.prod g.repr |>.toCanonical, sorry_proof, sorry_proof⟩
 
-def next (f : Face P n) : Option (Face P n) := 
+def next (f : Face P n) : Option (Face P n) :=
   match f.repr.next with
   | some f' => ⟨f', sorry_proof, sorry_proof⟩ |> some
-  | none => 
+  | none =>
     match n with
     | some _ => none
-    | none => 
+    | none =>
       match f.ofPrism.firstFace (some (f.dim+1)) with
       | some f' => ⟨f'.1, f'.2, by simp⟩ |> some
       | none => none
@@ -387,13 +387,13 @@ def forIn {m} [Monad m] (P : Prism) (n : Nat) (init : β) (f : Face P n → β �
 
       match b with
       | .done b => return .done b
-      | .yield b => 
+      | .yield b =>
         Face.forIn ⟨P', sorry_proof⟩ n b (λ q b => (f q.cone b))
 
   | ⟨.prod P Q, _⟩, n => do
       let P : Prism := ⟨P, sorry_proof⟩
       let Q : Prism := ⟨Q, sorry_proof⟩
-      
+
       let mut b := ForInStep.yield init
 
       for i in [0:n+1] do
@@ -401,9 +401,9 @@ def forIn {m} [Monad m] (P : Prism) (n : Nat) (init : β) (f : Face P n → β �
 
         match b with
         | .done b' => return .done b'
-        | .yield b' => 
+        | .yield b' =>
           b ← Face.forIn Q j b' λ q b =>
-                 Face.forIn P i b λ p b => 
+                 Face.forIn P i b λ p b =>
                    f ⟨p.repr.prod q.repr, sorry_proof, sorry_proof⟩ b
 
       pure b
@@ -437,7 +437,7 @@ def faces (P : Prism) (n : Option Nat := none)  := Iterable.fullRange (Face P n)
 
 
 #eval show IO Unit from do
-  let P := Prism.cube 
+  let P := Prism.cube
   for f in P.faces (some 2) do
     IO.println s!"{f.repr.toString} | {f.toFin} | {Face.fromFin P _ (f.toFin) |>.repr |>.toString}"
 
@@ -448,15 +448,15 @@ namespace Inclusion
 
 def toFace (f : Inclusion Q P) : Face P Q.dim := ⟨f.1, f.2, by simp[Prism.dim, FaceRepr.dim]; rw[← f.3]; simp⟩
 
-def comp (f : Inclusion Q P) (g : Inclusion S Q) : Inclusion S P := 
-  ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2, f.3]; done)) 
-   (by simp[g.2, f.2]; done), 
-   by simp[f.2]; done, 
+def comp (f : Inclusion Q P) (g : Inclusion S Q) : Inclusion S P :=
+  ⟨f.repr.comp (g.repr.fromCanonical f.repr.toPrism (by simp[g.2, f.3]; done))
+   (by simp[g.2, f.2]; done),
+   by simp[f.2]; done,
    by simp[g.3]; done⟩
 
 -- instance : Compose (Inclusion Q P) (Inclusion S Q) (Inclusion S P) where
 --   compose f g := f.comp g
- 
+
 -- def toFin (f : Inclusion Q P) : Fin (P.faceCount Q.dim) := ⟨f.repr.index, sorry_proof⟩
 -- def fromFin (Q P : Prism) (i : Fin (P.faceCount Q.dim)) : Inclusion Q P := ⟨FaceRepr.fromIndex P.1 Q.dim i, sorry_proof, sorry_proof⟩
 
@@ -484,7 +484,7 @@ def PrismDecomposition (P : Prism) := FinProd (P.prodTally.map (·.2+1))
   -- | .powers ns => (Prism.listProd <| P.prodTally.map (·.1) |>.zip ns.toListComplement
 
 --------- PrismDecomposition -----------------------------------------
-namespace PrismDecomposition 
+namespace PrismDecomposition
 
 variable {l} {P : Prism}
 
@@ -515,7 +515,7 @@ namespace Prism
 def topFace (P : Prism) : Face P P.dim := ⟨P.repr.topFace, by simp, by simp[FaceRepr.dim,Prism.dim]⟩
 
 
-/-- Tries to find decomposition of `P` such that `P = P₁ * ??` 
+/-- Tries to find decomposition of `P` such that `P = P₁ * ??`
 This is of course not possible in general and any excess powers ignored.
 
 TODO: The implementation is really bad!!! Improve it!!
@@ -523,7 +523,7 @@ TODO: The implementation is really bad!!! Improve it!!
 def decomposeBy (P P₁ : Prism) : PrismDecomposition P :=
   let pt  := P.prodTally
   let pt₁ := P₁.prodTally
-  
+
   let pt' := pt.map (λ (Pi, a) =>
     let find := pt₁.find? (λ ((Qi, _) : Prism × Nat) => Pi = Qi)
     match find with
@@ -546,30 +546,30 @@ def subprismCount (P Q : Prism) : Nat :=
   | ⟨.point, _⟩, ⟨.point, _⟩ => 1
   | ⟨.point, _⟩, _ => 0
 
-  | ⟨.cone P', h⟩, ⟨.point, _⟩ => 
+  | ⟨.cone P', h⟩, ⟨.point, _⟩ =>
     let P' : Prism := ⟨P', by simp[h]⟩
     subprismCount P' point + 1
-  | ⟨.cone P', h⟩, ⟨.cone Q', h'⟩ => 
+  | ⟨.cone P', h⟩, ⟨.cone Q', h'⟩ =>
     let P' : Prism := ⟨P', by simp[h]⟩
     let Q' : Prism := ⟨Q', by simp[h']⟩
     subprismCount P' Q' + subprismCount P' Q'.cone
-  | ⟨.cone P', h⟩, ⟨.prod _ _, _⟩ => 
+  | ⟨.cone P', h⟩, ⟨.prod _ _, _⟩ =>
     let P' : Prism := ⟨P', by simp[h]⟩
     subprismCount P' Q
 
-  | ⟨.prod P₁ P₂, _⟩, _ => 
+  | ⟨.prod P₁ P₂, _⟩, _ =>
     let P₁ : Prism := ⟨P₁, sorry_proof⟩
     let P₂ : Prism := ⟨P₂, sorry_proof⟩
     Enumtype.sum λ dec : (PrismDecomposition Q) => subprismCount P₁ dec.fst * subprismCount P₂ dec.snd
 
 
 -- TODO: Improve implementation, this is probably not very numerically stable
-def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim'}) : X := 
+def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim'}) : X :=
   match P with
-  | ⟨.point, h⟩ => 
+  | ⟨.point, h⟩ =>
     let ι : Inclusion point _ := ⟨.point, sorry_proof, sorry_proof⟩
     f ι
-  | ⟨.cone P', _⟩ => 
+  | ⟨.cone P', _⟩ =>
     let x : ℝ^{P'.dim'} := ⊞ i, x[⟨i.1,sorry_proof⟩]
     let t : ℝ := x[⟨P'.dim' ,sorry_proof⟩]
 
@@ -581,37 +581,37 @@ def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X)
     (1-t) • f₀ + t • f₁
     -- f₁ + (1-t) * (f₀ - f₁)
     -- f₀ + t * (f₁-f₀)
-  | ⟨.prod P Q, _⟩ => 
+  | ⟨.prod P Q, _⟩ =>
     let P : Prism := ⟨P, sorry_proof⟩
     let Q : Prism := ⟨Q, sorry_proof⟩
     let x : ℝ^{P.dim'} := ⊞ i, x[⟨i.1,sorry_proof⟩]
     let y : ℝ^{Q.dim'} := ⊞ i, x[⟨i.1+P.dim',sorry_proof⟩]
 
     P.barycentricInterpolate (x:=x) (λ ιP =>
-      Q.barycentricInterpolate (x:=y) (λ ιQ => 
+      Q.barycentricInterpolate (x:=y) (λ ιQ =>
         f ⟨ιP.1.prod ιQ.1, sorry_proof, sorry_proof⟩))
 
 end Prism
 
 --------- Inclusion --------------------------------------------------
-namespace Inclusion 
+namespace Inclusion
 
 def faceInclusion {P Q} (ι : Inclusion Q P) (x : ℝ^{Q.dim'}) : ℝ^{P.dim'} := sorry
 
 
 variable {P Q : Prism}
 
-/-- Splits `Inclusiton Q P` based on the decomposition `P = P₁ * P₂` into two inclusions `Inclusion Q₁ P₁` and `Inclusion Q₂ P₂`. 
+/-- Splits `Inclusiton Q P` based on the decomposition `P = P₁ * P₂` into two inclusions `Inclusion Q₁ P₁` and `Inclusion Q₂ P₂`.
 
 TODO: Reinspect this implementation, it was originally written for quotient implementation of Prism and might be problematic
 -/
-def split (ι : Inclusion Q P) (Pdec : PrismDecomposition P) 
-  : (Qdec : PrismDecomposition Q) × Inclusion Qdec.fst Pdec.fst × Inclusion Qdec.snd Pdec.snd 
-  := 
+def split (ι : Inclusion Q P) (Pdec : PrismDecomposition P)
+  : (Qdec : PrismDecomposition Q) × Inclusion Qdec.fst Pdec.fst × Inclusion Qdec.snd Pdec.snd
+  :=
   let P₁ := Pdec.fst
   let P₂ := Pdec.snd
   match ι.repr.fromCanonical (P₁.repr.prod P₂.repr) sorry_proof with
-  | .prod f g => 
+  | .prod f g =>
     let Qdec : PrismDecomposition Q := Q.decomposeBy ⟨f.toPrism.toCanonical, sorry_proof⟩
     let ι₁ : Inclusion Qdec.fst Pdec.fst := ⟨f, sorry_proof, sorry_proof⟩
     let ι₂ : Inclusion Qdec.snd Pdec.snd := ⟨g, sorry_proof, sorry_proof⟩
@@ -628,13 +628,13 @@ def forIn {m} [Monad m] (P : Prism) (Q : Prism) (init : β) (f : Inclusion Q P �
       let P' : Prism := ⟨P', sorry_proof⟩
 
       let b ←
-        Inclusion.forIn P' Prism.point init (λ q b => 
+        Inclusion.forIn P' Prism.point init (λ q b =>
           let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
           f q b)
 
       match b with
       | .done b => return (.done b)
-      | .yield b => 
+      | .yield b =>
         let q : Inclusion _ _ := ⟨.tip P'.repr, sorry_proof, sorry_proof⟩
         f q b
 
@@ -642,15 +642,15 @@ def forIn {m} [Monad m] (P : Prism) (Q : Prism) (init : β) (f : Inclusion Q P �
       let P' : Prism := ⟨P', sorry_proof⟩
       let Q' : Prism := ⟨Q', sorry_proof⟩
 
-      let b ← 
-        Inclusion.forIn P' Q'.cone init (λ q b => 
+      let b ←
+        Inclusion.forIn P' Q'.cone init (λ q b =>
           let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
           (f q b))
 
       match b with
       | .done b => return .done b
-      | .yield b => 
-        Inclusion.forIn P' Q' b (λ q b => 
+      | .yield b =>
+        Inclusion.forIn P' Q' b (λ q b =>
           let q : Inclusion _ _ := ⟨q.repr.cone, sorry_proof, sorry_proof⟩
           (f q b))
 
@@ -658,8 +658,8 @@ def forIn {m} [Monad m] (P : Prism) (Q : Prism) (init : β) (f : Inclusion Q P �
   | ⟨.cone P', _⟩, ⟨.prod Q₁ Q₂, _⟩ => do
       let P' : Prism := ⟨P', sorry_proof⟩
 
-      let b ← 
-        Inclusion.forIn P' Q init (λ q b => 
+      let b ←
+        Inclusion.forIn P' Q init (λ q b =>
           let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
           f q b)
 
@@ -676,9 +676,9 @@ def forIn {m} [Monad m] (P : Prism) (Q : Prism) (init : β) (f : Inclusion Q P �
         let Q₁ := dec.fst
         let Q₂ := dec.snd
 
-        b ← 
-          Inclusion.forIn P₂ Q₂ init λ q₂ b => 
-            Inclusion.forIn P₁ Q₁ b λ q₁ b => 
+        b ←
+          Inclusion.forIn P₂ Q₂ init λ q₂ b =>
+            Inclusion.forIn P₁ Q₁ b λ q₁ b =>
               f ⟨q₁.repr.prod q₂.repr, sorry_proof, sorry_proof⟩ b
 
         if let .done b' := b then

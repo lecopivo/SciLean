@@ -2,7 +2,7 @@
 -- import SciLean.Mathlib.Data.Prod
 -- import SciLean.Mathlib.Data.Enumtype
 import SciLean.Data.EnumType
- 
+
 namespace SciLean
 
 /-- Give `Fin n₁ × ... × Fin nₘ` for a list `[n₁,..., nₘ]`  -/
@@ -11,51 +11,51 @@ def FinProd : List Nat → Type
   | [n] => Fin n
   | n :: (m :: ns) => Fin n × FinProd (m :: ns)
 
-instance instEnumtypeFinProd (l : List Nat) : Enumtype (FinProd l) := 
+instance instEnumtypeFinProd (l : List Nat) : Enumtype (FinProd l) :=
   match l with
   | []  => by simp[FinProd]; infer_instance
   | [n] => by simp[FinProd]; infer_instance
-  | n :: m :: ns => 
+  | n :: m :: ns =>
     have e := instEnumtypeFinProd (m :: ns)
     by simp[FinProd]; infer_instance
 
-instance instEnumTypeFinProd (l : List Nat) : EnumType (FinProd l) := 
+instance instEnumTypeFinProd (l : List Nat) : EnumType (FinProd l) :=
   match l with
   | []  => by simp[FinProd]; infer_instance
   | [n] => by simp[FinProd]; infer_instance
-  | n :: m :: ns => 
+  | n :: m :: ns =>
     have e := instEnumTypeFinProd (m :: ns)
     by simp[FinProd]; infer_instance
 
-instance instToStringFinProd (l : List Nat) : ToString (FinProd l) := 
+instance instToStringFinProd (l : List Nat) : ToString (FinProd l) :=
   match l with
   | []  => by simp[FinProd]; infer_instance
   | [n] => by simp[FinProd]; infer_instance
-  | n :: m :: ns => 
+  | n :: m :: ns =>
     have e := instToStringFinProd (m :: ns)
     by simp[FinProd]; infer_instance
 
-instance instAddFinProd (l : List Nat) : Add (FinProd l) := 
+instance instAddFinProd (l : List Nat) : Add (FinProd l) :=
   match l with
   | []  => by simp[FinProd]; infer_instance
   | [n] => by simp[FinProd]; infer_instance
-  | n :: m :: ns => 
+  | n :: m :: ns =>
     have e := instAddFinProd (m :: ns)
     by simp[FinProd]; infer_instance
 
-instance instSubFinProd (l : List Nat) : Sub (FinProd l) := 
+instance instSubFinProd (l : List Nat) : Sub (FinProd l) :=
   match l with
   | []  => by simp[FinProd]; infer_instance
   | [n] => by simp[FinProd]; infer_instance
-  | n :: m :: ns => 
+  | n :: m :: ns =>
     have e := instSubFinProd (m :: ns)
     by simp[FinProd]; infer_instance
 
-instance instMulFinProd (l : List Nat) : Mul (FinProd l) := 
+instance instMulFinProd (l : List Nat) : Mul (FinProd l) :=
   match l with
   | []  => by simp[FinProd]; infer_instance
   | [n] => by simp[FinProd]; infer_instance
-  | n :: m :: ns => 
+  | n :: m :: ns =>
     have e := instMulFinProd (m :: ns)
     by simp[FinProd]; infer_instance
 
@@ -73,7 +73,7 @@ def FinProd.toList {l} (is : FinProd l) : List Nat :=
 --   | [],  _ => Unit.unit
 --   | [n], [i] => ⟨i % n, sorry⟩
 --   | n :: m :: ns, i :: j :: is => (⟨i % n, sorry⟩, fromList (j :: is))
---   | [n], [] => 
+--   | [n], [] =>
 
 /-- Given `(i₁, ..., iₘ) : Fin n₁ × ... × Fin nₘ` return `[n₁-i₁.1-1,..., nₘ-iₘ.1-1]` -/
 def FinProd.toListComplement {l} (is : FinProd l) : List Nat :=
@@ -81,4 +81,3 @@ def FinProd.toListComplement {l} (is : FinProd l) : List Nat :=
   | [], _ => []
   | [n], i => [n-i.1-1]
   | n :: _ :: _, (i, is) => (n-i.1-1) :: is.toListComplement
-

@@ -27,7 +27,7 @@ def applyRule (transName : Name) (ruleType : FunTransRuleType) (args : Array Exp
 
 
 /-- Applies letBinop or letComp rule to `T (λ x => let y := ..; b)` as a simp step.
-  
+
   - `x` has to be lambda free variable
   - `y` has to be let free variable
   - `b` is the body of the let binding
@@ -40,7 +40,7 @@ def applyLetRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) :
   let .some gx ← yId.getValue?
     | return none
 
-  -- if the let binding does not contain `x` then move the let binding out of the 
+  -- if the let binding does not contain `x` then move the let binding out of the
   -- function transformation
   if ¬(gx.containsFVar xId) then
     let e ← mkAppM transName #[← mkLambdaFVars #[y, x] b]
@@ -51,7 +51,7 @@ def applyLetRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) :
   withLocalDecl (← yId.getUserName) default (← inferType y) λ y' => do
     let b := b.replaceFVarId yId y'
 
-    if b.containsFVar xId then 
+    if b.containsFVar xId then
       let f ← mkLambdaFVars #[x,y'] b
       applyRule transName .letBinop #[f,g]
     else
@@ -60,7 +60,7 @@ def applyLetRules (transName : Name) (x y b : Expr) : SimpM (Option Simp.Step) :
 
 open Qq in
 /-- Applies swap or tries to apply piMap, piMapComp rule to `T (λ x y => b)` as a simp step.
-  
+
   - `x` and `y` has to be lambda free variable
   - `b` is the body of the lambda function
   -/
@@ -79,8 +79,8 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
       -- collect all subterms in the body of the form `g _`
       let (_,occurrences) ← StateT.run (s:=(#[] : Array Expr))
         (body.forEach' λ e => do
-          if (e.getAppFn == g) && 
-             (e.getAppNumArgs == 1) && 
+          if (e.getAppFn == g) &&
+             (e.getAppNumArgs == 1) &&
              (e.containsFVar a.fvarId!) then
             modify λ s => s.push e
             return false
@@ -124,7 +124,7 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
       -- let ga ← mkAppOptM ``getElem #[none,none,none,none,none,x,y, none]
       let h ← mkLambdaFVars #[y] (occ.getArg! 6)
       if ¬h.hasLooseBVars then
-        let step : Option Simp.Step ← 
+        let step : Option Simp.Step ←
           withLocalDecl `gha default (← inferType occ) λ gha => do
             let fbody := body.replace (λ e => if e == occ then gha else none)
             -- we have completely elimated `g` from the body, thus we can use `piMap` rule
@@ -153,11 +153,11 @@ def applyLambdaRules (transName : Name) (x y body : Expr) : SimpM (Option Simp.S
 
   - `x` has to be lambda free variable
   - `b` is the body of the lambda function
- 
-  Handling these cases: 
+
+  Handling these cases:
     1. identity: T (λ x => x)
     2. constant: T (λ y => x)
-    3. evaluation: T (λ f => f x) 
+    3. evaluation: T (λ f => f x)
 -/
 def applySimpleRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) := do
 
@@ -189,7 +189,7 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
 
   let xId := x.fvarId!
 
-  if ¬b.isApp then 
+  if ¬b.isApp then
     return none
 
   let F := b.getAppFn
@@ -200,7 +200,7 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
     throwError s!"Composition case: the head of the expression {← ppExpr b} depends on the argument {← ppExpr x}. TODO: handle this case!"
 
   let .some constName := F.constName?
-    | 
+    |
       trace[Meta.Tactic.fun_trans.rewrite] "Can handle only applications of contants! Got `{b}` which is an application of `{F}`"
       if F.isFVar && (← F.fvarId!.isLetVar) then
         let id := F.fvarId!
@@ -229,9 +229,9 @@ def applyCompRules (transName : Name) (x b : Expr) : SimpM (Option Simp.Step) :=
 def getFunTransStructureRule (transName structName : Name) : MetaM (Option Name) := do
   if (structName == ``Prod) then
     if (transName == `SciLean.adjointDifferential) then
-      return `SciLean.adjointDifferential.structure_rule.Prod 
+      return `SciLean.adjointDifferential.structure_rule.Prod
     if (transName == `SciLean.reverseDifferential) then
-      return `SciLean.reverseDifferential.structure_rule.Prod 
+      return `SciLean.reverseDifferential.structure_rule.Prod
   return none
 
 /--
@@ -243,30 +243,30 @@ def tryStructureRule? (transName : Name) (x b : Expr) : SimpM (Option Simp.Step)
   let X ← whnf (← inferType x)
 
   let .const structName us := X.getAppFn
-    | return none 
+    | return none
 
   let some info := getStructureInfo? (← getEnv) structName
     | return none
-  
+
   let some rule ← getFunTransStructureRule transName info.structName
     | return none
 
   let projArgs := (X.getAppArgs.push x)
-  let xprojs := info.fieldInfo.map λ fieldInfo => 
+  let xprojs := info.fieldInfo.map λ fieldInfo =>
                   mkAppN (.const fieldInfo.projFn us) projArgs
 
   let xprojTypes ← xprojs.mapM λ xi => inferType xi
 
   let xName ← x.fvarId!.getUserName
-  let xprojDecls := info.fieldInfo.mapIdx λ i fieldInfo => 
+  let xprojDecls := info.fieldInfo.mapIdx λ i fieldInfo =>
                       (xName.appendAfter (toString fieldInfo.fieldName), default, λ _ => pure xprojTypes[i]!)
 
-  let step ← 
+  let step ←
     withLocalDecls xprojDecls λ xps => do
 
       let replaceRules := xprojs.zip xps
 
-      let b' := b.replace (λ e => do 
+      let b' := b.replace (λ e => do
         for (val, fvar) in replaceRules do
           if e == val then
             return fvar
@@ -306,7 +306,7 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
       let y := xs[1]!
 
       let b ← mkLambdaFVars xs[2:] b
-      
+
       if ← y.fvarId!.isLetVar then
         -- λ x => let y := ..; b
         applyLetRules transName x y b
@@ -314,7 +314,7 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
         -- λ x y => b
         applyLambdaRules transName x y b
 
-    else 
+    else
 
       let b ← mkLambdaFVars xs[2:] b
 
@@ -339,7 +339,7 @@ def main (transName : Name) (f : Expr) : SimpM (Option Simp.Step) := do
 
   | _ => return none
 
-/-- 
+/--
   Is expression `e` of the form `T f x₀ x₁ .. xₙ` where `T` is some function transformation?
 
   Return `(T, f, #[x₀,...,xₙ])`
@@ -352,7 +352,7 @@ def getFunctionTransform (e : Expr) : MetaM (Option (Name × Expr × Array Expr)
     let env ← getEnv
     if ¬(funTransDefAttr.hasTag env transName) then
       return none
-    
+
     let info ← getConstInfo transName
     forallTelescope info.type λ xs _ => do
       -- find the id of the first explicit binder
@@ -363,21 +363,21 @@ def getFunctionTransform (e : Expr) : MetaM (Option (Name × Expr × Array Expr)
           return some (transName, args[fId]!, args[fId+1:])
       else
         return none
-  else 
+  else
     return none
 
 
 /--
-Heuristic whether expression `e` is performing any meaningful computation. This 
+Heuristic whether expression `e` is performing any meaningful computation. This
 is used when normalizing let bindings. Computationally meaningless let bindings are
 removed.
 -/
-def _root_.Lean.Expr.doesComputation (e : Expr) : Bool := 
+def _root_.Lean.Expr.doesComputation (e : Expr) : Bool :=
   if e.isAppOf ``hold then
     true
   else
   match e with
-  | .app f x => 
+  | .app f x =>
     -- TODO: generalize to any structure
     if (f.isAppOf ``Prod.fst || f.isAppOf ``Prod.snd || f.isAppOf ``Prod.mk) then
       if f.isAppOf ``Prod.mk then
@@ -397,7 +397,7 @@ partial def normalizeLet? (e : Expr) : MetaM (Option Expr) := do
   let e' ← flattenLet 2 e
   let (e', flag) := run e' (e' != e)
   if flag then pure (some e') else pure none
-where 
+where
   run (e : Expr) (didNormalize : Bool) : Expr × Bool :=
   match e with
   | .letE xName xType xVal body _ =>
@@ -420,14 +420,14 @@ where
 
 def tryFunTrans? (post := false) (e : Expr) : SimpM (Option Simp.Step) := do
 
-  -- if post then 
+  -- if post then
   --   if let .some e' ← normalizeLet? e then
   --     trace[Meta.Tactic.fun_trans.normalize_let] s!"\n{← Meta.ppExpr e}\n==>\n{← Meta.ppExpr e'}"
 
   --     return .some (.visit (.mk e' none 0))
   if post then
     return none
-  
+
   if let .some (transName, f, args) ← getFunctionTransform e then
     if let .some step ← main transName f then
 

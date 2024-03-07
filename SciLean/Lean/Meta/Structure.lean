@@ -7,16 +7,16 @@ open Lean Meta
 
 
 private def buildMk (mk : Expr) (mks : List Expr) (vars vals : Array Expr) : MetaM Expr :=
-  match mks with 
+  match mks with
   | [] => mkLambdaFVars vars (mkAppN mk vals)
-  | mk' :: mks' => 
-    lambdaTelescope mk' fun xs b => 
-      buildMk mk mks' (vars++xs) (vals.push b)              
+  | mk' :: mks' =>
+    lambdaTelescope mk' fun xs b =>
+      buildMk mk mks' (vars++xs) (vals.push b)
 
 
 /-- Decomposes an element `e` that is a nested application of constructors
 
-For example, calling this function on `((a,b),c)` returns 
+For example, calling this function on `((a,b),c)` returns
  - list of elements `#[a, b, c]`
  - list of projections `#[fun x => x.1.1, fun x => x.1.2, fun x => x.2]`
  - function to build the structure back up `fun a b c => ((a,b),c))`
@@ -30,7 +30,7 @@ private partial def splitByCtorsImpl (e : Expr) : MetaM (Array Expr × Array Exp
 
   let .const structName _ := E.getAppFn'
     | return (#[e], #[idE], idE)
-  
+
   -- not structure
   let .some _ := getStructureInfo? (← getEnv) structName
     | return (#[e], #[idE], idE)
@@ -38,9 +38,9 @@ private partial def splitByCtorsImpl (e : Expr) : MetaM (Array Expr × Array Exp
   let ctorVal := getStructureCtor (← getEnv) structName
 
   -- not application of ctor
-  if fn.constName? ≠ .some ctorVal.name then 
+  if fn.constName? ≠ .some ctorVal.name then
     return (#[e], #[idE], idE)
-    
+
   -- not fully applied ctor
   if args.size ≠ ctorVal.numParams + ctorVal.numFields then
     return (#[e], #[idE], idE)
@@ -53,8 +53,8 @@ private partial def splitByCtorsImpl (e : Expr) : MetaM (Array Expr × Array Exp
 
   let mk ← buildMk mk mks.toList #[] #[]
 
-  let projs := projs 
-    |>.mapIdx (fun idx projs' => 
+  let projs := projs
+    |>.mapIdx (fun idx projs' =>
        projs'.map (fun proj' => Expr.lam `x E (proj'.app (Expr.proj structName idx (.bvar 0))).headBeta default))
     |>.flatten
 
@@ -72,4 +72,3 @@ def splitByCtors? (e : Expr) : MetaM (Option (Array Expr × Array Expr × Expr))
     return none
   else
     return r
-

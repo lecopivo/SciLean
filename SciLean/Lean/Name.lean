@@ -1,6 +1,6 @@
 import Lean
- 
-open Lean 
+
+open Lean
 
 namespace SciLean
 

@@ -13,11 +13,11 @@ variable {α α' β β' γ γ' : Type _}
 /-- This axiom is obviously contradictory. We use it to compile programs that were designed only for reals or proper fields. With this axiom we can plug `Float` to function that would only accept types that have instance of `IsROrC`
 
 -/
-axiom realFloatEquiv : ℝ ≃ Float 
+axiom realFloatEquiv : ℝ ≃ Float
 
 
 scoped instance : IsomorphicType `RealToFloat ℝ Float where
-  equiv := 
+  equiv :=
   {
     toFun  := panic! "attempting to convert real to float"
     invFun := panic! "attempting to convert float to real"
@@ -27,7 +27,7 @@ scoped instance : IsomorphicType `RealToFloat ℝ Float where
 
 
 scoped instance : IsomorphicType `FloatToReal Float ℝ where
-  equiv := 
+  equiv :=
   {
     toFun  := panic! "attempting to convert float to real"
     invFun := panic! "attempting to convert real to float"
@@ -37,7 +37,7 @@ scoped instance : IsomorphicType `FloatToReal Float ℝ where
 
 
 instance instIsomorphicTypeRealToFloatProd [IsomorphicType `RealToFloat α α'] [IsomorphicType `RealToFloat β β'] : IsomorphicType `RealToFloat (α×β) (α'×β') where
-  equiv := 
+  equiv :=
   {
     toFun  := fun (a,b) => (IsomorphicType.equiv `RealToFloat a, IsomorphicType.equiv `RealToFloat b)
     invFun := fun (a',b') => ((IsomorphicType.equiv `RealToFloat).symm a', (IsomorphicType.equiv `RealToFloat).symm b')
@@ -47,14 +47,14 @@ instance instIsomorphicTypeRealToFloatProd [IsomorphicType `RealToFloat α α'] 
 
 
 instance [IsomorphicType `RealToFloat α α'] [IsomorphicType `RealToFloat β β'] : IsomorphicType `RealToFloat (α→β) (α'→β') where
-  equiv := 
+  equiv :=
   {
     toFun  := fun f a  => IsomorphicType.equiv `RealToFloat (f ((IsomorphicType.equiv `RealToFloat).symm a))
     invFun := fun f a' => (IsomorphicType.equiv `RealToFloat).symm (f (IsomorphicType.equiv `RealToFloat a'))
     left_inv := by intro f; simp[-isomorph.app]
     right_inv := by intro f; simp
   }
-  
+
 instance (priority := 1) isntIsomorphicTypeId {α : Sort u} : IsomorphicType `RealToFloat α α where
   equiv :=
   {
@@ -73,5 +73,3 @@ theorem isomorphicType_equiv_id {α : Type _} (a : α)
 abbrev realToFloat (x : ℝ) : Float := IsomorphicType.equiv `RealToFloat x
 
 abbrev floatToReal (x : Float) : ℝ := IsomorphicType.equiv `FloatToReal x
-
-

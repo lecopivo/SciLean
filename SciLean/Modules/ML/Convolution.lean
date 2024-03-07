@@ -13,7 +13,7 @@ variable
 set_default_scalar R
 
 def conv2d
-  {n m : USize} {ι} [Index ι] (filterNum : USize) (r : Int64)
+  {n m : USize} {ι} [IndexType ι] (filterNum : Nat) (r : Int64)
   (weights : R^[filterNum, [-r:r], [-r:r]]) (bias x : R^[ι,n,m]) : R^[[filterNum,ι],n,m] :=
   ⊞ ((k,l),i,j) =>
     bias[(l,i,j)]

@@ -18,7 +18,7 @@ theorem invFun.rule_id (X) [Nonempty X]
     λ x => x := sorry
 
 @[fun_trans_rule]
-theorem invFun.rule_comp 
+theorem invFun.rule_comp
   (f : Y → Z) [IsInv f]
   (g : X → Y) [IsInv g]
   : (λ x : X => f (g x))⁻¹
@@ -26,7 +26,7 @@ theorem invFun.rule_comp
     λ x' => g⁻¹ (f⁻¹ x') := sorry
 
 @[fun_trans_rule]
-theorem invFun.rule_letComp 
+theorem invFun.rule_letComp
   (f : Y → Z) [IsInv f]
   (g : X → Y) [IsInv g]
   : (λ (x : X) => let y := g x; f y)⁻¹
@@ -50,18 +50,18 @@ theorem invFun.rule_piComp [Nonempty α]
   (h : α → β) [IsInv h]
   : (λ (g : β → X) (a : α) => f a (g (h a)))⁻¹
     =
-    λ g' b => 
+    λ g' b =>
       let a := h⁻¹ b
       (f a)⁻¹ (g' a) := sorry
 
 theorem InvFun.rule_prodMap [Nonempty α] [Nonempty β]
-  (f : α → α') [IsInv f] 
-  (g : β → β') [IsInv g] 
+  (f : α → α') [IsInv f]
+  (g : β → β') [IsInv g]
   : (λ ab : α×β => (f ab.1, g ab.2))⁻¹
     =
     λ ab : α'×β' => (f⁻¹ ab.1, g⁻¹ ab.2) := sorry
 
 theorem InvFun.rule_prodMap_rev [Nonempty α] [Nonempty β]
-  (f : α → α') [IsInv f] 
-  (g : β → β') [IsInv g] 
+  (f : α → α') [IsInv f]
+  (g : β → β') [IsInv g]
   : IsInv (λ ab : α×β => (g ab.2, f ab.1)) := sorry

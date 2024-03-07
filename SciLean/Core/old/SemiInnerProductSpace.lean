@@ -15,16 +15,16 @@ instance (K X Y) [Add K] [Inner K X] [Inner K Y] : Inner K (X × Y) where
 instance (K X) [AddCommMonoid K] [Inner K X] (ι) [Fintype ι] : Inner K (ι → X) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫[K]
 
-instance (priority:=low) (K ι) (X : ι → Type) 
-  [AddCommMonoid K] [∀ i, Inner K (X i)] [Fintype ι] 
+instance (priority:=low) (K ι) (X : ι → Type)
+  [AddCommMonoid K] [∀ i, Inner K (X i)] [Fintype ι]
   : Inner K ((i : ι) → X i) where
   inner := λ f g => ∑ i, ⟪f i, g i⟫[K]
 
 end Inner
 
-section TestFunctions 
+section TestFunctions
 
-/-- TestFunctions defines a subset well behaved w.r.t. to the inner product. 
+/-- TestFunctions defines a subset well behaved w.r.t. to the inner product.
 For example:
   1. test function on `ℕ → ℝ` are sequences with only finitely many non-zero elements
   2. test function on `C∞(ℝ, ℝ)` are functions with compact support
@@ -46,17 +46,17 @@ instance (priority:=low) (ι : Type _) (X : ι → Type) [∀ i, TestFunctions (
   : TestFunctions ((i : ι) → X i) where
   TestFunction f := ∀ i, TestFunction (f i)
 
-end TestFunctions 
+end TestFunctions
 
 
-/-- SemiInnerProductSpace is almost InnerProductSpace but `⟪x,y⟫` does not make 
-sense for all elements `x y : X`. For example, `C∞(ℝ, ℝ)` or `ℕ → ℝ` are almost 
-inner product spaces but `∫ x : ℝ, f x * g x` or `∑ i : ℕ, a i * b i` are not 
+/-- SemiInnerProductSpace is almost InnerProductSpace but `⟪x,y⟫` does not make
+sense for all elements `x y : X`. For example, `C∞(ℝ, ℝ)` or `ℕ → ℝ` are almost
+inner product spaces but `∫ x : ℝ, f x * g x` or `∑ i : ℕ, a i * b i` are not
 meaningful for all `f, g` or `a, b`. Therefore we introduce notion of test functions
 and `⟪x, φ⟫` has meaning only when `φ` is test function, `x` can be arbitrary.
 
 The important property is that deciding if an element is zero, `x = 0`, can be
-determined by testing `⟪x, ϕ⟫[K] = 0` for all test functions `φ`. This is known 
+determined by testing `⟪x, ϕ⟫[K] = 0` for all test functions `φ`. This is known
 as fundamental lemma of the calculus of variations.
 https://en.wikipedia.org/wiki/Fundamental_lemma_of_the_calculus_of_variations
 
@@ -105,9 +105,9 @@ instance : SemiInnerProductSpace K K where
   smul_left := by simp[Inner.inner, mul_assoc]
   conj_sym := by simp[Inner.inner,mul_comm]
   inner_pos := by sorry
-  inner_ext := 
-    by 
-      simp[Inner.inner, TestFunction]; 
+  inner_ext :=
+    by
+      simp[Inner.inner, TestFunction];
       intro x
       constructor
       intro h; simp[h]
@@ -121,6 +121,5 @@ abbrev SemiInnerProductSpace.mkSorryProofs {α} [Vec K α] [Inner K α] [TestFun
 instance (X Y) [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : SemiInnerProductSpace K (X × Y) := SemiInnerProductSpace.mkSorryProofs
 
 instance (X) [SemiInnerProductSpace K X] (ι) [Fintype ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
-instance (priority:=low) (ι) (X : ι → Type) [∀ i, SemiInnerProductSpace K (X i)] [Fintype ι] : SemiInnerProductSpace K ((i : ι) → X i) 
+instance (priority:=low) (ι) (X : ι → Type) [∀ i, SemiInnerProductSpace K (X i)] [Fintype ι] : SemiInnerProductSpace K ((i : ι) → X i)
   := SemiInnerProductSpace.mkSorryProofs
-

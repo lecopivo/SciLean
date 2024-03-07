@@ -30,13 +30,13 @@ instance (priority:=low) : TypeWithProj α Unit (fun _ => α) where
   left_inv := sorry_proof
   right_inv := sorry_proof
 
-instance [TypeWithProj α αIdx αType] [TypeWithProj β βIdx βType] 
+instance [TypeWithProj α αIdx αType] [TypeWithProj β βIdx βType]
   : TypeWithProj (α×β) (Sum αIdx βIdx) (Prod.TypeFun αType βType) where
   proj := fun (x,y) i =>
     match i with
     | .inl a => TypeWithProj.proj x a
     | .inr b => TypeWithProj.proj y b
-  intro := fun f => (TypeWithProj.intro (fun a => f (.inl a)), 
+  intro := fun f => (TypeWithProj.intro (fun a => f (.inl a)),
                      TypeWithProj.intro (fun b => f (.inr b)))
   modify := fun i f (x,y) =>
     match i with

@@ -9,14 +9,14 @@ import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
 import SciLean.Util.SorryProof
 import SciLean.Tactic.AnalyzeConstLambda
- 
+
 open Lean Meta.Simp Qq
 
 namespace SciLean
 
 /-- Gadget for marking parameters for `fprop` and `ftrans` tactics.
 
-Parameters marked like this are usually hard to prove. Right now, they are 
+Parameters marked like this are usually hard to prove. Right now, they are
 usually discharged with sorry.
 -/
 @[reducible] def fpropParam (α : Sort u) : Sort u := α
@@ -43,7 +43,7 @@ initialize registerOption `linter.fpropDeclName { defValue := true, descr := "su
 
 
 
-open Meta 
+open Meta
 
 
 structure Config where
@@ -109,7 +109,7 @@ initialize fpropExt : PersistentEnvExtension (Name × Name) (Name × FPropExt) (
 
 def getFPropName? (e : Expr) : Option Name := e.getAppFn.constName?
 
-/-- 
+/--
   Returns function property name, its extension and the function if `e` is function property expression.
  -/
 def getFProp? (e : Expr) : CoreM (Option (Name × FPropExt × Expr)) := do
@@ -125,7 +125,7 @@ def getFProp? (e : Expr) : CoreM (Option (Name × FPropExt × Expr)) := do
 
   return (fpropName, ext, f)
 
-/-- 
+/--
   Returns function transformation info if `e` is function tranformation expression.
  -/
 def getFPropExt? (e : Expr) : CoreM (Option FPropExt) := do
@@ -133,7 +133,7 @@ def getFPropExt? (e : Expr) : CoreM (Option FPropExt) := do
     | return none
   return ext
 
-/-- 
+/--
   Returns function transformation info if `e` is function btranformation expression.
  -/
 def getFPropFun? (e : Expr) : CoreM (Option Expr) := do
@@ -149,7 +149,7 @@ def getFPropFun? (e : Expr) : CoreM (Option Expr) := do
 -- initialize registerTraceClass `trace.Tactic.fprop.new_property
 
 local instance : Ord Name := ⟨Name.quickCmp⟩
-/-- 
+/--
 This holds a collection of property theorems for a fixed constant
 -/
 def FPropRules := Std.RBMap Name (Std.RBSet Name compare /- maybe (Std.RBSet SimTheorem ...) -/) compare
@@ -159,7 +159,7 @@ namespace FPropRules
   instance : Inhabited FPropRules := by unfold FPropRules; infer_instance
   instance : ToString FPropRules := ⟨fun s => toString (s.toList.map fun (n,r) => (n,r.toList))⟩
 
-  def insert (fp : FPropRules) (property : Name) (thrm : Name) : FPropRules := 
+  def insert (fp : FPropRules) (property : Name) (thrm : Name) : FPropRules :=
     fp.alter property (λ p? =>
       match p? with
       | some p => some (p.insert thrm)
@@ -172,17 +172,17 @@ end FPropRules
 private def FPropRules.merge! (_ : Name) (fp fp' : FPropRules) :  FPropRules :=
   fp.mergeWith (t₂ := fp') λ _ p q => p.union q
 
-initialize FPropRulesExt : MergeMapDeclarationExtension FPropRules 
+initialize FPropRulesExt : MergeMapDeclarationExtension FPropRules
   ← mkMergeMapDeclarationExtension ⟨FPropRules.merge!, sorry_proof⟩
 
 open Lean Qq Meta Elab Term in
-initialize funTransRuleAttr : TagAttribute ← 
-  registerTagAttribute 
+initialize funTransRuleAttr : TagAttribute ←
+  registerTagAttribute
     `fprop
-    "Attribute to tag the basic rules for a function property." 
+    "Attribute to tag the basic rules for a function property."
     (validate := fun ruleName => do
-      let env ← getEnv 
-      let .some ruleInfo := env.find? ruleName 
+      let env ← getEnv
+      let .some ruleInfo := env.find? ruleName
         | throwError s!"Can't find a constant named `{ruleName}`!"
 
       let rule := ruleInfo.type
@@ -198,13 +198,13 @@ To register function transformation call:
 #eval show Lean.CoreM Unit from do
   FProp.FPropExt.insert <name> <info>
 ```
-where <name> is name of the function transformation and <ext> is corresponding `FPropExp`. 
+where <name> is name of the function transformation and <ext> is corresponding `FPropExp`.
 "
 
           let data ← analyzeConstLambda f
 
           let suggestedRuleName :=
-            data.constName 
+            data.constName
               |>.append data.declSuffix
               |>.append (transName.getString.append "_rule")
 
@@ -213,7 +213,7 @@ where <name> is name of the function transformation and <ext> is corresponding `
             logWarning s!"suggested name for this rule is {suggestedRuleName}"
 
           FPropRulesExt.insert data.constName (FPropRules.empty.insert transName ruleName)
-      )           
+      )
 
 open Meta in
 def getFPropRules (funName fpropName : Name) : CoreM (Array SimpTheorem) := do
@@ -225,13 +225,10 @@ def getFPropRules (funName fpropName : Name) : CoreM (Array SimpTheorem) := do
     | return #[]
 
   let rules : List SimpTheorem ← rules.toList.mapM fun r => do
-    pure { 
+    pure {
       proof  := mkConst r
       origin := .decl r
       rfl    := false
     }
 
   return rules.toArray
-
-
-  

@@ -3,17 +3,17 @@ import SciLean.Core
 
 namespace SciLean
 
-  -- def cross (x y : ℝ^{3}) : ℝ^{3} := 
+  -- def cross (x y : ℝ^{3}) : ℝ^{3} :=
   --   Vec3.mk (x.y*y.z - x.z*y.y) (x.z*y.x - x.x*y.z) (x.x*y.y - x.y*y.x)
   -- argument x
-  --   isLin := sorry, isSmooth, diff_simp, 
-  --   hasAdjoint := sorry, 
+  --   isLin := sorry, isSmooth, diff_simp,
+  --   hasAdjoint := sorry,
   --   adj_simp := cross y x' by sorry,
   --   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
   --   adjDiff_simp by simp[adjDiff]
   -- argument y
-  --   isLin := sorry, isSmooth, diff_simp, 
-  --   hasAdjoint := sorry, 
+  --   isLin := sorry, isSmooth, diff_simp,
+  --   hasAdjoint := sorry,
   --   adj_simp := cross y' x by sorry,
   --   hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
   --   adjDiff_simp by simp[adjDiff]

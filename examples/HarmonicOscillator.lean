@@ -1,7 +1,8 @@
 import SciLean
 import SciLean.Core.Approx.ApproxLimit
-import SciLean.Tactic.LetNormalize
-import SciLean.Tactic.PullLimitOut
+import SciLean.Core.Notation.Gradient
+-- import SciLean.Tactic.LetNormalize
+-- import SciLean.Tactic.PullLimitOut
 import SciLean.Modules.DifferentialEquations
 
 set_default_scalar Float
@@ -15,12 +16,13 @@ approx solver (m k : Float)
                                        -∇ (x':=x), H m k x' p))
 by
   -- Unfold Hamiltonian and compute gradients
-  unfold H
-  symdiff
-  
+  unfold H scalarGradient
+  autodiff; autodiff
+
   -- Apply RK4 method
-  rw [odeSolve_fixed_dt rungeKutta4 sorry_proof]
-  
+  simp_rw (config:={zeta:=false}) [odeSolve_fixed_dt rungeKutta4 sorry_proof]
+
+  -- todo: make approx_limit ignore leading let bindings
   approx_limit n := sorry_proof
 
 def main : IO Unit := do
@@ -36,8 +38,8 @@ def main : IO Unit := do
   let mut (x,p) := (x₀, p₀)
 
   for _ in [0:50] do
-  
-    (x, p) := solver m k substeps t (t+Δt) (x, p) 
+
+    (x, p) := solver m k substeps t (t+Δt) (x, p)
     t += Δt
 
     -- print

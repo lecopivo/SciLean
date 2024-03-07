@@ -17,7 +17,7 @@ namespace Polynomial
 
   variable {ι : Type} {K : Type} [Add K] [Mul K] [One K] [Zero K] [Neg K]
 
-  namespace Expr 
+  namespace Expr
 
     open Symbolic.Expr
 
@@ -36,7 +36,7 @@ namespace Polynomial
 
   notation " 𝓢𝓟[" ι ", " K "] " => Polynomial ι K
   notation " 𝓢𝓟[" ι " ] "       => Polynomial ι ℝ
-  
+
   -- I should define FinEnumBasis over some set/ring
   -- notation " 𝓟[" V ", " K "] " => Polynomial (FinEnumBasis.index V) K
   notation " 𝓟[" V "] " => Polynomial (Basis.Trait.Index V) (Basis.Trait.Coeff V)
@@ -59,7 +59,7 @@ namespace Polynomial
   instance : Zero (Polynomial ι K) := ⟨Quot.mk _ 0⟩
   instance : One  (Polynomial ι K) := ⟨Quot.mk _ 1⟩
 
-  -- The string actually depends on the represenative element, 
+  -- The string actually depends on the represenative element,
   -- thus it has to be hidden behind an opaque constant
   -- The sorry here is impossible to be proven
   constant toString' [ToString ι] [ToString K] (p : Polynomial ι K)  : String :=
@@ -70,12 +70,12 @@ namespace Polynomial
   def toVal {R} [CommRing R] (p : Polynomial ι R) (vars : ι → R) : R :=
     Quot.lift (λ e => e.toVal vars) sorry p
 
-  instance {R} [CommRing R] : CoeFun (Polynomial (Fin 1) R) (λ _ => R → R) 
+  instance {R} [CommRing R] : CoeFun (Polynomial (Fin 1) R) (λ _ => R → R)
     := ⟨λ p x => p.toVal λ _ => x⟩
-  -- instance {X} [FinEnumBasis X] : CoeFun (Polynomial (Basis.index X) ℝ) (λ _ => X → ℝ) 
+  -- instance {X} [FinEnumBasis X] : CoeFun (Polynomial (Basis.index X) ℝ) (λ _ => X → ℝ)
   --   := ⟨λ p x => p.toVal λ i => FinEnumBasis.proj i x⟩
 
-  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomial ι K 
+  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : Polynomial ι K
     := Quot.mk _ (Expr.var i)
 
   def expand {ι} [Zero K]
@@ -83,7 +83,7 @@ namespace Polynomial
     [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
     (x : Polynomial ι K) : Polynomial ι K :=
     Quot.mk _ <|
-    Quot.lift 
+    Quot.lift
       (λ e => e.expand)
       sorry x
 
@@ -91,7 +91,7 @@ namespace Polynomial
     [LT ι] [∀ i j : ι, Decidable (i < j)] [DecidableEq ι]
     [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
     (x : Polynomial ι K) : Polynomial ι K :=
-    Quot.mk _ <| Quot.lift 
+    Quot.mk _ <| Quot.lift
       (λ e =>
          e |> Expr.expand_to_monomials
            |> Array.map Monomial.symReduce

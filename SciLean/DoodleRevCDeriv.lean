@@ -5,7 +5,7 @@ import SciLean.Util.RewriteBy
 
 open SciLean
 
-variable 
+variable
   {K : Type} [RealScalar K]
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
@@ -16,7 +16,7 @@ variable
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
-set_default_scalar K 
+set_default_scalar K
 
 variable (K)
 theorem revCDeriv.pi_map_rule {ι} [EnumType ι]
@@ -24,14 +24,14 @@ theorem revCDeriv.pi_map_rule {ι} [EnumType ι]
   (hf : ∀ i, HasAdjDiff K (f · i))
   (hg' : ∀ j, HasAdjDiff K (g · j))
   : (revCDeriv K fun x i => f (g x i) i)
-    = 
+    =
     let df' := fun i => gradient K (fun y => f y i)
-    fun x => 
+    fun x =>
       let ydg := revCDeriv K g x
-      (fun i => f (ydg.1 i) i, 
-       fun dz => 
+      (fun i => f (ydg.1 i) i,
+       fun dz =>
          let dy := fun i => df' i (ydg.1 i) (dz i)
-         ydg.2 dy) := 
+         ydg.2 dy) :=
 by
   sorry
 
@@ -39,12 +39,12 @@ theorem revCDeriv.pi_prod_rule {ι} [EnumType ι]
   (g₁ : W → ι → Y₁) (g₂ : W → ι → Y₂)
   : (<∂ w, fun i => (g₁ w i, g₂ w i))
     =
-    fun w => 
+    fun w =>
       let ydg₁ := <∂ g₁ w
       let ydg₂ := <∂ g₂ w
       (fun i => (ydg₁.1 i, ydg₂.1 i),
-       fun dy => 
-         ydg₁.2 (fun i => (dy i).1) + ydg₂.2 (fun i => (dy i).2)) := 
+       fun dy =>
+         ydg₁.2 (fun i => (dy i).1) + ydg₂.2 (fun i => (dy i).2)) :=
 by
   sorry_proof
 
@@ -54,8 +54,8 @@ theorem revCDeriv.pi_uncurry_rule {ι κ} [EnumType ι] [EnumType κ]
     =
     fun x =>
       let ydf := <∂ x':=x, fun ij : ι×κ => f x' ij.1 ij.2
-      (fun i j => ydf.1 (i,j), 
-       fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) := 
+      (fun i j => ydf.1 (i,j),
+       fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) :=
 by
   sorry
 
@@ -66,8 +66,8 @@ theorem revCDeriv.pi_curry_rule {ι κ} [EnumType ι] [EnumType κ]
     =
     fun x =>
       let ydf := <∂ x':=x, fun i j => f x' i j
-      (fun ij => ydf.1 ij.1 ij.2, 
-       fun dy => ydf.2 (fun i j => dy (i,j))) := 
+      (fun ij => ydf.1 ij.1 ij.2,
+       fun dy => ydf.2 (fun i j => dy (i,j))) :=
 by
   sorry
 
@@ -77,36 +77,36 @@ theorem GetElem.getElem.arg_xs.revCDeriv_pi_rule {IX I X} [ArrayType IX I X] [In
   (xs : W → IX) (hxs : HasAdjDiff K xs)
   : (<∂ w, fun i => (xs w)[i])
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ xs w
-      (fun i => xdx.1[i], 
-       fun dx => 
+      (fun i => xdx.1[i],
+       fun dx =>
          let dx := introElem fun i => dx i
-         xdx.2 dx) := 
+         xdx.2 dx) :=
 by
   sorry_proof
 
 
 theorem GetElem.getElem.arg_xs.revCDeriv_pi_rule_aa {IX I J X : Type _} [ArrayType IX I X] [Index I] [EnumType J] [Nonempty J] [SemiInnerProductSpace K X]
-  (xs : W → IX) (h : J → I) 
+  (xs : W → IX) (h : J → I)
   (hxs : HasAdjDiff K xs) (hh : Function.Bijective h)
   : (<∂ w, fun j => (xs w)[h j])
     =
     let ih := h.invFun
-    fun w => 
+    fun w =>
       let xdx := <∂ xs w
-      (fun j : J => xdx.1[h j], 
+      (fun j : J => xdx.1[h j],
        fun dx =>
          let dx := introElem fun i => dx (ih i)
-         xdx.2 dx) := 
+         xdx.2 dx) :=
 by
   sorry_proof
 
 
 structure IsDecomposition (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) : Prop where
-  is_dec : 
+  is_dec :
     (∀ x, q (p₁ x) (p₂ x) = x)
-    ∧ 
+    ∧
     (∀ x₁ x₂, p₁ (q x₁ x₂) = x₁ ∧ p₂ (q x₁ x₂) = x₂)
 
 
@@ -116,12 +116,12 @@ theorem GetElem.getElem.arg_xs.revCDeriv_pi_rule_bb {IX I J X J₁ J₂ : Type _
   (hxs : HasAdjDiff K xs) (hdec : ∀ j, h' (p₁ j) = h j) (isDec : IsDecomposition p₁ p₂ q)
   : (<∂ w, fun j => (xs w)[h j])
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ w':=w, fun j₁ => (xs w')[h' j₁]
-      (fun j : J => xdx.1 (p₁ j), 
-       fun dx => 
+      (fun j : J => xdx.1 (p₁ j),
+       fun dx =>
          let dx := fun j₁ => ∑ j₂, dx (q j₁ j₂)
-         xdx.2 dx) := 
+         xdx.2 dx) :=
 by
   ftrans
   funext x
@@ -138,8 +138,8 @@ theorem revCDeriv.pi_swap_rule {ι κ} [EnumType ι] [EnumType κ]
     =
     fun x =>
       let ydf := <∂ x':=x, fun j i => f x' i j
-      (fun i j => ydf.1 j i, 
-       fun dy => ydf.2 (fun j i => dy i j)) := 
+      (fun i j => ydf.1 j i,
+       fun dy => ydf.2 (fun j i => dy i j)) :=
 by
   sorry
 
@@ -149,20 +149,20 @@ variable {K}
 
 theorem revCDeriv.factor_through_app [Index I] [Nonempty I] [Index J]
   (f : I → Y → Z) (g : X → J → Y) (h : I → J)
-  (hf : ∀ i, HasAdjDiff K (f i)) (hg : HasAdjDiff K g) 
+  (hf : ∀ i, HasAdjDiff K (f i)) (hg : HasAdjDiff K g)
   (hg' : ∀ j, HasAdjDiff K (g · j)) (hh : Function.Bijective h)
   : (revCDeriv K fun x i => f i ((g x) (h i)))
-    = 
+    =
     let df' := fun i => gradient K (fun y => f i y)
     let ih := Function.invFun h
-    fun x => 
+    fun x =>
       let jydg := revCDeriv K g x
-      (fun i => f i (jydg.1 (h i)), 
-       fun dz => 
+      (fun i => f i (jydg.1 (h i)),
+       fun dz =>
          let rhs := fun j => df' (ih j) (jydg.1 j) (dz (ih j))
-         jydg.2 rhs) := 
+         jydg.2 rhs) :=
 by
-  conv => 
+  conv =>
     lhs
     autodiff
     simp [revCDeriv]
@@ -176,18 +176,18 @@ by
 
 theorem revCDeriv.factor_through_app' [Index I]
   (f : I → Y → Z) (g : X → I → Y)
-  (hf : ∀ i, HasAdjDiff K (f i)) (hg : ∀ i, HasAdjDiff K (g · i)) 
+  (hf : ∀ i, HasAdjDiff K (f i)) (hg : ∀ i, HasAdjDiff K (g · i))
   : (revCDeriv K fun x i => f i ((g x) i))
-    = 
+    =
     let df' := fun i => gradient K (fun y => f i y)
-    fun x => 
+    fun x =>
       let jydg := revCDeriv K g x
-      (fun i => f i (jydg.1 i), 
-       fun dz => 
+      (fun i => f i (jydg.1 i),
+       fun dz =>
          let rhs := fun i => df' i (jydg.1 i) (dz i)
-         jydg.2 rhs) := 
+         jydg.2 rhs) :=
 by
-  conv => 
+  conv =>
     lhs
     autodiff
     simp [revCDeriv]
@@ -201,39 +201,39 @@ by
 
 theorem revCDeriv.factor_through_app'' [Index I]
   (f : I → Y₁ → Y₂ → Z) (g₁ : X → I → Y₁) (g₂ : X → I → Y₂)
-  -- (hf : ∀ i, HasAdjDiff K (f i)) (hg : ∀ i, HasAdjDiff K (g · i)) 
+  -- (hf : ∀ i, HasAdjDiff K (f i)) (hg : ∀ i, HasAdjDiff K (g · i))
   : (revCDeriv K fun x i => f i (g₁ x i) (g₂ x i))
-    = 
+    =
     let df₁ := fun i y₂ => gradient K (fun y₁ => f i y₁ y₂)
     let df₂ := fun i y₁ => gradient K (fun y₂ => f i y₁ y₂)
-    fun x => 
+    fun x =>
       let ydg₁ := <∂ x':=x, g₁ x'
       let ydg₂ := <∂ x':=x, g₂ x'
-      (fun i => f i (ydg₁.1 i) (ydg₂.1 i), 
-       fun dz => 
+      (fun i => f i (ydg₁.1 i) (ydg₂.1 i),
+       fun dz =>
          let dy₁ := fun i => df₁ i (ydg₂.1 i) (ydg₁.1 i) (dz i)
          let dy₂ := fun i => df₂ i (ydg₁.1 i) (ydg₂.1 i) (dz i)
-         ydg₁.2 dy₁ + ydg₂.2 dy₂) := 
+         ydg₁.2 dy₁ + ydg₂.2 dy₂) :=
 by
   sorry_proof -- it should be possible to push the sum insidep and be done
 
 
-theorem revCDeriv.factor_through_getElem 
-  {I J JY} [ArrayType JY J Y] [Index I] [Nonempty I] [Index J] 
+theorem revCDeriv.factor_through_getElem
+  {I J JY} [ArrayType JY J Y] [Index I] [Nonempty I] [Index J]
   (f : I → Y → Z) (g : X → JY) (h : I → J)
   (hf : ∀ i, HasAdjDiff K (f i)) (hg : HasAdjDiff K g) (hg' : ∀ i, HasAdjDiff K (fun x => (g x)[i])) (hh : Function.Bijective h)
   : (revCDeriv K fun x i => f i ((g x)[h i]))
-    = 
+    =
     let df' := fun i => gradient K (fun y => f i y)
     let ih := Function.invFun h
-    fun x => 
+    fun x =>
       let jydg := revCDeriv K g x
-      (fun i => f i (jydg.1[h i]), 
-       fun dz => 
+      (fun i => f i (jydg.1[h i]),
+       fun dz =>
          let rhs := introElem (Cont:=JY) (fun j => df' (ih j) (jydg.1[j]) (dz (ih j)))
-         jydg.2 rhs) := 
+         jydg.2 rhs) :=
 by
-  conv => 
+  conv =>
     lhs
     autodiff
     simp [revCDeriv]
@@ -254,8 +254,8 @@ variable {ι κ : Type} [Index κ] [Index ι] [Nonempty ι] [Nonempty κ] [Plain
 --     =
 --     fun x =>
 --       let ydf := <∂ x':=x, fun ij : ι×κ => f ij.1 ij.2 x'
---       (fun i j => ydf.1 (i,j), 
---        fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) := 
+--       (fun i j => ydf.1 (i,j),
+--        fun dy => ydf.2 (fun ij : ι×κ => dy ij.1 ij.2)) :=
 -- by
 --   sorry
 
@@ -264,8 +264,8 @@ theorem revCDeriv.pi_introElem_rule (f : ι → κ → X → K) (hf : ∀ i j, H
     =
     fun x =>
       let ydf := <∂ x':=x, fun i j => f i j x'
-      (fun i => ⊞ j => ydf.1 i j, 
-       fun dy => 
+      (fun i => ⊞ j => ydf.1 i j,
+       fun dy =>
          ydf.2 (fun i j => (dy i)[j])) := sorry
 
 --------------------------------------------------------------------------------
@@ -275,35 +275,35 @@ theorem revCDeriv.pi_introElem_rule (f : ι → κ → X → K) (hf : ∀ i j, H
 example (x : W → K ^ ι) (hx : ∀ i, HasAdjDiff K (fun w => (x w)[i])) (hx : HasAdjDiff K x)
   : <∂ (fun w i => (x w)[i])
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ (w':=w), x w'
       (fun i => xdx.1[i], fun dy => let dy' := ⊞ i => dy i; xdx.2 dy') :=
-by 
-  conv => 
+by
+  conv =>
     lhs
     simp (config := {zeta := false}) only [revCDeriv.factor_through_getElem (K:=K) (fun _ y => y) (fun w => x w) (fun i => i) sorry sorry sorry sorry]
     autodiff
 
 
-example 
+example
   : <∂ (fun (x : K ^ ι) i => x[i])
     =
-    fun x => 
+    fun x =>
       (fun i => x[i], fun dy => ⊞ i => dy i) :=
-by 
-  conv => 
+by
+  conv =>
     lhs
     simp (config := {zeta := false}) only [revCDeriv.factor_through_getElem (K:=K) (fun _ y => y) (fun x : K ^ ι => x) (fun i => i) sorry sorry sorry sorry]
     autodiff
 
 
-example 
+example
   : <∂ (fun (x : K ^ ι) i => (2:K) * x[i])
     =
-    fun x => 
+    fun x =>
       (fun i => (2:K) * x[i], fun dy => ⊞ i => (2:K) * dy i) :=
-by 
-  conv => 
+by
+  conv =>
     lhs
     simp (config := {zeta := false}) only [revCDeriv.factor_through_getElem (K:=K) (fun _ y => 2 * y) (fun x : K ^ ι => x) (fun i => i) sorry sorry sorry sorry]
     autodiff
@@ -313,20 +313,20 @@ by
 -- <∂ w, fun i => ∑ j, A i j * (x w)[j] ----------------------------------------
 --------------------------------------------------------------------------------
 
-example 
+example
   (A : ι → κ → K) (x : W → κ →  K) (hx : HasAdjDiff K x)
   : <∂ (fun w i => ∑ j, A i j * (x w j))
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ x w
-      (fun i => ∑ j, A i j * xdx.1 j, 
-       fun dy => 
+      (fun i => ∑ j, A i j * xdx.1 j,
+       fun dy =>
          let dx := fun j => ∑ i, A i j * dy i
-         xdx.2 dx) := 
-by 
-  conv => 
+         xdx.2 dx) :=
+by
+  conv =>
     lhs
-    conv => 
+    conv =>
       enter [x,2,x]
       simp only [← sum_lambda_swap]
     simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
@@ -335,21 +335,21 @@ by
     simp (config := {zeta:=false}) only [revCDeriv.factor_through_app' (K:=K) (fun j y i => A i j * y) x sorry sorry]
     autodiff
     autodiff
-    
-example 
+
+example
   (A : ι → κ → K) (x : W → K ^ κ) (hx : HasAdjDiff K x)
   : <∂ (fun w i => ∑ j, A i j * (x w)[j])
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ x w
-      (fun i => ∑ j, A i j * xdx.1[j], 
-       fun dy => 
+      (fun i => ∑ j, A i j * xdx.1[j],
+       fun dy =>
          let dx := ⊞ j => ∑ i, A i j * dy i
-         xdx.2 dx) := 
-by 
-  conv => 
+         xdx.2 dx) :=
+by
+  conv =>
     lhs
-    conv => 
+    conv =>
       enter [x,2,x]
       simp only [← sum_lambda_swap]
     simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
@@ -358,20 +358,20 @@ by
     let_normalize
     simp (config := {zeta:=false}) only
 
-example 
+example
   (A : ι → κ → K) (x : W → K ^ κ) (hx : HasAdjDiff K x)
   : (<∂ w, ⊞ i => ∑ j, A i j * (x w)[j])
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ x w
-      (⊞ i => ∑ j, A i j * xdx.1[j], 
-       fun dy => 
+      (⊞ i => ∑ j, A i j * xdx.1[j],
+       fun dy =>
          let dx := ⊞ j => ∑ i, A i j * dy[i]
-         xdx.2 dx) := 
-by 
-  conv => 
+         xdx.2 dx) :=
+by
+  conv =>
     lhs
-    conv => 
+    conv =>
       enter [x,2,x]
       simp only [← ArrayType.sum_introElem]
     simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
@@ -391,21 +391,21 @@ by
 example (A : W → (ι×κ) → K) (x : κ → K) (hA : ∀ ij, HasAdjDiff K (A · ij))
   : (<∂ w, fun i => ∑ j, A w (i,j) * x j)
     =
-    fun w => 
+    fun w =>
       let AdA := <∂ A w
       (fun i : ι => ∑ (j : κ), AdA.1 (i,j) * x j,
-       fun dy => 
+       fun dy =>
          let dA := fun ij => x ij.2 * dy ij.1
-         AdA.2 dA) := 
-by 
-  conv => 
+         AdA.2 dA) :=
+by
+  conv =>
     lhs
-    conv => 
+    conv =>
       enter [w,2,w']
       simp only [← sum_lambda_swap]
     simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
     simp (config := {zeta:=false}) only [revCDeriv.pi_uncurry_rule _ sorry]
-    simp (config := {zeta:=false}) only 
+    simp (config := {zeta:=false}) only
       [revCDeriv.factor_through_app (K:=K)
         (fun (ji : κ×ι) A => A * x ji.1) A (fun ji => (ji.2, ji.1)) sorry sorry sorry sorry]
     let_normalize
@@ -421,22 +421,22 @@ by
 example (A : W → DataArrayN K (ι×κ)) (x : K ^ κ) (hA : HasAdjDiff K A)
   : (<∂ w, ⊞ i => ∑ j, (A w)[(i,j)] * x[j])
     =
-    fun w => 
+    fun w =>
       let AdA := <∂ A w
       (⊞ i : ι => ∑ (j : κ), AdA.1[(i,j)] * x[j],
-       fun dy => 
+       fun dy =>
          let dA := ⊞ ij =>  x[ij.2] * dy[ij.1]
-         AdA.2 dA) := 
-by 
-  conv => 
+         AdA.2 dA) :=
+by
+  conv =>
     lhs
-    conv => 
+    conv =>
       enter [A,2,A']
       simp only [← ArrayType.sum_introElem]
     simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
     simp (config := {zeta:=false}) only [revCDeriv.pi_introElem_rule _ sorry]
     simp (config := {zeta:=false}) only [revCDeriv.pi_uncurry_rule _ sorry]
-    simp (config := {zeta:=false}) only 
+    simp (config := {zeta:=false}) only
       [revCDeriv.factor_through_getElem (K:=K)
         (fun (ji : κ×ι) A => A * x[ji.1]) A (fun ji => (ji.2, ji.1)) sorry sorry sorry sorry]
     let_normalize
@@ -445,29 +445,29 @@ by
       [show (Function.invFun fun ji : κ×ι => (ji.snd, ji.fst))
             =
             fun ij : ι×κ => (ij.2, ij.1) by sorry]
-  
 
-  
+
+
 --------------------------------------------------------------------------------
 -- <∂ w, fun i => ∑ j, A w (i,j) * (x w) j -----------------------------------------
 --------------------------------------------------------------------------------
 
-example (A : W → (ι×κ) → K) (x : W → κ → K) 
+example (A : W → (ι×κ) → K) (x : W → κ → K)
   (hA : ∀ ij, HasAdjDiff K (A · ij)) (hx : ∀ j, HasAdjDiff K (x · j))
   : (<∂ w, fun i => ∑ j, A w (i,j) * (x w) j)
     =
-    fun w => 
+    fun w =>
       let AdA := <∂ A w
       let xdx := <∂ x w
-      (fun i => ∑ j, AdA.1 (i,j) * xdx.1 j, 
-       fun dy => 
+      (fun i => ∑ j, AdA.1 (i,j) * xdx.1 j,
+       fun dy =>
          let dA := fun ij : ι×κ => xdx.1 ij.2 * dy ij.1
          let dx := fun j : κ => ∑ i, AdA.1 (i,j) * dy i
          AdA.2 dA + xdx.2 dx) :=
-by 
-  conv => 
+by
+  conv =>
     lhs
-    conv => 
+    conv =>
       enter [w,2,w']
       simp only [← sum_lambda_swap]
     simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
@@ -482,7 +482,7 @@ by
     let_normalize
     let_normalize
     simp (config := {zeta:=false}) only
-    conv => 
+    conv =>
       enter [w,ih,ydg₁,ydg₂]
       autodiff
     simp (config := {zeta:=false}) only
@@ -492,22 +492,22 @@ by
 
 
 
-example (A : W → DataArrayN K (ι×κ)) (x : W → K ^ κ) 
+example (A : W → DataArrayN K (ι×κ)) (x : W → K ^ κ)
   -- (hA : ∀ ij, HasAdjDiff K (A · ij)) (hx : ∀ j, HasAdjDiff K (x · j))
   : (<∂ w, ⊞ i => ∑ j, (A w)[(i,j)] * (x w)[j])
     =
-    fun w => 
+    fun w =>
       let AdA := <∂ A w
       let xdx := <∂ x w
-      (⊞ i => ∑ j, AdA.1[(i,j)] * xdx.1[j], 
-       fun dy => 
+      (⊞ i => ∑ j, AdA.1[(i,j)] * xdx.1[j],
+       fun dy =>
          let dA := ⊞ ij : ι×κ => xdx.1[ij.2] * dy[ij.1]
          let dx := ⊞ j : κ => ∑ i, AdA.1[(i,j)] * dy[i]
          AdA.2 dA + xdx.2 dx) :=
-by 
-  conv => 
+by
+  conv =>
     lhs
-    conv => 
+    conv =>
       enter [w,2,w']
       simp only [← ArrayType.sum_introElem]
     simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
@@ -534,25 +534,25 @@ by
             fun ij : ι×κ => (ij.2, ij.1) by sorry]
     let_normalize
     simp (config := {zeta:=false})
-  
-  
 
 
-example (x y z : W → K ^ κ) 
-  : (<∂ w, ∑ j, (x w)[j] * (y w)[j] * (z w)[j]) 
+
+
+example (x y z : W → K ^ κ)
+  : (<∂ w, ∑ j, (x w)[j] * (y w)[j] * (z w)[j])
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ x w
       let ydy := <∂ y w
       let zdz := <∂ z w
-      (∑ j, xdx.1[j] * ydy.1[j] * zdz.1[j], 
-       fun dr => 
+      (∑ j, xdx.1[j] * ydy.1[j] * zdz.1[j],
+       fun dr =>
          let dx := ⊞ j : κ => ydy.1[j] * (zdz.1[j] * dr)
          let dy := ⊞ j : κ => xdx.1[j] * (zdz.1[j] * dr)
          let dz := ⊞ j : κ => xdx.1[j] * ydy.1[j] * dr
          xdx.2 dx + ydy.2 dy + zdz.2 dz) :=
-by 
-  conv => 
+by
+  conv =>
     lhs
     simp (config := {zeta:=false}) only [EnumType.sum.arg_f.revCDeriv_rule _ sorry]
     simp (config := {zeta:=false}) only
@@ -580,15 +580,15 @@ example (x y : W → K ^ κ) (hx : HasAdjDiff K x) (hy : HasAdjDiff K x)
   (hx : ∀ i, HasAdjDiff K (fun w => (x w)[i])) (hy : ∀ i, HasAdjDiff K (fun w => (y w)[i]))
   : (<∂ w, fun j => (x w)[j] * (y w)[j])
     =
-    fun w => 
+    fun w =>
       let xdx := <∂ x w
       let ydy := <∂ y w
-      (fun j => xdx.1[j] * ydy.1[j], 
-       fun dr => 
+      (fun j => xdx.1[j] * ydy.1[j],
+       fun dr =>
          let dx := ⊞ j => ydy.1[j] * dr j
          let dy := ⊞ j => xdx.1[j] * dr j
          xdx.2 dx + ydy.2 dy) :=
-by 
+by
   conv =>
     lhs
     autodiff
@@ -602,8 +602,8 @@ open Lean Meta Qq
 
 
 def splitLambdaToComp' (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Expr × Expr) := do
-  match e with 
-  | .lam name _ _ _ => 
+  match e with
+  | .lam name _ _ _ =>
     let e ← instantiateMVars e
     lambdaTelescope e λ xs b => do
     -- withLocalDecl name bi type fun x => do
@@ -646,12 +646,12 @@ def splitLambdaToComp' (e : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := 
       f ← mkUncurryFun zs.size f mk fst snd
 
       return (f, g)
-    
+
   | _ => throwError "Error in `splitLambdaToComp`, not a lambda function!"
 
 
 
-def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with 
+def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with
   piRule := fun e F => do
 
     let n := F.getLamBinderNum
@@ -668,17 +668,17 @@ def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with
       SciLean.FTrans.tryTheorems
         #[{ proof := thrm, origin := .decl ``GetElem.getElem.arg_xs.revCDeriv_pi_rule, rfl := false}]
         revCDeriv.discharger e
-    else 
+    else
 
     -- in case n == 2
 
     if body.isAppOf ``GetElem.getElem then
-      IO.println s!"Is application of getElem!" 
+      IO.println s!"Is application of getElem!"
 
-      let f ← lambdaTelescope F fun xs b => 
+      let f ← lambdaTelescope F fun xs b =>
         mkLambdaFVars #[xs[0]!] (b.getArg! 5)
 
-      let h ← lambdaTelescope F fun xs b => 
+      let h ← lambdaTelescope F fun xs b =>
         mkLambdaFVars #[xs[1]!] (b.getArg! 6)
 
       let .some K := e.getArg? 0 | return none
@@ -690,7 +690,7 @@ def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with
         revCDeriv.discharger e
 
     else if body.isAppOf ``Prod.mk then
-      IO.println s!"Is application of Prod.mk!" 
+      IO.println s!"Is application of Prod.mk!"
 
       -- return none
       let (g₁,g₂) ← lambdaTelescope F fun xs b => do
@@ -703,18 +703,18 @@ def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with
         #[ { proof := thrm, origin := .decl ``revCDeriv.pi_prod_rule, rfl := false} ]
         revCDeriv.discharger e
 
-    else 
-      try 
+    else
+      try
         let (f, g) ← splitLambdaToComp' F
         IO.println (← ppExpr f)
         IO.println (← ppExpr g)
         if (← isDefEq F f) then
-          IO.println s!"split is trivial" 
+          IO.println s!"split is trivial"
           return none
         else
           IO.println s!"split is not trivial"
 
-        IO.println s!"hohoo" 
+        IO.println s!"hohoo"
 
         let .some K := e.getArg? 0 | return none
         let thrm ← mkAppM ``revCDeriv.pi_map_rule #[K, f, g]
@@ -722,12 +722,12 @@ def revCDeriv.modifiedFTransExt := {revCDeriv.ftransExt with
           #[ { proof := thrm, origin := .decl ``revCDeriv.pi_map_rule, rfl := false} ]
           revCDeriv.discharger e
 
-      catch e => 
+      catch e =>
         let m := Exception.toMessageData e
         IO.println s!"failed splitting {← m.format}"
         return none
     }
- 
+
 -- register revCDeriv
 open Lean in
 #eval show CoreM Unit from do
@@ -749,13 +749,13 @@ set_option trace.Meta.Tactic.simp.discharge true in
 set_option trace.Meta.Tactic.simp.rewrite true in
 set_option pp.notation false
 set_option pp.funBinderTypes true
-example 
+example
   : <∂ (fun w i => 2 * (x w)[i] * (y w)[i])
     =
-    0 := 
-by 
+    0 :=
+by
   conv =>
-    lhs 
+    lhs
     ftrans only
     let_normalize
     autodiff
@@ -765,17 +765,17 @@ by
   sorry_proof
 
 
-#check 
+#check
   (<∂ w, fun i => (x w)[i])
   rewrite_by
     autodiff
 
-example 
+example
   : (<∂ w, fun j => (x w)[j])
-    = 
+    =
     0 :=
 by
-  conv => 
+  conv =>
     lhs
     autodiff
   sorry_proof
@@ -785,7 +785,7 @@ example
     =
     0 :=
 by
-  conv => 
+  conv =>
     lhs
     autodiff
   sorry_proof
@@ -794,11 +794,11 @@ set_option profiler true
 
 -- set_option trace.Meta.Tactic.simp.discharge true in
 -- set_option trace.Meta.Tactic.simp.unify true in
-example 
+example
   : <∂ (fun w j i => (A w)[(i,j)])
     =
-    0 := 
-by 
+    0 :=
+by
   conv =>
     lhs
     ftrans only
@@ -807,13 +807,13 @@ by
 
 -- set_option trace.Meta.Tactic.simp.discharge true in
 -- set_option trace.Meta.Tactic.simp.unify true in
-example 
+example
   : <∂ (fun w j i => (A w)[(i,j)] * (x w)[j])
     =
-    0 := 
-by 
+    0 :=
+by
   conv =>
-    lhs 
+    lhs
     ftrans only
     unfold gradient
     ftrans only
@@ -837,14 +837,14 @@ by
 set_option trace.Meta.Tactic.fprop.unify true in
 
 
-example 
-  : <∂ (fun w j => 
+example
+  : <∂ (fun w j =>
             let a := (2:K) * (x w)[j]
             let b := (2:K) + (x w)[j]
             a + b)
     =
-    0 := 
-by   
+    0 :=
+by
   simp (config := {zeta:=false}) only [revCDeriv.revCDeriv.pi_let_rule K (fun w a j => let b := (2:K) + (x w)[j]; a + b) (fun w j => (2:K) * (x w)[j]) sorry sorry]
 
   simp (config := {zeta:=false}) only [revCDeriv.revCDeriv.pi_let_rule K (fun (wx : W×(κ→K)) (b : K) j =>  wx.2 j + b) (fun (wx : W×(κ→K)) j => (2:K) + (x wx.1)[j]) sorry sorry]
@@ -862,7 +862,7 @@ by
   -- let_normalize
 
   -- checkpoint
-  
+
   -- conv =>
   --   enter_let ydg
   --   autodiff
@@ -880,23 +880,23 @@ by
   --   enter [w,a,b]
   --   enter_let zdf
   --   autodiff
-  
-    
+
+
   -- let_normalize
   -- ftrans
   -- unfold gradient
   -- ftrans
   -- let_normalize (config := {removeLambdaLet := false})
   -- let_normalize (config := {removeLambdaLet := false})
-  
+
   -- ftrans
 
-  
+
   -- rw[h]
   -- simp (config := {zeta:=false}) only [revCDeriv.revCDeriv.pi_let_rule _ (fun w a j => let b := 2 + (x w)[j]; a + b) (fun w j => 2 * (x w)[j]) sorry sorry]
 
 
-#eval show MetaM Unit from do 
+#eval show MetaM Unit from do
   withLocalDeclQ `x default q(Float → DataArrayN Float (Idx 10)) fun x => do
   let e := q(fun w i => ($x w)[i])
   let (f, g) ← splitLambdaToComp' e
@@ -941,7 +941,7 @@ open Qq
 
 
 
-  
+
 
 
 def pseudoInverse (A B : Q(Type)) (f : Q($A → $B)) : (C : Q(Type)) × (c : Q($C)) × (g : Q($A → $C)) := sorry

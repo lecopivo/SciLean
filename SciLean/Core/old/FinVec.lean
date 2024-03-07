@@ -4,7 +4,7 @@ open BigOperators ComplexConjugate
 
 namespace SciLean
 
-/-- Basis of the space `X` over the field `K` indexed by `ι` 
+/-- Basis of the space `X` over the field `K` indexed by `ι`
 
 The class `FinVec ι K X` guarantees that any element `x : X` can be writtens as:
 ```
@@ -15,7 +15,7 @@ class Basis (ι : outParam $ Type v) (K : outParam $ Type w)(X : Type u)  where
   basis : ι → X
   proj  : ι → X → K
 
-/-- Dual basis of the space `X` over the field `K` indexed by `ι` 
+/-- Dual basis of the space `X` over the field `K` indexed by `ι`
 
 The class `FinVec ι K X` guarantees that any element `x : X` can be writtens as:
 ```
@@ -40,19 +40,19 @@ class BasisDuality (X : Type u) where
 
 section Basis
 
-  instance (K : Type _) [IsROrC K] : Basis Unit K K := 
+  instance (K : Type _) [IsROrC K] : Basis Unit K K :=
   {
     basis := λ _ => 1
     proj  := λ _ x => x
   }
 
-  instance (K : Type _) [IsROrC K] : DualBasis Unit K K := 
+  instance (K : Type _) [IsROrC K] : DualBasis Unit K K :=
   {
     dualBasis := λ _ => 1
     dualProj  := λ _ x => x
   }
 
-  instance (K : Type _) [IsROrC K] : BasisDuality K := 
+  instance (K : Type _) [IsROrC K] : BasisDuality K :=
   {
     toDual := λ x => x
     fromDual  := λ x => x
@@ -119,12 +119,12 @@ theorem dualBasis_ext {ι K X} {_ : Fintype ι} [DecidableEq ι] [IsROrC K] [Fin
 
 theorem inner_proj_dualProj {ι K X} {_ : Fintype ι} [DecidableEq ι] [IsROrC K] [FinVec ι K X] (x y : X)
   : ⟪x, y⟫[K] = ∑ i, ⅆ i x * ⅆ' i y :=
-by 
-  calc 
+by
+  calc
     ⟪x, y⟫[K] = ∑ i, ∑ j, ⟪(ⅆ i x) • ⅇ[X] i, (ⅆ' j y) • ⅇ' j⟫[K] := by sorry -- rw[← (FinVec.is_basis x), ← (FinVec.is_basis y)]
          _ = ∑ i, ∑ j, (ⅆ i x * ⅆ' j y) * ⟪ⅇ[X] i, ⅇ' j⟫[K] := by sorry -- use linearity of the sum
          _ = ∑ i, ∑ j, (ⅆ i x * ⅆ' j y) * if i=j then 1 else 0 := by simp [FinVec.duality]
-         _ = ∑ i, ⅆ i x * ⅆ' i y := sorry -- summing over [[i=j]]  
+         _ = ∑ i, ⅆ i x * ⅆ' i y := sorry -- summing over [[i=j]]
 
 variable {ι K X} {_ : Fintype ι} [DecidableEq ι] [IsROrC K] [FinVec ι K X]
 
@@ -141,7 +141,7 @@ by sorry
 @[simp]
 theorem inner_dualBasis_proj  (i : ι) (x : X)
   : ⟪x, ⅇ' i⟫[K] = ⅆ i x :=
-by 
+by
   calc
     ⟪x, ⅇ' i⟫[K] = ⟪∑ j, ⅆ j x • ⅇ[X] j, ⅇ' i⟫[K] := by sorry -- rw[← (FinVec.is_basis x)]
             _ = ∑ j, ⅆ j x * if j=i then 1 else 0 := by sorry -- inner_basis_dualBasis and some linearity

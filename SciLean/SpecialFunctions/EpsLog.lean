@@ -24,4 +24,3 @@ namespace SciLean
 
   @[simp]
   theorem εlog.is_log_at_zero (x : X)  : log{0} x = Math.log ∥x∥ := sorry
-

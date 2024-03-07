@@ -13,15 +13,15 @@ structure IsSmooth {X Y : Type _} [Vec X] [Vec Y] (f : X → Y) : Prop where
   isSmooth : Mathlib.Convenient.is_smooth f
 
 structure SmoothMap (X Y : Type _) [Vec X] [Vec Y] where
-  toFun : X → Y 
+  toFun : X → Y
   isSmooth_toFun : IsSmooth toFun := by infer_instance
 
 /-- `X ~~> Y` is the space of all smooth maps between `X` and `Y`.
 
 The notation `X ⟿ Y` is prefered, but this fixes pure ASCII equivalent. -/
-infixr:25 " ~~> " => SmoothMap 
+infixr:25 " ~~> " => SmoothMap
 
-/-- `X ⟿ Y` is the space of all smooth maps between `X` and `Y`. 
+/-- `X ⟿ Y` is the space of all smooth maps between `X` and `Y`.
 
 Can be also written as `X ~~> Y` -/
 infixr:25 " ⟿ " => SmoothMap
@@ -87,7 +87,7 @@ namespace SmoothMap
     map_isSmooth f := f.isSmooth_toFun
     coe f := f.toFun
     coe_injective' := sorry_proof
-    
+
   @[simp]
   theorem toFun_eq_coe {f : X ⟿ Y} : f.toFun = (f : X → Y) :=
     rfl
@@ -120,7 +120,7 @@ namespace SmoothMap
     SmoothMap.mk (λ x => x) sorry
 
   @[simp]
-  theorem coe_id : ⇑(SmoothMap.id : X ⟿ X) = _root_.id := 
+  theorem coe_id : ⇑(SmoothMap.id : X ⟿ X) = _root_.id :=
     rfl
 
   @[simp]
@@ -128,7 +128,7 @@ namespace SmoothMap
     rfl
 
   ------------------------------------------------------------------------------
-  -- X ⟿ Y is vector space 
+  -- X ⟿ Y is vector space
   ------------------------------------------------------------------------------
 
   theorem show_smoothness_via {X Y} [Vec X] [Vec Y] {f : X → Y} (g : X ⟿ Y) : (f = g) → IsSmooth f :=
@@ -162,7 +162,7 @@ namespace SmoothMap
   private def smul' : ℝ×X ⟿ X := SmoothMap.mk (λ (r,x) => r•x) sorry
   private def mul' : ℝ×ℝ ⟿ ℝ := SmoothMap.mk (λ (x,y) => x*y) sorry
 
-  instance : Neg (X⟿Y) := ⟨λ f => SmoothMap.mk (λ x => -f x) 
+  instance : Neg (X⟿Y) := ⟨λ f => SmoothMap.mk (λ x => -f x)
     (show_smoothness_via (comp' neg f) (by ext; simp[neg]))⟩
 
   instance : Add (X⟿Y) := ⟨λ f g => SmoothMap.mk (λ x => f x + g x)
@@ -179,7 +179,7 @@ namespace SmoothMap
 
   instance : HMul (X⟿ℝ) (X⟿Y) (X⟿Y) := ⟨λ f g => SmoothMap.mk (λ x => f x • g x)
     (show_smoothness_via (comp' smul' (prodMap' f g)) (by ext; simp[smul']))⟩
- 
+
   instance : Zero (X ⟿ Y) := ⟨const' 0⟩
   instance [One Y] : One (X ⟿ Y) := ⟨const' 1⟩
 
@@ -190,35 +190,35 @@ namespace SmoothMap
   -- Evaluation rules
   ------------------------------------------------------------------------------
 
-  @[simp] 
+  @[simp]
   theorem eval_neg (f : X ⟿ Y) (x : X)
     : (-f) x = -(f x) := by rfl
 
-  @[simp] 
+  @[simp]
   theorem eval_add (f g : X ⟿ Y) (x : X)
     : (f + g) x = f x + g x := by rfl
 
-  @[simp] 
+  @[simp]
   theorem eval_sub (f g : X ⟿ Y) (x : X)
     : (f - g) x = f x - g x := by rfl
 
-  @[simp] 
+  @[simp]
   theorem eval_mul (f g : X ⟿ ℝ) (x : X)
     : (f * g) x = f x * g x := by rfl
 
-  @[simp] 
+  @[simp]
   theorem eval_smul (f : X ⟿ Y) (x : X) (s : ℝ)
     : (s • f) x = s • f x := by rfl
 
-  @[simp] 
+  @[simp]
   theorem eval_hmul (f : X ⟿ ℝ) (g : X ⟿ Y) (x : X)
     : (f * g) x = f x • g x := by rfl
 
-  @[simp] 
+  @[simp]
   theorem eval_zero (x : X)
     : (0 : X ⟿ Y) x = 0 := by rfl
 
-  @[simp] 
+  @[simp]
   theorem eval_one (x : X) [One Y]
     : (1 : X ⟿ Y) x = 1 := by rfl
 
@@ -229,9 +229,9 @@ namespace SmoothMap
 
   -- const --
   -----------
-  private def const (Y : Type _) [Vec Y] : X ⟿ Y ⟿ X := 
-    SmoothMap.mk (λ x => 
-      SmoothMap.mk (λ y => x) 
+  private def const (Y : Type _) [Vec Y] : X ⟿ Y ⟿ X :=
+    SmoothMap.mk (λ x =>
+      SmoothMap.mk (λ y => x)
         sorry)
       sorry
 
@@ -242,27 +242,27 @@ namespace SmoothMap
   @[simp]
   private theorem const_apply (x : X) (y : Y) : const Y x y = x :=
     rfl
-  
+
   -- comp --
   ----------
-  def comp : (Y⟿Z)⟿(X⟿Y)⟿X⟿Z := 
-    SmoothMap.mk (λ f : Y⟿Z => 
-      SmoothMap.mk (λ g : X⟿Y => 
-        SmoothMap.mk (λ x : X => f (g x)) 
+  def comp : (Y⟿Z)⟿(X⟿Y)⟿X⟿Z :=
+    SmoothMap.mk (λ f : Y⟿Z =>
+      SmoothMap.mk (λ g : X⟿Y =>
+        SmoothMap.mk (λ x : X => f (g x))
         sorry)
       sorry)
     sorry
 
   @[simp]
-  theorem coe_comp (f : Y ⟿ Z) (g : X ⟿ Y) : ⇑(comp f g) = f ∘ g := 
+  theorem coe_comp (f : Y ⟿ Z) (g : X ⟿ Y) : ⇑(comp f g) = f ∘ g :=
     rfl
 
-  @[simp] 
+  @[simp]
   theorem comp_apply (f : Y ⟿ Z) (g : X ⟿ Y) (x : X) : comp f g x = f (g x) :=
     rfl
 
-  @[simp] 
-  theorem comp_assoc (f : Y ⟿ Z) (g : X ⟿ Y) (h : W ⟿ X) : 
+  @[simp]
+  theorem comp_assoc (f : Y ⟿ Z) (g : X ⟿ Y) (h : W ⟿ X) :
       comp (comp f g) h = comp f (comp g h) :=
     rfl
 
@@ -283,7 +283,7 @@ namespace SmoothMap
       SmoothMap.mk (λ (x,w) => (f x, g w)) sorry
 
     @[simp]
-    theorem prod_eval (f : X ⟿ Y) (g : X ⟿ Z) (x : X) : 
+    theorem prod_eval (f : X ⟿ Y) (g : X ⟿ Z) (x : X) :
         (prodMk f g) x = (f x, g x) :=
       rfl
 
@@ -297,7 +297,7 @@ namespace SmoothMap
 
   section Pi
 
-    def pi (f : α → X ⟿ Y) : X ⟿ (α → Y) := 
+    def pi (f : α → X ⟿ Y) : X ⟿ (α → Y) :=
       SmoothMap.mk (λ x a => f a x) sorry
 
     @[simp]
@@ -312,8 +312,8 @@ namespace SmoothMap
 
   -- variable {X Y Z W : Type} [Vec X] [Vec Y] [Vec Z] [Vec W]
 
-  private def curry' (f : X×Y ⟿ Z) : (X ⟿ Y ⟿ Z) := 
-    SmoothMap.mk (λ x => 
+  private def curry' (f : X×Y ⟿ Z) : (X ⟿ Y ⟿ Z) :=
+    SmoothMap.mk (λ x =>
       SmoothMap.mk (λ y => f (x,y))
       sorry)
     sorry
@@ -339,13 +339,13 @@ namespace SmoothMap
   -- @[simp] theorem const_apply (x : X) : const α x = λ _ => x := by simp[const]
 
 
-  def pair : X⟿Y⟿X×Y := 
-    SmoothMap.mk (λ x => 
+  def pair : X⟿Y⟿X×Y :=
+    SmoothMap.mk (λ x =>
       SmoothMap.mk (λ y => (x,y))
       (show_smoothness_via (curry' SmoothMap.id x) (by funext x; simp)))
     (show_smoothness_via (curry' SmoothMap.id) (by funext y; simp[curry']))
 
-  def swap : X×Y⟿Y×X := 
+  def swap : X×Y⟿Y×X :=
     SmoothMap.mk (λ (x,y) => (y,x))
       (show_smoothness_via (prodMap' snd fst) (by funext; simp))
 
@@ -354,17 +354,17 @@ namespace SmoothMap
   @[simp] theorem swap_apply (xy : X×Y) : swap xy = (xy.2,xy.1) := by simp[swap]
 
 
-  def eval : X⟿(X⟿Y)⟿Y := 
-    SmoothMap.mk (λ x : X => 
+  def eval : X⟿(X⟿Y)⟿Y :=
+    SmoothMap.mk (λ x : X =>
       SmoothMap.mk (λ f : X⟿Y => f x)
       (show_smoothness_via (curry' (comp' (uncurry' SmoothMap.id) swap) x) (by ext; simp)))
     (show_smoothness_via (curry' (comp' (uncurry' SmoothMap.id) swap)) (by ext; simp))
 
-  def assocl : X×(Y×Z) ⟿ (X×Y)×Z := 
+  def assocl : X×(Y×Z) ⟿ (X×Y)×Z :=
     SmoothMap.mk (λ (x,y,z) => ((x,y),z))
       (show_smoothness_via (prodMap' (prodMap' fst (comp' fst snd))  (comp' snd snd)) (by funext; simp))
 
-  def assocr : (X×Y)×Z ⟿ X×(Y×Z) := 
+  def assocr : (X×Y)×Z ⟿ X×(Y×Z) :=
     SmoothMap.mk (λ ((x,y),z) => (x,y,z))
       (show_smoothness_via (prodMap' (comp' fst fst) (prodMap' (comp' snd fst) snd)) (by funext; simp))
 
@@ -374,26 +374,26 @@ namespace SmoothMap
   @[simp] theorem assocr_apply (xyz : (X×Y)×Z) : assocr xyz = (xyz.1.1, (xyz.1.2,xyz.2)) := by simp[assocr]
 
 
-  -- def comp : (Y⟿Z)⟿(X⟿Y)⟿X⟿Z := 
-  --   SmoothMap.mk (λ f : Y⟿Z => 
-  --     SmoothMap.mk (λ g : X⟿Y => 
-  --       SmoothMap.mk (λ x : X => f (g x)) 
+  -- def comp : (Y⟿Z)⟿(X⟿Y)⟿X⟿Z :=
+  --   SmoothMap.mk (λ f : Y⟿Z =>
+  --     SmoothMap.mk (λ g : X⟿Y =>
+  --       SmoothMap.mk (λ x : X => f (g x))
   --       (show_smoothness_via (comp' (f) (g)) (by ext; simp)))
   --     (show_smoothness_via (curry' (comp' (f) (uncurry' (SmoothMap.id (X:=X⟿Y))))) (by ext; simp)))
   --   (show_smoothness_via (
   --     let F : (Y⟿Z)×(X⟿Y)×X⟿Z := comp' (uncurry' SmoothMap.id) (prodMap' (fst) (comp' (uncurry' (SmoothMap.id (X:=X⟿Y))) (snd)))
-  --     curry' (curry' (comp' F (assocr)))) 
+  --     curry' (curry' (comp' F (assocr))))
   --     (by ext; simp))
 
   -- def prodMap : (X⟿Y)⟿(X⟿Z)⟿X⟿Y×Z :=
-  --   SmoothMap.mk (λ f => 
-  --     SmoothMap.mk (λ g => 
+  --   SmoothMap.mk (λ f =>
+  --     SmoothMap.mk (λ g =>
   --       SmoothMap.mk (λ x => (f x, g x))
   --       (show_smoothness_via (prodMap' f g) (by funext; simp)))
   --     (show_smoothness_via (curry' (comp' swap (prodMap' (uncurry' SmoothMap.id) (comp' f snd)))) (by funext g; simp[comp',curry'])))
   --   (show_smoothness_via (
-  --     let F : (X⟿Y)×(X⟿Z)×X ⟿ Y×Z := comp' 
-  --       (prodMap' (comp' (uncurry' SmoothMap.id) fst) (comp' (uncurry' SmoothMap.id) snd)) 
+  --     let F : (X⟿Y)×(X⟿Z)×X ⟿ Y×Z := comp'
+  --       (prodMap' (comp' (uncurry' SmoothMap.id) fst) (comp' (uncurry' SmoothMap.id) snd))
   --       (prodMap' (prodMap' fst (comp' snd snd)) (prodMap' (comp' fst snd) (comp' snd snd)))
   --     curry' (curry' (comp' F (assocr))))
   --     (by funext; simp[comp']; simp[curry']))
@@ -403,10 +403,10 @@ namespace SmoothMap
   -- @[simp] theorem prodMap_apply (f : Y⟿Z) (g : X⟿Y) (x : X) : comp f g x = f (g x) := by simp[comp]
 
 
-  def curry : (X×Y⟿Z)⟿X⟿Y⟿Z := 
-    SmoothMap.mk (λ f => 
-      SmoothMap.mk (λ x => 
-        SmoothMap.mk (λ y => f (x,y)) 
+  def curry : (X×Y⟿Z)⟿X⟿Y⟿Z :=
+    SmoothMap.mk (λ f =>
+      SmoothMap.mk (λ x =>
+        SmoothMap.mk (λ y => f (x,y))
         (show_smoothness_via (curry' f x) (by ext; simp)))
       (show_smoothness_via (curry' f) (by ext; simp)))
     (show_smoothness_via (
@@ -414,8 +414,8 @@ namespace SmoothMap
       curry' (curry' F)
       ) (by ext; simp))
 
-  def uncurry : (X⟿Y⟿Z)⟿X×Y⟿Z := 
-    SmoothMap.mk (λ f => 
+  def uncurry : (X⟿Y⟿Z)⟿X×Y⟿Z :=
+    SmoothMap.mk (λ f =>
       SmoothMap.mk (λ xy => f xy.1 xy.2)
       (show_smoothness_via (uncurry' f) (by ext; simp)))
     (show_smoothness_via (
@@ -424,8 +424,8 @@ namespace SmoothMap
       ) (by ext; simp))
 
   def forallMap : (α → X⟿Y) ⟿ (α → X) ⟿ (α → Y) :=
-    SmoothMap.mk (λ f => 
-      SmoothMap.mk (λ x a => f a (x a)) 
+    SmoothMap.mk (λ f =>
+      SmoothMap.mk (λ x a => f a (x a))
       (show_smoothness_via (forallMap' f) (by ext; simp)))
     (show_smoothness_via (
       let F : (α → (X⟿Y))×(α → X) ⟿ _ := prodMap'' |> comp' (forallMap' (λ _ => uncurry' SmoothMap.id))
@@ -442,6 +442,4 @@ namespace SmoothMap
 
   -- def pmapDep : ((i : ι)→(E i)) ⟿ ((i : ι)→(F i)) ⟿ ((i : ι)→(E i)×(F i)) := ⟨λ f => ⟨λ g => λ x => (f x, g x), sorry⟩, sorry⟩
   -- def fmapDep : ((i : ι)→(E i)) ⟿ ((j : κ)→(E' j)) ⟿ ((ij : (ι×κ))→(E ij.1)×(E' ij.2)) := ⟨λ f => ⟨λ g => λ (i,j) => (f i, g j), sorry⟩, sorry⟩
-  -- def prodDep : ((i : ι) → E i ⟿ F i) ⟿ ((i : ι) → E i) ⟿ ((i : ι) → F i) := sorry 
-
-
+  -- def prodDep : ((i : ι) → E i ⟿ F i) ⟿ ((i : ι) → E i) ⟿ ((i : ι) → F i) := sorry

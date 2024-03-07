@@ -19,7 +19,7 @@ variable {ι κ} [EnumType ι] [EnumType κ]
 --   := sorry_proof
 
 -- @[simp]
--- theorem sum_lambda_swap {α β : Type _} [AddCommMonoid β] (f : ι → α → β) 
+-- theorem sum_lambda_swap {α β : Type _} [AddCommMonoid β] (f : ι → α → β)
 --   : ∑ i, (fun a => f i a)
 --     =
 --     fun a => ∑ i, f i a

@@ -8,10 +8,11 @@ import SciLean.Data.DataArray
 set_option linter.unusedVariables false
 
 open SciLean
+open LeanColls
 
 section OnVec
 
-variable 
+variable
   {K : Type} [IsROrC K]
   {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
@@ -37,12 +38,12 @@ theorem ForIn.forIn.arg_bf.IsDifferentiableM_rule
 theorem ForIn.forIn.arg_bf.fwdDerivM_rule
   (range : ρ) (init : X → Y) (f : X → α → Y → m (ForInStep Y))
   (hinit : IsDifferentiable K init) (hf : ∀ a, IsDifferentiableM K (fun (xy : X×Y) => f xy.1 a xy.2))
-  : fwdDerivM K (fun x => forIn range (init x) (f x)) 
+  : fwdDerivM K (fun x => forIn range (init x) (f x))
     =
     (fun x dx => do
       let ydy₀ := fwdCDeriv K init x dx
       forIn range ydy₀
-        fun a ydy => do 
+        fun a ydy => do
           let ydy ← fwdDerivM K (fun (xy : X×Y) => f xy.1 a xy.2) (x,ydy.1) (dx,ydy.2)
           return ForInStep.return2 ydy) :=
 by
@@ -52,12 +53,12 @@ by
 example
   (init : X → Y) (f : X → Nat → Y → m Y)
   (hinit : IsDifferentiable K init) (hf : ∀ a, IsDifferentiableM K (fun (xy : X×Y) => f xy.1 a xy.2))
-  : fwdDerivM K (fun x => forIn [0:3] (init x) (fun i y => do pure (ForInStep.yield (← f x i y)))) 
+  : fwdDerivM K (fun x => forIn [0:3] (init x) (fun i y => do pure (ForInStep.yield (← f x i y))))
     =
     (fun x dx => do
       let ydy₀ := fwdCDeriv K init x dx
       forIn [0:3] ydy₀
-        fun a ydy => do 
+        fun a ydy => do
           let ydy ← fwdDerivM K (fun (xy : X×Y) => f xy.1 a xy.2) (x,ydy.1) (dx,ydy.2)
           return .yield ydy) :=
 by
@@ -65,7 +66,7 @@ by
   simp [forIn,Std.Range.forIn,Std.Range.forIn.loop,Std.Range.forIn.loop.match_1]
   ftrans
   rfl
-    
+
 
 --------------------------------------------------------------------------------
 
@@ -78,7 +79,7 @@ end OnVec
 
 section OnSemiInnerProductSpace
 
-variable 
+variable
   {K : Type} [IsROrC K]
   {m m'} [Monad m] [Monad m'] [RevDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
@@ -114,14 +115,14 @@ theorem ForIn.forIn.arg_bf.HasAdjDiff_rule [ForIn Id ρ α]
 theorem ForIn.forIn.arg_bf.revDerivM_rule_lazy
   (range : ρ) (init : X → Y) (f : X → α → Y → m (ForInStep Y))
   (hinit : HasAdjDiff K init) (hf : ∀ a, HasAdjDiffM K (fun (xy : X×Y) => f xy.1 a xy.2))
-  : revDerivM K (fun x => forIn range (init x) (f x)) 
+  : revDerivM K (fun x => forIn range (init x) (f x))
     =
     (fun x => do
       let ydinit := revCDeriv K init x
       let ydf ← forIn range (ydinit.1, fun (dy:Y) => pure (f:=m') ((0:X),dy))
         (fun a ydf => do
           let ydf' ← revDerivM K (fun (xy : X×Y) => f xy.1 a xy.2) (x,ydf.1)
-          let df : Y → m' (X×Y) := 
+          let df : Y → m' (X×Y) :=
             fun dy : Y => do
               let dxy  ← ydf'.2 (.yield dy)
               let dxy' ← ydf.2 dxy.2
@@ -129,7 +130,7 @@ theorem ForIn.forIn.arg_bf.revDerivM_rule_lazy
           match ydf'.1 with
           | .yield y => pure (ForInStep.yield (y, df))
           | .done  y => pure (ForInStep.done (y, df)))
-      pure (ydf.1, 
+      pure (ydf.1,
             fun dy => do
               let dxy ← ydf.2 dy
               pure (dxy.1 + ydinit.2 dxy.2))) :=
@@ -139,14 +140,14 @@ by
 
 /-- Forward pass of a for loop implemented using `DataArray`
   -/
-def ForIn.forIn.arg_bf.fwdPass_dataArrayImpl [Index ι] [PlainDataType X]
+def ForIn.forIn.arg_bf.fwdPass_dataArrayImpl [IndexType ι] [PlainDataType X]
   (init : X) (f : ι → X → ForInStep X)
   : X×DataArray X := Id.run do
-  let n := Index.size ι
+  let n := IndexType.card ι
 
   -- forward pass
   let mut xs : DataArray X := .mkEmpty n
-  forIn (fullRange ι) (init, DataArray.mkEmpty (α:=X) n)
+  forIn (IndexType.univ ι) (init, DataArray.mkEmpty (α:=X) n)
     fun i (x,xs) =>
       let xs := xs.push x
       match f i x with
@@ -162,20 +163,20 @@ def ForIn.forIn.arg_bf.fwdPass_dataArrayImpl [Index ι] [PlainDataType X]
   TODO: Index shoud support iterating in reverse order
 
   WARNING: `dx'` and `dw` behave differently
-     - `df'` computes gradient in `dx'` 
-     - `df'` computes update to gradient in `dw` 
-  
+     - `df'` computes gradient in `dx'`
+     - `df'` computes update to gradient in `dw`
+
   The value of `df'` should be:
-    df' = fun w i x dx' dw => 
+    df' = fun w i x dx' dw =>
       ((∇ (x':=x;dx'), f w i x'), (dw + ∇ (w':=w;dx'), f w' i x))
   -/
-def ForIn.forIn.arg_bf.revPass_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
+def ForIn.forIn.arg_bf.revPass_dataArrayImpl [IndexType ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
   (df' : ι → X → W → X → W×X) (xs : DataArray X) (dx' : X) : W×X := Id.run do
   let n := xs.size
   let mut dwx := (0,dx')
-  for i in [0:n.toNat] do
-    let i' : Idx xs.size := ⟨n-i.toUSize-1,sorry_proof⟩
-    let j : ι := fromIdx ⟨n-i.toUSize-1,sorry_proof⟩
+  for i in [0:n] do
+    let i' : Fin xs.size := ⟨n-i-1,sorry_proof⟩
+    let j : ι := IndexType.fromFin ⟨n-i-1,sorry_proof⟩
     let xj := xs.get i'
     dwx := df' j xj dwx.1 dwx.2
   dwx
@@ -185,22 +186,22 @@ def ForIn.forIn.arg_bf.revPass_dataArrayImpl [Index ι] [PlainDataType X] [Plain
 /-- Reverse derivative of a for loop
 
   WARNING: `dx'` and `dw` behave differently
-     - `df'` computes gradient in `dx'` 
-     - `df'` computes update to gradient in `dw` 
-  
+     - `df'` computes gradient in `dx'`
+     - `df'` computes update to gradient in `dw`
+
   The value of `df'` should be:
-    df' = fun w i x dw dx' => 
+    df' = fun w i x dw dx' =>
       ((∇ (x':=x;dx'), f w i x'), (dw + ∇ (w':=w;dx'), f w' i x))
 -/
-def ForIn.arg_bf.revDeriv_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
+def ForIn.arg_bf.revDeriv_dataArrayImpl [IndexType ι] [PlainDataType X] [PlainDataType W] [Zero X] [Zero W]
   (init : X) (f : ι → X → X) (df' : ι → X → W → X → W×X)
   : X×(X→W×X) :=
   Id.run do
-    let n := Index.size ι
+    let n := IndexType.card ι
     -- forward pass
     let mut xs : DataArray X := .mkEmpty n
     let mut x := init
-    for i in fullRange ι do
+    for i in IndexType.univ ι do
       xs := xs.push x
       x := f i x
     (x, fun dx' => ForIn.forIn.arg_bf.revPass_dataArrayImpl df' xs dx')
@@ -230,13 +231,13 @@ def ForIn.arg_bf.revDeriv_dataArrayImpl [Index ι] [PlainDataType X] [PlainDataT
 
 
 @[ftrans]
-theorem ForIn.forIn.arg_bf.revCDeriv_rule_def [Index ι] [PlainDataType X] [PlainDataType W]
+theorem ForIn.forIn.arg_bf.revCDeriv_rule_def [IndexType ι] [PlainDataType X] [PlainDataType W]
   (init : W → X) (f : W → ι → X → ForInStep X)
   (hinit : HasAdjDiff K init) (hf : ∀ i, HasAdjDiff K (fun (w,x) => f w i x))
-  : revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => f w i y))
+  : revCDeriv K (fun w => forIn (m:=Id) (IndexType.univ ι) (init w) (fun i y => f w i y))
     =
     fun w => (Id.run do
-      let n := Index.size ι
+      let n := IndexType.card ι
       let initdinit := revCDeriv K init w
 
       let xxs := ForIn.forIn.arg_bf.fwdPass_dataArrayImpl initdinit.1 (f w)
@@ -248,7 +249,7 @@ theorem ForIn.forIn.arg_bf.revCDeriv_rule_def [Index ι] [PlainDataType X] [Plai
         let dwx' := gradient K (fun (w',x') => (f w' i x').val) (w,x) dx'
         (dw + dwx'.1, dwx'.2)
 
-      (x, 
+      (x,
        fun dx' =>
          -- reverse pass
          let dwx' := ForIn.forIn.arg_bf.revPass_dataArrayImpl revPassBody xs dx'
@@ -258,15 +259,15 @@ by
 
 
 -- @[ftrans]
--- disables for now because downstream `ForInStep.yield.arg_a0.revDerivUpdate_rule` is 
+-- disables for now because downstream `ForInStep.yield.arg_a0.revDerivUpdate_rule` is
 -- causing some issues with Id monad and congr lemmas in simp
-theorem ForIn.forIn.arg_bf.revCDeriv_rule_def' [Index ι] [PlainDataType X] [PlainDataType W]
+theorem ForIn.forIn.arg_bf.revCDeriv_rule_def' [IndexType ι] [PlainDataType X] [PlainDataType W]
   (init : W → X) (f : W → ι → X → ForInStep X)
   (hinit : HasAdjDiff K init) (hf : ∀ i, HasAdjDiff K (fun (w,x) => f w i x))
-  : revCDeriv K (fun w => forIn (m:=Id) (fullRange ι) (init w) (fun i y => f w i y))
+  : revCDeriv K (fun w => forIn (m:=Id) (IndexType.univ ι) (init w) (fun i y => f w i y))
     =
     fun w => (Id.run do
-      let n := Index.size ι
+      let n := IndexType.card ι
       let initdinit := revCDeriv K init w
 
       let xxs := ForIn.forIn.arg_bf.fwdPass_dataArrayImpl initdinit.1 (f w)
@@ -277,7 +278,7 @@ theorem ForIn.forIn.arg_bf.revCDeriv_rule_def' [Index ι] [PlainDataType X] [Pla
       let revPassBody := hold fun i x dw dx' =>
         (revDerivUpdate K (fun (w',x') => (f w' i x').val) (w,x)).2 dx' (dw,0)
 
-      (x, 
+      (x,
        fun dx' =>
          -- reverse pass
          let dwx' := ForIn.forIn.arg_bf.revPass_dataArrayImpl revPassBody xs dx'
@@ -287,7 +288,3 @@ by
 
 
 end OnSemiInnerProductSpace
-
-
-
-

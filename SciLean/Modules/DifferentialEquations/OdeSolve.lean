@@ -1,5 +1,4 @@
 import SciLean.Core
-import SciLean.Data.Curry
 
 set_option linter.unusedVariables false
 
@@ -19,45 +18,45 @@ structure HasOdeSolution (f : R → X → X) : Prop where
 
 structure HasUniqueOdeSolution (f : R → X → X) extends HasOdeSolution f : Prop where
   uniq : ∀ t₀ x₀ x x', IsOdeSolution f t₀ x₀ x → IsOdeSolution f t₀ x₀ x' → x = x'
-            
+
 open Classical in
 noncomputable
 def odeSolve (f : R → X → X) (t₀ t : R) (x₀ : X) : X :=
-  if h : HasUniqueOdeSolution f -- TODO: can we reduce it to just HasOdeSolution? 
+  if h : HasUniqueOdeSolution f -- TODO: can we reduce it to just HasOdeSolution?
   then Classical.choose (h.ex t₀ x₀) t
   else Classical.arbitrary X
 
 section OnVec
 
-variable 
-  {R : Type _} [IsROrC R] 
+variable
+  {R : Type _} [IsROrC R]
   {W : Type _} [Vec R W]
   {X : Type _} [Vec R X]
   {Y : Type _} [Vec R Y]
   {Z : Type _} [Vec R Z]
 
-@[fprop]
-theorem odeSolve.arg_ft₀tx₀.IsDifferentiable_rule
-  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X) 
-  (hf : IsDifferentiable R (fun (w,t,x) => f w t x)) 
-  (ht₀ : IsDifferentiable R t₀) (ht : IsDifferentiable R t)
-  (hx : IsDifferentiable R x₀)
-  : IsDifferentiable R fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w) := sorry_proof
+@[fun_prop]
+theorem odeSolve.arg_ft₀tx₀.CDifferentiable_rule
+  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
+  (hf : CDifferentiable R (fun (w,t,x) => f w t x))
+  (ht₀ : CDifferentiable R t₀) (ht : CDifferentiable R t)
+  (hx : CDifferentiable R x₀)
+  : CDifferentiable R fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w) := sorry_proof
 
 
-@[ftrans]
+@[fun_trans]
 theorem odeSolve.arg_ft₀tx₀.cderiv_rule
-  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X) 
-  (hf : IsDifferentiable R (fun (w,t,x) => f w t x)) 
-  (ht₀ : IsDifferentiable R t₀) (ht : IsDifferentiable R t)
-  (hx : IsDifferentiable R x₀)
+  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
+  (hf : CDifferentiable R (fun (w,t,x) => f w t x))
+  (ht₀ : CDifferentiable R t₀) (ht : CDifferentiable R t)
+  (hx : CDifferentiable R x₀)
   : cderiv R (fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w))
     =
-    fun w dw => 
-      let t₀dt₀ := fwdCDeriv R t₀ w dw
-      let tdt   := fwdCDeriv R t₀ w dw
-      let x₀dx₀ := fwdCDeriv R x₀ w dw
-      let Tf := fwdCDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
+    fun w dw =>
+      let t₀dt₀ := fwdDeriv R t₀ w dw
+      let tdt   := fwdDeriv R t₀ w dw
+      let x₀dx₀ := fwdDeriv R x₀ w dw
+      let Tf := fwdDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
 
       let F := fun (t : R) (xdx : X×X) =>
         let x  := xdx.1
@@ -70,19 +69,19 @@ theorem odeSolve.arg_ft₀tx₀.cderiv_rule
     := sorry_proof
 
 
-@[ftrans]
-theorem odeSolve.arg_ft₀tx₀.fwdCDeriv_rule
-  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X) 
-  (hf : IsDifferentiable R (fun (w,t,x) => f w t x)) 
-  (ht₀ : IsDifferentiable R t₀) (ht : IsDifferentiable R t)
-  (hx : IsDifferentiable R x₀)
-  : fwdCDeriv R (fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w))
+@[fun_trans]
+theorem odeSolve.arg_ft₀tx₀.fwdDeriv_rule
+  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
+  (hf : CDifferentiable R (fun (w,t,x) => f w t x))
+  (ht₀ : CDifferentiable R t₀) (ht : CDifferentiable R t)
+  (hx : CDifferentiable R x₀)
+  : fwdDeriv R (fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w))
     =
-    fun w dw => 
-      let t₀dt₀ := fwdCDeriv R t₀ w dw
-      let tdt   := fwdCDeriv R t₀ w dw
-      let x₀dx₀ := fwdCDeriv R x₀ w dw
-      let Tf := fwdCDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
+    fun w dw =>
+      let t₀dt₀ := fwdDeriv R t₀ w dw
+      let tdt   := fwdDeriv R t₀ w dw
+      let x₀dx₀ := fwdDeriv R x₀ w dw
+      let Tf := fwdDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
 
       let F := fun (t : R) (xdx : X×X) =>
         let x  := xdx.1
@@ -91,16 +90,16 @@ theorem odeSolve.arg_ft₀tx₀.fwdCDeriv_rule
 
       let xdx := odeSolve F (t₀dt₀.1) (tdt.1) x₀dx₀
 
-      (xdx.1, xdx.2 + tdt.2 • f w tdt.1 xdx.1) := 
-by 
-  (conv => lhs; unfold fwdCDeriv)
-  ftrans
+      (xdx.1, xdx.2 + tdt.2 • f w tdt.1 xdx.1) :=
+by
+  (conv => lhs; unfold fwdDeriv)
+  fun_trans
   funext w dw
-  simp[fwdCDeriv]
+  simp[fwdDeriv]
   sorry_proof
-      
 
-@[fprop]
+
+@[fun_prop]
 theorem odeSolve.arg_x₀.IsContinuousLinearMap_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
   (hf : ∀ t, IsContinuousLinearMap R (f t)) (hx₀ : IsContinuousLinearMap R x₀)
@@ -110,29 +109,29 @@ end OnVec
 
 section OnSemiInnerProductSpace
 
-variable 
-  {R : Type _} [IsROrC R] 
+variable
+  {R : Type _} [IsROrC R]
   {W : Type _} [SemiInnerProductSpace R W]
   {X : Type _} [SemiInnerProductSpace R X]
   {Y : Type _} [SemiInnerProductSpace R Y]
   {Z : Type _} [SemiInnerProductSpace R Z]
 
-@[fprop]
+@[fun_prop]
 theorem odeSolve.arg_x₀.HasSemiAdjoint_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
   (hf : ∀ t, HasSemiAdjoint R (f t)) (hx₀ : HasSemiAdjoint R x₀)
   : HasSemiAdjoint R (fun w => odeSolve f t₀ t (x₀ w)) := sorry_proof
 
-@[ftrans]
+@[fun_trans]
 theorem odeSolve.arg_x₀.semiAdjoint_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
   (hf : ∀ t, HasSemiAdjoint R (f t)) (hx₀ : HasSemiAdjoint R x₀)
   : semiAdjoint R (fun w => odeSolve f t₀ t (x₀ w))
     =
-    fun x₀' => 
+    fun x₀' =>
       let f' := (fun s y => - semiAdjoint R (f s) y)
       let y := odeSolve f' t t₀ x₀'
-      semiAdjoint R x₀ y := 
+      semiAdjoint R x₀ y :=
 by
   -- Define adjoint solution `y` such that
   -- ∀ s, ⟪x s, y s⟫ = constant
@@ -144,45 +143,43 @@ by
   --
   -- We can show that `y` satisfies diffrential equation `ⅆ y t = -(f t)† (y t)`
   -- by differentiating `⟪x s, y s⟫` w.r.t. to `s`
-  -- 
+  --
   -- Therefore we can express `y t₀` using `odeSolve`
   sorry_proof
 
 
 
-@[fprop]
+@[fun_prop]
 theorem odeSolve.arg_ft₀tx₀.HasAdjDiff_rule
-  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X) 
-  (hf : HasAdjDiff R (fun (w,t,x) => f w t x)) 
+  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
+  (hf : HasAdjDiff R (fun (w,t,x) => f w t x))
   (ht₀ : HasAdjDiff R t₀) (ht : HasAdjDiff R t)
   (hx : HasAdjDiff R x₀)
   : HasAdjDiff R fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w) := sorry_proof
 
 
-@[ftrans]
+@[fun_trans]
 theorem odeSolve.arg_x₀.revCDeriv_rule
-  (f : R → X → X) (t₀ t : R) (x₀ : W → X) 
-  (hf : HasAdjDiff R (fun (t,x) => f t x)) 
+  (f : R → X → X) (t₀ t : R) (x₀ : W → X)
+  (hf : HasAdjDiff R (fun (t,x) => f t x))
   (hx : HasAdjDiff R x₀)
-  : revCDeriv R (fun w => odeSolve f t₀ t (x₀ w))
+  : revDeriv R (fun w => odeSolve f t₀ t (x₀ w))
     =
     fun w =>
-      let x₀dx₀ := revCDeriv R x₀ w
-      let x := hold $ λ s => odeSolve f t₀ s x₀dx₀.1
-      let dfdx := hold λ s dx' => - gradient R (fun x' => f s x') (x s) dx'
-      (x t, 
-       fun dx => 
+      let x₀dx₀ := revDeriv R x₀ w
+      let x := fun s => odeSolve f t₀ s x₀dx₀.1
+      let dfdx := fun s dx' => - gradient R (fun x' => f s x') (x s) dx'
+      (x t,
+       fun dx =>
          let dx := odeSolve dfdx t₀ t dx
-         x₀dx₀.2 dx) := 
+         x₀dx₀.2 dx) :=
 by
-  unfold gradient revCDeriv hold
-  ftrans; 
+  unfold gradient revDeriv
+  fun_trans;
   funext w; simp
   -- set_option trace.Meta.Tactic.simp.discharge true in
   -- set_option trace.Meta.Tactic.simp.unify true in
-  -- set_option trace.Meta.Tactic.ftrans.step true in
-  ftrans
-  ftrans
+  -- set_option trace.Meta.Tactic.fun_trans.step true in
   sorry_proof
 
 
@@ -195,15 +192,15 @@ function_properties SciLean.odeSolve {X : Type} [Hilbert X]
   (f : ℝ → X → X) [∀ t, HasAdjDiff λ x : X => f t x] (t₀ : ℝ) (x₀ : X) (t : ℝ)
 argument x₀
   HasAdjDiff := sorry_proof,
-  noncomputable abbrev ∂† := 
-    -- alternatives 
+  noncomputable abbrev ∂† :=
+    -- alternatives
     --   fst:
         λ dx₀' =>
-        let x := hold $ λ s => odeSolve f t₀ x₀ s 
+        let x := hold $ λ s => odeSolve f t₀ x₀ s
         odeSolve (λ s dx' => - ∂† (x':= x s; dx'), f s x') t dx₀' t₀
       -- snd:
       --   λ dx₀' =>
-      --   let F := λ s (xdx' : X×X) => 
+      --   let F := λ s (xdx' : X×X) =>
       --              let x   := xdx'.1
       --              let dx' := xdx'.2
       --              (- (f s x),
@@ -212,10 +209,10 @@ argument x₀
       --   (odeSolve F t (xt, dx₀') t₀).2
       -- by sorry_proof
     by sorry_proof,
-  noncomputable abbrev ℛ := 
+  noncomputable abbrev ℛ :=
     let x := hold $ λ s => odeSolve f t₀ x₀ s
-    (x t, 
-     λ dx₀' => 
+    (x t,
+     λ dx₀' =>
        odeSolve (λ s dx' => - ∂† (x':= x s; dx'), f s x') t dx₀' t₀)
     by sorry_proof
 
@@ -237,10 +234,10 @@ theorem odeSolve.arg_fx₀.adjointDifferential_simp' {S X : Type} [Hilbert S] [H
   (t : ℝ)
   : (∂† s, odeSolve (f s) t₀ (x₀ s) t)
     =
-    -- alternatives 
+    -- alternatives
     --   fst:
 
-        fun s => 
+        fun s =>
           let x := λ t' => odeSolve (f s) t₀ (x₀ s) t'
 
           fun ds' =>
@@ -290,7 +287,7 @@ theorem odeSolve.arg_fx₀.reverseDifferential_simp' {S X : Type} [Hilbert S] [H
   (t : ℝ)
   : (ℛ  λ s => odeSolve (f s) t₀ (x₀ s) t)
     =
-    λ s => 
+    λ s =>
     let x := λ t' => odeSolve (f s) t₀ (x₀ s) t'
     (x t,
      fun ds' =>
@@ -324,8 +321,8 @@ theorem odeSolve.arg_fx₀.reverseDifferential_simp' {S X : Type} [Hilbert S] [H
 
 variable {X Y Z} [Vec X] [Vec Y] [Vec Z]
 
-def odeSolve_fixed_dt_impl (n : Nat) (stepper : (ℝ → X → X) → ℝ → X → ℝ → X) 
-  (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (t : ℝ) : X := 
+def odeSolve_fixed_dt_impl (n : Nat) (stepper : (ℝ → X → X) → ℝ → X → ℝ → X)
+  (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (t : ℝ) : X :=
 Id.run do
   let Δt := (t-t₀)/n
   let mut x  := x₀
@@ -336,8 +333,8 @@ Id.run do
   x
 
 
-def odeSolve_fixed_dt_impl' (n : Nat) (stepper : ℝ → X → ℝ → X) 
-  (t₀ : ℝ) (x₀ : X) (t : ℝ) : X := 
+def odeSolve_fixed_dt_impl' (n : Nat) (stepper : ℝ → X → ℝ → X)
+  (t₀ : ℝ) (x₀ : X) (t : ℝ) : X :=
 Id.run do
   let Δt := (t-t₀)/n
   let mut x  := x₀
@@ -348,8 +345,8 @@ Id.run do
   x
 
 
-def odeSolve_fixed_dt_impl'' (n : Nat) (stepper : ℝ → X → ℝ → X×(X→X)) 
-  (t₀ : ℝ) (x₀ : X) (t : ℝ) : X×(X→X) := 
+def odeSolve_fixed_dt_impl'' (n : Nat) (stepper : ℝ → X → ℝ → X×(X→X))
+  (t₀ : ℝ) (x₀ : X) (t : ℝ) : X×(X→X) :=
 Id.run do
   let Δt := (t-t₀)/n
   let mut x  := x₀
@@ -374,7 +371,7 @@ def odeSolve_fixed_dt_impl'.differential_simp (n : Nat) (stepper : ℝ → X →
 
 
 --- This requires some conditions on the function ... or just add the conclusion as an assumption
-theorem odeSolve_fixed_dt (stepper : (ℝ → X → X) → ℝ → X → ℝ → X) 
+theorem odeSolve_fixed_dt (stepper : (ℝ → X → X) → ℝ → X → ℝ → X)
   : odeSolve = limit (λ n => odeSolve_fixed_dt_impl n stepper) := sorry_proof
 
 
@@ -404,7 +401,7 @@ argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
     -- forward_euler_step Tf t₀ (x₀,dx₀) Δt
     by
       unfold forward_euler_step
-      have : ∀ t, IsSmooth (f t) := sorry_proof 
+      have : ∀ t, IsSmooth (f t) := sorry_proof
       fun_trans
       simp, -- WTF where did the goal `True` came from?
   noncomputable abbrev 𝒯 := λ dx₀ =>
@@ -416,7 +413,7 @@ argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
       have : ∀ t, IsSmooth (f t) := sorry_proof
       fun_trans
       fun_trans
-      unfold tangentMap 
+      unfold tangentMap
       fun_trans
       try simp
       done
@@ -425,26 +422,26 @@ argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
 -- function_properties SciLean.forward_euler_step {X : Type} [SemiHilbert X] (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ)
 -- argument x₀  --[∀ t, HasAdjDiff λ (x : X) => f t x]
 
---   noncomputable abbrev ℛ := 
+--   noncomputable abbrev ℛ :=
 --     let Rf := ℛ (λ x' => f t₀ x') x₀
 --     (x₀ + Δt • Rf.1, λ y' => y' + Δt • Rf.2 y')
 --     by
 --       unfold forward_euler_step
 --       ignore_fun_prop
---       conv => 
+--       conv =>
 --         rhs
 --         fun_trans
---       conv => 
+--       conv =>
 --         lhs
 --         fun_trans
 --       simp -- bugs in reverseMode transform
-    
+
 
 --- This requires some conditions on the function ... or just add the conclusion as an assumption
 theorem odeSolve_fixed_dt.forward_euler (f : ℝ → X → X)
   : odeSolve f = limit (λ n => odeSolve_fixed_dt_impl' n (forward_euler_step f)) := sorry_proof
 
-def midpoint_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X := 
+def midpoint_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X :=
   let dt := Δt/2
   let x' := x₀ + dt • f t₀ x₀
   x₀ + Δt • (f (t₀+dt) x')
@@ -463,7 +460,7 @@ argument x₀ [IsSmooth λ (tx : ℝ×X) => f tx.1 tx.2]
     let Tf := λ t (xdx : X×X) => 𝒯 (λ x' => f t x') xdx.1 xdx.2
     midpoint_step Tf t₀ (x₀,dx₀) Δt
     by sorry_proof
-      
+
 
 --- This requires some conditions on the function ... or just add the conclusion as an assumption
 theorem odeSolve_fixed_dt.midpoint_euler (f : ℝ → X → X)
@@ -471,11 +468,11 @@ theorem odeSolve_fixed_dt.midpoint_euler (f : ℝ → X → X)
 
 
 noncomputable
-def backward_euler_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) := 
+def backward_euler_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) :=
   (λ x' => x' + Δt • f t₀ x')⁻¹ x₀
 
 noncomputable
-def implicit_midpoint_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) := 
+def implicit_midpoint_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) :=
   (λ x' => x' + Δt • f (t₀ + Δt/2) (((1:ℝ)/2) • (x₀ + x')))⁻¹ x₀
 
 def runge_kutta4_step (f : ℝ → X → X) (t₀ : ℝ) (x₀ : X) (Δt : ℝ) : X :=
@@ -492,7 +489,7 @@ theorem odeSolve_fixed_dt.runge_kutta4 (f : ℝ → X → X)
 
 abbrev Stepper := ∀ {X} [Vec X], (ℝ → X → X) → (ℝ → X → ℝ → X)
 
-instance {X} [Vec X] (f : ℝ → X → X) 
+instance {X} [Vec X] (f : ℝ → X → X)
   : CoeFun (OdeStepper f) (λ _ => ℝ → X → ℝ → X) := ⟨λ s => s.stepper⟩
 
 def odeSolve_fixed_dt_array {X} [Vec X] (f : ℝ → X → X)
@@ -509,11 +506,11 @@ def odeSolve_fixed_dt_array {X} [Vec X] (f : ℝ → X → X)
     t += Δt
   xs
 
-theorem odeSolve_fixed_dt_on_interval {X} [Vec X] {f : ℝ → X → X} {t₀ : ℝ} {x₀ : X} 
+theorem odeSolve_fixed_dt_on_interval {X} [Vec X] {f : ℝ → X → X} {t₀ : ℝ} {x₀ : X}
   (stepper : Stepper) (interpol : (ℤ→X) → (ℝ→X)) (T : ℝ)
   : (λ t => odeSolve f t₀ x₀ t)
-    = 
-    limit λ n => 
+    =
+    limit λ n =>
       let Δt := (T-t₀) / n
       let toGrid := λ t : ℝ => (t - t₀)/Δt
       let odeData := odeSolve_fixed_dt_array f stepper n t₀ x₀ T
@@ -525,11 +522,11 @@ theorem odeSolve_fixed_dt_on_interval {X} [Vec X] {f : ℝ → X → X} {t₀ : 
 -- argument t [Hilbert X] [IsSmooth f] [∀ s, IsSmooth (f s)]
 --   hasAdjDiff   := by constructor; infer_instance; simp; intro; infer_instance; done,
 --   adjDiff_simp := ⟪dt', f t (odeSolve f t x₀)⟫ by simp[adjointDifferential,hold]; done
- 
+
 argument x₀ [Hilbert X] [IsSmooth f] [∀ s, HasAdjoint (f s)]
   hasAdjoint := sorry_proof,
-  adj_simp   := odeSolve (λ s => (f (t - s))†) t x₀' 
-  by 
+  adj_simp   := odeSolve (λ s => (f (t - s))†) t x₀'
+  by
     -- Define adjoint solution `y such that
     --  ∀ s, ⟪x (t - s), y s⟫ = ⟪x t, y 0⟫
     -- in particular for s := t we get desired ⟪x 0, y t⟫ = ⟪x t, y 0⟫
@@ -541,12 +538,12 @@ argument x₀ [Vec X] [IsSmooth f] [∀ s, IsSmooth (f s)]
   diff_simp  := odeSolve (λ s => ∂ (f s) (odeSolve f s x₀)) t dx₀
     by sorry_proof
 argument x₀ [Hilbert X] [IsSmooth f] [inst : ∀ t, HasAdjDiff (f t)]
-  hasAdjDiff   := by 
+  hasAdjDiff   := by
     have isf := λ t => (inst t).isSmooth
     have iaf := λ t => (inst t).hasAdjDiff
     constructor; infer_instance; simp; intro x₀; infer_instance,
-  adjDiff_simp := odeSolve (λ s => ∂† (f (t - s)) (odeSolve f (t - s) x₀)) t dx₀' 
-    by 
+  adjDiff_simp := odeSolve (λ s => ∂† (f (t - s)) (odeSolve f (t - s) x₀)) t dx₀'
+    by
       have isf := λ t => (inst t).isSmooth
       have iaf := λ t => (inst t).hasAdjDiff
       simp at iaf
@@ -554,29 +551,29 @@ argument x₀ [Hilbert X] [IsSmooth f] [inst : ∀ t, HasAdjDiff (f t)]
       done
 
 
-instance odeSolve.arg_f.isSmooth {X W} [Vec X] [Vec W] 
+instance odeSolve.arg_f.isSmooth {X W} [Vec X] [Vec W]
   (f : W → ℝ → X → X) [IsSmooth f] [∀ w, IsSmooth (f w)] [∀ w t, IsSmooth (f w t)]
   : IsSmooth (λ w => odeSolve (f w)) := sorry_proof
 
 @[simp]
-theorem odeSolve.arg_f.diff_simp {X W} [Vec X] [Vec W] 
+theorem odeSolve.arg_f.diff_simp {X W} [Vec X] [Vec W]
   (f : W → ℝ → X → X) [IsSmooth f] [∀ w, IsSmooth (f w)] [∀ w t, IsSmooth (f w t)]
   : ∂ (λ w => odeSolve (f w))
     =
     λ w dw t x => (odeSolve (λ t (x,dx) => (f w t x, ∂ f w dw t x + ∂ (f w t) x dx)) t (x,0)).1
   := sorry_proof
 
-theorem odeSolve.arg_f.diff_simp_alt {X W} [Vec X] [Vec W] 
+theorem odeSolve.arg_f.diff_simp_alt {X W} [Vec X] [Vec W]
   (f : W → ℝ → X → X) [IsSmooth f] [∀ w, IsSmooth (f w)] [∀ w t, IsSmooth (f w t)]
   : ∂ (λ w => odeSolve (f w))
     =
-    λ w dw t x₀ => 
+    λ w dw t x₀ =>
       let x := λ t => odeSolve (f w) t x₀
       (odeSolve (λ t dx => ∂ f w dw t (x t) + ∂ (f w t) (x t) dx) t 0)
   := sorry_proof
 
 -- @[simp]
--- theorem odeSolve.arg_f.adj_simp {X W} [SemiHilbert X] [SemiHilbert W] 
+-- theorem odeSolve.arg_f.adj_simp {X W} [SemiHilbert X] [SemiHilbert W]
 --   (f : W → ℝ → X → X) [IsSmooth f] [∀ w, IsSmooth (f w)] [∀ w t, IsSmooth (f w t)] (x₀ : X)
 --   : (λ w => odeSolve (f w) t x₀)†
 --     =
@@ -584,18 +581,17 @@ theorem odeSolve.arg_f.diff_simp_alt {X W} [Vec X] [Vec W]
 --   := sorry_proof
 
 -- @[simp]
--- theorem odeSolve.arg_f.adjDiff_simp {X W} [SemiHilbert X] [SemiHilbert W] 
+-- theorem odeSolve.arg_f.adjDiff_simp {X W} [SemiHilbert X] [SemiHilbert W]
 --   (f : W → ℝ → X → X) [IsSmooth f] [∀ w, IsSmooth (f w)] [∀ w t, IsSmooth (f w t)] (x₀ : X)
 --   : ∂† (λ w => odeSolve (f w) t x₀)
 --     =
---     λ w dw' => 
---       sorry := 
+--     λ w dw' =>
+--       sorry :=
 --   by
 --     simp only [adjointDifferential]
 --     simp [odeSolve.arg_f.diff_simp_alt]
-    
--- example [Hilbert X] (f : ℝ → X → X) (y : X) [IsSmooth f] [∀ t, HasAdjDiff (f t)] 
---   : ∇ (λ x₀ => ∥odeSolve f t x₀ - y∥²) = 0 := 
--- by 
---   simp[gradient]; unfold hold; simp
 
+-- example [Hilbert X] (f : ℝ → X → X) (y : X) [IsSmooth f] [∀ t, HasAdjDiff (f t)]
+--   : ∇ (λ x₀ => ∥odeSolve f t x₀ - y∥²) = 0 :=
+-- by
+--   simp[gradient]; unfold hold; simp

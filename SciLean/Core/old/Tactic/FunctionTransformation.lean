@@ -3,7 +3,7 @@ import Mathlib.Init.Function
 
 namespace SciLean
 
--- attributes 
+-- attributes
 -- fun_trans_def - define a new function transformation
 -- fun_trans - user facing attribute to define a rule for primitive function, most likely a simp rule
 -- fun_trans_rule - core rule to deal with lambda calculus - I, K, S, B, C, let, forall, proj, prod
@@ -14,7 +14,7 @@ namespace SciLean
 
 
 
--- Transformations 
+-- Transformations
 #check ``differential
 #check ``tangentMap
 

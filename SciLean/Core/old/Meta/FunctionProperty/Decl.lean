@@ -8,7 +8,7 @@ import SciLean.Core.Meta.RewriteBy
 
 namespace SciLean
 
-set_option linter.unusedVariables false 
+set_option linter.unusedVariables false
 
 open Lean Parser.Term Lean.Elab Meta
 
@@ -44,7 +44,7 @@ def addFunPropDecl (propName spaceName : Name) (e : Expr) (xs : Array Expr) (con
   let f    := e.getAppFn
   let args := e.getAppArgs
 
-  let mainArgIds ← xs.mapM (λ x => 
+  let mainArgIds ← xs.mapM (λ x =>
     args.findIdx? (λ arg => arg == x)
     |>.getDM (do throwError s!"Error in `addFunPropDecls`, argument `{← ppExpr x}` has to accur in `{← ppExpr e}!"))
 
@@ -57,7 +57,7 @@ def addFunPropDecl (propName spaceName : Name) (e : Expr) (xs : Array Expr) (con
   let normalTheorem ← mkNormalTheoremFunProp propName e xs contextVars
 
   let proof ← forallTelescope normalTheorem λ ys b => do
-    let val ← Term.elabTermAndSynthesize proofStx b 
+    let val ← Term.elabTermAndSynthesize proofStx b
     mkLambdaFVars ys val
 
   let theoremName := constName
@@ -82,10 +82,10 @@ def addFunPropDecl (propName spaceName : Name) (e : Expr) (xs : Array Expr) (con
   let compTheoremName := theoremName.appendAfter "'"
 
   let proof ← forallTelescope compTheorem λ ys b => do
-    -- TODO: Fill the proof here!!! 
-    -- I think I can manually apply composition rule and then it should be 
+    -- TODO: Fill the proof here!!!
+    -- I think I can manually apply composition rule and then it should be
     -- automatically discargable by using the normal theorem and product rule
-    let val ← Term.elabTermAndSynthesize (← `(by sorry_proof)) b  
+    let val ← Term.elabTermAndSynthesize (← `(by sorry_proof)) b
     mkLambdaFVars ys val
 
   let info : TheoremVal :=
@@ -101,18 +101,18 @@ def addFunPropDecl (propName spaceName : Name) (e : Expr) (xs : Array Expr) (con
 
   addFunctionProperty constName propName mainArgIds theoremName compTheoremName none
 
-inductive FunTransDefStx 
+inductive FunTransDefStx
   | valProof (valStx : Term) (proof : TSyntax ``Lean.Parser.Tactic.tacticSeq)
   | conv     (conv : TSyntax ``Parser.Tactic.Conv.convSeq)
 
-def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bool) 
-  (e : Expr) (xs : Array Expr) (contextVars : Array Expr) 
+def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bool)
+  (e : Expr) (xs : Array Expr) (contextVars : Array Expr)
   (funTransDefStx : FunTransDefStx) : TermElabM Unit := do
 
   let f    := e.getAppFn
   let args := e.getAppArgs
 
-  let mainArgIds ← xs.mapM (λ x => 
+  let mainArgIds ← xs.mapM (λ x =>
     args.findIdx? (λ arg => arg == x)
     |>.getDM (do throwError s!"Error in `addFunPropDecls`, argument `{← ppExpr x}` has to accur in `{← ppExpr e}!"))
 
@@ -124,7 +124,7 @@ def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bo
   -- make definition
   let defTargetVal  ← mkNormalTheoremLhs transName e xs
   let defType ← inferType defTargetVal
-  let (defVal, defProof)  ← 
+  let (defVal, defProof)  ←
     match funTransDefStx with
     | .valProof valStx proofStx => do
       let val ← Term.elabTermAndSynthesize valStx defType
@@ -141,23 +141,23 @@ def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bo
   let contextVars' := maybeFilterContextVars transName xs contextVars
   let defValLambda ← mkLambdaFVars contextVars' defVal
 
-  let info : DefinitionVal := 
+  let info : DefinitionVal :=
   {
     name  := defName
     type  := ← instantiateMVars (← inferType defValLambda)
-    value := ← instantiateMVars defValLambda 
+    value := ← instantiateMVars defValLambda
     hints := .regular 0
     safety := .safe
     levelParams := []
   }
 
-  if nonComputable then 
+  if nonComputable then
     addDecl (.defnDecl info)
   else
     addAndCompile (.defnDecl info)
 
   -- If we want to use just defined value in the simp theorem
-  let defVal ← 
+  let defVal ←
     if useDefInSimp = true then do
       mkAppOptM defName (contextVars'.map some)
     else
@@ -185,8 +185,8 @@ def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bo
   trace[FunProp.new_decl] s!"Composition theorem for {transName}:\n{← ppExpr compTheorem}"
 
   let prf ← forallTelescope compTheorem λ contextVars statement => do
-    -- TODO: Fill the proof here!!! 
-    -- I think I can manually apply composition rule and then it should be 
+    -- TODO: Fill the proof here!!!
+    -- I think I can manually apply composition rule and then it should be
     -- automatically discargable by using the normal theorem and product rule
     let prf ← Term.elabTermAndSynthesize (← `(by sorry_proof)) statement
     mkLambdaFVars contextVars prf
@@ -204,4 +204,3 @@ def addFunTransDecl (transName : Name) (useDefInSimp : Bool) (nonComputable : Bo
   addDecl (.thmDecl info)
 
   addFunctionProperty constName transName mainArgIds theoremName compTheoremName defName
-

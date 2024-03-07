@@ -10,11 +10,11 @@ variable {X Y ι : Type} [EnumType ι] [FinVec X ι] [Hilbert Y] [Hilbert Z]
 --------------------------------------------------------------------------------
 
  -- maybe add a condition that φ is test function on Ω
-def hasVariationalDual (F : (X ⟿ Y) → Set X → ℝ) 
+def hasVariationalDual (F : (X ⟿ Y) → Set X → ℝ)
   := ∃ (f : X ⟿ Y), ∀ Ω (φ : X ⟿ Y), F f Ω = ∫ x∈Ω, ⟪f x, φ x⟫
 
 noncomputable
-def variationalDual (F : (X ⟿ Y) → Set X → ℝ) : (X ⟿ Y) := 
+def variationalDual (F : (X ⟿ Y) → Set X → ℝ) : (X ⟿ Y) :=
   match Classical.dec (hasVariationalDual F) with
   | .isTrue h => Classical.choose h
   | .isFalse _ => 0
@@ -42,7 +42,7 @@ theorem variationalDual.arg_F.adjoint_simp (F : (X ⟿ Y) → (X → ℝ)) [∀ 
 --------------------------------------------------------------------------------
 
 noncomputable
-def gradientVariational (F : (X⟿Y) → Set X → ℝ) (f : X⟿Y) := (∂ F f)† 
+def gradientVariational (F : (X⟿Y) → Set X → ℝ) (f : X⟿Y) := (∂ F f)†
 
 instance (F : (X⟿Y) → Set X → ℝ) : Nabla F (gradientVariational F) := ⟨⟩
 
@@ -59,8 +59,8 @@ theorem gradientVariational_comp (F : (X⟿Y) → (X⟿ℝ))
 -- Divergence ∂·
 --------------------------------------------------------------------------------
 
-noncomputable 
-def divergenceDiffSmooth (v : X ⟿ X ⊸ Y) := λ x ⟿ - ∑ i, ∂ v x (𝕖' i) (𝕖 i)  
+noncomputable
+def divergenceDiffSmooth (v : X ⟿ X ⊸ Y) := λ x ⟿ - ∑ i, ∂ v x (𝕖' i) (𝕖 i)
 
 instance (v : X ⟿ X ⊸ Y) : PartialDot v (divergenceDiffSmooth v) := ⟨⟩
 
@@ -84,7 +84,7 @@ def divergence (v : X→X) : X→ℝ:=
   (λ (x : X) => ∑ (j:ι), 𝕡 j (dv x (𝕖[X] j)))
 
 noncomputable
-def divergenceSmooth (v : X⟿X) : X⟿ℝ := 
+def divergenceSmooth (v : X⟿X) : X⟿ℝ :=
   SmoothMap.mk (divergence v.1) sorry_proof
 
 instance (v : X → X) : Divergence v (divergence v) := ⟨⟩
@@ -130,9 +130,9 @@ theorem Smooth.divergence.symmetric_form (v : X ⟿ X ⊸ Y)
   : ∂· v
     =
     λ x ⟿ - ∑ i j, ⟪𝕖'[X] i, 𝕖' j⟫ • ∂ v x (𝕖 i) (𝕖 j)
-  := 
+  :=
 by
-  -- calc 
+  -- calc
   --   𝕖' i = ∑ j, 𝕡 j (𝕖' i) • 𝕖 j   := by FinVec.is_basis (𝕖' i)
   --      _ = ∑ j, ⟪𝕖' j, 𝕖' i⟫ • 𝕖 j := by ← inner_dualBasis_proj
   -- then it is just linearity
@@ -145,28 +145,28 @@ by
 
 
 -- This is a component wise formulation of divergence theorem
-theorem divergence_theorem (f : X ⟿ ℝ) 
+theorem divergence_theorem (f : X ⟿ ℝ)
   (Ω : Set X) (S : Set X) -- ∂ Ω = S -- surface of Ω
   (𝕟 : X → X) -- this should be the normal of Ω
-  : ∫ x∈Ω, ∂ f x (𝕖 i) 
+  : ∫ x∈Ω, ∂ f x (𝕖 i)
     =
     ∫ x∈S, f x * ⟪𝕟 x, 𝕖 i⟫ -- not entirelly sure about the projection of the normal, it might be `⟪𝕟 x, 𝕖' i⟫`
   := sorry_proof
 
 @[simp]
-theorem Smooth.differential.arg_f.adjoint_simp 
+theorem Smooth.differential.arg_f.adjoint_simp
   : (Smooth.differential : (X⟿Y) → (X⟿X⊸Y))†
     =
     - divergenceDiffSmooth
-  := 
+  :=
 by
 
-  -- this is a setup for proving adjoint 
+  -- this is a setup for proving adjoint
   have Ω : Set X := sorry  -- this should be sufficiently regular, can be even a ball sufficently big to contain support of `v`
   have f : X ⟿ Y := sorry
   have v : X⟿X⊸Y := sorry -- this should be a test function vanishing outside of Ω
   have : ∫ x∈Ω, ⟪∂ f x, v x⟫ = - ∫ x∈Ω, ⟪f x, ∂· v x⟫ := by
-   calc 
+   calc
      ∫ x∈Ω, ⟪∂ f x, v x⟫ = ∫ x∈Ω, ∑ i, ⟪∂ f x (𝕖 i), v x (𝕖' i)⟫ := by sorry_proof
 
      -- change of notation
@@ -174,8 +174,8 @@ by
 
      -- product rule for differentiation
      _ = ∫ x∈Ω, ∑ i, (∂ (x':=x;𝕖 i), ⟪f x', v x' (𝕖' i)⟫
-                      - 
-                      ⟪f x, (∂ (x':=x;𝕖 i), v x' (𝕖' i))⟫) := by sorry_proof 
+                      -
+                      ⟪f x, (∂ (x':=x;𝕖 i), v x' (𝕖' i))⟫) := by sorry_proof
 
      -- first therm vanishes by using greens theorem and the fact `v` vanishes on the boundary of Ω
      _ = - ∫ x∈Ω, ∑ i, ⟪f x, (∂ (x':=x;𝕖 i), v x' (𝕖' i))⟫ := by sorry_proof
@@ -194,15 +194,15 @@ theorem Smooth.adjointDifferential.arg_f.adjoint_simp {Y} {κ} [EnumType κ] [Fi
   : (Smooth.adjointDifferential : (X⟿Y) → (X⟿Y⊸X))†
     =
     - divergenceAdjDiffSmooth
-  := 
+  :=
 by
 
-  -- this is a setup for proving adjoint 
+  -- this is a setup for proving adjoint
   have Ω : Set X := sorry  -- this should be sufficiently regular, can be even a ball sufficently big to contain support of `v`
   have f : X ⟿ Y := sorry
   have v : X⟿Y⊸X := sorry -- this should be a test function vanishing outside of Ω
   have : ∫ x∈Ω, ⟪∂† f x, v x⟫ = - ∫ x∈Ω, ⟪f x, ∇· v x⟫ := by
-   calc 
+   calc
      ∫ x∈Ω, ⟪∂† f x, v x⟫ = ∫ x∈Ω, ∑ i, ⟪∂† f x (𝕖 i), v x (𝕖' i)⟫ := by sorry_proof
 
      -- adjoint of differential
@@ -218,7 +218,7 @@ by
      _ = ∫ x∈Ω, ∑ i j, 𝕡 j (v x (𝕖' i)) * ∂ (x':=x;𝕖 j), ⟪𝕖 i, f.1 x'⟫ := by sorry_proof
 
      -- product rule for differentiation
-     _ = ∫ x∈Ω, ∑ i j, (∂ (x':=x;𝕖 j), 𝕡 j (v x' (𝕖' i)) * ⟪𝕖 i, f.1 x'⟫ 
+     _ = ∫ x∈Ω, ∑ i j, (∂ (x':=x;𝕖 j), 𝕡 j (v x' (𝕖' i)) * ⟪𝕖 i, f.1 x'⟫
                         -
                         (𝕡 j (∂ (x':=x;𝕖[X] j), v x' (𝕖' i))) * ⟪𝕖 i, f.1 x⟫) := by sorry_proof
 
@@ -232,7 +232,7 @@ by
 
 
 @[simp]
-theorem Smooth.gradient.arg_f.adjoint_simp 
+theorem Smooth.gradient.arg_f.adjoint_simp
   : (Smooth.gradient : (X⟿ℝ) → (X⟿X))†
     =
     - divergenceSmooth
@@ -245,4 +245,3 @@ theorem Smooth.differentialScalar.arg_f.adjoint_simp {X} [Hilbert X]
     =
     - Smooth.differentialScalar
   := sorry_proof
-

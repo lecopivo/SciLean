@@ -19,7 +19,7 @@ def AutoImpl.finish {α} {a : α} : AutoImpl a := .exact a rfl
 
 theorem AutoImpl.impl_eq_spec (x : AutoImpl a) : a = x.val :=
 by
-  cases x; rename_i a' h; 
+  cases x; rename_i a' h;
   simp[AutoImpl.val, val, h]
   done
 
@@ -29,8 +29,8 @@ by
 axiom AutoImpl.injectivity_axiom {α} {a b : α} : (AutoImpl a = AutoImpl b) → (a = b)
 
 -- Do we really need AutoImpl.injectivity_axiom?
-@[simp] theorem AutoImpl.normalize_val {α : Type u} (a b : α) (h : (AutoImpl a = AutoImpl b)) 
-  : AutoImpl.val (Eq.mpr h (AutoImpl.finish (a:=b))) = b := 
+@[simp] theorem AutoImpl.normalize_val {α : Type u} (a b : α) (h : (AutoImpl a = AutoImpl b))
+  : AutoImpl.val (Eq.mpr h (AutoImpl.finish (a:=b))) = b :=
 by
   have h' : a = b := by apply AutoImpl.injectivity_axiom; apply h
   revert h; rw[h']
@@ -39,8 +39,8 @@ by
 
 -- -- This is a new version of `AutoImpl.normalize_val`, some tactic uses `cast` instead of `Eq.mpr` now
 -- -- TODO: clean this up
--- @[simp] theorem AutoImpl.normalize_val' {α : Type u} (a b : α) (h : (AutoImpl a = AutoImpl b)) 
---   : AutoImpl.val (cast h (AutoImpl.finish (a:=a))) = a := 
+-- @[simp] theorem AutoImpl.normalize_val' {α : Type u} (a b : α) (h : (AutoImpl a = AutoImpl b))
+--   : AutoImpl.val (cast h (AutoImpl.finish (a:=a))) = a :=
 -- by sorry
 --   -- have h' : a = b := by apply AutoImpl.injectivity_axiom; apply h
 --   -- revert h; rw[h']
@@ -49,7 +49,7 @@ by
 
 
 example {α : Type} (a b : α) (A : (Σ' x, x = a)) (h : (Σ' x, x = a) = (Σ' x, x = b))
-  : (a = b) ↔ (h ▸ A).1 = A.1 := 
+  : (a = b) ↔ (h ▸ A).1 = A.1 :=
 by
   constructor
   {
@@ -66,7 +66,7 @@ open Lean.Parser.Tactic.Conv
 
 -- TODO: turn `rewrite_by` to an elaborator and do not use `AutoImpl`
 /--
-Rewrites term by conv tactic. 
+Rewrites term by conv tactic.
 
 Example: `5 + 0 rewrite_by simp` returns `5`
 
@@ -97,7 +97,7 @@ def rewriteBy (e : Expr) (conv : TSyntax ``convSeq) : TermElabM (Expr × Expr) :
   let e' := proof.getArg! 2
 
   return (e',proof)
-  
+
 elab_rules : term
   | `($x rewrite_by $rw:convSeq) => do
 
@@ -115,6 +115,6 @@ elab_rules : term
 
 #check ((1 + 10 + 0 + 1 + 5 + 0 + 10) rewrite_by simp)
 #check ((1 + 10 + 0 + 1 + 5 + 0 + 10) rewrite_by' simp)
-#check 
+#check
   let ⟨v,p⟩ := ((id 100) rewrite_by' simp)
   p

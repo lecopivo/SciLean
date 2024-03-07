@@ -4,20 +4,20 @@ open SciLean
 
 set_default_scalar Float
 
-def foo := 
-  ((SciLean.gradient Float (fun x : Float ^ Idx 3 => Id.run do
-    let mut prod := 1
+#exit
+
+def foo :=
+  ((SciLean.gradient Float (fun x : Float ^ Fin 3 => Id.run do
+    let mut prod := 1.0
     let mut sum := 0.0
-    for i in fullRange (Idx 3) do
+    for i in IndexType.univ (Fin 3) do
       prod := prod * x[i]
       sum := sum + x[i]
     (prod,sum)))
     rewrite_by
       unfold SciLean.gradient
-      ftrans
-      ftrans
-      unfold SciLean.gradient
-      ftrans)
+      autodiff
+      unfold SciLean.gradient)
 
 /--
 info: ⊞[56.000000, 48.000000, 42.000000]
@@ -31,7 +31,7 @@ info: ⊞[0.000000, 0.000000, 0.000000]
 #guard_msgs in
 #eval foo ⊞[6.0,7,8] (0,0)
 
-def bar := 
+def bar :=
   ((SciLean.gradient Float (fun x : Float ^ Idx 3 => Id.run do
     let mut prod := 1
     let mut sum := 0.0
@@ -44,10 +44,10 @@ def bar :=
     (prod,sum,norm2)))
     rewrite_by
       unfold SciLean.gradient
-      ftrans
-      ftrans
+      fun_trans
+      fun_trans
       unfold SciLean.gradient
-      ftrans)
+      fun_trans)
 
 /--
 info: ⊞[56.000000, 48.000000, 42.000000]
@@ -61,7 +61,7 @@ info: ⊞[1.000000, 1.000000, 1.000000]
 #guard_msgs in
 #eval (bar ⊞[6.0, 7, 8] (0,1,0))
 
-/-- 
+/--
 info: ⊞[12.000000, 14.000000, 16.000000]
 -/
 #guard_msgs in

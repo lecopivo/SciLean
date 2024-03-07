@@ -1,0 +1,6 @@
+import Lean
+
+register_simp_attr rand_simp
+register_simp_attr rand_AD
+register_simp_attr rand_push_E
+register_simp_attr rand_pull_E

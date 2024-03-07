@@ -9,6 +9,12 @@ lean_lib SciLean {
   roots := #[`SciLean]
 }
 
+lean_lib CompileTactics where
+  -- options for SciLean.Tactic.MySimpProc (and below) modules
+  precompileModules := true
+  roots := #[`SciLean.Tactic.LSimp.LetNormalize,`SciLean.Tactic.MathlibCompiledTactics]
+
+
 
 lean_exe WaveEquation {
   root := `examples.WaveEquation
@@ -25,6 +31,11 @@ lean_exe CircleOptimisation {
 lean_exe Ballistic {
   root := `examples.Ballistic
 }
+
+lean_exe WalkOnSpheres {
+  root := `examples.WalkOnSpheres
+}
+
 
 lean_exe ForLoopTest {
   buildType := .release
@@ -44,7 +55,8 @@ lean_exe MNISTClassifier where
 meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
 
-require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "master"
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "lecopivo/fun_trans"
+require leancolls from git "https://github.com/lecopivo/LeanColls.git" @ "main"
 
 set_option linter.unusedVariables false
 
@@ -103,18 +115,18 @@ script compileEigen (args) do
   if ¬(← defaultBuildDir / "Eigen" / "Makefile" |>.pathExists) then
     let runCMake ← IO.Process.spawn {
       cmd := "cmake"
-      args := #[(← IO.currentDir) / "cpp" / "Eigen" |>.toString, 
+      args := #[(← IO.currentDir) / "cpp" / "Eigen" |>.toString,
                 "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
                 "-DCMAKE_BUILD_TYPE=Release",
                 s!"-DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES={← getLeanIncludeDir}"]
       cwd := defaultBuildDir / "Eigen" |>.toString
-      
+
     }
     let out ← runCMake.wait
     if out != 0 then
       return out
 
-  -- run make 
+  -- run make
   let runMake ← IO.Process.spawn {
     cmd := "make"
     args := #["-j"]
@@ -122,7 +134,7 @@ script compileEigen (args) do
   }
   let out ← runMake.wait
   if out != 0 then
-    return out 
+    return out
 
   return 0
 

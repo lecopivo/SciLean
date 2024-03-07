@@ -1,9 +1,9 @@
-import Lean 
+import Lean
 
 import SciLean.Lean.Expr
 import SciLean.Lean.Meta.Basic
 
-open Lean 
+open Lean
 
 namespace Lean.Parser.Tactic.Conv
 
@@ -25,7 +25,7 @@ open Lean.Parser.Tactic
 
 
 @[tactic flatten_let_conv] def convFlattenLet : Tactic
-| `(conv| flatten_let) => do  
+| `(conv| flatten_let) => do
   (← getMainGoal).withContext do
     let lhs ← getLhs
     let lhs' ← flattenLet 20 (← instantiateMVars lhs)
@@ -34,7 +34,7 @@ open Lean.Parser.Tactic
 | _ => Lean.Elab.throwUnsupportedSyntax
 
 @[tactic flatten_let_tactic] def tacticFlattenLet : Tactic
-| `(tactic| flatten_let) => do  
+| `(tactic| flatten_let) => do
   let goal ← getMainGoal
   goal.withContext do
     let t ← goal.getType
@@ -50,14 +50,14 @@ open Lean.Parser.Tactic
 | _ => Lean.Elab.throwUnsupportedSyntax
 
 
-macro "rw'" " [" s:simpLemma,* "]" : conv => 
+macro "rw'" " [" s:simpLemma,* "]" : conv =>
   let s' : Syntax.TSepArray `Lean.Parser.Tactic.simpStar "," := ⟨s.1⟩ -- hack
   `(conv| simp (config := {zeta := false, proj := false, beta := false, iota := false, eta := false, singlePass := true, decide := false}) only [$s',*])
 
-macro "rw'" " [" s:simpLemma,* "]" : tactic => 
+macro "rw'" " [" s:simpLemma,* "]" : tactic =>
   let s' : Syntax.TSepArray `Lean.Parser.Tactic.simpStar "," := ⟨s.1⟩ -- hack
   `(tactic| simp (config := {zeta := false, proj := false, beta := false, iota := false, eta := false, singlePass := true, decide := false}) only [$s',*])
-  
+
 
 macro "clean_up" : tactic => `(tactic| conv => enter[1]; dsimp (config := {zeta := false, proj:=false}); flatten_let)
 macro "clean_up_simp" : tactic => `(tactic| conv => enter[1]; simp (config := {zeta := false, proj:=false}); flatten_let)

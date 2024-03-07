@@ -10,7 +10,7 @@ def Int64.valueMask : USize := ((0:USize)-1) >>> 1
 def Int64.signMask : USize := ((0:USize)-(1:USize)) - (((0:USize)-1) >>> 1)
 def Int64.isPositive (n : Int64) : Bool := (n.toUSize &&& Int64.signMask) = 0
 def Int64.isNegative (n : Int64) : Bool := (n.toUSize &&& Int64.signMask) ≠ 0
-def Int64.absValue (n : Int64) : USize := 
+def Int64.absValue (n : Int64) : USize :=
   if n.isPositive then
     n.toUSize
   else
@@ -29,14 +29,14 @@ instance : Add Int64 := ⟨fun x y => ⟨x.toUSize + y.toUSize⟩⟩
 instance : Sub Int64 := ⟨fun x y => ⟨x.toUSize - y.toUSize⟩⟩
 instance : Neg Int64 := ⟨fun x   => ⟨(0:USize) - (x.toUSize)⟩⟩
 instance : Mul Int64 := ⟨fun x y => ⟨x.toUSize * y.toUSize⟩⟩
-instance : Div Int64 := ⟨fun x y => 
+instance : Div Int64 := ⟨fun x y =>
   match x.isPositive, y.isPositive with
   | true, true => ⟨x.toUSize / y.toUSize⟩
   | false, true => -⟨(-x).toUSize / y.toUSize⟩
   | true, false => -⟨x.toUSize / (-y).toUSize⟩
   | false, false => ⟨(-x).toUSize / (-y).toUSize⟩⟩
 
-instance : Mod Int64 := ⟨fun x y => 
+instance : Mod Int64 := ⟨fun x y =>
   match x.isPositive, y.isPositive with
   | true, true => ⟨x.toUSize % y.toUSize⟩
   | false, true => -⟨(-x).toUSize % y.toUSize⟩
@@ -53,7 +53,7 @@ def Int64.comp (x y : Int64) : Ordering :=
 instance : LE Int64 := ⟨fun x y => x.comp y != .gt⟩
 instance : LT Int64 := ⟨fun x y => x.comp y == .lt⟩
 
-instance Int64.decLt (a b : Int64) : Decidable (a < b) := 
+instance Int64.decLt (a b : Int64) : Decidable (a < b) :=
   if h : a.comp b == .lt then
     .isTrue h
   else
@@ -66,4 +66,3 @@ instance Int64.decLe (a b : Int64) : Decidable (a ≤ b) :=
     .isFalse h
 
 instance : DecidableEq Int64 := fun x y => if _h : x.1 = y.1 then .isTrue sorry_proof else .isFalse sorry_proof
-

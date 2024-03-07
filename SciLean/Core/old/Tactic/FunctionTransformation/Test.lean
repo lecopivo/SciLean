@@ -9,18 +9,18 @@ namespace SciLean
 
 variable {X : Type} [Hilbert X]
 
--- set_option trace.Meta.Tactic.fun_trans true 
--- set_option trace.Meta.Tactic.fun_trans.step true 
--- set_option trace.Meta.Tactic.fun_trans.rewrite true 
--- set_option trace.Meta.Tactic.fun_trans.normalize_let true 
-example 
+-- set_option trace.Meta.Tactic.fun_trans true
+-- set_option trace.Meta.Tactic.fun_trans.step true
+-- set_option trace.Meta.Tactic.fun_trans.rewrite true
+-- set_option trace.Meta.Tactic.fun_trans.normalize_let true
+example
   : ∂ (λ xy : ℝ × ℝ => xy.fst)
     =
-    λ xy dxy => dxy.fst 
+    λ xy dxy => dxy.fst
   :=
 by
   fun_trans
-  
+
 
 -- Level Set of a sphere
 
@@ -29,7 +29,7 @@ example (c : X) (r : ℝ)
   : ∂ (x : X), (‖x - c‖² - r^2)
     =
     λ x dx => 2 * ⟪dx, x - c⟫
-  := 
+  :=
 by
   conv => lhs; fun_trans
 
@@ -52,7 +52,7 @@ example (c : X) (r : ℝ)
 by
   unfold gradient
   conv => lhs; fun_trans; fun_trans
-  
+
 example (x : X) : IsSmooth λ y : X => ⟪x,y⟫ := by infer_instance
 example (x : X) : IsSmooth (Inner.inner x)  := by infer_instance
 
@@ -62,10 +62,10 @@ example (c : X) (r : ℝ)
   : ∂ (∂ (x : X), (‖x - c‖² - r^2))
     =
     λ x u v => 2 * ⟪v, u⟫
-  := 
+  :=
 by
-  conv => 
-    lhs; 
+  conv =>
+    lhs;
     fun_trans
     fun_trans
     simp
@@ -78,7 +78,7 @@ example (c : X) (r : ℝ)
   : ∂ (x : X), (‖x - c‖ - r)
     =
     λ x dx => ⟪dx, x - c⟫ / ‖x - c‖
-  := 
+  :=
 by
   unsafe_ad
   conv => lhs; fun_trans
@@ -90,7 +90,7 @@ example (c : X) (r : ℝ)
   : ∇ (x : X), (‖x - c‖ - r)
     =
     λ x => ‖x - c‖⁻¹ • (x - c)
-  := 
+  :=
 by
   unsafe_ad
   unfold gradient
@@ -105,9 +105,9 @@ set_option trace.Meta.Tactic.fun_trans.rewrite true in
 example (c : X) (r : ℝ)
   : ∂ (∂ (x : X), (‖x - c‖ - r))
     =
-    λ x u v => 
+    λ x u v =>
       (⟪v, u⟫ * ‖x - c‖ - ⟪v, x - c⟫ * (⟪u, x - c⟫ / ‖x - c‖ )) / ‖x - c‖^2
-  := 
+  :=
 by
   unsafe_ad
   conv =>
@@ -119,7 +119,7 @@ by
 
 
 -- Differentiation of ReLu
-example 
+example
   : ∂ (λ x : ℝ => if 0 < x then x else 0)
     =
     λ x dx => if 0 < x then dx else 0
@@ -164,7 +164,7 @@ open Lean Meta Qq
     let f' ← normalizeLet? f
     IO.println s!"\n{← ppExpr f'}\n"
     IO.println s!"f is equal to f': {← isDefEq f f'}\n"
-  
+
   lambdaTelescope e λ xs fst => do
 
     IO.println s!"{← ppExpr fst} is projection: {fst.isProj}"
@@ -172,16 +172,16 @@ open Lean Meta Qq
     let fst ← reduce fst
     IO.println s!"{← ppExpr fst} is projection: {fst.isProj}"
 
-    
+
 
 
 -- example {X Y₁ Y₂ Z} [SemiHilbert X] [SemiHilbert Y₁] [SemiHilbert Y₂] [SemiHilbert Z]
 --   (f : Y₁ → Y₂ → Z) (g₁ : X → Y₁) (g₂ : X → Y₂)
 --   : (λ (x : X) => f (g₁ x) (g₂ x))†
 --     =
---     λ z => 
+--     λ z =>
 --       let xy := (uncurryN 2 f)† z
---       g₁† xy.1 + g₂† xy.2 
+--       g₁† xy.1 + g₂† xy.2
 --   :=
 -- by
 --   fun_trans
@@ -199,34 +199,34 @@ open Lean Meta Qq
 variable {α β γ : Type} {X Y Y₁ Y₂ Z : Type} [Vec X] [Vec Y] [Vec Z] [Vec Y₁] [Vec Y₂]
 
 set_option pp.all true in
-set_option trace.Meta.Tactic.fun_trans true 
-set_option trace.Meta.Tactic.fun_trans.rewrite true 
+set_option trace.Meta.Tactic.fun_trans true
+set_option trace.Meta.Tactic.fun_trans.rewrite true
 set_option trace.Meta.Tactic.fun_trans.missing_rule true
-set_option trace.Meta.Tactic.fun_trans.normalize_let true 
+set_option trace.Meta.Tactic.fun_trans.normalize_let true
 
 example
-  : ∂ (λ x : X => x) 
-    = 
-    λ x dx => dx 
+  : ∂ (λ x : X => x)
+    =
+    λ x dx => dx
   := by fun_trans
 
 
 example (x : X)
   : ∂ (λ y : Y => x) y
-    = 
+    =
     λ dy => 0
   := by fun_trans
 
 example (a : α) (f : α → X)
   : ∂ (λ f' : α → X => f' a) f
-    = 
+    =
     λ df => df a
   := by fun_trans
 
 
 example (f : Y → Z) (g : X → Y) [IsSmooth f] [IsSmooth g]
   : ∂ (λ x : X => f (g x))
-    = 
+    =
     λ x dx => ∂ f (g x) (∂ g x dx)
   := by fun_trans
 
@@ -255,35 +255,35 @@ noncomputable
 def invChoice {α} [h : Nonempty α] /- {val : α} -/ : α  := Classical.choice h
 
 @[simp ↓]
-theorem setElem_inv {XI X I} [ArrayType XI I X] [Nonempty XI] [Nonempty X] (i : I) 
+theorem setElem_inv {XI X I} [ArrayType XI I X] [Nonempty XI] [Nonempty X] (i : I)
   : inv (uncurryN 2 λ (x : XI) (xi : X) => setElem x i xi)
     =
     λ x => (uncurryN 2 λ (x : XI) (xi : X) => (setElem x i xi, x[i])) (x,invChoice)
-    := 
-by  
-  sorry
-
-@[simp ↓]
-theorem setElem_inv' {XI X I} [ArrayType XI I X] [Nonempty XI] [Nonempty X] (i : I) 
-  : inv (uncurryN 2 λ (x : XI) (xi : X) => (setElem x i xi, x[i]))
-    =
-    λ xxi : XI×X => 
-      let x := xxi.1
-      let xi := xxi.2
-      (setElem x i xi, x[i])
-    := 
+    :=
 by
   sorry
 
 @[simp ↓]
-theorem setElem_inv'' {XI X I} [ArrayType XI I X] [Nonempty XI] (i j : I) 
+theorem setElem_inv' {XI X I} [ArrayType XI I X] [Nonempty XI] [Nonempty X] (i : I)
+  : inv (uncurryN 2 λ (x : XI) (xi : X) => (setElem x i xi, x[i]))
+    =
+    λ xxi : XI×X =>
+      let x := xxi.1
+      let xi := xxi.2
+      (setElem x i xi, x[i])
+    :=
+by
+  sorry
+
+@[simp ↓]
+theorem setElem_inv'' {XI X I} [ArrayType XI I X] [Nonempty XI] (i j : I)
   : inv (λ (x : XI) => (setElem x i x[j], x[i]))
     =
-    λ xxi : XI×X => 
+    λ xxi : XI×X =>
       let x := xxi.1
       let xi := xxi.2
       setElem x i xi
-    := 
+    :=
 by
   sorry
 
@@ -317,10 +317,9 @@ example (n : ℕ) (i j : Fin n)
       x[j] := x[i]
       x[i] := tmp
       x)
-  := 
+  :=
 by
   dsimp [Id.run]
   fun_trans
   dsimp
   done
-

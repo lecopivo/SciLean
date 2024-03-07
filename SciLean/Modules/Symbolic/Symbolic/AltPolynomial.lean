@@ -15,11 +15,11 @@ def AltPolynomial := Quot
     (Expr.EqAlgebra x y) ∨
     (Expr.EqAntiCommutative x y))
 
-namespace AltPolynomial 
+namespace AltPolynomial
 
   variable {ι : Type} {K : Type} [Add K] [Mul K] [One K] [Zero K] [Neg K]
 
-  namespace Expr 
+  namespace Expr
 
     open Symbolic.Expr
 
@@ -59,7 +59,7 @@ namespace AltPolynomial
   instance : Zero (AltPolynomial ι K) := ⟨Quot.mk _ 0⟩
   instance : One  (AltPolynomial ι K) := ⟨Quot.mk _ 1⟩
 
-  -- The string actually depends on the represenative element, 
+  -- The string actually depends on the represenative element,
   -- thus it has to be hidden behind an opaque constant
   -- The sorry here is impossible to be proven
   constant toString' [ToString ι] [ToString K] (p : AltPolynomial ι K)  : String :=
@@ -78,7 +78,7 @@ namespace AltPolynomial
   -- def PᵣΛₖ (ι) (r k : Nat) := AntiPolynomials ι (Polynomials ι ℝ) -- polyhomials
   -- def 𝓒Λₖ (X : Type) (k : Nat) [FinEnumVec X] := AntiPolynomials (FinEnumBasis.index X) (X ⟿ ℝ)   -- smoot
 
-  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : AltPolynomial ι K 
+  def var {ι} (i : ι) (K := ℝ) [Add K] [Mul K] [One K] : AltPolynomial ι K
     := Quot.mk _ (Expr.var i)
 
   def expand {ι} [Zero K]
@@ -86,15 +86,15 @@ namespace AltPolynomial
     [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
     (x : AltPolynomial ι K) : AltPolynomial ι K :=
     Quot.mk _ <|
-    Quot.lift 
+    Quot.lift
       (λ e => e.expand)
       sorry x
 
-  def simplify {ι} [Inhabited ι] [Inhabited K] [Zero K] [One K] [Neg K] 
+  def simplify {ι} [Inhabited ι] [Inhabited K] [Zero K] [One K] [Neg K]
     [LT ι] [∀ i j : ι, Decidable (i < j)] [DecidableEq ι]
     [LT K] [∀ a b : K, Decidable (a < b)] [DecidableEq K]
     (x : AltPolynomial ι K) : AltPolynomial ι K :=
-    Quot.mk _ <| Quot.lift 
+    Quot.mk _ <| Quot.lift
       (λ e =>
          e |> Expr.expand_to_monomials
            |> Array.map Monomial.altReduce
@@ -106,7 +106,7 @@ namespace AltPolynomial
   def mapMon {ι} (f : K → AltPolynomial ι K → AltPolynomial ι K)
     (p : AltPolynomial ι K) : AltPolynomial ι K :=
     Quot.lift
-      (λ e => 
+      (λ e =>
          e.expand_to_monomials
          |> Array.map (λ m => f m.coeff (Quot.mk _ $ (Monomial.mk 1 m.vars).toExpr))
          |> Array.foldl (· + ·) 0
@@ -116,10 +116,10 @@ namespace AltPolynomial
   notation " dx⟦" i ", " K "⟧ " => AltPolynomial.var (K := K) i
   notation " dx⟦" i "⟧ " => AltPolynomial.var i
 
-  #check mapMon (λ c x => x) (2.0 * dx⟦0⟧ + dx⟦(0 : Nat)⟧) 
+  #check mapMon (λ c x => x) (2.0 * dx⟦0⟧ + dx⟦(0 : Nat)⟧)
   #eval  mapMon (λ c x => (Math.sqrt c : ℝ)*x) (2.0 * dx⟦0⟧ ∧ (5.0 * dx⟦0⟧) + 2.0 * dx⟦3⟧)
 
-  def diff [Enumtype ι] (p : AltPolynomial ι K) (f : K → K) : AltPolynomial ι K := 
+  def diff [Enumtype ι] (p : AltPolynomial ι K) (f : K → K) : AltPolynomial ι K :=
     p.mapMon λ a dx => ∑ i : ι, (f a) * dx
 
   -- #eval  dx⟦0⟧ ∧ dx⟦1⟧

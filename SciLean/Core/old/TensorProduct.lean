@@ -48,19 +48,19 @@ namespace TensorProduct
   @[simp] theorem map'_tprod (f : X → Y → Z) (h : is_linear f ∧ ∀ x, is_linear (f x)) (x : X) (y : Y)
     : map' f h (x⊗y) = f x y := sorry_proof
 
-  instance : Neg (X⊗Y) := ⟨λ xy  => 
+  instance : Neg (X⊗Y) := ⟨λ xy  =>
     xy.liftOn (λ xy : Array (X×Y) => Quot.mk _ <| xy.map (λ (x,y) => (-x,y))) sorry_proof⟩
 
-  instance : Add (X⊗Y) := ⟨λ xy xy' => 
-    xy.liftOn (λ xy : Array (X×Y) => 
+  instance : Add (X⊗Y) := ⟨λ xy xy' =>
+    xy.liftOn (λ xy : Array (X×Y) =>
     xy'.liftOn (λ xy' : Array (X×Y) => Quot.mk _ (xy.append xy')) sorry_proof) sorry_proof⟩
 
   instance : Sub (X⊗Y) := ⟨λ xy xy' => xy + (-xy')⟩
 
   -- We scale x and y by the same amount in the hope of better numerical stability
-  instance : SMul ℝ (X⊗Y) := ⟨λ r xy => 
+  instance : SMul ℝ (X⊗Y) := ⟨λ r xy =>
     let s  := if 0 ≤ r then 1 else 0
-    let r' := if 0 ≤ r then r.sqrt else (-r).sqrt 
+    let r' := if 0 ≤ r then r.sqrt else (-r).sqrt
     xy.liftOn (λ xy =>
       Quot.mk _ <| xy.map (λ (x,y) => ((s*r')•x, r'•y))) sorry_proof⟩
 

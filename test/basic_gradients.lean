@@ -1,82 +1,86 @@
 import SciLean
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.RewriteBy
+import SciLean.Core.Notation.Gradient
 
-open SciLean
+open SciLean LeanColls
 
-variable 
-  {K : Type _} [RealScalar K]
-  {X : Type _} [SemiInnerProductSpace K X]
-  {Y : Type _} [SemiInnerProductSpace K Y]
-  {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [EnumType ι]
+variable
+  {K : Type} [RealScalar K]
+  {X : Type} [SemiInnerProductSpace K X]
+  {Y : Type} [SemiInnerProductSpace K Y]
+  {Z : Type} [SemiInnerProductSpace K Z]
+  {ι : Type} [IndexType ι] [DecidableEq ι] [LawfulIndexType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
-set_default_scalar K 
+set_default_scalar K
 
-example 
+
+example
   : (∇ (x : Fin 10 → K), fun i => x i)
     =
     fun x dx => dx :=
-by 
-  (conv => lhs; autodiff)
+by
+  (conv => lhs; unfold gradient; autodiff; autodiff)
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, x i)
     =
     fun x i => 1 :=
-by 
-  (conv => lhs; autodiff)
+by
+  (conv => lhs; unfold scalarGradient; autodiff; autodiff)
+
+#exit
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, ‖x i‖₂²)
     =
     fun x i => 2 * (x i) :=
 by
-  (conv => lhs; autodiff)
+  (conv => lhs; unfold scalarGradient; autodiff; autodiff)
 
 example (A : Fin 5 → Fin 10 → K)
   : (∇ (x : Fin 10 → K), fun i => ∑ j, A i j * x j)
     =
-    fun _ dy j => ∑ i, A i j * dy i := 
-by 
-  (conv => lhs; autodiff)
+    fun _ dy j => ∑ i, A i j * dy i :=
+by
+  (conv => lhs; simp[SciLean.gradient]; autodiff)
 
 variable [PlainDataType K]
 
-example 
+example
   : (∇ (x : K ^ Idx 10), fun i => x[i])
     =
     fun _ x => ⊞ i => x i :=
-by 
+by
   (conv => lhs; autodiff)
 
 example
   : (∇ (x : K ^ Idx 10), ⊞ i => x[i])
     =
     fun _ x => x :=
-by 
+by
   (conv => lhs; autodiff)
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, x i)
     =
     fun x i => 1 :=
-by 
+by
   (conv => lhs; autodiff)
 
 -- example
 --   : (∇ (x : K ^ Idx 10), ∑ i, ‖x[i+1] - x[i]‖₂²)
 --     =
 --     fun x => ⊞ _ => (1:K) :=
--- by 
---   (conv => lhs; unfold scalarGradient; ftrans)
+-- by
+--   (conv => lhs; unfold scalarGradient; autodiff)
 
 example
   : (∇ (x : K ^ Idx 10), ∑ i, x[i])
     =
     fun x => ⊞ _ => (1:K) :=
-by 
+by
   (conv => lhs; autodiff)
 
 
@@ -90,8 +94,8 @@ by
 example (A : Idx 5 → Idx 10 → K)
   : (∇ (x : K ^ Idx 10), fun i => ∑ j, A i j * x[j])
     =
-    fun _ dy => ⊞ j => ∑ i, A i j * dy i := 
-by 
+    fun _ dy => ⊞ j => ∑ i, A i j * dy i :=
+by
   (conv => lhs; autodiff)
 
 example
@@ -101,7 +105,7 @@ example
 by
   (conv => lhs; autodiff)
 
-example 
+example
   : (∇ (x : Fin 5 → Fin 10 → K), fun i j => x i j)
     =
     fun _ dx => dx :=
@@ -122,14 +126,14 @@ example
 by
   (conv => lhs; autodiff)
 
-example 
+example
   : (∇ (x : Fin 10 → K), fun ij : Fin 5 × Fin 10 => x ij.2)
     =
     fun _ dx i => ∑ j, dx (j,i) :=
 by
   (conv => lhs; autodiff)
 
-example 
+example
   : (∇ (x : Fin 5 → K), fun ij : Fin 5 × Fin 10 => x ij.1)
     =
     fun _ dx i => ∑ j, dx (i,j) :=
@@ -141,30 +145,30 @@ example (f : X → Fin 5 → Fin 10 → Fin 15→ K) (hf : ∀ i j k, HasAdjDiff
   (hf' : HasAdjDiff K f)
   : (∇ (x : X), fun k i j => f x i j k)
     =
-    fun x dy => 
+    fun x dy =>
       let ydf := <∂ f x
       ydf.2 fun i j k => dy k i j :=
 by
   (conv => lhs; autodiff)
 
 
-example 
+example
   : (∇ (x : K ^ Idx 10), fun (ij : Idx 5 × Idx 10) => x[ij.snd])
     =
-    fun _ dx => ⊞ j => ∑ i, dx (i,j) := 
+    fun _ dx => ⊞ j => ∑ i, dx (i,j) :=
 by
   (conv => lhs; autodiff)
 
 
-example 
+example
   : (∇ (x : K ^ Idx 10), fun i => x[i])
     =
     fun _ dx => ⊞ i => dx i :=
 by
   (conv => lhs; autodiff)
-  
 
-example 
+
+example
   : (∇ (x : K ^ (Idx 10 × Idx 5)), fun i j => x[(i,j)])
     =
     fun _ dx => ⊞ ij => dx ij.1 ij.2 :=
@@ -188,17 +192,17 @@ by
   (conv => lhs; autodiff)
 
 
-example 
+example
   : (∇ (x : Fin 10 → K), fun i j => x i * x j)
-    = 
+    =
     fun x dx i => ∑ j, x j * dx i j + ∑ j, x j * dx j i:=
 by
   (conv => lhs; autodiff)
 
 
-example 
+example
   : (∇ (x : Fin 10 → K), fun (i : Fin 10) (j : Fin 5) => x (i+j))
-    = 
+    =
     fun x dy i => ∑ (j : Fin 5), dy (i - j) j :=
 by
   (conv => lhs; autodiff; autodiff)
@@ -206,7 +210,7 @@ by
 
 example  (w : Idx' (-5) 5 → K)
   : (∇ (x : Idx 10 → K), fun (i : Idx 10) (j : Idx' (-5) 5) => w j * x (j.1 +ᵥ i))
-    = 
+    =
     fun _x dy i => ∑ (j : Idx' (-5) 5), w j * dy (-j.1 +ᵥ i) j :=
 by
   conv => lhs; autodiff
@@ -214,7 +218,7 @@ by
 
 example  (w : Idx' (-5) 5 → K)
   : (∇ (x : Idx 10 → K), fun (i : Idx 10) => ∑ j, w j * x (j.1 +ᵥ i))
-    = 
+    =
     fun _x dy i => ∑ (j : Idx' (-5) 5), w j * dy (-j.1 +ᵥ i) :=
 by
   conv => lhs; autodiff
@@ -222,7 +226,7 @@ by
 
 example  (w : K ^ Idx' (-5) 5)
   : (∇ (x : K ^ Idx 10), ⊞ (i : Idx 10) => ∑ j, w[j] * x[j.1 +ᵥ i])
-    = 
+    =
     fun _x dy => ⊞ i => ∑ (j : Idx' (-5) 5), w[j] * dy[-j.1 +ᵥ i] :=
 by
   conv => lhs; autodiff
@@ -230,12 +234,10 @@ by
 
 -- example  (w : K ^ (Idx' (-5) 5 × Idx' (-5) 5))
 --   : (∇ (x : K ^ (Idx 10 × Idx 10)), ⊞ (i : Idx 10 × Idx 10) => ∑ j, w[j] * x[(j.1.1 +ᵥ i.1, j.2.1 +ᵥ i.2)])
---     = 
---     fun _x dy => 
+--     =
+--     fun _x dy =>
 --       ⊞ i => ∑ j, w[j] * dy[(-j.fst.1 +ᵥ i.fst, -j.snd.1 +ᵥ i.snd)] :=
 --       -- ⊞ i => ∑ (j : (Idx' (-5) 5 × Idx' (-5) 5)), w[(j.2,j.1)] * dy[(-j.2.1 +ᵥ i.fst, -j.1.1 +ᵥ i.snd)] :=
 -- by
---   conv => lhs; unfold SciLean.gradient; ftrans
+--   conv => lhs; unfold SciLean.gradient; autodiff
 --   -- sorry_proof
-  
-

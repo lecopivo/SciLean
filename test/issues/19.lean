@@ -3,7 +3,7 @@ import SciLean
 open SciLean
 
 
-variable 
+variable
   {K : Type} [IsROrC K]
   {X : Type} [Vec K X]
   {Y : Type} [Vec K Y]
@@ -19,18 +19,17 @@ variable (f : X → Nat → Y) (x : X)
 -- ydf 0 : X → Y
 -- -/
 -- #guard_msgs in
--- #check 
+-- #check
 --   (let ydf := fun i => ∂ x':=x, f x' i; (ydf 0))
 --   rewrite_by
---     ftrans only
+--     autodiff
 
 -- /--
 -- info: let f := fun i => i;
 -- f 0 : ℕ
 -- -/
 -- #guard_msgs in
--- #check 
+-- #check
 --   (let f := fun i : Nat => i ; (f 0))
 --   rewrite_by
---     ftrans only
-
+--     autodiff

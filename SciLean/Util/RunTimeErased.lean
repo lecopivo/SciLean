@@ -9,7 +9,7 @@ structure RunTimeErased (α) where
   ex : ∃ a, P a
   uniq : ∀ a a', P a → P a' → a = a'
 
-def erase {α} (a : α) : RunTimeErased α := 
+def erase {α} (a : α) : RunTimeErased α :=
   { P := fun x => x = a
     ex := Exists.intro a rfl
     uniq := by intro a b h h'; simp[h,h']

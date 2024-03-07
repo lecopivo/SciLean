@@ -69,52 +69,52 @@ def mkApp9 (f a b c d e₁ e₂ e₃ e₄ e₅ : Expr) := mkApp5 (mkApp4 f a b c
 @[match_pattern]
 def mkApp10 (f a b c d e₁ e₂ e₃ e₄ e₅ e₆ : Expr) := mkApp6 (mkApp4 f a b c d) e₁ e₂ e₃ e₄ e₅ e₆
 
-def isFunLambda? (e : Expr) : Option (FunType × Name × Expr × Expr × BinderInfo) := 
+def isFunLambda? (e : Expr) : Option (FunType × Name × Expr × Expr × BinderInfo) :=
   match e with
-  | .lam n d b bi => 
+  | .lam n d b bi =>
     return (.normal, n, d, b, bi)
-  | mkApp6 (.const ``SmoothMap.mk _) _ _ _ _ (.lam n d b bi) _ => 
+  | mkApp6 (.const ``SmoothMap.mk _) _ _ _ _ (.lam n d b bi) _ =>
     return (.map ``SmoothMap, n, d, b, bi)
-  | mkApp6 (.const ``LinMap.mk _) _ _ _ _ (.lam n d b bi) _ => 
+  | mkApp6 (.const ``LinMap.mk _) _ _ _ _ (.lam n d b bi) _ =>
     return (.map ``LinMap, n, d, b, bi)
-  | mkApp6 (.const ``introArrayElem _) _ _ _ _ _ (.lam n d b bi) => 
+  | mkApp6 (.const ``introArrayElem _) _ _ _ _ _ (.lam n d b bi) =>
     return (.map ``ArrayType, n, d, b, bi)
-  | mkApp6 (.const ``ContinuousMap.mk _) _ _ _ _ (.lam n d b bi) _ => 
+  | mkApp6 (.const ``ContinuousMap.mk _) _ _ _ _ (.lam n d b bi) _ =>
     return (.map ``ContinuousMap, n, d, b, bi)
   | _ => none
 
 def isFunApp? (e : Expr) : Option (FunType × Expr × Expr) :=
   match e with
-  | mkApp6 (.const ``SmoothMap.toFun _) _ _ _ _ f x => 
+  | mkApp6 (.const ``SmoothMap.toFun _) _ _ _ _ f x =>
     return (.map ``SmoothMap, f ,x)
-  | mkApp6 (.const ``LinMap.toFun _) _ _ _ _ f x => 
+  | mkApp6 (.const ``LinMap.toFun _) _ _ _ _ f x =>
     return (.map ``LinMap, f ,x)
-  | mkApp6 (.const ``FunLike.coe _) (mkApp4 (.const ``ContinuousMap _) _ _ _ _) _ _ _ f x => 
+  | mkApp6 (.const ``FunLike.coe _) (mkApp4 (.const ``ContinuousMap _) _ _ _ _) _ _ _ f x =>
     return (.map ``ContinuousMap, f, x)
   | mkApp8 (.const ``getElem _) _ _ _ _ _ f x _ =>
-    return (.map ``ArrayType, f ,x) -- should we double check that it is indeed ArrayType ? 
-  | .app f x => 
+    return (.map ``ArrayType, f ,x) -- should we double check that it is indeed ArrayType ?
+  | .app f x =>
     return (.normal, f, x)
   | _ => none
 
-partial def getFunAppFn (e : Expr) : Expr := 
+partial def getFunAppFn (e : Expr) : Expr :=
   if let .some (_, f, _) := isFunApp? e then
     getFunAppFn f
   else
     e
 
 -- TODO: implement version that does not create reversed array
-private partial def getFunAppArgsRevAux (e : Expr) (args : Array Expr) : Expr × Array Expr := 
+private partial def getFunAppArgsRevAux (e : Expr) (args : Array Expr) : Expr × Array Expr :=
   if let .some (_, f, x) := isFunApp? e then
     getFunAppArgsRevAux f (args.push x)
   else
     (e, args)
 
-def getFunAppArgs (e : Expr) : Array Expr := 
+def getFunAppArgs (e : Expr) : Array Expr :=
   (getFunAppArgsRevAux e #[]).2.reverse
 
-def isFunSpace? (e : Expr) : MetaM (Option FunType) := 
-  match e with  
+def isFunSpace? (e : Expr) : MetaM (Option FunType) :=
+  match e with
   | .forallE .. => return some .normal
   | mkApp4 (.const ``SmoothMap _) _ _ _ _ => return some (.map ``SmoothMap)
   | mkApp4 (.const ``LinMap _) _ _ _ _ => return some (.map ``LinMap)
@@ -125,7 +125,7 @@ def isFunSpace? (e : Expr) : MetaM (Option FunType) :=
     let arrayType := mkApp3 (.const ``ArrayType [.zero, .zero, .zero]) e X? Y?
 
     -- synthesizing ArrayType fills in X? and Y?
-    let .some _ ← trySynthInstance arrayType 
+    let .some _ ← trySynthInstance arrayType
       | return none
 
     -- -- make sure that it is indeed ArrayType
@@ -157,11 +157,11 @@ def mkFunApp1M (f x : Expr) : MetaM Expr := do
     mkAppM' fx #[(.const ``True.intro [])]
   | .map n => throwError "Error in `mkFunSpace`, unrecognized function type `{n}`"
 
-def mkFunAppM (f : Expr) (xs : Array Expr) : MetaM Expr := 
+def mkFunAppM (f : Expr) (xs : Array Expr) : MetaM Expr :=
   xs.foldlM (init := f) λ f x => mkFunApp1M f x
 
 -- There is probably a better implementation
-def funHeadBeta (e : Expr) : MetaM Expr := 
+def funHeadBeta (e : Expr) : MetaM Expr :=
   let f := getFunAppFn e
   let args := getFunAppArgs e
   args.foldlM (init := f) λ f arg => do
@@ -176,10 +176,10 @@ private partial def funTelescopeImp (e : Expr) (maxArg? : Option Nat) (k : Array
 where
   process (lctx : LocalContext) (fvars : Array Expr) (funTypes : Array FunType) (stop : Bool) (e : Expr) : MetaM α := do
     if let .some (funType, n, d, b, bi) := isFunLambda? e then
-      if ¬stop then 
-        let stop := 
+      if ¬stop then
+        let stop :=
           match maxArg? with
-          | some maxArg => fvars.size + 1 = maxArg 
+          | some maxArg => fvars.size + 1 = maxArg
           | none => false
         let d := d.instantiateRevRange 0 fvars.size fvars
         let fvarId ← mkFreshFVarId
@@ -192,11 +192,11 @@ where
       -- withNewLocalInstancesImp fvars j do -- no clue what this does
         k (fvars.zip funTypes) e
 
-def funTelescope (e : Expr) (k : Array (Expr × FunType) → Expr → n α) : n α := 
+def funTelescope (e : Expr) (k : Array (Expr × FunType) → Expr → n α) : n α :=
   map2MetaM (fun k => funTelescopeImp e none k) k
 
 /-- Same as `funTelescope` but you can limit the number of consumed arguments -/
-def funTelescope' (e : Expr) (maxArg : Nat) (k : Array (Expr × FunType) → Expr → n α) : n α := 
+def funTelescope' (e : Expr) (maxArg : Nat) (k : Array (Expr × FunType) → Expr → n α) : n α :=
   map2MetaM (fun k => funTelescopeImp e (some maxArg) k) k
 
 def mkFunFVars (xs : Array (Expr × FunType)) (e : Expr) : MetaM Expr := do
@@ -224,9 +224,9 @@ open Qq
 #eval show MetaM Unit from do
   let f := q(λ (n : Nat) => λ (x : ℝ) ⟿ λ (z : ℝ) ⊸ z)
   let f := q(λ (n : Nat) => λ (x : ℝ) ⟿ ⊞ (i : Fin n), (x:ℝ))
-  
+
   IO.println s!"original function:  {← ppExpr f}"
-  
+
   funTelescope' f 2 λ xs b => do
     let f' ← mkFunFVars xs b
     IO.println s!"arguments: {← xs.mapM λ (x,_) => ppExpr x}"

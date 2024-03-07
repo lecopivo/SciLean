@@ -23,5 +23,5 @@ def printFunctionProperties : IO Unit := do
   let m ← functionPropertyMapRef.get
   m.forM λ (const, op) argMap => do
       IO.println s!"{const} {op}"
-      argMap.forM λ ids thrm => 
+      argMap.forM λ ids thrm =>
         IO.println s!"  {ids.data} {thrm.1}"

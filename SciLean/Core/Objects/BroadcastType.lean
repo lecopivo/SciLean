@@ -6,7 +6,7 @@ import Mathlib.Analysis.Calculus.FDeriv.Basic
 
 namespace SciLean
 
-/-- 
+/--
 `BroadcastType tag R ι X MX` says that `MX` is `ι`-many copies of `X`. This is used for broadcasting/vectorization of code.
 
 For example:
@@ -15,7 +15,7 @@ For example:
 `BroadcastType NArray ℝ (Fin n) X (NArray X n)`
 
 Arguments
-1. `tag` - is used to indicate the class of broadcasting types. For example, dense or sparse matrices are broadcast type for vectors. 
+1. `tag` - is used to indicate the class of broadcasting types. For example, dense or sparse matrices are broadcast type for vectors.
 2. `R` - over which field/ring we do this broadcasting. We require that `MX` is `R`-linear isomorphic to `ι → X`. Right now, it is not entirelly clear what is the role of this argument, but we need it to state the linear isomorphism.
 3. `ι` - index set specifying how many copies of `X` we are making
 4. `X` - type to broadcast/vectorize
@@ -24,7 +24,7 @@ class BroadcastType (tag : Lean.Name) (R : Type _) [Ring R] (ι : Type _) (X : T
   equiv  : MX ≃ₗ[R] (ι → X)
 
 
-variable 
+variable
   {R : Type _} [Ring R]
   {X : Type _} [AddCommGroup X] [Module R X]
   {Y : Type _} [AddCommGroup Y] [Module R Y]
@@ -32,18 +32,18 @@ variable
   {MY : outParam $ Type _} [outParam $ AddCommGroup MY] [outParam $ Module R MY]
   {ι : Type _} -- [Fintype ι]
   {κ : Type _} -- [Fintype κ]
-  {E ME : κ → Type _} 
+  {E ME : κ → Type _}
   [∀ j, AddCommGroup (E j)] [∀ j, Module R (E j)]
   [∀ j, AddCommGroup (ME j)] [∀ j, Module R (ME j)]
 
- 
+
 open BroadcastType in
 instance [BroadcastType tag R ι X MX] [BroadcastType tag R ι Y MY] : BroadcastType tag R ι (X×Y) (MX×MY) where
   equiv := {
-    toFun  := fun (mx,my) i => (equiv tag (R:=R) mx i, 
+    toFun  := fun (mx,my) i => (equiv tag (R:=R) mx i,
                                 equiv tag (R:=R) my i)
-    invFun := fun xy => ((equiv tag (R:=R)).invFun fun i => (xy i).1, 
-                         (equiv tag (R:=R)).invFun fun i => (xy i).2) 
+    invFun := fun xy => ((equiv tag (R:=R)).invFun fun i => (xy i).1,
+                         (equiv tag (R:=R)).invFun fun i => (xy i).2)
     map_add'  := by intro x y; funext i; simp
     map_smul' := by intro x y; funext i; simp
     left_inv  := fun _ => by simp
@@ -54,7 +54,7 @@ open BroadcastType in
 instance [∀ j, BroadcastType tag R ι (E j) (ME j)]
   : BroadcastType tag R ι (∀ j, E j) (∀ j, ME j) where
   equiv := {
-    toFun  := fun mx i j => equiv tag (R:=R) (mx j) i 
+    toFun  := fun mx i j => equiv tag (R:=R) (mx j) i
     invFun := fun x j => (equiv tag (R:=R)).invFun (fun i => x i j)
     map_add'  := by intro x y; funext i j; simp
     map_smul' := by intro x y; funext i j; simp
@@ -81,7 +81,7 @@ instance [BroadcastType `Prod R (Fin n) X MX] : BroadcastType `Prod R (Fin (n+1)
     toFun  := fun (x,mx) i =>
       match i with
       | ⟨0, _⟩ => x
-      | ⟨i'+1, h⟩ => 
+      | ⟨i'+1, h⟩ =>
         let i' : Fin n := ⟨i', by aesop⟩
         equiv `Prod (R:=R) mx i'
     invFun := fun x => (x 0, (equiv `Prod (R:=R)).invFun fun i : Fin n => x ⟨i.1+1, by aesop⟩)

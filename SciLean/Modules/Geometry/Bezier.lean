@@ -11,17 +11,17 @@ namespace SciLean
 namespace Bezier
 
 variable {X : Type}
-variable {Points : Nat → Type} [GenericLinearArray Points X] 
+variable {Points : Nat → Type} [GenericLinearArray Points X]
 
 open GenericArray
 
 
 
-/-- `k`-th derivative of a bezier curve with `n+k` points is just a bezier curve with `n` points 
+/-- `k`-th derivative of a bezier curve with `n+k` points is just a bezier curve with `n` points
 
 This function computes those `n` points.-/
-def derivativePoints [Vec X] {n} (k : Nat) (points : Points (k+n)) : Points n := 
-  let fₙ : (n' : Nat) → Points (n'+1) → Points n' := 
+def derivativePoints [Vec X] {n} (k : Nat) (points : Points (k+n)) : Points n :=
+  let fₙ : (n' : Nat) → Points (n'+1) → Points n' :=
     λ n' pts => upper2DiagonalUpdate (λ _ => n') (λ _ => -n') pts |> dropElem 1
   funRevRec k n fₙ points
 argument points
@@ -38,13 +38,13 @@ def evalDer [Vec X] {n} (k : Nat) (points : Points n) (t : ℝ) : X :=
   let n' := n - k - 1
   if h : n = k + (n' + 1) then
     let points' : Points (n' + 1) := derivativePoints k (h ▸ points)
-    let fₙ : (n' : Nat) → Points (n'+1) → Points n' := 
+    let fₙ : (n' : Nat) → Points (n'+1) → Points n' :=
       λ _ pts => linearInterpolate t pts
     (funRevRec n' 1 fₙ points')[0]
   else
     0
 argument points
-  isLin := sorry_proof, 
+  isLin := sorry_proof,
   isSmooth, diff_simp
 argument t
   isSmooth := sorry_proof,
@@ -52,10 +52,10 @@ argument t
 
 abbrev eval [Vec X] {n} (points : Points n) (t : ℝ) : X := evalDer 0 points t
 
-def split [Vec X] {n} (points : Points n) (t : ℝ) : Points n × Points n := 
+def split [Vec X] {n} (points : Points n) (t : ℝ) : Points n × Points n :=
   let fₙ :  (n' : Nat) → Points (n - n') × Points n' × Points n'
                        → Points (n - (n' + 1)) × Points (n' + 1) × Points (n' + 1) :=
-      λ n' (pts, startPts, endPts) => 
+      λ n' (pts, startPts, endPts) =>
         -- This is effectivelly asking if `0 < n - n'` but in a form that is usefully for typecasting
         if h : n - n' = (n - (n' + 1) + 1) then
           -- In this case pts should have at least one element
@@ -63,7 +63,7 @@ def split [Vec X] {n} (points : Points n) (t : ℝ) : Points n × Points n :=
           let last  := pts[⟨n - n' - 1, sorry_proof⟩]
           (linearInterpolate t (h ▸ pts), pushElem 1 first startPts, pushElem 1 last endPts)
         else
-          -- it should be the case that `n - n' = 0` 
+          -- it should be the case that `n - n' = 0`
           -- thus `h'` should be saying 0 = 0
           have h' : (n - n') = (n - (n' + 1)) := sorry_proof
           -- `pts` is an empty array, so just push 0 vectors to startPts and endPts
@@ -75,10 +75,10 @@ def split [Vec X] {n} (points : Points n) (t : ℝ) : Points n × Points n :=
 
 /-- Bezier curve evaluation satisfy a recursive formula -/
 def eval_rec [Vec X] (points : Points (n + 2)) (t : ℝ)
-  : 
+  :
     let P₀ : Points (n+1) := λ [i] => points[⟨i.1, sorry_proof⟩]
     let P₁ : Points (n+1) := λ [i] => points[⟨i.1+1, sorry_proof⟩]
-    eval points t = (1-t) * eval P₀ t + t * eval P₁ t 
+    eval points t = (1-t) * eval P₀ t + t * eval P₁ t
   := sorry_proof
 
 
@@ -92,7 +92,7 @@ noncomputable
 def Polynomial.roots (p : ℝ → ℝ) (a b : ℝ) /- [IsPol f] -/ : Array ℝ := sorry
 
 /-- Finds all roots in [0,1] interval of a Bezier curve -/
-noncomputable 
+noncomputable
 def roots {n} (points : RealPoints n) : Array ℝ := Polynomial.roots (eval points) 0 1
 
 /-- Approximation of `roots` -/
@@ -102,7 +102,7 @@ by
   simp
 
 /-- Finds all points in [0,1] of a Bezier curve that have zero derivative -/
-noncomputable 
+noncomputable
 def extremalPoints {n} (weights : RealPoints n) : Array ℝ := sorry
 
 /-- Approximation of `roots` -/
@@ -120,7 +120,7 @@ structure BezierCurve {T : Nat → Type} (X : Type) [Vec X] [LinearPowType T X] 
   points : X^{deg + 1}
 deriving Vec
 
-namespace BezierCurve 
+namespace BezierCurve
 
 variable {T : Nat → Type} {X : Type} [Vec X] [LinearPowType T X] {deg}
 

@@ -25,9 +25,9 @@ instance (X : Type) [Diff X] : TangentMap X (TangentBundle X) := ⟨⟩
 @[reducible]
 instance (priority:=low) (X : Type) [Vec X] : Diff X := ⟨(λ _ => X)⟩
 
-@[reducible] 
+@[reducible]
 instance (X) [Diff X] (x : X) : Vec (𝒯[x] X) := Diff.instVecTS x
-  
+
 @[reducible]
 instance Diff_of_Prod
   (X) [Diff X] (Y) [Diff Y]
@@ -41,9 +41,9 @@ instance Diff_of_funType
 
 
 @[reducible]
-instance 
+instance
   (X Y : Type)  (xy : X⊕Y) [Diff X] [Diff Y]
-  : Vec (((𝒯[·] X) ⊕ (𝒯[·] Y)) xy) -- (λ xy => match xy with | .inl x => 𝒯[x] X | .inr y => 𝒯[y] Y) xy)  -- 
+  : Vec (((𝒯[·] X) ⊕ (𝒯[·] Y)) xy) -- (λ xy => match xy with | .inl x => 𝒯[x] X | .inr y => 𝒯[y] Y) xy)  --
   := inferInstance
 
 
@@ -58,7 +58,7 @@ section TangentSpaceTests
 example (x : ℝ) : Vec (𝒯[x] ℝ) = Vec ℝ := by rfl
 
   -- Opacity test
-  private class TestClass (X : Type) 
+  private class TestClass (X : Type)
   private instance : TestClass ℝ := ⟨⟩
   private instance : TestClass (ℝ×ℝ) := ⟨⟩
   example : TestClass (𝒯[x] (ℝ×ℝ)) := inferInstance
@@ -74,5 +74,3 @@ end TangentSpaceTests
 
 
 --------------------------------------------------------------------------------
-
-

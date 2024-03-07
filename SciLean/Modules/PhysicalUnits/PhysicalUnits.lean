@@ -14,25 +14,25 @@ structure PhysicalUnit where
   kgPower : ℤ := 0
 deriving DecidableEq
 
-instance : Mul PhysicalUnit := ⟨λ x y => 
+instance : Mul PhysicalUnit := ⟨λ x y =>
   { scale := x.scale * y.scale
     mPower  := x.mPower + y.mPower,
     sPower  := x.sPower + y.sPower,
     kgPower := x.kgPower + y.kgPower }⟩
 
-instance : Div PhysicalUnit := ⟨λ x y => 
+instance : Div PhysicalUnit := ⟨λ x y =>
   { scale  := x.scale / y.scale,
     mPower  := x.mPower - y.mPower,
     sPower  := x.sPower - y.sPower,
     kgPower := x.kgPower - y.kgPower }⟩
 
-instance : HPow PhysicalUnit Int PhysicalUnit := ⟨λ x y => 
+instance : HPow PhysicalUnit Int PhysicalUnit := ⟨λ x y =>
   { scale  := x.scale ^ y,
     mPower  := x.mPower * y,
     sPower  := x.sPower * y,
     kgPower := x.kgPower * y }⟩
 
-instance : HPow PhysicalUnit Nat PhysicalUnit := ⟨λ x y => 
+instance : HPow PhysicalUnit Nat PhysicalUnit := ⟨λ x y =>
   { scale  := x.scale ^ y,
     mPower  := x.mPower * y,
     sPower  := x.sPower * y,
@@ -82,30 +82,30 @@ theorem hPhysicalUnit.one_kgpower
   : (1 : PhysicalUnit).kgPower = 0 := by rfl
 
 structure PhysicalQuantity (α : Type u) (unit : PhysicalUnit := {}) where
-  val : α 
+  val : α
 
 instance {α units} [Add α] : Add (PhysicalQuantity α units) := ⟨λ x y => ⟨x.val + y.val⟩⟩
 instance {α units} [Sub α] : Sub (PhysicalQuantity α units) := ⟨λ x y => ⟨x.val - y.val⟩⟩
 instance {α units} [OfNat α n] : OfNat (PhysicalQuantity α units) n := ⟨⟨OfNat.ofNat n⟩⟩
 
-instance {α β γ units units'} [HMul α β γ] 
-  : HMul (PhysicalQuantity α units) (PhysicalQuantity β units') (PhysicalQuantity γ (units*units')) := 
+instance {α β γ units units'} [HMul α β γ]
+  : HMul (PhysicalQuantity α units) (PhysicalQuantity β units') (PhysicalQuantity γ (units*units')) :=
   ⟨λ x y => ⟨x.val * y.val⟩⟩
-instance {α β γ units} [HMul α β γ] 
-  : HMul (PhysicalQuantity α units) β (PhysicalQuantity γ (units)) := 
+instance {α β γ units} [HMul α β γ]
+  : HMul (PhysicalQuantity α units) β (PhysicalQuantity γ (units)) :=
   ⟨λ x y => ⟨x.val * y⟩⟩
-instance {α β γ units'} [HMul α β γ] 
-  : HMul α (PhysicalQuantity β units') (PhysicalQuantity γ (units')) := 
+instance {α β γ units'} [HMul α β γ]
+  : HMul α (PhysicalQuantity β units') (PhysicalQuantity γ (units')) :=
   ⟨λ x y => ⟨x * y.val⟩⟩
 
-instance {α β γ units units'} [HDiv α β γ] 
-  : HDiv (PhysicalQuantity α units) (PhysicalQuantity β units') (PhysicalQuantity γ (units/units')) := 
+instance {α β γ units units'} [HDiv α β γ]
+  : HDiv (PhysicalQuantity α units) (PhysicalQuantity β units') (PhysicalQuantity γ (units/units')) :=
   ⟨λ x y => ⟨x.val / y.val⟩⟩
-instance {α β γ units} [HDiv α β γ] 
-  : HDiv (PhysicalQuantity α units) β (PhysicalQuantity γ (units)) := 
+instance {α β γ units} [HDiv α β γ]
+  : HDiv (PhysicalQuantity α units) β (PhysicalQuantity γ (units)) :=
   ⟨λ x y => ⟨x.val / y⟩⟩
-instance {α β γ units'} [HDiv α β γ] 
-  : HDiv α (PhysicalQuantity β units') (PhysicalQuantity γ (1/units')) := 
+instance {α β γ units'} [HDiv α β γ]
+  : HDiv α (PhysicalQuantity β units') (PhysicalQuantity γ (1/units')) :=
   ⟨λ x y => ⟨x / y.val⟩⟩
 
 abbrev meter : PhysicalUnit := { mPower := 1}
@@ -148,10 +148,10 @@ macro_rules
     let meter := Lean.mkIdent ``meter
     let second := Lean.mkIdent ``second
     let kilogram := Lean.mkIdent ``kilogram
-    let unit : Array (Lean.TSyntax `term) ← #[(b,meter),(c,second),(d,kilogram)].filterMapM 
+    let unit : Array (Lean.TSyntax `term) ← #[(b,meter),(c,second),(d,kilogram)].filterMapM
       (fun (x,y) => do
-        if x == zero then 
-          pure none 
+        if x == zero then
+          pure none
         else if x == one then
           pure (.some y)
         else
@@ -176,13 +176,13 @@ example : Float⟦newton⟧  = Float⟦kilogram*meter*second^(-2)⟧ := by rfl
 open Lean Elab Term Meta Qq in
 elab (priority:=high) x:term:71 " * " y:term:70 : term => do
   let x ← elabTerm x none
-  let y ← elabTerm y none 
+  let y ← elabTerm y none
   let X ← inferType x
   let Y ← inferType y
   let z ← mkAppOptM ``HMul.hMul #[X,Y,none,none,x,y]
   let Z ← inferType z
-  let r ← Mathlib.Meta.NormNum.deriveSimp 
-    { simpTheorems := #[← getSimpTheorems], 
+  let r ← Mathlib.Meta.NormNum.deriveSimp
+    { simpTheorems := #[← getSimpTheorems],
       congrTheorems := ← getSimpCongrTheorems} true Z
   let Z' := r.expr
   dbg_trace s!"Is {← ppExpr Z} defeq to {← ppExpr Z'}: {← isDefEq Z Z'}"
@@ -196,27 +196,27 @@ elab (priority:=high) x:term:71 " * " y:term:70 : term => do
 open Lean Elab Term Meta Qq in
 elab (priority := high) x:term:66 " + " y:term:65 : term => do
   let x ← elabTerm x none
-  let y ← elabTerm y none 
+  let y ← elabTerm y none
 
-  try 
+  try
     mkAppOptM ``HAdd.hAdd #[none,none,none,none,x,y]
-  catch _ => 
+  catch _ =>
 
     let X ← inferType x
     let Y ← inferType y
 
-    let ctx : Simp.Context := 
-      { simpTheorems := #[← getSimpTheorems], 
+    let ctx : Simp.Context :=
+      { simpTheorems := #[← getSimpTheorems],
         congrTheorems := ← getSimpCongrTheorems}
 
     let rX ← Mathlib.Meta.NormNum.deriveSimp ctx true X
     let rY ← Mathlib.Meta.NormNum.deriveSimp ctx true Y
 
-    let x' ← 
+    let x' ←
       match rX.proof? with
       | some proof => mkAppOptM ``cast #[X,rX.expr,proof,x]
       | none => pure x
-    let y' ← 
+    let y' ←
       match rY.proof? with
       | some proof => mkAppOptM ``cast #[Y,rY.expr,proof,y]
       | none => pure y
@@ -224,10 +224,10 @@ elab (priority := high) x:term:66 " + " y:term:65 : term => do
     mkAppOptM ``HAdd.hAdd #[none,none,none,none,x',y']
 
 
-variable 
+variable
   (v₁ : Float⟦meter*second^(-1:Int)⟧) (v₂ : Float⟦kilometer*hour^(-1:Int)⟧) (v₃ : Float⟦meter*hour^(-1:Int)⟧)
   (t₁ : Float⟦second⟧) (t₂ : Float⟦hour⟧)
-  (a  : Float⟦meter*second^(-2:Int)⟧) 
+  (a  : Float⟦meter*second^(-2:Int)⟧)
   (p : Float⟦pascal⟧) (V : Float⟦meter^3⟧) (R : Float⟦joule⟧) (F : Float⟦newton⟧)
 
 
@@ -245,7 +245,7 @@ instance : One PhysicalUnit := ⟨{}⟩
 
 def uderiv {X Y : Type} {u v w : PhysicalUnit} (f : X⟦u⟧ → Y⟦v⟧) (x : X⟦u⟧) (dx : X⟦w⟧) : Y⟦(v*w)/u⟧ := sorry
 
-variable 
+variable
   (u : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦meter*second^(-1:Int)⟧)
   (p : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦pascal⟧)
   (density : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦kilogram*meter^(-3:Int)⟧)
@@ -259,17 +259,17 @@ variable
 
 def adjoint {X Y : Type} {u v : PhysicalUnit} (f : X⟦u⟧ → Y⟦v⟧) : Y⟦v⟧ → X⟦u⟧ := sorry
 
-def uderiv' {X Y : Type} {u v w : PhysicalUnit} [Group PhysicalUnit] (f : X⟦u⟧ → Y⟦v⟧) (x : X⟦u⟧) (dy : Y⟦w⟧) : X⟦(u*w)/v⟧ := 
+def uderiv' {X Y : Type} {u v w : PhysicalUnit} [Group PhysicalUnit] (f : X⟦u⟧ → Y⟦v⟧) (x : X⟦u⟧) (dy : Y⟦w⟧) : X⟦(u*w)/v⟧ :=
   let df := fun dx : X⟦(u*w)/v⟧ => uderiv f x dx
   let df' := adjoint df
   df' (cast (by congr; have h : w.scale = (v.scale * ((u.scale * w.scale) / v.scale)) / u.scale := sorry; cases w; simp at h; simp; exact h) dy)
 
 
 
-variable 
+variable
   (u : ℝ⟦time,s⟧ → ℝ⟦length,s'⟧ → ℝ⟦length*time^(-1),s''⟧)
   (p : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦pascal⟧)
   (density : ℝ⟦second⟧ → ℝ⟦meter⟧ → ℝ⟦kilogram*meter^(-3:Int)⟧)
   (ν : ℝ⟦(meter^(2:Int)) * second^(-1:Int)⟧)
 
-def ucast {X : Type _} {u : PhysicalUnit} (v : PhysicalUnit) 
+def ucast {X : Type _} {u : PhysicalUnit} (v : PhysicalUnit)

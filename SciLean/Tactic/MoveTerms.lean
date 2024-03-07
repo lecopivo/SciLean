@@ -15,7 +15,7 @@ namespace MoveTermsTo
 private def splitAddOfTypeImpl (e E : Expr) (negate : Bool) : MetaM (Array Expr) := do
   match e with
   | .mdata _ e' => return ← splitAddOfTypeImpl e' E negate
-  | Expr.mkApp6 (.const name _) X Y Z _ x y => 
+  | Expr.mkApp6 (.const name _) X Y Z _ x y =>
     if (← isDefEq X E) &&
        (← isDefEq Y E) &&
        (← isDefEq Z E) then
@@ -27,12 +27,12 @@ private def splitAddOfTypeImpl (e E : Expr) (negate : Bool) : MetaM (Array Expr)
          let l1 ← splitAddOfTypeImpl x E negate
          let l2 ← splitAddOfTypeImpl y E !negate
          return l1.append l2
-  | Expr.mkApp3 (.const name _) X _ x => 
+  | Expr.mkApp3 (.const name _) X _ x =>
     if (← isDefEq X E) &&
        name = ``Neg.neg then
        return ← splitAddOfTypeImpl x E !negate
   | _ => pure ()
-  
+
   if negate then
     return #[← mkAppM ``Neg.neg #[e]]
   else
@@ -42,7 +42,7 @@ private def splitAddOfTypeImpl (e E : Expr) (negate : Bool) : MetaM (Array Expr)
 
 /-- Take and expresion of the form `a₁ + ... + aₙ` and return array `#[a₁, ..., aₙ]`. It ensures that all `aᵢ` have the type `E`, this is to prevent splitting unexpected heterogenous addition.
 
-The term `e` can also contain negation, subtraction and arbitrary bracketing. 
+The term `e` can also contain negation, subtraction and arbitrary bracketing.
 
 For example, calling this function on
 
@@ -50,7 +50,7 @@ For example, calling this function on
   a₁ - (a₂ - a₃) + a₄
 ```
 
-will return 
+will return
 
 ```
   #[a₁,-a₂,a₃,a₄]
@@ -100,4 +100,3 @@ syntax (name := move_terms_to) "move" ident+ "terms_to_lhs" : conv
     updateLhs lhs' eqProof
 
   | _ => throwUnsupportedSyntax
-

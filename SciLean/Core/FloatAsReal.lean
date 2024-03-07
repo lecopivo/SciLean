@@ -5,13 +5,13 @@ import SciLean.Core.Objects.Scalar
 namespace SciLean
 
 instance : CommRing Float where
-  zero_mul := by intros; apply isomorph.ext `FloatToReal; simp; ftrans; simp
-  mul_zero := by intros; apply isomorph.ext `FloatToReal; simp; ftrans
-  mul_comm := by intros; apply isomorph.ext `FloatToReal; simp; ftrans; rw[mul_comm]
-  left_distrib := by intros;  apply isomorph.ext `FloatToReal; simp; ftrans; simp; ftrans; rw[mul_add]
-  right_distrib := by intros; apply isomorph.ext `FloatToReal; simp; ftrans; simp; ftrans; rw[add_mul]
-  mul_one := by intros; apply isomorph.ext `FloatToReal; simp; ftrans
-  one_mul := by intros; apply isomorph.ext `FloatToReal; simp; ftrans; simp
+  zero_mul := by intros; apply isomorph.ext `FloatToReal; simp; sorry_proof --  fun_trans; simp
+  mul_zero := by intros; apply isomorph.ext `FloatToReal; simp; fun_trans
+  mul_comm := by intros; apply isomorph.ext `FloatToReal; simp; fun_trans; rw[mul_comm]
+  left_distrib := by intros;  apply isomorph.ext `FloatToReal; simp; fun_trans; rw[mul_add]
+  right_distrib := by intros; apply isomorph.ext `FloatToReal; simp; fun_trans; rw[add_mul]
+  mul_one := by intros; apply isomorph.ext `FloatToReal; simp; fun_trans
+  one_mul := by intros; apply isomorph.ext `FloatToReal; simp; fun_trans
   npow n x := x.pow (n.toFloat)  --- TODO: change this implementation
   npow_zero n := sorry_proof
   npow_succ n x := sorry_proof
@@ -25,22 +25,22 @@ instance : CommRing Float where
   nsmul_zero := sorry_proof
   nsmul_succ n x := sorry_proof
   sub_eq_add_neg a b := sorry_proof
-  natCast n := n.toFloat
+  natCast n := n.toUSize.toFloat
   natCast_zero := sorry_proof
   natCast_succ := sorry_proof
-  intCast n := if n ≥ 0 then n.toNat.toFloat else -((-n).toNat).toFloat
+  intCast n := if n ≥ 0 then n.toNat.toUInt64.toFloat else -((-n).toNat.toUInt64).toFloat
   intCast_ofNat := sorry_proof
   intCast_negSucc := sorry_proof
 
 instance : Field Float where
   exists_pair_ne := sorry_proof
-  div_eq_mul_inv := sorry_proof 
+  div_eq_mul_inv := sorry_proof
   mul_inv_cancel := sorry_proof
   inv_zero := sorry_proof
 
-instance : DecidableEq Float := fun x y => 
-  if x ≤ y && y ≤ x 
-  then .isTrue sorry_proof 
+instance : DecidableEq Float := fun x y =>
+  if x ≤ y && y ≤ x
+  then .isTrue sorry_proof
   else .isFalse sorry_proof
 
 instance : LinearOrderedCommRing Float where
@@ -57,7 +57,7 @@ instance : LinearOrderedCommRing Float where
   max := fun a b => if a ≤ b then b else a
   min_def := sorry_proof
   max_def := sorry_proof
-  compare x y :=   
+  compare x y :=
     if x < y then Ordering.lt
     else if x = y then Ordering.eq
     else Ordering.gt
@@ -67,7 +67,7 @@ instance : LinearOrderedCommRing Float where
 instance : LinearOrderedField Float where
   mul_inv_cancel := sorry_proof
   inv_zero := sorry_proof
-  div_eq_mul_inv := sorry_proof 
+  div_eq_mul_inv := sorry_proof
 
 
 instance : SeminormedRing Float where
@@ -82,8 +82,8 @@ instance : SeminormedRing Float where
 
 instance : StarRing Float where
   star := fun x => x
-  star_involutive := by simp[Function.Involutive] 
-  star_mul := by simp[Function.Involutive, mul_comm] 
+  star_involutive := by simp[Function.Involutive]
+  star_mul := by simp[Function.Involutive, mul_comm]
   star_add := by simp[Function.Involutive]
 
 instance : DenselyNormedField Float where
@@ -141,9 +141,11 @@ instance : IsReal Float where
 instance : RealScalar Float where
   toComplex x := ⟨floatToReal x, 0⟩
   toReal x := floatToReal x
+  ofReal x := realToFloat x
+  ofComplex x := realToFloat x.re
 
   is_real := sorry_proof
-  
+
   make x _ := x
   make_def := by intros; simp; sorry_proof
 
@@ -155,7 +157,7 @@ instance : RealScalar Float where
 
   sin x := x.sin
   sin_def := sorry_proof
-  
+
   cos x := x.cos
   cos_def := sorry_proof
 
@@ -164,7 +166,7 @@ instance : RealScalar Float where
 
   asin x := x.asin
   asin_def := sorry_proof
-  
+
   acos x := x.acos
   acos_def := sorry_proof
 
@@ -188,13 +190,13 @@ instance : RealScalar Float where
 
   abs x := x.abs
   abs_def := sorry_proof
-  
+
   le_total := by sorry_proof
   decidableLE := inferInstance
   decidableEq := inferInstance
   decidableLT := inferInstance
 
-  min_def := by sorry_proof 
+  min_def := by sorry_proof
   max_def := by sorry_proof
   compare x y := compare x y
   compare_eq_compareOfLessAndEq := by sorry_proof

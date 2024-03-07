@@ -4,14 +4,13 @@ open Lean Meta Qq
 
 open SciLean
 
-
 set_option pp.universes true
 
 /--
 info: newly introduced instances #[SciLean.EnumType.{u, w, w} I, SciLean.SemiInnerProductSpace.{w, v} K X]
 -/
 #guard_msgs in
-#eval show MetaM Unit from 
+#eval show MetaM Unit from
   let u := Level.param `u
   let v := Level.param `v
   let w := Level.param `w
@@ -29,7 +28,7 @@ info: newly introduced instances #[SciLean.EnumType.{u, w, w} I, SciLean.SemiInn
 info: newly introduced instances #[SciLean.EnumType.{u, w, w} I, SciLean.SemiInnerProductSpace.{w, v} K X, SciLean.EnumType.{u, w, w} J]
 -/
 #guard_msgs in
-#eval show MetaM Unit from 
+#eval show MetaM Unit from
   let u := Level.param `u
   let v := Level.param `v
   let w := Level.param `w
@@ -42,5 +41,3 @@ info: newly introduced instances #[SciLean.EnumType.{u, w, w} I, SciLean.SemiInn
 
     withSemiInnerProductSpace K T fun xs => do
       IO.println s!"newly introduced instances {← xs.mapM (fun x => inferType x >>= ppExpr)} "
-
-

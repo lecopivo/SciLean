@@ -2,7 +2,7 @@ namespace SciLean
 
 def has_limit {X} (lim : Nat → X) : Prop := sorry
 
-noncomputable 
+noncomputable
 def limit {X} (lim : Nat → X) : X := sorry
 
 def Filter (α : Type) : Type := sorry

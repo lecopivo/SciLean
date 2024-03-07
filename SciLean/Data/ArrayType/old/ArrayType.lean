@@ -6,7 +6,7 @@ import SciLean.Data.ArrayType.GenericArrayType
 namespace SciLean
 
 set_option synthInstance.checkSynthOrder false in
-/-- This class says that `T` is the canonical type to store `numOf I` element of `X`. 
+/-- This class says that `T` is the canonical type to store `numOf I` element of `X`.
 
 This class allows for the notation `X^I` and `T = X^I`. -/
 class ArrayType (T : outParam Type) (I X : Type) extends GenericArrayType T I X
@@ -27,9 +27,9 @@ instance (T : USize → Type) (X : Type) [LinearArrayType T X] (n : USize) : Arr
 
 For `x : X^I` you can:
   1. get a value: `x[i] : X` for `i : I`
-  2. set a value: `setElem x i xi : X^I` for `x : X^I`, `i : I`, `xi : X` 
+  2. set a value: `setElem x i xi : X^I` for `x : X^I`, `i : I`, `xi : X`
      in do blocks: `x[i] := xi`, `x[i] += xi`, ...
-  3. introduce new array: 
+  3. introduce new array:
      `let x : X^I := λ [i] => f i`
      for `f : I → X`
 
@@ -37,7 +37,7 @@ The precise type of `X^I` depends on `X` and `I` and it is determined by the typ
 -/
 notation X "^" I => ArrayTypeCarrier X I
 
--- instance (T : Nat → Type) [∀ n, ArrayType (T n) (Fin n) X] [DropElem T X] [PushElem T X] [ReserveElem T X] 
+-- instance (T : Nat → Type) [∀ n, ArrayType (T n) (Fin n) X] [DropElem T X] [PushElem T X] [ReserveElem T X]
 --   : LinearGenericArrayType T X := LinearGenericArrayType.mk (by infer_instance) sorry_proof sorry_proof sorry_proof
 
 
@@ -48,15 +48,15 @@ section CustomNotation
 For `x : X^{n₁,...,nₘ}` you can:
   1. get a value: `x[i₁,...,iₘ] : X` for `i₁ : Fin n₁`, ... , `iₘ : Fin nₘ`
   2. set a value in do blocks: `x[i₁,...,iₘ] := xi`, `x[i₁,...,iₘ] += xi`
-     for `x : X^{n₁,...,nₘ}`, `i₁ : Fin n₁`, ... , `iₘ : Fin nₘ`, `xi : X` 
-  3. introduce new array: 
+     for `x : X^{n₁,...,nₘ}`, `i₁ : Fin n₁`, ... , `iₘ : Fin nₘ`, `xi : X`
+  3. introduce new array:
      `let x : X^{n₁,...,nₘ} := λ [i₁,...,iₘ] => f i₁ ... iₘ`
      for `f : Fin n₁ → ... → Fin nₘ → X`
 
 The type `X^{n₁,...,nₘ}` is just a notation for `X^(Fin n₁ × ... Fin nₘ)`
 -/
 syntax term "^{" term,* "}" : term
-macro_rules 
+macro_rules
 | `($X:term ^{ $n }) => do
   `($X ^ (Idx $n))
 | `($X:term ^{ $ns,* }) => do
@@ -65,7 +65,7 @@ macro_rules
     let ns' := ns.getElems[:ns.getElems.size-1]
     let I ← ns'.foldrM (λ x y => `(Idx $x × $y)) (← `(Idx $last))
     `($X ^ $I)
-  else 
+  else
     `(Unit)
 
 
@@ -138,13 +138,13 @@ instance [ToJson X] : ToJson (X^I) where
 
 open Lean in
 instance [FromJson X] : FromJson (X^I) where
-  fromJson? json := 
+  fromJson? json :=
     match fromJson? (α := Array X) json with
     | .error msg => .error msg
-    | .ok array => 
+    | .ok array =>
       if h : (Index.size I).toNat = array.size then
         .ok (introElem λ i => array.uget (toIdx i).1 (sorry_proof))
-      else 
+      else
         .error "Failed to convert to json to ArrayType X^{n}, json size does not match `n`"
 
 end FixedSize
@@ -153,7 +153,7 @@ end FixedSize
 section VariableSize
 variable {X} {T : outParam (USize → Type)} [LinearArrayType T X]
 
-abbrev empty : X^{0} := GenericArrayType.empty 
+abbrev empty : X^{0} := GenericArrayType.empty
 abbrev split {n m : USize} (x : X^{n+m}) : X^{n} × X^{m} := GenericArrayType.split x
 abbrev merge {n m : USize} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArrayType.append x y
 abbrev append {n m : USize} (x : X^{n}) (y : X^{m}) : X^{n+m} := GenericArrayType.append x y
@@ -163,16 +163,16 @@ abbrev push (x : X^{n}) (xi : X) (k : USize := 1) : X^{n+k} := pushElem k xi x
 
 -- TODO: Fix these operations, change Fin to Idx
 
-#exit 
-/-- Computes: `y[i] := a i * x[i] + b i * x[i+1]` 
+#exit
+/-- Computes: `y[i] := a i * x[i] + b i * x[i+1]`
 
 Special case for `i=n-1`: `y[n-1] := a (n-1) * x[n-1]` -/
-abbrev generateUpperTriangularArray (f : (n' : USize) → X^{n'+1} → X^{n'}) (x : X^{n}) : X^{(n*(n+1))/2} := 
+abbrev generateUpperTriangularArray (f : (n' : USize) → X^{n'+1} → X^{n'}) (x : X^{n}) : X^{(n*(n+1))/2} :=
   GenericArrayType.generateUpperTriangularArray f x
 abbrev upper2DiagonalUpdate [Vec X] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : X^{n}) : X^{n} :=
   GenericArrayType.upper2DiagonalUpdate a b x
 
-/-- Computes: `y[i] := a i * x[i] + b (i-1) * x[i-1]` 
+/-- Computes: `y[i] := a i * x[i] + b (i-1) * x[i-1]`
 
 Special case for `i=0`: `y[0] := a 0 * x[0]` -/
 abbrev lower2DiagonalUpdate [Vec X] (a : Fin n → ℝ) (b : Fin (n-1) → ℝ) (x : X^{n}) : X^{n} :=

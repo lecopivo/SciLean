@@ -56,7 +56,7 @@ private partial def Lean.Expr.liftLetsAux (config : LiftLetsConfig) (e : Expr) (
             return ← (b.instantiate1 fvar').liftLetsAux config fvars f
 
         if config.splitCtors then
-          if let .some (vs', _, mk') ← splitByCtors? v' then 
+          if let .some (vs', _, mk') ← splitByCtors? v' then
             let names := (Array.range vs'.size).map fun i => n.appendAfter (toString i)
             return ← withLetDecls names vs' fun fvars' => do
               let fvar' := (mkAppN mk' fvars').headBeta
@@ -120,11 +120,11 @@ where
           match ← reduceProjOfCtor? e with
           | .some e' => return .yield e'
           | .none => return .done e)
-  removeLet (v : Expr) : Bool := 
+  removeLet (v : Expr) : Bool :=
     if config.removeFVar && v.isFVar then
       true
-    else if config.removeNum && 
-      (v.isAppOfArity' ``OfNat.ofNat 3 || 
+    else if config.removeNum &&
+      (v.isAppOfArity' ``OfNat.ofNat 3 ||
        v.isAppOfArity' ``OfScientific.ofScientific 5) then
       true
     else if config.removeLambda && v.isLambda then
@@ -154,8 +154,8 @@ def Lean.Expr.letNormalize (e : Expr)
 -- open Qq
 -- #eval show MetaM Unit from do
 
---   let e := q(  
---     fun x y => 
+--   let e := q(
+--     fun x y =>
 --       let a := x
 --       let b := a + y
 --       let c := 42
@@ -171,15 +171,15 @@ def Lean.Expr.letNormalize (e : Expr)
 
 open Qq
 #eval show MetaM Unit from do
-  
+
   let e := q(
-    fun x => 
-    let a := 
+    fun x =>
+    let a :=
       let b := (10,(20,30))
       let i : Fin 10 := ⟨5, by simp⟩
       let c := b.1 + 3
       b.2.2 + c + 4 + i.1
-    let d := 
+    let d :=
       let e := 11
       a + 4 + e + x
     let z := a + d
@@ -190,7 +190,7 @@ open Qq
   let e' ← e.letNormalize (config := {removeNum := true})
 
   IO.println (← ppExpr e')
-  
+
 
 #eval show MetaM Unit from do
 
@@ -298,7 +298,7 @@ open Qq
   let a100 := a99
   a100)
 
-  let e' ← replaceFVarAndPost e x.fvarId! q((1,2,3)) 
+  let e' ← replaceFVarAndPost e x.fvarId! q((1,2,3))
     (fun e => do
       IO.println s!"running post on {← ppExpr e}"
       match ← reduceProjOfCtor? e with

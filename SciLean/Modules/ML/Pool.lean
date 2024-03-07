@@ -9,7 +9,7 @@ namespace SciLean.ML
 
 set_option synthInstance.maxSize 200000
 
-variable 
+variable
   {R : Type} [RealScalar R] [PlainDataType R]
 
 set_default_scalar R
@@ -32,7 +32,7 @@ def softMaxPool {n m : USize} {ι} [Index ι] (scale : R) (x : R^[ι,n,m]) : R^[
     let ex := ⊞ (ij : Idx 2 × Idx 2) => Scalar.exp (scale*x[(k, i.prodMerge ij.1, j.prodMerge ij.2)])
     let w := ∑ i', ex[i']
     let w' := 1/w
-    ∑ i' j' : Idx 2, 
+    ∑ i' j' : Idx 2,
       let xi := x[(k, i.prodMerge i', j.prodMerge j')]
       let exi := ex[(i',j')]
       xi * (w'*exi)
@@ -41,4 +41,3 @@ def softMaxPool {n m : USize} {ι} [Index ι] (scale : R) (x : R^[ι,n,m]) : R^[
 #generate_revDeriv softMaxPool x
   prop_by unfold softMaxPool; fprop
   trans_by unfold softMaxPool; ftrans
-

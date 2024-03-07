@@ -14,11 +14,11 @@ instance : IsReal ℝ where
 
 
 inductive ExtendedReal (R : Type _) where
-  | val (r : R) 
-  | posInf 
+  | val (r : R)
+  | posInf
   | negInf
 
-def ExtendedReal.toEReal (R : Type _) [IsReal R] (x : ExtendedReal R) : EReal := 
+def ExtendedReal.toEReal (R : Type _) [IsReal R] (x : ExtendedReal R) : EReal :=
   match x with
   | .val r => .some (.some (IsROrC.re r))
   | .posInf => .some .none
@@ -34,7 +34,7 @@ instance (R : Type _) [IsReal R] : Neg (ExtendedReal R) := ⟨fun x =>
   | .posInf => .negInf
   | .negInf => .posInf⟩
 -- instance (R : Type _) [IsReal R] : Nontrivial (ExtendedReal R) := ⟨⟩
-instance (R : Type _) [IsReal R] [Ord R] : Ord (ExtendedReal R) := ⟨fun x y => 
+instance (R : Type _) [IsReal R] [Ord R] : Ord (ExtendedReal R) := ⟨fun x y =>
   match x, y with
   | .val x', .val y' => compare x' y'
   | .val _, .posInf => .lt
@@ -81,7 +81,7 @@ export ComputableNorm (cnorm)
 
 namespace NotationOverField
 
-open Lean Elab Term 
+open Lean Elab Term
 
 /-- Norm, usually `‖x‖ = (∑ i, ‖x i‖^p)^(1/p)` for some `p`
 
@@ -90,8 +90,6 @@ open Lean Elab Term
 scoped elab (priority := high) "‖" x:term "‖" : term => do
   let K := mkIdent (← currentFieldName.get)
   elabTerm (← `(cnorm (R:=$K) $x)) none
-  -- TODO: fall back to normal norm if 
+  -- TODO: fall back to normal norm if
 
 end NotationOverField
-
-

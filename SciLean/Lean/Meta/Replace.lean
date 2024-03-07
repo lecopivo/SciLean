@@ -18,7 +18,7 @@ private partial def replaceFVarAndPostImpl (e : Expr) (id : FVarId) (val : Expr)
     return .done e
   else
   match e with
-  | .fvar id' => 
+  | .fvar id' =>
     if id' == id then
       return .yield val
     else
@@ -33,16 +33,16 @@ private partial def replaceFVarAndPostImpl (e : Expr) (id : FVarId) (val : Expr)
     let t' ← replaceFVarAndPostImpl t id val post
     withLocalDecl n bi t'.val fun var => do
       match t', ← replaceFVarAndPostImpl (b.instantiate1 var) id val post with
-      | .yield _, .yield b' 
-      | .yield _, .done b' 
+      | .yield _, .yield b'
+      | .yield _, .done b'
       | .done _, .yield b' => post (← mkLambdaFVars #[var] b')
       | .done _, .done b' => return .done (← mkLambdaFVars #[var] b')
   | .forallE n t b bi => do
     let t' ← replaceFVarAndPostImpl t id val post
     withLocalDecl n bi t'.val fun var => do
       match t', ← replaceFVarAndPostImpl (b.instantiate1 var) id val post with
-      | .yield _, .yield b' 
-      | .yield _, .done b' 
+      | .yield _, .yield b'
+      | .yield _, .done b'
       | .done _, .yield b' => post (← mkForallFVars #[var] b')
       | .done _, .done b' => return .done (← mkForallFVars #[var] b')
   | .letE n t v b _ => do
@@ -69,7 +69,7 @@ private partial def instantiate1AndPostImpl (e : Expr) (i : Nat) (val : Expr) (p
     return .done e
   else
   match e with
-  | .bvar i' => 
+  | .bvar i' =>
     if i' == i then
       return .yield val
     else
@@ -82,14 +82,14 @@ private partial def instantiate1AndPostImpl (e : Expr) (i : Nat) (val : Expr) (p
     | .done f', .done x' => return .done (.app f' x')
   | .lam n t b bi => do
     match ← instantiate1AndPostImpl t i val post, ← instantiate1AndPostImpl b (i+1) val post with
-    | .yield t', .yield b' 
-    | .yield t', .done b' 
+    | .yield t', .yield b'
+    | .yield t', .done b'
     | .done t', .yield b' => post (.lam n t' b' bi)
     | .done t', .done b' => return .done (.lam n t' b' bi)
   | .forallE n t b bi => do
     match ← instantiate1AndPostImpl t i val post, ← instantiate1AndPostImpl b (i+1) val post with
-    | .yield t', .yield b' 
-    | .yield t', .done b' 
+    | .yield t', .yield b'
+    | .yield t', .done b'
     | .done t', .yield b' => post (.forallE n t' b' bi)
     | .done t', .done b' => return .done (.forallE n t' b' bi)
   | .letE n t v b _ => do
@@ -108,45 +108,45 @@ private partial def instantiate1AndPostImpl (e : Expr) (i : Nat) (val : Expr) (p
   | e => return .done e
 
 
-/-- Replaces free variable `fvar` with `val`. After replacement `post` is called 
+/-- Replaces free variable `fvar` with `val`. After replacement `post` is called
 successively on the expressions with replaced fvar as long as it keeps returning
 `ReplacePost.yield`
 
 Example use: replace `x` with `(a,b,c)` in `fun y => x.1 + x.2.1 + y` and use
 `post` to reduce projections resulting in `fun y => a + b + y`
- 
+
 -/
-def replaceFVarAndPost (e : Expr) (fvar : FVarId) (val : Expr) (post : Expr → MetaM ReplacePost) 
+def replaceFVarAndPost (e : Expr) (fvar : FVarId) (val : Expr) (post : Expr → MetaM ReplacePost)
   : MetaM Expr := do pure (← replaceFVarAndPostImpl e fvar val post).val
 
 
-/-- Instantiates the 0-th loose bound variable with `val`. After replacement `post` is called 
+/-- Instantiates the 0-th loose bound variable with `val`. After replacement `post` is called
 successively on the expressions with replaced fvar as long as it keeps returning
 `ReplacePost.yield`
 
 Example use: replace `#0` with `(a,b,c)` in `fun y => #0.1 + #0.2.1 + y` and use
 `post` to reduce projections resulting in `fun y => a + b + y`
- 
+
 Unlike `replaceFVarAndPost` this function can call `post e'` with `e'` containing
 loose bounda variables
 -/
-def instantiate1AndPost (e : Expr) (val : Expr) (post : Expr → MetaM ReplacePost) 
+def instantiate1AndPost (e : Expr) (val : Expr) (post : Expr → MetaM ReplacePost)
   : MetaM Expr := do pure (← instantiate1AndPostImpl e 0 val post).val
 
 
-#exit 
+#exit
 
 open Qq
 #eval show MetaM Unit from do
 
   let e := q(fun (x : Nat × Nat × Nat) (y : Nat) => x.1 + x.2.1 + y)
-  
+
   let b := e.bindingBody!
 
-  let b' ← instantiate1AndPost b q((1,2,3)) 
+  let b' ← instantiate1AndPost b q((1,2,3))
     (post := fun e => do
-      if e.hasLooseBVars 
-      then return .done e 
+      if e.hasLooseBVars
+      then return .done e
       else
         IO.println (← ppExpr e)
         match ← reduceProjOfCtor? e with
@@ -154,5 +154,3 @@ open Qq
         | .none => return .done e)
 
   IO.println (← ppExpr b')
-
-

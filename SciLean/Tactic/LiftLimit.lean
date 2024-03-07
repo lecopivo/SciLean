@@ -2,7 +2,7 @@ import Lean
 import Lean.Meta.Basic
 import Lean.Elab.Tactic.Basic
 
-open Lean 
+open Lean
 open Lean.Meta
 open Lean.Elab.Tactic
 
@@ -18,28 +18,28 @@ match e with
 
 -- do lambdaTelescope e fun xs b => do
 --             mkLambdaFVars xs (← replaceSubExpression b test replace)
-  -- 
+  --
   -- this is incomplete and should use lambda telescope
   | _ => pure e
 
 
--- use 
+-- use
 def getlimit  (e : Expr) : MetaM Expr := do
   let nId ← mkFreshFVarId
   withLCtx ((← getLCtx).mkLocalDecl nId `n (mkConst `Nat)) (← getLocalInstances) do
     let nFv := mkFVar nId
-    let test := (λ e : Expr => 
+    let test := (λ e : Expr =>
       match e.getAppFn.constName? with
         | some name => name == `SciLean.limit
         | none => false)
-    let replace := (λ e : Expr => 
+    let replace := (λ e : Expr =>
       do
         dbg_trace s!"HOHOHO {e}"
         let lim := e.getAppArgs[2]!
         let args := #[nFv].append e.getAppArgs[3:]
         mkAppM' lim args)
     mkLambdaFVars #[nFv] (← replaceSubExpression e test replace)
-  
+
 def liftLimitCore (mvarId : MVarId) (N msg : Expr) : MetaM (List MVarId) :=
   withMVarContext mvarId do
     let tag      ← getMVarTag mvarId
@@ -57,12 +57,12 @@ def liftLimitCore (mvarId : MVarId) (N msg : Expr) : MetaM (List MVarId) :=
 
     assignExprMVar mvarId (← mkAppM `SciLean.ImplSpec.limit #[lim, N, new_mvar, msg, eq_mvar])
 
-    return [eq_mvar.mvarId!, new_mvar.mvarId!]  
+    return [eq_mvar.mvarId!, new_mvar.mvarId!]
 
 syntax (name := lift_limit) "lift_limit" (colGt term:max)* : tactic
 
 @[tactic lift_limit] def tacticLiftLimit : Tactic
-| `(tactic| lift_limit $N:term $msg:term) => do 
+| `(tactic| lift_limit $N:term $msg:term) => do
           let N ← elabTerm N none true
           let msg ← elabTerm msg none true
           let mainGoal ← getMainGoal

@@ -48,7 +48,3 @@ theorem mul_recip_val (x y : ℝ) [Fact (x≠0)]: (y/x) * x = 1 := sorry_proof
 
 @[simp, diff_simp]
 theorem mul_recip_val_alt (x y z : ℝ) [Fact (x≠0)]: (y/(x*z)) * x = y/z := sorry_proof
-
-
-
-

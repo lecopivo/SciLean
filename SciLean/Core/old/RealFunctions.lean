@@ -7,7 +7,7 @@ namespace SciLean
 -- Real.sqrt - √
 --------------------------------------------------------------------------------
 
-function_properties SciLean.Real.sqrt [UnsafeAD] (x : ℝ) 
+function_properties SciLean.Real.sqrt [UnsafeAD] (x : ℝ)
 argument x
   IsSmooth := sorry_proof,
   abbrev ∂ := λ dx => dx/(2 * x.sqrt) by sorry_proof,
@@ -63,7 +63,7 @@ argument x
 -- Real.sin
 --------------------------------------------------------------------------------
 
-function_properties SciLean.Real.sin (x : ℝ) 
+function_properties SciLean.Real.sin (x : ℝ)
 argument x
   IsSmooth := sorry,
   abbrev ∂ := λ dx => dx * x.cos by sorry_proof,
@@ -77,7 +77,7 @@ argument x
 -- Real.cos
 --------------------------------------------------------------------------------
 
-function_properties SciLean.Real.cos (x : ℝ) 
+function_properties SciLean.Real.cos (x : ℝ)
 argument x
   IsSmooth := sorry,
   abbrev ∂ := λ dx => - dx * x.sin by sorry_proof,
@@ -91,7 +91,7 @@ argument x
 -- Real.tan
 --------------------------------------------------------------------------------
 
-function_properties SciLean.Real.tan [UnsafeAD] (x : ℝ) 
+function_properties SciLean.Real.tan [UnsafeAD] (x : ℝ)
 argument x
   IsSmooth := sorry,
   abbrev ∂ := λ dx => dx * (1 + x.tan^2) by sorry_proof,
@@ -105,7 +105,7 @@ argument x
 -- Real.atan
 --------------------------------------------------------------------------------
 
-function_properties SciLean.Real.atan (x : ℝ) 
+function_properties SciLean.Real.atan (x : ℝ)
 argument x
   IsSmooth := sorry,
   abbrev ∂ := λ dx => dx * (1 + x^2) by sorry_proof,
@@ -133,7 +133,7 @@ argument (y,x)
 -- Real.exp
 --------------------------------------------------------------------------------
 
-function_properties SciLean.Real.exp (x : ℝ) 
+function_properties SciLean.Real.exp (x : ℝ)
 argument x
   IsSmooth := sorry,
   abbrev ∂ := λ dx => dx * x.exp by sorry_proof,

@@ -22,15 +22,15 @@ class SemiHilbertDiff (X : Type) extends Diff X where
     ⟪x, x⟫ ≥ (0 : ℝ)
   inner_ext : ∀ (x' : X) (x : 𝒯[x'] X),
     ((x = 0) ↔ (∀ (ϕ : 𝒯[x'] X), TestFun ϕ → ⟪x, ϕ⟫ = 0))
-  is_lin_subspace : ∀ x', VecProp (X:=𝒯[x'] X) TestFun  
+  is_lin_subspace : ∀ x', VecProp (X:=𝒯[x'] X) TestFun
 
-attribute [reducible] 
-  SemiHilbertDiff.instInnerTS 
+attribute [reducible]
+  SemiHilbertDiff.instInnerTS
   SemiHilbertDiff.instTestFunctionsTS
   SemiHilbertDiff.toDiff
 
 @[reducible]
-instance (priority:=low) (X : Type) [SemiHilbert X] : SemiHilbertDiff X := 
+instance (priority:=low) (X : Type) [SemiHilbert X] : SemiHilbertDiff X :=
 {
   inner_add := λ _ => SemiHilbert.inner_add
   inner_mul := λ _ => SemiHilbert.inner_mul
@@ -38,10 +38,10 @@ instance (priority:=low) (X : Type) [SemiHilbert X] : SemiHilbertDiff X :=
   inner_pos := λ _ => SemiHilbert.inner_pos
   inner_ext := λ _ => SemiHilbert.inner_ext
   is_lin_subspace := λ _ => SemiHilbert.is_lin_subspace
-}  
+}
 
-@[reducible] 
-instance (X) [SemiHilbertDiff X] (x : X) : SemiHilbert (𝒯[x] X) := 
+@[reducible]
+instance (X) [SemiHilbertDiff X] (x : X) : SemiHilbert (𝒯[x] X) :=
 {
   inner_add := SemiHilbertDiff.inner_add x
   inner_mul := SemiHilbertDiff.inner_mul x
@@ -49,12 +49,12 @@ instance (X) [SemiHilbertDiff X] (x : X) : SemiHilbert (𝒯[x] X) :=
   inner_pos := SemiHilbertDiff.inner_pos x
   inner_ext := SemiHilbertDiff.inner_ext x
   is_lin_subspace := SemiHilbertDiff.is_lin_subspace x
-}  
+}
 
 @[reducible]
 instance SemiHilbertDiff_of_Prod
   (X) [SemiHilbertDiff X] (Y) [SemiHilbertDiff Y]
-  : SemiHilbertDiff (X×Y) := 
+  : SemiHilbertDiff (X×Y) :=
 {
   inner_add := λ _ => SemiHilbert.inner_add
   inner_mul := λ _ => SemiHilbert.inner_mul
@@ -62,13 +62,13 @@ instance SemiHilbertDiff_of_Prod
   inner_pos := λ _ => SemiHilbert.inner_pos
   inner_ext := λ _ => SemiHilbert.inner_ext
   is_lin_subspace := λ _ => SemiHilbert.is_lin_subspace
-}  
+}
 
 @[reducible]
 instance SemiHilbertDiff_of_funType
   {ι : Type} [Enumtype ι]
   (X) [SemiHilbertDiff X]
-  : SemiHilbertDiff (ι → X) := 
+  : SemiHilbertDiff (ι → X) :=
 {
   inner_add := λ _ => SemiHilbert.inner_add
   inner_mul := λ _ => SemiHilbert.inner_mul
@@ -76,11 +76,11 @@ instance SemiHilbertDiff_of_funType
   inner_pos := λ _ => SemiHilbert.inner_pos
   inner_ext := λ _ => SemiHilbert.inner_ext
   is_lin_subspace := λ _ => SemiHilbert.is_lin_subspace
-}  
+}
 
 @[reducible]
 instance SemiHilbertDiff_of_Sum (X) [SemiHilbertDiff X] (Y) [SemiHilbertDiff Y]
-  : SemiHilbertDiff (X⊕Y) := 
+  : SemiHilbertDiff (X⊕Y) :=
 {
   inner_add := λ xy => match xy with | .inl _ => SemiHilbert.inner_add | .inr _ => SemiHilbert.inner_add
   inner_mul := λ xy => match xy with | .inl _ => SemiHilbert.inner_mul | .inr _ => SemiHilbert.inner_mul
@@ -88,7 +88,7 @@ instance SemiHilbertDiff_of_Sum (X) [SemiHilbertDiff X] (Y) [SemiHilbertDiff Y]
   inner_pos := λ xy => match xy with | .inl _ => SemiHilbert.inner_pos | .inr _ => SemiHilbert.inner_pos
   inner_ext := λ xy => match xy with | .inl _ => SemiHilbert.inner_ext | .inr _ => SemiHilbert.inner_ext
   is_lin_subspace := λ xy => match xy with | .inl _ => SemiHilbert.is_lin_subspace | .inr _ => SemiHilbert.is_lin_subspace
-}  
+}
 
 
 --------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ attribute [reducible] HilbertDiff.toSemiHilbertDiff
 @[reducible]
 instance (priority:=low) (X : Type) [Hilbert X] : HilbertDiff X := ⟨λ _ => Hilbert.all_are_test⟩
 
-@[reducible] 
+@[reducible]
 instance (X) [HilbertDiff X] (x : X) : Hilbert (𝒯[x] X) where
   all_are_test := HilbertDiff.all_are_test x
 
@@ -120,5 +120,5 @@ instance instHilbertDiffForAll
 
 @[reducible]
 instance isntHilbertDiffSum (X) [HilbertDiff X] (Y) [HilbertDiff Y]
-  : HilbertDiff (X⊕Y) := 
+  : HilbertDiff (X⊕Y) :=
   ⟨λ xy => match xy with | .inl _ => Hilbert.all_are_test | .inr _ => Hilbert.all_are_test⟩

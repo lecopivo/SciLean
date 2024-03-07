@@ -26,13 +26,13 @@ namespace Compressed
 
     variable {α β : Type}
 
-    instance [ToString α] [ToString β] : ToString (Repr α β) := 
-    ⟨λ x => 
+    instance [ToString α] [ToString β] : ToString (Repr α β) :=
+    ⟨λ x =>
       match x with
       | val   a => toString a
       | compr b => toString b⟩
 
-    def Eq (c : Compression α β) : Repr α β → Repr α β → Prop 
+    def Eq (c : Compression α β) : Repr α β → Repr α β → Prop
       | val   x, val   y => x = y
       | compr x, compr y => x = y
       | val   x, compr y => c.eq x y
@@ -41,18 +41,18 @@ namespace Compressed
     open Quot'
 
     instance (c : Compression α β) : QForm (Eq c) where
-      RedForm := λ lvl x => 
+      RedForm := λ lvl x =>
         match lvl with
         | redLvl _ => True
-        | normLvl => 
-          match x with 
+        | normLvl =>
+          match x with
           | compr _ => True
           | val   a => ¬(c.compressible a)
       redform_norm := sorry
       redform_zero := sorry
       redform_succ := sorry
       redform_inf  := sorry
-    
+
     instance (c : Compression α β) (n : Nat) : QReduce (Eq c) (redLvl n) where
       reduce := id
       is_reduce := sorry
@@ -72,9 +72,9 @@ namespace Compressed
       match x with
       | compr x => x
       | val   x => c.compress x
-    
+
   end Repr
-      
+
 end Compressed
 
 
@@ -95,14 +95,14 @@ namespace Compressed
 
 
   def uncompress (x : Compressed α c) : α :=
-    (Quot.lift · sorry x) <| 
-      (λ x => 
+    (Quot.lift · sorry x) <|
+      (λ x =>
         match x.repr with
         | .val a => a
         | .compr x => c.uncompress x)
 
   -- compress if possible
-  def maybe_compress (x : Compressed α c) : Compressed α c := 
+  def maybe_compress (x : Compressed α c) : Compressed α c :=
     (Quot.lift · sorry x) <|
       (λ x => ⟦x.normalize⟧)
 
@@ -116,31 +116,31 @@ namespace Compressed
       (λ x => ⟦⟨.compr (x.repr.project c), normLvl, sorry⟩⟧)
 
 
-  def map (x : Compressed α c) 
-    (f : α → γ) (g : β → γ) 
-    (h : ∀ a b, c.eq a b → f a = g b) 
+  def map (x : Compressed α c)
+    (f : α → γ) (g : β → γ)
+    (h : ∀ a b, c.eq a b → f a = g b)
     : γ :=
     (Quot.lift · sorry x) <|
-    (λ x => 
+    (λ x =>
       match x.repr with
       | .val x => f x
       | .compr x => g x)
 
-  def map₂ (x y : Compressed α c) 
+  def map₂ (x y : Compressed α c)
     (faa : α → α → γ) (fbb : β → β → γ)
     (fab : α → β → γ) (fba : β → α → γ)
     (h : (∀ xa xb ya yb,  c.eq xa xb → c.eq ya yb → (faa xa ya = fbb xb yb)) ∧
-         (∀ xa xb ya, c.eq xa xb → (faa xa ya = fba xb ya)) ∧ 
+         (∀ xa xb ya, c.eq xa xb → (faa xa ya = fba xb ya)) ∧
          (∀ ya yb xa, c.eq ya yb → (faa xa ya = fab xa yb)))
-    := x.map 
-        (λ xa => y.map 
+    := x.map
+        (λ xa => y.map
          (λ ya => faa xa ya)
          (λ yb => fab xa yb)
          sorry)
         (λ xb => y.map
          (λ ya => fba xb ya)
          (λ yb => fbb xb yb)
-         sorry) 
+         sorry)
         sorry
 
   -- What is goint on with this coercion? It is doing odd stuff with `Coe`.
@@ -157,7 +157,7 @@ namespace Compressed
     #check a * b
 
   end FewTests
-  
+
 
 end Compressed
 
@@ -180,22 +180,22 @@ namespace ZeroCompression
   instance [Zero α] : Zero (ZCompr α) := ⟨()⟩
   instance [One α] [Zero α] : One (ZCompr α) := ⟨(1:α)⟩
 
-  instance {R : Type} [Monoid R] [AddMonoid α] [DistribMulAction R α]  : HMul R (ZCompr α) (ZCompr α) := 
-    ⟨λ r x => x.map (λ a : α => (HMul.hMul r a : α)) (λ p => ()) 
-     (by 
+  instance {R : Type} [Monoid R] [AddMonoid α] [DistribMulAction R α]  : HMul R (ZCompr α) (ZCompr α) :=
+    ⟨λ r x => x.map (λ a : α => (HMul.hMul r a : α)) (λ p => ())
+     (by
       simp[Compressed.Repr.Eq, ZeroCompression]
       apply Quot.sound; simp
       apply (DistribMulAction.smul_zero)
      )⟩
 
-  instance {α : Type} [DecidableEq α] [AddMonoid α] : Add (ZCompr α) := 
-    ⟨λ x y : ZCompr α => 
+  instance {α : Type} [DecidableEq α] [AddMonoid α] : Add (ZCompr α) :=
+    ⟨λ x y : ZCompr α =>
       (x.map₂ y
         (λ x y => (x + y : α))
         (λ _ _ => ())
         (λ x _ => x)
         (λ _ x => x)
-        (by 
+        (by
       simp[Compressed.Repr.Eq, ZeroCompression]
       constructor
       . intros _ _ h h'; apply Quot.sound; simp[h,h']
@@ -204,14 +204,14 @@ namespace ZeroCompression
       . intros _ _ h; apply Quot.sound; simp[h]
      ))⟩
 
-  instance [SubNegMonoid α] : Sub (ZCompr α) := 
-    ⟨λ x y : ZCompr α => 
+  instance [SubNegMonoid α] : Sub (ZCompr α) :=
+    ⟨λ x y : ZCompr α =>
       (x.map₂ y
         (λ x y => (x - y : α))
         (λ _ _ => ())
         (λ x _ => x)
         (λ _ x => (-x : α))
-        (by 
+        (by
       simp[Compressed.Repr.Eq, ZeroCompression]
       constructor
       . intros _ _ h h'; apply Quot.sound; simp[h,h']; admit
@@ -220,14 +220,14 @@ namespace ZeroCompression
       . intros _ _ h; apply Quot.sound; simp[h]; admit
      ))⟩
 
-  instance [MulZeroClass α] : Mul (ZCompr α) := 
-    ⟨λ x y : ZCompr α => 
+  instance [MulZeroClass α] : Mul (ZCompr α) :=
+    ⟨λ x y : ZCompr α =>
       (x.map₂ y
         (λ x y => (x * y : α))
         (λ _ _ => ())
         (λ x _ => ())
         (λ _ x => ())
-        (by 
+        (by
       simp[Compressed.Repr.Eq, ZeroCompression]
       constructor
       . intros _ _ h h'; apply Quot.sound; simp[h,h']; admit
@@ -236,8 +236,8 @@ namespace ZeroCompression
       . intros _ _ h; apply Quot.sound; simp[h]; admit
      ))⟩
 
-  instance [SubNegMonoid α] : Neg (ZCompr α) := ⟨λ x => x.map (λ a => (-a : α)) (λ p => ()) 
-    (by 
+  instance [SubNegMonoid α] : Neg (ZCompr α) := ⟨λ x => x.map (λ a => (-a : α)) (λ p => ())
+    (by
       simp[Compressed.Repr.Eq, ZeroCompression]
       apply Quot.sound; simp
       admit -- -0=0 this should be provable from `SubNegMonoid`
@@ -310,7 +310,7 @@ namespace HOHO
   def a : ZCompr Int := (42 : Int)
   def b : ZCompr Int := ()
   def c := a * b
-  def d := a + b + a 
+  def d := a + b + a
   #eval a.toDebugString
   #eval b.toDebugString
   #eval c.toDebugString
