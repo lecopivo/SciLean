@@ -27,3 +27,10 @@ example {Y : Type} [SemiHilbert R Y]
 by
   intros
   fun_prop
+
+
+variable
+  {K : Type*} [IsROrC K]
+  {α : Type*} -- problematic universe
+
+example (i : α) : CDifferentiable K (fun (xy : (α → K) × (α → K)) => xy.fst i) := by fun_prop
