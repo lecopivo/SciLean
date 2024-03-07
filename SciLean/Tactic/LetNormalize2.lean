@@ -30,6 +30,11 @@ structure Lean.Expr.LiftLets2Config where
   /-- Split bindings of constructors into multiple let bindings.
   For example `let y := (a,b); ...` will be transformed into `let y₁ := a; let y₂ := b; ...`  -/
   splitCtors : Bool := true
+  /-- Remove binding of lambda functions.  -/
+  removeLambda : Bool := true
+  /-- Remove binding of lambda functions.  -/
+  removeOfNat : Bool := true
+
 
 /--
 Auxiliary definition for `Lean.Expr.liftLets`. Takes a list of the accumulated fvars.
@@ -50,6 +55,10 @@ private partial def Lean.Expr.liftLets2Aux {α} (config : LiftLets2Config) (e : 
         if config.removeSingleFVar && v'.isFVar then
           return ← (b.instantiate1 v').liftLets2Aux config fvars f
         if config.removeNoFVar && ¬v'.hasFVar then
+          return ← (b.instantiate1 v').liftLets2Aux config fvars f
+        if config.removeLambda && v'.isLambda then
+          return ← (b.instantiate1 v').liftLets2Aux config fvars f
+        if config.removeOfNat && v'.isAppOfArity ``OfNat.ofNat 3 then
           return ← (b.instantiate1 v').liftLets2Aux config fvars f
 
         if config.splitCtors then

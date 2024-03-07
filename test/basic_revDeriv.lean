@@ -4,7 +4,9 @@ import SciLean.Data.DataArray
 import SciLean.Util.RewriteBy
 import SciLean.Tactic.Autodiff
 import SciLean.Tactic.LetEnter
+import SciLean.Tactic.LetUtils
 
+import SciLean.Core.Notation.RevCDeriv
 
 open SciLean
 
@@ -17,32 +19,6 @@ variable
   {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
-
-macro "clean_up" : conv => `(conv| (simp (config:={zeta:=false}) only[oneHot,structModify,structMake,dite_eq_ite,eq_self,ite_true,ite_false,dite_true,dite_false,SciLean.conj_for_real_scalar,Sum.inr.injEq,Sum.inl.injEq,Prod.snd_zero, Prod.fst_zero]; fun_trans only))
-
-
-
-example
-    (f : X → Y×Z) (hf : HasAdjDiff K f) :
-    revDeriv K (fun x => (f x).1)
-    =
-    fun x =>
-      let yzdf := revDeriv K f x
-      (yzdf.1.1, fun dy => yzdf.2 (dy,0)) := by
-  unfold revDeriv
-  conv =>
-    rhs
-    enter[x]
-    fun_trans
-
-
-variable (f : X → Y×Z) (hf : HasAdjDiff K f) (x : X)
-
-#check (let df := semiAdjoint K f; df) rewrite_by fun_trans
-#check (let df := (f,semiAdjoint K f); fun dy => df.2 (dy,0)) rewrite_by fun_trans
-
-
-#exit
 
 
 example
@@ -78,7 +54,8 @@ example
         let dy_2 := Prod.snd zdf dy_1.snd;
         (dy.fst, dy_1.fst, dy_2)) :=
 by
-  conv => lhs; fun_trans
+  conv => lhs; autodiff; autodiff; autodiff
+
 
 example
   : revDeriv K (fun yy : Y×Y×Y×Y => f yy.1 (f yy.2.1 (f yy.2.2.1 (f yy.2.2.2 x))))
@@ -95,7 +72,8 @@ example
         let dy_3 := Prod.snd zdf dy_2.snd;
         (dy.fst, dy_1.fst, dy_2.fst, dy_3)) :=
 by
-  conv => lhs; ftrans
+  conv => lhs; autodiff; autodiff; autodiff; autodiff
+
 
 
 --------------------------------------------------------------------------------

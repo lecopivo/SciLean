@@ -1,5 +1,5 @@
 import SciLean.Core.Notation.CDeriv
-import SciLean.Core.FunctionTransformations.RevCDeriv
+import SciLean.Core.FunctionTransformations.RevDeriv
 
 
 --------------------------------------------------------------------------------
@@ -20,13 +20,13 @@ open Lean Elab Term Meta in
 elab_rules : term
 | `(<∂ $f $xs*) => do
   let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(revCDeriv $K $f $xs*)) none
+  elabTerm (← `(revDeriv $K $f $xs*)) none
 | `(<∂ $f) => do
   let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(revCDeriv $K $f)) none
-| `(<∂ $x:ident := $val:term ; $codir:term, $b) => do
-  let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(revCDerivEval $K (fun $x => $b) $val $codir)) none
+  elabTerm (← `(revDeriv $K $f)) none
+-- | `(<∂ $x:ident := $val:term ; $codir:term, $b) => do
+--   let K := mkIdent (← currentFieldName.get)
+--   elabTerm (← `(revDerivEval $K (fun $x => $b) $val $codir)) none
 
 macro_rules
 | `(<∂ $x:ident, $b) => `(<∂ (fun $x => $b))
@@ -35,15 +35,15 @@ macro_rules
 | `(<∂ ($b:diffBinder), $f)       => `(<∂ $b, $f)
 
 macro_rules
-| `(<∂! $f $xs*) => `((<∂ $f $xs*) rewrite_by ftrans; ftrans; ftrans)
-| `(<∂! $f) => `((<∂ $f) rewrite_by ftrans; ftrans; ftrans)
+| `(<∂! $f $xs*) => `((<∂ $f $xs*) rewrite_by fun_trans)
+| `(<∂! $f) => `((<∂ $f) rewrite_by fun_trans)
 | `(<∂! $x:ident, $b) => `(<∂! (fun $x => $b))
 | `(<∂! $x:ident := $val:term, $b) => `(<∂! (fun $x => $b) $val)
 | `(<∂! $x:ident : $type:term, $b) => `(<∂! fun $x : $type => $b)
 | `(<∂! ($b:diffBinder), $f)       => `(<∂! $b, $f)
 
 
-@[app_unexpander revCDeriv] def unexpandRevCDeriv : Lean.PrettyPrinter.Unexpander
+@[app_unexpander revDeriv] def unexpandRevDeriv : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $_ $f:term $x) =>
     match f with
@@ -60,14 +60,14 @@ macro_rules
   | _  => throw ()
 
 
-@[app_unexpander revCDerivEval] def unexpandRevCDerivEval : Lean.PrettyPrinter.Unexpander
+-- @[app_unexpander revDerivEval] def unexpandRevDerivEval : Lean.PrettyPrinter.Unexpander
 
-  | `($(_) $_ $f:term $x $dy) =>
-    match f with
-    | `(fun $x':ident => $b:term) => `(<∂ ($x':ident:=$x;$dy), $b)
-    | `(fun ($x':ident : $_) => $b:term) => `(<∂ ($x':ident:=$x;$dy), $b)
-    | _  => throw ()
+--   | `($(_) $_ $f:term $x $dy) =>
+--     match f with
+--     | `(fun $x':ident => $b:term) => `(<∂ ($x':ident:=$x;$dy), $b)
+--     | `(fun ($x':ident : $_) => $b:term) => `(<∂ ($x':ident:=$x;$dy), $b)
+--     | _  => throw ()
 
-  | _ => throw ()
+--   | _ => throw ()
 
 end NotationOverField
