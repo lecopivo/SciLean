@@ -3,9 +3,9 @@ import SciLean
 open SciLean
 
 variable
-  {R : Type} [RealScalar R]
+  {R : Type _} [RealScalar R]
   {X : Type _} [SemiInnerProductSpace R X]
-  {Y : Type} [SemiHilbert R Y]
+  {Y : Type _} [SemiHilbert R Y]
 
 open ComplexConjugate
 
