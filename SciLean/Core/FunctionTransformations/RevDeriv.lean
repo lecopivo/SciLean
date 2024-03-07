@@ -55,6 +55,15 @@ def revDerivProjUpdate [DecidableEq I]
   let ydf' := revDerivProj K I f x
   (ydf'.1, fun i de dx => dx + ydf'.2 i de)
 
+
+
+noncomputable
+abbrev gradient (f : X → Y) (x : X) : (Y → X):= (revDeriv K f x).2
+
+noncomputable
+abbrev scalarGradient (f : X → K) (x : X) : X := (revDeriv K f x).2 1
+
+
 --------------------------------------------------------------------------------
 -- simplification rules for individual components ------------------------------
 --------------------------------------------------------------------------------

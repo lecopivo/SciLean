@@ -1,5 +1,4 @@
 import SciLean.Core
-import SciLean.Data.Curry
 
 set_option linter.unusedVariables false
 
@@ -36,28 +35,28 @@ variable
   {Y : Type _} [Vec R Y]
   {Z : Type _} [Vec R Z]
 
-@[fprop]
-theorem odeSolve.arg_ft₀tx₀.IsDifferentiable_rule
+@[fun_prop]
+theorem odeSolve.arg_ft₀tx₀.CDifferentiable_rule
   (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
-  (hf : IsDifferentiable R (fun (w,t,x) => f w t x))
-  (ht₀ : IsDifferentiable R t₀) (ht : IsDifferentiable R t)
-  (hx : IsDifferentiable R x₀)
-  : IsDifferentiable R fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w) := sorry_proof
+  (hf : CDifferentiable R (fun (w,t,x) => f w t x))
+  (ht₀ : CDifferentiable R t₀) (ht : CDifferentiable R t)
+  (hx : CDifferentiable R x₀)
+  : CDifferentiable R fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w) := sorry_proof
 
 
-@[ftrans]
+@[fun_trans]
 theorem odeSolve.arg_ft₀tx₀.cderiv_rule
   (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
-  (hf : IsDifferentiable R (fun (w,t,x) => f w t x))
-  (ht₀ : IsDifferentiable R t₀) (ht : IsDifferentiable R t)
-  (hx : IsDifferentiable R x₀)
+  (hf : CDifferentiable R (fun (w,t,x) => f w t x))
+  (ht₀ : CDifferentiable R t₀) (ht : CDifferentiable R t)
+  (hx : CDifferentiable R x₀)
   : cderiv R (fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w))
     =
     fun w dw =>
-      let t₀dt₀ := fwdCDeriv R t₀ w dw
-      let tdt   := fwdCDeriv R t₀ w dw
-      let x₀dx₀ := fwdCDeriv R x₀ w dw
-      let Tf := fwdCDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
+      let t₀dt₀ := fwdDeriv R t₀ w dw
+      let tdt   := fwdDeriv R t₀ w dw
+      let x₀dx₀ := fwdDeriv R x₀ w dw
+      let Tf := fwdDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
 
       let F := fun (t : R) (xdx : X×X) =>
         let x  := xdx.1
@@ -70,19 +69,19 @@ theorem odeSolve.arg_ft₀tx₀.cderiv_rule
     := sorry_proof
 
 
-@[ftrans]
-theorem odeSolve.arg_ft₀tx₀.fwdCDeriv_rule
+@[fun_trans]
+theorem odeSolve.arg_ft₀tx₀.fwdDeriv_rule
   (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
-  (hf : IsDifferentiable R (fun (w,t,x) => f w t x))
-  (ht₀ : IsDifferentiable R t₀) (ht : IsDifferentiable R t)
-  (hx : IsDifferentiable R x₀)
-  : fwdCDeriv R (fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w))
+  (hf : CDifferentiable R (fun (w,t,x) => f w t x))
+  (ht₀ : CDifferentiable R t₀) (ht : CDifferentiable R t)
+  (hx : CDifferentiable R x₀)
+  : fwdDeriv R (fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w))
     =
     fun w dw =>
-      let t₀dt₀ := fwdCDeriv R t₀ w dw
-      let tdt   := fwdCDeriv R t₀ w dw
-      let x₀dx₀ := fwdCDeriv R x₀ w dw
-      let Tf := fwdCDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
+      let t₀dt₀ := fwdDeriv R t₀ w dw
+      let tdt   := fwdDeriv R t₀ w dw
+      let x₀dx₀ := fwdDeriv R x₀ w dw
+      let Tf := fwdDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
 
       let F := fun (t : R) (xdx : X×X) =>
         let x  := xdx.1
@@ -93,14 +92,14 @@ theorem odeSolve.arg_ft₀tx₀.fwdCDeriv_rule
 
       (xdx.1, xdx.2 + tdt.2 • f w tdt.1 xdx.1) :=
 by
-  (conv => lhs; unfold fwdCDeriv)
-  ftrans
+  (conv => lhs; unfold fwdDeriv)
+  fun_trans
   funext w dw
-  simp[fwdCDeriv]
+  simp[fwdDeriv]
   sorry_proof
 
 
-@[fprop]
+@[fun_prop]
 theorem odeSolve.arg_x₀.IsContinuousLinearMap_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
   (hf : ∀ t, IsContinuousLinearMap R (f t)) (hx₀ : IsContinuousLinearMap R x₀)
@@ -117,13 +116,13 @@ variable
   {Y : Type _} [SemiInnerProductSpace R Y]
   {Z : Type _} [SemiInnerProductSpace R Z]
 
-@[fprop]
+@[fun_prop]
 theorem odeSolve.arg_x₀.HasSemiAdjoint_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
   (hf : ∀ t, HasSemiAdjoint R (f t)) (hx₀ : HasSemiAdjoint R x₀)
   : HasSemiAdjoint R (fun w => odeSolve f t₀ t (x₀ w)) := sorry_proof
 
-@[ftrans]
+@[fun_trans]
 theorem odeSolve.arg_x₀.semiAdjoint_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
   (hf : ∀ t, HasSemiAdjoint R (f t)) (hx₀ : HasSemiAdjoint R x₀)
@@ -150,7 +149,7 @@ by
 
 
 
-@[fprop]
+@[fun_prop]
 theorem odeSolve.arg_ft₀tx₀.HasAdjDiff_rule
   (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
   (hf : HasAdjDiff R (fun (w,t,x) => f w t x))
@@ -159,30 +158,28 @@ theorem odeSolve.arg_ft₀tx₀.HasAdjDiff_rule
   : HasAdjDiff R fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w) := sorry_proof
 
 
-@[ftrans]
+@[fun_trans]
 theorem odeSolve.arg_x₀.revCDeriv_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
   (hf : HasAdjDiff R (fun (t,x) => f t x))
   (hx : HasAdjDiff R x₀)
-  : revCDeriv R (fun w => odeSolve f t₀ t (x₀ w))
+  : revDeriv R (fun w => odeSolve f t₀ t (x₀ w))
     =
     fun w =>
-      let x₀dx₀ := revCDeriv R x₀ w
-      let x := hold $ λ s => odeSolve f t₀ s x₀dx₀.1
-      let dfdx := hold λ s dx' => - gradient R (fun x' => f s x') (x s) dx'
+      let x₀dx₀ := revDeriv R x₀ w
+      let x := fun s => odeSolve f t₀ s x₀dx₀.1
+      let dfdx := fun s dx' => - gradient R (fun x' => f s x') (x s) dx'
       (x t,
        fun dx =>
          let dx := odeSolve dfdx t₀ t dx
          x₀dx₀.2 dx) :=
 by
-  unfold gradient revCDeriv hold
-  ftrans;
+  unfold gradient revDeriv
+  fun_trans;
   funext w; simp
   -- set_option trace.Meta.Tactic.simp.discharge true in
   -- set_option trace.Meta.Tactic.simp.unify true in
-  -- set_option trace.Meta.Tactic.ftrans.step true in
-  ftrans
-  ftrans
+  -- set_option trace.Meta.Tactic.fun_trans.step true in
   sorry_proof
 
 

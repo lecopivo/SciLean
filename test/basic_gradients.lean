@@ -1,6 +1,7 @@
 import SciLean
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.RewriteBy
+import SciLean.Core.Notation.Gradient
 
 open SciLean LeanColls
 
@@ -20,45 +21,30 @@ example
     =
     fun x dx => dx :=
 by
-  (conv => lhs; autodiff)
+  (conv => lhs; unfold gradient; autodiff; autodiff)
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, x i)
     =
     fun x i => 1 :=
 by
-  (conv => lhs; autodiff)
+  (conv => lhs; unfold scalarGradient; autodiff; autodiff)
+
+#exit
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, ‖x i‖₂²)
     =
     fun x i => 2 * (x i) :=
 by
-  (conv => lhs; autodiff)
+  (conv => lhs; unfold scalarGradient; autodiff; autodiff)
 
--- #eval  compare (1,2) (2,1)
-variable (A : Fin 5 → Fin 10 → K) (i : Fin 5) (j : Fin 10)
-#check LeanColls.IndexType.instIndexTypeProd
-
-
-set_option trace.Meta.Tactic.simp.rewrite true in
-set_option pp.funBinderTypes true in
-set_option pp.all true in
-#check (∇ (x : Fin 10 → K), fun (ij : (Fin 10 × Fin 10)) => x ij.1 * x ij.2)
-  rewrite_by unfold gradient; ftrans
-
-#check (∇ (x : Fin 10 → K), fun i => ∑ j, A i j * x j)
-  rewrite_by unfold gradient; ftrans
-
-#exit
-
-set_option pp.notation false in
 example (A : Fin 5 → Fin 10 → K)
   : (∇ (x : Fin 10 → K), fun i => ∑ j, A i j * x j)
     =
     fun _ dy j => ∑ i, A i j * dy i :=
 by
-  (conv => lhs; simp[SciLean.gradient]; ftrans)
+  (conv => lhs; simp[SciLean.gradient]; autodiff)
 
 variable [PlainDataType K]
 
@@ -88,7 +74,7 @@ by
 --     =
 --     fun x => ⊞ _ => (1:K) :=
 -- by
---   (conv => lhs; unfold scalarGradient; ftrans)
+--   (conv => lhs; unfold scalarGradient; autodiff)
 
 example
   : (∇ (x : K ^ Idx 10), ∑ i, x[i])
@@ -253,5 +239,5 @@ by
 --       ⊞ i => ∑ j, w[j] * dy[(-j.fst.1 +ᵥ i.fst, -j.snd.1 +ᵥ i.snd)] :=
 --       -- ⊞ i => ∑ (j : (Idx' (-5) 5 × Idx' (-5) 5)), w[(j.2,j.1)] * dy[(-j.2.1 +ᵥ i.fst, -j.1.1 +ᵥ i.snd)] :=
 -- by
---   conv => lhs; unfold SciLean.gradient; ftrans
+--   conv => lhs; unfold SciLean.gradient; autodiff
 --   -- sorry_proof

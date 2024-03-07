@@ -270,7 +270,7 @@ by
 
   rw[show (fun x => Bind.bind (a0 x) (a1 x))
           =
-          fun x => g x >>= f by simp]
+          fun x => g x >>= f by simp[f,g]]
 
   have hg : CDifferentiableM K (fun x => do let y ← a0 x; pure (x,y)) :=
     by apply FwdDerivMonad.CDifferentiableM_pair a0 ha0
@@ -297,7 +297,7 @@ by
 
   rw[show (fun x => Bind.bind (a0 x) (a1 x))
           =
-          fun x => g x >>= f by simp]
+          fun x => g x >>= f by simp[f,g]]
 
   have hg : CDifferentiableM K (fun x => do let y ← a0 x; pure (x,y)) :=
     by apply FwdDerivMonad.CDifferentiableM_pair a0 ha0

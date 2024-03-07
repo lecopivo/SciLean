@@ -1,4 +1,5 @@
 import SciLean.Core.FunctionTransformations.CDeriv
+import SciLean.Tactic.Autodiff
 
 --------------------------------------------------------------------------------
 -- Notation  -------------------------------------------------------------------
@@ -64,7 +65,7 @@ macro_rules
 macro_rules
 -- in some cases it is still necessary to call fun_trans multiple times
 -- | `(∂! $f $xs*) => `((∂ $f $xs*) rewrite_by fun_trans; fun_trans; fun_trans)
-| `(∂! $f) => `((∂ $f) rewrite_by (try unfold scalarCDeriv); fun_trans)
+| `(∂! $f) => `((∂ $f) rewrite_by (try unfold scalarCDeriv); autodiff; autodiff)
 | `(∂! $x:ident, $b) => `(∂! (fun $x => $b))
 | `(∂! $x:ident := $val:term, $b) => `(∂! (fun $x => $b) $val)
 | `(∂! $x:ident := $val:term;$dir:term, $b) => `(((∂ $x:ident:=$val;$dir, $b) rewrite_by (try unfold scalarCDeriv);fun_trans))

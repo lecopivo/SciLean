@@ -249,7 +249,7 @@ the right inverse `f⁻¹` is parametrized by a type `X₁` and for every `x₁ 
 Returns also a list of pending goals proving that individual inversions are possible.
 -/
 def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarId)) := do
-  let f ← instantiateMVars f
+  let f ← whnfCore (← instantiateMVars f)
   match f with
   | .lam xName xType xBody xBi =>
     withLocalDecl `x xBi xType fun x => do

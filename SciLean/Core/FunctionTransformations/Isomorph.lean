@@ -59,3 +59,33 @@ theorem pi_rule (f : α → β → γ) :
     =
     fun x' => isomorph tag (f ((IsomorphicType.equiv tag).symm x')) := by
   funext x'; simp[isomorph, IsomorphicType.equiv]
+
+
+
+----------------------------------------------------------------------------------------------------
+
+
+@[fun_trans]
+theorem _root_.Prod.mk.isomorph_rule (f : α → β) (g : α → γ) :
+    isomorph tag (fun x => (f x, g x))
+    =
+    fun x' =>
+      let y' := isomorph tag f x'
+      let z' := isomorph tag g x'
+      (y', z')  := by rfl
+
+@[fun_trans]
+theorem _root_.Prod.fst.isomorph_rule (f : α → β×γ) :
+    isomorph tag (fun x => (f x).1)
+    =
+    fun x =>
+      let f' := isomorph tag f
+      (f' x).1  := by rfl
+
+@[fun_trans]
+theorem _root_.Prod.snd.isomorph_rule (f : α → β×γ) :
+    isomorph tag (fun x => (f x).1)
+    =
+    fun x =>
+      let f' := isomorph tag f
+      (f' x).1  := by rfl

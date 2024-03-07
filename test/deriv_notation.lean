@@ -1,6 +1,6 @@
 import SciLean.Core.Notation.CDeriv
 import SciLean.Core.Notation.Gradient
-import SciLean.Core.Notation.FwdCDeriv
+import SciLean.Core.Notation.FwdDeriv
 import SciLean.Core.Notation.RevCDeriv
 import SciLean.Core.FloatAsReal
 
@@ -17,7 +17,7 @@ set_default_scalar K
 #check ∂ (x:=1), x*x
 #check ∂ (x:=0.1), x*x
 #check ∂ (x:=((1:K),(2:K))), (x + x)
-#check 
+#check
   let df := ∂ (fun x : K×K => (x.1 + x.2*x.1)) (0,0)
   df (0,0)
 
@@ -37,7 +37,7 @@ variable {X} [Vec K X] (f : X → X)
 
 #check ∂ (x:=0), f x
 
-set_default_scalar Float 
+set_default_scalar Float
 
 #eval ∂! (fun x => x^2) 1
 #eval ∂! (fun x => x*x) 1
@@ -49,7 +49,7 @@ set_default_scalar Float
 
 --------------------------------------------------------------------------------
 
-set_default_scalar K 
+set_default_scalar K
 
 #check ∇ x : (K×K), x.1
 #check ∇! x : (K×K), x.1
@@ -79,7 +79,7 @@ set_default_scalar K
 
 #check ∂>! x : K×K, (x.1 + x.2*x.1)
 #check ∂>! x:=(1:K);2, (x + x*x)
-#check 
+#check
   let a := ∂> (fun x : K×K => (x.1 + x.2*x.1))
   a (0,0)
 
@@ -90,4 +90,3 @@ set_default_scalar K
 
 #check <∂! x : K×K, (x.1 + x.2*x.1)
 #check <∂! x:=(1:K), (x + x*x)
-

@@ -35,8 +35,8 @@ macro_rules
 | `(<∂ ($b:diffBinder), $f)       => `(<∂ $b, $f)
 
 macro_rules
-| `(<∂! $f $xs*) => `((<∂ $f $xs*) rewrite_by fun_trans)
-| `(<∂! $f) => `((<∂ $f) rewrite_by fun_trans)
+| `(<∂! $f $xs*) => `((<∂ $f $xs*) rewrite_by autodiff)
+| `(<∂! $f) => `((<∂ $f) rewrite_by autodiff)
 | `(<∂! $x:ident, $b) => `(<∂! (fun $x => $b))
 | `(<∂! $x:ident := $val:term, $b) => `(<∂! (fun $x => $b) $val)
 | `(<∂! $x:ident : $type:term, $b) => `(<∂! fun $x : $type => $b)

@@ -1,3 +1,4 @@
+import SciLean.Core
 import SciLean.Modules.DifferentialEquations.OdeSolvers.Basic
 import SciLean.Modules.DifferentialEquations.OdeSolvers.Solvers
 
@@ -16,4 +17,4 @@ namespace forwardEuler
 theorem isOdeStepper (f : R → X → X)
   : IsOdeStepper f (forwardEuler f)
 where
-  consistent := by unfold forwardEuler; ftrans
+  consistent := by unfold forwardEuler; autodiff; simp

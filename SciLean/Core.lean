@@ -7,12 +7,12 @@ import SciLean.Core.FunctionPropositions
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.Monads
 import SciLean.Core.Notation
-import SciLean.Core.Simp
-import SciLean.Core.Data
+
+import SciLean.Core.Rand
 
 import SciLean.Core.Approx.Basic
 import SciLean.Core.Approx.ApproxLimit
 
-import SciLean.Core.Meta.GenerateRevDeriv
-import SciLean.Core.Meta.GenerateRevCDeriv
-import SciLean.Core.Meta.GenerateFwdCDeriv
+-- import SciLean.Core.Meta.GenerateRevDeriv
+-- import SciLean.Core.Meta.GenerateRevCDeriv
+-- import SciLean.Core.Meta.GenerateFwdCDeriv

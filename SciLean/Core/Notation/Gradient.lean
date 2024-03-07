@@ -1,6 +1,6 @@
-import SciLean.Core.FunctionTransformations.RevCDeriv
-import SciLean.Core.Notation.Autodiff
+import SciLean.Core.FunctionTransformations.RevDeriv
 import SciLean.Core.Notation.CDeriv
+import SciLean.Tactic.Autodiff
 
 
 namespace SciLean.NotationOverField
@@ -53,7 +53,7 @@ macro_rules
 | `(∇ ($b:diffBinder), $f)       => `(∇ $b, $f)
 
 macro_rules
-| `(∇! $f)                        => `((∇ $f) rewrite_by ftrans; ftrans; ftrans)
+| `(∇! $f)                        => `((∇ $f) rewrite_by dsimp (config:={zeta:=false}) [gradient, scalarGradient]; autodiff; autodiff; autodiff)
 | `(∇! $x:ident, $f)              => `(∇! fun $x => $f)
 | `(∇! $x:ident : $type:term, $f) => `(∇! fun $x : $type => $f)
 | `(∇! $x:ident := $val:term, $f) => `(∇! (fun $x => $f) $val)

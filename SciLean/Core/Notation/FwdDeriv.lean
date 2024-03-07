@@ -1,5 +1,6 @@
-import SciLean.Core.Notation.CDeriv
 import SciLean.Core.FunctionTransformations.FwdDeriv
+import SciLean.Core.Notation.CDeriv
+
 
 --------------------------------------------------------------------------------
 -- Notation  -------------------------------------------------------------------
@@ -36,8 +37,8 @@ macro_rules
 
 
 macro_rules
-| `(∂>! $f $xs*) => `((∂> $f $xs*) rewrite_by fun_trans; fun_trans; fun_trans)
-| `(∂>! $f) => `((∂> $f) rewrite_by fun_trans; fun_trans; fun_trans)
+| `(∂>! $f $xs*) => `((∂> $f $xs*) rewrite_by autodiff; autodiff; autodiff)
+| `(∂>! $f) => `((∂> $f) rewrite_by autodiff; autodiff; autodiff)
 | `(∂>! $x:ident, $b) => `(∂>! (fun $x => $b))
 | `(∂>! $x:ident := $val:term, $b) => `(∂>! (fun $x => $b) $val)
 | `(∂>! $x:ident : $type:term, $b) => `(∂>! fun $x : $type => $b)

@@ -1,4 +1,4 @@
-import SciLean 
+import SciLean
 
 open SciLean
 
@@ -9,12 +9,13 @@ variable
 
 set_default_scalar K
 
-example (f : X → X) (hf : IsDifferentiable K f)
+
+example (f : X → X) (hf : CDifferentiable K f)
   : (∂ x, let df := ∂ (x':=0), f x'
           df x + df x)
     =
     let df := ∂ (x':=0), f x';
-    fun x dx => ∂ (x:=x;dx), df x + ∂ (x:=x;dx), df x := 
+    fun x dx => ∂ (x:=x;dx), df x + ∂ (x:=x;dx), df x :=
 by
-  conv => 
-    lhs; ftrans
+  conv =>
+    lhs; autodiff
