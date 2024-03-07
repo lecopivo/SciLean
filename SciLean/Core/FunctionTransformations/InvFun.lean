@@ -289,7 +289,7 @@ def HVAdd.hVAdd.arg_a1.invFun_rule_group
 
 @[fun_trans]
 theorem Equiv.toFun.arg_a0.invFun_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
-  : Function.invFun (fun x => f.toFun (g x))
+  : Function.invFun (fun x => f (g x))
     =
     fun z => Function.invFun g (f.invFun z) :=
 by
@@ -299,6 +299,6 @@ by
 theorem Equiv.invFun.arg_a0.invFun_rule (f : Y ≃ Z) (g : X → Z) (hf : Bijective g)
   : Function.invFun (fun x => f.invFun (g x))
     =
-    fun z => Function.invFun g (f.toFun z) :=
+    fun z => Function.invFun g (f z) :=
 by
   sorry_proof

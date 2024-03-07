@@ -58,7 +58,7 @@
   {"url": "https://github.com/leanprover-community/mathlib4",
    "type": "git",
    "subDir": null,
-   "rev": "bf9dea7437c1a1598fff57fcbed0256ce72de18d",
+   "rev": "c9c4eb97f21e72e0278a699296bc8680b3e93777",
    "name": "mathlib",
    "manifestFile": "lake-manifest.json",
    "inputRev": "lecopivo/fun_trans",

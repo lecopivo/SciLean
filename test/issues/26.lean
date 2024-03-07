@@ -1,5 +1,7 @@
 import SciLean
 
+open SciLean
+
 variable (a : Nat)
 
 /--
@@ -7,10 +9,10 @@ info: let x := a + a;
 a + (a + x) : ℕ
 -/
 #guard_msgs in
-#check 
+#check
   (a +
     (a +
     let x := a + a
     x))
   rewrite_by
-    lsimp (config := {zeta := false, singlePass := true})
+    simp (config:={zeta:=false,singlePass:=true}) [Tactic.lift_lets_simproc]

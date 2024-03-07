@@ -247,7 +247,7 @@ by
 
 @[fun_prop]
 theorem Equiv.toFun.arg_a0.Bijective_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
-  : Bijective (fun x => f.toFun (g x)) :=
+  : Bijective (fun x => f (g x)) :=
 by
   sorry_proof
 

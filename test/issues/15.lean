@@ -3,9 +3,9 @@ import SciLean
 import SciLean
 open SciLean
 
-example : IsDifferentiable ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z) := by dsimp; fprop
+example : CDifferentiable ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z) := by fun_prop
 
-example 
+example
   : (cderiv ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z))
     =
-    fun (_,_,_) (_,_,dz) => dz := by dsimp; ftrans only
+    fun (_,_,_) (_,_,dz) => dz := by fun_trans

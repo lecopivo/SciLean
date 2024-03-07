@@ -1,48 +1,38 @@
--- import SciLean.Core.FunctionTransformations.CDeriv
--- import SciLean.Core.FunctionTransformations.InvFun
 import SciLean
 
 open SciLean
 
--- should unfold match statement and see through projections
-example : IsDifferentiable ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z) := by fprop
+example : CDifferentiable ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z) := by fun_prop
 
--- should unfold match statement and see through projections
-example 
+example
   : (cderiv ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z))
     =
-    fun (_,_,_) (_,_,dz) => dz := by ftrans only
+    fun (_,_,_) (_,_,dz) => dz := by fun_trans only
 
--- should unfold introElemNotation to introElem
-example 
-  : IsDifferentiable Float (fun x : Float => ⊞ _ : Idx 10 => x) := 
-by
-  fprop
-
--- should unfold introElemNotation to introElem
 example
-  : cderiv Float (fun x : Float => ⊞ _ : Idx 10 => x)
-    =
-    fun x dx => ⊞ _ : Idx 10 => dx := 
+  : CDifferentiable Float (fun x : Float => ⊞ _ : Fin 10 => x) :=
 by
-  ftrans
-  
--- should unfold FunLike.coe to Equiv.toFun
-example (f : Nat ≃ Nat)
-  : Function.Bijective (fun x => f x) := by fprop
+  fun_prop [SciLean.introElemNotation]
 
--- should unfold FunLike.coe to Equiv.toFun
+example
+  : cderiv Float (fun x : Float => ⊞ _ : Fin 10 => x)
+    =
+    fun x dx => ⊞ _ : Fin 10 => dx :=
+by
+  fun_trans[SciLean.introElemNotation]
+
+example (f : Nat ≃ Nat)
+  : Function.Bijective (fun x => f x) := by fun_prop
+
 example (f : Nat ≃ Nat)
   : Function.invFun (fun x => f x)
     =
-    fun x => f.symm x := by ftrans
+    fun x => f.symm x := by fun_trans
 
--- should unfold FunLike.coe to Equiv.toFun
 example (f : Nat ≃ Nat)
-  : Function.Bijective (fun x => f.symm x) := by fprop
+  : Function.Bijective (fun x => f.symm x) := by fun_prop
 
--- should unfold FunLike.coe to Equiv.toFun
 example (f : Nat ≃ Nat)
   : Function.invFun (fun x => f.symm x)
     =
-    fun x => f x := by ftrans; ftrans
+    fun x => f x := by fun_trans

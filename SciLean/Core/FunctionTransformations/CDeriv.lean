@@ -45,6 +45,13 @@ theorem cderiv_apply
     =
     cderiv K (fun x' => f x' y) x dx := sorry_proof
 
+@[simp, ftrans_simp]
+theorem cderiv_apply_zero
+  (f : X → Y) (x : X)
+  : cderiv K f x 0
+    =
+    0 := sorry_proof
+
 @[fun_prop]
 theorem cderiv.arg_dx.IsLinearMap_rule_simple
   (f : X → Y) (x : X) (hf : CDifferentiableAt K f x)

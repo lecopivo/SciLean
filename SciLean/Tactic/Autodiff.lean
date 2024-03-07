@@ -13,6 +13,9 @@ simproc_decl lift_lets_simproc (_) := fun e => do
       else pure b) {}
   return .visit {expr:=e}
 
-
+-- todo: add option, discharger, only and [...] syntax
 macro "autodiff" : conv =>
   `(conv| fun_trans (config:={zeta:=false,singlePass:=true}) (disch:=sorry) only [ftrans_simp,lift_lets_simproc])
+
+macro "autodiff" : tactic =>
+  `(tactic| fun_trans (config:={zeta:=false,singlePass:=true}) (disch:=sorry) only [ftrans_simp,lift_lets_simproc])

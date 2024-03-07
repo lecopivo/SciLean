@@ -8,7 +8,7 @@ open Lean Meta Simp
 
 initialize registerTraceClass `Meta.Tactic.let_normalize
 
-#check Simp.Step
+#exit
 
 theorem let_congr_eq {α : Sort u} {β : Sort v} {a a' : α} {b b' : α → β}
     (h₁ : a = a') (h₂ : ∀ x, x = a' → b x = b' x) : (let x := a; b x) = (let x := a'; b' x) :=

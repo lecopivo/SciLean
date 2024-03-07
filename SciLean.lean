@@ -14,8 +14,8 @@
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.FunctionPropositions
 import SciLean.Core.Rand
-import SciLean.Tactic.LSimp.LetNormalize
 import SciLean.Tactic.MathlibCompiledTactics
+import SciLean.Tactic.Autodiff
 
 import SciLean.Data.ArrayType
 import SciLean.Data.DataArray
