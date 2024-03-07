@@ -26,8 +26,8 @@ lake build
 
 To run examples:
 #+begin_src
-lake build HarmonicOscillator && ./build/bin/HarmonicOscillator
-lake build WaveEquation && ./build/bin/WaveEquation 
+lake build HarmonicOscillator && .lake/build/bin/HarmonicOscillator
+lake build WaveEquation && .lake/build/bin/WaveEquation 
 #+end_src
 Other examples in =examples= directory do not currently work.
 
