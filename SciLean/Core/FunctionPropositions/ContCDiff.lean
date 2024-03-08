@@ -36,7 +36,6 @@ def ContCDiffAt (f : X → Y) (x : X) : Prop :=
 @[fun_prop]
 def ContCDiff (f : X → Y) : Prop := ∀ x, ContCDiffAt K n f x
 
-variable (X)
 @[fun_prop, to_any_point]
 theorem ContCDiffAt.id_rule (x : X) :
     ContCDiffAt K n (fun x : X => x) x := by sorry_proof
@@ -64,6 +63,35 @@ theorem ContCDiffAt.pi_rule (x : X)
 @[fun_prop, to_any_point]
 theorem ContCDiffAt.ContCDiff_rule (x : X) (f : X → Y) (hf : ContCDiffAt K m f x) (h : n ≤ m) :
     ContCDiffAt K n f x := sorry_proof
+
+@[fun_prop]
+theorem ContCDiff.ContCDiffAt_rule (x : X) (f : X → Y) (hf : ContCDiff K n f) :
+    ContCDiffAt K n f x := hf x
+
+
+@[fun_prop]
+theorem ContCDiff.id_rule :
+    ContCDiff K n (fun x : X => x) := by intro x; fun_prop
+
+@[fun_prop]
+theorem ContCDiff.const_rule (y : Y) :
+    ContCDiff K n (fun _ : X => y) := by intro x; fun_prop
+
+@[fun_prop]
+theorem ContCDiff.comp_rule
+    (f : Y → Z) (g : X → Y)
+    (hf : ContCDiff K n f) (hg : ContCDiff K n g) :
+    ContCDiff K n (fun x => f (g x)) := by intro x; fun_prop
+
+@[fun_prop]
+theorem ContCDiff.apply_rule
+    (i : ι) : ContCDiff K n (fun x : (i : ι) → E i => x i) := by intro x; fun_prop
+
+@[fun_prop]
+theorem ContCDiff.pi_rule (x : X)
+    (f : X → (i : ι) → E i)
+    (hf : ∀ i, ContCDiff K n (f · i)) :
+    ContCDiff K n (fun x i => f x i) := by intro x; apply ContCDiffAt.pi_rule; fun_prop
 
 section NormedSpaces
 
@@ -108,6 +136,14 @@ theorem Prod.mk.arg_fstsnd.ContCDiffAt_rule (x : X)
   := by sorry_proof
 
 
+@[fun_prop]
+theorem Prod.mk.arg_fstsnd.ContCDiff_rule
+  (g : X → Y) (hg : ContCDiff K n g)
+  (f : X → Z) (hf : ContCDiff K n f)
+  : ContCDiff K n (fun x => (g x, f x))
+  := by intro x; fun_prop
+
+
 -- Prod.fst --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -115,6 +151,12 @@ theorem Prod.mk.arg_fstsnd.ContCDiffAt_rule (x : X)
 theorem Prod.fst.arg_self.ContCDiffAt_rule (x : X)
     (f : X → Y×Z) (hf : ContCDiffAt K n f x) :
     ContCDiffAt K n (fun x => (f x).1) x := by sorry_proof
+
+
+@[fun_prop]
+theorem Prod.fst.arg_self.ContCDiff_rule
+    (f : X → Y×Z) (hf : ContCDiff K n f) :
+    ContCDiff K n (fun x => (f x).1):= by intro x; fun_prop
 
 
 -- Prod.snd --------------------------------------------------------------------
@@ -125,6 +167,11 @@ theorem Prod.snd.arg_self.ContCDiffAt_rule (x : X)
     (f : X → Y×Z) (hf : ContCDiffAt K n f x) :
     ContCDiffAt K n (fun x => (f x).2) x := by sorry_proof
 
+@[fun_prop]
+theorem Prod.snd.arg_self.ContCDiff_rule
+    (f : X → Y×Z) (hf : ContCDiff K n f) :
+    ContCDiff K n (fun x => (f x).2) := by sorry_proof
+
 
 -- Neg.neg ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -133,6 +180,11 @@ theorem Prod.snd.arg_self.ContCDiffAt_rule (x : X)
 theorem Neg.neg.arg_a0.ContCDiffAt_rule
     (x : X) (f : X → Y) (hf : ContCDiffAt K n f x) :
     ContCDiffAt K n (fun x => - f x) x := by sorry_proof
+
+@[fun_prop]
+theorem Neg.neg.arg_a0.ContCDiff_rule
+    (x : X) (f : X → Y) (hf : ContCDiff K n f) :
+    ContCDiff K n (fun x => - f x) := by sorry_proof
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -143,6 +195,11 @@ theorem HAdd.hAdd.arg_a0a1.ContCDiffAt_rule
     (x : X) (f g : X → Y) (hf : ContCDiffAt K n f x) (hg : ContCDiffAt K n g x) :
     ContCDiffAt K n (fun x => f x + g x) x := by sorry_proof
 
+@[fun_prop]
+theorem HAdd.hAdd.arg_a0a1.ContCDiff_rule
+    (f g : X → Y) (hf : ContCDiff K n f) (hg : ContCDiff K n g) :
+    ContCDiff K n (fun x => f x + g x) := by sorry_proof
+
 
 -- HSub.hSub -------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -152,6 +209,11 @@ theorem HSub.hSub.arg_a0a1.ContCDiffAt_rule
     (x : X) (f g : X → Y) (hf : ContCDiffAt K n f x) (hg : ContCDiffAt K n g x) :
     ContCDiffAt K n (fun x => f x - g x) x := by sorry_proof
 
+@[fun_prop]
+theorem HSub.hSub.arg_a0a1.ContCDiff_rule
+    (f g : X → Y) (hf : ContCDiff K n f) (hg : ContCDiff K n g) :
+    ContCDiff K n (fun x => f x - g x) := by sorry_proof
+
 
 -- HMul.hMul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -160,6 +222,11 @@ theorem HSub.hSub.arg_a0a1.ContCDiffAt_rule
 def HMul.hMul.arg_a0a1.ContCDiffAt_rule
     (x : X) (f g : X → K) (hf : ContCDiffAt K n f x) (hg : ContCDiffAt K n g x) :
     ContCDiffAt K n (fun x => f x * g x) x := by sorry_proof
+
+@[fun_prop]
+def HMul.hMul.arg_a0a1.ContCDiff_rule
+    (f g : X → K) (hf : ContCDiff K n f) (hg : ContCDiff K n g) :
+    ContCDiff K n (fun x => f x * g x) := by sorry_proof
 
 
 -- SMul.sMul -------------------------------------------------------------------
@@ -182,6 +249,23 @@ theorem HSMul.hSMul.arg_a1.ContCDiffAt_rule_int
     ContCDiffAt K n (fun x => c • f x) x := by sorry_proof
 
 
+@[fun_prop]
+def HSMul.hSMul.arg_a0a1.ContCDiff_rule
+  (f : X → K) (g : X → Y) (hf : ContCDiff K n f) (hg : ContCDiff K n g)
+  : ContCDiff K n (fun x => f x • g x)
+  := by intro x; fun_prop
+
+@[fun_prop]
+theorem HSMul.hSMul.arg_a1.ContCDiff_rule_n
+    (c : ℕ) (f : X → Y)  (hf : ContCDiff K n f) :
+    ContCDiff K n (fun x => c • f x) := by intro x; fun_prop
+
+@[fun_prop]
+theorem HSMul.hSMul.arg_a1.ContCDiff_rule_int
+    (c : ℤ) (f : X → Y) (hf : ContCDiff K n f) :
+    ContCDiff K n (fun x => c • f x) := by intro x; fun_prop
+
+
 -- HDiv.hDiv -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -199,13 +283,32 @@ def HDiv.hDiv.arg_a0.ContCDiffAt_rule (x : X)
   fun_prop (disch:=intros; assumption)
 
 
+@[fun_prop]
+def HDiv.hDiv.arg_a0a1.ContCDiff_rule
+    (f : X → K) (g : X → K)
+    (hf : ContCDiff K n f) (hg : ContCDiff K n g) (hx : ∀ x, g x ≠ 0) :
+    ContCDiff K n (fun x => f x / g x) := by intro x; fun_prop (disch:=aesop)
+
+@[fun_prop,to_any_point]
+def HDiv.hDiv.arg_a0.ContCDiff_rule
+    (f : X → K) (r : K)
+    (hf : ContCDiff K n f) (hr : r ≠ 0) :
+    ContCDiff K n (fun x => f x / r) := by
+  fun_prop (disch:=intros; assumption)
+
+
 -- HPow.hPow -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_prop,to_any_point]
 def HPow.hPow.arg_a0.ContCDiffAt_rule
-    (n : Nat) (x : X) (f : X → K) (hf : ContCDiffAt K n f x) :
-    ContCDiffAt K n (fun x => f x ^ n) x := by sorry_proof
+    (m : Nat) (x : X) (f : X → K) (hf : ContCDiffAt K n f x) :
+    ContCDiffAt K n (fun x => f x ^ m) x := by sorry_proof
+
+@[fun_prop]
+def HPow.hPow.arg_a0.ContCDiff_rule
+    (m : Nat)  (f : X → K) (hf : ContCDiff K n f) :
+    ContCDiff K n (fun x => f x ^ m) := by intro x; fun_prop
 
 
 -- IndexType.sum ----------------------------------------------------------------
@@ -215,6 +318,12 @@ def HPow.hPow.arg_a0.ContCDiffAt_rule
 theorem IndexType.sum.arg_f.ContCDiffAt_rule
   (f : X → ι → Y) (x : X) (hf : ∀ i, ContCDiffAt K n (fun x => f x i) x)
   : ContCDiffAt K n (fun x => ∑ i, f x i) x := by sorry_proof
+
+
+@[fun_prop]
+theorem IndexType.sum.arg_f.ContCDiff_rule
+  (f : X → ι → Y) (hf : ∀ i, ContCDiff K n (fun x => f x i))
+  : ContCDiff K n (fun x => ∑ i, f x i) := by intro x; fun_prop
 
 
 --------------------------------------------------------------------------------
@@ -237,6 +346,12 @@ theorem Inner.inner.arg_a0a1.ContCDiffAt_rule
     (hf : ContCDiffAt R n f x) (hg : ContCDiffAt R n g x) :
     ContCDiffAt R n (fun x => ⟪f x, g x⟫[R]) x := by sorry_proof
 
+@[fun_prop]
+theorem Inner.inner.arg_a0a1.ContCDiff_rule
+    (f : X → Y) (g : X → Y)
+    (hf : ContCDiff R n f) (hg : ContCDiff R n g) :
+    ContCDiff R n (fun x => ⟪f x, g x⟫[R]) := by intro x; fun_prop
+
 @[fun_prop,to_any_point]
 theorem SciLean.Norm2.norm2.arg_a0.ContCDiffAt_rule
   (f : X → Y) (x : X) (hf : ContCDiffAt R n f x)
@@ -244,11 +359,22 @@ theorem SciLean.Norm2.norm2.arg_a0.ContCDiffAt_rule
   simp[← SemiInnerProductSpace.inner_norm2]
   fun_prop
 
+@[fun_prop]
+theorem SciLean.Norm2.norm2.arg_a0.ContCDiff_rule
+  (f : X → Y) (hf : ContCDiff R n f)
+  : ContCDiff R n (fun x => ‖f x‖₂²[R]) := by intro x; fun_prop
+
 @[fun_prop,to_any_point]
 theorem SciLean.norm₂.arg_x.ContCDiffAt_rule
     (f : X → Y) (x : X)
     (hf : ContCDiffAt R n f x) (hx : f x≠0) :
     ContCDiffAt R n (fun x => ‖f x‖₂[R]) x := by sorry_proof
+
+@[fun_prop]
+theorem SciLean.norm₂.arg_x.ContCDiff_rule
+    (f : X → Y)
+    (hf : ContCDiff R n f) (hx : ∀ x, f x≠0) :
+    ContCDiff R n (fun x => ‖f x‖₂[R]) := by intro x; fun_prop (disch:=aesop)
 
 end InnerProductSpace
 
@@ -276,6 +402,22 @@ theorem BasisDuality.toDual.arg_x.ContCDiffAt_rule (x)
 @[fun_prop,to_any_point]
 theorem BasisDuality.fromDual.arg_x.ContCDiffAt_rule (x)
   : ContCDiffAt K n (fun x : X => BasisDuality.fromDual x) x := by sorry_proof
+
+@[fun_prop]
+theorem Basis.proj.arg_x.ContCDiff_rule (i : IX)
+  : ContCDiff K n (fun x : X => ℼ i x) := by sorry_proof
+
+@[fun_prop]
+theorem DualBasis.dualProj.arg_x.ContCDiff_rule (i : IX)
+  : ContCDiff K n (fun x : X => ℼ' i x) := by sorry_proof
+
+@[fun_prop]
+theorem BasisDuality.toDual.arg_x.ContCDiff_rule
+  : ContCDiff K n (fun x : X => BasisDuality.toDual x) := by sorry_proof
+
+@[fun_prop]
+theorem BasisDuality.fromDual.arg_x.ContCDiff_rule
+  : ContCDiff K n (fun x : X => BasisDuality.fromDual x) := by sorry_proof
 
 end OnFinVec
 end SciLean
