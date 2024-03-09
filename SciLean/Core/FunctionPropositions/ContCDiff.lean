@@ -61,13 +61,16 @@ theorem ContCDiffAt.pi_rule (x : X)
     ContCDiffAt K n (fun x i => f x i) x := by sorry_proof
 
 @[fun_prop, to_any_point]
-theorem ContCDiffAt.ContCDiff_rule (x : X) (f : X → Y) (hf : ContCDiffAt K m f x) (h : n ≤ m) :
+theorem ContCDiffAt.le_rule (x : X) (f : X → Y) (hf : ContCDiffAt K m f x) (h : n ≤ m) :
     ContCDiffAt K n f x := sorry_proof
+
+@[fun_prop, to_any_point]
+theorem ContCDiff.le_rule (f : X → Y) (hf : ContCDiff K m f) (h : n ≤ m) :
+    ContCDiff K n f := sorry_proof
 
 @[fun_prop]
 theorem ContCDiff.ContCDiffAt_rule (x : X) (f : X → Y) (hf : ContCDiff K n f) :
     ContCDiffAt K n f x := hf x
-
 
 @[fun_prop]
 theorem ContCDiff.id_rule :
@@ -183,7 +186,7 @@ theorem Neg.neg.arg_a0.ContCDiffAt_rule
 
 @[fun_prop]
 theorem Neg.neg.arg_a0.ContCDiff_rule
-    (x : X) (f : X → Y) (hf : ContCDiff K n f) :
+    (f : X → Y) (hf : ContCDiff K n f) :
     ContCDiff K n (fun x => - f x) := by sorry_proof
 
 
