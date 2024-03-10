@@ -5,6 +5,7 @@ import SciLean.Core.Objects.IsReal
 
 import SciLean.Core.FunctionPropositions
 import SciLean.Core.FunctionTransformations
+import SciLean.Core.FunctionSpaces
 import SciLean.Core.Monads
 import SciLean.Core.Notation
 

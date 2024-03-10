@@ -14,6 +14,8 @@ import SciLean.Util.RecVal
 
 import SciLean.Tactic.ConvInduction
 
+import SciLean.Core.FunctionSpaces
+
 open MeasureTheory
 
 namespace SciLean
@@ -96,16 +98,29 @@ def harmonicRec.arg_x.fwdDeriv_randApprox (n : ℕ)
   pure (f' x dx)
 
 
+set_current_scalar Float
+
 
 noncomputable
-def harmonicRec_fwdDeriv2 (n : ℕ)
-    (φ : W → Vec3 → Float) (φ' : W → Vec3 → W → Vec3 → Float×Float)
-    (g : Vec3 → Y)  (x : Vec3) :=
-    (∂> w, harmonicRec n (φ w) g x)
+def harmonicRec' (n : ℕ) (φ : Vec3 ⟿FD Float) (g : Vec3 ⟿FD Y) (x : Vec3) : Y :=
+  match n with
+  | 0 => g x
+  | m+1 => (4*(pi':Float))⁻¹ • ∫' (x' : sphere (0:Vec3) (1:Float)), harmonicRec' m φ g (x + φ x • x'.1)
+
+
+@[fun_prop]
+theorem harmonicRec'_CDifferentiable (n : ℕ) :
+    CDifferentiable Float (fun (w : (Vec3 ⟿FD Float)×(Vec3 ⟿FD Y)×Vec3) => harmonicRec' n w.1 w.2.1 w.2.2) := by
+  induction n <;> (simp[harmonicRec']; fun_prop)
+
+set_option profiler true
+-- set_option trace.Meta.Tactic.fun_trans true in
+-- set_option trace.Meta.Tactic.fun_prop true in
+noncomputable
+def harmonicRec'_fwdDeriv (n : ℕ) :=
+    (∂> (w : (Vec3 ⟿FD Float)×(Vec3 ⟿FD Y)×Vec3), harmonicRec' n w.1 w.2.1 w.2.2)
   rewrite_by
-    assuming (hφ' : (fwdDeriv Float (fun (wx : W×Vec3) => φ wx.1 wx.2)) = fun wx dwx => φ' wx.1 wx.2 dwx.1 dwx.2)
-             (hφ : CDifferentiable Float (fun (w,x) => φ w x))
     induction n n' du h
-      . simp[harmonicRec]; autodiff
-      . simp[harmonicRec];
-        autodiff; autodiff
+      . simp only [harmonicRec']; autodiff
+      . simp only [harmonicRec',smul_push]
+        autodiff

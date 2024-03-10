@@ -66,6 +66,8 @@ macro "fun " x:funBinder " ⟿FD[" K:term "," n:term "] " b:term : term =>
 macro "fun " x:funBinder " ⟿FD[" n:term "] " b:term : term => `(fun $x ⟿FD[currentScalar%, $n] $b)
 macro "fun " x:funBinder " ⟿FD "             b:term : term => `(fun $x ⟿FD[currentScalar%,  ∞] $b)
 
+variable {K n}
+
 @[app_unexpander ContCDiffMapFD.mk'] def unexpandContCDiffMapFDMk : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $R $n $f:term $_ $_ $_) =>
@@ -79,11 +81,12 @@ macro "fun " x:funBinder " ⟿FD "             b:term : term => `(fun $x ⟿FD[c
 @[simp, ftrans_simp]
 theorem ContCDiffMapFD_eta (f : X ⟿FD[K,n] Y) : (fun x ⟿FD[K,n] f x) = f := by sorry_proof
 
-def ContCDiffMapFD.fwdDeriv (f : X ⟿FD[K,n] Y) (x dx : X) : Y×Y := f.toFun x dx
+@[pp_dot]
+def ContCDiffMapFD.FD (f : X ⟿FD[K,n] Y) (x dx : X) : Y×Y := f.toFun x dx
 
 @[fun_trans]
 theorem ContCDiffMapFD_eval_fwdDeriv (f : X ⟿FD[K,n] Y) :
-    fwdDeriv K (fun x => f x) = f.fwdDeriv := sorry_proof
+    fwdDeriv K (fun x => f x) = f.FD := sorry_proof
 
 @[fun_prop]
 theorem ContCDiffMapFD_eval_cdifferentiable (f : X ⟿FD[K,n] Y) :
@@ -193,3 +196,25 @@ theorem ContCDiffMapFD_apply_CDifferentiable (f : W → X ⟿FD[K,∞] Y) (g : W
 @[fun_prop]
 theorem ContCDiffMapFD_apply_CDifferentiableAt (f : W → X ⟿FD[K,∞] Y) (g : W → X) (w : W)
     (hf : CDifferentiableAt K f w) (hg : CDifferentiableAt K g w) : CDifferentiableAt K (fun w => f w (g w)) w := by sorry_proof
+
+
+@[fun_trans]
+theorem ContCDiffMapFD_cderiv_rule :
+   cderiv K (fun (fx : (X⟿FD[K,∞] Y)×X) => fx.1 fx.2)
+   =
+   fun fx dfx =>
+     dfx.1 fx.2 + (fx.1.FD fx.2 dfx.2).2 := sorry_proof
+
+@[fun_trans]
+theorem ContCDiffMapFD_fwdDeriv_rule :
+    fwdDeriv K (fun (fx : (X⟿FD[K,∞] Y)×X) => fx.1 fx.2)
+    =
+    fun fx dfx =>
+      let ydy := fx.1.FD fx.2 dfx.2
+      let dy' := dfx.1 fx.2
+      (ydy.1, dy' + ydy.2) := by
+  unfold fwdDeriv
+  fun_trans
+  funext (f,x) (df,dx)
+  simp
+  sorry_proof -- this is easy from the definition
