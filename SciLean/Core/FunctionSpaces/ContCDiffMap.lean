@@ -1,6 +1,8 @@
 import SciLean.Core.FunctionPropositions.ContCDiff
 import SciLean.Core.FunctionTransformations
 
+import SciLean.Core.Notation.CDeriv
+
 set_option linter.unusedVariables false
 
 namespace SciLean
@@ -17,7 +19,6 @@ variable
 local notation "∞" => (⊤ : ℕ∞)
 
 
-
 -- Function space --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -31,8 +32,19 @@ instance : FunLike (ContCDiffMap K n X Y) X Y where
   coe f := f.toFun
   coe_injective' := sorry_proof
 
-macro X:term:25 " ⟿[" K:term "," n:term "]" Y:term:26 : term =>
+macro X:term:25 " ⟿[" K:term "," n:term "] " Y:term:26 : term =>
   `(ContCDiffMap $K $n $X $Y)
+
+macro X:term:25 " ⟿[" n:term "] " Y:term:26 : term =>
+  `(ContCDiffMap currentScalar% $n $X $Y)
+
+macro X:term:25 " ⟿ " Y:term:26 : term =>
+  `(ContCDiffMap currentScalar% ∞ $X $Y)
+
+@[app_unexpander ContCDiffMap] def unexpandContCDiffMap : Lean.PrettyPrinter.Unexpander
+  | `($(_) $R $n $X $Y) => `($X ⟿[$R,$n] $Y)
+  | _  => throw ()
+
 
 @[fun_prop]
 theorem ContCDiffMap_apply_right (f : X ⟿[K,n] Y) : ContCDiff K n (fun x => f x) := f.2
@@ -63,6 +75,14 @@ open Lean Parser Term
 macro "fun " x:funBinder " ⟿[" K:term "," n:term "] " b:term : term =>
   `(ContCDiffMap.mk' $K $n (fun $x => $b) (by fun_prop (disch:=norm_num; linarith)))
 
+open Lean Parser Term
+macro "fun " x:funBinder " ⟿[" n:term "] " b:term : term =>
+  `(ContCDiffMap.mk' currentScalar% $n (fun $x => $b) (by fun_prop (disch:=norm_num; linarith)))
+
+open Lean Parser Term
+macro "fun " x:funBinder " ⟿ " b:term : term =>
+  `(ContCDiffMap.mk' currentScalar% ∞ (fun $x => $b) (by fun_prop (disch:=norm_num; linarith)))
+
 @[app_unexpander ContCDiffMap.mk'] def unexpandContCDiffMapMk : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $R $n $f:term $_:term) =>
@@ -91,6 +111,7 @@ section AlgebraSimps
 
 variable (f g : X ⟿[K,n] Y) (x : X) (r : K)
 
+
 @[simp, ftrans_simp]
 theorem ContCDiffMap.add_apply : (f + g) x = f x + g x := by rfl
 
@@ -104,13 +125,15 @@ theorem ContCDiffMap.neg_apply : (- f) x = - f x := by rfl
 theorem ContCDiffMap.smul_apply : (r • f) x = r • f x := by rfl
 
 @[simp, ftrans_simp]
-theorem ContCDiffMap.zero_apply : (0 : X⟿[K,n]Y) x = 0 := by sorry_proof
+theorem ContCDiffMap.zero_apply : (0 : X ⟿[K,n] Y) x = 0 := by sorry_proof
 
 end AlgebraSimps
 
 instance : TopologicalSpace (X ⟿[K,n] Y) := sorry
 instance : Vec K (X ⟿[K,n] Y) := Vec.mkSorryProofs
 
+
+-- set_option trace.Meta.Tactic.fun_prop.attr true
 
 
 -- The following two theorems are somehow related to catesian closedness of convenient vectors spaces
@@ -155,5 +178,19 @@ example : (cderiv K fun (w : K) => fun (x : K) ⟿[K,n] w*x + w)
           =
           fun w dw => fun (x : K) ⟿[K,n] dw*x + dw := by conv => lhs; fun_trans
 
--- set_option trace.Meta.Tactic.fun_prop true in
--- example : IsSmoothLinearMap K fun (f : X ⟿[K,n] Y) => fun (x : X) ⟿[K,n] f x := by fun_prop
+@[fun_prop]
+theorem ContCDiffMap_eval_CDifferentiable (h : 0 < n) :
+    CDifferentiable K (fun (fx : (X ⟿[K,n] Y)×X) => fx.1 fx.2) := by sorry_proof
+
+@[fun_prop]
+theorem ContCDiffMap_eval_CDifferentiable' :
+    CDifferentiable K (fun (fx : (X ⟿[K,∞] Y)×X) => fx.1 fx.2) := by sorry_proof
+
+
+@[fun_prop]
+theorem ContCDiffMap_apply_CDifferentiable (f : W → X ⟿[K,∞] Y) (g : W → X)
+    (hf : CDifferentiable K f) (hg : CDifferentiable K g) : CDifferentiable K (fun w => f w (g w)) := by sorry_proof
+
+@[fun_prop]
+theorem ContCDiffMap_apply_CDifferentiableAt (f : W → X ⟿[K,∞] Y) (g : W → X) (w : W)
+    (hf : CDifferentiableAt K f w) (hg : CDifferentiableAt K g w) : CDifferentiableAt K (fun w => f w (g w)) w := by sorry_proof

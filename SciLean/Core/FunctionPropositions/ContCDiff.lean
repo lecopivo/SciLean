@@ -2,6 +2,7 @@ import SciLean.Core.Objects.Vec
 import SciLean.Core.Objects.SemiInnerProductSpace
 import SciLean.Core.Objects.FinVec
 import SciLean.Core.Objects.Scalar
+import SciLean.Core.FunctionPropositions.CDifferentiable
 
 import SciLean.Core.Meta.ToAnyPoint
 
@@ -95,6 +96,29 @@ theorem ContCDiff.pi_rule (x : X)
     (f : X → (i : ι) → E i)
     (hf : ∀ i, ContCDiff K n (f · i)) :
     ContCDiff K n (fun x i => f x i) := by intro x; apply ContCDiffAt.pi_rule; fun_prop
+
+
+----------------------------------------------------------------------------------------------------
+
+
+-- transition rules to CDifferentiable
+
+@[fun_prop]
+theorem CDifferentaibleAt.ContCDiffAt_rule (x : X) (f : X → Y) (hf : ContCDiffAt K n f x) (h : 0 < n) :
+    CDifferentiableAt K f x := sorry_proof
+
+@[fun_prop]
+theorem CDifferentaibleAt.ContCDiffAt_rule' (x : X) (f : X → Y) (hf : ContCDiffAt K ∞ f x) :
+    CDifferentiableAt K f x := by fun_prop (disch:=aesop)
+
+@[fun_prop]
+theorem CDifferentaible.ContCDiff_rule (f : X → Y) (hf : ContCDiff K n f) (h : 0 < n) :
+    CDifferentiable K f := by intro x; fun_prop (disch:=assumption)
+
+@[fun_prop]
+theorem CDifferentaible.ContCDiff_rule' (f : X → Y) (hf : ContCDiff K ∞ f) :
+    CDifferentiable K f := by intro x; fun_prop
+
 
 section NormedSpaces
 

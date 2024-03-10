@@ -24,6 +24,7 @@ set_default_scalar Float
 
 def pi' := 3.14159265359
 
+
 open RealScalar in
 noncomputable
 def harmonicRec (n : ℕ) (φ : Vec3 → Float) (g : Vec3 → Y) (x : Vec3) : Y :=
