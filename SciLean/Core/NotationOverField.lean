@@ -18,7 +18,7 @@ macro "set_default_scalar " K:ident : command => `(open_notation_over_field $K)
 syntax "currentScalar%" : term
 
 macro_rules | `(currentScalar%) => Lean.Macro.throwError "\
-  There is no default scalar set right now. \
+  This expression is using notation requiring to know the default scalar type. \
   To set it, add this command somewhere to your file \
   \n\n set_current_scalar R\
   \n\n\
