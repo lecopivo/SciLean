@@ -25,12 +25,15 @@ abbrev introElemNotation {Cont Idx Elem} [DecidableEq Idx] [ArrayType Cont Idx E
   := Indexed.ofFn (C := arrayTypeCont Idx Elem) f
 
 open Lean.TSyntax.Compat in
-macro "⊞ " x:term " => " b:term:51 : term => `(introElemNotation fun $x => $b)
-macro "⊞ " x:term " : " X:term " => " b:term:51 : term => `(introElemNotation fun ($x : $X) => $b)
+-- macro "⊞ " x:term " => " b:term:51 : term => `(introElemNotation fun $x => $b)
+-- macro "⊞ " x:term " : " X:term " => " b:term:51 : term => `(introElemNotation fun ($x : $X) => $b)
+open Term Function in
+macro "⊞ " xs:funBinder* " => " b:term:51 : term => `(introElemNotation (HasUncurry.uncurry fun $xs* => $b))
+
 
 @[app_unexpander introElemNotation]
 def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
-  | `($(_) fun $x:term => $b) =>
+  | `($(_) fun $x => $b) =>
     `(⊞ $x:term => $b)
   | _  => throw ()
 
