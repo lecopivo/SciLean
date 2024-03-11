@@ -35,25 +35,21 @@ theorem SmoothLinearMap_apply_right (f : X ⊸[K] Y) : IsSmoothLinearMap K (fun 
 --------------------------------------------------------------------------------
 
 variable {K}
-def SmoothLinearMap.mk' (f : X → Y) (hf : IsSmoothLinearMap K f) :
-    SmoothLinearMap K X Y := ⟨f, hf⟩
 
 @[simp, ftrans_simp]
-theorem SmoothLinearMap.mk'_eval (x : X) (f : X → Y) (hf : IsSmoothLinearMap K f) :
+theorem SmoothLinearMap.mk_eval (x : X) (f : X → Y) (hf : IsSmoothLinearMap K f) :
     mk f hf x = f x := by rfl
 
 @[simp]
 theorem SmoothLinearMap.eta_reduce (f : SmoothLinearMap K X Y) :
     (mk f.1 f.2) = f := by rfl
 
-macro "fun " x:ident " ⊸[" K:term "] " b:term : term =>
-  `(SmoothLinearMap.mk (K:=$K) (fun $x => $b) (by fun_prop))
+variable (K)
+def SmoothLinearMap.mk' (f : X → Y) (hf : IsSmoothLinearMap K f) : X ⊸[K] Y := ⟨f,hf⟩
 
-macro "fun " x:ident " : " X:term " ⊸[" R:term "] " b:term : term =>
-  `(SmoothLinearMap.mk' $R (fun ($x : $X) => $b) (by fun_prop))
-
-macro "fun " "(" x:ident " : " X:term ")" " ⊸[" R:term "] " b:term : term =>
-  `(SmoothLinearMap.mk' $R (fun ($x : $X) => $b) (by fun_prop))
+open Lean Parser Term in
+macro "fun " x:funBinder " ⊸[" K:term "] " b:term : term =>
+  `(SmoothLinearMap.mk' $K (fun $x => $b) (by fun_prop))
 
 @[app_unexpander SmoothLinearMap.mk'] def unexpandSmoothLinearMapMk : Lean.PrettyPrinter.Unexpander
 
@@ -73,7 +69,7 @@ instance : Add (X ⊸[K] Y) := ⟨fun f g => fun x ⊸[K] f x + g x⟩
 instance : Sub (X ⊸[K] Y) := ⟨fun f g => fun x ⊸[K] f x - g x⟩
 instance : Neg (X ⊸[K] Y) := ⟨fun f => fun x ⊸[K] - f x⟩
 instance : SMul K (X ⊸[K] Y) := ⟨fun r f => fun x ⊸[K] r • f x⟩
-instance : Zero (X ⊸[K] Y) := ⟨sorry⟩
+instance : Zero (X ⊸[K] Y) := ⟨fun x ⊸[K] 0⟩
 
 section AlgebraSimps
 

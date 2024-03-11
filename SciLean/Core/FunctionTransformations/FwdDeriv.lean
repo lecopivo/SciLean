@@ -240,7 +240,7 @@ theorem HSub.hSub.arg_a0a1.fwdDeriv_rule
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-theorem Neg.neg.arg_a0.fwdDeriv_rule (x : X) (f : X → Y) :
+theorem Neg.neg.arg_a0.fwdDeriv_rule (f : X → Y) :
     (fwdDeriv K fun x => - f x)
     =
     fun x dx => - fwdDeriv K f x dx := by
