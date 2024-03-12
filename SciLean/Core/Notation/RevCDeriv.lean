@@ -6,24 +6,22 @@ import SciLean.Core.FunctionTransformations.RevDeriv
 -- Notation  -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-namespace SciLean.NotationOverField
+namespace SciLean.Notation
 
-scoped syntax "<∂ " term:66 : term
-scoped syntax "<∂ " diffBinder ", " term:66 : term
-scoped syntax "<∂ " "(" diffBinder ")" ", " term:66 : term
+syntax "<∂ " term:66 : term
+syntax "<∂ " diffBinder ", " term:66 : term
+syntax "<∂ " "(" diffBinder ")" ", " term:66 : term
 
-scoped syntax "<∂! " term:66 : term
-scoped syntax "<∂! " diffBinder ", " term:66 : term
-scoped syntax "<∂! " "(" diffBinder ")" ", " term:66 : term
+syntax "<∂! " term:66 : term
+syntax "<∂! " diffBinder ", " term:66 : term
+syntax "<∂! " "(" diffBinder ")" ", " term:66 : term
 
 open Lean Elab Term Meta in
 elab_rules : term
 | `(<∂ $f $xs*) => do
-  let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(revDeriv $K $f $xs*)) none
+  elabTerm (← `(revDeriv defaultScalar% $f $xs*)) none
 | `(<∂ $f) => do
-  let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(revDeriv $K $f)) none
+  elabTerm (← `(revDeriv defaultScalar% $f)) none
 -- | `(<∂ $x:ident := $val:term ; $codir:term, $b) => do
 --   let K := mkIdent (← currentFieldName.get)
 --   elabTerm (← `(revDerivEval $K (fun $x => $b) $val $codir)) none
@@ -69,5 +67,3 @@ macro_rules
 --     | _  => throw ()
 
 --   | _ => throw ()
-
-end NotationOverField

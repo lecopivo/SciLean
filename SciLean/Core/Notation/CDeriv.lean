@@ -5,55 +5,52 @@ import SciLean.Tactic.Autodiff
 -- Notation  -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-namespace SciLean.NotationOverField
+namespace SciLean.Notation
 
 syntax diffBinderType  := " : " term
 syntax diffBinderValue := ":=" term (";" term)?
 syntax diffBinder := ident (diffBinderType <|> diffBinderValue)?
 
-scoped syntax "∂ " term:66 : term
-scoped syntax "∂ " diffBinder ", " term:66 : term
-scoped syntax "∂ " "(" diffBinder ")" ", " term:66 : term
+syntax "∂ " term:66 : term
+syntax "∂ " diffBinder ", " term:66 : term
+syntax "∂ " "(" diffBinder ")" ", " term:66 : term
 
-scoped syntax "∂! " term:66 : term
-scoped syntax "∂! " diffBinder ", " term:66 : term
-scoped syntax "∂! " "(" diffBinder ")" ", " term:66 : term
+syntax "∂! " term:66 : term
+syntax "∂! " diffBinder ", " term:66 : term
+syntax "∂! " "(" diffBinder ")" ", " term:66 : term
 
 open Lean Elab Term Meta in
 elab_rules : term
 | `(∂ $f $x $xs*) => do
-  let K := mkIdent (← currentFieldName.get)
-  let KExpr ← elabTerm (← `($K)) none
+  let K ← elabTerm (← `(defaultScalar%)) none
   let X ← inferType (← elabTerm x none)
   let Y ← mkFreshTypeMVar
   let XY ← mkArrow X Y
   -- X might also be infered by the function `f`
   let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
   let .some (X,_) := (← inferType fExpr).arrow? | return ← throwUnsupportedSyntax
-  if (← isDefEq KExpr X) && xs.size = 0 then
-    elabTerm (← `(scalarCDeriv $K $f $x $xs*)) none false
+  if (← isDefEq K X) && xs.size = 0 then
+    elabTerm (← `(scalarCDeriv defaultScalar% $f $x $xs*)) none false
   else
-    elabTerm (← `(cderiv $K $f $x $xs*)) none false
+    elabTerm (← `(cderiv defaultScalar% $f $x $xs*)) none false
 
 | `(∂ $f) => do
-  let K := mkIdent (← currentFieldName.get)
+  let K ← elabTerm (← `(defaultScalar%)) none
   let X ← mkFreshTypeMVar
   let Y ← mkFreshTypeMVar
   let XY ← mkArrow X Y
-  let KExpr ← elabTerm (← `($K)) none
   let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
   if let .some (X,_) := (← inferType fExpr).arrow? then
-    if (← isDefEq KExpr X) then
-      elabTerm (← `(scalarCDeriv $K $f)) none false
+    if (← isDefEq K X) then
+      elabTerm (← `(scalarCDeriv defaultScalar% $f)) none false
     else
-      elabTerm (← `(cderiv $K $f)) none false
+      elabTerm (← `(cderiv defaultScalar% $f)) none false
   else
     throwUnsupportedSyntax
 
 -- in this case we do not want to call scalarCDeriv
 | `(∂ $x:ident := $val:term ; $dir:term, $b) => do
-  let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(cderiv $K (fun $x => $b) $val $dir)) none
+  elabTerm (← `(cderiv defaultScalar% (fun $x => $b) $val $dir)) none
 
 
 macro_rules
@@ -122,6 +119,3 @@ macro_rules
     | _  => `(∂ $f)
 
   | _  => throw ()
-
-
-end NotationOverField

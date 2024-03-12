@@ -36,10 +36,10 @@ macro X:term:25 " ⟿[" K:term "," n:term "] " Y:term:26 : term =>
   `(ContCDiffMap $K $n $X $Y)
 
 macro X:term:25 " ⟿[" n:term "] " Y:term:26 : term =>
-  `(ContCDiffMap currentScalar% $n $X $Y)
+  `(ContCDiffMap defaultScalar% $n $X $Y)
 
 macro X:term:25 " ⟿ " Y:term:26 : term =>
-  `(ContCDiffMap currentScalar% ∞ $X $Y)
+  `(ContCDiffMap defaultScalar% ∞ $X $Y)
 
 @[app_unexpander ContCDiffMap] def unexpandContCDiffMap : Lean.PrettyPrinter.Unexpander
   | `($(_) $R $n $X $Y) => `($X ⟿[$R,$n] $Y)
@@ -77,11 +77,11 @@ macro "fun " x:funBinder " ⟿[" K:term "," n:term "] " b:term : term =>
 
 open Lean Parser Term
 macro "fun " x:funBinder " ⟿[" n:term "] " b:term : term =>
-  `(ContCDiffMap.mk' currentScalar% $n (fun $x => $b) (by fun_prop (disch:=norm_num; linarith)))
+  `(ContCDiffMap.mk' defaultScalar% $n (fun $x => $b) (by fun_prop (disch:=norm_num; linarith)))
 
 open Lean Parser Term
 macro "fun " x:funBinder " ⟿ " b:term : term =>
-  `(ContCDiffMap.mk' currentScalar% ∞ (fun $x => $b) (by fun_prop (disch:=norm_num; linarith)))
+  `(ContCDiffMap.mk' defaultScalar% ∞ (fun $x => $b) (by fun_prop (disch:=norm_num; linarith)))
 
 @[app_unexpander ContCDiffMap.mk'] def unexpandContCDiffMapMk : Lean.PrettyPrinter.Unexpander
 

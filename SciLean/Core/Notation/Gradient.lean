@@ -3,22 +3,21 @@ import SciLean.Core.Notation.CDeriv
 import SciLean.Tactic.Autodiff
 
 
-namespace SciLean.NotationOverField
+namespace SciLean.Notation
 
-scoped syntax (name:=gradNotation1) "∇ " term:66 : term
-scoped syntax "∇ " diffBinder ", " term:66 : term
-scoped syntax "∇ " "(" diffBinder ")" ", " term:66 : term
+syntax (name:=gradNotation1) "∇ " term:66 : term
+syntax "∇ " diffBinder ", " term:66 : term
+syntax "∇ " "(" diffBinder ")" ", " term:66 : term
 
-scoped syntax "∇! " term:66 : term
-scoped syntax "∇! " diffBinder ", " term:66 : term
-scoped syntax "∇! " "(" diffBinder ")" ", " term:66 : term
+syntax "∇! " term:66 : term
+syntax "∇! " diffBinder ", " term:66 : term
+syntax "∇! " "(" diffBinder ")" ", " term:66 : term
 
 
 open Lean Elab Term Meta in
 elab_rules (kind:=gradNotation1) : term
 | `(∇ $f $x $xs*) => do
-  let K := mkIdent (← currentFieldName.get)
-  let KExpr ← elabTerm (← `($K)) none
+  let K ← elabTerm (← `(defaultScalar%)) none
   let X ← inferType (← elabTerm x none)
   let Y ← mkFreshTypeMVar
   let XY ← mkArrow X Y
@@ -26,23 +25,22 @@ elab_rules (kind:=gradNotation1) : term
   let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
   let .some (_,Y) := (← inferType fExpr).arrow?
     | return ← throwUnsupportedSyntax
-  if (← isDefEq KExpr Y) then
-    elabTerm (← `(scalarGradient $K $f $x $xs*)) none false
+  if (← isDefEq K Y) then
+    elabTerm (← `(scalarGradient defaultScalar% $f $x $xs*)) none false
   else
-    elabTerm (← `(gradient $K $f $x $xs*)) none false
+    elabTerm (← `(gradient defaultScalar% $f $x $xs*)) none false
 
 | `(∇ $f) => do
-  let K := mkIdent (← currentFieldName.get)
+  let K ← elabTerm (← `(defaultScalar%)) none
   let X ← mkFreshTypeMVar
   let Y ← mkFreshTypeMVar
   let XY ← mkArrow X Y
-  let KExpr ← elabTerm (← `($K)) none
   let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
   if let .some (_,Y) := (← inferType fExpr).arrow? then
-    if (← isDefEq KExpr Y) then
-      elabTerm (← `(scalarGradient $K $f)) none false
+    if (← isDefEq K Y) then
+      elabTerm (← `(scalarGradient defaultScalar% $f)) none false
     else
-      elabTerm (← `(gradient $K $f)) none false
+      elabTerm (← `(gradient defaultScalar% $f)) none false
   else
     throwUnsupportedSyntax
 
@@ -107,5 +105,3 @@ macro_rules
     | _  => `(∇ $f)
 
   | _  => throw ()
-
-end SciLean.NotationOverField

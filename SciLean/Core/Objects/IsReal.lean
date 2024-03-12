@@ -88,8 +88,7 @@ open Lean Elab Term
   WARRNING: This is override for normal norm notation that provides computable version of norm if available.
 -/
 scoped elab (priority := high) "‖" x:term "‖" : term => do
-  let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(cnorm (R:=$K) $x)) none
+  elabTerm (← `(cnorm (R:=defaultScalar%) $x)) none
   -- TODO: fall back to normal norm if
 
 end NotationOverField

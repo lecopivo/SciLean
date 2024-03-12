@@ -98,7 +98,7 @@ def harmonicRec.arg_x.fwdDeriv_randApprox (n : ℕ)
   pure (f' x dx)
 
 
-set_current_scalar Float
+set_default_scalar Float
 
 
 noncomputable
@@ -113,7 +113,7 @@ theorem harmonicRec'_CDifferentiable (n : ℕ) :
     CDifferentiable Float (fun (w : (Vec3 ⟿FD Float)×(Vec3 ⟿FD Y)×Vec3) => harmonicRec' n w.1 w.2.1 w.2.2) := by
   induction n <;> (simp[harmonicRec']; fun_prop)
 
-set_option profiler true
+
 -- set_option trace.Meta.Tactic.fun_trans true in
 -- set_option trace.Meta.Tactic.fun_prop true in
 noncomputable

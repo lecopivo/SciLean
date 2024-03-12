@@ -37,10 +37,10 @@ macro X:term:25 " ⟿FD[" K:term "," n:term "] " Y:term:26 : term =>
   `(ContCDiffMapFD $K $n $X $Y)
 
 macro X:term:25 " ⟿FD[" n:term "] " Y:term:26 : term =>
-  `(ContCDiffMapFD currentScalar% $n $X $Y)
+  `(ContCDiffMapFD defaultScalar% $n $X $Y)
 
 macro X:term:25 " ⟿FD " Y:term:26 : term =>
-  `(ContCDiffMapFD currentScalar% ∞ $X $Y)
+  `(ContCDiffMapFD defaultScalar% ∞ $X $Y)
 
 @[app_unexpander ContCDiffMapFD] def unexpandContCDiffMapFD : Lean.PrettyPrinter.Unexpander
   | `($(_) $R $n $X $Y) => `($X ⟿FD[$R,$n] $Y)
@@ -63,8 +63,8 @@ macro "fun " x:funBinder " ⟿FD[" K:term "," n:term "] " b:term : term =>
   `(ContCDiffMapFD.mk' $K $n (fun $x => $b) ((fwdDeriv $K fun $x => $b) rewrite_by autodiff /- check that derivative has been eliminated -/) (sorry_proof /- todo: add proof -/) sorry_proof)
 
 
-macro "fun " x:funBinder " ⟿FD[" n:term "] " b:term : term => `(fun $x ⟿FD[currentScalar%, $n] $b)
-macro "fun " x:funBinder " ⟿FD "             b:term : term => `(fun $x ⟿FD[currentScalar%,  ∞] $b)
+macro "fun " x:funBinder " ⟿FD[" n:term "] " b:term : term => `(fun $x ⟿FD[defaultScalar%, $n] $b)
+macro "fun " x:funBinder " ⟿FD "             b:term : term => `(fun $x ⟿FD[defaultScalar%,  ∞] $b)
 
 variable {K n}
 

@@ -28,6 +28,9 @@ instance : FunLike (SmoothLinearMap K X Y) X Y where
 macro X:term:25 " ⊸[" K:term "]" Y:term:26 : term =>
   `(SmoothLinearMap $K $X $Y)
 
+macro X:term:25 " ⊸ " Y:term:26 : term =>
+  `(SmoothLinearMap defaultScalar% $X $Y)
+
 @[fun_prop]
 theorem SmoothLinearMap_apply_right (f : X ⊸[K] Y) : IsSmoothLinearMap K (fun x => f x) := f.2
 

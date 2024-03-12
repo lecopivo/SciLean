@@ -6,26 +6,24 @@ import SciLean.Core.Notation.CDeriv
 -- Notation  -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-namespace SciLean.NotationOverField
+namespace SciLean.Notation
 
 
-scoped syntax "∂> " term:66 : term
-scoped syntax "∂> " diffBinder ", " term:66 : term
-scoped syntax "∂> " "(" diffBinder ")" ", " term:66 : term
+syntax "∂> " term:66 : term
+syntax "∂> " diffBinder ", " term:66 : term
+syntax "∂> " "(" diffBinder ")" ", " term:66 : term
 
-scoped syntax "∂>! " term:66 : term
-scoped syntax "∂>! " diffBinder ", " term:66 : term
-scoped syntax "∂>! " "(" diffBinder ")" ", " term:66 : term
+syntax "∂>! " term:66 : term
+syntax "∂>! " diffBinder ", " term:66 : term
+syntax "∂>! " "(" diffBinder ")" ", " term:66 : term
 
 open Lean Elab Term Meta in
 elab_rules : term
 | `(∂> $f $x $xs*) => do
-  let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(fwdDeriv $K $f $x $xs*)) none
+  elabTerm (← `(fwdDeriv defaultScalar% $f $x $xs*)) none
 
 | `(∂> $f) => do
-  let K := mkIdent (← currentFieldName.get)
-  elabTerm (← `(fwdDeriv $K $f)) none
+  elabTerm (← `(fwdDeriv defaultScalar% $f)) none
 
 
 macro_rules
@@ -67,5 +65,3 @@ macro_rules
     | _  => `(∂> $f)
 
   | _  => throw ()
-
-end NotationOverField
