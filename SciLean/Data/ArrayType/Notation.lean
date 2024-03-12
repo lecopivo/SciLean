@@ -46,14 +46,31 @@ syntax (name:=arrayTypeLiteral) " ⊞[" term,* "] " : term
 --- ListN.toArrayType (arrayTypeCont (Fin $n) (typeOf $x)) [$x,$xs,*]'
 
 open Lean Meta Elab Term Qq
-macro_rules
+elab_rules (kind:=arrayTypeLiteral) : term
  | `(⊞[ $x:term ]) => do
-   `(Indexed.ofFn (C:=(arrayTypeCont (Fin 1) (typeOf $x))) fun i : Fin 1 => $x)
+   let x ← elabTerm x none
+   let Elem ← inferType x
+   unless Elem.hasMVar do throwPostpone
+   let Cont ← mkFreshTypeMVar
+   let cls := mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[Cont, q(Fin 1), Elem]
+   let _ ← synthInstance cls
+   let array ← mkAppOptM ``Indexed.ofFn #[Cont, none, none, none, Expr.lam `i q(Fin 1) x default]
+   return array
  | `(⊞[ $x:term, $xs:term,* ]) => do
-   let n := Syntax.mkNumLit (toString (xs.getElems.size + 1))
-   `(Indexed.ofFn (C:=(arrayTypeCont (Fin $n) (typeOf $x))) fun i : Fin $n => #[$x,$xs,*].get i)
-  -- let n := Syntax.mkNumLit (toString xs.getElems.size)
-  -- `(term| ListN.toArrayType (arrayType #[$xs,*] $n (by rfl))
+   let arr ← elabTerm (← `(#[$x,$xs,*])) none
+   let n := Expr.lit (.natVal (xs.getElems.size + 1))
+   let x ← elabTerm x none
+   let Elem ← inferType x
+   unless Elem.hasMVar do throwPostpone
+   let Idx ← mkAppM ``Fin #[n]
+   let Cont ← mkFreshTypeMVar
+   let cls := mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[Cont, Idx, Elem]
+   let _ ← synthInstance cls
+   let f ← withLocalDeclD `i Idx fun i => do
+     mkLambdaFVars #[i] (← mkAppM ``Array.get #[arr,i])
+   let array ← mkAppOptM ``Indexed.ofFn #[Cont, none, none, none, f]
+   return array
+
 
 @[app_unexpander Array.toArrayType]
 def unexpandArrayToArrayType : Lean.PrettyPrinter.Unexpander

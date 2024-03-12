@@ -28,11 +28,11 @@ Alternative notation:
 -/
 class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam)
     extends Indexed.{u,v,w,w} Cont Idx Elem, LawfulIndexed.{u,v,w,w} Cont Idx Elem where
-  get_injective : Function.Injective (Indexed.get (C:=Cont))
+  get_injective : Function.Injective (fun (c : Cont) i => c[i])
 
 
 instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont Idx (fun _ => Elem) where
-  structProj := Indexed.get
+  structProj := fun c i => c[i]
   structMake := Indexed.ofFn
   structModify := fun i f c => Indexed.update c i f
   left_inv := sorry_proof
@@ -49,10 +49,10 @@ variable
   [ArrayType Cont Idx Elem]
 
 @[ext]
-theorem ext (x y : Cont) : (∀ i, x[i] = y[i]) → x = y := by sorry
+theorem ext (x y : Cont) : (∀ i, x[i] = y[i]) → x = y := by sorry_proof
 
 @[simp]
-theorem eta (cont : Cont) : (Indexed.ofFn fun i => cont[i]) = cont := sorry
+theorem eta (cont : Cont) : (Indexed.ofFn fun i => cont[i]) = cont := sorry_proof
 
 def mapMono (f : Elem → Elem) (cont : Cont) : Cont :=
   Fold.fold (IndexType.univ Idx) (fun c i => Indexed.update c i f) cont

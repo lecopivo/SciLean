@@ -55,8 +55,9 @@ variable
   {X : Type} [Vec K X]
   [Vec K Elem]
 
+
 @[fun_prop]
-theorem LeanColls.Indexed.get.arg_cont.IsSmoothLinearMap_rule_simple
+theorem GetElem.getElem.arg_cont.IsSmoothLinearMap_rule_simple
   (idx : Idx)
   : IsSmoothLinearMap K (fun xs : Cont => xs[idx]) := sorry_proof
 
@@ -71,11 +72,11 @@ variable
   [SemiInnerProductSpace K Elem]
 
 @[fun_prop]
-theorem LeanColls.Indexed.get.arg_cont.HasSemiAdjoint_rule_simple (idx : Idx) :
+theorem GetElem.getElem.arg_cont.HasSemiAdjoint_rule_simple (idx : Idx) :
     HasSemiAdjoint K (fun cont : Cont => cont[idx]) := sorry_proof
 
 @[fun_trans]
-theorem LeanColls.Indexed.get.arg_cont.semiAdjoint_rule_simple (idx : Idx) :
+theorem GetElem.getElem.arg_cont.semiAdjoint_rule_simple (idx : Idx) :
     semiAdjoint K (fun cont : Cont => cont[idx])
     =
     fun elem => oneHot (X:=Cont) idx elem :=
@@ -83,7 +84,7 @@ by
   sorry_proof
 
 @[fun_trans]
-theorem LeanColls.Indexed.get.arg_cont.revCDeriv_rule
+theorem GetElem.getElem.arg_cont.revCDeriv_rule
   (f : X → Cont) (idx : Idx)
   (hf : HasAdjDiff K f)
   : revDeriv K (fun x => (f x)[idx])
@@ -98,7 +99,7 @@ by
     lhs; fun_trans; fun_trans; simp
 
 @[fun_trans]
-theorem LeanColls.Indexed.get.arg_cont.revCDerivUpdate_rule
+theorem GetElem.getElem.arg_cont.revCDerivUpdate_rule
   (f : X → Cont) (idx : Idx)
   (hf : HasAdjDiff K f)
   : revDerivUpdate K (fun x => (f x)[idx])
@@ -113,7 +114,7 @@ by
     lhs; fun_trans; fun_trans; simp
 
 @[fun_trans]
-theorem LeanColls.Indexed.get.arg_cont.revCDerivProj_rule
+theorem GetElem.getElem.arg_cont.revCDerivProj_rule
   {J ElemJ} [StructType Elem J ElemJ] [IndexType J] [LawfulIndexType J] [DecidableEq J]
   [∀ j, SemiInnerProductSpace K (ElemJ j)] [SemiInnerProductSpaceStruct K Elem J ElemJ]
   (f : X → Cont) (idx : Idx)
