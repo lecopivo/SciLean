@@ -1,3 +1,4 @@
+import SciLean.Core.FunctionTransformations
 import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
 
 namespace SciLean.Prob

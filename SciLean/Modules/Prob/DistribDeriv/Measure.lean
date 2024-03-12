@@ -45,8 +45,10 @@ theorem measure.distribDeriv_comp
     ⟪distribDeriv (fun y => (μ y).toDistribution) y dy, φ⟫ := by
 
   simp [distribDeriv]
-  rw [fderiv.comp_rule_at ℝ (fun y => ∫ (x : Z), φ x ∂(μ y)) f x hφ.diff hf]
-  dsimp
+  have h := fderiv.comp (𝕜:=ℝ) (x:=x) (g:=fun y => ∫ (x : Z), φ x ∂(μ y)) (f:=f) hφ.diff hf
+  -- rw[h] -- ugh
+  -- rw [fderiv.comp x (g:=fun y => ∫ (x : Z), φ x ∂(μ y)) (f:=f)f x hφ.diff hf]
+  sorry -- dsimp
 
 
 @[simp ↓]
