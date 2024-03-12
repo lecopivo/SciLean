@@ -217,19 +217,26 @@ theorem ContCDiffMapFD_apply_CDifferentiableAt (f : W → X ⟿FD[K,∞] Y) (g :
 
 
 @[fun_trans]
-theorem ContCDiffMapFD_cderiv_rule :
-   cderiv K (fun (fx : (X⟿FD[K,∞] Y)×X) => fx.1 fx.2)
-   =
-   fun fx dfx =>
-     dfx.1 fx.2 + (fx.1.FD fx.2 dfx.2).2 := sorry_proof
+theorem ContCDiffMapFD_cderiv_rule (f : W → (X ⟿FD[K,∞] Y)×Z) (g : W → X) :
+    cderiv K (fun w => (f w).1 (g w))
+    =
+    fun w dw =>
+      let dfz := cderiv K f w dw
+      let fwz := f w
+      let x := g w
+      let dx := cderiv K g w dw
+      dfz.1 x + (fwz.1.FD x dx).2 := sorry_proof
 
 @[fun_trans]
-theorem ContCDiffMapFD_fwdDeriv_rule :
-    fwdDeriv K (fun (fx : (X⟿FD[K,∞] Y)×X) => fx.1 fx.2)
+theorem ContCDiffMapFD_fwdDeriv_rule (f : W → (X ⟿FD[K,∞] Y)×Z) (g : W → X) :
+    fwdDeriv K (fun w => (f w).1 (g w))
     =
-    fun fx dfx =>
-      let ydy := fx.1.FD fx.2 dfx.2
-      let dy' := dfx.1 fx.2
-      (ydy.1, dy' + ydy.2) := by
+    fun w dw =>
+      let fdfz := fwdDeriv K f w dw
+      let xdx := fwdDeriv K g w dw
+      let fw := fdfz.1.1
+      let df := fdfz.2.1
+      let zdz := fw.FD xdx.1 xdx.2
+      (zdz.1, df xdx.1 + zdz.2) := by
   unfold fwdDeriv
   fun_trans

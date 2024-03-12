@@ -18,6 +18,7 @@ It should be Bochner integral but it should integrate function valued function p
 ∫ x, fun y => f x y = fun y => ∫ x, f x y
 ```
 where rhs can be understoods as Bochenr integral and lhs defined thie `cintegral`. -/
+noncomputable
 opaque cintegral {α} [MeasurableSpace α] {X} [AddCommGroup X] [Module ℝ X]
   -- dragging along all of these typeclasses is really really annoying
   -- [AddCommGroup X] [TopologicalSpace X] [TopologicalAddGroup X] [Module ℝ X] [LocallyConvexSpace ℝ X]

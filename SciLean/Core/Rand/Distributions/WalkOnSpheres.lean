@@ -36,7 +36,7 @@ def harmonicRec (n : ℕ) (φ : Vec3 → Float) (g : Vec3 → Y) (x : Vec3) : Y 
 
 
 def walkOnSpheres (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : Rand Y := do
-  let f : Rand (Vec3 → Y) :=
+  let f ←
     derive_random_approx
       (fun x => harmonicRec n φ g x)
     by
@@ -47,8 +47,10 @@ def walkOnSpheres (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : 
           rw[integral_as_uniform_E Float]
       rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
       simp (config:={zeta:=false})
-  let f' ← f
-  pure (f' x)
+  return f x
+
+
+#print walkOnSpheres
 
 
 @[fun_prop]
@@ -80,26 +82,22 @@ def harmonicRec.arg_x.fwdDeriv_randApprox (n : ℕ)
     (φ : Vec3 → Float) (φ' : Vec3 → Vec3 → Float×Float)
     (g : Vec3 → Y) (g' : Vec3 → Vec3 → Y×Y)
     (x dx : Vec3) : Rand (Y×Y) := do
-  let f : Rand (Vec3 → Vec3 → Y×Y) :=
-    derive_random_approx
-      (fun x dx => harmonicRec_fwdDeriv n φ φ' g g' x dx)
-    by
-      unfold harmonicRec_fwdDeriv
+  derive_random_approx
+    (harmonicRec_fwdDeriv n φ φ' g g' x dx)
+  by
+    unfold harmonicRec_fwdDeriv
+    conv =>
+      pattern (fun _ _ _ _ => cintegral _ _)
+      enter [n,du]
       conv =>
-        pattern (fun _ _ _ _ => cintegral _ _)
-        enter [n,du]
-        conv =>
-          conv => enter [x];rw[cintegral.arg_f.push_lambda]
-          rw[cintegral.arg_f.push_lambda]
-        rw[integral_as_uniform_E Float]
-      rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
-      simp (config:={zeta:=false})
-  let f' ← f
-  pure (f' x dx)
+        conv => enter [x];rw[cintegral.arg_f.push_lambda]
+        rw[cintegral.arg_f.push_lambda]
+      rw[integral_as_uniform_E Float]
+    rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
+    simp (config:={zeta:=false})
 
 
 set_default_scalar Float
-
 
 noncomputable
 def harmonicRec' (n : ℕ) (φ : Vec3 ⟿FD Float) (g : Vec3 ⟿FD Y) (x : Vec3) : Y :=
@@ -114,8 +112,6 @@ theorem harmonicRec'_CDifferentiable (n : ℕ) :
   induction n <;> (simp[harmonicRec']; fun_prop)
 
 
--- set_option trace.Meta.Tactic.fun_trans true in
--- set_option trace.Meta.Tactic.fun_prop true in
 noncomputable
 def harmonicRec'_fwdDeriv (n : ℕ) :=
     (∂> (w : (Vec3 ⟿FD Float)×(Vec3 ⟿FD Y)×Vec3), harmonicRec' n w.1 w.2.1 w.2.2)
@@ -124,3 +120,20 @@ def harmonicRec'_fwdDeriv (n : ℕ) :=
       . simp only [harmonicRec']; autodiff
       . simp only [harmonicRec',smul_push]
         autodiff
+
+
+def harmonicRec'_fwdDeriv_rand (n : ℕ)
+    (φ dφ : Vec3 ⟿FD Float) (g dg : Vec3 ⟿FD Y) (x dx : Vec3) : Rand (Y×Y) := do
+  derive_random_approx
+    (harmonicRec'_fwdDeriv n (φ,g,x) (dφ,dg,dx))
+  by
+    unfold harmonicRec'_fwdDeriv
+    conv =>
+      pattern (fun _ _ _ _ => cintegral _ _)
+      enter [n,du]
+      conv =>
+        conv => enter [x];rw[cintegral.arg_f.push_lambda]
+        rw[cintegral.arg_f.push_lambda]
+      rw[integral_as_uniform_E Float]
+    rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
+    simp (config:={zeta:=false})
