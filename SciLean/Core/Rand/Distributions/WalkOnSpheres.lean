@@ -50,9 +50,6 @@ def walkOnSpheres (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : 
   return f x
 
 
-#print walkOnSpheres
-
-
 @[fun_prop]
 theorem harmonicRec.arg_x.CDifferentiable_rule (n : ℕ)
     (φ : Vec3 → Float) (g : Vec3 → Y)
@@ -60,9 +57,7 @@ theorem harmonicRec.arg_x.CDifferentiable_rule (n : ℕ)
     CDifferentiable Float (fun x : Vec3 => harmonicRec n φ g x) := by
   induction n <;> (simp[harmonicRec]; fun_prop)
 
-variable {W} [Vec Float W]
 
--- set_option pp.notation false
 noncomputable
 def harmonicRec_fwdDeriv (n : ℕ)
     (φ : Vec3 → Float) (φ' : Vec3 → Vec3 → Float×Float)
@@ -99,6 +94,7 @@ def harmonicRec.arg_x.fwdDeriv_randApprox (n : ℕ)
 
 set_default_scalar Float
 
+
 noncomputable
 def harmonicRec' (n : ℕ) (φ : Vec3 ⟿FD Float) (g : Vec3 ⟿FD Y) (x : Vec3) : Y :=
   match n with
@@ -110,8 +106,6 @@ def harmonicRec' (n : ℕ) (φ : Vec3 ⟿FD Float) (g : Vec3 ⟿FD Y) (x : Vec3)
 theorem harmonicRec'_CDifferentiable (n : ℕ) :
     CDifferentiable Float (fun (w : (Vec3 ⟿FD Float)×(Vec3 ⟿FD Y)×Vec3) => harmonicRec' n w.1 w.2.1 w.2.2) := by
   induction n <;> (simp[harmonicRec']; fun_prop)
-
-variable (n : Nat)
 
 
 noncomputable
