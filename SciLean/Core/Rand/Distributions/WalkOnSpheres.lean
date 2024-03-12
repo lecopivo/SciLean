@@ -69,8 +69,8 @@ def harmonicRec_fwdDeriv (n : ℕ)
     (g : Vec3 → Y) (g' : Vec3 → Vec3 → Y×Y) : Vec3 → Vec3 → Y×Y :=
     (∂> x, harmonicRec n φ g x)
   rewrite_by
-    assuming (hφ' : ∂> φ = φ') (hφ : CDifferentiable Float φ)
-             (hg' : ∂> g = g') (hg : CDifferentiable Float g)
+    assuming (hφ' : (∂> φ) = φ') (hφ : CDifferentiable Float φ)
+             (hg' : (∂> g) = g') (hg : CDifferentiable Float g)
     induction n n' du h
       . simp[harmonicRec]; autodiff
       . simp[harmonicRec];
@@ -111,15 +111,16 @@ theorem harmonicRec'_CDifferentiable (n : ℕ) :
     CDifferentiable Float (fun (w : (Vec3 ⟿FD Float)×(Vec3 ⟿FD Y)×Vec3) => harmonicRec' n w.1 w.2.1 w.2.2) := by
   induction n <;> (simp[harmonicRec']; fun_prop)
 
+variable (n : Nat)
+
 
 noncomputable
 def harmonicRec'_fwdDeriv (n : ℕ) :=
-    (∂> (w : (Vec3 ⟿FD Float)×(Vec3 ⟿FD Y)×Vec3), harmonicRec' n w.1 w.2.1 w.2.2)
+    (∂> (φ,g,x), harmonicRec' (Y:=Y) n φ g x)
   rewrite_by
     induction n n' du h
       . simp only [harmonicRec']; autodiff
-      . simp only [harmonicRec',smul_push]
-        autodiff
+      . simp only [harmonicRec',smul_push]; autodiff
 
 
 def harmonicRec'_fwdDeriv_rand (n : ℕ)
