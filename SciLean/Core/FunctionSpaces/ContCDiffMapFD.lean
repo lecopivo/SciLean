@@ -26,6 +26,9 @@ structure ContCDiffMapFD (n : ℕ∞) (X Y : Type _)  [Vec K X] [Vec K Y] where
   toFun : X → X → Y×Y
   is_cont_cdiff_map : ContCDiff K n (fun x => (toFun x 0).1)
   cderiv_snd : cderiv K (fun x => (toFun x 0).1) = fun x dx => (toFun x dx).2
+  dir_independence : ∀ x dx, toFun x dx = toFun x 0
+
+attribute [simp, ftrans_simp] ContCDiffMapFD.cderiv_snd ContCDiffMapFD.dir_independence
 
 variable (n : ℕ∞)
 
@@ -55,7 +58,7 @@ theorem ContCDiffMapFD_apply_right (f : X ⟿FD[K,n] Y) : ContCDiff K n (fun x =
 --------------------------------------------------------------------------------
 
 def ContCDiffMapFD.mk' (f : X → Y) (f' : X → X → Y×Y) (h : fwdDeriv K f = f') (hf : ContCDiff K n f) : X ⟿FD[K,n] Y :=
-  ⟨f', sorry_proof, sorry_proof⟩
+  ⟨f', sorry_proof, sorry_proof, sorry_proof⟩
 
 
 open Lean Parser Term
@@ -86,11 +89,26 @@ def ContCDiffMapFD.FD (f : X ⟿FD[K,n] Y) (x dx : X) : Y×Y := f.toFun x dx
 
 @[fun_trans]
 theorem ContCDiffMapFD_eval_fwdDeriv (f : X ⟿FD[K,n] Y) :
-    fwdDeriv K (fun x => f x) = f.FD := sorry_proof
+    fwdDeriv K (fun x => f x) = f.FD := by
+  unfold ContCDiffMapFD.FD fwdDeriv
+  simp[DFunLike.coe]
 
 @[fun_prop]
-theorem ContCDiffMapFD_eval_cdifferentiable (f : X ⟿FD[K,n] Y) :
-    CDifferentiable K (fun x => f x) := sorry_proof
+theorem ContCDiffMapFD_eval_cdifferentiable (f : X ⟿FD[K,n] Y) (h : 0 < n) :
+    CDifferentiable K (fun x => f x) := by
+  simp[DFunLike.coe]
+  apply CDifferentaible.ContCDiff_rule
+  apply ContCDiffMapFD.is_cont_cdiff_map
+  assumption
+
+@[fun_prop]
+theorem ContCDiffMapFD_eval_cdifferentiable' (f : X ⟿FD[K,∞] Y) :
+    CDifferentiable K (fun x => f x) := by
+  fun_prop (disch:=apply ENat.zero_lt_top)
+
+@[simp, ftrans_simp]
+theorem ContCDiffMapFD.FD_fst (f : X ⟿FD[K,n] Y) (x dx : X) :
+    (f.FD x dx).1 = f x := by rw[← ContCDiffMapFD_eval_fwdDeriv]; unfold fwdDeriv; simp
 
 
 -- Algebra ---------------------------------------------------------------------
@@ -215,6 +233,3 @@ theorem ContCDiffMapFD_fwdDeriv_rule :
       (ydy.1, dy' + ydy.2) := by
   unfold fwdDeriv
   fun_trans
-  funext (f,x) (df,dx)
-  simp
-  sorry_proof -- this is easy from the definition
