@@ -1,5 +1,6 @@
 import SciLean.Util.SorryProof
-import SciLean.Data.Index
+-- import SciLean.Data.Index
+import LeanColls.Classes.IndexType
 
 namespace SciLean
 open LeanColls
@@ -302,101 +303,102 @@ instance : PlainDataType Bool where
   btype := .inl Bool.bitType
 
 
---------------- Idx n ------------------------------------------------
+--------------- Fin n ------------------------------------------------
 ----------------------------------------------------------------------
 
-/-- Number of bits necessary to store `Idx n` -/
-def Idx.bitSize  (n : USize) : USize := (USize.log2 n + (n - (1 <<< (USize.log2 n)) != 0).toUInt64.toUSize)
-def Idx.byteSize (n : USize) : USize := (Idx.bitSize n + 7) / 8
+/-- Number of bits necessary to store `Fin n` -/
+def Fin.bitSize  (n : Nat) : Nat := (Nat.log2 n + (n - (1 <<< (Nat.log2 n)) != 0).toUInt64.toNat)
+def Fin.byteSize (n : Nat) : Nat := (Fin.bitSize n + 7) / 8
 
 
--- INCONSISTENT: This breaks consistency with (n=0) as we could make `Idx 0` from a byte
+-- INCONSISTENT: This breaks consistency with (n=0) as we could make `Fin 0` from a byte
 -- Adding assumption (n≠0) is really annoying, what to do about this?
-def Idx.bitType (n : USize) (_ : n ≤ 256) : BitType (Idx n) where
+def Fin.bitType (n : Nat) (_ : n ≤ 256) : BitType (Fin n) where
   bits := (bitSize n).toUInt8
   h_size := sorry_proof
-  fromByte b := ⟨b.toUSize % n, sorry_proof⟩ --- The modulo here is just in case to remove junk bit values, also we need `n≠0` for consistency
+  fromByte b := ⟨b.toNat % n, sorry_proof⟩ --- The modulo here is just in case to remove junk bit values, also we need `n≠0` for consistency
   toByte   b := b.1.toUInt8
   fromByte_toByte := sorry_proof
 
-def Idx.byteType (n : USize) (_ : 256 < n) : ByteType (Idx n) where
-  bytes := byteSize n
+def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
+  bytes := (byteSize n).toUSize
   h_size := sorry_proof
 
   fromByteArray b i _ := Id.run do
     let bytes  := byteSize n
-    let ofByte := i * bytes
+    let ofByte := i * bytes.toUSize
 
     let mut val : USize := 0
-    for j in fullRange (Idx bytes) do
-      val := val + ((b[ofByte+j.1]'sorry_proof).toUSize <<< (j.1*(8:USize)))
-    ⟨val, sorry_proof⟩
+    for j in IndexType.univ (Fin bytes) do
+      val := val + ((b[ofByte+j.1.toUSize]'sorry_proof).toUSize <<< (j.1.toUSize*(8:USize)))
+    ⟨val.toNat, sorry_proof⟩
 
   toByteArray b i _ val := Id.run do
     let bytes  := byteSize n
-    let ofByte := i * bytes
+    let ofByte := i * bytes.toUSize
 
     let mut b := b
-    for j in fullRange (Idx bytes) do
-      b := b.uset (ofByte+j.1) (val.1 >>> (j.1*(8:USize))).toUInt8 sorry_proof
+    for j in IndexType.univ (Fin bytes) do
+      b := b.uset (ofByte+j.1.toUSize) (val.1.toUSize >>> (j.1.toUSize*(8:USize))).toUInt8 sorry_proof
     b
 
   toByteArray_size := sorry_proof
   fromByteArray_toByteArray := sorry_proof
   fromByteArray_toByteArray_other := sorry_proof
 
--- INCONSISTENT: This breaks consistency see Idx.bitType
-instance (n) : PlainDataType (Idx n) where
+-- INCONSISTENT: This breaks consistency see Fin.bitType
+instance (n) : PlainDataType (Fin n) where
   btype :=
     if h : n ≤ 256
-    then .inl (Idx.bitType n h)
-    else .inr (Idx.byteType n (by simp at h; apply h))
+    then .inl (Fin.bitType n h)
+    else .inr (Fin.byteType n (by simp at h; apply h))
 
--------------- Index ----------------------------------------------
-----------------------------------------------------------------------
+-- TODO: change to IndexType
+-- -------------- Index ----------------------------------------------
+-- ----------------------------------------------------------------------
 
-def Index.bitType (α : Type) [Index α] (h : Index.size α ≤ 256) : BitType α where
-  bits := Idx.bitSize (Index.size α) |>.toUInt8
-  h_size := sorry_proof
-  fromByte b := fromIdx <| (Idx.bitType (Index.size α) h).fromByte b
-  toByte a   := (Idx.bitType (Index.size α) h).toByte (toIdx a)
-  fromByte_toByte := sorry_proof
+-- def Index.bitType (α : Type) [Index α] (h : Index.size α ≤ 256) : BitType α where
+--   bits := Idx.bitSize (Index.size α) |>.toUInt8
+--   h_size := sorry_proof
+--   fromByte b := fromIdx <| (Idx.bitType (Index.size α) h).fromByte b
+--   toByte a   := (Idx.bitType (Index.size α) h).toByte (toIdx a)
+--   fromByte_toByte := sorry_proof
 
-def Index.byteType (α : Type) [Index α] (hn : 256 < Index.size α ) : ByteType α where
-  bytes := Idx.byteSize (Index.size α)
-  h_size := sorry_proof
+-- def Index.byteType (α : Type) [Index α] (hn : 256 < Index.size α ) : ByteType α where
+--   bytes := Idx.byteSize (Index.size α)
+--   h_size := sorry_proof
 
-  fromByteArray b i h := fromIdx <| (Idx.byteType (Index.size α) hn).fromByteArray b i h
-  toByteArray b i h a := (Idx.byteType (Index.size α) hn).toByteArray b i h (toIdx a)
+--   fromByteArray b i h := fromIdx <| (Idx.byteType (Index.size α) hn).fromByteArray b i h
+--   toByteArray b i h a := (Idx.byteType (Index.size α) hn).toByteArray b i h (toIdx a)
 
-  toByteArray_size := sorry_proof
-  fromByteArray_toByteArray := sorry_proof
-  fromByteArray_toByteArray_other := sorry_proof
+--   toByteArray_size := sorry_proof
+--   fromByteArray_toByteArray := sorry_proof
+--   fromByteArray_toByteArray_other := sorry_proof
 
 
-/-- Index is `PlainDataType` via conversion from/to `Idx n`
+-- /-- Index is `PlainDataType` via conversion from/to `Idx n`
 
-**Instance diamond** This instance `instPlainDataTypeProd` is prefered over this one.
+-- **Instance diamond** This instance `instPlainDataTypeProd` is prefered over this one.
 
-This instance makes a diamond together with `instPlainDataTypeProd`. Using this instance is more computationally intensive when writting and reading from `DataArra` but it consumes less memory. The `instPlainDataTypeProd` is doing the exact opposite.
+-- This instance makes a diamond together with `instPlainDataTypeProd`. Using this instance is more computationally intensive when writting and reading from `DataArra` but it consumes less memory. The `instPlainDataTypeProd` is doing the exact opposite.
 
-Example: `Idx (2^4+1) × Idx (2^4-1)`
+-- Example: `Idx (2^4+1) × Idx (2^4-1)`
 
-As Product:
-  The type `Idx (2^4+1)` needs 5 bits.
-  The type `Idx (2^4-1)` needs 4 bits.
-  Thus `Idx (2^4+1) × Idx (2^4-1)` needs 9 bits, thus 2 bytes, as `instPlainDataTypeProd`
+-- As Product:
+--   The type `Idx (2^4+1)` needs 5 bits.
+--   The type `Idx (2^4-1)` needs 4 bits.
+--   Thus `Idx (2^4+1) × Idx (2^4-1)` needs 9 bits, thus 2 bytes, as `instPlainDataTypeProd`
 
-As Index:
-  `Idx (2^4+1) × Idx (2^4-1) ≈ Idx (2^8-1)`
-  The type `Idx (2^8-1)` needs 8 bits thus only a single byte as `instPlainDataTypeIndex`
+-- As Index:
+--   `Idx (2^4+1) × Idx (2^4-1) ≈ Idx (2^8-1)`
+--   The type `Idx (2^8-1)` needs 8 bits thus only a single byte as `instPlainDataTypeIndex`
 
--/
-instance (priority := low) instPlainDataTypeIndex  {α : Type} [Index α] : PlainDataType α where
-  btype :=
-    if h : (Index.size α) ≤ 256
-    then .inl (Index.bitType α h)
-    else .inr (Index.byteType α (by simp at h; apply h))
+-- -/
+-- instance (priority := low) instPlainDataTypeIndex  {α : Type} [Index α] : PlainDataType α where
+--   btype :=
+--     if h : (Index.size α) ≤ 256
+--     then .inl (Index.bitType α h)
+--     else .inr (Index.byteType α (by simp at h; apply h))
 
 -------------- Float -------------------------------------------------
 ----------------------------------------------------------------------

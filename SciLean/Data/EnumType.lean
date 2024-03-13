@@ -3,8 +3,6 @@ import Mathlib.Algebra.Group.Defs
 
 import SciLean.Util.SorryProof
 import SciLean.Data.ColProd
-import SciLean.Data.Idx
-import SciLean.Data.IndexType
 
 import LeanColls
 
@@ -81,56 +79,56 @@ namespace EnumType
     forIn := Fin.forIn
   }
 
-  @[inline]
-  partial def Idx.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Idx n → β → m (ForInStep β)) := do
-      -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler
-      -- seems to have much better time optimizing code with `StateT`
-      let rec @[specialize] forLoop (i : USize) (b : β) : StateT Bool m β := do
-        if h : i < n then
-          match (← f ⟨i,h⟩ b) with
-          | ForInStep.done b  => set true; pure b
-          | ForInStep.yield b => forLoop (i + 1) b
-        else
-          pure b
-      let (val,b) ← forLoop 0 init false
-      if b then
-        return (ForInStep.done val)
-      else
-        return (ForInStep.yield val)
+  -- @[inline]
+  -- partial def Idx.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Idx n → β → m (ForInStep β)) := do
+  --     -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler
+  --     -- seems to have much better time optimizing code with `StateT`
+  --     let rec @[specialize] forLoop (i : USize) (b : β) : StateT Bool m β := do
+  --       if h : i < n then
+  --         match (← f ⟨i,h⟩ b) with
+  --         | ForInStep.done b  => set true; pure b
+  --         | ForInStep.yield b => forLoop (i + 1) b
+  --       else
+  --         pure b
+  --     let (val,b) ← forLoop 0 init false
+  --     if b then
+  --       return (ForInStep.done val)
+  --     else
+  --       return (ForInStep.yield val)
 
-  @[inline]
-  partial instance : EnumType (Idx n) :=
-  {
-    decEq := by infer_instance
+  -- @[inline]
+  -- partial instance : EnumType (Idx n) :=
+  -- {
+  --   decEq := by infer_instance
 
-    forIn := Idx.forIn
-  }
+  --   forIn := Idx.forIn
+  -- }
 
-  @[inline]
-  partial def Idx'.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Idx' a b → β → m (ForInStep β)) := do
-      -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler
-      -- seems to have much better time optimizing code with `StateT`
-      let rec @[specialize] forLoop (i : Int64) (val : β) : StateT Bool m β := do
-        if _h : i ≤ b then
-          match (← f ⟨i,sorry_proof⟩ val) with
-          | ForInStep.done val  => set true; pure val
-          | ForInStep.yield val => forLoop (i + 1) val
-        else
-          pure val
-      let (val,b) ← forLoop a init false
-      if b then
-        return (ForInStep.done val)
-      else
-        return (ForInStep.yield val)
+  -- @[inline]
+  -- partial def Idx'.forIn {m : Type → Type} [Monad m] {β : Type} (init : β) (f : Idx' a b → β → m (ForInStep β)) := do
+  --     -- Here we use `StateT Bool m β` instead of `m (ForInStep β)` as compiler
+  --     -- seems to have much better time optimizing code with `StateT`
+  --     let rec @[specialize] forLoop (i : Int64) (val : β) : StateT Bool m β := do
+  --       if _h : i ≤ b then
+  --         match (← f ⟨i,sorry_proof⟩ val) with
+  --         | ForInStep.done val  => set true; pure val
+  --         | ForInStep.yield val => forLoop (i + 1) val
+  --       else
+  --         pure val
+  --     let (val,b) ← forLoop a init false
+  --     if b then
+  --       return (ForInStep.done val)
+  --     else
+  --       return (ForInStep.yield val)
 
 
-  @[inline]
-  partial instance : EnumType (Idx' a b) :=
-  {
-    decEq := by infer_instance
+  -- @[inline]
+  -- partial instance : EnumType (Idx' a b) :=
+  -- {
+  --   decEq := by infer_instance
 
-    forIn := Idx'.forIn
-  }
+  --   forIn := Idx'.forIn
+  -- }
 
 
   -- /-- Embeds `ForInStep β` to `FoInStep (ForInStep β)`, useful for exiting from double for loops.

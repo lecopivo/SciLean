@@ -16,6 +16,44 @@ instance : LawfulIndexType (Fin n) where
   toFin_leftInv := by intro x; rfl
   toFin_rightInv := by intro x; rfl
 
+open Set
+
+instance (a b : Int) : IndexType (Icc a b) where
+  card := ((b + 1) - a).toNat
+  toFin i := ⟨(i.1 - a).toNat, sorry_proof⟩
+  fromFin i := ⟨a + i.1, sorry_proof⟩
+
+instance (a b : Int) : LawfulIndexType (Icc a b) where
+  toFin_leftInv := by intro x; simp[IndexType.toFin, IndexType.fromFin]
+  toFin_rightInv := by intro x; sorry_proof
+
+instance (a b : Int) : IndexType (Ioo a b) where
+  card := (b - (a + 1)).toNat
+  toFin i := ⟨(i.1 - (a + 1)).toNat, sorry_proof⟩
+  fromFin i := ⟨(a + 1) + i.1, sorry_proof⟩
+
+instance (a b : Int) : LawfulIndexType (Ioo a b) where
+  toFin_leftInv := by intro x; simp[IndexType.toFin, IndexType.fromFin]
+  toFin_rightInv := by intro x; sorry_proof
+
+instance (a b : Int) : IndexType (Ioc a b) where
+  card := ((b + 1) - (a+1)).toNat
+  toFin i := ⟨(i.1 - (a + 1)).toNat, sorry_proof⟩
+  fromFin i := ⟨(a + 1) + i.1, sorry_proof⟩
+
+instance (a b : Int) : LawfulIndexType (Ioc a b) where
+  toFin_leftInv := by intro x; simp[IndexType.toFin, IndexType.fromFin]
+  toFin_rightInv := by intro x; sorry_proof
+
+instance (a b : Int) : IndexType (Ico a b) where
+  card := (b - a).toNat
+  toFin i := ⟨(i.1 - a).toNat, sorry_proof⟩
+  fromFin i := ⟨a + i.1, sorry_proof⟩
+
+instance (a b : Int) : LawfulIndexType (Ico a b) where
+  toFin_leftInv := by intro x; simp[IndexType.toFin, IndexType.fromFin]
+  toFin_rightInv := by intro x; sorry_proof
+
 
 namespace SciLean
 -- use lean colls

@@ -65,7 +65,7 @@ def DataArray.reserve  (arr : DataArray α) (capacity : Nat) : DataArray α :=
     let newBytes := pd.bytes capacity
     let mut arr' : DataArray α := ⟨ByteArray.mkArray newBytes 0, arr.size, sorry_proof⟩
     -- copy over the old data
-    for i in fullRange (Fin arr.size) do
+    for i in IndexType.univ (Fin arr.size) do
       arr' := arr'.set ⟨i.1,sorry_proof⟩ (arr.get i)
     arr'
 

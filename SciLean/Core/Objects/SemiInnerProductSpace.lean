@@ -3,8 +3,6 @@ import SciLean.Core.Objects.Vec
 import SciLean.Core.Objects.Scalar
 import SciLean.Core.NotationOverField
 
-import SciLean.Data.EnumType
-
 namespace SciLean
 open LeanColls
 

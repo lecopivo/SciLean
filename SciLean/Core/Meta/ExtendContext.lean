@@ -1,6 +1,6 @@
 import SciLean.Core.Objects.FinVec
 import SciLean.Lean.Meta.Basic
-import SciLean.Data.Index
+import SciLean.Data.IndexType
 
 open Lean Meta Qq
 

@@ -69,8 +69,7 @@ def harmonicRec_fwdDeriv (n : ℕ)
     induction n n' du h
       . simp[harmonicRec]; autodiff
       . simp[harmonicRec];
-        simp only [smul_push]
-        autodiff; autodiff
+        simp only [smul_push]; autodiff
 
 
 def harmonicRec.arg_x.fwdDeriv_randApprox (n : ℕ)

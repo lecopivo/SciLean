@@ -1,5 +1,4 @@
 import SciLean.Util.SorryProof
-import SciLean.Data.Index
 import SciLean.Data.ListN
 import SciLean.Data.StructType.Basic
 import SciLean.Data.Function

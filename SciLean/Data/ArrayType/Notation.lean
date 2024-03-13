@@ -27,8 +27,11 @@ abbrev introElemNotation {Cont Idx Elem} [DecidableEq Idx] [ArrayType Cont Idx E
 open Lean.TSyntax.Compat in
 -- macro "⊞ " x:term " => " b:term:51 : term => `(introElemNotation fun $x => $b)
 -- macro "⊞ " x:term " : " X:term " => " b:term:51 : term => `(introElemNotation fun ($x : $X) => $b)
+
+-- The `by exact` is a hack to make certain case work
+--    see: https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/uncurry.20fails.20with.20.60Icc.60
 open Term Function in
-macro "⊞ " xs:funBinder* " => " b:term:51 : term => `(introElemNotation (HasUncurry.uncurry fun $xs* => $b))
+macro "⊞ " xs:funBinder* " => " b:term:51 : term => `(introElemNotation (HasUncurry.uncurry (by exact (fun $xs* => $b))))
 
 
 @[app_unexpander introElemNotation]
@@ -153,11 +156,11 @@ partial def expand' (l : List (TSyntax `dimSpec)) : TermElabM Expr :=
     match t with
     | `(dimSpec| $n:term) => do
       try
-        let n ← elabTerm n q(USize)
+        let n ← elabTerm n q(Nat)
         return ← mkAppM ``Fin #[n]
       catch _ =>
         return ← elabTerm n none
-    | `(dimSpec| [$n:term : $m:term]) => do elabTerm (← `(Idx' $n $m)) none
+    | `(dimSpec| [$n:term : $m:term]) => do elabTerm (← `(↑(Set.Icc ($n : Int) ($m : Int)))) q(Type)
     | `(dimSpec| [$ds:dimSpec,*]) => expand' ds.getElems.toList
     | _ => throwError "unexpected type power syntax"
   | t :: l' =>  do
@@ -184,7 +187,7 @@ elab_rules (kind:=typeIntPower) : term
 
   let Y ← expand' ns.getElems.toList
   let C ← mkFreshTypeMVar
-  let inst ← synthInstance <| mkAppN (← mkConst ``ArrayTypeNotation) #[C,Y,X]
+  let inst ← synthInstance <| mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[C,Y,X]
   let C ← whnfR (← instantiateMVars C)
   return ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,C,inst]
 

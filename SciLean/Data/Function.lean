@@ -1,5 +1,6 @@
 import Mathlib.Logic.Function.Basic
-import SciLean.Data.Index
+-- import SciLean.Data.Index
+import SciLean.Data.IndexType
 
 def Function.Inverse (g : β → α) (f : α → β) :=
   Function.LeftInverse g f ∧ Function.RightInverse g f
@@ -66,28 +67,28 @@ theorem Function.modify_noteq {a a' : α} (h : a ≠ a') (g : β a' → β a') (
 end FunctionModify
 
 
-def Function.repeatIdx (f : ι → α → α) (init : α) : α := Id.run do
-  let mut x := init
-  for i in IndexType.univ ι do
-    x := f i x
-  x
+-- def Function.repeatIdx (f : ι → α → α) (init : α) : α := Id.run do
+--   let mut x := init
+--   for i in IndexType.univ ι do
+--     x := f i x
+--   x
 
-def Function.repeat (n : Nat) (f : α → α) (init : α) : α :=
-  repeatIdx (fun (_ : Fin n) x => f x) init
+-- def Function.repeat (n : Nat) (f : α → α) (init : α) : α :=
+--   repeatIdx (fun (_ : Fin n) x => f x) init
 
 
-@[simp]
-theorem Function.repeatIdx_update {α : Type _} (f : ι → α → α) (g : ι → α)
-  : repeatIdx (fun i g' => Function.update g' i (f i (g' i))) g
-    =
-    fun i => f i (g i) := sorry_proof
+-- @[simp]
+-- theorem Function.repeatIdx_update {α : Type _} (f : ι → α → α) (g : ι → α)
+--   : repeatIdx (fun i g' => Function.update g' i (f i (g' i))) g
+--     =
+--     fun i => f i (g i) := sorry_proof
 
-/-- Specialized formulation of `Function.repeatIdx_update` which is sometimes more
-succesfull with unification -/
-@[simp]
-theorem Function.repeatIdx_update' {α : Type _} (f : ι → α) (g : ι → α) (op : α → α → α)
-  : repeatIdx (fun i g' => Function.update g' i (op (g' i) (f i))) g
-    =
-    fun i => op (g i) (f i) :=
-by
-  apply Function.repeatIdx_update (f := fun i x => op x (f i))
+--/-- Specialized formulation of `Function.repeatIdx_update` which is sometimes more
+-- succesfull with unification -/
+-- @[simp]
+-- theorem Function.repeatIdx_update' {α : Type _} (f : ι → α) (g : ι → α) (op : α → α → α)
+--   : repeatIdx (fun i g' => Function.update g' i (op (g' i) (f i))) g
+--     =
+--     fun i => op (g i) (f i) :=
+-- by
+--   apply Function.repeatIdx_update (f := fun i x => op x (f i))
