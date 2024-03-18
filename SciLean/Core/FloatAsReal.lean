@@ -176,13 +176,13 @@ instance : RealScalar Float where
   exp x := x.exp
   exp_def := sorry_proof
 
-  log x := x.log
+  log x := if x ≠ 0 then x.abs.log else 0
   log_def := sorry_proof
 
   tanh x := x.tanh
   tanh_def := sorry_proof
 
-  sqrt x := x.sqrt
+  sqrt x := if 0 ≤ x then x.sqrt else 0
   sqrt_def := sorry_proof
 
   pow x y := x.pow y

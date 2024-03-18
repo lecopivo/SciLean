@@ -17,6 +17,7 @@ import SciLean.Core.Approx.ApproxLimit
 
 import SciLean.Core.Functions.Exp
 import SciLean.Core.Functions.Trigonometric
+import SciLean.Core.Functions.Pow
 
 -- import SciLean.Core.Meta.GenerateRevDeriv
 -- import SciLean.Core.Meta.GenerateRevCDeriv
