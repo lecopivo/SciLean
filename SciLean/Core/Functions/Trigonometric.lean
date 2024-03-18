@@ -43,7 +43,7 @@ theorem sin.arg_x.fwdDeriv_rule
   unfold fwdDeriv; fun_trans; rfl
 
 
-@[fun_trans]
+@[fun_prop]
 theorem sin.arg_x.HasAdjDiff_rule
     (x : U → C) (hx : HasAdjDiff C x) :
     HasAdjDiff C (fun u => sin (x u)) := by
@@ -98,7 +98,7 @@ theorem cos.arg_x.fwdDeriv_rule
 by
   unfold fwdDeriv; fun_trans; rfl
 
-@[fun_trans]
+@[fun_prop]
 theorem cos.arg_x.HasAdjDiff_rule
     (x : U → C) (hx : HasAdjDiff C x) :
     HasAdjDiff C (fun u => cos (x u)) := by
@@ -155,7 +155,7 @@ by
   unfold fwdDeriv; fun_trans; rfl
 
 
-@[fun_trans]
+@[fun_prop]
 theorem tanh.arg_x.HasAdjDiff_rule
     (x : U → C) (hx : HasAdjDiff C x) :
     HasAdjDiff C (fun u => tanh (x u)) := by
