@@ -116,9 +116,10 @@ theorem cos.arg_x.revDeriv_rule
     =
     fun u =>
       let xdx := revDeriv C x u
-      (cos xdx.1, fun dy => xdx.2 (conj (- sin xdx.1) * dy)) := by
+      (cos xdx.1, fun dy => xdx.2 (- conj (sin xdx.1) * dy)) := by
   unfold revDeriv
-  fun_trans only [fwdDeriv, smul_push, ftrans_simp]
+  fun_trans only [fwdDeriv, smul_push, neg_push, ftrans_simp]
+
 
 
 --------------------------------------------------------------------------------
