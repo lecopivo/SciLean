@@ -2,6 +2,7 @@ import SciLean.Core.Integral.MovingDomain
 import SciLean.Core.Integral.Substitution
 import SciLean.Core.Integral.ParametricInverse
 import SciLean.Core.Integral.Frontier
+import SciLean.Core.Functions.Trigonometric
 
 open MeasureTheory
 
@@ -18,15 +19,20 @@ set_default_scalar R
 
 variable [MeasureSpace R] [Module ℝ R]
 
-#check ∫' (x : R), x
+attribute [ftrans_simp] FiniteDimensional.finrank_prod FiniteDimensional.finrank_self Finset.univ_unique Finset.sum_const Finset.card_singleton Prod.smul_mk -- Nat.reduceAdd
 
-#check (volume : Measure (R×R))
+@[simp, ftrans_simp]
+theorem Scalar.sqrt_pow (r : R) : Scalar.sqrt (r^2) = Scalar.abs r := sorry_proof
 
-#check SciLean.frontier_inter
+@[simp, ftrans_simp]
+theorem Scalar.abs_abs (r : R) : Scalar.abs (Scalar.abs r) = Scalar.abs r := sorry_proof
+
+--  Nat.succ_sub_succ_eq_sub, tsub_zero]
+-- SciLean.HasAdjDiff R fun x => (SciLean.Scalar.cos x, SciLean.Scalar.sin x)
 
 -- set_option trace.Meta.Tactic.simp.discharge true in
 -- set_option trace.Meta.Tactic.simp.rewrite true in
--- set_option trace.Meta.Tactic.fun_trans true in
+set_option trace.Meta.Tactic.fun_trans true in
 #check
   (cderiv R fun (t : R) => ∫' (x : R×R),
     if x.1^2 + x.2^2 ≤ t^2 then
@@ -35,21 +41,14 @@ variable [MeasureSpace R] [Module ℝ R]
       0)
   rewrite_by
     enter [t,dt]
-    simp only [ftrans_simp, split_integral_of_ite]
-    rw[moving_volume_derivative (f:=_) (A:=_) (hA:=sorry)]
-    fun_trans [ftrans_simp]
-    rw[intetgral_parametric_inverse (R:=R) (Y:=R) (I:=Unit) (X₁ := fun _ => R) (f:=_) (d:=1) (hdim:=sorry) (inv:=circle_polar_inverse (t^2) sorry)]
-    unfold scalarGradient
-    fun_trans only [scalarGradient,ftrans_simp]
-    simp only [Finset.univ_unique, PUnit.default_eq_unit, ftrans_simp, Finset.sum_const, Finset.card_singleton]
+    fun_trans (disch:=sorry) only [ftrans_simp,scalarGradient]
+    rw[intetgral_parametric_inverse (R:=R) (hdim:=sorry) (inv:=circle_polar_inverse (t^2) sorry)]
+    fun_trans only [ftrans_simp]
 
-    -- simp only [Finset.univ_unique, PUnit.default_eq_unit, smul_eq_mul, Finset.sum_const, Finset.card_singleton, one_smul]
 
-#check Nat
-
-#check circle_polar_inverse
 
 open BigOperators in
+set_option trace.Meta.Tactic.fun_trans true in
 #check
   (cderiv R fun (t : R) => ∫' (x : R×R),
     if x.1^2 + x.2^2 ≤ t^2 then
@@ -58,9 +57,6 @@ open BigOperators in
       0)
   rewrite_by
     enter [t,dt]
-    simp only [ftrans_simp]
-    rw[moving_volume_derivative (f:=_) (A:=_) (hA:=sorry)]
-    fun_trans [ftrans_simp,scalarGradient]
+    fun_trans (disch:=sorry) only [ftrans_simp,scalarGradient]
     rw[intetgral_parametric_inverse (R:=R) (hdim:=sorry) (inv:=circle_sqrt_inverse (t^2) sorry)]
-    simp only [scalarGradient,ftrans_simp]
-    simp only [Finset.univ_unique, PUnit.default_eq_unit, ftrans_simp, Finset.sum_const, Finset.card_singleton]
+    fun_trans (disch:=sorry) only [ftrans_simp,scalarGradient]

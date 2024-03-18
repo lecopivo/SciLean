@@ -31,6 +31,11 @@ theorem det.comp_rule
     det R (fun x => f (g x)) = det R f * det R g := sorry_proof
 
 
+@[fun_trans, ftrans_simp]
+theorem det.scalar_rule
+    (f : R → R) (hf : IsLinearMap R f) :
+    det R f = f 1 := sorry_proof
+
 open FiniteDimensional in
 @[fun_trans]
 theorem HSMul.hSMul.arg_x.det_rule
@@ -52,6 +57,7 @@ variable
   {R} [RealScalar R]
   {U} [SemiHilbert R U]
   {V} [SemiHilbert R V]
+  {W} [SemiHilbert R W]
 
 
 variable (R)
@@ -88,3 +94,17 @@ theorem HSMul.hSMul.arg_x.jacobian_rule
     =
     fun x =>
       (Scalar.abs r)^(finrank R U) • jacobian R f x := sorry_proof
+
+
+open FiniteDimensional in
+@[fun_trans]
+theorem Prod.mk.arg_xy.jacobian_rule
+    (f : U → V) (g : U → W) (hf : HasAdjDiff R f) (hg : HasAdjDiff R g) :
+    jacobian R (fun x => (f x, g x))
+    =
+    fun x =>
+      let Jf := cderiv R f x
+      let Jg := cderiv R g x
+      let Gf := fun dx => semiAdjoint R Jf (Jf dx)
+      let Gg := fun dx => semiAdjoint R Jg (Jg dx)
+      Scalar.sqrt (Scalar.abs (det R (fun dx => Gf dx + Gg dx))) := sorry_proof

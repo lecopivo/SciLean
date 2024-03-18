@@ -65,7 +65,7 @@ variable [MeasureSpace X]
 open FiniteDimensional
 
 -- Probably the domain needs to be differentiable in time and lipschitz in space
-@[simp,ftrans_simp, fun_trans]
+@[fun_trans]
 theorem moving_volume_derivative (f : W → X → Y) (A : W → Set X) (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
     (∂ w, ∫' x in A w, f w x)
     =
