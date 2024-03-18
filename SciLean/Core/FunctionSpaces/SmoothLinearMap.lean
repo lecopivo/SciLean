@@ -95,5 +95,5 @@ theorem SmoothLinearMap.zero_apply : (0 : X⊸[K]Y) x = 0 := by sorry_proof
 
 end AlgebraSimps
 
-instance : TopologicalSpace (X ⊸[K] Y) := sorry
+instance : UniformSpace (X ⊸[K] Y) := sorry
 instance : Vec K (X ⊸[K] Y) := Vec.mkSorryProofs

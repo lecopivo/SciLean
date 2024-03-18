@@ -67,8 +67,8 @@ smooth functions on real numbers, is Convenient Vector Spaces but fails to be Ba
 class Vec (K : Type _) [IsROrC K] (X : Type _)
   extends
     AddCommGroup X,
-    TopologicalSpace X,
-    TopologicalAddGroup X,
+    UniformSpace X,
+    UniformAddGroup X,
     Module K X,
     ContinuousSMul K X
   where
@@ -114,11 +114,13 @@ section CommonVectorSpaces
   abbrev ContinuousNeg.mkSorryProofs {α} [Neg α] [TopologicalSpace α] : ContinuousNeg α := ContinuousNeg.mk sorry_proof
   abbrev TopologicalAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :=
    @TopologicalAddGroup.mk α _ (AddGroup.mkSorryProofs) (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
+  abbrev UniformAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [UniformSpace α] :=
+   @UniformAddGroup.mk α _ (AddGroup.mkSorryProofs) sorry_proof -- (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
 
   abbrev ContinuousSMul.mkSorryProofs {α} [SMul K α] [TopologicalSpace α] : ContinuousSMul K α := ContinuousSMul.mk sorry_proof
 
-  abbrev Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [SMul K α] [TopologicalSpace α] : Vec K α :=
-    Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs)) (toTopologicalAddGroup := TopologicalAddGroup.mkSorryProofs) (toContinuousSMul := ContinuousSMul.mkSorryProofs) sorry_proof
+  abbrev Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [SMul K α] [UniformSpace α] : Vec K α :=
+    Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs)) (toUniformAddGroup := UniformAddGroup.mkSorryProofs) (toContinuousSMul := ContinuousSMul.mkSorryProofs) sorry_proof
 
   instance [IsROrC K] : Vec K K where
     scalar_wise_smooth := sorry_proof
@@ -136,8 +138,8 @@ section CommonVectorSpaces
   instance(priority:=low) (α : Type _) (X : α → Type _) [inst : ∀ a, Vec K (X a)] : Vec K ((a : α) → X a) :=
     --Vec.mkSorryProofs
     let _ : ∀ a, Module K (X a) := fun a => (inst a).toModule
-    let _ : ∀ a, TopologicalSpace (X a) := fun a => (inst a).toTopologicalSpace
-    let _ : ∀ a, TopologicalAddGroup (X a) := fun a => (inst a).toTopologicalAddGroup
+    let _ : ∀ a, UniformSpace (X a) := fun a => (inst a).toUniformSpace
+    let _ : ∀ a, UniformAddGroup (X a) := fun a => (inst a).toUniformAddGroup
     let _ : ∀ a, ContinuousSMul K (X a) := fun a => (inst a).toContinuousSMul
     Vec.mk (scalar_wise_smooth := sorry_proof)
 

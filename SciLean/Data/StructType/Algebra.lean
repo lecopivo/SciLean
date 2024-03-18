@@ -67,6 +67,13 @@ instance [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)] (i : 
   | .inr _ => by infer_instance
 
 @[reducible]
+instance [∀ i, UniformSpace (EI i)] [∀ j, UniformSpace (FJ j)] (i : I ⊕ J) :
+    UniformSpace (Sum.rec EI FJ i) :=
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
 instance [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] (i : I ⊕ J) : Vec K (Sum.rec EI FJ i) :=
   Vec.mkSorryProofs
 -- all the proofs should be solvable `by induction i <;> infer_instance`
