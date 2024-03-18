@@ -56,7 +56,7 @@ theorem eta (cont : Cont) : (Indexed.ofFn fun i => cont[i]) = cont := sorry_proo
 def mapMono (f : Elem → Elem) (cont : Cont) : Cont :=
   Fold.fold (IndexType.univ Idx) (fun c i => Indexed.update c i f) cont
 
-def mapMonoIdx (f : Idx → Elem → Elem) (cont : Cont) : Cont :=
+def mapIdxMono (f : Idx → Elem → Elem) (cont : Cont) : Cont :=
   Fold.fold (IndexType.univ Idx) (fun c i => Indexed.update c i (f i)) cont
 
 @[simp]
@@ -64,8 +64,8 @@ theorem getElem_mapMono (f : Elem → Elem) (cont : Cont) (i : Idx) :
     (mapMono f cont)[i] = f cont[i] := sorry_proof
 
 @[simp]
-theorem getElem_mapMonoIdx (f : Idx → Elem → Elem) (cont : Cont) (i : Idx) :
-    (mapMonoIdx f cont)[i] = f i cont[i] := sorry_proof
+theorem getElem_mapIdxMono (f : Idx → Elem → Elem) (cont : Cont) (i : Idx) :
+    (mapIdxMono f cont)[i] = f i cont[i] := sorry_proof
 
 @[simp]
 theorem getElem_map (f : Elem → Elem) (cont : Cont) (i : Idx) :
@@ -110,10 +110,10 @@ instance [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => Elem
 
 section Operations
 
-  instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapMonoIdx (λ x fx => fx + g[x]) f⟩
-  instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapMonoIdx (λ x fx => fx - g[x]) f⟩
-  instance (priority:=low) [Mul Elem] : Mul Cont := ⟨λ f g => mapMonoIdx (λ x fx => fx * g[x]) f⟩
-  instance (priority:=low) [Div Elem] : Div Cont := ⟨λ f g => mapMonoIdx (λ x fx => fx / g[x]) f⟩
+  instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapIdxMono (λ x fx => fx + g[x]) f⟩
+  instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapIdxMono (λ x fx => fx - g[x]) f⟩
+  instance (priority:=low) [Mul Elem] : Mul Cont := ⟨λ f g => mapIdxMono (λ x fx => fx * g[x]) f⟩
+  instance (priority:=low) [Div Elem] : Div Cont := ⟨λ f g => mapIdxMono (λ x fx => fx / g[x]) f⟩
 
   -- instance (priority:=low) {R} [HMul R Elem Elem] : HMul R Cont Cont := ⟨λ r f => map (λ fx => r*(fx : Elem)) f⟩
   instance (priority:=low) {R} [SMul R Elem] : SMul R Cont := ⟨λ r f => mapMono (λ fx => r•(fx : Elem)) f⟩
@@ -231,7 +231,7 @@ def argMaxCore (cont : Cont) : Idx × Elem :=
     (default, cont[default])
 
 def max (cont : Cont) : Elem :=
-  Function.reduceD
+  IndexType.reduceD
     (fun i => cont[i])
     (fun e e' => if e < e' then e' else e)
     (cont[default])
@@ -240,13 +240,13 @@ def idxMax (cont : Cont) : Idx := (argMaxCore cont).1
 
 
 def argMinCore (cont : Cont ) : Idx × Elem :=
-  Function.reduceD
+  IndexType.reduceD
     (fun i => (i,cont[i]))
     (fun (i,e) (i',e') => if e' < e then (i',e') else (i,e))
     (default, cont[default])
 
 def min (cont : Cont) : Elem :=
-  Function.reduceD
+  IndexType.reduceD
     (fun i => cont[i])
     (fun e e' => if e < e' then e' else e)
     (cont[default])
