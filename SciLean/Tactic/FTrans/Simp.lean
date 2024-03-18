@@ -13,7 +13,7 @@ attribute [ftrans_simp] add_zero zero_add sub_zero zero_sub sub_self neg_zero mu
 attribute [ftrans_simp] Nat.succ_sub_succ_eq_sub Nat.cast_ofNat
 
 -- simp theorems for `Prod`
-attribute [ftrans_simp] Prod.mk.eta Prod.fst_zero Prod.snd_zero Prod.mk_add_mk Prod.mk_mul_mk Prod.smul_mk Prod.mk_sub_mk Prod.neg_mk Prod.vadd_mk
+attribute [ftrans_simp] Prod.mk.eta Prod.fst_zero Prod.snd_zero Prod.mk_add_mk Prod.mk_mul_mk Prod.mk_sub_mk Prod.neg_mk Prod.vadd_mk -- Prod.smul_mk
 
 -- simp theorems for `Equiv`
 attribute [ftrans_simp] Equiv.invFun_as_coe Equiv.symm_symm

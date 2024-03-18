@@ -142,7 +142,7 @@ theorem ContCDiffMapFD.zero_apply : (0 : X ⟿FD[K,n] Y) x = 0 := by sorry_proof
 
 end AlgebraSimps
 
-instance : TopologicalSpace (X ⟿FD[K,n] Y) := sorry
+instance : UniformSpace (X ⟿FD[K,n] Y) := sorry
 instance : Vec K (X ⟿FD[K,n] Y) := Vec.mkSorryProofs
 
 

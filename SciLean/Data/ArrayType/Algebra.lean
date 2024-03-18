@@ -18,9 +18,8 @@ instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace Elem] : T
   isOpen_inter := sorry_proof
   isOpen_sUnion := sorry_proof
 
-noncomputable
 instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] : UniformSpace Cont where
-  uniformity := sorry_data
+  uniformity := default --sorry_proof
   refl := sorry_proof
   symm := sorry_proof
   comp := sorry_proof
@@ -29,13 +28,23 @@ instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] : Unifo
 instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] [CompleteSpace Elem] : CompleteSpace Cont where
   complete := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [AddCommGroup Elem] : AddCommGroup Cont where
+instance (priority := low) [ArrayType Cont Idx Elem] [AddGroup Elem] : AddGroup Cont where
   sub_eq_add_neg := sorry_proof
-  add_comm  := sorry_proof
   add_assoc := sorry_proof
   zero_add  := sorry_proof
   add_zero  := sorry_proof
   add_left_neg := sorry_proof
+
+instance (priority := low) [ArrayType Cont Idx Elem] [AddCommGroup Elem] : AddCommGroup Cont where
+  add_comm  := sorry_proof
+
+instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] [AddGroup Elem] [UniformAddGroup Elem] : UniformAddGroup Cont where
+  uniformContinuous_sub := sorry_proof
+
+
+instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace R] [TopologicalSpace Elem] [SMul R Elem] [ContinuousSMul R Elem] : ContinuousSMul R Cont where
+  continuous_smul := sorry_proof
+
 
 instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module R Elem] : Module R Cont where
   one_smul := sorry_proof
@@ -46,9 +55,6 @@ instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCo
   zero_smul := sorry_proof
 
 instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] : Vec K Cont where
-  continuous_add := sorry_proof
-  continuous_neg := sorry_proof
-  continuous_smul := sorry_proof
   scalar_wise_smooth := sorry_proof
 
 
@@ -88,6 +94,9 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions
 
 instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] :
     SemiInnerProductSpace K Cont where
+  uniformContinuous_sub := sorry_proof
+  continuous_smul := sorry_proof
+  scalar_wise_smooth := sorry_proof
   add_left := sorry_proof
   smul_left := sorry_proof
   conj_sym := sorry_proof
