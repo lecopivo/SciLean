@@ -50,19 +50,23 @@ def frontierSpeed (A : W → Set X) (w dw : W) (x : X) : R :=
     0
 variable {R}
 
--- TODO: generalize to X
-@[simp, ftrans_simp]
-theorem frontierSpeed_levelSet (φ ψ : W → X → R) :
-     frontierSpeed R (fun w => {x | φ w x ≤ ψ w x})
-     =
-     fun w dw x =>
-       - (∂ (w':=w;dw), (ψ w' x - φ w' x)) / ‖∇ (x':=x), (ψ w x' - φ w x')‖₂ := sorry_proof
 
+@[simp, ftrans_simp]
+theorem frontierSpeed_levelSet (φ ψ : W → X → R) (w dw : W) (x : X) (h : φ w x = ψ w x) :
+     frontierSpeed R (fun w => {x | φ w x ≤ ψ w x}) w dw x
+     =
+     - (∂ (w':=w;dw), (ψ w' x - φ w' x)) / ‖∇ (x':=x), (ψ w x' - φ w x')‖₂ := sorry_proof
 
 
 variable [MeasureSpace X]
 
 open FiniteDimensional
+
+-- Probably the domain needs to be differentiable in time and lipschitz in space
+@[fun_prop]
+theorem moving_volume_differentiable (f : W → X → Y) (A : W → Set X) (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
+    CDifferentiable R fun  w => ∫' x in A w, f w x := sorry_proof
+
 
 -- Probably the domain needs to be differentiable in time and lipschitz in space
 @[fun_trans]

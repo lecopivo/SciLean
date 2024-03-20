@@ -24,6 +24,7 @@ def area' {X} [MeasureSpace X] {S : Set X} : Measure S := sorry
 /-- Area measure of surfaces, can this be well defined? -/
 def area {X} [MeasureSpace X] : Measure X := sorry
 
+-- TODO: figure out how to use Hausdoff measure here
 noncomputable
 def surfaceMeasure [MeasureSpace X] (d : ℕ) : Measure X := sorry
   -- have m : EMetricSpace X := sorry

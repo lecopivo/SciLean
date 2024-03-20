@@ -15,13 +15,14 @@ variable
   {Z} [SemiHilbert R Z] [Module ℝ Z]
 
 
+/-- Leibnitz rule for set frontier -/
 @[simp,ftrans_simp]
 theorem frontier_inter {X} [TopologicalSpace X] (A B : Set X) (hA : IsClosed A) (hB : IsClosed B) :
-    frontier (A ∩ B) = (frontier A ∩ B) ∪ (A ∩ frontier B) := by
-  sorry
+    frontier (A ∩ B) = (frontier A ∩ B) ∪ (frontier B ∩ A) := by
+  sorry_proof
 
 
 @[simp,ftrans_simp]
 theorem frontier_levelSet {X} [TopologicalSpace X] (φ ψ : X → R) :
     frontier {x | φ x ≤ ψ x} = {x | φ x = ψ x}  := by
-  sorry
+  sorry_proof

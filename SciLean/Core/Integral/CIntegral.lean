@@ -28,7 +28,7 @@ opaque CIntegrable {α} [MeasurableSpace α] {X} [AddCommGroup X] [Module ℝ X]
     (f : α → X) (μ : Measure α) : Prop
 
 open Lean Parser  Term
-syntax "∫' " funBinder ("in" term)? ", " term:60 (" ∂" term:70)? : term
+syntax "∫' " funBinder ("in " term)? ", " term:60 (" ∂" term:70)? : term
 
 macro_rules
 | `(∫' $x:funBinder, $b) => `(cintegral (fun $x => $b) (by volume_tac))
@@ -46,10 +46,16 @@ macro_rules
     | _ => throw ()
 
   | `($(_) $f:term $μ) =>
-    match f with
-    | `(fun $x => $b) => `(∫' $x, $b ∂$μ)
-    | `(fun $x $xs* => $b) => `(∫' $x, (fun $xs* => $b) ∂μ)
-    | _ => throw ()
+    match f, μ with
+    -- |      `(fun $x => $b), `(Measure.restrict volume $A) => `(∫' $x in $A, $b)
+    -- | `(fun $x $xs* => $b), `(Measure.restrict volume $A) => `(∫' $x in $A, (fun $xs* => $b))
+    |      `(fun $x => $b), `(Measure.restrict $μ $A) => `(∫' $x in $A, $b ∂$μ)
+    | `(fun $x $xs* => $b), `(Measure.restrict $μ $A) => `(∫' $x in $A, (fun $xs* => $b) ∂$μ)
+    -- |      `(fun $x => $b), `(volume) => `(∫' $x, $b)
+    -- | `(fun $x $xs* => $b), `(volume) => `(∫' $x, (fun $xs* => $b))
+    |      `(fun $x => $b), _ => `(∫' $x, $b ∂$μ)
+    | `(fun $x $xs* => $b), _ => `(∫' $x, (fun $xs* => $b) ∂$μ)
+    | _, _ => throw ()
 
 
   | _ => throw ()
@@ -193,9 +199,9 @@ theorem split_integral_of_ite (φ ψ : X → R) (f g : X → Y) :
 theorem split_integral_over_set_of_ite (φ ψ : X → R) (f g : X → Y) (A : Set X) :
     (∫' x in A, if ψ x ≤ φ x then f x else g x)
     =
-    ∫' x in {x' | 0 ≤ φ x' - ψ x'} ∩ A, f x
+    (∫' x in {x' | 0 ≤ φ x' - ψ x'} ∩ A, f x)
     +
-    ∫' x in {x' | 0 ≤ ψ x' - φ x'} ∩ A, g x := by sorry_proof
+    (∫' x in {x' | 0 ≤ ψ x' - φ x'} ∩ A, g x) := by sorry_proof
 
 -- attribute [ftrans_simp] MeasureTheory.integral_zero sub_nonneg
 
