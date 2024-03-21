@@ -8,7 +8,6 @@ open MeasureTheory
 
 namespace SciLean
 
-
 variable
   {R} [RealScalar R]
   {W} [SemiHilbert R W]
@@ -19,15 +18,20 @@ variable
 set_default_scalar R
 
 /-- Area measure on if `S` is co-dimension one surface. -/
-def area' {X} [MeasureSpace X] {S : Set X} : Measure S := sorry
+opaque area' {X} [MeasureSpace X] {S : Set X} : Measure S := sorry
 
 /-- Area measure of surfaces, can this be well defined? -/
-def area {X} [MeasureSpace X] : Measure X := sorry
+opaque area {X} [MeasureSpace X] : Measure X := sorry
 
 -- TODO: figure out how to use Hausdoff measure here
 noncomputable
-def surfaceMeasure [MeasureSpace X] (d : ℕ) : Measure X := sorry
+opaque surfaceMeasure [MeasureSpace X] (d : ℕ) : Measure X := sorry
   -- have m : EMetricSpace X := sorry
   -- have h : (Vec.toUniformSpace R) = PseudoEMetricSpace.toUniformSpace := sorry
   -- have b : @BorelSpace X _ (borel X) := sorry
   -- @Measure.hausdorffMeasure _ _ (borel _) (h ▸ b) d
+
+open FiniteDimensional in
+@[simp, ftrans_simp]
+theorem surfaceMeasure_volume [MeasureSpace X] :
+   surfaceMeasure (X:=X) (finrank R X) = volume := sorry_proof

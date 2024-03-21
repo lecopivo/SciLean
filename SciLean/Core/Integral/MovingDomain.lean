@@ -10,7 +10,7 @@ namespace SciLean
 
 variable
   {R} [RealScalar R]
-  {W} [SemiHilbert R W]
+  {W} [Vec R W]
   {X} [SemiHilbert R X]
   {Y} [SemiHilbert R Y] [Module ℝ Y]
   {Z} [SemiHilbert R Z] [Module ℝ Z]
@@ -64,7 +64,8 @@ open FiniteDimensional
 
 -- Probably the domain needs to be differentiable in time and lipschitz in space
 @[fun_prop]
-theorem moving_volume_differentiable (f : W → X → Y) (A : W → Set X) (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
+theorem moving_volume_differentiable (f : W → X → Y) (A : W → Set X)
+    (hf : ∀ x, CDifferentiable R (f · x)) (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
     CDifferentiable R fun  w => ∫' x in A w, f w x := sorry_proof
 
 
