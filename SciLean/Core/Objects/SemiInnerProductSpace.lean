@@ -32,13 +32,16 @@ macro "‖" x:term "‖₂" : term => `(norm₂ defaultScalar% $x)
   | `($(_) K $x) => `(‖ $x ‖₂)
   | _ => throw ()
 
-@[simp]
+@[simp, ftrans_simp]
 theorem norm₂_squared_nat {R K X : Type _} [Scalar R K] [Norm2 K X] (x : X)
   : ‖x‖₂[K] ^ 2 = ‖x‖₂²[K] := by sorry_proof
 
-@[simp]
+@[simp, ftrans_simp]
 theorem norm₂_squared {R K X : Type _} [Scalar R K] [Norm2 K X] (x : X)
   : ‖x‖₂[K] ^ (2:K) = ‖x‖₂²[K] := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_norm {R} [RealScalar R] (r : R) : ‖r‖₂[R] = Scalar.abs r := by sorry_proof
 
 section Inner
 

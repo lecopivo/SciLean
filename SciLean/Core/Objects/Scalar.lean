@@ -273,3 +273,24 @@ noncomputable instance : RealScalar ℝ where
   compare a b := compareOfLessAndEq a b
   compare_eq_compareOfLessAndEq := by
     compareOfLessAndEq_rfl
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Simp theorems -----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+section SimpTheorems
+
+variable {R} [RealScalar R]
+
+@[simp, ftrans_simp]
+theorem scalar_abs_one : Scalar.abs (1 : R) = 1 := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_abs_zero : Scalar.abs (0 : R) = 0 := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_div_one (x : R) : x / 1 = x := by sorry_proof
+
+end SimpTheorems
