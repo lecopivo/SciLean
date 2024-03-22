@@ -16,7 +16,7 @@ variable
 
 
 /-- Leibnitz rule for set frontier -/
-@[simp,ftrans_simp]
+-- @[simp,ftrans_simp]
 theorem frontier_inter {X} [TopologicalSpace X] (A B : Set X) (hA : IsClosed A) (hB : IsClosed B) :
     frontier (A ∩ B) = (frontier A ∩ B) ∪ (frontier B ∩ A) := by
   sorry_proof

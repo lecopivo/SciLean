@@ -83,7 +83,10 @@ set_option trace.Meta.Tactic.simp.discharge true in
     fun x : R =>
       if 0 ≤ x - w then
         if 0 ≤ x^2 - w^2 then
-          x + w
+          if 0 ≤ x^2 + w^2 then
+            x + w
+          else
+            x - w
         else
           x / w
       else
@@ -91,3 +94,26 @@ set_option trace.Meta.Tactic.simp.discharge true in
   rewrite_by
     fun_trans (disch:=sorry) only [scalarGradient, ftrans_simp]
     simp only [ftrans_simp, finrank_self, le_refl, tsub_eq_zero_of_le]
+
+
+
+
+set_option trace.Meta.Tactic.simp.discharge true in
+#check (cderiv R (fun w : R =>
+  ∫' (x : R) in Set.Icc 0 1,
+      if 0 ≤ x - w then
+        if 0 ≤ x^2 - w^2 then
+          if 0 ≤ x^2 + w^2 then
+            x + w
+          else
+            x - w
+        else
+          x / w
+      else
+        x * w))
+  rewrite_by
+    autodiff
+    unfold scalarGradient
+    autodiff
+    -- fun_trans (disch:=sorry) only [scalarGradient, ftrans_simp]
+    simp (config:={zeta:=false}) only [ftrans_simp, finrank_self, le_refl, tsub_eq_zero_of_le]

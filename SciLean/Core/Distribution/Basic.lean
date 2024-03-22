@@ -96,6 +96,19 @@ instance : Add (Distribution R X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ + �
 instance : Sub (Distribution R X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ - ⟪g, φ⟫⟩⟩
 instance : SMul R (Distribution R X) := ⟨fun r f => ⟨fun φ => r • ⟪f, φ⟫⟩⟩
 
+@[simp, ftrans_simp]
+theorem Distribution.zero_action (φ : X → R) : ⟪(0 : 𝒟' X), φ⟫ = 0 := by rfl
+
+@[simp, ftrans_simp]
+theorem Distribution.add_action (T T' : 𝒟' X) (φ : X → R) : ⟪T + T', φ⟫ = ⟪T,φ⟫ + ⟪T',φ⟫ := by rfl
+
+@[simp, ftrans_simp]
+theorem Distribution.sub_action (T T' : 𝒟' X) (φ : X → R) : ⟪T - T', φ⟫ = ⟪T,φ⟫ - ⟪T',φ⟫ := by rfl
+
+@[simp, ftrans_simp]
+theorem Distribution.smul_action (r : R) (T : 𝒟' X) (φ : X → R) : ⟪r • T, φ⟫ = r • ⟪T,φ⟫ := by rfl
+
+
 
 ----------------------------------------------------------------------------------------------------
 -- Degree ------------------------------------------------------------------------------------------

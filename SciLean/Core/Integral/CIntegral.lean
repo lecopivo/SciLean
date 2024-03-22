@@ -178,7 +178,7 @@ variable
 
 -- we prefer specifying sets with `0 ≤ ...`
 -- TODO: Add seme regularity conditions on φ and ψ
-@[simp,ftrans_simp]
+-- @[simp,ftrans_simp]
 theorem split_integral_of_ite (φ ψ : X → R) (f g : X → Y) :
     (∫' x, if ψ x ≤ φ x then f x else g x)
     =
@@ -195,7 +195,7 @@ theorem split_integral_of_ite (φ ψ : X → R) (f g : X → Y) :
 --     +
 --     (∫' x in {x' | 0 ≤ ψ x' - φ x'}, h x (g x)) := sorry_proof
 
-@[simp,ftrans_simp]
+-- @[simp,ftrans_simp]
 theorem split_integral_over_set_of_ite (φ ψ : X → R) (f g : X → Y) (A : Set X) :
     (∫' x in A, if ψ x ≤ φ x then f x else g x)
     =
