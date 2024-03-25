@@ -28,7 +28,7 @@ opaque CIntegrable {α} [MeasurableSpace α] {X} [AddCommGroup X] [Module ℝ X]
     (f : α → X) (μ : Measure α) : Prop
 
 open Lean Parser  Term
-syntax "∫' " funBinder ("in " term)? ", " term:60 (" ∂" term:70)? : term
+syntax "∫' " funBinder (" in " term)? ", " term:60 (" ∂" term:70)? : term
 
 macro_rules
 | `(∫' $x:funBinder, $b) => `(cintegral (fun $x => $b) (by volume_tac))
@@ -241,6 +241,15 @@ theorem cintegral.arg_f.fwdDeriv_rule
     fun x dx => ∫' y, fwdDeriv R (f · y) x dx ∂μ := by
   unfold fwdDeriv; fun_trans [cintegral_prod_mk]
 
+@[fun_prop]
+theorem cintegral.arg_f.IsLinearMap_rule
+    (f : X → β → Z) (μ : Measure β) (hf : ∀ y, IsLinearMap R (f · y)) :
+    IsLinearMap R (fun x => ∫' y, f x y ∂μ) := by have := hf; sorry_proof
+
+@[fun_prop]
+theorem cintegral.arg_f.IsSmoothLinearMap_rule
+    (f : X → β → Z) (μ : Measure β) (hf : ∀ y, IsSmoothLinearMap R (f · y)) :
+    IsSmoothLinearMap R (fun x => ∫' y, f x y ∂μ) := by constructor <;> fun_prop
 
 
 end Differentiation

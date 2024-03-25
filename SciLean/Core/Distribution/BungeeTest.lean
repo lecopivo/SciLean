@@ -89,7 +89,7 @@ set_option profiler true
 --   simp (config := {zeta:=false}) only [ftrans_simp,bungeeTension]
 --   fun_prop (disch:=sorry)
 
-attribute [ftrans_simp] FiniteDimensional.finrank_self
+attribute [ftrans_simp] FiniteDimensional.finrank_self FiniteDimensional.finrank_prod mem_setOf_eq not_le ite_mul mul_ite mul_neg mul_one
 
 -- set_option pp.notation false in
 -- set_option trace.Meta.Tactic.fun_trans true in
@@ -104,24 +104,103 @@ attribute [ftrans_simp] FiniteDimensional.finrank_self
     autodiff
     fun_trans (config:={zeta:=false}) (disch:=sorry) only [ftrans_simp, scalarGradient]
 
-set_option trace.Meta.Tactic.fun_trans true in
+
+@[simp, ftrans_simp]
+theorem ite_apply {α β : Type _} {c : Prop} [Decidable c] (t e : α → β) (x : α) :
+    (ite c t e) x = ite c (t x) (e x) := by if h : c then simp[h] else simp[h]
+
+
+theorem t1 [MeasurableSpace X] (A : Set X) (φ ψ : X → R) (f g : X → R) (μ : Measure X) :
+    ∫' x in A, (if φ x < ψ x then f x else g x) ∂μ
+    =
+    ∫' x in A ∩ {x' | φ x' < ψ x'}, f x ∂μ
+    +
+    ∫' x in A ∩ {x' | ψ x' ≤ φ x'}, g x ∂μ := sorry_proof
+
+theorem t2 [MeasurableSpace X] (φ ψ : X → R) (f g : X → R) (μ : Measure X) :
+    ∫' x, (if φ x < ψ x then f x else g x) ∂μ
+    =
+    (∫' x in {x' | φ x' < ψ x'}, f x ∂μ)
+    +
+    ∫' x in {x' | ψ x' ≤ φ x'}, g x ∂μ := sorry_proof
+
+theorem t3 [MeasurableSpace X] (c : X → Prop) [∀ x, Decidable (c x)] (f g : X → R) (μ : Measure X) :
+    ∫' x, (if c x then f x else g x) ∂μ
+    =
+    (∫' x in {x' | c x'}, f x ∂μ)
+    +
+    (∫' x in {x' | ¬(c x')}, g x ∂μ) := sorry_proof
+
+
+theorem t4 [MeasurableSpace X] (A : Set X) (c : X → Prop) [∀ x, Decidable (c x)] (f g : X → R) (μ : Measure X) :
+    ∫' x in A, (if c x then f x else g x) ∂μ
+    =
+    (∫' x in {x' | c x'} ∩ A, f x ∂μ)
+    +
+    (∫' x in {x' | ¬(c x')} ∩ A, g x ∂μ) := sorry_proof
+
+theorem t3' [MeasurableSpace X] (c : Prop) [Decidable c] (f g : X → R) (μ : Measure X) :
+    ∫' x, (if c then f x else g x) ∂μ
+    =
+    if c then
+      ∫' x, f x ∂μ
+    else
+      ∫' x, g x ∂μ := sorry_proof
+
+
+theorem t4' [MeasurableSpace X] (A : Set X) (c : Prop) [Decidable c] (f g : X → R) (μ : Measure X) :
+    ∫' x in A, (if c then f x else g x) ∂μ
+    =
+    if c then
+      ∫' x in A, f x ∂μ
+    else
+      ∫' x in A, g x ∂μ := sorry_proof
+
+
+theorem set_inter {α} (P Q : α → Prop) : {x | P x} ∩ {x | Q x} = {x | P x ∧ Q x} := by aesop
+
+
+
+-- open Lean Meta in
+-- simproc hihi' (Distribution.extAction _ _) := fun e => do
+
+--   -- let φ := e.appArg!
+--   -- let T := e.appFn!.appArg!.appArg!.appFn!.appArg!
+--   IO.println s!"extAction simproc simplification with distribution {← ppExpr e}"
+
+--   return .continue
+
+theorem split_integral {X} {Y} [MeasureSpace X] [MeasureSpace Y] (f : X×Y → R) :
+    ∫' (xy : X×Y), f xy = ∫' x, ∫' y, f (x,y) := sorry_proof
+
+#check SciLean.toDistribution.arg_f.parDistribDeriv_rule
 #check (cderiv R fun l => timeToFall m l l₂ k₁ k₂ α x)
   rewrite_by
     unfold timeToFall bungeeTension
     autodiff
-    unfold scalarGradient
-    autodiff
+    unfold scalarGradient; autodiff
+    simp (config:={zeta:=false}) only [action_push, ftrans_simp]
+    simp (config:={zeta:=false}) only [t3',t4',t1, t2, t4, ftrans_simp,set_inter]
 
 
-
+l₁
+set_option pp.funBinderTypes true in
 set_option trace.Meta.Tactic.fun_trans true in
+set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.discharge true in
 #check (cderiv R fun l => timeToFall' m l l₂ k₁ k₂ α x)
   rewrite_by
     unfold timeToFall' bungeeTension
-    autodiff
-    unfold scalarGradient
-    autodiff
-    autodiff
+    fun_trans only
+    unfold scalarGradient; autodiff
+    simp only [ftrans_simp, action_push, Distribution.mk_extAction_simproc, split_integral]
+    simp (config:={zeta:=false}) only [t3',t4',t1, t2, t4, ftrans_simp,set_inter]
+    simp only [t3, ftrans_simp]
+    -- rw [Distribution.mk_extAction (X:=R)]
+    -- unfold scalarGradient
+    -- autodiff
+    -- simp only [Distribution.action_iteD,ftrans_simp]
+
 
 
 
@@ -136,3 +215,6 @@ set_option trace.Meta.Tactic.fun_trans true in
 
 
 #check HAdd.hAdd.arg_a0a1.cderiv_rule
+
+
+#check {(x, z) | 1 ≤ x ∧ x ≤ u ∧ 0 ≤ z ∧ z ≤ x}
