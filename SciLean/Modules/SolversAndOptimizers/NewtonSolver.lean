@@ -6,8 +6,8 @@ namespace SciLean
 
 variable
   {R} [RealScalar R]
-  {X} [Vec R X]
-  {Y} [Vec R Y]
+  {X} [SemiHilbert R X]
+  {Y} [SemiHilbert R Y]
 
 set_default_scalar R
 
@@ -23,8 +23,12 @@ structure NewtonSolverSettings where
 /-- Filter specifying how are we supposed to decrease relative/absolute tolerances and increase
 maximum steps to achieve convergence. -/
 opaque newtonSolverSettingsFilter : Filter (NewtonSolverSettings (R:=R)) := default
-
 variable {R}
+
+
+-- NOTE: to compute norm with values in `R` use ‖x‖₂
+variable (x : X)
+#check ‖x‖₂
 
 
 /-- Newton Solver, finds `x` such that `f x = y`
