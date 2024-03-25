@@ -20,54 +20,50 @@ variable
 set_default_scalar R
 
 noncomputable
-def dpure (x dx : X) : 𝒟' X := ⟨fun φ => cderiv R φ x dx⟩
-
+def dpure (x dx : X) : 𝒟' X := ⟨fun φ ⊸ cderiv R φ x dx⟩
 
 @[fun_prop]
-def DistribDifferentiableAt (deg : ℕ∞) (f : X → 𝒟' Y) (x : X) :=
-  ∀ (φ : X → Y → R), ContCDiff R deg (fun (x,y) => φ x y) → CDifferentiable R (fun x => ⟪f x, φ x⟫)
+def DistribDifferentiableAt (f : X → 𝒟' Y) (x : X) :=
+  ∀ (φ : X → 𝒟 Y), CDifferentiableAt R φ x → CDifferentiableAt R (fun x => ⟪f x, φ x⟫) x
 
 
 theorem distribDifferentiableAt_const_test_fun
-    {deg : ℕ∞} {f : X → 𝒟' Y} {x : X}
-    (hf : DistribDifferentiableAt deg f x)
-    {φ : Y → R} (hφ : ContCDiff R deg φ := by fun_prop) :
+    {f : X → 𝒟' Y} {x : X}
+    (hf : DistribDifferentiableAt f x)
+    {φ : 𝒟 Y} :
     CDifferentiableAt R (fun x => ⟪f x, φ⟫) x := by
   apply hf
   fun_prop
 
 
 @[fun_prop]
-def DistribDifferentiable (deg : ℕ∞) (f : X → 𝒟' Y) :=
-  ∀ x, DistribDifferentiableAt deg f x
+def DistribDifferentiable (f : X → 𝒟' Y) :=
+  ∀ x, DistribDifferentiableAt f x
 
 
 open Classical in
 @[fun_trans]
 noncomputable
-def parDistribDeriv (deg : ℕ∞) (f : X → 𝒟' Y) (x dx : X) : 𝒟' Y :=
-  ⟨fun φ =>
-    if _ : ContCDiff R deg φ then
+def parDistribDeriv (f : X → 𝒟' Y) (x dx : X) : 𝒟' Y :=
+  ⟨⟨fun φ =>
+    if _ : DistribDifferentiableAt f x then
       ∂ (x':=x;dx), ⟪f x', φ⟫
     else
-      0⟩
+      0, sorry_proof⟩⟩
 
 
 ----------------------------------------------------------------------------------------------------
 -- Const rule --------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- TODO: we actually need some condition on `T` here
 @[fun_prop]
 theorem DistribDiffrentiable.const_rule (T : 𝒟' X) :
-    DistribDifferentiable (R:=R) deg (fun w : W => T) := by
-  intro x φ hφ
-  simp
-  sorry_proof
+    DistribDifferentiable (fun _ : W => T) := by
+  intro _ φ hφ; simp; fun_prop
 
 @[fun_trans]
 theorem parDistribDeriv.const_rule (T : 𝒟' X) :
-    parDistribDeriv (R:=R) deg (fun w : W => T)
+    parDistribDeriv (fun _ : W => T)
     =
     fun w dw =>
       0 := by
@@ -81,32 +77,31 @@ theorem parDistribDeriv.const_rule (T : 𝒟' X) :
 ----------------------------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem Pure.pure.arg_x.DistribDiffrentiable_rule
-    (f : X → Y) (hf : CDifferentiable R f) (hdeg : 0 < deg) :
-    DistribDifferentiable (R:=R) deg (fun x => pure (f x))  := by
+theorem dirac.arg_x.DistribDiffrentiable_rule
+    (f : X → Y) (hf : CDifferentiable R f) :
+    DistribDifferentiable (R:=R) (fun x => dirac (f x))  := by
   intro x
   unfold DistribDifferentiableAt
   intro φ hφ
-  simp only [action_pure, pure]
-  fun_prop (disch:=assumption)
+  simp [action_dirac, dirac]
+  fun_prop
 
 
 @[fun_trans]
 theorem Pure.pure.arg_x.parDistribDeriv_rule
-    (f : X → Y) (hf : CDifferentiable R f) (hdeg : 0 < deg) :
-    parDistribDeriv (R:=R) deg (fun x => pure (f x))
+    (f : X → Y) (hf : CDifferentiable R f) :
+    parDistribDeriv (R:=R) (fun x => dirac (f x))
     =
     fun x dx =>
       let ydy := fwdDeriv R f x dx
-      (dpure (R:=R) ydy.1 ydy.2).restrictDeg deg := by
+      (dpure (R:=R) ydy.1 ydy.2) := by
   funext x dx; ext φ
   unfold parDistribDeriv dpure
-  simp [pure, fwdDeriv]
-  if h : ContCDiff R deg φ then
-    simp[h]
-    fun_trans (disch:=assumption) only
-  else
-    simp[h]
+  simp [pure, fwdDeriv, DistribDifferentiableAt]
+  fun_trans
+  . intro φ' hφ' h
+    have : CDifferentiableAt R (fun x => (φ' x) (f x)) x := by fun_prop
+    contradiction
 
 
 ----------------------------------------------------------------------------------------------------
@@ -116,8 +111,8 @@ theorem Pure.pure.arg_x.parDistribDeriv_rule
 @[fun_prop]
 theorem DistribDiffrentiable.comp_rule
     (f : Y → 𝒟' Z) (g : X → Y)
-    (hf : DistribDifferentiable deg f) (hg : CDifferentiable R g) :
-    DistribDifferentiable deg (fun x => f (g x)) := by
+    (hf : DistribDifferentiable f) (hg : CDifferentiable R g) :
+    DistribDifferentiable (fun x => f (g x)) := by
   intro x
   unfold DistribDifferentiableAt
   intro φ hφ
@@ -130,23 +125,17 @@ theorem DistribDiffrentiable.comp_rule
 @[fun_trans]
 theorem parDistribDeriv.comp_rule
     (f : Y → 𝒟' Z) (g : X → Y)
-    (hf : DistribDifferentiable deg f) (hg : CDifferentiable R g) :
-    parDistribDeriv deg (fun x => f (g x))
+    (hf : DistribDifferentiable f) (hg : CDifferentiable R g) :
+    parDistribDeriv (fun x => f (g x))
     =
     fun x dx =>
       let ydy := fwdDeriv R g x dx
-      parDistribDeriv deg f ydy.1 ydy.2 := by
+      parDistribDeriv f ydy.1 ydy.2 := by
 
   funext x dx; ext φ
-  unfold parDistribDeriv
-  if h : ContCDiff R deg φ then
-    simp[h]
-    rw[cderiv.comp_rule (K:=R) (f:=fun y => ⟪f y, φ⟫) (g:=g)
-      (hf:=by intro y; apply (hf y); fun_prop) (hg:=by fun_prop)]
-    rfl
-  else
-    simp[h]
-
+  unfvold parDistribDeriv
+  simp[hg]
+  sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
@@ -159,31 +148,28 @@ theorem parDistribDeriv.comp_rule
 @[fun_prop]
 theorem Bind.bind.arg_fx.DistribDifferentiable_rule
     (f : X → Y → 𝒟' Z) (g : X → 𝒟' Y)
-    (hf : DistribDifferentiable deg (fun (x,y) => f x y)) -- `f` has to be nice enough to accomodate action of `g`
-    (hg : DistribDifferentiable deg g) :
-    DistribDifferentiable deg (fun x => g x >>= (f x)) := by
+    (hf : DistribDifferentiable (fun (x,y) => f x y)) -- `f` has to be nice enough to accomodate action of `g`
+    (hg : DistribDifferentiable g) :
+    DistribDifferentiable (fun x => (g x).bind (f x)) := by
 
   intro x
   unfold DistribDifferentiableAt
   intro φ hφ
   simp
-  intro x
-  apply (hg x)
-  . simp
-    sorry_proof -- we need to strenghten assumptions on `f`
+  sorry_proof
 
 
 @[fun_trans]
 theorem Bind.bind.arg_fx.parDistribDiff_rule
     (f : X → Y → 𝒟' Z) (g : X → 𝒟' Y)
-    (hf : DistribDifferentiable deg (fun (x,y) => f x y)) -- `f` has to be nice enough to accomodate action of `g`
-    (hg : DistribDifferentiable deg g) :
-    parDistribDeriv deg (fun x => g x >>= (f x))
+    (hf : DistribDifferentiable (fun (x,y) => f x y)) -- `f` has to be nice enough to accomodate action of `g`
+    (hg : DistribDifferentiable g) :
+    parDistribDeriv (fun x => (g x).bind (f x))
     =
     fun x dx =>
-      ((parDistribDeriv deg g x dx) >>= (f x · ))
+      ((parDistribDeriv  g x dx).bind (f x · ))
       +
-      ((g x) >>= (fun y => parDistribDeriv deg (f · y) x dx)) := sorry_proof
+      ((g x).bind (fun y => parDistribDeriv (f · y) x dx)) := sorry_proof
 
 
 
@@ -193,12 +179,14 @@ theorem Bind.bind.arg_fx.parDistribDiff_rule
 
 variable [MeasureSpace X] [MeasureSpace Y] [MeasureSpace (X×Y)]
 
+open Notation
+
 @[fun_trans]
 theorem cintegral.arg_f.cderiv_distrib_rule (f : W → X → R) :
     cderiv R (fun w => ∫' x, f w x)
     =
     fun w dw =>
-      ⟪parDistribDeriv ⊤ (fun w => (f w ·).toDistribution) w dw, fun _ => 1⟫ := sorry_proof
+      (parDistribDeriv (fun w => (f w ·).toDistribution) w dw).extAction (fun _ => 1) := sorry_proof
 
 
 @[fun_trans]
@@ -206,27 +194,32 @@ theorem cintegral.arg_f.cderiv_distrib_rule' (f : W → X → R) (A : Set X):
     cderiv R (fun w => ∫' x in A, f w x)
     =
     fun w dw =>
-      ⟪ifD A then
-         parDistribDeriv ⊤ (fun w => (f w ·).toDistribution) w dw
+      (ifD A then
+         parDistribDeriv (fun w => (f w ·).toDistribution) w dw
        else
-         0, fun _ => 1⟫ := sorry_proof
+         0).extAction fun _ => 1 := sorry_proof
 
 
 
 @[fun_trans]
 theorem cintegral.arg_f.parDistribDeriv_rule (f : W → X → Y → R) :
-    parDistribDeriv deg (fun w => (fun x => ∫' y, f w x y).toDistribution)
+    parDistribDeriv (fun w => (fun x => ∫' y, f w x y).toDistribution)
     =
     fun w dw =>
-      ⟨fun φ => ⟪parDistribDeriv ⊤ (fun w => (fun (x,y) => f w x y).toDistribution) w dw, fun (x,_) => φ x⟫⟩ := sorry_proof
+      ⟨⟨fun φ => (parDistribDeriv (fun w => (fun (x,y) => f w x y).toDistribution) w dw).extAction fun (x,_) => φ x, sorry_proof⟩⟩ := sorry_proof
 
+
+#check Set.pi
 
 @[fun_trans]
 theorem cintegral.arg_f.parDistribDeriv_rule' (f : W → X → Y → R) (B : X → Set Y) :
-    parDistribDeriv deg (fun w => (fun x => ∫' y in B x, f w x y).toDistribution)
+    parDistribDeriv (fun w => (fun x => ∫' y in B x, f w x y).toDistribution)
     =
     fun w dw =>
-      ⟨fun φ => ⟪ifD {xy : X×Y | xy.2 ∈ B xy.1} then parDistribDeriv ⊤ (fun w => (fun (x,y) => f w x y).toDistribution) w dw else 0, fun (x,_) => φ x⟫⟩ := sorry_proof
+       ⟨⟨fun φ => (ifD {xy : X×Y | xy.2 ∈ B xy.1} then
+                    parDistribDeriv (fun w => (fun (x,y) => f w x y).toDistribution) w dw
+                  else
+                    0).extAction fun (x,_) => φ x, sorry_proof⟩⟩ := sorry_proof
 
 
 -- @[fun_trans]
@@ -249,25 +242,21 @@ theorem cintegral.arg_f.parDistribDeriv_rule' (f : W → X → Y → R) (B : X �
 @[fun_prop]
 theorem HAdd.hAdd.arg_a0a1.DistribDifferentiable_rule (f g : W → X → R)
     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
-    DistribDifferentiable deg (fun w => (fun x => f w x + g w x).toDistribution) := by
+    DistribDifferentiable (fun w => (fun x => f w x + g w x).toDistribution) := by
   intro _ φ hφ; simp; sorry_proof -- fun_prop (disch:=assumption)
 
+-- we probably only require local integrability in `x` of f and g for this to be true
 @[fun_trans]
 theorem HAdd.hAdd.arg_a0a1.parDistribDeriv_rule (f g : W → X → R)
     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
-    parDistribDeriv deg (fun w => (fun x => f w x + g w x).toDistribution)
+    parDistribDeriv (fun w => (fun x => f w x + g w x).toDistribution)
     =
     fun w dw =>
-      parDistribDeriv deg (fun w => (f w ·).toDistribution) w dw
+      parDistribDeriv (fun w => (f w ·).toDistribution) w dw
       +
-      parDistribDeriv deg (fun w => (g w ·).toDistribution) w dw := by
+      parDistribDeriv (fun w => (g w ·).toDistribution) w dw := by
   funext w dw; ext φ; simp[parDistribDeriv]
-  fun_trans
-  if h : ContCDiff R deg φ then
-    simp[h]
-    sorry_proof
-  else
-    simp[h]
+  sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
@@ -275,28 +264,23 @@ theorem HAdd.hAdd.arg_a0a1.parDistribDeriv_rule (f g : W → X → R)
 ----------------------------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem HSub.hSub.arg_a0a1.DistribDifferentiable_rule (f g : W → X → R) (hdeg : 0 < deg)
+theorem HSub.hSub.arg_a0a1.DistribDifferentiable_rule (f g : W → X → R)
     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
-    DistribDifferentiable deg (fun w => (fun x => f w x - g w x).toDistribution) := by
+    DistribDifferentiable (fun w => (fun x => f w x - g w x).toDistribution) := by
   intro _ φ hφ; simp; sorry_proof -- fun_prop (disch:=assumption)
 
 
 @[fun_trans]
-theorem HSub.hSub.arg_a0a1.parDistribDeriv_rule (f g : W → X → R) (hdeg : 0 < deg)
+theorem HSub.hSub.arg_a0a1.parDistribDeriv_rule (f g : W → X → R)
     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
-    parDistribDeriv deg (fun w => (fun x => f w x - g w x).toDistribution)
+    parDistribDeriv (fun w => (fun x => f w x - g w x).toDistribution)
     =
     fun w dw =>
-      parDistribDeriv deg (fun w => (f w ·).toDistribution) w dw
+      parDistribDeriv (fun w => (f w ·).toDistribution) w dw
       -
-      parDistribDeriv deg (fun w => (g w ·).toDistribution) w dw := by
+      parDistribDeriv (fun w => (g w ·).toDistribution) w dw := by
   funext w dw; ext φ; simp[parDistribDeriv]
-  fun_trans
-  if h : ContCDiff R deg φ then
-    simp[h]
-    sorry_proof
-  else
-    simp[h]
+  sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
@@ -306,24 +290,19 @@ theorem HSub.hSub.arg_a0a1.parDistribDeriv_rule (f g : W → X → R) (hdeg : 0 
 @[fun_prop]
 theorem HMul.hMul.arg_a0a1.DistribDifferentiable_rule (f : W → X → R) (r : R)
     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
-    DistribDifferentiable deg (fun w => (fun x => r * f w x).toDistribution) := by
+    DistribDifferentiable (fun w => (fun x => r * f w x).toDistribution) := by
   intro _ φ hφ; simp; sorry_proof -- fun_prop (disch:=assumption)
 
 
 @[fun_trans]
 theorem HMul.hMul.arg_a0a1.parDistribDeriv_rule (f : W → X → R) (r : R)
     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
-    parDistribDeriv deg (fun w => (fun x => r * f w x).toDistribution)
+    parDistribDeriv (fun w => (fun x => r * f w x).toDistribution)
     =
     fun w dw =>
-      r • (parDistribDeriv deg (fun w => (f w ·).toDistribution) w dw) := by
+      r • (parDistribDeriv (fun w => (f w ·).toDistribution) w dw) := by
   funext w dw; ext φ; simp[parDistribDeriv]
-  fun_trans
-  if h : ContCDiff R deg φ then
-    simp[h]
-    sorry_proof
-  else
-    simp[h]
+  sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
@@ -333,21 +312,16 @@ theorem HMul.hMul.arg_a0a1.parDistribDeriv_rule (f : W → X → R) (r : R)
 @[fun_prop]
 theorem HDiv.hDiv.arg_a0a1.DistribDifferentiable_rule (f : W → X → R) (r : R)
     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
-    DistribDifferentiable deg (fun w => (fun x => f w x / r).toDistribution) := by
+    DistribDifferentiable (fun w => (fun x => f w x / r).toDistribution) := by
   intro _ φ hφ; simp; sorry_proof -- fun_prop (disch:=assumption)
 
 
 @[fun_trans]
 theorem HDiv.hDiv.arg_a0a1.parDistribDeriv_rule (f : W → X → R) (r : R)
     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
-    parDistribDeriv deg (fun w => (fun x => f w x / r).toDistribution)
+    parDistribDeriv (fun w => (fun x => f w x / r).toDistribution)
     =
     fun w dw =>
-      r⁻¹ • (parDistribDeriv deg (fun w => (f w ·).toDistribution) w dw) := by
+      r⁻¹ • (parDistribDeriv (fun w => (f w ·).toDistribution) w dw) := by
   funext w dw; ext φ; simp[parDistribDeriv]
-  fun_trans
-  if h : ContCDiff R deg φ then
-    simp[h]
-    sorry_proof
-  else
-    simp[h]
+  sorry_proof

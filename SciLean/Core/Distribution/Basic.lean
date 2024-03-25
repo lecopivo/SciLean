@@ -2,27 +2,35 @@ import Mathlib.MeasureTheory.Measure.GiryMonad
 import Mathlib.MeasureTheory.Decomposition.Lebesgue
 
 import SciLean.Core.FunctionPropositions
+import SciLean.Core.FunctionSpaces
 import SciLean.Core.Integral.CIntegral
+import SciLean.Core.Distribution.TestFunction
+import SciLean.Core.Distribution.SimpAttr
 import SciLean.Util.SorryProof
+import SciLean.Util.Limit
 
 open MeasureTheory ENNReal
 
 namespace SciLean
 
-local notation "∞" => (⊤ : ℕ∞)
-
 variable
   {R} [RealScalar R]
-  {W} [Vec R W] [Module ℝ W]-- [NormedAddCommGroup W] [NormedSpace ℝ W] [CompleteSpace W]
-  {X} [Vec R X] -- [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
-  {Y} [Vec R Y] [Module ℝ Y] -- [NormedAddCommGroup Y] [NormedSpace ℝ Y] [CompleteSpace Y]
-  {Z} [Vec R Z] -- [NormedAddCommGroup Z] [NormedSpace ℝ Z] [CompleteSpace Z]
+  {W} [Vec R W] [Module ℝ W]
+  {X} [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)]
+  {Y} [Vec R Y] [Module ℝ Y]
+  {Z} [Vec R Z]
 
+set_default_scalar R
 
-/-- Generalized function with domain `X`
-todo: consider renaming it to GeneralizedFunction X. -/
-structure Distribution (R : Type u) [RealScalar R] (X : Type v) where
-  action : (X → R) → R
+example
+    (R : Type u) [RealScalar R]
+    (X : Type v) [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)] :
+    Vec R (TestFunctionSpace R X) := by infer_instance
+
+variable (R X)
+structure Distribution where
+  action : (𝒟 X) ⊸ R
+variable {R X}
 
 namespace Distribution
 scoped notation "⟪" f' ", " φ "⟫" => Distribution.action f' φ
@@ -36,20 +44,79 @@ notation "𝒟'" X => Distribution defaultScalar% X
   | `($(_) $_ $X) => `(𝒟' $X)
   | _ => throw ()
 
-set_default_scalar R
-
-@[simp]
-theorem action_mk_apply (f : (X → R) → R) (φ : X → R) :
+@[simp, ftrans_simp]
+theorem action_mk_apply (f : (𝒟 X) ⊸ R) (φ : 𝒟 X) :
     ⟪Distribution.mk (R:=R) f, φ⟫ = f φ := by rfl
 
 @[ext]
 theorem Distribution.ext (x y : Distribution R X) :
-    (∀ (φ : X → R), ⟪x,φ⟫ = ⟪y,φ⟫)
+    (∀ (φ : 𝒟 X), ⟪x,φ⟫ = ⟪y,φ⟫)
     →
     x = y := by
 
-  induction x; induction y; simp only [action_mk_apply, mk.injEq]
-  intro h; funext; tauto
+  induction x; induction y; simp only [action_mk_apply, mk.injEq]; aesop
+
+
+----------------------------------------------------------------------------------------------------
+-- Algebra -----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+instance : Zero (𝒟' X) := ⟨⟨fun _φ ⊸ 0⟩⟩
+instance : Add (𝒟' X) := ⟨fun f g => ⟨fun φ ⊸ ⟪f, φ⟫ + ⟪g, φ⟫⟩⟩
+instance : Sub (𝒟' X) := ⟨fun f g => ⟨fun φ ⊸ ⟪f, φ⟫ - ⟪g, φ⟫⟩⟩
+instance : Neg (𝒟' X) := ⟨fun f => ⟨fun φ ⊸ -⟪f, φ⟫⟩⟩
+instance : SMul R (𝒟' X) := ⟨fun r f => ⟨fun φ ⊸ r • ⟪f, φ⟫⟩⟩
+
+-- not sure what exact the topology is supposed to be here
+instance : UniformSpace (𝒟' X) := sorry
+instance : Vec R (𝒟' X) := Vec.mkSorryProofs
+
+
+----------------------------------------------------------------------------------------------------
+-- Extended action ---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+open Notation in
+@[pp_dot]
+noncomputable
+def Distribution.extAction (T : 𝒟' X) (φ : X → R) : R := limit n → ∞, ⟪T, testFunApprox n φ⟫
+
+
+-- Lean usually fails to unify this theorem, thus we have a custom simproc to apply it
+def Distribution.mk_extAction (T : (X → R) → R) (hT : IsSmoothLinearMap R (fun φ : 𝒟 X => T φ)) (φ : X → R) :
+   (Distribution.mk (⟨fun φ => T φ,hT⟩)).extAction φ = T φ := sorry_proof
+
+open Lean Meta in
+/-- Simproc to apply `Distribution.mk_extAction` theorem -/
+simproc_decl Distribution.mk_extAction_simproc (Distribution.extAction (Distribution.mk (SmoothLinearMap.mk _ _)) _) := fun e => do
+
+  let φ := e.appArg!
+  let T := e.appFn!.appArg!
+
+  let .lam xName xType xBody xBi := T.appArg!.appFn!.appArg!
+    | return .continue
+  let hT := T.appArg!.appArg!
+
+  withLocalDecl xName xBi xType fun x => do
+  let R := xType.getArg! 0
+  let X := xType.getArg! 2
+  withLocalDecl `φ' xBi (← mkArrow X R) fun φ' => do
+    let b := xBody.instantiate1 x
+    let b := b.replace (fun e' =>
+      if e'.isAppOf ``DFunLike.coe &&
+         5 ≤ e'.getAppNumArgs &&
+         e'.getArg! 4 == x then
+          .some (mkAppN φ' e'.getAppArgs[5:])
+      else
+        .none)
+
+    if b.containsFVar x.fvarId! then
+      return .continue
+
+    let T ← mkLambdaFVars #[φ'] b
+    let prf ← mkAppM ``Distribution.mk_extAction #[T, hT, φ]
+    return .visit {expr := T.beta #[φ], proof? := prf}
+
 
 
 ----------------------------------------------------------------------------------------------------
@@ -58,21 +125,27 @@ theorem Distribution.ext (x y : Distribution R X) :
 
 -- def dirac (x : X) : Distribution X := fun φ => φ x
 
-instance : Monad (Distribution R) where
-  pure := fun x => ⟨fun φ => φ x⟩
-  bind := fun x f => ⟨fun φ => ⟪x, fun x' => ⟪(f x'), φ⟫⟫⟩
+-- instance : Monad (Distribution R) where
+--   pure := fun x => ⟨fun φ => φ x⟩
+--   bind := fun x f => ⟨fun φ => ⟪x, fun x' => ⟪(f x'), φ⟫⟫⟩
 
+-- instance : LawfulMonad (Distribution R) where
+--   bind_pure_comp := by intros; rfl
+--   bind_map       := by intros; rfl
+--   pure_bind      := by intros; rfl
+--   bind_assoc     := by intros; rfl
+--   map_const      := by intros; rfl
+--   id_map         := by intros; rfl
+--   seqLeft_eq     := by intros; rfl
+--   seqRight_eq    := by intros; rfl
+--   pure_seq       := by intros; rfl
 
-instance : LawfulMonad (Distribution R) where
-  bind_pure_comp := by intros; rfl
-  bind_map       := by intros; rfl
-  pure_bind      := by intros; rfl
-  bind_assoc     := by intros; rfl
-  map_const      := by intros; rfl
-  id_map         := by intros; rfl
-  seqLeft_eq     := by intros; rfl
-  seqRight_eq    := by intros; rfl
-  pure_seq       := by intros; rfl
+def dirac (x : X) : 𝒟' X := ⟨fun φ ⊸ φ x⟩
+
+open Notation
+noncomputable
+def Distribution.bind (x' : 𝒟' X) (f : X → 𝒟' Y) : 𝒟' Y :=
+  limit (n : ℕ) → ∞, ⟨⟨fun φ => ⟪x', testFunApprox n fun x => ⟪f x, φ⟫⟫, sorry_proof⟩⟩
 
 
 ----------------------------------------------------------------------------------------------------
@@ -80,129 +153,100 @@ instance : LawfulMonad (Distribution R) where
 ----------------------------------------------------------------------------------------------------
 
 @[simp, ftrans_simp]
-theorem action_pure (x : X) (φ : X → R) : ⟪((pure x) : 𝒟' X), φ⟫ = φ x := by rfl
+theorem action_dirac (x : X) (φ : 𝒟 X) : ⟪((dirac x) : 𝒟' X), φ⟫ = φ x := by rfl
 
 @[simp, ftrans_simp]
-theorem action_bind (x : 𝒟' X) (f : X → 𝒟' Y) (φ : Y → R) :
-    ⟪x >>= f, φ⟫ = ⟪x, fun x' => ⟪f x', φ⟫⟫ := by rfl
+theorem action_bind (x : 𝒟' X) (f : X → 𝒟' Y) (φ : 𝒟 Y) :
+    ⟪x.bind f, φ⟫ = x.extAction (fun x' => ⟪f x', φ⟫) := by
+  simp[Distribution.bind]
+  sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
 -- Arithmetics -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-instance : Zero (Distribution R X) := ⟨⟨fun _φ => 0⟩⟩
-instance : Add (Distribution R X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ + ⟪g, φ⟫⟩⟩
-instance : Sub (Distribution R X) := ⟨fun f g => ⟨fun φ => ⟪f, φ⟫ - ⟪g, φ⟫⟩⟩
-instance : SMul R (Distribution R X) := ⟨fun r f => ⟨fun φ => r • ⟪f, φ⟫⟩⟩
+@[simp, ftrans_simp, action_push]
+theorem Distribution.zero_action (φ : 𝒟 X) : ⟪(0 : 𝒟' X), φ⟫ = 0 := by rfl
 
-@[simp, ftrans_simp]
-theorem Distribution.zero_action (φ : X → R) : ⟪(0 : 𝒟' X), φ⟫ = 0 := by rfl
+@[action_push]
+theorem Distribution.add_action (T T' : 𝒟' X) (φ : 𝒟 X) : ⟪T + T', φ⟫ = ⟪T,φ⟫ + ⟪T',φ⟫ := by rfl
 
-@[simp, ftrans_simp]
-theorem Distribution.add_action (T T' : 𝒟' X) (φ : X → R) : ⟪T + T', φ⟫ = ⟪T,φ⟫ + ⟪T',φ⟫ := by rfl
+@[action_push]
+theorem Distribution.sub_action (T T' : 𝒟' X) (φ : 𝒟 X) : ⟪T - T', φ⟫ = ⟪T,φ⟫ - ⟪T',φ⟫ := by rfl
 
-@[simp, ftrans_simp]
-theorem Distribution.sub_action (T T' : 𝒟' X) (φ : X → R) : ⟪T - T', φ⟫ = ⟪T,φ⟫ - ⟪T',φ⟫ := by rfl
+@[action_push]
+theorem Distribution.smul_action (r : R) (T : 𝒟' X) (φ : 𝒟 X) : ⟪r • T, φ⟫ = r • ⟪T,φ⟫ := by rfl
 
-@[simp, ftrans_simp]
-theorem Distribution.smul_action (r : R) (T : 𝒟' X) (φ : X → R) : ⟪r • T, φ⟫ = r • ⟪T,φ⟫ := by rfl
+@[action_push]
+theorem Distribution.neg_action (T : 𝒟' X) (φ : 𝒟 X) : ⟪- T, φ⟫ = - ⟪T,φ⟫ := by rfl
 
+@[simp, ftrans_simp, action_push]
+theorem Distribution.zero_extAction (φ : X → R) : (0 : 𝒟' X).extAction φ = 0 := by sorry_proof
 
+-- todo: this needs some integrability condition
+@[action_push]
+theorem Distribution.add_extAction (T T' : 𝒟' X) (φ : X → R) :
+    (T + T').extAction φ = T.extAction φ + T'.extAction φ := by sorry_proof
 
-----------------------------------------------------------------------------------------------------
--- Degree ------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
+@[action_push]
+theorem Distribution.sub_extAction (T T' : 𝒟' X) (φ : X → R) :
+    (T - T').extAction φ = T.extAction φ - T'.extAction φ := by sorry_proof
 
--- TODO: Move somewhere
-class TCOr (A B : Sort _) where
-  val : PSum A B
+@[action_push]
+theorem Distribution.smul_extAction (r : R) (T : 𝒟' X) (φ : X → R) :
+    (r • T).extAction φ = r • T.extAction φ := by sorry_proof
 
-set_option checkBinderAnnotations false in
-instance {A B} [inst : A] : TCOr A B where
-  val := .inl inst
-
-set_option checkBinderAnnotations false in
-instance {A B} [inst : B] : TCOr A B where
-  val := .inr inst
-
-
--- TODO: refine the notion of distribution degree
---       It should include differentiability, support and integrability
-open Classical in
-@[pp_dot]
-noncomputable
-def Distribution.restrictDeg {X} [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)]
-    (T : 𝒟' X) (deg : ℕ∞) : 𝒟' X :=
-  ⟨fun φ =>
-    match space.val with
-    | .inl _ =>
-      if _ : ContCDiff R deg φ then
-        ⟪T, φ⟫
-      else
-        0
-    | .inr _ => ⟪T,φ⟫⟩
-
-
-@[simp, ftrans_simp]
-theorem restrictDeg_restrictDeg (deg deg' : ℕ∞) (T : 𝒟' X) :
-    (T.restrictDeg deg).restrictDeg deg' = T.restrictDeg (deg ⊔ deg') := sorry_proof
-
-@[simp, ftrans_simp]
-theorem action_restricDeg (deg : ℕ∞) (T : 𝒟' X) (φ : X → R) (hφ : ContCDiff R deg φ) :
-    ⟪T.restrictDeg deg, φ⟫ = ⟪T, φ⟫ := by
-  unfold restrictDeg
-  simp; tauto
-
-@[simp, ftrans_simp]
-theorem action_restricDeg' (deg : ℕ∞) (T : 𝒟' X) (φ : X → R) (hφ : ¬(ContCDiff R deg φ)) :
-    ⟪T.restrictDeg deg, φ⟫ = 0 := by
-  unfold restrictDeg
-  simp; tauto
+@[action_push]
+theorem Distribution.neg_extAction (T : 𝒟' X) (φ : X → R) :
+    (- T).extAction φ = - T.extAction φ := by sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
--- Functions as distributions -----------------------------------------------------------------------
+-- Functions as distributions ----------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
+
+variable [MeasureSpace X]
 
 @[coe]
 noncomputable
-def _root_.Function.toDistribution {X} [MeasureSpace X] (f : X → R) : 𝒟' X :=
-  ⟨fun φ => ∫' x, f x • φ x⟩
+def _root_.Function.toDistribution (f : X → R) : 𝒟' X :=
+  ⟨fun φ ⊸ ∫' x, f x • φ x⟩
 
-@[simp,ftrans_simp]
-theorem Function.toDistribution_action {X} [MeasureSpace X] (f : X → R) (φ : X → R) :
-    ⟪f.toDistribution, φ⟫ = ∫' x, f x * φ x := by rfl
-
-def Distribution.IsFunction {X} [MeasureSpace X] (T : 𝒟' X) : Prop :=
-  ∃ (f : X → R), ∀ (φ : X → R),
+def Distribution.IsFunction (T : 𝒟' X) : Prop :=
+  ∃ (f : X → R), ∀ (φ : 𝒟 X),
       ⟪T, φ⟫ = ∫' x, f x • φ x
 
 open Classical
 noncomputable
-def Distribution.toFunction {X} [MeasureSpace X] (T : 𝒟' X) : X → R :=
+def Distribution.toFunction (T : 𝒟' X) : X → R :=
   if h : T.IsFunction then
     choose h
   else
     0
 
--- I do not think that this multiplication is good enough
--- We should be able to multiply nasty distribution with good enough function
-noncomputable
-instance {X} [MeasureSpace X] : Mul (𝒟' X) :=
-  ⟨fun T S => (fun x => T.toFunction x * S.toFunction x).toDistribution⟩
+@[action_push]
+theorem Function.toDistribution_action (f : X → R) (φ : 𝒟 X) :
+    ⟪f.toDistribution, φ⟫ = ∫' x, f x * φ x := by rfl
+
+@[action_push]
+theorem Function.toDistribution_extAction (f : X → R) (φ : X → R) :
+    f.toDistribution.extAction φ
+    =
+    ∫' x, f x * φ x := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
 -- Distributional if statement ---------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-open Classical in
+open Classical Notation in
 noncomputable
 def iteD (A : Set X) (t e : 𝒟' X) : 𝒟' X :=
-  ⟨fun φ =>
-    ⟪t, fun x => if x ∈ A then φ x else 0⟫ +
-    ⟪e, fun x => if x ∉ A then φ x else 0⟫⟩
+  limit n → ∞,
+  ⟨⟨fun φ =>
+    ⟪t, testFunApprox n fun x => if x ∈ A then φ x else 0⟫ +
+    ⟪e, testFunApprox n fun x => if x ∉ A then φ x else 0⟫, sorry_proof⟩⟩
 
 open Lean.Parser Term in
 syntax withPosition("ifD " term " then "
@@ -219,6 +263,17 @@ def unexpandIteD : Lean.PrettyPrinter.Unexpander
   | `($(_) $A $t $e) => `(ifD $A then $t else $e)
   | _ => throw ()
 
+@[action_push]
+theorem Distribution.action_iteD (A : Set X) (t e : 𝒟' X) (φ : 𝒟 X) :
+    ⟪iteD A t e, φ⟫ =
+        t.extAction (fun x => if x ∈ A then φ x else 0) +
+        e.extAction (fun x => if x ∉ A then φ x else 0) := by sorry_proof
+
+@[action_push]
+theorem Distribution.extAction_iteD (A : Set X) (t e : 𝒟' X) (φ : X → R) :
+    (iteD A t e).extAction φ =
+        t.extAction (fun x => if x ∈ A then φ x else 0) +
+        e.extAction (fun x => if x ∉ A then φ x else 0) := by sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
@@ -226,28 +281,23 @@ def unexpandIteD : Lean.PrettyPrinter.Unexpander
 ----------------------------------------------------------------------------------------------------
 
 -- open Classical in
+variable [MeasurableSpace X]
 @[coe]
 noncomputable
-def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X}
+def _root_.MeasureTheory.Measure.toDistribution
     (μ : Measure X) : 𝒟' X :=
-  ⟨fun φ => ∫' x, φ x ∂μ⟩
+  ⟨fun φ ⊸ ∫' x, φ x ∂μ⟩
 
 noncomputable
-instance {X} [MeasurableSpace X] : Coe (Measure X) (𝒟' X) := ⟨fun μ => μ.toDistribution⟩
+instance : Coe (Measure X) (𝒟' X) := ⟨fun μ => μ.toDistribution⟩
 
--- I'm a bit unsure about this definition
--- For example under what conditions `x.IsMeasure → ∀ x', (f x').IsMeasure → (x >>= f).IsMeasure`
--- I'm a bit affraid that with this definition this might never be true as you can always pick
--- really nasty `φ` to screw up the integral
--- So I think that there has to be some condition on `φ`. Likely they should be required to be test funcions
-
-def Distribution.IsMeasure {X} [MeasurableSpace X] (f : 𝒟' X) : Prop :=
-  ∃ (μ : Measure X), ∀ (φ : X → R),
+def Distribution.IsMeasure (f : 𝒟' X) : Prop :=
+  ∃ (μ : Measure X), ∀ (φ : 𝒟 X),
       ⟪f, φ⟫ = ∫' x, φ x ∂μ
 
 open Classical
 noncomputable
-def Distribution.toMeasure {X} [MeasurableSpace X] (f' : 𝒟' X) : Measure X :=
+def Distribution.toMeasure (f' : 𝒟' X) : Measure X :=
   if h : f'.IsMeasure then
     choose h
   else

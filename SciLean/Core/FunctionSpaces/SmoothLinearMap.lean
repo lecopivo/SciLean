@@ -34,6 +34,7 @@ macro X:term:25 " ⊸ " Y:term:26 : term =>
 @[fun_prop]
 theorem SmoothLinearMap_apply_right (f : X ⊸[K] Y) : IsSmoothLinearMap K (fun x => f x) := f.2
 
+
 -- Lambda function notation ----------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -47,12 +48,23 @@ theorem SmoothLinearMap.mk_eval (x : X) (f : X → Y) (hf : IsSmoothLinearMap K 
 theorem SmoothLinearMap.eta_reduce (f : SmoothLinearMap K X Y) :
     (mk f.1 f.2) = f := by rfl
 
+@[ext]
+theorem SmoothLinearMap.ext (f g : X ⊸[K] Y) : (∀ x, f x = g x) → f = g := sorry_proof
+
 variable (K)
 def SmoothLinearMap.mk' (f : X → Y) (hf : IsSmoothLinearMap K f) : X ⊸[K] Y := ⟨f,hf⟩
+
+@[simp, ftrans_simp]
+theorem SmoothLinearMap.mk'_eval (x : X) (f : X → Y) (hf : IsSmoothLinearMap K f) :
+    mk' K f hf x = f x := by rfl
 
 open Lean Parser Term in
 macro "fun " x:funBinder " ⊸[" K:term "] " b:term : term =>
   `(SmoothLinearMap.mk' $K (fun $x => $b) (by fun_prop))
+
+open Lean Parser Term in
+macro "fun " x:funBinder " ⊸ " b:term : term =>
+  `(SmoothLinearMap.mk' defaultScalar% (fun $x => $b) (by fun_prop))
 
 @[app_unexpander SmoothLinearMap.mk'] def unexpandSmoothLinearMapMk : Lean.PrettyPrinter.Unexpander
 

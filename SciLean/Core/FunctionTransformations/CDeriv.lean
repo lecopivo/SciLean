@@ -64,6 +64,18 @@ theorem cderiv.arg_dx.IsLinearMap_rule
   (f : X → Y) (x : X) (dx : W → X) (hf : CDifferentiableAt K f x) (hdx : IsLinearMap K dx)
   : IsLinearMap K (fun w => cderiv K f x (dx w)) := by fun_prop
 
+
+@[fun_prop]
+theorem cderiv.arg_f.IsLinearMap_rule
+    (f : X → Y → Z) (hf : ∀ x, CDifferentiable K (fun y => f x y)) (hf' : ∀ y, IsLinearMap K (fun x => f x y)) :
+    IsLinearMap K (fun x => cderiv K (f x ·)) := sorry_proof
+
+@[fun_prop]
+theorem cderiv.arg_f.IsSmoothLinearMap_rule
+    (f : X → Y → Z) (hf : CDifferentiable K (fun (x,y) => f x y)) (hf' : ∀ y, IsLinearMap K (fun x => f x y)) :
+    IsSmoothLinearMap K (fun x => cderiv K (f x ·)) := by constructor; fun_prop; sorry_proof /- differentiable and linear implies smooth -/
+
+
 variable (K)
 
 -- Basic lambda calculus rules -------------------------------------------------
