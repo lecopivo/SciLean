@@ -1,7 +1,6 @@
 import SciLean.Core
 import SciLean.Util.Limit
 
-
 namespace SciLean
 
 variable
@@ -31,19 +30,16 @@ variable (x : X)
 #check ‖x‖₂
 
 
-/-- Newton Solver, finds `x` such that `f x = y`
+/-- Newton Solver, finds `x` such that `f x = 0`
 
 Arguments:
 - `s`n settings
 - `f` function to invert
 - `iJ` inverse jacobian of `f`
-- `x₀` initial guess for `x`
-- `y` function value to be inverted -/
-def newtonSolver (s : NewtonSolverSettings R) (f : X → Y) (iJ : X → Y → X) (x₀ : X) (y : Y) : X := x₀
-  -- TODO: implement newton solver here
-  -- update step
-  -- x' := x - iJ x (f x)
-
+- `x₀` initial guess for `x` -/
+def newtonSolver (s : NewtonSolverSettings R) (f : X → Y) (iJ : X → Y → X) (x₀ : X) : X :=
+  -- TODO: proper implementation
+  x₀ - iJ x₀ (f x₀)
 
 
 
@@ -51,23 +47,18 @@ open Notation
 
 variable (R)
 /-- Predicate saying that newton solver converges when solving `f x = y` with initial guess `x₀` -/
-def NewtonSolverConvergesAt  (f : X → Y) (x₀ : X) (y : Y) : Prop :=
-  f.invFun y
+def NewtonSolverConvergesAt (f : X → Y) (x₀ : X) : Prop :=
+  f.invFun 0
   =
   let iJ := (fun x => (∂ (x':=x), f x').invFun)
-  (limit s ∈ newtonSolverSettingsFilter R, newtonSolver s f iJ x₀ y)
+  (limit s ∈ newtonSolverSettingsFilter R, newtonSolver s f iJ x₀)
 variable {R}
 
 
--- NOTE: this theorems seems like a completely useless as a mathematical theorem as it is tautology `A → A`.
---       It is used as a rewrite rule when creating approximate programs and `NewtonSolverConvergesAt` packages
---       the statement of this rewrite rule.
---
---       Most of the time we are not interested in proving `NewtonSolverConvergesAt` we just want to
---       keep it around such that we remember we are assuming it when running our program.
 theorem invFun_as_newtonSolver {f : X → Y} (x₀ : X) {y : Y}
-    (h : NewtonSolverConvergesAt R f x₀ y) :
+    (hf : CDifferentiable R f) /- some sensible invertibility condition on `f` -/
+    (h : NewtonSolverConvergesAt R (fun x => f x - y) x₀) :
     f.invFun y
     =
     let iJ := (fun x => (∂ (x':=x), f x').invFun)
-    (limit s ∈ newtonSolverSettingsFilter R, newtonSolver s f iJ x₀ y) := h
+    (limit s ∈ newtonSolverSettingsFilter R, newtonSolver s (fun x => f x - y) iJ x₀) := sorry
