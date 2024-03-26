@@ -6,7 +6,7 @@ import SciLean.Core.Rand.Tactic
 
 open MeasureTheory ENNReal Finset
 
-namespace SciLean.Prob
+namespace SciLean.Rand
 
 variable {R} [RealScalar R]
 

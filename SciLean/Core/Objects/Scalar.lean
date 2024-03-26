@@ -291,6 +291,27 @@ theorem scalar_abs_one : Scalar.abs (1 : R) = 1 := by sorry_proof
 theorem scalar_abs_zero : Scalar.abs (0 : R) = 0 := by sorry_proof
 
 @[simp, ftrans_simp]
+theorem scalar_abs_neg (r : R) : Scalar.abs (- r) = Scalar.abs r := by sorry_proof
+
+@[simp, ftrans_simp]
 theorem scalar_div_one (x : R) : x / 1 = x := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_sqrt_one  : Scalar.sqrt (1 : R) = 1 := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_sqrt_zero  : Scalar.sqrt (0 : R) = 0 := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_max_one_zero  : max (1 : R) (0 : R) = 1 := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_max_zero_one  : max (0 : R) (1 : R) = 1 := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_min_one_zero  : min (1 : R) (0 : R) = 0 := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem scalar_min_zero_one  : min (0 : R) (1 : R) = 0 := by sorry_proof
 
 end SimpTheorems

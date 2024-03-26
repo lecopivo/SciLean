@@ -6,7 +6,7 @@ import Mathlib.Tactic.FieldSimp
 
 open MeasureTheory ENNReal BigOperators Finset
 
-namespace SciLean.Prob
+namespace SciLean.Rand
 
 variable {R} [RealScalar R] [ToString R]
 

@@ -9,7 +9,7 @@ import SciLean.Core.FunctionSpaces
 import SciLean.Core.Monads
 import SciLean.Core.Notation
 
--- import SciLean.Core.Rand
+import SciLean.Core.Rand
 
 import SciLean.Core.Approx.Basic
 import SciLean.Core.Approx.ApproxLimit

@@ -4,7 +4,7 @@ import SciLean.Core.FloatAsReal
 -- import SciLean.Modules.Prob.DRand
 -- import SciLean.Modules.Prob.FDRand
 
-namespace SciLean
+namespace SciLean.Rand
 
 variable
   {R} [RealScalar R]

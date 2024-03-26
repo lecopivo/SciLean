@@ -9,7 +9,7 @@ import Mathlib.MeasureTheory.Measure.GiryMonad
 
 open MeasureTheory ENNReal BigOperators Finset
 
-namespace SciLean
+namespace SciLean.Rand
 
 abbrev erase (a : α) : Erased α := .mk a
 

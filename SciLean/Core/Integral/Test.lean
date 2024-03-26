@@ -26,37 +26,3 @@ theorem Scalar.sqrt_pow (r : R) : Scalar.sqrt (r^2) = Scalar.abs r := sorry_proo
 
 @[simp, ftrans_simp]
 theorem Scalar.abs_abs (r : R) : Scalar.abs (Scalar.abs r) = Scalar.abs r := sorry_proof
-
---  Nat.succ_sub_succ_eq_sub, tsub_zero]
--- SciLean.HasAdjDiff R fun x => (SciLean.Scalar.cos x, SciLean.Scalar.sin x)
-
--- set_option trace.Meta.Tactic.simp.discharge true in
--- set_option trace.Meta.Tactic.simp.rewrite true in
-set_option trace.Meta.Tactic.fun_trans true in
-#check
-  (cderiv R fun (t : R) => ∫' (x : R×R),
-    if x.1^2 + x.2^2 ≤ t^2 then
-      x.1
-    else
-      0)
-  rewrite_by
-    enter [t,dt]
-    fun_trans (disch:=sorry) only [ftrans_simp,scalarGradient]
-    rw[intetgral_parametric_inverse (R:=R) (hdim:=sorry) (inv:=circle_polar_inverse (t^2) sorry)]
-    fun_trans only [ftrans_simp]
-
-
-
-open BigOperators in
-set_option trace.Meta.Tactic.fun_trans true in
-#check
-  (cderiv R fun (t : R) => ∫' (x : R×R),
-    if x.1^2 + x.2^2 ≤ t^2 then
-      x.1
-    else
-      0)
-  rewrite_by
-    enter [t,dt]
-    fun_trans (disch:=sorry) only [ftrans_simp,scalarGradient]
-    rw[intetgral_parametric_inverse (R:=R) (hdim:=sorry) (inv:=circle_sqrt_inverse (t^2) sorry)]
-    fun_trans (disch:=sorry) only [ftrans_simp,scalarGradient]

@@ -167,13 +167,16 @@ theorem set_inter {α} (P Q : α → Prop) : {x | P x} ∩ {x | Q x} = {x | P x 
 --   -- let φ := e.appArg!
 --   -- let T := e.appFn!.appArg!.appArg!.appFn!.appArg!
 --   IO.println s!"extAction simproc simplification with distribution {← ppExpr e}"
-
+#check SciLean.cintegral.arg_f.cderiv_distrib_rule'
 --   return .continue
 
 theorem split_integral {X} {Y} [MeasureSpace X] [MeasureSpace Y] (f : X×Y → R) :
     ∫' (xy : X×Y), f xy = ∫' x, ∫' y, f (x,y) := sorry_proof
 
-#check SciLean.toDistribution.arg_f.parDistribDeriv_rule
+
+
+
+
 #check (cderiv R fun l => timeToFall m l l₂ k₁ k₂ α x)
   rewrite_by
     unfold timeToFall bungeeTension
@@ -183,7 +186,8 @@ theorem split_integral {X} {Y} [MeasureSpace X] [MeasureSpace Y] (f : X×Y → R
     simp (config:={zeta:=false}) only [t3',t4',t1, t2, t4, ftrans_simp,set_inter]
 
 
-l₁
+#exit
+
 set_option pp.funBinderTypes true in
 set_option trace.Meta.Tactic.fun_trans true in
 set_option trace.Meta.Tactic.simp.unify true in

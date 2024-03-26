@@ -11,7 +11,7 @@ import SciLean.Tactic.Autodiff
 
 open MeasureTheory
 
-namespace SciLean
+namespace SciLean.Rand
 
 
 section Geometry

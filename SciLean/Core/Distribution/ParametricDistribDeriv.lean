@@ -133,7 +133,7 @@ theorem parDistribDeriv.comp_rule
       parDistribDeriv f ydy.1 ydy.2 := by
 
   funext x dx; ext φ
-  unfvold parDistribDeriv
+  unfold parDistribDeriv
   simp[hg]
   sorry_proof
 
@@ -194,11 +194,9 @@ theorem cintegral.arg_f.cderiv_distrib_rule' (f : W → X → R) (A : Set X):
     cderiv R (fun w => ∫' x in A, f w x)
     =
     fun w dw =>
-      (ifD A then
-         parDistribDeriv (fun w => (f w ·).toDistribution) w dw
-       else
-         0).extAction fun _ => 1 := sorry_proof
+       (parDistribDeriv (fun w => (f w ·).toDistribution) w dw).restrict A |>.extAction fun _ => 1 := sorry_proof
 
+-- (parDistribDeriv (fun w => (f w ·).toDistribution) w dw).extAction (fun x => if x ∈ A then 1 else 0) := sorry_proof
 
 
 @[fun_trans]
@@ -216,10 +214,10 @@ theorem cintegral.arg_f.parDistribDeriv_rule' (f : W → X → Y → R) (B : X �
     parDistribDeriv (fun w => (fun x => ∫' y in B x, f w x y).toDistribution)
     =
     fun w dw =>
-       ⟨⟨fun φ => (ifD {xy : X×Y | xy.2 ∈ B xy.1} then
-                    parDistribDeriv (fun w => (fun (x,y) => f w x y).toDistribution) w dw
-                  else
-                    0).extAction fun (x,_) => φ x, sorry_proof⟩⟩ := sorry_proof
+       ⟨⟨fun φ =>
+         parDistribDeriv (fun w => (fun (x,y) => f w x y).toDistribution) w dw
+         |>.restrict {xy : X×Y | xy.2 ∈ B xy.1}
+         |>.extAction fun (x,_) => φ x, sorry_proof⟩⟩ := sorry_proof
 
 
 -- @[fun_trans]

@@ -249,10 +249,13 @@ the right inverse `f⁻¹` is parametrized by a type `X₁` and for every `x₁ 
 Returns also a list of pending goals proving that individual inversions are possible.
 -/
 def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarId)) := do
+  IO.println "asdf"
   let f ← whnfCore (← instantiateMVars f)
   match f with
   | .lam xName xType xBody xBi =>
     withLocalDecl `x xBi xType fun x => do
+
+      IO.println "asdf1"
       let b := xBody.instantiate1 x
       let xId := x.fvarId!
       let yType ← inferType b
@@ -261,8 +264,13 @@ def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarI
       let (xis, xmk) ← splitStructureElem x
       let (yis, ymk) ← splitStructureElem y
 
+      IO.println "asdf2"
+
       if xis.size == 1 then
         return none
+
+      IO.println "asdf3"
+
 
       -- can't have more equations then unknowns
       -- such system is overdetermined
@@ -356,18 +364,44 @@ def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarI
   | _ => throwError "Error in `invertFunction`, not a lambda function!"
 
 
+
+-- open Elab Term in
+-- elab "structural_inverse " e:term t:tac : term => do
+
+--   let e ← elabTerm e none
+
+--   IO.println (← ppExpr e)
+
+--   let .some (inv, goals) ← structuralInverse e
+--     | throwError "failed to get structural inverse"
+
+
+--   for goal in goals do
+--     let prf ← elabByTactic
+--     goal. goals.size != 0 then
+--     throwError s!"failed to get structural inverse, pending goals: {← goals.mapM fun g => g.withContext do pure <| toString <| ← ppExpr (← g.getType)}"
+
+--   match inv with
+--   | .full inv => return inv.invFun
+--   | .right inv => return inv.invFun
+
+
+-- set_option pp.funBinderTypes true in
+-- #check structural_inverse fun (x : Int×Int) => x.2+x.1
+
+-- #check structural_inverse fun ((x,y,z) : Int × Int × Int) => (x+y+z,x+y)
+
+
+-- #eval show MetaM Unit from do
+
+--   let e := q(fun ((x,y,z) : Int × Int × Int) => (x+y+z,x+y))
+
+--   let .some (.right inv, goals) ← structuralInverse e
+--     | return ()
+
+--   IO.println s!"asdf {← ppExpr inv.invFun}"
+
 /-
-
-#eval show MetaM Unit from do
-
-  let e := q(fun ((x,y,z) : Int × Int × Int) => (x+y+z,x+y))
-
-  let .some (.right inv, goals) ← structuralInverse e
-    | return ()
-
-  IO.println s!"asdf {← ppExpr inv.invFun}"
-
-
 #eval show MetaM Unit from do
 
   let e := q(fun ((x,y,z) : Int × Int × Int) => (z,x))

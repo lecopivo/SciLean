@@ -3,12 +3,12 @@ import Mathlib.MeasureTheory.Decomposition.Lebesgue
 
 import SciLean.Core.Objects.Vec
 import SciLean.Core.Objects.Scalar
-import SciLean.Core.Rand.CIntegral
+import SciLean.Core.Integral.CIntegral
 import SciLean.Util.SorryProof
 
 open MeasureTheory ENNReal
 
-namespace SciLean
+namespace SciLean.Rand
 
 local notation "∞" => (⊤ : ℕ∞)
 
@@ -107,11 +107,11 @@ theorem action_bind (x : Distribution X) (f : X → Distribution Y) (φ : Y → 
 -- open Classical in
 @[coe]
 noncomputable
-def _root_.MeasureTheory.Measure.toDistribution {X} {_ : MeasurableSpace X} (μ : Measure X) :
+def toDistribution {X} {_ : MeasurableSpace X} (μ : Measure X) :
     Distribution X := ⟨fun φ => ∫' x, φ x ∂μ⟩
 
 noncomputable
-instance {X} [MeasurableSpace X] : Coe (Measure X) (Distribution X) := ⟨fun μ => μ.toDistribution⟩
+instance {X} [MeasurableSpace X] : Coe (Measure X) (Distribution X) := ⟨fun μ => toDistribution μ⟩
 
 -- I'm a bit unsure about this definition
 -- For example under what conditions `x.IsMeasure → ∀ x', (f x').IsMeasure → (x >>= f).IsMeasure`

@@ -101,6 +101,10 @@ theorem cintegral_add_measures {f : α → X} {μ ν : Measure α}
 theorem cintegral_dirac {f : α → X} (p : α) :
     ∫' x, f x ∂(Measure.dirac p) = ∫' x, f x ∂μ + ∫' x, f x ∂ν := sorry_proof
 
+@[simp,ftrans_simp]
+theorem cintegral_unit {f : Unit → X} :
+    ∫' x, f x  = f () := sorry_proof
+
 -- @[integral_push]
 theorem cintegral_prod_mk {f : α → X} {g : α → Y} {μ : Measure α} :
     ∫' x, (f x, g x) ∂μ = (∫' x, f x ∂μ, ∫' x, g x ∂μ) := sorry_proof

@@ -9,7 +9,7 @@ import SciLean.Core.Distribution.SimpAttr
 import SciLean.Util.SorryProof
 import SciLean.Util.Limit
 
-open MeasureTheory ENNReal
+open MeasureTheory ENNReal Classical
 
 namespace SciLean
 
@@ -181,6 +181,15 @@ theorem Distribution.smul_action (r : R) (T : 𝒟' X) (φ : 𝒟 X) : ⟪r • 
 @[action_push]
 theorem Distribution.neg_action (T : 𝒟' X) (φ : 𝒟 X) : ⟪- T, φ⟫ = - ⟪T,φ⟫ := by rfl
 
+open BigOperators in
+@[action_push]
+theorem Distribution.fintype_sum_action {I} [Fintype I] (T : I → 𝒟' X) (φ : 𝒟 X) :
+    ⟪∑ i, T i, φ⟫ = ∑ i, ⟪T i, φ⟫ := by sorry_proof
+
+@[action_push]
+theorem Distribution.indextype_sum_action {I} [IndexType I] (T : I → 𝒟' X) (φ : 𝒟 X) :
+    ⟪∑ i, T i, φ⟫ = ∑ i, ⟪T i, φ⟫ := by sorry_proof
+
 @[simp, ftrans_simp, action_push]
 theorem Distribution.zero_extAction (φ : X → R) : (0 : 𝒟' X).extAction φ = 0 := by sorry_proof
 
@@ -201,52 +210,28 @@ theorem Distribution.smul_extAction (r : R) (T : 𝒟' X) (φ : X → R) :
 theorem Distribution.neg_extAction (T : 𝒟' X) (φ : X → R) :
     (- T).extAction φ = - T.extAction φ := by sorry_proof
 
-
-----------------------------------------------------------------------------------------------------
--- Functions as distributions ----------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-variable [MeasureSpace X]
-
-@[coe]
-noncomputable
-def _root_.Function.toDistribution (f : X → R) : 𝒟' X :=
-  ⟨fun φ ⊸ ∫' x, f x • φ x⟩
-
-def Distribution.IsFunction (T : 𝒟' X) : Prop :=
-  ∃ (f : X → R), ∀ (φ : 𝒟 X),
-      ⟪T, φ⟫ = ∫' x, f x • φ x
-
-open Classical
-noncomputable
-def Distribution.toFunction (T : 𝒟' X) : X → R :=
-  if h : T.IsFunction then
-    choose h
-  else
-    0
+open BigOperators in
+@[action_push]
+theorem Distribution.fintype_sum_extAction {I} [Fintype I] (T : I → 𝒟' X) (φ : X → R) :
+    (∑ i, T i).extAction φ = ∑ i, (T i).extAction φ := by sorry_proof
 
 @[action_push]
-theorem Function.toDistribution_action (f : X → R) (φ : 𝒟 X) :
-    ⟪f.toDistribution, φ⟫ = ∫' x, f x * φ x := by rfl
-
-@[action_push]
-theorem Function.toDistribution_extAction (f : X → R) (φ : X → R) :
-    f.toDistribution.extAction φ
-    =
-    ∫' x, f x * φ x := sorry_proof
+theorem Distribution.indextype_sum_extAction {I} [IndexType I] (T : I → 𝒟' X) (φ : X → R) :
+    (∑ i, T i).extAction φ = ∑ i, (T i).extAction φ := by sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
 -- Distributional if statement ---------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+variable [MeasureSpace X]
+
 open Classical Notation in
 noncomputable
 def iteD (A : Set X) (t e : 𝒟' X) : 𝒟' X :=
-  limit n → ∞,
   ⟨⟨fun φ =>
-    ⟪t, testFunApprox n fun x => if x ∈ A then φ x else 0⟫ +
-    ⟪e, testFunApprox n fun x => if x ∉ A then φ x else 0⟫, sorry_proof⟩⟩
+    t.extAction (fun x => if x ∈ A then φ x else 0) +
+    e.extAction (fun x => if x ∈ A then 0 else φ x), sorry_proof⟩⟩
 
 open Lean.Parser Term in
 syntax withPosition("ifD " term " then "
@@ -274,6 +259,147 @@ theorem Distribution.extAction_iteD (A : Set X) (t e : 𝒟' X) (φ : X → R) :
     (iteD A t e).extAction φ =
         t.extAction (fun x => if x ∈ A then φ x else 0) +
         e.extAction (fun x => if x ∉ A then φ x else 0) := by sorry_proof
+
+
+----------------------------------------------------------------------------------------------------
+-- Set restriction ---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+@[pp_dot]
+noncomputable
+def Distribution.restrict (T : 𝒟' X) (A : Set X) : 𝒟' X :=
+  ifD A then T else 0
+
+@[simp,ftrans_simp]
+theorem restrict_univ (T : 𝒟' X)  :
+    T.restrict Set.univ = T := sorry_proof
+
+@[simp,ftrans_simp]
+theorem zero_restrict (A : Set X) :
+    (0 : 𝒟' X).restrict A = 0 := sorry_proof
+
+@[simp,ftrans_simp]
+theorem add_restrict (T S : 𝒟' X) (A : Set X) :
+    (T + S).restrict A = T.restrict A + S.restrict A := sorry_proof
+
+@[simp,ftrans_simp]
+theorem sub_restrict (T S : 𝒟' X) (A : Set X) :
+    (T - S).restrict A = T.restrict A - S.restrict A := sorry_proof
+
+@[simp,ftrans_simp]
+theorem smul_restrict (r : R) (T : 𝒟' X) (A : Set X) :
+    (r • T).restrict A = r • (T.restrict A) := sorry_proof
+
+@[simp,ftrans_simp]
+theorem neg_restrict (T : 𝒟' X) (A : Set X) :
+    (- T).restrict A = - (T.restrict A) := sorry_proof
+
+open BigOperators in
+@[simp,ftrans_simp]
+theorem finset_sum_restrict {I} [Fintype I] (T : I → 𝒟' X) (A : Set X) :
+    (∑ i, T i).restrict A = ∑ i, (T i).restrict A := sorry_proof
+
+@[simp,ftrans_simp]
+theorem indextype_sum_restrict {I} [IndexType I] (T : I → 𝒟' X) (A : Set X) :
+    (∑ i, T i).restrict A = ∑ i, (T i).restrict A := sorry_proof
+
+@[simp,ftrans_simp]
+theorem iteD_restrict (T : 𝒟' X) (A : Set X) :
+    (ifD A then T else 0) = T.restrict A := by rfl
+
+@[simp,ftrans_simp]
+theorem iteD_restrict' (T : 𝒟' X) (A : Set X) :
+    (ifD A then 0 else T) = T.restrict Aᶜ := sorry_proof
+
+
+----------------------------------------------------------------------------------------------------
+-- Distributiona product  --------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+variable {X₁} [Vec R X₁] {X₂} [Vec R X₂]
+
+noncomputable
+def Distribution.prod' (p : X₁ → X₂ → X) (T : 𝒟' X₁) (S : X₁ → 𝒟' X₂) : 𝒟' X :=
+  ⟨⟨fun φ => T.extAction (fun x₁ => (S x₁).extAction fun x₂ => φ (p x₁ x₂)), sorry_proof⟩⟩
+
+noncomputable
+abbrev Distribution.prod (T : 𝒟' X₁) (S : 𝒟' X₂) : 𝒟' (X₁×X₂) := prod' Prod.mk T (fun _ => S)
+
+
+def _root_.Set.preimage1 {α β γ} (f : α → β → γ) (C : Set γ) : Set α := ⋃ b, (f · b) ⁻¹' C
+
+
+-- this probably needs non-empty `β`
+@[simp, ftrans_simp]
+theorem _root_.Set.preimage1_id1 {α β} (A : Set α) :
+     A.preimage1 (fun (a : α) (_ : β) => a) = A := sorry_proof
+
+-- this probably needs non-empty `B`
+@[simp, ftrans_simp]
+theorem _root_.Set.preimage1_id2 {α β} (B : Set β) :
+     B.preimage1 (fun (_ : α) (b : β) => b) = Set.univ := sorry_proof
+
+open Classical in
+@[simp, ftrans_simp]
+theorem _root_.Set.preimage1_const {α β γ} (c : γ) (C : Set γ) :
+     C.preimage1 (fun (_ : α) (_ : β) => c) = if c ∈ C then Set.univ else ∅ := sorry_proof
+
+
+-- this needs to check that `g ⁻¹' D` is non-empty
+open Classical in
+@[simp, ftrans_simp]
+theorem _root_.Set.preimage1_prod {α β γ δ} (f : α → γ) (g : β → δ) (C : Set γ) (D : Set δ) :
+     (C.prod D).preimage1 (fun (x : α) (y : β) => (f x, g y)) = f ⁻¹' C := sorry_proof
+
+-- this needs to check that `g ⁻¹' D` is non-empty
+open Classical in
+@[simp, ftrans_simp]
+theorem _root_.Set.preimage1_prod' {α β γ δ} (f : α → γ) (g : β → δ) (C : Set γ) (D : Set δ) :
+     (D.prod C).preimage1 (fun (x : α) (y : β) => (g y, f x)) = f ⁻¹' C := sorry_proof
+
+
+@[simp, ftrans_simp]
+theorem Distribution.prod'_restrict (p : X₁ → X₂ → X) (T : 𝒟' X₁) (S : X₁ → 𝒟' X₂) (A : Set X) :
+    (prod' p T S).restrict A = prod' p (T.restrict (A.preimage1 p)) (fun x₁ => (S x₁).restrict (p x₁ ⁻¹' A)) := sorry_proof
+
+@[action_push]
+theorem Distribution.prod'_extAction (p : X₁ → X₂ → X) (T : 𝒟' X₁) (S : X₁ → 𝒟' X₂) (φ : X → R) :
+    (prod' p T S).extAction φ = T.extAction (fun x₁ => (S x₁).extAction fun x₂ => φ (p x₁ x₂)) := sorry_proof
+
+
+----------------------------------------------------------------------------------------------------
+-- Functions as distributions ----------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+@[coe]
+noncomputable
+def _root_.Function.toDistribution (f : X → R) : 𝒟' X :=
+  ⟨fun φ ⊸ ∫' x, f x • φ x⟩
+
+def Distribution.IsFunction (T : 𝒟' X) : Prop :=
+  ∃ (f : X → R), ∀ (φ : 𝒟 X),
+      ⟪T, φ⟫ = ∫' x, f x • φ x
+
+noncomputable
+def Distribution.toFunction (T : 𝒟' X) : X → R :=
+  if h : T.IsFunction then
+    choose h
+  else
+    0
+
+@[action_push]
+theorem Function.toDistribution_action (f : X → R) (φ : 𝒟 X) :
+    ⟪f.toDistribution, φ⟫ = ∫' x, f x * φ x := by rfl
+
+@[action_push]
+theorem Function.toDistribution_extAction (f : X → R) (φ : X → R) :
+    f.toDistribution.extAction φ
+    =
+    ∫' x, f x * φ x := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Function.toDistribution_zero  :
+    Function.toDistribution (fun (_ : X) => 0) = (0 : 𝒟' X) := by sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------

@@ -22,8 +22,8 @@ open FiniteDimensional
 
 open BigOperators in
 theorem intetgral_parametric_inverse [Fintype I] (φ ψ : X → W) (f : X → Y) (hdim : d = finrank R X - finrank R W)
-  {dec : (i : I) → X₁ i → X₂ i → X} {ζ : (i : I) → X₁ i → X₂ i} {dom : (i : I) → Set (X₁ i)}
-  (inv : ParametricInverseAt (fun x => φ x - ψ x) 0 dec ζ dom) :
+  {p : (i : I) → X₁ i → X₂ i → X} {ζ : (i : I) → X₁ i → X₂ i} {dom : (i : I) → Set (X₁ i)}
+  (inv : ParametricInverseAt (fun x => φ x - ψ x) 0 p ζ dom) :
   ∫' x in {x' | φ x' = ψ x'}, f x ∂(surfaceMeasure d)
   =
-  ∑ i, ∫' x₁ in dom i, jacobian R (fun x => dec i x (ζ i x)) x₁ • f (dec i x₁ (ζ i x₁)) := sorry_proof
+  ∑ i, ∫' x₁ in dom i, jacobian R (fun x => p i x (ζ i x)) x₁ • f (p i x₁ (ζ i x₁)) := sorry_proof

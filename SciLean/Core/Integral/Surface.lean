@@ -17,11 +17,11 @@ variable
 
 set_default_scalar R
 
-/-- Area measure on if `S` is co-dimension one surface. -/
-opaque area' {X} [MeasureSpace X] {S : Set X} : Measure S := sorry
+-- /-- Area measure on if `S` is co-dimension one surface. -/
+-- opaque area' {X} [MeasureSpace X] {S : Set X} : Measure S := sorry
 
-/-- Area measure of surfaces, can this be well defined? -/
-opaque area {X} [MeasureSpace X] : Measure X := sorry
+-- /-- Area measure of surfaces, can this be well defined? -/
+-- opaque area {X} [MeasureSpace X] : Measure X := sorry
 
 -- TODO: figure out how to use Hausdoff measure here
 noncomputable

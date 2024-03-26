@@ -3,7 +3,7 @@ import SciLean.Core.FloatAsReal
 
 open MeasureTheory ENNReal BigOperators Finset
 
-namespace SciLean.Prob
+namespace SciLean.Rand
 
 variable {R} [RealScalar R]
 

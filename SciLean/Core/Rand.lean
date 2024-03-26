@@ -1,4 +1,3 @@
-import SciLean.Core.Rand.CIntegral
 import SciLean.Core.Rand.Distribution
 import SciLean.Core.Rand.Rand
 import SciLean.Core.Rand.SimpAttr

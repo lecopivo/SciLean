@@ -18,7 +18,7 @@ import SciLean.Core.FunctionSpaces
 
 open MeasureTheory
 
-namespace SciLean
+namespace SciLean.Rand
 
 variable {Y : Type} [SemiHilbert Float Y] [Module ℝ Y] [IsScalarTower ℝ Float Y]
 set_default_scalar Float

@@ -2,7 +2,7 @@ import SciLean.Core.Rand.Rand
 
 open MeasureTheory
 
-namespace SciLean
+namespace SciLean.Rand
 
 variable
   {R} [RealScalar R]
@@ -19,6 +19,15 @@ theorem integral_as_uniform_E (R) [RealScalar R] {Y} [AddCommGroup Y] [Module R 
     ∫' (x : X), f x ∂μ
     =
     (uniform X).E (fun x =>
+      let V : R := Scalar.ofENNReal (volume (Set.univ : Set X))
+      V • f x) := sorry_proof
+
+
+theorem integral_as_uniform_E_in_set (R) [RealScalar R] {Y} [AddCommGroup Y] [SMul R Y] [Module ℝ Y]
+    (f : X → Y) (A : Set X) [UniformRand A] :
+    ∫' x in A, f x
+    =
+    (uniform A).E (fun x =>
       let V : R := Scalar.ofENNReal (volume (Set.univ : Set X))
       V • f x) := sorry_proof
 

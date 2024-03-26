@@ -1,8 +1,11 @@
 import SciLean.Core.FunctionTransformations
 
+open FiniteDimensional
+
 namespace SciLean
 
 section DetDefinition
+
 variable {R : Type*} [CommRing R]
   {X} [AddCommGroup X] [Module R X]
   {Y} [AddCommGroup Y] [Module R Y]
@@ -10,7 +13,6 @@ variable {R : Type*} [CommRing R]
 
 variable (R)
 open Classical in
-
 @[fun_trans]
 noncomputable
 def det (f : X → X) : R :=
@@ -76,6 +78,13 @@ theorem jacobian.id_rule (f : U → V) (g : U → U) :
     jacobian R (fun x => f (g x))
     =
     fun x => jacobian R f x * jacobian R g x := sorry_proof
+
+
+@[fun_trans]
+theorem jacobian.const_rule (y : V) :
+    jacobian R (fun (_ : U) => y)
+    =
+    fun _ => if finrank R U = 0 then 1 else 0 := sorry_proof
 
 
 @[fun_trans]

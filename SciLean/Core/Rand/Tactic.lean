@@ -1,6 +1,6 @@
 import SciLean.Core.Rand.PushPullExpectation
 
-namespace SciLean.Prob
+namespace SciLean.Rand
 
 
 macro "rand_AD" : conv =>
