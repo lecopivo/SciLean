@@ -353,6 +353,81 @@ instance (n) : PlainDataType (Fin n) where
     then .inl (Fin.bitType n h)
     else .inr (Fin.byteType n (by simp at h; apply h))
 
+
+--------------- UInt* ------------------------------------------------
+-----------------------------------------------------------------------
+
+-- This implementation is not ideal, we do a round trip through `Nat`
+instance : PlainDataType UInt8 where
+  btype :=
+    let bt := Fin.bitType UInt8.size (by decide)
+    .inl {
+      bits := bt.bits
+      h_size := bt.h_size
+      fromByte := fun b => ⟨bt.fromByte b⟩
+      toByte   := fun a => bt.toByte a.1
+      fromByte_toByte := sorry_proof
+  }
+
+-- This implementation is not ideal, we do a round trip through `Nat`
+instance : PlainDataType UInt16 where
+  btype :=
+    let bt := Fin.byteType UInt16.size (by decide)
+    .inr {
+    bytes := bt.bytes
+    h_size := bt.h_size
+    fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
+    toByteArray := fun b i h a => bt.toByteArray b i h a.1
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+-- This implementation is not ideal, we do a round trip through `Nat`
+instance : PlainDataType UInt32 where
+  btype :=
+    let bt := Fin.byteType UInt32.size (by decide)
+    .inr {
+    bytes := bt.bytes
+    h_size := bt.h_size
+    fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
+    toByteArray := fun b i h a => bt.toByteArray b i h a.1
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+-- This implementation is not ideal, we do a round trip through `Nat`
+instance : PlainDataType UInt64 where
+  btype :=
+    let bt := Fin.byteType UInt64.size (by decide)
+    .inr {
+    bytes := bt.bytes
+    h_size := bt.h_size
+    fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
+    toByteArray := fun b i h a => bt.toByteArray b i h a.1
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+
+-- This implementation is not ideal, we do a round trip through `Nat`
+instance : PlainDataType UInt64 where
+  btype :=
+    let bt := Fin.byteType UInt64.size (by decide)
+    .inr {
+    bytes := bt.bytes
+    h_size := bt.h_size
+    fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
+    toByteArray := fun b i h a => bt.toByteArray b i h a.1
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+
+
 -- TODO: change to IndexType
 -- -------------- Index ----------------------------------------------
 -- ----------------------------------------------------------------------
