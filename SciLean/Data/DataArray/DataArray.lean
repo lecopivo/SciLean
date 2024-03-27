@@ -38,6 +38,9 @@ def DataArray.get (arr : DataArray α) (i : Fin arr.size) : α := -- pd.get a.da
   | .inr byteType =>
     byteType.fromByteArray arr.byteData (byteType.bytes * i) sorry_proof
 
+instance : GetElem (DataArray α) Nat α (fun a i => i < a.size) where
+  getElem := fun x i h => x.get ⟨i,h⟩
+
 @[irreducible]
 def DataArray.set (arr : DataArray α) (i : Fin arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
   let i := i.1.toUSize
