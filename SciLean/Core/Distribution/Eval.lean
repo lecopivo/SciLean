@@ -40,3 +40,16 @@ theorem function_toDistribution_eval (f : X → R) (A : Set X) (φ : X → R) [U
   (uniform A).E fun x =>
     let V : R := Scalar.ofENNReal (volume A)
     V • f x * φ x := sorry_proof
+
+
+open Rand in
+@[action_push]
+theorem function_toDistribution_eval_restrict (f : X → R) (B A : Set X) (φ : X → R) [UniformRand A] :
+  ((f.toDistribution.restrict B).restrict A).extAction φ
+  =
+  (uniform A).E fun x =>
+    let V : R := Scalar.ofENNReal (volume A)
+    if x.1 ∈ B then
+      V • f x * φ x
+    else
+      0 := sorry_proof

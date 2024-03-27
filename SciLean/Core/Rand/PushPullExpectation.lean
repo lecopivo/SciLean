@@ -78,6 +78,48 @@ theorem push_E_affine (r : Rand X) (φ : X → Y)
     (f : Y → Z) (hf : IsAffineMap ℝ f := by fun_prop) :
     r.E (fun x => f (φ x)) = (f (r.E φ)) := by rw[pull_E_affine (hf:=hf)]
 
+@[rand_pull_E]
+theorem pull_mean_add (x y : Rand X) :
+    x.mean + y.mean
+    =
+    Rand.mean do
+      let x' ← x
+      let y' ← y
+      return x' + y' := sorry_proof
+
+@[rand_pull_E]
+theorem pull_mean_sub (x y : Rand X) :
+    x.mean - y.mean
+    =
+    Rand.mean do
+      let x' ← x
+      let y' ← y
+      return x' - y' := sorry_proof
+
+@[rand_pull_E]
+theorem pull_mean_smul [Module R X] (r : R) (x : Rand X) :
+    r • x.mean
+    =
+    Rand.mean do
+      let x' ← x
+      return r • x' := sorry_proof
+
+@[rand_pull_E]
+theorem pull_mean_mul (r : R) (x : Rand R) :
+    r * x.mean
+    =
+    Rand.mean do
+      let x' ← x
+      return r * x' := sorry_proof
+
+@[rand_pull_E]
+theorem pull_mean_neg (x : Rand X) :
+    - x.mean
+    =
+    Rand.mean do
+      let x' ← x
+      return - x' := sorry_proof
+
 
 section Nat
 

@@ -13,8 +13,7 @@ attribute [fun_trans] Set.preimage
 attribute [fun_trans] Set.image
 
 
-attribute [fun_trans] Set.preimage_id
--- attribute [fun_trans]
+attribute [fun_trans] Set.preimage_id Set.preimage_id'
 
 namespace Set
 
@@ -37,6 +36,19 @@ theorem Prod.mk.arg_fstsnd.preimage_rule_prod (f : α → β) (g : α → γ) (B
     preimage (fun x => (f x, g x)) (B.prod C)
     =
     f ⁻¹' B ∩ g ⁻¹' C := sorry_proof
+
+@[fun_trans]
+theorem Prod.mk.arg_fst.preimage_rule_prod (f : α → β) (c : γ) :
+    preimage (fun x => (f x, c))
+    =
+    fun s => f ⁻¹' {y | (y,c) ∈ s} := sorry_proof
+
+@[fun_trans]
+theorem Prod.mk.arg_snd.preimage_rule_prod (b : β) (g : α → γ) :
+    preimage (fun x => (b, g x))
+    =
+    fun s => g ⁻¹' {z | (b,z) ∈ s} := sorry_proof
+
 
 open SciLean
 variable {R} [RealScalar R] -- probably generalize following to LinearlyOrderedAddCommGroup
@@ -66,7 +78,50 @@ theorem HSub.hSub.arg_a1.preimage_rule_Ioo (x' a b : R)  :
     Ioo (x' - b) (x' - a) := by ext; simp; sorry_proof
 
 @[fun_trans]
-theorem Neg.neg.arg_a1.preimage_rule_Ioo (x' a b : R)  :
+theorem Neg.neg.arg_a1.preimage_rule_Ioo (a b : R)  :
     preimage (fun x : R => - x) (Ioo a b)
     =
     Ioo (-b) (-a) := by ext; simp; sorry_proof
+
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Preimage1 ---------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+-- todo: turn into function transformation once we have `fun_trans` supporting two argument functions
+def preimage1 {α β γ} (f : α → β → γ) (C : Set γ) : Set α := ⋃ b, (f · b) ⁻¹' C
+
+
+-- @[simp, ftrans_simp]
+-- theorem preimage1_id {α β} (s : Set (α×β)) :
+--      s.preimage1 (fun (a : α) (b : β) => (a,b)) = ⋃ b, {a | (a, b) ∈ s} := sorry_proof
+
+-- this probably needs non-empty `β`
+@[simp, ftrans_simp]
+theorem preimage1_id1 {α β} (A : Set α) :
+     A.preimage1 (fun (a : α) (_ : β) => a) = A := sorry_proof
+
+-- this probably needs non-empty `B`
+@[simp, ftrans_simp]
+theorem preimage1_id2 {α β} (B : Set β) :
+     B.preimage1 (fun (_ : α) (b : β) => b) = Set.univ := sorry_proof
+
+open Classical in
+@[simp, ftrans_simp]
+theorem preimage1_const {α β γ} (c : γ) (C : Set γ) :
+     C.preimage1 (fun (_ : α) (_ : β) => c) = if c ∈ C then Set.univ else ∅ := sorry_proof
+
+
+-- this needs to check that `g ⁻¹' D` is non-empty
+open Classical in
+@[simp, ftrans_simp]
+theorem _root_.Set.preimage1_prod {α β γ δ} (f : α → γ) (g : β → δ) (C : Set γ) (D : Set δ) :
+     (C.prod D).preimage1 (fun (x : α) (y : β) => (f x, g y)) = f ⁻¹' C := sorry_proof
+
+-- this needs to check that `g ⁻¹' D` is non-empty
+open Classical in
+@[simp, ftrans_simp]
+theorem _root_.Set.preimage1_prod' {α β γ δ} (f : α → γ) (g : β → δ) (C : Set γ) (D : Set δ) :
+     (D.prod C).preimage1 (fun (x : α) (y : β) => (g y, f x)) = f ⁻¹' C := sorry_proof

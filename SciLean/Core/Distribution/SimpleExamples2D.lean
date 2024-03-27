@@ -1,9 +1,9 @@
 import SciLean.Core.Distribution.ParametricDistribDeriv
 import SciLean.Core.Distribution.SurfaceDirac
 import SciLean.Core.Distribution.Eval
-import SciLean.Core.Integral.Substitution
-import SciLean.Core.Integral.ParametricInverse
-import SciLean.Core.Integral.Frontier
+-- import SciLean.Core.Integral.Substitution
+-- import SciLean.Core.Integral.ParametricInverse
+-- import SciLean.Core.Integral.Frontier
 
 import SciLean.Core.FunctionTransformations.Preimage
 
@@ -56,11 +56,6 @@ def foo1 (t' : R) :=
 
 #eval Rand.print_mean_variance (foo1 0.3) 100 ""
 
-@[simp, ftrans_simp]
-theorem asdf (n : ℕ) : Scalar.abs (n : R) = (n : R) := sorry_proof
-
-@[simp, ftrans_simp]
-theorem asdf' : Scalar.abs (2 : R) = (2 : R) := sorry_proof
 
 
 def foo2 (t' : R) :=

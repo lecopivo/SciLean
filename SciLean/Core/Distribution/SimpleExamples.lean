@@ -80,7 +80,6 @@ theorem foo2_spec (t : R) :
 #eval foo2 (-1.0)
 #eval foo2 2.0
 
-
 def foo3 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo (-1) 1, if x^2 - t ≤ 0 then (1:R) else 0)
   rewrite_by assuming (_ : 0 < t')
     fun_trans only [scalarGradient, scalarCDeriv]
