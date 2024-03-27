@@ -28,7 +28,7 @@ approx solver (m k : Float)
 by
   -- Unfold Hamiltonian definition and compute gradients
   unfold H scalarGradient
-  autodiff; autodiff
+  autodiff
 
   -- Apply RK4 method
   conv =>
@@ -49,7 +49,7 @@ def main : IO Unit := do
 
   let Δt := 0.1
   let x₀ : Float^[N] := ⊞ (i : Fin N) => (Scalar.sin (i.1.toFloat/10))
-  let p₀ : Float^[N] := ⊞ i => (0 : Float)
+  let p₀ : Float^[N] := ⊞ (i : Fin N) => (0 : Float)
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
@@ -59,8 +59,8 @@ def main : IO Unit := do
     t += Δt
 
     let M : Nat := 20
-    for m in fullRange (Fin M) do
-      for n in fullRange (Fin N) do
+    for m in IndexType.univ (Fin M) do
+      for n in IndexType.univ (Fin N) do
         let xi := x[n]
         if (2*m.1.toFloat - M.toFloat)/(M.toFloat) - xi < 0  then
           IO.print "x"

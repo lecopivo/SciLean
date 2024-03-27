@@ -10,7 +10,7 @@ variable
   {Y : Type _} [Vec R Y]
   {Z : Type _} [Vec R Z]
 
-open_notation_over_field R
+set_default_scalar R
 
 def forwardEuler (f : R → X → X) (tₙ Δt : R) (xₙ : X) : X :=
   xₙ + Δt • f tₙ xₙ
@@ -47,7 +47,6 @@ def rungeKutta4 (f : R → X → X) (tₙ Δt : R) (xₙ : X) : X :=
 
 
 variable
-  {R : Type _} [IsROrC R]
   {X : Type _} [SemiInnerProductSpace R X]
   {Y : Type _} [SemiInnerProductSpace R Y]
   {Z : Type _} [SemiInnerProductSpace R Z]
@@ -96,5 +95,5 @@ by
     solve_for p' from 1 := sorry_proof
     solve_as_inv
     solve_as_inv
-  autodiff; autodiff; autodiff
+  autodiff; autodiff
   sorry_proof

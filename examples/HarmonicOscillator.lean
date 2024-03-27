@@ -1,8 +1,8 @@
 import SciLean
 import SciLean.Core.Approx.ApproxLimit
-import SciLean.Core.Notation.Gradient
--- import SciLean.Tactic.LetNormalize
--- import SciLean.Tactic.PullLimitOut
+-- import SciLean.Core.Notation.Gradient
+-- -- import SciLean.Tactic.LetNormalize
+-- -- import SciLean.Tactic.PullLimitOut
 import SciLean.Modules.DifferentialEquations
 
 set_default_scalar Float
@@ -17,7 +17,7 @@ approx solver (m k : Float)
 by
   -- Unfold Hamiltonian and compute gradients
   unfold H scalarGradient
-  autodiff; autodiff
+  autodiff
 
   -- Apply RK4 method
   simp_rw (config:={zeta:=false}) [odeSolve_fixed_dt rungeKutta4 sorry_proof]

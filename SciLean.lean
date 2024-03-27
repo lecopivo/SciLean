@@ -7,6 +7,7 @@ import SciLean.Data.ArrayType
 import SciLean.Data.DataArray
 import SciLean.Data.Fin
 
+import SciLean.Modules.DifferentialEquations
 
 /-!
 

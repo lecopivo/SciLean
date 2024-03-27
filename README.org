@@ -21,6 +21,7 @@ Getting and building SciLean simply:
 #+begin_src
 git clone https://github.com/lecopivo/SciLean.git
 cd SciLean
+lake exe cache get
 lake build
 #+end_src
 
