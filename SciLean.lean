@@ -5,6 +5,7 @@ import SciLean.Tactic.Autodiff
 
 import SciLean.Data.ArrayType
 import SciLean.Data.DataArray
+import SciLean.Data.Fin
 
 
 /-!
