@@ -7,8 +7,18 @@ open ProofWidgets Svg Jsx
 
 open SciLean
 
-abbrev State (n : USize) := ℝ^{n} × ℝ^{n}
+abbrev State (n : Nat) := Float^[n] × Float^[n]
 
+
+instance : ToJson (DataArrayN Float (Fin n)) where
+  toJson := fun x =>
+    let x' := Array.ofFn (fun i => x[i])
+    toJson x'
+
+instance : FromJson (DataArrayN Float (Fin n)) where
+  fromJson? := fun json => do
+    let x' : Array Float ← fromJson? json
+    return (⊞ (i : Fin n) => x'[i.1]!)
 
 def frame : Frame where
   xmin := -1
@@ -17,46 +27,47 @@ def frame : Frame where
   width := 400
   height := 400
 
-def isvg (n) [Nonempty (Idx n)] : InteractiveSvg (State n) where
-  init := (⊞ i, 0 * Real.sin (2*Real.pi*(i.1 : ℝ)/40),
-           ⊞ i, 0)
+
+def isvg (n) : InteractiveSvg (State n) where
+  init := (⊞ (i : Fin n) => (0:Float), -- 0 * Float.sin (2*RealScalar.pi*(i.toFloat)/40),
+           ⊞ (i : Fin n) => (0:Float))
 
   frame := frame
 
   update time Δt action mouseStart mouseEnd selected getData state := Id.run do
-    let m : ℝ := 0.1
-    let k : ℝ := 50000.0
+    let m : Float := 0.1
+    let k : Float := 50000.0
     -- convert time to seconds
-    let time : ℝ := ⟨time⟩/1000 
-    let Δt : ℝ := ⟨Δt⟩/1000
+    let time : Float := time/1000
+    let Δt : Float := Δt/1000
     let mut (x,v) := state
     if let .some pos := mouseEnd then
       if action.kind == .mousedown then
-        let θ := Real.atan2 ⟨pos.toAbsolute.2⟩ ⟨pos.toAbsolute.1⟩
-        for i in fullRange (Idx n) do
-          let θ' := (2 * Real.pi * i.1) / n
-          let θ' := if θ' ≤ Real.pi then θ' else θ' - 2*Real.pi
-          let w := min ‖θ - θ'‖ ‖θ - θ' + 2*Real.pi‖ 
-          x[i] += Real.exp (- 50*w^2)
-    solver m k 1 time (x,v) (time + Δt)
+        let θ := Float.atan2 pos.toAbsolute.1 pos.toAbsolute.2
+        for i in IndexType.univ (Fin n) do
+          let θ' := (2 * (RealScalar.pi : Float) * i.1) / n
+          let θ' := if θ' ≤ RealScalar.pi then θ' else θ' - 2*RealScalar.pi
+          let w := min (θ - θ').abs (θ - θ' + 2*RealScalar.pi).abs
+          x[i] += Float.exp (- 50*w^2)
+    solver m k (1,()) time (time + Δt) (x,v)
 
   render time mouseStart mouseEnd state :=
     {
       elements := Id.run do
-        let mut pts : Array (Point frame) := .mkEmpty n.toNat
+        let mut pts : Array (Point frame) := .mkEmpty n
         -- let mut qts : Array (Point frame) := .mkEmpty n.toNat
-        let Δθ := 2*Real.pi / n
-        for i in fullRange (Idx n) do
+        let Δθ := 2*(RealScalar.pi : Float) / n
+        for i in IndexType.univ (Fin n) do
           let θ := i.1 * Δθ
           let r := 0.5 + 0.2*state.1[i]
-          pts := pts.push (.abs (r*θ.cos).toFloat (r*θ.sin).toFloat)
+          pts := pts.push (.abs (r*θ.cos) (r*θ.sin))
           -- qts := qts.push (.abs (-frame.xmin + (i.1.toNat.toFloat/n.toNat.toFloat)*frame.xSize) (0.3*state.1[i].toFloat))
-        #[Svg.circle (.abs 0 0) (.abs 2) |>.setFill (1.0,1.0,1.0), 
+        #[Svg.circle (.abs 0 0) (.abs 2) |>.setFill (1.0,1.0,1.0),
           Svg.polygon pts |>.setFill (0.95,0.95,0.95) |>.setStroke (0.2,0.2,0.2) (.px 1)]-- ,
           -- Svg.polyline qts |>.setStroke (0.2,0.8,0.2) (.px 1)]
     }
 
-instance : Nonempty (Idx 100) := sorry
+
 
 open Server RequestM in
 @[server_rpc_method]
@@ -65,10 +76,10 @@ def updateSvg (params : UpdateParams (State 100)) : RequestM (RequestTask (Updat
 -- TODO: the tsx file is pretty broken
 @[widget_module]
 def SvgWidget : Component (UpdateResult (State 100)) where
-  javascript := include_str ".." / "lake-packages" / "proofwidgets" / "build" / "js" / "interactiveSvg.js"
+  javascript := include_str ".." / ".lake" / "packages" / "proofwidgets" / ".lake" / "build" / "js" / "interactiveSvg.js"
 
 def init : UpdateResult (State 100) := {
-  html := Html.ofTHtml <div>Init!!!</div>,
+  html := <div>Init!!!</div>,
   state := { state := (isvg 100).init
              time := 0
              selected := none
