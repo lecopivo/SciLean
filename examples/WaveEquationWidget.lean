@@ -43,7 +43,7 @@ def isvg (n) : InteractiveSvg (State n) where
     let mut (x,v) := state
     if let .some pos := mouseEnd then
       if action.kind == .mousedown then
-        let θ := Float.atan2 pos.toAbsolute.1 pos.toAbsolute.2
+        let θ := Float.atan2 pos.toAbsolute.2 pos.toAbsolute.1
         for i in IndexType.univ (Fin n) do
           let θ' := (2 * (RealScalar.pi : Float) * i.1) / n
           let θ' := if θ' ≤ RealScalar.pi then θ' else θ' - 2*RealScalar.pi
