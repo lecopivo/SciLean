@@ -36,6 +36,8 @@ open DistributionFun
 
 notation "𝒟'" "(" X ", " Y ")" => DistributionFun defaultScalar% X Y
 
+notation "𝒟'" X => DistributionFun defaultScalar% X defaultScalar%
+
 @[app_unexpander DistributionFun] def unexpandDistributionFun : Lean.PrettyPrinter.Unexpander
   | `($(_) $_ $X $Y) => `(𝒟' ($X, $Y))
   | _ => throw ()
@@ -77,6 +79,11 @@ open Notation in
 noncomputable
 def DistributionFun.extAction (T : 𝒟'(X,Y)) (φ : X → R) : Y := limit n → ∞, ⟪T, testFunApprox n φ⟫
 
+@[pp_dot]
+noncomputable
+def DistributionFun.extAction' (T : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) : W := sorry -- limit n → ∞, ⟪T, testFunApprox n φ⟫
+  -- write φ as ∑ i, φᵢ • zᵢ
+  -- and ⟪T, φ⟫[L] = ∑ i, L ⟪T, φᵢ⟫ zᵢ
 
 -- Lean usually fails to unify this theorem, thus we have a custom simproc to apply it
 theorem DistributionFun.mk_extAction (T : (X → R) → Y) (hT : IsSmoothLinearMap R (fun φ : 𝒟 X => T φ)) (φ : X → R) :
@@ -119,6 +126,21 @@ simproc_decl DistributionFun.mk_extAction_simproc (DistributionFun.extAction (Di
     let prf ← mkAppM ``DistributionFun.mk_extAction #[T, hT, φ]
     return .visit {expr := T.beta #[φ], proof? := prf}
 
+
+----------------------------------------------------------------------------------------------------
+-- Post Composition --------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+noncomputable
+def DistributionFun.postComp (T : 𝒟'(X,Y)) (f : Y → Z) : 𝒟'(X,Z) :=
+  if h : IsSmoothLinearMap R f then
+    ⟨fun φ ⊸ f ⟪T,φ⟫⟩
+  else
+    0
+
+noncomputable
+abbrev DistributionFun.postExtAction (T : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) : 𝒟'(X,Z) :=
+  T.postComp (fun u => u.extAction φ)
 
 
 ----------------------------------------------------------------------------------------------------

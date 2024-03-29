@@ -14,21 +14,23 @@ variable
   {R} [RealScalar R]
   {W} [Vec R W]
   {X} [Vec R X]
-  {Y} [Vec R Y]
+  {Y} [Vec R Y] [Module ℝ Y]
   {Z} [Vec R Z] [Module ℝ Z]
+  {U} [Vec R U] -- [Module ℝ U]
 
 set_default_scalar R
 
+
 noncomputable
-def dpure (x dx : X) : 𝒟' X := ⟨fun φ ⊸ cderiv R φ x dx⟩
+def vecDiracDeriv (x dx : X) (y dy : Y) : 𝒟'(X,Y) := ⟨fun φ ⊸ φ x • dy + cderiv R φ x dx • y⟩
 
 @[fun_prop]
-def DistribDifferentiableAt (f : X → 𝒟' Y) (x : X) :=
+def DistribDifferentiableAt (f : X → 𝒟'(Y,Z)) (x : X) :=
   ∀ (φ : X → 𝒟 Y), CDifferentiableAt R φ x → CDifferentiableAt R (fun x => ⟪f x, φ x⟫) x
 
 
 theorem distribDifferentiableAt_const_test_fun
-    {f : X → 𝒟' Y} {x : X}
+    {f : X → 𝒟'(Y,Z)} {x : X}
     (hf : DistribDifferentiableAt f x)
     {φ : 𝒟 Y} :
     CDifferentiableAt R (fun x => ⟪f x, φ⟫) x := by
@@ -37,14 +39,14 @@ theorem distribDifferentiableAt_const_test_fun
 
 
 @[fun_prop]
-def DistribDifferentiable (f : X → 𝒟' Y) :=
+def DistribDifferentiable (f : X → 𝒟'(Y,Z)) :=
   ∀ x, DistribDifferentiableAt f x
 
 
 open Classical in
 @[fun_trans]
 noncomputable
-def parDistribDeriv (f : X → 𝒟' Y) (x dx : X) : 𝒟' Y :=
+def parDistribDeriv (f : X → 𝒟'(Y,Z)) (x dx : X) : 𝒟'(Y,Z) :=
   ⟨⟨fun φ =>
     if _ : DistribDifferentiableAt f x then
       ∂ (x':=x;dx), ⟪f x', φ⟫
@@ -57,12 +59,12 @@ def parDistribDeriv (f : X → 𝒟' Y) (x dx : X) : 𝒟' Y :=
 ----------------------------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem DistribDiffrentiable.const_rule (T : 𝒟' X) :
+theorem DistribDiffrentiable.const_rule (T : 𝒟'(X,Y)) :
     DistribDifferentiable (fun _ : W => T) := by
   intro _ φ hφ; simp; fun_prop
 
 @[fun_trans]
-theorem parDistribDeriv.const_rule (T : 𝒟' X) :
+theorem parDistribDeriv.const_rule (T : 𝒟'(X,Y)) :
     parDistribDeriv (fun _ : W => T)
     =
     fun w dw =>
@@ -77,30 +79,31 @@ theorem parDistribDeriv.const_rule (T : 𝒟' X) :
 ----------------------------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem dirac.arg_x.DistribDiffrentiable_rule
-    (f : X → Y) (hf : CDifferentiable R f) :
-    DistribDifferentiable (R:=R) (fun x => dirac (f x))  := by
+theorem vecDirac.arg_xy.DistribDiffrentiable_rule
+    (x : W → X) (y : W → Y) (hx : CDifferentiable R x) (hy : CDifferentiable R y) :
+    DistribDifferentiable (R:=R) (fun w => vecDirac (x w) (y w))  := by
   intro x
   unfold DistribDifferentiableAt
   intro φ hφ
-  simp [action_dirac, dirac]
+  simp [action_vecDirac, dirac]
   fun_prop
 
 
 @[fun_trans]
-theorem Pure.pure.arg_x.parDistribDeriv_rule
-    (f : X → Y) (hf : CDifferentiable R f) :
-    parDistribDeriv (R:=R) (fun x => dirac (f x))
+theorem vecDirac.arg_x.parDistribDeriv_rule
+    (x : W → X) (y : W → Y) (hx : CDifferentiable R x) (hy : CDifferentiable R y) :
+    parDistribDeriv (R:=R) (fun w => vecDirac (x w) (y w))
     =
-    fun x dx =>
-      let ydy := fwdDeriv R f x dx
-      (dpure (R:=R) ydy.1 ydy.2) := by
-  funext x dx; ext φ
-  unfold parDistribDeriv dpure
+    fun w dw =>
+      let xdx := fwdDeriv R x w dw
+      let ydy := fwdDeriv R y w dw
+      vecDiracDeriv xdx.1 xdx.2 ydy.1 ydy.2 := by --= (dpure (R:=R) ydy.1 ydy.2) := by
+  funext w dw; ext φ
+  unfold parDistribDeriv vecDirac vecDiracDeriv
   simp [pure, fwdDeriv, DistribDifferentiableAt]
   fun_trans
   . intro φ' hφ' h
-    have : CDifferentiableAt R (fun x => (φ' x) (f x)) x := by fun_prop
+    have : CDifferentiableAt R (fun w : W => (φ' w) (x w) • (y w)) w := by fun_prop
     contradiction
 
 
@@ -110,7 +113,7 @@ theorem Pure.pure.arg_x.parDistribDeriv_rule
 
 @[fun_prop]
 theorem DistribDiffrentiable.comp_rule
-    (f : Y → 𝒟' Z) (g : X → Y)
+    (f : Y → 𝒟'(Z,U)) (g : X → Y)
     (hf : DistribDifferentiable f) (hg : CDifferentiable R g) :
     DistribDifferentiable (fun x => f (g x)) := by
   intro x
@@ -124,7 +127,7 @@ theorem DistribDiffrentiable.comp_rule
 
 @[fun_trans]
 theorem parDistribDeriv.comp_rule
-    (f : Y → 𝒟' Z) (g : X → Y)
+    (f : Y → 𝒟'(Z,U)) (g : X → Y)
     (hf : DistribDifferentiable f) (hg : CDifferentiable R g) :
     parDistribDeriv (fun x => f (g x))
     =
@@ -198,37 +201,28 @@ theorem cintegral.arg_f.cderiv_distrib_rule' (f : W → X → R) (A : Set X):
 
 -- (parDistribDeriv (fun w => (f w ·).toDistribution) w dw).extAction (fun x => if x ∈ A then 1 else 0) := sorry_proof
 
-
 @[fun_trans]
 theorem cintegral.arg_f.parDistribDeriv_rule (f : W → X → Y → R) :
     parDistribDeriv (fun w => (fun x => ∫' y, f w x y).toDistribution)
     =
     fun w dw =>
-      ⟨⟨fun φ => (parDistribDeriv (fun w => (fun (x,y) => f w x y).toDistribution) w dw).extAction fun (x,_) => φ x, sorry_proof⟩⟩ := sorry_proof
+      let Tf := (fun w => (fun x => (fun y => f w x y).toDistribution (R:=R)).toDistribution (R:=R))
+      parDistribDeriv Tf w dw |>.postExtAction (fun _ => 1) := by
+  funext w dw
+  unfold postExtAction parDistribDeriv postComp Function.toDistribution
+  ext φ
+  simp [ftrans_simp, Distribution.mk_extAction_simproc]
+  sorry_proof
 
-
-#check Set.pi
 
 @[fun_trans]
 theorem cintegral.arg_f.parDistribDeriv_rule' (f : W → X → Y → R) (B : X → Set Y) :
     parDistribDeriv (fun w => (fun x => ∫' y in B x, f w x y).toDistribution)
     =
     fun w dw =>
-       ⟨⟨fun φ =>
-         parDistribDeriv (fun w => (fun (x,y) => f w x y).toDistribution) w dw
-         |>.restrict {xy : X×Y | xy.2 ∈ B xy.1}
-         |>.extAction fun (x,_) => φ x, sorry_proof⟩⟩ := sorry_proof
+      let Tf := (fun w => (fun x => ((fun y => f w x y).toDistribution (R:=R)).restrict (B x)).toDistribution (R:=R))
+      parDistribDeriv Tf w dw |>.postExtAction (fun _ => 1) := sorry_proof
 
-
--- @[fun_trans]
--- theorem cintegral.arg_f.cderiv_distrib_rule' (f : W → X → R) (A : Set X):
---     cderiv R (fun w => ∫' x in A, f w x)
---     =
---     fun w dw =>
---       ⟪ifD A then
---          parDistribDeriv ⊤ (fun w => (f w ·).toDistribution) w dw
---        else
---          0, fun _ => 1⟫ := sorry_proof
 
 
 

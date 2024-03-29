@@ -9,6 +9,8 @@ namespace SciLean
 variable
   {R} [RealScalar R]
   {X} [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)]
+  {Y} [Vec R Y]
+  {Z} [Vec R Z]
 
 set_default_scalar R
 
@@ -19,16 +21,22 @@ theorem action_extAction (T : 𝒟' X) (φ : 𝒟 X) :
     T.action φ = T.extAction φ := sorry_proof
 
 @[action_push]
-theorem dirac_eval (x : X) (φ : X → R) :
-    (dirac x).extAction φ
+theorem extAction_vecDirac (x : X) (y : Y) (φ : X → R) :
+    (vecDirac x y).extAction φ
     =
-    φ x := sorry_proof
+    φ x • y := sorry_proof
 
 @[action_push]
-theorem dirac_restric_eval (x : X) (A : Set X) (φ : X → R) :
-    ((dirac x).restrict A).extAction φ
+theorem extAction_restrict_vecDirac (x : X) (y : Y) (A : Set X) (φ : X → R) :
+    ((vecDirac x y).restrict A).extAction φ
     =
-    if x ∈ A then φ x else 0 := sorry_proof
+    if x ∈ A then φ x • y else 0 := sorry_proof
+
+@[action_push]
+theorem postExtAction_vecDirac (x : X) (y : 𝒟'(Y,Z)) (φ : Y → R) :
+    (vecDirac x y).postExtAction φ
+    =
+    vecDirac x (y.extAction φ) := sorry_proof
 
 variable [MeasureSpace X]
 

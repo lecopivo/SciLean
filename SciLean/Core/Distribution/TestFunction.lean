@@ -35,7 +35,7 @@ structure IsTestFunction
     (f : X → R) : Prop where
   is_smooth :
     match space.val with
-    | .inl _ => ContCDiff R ⊤ f
+    | .inl _ => ContCDiff R ∞ f
     | .inr _ => True
   has_compact_support : HasCompactSupport f
 

@@ -13,36 +13,41 @@ variable
   {R} [RealScalar R]
   {W} [Vec R W]
   {X} [SemiHilbert R X] [MeasureSpace X]
+  {Y} [Vec R Y] [Module ℝ Y]
 
 set_default_scalar R
 
 
 open Classical
 noncomputable
-def surfaceDirac (A : Set X) (f : X → R) (d : ℕ) : 𝒟' X :=
-  ⟨fun φ ⊸ ∫' x in A, φ x * f x ∂(surfaceMeasure d)⟩
+def surfaceDirac (A : Set X) (f : X → Y) (d : ℕ) : 𝒟'(X,Y) :=
+  ⟨fun φ ⊸ ∫' x in A, φ x • f x ∂(surfaceMeasure d)⟩
 
 
 @[action_push]
-theorem surfaceDirac_action (A : Set X) (f : X → R) (d : ℕ) (φ : 𝒟 X) :
-    (surfaceDirac A f d).action φ = ∫' x in A, φ x * f x ∂(surfaceMeasure d) := sorry_proof
+theorem surfaceDirac_action (A : Set X) (f : X → Y) (d : ℕ) (φ : 𝒟 X) :
+    (surfaceDirac A f d).action φ = ∫' x in A, φ x • f x ∂(surfaceMeasure d) := sorry_proof
+
 
 @[action_push]
-theorem surfaceDirac_extAction (A : Set X) (f : X → R) (d : ℕ) (φ : X → R) :
-    (surfaceDirac A f d).extAction φ = ∫' x in A, φ x * f x ∂(surfaceMeasure d) := sorry_proof
+theorem surfaceDirac_extAction (A : Set X) (f : X → Y) (d : ℕ) (φ : X → R) :
+    (surfaceDirac A f d).extAction φ = ∫' x in A, φ x • f x ∂(surfaceMeasure d) := sorry_proof
 
 
 @[simp, ftrans_simp]
-theorem surfaceDirac_dirac (f : X → R) (x : X) : surfaceDirac {x} f 0 = f x • dirac x := sorry_proof
+theorem surfaceDirac_dirac (f : X → Y) (x : X) : surfaceDirac {x} f 0 = vecDirac x (f x) := by
+  ext φ
+  unfold surfaceDirac; dsimp
+  sorry_proof
 
 
 open Classical Function in
 @[fun_trans]
-theorem ite_parDistribDeriv (A : W → Set X) (f g : W → X → R) :
+theorem ite_parDistribDeriv (A : W → Set X) (f g : W → X → Y) :
     parDistribDeriv (fun w => Function.toDistribution (fun x => if x ∈ A w then f w x else g w x))
     =
     fun w dw =>
-      surfaceDirac (frontier (A w)) (fun x => (frontierSpeed R A w dw x) * (f w x - g w x)) (finrank R X - 1)
+      surfaceDirac (frontier (A w)) (fun x => (frontierSpeed R A w dw x) • (f w x - g w x)) (finrank R X - 1)
       +
       ifD (A w) then
         (parDistribDeriv (fun w => (f w ·).toDistribution) w dw)
@@ -52,12 +57,12 @@ theorem ite_parDistribDeriv (A : W → Set X) (f g : W → X → R) :
 
 open Function in
 @[fun_trans]
-theorem ite_parDistribDeriv' (φ ψ : W → X → R) (f g : W → X → R) :
+theorem ite_parDistribDeriv' (φ ψ : W → X → R) (f g : W → X → Y) :
     parDistribDeriv (fun w => Function.toDistribution (fun x => if φ w x ≤ ψ w x then f w x else g w x))
     =
     fun w dw =>
       let frontierSpeed := fun x => - (∂ (w':=w;dw), (φ w' x - ψ w' x)) / ‖∇ (x':=x), (φ w x' - ψ w x')‖₂
-      (surfaceDirac {x | φ w x = ψ w x} frontierSpeed (finrank R X - 1))
+      (surfaceDirac {x | φ w x = ψ w x} (fun x => frontierSpeed x • (f w x - g w x)) (finrank R X - 1))
       +
       ifD {x | φ w x ≤ ψ w x} then
         (parDistribDeriv (fun w => (f w ·).toDistribution) w dw)
@@ -67,7 +72,7 @@ theorem ite_parDistribDeriv' (φ ψ : W → X → R) (f g : W → X → R) :
 
 open Function in
 @[fun_trans]
-theorem toDistribution.arg_f.parDistribDeriv_rule (f : W → X → R) (hf : ∀ x, CDifferentiable R (f · x)) :
+theorem toDistribution.arg_f.parDistribDeriv_rule (f : W → X → Y) (hf : ∀ x, CDifferentiable R (f · x)) :
     parDistribDeriv (fun w => Function.toDistribution (fun x => f w x))
     =
     fun w dw =>
@@ -75,6 +80,7 @@ theorem toDistribution.arg_f.parDistribDeriv_rule (f : W → X → R) (hf : ∀ 
 
   unfold parDistribDeriv
   funext x dx; ext φ
+  simp[Function.toDistribution]
   sorry_proof
 
 
@@ -98,14 +104,14 @@ variable
 
 
 open BigOperators in
-theorem surfaceDirac_substitution [Fintype I] (φ ψ : X → R) (f : X → R) (d : ℕ)
+theorem surfaceDirac_substitution [Fintype I] (φ ψ : X → R) (f : X → Y) (d : ℕ)
     {p : (i : I) → X₁ i → X₂ i → X} {ζ : (i : I) → X₁ i → X₂ i} {dom : (i : I) → Set (X₁ i)}
     (inv : ParametricInverseAt (fun x => φ x - ψ x) 0 p ζ dom) (hdim : ∀ i, d = finrank (X₁ i)) :
     surfaceDirac {x | φ x = ψ x} f d
     =
     ∑ i, Distribution.prod'
            (fun x₁ x₂ => p i x₁ x₂)
-           (((fun x₁ => jacobian R (fun x => p i x (ζ i x)) x₁ • f (p i x₁ (ζ i x₁)) ).toDistribution : 𝒟' (X₁ i)).restrict (dom i))
+           (((fun x₁ => jacobian R (fun x => p i x (ζ i x)) x₁ • f (p i x₁ (ζ i x₁))).toDistribution).restrict (dom i))
            (fun x₁ => (dirac (ζ i x₁) : 𝒟' (X₂ i))) := sorry
 
 
