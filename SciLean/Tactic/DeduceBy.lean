@@ -57,6 +57,11 @@ partial def deduceByTactic : Tactic
   let goal ← getMainGoal
   let .some (_,lhs,rhs) := Expr.eq? (← goal.getType) | throwError "expected `?m = e`, got {← ppExpr (← goal.getType)}"
 
+  if ¬lhs.hasMVar ∨ ¬rhs.hasMVar then
+    let prf ← elabTerm (← `(by (conv => ($t;$t)); try simp)) (← goal.getType)
+    goal.assign prf
+    return ()
+
   -- if ¬lhs.isMVar then
   --   throwError "lhs is not mvar"
 
