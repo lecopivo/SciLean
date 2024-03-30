@@ -242,6 +242,36 @@ theorem Distribution.indextype_sum_extAction {I} [IndexType I] (T : I → 𝒟'(
     (∑ i, T i).extAction φ = ∑ i, (T i).extAction φ := by sorry_proof
 
 
+@[simp, ftrans_simp, action_push]
+theorem Distribution.zero_extAction' (φ : X → Z) (L : Y → Z → W) : (0 : 𝒟'(X,Y)).extAction' φ L = 0 := by sorry_proof
+
+-- todo: this needs some integrability condition
+@[action_push]
+theorem Distribution.add_extAction' (T T' : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
+    (T + T').extAction' φ L = T.extAction' φ L + T'.extAction' φ L := by sorry_proof
+
+@[action_push]
+theorem Distribution.sub_extAction' (T T' : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
+    (T - T').extAction' φ L = T.extAction' φ L - T'.extAction' φ L := by sorry_proof
+
+@[action_push]
+theorem Distribution.smul_extAction' (r : R) (T : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
+    (r • T).extAction' φ L = r • T.extAction' φ L := by sorry_proof
+
+@[action_push]
+theorem Distribution.neg_extAction' (T : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
+    (- T).extAction' φ L = - T.extAction' φ L := by sorry_proof
+
+open BigOperators in
+@[action_push]
+theorem Distribution.fintype_sum_extAction' {I} [Fintype I] (T : I → 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
+    (∑ i, T i).extAction' φ L = ∑ i, (T i).extAction' φ L := by sorry_proof
+
+@[action_push]
+theorem Distribution.indextype_sum_extAction' {I} [IndexType I] (T : I → 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
+    (∑ i, T i).extAction' φ L = ∑ i, (T i).extAction' φ L := by sorry_proof
+
+
 ----------------------------------------------------------------------------------------------------
 -- Distributional if statement ---------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
