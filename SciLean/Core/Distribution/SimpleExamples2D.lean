@@ -75,20 +75,14 @@ def foo1' (t' : R) :=
     simp only [ftrans_simp]
     simp only [Tactic.if_pull]
     fun_trans only [scalarGradient, scalarCDeriv,ftrans_simp]
+    unfold Distribution.postExtAction
+    rw[postComp_restrict_extAction (x:=dirac t') (A:= Ioo 0 1) (φ:=fun _ => 1)]
+    simp [ftrans_simp, postComp_restrict_extAction]
     simp (disch:=sorry) only [action_push, ftrans_simp]
     rand_pull_E
     simp
 
 #eval Rand.print_mean_variance (foo1' 0.3) 100 " of foo1'"
-
-
--- open Scalar in
--- def foo1'' (t' : R) :=
---   derive_random_approx
---     (∂ (t:=t'), ∫' (x : R) in Ioo 0 1, sqrt (∫' (y : R) in Ioo 0 1, if x ≤ t then (1:R) else 0))
---   by
---     fun_trans only [scalarGradient, scalarCDeriv, if_pull, ftrans_simp]
---     simp only [action_push, ftrans_simp]
 
 
 def foo2 (t' : R) :=
@@ -115,8 +109,6 @@ def foo2 (t' : R) :=
     simp only [ftrans_simp,action_push]
     simp (disch:=sorry) only [ftrans_simp]
     rand_pull_E
-
-𝒟'(X,𝒟'(Y,ℝ)) := L(𝒟 X, Y)
 
 
 #eval Rand.print_mean_variance (foo2 0.3) 1000 ""
@@ -155,12 +147,19 @@ def foo3 (t' : R) :=
 #eval Rand.print_mean_variance (foo3 1.7) 10000 ""
 
 
+variable [Module ℝ Z] [MeasureSpace X] [Module ℝ Y]
+
+
+#exit
+
+set_option profiler true in
+set_option trace.Meta.Tactic.fun_trans true in
+set_option trace.Meta.Tactic.fun_prop true in
 def foo4 (t' : R) :=
   derive_random_approx
     (∂ (t:=t'), ∫' (x : R) in Ioo 0 1, ∫' (y : R) in Ioo 0 1, if x ≤ t then x*y*t else x+y+t)
   by
     fun_trans only [scalarGradient, scalarCDeriv]
-    simp only [ftrans_simp]
     simp only [Tactic.if_pull]
     fun_trans only [scalarGradient, scalarCDeriv,ftrans_simp]
     simp (disch:=sorry) only [action_push, ftrans_simp]

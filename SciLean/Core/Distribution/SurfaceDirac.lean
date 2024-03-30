@@ -35,7 +35,7 @@ theorem surfaceDirac_extAction (A : Set X) (f : X → Y) (d : ℕ) (φ : X → R
 
 
 @[simp, ftrans_simp]
-theorem surfaceDirac_dirac (f : X → Y) (x : X) : surfaceDirac {x} f 0 = vecDirac x (f x) := by
+theorem surfaceDirac_dirac (f : X → Y) (x : X) : surfaceDirac {x} f 0 = (dirac x).postComp (fun r => r • (f x)) := by
   ext φ
   unfold surfaceDirac; dsimp
   sorry_proof

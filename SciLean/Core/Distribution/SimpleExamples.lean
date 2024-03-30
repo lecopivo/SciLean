@@ -34,8 +34,6 @@ theorem _root_.FiniteDimensional.finrank_unit : finrank R Unit = 0 := by sorry_p
 
 variable [MeasureSpace R] -- [Module ℝ R]
 
-
-
 def foo1 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo 0 1, if x ≤ t then (1:R) else 0)
   rewrite_by
     fun_trans only [scalarGradient, scalarCDeriv]
@@ -49,11 +47,7 @@ theorem foo1_spec (t : R) :
 #eval foo1 (-1.0) -- 0.0
 #eval foo1 2.0    -- 0.0
 
-#check Set.add_empty
-
 open Classical in
-
-set_option pp.funBinderTypes true in
 
 def foo2 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo 0 1, if x - t ≤ 0 then (1:R) else 0)
   rewrite_by

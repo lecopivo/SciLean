@@ -151,8 +151,7 @@ simproc_decl Distribution.mk_extAction_simproc (Distribution.extAction (Distribu
 --   seqRight_eq    := by intros; rfl
 --   pure_seq       := by intros; rfl
 
-def vecDirac (x : X) (y : Y) : 𝒟'(X,Y) := ⟨fun φ ⊸ φ x • y⟩
-abbrev dirac (x : X) : 𝒟' X := vecDirac x 1
+def dirac (x : X) : 𝒟' X := ⟨fun φ ⊸ φ x⟩
 
 open Notation
 noncomputable
@@ -170,7 +169,7 @@ def Distribution.bind' (x' : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U → V →
 ----------------------------------------------------------------------------------------------------
 
 @[simp, ftrans_simp]
-theorem action_vecDirac (x : X) (y : Y) (φ : 𝒟 X) : ⟪(vecDirac x y), φ⟫ = φ x • y := by simp[dirac,vecDirac]
+theorem action_dirac (x : X) (φ : 𝒟 X) : ⟪dirac x, φ⟫ = φ x := by simp[dirac]
 
 @[simp, ftrans_simp]
 theorem action_bind (x : 𝒟'(X,Z)) (f : X → 𝒟' Y)  (φ : 𝒟 Y) :
@@ -409,6 +408,35 @@ abbrev Distribution.postRestrict (T : 𝒟'(X,𝒟'(Y,Z))) (A : X → Set Y) : �
     ⟨fun ψ => sorry,
       sorry_proof⟩,
   sorry_proof⟩⟩
+
+
+@[simp, ftrans_simp]
+theorem postComp_id (u : 𝒟'(X,Y)) :
+    (u.postComp (fun y => y)) = u := sorry_proof
+
+@[simp, ftrans_simp]
+theorem postComp_comp (x : 𝒟'(X,U)) (g : U → V) (f : V → W) :
+    (x.postComp g).postComp f
+    =
+    x.postComp (fun u => f (g u)) := sorry_proof
+
+@[simp, ftrans_simp]
+theorem postComp_assoc (x : 𝒟'(X,U)) (y : U → 𝒟'(Y,V)) (f : V → W) (φ : Y → R) :
+    (x.postComp y).postComp (fun T => T.postComp f)
+    =
+    (x.postComp (fun u => (y u).postComp f)) := sorry_proof
+
+@[action_push]
+theorem postComp_extAction (x : 𝒟'(X,U)) (y : U → V) (φ : X → R) :
+    (x.postComp y).extAction φ
+    =
+    y (x.extAction φ) := sorry_proof
+
+@[action_push]
+theorem postComp_restrict_extAction (x : 𝒟'(X,U)) (y : U → V) (A : Set X) (φ : X → R) :
+    ((x.postComp y).restrict A).extAction φ
+    =
+    y ((x.restrict A).extAction φ) := sorry_proof
 
 
 @[simp, ftrans_simp, action_push]

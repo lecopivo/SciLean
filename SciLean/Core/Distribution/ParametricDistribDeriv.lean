@@ -13,16 +13,17 @@ open Distribution
 variable
   {R} [RealScalar R]
   {W} [Vec R W]
-  {X} [Vec R X]
+  {X} [Vec R X] [MeasureSpace X]
   {Y} [Vec R Y] [Module ℝ Y]
   {Z} [Vec R Z] [Module ℝ Z]
   {U} [Vec R U] -- [Module ℝ U]
+
 
 set_default_scalar R
 
 
 noncomputable
-def vecDiracDeriv (x dx : X) (y dy : Y) : 𝒟'(X,Y) := ⟨fun φ ⊸ φ x • dy + cderiv R φ x dx • y⟩
+def diracDeriv (x dx : X) : 𝒟' X := ⟨fun φ ⊸ cderiv R φ x dx⟩
 
 @[fun_prop]
 def DistribDifferentiableAt (f : X → 𝒟'(Y,Z)) (x : X) :=
@@ -43,15 +44,25 @@ def DistribDifferentiable (f : X → 𝒟'(Y,Z)) :=
   ∀ x, DistribDifferentiableAt f x
 
 
+-- TODO:
+-- probably change the definition of `parDistribDeriv` to:
+-- ⟨⟨fun φ =>
+--    if h : DistribDifferentiableAt f x then
+--      ∂ (x':=x;dx), ⟪f x', φ⟫
+--    else
+--      0 , sorry_proof⟩⟩
+-- I believe in that case the function is indeed linear in φ
+
 open Classical in
 @[fun_trans]
 noncomputable
 def parDistribDeriv (f : X → 𝒟'(Y,Z)) (x dx : X) : 𝒟'(Y,Z) :=
-  ⟨⟨fun φ =>
-    if _ : DistribDifferentiableAt f x then
-      ∂ (x':=x;dx), ⟪f x', φ⟫
-    else
-      0, sorry_proof⟩⟩
+  ⟨⟨fun φ => ∂ (x':=x;dx), ⟪f x', φ⟫, sorry_proof⟩⟩
+
+
+@[simp, ftrans_simp]
+theorem action_parDistribDeriv (f : X → 𝒟'(Y,Z)) (x dx : X) (φ : 𝒟 Y) :
+    ⟪parDistribDeriv f x dx, φ⟫ = ∂ (x':=x;dx), ⟪f x', φ⟫ := rfl
 
 
 ----------------------------------------------------------------------------------------------------
@@ -79,32 +90,28 @@ theorem parDistribDeriv.const_rule (T : 𝒟'(X,Y)) :
 ----------------------------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem vecDirac.arg_xy.DistribDiffrentiable_rule
-    (x : W → X) (y : W → Y) (hx : CDifferentiable R x) (hy : CDifferentiable R y) :
-    DistribDifferentiable (R:=R) (fun w => vecDirac (x w) (y w))  := by
+theorem dirac.arg_xy.DistribDiffrentiable_rule
+    (x : W → X) (hx : CDifferentiable R x) :
+    DistribDifferentiable (R:=R) (fun w => dirac (x w))  := by
   intro x
   unfold DistribDifferentiableAt
   intro φ hφ
-  simp [action_vecDirac, dirac]
+  simp [action_dirac, dirac]
   fun_prop
 
 
 @[fun_trans]
-theorem vecDirac.arg_x.parDistribDeriv_rule
-    (x : W → X) (y : W → Y) (hx : CDifferentiable R x) (hy : CDifferentiable R y) :
-    parDistribDeriv (R:=R) (fun w => vecDirac (x w) (y w))
+theorem dirac.arg_x.parDistribDeriv_rule
+    (x : W → X) (hx : CDifferentiable R x) :
+    parDistribDeriv (R:=R) (fun w => dirac (x w))
     =
     fun w dw =>
       let xdx := fwdDeriv R x w dw
-      let ydy := fwdDeriv R y w dw
-      vecDiracDeriv xdx.1 xdx.2 ydy.1 ydy.2 := by --= (dpure (R:=R) ydy.1 ydy.2) := by
+      diracDeriv xdx.1 xdx.2 := by --= (dpure (R:=R) ydy.1 ydy.2) := by
   funext w dw; ext φ
-  unfold parDistribDeriv vecDirac vecDiracDeriv
+  unfold parDistribDeriv dirac diracDeriv
   simp [pure, fwdDeriv, DistribDifferentiableAt]
   fun_trans
-  . intro φ' hφ' h
-    have : CDifferentiableAt R (fun w : W => (φ' w) (x w) • (y w)) w := by fun_prop
-    contradiction
 
 
 ----------------------------------------------------------------------------------------------------
@@ -177,6 +184,49 @@ theorem Bind.bind.arg_fx.parDistribDiff_rule
 
 
 ----------------------------------------------------------------------------------------------------
+-- Move these around -------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+@[fun_prop]
+theorem Distribution.restrict.arg_T.IsSmoothLinearMap_rule (T : W → 𝒟'(X,Y)) (A : Set X)
+    (hT : IsSmoothLinearMap R T) :
+    IsSmoothLinearMap R (fun w => (T w).restrict A) := sorry_proof
+
+@[fun_prop]
+theorem Distribution.restrict.arg_T.IsSmoothLinearMap_rule_simple (A : Set X) :
+    IsSmoothLinearMap R (fun (T : 𝒟'(X,Y)) => T.restrict A) := sorry_proof
+
+@[fun_prop]
+theorem Function.toDistribution.arg_f.CDifferentiable_rule (f : W → X → Y)
+    (hf : ∀ x, CDifferentiable R (f · x)) :
+    CDifferentiable R (fun w => (fun x => f w x).toDistribution (R:=R)) := sorry_proof
+
+@[fun_trans]
+theorem Function.toDistribution.arg_f.cderiv_rule (f : W → X → Y)
+    (hf : ∀ x, CDifferentiable R (f · x)) :
+    cderiv R (fun w => (fun x => f w x).toDistribution (R:=R))
+    =
+    fun w dw =>
+      (fun x =>
+        let dy := cderiv R (f · x) w dw
+        dy).toDistribution := sorry_proof
+
+@[fun_trans]
+theorem toDistribution.linear_parDistribDeriv_rule (f : W → X → Y) (L : Y → Z)
+    (hL : IsSmoothLinearMap R L) :
+    parDistribDeriv (fun w => (fun x => L (f w x)).toDistribution)
+    =
+    fun w dw =>
+      parDistribDeriv Tf w dw |>.postComp L := by
+  funext w dw
+  unfold parDistribDeriv Distribution.postComp Function.toDistribution
+  ext φ
+  simp [ftrans_simp, Distribution.mk_extAction_simproc]
+  sorry_proof
+
+
+
+----------------------------------------------------------------------------------------------------
 -- Integral ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
@@ -200,6 +250,8 @@ theorem cintegral.arg_f.cderiv_distrib_rule' (f : W → X → R) (A : Set X):
        (parDistribDeriv (fun w => (f w ·).toDistribution) w dw).restrict A |>.extAction fun _ => 1 := sorry_proof
 
 -- (parDistribDeriv (fun w => (f w ·).toDistribution) w dw).extAction (fun x => if x ∈ A then 1 else 0) := sorry_proof
+
+
 
 @[fun_trans]
 theorem cintegral.arg_f.parDistribDeriv_rule (f : W → X → Y → R) :
