@@ -27,11 +27,13 @@ set_default_scalar R
 noncomputable
 def parDistribRevDeriv (f : X → 𝒟'(Y,Z)) (x : X) : 𝒟'(Y,Z×(Z→X)) :=
   ⟨fun φ =>
-      let dz := semiAdjoint R (fun dx => parDistribDeriv f x dx φ)
+      let dz := semiAdjoint R (fun dx => cderiv R (f · φ) x dx)
       let z  := f x φ
       (z, dz), sorry_proof⟩
 
+
 namespace parDistribRevDeriv
+
 
 theorem comp_rule
     (f : Y → 𝒟'(Z,U)) (g : X → Y)
@@ -41,7 +43,7 @@ theorem comp_rule
     fun x =>
       let ydg := revDeriv R g x
       let udf := parDistribRevDeriv f ydg.1
-      udf.postComp (⟨fun (u,df') => (u, fun du => ydg.2 (df' du)), sorry_proof⟩) := by
+      udf.postComp (⟨fun (u,df') => (u, fun du => ydg.2 (df' du)), by sorry_proof⟩) := by
 
   unfold parDistribRevDeriv postComp
   funext x; ext φ
@@ -49,7 +51,9 @@ theorem comp_rule
   fun_trans
   simp [action_push,revDeriv,fwdDeriv]
   have : ∀ x, HasSemiAdjoint R (∂ x':=x, f x' φ) := sorry_proof -- todo add: `DistribHasAdjDiff`
+  have : ∀ φ, CDifferentiable R fun x0 => (f x0) φ := sorry_proof
   fun_trans
+
 
 
 theorem bind_rule
@@ -84,7 +88,7 @@ def diracRevDeriv (x : X) : 𝒟'(X,R×(R→X)) :=
 @[fun_trans]
 theorem dirac.arg_xy.parDistribRevDeriv_rule
     (x : W → X) (hx : HasAdjDiff R x) :
-    parDistribRevDeriv (fun w => dirac (x w))
+    parDistribRevDeriv (fun w => dirac (x w) (R:=R))
     =
     fun w =>
       let xdx := revDeriv R x w

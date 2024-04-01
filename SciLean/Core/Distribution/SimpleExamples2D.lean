@@ -142,8 +142,7 @@ def foo3 (t' : R) :=
 
 variable [Module ℝ Z] [MeasureSpace X] [Module ℝ Y]
 
-
-
+#exit
 
 -- set_option profiler true in
 -- set_option trace.Meta.Tactic.fun_trans true in

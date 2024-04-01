@@ -19,6 +19,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
+  {W : Type _} [SemiInnerProductSpace K W]
   {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
@@ -30,6 +31,7 @@ structure HasSemiAdjoint (f : X → Y) : Prop where
    -- maybe add: ∀ x, TestFunction x → TestFunction (f x) - I think this is important for proving linearity of f'
    -- maybe add: ∀ y, TestFunction y → TestFunction (f' y)
   -- Right now we have no use for functions that have semiAdjoint and are not differentiable
+  -- so we just assume that all are differentiable
   is_differentiable : CDifferentiable K f
 
 /-- Generalization of adjoint of linear map `f : X → Y`.
@@ -47,6 +49,7 @@ def semiAdjoint (f : X → Y) (y : Y) : X :=
   | isTrue h => Classical.choose h.semiAdjoint_exists y
   | isFalse _ => 0
 
+
 -- Basic identities ------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -59,8 +62,25 @@ theorem semiAdjoint.arg_y.IsLinearMap_rule (f : X → Y) :
 #generate_linear_map_simps SciLean.semiAdjoint.arg_y.IsLinearMap_rule
 
 @[fun_prop]
-theorem semiAdjoint.arg_y.CDifferentiable_rule (f : X → Y) (hf : CDifferentiable K f) :
+theorem semiAdjoint.arg_y.CDifferentiable_rule (f : X → Y) :
     CDifferentiable K (fun y => semiAdjoint K f y) := sorry_proof
+
+@[fun_prop]
+theorem semiAdjoint.arg_y.IsSmoothLinearMap_rule (f : X → Y) :
+    IsSmoothLinearMap K (fun y => semiAdjoint K f y) := by constructor; fun_prop; fun_prop
+
+
+-- Do we need joint smoothness in `w` and `x` for `f` ???
+@[fun_prop]
+theorem semiAdjoint.arg_f.IsSmoothLinearMap_rule (f : W → X → Y)
+    (hf₁ : ∀ x, IsSmoothLinearMap K (f · x)) (hf₂ : ∀ w, HasSemiAdjoint K (f w ·)) :
+    IsSmoothLinearMap K (fun w => semiAdjoint K (f w)) := sorry_proof
+
+@[fun_prop]
+theorem semiAdjoint.arg_f.CDifferentiable_rule (f : W → X → Y) (y : W → Y)
+    (hf₁ : CDifferentiable K (fun (w,x) => f w x)) (hf₂ : ∀ w, HasSemiAdjoint K (f w ·))
+    (hy : CDifferentiable K y) :
+    CDifferentiable K (fun w => semiAdjoint K (f w) (y w)) := sorry_proof
 
 @[fun_prop]
 theorem HasSemiAdjoint.CDifferentiable (f : X → Y) (hf : HasSemiAdjoint K f) :
