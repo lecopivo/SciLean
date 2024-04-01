@@ -109,3 +109,43 @@ end AlgebraSimps
 
 instance : UniformSpace (X ⊸[K] Y) := sorry
 instance : Vec K (X ⊸[K] Y) := Vec.mkSorryProofs
+
+open BigOperators in
+@[simp, ftrans_simp]
+theorem SmoothLinearMap.fintype_sum_apply {I} [Fintype I] (f : I → X⊸[K] Y) (x : X) :
+    (∑ i, f i) x = ∑ i, f i x  := by sorry_proof
+
+@[simp, ftrans_simp]
+theorem SmoothLinearMap.indextype_sum_apply {I} [IndexType I] (f : I → X⊸[K] Y) (x : X) :
+    (∑ i, f i) x = ∑ i, f i x  := by sorry_proof
+
+
+
+----------------------------------------------------------------------------------------------------
+
+
+@[fun_prop]
+theorem SmoothLinearMap.mk'.arg_f.IsSmoothLinearMap_rule
+    (f : W → X → Y)
+    (hf : CDifferentiable K (fun (w,x) => f w x))
+    (hf₁ : ∀ x, IsSmoothLinearMap K (f · x)) (hf₂ : ∀ w, IsSmoothLinearMap K (f w ·)) :
+    IsSmoothLinearMap K (fun w => (fun x ⊸[K] f w x)) := sorry_proof
+
+@[fun_prop]
+theorem SmoothLinearMap_apply_left
+    (f : W → X ⊸[K] Y) (x : X) (hf : IsSmoothLinearMap K f) :
+    IsSmoothLinearMap K fun w => (f w) x := sorry_proof
+
+@[fun_prop]
+theorem SmoothLinearMap.mk'.arg_f.CDifferentiable_rule
+    (f : W → X ⊸[K] Y) (g : W → X) (hf : CDifferentiable K f) (hg : CDifferentiable K g) :
+    CDifferentiable K (fun w => f w (g w)) := sorry_proof
+
+
+
+set_default_scalar K
+
+variable (f : X ⊸ Y)
+
+-- TODO: fix this!!! What is going on??
+#check f -- f : sorryAx (Type (max ?u.29009 ?u.28996)) true

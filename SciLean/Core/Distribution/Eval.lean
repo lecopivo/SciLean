@@ -8,11 +8,11 @@ namespace SciLean
 
 variable
   {R} [RealScalar R]
-  {X} [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)]
-  {Y} [Vec R Y]
+  {X} [Vec R X] -- [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)]
+  {Y} [Vec R Y] [Module ℝ Y]
   {Z} [Vec R Z]
   {U} [Vec R U]
-  {V} [Vec R V]
+  {V} [Vec R V] [Module ℝ V]
   {W} [Vec R W]
 
 set_default_scalar R
@@ -21,48 +21,55 @@ open Classical
 
 @[action_push]
 theorem action_extAction (T : 𝒟' X) (φ : 𝒟 X) :
-    T.action φ = T.extAction φ := sorry_proof
+    T φ = T.extAction' φ := sorry_proof
 
 @[action_push]
-theorem extAction_vecDirac (x : X) (φ : X → R) :
-    (dirac x).extAction φ
+theorem extAction_vecDirac (x : X) (φ : X → Y)  (L : R ⊸ Y ⊸ Z) :
+    (dirac x).extAction φ L
     =
-    φ x := sorry_proof
+    L 1 (φ x) := sorry_proof
 
 @[action_push]
-theorem extAction_restrict_vecDirac (x : X) (A : Set X) (φ : X → R) :
-    ((dirac x).restrict A).extAction φ
+theorem extAction_restrict_vecDirac (x : X) (A : Set X) (φ : X → Y) (L : R ⊸ Y ⊸ Z) :
+    ((dirac x).restrict A).extAction φ L
     =
-    if x ∈ A then φ x else 0 := sorry_proof
+    if x ∈ A then L 1 (φ x) else 0 := sorry_proof
 
     -- x.postComp (fun u => (y u).extAction φ) := by sorry_proof
 
 @[action_push]
-theorem postExtAction_postComp (x : 𝒟'(X,U)) (y : U → 𝒟'(Y,Z)) (φ : Y → R) :
-    (x.postComp y).postExtAction φ
+theorem postExtAction_postComp (x : 𝒟'(X,U)) (y : U ⊸ 𝒟'(Y,Z)) (φ : Y → R) :
+    (x.postComp y).postComp (⟨fun T => T.extAction' φ, by unfold Distribution.extAction'; fun_prop⟩)
     =
-    x.postComp (fun u => (y u).extAction φ) := by sorry_proof
+    x.postComp (⟨fun u => (y u).extAction' φ, by unfold Distribution.extAction'; fun_prop⟩) := by sorry_proof
 
 variable [MeasureSpace X]
 
 open Rand in
 @[action_push]
-theorem function_toDistribution_eval (f : X → R) (A : Set X) (φ : X → R) [UniformRand A] :
-  (f.toDistribution.restrict A).extAction φ
+theorem function_toDistribution_eval (f : X → Y) (A : Set X) (φ : X → U) (L : Y ⊸ U ⊸ V) [UniformRand A] :
+  (f.toDistribution.restrict A).extAction φ L
   =
   (uniform A).E fun x =>
     let V : R := Scalar.ofENNReal (volume A)
-    V • f x * φ x := sorry_proof
+    V • L (f x) (φ x) := sorry_proof
 
 
 open Rand in
 @[action_push]
-theorem function_toDistribution_eval_restrict (f : X → R) (B A : Set X) (φ : X → R) [UniformRand A] :
-  ((f.toDistribution.restrict B).restrict A).extAction φ
+theorem function_toDistribution_eval_restrict (f : X → Y) (B A : Set X) (φ : X → U) (L : Y ⊸ U ⊸ V) [UniformRand A] :
+  ((f.toDistribution.restrict B).restrict A).extAction φ L
   =
   (uniform A).E fun x =>
     let V : R := Scalar.ofENNReal (volume A)
     if x.1 ∈ B then
-      V • f x * φ x
+      V • L (f x) (φ x)
     else
       0 := sorry_proof
+
+
+@[simp, ftrans_simp, action_push]
+theorem function_toDistribution_extAction_unit {X} [Vec R X] [Module ℝ X] (f : Unit → X) (φ : Unit → Y) (L : X ⊸ Y ⊸ Z) :
+    f.toDistribution.extAction φ L
+    =
+    L (f ()) (φ ()) := sorry_proof

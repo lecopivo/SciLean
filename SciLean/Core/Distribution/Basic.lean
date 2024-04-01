@@ -16,7 +16,7 @@ namespace SciLean
 variable
   {R} [RealScalar R]
   {W} [Vec R W] [Module ℝ W]
-  {X} [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)]
+  {X} [Vec R X] -- [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)]
   {Y} [Vec R Y] [Module ℝ Y]
   {Z} [Vec R Z]
   {U} [Vec R U]
@@ -25,15 +25,9 @@ variable
 set_default_scalar R
 
 variable (R X Y)
-structure Distribution where
-  action : (𝒟 X) ⊸ Y
+abbrev Distribution := (𝒟 X) ⊸ Y
 variable {R X Y}
 
-namespace Distribution
-scoped notation "⟪" f' ", " φ "⟫" => Distribution.action f' φ
-end Distribution
-
-open Distribution
 
 notation "𝒟'" X => Distribution defaultScalar% X defaultScalar%
 notation "𝒟'" "(" X ", " Y ")" => Distribution defaultScalar% X Y
@@ -42,33 +36,29 @@ notation "𝒟'" "(" X ", " Y ")" => Distribution defaultScalar% X Y
   | `($(_) $_ $X $Y) => `(𝒟'($X,$Y))
   | _ => throw ()
 
-@[simp, ftrans_simp]
-theorem action_mk_apply (f : (𝒟 X) ⊸ Y) (φ : 𝒟 X) :
-    ⟪Distribution.mk (R:=R) f, φ⟫ = f φ := by rfl
 
 @[ext]
-theorem Distribution.ext (x y : Distribution R X Y) :
-    (∀ (φ : 𝒟 X), ⟪x,φ⟫ = ⟪y,φ⟫)
+theorem Distribution.ext (x y : 𝒟'(X,Y)) :
+    (∀ (φ : 𝒟 X), x φ = y φ)
     →
     x = y := by
 
-  induction x; induction y; simp only [action_mk_apply, mk.injEq]; aesop
+  apply SmoothLinearMap.ext
 
 
 ----------------------------------------------------------------------------------------------------
 -- Algebra -----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-instance : Zero (𝒟'(X,Y)) := ⟨⟨fun _φ ⊸ 0⟩⟩
-instance : Add (𝒟'(X,Y)) := ⟨fun f g => ⟨fun φ ⊸ ⟪f, φ⟫ + ⟪g, φ⟫⟩⟩
-instance : Sub (𝒟'(X,Y)) := ⟨fun f g => ⟨fun φ ⊸ ⟪f, φ⟫ - ⟪g, φ⟫⟩⟩
-instance : Neg (𝒟'(X,Y)) := ⟨fun f => ⟨fun φ ⊸ -⟪f, φ⟫⟩⟩
-instance : SMul R (𝒟'(X,Y)) := ⟨fun r f => ⟨fun φ ⊸ r • ⟪f, φ⟫⟩⟩
-instance [Module ℝ Y] : SMul ℝ (𝒟'(X,Y)) := ⟨fun r f => ⟨⟨fun φ => r • ⟪f, φ⟫, sorry_proof⟩⟩⟩
+-- instance : Zero (𝒟'(X,Y)) := by unfold Distribution; infer_instance
+-- instance : Add (𝒟'(X,Y)) := by unfold Distribution; infer_instance
+-- instance : Sub (𝒟'(X,Y)) := by unfold Distribution; infer_instance
+-- instance : Neg (𝒟'(X,Y)) := by unfold Distribution; infer_instance
+-- instance : SMul R (𝒟'(X,Y)) := by unfold Distribution; infer_instance
+instance [Module ℝ Y] : SMul ℝ (𝒟'(X,Y)) := ⟨fun r f => ⟨fun φ => r • (f φ), sorry_proof⟩⟩
 
--- not sure what exact the topology is supposed to be here
-instance : UniformSpace (𝒟'(X,Y)) := sorry
-instance : Vec R (𝒟'(X,Y)) := Vec.mkSorryProofs
+-- instance : UniformSpace (𝒟'(X,Y)) :=  by unfold Distribution; infer_instance
+-- instance : Vec R (𝒟'(X,Y)) := by unfold Distribution; infer_instance
 instance [Module ℝ Y] : Module ℝ (𝒟'(X,Y)) := Module.mkSorryProofs
 
 
@@ -76,57 +66,77 @@ instance [Module ℝ Y] : Module ℝ (𝒟'(X,Y)) := Module.mkSorryProofs
 -- Extended action ---------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-open Notation in
+open BigOperators in
 @[pp_dot]
 noncomputable
-def Distribution.extAction (T : 𝒟'(X,Y)) (φ : X → R) : Y := limit n → ∞, ⟪T, testFunApprox n φ⟫
+def Distribution.extAction (T : 𝒟'(X,Y)) (φ : X → Z) (L : Y ⊸ Z ⊸ W) : W :=
+  if h : ∃ (zₙ : ℕ → Z) (φₙ : ℕ → 𝒟 X), ∀ x, ∑' i, φₙ i x • zₙ i = φ x then
+    let zₙ := Classical.choose h
+    let φₙ := (Classical.choose_spec h).choose
+    ∑' i, L (T (φₙ i)) (zₙ i)
+  else
+    0
 
-@[pp_dot]
+namespace Distribution
+scoped notation "⟪" T ", " φ "⟫[" L "]" => Distribution.extAction T φ L
+end Distribution
+
+
 noncomputable
-def Distribution.extAction' (T : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) : W := sorry
-  -- write φ as ∑ i, φᵢ • zᵢ
-  -- and ⟪T, φ⟫[L] = ∑ i, L ⟪T, φᵢ⟫ zᵢ
+abbrev Distribution.extAction' (T : 𝒟'(X,Y)) (φ : X → R) : Y := T.extAction φ (fun y ⊸ fun r ⊸ r • y)
 
--- Lean usually fails to unify this theorem, thus we have a custom simproc to apply it
+noncomputable
+abbrev Distribution.integrate (T : 𝒟'(X,Y)) : Y := T.extAction' (fun _ => 1)
+
+@[fun_prop]
+theorem TestFunction.apply_IsSmoothLinearMap : IsSmoothLinearMap R fun (φ : 𝒟 X) => (φ : X → R) := sorry_proof
+
 theorem Distribution.mk_extAction (T : (X → R) → Y) (hT : IsSmoothLinearMap R (fun φ : 𝒟 X => T φ)) (φ : X → R) :
-   (Distribution.mk (⟨fun φ => T φ,hT⟩)).extAction φ = T φ := sorry_proof
+    Distribution.extAction (SmoothLinearMap.mk' R (fun (φ : 𝒟 X) => T φ) hT : Distribution _ _ _) φ (fun y ⊸ fun r ⊸ r • y) = T φ := sorry_proof
 
 
--- #check Function.
--- theorem Distribution.mk_restrict (T : (X → R) → R) (hT : IsSmoothLinearMap R (fun φ : 𝒟 X => T φ)) (φ : X → R) (A : Set X) :
---    ((Distribution.mk (⟨fun φ => T φ,hT⟩)).restrict A).extAction φ = T φ  := sorry_proof
+-- This is definitely not true as stated, what kind of condistions do we need on `φ` and `T`?
+@[fun_prop]
+theorem Distribution.extAction.arg_φ.IsSmoothLinearMap (T : 𝒟'(X,U)) (φ : W → X → V) (L : U ⊸ V ⊸ Z)
+    (hφ : IsSmoothLinearMap R φ) :
+    IsSmoothLinearMap R (fun w => T.extAction (φ w) L) := sorry_proof
+
+@[fun_prop]
+theorem Distribution.extAction.arg_T.IsSmoothLinearMap (T : W → 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ Z)
+    (hT : IsSmoothLinearMap R T) :
+    IsSmoothLinearMap R (fun w => (T w).extAction φ L) := sorry_proof
 
 
-open Lean Meta in
-/-- Simproc to apply `Distribution.mk_extAction` theorem -/
-simproc_decl Distribution.mk_extAction_simproc (Distribution.extAction (Distribution.mk (SmoothLinearMap.mk _ _)) _) := fun e => do
+-- open Lean Meta in
+-- /-- Simproc to apply `Distribution.mk_extAction` theorem -/
+-- simproc_decl Distribution.mk_extAction_simproc (Distribution.extAction (Distribution.mk (SmoothLinearMap.mk _ _)) _) := fun e => do
 
-  let φ := e.appArg!
-  let T := e.appFn!.appArg!
+--   let φ := e.appArg!
+--   let T := e.appFn!.appArg!
 
-  let .lam xName xType xBody xBi := T.appArg!.appFn!.appArg!
-    | return .continue
-  let hT := T.appArg!.appArg!
+--   let .lam xName xType xBody xBi := T.appArg!.appFn!.appArg!
+--     | return .continue
+--   let hT := T.appArg!.appArg!
 
-  withLocalDecl xName xBi xType fun x => do
-  let R := xType.getArg! 0
-  let X := xType.getArg! 2
-  withLocalDecl `φ' xBi (← mkArrow X R) fun φ' => do
-    let b := xBody.instantiate1 x
-    let b := b.replace (fun e' =>
-      if e'.isAppOf ``DFunLike.coe &&
-         5 ≤ e'.getAppNumArgs &&
-         e'.getArg! 4 == x then
-          .some (mkAppN φ' e'.getAppArgs[5:])
-      else
-        .none)
+--   withLocalDecl xName xBi xType fun x => do
+--   let R := xType.getArg! 0
+--   let X := xType.getArg! 2
+--   withLocalDecl `φ' xBi (← mkArrow X R) fun φ' => do
+--     let b := xBody.instantiate1 x
+--     let b := b.replace (fun e' =>
+--       if e'.isAppOf ``DFunLike.coe &&
+--          5 ≤ e'.getAppNumArgs &&
+--          e'.getArg! 4 == x then
+--           .some (mkAppN φ' e'.getAppArgs[5:])
+--       else
+--         .none)
 
-    if b.containsFVar x.fvarId! then
-      return .continue
+--     if b.containsFVar x.fvarId! then
+--       return .continue
 
-    let T ← mkLambdaFVars #[φ'] b
-    let prf ← mkAppM ``Distribution.mk_extAction #[T, hT, φ]
-    return .visit {expr := T.beta #[φ], proof? := prf}
+--     let T ← mkLambdaFVars #[φ'] b
+--     let prf ← mkAppM ``Distribution.mk_extAction #[T, hT, φ]
+--     return .visit {expr := T.beta #[φ], proof? := prf}
 
 
 
@@ -151,17 +161,13 @@ simproc_decl Distribution.mk_extAction_simproc (Distribution.extAction (Distribu
 --   seqRight_eq    := by intros; rfl
 --   pure_seq       := by intros; rfl
 
-def dirac (x : X) : 𝒟' X := ⟨fun φ ⊸ φ x⟩
+def dirac (x : X) : 𝒟' X := fun φ ⊸ φ x
+
 
 open Notation
 noncomputable
-def Distribution.bind (x' : 𝒟'(X,Z)) (f : X → 𝒟' Y) : 𝒟'(Y,Z) :=
-  ⟨⟨fun φ => x'.extAction fun x => ⟪f x, φ⟫, sorry_proof⟩⟩
-
-open Notation
-noncomputable
-def Distribution.bind' (x' : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U → V → W) : 𝒟'(Y,W) :=
-  ⟨⟨fun φ => x'.extAction' (fun x => ⟪f x, φ⟫) L, sorry_proof⟩⟩
+def Distribution.bind (x' : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U ⊸ V ⊸ W) : 𝒟'(Y,W) :=
+  fun φ ⊸ x'.extAction (fun x => f x φ) L
 
 
 ----------------------------------------------------------------------------------------------------
@@ -169,106 +175,57 @@ def Distribution.bind' (x' : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U → V →
 ----------------------------------------------------------------------------------------------------
 
 @[simp, ftrans_simp]
-theorem action_dirac (x : X) (φ : 𝒟 X) : ⟪dirac x, φ⟫ = φ x := by simp[dirac]
+theorem action_dirac (x : X) (φ : 𝒟 X) : dirac x φ = φ x := by simp[dirac]
 
 @[simp, ftrans_simp]
-theorem action_bind (x : 𝒟'(X,Z)) (f : X → 𝒟' Y)  (φ : 𝒟 Y) :
-    ⟪x.bind f, φ⟫ = x.extAction (fun x' => ⟪f x', φ⟫) := by
+theorem action_bind (x : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U ⊸ V ⊸ W) (φ : 𝒟 Y) :
+    x.bind f L φ = x.extAction (fun x' => f x' φ) L := by
   simp[Distribution.bind]
 
-@[simp, ftrans_simp]
-theorem extAction_bind (x : 𝒟'(X,Z)) (f : X → 𝒟' Y) (φ : Y → R) :
-    (x.bind f).extAction  φ = x.extAction (fun x' => (f x').extAction φ) := by
-  simp[Distribution.bind]
-  sorry_proof
+
+-- @[simp, ftrans_simp]
+-- theorem extAction_bind (x : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U ⊸ V ⊸ W) (φ : Y → Z) (K : W ⊸ Z ⊸ W') :
+--     (x.bind f L).extAction φ K = x.extAction (fun x' => (f x').extAction φ (sorry : V ⊸ Z ⊸ V⊗Z)) (sorry : U ⊸ (V⊗Z) ⊸ W') := by
+--   simp [Distribution.bind]
 
 
 ----------------------------------------------------------------------------------------------------
 -- Arithmetics -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-@[simp, ftrans_simp, action_push]
-theorem Distribution.zero_action (φ : 𝒟 X) : ⟪(0 : 𝒟'(X,Y)), φ⟫ = 0 := by rfl
-
-@[action_push]
-theorem Distribution.add_action (T T' : 𝒟'(X,Y)) (φ : 𝒟 X) : ⟪T + T', φ⟫ = ⟪T,φ⟫ + ⟪T',φ⟫ := by rfl
-
-@[action_push]
-theorem Distribution.sub_action (T T' : 𝒟'(X,Y)) (φ : 𝒟 X) : ⟪T - T', φ⟫ = ⟪T,φ⟫ - ⟪T',φ⟫ := by rfl
-
-@[action_push]
-theorem Distribution.smul_action (r : R) (T : 𝒟'(X,Y)) (φ : 𝒟 X) : ⟪r • T, φ⟫ = r • ⟪T,φ⟫ := by rfl
-
-@[action_push]
-theorem Distribution.neg_action (T : 𝒟'(X,Y)) (φ : 𝒟 X) : ⟪- T, φ⟫ = - ⟪T,φ⟫ := by rfl
-
-open BigOperators in
-@[action_push]
-theorem Distribution.fintype_sum_action {I} [Fintype I] (T : I → 𝒟'(X,Y)) (φ : 𝒟 X) :
-    ⟪∑ i, T i, φ⟫ = ∑ i, ⟪T i, φ⟫ := by sorry_proof
-
-@[action_push]
-theorem Distribution.indextype_sum_action {I} [IndexType I] (T : I → 𝒟'(X,Y)) (φ : 𝒟 X) :
-    ⟪∑ i, T i, φ⟫ = ∑ i, ⟪T i, φ⟫ := by sorry_proof
+section Arithmetics
 
 @[simp, ftrans_simp, action_push]
-theorem Distribution.zero_extAction (φ : X → R) : (0 : 𝒟'(X,Y)).extAction φ = 0 := by sorry_proof
+theorem Distribution.zero_extAction (φ : X → V) (L : U ⊸ V ⊸ W) : (0 : 𝒟'(X,U)).extAction φ L = 0 := by sorry_proof
+
 
 -- todo: this needs some integrability condition
 @[action_push]
-theorem Distribution.add_extAction (T T' : 𝒟'(X,Y)) (φ : X → R) :
-    (T + T').extAction φ = T.extAction φ + T'.extAction φ := by sorry_proof
+theorem Distribution.add_extAction (T T' : 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
+    ((T + T') : 𝒟'(X,U)).extAction φ L = T.extAction φ L + T'.extAction φ L := by sorry_proof
 
 @[action_push]
-theorem Distribution.sub_extAction (T T' : 𝒟'(X,Y)) (φ : X → R) :
-    (T - T').extAction φ = T.extAction φ - T'.extAction φ := by sorry_proof
+theorem Distribution.sub_extAction (T T' : 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
+    (T - T').extAction φ L = T.extAction φ L - T'.extAction φ L := by sorry_proof
 
 @[action_push]
-theorem Distribution.smul_extAction (r : R) (T : 𝒟'(X,Y)) (φ : X → R) :
-    (r • T).extAction φ = r • T.extAction φ := by sorry_proof
+theorem Distribution.smul_extAction (r : R) (T : 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W)  :
+    (r • T).extAction φ L = r • T.extAction φ L := by sorry_proof
 
 @[action_push]
-theorem Distribution.neg_extAction (T : 𝒟'(X,Y)) (φ : X → R) :
-    (- T).extAction φ = - T.extAction φ := by sorry_proof
+theorem Distribution.neg_extAction (T : 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
+    (- T).extAction φ L = - T.extAction φ L := by sorry_proof
 
 open BigOperators in
 @[action_push]
-theorem Distribution.fintype_sum_extAction {I} [Fintype I] (T : I → 𝒟'(X,Y)) (φ : X → R) :
-    (∑ i, T i).extAction φ = ∑ i, (T i).extAction φ := by sorry_proof
+theorem Distribution.fintype_sum_extAction {I} [Fintype I] (T : I → 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
+    (∑ i, T i).extAction φ L = ∑ i, (T i).extAction φ L := by sorry_proof
 
 @[action_push]
-theorem Distribution.indextype_sum_extAction {I} [IndexType I] (T : I → 𝒟'(X,Y)) (φ : X → R) :
-    (∑ i, T i).extAction φ = ∑ i, (T i).extAction φ := by sorry_proof
+theorem Distribution.indextype_sum_extAction {I} [IndexType I] (T : I → 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
+    (∑ i, T i).extAction φ L = ∑ i, (T i).extAction φ L := by sorry_proof
 
-
-@[simp, ftrans_simp, action_push]
-theorem Distribution.zero_extAction' (φ : X → Z) (L : Y → Z → W) : (0 : 𝒟'(X,Y)).extAction' φ L = 0 := by sorry_proof
-
--- todo: this needs some integrability condition
-@[action_push]
-theorem Distribution.add_extAction' (T T' : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
-    (T + T').extAction' φ L = T.extAction' φ L + T'.extAction' φ L := by sorry_proof
-
-@[action_push]
-theorem Distribution.sub_extAction' (T T' : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
-    (T - T').extAction' φ L = T.extAction' φ L - T'.extAction' φ L := by sorry_proof
-
-@[action_push]
-theorem Distribution.smul_extAction' (r : R) (T : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
-    (r • T).extAction' φ L = r • T.extAction' φ L := by sorry_proof
-
-@[action_push]
-theorem Distribution.neg_extAction' (T : 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
-    (- T).extAction' φ L = - T.extAction' φ L := by sorry_proof
-
-open BigOperators in
-@[action_push]
-theorem Distribution.fintype_sum_extAction' {I} [Fintype I] (T : I → 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
-    (∑ i, T i).extAction' φ L = ∑ i, (T i).extAction' φ L := by sorry_proof
-
-@[action_push]
-theorem Distribution.indextype_sum_extAction' {I} [IndexType I] (T : I → 𝒟'(X,Y)) (φ : X → Z) (L : Y → Z → W) :
-    (∑ i, T i).extAction' φ L = ∑ i, (T i).extAction' φ L := by sorry_proof
+end Arithmetics
 
 
 ----------------------------------------------------------------------------------------------------
@@ -280,9 +237,9 @@ variable [MeasureSpace X]
 open Classical Notation in
 noncomputable
 def iteD (A : Set X) (t e : 𝒟'(X,Y)) : 𝒟'(X,Y) :=
-  ⟨⟨fun φ =>
-    t.extAction (fun x => if x ∈ A then φ x else 0) +
-    e.extAction (fun x => if x ∈ A then 0 else φ x), sorry_proof⟩⟩
+  fun φ ⊸
+    t.extAction (fun x => if x ∈ A then φ x else 0) (fun y ⊸ fun r ⊸ r • y) +
+    e.extAction (fun x => if x ∈ A then 0 else φ x) (fun y ⊸ fun r ⊸ r • y)
 
 open Lean.Parser Term in
 syntax withPosition("ifD " term " then "
@@ -301,15 +258,20 @@ def unexpandIteD : Lean.PrettyPrinter.Unexpander
 
 @[action_push]
 theorem Distribution.action_iteD (A : Set X) (t e : 𝒟'(X,Y)) (φ : 𝒟 X) :
-    ⟪iteD A t e, φ⟫ =
-        t.extAction (fun x => if x ∈ A then φ x else 0) +
-        e.extAction (fun x => if x ∉ A then φ x else 0) := by sorry_proof
+   iteD A t e φ =
+        t.extAction (fun x => if x ∈ A then φ x else 0) (fun y ⊸ fun r ⊸ r • y) +
+        e.extAction (fun x => if x ∉ A then φ x else 0) (fun y ⊸ fun r ⊸ r • y) := by sorry_proof
 
 @[action_push]
-theorem Distribution.extAction_iteD (A : Set X) (t e : 𝒟'(X,Y)) (φ : X → R) :
-    (iteD A t e).extAction φ =
-        t.extAction (fun x => if x ∈ A then φ x else 0) +
-        e.extAction (fun x => if x ∉ A then φ x else 0) := by sorry_proof
+theorem Distribution.extAction_iteD (A : Set X) (t e : 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
+    (iteD A t e).extAction φ L =
+        t.extAction (fun x => if x ∈ A then φ x else 0) L +
+        e.extAction (fun x => if x ∉ A then φ x else 0) L := by sorry_proof
+
+@[fun_prop]
+theorem iteD.arg_te.IsSmoothLinearMap_rule (A : Set X) (t e : W → 𝒟'(X,Y))
+    (ht : IsSmoothLinearMap R t) (he : IsSmoothLinearMap R e) :
+    IsSmoothLinearMap R (fun w => iteD A (t w) (e w)) := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
@@ -367,23 +329,28 @@ theorem iteD_restrict' (T : 𝒟'(X,Y)) (A : Set X) :
 -- Distributiona product  --------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-variable {X₁} [Vec R X₁] {X₂} [Vec R X₂]
+variable {X₁} [Vec R X₁] {X₂} [Vec R X₂] {Y₁} [Vec R Y₁] {Y₂} [Vec R Y₂]
 
 -- can we extended to vector valued distributions?
 noncomputable
-def Distribution.prod' (p : X₁ → X₂ → X) (T : 𝒟' (X₁,Y)) (S : X₁ → 𝒟' X₂) : 𝒟'(X,Y) :=
-  ⟨⟨fun φ => T.extAction (fun x₁ => (S x₁).extAction fun x₂ => φ (p x₁ x₂)), sorry_proof⟩⟩
-
-noncomputable
-abbrev Distribution.prod (T : 𝒟'(X₁,Y)) (S : 𝒟' X₂) : 𝒟'(X₁×X₂,Y) := prod' Prod.mk T (fun _ => S)
+def Distribution.prod (p : X₁ → X₂ → X) (T : 𝒟' (X₁,Y₁)) (S : X₁ → 𝒟'(X₂,Y₂)) (L : Y₁ ⊸ Y₂ ⊸ Z) : 𝒟'(X,Z) :=
+ ⟨fun φ => T.extAction (fun x₁ => S x₁ ⟨fun x₂ => φ (p x₁ x₂), sorry_proof⟩) L, sorry_proof⟩
 
 @[simp, ftrans_simp]
-theorem Distribution.prod'_restrict (p : X₁ → X₂ → X) (T : 𝒟'(X₁,Y)) (S : X₁ → 𝒟' X₂) (A : Set X) :
-    (prod' p T S).restrict A = prod' p (T.restrict (A.preimage1 p)) (fun x₁ => (S x₁).restrict (p x₁ ⁻¹' A)) := sorry_proof
+theorem Distribution.prod_restrict (p : X₁ → X₂ → X) (T : 𝒟'(X₁,Y₁)) (S : X₁ → 𝒟'(X₂,Y₂)) (L : Y₁ ⊸ Y₂ ⊸ Z) (A : Set X) :
+    (prod p T S L).restrict A = prod p (T.restrict (A.preimage1 p)) (fun x₁ => (S x₁).restrict (p x₁ ⁻¹' A)) L := sorry_proof
 
 @[action_push]
-theorem Distribution.prod'_extAction (p : X₁ → X₂ → X) (T : 𝒟'(X₁,Y)) (S : X₁ → 𝒟' X₂) (φ : X → R) :
-    (prod' p T S).extAction φ = T.extAction (fun x₁ => (S x₁).extAction fun x₂ => φ (p x₁ x₂)) := sorry_proof
+theorem Distribution.prod'_extAction (p : X₁ → X₂ → X) (T : 𝒟'(X₁,Y₁)) (S : X₁ → 𝒟'(X₂,Y₂)) (L : Y₁ ⊸ Y₂ ⊸ Z) (K : Z ⊸ R ⊸ Z) (φ : X → R) :
+    (prod p T S L).extAction φ K
+    =
+    T.extAction (fun x₁ => (S x₁).extAction (fun x₂ => φ (p x₁ x₂)) (fun y₂ ⊸ fun r ⊸ r • y₂)) (fun y₁ ⊸ fun y₂ ⊸ K (L y₁ y₂) 1) := sorry_proof
+
+-- @[action_push]
+-- theorem Distribution.prod'_extAction' (p : X₁ → X₂ → X) (T : 𝒟'(X₁,Y₁)) (S : X₁ → 𝒟'(X₂,Y₂)) (L : Y₁ ⊸ Y₂ ⊸ U) (φ : X → V) (K : U ⊸ V ⊸ W) :
+--     (prod p T S L).extAction φ K
+--     =
+--     T.extAction (fun x₁ => (S x₁).extAction (fun x₂ => φ (p x₁ x₂)) (sorry : Y₂ ⊸ V ⊸ Y₂⊗V)) (fun y₁ ⊸ fun yv ⊸ ) := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
@@ -391,89 +358,81 @@ theorem Distribution.prod'_extAction (p : X₁ → X₂ → X) (T : 𝒟'(X₁,Y
 ----------------------------------------------------------------------------------------------------
 
 noncomputable
-def Distribution.postComp (T : 𝒟'(X,Y)) (f : Y → Z) : 𝒟'(X,Z) :=
-  if h : IsSmoothLinearMap R f then
-    ⟨fun φ ⊸ f ⟪T,φ⟫⟩
-  else
-    0
+def Distribution.postComp (T : 𝒟'(X,Y)) (f : Y ⊸ Z) : 𝒟'(X,Z) := fun φ ⊸ f (T φ)
 
-@[pp_dot]
-noncomputable
-abbrev Distribution.postExtAction (T : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) : 𝒟'(X,Z) :=
-  T.postComp (fun u => u.extAction φ)
+-- @[pp_dot]
+-- noncomputable
+-- abbrev Distribution.postExtAction (T : 𝒟'(X,𝒟'(Y,U))) (φ : Y → V) (L : U ⊸ V ⊸ W) : 𝒟'(X,W) :=
+--   T.postComp (fun u ⊸ u.extAction φ L)
 
-noncomputable
-abbrev Distribution.postRestrict (T : 𝒟'(X,𝒟'(Y,Z))) (A : X → Set Y) : 𝒟'(X,𝒟'(Y,Z)) :=
-  ⟨⟨fun φ =>
-    ⟨fun ψ => sorry,
-      sorry_proof⟩,
-  sorry_proof⟩⟩
-
+@[fun_prop]
+theorem Distribution.postComp.arg_T.IsSmoothLinarMap_rule (T : W → 𝒟'(X,Y)) (f : Y ⊸ Z)
+    (hT : IsSmoothLinearMap R T) :
+    IsSmoothLinearMap R (fun w => (T w).postComp f) := by unfold postComp; sorry_proof
 
 @[simp, ftrans_simp]
 theorem postComp_id (u : 𝒟'(X,Y)) :
-    (u.postComp (fun y => y)) = u := sorry_proof
+    (u.postComp (fun y ⊸ y)) = u := sorry_proof
 
 @[simp, ftrans_simp]
-theorem postComp_comp (x : 𝒟'(X,U)) (g : U → V) (f : V → W) :
+theorem postComp_comp (x : 𝒟'(X,U)) (g : U ⊸ V) (f : V ⊸ W) :
     (x.postComp g).postComp f
     =
-    x.postComp (fun u => f (g u)) := sorry_proof
+    x.postComp (fun u ⊸ f (g u)) := sorry_proof
 
 @[simp, ftrans_simp]
-theorem postComp_assoc (x : 𝒟'(X,U)) (y : U → 𝒟'(Y,V)) (f : V → W) (φ : Y → R) :
-    (x.postComp y).postComp (fun T => T.postComp f)
+theorem postComp_assoc (x : 𝒟'(X,U)) (y : U ⊸ 𝒟'(Y,V)) (f : V ⊸ W) (φ : Y → R) :
+    (x.postComp y).postComp (fun T ⊸ T.postComp f)
     =
-    (x.postComp (fun u => (y u).postComp f)) := sorry_proof
+    (x.postComp (fun u ⊸ (y u).postComp f)) := sorry_proof
 
 @[action_push]
-theorem postComp_extAction (x : 𝒟'(X,U)) (y : U → V) (φ : X → R) :
-    (x.postComp y).extAction φ
+theorem postComp_extAction (x : 𝒟'(X,U)) (f : U ⊸ V) (φ : X → W) (L : V ⊸ W ⊸ Z) :
+    (x.postComp y).extAction φ L
     =
-    y (x.extAction φ) := sorry_proof
+    (x.extAction φ (fun u ⊸ fun w ⊸ L (f u) w)) := sorry_proof
 
 @[action_push]
-theorem postComp_restrict_extAction (x : 𝒟'(X,U)) (y : U → V) (A : Set X) (φ : X → R) :
-    ((x.postComp y).restrict A).extAction φ
+theorem postComp_restrict_extAction (x : 𝒟'(X,U)) (f : U ⊸ V) (A : Set X) (φ : X → W) (L : V ⊸ W ⊸ Z) :
+    ((x.postComp f).restrict A).extAction φ L
     =
-    y ((x.restrict A).extAction φ) := sorry_proof
+    ((x.restrict A).extAction φ (fun u ⊸ fun w ⊸ (L (f u) w))) := sorry_proof
 
 
-@[simp, ftrans_simp, action_push]
-theorem Distribution.zero_postExtAction (φ : Y → R) : (0 : 𝒟'(X,𝒟'(Y,Z))).postExtAction φ = 0 := by sorry_proof
+-- @[simp, ftrans_simp, action_push]
+-- theorem Distribution.zero_postExtAction (φ : Y → R) : (0 : 𝒟'(X,𝒟'(Y,Z))).postExtAction φ = 0 := by sorry_proof
 
--- todo: this needs some integrability condition
-@[action_push]
-theorem Distribution.add_postExtAction (T T' : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
-    (T + T').postExtAction φ = T.postExtAction φ + T'.postExtAction φ := by sorry_proof
+-- -- todo: this needs some integrability condition
+-- @[action_push]
+-- theorem Distribution.add_postExtAction (T T' : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
+--     (T + T').postExtAction φ = T.postExtAction φ + T'.postExtAction φ := by sorry_proof
 
-@[action_push]
-theorem Distribution.sub_postExtAction (T T' : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
-    (T - T').postExtAction φ = T.postExtAction φ - T'.postExtAction φ := by sorry_proof
+-- @[action_push]
+-- theorem Distribution.sub_postExtAction (T T' : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
+--     (T - T').postExtAction φ = T.postExtAction φ - T'.postExtAction φ := by sorry_proof
 
-@[action_push]
-theorem Distribution.smul_postExtAction (r : R) (T : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
-    (r • T).postExtAction φ = r • T.postExtAction φ := by sorry_proof
+-- @[action_push]
+-- theorem Distribution.smul_postExtAction (r : R) (T : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
+--     (r • T).postExtAction φ = r • T.postExtAction φ := by sorry_proof
 
-@[action_push]
-theorem Distribution.neg_postExtAction (T : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
-    (- T).postExtAction φ = - T.postExtAction φ := by sorry_proof
+-- @[action_push]
+-- theorem Distribution.neg_postExtAction (T : 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
+--     (- T).postExtAction φ = - T.postExtAction φ := by sorry_proof
 
-open BigOperators in
-@[action_push]
-theorem Distribution.fintype_sum_postExtAction {I} [Fintype I] (T : I → 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
-    (∑ i, T i).postExtAction φ = ∑ i, (T i).postExtAction φ := by sorry_proof
-
-
-@[action_push]
-theorem Distribution.ifD_postExtAction (T T' : 𝒟'(X,𝒟'(Y,Z))) (A : Set X) (φ : Y → R) :
-    (ifD A then T else T').postExtAction φ = ifD A then T.postExtAction φ else T'.postExtAction φ := by sorry_proof
+-- open BigOperators in
+-- @[action_push]
+-- theorem Distribution.fintype_sum_postExtAction {I} [Fintype I] (T : I → 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
+--     (∑ i, T i).postExtAction φ = ∑ i, (T i).postExtAction φ := by sorry_proof
 
 
 -- @[action_push]
--- theorem Distribution.indextype_sum_postExtAction {I} [IndexType I] (T : I → 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
---     (∑ i, T i).postExtAction φ = ∑ i, (T i).postExtAction φ := by sorry_proof
+-- theorem Distribution.ifD_postExtAction (T T' : 𝒟'(X,𝒟'(Y,Z))) (A : Set X) (φ : Y → R) :
+--     (ifD A then T else T').postExtAction φ = ifD A then T.postExtAction φ else T'.postExtAction φ := by sorry_proof
 
+
+-- -- @[action_push]
+-- -- theorem Distribution.indextype_sum_postExtAction {I} [IndexType I] (T : I → 𝒟'(X,𝒟'(Y,Z))) (φ : Y → R) :
+-- --     (∑ i, T i).postExtAction φ = ∑ i, (T i).postExtAction φ := by sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
@@ -483,11 +442,11 @@ theorem Distribution.ifD_postExtAction (T T' : 𝒟'(X,𝒟'(Y,Z))) (A : Set X) 
 @[coe]
 noncomputable
 def _root_.Function.toDistribution (f : X → Y) : 𝒟'(X,Y) :=
-  ⟨fun φ ⊸ ∫' x, φ x • f x⟩
+  fun φ ⊸ ∫' x, φ x • f x
 
 def Distribution.IsFunction (T : 𝒟'(X,Y)) : Prop :=
   ∃ (f : X → Y), ∀ (φ : 𝒟 X),
-      ⟪T, φ⟫ = ∫' x, φ x • f x
+      T φ = ∫' x, φ x • f x
 
 noncomputable
 def Distribution.toFunction (T : 𝒟'(X,Y)) : X → Y :=
@@ -498,11 +457,11 @@ def Distribution.toFunction (T : 𝒟'(X,Y)) : X → Y :=
 
 @[action_push]
 theorem Function.toDistribution_action (f : X → Y) (φ : 𝒟 X) :
-    ⟪f.toDistribution, φ⟫ = ∫' x, φ x • f x := by rfl
+    f.toDistribution φ = ∫' x, φ x • f x := by rfl
 
 @[action_push]
 theorem Function.toDistribution_extAction (f : X → Y) (φ : X → R) :
-    f.toDistribution.extAction φ
+    f.toDistribution.extAction φ (fun y ⊸ fun r ⊸ r • y)
     =
     ∫' x, φ x • f x := sorry_proof
 
@@ -521,14 +480,14 @@ variable [MeasurableSpace X]
 noncomputable
 def _root_.MeasureTheory.Measure.toDistribution
     (μ : Measure X) : 𝒟' X :=
-  ⟨fun φ ⊸ ∫' x, φ x ∂μ⟩
+  fun φ ⊸ ∫' x, φ x ∂μ
 
 noncomputable
 instance : Coe (Measure X) (𝒟' X) := ⟨fun μ => μ.toDistribution⟩
 
 def Distribution.IsMeasure (f : 𝒟' X) : Prop :=
   ∃ (μ : Measure X), ∀ (φ : 𝒟 X),
-      ⟪f, φ⟫ = ∫' x, φ x ∂μ
+      f φ = ∫' x, φ x ∂μ
 
 open Classical
 noncomputable

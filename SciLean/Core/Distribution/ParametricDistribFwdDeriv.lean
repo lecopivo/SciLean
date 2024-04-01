@@ -24,8 +24,8 @@ set_default_scalar R
 @[fun_trans]
 noncomputable
 def parDistribFwdDeriv (f : X → 𝒟'(Y,Z)) (x dx : X) : 𝒟'(Y,Z×Z) :=
-  let dz := parDistribDeriv f x dx |>.postComp (fun dz => ((0:Z),dz))
-  let z  := f x |>.postComp (fun z => (z,(0:Z)))
+  let dz := parDistribDeriv f x dx |>.postComp (fun dz ⊸ ((0:Z),dz))
+  let z  := f x |>.postComp (fun z ⊸ (z,(0:Z)))
   z + dz
 
 
@@ -46,64 +46,52 @@ theorem comp_rule
   fun_trans [action_push,fwdDeriv]
 
 
-@[simp, ftrans_simp]
-theorem asdf (u : 𝒟'(X,Y)) (f : Y → Z) (φ : 𝒟 X) :
-    (u.postComp f).action φ = f (u.action φ) := sorry_proof
+-- @[simp, ftrans_simp]
+-- theorem asdf (u : 𝒟'(X,Y)) (f : Y ⊸ Z) (φ : 𝒟 X) :
+--     (u.postComp f) φ = f (u φ) := by rfl
 
 
-@[simp, ftrans_simp]
-theorem asdf' (u : 𝒟'(X,Y)) (f : Y → Z) (φ : X → R) :
-    (u.postComp f).extAction φ = f (u.extAction φ) := sorry_proof
+-- @[simp, ftrans_simp]
+-- theorem asdf' (u : 𝒟'(X,Y)) (f : Y ⊸ Z) (φ : X → R) (L) :
+--     (u.postComp f).extAction φ L = (u.extAction φ (fun x ⊸ fun y ⊸ L (f x) y)) := sorry_proof
 
 
-@[simp, ftrans_simp]
-theorem asdf'' (u : 𝒟'(X,U)) (f : U → Y) (φ : X → Z) (L : Y → Z → W) :
-    (u.postComp f).extAction' φ L = u.extAction' φ (fun u z => L (f u) z) := sorry_proof
+-- @[simp, ftrans_simp]
+-- theorem asdf'' (u : 𝒟'(X,U)) (f : U → Y) (φ : X → Z) (L : Y → Z → W) :
+--     (u.postComp f).extAction' φ L = u.extAction' φ (fun u z => L (f u) z) := sorry_proof
 
 
-@[simp, ftrans_simp]
-theorem asdf''' (u : 𝒟'(X,Y)) (φ : X → U) (ψ : X → V) (L : Y → (U×V) → W) :
-    u.extAction' (fun x => (φ x, ψ x)) L
-    =
-    u.extAction' φ (fun y u => L y (u,0))
-    +
-    u.extAction' ψ (fun y v => L y (0,v)) := sorry_proof
+-- @[simp, ftrans_simp]
+-- theorem asdf''' (u : 𝒟'(X,Y)) (φ : X → U) (ψ : X → V) (L : Y → (U×V) → W) :
+--     u.extAction' (fun x => (φ x, ψ x)) L
+--     =x`
+--     u.extAction' φ (fun y u => L y (u,0))
+--     +
+--     u.extAction' ψ (fun y v => L y (0,v)) := sorry_proof
 
-@[simp, ftrans_simp]
-theorem asdf'''' (u : 𝒟'(X,Y)) (φ : X → R) (L : Y → R → Y) :
-    u.extAction' φ L
-    =
-    L (u.extAction φ) 1 := sorry_proof
+-- @[simp, ftrans_simp]
+-- theorem asdf'''' (u : 𝒟'(X,Y)) (φ : X → R) (L : Y → R → Y) :
+--     u.extAction' φ L
+--     =
+--     L (u.extAction φ) 1 := sorry_proof
 
 
 theorem bind_rule
-    (f : X → Y → 𝒟' Z) (g : X → 𝒟' Y)
+    (f : X → Y → 𝒟'(Z,V)) (g : X → 𝒟'(Y,U)) (L : U ⊸ V ⊸ W)
     (hf : DistribDifferentiable (fun (x,y) => f x y)) (hg : DistribDifferentiable g) :
-    parDistribFwdDeriv (fun x => (g x).bind (f x))
+    parDistribFwdDeriv (fun x => (g x).bind (f x) L)
     =
     fun x dx =>
       let ydy := parDistribFwdDeriv g x dx
       let zdz := fun y => parDistribFwdDeriv (f · y) x dx
-      ydy.bind' zdz (fun (r,dr) (s,ds) => (r*s, r*ds + s*dr)) := by
+      ydy.bind zdz (fun (r,dr) ⊸ fun (s,ds) ⊸ (L r s, L r ds + L dr s)) := by
 
-  unfold parDistribFwdDeriv Distribution.bind'
+  unfold parDistribFwdDeriv Distribution.bind
   autodiff
   funext x dx
   fun_trans [action_push,fwdDeriv]
   ext φ
-  simp only [ftrans_simp, action_push]
-  simp only [ftrans_simp, action_push]
-
-
-
-
-theorem bind_rule'
-    (f : X → Y → 𝒟'(Z,V)) (g : X → 𝒟'(Y,U)) (L : U → V → W)
-    (hf : DistribDifferentiable (fun (x,y) => f x y)) (hg : DistribDifferentiable g)
-    (hL₁ : ∀ u, IsSmoothLinearMap R (L u ·)) (hL₂ : ∀ v, IsSmoothLinearMap R (L · v)) :
-    parDistribFwdDeriv (fun x => (g x).bind' (f x) L)
-    =
-    fun x dx =>
-      let ydy := parDistribFwdDeriv g x dx
-      let zdz := fun y => parDistribFwdDeriv (f · y) x dx
-      ydy.bind' zdz (fun (r,dr) (s,ds) => (L r s, L r ds + L dr s)) := sorry_proof
+  simp only [ftrans_simp, action_push, postComp]
+  sorry_proof
+  sorry_proof
+  -- simp only [ftrans_simp, action_push]

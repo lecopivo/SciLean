@@ -49,6 +49,8 @@ theorem foo1_spec (t : R) :
 
 open Classical in
 
+set_option pp.funBinderTypes true in
+
 def foo2 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo 0 1, if x - t ≤ 0 then (1:R) else 0)
   rewrite_by
     fun_trans only [scalarGradient, scalarCDeriv]
@@ -66,6 +68,7 @@ def foo2 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo 0 1, if x - t ≤ 0 then (1
       fun_trans
     simp only [action_push, ftrans_simp]
 
+#check instTCOr_1
 
 theorem foo2_spec (t : R) :
     foo2 t = if 0 < t ∧ t < 1 then 1 else 0 := by rfl
@@ -73,6 +76,8 @@ theorem foo2_spec (t : R) :
 #eval foo2 0.5
 #eval foo2 (-1.0)
 #eval foo2 2.0
+
+set_option pp.funBinderTypes true in
 
 def foo3 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo (-1) 1, if x^2 - t ≤ 0 then (1:R) else 0)
   rewrite_by assuming (_ : 0 < t')
