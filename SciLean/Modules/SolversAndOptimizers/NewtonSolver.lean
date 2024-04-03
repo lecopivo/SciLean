@@ -41,7 +41,7 @@ def newtonIterate (s: NewtonSolverSettings R) (f : X → Y) (iJ : X → Y → X)
   else if ‖(f x_next) - (f x_curr)‖₂ < s.relTol then x_curr
   else if iter_count ≥ s.maxSteps then x_curr
   else newtonIterate s f iJ x_curr (iter_count + 1)
-termination_by s.maxSteps - (iter_count)
+termination_by s.maxSteps - iter_count
 /-- Newton Solver, finds `x` such that `f x = 0`
 
 Arguments:
