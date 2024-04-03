@@ -35,12 +35,13 @@ def newtonSolverStep (f : X → Y) (iJ : X → Y → X) (xᵢ : X) : X :=
   xᵢ - iJ xᵢ (f xᵢ)
 
 
-partial def newtonIterate (s: NewtonSolverSettings R) (f : X → Y) (iJ : X → Y → X) (x_curr : X) (iter_count : ℕ) : X :=
+def newtonIterate (s: NewtonSolverSettings R) (f : X → Y) (iJ : X → Y → X) (x_curr : X) (iter_count : ℕ) : X :=
   let x_next := x_curr - iJ x_curr (f x_curr)
   if ‖(f x_next)‖₂ < s.absTol then x_curr
   else if ‖(f x_next) - (f x_curr)‖₂ < s.relTol then x_curr
   else if iter_count ≥ s.maxSteps then x_curr
   else newtonIterate s f iJ x_curr (iter_count + 1)
+termination_by s.maxSteps - (iter_count)
 /-- Newton Solver, finds `x` such that `f x = 0`
 
 Arguments:
