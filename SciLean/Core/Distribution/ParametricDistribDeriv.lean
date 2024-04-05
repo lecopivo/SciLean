@@ -172,15 +172,15 @@ theorem Bind.bind.arg_fx.DistribDifferentiable_rule
 
 @[fun_trans]
 theorem Bind.bind.arg_fx.parDistribDiff_rule
-    (f : X → Y → 𝒟'(Z,V)) (g : X → 𝒟'(Y,U)) (L : U ⊸ V ⊸ W)
-    (hf : DistribDifferentiable (fun (x,y) => f x y)) -- `f` has to be nice enough to accomodate action of `g`
+    (f : W → X → 𝒟'(Y,V)) (g : W → 𝒟'(X,U)) (L : U ⊸ V ⊸ W)
+    (hf : DistribDifferentiable (fun (w,x) => f w x)) -- `f` has to be nice enough to accomodate action of `g`
     (hg : DistribDifferentiable g) :
-    parDistribDeriv (fun x => (g x).bind (f x) L)
+    parDistribDeriv (fun w => (g w).bind (f w) L)
     =
-    fun x dx =>
-      ((parDistribDeriv  g x dx).bind (f x · ) L)
+    fun w dw =>
+      ((parDistribDeriv g w dw).bind (f x · ) L)
       +
-      ((g x).bind (fun y => parDistribDeriv (f · y) x dx) L) := sorry_proof
+      ((g w).bind (fun x => parDistribDeriv (f · x) w dw) L) := sorry_proof
 
 
 

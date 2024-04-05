@@ -8,6 +8,9 @@ import SciLean.Core.Integral.ParametricInverse
 import SciLean.Core.Integral.Frontier
 import SciLean.Core
 
+import SciLean.Core.FunctionTransformations.Preimage
+import SciLean.Tactic.IfPull
+
 import SciLean.Util.RewriteBy
 
 open MeasureTheory
@@ -139,6 +142,7 @@ attribute [rand_pull_E] bind_assoc pure_bind
 theorem ite_apply {α β : Type _} {c : Prop} [Decidable c] (t e : α → β) (x : α) :
     (ite c t e) x = ite c (t x) (e x) := by if h : c then simp[h] else simp[h]
 
+
 -- theorem set_inter {α} (P Q : α → Prop) : {x | P x} ∩ {x | Q x} = {x | P x ∧ Q x} := by aesop
 
 -- open Lean Meta in
@@ -190,6 +194,10 @@ set_option trace.Meta.Tactic.fun_trans true in
   rewrite_by
     unfold timeToFall' bungeeTension
     fun_trans (config:={zeta:=false}) only [ftrans_simp, scalarGradient, Tactic.lift_lets_simproc]
+
+    enter[w,dw,1,1,1,1,w,1,x,1,2]
+    simp only
+    simp only [Tactic.if_pull]
 
     -- simp only [ftrans_simp, action_pus]
     -- rw [Distribution.mk_extAction (X:=R)]

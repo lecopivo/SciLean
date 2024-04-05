@@ -27,6 +27,12 @@ def surfaceDirac (A : Set X) (f : X → Y) (d : ℕ) : 𝒟'(X,Y) :=
   fun φ ⊸ ∫' x in A, φ x • f x ∂(surfaceMeasure d)
 
 
+open Classical
+noncomputable
+def surfaceDirac' (A : Set X) (f : X → R) (u : 𝒟'(X,Y)) (d : ℕ) : 𝒟'(X,Y) := sorry
+  -- fun φ ⊸ ∫' x in A, φ x • f x ∂(surfaceMeasure d)
+
+
 @[action_push]
 theorem surfaceDirac_action (A : Set X) (f : X → Y) (d : ℕ) (φ : 𝒟 X) :
     (surfaceDirac A f d) φ = ∫' x in A, φ x • f x ∂(surfaceMeasure d) := sorry_proof

@@ -19,17 +19,17 @@ set_default_scalar R
 
 open Classical
 
-@[action_push]
+@[distrib_eval]
 theorem action_extAction (T : 𝒟' X) (φ : 𝒟 X) :
     T φ = T.extAction' φ := sorry_proof
 
-@[action_push]
+@[simp,ftrans_simp]
 theorem extAction_vecDirac (x : X) (φ : X → Y)  (L : R ⊸ Y ⊸ Z) :
     (dirac x).extAction φ L
     =
     L 1 (φ x) := sorry_proof
 
-@[action_push]
+@[simp,ftrans_simp]
 theorem extAction_restrict_vecDirac (x : X) (A : Set X) (φ : X → Y) (L : R ⊸ Y ⊸ Z) :
     ((dirac x).restrict A).extAction φ L
     =
@@ -46,7 +46,7 @@ theorem postExtAction_postComp (x : 𝒟'(X,U)) (y : U ⊸ 𝒟'(Y,Z)) (φ : Y �
 variable [MeasureSpace X]
 
 open Rand in
-@[action_push]
+@[distrib_eval]
 theorem function_toDistribution_eval (f : X → Y) (A : Set X) (φ : X → U) (L : Y ⊸ U ⊸ V) [UniformRand A] :
   (f.toDistribution.restrict A).extAction φ L
   =
@@ -56,7 +56,7 @@ theorem function_toDistribution_eval (f : X → Y) (A : Set X) (φ : X → U) (L
 
 
 open Rand in
-@[action_push]
+@[distrib_eval]
 theorem function_toDistribution_eval_restrict (f : X → Y) (B A : Set X) (φ : X → U) (L : Y ⊸ U ⊸ V) [UniformRand A] :
   ((f.toDistribution.restrict B).restrict A).extAction φ L
   =

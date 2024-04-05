@@ -82,8 +82,8 @@ theorem bind_rule
     parDistribFwdDeriv (fun x => (g x).bind (f x) L)
     =
     fun x dx =>
-      let ydy := parDistribFwdDeriv g x dx
-      let zdz := fun y => parDistribFwdDeriv (f · y) x dx
+      let ydy := parDistribFwdDeriv g x dx  -- 𝒟'(Y,U×U)
+      let zdz := fun y => parDistribFwdDeriv (f · y) x dx -- Y → 𝒟'(Z,V×V)
       ydy.bind zdz (fun (r,dr) ⊸ fun (s,ds) ⊸ (L r s, L r ds + L dr s)) := by
 
   unfold parDistribFwdDeriv Distribution.bind

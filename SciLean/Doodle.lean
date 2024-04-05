@@ -6,6 +6,12 @@ open SciLean
 set_default_scalar Float
 
 
+
+#check ∂>! x : Float, ((x*x)*x)
+
+#check HMul.hMul.arg_a0a1.
+
+
 #check ∂! x : Float, x*x
 
 def foo (x : Float) := ∂! (x':=x), x'*x'

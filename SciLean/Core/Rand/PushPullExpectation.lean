@@ -88,6 +88,22 @@ theorem pull_mean_add (x y : Rand X) :
       return x' + y' := sorry_proof
 
 @[rand_pull_E]
+theorem pull_mean_add_1 (x : Rand X) (y : X) :
+    x.mean + y
+    =
+    Rand.mean do
+      let x' ← x
+      return x' + y := sorry_proof
+
+@[rand_pull_E]
+theorem pull_mean_add_2 (x : X) (y : Rand X) :
+    x + y.mean
+    =
+    Rand.mean do
+      let y' ← y
+      return x + y' := sorry_proof
+
+@[rand_pull_E]
 theorem pull_mean_sub (x y : Rand X) :
     x.mean - y.mean
     =
@@ -111,6 +127,15 @@ theorem pull_mean_mul (r : R) (x : Rand R) :
     Rand.mean do
       let x' ← x
       return r * x' := sorry_proof
+
+@[rand_pull_E]
+theorem pull_mean_div (x : Rand R) (y : R) :
+    x.mean / y
+    =
+    Rand.mean do
+      let x' ← x
+      return x' / y:= sorry_proof
+
 
 @[rand_pull_E]
 theorem pull_mean_neg (x : Rand X) :
