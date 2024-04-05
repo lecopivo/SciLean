@@ -2,3 +2,9 @@ import Lean
 
 register_simp_attr action_push
 register_simp_attr distrib_eval
+
+register_simp_attr restrict_push
+register_simp_attr restrict_pull
+
+register_simp_attr toDistrib_push
+register_simp_attr toDistrib_pull

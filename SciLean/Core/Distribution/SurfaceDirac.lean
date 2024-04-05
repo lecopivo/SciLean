@@ -44,6 +44,21 @@ theorem surfaceDirac_dirac (f : X → Y) (x : X) : surfaceDirac {x} f 0 = (dirac
   sorry_proof
 
 
+theorem iteD.arg_cte.parDistribDeriv_rule
+    (s : W → Set X) (t e : W → 𝒟'(X,R))
+    (ht : DistribDifferentiable t) (he : DistribDifferentiable e) :
+    parDistribDeriv (fun w => ifD s w then t w else e w)
+    =
+    fun w dw =>
+      -- !!!THiS IS INCORRECT!!! it should contain term `t w - e w` but it is not clear how to consume it
+      surfaceDirac (frontier (s w)) (fun x => (frontierSpeed R s w dw x)) (finrank R X - 1)
+      +
+      ifD s w then
+        parDistribDeriv t w dw
+      else
+        parDistribDeriv e w dw := sorry
+
+
 open Classical Function in
 @[fun_trans]
 theorem ite_parDistribDeriv (A : W → Set X) (f g : W → X → Y) :
