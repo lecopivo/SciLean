@@ -105,6 +105,9 @@ theorem SmoothLinearMap.smul_apply : (r • f) x = r • f x := by rfl
 @[simp, ftrans_simp]
 theorem SmoothLinearMap.zero_apply : (0 : X⊸[K]Y) x = 0 := by sorry_proof
 
+@[simp,ftrans_simp]
+theorem SmoothLinearMap.apply_zero (f : X ⊸[K] Y) : f 0 = 0 := by sorry_proof
+
 end AlgebraSimps
 
 instance : UniformSpace (X ⊸[K] Y) := sorry

@@ -46,9 +46,11 @@ def generateNormalV2 : Rand R := do
 
 
 /-- Uniform random number between `0` and `1`. -/
-def normal : Rand R := {
+def normal (μ σ : R)  : Rand R := {
   spec := erase sorry -- (⟨fun φ => ∫' x in Set.Icc (0:R) (1:R), (Scalar.toReal (Scalar.exp x)) •  φ x ∂sorry⟩)
-  rand := (generateNormalV2 R).rand
+  rand := do
+    let x ← (generateNormalV2 R).rand
+    return σ * x + μ
 }
 
 variable {R}
