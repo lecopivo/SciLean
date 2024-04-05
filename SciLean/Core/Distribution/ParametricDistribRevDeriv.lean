@@ -35,6 +35,10 @@ def parDistribRevDeriv (f : X → 𝒟'(Y,Z)) (x : X) : 𝒟'(Y,Z×(Z→X)) :=
 namespace parDistribRevDeriv
 
 
+----------------------------------------------------------------------------------------------------
+-- Composition -------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
 theorem comp_rule
     (f : Y → 𝒟'(Z,U)) (g : X → Y)
     (hf : DistribDifferentiable f) (hg : HasAdjDiff R g) :
@@ -55,6 +59,9 @@ theorem comp_rule
   fun_trans
 
 
+----------------------------------------------------------------------------------------------------
+-- Bind --------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 theorem bind_rule
     (f : X → Y → 𝒟'(Z,V)) (g : X → 𝒟'(Y,U)) (L : U ⊸ V ⊸ W) :
@@ -98,3 +105,59 @@ theorem dirac.arg_xy.parDistribRevDeriv_rule
   have : HasAdjDiff R φ := sorry_proof -- this should be consequence of that `R` has dimension one
   simp [diracRevDeriv,revDeriv, parDistribRevDeriv, postComp]
   fun_trans
+
+
+----------------------------------------------------------------------------------------------------
+-- Integral ----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
+variable [MeasureSpace X] [MeasureSpace Y]
+
+@[fun_trans]
+theorem cintegral.arg_f.revDeriv_distrib_rule (f : W → X → Y) :
+    revDeriv R (fun w => ∫' x, f w x)
+    =
+    fun w =>
+      (parDistribRevDeriv (fun w => (f w ·).toDistribution (R:=R)) w).integrate := sorry_proof
+
+@[fun_trans]
+theorem cintegral.arg_f.parDistribRevDeriv_rule (f : W → X → Y → Z) :
+    parDistribRevDeriv (fun w => (fun x => ∫' y, f w x y).toDistribution (R:=R))
+    =
+    fun w =>
+      let Tf := (fun w => (fun x => (fun y => f w x y).toDistribution (R:=R)).toDistribution (R:=R))
+      (parDistribRevDeriv Tf w).postComp
+        ⟨fun (z,df) => (z.integrate, fun dz => df (fun _ => dz).toDistribution), sorry_proof⟩ := sorry_proof
+
+
+-- I'm not sure if this is correct
+-- I have a feeling that `B` is supposed to be used in the reverse pass somehow
+@[fun_trans]
+theorem cintegral.arg_f.parDistribRevDeriv_rule' (f : W → X → Y → Z) (B : X → Set Y) :
+    parDistribRevDeriv (fun w => (fun x => ∫' y in B x, f w x y).toDistribution (R:=R))
+    =
+    fun w =>
+      let Tf := (fun w => (fun x => ((fun y => f w x y).toDistribution (R:=R)).restrict (B x)).toDistribution (R:=R))
+      (parDistribRevDeriv Tf w).postComp
+        ⟨fun (z,df) => (z.integrate, fun dz => df (fun _ => dz).toDistribution), sorry_proof⟩ := sorry_proof
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Add ---------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
+@[fun_trans]
+theorem HAdd.hAdd.arg_a0a1.parDistribDeriv_rule (f g : W → 𝒟'(X,Y))
+    (hf : DistribDifferentiable f) (hg : DistribDifferentiable g) :
+    parDistribRevDeriv (fun w => f w + g w)
+    =
+    fun w =>
+      let ydf := parDistribRevDeriv f w
+      let ydg := parDistribRevDeriv g w
+      ydf + ydg := by
+  funext w; ext φ; simp[parDistribRevDeriv];
+  simp[parDistribRevDeriv]
+  sorry_proof

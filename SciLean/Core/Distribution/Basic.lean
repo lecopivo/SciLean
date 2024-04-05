@@ -25,7 +25,7 @@ variable
 set_default_scalar R
 
 variable (R X Y)
-abbrev Distribution := (𝒟 X) ⊸ Y
+abbrev Distribution := (𝒟 X) ⊸[R] Y
 variable {R X Y}
 
 
@@ -163,11 +163,10 @@ theorem Distribution.extAction.arg_T.IsSmoothLinearMap (T : W → 𝒟'(X,U)) (�
 
 def dirac (x : X) : 𝒟' X := fun φ ⊸ φ x
 
-
 open Notation
 noncomputable
 def Distribution.bind (x' : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U ⊸ V ⊸ W) : 𝒟'(Y,W) :=
-  fun φ ⊸ x'.extAction (fun x => f x φ) L
+  fun φ ⊸ x'.extAction (fun x => (f x).extAction φ (fun v ⊸ fun r ⊸ r • v)) L
 
 
 ----------------------------------------------------------------------------------------------------
@@ -179,7 +178,7 @@ theorem action_dirac (x : X) (φ : 𝒟 X) : dirac x φ = φ x := by simp[dirac]
 
 @[simp, ftrans_simp]
 theorem action_bind (x : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U ⊸ V ⊸ W) (φ : 𝒟 Y) :
-    x.bind f L φ = x.extAction (fun x' => f x' φ) L := by
+    x.bind f L φ = x.extAction (fun x' => (f x').extAction' φ) L := by
   simp[Distribution.bind]
 
 
@@ -196,7 +195,8 @@ theorem action_bind (x : 𝒟'(X,U)) (f : X → 𝒟'(Y,V)) (L : U ⊸ V ⊸ W) 
 section Arithmetics
 
 @[simp, ftrans_simp, action_push]
-theorem Distribution.zero_extAction (φ : X → V) (L : U ⊸ V ⊸ W) : (0 : 𝒟'(X,U)).extAction φ L = 0 := by sorry_proof
+theorem Distribution.zero_extAction (φ : X → V) (L : U ⊸ V ⊸ W) : (0 : 𝒟'(X,U)).extAction φ L = 0 := by
+  unfold extAction; simp
 
 
 -- todo: this needs some integrability condition
@@ -348,6 +348,14 @@ theorem iteD_restrict (T : 𝒟'(X,Y)) (A : Set X) :
 @[simp,ftrans_simp]
 theorem iteD_restrict' (T : 𝒟'(X,Y)) (A : Set X) :
     (ifD A then 0 else T) = T.restrict Aᶜ := sorry_proof
+
+
+@[action_push]
+theorem Distribution.extAction_iteD' (A B : Set X) (t e : 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
+    ((iteD A t e).restrict B).extAction φ L =
+        (t.restrict B).extAction (fun x => if x ∈ A then φ x else 0) L +
+        (e.restrict B).extAction (fun x => if x ∉ A then φ x else 0) L := by sorry_proof
+
 
 
 ----------------------------------------------------------------------------------------------------
@@ -621,3 +629,19 @@ def Distribution.toMeasure (f' : 𝒟' X) : Measure X :=
 
 -- def Distribution.densitvy {X} [MeasurableSpace X] (x y : 𝒟' X) : X → ℝ≥0∞ :=
 --   x.toMeasure.rnDeriv y.toMeasure
+
+
+----------------------------------------------------------------------------------------------------
+-- Semi Inner Product Structure on Distributions  --------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+noncomputable
+instance [SemiInnerProductSpace R Y] [Module ℝ Y] : Inner R (𝒟'(X,Y)) where
+  inner u v := u.extAction (v.toFunction) ⟨fun y => ⟨fun y' => ⟪y,y'⟫, sorry_proof⟩, sorry_proof⟩
+
+noncomputable
+instance [SemiInnerProductSpace R Y] [Module ℝ Y] : TestFunctions (𝒟'(X,Y)) where
+  TestFunction u := ∃ (φ : 𝒟 X) (y : Y), u = (fun x => φ x • y).toDistribution
+
+noncomputable
+instance [SemiInnerProductSpace R Y] [Module ℝ Y] : SemiInnerProductSpace R (𝒟'(X,Y)) := SemiInnerProductSpace.mkSorryProofs
