@@ -139,19 +139,4 @@ def foo3 (t' : R) :=
 #eval Rand.print_mean_variance (foo3 0.3) 10000 ""
 #eval Rand.print_mean_variance (foo3 1.7) 10000 ""
 
-
-variable [Module ℝ Z] [MeasureSpace X] [Module ℝ Y]
-
-#exit
-
--- set_option profiler true in
--- set_option trace.Meta.Tactic.fun_trans true in
--- set_option trace.Meta.Tactic.fun_prop true in
-def foo4 (t' : R) :=
-  derive_random_approx
-    (∂ (t:=t'), ∫' (x : R) in Ioo 0 1, ∫' (y : R) in Ioo 0 1, if x ≤ t then x*y*t else x+y+t)
-  by
-    fun_trans only [scalarGradient, scalarCDeriv, Tactic.if_pull, ftrans_simp]
-    simp (disch:=sorry) only [action_push, ftrans_simp]
-    rand_pull_E
-    simp
+]

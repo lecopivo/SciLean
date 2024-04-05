@@ -291,30 +291,55 @@ theorem restrict_univ (T : 𝒟'(X,Y))  :
 theorem zero_restrict (A : Set X) :
     (0 : 𝒟'(X,Y)).restrict A = 0 := sorry_proof
 
-@[simp,ftrans_simp]
+@[restrict_push]
 theorem add_restrict (T S : 𝒟'(X,Y)) (A : Set X) :
     (T + S).restrict A = T.restrict A + S.restrict A := sorry_proof
 
-@[simp,ftrans_simp]
+@[restrict_pull]
+theorem add_restrict' (T S : 𝒟'(X,Y)) (A : Set X) :
+    T.restrict A + S.restrict A = (T + S).restrict A := sorry_proof
+
+@[restrict_push]
 theorem sub_restrict (T S : 𝒟'(X,Y)) (A : Set X) :
     (T - S).restrict A = T.restrict A - S.restrict A := sorry_proof
 
-@[simp,ftrans_simp]
+@[restrict_pull]
+theorem sub_restrict' (T S : 𝒟'(X,Y)) (A : Set X) :
+    T.restrict A - S.restrict A = (T - S).restrict A := sorry_proof
+
+@[restrict_push]
 theorem smul_restrict (r : R) (T : 𝒟'(X,Y)) (A : Set X) :
     (r • T).restrict A = r • (T.restrict A) := sorry_proof
 
-@[simp,ftrans_simp]
+@[restrict_pull]
+theorem smul_restrict' (r : R) (T : 𝒟'(X,Y)) (A : Set X) :
+    r • (T.restrict A) = (r • T).restrict A := sorry_proof
+
+@[restrict_push]
 theorem neg_restrict (T : 𝒟'(X,Y)) (A : Set X) :
     (- T).restrict A = - (T.restrict A) := sorry_proof
 
+@[restrict_pull]
+theorem neg_restrict' (T : 𝒟'(X,Y)) (A : Set X) :
+    - (T.restrict A) = (- T).restrict A := sorry_proof
+
 open BigOperators in
-@[simp,ftrans_simp]
+@[restrict_push]
 theorem finset_sum_restrict {I} [Fintype I] (T : I → 𝒟'(X,Y)) (A : Set X) :
     (∑ i, T i).restrict A = ∑ i, (T i).restrict A := sorry_proof
 
-@[simp,ftrans_simp]
+open BigOperators in
+@[restrict_pull]
+theorem finset_sum_restrict' {I} [Fintype I] (T : I → 𝒟'(X,Y)) (A : Set X) :
+    ∑ i, (T i).restrict A = (∑ i, T i).restrict A := sorry_proof
+
+@[restrict_push]
 theorem indextype_sum_restrict {I} [IndexType I] (T : I → 𝒟' X) (A : Set X) :
     (∑ i, T i).restrict A = ∑ i, (T i).restrict A := sorry_proof
+
+@[restrict_pull]
+theorem indextype_sum_restrict' {I} [IndexType I] (T : I → 𝒟' X) (A : Set X) :
+    ∑ i, (T i).restrict A = (∑ i, T i).restrict A := sorry_proof
 
 @[simp,ftrans_simp]
 theorem iteD_restrict (T : 𝒟'(X,Y)) (A : Set X) :
@@ -439,7 +464,7 @@ theorem postComp_restrict_extAction (x : 𝒟'(X,U)) (f : U ⊸ V) (A : Set X) (
 -- Functions as distributions ----------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-@[coe]
+@[coe, fun_trans]
 noncomputable
 def _root_.Function.toDistribution (f : X → Y) : 𝒟'(X,Y) :=
   fun φ ⊸ ∫' x, φ x • f x
@@ -468,6 +493,90 @@ theorem Function.toDistribution_extAction (f : X → Y) (φ : X → R) :
 @[simp, ftrans_simp]
 theorem Function.toDistribution_zero  :
     Function.toDistribution (fun (_ : X) => 0) = (0 : 𝒟'(X,Y)) := by sorry_proof
+
+
+@[fun_trans,toDistrib_push]
+theorem HAdd.hAdd.arg_a0a1.toDistribution_rule (f g : X → Y) :
+    (fun x => f x + g x).toDistribution (R:=R)
+    =
+    f.toDistribution + g.toDistribution := sorry_proof
+
+@[toDistrib_pull]
+theorem HAdd.hAdd.arg_a0a1.toDistribution_rule' (f g : X → Y) :
+    f.toDistribution + g.toDistribution
+    =
+    (fun x => f x + g x).toDistribution (R:=R) := sorry_proof
+
+@[fun_trans,toDistrib_push]
+theorem HSub.hSub.arg_a0a1.toDistribution_rule (f g : X → Y) :
+    (fun x => f x - g x).toDistribution (R:=R)
+    =
+    f.toDistribution - g.toDistribution := sorry_proof
+
+@[toDistrib_pull]
+theorem HSub.hSub.arg_a0a1.toDistribution_rule' (f g : X → Y) :
+    f.toDistribution - g.toDistribution
+    =
+    (fun x => f x - g x).toDistribution (R:=R) := sorry_proof
+
+
+@[fun_trans,toDistrib_push]
+theorem HSMul.hSMul.arg_a0a1.toDistribution_rule (r : R) (f : X → Y) :
+    (fun x => r • f x).toDistribution (R:=R)
+    =
+    r • f.toDistribution := sorry_proof
+
+@[toDistrib_pull]
+theorem HSMul.hSMul.arg_a0a1.toDistribution_rule' (r : R) (f : X → Y) :
+    r • f.toDistribution
+    =
+    (fun x => r • f x).toDistribution (R:=R) := sorry_proof
+
+
+@[fun_trans,toDistrib_push]
+theorem HMul.hMul.arg_a0.toDistribution_rule (r : R) (f : X → R) :
+    (fun x => f x * r).toDistribution (R:=R)
+    =
+    r • f.toDistribution := sorry_proof
+
+
+@[toDistrib_pull]
+theorem HMul.hMul.arg_a0.toDistribution_rule' (r : R) (f : X → R) :
+    r • f.toDistribution
+    =
+    (fun x => f x * r).toDistribution (R:=R) := sorry_proof
+
+
+@[fun_trans,toDistrib_push]
+theorem HMul.hMul.arg_a1.toDistribution_rule (r : R) (f : X → R) :
+    (fun x => r • f x).toDistribution (R:=R)
+    =
+    r • f.toDistribution := sorry_proof
+
+@[toDistrib_pull]
+theorem HMul.hMul.arg_a1.toDistribution_rule' (r : R) (f : X → R) :
+    r • f.toDistribution
+    =
+    (fun x => r • f x).toDistribution (R:=R) := sorry_proof
+
+-- @[fun_trans]
+-- theorem ite.arg_cte.toDistribution_rule (c : X → Prop) [∀ x, Decidable (c x)] (t e : X → Y) :
+--   (fun x => if c x then t x else e x).toDistribution (R:=R)
+--   =
+--   ifD {x | c x} then
+--     t.toDistribution
+--   else
+--     e.toDistribution := sorry_proof
+
+@[toDistrib_pull]
+theorem iteD.arg_cte.toDistribution_rule (s : Set X) (t e : X → Y) :
+    (ifD s then
+      t.toDistribution
+    else
+      e.toDistribution)
+    =
+    (fun x => if x ∈ s then t x else e x).toDistribution (R:=R) := sorry_proof
+
 
 
 ----------------------------------------------------------------------------------------------------

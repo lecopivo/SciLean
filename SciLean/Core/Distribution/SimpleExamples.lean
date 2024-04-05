@@ -93,7 +93,9 @@ def foo3 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo (-1) 1, if x^2 - t ≤ 0 th
         (inv:= by intro i x₁ _; dsimp; simp; sorry_proof) (hdim := sorry_proof)]
 
     simp only [ftrans_simp]
-    autodiff
+    conv =>
+      enter [1,2,b,2,1]
+      autodiff
     simp only [ftrans_simp, action_push]
 
 def foo3' (t : R) := if |t| < 1 then 1/Scalar.sqrt |t| else 0

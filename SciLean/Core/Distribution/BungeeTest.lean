@@ -184,14 +184,14 @@ variable (hheight : 1 ≤ height)
 
 set_option pp.funBinderTypes true in
 set_option trace.Meta.Tactic.fun_trans true in
-set_option trace.Meta.Tactic.simp.unify true in
-set_option trace.Meta.Tactic.simp.discharge true in
+-- set_option trace.Meta.Tactic.simp.unify true in
+-- set_option trace.Meta.Tactic.simp.discharge true in
 #check (cderiv R fun l => timeToFall' m l l₂ k₁ k₂ α height)
   rewrite_by
     unfold timeToFall' bungeeTension
-    fun_trans (config:={zeta:=false}) only  -- [ftrans_simp, scalarGradient, Tactic.lift_lets_simproc]
+    fun_trans (config:={zeta:=false}) only [ftrans_simp, scalarGradient, Tactic.lift_lets_simproc]
 
-    simp only [ftrans_simp, action_push, Distribution.mk_extAction_simproc]
+    -- simp only [ftrans_simp, action_pus]
     -- rw [Distribution.mk_extAction (X:=R)]
     -- unfold scalarGradient
     -- autodiff
