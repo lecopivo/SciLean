@@ -34,9 +34,8 @@ structure BungeeParams where
 def g : R := 9.81
 
 def bungeeTension (l₁ l₂ k₁ k₂ α : R) (bungeeLength : R) : R :=
-  let x := bungeeLength
-  let x₁ := k₂ / (k₁ + k₂) * x
-  let x₂ := k₁ / (k₁ + k₂) * x
+  let x₁ := k₂ / (k₁ + k₂) * bungeeLength
+  let x₂ := k₁ / (k₁ + k₂) * bungeeLength
   if x₁ ≤ l₁ then
     if x₂ ≤ l₂ then
       k₁ * x₁ + k₂ * x₂
@@ -165,7 +164,7 @@ variable (hheight : 1 ≤ height)
     fun_trans (config:={zeta:=false}) only [scalarCDeriv, ftrans_simp, scalarGradient, Tactic.lift_lets_simproc]
 
     conv =>
-      enter[k',k'',l]
+      enter[k']
       conv in surfaceDirac _ _ _ =>
         rw[surfaceDirac_substitution
             (I:= Unit)
@@ -193,17 +192,16 @@ set_option trace.Meta.Tactic.fun_trans true in
 #check (cderiv R fun l => timeToFall' m l l₂ k₁ k₂ α height)
   rewrite_by
     unfold timeToFall' bungeeTension
-    fun_trans (config:={zeta:=false}) only [ftrans_simp, scalarGradient, Tactic.lift_lets_simproc]
+    fun_trans (config:={zeta:=false}) only
+      [ftrans_simp, scalarGradient, Tactic.lift_lets_simproc]
 
-    enter[w,dw,1,1,1,1,w,1,x,1,2]
     simp only
     simp only [Tactic.if_pull]
 
-    -- simp only [ftrans_simp, action_pus]
-    -- rw [Distribution.mk_extAction (X:=R)]
-    -- unfold scalarGradient
-    -- autodiff
-    -- simp only [Distribution.action_iteD,ftrans_simp]
+    fun_trans (config:={zeta:=false}) only
+      [ftrans_simp, scalarGradient, Tactic.lift_lets_simproc,restrict_push]
+
+
 
 #exit
 #check split_integral_over_set_of_ite

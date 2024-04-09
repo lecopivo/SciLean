@@ -53,31 +53,63 @@ def normal (μ σ : R)  : Rand R := {
     return σ * x + μ
 }
 
-variable {R}
 
-instance : LawfulRand (uniformI R) where
+variable {R} [MeasureSpace R]
+
+
+-- TODO: Move to file with basic scalar functions
+open Scalar RealScalar in
+def gaussian (μ σ x : R) : R :=
+  let x' := (x - μ) / σ
+  1/(σ*sqrt (2*(pi : R))) * exp (- x'^2/2)
+
+-- open Scalar in
+-- @[simp, ftrans_simp]
+-- theorem log_gaussian (μ σ x : R) :
+--     log (gaussian μ σ x)
+--     =
+--     let x' := (x - μ) / σ
+--     (- x'^2/2) - log σ + log (2*RealScalar.pi) := sorry_proof
+
+instance : LawfulRand (normal R μ σ) where
   is_measure := sorry_proof
   is_prob    := sorry_proof
 
--- @[rand_simp,simp]
--- theorem uniformI.pdf (x : R) (_hx : x ∈ Set.Icc 0 1) :
---     (uniformI R).pdf R volume
---     =
---     1 := by sorry_proof
-
--- theorem uniformI.measure (θ : R) :
---     (uniformI R).ℙ = volume.restrict (Set.Ioo 0 1) :=
---   sorry_proof
+@[rand_simp,simp,ftrans_simp]
+theorem normal.pdf (μ σ : R) :
+    (normal R μ σ).pdf R volume
+    =
+    gaussian μ σ := sorry_proof
 
 
-variable
-  {X} [AddCommGroup X] [Module R X] [Module ℝ X]
+@[rand_simp,simp,ftrans_simp]
+theorem normal.map_add_right (μ σ : R) (θ : R) :
+    (normal R μ σ).map (fun x => x + θ)
+    =
+    (normal R (μ+θ) σ) := sorry_proof
 
--- @[rand_simp,simp]
--- theorem uniformI.integral (θ : R) (f : Bool → X) :
---     ∫' x, f x ∂(uniformI R).ℙ = ∫' x in Set.Ioo 0 1, f x := by
---   simp [rand_simp,uniformI.measure]; sorry_proof
+@[rand_simp,simp,ftrans_simp]
+theorem normal.map_add_left (μ σ : R) (θ : R) :
+    (normal R μ σ).map (fun x => θ + x)
+    =
+    (normal R (θ + μ) σ) := sorry_proof
 
--- theorem uniformI.E (θ : R) (f : Bool → X) :
---     (uniformI R).E f = ∫' x in Set.Ioo 0 1, f x := by
---   simp only [Rand.E_as_cintegral,uniformI.integral]
+@[rand_simp,simp,ftrans_simp]
+theorem normal.map_sub_right (μ σ : R) (θ : R) :
+    (normal R μ σ).map (fun x => x - θ)
+    =
+    (normal R (μ-θ) σ) := sorry_proof
+
+
+
+-- variable
+--   {X} [AddCommGroup X] [Module R X] [Module ℝ X]
+
+-- -- @[rand_simp,simp]
+-- -- theorem uniformI.integral (θ : R) (f : Bool → X) :
+-- --     ∫' x, f x ∂(uniformI R).ℙ = ∫' x in Set.Ioo 0 1, f x := by
+-- --   simp [rand_simp,uniformI.measure]; sorry_proof
+
+-- -- theorem uniformI.E (θ : R) (f : Bool → X) :
+-- --     (uniformI R).E f = ∫' x in Set.Ioo 0 1, f x := by
+-- --   simp only [Rand.E_as_cintegral,uniformI.integral]

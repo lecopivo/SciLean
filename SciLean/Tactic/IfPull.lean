@@ -19,30 +19,41 @@ simproc_decl if_pull (_) := fun e => do
     let fn := e.getAppFn
     let args := e.getAppArgs
 
+    let mut thn : Expr := default
+    let mut els : Expr := default
+    let mut cond : Expr := default
+
     -- do not pull `if` out of `if`
     -- this would cause infinite loops
-    if e.isAppOfArity ``ite 5 then
-      return .continue
+    if e.isAppOf ``ite then
+      if args.size ≤ 5 then
+        return .continue
+      else
+        thn := mkAppN (e.getArg! 3) args[5:]
+        els := mkAppN (e.getArg! 4) args[5:]
+        cond := e.getArg! 1
+    else
+      -- locate argument with if statement
+      let .some i := args.findIdx? fun arg => arg.isAppOfArity ``ite 5
+        | return .continue
 
-    -- locate argument with if statement
-    let .some i := args.findIdx? fun arg => arg.isAppOfArity ``ite 5
-      | return .continue
+      let arg := args[i]!
+      -- todo: introduce let bindings for other arguments (probaly only for non-type arguments)
+      thn := mkAppN fn (args.set! i (arg.getArg! 3))
+      els := mkAppN fn (args.set! i (arg.getArg! 4))
+      cond := arg.getArg! 1
 
-    let arg := args[i]!
-    -- todo: introduce let bindings for other arguments (probaly only for non-type arguments)
-    let thn := mkAppN fn (args.set! i (arg.getArg! 3))
-    let els := mkAppN fn (args.set! i (arg.getArg! 4))
-
-    let e' ← mkAppOptM ``ite #[none, arg.getArg! 1, none, thn, els]
+    let e' ← mkAppOptM ``ite #[none, cond, none, thn, els]
 
     let prf ← mkSorry (← mkEq e e') false
 
     trace[Meta.Tactic.if_pull] s!"if_pull: \n{← ppExpr e}\n==>\n{← ppExpr e'}\n"
     return .visit { expr := e', proof? := prf }
 
-  | .lam .. =>
+  | .lam ..
+  | .letE .. =>
 
-    lambdaTelescope e fun xs b => do
+    lambdaLetTelescope e fun xs b => do
 
     unless b.isAppOfArity ``ite 5 do return .continue
     let cond := b.getArg! 1
@@ -65,3 +76,11 @@ simproc_decl if_pull (_) := fun e => do
     return .visit { expr := e', proof? := prf }
 
   | _ => return .continue
+
+
+
+-- #check ((if 0 < 1 then (fun x : Float => x + 2) else (fun x : Float => x + 3)) 42).log rewrite_by
+--   simp only [if_pull]
+
+-- #check (let y := 5;  ((if 0 < 1 then (fun x : Float => x + 2 + y) else (fun x : Float => x + 3 + y)) 42).log) rewrite_by
+--   simp (config:={zeta:=false}) only [if_pull]

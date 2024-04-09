@@ -286,28 +286,50 @@ theorem cintegral.arg_f.parDistribDeriv_rule' (f : W → X → Y → Z) (B : X �
 
 
 
--- ----------------------------------------------------------------------------------------------------
--- -- Add ---------------------------------------------------------------------------------------------
--- ----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+-- Add ---------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
--- @[fun_prop]
--- theorem HAdd.hAdd.arg_a0a1.DistribDifferentiable_rule (f g : W → X → Y)
---     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
---     DistribDifferentiable (fun w => (fun x => f w x + g w x).toDistribution (R:=R)) := by
---   intro _ φ hφ; simp; sorry_proof -- fun_prop (disch:=assumption)
 
--- -- we probably only require local integrability in `x` of f and g for this to be true
--- @[fun_trans]
--- theorem HAdd.hAdd.arg_a0a1.parDistribDeriv_rule (f g : W → X → Y)
---     /- (hf : ∀ x, CDifferentiable R (f · x)) (hg : ∀ x, CDifferentiable R (g · x)) -/ :
---     parDistribDeriv (fun w => (fun x => f w x + g w x).toDistribution)
---     =
---     fun w dw =>
---       parDistribDeriv (fun w => (f w ·).toDistribution) w dw
---       +
---       parDistribDeriv (fun w => (g w ·).toDistribution (R:=R)) w dw := by
---   funext w dw; ext φ; simp[parDistribDeriv]
---   sorry_proof
+@[fun_prop]
+theorem HAdd.hAdd.arg_a0a1.DistribDifferentiable_rule (f g : W → 𝒟'(X,Y))
+    (hf : DistribDifferentiable f) (hg : DistribDifferentiable g) :
+    DistribDifferentiable (fun w => f w + g w) := sorry_proof
+
+
+@[fun_trans]
+theorem HAdd.hAdd.arg_a0a1.parDistribDeriv_rule (f g : W → 𝒟'(X,Y))
+    (hf : DistribDifferentiable f) (hg : DistribDifferentiable g) :
+    parDistribDeriv (fun w => f w + g w)
+    =
+    fun w dw =>
+      let dy := parDistribDeriv f w dw
+      let dz := parDistribDeriv g w dw
+      dy + dz := sorry_proof
+
+
+----------------------------------------------------------------------------------------------------
+-- Sub ---------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
+@[fun_prop]
+theorem HSub.hSub.arg_a0a1.DistribDifferentiable_rule (f g : W → 𝒟'(X,Y)) :
+    -- (hf : DistribDifferentiable f) (hg : DistribDifferentiable g) :
+    DistribDifferentiable (fun w => f w - g w) := sorry_proof
+
+
+@[fun_trans]
+theorem HSub.hSub.arg_a0a1.parDistribDeriv_rule (f g : W → 𝒟'(X,Y)) :
+    -- (hf : DistribDifferentiable f) (hg : DistribDifferentiable g) :
+    parDistribDeriv (fun w => f w - g w)
+    =
+    fun w dw =>
+      let dy := parDistribDeriv f w dw
+      let dz := parDistribDeriv g w dw
+      dy - dz := sorry_proof
+
+
 
 
 -- ----------------------------------------------------------------------------------------------------

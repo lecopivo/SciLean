@@ -51,7 +51,7 @@ def foo1 (t' : R) :=
         (inv:= by intro i x₁ _; dsimp; simp) (hdim := sorry_proof)]
 
     autodiff; autodiff
-    simp only [ftrans_simp,action_push]
+    simp only [ftrans_simp,action_push,distrib_eval]
 
     simp (disch:=sorry) only [ftrans_simp]
     rand_pull_E
@@ -65,14 +65,12 @@ def foo := (fun x : R => (fun (z y : R) => (if x < 1 then x*y*z else x + y + z))
     simp only [Tactic.if_pull]
 
 
--- #exit
-
 def foo1' (t' : R) :=
   derive_random_approx
     (∂ (t:=t'), ∫' (x : R) in Ioo 0 1, ∫' (y : R) in Ioo 0 1, if x ≤ t then (1:R) else 0)
   by
     fun_trans only [scalarGradient, scalarCDeriv, Tactic.if_pull, ftrans_simp]
-    simp (disch:=sorry) only [action_push, ftrans_simp]
+    simp (disch:=sorry) only [action_push, ftrans_simp,distrib_eval]
     rand_pull_E
 
 #eval Rand.print_mean_variance (foo1' 0.3) 100 " of foo1'"
@@ -99,7 +97,7 @@ def foo2 (t' : R) :=
       rw[Set.preimage1_prod]
       simp only [ftrans_simp]
 
-    simp only [ftrans_simp,action_push]
+    simp only [ftrans_simp,action_push,distrib_eval]
     simp (disch:=sorry) only [ftrans_simp]
     rand_pull_E
 
@@ -131,12 +129,10 @@ def foo3 (t' : R) :=
       fun_trans
       equals Ioo (-1) 1 => sorry
 
-    simp only [ftrans_simp,action_push]
+    simp only [ftrans_simp,action_push,distrib_eval]
     simp (disch:=sorry) only [ftrans_simp]
     norm_num only [ftrans_simp]
     rand_pull_E
 
 #eval Rand.print_mean_variance (foo3 0.3) 10000 ""
 #eval Rand.print_mean_variance (foo3 1.7) 10000 ""
-
-]

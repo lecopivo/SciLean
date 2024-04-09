@@ -13,7 +13,7 @@ namespace SciLean.Rand
 
 abbrev erase (a : α) : Erased α := .mk a
 
-@[simp]
+@[simp,ftrans_simp]
 theorem erase_out {α} (a : α) : (erase a).out = a := by simp[erase]
 
 
@@ -124,6 +124,15 @@ instance [Add X] : HAdd (Rand X) X (Rand X) := ⟨fun x x' => do
 
 -- todo: add simp theorems that inline these operations
 
+----------------------------------------------------------------------------------------------------
+-- Map Random Variable -----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+@[pp_dot]
+def map (r : Rand X) (f : X → Y) : Rand Y := do
+  let x' ← r
+  return f x'
+
 
 ----------------------------------------------------------------------------------------------------
 -- Expected Value ----------------------------------------------------------------------------------
@@ -191,7 +200,7 @@ theorem expectedValue_as_mean (x : Rand X) (φ : X → Y) :
     x.E φ = (x >>=(fun x' => pure (φ x'))).mean := by
   simp [bind,mean,pure,E]
 
-@[simp]
+@[simp,ftrans_simp]
 theorem pure_mean (x : X) : (pure (f:=Rand) x).mean = x := by simp[mean]
 
 @[rand_push_E]
@@ -233,25 +242,34 @@ variable {R}
 -- abbrev rpdf (x : Rand X) (ν : Measure X) : X → ℝ :=
 --   fun x' => x.pdf (lebesgue) ℝ ν x'
 
-@[rand_simp,simp]
+@[rand_simp,simp,ftrans_simp]
 theorem pdf_wrt_self (x : Rand X) [LawfulRand x] : x.pdf R x.ℙ = 1 := sorry
 
--- @[rand_simp,simp]
+-- @[rand_simp,simp,ftrans_simp]
 -- theorem rpdf_wrt_self (x : Rand X) : x.rpdf x.ℙ = 1 := by
 --   funext x; unfold rpdf; rw[pdf_wrt_self]
 
--- @[rand_simp,simp]
+-- @[rand_simp,simp,ftrans_simp]
 -- theorem bind_rpdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
 --     (x.bind f).rpdf R ν = fun y => ∫ x', ((f x').rpdf ν y) ∂x.ℙ := by
 --   funext y; simp[Rand.pdf,Rand.bind,Rand.pure]; sorry
 
-@[rand_simp,simp]
+@[rand_simp,simp,ftrans_simp]
 theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
     (x >>= f).pdf R ν = fun y => ∫ x', ((f x').pdf R ν y) ∂x.ℙ := by
   funext y; simp[Rand.pdf,Bind.bind,Pure.pure]; sorry_proof
 
+
+@[rand_simp,simp,ftrans_simp]
+theorem ite_pdf (c) [Decidable c] (t e : Rand X) (μ : Measure X) :
+    (if c then t else e).pdf R μ = (if c then t.pdf R μ else e.pdf R μ) := by
+  if h : c then
+    simp [h]
+  else
+    simp [h]
+
 -- open Classical in
--- @[rand_simp,simp]
+-- @[rand_simp,simp,ftrans_simp]
 -- theorem pdf_wrt_add (x : Rand X) (μ ν : Measure X) :
 --     x.pdf R (μ + ν)
 --     =

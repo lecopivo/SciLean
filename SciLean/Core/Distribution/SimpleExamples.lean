@@ -94,9 +94,9 @@ def foo3 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo (-1) 1, if x^2 - t ≤ 0 th
 
     simp only [ftrans_simp]
     conv =>
-      enter [1,2,b,2,1]
+      enter [1,1,2,b,2,1,p]
       autodiff
-    simp only [ftrans_simp, action_push]
+    simp only [ftrans_simp, action_push,restrict_push]
 
 def foo3' (t : R) := if |t| < 1 then 1/Scalar.sqrt |t| else 0
 
