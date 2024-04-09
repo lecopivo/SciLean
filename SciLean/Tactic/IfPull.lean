@@ -1,8 +1,17 @@
 import Lean
+import SciLean.Util.RewriteBy
 
 namespace SciLean.Tactic
 
-open Lean Meta in
+open Lean Meta
+
+initialize registerTraceClass `Meta.Tactic.if_pull
+
+/-- Simproc that pulls `if` out of applications and lambda functions.
+
+For example
+  - `(if 0 ≤ x then x else -x) + y` is transformed to `if 0 ≤ x then x + y else -x + y`
+  - `fun y => if 0 ≤ x then y + x else y - x` is transformed to `if 0 ≤ x then (fun y => y + x) else (fun y => y - x)`  -/
 simproc_decl if_pull (_) := fun e => do
 
   match e with
@@ -10,6 +19,12 @@ simproc_decl if_pull (_) := fun e => do
     let fn := e.getAppFn
     let args := e.getAppArgs
 
+    -- do not pull `if` out of `if`
+    -- this would cause infinite loops
+    if e.isAppOfArity ``ite 5 then
+      return .continue
+
+    -- locate argument with if statement
     let .some i := args.findIdx? fun arg => arg.isAppOfArity ``ite 5
       | return .continue
 
@@ -22,6 +37,7 @@ simproc_decl if_pull (_) := fun e => do
 
     let prf ← mkSorry (← mkEq e e') false
 
+    trace[Meta.Tactic.if_pull] s!"if_pull: \n{← ppExpr e}\n==>\n{← ppExpr e'}\n"
     return .visit { expr := e', proof? := prf }
 
   | .lam .. =>
@@ -45,6 +61,7 @@ simproc_decl if_pull (_) := fun e => do
 
     let prf ← mkSorry (← mkEq e e') false
 
+    trace[Meta.Tactic.if_pull] s!"if_pull: \n{← ppExpr e}\n==>\n{← ppExpr e'}\n"
     return .visit { expr := e', proof? := prf }
 
   | _ => return .continue
