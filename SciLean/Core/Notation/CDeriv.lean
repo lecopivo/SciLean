@@ -57,7 +57,7 @@ macro_rules
 | `(∂ $x:term, $b) => `(∂ (fun $x => $b))
 | `(∂ $x:term := $val:term, $b) => `(∂ (fun $x => $b) $val)
 | `(∂ $x:term : $type:term, $b) => `(∂ fun $x : $type => $b)
--- | `(∂ ($b:diffBinder), $f)       => `(∂ $b, $f)
+| `(∂ ($b:diffBinder), $f)       => `(∂ $b, $f)
 
 macro_rules
 -- in some cases it is still necessary to call fun_trans multiple times
