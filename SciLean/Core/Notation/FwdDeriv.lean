@@ -31,7 +31,7 @@ macro_rules
 | `(∂> $x:term := $val:term, $b) => `(∂> (fun $x => $b) $val)
 | `(∂> $x:term : $type:term, $b) => `(∂> fun $x : $type => $b)
 | `(∂> $x:term := $val:term ; $dir:term, $b) => `(∂> (fun $x => $b) $val $dir)
-| `(∂> ($b:diffBinder), $f)       => `(∂> $b, $f)
+-- | `(∂> ($b:diffBinder), $f)       => `(∂> $b, $f)
 
 
 macro_rules
