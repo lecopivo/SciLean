@@ -99,7 +99,7 @@ theorem cintegral_add_measures {f : α → X} {μ ν : Measure α}
 
 @[simp, ftrans_simp]
 theorem cintegral_dirac {f : α → X} (p : α) :
-    ∫' x, f x ∂(Measure.dirac p) = ∫' x, f x ∂μ + ∫' x, f x ∂ν := sorry_proof
+    ∫' x, f x ∂(Measure.dirac p) = f p := sorry_proof
 
 @[simp,ftrans_simp]
 theorem cintegral_unit {f : Unit → X} :
@@ -122,6 +122,13 @@ theorem cintegral.arg_f.push_lambda {α} (f : α → β → X) (μ : Measure β)
     (fun x => ∫' y, f x y ∂μ)
     =
     ∫' y, (fun x => f x y) ∂μ := sorry_proof
+
+
+@[simp, ftrans_simp]
+theorem cintegral_measure_map (g : β → X) (f : α → β) (μ : Measure α) :
+    (∫' y, g y ∂(μ.map f))
+    =
+    ∫' x, g (f x) ∂μ := sorry_proof
 
 
 end Algebra

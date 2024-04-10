@@ -17,7 +17,7 @@ namespace SciLean.Rand
 section Geometry
 
 variable
-  {R} [RealScalar R]
+  {R} [RealScalar R] [MeasureSpace R]
   {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   {X} [FinVec ι R X] [Module ℝ X] [MeasureSpace X]
 
@@ -42,7 +42,7 @@ end Geometry
 open Rand Scalar RealScalar in
 instance (x : Vec3) (r : Float) : UniformRand (sphere x r) where
   uniform := {
-    spec := erase ⟨fun φ => φ ⟨v[1,0,0],sorry_proof⟩⟩
+    spec := erase (fun φ => φ ⟨v[1,0,0],sorry_proof⟩) -- some bogus value
     rand := Rand.rand <| do
       let z := 2*(← uniformI Float) - 1
       let θ := 2*pi*(← uniformI Float)

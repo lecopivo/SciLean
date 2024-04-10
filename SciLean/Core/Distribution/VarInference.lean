@@ -177,6 +177,13 @@ variable {X Z} [MeasurableSpace X] [MeasurableSpace Z] [Inhabited Z]
 noncomputable
 def KLDiv (P Q : Rand X) : R := P.E (fun x => Scalar.log (P.pdf R Q.ℙ x))
 
+abbrev _root_.SciLean.Rand.Rand.fst (r : Rand (X×Y)) : Rand X := do
+  let (x,_) ← r
+  return x
+
+abbrev _root_.SciLean.Rand.Rand.snd (r : Rand (X×Y)) : Rand Y := do
+  let (_,y) ← r
+  return y
 
 noncomputable
 def ELBO {X Z} [MeasureSpace Z] [MeasureSpace X]
@@ -188,7 +195,7 @@ def kldiv_elbo
     (P : Rand (Z×X)) (Q : Rand Z) (x : X) :
     KLDiv (R:=R) Q (P.conditionSnd x)
     =
-    (Scalar.log (R:=R) (∫ z, P.pdf R volume (z,x))) - ELBO P Q x := sorry_proof
+    (Scalar.log (P.snd.pdf R volume x)) - ELBO P Q x := sorry_proof
 
 
 variable

@@ -18,7 +18,7 @@ theorem integral_as_uniform_E (R) [RealScalar R] {Y} [AddCommGroup Y] [Module R 
     (f : X → Y) (μ : Measure X) [UniformRand X] :
     ∫' (x : X), f x ∂μ
     =
-    (uniform X).E (fun x =>
+    (uniform X).𝔼 (fun x =>
       let V : R := Scalar.ofENNReal (volume (Set.univ : Set X))
       V • f x) := sorry_proof
 
@@ -27,7 +27,7 @@ theorem integral_as_uniform_E_in_set (R) [RealScalar R] {Y} [AddCommGroup Y] [SM
     (f : X → Y) (A : Set X) [UniformRand A] :
     ∫' x in A, f x
     =
-    (uniform A).E (fun x =>
+    (uniform A).𝔼 (fun x =>
       let V : R := Scalar.ofENNReal (volume (Set.univ : Set X))
       V • f x) := sorry_proof
 

@@ -30,14 +30,14 @@ elab " derive_random_approx " e:term " by " t:convSeq : term => do
   unless (b.isAppOf ``Rand.mean) && args.size ≥ 4 do
     throwError "deriving probabilistic derivative should end with a term of the form `Rand.mean _`"
 
-  if args.size = 4 then
-    return ← mkLambdaFVars xs args[3]!
+  if args.size = 5 then
+    return ← mkLambdaFVars xs args[4]!
   else
-    let X ← inferType (b.stripArgsN (args.size-4))
+    let X ← inferType (b.stripArgsN (args.size-5))
     let f ← withLocalDeclD `x X fun x => do
-      let b ← mkAppOptM ``Pure.pure #[← mkConstWithFreshMVarLevels ``Rand, none, none, mkAppN x args[4:]]
+      let b ← mkAppOptM ``Pure.pure #[← mkConstWithFreshMVarLevels ``Rand, none, none, mkAppN x args[5:]]
       mkLambdaFVars #[x] b
-    let b' ← mkAppM ``Bind.bind #[args[3]!, f]
+    let b' ← mkAppM ``Bind.bind #[args[4]!, f]
     return ← mkLambdaFVars xs b'
 
 

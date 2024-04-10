@@ -6,21 +6,22 @@ open MeasureTheory ENNReal BigOperators Finset
 
 namespace SciLean.Rand
 
-variable {R} [RealScalar R]
+variable {R} [RealScalar R] [MeasureSpace R]
 
 instance : LawfulRand (uniformI R) where
   is_measure := sorry_proof
   is_prob    := sorry_proof
 
--- @[rand_simp,simp]
--- theorem uniformI.pdf (x : R) (_hx : x ∈ Set.Icc 0 1) :
---     (uniformI R).pdf R volume
---     =
---     1 := by sorry_proof
+@[simp, ftrans_simp]
+theorem uniformI.pdf :
+    (uniformI R).pdf R volume
+    =
+    fun x => if 0 < x ∧ x < 1 then 1 else 0 := by sorry_proof
 
--- theorem uniformI.measure (θ : R) :
---     (uniformI R).ℙ = volume.restrict (Set.Ioo 0 1) :=
---   sorry_proof
+@[simp, ftrans_simp]
+theorem uniformI.measure :
+    (uniformI R).ℙ = volume.restrict (Set.Ioo 0 1) :=
+  sorry_proof
 
 
 -- ugh how to deal with empty intervals ?!

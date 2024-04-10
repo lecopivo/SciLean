@@ -8,7 +8,7 @@ open MeasureTheory ENNReal BigOperators Finset
 
 namespace SciLean.Rand
 
-variable {R} [RealScalar R] [ToString R]
+variable {R} [RealScalar R] [MeasureSpace R] [ToString R]
 
 
 def test (θ : R) : Rand R := do

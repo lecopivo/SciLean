@@ -1,15 +1,17 @@
 import Mathlib.Data.Erased
 import Mathlib.Control.Random
+import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.MeasureTheory.Decomposition.Lebesgue
 
 import SciLean.Core.Objects.Scalar
-import SciLean.Core.Rand.Distribution
+import SciLean.Core.Integral.CIntegral
 import SciLean.Core.Rand.SimpAttr
 
 import Mathlib.MeasureTheory.Measure.GiryMonad
 
 open MeasureTheory ENNReal BigOperators Finset
 
-namespace SciLean.Rand
+namespace SciLean
 
 abbrev erase (a : α) : Erased α := .mk a
 
@@ -19,25 +21,45 @@ theorem erase_out {α} (a : α) : (erase a).out = a := by simp[erase]
 
 /-- `x : Rand X` is a random variable of type `X`
 
-You can draw a sample by `x.get : IO X`.
+You can:
+  - generate sample with `x.get : IO X`
+  - get probability measure with `x.ℙ : Measure X`
+
+The internal fields `spec` and `rand` are just an internal implementation of `Rand` and should not
+be accessed but normal users.
+
+TODO: Hide implementation using quotients or something like that
 -/
 structure Rand (X : Type _)  where
-  /-- `spec` defines a probability measure using a generalized function
+  /-- `spec` defines a probability measure by computing an expectation. This means if `x : Rand X`
+  corresponds to a probability measure `μ` then for `φ : X → ℝ`
+  ```
+  x.spec.out φ = ∫ x, φ x ∂μ
+  ```
 
-  Note: `Distribution X` is a set of generalized functions with domain `X`. It is not a probability distribution.
-        Furthermore, any probability measure `μ` can be turned into a distribution `fun φ => ∫ x, φ x ∂μ`.
-
-  Instead of `Measure X` we use `Distribution X`, this has two advantages:
-    1. no requirement for `MeasurableSpace X` and thus we can provide `Monad Rand` instance
-    2. we can get more generality with distributions when differentiating measure valued functions
+  Using `(X→ℝ)→ℝ` instead of `Measure X` for the specification of random variables has the
+  advantage that we can reuse Lean's `do` notation.
   -/
-  spec : Erased (Distribution X)
+  spec : Erased ((X→ℝ)→ℝ)
+  /-- `rand` is a pseudo randon number generator implemented using the "Standard" number generator
+  -/
   rand : StateM StdGen X
 
+
+namespace Rand
+
+def _root_.Function.IsMeasure {X} [MeasurableSpace X] (F : (X → ℝ) → ℝ) : Prop :=
+  ∃ μ : Measure X, ∀ (f : X → ℝ), F f = ∫ x, f x ∂μ
+
+open Classical in
 /-- Probability measure of a random variable -/
 @[pp_dot]
 noncomputable
-def Rand.ℙ {X} [MeasurableSpace X] (x : Rand X) := x.spec.out.measure
+def ℙ {X} [MeasurableSpace X] (r : Rand X) : Measure X :=
+  if h : r.spec.out.IsMeasure then
+    choose h
+  else
+    0
 
 /-- Specification of `x : Rand X` is really saying that it is a probability measure. -/
 class LawfulRand (x : Rand X) [MeasurableSpace X] where
@@ -46,11 +68,9 @@ class LawfulRand (x : Rand X) [MeasurableSpace X] where
 
 variable {X} [MeasurableSpace X]
 
-instance (x : Rand X) [inst : LawfulRand x] : IsProbabilityMeasure (x.ℙ) := inst.is_prob
+instance instIsProbabilityMeasureℙ (x : Rand X) [inst : LawfulRand x] : IsProbabilityMeasure (x.ℙ) := inst.is_prob
 
 variable {X Y Z : Type _}
-
-namespace Rand
 
 /-- Extensionality of random variable.
 
@@ -59,7 +79,7 @@ WARNING: This theorem is inconsistent!!! The random generators `x.rand` and `y.r
          generator is a true random number generator. Thus the result of any probabilistic program
          should be independent on the exact generator up to some randomness.
 
-TODO: We might quotient all the random number generators corresponding to the measure `x.μ`  under
+TODO: We might quotient all the random number generators corresponding to the measure `x.ℙ`  under
       the assumption that they are all true random generators. I believe that such type would be
       a singleton i.e. all the random number generators are all the same.
 -/
@@ -81,8 +101,14 @@ def get (x : Rand X) : IO X := do
 
 
 instance : Monad Rand where
-  pure {X} x := { spec := erase (pure x : Distribution X), rand := pure x }
-  bind x f := { spec := erase (x.spec.out >>= fun x => (f x).spec.out), rand := bind x.rand (fun x => (f x).rand) }
+  pure x := {
+    spec := erase (fun φ => φ x),
+    rand := pure x
+  }
+  bind x f := {
+    spec := erase (fun φ => x.spec.out (fun x => (f x).spec.out φ)),
+    rand := bind x.rand (fun x => (f x).rand)
+  }
 
 
 instance : LawfulMonad Rand where
@@ -105,6 +131,12 @@ theorem swap_bind (f : X → Y → Z) (x : Rand X) (y : Rand Y) :
   sorry_proof
 
 
+variable [MeasurableSpace X]
+
+@[simp, ftrans_simp]
+theorem pure_ℙ (x : X) : (pure x : Rand X).ℙ = Measure.dirac x := sorry_proof
+
+
 ----------------------------------------------------------------------------------------------------
 -- Arithmetics -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -125,26 +157,41 @@ instance [Add X] : HAdd (Rand X) X (Rand X) := ⟨fun x x' => do
 -- todo: add simp theorems that inline these operations
 
 ----------------------------------------------------------------------------------------------------
--- Map Random Variable -----------------------------------------------------------------------------
+-- Simple Random Variable functions ----------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
 @[pp_dot]
-def map (r : Rand X) (f : X → Y) : Rand Y := do
+abbrev map (r : Rand X) (f : X → Y) : Rand Y := do
   let x' ← r
   return f x'
+
+@[pp_dot]
+abbrev fst (r : Rand (X×Y)) : Rand X := do
+  let (x,_) ← r
+  return x
+
+@[pp_dot]
+abbrev snd (r : Rand (X×Y)) : Rand Y := do
+  let (_,y) ← r
+  return y
+
+variable
+  [MeasurableSpace X]
+  [MeasurableSpace Y]
+
+@[simp, ftrans_simp]
+theorem map_ℙ  (r : Rand X) (f : X → Y) :
+  (r.map f).ℙ = r.ℙ.map f := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
 -- Expected Value ----------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-
-
 section ExpectedValue
 
 variable
   {R} [RealScalar R]
-  [MeasurableSpace X]
   [AddCommGroup Y] [Module ℝ Y]
   [AddCommGroup Z] [Module ℝ Z]
   -- [AddCommGroup U] [TopologicalSpace U] [TopologicalAddGroup U] [Module ℝ U] [LocallyConveUSpace ℝ U]
@@ -152,40 +199,32 @@ variable
 
 @[pp_dot]
 noncomputable
-def E (x : Rand X) (φ : X → Y) : Y := ⟪x.spec.out, φ⟫
+def 𝔼 (r : Rand X) (φ : X → Y) : Y := ∫' x, φ x ∂r.ℙ
 
-theorem E_as_cintegral
-    (x : Rand X) [lr : LawfulRand x] (φ : X → U) :
-    x.E φ = ∫' x, φ x ∂x.ℙ := by
-  simp [Rand.ℙ, Distribution.measure, lr.is_measure]
-  have q := lr.is_measure
-  rw[← Classical.choose_spec q φ]
-  rfl
+@[simp, ftrans_simp, rand_push_E]
+theorem pure_𝔼 (x : X) (φ : X → Y) :
+    (pure (f:=Rand) x).𝔼 φ = φ x := by simp [𝔼]
 
-@[simp, rand_push_E]
-theorem pure_E (x : X) (φ : X → Y) :
-    (pure (f:=Rand) x).E φ = φ x := by simp [E,pure]
-
+-- What are the right assumptions here? Lambda lawfulness of `x` and `f x'` and integrability of `φ`
 @[rand_push_E]
-theorem bind_E (x : Rand X) (f : X → Rand Y) (φ : Y → Z) :
-    (x >>= f).E φ = x.E (fun x' => (f x').E φ) := by simp[E,bind]
+theorem bind_E (r : Rand X) (f : X → Rand Y) (φ : Y → Z) :
+    (r >>= f).𝔼 φ = r.𝔼 (fun x' => (f x').𝔼 φ) := by simp[𝔼]; sorry_proof
 
 -- todo: We might want this to hold without lawfulness
 -- consider adding as a property inside of `Distribution` or `Rand`
-@[simp, rand_push_E]
-theorem zero_E (x : Rand X) [LawfulRand x] :
-    x.E (fun _ => (0 : U)) = 0 := by simp[E_as_cintegral]
+@[simp, ftrans_simp, rand_push_E]
+theorem E_zero (r : Rand X) :
+    r.𝔼 (fun _ => (0 : U)) = 0 := by simp[𝔼]
 
-@[rand_simp,simp]
-theorem add_E (x : Rand X) [LawfulRand x] (φ ψ : X → U)
-    (hφ : CIntegrable φ x.ℙ) (hψ : CIntegrable ψ x.ℙ) :
-    x.E (fun x => φ x + ψ x) = x.E φ + x.E ψ := by
-  simp[E_as_cintegral]; rw[cintegral_add] <;> assumption
+@[simp, ftrans_simp, add_pull, rand_push_E]
+theorem E_add (r : Rand X) (φ ψ : X → U)
+    (hφ : CIntegrable φ r.ℙ) (hψ : CIntegrable ψ r.ℙ) :
+    r.𝔼 (fun x => φ x + ψ x) = r.𝔼 φ + r.𝔼 ψ := by
+  simp[𝔼]; rw[cintegral_add] <;> assumption
 
--- we might add this to the definition of Rand and I think it won't require
--- integrability of `φ` nor lawfulness of `x`
-theorem smul_E (x : Rand X) (φ : X → ℝ) (y : Y) :
-    x.E (fun x' => φ x' • y) = x.E φ • y := by sorry_proof
+@[simp, ftrans_simp, smul_pull, rand_push_E]
+theorem E_smul (r : Rand X) (φ : X → ℝ) (y : Y) :
+    r.𝔼 (fun x' => φ x' • y) = r.𝔼 φ • y := by sorry_proof
 
 
 section Mean
@@ -193,30 +232,26 @@ section Mean
 variable [AddCommGroup X] [Module ℝ X]
 
 noncomputable
-def mean (x : Rand X) : X := x.E id
+def mean (r : Rand X) : X := r.𝔼 id
 
 @[rand_pull_E]
 theorem expectedValue_as_mean (x : Rand X) (φ : X → Y) :
-    x.E φ = (x >>=(fun x' => pure (φ x'))).mean := by
-  simp [bind,mean,pure,E]
+    x.𝔼 φ = (x.map φ).mean := by
+  simp [bind,mean,pure,𝔼]
 
 @[simp,ftrans_simp]
 theorem pure_mean (x : X) : (pure (f:=Rand) x).mean = x := by simp[mean]
 
 @[rand_push_E]
 theorem bind_mean (x : Rand X) (f : X → Rand Y) :
-    (x >>= f).mean = x.E (fun x' => (f x').mean) := by simp[mean,rand_push_E]
+    (x >>= f).mean = x.𝔼 (fun x' => (f x').mean) := by simp[mean,rand_push_E]
 
--- Again we might add this as a definit property of `Rand`
---  (It would not work for `Distribution` as integrating constant function yields that constant
---  only over a probability measure)
 theorem mean_add  (x : Rand X) (x' : X) : x.mean + x' = (x  + x').mean := by
-  simp[HAdd.hAdd,mean,E,pure,bind]; sorry_proof
+  simp[HAdd.hAdd,mean,𝔼,pure,bind]; sorry_proof
 theorem mean_add' (x : Rand X) (x' : X) : x' + x.mean = (x' +  x).mean := by
-  simp[HAdd.hAdd,mean,E,pure,bind]; sorry_proof
+  simp[HAdd.hAdd,mean,𝔼,pure,bind]; sorry_proof
 
 end Mean
-
 
 end ExpectedValue
 
@@ -235,32 +270,19 @@ variable
 variable (R)
 /-- Probability density function of `x` w.r.t. the measure `ν`. -/
 noncomputable
-def pdf (x : Rand X) (ν : Measure X) : X → R :=
+def pdf (x : Rand X) (ν : Measure X := by volume_tac) : X → R :=
   fun x' => Scalar.ofReal R (Measure.rnDeriv x.ℙ ν x').toReal
 variable {R}
--- noncomputable
--- abbrev rpdf (x : Rand X) (ν : Measure X) : X → ℝ :=
---   fun x' => x.pdf (lebesgue) ℝ ν x'
 
-@[rand_simp,simp,ftrans_simp]
-theorem pdf_wrt_self (x : Rand X) [LawfulRand x] : x.pdf R x.ℙ = 1 := sorry
+@[simp,ftrans_simp]
+theorem pdf_wrt_self (x : Rand X) [LawfulRand x] : x.pdf R x.ℙ = 1 := sorry_proof
 
--- @[rand_simp,simp,ftrans_simp]
--- theorem rpdf_wrt_self (x : Rand X) : x.rpdf x.ℙ = 1 := by
---   funext x; unfold rpdf; rw[pdf_wrt_self]
-
--- @[rand_simp,simp,ftrans_simp]
--- theorem bind_rpdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
---     (x.bind f).rpdf R ν = fun y => ∫ x', ((f x').rpdf ν y) ∂x.ℙ := by
---   funext y; simp[Rand.pdf,Rand.bind,Rand.pure]; sorry
-
-@[rand_simp,simp,ftrans_simp]
+@[simp,ftrans_simp]
 theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
     (x >>= f).pdf R ν = fun y => ∫ x', ((f x').pdf R ν y) ∂x.ℙ := by
   funext y; simp[Rand.pdf,Bind.bind,Pure.pure]; sorry_proof
 
-
-@[rand_simp,simp,ftrans_simp]
+@[simp,ftrans_simp]
 theorem ite_pdf (c) [Decidable c] (t e : Rand X) (μ : Measure X) :
     (if c then t else e).pdf R μ = (if c then t.pdf R μ else e.pdf R μ) := by
   if h : c then
@@ -268,26 +290,17 @@ theorem ite_pdf (c) [Decidable c] (t e : Rand X) (μ : Measure X) :
   else
     simp [h]
 
--- open Classical in
--- @[rand_simp,simp,ftrans_simp]
--- theorem pdf_wrt_add (x : Rand X) (μ ν : Measure X) :
---     x.pdf R (μ + ν)
---     =
---     fun x' =>
---       if x.ℙ ⟂ₘ μ then 0 else x.pdf R μ x'
---       +
---       if x.ℙ ⟂ₘ ν then 0 else x.pdf R ν x' := sorry
-
 
 ----------------------------------------------------------------------------------------------------
 -- Combine -----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+variable [MeasureSpace R]
 variable (R)
 @[inline] -- inlining seems to have quite implact on performance
 def _root_.SciLean.uniformI : Rand R := {
   spec :=
-    erase (⟨fun φ => ∫' x in Set.Icc (0:R) (1:R), φ x ∂sorry⟩) -- todo: add volume to RealScalar
+    erase (fun φ => ∫' x in Set.Icc (0:R) (1:R), φ x)
   rand :=
     fun g => do
     let N := stdRange.2
@@ -298,7 +311,7 @@ def _root_.SciLean.uniformI : Rand R := {
 variable {R}
 
 def combine (x y : Rand X) (θ : R) : Rand X := {
-  spec := erase ⟨fun φ => (Scalar.toReal R (1-θ)) • x.E φ + (Scalar.toReal R θ) • y.E φ⟩
+  spec := erase (fun φ => (Scalar.toReal R (1-θ)) • x.𝔼 φ + (Scalar.toReal R θ) • y.𝔼 φ)
   rand := fun g => do
     let (θ',g) := (uniformI R).rand g
     if θ' ≤ θ then

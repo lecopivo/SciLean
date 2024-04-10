@@ -2,6 +2,8 @@ import SciLean.Core.FunctionTransformations.Isomorph.RealToFloat
 import SciLean.Core.Objects.IsReal
 import SciLean.Core.Objects.Scalar
 
+import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+
 namespace SciLean
 
 instance : CommRing Float where
@@ -215,3 +217,5 @@ open ComplexConjugate
 @[simp]
 theorem im_float  (a : Float)
   : IsROrC.im a = (0 : Float) := sorry_proof
+
+instance : MeasureTheory.MeasureSpace Float := sorry

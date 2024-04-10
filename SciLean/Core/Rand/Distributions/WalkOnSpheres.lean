@@ -20,7 +20,7 @@ open MeasureTheory
 
 namespace SciLean.Rand
 
-variable {Y : Type} [SemiHilbert Float Y] [Module ℝ Y] [IsScalarTower ℝ Float Y]
+variable {Y : Type} [SemiHilbert Float Y] [Module ℝ Y] [IsScalarTower ℝ Float Y] [MeasurableSpace Y]
 set_default_scalar Float
 
 
