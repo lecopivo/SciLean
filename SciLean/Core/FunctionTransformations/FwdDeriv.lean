@@ -201,7 +201,9 @@ theorem HAdd.hAdd.arg_a0a1.fwdDeriv_rule_at (x : X)
     (fwdDeriv K fun x => f x + g x) x
     =
     fun dx =>
-      fwdDeriv K f x dx + fwdDeriv K g x dx := by
+      let ydy := fwdDeriv K f x dx
+      let zdz := fwdDeriv K g x dx
+      ydy + zdz := by
   unfold fwdDeriv; fun_trans
 
 @[fun_trans]
@@ -210,7 +212,9 @@ theorem HAdd.hAdd.arg_a0a1.fwdDeriv_rule
     (fwdDeriv K fun x => f x + g x)
     =
     fun x dx =>
-      fwdDeriv K f x dx + fwdDeriv K g x dx := by
+      let ydy := fwdDeriv K f x dx
+      let zdz := fwdDeriv K g x dx
+      ydy + zdz := by
   unfold fwdDeriv; fun_trans
 
 
@@ -223,7 +227,9 @@ theorem HSub.hSub.arg_a0a1.fwdDeriv_rule_at (x : X)
     (fwdDeriv K fun x => f x - g x) x
     =
     fun dx =>
-      fwdDeriv K f x dx - fwdDeriv K g x dx := by
+      let ydy := fwdDeriv K f x dx
+      let zdz := fwdDeriv K g x dx
+      ydy - zdz := by
   unfold fwdDeriv; fun_trans
 
 @[fun_trans]
@@ -232,7 +238,9 @@ theorem HSub.hSub.arg_a0a1.fwdDeriv_rule
     (fwdDeriv K fun x => f x - g x)
     =
     fun x dx =>
-      fwdDeriv K f x dx - fwdDeriv K g x dx := by
+      let ydy := fwdDeriv K f x dx
+      let zdz := fwdDeriv K g x dx
+      ydy - zdz := by
   unfold fwdDeriv; fun_trans
 
 
