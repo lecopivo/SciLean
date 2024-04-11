@@ -25,11 +25,16 @@ instance : FunLike (SmoothLinearMap K X Y) X Y where
   coe f := f.toFun
   coe_injective' := sorry_proof
 
-macro X:term:25 " ⊸[" K:term "]" Y:term:26 : term =>
+macro X:term:25 " ⊸[" K:term "] " Y:term:26 : term =>
   `(SmoothLinearMap $K $X $Y)
 
 macro X:term:25 " ⊸ " Y:term:26 : term =>
   `(SmoothLinearMap defaultScalar% $X $Y)
+
+@[app_unexpander SmoothLinearMap] def unexpandSmoothLinearMap : Lean.PrettyPrinter.Unexpander
+  | `($(_) $R $X $Y) => `($X ⊸[$R] $Y)
+  | _ => throw ()
+
 
 @[fun_prop]
 theorem SmoothLinearMap_apply_right (f : X ⊸[K] Y) : IsSmoothLinearMap K (fun x => f x) := f.2

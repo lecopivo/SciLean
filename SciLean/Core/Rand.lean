@@ -10,3 +10,4 @@ import SciLean.Core.Rand.PushPullExpectation
 import SciLean.Core.Rand.Rand
 import SciLean.Core.Rand.SimpAttr
 import SciLean.Core.Rand.Tactic
+import SciLean.Core.Rand.VariationalInference

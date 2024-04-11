@@ -50,7 +50,7 @@ open Rand in
 theorem function_toDistribution_eval (f : X → Y) (A : Set X) (φ : X → U) (L : Y ⊸ U ⊸ V) [UniformRand A] :
   (f.toDistribution.restrict A).extAction φ L
   =
-  (uniform A).E fun x =>
+  (uniform A).𝔼 fun x =>
     let V : R := Scalar.ofENNReal (volume A)
     V • L (f x) (φ x) := sorry_proof
 
@@ -60,7 +60,7 @@ open Rand in
 theorem function_toDistribution_eval_restrict (f : X → Y) (B A : Set X) (φ : X → U) (L : Y ⊸ U ⊸ V) [UniformRand A] :
   ((f.toDistribution.restrict B).restrict A).extAction φ L
   =
-  (uniform A).E fun x =>
+  (uniform A).𝔼 fun x =>
     let V : R := Scalar.ofENNReal (volume A)
     if x.1 ∈ B then
       V • L (f x) (φ x)

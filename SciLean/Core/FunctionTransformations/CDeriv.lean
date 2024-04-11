@@ -271,6 +271,22 @@ theorem HAdd.hAdd.arg_a0a1.cderiv_rule
     fun x => fun dx =>
       cderiv K f x dx + cderiv K g x dx := by funext x; fun_trans
 
+@[fun_trans]
+theorem HAdd.hAdd.arg_a0.cderiv_rule
+    (f : X → Y) (y : Y) :
+    (cderiv K fun x => f x + y)
+    =
+    fun x dx =>
+      cderiv K f x dx := by funext x; sorry_proof
+
+@[fun_trans]
+theorem HAdd.hAdd.arg_a1.cderiv_rule
+    (f : X → Y) (y : Y) :
+    (cderiv K fun x => y + f x)
+    =
+    fun x dx =>
+      cderiv K f x dx := by funext x; sorry_proof
+
 
 -- HSub.hSub -------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -291,6 +307,23 @@ theorem HSub.hSub.arg_a0a1.cderiv_rule
     =
     fun x => fun dx =>
       cderiv K f x dx - cderiv K g x dx := by funext x; fun_trans
+
+@[fun_trans]
+theorem HSub.hSub.arg_a0.cderiv_rule
+    (f : X → Y) (y : Y) :
+    (cderiv K fun x => f x - y)
+    =
+    fun x dx =>
+      cderiv K f x dx := by funext x; sorry_proof
+
+@[fun_trans]
+theorem HSub.hSub.arg_a1.cderiv_rule
+    (f : X → Y) (y : Y) :
+    (cderiv K fun x => y - f x)
+    =
+    fun x dx =>
+      - cderiv K f x dx := by funext x; sorry_proof
+
 
 
 -- Neg.neg ---------------------------------------------------------------------

@@ -55,13 +55,19 @@ open Lean Parser
 
 @[simp, ftrans_simp]
 theorem modelBind_condition (r : Rand X) (f : X → Rand Y) (x' : X) :
-  (let x ~ r; f x).condition x'
-  =
-  f x' := sorry_proof
-
+    (let x ~ r; f x).conditionFst x'
+    =
+    f x' := sorry_proof
 
 @[simp, ftrans_simp]
 theorem modelBind_pdf (r : Rand X) (f : X → Rand Y) :
-  (let x ~ r; f x).pdf R (volume : Measure (X×Y))
-  =
-  fun xy => (r.pdf R volume xy.1) * (f xy.1).pdf R volume xy.2 := sorry_proof
+    (let x ~ r; f x).pdf R (volume : Measure (X×Y))
+    =
+    fun xy => (r.pdf R volume xy.1) * (f xy.1).pdf R volume xy.2 := sorry_proof
+
+@[simp, ftrans_simp]
+theorem modelBind_pdf_prod [MeasurableSpace X] [MeasurableSpace Y]
+    (r : Rand X) (f : X → Rand Y) (μ : Measure X) (ν : Measure Y) :
+    (let x ~ r; f x).pdf R (μ.prod ν)
+    =
+    fun xy => (r.pdf R μ xy.1) * (f xy.1).pdf R ν xy.2 := sorry_proof

@@ -1,5 +1,6 @@
 import Mathlib.MeasureTheory.Measure.GiryMonad
 import Mathlib.MeasureTheory.Decomposition.Lebesgue
+import Mathlib.MeasureTheory.Constructions.Prod.Basic
 
 import SciLean.Core.FunctionPropositions
 import SciLean.Core.FunctionSpaces
@@ -584,6 +585,16 @@ theorem iteD.arg_cte.toDistribution_rule (s : Set X) (t e : X → Y) :
       e.toDistribution)
     =
     (fun x => if x ∈ s then t x else e x).toDistribution (R:=R) := sorry_proof
+
+
+variable [MeasureSpace Y] [Module ℝ Z]
+
+@[fun_trans]
+theorem toDistribution_let_rule (g : X → Y) (f : X → Y → Z) :
+    (fun x => let y := g x; f x y).toDistribution (R:=R)
+    =
+    ((fun xy : X×Y => f xy.1 xy.2).toDistribution (R:=R)).bind
+    (fun xy => dirac (xy.1 - g.invFun xy.2)) (fun z ⊸ fun r ⊸ r • z) := sorry_proof
 
 
 

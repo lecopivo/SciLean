@@ -2,6 +2,7 @@ import SciLean.Core
 
 import SciLean.Tactic.MathlibCompiledTactics
 import SciLean.Tactic.Autodiff
+import SciLean.Tactic.IfPull
 
 import SciLean.Data.ArrayType
 import SciLean.Data.DataArray

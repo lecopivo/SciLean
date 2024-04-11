@@ -9,10 +9,12 @@ variable {R} [RealScalar R] [MeasureSpace R]
 
 def flip (x : R) : Rand Bool := {
   spec :=
-    let t := (Scalar.toReal R x)     -- todo: clamp to [0,1]
-    let f := (Scalar.toReal R (1-x)) -- todo: clamp to [0,1]
+    let x := (x ⊔ 0) ⊓ 1
+    let t := (Scalar.toReal R x)
+    let f := (Scalar.toReal R (1-x))
     erase (fun φ => t • φ true + f • φ false)
   rand :=
+    let x := (x ⊔ 0) ⊓ 1
     fun g => do
     let (y,g) := (uniformI R).rand g
     let b := if y ≤ x then true else false
@@ -23,17 +25,19 @@ instance (θ : R) : LawfulRand (flip θ) where
   is_measure := sorry_proof
   is_prob    := sorry_proof
 
-@[rand_simp,simp]
+@[rand_simp,simp, ftrans_simp]
 theorem flip.pdf_wrt_flip (θ θ' : R) :
     (flip θ).pdf R (flip θ').ℙ
     =
     fun b => if b then θ / θ' else (1-θ) / (1-θ') := by sorry_proof
 
-@[rand_simp,simp]
-theorem flip.pdf (x : R) (_hx : x ∈ Set.Icc 0 1) :
+@[rand_simp,simp, ftrans_simp]
+theorem flip.pdf (x : R) :
     (flip x).pdf R .count
     =
-    fun b => if b then x else (1-x) := by sorry_proof
+    fun b =>
+      let x := (x ⊔ 0) ⊓ 1
+      if b then x else (1-x) := by sorry_proof
 
 theorem flip.measure (θ : R) :
     (flip θ).ℙ = (ENNReal.ofReal (Scalar.toReal R θ)) • Measure.dirac true
@@ -45,7 +49,7 @@ theorem flip.measure (θ : R) :
 variable
   {X} [AddCommGroup X] [Module R X] [Module ℝ X]
 
-@[rand_simp,simp]
+@[rand_simp,simp, ftrans_simp]
 theorem flip.integral (θ : R) (f : Bool → X) :
     ∫' x, f x ∂(flip θ).ℙ = θ • f true + (1-θ) • f false := by
   simp [rand_simp,flip.measure]; sorry_proof
