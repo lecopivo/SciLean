@@ -281,6 +281,21 @@ theorem HSMul.hSMul.arg_a1.CDifferentiableAt_rule_int
   fun_prop
 
 
+-- Inv.inv -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_prop]
+def Inv.inv.arg_a0.CDifferentiableAt_rule (x : X) (f : X → K)
+    (hf : CDifferentiableAt K f x) (hf' : f x ≠ 0) :
+    CDifferentiableAt K (fun x => (f x)⁻¹) x := by
+  sorry_proof
+
+@[fun_prop]
+def Inv.inv.arg_a0.CDifferentiable_rule (f : X → K)
+    (hf : CDifferentiable K f) (hf' : ∀ x, f x ≠ 0) :
+    CDifferentiable K (fun x => (f x)⁻¹) := by
+  sorry_proof
+
 
 -- HDiv.hDiv -------------------------------------------------------------------
 --------------------------------------------------------------------------------
