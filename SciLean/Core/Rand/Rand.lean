@@ -3,6 +3,7 @@ import Mathlib.Control.Random
 import Mathlib.MeasureTheory.Integral.Bochner
 import Mathlib.MeasureTheory.Decomposition.Lebesgue
 
+import SciLean.Core.FunctionPropositions.Bijective
 import SciLean.Core.Objects.Scalar
 import SciLean.Core.Integral.CIntegral
 import SciLean.Core.Rand.SimpAttr
@@ -224,6 +225,12 @@ theorem E_add (r : Rand X) (φ ψ : X → U)
 theorem E_smul (r : Rand X) (φ : X → ℝ) (y : Y) :
     r.𝔼 (fun x' => φ x' • y) = r.𝔼 φ • y := by sorry_proof
 
+theorem reparameterize [Nonempty X] (f : X → Y) (hf : f.Injective) {r : Rand X} {φ : X → Z} :
+    r.𝔼 φ
+    =
+    let invf := f.invFun
+    (r.map f).𝔼 (fun y => φ (invf y)) := by
+  simp [𝔼,Function.invFun_comp' hf]
 
 section Mean
 

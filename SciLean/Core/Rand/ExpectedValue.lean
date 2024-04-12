@@ -3,6 +3,8 @@ import SciLean.Core.Distribution.ParametricDistribFwdDeriv
 
 namespace SciLean
 
+open MeasureTheory
+
 variable
   {R} [RealScalar R]
   {W} [Vec R W]
@@ -28,6 +30,15 @@ theorem Rand.𝔼.arg_rf.cderiv_rule' (r : W → Rand X) (f : W → X → Y)
     let dr := parDistribFwdDeriv (fun w => (r w).ℙ.toDistribution (R:=R)) w dw
     let df := fun x => fwdDeriv R (f · x) w dw
     dr.extAction df (fun rdr ⊸ fun ydy ⊸ rdr.1•ydy.2 + rdr.2•ydy.1) := sorry_proof
+
+
+
+theorem Rand.𝔼_deriv_as_distribDeriv {X} [Vec R X] [MeasureSpace X]
+  (r : W → Rand X) (f : W → X → Y) :
+  cderiv R (fun w => (r w).𝔼 (f w))
+  =
+  fun w dw =>
+    parDistribDeriv (fun w => (fun x => ((r w).pdf R volume x) • f w x).toDistribution (R:=R)) w dw |>.integrate := sorry
 
 
 -- variable

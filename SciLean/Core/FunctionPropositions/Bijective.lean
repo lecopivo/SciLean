@@ -6,6 +6,16 @@ import SciLean.Util.SorryProof
 
 set_option linter.unusedVariables false
 
+-- Some missing theorems -------------------------------------------------------
+--------------------------------------------------------------------------------
+
+theorem Function.invFun_comp' [Nonempty α] {f : α → β} (hf : f.Injective) {x : α} :
+    f.invFun (f x) = x := by
+  suffices (f.invFun ∘ f) x = x by assumption
+  rw[Function.invFun_comp hf]
+  rfl
+
+
 -- Basic rules -----------------------------------------------------------------
 --------------------------------------------------------------------------------
 

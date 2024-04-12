@@ -86,29 +86,6 @@ theorem Prod.mk.arg_fstsnd.invFun_rule
 by sorry_proof
 
 
--- Id --------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-@[fun_trans]
-theorem id.arg_a.invFun_rule
-  : invFun (fun x : X => id x)
-    =
-    id := by unfold id; fun_trans
-
-
--- Function.comp ---------------------------------------------------------------
---------------------------------------------------------------------------------
-
-@[fun_trans]
-theorem Function.comp.arg_a0.invFun_rule
-  (f : Y → Z) (g : X → Y)
-  (hf : Bijective f) (hg : Bijective g)
-  : invFun (fun x => (f ∘ g) x)
-    =
-    invFun g ∘ invFun f
-  := by unfold Function.comp; fun_trans
-
-
 
 -- Neg.neg ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
