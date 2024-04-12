@@ -71,13 +71,23 @@ open Lean Parser Term in
 macro "fun " x:funBinder " ⊸ " b:term : term =>
   `(SmoothLinearMap.mk' defaultScalar% (fun $x => $b) (by fun_prop))
 
-@[app_unexpander SmoothLinearMap.mk'] def unexpandSmoothLinearMapMk : Lean.PrettyPrinter.Unexpander
+@[app_unexpander SmoothLinearMap.mk'] def unexpandSmoothLinearMapMk' : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $R $f:term $_:term) =>
     match f with
     | `(fun $x':ident => $b:term) => `(fun $x' ⊸[$R] $b)
     | `(fun ($x':ident : $ty) => $b:term) => `(fun ($x' : $ty) ⊸[$R] $b)
     | `(fun $x':ident : $ty => $b:term) => `(fun ($x' : $ty) ⊸[$R] $b)
+    | _  => throw ()
+  | _  => throw ()
+
+@[app_unexpander SmoothLinearMap.mk] def unexpandSmoothLinearMapMk : Lean.PrettyPrinter.Unexpander
+
+  | `($(_) $f:term $_:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(fun $x' ⊸ $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(fun ($x' : $ty) ⊸ $b)
+    | `(fun $x':ident : $ty => $b:term) => `(fun ($x' : $ty) ⊸ $b)
     | _  => throw ()
   | _  => throw ()
 

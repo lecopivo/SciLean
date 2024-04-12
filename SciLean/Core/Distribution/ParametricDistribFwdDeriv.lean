@@ -2,12 +2,7 @@ import SciLean.Core.Distribution.ParametricDistribDeriv
 
 namespace SciLean
 
-
-open MeasureTheory
-
-namespace SciLean
-
-open Distribution
+open MeasureTheory Distribution
 
 variable
   {R} [RealScalar R]

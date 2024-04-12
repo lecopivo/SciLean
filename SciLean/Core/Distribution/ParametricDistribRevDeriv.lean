@@ -4,12 +4,7 @@ import SciLean.Core.Distribution.Eval
 
 namespace SciLean
 
-
-open MeasureTheory
-
-namespace SciLean
-
-open Distribution
+open MeasureTheory Distribution
 
 variable
   {R} [RealScalar R]
@@ -25,11 +20,11 @@ set_default_scalar R
 
 @[fun_trans]
 noncomputable
-def parDistribRevDeriv (f : X → 𝒟'(Y,Z)) (x : X) : 𝒟'(Y,Z×(Z→X)) :=
+def parDistribRevDeriv (f : X → 𝒟'(Y,Z)) (x : X) : 𝒟'(Y,Z×(Z⊸X)) :=
   ⟨fun φ =>
-      let dz := semiAdjoint R (fun dx => cderiv R (f · φ) x dx)
+      let df' := semiAdjoint R (fun dx => cderiv R (f · φ) x dx)
       let z  := f x φ
-      (z, dz), sorry_proof⟩
+      (z, fun dz ⊸ df' dz), sorry_proof⟩
 
 
 namespace parDistribRevDeriv
@@ -45,18 +40,20 @@ theorem comp_rule
     parDistribRevDeriv (fun x => f (g x))
     =
     fun x =>
-      let ydg := revDeriv R g x
+      let ydg := revDeriv' R g x
       let udf := parDistribRevDeriv f ydg.1
-      udf.postComp (⟨fun (u,df') => (u, fun du => ydg.2 (df' du)), by sorry_proof⟩) := by
+      udf.postComp (fun udf' ⊸ (udf'.1, fun du ⊸ ydg.2 (udf'.2 du))) := by
 
+  simp
   unfold parDistribRevDeriv postComp
   funext x; ext φ
   simp
-  fun_trans
-  simp [action_push,revDeriv,fwdDeriv]
-  have : ∀ x, HasSemiAdjoint R (∂ x':=x, f x' φ) := sorry_proof -- todo add: `DistribHasAdjDiff`
-  have : ∀ φ, CDifferentiable R fun x0 => (f x0) φ := sorry_proof
-  fun_trans
+  sorry_proof -- TODO: fix fun_trans bug
+  -- fun_trans
+  -- simp [action_push,revDeriv,fwdDeriv]
+  -- have : ∀ x, HasSemiAdjoint R (∂ x':=x, f x' φ) := sorry_proof -- todo add: `DistribHasAdjDiff`
+  -- have : ∀ φ, CDifferentiable R fun x0 => (f x0) φ := sorry_proof
+  -- fun_trans
 
 
 ----------------------------------------------------------------------------------------------------
@@ -70,10 +67,10 @@ theorem bind_rule
     fun x =>
       let ydg := parDistribRevDeriv g x
       let zdf := fun y => parDistribRevDeriv (f · y) x
-      ydg.bind zdf (⟨fun (u,dg) => ⟨fun (v,df) =>
-        (L u v, fun dw =>
-                  df (semiAdjoint R (L u ·) dw) +
-                  dg (semiAdjoint R (L · v) dw)), sorry_proof⟩, sorry_proof⟩) := by
+      ydg.bind zdf (⟨fun (u,dg) => ⟨fun vdf =>
+        (L u vdf.1, fun dw ⊸
+                  vdf.2 (semiAdjoint R (L u ·) dw) +
+                  dg (semiAdjoint R (L · vdf.1) dw)), sorry_proof⟩, sorry_proof⟩) := by
 
   unfold parDistribRevDeriv Distribution.bind
   funext x; ext φ
@@ -88,9 +85,8 @@ theorem bind_rule
 ----------------------------------------------------------------------------------------------------
 
 noncomputable
-def diracRevDeriv (x : X) : 𝒟'(X,R×(R→X)) :=
-  ⟨fun φ => revDeriv R φ x, sorry_proof⟩
-
+def diracRevDeriv (x : X) : 𝒟'(X,R×(R⊸X)) :=
+  ⟨fun φ => revDeriv' R φ x, sorry_proof⟩
 
 @[fun_trans]
 theorem dirac.arg_xy.parDistribRevDeriv_rule
@@ -98,13 +94,14 @@ theorem dirac.arg_xy.parDistribRevDeriv_rule
     parDistribRevDeriv (fun w => dirac (x w) (R:=R))
     =
     fun w =>
-      let xdx := revDeriv R x w
-      diracRevDeriv xdx.1 |>.postComp (⟨fun (r,dφ) => (r, fun dr => xdx.2 (dφ dr)), sorry_proof⟩) := by
+      let xdx := revDeriv' R x w
+      diracRevDeriv xdx.1 |>.postComp (⟨fun (r,dφ) => (r, fun dr ⊸ xdx.2 (dφ dr)), sorry_proof⟩) := by
 
   funext w; apply Distribution.ext _ _; intro φ
   have : HasAdjDiff R φ := sorry_proof -- this should be consequence of that `R` has dimension one
   simp [diracRevDeriv,revDeriv, parDistribRevDeriv, postComp]
-  fun_trans
+  sorry_proof -- fix fun_trans bug "unexpected bound variable #0"
+  -- fun_trans
 
 
 ----------------------------------------------------------------------------------------------------
@@ -119,7 +116,8 @@ theorem cintegral.arg_f.revDeriv_distrib_rule (f : W → X → Y) :
     revDeriv R (fun w => ∫' x, f w x)
     =
     fun w =>
-      (parDistribRevDeriv (fun w => (f w ·).toDistribution (R:=R)) w).integrate := sorry_proof
+      let ydf := (parDistribRevDeriv (fun w => (f w ·).toDistribution (R:=R)) w).integrate
+      (ydf.1, fun dy => ydf.2 dy) := sorry_proof
 
 @[fun_trans]
 theorem cintegral.arg_f.parDistribRevDeriv_rule (f : W → X → Y → Z) :
@@ -128,7 +126,7 @@ theorem cintegral.arg_f.parDistribRevDeriv_rule (f : W → X → Y → Z) :
     fun w =>
       let Tf := (fun w => (fun x => (fun y => f w x y).toDistribution (R:=R)).toDistribution (R:=R))
       (parDistribRevDeriv Tf w).postComp
-        ⟨fun (z,df) => (z.integrate, fun dz => df (fun _ => dz).toDistribution), sorry_proof⟩ := sorry_proof
+        ⟨fun (z,df) => (z.integrate, ⟨fun dz => df (fun _ => dz).toDistribution, sorry_proof⟩), sorry_proof⟩ := sorry_proof
 
 
 -- I'm not sure if this is correct
@@ -140,7 +138,7 @@ theorem cintegral.arg_f.parDistribRevDeriv_rule' (f : W → X → Y → Z) (B : 
     fun w =>
       let Tf := (fun w => (fun x => ((fun y => f w x y).toDistribution (R:=R)).restrict (B x)).toDistribution (R:=R))
       (parDistribRevDeriv Tf w).postComp
-        ⟨fun (z,df) => (z.integrate, fun dz => df (fun _ => dz).toDistribution), sorry_proof⟩ := sorry_proof
+        ⟨fun (z,df) => (z.integrate, ⟨fun dz => df (fun _ => dz).toDistribution,sorry_proof⟩), sorry_proof⟩ := sorry_proof
 
 
 
@@ -158,6 +156,6 @@ theorem HAdd.hAdd.arg_a0a1.parDistribDeriv_rule (f g : W → 𝒟'(X,Y))
       let ydf := parDistribRevDeriv f w
       let ydg := parDistribRevDeriv g w
       ydf + ydg := by
-  funext w; ext φ; simp[parDistribRevDeriv];
+  funext w; ext φ; simp[parDistribRevDeriv]
   simp[parDistribRevDeriv]
   sorry_proof

@@ -17,7 +17,13 @@ variable
 noncomputable
 def KLDiv (P Q : Rand X) : R := P.𝔼 (fun x => Scalar.log (P.pdf R Q.ℙ x))
 
-/-- Evidence Lower Bound -/
+/-- Evidence Lower Bound
+
+```
+𝔼_Q [log Q(Z) - log P(Z,X)]
+```
+reference: https://en.wikipedia.org/wiki/Variational_Bayesian_methods#Evidence_lower_bound
+ -/
 noncomputable
 def ELBO {X Z} [MeasureSpace Z] [MeasureSpace X]
     (P : Rand (Z×X)) (Q : Rand Z) (x : X) : R :=
@@ -31,7 +37,6 @@ theorem kldiv_elbo
     KLDiv Q (P.conditionSnd x)
     =
     (Scalar.log (P.snd.pdf R volume x)) - ELBO P Q x := sorry_proof
-
 
 
 ----------------------------------------------------------------------------------------------------

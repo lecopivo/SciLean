@@ -26,7 +26,7 @@ You can:
   - get probability measure with `x.ℙ : Measure X`
 
 The internal fields `spec` and `rand` are just an internal implementation of `Rand` and should not
-be accessed but normal users.
+be accessed by normal users.
 
 TODO: Hide implementation using quotients or something like that
 -/
@@ -66,11 +66,12 @@ class LawfulRand (x : Rand X) [MeasurableSpace X] where
   is_measure : x.spec.out.IsMeasure
   is_prob : IsProbabilityMeasure x.ℙ
 
-variable {X} [MeasurableSpace X]
+variable {X Y Z : Type _}
+  [MeasurableSpace X]
+  [MeasurableSpace Y]
 
 instance instIsProbabilityMeasureℙ (x : Rand X) [inst : LawfulRand x] : IsProbabilityMeasure (x.ℙ) := inst.is_prob
 
-variable {X Y Z : Type _}
 
 /-- Extensionality of random variable.
 
@@ -131,8 +132,6 @@ theorem swap_bind (f : X → Y → Z) (x : Rand X) (y : Rand Y) :
   sorry_proof
 
 
-variable [MeasurableSpace X]
-
 @[simp, ftrans_simp]
 theorem pure_ℙ (x : X) : (pure x : Rand X).ℙ = Measure.dirac x := sorry_proof
 
@@ -165,19 +164,18 @@ abbrev map (r : Rand X) (f : X → Y) : Rand Y := do
   let x' ← r
   return f x'
 
+/-- Marginal distribution for the first component of a pair. -/
 @[pp_dot]
 abbrev fst (r : Rand (X×Y)) : Rand X := do
   let (x,_) ← r
   return x
 
+/-- Marginal distribution for the second component of a pair. -/
 @[pp_dot]
 abbrev snd (r : Rand (X×Y)) : Rand Y := do
   let (_,y) ← r
   return y
 
-variable
-  [MeasurableSpace X]
-  [MeasurableSpace Y]
 
 @[simp, ftrans_simp]
 theorem map_ℙ  (r : Rand X) (f : X → Y) :

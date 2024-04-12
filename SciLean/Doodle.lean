@@ -1,5 +1,18 @@
-import SciLean
+import SciLean.Tactic.IfPull
 
+open SciLean
+
+set_option trace.Meta.Tactic.if_pull true
+
+#check (fun x : Float => if 1 ≤ 0 then if x ≤ 1 then 1 else 0 else 0) rewrite_by
+  simp only [Tactic.if_pull]
+
+
+
+#check (let y := 5; (if 0 < 1 then (fun x : Float => x + 2 + y) else (fun x : Float => x + 3 + y)) 42).log rewrite_by
+  simp (config:={zeta:=false}) only [Tactic.if_pull]
+
+#exit
 
 open SciLean
 

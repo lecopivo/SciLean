@@ -61,9 +61,12 @@ theorem norm₂_prod {R K X Y} [Scalar R K] [AddCommMonoid K] [Inner K X] [Inner
   ‖(x,y)‖₂[K] = Scalar.sqrt (‖x‖₂²[K] + ‖y‖₂²[K]) := by sorry_proof
 
 @[simp, ftrans_simp]
-theorem norm2_scalar {R} [RealScalar R] (x : R) :
-  ‖x‖₂²[R] = Scalar.abs x := by sorry_proof
+theorem norm₂_scalar {R} [RealScalar R] (x : R) :
+  ‖x‖₂[R] = Scalar.abs x := by sorry_proof
 
+@[simp, ftrans_simp]
+theorem norm2_scalar {R} [RealScalar R] (x : R) :
+  ‖x‖₂²[R] = x^2 := by sorry_proof
 
 -- instance (K X) [AddCommMonoid K] [Inner K X] (ι) [Fintype ι] : Inner K (ι → X) where
 --   inner := λ f g => ∑ i, ⟪f i, g i⟫[K]

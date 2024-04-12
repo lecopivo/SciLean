@@ -169,4 +169,13 @@ theorem log.arg_x.revDeriv_rule
   unfold revDeriv
   fun_trans (disch:=aesop) only [fwdDeriv, smul_push, ftrans_simp]
 
+
+@[simp, ftrans_simp]
+theorem log_one : Scalar.log (1:R) = 0 := sorry_proof
+@[simp, ftrans_simp]
+theorem log_exp (x : R) : Scalar.log (Scalar.exp x) = x := sorry_proof
+theorem log_mul (x y : R) : Scalar.log (x*y) = Scalar.log x + Scalar.log y := sorry_proof
+theorem log_div (x y : R) : Scalar.log (x/y) = Scalar.log x - Scalar.log y := sorry_proof
+theorem log_inv (x : R) : Scalar.log x⁻¹ = - Scalar.log x := sorry_proof
+
 end Log

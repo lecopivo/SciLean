@@ -2,14 +2,18 @@ import SciLean
 
 import SciLean.Core.Distribution.Basic
 import SciLean.Core.Distribution.ParametricDistribDeriv
+import SciLean.Core.Distribution.ParametricDistribFwdDeriv
+import SciLean.Core.Distribution.ParametricDistribRevDeriv
+
+import SciLean.Core.Functions.Gaussian
 
 namespace SciLean
 
 open Rand MeasureTheory
 
 variable {R} [RealScalar R] [MeasureSpace R]
-set_default_scalar R
 
+set_default_scalar R
 
 
 ----------------------------------------------------------------------------------------------------
@@ -44,17 +48,65 @@ theorem Rand.𝔼.arg_r.cderiv_rule (r : W → Rand X) (f : X → Y) :
     let d := parDistribDeriv (fun w => (r w).ℙ.toDistribution (R:=R)) w dw
     d.extAction f (fun r ⊸ fun y ⊸ ((r • y) : Y)) := sorry_proof
 
-set_option trace.Meta.Tactic.fun_trans true in
 
+#check parDistribFwdDeriv
+
+@[fun_trans]
+theorem Rand.𝔼.arg_r.cderiv_rule' (r : W → Rand X) (f : W → X → Y)
+  (hf : ∀ x, CDifferentiable R (f · x)) :
+  cderiv R (fun w => (r w).𝔼 (f w))
+  =
+  fun w dw =>
+    let dr := parDistribFwdDeriv (fun w => (r w).ℙ.toDistribution (R:=R)) w dw
+    let df := fun x => fwdDeriv R (f · x) w dw
+    dr.extAction df (fun rdr ⊸ fun ydy ⊸ rdr.1•ydy.2 + rdr.2•ydy.1) := sorry_proof
+
+
+
+section hihi
+
+variable
+  {X : Type _} [SemiInnerProductSpace R X] [MeasurableSpace X]
+  {W : Type _} [SemiInnerProductSpace R W]
+  {Y : Type _} [SemiInnerProductSpace R Y] [Module ℝ Y]
+  {U} [SemiHilbert R U] [MeasureSpace U]
+
+noncomputable
+def normalFDμ (μ : U) (σ : R) : 𝒟'(U,R×R) :=
+  ⟨fun φ => (∫' x, φ x * gaussian μ σ x, ∫' x, φ x * ), sorry_proof⟩
+
+
+@[fun_trans]
+theorem Rand.𝔼.arg_r.revDeriv_rule' (r : W → Rand X) (f : W → X → Y)
+  (hf : ∀ x, HasAdjDiff R (f · x)) :
+  revDeriv R (fun w => (r w).𝔼 (f w))
+  =
+  fun w =>
+    let dr := parDistribRevDeriv (fun w => (r w).ℙ.toDistribution (R:=R)) w
+    let df := fun x => revDeriv' R (f · x) w
+    dr.extAction df ⟨fun rdr => ⟨fun ydf => (rdr.1•ydf.1, fun dy => ydf.2 (rdr.1•dy) + rdr.2 ⟪ydf.1,dy⟫),sorry_proof⟩,sorry_proof⟩ := sorry_proof
+
+end hihi
+
+
+set_option trace.Meta.Tactic.simp.rewrite true in
 /-- Compute derivative of `loss1` by directly differentiating KLDivergence -/
-def loss1_grad := (∂ θ : R, loss1 θ) rewrite_by
+def loss1_deriv := (∂ θ : R, loss1 θ) rewrite_by
   unfold loss1
   unfold scalarCDeriv
-  -- unfold scalarCDeriv
-  -- rw[KLDiv.arg_P.cderiv_rule]
-
-  -- fun_trans
-  simp only [kldiv_elbo]
-  fun_trans [Tactic.if_pull]
+  simp only [kldiv_elbo]  -- log P(X) - ELBO P(Z,X) Q(Z)
+  autodiff
   unfold model1 guide1 ELBO
-  fun_trans [Tactic.if_pull]
+  simp (config:={zeta:=false}) only [ftrans_simp,Scalar.log_mul, Tactic.lift_lets_simproc]
+  autodiff
+
+#check SciLean.norm2_scalar
+
+#check gaussian
+
+#check normal (0:Float) 1
+
+#check (normal 0.0 1.0).ℙ
+#eval  (normal 0.0 1.0).get
+
+#check Rand

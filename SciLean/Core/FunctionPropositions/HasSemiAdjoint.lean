@@ -77,7 +77,7 @@ theorem semiAdjoint.arg_f.IsSmoothLinearMap_rule (f : W → X → Y)
     IsSmoothLinearMap K (fun w => semiAdjoint K (f w)) := sorry_proof
 
 @[fun_prop]
-theorem semiAdjoint.arg_f.CDifferentiable_rule (f : W → X → Y) (y : W → Y)
+theorem semiAdjoint.arg_fy.CDifferentiable_rule (f : W → X → Y) (y : W → Y)
     (hf₁ : CDifferentiable K (fun (w,x) => f w x)) (hf₂ : ∀ w, HasSemiAdjoint K (f w ·))
     (hy : CDifferentiable K y) :
     CDifferentiable K (fun w => semiAdjoint K (f w) (y w)) := sorry_proof

@@ -1,5 +1,6 @@
 import SciLean.Core.FunctionPropositions.HasAdjDiff
 import SciLean.Core.FunctionTransformations.SemiAdjoint
+import SciLean.Core.FunctionSpaces.SmoothLinearMap
 
 import SciLean.Data.StructType.Algebra
 
@@ -55,6 +56,11 @@ def revDerivProjUpdate [DecidableEq I]
   let ydf' := revDerivProj K I f x
   (ydf'.1, fun i de dx => dx + ydf'.2 i de)
 
+
+noncomputable
+abbrev revDeriv' (f : X → Y) (x : X) : Y×(Y ⊸[K] X) :=
+  let ydf := revDeriv K f x
+  (ydf.1, ⟨fun dy => ydf.2 dy, by simp (config:={zetaDelta:=true}) [revDeriv]; fun_prop⟩)
 
 
 noncomputable

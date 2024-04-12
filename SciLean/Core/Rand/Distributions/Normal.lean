@@ -2,6 +2,8 @@ import SciLean.Core.Rand.Rand
 import SciLean.Core.FloatAsReal
 import SciLean.Core.Rand.Distributions.UniformI
 
+import SciLean.Core.Functions.Gaussian
+
 import SciLean.Core.Rand.Tactic
 
 open MeasureTheory ENNReal Finset
@@ -34,11 +36,6 @@ private def generateNormalV2 : Rand R := do
   return sqrt (-2*log u) * cos (2*(pi:R)*v)
 variable {R}
 
--- TODO: Move to file with basic scalar functions
-open Scalar RealScalar in
-def gaussian (μ σ x : R) : R :=
-  let x' := (x - μ) / σ
-  1/(σ*sqrt (2*(pi : R))) * exp (- x'^2/2)
 
 /-- Normal random variable with mean `μ` and standard deviation `σ`. -/
 def normal (μ σ : R)  : Rand R := {
