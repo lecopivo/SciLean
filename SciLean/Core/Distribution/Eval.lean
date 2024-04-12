@@ -11,9 +11,9 @@ variable
   {X} [Vec R X] -- [TopologicalSpace X] [space : TCOr (Vec R X) (DiscreteTopology X)]
   {Y} [Vec R Y] [Module ℝ Y]
   {Z} [Vec R Z]
-  {U} [Vec R U]
+  {U} [Vec R U] [Module ℝ U]
   {V} [Vec R V] [Module ℝ V]
-  {W} [Vec R W]
+  {W} [Vec R W] [Module ℝ W]
 
 set_default_scalar R
 
@@ -73,3 +73,12 @@ theorem function_toDistribution_extAction_unit {X} [Vec R X] [Module ℝ X] (f :
     f.toDistribution.extAction φ L
     =
     L (f ()) (φ ()) := sorry_proof
+
+
+
+
+open Rand in
+theorem distrib_action_as_expectation [MeasureSpace X] (r : Rand X) {f : X → U} {φ : X → V} {L : U ⊸ V ⊸ W} :
+  (f.toDistribution).extAction φ L
+  =
+  r.𝔼 fun x => (r.pdf R volume x)⁻¹ • L (f x) (φ x) := sorry_proof

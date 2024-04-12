@@ -263,6 +263,10 @@ theorem Distribution.action_iteD (A : Set X) (t e : 𝒟'(X,Y)) (φ : 𝒟 X) :
         t.extAction (fun x => if x ∈ A then φ x else 0) (fun y ⊸ fun r ⊸ r • y) +
         e.extAction (fun x => if x ∉ A then φ x else 0) (fun y ⊸ fun r ⊸ r • y) := by sorry_proof
 
+@[simp, ftrans_simp]
+theorem Distribution.iteD_same (A : Set X) (u : 𝒟'(X,Y)) :
+   iteD A u u = u := by sorry_proof
+
 @[action_push]
 theorem Distribution.extAction_iteD (A : Set X) (t e : 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
     (iteD A t e).extAction φ L =

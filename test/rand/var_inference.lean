@@ -12,11 +12,24 @@ import SciLean.Core.Functions.Gaussian
 
 namespace SciLean
 
-open Rand MeasureTheory
+open Rand MeasureTheory Set BigOperators
 
 variable {R} [RealScalar R] [MeasureSpace R]
 
 set_default_scalar R
+
+
+attribute [ftrans_simp]
+  FiniteDimensional.finrank_self FiniteDimensional.finrank_prod
+  not_le ite_mul mul_ite mul_neg mul_one setOf_eq_eq_singleton
+  Finset.card_singleton PUnit.default_eq_unit Finset.univ_unique Finset.sum_const
+  preimage_id'
+  mem_setOf_eq mem_ite_empty_right mem_inter_iff mem_ite_empty_right mem_univ mem_Ioo
+  and_true
+
+@[ftrans_simp]
+theorem _root_.PUnit.finrank [Semiring R] : FiniteDimensional.finrank R Unit = 0 := sorry_proof
+
 
 ----------------------------------------------------------------------------------------------------
 -- Variational Inference - Test 1 ------------------------------------------------------------------
@@ -108,22 +121,47 @@ def loss1_deriv_reparam (θ : R) :=
       pattern (cderiv _ _ _ _)
       enter[2,x]
       rw[Rand.reparameterize (fun y => y - x) sorry_proof]
+      fun_trans
 
     -- clean up
-    autodiff; autodiff
+    autodiff
 
-    simp
-
-    -- compute derivative as distributional derivatives
+    -- write normal derivative as distributional derivative
     simp (config:={zeta:=false}) only [Rand.𝔼_deriv_as_distribDeriv]
+    unfold Distribution.integrate Distribution.extAction'
 
     -- compute distrib derivative
     simp (config:={zeta:=false}) only [ftrans_simp,Tactic.lift_lets_simproc]
     simp (config:={zeta:=false}) only [Tactic.if_pull]
+    autodiff; unfold scalarGradient; autodiff
 
-    -- destroy let bindings
-    simp
+    -- surface dirac reparametrization
+    dsimp
+    rw[surfaceDirac_substitution
+        (I:=Unit) (X₁:=fun _ => Unit) (X₂:= fun _ => R)
+        (p:= fun _ _ x => x)
+        (ζ:= fun _ _ => -θ)
+        (dom:= fun _ => Set.univ)
+        (inv:= by intro i x₁ _; ring) (hdim := sorry)]
 
+    -- compute jacobian from change of variables
     autodiff
-    unfold scalarGradient
-    autodiff
+
+    -- turn distributions back to random variables
+    simp only [ftrans_simp,action_push,distrib_eval]
+
+    -- algebraic simplify
+    ring_nf
+
+    -- estimate the integral with gaussian
+    rw[distrib_action_as_expectation (normal (0:R) 1)]
+
+    -- compute density of normal distribution
+    simp only [ftrans_simp]
+
+    rand_pull_E
+
+
+
+
+#eval print_mean_variance (loss1_deriv_reparam (2.0)) 10000 " derivative of loss1 is"
