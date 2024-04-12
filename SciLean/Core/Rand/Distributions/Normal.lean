@@ -1,16 +1,20 @@
-import SciLean.Core.Rand.Rand
+import SciLean.Core.Distribution.ParametricDistribFwdDeriv
 import SciLean.Core.FloatAsReal
-import SciLean.Core.Rand.Distributions.UniformI
-
 import SciLean.Core.Functions.Gaussian
-
+import SciLean.Core.Rand.Distributions.UniformI
+import SciLean.Core.Rand.Rand
 import SciLean.Core.Rand.Tactic
 
 open MeasureTheory ENNReal Finset
 
 namespace SciLean.Rand
 
-variable {R} [RealScalar R] [MeasureSpace R]
+variable
+  {R} [RealScalar R] [MeasureSpace R]
+  {U} [SemiHilbert R U] [MeasureSpace U]
+
+set_default_scalar R
+
 
 open Scalar in
 def boxMuller (u v : R) : R×R :=
@@ -73,3 +77,32 @@ theorem normal.map_sub_right (μ σ : R) (θ : R) :
     (normal μ σ).map (fun x => x - θ)
     =
     (normal (μ-θ) σ) := sorry_proof
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Derivatives -------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+variable
+  {W} [Vec R W]
+  {Y} [Vec R Y]
+  {Z} [Vec R Z] [Module ℝ Z]
+
+noncomputable
+def normalFDμ (μ dμ : U) (σ : R) : 𝒟'(U,R×R) :=
+  fun φ ⊸ (∫' x, φ x * gaussian μ σ x, ∫' x, φ x * (∂ μ':=μ;dμ, gaussian μ' σ x))
+
+@[fun_trans]
+theorem normal.arg_μ.parDistribFwdDeriv (μ : W → R) (σ : R)
+  (hμ : CDifferentiable R μ) :
+  parDistribFwdDeriv (fun w => (normal (μ w) σ).ℙ.toDistribution (R:=R))
+  =
+  fun w dw =>
+    let μdμ := fwdDeriv R μ w dw
+    normalFDμ μdμ.1 μdμ.2 σ := sorry_proof
+
+theorem normalFDμ_score (μ dμ : R) (σ : R) (f : R → Y) (L : (R×R) ⊸ Y ⊸ Z) :
+    (normalFDμ μ dμ σ).extAction f L
+    =
+    (normal μ σ).𝔼 (fun x => L (1, - (1/(σ^2)) * ⟪x-μ,-dμ⟫) (f x)) := sorry_proof
