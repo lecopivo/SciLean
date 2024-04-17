@@ -121,7 +121,7 @@ def loss1_deriv_reparam (θ : R) :=
       pattern (cderiv _ _ _ _)
       enter[2,x]
       rw[Rand.reparameterize (fun y => y - x) sorry_proof]
-      fun_trans
+      fun_trans (config:={zeta:=false})
 
     -- clean up
     autodiff
