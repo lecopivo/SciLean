@@ -5,6 +5,7 @@ import SciLean.Core.Integral.Surface
 
 import SciLean.Tactic.RefinedSimp
 
+import Mathlib.MeasureTheory.Decomposition.Lebesgue
 
 open MeasureTheory
 
@@ -14,6 +15,7 @@ namespace SciLean
 variable
   {R} [RealScalar R]
   {W} [Vec R W]
+  {W'} [Vec R W']
   {X} [SemiHilbert R X]
   {Y} [Vec R Y] [Module ℝ Y]
   {Z} [Vec R Z] [Module ℝ Z]
@@ -90,16 +92,33 @@ theorem moving_volume_derivative (f : W → X → Y) (A : W → Set X) (hA : IsL
 ----------------------------------------------------------------------------------------------------
 
 variable (R)
+@[fun_trans]
 noncomputable
 def movingFrontierIntegral (A : W → Set X) (B : Set X) (f : X → Y) (w dw : W) : Y :=
   ∫' x in frontier (A w) ∩ B, frontierSpeed R A w dw x • f x
 variable {R}
 
 
-@[rsimp ↓]
+@[fun_trans]
+theorem movingFrontierIntegral_const_rule (A B : Set X) (f : X → Y) :
+    movingFrontierIntegral R (fun _ : W => A) B f
+    =
+    fun _ _ => 0 := sorry_proof
+
+@[fun_trans]
+theorem movingFrontierIntegral_comp_rule (h : W' → W) (A : W → Set X) (f : X → Y)
+    (hf : CDifferentiable R h) :
+    movingFrontierIntegral R (fun w' => A (h w')) B f
+    =
+    fun w' dw' =>
+      let wdw := fwdDeriv R h w' dw'
+      movingFrontierIntegral R A B f wdw.1 wdw.2 := sorry_proof
+
+
+@[fun_trans]
 noncomputable
-def movingFrontierIntegral_inter (A A' : W → Set X) (B : Set X) (f : X → Y)
-    (hA : ∀ w, surfaceMeasure (finrank R X - 1) (frontier (A w) ∩ frontier (A' w)) = 0) :
+def _root_.Set.inter.arg_s₁s₂.movingFrontierIntegral_rule (A A' : W → Set X) (B : Set X) (f : X → Y) :
+    -- (hA : ∀ w, surfaceMeasure (finrank R X - 1) (frontier (A w) ∩ frontier (A' w)) = 0) :
     movingFrontierIntegral R (fun w => A w ∩ A' w) B f
     =
     fun w dw =>
@@ -108,10 +127,10 @@ def movingFrontierIntegral_inter (A A' : W → Set X) (B : Set X) (f : X → Y)
       movingFrontierIntegral R (fun w => A' w) (B ∩ A w) f w dw := sorry_proof
 
 
-@[rsimp ↓]
+@[fun_trans]
 noncomputable
-def movingFrontierIntegral_union (A A' : W → Set X) (B : Set X) (f : X → Y)
-    (hA : ∀ w, surfaceMeasure (finrank R X - 1) (frontier (A w) ∩ frontier (A' w)) = 0) :
+def _root_.Set.union.arg_s₁s₂.movingFrontierIntegral_rule (A A' : W → Set X) (B : Set X) (f : X → Y) :
+    -- (hA : ∀ w, surfaceMeasure (finrank R X - 1) (frontier (A w) ∩ frontier (A' w)) = 0) :
     movingFrontierIntegral R (fun w => A w ∪ A' w) B f
     =
     fun w dw =>
@@ -120,10 +139,20 @@ def movingFrontierIntegral_union (A A' : W → Set X) (B : Set X) (f : X → Y)
       movingFrontierIntegral R (fun w => A' w) (B ∩ (A w)ᶜ) f w dw := sorry_proof
 
 
--- We need a specialized simproc for this as lhs matches on rhs. This leads to infinite recursion
+@[rsimp ↓ (mid-1) guard A .notConst]
+theorem cintegral.arg_fμ.cderiv_rule_measure (f : W → X → Y) (A : W → Set X) (μ : Measure X) :
+    -- (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
+    (∂ w, ∫' x in A w, f w x ∂μ)
+    =
+    fun w dw =>
+      let ds := movingFrontierIntegral R A ⊤ (fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x) • f w x) w dw
+      let di := ∂ (w':=w;dw), ∫' x in A w, f w' x ∂μ
+      ds + di := sorry_proof
+
+
 @[rsimp ↓ guard A .notConst]
-theorem cintegral.arg_fμ.cderiv_rule (f : W → X → Y) (A : W → Set X)
-    (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
+theorem cintegral.arg_fμ.cderiv_rule (f : W → X → Y) (A : W → Set X) :
+    -- (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
     (∂ w, ∫' x in A w, f w x)
     =
     fun w dw =>
@@ -132,34 +161,59 @@ theorem cintegral.arg_fμ.cderiv_rule (f : W → X → Y) (A : W → Set X)
       ds + di := sorry_proof
 
 
+@[rsimp ↓ (mid-1) guard A .notConst]
+theorem cintegral.arg_fμ.fwdDeriv_rule_measure (f : W → X → Y) (A : W → Set X) (μ : Measure X) :
+    -- (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
+    (∂> w, ∫' x in A w, f w x)
+    =
+    fun w dw =>
+      let ds := movingFrontierIntegral R A ⊤ (fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x) • f w x) w dw
+      let idi := ∂> (w':=w;dw), ∫' x in A w, f w' x
+      (idi.1, idi.2 + ds) := sorry_proof
+
+
 @[rsimp ↓ guard A .notConst]
-theorem cintegral.arg_fμ.fwdDeriv_rule (f : W → X → Y) (A : W → Set X)
-    (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
-    (∂ w, ∫' x in A w, f w x)
+theorem cintegral.arg_fμ.fwdDeriv_rule (f : W → X → Y) (A : W → Set X) :
+    -- (hA : IsLipschitzDomain {wx : W×X | wx.2 ∈ A wx.1}) :
+    (∂> w, ∫' x in A w, f w x)
     =
     fun w dw =>
       let ds := movingFrontierIntegral R A ⊤ (f w) w dw
-      let di := ∂ (w':=w;dw), ∫' x in A w, f w' x
-      ds + di := sorry_proof
+      let idi := ∂> (w':=w;dw), ∫' x in A w, f w' x
+      (idi.1, idi.2 + ds) := sorry_proof
 
 
 @[rsimp ↓]
 theorem cintegral.arg_fμ.cderiv_rule_if_le (f g : W → X → Y) (φ ψ : W → X → R) (A : Set X) :
+    -- (hA : ∀ w, surfaceMeasure (finrank R X - 1) (frontier A) ∩ {x : φ w x = ψ w x}) = 0) :
     (∂ w, ∫' x in A, if φ w x ≤ ψ w x then f w x else g w x)
     =
     fun w dw =>
-      let ds := movingFrontierIntegral R (fun w => {x : X | φ w x ≤ ψ w x}) ⊤ (fun x => f w x - g w x) w dw
+      let ds := movingFrontierIntegral R (fun w => {x : X | φ w x ≤ ψ w x}) A (fun x => f w x - g w x) w dw
       let dy := ∂ (w':=w;dw), ∫' x in (A ∩ {x : X | φ w x ≤ ψ w x}), f w' x
-      let dz := ∂ (w':=w;dw), ∫' x in (A ∩ {x : X | ψ w x < φ w x}), g w' x
+      let dz := ∂ (w':=w;dw), ∫' x in (A ∩ {x : X | φ w x ≤ ψ w x}ᶜ), g w' x
       ds + dy + dz := sorry_proof
 
 
 @[rsimp ↓]
 theorem cintegral.arg_fμ.cderiv_rule_if_lt (f g : W → X → Y) (φ ψ : W → X → R) (A : Set X) :
+    -- (hA : ∀ w, surfaceMeasure (finrank R X - 1) (frontier A) ∩ {x : φ w x = ψ w x}) = 0) :
     (∂ w, ∫' x in A, if φ w x < ψ w x then f w x else g w x)
     =
     fun w dw =>
-      let ds := movingFrontierIntegral R (fun w => {x : X | φ w x < ψ w x}) ⊤ (fun x => f w x - g w x) w dw
-      let dy := ∂ (w':=w;dw), ∫' x in (A ∩ {x : X | φ w x < ψ w x}), f w' x
-      let dz := ∂ (w':=w;dw), ∫' x in (A ∩ {x : X | ψ w x ≤ φ w x}), g w' x
+      let ds := movingFrontierIntegral R (fun w => {x : X | φ w x < ψ w x}) A (fun x => f w x - g w x) w dw
+      let dy := ∂ (w':=w;dw), ∫' x in (A ∩ {x : X | φ w x ≤ ψ w x}), f w' x
+      let dz := ∂ (w':=w;dw), ∫' x in (A ∩ {x : X | φ w x ≤ ψ w x}ᶜ), g w' x
+      ds + dy + dz := sorry_proof
+
+
+
+
+@[rsimp ↓]
+theorem cintegral.arg_fμ.cderiv_rule_add (f g : W → X → Y) (A : Set X) :
+    (∂ w, ∫' x in A, f w x + g w x)
+    =
+    fun w dw =>
+      let dy := ∂ (w':=w;dw), ∫' x in A, f w' x
+      let dz := ∂ (w':=w;dw), ∫' x in A, g w' x
       ds + dy + dz := sorry_proof
