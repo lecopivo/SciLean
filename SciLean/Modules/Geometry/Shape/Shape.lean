@@ -3,6 +3,67 @@ import Mathlib.Data.Real.EReal
 
 namespace SciLean
 
+/-- Type `S` represents a shape in the topological space `X`. -/
+class Shape (S : Type u) (X : outParam $ Type v) [TopologicalSpace X] where
+  toSet : S → Set X
+
+namespace Shape
+
+section OnTopologicalSpace
+
+variable
+  {X} [TopologicalSpace X]
+  {Y} [TopologicalSpace Y]
+  {S} [Shape S X]
+
+abbrev interior (s : S) : Set X := _root_.interior (toSet s)
+abbrev exterior (s : S) : Set X := Set.univ \ closure (toSet s)
+abbrev frontier (s : S) : Set X := _root_.frontier (toSet s)
+
+------------------------------------------------------------------------------
+-- Product
+------------------------------------------------------------------------------
+
+instance {S} [Shape S X] {R} [Shape R Y] : Shape (S×R) (X×Y) where
+  toSet := fun (s,r) (x,y) => toSet s x ∧ toSet r y
+
+
+------------------------------------------------------------------------------
+-- Locate
+------------------------------------------------------------------------------
+
+inductive Location
+  /-- Point lies in the  -/
+  | inside
+  | boundary
+  | outside
+
+noncomputable
+def locateSpec (s : S) (x : X) : Location :=
+  have := Classical.propDecidable
+  if (x ∈ interior s) then
+    .inside
+  else if (x ∈ exterior s) then
+    .outside
+  else
+    .boundary
+
+variable (S)
+class HasLocate where
+  /-- Locate point `x` in the shape `s`, is it inside, outside or lies on the frontier? -/
+  locate (s : S) (x : X) : Location
+  is_locate : locate = locateSpec
+variable {S}
+
+export HasLocate (locate)
+
+
+end OnTopologicalSpace
+
+
+
+
+#exit
 /--
 Shape parametrized by `P` living in `X`
 -/

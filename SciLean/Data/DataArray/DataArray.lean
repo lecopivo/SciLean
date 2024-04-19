@@ -20,7 +20,7 @@ structure DataArray (α : Type) [pd : PlainDataType α] where
   h_size : pd.bytes size ≤ byteData.size
 
 variable {α : Type} [pd : PlainDataType α]
-variable {ι} [IndexType ι]
+variable {ι} [IndexType ι] {κ : Type _} [IndexType κ]
 
 @[irreducible]
 def DataArray.get (arr : DataArray α) (i : Fin arr.size) : α := -- pd.get a.data i sorry_proof
@@ -271,3 +271,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
         fromByteArray_toByteArray := sorry_proof
         fromByteArray_toByteArray_other := sorry_proof
       }
+
+
+def DataArrayN.curry [Inhabited α] (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
+  ⟨⟨x.data.byteData, IndexType.card ι, sorry_proof⟩, sorry_proof⟩

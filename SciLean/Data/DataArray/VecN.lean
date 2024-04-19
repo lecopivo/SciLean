@@ -11,6 +11,7 @@ structure Vec2 where
 
 namespace Vec2
 
+  -- !!!this is evil!!! you can't have arrays named v!
   notation "v[" x ", " y "]" => Vec2.mk x y
 
   def get (v : Vec2) (i : Fin 2) : Float :=
@@ -94,6 +95,7 @@ structure Vec3 where
 
 namespace Vec3
 
+  -- !!!this is evil!!! you can't have arrays named v!
   notation "v[" x ", " y ", " z "]" => Vec3.mk x y z
 
   def get (v : Vec3) (i : Fin 3) : Float :=
