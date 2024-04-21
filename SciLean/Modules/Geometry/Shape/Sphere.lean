@@ -16,36 +16,38 @@ variable
 
 /-- Sphere with center `c` and radius `r`. -/
 structure Sphere (R : Type u) (X : Type v) where
-  c : X
-  r : R
+  center : X
+  radius : R
+  deriving Inhabited, Repr
 
 structure Ball (R : Type u) (X : Type v) where
-  c : X
-  r : R
+  center : X
+  radius : R
+  deriving Inhabited, Repr
 
 def Sphere.toBall (s : Sphere R X) : Ball R X := {
-  c := s.c
-  r := s.r
+  center := s.center
+  radius := s.radius
 }
 
 def Ball.toSphere (s : Ball R X) : Sphere R X := {
-  c := s.c
-  r := s.r
+  center := s.center
+  radius := s.radius
 }
 
 
 instance : Shape (Sphere R X) X where
-  toSet s := {x | ‖x-s.c‖₂[R] = s.r}
+  toSet s := {x | ‖x-s.center‖₂[R] = s.radius}
 
 instance : Shape (Ball R X) X where
-  toSet s := {x | ‖x-s.c‖₂[R] ≤ s.r}
+  toSet s := {x | ‖x-s.center‖₂[R] ≤ s.radius}
 
 
 ------------------------------------------------------------------------------
 -- Bounding Sphere
 ------------------------------------------------------------------------------
 
-variable (R) (X) (S)
+variable  (S)
 class BoundingSphere where
   /-- The smallest sphere containing the shape `s` -/
   boundingSphere (s : S) : Sphere R X
@@ -57,28 +59,12 @@ class BoundingSphere where
       ∧
       -- is minimal
       ∀ (b' : Ball R X), toSet s ⊆ toSet b' → toSet b ⊆ toSet b'
-variable {S} {R} {X}
+variable {S}
 
 export BoundingSphere (boundingSphere)
 
-variable (R)
-abbrev boundingBall [BoundingSphere R X S] (s : S) : Ball R X := (boundingSphere (R:=R) s).toBall
-variable {R}
+abbrev boundingBall [BoundingSphere S] (s : S) : Ball R X := (boundingSphere s).toBall
 
-
-
-variable [PlainDataType R]
-
-def _root_.IndexType.argValMax {I} [IndexType.{_,0} I] [Inhabited I]
-    (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I×X :=
-  IndexType.reduceD
-    (fun i => (i,f i))
-    (fun (i,e) (i',e') => if e < e' then (i',e') else (i,e))
-    (default, f default)
-
-def _root_.IndexType.argMax {I} [IndexType.{_,0} I] [Inhabited I]
-    (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I :=
-  (IndexType.argValMax f).1
 
 
 set_default_scalar R
@@ -89,9 +75,22 @@ def vecNormalize {X} [SemiHilbert R X] (x : X) : X := (‖x‖₂[R])⁻¹ • x
 variable {R}
 
 
+/-- Given collection of `m` vectors  -/
+def gramSchmidtArrayImpl {X} [SemiHilbert R X] (u : Array X) : Array X := Id.run do
+  let mut u := u
+  for i in IndexType.univ (Fin u.size) do
+    let i : Fin u.size := ⟨i, sorry_proof⟩
+    let mut ui := u[i]
+    for j in [0:i.1] do
+      let j : Fin u.size := ⟨j,sorry_proof⟩
+      let uj := u[j]
+      ui -= ⟪uj,ui⟫ • uj
+    u := u.set i (vecNormalize (R:=R) ui)
+  return u
+
 
 /-- Given collection of `m` vectors  -/
-def gramSchmidt {X} [SemiHilbert R X] [PlainDataType X] (u : X^[n]) : X^[n] := Id.run do
+def gramSchmidtDataArrayImpl {X} [SemiHilbert R X] [PlainDataType X] (u : X^[n]) : X^[n] := Id.run do
   let mut u := u
   for i in IndexType.univ (Fin n) do
     let mut ui := u[i]

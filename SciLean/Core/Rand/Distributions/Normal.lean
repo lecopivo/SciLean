@@ -78,6 +78,8 @@ theorem normal.map_sub_right (μ σ : R) (θ : R) :
     =
     (normal (μ-θ) σ) := sorry_proof
 
+theorem normal_reparameterize (μ σ : R) :
+    normal μ σ = (normal 0 1).map (fun x => σ • x + μ) := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------

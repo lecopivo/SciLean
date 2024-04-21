@@ -65,6 +65,14 @@ namespace IndexType
 
 variable {ι : Type v} [IndexType ι]
 
+instance (P : ι → Prop) [∀ i : ι, Decidable (P i)] : Decidable (∀ i : ι, P i) := Id.run do
+  for i in IndexType.univ ι do
+    if P i then
+      continue
+    else
+      return .isFalse sorry_proof
+  return .isTrue sorry_proof
+
 @[specialize] def sum {α : Type u} [Zero α] [Add α] (f : ι → α) : α :=
   Fold.fold (β:=α) (C:=IndexType.Univ ι) (τ:=ι) (IndexType.univ ι) (fun (s : α) (i : ι) => s + f i) (0 : α)
 
@@ -88,8 +96,21 @@ def reduceD (f : ι → α) (op : α → α → α) (default : α) : α :=
       let i : Fin n := ⟨i+1, sorry_proof⟩
       a := op a (f (IndexType.fromFin i))
     a
+
 abbrev reduce [Inhabited α] (f : ι → α) (op : α → α → α) : α :=
   reduceD f op default
+
+def argValMax {I} [IndexType.{_,0} I] [Inhabited I]
+    (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I×X :=
+  IndexType.reduceD
+    (fun i => (i,f i))
+    (fun (i,e) (i',e') => if e < e' then (i',e') else (i,e))
+    (default, f default)
+
+def argMax {I} [IndexType.{_,0} I] [Inhabited I]
+    (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I :=
+  (IndexType.argValMax f).1
+
 
 open Lean.TSyntax.Compat in
 macro " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``sum xs b

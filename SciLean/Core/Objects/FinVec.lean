@@ -127,7 +127,7 @@ class OrthonormalBasis (ι K X : Type _) [Semiring K] [Basis ι K X] [Inner K X]
 
 /--
  -/
-class FinVec (ι : outParam $ Type _) (K : Type _) (X : Type _) [outParam $ IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [IsROrC K] extends SemiInnerProductSpace K X, Basis ι K X, DualBasis ι K X, BasisDuality X where
+class FinVec (ι : outParam $ Type _) (K : Type _) (X : Type _) [outParam $ IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [IsROrC K] extends SemiHilbert K X, Basis ι K X, DualBasis ι K X, BasisDuality X where
   is_basis : ∀ x : X, x = ∑ i : ι, ℼ i x • ⅇ[X] i
   duality : ∀ i j, ⟪ⅇ[X] i, ⅇ'[X] j⟫[K] = if i=j then 1 else 0
   to_dual   : toDual   x = ∑ i,  ℼ i x • ⅇ'[X] i
@@ -200,12 +200,25 @@ instance : OrthonormalBasis Unit K K where
   is_orthonormal := sorry_proof
 
 -- @[infer_tc_goals_rl]
-instance {ι κ K X Y} [IndexType ι] [IndexType κ] [LawfulIndexType ι] [LawfulIndexType κ] [DecidableEq ι] [DecidableEq κ] [IsROrC K] [FinVec ι K X] [FinVec κ K Y]
-  : FinVec (ι⊕κ) K (X×Y) where
+instance {ι κ K X Y}
+    [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+    [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
+    [IsROrC K] [FinVec ι K X] [FinVec κ K Y] :
+    FinVec (ι⊕κ) K (X×Y) where
   is_basis := sorry_proof
   duality := sorry_proof
   to_dual := sorry_proof
   from_dual := sorry_proof
+
+instance
+    [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+    [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
+    [FinVec ι K X] [OrthonormalBasis ι K X]
+    [FinVec κ K Y] [OrthonormalBasis κ K Y] :
+    OrthonormalBasis (ι⊕κ) K (X×Y) where
+  is_orthogonal  := by simp[Inner.inner, Basis.basis]; sorry_proof
+  is_orthonormal := by simp[Inner.inner, Basis.basis]; sorry_proof
+
 
 -- this might require `FinVec` instance, without it we probably do not know that `⟪0,x⟫ = 0`
 instance [IndexType ι] [IndexType κ] [LawfulIndexType ι] [LawfulIndexType κ] [Zero X] [Basis κ K X] [OrthonormalBasis κ K X] : OrthonormalBasis (ι×κ) K (ι → X) where

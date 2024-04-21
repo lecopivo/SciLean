@@ -1,10 +1,12 @@
 import SciLean.Core
+import SciLean.Modules.Geometry.Shape.Rotation
+
 import Mathlib.Data.Real.EReal
 
 namespace SciLean
 
 /-- Type `S` represents a shape in the topological space `X`. -/
-class Shape (S : Type u) (X : outParam $ Type v) [TopologicalSpace X] where
+class Shape (S : Type u) (X : outParam $ Type v) [outParam $ TopologicalSpace X] where
   toSet : S → Set X
 
 namespace Shape
@@ -37,6 +39,7 @@ inductive Location
   | inside
   | boundary
   | outside
+  deriving Repr, Inhabited
 
 noncomputable
 def locateSpec (s : S) (x : X) : Location :=
@@ -49,20 +52,64 @@ def locateSpec (s : S) (x : X) : Location :=
     .boundary
 
 variable (S)
-class HasLocate where
+class Locate where
   /-- Locate point `x` in the shape `s`, is it inside, outside or lies on the frontier? -/
   locate (s : S) (x : X) : Location
   is_locate : locate = locateSpec
 variable {S}
 
-export HasLocate (locate)
+export Locate (locate)
+
+
+
+
+-- Shape Transform
+------------------------------------------------------------------------------
+variable (S)
+class Transform (f : X → X) where
+  transform : S → S
+  is_trans : ∀ (s : S) (x : X), x ∈ toSet s ↔ f x ∈ toSet (transform s)
+
+export Transform (transform)
 
 
 end OnTopologicalSpace
 
 
+section OnVectorSpace
+variable
+  {R} [RealScalar R]
+  {X} [Vec R X]
+  {U} [SemiHilbert R U]
+  {S} [Shape S X]
+  {S'} [Shape S' U]
+
+set_default_scalar R
+
+------------------------------------------------------------------------------
 
 
+-- Common transformations
+variable (S) (S')
+abbrev Reflect   := Transform S (fun x => - x)
+abbrev Translate := ∀ t, Transform S (fun x => x + t)
+abbrev Rotate := ∀ r : Rotation R U, Transform S' (fun u => r u)
+abbrev Scale := ∀ s : R, Transform S (fun x => s • x)
+-- abbrev Mirror := ∀ n : U, Transform S' (fun x => x - ((2 : R) * ⟪x,n⟫) • n)
+
+abbrev reflect   [Reflect S] (s : S) := transform (fun x => - x) s
+abbrev translate [Translate S] (s : S) (t : X) := transform (fun x => x + t) s
+abbrev rotate    [Rotate S'] (s : S') (r : Rotation R U) := transform (fun x => r x) s
+abbrev scale     [Scale S] (s : S) (r : R) := transform (fun x => r • x) s
+
+
+
+
+
+
+end OnVectorSpace
+
+-- old code
 #exit
 /--
 Shape parametrized by `P` living in `X`
