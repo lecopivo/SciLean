@@ -13,7 +13,7 @@ The class `FinVec ι K X` guarantees that any element `x : X` can be writtens as
 ∑ i, proj i x • basis i
 ```
 -/
-class Basis (ι : outParam $ Type v) (K : outParam $ Type w)(X : Type u)  where
+class Basis (ι : outParam $ Type v) (K : outParam $ Type w) (X : Type u)  where
   basis (i : ι) : X
   proj  (i : ι) (x : X) : K
 

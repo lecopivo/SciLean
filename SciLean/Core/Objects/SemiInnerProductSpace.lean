@@ -159,6 +159,8 @@ class SemiHilbert (K : Type _) [IsROrC K] (X : Type _) extends SemiInnerProductS
 
 variable {K} [IsROrC K]
 
+def vecNormalize {R} (C) [Scalar R C] {X} [SemiHilbert C X] (x : X) : X := (‖x‖₂[C])⁻¹ • x
+
 instance {K} [IsROrC K] : Inner K K where
   inner x y := conj x * y
 

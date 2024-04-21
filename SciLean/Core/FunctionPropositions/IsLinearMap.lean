@@ -266,8 +266,30 @@ theorem HMul.hMul.arg_a1.IsLinearMap_rule
 end CommSemiring
 
 
+
+
+section OnSemiHilbert
+open SciLean
+variable
+  {R : Type _} [RealScalar R]
+  {X : Type _} [SemiHilbert R X]
+
+theorem Inner.inner.arg_a0.IsLinearMap_rule (y : X) :
+    IsLinearMap R (fun x : X => ⟪x,y⟫[R]) := sorry_proof
+
+#generate_linear_map_simps Inner.inner.arg_a0.IsLinearMap_rule
+
+theorem Inner.inner.arg_a1.IsLinearMap_rule (y : X) :
+    IsLinearMap R (fun x : X => ⟪y,x⟫[R]) := sorry_proof
+
+#generate_linear_map_simps Inner.inner.arg_a1.IsLinearMap_rule
+
+
+end OnSemiHilbert
+
 open LeanColls
 namespace SciLean
+
 section OnFinVec
 
 variable
