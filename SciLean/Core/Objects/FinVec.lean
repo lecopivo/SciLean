@@ -133,6 +133,7 @@ class FinVec (ι : outParam $ Type _) (K : Type _) (X : Type _) [outParam $ Inde
   to_dual   : toDual   x = ∑ i,  ℼ i x • ⅇ'[X] i
   from_dual : fromDual x = ∑ i, ℼ' i x •  ⅇ[X] i
 
+
 theorem basis_ext {ι K X} {_ : IndexType ι} [LawfulIndexType ι] [DecidableEq ι] [IsROrC K] [FinVec ι K X] (x y : X)
   : (∀ i, ⟪x, ⅇ i⟫[K] = ⟪y, ⅇ i⟫[K]) → (x = y) := sorry_proof
 
@@ -149,6 +150,13 @@ by
          _ = ∑ i, ℼ i x * ℼ' i y := sorry_proof -- summing over [[i=j]]
 
 variable {ι K X} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [IsROrC K] [FinVec ι K X]
+
+
+instance (priority:=low) : GetElem X ι K (fun _ _ => True) where
+  getElem x i _ := ℼ i x
+
+instance (priority:=low) : GetElem X ℕ K (fun _ i => i < IndexType.card ι) where
+  getElem x i h := ℼ (IndexType.fromFin ⟨i,h⟩) x
 
 @[simp]
 theorem inner_basis_dualBasis (i j : ι)
