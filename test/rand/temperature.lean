@@ -1,5 +1,7 @@
 import SciLean
 
+#exit
+
 import SciLean.Core.Rand.ExpectedValue
 
 import SciLean.Core.Distribution.Basic
@@ -10,7 +12,7 @@ import SciLean.Core.Distribution.SurfaceDirac
 
 import SciLean.Core.Functions.Gaussian
 
-#exit
+
 
 namespace SciLean
 
@@ -38,7 +40,6 @@ theorem _root_.PUnit.finrank [Semiring R] : FiniteDimensional.finrank R Unit = 0
 ----------------------------------------------------------------------------------------------------
 
 
-
 def model (T₀ : R) (S : Rand Bool) (T : Bool → R → Rand R) : Rand (Bool^[n]×R^[n]) := do
   let mut Tᵢ := T₀
   for i in [0:n] do
@@ -47,3 +48,7 @@ def model (T₀ : R) (S : Rand Bool) (T : Bool → R → Rand R) : Rand (Bool^[n
       Tᵢ ~ T s Tᵢ
     else
       Tᵢ ~ T s Tᵢ
+
+def guide (μ : R^[n]) : Rand (R^[n]) := do
+  for i in [0:n] do
+    let Tᵢ ~ normal (μ[i]) 1
