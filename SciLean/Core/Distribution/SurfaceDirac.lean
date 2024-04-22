@@ -3,6 +3,7 @@ import SciLean.Core.Distribution.ParametricDistribDeriv
 import SciLean.Core.Integral.Surface
 import SciLean.Core.Integral.MovingDomain
 import SciLean.Core.Integral.Jacobian
+import SciLean.Core.Integral.PlaneDecomposition
 
 
 open MeasureTheory FiniteDimensional
@@ -125,12 +126,12 @@ variable
 --   ∫' x in {x' | φ x' = ψ x'}, f x ∂(surfaceMeasure d)
 --   =
 --   ∑ i, ∫' x₁ in dom i, jacobian R (fun x => p i x (ζ i x)) x₁ • f (p i x₁ (ζ i x₁)) := sorry_proof
-
+set_option pp.universes true in
 
 open BigOperators in
 theorem surfaceDirac_substitution [Fintype I] (φ ψ : X → R) (f : X → Y) (d : ℕ)
     {p : (i : I) → X₁ i → X₂ i → X} {ζ : (i : I) → X₁ i → X₂ i} {dom : (i : I) → Set (X₁ i)}
-    (inv : ParametricInverseAt (fun x => φ x - ψ x) 0 p ζ dom) (hdim : ∀ i, d = finrank (X₁ i)) :
+    (inv : ParametricInverseAt (fun x => φ x - ψ x) 0 p ζ dom) : -- (hdim : ∀ i, d = finrank R (X₁ i)) :
     surfaceDirac {x | φ x = ψ x} f d
     =
     ∑ i, Distribution.prod
@@ -138,6 +139,60 @@ theorem surfaceDirac_substitution [Fintype I] (φ ψ : X → R) (f : X → Y) (d
            (((fun x₁ => jacobian R (fun x => p i x (ζ i x)) x₁ • f (p i x₁ (ζ i x₁))).toDistribution).restrict (dom i))
            (fun x₁ => (dirac (ζ i x₁) : 𝒟' (X₂ i)))
            (fun y ⊸ fun r ⊸ r • y) := sorry_proof
+
+
+
+
+-- WIP: this simproc is under construction!
+open Lean Meta Elab Term in
+simproc_decl surfaceDirac_substitution_simproc (surfaceDirac {x | _ = _} _ _) := fun e => do
+  IO.println s!"detected surfaceDirac in:\n{← ppExpr e}"
+
+  let A := e.getRevArg! 2
+  let f := e.getRevArg! 1
+  let d := e.getRevArg! 0
+  unless A.isAppOfArity ``setOf 2 do return .continue
+  let φψ := A.appArg!
+
+  lambdaTelescope φψ fun xs b => do
+    unless b.isAppOfArity ``Eq 3 do return .continue
+
+    let lhs := b.appFn!.appArg!
+    let rhs := b.appArg!
+    let φ ← mkLambdaFVars xs lhs
+    let ψ ← mkLambdaFVars xs rhs
+    let L ← mkLambdaFVars xs (← mkAppM ``HSub.hSub #[lhs,rhs])
+
+    let R ← inferType lhs
+    let is_affine ← mkAppM ``IsAffineMap #[R,L]
+
+    IO.println s!"function {← ppExpr L}"
+    IO.println s!"affine condition {← ppExpr is_affine}"
+
+    let (.some ⟨proof⟩, _) ← (Mathlib.Meta.FunProp.funProp is_affine).run {} {}
+      | IO.println "failed to prove affine condition!"
+        return .continue
+
+    IO.println s!"affine condition proven! {← ppExpr (← instantiateMVars proof)}"
+
+    let parametric_inverse ← mkAppM ``parametric_inverse_affine' #[L, proof]
+
+    IO.println s!"parametric inverse:\n{← ppExpr (← inferType parametric_inverse)}"
+
+    let dirac_subst ← mkAppM ``surfaceDirac_substitution #[φ,ψ,f,d,parametric_inverse]
+
+    let rule ← inferType dirac_subst
+    let lhs := rule.appFn!.appArg!
+    let rhs := rule.appArg!
+
+    IO.println s!"old expr:\n{← ppExpr e}"
+    IO.println s!"old expr':\n{← ppExpr lhs}"
+    IO.println s!"new expr':\n{← ppExpr rhs}"
+
+    if (← isDefEq e lhs) then
+      return .visit { expr := rhs, proof? := dirac_subst }
+    else
+      return .continue
 
 
 #exit

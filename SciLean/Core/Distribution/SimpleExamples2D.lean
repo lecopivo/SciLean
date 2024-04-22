@@ -3,7 +3,7 @@ import SciLean.Core.Distribution.SurfaceDirac
 import SciLean.Core.Distribution.Eval
 -- import SciLean.Core.Integral.Substitution
 -- import SciLean.Core.Integral.ParametricInverse
--- import SciLean.Core.Integral.Frontier
+import SciLean.Core.Integral.PlaneDecomposition
 
 import SciLean.Core.FunctionTransformations.Preimage
 
@@ -48,7 +48,7 @@ def foo1 (t' : R) :=
         (p:= fun _ y x => (x,y))
         (ζ:= fun b y => t')
         (dom:= fun _ => Set.univ)
-        (inv:= by intro i x₁ _; dsimp; simp) (hdim := sorry_proof)]
+        (inv:= by intro i x₁ _; dsimp; simp)]
 
     autodiff; autodiff
     simp only [ftrans_simp,action_push,distrib_eval]
@@ -89,7 +89,7 @@ def foo2 (t' : R) :=
         (p:= fun _ x y => (x,y))
         (ζ:= fun b x => t' - x)
         (dom:= fun _ => Set.univ)
-        (inv:= by intro i x₁ _; dsimp; simp) (hdim := sorry_proof)]
+        (inv:= by intro i x₁ _; dsimp; simp)]
 
     autodiff; autodiff; norm_num
 
@@ -119,7 +119,7 @@ def foo3 (t' : R) :=
         (p:= fun _ x y => (x+y,y-x))
         (ζ:= fun b _ => t'/2)
         (dom:= fun _ => Set.univ)
-        (inv:= by intro i x₁ _; dsimp; ring) (hdim := sorry_proof)]
+        (inv:= by intro i x₁ _; dsimp; ring)]
 
     autodiff; autodiff; norm_num only [ftrans_simp]
 
@@ -133,6 +133,7 @@ def foo3 (t' : R) :=
     simp (disch:=sorry) only [ftrans_simp]
     norm_num only [ftrans_simp]
     rand_pull_E
+
 
 #eval Rand.print_mean_variance (foo3 0.3) 10000 ""
 #eval Rand.print_mean_variance (foo3 1.7) 10000 ""

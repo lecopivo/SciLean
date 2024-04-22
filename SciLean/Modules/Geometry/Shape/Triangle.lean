@@ -243,13 +243,8 @@ theorem planeDecomposition_orthogonal_dir
     (hn : n + 1 = card ι) :
     ⟪u, planeDecomposition (R:=R) u hn (0,y)⟫ = 0 := sorry_proof
 
--- #check planeDecomposition' (1.0,2.0) 3.0 _ _
--- def a := planeDecomposition' (1.0,2.0) 3.0 _ _ (0,0)
-
-#check Metric.sphere
-#check Metric.ball
-
 open Scalar IndexType in
+@[simp, ftrans_simp]
 theorem planeDecomposition.arg_x.ball_preimage_rule {n} (u : X) (s : Ball R X)
     (hn : n + 1 = card ι) :
     (planeDecomposition (R:=R) u hn)⁻¹' (toSet s)
@@ -257,7 +252,11 @@ theorem planeDecomposition.arg_x.ball_preimage_rule {n} (u : X) (s : Ball R X)
     let (tc, yc) := (planeDecomposition (R:=R) u hn).symm s.center
     let A := Set.Icc (tc - s.radius) (tc + s.radius)
     let B := fun t : R => toSet (Ball.mk yc (sqrt (s.radius^2 - (t-tc)^2)))
-    A.prodDep B := sorry
+    A.prodDep B := sorry_proof
+
+
+
+
 
 def t : Triangle Float (Float×Float) := Triangle.mk (0.0231,0.01554) (1.0124,0.0125) (-10.054,1.0123)
 

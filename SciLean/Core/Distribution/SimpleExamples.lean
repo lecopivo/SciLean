@@ -61,7 +61,7 @@ def foo2 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo 0 1, if x - t ≤ 0 then (1
         (p:= fun _ _ x => x)
         (ζ:= fun _ _ => t')
         (dom:= fun _ => Set.univ)
-        (inv:= by intro i x₁ _; dsimp; simp) (hdim := sorry)]
+        (inv:= by intro i x₁ _; dsimp; simp)]
 
     simp only [ftrans_simp]
     conv in jacobian _ _ =>
@@ -90,7 +90,7 @@ def foo3 (t' : R) := (∂ (t:=t'), ∫' (x:R) in Ioo (-1) 1, if x^2 - t ≤ 0 th
         (p:= fun _ _ x => x)
         (ζ:= fun b _ => if b then Scalar.sqrt t' else - Scalar.sqrt t')
         (dom:= fun _ => Set.univ)
-        (inv:= by intro i x₁ _; dsimp; simp; sorry_proof) (hdim := sorry_proof)]
+        (inv:= by intro i x₁ _; dsimp; simp; sorry_proof)]
 
     simp only [ftrans_simp]
     conv =>

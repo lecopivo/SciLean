@@ -2,6 +2,8 @@ import SciLean.Core.Objects.FinVec
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.StructType.Algebra
 
+import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+
 open LeanColls
 
 namespace SciLean
@@ -181,3 +183,11 @@ instance {K} [IsROrC K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Con
 instance {K} [IsROrC K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] : SemiInnerProductSpaceStruct K Cont Idx (fun _ => Elem) where
   inner_structProj := sorry_proof
   testFun_structProj := sorry_proof
+
+
+
+
+instance [ArrayType Cont Idx Elem] [MeasurableSpace Elem] : MeasurableSpace Cont := sorry
+open MeasureTheory in
+instance [ArrayType Cont Idx Elem] [MeasureSpace Elem] : MeasureSpace Cont where
+  volume := sorry
