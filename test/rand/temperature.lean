@@ -10,6 +10,8 @@ import SciLean.Core.Distribution.SurfaceDirac
 
 import SciLean.Core.Functions.Gaussian
 
+#exit
+
 namespace SciLean
 
 open MeasureTheory Set BigOperators
@@ -34,3 +36,14 @@ theorem _root_.PUnit.finrank [Semiring R] : FiniteDimensional.finrank R Unit = 0
 ----------------------------------------------------------------------------------------------------
 -- Variational Inference - Test 1 ------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
+
+
+
+def model (T₀ : R) (S : Rand Bool) (T : Bool → R → Rand R) : Rand (Bool^[n]×R^[n]) := do
+  let mut Tᵢ := T₀
+  for i in [0:n] do
+    let s ~ S
+    if s then
+      Tᵢ ~ T s Tᵢ
+    else
+      Tᵢ ~ T s Tᵢ
