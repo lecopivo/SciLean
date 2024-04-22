@@ -22,14 +22,16 @@ structure BitType (α : Type) where
 structure ByteType (α : Type) where
   bytes : USize
   h_size : 1 < bytes  -- for one byte types use BitInfo
+  /-- Read `a : α` from byte array `b` starting at the byte `i` -/
   fromByteArray (b : ByteArray) (i : USize) (h : (i+bytes).toNat ≤ b.size) : α
+  /-- Write `a : α` from byte array `b` starting at the byte `i` -/
   toByteArray   (b : ByteArray) (i : USize) (h : (i+bytes).toNat ≤ b.size) (a : α) : ByteArray
 
-  -- `toByteArray` does not modify ByteArray size
+  /-- `toByteArray` does not modify ByteArray size -/
   toByteArray_size : ∀ b i h a, (toByteArray b i h a).size = b.size
-  -- we can recover `a` from bytes
+  /-- we can recover `a` from bytes -/
   fromByteArray_toByteArray : ∀ a b i h h', fromByteArray (toByteArray b i h a) i h' = a
-  -- `toByteArray` does not affect other bytes
+  /-- `toByteArray` does not affect other bytes -/
   fromByteArray_toByteArray_other : ∀ a b i j h, (j < i) ∨ (i + bytes) ≤ j → (toByteArray b i h a).uget j sorry_proof = b.uget j sorry_proof
 
 /-- This rougly corresponds to Plain Old Data(POD)/Passive Data known from OOP
@@ -321,22 +323,23 @@ def Fin.bitType (n : Nat) (_ : n ≤ 256) : BitType (Fin n) where
   toByte   b := b.1.toUInt8
   fromByte_toByte := sorry_proof
 
+
 def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
   bytes := (byteSize n).toUSize
   h_size := sorry_proof
 
   fromByteArray b i _ := Id.run do
     let bytes  := byteSize n
-    let ofByte := i * bytes.toUSize
-
-    let mut val : USize := 0
+    let ofByte := i
+    let mut val : Nat := 0
     for j in IndexType.univ (Fin bytes) do
-      val := val + ((b[ofByte+j.1.toUSize]'sorry_proof).toUSize <<< (j.1.toUSize*(8:USize)))
-    ⟨val.toNat, sorry_proof⟩
+      let val' := ((b[ofByte+j.1.toUSize]'sorry_proof).toNat <<< (j.1*8))
+      val := val + val'
+    ⟨val, sorry_proof⟩
 
   toByteArray b i _ val := Id.run do
     let bytes  := byteSize n
-    let ofByte := i * bytes.toUSize
+    let ofByte := i
 
     let mut b := b
     for j in IndexType.univ (Fin bytes) do
