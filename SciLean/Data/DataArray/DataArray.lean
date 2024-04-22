@@ -121,14 +121,19 @@ def DataArray.intro (f : ι → α) : DataArray α := Id.run do
     d' := d'.set ⟨(IndexType.toFin i).1,sorry_proof⟩ (f i)
   d'
 
-instance [ToString α] : ToString (DataArray α) := ⟨fun a => Id.run do
-  if h : a.size = 0 then
-    return "⊞[]"
-  else
-    let mut s := s!"⊞[{a[0]},"
-    for h : i in [1:a.size] do
-      s := s ++ ", " ++ toString a[i]
-    return s⟩
+
+instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
+  let mut fst := true
+  let mut s := "⊞["
+  for i in [0:x.size] do
+    let i : Fin (x.size) := ⟨i, sorry_proof⟩
+    if fst then
+      s := s ++ toString x[i]
+      fst := false
+    else
+      s := s ++ ", " ++ toString x[i]
+  s ++ "]"⟩
+
 
 structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [IndexType.{0,0} ι] where
   data : DataArray α
