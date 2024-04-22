@@ -3,7 +3,7 @@ import SciLean.Core
 open SciLean
 
 variable
-  {K} [IsROrC K]
+  {K} [RCLike K]
   {X Y Z W} [Vec K X] [Vec K Y] [Vec K Z] [Vec K W]
 
 

@@ -3,7 +3,7 @@ import SciLean
 open SciLean
 
 variable
-  {K} [IsROrC K]
+  {K} [RCLike K]
   {X Y} [Vec K X] [Vec K Y]
   (f : X → Y) (x dx : X)
 

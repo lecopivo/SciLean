@@ -15,7 +15,7 @@ variable
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
-  {ι : Type} [EnumType ι]
+  {ι : Type} [IndexType ι]
   {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
@@ -208,6 +208,7 @@ example
 by
   conv => lhs; autodiff
 
+#exit
 example
   : revDeriv K (fun (x : Fin 10 → K) => ∑ i, ‖x i‖₂²)
     =

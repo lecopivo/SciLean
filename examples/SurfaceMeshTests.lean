@@ -1,10 +1,10 @@
 import SciLean.Modules.DDG.SurfaceMesh
 
 def testTetrahedron : IO Bool := do
-  let base0 : SciLean.Vec3 Float := SciLean.Vec3.mk 0 0 0
-  let base1 : SciLean.Vec3 Float := SciLean.Vec3.mk 2 0 0
-  let base2 : SciLean.Vec3 Float := SciLean.Vec3.mk 1 1 0
-  let apex : SciLean.Vec3 Float := SciLean.Vec3.mk 0 0 1
+  let base0 : SciLean.Vec3 := SciLean.Vec3.mk 0 0 0
+  let base1 : SciLean.Vec3 := SciLean.Vec3.mk 2 0 0
+  let base2 : SciLean.Vec3 := SciLean.Vec3.mk 1 1 0
+  let apex : SciLean.Vec3 := SciLean.Vec3.mk 0 0 1
   let indices : Array (Index ``Vertex) := #[]
   let indices := indices.append #[0, 1, 2] -- base
   let indices := indices.append #[0, 1, 3] -- (0, 1) to apex tri

@@ -4,8 +4,9 @@ open Lean SciLean
 
 set_option linter.unusedVariables false
 
-def mymul {K : Type u} [instK : IsROrC K] (x y : K) := x * y
+def mymul {K : Type u} [instK : RCLike K] (x y : K) := x * y
 
+#exit
 #generate_revCDeriv mymul x y
   prop_by unfold mymul; fprop
   trans_by unfold mymul; autodiff

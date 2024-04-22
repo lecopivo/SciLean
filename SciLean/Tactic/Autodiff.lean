@@ -20,4 +20,4 @@ macro "autodiff" : conv =>
 
 macro "autodiff" : tactic =>
   `(tactic| (fun_trans (config:={zeta:=false,singlePass:=true}) (disch:=sorry) only [ftrans_simp,lift_lets_simproc];
-             simp (config:={zeta:=false,failIfUnchanged:=false}) only [ftrans_simp,lift_lets_simproc]))
+             try simp (config:={zeta:=false,failIfUnchanged:=false}) only [ftrans_simp,lift_lets_simproc]))

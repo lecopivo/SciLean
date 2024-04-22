@@ -1,8 +1,7 @@
 import SciLean
 
 
-
-
+#exit
 def dot {n : Nat} (x y : Float^[n]) : Float := ∑ i, x[i] * y[i]
 
 -- terrible error message

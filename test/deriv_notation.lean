@@ -29,9 +29,7 @@ set_default_scalar K
 #check ∂! (x:=1), x*x
 
 
-#check ∂ (fun x : K => x*x)
-       =
-       (fun x => x + x)
+#check ((∂ (fun x : K => x*x)) = (fun x => x + x))
 
 variable {X} [Vec K X] (f : X → X)
 

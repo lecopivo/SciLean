@@ -16,14 +16,13 @@ private partial def withEnumTypeImpl
 where
   loop (I : Expr) (acc : Array Expr) (k : Array Expr → MetaM α) : MetaM α := do
     let .some ⟨u,_⟩ ← isTypeQ I | throwError "invalid type {← ppExpr I}"
-    let cls := (Expr.const ``EnumType [u,v,w]).app I
+    let cls := (Expr.const ``IndexType [u,v,w]).app I
     match ← synthInstance? cls with
     | .some _ => k acc
     | none =>
       match I with
       | .app .. =>
         if (I.isAppOfArity' ``Prod 2) ||
-           (I.isAppOfArity' ``ColProd 2) ||
            (I.isAppOfArity' ``Sum 2) then
           let X₁ := I.getArg! 0
           let X₂ := I.getArg! 1
@@ -55,7 +54,7 @@ private partial def withIndexImpl
 where
   loop (I : Expr) (acc : Array Expr) (k : Array Expr → MetaM α) : MetaM α := do
     let .some ⟨u,_⟩ ← isTypeQ I | throwError "invalid type {← ppExpr I}"
-    let cls := (Expr.const ``Index [u,v,w]).app I
+    let cls := (Expr.const ``Fin [u,v,w]).app I
     match ← synthInstance? cls with
     | .some _ => k acc
     | none =>

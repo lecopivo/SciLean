@@ -2,7 +2,7 @@ import SciLean
 
 open SciLean
 
-variable 
+variable
   {K : Type} [RealScalar K]
   {X : Type} [SemiInnerProductSpace K X]
   {X₁ : Type} [SemiInnerProductSpace K X₁]
@@ -10,12 +10,14 @@ variable
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
   {W : Type} [SemiInnerProductSpace K W]
-  {ι : Type} [EnumType ι]
+  {ι : Type} [IndexType ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
 
 def mul (x y : K) : K := x * y
+
+#exit
 
 #generate_revDeriv mul x y
   prop_by unfold mul; fprop
@@ -43,7 +45,7 @@ example :
     (zdf.1, fun dz =>
       let dy := zdf.2 dz;
       dy) :=
-by 
+by
   conv => lhs; ftrans
 
 
@@ -100,7 +102,7 @@ example :
 by
   conv => lhs; ftrans
 
-example : 
+example :
   (revDeriv K fun (x : K) =>
     let x1 := mul x x
     let x2 := mul x1 x1
@@ -125,7 +127,7 @@ example :
       let dy := zdf_1.2 dy;
       let dy := dy.1 + dy.2;
       let dy := zdf.2 dy;
-     dy.1 + dy.2) := 
+     dy.1 + dy.2) :=
 by
   ftrans
 
@@ -159,4 +161,3 @@ example :
       dx) :=
 by
   conv => lhs; ftrans
-

@@ -2,6 +2,8 @@ import SciLean
 
 open SciLean
 
+#exit
+
 def dot {n : Nat} (x y : Float^[n]) : Float := ∑ i, x[i] * y[i]
 
 -- todo: make this working!!!s

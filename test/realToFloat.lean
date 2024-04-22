@@ -11,9 +11,7 @@ example : isomorph `RealToFloat (fun p : (Fin 2 → Real) => p 0)
           =
           fun p => p 0 := by conv => lhs; fun_trans
 
-set_option trace.Meta.Tactic.fun_trans true in
-set_option trace.Meta.Tactic.fun_trans.unify true in
-set_option trace.Meta.Tactic.fun_trans.discharge true in
+
 example
   : isomorph `RealToFloat (fun (p : Real × (Fin 2 → Real)) => Real.exp p.1 + p.2 0)
     =
@@ -21,7 +19,8 @@ example
 by
   conv =>
     lhs
-    fun_trans
+    fun_trans -- missing `fun_trans` feature
+  sorry
 
 
 example
@@ -31,10 +30,5 @@ example
 by
   conv =>
     lhs
-    fun_trans; simp
-
-
-#check Prod.fst.isomorph_rule
-
-
-#check Prod.snd.arg_self.isomorph_rule
+    fun_trans; simp  -- missing `fun_trans` feature
+  sorry

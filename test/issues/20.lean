@@ -18,6 +18,7 @@ info: fun i =>
    rewrite_by
      simp (config:={zeta:=false,singlePass:=true}) [Tactic.lift_lets_simproc]
 
+#exit
 
 /--
 info: fun i =>

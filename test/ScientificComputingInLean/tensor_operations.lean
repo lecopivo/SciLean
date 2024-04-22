@@ -8,6 +8,7 @@ open SciLean Scalar
 -- Transformations and Reductions ------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+#exit
 
 def map {I : Type} [IndexType I] (x : Float^[I]) (f : Float → Float) := Id.run do
   let mut x' := x

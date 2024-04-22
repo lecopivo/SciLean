@@ -4,7 +4,7 @@ open SciLean
 
 
 variable
-  {K : Type} [IsROrC K]
+  {K : Type} [RCLike K]
   {X : Type} [Vec K X]
   {Y : Type} [Vec K Y]
 

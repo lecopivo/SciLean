@@ -67,7 +67,7 @@ deriving Inhabited
  * @property {Array.<module:Core.Halfedge[]>} generators An array of halfedge arrays, i.e.,
  -/
 structure SurfaceMesh where
-  positions  : Array (SciLean.Vec3 Float) := {}
+  positions  : Array SciLean.Vec3 := {}
   vertices   : Array Vertex := {}
   edges      : Array Edge := {}
   faces      : Array Face := {}
@@ -286,7 +286,7 @@ partial def MeshBuilderM.assertNoIsolatedFaces : MeshBuilderM Unit := return ()
 partial def MeshBuilderM.assertNoNonManifoldVertices : MeshBuilderM Unit := return ()
 
 partial def MeshBuilderM.build_
-  (positions : Array (SciLean.Vec3 Float)) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit := do {
+  (positions : Array (SciLean.Vec3)) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit := do {
   let mut existingHalfedges :
       HashMap (Index `Vertex × Index `Vertex) (Index `Halfedge) := {};
   let mut edgeCount :
@@ -389,15 +389,15 @@ def MeshBuilderM.run (mb : MeshBuilderM Unit) : Except MeshBuilderError SurfaceM
   | .error  err _ => .error err
 
 
-def SurfaceMesh.build (positions: Array (SciLean.Vec3 Float)) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build (positions: Array (SciLean.Vec3)) (indices: Array (Index ``Vertex)) :
   Except MeshBuilderError SurfaceMesh :=
   (MeshBuilderM.build_ positions indices).run
 
-def SurfaceMesh.build' (positions: Array (SciLean.Vec3 Float)) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build' (positions: Array (SciLean.Vec3)) (indices: Array (Index ``Vertex)) :
   Option SurfaceMesh :=
   (build positions indices).toOption
 
-def SurfaceMesh.build! (positions: Array (SciLean.Vec3 Float)) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build! (positions: Array (SciLean.Vec3)) (indices: Array (Index ``Vertex)) :
   SurfaceMesh := (build' positions indices).get!
 
 /-
@@ -416,7 +416,7 @@ def randFloat01 [G : RandomGen γ] (gen : γ) : Float × γ := Id.run do
   return ((Float.ofNat <| val - lo) / (Float.ofNat <| hi - lo), gen)
 
 /-- Create a random vertex with coordinates sampled from uniform [0, 1] -/
-def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Vec3 Float × γ := Id.run do
+def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Vec3 × γ := Id.run do
   let (val1, gen) := randFloat01 gen
   let (val2, gen) := randFloat01 gen
   let (val3, gen) := randFloat01 gen
@@ -425,12 +425,12 @@ def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Vec3 Float × γ := Id.run 
 
 /-- Create `nvertices` random vertices with coordinates sampled from [-scale/2, scale/2] -/
 def randVertices [RandomGen γ]
- (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array (SciLean.Vec3 Float)) × γ := Id.run do
-  let mut out : Array (SciLean.Vec3 Float) := #[]
+ (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array (SciLean.Vec3)) × γ := Id.run do
+  let mut out : Array (SciLean.Vec3) := #[]
   let mut gen := gen
   for _ in List.range nvertices do
     let (vertex, gen') := randVertex01 gen; gen := gen'
-    let vertex : (SciLean.Vec3 Float) := vertex.map (fun coord => (coord - 0.5) * scale)
+    let vertex : (SciLean.Vec3) := SciLean.ArrayType.mapMono (fun coord => (coord - 0.5) * scale) vertex
     out := out.push vertex
   return (out, gen)
 
@@ -460,16 +460,16 @@ def SurfaceMesh.rand [RandomGen γ] (gen : γ) (nvertices : Nat) (nfaces : Nat) 
 
 
 /-- Coerce a list of reals into a vector. Throws a ParseError if length of list is not 3 -/
-def V3.ofList : List Float → MeshBuilderM (SciLean.Vec3 Float)
+def V3.ofList : List Float → MeshBuilderM (SciLean.Vec3)
 | [x, y, z] => pure { x := x, y := y, z := z }
 | xs => throw <| MeshBuilderError.parseError s!"unable to convert list to vertex '{xs}'"
 
-def V3.ofArray (xs : Array Float) : MeshBuilderM (SciLean.Vec3 Float) :=
-  return (SciLean.Vec3.ofArray xs)
+def V3.ofArray (xs : Array Float) : MeshBuilderM (SciLean.Vec3) :=
+  return (⟨xs[0]!, xs[1]!, xs[2]!⟩)
 
 /-- Load the mesh data from a .OFF format string -/
 def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
-  let mut vertices : Array (SciLean.Vec3 Float) := #[]
+  let mut vertices : Array (SciLean.Vec3) := #[]
   let mut faces : Array Nat := #[]
   let mut i := 0
   if lines[i]!.trim != "OFF"

@@ -1,5 +1,4 @@
 import SciLean
-import Mathlib
 
 namespace SciLean
 
@@ -52,7 +51,7 @@ example :
 
 
 example (v : R) :
-    ((model2 (R:=R)).condition v).pdf R
+    ((model2 (R:=R)).conditionFst v).pdf R
     =
     (fun y =>
       if 0 < v then

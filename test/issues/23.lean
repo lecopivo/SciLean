@@ -3,7 +3,7 @@ import SciLean
 open SciLean
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [Vec K X]
 
 

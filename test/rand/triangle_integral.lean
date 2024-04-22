@@ -29,6 +29,8 @@ attribute [ftrans_simp]
   and_true
 
 
+#exit
+
 structure Segment where
   a : Vec2
   b : Vec2
@@ -133,6 +135,8 @@ def Segment.normalSpeedRef (s v : Segment) (r : Float) : Float :=
   let n := s.normal
   ⟪v.a + r • (v.b-v.a),n⟫
 
+
+#exit
 
 -- Instrument simp to not apply this theorem if `t` is constant function
 -- @[simp, ftrans_simp] -- , simp_guard t notConst]

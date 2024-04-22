@@ -30,7 +30,7 @@ by
 
 
 variable
-  {K : Type*} [IsROrC K]
+  {K : Type*} [RCLike K]
   {α : Type*} -- problematic universe
 
 example (i : α) : CDifferentiable K (fun (xy : (α → K) × (α → K)) => xy.fst i) := by fun_prop

@@ -19,9 +19,9 @@ open Lean Meta Qq in
   let h ← mkFreshExprMVar H
   IO.println (← isDefEq hx h)
 
-
+-- TODO: fix index access herel
 example
   (x : Float → DataArrayN Float (Fin 10)) (hx : CDifferentiable Float x)
-  : CDifferentiable Float (fun w => ⊞ i => (x w)[i]) :=
+  : CDifferentiable Float (fun w => ⊞ (i : Fin 10) => (x w)[i]'sorry_proof) :=
 by
   fun_prop [SciLean.introElemNotation]

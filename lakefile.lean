@@ -15,6 +15,9 @@ lean_lib CompileTactics where
   roots := #[`SciLean.Tactic.LSimp.LetNormalize,`SciLean.Tactic.MathlibCompiledTactics]
 
 
+lean_exe Doodle {
+  root := `examples.Doodle
+}
 
 lean_exe WaveEquation {
   root := `examples.WaveEquation

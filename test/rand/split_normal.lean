@@ -142,7 +142,7 @@ def loss1_deriv_reparam (θ : R) :=
         (p:= fun _ _ x => x)
         (ζ:= fun _ _ => -θ)
         (dom:= fun _ => Set.univ)
-        (inv:= by intro i x₁ _; ring) (hdim := sorry)]
+        (inv:= by intro i x₁ _; ring)]
 
     -- compute jacobian from change of variables
     autodiff

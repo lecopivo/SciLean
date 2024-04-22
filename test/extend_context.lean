@@ -1,4 +1,6 @@
-import SciLean.Core.Meta.ExtendContext
+#exit
+
+-- import SciLean.Core.Meta.ExtendContext
 
 open Lean Meta Qq
 

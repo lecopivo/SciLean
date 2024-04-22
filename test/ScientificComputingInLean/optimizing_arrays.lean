@@ -17,7 +17,6 @@ def softMax {I} [IndexType I]
   return x
 
 
-set_option trace.Meta.Tactic.simp.rewrite true in
 def softMax_optimized {I} [IndexType I] (r : Float) (x : Float^[I]) :=
     (softMax r x)
     rewrite_by
