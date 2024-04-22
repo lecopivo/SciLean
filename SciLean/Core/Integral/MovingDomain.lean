@@ -37,23 +37,25 @@ open Classical in
 noncomputable
 def interfaceSpeed' (A : W → Set X) (w dw : W) (x : frontier (A w)) : R :=
   -- todo: use some version of `IsLipschitzDomain` to get `φ`
-  if h : ∃ φ : W → X → R, ∀ w, A w = {x | 0 ≤ φ w x} then
-    let φ := choose h
-    levelSetSpeed φ w dw x.1
-  else
-    0
+  sorry
+  -- if h : ∃ φ : W → X → R, ∀ w, A w = {x | 0 ≤ φ w x} then
+  --   let φ := choose h
+  --   levelSetSpeed φ w dw x.1
+  -- else
+  --   0
 
 variable (R)
 open Classical in
 noncomputable
 def frontierSpeed (A : W → Set X) (w dw : W) (x : X) : R :=
   -- todo: use some version of `IsLipschitzDomain` to get `φ`
-  if h : ∃ φ : W → X → R, ∀ w, A w = {x | 0 ≤ φ w x} then
-    let φ := choose h
-    -- TODO: turn `x` to the closes point on the boundary
-    levelSetSpeed φ w dw x
-  else
-    0
+  sorry
+  -- if h : ∃ φ : W → X → R, ∀ w, A w = {x | 0 ≤ φ w x} then
+  --   let φ := choose h
+  --   -- TODO: turn `x` to the closes point on the boundary
+  --   levelSetSpeed φ w dw x
+  -- else
+  --   0
 variable {R}
 
 

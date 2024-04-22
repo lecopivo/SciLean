@@ -26,6 +26,10 @@ instance : CommRing Float where
   nsmul n x := n.toFloat * x
   nsmul_zero := sorry_proof
   nsmul_succ n x := sorry_proof
+  zsmul n x := Float.ofInt n * x
+  zsmul_neg' := sorry_proof
+  zsmul_succ' := sorry_proof
+  zsmul_zero' := sorry_proof
   sub_eq_add_neg a b := sorry_proof
   natCast n := n.toUInt64.toFloat
   natCast_zero := sorry_proof
@@ -39,6 +43,9 @@ instance : Field Float where
   div_eq_mul_inv := sorry_proof
   mul_inv_cancel := sorry_proof
   inv_zero := sorry_proof
+  qsmul q x := (q.num * x) / q.den
+  qsmul_def := sorry_proof
+
 
 instance : DecidableEq Float := fun x y =>
   if x ≤ y && y ≤ x
@@ -70,6 +77,8 @@ instance : LinearOrderedField Float where
   mul_inv_cancel := sorry_proof
   inv_zero := sorry_proof
   div_eq_mul_inv := sorry_proof
+  qsmul q x := (q.num * x) / q.den
+  qsmul_def := sorry_proof
 
 
 instance : SeminormedRing Float where

@@ -380,32 +380,31 @@ theorem Inner.inner.arg_a0a1.ContCDiff_rule
     ContCDiff R n (fun x => ⟪f x, g x⟫[R]) := by intro x; fun_prop
 
 @[fun_prop,to_any_point]
-theorem SciLean.Norm2.norm2.arg_a0.ContCDiffAt_rule
+theorem Norm2.norm2.arg_a0.ContCDiffAt_rule
   (f : X → Y) (x : X) (hf : ContCDiffAt R n f x)
   : ContCDiffAt R n (fun x => ‖f x‖₂²[R]) x := by
   simp[← SemiInnerProductSpace.inner_norm2]
   fun_prop
 
 @[fun_prop]
-theorem SciLean.Norm2.norm2.arg_a0.ContCDiff_rule
+theorem Norm2.norm2.arg_a0.ContCDiff_rule
   (f : X → Y) (hf : ContCDiff R n f)
   : ContCDiff R n (fun x => ‖f x‖₂²[R]) := by intro x; fun_prop
 
 @[fun_prop,to_any_point]
-theorem SciLean.norm₂.arg_x.ContCDiffAt_rule
+theorem norm₂.arg_x.ContCDiffAt_rule
     (f : X → Y) (x : X)
     (hf : ContCDiffAt R n f x) (hx : f x≠0) :
     ContCDiffAt R n (fun x => ‖f x‖₂[R]) x := by sorry_proof
 
 @[fun_prop]
-theorem SciLean.norm₂.arg_x.ContCDiff_rule
+theorem norm₂.arg_x.ContCDiff_rule
     (f : X → Y)
     (hf : ContCDiff R n f) (hx : ∀ x, f x≠0) :
     ContCDiff R n (fun x => ‖f x‖₂[R]) := by intro x; fun_prop (disch:=aesop)
 
 end InnerProductSpace
 
-namespace SciLean
 section OnFinVec
 
 variable

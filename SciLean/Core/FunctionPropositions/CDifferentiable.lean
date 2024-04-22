@@ -430,9 +430,7 @@ theorem SciLean.norm₂.arg_x.CDifferentiableAt_rule
 end InnerProductSpace
 
 
-namespace SciLean
 section OnFinVec
-
 
 variable
   {K : Type _} [RCLike K]

@@ -1,7 +1,8 @@
 import Lean
 import Mathlib.Logic.Nonempty
 import Mathlib.Algebra.Group.Defs
-import Mathlib.Data.Int.Basic
+import Mathlib.Logic.Function.Basic
+import Mathlib.Algebra.Group.Int
 
 import SciLean.Data.Curry
 import SciLean.Lean.Meta.Basic
@@ -281,7 +282,6 @@ open Lean Elab Tactic Conv
     updateLhs lhs' eq
 
   | _ => throwUnsupportedSyntax
-
 
 
 open Function

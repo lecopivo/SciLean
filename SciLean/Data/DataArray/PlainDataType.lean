@@ -1,6 +1,7 @@
 import SciLean.Util.SorryProof
 -- import SciLean.Data.Index
-import LeanColls.Classes.IndexType
+import LeanColls
+-- import LeanColls.Classes.Ops.Fold
 
 namespace SciLean
 open LeanColls

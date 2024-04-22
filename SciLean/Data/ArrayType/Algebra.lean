@@ -22,10 +22,9 @@ instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace Elem] : T
 
 instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] : UniformSpace Cont where
   uniformity := default --sorry_proof
-  refl := sorry_proof
+  nhds_eq_comap_uniformity := sorry_proof
   symm := sorry_proof
   comp := sorry_proof
-  isOpen_uniformity := sorry_proof
 
 instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] [CompleteSpace Elem] : CompleteSpace Cont where
   complete := sorry_proof
@@ -36,6 +35,13 @@ instance (priority := low) [ArrayType Cont Idx Elem] [AddGroup Elem] : AddGroup 
   zero_add  := sorry_proof
   add_zero  := sorry_proof
   add_left_neg := sorry_proof
+  nsmul n x := ArrayType.mapMono (fun xi => n • xi) x
+  nsmul_succ := sorry_proof
+  nsmul_zero := sorry_proof
+  zsmul n x := ArrayType.mapMono (fun xi => n • xi) x
+  zsmul_succ' := sorry_proof
+  zsmul_neg' := sorry_proof
+  zsmul_zero' := sorry_proof
 
 instance (priority := low) [ArrayType Cont Idx Elem] [AddCommGroup Elem] : AddCommGroup Cont where
   add_comm  := sorry_proof
@@ -58,6 +64,7 @@ instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCo
 
 instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] : Vec K Cont where
   scalar_wise_smooth := sorry_proof
+  continuous_smul := sorry_proof
 
 
 instance (priority := low) [ArrayType Cont Idx Elem] [Inner K Elem] : Inner K Cont where
@@ -177,6 +184,9 @@ instance {K} [ArrayType Cont Idx Elem] [SMul K Elem] : SMulStruct K Cont Idx (fu
   structProj_smul := by intro i k x; simp[HSMul.hSMul, SMul.smul]
 
 instance {K} [RCLike K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Cont Idx (fun _ => Elem) where
+  structProj_zero := sorry_proof
+  structProj_add := sorry_proof
+  structProj_smul := sorry_proof
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof
 

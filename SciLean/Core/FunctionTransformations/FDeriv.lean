@@ -249,7 +249,7 @@ by
   case succ n hn =>
     ext dx
     simp_rw[pow_succ]
-    rw[HMul.hMul.arg_a0a1.fderiv_rule_at x f _ (by fun_prop) (by fun_prop)]
+    rw[HMul.hMul.arg_a0a1.fderiv_rule_at x _ f (by fun_prop) (by fun_prop)]
     rw[hn]
     induction n
     case zero => simp
