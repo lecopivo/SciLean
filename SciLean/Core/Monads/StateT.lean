@@ -7,7 +7,7 @@ namespace SciLean
 section FwdDerivMonad
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
 
@@ -227,7 +227,7 @@ end FwdDerivMonad
 section RevDerivMonad
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [RevDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
 

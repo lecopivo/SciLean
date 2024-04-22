@@ -1,11 +1,11 @@
-import Mathlib.Data.IsROrC.Basic
+import Mathlib.Data.RCLike.Basic
 import Mathlib.Data.Real.EReal
 
 import SciLean.Core.NotationOverField
 
 namespace SciLean
 
-class IsReal (R : semiOutParam $ Type _) extends IsROrC R where
+class IsReal (R : semiOutParam $ Type _) extends RCLike R where
   is_real : ∀ x : R, im x = 0
 
 noncomputable
@@ -20,7 +20,7 @@ inductive ExtendedReal (R : Type _) where
 
 def ExtendedReal.toEReal (R : Type _) [IsReal R] (x : ExtendedReal R) : EReal :=
   match x with
-  | .val r => .some (.some (IsROrC.re r))
+  | .val r => .some (.some (RCLike.re r))
   | .posInf => .some .none
   | .negInf => .none
 
@@ -63,7 +63,7 @@ instance (R : Type _) [IsReal R] [Ord R] : Ord (ExtendedReal R) := ⟨fun x y =>
 
 class ComputableDist (R : Type _) (X : Type _) [IsReal R] [Dist X] where
   cdist : X → X → R
-  is_dist : ∀ x y, IsROrC.re (cdist x y) = dist x y
+  is_dist : ∀ x y, RCLike.re (cdist x y) = dist x y
 
 export ComputableDist (cdist)
 
@@ -75,7 +75,7 @@ export ComputableEDist (cedist)
 
 class ComputableNorm (R : Type _) (X : Type _) [IsReal R] [Norm X] where
   cnorm : X → R
-  is_norm : ∀ x, IsROrC.re (cnorm x) = norm x
+  is_norm : ∀ x, RCLike.re (cnorm x) = norm x
 
 export ComputableNorm (cnorm)
 

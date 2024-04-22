@@ -5,7 +5,7 @@ open SciLean
 section CDeriv
 
 variable
-  (K) [IsROrC K]
+  (K) [RCLike K]
   {X Y} [Vec K X] [Vec K Y]
   (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y : Y)
 
@@ -77,7 +77,7 @@ end CDeriv
 
 section Gradient
 
-variable (K) [IsROrC K]
+variable (K) [RCLike K]
   {X Y} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
   (f : X → Y) (g : X → K) (x dx : X) (y dy : Y) (k dk : K)
 
@@ -147,7 +147,7 @@ end Gradient
 section FwdCDeriv
 
 variable
-  (K) [IsROrC K]
+  (K) [RCLike K]
   {X Y} [Vec K X] [Vec K Y]
   (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y dy : Y)
 
@@ -191,7 +191,7 @@ end FwdCDeriv
 section RevCDeriv
 
 variable
-  (K) [IsROrC K]
+  (K) [RCLike K]
   {X Y} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
   (f : X → Y) (g : K → X) (x dx : X) (t dt : K) (y dy : Y)
 

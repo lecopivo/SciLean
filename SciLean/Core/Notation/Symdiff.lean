@@ -4,7 +4,7 @@ namespace SciLean
 
 open Lean Elab Tactic
 
-theorem cderiv_as_fwdCDeriv {K} [IsROrC K] {X Y} [Vec K X] [Vec K Y]
+theorem cderiv_as_fwdCDeriv {K} [RCLike K] {X Y} [Vec K X] [Vec K Y]
   (f : X → Y)
   : cderiv K f
     =

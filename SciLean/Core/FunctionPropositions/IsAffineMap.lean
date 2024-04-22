@@ -201,7 +201,7 @@ namespace SciLean
 section OnFinVec
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {IX : Type} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
   {IY : Type} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
   {IZ : Type} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]

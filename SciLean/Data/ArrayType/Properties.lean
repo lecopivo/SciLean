@@ -12,7 +12,7 @@ open LeanColls
 section GenericArrayType
 
 variable
-  {K : Type} [IsROrC K]
+  {K : Type} [RCLike K]
   {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
   [ArrayType Cont Idx Elem] [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
 

@@ -14,7 +14,7 @@ open LeanColls
 namespace SciLean
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {ι κ : Type _}
   [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
   [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
@@ -119,7 +119,7 @@ class AddStruct (X I XI) [StructType X I XI] [Add X] [∀ i, Add (XI i)] : Prop 
 class SMulStruct (K X I XI) [StructType X I XI] [SMul K X] [∀ i, SMul K (XI i)] : Prop where
   structProj_smul : ∀ (i : I) (k : K) (x : X), structProj (k • x) i = k • structProj x i
 
-class VecStruct (K X I XI) [StructType X I XI] [IsROrC K] [Vec K X] [∀ i, Vec K (XI i)]
+class VecStruct (K X I XI) [StructType X I XI] [RCLike K] [Vec K X] [∀ i, Vec K (XI i)]
   extends ZeroStruct X I XI, AddStruct X I XI, SMulStruct K X I XI : Prop
   where
     structProj_continuous : Continuous (fun (x : X) (i : I) =>  structProj x i)
@@ -308,7 +308,7 @@ end VecStruct
 --------------------------------------------------------------------------------
 
 open StructType in
-class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [IsROrC K] [IndexType I]
+class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I]
   [LawfulIndexType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)]
   extends
     VecStruct K X I XI : Prop

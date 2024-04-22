@@ -4,7 +4,7 @@ namespace SciLean
 
 
 set_option linter.unusedVariables false in
-class RevDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ Type → Type) [Monad m] [Monad m'] where
+class RevDerivMonad (K : Type) [RCLike K] (m : Type → Type) (m' : outParam $ Type → Type) [Monad m] [Monad m'] where
   revDerivM {X : Type} {Y : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y] : ∀ (f : X → m Y) (x : X), m (Y × (Y → m' X))
 
   HasAdjDiffM {X : Type} {Y : Type} [SemiInnerProductSpace K X] [SemiInnerProductSpace K Y]
@@ -48,7 +48,7 @@ attribute [fun_trans] revDerivM
 attribute [fun_prop] HasAdjDiffM
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [RevDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
   {X : Type} [SemiInnerProductSpace K X]
@@ -210,7 +210,7 @@ section CoreFunctionProperties
 open SciLean
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {m m'} [Monad m] [Monad m'] [RevDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
   {X : Type} [SemiInnerProductSpace K X]

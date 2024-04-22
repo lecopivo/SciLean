@@ -7,7 +7,7 @@ set_option linter.unusedVariables false
 
 open SciLean
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
 
 -- This is not true but lets assume it for now
 instance [Vec K X] : Vec K (ForInStep X) := sorry
@@ -56,7 +56,7 @@ theorem ForInStep.return2_return2Inv_done {α β} (x : α × β)
 section OnVec
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
@@ -130,7 +130,7 @@ end OnVec
 section OnSemiInnerProductSpace
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]

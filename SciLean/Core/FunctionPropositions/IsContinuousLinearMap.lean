@@ -425,7 +425,7 @@ by
 section NormedSpace
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
 
@@ -444,7 +444,7 @@ end NormedSpace
 section InnerProductSpace
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module K X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
 

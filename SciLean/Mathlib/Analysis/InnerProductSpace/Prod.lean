@@ -54,9 +54,9 @@ instance instDist [Dist α] [Dist β] : Dist (α ×[p] β) where
 
 
 noncomputable
-instance instInner [IsROrC K]
+instance instInner [RCLike K]
   [Inner K α] [Inner K β] : Inner K (α ×₂ β) where
-  inner x y := Real.sqrt (IsROrC.re (@inner K _ _ x.1 y.1 + @inner K _ _ x.2 y.2))
+  inner x y := Real.sqrt (RCLike.re (@inner K _ _ x.1 y.1 + @inner K _ _ x.2 y.2))
 
 noncomputable
 instance instNorm
@@ -93,7 +93,7 @@ instance [NormedAddCommGroup α] [NormedAddCommGroup β]
   dist_eq := sorry_proof
 
 noncomputable
-instance [IsROrC K]
+instance [RCLike K]
   [NormedAddCommGroup α] [InnerProductSpace K α]
   [NormedAddCommGroup β] [InnerProductSpace K β]
   : InnerProductSpace K (α ×₂ β) where
@@ -107,7 +107,7 @@ instance [IsROrC K]
 
 -- -- TODO: move to mathlib
 -- instance
---   {K : Type _} [IsROrC K]
+--   {K : Type _} [RCLike K]
 --   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
 --   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
 --   : CompleteSpace (X × Y) := by infer_instance

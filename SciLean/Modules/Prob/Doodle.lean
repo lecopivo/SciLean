@@ -3,7 +3,7 @@ import Mathlib
 open MeasureTheory
 
 variable
-  {R} [IsROrC R]
+  {R} [RCLike R]
   {X} [MeasureSpace X]
   {Y} [NormedAddCommGroup Y] [NormedSpace R Y]
 

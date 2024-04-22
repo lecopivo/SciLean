@@ -8,7 +8,7 @@ open SciLean
 
 
 variable
-  {K : Type} [IsROrC K]
+  {K : Type} [RCLike K]
   {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
   {ρ : Type} {α : Type _} [ForIn m ρ α] [ForIn m' ρ α] {β : Type _}

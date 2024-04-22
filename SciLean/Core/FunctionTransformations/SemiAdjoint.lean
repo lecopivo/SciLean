@@ -6,7 +6,7 @@ open LeanColls
 namespace SciLean
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
@@ -67,7 +67,7 @@ theorem pi_rule
 open SciLean
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]

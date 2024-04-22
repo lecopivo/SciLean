@@ -3,7 +3,7 @@ import SciLean.Core.Vec
 
 namespace SciLean
 
-open IsROrC ComplexConjugate BigOperators
+open RCLike ComplexConjugate BigOperators
 
 section Inner
 
@@ -62,7 +62,7 @@ https://en.wikipedia.org/wiki/Fundamental_lemma_of_the_calculus_of_variations
 
 This also allows a definition of adjoint between two semi-inner product spaces, see `semiAdjoint`.
 -/
-class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X, Inner K X, TestFunctions X where
+class SemiInnerProductSpace (K : Type _) [RCLike K] (X : Type _) extends Vec K X, Inner K X, TestFunctions X where
   add_left : ∀ (x y z : X), (TestFunction x ∧ TestFunction y) ∨ TestFunction z →
     ⟪x + y, z⟫[K] = ⟪x, z⟫[K] + ⟪y, z⟫[K]
   smul_left : ∀ (x y : X) (r : K),   -- I thinkg here we do not need `TestFunction x ∨ TestFunction y`
@@ -70,7 +70,7 @@ class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X
   conj_sym : ∀ (x y : X),            -- I thinkg here we do not need `TestFunction x ∨ TestFunction y`
     conj ⟪y, x⟫[K] = ⟪x, y⟫[K]
   inner_pos : ∀ (x : X), TestFunction x →
-    IsROrC.re ⟪x, x⟫[K] ≥ (0 : ℝ) ∧ IsROrC.im ⟪x, x⟫[K] = 0
+    RCLike.re ⟪x, x⟫[K] ≥ (0 : ℝ) ∧ RCLike.im ⟪x, x⟫[K] = 0
   inner_ext : ∀ (x : X),
     ((x = 0) ↔ (∀ (ϕ : X), TestFunction ϕ → ⟪x, ϕ⟫[K] = 0))
   is_lin_subspace : VecProp K (X:=X) TestFunction
@@ -92,12 +92,12 @@ class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X
   --   2. ∀ t ∈ ℝ \ (-1,1), ⟪γ t, γ t⟫ = 0
 
 
-variable {K} [IsROrC K]
+variable {K} [RCLike K]
 
-instance {K} [IsROrC K] : Inner K K where
+instance {K} [RCLike K] : Inner K K where
   inner x y := conj x * y
 
-instance [IsROrC K] : TestFunctions K where
+instance [RCLike K] : TestFunctions K where
   TestFunction _ := True
 
 instance : SemiInnerProductSpace K K where

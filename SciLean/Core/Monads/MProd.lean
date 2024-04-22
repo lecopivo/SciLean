@@ -15,7 +15,7 @@ instance [SMul K X] [SMul K Y] : SMul K (MProd X Y) := ⟨fun k ⟨x,y⟩ => ⟨
 instance [Zero X] [Zero Y] : Zero (MProd X Y) := ⟨⟨0,0⟩⟩
 instance [TopologicalSpace X] [TopologicalSpace Y] : TopologicalSpace (MProd X Y) := sorry
 
-instance [IsROrC K] [Vec K X] [Vec K Y] : Vec K (MProd X Y) := Vec.mkSorryProofs
+instance [RCLike K] [Vec K X] [Vec K Y] : Vec K (MProd X Y) := Vec.mkSorryProofs
 
 
 section Simps
@@ -57,7 +57,7 @@ theorem MProd.neg_mk [Neg X] [Neg Y] (x : X) (y : Y)
 end Simps
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
 
 section OnVec
 

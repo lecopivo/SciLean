@@ -7,7 +7,7 @@ namespace SciLean
 set_option linter.unusedVariables false
 
 variable
-  {K : Type u} [IsROrC K]
+  {K : Type u} [RCLike K]
   {ι κ} [Index ι] [Index κ]
 
 section OnVec
@@ -19,7 +19,7 @@ variable
 example : Vec K (DataArrayN X ι) := by infer_instance
 
 -- #generate DataArrayN.reshape x
---   assume {K : Type} [IsROrC K] [Vec K α]
+--   assume {K : Type} [RCLike K] [Vec K α]
 --   IsDifferentible by sorry_proof
 --   IsLinearMap by sorry_proof
 --   IsLinearMap_simps
@@ -28,7 +28,7 @@ example : Vec K (DataArrayN X ι) := by infer_instance
 --   fwdCderiv by unfold cderiv; ftrans
 
 -- #generate DataArrayN.reshape x
---   assume {K : Type} [IsROrC K] [SemiInnerProductSpace K α]
+--   assume {K : Type} [RCLike K] [SemiInnerProductSpace K α]
 --   HasAdjoint by sorry_proof
 --   HasAdjDiff by constructor <;> fprop
 --   semiAdjoint :=
@@ -50,7 +50,7 @@ theorem DataArrayN.reshape.arg_x.IsLinearMap_rule_simple
 #generate_linear_map_simps SciLean.DataArrayN.reshape.arg_x.IsLinearMap_rule_simple
 
 #generate_fwdCDeriv DataArrayN.reshape x
-  assume {K : Type} [IsROrC K] [Vec K α]
+  assume {K : Type} [RCLike K] [Vec K α]
   prop_by sorry_proof
   trans_by
     rw[fwdCDeriv.comp_rule K (DataArrayN.reshape · κ hs) x (by sorry_proof) (by fprop)]

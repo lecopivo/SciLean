@@ -6,7 +6,7 @@ import SciLean.Core.NotationOverField
 namespace SciLean
 open LeanColls
 
-open IsROrC ComplexConjugate
+open RCLike ComplexConjugate
 
 /-- Square of L₂ norm over the field `K` -/
 class Norm2 (K X : Type _) where
@@ -121,7 +121,7 @@ https://en.wikipedia.org/wiki/Fundamental_lemma_of_the_calculus_of_variations
 
 This also allows a definition of adjoint between two semi-inner product spaces, see `semiAdjoint`.
 -/
-class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X, Inner K X, TestFunctions X, Norm2 K X where
+class SemiInnerProductSpace (K : Type _) [RCLike K] (X : Type _) extends Vec K X, Inner K X, TestFunctions X, Norm2 K X where
   add_left : ∀ (x y z : X), (TestFunction x ∧ TestFunction y) ∨ TestFunction z →
     ⟪x + y, z⟫[K] = ⟪x, z⟫[K] + ⟪y, z⟫[K]
   smul_left : ∀ (x y : X) (r : K),   -- I thinkg here we do not need `TestFunction x ∨ TestFunction y`
@@ -129,7 +129,7 @@ class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X
   conj_sym : ∀ (x y : X),            -- I thinkg here we do not need `TestFunction x ∨ TestFunction y`
     conj ⟪y, x⟫[K] = ⟪x, y⟫[K]
   inner_pos : ∀ (x : X), TestFunction x →
-    IsROrC.re ⟪x, x⟫[K] ≥ (0 : ℝ) ∧ IsROrC.im ⟪x, x⟫[K] = 0
+    RCLike.re ⟪x, x⟫[K] ≥ (0 : ℝ) ∧ RCLike.im ⟪x, x⟫[K] = 0
   inner_ext : ∀ (x : X),
     ((x = 0) ↔ (∀ (ϕ : X), TestFunction ϕ → ⟪x, ϕ⟫[K] = 0))
   is_lin_subspace : VecProp K (X:=X) TestFunction
@@ -154,17 +154,17 @@ class SemiInnerProductSpace (K : Type _) [IsROrC K] (X : Type _) extends Vec K X
 /-- Almost Hilbert space but does not have to be complete. It is only c∞-complete.
 
 The important property is that the norm `‖x‖₂` and inner product `⟪x,y⟫` is meaningful for any `x y : X`. For general semi-inner prodcut space the norm and inner product is well defined only for `x ∈ TestFunction`-/
-class SemiHilbert (K : Type _) [IsROrC K] (X : Type _) extends SemiInnerProductSpace K X where
+class SemiHilbert (K : Type _) [RCLike K] (X : Type _) extends SemiInnerProductSpace K X where
   test_functions_true : ∀ x, TestFunction x
 
-variable {K} [IsROrC K]
+variable {K} [RCLike K]
 
 def vecNormalize {R} (C) [Scalar R C] {X} [SemiHilbert C X] (x : X) : X := (‖x‖₂[C])⁻¹ • x
 
-instance {K} [IsROrC K] : Inner K K where
+instance {K} [RCLike K] : Inner K K where
   inner x y := conj x * y
 
-instance [IsROrC K] : TestFunctions K where
+instance [RCLike K] : TestFunctions K where
   TestFunction _ := True
 
 instance : SemiInnerProductSpace K K where
@@ -186,10 +186,10 @@ instance : SemiInnerProductSpace K K where
 instance : SemiHilbert K K where
   test_functions_true := by simp[TestFunction]
 
-instance {K} [IsROrC K] : Inner K Unit where
+instance {K} [RCLike K] : Inner K Unit where
   inner _ _ := 0
 
-instance [IsROrC K] : TestFunctions Unit where
+instance [RCLike K] : TestFunctions Unit where
   TestFunction _ := True
 
 instance : SemiInnerProductSpace K Unit where
@@ -206,7 +206,7 @@ instance : SemiHilbert K Unit where
   test_functions_true := by simp[TestFunction]
 
 -- Complete InnerProductSpace is SemiInnerProductSpace
-instance (priority:=low) [IsROrC K] [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
+instance (priority:=low) [RCLike K] [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   : SemiInnerProductSpace K X where
   scalar_wise_smooth := by sorry_proof
   TestFunction _ := True

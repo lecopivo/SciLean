@@ -117,7 +117,7 @@ instance : NormedAlgebra ℝ Float where
 instance : CompleteSpace Float where
   complete := sorry_proof
 
-instance : IsROrC Float where
+instance : RCLike Float where
   re := ⟨⟨fun x => floatToReal x, sorry_proof⟩, sorry_proof⟩
   im := ⟨⟨fun _ => 0, sorry_proof⟩, sorry_proof⟩
   I := 0
@@ -211,11 +211,11 @@ theorem conj_float  (a : Float)
 
 @[simp]
 theorem re_float  (a : Float)
-  : IsROrC.re a = a := by sorry_proof
+  : RCLike.re a = a := by sorry_proof
 
 open ComplexConjugate
 @[simp]
 theorem im_float  (a : Float)
-  : IsROrC.im a = (0 : Float) := sorry_proof
+  : RCLike.im a = (0 : Float) := sorry_proof
 
 instance : MeasureTheory.MeasureSpace Float := sorry

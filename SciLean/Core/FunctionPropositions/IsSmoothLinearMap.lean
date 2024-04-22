@@ -7,7 +7,7 @@ open LeanColls
 namespace SciLean
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
@@ -70,7 +70,7 @@ by
 open SciLean
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
@@ -218,7 +218,7 @@ namespace SciLean
 section OnFinVec
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {IX : Type _} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
   {IY : Type _} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
   {IZ : Type _} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]

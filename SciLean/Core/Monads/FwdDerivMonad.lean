@@ -3,7 +3,7 @@ import SciLean.Core.FunctionTransformations.FwdDeriv
 namespace SciLean
 
 set_option linter.unusedVariables false in
-class FwdDerivMonad (K : Type) [IsROrC K] (m : Type → Type) (m' : outParam $ Type → Type) [Monad m] [Monad m'] where
+class FwdDerivMonad (K : Type) [RCLike K] (m : Type → Type) (m' : outParam $ Type → Type) [Monad m] [Monad m'] where
   fwdDerivM {X : Type} {Y : Type} [Vec K X] [Vec K Y] : ∀ (f : X → m Y) (x dx : X), m' (Y × Y)
 
   CDifferentiableM {X : Type} {Y : Type} [Vec K X] [Vec K Y]
@@ -46,7 +46,7 @@ attribute [fun_trans] fwdDerivM
 
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
   {X : Type} [Vec K X]
@@ -204,7 +204,7 @@ section CoreFunctionProperties
 open SciLean
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {m m'} [Monad m] [Monad m'] [FwdDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
   {X : Type} [Vec K X]

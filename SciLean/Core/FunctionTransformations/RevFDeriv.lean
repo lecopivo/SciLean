@@ -11,7 +11,7 @@ open ContinuousLinearMap
 
 noncomputable
 def revFDeriv
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
   (f : X → Y) (x : X) : Y×(Y→X) :=
@@ -21,7 +21,7 @@ def revFDeriv
 namespace revFDeriv
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
   {Z : Type _} [NormedAddCommGroup Z] [InnerProductSpace K Z] [CompleteSpace Z]
@@ -255,7 +255,7 @@ end SciLean.revFDeriv
 open SciLean
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
   {Z : Type _} [NormedAddCommGroup Z] [InnerProductSpace K Z] [CompleteSpace Z]

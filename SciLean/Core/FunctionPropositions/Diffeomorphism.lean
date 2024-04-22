@@ -7,7 +7,7 @@ set_option linter.unusedVariables false
 open SciLean LeanColls
 
 variable
-  (K : Type _) [IsROrC K]
+  (K : Type _) [RCLike K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]

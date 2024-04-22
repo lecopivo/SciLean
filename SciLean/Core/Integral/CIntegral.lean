@@ -1,7 +1,7 @@
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 import Mathlib.MeasureTheory.Measure.Restrict
 import Mathlib.MeasureTheory.Measure.Dirac
-import Mathlib.Data.IsROrC.Basic
+import Mathlib.Data.RCLike.Basic
 -- import Mathlib.Analysis.LocallyConvex.Basic
 -- import Mathlib.Topology.Algebra.Module.LocallyConvex
 
@@ -227,7 +227,7 @@ section Differentiation
 variable
   {α} [MeasurableSpace α]
   {β} [MeasurableSpace β]
-  {R} [IsROrC R]
+  {R} [RCLike R]
   {X} [Vec R X] [Module ℝ X]
   {Y} [Vec R Y] [Module ℝ Y]
   {Z} [Vec R Z] [Module ℝ Z]

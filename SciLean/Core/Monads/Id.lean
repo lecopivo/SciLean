@@ -4,7 +4,7 @@ import SciLean.Core.Monads.RevDerivMonad
 namespace SciLean
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
 
 instance [Vec K X] : Vec K (Id X) := by unfold Id; infer_instance
 instance [SemiInnerProductSpace K X] : SemiInnerProductSpace K (Id X) := by unfold Id; infer_instance
@@ -49,7 +49,7 @@ open SciLean
 section OnVec
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type} [Vec K X]
   {Y : Type} [Vec K Y]
   {Z : Type} [Vec K Z]
@@ -71,7 +71,7 @@ end OnVec
 section OnSemiInnerProductSpace
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]

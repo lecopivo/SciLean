@@ -8,7 +8,7 @@ open MeasureTheory ENNReal BigOperators Finset
 namespace SciLean.Prob
 
 
--- instance [IsROrC R] [AddCommGroup M] [Module R M] : Module ℝ M := sorry
+-- instance [RCLike R] [AddCommGroup M] [Module R M] : Module ℝ M := sorry
 ----------------------------------------------------------------------------------------------------
 -- helpful Erased functions and instances ----------------------------------------------------------
 ----------------------------------------------------------------------------------------------------

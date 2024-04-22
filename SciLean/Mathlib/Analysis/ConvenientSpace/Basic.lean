@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Module.Basic
-import Mathlib.Data.IsROrC.Lemmas
+import Mathlib.Data.RCLike.Lemmas
 import Mathlib.Topology.Algebra.Module.LocallyConvex
 
 import SciLean.Util.SorryProof
@@ -54,7 +54,7 @@ class ConvenientAddGroup (X : Type _)
     TopologicalAddGroup X
 
 
-class ConvenientSpace (K : Type _) [IsROrC K] (X : Type _) [ConvenientAddGroup X]
+class ConvenientSpace (K : Type _) [RCLike K] (X : Type _) [ConvenientAddGroup X]
   extends
     Module K X,
     ContinuousSMul K X
@@ -69,7 +69,7 @@ class ConvenientSpace (K : Type _) [IsROrC K] (X : Type _) [ConvenientAddGroup X
 section CommonVectorSpaces
 
   -- variable {α β ι : Type u}
-  variable {K : Type _} [IsROrC K]
+  variable {K : Type _} [RCLike K]
   -- variable {U V} [Vec K U] [Vec K V]
   -- variable {E : ι → Type v}
 
@@ -115,4 +115,4 @@ section CommonVectorSpaces
       (toContinuousSMul := ContinuousSMul.mkSorryProofs)
       sorry_proof
 
-  instance [IsROrC K] : ConvenientAddGroup K := ⟨⟩
+  instance [RCLike K] : ConvenientAddGroup K := ⟨⟩

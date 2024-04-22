@@ -10,7 +10,7 @@ open LeanColls
 namespace SciLean
 
 variable
-  (K I : Type) [IsROrC K]
+  (K I : Type) [RCLike K]
   {W : Type} [SemiInnerProductSpace K W]
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
@@ -289,7 +289,7 @@ end SciLean
 open SciLean
 
 variable
-  {K : Type} [IsROrC K]
+  {K : Type} [RCLike K]
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]

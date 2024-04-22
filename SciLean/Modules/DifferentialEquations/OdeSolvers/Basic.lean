@@ -6,7 +6,7 @@ set_option linter.unusedVariables false
 namespace SciLean
 
 variable
-  {R : Type _} [IsROrC R]
+  {R : Type _} [RCLike R]
   {X : Type _} [Vec R X]
   {Y : Type _} [Vec R Y]
   {Z : Type _} [Vec R Z]

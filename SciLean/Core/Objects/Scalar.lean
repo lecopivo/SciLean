@@ -1,4 +1,4 @@
-import Mathlib.Data.IsROrC.Basic
+import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Complex.Exponential
 import Mathlib.Analysis.Complex.Basic
@@ -22,7 +22,7 @@ This class allows us to write code independent of particular implementation of r
 The main motivation for this class is to treat floating point numbers as real numbers but to minimize the impact of such unsoundness. We can write code with valid proofs and only at the last step before compilation provide inconsistent instance `Scalar Float Float`.
 
 An alternative approach to get executable code would be to add a custom compiler step which would replace every occurance of real or complex numbers with their floating point equivalent. Implementing such compiler step turned out to be quite a non-trivial task thus we are taking this type class approach. -/
-class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC K where
+class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends RCLike K where
   -- used for specification
   toComplex : K → ℂ
   toReal    : R → ℝ
@@ -37,10 +37,10 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
       toComplex (make x y) = ⟨toReal x, toReal y⟩
 
   real (x : K) : R
-  real_def : ∀ x, toReal (real x) = IsROrC.re (toComplex x)
+  real_def : ∀ x, toReal (real x) = RCLike.re (toComplex x)
 
   imag (x : K) : R
-  imag_def : ∀ x, toReal (imag x) = IsROrC.im (toComplex x)
+  imag_def : ∀ x, toReal (imag x) = RCLike.im (toComplex x)
 
   sin (x : K) : K
   sin_def : ∀ x, toComplex (sin x) = Complex.sin (toComplex x)
@@ -64,7 +64,7 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends IsROrC 
   sqrt_def : ∀ x,
     if ∀ y : K, im y = 0 then
       -- for reals
-      IsROrC.re (toComplex (sqrt x)) = Real.sqrt (IsROrC.re (toComplex x))
+      RCLike.re (toComplex (sqrt x)) = Real.sqrt (RCLike.re (toComplex x))
     else
       -- for complex
       toComplex (sqrt x) = (toComplex x).cpow (1/2)

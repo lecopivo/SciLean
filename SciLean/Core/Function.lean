@@ -21,7 +21,7 @@ section OnEnumType
 variable [EnumType ι]
 
 variable
-  {K : Type} [IsROrC K]
+  {K : Type} [RCLike K]
   {X : Type} [Vec K X]
   {Y : Type} [Vec K Y]
   {Z : Type} [Vec K Z]
@@ -153,7 +153,7 @@ def Function.foldl.revDeriv_dataArrayImpl_alt [Add α] [Add β] [PlainDataType �
 
 
 variable
-  {K : Type} [IsROrC K]
+  {K : Type} [RCLike K]
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
@@ -224,7 +224,7 @@ end OnIndexType
 section OnVec
 variable
   [Index ι]
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
@@ -256,7 +256,7 @@ section OnSemiInnerProductSpace
 
 variable
   [Index ι]
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]

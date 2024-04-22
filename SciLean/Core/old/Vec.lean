@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Module.Basic
-import Mathlib.Data.IsROrC.Lemmas
+import Mathlib.Data.RCLike.Lemmas
 import Mathlib.Topology.Algebra.Module.LocallyConvex
 
 
@@ -51,7 +51,7 @@ end Curve
 --                               |_|
 -- At the and we will use Convenient Vector Space. It is a special kind of topological vector space
 
-class Vec (K : Type _) [IsROrC K] (X : Type _)
+class Vec (K : Type _) [RCLike K] (X : Type _)
   extends
     AddCommGroup X,
     Module K X,
@@ -69,7 +69,7 @@ class Vec (K : Type _) [IsROrC K] (X : Type _)
 section CommonVectorSpaces
 
   variable {α β ι : Type u}
-  variable {K : Type _} [IsROrC K]
+  variable {K : Type _} [RCLike K]
   variable {U V} [Vec K U] [Vec K V]
   variable {E : ι → Type v}
 
@@ -100,7 +100,7 @@ section CommonVectorSpaces
   -- abbrev Vec.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [SMul K α] : Vec K α :=
   --   Vec.mk (toAddCommGroup := AddCommGroup.mkSorryProofs) (toModule := Module.mkSorryProofs (addcommgroup := AddCommGroup.mkSorryProofs))
 
-  instance [IsROrC K] : Vec K K where
+  instance [RCLike K] : Vec K K where
     scalar_wise_smooth := sorry
 
   instance [inst : Vec K U] : Vec K (α → U) :=
@@ -145,14 +145,14 @@ end CommonVectorSpaces
 
 section VecProp
 
-class VecProp (K : Type _) [IsROrC K] {X : Type _} [Vec K X] (P : X → Prop) : Prop where
+class VecProp (K : Type _) [RCLike K] {X : Type _} [Vec K X] (P : X → Prop) : Prop where
   add : ∀ x y, P x → P y → P (x + y)
   neg : ∀ x, P x → P (- x)
   smul : ∀ (r : K) x, P x → P (r • x)
   zero : P 0
 
 
-variable {K : Type _} [IsROrC K] {X : Type _} [Vec K X] {P : X → Prop} [inst : VecProp K P]
+variable {K : Type _} [RCLike K] {X : Type _} [Vec K X] {P : X → Prop} [inst : VecProp K P]
 
 instance : Add {x : X // P x} := ⟨λ x y => ⟨x.1 + y.1, inst.add x.1 y.1 x.2 y.2⟩⟩
 instance : Sub {x : X // P x} := ⟨λ x y => ⟨x.1 - y.1, by simp[sub_eq_add_neg]; apply inst.add; apply x.2; apply inst.neg; apply y.2⟩⟩

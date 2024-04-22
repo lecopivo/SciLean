@@ -25,14 +25,14 @@ def elabProof (goal : Expr) (tac : TSyntax ``tacticSeq) : TermElabM Expr := do
 
 /-- Returns `(id, u, K)` where `K` is infered field type with universe level `u`
 
-The index `id` tells that arguments `args[id:]` have already `K` in its local context with valid `IsROrC K` instances. -/
-def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × (K : Q(Type $u)) × Q(IsROrC $K))) := do
+The index `id` tells that arguments `args[id:]` have already `K` in its local context with valid `RCLike K` instances. -/
+def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × (K : Q(Type $u)) × Q(RCLike $K))) := do
 
   let mut K? : Option Expr := none
   for arg in args do
     let type ← inferType arg
 
-    if type.isAppOf ``IsROrC then
+    if type.isAppOf ``RCLike then
       K? := type.getArg! 0
       break
 
@@ -74,7 +74,7 @@ def getFieldOutOfContextQ (args : Array Expr) : MetaM (Option ((u : Level) × (K
 
   let .some K := K? | return none
   let .some ⟨u,K⟩ ← isTypeQ K | return none
-  let isROrC ← synthInstanceQ q(IsROrC $K)
+  let isROrC ← synthInstanceQ q(RCLike $K)
 
   return .some ⟨u,K,isROrC⟩
 

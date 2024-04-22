@@ -12,7 +12,7 @@ namespace ArrayType
 variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
 variable {Idx : Type _} [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
 
-variable {K : Type _} [IsROrC K]
+variable {K : Type _} [RCLike K]
 
 instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace Elem] : TopologicalSpace Cont where
   IsOpen := fun A => ∀ i, IsOpen (fun x : Elem => ∃ a ∈ A, a[i]=x)
@@ -176,11 +176,11 @@ instance [ArrayType Cont Idx Elem] [Add Elem] : AddStruct Cont Idx (fun _ => Ele
 instance {K} [ArrayType Cont Idx Elem] [SMul K Elem] : SMulStruct K Cont Idx (fun _ => Elem) where
   structProj_smul := by intro i k x; simp[HSMul.hSMul, SMul.smul]
 
-instance {K} [IsROrC K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Cont Idx (fun _ => Elem) where
+instance {K} [RCLike K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Cont Idx (fun _ => Elem) where
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof
 
-instance {K} [IsROrC K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] : SemiInnerProductSpaceStruct K Cont Idx (fun _ => Elem) where
+instance {K} [RCLike K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] : SemiInnerProductSpaceStruct K Cont Idx (fun _ => Elem) where
   inner_structProj := sorry_proof
   testFun_structProj := sorry_proof
 

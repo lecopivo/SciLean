@@ -10,7 +10,7 @@ variable {α α' β β' γ γ' : Type _}
   [IsomorphicType `RealToFloat β β']
   [IsomorphicType `RealToFloat γ γ']
 
-/-- This axiom is obviously contradictory. We use it to compile programs that were designed only for reals or proper fields. With this axiom we can plug `Float` to function that would only accept types that have instance of `IsROrC`
+/-- This axiom is obviously contradictory. We use it to compile programs that were designed only for reals or proper fields. With this axiom we can plug `Float` to function that would only accept types that have instance of `RCLike`
 
 -/
 axiom realFloatEquiv : ℝ ≃ Float

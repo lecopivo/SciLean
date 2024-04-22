@@ -4,7 +4,7 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-variable {R : Type _} [IsROrC R] {X : Type _} [Vec R X]
+variable {R : Type _} [RCLike R] {X : Type _} [Vec R X]
 
 set_default_scalar R
 
@@ -29,7 +29,7 @@ def odeSolve (f : R → X → X) (t₀ t : R) (x₀ : X) : X :=
 section OnVec
 
 variable
-  {R : Type _} [IsROrC R]
+  {R : Type _} [RCLike R]
   {W : Type _} [Vec R W]
   {X : Type _} [Vec R X]
   {Y : Type _} [Vec R Y]
@@ -110,7 +110,7 @@ end OnVec
 section OnSemiInnerProductSpace
 
 variable
-  {R : Type _} [IsROrC R]
+  {R : Type _} [RCLike R]
   {W : Type _} [SemiInnerProductSpace R W]
   {X : Type _} [SemiInnerProductSpace R X]
   {Y : Type _} [SemiInnerProductSpace R Y]

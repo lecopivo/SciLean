@@ -13,7 +13,7 @@ set_option linter.unusedVariables false
 namespace ContinuousLinearMap.adjoint
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
   {Z : Type _} [NormedAddCommGroup Z] [InnerProductSpace K Z] [CompleteSpace Z]
@@ -127,7 +127,7 @@ theorem pi_rule
 --------------------------------------------------------------------------------
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [InnerProductSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [InnerProductSpace K Y] [CompleteSpace Y]
   {Z : Type _} [NormedAddCommGroup Z] [InnerProductSpace K Z] [CompleteSpace Z]

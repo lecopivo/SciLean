@@ -16,7 +16,7 @@ import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 import SciLean.Core.FunctionPropositions.Differentiable
 
 variable
-  {K : Type _} [IsROrC K]
+  {K : Type _} [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
