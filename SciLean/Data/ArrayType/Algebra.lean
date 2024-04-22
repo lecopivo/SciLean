@@ -196,8 +196,23 @@ instance {K} [RCLike K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem]
 
 
 
+-- TODO: provide proper measurable structure by
+--       translating measurable structure from product type
+instance [ArrayType Cont Idx Elem] [MeasurableSpace Elem] : MeasurableSpace Cont where
+  MeasurableSet' := fun _ => True
+  measurableSet_empty := sorry_proof
+  measurableSet_compl := sorry_proof
+  measurableSet_iUnion := sorry_proof
 
-instance [ArrayType Cont Idx Elem] [MeasurableSpace Elem] : MeasurableSpace Cont := sorry
+-- TODO: provide proper measurable structure by
+--       translating measurable structure from product type
 open MeasureTheory in
 instance [ArrayType Cont Idx Elem] [MeasureSpace Elem] : MeasureSpace Cont where
-  volume := sorry
+  volume := {
+    measureOf := fun _ => 0
+    empty := sorry_proof
+    mono := sorry_proof
+    iUnion_nat := sorry_proof
+    m_iUnion := sorry_proof
+    trimmed := sorry_proof
+}

@@ -227,4 +227,23 @@ open ComplexConjugate
 theorem im_float  (a : Float)
   : RCLike.im a = (0 : Float) := sorry_proof
 
-instance : MeasureTheory.MeasureSpace Float := sorry
+
+-- TODO: provide proper measurable structure by
+--       translating measurable structure from reals via Scalar.toReal/ofReal
+instance : MeasurableSpace Float where
+ MeasurableSet' := fun _ => True
+ measurableSet_empty := sorry_proof
+ measurableSet_compl := sorry_proof
+ measurableSet_iUnion := sorry_proof
+
+-- TODO: provide proper measurable structure by
+--       translating measurable structure from reals via Scalar.toReal/ofReal
+instance : MeasureTheory.MeasureSpace Float where
+  volume := {
+    measureOf := fun _ => 0
+    empty := sorry_proof
+    mono := sorry_proof
+    iUnion_nat := sorry_proof
+    m_iUnion := sorry_proof
+    trimmed := sorry_proof
+}
