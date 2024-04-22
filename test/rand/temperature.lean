@@ -12,9 +12,9 @@ import SciLean.Core.Functions.Gaussian
 
 namespace SciLean
 
-open Rand MeasureTheory Set BigOperators
+open MeasureTheory Set BigOperators
 
-variable {R} [RealScalar R] [MeasureSpace R]
+variable {R} [RealScalar R] [MeasureSpace R] [PlainDataType R]
 
 set_default_scalar R
 
@@ -34,10 +34,3 @@ theorem _root_.PUnit.finrank [Semiring R] : FiniteDimensional.finrank R Unit = 0
 ----------------------------------------------------------------------------------------------------
 -- Variational Inference - Test 1 ------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
-
-def model1 (T : Rand R) : Rand (R×R) :=
-  let v ~ normal 0 1
-  if 0 ≤ v then
-    let obs ~ normal (1:R) 1
-  else
-    let obs ~ normal (-2:R) 1
