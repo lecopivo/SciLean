@@ -54,7 +54,7 @@ example
         let dy_2 := Prod.snd zdf dy_1.snd;
         (dy.fst, dy_1.fst, dy_2)) :=
 by
-  conv => lhs; autodiff; autodiff; autodiff
+  conv => lhs; autodiff
 
 
 example
@@ -72,7 +72,7 @@ example
         let dy_3 := Prod.snd zdf dy_2.snd;
         (dy.fst, dy_1.fst, dy_2.fst, dy_3)) :=
 by
-  conv => lhs; autodiff; autodiff; autodiff; autodiff
+  conv => lhs; autodiff
 
 
 
@@ -208,22 +208,23 @@ example
 by
   conv => lhs; autodiff
 
-#exit
 example
   : revDeriv K (fun (x : Fin 10 → K) => ∑ i, ‖x i‖₂²)
     =
-    fun x => (∑ i, ‖x i‖₂², fun dx i => 2 * dx * (x i)) :=
+    fun x => (∑ i, (x i)^2, fun dx i => 2 * dx * (x i)) :=
 by
-  conv => lhs; autodiff; simp
+  conv => lhs; autodiff
 
 example (A : Fin 5 → Fin 10 → K)
   : revDeriv K (fun (x : Fin 10 → K) => fun i => ∑ j, A i j * x j)
     =
     fun x => (fun i => ∑ j, A i j * x j, fun dy j => ∑ i, A i j * dy i) :=
 by
-  conv => lhs; autodiff; simp
+  conv => lhs; autodiff
 
 variable [PlainDataType K]
+
+#exit
 
 example
   : revDeriv K (fun (x : K^[Fin 10]) => fun i => x[i])

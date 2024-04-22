@@ -5,6 +5,7 @@ import SciLean.Core.Rand.Distributions.Sphere
 import SciLean.Core.Rand.Distributions.Uniform
 import SciLean.Core.Rand.Distributions.UniformI
 import SciLean.Core.Rand.Distributions.WalkOnSpheres
+import SciLean.Core.Rand.ExpectedValue
 import SciLean.Core.Rand.Model
 import SciLean.Core.Rand.PushPullExpectation
 import SciLean.Core.Rand.Rand

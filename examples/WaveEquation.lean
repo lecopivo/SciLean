@@ -5,10 +5,10 @@ import SciLean.Modules.DifferentialEquations
 
 open SciLean
 
-variable {n : Nat} [Nonempty (Fin n)]
+variable {n : Nat}
 
 set_option synthInstance.maxSize 20000
-open NotationOverField
+
 set_default_scalar Float
 
 -- set_option trace.Meta.synthInstance true in
@@ -21,7 +21,7 @@ def H (m k : Float) (x p : Float^[n]) : Float :=
 --   prop_by unfold H; fprop
 --   trans_by unfold H; ftrans; ftrans; ftrans
 
-
+set_option trace.Meta.Tactic.fun_trans true in
 approx solver (m k : Float)
   :=  odeSolve (λ t (x,p) => ( ∇ (p':=p), H (n:=n) m k x p',
                               -∇ (x':=x), H (n:=n) m k x' p))

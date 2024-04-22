@@ -1,5 +1,7 @@
 import SciLean
 
+#exit
+
 import SciLean.Core.Rand.ExpectedValue
 
 import SciLean.Core.Distribution.Basic
