@@ -1,5 +1,6 @@
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ListN
+import Std.Lean.Expr
 import Qq
 
 
@@ -30,8 +31,26 @@ open Lean.TSyntax.Compat in
 
 -- The `by exact` is a hack to make certain case work
 --    see: https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/uncurry.20fails.20with.20.60Icc.60
-open Term Function in
-macro "⊞ " xs:funBinder* " => " b:term:51 : term => `(introElemNotation (HasUncurry.uncurry (by exact (fun $xs* => $b))))
+open Term Function Lean Elab Term Meta in
+elab "⊞ " xs:funBinder* " => " b:term:51 : term => do
+  let fn ← elabTerm (← `(fun $xs* => $b)) none
+  let arity := (← inferType fn).forallArity
+
+  -- uncurry if necessary
+  let fn :=
+    if arity = 1 then
+      fn
+    else
+      (← mkAppM ``HasUncurry.uncurry #[fn])
+
+  let .some (Idx, Elem) := (← inferType fn).arrow? | throwError "⊞: expected function type"
+
+  let Cont ← mkAppOptM ``arrayTypeCont #[Idx, Elem, none, none]
+  let Cont := Cont.getRevArg! 1
+
+  mkAppOptM ``Indexed.ofFn #[Cont, Idx, Elem, none, fn]
+
+
 
 
 @[app_unexpander introElemNotation]
@@ -44,46 +63,57 @@ def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
 -- Notation: ⊞[1,2,3] --
 ------------------------
 
-syntax (name:=arrayTypeLiteral) " ⊞[" term,* "] " : term
-
---- ListN.toArrayType (arrayTypeCont (Fin $n) (typeOf $x)) [$x,$xs,*]'
-
-open Lean Meta Elab Term Qq
-elab_rules (kind:=arrayTypeLiteral) : term
- | `(⊞[ $x:term ]) => do
-   let x ← elabTerm x none
-   let Elem ← inferType x
-   unless Elem.hasMVar do throwPostpone
-   let Cont ← mkFreshTypeMVar
-   let cls := mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[Cont, q(Fin 1), Elem]
-   let _ ← synthInstance cls
-   let array ← mkAppOptM ``Indexed.ofFn #[Cont, none, none, none, Expr.lam `i q(Fin 1) x default]
-   return array
- | `(⊞[ $x:term, $xs:term,* ]) => do
-   let arr ← elabTerm (← `(#[$x,$xs,*])) none
-   let n := Expr.lit (.natVal (xs.getElems.size + 1))
-   let x ← elabTerm x none
-   let Elem ← inferType x
-   unless Elem.hasMVar do throwPostpone
-   let Idx ← mkAppM ``Fin #[n]
-   let Cont ← mkFreshTypeMVar
-   let cls := mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[Cont, Idx, Elem]
-   let _ ← synthInstance cls
-   let f ← withLocalDeclD `i Idx fun i => do
-     mkLambdaFVars #[i] (← mkAppM ``Array.get #[arr,i])
-   let array ← mkAppOptM ``Indexed.ofFn #[Cont, none, none, none, f]
-   return array
+/-- A notation for creating a `DataArray` from a list of elements. -/
+syntax (name := dataArrayNotation) (priority:=high)
+  "⊞[" ppRealGroup(sepBy1(ppGroup(term,+,?), ";", "; ", allowTrailingSep)) "]" : term
 
 
-@[app_unexpander Array.toArrayType]
-def unexpandArrayToArrayType : Lean.PrettyPrinter.Unexpander
-  | `($(_) #[$ys,*] $_*) =>
-    `(⊞[$ys,*])
-  | _  => throw ()
+open Lean Qq Elab Term in
+/-- Elaborate a `⊞[...]` notation into a `Indexed.ofFn` term. -/
+elab_rules (kind := dataArrayNotation) : term
+  | `(⊞[$[$[$rows],*];*]) => do
+    let m := rows.size
+    let n := if h : 0 < m then rows[0].size else 0
+    let elems := rows.flatten
 
--- variable {CC : USize → Type} [∀ n, ArrayType (CC n) (Idx n) Float] [∀ n, ArrayTypeNotation (CC n) (Idx n) Float]
--- #check [1.0,2.0,3.0]'.toArrayType (CC 3)
--- #check ⊞[1.0,2.0,3.0]
+    -- check dimenstions
+    for row in rows do
+      if row.size ≠ n then
+        throwErrorAt (mkNullNode row) s!"\
+          Rows must be of equal length; this row has {row.size} items, \
+          the previous rows have {n}"
+
+    let n := Syntax.mkNumLit (toString n)
+    let m := Syntax.mkNumLit (toString rows.size)
+
+    let Idx ←
+      if rows.size = 1 then
+        `(Fin $n)
+      else
+        `(Fin $m × Fin $n)
+
+    let dataArray := mkIdent `DataArrayN
+    let fn ←
+      elabTerm (←`(@Indexed.ofFn.{_,_,_,0} ($dataArray _ _) _ _ _
+                    fun (i : $Idx) => [$elems,*].get! (IndexType.toFin.{_,0} i))) none
+
+    return fn
+
+
+/-- Unexpander for `⊞[...]` and `⊞ i => ...` notation.
+
+TODO: support matrix literals -/
+@[app_unexpander LeanColls.Indexed.ofFn] def unexpandIndexedOfFn : Lean.PrettyPrinter.Unexpander
+  | `($(_) $f) =>
+    match f with
+    | `(fun $_ => List.get! [$xs,*] $_) =>
+      `(⊞[$xs,*])
+    | `(fun $i => $b) =>
+      `(⊞ $i => $b)
+    | _ =>
+      throw ()
+  | _ => throw ()
+
 
 
 -- Notation: Float ^ Idx n --
@@ -189,6 +219,7 @@ elab_rules (kind:=typeIntPower) : term
   let C ← mkFreshTypeMVar
   let inst ← synthInstance <| mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[C,Y,X]
   let C ← whnfR (← instantiateMVars C)
-  return ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,C,inst]
+  let result ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,C,inst]
+  return result.getRevArg! 1
 
 end ArrayType.PowerNotation

@@ -5,6 +5,7 @@ import SciLean.Util.RewriteBy
 import SciLean.Tactic.Autodiff
 import SciLean.Tactic.LetEnter
 import SciLean.Tactic.LetUtils
+import SciLean.Core
 
 import SciLean.Core.Notation.RevCDeriv
 

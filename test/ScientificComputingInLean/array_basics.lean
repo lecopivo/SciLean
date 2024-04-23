@@ -1,21 +1,37 @@
-import SciLean
+import SciLean.Data.DataArray
+import Mathlib
 
-open SciLean
+open SciLean LeanColls
 
-#exit
 
 def dot {n : Nat} (x y : Float^[n]) : Float := ∑ i, x[i] * y[i]
 
--- todo: make this working!!!s
+/--
+info: ⊞[1.000000, 1.000000]
+-/
+#guard_msgs in
 #eval ⊞[1.0,1.0]
 
+/--
+info: 2.000000
+-/
+#guard_msgs in
 #eval dot ⊞[1.0,1.0] ⊞[1.0,1.0]
 
--- todo: fix error message
-#eval dot ⊞[1.0,1.0] ⊞[1.0,1.0,1.0]
+/--
+warning: application type mismatch
+  dot ⊞[1.0, 1.0] ⊞[1.0, 1.0, 1.0]
+argument
+  ⊞[1.0, 1.0, 1.0]
+has type
+  DataArrayN Float (Fin 3) : Type
+but is expected to have type
+  DataArrayN Float (Fin 2) : Type
+-/
+#guard_msgs in
+#check_failure dot ⊞[1.0,1.0] ⊞[1.0,1.0,1.0]
 
-
-def u :=  ⊞[(1.0 : Float), 2.0]
+def u :=  ⊞[1.0, 2.0]
 
 #eval u[0]
 #eval u[1]

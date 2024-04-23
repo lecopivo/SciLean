@@ -19,6 +19,7 @@ variable
   {Y} [SemiHilbert R Y] -- [Module ℝ Y]
   {Z} [SemiHilbert R Z] -- [Module ℝ Z]
 
+
 set_default_scalar R
 
 
