@@ -19,6 +19,10 @@ import SciLean.Core.Functions.Exp
 import SciLean.Core.Functions.Trigonometric
 import SciLean.Core.Functions.Pow
 
+
+import SciLean.Tactic.DeduceBy
+import SciLean.Tactic.RefinedSimp
+
 -- import SciLean.Core.Meta.GenerateRevDeriv
 -- import SciLean.Core.Meta.GenerateRevCDeriv
 -- import SciLean.Core.Meta.GenerateFwdCDeriv
