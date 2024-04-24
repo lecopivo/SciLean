@@ -1052,7 +1052,7 @@ end SMulOnSemiHilbert
 
 @[fun_trans]
 theorem HDiv.hDiv.arg_a0a1.revDeriv_rule
-    (f g : X → K) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : fpropParam (∀ x, g x ≠ 0)) :
+    (f g : X → K) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) (hx : ∀ x, g x ≠ 0) :
     (revDeriv K fun x => f x / g x)
     =
     fun x =>

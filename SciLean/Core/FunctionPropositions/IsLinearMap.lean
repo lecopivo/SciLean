@@ -3,9 +3,6 @@ import Mathlib.Algebra.Module.Prod
 import Mathlib.LinearAlgebra.Prod
 import SciLean.Core.Objects.FinVec
 
-import SciLean.Tactic.FProp.Basic
-import SciLean.Tactic.FProp.Notation
-
 import SciLean.Core.Meta.GenerateLinearMapSimp
 
 set_option linter.unusedVariables false
