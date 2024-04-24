@@ -11,28 +11,66 @@ variable {K} [RealScalar K]
 
 set_default_scalar K
 
+/-- info: ∂ x, x * x : K → K -/
+#guard_msgs in
 #check ∂ (fun x : K => x*x)
+
+/-- info: ∂ (x:=1), x * x : K -/
+#guard_msgs in
 #check ∂ (fun x => x*x) 1
+
+/-- info: ∂ (x:=1), x * x : K -/
+#guard_msgs in
 #check ∂ (x:=(1:K)), x*x
+
+
+/-- info: ∂ (x:=1), x * x : K -/
+#guard_msgs in
 #check ∂ (x:=1), x*x
+/-- info: ∂ (x:=0.1), x * x : K -/
+#guard_msgs in
 #check ∂ (x:=0.1), x*x
+/-- info: ∂ x, x * x : K → K -/
+#guard_msgs in
+#check ∂ (x:K), x*x
+/-- info: ∂ (x:=(1, 2)), (x + x) : K × K → K × K -/
+#guard_msgs in
 #check ∂ (x:=((1:K),(2:K))), (x + x)
+/--
+info: let df := ∂ (x:=(0, 0)), (x.1 + x.2 * x.1);
+df (0, 0) : K
+-/
+#guard_msgs in
 #check
   let df := ∂ (fun x : K×K => (x.1 + x.2*x.1)) (0,0)
   df (0,0)
 
 
+/-- info: fun t => 2 * t : K → K -/
+#guard_msgs in
 #check ∂! (fun x : K => x^2)
+/-- info: fun x dx => dx + dx : K × K → K × K → K × K -/
+#guard_msgs in
 #check ∂! (fun x : K×K => x + x)
+/-- info: 1 + 1 : K -/
+#guard_msgs in
 #check ∂! (fun x => x*x) 1
+/-- info: fun dx => dx + dx : K × K → K × K -/
+#guard_msgs in
 #check ∂! (x:=((1:K),(2:K))), (x + x)
+/-- info: 1 + 1 : K -/
+#guard_msgs in
 #check ∂! (x:=1), x*x
 
 
+/-- info: ∂ x, x * x = fun x => x + x : Prop -/
+#guard_msgs in
 #check ((∂ (fun x : K => x*x)) = (fun x => x + x))
 
 variable {X} [Vec K X] (f : X → X)
 
+/-- info: ∂ (x:=0), f x : X → X -/
+#guard_msgs in
 #check ∂ (x:=0), f x
 
 set_default_scalar Float
@@ -49,15 +87,32 @@ set_default_scalar Float
 
 set_default_scalar K
 
+/-- info: ∇ x, x.1 : K × K → K × K -/
+#guard_msgs in
 #check ∇ x : (K×K), x.1
+/-- info: ∇ x, x.1 : K × K → K × K -/
+#guard_msgs in
 #check ∇! x : (K×K), x.1
+/-- info: ∇ x, x.2 : K × K → K × K -/
+#guard_msgs in
 #check ∇! x : (K×K), x.2
 
 variable (y : K × K)
 
+/-- info: ∇ (x:=y), (x + x) : K × K → K × K -/
+#guard_msgs in
 #check ∇ (x:=y), (x + x)
+/-- info: ∇ x, x : K → K -/
+#guard_msgs in
+#check ∇ (x :K), x
+/-- info: ∇ (x:=y), (x + x) : K × K → K × K -/
+#guard_msgs in
 #check ∇ (fun x => x + x) y
+/-- info: ∇ (x:=(1.0, 2.0)), (x + x) : K × K → K × K -/
+#guard_msgs in
 #check ∇ (fun x => x + x) ((1.0,2.0) : K×K)
+/-- info: ∇ x, ⟪x, (1, 0)⟫_K : K × K → K × K -/
+#guard_msgs in
 #check (∇! x : (K×K), ⟪x,(1,0)⟫)
 
 
@@ -75,16 +130,40 @@ set_default_scalar Float
 
 set_default_scalar K
 
-#check ∂>! x : K×K, (x.1 + x.2*x.1)
-#check ∂>! x:=(1:K);2, (x + x*x)
+/-- info: fun x dx => (x.1 + x.2 * x.1, dx.1 + (dx.1 * x.2 + dx.2 * x.1)) : K × K → K × K → K × K -/
+#guard_msgs in
+#check (∂>! x : K×K, (x.1 + x.2*x.1)) rewrite_by dsimp
+/-- info: (1 + 1, 2 + (2 + 2)) : K × K -/
+#guard_msgs in
+#check (∂>! x:=(1:K);2, (x + x*x)) rewrite_by dsimp
+/--
+info: let a := ∂> x, (x.1 + x.2 * x.1);
+a (0, 0) : K × K → K × K
+-/
+#guard_msgs in
 #check
   let a := ∂> (fun x : K×K => (x.1 + x.2*x.1))
   a (0,0)
+
+
+/-- info: ∂> x, (x + x * x) : K → K → K × K -/
+#guard_msgs in
+#check ∂> (x:K), (x + x*x)
 
 
 --------------------------------------------------------------------------------
 
 set_default_scalar K
 
-#check <∂! x : K×K, (x.1 + x.2*x.1)
-#check <∂! x:=(1:K), (x + x*x)
+/--
+info: fun x => (x.1 + x.2 * x.1, fun dy => (dy + x.2 * dy, x.1 * dy)) : K × K → K × (K → K × K)
+-/
+#guard_msgs in
+#check (<∂! x : K×K, (x.1 + x.2*x.1)) rewrite_by dsimp
+/-- info: (1 + 1, fun dy => dy + dy + dy) : K × (K → K) -/
+#guard_msgs in
+#check (<∂! x:=(1:K), (x + x*x)) rewrite_by dsimp
+
+/-- info: <∂ x, (x + x * x) : K → K × (K → K) -/
+#guard_msgs in
+#check <∂ (x:K), (x + x*x)
