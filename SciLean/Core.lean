@@ -22,6 +22,7 @@ import SciLean.Core.Functions.Pow
 
 import SciLean.Tactic.InferVar
 import SciLean.Tactic.RefinedSimp
+import SciLean.Tactic.OptimizeIndexAccess
 
 -- import SciLean.Core.Meta.GenerateRevDeriv
 -- import SciLean.Core.Meta.GenerateRevCDeriv

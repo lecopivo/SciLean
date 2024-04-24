@@ -14,14 +14,20 @@ The class `FinVec ι K X` guarantees that any element `x : X` can be writtens as
 ```
 -/
 class Basis (ι : outParam $ Type v) (K : outParam $ Type w) (X : Type u)  where
+  /-- i-th basis vector
+
+  Taking inner product with `basis i` and calling `dualProj i` is equal on `FinVec ι K X` -/
   basis (i : ι) : X
+  /-- projection of `x` onto i-th basis vector `basis i`
+
+  Taking inner product with `dualBasis i` and calling `proj i` is equal on `FinVec ι K X` -/
   proj  (i : ι) (x : X) : K
 
 /-- Dual basis of the space `X` over the field `K` indexed by `ι`
 
 The class `FinVec ι K X` guarantees that any element `x : X` can be writtens as:
 ```
-∑ i, proj i x • basis i
+∑ i, dualProj i x • dualBasis i
 ```
 and that it is dual to the normal basis
 ```
@@ -29,15 +35,20 @@ and that it is dual to the normal basis
 ```
 -/
 class DualBasis (ι  : outParam $ Type v) (K : outParam $ Type w) (X : Type u) where
+  /-- i-th dual basis vector
+
+  Taking inner product with `dualBasis i` and calling `proj i` is equal on `FinVec ι K X` -/
   dualBasis (i : ι) : X
+  /-- projection of `x` onto i-th dual basis vector `dualBasis i`
+
+  Taking inner product with `basis i` and calling `dualProj i` is equal on `FinVec ι K X` -/
   dualProj  (i : ι) (x : X) : K
 
-/-- This should somehow relate to raising and lowering indices but I forgot how.
-
-TODO: add explanation why this is useful
--/
+/-- Duality between basis and dual basis -/
 class BasisDuality (X : Type u) where
+  /-- transforms the space `X` such that it transforms basis vectors to dual basis vectors -/
   toDual   (x : X) : X  -- transforms basis vectors to dual basis vectors
+  /-- transforms the space `X` such that it transforms dual basis vectors to basis vectors -/
   fromDual (x : X) : X  -- transforma dual basis vectors to basis vectors
 
 section Basis
@@ -121,12 +132,12 @@ section Basis
 
 end Basis
 
+/-- Predicate stating that the basis is orthonormal -/
 class OrthonormalBasis (ι K X : Type _) [Semiring K] [Basis ι K X] [Inner K X] : Prop where
   is_orthogonal : ∀ i j, i ≠ j → ⟪ⅇ[X] i, ⅇ j⟫[K] = 0
   is_orthonormal : ∀ i, ⟪ⅇ[X] i, ⅇ i⟫[K] = 1
 
-/--
- -/
+/-- Finite dimensional vector space over `K` with a basis indexed by `ι` -/
 class FinVec (ι : outParam $ Type _) (K : Type _) (X : Type _) [outParam $ IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [RCLike K] extends SemiHilbert K X, Basis ι K X, DualBasis ι K X, BasisDuality X where
   is_basis : ∀ x : X, x = ∑ i : ι, ℼ i x • ⅇ[X] i
   duality : ∀ i j, ⟪ⅇ[X] i, ⅇ'[X] j⟫[K] = if i=j then 1 else 0
@@ -152,11 +163,13 @@ by
 variable {ι K X} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [RCLike K] [FinVec ι K X]
 
 
-instance (priority:=low) : GetElem X ι K (fun _ _ => True) where
+namespace FinVec
+scoped instance (priority:=low) : GetElem X ι K (fun _ _ => True) where
   getElem x i _ := ℼ i x
 
-instance (priority:=low) : GetElem X ℕ K (fun _ i => i < IndexType.card ι) where
+scoped instance (priority:=low) : GetElem X ℕ K (fun _ i => i < IndexType.card ι) where
   getElem x i h := ℼ (IndexType.fromFin ⟨i,h⟩) x
+end FinVec
 
 @[simp]
 theorem inner_basis_dualBasis (i j : ι)

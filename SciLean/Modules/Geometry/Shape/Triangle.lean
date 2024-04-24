@@ -18,11 +18,11 @@ variable
 
 set_default_scalar R
 
-instance : GetElem X ι R (fun _ _ => True) where
-  getElem x i _ := ℼ i x
+-- instance : GetElem X ι R (fun _ _ => True) where
+--   getElem x i _ := ℼ i x
 
-instance : GetElem X ℕ R (fun _ i => i < IndexType.card ι) where
-  getElem x i h := ℼ (IndexType.fromFin ⟨i,h⟩) x
+-- instance : GetElem X ℕ R (fun _ i => i < IndexType.card ι) where
+--   getElem x i h := ℼ (IndexType.fromFin ⟨i,h⟩) x
 
 
 variable (R) (X)

@@ -18,6 +18,8 @@ inductive ArgGuard where
   | notId
   /-- Argument can't be constant function -/
   | notConst
+  /-- Argument can't be application of `name` -/
+  | notAppOf (name : Name)
   deriving Inhabited, BEq, Repr
 
 
@@ -157,6 +159,12 @@ def theoremGuard (e : Expr) (thm : RefinedSimpTheorem) : MetaM Bool := do
                           {← ppExpr e} bacause {← ppExpr x} is constant function"
           return false
 
+      | .notAppOf n =>
+        if x.isAppOf n then
+          trace[Meta.Tactic.simp.guard] "not applying {← ppOrigin thm.origin} to \
+                          {← ppExpr e} bacause {← ppExpr x} is application of {n}"
+          return false
+        continue
     return true
   else
     return false

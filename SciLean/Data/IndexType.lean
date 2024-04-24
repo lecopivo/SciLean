@@ -1,5 +1,6 @@
 import LeanColls
 import SciLean.Util.SorryProof
+import SciLean.Tactic.RefinedSimp
 
 open LeanColls
 
@@ -87,6 +88,7 @@ instance (P : ι → Prop) [∀ i : ι, Decidable (P i)] : Decidable (∀ i : ι
       return .isFalse sorry_proof
   return .isTrue sorry_proof
 
+
 @[specialize] def sum {α : Type u} [Zero α] [Add α] (f : ι → α) : α :=
   Fold.fold (β:=α) (C:=IndexType.Univ ι) (τ:=ι) (IndexType.univ ι) (fun (s : α) (i : ι) => s + f i) (0 : α)
 
@@ -153,3 +155,20 @@ macro " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplic
   | `($(_) fun ($x:ident : $ty:term) => $b) =>
     `(∏ ($x:ident : $ty), $b)
   | _  => throw ()
+
+
+
+open IndexType
+@[rsimp guard I .notAppOf ``Fin]
+theorem fold_linearize {I X : Type _} [IndexType I] [LawfulIndexType I] (init : X) (f : X → I → X) :
+    Fold.fold (IndexType.univ I) f init
+    =
+    Fold.fold (IndexType.univ (Fin (IndexType.card I))) (fun x i => f x (IndexType.fromFin i)) init := sorry_proof
+
+
+open IndexType in
+@[rsimp guard I .notAppOf ``Fin]
+theorem sum_linearize {I X : Type _} [Add X] [Zero X] [IndexType I] [LawfulIndexType I] (f : I → X) :
+    ∑ i, f i
+    =
+    ∑ i : Fin (card I), f (fromFin i) := by simp only [sum]; rw[fold_linearize]
