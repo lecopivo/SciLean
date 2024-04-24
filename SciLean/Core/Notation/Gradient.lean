@@ -45,17 +45,19 @@ elab_rules (kind:=gradNotation1) : term
     throwUnsupportedSyntax
 
 macro_rules
-| `(∇ $x:ident, $f)              => `(∇ fun $x => $f)
-| `(∇ $x:ident : $type:term, $f) => `(∇ fun $x : $type => $f)
-| `(∇ $x:ident := $val:term, $f) => `(∇ (fun $x => $f) $val)
-| `(∇ ($b:diffBinder), $f)       => `(∇ $b, $f)
+| `(∇ $x:term, $f)              => `(∇ fun $x => $f)
+| `(∇ $x:term : $type:term, $f) => `(∇ fun $x : $type => $f)
+| `(∇ $x:term := $val:term, $f) => `(∇ (fun $x => $f) $val)
+-- with brackets
+| `(∇ ($x:term := $val:term), $f) => `(∇ (fun $x => $f) $val)
 
 macro_rules
 | `(∇! $f)                        => `((∇ $f) rewrite_by dsimp (config:={zeta:=false}) [gradient, scalarGradient]; autodiff; autodiff; autodiff)
-| `(∇! $x:ident, $f)              => `(∇! fun $x => $f)
-| `(∇! $x:ident : $type:term, $f) => `(∇! fun $x : $type => $f)
-| `(∇! $x:ident := $val:term, $f) => `(∇! (fun $x => $f) $val)
-| `(∇! ($b:diffBinder), $f)       => `(∇! $b, $f)
+| `(∇! $x:term, $f)              => `(∇! fun $x => $f)
+| `(∇! $x:term : $type:term, $f) => `(∇! fun $x : $type => $f)
+| `(∇! $x:term := $val:term, $f) => `(∇! (fun $x => $f) $val)
+-- with brackets
+| `(∇! ($x:term := $val:term), $f) => `(∇! (fun $x => $f) $val)
 
 @[app_unexpander gradient] def unexpandGradient : Lean.PrettyPrinter.Unexpander
 

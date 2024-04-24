@@ -27,18 +27,21 @@ elab_rules : term
 --   elabTerm (← `(revDerivEval $K (fun $x => $b) $val $codir)) none
 
 macro_rules
-| `(<∂ $x:ident, $b) => `(<∂ (fun $x => $b))
-| `(<∂ $x:ident := $val:term, $b) => `(<∂ (fun $x => $b) $val)
-| `(<∂ $x:ident : $type:term, $b) => `(<∂ fun $x : $type => $b)
-| `(<∂ ($b:diffBinder), $f)       => `(<∂ $b, $f)
+| `(<∂ $x:term, $b) => `(<∂ (fun $x => $b))
+| `(<∂ $x:term : $type:term, $b) => `(<∂ fun $x : $type => $b)
+| `(<∂ $x:term := $val:term, $b) => `(<∂ (fun $x => $b) $val)
+-- with brackets
+| `(<∂ ($x:term := $val:term), $b) => `(<∂ (fun $x => $b) $val)
+
 
 macro_rules
 | `(<∂! $f $xs*) => `((<∂ $f $xs*) rewrite_by autodiff)
 | `(<∂! $f) => `((<∂ $f) rewrite_by autodiff)
-| `(<∂! $x:ident, $b) => `(<∂! (fun $x => $b))
-| `(<∂! $x:ident := $val:term, $b) => `(<∂! (fun $x => $b) $val)
-| `(<∂! $x:ident : $type:term, $b) => `(<∂! fun $x : $type => $b)
-| `(<∂! ($b:diffBinder), $f)       => `(<∂! $b, $f)
+| `(<∂! $x:term, $b) => `(<∂! (fun $x => $b))
+| `(<∂! $x:term : $type:term, $b) => `(<∂! fun $x : $type => $b)
+| `(<∂! $x:term := $val:term, $b) => `(<∂! (fun $x => $b) $val)
+-- with brackets
+| `(<∂! ($x:term := $val:term), $b) => `(<∂! (fun $x => $b) $val)
 
 
 @[app_unexpander revDeriv] def unexpandRevDeriv : Lean.PrettyPrinter.Unexpander

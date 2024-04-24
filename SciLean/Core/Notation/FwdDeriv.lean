@@ -27,21 +27,25 @@ elab_rules : term
 
 
 macro_rules
-| `(∂> $x:ident, $b) => `(∂> (fun $x => $b))
-| `(∂> $x:ident := $val:term, $b) => `(∂> (fun $x => $b) $val)
-| `(∂> $x:ident : $type:term, $b) => `(∂> fun $x : $type => $b)
-| `(∂> $x:ident := $val:term ; $dir:term, $b) => `(∂> (fun $x => $b) $val $dir)
-| `(∂> ($b:diffBinder), $f)       => `(∂> $b, $f)
+| `(∂> $x:term, $b) => `(∂> (fun $x => $b))
+| `(∂> $x:term := $val:term, $b) => `(∂> (fun $x => $b) $val)
+| `(∂> $x:term : $type:term, $b) => `(∂> fun $x : $type => $b)
+| `(∂> $x:term := $val:term ; $dir:term, $b) => `(∂> (fun $x => $b) $val $dir)
+-- with brackets
+| `(∂> ($x:term := $val:term), $b) => `(∂> (fun $x => $b) $val)
+| `(∂> ($x:term := $val:term; $dir:term), $b) => `(∂> (fun $x => $b) $val $dir)
 
 
 macro_rules
 | `(∂>! $f $xs*) => `((∂> $f $xs*) rewrite_by autodiff; autodiff; autodiff)
 | `(∂>! $f) => `((∂> $f) rewrite_by autodiff; autodiff; autodiff)
-| `(∂>! $x:ident, $b) => `(∂>! (fun $x => $b))
-| `(∂>! $x:ident := $val:term, $b) => `(∂>! (fun $x => $b) $val)
-| `(∂>! $x:ident : $type:term, $b) => `(∂>! fun $x : $type => $b)
-| `(∂>! $x:ident := $val:term ; $dir:term, $b) => `(∂>! (fun $x => $b) $val $dir)
-| `(∂>! ($b:diffBinder), $f)       => `(∂>! $b, $f)
+| `(∂>! $x:term, $b) => `(∂>! (fun $x => $b))
+| `(∂>! $x:term := $val:term, $b) => `(∂>! (fun $x => $b) $val)
+| `(∂>! $x:term : $type:term, $b) => `(∂>! fun $x : $type => $b)
+| `(∂>! $x:term := $val:term ; $dir:term, $b) => `(∂>! (fun $x => $b) $val $dir)
+-- with brackets
+| `(∂>! ($x:term := $val:term), $b) => `(∂>! (fun $x => $b) $val)
+| `(∂>! ($x:term := $val:term; $dir:term), $b) => `(∂>! (fun $x => $b) $val $dir)
 
 
 @[app_unexpander fwdDeriv] def unexpandFwdDeriv : Lean.PrettyPrinter.Unexpander

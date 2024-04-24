@@ -23,6 +23,14 @@ set_default_scalar K
 #guard_msgs in
 #check ∂ (x:=(1:K)), x*x
 
+variable (f : K → K → K)
+/--
+info: ∂ x,
+  match x with
+  | (x, y) => f x y : K × K → K × K → K
+-/
+#guard_msgs in
+#check ((∂ (x,y), f x y) : K×K → K×K → K)
 
 /-- info: ∂ (x:=1), x * x : K -/
 #guard_msgs in
@@ -33,9 +41,28 @@ set_default_scalar K
 /-- info: ∂ x, x * x : K → K -/
 #guard_msgs in
 #check ∂ (x:K), x*x
+
+/--
+info: ∂ (x:=(1.0, 2.0)),
+  match x with
+  | (x, y) => x * y : K × K → K
+-/
+#guard_msgs in
+#check ∂ ((x,y):=((1.0:K),(2.0:K))), x*y
+
+
+/-- info: ∂ (x:=1;2), x : K -/
+#guard_msgs in
+#check ∂ x:=(1:K);(2:K), x
+
+/-- info: ∂ (x:=1;2), x : K -/
+#guard_msgs in
+#check ∂ (x:=(1:K);(2:K)), x
+
 /-- info: ∂ (x:=(1, 2)), (x + x) : K × K → K × K -/
 #guard_msgs in
 #check ∂ (x:=((1:K),(2:K))), (x + x)
+
 /--
 info: let df := ∂ (x:=(0, 0)), (x.1 + x.2 * x.1);
 df (0, 0) : K
@@ -45,23 +72,29 @@ df (0, 0) : K
   let df := ∂ (fun x : K×K => (x.1 + x.2*x.1)) (0,0)
   df (0,0)
 
-
 /-- info: fun t => 2 * t : K → K -/
 #guard_msgs in
 #check ∂! (fun x : K => x^2)
+
 /-- info: fun x dx => dx + dx : K × K → K × K → K × K -/
 #guard_msgs in
 #check ∂! (fun x : K×K => x + x)
+
 /-- info: 1 + 1 : K -/
 #guard_msgs in
 #check ∂! (fun x => x*x) 1
+
 /-- info: fun dx => dx + dx : K × K → K × K -/
 #guard_msgs in
 #check ∂! (x:=((1:K),(2:K))), (x + x)
+
 /-- info: 1 + 1 : K -/
 #guard_msgs in
 #check ∂! (x:=1), x*x
 
+/-- info: fun dx => dx + dx : K × K → K × K -/
+#guard_msgs in
+#check ∂! (x:=((1:K),(2:K))), (x + x)
 
 /-- info: ∂ x, x * x = fun x => x + x : Prop -/
 #guard_msgs in
@@ -75,10 +108,20 @@ variable {X} [Vec K X] (f : X → X)
 
 set_default_scalar Float
 
+/-- info: 2.000000 -/
+#guard_msgs in
 #eval ∂! (fun x => x^2) 1
+/-- info: 2.000000 -/
+#guard_msgs in
 #eval ∂! (fun x => x*x) 1
+/-- info: 2.000000 -/
+#guard_msgs in
 #eval ∂! (x:=1), x*x
+/-- info: (2.000000, 0.000000) -/
+#guard_msgs in
 #eval ∂! (fun x => x + x) (1.0,2.0) (1.0,0.0)
+/-- info: (2.000000, 0.000000) -/
+#guard_msgs in
 #eval ∂! (x:=(1.0,2.0);(1.0,0.0)), (x + x)
 
 
@@ -118,10 +161,20 @@ variable (y : K × K)
 
 set_default_scalar Float
 
+/-- info: 2.000000 -/
+#guard_msgs in
 #eval ∇! (fun x => x^2) 1
+/-- info: 2.000000 -/
+#guard_msgs in
 #eval ∇! (fun x => x*x) 1
+/-- info: 2.000000 -/
+#guard_msgs in
 #eval ∇! (x:=1), x*x
+/-- info: (0.000000, 2.000000) -/
+#guard_msgs in
 #eval ∇! (fun x : Float×Float => (x + x).2) (1.0,2.0)
+/-- info: (2.000000, 0.000000) -/
+#guard_msgs in
 #eval ∇! (x:=((1.0 : Float),(2.0:Float))), (x + x).1
 
 

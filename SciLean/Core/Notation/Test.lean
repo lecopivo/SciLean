@@ -101,20 +101,6 @@ info: ∇ (x':=x), f x' : Y → X
 #guard_msgs in
 #check ∇ x':=x, f x'
 
-/--
-info: ∇ (x':=x;dy), f x' + dx : X
--/
-#guard_msgs in
-#check ∇ x':=x;dy, f x' + dx
-
---TODO: this should produce eroror `function expected at f x'`
-/--
-warning: unexpected syntax
-  ∇ fun x' => f x' dx
--/
-#guard_msgs in
-#check_failure ∇ x', f x' dx
-
 
 /--
 info: ∇ g : X → X
@@ -134,11 +120,6 @@ info: ∇ (x':=x), g x' : X
 #guard_msgs in
 #check ∇ x':=x, g x'
 
-/--
-info: ∇ (x':=x;dk), g x' + dx : X
--/
-#guard_msgs in
-#check ∇ x':=x;dk, g x' + dx
 
 end Gradient
 
@@ -222,10 +203,5 @@ info: <∂ (x':=x), f x' : Y × (Y → X)
 #guard_msgs in
 #check (<∂ x':=x, f x')
 
-/--
-info: <∂ (x':=x;dy), f x' : Y × X
--/
-#guard_msgs in
-#check <∂ x':=x;dy, f x'
 
 end RevCDeriv
