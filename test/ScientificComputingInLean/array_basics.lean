@@ -33,9 +33,20 @@ but is expected to have type
 
 def u :=  ⊞[1.0, 2.0]
 
+/-- info: 1.000000 -/
+#guard_msgs in
 #eval u[0]
+
+/-- info: 2.000000 -/
+#guard_msgs in
 #eval u[1]
+
+/-- info: 3.000000 -/
+#guard_msgs in
 #eval ∑ i, u[i]
+
+/-- info: ![1.000000, 2.000000] -/
+#guard_msgs in
 #eval fun i => u[i]
 
 -- todo: support creating matrix literals
@@ -45,13 +56,24 @@ def u :=  ⊞[1.0, 2.0]
 variable (A : Float^[2,2])
 
 -- switch to eval once `A` is defined properly
+/-- info: A[0, 1] : Float -/
+#guard_msgs in
 #check A[0,1]
+
+/-- info: A[0, 1] : Float -/
+#guard_msgs in
 #check A[(0,1)]
+
+/-- info: fun i j => A[i, j] : Fin 2 → Fin 2 → Float -/
+#guard_msgs in
+#check fun i j => A[i,j]
 
 
 variable {Cont Idx Elem} [DecidableEq Idx] [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]
          (f : Idx → Elem)
 
+/-- info: ⊞ i => f i : Cont -/
+#guard_msgs in
 #check ⊞ i => f i
 
 
@@ -81,15 +103,27 @@ def outerProduct4 {n m : Nat} (x : Float^[n]) (y : Float^[m]) : Float^[n,m] := I
   return { data:= A, h_size:= sorry }
 
 
+/-- info: ⊞[3.000000, 4.000000, 6.000000, 8.000000] -/
+#guard_msgs in
 #eval outerProduct1 ⊞[(1.0 : Float), 2.0] ⊞[(3.0 : Float), 4.0]
+
+/-- info: ⊞[3.000000, 4.000000, 6.000000, 8.000000] -/
+#guard_msgs in
 #eval outerProduct2 ⊞[(1.0 : Float), 2.0] ⊞[(3.0 : Float), 4.0]
+
+/-- info: ⊞[3.000000, 4.000000, 6.000000, 8.000000] -/
+#guard_msgs in
 #eval outerProduct3 ⊞[(1.0 : Float), 2.0] ⊞[(3.0 : Float), 4.0]
+
+/-- info: ⊞[3.000000, 4.000000, 6.000000, 8.000000] -/
+#guard_msgs in
 #eval outerProduct4 ⊞[(1.0 : Float), 2.0] ⊞[(3.0 : Float), 4.0]
 
 
--- This function already exists as `IndexType.naturalEquiv`
 open IndexType
-def naturalEquiv' (I J : Type) [IndexType I] [IndexType J] (h : card I = card J) : I ≃ J := {
+def naturalEquiv'
+    (I J : Type) [IndexType I] [IndexType J] [LawfulIndexType I] [LawfulIndexType J]
+    (h : card I = card J) : I ≃ J := {
   toFun := fun i => fromFin (h ▸ toFin i)
   invFun := fun j => fromFin (h ▸ toFin j)
   left_inv := sorry

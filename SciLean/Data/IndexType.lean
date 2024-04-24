@@ -3,23 +3,43 @@ import SciLean.Util.SorryProof
 
 open LeanColls
 
-
 open Set
 
--- instance (a b : Int) : IndexType (Icc a b) where
---   card := ((b + 1) - a).toNat
---   toFin i := ⟨(i.1 - a).toNat, sorry_proof⟩
---   fromFin i := ⟨a + i.1, sorry_proof⟩
---   fold := fun r f init => Id.run do
---     let mut x := init
---     for i in [0:(b-a).toNat] do
---       let i : Icc a b := ⟨a + i, sorry_proof⟩
---       x := f x i
---     return x
+instance (a b : Int) : IndexType (Icc a b) where
+  card := ((b + 1) - a).toNat
+  toFin i := ⟨(i.1 - a).toNat,
+    by
+      cases i; case mk i lt =>
+        simp at lt ⊢; simp (disch:=aesop) only [Int.toNat_of_nonneg, sub_lt_sub_iff_right]; omega⟩
+  fromFin i := ⟨a + i.1, by cases i; case mk i lt => simp at lt ⊢; omega⟩
+  fold := fun _ f init => Id.run do
+    let mut x := init
+    for i in [0:(b-a).toNat] do
+      let i : Icc a b := ⟨a + i, sorry_proof⟩
+      x := f x i
+    return x
 
--- instance (a b : Int) : LawfulIndexType (Icc a b) where
---   leftInv := by intro x; sorry_proof
---   rightInv := by intro x; sorry_proof
+  foldM := fun _ f init => do
+    let mut x := init
+    for i in [0:(b-a).toNat] do
+      let i : Icc a b := ⟨a + i, sorry_proof⟩
+      x ← f x i
+    return x
+
+instance (a b : Int) : LawfulIndexType (Icc a b) where
+  leftInv := by
+    intro x
+    simp only [IndexType.toFin, IndexType.fromFin]
+    unhygienic
+      with_reducible
+        aesop_destruct_products
+    simp_all only [Subtype.mk.injEq]
+    simp_all only [mem_Icc, sub_nonneg, Int.toNat_of_nonneg, add_sub_cancel]
+  rightInv := by
+    intro x
+    simp only [IndexType.toFin, IndexType.fromFin, add_sub_cancel_left, Int.toNat_ofNat, Fin.eta]
+  fold_eq_fold_toList := sorry_proof
+  foldM_eq_fold := sorry_proof
 
 -- instance (a b : Int) : IndexType (Ioo a b) where
 --   card := (b - (a + 1)).toNat

@@ -8,8 +8,6 @@ open SciLean Scalar
 -- Transformations and Reductions ------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-#exit
-
 def map {I : Type} [IndexType I] (x : Float^[I]) (f : Float → Float) := Id.run do
   let mut x' := x
   for i in IndexType.univ I do
@@ -17,16 +15,29 @@ def map {I : Type} [IndexType I] (x : Float^[I]) (f : Float → Float) := Id.run
   return x'
 
 
-#eval ⊞[(1.0 : Float),2.0,3.0].mapMono (fun x => sqrt x)
+/-- info: ⊞[1.000000, 1.414214, 1.732051] -/
+#guard_msgs in
+#eval ⊞[1.0,2.0,3.0].mapMono (fun x => sqrt x)
 
+/-- info: ⊞[1.000000, 1.414214, 1.732051, 2.000000] -/
+#guard_msgs in
 #eval ⊞[1.0,2.0;3.0,4.0].mapMono (fun x => sqrt x)
 
+/-- info: ⊞[0.000000, 1.000000, 1.414214, 1.732051, 2.000000, 2.236068, 2.449490, 2.645751] -/
+#guard_msgs in
 #eval (⊞ (i j k : Fin 2) => (IndexType.toFin (i,j,k)).toFloat).mapMono (fun x => sqrt x)
 
-#eval (0 : Float^[3]) |>.mapIdxMono (fun i _ => i.toFloat) |>.map (fun x => sqrt x)
+/-- info: ⊞[0.000000, 1.000000, 1.414214] -/
+#guard_msgs in
+#eval (0 : Float^[3]) |>.mapIdxMono (fun i _ => i.toFloat) |>.mapMono (fun x => sqrt x)
 
 
+/-- info: 6.000000 -/
+#guard_msgs in
 #eval ⊞[(1.0 : Float),2.0,3.0].fold (·+·) 0
+
+/-- info: 1.000000 -/
+#guard_msgs in
 #eval ⊞[(1.0 :Float),2.0,3.0].reduce (min · ·)
 
 
@@ -41,12 +52,23 @@ def softMax {I} [IndexType I]
 
 
 def x := ⊞[(1.0:Float),2.0,3.0,4.0]
--- def A := ⊞[1.0,2.0;3.0,4.0]
+def A := ⊞[1.0,2.0;3.0,4.0]
 
+/-- info: 10.000000 -/
+#guard_msgs in
 #eval ∑ i, x[i]
+
+/-- info: 24.000000 -/
+#guard_msgs in
 #eval ∏ i, x[i]
--- #eval ∑ i j, A[i,j]
--- #eval ∏ i j, A[i,j]
+
+/-- info: 10.000000 -/
+#guard_msgs in
+#eval ∑ i j, A[i,j]
+
+/-- info: 24.000000 -/
+#guard_msgs in
+#eval ∏ i j, A[i,j]
 
 def matMul {n m : Nat} (A : Float^[n,m]) (x : Float^[m]) :=
   ⊞ i => ∑ j, A[i,j] * x[j]
@@ -61,10 +83,10 @@ def trace {n : Nat} (A : Float^[n,n]) :=
 
 -- intentionally broken
 -- def conv1d {n k : Nat} (x : Float^[n]) (w : Float^[k]) :=
---     ⊞ (i : Fin n) => ∑ j, w[j] * x[i-j]
+--   ⊞ (i : Fin n) => ∑ j, w[j] * x[i-j]
 
 def Fin.shift {n} (i : Fin n) (j : ℤ) : Fin n :=
-    { val := ((i.1 + j) % n ).toNat, isLt := by sorry }
+    { val := ((i.1 + j) % n ).toNat, isLt := by sorry_proof }
 
 def conv1d {n : Nat} (k : Nat) (w : Float^[[-k:k]]) (x : Float^[n]) :=
     ⊞ (i : Fin n) => ∑ j, w[j] * x[i.shift j.1]
@@ -107,12 +129,39 @@ def avgPool_v4 (x : Float^[n]) {m} (h : 2*m = n := by deduce_by norm_num) : Floa
     0.5 * (x[i1] + x[i2])
 
 
-variable (x : Float^[11])
-#check avgPool_v1 ⊞[(1.0 : Float), 2.0, 3.0, 4.0, 5.0]
-#check avgPool_v2 x
-#check avgPool_v3 ⊞[(1.0 : Float), 2.0, 3.0, 4.0, 5.0]
-#check avgPool ⊞[(1.0 : Float), 2.0, 3.0, 4.0, 5.0]
-#check avgPool_v4 ⊞[(1.0 : Float), 2.0, 3.0, 4.0]
+
+/-- info: avgPool_v1 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] : DataArrayN Float (Fin (5 / 2)) -/
+#guard_msgs in
+#check avgPool_v1 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
+
+-- #check_failure avgPool_v2 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
+
+
+/-- info: avgPool_v3 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] ⋯ : DataArrayN Float (Fin 2) -/
+#guard_msgs in
+#check avgPool_v3 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
+
+/-- info: ⊞[1.500000, 3.500000] -/
+#guard_msgs in
+#eval avgPool_v3 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
+
+
+/-- info: avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0] ⋯ : DataArrayN Float (Fin 2) -/
+#guard_msgs in
+#check avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0]
+
+
+/--
+error: `decide_by` failed to show 2 * 2 = 5
+---
+info: avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] ⋯ : DataArrayN Float (Fin 2)
+-/
+#guard_msgs in
+#check avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
+
+/-- info: ⊞[1.500000, 3.500000] -/
+#guard_msgs in
+#eval avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0]
 
 
 variable {I} [IndexType I] [DecidableEq I]
@@ -136,15 +185,17 @@ def avgPool2d
 def dense (n : Nat) (A : Float^[n,I]) (b : Float^[n]) (x : Float^[I]) : Float^[n] :=
   ⊞ (i : Fin n) => b[i] + ∑ j, A[i,j] * x[j]
 
-def SciLean.DataArrayN.resize3 (x : Float^[I]) (a b c : Nat) (h : a*b*c = IndexType.card I) : Float^[a,b,c] :=
-  ⟨x.data, by simp[IndexType.card]; rw[← mul_assoc,←x.2,h]⟩
+def SciLean.DataArrayN.resize3 (x : Float^[I]) (a b c : Nat) (h : a*b*c = IndexType.card I) :
+    Float^[a,b,c] :=
+  { data := x.data ,
+    h_size := by simp[IndexType.card]; rw[← mul_assoc,←x.2,h] }
 
 def nnet := fun (w₁,b₁,w₂,b₂,w₃,b₃) (x : Float^[28,28]) =>
   x |>.resize3 1 28 28 (by decide)
     |> conv2d 1 (Fin 8) w₁ b₁
     |>.mapMono (fun x => max x 0)
-    |> avgPool2d
-    |> dense (I:=Fin 8 × Fin 14 × Fin 14) 30 w₂ b₂ -- deduce_by does not play well :(
+    |> avgPool2d (m₁:=14) (m₂:=14) -- deduce_by does not work in this chain as expected :(
+    |> dense 30 w₂ b₂
     |>.mapMono (fun x => max x 0)
     |> dense 10 w₃ b₃
     |> softMax 0.1

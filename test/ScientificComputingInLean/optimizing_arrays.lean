@@ -4,7 +4,7 @@ open SciLean
 
 
 theorem mapMono_mapMono {I} [IndexType I] (x : Float^[I]) (f g : Float → Float) :
-    (x.mapMono f |>.mapMono g) = x.mapMono fun x => f (g x) := sorry
+    (x.mapMono f |>.mapMono g) = x.mapMono fun x => f (g x) := sorry_proof
 
 open Scalar
 def softMax {I} [IndexType I]

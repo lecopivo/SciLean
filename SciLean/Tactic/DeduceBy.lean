@@ -11,6 +11,44 @@ import SciLean.Util.RewriteBy
 
 namespace SciLean
 
+/-- Tactic used to reduce expressions in return types of a function. For example if the return
+type is `Fin (n*m)` and we call the function with `n=5`, `m=3` we want the return type to be
+`Fin 15` rather than `Fin 5*3`.
+
+Consider this function
+```
+def halve (i : Fin n) : Fin (n/2) := ...
+```
+it is not ideal that the return type is `Fin (n/2)`. For example, for `i : Fin 10` calling
+`halve i` has type `Fin 10/2` which is undesirable. We would like to simplify `10/2` in the type.
+
+Using `deduce_by` you can write
+```
+def halve {n m} (i : Fin n) (hm : 2 * m = n := by deduce_by norm_num) := ...
+```
+Now for `i : Fin 10`, calling `halve i` will have type `
+
+The tactic `deduce_by <conv>` expects equality `lhs = rhs` where `lhs` contains metavariable i.e.
+variable which is not yet determined like `m` when we call `halve`. `deduce_by` will express
+the meta variable from this equality e.g. `n/2` in the above example, simplifies the expression
+with provided conv tactic and uses it also to prove the equality ofter the asigment.
+
+For example:
+- For `i : Fin 10` calling `halve i` will first look at `2 * ?m = 10` and solves it for `?m` i.e.
+  `?m = 10 / 2`. The provided tactic, like `norm_num`, is called on `10 / 2` yielding `5`. The result
+  `5` is assigned to `?m`. As the last them the tactic tries to prove `2 * 5 = 10` which succeeds
+  and the resulting proof is provided to the `hm` argument of `halve` and calling `halve i` succeeds.
+
+- For `i : Fin 11` calling `halve i` will first look at `2 * ?m = 11` and solves it for `?m` i.e.
+  `?m = 11 / 2`. The provided tactic, like `norm_num`, is called on `11 / 2` yielding `5`. The result
+  `5` is assigned to `?m`. As the last them the tactic tries to prove `2 * 5 = 11` which fails.
+  Thus calling `halve i` is unsuccessful.
+
+Limitation:
+  When adding function argument like `{x} (hx : lhs = rhs := deduce_by <conv>)` then
+  - if `x` is of type `Nat` then `lhs` can be expression involing arithemtic operations `+,-,*,/`
+  - if `x` if of any other type then `lhs` has to be just `x`
+ -/
 syntax (name:=deduceBy) "deduce_by " conv : tactic
 
 namespace DeduceBy
@@ -57,13 +95,10 @@ partial def deduceByTactic : Tactic
   let goal ← getMainGoal
   let .some (_,lhs,rhs) := Expr.eq? (← goal.getType) | throwError "expected `?m = e`, got {← ppExpr (← goal.getType)}"
 
-  if ¬lhs.hasMVar ∨ ¬rhs.hasMVar then
+  if ¬lhs.hasMVar && ¬rhs.hasMVar then
     let prf ← elabTerm (← `(by (conv => ($t;$t)); try simp)) (← goal.getType)
     goal.assign prf
     return ()
-
-  -- if ¬lhs.isMVar then
-  --   throwError "lhs is not mvar"
 
   -- now we assume that a is mvar and b is and expression we want to simplify
   let (goal,a,b) ←
@@ -96,8 +131,10 @@ partial def deduceByTactic : Tactic
 
 -- variable (n : Nat)
 
+
 -- #check foo (8 : Fin 10)
--- #eval foo (8 : Fin 10)
+
+-- #exit
 
 -- #check bar (8 : Fin 10)
 
