@@ -170,14 +170,14 @@ theorem fold_function_modify_simplify {ι} [IndexType ι] [DecidableEq ι] {X} [
 -- todo: add LawfulIndexType (right now I'm on old LeanColls)
 @[simp, ftrans_simp]
 theorem fold_indexed_update_simplify
-  {Idx} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [ArrayType Cont Idx Elem] (h : Cont) (g : Idx → Elem):
+  {Idx Cont} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [ArrayType Cont Idx Elem] (h : Cont) (g : Idx → Elem):
   LeanColls.fold (IndexType.univ Idx) (fun f i => LeanColls.Indexed.update f i fun fi => fi + g i) h
   =
   LeanColls.Indexed.ofFn fun i => h[i] + g i := sorry_proof
 
 @[simp, ftrans_simp]
 theorem fold_struct_modify_simplify
-  {Idx} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [StructType Cont Idx (fun _ => Elem)] (h : Cont) (g : Idx → Elem):
+  {Idx Cont} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [StructType Cont Idx (fun _ => Elem)] (h : Cont) (g : Idx → Elem):
   LeanColls.fold (IndexType.univ Idx) (fun f i => structModify i (fun fi => fi + g i) f) h
   =
   structMake fun i => structProj h i + g i := sorry_proof
