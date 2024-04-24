@@ -1,6 +1,6 @@
 import SciLean.Core
 import SciLean.Core.Integral.ParametricInverse
-import SciLean.Tactic.DeduceBy
+import SciLean.Tactic.InferVar
 
 namespace SciLean
 
@@ -47,7 +47,7 @@ TODO: Fix this function for `u = 0`!!! -/
 def planeDecomposition
     {n} {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] {X} [FinVec ι R X]
     (u : X)
-    (hn : n + 1 = card ι := by first | assumption | deduce_by simp) :
+    (hn : n + 1 = card ι := by first | assumption | infer_var) :
     R×R^[n] ≃ X := Id.run do
 
   have : Inhabited ι := ⟨fromFin ⟨0, by omega⟩⟩
@@ -107,7 +107,7 @@ variable (f : X → R)
 
 open IndexType in
 theorem parametric_inverse_affine {n} (f : X → R) (hf : IsAffineMap R f)
-    (hn : n + 1 = card ι := by first | assumption | deduce_by simp) :
+    (hn : n + 1 = card ι := by first | assumption | infer_var) :
     let u  := ∇ f 0
     let dec := planeDecomposition (R:=R) u hn
     ParametricInverseAt f 0

@@ -11,25 +11,34 @@ import SciLean.Util.RewriteBy
 
 namespace SciLean
 
-/-- Tactic used to reduce expressions in return types of a function. For example if the return
+open Lean Parser Tactic Conv in
+syntax normalizer := atomic(" (" patternIgnore(&"normalizer" <|> &"norm")) " := " withoutPosition(convSeq) ")"
+
+
+/- Tactic used to reduce expressions in return types of a function. For example if the return
 type is `Fin (n*m)` and we call the function with `n=5`, `m=3` we want the return type to be
 `Fin 15` rather than `Fin 5*3`.
 
-Consider this function
+Another way of looking at this tactic is that it tries to prove equality `lhs = rhs` where `lhs`
+contains an unknown variable(metavariable). This tactic will try to fill in this variable and
+prove the equality. For example, `5 * ?m = 15 := by infer_var` will assign `3` to `?m` and return
+proof that `5 * 3 = 15`.
+
+An example of intended application is following. Consider this function
 ```
 def halve (i : Fin n) : Fin (n/2) := ...
 ```
 it is not ideal that the return type is `Fin (n/2)`. For example, for `i : Fin 10` calling
 `halve i` has type `Fin 10/2` which is undesirable. We would like to simplify `10/2` in the type.
 
-Using `deduce_by` you can write
+Using `infer_var` you can write
 ```
-def halve {n m} (i : Fin n) (hm : 2 * m = n := by deduce_by norm_num) := ...
+def halve {n m} (i : Fin n) (hm : 2 * m = n := by infer_var) := ...
 ```
 Now for `i : Fin 10`, calling `halve i` will have type `
 
-The tactic `deduce_by <conv>` expects equality `lhs = rhs` where `lhs` contains metavariable i.e.
-variable which is not yet determined like `m` when we call `halve`. `deduce_by` will express
+The tactic `infer_var <conv>` expects equality `lhs = rhs` where `lhs` contains metavariable i.e.
+variable which is not yet determined like `m` when we call `halve`. `infer_var` will express
 the meta variable from this equality e.g. `n/2` in the above example, simplifies the expression
 with provided conv tactic and uses it also to prove the equality ofter the asigment.
 
@@ -45,13 +54,15 @@ For example:
   Thus calling `halve i` is unsuccessful.
 
 Limitation:
-  When adding function argument like `{x} (hx : lhs = rhs := deduce_by <conv>)` then
+  When adding function argument like `{x} (hx : lhs = rhs := infer_var <conv>)` then
   - if `x` is of type `Nat` then `lhs` can be expression involing arithemtic operations `+,-,*,/`
   - if `x` if of any other type then `lhs` has to be just `x`
  -/
-syntax (name:=deduceBy) "deduce_by " conv : tactic
+open Lean.Parser.Tactic in
+syntax (name:=inferVar) "infer_var " (normalizer)? (discharger)? : tactic
 
-namespace DeduceBy
+
+namespace InferVar
 open Qq Lean Meta
 
 /--
@@ -63,7 +74,7 @@ Examples:
 - `a = 4 * ?m + 2`, `b = 2*n` => `(?m, (2*n-2)/4)`
 -/
 partial def invertNat (a b : Q(Nat)) : MetaM (Q(Nat) × Q(Nat)) := do
-  if a.isMVar then
+  if a.getAppFn.isMVar then
     return (a,b)
   else
     match a with
@@ -84,21 +95,25 @@ partial def invertNat (a b : Q(Nat)) : MetaM (Q(Nat) × Q(Nat)) := do
       then invertNat x q($b + $y)
       else invertNat y q($x - $b)
     | _ =>
-      throwError s!"`decuce_by` does not support Nat operation {← ppExpr a}"
+      throwError s!"`infer_var` does not support Nat operation {← ppExpr a}"
 
 
 open Lean Meta Elab Tactic Qq
-@[tactic deduceBy]
+@[tactic inferVar]
 partial def deduceByTactic : Tactic
-| `(tactic| deduce_by $t:conv) => do
+| `(tactic| infer_var (norm:=$c) (disch:=$t)) => do
 
   let goal ← getMainGoal
-  let .some (_,lhs,rhs) := Expr.eq? (← goal.getType) | throwError "expected `?m = e`, got {← ppExpr (← goal.getType)}"
+  let .some (_,lhs,rhs) := Expr.eq? (← goal.getType)
+    | throwError "infer_var: expected goal of the form `?m = e`, got {← ppExpr (← goal.getType)}"
 
   if ¬lhs.hasMVar && ¬rhs.hasMVar then
-    let prf ← elabTerm (← `(by (conv => ($t;$t)); try simp)) (← goal.getType)
-    goal.assign prf
-    return ()
+    let subgoals ← evalTacticAt t goal
+    if subgoals.length = 0 then
+      return ()
+    else
+      throwError "infer_var: discharger `{Syntax.prettyPrint t}` failed proving \
+                  {← ppExpr (←goal.getType)}"
 
   -- now we assume that a is mvar and b is and expression we want to simplify
   let (goal,a,b) ←
@@ -112,31 +127,16 @@ partial def deduceByTactic : Tactic
   let A ← inferType a
   if A == q(Nat) then
     let (m,x) ← invertNat a b
-    let (x', _) ← elabConvRewrite x #[] t
-    m.mvarId!.assign x'
-    let subgoals ← evalTacticAt (← `(tactic| (conv => (conv => lhs; $t); (conv => rhs; $t)); try field_simp)) goal
+    let (x', _) ← elabConvRewrite x #[] (← `(conv| ($c)))
+    unless ← isDefEq m x' do throwError "infer_var: failed to assign {← ppExpr x'} to {← ppExpr m}"
+    let subgoals ←
+      evalTacticAt (← `(tactic| (conv => (conv => lhs; ($c)); (conv => rhs; ($c))); (try $t))) goal
     if subgoals.length ≠ 0 then
-      throwError "`decide_by` failed to show {← ppExpr (← goal.getType)}"
-
+      throwError "infer_var: discharger `{Syntax.prettyPrint t}` failed proving {← ppExpr (← goal.getType)}"
   else
-    let (b',prf) ← elabConvRewrite b #[] t
+    let (b',prf) ← elabConvRewrite b #[] (← `(conv| ($c)))
     a.mvarId!.assign b'
     goal.assign prf
+| `(tactic| infer_var) => do
+  evalTactic (← `(tactic| infer_var (norm:=norm_num) (disch:=simp)))
 | _ => throwUnsupportedSyntax
-
-
--- def foo {n : Nat} {m : Nat} (i : Fin n) (h : 2 * m = n := by deduce_by ring_nf) : Fin m := ⟨i/2, sorry⟩
-
--- def bar {n : Nat} (i : Fin n) : Fin (n/2) := ⟨i/2, sorry⟩
-
--- variable (n : Nat)
-
-
--- #check foo (8 : Fin 10)
-
--- #exit
-
--- #check bar (8 : Fin 10)
-
--- variable (i : Fin (2*n))
--- #eval foo i

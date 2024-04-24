@@ -1,7 +1,7 @@
 import SciLean.Modules.Geometry.Shape
 import SciLean.Modules.Geometry.Shape.Sphere
 import SciLean.Modules.Geometry.Shape.AxisAlignedBox
-import SciLean.Tactic.DeduceBy
+import SciLean.Tactic.InferVar
 
 open FiniteDimensional
 
@@ -188,7 +188,7 @@ TODO: Fix this function for `u = 0`!!! -/
 def planeDecomposition
     {n} {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] {X} [FinVec ι R X]
     (u : X)
-    (hn : n + 1 = card ι := by first | assumption | deduce_by simp) :
+    (hn : n + 1 = card ι := by first | assumption | infer_var) :
     R×R^[n] ≃ X := Id.run do
 
   have : Inhabited ι := ⟨fromFin ⟨0, by omega⟩⟩

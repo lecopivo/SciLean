@@ -20,7 +20,7 @@ import SciLean.Core.Functions.Trigonometric
 import SciLean.Core.Functions.Pow
 
 
-import SciLean.Tactic.DeduceBy
+import SciLean.Tactic.InferVar
 import SciLean.Tactic.RefinedSimp
 
 -- import SciLean.Core.Meta.GenerateRevDeriv

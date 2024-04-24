@@ -1,5 +1,5 @@
 import SciLean
-import SciLean.Tactic.DeduceBy
+import SciLean.Tactic.InferVar
 
 open SciLean Scalar
 
@@ -116,13 +116,13 @@ def avgPool_v2 (x : Float^[2*n]) : Float^[n] :=
     let i₂ : Fin (2*n) := ⟨2*i.1+1, by omega⟩
     0.5 * (x[i₁] + x[i₂])
 
-def avgPool_v3 (x : Float^[n]) {m} (h : m = n/2 := by deduce_by norm_num) : Float^[m] :=
+def avgPool_v3 (x : Float^[n]) {m} (h : m = n/2 := by infer_var) : Float^[m] :=
   ⊞ (i : Fin m) =>
     let i1 : Fin n := ⟨2*i.1, by omega⟩
     let i2 : Fin n := ⟨2*i.1+1, by omega⟩
     0.5 * (x[i1] + x[i2])
 
-def avgPool_v4 (x : Float^[n]) {m} (h : 2*m = n := by deduce_by norm_num) : Float^[m] :=
+def avgPool_v4 (x : Float^[n]) {m} (h : 2*m = n := by infer_var) : Float^[m] :=
   ⊞ (i : Fin m) =>
     let i1 : Fin n := ⟨2*i.1, by omega⟩
     let i2 : Fin n := ⟨2*i.1+1, by omega⟩
@@ -152,7 +152,7 @@ def avgPool_v4 (x : Float^[n]) {m} (h : 2*m = n := by deduce_by norm_num) : Floa
 
 
 /--
-error: `decide_by` failed to show 2 * 2 = 5
+error: infer_var: discharger ` simp ` failed proving 2 * 2 = 5
 ---
 info: avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] ⋯ : DataArrayN Float (Fin 2)
 -/
@@ -168,8 +168,8 @@ variable {I} [IndexType I] [DecidableEq I]
 
 def avgPool2d
     (x : Float^[I,n₁,n₂]) {m₁ m₂}
-    (h₁ : m₁ = n₁/2 := by deduce_by norm_num)
-    (h₂ : m₂ = n₂/2 := by deduce_by norm_num) : Float^[I,m₁,m₂] :=
+    (h₁ : m₁ = n₁/2 := by infer_var)
+    (h₂ : m₂ = n₂/2 := by infer_var) : Float^[I,m₁,m₂] :=
   ⊞ (ι : I) (i : Fin m₁) (j : Fin m₂) =>
     let i₁ : Fin n₁ := ⟨2*i.1, by omega⟩
     let i₂ : Fin n₁ := ⟨2*i.1+1, by omega⟩
@@ -194,7 +194,7 @@ def nnet := fun (w₁,b₁,w₂,b₂,w₃,b₃) (x : Float^[28,28]) =>
   x |>.resize3 1 28 28 (by decide)
     |> conv2d 1 (Fin 8) w₁ b₁
     |>.mapMono (fun x => max x 0)
-    |> avgPool2d (m₁:=14) (m₂:=14) -- deduce_by does not work in this chain as expected :(
+    |> avgPool2d (m₁:=14) (m₂:=14) -- infer_var does not work in this chain as expected :(
     |> dense 30 w₂ b₂
     |>.mapMono (fun x => max x 0)
     |> dense 10 w₃ b₃
