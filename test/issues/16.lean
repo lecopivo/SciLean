@@ -17,10 +17,9 @@ by
 example
   : cderiv Float (fun x : Float => ⊞ (_ : Fin 10) => x)
     =
-    fun x dx => ⊞ (_ : Fin 10) => dx :=
+    fun x dx => ⊞ _ => dx :=
 by
   fun_trans[Function.HasUncurry.uncurry]
-  sorry -- fix this!!!
 
 example (f : Nat ≃ Nat)
   : Function.Bijective (fun x => f x) := by fun_prop

@@ -32,23 +32,39 @@ open Lean.TSyntax.Compat in
 -- The `by exact` is a hack to make certain case work
 --    see: https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/uncurry.20fails.20with.20.60Icc.60
 open Term Function Lean Elab Term Meta in
-elab "⊞ " xs:funBinder* " => " b:term:51 : term => do
+elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
   let fn ← elabTerm (← `(fun $xs* => $b)) none
   let arity := (← inferType fn).forallArity
 
-  -- uncurry if necessary
-  let fn :=
+  try
+    -- uncurry if necessary
+    let fn ←
+      if arity = 1 then
+        pure fn
+      else
+        mkAppM ``HasUncurry.uncurry #[fn]
+
+    let .some (Idx, Elem) := (← inferType fn).arrow?
+      | throwError "⊞ _ => _: expectes function type {← ppExpr (← inferType fn)}"
+
+    let Cont ← mkAppOptM ``arrayTypeCont #[Idx, Elem, none, none]
+    let Cont := Cont.getRevArg! 1
+
+    mkAppOptM ``Indexed.ofFn #[Cont, Idx, Elem, none, fn]
+  catch _ =>
     if arity = 1 then
-      fn
+      elabTerm (← `(Indexed.ofFn fun $xs* => $b)) none
+    else if arity = 2 then
+      elabTerm (← `(Indexed.ofFn (Function.uncurry fun $xs* => $b))) none
     else
-      (← mkAppM ``HasUncurry.uncurry #[fn])
+      throwError "notation `⊞ _ => _` is not supported for high rank arrays when types are unknown\
+                  \nplease specify the types!"
 
-  let .some (Idx, Elem) := (← inferType fn).arrow? | throwError "⊞: expected function type"
 
-  let Cont ← mkAppOptM ``arrayTypeCont #[Idx, Elem, none, none]
-  let Cont := Cont.getRevArg! 1
+-- variable {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem] (e : Elem) (c : Cont)
 
-  mkAppOptM ``Indexed.ofFn #[Cont, Idx, Elem, none, fn]
+-- set_option pp.funBinderTypes true in
+-- example : c = ⊞ (_ : Idx) => e := sorry
 
 
 
