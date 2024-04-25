@@ -3,6 +3,9 @@ import SciLean.Core.Monads.RevDerivMonad
 
 namespace SciLean
 
+-- TODO: screw `Id` monad, define new `Id'` will wrap value in a structure
+--       that way `Id'` can't abuse defeq and mess up the differentiation process
+
 variable
   {K : Type _} [RCLike K]
 
