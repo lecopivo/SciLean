@@ -36,6 +36,12 @@ instance [∀ i, Zero (EI i)] [∀ j, Zero (FJ j)] (i : I ⊕ J) : Zero (Sum.rec
   | .inr _ => by infer_instance
 
 @[reducible]
+instance [∀ i, One (EI i)] [∀ j, One (FJ j)] (i : I ⊕ J) : One (Sum.rec EI FJ i) :=
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
 instance [∀ i, Add (EI i)] [∀ j, Add (FJ j)] (i : I ⊕ J) : Add (Sum.rec EI FJ i) :=
   match i with
   | .inl _ => by infer_instance

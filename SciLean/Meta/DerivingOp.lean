@@ -1,4 +1,4 @@
-import SciLean.Core.Hilbert
+import SciLean.Core.Objects.Vec
 import Lean.Elab.Deriving.Basic
 
 open Lean Elab Command
@@ -25,7 +25,7 @@ def mkBinaryOpInstance (className opName : Name) (declName : Name) : TermElabM U
 
     let instType ← Meta.inferType instValue
 
-    let instName : Name := s!"inst{className}{declName.getString!}"
+    let instName : Name := declName.append "instances" |>.append className
     let instDecl : Declaration := .defnDecl
       {levelParams := [],
        hints := .regular 0,
@@ -66,7 +66,7 @@ def mkUnaryOpInstance (className opName : Name) (declName : Name) : TermElabM Un
 
     let instType ← Meta.inferType instValue
 
-    let instName : Name := s!"inst{className}{declName.getString!}"
+    let instName : Name := declName.append "instances" |>.append className
     let instDecl : Declaration := .defnDecl
       {levelParams := [],
        hints := .regular 0,
@@ -106,7 +106,7 @@ def mkNullaryOpInstance (className opName : Name) (declName : Name) : TermElabM 
 
     let instType ← Meta.inferType instValue
 
-    let instName : Name := s!"inst{className}{declName.getString!}"
+    let instName : Name := declName.append "instances" |>.append className
     let instDecl : Declaration := .defnDecl
       {levelParams := [],
        hints := .regular 0,
@@ -137,7 +137,7 @@ def mkSMulOpInstance (declName : Name) : TermElabM Unit := do
     let instValue ← Meta.forallTelescope structType λ xs _ =>
     do
       let strct ← Meta.mkAppOptM info.structName (xs.map some)
-      let binOp ← Meta.withLocalDecl `s default (mkConst ``SciLean.Real) λ s =>
+      let binOp ← Meta.withLocalDecl `s default (mkConst `Real) λ s =>
                    Meta.withLocalDecl `x default strct λ x => do
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
@@ -148,7 +148,7 @@ def mkSMulOpInstance (declName : Name) : TermElabM Unit := do
 
     let instType ← Meta.inferType instValue
 
-    let instName : Name := s!"instSMul{declName.getString!}"
+    let instName : Name := declName.append "instances" |>.append "SMul"
     let instDecl : Declaration := .defnDecl
       {levelParams := [],
        hints := .regular 0,
