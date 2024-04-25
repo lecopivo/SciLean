@@ -89,8 +89,6 @@ instance (P : ι → Prop) [∀ i : ι, Decidable (P i)] : Decidable (∀ i : ι
   return .isTrue sorry_proof
 
 
-@[specialize] def sum {α : Type u} [Zero α] [Add α] (f : ι → α) : α :=
-  Fold.fold (β:=α) (C:=IndexType.Univ ι) (τ:=ι) (IndexType.univ ι) (fun (s : α) (i : ι) => s + f i) (0 : α)
 
 def reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (default : α) : m α := do
   let n := IndexType.card ι
@@ -127,6 +125,9 @@ def argMax {I} [IndexType.{_,0} I] [Inhabited I]
     (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I :=
   (IndexType.argValMax f).1
 
+
+@[specialize] def sum {α : Type u} [Zero α] [Add α] (f : ι → α) : α :=
+  Fold.fold (β:=α) (C:=IndexType.Univ ι) (τ:=ι) (IndexType.univ ι) (fun (s : α) (i : ι) => s + f i) (0 : α)
 
 open Lean.TSyntax.Compat in
 macro " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``sum xs b
