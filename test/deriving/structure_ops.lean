@@ -6,6 +6,18 @@ import SciLean.Core.Meta.GenerateLinearMapSimp
 
 open SciLean
 
+-- This look like a good idea to have such that we do not have to deal with XI in some cases
+section MoveMe
+  class UniformStructType (X : Sort _) (R : Sort _) (I : outParam (Sort _)) {XI : outParam <| I → Sort _}
+      [StructType X I XI] : Prop where
+    uniform_return_type : ∀ i, XI i = R
+
+  open UniformStructType in
+  abbrev uniformStructProj (R : Sort _) {X : Sort _}  {I : Sort _} {XI : I → Sort _}
+      [StructType X I XI] [UniformStructType X R I] (x : X) (i : I) : R :=
+    uniform_return_type (R:=R) X i ▸ structProj (I:=I) x i
+end MoveMe
+
 
 def Add.ofEquiv {X Y : Type*} [Add X] (f : X ≃ Y) : Add Y where
   add a b := f (f.symm a + f.symm b)
@@ -160,6 +172,7 @@ def StructType.ofEquiv {X I : Type*} {XI : I → Type*} {Y : Type*} [StructType 
 
 
 
+
 ----------------------------------------------------------------------------------------------------
 
 structure Float3 where
@@ -185,6 +198,7 @@ instance : TestFunctions Float3 := TestFunctions.ofEquiv (proxy_equiv% Float3) r
 instance : SemiInnerProductSpace Float Float3 := SemiInnerProductSpace.mkSorryProofs
 instance : SemiHilbert Float Float3 where test_functions_true := by simp[TestFunction]
 
+-- Right now we have to provide `I` explicitely, can we automate this?
 @[instance]
 def Float3.instances.StructType := StructType.ofEquiv (I:=Unit⊕Unit⊕Unit) (proxy_equiv% Float3)
 
@@ -201,43 +215,54 @@ instance : VecStruct Float Float3 (Unit⊕Unit⊕Unit) _ where
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof
 
-
+instance Float3.instances.UniformStructIndex : UniformStructType Float3 Float (Unit⊕Unit⊕Unit) where
+  uniform_return_type := by intro _; repeat (first | rfl | rename_i i; cases i; rfl)
 
 instance : SciLean.Basis (Unit⊕Unit⊕Unit) Float Float3 where
   basis := λ i => oneHot i 1
-  proj := λ i x =>
-    match i with
-    | .inl i => structProj (I:=(Unit⊕Unit⊕Unit))  x (.inl ())
-    | .inr (.inl i) => structProj (I:=Unit⊕Unit⊕Unit) x (.inr (.inl ()))
-    | .inr (.inr i) => structProj (I:=Unit⊕Unit⊕Unit) x (.inr (.inr ()))
+  proj := λ i x => uniformStructProj Float x i
+
+instance : SciLean.DualBasis (Unit⊕Unit⊕Unit) Float Float3 where
+  dualBasis := λ i => oneHot i 1
+  dualProj := λ i x => uniformStructProj Float x i
+
+instance : OrthonormalBasis (Unit⊕Unit⊕Unit) Float Float3 where
+  is_orthogonal := sorry_proof
+  is_orthonormal := sorry_proof
 
 
-
+-- StructType theorems for `Float.x` -----------------------------------------
 --@[as_struct_proj]
 theorem Float3.x.as_struct_proj :
   Float3.x = (fun v : Float3 => (structProj (I:=Unit⊕Unit⊕Unit) v (.inl ()))) := by rfl
-
---@[as_struct_proj]
-theorem Float3.y.as_struct_proj :
-  Float3.y = (fun v : Float3 => (structProj (I:=Unit⊕Unit⊕Unit) v (.inr (.inl ())))) := by rfl
-
---@[as_struct_proj]
-theorem Float3.z.as_struct_proj :
-  Float3.z = (fun v : Float3 => (structProj (I:=Unit⊕Unit⊕Unit) v (.inr (.inr ())))) := by rfl
-
 
 --@[as_struct_modify]
 theorem Float3.x.as_struct_modify (f : Float → Float) (v : Float3):
   {v with x := f v.x} = (structModify (I:=Unit⊕Unit⊕Unit) (.inl ()) f v) := by rfl
 
+
+-- StructType theorems for `Float.y` -----------------------------------------
+
+--@[as_struct_proj]
+theorem Float3.y.as_struct_proj :
+  Float3.y = (fun v : Float3 => (structProj (I:=Unit⊕Unit⊕Unit) v (.inr (.inl ())))) := by rfl
+
 --@[as_struct_modify]
 theorem Float3.y.as_struct_modify (f : Float → Float) (v : Float3):
   {v with y := f v.y} = (structModify (I:=Unit⊕Unit⊕Unit) (.inr (.inl ())) f v) := by rfl
+
+
+-- StructType theorems for `Float.z` -----------------------------------------
+
+--@[as_struct_proj]
+theorem Float3.z.as_struct_proj :
+  Float3.z = (fun v : Float3 => (structProj (I:=Unit⊕Unit⊕Unit) v (.inr (.inr ())))) := by rfl
 
 --@[as_struct_modify]
 theorem Float3.z.as_struct_modify (f : Float → Float) (v : Float3):
   {v with z := f v.z} = (structModify (I:=Unit⊕Unit⊕Unit) (.inr (.inr ())) f v) := by rfl
 
+-- StructType thorems for `Float.mk` -----------------------------------------
 
 --@[as_struct_make]
 theorem Float3.mk.as_struct_make (f) :
@@ -246,27 +271,51 @@ theorem Float3.mk.as_struct_make (f) :
   (structMake (X:=Float3) (I:=Unit⊕Unit⊕Unit) f) := by rfl
 
 
+-- Float3.x properties ---------------------------------------------------
+@[fun_prop]
 theorem Float3.x.arg_self.IsLinearMap_rule : IsLinearMap Float (fun v => Float3.x v) := by
   rw[Float3.x.as_struct_proj]
-  sorry_proof
-
-theorem Float3.y.arg_self.IsLinearMap_rule : IsLinearMap Float (fun v => Float3.y v) := by
-  rw[Float3.y.as_struct_proj]
-  sorry_proof
-
-theorem Float3.z.arg_self.IsLinearMap_rule : IsLinearMap Float (fun v => Float3.z v) := by
-  rw[Float3.z.as_struct_proj]
-  sorry_proof
-
+  sorry_proof -- use fact about structProj
 
 #generate_linear_map_simps Float3.x.arg_self.IsLinearMap_rule
-#generate_linear_map_simps Float3.y.arg_self.IsLinearMap_rule
-#generate_linear_map_simps Float3.z.arg_self.IsLinearMap_rule
+
+@[fun_prop]
+theorem Float3.x.arg_self.CDifferentiable_rule : CDifferentiable Float (fun v => Float3.x v) := by
+  rw[Float3.x.as_struct_proj]
+  sorry_proof -- use fact about structProj
+
+@[fun_prop]
+theorem Float3.x.arg_self.IsSmoothLinearMap_rule : IsSmoothLinearMap Float (fun v => Float3.x v) := by
+  constructor <;> fun_prop
+
+@[fun_prop]
+theorem Float3.x.arg_self.HasSemiAdjoint_rule : HasSemiAdjoint Float (fun v => Float3.x v) := by
+  rw[Float3.x.as_struct_proj]
+  sorry_proof -- use fact about structProj
+
+theorem Float3.x.arg_self.HasAdjDiff_rule : HasAdjDiff Float (fun v => Float3.x v) := by
+  intro x
+  constructor
+  . fun_prop
+  . fun_trans; fun_prop
+
+-- todo add transformation rules
+
+-- Float3.y properties ---------------------------------------------------
+-- ditto
+
+-- Float3.z properties ---------------------------------------------------
+-- ditto
 
 
+
+
+variable (v : Float3)
+#check fun i => uniformStructProj Float v i
 
 ----------------------------------------------------------------------------------------------------
 
+#exit
 structure Vec2 (X : Type) where
   (x y : X)
 
