@@ -34,6 +34,8 @@ structure Lean.Expr.LiftLets2Config where
   removeLambda : Bool := true
   /-- Remove binding of lambda functions.  -/
   removeOfNat : Bool := true
+  /-- Pull let bindings out of lambda functions. -/
+  pullLetOutOfLambda : Bool := true
 
 
 /--
@@ -87,10 +89,13 @@ private partial def Lean.Expr.liftLets2Aux {α} (config : LiftLets2Config) (e : 
       let e' ← withLocalDecl n i t fun fvar => do
         (b.instantiate1 fvar).liftLets2Aux config fvars fun fvars2 b => do
           -- See which bindings can't be migrated out
-          let deps ← collectForwardDeps #[fvar] false
-          let fvars2 := fvars2[fvars.size:].toArray
-          let (fvars2, fvars2') := fvars2.partition deps.contains
-          mkLetFVars fvars2' (← mkLambdaFVars #[fvar] (← mkLetFVars fvars2 b))
+          if config.pullLetOutOfLambda then
+            let deps ← collectForwardDeps #[fvar] false
+            let fvars2 := fvars2[fvars.size:].toArray
+            let (fvars2, fvars2') := fvars2.partition deps.contains
+            mkLetFVars fvars2' (← mkLambdaFVars #[fvar] (← mkLetFVars fvars2 b))
+          else
+            mkLambdaFVars #[fvar] (← mkLetFVars fvars2 b)
       -- Re-enter the new lets; we do it this way to keep the local context clean
       insideLets e' fvars fun fvars e'' => f fvars e''
   | .forallE n t b i =>
@@ -102,7 +107,7 @@ private partial def Lean.Expr.liftLets2Aux {α} (config : LiftLets2Config) (e : 
           let deps ← collectForwardDeps #[fvar] false
           let fvars2 := fvars2[fvars.size:].toArray
           let (fvars2, fvars2') := fvars2.partition deps.contains
-          mkLetFVars fvars2' (← mkForallFVars #[fvar] (← mkLetFVars fvars2 b))
+          mkLetFVars fvars2' (← mkForallFVars #[fvar] (← mkLetFVars fvars2[fvars.size:] b))
       -- Re-enter the new lets; we do it this way to keep the local context clean
       insideLets e' fvars fun fvars e'' => f fvars e''
   | .mdata _ e => e.liftLets2Aux config fvars f
