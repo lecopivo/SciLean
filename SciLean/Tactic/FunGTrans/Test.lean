@@ -11,19 +11,23 @@ open Lean Meta Qq
 
 namespace SciLean.Tactic.FunGTrans
 
+set_option linter.unusedVariables false
 
+@[gtrans]
 def HasDeriv (f : α → β) (df : outParam <| α → α → β) : Prop := sorry
 
-#eval addGTransDecl ``HasDeriv
-
-theorem hasDeriv_id : HasDeriv (fun x : α => x) (fun x dx => dx) := sorry
-theorem hasDeriv_const [Inhabited β] (b : β) : HasDeriv (fun x : α => b) (fun x dx => default) := sorry
+@[gtrans]
+theorem hasDeriv_id : HasDeriv (fun x : α => x) (fun x dx => dx) := sorry_proof
+@[gtrans]
+theorem hasDeriv_const [Inhabited β] (b : β) : HasDeriv (fun x : α => b) (fun x dx => default) := sorry_proof
+@[gtrans]
 theorem hasDeriv_comp
   (f : β → γ) (g : α → β)
   (f' : β → β → γ) (g' : α → α → β)
   (hf : HasDeriv f f') (hg : HasDeriv g g') :
-  HasDeriv (fun x => f (g x)) (fun x dx => f' (g x) (g' x dx)) := sorry
+  HasDeriv (fun x => f (g x)) (fun x dx => f' (g x) (g' x dx)) := sorry_proof
 
+@[gtrans]
 theorem hasDeriv_add [Add β]
   (f g : α → β)
   (f' g' : α → α → β)
@@ -33,8 +37,9 @@ theorem hasDeriv_add [Add β]
     (fun x dx =>
       let dy := f' x dx
       let dz := g' x dx
-      dy + dz) := sorry
+      dy + dz) := sorry_proof
 
+@[gtrans]
 theorem hasDeriv_mul [Add β] [Mul β]
   (f g : α → β)
   (f' g' : α → α → β)
@@ -46,16 +51,10 @@ theorem hasDeriv_mul [Add β] [Mul β]
       let dy := f' x dx
       let z := g x
       let dz := g' x dx
-      y*dz+z*dy) := sorry
-
-#eval addTheorem ``hasDeriv_comp
-#eval addTheorem ``hasDeriv_id
-#eval addTheorem ``hasDeriv_const
-#eval addTheorem ``hasDeriv_add
-#eval addTheorem ``hasDeriv_mul
+      y*dz+z*dy) := sorry_proof
 
 -- set_option trace.Meta.Tactic.gtrans.candidates true
-set_option trace.Meta.Tactic.gtrans true
+-- set_option trace.Meta.Tactic.gtrans true
 -- set_option trace.Meta.Tactic.gtrans.normalize true
 
 #eval show MetaM Unit from do
@@ -76,17 +75,17 @@ def HasDerivOn (f : α → β) (x : outParam <| Set α) (df : outParam <| α →
 
 
 @[gtrans]
-theorem hasDerivOn_id : HasDerivOn (fun x : α => x) ⊤ (fun x dx => dx) := sorry
+theorem hasDerivOn_id : HasDerivOn (fun x : α => x) ⊤ (fun x dx => dx) := sorry_proof
 
 @[gtrans]
-theorem hasDerivOn_const [Inhabited β] (b : β) (s : Set α) : HasDerivOn (fun x : α => b) ⊤ (fun x dx => default) := sorry
+theorem hasDerivOn_const [Inhabited β] (b : β) (s : Set α) : HasDerivOn (fun x : α => b) ⊤ (fun x dx => default) := sorry_proof
 
 @[gtrans]
 theorem hasDerivOn_comp
   (f : β → γ) (g : α → β) (s : Set α)
   (f' : β → β → γ) (g' : α → α → β)
   (hf : HasDerivOn f (g '' s) f') (hg : HasDerivOn g s g') :
-  HasDerivOn (fun x => f (g x)) s (fun x dx => f' (g x) (g' x dx)) := sorry
+  HasDerivOn (fun x => f (g x)) s (fun x dx => f' (g x) (g' x dx)) := sorry_proof
 
 @[gtrans]
 theorem hasDerivOn_add [Add β]
@@ -99,7 +98,7 @@ theorem hasDerivOn_add [Add β]
     (fun x dx =>
       let dy := f' x dx
       let dz := g' x dx
-      dy + dz) := sorry
+      dy + dz) := sorry_proof
 
 @[gtrans]
 theorem hasDerivOn_mul [Add β] [Mul β]
@@ -114,7 +113,7 @@ theorem hasDerivOn_mul [Add β] [Mul β]
       let dy := f' x dx
       let z := g x
       let dz := g' x dx
-      y*dz+z*dy) := sorry
+      y*dz+z*dy) := sorry_proof
 
 @[gtrans]
 theorem hasDerivOn_div [Add β] [Sub β] [Mul β] [Div β] [Inhabited β]
@@ -129,7 +128,7 @@ theorem hasDerivOn_div [Add β] [Sub β] [Mul β] [Div β] [Inhabited β]
       let dy := f' x dx
       let z := g x
       let dz := g' x dx
-      (dy*z-y*dz)/(z*z)) := sorry
+      (dy*z-y*dz)/(z*z)) := sorry_proof
 
 
 set_option trace.Meta.Tactic.gtrans true
@@ -146,13 +145,47 @@ set_option trace.Meta.Tactic.gtrans.candidates true
 
   IO.println (← ppExpr e)
 
+-- good for surjective functions `f`
+-- The additional parameter `c` determines which elemnt of `f⁻¹' {y}` does `f'` chooses
+-- todo: shoud we require that `f'` produces the whole preimage? i.e. `{x | ∃ c, x = f' c y} = f⁻¹' {y}`
+@[gtrans]
+def ParametricRightInverse (f : α → β) (γ : outParam <| Type) (f' : outParam <| γ → β → α) : Prop :=
+  ∀ (y : β) (c : γ), f (f' c y) = y
+
+-- def polarCoordinates (θ : Float) : Float×Float := (θ.cos, θ.sin)
+
+-- @[gtrans]
+-- theorem polarCoordinates.arg_θ.ParametricRightInverse_rule :
+--   ParametricRightInverse
+--     polarCoordinates
+--     ℤ
+--     (fun n (x,y) => Float.ofInt n * 2 * Float.atan2 0 (-1) + Float.atan2 y x) := by unfold ParametricRightInverse; intros; simp[polarCoordinates]
+
+@[gtrans]
+theorem HAdd.hAdd.arg_a0a1.ParametricRightInverse_rule {α} [AddCommGroup α] [Module ℚ α] :
+  ParametricRightInverse
+    (fun xy : α×α => xy.1 + xy.2)
+    α
+    (fun a z => ((1/2:ℚ) • z+a,(1/2:ℚ) • z-a)) := by unfold ParametricRightInverse; intros; simp; sorry_proof
 
 
-theorem deriv_hihi
-  (f : α → β)
-  (f' : α → α → β)
-  (hf' : ∂ f = f')
-  (g : α → β)
-  (g' : α → α → β)
-  (hg' : ∂ g = g') :
-  ∂ (fun x => f x + g x) = fun x dx => f' x dx + g' x dx := sorry
+-- the intuition `p` recovers information lost by `f`
+@[gtrans]
+def ParametricLeftInverse (f : α → β) (γ : outParam <| Type) (p : outParam <| α → γ) (f' : outParam <| γ → β → α) : Prop :=
+  ∀ (x : α), f' (p x) (f x) = x
+
+
+
+@[gtrans]
+def ParametricPreimageAt
+    {X Y I : Type} {X₁ X₂ : I → Type}
+    (f : X → Y) (y : Y)
+    (p : outParam <| ∀ i, X₁ i → X₂ i → X)  -- decomposition of `X` as `X₁ i × X₂ i`
+    (g : outParam <| (i : I) → X₁ i → X₂ i) -- preimage is a graph of this function
+    (dom : outParam <| (i : I) → Set (X₁ i)) --
+    :=
+  -- all points in `dom i` map to `y`
+  ∀ (i : I) (x₁ : X₁ i), (x₁ ∈ dom i) → f (p i x₁ (g i x₁)) = y
+  ∧
+  -- every point in the preimage can be uniquelly represented by some point `x₁ : X₁ i`
+  ∀ (x : X), (x ∈ f⁻¹' {y}) → ∃! (i : I), ∃! (x₁ : X₁ i), (x₁ ∈ dom i) ∧ (p i x₁ (g i x₁) = x)

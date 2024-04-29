@@ -62,12 +62,12 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
 
 
   -- replace output arguments with meta variables, we do not want to index them!
-  let mut (fn,args) := b.getAppFnArgs
+  let mut (fn,args) := b.withApp (fun fn args => (fn,args))
   for i in gtransDecl.outputArgs do
     let X ← inferType args[i]!
     args := args.set! i (← mkFreshExprMVar X)
-  let b ← mkAppOptM fn (args.map some)
 
+  let b := fn.beta args
 
   let thm : GTransTheorem := {
     gtransName := gtransDecl.gtransName
