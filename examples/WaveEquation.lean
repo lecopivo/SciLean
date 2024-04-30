@@ -17,11 +17,6 @@ def H (m k : Float) (x p : Float^[n]) : Float :=
   (Δx/(2*m)) * ‖p‖₂² + (Δx * k/2) * (∑ i, ‖x[⟨(i.1+1)%n,sorry_proof⟩] - x[i]‖₂²)
 
 
--- #generate_revCDeriv' H x p
---   prop_by unfold H; fprop
---   trans_by unfold H; ftrans; ftrans; ftrans
-
-set_option trace.Meta.Tactic.fun_trans true in
 approx solver (m k : Float)
   :=  odeSolve (λ t (x,p) => ( ∇ (p':=p), H (n:=n) m k x p',
                               -∇ (x':=x), H (n:=n) m k x' p))
@@ -53,7 +48,7 @@ def main : IO Unit := do
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
-  for i in [0:1000] do
+  for i in [0:100] do
 
     (x, p) := solver m k (substeps,()) t (t+Δt) (x, p)
     t += Δt

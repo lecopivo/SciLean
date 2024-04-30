@@ -17,6 +17,8 @@ examples:
 	./.lake/build/bin/SurfaceMeshTests
 	lake build HarmonicOscillator
 	./.lake/build/bin/HarmonicOscillator
+	lake build WaveEquation
+	./.lake/build/bin/WaveEquation
 
 lint: build
 	./build/bin/runLinter

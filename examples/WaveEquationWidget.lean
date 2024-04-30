@@ -9,7 +9,6 @@ open SciLean
 
 abbrev State (n : Nat) := Float^[n] × Float^[n]
 
-
 instance : ToJson (DataArrayN Float (Fin n)) where
   toJson := fun x =>
     let x' := Array.ofFn (fun i => x[i])
@@ -49,7 +48,7 @@ def isvg (n) : InteractiveSvg (State n) where
           let θ' := if θ' ≤ RealScalar.pi then θ' else θ' - 2*RealScalar.pi
           let w := min (θ - θ').abs (θ - θ' + 2*RealScalar.pi).abs
           x[i] += Float.exp (- 50*w^2)
-    solver m k (1,()) time (time + Δt) (x,v)
+    (solver m k).val (1,()) time (time + Δt) (x,v)
 
   render time mouseStart mouseEnd state :=
     {
