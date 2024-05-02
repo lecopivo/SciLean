@@ -1,9 +1,9 @@
-import SciLean.Tactic.FunGTrans.Theorems
-import SciLean.Tactic.FunGTrans.Decl
+import SciLean.Tactic.GTrans.Theorems
+import SciLean.Tactic.GTrans.Decl
 
 open Lean Meta
 
-namespace SciLean.Tactic.FunGTrans
+namespace SciLean.Tactic.GTrans
 
 
 /-- Initialization of `funProp` attribute -/

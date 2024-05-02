@@ -5,7 +5,7 @@ import Mathlib.Tactic.FunProp.RefinedDiscrTree
 open Lean Meta
 open Mathlib.Meta.FunProp
 
-namespace SciLean.Tactic.FunGTrans
+namespace SciLean.Tactic.GTrans
 
 
 structure GTransDecl where

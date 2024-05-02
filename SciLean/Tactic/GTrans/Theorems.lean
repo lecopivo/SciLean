@@ -1,13 +1,13 @@
 import Lean
 import Mathlib.Tactic.FunProp.RefinedDiscrTree
 
-import SciLean.Tactic.FunGTrans.Decl
+import SciLean.Tactic.GTrans.Decl
 
 
 open Lean Meta
 open Mathlib.Meta.FunProp
 
-namespace SciLean.Tactic.FunGTrans
+namespace SciLean.Tactic.GTrans
 
 
 /-- Generalized transformation theorem -/

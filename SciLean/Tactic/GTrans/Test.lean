@@ -2,14 +2,14 @@ import Qq
 
 import Mathlib.Tactic
 
-import SciLean.Tactic.FunGTrans.Decl
-import SciLean.Tactic.FunGTrans.Theorems
-import SciLean.Tactic.FunGTrans.Attr
-import SciLean.Tactic.FunGTrans.Core
+import SciLean.Tactic.GTrans.Decl
+import SciLean.Tactic.GTrans.Theorems
+import SciLean.Tactic.GTrans.Attr
+import SciLean.Tactic.GTrans.Core
 
 open Lean Meta Qq
 
-namespace SciLean.Tactic.FunGTrans
+namespace SciLean.Tactic.GTrans
 
 set_option linter.unusedVariables false
 
@@ -57,7 +57,7 @@ theorem hasDeriv_mul [Add β] [Mul β]
 -- set_option trace.Meta.Tactic.gtrans true
 -- set_option trace.Meta.Tactic.gtrans.normalize true
 
-#eval show MetaM Unit from do
+  #eval show MetaM Unit from do
 
   withLocalDeclDQ `n q(Nat) fun n => do
 
@@ -189,3 +189,14 @@ def ParametricPreimageAt
   ∧
   -- every point in the preimage can be uniquelly represented by some point `x₁ : X₁ i`
   ∀ (x : X), (x ∈ f⁻¹' {y}) → ∃! (i : I), ∃! (x₁ : X₁ i), (x₁ ∈ dom i) ∧ (p i x₁ (g i x₁) = x)
+
+
+def HasRevDerivWithTape (f : α → β)
+    (T : outParam <| Type)     -- tape type
+    (f₁ : outParam <| α → T)  -- precomputa stuff to put on tape
+    (f₂ : outParam <| α → T → β) -- continue main computation, potentially use stuff on tape
+    (f' : outParam <| T → β → α) -- reverse pass using tape values
+    : Prop :=
+  ∀ x, f x = f₂ x (f₁ x)
+  -- ∧
+  -- ∀ x dy, ∇ f x dy = f' (f₂ x (f₁ x)) dy
