@@ -1,5 +1,5 @@
 import Lean
-import Mathlib.Tactic.FunProp.RefinedDiscrTree
+import Mathlib.Tactic.FunProp
 
 import SciLean.Tactic.GTrans.Decl
 import SciLean.Tactic.GTrans.Theorems
@@ -21,7 +21,7 @@ namespace SciLean.Tactic.GTrans
 def normalize (e : Expr) : MetaM (Expr × Option Expr) := do
   trace[Meta.Tactic.gtrans.normalize] "normalizing {e}"
   -- let e ← whnfCore e {zeta:=false,zetaDelta:=false}
-  let e ← e.toSSA #[]
+  -- let e ← e.toSSA #[]
   let e ← e.liftLets2 mkLambdaFVars (config:={pullLetOutOfLambda:=false})
   trace[Meta.Tactic.gtrans.normalize] "normalized {e}"
   return (e,none)
@@ -48,14 +48,24 @@ def tryTheorem? (e : Expr) (thm : GTransTheorem) (fuel : Nat)
 
     if let .some _ ← isGTrans? X then
       if let .some prf ← gtrans (fuel-1) X then
-        x.mvarId!.assign prf
+        x.mvarId!.assignIfDefeq prf
       else
         trace[Meta.Tactic.gtrans] "failed to synthesize argument `{← ppExpr x} : {← ppExpr X}`"
         return none
     else if let .some _ ← isClass? X then
       let inst ← synthInstance X
       x.mvarId!.assignIfDefeq inst
+    else if ← Mathlib.Meta.FunProp.isFunPropGoal X then
+      if let (.some prf, _) ← (funProp X).run {} {} then
+        x.mvarId!.assign prf.proof
+      else
+        trace[Meta.Tactic.gtrans] "failed to prove argument `{← ppExpr x} : {← ppExpr X}`"
+        return none
 
+  -- if (← instantiateMVars thmProof).hasExprMVar then
+  --   let mvars := (thmProof.collectMVars {}).result
+
+  --   throwError s!"proof has unassigned metavariables {← mvars.mapM (fun mvar => mvar.getType >>= ppExpr)}"
   return some thmProof
 
 
@@ -95,7 +105,7 @@ partial def gtrans (fuel : Nat) (e : Expr) : MetaM (Option Expr) := do
   -- replace output argument mvars with fresh mvars
   let mut e' := e
   for i in gtransDecl.outputArgs do
-    unless e.getArg! i |>.isMVar do
+    unless (e.getArg! i).getAppFn |>.isMVar do
       throwError "expected metavariable in output argument {i} of {← ppExpr e}"
     e' := e'.setArg i (← mkFreshExprMVar (← inferType (e'.getArg! i)))
 
@@ -106,11 +116,13 @@ partial def gtrans (fuel : Nat) (e : Expr) : MetaM (Option Expr) := do
   for thm in thms do
     trace[Meta.Tactic.gtrans] "applying {thm.thmName}"
     if let .some prf ← tryTheorem? e' thm fuel gtrans then
+
       -- get output arguments and normalize them
       for i in gtransDecl.outputArgs do
         let arg := (← instantiateMVars (e'.getArg! i))
         let (arg',_) ← normalize arg
         (e.getArg! i).mvarId!.assign arg'
+
 
       -- todo: use proofs from normalization
       --       right now we assume that normalization produces terms that are defeq to the original ones
