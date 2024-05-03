@@ -124,18 +124,6 @@ noncomputable
 def Scalar.toENNReal {R} [RealScalar R] (x : R) : ENNReal :=
   .ofReal (Scalar.toReal R x)
 
-@[simp, ftrans_simp]
-theorem Scalar.oftoENNReal {R} [RealScalar R] (x : R) :
-    Scalar.ofENNReal (Scalar.toENNReal x)
-    =
-    max x 0 := sorry_proof
-
-@[simp, ftrans_simp]
-theorem Scalar.oftoReal {R} [RealScalar R] (x : R) :
-    Scalar.ofReal R (Scalar.toReal R x)
-    =
-    x := sorry_proof
-
 
 open ComplexConjugate
 
@@ -313,5 +301,121 @@ theorem scalar_min_one_zero  : min (1 : R) (0 : R) = 0 := by sorry_proof
 
 @[simp, ftrans_simp]
 theorem scalar_min_zero_one  : min (0 : R) (1 : R) = 0 := by sorry_proof
+
+
+----------------------------------------------------------------------------------------------------
+-- to/ofReal ------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+@[simp, ftrans_simp]
+theorem Scalar.oftoReal (x : R) :
+    Scalar.ofReal R (Scalar.toReal R x)
+    =
+    x := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.ofReal_zero :
+  Scalar.ofReal R (0 : ℝ) = (0:R) := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.ofReal_one :
+  Scalar.ofReal R (1 : ℝ) = (1:R) := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.toReal_zero :
+  Scalar.toReal R (0:R) = 0 := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.toReal_one :
+  Scalar.toReal R (1:R) = 1 := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.ofReal_ite (c : Prop) [Decidable c] (t e : ℝ) :
+    Scalar.ofReal R (if c then t else e)
+    =
+    if c then Scalar.ofReal R t else Scalar.ofReal R e := by
+  if h : c then simp[h] else simp[h]
+
+@[simp, ftrans_simp]
+theorem Scalar.ofReal_dite (c : Prop) [Decidable c]
+    (t : c → ℝ) (e : ¬c → ℝ) :
+    Scalar.ofReal R (if h : c then t h else e h)
+    =
+    if h : c then Scalar.ofReal R (t h) else Scalar.ofReal R (e h) := by
+  if h : c then simp[h] else simp[h]
+
+@[simp, ftrans_simp]
+theorem Scalar.toReal_ite (c : Prop) [Decidable c] (t e : R) :
+    Scalar.toReal R (if c then t else e)
+    =
+    if c then Scalar.toReal R t else Scalar.toReal R e := by
+  if h : c then simp[h] else simp[h]
+
+@[simp, ftrans_simp]
+theorem Scalar.toReal_dite (c : Prop) [Decidable c]
+    (t : c → R) (e : ¬c → R) :
+    Scalar.toReal R (if h : c then t h else e h)
+    =
+    if h : c then Scalar.toReal R (t h) else Scalar.toReal R (e h) := by
+  if h : c then simp[h] else simp[h]
+
+
+----------------------------------------------------------------------------------------------------
+-- to/ofENNReal ------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+@[simp, ftrans_simp]
+theorem Scalar.oftoENNReal (x : R) :
+    Scalar.ofENNReal (Scalar.toENNReal x)
+    =
+    max x 0 := sorry_proof
+
+
+@[simp, ftrans_simp]
+theorem Scalar.ofENNReal_one :
+  Scalar.ofENNReal (1 : ENNReal) = (1:R) := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.ofENNReal_zero :
+  Scalar.ofENNReal (0 : ENNReal) = (0:R) := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.toENNReal_one :
+  Scalar.toENNReal (1:R) = 1 := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.toENNReal_zero :
+  Scalar.toENNReal (0:R) = 0 := sorry_proof
+
+@[simp, ftrans_simp]
+theorem Scalar.ofENNReal_ite (c : Prop) [Decidable c] (t e : ENNReal) :
+    Scalar.ofENNReal (R:=R) (if c then t else e)
+    =
+    if c then Scalar.ofENNReal (R:=R) t else Scalar.ofENNReal (R:=R) e := by
+  if h : c then simp[h] else simp[h]
+
+@[simp, ftrans_simp]
+theorem Scalar.ofENNReal_dite (c : Prop) [Decidable c]
+    (t : c → ENNReal) (e : ¬c → ENNReal) :
+    Scalar.ofENNReal (R:=R) (if h : c then t h else e h)
+    =
+    if h : c then Scalar.ofENNReal (R:=R) (t h) else Scalar.ofENNReal (R:=R) (e h) := by
+  if h : c then simp[h] else simp[h]
+
+@[simp, ftrans_simp]
+theorem Scalar.toENNReal_ite (c : Prop) [Decidable c] (t e : R) :
+    Scalar.toENNReal (if c then t else e)
+    =
+    if c then Scalar.toENNReal t else Scalar.toENNReal e := by
+  if h : c then simp[h] else simp[h]
+
+@[simp, ftrans_simp]
+theorem Scalar.toENNReal_dite (c : Prop) [Decidable c]
+    (t : c → R) (e : ¬c → R) :
+    Scalar.toENNReal (if h : c then t h else e h)
+    =
+    if h : c then Scalar.toENNReal (t h) else Scalar.toENNReal (e h) := by
+  if h : c then simp[h] else simp[h]
+
 
 end SimpTheorems
