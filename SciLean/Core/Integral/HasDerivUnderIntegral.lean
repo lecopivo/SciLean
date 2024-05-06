@@ -1,8 +1,10 @@
 import SciLean.Notation
-import SciLean.Core.Integral.CIntegral
-import SciLean.Core.Integral.Surface
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.Notation
+
+import SciLean.Core.Integral.CIntegral
+import SciLean.Core.Integral.Surface
+import SciLean.Core.Integral.RestrictToLevelSet
 
 import SciLean.Tactic.GTrans
 
@@ -222,11 +224,13 @@ theorem cintegral.arg_f.HasDerivUnderIntegral_rule
   (w : W) (f : W → X → Y → Z) (μ : Measure X) (ν : Measure Y)
   (f' : W → X×Y → Z) (sf : W → Z)
   (hf : HasDerivUnderIntegralAt R (fun w (xy : X×Y) => f w xy.1 xy.2) (μ.prod ν) w f' sf) :
-  HasDerivUnderIntegralAt R (fun w x => ∫' y, f w x y ∂ν) μ w (fun dw x => ∫' y, f' dw (x,y) ∂ν) sf := sorry_proof
+  HasDerivUnderIntegralAt R
+    (fun w x => ∫' y, f w x y ∂ν) μ w
+    (fun dw x => ∫' y, f' dw (x,y) ∂ν) sf := sorry_proof
 
 
 @[gtrans]
-theorem ite.arg_cte.HasDerivUnderIntegral_rule
+theorem ite.arg_cte.HasDerivUnderIntegral_rule {X} [SemiHilbert R X] [MeasureSpace X]
   (t e : W → X → Y) (μ : Measure X) (w : W)
   (c : W → X → Prop) [∀ w x, Decidable (c w x)]
   (t' e' : W → X → Y) (st se : W → Y)
@@ -237,7 +241,25 @@ theorem ite.arg_cte.HasDerivUnderIntegral_rule
     (fun w x => if c w x then t w x else e w x) μ w
     (fun dw x => if c w x then t' dw x else e' dw x)
     (fun dw =>
-       let ds := movingFrontierIntegral R (fun x => t w x - e w x) (fun w => {x | c w x}) μ w dw
+       let ds := vectorIntegral (fun x => (t w x - e w x)) (μ.restrictToFrontier R (fun w => {x | c w x}) w dw) (fun y r => r•y)
        let st' := st dw
        let se' := se dw
        st' + se' + ds) := sorry_proof
+
+
+-- @[gtrans]
+-- theorem ite.arg_cte.HasDerivUnderIntegral_rule {X} [SemiHilbert R X] [MeasureSpace X]
+--   (t e : W → X → Y) (μ : Measure X) (w : W)
+--   (φ ψ : W → X → R)
+--   (t' e' : W → X → Y) (st se : W → Y)
+--   -- (hμ : μ ≪ volume)
+--   (hf : HasDerivUnderIntegralAt R t (μ.restrict {x | φ w x ≤ ψ w x}) w t' st)
+--   (hg : HasDerivUnderIntegralAt R e (μ.restrict {x | φ w x ≤ ψ w x}ᶜ) w e' se) :
+--   HasDerivUnderIntegralAt R
+--     (fun w x => if φ w x ≤ ψ w x then t w x else e w x) μ w
+--     (fun dw x => if φ w x ≤ ψ w x then t' dw x else e' dw x)
+--     (fun dw =>
+--        let ds := ∫' x, (t w x - e w x) ∂(μ.restrictToLevelSet R (fun w x => φ w x - ψ w x) w dw x)
+--        let st' := st dw
+--        let se' := se dw
+--        st' + se' + ds) := sorry_proof

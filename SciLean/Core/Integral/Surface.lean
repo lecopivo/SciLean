@@ -35,3 +35,8 @@ open FiniteDimensional in
 @[simp, ftrans_simp]
 theorem surfaceMeasure_volume [MeasureSpace X] :
    surfaceMeasure (X:=X) (finrank R X) = volume := sorry_proof
+
+
+@[ftrans_simp]
+theorem surfaceMeasure_zero_singleton [MeasureSpace X] (x : X) :
+  surfaceMeasure 0 {x} = 1 := sorry_proof

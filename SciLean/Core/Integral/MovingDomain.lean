@@ -48,14 +48,12 @@ variable (R)
 open Classical in
 noncomputable
 def frontierSpeed (A : W → Set X) (w dw : W) (x : X) : R :=
-  -- todo: use some version of `IsLipschitzDomain` to get `φ`
-  sorry
-  -- if h : ∃ φ : W → X → R, ∀ w, A w = {x | 0 ≤ φ w x} then
-  --   let φ := choose h
-  --   -- TODO: turn `x` to the closes point on the boundary
-  --   levelSetSpeed φ w dw x
-  -- else
-  --   0
+  match Classical.dec (∃ (φ : W → X → R), (∀ w, A w = {x | φ w x = 0})) with
+  | .isTrue h =>
+    let φ := Classical.choose h
+    (-(∂ (w':=w;dw), φ w' x)/‖∇ x':=x, φ w x'‖₂)
+  | .isFalse _ => 0
+
 variable {R}
 
 
@@ -92,6 +90,8 @@ theorem moving_volume_derivative (f : W → X → Y) (A : W → Set X) (hA : IsL
 ----------------------------------------------------------------------------------------------------
 -- Moving Frontier Integral ------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
+
+#exit
 
 variable (R)
 @[fun_trans]
@@ -234,6 +234,7 @@ theorem cintegral.arg_fμ.cderiv_rule_add (f g : W → X → Y) (A : Set X) :
       ds + dy + dz := sorry_proof
 
 
+#exit
 
 variable (R)
 /-- -/

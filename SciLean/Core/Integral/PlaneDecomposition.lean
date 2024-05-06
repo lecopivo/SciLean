@@ -39,7 +39,7 @@ def gramSchmidtDataArrayImpl {X} [SemiHilbert R X] [PlainDataType X] (u : X^[n])
   return u
 
 
-open IndexType Scalar in
+open IndexType Scalar FinVec in
 /-- Given a plane `{x | ⟪u,x⟫=0}` this function decomposes `R^[n]` into this plane and its
 orthogonal complement.
 

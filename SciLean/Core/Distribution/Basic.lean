@@ -622,6 +622,8 @@ def Distribution.toMeasure (f' : 𝒟' X) : Measure X :=
   else
     0
 
+
+
 -- @[simp]
 -- theorem apply_measure_as_distribution  {X} [MeasurableSpace X]  (μ : Measure X) (φ : X → Y) :
 --      ⟪μ.toDistribution, φ⟫ = ∫ x, φ x ∂μ := by rfl

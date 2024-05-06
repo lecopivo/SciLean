@@ -2,6 +2,7 @@ import LeanColls
 import SciLean.Util.SorryProof
 import SciLean.Tactic.RefinedSimp
 
+
 open LeanColls
 
 open Set
@@ -77,8 +78,17 @@ end SciLean
 
 namespace IndexType
 
-
 variable {ι : Type v} [IndexType ι]
+
+open IndexType
+@[simp]
+theorem card_sum {ι κ} [IndexType ι] [IndexType κ] : card (ι ⊕ κ) = card ι + card κ := by rfl
+
+@[simp]
+theorem card_prod {ι κ} [IndexType ι] [IndexType κ] : card (ι × κ) = card ι * card κ := by rfl
+
+@[simp]
+theorem card_unit : card Unit = 1 := by rfl
 
 instance (P : ι → Prop) [∀ i : ι, Decidable (P i)] : Decidable (∀ i : ι, P i) := Id.run do
   for i in IndexType.univ ι do
