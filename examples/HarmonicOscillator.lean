@@ -23,7 +23,7 @@ by
   simp_rw (config:={zeta:=false}) [odeSolve_fixed_dt rungeKutta4 sorry_proof]
 
   -- todo: make approx_limit ignore leading let bindings
-  approx_limit n := sorry_proof
+  approx_limit n sorry_proof
 
 def main : IO Unit := do
 

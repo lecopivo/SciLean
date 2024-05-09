@@ -3,7 +3,7 @@ import SciLean.Core.Approx.ApproxLimit
 import SciLean.Core.Notation.Gradient
 import SciLean.Modules.DifferentialEquations
 
-open SciLean
+open SciLean Notation
 
 variable {n : Nat}
 
@@ -11,10 +11,12 @@ set_option synthInstance.maxSize 20000
 
 set_default_scalar Float
 
+def _root_.Fin.shift (i : Fin n) (j : Nat) : Fin n := ⟨(i.1+j)%j, sorry_proof⟩
+
 -- set_option trace.Meta.synthInstance true in
 def H (m k : Float) (x p : Float^[n]) : Float :=
   let Δx := 1.0/n.toFloat
-  (Δx/(2*m)) * ‖p‖₂² + (Δx * k/2) * (∑ i, ‖x[⟨(i.1+1)%n,sorry_proof⟩] - x[i]‖₂²)
+  (Δx/(2*m)) * ‖p‖₂² + (Δx * k/2) * (∑ i, ‖x[i.shift 1] - x[i]‖₂²)
 
 
 approx solver (m k : Float)
@@ -22,7 +24,7 @@ approx solver (m k : Float)
                               -∇ (x':=x), H (n:=n) m k x' p))
 by
   -- Unfold Hamiltonian definition and compute gradients
-  unfold H scalarGradient
+  unfold H
   autodiff
 
   -- Apply RK4 method
@@ -30,7 +32,7 @@ by
     pattern (odeSolve _)
     rw[odeSolve_fixed_dt (R:=Float) rungeKutta4 sorry_proof]
 
-  approx_limit steps := sorry_proof
+  approx_limit steps sorry_proof
 
 
 def main : IO Unit := do

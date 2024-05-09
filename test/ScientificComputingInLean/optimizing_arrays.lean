@@ -19,30 +19,15 @@ theorem mapIdxMono_mapIdxMono {I} [IndexType I] (x : Float^[I]) (f g : I → Flo
 
 
 def saxpy {n} (a : Float) (x y : Float^[n]) := (a•x+y)
-  rewrite_by
-    simp only [HAdd.hAdd,Add.add,HSMul.hSMul,SMul.smul]
-    simp only [mapMono_mapIdxMono]
 
-
-def saxpy_naive {n} (a : Float) (x y : Float^[n]) := (a•x+y)
-
-def_optimize saxpy_naive by
+def_optimize saxpy by
   simp only [HAdd.hAdd,Add.add,HSMul.hSMul,SMul.smul]
   simp only [mapMono_mapIdxMono]
 
 
-/--
-info: saxpy_naive.optimized {n : ℕ} (a : Float) (x y : DataArrayN Float (Fin n)) : DataArrayN Float (Fin n)
--/
-#guard_msgs in
-#check saxpy_naive.optimized
+#check saxpy.optimized
 
-/--
-info: saxpy_naive.optimize_rule {n : ℕ} (a : Float) (x y : DataArrayN Float (Fin n)) :
-  saxpy_naive a x y = saxpy_naive.optimized a x y
--/
-#guard_msgs in
-#check saxpy_naive.optimize_rule
+#check saxpy.optimize_rule
 
 
 
@@ -50,7 +35,6 @@ info: saxpy_naive.optimize_rule {n : ℕ} (a : Float) (x y : DataArrayN Float (F
 def matVecMul {n m} (A : Float^[n,m]) (x : Float^[m]) := ⊞ i => ∑ j, A[i,j] * x[j]
 
 def_optimize matVecMul by
-  simp only [LeanColls.IndexType.toFin_prod]
   simp only [GetElem.getElem, LeanColls.GetElem'.get, DataArrayN.get, IndexType.toFin, id,
              Fin.pair, IndexType.fromFin, Fin.cast, IndexType.card]
 

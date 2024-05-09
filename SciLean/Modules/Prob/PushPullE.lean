@@ -54,4 +54,4 @@ theorem bind_pull_mean (x : Rand X) (f : X → Rand Y) :
 
 @[rand_pull_E mid-1]
 theorem add_pull_mean (x : X) (f : Rand X) :
-    x + f.mean = Rand.mean (X:=X) (do let y ← f; pure (x + y)) := sorry_proof
+    x + f.mean = Rand.mean (X:=X) (f.bind (fun y => pure (x + y))) := sorry_proof
