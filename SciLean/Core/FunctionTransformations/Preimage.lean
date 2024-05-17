@@ -38,8 +38,9 @@ theorem Prod.mk.arg_fstsnd.preimage_rule_prod (f : α → β) (g : α → γ) (B
     =
     f ⁻¹' B ∩ g ⁻¹' C := sorry_proof
 
-
+@[pp_dot]
 def _root_.Set.fst (A : Set (α×β)) (b : β) : Set α := {x | (x,b) ∈ A}
+@[pp_dot]
 def _root_.Set.snd (A : Set (α×β)) (a : α) : Set β := {y | (a,y) ∈ A}
 
 @[fun_trans]
