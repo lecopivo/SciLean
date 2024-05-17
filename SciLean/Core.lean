@@ -19,6 +19,7 @@ import SciLean.Core.Functions.Exp
 import SciLean.Core.Functions.Trigonometric
 import SciLean.Core.Functions.Pow
 
+import SciLean.Core.Integral.Common
 
 import SciLean.Tactic.InferVar
 import SciLean.Tactic.RefinedSimp

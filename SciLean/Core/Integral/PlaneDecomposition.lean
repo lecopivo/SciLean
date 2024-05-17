@@ -1,5 +1,8 @@
-import SciLean.Core
+import SciLean.Data.DataArray
+import SciLean.Core.FunctionTransformations
+import SciLean.Core.FunctionPropositions
 import SciLean.Core.Integral.ParametricInverse
+import SciLean.Core.Notation
 import SciLean.Tactic.InferVar
 
 namespace SciLean
