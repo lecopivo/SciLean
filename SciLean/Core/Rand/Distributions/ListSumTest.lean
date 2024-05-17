@@ -23,7 +23,7 @@ def foo' (θ : R) (l : List R) (n : Nat) : Rand R :=
     induction n n' prev h
     . simp[foo]
     . simp[foo,h]
-      rw[add_as_flip_E θ sorry_proof]
+      -- rw[add_as_flip_E θ sorry_proof]
     rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
 
 

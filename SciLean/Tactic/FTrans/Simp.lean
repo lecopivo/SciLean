@@ -8,7 +8,7 @@ import Mathlib.LinearAlgebra.Dimension.Constructions
 namespace SciLean
 
 -- basic algebraic operations
-attribute [ftrans_simp] add_zero zero_add sub_zero zero_sub sub_self neg_zero mul_zero zero_mul zero_smul smul_zero smul_eq_mul smul_neg eq_self iff_self mul_one one_mul one_smul tsub_zero pow_one mul_neg neg_mul neg_neg one_pow zero_pow div_self one_div
+attribute [ftrans_simp] add_zero zero_add sub_zero zero_sub sub_self neg_zero mul_zero zero_mul zero_smul smul_zero smul_eq_mul smul_neg eq_self iff_self mul_one one_mul one_smul tsub_zero pow_one mul_neg neg_mul neg_neg one_pow zero_pow div_self one_div inv_one neg_sub sub_neg_eq_add
 
 -- simps theorems for `Nat`
 attribute [ftrans_simp] Nat.succ_sub_succ_eq_sub Nat.cast_ofNat

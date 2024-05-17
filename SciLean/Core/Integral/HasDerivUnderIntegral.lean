@@ -5,6 +5,7 @@ import SciLean.Core.Notation
 import SciLean.Core.Integral.CIntegral
 import SciLean.Core.Integral.Surface
 import SciLean.Core.Integral.RestrictToLevelSet
+import SciLean.Core.Integral.VectorIntegral
 
 import SciLean.Tactic.GTrans
 
@@ -16,11 +17,14 @@ namespace SciLean
 
 variable
   {R} [RealScalar R] [MeasureSpace R]
-  {W} [Vec R W]
+  {W} [Vec R W] [Module ℝ W]
+  {S} [Vec R S]
   {W'} [Vec R W']
   {X} [SemiHilbert R X] [MeasurableSpace X]
   {Y} [Vec R Y] [Module ℝ Y]
   {Z} [Vec R Z] [Module ℝ Z]
+  {U} [Vec R U] [Module ℝ U]
+  {V} [Vec R V] [Module ℝ V]
 
 
 set_default_scalar R
@@ -36,6 +40,18 @@ def HasDerivUnderIntegralAt
   CDifferentiable R (fun w' => ∫' x, f w' x ∂μ)
   ∧
   ∀ dw, (∂ (w':=w;dw), ∫' x, f w' x ∂μ) = (∫' x, f' dw x ∂μ) + s dw
+
+
+
+@[gtrans]
+def HasDerivUnderVectorIntegralAt
+    (f : S → X → U) (μ : VectorMeasure X V) (L : U → V → W) (s : S)
+    (f' : outParam <| S → X → U) (sf : outParam <| S → W) : Prop :=
+  CDifferentiable R (fun s' => vectorIntegral (fun x => f s' x) μ L)
+  ∧
+  ∀ ds, (∂ (s':=s;ds), vectorIntegral (fun x => f s' x) μ L)
+        =
+        vectorIntegral (fun x => f' ds x) μ L + sf ds
 
 
 -- TODO: add option to `fun_trans` to specify main argument
@@ -241,7 +257,7 @@ theorem ite.arg_cte.HasDerivUnderIntegral_rule {X} [SemiHilbert R X] [MeasureSpa
     (fun w x => if c w x then t w x else e w x) μ w
     (fun dw x => if c w x then t' dw x else e' dw x)
     (fun dw =>
-       let ds := vectorIntegral (fun x => (t w x - e w x)) (μ.restrictToFrontier R (fun w => {x | c w x}) w dw) (fun y r => r•y)
+       let ds := vectorIntegral (fun x => (t w x - e w x)) (μ.restrictToMovingBoundary R (fun w => {x | c w x}) w dw) (fun y r => r•y)
        let st' := st dw
        let se' := se dw
        st' + se' + ds) := sorry_proof

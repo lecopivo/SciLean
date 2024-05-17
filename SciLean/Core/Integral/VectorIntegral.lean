@@ -41,6 +41,8 @@ open Classical in
   ```
   L fun (u : U) (v : ℝ) => v • u
   ```
+
+  See introduction of this paper: On integration of vector functions with respect to vector measures
 -/
 noncomputable
 def vectorIntegral {X U V W} [MeasurableSpace X]
@@ -53,7 +55,6 @@ def vectorIntegral {X U V W} [MeasurableSpace X]
     choose h
   else
     0
-
 
 
 noncomputable

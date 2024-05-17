@@ -1,6 +1,7 @@
 import Lean.Elab.Tactic.Conv
 
 import SciLean.Tactic.GTrans.Core
+import SciLean.Util.RewriteBy
 
 namespace SciLean
 
@@ -14,7 +15,7 @@ syntax (name:=gtrans_tac) "gtrans" : tactic
 syntax (name:=gtrans_conv) "gtrans" : conv
 
 
-@[tactic gtrans_tac] def gtransTac : Tactic := fun _ => do
+@[tactic gtrans_tac] unsafe def gtransTac : Tactic := fun _ => do
   let goal ← getMainGoal
 
   let e ← goal.getType
@@ -25,10 +26,30 @@ syntax (name:=gtrans_conv) "gtrans" : conv
   goal.assignIfDefeq prf
 
 
-@[tactic gtrans_conv] def gtransConv : Tactic := fun _ => do
+@[tactic gtrans_conv] unsafe def gtransConv : Tactic := fun _ => do
   let e ← Conv.getLhs
 
   let .some _ ← gtrans 100 e
     | throwError "gtrans: faild to prove {← ppExpr e}"
 
   -- goal.assignIfDefeq prf
+
+
+open Lean Elab Term Meta Qq in
+/-- `gtrans_output t by gtrans` returns tuple of all output parameters infered by `gtrans` in the term `t` -/
+elab "gtrans_output" t:term "by" c:Parser.Tactic.Conv.convSeq : term => do
+
+  let e ← elabTerm (← `($t rewrite_by $c)) none
+
+  forallTelescope e fun xs b => do
+
+    let fn := b.getAppFn
+    forallTelescope (← inferType fn) fun ys _ => do
+
+    let mut output : Array Expr := #[]
+
+    for y in ys, arg in b.getAppArgs do
+      if (← inferType y).isAppOf ``outParam then
+        output := output.push arg
+
+    mkLambdaFVars xs (← mkProdElem output)

@@ -76,24 +76,6 @@ theorem Prod.mk.arg_fstsnd.Bijective_rule
   := by sorry_proof
 
 
--- Id --------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-@[fun_prop]
-theorem id.arg_a.Bijective_rule
-  : Bijective (fun x : X => id x) := by unfold id; fun_prop
-
-
--- Function.comp ---------------------------------------------------------------
---------------------------------------------------------------------------------
-
-@[fun_prop]
-theorem Function.comp.arg_a0.Bijective_rule
-  (f : Y → Z) (hf : Bijective f)
-  (g : X → Y) (hg : Bijective g)
-  : Bijective (fun x => (f ∘ g) x)
-  := Bijective.comp hf hg
-
 
 
 -- Neg.neg ---------------------------------------------------------------------

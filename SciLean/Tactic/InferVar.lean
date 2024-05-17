@@ -103,7 +103,11 @@ open Lean Meta Elab Tactic Qq
 partial def deduceByTactic : Tactic
 | `(tactic| infer_var (norm:=$c) (disch:=$t)) => do
 
+
   let goal ← getMainGoal
+
+  trace[Meta.Tactic.infer_var] "goal {← ppExpr (← goal.getType)}"
+
   let .some (_,lhs,rhs) := Expr.eq? (← goal.getType)
     | throwError "infer_var: expected goal of the form `?m = e`, got {← ppExpr (← goal.getType)}"
 
@@ -124,10 +128,15 @@ partial def deduceByTactic : Tactic
       goal.assign (← mkEqSymm goal')
       pure (goal'.mvarId!,rhs,lhs)
 
+  trace[Meta.Tactic.infer_var] "infering {← ppExpr a} from {← ppExpr b}"
+
   let A ← inferType a
   if A == q(Nat) then
     let (m,x) ← invertNat a b
+    trace[Meta.Tactic.infer_var] "candidate value for {← ppExpr m} is {← ppExpr x}"
     let (x', _) ← elabConvRewrite x #[] (← `(conv| ($c)))
+    trace[Meta.Tactic.infer_var] "simplified candidate value is {← ppExpr x'}"
+    m.mvarId!.assignIfDefeq x'
     unless ← isDefEq m x' do throwError "infer_var: failed to assign {← ppExpr x'} to {← ppExpr m}"
     let subgoals ←
       evalTacticAt (← `(tactic| (conv => (conv => lhs; ($c)); (conv => rhs; ($c))); (try $t))) goal
@@ -135,8 +144,14 @@ partial def deduceByTactic : Tactic
       throwError "infer_var: discharger `{Syntax.prettyPrint t}` failed proving {← ppExpr (← goal.getType)}"
   else
     let (b',prf) ← elabConvRewrite b #[] (← `(conv| ($c)))
+    trace[Meta.Tactic.infer_var] "simplified value {← ppExpr b'}"
     a.mvarId!.assign b'
     goal.assign prf
 | `(tactic| infer_var) => do
   evalTactic (← `(tactic| infer_var (norm:=norm_num) (disch:=simp)))
 | _ => throwUnsupportedSyntax
+
+
+
+
+initialize registerTraceClass `Meta.Tactic.infer_var

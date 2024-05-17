@@ -106,14 +106,15 @@ variable
 variable (f : X → R)
 
 open IndexType in
-theorem parametric_inverse_affine {n} (f : X → R) (hf : IsAffineMap R f)
+@[gtrans]
+theorem parametric_inverse_affine {n} (f : X → R) (c : R) (hf : IsAffineMap R f)
     (hn : n + 1 = card ι := by first | assumption | infer_var) :
     let u  := ∇ f 0
     let dec := planeDecomposition (R:=R) u hn
-    ParametricInverseAt f 0
+    ParametricInverseAt f c
       (I:=Unit)
       (p:=fun _ y t => dec (t,y))
-      (g:=fun _ _ => - f 0 / ‖u‖₂)
+      (g:=fun _ _ => (c - f 0) / ‖u‖₂)
       (dom := fun _ => ⊤) := by
 
   simp[ParametricInverseAt,arrayTypeCont]
@@ -124,13 +125,13 @@ theorem parametric_inverse_affine {n} (f : X → R) (hf : IsAffineMap R f)
 
 
 open IndexType in
-theorem parametric_inverse_affine' (f : X → R) (hf : IsAffineMap R f) :
+theorem parametric_inverse_affine' (f : X → R) (c : R) (hf : IsAffineMap R f) :
     let u  := ∇ f 0
     let dec := planeDecomposition (n:=card ι - 1) (R:=R) u sorry_proof
-    ParametricInverseAt f 0
+    ParametricInverseAt f c
       (I:=Unit)
       (p:=fun _ y t => dec (t,y))
-      (g:=fun _ _ => - f 0 / ‖u‖₂)
+      (g:=fun _ _ => (c - f 0) / ‖u‖₂)
       (dom := fun _ => ⊤) := by
 
   simp[ParametricInverseAt,arrayTypeCont]

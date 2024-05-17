@@ -65,6 +65,8 @@ def addGTransDecl (declName : Name) : MetaM Unit := do
 
 def isGTrans? (e : Expr) : MetaM (Option GTransDecl) := do
 
+  let e ← whnfR e
+
   let ext := gtransDeclsExt.getState (← getEnv)
 
   let .some (fnName,_) := e.getAppFn'.const?

@@ -1,8 +1,9 @@
 import Lean
 import Mathlib.Tactic.FunProp.RefinedDiscrTree
 
-import SciLean.Tactic.GTrans.Decl
 
+import SciLean.Tactic.GTrans.Decl
+import SciLean.Lean.Meta.Basic
 
 open Lean Meta
 open Mathlib.Meta.FunProp
@@ -57,8 +58,10 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
 
   let (_,_,b) ← forallMetaTelescope info.type
 
+  Meta.letTelescope b fun _ b => do
+
   let .some gtransDecl ← isGTrans? b
-    | throwError "not generalized transformation"
+    | throwError s!"not generalized transformation {← ppExpr b} \n \n {← ppExpr (← whnfR b)}"
 
 
   -- replace output arguments with meta variables, we do not want to index them!
