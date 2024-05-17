@@ -19,6 +19,7 @@ attribute [ftrans_simp] MeasureTheory.Measure.restrict_empty MeasureTheory.Measu
 
 attribute [ftrans_simp] ENNReal.one_toReal ENNReal.zero_toReal
 
+attribute [ftrans_simp] Set.mem_inter_iff
 
 ----------------------------------------------------------------------------------------------------
 -- Measure simp theorems ---------------------------------------------------------------------------
