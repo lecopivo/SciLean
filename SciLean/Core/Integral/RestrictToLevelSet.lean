@@ -105,18 +105,27 @@ def _root_.MeasureTheory.Measure.restrictToLevelSet (μ : Measure X) (φ : X →
 theorem restrictToFrontier_eq_restrictToLevelSet (f : X → U) (μ : Measure X) (φ ψ : W → X → R) (L : U → R → V) (w dw : W) :
     (vectorIntegral f (μ.restrictToMovingBoundary R (fun w => {x | φ w x ≤ ψ w x}) w dw) L)
     =
-    let sliceSpeed := fun x => ∂ (w':=w;dw), (φ w' x - ψ w' x)
+    let sliceSpeed := fun x => - ∂ (w':=w;dw), (φ w' x - ψ w' x)
     vectorIntegral (fun x => sliceSpeed x • f x) (μ.restrictToLevelSet (fun x => φ w x - ψ w x) 0) L := sorry_proof
 
 
-@[ftrans_simp]
+
 theorem vectorIntegral_restrictToLevelSet_eq_cintegral (f : X → U) (μ : Measure X)
     (φ : X → R) (L : U → R → V) (c : R) :
     vectorIntegral f (μ.restrictToLevelSet φ c) L
     =
     let thickness := fun x => ‖∇ (x':=x), φ x'‖₂⁻¹
     let dμdΛ := fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x)
-    ∫' x in {x | φ x = c}, L (f x) (thickness x * dμdΛ x) ∂(surfaceMeasure (finrank R X - 1)) := sorry
+    ∫' x in {x | φ x = c}, L (f x) (thickness x * dμdΛ x) ∂(surfaceMeasure (finrank R X - 1)) := sorry_proof
+
+
+@[ftrans_simp]
+theorem vectorIntegral_volume_restrict_restrictToLevelSet_eq_cintegral (f : X → U) (A : Set X)
+    (φ : X → R) (L : U → R → V) (c : R) :
+    vectorIntegral f ((volume.restrict A).restrictToLevelSet φ c) L
+    =
+    let thickness := fun x => ‖∇ (x':=x), φ x'‖₂⁻¹
+    ∫' x in {x | φ x = c} ∩ A, L (f x) (thickness x) ∂(surfaceMeasure (finrank R X - 1)) := sorry_proof
 
 
 

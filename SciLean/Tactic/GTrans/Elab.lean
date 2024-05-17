@@ -53,3 +53,8 @@ elab "gtrans_output" t:term "by" c:Parser.Tactic.Conv.convSeq : term => do
         output := output.push arg
 
     mkLambdaFVars xs (← mkProdElem output)
+
+/-- `gtrans_output t` returns tuple of all output parameters infered by `gtrans` in the term `t`.
+
+This is a shorthand for `gtrans_output t by gtrans`. -/
+macro "gtrans_output" t:term : term => `(gtrans_output $t by gtrans)

@@ -17,6 +17,7 @@ attribute [fun_trans] Set.preimage_id Set.preimage_id'
 
 namespace Set
 
+
 open Classical in
 @[fun_trans]
 theorem preimage_const' (b : β) (s : Set β) :
@@ -37,17 +38,21 @@ theorem Prod.mk.arg_fstsnd.preimage_rule_prod (f : α → β) (g : α → γ) (B
     =
     f ⁻¹' B ∩ g ⁻¹' C := sorry_proof
 
+
+def _root_.Set.fst (A : Set (α×β)) (b : β) : Set α := {x | (x,b) ∈ A}
+def _root_.Set.snd (A : Set (α×β)) (a : α) : Set β := {y | (a,y) ∈ A}
+
 @[fun_trans]
 theorem Prod.mk.arg_fst.preimage_rule_prod (f : α → β) (c : γ) :
     preimage (fun x => (f x, c))
     =
-    fun s => f ⁻¹' {y | (y,c) ∈ s} := sorry_proof
+    fun s => f ⁻¹' (s.fst c) := sorry_proof
 
 @[fun_trans]
 theorem Prod.mk.arg_snd.preimage_rule_prod (b : β) (g : α → γ) :
     preimage (fun x => (b, g x))
     =
-    fun s => g ⁻¹' {z | (b,z) ∈ s} := sorry_proof
+    fun s => g ⁻¹' (s.snd b) := sorry_proof
 
 
 open SciLean

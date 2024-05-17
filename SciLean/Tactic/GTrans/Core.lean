@@ -102,7 +102,7 @@ unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (fuel : Nat)
     let x ← instantiateMVars x
     if x.hasMVar then
       restoreState s
-      trace[Meta.Tactic.gtrans] "failed to synthesize argument {← ppExpr x}"
+      trace[Meta.Tactic.gtrans] "failed to synthesize argument {← ppExprWithType x}"
       return none
 
   return some thmProof
