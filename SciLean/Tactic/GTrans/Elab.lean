@@ -2,6 +2,9 @@ import Lean.Elab.Tactic.Conv
 
 import SciLean.Tactic.GTrans.Core
 import SciLean.Util.RewriteBy
+import SciLean.Tactic.InferVar
+
+import Mathlib.Tactic.FunProp.Elab
 
 namespace SciLean
 
@@ -14,23 +17,81 @@ syntax (name:=gtrans_tac) "gtrans" : tactic
 /-- `gtrans` as conv tactic will fill in meta variables in generalized transformation -/
 syntax (name:=gtrans_conv) "gtrans" : conv
 
+#check Nat
 
-@[tactic gtrans_tac] unsafe def gtransTac : Tactic := fun _ => do
+open Lean.Parser.Tactic in
+syntax (name:=gtrans_tac') "gtrans" (config)? (discharger)? (normalizer)? : tactic
+
+
+open Lean.Parser.Tactic in
+syntax (name:=gtrans_conv') "gtrans" (config)? (discharger)? (normalizer)? : conv
+
+
+declare_config_elab elabGTransConfig  SciLean.Tactic.GTrans.Config
+
+private def emptyDischarge : Expr → MetaM (Option Expr) :=
+  fun e =>
+    withTraceNode `Meta.Tactic.fun_prop
+      (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] discharging: {← ppExpr e}") do
+      pure none
+
+open Lean.Parser.Tactic Mathlib.Meta.FunProp in
+private def elabDischarger (disch : Option (TSyntax ``discharger)) : MetaM (Expr → MetaM (Option Expr)) := do
+    match disch with
+    | none => pure emptyDischarge
+    | some d =>
+      match d with
+      | `(discharger| (discharger:=$tac)) => pure <| tacticToDischarge (← `(tactic| ($tac)))
+      | _ => pure emptyDischarge
+
+
+
+@[tactic gtrans_tac] unsafe def gtransTac : Tactic := fun stx => do
   let goal ← getMainGoal
 
   let e ← goal.getType
 
-  let .some prf ← gtrans 100 e
+  let (.some prf, _) ← ((gtrans e).run {}).run {}
     | throwError "gtrans: faild to prove {← ppExpr e}"
 
   goal.assignIfDefeq prf
+
+@[tactic gtrans_tac'] unsafe def gtransTac' : Tactic
+| `(tactic| gtrans $(cfg)? $(disch)? $(norm)?) => do
+
+  let cfg ← match cfg with | .some cfg => elabGTransConfig cfg | .none => pure {}
+  let disch ← elabDischarger disch
+
+  let goal ← getMainGoal
+
+  let e ← goal.getType
+
+  let (.some prf, _) ← ((gtrans e).run {config := cfg, discharge := disch}).run {}
+    | throwError "gtrans: faild to prove {← ppExpr e}"
+
+  goal.assignIfDefeq prf
+| _ => throwUnsupportedSyntax
+
 
 
 @[tactic gtrans_conv] unsafe def gtransConv : Tactic := fun _ => do
   let e ← Conv.getLhs
 
-  let .some _ ← gtrans 100 e
+  let (.some prf, _) ← ((gtrans e).run {}).run {}
     | throwError "gtrans: faild to prove {← ppExpr e}"
+
+open Mathlib.Meta.FunProp Lean.Parser.Tactic in
+@[tactic gtrans_conv'] unsafe def gtransConv' : Tactic
+| `(conv| gtrans $(cfg)? $(disch)? $(norm)?) => do
+  let e ← Conv.getLhs
+
+  let cfg ← match cfg with | .some cfg => elabGTransConfig cfg | .none => pure {}
+  let disch ← elabDischarger disch
+
+  let (.some prf, _) ← ((gtrans e).run {config := cfg, discharge := disch}).run {}
+    | throwError "gtrans: faild to prove {← ppExpr e}"
+| _ => throwUnsupportedSyntax
+
 
   -- goal.assignIfDefeq prf
 

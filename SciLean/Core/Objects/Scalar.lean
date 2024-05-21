@@ -6,6 +6,8 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+import Mathlib.Analysis.NormedSpace.WithLp
+import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
 import SciLean.Util.SorryProof
 import SciLean.Tactic.FTrans.Init
@@ -107,6 +109,13 @@ class RealScalar (R : semiOutParam (Type _)) extends Scalar R R, LinearOrder R w
   atan_def : ∀ x, toReal (atan x) = Real.arctan (toReal x)
 
 def RealScalar.pi [RealScalar R] : R := RealScalar.acos (-1)
+
+
+instance {R} [RealScalar R] : MetricSpace (WithLp p R) := (by infer_instance : MetricSpace R)
+
+-- can we provide this without messing with instance for `MeasureSpace ℝ`?
+-- open MeasureTheory in
+-- instance {R} [RealScalar R] : MeasureSpace R := sorry
 
 instance {R K} [Scalar R K] : HPow K K K := ⟨fun x y => Scalar.pow x y⟩
 

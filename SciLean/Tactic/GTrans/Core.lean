@@ -16,13 +16,33 @@ namespace SciLean.Tactic.GTrans
 
 
 ----------------------------------------------------------------------------------------------------
+
+
+structure Config where
+  maxNumSteps := 1000
+
+
+structure Context where
+  config : Config := {}
+  normalize : Expr → MetaM Simp.Result := fun e => return { expr := e}
+  discharge : Expr → MetaM (Option Expr) := fun _ => return .none
+
+
+structure State where
+  numSteps := 0
+
+
+
+abbrev GTransM := ReaderT Context $ StateRefT State MetaM
+
+----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
 private def ppExprWithType (e : Expr) : MetaM String := do
   return s!"{← ppExpr e} : {← ppExpr (← inferType e)}"
 
 
-def normalize (e : Expr) : MetaM (Expr × Option Expr) := do
+def defaultNormalize (e : Expr) : MetaM (Expr × Option Expr) := do
   trace[Meta.Tactic.gtrans.normalize] "normalizing {e}"
   -- let e ← whnfCore e {zeta:=false,zetaDelta:=false}
   -- let e ← e.toSSA #[]
@@ -30,10 +50,14 @@ def normalize (e : Expr) : MetaM (Expr × Option Expr) := do
   trace[Meta.Tactic.gtrans.normalize] "normalized {e}"
   return (e,none)
 
+def increaseNumSteps : GTransM Unit :=
+  modify (fun s => {s with numSteps := s.numSteps + 1 })
 
-unsafe def synthesizeArgument (x : Expr)
-    (fuel : Nat) (gtrans : Nat → Expr → MetaM (Option Expr)) :
-    MetaM Bool := do
+def normalize (e : Expr) : GTransM Simp.Result := do (← read).normalize e
+def discharge? (e : Expr) : GTransM (Option Expr) := do (← read).discharge e
+
+unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr)) :
+    GTransM Bool := do
 
   let x ← instantiateMVars x
   let X ← inferType x
@@ -45,42 +69,38 @@ unsafe def synthesizeArgument (x : Expr)
     (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] synthesizing argument {← ppExprWithType x}") do
 
     if let .some _ ← isGTrans? X then
-      if let .some prf ← gtrans (fuel-1) X then
+      if let .some prf ← do increaseNumSteps; gtrans X then
         x.mvarId!.assignIfDefeq prf
         return true
-      else
-        return false
-    else if let .some _ ← isClass? X then
+
+    if let .some _ ← isClass? X then
       try
         let inst ← synthInstance X
         x.mvarId!.assignIfDefeq inst
         return true
       catch _ =>
         return false
-    else if ← Mathlib.Meta.FunProp.isFunPropGoal X then
-      if let (.some prf, _) ← (funProp X).run {} {} then
-        x.mvarId!.assign prf.proof
-        return true
-      else
-        return false
-    else if X.isAppOfArity ``autoParam 2 then
+
+    if X.isAppOfArity ``autoParam 2 then
       let tactic ← Meta.evalExpr (TSyntax `tactic) q(Lean.Syntax) X.appArg!
       trace[Meta.Tactic.gtrans.arg] s!"auto arg tactic {tactic.raw.prettyPrint}"
       let .some prf ← tacticToDischarge ⟨tactic⟩ X.appFn!.appArg! | return false
       if ← isDefEq (← inferType prf) X then
         x.mvarId!.assignIfDefeq prf
         return true
-      else
-        return false
-    else
-      return false
+
+    if let .some prf ← discharge? X then
+      if ← isDefEq (← inferType prf) X then
+        x.mvarId!.assignIfDefeq prf
+        return true
+
+    return false
 
 
-unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (fuel : Nat)
-    (gtrans : Nat → Expr → MetaM (Option Expr)) : MetaM (Option Expr) := do
+unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem)
+    (gtrans : Expr → GTransM (Option Expr)) : GTransM (Option Expr) := do
 
   trace[Meta.Tactic.gtrans] "goal {← ppExpr e}"
-
 
   let thmProof ← thm.getProof
   let type ← inferType thmProof
@@ -88,7 +108,7 @@ unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (fuel : Nat)
   let thmProof := thmProof.beta xs
 
   -- if applying this theorem fails we want to roll back any changes to metavariables
-  let s ← saveState
+  let s ← liftM <| (saveState : MetaM _)
 
   trace[Meta.Tactic.gtrans.unify] "unify\n{e}\n=?=\n{type}"
   unless (← isDefEq e type) do
@@ -96,12 +116,12 @@ unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (fuel : Nat)
     return none
 
   for x in xs do
-    let _ ← synthesizeArgument x fuel gtrans
+    let _ ← synthesizeArgument x gtrans
 
   for x in xs do
     let x ← instantiateMVars x
     if x.hasMVar then
-      restoreState s
+      liftM <| (restoreState s : MetaM _)
       trace[Meta.Tactic.gtrans] "failed to synthesize argument {← ppExprWithType x}"
       return none
 
@@ -125,12 +145,13 @@ Examples:
   calling `gtrans q(HasFDeriv (fun x : ℝ => x*x) ?f' x` will compute derivative
   `?f := fun dx ↦L[K] 2*dx`
  -/
-unsafe def gtrans (fuel : Nat) (e : Expr) : MetaM (Option Expr) := do
+unsafe def gtrans (e : Expr) : GTransM (Option Expr) := do
 
   forallTelescope e fun ctx e => do
   Meta.letTelescope e fun ctx' e => do
 
-  if fuel = 0 then
+  if (← get).numSteps ≥ (← read).config.maxNumSteps then
+    throwError "expected application of generalized transformation, got {← ppExpr e}"
     return none
 
   let .some gtransDecl ← isGTrans? e
@@ -160,17 +181,17 @@ unsafe def gtrans (fuel : Nat) (e : Expr) : MetaM (Option Expr) := do
     if let .some prf ←
       withTraceNode `Meta.Tactic.gtrans
         (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] applying {thm.thmName}") do
-        tryTheorem? e' thm fuel gtrans then
+        tryTheorem? e' thm gtrans then
 
       -- get output arguments and normalize them
       for i in gtransDecl.outputArgs do
         let arg := (← instantiateMVars (e'.getArg! i))
-        let (arg',_) ← normalize arg
+        let arg' ← normalize arg
 
-        if ← isDefEq arg' (e.getArg! i) then
+        if ← isDefEq arg'.expr (e.getArg! i) then
           continue
         else
-          trace[Meta.Tactic.gtrans] "failed to assign {← ppExprWithType arg'} to {← ppExprWithType (e.getArg! i)}"
+          trace[Meta.Tactic.gtrans] "failed to assign {← ppExprWithType arg'.expr} to {← ppExprWithType (e.getArg! i)}"
 
 
       -- todo: use proofs from normalization

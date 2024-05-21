@@ -8,7 +8,7 @@ open MeasureTheory
 namespace SciLean
 
 macro "integral_deriv" : conv =>
-  `(conv| fun_trans (config:={zeta:=false}) (disch:=first | assumption | gtrans) only
+  `(conv| fun_trans (config:={zeta:=false}) (disch:=first | assumption | (gtrans (disch:=fun_prop))) only
       [↓ refinedRewritePre, ↑ refinedRewritePost, ftrans_simp, Tactic.lift_lets_simproc,
        scalarGradient, scalarCDeriv])
 

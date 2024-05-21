@@ -8,7 +8,6 @@ variable
 
 set_default_scalar R
 
-
 example (w : R) :
     (∂ w':=w,
       ∫' x in Icc (0:R) 1,

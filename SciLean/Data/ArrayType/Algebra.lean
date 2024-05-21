@@ -4,6 +4,8 @@ import SciLean.Data.StructType.Algebra
 
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
+import SciLean.Mathlib.Analysis.MetricSpace
+
 open LeanColls
 
 namespace SciLean
@@ -73,6 +75,28 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Inner K Elem] : Inner K Co
 instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions Elem] :
     TestFunctions Cont where
   TestFunction x := ∀ i, TestFunction (x[i])
+
+
+noncomputable
+instance (priority := low) {p} [ArrayType Cont Idx Elem] [Dist (WithLp p Elem)] :
+    Dist (WithLp p Cont) where
+  dist := fun x y =>
+    let x := WithLp.equiv _ _ x
+    let y := WithLp.equiv _ _ y
+    (∑ i, (pdist p x[i] y[i])^p.toReal)^(1/p.toReal)
+
+
+noncomputable
+instance (priority := low) [ArrayType Cont Idx Elem] [MetricSpace (WithLp p Elem)] :
+    MetricSpace (WithLp p Cont) where
+  dist_self := sorry_proof
+  dist_comm := sorry_proof
+  dist_triangle := sorry_proof
+  edist_dist := sorry_proof
+  uniformity_dist := sorry_proof
+  cobounded_sets := sorry_proof
+  eq_of_dist_eq_zero := sorry_proof
+
 
 -- noncomputable
 -- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :

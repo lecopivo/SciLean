@@ -1,7 +1,9 @@
 import SciLean.Data.DataArray
+import SciLean.Data.ArrayType
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.FunctionPropositions
 import SciLean.Core.Integral.ParametricInverse
+import SciLean.Core.Integral.Jacobian
 import SciLean.Core.Notation
 import SciLean.Tactic.InferVar
 
@@ -142,3 +144,20 @@ theorem parametric_inverse_affine' (f : X → R) (c : R) (hf : IsAffineMap R f) 
   rw[h]; fun_trans [scalarGradient,planeDecomposition_orthogonal_dir]
   have : ‖(<∂ f 0).2 1‖₂[R] ≠ 0 := sorry_proof
   field_simp
+
+
+
+
+
+open IndexType in
+@[simp, fun_trans]
+theorem planeDecomposition.arg_a0.jacobian_rule
+    {n} {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+    {X} [SemiHilbert R X]
+    {Y} [FinVec ι R Y]
+    (u : Y)
+    (hn : n + 1 = card ι := by first | assumption | infer_var) (a : R)
+    (f : X → R^[n]) (hf : HasAdjDiff R f):
+    jacobian R (fun x => planeDecomposition u hn (a, f x))
+    =
+    fun x => jacobian R f x := sorry_proof

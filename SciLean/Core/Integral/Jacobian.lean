@@ -74,10 +74,10 @@ variable {R}
 
 
 @[fun_trans]
-theorem jacobian.id_rule (f : U → V) (g : U → U) :
-    jacobian R (fun x => f (g x))
+theorem jacobian.id_rule :
+    jacobian R (fun x : U => x)
     =
-    fun x => jacobian R f x * jacobian R g x := sorry_proof
+    fun _ => 1 := sorry_proof
 
 
 @[fun_trans]
