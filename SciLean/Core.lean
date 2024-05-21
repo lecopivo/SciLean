@@ -9,16 +9,15 @@ import SciLean.Core.FunctionSpaces
 import SciLean.Core.Monads
 import SciLean.Core.Notation
 
-import SciLean.Core.Rand
-
 import SciLean.Core.Approx.Basic
 import SciLean.Core.Approx.ApproxLimit
-
 
 import SciLean.Core.Functions.Exp
 import SciLean.Core.Functions.Trigonometric
 import SciLean.Core.Functions.Pow
 
+-- these two imports need clean up
+import SciLean.Core.Rand
 import SciLean.Core.Integral.Common
 
 import SciLean.Tactic.InferVar

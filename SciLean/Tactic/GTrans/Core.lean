@@ -162,15 +162,13 @@ unsafe def gtrans (fuel : Nat) (e : Expr) : MetaM (Option Expr) := do
         (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] applying {thm.thmName}") do
         tryTheorem? e' thm fuel gtrans then
 
-      trace[Meta.Tactic.gtrans] "application successful"
-
       -- get output arguments and normalize them
       for i in gtransDecl.outputArgs do
         let arg := (← instantiateMVars (e'.getArg! i))
         let (arg',_) ← normalize arg
 
         if ← isDefEq arg' (e.getArg! i) then
-          trace[Meta.Tactic.gtrans] "argument {i} assigned with {← ppExpr arg'}"
+          continue
         else
           trace[Meta.Tactic.gtrans] "failed to assign {← ppExprWithType arg'} to {← ppExprWithType (e.getArg! i)}"
 
