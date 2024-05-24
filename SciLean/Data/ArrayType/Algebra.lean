@@ -83,7 +83,7 @@ instance (priority := low) {p} [ArrayType Cont Idx Elem] [Dist (WithLp p Elem)] 
   dist := fun x y =>
     let x := WithLp.equiv _ _ x
     let y := WithLp.equiv _ _ y
-    (∑ i, (pdist p x[i] y[i])^p.toReal)^(1/p.toReal)
+    (∑ i, (distP p x[i] y[i])^p.toReal)^(1/p.toReal)
 
 
 noncomputable

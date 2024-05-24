@@ -7,6 +7,8 @@ import Mathlib.Tactic.FunTrans.Elab
 import SciLean.Core.Objects.Scalar
 import SciLean.Util.SorryProof
 
+import SciLean.Mathlib.Set
+
 variable {α β γ : Type _}
 
 attribute [fun_trans] Set.preimage
@@ -37,11 +39,6 @@ theorem Prod.mk.arg_fstsnd.preimage_rule_prod (f : α → β) (g : α → γ) (B
     preimage (fun x => (f x, g x)) (B.prod C)
     =
     f ⁻¹' B ∩ g ⁻¹' C := sorry_proof
-
-@[pp_dot]
-def _root_.Set.fst (A : Set (α×β)) (b : β) : Set α := {x | (x,b) ∈ A}
-@[pp_dot]
-def _root_.Set.snd (A : Set (α×β)) (a : α) : Set β := {y | (a,y) ∈ A}
 
 @[fun_trans]
 theorem Prod.mk.arg_fst.preimage_rule_prod (f : α → β) (c : γ) :

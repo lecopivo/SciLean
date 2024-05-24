@@ -3,14 +3,11 @@ import SciLean.Tactic.IfPull
 
 open SciLean MeasureTheory Set
 
-
-attribute [ftrans_simp] Set.mem_preimage
-
 @[gtrans]
 def SciLean.BoundingBall {X} [MetricSpaceP X 2]
     (A : Set X)
     (center : outParam X) (radius : outParam ℝ) : Prop :=
-  A ⊂ Metric.pclosedBall 2 center radius
+  A ⊂ Metric.closedBallP 2 center radius
 
 
 open Set in
@@ -28,7 +25,7 @@ theorem Set.fst.bounding_ball
     (A : Set (X×Y)) (b : Y)  (center : X×Y) (radius : ℝ)
     (hA : BoundingBall A center radius) :
     let center' := center.1
-    let radius' := (radius^2 - (pdist 2 center.2 b)^2).sqrt
+    let radius' := (radius^2 - (distP 2 center.2 b)^2).sqrt
     BoundingBall (A.fst b) center' radius' := sorry_proof
 
 
@@ -38,7 +35,7 @@ theorem Set.snd.bounding_ball
     (A : Set (X×Y)) (a : X)  (center : X×Y) (radius : ℝ)
     (hA : BoundingBall A center radius) :
     let center' := center.2
-    let radius' := (radius^2 - (pdist 2 center.1 a)^2).sqrt
+    let radius' := (radius^2 - (distP 2 center.1 a)^2).sqrt
     BoundingBall (A.snd a) center' radius' := sorry_proof
 
 

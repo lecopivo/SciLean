@@ -39,10 +39,10 @@ attribute [ftrans_simp]
 attribute [ftrans_simp]
   not_le
 
--- setOf
+-- setOf and membership
 open Set in
 attribute [ftrans_simp]
-  mem_setOf_eq not_le  setOf_eq_eq_singleton mem_Ioo mem_Icc mem_Ico mem_Ioc mem_compl_iff mem_prod_eq
+  mem_setOf_eq not_le  setOf_eq_eq_singleton mem_Ioo mem_Icc mem_Ico mem_Ioc mem_compl_iff mem_prod_eq Set.mem_preimage
 
 -- PUnit
 attribute [ftrans_simp]

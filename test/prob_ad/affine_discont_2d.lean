@@ -1,6 +1,7 @@
 import SciLean.Core.Integral.Common
 import SciLean.Core.Integral.BoundingBall
 import SciLean.Tactic.IfPull
+import SciLean.Util.Profile
 
 open SciLean MeasureTheory Set
 
@@ -17,8 +18,7 @@ theorem cintegral_boundinb_ball_domain
     (center : X) (radius : ℝ) (hball : BoundingBall A center radius) :
     ∫' y in A, f y
     =
-    ∫' x in Metric.pclosedBall 2 center radius, (if x ∈ A then f x else 0) := sorry
-
+    ∫' x in Metric.closedBallP 2 center radius, (if x ∈ A then f x else 0) := sorry
 
 
 open IndexType in
@@ -31,44 +31,21 @@ theorem planeDecomposition_bounding_ball
     let center' := ((planeDecomposition (R:=R) u hn).symm center)
     BoundingBall ((fun x => planeDecomposition u hn x) ⁻¹' A) center' radius := sorry
 
--- BoundingBall ((fun x12 => (planeDecomposition (a, b) ⋯) x12) ⁻¹' Icc 0 1 ×ˢ Icc 0 1) ?center ?radius
 
-@[simp, ftrans_simp]
-theorem indicator_of_preimage {α β M} [Zero M] (f : α → β) (m : M) (B : Set β) (x : α) :
-  (f ⁻¹' B).indicator (fun _ => m) x
-  =
-  B.indicator (fun _ => m) (f x) := by rfl
+-- @[simp, ftrans_simp]
+-- theorem invFun_equiv [Nonempty α] (f : α ≃ β) :
+--   Function.invFun f = f.symm := sorry_proof
 
-
-@[simp, ftrans_simp]
-theorem indicator_of_preimage' {α β M} [Nonempty α] [Zero M] (f : α → β) (g : α → M) (B : Set β) (x : α) :
-  (f ⁻¹' B).indicator g x
-  =
-  B.indicator (fun y => g (f.invFun y)) (f x) := sorry_proof
-
-
-@[simp, ftrans_simp]
-theorem invFun_equiv [Nonempty α] (f : α ≃ β) :
-  Function.invFun f = f.symm := sorry_proof
-
-open Classical in
-@[simp, ftrans_simp]
-theorem indicator_of_snd {α β M} [Zero M] (A : Set (α×β)) (m : M)  (a : α) (y : β) :
-    (A.snd a).indicator (fun _ => m) y
-    =
-    if (a,y) ∈ A then m else 0 := by
-  unfold Set.indicator Set.snd
-  if h : (a, y) ∈ A then simp[h] else simp[h]
-
-set_option trace.Meta.Tactic.gtrans true
-set_option trace.Meta.Tactic.gtrans.arg true
-set_option trace.Meta.Tactic.simp.rewrite true
-set_option trace.Meta.Tactic.simp.unify true
-set_option trace.Meta.Tactic.simp.discharge true
+set_option profiler true
+-- set_option trace.Meta.Tactic.fun_trans true
+-- set_option trace.Meta.Tactic.fun_prop true
+-- set_option trace.Meta.Tactic.gtrans true
+-- set_option trace.Meta.Tactic.gtrans.arg true
 
 
 @[simp, ftrans_simp]
 theorem dist_sqrt (x y : ℝ) : (x^2 + y^2).sqrt^2 = x^2 + y^2 := sorry_proof
+
 
 example (w : R) (a b c d : R) :
     (∂ w':=w,
@@ -78,21 +55,16 @@ example (w : R) (a b c d : R) :
     sorry := by
 
   conv =>
-    lhs
     integral_deriv
     simp (config := {zeta:=false}) (disch:=gtrans) only [cintegral_boundinb_ball_domain]
     integral_deriv
-    simp (config:={zeta:=false})
 
   sorry_proof
 
 
 
-variable (w : R) (a b c d : R)
 
-
-
-
+#exit
 /--
 info: let ds :=
   ∫' x,
