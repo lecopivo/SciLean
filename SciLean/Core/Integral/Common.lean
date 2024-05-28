@@ -8,7 +8,7 @@ open MeasureTheory
 namespace SciLean
 
 macro "integral_deriv" : conv =>
-  `(conv| fun_trans (config:={zeta:=false}) (disch:=first | assumption | (gtrans (disch:=fun_prop))) only
+  `(conv| fun_trans (config:={zeta:=false}) (disch:=first | assumption | (gtrans (disch:=(first | assumption | fun_prop (disch:=assumption))))) only
       [↓ refinedRewritePre, ↑ refinedRewritePost, ftrans_simp, Tactic.lift_lets_simproc,
        scalarGradient, scalarCDeriv])
 
@@ -19,12 +19,12 @@ attribute [ftrans_simp] MeasureTheory.Measure.restrict_empty MeasureTheory.Measu
 
 attribute [ftrans_simp] ENNReal.one_toReal ENNReal.zero_toReal
 
-attribute [ftrans_simp] Set.mem_inter_iff
 
 ----------------------------------------------------------------------------------------------------
 -- Measure simp theorems ---------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+-- same as `MeasureTheory.Measure.restrict_restrict` but for now we skip checking measurability of the set
 @[ftrans_simp]
 theorem Measure.restrict_restrict {X} [MeasurableSpace X] (μ : Measure X) (A B : Set X) :
     (μ.restrict A).restrict B = μ.restrict (A ∩ B) := by sorry_proof
@@ -77,7 +77,7 @@ theorem surfaceIntegral_parametrization (f : X → U) (d) (φ ψ : X → R)
     =
     let sub := fun i x => p i x (g i x)
     let J := fun i x => jacobian R (sub i) x
-    ∑ i : I, ∫' x, J i x • f (sub i x) := sorry_proof
+    ∑ i : I, ∫' x in dom i, J i x • f (sub i x) := sorry_proof
 
 
 open BigOperators in
@@ -92,7 +92,7 @@ theorem surfaceIntegral_inter_parametrization (f : X → U) (d) (φ ψ : X → R
     ∑ i : I,
       let sub := fun x => p i x (g i x)
       let J := fun x => jacobian R sub x
-      ∫' x in sub ⁻¹' A, J x • f (sub x) := sorry_proof
+      ∫' x in sub ⁻¹' A ∩ dom i, J x • f (sub x) := sorry_proof
 
 
 end SubstitutionTheorems

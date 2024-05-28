@@ -15,7 +15,7 @@ def ParametricInverseAt
     (g : outParam <| (i : I) → X₁ i → X₂ i)
     (dom : outParam <| (i : I) → Set (X₁ i)) :=
   ∀ (i : I) (x₁ : X₁ i), (x₁∈ dom i) → f (p i x₁ (g i x₁)) = y
-
+  -- add condition that the parametrization is 1-1
 
 variable {R} [RealScalar R]
 

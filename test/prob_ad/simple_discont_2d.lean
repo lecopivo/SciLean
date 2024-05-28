@@ -18,26 +18,17 @@ example (w : R) :
 
   conv =>
     lhs
-    integral_deriv
+
+    fun_trans
+      (config := {zeta:=false})
+      (disch:=first | assumption | (gtrans (disch:=(fun_prop (disch:=assumption)))))
+      only [ftrans_simp,ftrans_simp, Tactic.lift_lets_simproc, scalarGradient, scalarCDeriv]
+
+    simp
+      (config := {zeta:=false,singlePass:=true})
+      (disch:=gtrans)
+      only [cintegral_bound_domain_ball]
+
     autodiff
 
   sorry_proof
-
-
-
-variable (w : R)
-
-/--
-info: let ds :=
-  ∫' x,
-    jacobian R (fun x => (planeDecomposition (1, 1) ⋯) (w / Scalar.sqrt (1 + 1), x)) x *
-      (Scalar.sqrt
-          (1 +
-            1))⁻¹ ∂volume.restrict
-      (preimageSnd ((fun x12 => (planeDecomposition (1, 1) ⋯) x12) ⁻¹' Icc 0 1 ×ˢ Icc 0 1) (w / Scalar.sqrt (1 + 1)));
-ds : R
--/
-#guard_msgs in
-#check (∂ w':=w,
-      ∫' x in Icc (0:R) 1, ∫' y in Icc (0:R) 1,
-        if x + y ≤ w' then (1:R) else 0) rewrite_by integral_deriv; autodiff

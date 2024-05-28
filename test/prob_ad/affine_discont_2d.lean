@@ -10,42 +10,15 @@ variable
 
 set_default_scalar R
 
-open Classical in
-theorem cintegral_boundinb_ball_domain
-    {X} [MeasureSpace X] [MetricSpaceP X 2]
-    {U} [AddCommGroup U] [Module ℝ U]
-    (A : Set X) (f : X → U)
-    (center : X) (radius : ℝ) (hball : BoundingBall A center radius) :
-    ∫' y in A, f y
-    =
-    ∫' x in Metric.closedBallP 2 center radius, (if x ∈ A then f x else 0) := sorry
 
-
-open IndexType in
-@[gtrans]
-theorem planeDecomposition_bounding_ball
-    {n} {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] {X} [FinVec ι R X] [MetricSpaceP X 2]
-    (u : X) (hn : n + 1 = card ι := by first | assumption | infer_var)
-    (A : Set X) (center : X) (radius : ℝ)
-    (hA : BoundingBall A center radius) :
-    let center' := ((planeDecomposition (R:=R) u hn).symm center)
-    BoundingBall ((fun x => planeDecomposition u hn x) ⁻¹' A) center' radius := sorry
-
-
--- @[simp, ftrans_simp]
--- theorem invFun_equiv [Nonempty α] (f : α ≃ β) :
---   Function.invFun f = f.symm := sorry_proof
-
-set_option profiler true
+-- set_option profiler true
 -- set_option trace.Meta.Tactic.fun_trans true
+-- set_option trace.Meta.Tactic.fun_trans.rewrite true
 -- set_option trace.Meta.Tactic.fun_prop true
 -- set_option trace.Meta.Tactic.gtrans true
 -- set_option trace.Meta.Tactic.gtrans.arg true
-
-
-@[simp, ftrans_simp]
-theorem dist_sqrt (x y : ℝ) : (x^2 + y^2).sqrt^2 = x^2 + y^2 := sorry_proof
-
+-- set_option trace.Meta.Tactic.simp.rewrite true
+-- set_option trace.Meta.Tactic.simp.discharge true
 
 example (w : R) (a b c d : R) :
     (∂ w':=w,
@@ -53,29 +26,40 @@ example (w : R) (a b c d : R) :
         if a * x + b * y + c ≤ d * w' then (1:R) else 0)
     =
     sorry := by
+    -- let dec := planeDecomposition (R:=R) (a, b)
+    -- let r := Scalar.sqrt (a ^ 2 + b ^ 2)
+    -- let ds :=
+    --   ∫' x,
+    --     if
+    --         (0 ≤ (dec ((d * w - c) / r, x)).1 ∧
+    --             (dec ((d * w - c) / r, x)).1 ≤ 1) ∧
+    --           0 ≤ (dec ((d * w - c) / r, x)).2 ∧
+    --             (dec ((d * w - c) / r, x)).2 ≤ 1 then
+    --       Inv.inv r * d
+    --     else
+    --       0 ∂volume.restrict
+    --       (Metric.closedBallP 2 (dec.symm (1/2, 1/2)).2
+    --         √(Scalar.toReal R (1/2) ^ 2 + Scalar.toReal R (1/2) ^ 2 - distP 2 (dec.symm (1/2, 1/2)).1 ((d * w - c) / r) ^ 2));
+    -- ds := by
 
   conv =>
-    integral_deriv
-    simp (config := {zeta:=false}) (disch:=gtrans) only [cintegral_boundinb_ball_domain]
-    integral_deriv
+    lhs
+    -- there is an issue with `first | assumption | ...` discharger for `gtrans`
+    -- simp
+    --   (config := {zeta:=false})
+    --   (disch:=first | assumption | (gtrans (disch:=first | assumption | (fun_prop (disch:=assumption))))) only
+    --   [ftrans_simp,ftrans_simp, Tactic.lift_lets_simproc, scalarGradient, scalarCDeriv]
+
+    fun_trans
+      (config := {zeta:=false})
+      (disch:=first | assumption | (gtrans (disch:=(fun_prop (disch:=assumption)))))
+      only [ftrans_simp,ftrans_simp, Tactic.lift_lets_simproc, scalarGradient, scalarCDeriv]
+
+    simp
+      (config := {zeta:=false,singlePass:=true})
+      (disch:=gtrans)
+      only [cintegral_bound_domain_ball]
+
+    autodiff
 
   sorry_proof
-
-
-
-
-#exit
-/--
-info: let ds :=
-  ∫' x,
-    jacobian R (fun x => (planeDecomposition (a, b) ⋯) ((d * w - c) / Scalar.sqrt (a ^ 2 + b ^ 2), x)) x *
-      ((Scalar.sqrt (a ^ 2 + b ^ 2))⁻¹ *
-        d) ∂volume.restrict
-      (((fun x12 => (planeDecomposition (a, b) ⋯) x12) ⁻¹' Icc 0 1 ×ˢ Icc 0 1).snd
-        ((d * w - c) / Scalar.sqrt (a ^ 2 + b ^ 2)));
-ds : R
--/
-#guard_msgs in
-#check (∂ w':=w,
-      ∫' x in Icc (0:R) 1, ∫' y in Icc (0:R) 1,
-        if a * x + b * y + c ≤ d * w' then (1:R) else 0) rewrite_by integral_deriv; autodiff

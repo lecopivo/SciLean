@@ -40,9 +40,10 @@ attribute [ftrans_simp]
   not_le
 
 -- setOf and membership
+-- bunch of other theorems are in SciLean.Mathlib.Set
 open Set in
 attribute [ftrans_simp]
-  mem_setOf_eq not_le  setOf_eq_eq_singleton mem_Ioo mem_Icc mem_Ico mem_Ioc mem_compl_iff mem_prod_eq Set.mem_preimage
+  Set.top_eq_univ Set.inter_univ mem_setOf_eq not_le setOf_eq_eq_singleton mem_compl_iff mem_preimage
 
 -- PUnit
 attribute [ftrans_simp]

@@ -1,5 +1,6 @@
 import SciLean.Core
 import SciLean.Tactic.IfPull
+import SciLean.Util.Profile
 
 open SciLean MeasureTheory Set
 
@@ -8,36 +9,16 @@ variable
 
 set_default_scalar R
 
-set_option trace.Meta.Tactic.gtrans true
-set_option trace.Meta.Tactic.fun_trans true
-set_option trace.Meta.Tactic.fun_trans.rewrite true
-set_option trace.Meta.Tactic.simp.discharge true
--- set_option trace.Meta.Tactic.gtrans.arg true
-
-
 
 example (w : R) (a b c : R) (ha : a ≠ 0) :
     (∂ w':=w,
       ∫' x in Icc (0:R) 1,
         if a * x + b ≤ c * w' then (1:R) else 0)
     =
-    sorry := by
+    if 0 ≤ a⁻¹ * (c * w - b) ∧ a⁻¹ * (c * w - b) ≤ 1 then
+      (Scalar.abs a)⁻¹ * c
+    else 0 := by
 
   conv =>
     lhs
     integral_deriv
-
-  sorry_proof
-
-
-variable (w : R) (a b c : R) (ha : a ≠ 0)
-
-
-/--
-info: let ds := ∫' x, (Scalar.abs a)⁻¹ * c ∂(surfaceMeasure 0).restrict ({x | a * x + b - c * w = 0} ∩ Icc 0 1);
-ds : R
--/
-#guard_msgs in
-#check (∂ w':=w,
-      ∫' x in Icc (0:R) 1,
-        if a * x + b ≤ c * w' then (1:R) else 0) rewrite_by integral_deriv

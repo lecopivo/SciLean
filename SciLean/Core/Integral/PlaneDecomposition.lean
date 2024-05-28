@@ -4,6 +4,7 @@ import SciLean.Core.FunctionTransformations
 import SciLean.Core.FunctionPropositions
 import SciLean.Core.Integral.ParametricInverse
 import SciLean.Core.Integral.Jacobian
+import SciLean.Core.Integral.BoundingBall
 import SciLean.Core.Notation
 import SciLean.Tactic.InferVar
 
@@ -161,3 +162,15 @@ theorem planeDecomposition.arg_a0.jacobian_rule
     jacobian R (fun x => planeDecomposition u hn (a, f x))
     =
     fun x => jacobian R f x := sorry_proof
+
+
+open IndexType in
+@[gtrans]
+theorem planeDecomposition_bounding_ball
+    {n} {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] {X} [FinVec ι R X] [MetricSpaceP X 2]
+    (u : X) (hn : n + 1 = card ι := by first | assumption | infer_var)
+    (A : Set X) (center : X) (radius : ℝ)
+    (hA : BoundingBall A center radius) :
+    let dec := (planeDecomposition (R:=R) u hn)
+    let center' := (dec.symm center)
+    BoundingBall (dec ⁻¹' A) center' radius := sorry_proof

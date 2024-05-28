@@ -5,8 +5,12 @@ import Mathlib.MeasureTheory.Measure.Dirac
 -- import Mathlib.Analysis.LocallyConvex.Basic
 -- import Mathlib.Topology.Algebra.Module.LocallyConvex
 
+import SciLean.Mathlib.MeasureTheory.Unit
+
 import SciLean.Core.FunctionTransformations
+import SciLean.Core.Integral.BoundingBall
 import SciLean.Util.SorryProof
+
 
 open MeasureTheory
 
@@ -264,3 +268,17 @@ theorem cintegral.arg_f.IsSmoothLinearMap_rule
 
 
 end Differentiation
+
+
+----------------------------------------------------------------------------------------------------
+-- Upper bounds on integration domains  ------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+open Classical in
+theorem cintegral_bound_domain_ball
+    {X} [MeasureSpace X] [MetricSpaceP X 2]
+    {U} [AddCommGroup U] [Module ℝ U]
+    (A : Set X) (f : X → U)
+    (center : X) (radius : ℝ) (hball : BoundingBall A center radius) :
+    ∫' y in A, f y
+    =
+    ∫' x in Metric.closedBallP 2 center radius, (if x ∈ A then f x else 0) := sorry_proof

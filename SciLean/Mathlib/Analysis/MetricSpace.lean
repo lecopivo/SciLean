@@ -2,6 +2,7 @@ import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Analysis.NormedSpace.WithLp
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
+import SciLean.Tactic.FTrans.Simp
 import SciLean.Util.SorryProof
 
 abbrev MetricSpaceP (X : Type _) (p) := MetricSpace (WithLp p X)
@@ -36,3 +37,7 @@ instance {X} {Y} [a : MetricSpace (WithLp p X)] [b : MetricSpace (WithLp p Y)] :
   dist_triangle := sorry_proof
   edist_dist := sorry_proof
   eq_of_dist_eq_zero := sorry_proof
+
+
+@[simp, ftrans_simp]
+theorem dist_sqrt (x y : ℝ) : (x^2 + y^2).sqrt^2 = x^2 + y^2 := sorry_proof

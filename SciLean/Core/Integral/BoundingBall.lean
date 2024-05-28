@@ -1,7 +1,12 @@
-import SciLean.Core.Integral.Common
+import SciLean.Mathlib.Analysis.MetricSpace
+import SciLean.Mathlib.Set
+
+import SciLean.Core.Objects.Scalar
+
+import SciLean.Tactic.GTrans
 import SciLean.Tactic.IfPull
 
-open SciLean MeasureTheory Set
+open SciLean Set
 
 @[gtrans]
 def SciLean.BoundingBall {X} [MetricSpaceP X 2]
@@ -39,7 +44,26 @@ theorem Set.snd.bounding_ball
     BoundingBall (A.snd a) center' radius' := sorry_proof
 
 
+@[gtrans]
+theorem Set.inter.left_bounding_ball
+    {X} [MetricSpaceP X 2]
+    (A B : Set X) (center : X) (radius : ℝ)
+    (hA : BoundingBall A center radius) :
+    BoundingBall (A ∩ B) center radius := sorry_proof
+
+@[gtrans]
+theorem Set.inter.right_bounding_ball
+    {X} [MetricSpaceP X 2]
+    (A B : Set X) (center : X) (radius : ℝ)
+    (hB : BoundingBall B center radius) :
+    BoundingBall (A ∩ B) center radius := sorry_proof
+
+
 variable {R} [RealScalar R]
+
+-- TODO: make sure that we can do bounding balls on `R×R` or similar
+--       I somehow need to make sure that Preorder structure is compatible with
+--       the distance function
 
 @[gtrans]
 theorem Set.Icc.bounding_ball (a b : R) :
