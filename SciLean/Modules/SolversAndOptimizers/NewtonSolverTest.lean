@@ -35,7 +35,7 @@ by
     rw[invFun_as_newtonSolver (R:=R) 1 (by fun_prop) sorry]
 
   -- fix limit at some value `s`
-  approx_limit s := sorry
+  approx_limit s sorry
 
   autodiff -- compute derivative
   autodiff -- compute inverse

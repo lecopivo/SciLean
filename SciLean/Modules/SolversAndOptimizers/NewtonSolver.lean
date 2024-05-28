@@ -25,23 +25,20 @@ opaque newtonSolverSettingsFilter : Filter (NewtonSolverSettings (R:=R)) := defa
 variable {R}
 
 
--- NOTE: to compute norm with values in `R` use ‖x‖₂
-variable (x : X)
-#check ‖x‖₂
-
-
-
 def newtonSolverStep (f : X → Y) (iJ : X → Y → X) (xᵢ : X) : X :=
   xᵢ - iJ xᵢ (f xᵢ)
 
 
-def newtonIterate (s: NewtonSolverSettings R) (f : X → Y) (iJ : X → Y → X) (x_curr : X) (iter_count : ℕ) : X :=
-  let x_next := x_curr - iJ x_curr (f x_curr)
-  if ‖(f x_next)‖₂ < s.absTol then x_curr
-  else if ‖(f x_next) - (f x_curr)‖₂ < s.relTol then x_curr
-  else if iter_count ≥ s.maxSteps then x_curr
-  else newtonIterate s f iJ x_curr (iter_count + 1)
+def newtonIterate (s: NewtonSolverSettings R) (f : X → Y) (iJ : X → Y → X) (x_curr : X) (y_curr : Y) (iter_count : ℕ) : X×Y :=
+  let x_next := x_curr - iJ x_curr y_curr
+  let y_next := f x_next
+  if ‖y_next‖₂ < s.absTol then (x_next,y_next)
+  else if ‖y_next - y_curr‖₂ < s.relTol then (x_next,y_next)
+  else if iter_count ≥ s.maxSteps then (x_next,y_next)
+  else newtonIterate s f iJ x_next y_next (iter_count + 1)
 termination_by s.maxSteps - iter_count
+
+
 /-- Newton Solver, finds `x` such that `f x = 0`
 
 Arguments:
@@ -51,7 +48,7 @@ Arguments:
 - `x₀` initial guess for `x` -/
 def newtonSolver (s : NewtonSolverSettings R) (f : X → Y) (iJ : X → Y → X) (x₀ : X) : X :=
   -- TODO: proper implementation
-  newtonIterate s f iJ x₀ 0
+  (newtonIterate s f iJ x₀ (f x₀) 0).1
 
 
 
@@ -73,4 +70,4 @@ theorem invFun_as_newtonSolver {f : X → Y} (x₀ : X) {y : Y}
     f.invFun y
     =
     let iJ := (fun x => (∂ (x':=x), f x').invFun)
-    (limit s ∈ newtonSolverSettingsFilter R, newtonSolver s (fun x => f x - y) iJ x₀) := sorry
+    (limit s ∈ newtonSolverSettingsFilter R, newtonSolver s (fun x => f x - y) iJ x₀) := sorry_proof
