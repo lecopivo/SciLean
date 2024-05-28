@@ -9,9 +9,9 @@ set_default_scalar Float
 open Lean Meta Qq SciLean
 
 
-#check mkAppFoldlM
-
 -- set_option trace.Meta.Tactic.fun_trans2 true
+-- set_option trace.Meta.Tactic.fun_trans2.fun_trans true
+-- set_option trace.Meta.Tactic.fun_trans2.quick true
 -- set_option trace.Meta.Tactic.fun_trans true
 set_option profiler true
 
@@ -22,6 +22,7 @@ def expression1Aux (n : Nat) (k : Array Expr → MetaM α) : MetaM α := do
   | n+1 =>
     expression1Aux n fun xs => do
       let val ← mkAppFoldlM ``HMul.hMul xs[xs.size-3:xs.size-1]
+      -- -- let val ← mkAppFoldlM ``HMul.hMul #[xs[xs.size-1]!,xs[xs.size-1]!]
       -- let val ← mkAppFoldlM ``HMul.hMul xs
       withLetDecl ((`x).appendAfter (toString n)) q(Float) val fun x => do
         k (xs.push x)
@@ -35,27 +36,32 @@ def expression1 (n : Nat) : MetaM Q(Float → Float) :=
   withLocalDeclQ `x default q(Float) fun x => do
   withLocalDeclQ `dx default q(Float) fun dx => do
 
-  for i in [0:10] do
+
+  let mut ts : Array Float := #[]
+
+  for i in [0:30] do
 
     let e ← expression1 i
 
     let e := q((revDeriv Float $e $x).2 $dx)
 
-    let insts ← getLocalInstances
-    let (r,time) ← Aesop.time (funTrans2 (← getLCtx) insts e)
+    let (r,time) ← Aesop.time (callFunTrans2 e)
 
-    let (((e'',_),_),time') ← Aesop.time <| elabConvRewrite e #[] (← `(conv| autodiff)) |>.run {} {}
-
+    -- let (((e'',_),_),time') ← Aesop.time <| elabConvRewrite e #[] (← `(conv| autodiff)) |>.run {} {}
 
     -- (Elab.Term.elabTerm (←`(((revDeriv Float $e 1.0).2 0.1) rewrite_by autodiff) none).run {} {}
 
     let e' ← r.toExpr
     IO.println s!"{← ppExpr e}\n"
     IO.println s!"fun_trans2 result is:\n\n{← ppExpr e'}\n"
-    IO.println s!"autodiff result is:\n\n{← ppExpr e''}\n"
+    -- IO.println s!"autodiff result is:\n\n{← ppExpr e''}\n"
     IO.println s!"fun_trans2 took {time.printAsMillis}\n"
-    IO.println s!"autodiff took {time'.printAsMillis}\n"
+    -- IO.println s!"autodiff took {time'.printAsMillis}\n"
     IO.println "-------------------------------------------------------"
+
+
+-- yᵢ = b * xᵢ^a
+-- ∑ i, (log yᵢ - a * log xᵢ + log b)^2
 
 
 

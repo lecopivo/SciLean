@@ -8,6 +8,8 @@ import Mathlib.Tactic.FunTrans.Core
 open Lean Meta
 
 initialize registerTraceClass `Meta.Tactic.fun_trans2
+initialize registerTraceClass `Meta.Tactic.fun_trans2.fun_trans
+initialize registerTraceClass `Meta.Tactic.fun_trans2.quick
 initialize registerTraceClass `Meta.Tactic.fun_trans2.normalize
 
 -- /-- Transforms `e` into `e'` where `e'` and calls `k xs e' h` where `xs` are new free variables
@@ -72,10 +74,13 @@ def mkLetBinding (e : Expr) : MetaM Bool :=
 
 
 private def skip (e : Expr) : MetaM Bool := do
+  let E ← inferType e
+  -- skip types
   if ← isType e then
     return true
 
-  if (← isClass? (← inferType e)).isSome then
+  -- skip instances
+  if (← isClass? E).isSome then
     return true
 
   return false
@@ -173,16 +178,22 @@ partial def normalizeLetValue (lctx : LocalContext) (insts : LocalInstances) (n 
 appearing in `e'` and `h` is proof of `e = mkLambdaFVars xs e'`. -/
 partial def funTrans2
     (lctx : LocalContext) (insts : LocalInstances)
-    (e : Expr) : MetaM Result := do
+    (e : Expr) : SimpM Result := do
 
   withLCtx lctx insts do
 
   withTraceNode `Meta.Tactic.fun_trans2 (fun r => do match r with | .ok r => pure s!"{← ppExpr e}\n==>\n{← ppExpr (← r.toExpr)}" | _ => pure "bum" ) do
 
+  withTraceNode `Meta.Tactic.fun_trans2.quick (fun r => do pure "" ) do
+
+  modify fun s => { s with numSteps := s.numSteps + 1}
+
   let e ← normalize'' e
 
-  let s ← (Mathlib.Meta.FunTrans.funTrans e).run
-     (Simp.mkDefaultMethodsCore #[]).toMethodsRef {config:={zeta:=false}} (← IO.mkRef {})
+  let s ←
+    withTraceNode `Meta.Tactic.fun_trans2.fun_trans (fun r => do pure "") do
+      Mathlib.Meta.FunTrans.funTrans e
+     -- (Simp.mkDefaultMethodsCore #[]).toMethodsRef {config:={zeta:=false}} (← IO.mkRef {})
 
   let e :=
     match s with
@@ -265,3 +276,16 @@ partial def funTrans2
 
   | _ =>
     return ⟨e, #[], default, lctx, insts⟩
+
+
+
+def callFunTrans2 (e : Expr) : MetaM Result := do
+
+  let stateRef : IO.Ref Simp.State ← IO.mkRef {}
+  let s ← (funTrans2 (← getLCtx) (← getLocalInstances) e).run
+     (Simp.mkDefaultMethodsCore #[]).toMethodsRef {config:={zeta:=false},simpTheorems:=#[←getSimpTheorems]} stateRef
+
+  let state ← stateRef.get
+  IO.println s!"fun_trans2 took {state.numSteps} steps"
+
+  return s
