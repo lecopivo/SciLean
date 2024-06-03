@@ -79,13 +79,14 @@ open SciLean.Tactic.LSimp
 def callLSimpData (e : Expr) : MetaM (Expr×MeasureData) := do
 
   let stateRef : IO.Ref Simp.State ← IO.mkRef {}
+  let lcacheRef : IO.Ref Tactic.LSimp.Cache ← IO.mkRef {}
 
   let mut simprocs : Simp.Simprocs := {}
   simprocs ← simprocs.add ``Mathlib.Meta.FunTrans.fun_trans_simproc false
   let r := (lsimp e).run
-   (Simp.mkDefaultMethodsCore #[simprocs]) {config:={zeta:=false,singlePass:=false},simpTheorems:=#[←getSimpTheorems]} stateRef
+   (Simp.mkDefaultMethodsCore #[simprocs]) {config:={zeta:=false,singlePass:=false},simpTheorems:=#[←getSimpTheorems]} ⟨lcacheRef, stateRef⟩
 
-  let (e,t) ← Aesop.time <| r.runInMeta (fun r => mkLambdaFVars r.vars r.expr)
+  let (e,t) ← Aesop.time <| r.runInMeta (fun (r,_) => mkLambdaFVars r.vars r.expr)
 
 
   return (e, { time := t, numSteps := (← stateRef.get).numSteps })
@@ -107,14 +108,111 @@ def measureOnTestExpression (n : Nat) : MetaM (Array MeasureData) := do
 
 
 
-#eval show MetaM Unit from do
-  let _ ← measureOnTestExpression 10
+-- -- #eval show MetaM Unit from do
+-- --   let _ ← measureOnTestExpression 4
 
-set_option trace.Meta.Tactic.fun_trans true
-set_option trace.Meta.Tactic.fun_trans.step true
+-- -- set_option trace.Meta.Tactic.fun_trans true
+-- -- set_option trace.Meta.Tactic.fun_trans.step true
 
-#check (cderiv Float (fun x : Float => x * x)) rewrite_by lsimp; lsimp
+-- set_option trace.Meta.Tactic.simp.heads true
+
+-- #check (let a := 1; let b := a + 1; b) rewrite_by lsimp
+
+-- #check (let a :=
+--           let c := 1
+--           let d := c + 3
+--           c + d + 2
+--         let b := a + 5
+--         a + b) rewrite_by lsimp
+
+-- example :
+--   (let a := (let c := 1; let d := c + 3;  c + d + 2); let b := a + 5; a + b)
+--   =
+--   19 := by (conv => lhs; lsimp)
 
 
-#check (cderiv Float (fun x : Float => let x1 := x * x; x1*x1))
-         rewrite_by fun_trans (config:={zeta:=false}) [Tactic.lift_lets_simproc]
+----------------------------------------------------------------------------------------
+-- Tests -------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+-- set_option trace.Meta.Tactic.simp.heads true
+
+
+example (n : Nat) :
+  n
+  =
+  n := by (conv => lhs; lsimp)
+
+example (n : Nat) :
+  (let a := 1; a + n)
+  =
+  (1 + n) := by (conv => lhs; lsimp)
+
+example (n : Nat) :
+  (0 + n)
+  =
+  n := by (conv => lhs; lsimp)
+
+example (n : Nat) :
+  (0 + 1 * n)
+  =
+  n := by (conv => lhs; lsimp)
+
+example (n : Nat) :
+  (let a := (0 + 1 * n); a)
+  =
+  n := by (conv => lhs; lsimp)
+
+example (n : Nat) :
+    (let a :=
+       let c := 0 + n
+       let d := c + 0 + 3
+       c + d + 1 * n + 2
+     let b := a + 5
+     a + b)
+    =
+    n + (n + 3) + n + 2 + (n + (n + 3) + n + 2 + 5) := by
+  (conv => lhs; lsimp)
+
+example (n : Nat) (i : Fin n) :
+    (let j := 2*i.1
+     let hj : j < 2*n := by omega
+     let j : Fin (2*n) := ⟨j, hj⟩
+     let k :=
+       let a := j + j
+       a + j
+     j + k)
+    =
+    let j := 2*i.1
+    let hj : j < 2*n := by omega
+    let j : Fin (2*n) := ⟨j, hj⟩
+    (j + (j + j + j)) := by
+  (conv => lhs; lsimp)
+
+-- tests under lambda binder
+
+example :
+  (fun n : Nat => n)
+  =
+  (fun n : Nat => n) := by (conv => lhs; lsimp)
+
+example :
+  (fun n => let a := 1; a + n)
+  =
+  (fun n => 1 + n) := by (conv => lhs; lsimp)
+
+
+example :
+  (fun n => let a := (0 + 1 * n); a)
+  =
+  (fun n => n) := by (conv => lhs; lsimp)
+
+
+example :
+    (fun n : Nat=>
+     let c := n
+     let a := c + 1 * n
+     a)
+    =
+    (fun n => n + n) := by
+  (conv => lhs; lsimp)

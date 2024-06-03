@@ -215,10 +215,10 @@ partial def simpProj (e : Expr) : LSimpM Result := do
       let r ← lsimp s
       let eNew := e.updateProj! r.expr
       match r.proof? with
-      | none => return { expr := eNew }
+      | none => return { expr := eNew, vars := r.vars}
       | some h =>
         let hNew ← mkEqNDRec motive (← mkEqRefl e) h
-        return { expr := eNew, proof? := some hNew }
+        return { expr := eNew, proof? := some hNew, vars := r.vars }
     else
       return { expr := (← ldsimp e) }
 
@@ -234,50 +234,52 @@ where
     | e => k xs e
 
 partial def simpLambda (e : Expr) : LSimpM Result := do
-  withParent e <| lambdaTelescopeDSimp e fun xs e => withNewLemmas xs do
-    let r ← lsimp e
-    let eNew ← mkLambdaFVars xs r.expr
-    match r.proof? with
-    | none   => return { expr := eNew }
-    | some h =>
-      let p ← xs.foldrM (init := h) fun x h => do
-        mkFunExt (← mkLambdaFVars #[x] h)
-      return { expr := eNew, proof? := p }
+  withParent e <| lambdaTelescopeDSimp e fun xs e => do
+    let go : LSimpM Result := withNewLemmas xs do
+      let r ← lsimp e >>= (·.bindVars)
+      let eNew ← mkLambdaFVars xs r.expr
+      match r.proof? with
+      | none   => return { expr := eNew }
+      | some h =>
+        let p ← xs.foldrM (init := h) fun x h => do
+          mkFunExt (← mkLambdaFVars #[x] h)
+        return { expr := eNew, proof? := p }
+    go.runInMeta pure
 
-partial def simpArrow (e : Expr) : LSimpM Result := do
-  trace[Debug.Meta.Tactic.simp] "arrow {e}"
-  let p := e.bindingDomain!
-  let q := e.bindingBody!
-  let rp ← lsimp p
-  trace[Debug.Meta.Tactic.simp] "arrow [{(← getConfig).contextual}] {p} [{← isProp p}] -> {q} [{← isProp q}]"
-  if (← pure (← getConfig).contextual <&&> isProp p <&&> isProp q) then
-    trace[Debug.Meta.Tactic.simp] "ctx arrow {rp.expr} -> {q}"
-    withLocalDeclD e.bindingName! rp.expr fun h => do
-      let s ← Simp.getSimpTheorems
-      let s ← s.addTheorem (.fvar h.fvarId!) h
-      withSimpTheorems s do
-        let rq ← lsimp q
-        match rq.proof? with
-        | none    => mkImpCongr e rp rq
-        | some hq =>
-          let hq ← mkLambdaFVars #[h] hq
-          /-
-            We use the default reducibility setting at `mkImpDepCongrCtx` and `mkImpCongrCtx` because they use the theorems
-            ```lean
-            @implies_dep_congr_ctx : ∀ {p₁ p₂ q₁ : Prop}, p₁ = p₂ → ∀ {q₂ : p₂ → Prop}, (∀ (h : p₂), q₁ = q₂ h) → (p₁ → q₁) = ∀ (h : p₂), q₂ h
-            @implies_congr_ctx : ∀ {p₁ p₂ q₁ q₂ : Prop}, p₁ = p₂ → (p₂ → q₁ = q₂) → (p₁ → q₁) = (p₂ → q₂)
-            ```
-            And the proofs may be from `rfl` theorems which are now omitted. Moreover, we cannot establish that the two
-            terms are definitionally equal using `withReducible`.
-            TODO (better solution): provide the problematic implicit arguments explicitly. It is more efficient and avoids this
-            problem.
-            -/
-          if rq.expr.containsFVar h.fvarId! then
-            return { expr := (← mkForallFVars #[h] rq.expr), proof? := (← withDefault <| mkImpDepCongrCtx (← rp.getProof) hq) }
-          else
-            return { expr := e.updateForallE! rp.expr rq.expr, proof? := (← withDefault <| mkImpCongrCtx (← rp.getProof) hq) }
-  else
-    mkImpCongr e rp (← lsimp q)
+partial def simpArrow (e : Expr) : LSimpM Result := return { expr := e}
+  -- trace[Debug.Meta.Tactic.simp] "arrow {e}"
+  -- let p := e.bindingDomain!
+  -- let q := e.bindingBody!
+  -- let rp ← lsimp p
+  -- trace[Debug.Meta.Tactic.simp] "arrow [{(← getConfig).contextual}] {p} [{← isProp p}] -> {q} [{← isProp q}]"
+  -- if (← pure (← getConfig).contextual <&&> isProp p <&&> isProp q) then
+  --   trace[Debug.Meta.Tactic.simp] "ctx arrow {rp.expr} -> {q}"
+  --   withLocalDeclD e.bindingName! rp.expr fun h => do
+  --     let s ← Simp.getSimpTheorems
+  --     let s ← s.addTheorem (.fvar h.fvarId!) h
+  --     withSimpTheorems s do
+  --       let rq ← lsimp q
+  --       match rq.proof? with
+  --       | none    => mkImpCongr e rp rq
+  --       | some hq =>
+  --         let hq ← mkLambdaFVars #[h] hq
+  --         /-
+  --           We use the default reducibility setting at `mkImpDepCongrCtx` and `mkImpCongrCtx` because they use the theorems
+  --           ```lean
+  --           @implies_dep_congr_ctx : ∀ {p₁ p₂ q₁ : Prop}, p₁ = p₂ → ∀ {q₂ : p₂ → Prop}, (∀ (h : p₂), q₁ = q₂ h) → (p₁ → q₁) = ∀ (h : p₂), q₂ h
+  --           @implies_congr_ctx : ∀ {p₁ p₂ q₁ q₂ : Prop}, p₁ = p₂ → (p₂ → q₁ = q₂) → (p₁ → q₁) = (p₂ → q₂)
+  --           ```
+  --           And the proofs may be from `rfl` theorems which are now omitted. Moreover, we cannot establish that the two
+  --           terms are definitionally equal using `withReducible`.
+  --           TODO (better solution): provide the problematic implicit arguments explicitly. It is more efficient and avoids this
+  --           problem.
+  --           -/
+  --         if rq.expr.containsFVar h.fvarId! then
+  --           return { expr := (← mkForallFVars #[h] rq.expr), proof? := (← withDefault <| mkImpDepCongrCtx (← rp.getProof) hq) }
+  --         else
+  --           return { expr := e.updateForallE! rp.expr rq.expr, proof? := (← withDefault <| mkImpCongrCtx (← rp.getProof) hq) }
+  -- else
+  --   mkImpCongr e rp (← lsimp q)
 
 partial def simpForall (e : Expr) : LSimpM Result := return { expr := e }
   -- withParent e do
@@ -335,45 +337,43 @@ partial def simpLet (e : Expr) : LSimpM Result := do
     return { expr := b.instantiate1 v }
   else
     match (← Simp.getSimpLetCase n t b) with
-    | .dep => return { expr := (← ldsimp e) }
+    | .dep | .nondepDepVar =>
+      let v' ← ldsimp v
+
+      -- todo: decide if we want to keep the let binding
+      let vVar ← introLetDecl n t v'
+
+      let bx := b.instantiate1 vVar
+      let rbx ← lsimp bx
+      return { rbx with vars := #[vVar] ++ rbx.vars }
     | .nondep =>
       let rv ← lsimp v
-      withLocalDeclD n t fun x => do
-        let bx := b.instantiate1 x
-        let rbx ← lsimp bx
-        let hb? ← match rbx.proof? with
-          | none => pure none
-          | some h => pure (some (← mkLambdaFVars #[x] h))
-        let e' := mkLet n t rv.expr (← rbx.expr.abstractM #[x])
-        match rv.proof?, hb? with
-        | none,   none   => return { expr := e' }
-        | some h, none   => return { expr := e', proof? := some (← mkLetValCongr (← mkLambdaFVars #[x] rbx.expr) h) }
-        | _,      some h => return { expr := e', proof? := some (← mkLetCongr (← rv.getProof) h) }
-    | .nondepDepVar =>
-      let v' ← ldsimp v
-      withLocalDeclD n t fun x => do
-        let bx := b.instantiate1 x
-        let rbx ← lsimp bx
-        let e' := mkLet n t v' (← rbx.expr.abstractM #[x])
-        match rbx.proof? with
-        | none => return { expr := e' }
-        | some h =>
-          let h ← mkLambdaFVars #[x] h
-          return { expr := e', proof? := some (← mkLetBodyCongr v' h) }
+
+      -- todo: decide if we want to keep the let binding
+      let vVar ← introLetDecl n t rv.expr
+
+      let r : Result :=
+        { expr := b.instantiate1 rv.expr
+          proof? := ← rv.proof?.mapM (fun h => mkCongrArg (.lam n t b default) h)
+          vars := rv.vars.push vVar }
+
+      let bx := b.instantiate1 vVar
+      let rbx ← lsimp bx
+      return ← r.mkEqTrans rbx
 
 partial def ldsimp (e : Expr) : LSimpM Expr := do
   let cfg ← getConfig
   unless cfg.dsimp do
     return e
   let pre (e : Expr) : LSimpM TransformStep := do
-    -- if let Step.visit r ← rewritePre (rflOnly := true) e then
-    --   if r.expr != e then
-    --     return .visit r.expr
+    if let Simp.Step.visit r ← Simp.rewritePre (rflOnly := true) e then
+      if r.expr != e then
+        return .visit r.expr
     return .continue
   let post (e : Expr) : LSimpM TransformStep := do
-    -- if let Step.visit r ← rewritePost (rflOnly := true) e then
-    --   if r.expr != e then
-    --     return .visit r.expr
+    if let Simp.Step.visit r ← Simp.rewritePost (rflOnly := true) e then
+      if r.expr != e then
+        return .visit r.expr
     let mut eNew ← reduce e
     if eNew.isFVar then
       eNew ← reduceFVar cfg (← Simp.getSimpTheorems) eNew
@@ -388,11 +388,11 @@ partial def visitFn (e : Expr) : LSimpM Result := do
   else
     let args := e.getAppArgs
     let eNew := mkAppN fNew.expr args
-    if fNew.proof?.isNone then return { expr := eNew }
+    if fNew.proof?.isNone then return { expr := eNew, vars := fNew.vars }
     let mut proof ← fNew.getProof
     for arg in args do
       proof ← Meta.mkCongrFun proof arg
-    return { expr := eNew, proof? := proof }
+    return { expr := eNew, proof? := proof, vars := fNew.vars }
 
 partial def congrArgs (r : Result) (args : Array Expr) : LSimpM Result := do
   if args.isEmpty then
@@ -552,10 +552,10 @@ partial def simpStep (e : Expr) : LSimpM Result := do
 
 
 partial def cacheResult (e : Expr) (cfg : Simp.Config) (r : Result) : LSimpM Result := do
-  if cfg.memoize && r.cache then
-    let ctx ← readThe Simp.Context
-    let dischargeDepth := ctx.dischargeDepth
-    modify fun s => { s with cache := s.cache.insert e { r with dischargeDepth } }
+  -- if cfg.memoize && r.cache then
+  --   let ctx ← readThe Simp.Context
+  --   let dischargeDepth := ctx.dischargeDepth
+  --   modify fun s => { s with cache := s.cache.insert e { r with dischargeDepth } }
   return r
 
 
@@ -564,7 +564,7 @@ partial def simpLoop (e : Expr) : LSimpM Result := /- withIncRecDepth -/ do
   if (← get).numSteps > cfg.maxSteps then
     throwError "simp failed, maximum number of steps exceeded"
   else
-    checkSystem "simp"
+    -- checkSystem "simp"
     modify fun s => { s with numSteps := s.numSteps + 1 }
     match (← pre e) with
     | .done r  => cacheResult e cfg r
@@ -609,6 +609,6 @@ where
     --     if result.dischargeDepth ≤ (← readThe Simp.Context).dischargeDepth then
     --       return result
     trace[Meta.Tactic.simp.heads] "{repr e.toHeadIndex}"
-    simpLoop e
+    return ← simpLoop e
 
 end

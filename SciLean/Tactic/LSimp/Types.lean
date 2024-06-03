@@ -45,7 +45,7 @@ def _root_.Lean.Meta.Simp.Result.toLResult (s : Simp.Result) : Result :=
     dischargeDepth := s.dischargeDepth,
     cache := s.cache }
 
-def Result.getProof (r : Result) : MetaLCtxM Expr :=
+def Result.getProof (r : Result) : MetaM Expr :=
   match r.proof? with
   | some p => return p
   | none   => mkEqRefl r.expr
@@ -66,23 +66,48 @@ def mkCongr (r₁ r₂ : Result) : MetaM Result :=
 def mkImpCongr (src : Expr) (r₁ r₂ : Result) : MetaLCtxM Result := do
   let e := src.updateForallE! r₁.expr r₂.expr
   match r₁.proof?, r₂.proof? with
-  | none,     none   => return { expr := e, proof? := none }
-  | _,        _      => return { expr := e, proof? := (← Meta.mkImpCongr (← r₁.getProof) (← r₂.getProof)) } -- TODO specialize if bottleneck
+  | none,     none   => return { expr := e, proof? := none, vars := r₁.vars ++ r₂.vars }
+  | _,        _      => return { expr := e, proof? := (← Meta.mkImpCongr (← r₁.getProof) (← r₂.getProof)), vars := r₁.vars ++ r₂.vars } -- TODO specialize if bottleneck
 
+
+/-- Binds all variables to the result expression and proof. Useful when returning result to a context
+where `r.vars` are no longer valid.
+
+This is useful when running `MetaLCtxM.runInMeta` or `LSimpM.runInMeta` and you want make the
+result valid in the original context. E.g. `(lsimp x).runInMeta (fun r => r.binVars)`   -/
+def Result.bindVars (r : Result) : MetaM Result := do
+  return { r with expr := ← mkLambdaFVars r.vars r.expr
+                  proof? := ← r.proof?.mapM (fun h => mkLambdaFVars r.vars h)
+                  vars := #[] }
 
 ----------------------------------------------------------------------------------------------------
 -- LSimpM ------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-abbrev LSimpM := ReaderT Simp.Methods $ ReaderT Simp.Context $ StateRefT Simp.State MetaLCtxM
+abbrev Cache := ExprMap Result
+
+structure State where
+  /-- Cache storing lsimp results. -/
+  cache : IO.Ref Cache
+  simpState : IO.Ref Simp.State
+
+abbrev LSimpM := ReaderT Simp.Methods $ ReaderT Simp.Context $ StateT State MetaLCtxM
 
 instance : MonadLift SimpM LSimpM where
-  monadLift x := fun m c s => x m.toMethodsRef c s
+  monadLift x := fun m c s => do return (← x m.toMethodsRef c s.simpState, s)
 
-def LSimpM.runInSimp (x : LSimpM X) (k : X → MetaM Y) : SimpM Y := do
+/-- Run `x : LSimpM X` without modifying the local context.
+
+This effectively runs `x : LSimpM X`, modifies the local context and then reverts the context back.
+The function `k` is evaluated on the result of `x` in the modified context before the context is
+reverted back. It is user's responsibility to make sure that the `k` modifies the result such
+that it is valid in the original context e.g. bind all newly introduced free variables. -/
+def LSimpM.runInMeta (x : LSimpM X) (k : X → MetaM Y) : LSimpM Y := do
   fun mths ctx s => do
-    let m : Simp.Methods := Simp.MethodsRef.toMethods mths
-    (x m ctx s).runInMeta k
+    let m : Simp.Methods := Simp.MethodsRef.toMethods mths.toMethodsRef
+    let r ← (x m ctx s).runInMeta (fun (x,_) => k x)
+    return (r,s)
+
 
 instance : Inhabited (LSimpM α) where
   default := fun _ _ _ _ _ _ => default
