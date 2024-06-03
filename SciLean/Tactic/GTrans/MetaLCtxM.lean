@@ -139,9 +139,10 @@ def introLocalDecl (name : Name) (bi : BinderInfo) (type : Expr) : MetaLCtxM Exp
 /-- Adds let declaration into the local context. Returns newly created free variable.
 
 Similar to `withLetDecl` but runs in `MetaLCtxM` instead of `MetaM`. -/
-def introLetDecl (name : Name) (type val : Expr) : MetaLCtxM Expr := do
+def introLetDecl (name : Name) (type? : Option Expr) (val : Expr) : MetaLCtxM Expr := do
+  let type := type?.getD (← inferType val)
   let fvarId ← mkFreshFVarId
-  fun _ ctx =>
+  fun _ ctx => do
     let ctx := {ctx with lctx := ctx.lctx.mkLetDecl fvarId name type val (nonDep := false) .default}
     let fvar := Expr.fvar fvarId
     return (fvar, ctx)

@@ -15,11 +15,16 @@ def callLSimpAux (e : Expr) (k : Expr → Expr → Array Expr → MetaM α) : Me
 
   let mut simprocs : Simp.Simprocs := {}
   simprocs ← simprocs.add ``Mathlib.Meta.FunTrans.fun_trans_simproc false
-  let r := (lsimp e).run
-   (Simp.mkDefaultMethodsCore #[simprocs]) {config:={zeta:=false,singlePass:=false},simpTheorems:=#[←getSimpTheorems]} ⟨lcacheRef, stateRef⟩
+  let r :=
+    (lsimp e).run
+      (Simp.mkDefaultMethodsCore #[simprocs])
+      {config:={zeta:=false,singlePass:=false},simpTheorems:=#[←getSimpTheorems]}
+      ⟨lcacheRef, stateRef⟩
 
   let a ← r.runInMeta (fun (r,_) => do
     k r.expr (← r.getProof) r.vars)
+
+  trace[Meta.Tactic.simp.steps] "lsimp took {(← stateRef.get).numSteps} steps"
 
   return a
 
@@ -39,3 +44,13 @@ open Lean Elab Tactic in
   let e ← Conv.getLhs
   let (e',prf) ← callLSimp e
   Conv.updateLhs e' prf
+
+
+@[export scilean_lsimp_compile_test]
+def compileCheckImpl : IO Unit := do
+  IO.println "running compiled code!"
+
+
+@[export scilean_lsimp_compile_test_2]
+def compileCheckImpl2 : IO Unit := do
+  SciLean.Tactic.LSimp.compileCheck

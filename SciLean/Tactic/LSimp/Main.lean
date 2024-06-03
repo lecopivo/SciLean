@@ -20,9 +20,95 @@ open Lean Meta
 
 namespace SciLean.Tactic.LSimp
 
+initialize registerTraceClass `Meta.Tactic.simp.proj
+initialize registerTraceClass `Meta.Tactic.simp.steps
 
 
-private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := do
+/-- Decide if `v` should kept as a let binding or should be reduced.
+
+This is refined version of `zeta` option in vanila simp. It allows you decide if let binding should
+be kept or reduced based on the value of the let binding.
+
+For example `fun x => let y := x; y` should be reduced to `fun x => x` and the let binding
+`let y := x` is completely pointless.
+
+-/
+def keepAsLetValue (v : Expr) : LSimpM Bool := do
+  if v.isAppOfArity ``Prod.mk 4 then
+    return false
+  if v.isAppOfArity ``OfNat.ofNat 3 then
+    return false
+  else if v.isAppOfArity ``OfScientific.ofScientific 5 then
+    return false
+  else if v.isFVar then
+    return false
+  else if v.isLambda then
+    return false
+  else if ← isProof v then
+    return false
+  return true
+
+partial def maybeLetBind (e : Expr) : LSimpM Result := do
+  if e.isAppOfArity ``Prod.mk 4 then
+    let r₁ ← maybeLetBind e.appFn!.appArg!
+    let r₂ ← maybeLetBind e.appArg!
+    if r₁.proof?.isSome || r₁.proof?.isSome then
+      throwError "internal bug, function `maybeLetBind` can't handle proofs right now!"
+    return { expr := ← mkAppM ``Prod.mk #[r₁.expr, r₂.expr], vars := r₁.vars ++ r₂.vars }
+  else if ← keepAsLetValue e then
+    let var ← introLetDecl `x none e
+    return { expr := var, vars := #[var] }
+  else
+    return { expr := e }
+
+
+/-- Introduce a new let binding if `r.expr` is complicated enough i.e. `keepAsLetValue r.expr` is true.
+```
+  { expr := v, vars := xs }.maybeLetBind
+  =
+  { expr := x, vars := xs.push x}
+```
+where `x := v` is the new local declaration.
+
+Structure constructors might get split into multiple let bindings.
+```
+  { expr := (u,v) }.maybeLetBind
+  =
+  { expr := (x,y), vars := #[x,y] }
+```
+where `x := u` and `y := v` are new local declarations. The variable `x` gets introduces if `u`
+passes `keepAsLetValue` and similarly for `y` and `v`.
+
+NOTE: currently only `Prod` gets split into multiple let bindings. -/
+def Result.maybeLetBind (r : Result) : LSimpM Result := do
+  let r' ← LSimp.maybeLetBind r.expr
+  return ← r.mkEqTrans r'
+
+
+private def projectCore? (e : Expr) (i : Nat) : MetaM (Option Expr) := do
+  let e := e.toCtorIfLit
+  matchConstCtor e.getAppFn (fun _ => pure none) fun ctorVal _ =>
+    let numArgs := e.getAppNumArgs
+    let idx := ctorVal.numParams + i
+    if idx < numArgs then
+      return some (e.getArg! idx)
+    else
+      return none
+
+def project? (e : Expr) (i : Nat) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
+  projectCore? (← whnfCore e config) i
+
+/-- Reduce kernel projection `Expr.proj ..` expression. -/
+def reduceProj? (e : Expr) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
+  match e with
+  | .proj _ i c => project? c i config
+  | _           => return none
+
+def getWhnfConfig : SimpM WhnfCoreConfig := do
+  let cfg ← Simp.getConfig
+  return Simp.getDtConfig cfg
+
+private def reduceProjFnAux? (e : Expr) : LSimpM (Option Expr) := do
   matchConst e.getAppFn (fun _ => pure none) fun cinfo _ => do
     match (← getProjectionFnInfo? cinfo.name) with
     | none => return none
@@ -32,7 +118,7 @@ private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := do
         match e? with
         | none   => pure none
         | some e =>
-          match (← reduceProj? e.getAppFn) with
+          match (← reduceProj? e.getAppFn (← getWhnfConfig)) with
           | some f => return some (mkAppN f e.getAppArgs)
           | none   => return none
       if projInfo.fromClass then
@@ -46,6 +132,7 @@ private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := do
           let e? ← withReducibleAndInstances <| unfoldDefinition? e
           if e?.isSome then
             Simp.recordSimpTheorem (.decl cinfo.name)
+          trace[Meta.Tactic.simp.proj] "definition to unfold"
           return e?
         else
           /-
@@ -58,10 +145,21 @@ private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := do
           let major := e.getArg! projInfo.numParams
           unless (← isConstructorApp major) do
             return none
+          trace[Meta.Tactic.simp.proj] "unfold definition"
           reduceProjCont? (← withDefault <| unfoldDefinition? e)
       else
         -- `structure` projections
+        trace[Meta.Tactic.simp.proj] "structure projection"
         reduceProjCont? (← unfoldDefinition? e)
+
+
+private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := do
+  match (← reduceProjFnAux? e) with
+  | none => return none
+  | some e' =>
+    trace[Meta.Tactic.simp.proj] "{e} ==> {e'}"
+    return e'
+
 
 private def reduceFVar (cfg : Simp.Config) (thms : SimpTheoremsArray) (e : Expr) : LSimpM Expr := do
   let localDecl ← getFVarLocalDecl e
@@ -331,6 +429,7 @@ partial def simpForall (e : Expr) : LSimpM Result := return { expr := e }
   -- else
   --   return { expr := (← dsimp e) }
 
+
 partial def simpLet (e : Expr) : LSimpM Result := do
   let .letE n t v b _ := e | unreachable!
   if (← getConfig).zeta then
@@ -340,24 +439,25 @@ partial def simpLet (e : Expr) : LSimpM Result := do
     | .dep | .nondepDepVar =>
       let v' ← ldsimp v
 
-      -- todo: decide if we want to keep the let binding
-      let vVar ← introLetDecl n t v'
+      let (vVar,vars) ← do
+        if ← keepAsLetValue v' then
+          let var ← introLetDecl n t v'
+          pure (var, #[var])
+        else
+          pure (v', #[])
 
       let bx := b.instantiate1 vVar
       let rbx ← lsimp bx
-      return { rbx with vars := #[vVar] ++ rbx.vars }
+      return { rbx with vars := vars ++ rbx.vars }
     | .nondep =>
-      let rv ← lsimp v
-
-      -- todo: decide if we want to keep the let binding
-      let vVar ← introLetDecl n t rv.expr
+      let rv ← lsimp v >>= (·.maybeLetBind)
 
       let r : Result :=
         { expr := b.instantiate1 rv.expr
           proof? := ← rv.proof?.mapM (fun h => mkCongrArg (.lam n t b default) h)
-          vars := rv.vars.push vVar }
+          vars := rv.vars }
 
-      let bx := b.instantiate1 vVar
+      let bx := b.instantiate1 rv.expr
       let rbx ← lsimp bx
       return ← r.mkEqTrans rbx
 
@@ -552,10 +652,13 @@ partial def simpStep (e : Expr) : LSimpM Result := do
 
 
 partial def cacheResult (e : Expr) (cfg : Simp.Config) (r : Result) : LSimpM Result := do
-  -- if cfg.memoize && r.cache then
-  --   let ctx ← readThe Simp.Context
-  --   let dischargeDepth := ctx.dischargeDepth
-  --   modify fun s => { s with cache := s.cache.insert e { r with dischargeDepth } }
+  if cfg.memoize && r.cache then
+    let ctx ← readThe Simp.Context
+    let dischargeDepth := ctx.dischargeDepth
+    let r : Result := { r with dischargeDepth }
+    let cacheRef := (← getThe State).cache
+    cacheRef.modify (fun c => c.insert e r)
+    -- modifyThe State fun s => { s with cache := s.cache.insert e r }
   return r
 
 
@@ -598,17 +701,22 @@ partial def lsimp (e : Expr) : LSimpM Result := do
   go
 where
   go : LSimpM Result := do
-    -- let cfg ← getConfig
-    -- if cfg.memoize then
-    --   let cache := (← get).cache
-    --   if let some result := cache.find? e then
-    --     /-
-    --       If the result was cached at a dischargeDepth > the current one, it may not be valid.
-    --       See issue #1234
-    --     -/
-    --     if result.dischargeDepth ≤ (← readThe Simp.Context).dischargeDepth then
-    --       return result
+    let cfg ← getConfig
+    if cfg.memoize then
+      let cache ← (← getThe State).cache.get
+      if let some result := cache.find? e then
+        /-
+          If the result was cached at a dischargeDepth > the current one, it may not be valid.
+          See issue #1234
+        -/
+        if result.dischargeDepth ≤ (← readThe Simp.Context).dischargeDepth then
+          return result
     trace[Meta.Tactic.simp.heads] "{repr e.toHeadIndex}"
-    return ← simpLoop e
+    withTraceNode `Meta.Tactic.simp.heads (fun _ => pure s!"{repr e.toHeadIndex}") do
+      simpLoop e
 
 end
+
+
+@[extern "scilean_lsimp_compile_test"]
+opaque compileCheck : IO Unit
