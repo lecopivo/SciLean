@@ -22,6 +22,8 @@ namespace SciLean.Tactic.LSimp
 
 initialize registerTraceClass `Meta.Tactic.simp.proj
 initialize registerTraceClass `Meta.Tactic.simp.steps
+initialize registerTraceClass `Meta.Tactic.simp.time
+initialize registerTraceClass `Meta.Tactic.simp.cache
 
 
 /-- Decide if `v` should kept as a let binding or should be reduced.
@@ -48,16 +50,25 @@ def keepAsLetValue (v : Expr) : LSimpM Bool := do
     return false
   return true
 
-partial def maybeLetBind (e : Expr) : LSimpM Result := do
+partial def maybeLetBind (e : Expr) (name := `x) : LSimpM Result :=  do
   if e.isAppOfArity ``Prod.mk 4 then
-    let r₁ ← maybeLetBind e.appFn!.appArg!
-    let r₂ ← maybeLetBind e.appArg!
+    let r₁ ← maybeLetBind e.appFn!.appArg! name
+    let r₂ ← maybeLetBind e.appArg! name
     if r₁.proof?.isSome || r₁.proof?.isSome then
       throwError "internal bug, function `maybeLetBind` can't handle proofs right now!"
     return { expr := ← mkAppM ``Prod.mk #[r₁.expr, r₂.expr], vars := r₁.vars ++ r₂.vars }
   else if ← keepAsLetValue e then
-    let var ← introLetDecl `x none e
-    return { expr := var, vars := #[var] }
+    let lctx ← getLCtx
+    let E ← inferType e
+    if let .some var ← lctx.findDeclM? (fun decl =>
+                           if decl.hasValue &&
+                              decl.value == e &&
+                              decl.type == E then
+                           return some decl.toExpr else return none) then
+      return { expr := var }
+    else
+      let var ← introLetDecl name none e
+      return { expr := var, vars := #[var] }
   else
     return { expr := e }
 
@@ -80,8 +91,8 @@ where `x := u` and `y := v` are new local declarations. The variable `x` gets in
 passes `keepAsLetValue` and similarly for `y` and `v`.
 
 NOTE: currently only `Prod` gets split into multiple let bindings. -/
-def Result.maybeLetBind (r : Result) : LSimpM Result := do
-  let r' ← LSimp.maybeLetBind r.expr
+def Result.maybeLetBind (r : Result) (name := `x) : LSimpM Result :=timeThis "let binding" do
+  let r' ← LSimp.maybeLetBind r.expr name
   return ← r.mkEqTrans r'
 
 
@@ -95,8 +106,20 @@ private def projectCore? (e : Expr) (i : Nat) : MetaM (Option Expr) := do
     else
       return none
 
+
+partial def whnf' (e : Expr) (config : WhnfCoreConfig := {}) : MetaM Expr :=
+  withIncRecDepth <| whnfEasyCases e fun e => do
+    let e' ← whnfCore e config
+    match (← reduceNat? e') with
+    | some v => return v
+    | none   =>
+      match (← reduceNative? e') with
+      | some v => return v
+      | none   => return e'
+
+
 def project? (e : Expr) (i : Nat) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
-  projectCore? (← whnfCore e config) i
+  projectCore? (← whnf' e config) i
 
 /-- Reduce kernel projection `Expr.proj ..` expression. -/
 def reduceProj? (e : Expr) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
@@ -153,7 +176,7 @@ private def reduceProjFnAux? (e : Expr) : LSimpM (Option Expr) := do
         reduceProjCont? (← unfoldDefinition? e)
 
 
-private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := do
+private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := timeThis "proj" do
   match (← reduceProjFnAux? e) with
   | none => return none
   | some e' =>
@@ -244,7 +267,6 @@ def withNewLemmas {α} (xs : Array Expr) (f : LSimpM α) : LSimpM α := do
     f
 
 
-mutual
 
 partial def reduceStep (e : Expr) : LSimpM Expr := do
   let cfg ← getConfig
@@ -275,7 +297,8 @@ partial def reduceStep (e : Expr) : LSimpM Expr := do
     return e'
   | none => return e
 
-partial def reduce (e : Expr) : LSimpM Expr := /- withIncRecDepth -/ do
+
+partial def reduce (e : Expr) : LSimpM Expr :=  /- withIncRecDepth -/  do
   let e' ← reduceStep e
   if e' == e then
     return e'
@@ -295,8 +318,9 @@ partial def simpLit (e : Expr) : LSimpM Result := do
   | none   => return { expr := e }
 
 partial def simpProj (e : Expr) : LSimpM Result := do
-  match (← reduceProj? e) with
-  | some e => return { expr := e }
+  match (← Meta.reduceProj? e) with
+  | some e =>
+    return { expr := e }
   | none =>
     let s := e.projExpr!
     let motive? ← withLocalDeclD `s (← inferType s) fun s => do
@@ -313,7 +337,7 @@ partial def simpProj (e : Expr) : LSimpM Result := do
       let r ← lsimp s
       let eNew := e.updateProj! r.expr
       match r.proof? with
-      | none => return { expr := eNew, vars := r.vars}
+      | none => return { expr := eNew, vars := r.vars }
       | some h =>
         let hNew ← mkEqNDRec motive (← mkEqRefl e) h
         return { expr := eNew, proof? := some hNew, vars := r.vars }
@@ -450,7 +474,7 @@ partial def simpLet (e : Expr) : LSimpM Result := do
       let rbx ← lsimp bx
       return { rbx with vars := vars ++ rbx.vars }
     | .nondep =>
-      let rv ← lsimp v >>= (·.maybeLetBind)
+      let rv ← (lsimp v >>= (·.maybeLetBind n))
 
       let r : Result :=
         { expr := b.instantiate1 rv.expr
@@ -461,7 +485,8 @@ partial def simpLet (e : Expr) : LSimpM Result := do
       let rbx ← lsimp bx
       return ← r.mkEqTrans rbx
 
-partial def ldsimp (e : Expr) : LSimpM Expr := do
+@[export scilean_ldsimp]
+partial def ldsimpImpl (e : Expr) : LSimpM Expr := timeThis "dsimp" do
   let cfg ← getConfig
   unless cfg.dsimp do
     return e
@@ -479,6 +504,7 @@ partial def ldsimp (e : Expr) : LSimpM Expr := do
       eNew ← reduceFVar cfg (← Simp.getSimpTheorems) eNew
     if eNew != e then return .visit eNew else return .done e
   transform (usedLetOnly := cfg.zeta) e (pre := pre) (post := post)
+
 
 partial def visitFn (e : Expr) : LSimpM Result := do
   let f := e.getAppFn
@@ -658,7 +684,6 @@ partial def cacheResult (e : Expr) (cfg : Simp.Config) (r : Result) : LSimpM Res
     let r : Result := { r with dischargeDepth }
     let cacheRef := (← getThe State).cache
     cacheRef.modify (fun c => c.insert e r)
-    -- modifyThe State fun s => { s with cache := s.cache.insert e r }
   return r
 
 
@@ -694,7 +719,8 @@ where
       r ← r.mkEqTrans (← simpLoop r.expr)
     cacheResult e cfg r
 
-partial def lsimp (e : Expr) : LSimpM Result := do
+@[export scilean_lsimp]
+partial def lsimpImpl (e : Expr) : LSimpM Result := do
 --   withIncRecDepth do
   if (← isProof e) then
     return { expr := e }
@@ -703,20 +729,19 @@ where
   go : LSimpM Result := do
     let cfg ← getConfig
     if cfg.memoize then
+      -- try LSimp.Cache
       let cache ← (← getThe State).cache.get
       if let some result := cache.find? e then
-        /-
-          If the result was cached at a dischargeDepth > the current one, it may not be valid.
-          See issue #1234
-        -/
         if result.dischargeDepth ≤ (← readThe Simp.Context).dischargeDepth then
+          trace[Meta.Tactic.simp.cache] "cached result {e}==>{(←result.bindVars).expr}"
           return result
+      -- try Sipm.Cache
+      let cache := (← (← getThe State).simpState.get).cache
+      if let some result := cache.find? e then
+        if result.dischargeDepth ≤ (← readThe Simp.Context).dischargeDepth then
+          trace[Meta.Tactic.simp.cache] "cached result {e}==>{result.expr}"
+          return { result with }
+
     trace[Meta.Tactic.simp.heads] "{repr e.toHeadIndex}"
     withTraceNode `Meta.Tactic.simp.heads (fun _ => pure s!"{repr e.toHeadIndex}") do
       simpLoop e
-
-end
-
-
-@[extern "scilean_lsimp_compile_test"]
-opaque compileCheck : IO Unit

@@ -1,4 +1,5 @@
 import SciLean.Tactic.LSimp.Main
+import SciLean.Core
 
 namespace SciLean.Tactic.LSimp
 
@@ -8,6 +9,11 @@ open TSyntax.Compat
 open Lean Meta
 
 
+open Lean.Parser.Tactic
+syntax (name := Parser.lsimp) "lsimp" (config)? (discharger)? (&" only")?
+  (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*,?) "]")? : tactic
+
+
 def callLSimpAux (e : Expr) (k : Expr → Expr → Array Expr → MetaM α) : MetaM α := do
 
   let stateRef : IO.Ref Simp.State ← IO.mkRef {}
@@ -15,16 +21,28 @@ def callLSimpAux (e : Expr) (k : Expr → Expr → Array Expr → MetaM α) : Me
 
   let mut simprocs : Simp.Simprocs := {}
   simprocs ← simprocs.add ``Mathlib.Meta.FunTrans.fun_trans_simproc false
+  let .some ext ← getSimpExtension? `ftrans_simp | throwError "can't find theorems!"
+  let thms ← ext.getTheorems
+        >>= (·.addDeclToUnfold ``scalarGradient)
+        >>= (·.addDeclToUnfold ``scalarCDeriv)
+
   let r :=
     (lsimp e).run
       (Simp.mkDefaultMethodsCore #[simprocs])
-      {config:={zeta:=false,singlePass:=false},simpTheorems:=#[←getSimpTheorems]}
-      ⟨lcacheRef, stateRef⟩
+      {config:={zeta:=false,singlePass:=false},simpTheorems:=#[thms]}
+      ⟨lcacheRef, stateRef, {}⟩
 
-  let a ← r.runInMeta (fun (r,_) => do
+  let (a,t) ← Aesop.time <| r.runInMeta (fun (r,s) => do
+    trace[Meta.Tactic.simp.numSteps] "{(← stateRef.get).numSteps}"
+    s.printTimings
+
+    -- IO.println "cache"
+    -- (← s.simpState.get).cache.forM fun e v => do
+    --   IO.println s!"{← ppExpr e}"
+
     k r.expr (← r.getProof) r.vars)
 
-  trace[Meta.Tactic.simp.steps] "lsimp took {(← stateRef.get).numSteps} steps"
+  trace[Meta.Tactic.simp.time] "lsimp took {t.printAsMillis}"
 
   return a
 
@@ -44,13 +62,3 @@ open Lean Elab Tactic in
   let e ← Conv.getLhs
   let (e',prf) ← callLSimp e
   Conv.updateLhs e' prf
-
-
-@[export scilean_lsimp_compile_test]
-def compileCheckImpl : IO Unit := do
-  IO.println "running compiled code!"
-
-
-@[export scilean_lsimp_compile_test_2]
-def compileCheckImpl2 : IO Unit := do
-  SciLean.Tactic.LSimp.compileCheck

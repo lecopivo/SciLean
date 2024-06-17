@@ -1,6 +1,8 @@
 import Lean
 import Lean.Util.Trace
 
+import Aesop
+
 import SciLean.Lean.Meta.Basic
 
 import SciLean.Tactic.GTrans.MetaLCtxM
@@ -90,6 +92,8 @@ structure State where
   /-- Cache storing lsimp results. -/
   cache : IO.Ref Cache
   simpState : IO.Ref Simp.State
+  timings : Std.RBMap String Aesop.Nanos compare := {}
+
 
 abbrev LSimpM := ReaderT Simp.Methods $ ReaderT Simp.Context $ StateT State MetaLCtxM
 
@@ -105,22 +109,49 @@ that it is valid in the original context e.g. bind all newly introduced free var
 def LSimpM.runInMeta (x : LSimpM X) (k : X → MetaM Y) : LSimpM Y := do
   fun mths ctx s => do
     let m : Simp.Methods := Simp.MethodsRef.toMethods mths.toMethodsRef
-    let r ← (x m ctx s).runInMeta (fun (x,_) => k x)
-    return (r,s)
-
+    let (r,s') ← (x m ctx s).runInMeta (fun (x,s') => do pure (← k x, s'))
+    return (r,s')
 
 instance : Inhabited (LSimpM α) where
   default := fun _ _ _ _ _ _ => default
+
+def timeThis (key : String) (x : LSimpM α) : LSimpM α := do
+  let (a, t) ← Aesop.time x
+  modifyThe State fun s => {s with timings := s.timings.alter key (fun t' => .some (t'.getD 0 + t))}
+  return a
+
+def _root_.Aesop.Nanos.print (n : Aesop.Nanos) : String :=
+  if n.nanos < 1000 then
+    s!"{n.nanos}ns"
+  else if n.nanos < 1000000 then
+    let str := toString (n.nanos.toFloat / 1000)
+    match str.split λ c => c == '.' with
+    | [beforePoint] => beforePoint ++ "μs"
+    | [beforePoint, afterPoint] => beforePoint ++ "." ++ afterPoint.take 1 ++ "μs"
+    | _ => unreachable!
+  else
+    let str := toString (n.nanos.toFloat / 1000000)
+    match str.split λ c => c == '.' with
+    | [beforePoint] => beforePoint ++ "ms"
+    | [beforePoint, afterPoint] => beforePoint ++ "." ++ afterPoint.take 1 ++ "ms"
+    | _ => unreachable!
+
+
+def State.printTimings (s : State) : MetaM Unit := do
+  let t := s.timings
+  for (k,t) in t do
+    trace[Meta.Tactic.simp.time] "{k} took {t.print}"
+
 
 ----------------------------------------------------------------------------------------------------
 -- LSimp forward declaration -----------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- @[extern "scilean_lsimp"]
--- opaque lsimp (e : Expr) : LSimpM Result
+@[extern "scilean_lsimp"]
+opaque lsimp (e : Expr) : LSimpM Result
 
--- @[extern "scilean_ldsimp"]
--- opaque ldsimp (e : Expr) : LSimpM Expr
+@[extern "scilean_ldsimp"]
+opaque ldsimp (e : Expr) : LSimpM Expr
 
 
 ----------------------------------------------------------------------------------------------------
@@ -152,10 +183,13 @@ def _root_.Lean.Meta.Simp.Step.toLStep (s : Simp.Step) : Step :=
 ----------------------------------------------------------------------------------------------------
 
 def pre (e : Expr) : LSimpM Step := do
-  Simp.getMethods >>= (·.pre e) >>= fun s => pure s.toLStep
+  timeThis "pre" <|
+    (Simp.getMethods >>= (·.pre e) >>= fun s => pure s.toLStep)
 
 def post (e : Expr) : LSimpM Step := do
-  Simp.getMethods >>= (·.post e) >>= fun s => pure s.toLStep
+  timeThis "post" <|
+    (Simp.getMethods >>= (·.post e) >>= fun s => pure s.toLStep)
+
 
 @[inline] def getContext : LSimpM Simp.Context :=
   readThe Simp.Context
