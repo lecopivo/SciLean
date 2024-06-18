@@ -1,3 +1,4 @@
+import SciLean.Tactic.MathlibCompiledTactics
 import SciLean.Tactic.LSimp.Elab
 import SciLean.Util.RewriteBy
 import SciLean.Core
@@ -67,7 +68,6 @@ def testExpression (n : Nat) : MetaM Q(Float → Float) :=
 #eval show MetaM Unit from do
   IO.println (← ppExpr (← testExpression 8))
 
-
 #check (0 + 1 + 0) rewrite_by lsimp
 
 
@@ -136,7 +136,6 @@ def measureOnTestExpression (n : Nat) : MetaM (Array MeasureData) := do
 ----------------------------------------------------------------------------------------
 
 -- set_option trace.Meta.Tactic.simp.heads true
-
 
 example (n : Nat) :
   n

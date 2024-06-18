@@ -10,6 +10,9 @@ import SciLean.Data.Fin
 
 import SciLean.Modules.DifferentialEquations
 
+import SciLean.Util.Profile
+
+
 /-!
 
 SciLean

@@ -3,8 +3,8 @@ import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
 
 import SciLean.Core.Meta.GenerateLinearMapSimp
 
-import Mathlib.Tactic.FunTrans.Attr
-import Mathlib.Tactic.FunTrans.Elab
+import SciLean.Tactic.FunTrans.Attr
+import SciLean.Tactic.FunTrans.Elab
 
 set_option linter.unusedVariables false
 

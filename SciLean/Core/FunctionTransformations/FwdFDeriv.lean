@@ -236,13 +236,13 @@ def HPow.hPow.arg_a0.fwdFDeriv_rule_at (n : Nat) (x : X)
 
 open BigOperators in
 @[fun_trans, to_any_point]
-theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X)
+theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
     (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x) :
-    fwdFDeriv K (fun x => ∑ i, f x i) x
+    fwdFDeriv K (fun x => Finset.sum A (f x)) x
     =
     fun dx =>
       let ydy := fun i => fwdFDeriv K (f · i) x dx
-      ∑ i, ydy i := by
+      Finset.sum A ydy := by
   unfold fwdFDeriv; fun_trans
   sorry_proof
 

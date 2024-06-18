@@ -65,10 +65,10 @@ instance : MonadLift MetaM MetaLCtxM where
   monadLift x := fun cfg ctx => do let r ← x (.mkCtxCfg ctx cfg); pure (r, ctx)
 
 protected def MetaLCtxM.saveState : MetaLCtxM (SavedState×ContextCtx) :=
-  return ({ core := (← getThe Core.State), meta := (← get) }, ⟨← getLCtx, ← getLocalInstances⟩)
+  return ({ core := (← Core.saveState), meta := (← get) }, ⟨← getLCtx, ← getLocalInstances⟩)
 
 def MetaLCtxM.restore (b : SavedState) (ctx : ContextCtx) : MetaLCtxM Unit := do
-  Core.restore b.core
+  b.restore
   modify fun s => { s with mctx := b.meta.mctx, zetaDeltaFVarIds := b.meta.zetaDeltaFVarIds, postponed := b.meta.postponed }
   modifyThe ContextCtx fun _ => ctx
 
@@ -148,12 +148,12 @@ def introLetDecl (name : Name) (type? : Option Expr) (val : Expr) : MetaLCtxM Ex
     return (fvar, ctx)
 
 
-open Lean Meta Qq in
-#eval show MetaLCtxM Unit from do
-  let e := q(fun a b => a + b + 42)
+-- open Lean Meta Qq in
+-- #eval show MetaLCtxM Unit from do
+--   let e := q(fun a b => a + b + 42)
 
-  let (b, xs) ← lambdaIntro e
+--   let (b, xs) ← lambdaIntro e
 
-  IO.println s!"lambda body: {← ppExpr b}"
-  IO.println s!"lambda vars: {← liftM <| xs.mapM ppExpr}"
-  IO.println s!"lambda: {← ppExpr (← mkLambdaFVars xs b)}"
+--   IO.println s!"lambda body: {← ppExpr b}"
+--   IO.println s!"lambda vars: {← liftM <| xs.mapM ppExpr}"
+--   IO.println s!"lambda: {← ppExpr (← mkLambdaFVars xs b)}"

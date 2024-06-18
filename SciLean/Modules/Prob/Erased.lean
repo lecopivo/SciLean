@@ -1,4 +1,4 @@
-import Std
+import Batteries
 
 structure Erased (α : Type) : Type where
   spec : α → Prop

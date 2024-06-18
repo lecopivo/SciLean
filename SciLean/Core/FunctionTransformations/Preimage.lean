@@ -1,8 +1,8 @@
 import Mathlib.Data.Set.Defs
 import Mathlib.Data.Set.Image
 
-import Mathlib.Tactic.FunTrans.Attr
-import Mathlib.Tactic.FunTrans.Elab
+import SciLean.Tactic.FunTrans.Attr
+import SciLean.Tactic.FunTrans.Elab
 
 import SciLean.Core.Objects.Scalar
 import SciLean.Util.SorryProof

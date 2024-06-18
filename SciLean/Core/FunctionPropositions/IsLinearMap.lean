@@ -6,6 +6,7 @@ import SciLean.Core.Objects.FinVec
 import SciLean.Core.Meta.GenerateLinearMapSimp
 
 set_option linter.unusedVariables false
+set_option linter.hashCommand false
 
 --------------------------------------------------------------------------------
 open LeanColls

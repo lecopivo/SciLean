@@ -130,8 +130,8 @@ instance : Vec K (X ⊸[K] Y) := Vec.mkSorryProofs
 
 open BigOperators in
 @[simp, ftrans_simp]
-theorem SmoothLinearMap.fintype_sum_apply {I} [Fintype I] (f : I → X⊸[K] Y) (x : X) :
-    (∑ i, f i) x = ∑ i, f i x  := by sorry_proof
+theorem SmoothLinearMap.fintype_sum_apply {I} (A : Finset I) (f : I → X⊸[K] Y) (x : X) :
+    (Finset.sum A f) x = Finset.sum A (f · x)  := by sorry_proof
 
 @[simp, ftrans_simp]
 theorem SmoothLinearMap.indextype_sum_apply {I} [IndexType I] (f : I → X⊸[K] Y) (x : X) :

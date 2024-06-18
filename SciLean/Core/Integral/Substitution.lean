@@ -27,4 +27,4 @@ theorem integral_parametric_inverse (φ ψ : X → W) (f : X → Y) (hdim : d = 
   [Fintype I] [∀ i, SemiHilbert R (X₁ i)] [∀ i, MeasureSpace (X₁ i)] :
   ∫' x in {x' | φ x' = ψ x'}, f x ∂(surfaceMeasure d)
   =
-  ∑ i, ∫' x₁ in dom i, jacobian R (fun x => p i x (ζ i x)) x₁ • f (p i x₁ (ζ i x₁)) := sorry_proof
+  Finset.sum Finset.univ (fun i => ∫' x₁ in dom i, jacobian R (fun x => p i x (ζ i x)) x₁ • f (p i x₁ (ζ i x₁))) := sorry_proof

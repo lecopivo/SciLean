@@ -1,7 +1,7 @@
 import Qq
 import Lean.Meta.Tactic.Simp.Types
 
-import Std.Data.RBMap.Alter
+import Batteries.Data.RBMap.Alter
 
 import Mathlib.Data.FunLike.Basic
 
@@ -128,12 +128,12 @@ def mkFTransExt (n : Name) : ImportM FTransExt := do
   IO.ofExcept <| unsafe env.evalConstCheck FTransExt opts ``FTransExt n
 
 
-initialize ftransExt : PersistentEnvExtension (Name × Name) (Name × FTransExt) (Std.RBMap Name FTransExt Name.quickCmp) ←
+initialize ftransExt : PersistentEnvExtension (Name × Name) (Name × FTransExt) (Batteries.RBMap Name FTransExt Name.quickCmp) ←
   registerPersistentEnvExtension {
     mkInitial := pure {}
     addImportedFn := fun s => do
 
-      let mut r : Std.RBMap Name FTransExt Name.quickCmp := {}
+      let mut r : Batteries.RBMap Name FTransExt Name.quickCmp := {}
 
       for s' in s do
         for (ftransName, extName) in s' do
@@ -230,7 +230,7 @@ local instance : Ord Name := ⟨Name.quickCmp⟩
 /--
 This holds a collection of function transformation rules for a fixed constant
 -/
-def FTransRules := Std.RBMap Name (Std.RBSet FTransRule FTransRule.cmp) compare
+def FTransRules := Batteries.RBMap Name (Batteries.RBSet FTransRule FTransRule.cmp) compare
 
 namespace FTransRules
 
@@ -243,9 +243,9 @@ namespace FTransRules
     fp.alter ftransName (λ p? =>
       match p? with
       | some p => some (p.insert rule)
-      | none => some (Std.RBSet.empty.insert rule))
+      | none => some (Batteries.RBSet.empty.insert rule))
 
-  def empty : FTransRules := Std.RBMap.empty
+  def empty : FTransRules := Batteries.RBMap.empty
 
 end FTransRules
 
@@ -293,8 +293,8 @@ where <name> is name of the function transformation and <info> is corresponding 
 
           let suggestedRuleName :=
             data.constName
-              |>.append data.declSuffix
-              |>.append (transName.getString.append "_rule")
+              |>.append (.mkSimple data.declSuffix)
+              |>.append (.mkSimple (transName.lastComponentAsString.append "_rule"))
 
           if (← getBoolOption `linter.ftransDeclName) &&
              ¬(suggestedRuleName.toString.isPrefixOf ruleName.toString) then

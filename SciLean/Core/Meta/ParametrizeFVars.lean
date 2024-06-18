@@ -1,7 +1,7 @@
 import Lean
 import Qq
 
-import Std.Tactic.GuardMsgs
+import Batteries.Tactic.GuardMsgs
 import SciLean.Lean.Meta.Basic
 
 open Lean Meta Qq

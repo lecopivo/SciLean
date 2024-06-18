@@ -145,6 +145,8 @@ elab "timeTactic" t:conv : conv => do
 --     unfold scalarGradient
 --     timeTactic lsimp
 
+
+set_option trace.Meta.Tactic.fun_trans true in
 #check (∇ x : Float,
           let x1 := x * x
           let x2 := x * x1
@@ -152,6 +154,7 @@ elab "timeTactic" t:conv : conv => do
           let x4 := x * x3
           let x5 := x * x4
           let x6 := x * x5
+          -- let x7 := x * x6
           -- let x8 := x * x7
           -- let x9 := x * x8
           -- let x10 := x * x9

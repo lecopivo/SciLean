@@ -77,7 +77,7 @@ theorem surfaceIntegral_parametrization (f : X → U) (d) (φ ψ : X → R)
     =
     let sub := fun i x => p i x (g i x)
     let J := fun i x => jacobian R (sub i) x
-    ∑ i : I, ∫' x in dom i, J i x • f (sub i x) := sorry_proof
+    Finset.sum Finset.univ (fun i => ∫' x in dom i, J i x • f (sub i x)) := sorry_proof
 
 
 open BigOperators in
@@ -89,7 +89,7 @@ theorem surfaceIntegral_inter_parametrization (f : X → U) (d) (φ ψ : X → R
     [Fintype I] [∀ i, SemiHilbert R (X₁ i)] [∀ i, MeasureSpace (X₁ i)] :
     ∫' x in {x | φ x = ψ x} ∩ A, f x ∂((surfaceMeasure d))
     =
-    ∑ i : I,
+    Finset.sum Finset.univ fun i =>
       let sub := fun x => p i x (g i x)
       let J := fun x => jacobian R sub x
       ∫' x in sub ⁻¹' A ∩ dom i, J x • f (sub x) := sorry_proof

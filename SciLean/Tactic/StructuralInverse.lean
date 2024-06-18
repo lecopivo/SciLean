@@ -329,7 +329,7 @@ def structuralInverse (f : Expr) : MetaM (Option (FunctionInverse × Array MVarI
             let l ← proof.mvarId!.constructor
             l.forM fun m => do
               let (_,m') ← m.intros
-              m'.applyRefl
+              m'.refl
 
             let dec : StructureDecomposition := {
               u := u, v := u₁, w := u₂, X := X, X₁ := X₁, X₂ := X₂

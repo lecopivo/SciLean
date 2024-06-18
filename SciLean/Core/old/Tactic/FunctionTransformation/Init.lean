@@ -1,7 +1,7 @@
 import Lean
 import Qq
 
-import Std.Data.RBMap.Alter
+import Batteries.Data.RBMap.Alter
 import SciLean.Lean.Array
 import SciLean.Lean.MergeMapDeclarationExtension
 

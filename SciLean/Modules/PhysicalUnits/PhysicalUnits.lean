@@ -1,5 +1,5 @@
 import Lean
-import Std
+import Batteries
 import Qq
 import Mathlib.Data.Real.Basic
 import Mathlib.Tactic.NormNum

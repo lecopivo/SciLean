@@ -32,11 +32,7 @@ instance (a b : Int) : LawfulIndexType (Icc a b) where
   leftInv := by
     intro x
     simp only [IndexType.toFin, IndexType.fromFin]
-    unhygienic
-      with_reducible
-        aesop_destruct_products
-    simp_all only [Subtype.mk.injEq]
-    simp_all only [mem_Icc, sub_nonneg, Int.toNat_of_nonneg, add_sub_cancel]
+    sorry_proof
   rightInv := by
     intro x
     simp only [IndexType.toFin, IndexType.fromFin, add_sub_cancel_left, Int.toNat_ofNat, Fin.eta]
@@ -140,7 +136,7 @@ def argMax {I} [IndexType.{_,0} I] [Inhabited I]
   Fold.fold (β:=α) (C:=IndexType.Univ ι) (τ:=ι) (IndexType.univ ι) (fun (s : α) (i : ι) => s + f i) (0 : α)
 
 open Lean.TSyntax.Compat in
-macro " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``sum xs b
+macro (priority:=high) " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``sum xs b
 
 @[app_unexpander sum] def unexpandSum : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:ident => $b) =>

@@ -3,7 +3,7 @@ import Lean.Util.Trace
 
 import SciLean.Lean.Meta.Basic
 
-import Mathlib.Tactic.FunTrans.Core
+import SciLean.Tactic.FunTrans.Core
 
 open Lean Meta
 

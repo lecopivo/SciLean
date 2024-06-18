@@ -1,5 +1,5 @@
 import Lean
-import Std.Lean.Expr
+import Batteries.Lean.Expr
 
 import SciLean.Lean.Expr
 import SciLean.Lean.Array
@@ -196,7 +196,7 @@ def mkUncurryFun (n : Nat) (f : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd
   forallTelescope (← inferType f) λ xs _ => do
     let xs := xs[0:n]
 
-    let xProdName : String ← xs.foldlM (init:="") λ n x =>
+    let xProdName := Name.mkSimple <| ← xs.foldlM (init:="") λ n x =>
       do return (n ++ toString (← x.fvarId!.getUserName).eraseMacroScopes)
     let xProdType ← inferType (← mkProdElem xs mk)
 

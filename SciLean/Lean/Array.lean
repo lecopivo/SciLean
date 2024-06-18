@@ -1,4 +1,3 @@
-import Std.Logic
 import SciLean.Util.SorryProof
 
 namespace Array
@@ -66,7 +65,7 @@ def joinl [Inhabited β] (xs : Array α) (map : α → β) (op : β → β → �
   xs.joinlM map op
 
 def joinrM [Monad m] [Inhabited β] (xs : Array α) (map : α → m β) (op : β → β → m β) : m β := do
-  if h : 0 < xs.size then
+  if _h : 0 < xs.size then
     let n := xs.size - 1
     have : n < xs.size := sorry_proof
     xs[0:n].foldrM (init:=(← map xs[n])) λ x acc => do op (← map x) acc

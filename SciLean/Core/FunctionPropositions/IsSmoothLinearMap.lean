@@ -35,7 +35,7 @@ theorem id_rule : IsSmoothLinearMap K (fun x : X => x) := by constructor <;> fun
 variable (Y)
 @[fun_prop]
 theorem const_zero_rule : IsSmoothLinearMap K (fun _ : X => (0 : Y)) := by
-  constructor <;> first | fun_prop | apply IsLinearMap.isLinearMap_const_zero
+  constructor <;> first | fun_prop
 variable {Y}
 
 variable {X}

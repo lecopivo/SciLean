@@ -51,7 +51,6 @@ syntax (name:=conv_induction) "induction" ident (ident)? (ident)? (ident)? conv 
 
 syntax (name:=conv_induction_list) "induction_list" ident (ident)? (ident)? (ident)? (ident)? conv conv : conv
 
-#check List.recOn
 @[tactic conv_induction_list] def convInductionList : Tactic
 | `(conv| induction_list $n $[$head]? $[$tail]? $[$prev]? $[$eq]? $baseConv $succConv) => do
   let mvarId ← getMainGoal

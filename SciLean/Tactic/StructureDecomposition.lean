@@ -189,7 +189,7 @@ def decomposeStructure (e : Expr) (split : Nat → Expr → Bool) : MetaM (Optio
       let l ← proof.mvarId!.constructor
       l.forM fun m => do
         let (_,m') ← m.intros
-        m'.applyRefl
+        m'.refl
 
       return .some {u:=u, v:=v, w:=w, X:=X, X₁:=X₁, X₂:=X₂, p₁:=p₁, p₂:=p₂, q:=q, proof := proof}
 
@@ -255,7 +255,7 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option DomainDecompositio
         let f : Q($dec.X → $Y) := f
 
         let proof ← mkFreshExprMVarQ q(∀ x, $f' ($dec.p₁ x) = $f x)
-        proof.mvarId!.intros >>= fun (_,m) => m.applyRefl
+        proof.mvarId!.intros >>= fun (_,m) => m.refl
 
         return .some {u:= u, Y:=Y, dec:=dec, f:=f, f':=f', proof:=proof}
 
@@ -294,7 +294,7 @@ def factorCodomainThroughProjections (f : Expr) : MetaM (Option CodomainDecompos
       let f : Q($X → $dec.X) := f
 
       let proof ← mkFreshExprMVarQ q(∀ x, $dec.q ($f' x) $y₂ = $f x)
-      proof.mvarId!.intros >>= fun (_,m) => m.applyRefl
+      proof.mvarId!.intros >>= fun (_,m) => m.refl
 
       return .some {u:=u, X:=X, dec:=dec, f:=f, f':=f', y₂:=y₂, proof:=proof}
 

@@ -1,4 +1,4 @@
-import Std.Data.RBMap.Alter
+import Batteries.Data.RBMap.Alter
 
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic

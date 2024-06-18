@@ -17,8 +17,6 @@ syntax (name:=gtrans_tac) "gtrans" : tactic
 /-- `gtrans` as conv tactic will fill in meta variables in generalized transformation -/
 syntax (name:=gtrans_conv) "gtrans" : conv
 
-#check Nat
-
 open Lean.Parser.Tactic in
 syntax (name:=gtrans_tac') "gtrans" (config)? (discharger)? (normalizer)? : tactic
 

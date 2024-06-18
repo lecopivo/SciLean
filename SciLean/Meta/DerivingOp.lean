@@ -19,13 +19,13 @@ def mkBinaryOpInstance (className opName : Name) (declName : Name) : TermElabM U
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
           fields := fields.push (← Meta.mkAppM opName #[x.proj info.structName i, y.proj info.structName i])
-        (Meta.mkLambdaFVars #[x,y] (← Meta.mkAppM (info.structName.append "mk") fields))
+        (Meta.mkLambdaFVars #[x,y] (← Meta.mkAppM (info.structName.append `mk) fields))
 
-      Meta.mkLambdaFVars xs (← Meta.mkAppM (className.append "mk") #[binOp])
+      Meta.mkLambdaFVars xs (← Meta.mkAppM (className.append `mk) #[binOp])
 
     let instType ← Meta.inferType instValue
 
-    let instName : Name := declName.append "instances" |>.append className
+    let instName : Name := declName.append `instances |>.append className
     let instDecl : Declaration := .defnDecl
       {levelParams := [],
        hints := .regular 0,
@@ -35,7 +35,7 @@ def mkBinaryOpInstance (className opName : Name) (declName : Name) : TermElabM U
        name := instName,
        }
     addAndCompile instDecl
-    Attribute.add instName "instance" default
+    Attribute.add instName `instance default
   | none =>
     pure default
 
@@ -60,13 +60,13 @@ def mkUnaryOpInstance (className opName : Name) (declName : Name) : TermElabM Un
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
           fields := fields.push (← Meta.mkAppM opName #[x.proj info.structName i])
-        (Meta.mkLambdaFVars #[x] (← Meta.mkAppM (info.structName.append "mk") fields))
+        (Meta.mkLambdaFVars #[x] (← Meta.mkAppM (info.structName.append `mk) fields))
 
-      Meta.mkLambdaFVars xs (← Meta.mkAppM (className.append "mk") #[op])
+      Meta.mkLambdaFVars xs (← Meta.mkAppM (className.append `mk) #[op])
 
     let instType ← Meta.inferType instValue
 
-    let instName : Name := declName.append "instances" |>.append className
+    let instName : Name := declName.append `instances |>.append className
     let instDecl : Declaration := .defnDecl
       {levelParams := [],
        hints := .regular 0,
@@ -76,7 +76,7 @@ def mkUnaryOpInstance (className opName : Name) (declName : Name) : TermElabM Un
        name := instName,
        }
     addAndCompile instDecl
-    Attribute.add instName "instance" default
+    Attribute.add instName `instance default
   | none =>
     pure default
 
@@ -100,13 +100,13 @@ def mkNullaryOpInstance (className opName : Name) (declName : Name) : TermElabM 
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
           fields := fields.push (← Meta.mkAppOptM opName #[← Meta.inferType (x.proj info.structName i),none])
-        Meta.mkAppM (info.structName.append "mk") fields
+        Meta.mkAppM (info.structName.append `mk) fields
 
-      Meta.mkLambdaFVars xs (← Meta.mkAppM (className.append "mk") #[op])
+      Meta.mkLambdaFVars xs (← Meta.mkAppM (className.append `mk) #[op])
 
     let instType ← Meta.inferType instValue
 
-    let instName : Name := declName.append "instances" |>.append className
+    let instName : Name := declName.append `instances |>.append className
     let instDecl : Declaration := .defnDecl
       {levelParams := [],
        hints := .regular 0,
@@ -116,7 +116,7 @@ def mkNullaryOpInstance (className opName : Name) (declName : Name) : TermElabM 
        name := instName,
        }
     addAndCompile instDecl
-    Attribute.add instName "instance" default
+    Attribute.add instName `instance default
   | none =>
     pure default
 
@@ -142,13 +142,13 @@ def mkSMulOpInstance (declName : Name) : TermElabM Unit := do
         let mut fields := #[]
         for i in [0:info.fieldNames.size] do
           fields := fields.push (← Meta.mkAppM ``SMul.smul #[s, x.proj info.structName i])
-        (Meta.mkLambdaFVars #[s,x] (← Meta.mkAppM (info.structName.append "mk") fields))
+        (Meta.mkLambdaFVars #[s,x] (← Meta.mkAppM (info.structName.append `mk) fields))
 
       Meta.mkLambdaFVars xs (← Meta.mkAppM ``SMul.mk #[binOp])
 
     let instType ← Meta.inferType instValue
 
-    let instName : Name := declName.append "instances" |>.append "SMul"
+    let instName : Name := declName.append `instances |>.append `SMul
     let instDecl : Declaration := .defnDecl
       {levelParams := [],
        hints := .regular 0,
@@ -157,7 +157,7 @@ def mkSMulOpInstance (declName : Name) : TermElabM Unit := do
        value := instValue,
        name := instName}
     addAndCompile instDecl
-    Attribute.add instName "instance" default
+    Attribute.add instName `instance default
   | none =>
     pure default
 

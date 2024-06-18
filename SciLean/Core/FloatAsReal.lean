@@ -45,7 +45,8 @@ instance : Field Float where
   inv_zero := sorry_proof
   qsmul q x := (q.num * x) / q.den
   qsmul_def := sorry_proof
-
+  nnqsmul q x := (q.num * x) / q.den
+  nnqsmul_def := sorry_proof
 
 instance : DecidableEq Float := fun x y =>
   if x ≤ y && y ≤ x
@@ -79,6 +80,8 @@ instance : LinearOrderedField Float where
   div_eq_mul_inv := sorry_proof
   qsmul q x := (q.num * x) / q.den
   qsmul_def := sorry_proof
+  nnqsmul q x := (q.num * x) / q.den
+  nnqsmul_def := sorry_proof
 
 
 instance : SeminormedRing Float where
@@ -105,6 +108,7 @@ instance : DenselyNormedField Float where
 
 instance : StarRing Float where
   star_add := sorry_proof
+
 
 instance : Algebra ℝ Float where
   smul := fun r x => realToFloat r * x
@@ -245,5 +249,5 @@ instance : MeasureTheory.MeasureSpace Float where
     mono := sorry_proof
     iUnion_nat := sorry_proof
     m_iUnion := sorry_proof
-    trimmed := sorry_proof
+    trim_le := sorry_proof
 }

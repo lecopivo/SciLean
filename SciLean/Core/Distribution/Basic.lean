@@ -217,10 +217,10 @@ theorem Distribution.smul_extAction (r : R) (T : 𝒟'(X,U)) (φ : X → V) (L :
 theorem Distribution.neg_extAction (T : 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
     (- T).extAction φ L = - T.extAction φ L := by sorry_proof
 
-open BigOperators in
-@[action_push]
-theorem Distribution.fintype_sum_extAction {I} [Fintype I] (T : I → 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
-    (∑ i, T i).extAction φ L = ∑ i, (T i).extAction φ L := by sorry_proof
+-- open BigOperators in
+-- @[action_push]
+-- theorem Distribution.fintype_sum_extAction {I} [Fintype I] (T : I → 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
+--     (∑ i, T i).extAction φ L = ∑ i, (T i).extAction φ L := by sorry_proof
 
 @[action_push]
 theorem Distribution.indextype_sum_extAction {I} [IndexType I] (T : I → 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ W) :
@@ -328,15 +328,15 @@ theorem neg_restrict (T : 𝒟'(X,Y)) (A : Set X) :
 theorem neg_restrict' (T : 𝒟'(X,Y)) (A : Set X) :
     - (T.restrict A) = (- T).restrict A := sorry_proof
 
-open BigOperators in
-@[restrict_push]
-theorem finset_sum_restrict {I} [Fintype I] (T : I → 𝒟'(X,Y)) (A : Set X) :
-    (∑ i, T i).restrict A = ∑ i, (T i).restrict A := sorry_proof
+-- open BigOperators in
+-- @[restrict_push]
+-- theorem finset_sum_restrict {I} [Fintype I] (T : I → 𝒟'(X,Y)) (A : Set X) :
+--     (∑ i, T i).restrict A = ∑ i, (T i).restrict A := sorry_proof
 
-open BigOperators in
-@[restrict_pull]
-theorem finset_sum_restrict' {I} [Fintype I] (T : I → 𝒟'(X,Y)) (A : Set X) :
-    ∑ i, (T i).restrict A = (∑ i, T i).restrict A := sorry_proof
+-- open BigOperators in
+-- @[restrict_pull]
+-- theorem finset_sum_restrict' {I} [Fintype I] (T : I → 𝒟'(X,Y)) (A : Set X) :
+--     ∑ i, (T i).restrict A = (∑ i, T i).restrict A := sorry_proof
 
 @[restrict_push]
 theorem indextype_sum_restrict {I} [IndexType I] (T : I → 𝒟' X) (A : Set X) :

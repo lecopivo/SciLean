@@ -7,8 +7,8 @@ import SciLean.Lean.Meta.Basic
 
 import SciLean.Tactic.GTrans.MetaLCtxM
 
-import Mathlib.Tactic.FunTrans.Core
-import Mathlib.Tactic.FunTrans.Elab
+import SciLean.Tactic.FunTrans.Core
+import SciLean.Tactic.FunTrans.Elab
 
 open Lean Meta
 
@@ -24,7 +24,6 @@ structure Result where
   expr : Expr
   proof? : Option Expr := none
   vars : Array Expr := #[]
-  dischargeDepth : UInt32 := 0
   cache          : Bool := true
   deriving Inhabited
 
@@ -44,7 +43,6 @@ def _root_.Lean.Meta.Simp.Result.toLResult (s : Simp.Result) : Result :=
   { expr := s.expr,
     proof? := s.proof?,
     vars := #[],
-    dischargeDepth := s.dischargeDepth,
     cache := s.cache }
 
 def Result.getProof (r : Result) : MetaM Expr :=
@@ -92,7 +90,7 @@ structure State where
   /-- Cache storing lsimp results. -/
   cache : IO.Ref Cache
   simpState : IO.Ref Simp.State
-  timings : Std.RBMap String Aesop.Nanos compare := {}
+  timings : Batteries.RBMap String Aesop.Nanos compare := {}
 
 
 abbrev LSimpM := ReaderT Simp.Methods $ ReaderT Simp.Context $ StateT State MetaLCtxM

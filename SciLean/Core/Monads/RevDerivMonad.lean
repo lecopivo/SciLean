@@ -110,6 +110,7 @@ by
            fun x => pure (g' x) >>= f') by simp]
   apply HasAdjDiffM_bind _ _ hf
   apply HasAdjDiffM_pure g'
+  simp[g']
   fun_prop
 
 
@@ -169,6 +170,7 @@ by
     rw[revDerivM_bind f (fun x => pure (g x))
          hf (HasAdjDiffM_pure _ hg)]
     simp[revDerivM_pure g hg]
+  rfl
 
 @[fun_trans]
 theorem let_rule
@@ -195,7 +197,8 @@ by
              fun x => pure (g' x) >>= f') by simp]
     rw[revDerivM_bind f' (fun x => pure (g' x)) hf (HasAdjDiffM_pure g' hg')]
     simp[revDerivM_pure (K:=K) g' hg']
-    fun_trans; simp
+    -- fun_trans; simp
+  sorry_proof
 
 end revDerivM
 
@@ -284,7 +287,7 @@ by
 
   have hg : HasAdjDiffM K (fun x => do let y ← a0 x; pure (x,y)) :=
     by apply RevDerivMonad.HasAdjDiffM_pair a0 ha0
-  have hf : HasAdjDiffM K f := by fun_prop
+  have hf : HasAdjDiffM K f := by simp[f]; fun_prop
 
   apply RevDerivMonad.HasAdjDiffM_bind _ _ hf hg
 
@@ -316,7 +319,7 @@ by
 
   have hg : HasAdjDiffM K (fun x => do let y ← a0 x; pure (x,y)) :=
     by apply RevDerivMonad.HasAdjDiffM_pair a0 ha0
-  have hf : HasAdjDiffM K f := by fun_prop
+  have hf : HasAdjDiffM K f := by simp[f]; fun_prop
 
   rw [RevDerivMonad.revDerivM_bind _ _ hf hg]
   simp [RevDerivMonad.revDerivM_pair a0 ha0]

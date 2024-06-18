@@ -9,6 +9,7 @@ import SciLean.Tactic.AnalyzeConstLambda
 open LeanColls
 namespace SciLean
 
+set_option linter.unusedVariables false
 
 section HelperTheorems
 
@@ -34,7 +35,7 @@ theorem _root_.IsLinearMap.add_pull (x x' : X)
 theorem _root_.IsLinearMap.sum_push
   {f : X → Y} (hf : IsLinearMap K f)
   (ι : Type) [IndexType.{_,u} ι] [IndexType.{_,v} ι] (x : ι → X)
-  : (∑ i, f (x i)) = f (∑ i, x i) := by sorry_proof
+  : (∑ i : ι, f (x i)) = f (∑ i, x i) := by sorry_proof
 
 -- todo: this is not sufficiently universe polymorphic
 --       and somethimes forces to write non-universe polymorphic code
@@ -146,7 +147,7 @@ def generateLinearMapSimp
 
   let thrmVal : TheoremVal :=
   {
-    name  := data.constName |>.append data.declSuffix |>.append thrmName
+    name  := data.constName |>.append (.mkSimple data.declSuffix) |>.append thrmName
     type  := statement
     value := proof
     levelParams := (collectLevelParams {} statement).params.toList

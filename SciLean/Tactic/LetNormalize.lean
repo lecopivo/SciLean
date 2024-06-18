@@ -134,23 +134,24 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
       -- deconstruct constructors into bunch of let bindings
       if config.splitStructureConstuctors then
         if let .some (ctor, args) ← constructorApp? xValue' then
-          if let .some info := getStructureInfo? (← getEnv) xType.getAppFn.constName! then
-            let mut lctx ← getLCtx
-            let insts ← getLocalInstances
-            let mut fvars : Array Expr := #[]
-            for i in [0:ctor.numFields] do
-              let fvarId ← withLCtx lctx insts mkFreshFVarId
-              let name := xName.appendAfter s!"_{info.fieldNames[i]!}"
-              let val  := args[ctor.numParams + i]!
-              let type ← inferType val
-              lctx := lctx.mkLetDecl fvarId name type val (nonDep := false) default
-              fvars := fvars.push (.fvar fvarId)
+        if let .some name := xType.getAppFn.constName? then
+        if let .some info := getStructureInfo? (← getEnv) name then
+          let mut lctx ← getLCtx
+          let insts ← getLocalInstances
+          let mut fvars : Array Expr := #[]
+          for i in [0:ctor.numFields] do
+            let fvarId ← withLCtx lctx insts mkFreshFVarId
+            let name := xName.appendAfter s!"_{info.fieldNames[i]!}"
+            let val  := args[ctor.numParams + i]!
+            let type ← inferType val
+            lctx := lctx.mkLetDecl fvarId name type val (nonDep := false) default
+            fvars := fvars.push (.fvar fvarId)
 
-            let e' ← withLCtx lctx insts do
-              let xValue'' := mkAppN xValue'.getAppFn (args[0:ctor.numFields].toArray.append fvars)
-              mkLambdaFVars fvars (xBody.instantiate1 xValue'')
+          let e' ← withLCtx lctx insts do
+            let xValue'' := mkAppN xValue'.getAppFn (args[0:ctor.numFields].toArray.append fvars)
+            mkLambdaFVars fvars (xBody.instantiate1 xValue'')
 
-            return (← letNormalize e' config)
+          return (← letNormalize e' config)
 
       -- in all other cases normalized the body
       withLetDecl xName xType xValue' fun x => do

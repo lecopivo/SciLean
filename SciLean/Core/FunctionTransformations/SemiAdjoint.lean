@@ -231,11 +231,11 @@ by
 
 open BigOperators in
 @[fun_trans]
-theorem Finset.sum.arg_f.semiAdjoint_rule {ι : Type _} [Fintype ι]
+theorem Finset.sum.arg_f.semiAdjoint_rule {ι : Type _} (A : Finset ι)
   (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K (f · i))
-  : semiAdjoint K (fun x => ∑ i, f x i)
+  : semiAdjoint K (fun x => Finset.sum A (fun i => f x i))
     =
-    (fun y => ∑ i, semiAdjoint K (f · i) y) :=
+    (fun y => Finset.sum A (fun i => semiAdjoint K (f · i) y)) :=
 by
   sorry_proof
 

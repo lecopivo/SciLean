@@ -1,5 +1,5 @@
-
-import Std.Data.RBMap.Alter
+import Batteries.Data.RBMap.Alter
+import Lean
 import SciLean.Lean.Array
 
 open Lean
@@ -18,7 +18,7 @@ Similar to `MapDeclarationExtension` but it allows you have insert declarations 
 However, you have to provide how to merge the values and to guarantee consistency i.e. merging should be associative and commutative.
 -/
 def MergeMapDeclarationExtension (α)
-  := PersistentEnvExtension (Name × α) (Name × α) (Std.RBMap Name α Name.quickCmp)
+  := PersistentEnvExtension (Name × α) (Name × α) (Batteries.RBMap Name α Name.quickCmp)
 
 open MergeMapDeclarationExtension in
 def mkMergeMapDeclarationExtension [Inhabited α] (merge : Merge α) (name : Name := by exact decl_name%)

@@ -1,7 +1,7 @@
 import SciLean.Core.Objects.BroadcastType
 
-import Mathlib.Tactic.FunTrans.Attr
-import Mathlib.Tactic.FunTrans.Elab
+import SciLean.Tactic.FunTrans.Attr
+import SciLean.Tactic.FunTrans.Elab
 
 namespace SciLean
 

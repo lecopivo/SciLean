@@ -97,6 +97,7 @@ by
   unfold revDeriv;
   conv =>
     lhs; fun_trans; fun_trans; simp
+  rfl
 
 @[fun_trans]
 theorem GetElem.getElem.arg_cont.revCDerivUpdate_rule
@@ -112,6 +113,7 @@ by
   unfold revDerivUpdate;
   conv =>
     lhs; fun_trans; fun_trans; simp
+  rfl
 
 @[fun_trans]
 theorem GetElem.getElem.arg_cont.revCDerivProj_rule
@@ -218,6 +220,7 @@ theorem LeanColls.Indexed.set.arg_contelem.revCDeriv_rule
   unfold revDeriv;
   conv =>
     lhs; fun_trans; fun_trans; simp
+  rfl
 
 @[fun_trans]
 theorem LeanColls.Indexed.set.arg_contelem.revCDerivUpdate_rule
@@ -391,6 +394,7 @@ theorem LeanColls.Indexed.ofFn.arg_cont.revCDerivUpdate_rule
 by
   unfold revDerivUpdate;
   conv => lhs; fun_trans; simp
+  rfl
 
 @[fun_trans]
 theorem LeanColls.Indexed.ofFn.arg_cont.revCDerivProj_rule
@@ -416,6 +420,7 @@ theorem LeanColls.Indexed.ofFn.arg_cont.revCDerivProjUpdate_rule
        fdf.2) := by
   unfold revDerivProjUpdate;
   conv => lhs; fun_trans; simp
+  rfl
 
 end OnSemiInnerProductSpace
 

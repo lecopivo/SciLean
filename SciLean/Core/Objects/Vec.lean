@@ -6,6 +6,7 @@ import SciLean.Util.SorryProof
 
 namespace SciLean
 
+set_option linter.unusedVariables false
 
 -- TODO: move this section
 namespace Curve

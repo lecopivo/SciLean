@@ -44,7 +44,7 @@ def profileFile (file : FilePath) (flame : FilePath := "/home/tskrivan/Documents
   let stdout ← IO.asTask child.stdout.readToEnd Task.Priority.dedicated
   let stderr ← child.stderr.readToEnd
   let exitCode ← child.wait
-  let stdout ← IO.ofExcept stdout.get
+  let _stdout ← IO.ofExcept stdout.get
 
   if exitCode != 0 then
     throw (IO.Error.userError s!"Error: Failed to run speedscope\n\n{stderr}")

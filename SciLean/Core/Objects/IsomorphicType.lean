@@ -1,7 +1,7 @@
 import Mathlib.Logic.Equiv.Basic
 
-import Mathlib.Tactic.FunTrans.Attr
-import Mathlib.Tactic.FunTrans.Elab
+import SciLean.Tactic.FunTrans.Attr
+import SciLean.Tactic.FunTrans.Elab
 
 import SciLean.Tactic.FTrans.Simp
 

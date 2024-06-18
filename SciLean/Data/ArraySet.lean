@@ -1,5 +1,5 @@
-import Std.Data.Array.Merge
-import Std.Data.List.Basic
+import Batteries.Data.Array.Merge
+import Batteries.Data.List.Basic
 
 import SciLean.Lean.Array
 import SciLean.Util.SorryProof
@@ -13,7 +13,7 @@ namespace SciLean
   -/
 structure ArraySet (α : Type _) [ord : Ord α] where
   data : Array α
-  isSet : data.sortAndDeduplicate = data
+  isSet : data.sortDedup = data
 deriving Hashable
 
 namespace ArraySet
@@ -32,7 +32,7 @@ namespace ArraySet
   instance [ToString α] : ToString (ArraySet α) := ⟨λ as => toString as.data⟩
 
   def _root_.Array.toArraySet (as : Array α) : ArraySet α where
-    data := as.sortAndDeduplicate
+    data := as.sortDedup
     isSet := sorry_proof
 
   def mem (as : ArraySet α) (a : α) [DecidableEq α] : Bool := Id.run do
@@ -57,7 +57,7 @@ namespace ArraySet
   instance (a b : ArraySet α) : Decidable (a ⊆ b) := Id.run do
     let mut j := 0
     for h : i in [0:b.size] do
-      if h' : (a.size - j) > (b.size - i) then
+      if _h' : (a.size - j) > (b.size - i) then
         return isFalse sorry_proof
       if h' : j < a.size then
         have _ := h.2

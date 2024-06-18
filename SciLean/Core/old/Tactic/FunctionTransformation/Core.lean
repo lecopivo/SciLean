@@ -1,4 +1,4 @@
-import Std.Lean.Parser
+import Batteries.Lean.Parser
 import Mathlib.Tactic.NormNum.Core
 
 import SciLean.Lean.Meta.Basic

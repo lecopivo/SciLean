@@ -238,5 +238,5 @@ instance [ArrayType Cont Idx Elem] [MeasureSpace Elem] : MeasureSpace Cont where
     mono := sorry_proof
     iUnion_nat := sorry_proof
     m_iUnion := sorry_proof
-    trimmed := sorry_proof
+    trim_le := sorry_proof
 }

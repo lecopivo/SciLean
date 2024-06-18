@@ -8,8 +8,8 @@ import Mathlib.Analysis.Calculus.FDeriv.Mul
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Analysis.Calculus.Deriv.Inv
 
-import Mathlib.Tactic.FunTrans.Attr
-import Mathlib.Tactic.FunTrans.Elab
+import SciLean.Tactic.FunTrans.Attr
+import SciLean.Tactic.FunTrans.Elab
 
 import SciLean.Core.Meta.ToAnyPoint
 import SciLean.Core.FunctionPropositions.IsContinuousLinearMap

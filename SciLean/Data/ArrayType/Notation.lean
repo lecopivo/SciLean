@@ -1,6 +1,6 @@
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ListN
-import Std.Lean.Expr
+import Batteries.Lean.Expr
 import Qq
 
 

@@ -21,7 +21,7 @@ elab "def_optimize" f:ident "by " t:convSeq : command => do
       let (value',eq) ← elabConvRewrite val #[] (← `(conv| ($t)))
       pure (← mkLambdaFVars xs value', ← mkLambdaFVars xs eq)
 
-  let optName := info.name.append "optimized"
+  let optName := info.name.append (.mkSimple "optimized")
 
   let optimizedDef : DefinitionVal :=
   {
@@ -41,11 +41,11 @@ elab "def_optimize" f:ident "by " t:convSeq : command => do
     let rhs ← mkAppOptM optName (xs.map .some)
     mkForallFVars xs (← mkEq lhs rhs)
 
-  let thmName := info.name.append "optimize_rule"
+  let thmName := info.name.append (.mkSimple "optimize_rule")
 
   let eqTheorem : TheoremVal :=
   {
-    name  := info.name.append "optimize_rule"
+    name  := info.name.append (.mkSimple "optimize_rule")
     type  := eqType
     value := (← instantiateMVars eq)
     levelParams := info.levelParams

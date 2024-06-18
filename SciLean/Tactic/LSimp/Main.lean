@@ -306,17 +306,6 @@ partial def reduce (e : Expr) : LSimpM Expr :=  /- withIncRecDepth -/  do
     reduce e'
 
 
-partial def simpLit (e : Expr) : LSimpM Result := do
-  match e.natLit? with
-  | some n =>
-    /- If `OfNat.ofNat` is marked to be unfolded, we do not pack orphan nat literals as `OfNat.ofNat` applications
-        to avoid non-termination. See issue #788.  -/
-    if (← readThe Simp.Context).isDeclToUnfold ``OfNat.ofNat then
-      return { expr := e }
-    else
-      return { expr := (← mkNumeral (mkConst ``Nat) n) }
-  | none   => return { expr := e }
-
 partial def simpProj (e : Expr) : LSimpM Result := do
   match (← Meta.reduceProj? e) with
   | some e =>
@@ -672,16 +661,13 @@ partial def simpStep (e : Expr) : LSimpM Result := do
   | .const ..    => simpConst e
   | .bvar ..     => unreachable!
   | .sort ..     => return { expr := e }
-  | .lit ..      => simpLit e
+  | .lit ..      => return { expr := e }
   | .mvar ..     => return { expr := (← instantiateMVars e) }
   | .fvar ..     => return { expr := (← reduceFVar (← getConfig) (← Simp.getSimpTheorems) e) }
 
 
 partial def cacheResult (e : Expr) (cfg : Simp.Config) (r : Result) : LSimpM Result := do
   if cfg.memoize && r.cache then
-    let ctx ← readThe Simp.Context
-    let dischargeDepth := ctx.dischargeDepth
-    let r : Result := { r with dischargeDepth }
     let cacheRef := (← getThe State).cache
     cacheRef.modify (fun c => c.insert e r)
   return r
@@ -732,16 +718,11 @@ where
       -- try LSimp.Cache
       let cache ← (← getThe State).cache.get
       if let some result := cache.find? e then
-        if result.dischargeDepth ≤ (← readThe Simp.Context).dischargeDepth then
-          trace[Meta.Tactic.simp.cache] "cached result {e}==>{(←result.bindVars).expr}"
-          return result
+        return result
       -- try Sipm.Cache
       let cache := (← (← getThe State).simpState.get).cache
       if let some result := cache.find? e then
-        if result.dischargeDepth ≤ (← readThe Simp.Context).dischargeDepth then
-          trace[Meta.Tactic.simp.cache] "cached result {e}==>{result.expr}"
-          return { result with }
+        return { result with }
 
     trace[Meta.Tactic.simp.heads] "{repr e.toHeadIndex}"
-    withTraceNode `Meta.Tactic.simp.heads (fun _ => pure s!"{repr e.toHeadIndex}") do
-      simpLoop e
+    simpLoop e

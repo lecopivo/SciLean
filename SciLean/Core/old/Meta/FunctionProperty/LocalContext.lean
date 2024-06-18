@@ -1,5 +1,5 @@
-import Std.Data.RBMap.Alter
-import Std.Data.HashMap
+import Batteries.Data.RBMap.Alter
+import Batteries.Data.HashMap
 
 import SciLean.Lean.Meta.Basic
 import SciLean.Data.ArraySet
