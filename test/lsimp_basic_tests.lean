@@ -126,12 +126,16 @@ elab "timeTactic" t:conv : conv => do
   IO.println s!"tactic {t.raw.prettyPrint} took {time.printAsMillis}"
 
 
-
 #check (∇ x : Float, let y := x * x; x * y)
   rewrite_by
     unfold scalarGradient
-    lsimp
+    lsimp only [Mathlib.Meta.FunTrans.fun_trans_simproc, ftrans_simp]
 
+
+macro "lautodiff" : conv =>
+  `(conv| (unfold scalarGradient scalarCDeriv;
+           lsimp (config := {zeta:=false}) only
+             [Mathlib.Meta.FunTrans.fun_trans_simproc, ftrans_simp]))
 
 -- set_option trace.Meta.Tactic.fun_trans true in
 
@@ -145,8 +149,9 @@ elab "timeTactic" t:conv : conv => do
 --     unfold scalarGradient
 --     timeTactic lsimp
 
-
-set_option trace.Meta.Tactic.fun_trans true in
+-- set_option trace.Meta.Tactic.fun_trans true in
+set_option trace.Meta.Tactic.simp.unify true in
+set_option trace.Meta.Tactic.simp.rewrite true in
 #check (∇ x : Float,
           let x1 := x * x
           let x2 := x * x1
@@ -161,28 +166,25 @@ set_option trace.Meta.Tactic.fun_trans true in
           -- let x11 := x * x10
           x6)
   rewrite_by
-    unfold scalarGradient
-    lsimp
+    unfold scalarGradient scalarCDeriv
+    lautodiff
 
-
-#exit
 
 #check (∂ x : Float, let y := x * x; x * y)
   rewrite_by
-    unfold scalarCDeriv
-    lsimp
+    lautodiff
 
 
 #check (∂> x : Float, let y := x * x; x * y)
   rewrite_by
-    lsimp
+    lautodiff
 
 
 -- #check Nat
 
 #check (∂> x : Float, let y := x * x; let z := x * y; x * y * z)
   rewrite_by
-    lsimp
+    lautodiff
 
 set_option profiler true
 
@@ -200,22 +202,22 @@ open SciLean
 #check (structProj 1 ())
   rewrite_by
     unfold scalarGradient
-    lsimp
-    lsimp
+    lautodiff
+    lautodiff
 
 
 
 -- #check (∇ x : Float, let y := x * x; let z := x * y; x * y * z)
 --   rewrite_by
 --     unfold scalarGradient
---     lsimp
---     lsimp-- 16107 steps & 4.45s | with cache: 1295 steps && 709ms
+--     lautodiff
+--     lautodiff-- 16107 steps & 4.45s | with cache: 1295 steps && 709ms
 
 
 -- #check (∇ x : Float, let y := x * x; let z := x * y; x * y * z)
 --   rewrite_by
 --     unfold scalarGradient
---     lsimp -- 16107 steps & 4.45s | with cache: 1295 steps && 709ms
+--     lautodiff -- 16107 steps & 4.45s | with cache: 1295 steps && 709ms
 
 
 #check (∇ x : Float,
@@ -232,7 +234,7 @@ open SciLean
           x6)
   rewrite_by
     unfold scalarGradient
-    lsimp
+    lautodiff
 
 
 
@@ -251,7 +253,7 @@ open SciLean
           x6)
   rewrite_by
     unfold scalarGradient
-    lsimp
+    lautodiff
 
 
 
@@ -269,7 +271,7 @@ open SciLean
           x6)
   rewrite_by
     unfold scalarGradient
-    lsimp
+    lautodiff
 
 
 
@@ -289,7 +291,7 @@ open SciLean
 --           x10 * x11)
 --   rewrite_by
 --     unfold scalarGradient
---     lsimp
+--     lautodiff
 
 
 
@@ -306,7 +308,7 @@ open SciLean
           x3 * x4)
   rewrite_by
     unfold scalarGradient
-    lsimp
+    lautodiff
     simp
 
 
@@ -321,7 +323,7 @@ open SciLean
           x * x1 * x2 * x3 * x4 * x5)
   rewrite_by
     unfold scalarGradient
-    lsimp
+    lautodiff
 
 
 

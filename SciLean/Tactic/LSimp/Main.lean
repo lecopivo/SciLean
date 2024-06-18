@@ -726,3 +726,35 @@ where
 
     trace[Meta.Tactic.simp.heads] "{repr e.toHeadIndex}"
     simpLoop e
+
+
+/-- Run `lsimp` on `e` and process result with `k r' where `k` is executed in modified local context
+where all `r.vars` are valid free vars.
+ -/
+def main (e : Expr) (k : Result → MetaM α)
+    (ctx : Simp.Context)
+    (stats : Simp.Stats := {})
+    (methods : Simp.Methods := {}) : MetaM (α × Simp.Stats) := do
+
+  -- prepare state
+  let lcacheRef : IO.Ref Cache ← IO.mkRef {}
+  let stateRef : IO.Ref Simp.State ← IO.mkRef {stats with}
+  let state : State := { cache := lcacheRef, simpState := stateRef }
+
+  -- load context
+  let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
+  Simp.withSimpContext ctx do
+
+    let (a,s) ← (lsimp e methods ctx state).runInMeta
+      (fun (r,s) => do pure (← k r,s))
+
+    let simpState ← s.simpState.get
+    return (a, {simpState with})
+
+
+def lsimpMain (e : Expr) (k : Result → MetaM α)
+    (ctx : Simp.Context) (simprocs : Simp.SimprocsArray := #[]) (discharge? : Option Simp.Discharge := none)
+    (stats : Simp.Stats := {}) : MetaM (α × Simp.Stats) := do profileitM Exception "lsimp" (← getOptions) do
+  match discharge? with
+  | none   => main e k ctx stats (methods := Simp.mkDefaultMethodsCore simprocs)
+  | some d => main e k ctx stats (methods := Simp.mkMethods simprocs d (wellBehavedDischarge := false))

@@ -171,7 +171,7 @@ example (n : Nat) :
      a + b)
     =
     n + (n + 3) + n + 2 + (n + (n + 3) + n + 2 + 5) := by
-  (conv => lhs; lsimp)
+  (conv => lhs; lsimp (config:={zeta:=false}))
 
 example (n : Nat) (i : Fin n) :
     (let j := 2*i.1
@@ -186,7 +186,7 @@ example (n : Nat) (i : Fin n) :
     let hj : j < 2*n := by omega
     let j : Fin (2*n) := ⟨j, hj⟩
     (j + (j + j + j)) := by
-  (conv => lhs; lsimp)
+  (conv => lhs; lsimp (config:={zeta:=false}))
 
 -- tests under lambda binder
 
@@ -194,6 +194,7 @@ example :
   (fun n : Nat => n)
   =
   (fun n : Nat => n) := by (conv => lhs; lsimp)
+
 
 example :
   (fun n => let a := 1; a + n)
@@ -214,4 +215,4 @@ example :
      a)
     =
     (fun n => n + n) := by
-  (conv => lhs; lsimp)
+  (conv => lhs; lsimp (config:={zeta:=false}))

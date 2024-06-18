@@ -92,7 +92,6 @@ structure State where
   simpState : IO.Ref Simp.State
   timings : Batteries.RBMap String Aesop.Nanos compare := {}
 
-
 abbrev LSimpM := ReaderT Simp.Methods $ ReaderT Simp.Context $ StateT State MetaLCtxM
 
 instance : MonadLift SimpM LSimpM where
