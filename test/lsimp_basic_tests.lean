@@ -117,14 +117,6 @@ open SciLean
 -- set_option trace.Meta.Tactic.simp.steps true
 
 
-open Lean Meta Elab Term Tactic Conv in
-elab "timeTactic" t:conv : conv => do
-
-  let target ← getMainTarget
-  let ((targetNew, proof),time) ← Aesop.time <| convert target (withTacticInfoContext (← getRef) (evalTactic t))
-  liftMetaTactic1 fun mvarId => mvarId.replaceTargetEq targetNew proof
-  IO.println s!"tactic {t.raw.prettyPrint} took {time.printAsMillis}"
-
 
 #check (∇ x : Float, let y := x * x; x * y)
   rewrite_by
