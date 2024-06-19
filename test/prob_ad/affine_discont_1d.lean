@@ -15,7 +15,7 @@ example (w : R) (a b c : R) (ha : a ≠ 0) :
       ∫' x in Icc (0:R) 1,
         if a * x + b ≤ c * w' then (1:R) else 0)
     =
-    if 0 ≤ a⁻¹ * (c * w - b) ∧ a⁻¹ * (c * w - b) ≤ 1 then
+    if a⁻¹ * (c * w - b) ∈ Icc 0 1 then
       (Scalar.abs a)⁻¹ * c
     else 0 := by
 

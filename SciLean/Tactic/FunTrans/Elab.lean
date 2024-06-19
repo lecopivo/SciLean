@@ -34,7 +34,7 @@ private def emptyDischarge : Expr → MetaM (Option Expr) :=
       (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] discharging: {← ppExpr e}") do
       pure none
 
-private def stxToDischarge (stx : Option (TSyntax ``discharger)) : Expr → MetaM (Option Expr) := fun e => do
+def stxToDischarge (stx : Option (TSyntax ``discharger)) : Expr → MetaM (Option Expr) := fun e => do
   match stx with
   | none => (emptyDischarge e)
   | some d =>

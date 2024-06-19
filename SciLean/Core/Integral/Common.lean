@@ -15,7 +15,7 @@ macro "integral_deriv" : conv =>
 
 attribute [ftrans_simp] ite_smul
 
-attribute [ftrans_simp] MeasureTheory.Measure.restrict_empty MeasureTheory.Measure.zero_toOuterMeasure MeasureTheory.OuterMeasure.coe_zero MeasureTheory.Measure.restrict_univ
+attribute [ftrans_simp] MeasureTheory.Measure.restrict_empty MeasureTheory.Measure.zero_toOuterMeasure MeasureTheory.Measure.coe_zero MeasureTheory.OuterMeasure.coe_zero MeasureTheory.Measure.restrict_univ
 
 attribute [ftrans_simp] ENNReal.one_toReal ENNReal.zero_toReal
 
