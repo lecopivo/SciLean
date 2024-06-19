@@ -549,98 +549,98 @@ partial def congrDefault (e : Expr) : LSimpM Result := do
     withParent e <| e.withApp fun f args => do
       congrArgs (← lsimp f) args
 
--- /-- Process the given congruence theorem hypothesis. Return true if it made "progress". -/
--- partial def processCongrHypothesis (h : Expr) : LSimpM Bool := do
---   forallTelescopeReducing (← inferType h) fun xs hType => withNewLemmas xs do
---     let lhs ← instantiateMVars hType.appFn!.appArg!
---     let r ← simp lhs
---     let rhs := hType.appArg!
---     rhs.withApp fun m zs => do
---       let val ← mkLambdaFVars zs r.expr
---       unless (← isDefEq m val) do
---         throwCongrHypothesisFailed
---       let mut proof ← r.getProof
---       if hType.isAppOf ``Iff then
---         try proof ← mkIffOfEq proof
---         catch _ => throwCongrHypothesisFailed
---       unless (← isDefEq h (← mkLambdaFVars xs proof)) do
---         throwCongrHypothesisFailed
---       /- We used to return `false` if `r.proof? = none` (i.e., an implicit `rfl` proof) because we
---           assumed `dsimp` would also be able to simplify the term, but this is not true
---           for non-trivial user-provided theorems.
---           Example:
---           ```
---           @[congr] theorem image_congr {f g : α → β} {s : Set α} (h : ∀ a, mem a s → f a = g a) : image f s = image g s :=
---           ...
+/-- Process the given congruence theorem hypothesis. Return true if it made "progress". -/
+partial def processCongrHypothesis (h : Expr) : LSimpM Bool := do
+  forallTelescopeReducing (← inferType h) fun xs hType => withNewLemmas xs do
+    let lhs ← instantiateMVars hType.appFn!.appArg!
+    let r ← lsimp lhs
+    let rhs := hType.appArg!
+    rhs.withApp fun m zs => do
+      let val ← mkLambdaFVars zs r.expr
+      unless (← isDefEq m val) do
+        Simp.throwCongrHypothesisFailed
+      let mut proof ← r.getProof
+      if hType.isAppOf ``Iff then
+        try proof ← mkIffOfEq proof
+        catch _ => Simp.throwCongrHypothesisFailed
+      unless (← isDefEq h (← mkLambdaFVars xs proof)) do
+        Simp.throwCongrHypothesisFailed
+      /- We used to return `false` if `r.proof? = none` (i.e., an implicit `rfl` proof) because we
+          assumed `dsimp` would also be able to simplify the term, but this is not true
+          for non-trivial user-provided theorems.
+          Example:
+          ```
+          @[congr] theorem image_congr {f g : α → β} {s : Set α} (h : ∀ a, mem a s → f a = g a) : image f s = image g s :=
+          ...
 
---           example {Γ: Set Nat}: (image (Nat.succ ∘ Nat.succ) Γ) = (image (fun a => a.succ.succ) Γ) := by
---             simp only [Function.comp_apply]
---           ```
---           `Function.comp_apply` is a `rfl` theorem, but `dsimp` will not apply it because the composition
---           is not fully applied. See comment at issue #1113
+          example {Γ: Set Nat}: (image (Nat.succ ∘ Nat.succ) Γ) = (image (fun a => a.succ.succ) Γ) := by
+            simp only [Function.comp_apply]
+          ```
+          `Function.comp_apply` is a `rfl` theorem, but `dsimp` will not apply it because the composition
+          is not fully applied. See comment at issue #1113
 
---           Thus, we have an extra check now if `xs.size > 0`. TODO: refine this test.
---       -/
---       return r.proof?.isSome || (xs.size > 0 && lhs != r.expr)
+          Thus, we have an extra check now if `xs.size > 0`. TODO: refine this test.
+      -/
+      return r.proof?.isSome || (xs.size > 0 && lhs != r.expr)
 
--- /-- Try to rewrite `e` children using the given congruence theorem -/
--- partial def trySimpCongrTheorem? (c : SimpCongrTheorem) (e : Expr) : LSimpM (Option Result) := withNewMCtxDepth do
---   trace[Debug.Meta.Tactic.simp.congr] "{c.theoremName}, {e}"
---   let thm ← mkConstWithFreshMVarLevels c.theoremName
---   let (xs, bis, type) ← forallMetaTelescopeReducing (← inferType thm)
---   if c.hypothesesPos.any (· ≥ xs.size) then
---     return none
---   let isIff := type.isAppOf ``Iff
---   let lhs := type.appFn!.appArg!
---   let rhs := type.appArg!
---   let numArgs := lhs.getAppNumArgs
---   let mut e := e
---   let mut extraArgs := #[]
---   if e.getAppNumArgs > numArgs then
---     let args := e.getAppArgs
---     e := mkAppN e.getAppFn args[:numArgs]
---     extraArgs := args[numArgs:].toArray
---   if (← isDefEq lhs e) then
---     let mut modified := false
---     for i in c.hypothesesPos do
---       let x := xs[i]!
---       try
---         if (← processCongrHypothesis x) then
---           modified := true
---       catch _ =>
---         trace[Meta.Tactic.simp.congr] "processCongrHypothesis {c.theoremName} failed {← inferType x}"
---         -- Remark: we don't need to check ex.isMaxRecDepth anymore since `try .. catch ..`
---         -- does not catch runtime exceptions by default.
---         return none
---     unless modified do
---       trace[Meta.Tactic.simp.congr] "{c.theoremName} not modified"
---       return none
---     unless (← synthesizeArgs (.decl c.theoremName) bis xs) do
---       trace[Meta.Tactic.simp.congr] "{c.theoremName} synthesizeArgs failed"
---       return none
---     let eNew ← instantiateMVars rhs
---     let mut proof ← instantiateMVars (mkAppN thm xs)
---     if isIff then
---       try proof ← mkAppM ``propext #[proof]
---       catch _ => return none
---     if (← hasAssignableMVar proof <||> hasAssignableMVar eNew) then
---       trace[Meta.Tactic.simp.congr] "{c.theoremName} has unassigned metavariables"
---       return none
---     congrArgs { expr := eNew, proof? := proof } extraArgs
---   else
---     return none
+/-- Try to rewrite `e` children using the given congruence theorem -/
+partial def trySimpCongrTheorem? (c : SimpCongrTheorem) (e : Expr) : LSimpM (Option Result) := withNewMCtxDepth do
+  trace[Debug.Meta.Tactic.simp.congr] "{c.theoremName}, {e}"
+  let thm ← mkConstWithFreshMVarLevels c.theoremName
+  let (xs, bis, type) ← forallMetaTelescopeReducing (← inferType thm)
+  if c.hypothesesPos.any (· ≥ xs.size) then
+    return none
+  let isIff := type.isAppOf ``Iff
+  let lhs := type.appFn!.appArg!
+  let rhs := type.appArg!
+  let numArgs := lhs.getAppNumArgs
+  let mut e := e
+  let mut extraArgs := #[]
+  if e.getAppNumArgs > numArgs then
+    let args := e.getAppArgs
+    e := mkAppN e.getAppFn args[:numArgs]
+    extraArgs := args[numArgs:].toArray
+  if (← isDefEq lhs e) then
+    let mut modified := false
+    for i in c.hypothesesPos do
+      let x := xs[i]!
+      try
+        if (← processCongrHypothesis x) then
+          modified := true
+      catch _ =>
+        trace[Meta.Tactic.simp.congr] "processCongrHypothesis {c.theoremName} failed {← inferType x}"
+        -- Remark: we don't need to check ex.isMaxRecDepth anymore since `try .. catch ..`
+        -- does not catch runtime exceptions by default.
+        return none
+    unless modified do
+      trace[Meta.Tactic.simp.congr] "{c.theoremName} not modified"
+      return none
+    unless (← Simp.synthesizeArgs (.decl c.theoremName) bis xs) do
+      trace[Meta.Tactic.simp.congr] "{c.theoremName} synthesizeArgs failed"
+      return none
+    let eNew ← instantiateMVars rhs
+    let mut proof ← instantiateMVars (mkAppN thm xs)
+    if isIff then
+      try proof ← mkAppM ``propext #[proof]
+      catch _ => return none
+    if (← hasAssignableMVar proof <||> hasAssignableMVar eNew) then
+      trace[Meta.Tactic.simp.congr] "{c.theoremName} has unassigned metavariables"
+      return none
+    congrArgs { expr := eNew, proof? := proof } extraArgs
+  else
+    return none
 
 partial def congr (e : Expr) : LSimpM Result := do
-  -- let f := e.getAppFn
-  -- if f.isConst then
-  --   let congrThms ← getSimpCongrTheorems
-  --   let cs := congrThms.get f.constName!
-  --   for c in cs do
-  --     match (← trySimpCongrTheorem? c e) with
-  --     | none   => pure ()
-  --     | some r => return r
-  --   congrDefault e
-  -- else
+  let f := e.getAppFn
+  if f.isConst then
+    let congrThms ← getSimpCongrTheorems
+    let cs := congrThms.get f.constName!
+    for c in cs do
+      match (← trySimpCongrTheorem? c e) with
+      | none   => pure ()
+      | some r => return r
+    congrDefault e
+  else
     congrDefault e
 
 partial def simpApp (e : Expr) : LSimpM Result := do

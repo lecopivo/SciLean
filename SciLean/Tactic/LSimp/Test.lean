@@ -8,7 +8,6 @@ import ProofWidgets.Component.Recharts
 
 open Lean ProofWidgets Recharts
 
-
 -- def plot (x y : Array Float) : Html :=
 
 open scoped ProofWidgets.Jsx in
@@ -162,6 +161,11 @@ example (n : Nat) :
   =
   n := by (conv => lhs; lsimp)
 
+example (a : ℤ) :
+   (if 0 ≤ 0 + a then 1 else 0)
+   =
+   (if 0 ≤ a then 1 else 0) := by conv => lhs; lsimp
+
 example (n : Nat) :
     (let a :=
        let c := 0 + n
@@ -171,7 +175,7 @@ example (n : Nat) :
      a + b)
     =
     n + (n + 3) + n + 2 + (n + (n + 3) + n + 2 + 5) := by
-  (conv => lhs; lsimp (config:={zeta:=false}))
+  (conv => lhs; lsimp)
 
 example (n : Nat) (i : Fin n) :
     (let j := 2*i.1
@@ -186,7 +190,7 @@ example (n : Nat) (i : Fin n) :
     let hj : j < 2*n := by omega
     let j : Fin (2*n) := ⟨j, hj⟩
     (j + (j + j + j)) := by
-  (conv => lhs; lsimp (config:={zeta:=false}))
+  (conv => lhs; lsimp)
 
 -- tests under lambda binder
 
@@ -215,4 +219,4 @@ example :
      a)
     =
     (fun n => n + n) := by
-  (conv => lhs; lsimp (config:={zeta:=false}))
+  (conv => lhs; lsimp)
