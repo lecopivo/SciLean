@@ -8,6 +8,35 @@ import ProofWidgets.Component.Recharts
 
 open Lean ProofWidgets Recharts
 
+
+variable (x y : ℤ)
+
+open Lean Meta Simp
+simproc_decl mySimpMatch (_) := fun e => do
+  if let .reduced e ← reduceMatcher? e then
+    return .visit { expr := e}
+  return .continue
+
+
+let p₁ := y.1; let p₂ := y.2; ...
+let p₃ := y.3
+
+#check (let (a,b) := (x+y, x*y); a + b) rewrite_by simp (config:={zeta:=false})
+
+set_option trace.Meta.Tactic.simp.heads true
+set_option trace.Meta.Tactic.simp.proj true
+
+set_option trace.Meta.Tactic.simp.rewrite true in
+
+#check (let (a,b) := (x+y, x*y); a + b) rewrite_by lsimp (config := {iota:=false}) only [mySimpMatch]
+
+
+variable (w : ℤ×ℤ)
+#check (let (a,b) := w; a + b) rewrite_by lsimp (config := {iota:=false}) only [mySimpMatch]
+
+
+#exit
+
 -- def plot (x y : Array Float) : Html :=
 
 open scoped ProofWidgets.Jsx in
