@@ -396,8 +396,7 @@ macro "shock_deriv" : conv =>
     lsimp (config := {zeta:=false}) only [ftrans_simp]
 
     autodiff
-    autodiff
-    ))
+    autodiff ))
 
 
 #check
@@ -447,3 +446,14 @@ macro "shock_deriv" : conv =>
        rewrite_by
          enter[θ,dθ]
          shock_deriv
+
+
+
+#check
+  (∂ (t : R), ∫' x, (if x ≤ t then t*x else t+x) * (if x + 1 ≤ t then t-x else t*x) * (if x + 2 ≤ t then t*t*x else t*x))
+  rewrite_by
+
+    unfold scalarCDeriv
+    enter[t]
+
+    shock_deriv
