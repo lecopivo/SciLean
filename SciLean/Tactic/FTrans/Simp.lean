@@ -20,7 +20,7 @@ attribute [ftrans_simp] Prod.mk.eta Prod.fst_zero Prod.snd_zero Prod.mk_add_mk P
 attribute [ftrans_simp] Equiv.invFun_as_coe Equiv.symm_symm
 
 -- simp theorems for `if _ then _ else _`
-attribute [ftrans_simp] ite_self dite_eq_ite eq_self ite_true ite_false dite_true dite_false ite_mul mul_ite
+attribute [ftrans_simp] ite_self dite_eq_ite eq_self ite_true ite_false dite_true dite_false
 
 -- simp theorems for `Sum`
 attribute [ftrans_simp] Sum.inr.injEq Sum.inl.injEq
