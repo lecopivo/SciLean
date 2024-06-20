@@ -1,13 +1,17 @@
 import SciLean
-import SciLean.Core.Complexify
-import SciLean.Meta.DerivingAlgebra
-import SciLean.Solver.Solver
-import Mathlib.Tactic.Ring.RingNF
-import Mathlib.Tactic.FieldSimp
+-- import SciLean.Core.Complexify
+-- import SciLean.Meta.DerivingAlgebra
+-- import SciLean.Solver.Solver
+-- import Mathlib.Tactic.Ring.RingNF
+-- import Mathlib.Tactic.FieldSimp
 
 open SciLean
 
-variable {X : Type} [Hilbert X]
+variable {R} [RealScalar R]
+set_default_scalar R
+
+variable {X : Type} [SemiHilbert R X]
+variable {U : Type} [SemiHilbert R U]
 
 namespace AbstractManifolGalerkin
 
@@ -24,51 +28,51 @@ namespace AbstractManifolGalerkin
 
 
   -- def manifoldGalerkinSolution (f : X → X) (x₀ : X) (p : (n : ℕ) → U n → X) [∀ n, IsSmooth (p n)] (n : ℕ) :=
-  --   Solution (λ (uₙ : ℝ → U n) => 
-  --       (∀ v t, ⟪∂ (p n) (uₙ t) (ⅆ (t':=t), uₙ t'), ∂ (p n) (uₙ t) v⟫ 
-  --               = 
+  --   Solution (λ (uₙ : ℝ → U n) =>
+  --       (∀ v t, ⟪∂ (p n) (uₙ t) (ⅆ (t':=t), uₙ t'), ∂ (p n) (uₙ t) v⟫
+  --               =
   --               ⟪f (p n (uₙ t)), ∂ (p n) (uₙ t) v⟫)
   --       ∧
   --       (∀ v, ⟪x₀ - p n (uₙ 0), ∂ (p n) (uₙ 0) v⟫ = 0))
 
-  
-  -- -- Give a fix approximation `p : U → X`, we form an approximation by 
+
+  -- -- Give a fix approximation `p : U → X`, we form an approximation by
   -- -- summing n copies of `p` i.e. `x` is approximated by `∑ i, p (u i)`
   -- def manifoldGalerkinNSolution {U} [Vec U] (f : X → X) (x₀ : X) (p : U → X) [IsSmooth p] (n : ℕ) :=
   --   let Uₙ := Fin n → U  -- U^n ???
-  --   Solution (λ (uₙ : ℝ → Uₙ) => 
-  --     (∀ i v t, (∑ j, ⟪∂ p (uₙ t j) (ⅆ uₙ t j), ∂ p (uₙ t i) v⟫) 
-  --                = 
+  --   Solution (λ (uₙ : ℝ → Uₙ) =>
+  --     (∀ i v t, (∑ j, ⟪∂ p (uₙ t j) (ⅆ uₙ t j), ∂ p (uₙ t i) v⟫)
+  --                =
   --                ⟪f (∑ j, p (uₙ t j)), ∂ p (uₙ t i) v⟫)
-  --     ∧ 
+  --     ∧
   --     ∀ i v, ⟪x₀ - (∑ j, p (uₙ 0 j)), ∂ p (uₙ 0 i) v⟫ = 0)
 
-  noncomputable
-  def massMatrixBlock {U} [Hilbert U] (p : U → X) (ui uj : U)
-    : (U → U) := λ du => (λ v => ⟪∂ p uj du, ∂ p ui v⟫)† 1
+noncomputable
+def massMatrixBlock (p : U → X) (ui uj : U) : (U → U) :=
+  fun du => semiAdjoint R (λ v => ⟪(∂ p uj du), (∂ p ui v)⟫) 1
 
-  noncomputable
-  def massMatrix {U} [Hilbert U] (p : U → X) {n : ℕ} (u du : Fin n → U) 
-    : (Fin n → U) := λ i => ∑ j, massMatrixBlock p (u i) (u j) (du j) -- (λ v => ⟪∂ p (u j) (du j), ∂ p (u i) v⟫)† 1
+noncomputable
+def massMatrix {n : ℕ} (p : U → X) (u du : Fin n → U) : (Fin n → U) :=
+  fun i => ∑ j, massMatrixBlock (R:=R) p (u i) (u j) (du j)
 
-  noncomputable
-  def force {U} [Hilbert U] (f : X → X) (p : U → X) {n : ℕ} (u : Fin n → U) 
-    : (Fin n → U) := λ i => (λ v => ⟪f (∑ j, p (u j)), ∂ p (u i) v⟫)† 1
+noncomputable
+def force (f : X → X) (p : U → X) (u : Fin n → U) : (Fin n → U) :=
+  fun i => semiAdjoint R (fun v => ⟪f (∑ j, p (u j)), ∂ p (u i) v⟫) 1
 
-  noncomputable
-  def linForceBlock {U} [Hilbert U] (f : X → X) (p : U → X) {n : ℕ} (u : Fin n → U) 
-    : (Fin n → Fin n → U) := λ i j => (λ v => ⟪f (p (u j)), ∂ p (u i) v⟫)† 1
+noncomputable
+def linForceBlock (f : X → X) (p : U → X) (u : Fin n → U) : (Fin n → Fin n → U) :=
+  fun i j => semiAdjoint R (λ v => ⟪f (p (u j)), ∂ p (u i) v⟫) 1
 
-  noncomputable
-  def linForce {U} [Hilbert U] (f : X → X) (p : U → X) {n : ℕ} (u : Fin n → U) 
-    : (Fin n → U) := λ i => ∑ j, linForceBlock f p u i j
+noncomputable
+def linForce (f : X → X) (p : U → X) {n : ℕ} (u : Fin n → U) : (Fin n → U) :=
+  fun i => ∑ j, linForceBlock (R:=R) f p u i j
 
-  theorem force_linBlock {U} [Hilbert U] (f : X → X) (p : U → X) {n : ℕ} (u : Fin n → U) 
-    : IsLin f → force f p u = linForce f p u := sorry
+theorem force_linBlock (f : X → X) (p : U → X) (u : Fin n → U) (hf : IsLinearMap R f) :
+    force (R:=R) f p u = linForce (R:=R) f p u := sorry_proof
 
-  noncomputable
-  def blockJacobiStep {X} [Vec X] (A : Fin n → Fin n → X → X) (b : Fin n → X) (xₙ : Fin n → X) : Fin n → X :=
-    λ i => (A i i)⁻¹ (b i - ∑ j, [[i≠j]] • A i j (xₙ j))
+noncomputable
+def blockJacobiStep (A : Fin n → Fin n → X → X) (b : Fin n → X) (xₙ : Fin n → X) : Fin n → X :=
+  fun i => (A i i).invFun (b i - ∑ j, if i≠j then A i j (xₙ j) else 0)
 
   -- def manifoldGalerkinImpl (p : U → X)
   --     (massMatrix : Approx λ u i j => massMatrixBlock p u i j)
@@ -76,12 +80,12 @@ namespace AbstractManifolGalerkin
 
   def Gaussian {X} [Hilbert X] (x : X) (σ : ℝ) := Real.exp (- (2*σ*σ)⁻¹ * ‖x‖²)
 
-  
+
   theorem Gaussian.from_exp {X} [Hilbert X] (x : X) (α : ℝ) (h : α > 0)
-    : Real.exp (-α * ‖x‖²)      
+    : Real.exp (-α * ‖x‖²)
       =
       Gaussian x (Real.sqrt (2 * α))⁻¹
-    := by simp; sorry -- simp[Gaussian] 
+    := by simp; sorry -- simp[Gaussian]
 
   function_properties AbstractManifolGalerkin.Gaussian {X} [Hilbert X] (x : X) (σ : ℝ)
   argument x
@@ -102,7 +106,7 @@ namespace AbstractManifolGalerkin
       let S₁₂ := Gaussian (μ₁-μ₂) σ'
       S₁₂ * Gaussian (x - μ₁₂) σ₁₂
 
-  theorem Gaussian.mul_product {X} [Hilbert X] (x μ₁ μ₂ : X) (σ₁ σ₂ : ℝ) 
+  theorem Gaussian.mul_product {X} [Hilbert X] (x μ₁ μ₂ : X) (σ₁ σ₂ : ℝ)
     : Gaussian (x - μ₁) σ₁ * Gaussian (x - μ₂) σ₂
       =
       let s2  := σ₁*σ₁ + σ₂*σ₂
@@ -115,7 +119,7 @@ namespace AbstractManifolGalerkin
       S₁₂ * Gaussian (x - μ₁₂) σ₁₂
     := sorry
 
-  theorem GaussianDistrib.product {X} [Hilbert X] (x μ₁ μ₂ : X) (σ₁ σ₂ : ℝ) 
+  theorem GaussianDistrib.product {X} [Hilbert X] (x μ₁ μ₂ : X) (σ₁ σ₂ : ℝ)
     : GaussianDistrib (x - μ₁) σ₁ * GaussianDistrib (x - μ₂) σ₂
       =
       let s2  := σ₁*σ₁ + σ₂*σ₂
@@ -128,23 +132,23 @@ namespace AbstractManifolGalerkin
       S₁₂ * GaussianDistrib (x - μ₁₂) σ₁₂
     := sorry
 
-  theorem Gaussian.product_same_variance {X} [Hilbert X] (x μ₁ μ₂ : X) (σ : ℝ) 
+  theorem Gaussian.product_same_variance {X} [Hilbert X] (x μ₁ μ₂ : X) (σ : ℝ)
     : Gaussian (x - μ₁) σ * Gaussian (x - μ₂) σ
       =
       let s2  := 2 * σ*σ
       let μ₁₂ := (1/2 : ℝ) • (μ₁ + μ₂)
-      let σ₁₂ := σ / Real.sqrt 2 
+      let σ₁₂ := σ / Real.sqrt 2
       let σ' := Real.sqrt 2 * σ
       let S₁₂ := Gaussian (μ₁-μ₂) σ'
       S₁₂ * Gaussian (x - μ₁₂) σ₁₂
     := sorry
 
-  theorem GaussianDistrib.product_same_variance {X} [Hilbert X] (x μ₁ μ₂ : X) (σ : ℝ) 
+  theorem GaussianDistrib.product_same_variance {X} [Hilbert X] (x μ₁ μ₂ : X) (σ : ℝ)
     : Gaussian (x - μ₁) σ * Gaussian (x - μ₂) σ
       =
       let s2  := 2 * σ*σ
       let μ₁₂ := (1/2 : ℝ) • (μ₁ + μ₂)
-      let σ₁₂ := σ / Real.sqrt 2 
+      let σ₁₂ := σ / Real.sqrt 2
       let σ' := Real.sqrt 2 * σ
       let S₁₂ := GaussianDistrib (μ₁-μ₂) σ'
       S₁₂ * GaussianDistrib (x - μ₁₂) σ₁₂
@@ -156,18 +160,18 @@ namespace AbstractManifolGalerkin
     Complex.exp (- (2*σ*σ)⁻¹ • cnorm )
 
 
-  def Gaussian.complexify_to_real {X} [Hilbert X] (x : ComplexExtension X) (σ : ℝ) 
-    : Gaussian.complexify x σ 
+  def Gaussian.complexify_to_real {X} [Hilbert X] (x : ComplexExtension X) (σ : ℝ)
+    : Gaussian.complexify x σ
       =
       let θ := - (σ*σ)⁻¹ * ⟪x.real,x.imag⟫
-      (Gaussian x.real σ / Gaussian x.imag σ) • ⟨Real.cos θ, Real.sin θ⟩ := 
+      (Gaussian x.real σ / Gaussian x.imag σ) • ⟨Real.cos θ, Real.sin θ⟩ :=
   by
     simp [Gaussian.complexify, Complex.exp]
     -- this should be doable by simp + ring or something
     sorry
 
 
-  theorem Gaussian.product_complex_exp {X} [Hilbert X] (x μ : X) (σ : ℝ) (k : X) (θ : ℝ) 
+  theorem Gaussian.product_complex_exp {X} [Hilbert X] (x μ : X) (σ : ℝ) (k : X) (θ : ℝ)
     : Gaussian (x - μ) σ • Complex.exp (⟨0, ⟪k,x⟫ + θ⟩)
       =
       Gaussian.complexify (⟨x - μ, (σ*σ)•k⟩) σ * Complex.exp ⟨- (σ*σ / 2) • ‖k‖², ⟪μ,k⟫ + θ⟩
@@ -177,16 +181,16 @@ namespace AbstractManifolGalerkin
   variable {ι} [Index ι] [FinVec X ι] (σ : ℝ) (Ω : Set X) (f : X → ℝ) (y : X)
 
 
-  theorem integral_complex_shift [Hilbert R] (f : X → R) [IsAnalytic f] (y y' : X) 
-    : ∃ (c : ℝ), ‖f x‖ ≤ c * (1 + ‖x‖^(2*Index.size ι)) -- some 
-      → 
+  theorem integral_complex_shift [Hilbert R] (f : X → R) [IsAnalytic f] (y y' : X)
+    : ∃ (c : ℝ), ‖f x‖ ≤ c * (1 + ‖x‖^(2*Index.size ι)) -- some
+      →
       ∫ x ∈ ⊤, complexify f ⟨x, y⟩
       =
       ((-1:ℝ)^(Index.size ι)) • ∫ x ∈ ⊤, complexify f ⟨x, y'⟩
     := sorry
 
 
-    
+
   theorem cos_gaussian_to_complex (x k : X) (θ : ℝ)
     : complexify (λ x => f x * Real.cos (⟪k,x⟫ + θ) * Gaussian x σ)
       =
@@ -245,24 +249,24 @@ namespace AbstractManifolGalerkin
   function_properties AbstractManifolGalerkin.waveletParticle {X Y} [Hilbert X] [Hilbert Y] (σ : ℝ) (p : Params X Y)
   argument p
     IsSmooth,
-    def ∂ by 
+    def ∂ by
       unfold waveletParticle
       fun_trans only []
       fun_trans only []
       dsimp
       ring_nf
 
-  #exit 
-  theorem waveletParticle_complex_form {X} [Hilbert X] (σ : ℝ) (p : Params X) 
-    : waveletParticle σ p 
+  #exit
+  theorem waveletParticle_complex_form {X} [Hilbert X] (σ : ℝ) (p : Params X)
+    : waveletParticle σ p
       =
       ((waveletParticle σ p)
        rewrite_by
          unfold waveletParticle
-         
+
          )
     := sorry
-  
+
   variable {_ : EnumType ι} [FinVec X ι]
 
   noncomputable
@@ -276,7 +280,7 @@ namespace AbstractManifolGalerkin
 
   noncomputable
   instance : Hilbert (X → ℝ) := Hilbert.mkSorryProofs
-  
+
   approx massMatrixBlockImpl (σ : ℝ) (pi pj : Params X) := massMatrixBlock (waveletParticle σ) pi pj
   by
     conv =>
@@ -295,5 +299,5 @@ namespace AbstractManifolGalerkin
     conv =>
       enter [1,dp,1,v,1,x]
       ring_nf
- 
+
 end AbstractManifolGalerkin
