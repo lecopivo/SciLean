@@ -97,7 +97,7 @@ The last line =finish_impl= states we are done. Lean checks if all purely symbol
 
 See the full [[https://github.com/lecopivo/SciLean/blob/master/examples/HarmonicOscillator.lean][example]] to see how the set up initial conditions and how the function =solver= is actually used. To execute this example, run:
 #+begin_src
-lake env lean --run examples/HarmonicOscilator.lean 
+lake env lean --run examples/HarmonicOscillator.lean 
 #+end_src
 from the project root directory.
 
