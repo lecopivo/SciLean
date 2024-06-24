@@ -7,6 +7,20 @@ open LeanColls
 
 open Set
 
+
+instance : IndexType Empty where
+  card := 0
+  toFin x := Empty.elim x
+  fromFin i := by have := i.2; simp_all only [not_lt_zero']
+  fold := fun _ _ init => init
+  foldM := fun _ _ init => pure init
+
+instance : LawfulIndexType Empty where
+  leftInv := by intro x; aesop
+  rightInv := by intro x; simp[IndexType.card] at x; have := x.2; aesop
+  fold_eq_fold_toList := sorry_proof
+  foldM_eq_fold := sorry_proof
+
 instance (a b : Int) : IndexType (Icc a b) where
   card := ((b + 1) - a).toNat
   toFin i := ⟨(i.1 - a).toNat,
