@@ -218,19 +218,24 @@ theorem HSMul.hSMul.arg_a0a1.fderiv_rule_at (x : X)
 -- HDiv.hDiv -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 @[fun_trans, to_any_point]
 theorem HDiv.hDiv.arg_a0a1.fderiv_rule_at
-    {R : Type _} [NontriviallyNormedField R] [NormedAlgebra R K]
-    (x : R) (f : R → K) (g : R → K)
-    (hf : DifferentiableAt R f x) (hg : DifferentiableAt R g x) (hx : g x ≠ 0) :
-    (fderiv R fun x => f x / g x) x
+    (x : X) (f : X → K) (g : X → K)
+    (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) (hx : g x ≠ 0) :
+    (fderiv K fun x => f x / g x) x
     =
     let k := f x
     let k' := g x
-    fun dx =>L[R]
-      ((fderiv R f x dx) * k' - k * (fderiv R g x dx)) / k'^2 := by
-  have h : ∀ (f : R → K) x, fderiv R f x 1 = deriv f x := by simp[deriv]
-  ext; simp[h]; apply deriv_div hf hg hx
+    fun dx =>L[K]
+      ((fderiv K f x dx) * k' - k * (fderiv K g x dx)) / k'^2 := by
+  ext dx
+  have h : ∀ (f : X → K) x, fderiv K f x dx = deriv (fun h : K => f (x + h•dx)) 0 := by sorry_proof
+  simp[h]
+  rw[deriv_div (c:=(fun h => f (x + h • dx))) (d:=(fun h => g (x + h • dx)))
+               (hc:=by sorry_proof) (hd:= by sorry_proof)
+               (hx:=by simp; assumption)]
+  simp
 
 
 -- HPow.hPow ---------------------------------------------------------------------

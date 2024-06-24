@@ -120,7 +120,7 @@ theorem adjoint_id :
 
 @[fun_trans]
 theorem const_rule :
-    (fun (x : X) =>L[K] (0 : Y))† = fun x =>L[K] 0 := by
+    (fun (x : X) => (0 : Y))† = fun x => 0 := by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp
 
@@ -146,7 +146,11 @@ theorem prod_rule
       let x₂ := (g†) yz.2
       x₁ + x₂ :=
 by
-  sorry_proof
+  rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
+  intro (y,z) x
+  rw[AdjointSpace.inner_add_left]
+  simp (disch:=fun_prop) [adjoint_inner_left]
+  rfl
 
 @[fun_trans]
 theorem comp_rule
@@ -228,8 +232,7 @@ theorem Prod.fst.arg_self.adjoint_rule
     fun y => (f†) (y,0) :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
-  simp (disch:=fun_prop) [adjoint_inner_left]
-  sorry_proof -- todo some lemma about inner product on product spaces
+  simp (disch:=fun_prop) [adjoint_inner_left,inner_prod_split]
 
 @[fun_trans]
 theorem Prod.snd.arg_self.adjoint_rule
@@ -239,8 +242,7 @@ theorem Prod.snd.arg_self.adjoint_rule
     fun z => (f†) (0,z) :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
-  simp (disch:=fun_prop) [adjoint_inner_left]
-  sorry_proof -- todo some lemma about inner product on product spaces
+  simp (disch:=fun_prop) [adjoint_inner_left,inner_prod_split]
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -326,10 +328,10 @@ by
 open ComplexConjugate in
 @[fun_trans]
 theorem HSMul.hSMul.arg_a0.adjoint_rule
-  (x' : X) (f : X → K) (hf : IsContinuousLinearMap K f)
-  : (fun x => f x • x')†
+  (y : Y) (f : X → K) (hf : IsContinuousLinearMap K f)
+  : (fun x => f x • y)†
     =
-    fun y => ⟪x', y⟫ • ((fun x =>L[K] f x)†) 1 :=
+    fun y' => ⟪y, y'⟫ • ((fun x =>L[K] f x)†) 1 :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop)
@@ -359,7 +361,7 @@ theorem HDiv.hDiv.arg_a0.adjoint_rule
   (hf : IsContinuousLinearMap K f)
   : (fun x => f x / c)†
     =
-    fun y => (conj c)⁻¹ • (fun x =>L[K] f x)† y :=
+    fun y => (conj c)⁻¹ • (f†) y :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop)

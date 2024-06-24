@@ -15,7 +15,7 @@ class AdjointSpace (𝕜 : Type*) (E : Type*) [RCLike 𝕜] [NormedAddCommGroup 
   /-- Norm induced by inner is topologicaly equivalent to the given norm -/
   inner_top_equiv_norm : ∃ c d : ℝ,
     c > 0 ∧ d > 0 ∧
-    ∀ x : E, (c • ‖x‖ ≤ (re (inner x x)).sqrt) ∧ ((re (inner x x)).sqrt ≤ d • ‖x‖)
+    ∀ x : E, (c • ‖x‖^2 ≤ re (inner x x)) ∧ (re (inner x x) ≤ d • ‖x‖^2)
   /-- The inner product is *hermitian*, taking the `conj` swaps the arguments. -/
   conj_symm : ∀ x y, conj (inner y x) = inner x y
   /-- The inner product is additive in the first coordinate. -/
@@ -46,9 +46,10 @@ open RCLike ComplexConjugate
 section BasicProperties
 
 @[simp mid+1, simp_core mid+1]
-theorem inner_conj_symm (x y : E) : ⟪y, x⟫† = ⟪x, y⟫ := sorry_proof
+theorem inner_conj_symm (x y : E) : ⟪y, x⟫† = ⟪x, y⟫ := by rw[conj_symm]
 
-theorem real_inner_comm (x y : F) : ⟪y, x⟫_ℝ = ⟪x, y⟫_ℝ := sorry_proof
+theorem real_inner_comm (x y : F) : ⟪y, x⟫_ℝ = ⟪x, y⟫_ℝ := by
+  rw[← conj_symm]; simp only [conj_trivial]
 
 theorem inner_eq_zero_symm {x y : E} : ⟪x, y⟫ = 0 ↔ ⟪y, x⟫ = 0 := by
   rw [← inner_conj_symm]
@@ -58,7 +59,7 @@ theorem inner_eq_zero_symm {x y : E} : ⟪x, y⟫ = 0 ↔ ⟪y, x⟫ = 0 := by
 theorem inner_self_im (x : E) : RCLike.im ⟪x, x⟫ = 0 := by
   rw [← @ofReal_inj 𝕜, im_eq_conj_sub]; simp
 
-theorem inner_add_left (x y z : E) : ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫ :=  sorry_proof
+theorem inner_add_left (x y z : E) : ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫ := by rw[add_left]
 
 theorem inner_add_right (x y z : E) : ⟪x, y + z⟫ = ⟪x, y⟫ + ⟪x, z⟫ := by
   rw [← inner_conj_symm, inner_add_left, RingHom.map_add]
@@ -68,7 +69,7 @@ theorem inner_re_symm (x y : E) : re ⟪x, y⟫ = re ⟪y, x⟫ := by rw [← in
 
 theorem inner_im_symm (x y : E) : im ⟪x, y⟫ = -im ⟪y, x⟫ := by rw [← inner_conj_symm, conj_im]
 
-theorem inner_smul_left (x y : E) (r : 𝕜) : ⟪r • x, y⟫ = r† * ⟪x, y⟫ := sorry_proof
+theorem inner_smul_left (x y : E) (r : 𝕜) : ⟪r • x, y⟫ = r† * ⟪x, y⟫ := by rw [smul_left]
 
 theorem real_inner_smul_left (x y : F) (r : ℝ) : ⟪r • x, y⟫_ℝ = r * ⟪x, y⟫_ℝ :=
   inner_smul_left _ _ _
@@ -121,7 +122,11 @@ theorem inner_zero_right (x : E) : ⟪x, 0⟫ = 0 := by
 theorem inner_re_zero_right (x : E) : re ⟪x, 0⟫ = 0 := by
   simp only [inner_zero_right, AddMonoidHom.map_zero]
 
-theorem inner_self_nonneg {x : E} : 0 ≤ re ⟪x, x⟫ := sorry_proof
+theorem inner_self_nonneg {x : E} : 0 ≤ re ⟪x, x⟫ := by
+  have ⟨c,d,hc,_,h⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=E)
+  have ⟨h'',_⟩ := h x
+  apply le_trans _ h''
+  positivity
 
 theorem real_inner_self_nonneg {x : F} : 0 ≤ ⟪x, x⟫_ℝ :=
   @inner_self_nonneg ℝ F _ _ _ x
@@ -130,18 +135,30 @@ theorem real_inner_self_nonneg {x : F} : 0 ≤ ⟪x, x⟫_ℝ :=
 theorem inner_self_ofReal_re (x : E) : (re ⟪x, x⟫ : 𝕜) = ⟪x, x⟫ :=
   ((RCLike.is_real_TFAE (⟪x, x⟫ : 𝕜)).out 2 3).2 (inner_self_im _)
 
-
 @[simp mid+1, simp_core mid+1]
-theorem inner_self_eq_zero {x : E} : ⟪x, x⟫ = 0 ↔ x = 0 := sorry_proof
-
-theorem inner_self_ne_zero {x : E} : ⟪x, x⟫ ≠ 0 ↔ x ≠ 0 :=
-  inner_self_eq_zero.not
-
-@[simp mid+1, simp_core mid+1]
-theorem inner_self_nonpos {x : E} : re ⟪x, x⟫ ≤ 0 ↔ x = 0 := sorry_proof
+theorem inner_self_nonpos {x : E} : re ⟪x, x⟫ ≤ 0 ↔ x = 0 := by
+  constructor
+  . have ⟨c,d,hc,_,h⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=E)
+    have ⟨h,_⟩ := h x
+    intro h'; simp[h'] at h
+    have : ‖x‖^2 ≤ 0 := by nlinarith
+    have : ‖x‖ ≤ 0 := by nlinarith
+    simp_all only [gt_iff_lt, smul_eq_mul, norm_le_zero_iff]
+  . simp_all only [inner_zero_right, map_zero, le_refl, implies_true]
 
 theorem real_inner_self_nonpos {x : F} : ⟪x, x⟫_ℝ ≤ 0 ↔ x = 0 :=
   @inner_self_nonpos ℝ F _ _ _ x
+
+@[simp mid+1, simp_core mid+1]
+theorem inner_self_eq_zero {x : E} : ⟪x, x⟫ = 0 ↔ x = 0 := by
+  constructor
+  . intro h
+    apply (inner_self_nonpos (𝕜:=𝕜)).1
+    simp only [h, map_zero, le_refl]
+  . simp_all only [inner_zero_right, implies_true]
+
+theorem inner_self_ne_zero {x : E} : ⟪x, x⟫ ≠ 0 ↔ x ≠ 0 :=
+  inner_self_eq_zero.not
 
 theorem norm_inner_symm (x y : E) : ‖⟪x, y⟫‖ = ‖⟪y, x⟫‖ := by rw [← inner_conj_symm, norm_conj]
 
@@ -237,21 +254,45 @@ variable
   {E : ι → Type} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)]
 
 instance : AdjointSpace 𝕜 𝕜 where
-  inner_top_equiv_norm := by sorry_proof
+  inner_top_equiv_norm := by
+    apply Exists.intro 1
+    apply Exists.intro 1
+    simp [norm_sq_eq_def]
   conj_symm := by simp[mul_comm]
   add_left := by simp[add_mul]
   smul_left := by simp[mul_assoc]
 
 instance : AdjointSpace 𝕜 (X×Y) where
   inner := fun (x,y) (x',y') => ⟪x,x'⟫_𝕜 + ⟪y,y'⟫_𝕜
-  inner_top_equiv_norm := sorry_proof
+  inner_top_equiv_norm := by
+    have ⟨cx,dx,hcx,hdx,_hx⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=X)
+    have ⟨cy,dy,hcy,hdy,_hy⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=X)
+    apply Exists.intro (cx*cx + cy*cy) -- todo: fix this constant
+    apply Exists.intro (dx*dx + dy*dy) -- todo: fix this constant
+    constructor
+    . positivity
+    constructor
+    . positivity
+    . intro (x,y)
+      sorry_proof
   conj_symm := by simp
   add_left := by simp[inner_add_left]; intros; ac_rfl
   smul_left := by simp[inner_smul_left,mul_add]
 
+open Classical in
 instance : AdjointSpace 𝕜 ((i : ι) → E i) where
   inner := fun x y => ∑ i, ⟪x i, y i⟫_𝕜
-  inner_top_equiv_norm := sorry_proof
+  inner_top_equiv_norm := by
+    have h := fun i => inner_top_equiv_norm (𝕜:=𝕜) (E:=E i)
+    let c := (fun i => let ci := choose (h i); ci*ci)
+    let d := (fun i => let di := choose <| choose_spec (h i); di*di)
+    apply Exists.intro (Finset.univ.sum (fun i => c i ^ 2))
+    apply Exists.intro (Finset.univ.sum (fun i => d i ^ 2))
+    sorry_proof
   conj_symm := by simp
   add_left := by simp[inner_add_left,Finset.sum_add_distrib]
   smul_left := by simp[inner_smul_left,Finset.mul_sum]
+
+
+
+theorem inner_prod_split (x y : X×Y) : ⟪x,y⟫_𝕜 = ⟪x.1,y.1⟫_𝕜 + ⟪x.2,y.2⟫_𝕜 := by rfl
