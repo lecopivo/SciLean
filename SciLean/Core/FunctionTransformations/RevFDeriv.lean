@@ -18,6 +18,11 @@ def revFDeriv
   (f : X → Y) (x : X) : Y×(Y→X) :=
   (f x, adjoint K (fun dx => fderiv K f x dx))
 
+noncomputable
+def fgradient
+  {K : Type _} [RCLike K]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  (f : X → K) (x : X) : X := (revFDeriv K f x).2 1
 
 namespace revFDeriv
 
