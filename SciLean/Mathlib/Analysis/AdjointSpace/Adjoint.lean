@@ -47,7 +47,6 @@ theorem adjoint_ex (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) :
 theorem adjoint_clm {A : E → F} (hA : IsContinuousLinearMap 𝕜 A) : IsContinuousLinearMap 𝕜 (A†) :=
     sorry_proof
 
-
 /-- The fundamental property of the adjoint. -/
 theorem adjoint_inner_left (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) (x : E) (y : F) :
     ⟪(A†) y, x⟫ = ⟪y, A x⟫ := by
@@ -69,6 +68,14 @@ theorem adjoint_adjoint (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) : A†
   intro v
   rw[← adjoint_ex _ (adjoint_clm hA)]
   apply adjoint_inner_left _ hA
+
+theorem smul_adjoint (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) (c : 𝕜) (y : F) :
+    c • adjoint 𝕜 A y = adjoint 𝕜 A (c • y) := by
+
+  apply AdjointSpace.ext_inner_right 𝕜; intro v
+  rw[AdjointSpace.inner_smul_left]
+  simp[adjoint_inner_left (hA:=hA)]
+  rw[AdjointSpace.inner_smul_left]
 
 
 /-- The adjoint of the composition of two operators is the composition of the two adjoints
@@ -132,7 +139,7 @@ theorem proj_rule [DecidableEq ι]
     fun x => (fun j => if h : i=j then h ▸ x else 0) := by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   intro x y
-  simp[Inner.inner]
+  rw[inner_forall_split]
   sorry_proof
 
 @[fun_trans]

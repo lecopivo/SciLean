@@ -294,5 +294,7 @@ instance : AdjointSpace 𝕜 ((i : ι) → E i) where
   smul_left := by simp[inner_smul_left,Finset.mul_sum]
 
 
-
 theorem inner_prod_split (x y : X×Y) : ⟪x,y⟫_𝕜 = ⟪x.1,y.1⟫_𝕜 + ⟪x.2,y.2⟫_𝕜 := by rfl
+
+theorem inner_forall_split (f g : (i : ι) → E i) :
+    ⟪f,g⟫_𝕜 = ∑ i, ⟪f i, g i⟫_𝕜 := by rfl

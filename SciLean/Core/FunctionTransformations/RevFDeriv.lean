@@ -178,14 +178,14 @@ variable
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 
--- Prod.mk -----------------------------------v---------------------------------
+-- Prod.mk ----------------------------------- ---------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_trans]
 theorem SciLean.Prod.mk.arg_fstsnd.revFDeriv_rule_at
-  (g : X → Y) (f : X → Z) (x : X)
-  (hg : DifferentiableAt K g x) (hf : DifferentiableAt K f x)
-  : revFDeriv K (fun x => Prod.mk (g x) (f x)) x
+    (g : X → Y) (f : X → Z) (x : X)
+    (hg : DifferentiableAt K g x) (hf : DifferentiableAt K f x) :
+    revFDeriv K (fun x => Prod.mk (g x) (f x)) x
     =
     let ydg := revFDeriv K g x
     let zdf := revFDeriv K f x
@@ -214,8 +214,8 @@ theorem SciLean.Prod.mk.arg_fstsnd.revFDeriv_rule
 
 @[fun_trans]
 theorem SciLean.Prod.fst.arg_self.revFDeriv_rule_at
-  (f : X → Y×Z) (x : X) (hf : DifferentiableAt K f x)
-  : revFDeriv K (fun x => (f x).1) x
+    (f : X → Y×Z) (x : X) (hf : DifferentiableAt K f x) :
+    revFDeriv K (fun x => (f x).1) x
     =
     let yzdf := revFDeriv K f x
     (Prod.fst yzdf.1, fun dy => yzdf.2 (dy,0)) := by
@@ -225,8 +225,8 @@ theorem SciLean.Prod.fst.arg_self.revFDeriv_rule_at
 
 @[fun_trans]
 theorem SciLean.Prod.fst.arg_self.revFDeriv_rule
-  (f : X → Y×Z) (hf : Differentiable K f)
-  : revFDeriv K (fun x => (f x).1)
+    (f : X → Y×Z) (hf : Differentiable K f) :
+    revFDeriv K (fun x => (f x).1)
     =
     fun x =>
       let yzdf := revFDeriv K f x
@@ -240,8 +240,8 @@ theorem SciLean.Prod.fst.arg_self.revFDeriv_rule
 
 @[fun_trans]
 theorem SciLean.Prod.snd.arg_self.revFDeriv_rule_at
-  (f : X → Y×Z) (x : X) (hf : DifferentiableAt K f x)
-  : revFDeriv K (fun x => Prod.snd (f x)) x
+    (f : X → Y×Z) (x : X) (hf : DifferentiableAt K f x) :
+    revFDeriv K (fun x => Prod.snd (f x)) x
     =
     let yzdf := revFDeriv K f x
     (Prod.snd yzdf.1, fun dz => yzdf.2 (0,dz)) := by
@@ -251,8 +251,8 @@ theorem SciLean.Prod.snd.arg_self.revFDeriv_rule_at
 
 @[fun_trans]
 theorem SciLean.Prod.snd.arg_self.revFDeriv_rule
-  (f : X → Y×Z) (hf : Differentiable K f)
-  : revFDeriv K (fun x => Prod.snd (f x))
+    (f : X → Y×Z) (hf : Differentiable K f) :
+    revFDeriv K (fun x => Prod.snd (f x))
     =
     fun x =>
       let yzdf := revFDeriv K f x
@@ -324,12 +324,13 @@ theorem HSub.hSub.arg_a0a1.revFDeriv_rule
 
 @[fun_trans]
 theorem Neg.neg.arg_a0.revFDeriv_rule
-  (f : X → Y) (x : X)
-  : (revFDeriv K fun x => - f x) x
+    (f : X → Y) (x : X) :
+    (revFDeriv K fun x => - f x) x
     =
     let ydf := revFDeriv K f x
-    (-ydf.1, fun dy => - ydf.2 dy) :=
-by unfold revFDeriv; fun_trans
+    (-ydf.1, fun dy => - ydf.2 dy) := by
+
+  unfold revFDeriv; fun_trans
 
 
 -- HMul.hmul -------------------------------------------------------------------
@@ -339,9 +340,9 @@ open ComplexConjugate
 
 @[fun_trans]
 theorem HMul.hMul.arg_a0a1.revFDeriv_rule_at
-  (f g : X → K) (x : X)
-  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
-  : (revFDeriv K fun x => f x * g x) x
+    (f g : X → K) (x : X)
+    (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) :
+    (revFDeriv K fun x => f x * g x) x
     =
     let ydf := revFDeriv K f x
     let zdg := revFDeriv K g x
@@ -352,15 +353,16 @@ theorem HMul.hMul.arg_a0a1.revFDeriv_rule_at
 
 @[fun_trans]
 theorem HMul.hMul.arg_a0a1.revFDeriv_rule
-  (f g : X → K)
-  (hf : Differentiable K f) (hg : Differentiable K g)
-  : (revFDeriv K fun x => f x * g x)
+    (f g : X → K)
+    (hf : Differentiable K f) (hg : Differentiable K g) :
+    (revFDeriv K fun x => f x * g x)
     =
     fun x =>
       let ydf := revFDeriv K f x
       let zdg := revFDeriv K g x
-      (ydf.1 * zdg.1, fun dx' => (conj zdg.1) • ydf.2 dx' + (conj ydf.1) • zdg.2 dx') :=
-by funext; fun_trans
+      (ydf.1 * zdg.1, fun dx' => (conj zdg.1) • ydf.2 dx' + (conj ydf.1) • zdg.2 dx') := by
+
+  funext; fun_trans
 
 
 -- SMul.smul -------------------------------------------------------------------
@@ -368,30 +370,31 @@ by funext; fun_trans
 
 @[fun_trans]
 theorem HSMul.hSMul.arg_a0a1.revFDeriv_rule_at
-  (f : X → K) (g : X → Y) (x : X)
-  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x)
-  : (revFDeriv K fun x => f x • g x) x
+    (f : X → K) (g : X → Y) (x : X)
+    (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) :
+    (revFDeriv K fun x => f x • g x) x
     =
     let ydf := revFDeriv K f x
     let zdg := revFDeriv K g x
-    (ydf.1 • zdg.1, fun dx' => ydf.2 (inner dx' zdg.1) + (conj ydf.1) • zdg.2 dx') := by
+    (ydf.1 • zdg.1, fun dx' => ydf.2 (inner zdg.1 dx') + (conj ydf.1) • zdg.2 dx') := by
   unfold revFDeriv
   fun_trans
   funext y; rw[add_comm]; congr
-  sorry_proof
+  rw[smul_adjoint (hA:=by fun_prop)]; simp
 
 
 @[fun_trans]
 theorem HSMul.hSMul.arg_a0a1.revFDeriv_rule
-  (f : X → K) (g : X → Y)
-  (hf : Differentiable K f) (hg : Differentiable K g)
-  : (revFDeriv K fun x => f x • g x)
+    (f : X → K) (g : X → Y)
+    (hf : Differentiable K f) (hg : Differentiable K g) :
+    (revFDeriv K fun x => f x • g x)
     =
     fun x =>
       let ydf := revFDeriv K f x
       let zdg := revFDeriv K g x
-      (ydf.1 • zdg.1, fun dx' => ydf.2 (inner dx' zdg.1) + (conj ydf.1) • zdg.2 dx') :=
-by funext; fun_trans
+      (ydf.1 • zdg.1, fun dx' => ydf.2 (inner zdg.1 dx') + (conj ydf.1) • zdg.2 dx') := by
+
+  funext; fun_trans
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
@@ -399,30 +402,31 @@ by funext; fun_trans
 
 @[fun_trans]
 theorem HDiv.hDiv.arg_a0a1.revFDeriv_rule_at
-  (f g : X → K) (x : X)
-  (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) (hx : g x ≠ 0)
-  : (revFDeriv K fun x => f x / g x) x
+    (f g : X → K) (x : X)
+    (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) (hx : g x ≠ 0) :
+    (revFDeriv K fun x => f x / g x) x
     =
     let ydf := revFDeriv K f x
     let zdg := revFDeriv K g x
     (ydf.1 / zdg.1,
-     fun dx' => ((conj zdg.1)^2)⁻¹ • (conj zdg.1 • ydf.2 dx' - conj ydf.1 • zdg.2 dx')) :=
-by
+     fun dx' => ((conj zdg.1)^2)⁻¹ • (conj zdg.1 • ydf.2 dx' - conj ydf.1 • zdg.2 dx')) := by
+
   unfold revFDeriv
   fun_trans (disch:=assumption)
 
 
 @[fun_trans]
 theorem HDiv.hDiv.arg_a0a1.revFDeriv_rule
-  (f g : X → K)
-  (hf : Differentiable K f) (hg : Differentiable K g) (hx : ∀ x, g x ≠ 0)
-  : (revFDeriv K fun x => f x / g x)
+    (f g : X → K)
+    (hf : Differentiable K f) (hg : Differentiable K g) (hx : ∀ x, g x ≠ 0) :
+    (revFDeriv K fun x => f x / g x)
     =
     fun x =>
       let ydf := revFDeriv K f x
       let zdg := revFDeriv K g x
       (ydf.1 / zdg.1,
        fun dx' => ((conj zdg.1)^2)⁻¹ • (conj zdg.1 • ydf.2 dx' - conj ydf.1 • zdg.2 dx')) := by
+
   funext
   fun_trans (disch:=apply hx)
 
@@ -443,10 +447,11 @@ by unfold revFDeriv; fun_trans
 
 @[fun_trans]
 def HPow.hPow.arg_a0.revFDeriv_rule
-  (f : X → K) (n : Nat) (hf : Differentiable K f)
-  : revFDeriv K (fun x => f x ^ n)
+    (f : X → K) (n : Nat) (hf : Differentiable K f) :
+    revFDeriv K (fun x => f x ^ n)
     =
     fun x =>
       let ydf := revFDeriv K f x
-      (ydf.1 ^ n, fun dx' => (n * (conj ydf.1 ^ (n-1))) • ydf.2 dx') :=
-by funext; fun_trans
+      (ydf.1 ^ n, fun dx' => (n * (conj ydf.1 ^ (n-1))) • ydf.2 dx') := by
+
+  funext; fun_trans
