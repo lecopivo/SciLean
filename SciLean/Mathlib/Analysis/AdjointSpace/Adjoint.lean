@@ -209,6 +209,7 @@ theorem pi_rule
   rfl
 
 
+end adjoint
 
 
 --------------------------------------------------------------------------------
@@ -338,7 +339,7 @@ theorem HSMul.hSMul.arg_a0.adjoint_rule
   (y : Y) (f : X → K) (hf : IsContinuousLinearMap K f)
   : (fun x => f x • y)†
     =
-    fun y' => ⟪y, y'⟫ • ((fun x =>L[K] f x)†) 1 :=
+    fun y' => ⟪y, y'⟫ • (f†) 1 :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop)
@@ -351,7 +352,7 @@ theorem HSMul.hSMul.arg_a1.adjoint_rule
   (c : K) (g : X → Y) (hg : IsContinuousLinearMap K g)
   : (fun x => c • g x)†
     =
-    fun y => (conj c) • ((fun x =>L[K] g x)†) y :=
+    fun y => (conj c) • (g†) y :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop)
@@ -468,3 +469,37 @@ by
 
 
 end OnRealSpace
+
+
+
+
+--------------------------------------------------------------------------------
+
+section IsContinuousLinearMap
+
+variable
+  {R : Type _} [RealScalar R]
+  {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
+  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
+
+set_default_scalar R
+
+-- Inner -----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_prop]
+theorem Inner.inner.arg_a0.IsContinuousLinearMap_rule
+  (f : X → Y) (_ : IsContinuousLinearMap R f) (y : Y)
+  : IsContinuousLinearMap R fun x => ⟪f x, y⟫ :=
+by
+  sorry_proof
+
+@[fun_prop]
+theorem Inner.inner.arg_a1.IsContinuousLinearMap_rule
+  (f : X → Y) (_ : IsContinuousLinearMap R f) (y : Y)
+  : IsContinuousLinearMap R fun x => ⟪y, f x⟫ :=
+by
+  sorry_proof
+
+
+end IsContinuousLinearMap
