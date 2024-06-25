@@ -8,9 +8,10 @@ import Mathlib.MeasureTheory.Measure.Hausdorff
 
 import SciLean.Core.NotationOverField
 import SciLean.Mathlib.Analysis.AdjointSpace.Adjoint
--- import SciLean.Core.Integral.MovingDomain
 
 import SciLean.Core.FunctionTransformations.RevFDeriv
+
+set_option linter.unusedVariables false
 
 open MeasureTheory Topology Filter
 
@@ -19,7 +20,7 @@ namespace SciLean
 variable
   {R} [RealScalar R] [MeasureSpace R]
   {W} [NormedAddCommGroup W] [NormedSpace R W]
-  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
   {Y} [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y]
   {Z} [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z]
 
@@ -96,16 +97,6 @@ def HasParamFDerivWithJumpsAt (f : W → X → Y) (w : W)
     (jump : I → Set X) : Prop := ∃ J Ω ι, HasParamFDerivWithJumpsAtImpl R f w f' I J ι Ω jumpVals jumpSpeed jump
 
 
-structure HasParamFDerivWithJumpsAt' (f : W → X → Y) (w : W) where
-    I : Type
-    f' : W → X → Y
-    jumpVals : I → X → Y×Y
-    jumpSpeed : I → W → X → R
-    jump : I → Set X
-    -- we do not keep track of the domains only of their interfaces
-    proof : ∃ J Ω ι, HasParamFDerivWithJumpsAtImpl R f w f' I J ι Ω jumpVals jumpSpeed jump
-
-
 def HasParamFDerivWithJumps (f : W → X → Y)
     (f' : W → W → X → Y)
     (I : Type)
@@ -119,38 +110,15 @@ open FiniteDimensional
 theorem fderiv_under_integral
   {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
   (f : W → X → Y) (w : W) (μ : Measure X)
-  (I) [IndexType I]
-  (hf : Σ' f' df s S, HasParamFDerivWithJumpsAt R f w f' I df s S) (dw : W)
+  {I} [IndexType I] {f' df s S}
+  (hf : HasParamFDerivWithJumpsAt R f w f' I df s S) (dw : W)
   /- todo: add some integrability conditions -/ :
   (fderiv R (fun w' => ∫ x, f w' x ∂μ) w dw)
   =
-  let ⟨f', df, s, S, _⟩ := hf
   let interior := ∫ x, f' dw x ∂μ
   let density := fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x)
   let shocks := ∑ i, ∫ x in S i, (s i dw x * density x) • ((df i x).1 - (df i x).2) ∂μH[finrank R X - 1]
   interior + shocks := sorry_proof
-
-
-open FiniteDimensional
--- @[fun_trans]
-theorem fderiv_under_integral'
-  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
-  (f : W → X → Y) (w : W) (μ : Measure X)
-  (I) [IndexType I]
-  (hf : HasParamFDerivWithJumpsAt' R f w) (dw : W)
-  [IndexType hf.I]
-  /- todo: add some integrability conditions -/ :
-  (fderiv R (fun w' => ∫ x, f w' x ∂μ) w dw)
-  =
-  let f' := hf.f'
-  let df := hf.jumpVals
-  let s := hf.jumpSpeed
-  let S := hf.jump
-  let interior := ∫ x, f' dw x ∂μ
-  let density := fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x)
-  let shocks := ∑ i, ∫ x in S i, (s i dw x * density x) • ((df i x).1 - (df i x).2) ∂μH[finrank R X - 1]
-  interior + shocks := sorry_proof
-
 
 
 ----------------------------------------------------------------------------------------------------
@@ -160,65 +128,59 @@ theorem fderiv_under_integral'
 namespace HasParamFDerivWithJumpsAt
 
 @[aesop unsafe]
-noncomputable
-def smooth_rule
+theorem smooth_rule
     (w : W)
     (f : W → X → Y) (hf : ∀ x, DifferentiableAt R (f · x) w) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf :=
+    HasParamFDerivWithJumpsAt R f w (fun dw x => fderiv R (f · x) w dw) Empty 0 0 (fun _ => ∅) :=
 
-  ⟨fun dw x => fderiv R (f · x) w dw,
-   0, 0, fun _ => ∅, sorry_proof⟩
-
-
+  sorry_proof
 
 @[aesop unsafe]
-noncomputable
-def comp_smooth_jumps_rule
+theorem comp_smooth_jumps_rule
     (f : W → Y → Z) (g : W → X → Y) (w : W)
-    (I)
+    {I g' bg sg Sg}
     (hf : Differentiable R (fun (w,y) => f w y))
-    (hg : Σ' g' bg sg Sg, HasParamFDerivWithJumpsAt R g w g' I bg sg Sg) :
-     Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => f w (g w x)) w f' I bf sf Sf :=
-
-  let ⟨g',bg,sg,Sg,_⟩ := hg
-  ⟨fun dw x =>
-     let y := g w x
-     let dy := g' dw x
-     let dz := fderiv R (fun (w,y) => f w y) (w,y) (dw,dy)
-     dz,
-   fun i x =>
-     let (y₁, y₂) := bg i x
-     (f w y₁, f w y₂),
-   sg, Sg, sorry_proof⟩
-
+    (hg : HasParamFDerivWithJumpsAt R g w g' I bg sg Sg) :
+    HasParamFDerivWithJumpsAt R (fun w x => f w (g w x)) w
+      /- f' -/
+      (fun dw x =>
+         let y := g w x
+         let dy := g' dw x
+         let dz := fderiv R (fun (w,y) => f w y) (w,y) (dw,dy)
+         dz)
+      (I)
+      /- jumpVals -/
+      (fun i x =>
+         let y := bg i x
+         (f w y.1, f w y.2))
+      /- jumpSpeed -/
+      (sg)
+      /- jump -/
+      (Sg) := sorry_proof
 
 @[aesop unsafe]
-noncomputable
-def comp_smooth_jumps_rule'
+theorem comp_smooth_jumps_rule_at
     (f : W → Y → Z) (g : W → X → Y) (w : W)
-    (hf : Differentiable R (fun (w,y) => f w y))
-    (hg : HasParamFDerivWithJumpsAt' R g w) :
-    HasParamFDerivWithJumpsAt' R (fun w x => f w (g w x)) w :=
+    {I g' bg sg Sg}
+    (hf : ∀ x, DifferentiableAt R (fun (w,y) => f w y) (w,g w x))
+    (hg : HasParamFDerivWithJumpsAt R g w g' I bg sg Sg) :
+    HasParamFDerivWithJumpsAt R (fun w x => f w (g w x)) w
+      /- f' -/
+      (fun dw x =>
+         let y := g w x
+         let dy := g' dw x
+         let dz := fderiv R (fun (w,y) => f w y) (w,y) (dw,dy)
+         dz)
+      (I)
+      /- jumpVals -/
+      (fun i x =>
+         let y := bg i x
+         (f w y.1, f w y.2))
+      /- jumpSpeed -/
+      (sg)
+      /- jump -/
+      (Sg) := sorry_proof
 
-  let ⟨I,g',bg,sg,Sg,_⟩ := hg
-  {
-    I := I
-
-    f' := fun dw x =>
-      let y := g w x
-      let dy := g' dw x
-      let dz := fderiv R (fun (w,y) => f w y) (w,y) (dw,dy)
-      dz
-
-    jumpVals := fun i x =>
-      let (y₁, y₂) := bg i x
-      (f w y₁, f w y₂)
-
-    jumpSpeed := sg
-    jump := Sg
-
-    proof := sorry_proof
-  }
 
 
 end HasParamFDerivWithJumpsAt
@@ -228,187 +190,85 @@ end HasParamFDerivWithJumpsAt
 -- Function Rules ----------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- TODO: Add condition that the intersection of `⋃ i, Sf i` and `⋃ i, Sg i` has zero (n-1)-measure
-def Prod.mk.arg_self.HasParamFDerivWithJumpsAt_rule
-    (f g : W → X → Y) (w : W)
-    (I J)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : Σ' g' bg sg Sg, HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => (f w x, g w x)) w f' (I⊕J) bf sf Sf :=
-
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  let ⟨g', bg, sg, Sg, _⟩ := hg
-  ⟨fun dw x => (f' dw x, g' dw x),
-   fun i =>
-     match i with
-     | .inl i =>
-       fun x =>
-         let (y₁, y₂) := bf i x
-         let z := g w x
-         ((y₁,z), (y₂,z))
-     | .inr j =>
-       fun x =>
-         let y := f w x
-         let (z₁, z₂) := bg j x
-         ((y,z₁), (y,z₂)),
-   fun i =>
-     match i with
-     | .inl i => (sf i ·)
-     | .inr j => (sg j ·),
-   fun i =>
-     match i with
-     | .inl i => Sf i
-     | .inr j => Sg j,
-   sorry_proof⟩
+open FiniteDimensional in
+/--
+Proposition stating that intersection of two jump discontinuities is empty up to
+(n-1)-dimensional measure. -/
+def DisjointJumps {X} [NormedAddCommGroup X] [NormedSpace R X] [MeasureSpace X] [BorelSpace X]
+  {I J} (S : I → Set X) (P : J → Set X) :=
+  μH[finrank R X - 1] (⋃ i, S i ∩ ⋃ j, P j) = 0
 
 
--- An alternative way to formulate this
--- This is probably preferable by default if we do not need to share some precomputed data among output parameters
-theorem Prod.mk.arg_self.HasParamFDerivWithJumpsAt_rule'
-    (f g : W → X → Y) (w : W)
-    (f' I bf sf Sf) (g' J bg sg Sg)
+@[aesop safe]
+theorem Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule
+    (f : W → X → Y) (g : W → X → Z) (w : W)
+    {f' I bf sf Sf} {g' J bg sg Sg}
     (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamFDerivWithJumpsAt R (fun w x => (f w x, g w x)) w
-      (fun dw x => (f' dw x, g' dw x))
-      (I⊕J)
-      /- jumpVals-/
-      (fun i =>
-         match i with
-         | .inl i =>
-           fun x =>
+    (hg : HasParamFDerivWithJumpsAt R g w g' J bg sg Sg)
+    /- (hIJ : DisjointJumps R Sf Sg) -/ :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => (f w x, g w x)) w
+      (f' := fun dw x => (f' dw x, g' dw x))
+      (I := I⊕J)
+      (jumpVals := Sum.elim
+           (fun i x =>
              let (y₁, y₂) := bf i x
              let z := g w x
-             ((y₁,z), (y₂,z))
-         | .inr j =>
-           fun x =>
+             ((y₁,z), (y₂,z)))
+           (fun j x =>
              let y := f w x
              let (z₁, z₂) := bg j x
-             ((y,z₁), (y,z₂)))
-      /- jumpSpeed -/
-      (fun i =>
-         match i with
-         | .inl i => (sf i ·)
-         | .inr j => (sg j ·))
-      /- jump -/
-      (fun i =>
-         match i with
-         | .inl i => Sf i
-         | .inr j => Sg j) := sorry_proof
-
--- An alternative way to formulate this
--- This is probably preferable by default if we do not need to share some precomputed data among output parameters
-abbrev Prod.mk.arg_self.HasParamFDerivWithJumpsAt_rule''
-    (f g : W → X → Y) (w : W)
-    (hf : HasParamFDerivWithJumpsAt' R f w)
-    (hg : HasParamFDerivWithJumpsAt' R g w) :
-    HasParamFDerivWithJumpsAt' R (fun w x => (f w x, g w x)) w :=
-
-  let ⟨I, f', bf, sf, Sf, _⟩ := hf
-  let ⟨J, g', bg, sg, Sg, _⟩ := hg
-  {
-    I :=I⊕J
-    f' := fun dw x =>
-      (f' dw x, g' dw x)
-
-    jumpVals := Sum.elim
-        (fun i x =>
-          let (y₁, y₂) := bf i x
-          let z := g w x
-          ((y₁,z), (y₂,z)))
-        (fun j x =>
-          let y := f w x
-          let (z₁, z₂) := bg j x
-          ((y,z₁), (y,z₂)))
-
-    jumpSpeed := Sum.elim sf sg
-
-    jump := Sum.elim Sf Sg
-
-    proof := sorry_proof
-  }
+             ((y,z₁), (y,z₂))))
+      (jumpSpeed := Sum.elim sf sg)
+      (jump := Sum.elim Sf Sg) := sorry_proof
 
 
-def Prod.fst.arg_self.HasParamFDerivWithJumpsAt_rule
+@[aesop safe]
+theorem Prod.fst.arg_self.HasParamFDerivWithJumpsAt_rule
     (f : W → X → Y×Z) (w : W)
-    (I)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => (f w x).1) w f' I bf sf Sf :=
+    {I f' bf sf Sf}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf) :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => (f w x).1) w
+      (f':= fun dw x => (f' dw x).1)
+      (I := I)
+      (jumpVals := fun i x => let y := bf i x; (y.1.1, y.2.1))
+      (jumpSpeed := sf)
+      (jump := Sf) := by
 
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  ⟨fun dw x => (f' dw x).1,
-   fun i x =>
-       let (y₁, y₂) := bf i x
-       (y₁.1, y₂.1),
-   sf, Sf,
-   sorry_proof⟩
+  convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule (R:=R)
+          (fun _ x => Prod.fst x) f w
+          (by fun_prop) hf
+  fun_trans
 
 
-def Prod.snd.arg_self.HasParamFDerivWithJumpsAt_rule
+@[aesop safe]
+theorem Prod.snd.arg_self.HasParamFDerivWithJumpsAt_rule
     (f : W → X → Y×Z) (w : W)
-    (I)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => (f w x).2) w f' I bf sf Sf :=
+    {I f' bf sf Sf}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf) :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => (f w x).2) w
+      (f':= fun dw x => (f' dw x).2)
+      (I := I)
+      (jumpVals := fun i x => let y := bf i x; (y.1.2, y.2.2))
+      (jumpSpeed := sf)
+      (jump := Sf) := by
 
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  ⟨fun dw x => (f' dw x).2,
-   fun i x =>
-       let (y₁, y₂) := bf i x
-       (y₁.2, y₂.2),
-   sf, Sf,
-   sorry_proof⟩
+  convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule (R:=R)
+          (fun _ x => Prod.snd x) f w
+          (by fun_prop) hf
+  fun_trans
 
 
--- TODO: Add condition that the intersection of `⋃ i, Sf i` and `⋃ i, Sg i` has zero (n-1)-measure
-def HAdd.hAdd.arg_a0a1.HasParamFDerivWithJumpsAt_rule
+@[aesop safe]
+theorem HAdd.hAdd.arg_a0a1.HasParamFDerivWithJumpsAt_rule
     (f g : W → X → Y) (w : W)
-    (I J)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : Σ' g' bg sg Sg, HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => f w x + g w x) w f' (I⊕J) bf sf Sf :=
-
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  let ⟨g', bg, sg, Sg, _⟩ := hg
-  ⟨fun dw x => (f' dw x + g' dw x),
-   fun i =>
-     match i with
-     | .inl i =>
-       fun x =>
-         let (y₁, y₂) := bf i x
-         let z := g w x
-         ((y₁+z), (y₂+z))
-     | .inr j =>
-       fun x =>
-         let y := f w x
-         let (z₁, z₂) := bg j x
-         ((y+z₁), (y+z₂)),
-   fun i =>
-     match i with
-     | .inl i => (sf i ·)
-     | .inr j => (sg j ·),
-   fun i =>
-     match i with
-     | .inl i => Sf i
-     | .inr j => Sg j,
-   sorry_proof⟩
-
--- An alternative way to formulate this
--- This is probably preferable by default if we do not need to share some precomputed data among output parameters
-abbrev HAdd.hAdd.arg_self.HasParamFDerivWithJumpsAt_rule''
-    (f g : W → X → Y) (w : W)
-    (hf : HasParamFDerivWithJumpsAt' R f w)
-    (hg : HasParamFDerivWithJumpsAt' R g w) :
-    HasParamFDerivWithJumpsAt' R (fun w x => f w x + g w x) w :=
-
-  let ⟨I, f', bf, sf, Sf, _⟩ := hf
-  let ⟨J, g', bg, sg, Sg, _⟩ := hg
-  {
-    I :=I⊕J
-
-    f' := fun dw x =>
-      (f' dw x + g' dw x)
-
-    jumpVals := Sum.elim
+    {f' I bf sf Sf} {g' J bg sg Sg}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
+    (hg : HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => f w x + g w x) w
+      (f' := fun (dw : W) x =>
+        f' dw x + g' dw x)
+      (I:=I⊕J)
+      (jumpVals := Sum.elim
         (fun i x =>
           let (y₁, y₂) := bf i x
           let z := g w x
@@ -416,33 +276,32 @@ abbrev HAdd.hAdd.arg_self.HasParamFDerivWithJumpsAt_rule''
         (fun j x =>
           let y := f w x
           let (z₁, z₂) := bg j x
-          ((y+z₁), (y+z₂)))
+          ((y+z₁), (y+z₂))))
+      (jumpSpeed := Sum.elim sf sg)
+      (jump := Sum.elim Sf Sg) := by
 
-    jumpSpeed := Sum.elim sf sg
+  convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule (R:=R)
+          (f:=fun _ (y:Y×Y) => y.1 + y.2) (g:=fun w x => (f w x, g w x)) (w:=w)
+          (hf:=by fun_prop)
+          (hg:= Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R f g w hf hg)
+  . fun_trans
+  . rename_i i x
+    induction i
+    . simp
+    . simp
 
-    jump := Sum.elim Sf Sg
 
-    proof := sorry_proof
-  }
-
-
--- An alternative way to formulate this
--- This is probably preferable by default if we do not need to share some precomputed data among output parameters
-abbrev HSub.hSub.arg_self.HasParamFDerivWithJumpsAt_rule''
+@[aesop safe]
+theorem HSub.hSub.arg_a0a1.HasParamFDerivWithJumpsAt_rule
     (f g : W → X → Y) (w : W)
-    (hf : HasParamFDerivWithJumpsAt' R f w)
-    (hg : HasParamFDerivWithJumpsAt' R g w) :
-    HasParamFDerivWithJumpsAt' R (fun w x => f w x - g w x) w :=
-
-  let ⟨I, f', bf, sf, Sf, _⟩ := hf
-  let ⟨J, g', bg, sg, Sg, _⟩ := hg
-  {
-    I :=I⊕J
-
-    f' := fun dw x =>
-      (f' dw x - g' dw x)
-
-    jumpVals := Sum.elim
+    {f' I bf sf Sf} {g' J bg sg Sg}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
+    (hg : HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => f w x - g w x) w
+      (f' := fun (dw : W) x =>
+        f' dw x - g' dw x)
+      (I:=I⊕J)
+      (jumpVals := Sum.elim
         (fun i x =>
           let (y₁, y₂) := bf i x
           let z := g w x
@@ -450,178 +309,170 @@ abbrev HSub.hSub.arg_self.HasParamFDerivWithJumpsAt_rule''
         (fun j x =>
           let y := f w x
           let (z₁, z₂) := bg j x
-          ((y-z₁), (y-z₂)))
+          ((y-z₁), (y-z₂))))
+      (jumpSpeed := Sum.elim sf sg)
+      (jump := Sum.elim Sf Sg) := by
 
-    jumpSpeed := Sum.elim sf sg
+  convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule (R:=R)
+          (f:=fun _ (y:Y×Y) => y.1 - y.2) (g:=fun w x => (f w x, g w x)) (w:=w)
+          (hf:=by fun_prop)
+          (hg:= Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R f g w hf hg)
+  . fun_trans
+  . rename_i i x
+    induction i
+    . simp
+    . simp
 
-    jump := Sum.elim Sf Sg
-
-    proof := sorry_proof
-  }
-
-
-
-
--- TODO: Add condition that the intersection of `⋃ i, Sf i` and `⋃ i, Sg i` has zero (n-1)-measure
-def HSub.hSub.arg_a0a1.HasParamFDerivWithJumpsAt_rule
-    (f g : W → X → Y) (w : W)
-    (I J)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : Σ' g' bg sg Sg, HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => f w x - g w x) w f' (I⊕J) bf sf Sf :=
-
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  let ⟨g', bg, sg, Sg, _⟩ := hg
-  ⟨fun dw x => (f' dw x - g' dw x),
-   fun i =>
-     match i with
-     | .inl i =>
-       fun x =>
-         let (y₁, y₂) := bf i x
-         let z := g w x
-         ((y₁-z), (y₂-z))
-     | .inr j =>
-       fun x =>
-         let y := f w x
-         let (z₁, z₂) := bg j x
-         ((y-z₁), (y-z₂)),
-   fun i =>
-     match i with
-     | .inl i => (sf i ·)
-     | .inr j => (sg j ·),
-   fun i =>
-     match i with
-     | .inl i => Sf i
-     | .inr j => Sg j,
-   sorry_proof⟩
-
-
-def Neg.neg.arg_a0a1.HasParamFDerivWithJumpsAt_rule
+@[aesop safe]
+theorem Neg.neg.arg_a0.HasParamFDerivWithJumpsAt_rule
     (f : W → X → Y) (w : W)
-    (I)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => - f w x) w f' I bf sf Sf :=
+    {I f' bf sf Sf}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf) :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => - f w x) w
+      (f':=fun dw x => - f' dw x)
+      (I := I)
+      (jumpVals := fun i x => - bf i x)
+      (jumpSpeed := sf)
+      (jump := Sf) := by
 
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  ⟨fun dw x => - f' dw x,
-   fun i x => - bf i x,
-   sf, Sf,
-   sorry_proof⟩
+
+  convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule (R:=R)
+          (f:=fun _ y => - y) (g:=f) (w:=w)
+          (hf:=by fun_prop)
+          (hg:=hf)
+  . fun_trans
 
 
--- TODO: Mul condition that the intersection of `⋃ i, Sf i` and `⋃ i, Sg i` has zero (n-1)-measure
-def HMul.hMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule
+@[aesop safe]
+theorem HMul.hMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule
     (f g : W → X → R) (w : W)
-    (I J)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : Σ' g' bg sg Sg, HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => f w x * g w x) w f' (I⊕J) bf sf Sf :=
-
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  let ⟨g', bg, sg, Sg, _⟩ := hg
-  ⟨fun dw x =>
-     let y := f w x
-     let dy := f' dw x
-     let z := g w x
-     let dz := g' dw x
-     dy * z + y * dz,
-   fun i =>
-     match i with
-     | .inl i =>
-       fun x =>
-         let (y₁, y₂) := bf i x
-         let z := g w x
-         ((y₁*z), (y₂*z))
-     | .inr j =>
-       fun x =>
+    {f' I bf sf Sf} {g' J bg sg Sg}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
+    (hg : HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => f w x * g w x) w
+      (f' := fun (dw : W) x =>
          let y := f w x
-         let (z₁, z₂) := bg j x
-         ((y*z₁), (y*z₂)),
-   fun i =>
-     match i with
-     | .inl i => (sf i ·)
-     | .inr j => (sg j ·),
-   fun i =>
-     match i with
-     | .inl i => Sf i
-     | .inr j => Sg j,
-   sorry_proof⟩
+         let dy := f' dw x
+         let z := g w x
+         let dz := g' dw x
+         dy * z + y * dz)
+      (I:=I⊕J)
+      (jumpVals := Sum.elim
+        (fun i x =>
+          let (y₁, y₂) := bf i x
+          let z := g w x
+          ((y₁*z), (y₂*z)))
+        (fun j x =>
+          let y := f w x
+          let (z₁, z₂) := bg j x
+          ((y*z₁), (y*z₂))))
+      (jumpSpeed := Sum.elim sf sg)
+      (jump := Sum.elim Sf Sg) := by
+
+  convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule (R:=R)
+          (f:=fun _ (y:R×R) => y.1 * y.2) (g:=fun w x => (f w x, g w x)) (w:=w)
+          (hf:=by simp; fun_prop)
+          (hg:= Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R f g w hf hg)
+  . fun_trans; ac_rfl
+  . rename_i i x
+    induction i
+    . simp
+    . simp
 
 
--- TODO: Mul condition that the intersection of `⋃ i, Sf i` and `⋃ i, Sg i` has zero (n-1)-measure
-def HSMul.hSMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule
+@[aesop safe]
+theorem HSMul.hSMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule
     (f : W → X → R) (g : W → X → Y) (w : W)
-    (I J)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : Σ' g' bg sg Sg, HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => f w x • g w x) w f' (I⊕J) bf sf Sf :=
-
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  let ⟨g', bg, sg, Sg, _⟩ := hg
-  ⟨fun dw x =>
-     let y := f w x
-     let dy := f' dw x
-     let z := g w x
-     let dz := g' dw x
-     dy • z + y • dz,
-   fun i =>
-     match i with
-     | .inl i =>
-       fun x =>
-         let (y₁, y₂) := bf i x
-         let z := g w x
-         ((y₁•z), (y₂•z))
-     | .inr j =>
-       fun x =>
+    {f' I bf sf Sf} {g' J bg sg Sg}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
+    (hg : HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => f w x • g w x) w
+      (f' := fun (dw : W) x =>
          let y := f w x
-         let (z₁, z₂) := bg j x
-         ((y•z₁), (y•z₂)),
-   fun i =>
-     match i with
-     | .inl i => (sf i ·)
-     | .inr j => (sg j ·),
-   fun i =>
-     match i with
-     | .inl i => Sf i
-     | .inr j => Sg j,
-   sorry_proof⟩
+         let dy := f' dw x
+         let z := g w x
+         let dz := g' dw x
+         dy • z + y • dz)
+      (I:=I⊕J)
+      (jumpVals := Sum.elim
+        (fun i x =>
+          let (y₁, y₂) := bf i x
+          let z := g w x
+          ((y₁•z), (y₂•z)))
+        (fun j x =>
+          let y := f w x
+          let (z₁, z₂) := bg j x
+          ((y•z₁), (y•z₂))))
+      (jumpSpeed := Sum.elim sf sg)
+      (jump := Sum.elim Sf Sg) := by
+
+  convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule (R:=R)
+          (f:=fun _ (y:R×Y) => y.1 • y.2) (g:=fun w x => (f w x, g w x)) (w:=w)
+          (hf:=by simp; fun_prop)
+          (hg:= Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R f g w hf hg)
+  . fun_trans; ac_rfl
+  . rename_i i x
+    induction i
+    . simp
+    . simp
 
 
--- TODO: Div condition that the intersection of `⋃ i, Sf i` and `⋃ i, Sg i` has zero (n-1)-measure
-def HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule
+@[aesop safe]
+theorem HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule
     (f g : W → X → R) (w : W)
-    (I J)
-    (hf : Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : Σ' g' bg sg Sg, HasParamFDerivWithJumpsAt R g w g' J bg sg Sg)
+    {f' I bf sf Sf} {g' J bg sg Sg}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
+    (hg : HasParamFDerivWithJumpsAt R g w g' J bg sg Sg)
     (hg' : ∀ x, g w x ≠ 0) :
-    Σ' f' bf sf Sf, HasParamFDerivWithJumpsAt R (fun w x => f w x / g w x) w f' (I⊕J) bf sf Sf :=
-
-  let ⟨f', bf, sf, Sf, _⟩ := hf
-  let ⟨g', bg, sg, Sg, _⟩ := hg
-  ⟨fun dw x =>
-     let y := f w x
-     let dy := f' dw x
-     let z := g w x
-     let dz := g' dw x
-     (z^2)⁻¹ * (dy * z - y * dz),
-   fun i =>
-     match i with
-     | .inl i =>
-       fun x =>
-         let (y₁, y₂) := bf i x
-         let z := g w x
-         ((y₁/z), (y₂/z))
-     | .inr j =>
-       fun x =>
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => f w x / g w x) w
+      (f' := fun (dw : W) x =>
          let y := f w x
-         let (z₁, z₂) := bg j x
-         ((y/z₁), (y/z₂)),
-   fun i =>
-     match i with
-     | .inl i => (sf i ·)
-     | .inr j => (sg j ·),
-   fun i =>
-     match i with
-     | .inl i => Sf i
-     | .inr j => Sg j,
-   sorry_proof⟩
+         let dy := f' dw x
+         let z := g w x
+         let dz := g' dw x
+         (dy * z - y * dz) / (z^2))
+      (I:=I⊕J)
+      (jumpVals := Sum.elim
+        (fun i x =>
+          let (y₁, y₂) := bf i x
+          let z := g w x
+          ((y₁/z), (y₂/z)))
+        (fun j x =>
+          let y := f w x
+          let (z₁, z₂) := bg j x
+          ((y/z₁), (y/z₂))))
+      (jumpSpeed := Sum.elim sf sg)
+      (jump := Sum.elim Sf Sg) := by
+
+  convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule_at (R:=R)
+          (f:=fun _ (y:R×R) => y.1 / y.2) (g:=fun w x => (f w x, g w x)) (w:=w)
+          (hf:=by simp; sorry_proof)
+          (hg:= Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R f g w hf hg)
+  . fun_trans (disch:=apply hg')
+  . rename_i i x
+    induction i
+    . simp
+    . simp
+
+
+@[aesop safe]
+theorem ite.arg_te.HasParamFDerivWithJumpsAt_rule
+    (f g : W → X → Y) (w : W)
+    {c : W → X → Prop} [∀ w x, Decidable (c w x)]
+    {f' I bf sf Sf} {g' J bg sg Sg}
+    (hf : HasParamFDerivWithJumpsAt R f w f' I bf sf Sf)
+    (hg : HasParamFDerivWithJumpsAt R g w g' J bg sg Sg) :
+    HasParamFDerivWithJumpsAt (R:=R) (fun w x => if c w x then f w x else g w x) w
+      (f' := fun dw x => if c w x then f' dw x else g' dw x)
+      (I:=Unit⊕I⊕J)
+      (jumpVals :=
+        Sum.elim
+         (fun _ x => (f w x, g w x)) <|
+        Sum.elim bf bg)
+      (jumpSpeed := Sum.elim (fun _ => frontierSpeed R (fun w => {x | ¬c w x}) w) (Sum.elim sf sg))
+      (jump := Sum.elim (fun _ => frontier {x | c w x}) <|
+               Sum.elim
+                 (fun i => Sf i ∩ {x | c w x})
+                 (fun j => Sg j ∩ {x | ¬c w x})) := by
+
+  sorry_proof
