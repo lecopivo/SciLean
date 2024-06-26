@@ -16,6 +16,65 @@ variable
 --------------------------------------------------------------------------------
 
 @[fun_prop]
+theorem exp.arg_x.DifferentiableAt_rule
+    {W} [NormedAddCommGroup W] [NormedSpace C W]
+    (w : W) (x : W → C) (hx : DifferentiableAt C x w) :
+    DifferentiableAt C (fun w => exp (x w)) w := sorry_proof
+
+
+@[fun_prop]
+theorem exp.arg_x.Differentiable_rule
+    {W} [NormedAddCommGroup W] [NormedSpace C W]
+    (x : W → C) (hx : Differentiable C x) :
+    Differentiable C fun w => exp (x w) := by intro x; fun_prop
+
+
+@[fun_trans]
+theorem exp.arg_x.fderiv_rule
+    {W} [NormedAddCommGroup W] [NormedSpace C W]
+    (x : W → C) (hx : Differentiable C x) :
+    fderiv C (fun w => exp (x w))
+    =
+    fun w => fun dw =>L[C]
+      let x'  := x w
+      let dx' := fderiv C x w dw
+      dx' * exp x' := sorry_proof
+
+
+@[fun_trans]
+theorem exp.arg_x.fwdFDeriv_rule
+    {W} [NormedAddCommGroup W] [NormedSpace C W]
+    (x : W → C) (hx : Differentiable C x) :
+    fwdFDeriv C (fun w => exp (x w))
+    =
+    fun w dw =>
+      let xdx := fwdFDeriv C x w dw
+      let y := exp xdx.1
+      (y, xdx.2 * y) := by
+
+  unfold fwdFDeriv
+  fun_trans
+
+
+@[fun_trans]
+theorem exp.arg_x.revFDeriv_rule
+    {W} [NormedAddCommGroup W] [AdjointSpace C W] [CompleteSpace W]
+    (x : W → C) (hx : Differentiable C x) :
+    revFDeriv C (fun w => exp (x w))
+    =
+    fun w =>
+      let xdx := revFDeriv C x w
+      let y := exp xdx.1
+      (y,
+       fun dy =>
+         let s := conj y
+         s • xdx.2 dy) := by
+
+  unfold revFDeriv
+  fun_trans
+
+
+@[fun_prop]
 theorem exp.arg_x.CDifferentiable_rule
   (x : W → C) (hx : CDifferentiable C x)
   : CDifferentiable C fun w => exp (x w) := sorry_proof

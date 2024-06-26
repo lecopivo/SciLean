@@ -19,7 +19,7 @@ set_default_scalar R
 ----------------------------------------------------------------------------------------------------
 
 open Scalar RealScalar in
-def gaussian (μ : U) (σ : R) (x : U) : R :=
+def gaussian {U} [Sub U] [SMul R U] [Inner R U] (μ : U) (σ : R) (x : U) : R :=
   let x' := σ⁻¹ • (x - μ)
   1/(σ*sqrt (2*(pi : R))) * exp (- ‖x'‖₂²/2)
 
@@ -47,6 +47,25 @@ theorem log_gaussian (μ : U) (σ : R) (x : U) :
 -- -- this can't have non-compositional version
 -- derive_cdifferentiable gaussian μ σ x
 --   assuming σ ≠ 0
+
+@[fun_prop]
+theorem gaussian.arg_μx.DifferentiableAt_rule
+    {W} [NormedAddCommGroup W] [NormedSpace R W]
+    {U} [NormedAddCommGroup U] [AdjointSpace R U]
+    (μ : W → U) (σ : R) (x : W → U) (w : W)
+    (hμ : DifferentiableAt R μ w) (hx : DifferentiableAt R x w) :
+    DifferentiableAt R (fun w => gaussian (μ w) σ (x w)) w := by
+
+  unfold gaussian
+  sorry_proof -- fun_prop
+
+@[fun_prop]
+theorem gaussian.arg_μx.Differentiable_rule
+    {W} [NormedAddCommGroup W] [NormedSpace R W]
+    {U} [NormedAddCommGroup U] [AdjointSpace R U]
+    (μ : W → U) (σ : R) (x : W → U)
+    (hμ : Differentiable R μ) (hx : Differentiable R x) :
+    Differentiable R (fun w => gaussian (μ w) σ (x w)) := by intro w; fun_prop
 
 
 @[fun_prop]
