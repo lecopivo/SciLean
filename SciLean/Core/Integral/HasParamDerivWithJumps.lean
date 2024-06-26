@@ -8,10 +8,14 @@ import Mathlib.MeasureTheory.Measure.Hausdorff
 
 import SciLean.Core.NotationOverField
 import SciLean.Core.Functions.Trigonometric
+import SciLean.Core.Functions.Gaussian
 import SciLean.Mathlib.Analysis.AdjointSpace.Adjoint
 
 import SciLean.Tactic.Autodiff
 import SciLean.Core.FunctionTransformations.RevFDeriv
+
+import SciLean.Core.Integral.HasParamDerivInit
+import SciLean.Tactic.GTrans
 
 set_option linter.unusedVariables false
 
@@ -29,6 +33,23 @@ variable
   {Z} [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z]
 
 set_default_scalar R
+
+
+attribute [aesop (rule_sets := [ParamDeriv]) unfold norm] Function.comp
+
+/--
+The `continuity` attribute used to tag continuity statements for the `continuity` tactic. -/
+macro "param_deriv" : attr =>
+  `(attr|aesop safe apply (rule_sets := [$(Lean.mkIdent `ParamDeriv):ident]))
+
+/--
+The tactic `continuity` solves goals of the form `Continuous f` by applying lemmas tagged with the
+`continuity` user attribute. -/
+macro "param_deriv" : tactic =>
+  `(tactic| aesop (config := { terminal := true })
+     (rule_sets := [$(Lean.mkIdent `ParamDeriv):ident])
+     (add safe (by fun_prop)))
+
 
 
 variable (R)
@@ -84,21 +105,21 @@ structure HasParamFDerivWithJumpsAtImpl (f : W → X → Y) (w : W)
       | some i => ∀ x ∈ jump i,
         frontierSpeed' R (Ω n) w dw x = jumpSpeed i dw x
 
-
+@[gtrans]
 def HasParamFDerivWithJumpsAt (f : W → X → Y) (w : W)
-    (f' : W → X → Y)
-    (I : Type)
+    (f' : outParam <| W → X → Y)
+    (I : outParam <| Type)
     /- Values of `f` on both sides of jump discontinuity.
 
     The first value is in the positive noramal direction and the second value in the negative
     normal direction.
 
     The orientation of the normal is arbitrary but fixed as `jumpVals` and `jumpSpeed` depend on it. -/
-    (jumpVals : I → X → Y×Y)
+    (jumpVals : outParam <| I → X → Y×Y)
     /- Normal speed of the jump discontinuity. -/
-    (jumpSpeed : I → W → X → R)
+    (jumpSpeed : outParam <| I → W → X → R)
     /- Jump discontinuities of `f`. -/
-    (jump : I → Set X) : Prop := ∃ J Ω ι, HasParamFDerivWithJumpsAtImpl R f w f' I J ι Ω jumpVals jumpSpeed jump
+    (jump : outParam <| I → Set X) : Prop := ∃ J Ω ι, HasParamFDerivWithJumpsAtImpl R f w f' I J ι Ω jumpVals jumpSpeed jump
 
 
 def HasParamFDerivWithJumps (f : W → X → Y)
@@ -132,7 +153,7 @@ theorem fderiv_under_integral
 namespace HasParamFDerivWithJumpsAt
 
 
-@[aesop unsafe]
+@[aesop unsafe, gtrans high]
 theorem smooth_rule
     (w : W)
     (f : W → X → Y) (hf : ∀ x, DifferentiableAt R (f · x) w) :
@@ -210,7 +231,7 @@ theorem comp1_smooth_jumps_rule
 
     comp_smooth_jumps_rule R f g w hf hg
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 theorem _root_.Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule
     (f : W → X → Y) (g : W → X → Z) (w : W)
     {f' I bf sf Sf} {g' J bg sg Sg}
@@ -286,48 +307,55 @@ def DisjointJumps {X} [NormedAddCommGroup X] [NormedSpace R X] [MeasureSpace X] 
   μH[finrank R X - 1] (⋃ i, S i ∩ ⋃ j, P j) = 0
 
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 def Prod.fst.arg_self.HasParamFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Y) (fun _ yz => yz.1) (by fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
 
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 def Prod.snd.arg_self.HasParamFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Z) (fun _ yz => yz.2) (by fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
 
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 def HAdd.hAdd.arg_a0a1.HasParamFDerivWithJumpsAt_rule :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ + y₂) (by fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
 
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 def HSub.hSub.arg_a0a1.HasParamFDerivWithJumpsAt_rule :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ - y₂) (by fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
 
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 def Neg.neg.arg_a0.HasParamFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (X:=X) (Y:=Y) (Z:=Y) (fun (w : W) y => - y) (by fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
 
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 def HMul.hMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=R) (Z:=R) (fun _ y₁ y₂ => y₁ * y₂) (by fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe]
+
+@[aesop safe, param_deriv, gtrans]
+def HPow.hPow.arg_a0.HasParamFDerivWithJumpsAt_rule (n:ℕ) :=
+  (comp1_smooth_jumps_rule (R:=R) (X:=X) (Y:=R) (Z:=R) (fun (w : W) y => y^n) (by fun_prop))
+  -- rewrite_type_by (repeat ext); autodiff
+
+
+@[aesop safe, param_deriv, gtrans]
 def HSMul.hSMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ • y₂) (by fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
 
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 theorem HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule
     (f g : W → X → R) (w : W)
     {f' I bf sf Sf} {g' J bg sg Sg}
@@ -365,7 +393,7 @@ theorem HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule
     . simp
 
 
-@[aesop safe]
+@[aesop safe, param_deriv, gtrans]
 theorem ite.arg_te.HasParamFDerivWithJumpsAt_rule
     (f g : W → X → Y) (w : W)
     {c : W → X → Prop} [∀ w x, Decidable (c w x)]
@@ -394,14 +422,20 @@ theorem ite.arg_te.HasParamFDerivWithJumpsAt_rule
 ----------------------------------------------------------------------------------------------------
 
 open Scalar in
-@[aesop safe]
+@[aesop safe, gtrans]
 def Scalar.sin.arg_a0.HasParamFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => sin y) (by simp; fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
 
 
 open Scalar in
-@[aesop safe]
+@[aesop safe, gtrans]
 def Scalar.cos.arg_a0.HasParamFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => cos y) (by simp; fun_prop))
+  -- rewrite_type_by (repeat ext); autodiff
+
+
+@[aesop safe, gtrans]
+def gaussian.arg_a0.HasParamFDerivWithJumpsAt_rule (σ : R) :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=X) (Y₂:=X) (Z:=R) (fun _ μ x => gaussian μ σ x) (by simp; fun_prop))
   -- rewrite_type_by (repeat ext); autodiff
