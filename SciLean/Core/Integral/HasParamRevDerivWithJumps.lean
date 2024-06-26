@@ -13,6 +13,8 @@ variable
   {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [NormedSpace ℝ W] [CompleteSpace W]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
   {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Y₁ : Type} [NormedAddCommGroup Y₁] [AdjointSpace R Y₁] [NormedSpace ℝ Y₁] [CompleteSpace Y₁]
+  {Y₂ : Type} [NormedAddCommGroup Y₂] [AdjointSpace R Y₂] [NormedSpace ℝ Y₂] [CompleteSpace Y₂]
   {Z : Type} [NormedAddCommGroup Z] [AdjointSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 set_default_scalar R
@@ -60,7 +62,7 @@ variable (R)
 open Classical in
 noncomputable
 def frontierGrad (A : W → Set X) (w : W) (x : X) : W :=
-  adjoint R (fun dw => frontierSpeed R A w dw x) 1
+  adjoint R (fun dw => frontierSpeed' R A w dw x) 1
 
 
 def HasParamRevFDerivWithJumpsAt (f : W → X → Y) (w : W)
@@ -100,11 +102,11 @@ theorem revFDeriv_under_integral
     (val, fun dy =>
       let interior := ∫ x, (f' x).2 dy ∂μ
       let density := fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x)
-      let shocks := ∑ i, ∫ x in S i, (⟪(df i x).1 - (df i x).2, dy⟫ * density x) • s i x ∂μH[finrank R X - 1]
+      let shocks := ∑ i, ∫ x in S i, (⟪(df i x).1 - (df i x).2, dy⟫ * density x) • s i x ∂μH[finrank R X - (1:ℕ)]
       interior + shocks) := by
 
   unfold revFDeriv
-  simp only [fderiv_under_integral R f w μ hf.1]
+  simp only [fderiv_under_integral R f w _ μ hf.1]
   have hf' : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof -- this should be part of hf
   fun_trans (disch:=apply hf') [adjoint_sum,adjoint_integral,adjoint_adjoint,smul_smul]
 
@@ -161,13 +163,8 @@ theorem comp_smooth_jumps_rule
   . simp [revFDeriv,hg.2]
 
 
-end HasParamRevFDerivWithJumpsAt
-open HasParamRevFDerivWithJumpsAt
-
-
-
 @[aesop safe]
-theorem Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
+theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
     (f : W → X → Y) (g : W → X → Z) (w : W)
     {f' I bf sf Sf} {g' J bg sg Sg}
     (hf : HasParamRevFDerivWithJumpsAt R f w f' I bf sf Sf)
@@ -203,224 +200,105 @@ theorem Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
   . simp [hf.2, hg.2]
 
 
-@[aesop safe]
-theorem Prod.fst.arg_self.HasParamRevFDerivWithJumpsAt_rule
-    (f : W → X → Y×Z) (w : W)
-    {I f' bf sf Sf}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => (f w x).1) w
-      (f':= fun x =>
-         let ydf := f' x
-         (ydf.1.1, fun dy => ydf.2 (dy,0)))
+@[aesop unsafe]
+theorem comp1_smooth_jumps_rule
+    (f : W → Y → Z) (hf : Differentiable R (fun (w,y) => f w y))
+    (g : W → X → Y) (w : W)
+    {I g' bg sg Sg}
+    (hg : HasParamRevFDerivWithJumpsAt R g w g' I bg sg Sg) :
+    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w (g w x)) w
+      (f' := fun x =>
+         let ydg := g' x
+         let zdf := revFDeriv R (fun (w,y) => f w y) (w,ydg.1)
+         (zdf.1,
+          fun dz =>
+            let dwy := zdf.2 dz
+            let dw := ydg.2 dwy.2
+            dwy.1 + dw))
       (I := I)
-      (jumpVals := fun i x => let y := bf i x; (y.1.1, y.2.1))
-      (jumpGrad := sf)
-      (jump := Sf) := by
+      (jumpVals := fun i x =>
+         let y := bg i x
+         (f w y.1, f w y.2))
+      (jumpGrad := sg)
+      (jump := Sg) :=
 
-  unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-
-  constructor
-  . convert Prod.fst.arg_self.HasParamFDerivWithJumpsAt_rule _ _  _ (hf.1)
-    . fun_trans
-  . simp [hf.2]
+  comp_smooth_jumps_rule f g w hf hg
 
 
-@[aesop safe]
-theorem Prod.snd.arg_self.HasParamRevFDerivWithJumpsAt_rule
-    (f : W → X → Y×Z) (w : W)
-    {I f' bf sf Sf}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => (f w x).2) w
-      (f':= fun x =>
-         let ydf := f' x
-         (ydf.1.2, fun dz => ydf.2 (0,dz)))
-      (I := I)
-      (jumpVals := fun i x => let y := bf i x; (y.1.2, y.2.2))
-      (jumpGrad := sf)
-      (jump := Sf) := by
-
-  unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-
-  constructor
-  . convert Prod.snd.arg_self.HasParamFDerivWithJumpsAt_rule _ _  _ (hf.1)
-    . fun_trans
-  . simp [hf.2]
-
-
-@[aesop safe]
-theorem HAdd.hAdd.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
-    (f g : W → X → Y) (w : W)
-    {f' I bf sf Sf} {g' J bg sg Sg}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w x + g w x) w
+@[aesop unsafe]
+theorem comp2_smooth_jumps_rule
+    (f : W → Y₁ → Y₂ → Z) (hf : Differentiable R (fun (w,y₁,y₂) => f w y₁ y₂))
+    (g₁ : W → X → Y₁) (g₂ : W → X → Y₂) (w : W)
+    {I₁ g₁' bg₁ sg₁ Sg₁} {I₂ g₂' bg₂ sg₂ Sg₂}
+    (hg₁ : HasParamRevFDerivWithJumpsAt R g₁ w g₁' I₁ bg₁ sg₁ Sg₁)
+    (hg₂ : HasParamRevFDerivWithJumpsAt R g₂ w g₂' I₂ bg₂ sg₂ Sg₂) :
+    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w (g₁ w x) (g₂ w x)) w
       (f' := fun x =>
-        let ydf := f' x
-        let zdg := g' x
-        (ydf.1 + zdg.1,
-         fun dy =>
-           ydf.2 dy + zdg.2 dy))
-      (I:=I⊕J)
+         let ydg₁ := g₁' x
+         let ydg₂ := g₂' x
+         let zdf := revFDeriv R (fun (w,y₁,y₂) => f w y₁ y₂) (w,ydg₁.1,ydg₂.1)
+         (zdf.1, fun dz =>
+           let dwy := zdf.2 dz
+           let dw₁ := ydg₁.2 dwy.2.1
+           let dw₂ := ydg₂.2 dwy.2.2
+           dwy.1 + dw₁ + dw₂))
+      (I := I₁⊕I₂)
       (jumpVals := Sum.elim
-        (fun i x =>
-          let (y₁, y₂) := bf i x
-          let z := g w x
-          ((y₁+z), (y₂+z)))
-        (fun j x =>
-          let y := f w x
-          let (z₁, z₂) := bg j x
-          ((y+z₁), (y+z₂))))
-      (jumpGrad := Sum.elim sf sg)
-      (jump := Sum.elim Sf Sg) := by
+        (fun i₁ x =>
+           let y₁ := bg₁ i₁ x
+           let y₂ := g₂ w x
+           (f w y₁.1 y₂, f w y₁.2 y₂))
+        (fun i₂ x =>
+           let y₁ := g₁ w x
+           let y₂ := bg₂ i₂ x
+           (f w y₁ y₂.1, f w y₁ y₂.2)))
+      (jumpGrad := Sum.elim sg₁ sg₂)
+      (jump := Sum.elim Sg₁ Sg₂) := by
 
-  unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-  have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry
+  convert comp_smooth_jumps_rule (R:=R) (fun w (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
+    hf (by  aesop (config := {enableSimp := false}))
+  . fun_trans [hg₁.2,hg₂.2]; ac_rfl
+  . rename_i i x; induction i <;> simp
 
-  constructor
-  . convert HAdd.hAdd.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-    . fun_trans
-    . rename_i i _ _; induction i <;> simp
-  . simp [hf.2, hg.2]
 
+end HasParamRevFDerivWithJumpsAt
+open HasParamRevFDerivWithJumpsAt
 
 
 @[aesop safe]
-theorem HSub.hSub.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
-    (f g : W → X → Y) (w : W)
-    {f' I bf sf Sf} {g' J bg sg Sg}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w x - g w x) w
-      (f' := fun x =>
-        let ydf := f' x
-        let zdg := g' x
-        (ydf.1 - zdg.1,
-         fun dy =>
-           ydf.2 dy - zdg.2 dy))
-      (I:=I⊕J)
-      (jumpVals := Sum.elim
-        (fun i x =>
-          let (y₁, y₂) := bf i x
-          let z := g w x
-          ((y₁-z), (y₂-z)))
-        (fun j x =>
-          let y := f w x
-          let (z₁, z₂) := bg j x
-          ((y-z₁), (y-z₂))))
-      (jumpGrad := Sum.elim sf sg)
-      (jump := Sum.elim Sf Sg) := by
-
-  unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-  have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry
-
-  constructor
-  . convert HSub.hSub.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-    . fun_trans
-    . rename_i i _ _; induction i <;> simp
-  . simp [hf.2, hg.2]
-
-
+def Prod.fst.arg_self.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Y) (fun _ yz => yz.1) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
 @[aesop safe]
-theorem Neg.neg.arg_a0.HasParamRevFDerivWithJumpsAt_rule
-    (f : W → X → Y) (w : W)
-    {I f' bf sf Sf}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => -f w x) w
-      (f':= fun x =>
-         let ydf := f' x
-         (-ydf.1, fun dy => - ydf.2 dy))
-      (I := I)
-      (jumpVals := fun i x => -bf i x)
-      (jumpGrad := sf)
-      (jump := Sf) := by
-
-  unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-
-  constructor
-  . convert Neg.neg.arg_a0.HasParamFDerivWithJumpsAt_rule _ _  _ (hf.1)
-    . fun_trans
-  . simp [hf.2]
-
+def Prod.snd.arg_self.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Z) (fun _ yz => yz.2) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
 @[aesop safe]
-theorem HMul.hMul.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
-    (f g : W → X → R) (w : W)
-    {f' I bf sf Sf} {g' J bg sg Sg}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w x * g w x) w
-      (f' := fun x =>
-        let ydf := f' x
-        let zdg := g' x
-        (ydf.1 * zdg.1,
-         fun dy =>
-           zdg.1 • ydf.2 dy + ydf.1 • zdg.2 dy))
-      (I:=I⊕J)
-      (jumpVals := Sum.elim
-        (fun i x =>
-          let y := bf i x
-          let z := g w x
-          ((y.1*z), (y.2*z)))
-        (fun j x =>
-          let y := f w x
-          let z := bg j x
-          ((y*z.1), (y*z.2))))
-      (jumpGrad := Sum.elim sf sg)
-      (jump := Sum.elim Sf Sg) := by
-
-  unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-  have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry
-
-  constructor
-  . convert HMul.hMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-    . fun_trans [hf.2,hg.2]; ac_rfl
-    . rename_i i _ _; induction i <;> simp
-  . simp [hf.2, hg.2]
-
+def HAdd.hAdd.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ + y₂) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
 @[aesop safe]
-theorem HSMul.hSMul.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
-    (f : W → X → R) (g : W → X → Y) (w : W)
-    {f' I bf sf Sf} {g' J bg sg Sg}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w x • g w x) w
-      (f' := fun x =>
-        let ydf := f' x
-        let zdg := g' x
-        (ydf.1 • zdg.1,
-         fun dy =>
-           ydf.2 ⟪zdg.1,dy⟫ + ydf.1 • zdg.2 dy))
-      (I:=I⊕J)
-      (jumpVals := Sum.elim
-        (fun i x =>
-          let y := bf i x
-          let z := g w x
-          ((y.1•z), (y.2•z)))
-        (fun j x =>
-          let y := f w x
-          let z := bg j x
-          ((y•z.1), (y•z.2))))
-      (jumpGrad := Sum.elim sf sg)
-      (jump := Sum.elim Sf Sg) := by
+def HSub.hSub.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ - y₂) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
-  unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-  have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry
+@[aesop safe]
+def Neg.neg.arg_a0.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y) (Z:=Y) (fun _ y => - y) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
-  constructor
-  . convert HSMul.hSMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-    . fun_trans [hf.2,hg.2]
-    . rename_i i _ _; induction i <;> simp
-  . simp [hf.2, hg.2]
+@[aesop safe]
+def HMul.hMul.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=R) (Z:=R) (fun _ y₁ y₂ => y₁ * y₂) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
+@[aesop safe]
+def HSMul.hSMul.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ • y₂) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
 @[aesop safe]
 theorem HDiv.hDiv.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
@@ -490,3 +368,22 @@ theorem ite.arg_te.HasParamRevFDerivWithJumpsAt_rule
       case inl i => simp[frontierGrad]; simp (disch:=sorry) only [adjoint_inner_left]; simp [Inner.inner]
       case inr j => induction j <;> simp
   . simp [hf.2, hg.2,Tactic.if_pull]
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Trigonometric functions -------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+open Scalar in
+@[aesop safe]
+def Scalar.sin.arg_a0.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => sin y) (by simp; fun_prop))
+  rewrite_type_by (repeat ext); autodiff
+
+
+open Scalar in
+@[aesop safe]
+def Scalar.cos.arg_a0.HasParamRevFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => cos y) (by simp; fun_prop))
+  rewrite_type_by (repeat ext); autodiff

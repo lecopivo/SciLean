@@ -13,6 +13,8 @@ variable
   {W} [NormedAddCommGroup W] [NormedSpace R W]
   {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
   {Y} [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
+  {Y₁} [NormedAddCommGroup Y₁] [NormedSpace R Y₁] [NormedSpace ℝ Y₁]
+  {Y₂} [NormedAddCommGroup Y₂] [NormedSpace R Y₂] [NormedSpace ℝ Y₂]
   {Z} [NormedAddCommGroup Z] [NormedSpace R Z] [NormedSpace ℝ Z] [CompleteSpace Z]
 
 set_default_scalar R
@@ -54,7 +56,7 @@ open FiniteDimensional
 theorem fwdFDeriv_under_integral
   {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
   (f : W → X → Y) (w : W) (μ : Measure X)
-  {I} [IndexType I] {f' df s S}
+  {I} [hI : IndexType I] {f' df s S}
   (hf : HasParamFwdFDerivWithJumpsAt R f w f' I df s S)
   /- (hμ : μ ≪ volume) -/ :
   (fwdFDeriv R (fun w' => ∫ x, f w' x ∂μ) w)
@@ -62,13 +64,13 @@ theorem fwdFDeriv_under_integral
   fun dw =>
     let interior := ∫ x, f' dw x ∂μ
     let density := fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x)
-    let shocks := ∑ i, ∫ x in S i, (s i dw x * density x) • ((df i x).1 - (df i x).2) ∂μH[finrank R X - 1]
+    let shocks := ∑ i, ∫ x in S i, (s i dw x * density x) • ((df i x).1 - (df i x).2) ∂μH[finrank R X - (1:ℕ)]
     (interior.1, interior.2 + shocks) := by
 
   unfold fwdFDeriv
   funext dw; ext
   . simp only [fst_integral (hf := sorry_proof), hf.2]
-  . simp only [fderiv_under_integral R f w μ hf.1, add_left_inj, snd_integral (hf:=sorry_proof)]
+  . simp only [fderiv_under_integral R f w dw μ hf.1, add_left_inj, snd_integral (hf:=sorry_proof)]
 
 
 
@@ -119,13 +121,9 @@ theorem comp_smooth_jumps_rule
   . simp [fwdFDeriv,hg.2]
 
 
-end HasParamFwdDerivWithJumps
-open HasParamFwdDerivWithJumps
-
-
 
 @[aesop safe]
-theorem Prod.mk.arg_fstsnd.HasParamFwdFDerivWithJumpsAt_rule
+theorem _root_.Prod.mk.arg_fstsnd.HasParamFwdFDerivWithJumpsAt_rule
     (f : W → X → Y) (g : W → X → Z) (w : W)
     {f' I bf sf Sf} {g' J bg sg Sg}
     (hf : HasParamFwdFDerivWithJumpsAt R f w f' I bf sf Sf)
@@ -156,184 +154,97 @@ theorem Prod.mk.arg_fstsnd.HasParamFwdFDerivWithJumpsAt_rule
 
 
 
-@[aesop safe]
-theorem Prod.fst.arg_self.HasParamFwdFDerivWithJumpsAt_rule
-    (f : W → X → Y×Z) (w : W)
-    {I f' bf sf Sf}
-    (hf : HasParamFwdFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => (f w x).1) w
-      (f':= fun dw x =>
-         let ydy := f' dw x
-         (ydy.1.1, ydy.2.1))
+
+@[aesop unsafe]
+theorem comp1_smooth_jumps_rule
+    (f : W → Y → Z) (hf : Differentiable R (fun (w,y) => f w y))
+    (g : W → X → Y) (w : W)
+    {I g' bg sg Sg}
+    (hg : HasParamFwdFDerivWithJumpsAt R g w g' I bg sg Sg) :
+    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => f w (g w x)) w
+      (f' := fun dw x =>
+         let ydy := g' dw x
+         let zdz := fwdFDeriv R (fun (w,y) => f w y) (w,ydy.1) (dw,ydy.2)
+         zdz)
       (I := I)
-      (jumpVals := fun i x => let y := bf i x; (y.1.1, y.2.1))
-      (jumpSpeed := sf)
-      (jump := Sf) := by
+      (jumpVals := fun i x =>
+         let y := bg i x
+         (f w y.1, f w y.2))
+      (jumpSpeed := sg)
+      (jump := Sg) :=
 
-  unfold HasParamFwdFDerivWithJumpsAt
-  constructor
-  . exact Prod.fst.arg_self.HasParamFDerivWithJumpsAt_rule _ _  _ (hf.1)
-  . simp [hf.2]
-
-
-@[aesop safe]
-theorem Prod.snd.arg_self.HasParamFwdFDerivWithJumpsAt_rule
-    (f : W → X → Y×Z) (w : W)
-    {I f' bf sf Sf}
-    (hf : HasParamFwdFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => (f w x).2) w
-      (f':= fun dw x =>
-         let ydy := f' dw x
-         (ydy.1.2, ydy.2.2))
-      (I := I)
-      (jumpVals := fun i x => let y := bf i x; (y.1.2, y.2.2))
-      (jumpSpeed := sf)
-      (jump := Sf) := by
-
-  unfold HasParamFwdFDerivWithJumpsAt
-  constructor
-  . exact Prod.snd.arg_self.HasParamFDerivWithJumpsAt_rule _ _  _ (hf.1)
-  . simp [hf.2]
+  comp_smooth_jumps_rule f g w hf hg
 
 
-@[aesop safe]
-theorem HAdd.hAdd.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule
-    (f g : W → X → Y) (w : W)
-    {f' I bf sf Sf} {g' J bg sg Sg}
-    (hf : HasParamFwdFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamFwdFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => f w x + g w x) w
-      (f' := fun (dw : W) x =>
-        f' dw x + g' dw x)
-      (I:=I⊕J)
+@[aesop unsafe]
+theorem comp2_smooth_jumps_rule
+    (f : W → Y₁ → Y₂ → Z) (hf : Differentiable R (fun (w,y₁,y₂) => f w y₁ y₂))
+    (g₁ : W → X → Y₁) (g₂ : W → X → Y₂) (w : W)
+    {I₁ g₁' bg₁ sg₁ Sg₁} {I₂ g₂' bg₂ sg₂ Sg₂}
+    (hg₁ : HasParamFwdFDerivWithJumpsAt R g₁ w g₁' I₁ bg₁ sg₁ Sg₁)
+    (hg₂ : HasParamFwdFDerivWithJumpsAt R g₂ w g₂' I₂ bg₂ sg₂ Sg₂) :
+    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => f w (g₁ w x) (g₂ w x)) w
+      (f' := fun dw x =>
+         let ydy₁ := g₁' dw x
+         let ydy₂ := g₂' dw x
+         let zdz := fwdFDeriv R (fun (w,y₁,y₂) => f w y₁ y₂) (w,ydy₁.1,ydy₂.1) (dw,ydy₁.2,ydy₂.2)
+         zdz)
+      (I := I₁⊕I₂)
       (jumpVals := Sum.elim
-        (fun i x =>
-          let (y₁, y₂) := bf i x
-          let z := g w x
-          ((y₁+z), (y₂+z)))
-        (fun j x =>
-          let y := f w x
-          let (z₁, z₂) := bg j x
-          ((y+z₁), (y+z₂))))
-      (jumpSpeed := Sum.elim sf sg)
-      (jump := Sum.elim Sf Sg) := by
+        (fun i₁ x =>
+           let y₁ := bg₁ i₁ x
+           let y₂ := g₂ w x
+           (f w y₁.1 y₂, f w y₁.2 y₂))
+        (fun i₂ x =>
+           let y₁ := g₁ w x
+           let y₂ := bg₂ i₂ x
+           (f w y₁ y₂.1, f w y₁ y₂.2)))
+      (jumpSpeed := Sum.elim sg₁ sg₂)
+      (jump := Sum.elim Sg₁ Sg₂) := by
 
-  unfold HasParamFwdFDerivWithJumpsAt
-  constructor
-  . exact HAdd.hAdd.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-  . simp [hf.2, hg.2]
+  convert comp_smooth_jumps_rule (R:=R) (fun w (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
+    hf (by  aesop (config := {enableSimp := false}))
+  . rename_i i x; induction i <;> simp
 
 
-@[aesop safe]
-theorem HSub.hSub.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule
-    (f g : W → X → Y) (w : W)
-    {f' I bf sf Sf} {g' J bg sg Sg}
-    (hf : HasParamFwdFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamFwdFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => f w x - g w x) w
-      (f' := fun (dw : W) x =>
-        f' dw x - g' dw x)
-      (I:=I⊕J)
-      (jumpVals := Sum.elim
-        (fun i x =>
-          let (y₁, y₂) := bf i x
-          let z := g w x
-          ((y₁-z), (y₂-z)))
-        (fun j x =>
-          let y := f w x
-          let (z₁, z₂) := bg j x
-          ((y-z₁), (y-z₂))))
-      (jumpSpeed := Sum.elim sf sg)
-      (jump := Sum.elim Sf Sg) := by
-
-  unfold HasParamFwdFDerivWithJumpsAt
-  constructor
-  . exact HSub.hSub.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-  . simp [hf.2, hg.2]
-
-@[aesop safe]
-theorem Neg.neg.arg_a0.HasParamFwdFDerivWithJumpsAt_rule
-    (f : W → X → Y) (w : W)
-    {I f' bf sf Sf}
-    (hf : HasParamFwdFDerivWithJumpsAt R f w f' I bf sf Sf) :
-    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => - f w x) w
-      (f':=fun dw x => - f' dw x)
-      (I := I)
-      (jumpVals := fun i x => - bf i x)
-      (jumpSpeed := sf)
-      (jump := Sf) := by
-
-  unfold HasParamFwdFDerivWithJumpsAt
-  constructor
-  . exact Neg.neg.arg_a0.HasParamFDerivWithJumpsAt_rule _ _  _ (hf.1)
-  . simp [hf.2]
+end HasParamFwdDerivWithJumps
+open HasParamFwdDerivWithJumps
 
 
 @[aesop safe]
-theorem HMul.hMul.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule
-    (f g : W → X → R) (w : W)
-    {f' I bf sf Sf} {g' J bg sg Sg}
-    (hf : HasParamFwdFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamFwdFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => f w x * g w x) w
-      (f' := fun (dw : W) x =>
-         let ydy := f' dw x
-         let zdz := g' dw x
-         (ydy.1 * zdz.1, ydy.2 * zdz.1 + ydy.1 * zdz.2))
-      (I:=I⊕J)
-      (jumpVals := Sum.elim
-        (fun i x =>
-          let (y₁, y₂) := bf i x
-          let z := g w x
-          ((y₁*z), (y₂*z)))
-        (fun j x =>
-          let y := f w x
-          let (z₁, z₂) := bg j x
-          ((y*z₁), (y*z₂))))
-      (jumpSpeed := Sum.elim sf sg)
-      (jump := Sum.elim Sf Sg) := by
-
-  unfold HasParamFwdFDerivWithJumpsAt
-  have ⟨_,_⟩ := hf
-  have ⟨_,_⟩ := hg
-  constructor
-  . convert HMul.hMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-    . simp only [hf.2, hg.2]
-  . simp [hf.2, hg.2]
-
+def Prod.fst.arg_self.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Y) (fun _ yz => yz.1) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
 @[aesop safe]
-theorem HSMul.hSMul.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule
-    (f : W → X → R) (g : W → X → Y) (w : W)
-    {f' I bf sf Sf} {g' J bg sg Sg}
-    (hf : HasParamFwdFDerivWithJumpsAt R f w f' I bf sf Sf)
-    (hg : HasParamFwdFDerivWithJumpsAt R g w g' J bg sg Sg) :
-    HasParamFwdFDerivWithJumpsAt (R:=R) (fun w x => f w x • g w x) w
-      (f' := fun (dw : W) x =>
-         let ydy := f' dw x
-         let zdz := g' dw x
-         (ydy.1 • zdz.1, ydy.2 • zdz.1 + ydy.1 • zdz.2))
-      (I:=I⊕J)
-      (jumpVals := Sum.elim
-        (fun i x =>
-          let (y₁, y₂) := bf i x
-          let z := g w x
-          ((y₁•z), (y₂•z)))
-        (fun j x =>
-          let y := f w x
-          let (z₁, z₂) := bg j x
-          ((y•z₁), (y•z₂))))
-      (jumpSpeed := Sum.elim sf sg)
-      (jump := Sum.elim Sf Sg) := by
+def Prod.snd.arg_self.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Z) (fun _ yz => yz.2) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
-  unfold HasParamFwdFDerivWithJumpsAt
-  have ⟨_,_⟩ := hf
-  have ⟨_,_⟩ := hg
-  constructor
-  . convert HSMul.hSMul.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-    . simp only [hf.2, hg.2]
-  . simp [hf.2, hg.2]
+@[aesop safe]
+def HAdd.hAdd.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ + y₂) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
+@[aesop safe]
+def HSub.hSub.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ - y₂) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
+
+@[aesop safe]
+def Neg.neg.arg_a0.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (X:=X) (Y:=Y) (Z:=Y) (fun (w : W) y => - y) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
+
+@[aesop safe]
+def HMul.hMul.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=R) (Z:=R) (fun _ y₁ y₂ => y₁ * y₂) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
+
+@[aesop safe]
+def HSMul.hSMul.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ • y₂) (by fun_prop))
+  rewrite_type_by (repeat ext); autodiff
 
 @[aesop safe]
 theorem HDiv.hDiv.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule
@@ -383,7 +294,7 @@ theorem ite.arg_te.HasParamFwdFDerivWithJumpsAt_rule
         Sum.elim
          (fun _ x => (f w x, g w x)) <|
         Sum.elim bf bg)
-      (jumpSpeed := Sum.elim (fun _ => frontierSpeed R (fun w => {x | ¬c w x}) w) (Sum.elim sf sg))
+      (jumpSpeed := Sum.elim (fun _ => frontierSpeed' R (fun w => {x | ¬c w x}) w) (Sum.elim sf sg))
       (jump := Sum.elim (fun _ => frontier {x | c w x}) <|
                Sum.elim
                  (fun i => Sf i ∩ {x | c w x})
@@ -397,3 +308,23 @@ theorem ite.arg_te.HasParamFwdFDerivWithJumpsAt_rule
   . convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
     . simp only [hf.2, hg.2, Tactic.if_pull]
   . simp [hf.2, hg.2,Tactic.if_pull]
+
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Trigonometric functions -------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+open Scalar in
+@[aesop safe]
+def Scalar.sin.arg_a0.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => sin y) (by simp; fun_prop))
+  rewrite_type_by (repeat ext); autodiff
+
+
+open Scalar in
+@[aesop safe]
+def Scalar.cos.arg_a0.HasParamFwdFDerivWithJumpsAt_rule :=
+  (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => cos y) (by simp; fun_prop))
+  rewrite_type_by (repeat ext); autodiff

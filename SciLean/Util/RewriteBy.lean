@@ -44,3 +44,24 @@ elab_rules : term
   synthesizeSyntheticMVarsNoPostponing
   let (x',_eq) ← elabConvRewrite x as (← `(conv| ($rw)))
   return x'
+
+
+
+/--
+Rewrites type of a term term by conv tactic.
+
+Example: `(_ : 5 + 0 = 5) rewrite_type_by simp` returns proof of `5 = 5`
+-/
+syntax term:max "rewrite_type_by" convSeq : term
+
+
+elab_rules : term
+  | `($x rewrite_type_by $rw:convSeq) => do
+
+    let x ← Term.elabTermAndSynthesize x none
+    let X ← inferType x
+    let (_, prf) ← elabConvRewrite X #[] (← `(conv| ($rw)))
+
+    mkAppM ``Eq.mp #[prf,x]
+
+#check (by simp : 1 * 5 = 5) rewrite_type_by (simp)
