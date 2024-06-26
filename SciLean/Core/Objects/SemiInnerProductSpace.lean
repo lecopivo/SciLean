@@ -121,7 +121,7 @@ https://en.wikipedia.org/wiki/Fundamental_lemma_of_the_calculus_of_variations
 
 This also allows a definition of adjoint between two semi-inner product spaces, see `semiAdjoint`.
 -/
-class SemiInnerProductSpace (K : Type _) [RCLike K] (X : Type _) extends Vec K X, Inner K X, TestFunctions X, Norm2 K X where
+class SemiInnerProductSpace (K : Type _) [RCLike K] (X : Type _) extends Vec K X, Inner K X, TestFunctions X where
   add_left : ∀ (x y z : X), (TestFunction x ∧ TestFunction y) ∨ TestFunction z →
     ⟪x + y, z⟫[K] = ⟪x, z⟫[K] + ⟪y, z⟫[K]
   smul_left : ∀ (x y : X) (r : K),   -- I thinkg here we do not need `TestFunction x ∨ TestFunction y`
