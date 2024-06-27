@@ -19,7 +19,7 @@ namespace SciLean.Tactic.GTrans
 
 
 structure Config where
-  maxNumSteps := 1000
+  maxNumSteps := 100
 
 
 structure Context where
@@ -30,7 +30,6 @@ structure Context where
 
 structure State where
   numSteps := 0
-
 
 
 abbrev GTransM := ReaderT Context $ StateRefT State MetaM
@@ -54,6 +53,7 @@ def increaseNumSteps : GTransM Unit :=
   modify (fun s => {s with numSteps := s.numSteps + 1 })
 
 def normalize (e : Expr) : GTransM Simp.Result := do (← read).normalize e
+def dnormalize (e : Expr) : GTransM Expr := pure e
 def discharge? (e : Expr) : GTransM (Option Expr) := do (← read).discharge e
 
 unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr)) :
@@ -69,7 +69,7 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
     (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] synthesizing argument {← ppExprWithType x}") do
 
     if let .some _ ← isGTrans? X then
-      if let .some prf ← do increaseNumSteps; gtrans X then
+      if let .some prf ← do gtrans X then
         x.mvarId!.assignIfDefeq prf
         return true
 
@@ -97,7 +97,35 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
     return false
 
 
-unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem)
+open Lean Meta Qq
+#eval show MetaM Unit from do
+  let x ← mkFreshExprMVar q(Nat)
+  let y := q(1 : ℕ)
+
+  let s ← saveState
+  let unify ← isDefEq x y
+  restoreState s
+
+  if unify then
+    IO.println "are def eq!"
+    if (← instantiateMVars x).isMVar then
+      IO.println "x is still mvar!"
+    else
+      throwError "x is no longer mvar!"
+  else
+    throwError "not def eq!"
+
+
+/-- Replace n-th and all subsequent arguments in `e` with fresh metavariables. -/
+def mkTrailingArgsToFreshMVars (e : Expr) (n : ℕ) : MetaM Expr := do
+  e.withApp fun fn args => do
+    let e' := mkAppN fn args[0:n]
+    let (xs, _, _) ← forallMetaTelescope (← inferType e')
+    return mkAppN e' xs
+
+
+
+unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (minOutParam : ℕ)
     (gtrans : Expr → GTransM (Option Expr)) : GTransM (Option Expr) := do
 
   trace[Meta.Tactic.gtrans] "goal {← ppExpr e}"
@@ -107,11 +135,11 @@ unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem)
   let (xs, _, type) ← forallMetaTelescope type
   let thmProof := thmProof.beta xs
 
-  -- if applying this theorem fails we want to roll back any changes to metavariables
-  let s ← liftM <| (saveState : MetaM _)
-
   trace[Meta.Tactic.gtrans.unify] "unify\n{e}\n=?=\n{type}"
-  unless (← isDefEq e type) do
+
+  -- replace all output arguments in `e` with fresh mvars
+  let e' ← mkTrailingArgsToFreshMVars e minOutParam
+  unless (← isDefEq e' type) do
     trace[Meta.Tactic.gtrans.unify] "unification failed"
     return none
 
@@ -121,11 +149,36 @@ unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem)
   for x in xs do
     let x ← instantiateMVars x
     if x.hasMVar then
-      liftM <| (restoreState s : MetaM _)
       trace[Meta.Tactic.gtrans] "failed to synthesize argument {← ppExprWithType x}"
       return none
 
   return some thmProof
+
+-- rip off Lean.Meta.Simp.congrArgs
+open Simp
+def congrNormalize (e : Expr) (args : Array Expr) : GTransM Simp.Result := do
+  let mut r : Simp.Result := { expr := e }
+  if args.isEmpty then
+    return r
+  else
+    let infos := (← getFunInfoNArgs r.expr args.size).paramInfo
+    let mut i := 0
+    for arg in args do
+      if h : i < infos.size then
+        trace[Debug.Meta.Tactic.simp] "app [{i}] {infos.size} {arg} hasFwdDeps: {infos[i].hasFwdDeps}"
+        let info := infos[i]
+        if !info.hasFwdDeps then
+          r ← mkCongr r (← normalize arg)
+        else if (← whnfD (← inferType r.expr)).isArrow then
+          r ← mkCongr r (← normalize arg)
+        else
+          r ← mkCongrFun r (← dnormalize arg)
+      else if (← whnfD (← inferType r.expr)).isArrow then
+        r ← mkCongr r (← normalize arg)
+      else
+        r ← mkCongrFun r (← dnormalize arg)
+      i := i + 1
+    return r
 
 
 
@@ -153,51 +206,38 @@ unsafe def gtrans (e : Expr) : GTransM (Option Expr) := do
   if (← get).numSteps ≥ (← read).config.maxNumSteps then
     throwError "expected application of generalized transformation, got {← ppExpr e}"
     return none
+  increaseNumSteps
 
   let .some gtransDecl ← isGTrans? e
     | throwError "expected application of generalized transformation, got {← ppExpr e}"
 
   let ext := gtransTheoremsExt.getState (← getEnv)
   let thms ← ext.theorems.getMatchWithScore e false {}
-  -- let thms := thms.qsort (fun t s => t.2 < s.2) |>.map (·.1) |>.flatten
   let thms := thms |>.map (·.1) |>.flatten
 
   withTraceNode `Meta.Tactic.gtrans (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] {← ppExpr e}") do
-
-  -- replace output argument mvars with fresh mvars
-  let mut e' := e
-  for i in gtransDecl.outputArgs do
-    -- this check is a temporary hack, we should have proper handling of output arguments that
-    -- depend on another output arguments. Types that are output arguments are the prime examples
-    -- and right now we just skip them and do not replace them with a fresh mvar.
-    unless (← isType (← inferType (e.getArg! i))) do continue
-    e' := e'.setArg i (← mkFreshExprMVar (← inferType (e'.getArg! i)))
 
   let keys := ← RefinedDiscrTree.mkDTExprs e {} false
   trace[Meta.Tactic.gtrans.candidates] "look up key: {keys}"
   trace[Meta.Tactic.gtrans.candidates] "candidates: {thms.map (·.thmName)}"
 
+  let minOutArg := gtransDecl.outputArgs.minI
+
   for thm in thms do
     if let .some prf ←
       withTraceNode `Meta.Tactic.gtrans
         (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] applying {thm.thmName}") do
-        tryTheorem? e' thm gtrans then
+        tryTheorem? e thm minOutArg gtrans then
+
+      let e' ← inferType prf
 
       -- get output arguments and normalize them
-      for i in gtransDecl.outputArgs do
-        let arg := (← instantiateMVars (e'.getArg! i))
-        let arg' ← normalize arg
-
-        if ← isDefEq arg'.expr (e.getArg! i) then
-          continue
+      let outArgsNum := e.getAppNumArgs' + 1 - minOutArg
+      let r ← congrNormalize (e'.stripArgsN outArgsNum) (e'.getAppArgsN outArgsNum)
+        if ← isDefEq e r.expr then
+          return ← mkAppM ``Eq.mp #[← r.getProof, prf]
         else
-          trace[Meta.Tactic.gtrans] "failed to assign {← ppExprWithType arg'.expr} to {← ppExprWithType (e.getArg! i)}"
-
-
-      -- todo: use proofs from normalization
-      --       right now we assume that normalization produces terms that are defeq to the original ones
-
-      return ← mkLambdaFVars (ctx++ctx') prf
+          trace[Meta.Tactic.gtrans] "failed to assign {← ppExpr r.expr} to {← ppExpr e}"
 
   return none
 

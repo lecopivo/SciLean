@@ -33,6 +33,8 @@ private def emptyDischarge : Expr → MetaM (Option Expr) :=
       (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] discharging: {← ppExpr e}") do
       pure none
 
+
+-- todo don't use fun_prop's `tacticToDischarge`
 open Lean.Parser.Tactic Mathlib.Meta.FunProp in
 private def elabDischarger (disch : Option (TSyntax ``discharger)) : MetaM (Expr → MetaM (Option Expr)) := do
     match disch with
@@ -42,6 +44,18 @@ private def elabDischarger (disch : Option (TSyntax ``discharger)) : MetaM (Expr
       | `(discharger| (discharger:=$tac)) => pure <| tacticToDischarge (← `(tactic| ($tac)))
       | _ => pure emptyDischarge
 
+
+open Lean.Parser.Tactic Mathlib.Meta.FunProp in
+private def elabNormalizer (norm : Option (TSyntax ``normalizer)) : Expr → MetaM Simp.Result :=
+    match norm with
+    | none => (fun e => pure { expr := e} )
+    | some d =>
+      match d with
+      | `(normalizer| (normalizer:=$c)) =>
+         fun e => do
+           let ((e',prf),_) ← elabConvRewrite e #[] (← `(conv| ($c))) |>.run {} {}
+           return { expr := e', proof? := prf }
+      | _ => (fun e => pure { expr := e} )
 
 
 @[tactic gtrans_tac] unsafe def gtransTac : Tactic := fun stx => do
@@ -59,12 +73,13 @@ private def elabDischarger (disch : Option (TSyntax ``discharger)) : MetaM (Expr
 
   let cfg ← match cfg with | .some cfg => elabGTransConfig cfg | .none => pure {}
   let disch ← elabDischarger disch
+  let norm := elabNormalizer norm
 
   let goal ← getMainGoal
 
   let e ← goal.getType
 
-  let (.some prf, _) ← ((gtrans e).run {config := cfg, discharge := disch}).run {}
+  let (.some prf, _) ← ((gtrans e).run {config := cfg, discharge := disch, normalize := norm}).run {}
     | throwError "gtrans: faild to prove {← ppExpr e}"
 
   goal.assignIfDefeq prf
@@ -85,8 +100,9 @@ open Mathlib.Meta.FunProp Lean.Parser.Tactic in
 
   let cfg ← match cfg with | .some cfg => elabGTransConfig cfg | .none => pure {}
   let disch ← elabDischarger disch
+  let norm := elabNormalizer norm
 
-  let (.some prf, _) ← ((gtrans e).run {config := cfg, discharge := disch}).run {}
+  let (.some prf, _) ← ((gtrans e).run {config := cfg, discharge := disch, normalize := norm}).run {}
     | throwError "gtrans: faild to prove {← ppExpr e}"
 | _ => throwUnsupportedSyntax
 

@@ -6,6 +6,9 @@ import SciLean.Tactic.GTrans.Decl
 import SciLean.Tactic.GTrans.Theorems
 import SciLean.Tactic.GTrans.Attr
 import SciLean.Tactic.GTrans.Core
+import SciLean.Tactic.GTrans.Elab
+
+import SciLean.Tactic.LSimp
 
 open Lean Meta Qq
 
@@ -14,13 +17,13 @@ namespace SciLean.Tactic.GTrans
 set_option linter.unusedVariables false
 
 @[gtrans]
-def HasDeriv (f : α → β) (df : outParam <| α → α → β) : Prop := sorry
+opaque HasDeriv (f : α → β) (df : outParam <| α → α → β) : Prop
 
 @[gtrans]
 theorem hasDeriv_id : HasDeriv (fun x : α => x) (fun x dx => dx) := sorry_proof
 @[gtrans]
 theorem hasDeriv_const [Inhabited β] (b : β) : HasDeriv (fun x : α => b) (fun x dx => default) := sorry_proof
-@[gtrans]
+-- @[gtrans]
 theorem hasDeriv_comp
   (f : β → γ) (g : α → β)
   (f' : β → β → γ) (g' : α → α → β)
@@ -53,34 +56,20 @@ theorem hasDeriv_mul [Add β] [Mul β]
       let dz := g' x dx
       y*dz+z*dy) := sorry_proof
 
--- set_option trace.Meta.Tactic.gtrans.candidates true
--- set_option trace.Meta.Tactic.gtrans true
--- set_option trace.Meta.Tactic.gtrans.normalize true
 
-  #eval show MetaM Unit from do
-
-  withLocalDeclDQ `n q(Nat) fun n => do
-
-  let e := q(HasDeriv (fun x : Nat => x*x*x*x*x*x))
-  let (xs,_,b) ← forallMetaTelescope (← inferType e)
-  let e := e.beta xs
-  let _ ← gtrans 100 e
-
-  IO.println (← ppExpr e)
-
-
+variable (n : ℕ)
+#check (HasDeriv (fun x : Nat => x*x*x*x*x*x) _) rewrite_by gtrans (norm:=lsimp)
 
 @[gtrans]
-def HasDerivOn (f : α → β) (x : outParam <| Set α) (df : outParam <| α → α → β) : Prop := sorry
-
+opaque HasDerivOn (f : α → β) (x : outParam <| Set α) (df : outParam <| α → α → β) : Prop
 
 @[gtrans]
 theorem hasDerivOn_id : HasDerivOn (fun x : α => x) ⊤ (fun x dx => dx) := sorry_proof
 
 @[gtrans]
-theorem hasDerivOn_const [Inhabited β] (b : β) (s : Set α) : HasDerivOn (fun x : α => b) ⊤ (fun x dx => default) := sorry_proof
+theorem hasDerivOn_const [Inhabited β] (b : β) : HasDerivOn (fun x : α => b) ⊤ (fun x dx => default) := sorry_proof
 
-@[gtrans]
+-- @[gtrans]
 theorem hasDerivOn_comp
   (f : β → γ) (g : α → β) (s : Set α)
   (f' : β → β → γ) (g' : α → α → β)
@@ -131,19 +120,15 @@ theorem hasDerivOn_div [Add β] [Sub β] [Mul β] [Div β] [Inhabited β]
       (dy*z-y*dz)/(z*z)) := sorry_proof
 
 
-set_option trace.Meta.Tactic.gtrans true
-set_option trace.Meta.Tactic.gtrans.candidates true
 
-#eval show MetaM Unit from do
+variable (n:Nat)
 
-  withLocalDeclDQ `n q(Nat) fun n => do
+#check (HasDerivOn (fun x : Nat => x*n/(x*n)) _ _) rewrite_by gtrans (norm:=lsimp)
 
-  let e := q(HasDerivOn (fun x : Nat => x*x/(x+x*x*$n)))
-  let (xs,_,_) ← forallMetaTelescope (← inferType e)
-  let e := e.beta xs
-  let _ ← gtrans 100 e
 
-  IO.println (← ppExpr e)
+#check (HasDerivOn (fun x : Nat => x*x/(x+x*x*n)) _ _) rewrite_by gtrans (norm:=lsimp)
+
+
 
 -- good for surjective functions `f`
 -- The additional parameter `c` determines which elemnt of `f⁻¹' {y}` does `f'` chooses
