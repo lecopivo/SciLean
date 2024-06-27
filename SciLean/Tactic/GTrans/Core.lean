@@ -72,6 +72,11 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
       if let .some prf ← do gtrans X then
         x.mvarId!.assignIfDefeq prf
         return true
+      try
+        x.mvarId!.assumption
+        return true
+      catch _ =>
+        pure ()
 
     if let .some _ ← isClass? X then
       try

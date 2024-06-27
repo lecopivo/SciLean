@@ -82,7 +82,7 @@ theorem fwdFDeriv_under_integral
 
 namespace HasParamFwdDerivWithJumps
 
-@[aesop unsafe,gtrans high]
+@[gtrans high]
 theorem smooth_rule
     (f : W → X → Y) (w : W) (hf : ∀ x, DifferentiableAt R (f · x) w) :
     HasParamFwdFDerivWithJumpsAt (R:=R) f w
@@ -98,7 +98,7 @@ theorem smooth_rule
   . simp only [fwdFDeriv, implies_true]
 
 
-@[aesop unsafe]
+
 theorem comp_smooth_jumps_rule
     (f : W → Y → Z) (g : W → X → Y) (w : W)
     {I g' bg sg Sg}
@@ -124,7 +124,7 @@ theorem comp_smooth_jumps_rule
 
 
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 theorem _root_.Prod.mk.arg_fstsnd.HasParamFwdFDerivWithJumpsAt_rule
     (f : W → X → Y) (g : W → X → Z) (w : W)
     {f' I bf sf Sf} {g' J bg sg Sg}
@@ -155,9 +155,6 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamFwdFDerivWithJumpsAt_rule
   . simp [hf.2, hg.2]
 
 
-
-
-@[aesop unsafe]
 theorem comp1_smooth_jumps_rule
     (f : W → Y → Z) (hf : Differentiable R (fun (w,y) => f w y))
     (g : W → X → Y) (w : W)
@@ -178,7 +175,6 @@ theorem comp1_smooth_jumps_rule
   comp_smooth_jumps_rule f g w hf hg
 
 
-@[aesop unsafe]
 theorem comp2_smooth_jumps_rule
     (f : W → Y₁ → Y₂ → Z) (hf : Differentiable R (fun (w,y₁,y₂) => f w y₁ y₂))
     (g₁ : W → X → Y₁) (g₂ : W → X → Y₂) (w : W)
@@ -205,7 +201,7 @@ theorem comp2_smooth_jumps_rule
       (jump := Sum.elim Sg₁ Sg₂) := by
 
   convert comp_smooth_jumps_rule (R:=R) (fun w (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
-    hf (by  aesop (config := {enableSimp := false}))
+    hf (by gtrans (disch:=first | fun_prop))
   . rename_i i x; induction i <;> simp
 
 
@@ -213,47 +209,47 @@ end HasParamFwdDerivWithJumps
 open HasParamFwdDerivWithJumps
 
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def Prod.fst.arg_self.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Y) (fun _ yz => yz.1) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def Prod.snd.arg_self.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Z) (fun _ yz => yz.2) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def HAdd.hAdd.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ + y₂) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def HSub.hSub.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ - y₂) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def Neg.neg.arg_a0.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (X:=X) (Y:=Y) (Z:=Y) (fun (w : W) y => - y) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def HMul.hMul.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=R) (Z:=R) (fun _ y₁ y₂ => y₁ * y₂) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def HPow.hPow.arg_a0.HasParamFwdFDerivWithJumpsAt_rule (n:ℕ) :=
   (comp1_smooth_jumps_rule (R:=R) (X:=X) (Y:=R) (Z:=R) (fun (w : W) y => y^n) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def HSMul.hSMul.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ • y₂) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 theorem HDiv.hDiv.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule
     (f g : W → X → R) (w : W)
     {f' I bf sf Sf} {g' J bg sg Sg}
@@ -287,7 +283,7 @@ theorem HDiv.hDiv.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule
   . simp [hf.2, hg.2]
 
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 theorem ite.arg_te.HasParamFwdFDerivWithJumpsAt_rule
     (f g : W → X → Y) (w : W)
     {c : W → X → Prop} [∀ w x, Decidable (c w x)]
@@ -313,9 +309,8 @@ theorem ite.arg_te.HasParamFwdFDerivWithJumpsAt_rule
   have ⟨_,_⟩ := hg
   constructor
   . convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
-    . simp only [hf.2, hg.2, Tactic.if_pull]
-  . simp [hf.2, hg.2,Tactic.if_pull]
-
+    . simp only [hf.2, hg.2]; split_ifs <;> dsimp
+  . dsimp; intros; split_ifs <;> simp [hf.2, hg.2]
 
 
 
@@ -324,19 +319,19 @@ theorem ite.arg_te.HasParamFwdFDerivWithJumpsAt_rule
 ----------------------------------------------------------------------------------------------------
 
 open Scalar in
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def Scalar.sin.arg_a0.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => sin y) (by simp; fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 
 open Scalar in
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def Scalar.cos.arg_a0.HasParamFwdFDerivWithJumpsAt_rule :=
   (comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => cos y) (by simp; fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 
-@[aesop safe, param_deriv, gtrans]
+@[gtrans]
 def gaussian.arg_a0.HasParamFwdFDerivWithJumpsAt_rule (σ : R) :=
   (comp2_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=X) (Y₂:=X) (Z:=R) (fun _ μ x => gaussian μ σ x) (by simp; fun_prop))
