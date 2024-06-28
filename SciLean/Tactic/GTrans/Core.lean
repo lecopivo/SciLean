@@ -218,7 +218,7 @@ unsafe def gtrans (e : Expr) : GTransM (Option Expr) := do
 
   let ext := gtransTheoremsExt.getState (← getEnv)
   let thms ← ext.theorems.getMatchWithScore e false {}
-  let thms := thms |>.map (·.1) |>.flatten
+  let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
 
   withTraceNode `Meta.Tactic.gtrans (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] {← ppExpr e}") do
 

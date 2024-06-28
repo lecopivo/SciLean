@@ -83,8 +83,8 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
 
 
 
-def addTheorem (declName : Name) (kind : AttributeKind := .global) : MetaM Unit := do
+def addTheorem (declName : Name) (kind : AttributeKind := .global) (prio : Nat := eval_prio default) : MetaM Unit := do
 
-  let thm ← getTheoremFromConst declName
+  let thm ← getTheoremFromConst declName prio
 
   gtransTheoremsExt.add thm kind
