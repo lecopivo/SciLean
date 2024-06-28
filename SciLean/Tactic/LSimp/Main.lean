@@ -553,7 +553,7 @@ partial def congrDefault (e : Expr) : LSimpM Result := do
 partial def processCongrHypothesis (h : Expr) : LSimpM Bool := do
   forallTelescopeReducing (← inferType h) fun xs hType => withNewLemmas xs do
     let lhs ← instantiateMVars hType.appFn!.appArg!
-    let r ← lsimp lhs
+    let r ← (lsimp lhs).runInMeta (fun r => r.bindVars)
     let rhs := hType.appArg!
     rhs.withApp fun m zs => do
       let val ← mkLambdaFVars zs r.expr
@@ -669,6 +669,7 @@ partial def simpStep (e : Expr) : LSimpM Result := do
 partial def cacheResult (e : Expr) (cfg : Simp.Config) (r : Result) : LSimpM Result := do
   if cfg.memoize && r.cache then
     let cacheRef := (← getThe State).cache
+    let r ← r.bindVars
     cacheRef.modify (fun c => c.insert e r)
   return r
 

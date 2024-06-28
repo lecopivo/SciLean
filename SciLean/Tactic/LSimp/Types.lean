@@ -105,8 +105,8 @@ reverted back. It is user's responsibility to make sure that the `k` modifies th
 that it is valid in the original context e.g. bind all newly introduced free variables. -/
 def LSimpM.runInMeta (x : LSimpM X) (k : X → MetaM Y) : LSimpM Y := do
   fun mths ctx s => do
-    let m : Simp.Methods := Simp.MethodsRef.toMethods mths.toMethodsRef
-    let (r,s') ← (x m ctx s).runInMeta (fun (x,s') => do pure (← k x, s'))
+    -- let m : Simp.Methods := Simp.MethodsRef.toMethods mths.toMethodsRef
+    let (r,s') ← (x mths ctx s).runInMeta (fun (x,s') => do pure (← k x, s'))
     return (r,s')
 
 instance : Inhabited (LSimpM α) where
