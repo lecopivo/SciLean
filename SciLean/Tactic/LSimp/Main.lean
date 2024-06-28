@@ -26,6 +26,10 @@ initialize registerTraceClass `Meta.Tactic.simp.time
 initialize registerTraceClass `Meta.Tactic.simp.cache
 
 
+theorem pull_if_from_app {α β} (c : Prop) [Decidable c] (t e : α) (f : α → β) :
+    f (if c then t else e) = if c then f t else f e := by
+  if h : c then simp[h] else simp[h]
+
 /-- Decide if `v` should kept as a let binding or should be reduced.
 
 This is refined version of `zeta` option in vanila simp. It allows you decide if let binding should
@@ -42,6 +46,8 @@ def keepAsLetValue (v : Expr) : LSimpM Bool := do
     return false
   else if v.isAppOfArity ``OfScientific.ofScientific 5 then
     return false
+  -- else if v.isAppOfArity ``ite 5 then
+  --   return false
   else if v.isFVar then
     return false
   else if v.isLambda then
@@ -119,7 +125,8 @@ partial def whnf' (e : Expr) (config : WhnfCoreConfig := {}) : MetaM Expr :=
 
 
 def project? (e : Expr) (i : Nat) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
-  projectCore? (← whnf' e config) i
+  -- projectCore? (← whnf' e config) i
+  projectCore? (← whnf e) i
 
 /-- Reduce kernel projection `Expr.proj ..` expression. -/
 def reduceProj? (e : Expr) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
@@ -443,6 +450,14 @@ partial def simpForall (e : Expr) : LSimpM Result := return { expr := e }
   --   return { expr := (← dsimp e) }
 
 
+@[inline] def _root_.Lean.Expr.app5? (e : Expr) (fName : Name) : Option (Expr × Expr × Expr × Expr × Expr) :=
+  if e.isAppOfArity fName 5 then
+    some (e.appFn!.appFn!.appFn!.appArg!.appArg!, e.appFn!.appFn!.appFn!.appArg!, e.appFn!.appFn!.appArg!, e.appFn!.appArg!, e.appArg!)
+  else
+    none
+
+
+
 partial def simpLet (e : Expr) : LSimpM Result := do
   let .letE n t v b _ := e | unreachable!
   if (← getConfig).zeta then
@@ -459,6 +474,14 @@ partial def simpLet (e : Expr) : LSimpM Result := do
         else
           pure (v', #[])
 
+      -- -- special handling of `let x := if c then t else e`
+      -- if let .some (_,c,_,t,e) := v'.app5? ``ite then
+      --   let t := b.instantiate1 t
+      --   let e := b.instantiate1 e
+      --   let bx ← mkAppM ``ite #[c,t,e]
+      --   let rbx ← lsimp bx
+      --   return { rbx with vars := vars ++ rbx.vars }
+
       let bx := b.instantiate1 vVar
       let rbx ← lsimp bx
       return { rbx with vars := vars ++ rbx.vars }
@@ -469,6 +492,19 @@ partial def simpLet (e : Expr) : LSimpM Result := do
         { expr := b.instantiate1 rv.expr
           proof? := ← rv.proof?.mapM (fun h => mkCongrArg (.lam n t b default) h)
           vars := rv.vars }
+
+      -- -- special handling of `let x := if c then t else e`
+      -- -- todo: move this to a specialized function
+      -- if let .some (_,c,_,x,y) := rv.expr.app5? ``ite then
+      --   let bx ← mkAppM ``ite #[c, .letE n t x b false, .letE n t y b false]
+      --   let r' : Result :=
+      --     { expr := bx
+      --       proof? := ← mkAppM ``pull_if_from_app #[c, x, y, .lam n t b default]
+      --       vars := rv.vars }
+
+      --   let rbx ← lsimp bx
+      --   return ← r.mkEqTrans r' >>= (fun r => r.mkEqTrans rbx)
+
 
       let bx := b.instantiate1 rv.expr
       let rbx ← lsimp bx
