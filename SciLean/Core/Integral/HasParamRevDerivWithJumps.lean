@@ -111,7 +111,24 @@ theorem revFDeriv_under_integral
   have hf' : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof -- this should be part of hf
   fun_trans (disch:=apply hf') [adjoint_sum,adjoint_integral,adjoint_adjoint,smul_smul]
 
+@[fun_trans]
+theorem revFDeriv_under_integral_over_set
+    (f : W → X → Y) (w : W) (μ : Measure X) (A : Set X)
+    {I} [hI : IndexType I] {f' df s S}
+    (hf : HasParamRevFDerivWithJumpsAt R f w f' I df s S) :
+    (revFDeriv R (fun w' => ∫ x in A, f w' x ∂μ) w)
+    =
+    let val := ∫ x in A, f w x ∂μ
+    (val, fun dy =>
+      let interior := ∫ x in A, (f' x).2 dy ∂μ
+      let density := fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x)
+      let shocks := ∑ i, ∫ x in S i ∩ A, (⟪(df i x).1 - (df i x).2, dy⟫ * density x) • s i x ∂μH[finrank R X - (1:ℕ)]
+      interior + shocks) := by
 
+  unfold revFDeriv
+  simp only [fderiv_under_integral_over_set R f w _ μ A hf.1]
+  have hf' : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof -- this should be part of hf
+  fun_trans (disch:=apply hf') [adjoint_sum,adjoint_integral,adjoint_adjoint,smul_smul]
 
 
 ----------------------------------------------------------------------------------------------------

@@ -75,6 +75,28 @@ theorem fwdFDeriv_under_integral
   . simp only [fderiv_under_integral R f w dw μ hf.1, add_left_inj, snd_integral (hf:=sorry_proof)]
 
 
+open FiniteDimensional
+@[fun_trans]
+theorem fwdFDeriv_under_integral_over_set
+  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
+  (f : W → X → Y) (w : W) (μ : Measure X) (A : Set X)
+  {I} [hI : IndexType I] {f' df s S}
+  (hf : HasParamFwdFDerivWithJumpsAt R f w f' I df s S)
+  /- (hμ : μ ≪ volume) -/ :
+  (fwdFDeriv R (fun w' => ∫ x in A, f w' x ∂μ) w)
+  =
+  fun dw =>
+    let interior := ∫ x in A, f' dw x ∂μ
+    let density := fun x => Scalar.ofENNReal (R:=R) (μ.rnDeriv volume x)
+    let shocks := ∑ i, ∫ x in S i ∩ A, (s i dw x * density x) • ((df i x).1 - (df i x).2) ∂μH[finrank R X - (1:ℕ)]
+    (interior.1, interior.2 + shocks) := by
+
+  unfold fwdFDeriv
+  funext dw; ext
+  . simp only [fst_integral (hf := sorry_proof), hf.2]
+  . simp only [fderiv_under_integral_over_set R f w dw μ A hf.1, add_left_inj, snd_integral (hf:=sorry_proof)]
+
+
 
 ----------------------------------------------------------------------------------------------------
 -- Lambda rules ------------------------------------------------------------------------------------
