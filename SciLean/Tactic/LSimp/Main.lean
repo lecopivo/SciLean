@@ -353,7 +353,7 @@ where
 
 partial def simpLambda (e : Expr) : LSimpM Result := do
   withParent e <| lambdaTelescopeDSimp e fun xs e => do
-    let go : LSimpM Result := withNewLemmas xs do
+    withoutModifyingLCtx pure do withoutModifyingCache do withNewLemmas xs do
       let r ← lsimp e >>= (·.bindVars)
       let eNew ← mkLambdaFVars xs r.expr
       match r.proof? with
@@ -362,7 +362,7 @@ partial def simpLambda (e : Expr) : LSimpM Result := do
         let p ← xs.foldrM (init := h) fun x h => do
           mkFunExt (← mkLambdaFVars #[x] h)
         return { expr := eNew, proof? := p }
-    go.runInMeta pure
+
 
 partial def simpArrow (e : Expr) : LSimpM Result := return { expr := e}
   -- trace[Debug.Meta.Tactic.simp] "arrow {e}"
@@ -587,9 +587,9 @@ partial def congrDefault (e : Expr) : LSimpM Result := do
 
 /-- Process the given congruence theorem hypothesis. Return true if it made "progress". -/
 partial def processCongrHypothesis (h : Expr) : LSimpM Bool := do
-  forallTelescopeReducing (← inferType h) fun xs hType => withNewLemmas xs do
+  forallTelescopeReducing (← inferType h) fun xs hType => withoutModifyingCache do withNewLemmas xs do
     let lhs ← instantiateMVars hType.appFn!.appArg!
-    let r ← (lsimp lhs).runInMeta (fun r => r.bindVars)
+    let r ← withoutModifyingLCtx (·.bindVars) (lsimp lhs)
     let rhs := hType.appArg!
     rhs.withApp fun m zs => do
       let val ← mkLambdaFVars zs r.expr
@@ -704,9 +704,9 @@ partial def simpStep (e : Expr) : LSimpM Result := do
 
 partial def cacheResult (e : Expr) (cfg : Simp.Config) (r : Result) : LSimpM Result := do
   if cfg.memoize && r.cache then
-    let cacheRef := (← getThe State).cache
     let r ← r.bindVars
-    cacheRef.modify (fun c => c.insert e r)
+    trace[Meta.Tactic.simp.cache] "inserting: {e} ==> {r.expr}"
+    cacheInsert e r
   return r
 
 
@@ -753,12 +753,15 @@ where
     let cfg ← getConfig
     if cfg.memoize then
       -- try LSimp.Cache
-      let cache ← (← getThe State).cache.get
-      if let some result := cache.find? e then
+      if let some result ← cacheFind? e then
+        trace[Meta.Tactic.simp.cache] "reusing: {e} ==> {result.expr}"
         return result
+      else
+        trace[Meta.Tactic.simp.cache] "no cache for: {e}"
       -- try Sipm.Cache
       let cache := (← (← getThe State).simpState.get).cache
       if let some result := cache.find? e then
+        trace[Meta.Tactic.simp.cache] "reusing from simp cache: {e} ==> {result.expr}"
         return { result with }
 
     trace[Meta.Tactic.simp.heads] "{repr e.toHeadIndex}"
@@ -773,8 +776,12 @@ def main (e : Expr) (k : Result → MetaM α)
     (stats : Simp.Stats := {})
     (methods : Simp.Methods := {}) : MetaM (α × Simp.Stats) := do
 
+  -- try to instantiate as many mvars as possible
+  -- this helps cache a lot as sometimes you can have universe mvars all over the place
+  let e ← instantiateMVars e
+
   -- prepare state
-  let lcacheRef : IO.Ref Cache ← IO.mkRef {}
+  let lcacheRef : IO.Ref Cache ← IO.mkRef [{}] -- initialize cache stack to one!
   let stateRef : IO.Ref Simp.State ← IO.mkRef {stats with}
   let state : State := { cache := lcacheRef, simpState := stateRef }
 
@@ -782,8 +789,16 @@ def main (e : Expr) (k : Result → MetaM α)
   let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
   Simp.withSimpContext ctx do
 
-    let (a,s) ← (lsimp e methods ctx state).runInMeta
-      (fun (r,s) => do pure (← k r,s))
+    -- run simp
+    let (a,s) ← Meta.withoutModifyingLCtx (fun (r,s) => do pure (← k r,s)) do
+      (lsimp e methods ctx state)
+
+    -- trace cache - todo: use `traceCache function`
+    (← s.cache.get).forM (fun c => do
+      let l ← c.toList.mapM (fun (e,_) => do pure m!"{← ppExpr e}" )
+      trace[Meta.Tactic.simp.cache] (l.foldl (init:="") (fun s e => s ++ "\n" ++ e))
+      pure ())
+    trace[Meta.Tactic.simp.cache] "cacher results "
 
     let simpState ← s.simpState.get
     return (a, {simpState with})

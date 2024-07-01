@@ -91,7 +91,21 @@ This effectively runs `a : MetaLCtx X`, modifies the local context and then reve
 The function `k` is evaluated on the result of `a` in the modified context before the context is
 reverted back. It is user's responsibility to make sure that the `k` modifies the result such
 that it is valid in the original context e.g. bind all newly introduced free variables. -/
-@[inline] def MetaLCtxM.runInMeta (a : MetaLCtxM α) (k : α → MetaM β) : MetaM β :=
+@[inline] def Lean.Meta.withoutModifyingLCtx (k : α → MetaM β) (a : MetaLCtxM α) : MetaM β :=
+  fun ctx => do
+    let cfg := ctx.toCfg
+    let ctx' := ctx.toCtx
+    let (a,ctx) ← a cfg ctx'
+    k a (.mkCtxCfg ctx cfg)
+
+
+/-- Run `a : MetaLCtx X` without modifying the local context.
+
+This effectively runs `a : MetaLCtx X`, modifies the local context and then reverts the context back.
+The function `k` is evaluated on the result of `a` in the modified context before the context is
+reverted back. It is user's responsibility to make sure that the `k` modifies the result such
+that it is valid in the original context e.g. bind all newly introduced free variables. -/
+@[inline, deprecated] def MetaLCtxM.runInMeta (a : MetaLCtxM α) (k : α → MetaM β) : MetaM β :=
   fun ctx => do
     let cfg := ctx.toCfg
     let ctx' := ctx.toCtx

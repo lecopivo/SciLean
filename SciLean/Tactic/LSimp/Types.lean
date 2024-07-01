@@ -84,7 +84,9 @@ def Result.bindVars (r : Result) : MetaM Result := do
 -- LSimpM ------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-abbrev Cache := ExprMap Result
+/-- `lsimp`'s cache is a stack of caches. This allows us to run `lsimp` and easiliy discart all
+changes to the cache by simply increasing the cache stack depth.  -/
+abbrev Cache := List (ExprMap Result)
 
 structure State where
   /-- Cache storing lsimp results. -/
@@ -97,17 +99,26 @@ abbrev LSimpM := ReaderT Simp.Methods $ ReaderT Simp.Context $ StateT State Meta
 instance : MonadLift SimpM LSimpM where
   monadLift x := fun m c s => do return (← x m.toMethodsRef c s.simpState, s)
 
+
 /-- Run `x : LSimpM X` without modifying the local context.
 
 This effectively runs `x : LSimpM X`, modifies the local context and then reverts the context back.
 The function `k` is evaluated on the result of `x` in the modified context before the context is
 reverted back. It is user's responsibility to make sure that the `k` modifies the result such
 that it is valid in the original context e.g. bind all newly introduced free variables. -/
+def withoutModifyingLCtx (k : X → MetaM Y) (x : LSimpM X) : LSimpM Y := do
+  fun mths ctx s => do
+    Meta.withoutModifyingLCtx (fun (x,s') => do pure (← k x, s'))
+      (x mths ctx s)
+
+@[deprecated]
 def LSimpM.runInMeta (x : LSimpM X) (k : X → MetaM Y) : LSimpM Y := do
   fun mths ctx s => do
     -- let m : Simp.Methods := Simp.MethodsRef.toMethods mths.toMethodsRef
     let (r,s') ← (x mths ctx s).runInMeta (fun (x,s') => do pure (← k x, s'))
     return (r,s')
+
+
 
 instance : Inhabited (LSimpM α) where
   default := fun _ _ _ _ _ _ => default
@@ -138,6 +149,50 @@ def State.printTimings (s : State) : MetaM Unit := do
   let t := s.timings
   for (k,t) in t do
     trace[Meta.Tactic.simp.time] "{k} took {t.print}"
+
+
+/-- Run `x` and discart any changes to the cache.
+
+The cache is modified while running `x` but all changes are discarted once `x` is done.  -/
+def withoutModifyingCache {α} (x : LSimpM α) : LSimpM α :=
+  fun m ctx s  => do
+    let cacheRef := s.cache
+    -- increase stack depth
+    cacheRef.modify fun c => {} :: c
+    let (x',s') ← x m ctx s
+    let cacheRef := s'.cache
+    -- decrease stack depth
+    -- todo: give an option to do custom salvage of the cache modification
+    --       for example when we enter a scope with few new fvars we have to discart everything
+    --       using those fvars and their dependencies but keep the rest
+    cacheRef.modify fun c => c.tail
+    return (x',s')
+
+
+def cacheInsert (e : Expr) (r : Result) : LSimpM Unit := do
+  let s ← getThe State
+  s.cache.modify (fun c => c.modifyHead (fun c => c.insert e r))
+  pure ()
+
+
+def cacheFind? (e : Expr) : LSimpM (Option Result) := do
+  let s ← getThe State
+  let c ← s.cache.get
+  return c.findSome? (fun c => c.find? e)
+
+
+def traceCache : LSimpM Unit := do
+  let cache ← (← getThe State).cache.get
+
+  let mut s : MessageData := "lsimp cache:"
+  for c in cache, i in [0:cache.length] do
+    s := s ++ m!"\n  cache depth {i}"
+    for (e,r) in c do
+      s := s ++ m!"\n    {e} ==> {r.expr}"
+      pure ()
+
+  trace[Meta.Tactic.simp.cache] s
+
 
 
 ----------------------------------------------------------------------------------------------------

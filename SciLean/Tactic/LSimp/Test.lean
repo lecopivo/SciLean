@@ -17,11 +17,42 @@ simproc_decl mySimpMatch (_) := fun e => do
     return .visit { expr := e}
   return .continue
 
+set_option trace.Meta.Tactic.simp.cache true in
 
-let p₁ := y.1; let p₂ := y.2; ...
-let p₃ := y.3
+-- unletNum
+-- unletIf
+-- unletFun
+-- unletCtor
+-- unletFVar
+-- unletBVar
+-- unletBVar
 
-#check (let (a,b) := (x+y, x*y); a + b) rewrite_by simp (config:={zeta:=false})
+-- set_option pp.raw true in
+#check ((1*x) + (1*x) + (1*x) + (1*x)  + (1*x)  + (1*x)  + (1*x)  + (1*x)) rewrite_by lsimp --(config:={zeta:=false})
+
+
+def id' {α} (a : α) := a
+
+
+#check (let_fun foo := (fun z (h : x = z) => x + x); x + x + foo x sorry) rewrite_by lsimp (config:={contextual:=true})
+
+
+#check (if h : x = y then x + x else x * x) rewrite_by lsimp (config:={contextual:=true})
+
+
+#exit
+#check (fun (z : ℤ) (h : x = z) =>
+        x + x) rewrite_by enter [z,h]; lsimp (config:={contextual:=true})
+
+
+#check (let (a,b) := (x+(y+0), x*y+(y+0)); a + b) rewrite_by lsimp --(config:={zeta:=false})
+
+-- set_option trace.Meta.Tactic.simp true
+set_option trace.Meta.Tactic.simp.discharge true
+
+#check (let a := if x ≤ 0 then (y*y, fun z => z*z) else (y+y, fun z => z + z); a.2 a.1) rewrite_by lsimp only
+
+#exit
 
 set_option trace.Meta.Tactic.simp.heads true
 set_option trace.Meta.Tactic.simp.proj true
