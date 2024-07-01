@@ -1,5 +1,4 @@
 import SciLean.Tactic.LSimp.Main
-import SciLean.Core
 
 namespace SciLean.Tactic.LSimp
 

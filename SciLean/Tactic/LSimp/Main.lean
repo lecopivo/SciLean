@@ -5,8 +5,6 @@ Authors: Leonardo de Moura
 
 This is modified version of Lean.Meta.Tactic.Simp.Main
 
-major changes are marked with 'lsimp modification'
-
 -/
 import Lean.Meta.Transform
 import Lean.Meta.Tactic.Replace
