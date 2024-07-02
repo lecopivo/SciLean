@@ -16,14 +16,14 @@ import SciLean.Tactic.GTrans
 
 set_option linter.unusedVariables false
 
-open MeasureTheory Topology Filter
+open MeasureTheory Topology Filter FiniteDimensional
 
 namespace SciLean
 
 variable
   {R} [RealScalar R] [MeasureSpace R]
   {W} [NormedAddCommGroup W] [NormedSpace R W]
-  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
+  {X} [NormedAddCommGroup X] [AdjointSpace R X] [NormedSpace ℝ X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
   {Y} [NormedAddCommGroup Y] [NormedSpace R Y] [NormedSpace ℝ Y]
   {Y₁} [NormedAddCommGroup Y₁] [NormedSpace R Y₁] [NormedSpace ℝ Y₁]
   {Y₂} [NormedAddCommGroup Y₂] [NormedSpace R Y₂] [NormedSpace ℝ Y₂]
@@ -36,7 +36,7 @@ variable (R)
 open Classical in
 noncomputable
 def frontierSpeed' (A : W → Set X) (w dw : W) (x : X) : R :=
-  match Classical.dec (∃ (φ : W → X → R), (∀ w, A w = {x | φ w x = 0})) with
+  match Classical.dec (∃ (φ : W → X → R), (∀ w, closure (A w) = {x | φ w x ≤ 0})) with
   | .isTrue h =>
     let φ := Classical.choose h
     (-(fderiv R (φ · x) w dw)/‖fgradient (φ w ·) x‖₂)
@@ -55,14 +55,14 @@ structure HasParamFDerivWithJumpsAtImpl (f : W → X → Y) (w : W)
     (Ω : J → W → Set X)
     /- Values of `f` on both sides of jump discontinuity.
 
-    The first value is in the positive noramal direction and the second value in the negative
+    The first value is in the negative noramal direction and the second value in the positive
     normal direction.
 
     The orientation of the normal is arbitrary but fixed as `jumpVals` and `jumpSpeed` depend on it. -/
     (jumpVals : I → X → Y×Y)
     /- Normal speed of the jump discontinuity. -/
     (jumpSpeed : I → W → X → R)
-    /- Jump discontinuities of `f`. -/
+    /- Jump discontinuities of `f`. It is assumed that they are all almost disjoint. -/
     (jump : I → Set X) : Prop where
 
   -- todo: some of there statements should hold on neighbourhoods of `w`
@@ -84,19 +84,43 @@ structure HasParamFDerivWithJumpsAtImpl (f : W → X → Y) (w : W)
       | none => True
       | some i => ∀ x ∈ jump i,
         frontierSpeed' R (Ω n) w dw x = jumpSpeed i dw x
+variable {R}
 
-
-variable (W X Y)
+variable (R W X Y)
 structure DiscontinuityData where
   vals : X → Y×Y
   speed : W → X → R
   discontinuity : Set X
-variable {W X Y}
 
+abbrev DiscontinuityDataList := List (DiscontinuityData R W X Y)
+
+variable {R W X Y}
+
+
+def DiscontinuityDataList.getDiscontinuity (d : DiscontinuityDataList R W X Y) : Set X :=
+  d.foldl (init:=∅) (fun s ⟨_,_,x⟩ => s ∪ x)
+
+def DiscontinuityDataList.getDiscontinuities (d : DiscontinuityDataList R W X Y) : List (Set X) :=
+  d.map (·.discontinuity)
+
+
+/-- Set `A` and `B` are disjoint up to a set of zero (n-1)-dimensional measure.
+
+For example, in two dimensions two circles are almost disjoint unless they are the same.
+This is because their intersection consist up to two points which have zero 1-dimensional measure.
+ -/
+def AlmostDisjoint {X} [MeasurableSpace X] (A B : Set X) (μ : Measure X := by volume_tac) : Prop :=
+  μ (A ∩ B) = 0
+
+def AlmostDisjointList {X} [MeasurableSpace X]
+    (As : List (Set X)) (μ : Measure X := by volume_tac) : Prop :=
+  ∀ i j : Fin As.length, i ≠ j → AlmostDisjoint As[i] As[j] μ
+
+variable (R)
 @[gtrans]
 def HasParamFDerivWithJumpsAt (f : W → X → Y) (w : W)
     (f' : outParam <| W → X → Y)
-    (disc : outParam <| List (DiscontinuityData R W X Y))
+    (disc : outParam <| DiscontinuityDataList R W X Y)
     : Prop := ∃ J Ω ι, HasParamFDerivWithJumpsAtImpl R f w f' sorry J ι Ω sorry sorry sorry
 
 
@@ -109,7 +133,7 @@ def HasParamFDerivWithJumpsAt (f : W → X → Y) (w : W)
 
 
 
-open FiniteDimensional
+
 -- @[fun_trans]
 theorem fderiv_under_integral
   {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
@@ -127,13 +151,14 @@ theorem fderiv_under_integral
       (s dw x * density x) • (vals.1 - vals.2) ∂μH[finrank R X - (1:ℕ)]
   interior + shocks := sorry_proof
 
-open FiniteDimensional
+
 -- @[fun_trans]
 theorem fderiv_under_integral_over_set
-  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
+  {X} [NormedAddCommGroup X] [AdjointSpace R X] [NormedSpace ℝ X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
   (f : W → X → Y) (w dw : W) (μ : Measure X) (A : Set X)
   {f' disc}
   (hf : HasParamFDerivWithJumpsAt R f w f' disc)
+  (hA : AlmostDisjoint (frontier A) disc.getDiscontinuity μH[finrank ℝ X - (1:ℕ)])
   /- todo: add some integrability conditions -/ :
   (fderiv R (fun w' => ∫ x in A, f w' x ∂μ) w dw)
   =
@@ -235,6 +260,7 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule
     {f' fdisc} {g' gdisc}
     (hf : HasParamFDerivWithJumpsAt R f w f' fdisc)
     (hg : HasParamFDerivWithJumpsAt R g w g' gdisc)
+    (hdisjoint : AlmostDisjoint fdisc.getDiscontinuity gdisc.getDiscontinuity μH[finrank ℝ X - (1:ℕ)])
     /- (hIJ : DisjointJumps R Sf Sg) -/ :
     HasParamFDerivWithJumpsAt (R:=R) (fun w x => (f w x, g w x)) w
       (f' := fun dw x => (f' dw x, g' dw x))
@@ -258,7 +284,8 @@ theorem comp2_smooth_jumps_rule
     (g₁ : W → X → Y₁) (g₂ : W → X → Y₂) (w : W)
     {g₁' dg₁} {g₂' dg₂}
     (hg₁ : HasParamFDerivWithJumpsAt R g₁ w g₁' dg₁)
-    (hg₂ : HasParamFDerivWithJumpsAt R g₂ w g₂' dg₂) :
+    (hg₂ : HasParamFDerivWithJumpsAt R g₂ w g₂' dg₂)
+    (hdisjoint : AlmostDisjoint dg₁.getDiscontinuity dg₂.getDiscontinuity μH[finrank ℝ X - (1:ℕ)]) :
     HasParamFDerivWithJumpsAt (R:=R) (fun w x => f w (g₁ w x) (g₂ w x)) w
       (f' := fun dw x =>
          let y₁ := g₁ w x
@@ -281,7 +308,7 @@ theorem comp2_smooth_jumps_rule
            (f w y₁ y₂.1, f w y₁ y₂.2) })) := by
 
   convert comp_smooth_jumps_rule R (fun (w:W) (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
-    (hf) (Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R g₁ g₂ w hg₁ hg₂)
+    (hf) (Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R g₁ g₂ w hg₁ hg₂ hdisjoint)
 
   . simp[Function.comp]
 
@@ -357,6 +384,7 @@ theorem HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule
     {f' fdisc} {g' gdisc}
     (hf : HasParamFDerivWithJumpsAt R f w f' fdisc)
     (hg : HasParamFDerivWithJumpsAt R g w g' gdisc)
+    (hdisjoint : AlmostDisjoint fdisc.getDiscontinuity gdisc.getDiscontinuity μH[finrank ℝ X - (1:ℕ)])
     (hg' : ∀ x, g w x ≠ 0) :
     HasParamFDerivWithJumpsAt (R:=R) (fun w x => f w x / g w x) w
       (f' := fun (dw : W) x =>
@@ -381,7 +409,7 @@ theorem HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule
   convert comp_smooth_jumps_rule_at (R:=R)
           (f:=fun _ (y:R×R) => y.1 / y.2) (g:=fun w x => (f w x, g w x)) (w:=w)
           (hf:=by simp; sorry_proof)
-          (hg:= Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R f g w hf hg)
+          (hg:= Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R f g w hf hg hdisjoint)
   . fun_trans (disch:=apply hg')
   . simp[List.map_append]; congr
 
@@ -392,12 +420,13 @@ theorem ite.arg_te.HasParamFDerivWithJumpsAt_rule
     {c : W → X → Prop} [∀ w x, Decidable (c w x)]
     {f' df} {g' dg}
     (hf : HasParamFDerivWithJumpsAt R f w f' df)
-    (hg : HasParamFDerivWithJumpsAt R g w g' dg) :
+    (hg : HasParamFDerivWithJumpsAt R g w g' dg)
+    (hdisjoint : AlmostDisjointList (frontier {x | c w x} :: df.getDiscontinuities ++ dg.getDiscontinuities) μH[finrank ℝ X - (1:ℕ)]) :
     HasParamFDerivWithJumpsAt (R:=R) (fun w x => if c w x then f w x else g w x) w
       (f' := fun dw x => if c w x then f' dw x else g' dw x)
       (disc :=
         {vals := fun x => (f w x, g w x)
-         speed := frontierSpeed' R (fun w => {x | ¬c w x}) w
+         speed := frontierSpeed' R (fun w => {x | c w x}) w
          discontinuity := frontier {x | c w x}}
         ::
         df.map (fun d => {d with discontinuity := d.discontinuity ∩ {x | c w x}})
@@ -405,6 +434,7 @@ theorem ite.arg_te.HasParamFDerivWithJumpsAt_rule
         dg.map (fun d => {d with discontinuity := d.discontinuity ∩ {x | ¬c w x}})) := by
 
   sorry_proof
+
 
 
 ----------------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ namespace SciLean
 variable
   {R : Type} [RealScalar R] [MeasureSpace R] [BorelSpace R]
   {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [NormedSpace ℝ W] [CompleteSpace W]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [NormedSpace ℝ X] [CompleteSpace X] [MeasureSpace X] [BorelSpace X]
   {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedSpace ℝ Y] [CompleteSpace Y]
   {Y₁ : Type} [NormedAddCommGroup Y₁] [AdjointSpace R Y₁] [NormedSpace ℝ Y₁] [CompleteSpace Y₁]
   {Y₂ : Type} [NormedAddCommGroup Y₂] [AdjointSpace R Y₂] [NormedSpace ℝ Y₂] [CompleteSpace Y₂]
@@ -32,7 +32,6 @@ theorem adjoint_sum {ι} [IndexType ι] (f : ι → Y → Z) :
   adjoint R (fun y => ∑ i, f i y)
   =
   fun y' => ∑ i, adjoint R (f i) y' := sorry_proof
-
 
 @[fun_prop]
 theorem integral_IsContinuousLinearMap
@@ -71,14 +70,22 @@ structure DiscontinuityRevData where
   vals : X → Y×Y
   speedGrad : X → W
   discontinuity : Set X
+
+abbrev DiscontinuityRevDataList := List (DiscontinuityRevData W X Y)
 variable {W X Y}
 
+
+def DiscontinuityRevDataList.getDiscontinuity (d : DiscontinuityRevDataList W X Y) : Set X :=
+  d.foldl (init:=∅) (fun s ⟨_,_,x⟩ => s ∪ x)
+
+def DiscontinuityRevDataList.getDiscontinuities (d : DiscontinuityRevDataList W X Y) : List (Set X) :=
+  d.map (·.discontinuity)
 
 
 @[gtrans]
 def HasParamRevFDerivWithJumpsAt (f : W → X → Y) (w : W)
     (f' : outParam <| X → Y×(Y→W))
-    (disc : outParam <| List (DiscontinuityRevData W X Y)) :=
+    (disc : outParam <| DiscontinuityRevDataList W X Y) :=
   HasParamFDerivWithJumpsAt R f w
     (fun (dw : W) (x : X) => adjoint R (fun dy => ⟪(f' x).2 dy, dw⟫) 1)
     (disc.map (fun ⟨df,s,S⟩ => ⟨df,fun dy x => ⟪s x, dy⟫,S⟩))
@@ -120,7 +127,8 @@ theorem revFDeriv_under_integral
 theorem revFDeriv_under_integral_over_set
     (f : W → X → Y) (w : W) (μ : Measure X) (A : Set X)
     {f' disc}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' disc) :
+    (hf : HasParamRevFDerivWithJumpsAt R f w f' disc)
+    (hA : AlmostDisjoint (frontier A) disc.getDiscontinuity μH[finrank ℝ X - (1:ℕ)]) :
     (revFDeriv R (fun w' => ∫ x in A, f w' x ∂μ) w)
     =
     let val := ∫ x in A, f w x ∂μ
@@ -134,8 +142,8 @@ theorem revFDeriv_under_integral_over_set
             (⟪vals.1 - vals.2, dy⟫ * density x) • s x ∂μH[finrank R X - (1:ℕ)]
       interior + shocks) := by
 
-  unfold revFDeriv
-  simp only [fderiv_under_integral R f w _ μ hf.1]
+  simp[revFDeriv]
+  simp only [fderiv_under_integral_over_set R f w _ μ A hf.1 sorry]
   have hf' : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof -- this should be part of hf
   fun_trans (disch:=apply hf') [adjoint_sum,adjoint_integral,adjoint_adjoint,smul_smul]
 
@@ -201,6 +209,7 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
     {f' fdisc} {g' gdisc}
     (hf : HasParamRevFDerivWithJumpsAt R f w f' fdisc)
     (hg : HasParamRevFDerivWithJumpsAt R g w g' gdisc)
+    (hdisjoint : AlmostDisjoint fdisc.getDiscontinuity gdisc.getDiscontinuity μH[finrank ℝ X - (1:ℕ)])
     /- (hIJ : DisjointJumps R Sf Sg) -/ :
     HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => (f w x, g w x)) w
       (f' := fun x =>
@@ -225,7 +234,7 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
   have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry
 
   constructor
-  . convert Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
+  . convert Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry
     . fun_trans
     . fun_trans
     . simp[List.map_append]; rfl
@@ -263,7 +272,8 @@ theorem comp2_smooth_jumps_rule
     (g₁ : W → X → Y₁) (g₂ : W → X → Y₂) (w : W)
     {g₁' dg₁} {g₂' dg₂}
     (hg₁ : HasParamRevFDerivWithJumpsAt R g₁ w g₁' dg₁)
-    (hg₂ : HasParamRevFDerivWithJumpsAt R g₂ w g₂' dg₂) :
+    (hg₂ : HasParamRevFDerivWithJumpsAt R g₂ w g₂' dg₂)
+    (hdisjoint : AlmostDisjoint dg₁.getDiscontinuity dg₂.getDiscontinuity μH[finrank ℝ X - (1:ℕ)]) :
     HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w (g₁ w x) (g₂ w x)) w
       (f' := fun x =>
          let ydg₁ := g₁' x
@@ -288,7 +298,7 @@ theorem comp2_smooth_jumps_rule
            (f w y₁ y₂.1, f w y₁ y₂.2) })) := by
 
   convert comp_smooth_jumps_rule (R:=R) (fun w (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
-    hf (by gtrans (disch:=fun_prop))
+    hf (by gtrans (disch:=first | fun_prop | assumption))
   . fun_trans [hg₁.2,hg₂.2]; ac_rfl
   . simp[List.map_append]; rfl
 
@@ -342,7 +352,9 @@ theorem HDiv.hDiv.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
     (f g : W → X → R) (w : W)
     {f' df} {g' dg}
     (hf : HasParamRevFDerivWithJumpsAt R f w f' df)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' dg) :
+    (hg : HasParamRevFDerivWithJumpsAt R g w g' dg)
+    (hdisjoint : AlmostDisjoint df.getDiscontinuity dg.getDiscontinuity μH[finrank ℝ X - (1:ℕ)])
+    (hg' : ∀ x, g w x ≠ 0) :
     HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w x / g w x) w
       (f' := fun x =>
         let ydf := f' x
@@ -368,7 +380,7 @@ theorem HDiv.hDiv.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
   have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry
 
   constructor
-  . convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry
+  . convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry hg'
     . fun_trans [hf.2,hg.2]; ring
     . simp[List.map_append]; rfl
   . simp [hf.2, hg.2]
@@ -380,12 +392,13 @@ theorem ite.arg_te.HasParamRevFDerivWithJumpsAt_rule
     {c : W → X → Prop} [∀ w x, Decidable (c w x)]
     {f' df} {g' dg}
     (hf : HasParamRevFDerivWithJumpsAt R f w f' df)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' dg) :
+    (hg : HasParamRevFDerivWithJumpsAt R g w g' dg)
+    (hdisjoint : AlmostDisjointList (frontier {x | c w x} :: df.getDiscontinuities ++ dg.getDiscontinuities) μH[finrank ℝ X - (1:ℕ)]) :
     HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => if c w x then f w x else g w x) w
       (f' := fun x => if c w x then f' x else g' x)
       (disc :=
         {vals := fun x => (f w x, g w x)
-         speedGrad := frontierGrad R (fun w => {x | ¬c w x}) w
+         speedGrad := frontierGrad R (fun w => {x | c w x}) w
          discontinuity := frontier {x | c w x}}
         ::
         df.map (fun d => {d with discontinuity := d.discontinuity ∩ {x | c w x}})
@@ -396,9 +409,9 @@ theorem ite.arg_te.HasParamRevFDerivWithJumpsAt_rule
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor
-  . convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1)
+  . convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry
     . fun_trans; simp only [hf.2, hg.2, Tactic.if_pull]
-    . simp[List.map_append,ftrans_simp];
+    . simp[List.map_append,ftrans_simp]
       constructor
       . simp[frontierGrad]; simp (disch:=sorry) only [adjoint_inner_left]; simp [Inner.inner]
       . rfl
