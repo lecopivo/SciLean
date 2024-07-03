@@ -151,6 +151,10 @@ unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (minOutParam : ℕ)
   for x in xs do
     let _ ← synthesizeArgument x gtrans
 
+  -- todo: keep on synthesizing arguments while there is some progress
+  for x in xs do
+    let _ ← synthesizeArgument x gtrans
+
   for x in xs do
     let x ← instantiateMVars x
     if x.hasMVar then
