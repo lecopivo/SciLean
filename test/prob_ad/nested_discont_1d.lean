@@ -1,88 +1,53 @@
-import SciLean.Core.Integral.Common
-
-import SciLean.Tactic.LetEnter
-import SciLean.Tactic.LetUtils
+import SciLean.Core.Integral.HasParamDerivWithJumps
+import SciLean.Core.Integral.HasParamFwdDerivWithJumps
+import SciLean.Core.Integral.HasParamRevDerivWithJumps
+import SciLean.Core.Integral.HasParamDerivWithJumpsCommon
+import SciLean.Tactic.LSimp
+import SciLean.Tactic.LFunTrans
 
 open SciLean MeasureTheory Set
 
 variable
-  {R : Type} [RealScalar R] [MeasureSpace R]
+  {R : Type} [RealScalar R] [MeasureSpace R] [BorelSpace R]
 
 set_default_scalar R
 
-#check _root_.MeasureTheory.Measure.restrict_restrict
-#check SciLean.Measure.restrict_restrict
-
--- set_option trace.Meta.Tactic.simp.discharge true
--- set_option trace.Meta.Tactic.fun_trans.discharge true
 set_option trace.Meta.Tactic.simp.rewrite true
-set_option trace.Meta.Tactic.fun_trans.rewrite true
+set_option trace.Meta.Tactic.simp.discharge true
+set_option trace.Meta.Tactic.simp.unify true
 
-example (w : R) :
-    (∂ w':=w,
-      ∫' x in Icc (0:R) 1,
-        if x ≤ w' then if x + w' ≤ 0 then (1:R) else 0 else 0)
+attribute [ftrans_simp ↓] SciLean.ContinuousLinearMap.mk'_eval
+
+
+@[ftrans_simp]
+theorem frontier_setOf_le' {X} [TopologicalSpace X] {R} [RealScalar R] (f g : X → R)
+  (hf : Continuous f) (hg : Continuous g) :
+  frontier (setOf (no_index fun x => f x ≤ g x))
+  =
+  {x | f x = g x} := sorry_proof
+
+
+#check frontier_setOf_le
+
+example (w : R) (a : R) (ha : a ≠ 0) :
+    (fderiv R (fun w' =>
+      ∫ x in Icc (0:R) 1,
+        if x ≤ w' then if w' ≤ a * x then (1:R) else 0 else 0) w 1)
     =
-    let ds := if w ∈ Icc 0 1 then if w + w ≤ 0 then 1 else 0 else 0;
-    let ds_1 := -if -w ∈ Icc 0 1 ∩ {x | x ≤ w} then 1 else 0;
-    let sf' := ds_1 + ds;
+    let ds := if w ∈ Icc 0 1 then if w ≤ a * w then 1 else 0 else 0;
+    let w' := a⁻¹ * w
+    let ds_1 := if w' ∈ {x | x ≤ w} ∩ Icc 0 1 then -1/(Scalar.abs a) else 0;
+    let sf' := ds + ds_1;
     sf' := by
 
   conv =>
     lhs
 
-    unfold scalarCDeriv
+    rw[fderiv_under_integral_over_set
+           (hf:= by gtrans
+                      (disch:=first | fun_prop_no_ifs | assume_almost_disjoint)
+                      (norm:=lsimp only [ftrans_simp]))
+                      (hA := by assume_almost_disjoint)]
 
-    simp (config := {zeta:=false,singlePass:=false}) (disch:=gtrans (disch:=fun_prop)) only [Tactic.lift_lets_simproc,cintegral.arg_f.cderiv_rule']
-
-
-    simp (config := {zeta:=false,singlePass:=false}) (disch:=gtrans (disch:=fun_prop))
-      only [restrictToFrontier_eq_restrictToLevelSet,Tactic.lift_lets_simproc,
-            SciLean.Measure.restrict_restrict,
-            vectorIntegral_volume_restrict_restrictToLevelSet_eq_cintegral]
-
-
-    fun_trans (config := {zeta:=false}) only [scalarCDeriv,scalarGradient]
-
-
-    simp (config := {zeta:=false,singlePass:=true}) (disch:=gtrans (disch:=fun_prop)) only [surfaceIntegral_inter_parametrization]
-
-
-    simp (config := {zeta:=false,singlePass:=false})  only [ftrans_simp, Tactic.lift_lets_simproc]
-
-
-    fun_trans (config:={zeta:=false}) only []
-
-    -- fun_trans (config:={zeta:=false,singlePass:=true}) (disch:=sorry_proof) only [ftrans_simp,Tactic.lift_lets_simproc, scalarGradient, scalarCDeriv]
-    -- simp (config:={zeta:=false,failIfUnchanged:=false}) only [ftrans_simp,Tactic.lift_lets_simproc]
-
-    -- simp (config:={zeta:=false,singlePass:=false})  only
-    --       [Set.mem_Icc,Set.mem_inter_iff]
-
-    simp (config:={zeta:=false,singlePass:=true}) only
-          [ftrans_simp, Tactic.lift_lets_simproc, scalarGradient, scalarCDeriv]
-
-    simp (config:={zeta:=false,singlePass:=true}) only
-          [ftrans_simp, Tactic.lift_lets_simproc, scalarGradient, scalarCDeriv]
-
-    autodiff
-
-
-
-#check Nat
-
-set_option pp.notation false
-set_option pp.all true
-example (y : ℝ) (P : ℝ → ℝ → Prop) [∀ x y, Decidable (P x y)] :
-    (if (let x := -y; P x y) then y + 0 else y)
-    =
-    sorry := by
-
-  conv =>
-    lhs
-    simp (config:={zeta:=false}) only [Tactic.lift_lets_simproc]
-
-    simp (config:={zeta:=false})
-
-
-#check Set.mem_inter_iff
+    -- for some reason `assumption` tactic fails to apply `ha`
+    lautodiff (disch:=first | apply ha | fun_prop (disch:=apply ha)) [inter_assoc]
