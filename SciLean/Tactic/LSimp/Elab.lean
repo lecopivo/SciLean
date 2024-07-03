@@ -18,9 +18,12 @@ open Lean Elab Tactic in
   withMainContext do withSimpDiagnostics do
     let { ctx, simprocs, dischargeWrapper } ← mkSimpContext stx (eraseLocal := false)
     let ctx := { ctx with config := { ctx.config with zeta := false } }
+    let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
+
     let stats ← dischargeWrapper.with fun discharge? => do
       let e ← Conv.getLhs
       let ((e',prf),stats) ←
+        Simp.withSimpContext ctx do
         lsimpMain e /- k -/ ctx simprocs discharge?
           (k := fun r => do let r ← r.bindVars; pure (r.expr, ← r.getProof))
       Conv.updateLhs e' prf
