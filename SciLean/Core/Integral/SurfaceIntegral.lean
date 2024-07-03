@@ -51,8 +51,8 @@ theorem surface_integral_parametrization_inter
 theorem surface_integral_parametrization_inter'
     (f : X → Y) (A B : Set X)
     {U param} (p : SetParametrization A U param)
-    [AddCommGroup U] [Module ℝ U] [MeasureSpace U] :
+    [NormedAddCommGroup U] [AdjointSpace ℝ U] [MeasureSpace U] :
     (∫ x in A ∩ B, f x ∂μH[d])
     =
     param.foldl (init:=(0:Y))
-      fun s (dom,p) => s + ∫ u in dom ∩ p ⁻¹' B, f (p u) := sorry_proof
+      fun s (dom,p) => s + ∫ u in dom ∩ p ⁻¹' B, jacobian ℝ p u • f (p u) := sorry_proof

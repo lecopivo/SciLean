@@ -148,7 +148,7 @@ theorem parametric_inverse_affine' (f : X → R) (c : R) (hf : IsAffineMap R f) 
 
 
 
-
+#exit
 
 open IndexType in
 @[simp, fun_trans]

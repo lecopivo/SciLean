@@ -40,13 +40,9 @@ example (w : R) :
 
     lautodiff (disch:=fun_prop)
 
-
-
     lsimp (disch:=gtrans (disch:=fun_prop)) only [surface_integral_parametrization_inter',ftrans_simp]
 
     lautodiff
-
-    simp [univ_inter]
 
     lautodiff
 
@@ -69,3 +65,9 @@ example (w : R) :
 #check_simp (1 + 1 : ℝ) ~> (2 : ℝ)
 
 #check univ_inter
+
+
+
+#synth NormedAddCommGroup (R^[2])
+#synth NormedSpace R (R^[2])
+#synth NormedSpace ℝ (R^[2])
