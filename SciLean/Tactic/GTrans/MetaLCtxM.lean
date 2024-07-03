@@ -119,9 +119,8 @@ instance [MetaEval α] : MetaEval (MetaLCtxM α) :=
 instance : MonadControl MetaM MetaLCtxM where
   stM      := fun α => α × ContextCtx
   liftWith := fun f => do
-    let cfg ← readThe ContextCfg
     let f' := (f (fun x c s => do
-                      let (x',ctx') ← x cfg ⟨c.lctx,c.localInstances⟩ s
+                      let (x',ctx') ← x c.toCfg ⟨c.lctx,c.localInstances⟩ s
                       return (x', ctx')))
     f'
   restoreM := fun x => do let (a, s) ← liftM x; set s; pure a
