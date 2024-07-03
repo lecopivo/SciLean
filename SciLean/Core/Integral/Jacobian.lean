@@ -4,6 +4,8 @@ open FiniteDimensional
 
 namespace SciLean
 
+set_option linter.unusedVariables false
+
 section DetDefinition
 
 variable {R : Type*} [CommRing R]
@@ -38,6 +40,7 @@ theorem det.scalar_rule
     (f : R → R) (hf : IsLinearMap R f) :
     det R f = f 1 := sorry_proof
 
+
 open FiniteDimensional in
 @[fun_trans]
 theorem HSMul.hSMul.arg_x.det_rule
@@ -57,17 +60,17 @@ end DetDefinition
 
 variable
   {R} [RealScalar R]
-  {U} [SemiHilbert R U]
-  {V} [SemiHilbert R V]
-  {W} [SemiHilbert R W]
+  {U} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
+  {V} [NormedAddCommGroup V] [AdjointSpace R V] [CompleteSpace V]
+  {W} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
 
 
 variable (R)
 @[fun_trans]
 noncomputable
 def jacobian (g : U → V) (x : U) : R :=
-  let dg := cderiv R g x
-  let dg' :=  semiAdjoint R dg
+  let dg := fderiv R g x
+  let dg' :=  adjoint R dg
   Scalar.sqrt (det R (dg' ∘ dg))
 
 variable {R}
@@ -89,7 +92,7 @@ theorem jacobian.const_rule (y : V) :
 
 @[fun_trans]
 theorem jacobian.comp_rule (f : U → V) (g : U → U)
-    (hf : HasAdjDiff R f) (hg : HasAdjDiff R g) :
+    (hf : Differentiable R f) (hg : Differentiable R g) :
     jacobian R (fun x => f (g x))
     =
     fun x => jacobian R f x * jacobian R g x := by sorry_proof
@@ -98,7 +101,7 @@ theorem jacobian.comp_rule (f : U → V) (g : U → U)
 open FiniteDimensional in
 @[fun_trans]
 theorem HSMul.hSMul.arg_x.jacobian_rule
-    (r : R) (f : U → V) (hf : HasAdjDiff R f)  :
+    (r : R) (f : U → V) (hf : Differentiable R f)  :
     jacobian R (fun x => r • f x)
     =
     fun x =>
@@ -108,12 +111,12 @@ theorem HSMul.hSMul.arg_x.jacobian_rule
 open FiniteDimensional in
 @[fun_trans]
 theorem Prod.mk.arg_xy.jacobian_rule
-    (f : U → V) (g : U → W) (hf : HasAdjDiff R f) (hg : HasAdjDiff R g) :
+    (f : U → V) (g : U → W) (hf : Differentiable R f) (hg : Differentiable R g) :
     jacobian R (fun x => (f x, g x))
     =
     fun x =>
-      let Jf := cderiv R f x
-      let Jg := cderiv R g x
-      let Gf := fun dx => semiAdjoint R Jf (Jf dx)
-      let Gg := fun dx => semiAdjoint R Jg (Jg dx)
+      let Jf := fderiv R f x
+      let Jg := fderiv R g x
+      let Gf := fun dx => adjoint R Jf (Jf dx)
+      let Gg := fun dx => adjoint R Jg (Jg dx)
       Scalar.sqrt (Scalar.abs (det R (fun dx => Gf dx + Gg dx))) := sorry_proof
