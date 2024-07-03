@@ -1,7 +1,10 @@
 import SciLean.Core.Objects.FinVec
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.StructType.Algebra
+import SciLean.Core.FloatAsReal
 
+
+import SciLean.Mathlib.Analysis.AdjointSpace.Basic
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
 import SciLean.Mathlib.Analysis.MetricSpace
@@ -64,6 +67,11 @@ instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCo
   add_smul := sorry_proof
   zero_smul := sorry_proof
 
+
+instance (priority := low) {S R} [SMul S Elem] [SMul R Elem] [SMul S R] [IsScalarTower S R Elem]
+    [ArrayType Cont Idx Elem] : IsScalarTower S R Cont where
+  smul_assoc := by intros; ext; simp
+
 instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] : Vec K Cont where
   scalar_wise_smooth := sorry_proof
   continuous_smul := sorry_proof
@@ -98,32 +106,41 @@ instance (priority := low) [ArrayType Cont Idx Elem] [MetricSpace (WithLp p Elem
   eq_of_dist_eq_zero := sorry_proof
 
 
--- noncomputable
--- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
---     NormedAddCommGroup Cont where
---   norm := fun x => (∑ i, ‖x[i]‖^2).sqrt
---   dist_self := sorry_proof
---   dist_comm := sorry_proof
---   dist_triangle := sorry_proof
---   edist_dist := sorry_proof
---   eq_of_dist_eq_zero := sorry_proof
+instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
+    NormedAddCommGroup Cont where
+  norm := fun x =>
+    let x := ∑ i, ‖x[i]‖^2
+    let y := Scalar.ofReal Float x
+    Scalar.toReal Float y
+  dist_self := sorry_proof
+  dist_comm := sorry_proof
+  dist_triangle := sorry_proof
+  edist_dist := sorry_proof
+  eq_of_dist_eq_zero := sorry_proof
 
--- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace K Elem] :
---     NormedSpace K Cont where
---   one_smul := sorry_proof
---   mul_smul := sorry_proof
---   smul_zero := sorry_proof
---   smul_add := sorry_proof
---   add_smul := sorry_proof
---   zero_smul := sorry_proof
---   norm_smul_le := sorry_proof
+instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace K Elem] :
+    NormedSpace K Cont where
+  one_smul := sorry_proof
+  mul_smul := sorry_proof
+  smul_zero := sorry_proof
+  smul_add := sorry_proof
+  add_smul := sorry_proof
+  zero_smul := sorry_proof
+  norm_smul_le := sorry_proof
 
--- instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [InnerProductSpace K Elem] :
---     InnerProductSpace K Cont where
---   norm_sq_eq_inner := sorry_proof
---   conj_symm := sorry_proof
---   add_left := sorry_proof
---   smul_left := sorry_proof
+instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    AdjointSpace K Cont where
+  inner_top_equiv_norm := sorry_proof
+  conj_symm := sorry_proof
+  add_left := sorry_proof
+  smul_left := sorry_proof
+
+instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [InnerProductSpace K Elem] :
+    InnerProductSpace K Cont where
+  norm_sq_eq_inner := sorry_proof
+  conj_symm := sorry_proof
+  add_left := sorry_proof
+  smul_left := sorry_proof
 
 instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] :
     SemiInnerProductSpace K Cont where
