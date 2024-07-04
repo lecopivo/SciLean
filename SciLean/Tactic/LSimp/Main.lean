@@ -352,14 +352,30 @@ where
 partial def simpLambda (e : Expr) : LSimpM Result := do
   withParent e <| lambdaTelescopeDSimp e fun xs e => do
     withoutModifyingLCtx pure do withoutModifyingCache do withNewLemmas xs do
-      let r ← lsimp e >>= (·.bindVars)
-      let eNew ← mkLambdaFVars xs r.expr
+      let r ← lsimp e
+      let (eNew,vars)  ← xs.foldrM (init:=(r.expr,r.vars)) fun x (e,vars) => do
+        let deps ← collectForwardDeps #[x] false
+        let (vars', vars) := vars.partition deps.contains
+        let e ← mkLambdaFVars (#[x] ++ vars') e
+        pure (e,vars)
+      let eNew ← mkLambdaFVars vars eNew
+      let r ← r.bindVars
       match r.proof? with
       | none   => return { expr := eNew }
       | some h =>
         let p ← xs.foldrM (init := h) fun x h => do
           mkFunExt (← mkLambdaFVars #[x] h)
         return { expr := eNew, proof? := p }
+
+      -- old implementation that does not pull let bindings out of lambda function
+      -- let r ← lsimp e >>= (·.bindVars)
+      -- let eNew ← mkLambdaFVars xs r.expr
+      -- match r.proof? with
+      -- | none   => return { expr := eNew }
+      -- | some h =>
+      --   let p ← xs.foldrM (init := h) fun x h => do
+      --     mkFunExt (← mkLambdaFVars #[x] h)
+      --   return { expr := eNew, proof? := p }
 
 
 partial def simpArrow (e : Expr) : LSimpM Result := return { expr := e}
