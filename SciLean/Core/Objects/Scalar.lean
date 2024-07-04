@@ -9,6 +9,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
 import Mathlib.Analysis.NormedSpace.WithLp
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
+import SciLean.Mathlib.Analysis.AdjointSpace.Basic
 import SciLean.Util.SorryProof
 import SciLean.Tactic.FTrans.Init
 
@@ -112,6 +113,16 @@ def RealScalar.pi [RealScalar R] : R := RealScalar.acos (-1)
 
 
 instance {R} [RealScalar R] : MetricSpace (WithLp p R) := (by infer_instance : MetricSpace R)
+
+instance {R} [RealScalar R] : Inner ℝ R where
+  inner x y := Scalar.toReal R (x*y)
+
+noncomputable
+instance {R} [RealScalar R] : AdjointSpace ℝ R where
+  inner_top_equiv_norm := sorry_proof
+  conj_symm := sorry_proof
+  add_left := sorry_proof
+  smul_left := sorry_proof
 
 -- can we provide this without messing with instance for `MeasureSpace ℝ`?
 -- open MeasureTheory in

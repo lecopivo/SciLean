@@ -44,7 +44,7 @@ def walkOnSpheres (φ : Vec3 → Float) (g : Vec3 → Y) (n : ℕ) (x : Vec3) : 
         . simp[harmonicRec]
         . simp[harmonicRec,h]
           simp only [smul_push,cintegral.arg_f.push_lambda]
-          rw[integral_as_uniform_E Float]
+          rw[cintegral_as_uniform_E Float]
       rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
       simp (config:={zeta:=false})
   return f x
@@ -86,7 +86,7 @@ def harmonicRec.arg_x.fwdDeriv_randApprox (n : ℕ)
       conv =>
         conv => enter [x];rw[cintegral.arg_f.push_lambda]
         rw[cintegral.arg_f.push_lambda]
-      rw[integral_as_uniform_E Float]
+      rw[cintegral_as_uniform_E Float]
     rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
     simp (config:={zeta:=false})
 
@@ -128,6 +128,6 @@ def harmonicRec'_fwdDeriv_rand (n : ℕ)
       conv =>
         conv => enter [x];rw[cintegral.arg_f.push_lambda]
         rw[cintegral.arg_f.push_lambda]
-      rw[integral_as_uniform_E Float]
+      rw[cintegral_as_uniform_E Float]
     rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
     simp (config:={zeta:=false})

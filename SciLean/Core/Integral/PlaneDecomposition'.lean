@@ -5,12 +5,11 @@ import SciLean.Core.FunctionPropositions
 -- import SciLean.Core.Integral.ParametricInverse
 import SciLean.Core.Integral.SetParametrization
 import SciLean.Core.Integral.Jacobian
--- import SciLean.Core.Integral.BoundingBall
+import SciLean.Core.Integral.BoundingBall
 import SciLean.Core.Notation
 import SciLean.Tactic.InferVar
 
 import SciLean.Mathlib.Analysis.AdjointSpace.Adjoint
-import SciLean.Mathlib.LinearAlgebra.Basis
 
 import SciLean.Core.Integral.HasParamDerivWithJumpsCommon
 
@@ -119,7 +118,10 @@ theorem planeDecomposition_orthogonal_dir
 
 variable
   {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [b : Basis ι R X]
+  {κ} [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
+  {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [AdjointSpace R X] [CompleteSpace X] [b : Basis ι R X]
+  {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [AdjointSpace R Y] [CompleteSpace Y] [Basis κ R Y]
+
 
 -- variable (f : X → R)
 -- @[fun_trans]
@@ -145,18 +147,28 @@ theorem SetParametrization.setOf_eq_affine {n} (f g : X → R) (hf : IsAffineMap
         dec (a,u)))]) := sorry_proof
 
 
+open IndexType FiniteDimensional in
+@[gtrans]
+theorem SurfaceParametrization.setOf_eq_affine {n} (f g : X → R) (hf : IsAffineMap R f) (hg : IsAffineMap R g)
+    (hn : n + 1 = card ι := by infer_var) :
+    SurfaceParametrization {x | f x = g x} (R^[n])
+    ([(Set.univ,
+      (fun u =>
+        let N := fgradient (fun x => f x - g x) 0
+        let dec := planeDecomposition (R:=R) N hn
+        let a := - (f 0 - g 0) / ‖N‖₂
+        dec (a,u)))]) := sorry_proof
 
-#exit
+
+
 
 open IndexType in
 @[simp, fun_trans]
 theorem planeDecomposition.arg_a0.jacobian_rule
-    {n} {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-    {X} [SemiHilbert R X]
-    {Y} [FinVec ι R Y]
+    {n}
     (u : Y)
-    (hn : n + 1 = card ι := by first | assumption | infer_var) (a : R)
-    (f : X → R^[n]) (hf : HasAdjDiff R f):
+    (hn : n + 1 = card κ := by first | assumption | infer_var) (a : R)
+    (f : X → R^[n]) (hf : Differentiable R f):
     jacobian R (fun x => planeDecomposition u hn (a, f x))
     =
     fun x => jacobian R f x := sorry_proof
@@ -164,11 +176,24 @@ theorem planeDecomposition.arg_a0.jacobian_rule
 
 open IndexType in
 @[gtrans]
-theorem planeDecomposition_bounding_ball
-    {n} {ι} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] {X} [FinVec ι R X] [MetricSpaceP X 2]
-    (u : X) (hn : n + 1 = card ι := by first | assumption | infer_var)
-    (A : Set X) (center : X) (radius : ℝ)
-    (hA : BoundingBall A center radius) :
-    let dec := (planeDecomposition (R:=R) u hn)
-    let center' := (dec.symm center)
-    BoundingBall (dec ⁻¹' A) center' radius := sorry_proof
+theorem planeDecomposition_preimage_bounding_ball
+    (A : Set X) (u : X) (hn : n + 1 = card ι := by first | assumption | infer_var)
+    {center radius} (hA : BoundingBall₂ R A center radius) :
+    BoundingBall₂ (R:=R) (planeDecomposition u hn ⁻¹' A)
+      (center :=
+        let dec := planeDecomposition (R:=R) u hn
+        (dec.symm center))
+      (radius := radius) := sorry_proof
+
+
+-- There seems to be some problem with RefinedDiscrTree and eta reduction and Equiv
+open IndexType in
+@[gtrans]
+theorem planeDecomposition_preimage_bounding_ball'
+    (A : Set X) (u : X) (hn : n + 1 = card ι := by first | assumption | infer_var)
+    {center radius} (hA : BoundingBall₂ R A center radius) :
+    BoundingBall₂ (R:=R) ((fun x => DFunLike.coe (planeDecomposition u hn) x) ⁻¹' A)
+      (center :=
+        let dec := planeDecomposition (R:=R) u hn
+        (dec.symm center))
+      (radius := radius) := sorry_proof
