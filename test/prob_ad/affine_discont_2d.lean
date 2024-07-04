@@ -29,7 +29,7 @@ set_default_scalar R
 example (w : R) (a b c d : R) :
     (fderiv R (fun w' =>
       ∫ xy in Icc (0:R) 1 |>.prod (Icc (0 : R) 1),
-        if a * xy.1 + b * xy.2 + c ≤ d * w' then (1:R) else 0) w 1)
+        if a * xy.1 + b * xy.2 + c ≤ d * w' then xy.1*xy.2*w'*w' else 0) w 1)
     =
     sorry := by
 
@@ -42,9 +42,15 @@ example (w : R) (a b c d : R) :
                       (norm:=lsimp only [ftrans_simp]))
                       (hA := by assume_almost_disjoint)]
 
-    lautodiff (disch:=fun_prop)
+    lautodiff (disch:=first | fun_prop | gtrans (disch:=fun_prop))
 
-    lsimp (config:={singlePass:=true}) (disch:=gtrans (disch:=fun_prop)) only
-      [surface_integral_parametrization_inter'',ftrans_simp]
+    conv in (∫ x in _, _ ∂μH[_]) =>
 
-    lautodiff
+      lsimp (disch:=gtrans (disch:=fun_prop)) only
+        [surface_integral_parametrization_inter R]
+      lautodiff (disch:=gtrans (disch:=fun_prop))
+        [integral_over_bounding_ball (R:=R)]
+
+    lsimp only
+
+  sorry_proof
