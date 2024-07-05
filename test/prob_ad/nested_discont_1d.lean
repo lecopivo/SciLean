@@ -12,22 +12,6 @@ variable
 
 set_default_scalar R
 
-set_option trace.Meta.Tactic.simp.rewrite true
-set_option trace.Meta.Tactic.simp.discharge true
-set_option trace.Meta.Tactic.simp.unify true
-
-attribute [ftrans_simp ↓] SciLean.ContinuousLinearMap.mk'_eval
-
-
-@[ftrans_simp]
-theorem frontier_setOf_le' {X} [TopologicalSpace X] {R} [RealScalar R] (f g : X → R)
-  (hf : Continuous f) (hg : Continuous g) :
-  frontier (setOf (no_index fun x => f x ≤ g x))
-  =
-  {x | f x = g x} := sorry_proof
-
-
-#check frontier_setOf_le
 
 example (w : R) (a : R) (ha : a ≠ 0) :
     (fderiv R (fun w' =>
@@ -51,3 +35,28 @@ example (w : R) (a : R) (ha : a ≠ 0) :
 
     -- for some reason `assumption` tactic fails to apply `ha`
     lautodiff (disch:=first | apply ha | fun_prop (disch:=apply ha)) [inter_assoc]
+
+
+
+example (w : R) (a : R) (ha : a ≠ 0) :
+    (fgradient (fun w' =>
+      ∫ x in Icc (0:R) 1,
+        if x ≤ w' then if w' ≤ a * x then (1:R) else 0 else 0) w)
+    =
+    let ds := if w ∈ Icc 0 1 then if w ≤ a * w then 1 else 0 else 0;
+    let w' := a⁻¹ * w
+    let ds_1 := if w' ∈ {x | x ≤ w} ∩ Icc 0 1 then -(Scalar.abs a)⁻¹ else 0;
+    let sf' := ds + ds_1;
+    sf' := by
+
+  conv =>
+    lhs
+    unfold fgradient
+    rw[revFDeriv_under_integral_over_set
+           (hf:= by gtrans
+                      (disch:=first | fun_prop_no_ifs | assume_almost_disjoint)
+                      (norm:=lsimp only [ftrans_simp]))
+                      (hA := by assume_almost_disjoint)]
+
+    -- for some reason `assumption` tactic fails to apply `ha`
+    lautodiff (disch:=first | apply ha | fun_prop (disch:=apply ha)) [inter_assoc,frontierGrad]

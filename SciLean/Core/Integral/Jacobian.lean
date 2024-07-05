@@ -115,8 +115,8 @@ theorem Prod.mk.arg_xy.jacobian_rule
     jacobian R (fun x => (f x, g x))
     =
     fun x =>
-      let Jf := fderiv R f x
-      let Jg := fderiv R g x
+      let Jf := fun dx => fderiv R f x dx
+      let Jg := fun dx => fderiv R g x dx
       let Gf := fun dx => adjoint R Jf (Jf dx)
       let Gg := fun dx => adjoint R Jg (Jg dx)
       Scalar.sqrt (Scalar.abs (det R (fun dx => Gf dx + Gg dx))) := sorry_proof
