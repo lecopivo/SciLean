@@ -123,8 +123,8 @@ partial def whnf' (e : Expr) (config : WhnfCoreConfig := {}) : MetaM Expr :=
 
 
 def project? (e : Expr) (i : Nat) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
-  -- projectCore? (← whnf' e config) i
-  projectCore? (← whnf e) i
+  projectCore? (← whnf' e config) i
+  -- projectCore? (← whnf e) i
 
 /-- Reduce kernel projection `Expr.proj ..` expression. -/
 def reduceProj? (e : Expr) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do

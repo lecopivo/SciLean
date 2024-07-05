@@ -1,8 +1,5 @@
--- import SciLean.Core.Objects.Vec
--- import SciLean.Core.Objects.Scalar
-import SciLean.Meta.DerivingOp
-import SciLean.Core
-import SciLean.Core.Meta.GenerateLinearMapSimp
+import SciLean
+
 
 open SciLean
 

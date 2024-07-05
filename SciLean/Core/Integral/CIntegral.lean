@@ -1,14 +1,10 @@
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 import Mathlib.MeasureTheory.Measure.Restrict
 import Mathlib.MeasureTheory.Measure.Dirac
--- import Mathlib.Data.RCLike.Basic
--- import Mathlib.Analysis.LocallyConvex.Basic
--- import Mathlib.Topology.Algebra.Module.LocallyConvex
 
 import SciLean.Mathlib.MeasureTheory.Unit
 
 import SciLean.Core.FunctionTransformations
-import SciLean.Core.Integral.BoundingBall
 import SciLean.Util.SorryProof
 
 

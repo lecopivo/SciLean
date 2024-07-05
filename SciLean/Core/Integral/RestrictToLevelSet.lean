@@ -123,7 +123,7 @@ theorem vectorIntegral_restrictToLevelSet_eq_cintegral (f : X → U) (μ : Measu
 theorem vectorIntegral_volume_restrict_restrictToLevelSet_eq_cintegral (f : X → U) (A : Set X)
     (φ : X → R) (L : U → R → V) (c : R) :
     vectorIntegral f ((volume.restrict A).restrictToLevelSet φ c) L
-    =
+v    =
     let thickness := fun x => ‖∇ (x':=x), φ x'‖₂⁻¹
     ∫' x in {x | φ x = c} ∩ A, L (f x) (thickness x) ∂(surfaceMeasure (finrank R X - 1)) := sorry_proof
 

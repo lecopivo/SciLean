@@ -18,6 +18,8 @@ import SciLean.Core.Functions.Pow
 
 -- these two imports need clean up
 import SciLean.Core.Rand
+import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
+import SciLean.Core.Transformations.SurfaceParametrization
 
 import SciLean.Tactic.InferVar
 import SciLean.Tactic.RefinedSimp

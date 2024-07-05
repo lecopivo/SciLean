@@ -1,13 +1,4 @@
-import SciLean.Core.FunctionTransformations
-import SciLean.Data.ArrayType
-import SciLean.Data.DataArray
-import SciLean.Util.RewriteBy
-import SciLean.Tactic.Autodiff
-import SciLean.Tactic.LetEnter
-import SciLean.Tactic.LetUtils
-import SciLean.Core
-
-import SciLean.Core.Notation.RevCDeriv
+import SciLean
 
 open SciLean
 
@@ -216,6 +207,9 @@ example
 by
   conv => lhs; autodiff
 
+
+#exit
+
 example (A : Fin 5 → Fin 10 → K)
   : revDeriv K (fun (x : Fin 10 → K) => fun i => ∑ j, A i j * x j)
     =
@@ -225,7 +219,6 @@ by
 
 variable [PlainDataType K]
 
-#exit
 
 example
   : revDeriv K (fun (x : K^[Fin 10]) => fun i => x[i])

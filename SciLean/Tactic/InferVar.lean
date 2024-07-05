@@ -136,8 +136,7 @@ partial def deduceByTactic : Tactic
     trace[Meta.Tactic.infer_var] "candidate value for {← ppExpr m} is {← ppExpr x}"
     let (x', _) ← elabConvRewrite x #[] (← `(conv| ($c)))
     trace[Meta.Tactic.infer_var] "simplified candidate value is {← ppExpr x'}"
-    m.mvarId!.assignIfDefeq x'
-    unless ← isDefEq m x' do throwError "infer_var: failed to assign {← ppExpr x'} to {← ppExpr m}"
+    unless (← isDefEq m x') do throwError "infer_var: failed to assign {← ppExpr x'} to {← ppExpr m}"
     let subgoals ←
       evalTacticAt (← `(tactic| (conv => (conv => lhs; ($c)); (conv => rhs; ($c))); (try $t))) goal
     if subgoals.length ≠ 0 then

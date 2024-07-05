@@ -7,7 +7,7 @@ set_default_scalar Float
 #exit
 
 def foo :=
-  ((SciLean.gradient Float (fun x : Float ^ Fin 3 => Id.run do
+  ((SciLean.gradient Float (fun x : Float^[3] => Id.run do
     let mut prod := 1.0
     let mut sum := 0.0
     for i in IndexType.univ (Fin 3) do

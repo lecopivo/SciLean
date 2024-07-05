@@ -1,7 +1,4 @@
 import SciLean
-import SciLean.Tactic.LetNormalize
-import SciLean.Util.RewriteBy
-import SciLean.Core.Notation.Gradient
 
 open SciLean LeanColls
 
@@ -21,7 +18,7 @@ example
     =
     fun x dx => dx :=
 by
-  (conv => lhs; unfold gradient; autodiff; autodiff)
+  (conv => lhs; unfold SciLean.gradient; autodiff; autodiff)
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, x i)
