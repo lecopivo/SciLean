@@ -31,9 +31,6 @@ theorem circleParam.arg_θ.jacobian_rule :
   unfold circleParam
   autodiff; autodiff
 
-
-notation "π" => RealScalar.pi (R:=defaultScalar%)
-
 open Scalar Set RealScalar in
 @[gtrans]
 theorem circle_parametric_inverse_polar (r : R) (hr : r ≠ 0) :

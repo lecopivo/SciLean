@@ -50,10 +50,11 @@ attribute [ftrans_simp]
 @[ftrans_simp]
 theorem finrank_real_scalar [RealScalar R] : FiniteDimensional.finrank ℝ R = 1 := sorry_proof
 
-
 instance instMemPreimageDecidable (x : α) (B : Set β) (f : α → β)
     [inst : ∀ (y:β), Decidable (y ∈ B)] :
     Decidable (x ∈ f ⁻¹' B) := inst (f x)
+
+notation "π" => RealScalar.pi (R:=defaultScalar%)
 
 ----------------------------------------------------------------------------------------------------
 -- Scalar ------------------------------------------------------------------------------------------
