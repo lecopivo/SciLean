@@ -305,3 +305,19 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
 @[pp_dot]
 def DataArrayN.curry [Inhabited α] (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
   ⟨⟨x.data.byteData, IndexType.card ι, sorry_proof⟩, sorry_proof⟩
+
+
+open Lean in
+private partial def parseDimProd (s : Syntax) : TSyntaxArray `dimSpec :=
+  match s with
+  | `(Fin $n)      => #[⟨n.raw⟩]
+  | `(Fin $n × $I) => #[⟨n.raw⟩] ++ parseDimProd I
+  | `($J × $I)     => #[⟨J.raw⟩] ++ parseDimProd I
+  | `($I)          => #[⟨I.raw⟩]
+
+@[app_unexpander DataArrayN]
+def unexpandDataArrayN : Lean.PrettyPrinter.Unexpander
+  | `($(_) $α $I) =>
+    let dims := parseDimProd I
+    `($α^[$dims,*])
+  | _  => throw ()
