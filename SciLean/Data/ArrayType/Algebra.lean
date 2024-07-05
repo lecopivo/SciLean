@@ -6,6 +6,7 @@ import SciLean.Core.FloatAsReal
 
 import SciLean.Mathlib.Analysis.AdjointSpace.Basic
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 
 import SciLean.Mathlib.Analysis.MetricSpace
 
@@ -93,6 +94,12 @@ instance (priority := low) {p} [ArrayType Cont Idx Elem] [Dist (WithLp p Elem)] 
     let y := WithLp.equiv _ _ y
     (∑ i, (distP p x[i] y[i])^p.toReal)^(1/p.toReal)
 
+instance (priority := low) [ArrayType Cont Idx Elem] [Dist Elem] :
+    Dist Cont where
+  dist := fun x y =>
+    let x := (∑ i, (dist x[i] y[i])^2)
+    let y := Scalar.ofReal Float x -- this ugliness it to dodge noncomputable checker
+    Scalar.toReal Float y
 
 noncomputable
 instance (priority := low) [ArrayType Cont Idx Elem] [MetricSpace (WithLp p Elem)] :
@@ -105,13 +112,13 @@ instance (priority := low) [ArrayType Cont Idx Elem] [MetricSpace (WithLp p Elem
   cobounded_sets := sorry_proof
   eq_of_dist_eq_zero := sorry_proof
 
-
 instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
     NormedAddCommGroup Cont where
   norm := fun x =>
     let x := ∑ i, ‖x[i]‖^2
-    let y := Scalar.ofReal Float x
+    let y := Scalar.ofReal Float x  -- this ugliness it to dodge noncomputable checker
     Scalar.toReal Float y
+  dist_eq := by simp[dist,NormedAddCommGroup.dist_eq]
   dist_self := sorry_proof
   dist_comm := sorry_proof
   dist_triangle := sorry_proof
@@ -182,8 +189,6 @@ instance (priority := low) [ArrayType Cont Idx K] : FinVec Idx K Cont where
   duality := by intro (i) (i'); simp[Inner.inner,Basis.basis, DualBasis.dualBasis]; sorry_proof
   to_dual := sorry_proof
   from_dual := sorry_proof
-
-
 
 
 -- -- These instances might cause problems
@@ -257,3 +262,16 @@ instance [ArrayType Cont Idx Elem] [MeasureSpace Elem] : MeasureSpace Cont where
     m_iUnion := sorry_proof
     trim_le := sorry_proof
 }
+
+open MeasureTheory in
+instance [ArrayType Cont Idx Elem] [MeasurableSpace Elem] [TopologicalSpace Elem] [BorelSpace Elem] :
+    BorelSpace Cont where
+  measurable_eq := sorry_proof
+
+
+
+-- This is problem as `Vec` and `NormedAddCommGroup` provide different topologie on `Elem`
+-- example {R} [RCLike R] [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace ℝ Elem] [Vec R Elem] :
+--   (PseudoEMetricSpace.toUniformSpace : UniformSpace Cont)
+--   =
+--   (Vec.toUniformSpace R : UniformSpace Cont) := by rfl

@@ -1,9 +1,6 @@
-import SciLean.Core.Integral.HasParamDerivWithJumps
-import SciLean.Core.Integral.HasParamFwdDerivWithJumps
-import SciLean.Core.Integral.HasParamRevDerivWithJumps
-import SciLean.Core.Integral.HasParamDerivWithJumpsCommon
-import SciLean.Tactic.LSimp
-import SciLean.Tactic.LFunTrans
+import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
+import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Tactic.Autodiff
 
 open SciLean MeasureTheory Set
 

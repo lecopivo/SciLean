@@ -8,7 +8,7 @@ open MeasureTheory ENNReal BigOperators Finset
 
 namespace SciLean.Rand
 
-variable {R} [RealScalar R] [ToString R]
+variable {R} [RealScalar R] [MeasureSpace R] [BorelSpace R] [ToString R]
 
 def foo (l : List R) (n : Nat) : R :=
   match n with
@@ -23,7 +23,7 @@ def foo' (θ : R) (l : List R) (n : Nat) : Rand R :=
     induction n n' prev h
     . simp[foo]
     . simp[foo,h]
-      -- rw[add_as_flip_E θ sorry_proof]
+    simp[add_as_flip_E θ sorry_proof]
     rw[pull_E_nat_recOn (x₀:=_) (r:=_) (hf:=by fun_prop)]
 
 

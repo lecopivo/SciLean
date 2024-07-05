@@ -18,7 +18,6 @@ import SciLean.Core.Functions.Pow
 
 -- these two imports need clean up
 import SciLean.Core.Rand
-import SciLean.Core.Integral.Common
 
 import SciLean.Tactic.InferVar
 import SciLean.Tactic.RefinedSimp

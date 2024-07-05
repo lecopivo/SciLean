@@ -2,10 +2,10 @@ import Mathlib.Data.Erased
 import Mathlib.Control.Random
 import Mathlib.MeasureTheory.Integral.Bochner
 import Mathlib.MeasureTheory.Decomposition.Lebesgue
+import SciLean.Mathlib.MeasureTheory.WeakIntegral
 
 import SciLean.Core.FunctionPropositions.Bijective
 import SciLean.Core.Objects.Scalar
-import SciLean.Core.Integral.CIntegral
 import SciLean.Core.Rand.SimpAttr
 
 import Mathlib.MeasureTheory.Measure.GiryMonad
@@ -53,8 +53,8 @@ def _root_.Function.IsMeasure {X} [MeasurableSpace X] (F : (X → ℝ) → ℝ) 
   ∃ μ : Measure X, ∀ (f : X → ℝ), F f = ∫ x, f x ∂μ
 
 open Classical in
+
 /-- Probability measure of a random variable -/
-@[pp_dot]
 noncomputable
 def ℙ {X} [MeasurableSpace X] (r : Rand X) : Measure X :=
   if h : r.spec.out.IsMeasure then
@@ -68,8 +68,8 @@ class LawfulRand (x : Rand X) [MeasurableSpace X] where
   is_prob : IsProbabilityMeasure x.ℙ
 
 variable {X Y Z : Type _}
-  [MeasurableSpace X]
-  [MeasurableSpace Y]
+  [MeasurableSpace X] [MeasurableSingletonClass X]
+  [MeasurableSpace Y] [MeasurableSingletonClass Y]
 
 instance instIsProbabilityMeasureℙ (x : Rand X) [inst : LawfulRand x] : IsProbabilityMeasure (x.ℙ) := inst.is_prob
 
@@ -160,19 +160,16 @@ instance [Add X] : HAdd (Rand X) X (Rand X) := ⟨fun x x' => do
 -- Simple Random Variable functions ----------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-@[pp_dot]
 abbrev map (r : Rand X) (f : X → Y) : Rand Y := do
   let x' ← r
   return f x'
 
 /-- Marginal distribution for the first component of a pair. -/
-@[pp_dot]
 abbrev fst (r : Rand (X×Y)) : Rand X := do
   let (x,_) ← r
   return x
 
 /-- Marginal distribution for the second component of a pair. -/
-@[pp_dot]
 abbrev snd (r : Rand (X×Y)) : Rand Y := do
   let (_,y) ← r
   return y
@@ -191,14 +188,13 @@ section ExpectedValue
 
 variable
   {R} [RealScalar R]
-  [AddCommGroup Y] [Module ℝ Y]
-  [AddCommGroup Z] [Module ℝ Z]
-  -- [AddCommGroup U] [TopologicalSpace U] [TopologicalAddGroup U] [Module ℝ U] [LocallyConveUSpace ℝ U]
-  {U} [AddCommGroup U] [Module ℝ U]
+  [AddCommGroup Y] [Module ℝ Y] [TopologicalSpace Y] [LocallyConvexSpace ℝ Y]
+  [AddCommGroup Z] [Module ℝ Z] [TopologicalSpace Z] [LocallyConvexSpace ℝ Z]
+  {U} [AddCommGroup U] [Module ℝ U] [TopologicalSpace U] [LocallyConvexSpace ℝ U]
+  -- {U} [AddCommGroup U] [TopologicalSpace U] [TopologicalAddGroup U] [Module ℝ U] [LocallyConvexSpace ℝ U]
 
-@[pp_dot]
 noncomputable
-def 𝔼 (r : Rand X) (φ : X → Y) : Y := ∫' x, φ x ∂r.ℙ
+def 𝔼 (r : Rand X) (φ : X → Y) : Y := weakIntegral r.ℙ  φ
 
 @[simp, ftrans_simp, rand_push_E]
 theorem pure_𝔼 (x : X) (φ : X → Y) :
@@ -213,13 +209,13 @@ theorem bind_E (r : Rand X) (f : X → Rand Y) (φ : Y → Z) :
 -- consider adding as a property inside of `Distribution` or `Rand`
 @[simp, ftrans_simp, rand_push_E]
 theorem E_zero (r : Rand X) :
-    r.𝔼 (fun _ => (0 : U)) = 0 := by simp[𝔼]
+    r.𝔼 (fun _ => (0 : Y)) = 0 := by simp[𝔼]
 
 @[simp, ftrans_simp, add_pull, rand_push_E]
 theorem E_add (r : Rand X) (φ ψ : X → U)
-    (hφ : CIntegrable φ r.ℙ) (hψ : CIntegrable ψ r.ℙ) :
+    (hφ : WeakIntegrable φ r.ℙ) (hψ : WeakIntegrable ψ r.ℙ) :
     r.𝔼 (fun x => φ x + ψ x) = r.𝔼 φ + r.𝔼 ψ := by
-  simp[𝔼]; rw[cintegral_add] <;> assumption
+  simp[𝔼]; rw[weakIntegral_add] <;> assumption
 
 @[simp, ftrans_simp, smul_pull, rand_push_E]
 theorem E_smul (r : Rand X) (φ : X → ℝ) (y : Y) :
@@ -230,11 +226,13 @@ theorem reparameterize [Nonempty X] (f : X → Y) (hf : f.Injective) {r : Rand X
     =
     let invf := f.invFun
     (r.map f).𝔼 (fun y => φ (invf y)) := by
+  simp [𝔼]
+  rw[weakIntegral_map sorry_proof sorry_proof]
   simp [𝔼,Function.invFun_comp' hf]
 
 section Mean
 
-variable [AddCommGroup X] [Module ℝ X]
+variable [AddCommGroup X] [Module ℝ X] [TopologicalSpace X] [LocallyConvexSpace ℝ X]
 
 noncomputable
 def mean (r : Rand X) : X := r.𝔼 id
@@ -243,6 +241,8 @@ def mean (r : Rand X) : X := r.𝔼 id
 theorem expectedValue_as_mean (x : Rand X) (φ : X → Y) :
     x.𝔼 φ = (x.map φ).mean := by
   simp [bind,mean,pure,𝔼]
+  rw[weakIntegral_map sorry_proof sorry_proof]
+  rfl
 
 @[simp,ftrans_simp]
 theorem pure_mean (x : X) : (pure (f:=Rand) x).mean = x := by simp[mean]
@@ -305,7 +305,7 @@ variable (R)
 @[inline] -- inlining seems to have quite implact on performance
 def _root_.SciLean.uniformI : Rand R := {
   spec :=
-    erase (fun φ => ∫' x in Set.Icc (0:R) (1:R), φ x)
+    erase (fun φ => weakIntegral (volume.restrict (Set.Icc (0:R) (1:R))) φ )
   rand :=
     fun g => do
     let N := stdRange.2

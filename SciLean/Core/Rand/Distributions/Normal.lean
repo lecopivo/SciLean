@@ -1,7 +1,6 @@
-import SciLean.Core.Distribution.ParametricDistribFwdDeriv
+-- import SciLean.Core.Distribution.ParametricDistribFwdDeriv
 import SciLean.Core.FloatAsReal
 import SciLean.Core.Functions.Gaussian
-import SciLean.Core.Rand.Distributions.UniformI
 import SciLean.Core.Rand.Rand
 import SciLean.Core.Rand.Tactic
 
@@ -15,6 +14,10 @@ variable
 
 set_default_scalar R
 
+
+----------------------------------------------------------------------------------------------------
+-- Generating functions ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 open Scalar in
 def boxMuller (u v : R) : R×R :=
@@ -41,9 +44,11 @@ private def generateNormalV2 : Rand R := do
 variable {R}
 
 
+----------------------------------------------------------------------------------------------------
+
 /-- Normal random variable with mean `μ` and standard deviation `σ`. -/
 def normal (μ σ : R)  : Rand R := {
-  spec := erase (fun φ => ∫' x, φ x * (Scalar.toReal R (gaussian μ σ x)))
+  spec := erase (fun φ => ∫ x, φ x * (Scalar.toReal R (gaussian μ σ x)))
   rand := do
     let x ← (generateNormalV2 R).rand
     return σ * x + μ
@@ -82,29 +87,29 @@ theorem normal_reparameterize (μ σ : R) :
     normal μ σ = (normal 0 1).map (fun x => σ • x + μ) := sorry_proof
 
 
-----------------------------------------------------------------------------------------------------
--- Derivatives -------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------------------------------
+-- -- Derivatives -------------------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------------------------------
 
-variable
-  {W} [Vec R W]
-  {Y} [Vec R Y]
-  {Z} [Vec R Z] [Module ℝ Z]
+-- variable
+--   {W} [Vec R W]
+--   {Y} [Vec R Y]
+--   {Z} [Vec R Z] [Module ℝ Z]
 
-noncomputable
-def normalFDμ (μ dμ : U) (σ : R) : 𝒟'(U,R×R) :=
-  fun φ ⊸ (∫' x, φ x * gaussian μ σ x, ∫' x, φ x * (∂ μ':=μ;dμ, gaussian μ' σ x))
+-- noncomputable
+-- def normalFDμ (μ dμ : U) (σ : R) : 𝒟'(U,R×R) :=
+--   fun φ ⊸ (∫' x, φ x * gaussian μ σ x, ∫' x, φ x * (∂ μ':=μ;dμ, gaussian μ' σ x))
 
-@[fun_trans]
-theorem normal.arg_μ.parDistribFwdDeriv (μ : W → R) (σ : R)
-  (hμ : CDifferentiable R μ) :
-  parDistribFwdDeriv (fun w => (normal (μ w) σ).ℙ.toDistribution (R:=R))
-  =
-  fun w dw =>
-    let μdμ := fwdDeriv R μ w dw
-    normalFDμ μdμ.1 μdμ.2 σ := sorry_proof
+-- @[fun_trans]
+-- theorem normal.arg_μ.parDistribFwdDeriv (μ : W → R) (σ : R)
+--   (hμ : CDifferentiable R μ) :
+--   parDistribFwdDeriv (fun w => (normal (μ w) σ).ℙ.toDistribution (R:=R))
+--   =
+--   fun w dw =>
+--     let μdμ := fwdDeriv R μ w dw
+--     normalFDμ μdμ.1 μdμ.2 σ := sorry_proof
 
-theorem normalFDμ_score (μ dμ : R) (σ : R) (f : R → Y) (L : (R×R) ⊸ Y ⊸ Z) :
-    (normalFDμ μ dμ σ).extAction f L
-    =
-    (normal μ σ).𝔼 (fun x => L (1, - (1/(σ^2)) * ⟪x-μ,-dμ⟫) (f x)) := sorry_proof
+-- theorem normalFDμ_score (μ dμ : R) (σ : R) (f : R → Y) (L : (R×R) ⊸ Y ⊸ Z) :
+--     (normalFDμ μ dμ σ).extAction f L
+--     =
+--     (normal μ σ).𝔼 (fun x => L (1, - (1/(σ^2)) * ⟪x-μ,-dμ⟫) (f x)) := sorry_proof

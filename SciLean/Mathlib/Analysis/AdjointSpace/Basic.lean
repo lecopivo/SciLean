@@ -34,6 +34,7 @@ variable [NormedAddCommGroup E] [AdjointSpace 𝕜 E]
 variable [NormedAddCommGroup F] [AdjointSpace ℝ F]
 
 local notation "⟪" x ", " y "⟫" => @inner 𝕜 E _ x y
+local notation "‖" x "‖₂²" => @inner 𝕜 E _ x x
 
 local notation "IK" => @RCLike.I 𝕜 _
 
@@ -245,7 +246,8 @@ def innerₗ : F →ₗ[ℝ] F →ₗ[ℝ] ℝ := innerₛₗ ℝ
 
 
 ----------------------------------------------------------------------------------------------------
-
+-- Instances ---------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 variable
   {X} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]

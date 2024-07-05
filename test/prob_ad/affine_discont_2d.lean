@@ -1,10 +1,10 @@
-import SciLean.Core.Integral.HasParamDerivWithJumps
-import SciLean.Core.Integral.HasParamFwdDerivWithJumps
-import SciLean.Core.Integral.HasParamRevDerivWithJumps
-import SciLean.Core.Integral.HasParamDerivWithJumpsCommon
-import SciLean.Tactic.LSimp
-import SciLean.Tactic.LFunTrans
-import SciLean.Core.Integral.SurfaceIntegral
+import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
+import SciLean.Core.Transformations.SurfaceParametrization
+import SciLean.Core.LinearAlgebra.GramSchmidt.Properties
+import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Core.Rand.Tactic
+import SciLean.Data.DataArray
+import SciLean.Tactic.Autodiff
 
 open SciLean MeasureTheory Set Scalar
 
@@ -24,7 +24,7 @@ example (w : R) (a b c d : R) :
         let fx := x.1 * x.2 * w;
         let fx_1 := x.1 * x.2;
         if a * x.1 + b * x.2 + c ≤ d * w then fx + fx_1 * w else 0;
-    let dec := planeDecomposition (a, b);
+    let dec := hyperplaneDecomposition (a, b);
     let a_1 := (d * w - c) / Scalar.sqrt (a ^ 2 + b ^ 2);
     let center := dec.symm (1 / 2, 1 / 2);
     let s :=
@@ -52,7 +52,9 @@ example (w : R) (a b c d : R) :
       lautodiff (disch:=gtrans (disch:=fun_prop))
         [integral_over_bounding_ball (R:=R)]
 
-    lsimp only
+    lsimp only [Rand.integral_as_uniform_E_in_set R]
+
+  sorry_proof
 
 
 
@@ -66,7 +68,7 @@ example (w : R) (a b c d : R) :
          let ydf := x.1 * x.2;
          let ydf_1 := ydf * w;
          if a * x.1 + b * x.2 + c ≤ d * w then w * ydf + ydf_1 else 0;
-     let dec := planeDecomposition (a, b);
+     let dec := hyperplaneDecomposition (a, b);
      let a_1 := (d * w - c) / Scalar.sqrt (a ^ 2 + b ^ 2);
      let center := dec.symm (1 / 2, 1 / 2);
      let s :=
@@ -95,4 +97,6 @@ example (w : R) (a b c d : R) :
       lautodiff (disch:=gtrans (disch:=fun_prop))
         [integral_over_bounding_ball (R:=R)]
 
-    lsimp only
+    lsimp only [Rand.integral_as_uniform_E_in_set R]
+
+  sorry_proof

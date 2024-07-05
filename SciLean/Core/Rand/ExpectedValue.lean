@@ -33,12 +33,12 @@ theorem Rand.𝔼.arg_rf.cderiv_rule' (r : W → Rand X) (f : W → X → Y)
 
 
 
-theorem Rand.𝔼_deriv_as_distribDeriv {X} [Vec R X] [MeasureSpace X]
-  (r : W → Rand X) (f : W → X → Y) :
-  cderiv R (fun w => (r w).𝔼 (f w))
-  =
-  fun w dw =>
-    parDistribDeriv (fun w => (fun x => ((r w).pdf R volume x) • f w x).toDistribution (R:=R)) w dw |>.integrate := sorry
+-- theorem Rand.𝔼_deriv_as_distribDeriv {X} [Vec R X] [MeasureSpace X]
+--   (r : W → Rand X) (f : W → X → Y) :
+--   cderiv R (fun w => (r w).𝔼 (f w))
+--   =
+--   fun w dw =>
+--     parDistribDeriv (fun w => (fun x => ((r w).pdf R volume x) • f w x).toDistribution (R:=R)) w dw |>.integrate := sorry
 
 
 -- variable

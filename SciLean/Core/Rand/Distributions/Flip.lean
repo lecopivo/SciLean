@@ -47,11 +47,11 @@ theorem flip.measure (θ : R) :
 
 
 variable
-  {X} [AddCommGroup X] [Module R X] [Module ℝ X]
+  {X} [NormedAddCommGroup X] [Module R X] [NormedSpace ℝ X]
 
 @[rand_simp,simp, ftrans_simp]
 theorem flip.integral (θ : R) (f : Bool → X) :
-    ∫' x, f x ∂(flip θ).ℙ = θ • f true + (1-θ) • f false := by
+    weakIntegral (flip θ).ℙ f = θ • f true + (1-θ) • f false := by
   simp [rand_simp,flip.measure]; sorry_proof
 
 theorem flip.E (θ : R) (f : Bool → X) :

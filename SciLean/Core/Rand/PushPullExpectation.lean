@@ -1,22 +1,18 @@
 import SciLean.Core.Rand.Rand
 import SciLean.Core.FunctionPropositions
-import SciLean.Core.FloatAsReal
--- import SciLean.Modules.Prob.DRand
--- import SciLean.Modules.Prob.FDRand
+import Mathlib
 
 namespace SciLean.Rand
 
 variable
   {R} [RealScalar R]
-  -- {X} [NormedAddCommGroup X] [NormedSpace ℝ X] [NormedSpace R X] [CompleteSpace X] [MeasurableSpace X]
-  -- {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [NormedSpace R Y] [CompleteSpace Y] [MeasurableSpace Y]
-  -- {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z] [NormedSpace R Z] [CompleteSpace Z] [MeasurableSpace Z]
-  {X : Type _} [MeasurableSpace X] [AddCommGroup X] [Module ℝ X]
-  {Y : Type _} [AddCommGroup Y] [Module ℝ Y] [MeasurableSpace Y]
-  {Z : Type _} [AddCommGroup Z] [Module ℝ Z]
+  {X : Type _} [AddCommGroup X] [Module ℝ X] [TopologicalSpace X] [MeasurableSpace X] [MeasurableSingletonClass X]
+  {Y : Type _} [AddCommGroup Y] [Module ℝ Y] [TopologicalSpace Y] [MeasurableSpace Y] [MeasurableSingletonClass Y]
+  {Z : Type _} [AddCommGroup Z] [Module ℝ Z] [TopologicalSpace Z]
 
 open Rand
 
+set_option trace.Meta.Tactic.simp.discharge true
 @[rand_pull_E]
 theorem bind_pull_mean (x : Rand X) (f : X → Rand Y) :
     (x >>= (fun x' => pure (f x').mean)).mean
@@ -149,7 +145,8 @@ theorem pull_mean_neg (x : Rand X) :
 section Nat
 
 variable
-  (C : ℕ → Type) [∀ n, AddCommGroup (C n)] [∀ n, Module ℝ (C n)] [∀ n, MeasurableSpace (C n)]
+  (C : ℕ → Type) [∀ n, AddCommGroup (C n)] [∀ n, Module ℝ (C n)] [∀ n, TopologicalSpace (C n)]
+  [∀ n, MeasurableSpace (C n)] [∀ n, MeasurableSingletonClass (C n)]
   (D : ℕ → Type) [∀ n, MeasurableSpace (D n)] [∀ n, MeasurableSpace (D n)]
 
 
@@ -186,7 +183,8 @@ end Nat
 section List
 
 variable {α}
-  {C : List α → Type} [∀ n, AddCommGroup (C n)] [∀ n, Module ℝ (C n)] [∀ n, MeasurableSpace (C n)]
+  (C : List α → Type) [∀ n, AddCommGroup (C n)] [∀ n, Module ℝ (C n)] [∀ n, TopologicalSpace (C n)]
+  [∀ n, MeasurableSpace (C n)] [∀ n, MeasurableSingletonClass (C n)]
   {D : List α → Type} [∀ n, MeasurableSpace (D n)]
 
 

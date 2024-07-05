@@ -1,16 +1,16 @@
--- import SciLean.Mathlib.Analysis.MetricSpace
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+import Mathlib.MeasureTheory.Integral.Bochner
+
+import SciLean.Mathlib.Analysis.AdjointSpace.Basic
 import SciLean.Mathlib.Analysis.AdjointSpace.Geometry
 import SciLean.Mathlib.Set
 
 import SciLean.Core.Objects.Scalar
 import SciLean.Core.Objects.SemiInnerProductSpace
 
-
 import SciLean.Tactic.GTrans
-import SciLean.Tactic.IfPull
 
-open SciLean Set
-
+open SciLean Set MeasureTheory
 
 variable
   {R} [RealScalar R]
@@ -28,6 +28,30 @@ def SciLean.BoundingBall₂ {X} [NormedAddCommGroup X] [AdjointSpace R X]
     (A : Set X) (center : outParam X) (radius : outParam R) : Prop :=
   A ⊂ closedBall₂ center radius
 variable {R}
+
+
+
+----------------------------------------------------------------------------------------------------
+
+section IntegralOverBoundingBall
+variable
+  {R : Type*} [RealScalar R]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [MeasurableSpace X] [BorelSpace X]
+  {Y : Type*} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
+
+open Classical in
+theorem SciLean.integral_over_bounding_ball
+  (f : X → Y) (A : Set X) (μ : Measure X)
+  {center radius}
+  (hA : BoundingBall₂ R A center radius) :
+  (∫ x in A, f x ∂μ)
+  =
+  (∫ x in closedBall₂ center radius, if x ∈ A then f x else 0 ∂μ) := sorry_proof
+
+end IntegralOverBoundingBall
+
+
+----------------------------------------------------------------------------------------------------
 
 open Scalar
 open Set in

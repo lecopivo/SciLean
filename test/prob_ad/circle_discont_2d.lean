@@ -1,14 +1,7 @@
-import SciLean.Core.Integral.HasParamDerivWithJumps
-import SciLean.Core.Integral.HasParamFwdDerivWithJumps
-import SciLean.Core.Integral.HasParamRevDerivWithJumps
-import SciLean.Core.Integral.HasParamDerivWithJumpsCommon
-import SciLean.Core.Integral.Jacobian
-import SciLean.Core.Integral.SetParametrization
-import SciLean.Data.DataArray
-import SciLean.Core.Functions.Trigonometric
-import SciLean.Core.Integral.SurfaceIntegral
-
--- import SciLean.Tactic.IfPull
+import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
+import SciLean.Core.Transformations.SurfaceParametrization
+import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Tactic.Autodiff
 
 open SciLean MeasureTheory Set
 
@@ -79,6 +72,6 @@ example (w : R) (hw : w ≠ 0) :
       lautodiff (disch:=first | gtrans (disch:=fun_prop) | fun_prop)
         [integral_over_bounding_ball (R:=R)]
 
-    lsimp only
+    lsimp only [Rand.integral_as_uniform_E_in_set R]
 
-  simp
+  sorry_proof

@@ -1,9 +1,6 @@
-import SciLean.Core.Integral.HasParamDerivWithJumps
-import SciLean.Core.Integral.HasParamFwdDerivWithJumps
-import SciLean.Core.Integral.HasParamRevDerivWithJumps
-import SciLean.Core.Integral.HasParamDerivWithJumpsCommon
--- import SciLean.Tactic.LSimp
--- import SciLean.Tactic.LFunTrans
+import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
+import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Tactic.Autodiff
 
 open SciLean MeasureTheory Set
 
@@ -51,8 +48,8 @@ example (w : R) :
                       (hA := by assume_almost_disjoint)]
 
     lautodiff (disch:=fun_prop)
-
-
+    -- rw[Rand.integral_as_uniform_E_in_set R]
+    -- rand_pull_E
 
 
 example (w : R) :

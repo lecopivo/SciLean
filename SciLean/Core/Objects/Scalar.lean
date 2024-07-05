@@ -152,6 +152,12 @@ theorem conj_for_real_scalar {R} [RealScalar R] (r : R)
   : conj r = r := sorry_proof
 
 
+
+----------------------------------------------------------------------------------------------------
+-- Instances ---------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
 noncomputable
 instance : Scalar ℝ ℂ where
   toComplex x := x
@@ -290,6 +296,10 @@ noncomputable instance : RealScalar ℝ where
 
 section SimpTheorems
 
+theorem normalize_real_smul (R) [RealScalar R] [Ring X] [Module R X] [Module ℝ X] [IsScalarTower ℝ R X]
+    (r : ℝ) (x : X) :
+    r • x = Scalar.ofReal R r • x := sorry_proof
+
 variable {R} [RealScalar R]
 
 @[simp, ftrans_simp]
@@ -390,6 +400,11 @@ theorem Scalar.oftoENNReal (x : R) :
     =
     max x 0 := sorry_proof
 
+@[simp, ftrans_simp]
+theorem Scalar.ofReal_toReal (x : ENNReal) :
+    Scalar.ofReal R x.toReal
+    =
+    Scalar.ofENNReal x := sorry_proof
 
 @[simp, ftrans_simp]
 theorem Scalar.ofENNReal_one :

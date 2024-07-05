@@ -1,10 +1,10 @@
-import SciLean.Core.Integral.HasParamDerivWithJumps
-import SciLean.Core.Integral.HasParamFwdDerivWithJumps
-import SciLean.Core.Integral.HasParamRevDerivWithJumps
-import SciLean.Core.Integral.HasParamDerivWithJumpsCommon
-import SciLean.Tactic.LSimp
-import SciLean.Tactic.LFunTrans
-import SciLean.Core.Integral.SurfaceIntegral
+import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
+import SciLean.Core.Transformations.SurfaceParametrization
+import SciLean.Core.LinearAlgebra.GramSchmidt.Properties
+import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Core.Rand.Tactic
+import SciLean.Data.DataArray
+import SciLean.Tactic.Autodiff
 
 open SciLean MeasureTheory Set Scalar
 
@@ -13,6 +13,9 @@ variable
 
 set_default_scalar R
 
+set_option trace.Meta.Tactic.simp.discharge true
+set_option trace.Meta.Tactic.gtrans true
+set_option trace.Meta.Tactic.gtrans.candidates true
 
 example (w : R) :
     (fderiv R (fun w' =>
@@ -39,11 +42,13 @@ example (w : R) :
       lautodiff (disch:=gtrans (disch:=fun_prop))
         [integral_over_bounding_ball (R:=R)]
 
-    lsimp only
+
+    lsimp only [Rand.integral_as_uniform_E_in_set R]
+
 
   sorry_proof
 
-
+#check Set.snd
 
 example (w : R) :
     (fwdFDeriv R (fun w' =>
@@ -54,7 +59,7 @@ example (w : R) :
       ∫ (x : R × R) in Icc 0 1 ×ˢ Icc 0 1,
         let ydy := x.1 * x.2;
         if x.1 + x.2 ≤ w then (ydy * w, ydy) else (x.1 + x.2 + w, 1);
-    let dec := planeDecomposition (1, 1);
+    let dec := hyperplaneDecomposition (1, 1);
     let a := w / Scalar.sqrt 2;
     let center := dec.symm (1 / 2, 1 / 2);
     let s :=
@@ -83,7 +88,7 @@ example (w : R) :
       lautodiff (disch:=gtrans (disch:=fun_prop))
         [integral_over_bounding_ball (R:=R)]
 
-    lsimp only
+    lsimp only [Rand.integral_as_uniform_E_in_set R]
 
   sorry_proof
 
@@ -99,7 +104,7 @@ example (w : R) :
       ∫ (x : R × R) in Icc 0 1 ×ˢ Icc 0 1,
         let ydf := x.1 * x.2;
         if x.1 + x.2 ≤ w then ydf else 1;
-    let dec := planeDecomposition (1, 1);
+    let dec := hyperplaneDecomposition (1, 1);
     let a := w / Scalar.sqrt 2;
     let center := dec.symm (1 / 2, 1 / 2);
     let s :=
@@ -130,4 +135,6 @@ example (w : R) :
       lautodiff (disch:=gtrans (disch:=fun_prop))
         [integral_over_bounding_ball (R:=R)]
 
-    lsimp only
+    lsimp only [Rand.integral_as_uniform_E_in_set R]
+
+  sorry_proof
