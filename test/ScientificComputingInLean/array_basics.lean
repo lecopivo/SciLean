@@ -24,9 +24,9 @@ warning: application type mismatch
 argument
   ⊞[1.0, 1.0, 1.0]
 has type
-  DataArrayN Float (Fin 3) : Type
+  Float^[3] : Type
 but is expected to have type
-  DataArrayN Float (Fin 2) : Type
+  Float^[2] : Type
 -/
 #guard_msgs in
 #check_failure dot ⊞[1.0,1.0] ⊞[1.0,1.0,1.0]

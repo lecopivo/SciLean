@@ -10,7 +10,7 @@ build:
 test: $(addsuffix .run, $(TESTS))
 
 test/%.run: build
-	lake env lean test/$*
+	lake env lean --load-dynlib=./.lake/build/lib/libSciLean-Tactic-LSimp-Main-1.so  test/$*
 
 examples:
 	lake build SurfaceMeshTests

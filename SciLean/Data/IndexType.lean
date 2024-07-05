@@ -169,7 +169,7 @@ macro (priority:=high) " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => 
   Fold.fold (IndexType.univ ι) (fun s i => s * f i) 1
 
 open Lean.TSyntax.Compat in
-macro " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
+macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
 
 @[app_unexpander product] def unexpandProduct : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:ident => $b) =>

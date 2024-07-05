@@ -129,15 +129,14 @@ def avgPool_v4 (x : Float^[n]) {m} (h : 2*m = n := by infer_var) : Float^[m] :=
     0.5 * (x[i1] + x[i2])
 
 
-
-/-- info: avgPool_v1 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] : DataArrayN Float (Fin (5 / 2)) -/
+/-- info: avgPool_v1 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] : Float^[5 / 2] -/
 #guard_msgs in
 #check avgPool_v1 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
 
 -- #check_failure avgPool_v2 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
 
 
-/-- info: avgPool_v3 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] ⋯ : DataArrayN Float (Fin 2) -/
+/-- info: avgPool_v3 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] ⋯ : Float^[2] -/
 #guard_msgs in
 #check avgPool_v3 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
 
@@ -146,7 +145,7 @@ def avgPool_v4 (x : Float^[n]) {m} (h : 2*m = n := by infer_var) : Float^[m] :=
 #eval avgPool_v3 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]
 
 
-/-- info: avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0] ⋯ : DataArrayN Float (Fin 2) -/
+/-- info: avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0] ⋯ : Float^[2] -/
 #guard_msgs in
 #check avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0]
 
@@ -154,7 +153,7 @@ def avgPool_v4 (x : Float^[n]) {m} (h : 2*m = n := by infer_var) : Float^[m] :=
 /--
 error: infer_var: discharger ` simp ` failed proving 2 * 2 = 5
 ---
-info: avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] ⋯ : DataArrayN Float (Fin 2)
+info: avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] ⋯ : Float^[2]
 -/
 #guard_msgs in
 #check avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0, 5.0]

@@ -122,7 +122,7 @@ TODO: support matrix literals -/
 @[app_unexpander LeanColls.Indexed.ofFn] def unexpandIndexedOfFn : Lean.PrettyPrinter.Unexpander
   | `($(_) $f) =>
     match f with
-    | `(fun $_ => List.get! [$xs,*] $_) =>
+    | `(fun $_ => [$xs,*].get! $_) =>
       `(⊞[$xs,*])
     | `(fun $i => $b) =>
       `(⊞ $i => $b)

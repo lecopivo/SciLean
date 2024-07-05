@@ -27,6 +27,7 @@ example (r : R) :
       if xy.2 = true then x else 1 - x) := by
   unfold model1
   simp only [ftrans_simp]
+  sorry_proof
 
 
 def model2 :=

@@ -2,6 +2,7 @@ import SciLean.Tactic.LSimp.Elab
 import SciLean.Util.RewriteBy
 import SciLean.Core
 import SciLean.Tactic.MathlibCompiledTactics
+import SciLean.Tactic.TimeTactic
 import SciLean.Util.Profile
 
 
@@ -103,38 +104,47 @@ example :
   (conv => lhs; lsimp)
 
 
+-- test projection, simp does not preserve the let bindings even with `zeta:=false`
+section LetAndProjections
+variable (a b c : Nat)
+/--
+info: let x := a * b;
+x : ℕ
+-/
+#guard_msgs in
+#check (let x := a * b
+        let y := x * c
+        (x,y)).1 rewrite_by lsimp
 
+/-- info: a * b : ℕ -/
+#guard_msgs in
+#check (let x := a * b
+        let y := x * c
+        (x,y)).1 rewrite_by simp (config:={zeta:=false}) only
+
+end LetAndProjections
+
+
+#exit
 
 set_default_scalar Float
 
 open SciLean
 
--- set_option trace.Meta.Tactic.simp.numSteps true
--- set_option trace.Meta.Tactic.simp.time true
-
-
--- -- set_option trace.Meta.Tactic.simp.proj true
--- set_option trace.Meta.Tactic.simp.steps true
 
 
 
 #check (∇ x : Float, let y := x * x; x * y)
   rewrite_by
     unfold scalarGradient
-    lsimp only [Mathlib.Meta.FunTrans.fun_trans_simproc, ftrans_simp]
-
-
-macro "lautodiff" : conv =>
-  `(conv| (unfold scalarGradient scalarCDeriv;
-           lsimp (config := {zeta:=false}) only
-             [Mathlib.Meta.FunTrans.fun_trans_simproc, ftrans_simp]))
+    lautodiff
 
 -- set_option trace.Meta.Tactic.fun_trans true in
 
--- #check (∇ (x : Float×Float), let y := x + x; let z := x + y; y.1*z.2)
---   rewrite_by
---     unfold scalarGradient
---     timeTactic autodiff
+#check (∇ (x : Float×Float), let y := x + x; let z := x + y; y.1*z.2)
+  rewrite_by
+    unfold scalarGradient
+    lautodiff
 
 -- #check (∇ (x : Float×Float), let y := x + x; let z := x + y; y.1*z.2)
 --   rewrite_by
@@ -142,21 +152,19 @@ macro "lautodiff" : conv =>
 --     timeTactic lsimp
 
 -- set_option trace.Meta.Tactic.fun_trans true in
-set_option trace.Meta.Tactic.simp.unify true in
-set_option trace.Meta.Tactic.simp.rewrite true in
 #check (∇ x : Float,
           let x1 := x * x
           let x2 := x * x1
           let x3 := x * x2
-          let x4 := x * x3
-          let x5 := x * x4
-          let x6 := x * x5
+          -- let x4 := x * x3
+          -- let x5 := x * x4
+          -- let x6 := x * x5
           -- let x7 := x * x6
           -- let x8 := x * x7
           -- let x9 := x * x8
           -- let x10 := x * x9
           -- let x11 := x * x10
-          x6)
+          x3)
   rewrite_by
     unfold scalarGradient scalarCDeriv
     lautodiff
@@ -190,14 +198,7 @@ set_default_scalar Float
 
 open SciLean
 
-
-#check (structProj 1 ())
-  rewrite_by
-    unfold scalarGradient
-    lautodiff
-    lautodiff
-
-
+#exit
 
 -- #check (∇ x : Float, let y := x * x; let z := x * y; x * y * z)
 --   rewrite_by
