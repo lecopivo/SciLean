@@ -1,6 +1,7 @@
 import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ArrayType.Notation
+import SciLean.Tactic.InferVar
 
 set_option linter.unusedVariables false
 
@@ -254,6 +255,12 @@ def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type) [IndexType κ]
   (hs : IndexType.card κ = IndexType.card ι)
   : DataArrayN α κ :=
   ⟨x.data, by simp[hs,x.h_size]⟩
+
+def DataArrayN.flatten (x : DataArrayN α ι)
+    {n} (hn : n = IndexType.card ι := by infer_var) :
+    DataArrayN α (Fin n) :=
+  x.reshape (Fin n) (by simp[hn])
+
 
 instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α] [pd : PlainDataType α] :
     PlainDataType Cont where

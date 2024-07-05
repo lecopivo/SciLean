@@ -100,6 +100,9 @@ theorem card_prod {ι κ} [IndexType ι] [IndexType κ] : card (ι × κ) = card
 @[simp]
 theorem card_unit : card Unit = 1 := by rfl
 
+@[simp]
+theorem card_fin (n : Nat) : card (Fin n) = n := by rfl
+
 instance (P : ι → Prop) [∀ i : ι, Decidable (P i)] : Decidable (∀ i : ι, P i) := Id.run do
   for i in IndexType.univ ι do
     if P i then
