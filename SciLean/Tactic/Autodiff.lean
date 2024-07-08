@@ -35,7 +35,11 @@ syntax (name := lautodiffStx) "lautodiff" (config)? (discharger)?
 
 macro_rules
 | `(conv| lautodiff $[$cfg]? $[$disch]?  $[[$a,*]]?) => do
+  -- Adding these extra siplifications is slow
+  -- ↓ norm_num_simproc_pre
+  -- ↑ norm_num_simproc_post
+  -- normalize_real_smul defaultScalar%
   if a.isSome then
-    `(conv| lfun_trans $[$cfg]? $[$disch]? only $[[fgradient, ftrans_simp, normalize_real_smul defaultScalar%, ↓ norm_num_simproc_pre, ↑ norm_num_simproc_post, $a,*]]?)
+    `(conv| lfun_trans $[$cfg]? $[$disch]? only $[[fgradient, ftrans_simp, $a,*]]?)
   else
-    `(conv| lfun_trans $[$cfg]? $[$disch]? only [fgradient, ftrans_simp, normalize_real_smul defaultScalar%, ↓ norm_num_simproc_pre, ↑ norm_num_simproc_post])
+    `(conv| lfun_trans $[$cfg]? $[$disch]? only [fgradient, ftrans_simp])
