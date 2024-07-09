@@ -92,9 +92,10 @@ def generateFunTransDefAndTheorem (e : Expr) (ctx : Array Expr) (c : TSyntax `co
 
 
 open Mathlib.Meta
-elab  "#generate_fun_trans" e:term "by" c:Lean.Parser.Tactic.Conv.convSeq : command => do
+elab  "def_fun_trans" bs:bracketedBinder* ":" e:term "by" c:Lean.Parser.Tactic.Conv.convSeq : command => do
 
-  runTermElabM fun ctx => do
+  runTermElabM fun ctx₁ => do
+    elabBinders bs fun ctx₂ => do
     let e ← elabTermAndSynthesize (← `($e)) none
     let e := e.headBeta.eta
-    generateFunTransDefAndTheorem e ctx (← `(conv| ($c)))
+    generateFunTransDefAndTheorem e (ctx₁++ctx₂) (← `(conv| ($c)))
