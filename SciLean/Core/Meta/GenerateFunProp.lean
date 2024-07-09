@@ -1,7 +1,6 @@
 import SciLean.Tactic.FunTrans.Core
 import SciLean.Lean.Meta.Basic
 import SciLean.Util.RewriteBy
-import SciLean.Core
 
 open Lean Meta Elab Term Command
 
@@ -88,7 +87,7 @@ def defineFunPropTheorem (statement proof : Expr) (ctx : Array Expr)
   return true
 
 
-private partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.Trie.forValuesM {α} {m} [Monad m]
+partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.Trie.forValuesM {α} {m} [Monad m]
     (t : Mathlib.Meta.FunProp.RefinedDiscrTree.Trie α) (f : α → m Unit) : m Unit := do
 
   match t with
@@ -100,7 +99,7 @@ private partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.Trie.forValuesM
     for v in vs do
       f v
 
-private partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.forValuesM {α} {m} [Monad m]
+partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.forValuesM {α} {m} [Monad m]
     (t : Mathlib.Meta.FunProp.RefinedDiscrTree α) (f : α → m Unit) : m Unit := do
   t.root.forM (fun _ trie => trie.forValuesM f)
 
@@ -161,6 +160,10 @@ elab  "def_fun_prop" doTrans:("with_transitive")? suffix:(ident)? bs:bracketedBi
 
     let prf ← mkFreshExprMVar statement
     let (subgoals,_) ← Elab.runTactic prf.mvarId! t
+
+    -- filter context variables whether they are used or not
+    let ctx₁ := ctx₁.filter (fun x => statement.containsFVar x.fvarId! ||
+                                      prf.containsFVar x.fvarId!)
 
     if subgoals.length ≠ 0 then
       throwError s!"failed to show {← ppExpr statement}"
