@@ -37,13 +37,14 @@ example (w : R) :
 
     conv in (∫ x in _, _ ∂μH[_]) =>
 
-      lsimp (disch:=gtrans (disch:=fun_prop)) only
-        [surface_integral_parametrization_inter R]
       lautodiff (disch:=gtrans (disch:=fun_prop))
-        [integral_over_bounding_ball (R:=R)]
+        [surface_integral_parametrization_inter R,
+         integral_over_bounding_ball (R:=R)]
 
 
-    lsimp only [Rand.integral_as_uniform_E_in_set R]
+    conv in (occs:=*) (∫ x in _, _ ∂_) =>
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
 
 
   sorry_proof
@@ -81,14 +82,14 @@ example (w : R) :
 
     lautodiff (disch:=first | fun_prop | gtrans (disch:=fun_prop))
 
-    conv in (∫ x in _, _ ∂μH[_]) =>
-
-      lsimp (disch:=gtrans (disch:=fun_prop)) only
-        [surface_integral_parametrization_inter R]
+    conv in (∫ _ in _, _ ∂μH[_]) =>
       lautodiff (disch:=gtrans (disch:=fun_prop))
-        [integral_over_bounding_ball (R:=R)]
+        [surface_integral_parametrization_inter R,
+         integral_over_bounding_ball (R:=R)]
 
-    lsimp only [Rand.integral_as_uniform_E_in_set R]
+    conv in (occs:=*) (∫ x in _, _ ∂_) =>
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
 
   sorry_proof
 
@@ -119,6 +120,8 @@ example (w : R) :
 
   conv =>
     lhs
+
+    -- run AD
     unfold fgradient
     rw[revFDeriv_under_integral_over_set
            (hf:= by gtrans
@@ -128,13 +131,15 @@ example (w : R) :
 
     lautodiff (disch:=first | fun_prop | gtrans (disch:=fun_prop)) [frontierGrad]
 
-    conv in (∫ x in _, _ ∂μH[_]) =>
-
-      lsimp (disch:=gtrans (disch:=fun_prop)) only
-        [surface_integral_parametrization_inter R]
+    -- deal with surface integrals
+    conv in (∫ _ in _, _ ∂μH[_]) =>
       lautodiff (disch:=gtrans (disch:=fun_prop))
-        [integral_over_bounding_ball (R:=R)]
+        [surface_integral_parametrization_inter R,
+         integral_over_bounding_ball (R:=R)]
 
-    lsimp only [Rand.integral_as_uniform_E_in_set R]
+    -- turn integrals into expectations
+    conv in (occs:=*) (∫ _ in _, _ ∂_) =>
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
 
   sorry_proof

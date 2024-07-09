@@ -52,7 +52,9 @@ example (w : R) (a b c d : R) :
       lautodiff (disch:=gtrans (disch:=fun_prop))
         [integral_over_bounding_ball (R:=R)]
 
-    lsimp only [Rand.integral_as_uniform_E_in_set R]
+    conv in (occs:=*) (∫ x in _, _ ∂_) =>
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
 
   sorry_proof
 
@@ -97,6 +99,8 @@ example (w : R) (a b c d : R) :
       lautodiff (disch:=gtrans (disch:=fun_prop))
         [integral_over_bounding_ball (R:=R)]
 
-    lsimp only [Rand.integral_as_uniform_E_in_set R]
+    conv in (occs:=*) (∫ x in _, _ ∂_) =>
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
+      . lsimp only [Rand.integral_eq_uniform_expectation R]
 
   sorry_proof

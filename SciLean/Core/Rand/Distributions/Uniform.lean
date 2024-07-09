@@ -35,7 +35,17 @@ theorem uniform.pdf [MeasureSpace X] (A : Set X) [UniformRand A] :
 -- Integral ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-theorem integral_as_uniform_E_in_set (R) [RealScalar R]
+theorem integral_eq_expectation (R) [RealScalar R]
+    {X} [MeasureSpace X]
+    {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [NormedSpace R Y]
+    (r : Rand X) (f : X → Y) (μ : Measure X) /- (hrμ : r.ℙ ≪ μ) -/ :
+    ∫ x, f x ∂μ
+    =
+    r.𝔼 (fun x =>
+      let pdf := r.pdf R μ x
+      pdf • f x) := sorry_proof
+
+theorem integral_eq_uniform_expectation (R) [RealScalar R]
     {X} [MeasureSpace X]
     {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [NormedSpace R Y]
     (f : X → Y) (A : Set X) [UniformRand A] :
