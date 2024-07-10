@@ -151,8 +151,8 @@ TODO: This should produce proof that those two terms are equal
 def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := do
   if e.isAppOfArity ``solveFun 5 then
     lambdaTelescope (e.getArg! 4) fun xs b => do
-      let is := is.sortAndDeduplicate
-      let js := js.sortAndDeduplicate
+      let is := is.sortDedup
+      let js := js.sortDedup
       let Ps ← splitAnd? b
 
       if let .some i := is.find? (· ≥ xs.size) then

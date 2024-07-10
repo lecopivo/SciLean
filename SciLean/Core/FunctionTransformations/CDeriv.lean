@@ -7,6 +7,7 @@ import SciLean.Tactic.FunTrans.Attr
 import SciLean.Tactic.FunTrans.Elab
 
 set_option linter.unusedVariables false
+set_option linter.hashCommand false
 
 open LeanColls
 
@@ -565,7 +566,7 @@ by
   funext x; apply Inner.inner.arg_a0a1.cderiv_rule_at f g x (hf x) (hg x)
 
 @[fun_trans]
-theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule_at
+theorem Norm2.norm2.arg_a0.cderiv_rule_at
   (f : X → Y) (x : X)
   (hf : CDifferentiableAt R f x)
   : cderiv R (fun x => ‖f x‖₂²[R]) x
@@ -585,7 +586,7 @@ by
   ring
 
 @[fun_trans]
-theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule
+theorem Norm2.norm2.arg_a0.cderiv_rule
   (f : X → Y)
   (hf : CDifferentiable R f)
   : cderiv R (fun x => ‖f x‖₂²[R])
@@ -595,10 +596,10 @@ theorem SciLean.Norm2.norm2.arg_a0.cderiv_rule
       let dy := cderiv R f x dx
       2 * ⟪dy, y⟫[R] :=
 by
-  funext x; apply SciLean.Norm2.norm2.arg_a0.cderiv_rule_at f x (hf x)
+  funext x; apply Norm2.norm2.arg_a0.cderiv_rule_at f x (hf x)
 
 @[fun_trans]
-theorem SciLean.norm₂.arg_x.cderiv_rule_at
+theorem norm₂.arg_x.cderiv_rule_at
   (f : X → Y) (x : X)
   (hf : CDifferentiableAt R f x) (hx : f x≠0)
   : cderiv R (fun x => ‖f x‖₂[R]) x
@@ -612,7 +613,7 @@ by
 
 
 @[fun_trans]
-theorem SciLean.norm₂.arg_x.cderiv_rule
+theorem norm₂.arg_x.cderiv_rule
   (f : X → Y)
   (hf : CDifferentiable R f) (hx : ∀ x, f x≠0)
   : cderiv R (fun x => ‖f x‖₂[R])
@@ -623,7 +624,7 @@ theorem SciLean.norm₂.arg_x.cderiv_rule
       ‖y‖₂[R]⁻¹ * ⟪dy,y⟫[R] :=
 by
   funext x
-  rw [SciLean.norm₂.arg_x.cderiv_rule_at f x (hf x) (hx x)]
+  rw [norm₂.arg_x.cderiv_rule_at f x (hf x) (hx x)]
 
 
 end OverReals
@@ -635,7 +636,7 @@ end InnerProductSpace
 
 
 @[fun_prop]
-theorem SciLean.cderiv.arg_dx.CDifferentiableAt_rule
+theorem cderiv.arg_dx.CDifferentiableAt_rule
   (f : Y → Z) (g : X → Y) (y : Y) (dx : X)
   (hf : CDifferentiableAt K f y) (hg : CDifferentiableAt K g dx)
   : CDifferentiableAt K (fun dx' => cderiv K f y (g dx')) dx :=
@@ -643,19 +644,19 @@ by
   sorry_proof
 
 @[fun_prop]
-theorem SciLean.cderiv.arg_dx.CDifferentiable_rule
+theorem cderiv.arg_dx.CDifferentiable_rule
   (f : Y → Z) (g : X → Y) (y : Y)
   (hf : CDifferentiable K f) (hg : CDifferentiable K g)
   : CDifferentiable K (fun dx' => cderiv K f y (g dx')) :=
 by
   intro dx
-  apply SciLean.cderiv.arg_dx.CDifferentiableAt_rule
+  apply cderiv.arg_dx.CDifferentiableAt_rule
   apply (hf y)
   apply (hg dx)
 
 
 @[fun_trans]
-theorem SciLean.cderiv.arg_dx.cderiv_rule_at
+theorem cderiv.arg_dx.cderiv_rule_at
   (f : Y → Z) (g : X → Y) (y : Y) (dx : X)
   (hf : CDifferentiableAt K f y) (hg : CDifferentiableAt K g dx)
   : cderiv K (fun dx' => cderiv K f y (g dx')) dx
@@ -667,7 +668,7 @@ by
   sorry_proof
 
 @[fun_trans]
-theorem SciLean.cderiv.arg_dx.cderiv_rule
+theorem cderiv.arg_dx.cderiv_rule
   (f : Y → Z) (g : X → Y) (y : Y)
   (hf : CDifferentiable K f) (hg : CDifferentiable K g)
   : cderiv K (fun dx => cderiv K f y (g dx))

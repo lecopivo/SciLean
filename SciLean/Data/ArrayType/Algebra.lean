@@ -68,6 +68,10 @@ instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCo
   add_smul := sorry_proof
   zero_smul := sorry_proof
 
+open FiniteDimensional IndexType in
+@[simp, ftrans_simp]
+theorem array_type_finrank {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module R Elem] :
+    finrank R Cont = card Idx * finrank R Elem := sorry_proof
 
 instance (priority := low) {S R} [SMul S Elem] [SMul R Elem] [SMul S R] [IsScalarTower S R Elem]
     [ArrayType Cont Idx Elem] : IsScalarTower S R Cont where

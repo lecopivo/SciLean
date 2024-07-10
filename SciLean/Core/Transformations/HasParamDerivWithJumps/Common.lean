@@ -5,6 +5,8 @@ import SciLean.Core.Transformations.BoundingBall
 import SciLean.Core.Transformations.RnDeriv
 import SciLean.Tactic.LFunTrans
 
+import SciLean.Core.FloatAsReal
+
 open MeasureTheory
 
 namespace SciLean
@@ -43,6 +45,11 @@ attribute [ftrans_simp]
   frontier_Icc frontier_Ico frontier_Ioc frontier_Ioo
 
 
+
+attribute [ftrans_simp] zero_le_one
+
+
+
 ----------------------------------------------------------------------------------------------------
 -- Misc ------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -54,6 +61,14 @@ instance instMemPreimageDecidable (x : α) (B : Set β) (f : α → β)
     [inst : ∀ (y:β), Decidable (y ∈ B)] :
     Decidable (x ∈ f ⁻¹' B) := inst (f x)
 
+def _root_.Set.decidableMemProdComputable {α β : Type*} {s : Set α} {t : Set β}
+ [DecidablePred (· ∈ s)] [DecidablePred (· ∈ t)] :
+    DecidablePred (· ∈ s ×ˢ t) := fun _ => And.decidable
+
+@[ftrans_simp]
+theorem decidableMemProd_mk_computable {α β : Type*} {s : Set α} {t : Set β} [DecidablePred (· ∈ s)] [DecidablePred (· ∈ t)] :
+  (Set.decidableMemProd : DecidablePred (· ∈ s ×ˢ t)) = Set.decidableMemProdComputable := by rfl
+
 notation "π" => RealScalar.pi (R:=defaultScalar%)
 
 
@@ -61,6 +76,7 @@ notation "π" => RealScalar.pi (R:=defaultScalar%)
 -- Frontier ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 @[ftrans_simp]
 theorem frontier_setOf_le {X} [TopologicalSpace X] {R} [RealScalar R] (f g : X → R)
   (hf : Continuous f) (hg : Continuous g) :
@@ -117,6 +133,7 @@ theorem integral_zero_hausdof_of_singleton_inter_set (f : α → Y) (a : α) (A 
   ∫ x in {a} ∩ A, f x ∂μH[0] = if a ∈ A then f a else 0 := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[ftrans_simp]
 theorem integral_zero_hausdof_of_setOf_bijective_inter_set [Nonempty α]
     (f : α → Y) (φ : α → β) (hφ : φ.Bijective) (b : β) (A : Set α) [∀ x, Decidable (x ∈ A)] :
@@ -125,6 +142,7 @@ theorem integral_zero_hausdof_of_setOf_bijective_inter_set [Nonempty α]
     let x' := φ.invFun b
     if x' ∈ A then f x' else 0 := sorry_proof
 
+set_option linter.unusedVariables false in
 @[ftrans_simp]
 theorem integral_zero_hausdof_of_setOf_bijective_inter_set' [Nonempty α]
     (f : α → Y) (φ : α → β) (hφ : φ.Bijective) (b : β) (A : Set α) [∀ x, Decidable (x ∈ A)] :
@@ -184,6 +202,58 @@ theorem ite_sub2 {α} [Sub α] (P : Prop) [Decidable P] (a b c d : α) :
     =
     if P then a - c else b - d := by split_ifs <;> rfl
 
+
+
+----------------------------------------------------------------------------------------------------
+-- volume ------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+section volume
+
+variable {R} [RealScalar R]
+
+set_default_scalar R
+
+open Set SciLean MeasureTheory
+@[ftrans_simp]
+theorem volume_Icc {R} [RealScalar R] [MeasureSpace R] (a b : R) :
+  volume (Icc a b) = Scalar.toENNReal (R:=R) (if a ≤ b then b - a else 0) := sorry_proof
+
+@[ftrans_simp]
+theorem volume_Ioo {R} [RealScalar R] [MeasureSpace R] (a b : R) :
+  volume (Ioo a b) = Scalar.toENNReal (R:=R) (if a ≤ b then b - a else 0) := sorry_proof
+
+@[ftrans_simp]
+theorem volume_Ico {R} [RealScalar R] [MeasureSpace R] (a b : R) :
+  volume (Ico a b) = Scalar.toENNReal (R:=R) (if a ≤ b then b - a else 0) := sorry_proof
+
+@[ftrans_simp]
+theorem volume_Ioc {R} [RealScalar R] [MeasureSpace R] (a b : R) :
+  volume (Ioc a b) = Scalar.toENNReal (R:=R) (if a ≤ b then b - a else 0) := sorry_proof
+
+@[ftrans_simp ↓]
+theorem volume_prod {X Y} [MeasureSpace X] [MeasureSpace Y] (A : Set X) (B : Set Y) :
+  volume (A ×ˢ B) = volume A * volume B := sorry_proof
+
+def ballVolume (dim : Nat) (r : R) :=
+  if r ≤ 0 then
+    0
+  else
+    go dim
+where
+  go (dim : Nat) :=
+  match dim with
+  | 0 => 1
+  | 1 => 2 * r
+  | (n + 2) => 2*π/(n+2) * r^2 * ballVolume n r
+
+open FiniteDimensional
+@[ftrans_simp]
+theorem volume_closedBall₂ {R} [RealScalar R] {X} [NormedAddCommGroup X] [AdjointSpace R X] [MeasureSpace X]
+  (x : X) (r : R) :
+  volume (closedBall₂ x r)
+  =
+  Scalar.toENNReal (R:=R) (ballVolume (finrank R X) r) := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------

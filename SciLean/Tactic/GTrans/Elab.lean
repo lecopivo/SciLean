@@ -58,7 +58,7 @@ private def elabNormalizer (norm : Option (TSyntax ``normalizer)) : Expr → Met
       | _ => (fun e => pure { expr := e} )
 
 
-@[tactic gtrans_tac] unsafe def gtransTac : Tactic := fun stx => do
+@[tactic gtrans_tac] unsafe def gtransTac : Tactic := fun _ => do
   let goal ← getMainGoal
 
   let e ← goal.getType
@@ -90,7 +90,7 @@ private def elabNormalizer (norm : Option (TSyntax ``normalizer)) : Expr → Met
 @[tactic gtrans_conv] unsafe def gtransConv : Tactic := fun _ => do
   let e ← Conv.getLhs
 
-  let (.some prf, _) ← ((gtrans e).run {}).run {}
+  let (.some _, _) ← ((gtrans e).run {}).run {}
     | throwError "gtrans: faild to prove {← ppExpr e}"
 
 open Mathlib.Meta.FunProp Lean.Parser.Tactic in
@@ -102,7 +102,7 @@ open Mathlib.Meta.FunProp Lean.Parser.Tactic in
   let disch ← elabDischarger disch
   let norm := elabNormalizer norm
 
-  let (.some prf, _) ← ((gtrans e).run {config := cfg, discharge := disch, normalize := norm}).run {}
+  let (.some _, _) ← ((gtrans e).run {config := cfg, discharge := disch, normalize := norm}).run {}
     | throwError "gtrans: faild to prove {← ppExpr e}"
 | _ => throwUnsupportedSyntax
 

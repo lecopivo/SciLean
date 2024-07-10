@@ -84,7 +84,6 @@ variable {K n}
 @[simp, ftrans_simp]
 theorem ContCDiffMapFD_eta (f : X ⟿FD[K,n] Y) : (fun x ⟿FD[K,n] f x) = f := by sorry_proof
 
-@[pp_dot]
 def ContCDiffMapFD.FD (f : X ⟿FD[K,n] Y) (x dx : X) : Y×Y := f.toFun x dx
 
 @[fun_trans]
@@ -142,7 +141,16 @@ theorem ContCDiffMapFD.zero_apply : (0 : X ⟿FD[K,n] Y) x = 0 := by sorry_proof
 
 end AlgebraSimps
 
-instance : UniformSpace (X ⟿FD[K,n] Y) := sorry
+instance : UniformSpace (X ⟿FD[K,n] Y) where
+  IsOpen := default
+  isOpen_univ := sorry_proof
+  isOpen_inter := sorry_proof
+  isOpen_sUnion := sorry_proof
+  uniformity := default
+  symm := sorry_proof
+  comp := sorry_proof
+  nhds_eq_comap_uniformity := sorry_proof
+
 instance : Vec K (X ⟿FD[K,n] Y) := Vec.mkSorryProofs
 
 

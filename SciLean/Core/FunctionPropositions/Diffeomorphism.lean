@@ -33,7 +33,7 @@ theorem diffeomorphism_to_differentiables (f : X → Y) (hf : Diffeomorphism K f
     CDifferentiable K f := hf.2
 
 @[fun_prop]
-theorem SciLean.cderiv.arg_dx.Bijective_rule (f : X → Y) (x : X) (hf : Diffeomorphism K f) :
+theorem cderiv.arg_dx.Bijective_rule (f : X → Y) (x : X) (hf : Diffeomorphism K f) :
     Function.Bijective (fun dx => cderiv K f x dx) := hf.3 x
 
 namespace Diffeomorphism

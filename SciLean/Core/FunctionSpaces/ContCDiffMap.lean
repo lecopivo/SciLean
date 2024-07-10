@@ -129,7 +129,16 @@ theorem ContCDiffMap.zero_apply : (0 : X ⟿[K,n] Y) x = 0 := by sorry_proof
 
 end AlgebraSimps
 
-instance : UniformSpace (X ⟿[K,n] Y) := sorry
+instance : UniformSpace (X ⟿[K,n] Y) where
+  IsOpen := default
+  isOpen_univ := sorry_proof
+  isOpen_inter := sorry_proof
+  isOpen_sUnion := sorry_proof
+  uniformity := default
+  symm := sorry_proof
+  comp := sorry_proof
+  nhds_eq_comap_uniformity := sorry_proof
+
 instance : Vec K (X ⟿[K,n] Y) := Vec.mkSorryProofs
 
 

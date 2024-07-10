@@ -63,5 +63,3 @@ elab_rules : term
     let (_, prf) ← elabConvRewrite X #[] (← `(conv| ($rw)))
 
     mkAppM ``Eq.mp #[prf,x]
-
-#check (by simp : 1 * 5 = 5) rewrite_type_by (simp)

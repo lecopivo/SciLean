@@ -65,6 +65,7 @@ theorem push_E_lambda (r : Rand Y) (f : X → Y → Z) :
     (fun x => r.𝔼 (fun y => f x y)) := sorry_proof
 
 -- can't be simp as it has variable head
+set_option linter.unusedVariables false in
 theorem pull_E_affine (r : Rand X) (φ : X → Y)
     (f : Y → Z) (hf : IsAffineMap ℝ f := by fun_prop) :
     (f (r.𝔼 φ)) = r.𝔼 (fun x => f (φ x)) := by sorry_proof -- have := hf; sorry_proof

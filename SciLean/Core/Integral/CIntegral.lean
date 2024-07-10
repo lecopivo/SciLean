@@ -7,6 +7,7 @@ import SciLean.Mathlib.MeasureTheory.Unit
 import SciLean.Core.FunctionTransformations
 import SciLean.Util.SorryProof
 
+set_option linter.unusedVariables false
 
 open MeasureTheory
 

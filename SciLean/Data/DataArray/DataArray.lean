@@ -23,7 +23,7 @@ structure DataArray (α : Type) [pd : PlainDataType α] where
 variable {α : Type} [pd : PlainDataType α]
 variable {ι} [IndexType ι] {κ : Type _} [IndexType κ]
 
-@[irreducible, pp_dot]
+@[irreducible]
 def DataArray.get (arr : DataArray α) (i : Fin arr.size) : α := -- pd.get a.data i sorry_proof
   let i := i.1.toUSize
   match pd.btype with
@@ -42,7 +42,7 @@ def DataArray.get (arr : DataArray α) (i : Fin arr.size) : α := -- pd.get a.da
 instance : GetElem (DataArray α) Nat α (fun a i => i < a.size) where
   getElem := fun x i h => x.get ⟨i,h⟩
 
-@[irreducible, pp_dot]
+@[irreducible]
 def DataArray.set (arr : DataArray α) (i : Fin arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
   let i := i.1.toUSize
   match pd.btype with
@@ -60,11 +60,9 @@ def DataArray.set (arr : DataArray α) (i : Fin arr.size) (val : α) : DataArray
 
 
 /-- Capacity of an array. The return type is `Squash Nat` as the capacity is is just an implementation detail and should not affect semantics of the program. -/
-@[pp_dot]
 def DataArray.capacity (arr : DataArray α) : Squash Nat := Quot.mk _ (pd.capacity (arr.byteData.size))
 
 /-- Makes sure that `arr` fits at least `n` elements of `α` -/
-@[pp_dot]
 def DataArray.reserve  (arr : DataArray α) (capacity : Nat) : DataArray α :=
   if capacity ≤ (pd.capacity (arr.byteData.size)) then
     arr
@@ -82,10 +80,10 @@ def DataArray.mkEmpty (capacity : Nat) : DataArray α := Id.run do
     size := 0
     h_size := by sorry_proof }
 
-@[pp_dot]
+
 def DataArray.drop (arr : DataArray α) (k : Nat) : DataArray α := ⟨arr.byteData, arr.size - k, sorry_proof⟩
 
-@[pp_dot]
+
 def DataArray.push (arr : DataArray α) (val : α) (k : Nat := 1) : DataArray α := Id.run do
   let oldSize := arr.size
   let newSize := arr.size + k
@@ -108,7 +106,7 @@ def DataArray.swap (arr : DataArray α) (i j : Fin arr.size) : DataArray α :=
   let arr := arr.set ⟨j.1, sorry_proof⟩ ai
   arr
 
-@[pp_dot]
+
 def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
   let mut arr := arr
   let n := arr.size
@@ -146,28 +144,28 @@ structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [IndexType.
   data : DataArray α
   h_size : IndexType.card ι = data.size
 
-@[pp_dot]
+
 def DataArrayN.get (xs : DataArrayN α ι) (i : ι) : α := (xs.1.get ((IndexType.toFin i).cast xs.2))
 
-@[pp_dot]
+
 def DataArrayN.linGet (xs : DataArrayN α ι) (i : Fin (IndexType.card ι)) : α := (xs.1.get ⟨i,by rw[←xs.2]; omega⟩)
 
-@[pp_dot]
+
 def DataArrayN.set (xs : DataArrayN α ι) (i : ι) (xi : α) : DataArrayN α ι :=
   ⟨xs.1.set ((IndexType.toFin i).cast xs.2) xi, sorry_proof⟩
 
-@[pp_dot]
+
 def DataArrayN.modify (xs : DataArrayN α ι) (i : ι) (f : α → α) : DataArrayN α ι :=
   xs.set i (f (xs.get i))
 
-@[pp_dot]
+
 def DataArrayN.toList (xs : DataArrayN α ι) : List α := Id.run do
   let mut l : List α := []
   for i in IndexType.univ ι do
     l := xs.get i :: l
   return l
 
-@[pp_dot]
+
 def DataArrayN.toListIdx (xs : DataArrayN α ι) : List (ι × α) := Id.run do
   let mut l : List (ι × α) := []
   for i in IndexType.univ ι do
@@ -250,7 +248,7 @@ instance : ArrayTypeNotation (DataArrayN α ι) ι α := ⟨⟩
 --   dropElem_getElem := sorry_proof
 --   reserveElem_id := sorry_proof
 
-@[pp_dot]
+
 def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type) [IndexType κ]
   (hs : IndexType.card κ = IndexType.card ι)
   : DataArrayN α κ :=
@@ -302,7 +300,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
       }
 
 
-@[pp_dot]
+
 def DataArrayN.curry [Inhabited α] (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
   ⟨⟨x.data.byteData, IndexType.card ι, sorry_proof⟩, sorry_proof⟩
 

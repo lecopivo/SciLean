@@ -21,6 +21,7 @@ theorem Rand.𝔼.arg_r.cderiv_rule (r : W → Rand X) (f : X → Y) :
     let d := parDistribDeriv (fun w => (r w).ℙ.toDistribution (R:=R)) w dw
     d.extAction f (fun r ⊸ fun y ⊸ ((r • y) : Y)) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem Rand.𝔼.arg_rf.cderiv_rule' (r : W → Rand X) (f : W → X → Y)
   (hf : ∀ x, CDifferentiable R (f · x)) :

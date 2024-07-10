@@ -71,6 +71,7 @@ theorem comp_rule
 --     L (u.extAction φ) 1 := sorry_proof
 
 
+set_option linter.unusedVariables false in
 theorem bind_rule
     (f : X → Y → 𝒟'(Z,V)) (g : X → 𝒟'(Y,U)) (L : U ⊸ V ⊸ W)
     (hf : DistribDifferentiable (fun (x,y) => f x y)) (hg : DistribDifferentiable g) :

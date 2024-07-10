@@ -1,8 +1,9 @@
 import SciLean.Core.FunctionTransformations.RevFDeriv
 import SciLean.Core.Transformations.HasParamDerivWithJumps.HasParamFDerivWithJumps
 import SciLean.Tactic.IfPull
-
 import Mathlib.Lean.CoreM
+
+set_option linter.unusedVariables false
 
 open MeasureTheory
 
@@ -143,7 +144,7 @@ theorem revFDeriv_under_integral_over_set
       interior + shocks) := by
 
   simp[revFDeriv]
-  simp only [fderiv_under_integral_over_set R f w _ μ A hf.1 sorry]
+  simp only [fderiv_under_integral_over_set R f w _ μ A hf.1 sorry_proof]
   have hf' : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof -- this should be part of hf
   fun_trans (disch:=apply hf') [adjoint_sum,adjoint_integral,adjoint_adjoint,smul_smul]
 
@@ -195,10 +196,10 @@ theorem comp_smooth_jumps_rule
   constructor
   . convert HasParamFDerivWithJumpsAt.comp_smooth_jumps_rule R f g w hf hg.1
     . rename_i w x
-      have hg' : IsContinuousLinearMap R (g' x).2 := by sorry
+      have hg' : IsContinuousLinearMap R (g' x).2 := by sorry_proof
       simp [revFDeriv, hg.2]
       fun_trans
-      sorry
+      sorry_proof
     . simp[List.map_append]; rfl
   . simp [revFDeriv,hg.2]
 
@@ -230,11 +231,11 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
               ((y, z.1), (y, z.2)) })) := by
 
   unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-  have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry
+  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof
+  have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry_proof
 
   constructor
-  . convert Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry
+  . convert Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
     . fun_trans
     . fun_trans
     . simp[List.map_append]; rfl
@@ -376,11 +377,11 @@ theorem HDiv.hDiv.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
               (y/z.1, y/z.2) })) := by
 
   unfold HasParamRevFDerivWithJumpsAt
-  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry
-  have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry
+  have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof
+  have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry_proof
 
   constructor
-  . convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry hg'
+  . convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof hg'
     . fun_trans [hf.2,hg.2]; ring
     . simp[List.map_append]; rfl
   . simp [hf.2, hg.2]
@@ -409,11 +410,11 @@ theorem ite.arg_te.HasParamRevFDerivWithJumpsAt_rule
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor
-  . convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry
+  . convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
     . fun_trans; simp only [hf.2, hg.2, Tactic.if_pull]
     . simp[List.map_append,ftrans_simp]
       constructor
-      . simp[frontierGrad]; simp (disch:=sorry) only [adjoint_inner_left]; simp [Inner.inner]
+      . simp[frontierGrad]; simp (disch:=sorry_proof) only [adjoint_inner_left]; simp [Inner.inner]
       . rfl
   . dsimp; intros; split_ifs <;> simp [hf.2, hg.2]
 

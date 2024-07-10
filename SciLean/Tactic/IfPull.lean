@@ -1,5 +1,6 @@
 import Lean
 import SciLean.Util.RewriteBy
+import SciLean.Util.SorryProof
 
 namespace SciLean.Tactic
 
@@ -45,7 +46,7 @@ simproc_decl if_pull (_) := fun e => do
 
     let e' ← mkAppOptM ``ite #[none, cond, none, thn, els]
 
-    let prf ← mkSorry (← mkEq e e') false
+    let prf := Expr.app (Expr.const ``SciLean.sorryProofAxiom []) (← mkEq e e')
 
     trace[Meta.Tactic.if_pull] s!"if_pull: \n{← ppExpr e}\n==>\n{← ppExpr e'}\n"
     return .visit { expr := e', proof? := prf }
@@ -70,7 +71,7 @@ simproc_decl if_pull (_) := fun e => do
     let e' ← mkAppOptM ``ite #[none, b.getArg! 1, none, thn, els]
     let e' ← mkLambdaFVars xs' e'
 
-    let prf ← mkSorry (← mkEq e e') false
+    let prf := Expr.app (Expr.const ``SciLean.sorryProofAxiom []) (← mkEq e e')
 
     trace[Meta.Tactic.if_pull] s!"if_pull: \n{← ppExpr e}\n==>\n{← ppExpr e'}\n"
     return .visit { expr := e', proof? := prf }

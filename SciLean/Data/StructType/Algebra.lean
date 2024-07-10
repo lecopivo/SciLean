@@ -8,6 +8,7 @@ import SciLean.Data.StructType.Basic
 import SciLean.Tactic.AnalyzeConstLambda
 
 set_option linter.unusedVariables false
+set_option linter.hashCommand false
 
 open LeanColls
 

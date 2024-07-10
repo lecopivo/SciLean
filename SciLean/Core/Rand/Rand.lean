@@ -272,7 +272,7 @@ def estimateE (n : ℕ) (x : Rand X) (f : X → Y) : Rand Y := do
   let mut y := (0:Y)
   for _ in [0:n] do
     let x' ← x
-    y += y + f x'
+    y += f x'
   return ((1:R)/(n:R)) • y
 
 

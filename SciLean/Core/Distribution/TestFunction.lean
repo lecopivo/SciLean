@@ -65,9 +65,18 @@ instance : Add (𝒟 X) := ⟨fun f g : 𝒟 X => ⟨fun x => f x + g x, sorry_p
 instance : Sub (𝒟 X) := ⟨fun f g : 𝒟 X => ⟨fun x => f x - g x, sorry_proof⟩⟩
 instance : SMul R (𝒟 X) := ⟨fun r f => ⟨fun x => r * f x, sorry_proof⟩⟩
 instance : Neg (𝒟 X) := ⟨fun f => ⟨fun x => - f x, sorry_proof⟩⟩
-instance : Zero (𝒟 X) := ⟨⟨fun x => - 0, sorry_proof⟩⟩
+instance : Zero (𝒟 X) := ⟨⟨fun _ => - 0, sorry_proof⟩⟩
 
-instance : UniformSpace (𝒟 X) := sorry
+instance : UniformSpace (𝒟 X) where
+  IsOpen := default
+  isOpen_univ := sorry_proof
+  isOpen_inter := sorry_proof
+  isOpen_sUnion := sorry_proof
+  uniformity := default
+  symm := sorry_proof
+  comp := sorry_proof
+  nhds_eq_comap_uniformity := sorry_proof
+
 instance : Vec R (𝒟 X) := Vec.mkSorryProofs
 
 
@@ -106,14 +115,14 @@ variable
 -- theorem TestFunctionSpace.eval_CDifferentiable_rule :
 --     CDifferentiable R (fun (φx : (𝒟 X)×X) => φx.1 φx.2) := sorry_proof
 
-
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem TestFunctionSpace.eval_CDifferentiableAt_rule (w : W)
     (φ : W → 𝒟 X) (x : W → X)
     (hφ : CDifferentiableAt R φ w) (hx : CDifferentiableAt R x w) :
     CDifferentiableAt R (fun w : W => (φ w) (x w)) w := sorry_proof
 
-
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem TestFunctionSpace.eval_CDifferentiable_rule'
     (φ : W → 𝒟 X) (x : W → X)

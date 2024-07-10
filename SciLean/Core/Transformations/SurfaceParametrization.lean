@@ -40,6 +40,7 @@ variable
   {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [NormedSpace R Y] [CompleteSpace Y]
 
 variable (R)
+set_option linter.unusedVariables false in
 theorem surface_integral_parametrization_inter
     (f : X → Y) (A B : Set X)
     {U param} [NormedAddCommGroup U] [NormedSpace ℝ U]

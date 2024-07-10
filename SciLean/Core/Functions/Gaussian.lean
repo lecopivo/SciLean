@@ -48,6 +48,7 @@ theorem log_gaussian (μ : U) (σ : R) (x : U) :
 -- derive_cdifferentiable gaussian μ σ x
 --   assuming σ ≠ 0
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem gaussian.arg_μx.DifferentiableAt_rule
     {W} [NormedAddCommGroup W] [NormedSpace R W]
@@ -88,6 +89,7 @@ theorem gaussian.arg_μx.CDifferentiable_rule
   fun_prop
 
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem gaussian.arg_μx.cderiv_rule
     (μ : W → U) (σ : R) (x : W → U)

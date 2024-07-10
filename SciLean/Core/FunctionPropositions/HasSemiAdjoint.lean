@@ -9,6 +9,7 @@ import SciLean.Tactic.FunTrans.Attr
 import SciLean.Tactic.FunTrans.Elab
 
 set_option linter.unusedVariables false
+set_option linter.hashCommand false
 
 open LeanColls
 

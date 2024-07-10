@@ -114,10 +114,10 @@ def AlmostDisjointList {X} [MeasurableSpace X]
 
 variable (R)
 @[gtrans]
-def HasParamFDerivWithJumpsAt (f : W → X → Y) (w : W)
+opaque HasParamFDerivWithJumpsAt (f : W → X → Y) (w : W)
     (f' : outParam <| W → X → Y)
     (disc : outParam <| DiscontinuityDataList R W X Y)
-    : Prop := ∃ J Ω ι, HasParamFDerivWithJumpsAtImpl R f w f' sorry J ι Ω sorry sorry sorry
+    : Prop  -- := ∃ J Ω ι, HasParamFDerivWithJumpsAtImpl R f w f' sorry J ι Ω sorry sorry sorry
 
 
 -- def HasParamFDerivWithJumps (f : W → X → Y)

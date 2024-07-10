@@ -113,6 +113,7 @@ abbrev curryAll {Xs Y : outParam $ Sort _} {F : outParam (Sort _)}
 
 
 section Tests
+  set_option linter.unusedVariables false
 
   example : uncurryN 3 (λ i j k : Nat => i + j) = λ (i,j,k) => i + j := by rfl
   example : uncurryN 2 (λ i j k : Nat => i + j) = λ (i,j) k => i + j := by rfl

@@ -102,25 +102,6 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
     return false
 
 
-open Lean Meta Qq
-#eval show MetaM Unit from do
-  let x ← mkFreshExprMVar q(Nat)
-  let y := q(1 : ℕ)
-
-  let s ← saveState
-  let unify ← isDefEq x y
-  restoreState s
-
-  if unify then
-    IO.println "are def eq!"
-    if (← instantiateMVars x).isMVar then
-      IO.println "x is still mvar!"
-    else
-      throwError "x is no longer mvar!"
-  else
-    throwError "not def eq!"
-
-
 /-- Replace n-th and all subsequent arguments in `e` with fresh metavariables. -/
 def mkTrailingArgsToFreshMVars (e : Expr) (n : ℕ) : MetaM Expr := do
   e.withApp fun fn args => do
@@ -209,8 +190,8 @@ Examples:
  -/
 unsafe def gtrans (e : Expr) : GTransM (Option Expr) := do
 
-  forallTelescope e fun ctx e => do
-  Meta.letTelescope e fun ctx' e => do
+  forallTelescope e fun _ e => do
+  Meta.letTelescope e fun _ e => do
 
   if (← get).numSteps ≥ (← read).config.maxNumSteps then
     throwError "expected application of generalized transformation, got {← ppExpr e}"

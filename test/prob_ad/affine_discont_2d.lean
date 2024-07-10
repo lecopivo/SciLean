@@ -3,6 +3,7 @@ import SciLean.Core.Transformations.SurfaceParametrization
 import SciLean.Core.LinearAlgebra.GramSchmidt.Properties
 import SciLean.Core.Rand.Distributions.Uniform
 import SciLean.Core.Rand.Tactic
+import SciLean.Core.Rand.PullMean
 import SciLean.Data.DataArray
 import SciLean.Tactic.Autodiff
 
@@ -13,6 +14,7 @@ variable
 
 set_default_scalar R
 
+set_optiion trace.Meta.Tactic.simp.rewrite true
 
 example (w : R) (a b c d : R) :
     (fderiv R (fun w' =>
@@ -47,14 +49,16 @@ example (w : R) (a b c d : R) :
 
     conv in (∫ _ in _, _ ∂μH[_]) =>
 
-      lsimp (disch:=gtrans (disch:=fun_prop)) only
-        [surface_integral_parametrization_inter R]
       lautodiff (disch:=gtrans (disch:=fun_prop))
-        [integral_over_bounding_ball (R:=R)]
+        [surface_integral_parametrization_inter R,
+         integral_over_bounding_ball (R:=R)]
 
     conv in (occs:=*) (∫ _ in _, _ ∂_) =>
-      . lsimp only [Rand.integral_eq_uniform_E R]
-      . lsimp only [Rand.integral_eq_uniform_E R]
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R 10]
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R 10]
+    pull_mean
 
   sorry_proof
 
@@ -94,13 +98,15 @@ example (w : R) (a b c d : R) :
 
     conv in (∫ _ in _, _ ∂μH[_]) =>
 
-      lsimp (disch:=gtrans (disch:=fun_prop)) only
-        [surface_integral_parametrization_inter R]
       lautodiff (disch:=gtrans (disch:=fun_prop))
-        [integral_over_bounding_ball (R:=R)]
+        [surface_integral_parametrization_inter R,
+         integral_over_bounding_ball (R:=R)]
 
     conv in (occs:=*) (∫ _ in _, _ ∂_) =>
-      . lsimp only [Rand.integral_eq_uniform_E R]
-      . lsimp only [Rand.integral_eq_uniform_E R]
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R 10]
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R 10]
+    pull_mean
 
   sorry_proof

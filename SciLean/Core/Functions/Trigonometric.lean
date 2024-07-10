@@ -30,6 +30,8 @@ theorem add_cos2_sin2_eq_one (x : C) : cos x * cos x + sin x * sin x = 1 :=
 -- Sin -------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem sin.arg_x.Differentiable_rule
     {W} [NormedAddCommGroup W] [NormedSpace C W]
@@ -37,6 +39,7 @@ theorem sin.arg_x.Differentiable_rule
     Differentiable C fun w => sin (x w) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem sin.arg_x.fderiv_rule
     {W} [NormedAddCommGroup W] [NormedSpace C W]
@@ -80,11 +83,13 @@ theorem sin.arg_x.revFDeriv_rule
   fun_trans
 
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem sin.arg_x.CDifferentiable_rule
     (x : W → C) (hx : CDifferentiable C x) :
     CDifferentiable C fun w => sin (x w) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem sin.arg_x.cderiv_rule
     (x : W → C) (hx : CDifferentiable C x) :
@@ -135,6 +140,7 @@ theorem sin.arg_x.revDeriv_rule
 -- Cos -------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem cos.arg_x.Differentiable_rule
     {W} [NormedAddCommGroup W] [NormedSpace C W]
@@ -142,6 +148,7 @@ theorem cos.arg_x.Differentiable_rule
     Differentiable C fun w => cos (x w) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem cos.arg_x.fderiv_rule
     {W} [NormedAddCommGroup W] [NormedSpace C W]
@@ -185,11 +192,13 @@ theorem cos.arg_x.revFDeriv_rule
   fun_trans
 
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem cos.arg_x.CDifferentiable_rule
   (x : W → C) (hx : CDifferentiable C x)
   : CDifferentiable C fun w => cos (x w) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem cos.arg_x.ceriv_rule
   (x : W → C) (hx : CDifferentiable C x)
@@ -241,11 +250,13 @@ theorem cos.arg_x.revDeriv_rule
 -- Tanh -------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem tanh.arg_x.CDifferentiable_rule
     (x : W → C) (hx : CDifferentiable C x) :
     CDifferentiable C fun w => tanh (x w) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem tanh.arg_x.ceriv_rule
     (x : W → C) (hx : CDifferentiable C x) :

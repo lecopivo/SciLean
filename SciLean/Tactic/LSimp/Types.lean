@@ -115,7 +115,7 @@ def withoutModifyingLCtx (k : X → MetaM Y) (x : LSimpM X) : LSimpM Y := do
 def LSimpM.runInMeta (x : LSimpM X) (k : X → MetaM Y) : LSimpM Y := do
   fun mths ctx s => do
     -- let m : Simp.Methods := Simp.MethodsRef.toMethods mths.toMethodsRef
-    let (r,s') ← (x mths ctx s).runInMeta (fun (x,s') => do pure (← k x, s'))
+    let (r,s') ← Meta.withoutModifyingLCtx (fun (x,s') => do pure (← k x, s')) (x mths ctx s)
     return (r,s')
 
 

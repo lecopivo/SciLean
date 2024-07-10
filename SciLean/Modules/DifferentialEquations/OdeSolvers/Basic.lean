@@ -41,15 +41,13 @@ theorem odeSolve_fixed_dt {f : R → X → X} (stepper : (R → X → X) → (R 
 
 
 
-
-#exit
-theorem odeSolve_fixed_dt_on_interval {X} [Vec X] {f : ℝ → X → X} {t₀ : ℝ} {x₀ : X}
-  (stepper : Stepper) (interpol : (ℤ→X) → (ℝ→X)) (T : ℝ)
-  : (λ t => odeSolve f t₀ x₀ t)
-    =
-    limit λ n =>
-      let Δt := (T-t₀) / n
-      let toGrid := λ t : ℝ => (t - t₀)/Δt
-      let odeData := odeSolve_fixed_dt_array f stepper n t₀ x₀ T
-      λ t => interpol (extend1DFinStreak λ i => odeData.get i) (toGrid t)
-  := sorry
+-- theorem odeSolve_fixed_dt_on_interval {X} [Vec X] {f : ℝ → X → X} {t₀ : ℝ} {x₀ : X}
+--   (stepper : Stepper) (interpol : (ℤ→X) → (ℝ→X)) (T : ℝ)
+--   : (λ t => odeSolve f t₀ x₀ t)
+--     =
+--     limit λ n =>
+--       let Δt := (T-t₀) / n
+--       let toGrid := λ t : ℝ => (t - t₀)/Δt
+--       let odeData := odeSolve_fixed_dt_array f stepper n t₀ x₀ T
+--       λ t => interpol (extend1DFinStreak λ i => odeData.get i) (toGrid t)
+--   := sorry

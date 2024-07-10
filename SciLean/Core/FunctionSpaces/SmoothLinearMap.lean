@@ -125,7 +125,16 @@ theorem SmoothLinearMap.apply_zero (f : X ⊸[K] Y) : f 0 = 0 := by sorry_proof
 
 end AlgebraSimps
 
-instance : UniformSpace (X ⊸[K] Y) := sorry
+instance : UniformSpace (X ⊸[K] Y) where
+  IsOpen := default
+  isOpen_univ := sorry_proof
+  isOpen_inter := sorry_proof
+  isOpen_sUnion := sorry_proof
+  uniformity := default
+  symm := sorry_proof
+  comp := sorry_proof
+  nhds_eq_comap_uniformity := sorry_proof
+
 instance : Vec K (X ⊸[K] Y) := Vec.mkSorryProofs
 
 open BigOperators in
@@ -166,4 +175,4 @@ set_default_scalar K
 variable (f : X ⊸ Y)
 
 -- TODO: fix this!!! What is going on??
-#check f -- f : sorryAx (Type (max ?u.29009 ?u.28996)) true
+-- #check f -- f : sorryAx (Type (max ?u.29009 ?u.28996)) true

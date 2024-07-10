@@ -130,6 +130,9 @@ instance {R} [RealScalar R] : AdjointSpace ℝ R where
 
 instance {R K} [Scalar R K] : HPow K K K := ⟨fun x y => Scalar.pow x y⟩
 
+
+instance {R} [RealScalar R] : ZeroLEOneClass R := sorry_proof
+
   -- floor
   -- ceil
 
@@ -359,6 +362,12 @@ theorem Scalar.toReal_zero :
 theorem Scalar.toReal_one :
   Scalar.toReal R (1:R) = 1 := sorry_proof
 
+@[ftrans_simp ↓]
+theorem Scalar.ofReal_mul (x y : ℝ) :
+    Scalar.ofReal (K:=R) (x * y)
+    =
+    Scalar.ofReal (K:=R) x * Scalar.ofReal (K:=R) y := sorry_proof
+
 @[simp, ftrans_simp]
 theorem Scalar.ofReal_ite (c : Prop) [Decidable c] (t e : ℝ) :
     Scalar.ofReal R (if c then t else e)
@@ -422,14 +431,20 @@ theorem Scalar.toENNReal_one :
 theorem Scalar.toENNReal_zero :
   Scalar.toENNReal (0:R) = 0 := sorry_proof
 
-@[simp, ftrans_simp]
+@[ftrans_simp ↓]
+theorem ofENNReal_mul (x y : ENNReal) :
+    Scalar.ofENNReal (R:=R) (x * y)
+    =
+    Scalar.ofENNReal (R:=R) x * Scalar.ofENNReal (R:=R) y := sorry_proof
+
+@[simp ↓, ftrans_simp ↓]
 theorem Scalar.ofENNReal_ite (c : Prop) [Decidable c] (t e : ENNReal) :
     Scalar.ofENNReal (R:=R) (if c then t else e)
     =
     if c then Scalar.ofENNReal (R:=R) t else Scalar.ofENNReal (R:=R) e := by
   if h : c then simp[h] else simp[h]
 
-@[simp, ftrans_simp]
+@[simp ↓, ftrans_simp ↓]
 theorem Scalar.ofENNReal_dite (c : Prop) [Decidable c]
     (t : c → ENNReal) (e : ¬c → ENNReal) :
     Scalar.ofENNReal (R:=R) (if h : c then t h else e h)
@@ -437,14 +452,14 @@ theorem Scalar.ofENNReal_dite (c : Prop) [Decidable c]
     if h : c then Scalar.ofENNReal (R:=R) (t h) else Scalar.ofENNReal (R:=R) (e h) := by
   if h : c then simp[h] else simp[h]
 
-@[simp, ftrans_simp]
+@[simp ↓, ftrans_simp ↓]
 theorem Scalar.toENNReal_ite (c : Prop) [Decidable c] (t e : R) :
     Scalar.toENNReal (if c then t else e)
     =
     if c then Scalar.toENNReal t else Scalar.toENNReal e := by
   if h : c then simp[h] else simp[h]
 
-@[simp, ftrans_simp]
+@[simp ↓, ftrans_simp ↓]
 theorem Scalar.toENNReal_dite (c : Prop) [Decidable c]
     (t : c → R) (e : ¬c → R) :
     Scalar.toENNReal (if h : c then t h else e h)

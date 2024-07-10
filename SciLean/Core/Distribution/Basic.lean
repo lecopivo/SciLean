@@ -68,7 +68,6 @@ instance [Module ℝ Y] : Module ℝ (𝒟'(X,Y)) := Module.mkSorryProofs
 ----------------------------------------------------------------------------------------------------
 
 open BigOperators in
-@[pp_dot]
 noncomputable
 def Distribution.extAction (T : 𝒟'(X,Y)) (φ : X → Z) (L : Y ⊸ Z ⊸ W) : W :=
   if h : ∃ (zₙ : ℕ → Z) (φₙ : ℕ → 𝒟 X), ∀ x, ∑' i, φₙ i x • zₙ i = φ x then
@@ -97,11 +96,13 @@ theorem Distribution.mk_extAction (T : (X → R) → Y) (hT : IsSmoothLinearMap 
 
 
 -- This is definitely not true as stated, what kind of condistions do we need on `φ` and `T`?
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem Distribution.extAction.arg_φ.IsSmoothLinearMap (T : 𝒟'(X,U)) (φ : W → X → V) (L : U ⊸ V ⊸ Z)
     (hφ : IsSmoothLinearMap R φ) :
     IsSmoothLinearMap R (fun w => T.extAction (φ w) L) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem Distribution.extAction.arg_T.IsSmoothLinearMap (T : W → 𝒟'(X,U)) (φ : X → V) (L : U ⊸ V ⊸ Z)
     (hT : IsSmoothLinearMap R T) :
@@ -273,6 +274,7 @@ theorem Distribution.extAction_iteD (A : Set X) (t e : 𝒟'(X,U)) (φ : X → V
         t.extAction (fun x => if x ∈ A then φ x else 0) L +
         e.extAction (fun x => if x ∉ A then φ x else 0) L := by sorry_proof
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem iteD.arg_te.IsSmoothLinearMap_rule (A : Set X) (t e : W → 𝒟'(X,Y))
     (ht : IsSmoothLinearMap R t) (he : IsSmoothLinearMap R e) :
@@ -283,7 +285,6 @@ theorem iteD.arg_te.IsSmoothLinearMap_rule (A : Set X) (t e : W → 𝒟'(X,Y))
 -- Set restriction ---------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-@[pp_dot]
 noncomputable
 def Distribution.restrict (T : 𝒟'(X,Y)) (A : Set X) : 𝒟'(X,Y) :=
   ifD A then T else 0
@@ -403,6 +404,7 @@ def Distribution.postComp (T : 𝒟'(X,Y)) (f : Y ⊸ Z) : 𝒟'(X,Z) := fun φ 
 -- abbrev Distribution.postExtAction (T : 𝒟'(X,𝒟'(Y,U))) (φ : Y → V) (L : U ⊸ V ⊸ W) : 𝒟'(X,W) :=
 --   T.postComp (fun u ⊸ u.extAction φ L)
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem Distribution.postComp.arg_T.IsSmoothLinarMap_rule (T : W → 𝒟'(X,Y)) (f : Y ⊸ Z)
     (hT : IsSmoothLinearMap R T) :
@@ -419,7 +421,7 @@ theorem postComp_comp (x : 𝒟'(X,U)) (g : U ⊸ V) (f : V ⊸ W) :
     x.postComp (fun u ⊸ f (g u)) := sorry_proof
 
 @[simp, ftrans_simp]
-theorem postComp_assoc (x : 𝒟'(X,U)) (y : U ⊸ 𝒟'(Y,V)) (f : V ⊸ W) (φ : Y → R) :
+theorem postComp_assoc (x : 𝒟'(X,U)) (y : U ⊸ 𝒟'(Y,V)) (f : V ⊸ W) :
     (x.postComp y).postComp (fun T ⊸ T.postComp f)
     =
     (x.postComp (fun u ⊸ (y u).postComp f)) := sorry_proof

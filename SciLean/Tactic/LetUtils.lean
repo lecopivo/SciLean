@@ -172,57 +172,57 @@ macro " let_move_up " id:ident n:(num)? : tactic => `(tactic| conv => let_move_u
 
 
 
-/-- Moves let binding down, maximum by `n?` positions. Returns none if there is no such let binding.
+-- /-- Moves let binding down, maximum by `n?` positions. Returns none if there is no such let binding.
 
-For example for the following expresion
-```
-  let x := ..
-  let y := ..
-  let z := ..
-  f x y z
-```
-calling `letMoveUp e (λ n => n == `x) (some 2)` will produce
-```
-  let y := ..
-  let z := ..
-  let x := ..
-  f x y z
-```
-but only if the value of `y` does not depend on `z`.
-
-
-Let binding is specified by a running `p` on let binding name.
--/
-def letMoveDown (e : Expr) (p : Name → Bool) (n? : Option Nat) : Option Expr := do
-  if n?.isSome && n?.get! = 0 then
-    some e
-  else
-  match e with
-  | .app f x =>
-    if let .some x' := letMoveDown x p n? then
-      some (.app f x')
-    else if let .some f' := letMoveDown f p n? then
-      some (.app f' x)
-    else
-      none
-
-  | .letE xName xType xValue b _ =>
-
-    if p xName then
-      match b with
-      | .letE yName yType yValue b' _ => sorry
-
-      | .lam yName yType b' bi => sorry
-      | _ => some e
-    else
-
-      if let .some b' := letMoveDown b p n? then
-        some (.letE xName xType xValue b' false)
-      else
-        none
+-- For example for the following expresion
+-- ```
+--   let x := ..
+--   let y := ..
+--   let z := ..
+--   f x y z
+-- ```
+-- calling `letMoveUp e (λ n => n == `x) (some 2)` will produce
+-- ```
+--   let y := ..
+--   let z := ..
+--   let x := ..
+--   f x y z
+-- ```
+-- but only if the value of `y` does not depend on `z`.
 
 
-  | _ => none
+-- Let binding is specified by a running `p` on let binding name.
+-- -/
+-- def letMoveDown (e : Expr) (p : Name → Bool) (n? : Option Nat) : Option Expr := do
+--   if n?.isSome && n?.get! = 0 then
+--     some e
+--   else
+--   match e with
+--   | .app f x =>
+--     if let .some x' := letMoveDown x p n? then
+--       some (.app f x')
+--     else if let .some f' := letMoveDown f p n? then
+--       some (.app f' x)
+--     else
+--       none
+
+--   | .letE xName xType xValue b _ =>
+
+--     if p xName then
+--       match b with
+--       | .letE yName yType yValue b' _ => sorry
+
+--       | .lam yName yType b' bi => sorry
+--       | _ => some e
+--     else
+
+--       if let .some b' := letMoveDown b p n? then
+--         some (.letE xName xType xValue b' false)
+--       else
+--         none
+
+
+--   | _ => none
 
 
 
@@ -254,10 +254,3 @@ by
     let_unfold1 a
     let_unfold1 a
     let_unfold1 a
-
-
-
-
-
-
-#exit

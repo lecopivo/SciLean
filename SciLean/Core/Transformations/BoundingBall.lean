@@ -39,6 +39,7 @@ variable
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [MeasurableSpace X] [BorelSpace X]
   {Y : Type*} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
 
+set_option linter.unusedVariables false in
 open Classical in
 theorem SciLean.integral_over_bounding_ball
   (f : X → Y) (A : Set X) (μ : Measure X)
@@ -55,6 +56,7 @@ end IntegralOverBoundingBall
 
 open Scalar
 open Set in
+set_option linter.unusedVariables false in
 @[gtrans]
 theorem Set.prod.bounding_ball₂
     (A : Set X) (B : Set Y) (cx : X) (cy : Y) (rx ry : R)
@@ -62,6 +64,7 @@ theorem Set.prod.bounding_ball₂
     BoundingBall₂ R (A.prod B) (cx,cy) (sqrt (rx^2 + ry^2)) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[gtrans]
 theorem SProd.sprod.bounding_ball₂
     (A : Set X) (B : Set Y) (cx : X) (cy : Y) (rx ry : R)
@@ -69,6 +72,7 @@ theorem SProd.sprod.bounding_ball₂
     BoundingBall₂ R (A ×ˢ B) (cx,cy) (sqrt (rx^2 + ry^2)) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[gtrans]
 theorem Set.fst.bounding_ball₂
     (A : Set (X×Y)) (b : Y) (center : X×Y) (radius : R)
@@ -78,6 +82,7 @@ theorem Set.fst.bounding_ball₂
     BoundingBall₂ R (A.fst b) center' radius' := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[gtrans]
 theorem Set.snd.bounding_ball₂
     (A : Set (X×Y)) (a : X) (center : X×Y) (radius : R)
@@ -89,12 +94,14 @@ theorem Set.snd.bounding_ball₂
        sqrt (radius^2 - ‖center.1 - a‖₂²)) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[gtrans]
 theorem Set.inter.left_bounding_ball₂
     (A B : Set X) (center : X) (radius : R)
     (hA : BoundingBall₂ R A center radius) :
     BoundingBall₂ R (A ∩ B) center radius := sorry_proof
 
+set_option linter.unusedVariables false in
 @[gtrans]
 theorem Set.inter.right_bounding_ball₂
     (A B : Set X) (center : X) (radius : R)

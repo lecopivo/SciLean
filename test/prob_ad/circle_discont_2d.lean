@@ -1,6 +1,7 @@
 import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
 import SciLean.Core.Transformations.SurfaceParametrization
 import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Core.Rand.PullMean
 import SciLean.Tactic.Autodiff
 
 open SciLean MeasureTheory Set
@@ -67,13 +68,17 @@ example (w : R) (hw : w ≠ 0) :
 
     conv in (∫ _ in _, _ ∂μH[_]) =>
 
-      lsimp (disch:=gtrans (disch:=first | fun_prop | assumption)) only
+      lautodiff (disch:=gtrans (disch:=first | fun_prop | assumption))
         [surface_integral_parametrization_inter R]
       lautodiff (disch:=first | gtrans (disch:=fun_prop) | fun_prop)
         [integral_over_bounding_ball (R:=R)]
 
     conv in (occs:=*) (∫ _ in _, _ ∂_) =>
-      . lsimp only [Rand.integral_eq_uniform_E R]
-      . lsimp only [Rand.integral_eq_uniform_E R]
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R 10]
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R 10]
+
+    pull_mean
 
   sorry_proof

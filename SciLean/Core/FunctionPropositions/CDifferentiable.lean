@@ -397,7 +397,7 @@ theorem Inner.inner.arg_a0a1.CDifferentiableAt_rule
 
 
 @[fun_prop]
-theorem SciLean.Norm2.norm2.arg_a0.CDifferentiable_rule
+theorem Norm2.norm2.arg_a0.CDifferentiable_rule
   (f : X → Y) (hf : CDifferentiable R f)
   : CDifferentiable R (fun x => ‖f x‖₂²[R]) :=
 by
@@ -406,7 +406,7 @@ by
 
 
 @[fun_prop]
-theorem SciLean.Norm2.norm2.arg_a0.CDifferentiableAt_rule
+theorem Norm2.norm2.arg_a0.CDifferentiableAt_rule
   (f : X → Y) (x : X) (hf : CDifferentiableAt R f x)
   : CDifferentiableAt R (fun x => ‖f x‖₂²[R]) x :=
 by
@@ -415,12 +415,12 @@ by
 
 
 @[fun_prop]
-theorem SciLean.norm₂.arg_x.CDifferentiable_rule
+theorem norm₂.arg_x.CDifferentiable_rule
   (f : X → Y) (hf : CDifferentiable R f) (hx : f x≠0)
   : CDifferentiable R (fun x => ‖f x‖₂[R]) := by sorry_proof
 
 @[fun_prop]
-theorem SciLean.norm₂.arg_x.CDifferentiableAt_rule
+theorem norm₂.arg_x.CDifferentiableAt_rule
   (f : X → Y) (x : X)
   (hf : CDifferentiableAt R f x) (hx : f x≠0)
   : CDifferentiableAt R (fun x => ‖f x‖₂[R]) x := by fun_prop (disch:=assumption)

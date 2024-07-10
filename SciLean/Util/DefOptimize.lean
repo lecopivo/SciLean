@@ -36,7 +36,7 @@ elab "def_optimize" f:ident "by " t:convSeq : command => do
   addAndCompile (.defnDecl optimizedDef)
 
 
-  let eqType ← forallTelescope info.type fun xs b => do
+  let eqType ← forallTelescope info.type fun xs _ => do
     let lhs ← mkAppOptM info.name (xs.map .some)
     let rhs ← mkAppOptM optName (xs.map .some)
     mkForallFVars xs (← mkEq lhs rhs)

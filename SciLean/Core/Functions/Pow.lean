@@ -17,6 +17,7 @@ variable
 -- Sqrt --------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem sqrt.arg_x.CDifferentiableAt_rule
     (w : W) (x : W → R) (hx : CDifferentiableAt R x w) (hw : x w ≠ 0) :
@@ -28,6 +29,7 @@ theorem sqrt.arg_x.CDifferentiable_rule
     CDifferentiable R (fun w => sqrt (x w)) := by
   intro x; fun_prop (disch:=aesop)
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem sqrt.arg_x.cderiv_rule_at
     (w : W) (x : W → R) (hx : CDifferentiableAt R x w) (hw : 0 < x w) :

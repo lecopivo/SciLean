@@ -216,14 +216,14 @@ theorem Prod.snd.arg_self.HasAdjDiff_rule
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem SciLean.cderiv.arg_dx.HasSemiAdjoint_rule_at
+theorem cderiv.arg_dx.HasSemiAdjoint_rule_at
     (f : Y → Z) (g : X → Y) (y : Y)
     (hf : HasAdjDiffAt K f y) (hg : HasSemiAdjoint K g) :
     HasSemiAdjoint K fun dx => cderiv K f y (g dx) := by
   apply HasSemiAdjoint.comp_rule K (cderiv K f y) g hf.2 hg
 
 @[fun_prop]
-theorem SciLean.cderiv.arg_dx.HasSemiAdjoint_rule
+theorem cderiv.arg_dx.HasSemiAdjoint_rule
     (f : Y → Z) (g : X → Y) (y : Y)
     (hf : HasAdjDiff K f) (hg : HasSemiAdjoint K g) :
     HasSemiAdjoint K fun dx => cderiv K f y (g dx) := by fun_prop
@@ -449,19 +449,19 @@ theorem Inner.inner.arg_a0a1.HasAdjDiff_rule
 
 
 @[fun_prop]
-theorem SciLean.Norm2.norm2.arg_a0.HasAdjDiffAt_rule (x : X)
+theorem Norm2.norm2.arg_a0.HasAdjDiffAt_rule (x : X)
     (f : X → Y) (hf : HasAdjDiffAt R f x) :
     HasAdjDiffAt R (fun x => ‖f x‖₂²[R]) x := by
   constructor; fun_prop; fun_trans; fun_prop
 
 @[fun_prop]
-theorem SciLean.Norm2.norm2.arg_a0.HasAdjDiff_rule
+theorem Norm2.norm2.arg_a0.HasAdjDiff_rule
     (f : X → Y) (hf : HasAdjDiff R f) :
     HasAdjDiff R fun x => ‖f x‖₂²[R] := by
   intro x; fun_prop
 
 @[fun_prop]
-theorem SciLean.norm₂.arg_x.HasAdjDiffAt_rule (x : X)
+theorem norm₂.arg_x.HasAdjDiffAt_rule (x : X)
     (f : X → Y) (hf : HasAdjDiffAt R f x) (hfz : f x ≠ 0) :
     HasAdjDiffAt R (fun x => ‖f x‖₂[R]) x := by
   constructor;
@@ -469,7 +469,7 @@ theorem SciLean.norm₂.arg_x.HasAdjDiffAt_rule (x : X)
   sorry_proof --fun_trans (disch:=assumption); fun_prop (disch:=assumption)
 
 @[fun_prop]
-theorem SciLean.norm₂.arg_x.HasAdjDiff_rule
+theorem norm₂.arg_x.HasAdjDiff_rule
     (f : X → Y) (hf : HasAdjDiff R f) (hfz : ∀ x, f x ≠ 0) :
     HasAdjDiff R fun x => ‖f x‖₂[R] := by
   intro x; fun_prop (disch:=aesop)
@@ -481,17 +481,13 @@ end InnerProductSpace
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem SciLean.semiAdjoint.arg_y.CDifferentiableAt_rule {W : Type _} [Vec K W] (w : W)
+theorem semiAdjoint.arg_y.CDifferentiableAt_rule {W : Type _} [Vec K W] (w : W)
     (f : X → Y) (a0 : W → Y) (hf : CDifferentiable K f) (ha0 : CDifferentiableAt K a0 w) :
     CDifferentiableAt K (fun w => semiAdjoint K f (a0 w)) w := by fun_prop
 
-@[fun_prop]
-theorem SciLean.semiAdjoint.arg_y.CDifferentiable_rule {W : Type _} [Vec K W]
-    (f : X → Y) (a0 : W → Y) (hf : CDifferentiable K f) (ha0 : CDifferentiable K a0) :
-    CDifferentiable K (fun w => semiAdjoint K f (a0 w)) := by intro x; fun_prop
 
 @[fun_prop]
-theorem SciLean.semiAdjoint.arg_y.HasAdjDiffAt_rule (w : W)
+theorem semiAdjoint.arg_y.HasAdjDiffAt_rule (w : W)
     (f : X → Y) (a0 : W → Y) (hf : CDifferentiable K f) (ha0 : HasAdjDiffAt K a0 w) :
     HasAdjDiffAt K (fun w => semiAdjoint K f (a0 w)) w := by
   constructor
@@ -499,7 +495,7 @@ theorem SciLean.semiAdjoint.arg_y.HasAdjDiffAt_rule (w : W)
   sorry_proof
 
 @[fun_prop]
-theorem SciLean.semiAdjoint.arg_y.HasAdjDiff_rule
+theorem semiAdjoint.arg_y.HasAdjDiff_rule
     (f : X → Y) (a0 : W → Y) (hf : CDifferentiable K f) (ha0 : HasAdjDiff K a0) :
     HasAdjDiff K (fun w => semiAdjoint K f (a0 w)) := by
   intro w; fun_prop

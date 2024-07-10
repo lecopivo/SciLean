@@ -6,6 +6,7 @@ import SciLean.Data.ArrayType.Algebra
 open SciLean
 
 set_option linter.unusedVariables false
+set_option linter.hashCommand false
 
 open LeanColls
 
@@ -424,7 +425,7 @@ theorem LeanColls.Indexed.ofFn.arg_cont.revCDerivProjUpdate_rule
 
 end OnSemiInnerProductSpace
 
-#exit
+
 
 -- PushElem.pushElem -----------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -445,11 +446,11 @@ end OnSemiInnerProductSpace
 -- ArrayType.map ---------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-section OnNormedSpaces
+-- section OnNormedSpaces
 
-variable
-  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
-  [NormedAddCommGroup Elem] [NormedSpace K Elem]
+-- variable
+--   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
+--   [NormedAddCommGroup Elem] [NormedSpace K Elem]
 
 -- @[fun_prop]
 -- theorem ArrayType.map.arg_a0.IsContinuousLinearMap_rule
@@ -479,14 +480,14 @@ variable
 
 -- TODO: fderiv, fwdFDeriv, adjoint, revFDeriv
 
-end OnNormedSpaces
+-- end OnNormedSpaces
 
-namespace SciLean
-section OnVec
+-- namespace SciLean
+-- section OnVec
 
-variable
-  {X : Type _} [Vec K X]
-  [Vec K Elem]
+-- variable
+--   {X : Type _} [Vec K X]
+--   [Vec K Elem]
 
 -- @[fun_prop]
 -- theorem ArrayType.map.arg_xs.IsDifferentiable_rule
@@ -500,35 +501,35 @@ variable
 --   (hf : IsDifferentiableAt K f x)
 --   : IsDifferentiableAt K (λ x => getElem (f x) idx dom) x := sorry_proof
 
-@[ftrans]
-theorem ArrayType.map.arg_a0arr.cderiv_rule
-  (f : X → Elem → Elem) (arr : X → Cont)
-  (hf : IsDifferentiable K (fun (xe : X×Elem) => f xe.1 xe.2))
-  (harr : IsDifferentiable K arr)
-  : cderiv K (fun x => mapMono (f x) (arr x))
-    =
-    fun x dx =>
-      let a  := arr x
-      let da := cderiv K arr x dx
-      let df := cderiv K (fun (xe : X×Elem) => f xe.1 xe.2)
-      Indexed.ofFn (fun i => df (x,a[i]) (dx,da[i])) :=
-by
-  sorry_proof
+-- @[ftrans]
+-- theorem ArrayType.map.arg_a0arr.cderiv_rule
+--   (f : X → Elem → Elem) (arr : X → Cont)
+--   (hf : IsDifferentiable K (fun (xe : X×Elem) => f xe.1 xe.2))
+--   (harr : IsDifferentiable K arr)
+--   : cderiv K (fun x => mapMono (f x) (arr x))
+--     =
+--     fun x dx =>
+--       let a  := arr x
+--       let da := cderiv K arr x dx
+--       let df := cderiv K (fun (xe : X×Elem) => f xe.1 xe.2)
+--       Indexed.ofFn (fun i => df (x,a[i]) (dx,da[i])) :=
+-- by
+--   sorry_proof
 
-@[ftrans]
-theorem ArrayType.map.arg_a0arr.cderiv_rule_at
-  (f : X → Elem → Elem) (arr : X → Cont)
-  (hf : ∀ i, IsDifferentiableAt K (fun (xe : X×Elem) => f xe.1 xe.2) (x, (arr x)[i]))
-  (harr : IsDifferentiableAt K arr x)
-  : cderiv K (fun x => mapMono (f x) (arr x)) x
-    =
-    fun dx =>
-      let a  := arr x
-      let da := cderiv K arr x dx
-      Indexed.ofFn (fun i =>
-        cderiv K (fun (xe : X×Elem) => f xe.1 xe.2) (x,a[i]) (dx,da[i])) :=
-by
-  sorry_proof
+-- @[ftrans]
+-- theorem ArrayType.map.arg_a0arr.cderiv_rule_at
+--   (f : X → Elem → Elem) (arr : X → Cont)
+--   (hf : ∀ i, IsDifferentiableAt K (fun (xe : X×Elem) => f xe.1 xe.2) (x, (arr x)[i]))
+--   (harr : IsDifferentiableAt K arr x)
+--   : cderiv K (fun x => mapMono (f x) (arr x)) x
+--     =
+--     fun dx =>
+--       let a  := arr x
+--       let da := cderiv K arr x dx
+--       Indexed.ofFn (fun i =>
+--         cderiv K (fun (xe : X×Elem) => f xe.1 xe.2) (x,a[i]) (dx,da[i])) :=
+-- by
+--   sorry_proof
 
 -- @[ftrans]
 -- theorem ArrayType.map.arg_xs.fwdCDeriv_rule
@@ -554,19 +555,19 @@ by
 -- by
 --   sorry_proof
 
-end OnVec
+-- end OnVec
 
-section OnSemiInnerProductSpace
+-- section OnSemiInnerProductSpace
 
-variable
-  {X : Type _} [SemiInnerProductSpace K X]
-  [SemiInnerProductSpace K Elem]
+-- variable
+--   {X : Type _} [SemiInnerProductSpace K X]
+--   [SemiInnerProductSpace K Elem]
 
-@[fun_prop]
-theorem ArrayType.map.arg_a0arr.HasAdjDiff_rule
-  (f : X → Elem → Elem) (arr : X → Cont)
-  (hf : HasAdjDiff K (fun (xe : X×Elem) => f xe.1 xe.2)) (harr : HasAdjDiff K arr)
-  : HasAdjDiff K (fun x => mapMono (f x) (arr x)) := sorry_proof
+-- @[fun_prop]
+-- theorem ArrayType.map.arg_a0arr.HasAdjDiff_rule
+--   (f : X → Elem → Elem) (arr : X → Cont)
+--   (hf : HasAdjDiff K (fun (xe : X×Elem) => f xe.1 xe.2)) (harr : HasAdjDiff K arr)
+--   : HasAdjDiff K (fun x => mapMono (f x) (arr x)) := sorry_proof
 
 -- @[ftrans]
 -- theorem ArrayType.map.arg_a0arr.revDeriv_rule
@@ -590,71 +591,71 @@ theorem ArrayType.map.arg_a0arr.HasAdjDiff_rule
 --          ada.2 da dx) := sorry_proof
 
 
-@[ftrans]
-theorem ArrayType.map.arg_arr.revDeriv_rule
-  (f : Elem → Elem) (arr : X → Cont)
-  (hf : HasAdjDiff K f) (harr : HasAdjDiff K arr)
-  : revDeriv K (fun x => mapMono f (arr x))
-    =
-    fun x =>
-      let fdf := revDeriv K f
-      let ada := revDeriv K arr x
-      let a := ada.1
-      (mapMono f a,
-       fun da =>
-         let da := mapMonoIdx (fun i dai => (fdf a[i]).2 dai) da
-         ada.2 da) := sorry_proof
+-- @[ftrans]
+-- theorem ArrayType.map.arg_arr.revDeriv_rule
+--   (f : Elem → Elem) (arr : X → Cont)
+--   (hf : HasAdjDiff K f) (harr : HasAdjDiff K arr)
+--   : revDeriv K (fun x => mapMono f (arr x))
+--     =
+--     fun x =>
+--       let fdf := revDeriv K f
+--       let ada := revDeriv K arr x
+--       let a := ada.1
+--       (mapMono f a,
+--        fun da =>
+--          let da := mapMonoIdx (fun i dai => (fdf a[i]).2 dai) da
+--          ada.2 da) := sorry_proof
 
 
-@[ftrans]
-theorem ArrayType.map.arg_arr.revDerivUpdate_rule
-  (f : Elem → Elem) (arr : X → Cont)
-  (hf : HasAdjDiff K f) (harr : HasAdjDiff K arr)
-  : revDerivUpdate K (fun x => mapMono f (arr x))
-    =
-    fun x =>
-      let fdf := revDeriv K f
-      let ada := revDerivUpdate K arr x
-      let a := ada.1
-      (mapMono f a,
-       fun da dx =>
-         let da := mapMonoIdx (fun i dai => let df := (fdf a[i]).2; df dai) da
-         ada.2 da dx) := sorry_proof
+-- @[ftrans]
+-- theorem ArrayType.map.arg_arr.revDerivUpdate_rule
+--   (f : Elem → Elem) (arr : X → Cont)
+--   (hf : HasAdjDiff K f) (harr : HasAdjDiff K arr)
+--   : revDerivUpdate K (fun x => mapMono f (arr x))
+--     =
+--     fun x =>
+--       let fdf := revDeriv K f
+--       let ada := revDerivUpdate K arr x
+--       let a := ada.1
+--       (mapMono f a,
+--        fun da dx =>
+--          let da := mapMonoIdx (fun i dai => let df := (fdf a[i]).2; df dai) da
+--          ada.2 da dx) := sorry_proof
 
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem ArrayType.max.arg_cont.HasAdjDiff_rule
-  [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx]
-  (arr : X → Cont)
-  (hf : HasAdjDiff K arr) (hfalse : fun_propParam False)
-  : HasAdjDiff K (fun x => max (arr x)) := sorry_proof
+-- @[fun_prop]
+-- theorem ArrayType.max.arg_cont.HasAdjDiff_rule
+--   [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx]
+--   (arr : X → Cont)
+--   (hf : HasAdjDiff K arr) (hfalse : fun_propParam False)
+--   : HasAdjDiff K (fun x => max (arr x)) := sorry_proof
 
 
-@[ftrans]
-theorem ArrayType.max.arg_arr.revDeriv_rule
-  [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx]
-  (arr : X → Cont)
-  (hf : HasAdjDiff K arr) (hfalse : fun_propParam False)
-  : revDeriv K (fun x => max (arr x))
-    =
-    fun x =>
-      let i := idxMax (arr x)
-      let fdf := revDerivProj K Idx arr x
-      (fdf.1[i], fun dei => fdf.2 i dei) := sorry_proof
+-- @[ftrans]
+-- theorem ArrayType.max.arg_arr.revDeriv_rule
+--   [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx]
+--   (arr : X → Cont)
+--   (hf : HasAdjDiff K arr) (hfalse : fun_propParam False)
+--   : revDeriv K (fun x => max (arr x))
+--     =
+--     fun x =>
+--       let i := idxMax (arr x)
+--       let fdf := revDerivProj K Idx arr x
+--       (fdf.1[i], fun dei => fdf.2 i dei) := sorry_proof
 
 
-@[ftrans]
-theorem ArrayType.max.arg_arr.revDerivUpdate_rule
-  [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx]
-  (arr : X → Cont)
-  (hf : HasAdjDiff K arr) (hfalse : fun_propParam False)
-  : revDerivUpdate K (fun x => max (arr x))
-    =
-    fun x =>
-      let i := idxMax (arr x)
-      let fdf := revDerivProjUpdate K Idx arr x
-      (fdf.1[i], fun dei dx => fdf.2 i dei dx) := sorry_proof
+-- @[ftrans]
+-- theorem ArrayType.max.arg_arr.revDerivUpdate_rule
+--   [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx]
+--   (arr : X → Cont)
+--   (hf : HasAdjDiff K arr) (hfalse : fun_propParam False)
+--   : revDerivUpdate K (fun x => max (arr x))
+--     =
+--     fun x =>
+--       let i := idxMax (arr x)
+--       let fdf := revDerivProjUpdate K Idx arr x
+--       (fdf.1[i], fun dei dx => fdf.2 i dei dx) := sorry_proof
 
 
 -- @[ftrans]
@@ -722,7 +723,7 @@ theorem ArrayType.max.arg_arr.revDerivUpdate_rule
 --   have ⟨_,_⟩ := hf
 --   unfold revCDeriv; ftrans; ftrans; simp
 
-end OnSemiInnerProductSpace
+-- end OnSemiInnerProductSpace
 
 
 -- ArrayType.split -------------------------------------------------------------

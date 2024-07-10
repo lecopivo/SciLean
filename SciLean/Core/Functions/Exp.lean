@@ -15,6 +15,7 @@ variable
 -- Exp -------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem exp.arg_x.DifferentiableAt_rule
     {W} [NormedAddCommGroup W] [NormedSpace C W]
@@ -29,6 +30,7 @@ theorem exp.arg_x.Differentiable_rule
     Differentiable C fun w => exp (x w) := by intro x; fun_prop
 
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem exp.arg_x.fderiv_rule
     {W} [NormedAddCommGroup W] [NormedSpace C W]
@@ -74,11 +76,13 @@ theorem exp.arg_x.revFDeriv_rule
   fun_trans
 
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem exp.arg_x.CDifferentiable_rule
   (x : W → C) (hx : CDifferentiable C x)
   : CDifferentiable C fun w => exp (x w) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem exp.arg_x.ceriv_rule
   (x : W → C) (hx : CDifferentiable C x)
@@ -135,6 +139,7 @@ variable
   {U : Type _} [SemiInnerProductSpace R U]
 
 
+set_option linter.unusedVariables false in
 @[fun_prop]
 theorem log.arg_x.CDifferentiableAt_rule
     (w : W) (x : W → R) (hx : CDifferentiableAt R x w) (hw : x w ≠ 0) :
@@ -146,6 +151,7 @@ theorem log.arg_x.CDifferentiable_rule
     CDifferentiable R (fun w => log (x w)) := by
   intro x; fun_prop (disch:=aesop)
 
+set_option linter.unusedVariables false in
 @[fun_trans]
 theorem log.arg_x.cderiv_rule_at
     (w : W) (x : W → R) (hx : CDifferentiableAt R x w) (hw : x w ≠ 0) :

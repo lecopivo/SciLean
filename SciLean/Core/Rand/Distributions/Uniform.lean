@@ -122,19 +122,22 @@ instance (a b : R) : UniformRand (Set.Ico a b) where
   is_uniform := by
     sorry_proof
 
-
+set_option linter.unusedVariables false in
 @[simp, ftrans_simp]
-theorem Set.Ioo_volume (a b : R) (h : a ≤ b) :
+theorem Set.Ioo_volume (a b : R) (_h : a ≤ b) :
   (volume (Set.Ioo a b)) = Scalar.toENNReal (b - a) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[simp, ftrans_simp]
 theorem Set.Ioc_volume (a b : R) (h : a ≤ b) :
   (volume (Set.Ioc a b)) = Scalar.toENNReal (b - a) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[simp, ftrans_simp]
 theorem Set.Ico_volume (a b : R) (h : a ≤ b) :
   (volume (Set.Ico a b)) = Scalar.toENNReal (b - a) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[simp, ftrans_simp]
 theorem Set.Icc_volume (a b : R) (h : a ≤ b) :
   (volume (Set.Icc a b)) = Scalar.toENNReal (b - a) := sorry_proof

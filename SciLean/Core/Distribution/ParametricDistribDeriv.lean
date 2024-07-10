@@ -3,6 +3,8 @@ import SciLean.Core.FunctionTransformations
 import SciLean.Core.FunctionPropositions
 import SciLean.Core.Notation
 
+set_option linter.unusedVariables false
+
 
 open MeasureTheory
 
@@ -126,7 +128,7 @@ theorem DistribDiffrentiable.comp_rule
     DistribDifferentiable (fun x => f (g x)) := by
   intro x
   unfold DistribDifferentiableAt
-  intro φ hφ
+  intro φ _
   apply CDifferentiable.comp_rule (K:=R) (f:=fun xy : X×Y => f xy.2 (φ xy.1)) (g:=fun x => (x, g x))
     (hg:=by fun_prop)
   intro x

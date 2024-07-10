@@ -41,6 +41,18 @@ elab " derive_random_approx " e:term " by " t:convSeq : term => do
     return ← mkLambdaFVars xs b'
 
 
+open Lean Meta Elab.Term Parser.Tactic.Conv in
+elab " derive_random_approx' " e:term " by " t:convSeq : term => do
+  --
+  let e ← elabTerm e none
+  let (e,_prf) ← elabConvRewrite e #[] (← `(conv| ($t)))
+
+  letTelescope e fun xs e => do
+
+    unless e.isAppOfArity ``Rand.mean 6 do
+      throwError "deriving probabilistic derivative should end with a term of the form `Rand.mean _`"
+
+    mkLambdaFVars xs e.appArg!
 
 def print_mean_variance {R} [RealScalar R] [ToString R] (r : Rand R) (n : ℕ) (msg : String) : IO Unit := do
   let mut xs : Array R := #[]

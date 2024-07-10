@@ -1,5 +1,4 @@
 import SciLean.Core.FunctionTransformations.FDeriv
-import SciLean.Core.FunctionTransformations.Adjoint
 import SciLean.Mathlib.Analysis.AdjointSpace.Adjoint
 
 set_option linter.unusedVariables false

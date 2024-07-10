@@ -228,7 +228,7 @@ def HPow.hPow.arg_a0.fwdFDeriv_rule_at (n : Nat) (x : X)
   funext dx; simp
   induction n
   case zero => simp
-  case h nh => simp[pow_succ]; fun_trans; sorry_proof
+  case h _ => simp[pow_succ]; fun_trans; sorry_proof
 
 
 -- IndexType.sum ----------------------------------------------------------------
