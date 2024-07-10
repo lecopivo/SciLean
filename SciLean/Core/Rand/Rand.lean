@@ -5,8 +5,11 @@ import Mathlib.MeasureTheory.Decomposition.Lebesgue
 import SciLean.Mathlib.MeasureTheory.WeakIntegral
 
 import SciLean.Core.FunctionPropositions.Bijective
+import SciLean.Core.FunctionPropositions.IsAffineMap
 import SciLean.Core.Objects.Scalar
 import SciLean.Core.Rand.SimpAttr
+import SciLean.Core.Notation
+import SciLean.Util.Limit
 
 import Mathlib.MeasureTheory.Measure.GiryMonad
 
@@ -256,7 +259,43 @@ theorem mean_add  (x : Rand X) (x' : X) : x.mean + x' = (x  + x').mean := by
 theorem mean_add' (x : Rand X) (x' : X) : x' + x.mean = (x' +  x).mean := by
   simp[HAdd.hAdd,mean,𝔼,pure,bind]; sorry_proof
 
+set_option linter.unusedVariables false in
+theorem mean_affine (x : Rand X) (f : X → Y) (hf : IsAffineMap ℝ f) :
+   f x.mean = (do let x' ← x; return (f x')).mean := sorry_proof
+
 end Mean
+
+variable (R)
+variable [Module R Y] [IsScalarTower ℝ R Y]
+/-- Estimate expected value of `f x`. -/
+def estimateE (n : ℕ) (x : Rand X) (f : X → Y) : Rand Y := do
+  let mut y := (0:Y)
+  for _ in [0:n] do
+    let x' ← x
+    y += y + f x'
+  return ((1:R)/(n:R)) • y
+
+
+-- is this right? Do I need `mean` there?
+-- theorem estimateE_affine
+--     [AddCommGroup X] [Module ℝ X] [Module R X] [IsScalarTower ℝ R X] [TopologicalSpace X]
+--     (n : ℕ) (x : Rand X) (f : X → Y) (hf : IsAffineMap ℝ f) :
+--     (estimateE R n x f).mean = f (estimateE R n x id).mean := sorry_proof
+
+theorem E_eq_mean_estimateE (n : ℕ) (x : Rand X) (f : X → Y) :
+    x.𝔼 f = (estimateE R n x f).mean := sorry_proof
+
+-- what conditions do we need on `g`? Probably continuity?
+open Notation in
+theorem E_eq_limit_estimateE (x : Rand X) (f : X → Y) (g : Y → Z) :
+    g (x.𝔼 f)
+    =
+    limit n → ∞,
+      let y := (estimateE R n x f).mean
+      g y := sorry_proof
+
+
+variable {R}
 
 end ExpectedValue
 

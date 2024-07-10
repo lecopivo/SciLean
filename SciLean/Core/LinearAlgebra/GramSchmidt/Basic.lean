@@ -2,6 +2,7 @@ import SciLean.Data.DataArray
 import SciLean.Data.ArrayType
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.FunctionPropositions
+import SciLean.Core.Notation
 
 namespace SciLean
 

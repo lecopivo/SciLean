@@ -35,7 +35,7 @@ example (w : R) :
 
     lautodiff (disch:=first | fun_prop | gtrans (disch:=fun_prop))
 
-    conv in (∫ x in _, _ ∂μH[_]) =>
+    conv in (∫ _ in _, _ ∂μH[_]) =>
 
       lautodiff (disch:=gtrans (disch:=fun_prop))
         [surface_integral_parametrization_inter R,
@@ -43,8 +43,8 @@ example (w : R) :
 
 
     conv in (occs:=*) (∫ x in _, _ ∂_) =>
-      . lsimp only [Rand.integral_eq_uniform_expectation R]
-      . lsimp only [Rand.integral_eq_uniform_expectation R]
+      . lsimp only [Rand.integral_eq_uniform_E R]
+      . lsimp only [Rand.integral_eq_uniform_E R]
 
 
   sorry_proof
@@ -87,10 +87,13 @@ example (w : R) :
         [surface_integral_parametrization_inter R,
          integral_over_bounding_ball (R:=R)]
 
-    conv in (occs:=*) (∫ x in _, _ ∂_) =>
-      . lsimp only [Rand.integral_eq_uniform_expectation R]
-      . lsimp only [Rand.integral_eq_uniform_expectation R]
+    conv in (occs:=*) (∫ _ in _, _ ∂_) =>
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R 10]
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R 10]
 
+    lsimp only
   sorry_proof
 
 
@@ -139,7 +142,7 @@ example (w : R) :
 
     -- turn integrals into expectations
     conv in (occs:=*) (∫ _ in _, _ ∂_) =>
-      . lsimp only [Rand.integral_eq_uniform_expectation R]
-      . lsimp only [Rand.integral_eq_uniform_expectation R]
+      . lsimp only [Rand.integral_eq_uniform_E R]
+      . lsimp only [Rand.integral_eq_uniform_E R]
 
   sorry_proof
