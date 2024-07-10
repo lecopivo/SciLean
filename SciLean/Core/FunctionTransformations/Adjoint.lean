@@ -4,7 +4,6 @@ import SciLean.Mathlib.Analysis.InnerProductSpace.Prod
 
 import SciLean.Core.FunctionPropositions.IsContinuousLinearMap
 
-import SciLean.Notation
 
 #exit -- right now `adjoint` can't work with `fun_trans` as it transforms bundles morphism
 
