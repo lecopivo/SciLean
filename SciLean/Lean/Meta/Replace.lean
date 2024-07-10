@@ -134,6 +134,35 @@ def instantiate1AndPost (e : Expr) (val : Expr) (post : Expr → MetaM ReplacePo
   : MetaM Expr := do pure (← instantiate1AndPostImpl e 0 val post).val
 
 
+
+/--
+Replaces all subexpresions in `e` that satisfy `f` with a free variables.
+
+This function replaces only subexpressions that have no bound variables. -/
+def replaceWithFVarsNoBVars (e : Expr) (f : Expr → MetaM Bool)
+    (k : Array Expr  → Array Expr → Expr → MetaM α) : MetaM α := do
+
+  let (e', vars) ←
+    StateT.run (m:=MetaM) (σ := Array (FVarId×Expr)) (s:=#[]) do
+      e.replaceM (fun e' => do
+        if e'.hasLooseBVars then return .noMatch
+        if ¬(← f e') then return .noMatch
+
+        let fvarId ← mkFreshFVarId
+        let fvar := Expr.fvar fvarId
+        modify (fun vars => vars.push (fvarId, e'))
+        return .yield fvar)
+
+  let mut lctx ← getLCtx
+  for (fvarId,val) in vars do
+    lctx := (lctx.mkLocalDecl fvarId `x (← inferType val))
+
+  withLCtx lctx (← getLocalInstances) do
+    let vars := vars.map (fun (fvarId, val) => (Expr.fvar fvarId, val))
+    let (fvars,vals) := vars.unzip
+    k fvars vals e'
+
+
 #exit
 
 open Qq
