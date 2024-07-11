@@ -19,33 +19,14 @@ macro "rand_compute_mean" : conv =>
   `(conv| simp (config := {zeta:=false}) (disch:=sorry) only [Rand.mean,Rand.E,rand_simp,id,weightByDensity',ftrans_simp,weightByDensityM'])
 
 
-open Lean Meta Elab.Term Parser.Tactic.Conv in
-elab " derive_random_approx " e:term " by " t:convSeq : term => do
+syntax Parser.assumptions := ("assuming" bracketedBinder*)?
+
+open Lean Meta Elab.Term Parser.Tactic.Conv Parser in
+elab " derive_random_approx " e:term as:assumptions " by " t:convSeq : term => do
   --
-  let e ← elabTerm (← `(term| $e rewrite_by $t)).raw none
-
-  lambdaTelescope e fun xs b => do
-
-  let args := b.getAppArgs
-  unless (b.isAppOf ``Rand.mean) && args.size ≥ 4 do
-    throwError "deriving probabilistic derivative should end with a term of the form `Rand.mean _`"
-
-  if args.size = 5 then
-    return ← mkLambdaFVars xs args[4]!
-  else
-    let X ← inferType (b.stripArgsN (args.size-5))
-    let f ← withLocalDeclD `x X fun x => do
-      let b ← mkAppOptM ``Pure.pure #[← mkConstWithFreshMVarLevels ``Rand, none, none, mkAppN x args[5:]]
-      mkLambdaFVars #[x] b
-    let b' ← mkAppM ``Bind.bind #[args[4]!, f]
-    return ← mkLambdaFVars xs b'
-
-
-open Lean Meta Elab.Term Parser.Tactic.Conv in
-elab " derive_random_approx' " e:term " by " t:convSeq : term => do
-  --
-  let e ← elabTerm e none
-  let (e,_prf) ← elabConvRewrite e #[] (← `(conv| ($t)))
+  let e ← elabTermAndSynthesize e none
+  let as := as.raw[0][1].getArgs
+  let (e,_prf) ← elabConvRewrite e as (← `(conv| ($t)))
 
   letTelescope e fun xs e => do
 

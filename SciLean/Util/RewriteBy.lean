@@ -28,7 +28,7 @@ def elabConvRewrite (e : Expr) (assumptions : Array Syntax) (stx : TSyntax `conv
 
   (goals.get! 0).refl
 
-  return (← instantiateMVars rhs, ← instantiateMVars eq)
+  return (← instantiateMVars rhs, ← mkLambdaFVars as (← instantiateMVars eq))
 
 def rewriteByConv (e : Expr) (stx : TSyntax `conv) : MetaM (Expr × Expr) := do
   let (r,_) ← (elabConvRewrite e #[] stx).run {} {}

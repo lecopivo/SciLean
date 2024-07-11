@@ -69,6 +69,14 @@ def _root_.Set.decidableMemProdComputable {α β : Type*} {s : Set α} {t : Set 
 theorem decidableMemProd_mk_computable {α β : Type*} {s : Set α} {t : Set β} [DecidablePred (· ∈ s)] [DecidablePred (· ∈ t)] :
   (Set.decidableMemProd : DecidablePred (· ∈ s ×ˢ t)) = Set.decidableMemProdComputable := by rfl
 
+-- clean up all classical decisions to decidable ones if possible
+open Classical in
+@[ftrans_simp]
+theorem prop_classical_dec_eq_decidable {P : Prop} [inst : Decidable P] :
+   Classical.propDecidable P = inst := by
+  induction inst <;> induction (propDecidable P) <;> aesop
+
+
 notation "π" => RealScalar.pi (R:=defaultScalar%)
 
 

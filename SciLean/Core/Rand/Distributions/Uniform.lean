@@ -20,6 +20,17 @@ class UniformRand {X : Type _} (A : Set X) [MeasureSpace X] where
 def uniform {X : Type _} (A : Set X) [MeasureSpace X] [UniformRand A] : Rand X :=
   UniformRand.uniform A
 
+
+-- open Classical in
+-- @[gtrans]
+-- def UniformRand {X : Type} [MeasureSpace X] (A : Set X) (sampler : outParam (Rand X)) :=
+--   ∀ x, sampler.ℙ.rnDeriv volume x = if x ∈ A then 1 / volume A else 0
+
+-- def uniform {X : Type _} (A : Set X) [MeasureSpace X] {sampler}
+--   (_hsampler : UniformRand A sampler := by gtrans) : Rand X := sampler
+
+
+
 @[simp, ftrans_simp]
 theorem uniform.pdf [MeasureSpace X] (A : Set X) [UniformRand A] :
     (uniform A).pdf R volume

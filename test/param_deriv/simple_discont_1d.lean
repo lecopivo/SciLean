@@ -1,5 +1,5 @@
 import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
-import SciLean.Core.Rand.Distributions.Uniform
+import SciLean.Core.Rand
 import SciLean.Tactic.Autodiff
 
 open SciLean MeasureTheory Set
@@ -10,15 +10,11 @@ variable
 set_default_scalar R
 
 
-example (w : R) :
+def test_fderiv (w : R) :=
     (fderiv R (fun w' =>
       ∫ x in Icc (0:R) 1,
         if x ≤ w' then (1:R) else 0) w 1)
-    =
-    if w ∈ Set.Icc 0 1 then 1 else 0 := by
-
-  conv =>
-    lhs
+  rewrite_by
     rw[fderiv_under_integral_over_set
            (hf:= by gtrans
                       (disch:=first | fun_prop_no_ifs | assume_almost_disjoint)
@@ -29,18 +25,12 @@ example (w : R) :
 
 
 
-
-example (w : R) :
+def test_fwdFDeriv (numSamples : ℕ) (w : R) :=
+  derive_random_approx
     (fwdFDeriv R (fun w' =>
       ∫ x in Icc (0:R) 1,
         if x ≤ w' then (1:R) else 0) w 1)
-    =
-    let interior := ∫ (x : R) in Icc 0 1, if x ≤ w then (1, 0) else (0, 0);
-    let s := if w ∈ Icc 0 1 then 1 else 0;
-    (interior.1, interior.2 + s) := by
-
-  conv =>
-    lhs
+  by
     rw[fwdFDeriv_under_integral_over_set
            (hf:= by gtrans
                       (disch:=first | fun_prop_no_ifs | assume_almost_disjoint)
@@ -48,19 +38,19 @@ example (w : R) :
                       (hA := by assume_almost_disjoint)]
 
     lautodiff (disch:=fun_prop)
-    -- rw[Rand.integral_as_uniform_E_in_set R]
-    -- rand_pull_E
 
+    conv in (occs:=*) (∫ _ in _, _ ∂_) =>
+      . lsimp only [Rand.integral_eq_uniform_E R,
+                    Rand.E_eq_mean_estimateE R numSamples]
+        lsimp only [ftrans_simp]
 
-example (w : R) :
+    pull_mean
+
+def test_fgradient (w : R) :=
     (fgradient (fun w' =>
       ∫ x in Icc (0:R) 1,
         if x ≤ w' then (1:R) else 0) w)
-    =
-    if w ∈ Icc 0 1 then 1 else 0 := by
-
-  conv =>
-    lhs
+  rewrite_by
     unfold fgradient
     rw[revFDeriv_under_integral_over_set
            (hf:= by gtrans
@@ -69,3 +59,11 @@ example (w : R) :
                       (hA := by assume_almost_disjoint)]
 
     lautodiff (disch:=fun_prop) [frontierGrad]
+
+
+#eval 0
+
+
+#eval test_fderiv 0.1
+#eval (test_fwdFDeriv 100 0.1).get
+#eval test_fgradient 0.1

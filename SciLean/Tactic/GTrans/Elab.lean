@@ -29,12 +29,12 @@ declare_config_elab elabGTransConfig  SciLean.Tactic.GTrans.Config
 
 private def emptyDischarge : Expr → MetaM (Option Expr) :=
   fun e =>
-    withTraceNode `Meta.Tactic.fun_prop
+    withTraceNode `Meta.Tactic.gtrans
       (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] discharging: {← ppExpr e}") do
       pure none
 
 
--- todo don't use fun_prop's `tacticToDischarge`
+-- todo: don't use fun_prop's `tacticToDischarge`
 open Lean.Parser.Tactic Mathlib.Meta.FunProp in
 private def elabDischarger (disch : Option (TSyntax ``discharger)) : MetaM (Expr → MetaM (Option Expr)) := do
     match disch with

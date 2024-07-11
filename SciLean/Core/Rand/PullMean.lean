@@ -1,7 +1,6 @@
 import Lean.Meta.Transform
 
 import Mathlib.Tactic.FunProp
-import Mathlib
 
 import SciLean.Core.Rand.Rand
 import SciLean.Core.Rand.IsAffineRandMap
