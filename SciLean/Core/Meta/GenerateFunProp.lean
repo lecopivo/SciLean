@@ -65,20 +65,24 @@ def defineFunPropTheorem (statement proof : Expr) (ctx : Array Expr)
   if let .some s := suffix then
     thmName := thmName.appendAfter (toString s)
 
-  let thmType ← mkForallFVars ctx statement >>= instantiateMVars
-  let thmVal  ← mkLambdaFVars ctx proof >>= instantiateMVars
+  let thmType ← (mkForallFVars ctx statement) >>= instantiateMVars
+  let thmVal  ← (mkLambdaFVars ctx proof) >>= instantiateMVars
 
-  if thmType.hasLevelParam then
-    throwError "theorem statement {← ppExpr thmType} has level parameters!"
-  if thmVal.hasLevelParam then
-    throwError "theorem proof {← ppExpr thmVal} has level parameters!"
+  -- replace level mvars with parameters
+  let (thmVal,_) ← (Elab.Term.levelMVarToParam thmVal).run {}
+  let lvlParams := (collectLevelParams {} thmVal).params
+
+  -- assign lvl parameters in `tmmType`
+  unless (← isDefEq thmType (← inferType thmVal)) do
+    throwError "failed instantiating level parameters"
+  let thmType ← instantiateMVars thmType
 
   let thmDecl : TheoremVal :=
   {
     name  := thmName
     type  := thmType
     value := thmVal
-    levelParams := []
+    levelParams := lvlParams.toList
   }
 
   addDecl (.thmDecl thmDecl)
