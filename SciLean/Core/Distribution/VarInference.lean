@@ -68,7 +68,7 @@ open Classical in
 /-- If `X` decomposes into `X₁` and `X₂` then we can condition `rx : Rand X` with `x₁ : X₁`
 and obtain random variable on `X₂`. -/
 noncomputable
-def Rand.condition [Inhabited X₂] (rx : Rand X) (mk : X₁ → X₂ → X) (x₁ : X₁) : Rand X₂ :=
+def condition [Inhabited X₂] (rx : Rand X) (mk : X₁ → X₂ → X) (x₁ : X₁) : Rand X₂ :=
   if h : ∃ rx₂ : X₁ → Rand X₂, ∀ (rx₁ : Rand X₁), (do let x₁ ← rx₁; let x₂ ← rx₂ x₁; return mk x₁ x₂) = rx then
     choose h x₁
   else
@@ -76,11 +76,11 @@ def Rand.condition [Inhabited X₂] (rx : Rand X) (mk : X₁ → X₂ → X) (x�
 
 /-- Condition on the first variable of a pair. -/
 noncomputable
-abbrev Rand.conditionFst [Inhabited X₂] (rx : Rand (X₁×X₂))  (x₁ : X₁) : Rand X₂ := rx.condition Prod.mk x₁
+abbrev conditionFst [Inhabited X₂] (rx : Rand (X₁×X₂))  (x₁ : X₁) : Rand X₂ := rx.condition Prod.mk x₁
 
 /-- Condition on the second variable of a pair. -/
 noncomputable
-abbrev Rand.conditionSnd [Inhabited X₁] (rx : Rand (X₁×X₂))  (x₂ : X₂) : Rand X₁ := rx.condition (fun x₂ x₁ => (x₁,x₂)) x₂
+abbrev conditionSnd [Inhabited X₁] (rx : Rand (X₁×X₂))  (x₂ : X₂) : Rand X₁ := rx.condition (fun x₂ x₁ => (x₁,x₂)) x₂
 
 @[simp, ftrans_simp]
 theorem Rand.bind_bind_condition [Inhabited X₂] (rx : Rand X) (mk : X₁ → X₂ → X) (prior : Rand X₁) (f : X → α) :
@@ -98,7 +98,7 @@ theorem Rand.bind_bind_condition [Inhabited X₂] (rx : Rand X) (mk : X₁ → X
 
 /-- Special form of bind for `Rand` for which it is easy to compute conditional probabilities and
 probability densities. Most likely you want to use this bind when defining probabilistic model. -/
-def Rand.modelBind (x : Rand X) (f : X → Rand Y) : Rand (X×Y) := do
+def modelBind (x : Rand X) (f : X → Rand Y) : Rand (X×Y) := do
   let x' ← x
   let y' ← f x'
   return (x',y')
@@ -112,11 +112,11 @@ def Rand.modelBind (x : Rand X) (f : X → Rand Y) : Rand (X×Y) := do
 open Lean.Parser Term in
 syntax withPosition("let" funBinder " ~ " term (semicolonOrLinebreak ppDedent(ppLine) term)?) : term
 macro_rules
-  | `(let $x ~ $y; $b) => do Pure.pure (← `(SciLean.Rand.Rand.modelBind $y (fun $x => $b))).raw
+  | `(let $x ~ $y; $b) => do Pure.pure (← `(SciLean.Rand.modelBind $y (fun $x => $b))).raw
   | `(let $_ ~ $y) => `($y)
 
 open Lean Parser
-@[app_unexpander SciLean.Rand.Rand.modelBind] def unexpandRandBind : Lean.PrettyPrinter.Unexpander
+@[app_unexpander SciLean.Rand.modelBind] def unexpandRandBind : Lean.PrettyPrinter.Unexpander
 
 | `($(_) $y $f) =>
   match f.raw with
@@ -175,19 +175,12 @@ variable {X Z} [MeasurableSpace X] [MeasurableSpace Z] [Inhabited Z]
 
 /-- Kullback–Leibler divergence of `Dₖₗ(P‖Q)` -/
 noncomputable
-def KLDiv (P Q : Rand X) : R := P.E (fun x => Scalar.log (P.pdf R Q.ℙ x))
+def KLDiv (P Q : Rand X) : R := P.𝔼 (fun x => Scalar.log (P.pdf R Q.ℙ x))
 
-abbrev _root_.SciLean.Rand.Rand.fst (r : Rand (X×Y)) : Rand X := do
-  let (x,_) ← r
-  return x
-
-abbrev _root_.SciLean.Rand.Rand.snd (r : Rand (X×Y)) : Rand Y := do
-  let (_,y) ← r
-  return y
 
 noncomputable
 def ELBO {X Z} [MeasureSpace Z] [MeasureSpace X]
-  (P : Rand (Z×X)) (Q : Rand Z) (x : X) : R := - Q.E (fun z => Scalar.log (Q.pdf R volume z) - Scalar.log (P.pdf R volume (z,x)))
+  (P : Rand (Z×X)) (Q : Rand Z) (x : X) : R := - Q.𝔼 (fun z => Scalar.log (Q.pdf R volume z) - Scalar.log (P.pdf R volume (z,x)))
 
 noncomputable
 def kldiv_elbo
@@ -195,7 +188,9 @@ def kldiv_elbo
     (P : Rand (Z×X)) (Q : Rand Z) (x : X) :
     KLDiv (R:=R) Q (P.conditionSnd x)
     =
-    (Scalar.log (P.snd.pdf R volume x)) - ELBO P Q x := sorry_proof
+    let a := (Scalar.log (P.snd.pdf R volume x))
+    let b := ELBO P Q x
+    a - b := sorry_proof
 
 
 variable
@@ -212,21 +207,23 @@ theorem KLDiv.arg_P.cderiv_rule (P : W → Rand X) (Q : Rand X) :
 
 -----------------------------------------------------------------------------------------------
 
-def model : Rand (R×R) :=
-  let v ~ normal R 0 5
-  if v > 0 then
-    let obs ~ normal R 1 1
-  else
-    let obs ~ normal R (-2) 1
+variable [MeasureSpace R]
 
-def prior : Rand R := normal R 0 5
+def model : Rand (R×R) :=
+  let v ~ normal 0 5
+  if v > 0 then
+    let obs ~ normal 1 1
+  else
+    let obs ~ normal (-2) 1
+
+def prior : Rand R := normal 0 5
 
 def likelihood (v : R) : Rand R := model.conditionFst v
   rewrite_by
     unfold model
     simp only [ftrans_simp]
 
-def guide (θ : R) : Rand R := normal R θ 1
+def guide (θ : R) : Rand R := normal θ 1
 
 variable [MeasureSpace R]
 
@@ -238,9 +235,6 @@ noncomputable
 def loss (θ : R) := KLDiv (R:=R) (guide θ) (model.conditionSnd 0)
 
 set_default_scalar R
-
-#check ∂ x : R, x * x
-
 
 -- #check map
 
@@ -254,8 +248,8 @@ theorem log_div (x y : R) : Scalar.log (x/y) = Scalar.log x - Scalar.log y := so
 theorem log_exp (x : R) : Scalar.log (Scalar.exp x) = x := sorry_proof
 
 
-theorem reparameterize (f : X → Y) {r : Rand X} {φ : X → Z} :
-    r.E φ = (r.map f).E (fun y => φ (f.invFun y)) := sorry_proof
+-- theorem reparameterize (f : X → Y) {r : Rand X} {φ : X → Z} :
+--     r.E φ = (r.map f).E (fun y => φ (f.invFun y)) := sorry_proof
 
 open Scalar RealScalar
 set_option trace.Meta.Tactic.fun_trans true in
@@ -266,36 +260,22 @@ set_option profiler true in
   simp only [kldiv_elbo]
   unfold ELBO
   unfold guide
-  conv in Rand.E _ _ =>
-    rw[reparameterize (R:=R) (fun x : R => x - θ)]
-    fun_trans only [ftrans_simp]
+  -- tactic =>
+  --   let h := reparameterize (fun x : R => x - θ) (hf := sorry)
+  conv in Rand.𝔼 _ _ =>
+    rw[reparameterize (fun x : R => x - θ) sorry_proof]
+    lautodiff -- fun_trans only [ftrans_simp]
     unfold model
-    simp (config:={zeta:=false}) only
+    lsimp (config:={zeta:=false}) only
       [ftrans_simp,log_mul,log_div,log_one,log_exp,Tactic.lift_lets_simproc,Tactic.if_pull]
 
-    simp (config:={zeta:=false}) only [log_mul,log_div,log_exp,log_one,gaussian,Tactic.lift_lets_simproc,ftrans_simp, ← add_sub]
-    simp (config:={zeta:=false}) only [Tactic.if_pull]
+    -- lsimp (config:={zeta:=false}) only [log_mul,log_div,log_exp,log_one,gaussian,Tactic.lift_lets_simproc,ftrans_simp, ← add_sub]
+    -- simp (config:={zeta:=false}) only [Tactic.if_pull]
 
   unfold scalarCDeriv
-  fun_trans (config:={zeta:=false}) only [ftrans_simp]
+  lautodiff
 
   -- unfold model
   -- unfold scalarCDeriv
   -- fun_trans
   -- fun_trans
-  -- fun_trans
-#check add_sub
-
-#check (cderiv R fun θ : R => loss θ)
-
-variable (y θ : R)
-
-#check (Scalar.log ((if y + θ > 0 then gaussian (R:=R) 1 1 else gaussian (-2) 1) 0)) rewrite_by
-  simp only [Tactic.if_pull]
-
--- def model (θ : R) : Rand R := do
---   let z ← normal R 0 1
---   if 0 < z then
---     let x ← normal
-
--- E_{v ~ dens(guide’)(-)} [ log (dens(model)(v+\theta) / dens(guide)(v+\theta)) ]
