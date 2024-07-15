@@ -15,7 +15,7 @@ variable
 set_default_scalar R
 
 def test_fderiv (numSamples : ℕ) (w : R) :=
-  derive_random_approx'
+  derive_random_approx
     (fderiv R (fun w' =>
       ∫ xy in Icc (0:R) 1 ×ˢ (Icc (0 : R) 1),
         if xy.1 ≤ w' then (1:R) else (0:R)) w 1)
@@ -30,19 +30,20 @@ def test_fderiv (numSamples : ℕ) (w : R) :=
 
     conv in (∫ _ in _, _ ∂μH[_]) =>
       lautodiff (disch:=gtrans (disch:=fun_prop))
-        [surface_integral_parametrization_inter R,
-         integral_over_bounding_ball (R:=R)]
+        [surface_integral_parametrization_inter R]
+      lautodiff (disch:=gtrans (disch:=fun_prop))
+        [integral_over_bounding_ball (R:=R)]
 
     conv in (occs:=*) (∫ _ in _, _ ∂_) =>
-      . lsimp only [Rand.integral_eq_uniform_E R,
-                    Rand.E_eq_mean_estimateE R numSamples]
+      . lsimp only [Rand.integral_eq_uniform_E R]
+        lsimp only [Rand.E_eq_mean_estimateE R numSamples]
         lsimp only [ftrans_simp]
 
     pull_mean
 
 
 def test_fwdFDeriv (numSamples : ℕ) (w : R) :=
-  derive_random_approx'
+  derive_random_approx
     (fwdFDeriv R (fun w' =>
       ∫ xy in Icc (0:R) 1 ×ˢ (Icc (0 : R) 1),
         if xy.1 ≤ w' then (1:R) else (0:R)) w 1)
@@ -72,7 +73,7 @@ def test_fwdFDeriv (numSamples : ℕ) (w : R) :=
 
 
 def test_fgrad (numSamples : ℕ) (w : R) :=
-  derive_random_approx'
+  derive_random_approx
     (fgradient (fun w' =>
       ∫ xy in Icc (0:R) 1 ×ˢ (Icc (0 : R) 1),
         if xy.1 ≤ w' then (1:R) else (0:R)) w)

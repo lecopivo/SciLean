@@ -43,6 +43,7 @@ attribute [ftrans_simp]
 attribute [ftrans_simp]
   -- not sure about these as they require nontrivial hypothesis
   frontier_Icc frontier_Ico frontier_Ioc frontier_Ioo
+  Set.setOf_mem_eq
 
 
 
@@ -91,6 +92,30 @@ theorem frontier_setOf_le {X} [TopologicalSpace X] {R} [RealScalar R] (f g : X �
   frontier {x | f x ≤ g x}
   =
   {x | f x = g x} := sorry_proof
+
+set_option linter.unusedVariables false in
+open Set in
+@[ftrans_simp]
+theorem frontier_Icc' {R} [RealScalar R] (a b : R) (h : a < b) :
+  frontier (Icc a b) = ({a,b} : Finset R) := sorry_proof
+
+set_option linter.unusedVariables false in
+open Set in
+@[ftrans_simp]
+theorem frontier_Ico' {R} [RealScalar R] (a b : R) (h : a < b) :
+  frontier (Ico a b) = ({a,b} : Finset R) := sorry_proof
+
+set_option linter.unusedVariables false in
+open Set in
+@[ftrans_simp]
+theorem frontier_Ioc' {R} [RealScalar R] (a b : R) (h : a < b) :
+  frontier (Ioc a b) = ({a,b} : Finset R) := sorry_proof
+
+set_option linter.unusedVariables false in
+open Set in
+@[ftrans_simp]
+theorem frontier_Ioo' {R} [RealScalar R] (a b : R) (h : a < b) :
+  frontier (Ioo a b) = ({a,b} : Finset R) := sorry_proof
 
 
 section
@@ -158,6 +183,15 @@ theorem integral_zero_hausdof_of_setOf_bijective_inter_set' [Nonempty α]
     =
     let x' := φ.invFun b
     if x' ∈ A then f x' else 0 := sorry_proof
+
+
+set_option linter.unusedVariables false in
+@[ftrans_simp]
+theorem integral_zero_hausdof_of_finset
+    (f : α → Y) (A : Set α) (B : Finset α) [∀ x, Decidable (x ∈ A)] :
+    ∫ x in B ∩ A, f x ∂μH[0]
+    =
+    B.sum fun x =>  if x ∈ A then f x else 0 := sorry_proof
 
 
 end IntegralSimps
