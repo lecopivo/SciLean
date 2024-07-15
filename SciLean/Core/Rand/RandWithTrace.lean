@@ -10,75 +10,63 @@ namespace SciLean.Rand
 
 inductive Trace where
 | nil
-| cons (tag : Name) (T : Type) (tail : Trace)
+| single (tag : Name) (T : Type)
+| pair (t s : Trace)
 
-protected def Trace.append : (t s : Trace) → Trace
-  | .nil,    s => s
-  | .cons n T ts, s => .cons n T (Trace.append ts s)
+instance : Append Trace := ⟨fun t s => .pair t s⟩
 
-instance : Append Trace := ⟨fun t s => t.append s⟩
-
--- open Classical in
 def Trace.type : (trace : Trace) → Type
   | .nil => Unit
-  -- | .cons n T .nil => T -- this case would be nice but makes all the proofs more compilicated
-  | .cons n T tr => T × tr.type
+  | .single n T => T
+  | .pair t s => t.type × s.type
 
 def Trace.tags : (trace : Trace) → List Name
   | .nil => []
-  | .cons n _ tr => n :: tr.tags
+  | .single n _ => [n]
+  | .pair t s => t.tags ++ s.tags
 
-
-@[inline]
-def Trace.appendIso {t s : Trace} : (t.append s).type ≃ t.type × s.type :=
-  match t, s with
-  | .nil, s => {
-    toFun := fun x => ((),x)
-    invFun := fun (_,x) => x
-    left_inv := by intro x; rfl
-    right_inv := by intro x; rfl
-  }
-  | .cons n T tr, s => {
-    toFun := fun (x,y) => let (a,b) := appendIso y; ((x,a),b)
-    invFun := fun ((x,x'),y) => (x, appendIso.symm (x',y))
-    left_inv := by intro (x,y); simp
-    right_inv := by intro ((x,y),z); simp
-  }
-
-structure RandWithTrace (X : Type) (trace : Trace) where
+structure RandWithTrace (X : Type) (trace : Trace) (T : Type) where
   rand : Rand X
-  traceRand : Rand trace.type
-  map : trace.type → X
-  consistent : traceRand.map map = rand
+  traceRand : Rand T
+  map : T → X
+  hmap : traceRand.map map = rand
+  htype : T = trace.type
 
-def return' (x : X) : RandWithTrace X .nil where
+def return' (x : X) : RandWithTrace X .nil Unit where
   rand := Pure.pure x
   traceRand := Pure.pure ()
   map := fun _ => x
-  consistent := by simp
+  hmap := by simp
+  htype := rfl
 
-def RandWithTrace.bind (x : RandWithTrace X t) (f : X → RandWithTrace Y s)
-    (hinter : t.tags.inter s.tags = [] := by simp[Trace.tags,List.inter]; done)
-    {tr} (hu : tr = t.append s := by simp[Trace.append,Append.append]; infer_var) : RandWithTrace Y tr where
+def RandWithTrace.bind (x : RandWithTrace X t T) (f : X → RandWithTrace Y s S)
+    (hinter : t.tags.inter s.tags = [] := by simp[Trace.tags,List.inter]; done) : RandWithTrace Y (t++s) (T×S) where
   rand := x.rand >>= (fun x' => (f x').rand)
   traceRand := do
     let tx ← x.traceRand
     let x := x.map tx
     let ty ← (f x).traceRand
-    let t := Trace.appendIso.symm (tx,ty)
-    pure (hu ▸ t)
-  map s :=
-    let (sx,sy) := Trace.appendIso (hu▸s)
-    (f (x.map sx)).map sy
-  consistent := sorry_proof
+    pure (tx,ty)
+  map  := fun (wx,wy) => (f (x.map wx)).map wy
+  hmap := by simp; sorry_proof
+  htype := by
+    simp[Trace.type]
+    rw[← x.htype]
+    -- how do I get element of `X` in this proof to invoke `(f x).htype`?
+    -- I can probably do case on `Nonempty X`
+    rw[← (f sorry).htype]
 
 def sample {X} (x : Rand X) (tag : Name) :
-    RandWithTrace X (.cons tag X .nil) where
+    RandWithTrace X (.single tag X) X where
   rand := x
-  traceRand := do let x ← x; pure (x,())
-  map := fun (x,_) => x
-  consistent := by simp
+  traceRand := x
+  map := fun x => x
+  hmap := by simp[Rand.map]
+  htype := rfl
 
+@[simp]
+theorem sample_map (x : Rand X) (tag : Name) :
+    (sample x tag).map = fun x => x := by rfl
 
 open Lean.Parser Term in
 syntax (name:=probStx) withPosition("let" funBinder " <~ " term (semicolonOrLinebreak ppDedent(ppLine) term)?) : term
@@ -103,40 +91,82 @@ unsafe def probStxElab : TermElab := fun stx _ =>
   match stx with
   | `(let $x <~ $y; $b) => do
   let x' ← elabTermAndSynthesize y none
-  let X := (← inferType x').appFn!.appArg!
+  let X := (← inferType x').appFn!.appFn!.appArg!
   let Y ← mkFreshTypeMVar
   let f ← elabTermAndSynthesize (← `(fun $x => $b)) (← mkArrow X Y)
   let fx ← mkAppM ``RandWithTrace.bind #[x',f]
   let (xs,_,_) ← forallMetaTelescope (← inferType fx)
   try synthesizeAutoArg xs[0]!
   catch _ => throwError "traces contain repeated variable"
-  synthesizeAutoArg xs[2]!
+  -- synthesizeAutoArg xs[2]!
   return mkAppN fx xs
   | _ => throwUnsupportedSyntax
 
 
-abbrev RandWithTrace.traceType (x : RandWithTrace X tr) {T} (h : T = tr.type := by simp[Trace.append,Trace.type]; infer_var) := T
-
-def RandWithTrace.map' (x : RandWithTrace X tr) {T} (h : T = tr.type := by simp[Trace.append,Trace.type]; infer_var) := fun t : T => x.map (h▸t)
-
-def RandWithTrace.traceRand' (x : RandWithTrace X tr) {T} (h : T = tr.type := by simp[Trace.append,Trace.type]; infer_var) := do
-  let t ← x.traceRand
-  return (Eq.mpr h t)
-
-def RandWithTrace.get (x : RandWithTrace X tr) := x.rand.get
-def RandWithTrace.getTrace (x : RandWithTrace X tr) {T} (h : T = tr.type := by simp[Trace.append,Trace.type]; infer_var) := (x.traceRand' h).get
-
 def test1 :=
+  let x <~ sample (flip 0.5) `v1
+  return' x
+
+
+def test2 :=
   let x <~ sample (flip 0.5) `v1
   let y <~ sample (normal 0.1 (x.toNat.toFloat)) `v2
   let z <~ sample (uniform (Set.Icc y (2*y))) `v3
   return' (x.toNat.toFloat+y+z)
 
 
-#eval test1.rand.get
-#eval test1.traceRand'.get
-#check test1.map'
+#eval test2.rand.get
+#eval test2.traceRand.get
+#eval do pure (test2.map (← test2.traceRand.get))
 
 
-#eval print_mean_variance test1.rand 1000 ""
-#eval print_mean_variance (do let tr ← test1.traceRand; return test1.map tr) 1000 ""
+variable {R} [RealScalar R]
+open MeasureTheory
+
+theorem trace_bind_pdf (x : RandWithTrace X t T) (f : X → RandWithTrace Y s S)
+  (h : t.tags.inter s.tags = [] := by simp[Trace.tags,List.inter])
+  [MeasureSpace S] [MeasureSpace T] :
+  ((x.bind f h).traceRand).pdf R
+  =
+  fun (wt,ws) =>
+    let xpdf := x.traceRand.pdf R volume wt
+    let x' := x.map wt
+    let fxpdf := (f x').traceRand.pdf R volume ws
+    xpdf * fxpdf := by sorry_proof
+
+
+@[simp]
+theorem trace_return_pdf (x : X) [MeasureSpace X] :
+  (return' x).traceRand.pdf R volume
+  =
+  fun x => 1 := sorry_proof
+
+
+@[simp]
+theorem trace_sample_pdf (x : Rand X) (n : Name) [MeasureSpace X] :
+  (sample x n).traceRand.pdf R volume
+  =
+  fun x' => x.pdf R volume x' := sorry_proof
+
+
+#check ((sample (normal (0.0:Float) 1.0) `v1).traceRand.pdf Float)
+  rewrite_by
+    simp
+
+
+set_option trace.Meta.Tactic.simp.unify true
+set_option trace.Meta.Tactic.simp.discharge true
+
+#check ((let x <~ sample (normal (0.0:Float) 1.0) `v1; return' x).traceRand.pdf Float)
+  rewrite_by
+    simp[trace_bind_pdf]
+
+
+set_option pp.funBinderTypes true
+
+#check (
+    (let x <~ sample (normal (0.0:Float) 1.0) `v1
+     let y <~ sample (normal x 1.0) `v2
+     return' (x*y)).traceRand.pdf Float)
+  rewrite_by
+    simp[trace_bind_pdf]
