@@ -21,7 +21,7 @@
 *** TODO Lean Framework
 
    Implement these to in the order to get these examples working:
-     1. Harmonic Oscilator
+     1. Harmonic Oscillator
      2. Pendulum
      3. NBody
      4. NPendulum in 2D
