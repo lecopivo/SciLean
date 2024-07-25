@@ -27,7 +27,7 @@ theorem circle_parametric_inverse_polar (r : R) (hr : r ≠ 0) :
     SurfaceParametrization {x : R×R | x.1 ^ 2 + x.2 ^ 2 = r ^ 2}
       (U := R)
       (param :=
-        [(Ico 0 (2*π), circleParam)]) := sorry_proof
+        [(Ico 0 (2*π), fun x => r•circleParam x)]) := sorry_proof
 
 
 def test_fderiv (numSamples : ℕ) (w : R) :=
@@ -68,6 +68,4 @@ def test_fderiv (numSamples : ℕ) (w : R) :=
 
 
 
-
-#eval (test_fderiv 1000 (-1.5)).get
-#eval (test_fderiv 1000 (1.5)).get
+#eval Rand.print_mean_variance (test_fderiv 1 0.5) 5000 ""

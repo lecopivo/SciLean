@@ -23,7 +23,7 @@ variable
 open Scalar in
 @[gtrans]
 def Norm2.norm2.HasParamFDerivWithJumpsAt_rule :=
-  (HasParamFDerivWithJumpsAt.comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=U) (Z:=R)
+  (HasParamFDerivWithJumpsAt.comp1_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=U) (Z:=R)
     (fun _ y => ‖y‖₂²[R]) (by simp; fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
@@ -31,14 +31,14 @@ def Norm2.norm2.HasParamFDerivWithJumpsAt_rule :=
 open Scalar in
 @[gtrans]
 def Norm2.norm2.HasParamFwdFDerivWithJumpsAt_rule :=
-  (HasParamFwdDerivWithJumps.comp1_smooth_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=U) (Z:=R)
+  (HasParamFwdDerivWithJumps.comp1_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=U) (Z:=R)
     (fun _ y => ‖y‖₂²[R]) (by simp; fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 open Scalar in
 @[gtrans]
 def Norm2.norm2.HasParamRevFDerivWithJumpsAt_rule :=
-  (HasParamRevFDerivWithJumpsAt.comp1_smooth_jumps_rule (R:=R) (W:=U) (X:=X) (Y:=V) (Z:=R)
+  (HasParamRevFDerivWithJumpsAt.comp1_differentiable_jumps_rule (R:=R) (W:=U) (X:=X) (Y:=V) (Z:=R)
     (fun _ y => ‖y‖₂²[R]) (by simp; fun_prop))
   rewrite_type_by (repeat ext); autodiff
 

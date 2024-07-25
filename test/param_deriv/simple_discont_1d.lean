@@ -64,6 +64,6 @@ def test_fgradient (w : R) :=
 #eval 0
 
 
-#eval test_fderiv 0.1
+#eval test_fderiv 0.5
 #eval (test_fwdFDeriv 100 0.1).get
 #eval test_fgradient 0.1

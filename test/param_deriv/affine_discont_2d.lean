@@ -75,5 +75,5 @@ def test_fgradient (numSamples : ℕ) (a b c d : R) (w : R) :=
 #eval 0
 
 
-#eval (test_fderiv    1000 1.0 1.0 0.0 1.0 0.3).get
-#eval (test_fgradient 1000 1.0 1.0 0.0 1.0 0.3).get
+#eval (test_fderiv  1000 1.0 1.0 0.3 1.0 0.5).get
+-- #eval (test_fgradient 1000 1.0 1.0 0.0 1.0 0.3).get

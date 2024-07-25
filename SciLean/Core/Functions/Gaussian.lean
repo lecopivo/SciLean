@@ -1,5 +1,6 @@
 import SciLean.Core.FunctionTransformations
 import SciLean.Core.Functions.Exp
+import SciLean.Core.Functions.Inner
 import SciLean.Tactic.Autodiff
 -- import SciLean.Core.Meta.GenerateRevDeriv
 
@@ -67,6 +68,67 @@ theorem gaussian.arg_μx.Differentiable_rule
     (μ : W → U) (σ : R) (x : W → U)
     (hμ : Differentiable R μ) (hx : Differentiable R x) :
     Differentiable R (fun w => gaussian (μ w) σ (x w)) := by intro w; fun_prop
+
+
+set_option linter.unusedVariables false in
+@[fun_trans]
+theorem gaussian.arg_μx.fderiv_rule
+    {W} [NormedAddCommGroup W] [NormedSpace R W]
+    {U} [NormedAddCommGroup U] [AdjointSpace R U]
+    (μ : W → U) (σ : R) (x : W → U)
+    (hμ : Differentiable R μ) (hx : Differentiable R x) :
+    fderiv R (fun w => gaussian (μ w) σ (x w))
+    =
+    fun w => fun dw =>L[R]
+      let μ' := μ w
+      let dμ := fderiv R μ w dw
+      let x' := x w
+      let dx := fderiv R x w dw
+      let dx' := - σ^(-2:ℤ) * ⟪dx-dμ, x'-μ'⟫
+      dx' * gaussian μ' σ x' := sorry_proof
+
+
+set_option linter.unusedVariables false in
+@[fun_trans]
+theorem gaussian.arg_μx.fwdFDeriv_rule
+    {W} [NormedAddCommGroup W] [NormedSpace R W]
+    {U} [NormedAddCommGroup U] [AdjointSpace R U]
+    (μ : W → U) (σ : R) (x : W → U)
+    (hμ : Differentiable R μ) (hx : Differentiable R x) :
+    fwdFDeriv R (fun w => gaussian (μ w) σ (x w))
+    =
+    fun w dw =>
+      let μdμ := fwdFDeriv R μ w dw
+      let xdx := fwdFDeriv R x w dw
+      let dx' := - σ^(-2:ℤ) * ⟪xdx.2-μdμ.2, xdx.1-μdμ.1⟫
+      let s := gaussian μdμ.1 σ xdx.1
+      (s, dx' * s) := by unfold fwdFDeriv; autodiff
+
+
+set_option linter.unusedVariables false in
+@[fun_trans]
+theorem gaussian.arg_μx.revFDeriv_rule
+    {W} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
+    {U} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
+    (μ : W → U) (σ : R) (x : W → U)
+    (hμ : Differentiable R μ) (hx : Differentiable R x) :
+    revFDeriv R (fun w => gaussian (μ w) σ (x w))
+    =
+    fun w =>
+      let μdμ := revFDeriv R μ w
+      let xdx := revFDeriv R x w
+      let s := gaussian μdμ.1 σ xdx.1
+      (s,
+       fun dr =>
+         let dx' := (dr * s * σ^(-2:ℤ)) • (xdx.1-μdμ.1)
+         let dw₁ := xdx.2 dx'
+         let dw₂ := μdμ.2 dx'
+         dw₂ - dw₁) := by
+  unfold revFDeriv
+  funext w; simp
+  autodiff; autodiff
+  funext dw; simp[← smul_assoc,mul_comm]
+  sorry_proof
 
 
 @[fun_prop]

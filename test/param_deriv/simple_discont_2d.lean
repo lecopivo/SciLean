@@ -18,7 +18,7 @@ def test_fderiv (numSamples : ℕ) (w : R) :=
   derive_random_approx
     (fderiv R (fun w' =>
       ∫ xy in Icc (0:R) 1 ×ˢ (Icc (0 : R) 1),
-        if xy.1 ≤ w' then (1:R) else (0:R)) w 1)
+        if xy.1 + xy.2 ≤ w' then (1:R) else (0:R)) w 1)
   by
     rw[fderiv_under_integral_over_set
            (hf:= by gtrans
@@ -103,6 +103,6 @@ def test_fgrad (numSamples : ℕ) (w : R) :=
 
 #eval 0
 
-#eval (test_fderiv 100 0.5).get
+#eval Rand.print_mean_variance (test_fderiv 1 0.5) 1000 ""
 #eval (test_fwdFDeriv 100 0.5).get
 #eval (test_fgrad 100 0.5).get

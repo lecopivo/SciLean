@@ -130,7 +130,7 @@ set_default_scalar R
 --       frontierSpeed is not well defined
 @[simp,ftrans_simp]
 theorem frontierSpeed_setOf_le (φ ψ : W → X → R) :
-    frontierSpeed' R  (fun w => {x | φ w x ≤ ψ w x})
+    frontierSpeed R  (fun w => {x | φ w x ≤ ψ w x})
     =
     fun w dw x =>
       let ζ := (fun w x => φ w x - ψ w x)
@@ -139,11 +139,48 @@ theorem frontierSpeed_setOf_le (φ ψ : W → X → R) :
 
 @[simp,ftrans_simp]
 theorem frontierSpeed_setOf_lt (φ ψ : W → X → R) :
-    frontierSpeed' R  (fun w => {x | φ w x < ψ w x})
+    frontierSpeed R  (fun w => {x | φ w x < ψ w x})
     =
     fun w dw x =>
       let ζ := (fun w x => φ w x - ψ w x)
       (-(fderiv R (ζ · x) w dw)/‖fgradient (ζ w ·) x‖₂) := by
+  sorry_proof
+
+
+-- not sure what to do when `(a w) > (b w)`. In that case is not really well defined `frontierSpeed`
+set_option linter.unusedVariables false in
+open Set in
+@[simp,ftrans_simp]
+theorem frontierSpeed_Icc (a b : W → R) (ha : Differentiable R a) (hb : Differentiable R b) :
+    frontierSpeed R  (fun w => Icc (a w) (b w))
+    =
+    fun w dw x =>
+      let ada := fwdFDeriv R a w dw
+      let bdb := fwdFDeriv R b w dw
+      let m := (ada.1 + bdb.1)/2
+      if x < m then
+        - ada.2
+      else
+        bdb.2 := by
+  sorry_proof
+
+
+set_option linter.unusedVariables false in
+open Set in
+@[simp,ftrans_simp]
+theorem frontierGrad_Icc
+    {W} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
+    (a b : W → R) (ha : Differentiable R a) (hb : Differentiable R b) :
+    frontierGrad R (fun w => Icc (a w) (b w))
+    =
+    fun w x =>
+      let ada := revFDeriv R a w
+      let bdb := revFDeriv R b w
+      let m := (ada.1 + bdb.1)/2
+      if x < m then
+        - ada.2 1
+      else
+        bdb.2 1 := by
   sorry_proof
 
 
