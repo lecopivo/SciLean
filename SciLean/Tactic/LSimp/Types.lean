@@ -181,17 +181,17 @@ def cacheFind? (e : Expr) : LSimpM (Option Result) := do
   return c.findSome? (fun c => c.find? e)
 
 
-def traceCache : LSimpM Unit := do
-  let cache ← (← getThe State).cache.get
+-- def traceCache : LSimpM Unit := do
+--   let cache ← (← getThe State).cache.get
 
-  let mut s : MessageData := "lsimp cache:"
-  for c in cache, i in [0:cache.length] do
-    s := s ++ m!"\n  cache depth {i}"
-    for (e,r) in c do
-      s := s ++ m!"\n    {e} ==> {r.expr}"
-      pure ()
+--   let mut s : MessageData := "lsimp cache:"
+--   for c in cache, i in [0:cache.length] do
+--     s := s ++ m!"\n  cache depth {i}"
+--     for (e,r) in c do
+--       s := s ++ m!"\n    {e} ==> {r.expr}"
+--       pure ()
 
-  trace[Meta.Tactic.simp.cache] s
+--   trace[Meta.Tactic.simp.cache] s
 
 
 

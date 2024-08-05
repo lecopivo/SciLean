@@ -26,18 +26,21 @@ def HasAdjDiffAt (f : X → Y) (x : X) : Prop :=
 @[fun_prop]
 def HasAdjDiff (f : X → Y) : Prop := ∀ x, HasAdjDiffAt K f x
 
-
 @[fun_prop]
 theorem HasAdjDiff.hasAdjDiffAt (f : X → Y) (x) (hf : HasAdjDiff K f) :
     HasAdjDiffAt K f x := hf x
 
 @[fun_prop]
-theorem HasAdjDiffAt.cdifferentiableAt (f : X → Y) (x) (hf : HasAdjDiffAt K f x) :
+theorem HasAdjDiffAt.CDifferentiableAt (f : X → Y) (x) (hf : HasAdjDiffAt K f x) :
     CDifferentiableAt K f x := hf.1
 
 @[fun_prop]
 theorem HasAdjDiff.cdifferentiable (f : X → Y) (hf : HasAdjDiff K f) :
     CDifferentiable K f := fun x => (hf x).1
+
+@[fun_prop]
+theorem HasAdjDiff.cdifferentiableAt (f : X → Y) (x) (hf : HasAdjDiff K f) :
+    CDifferentiableAt K f x := (hf x).1
 
 @[fun_prop]
 theorem cderiv.arg_dx.hasSemiAdjointAt (f : X → Y) (x) (hf : HasAdjDiffAt K f x) :
@@ -52,8 +55,9 @@ theorem HasSemiAdjoint.hasAdjDiff (f : X → Y) (hf : HasSemiAdjoint K f) :
     HasAdjDiff K f := by
   intro x
   constructor
-  . fun_prop
-  . fun_trans; fun_prop
+
+  · fun_prop
+  · fun_trans; fun_prop
 
 
 ----------------------------------------------------------------------------------------------------
@@ -62,8 +66,8 @@ theorem HasSemiAdjoint.hasAdjDiff (f : X → Y) (hf : HasSemiAdjoint K f) :
 @[fun_prop]
 theorem HasAdjDiffAt.id_rule (x) : HasAdjDiffAt K (fun x : X => x) x := by
   constructor
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 @[fun_prop]
 theorem HasAdjDiff.id_rule : HasAdjDiff K (fun x : X => x) := by intro x; fun_prop
@@ -71,8 +75,8 @@ theorem HasAdjDiff.id_rule : HasAdjDiff K (fun x : X => x) := by intro x; fun_pr
 @[fun_prop]
 theorem HasAdjDiffAt.const_rule (x) (y : Y) : HasAdjDiffAt K (fun _ : X => y) x := by
   constructor
-  . fun_prop
-  . fun_trans; apply HasSemiAdjoint.const_rule
+  · fun_prop
+  · fun_trans; apply HasSemiAdjoint.const_rule
 
 @[fun_prop]
 theorem HasAjdDiff.const_rule (y : Y) : HasAdjDiff K (fun _ : X => y) := by
@@ -82,8 +86,8 @@ theorem HasAjdDiff.const_rule (y : Y) : HasAdjDiff K (fun _ : X => y) := by
 theorem HasAdjDiffAt.apply_rule (x) (i : ι) :
     HasAdjDiffAt K (fun x : (i : ι) → E i => x i) x := by
   constructor
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 @[fun_prop]
 theorem HasAdjDiff.apply_rule (i : ι) :
@@ -95,32 +99,16 @@ theorem HasAdjDiffAt.comp_rule
     (f : Y → Z) (g : X → Y) (x) (hf : HasAdjDiffAt K f (g x)) (hg : HasAdjDiffAt K g x) :
     HasAdjDiffAt K (fun x => f (g x)) x := by
   constructor
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 @[fun_prop]
 theorem HasAdjDiff.comp_rule
     (f : Y → Z) (g : X → Y) (hf : HasAdjDiff K f) (hg : HasAdjDiff K g) :
     HasAdjDiff K (fun x => f (g x)) := by
   intro x; constructor
-  . fun_prop
-  . fun_trans; fun_prop
-
-@[fun_prop]
-theorem HasAdjDiffAt.let_rule
-    (f : X → Y → Z) (g : X → Y) (x) (hf : HasAdjDiffAt K ↿f (x,g x)) (hg : HasAdjDiffAt K g x) :
-    HasAdjDiffAt K (fun x => let y := g x; f x y) x := by
-  constructor
-  . fun_prop
-  . fun_trans; fun_prop
-
-@[fun_prop]
-theorem HasAdjDiff.let_rule
-    (f : X → Y → Z) (g : X → Y) (hf : HasAdjDiff K ↿f) (hg : HasAdjDiff K g) :
-    HasAdjDiff K (fun x => let y := g x; f x y) := by
-  intro x; constructor
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 @[fun_prop]
 theorem HasAdjDiffAt.pi_rule
@@ -128,8 +116,8 @@ theorem HasAdjDiffAt.pi_rule
     HasAdjDiffAt K (fun x i => f x i) x := by
   have := fun i => (hf i).1
   constructor
-  . fun_prop
-  . rw[cderiv.pi_rule_at (hf:=by assumption)]
+  · fun_prop
+  · rw[cderiv.pi_rule_at (hf:=by assumption)]
     fun_prop
 
 @[fun_prop]

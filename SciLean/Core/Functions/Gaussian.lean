@@ -126,7 +126,7 @@ theorem gaussian.arg_μx.revFDeriv_rule
          dw₂ - dw₁) := by
   unfold revFDeriv
   funext w; simp
-  autodiff; autodiff
+  autodiff
   funext dw; simp[← smul_assoc,mul_comm]
   sorry_proof
 

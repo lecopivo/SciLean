@@ -378,8 +378,8 @@ theorem oneHot_inl (i : I) (xi : EI i)
 by
   simp[oneHot, structMake]
   constructor
-  . congr; funext; congr; funext h; subst h; rfl
-  . apply structExt (I:=J); simp [ZeroStruct.structProj_zero]
+  · congr; funext; congr; funext h; subst h; rfl
+  · apply structExt (I:=J); simp [ZeroStruct.structProj_zero]
 
 @[simp, ftrans_simp]
 theorem oneHot_inr (j : J) (xj : FJ j)
@@ -389,7 +389,7 @@ theorem oneHot_inr (j : J) (xj : FJ j)
 by
   simp[oneHot, structMake]
   constructor
-  . apply structExt (I:=I); simp [ZeroStruct.structProj_zero]
-  . congr; funext; congr; funext h; subst h; rfl
+  · apply structExt (I:=I); simp [ZeroStruct.structProj_zero]
+  · congr; funext; congr; funext h; subst h; rfl
 
 end OneHotSimp

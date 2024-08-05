@@ -61,8 +61,8 @@ theorem fwdFDeriv_under_integral
 
   unfold fwdFDeriv
   funext dw; ext
-  . simp only [fst_integral (hf := sorry_proof), hf.2]
-  . simp only [fderiv_under_integral R f w dw μ hf.1, add_left_inj, snd_integral (hf:=sorry_proof)]
+  · simp only [fst_integral (hf := sorry_proof), hf.2]
+  · simp only [fderiv_under_integral R f w dw μ hf.1, add_left_inj, snd_integral (hf:=sorry_proof)]
 
 open FiniteDimensional
 @[fun_trans]
@@ -87,8 +87,8 @@ theorem fwdFDeriv_under_integral_over_set
 
   unfold fwdFDeriv
   funext dw; ext
-  . simp only [fst_integral (hf := sorry_proof), hf.2]
-  . simp only [fderiv_under_integral_over_set R f w dw μ A hf.1 hA, add_left_inj, snd_integral (hf:=sorry_proof)]
+  · simp only [fst_integral (hf := sorry_proof), hf.2]
+  · simp only [fderiv_under_integral_over_set R f w dw μ A hf.1 hA, add_left_inj, snd_integral (hf:=sorry_proof)]
 
 
 
@@ -108,8 +108,8 @@ theorem smooth_rule
 
   unfold HasParamFwdFDerivWithJumpsAt
   constructor
-  . apply HasParamFDerivWithJumpsAt.differentiable_at_rule R w f hf
-  . simp only [fwdFDeriv, implies_true]
+  · apply HasParamFDerivWithJumpsAt.differentiable_at_rule R w f hf
+  · simp only [fwdFDeriv, implies_true]
 
 
 
@@ -133,9 +133,9 @@ theorem comp_differentiable_jumps_rule
 
   unfold HasParamFwdFDerivWithJumpsAt
   constructor
-  . convert HasParamFDerivWithJumpsAt.comp_differentiable_jumps_rule R f g w hf hg.1
+  · convert HasParamFDerivWithJumpsAt.comp_differentiable_jumps_rule R f g w hf hg.1
     simp [fwdFDeriv, hg.2]
-  . simp [fwdFDeriv,hg.2]
+  · simp [fwdFDeriv,hg.2]
 
 
 
@@ -166,8 +166,8 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamFwdFDerivWithJumpsAt_rule
 
   unfold HasParamFwdFDerivWithJumpsAt
   constructor
-  . exact Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) hdisjoint
-  . simp [hf.2, hg.2]
+  · exact Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) hdisjoint
+  · simp [hf.2, hg.2]
 
 
 theorem comp1_differentiable_jumps_rule
@@ -218,7 +218,7 @@ theorem comp2_differentiable_jumps_rule
 
   convert comp_differentiable_jumps_rule (R:=R) (fun w (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
     hf (by gtrans (disch:=first | fun_prop | assumption))
-  . simp[List.map_append]; rfl
+  · simp[List.map_append]; rfl
 
 
 end HasParamFwdDerivWithJumps
@@ -295,9 +295,9 @@ theorem HDiv.hDiv.arg_a0a1.HasParamFwdFDerivWithJumpsAt_rule
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor
-  . convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) hdisjoint hg'
+  · convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) hdisjoint hg'
     simp[hf.2,hg.2]
-  . simp [hf.2, hg.2]
+  · simp [hf.2, hg.2]
 
 
 @[gtrans]
@@ -323,9 +323,9 @@ theorem ite.arg_te.HasParamFwdFDerivWithJumpsAt_rule
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor
-  . convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) hdisjoint
+  · convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) hdisjoint
     simp only [hf.2, hg.2]; split_ifs <;> dsimp
-  . dsimp; intros; split_ifs <;> simp [hf.2, hg.2]
+  · dsimp; intros; split_ifs <;> simp [hf.2, hg.2]
 
 
 

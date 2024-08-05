@@ -16,9 +16,10 @@ open Lean Meta
 
 namespace Meta.FunTrans
 
+instance : Inhabited FunProp.Context := ⟨{}⟩
 
-structure Config where
-  funPropConfig : FunProp.Config := {}
+structure Context where
+  funPropContext : FunProp.Context := {}
 deriving Inhabited
 
-initialize funTransConfig : IO.Ref Config ← IO.mkRef {}
+initialize funTransContext : IO.Ref Context ← IO.mkRef {}

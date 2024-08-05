@@ -89,9 +89,9 @@ theorem Neg.neg.arg_a0.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 
 -- HAdd.hAdd -------------------------------------------------------------------
@@ -104,9 +104,9 @@ theorem HAdd.hAdd.arg_a0.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 @[fun_prop]
 theorem HAdd.hAdd.arg_a1.Diffeomorphism_rule
@@ -115,9 +115,9 @@ theorem HAdd.hAdd.arg_a1.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 
 
@@ -131,9 +131,9 @@ theorem HSub.hSub.arg_a0.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 @[fun_prop]
 theorem HSub.hSub.arg_a1.Diffeomorphism_rule
@@ -142,9 +142,9 @@ theorem HSub.hSub.arg_a1.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop
-  . fun_prop
-  . fun_trans; fun_prop
+  · fun_prop
+  · fun_prop
+  · fun_trans; fun_prop
 
 
 -- HMul.hMul -------------------------------------------------------------------
@@ -157,9 +157,9 @@ def HMul.hMul.arg_a0.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop (disch:=assumption)
-  . fun_prop
-  . fun_trans; fun_prop (disch:=assumption)
+  · fun_prop (disch:=assumption)
+  · fun_prop
+  · fun_trans; fun_prop (disch:=assumption)
 
 @[fun_prop]
 def HMul.hMul.arg_a1.Diffeomorphism_rule
@@ -168,9 +168,9 @@ def HMul.hMul.arg_a1.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop (disch:=assumption)
-  . fun_prop
-  . fun_trans; fun_prop (disch:=assumption)
+  · fun_prop (disch:=assumption)
+  · fun_prop
+  · fun_trans; fun_prop (disch:=assumption)
 
 
 -- SMul.sMul -------------------------------------------------------------------
@@ -183,9 +183,9 @@ def HSMul.hSMul.arg_a1.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop (disch:=assumption)
-  . fun_prop
-  . fun_trans; fun_prop (disch:=assumption)
+  · fun_prop (disch:=assumption)
+  · fun_prop
+  · fun_trans; fun_prop (disch:=assumption)
 
 
 -- HDiv.hDiv -------------------------------------------------------------------
@@ -199,9 +199,9 @@ def HDiv.hDiv.arg_a0.Diffeomorphism_rule
 by
   have ⟨_,_,_⟩ := hf
   constructor
-  . fun_prop (disch:=assumption)
-  . fun_prop (disch:=assumption)
-  . fun_trans (disch:=assumption); sorry_proof --fun_prop (disch:=assumption)
+  · fun_prop (disch:=assumption)
+  · fun_prop (disch:=assumption)
+  · fun_trans (disch:=assumption); sorry_proof --fun_prop (disch:=assumption)
 
 
 -- Nat.iterate -------------------------------------------------------------------

@@ -306,7 +306,7 @@ theorem comp2_differentiable_jumps_rule
   convert comp_differentiable_jumps_rule R (fun (w:W) (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
     (hf) (Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R g₁ g₂ w hg₁ hg₂ hdisjoint)
 
-  . simp[Function.comp]
+  · simp[Function.comp]
 
 
 end HasParamFDerivWithJumpsAt
@@ -406,8 +406,8 @@ theorem HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule
           (f:=fun _ (y:R×R) => y.1 / y.2) (g:=fun w x => (f w x, g w x)) (w:=w)
           (hf:=by simp; sorry_proof)
           (hg:= Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule R f g w hf hg hdisjoint)
-  . fun_trans (disch:=apply hg')
-  . simp[List.map_append]; congr
+  · fun_trans (disch:=apply hg')
+  · simp[List.map_append]; congr
 
 
 @[gtrans]

@@ -97,22 +97,6 @@ by
   apply HasAdjDiffM_bind _ _ hf
   apply HasAdjDiffM_pure g hg
 
-@[fun_prop]
-theorem let_rule
-  (f : X → Y → m Z) (g : X → Y)
-  (hf : HasAdjDiffM K (fun xy : X×Y => f xy.1 xy.2)) (hg : HasAdjDiff K g)
-  : HasAdjDiffM K (fun x => let y := g x; f x y) :=
-by
-  let f' := (fun xy : X×Y => f xy.1 xy.2)
-  let g' := (fun x => (x, g x))
-  rw[show ((fun x => f x (g x))
-           =
-           fun x => pure (g' x) >>= f') by simp]
-  apply HasAdjDiffM_bind _ _ hf
-  apply HasAdjDiffM_pure g'
-  simp[g']
-  fun_prop
-
 
 
 end HasAdjDiffM

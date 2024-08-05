@@ -276,7 +276,8 @@ theorem let_rule
          let dx := ydg.2 dxdy.2 dxdy.1
          dx)  := by
   unfold revDerivUpdate
-  fun_trans [revDerivUpdate,add_assoc]
+  fun_trans [revDerivUpdate,revDeriv,add_assoc]
+
 
 @[fun_trans]
 theorem apply_rule (i : I) :
@@ -379,7 +380,7 @@ theorem let_rule
        fun i dei =>
          let dxy := zdf'.2 i dei
          ydg'.2 dxy.2 dxy.1) := by
-  unfold revDerivProj; fun_trans
+  unfold revDerivProj revDerivUpdate revDeriv; fun_trans
 
 @[fun_trans]
 theorem pi_rule

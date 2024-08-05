@@ -17,6 +17,86 @@ open Lean Meta
 
 namespace Meta.FunTrans
 
+
+/-- Tag for one of the 5 basic lambda theorems, that also hold extra data for composition theorem
+ -/
+inductive LambdaTheoremArgs
+  /-- Identity theorem e.g. `fderiv ℝ fun x => x = ...` -/
+  | id
+  /-- Constant theorem e.g. `fderiv ℝ fun x => y = ...` -/
+  | const
+  /-- Apply theorem e.g. `fderiv ℝ fun (f : (x : X) → Y x => f x) = ...` -/
+  | apply
+  /-- Composition theorem e.g. `fderiv ℝ fun x => f (g x) = ...`
+
+  The numbers `fArgId` and `gArgId` store the argument index for `f` and `g` in the composition
+  theorem. -/
+  | comp (fArgId gArgId : Nat)
+  /-- Let composition theorem e.g. `fderiv ℝ fun x => let y := g x; f x y = ...`
+
+  The numbers `fArgId` and `gArgId` store the argument index for `f` and `g` in the composition
+  theorem. -/
+  | letE (fArgId gArgId : Nat)
+
+  /-- Pi theorem e.g. `fderiv ℝ fun x y => f x y = ...` -/
+  | pi
+  deriving Inhabited, BEq, Repr, Hashable
+
+/-- Tag for one of the 5 basic lambda theorems -/
+inductive LambdaTheoremType
+  /-- Identity theorem e.g. `fderiv ℝ fun x => x = ...` -/
+  | id
+  /-- Constant theorem e.g. `fderiv ℝ fun x => y = ...` -/
+  | const
+  /-- Apply theorem e.g. `fderiv ℝ fun (f : (x : X) → Y x => f x) = ...` -/
+  | apply
+  /-- Composition theorem e.g. `fderiv ℝ fun x => f (g x) = ...` -/
+  | comp
+  /-- Let composition theorem e.g. `fderiv ℝ fun x => f (g x) = ...` -/
+  | letE
+  /-- Pi theorem e.g. `fderiv ℝ fun x y => f x y = ...` -/
+  | pi
+  deriving Inhabited, BEq, Repr, Hashable
+
+/-- Convert `LambdaTheoremArgs` to `LambdaTheoremType`. -/
+def LambdaTheoremArgs.type (t : LambdaTheoremArgs) : LambdaTheoremType :=
+  match t with
+  | .id => .id
+  | .const => .const
+  | .comp .. => .comp
+  | .letE .. => .letE
+  | .apply  => .apply
+  | .pi => .pi
+
+/-- Decides whether `f` is a function corresponding to one of the lambda theorems. -/
+def detectLambdaTheoremArgs (f : Expr) (ctxVars : Array Expr) :
+    MetaM (Option LambdaTheoremArgs) := do
+
+  -- eta expand but beta reduce body
+  let f ← forallTelescope (← inferType f) fun xs _ =>
+    mkLambdaFVars xs (mkAppN f xs).headBeta
+
+  match f with
+  | .lam _ _ xBody _ =>
+    unless xBody.hasLooseBVars do return .some .const
+    match xBody with
+    | .bvar 0 => return .some .id
+    | .app (.bvar 0) (.fvar _) =>  return .some .apply
+    | .app (.fvar fId) (.app (.fvar gId) (.bvar 0)) =>
+      -- fun x => f (g x)
+      let .some argId_f := ctxVars.findIdx? (fun x => x == (.fvar fId)) | return none
+      let .some argId_g := ctxVars.findIdx? (fun x => x == (.fvar gId)) | return none
+      return .some <| .comp argId_f argId_g
+    | .letE _ _ (.app (.fvar gId) (.bvar 0)) (.app (.app (.fvar fId) (.bvar 1)) (.bvar 0)) _ =>
+      let .some argId_f := ctxVars.findIdx? (fun x => x == (.fvar fId)) | return none
+      let .some argId_g := ctxVars.findIdx? (fun x => x == (.fvar gId)) | return none
+      return .some <| .comp argId_f argId_g
+    | .lam _ _ (.app (.app (.fvar _) (.bvar 1)) (.bvar 0)) _ =>
+      return .some .pi
+    | _ => return none
+  | _ => return none
+
+
 /--  -/
 structure LambdaTheorem where
   /-- Name of function transformation -/
@@ -26,13 +106,13 @@ structure LambdaTheorem where
   /-- total number of arguments applied to the function transformation  -/
   transAppliedArgs : Nat
   /-- Type and important argument of the theorem. -/
-  thmArgs : FunProp.LambdaTheoremArgs
+  thmArgs : LambdaTheoremArgs
   deriving Inhabited, BEq
 
 /-- -/
 structure LambdaTheorems where
   /-- map: function transfromation name × theorem type → lambda theorem -/
-  theorems : HashMap (Name × FunProp.LambdaTheoremType) (Array LambdaTheorem) := {}
+  theorems : HashMap (Name × LambdaTheoremType) (Array LambdaTheorem) := {}
   deriving Inhabited
 
 
@@ -72,7 +152,7 @@ deriv (fun x' => 1/(1-x')) x
 ```
 we prefer the version `deriv (fun x' => f (g x')) x` over `deriv (fun x' => f (g x'))` as the former
 uses `DifferntiableAt` insed of `Differentiable` as preconditions. -/
-def getLambdaTheorems (funTransName : Name) (type : FunProp.LambdaTheoremType) (nargs : Option Nat):
+def getLambdaTheorems (funTransName : Name) (type : LambdaTheoremType) (nargs : Option Nat):
     CoreM (Option (Array LambdaTheorem)) := do
   let .some thms := (lambdaTheoremsExt.getState (← getEnv)).theorems.find? (funTransName,type)
     | return none
@@ -267,7 +347,7 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
 
     let fData? ← FunProp.getFunctionData? f FunProp.defaultUnfoldPred {zeta:=false}
 
-    if let .some thmArgs ← FunProp.detectLambdaTheoremArgs (← fData?.get) xs then
+    if let .some thmArgs ← detectLambdaTheoremArgs (← fData?.get) xs then
       return .lam {
         funTransName := funTransName
         transAppliedArgs := lhs.getAppNumArgs

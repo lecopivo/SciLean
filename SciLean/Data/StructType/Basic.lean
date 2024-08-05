@@ -1,4 +1,3 @@
-import Mathlib.Init.Function
 import Mathlib.Algebra.Group.Basic
 import SciLean.Util.SorryProof
 import SciLean.Tactic.FTrans.Init
@@ -7,6 +6,8 @@ namespace SciLean
 
 open Function
 
+/-- `StructType X I XI` says that the type `X` behaves like a structure with fields indexed by
+`i : I` of type `XI i`. -/
 class StructType (X : Sort _) (I : (Sort _)) (XI : outParam <| I → Sort _) where
   structProj (x : X) (i : I) : (XI i)
   structMake (f : (i : I) → (XI i)) : X

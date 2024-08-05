@@ -1,6 +1,6 @@
 import Mathlib.Topology.Algebra.Module.Basic
 import Mathlib.Topology.UniformSpace.Pi
-import Mathlib.Analysis.NormedSpace.Basic
+import Mathlib.Analysis.Normed.Module.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
 
 import SciLean.Core.FunctionPropositions.IsLinearMap

@@ -113,11 +113,11 @@ theorem CDifferentaibleAt.ContCDiffAt_rule' (x : X) (f : X → Y) (hf : ContCDif
 
 @[fun_prop]
 theorem CDifferentaible.ContCDiff_rule (f : X → Y) (hf : ContCDiff K n f) (h : 0 < n) :
-    CDifferentiable K f := by intro x; fun_prop (disch:=assumption)
+    CDifferentiable K f := by intro x; fun_prop (config:={maxTransitionDepth:=2}) (disch:=assumption)
 
 @[fun_prop]
 theorem CDifferentaible.ContCDiff_rule' (f : X → Y) (hf : ContCDiff K ∞ f) :
-    CDifferentiable K f := by intro x; fun_prop
+    CDifferentiable K f := by intro x; fun_prop (config:={maxTransitionDepth:=2}) (disch:=assumption)
 
 
 section NormedSpaces

@@ -24,9 +24,9 @@ namespace Meta.FunTrans
 def runFunProp (e : Expr) : SimpM (Option Expr) := do
   let cache := (← get).cache
   modify (fun s => { s with cache := {}}) -- hopefully this prevent duplicating the cache
-  let config : FunProp.Config := (← funTransConfig.get).funPropConfig
-  let state  : FunProp.State := { cache := cache }
-  let (result?, state) ← FunProp.funProp e |>.run config state
+  let ctx   := (← funTransContext.get).funPropContext
+  let state := { cache := cache : FunProp.State }
+  let (result?, state) ← FunProp.funProp e |>.run ctx state
   modify (fun simpState => { simpState with cache := state.cache })
 
   match result? with
@@ -65,7 +65,7 @@ def synthesizeArgs (thmId : FunProp.Origin) (xs : Array Expr) : SimpM Bool := do
             x.mvarId!.assignIfDefeq r
             continue
         else
-          let disch := (← funTransConfig.get).funPropConfig.disch
+          let disch := (← funTransContext.get).funPropContext.disch
           if let .some r ← disch type then
             x.mvarId!.assignIfDefeq r
             continue
@@ -145,7 +145,7 @@ def tryTheorem? (e : Expr) (thmOrigin : FunProp.Origin) : SimpM (Option Simp.Res
   tryTheoremWithHint e thmOrigin #[]
 
 
-def applyIdRule (funTransDecl : FunTransDecl) (e X : Expr) : SimpM (Option Simp.Result) := do
+def applyIdRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Result) := do
   trace[Meta.Tactic.fun_trans.step] "id case"
 
   let .some thms ← getLambdaTheorems funTransDecl.funTransName .id e.getAppNumArgs
@@ -153,9 +153,7 @@ def applyIdRule (funTransDecl : FunTransDecl) (e X : Expr) : SimpM (Option Simp.
       return none
 
   for thm in thms do
-    let .id id_X := thm.thmArgs | continue
-
-    if let .some r ← tryTheoremWithHint e (.decl thm.thmName) #[(id_X,X)] then
+    if let .some r ← tryTheorem? e (.decl thm.thmName) then
       return r
 
   return none
@@ -166,14 +164,10 @@ def applyConstRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp
       return none
 
   for thm in thms do
-    let .const := thm.thmArgs | continue
-
-    if let .some r ← tryTheoremWithHint e (.decl thm.thmName) #[] then
+    if let .some r ← tryTheorem? e (.decl thm.thmName) then
       return r
 
   return none
-
-
 
 def applyCompRule (funTransDecl : FunTransDecl) (e f g : Expr) : SimpM (Option Simp.Result) := do
   let .some thms ← getLambdaTheorems funTransDecl.funTransName .comp e.getAppNumArgs
@@ -201,60 +195,27 @@ def applyLetRule (funTransDecl : FunTransDecl) (e f g : Expr) : SimpM (Option Si
 
   return none
 
-def applyApplyRule (funTransDecl : FunTransDecl) (e x XY : Expr) : SimpM (Option Simp.Result) := do
-  let ext := lambdaTheoremsExt.getState (← getEnv)
-  let .forallE n X Y _ := XY | return none
-
-  -- non dependent case
-  if ¬(Y.hasLooseBVars) then
-    if let .some thms := ext.theorems.find? (funTransDecl.funTransName, .proj) then
-      for thm in thms do
-        let .proj id_x id_Y := thm.thmArgs | return none
-        if let .some r ← tryTheoremWithHint e (.decl thm.thmName) #[(id_x,x),(id_Y,Y)] then
-          return r
-
-  -- dependent case
-  -- can also handle non-dependent cases if non-dependent theorem is not available
-  let Y := Expr.lam n X Y default
-
-  let .some thms := ext.theorems.find? (funTransDecl.funTransName, .projDep)
+def applyApplyRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Result) := do
+  let .some thms ← getLambdaTheorems funTransDecl.funTransName .apply e.getAppNumArgs
     | trace[Meta.Tactic.fun_trans]
         "missing projection rule to transform `{← ppExpr e}`"
       return none
   for thm in thms do
-    let .projDep id_x id_Y := thm.thmArgs | return none
-
-    if let .some r ← tryTheoremWithHint e (.decl thm.thmName) #[(id_x,x),(id_Y,Y)] then
+    if let .some r ← tryTheorem? e (.decl thm.thmName) then
       return r
 
   return none
 
-def applyApplyDepRule (funTransDecl : FunTransDecl) (e x Y : Expr) : SimpM (Option Simp.Result) := do
-  let .some thms ← getLambdaTheorems funTransDecl.funTransName .projDep e.getAppNumArgs
-    | trace[Meta.Tactic.fun_trans] "missing projDep rule to transform `{← ppExpr e}`"
-      return none
-
-  for thm in thms do
-    let .projDep id_x id_Y := thm.thmArgs | continue
-
-    if let .some r ← tryTheoremWithHint e (.decl thm.thmName) #[(id_x,x),(id_Y,Y)] then
-      return r
-
-  return none
-
-def applyPiRule (funTransDecl : FunTransDecl) (e f : Expr) : SimpM (Option Simp.Result) := do
+def applyPiRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Result) := do
   let .some thms ← getLambdaTheorems funTransDecl.funTransName .pi e.getAppNumArgs
     | trace[Meta.Tactic.fun_trans] "missing pi rule to transform `{← ppExpr e}`"
       return none
 
   for thm in thms do
-    let .pi id_f := thm.thmArgs | continue
-
-    if let .some r ← tryTheoremWithHint e (.decl thm.thmName) #[(id_f,f)] then
+    if let .some r ← tryTheorem? e (.decl thm.thmName) then
       return r
 
   return none
-
 
 
 def applyMorTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.FunctionData) : SimpM (Option Simp.Result) := do
@@ -262,7 +223,7 @@ def applyMorTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.F
   match ← fData.isMorApplication with
   | .none => return none
   | .underApplied =>
-    applyPiRule funTransDecl e (← fData.toExpr)
+    applyPiRule funTransDecl e
   | .overApplied =>
     let .some (f,g) ← fData.peeloffArgDecomposition | return none
     applyCompRule funTransDecl e f g
@@ -368,7 +329,7 @@ def tryTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
       return none
     | .gt =>
       trace[Meta.Tactic.fun_trans] s!"adding argument to later use {← ppOrigin' thm.thmOrigin}"
-      if let .some r ← applyPiRule funTransDecl e (← fData.toExpr) then
+      if let .some r ← applyPiRule funTransDecl e then
         return r
       continue
     | .eq =>
@@ -437,7 +398,7 @@ def bvarAppCase (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
     if let .some (f, g) ← fData.nontrivialDecomposition then
       applyCompRule funTransDecl e f g
     else
-      applyApplyRule funTransDecl e fData.args[0]!.expr (← fData.domainType)
+      applyApplyRule funTransDecl e
 
   -- if let .some (f,g) ← fData.nontrivialDecomposition then
   --   return ← applyCompRule funTransDecl e f g
@@ -583,12 +544,12 @@ partial def funTrans (e : Expr) : SimpM Simp.Step := do
   | .lam f =>
     trace[Meta.Tactic.fun_trans.step] "lam case on {← ppExpr f}"
     let e := e.setArg funTransDecl.funArgId f -- update e with reduced f
-    toStep <| applyPiRule funTransDecl e f
+    toStep <| applyPiRule funTransDecl e
   | .data fData =>
     let e := e.setArg funTransDecl.funArgId (← fData.toExpr) -- update e with reduced f
 
     if fData.isIdentityFun then
-      toStep <| applyIdRule funTransDecl e (← fData.domainType)
+      toStep <| applyIdRule funTransDecl e
     else if fData.isConstantFun then
       toStep <| applyConstRule funTransDecl e
     else

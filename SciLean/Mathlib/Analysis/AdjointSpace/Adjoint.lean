@@ -94,8 +94,8 @@ for all `x` and `y`. -/
 theorem eq_adjoint_iff (A : E → F) (B : F → E) (hB : IsContinuousLinearMap 𝕜 B) :
     A = B† ↔ ∀ x y, ⟪A x, y⟫ = ⟪x, B y⟫ := by
   constructor
-  . intro h x y; rw[h,adjoint_inner_left _ hB]
-  . intro h; funext u
+  · intro h x y; rw[h,adjoint_inner_left _ hB]
+  · intro h; funext u
     apply AdjointSpace.ext_inner_right 𝕜
     intro v
     rw[adjoint_inner_left _ hB]

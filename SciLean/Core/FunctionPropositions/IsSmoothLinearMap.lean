@@ -61,8 +61,8 @@ by
   have := fun i => (hf i).1
   have := fun i => (hf i).2
   constructor
-  . fun_prop
-  . fun_prop
+  · fun_prop
+  · fun_prop
 
 
 --------------------------------------------------------------------------------

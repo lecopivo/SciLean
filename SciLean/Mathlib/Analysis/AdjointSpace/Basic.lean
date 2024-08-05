@@ -1,4 +1,4 @@
-import Mathlib.Analysis.NormedSpace.Basic
+import Mathlib.Analysis.Normed.Module.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
 
 import SciLean.Util.SorryProof
@@ -77,7 +77,6 @@ theorem real_inner_smul_left (x y : F) (r : ℝ) : ⟪r • x, y⟫_ℝ = r * �
 
 theorem inner_smul_real_left (x y : E) (r : ℝ) : ⟪(r : 𝕜) • x, y⟫ = r • ⟪x, y⟫ := by
   rw [inner_smul_left, conj_ofReal, Algebra.smul_def]
-  rfl
 
 theorem inner_smul_right (x y : E) (r : 𝕜) : ⟪x, r • y⟫ = r * ⟪x, y⟫ := by
   rw [← inner_conj_symm, inner_smul_left, RingHom.map_mul, conj_conj, inner_conj_symm]
@@ -87,7 +86,6 @@ theorem real_inner_smul_right (x y : F) (r : ℝ) : ⟪x, r • y⟫_ℝ = r * �
 
 theorem inner_smul_real_right (x y : E) (r : ℝ) : ⟪x, (r : 𝕜) • y⟫ = r • ⟪x, y⟫ := by
   rw [inner_smul_right, Algebra.smul_def]
-  rfl
 
 /-- The inner product as a sesquilinear form.
 
@@ -139,13 +137,13 @@ theorem inner_self_ofReal_re (x : E) : (re ⟪x, x⟫ : 𝕜) = ⟪x, x⟫ :=
 @[simp mid+1, simp_core mid+1]
 theorem inner_self_nonpos {x : E} : re ⟪x, x⟫ ≤ 0 ↔ x = 0 := by
   constructor
-  . have ⟨c,d,hc,_,h⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=E)
+  · have ⟨c,d,hc,_,h⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=E)
     have ⟨h,_⟩ := h x
     intro h'; simp[h'] at h
     have : ‖x‖^2 ≤ 0 := by nlinarith
     have : ‖x‖ ≤ 0 := by nlinarith
     simp_all only [gt_iff_lt, smul_eq_mul, norm_le_zero_iff]
-  . simp_all only [inner_zero_right, map_zero, le_refl, implies_true]
+  · simp_all only [inner_zero_right, map_zero, le_refl, implies_true]
 
 theorem real_inner_self_nonpos {x : F} : ⟪x, x⟫_ℝ ≤ 0 ↔ x = 0 :=
   @inner_self_nonpos ℝ F _ _ _ x
@@ -153,10 +151,10 @@ theorem real_inner_self_nonpos {x : F} : ⟪x, x⟫_ℝ ≤ 0 ↔ x = 0 :=
 @[simp mid+1, simp_core mid+1]
 theorem inner_self_eq_zero {x : E} : ⟪x, x⟫ = 0 ↔ x = 0 := by
   constructor
-  . intro h
+  · intro h
     apply (inner_self_nonpos (𝕜:=𝕜)).1
     simp only [h, map_zero, le_refl]
-  . simp_all only [inner_zero_right, implies_true]
+  · simp_all only [inner_zero_right, implies_true]
 
 theorem inner_self_ne_zero {x : E} : ⟪x, x⟫ ≠ 0 ↔ x ≠ 0 :=
   inner_self_eq_zero.not
@@ -272,10 +270,10 @@ instance : AdjointSpace 𝕜 (X×Y) where
     apply Exists.intro (cx*cx + cy*cy) -- todo: fix this constant
     apply Exists.intro (dx*dx + dy*dy) -- todo: fix this constant
     constructor
-    . positivity
+    · positivity
     constructor
-    . positivity
-    . intro (x,y)
+    · positivity
+    · intro (x,y)
       sorry_proof
   conj_symm := by simp
   add_left := by simp[inner_add_left]; intros; ac_rfl

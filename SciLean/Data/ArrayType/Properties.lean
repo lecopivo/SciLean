@@ -29,8 +29,8 @@ variable {R : Type} [CommSemiring R] [AddCommGroup Elem] [Module R Elem]
 theorem LeanColls.Indexed.get.arg_cont.IsLinearMap_rule_simple (idx : Idx) :
     IsLinearMap R (fun xs : Cont => xs[idx]) := by
   constructor
-  . intros; simp
-  . intros; simp
+  · intros; simp
+  · intros; simp
 
 #generate_linear_map_simps LeanColls.Indexed.get.arg_cont.IsLinearMap_rule_simple
 
@@ -152,8 +152,8 @@ variable {R : Type} [CommSemiring R] [AddCommGroup Elem] [Module R Elem]
 theorem LeanColls.Indexed.set.arg_contelem.IsLinearMap_rule_simple (idx : Idx) :
     IsLinearMap R (fun ((cont,elem) : Cont×Elem) => Indexed.set cont idx elem) := by
   constructor
-  . intros; simp; ext; sorry_proof
-  . intros; simp; ext; sorry_proof
+  · intros; simp; ext; sorry_proof
+  · intros; simp; ext; sorry_proof
 
 #generate_linear_map_simps LeanColls.Indexed.set.arg_contelem.IsLinearMap_rule_simple
 
@@ -314,8 +314,8 @@ variable {R : Type} [CommSemiring R] [AddCommGroup Elem] [Module R Elem]
 theorem LeanColls.Indexed.ofFn.arg_f.IsLinearMap_rule_simple :
     IsLinearMap R (fun f : Idx → Elem => Indexed.ofFn (C:=Cont) f) := by
   constructor
-  . intros; ext; simp
-  . intros; ext; simp
+  · intros; ext; simp
+  · intros; ext; simp
 
 #generate_linear_map_simps LeanColls.Indexed.ofFn.arg_f.IsLinearMap_rule_simple
 

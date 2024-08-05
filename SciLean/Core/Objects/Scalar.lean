@@ -6,7 +6,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
-import Mathlib.Analysis.NormedSpace.WithLp
+import Mathlib.Analysis.Normed.Lp.WithLp
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
 import SciLean.Mathlib.Analysis.AdjointSpace.Basic

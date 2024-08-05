@@ -168,9 +168,9 @@ theorem smooth_rule
 
   unfold HasParamRevFDerivWithJumpsAt
   constructor
-  . convert HasParamFDerivWithJumpsAt.differentiable_at_rule R w f hf
-    . fun_trans [revFDeriv]
-  . simp [revFDeriv]
+  · convert HasParamFDerivWithJumpsAt.differentiable_at_rule R w f hf
+    · fun_trans [revFDeriv]
+  · simp [revFDeriv]
 
 
 theorem comp_differentiable_jumps_rule
@@ -196,14 +196,14 @@ theorem comp_differentiable_jumps_rule
 
   unfold HasParamRevFDerivWithJumpsAt
   constructor
-  . convert HasParamFDerivWithJumpsAt.comp_differentiable_jumps_rule R f g w hf hg.1
-    . rename_i w x
+  · convert HasParamFDerivWithJumpsAt.comp_differentiable_jumps_rule R f g w hf hg.1
+    · rename_i w x
       have hg' : IsContinuousLinearMap R (g' x).2 := by sorry_proof
       simp [revFDeriv, hg.2]
       fun_trans
       sorry_proof
-    . simp[List.map_append]; rfl
-  . simp [revFDeriv,hg.2]
+    · simp[List.map_append]
+  · simp [revFDeriv,hg.2]
 
 
 @[gtrans]
@@ -237,11 +237,11 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
   have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry_proof
 
   constructor
-  . convert Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
-    . fun_trans
-    . fun_trans
-    . simp[List.map_append]; rfl
-  . simp [hf.2, hg.2]
+  · convert Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
+    · fun_trans
+    · fun_trans
+    · simp[List.map_append]; rfl
+  · simp [hf.2, hg.2]
 
 
 
@@ -302,8 +302,8 @@ theorem comp2_differentiable_jumps_rule
 
   convert comp_differentiable_jumps_rule (R:=R) (fun w (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
     hf (by gtrans (disch:=first | fun_prop | assumption))
-  . fun_trans [hg₁.2,hg₂.2]; ac_rfl
-  . simp[List.map_append]; rfl
+  · fun_trans [hg₁.2,hg₂.2]; ac_rfl
+  · simp[List.map_append]; rfl
 
 
 end HasParamRevFDerivWithJumpsAt
@@ -383,10 +383,10 @@ theorem HDiv.hDiv.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
   have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry_proof
 
   constructor
-  . convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof hg'
-    . fun_trans [hf.2,hg.2]; ring
-    . simp[List.map_append]; rfl
-  . simp [hf.2, hg.2]
+  · convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof hg'
+    · fun_trans [hf.2,hg.2]; ring
+    · simp[List.map_append]; rfl
+  · simp [hf.2, hg.2]
 
 
 @[gtrans]
@@ -412,13 +412,13 @@ theorem ite.arg_te.HasParamRevFDerivWithJumpsAt_rule
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor
-  . convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
-    . fun_trans; simp only [hf.2, hg.2, Tactic.if_pull]
-    . simp[List.map_append,ftrans_simp]
+  · convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
+    · fun_trans; simp only [hf.2, hg.2, Tactic.if_pull]
+    · simp[List.map_append,ftrans_simp]
       constructor
-      . simp[frontierGrad]; simp (disch:=sorry_proof) only [adjoint_inner_left]; simp [Inner.inner]
-      . rfl
-  . dsimp; intros; split_ifs <;> simp [hf.2, hg.2]
+      · simp[frontierGrad]; simp (disch:=sorry_proof) only [adjoint_inner_left]; simp [Inner.inner]
+      · rfl
+  · dsimp; intros; split_ifs <;> simp [hf.2, hg.2]
 
 
 ----------------------------------------------------------------------------------------------------

@@ -103,6 +103,6 @@ def test_fgrad (numSamples : ℕ) (w : R) :=
 
 #eval 0
 
-#eval Rand.print_mean_variance (test_fderiv 1 0.5) 1000 ""
-#eval (test_fwdFDeriv 100 0.5).get
-#eval (test_fgrad 100 0.5).get
+#eval! Rand.print_mean_variance (test_fderiv 1 0.5) 1000 ""
+#eval! (test_fwdFDeriv 100 0.5).get
+#eval! (test_fgrad 100 0.5).get

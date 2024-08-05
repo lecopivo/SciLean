@@ -211,7 +211,7 @@ unsafe def gtrans (e : Expr) : GTransM (Option Expr) := do
   trace[Meta.Tactic.gtrans.candidates] "look up key: {keys}"
   trace[Meta.Tactic.gtrans.candidates] "candidates: {thms.map (·.thmName)}"
 
-  let minOutArg := gtransDecl.outputArgs.minI
+  let minOutArg := gtransDecl.outputArgs.getMax? (·>·) |>.getD 0
 
   for thm in thms do
     if let .some prf ←

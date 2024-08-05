@@ -1,6 +1,6 @@
 import SciLean.Tactic.FTrans.Init
 import Mathlib.Algebra.Group.Prod
-import Mathlib.GroupTheory.GroupAction.Prod
+import Mathlib.GroupTheory.GroupAction.Basic
 import Mathlib.Algebra.SMulWithZero
 import Mathlib.Data.Complex.Basic
 import Mathlib.LinearAlgebra.Dimension.Constructions

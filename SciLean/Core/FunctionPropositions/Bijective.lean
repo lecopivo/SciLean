@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Field.Defs
-import Mathlib.GroupTheory.GroupAction.Defs
+import Mathlib.GroupTheory.GroupAction.Basic
 import Mathlib.Tactic.FunProp
 
 import SciLean.Util.SorryProof

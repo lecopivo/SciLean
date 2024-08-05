@@ -138,14 +138,12 @@ partial def defineTransitiveFunTransFromFunProp (proof : Expr) (ctx : Array Expr
         let thmType ← mkForallFVars xs' thmType
         forallTelescope thmType fun xs'' thmType => do
 
-          let r ← generateFunTransDefAndTheorem thmType (thmProof.beta xs'') (ctx++xs'')
+          let _ ← generateFunTransDefAndTheorem thmType (thmProof.beta xs'') (ctx++xs'')
                      suffix {defineIfSimilarExists := false, defineNewFunction := false }
 
 
-#check Lean.MetaM
-
 open Mathlib.Meta
-elab  "def_fun_trans" doTrans:("with_transitive")? suffix:(ident)? bs:bracketedBinder* ":" e:term "by" c:Lean.Parser.Tactic.Conv.convSeq : command => do
+elab  "def_fun_trans" _doTrans:("with_transitive")? suffix:(ident)? bs:bracketedBinder* ":" e:term "by" c:Lean.Parser.Tactic.Conv.convSeq : command => do
 
   runTermElabM fun ctx₁ => do
     elabBinders bs fun ctx₂ => do
@@ -157,7 +155,7 @@ elab  "def_fun_trans" doTrans:("with_transitive")? suffix:(ident)? bs:bracketedB
 
 
 open Mathlib.Meta
-elab  "abbrev_fun_trans" doTrans:("with_transitive")? suffix:(ident)? bs:bracketedBinder* ":" e:term "by" c:Lean.Parser.Tactic.Conv.convSeq : command => do
+elab  "abbrev_fun_trans" _doTrans:("with_transitive")? suffix:(ident)? bs:bracketedBinder* ":" e:term "by" c:Lean.Parser.Tactic.Conv.convSeq : command => do
 
   runTermElabM fun ctx₁ => do
     elabBinders bs fun ctx₂ => do

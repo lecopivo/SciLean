@@ -44,8 +44,8 @@ def lfunTransConv : Tactic := fun stx => do
   | `(conv| lfun_trans $[$cfg]? $[$disch]? $[only]? $[[$a,*]]?) => do
 
     -- set fun_trans config
-    funTransConfig.modify
-      fun c => { c with funPropConfig := { c.funPropConfig with disch := stxToDischarge disch}}
+    funTransContext.modify
+      fun c => { c with funPropContext := { c.funPropContext with disch := stxToDischarge disch}}
 
     let a := a.getD (Syntax.TSepArray.mk #[])
     if stx[3].isNone then
@@ -54,6 +54,6 @@ def lfunTransConv : Tactic := fun stx => do
       evalTactic (← `(conv| lsimp $[$cfg]? $[$disch]? only [↓fun_trans_simproc,$a,*]))
 
     -- reset fun_trans config
-    funTransConfig.modify fun _ => {}
+    funTransContext.modify fun _ => {}
 
   | _ => throwUnsupportedSyntax
