@@ -62,17 +62,22 @@ partial def maybeLetBind (e : Expr) (name := `x) : LSimpM Result :=  do
       throwError "internal bug, function `maybeLetBind` can't handle proofs right now!"
     return { expr := ← mkAppM ``Prod.mk #[r₁.expr, r₂.expr], vars := r₁.vars ++ r₂.vars }
   else if ← keepAsLetValue e then
-    let lctx ← getLCtx
-    let E ← inferType e
-    if let .some var ← lctx.findDeclM? (fun decl =>
-                           if decl.hasValue &&
-                              decl.value == e &&
-                              decl.type == E then
-                           return some decl.toExpr else return none) then
-      return { expr := var }
-    else
-      let var ← introLetDecl name none e
-      return { expr := var, vars := #[var] }
+
+    -- todo: add option to enable this
+    -- attempt at reusing existing variables but it does not work see
+    -- for example see test/lsimp_fvar_reuse_issue.lean
+    -- in that example is seems that `ldsimp` introduces the `a` fvar into the context
+    -- let lctx ← getLCtx
+    -- let E ← inferType e
+    -- if let .some var ← lctx.findDeclM? (fun decl =>
+    --                        if decl.hasValue &&
+    --                           decl.value == e &&
+    --                           decl.type == E then
+    --                        return some decl.toExpr else return none) then
+    --   return { expr := var }
+    -- else
+    let var ← introLetDecl name none e
+    return { expr := var, vars := #[var] }
   else
     return { expr := e }
 
@@ -488,6 +493,7 @@ partial def simpLet (e : Expr) : LSimpM Result := do
         else
           pure (v', #[])
 
+      -- todo: add option to enable this
       -- -- special handling of `let x := if c then t else e`
       -- if let .some (_,c,_,t,e) := v'.app5? ``ite then
       --   let t := b.instantiate1 t
