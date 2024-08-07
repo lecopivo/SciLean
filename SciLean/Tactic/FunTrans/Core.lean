@@ -26,7 +26,11 @@ def runFunProp (e : Expr) : SimpM (Option Expr) := do
   modify (fun s => { s with cache := {}}) -- hopefully this prevent duplicating the cache
   let ctx   := (← funTransContext.get).funPropContext
   let state := { cache := cache : FunProp.State }
-  let (result?, state) ← FunProp.funProp e |>.run ctx state
+  -- We run fun_prop at default transparency
+  -- As fun_prop unfolds `id`, `Function.comp`, ... it tries to apply `Continuous id` to
+  -- `Continuous (fun x => x)` and this fails when running at 'reducible and instances' transparency
+  -- and that is the default transparency simp is running in
+  let (result?, state) ← withDefault <| FunProp.funProp e |>.run ctx state
   modify (fun simpState => { simpState with cache := state.cache })
 
   match result? with
@@ -62,12 +66,25 @@ def synthesizeArgs (thmId : FunProp.Origin) (xs : Array Expr) : SimpM Bool := do
       if (← isProp type) then
         if ← FunProp.isFunPropGoal type then
           if let .some r ← runFunProp type then
-            x.mvarId!.assignIfDefeq r
+            try
+              -- we assign the result at default transparency as we run `fun_prop` at default
+              -- transparency, see comment at the function `runFunProp`
+              withDefault <| x.mvarId!.assignIfDefeq r
+            catch _ =>
+              trace[Meta.Tactic.fun_trans.discharge]
+                "{← ppOrigin' thmId}, failed to assign {r} to ({x} : {type})"
+              return false
             continue
         else
           let disch := (← funTransContext.get).funPropContext.disch
           if let .some r ← disch type then
-            x.mvarId!.assignIfDefeq r
+            try
+              -- we run this at default transparency just in case too
+              withDefault <| x.mvarId!.assignIfDefeq r
+            catch _ =>
+              trace[Meta.Tactic.fun_trans.discharge]
+                "{← ppOrigin' thmId}, failed to assign {r} to ({x} : {type})"
+              return false
             continue
 
       if ¬(← isProp type) then

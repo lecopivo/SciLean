@@ -57,3 +57,24 @@ def lfunTransConv : Tactic := fun stx => do
     funTransContext.modify fun _ => {}
 
   | _ => throwUnsupportedSyntax
+
+
+-- @[tactic lfunTransTacticStx]
+-- def lfunTransTactic : Tactic := fun stx => do
+--   match stx with
+--   | `(tactic| lfun_trans $[$cfg]? $[$disch]? $[only]? $[[$a,*]]?) => do
+
+--     -- set fun_trans config
+--     funTransContext.modify
+--       fun c => { c with funPropContext := { c.funPropContext with disch := stxToDischarge disch}}
+
+--     let a := a.getD (Syntax.TSepArray.mk #[])
+--     if stx[3].isNone then
+--       evalTactic (← `(tactic| lsimp $[$cfg]? $[$disch]? [↓fun_trans_simproc,$a,*]))
+--     else
+--       evalTactic (← `(tactic| lsimp $[$cfg]? $[$disch]? only [↓fun_trans_simproc,$a,*]))
+
+--     -- reset fun_trans config
+--     funTransContext.modify fun _ => {}
+
+--   | _ => throwUnsupportedSyntax
