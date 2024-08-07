@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Module.Basic
-import Mathlib.Data.RCLike.Lemmas
+import Mathlib.Analysis.RCLike.Lemmas
 import Mathlib.Topology.Algebra.Module.LocallyConvex
 
 import SciLean.Util.SorryProof
@@ -47,20 +47,37 @@ def Smooth          (f : K → F)           := ∀ x n, DifferentiableAtN f x n
 end Curve
 
 
-class ConvenientAddGroup (X : Type _)
+/--
+Convenient Additive Commutative Group
+
+This is just a convenience class as it is just a topological additive group.
+It is meant to be used to conjunction with `ConvenientSpace` such that instead of writing
+```
+variable {X : Type} [AddCommGroup X] [TopologicalSpace X] [TopologicalAddGroup X]
+  [ConvenientSpace ℝ X]
+```
+you can write
+```
+variable {X : Type} [ConvenientAddCommGroup X] [ConvenientSpace ℝ X]
+```
+-/
+class ConvenientAddCommGroup (X : Type _)
   extends
     AddCommGroup X,
-    TopologicalSpace X,
+    TopologicalSpace X, -- maybe uniform space?
     TopologicalAddGroup X
 
+/--
+Convenient Vector Space
 
-class ConvenientSpace (K : Type _) [RCLike K] (X : Type _) [ConvenientAddGroup X]
+A topological vector space that with smooth maps form cartesian closed category. -/
+class ConvenientSpace (K : Type _) [RCLike K] (X : Type _) [ConvenientAddCommGroup X]
   extends
     Module K X,
     ContinuousSMul K X
+    -- LocallyConvexSpace K X -- this works only for `K=ℝ`
   where
-    -- locally convex in some sense, mathlib definition is odd
-    -- mild completeness condition
+    /-- Mild completeness condition see https://en.wikipedia.org/wiki/Convenient_vector_space#Convenient_vector_spaces -/
     scalar_wise_smooth : ∀ (c : K → X),
       Curve.Smooth c
       ↔
@@ -102,17 +119,22 @@ section CommonVectorSpaces
   abbrev TopologicalAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :=
    @TopologicalAddGroup.mk α _ (AddGroup.mkSorryProofs) (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
 
-  abbrev ConvenientAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :
-      ConvenientAddGroup α :=
-    @ConvenientAddGroup.mk _ AddCommGroup.mkSorryProofs _ TopologicalAddGroup.mkSorryProofs
+  abbrev ConvenientAddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :
+      ConvenientAddCommGroup α :=
+    @ConvenientAddCommGroup.mk _ AddCommGroup.mkSorryProofs _ TopologicalAddGroup.mkSorryProofs
 
   abbrev ContinuousSMul.mkSorryProofs {α} [SMul K α] [TopologicalSpace α] :
       ContinuousSMul K α := ContinuousSMul.mk sorry_proof
 
-  abbrev ConvenientSpace.mkSorryProofs {α} [ConvenientAddGroup α] [SMul K α] : ConvenientSpace K α :=
+  abbrev ConvenientSpace.mkSorryProofs {α} [ConvenientAddCommGroup α] [SMul K α] : ConvenientSpace K α :=
     @ConvenientSpace.mk
       (toModule := Module.mkSorryProofs)
       (toContinuousSMul := ContinuousSMul.mkSorryProofs)
       sorry_proof
 
-  instance [RCLike K] : ConvenientAddGroup K := ⟨⟩
+  instance [RCLike K] : ConvenientAddCommGroup K := ⟨⟩
+
+  instance [NormedAddCommGroup X] : ConvenientAddCommGroup X := ⟨⟩
+  instance {K} [RCLike K] [NormedAddCommGroup X] [NormedSpace K X] :
+    ConvenientSpace K X where
+    scalar_wise_smooth := sorry_proof
