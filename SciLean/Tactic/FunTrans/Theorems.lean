@@ -153,9 +153,9 @@ deriv (fun x' => 1/(1-x')) x
 we prefer the version `deriv (fun x' => f (g x')) x` over `deriv (fun x' => f (g x'))` as the former
 uses `DifferntiableAt` insed of `Differentiable` as preconditions. -/
 def getLambdaTheorems (funTransName : Name) (type : LambdaTheoremType) (nargs : Option Nat):
-    CoreM (Option (Array LambdaTheorem)) := do
+    CoreM (Array LambdaTheorem) := do
   let .some thms := (lambdaTheoremsExt.getState (← getEnv)).theorems.find? (funTransName,type)
-    | return none
+    | return #[]
 
   match nargs with
   | none => return thms

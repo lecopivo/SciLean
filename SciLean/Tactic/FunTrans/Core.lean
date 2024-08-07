@@ -165,9 +165,11 @@ def tryTheorem? (e : Expr) (thmOrigin : FunProp.Origin) : SimpM (Option Simp.Res
 def applyIdRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Result) := do
   trace[Meta.Tactic.fun_trans.step] "id case"
 
-  let .some thms ← getLambdaTheorems funTransDecl.funTransName .id e.getAppNumArgs
-    | trace[Meta.Tactic.fun_trans] "missing identity rule to transform `{← ppExpr e}`"
-      return none
+  let thms ← getLambdaTheorems funTransDecl.funTransName .id e.getAppNumArgs
+
+  if thms.size = 0 then
+    trace[Meta.Tactic.fun_trans] "missing identity rule to transform `{← ppExpr e}`"
+    return none
 
   for thm in thms do
     if let .some r ← tryTheorem? e (.decl thm.thmName) then
@@ -176,9 +178,11 @@ def applyIdRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Re
   return none
 
 def applyConstRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Result) := do
-  let .some thms ← getLambdaTheorems funTransDecl.funTransName .const e.getAppNumArgs
-    | trace[Meta.Tactic.fun_trans] "missing const rule to transform `{← ppExpr e}`"
-      return none
+  let thms ← getLambdaTheorems funTransDecl.funTransName .const e.getAppNumArgs
+
+  if thms.size = 0 then
+    trace[Meta.Tactic.fun_trans] "missing const rule to transform `{← ppExpr e}`"
+    return none
 
   for thm in thms do
     if let .some r ← tryTheorem? e (.decl thm.thmName) then
@@ -187,9 +191,11 @@ def applyConstRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp
   return none
 
 def applyCompRule (funTransDecl : FunTransDecl) (e f g : Expr) : SimpM (Option Simp.Result) := do
-  let .some thms ← getLambdaTheorems funTransDecl.funTransName .comp e.getAppNumArgs
-    | trace[Meta.Tactic.fun_trans] "missing comp rule to transform `{← ppExpr e}`"
-      return none
+  let thms ← getLambdaTheorems funTransDecl.funTransName .comp e.getAppNumArgs
+
+  if thms.size = 0 then
+    trace[Meta.Tactic.fun_trans] "missing comp rule to transform `{← ppExpr e}`"
+    return none
 
   for thm in thms do
     let .comp id_f id_g := thm.thmArgs | continue
@@ -200,9 +206,11 @@ def applyCompRule (funTransDecl : FunTransDecl) (e f g : Expr) : SimpM (Option S
   return none
 
 def applyLetRule (funTransDecl : FunTransDecl) (e f g : Expr) : SimpM (Option Simp.Result) := do
-  let .some thms ← getLambdaTheorems funTransDecl.funTransName .letE e.getAppNumArgs
-    | trace[Meta.Tactic.fun_trans] "missing let rule to transform `{← ppExpr e}`"
-      return none
+  let thms ← getLambdaTheorems funTransDecl.funTransName .letE e.getAppNumArgs
+
+  if thms.size = 0 then
+    trace[Meta.Tactic.fun_trans] "missing let rule to transform `{← ppExpr e}`"
+    return none
 
   for thm in thms do
     let .letE id_f id_g := thm.thmArgs | continue
@@ -213,10 +221,13 @@ def applyLetRule (funTransDecl : FunTransDecl) (e f g : Expr) : SimpM (Option Si
   return none
 
 def applyApplyRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Result) := do
-  let .some thms ← getLambdaTheorems funTransDecl.funTransName .apply e.getAppNumArgs
-    | trace[Meta.Tactic.fun_trans]
-        "missing projection rule to transform `{← ppExpr e}`"
-      return none
+  let thms ← getLambdaTheorems funTransDecl.funTransName .apply e.getAppNumArgs
+
+  if thms.size = 0 then
+    trace[Meta.Tactic.fun_trans]
+      "missing projection rule to transform `{← ppExpr e}`"
+    return none
+
   for thm in thms do
     if let .some r ← tryTheorem? e (.decl thm.thmName) then
       return r
@@ -224,9 +235,11 @@ def applyApplyRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp
   return none
 
 def applyPiRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Result) := do
-  let .some thms ← getLambdaTheorems funTransDecl.funTransName .pi e.getAppNumArgs
-    | trace[Meta.Tactic.fun_trans] "missing pi rule to transform `{← ppExpr e}`"
-      return none
+  let thms ← getLambdaTheorems funTransDecl.funTransName .pi e.getAppNumArgs
+
+  if thms.size = 0 then
+    trace[Meta.Tactic.fun_trans] "missing pi rule to transform `{← ppExpr e}`"
+    return none
 
   for thm in thms do
     if let .some r ← tryTheorem? e (.decl thm.thmName) then
@@ -364,7 +377,7 @@ def tryTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
               return r
           | .some (.some (f,g)) =>
             trace[Meta.Tactic.fun_trans.step]
-              s!"decomposing to later use {←ppOrigin' thm.thmOrigin}"
+              s!"decomposing to later use {←ppOrigin' thm.thmOrigin}, {← ppExpr (←fData.toExpr)} = {← ppExpr f}∘{← ppExpr g}"
             if let .some r ← applyCompRule funTransDecl e f g then
               return r
           | _ => continue
