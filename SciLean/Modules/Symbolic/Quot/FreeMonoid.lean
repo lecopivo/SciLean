@@ -1,4 +1,6 @@
-import SciLean.Algebra
+import Mathlib.Algebra.Module.Basic
+
+import SciLean.Util.SorryProof
 
 inductive Comparison {X : Type u} [LT X] (x y : X) where
   | cpEq (h : x = y) : Comparison x y
@@ -17,10 +19,10 @@ instance [LT α] [DecidableEq α] [∀ a b : α, Decidable (a < b)] : DecidableC
     then cpEq h
     else if h : x < y
     then cpLt h
-    else cpGt sorry
+    else cpGt sorry_proof
 }
 
--- instance [LT ι] [Enumtype ι] : DecidableCp ι := sorry
+-- instance [LT ι] [Enumtype ι] : DecidableCp ι := sorry_proof
 
 instance : DecidableCp ℕ :=
 {
@@ -29,7 +31,7 @@ instance : DecidableCp ℕ :=
     then cpEq h
     else if h : x < y
     then cpLt h
-    else cpGt sorry
+    else cpGt sorry_proof
 }
 
 abbrev decCp {X} [LT X] [DecidableCp X] (x y : X) : Comparison x y := DecidableCp.compare x y
@@ -37,12 +39,12 @@ abbrev decCp {X} [LT X] [DecidableCp X] (x y : X) : Comparison x y := DecidableC
 instance {X} [LT X] [DecidableCp X] : DecidableEq X := λ x y =>
   match decCp x y with
   | cpEq h => isTrue h
-  | _ => isFalse sorry
+  | _ => isFalse sorry_proof
 
 instance {X} [LT X] [DecidableCp X] (x y : X) : Decidable (x < y) :=
   match decCp x y with
   | cpLt h => isTrue h
-  | _ => isFalse sorry
+  | _ => isFalse sorry_proof
 
 
 namespace SciLean
@@ -78,11 +80,11 @@ namespace FreeMonoid
 
   instance {X} : Monoid (FreeMonoid X) :=
   {
-    mul_assoc := sorry
-    mul_one := sorry
-    one_mul := sorry
-    npow_zero' := sorry
-    npow_succ' := sorry
+    mul_assoc := sorry_proof
+    mul_one := sorry_proof
+    one_mul := sorry_proof
+    -- npow_zero' := sorry_proof
+    -- npow_succ' := sorry_proof
   }
 
 -- def List.decGradedLexComparison {α}
@@ -153,25 +155,25 @@ namespace FreeMonoid
   instance {X} [LT X] [DecidableCp X] : DecidableCp (FreeMonoid X) :=
   ⟨ λ x y =>
     match gradedLt x.1 y.1 with
-    | Ordering.lt => cpLt sorry
-    | Ordering.gt => cpGt sorry
-    | Ordering.eq => cpEq sorry⟩
+    | Ordering.lt => cpLt sorry_proof
+    | Ordering.gt => cpGt sorry_proof
+    | Ordering.eq => cpEq sorry_proof⟩
 
     --   match m1., m'.1 with
     -- let n  := m.rank
     -- let n' := m'.rank
     -- if n < n' then
-    --   cpLt sorry
+    --   cpLt sorry_proof
     -- else if n' < n then
-    --   cpGt sorry
+    --   cpGt sorry_proof
     -- else
     --   match m.1, m'.1 with
     --   | x :: xs, y :: ys =>
     --     match compare x y with
     --     |
-    --   | [], y :: ys => cpLt sorry
-    --   | x :: xs, [] => cpGt sorry
-    --   | [], [] => cpEq sorry
+    --   | [], y :: ys => cpLt sorry_proof
+    --   | x :: xs, [] => cpGt sorry_proof
+    --   | [], [] => cpEq sorry_proof
     -- match m.1, m'.1 with
     -- | x1 :: xs1, x2 :: xs2 =>
     --  if x1 = x2 then

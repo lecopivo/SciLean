@@ -1,5 +1,5 @@
-import SciLean.Quot.FreeMonoid
-import SciLean.Quot.QuotQ
+import SciLean.Modules.Symbolic.Quot.FreeMonoid
+import SciLean.Modules.Symbolic.Quot.QuotQ
 
 inductive List.Sorted {X : Type u} [LT X] : List X → Prop where
 | empty : Sorted []
@@ -47,7 +47,7 @@ def napply (f : α → α) (n : ℕ) (a : α) : α :=
 export Rank (rank)
 
 
-class Monomial (M) (K : Type v) (X : Type u) extends HMul K M M, Mul M where
+class Monomial (M) (K : Type v) (X : Type u) [HMul K M M] [Mul M] where
   intro : K → X → M
   base : M → X
   coef : M → K
@@ -208,20 +208,28 @@ namespace FreeMonomial
 
   variable {K ι} [Zero K] [One K] [Mul K] [DecidableEq K] -- [Reduce K] [Normalize K]  --[QNormalize (FreeEq K X)]
 
-  instance (c : K) : IsQHom (FreeEq K ι) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance (n : Nat) (c : K) : IsQHom' (redLvl n) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  @[fun_prop]
+  theorem smul_qhom (c : K) : IsQHom (FreeEq K ι) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry_proof
+
+  @[fun_prop]
+  theorem smul_qhom' (n : Nat) (c : K) : IsQHom' (redLvl n) (FreeEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry_proof
+
+
   instance {n : Nat} : HMul K (FreeMonomial K ι) (FreeMonomial K ι) :=
-    ⟨λ c m => Quot'.lift' (redLvl n) (λ x => ⟨c*x.coef, x.base⟩) m⟩
+    ⟨λ c m => Quot'.lift' (redLvl n) (λ x => ⟨c*x.coef, x.base⟩) (by fun_prop) m⟩
 
-  instance : IsQHom₂ (FreeEq K ι) (FreeEq K ι) (FreeEq K ι)
-    (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
+  theorem mul_qhom₂ : IsQHom₂ (FreeEq K ι) (FreeEq K ι) (FreeEq K ι)
+    (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry_proof
   instance : Mul (FreeMonomial K ι) :=
-  ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
+  ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) sorry_proof⟩
 
-  instance (c : K) : IsQHom (FreeEq K ι) (FreeEq K ι) (λ x => c * x) := sorry
-  instance {n} (c : K) : IsQHom' (redLvl n) (FreeEq K ι) (λ x => c * x) := sorry
+  @[fun_prop]
+  theorem mul_qhom (c : K) : IsQHom (FreeEq K ι) (FreeEq K ι) (λ x => c * x) := sorry_proof
+
+  @[fun_prop]
+  theorem mul_qhom' {n} (c : K) : IsQHom' (redLvl n) (FreeEq K ι) (λ x => c * x) := sorry_proof
   instance : HMul K (FreeMonomial K ι) (FreeMonomial K ι) :=
-  ⟨λ c => Quot'.lift' (redLvl 0) (λ x => c * x)⟩
+  ⟨λ c => Quot'.lift' (redLvl 0) (λ x => c * x) (by fun_prop)⟩
 
   instance : Zero (FreeMonomial K ι) := ⟨⟦⟨⟨0, 1⟩, normLvl, sorry⟩⟧⟩
   instance : One (FreeMonomial K ι) := ⟨⟦⟨⟨1, 1⟩, normLvl, sorry⟩⟧⟩
@@ -242,8 +250,8 @@ namespace FreeMonomial
   {
     mul_one := sorry
     one_mul := sorry
-    npow_zero' := sorry
-    npow_succ' := sorry
+    -- npow_zero' := sorry
+    -- npow_succ' := sorry
   }
 
   instance : MonoidWithZero (FreeMonomial K ι) :=
@@ -263,7 +271,7 @@ namespace FreeMonomial
   instance [ToString ι] [ToString K] : ToString (FreeMonomial K ι)
     := ⟨λ m => m.toString "⊗" "*"⟩
 
-  instance {lvl} [QReduce (FreeEq K ι) lvl] : Reduce (FreeMonomial K ι) lvl := Quot'.instReduceQuot'
+  -- instance {lvl} [QReduce (FreeEq K ι) lvl] : Reduce (FreeMonomial K ι) lvl := Quot'.instReduceQuot'
 
 end FreeMonomial
 
@@ -272,15 +280,17 @@ namespace SymMonomial
 
   variable {K ι} [LT ι] [DecidableCp ι] [DecidableEq K] [Zero K] [One K] [Mul K] --[Reduce K] [Normalize K] -- [QNormalize (SymEq K ι)]
 
-  instance (c : K) : IsQHom (SymEq K ι) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
-  instance {n} (c : K) : IsQHom' (redLvl n) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  @[fun_prop]
+  theorem mul_qhom (c : K) : IsQHom (SymEq K ι) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
+  @[fun_prop]
+  theorem mul_qhom' {n} (c : K) : IsQHom' (redLvl n) (SymEq K ι) (λ x => ⟨c*x.coef, x.base⟩) := sorry
   instance : HMul K (SymMonomial K ι) (SymMonomial K ι) :=
-  ⟨λ c => Quot'.lift' (redLvl 1) (λ x => ⟨c*x.coef, x.base⟩)⟩
+  ⟨λ c => Quot'.lift' (redLvl 1) (λ x => ⟨c*x.coef, x.base⟩) (by fun_prop)⟩
 
-  instance : IsQHom₂ (SymEq K ι) (SymEq K ι) (SymEq K ι)
+  theorem mul_qhom₂ : IsQHom₂ (SymEq K ι) (SymEq K ι) (SymEq K ι)
     (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) := sorry
   instance : Mul (SymMonomial K ι) :=
-  ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩)⟩
+  ⟨Quot'.lift₂ (λ x y => ⟨x.coef*y.coef, x.base*y.base⟩) sorry_proof⟩
 
   instance : Zero (SymMonomial K ι) := ⟨⟦⟨⟨0, 1⟩, normLvl, sorry⟩⟧⟩
   instance : One (SymMonomial K ι) := ⟨⟦⟨⟨1, 1⟩, normLvl, sorry⟩⟧⟩
@@ -301,8 +311,6 @@ namespace SymMonomial
   {
     mul_one := sorry
     one_mul := sorry
-    npow_zero' := sorry
-    npow_succ' := sorry
   }
 
   instance : MonoidWithZero (SymMonomial K ι) :=
@@ -330,7 +338,7 @@ namespace SymMonomial
   instance [ToString ι] [ToString K] : ToString (SymMonomial K ι)
     := ⟨λ m => m.toString "*" "*"⟩
 
-  instance {lvl} [QReduce (SymEq K ι) lvl] : Reduce (SymMonomial K ι) lvl := Quot'.instReduceQuot'
+  -- instance {lvl} [QReduce (SymEq K ι) lvl] : Reduce (SymMonomial K ι) lvl := Quot'.instReduceQuot'
 
 end SymMonomial
 
@@ -400,11 +408,12 @@ namespace AltMonomial
 
 end AltMonomial
 
-def m : FreeMonomial Int Nat := ⟦⟨⟨1, ⟨[0,2,0,3]⟩⟩, rawLvl, sorry⟩⟧
-def p : SymMonomial Int Nat := ⟦⟨⟨2, ⟨[0,2,0,3]⟩⟩, rawLvl, sorry⟩⟧
-def w : AltMonomial Int Nat := ⟦⟨⟨2, ⟨[1,0,3]⟩⟩, rawLvl, sorry⟩⟧
-def w' : AltMonomial Int Nat := ⟦⟨⟨0, ⟨[5,2]⟩⟩, rawLvl, sorry⟩⟧
-def w'' : AltMonomial Int Nat := ⟦⟨⟨3, ⟨[5,2]⟩⟩, rawLvl, sorry⟩⟧
+def m : FreeMonomial Int Nat := ⟦⟨⟨1, ⟨[0,2,0,3]⟩⟩, rawLvl, sorry_proof⟩⟧
+def p : SymMonomial Int Nat := ⟦⟨⟨2, ⟨[0,2,0,3]⟩⟩, rawLvl, sorry_proof⟩⟧
+def w : AltMonomial Int Nat := ⟦⟨⟨2, ⟨[1,0,3]⟩⟩, rawLvl, sorry_proof⟩⟧
+def w' : AltMonomial Int Nat := ⟦⟨⟨0, ⟨[5,2]⟩⟩, rawLvl, sorry_proof⟩⟧
+def w'' : AltMonomial Int Nat := ⟦⟨⟨3, ⟨[5,2]⟩⟩, rawLvl, sorry_proof⟩⟧
+
 
 example : (m |> toString) = "1*[0]⊗[2]⊗[0]⊗[3]" := by native_decide
 example : (p*p |>.toDebugString) = "⟦4*[0]⊗[2]⊗[0]⊗[3]⊗[0]⊗[2]⊗[0]⊗[3]⟧₀" := by native_decide

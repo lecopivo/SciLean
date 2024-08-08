@@ -1,4 +1,4 @@
-import SciLean.Quot.Basic
+import SciLean.Modules.Symbolic.Quot.Basic
 
 partial def Nat.toSubscript (n : Nat) : String :=
   let rec impl (k : Nat) : String :=
@@ -72,22 +72,22 @@ namespace SciLean.Quot'
 
     instance decLt (l l' : Level) : Decidable (l < l') :=
     match l, l' with
-    | redLvl n, redLvl n' => if n < n' then isTrue sorry else isFalse sorry
-    | redLvl n, normLvl => isTrue sorry
-    | normLvl, _ => isFalse sorry
+    | redLvl n, redLvl n' => if n < n' then isTrue sorry_proof else isFalse sorry_proof
+    | redLvl n, normLvl => isTrue sorry_proof
+    | normLvl, _ => isFalse sorry_proof
 
     instance decLe (l l' : Level) : Decidable (l ≤ l') :=
     match l, l' with
-    | redLvl n, redLvl n' => if n ≤ n' then isTrue sorry else isFalse sorry
-    | normLvl, normLvl => isFalse sorry
-    | redLvl n, normLvl => isTrue sorry
-    | normLvl, redLvl n' => isFalse sorry
+    | redLvl n, redLvl n' => if n ≤ n' then isTrue sorry_proof else isFalse sorry_proof
+    | normLvl, normLvl => isFalse sorry_proof
+    | redLvl n, normLvl => isTrue sorry_proof
+    | normLvl, redLvl n' => isFalse sorry_proof
 
     instance decEq (l l' : Level) : Decidable (l = l') :=
     match l, l' with
-    | redLvl n, redLvl n' => if n = n' then isTrue sorry else isFalse sorry
-    | normLvl, normLvl => isTrue sorry
-    | _, _ => isFalse sorry
+    | redLvl n, redLvl n' => if n = n' then isTrue sorry_proof else isFalse sorry_proof
+    | normLvl, normLvl => isTrue sorry_proof
+    | _, _ => isFalse sorry_proof
 
     instance : HAdd Level Nat Level :=
     ⟨λ l n' =>
@@ -112,8 +112,14 @@ namespace SciLean.Quot'
   open QForm
 
   --- IsQHom' S R lvl f  preserves all reduction levels bellow or equal to lvl
-  class IsQHom' (lvl : Level) (S : Rel α) [QForm S]  (f : α → α) extends IsQHom S S f where
+  @[fun_prop]
+  structure IsQHom' (lvl : Level) (S : Rel α) [QForm S]  (f : α → α) : Prop where
+    toQHom : IsQHom S S f
     preserve_red : ∀ x lvl', lvl' ≤ lvl → RedForm S lvl' x → RedForm S lvl' (f x)
+
+  @[fun_prop]
+  theorem isqhom'_isqhom (lvl) (S : Rel α) [QForm S] (f : α → α) (hf : IsQHom' lvl S f) :
+    IsQHom S S f := hf.toQHom
 
   -- class IsQHomN (S : Rel α) (R : Rel β) [QForm S] [QForm R] (f : α → β) extends IsQHomR S R f where
   --   preserve_norm : ∀ x : α, NormForm S x → NormForm R (f x)
@@ -218,7 +224,7 @@ namespace SciLean.Quot'
 
     def reduce (x : QRepr S) (lvl : Level) [QReduce S lvl] : QRepr S :=
       if lvl > x.lvl then
-        ⟨QReduce.reduce S lvl x.repr, lvl, sorry⟩
+        ⟨QReduce.reduce S lvl x.repr, lvl, sorry_proof⟩
       else
         x
 
@@ -240,7 +246,7 @@ namespace Quot'
   variable {γ} {T : Rel γ} [QForm T]
 
   -- Normalized representant is unique, follows from `QForm.norm_eq`
-  def nrepr [QNormalize S] : Quot' S → α := Quot.lift (λ x => x.normalize.repr) sorry
+  def nrepr [QNormalize S] : Quot' S → α := Quot.lift (λ x => x.normalize.repr) sorry_proof
 
   noncomputable
   def repr' (x : Quot' S) : QRepr S := x.repr
@@ -248,32 +254,32 @@ namespace Quot'
   noncomputable
   def repr (x : Quot' S) : α := x.repr'.repr
 
-  def lift (f : α → β) [hom : IsQHom S R f] : Quot' S → Quot' R :=
-  Quot.lift (λ x => ⟦⟨f x.repr, rawLvl, by intro x; rw[QForm.redform_zero]; simp; done⟩⟧) sorry
+  def lift (f : α → β) (hf : IsQHom S R f) : Quot' S → Quot' R :=
+  Quot.lift (λ x => ⟦⟨f x.repr, rawLvl, by intro x; rw[QForm.redform_zero]; simp; done⟩⟧) sorry_proof
 
-  def lift' (lvl : Level) (f : α → α) [hom : IsQHom' lvl S f] : Quot' S → Quot' S :=
-  Quot.lift (λ x => ⟦⟨f x.repr, lvl, sorry⟩⟧) sorry
+  def lift' (lvl : Level) (f : α → α) (hf : IsQHom' lvl S f) : Quot' S → Quot' S :=
+  Quot.lift (λ x => ⟦⟨f x.repr, lvl, sorry_proof⟩⟧) sorry_proof
 
-  abbrev nlift (f : α → α) [hom : IsQHom' normLvl S f] : Quot' S → Quot' S :=
-    lift' normLvl f
+  abbrev nlift (f : α → α) (hf : IsQHom' normLvl S f) : Quot' S → Quot' S :=
+    lift' normLvl f hf
 
-  def lift₂ (f : α → β → γ) [hom : IsQHom₂ S R T f] : Quot' S → Quot' R → Quot' T :=
+  def lift₂ (f : α → β → γ) (hf : IsQHom₂ S R T f) : Quot' S → Quot' R → Quot' T :=
   Quot.lift (λ x =>
-    Quot.lift (λ y => ⟦⟨f x.repr y.repr, rawLvl, sorry⟩⟧
-      ) sorry
-    ) sorry
+    Quot.lift (λ y => ⟦⟨f x.repr y.repr, rawLvl, sorry_proof⟩⟧
+      ) sorry_proof
+    ) sorry_proof
 
   instance {lvl} [QReduce S lvl] : Reduce (Quot' S) lvl :=
   {
-    reduce := Quot.lift (λ x : QRepr S => ⟦x.reduce lvl⟧) sorry
-    id_reduce := sorry
+    reduce := Quot.lift (λ x : QRepr S => ⟦x.reduce lvl⟧) sorry_proof
+    id_reduce := sorry_proof
   }
 
   instance [QNormalize S] [DecidableEq α] : DecidableEq (Quot' S) :=
     λ a b =>
       if a.nrepr = b.nrepr
-      then (isTrue sorry)
-      else (isFalse sorry)
+      then (isTrue sorry_proof)
+      else (isFalse sorry_proof)
 
   variable (x : Quot' S) [QNormalize S]
 
@@ -281,10 +287,10 @@ namespace Quot'
   #check x.repr'
   #check x.nrepr
 
-  constant toDebugString (x : Quot' S) [ToString α] : String :=
+  opaque toDebugString (x : Quot' S) [ToString α] : String :=
     Quot.lift (λ x => s!"⟦{x.repr}⟧{match x.lvl with
                                     | redLvl n => n.toSubscript
-                                    | normLvl => "∞"}") sorry x
+                                    | normLvl => "∞"}") sorry_proof x
 
 end Quot'
 

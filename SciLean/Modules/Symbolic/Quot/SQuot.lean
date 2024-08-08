@@ -1,4 +1,4 @@
-import SciLean.Quot.Basic
+import SciLean.Modules.Symbolic.Quot.Basic
 
 namespace SciLean.Quot'
 
@@ -58,13 +58,13 @@ namespace SciLean.Quot'
       | norm x _ => x
 
     @[simp]
-    theorem raw_repr (x : α) : (raw x : QRepr S).repr = x := by simp[repr] done
+    theorem raw_repr (x : α) : (raw x : QRepr S).repr = x := by simp[repr]
 
     @[simp]
-    theorem red_repr (x : α) (h : RedForm S x) : (red x h : QRepr S).repr = x := by simp[repr] done
+    theorem red_repr (x : α) (h : RedForm S x) : (red x h : QRepr S).repr = x := by simp[repr]
 
     @[simp]
-    theorem norm_repr (x : α) (h : NormForm S x) : (norm x h : QRepr S).repr = x := by simp[repr] done
+    theorem norm_repr (x : α) (h : NormForm S x) : (norm x h : QRepr S).repr = x := by simp[repr]
 
     def isReduced (x : QRepr S) : Bool :=
       match x with

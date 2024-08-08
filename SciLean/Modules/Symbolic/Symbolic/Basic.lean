@@ -1,4 +1,4 @@
-import SciLean.Categories
+-- import SciLean.Categories
 
 namespace SciLean
 

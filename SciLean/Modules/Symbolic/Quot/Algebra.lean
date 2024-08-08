@@ -1,4 +1,4 @@
-import SciLean.Algebra
+-- import SciLean.Algebra
 import SciLean.Quot.Monomial
 
 namespace SciLean
