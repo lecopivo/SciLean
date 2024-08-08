@@ -1,3 +1,0 @@
-import SciLean.Core.FunctionSpaces.SmoothLinearMap
-import SciLean.Core.FunctionSpaces.ContCDiffMap
-import SciLean.Core.FunctionSpaces.ContCDiffMapFD

@@ -1,9 +1,10 @@
-import SciLean.Core.Objects.FinVec
+import SciLean.Analysis.Convenient.FinVec
+import SciLean.Analysis.AdjointSpace.Basic
+import SciLean.Analysis.Scalar.FloatAsReal
+
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.StructType.Algebra
-import SciLean.Core.FloatAsReal
 
-import SciLean.Mathlib.Analysis.AdjointSpace.Basic
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 
@@ -20,7 +21,7 @@ variable {Idx : Type _} [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
 variable {K : Type _} [RCLike K]
 
 instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace Elem] : TopologicalSpace Cont where
-  IsOpen := fun A => ∀ i, IsOpen (fun x : Elem => ∃ a ∈ A, a[i]=x)
+  IsOpen := fun A => ∀ i, IsOpen (fun x : Elem => ∃ a ∈ A, get a i=x)
   isOpen_univ := sorry_proof
   isOpen_inter := sorry_proof
   isOpen_sUnion := sorry_proof
@@ -82,11 +83,11 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] : Vec K Cont w
 
 
 instance (priority := low) [ArrayType Cont Idx Elem] [Inner K Elem] : Inner K Cont where
-  inner := λ f g => ∑ x, ⟪f[x], g[x]⟫[K]
+  inner := λ f g => ∑ x, ⟪get f x, get g x⟫[K]
 
 instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions Elem] :
     TestFunctions Cont where
-  TestFunction x := ∀ i, TestFunction (x[i])
+  TestFunction x := ∀ i, TestFunction (get x i)
 
 
 noncomputable
@@ -95,12 +96,12 @@ instance (priority := low) {p} [ArrayType Cont Idx Elem] [Dist (WithLp p Elem)] 
   dist := fun x y =>
     let x := WithLp.equiv _ _ x
     let y := WithLp.equiv _ _ y
-    (∑ i, (distP p x[i] y[i])^p.toReal)^(1/p.toReal)
+    (∑ i, (distP p (get x i) (get y i))^p.toReal)^(1/p.toReal)
 
 instance (priority := low) [ArrayType Cont Idx Elem] [Dist Elem] :
     Dist Cont where
   dist := fun x y =>
-    let x := (∑ i, (dist x[i] y[i])^2)
+    let x := (∑ i, (dist (get x i) (get y i))^2)
     let y := Scalar.ofReal Float x -- this ugliness it to dodge noncomputable checker
     Scalar.toReal Float y
 
@@ -118,7 +119,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [MetricSpace (WithLp p Elem
 instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
     NormedAddCommGroup Cont where
   norm := fun x =>
-    let x := ∑ i, ‖x[i]‖^2
+    let x := ∑ i, ‖get x i‖^2
     let y := Scalar.ofReal Float x  -- this ugliness it to dodge noncomputable checker
     Scalar.toReal Float y
   dist_eq := by simp[dist,NormedAddCommGroup.dist_eq]
@@ -127,6 +128,11 @@ instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
   dist_triangle := sorry_proof
   edist_dist := sorry_proof
   eq_of_dist_eq_zero := sorry_proof
+  toUniformSpace := by infer_instance
+  uniformity_dist := sorry_proof
+  -- toBornology := sorry
+  -- cobounded_sets := sorry_proof
+
 
 instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace K Elem] :
     NormedSpace K Cont where
@@ -171,12 +177,12 @@ instance (priority := low) [ArrayType Cont Idx Elem] [SemiHilbert K Elem] :
   test_functions_true := by simp[TestFunction]; intros; apply SemiHilbert.test_functions_true
 
 instance (priority := low) [ArrayType Cont Idx K] : Basis Idx K Cont where
-  basis := λ i => Indexed.ofFn fun i' => (if i = i' then 1 else 0)
-  proj := λ i x => x[i]
+  basis := λ i => ofFn fun i' => (if i = i' then 1 else 0)
+  proj := λ i x => get x i
 
 instance (priority := low) [ArrayType Cont Idx K] : DualBasis Idx K Cont where
-  dualBasis := λ i => Indexed.ofFn fun i' => (if i = i' then 1 else 0)
-  dualProj := λ i x => x[i]
+  dualBasis := λ i => ofFn fun i' => (if i = i' then 1 else 0)
+  dualProj := λ i x => get x i
 
 open BasisDuality in
 instance (priority := low) [ArrayType Cont Idx K] : BasisDuality Cont where

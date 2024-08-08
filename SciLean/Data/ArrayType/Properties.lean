@@ -1,9 +1,11 @@
-import SciLean.Core.FunctionPropositions
-import SciLean.Core.FunctionTransformations
+-- import SciLean.Core.FunctionPropositions
+-- import SciLean.Core.FunctionTransformations
 import SciLean.Data.ArrayType.Algebra
+import SciLean.Analysis.Convenient.HasAdjDiff
 
+import SciLean.Meta.GenerateAddGroupHomSimp
 
-open SciLean
+namespace SciLean
 
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
@@ -21,71 +23,204 @@ variable
 -- Indexed.get -----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-section OnVectorSpaces
+section OnModule
+open ArrayType
 
 variable {R : Type} [CommSemiring R] [AddCommGroup Elem] [Module R Elem]
+  {W : Type} [AddCommGroup W] [Module R W]
+
+def_fun_prop with_transitive (i : Idx) : IsAddGroupHom (fun xs : Cont => ArrayType.get xs i) by
+  constructor <;> simp
+
+def_fun_prop with_transitive : IsAddGroupHom (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f) by
+  constructor <;> (intros; apply ArrayType.ext (Idx:=Idx); simp)
+
+def_fun_prop with_transitive (i : Idx) :
+    IsAddGroupHom (fun (x : Cont×Elem) => ArrayType.set x.1 i x.2) by
+  constructor
+  · intros; apply ArrayType.ext (Idx:=Idx); intro j; simp
+    if h : i = j then simp[h,ArrayType.get_set_eq] else simp[h,ArrayType.get_set_neq]
+  · intros; apply ArrayType.ext (Idx:=Idx); intro j; simp
+    if h : i = j then simp[h,ArrayType.get_set_eq] else simp[h,ArrayType.get_set_neq]
+
+
+#generate_add_group_hom_simps ArrayType.get.arg_cont.IsAddGroupHom_rule
+#generate_add_group_hom_simps ArrayType.ofFn.arg_f.IsAddGroupHom_rule
+-- todo: there is some unification issue here
+-- #generate_add_group_hom_simps ArrayType.set.arg_contxi.IsAddGroupHom_rule
 
 @[fun_prop]
-theorem LeanColls.Indexed.get.arg_cont.IsLinearMap_rule_simple (idx : Idx) :
-    IsLinearMap R (fun xs : Cont => xs[idx]) := by
+theorem ArrayType.modify.arg_contf.IsAddGroupHom_rule
+    (cont : W → Cont) (hcont : IsAddGroupHom cont) (i : Idx)
+    (f : W → Elem → Elem) (hf : IsAddGroupHom (fun (w,x) => f w x)) :
+    IsAddGroupHom (fun w => ArrayType.modify (cont w) i (f w)) := by
   constructor
-  · intros; simp
-  · intros; simp
+  · intros; apply ArrayType.ext (Idx:=Idx); intro j; simp
+    if h : i = j then
+      simp [h,hcont.map_add]; sorry_proof
+    else
+      simp[h,ArrayType.get_set_neq,hcont.map_add]
+  · intros; apply ArrayType.ext (Idx:=Idx); intro j; simp
+    if h : i = j then
+      simp [h,hcont.map_neg]; sorry_proof
+    else
+      simp[h,ArrayType.get_set_neq,hcont.map_neg]
 
-#generate_linear_map_simps LeanColls.Indexed.get.arg_cont.IsLinearMap_rule_simple
 
-end OnVectorSpaces
+def_fun_prop with_transitive (i : Idx) : IsLinearMap R (fun xs : Cont => ArrayType.get xs i) by
+  constructor <;> simp
+
+def_fun_prop with_transitive : IsLinearMap R (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f) by
+  constructor <;> (intros; apply ArrayType.ext (Idx:=Idx); simp)
+
+def_fun_prop with_transitive (i : Idx) :
+    IsLinearMap R (fun (x : Cont×Elem) => ArrayType.set x.1 i x.2) by
+  constructor
+  · intros; apply ArrayType.ext (Idx:=Idx); intro j; simp
+    if h : i = j then simp[h,ArrayType.get_set_eq] else simp[h,ArrayType.get_set_neq]
+  · intros; apply ArrayType.ext (Idx:=Idx); intro j; simp
+    if h : i = j then simp[h,ArrayType.get_set_eq] else simp[h,ArrayType.get_set_neq]
+
+
+#generate_linear_map_simps ArrayType.get.arg_cont.IsLinearMap_rule
+#generate_linear_map_simps ArrayType.ofFn.arg_f.IsLinearMap_rule
+-- TODO: fix unification issue
+-- #generate_linear_map_simps ArrayType.set.arg_contxi.IsLinearMap_rule
+
+@[fun_prop]
+theorem ArrayType.modify.arg_contf.IsLinearMap_rule
+    (cont : W → Cont) (hcont : IsLinearMap R cont) (i : Idx)
+    (f : W → Elem → Elem) (hf : IsLinearMap R (fun (w,x) => f w x)) :
+    IsLinearMap R (fun w => ArrayType.modify (cont w) i (f w)) := by
+  constructor
+  · intros; apply ArrayType.ext (Idx:=Idx); intro j; simp
+    if h : i = j then
+      simp [h,hcont.map_add]; sorry_proof
+    else
+      simp[h,ArrayType.get_set_neq,hcont.map_add]
+  · intros; apply ArrayType.ext (Idx:=Idx); intro j; simp
+    if h : i = j then
+      simp [h,hcont.map_smul]; sorry_proof
+    else
+      simp[h,ArrayType.get_set_neq,hcont.map_smul]
+
+end OnModule
+
+section OnTopologicalSpace
+
+variable [TopologicalSpace Elem]
+  {W : Type} [TopologicalSpace W]
+
+def_fun_prop with_transitive (i : Idx) :
+   Continuous (fun xs : Cont => ArrayType.get xs i) by sorry_proof
+
+def_fun_prop with_transitive :
+   Continuous (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f) by sorry_proof
+
+def_fun_prop with_transitive (i : Idx) :
+   Continuous (fun (x : Cont×Elem) => ArrayType.set x.1 i x.2) by sorry_proof
+
+@[fun_prop]
+theorem ArrayType.modify.arg_contf.Continuous_rule
+    (cont : W → Cont) (hcont : Continuous cont) (i : Idx)
+    (f : W → Elem → Elem) (hf : Continuous (fun (w,x) => f w x)) :
+    Continuous (fun w => ArrayType.modify (cont w) i (f w)) := by sorry_proof
+
+end OnTopologicalSpace
+
 
 section OnNormedSpaces
 
-variable
-  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
-  [NormedAddCommGroup Elem] [NormedSpace K Elem]
+variable [NormedAddCommGroup Elem] [NormedSpace K Elem]
+  {W : Type} [NormedAddCommGroup W] [NormedSpace K W]
+
+def_fun_prop with_transitive (i : Idx) :
+    IsContinuousLinearMap K (fun xs : Cont => ArrayType.get xs i) by
+  constructor; fun_prop; simp[autoParam]; fun_prop
+
+def_fun_prop with_transitive :
+    IsContinuousLinearMap K (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f) by
+  constructor; fun_prop; simp[autoParam]; fun_prop
+
+def_fun_prop with_transitive (i : Idx) :
+    IsContinuousLinearMap K (fun (x : Cont×Elem) => ArrayType.set x.1 i x.2) by
+  constructor; fun_prop; simp[autoParam]; fun_prop
 
 @[fun_prop]
-theorem LeanColls.Indexed.get.arg_cont.IsContinuousLinearMap_rule_simple (idx : Idx) :
-    IsContinuousLinearMap K (λ cont : Cont => cont[idx]) := sorry_proof
-
--- automatically infer: Differentiable, DifferentiableAt, ContDiff, fderiv, fwdFDeriv
+theorem ArrayType.modify.arg_contf.IsContinuousLinearMap_rule
+    (cont : W → Cont) (hcont : IsContinuousLinearMap K cont) (i : Idx)
+    (f : W → Elem → Elem) (hf : IsContinuousLinearMap K (fun (w,x) => f w x)) :
+    IsContinuousLinearMap K (fun w => ArrayType.modify (cont w) i (f w)) := by
+  -- set_option trace.Meta.isDefEq true in
+  constructor; fun_prop; simp[autoParam]
+  -- todo: fix fun_prop such that it can postpone type class arguments
+  --       bacause of this reason it can't apply `IsContinuousLinearMap.continuous`
+  sorry_proof
 
 end OnNormedSpaces
 
 section OnVec
 
 variable
-  {X : Type} [Vec K X]
   [Vec K Elem]
+  {W : Type} [Vec K W]
 
+def_fun_prop with_transitive (i : Idx) :
+    IsSmoothLinearMap K (fun xs : Cont => ArrayType.get xs i) by
+  constructor; fun_prop; sorry_proof
+
+def_fun_prop with_transitive :
+    IsSmoothLinearMap K (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f) by
+  constructor; fun_prop; sorry_proof
+
+def_fun_prop with_transitive (i : Idx) :
+    IsSmoothLinearMap K (fun (x : Cont×Elem) => ArrayType.set x.1 i x.2) by
+  constructor; fun_prop; sorry_proof
 
 @[fun_prop]
-theorem GetElem.getElem.arg_cont.IsSmoothLinearMap_rule_simple
-  (idx : Idx)
-  : IsSmoothLinearMap K (fun xs : Cont => xs[idx]) := sorry_proof
-
--- automatically infer: CDifferentiable, CDifferentiableAt, CContDiff, cderiv, fwdDeriv
+theorem ArrayType.modify.arg_contf.IsSmoothLinearMap_rule
+    (cont : W → Cont) (hcont : IsSmoothLinearMap K cont) (i : Idx)
+    (f : W → Elem → Elem) (hf : IsSmoothLinearMap K (fun (w,x) => f w x)) :
+    IsSmoothLinearMap K (fun w => ArrayType.modify (cont w) i (f w)) := by
+  constructor; fun_prop; sorry_proof
 
 end OnVec
 
 section OnSemiInnerProductSpace
 
 variable
-  {X : Type} [SemiInnerProductSpace K X]
   [SemiInnerProductSpace K Elem]
+  {W : Type} [SemiInnerProductSpace K W]
+
+def_fun_prop with_transitive (i : Idx) :
+    HasSemiAdjoint K (fun xs : Cont => ArrayType.get xs i) by sorry_proof
+
+def_fun_prop with_transitive :
+    HasSemiAdjoint K (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f) by sorry_proof
+
+def_fun_prop with_transitive (i : Idx) :
+    HasSemiAdjoint K (fun (x : Cont×Elem) => ArrayType.set x.1 i x.2) by sorry_proof
 
 @[fun_prop]
-theorem GetElem.getElem.arg_cont.HasSemiAdjoint_rule_simple (idx : Idx) :
-    HasSemiAdjoint K (fun cont : Cont => cont[idx]) := sorry_proof
+theorem ArrayType.modify.arg_contf.HasSemiAdjoint_rule
+    (cont : W → Cont) (hcont : HasSemiAdjoint K cont) (i : Idx)
+    (f : W → Elem → Elem) (hf : HasSemiAdjoint K (fun (w,x) => f w x)) :
+    HasSemiAdjoint K (fun w => ArrayType.modify (cont w) i (f w)) := by sorry_proof
+
+open ArrayType
+
+#exit
 
 @[fun_trans]
-theorem GetElem.getElem.arg_cont.semiAdjoint_rule_simple (idx : Idx) :
-    semiAdjoint K (fun cont : Cont => cont[idx])
+theorem ArrayType.get.arg_cont.semiAdjoint_rule_simple (idx : Idx) :
+    semiAdjoint K (fun cont : Cont => get cont idx)
     =
     fun elem => oneHot (X:=Cont) idx elem :=
 by
   sorry_proof
 
 @[fun_trans]
-theorem GetElem.getElem.arg_cont.revCDeriv_rule
+theorem ArrayType.get.arg_cont.revCDeriv_rule
   (f : X → Cont) (idx : Idx)
   (hf : HasAdjDiff K f)
   : revDeriv K (fun x => (f x)[idx])

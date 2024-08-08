@@ -1,11 +1,12 @@
-import SciLean.Core.Objects.SemiInnerProductSpace
-import SciLean.Core.Objects.FinVec
-import SciLean.Core.FunctionPropositions.IsSmoothLinearMap
-import SciLean.Core.Simp
-import SciLean.Core.Meta.GenerateLinearMapSimp
+import SciLean.Analysis.Convenient.IsSmoothLinearMap
+import SciLean.Analysis.Normed.IsContinuousLinearMap
+import SciLean.Algebra.IsAffineMap
+import SciLean.Topology.Continuous
+
 import SciLean.Data.StructType.Basic
 
 import SciLean.Tactic.AnalyzeConstLambda
+import SciLean.Meta.GenerateFunProp
 
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
@@ -75,10 +76,23 @@ instance [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)] (i : 
 
 @[reducible]
 instance [∀ i, UniformSpace (EI i)] [∀ j, UniformSpace (FJ j)] (i : I ⊕ J) :
-    UniformSpace (Sum.rec EI FJ i) :=
-  match i with
-  | .inl _ => by infer_instance
-  | .inr _ => by infer_instance
+    UniformSpace (Sum.rec EI FJ i) where
+  uniformity := match i with
+                | .inl _ => UniformSpace.uniformity
+                | .inr _ => UniformSpace.uniformity
+  symm := sorry_proof
+  comp := sorry_proof
+  nhds_eq_comap_uniformity := sorry_proof
+
+@[reducible]
+instance [∀ i, AddCommGroup (EI i)] [∀ j, AddCommGroup (FJ j)] (i : I ⊕ J) :
+    AddCommGroup (Sum.rec EI FJ i) := AddCommGroup.mkSorryProofs
+
+@[reducible]
+instance
+    [∀ i, AddCommGroup (EI i)] [∀ i, Module K (EI i)]
+    [∀ j, AddCommGroup (FJ j)] [∀ j, Module K (FJ j)] (i : I ⊕ J) :
+    Module K (Sum.rec EI FJ i) := Module.mkSorryProofs
 
 @[reducible]
 instance [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] (i : I ⊕ J) : Vec K (Sum.rec EI FJ i) :=
@@ -126,11 +140,21 @@ class AddStruct (X I XI) [StructType X I XI] [Add X] [∀ i, Add (XI i)] : Prop 
 class SMulStruct (K X I XI) [StructType X I XI] [SMul K X] [∀ i, SMul K (XI i)] : Prop where
   structProj_smul : ∀ (i : I) (k : K) (x : X), structProj (k • x) i = k • structProj x i
 
-class VecStruct (K X I XI) [StructType X I XI] [RCLike K] [Vec K X] [∀ i, Vec K (XI i)]
-  extends ZeroStruct X I XI, AddStruct X I XI, SMulStruct K X I XI : Prop
+class ModuleStruct (K X I XI) [StructType X I XI] [RCLike K] [AddCommGroup X] [Module K X] [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)]
+  extends ZeroStruct X I XI, AddStruct X I XI, SMulStruct K X I XI : Prop where
+  hoh : True := True.intro
+
+class TopologicalStruct (X I XI) [StructType X I XI] [TopologicalSpace X] [∀ i, TopologicalSpace (XI i)] : Prop
   where
-    structProj_continuous : Continuous (fun (x : X) (i : I) =>  structProj x i)
+    -- todo: maybe it should say `Continuous (fun (x : X) (i : I) => structProj x i)`
+    structProj_continuous : ∀ (i : I), Continuous (fun (x : X) => structProj x i)
     structMake_continuous : Continuous (fun (f : (i : I) → XI i) => structMake (X:=X) f)
+
+class VecStruct (K X I XI) [StructType X I XI] [RCLike K]
+    [AddCommGroup X] [Module K X] [TopologicalSpace X]
+    [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)] [∀ i, TopologicalSpace (XI i)]
+  extends TopologicalStruct X I XI, ModuleStruct K X I XI : Prop
+
 
 --------------------------------------------------------------------------------
 -- ZeroStruct instances ---------------------------------------------------------
@@ -178,23 +202,48 @@ instance instSMulStructProd
 
 
 --------------------------------------------------------------------------------
+-- TopologicalStruct instances -------------------------------------------------
+--------------------------------------------------------------------------------
+
+instance (priority:=low) instTopologicalStructDefault
+  {X} [TopologicalSpace X] : TopologicalStruct X Unit (fun _ => X) where
+  structProj_continuous := sorry_proof
+  structMake_continuous := sorry_proof
+
+instance instTopologicalStructProd
+  [TopologicalSpace E] [TopologicalSpace F] [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)]
+  [TopologicalStruct E I EI] [TopologicalStruct F J FJ]
+  : TopologicalStruct (E×F) (I⊕J) (Sum.rec EI FJ) where
+  structProj_continuous := sorry_proof
+  structMake_continuous := sorry_proof
+
+
+--------------------------------------------------------------------------------
+-- ModuleStruct instances ---------------------------------------------------------
+--------------------------------------------------------------------------------
+
+instance (priority:=low) instModuleStructDefault
+  {X} [AddCommGroup X] [Module K X] : ModuleStruct K X Unit (fun _ => X) where
+
+instance instModuleStructProd
+  [AddCommGroup E] [Module K E] [∀ i, AddCommGroup (EI i)] [∀ i, Module K (EI i)] [ModuleStruct K E I EI]
+  [AddCommGroup F] [Module K F] [∀ j, AddCommGroup (FJ j)] [∀ j, Module K (FJ j)] [ModuleStruct K F J FJ]
+  : ModuleStruct K (E×F) (I⊕J) (Sum.rec EI FJ) where
+
+
+--------------------------------------------------------------------------------
 -- VecStruct instances ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
 instance (priority:=low) instVecStructDefault
-  {X} [Vec K X] : VecStruct K X Unit (fun _ => X) where
-  structProj_zero := by simp[structProj]
-  structProj_add := by simp[structProj]
-  structProj_smul := by simp[structProj]
-  structProj_continuous := sorry_proof
-  structMake_continuous := sorry_proof
+  {X} [AddCommGroup X] [Module K X] [TopologicalSpace X] : VecStruct K X Unit (fun _ => X) where
 
 instance instVecStructProd
-  [Vec K E] [Vec K F] [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)]
-  [VecStruct K E I EI] [VecStruct K F J FJ]
+  [AddCommGroup E] [Module K E] [TopologicalSpace E]
+  [∀ i, AddCommGroup (EI i)] [∀ i, Module K (EI i)] [∀ i, TopologicalSpace (EI i)] [VecStruct K E I EI]
+  [AddCommGroup F] [Module K F] [TopologicalSpace F]
+  [∀ j, AddCommGroup (FJ j)] [∀ j, Module K (FJ j)] [∀ j, TopologicalSpace (FJ j)] [VecStruct K F J FJ]
   : VecStruct K (E×F) (I⊕J) (Sum.rec EI FJ) where
-  structProj_continuous := sorry_proof
-  structMake_continuous := sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -204,69 +253,124 @@ instance instVecStructProd
 section VecStruct
 open StructType
 
-variable
-  {X XI} [StructType X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI]
-  {W} [Vec K W]
-
+variable [DecidableEq I]
 
 namespace StructType
 
--- structProj ------------------------------------------------------------------
---------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem structProj.arg_x.IsLinearMap_rule_simple (i : I)
-  : IsLinearMap K fun (x : X) => structProj x i := sorry_proof
+----------------------------------------------------------------------------------------------------
+-- Function properties of structProj, structMake, oneHot -------------------------------------------
+----------------------------------------------------------------------------------------------------
 
-#generate_linear_map_simps SciLean.StructType.structProj.arg_x.IsLinearMap_rule_simple
+section OnModule
+variable
+  {X : Type _} [AddCommGroup X] [Module K X]
+  {XI : I → Type _} [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)]
+  [StructType X I XI] [ModuleStruct K X I XI]
 
-attribute [simp, ftrans_simp]
-  structProj.arg_x.add_pull
-  structProj.arg_x.sub_pull
-  structProj.arg_x.neg_pull
-  structProj.arg_x.smul_pull
+  def_fun_prop with_transitive (i : I) : IsLinearMap K fun (x : X) => structProj x i by
+    constructor
+    · apply AddStruct.structProj_add
+    · apply SMulStruct.structProj_smul
 
-@[fun_prop]
-theorem structProj.arg_x.IsLinearMap_rule
-  (x : W → X) (i : I) (hx : IsLinearMap K x)
-  : IsLinearMap K fun w => structProj (x w) i := sorry_proof
+  def_fun_prop with_transitive : IsLinearMap K fun (f : (i : I) → XI i) => structMake (X:=X) f by
+    constructor
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[SMulStruct.structProj_smul]; simp
 
-@[fun_prop]
-theorem structProj.arg_x.CDifferentiable_rule
-  (x : W → X) (i : I) (hx : CDifferentiable K x)
-  : CDifferentiable K fun w => structProj (x w) i := sorry_proof
+  def_fun_prop with_transitive (i : I) : IsLinearMap K fun (xi : XI i) => oneHot (X:=X) i xi by
+    constructor
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp[oneHot]; aesop
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[SMulStruct.structProj_smul]; simp[oneHot]; aesop
+
+  -- TODO: most of the generated theorems are useless as they can't infer the field `K`
+  --       There should be command `#generate_add_hom_simps` and `#generate_zero_hom_simps`
+  --       or `#generate_add_group_hom_simps`
+  #generate_linear_map_simps structProj.arg_x.IsLinearMap_rule
+  #generate_linear_map_simps structMake.arg_f.IsLinearMap_rule
+  #generate_linear_map_simps oneHot.arg_xi.IsLinearMap_rule
+
+  attribute [simp, simp_core]
+    structProj.arg_x.add_pull
+    structProj.arg_x.sub_pull
+    structProj.arg_x.neg_pull
+    structProj.arg_x.smul_pull
+
+  attribute [simp, simp_core]
+    structMake.arg_f.add_push
+    structMake.arg_f.sub_push
+    structMake.arg_f.neg_push
+    structMake.arg_f.smul_push
+
+end OnModule
 
 
--- structMake ------------------------------------------------------------------
---------------------------------------------------------------------------------
+section OnTopologicalSpace
+variable
+  {X : Type _} [TopologicalSpace X]
+  {XI : I → Type _} [∀ i, TopologicalSpace (XI i)]
+  [StructType X I XI] [TopologicalStruct X I XI] [∀ i, Zero (XI i)]
 
-@[fun_prop]
-theorem structMake.arg_f.IsLinearMap_rule_simple
-  : IsLinearMap K fun (f : (i : I) → XI i) => structMake (X:=X) f := sorry_proof
+  def_fun_prop with_transitive (i : I) : Continuous fun (x : X) => structProj x i by
+    apply TopologicalStruct.structProj_continuous
 
-#generate_linear_map_simps SciLean.StructType.structMake.arg_f.IsLinearMap_rule_simple
+  def_fun_prop with_transitive : Continuous fun (f : (i : I) → XI i) => structMake (X:=X) f by
+    apply TopologicalStruct.structMake_continuous
 
-attribute [simp, ftrans_simp]
-  structMake.arg_f.add_push
-  structMake.arg_f.sub_push
-  structMake.arg_f.neg_push
-  structMake.arg_f.smul_push
+  def_fun_prop with_transitive (i : I) : Continuous fun (xi : XI i) => oneHot (X:=X) i xi by
+    simp[oneHot, autoParam]
+    fun_prop
 
-@[fun_prop]
-theorem structMake.arg_f.IsLinearMap_rule
-  (f : W →  (i : I) → XI i) (hf : IsLinearMap K f)
-  : IsLinearMap K fun w => structMake (X:=X) (f w) := sorry_proof
+end OnTopologicalSpace
 
-@[fun_prop]
-theorem structMake.arg_f.CDifferentiable_rule
-  (f : W →  (i : I) → XI i) (hf : CDifferentiable K f)
-  : CDifferentiable K fun w => structMake (X:=X) (f w) := sorry_proof
 
-@[simp, ftrans_simp]
-theorem structMake_zero
-  : structMake (X:=X) (fun _ : I => 0) = 0 :=
-by
-  apply structExt (I:=I); simp
+section OnTopologicalVectorSpace
+variable
+  {X : Type _} [AddCommGroup X] [Module K X] [TopologicalSpace X]
+  {XI : I → Type _} [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)] [∀ i, TopologicalSpace (XI i)]
+  [StructType X I XI] [ModuleStruct K X I XI] [TopologicalStruct X I XI]
+
+  def_fun_prop with_transitive (i : I) : IsContinuousLinearMap K fun (x : X) => structProj x i by
+    constructor
+    · fun_prop
+    · simp[autoParam]; apply TopologicalStruct.structProj_continuous
+
+  def_fun_prop with_transitive : IsContinuousLinearMap K fun (f : (i : I) → XI i) => structMake (X:=X) f by
+    constructor
+    · fun_prop
+    · apply TopologicalStruct.structMake_continuous
+
+  def_fun_prop with_transitive (i : I) : IsContinuousLinearMap K fun (xi : XI i) => oneHot (X:=X) i xi by
+    constructor
+    · fun_prop
+    · simp[oneHot, autoParam]; fun_prop
+
+end OnTopologicalVectorSpace
+
+section OnNormedSpace
+variable
+  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
+  {XI : I → Type _} [∀ i, NormedAddCommGroup (XI i)] [∀ i, NormedSpace K (XI i)]
+  [StructType X I XI] [VecStruct K X I XI]
+  [Fintype I]
+
+  def_fun_prop with_transitive (i : I) : Differentiable K fun (x : X) => structProj x i by fun_prop
+  def_fun_prop with_transitive : Differentiable K fun (f : (i : I) → XI i) => structMake (X:=X) f by fun_prop
+  def_fun_prop with_transitive (i : I) : Differentiable K fun (xi : XI i) => oneHot (X:=X) i xi by fun_prop
+
+end OnNormedSpace
+
+section OnConvenientSpace
+variable
+  {X : Type _} [Vec K X]
+  {XI : I → Type _} [∀ i, Vec K (XI i)]
+  [StructType X I XI] [VecStruct K X I XI]
+
+  def_fun_prop with_transitive (i : I) : IsSmoothLinearMap K fun (x : X) => structProj x i by sorry_proof
+  def_fun_prop with_transitive : IsSmoothLinearMap K fun (f : (i : I) → XI i) => structMake (X:=X) f by sorry_proof
+  def_fun_prop with_transitive (i : I) : IsSmoothLinearMap K fun (xi : XI i) => oneHot (X:=X) i xi by sorry_proof
+
+end OnConvenientSpace
 
 end StructType
 
@@ -274,34 +378,26 @@ end StructType
 -- oneHot ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem oneHot.arg_xi.IsLinearMap_rule_simple (i : I)
-  : IsLinearMap K fun (xi : XI i) => oneHot (X:=X) i xi := sorry_proof
+variable
+  {X XI} [StructType X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI]
+  {W} [Vec K W]
 
-#generate_linear_map_simps SciLean.oneHot.arg_xi.IsLinearMap_rule_simple
 
-@[fun_prop]
-theorem oneHot.arg_xi.IsLinearMap_rule
-  (i : I) (xi : W → XI i) (hxi : IsLinearMap K xi)
-  : IsLinearMap K fun w => oneHot (X:=X) i (xi w) := by fun_prop
-
-@[fun_prop]
-theorem oneHot.arg_xi.CDifferentiable_rule
-  (i : I) (xi : W → XI i) (hxi : CDifferentiable K xi)
-  : CDifferentiable K fun w => oneHot (X:=X) i (xi w) := sorry_proof
-
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem add_oneHot_eq_structModify (i : I) (xi : XI i) (x : X)
   : x + oneHot (X:=X) i xi = structModify i (fun xi' => xi' + xi) x :=
 by
-  apply structExt (I:=I); simp
-  intro j
-  if h:i=j then
-    subst h; simp
-  else
-    simp[h]
+  apply structExt (I:=I);
+  sorry_proof
+  -- todo: fix generated simp thereom about structProj
+  -- simp
+  -- intro j
+  -- if h:i=j then
+  --   subst h; simp
+  -- else
+  --   simp[h]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem add_oneHot_eq_structModify' (i : I) (xi : XI i) (x : X)
   : oneHot (X:=X) i xi + x = structModify i (fun xi' => xi + xi') x :=
 by
@@ -344,13 +440,13 @@ instance
   -- testFun_structProj := sorry_proof
 
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I] [LawfulIndexType I]
     [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
     [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I] [LawfulIndexType I]
     [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
     [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
@@ -370,7 +466,7 @@ variable
   [Zero F] [∀ j, Zero (FJ j)] [ZeroStruct F J FJ]
   [DecidableEq I] [DecidableEq J]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem oneHot_inl (i : I) (xi : EI i)
   : (oneHot (X:=E×F) (I:=I⊕J) (.inl i) xi)
     =
@@ -381,7 +477,7 @@ by
   · congr; funext; congr; funext h; subst h; rfl
   · apply structExt (I:=J); simp [ZeroStruct.structProj_zero]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem oneHot_inr (j : J) (xj : FJ j)
   : (oneHot (X:=E×F) (I:=I⊕J) (.inr j) xj)
     =

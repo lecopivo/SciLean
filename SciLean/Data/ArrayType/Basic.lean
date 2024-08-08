@@ -4,20 +4,19 @@ import SciLean.Data.StructType.Basic
 import SciLean.Data.Function
 import LeanColls
 
+import SciLean.Meta.SimpAttr
 
 namespace SciLean
 
 open LeanColls
-
-
 
 /-- This class says that `Cont` behaves like an array with `Elem` values indexed by `Idx`
 
 Examples for `Idx = Fin n` and `Elem = ℝ` are: `ArrayN ℝ n` or `ℝ^{n}`
 
 For `array : Cont` you can:
-  1. get values: `Indexed.get array i : Elem` for `i : Idx`
-  2. set values: `Indexed.set array i x : Cont` for `i : Idx` and `x : Elem`
+  1. get values: `ArrayType.get array i : Elem` for `i : Idx`
+  2. set values: `ArrayType.set array i x : Cont` for `i : Idx` and `x : Elem`
   3. make new a array: `Indexed.ofFn f : Cont` for `f : Idx → Elem`
 
 Alternative notation:
@@ -26,15 +25,23 @@ Alternative notation:
   3. `λ [x] => f x` this notation works only if the type `Cont` can be infered from the context
      Common use: `let array : Cont := λ [x] => f x` where the type asscription `: Cont` is important.
 -/
-class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam)
-    extends Indexed.{u,v,w,w} Cont Idx Elem, LawfulIndexed.{u,v,w,w} Cont Idx Elem where
-  get_injective : Function.Injective (fun (c : Cont) i => c[i])
+class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> outParam) where
+  ofFn (f : Idx → Elem) : Cont
+  get (cont : Cont) (i : Idx) : Elem
+  set (cont : Cont) (i : Idx) (xi : Elem) : Cont
+  modify (cont : Cont) (i : Idx) (f : Elem → Elem) : Cont
+  get_ofFn : Function.LeftInverse get ofFn
+  ofFn_get : Function.RightInverse ofFn get
+  get_set_eq : ∀ c i xi, get (set c i xi) i = xi
+  get_set_neq : ∀ c i i' xi, i≠i' → get (set c i xi) i' = get c i'
+  modify_set : ∀ c i f, modify c i f = set c i (f (get c i))
 
+attribute [simp,simp_core] ArrayType.get_set_eq ArrayType.get_set_neq
 
 instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont Idx (fun _ => Elem) where
-  structProj := fun c i => c[i]
-  structMake := Indexed.ofFn
-  structModify := fun i f c => Indexed.update c i f
+  structProj := fun c i => ArrayType.get c i
+  structMake := ArrayType.ofFn
+  structModify := fun i f c => ArrayType.modify c i f
   left_inv := sorry_proof
   right_inv := sorry_proof
   structProj_structModify := sorry_proof
@@ -49,28 +56,37 @@ variable
   [ArrayType Cont Idx Elem]
 
 @[ext]
-theorem ext (x y : Cont) : (∀ i, x[i] = y[i]) → x = y := by sorry_proof
+theorem ext (x y : Cont) : (∀ i, get x i = get y i) → x = y := by sorry_proof
 
-@[simp]
-theorem eta (cont : Cont) : (Indexed.ofFn fun i => cont[i]) = cont := sorry_proof
+@[simp,simp_core]
+theorem eta (cont : Cont) : (ofFn fun i => get cont i) = cont := sorry_proof
 
 def mapMono (f : Elem → Elem) (cont : Cont) : Cont :=
-  Fold.fold (IndexType.univ Idx) (fun c i => Indexed.update c i f) cont
+  Fold.fold (IndexType.univ Idx) (fun c i => modify c i f) cont
 
 def mapIdxMono (f : Idx → Elem → Elem) (cont : Cont) : Cont :=
-  Fold.fold (IndexType.univ Idx) (fun c i => Indexed.update c i (f i)) cont
+  Fold.fold (IndexType.univ Idx) (fun c i => modify c i (f i)) cont
 
-@[simp]
-theorem getElem_mapMono (f : Elem → Elem) (cont : Cont) (i : Idx) :
-    (mapMono f cont)[i] = f cont[i] := sorry_proof
+@[simp,simp_core]
+theorem get_mapMono (f : Elem → Elem) (cont : Cont) (i : Idx) :
+    get (mapMono f cont) i = f (get cont i) := sorry_proof
 
-@[simp]
-theorem getElem_mapIdxMono (f : Idx → Elem → Elem) (cont : Cont) (i : Idx) :
-    (mapIdxMono f cont)[i] = f i cont[i] := sorry_proof
+@[simp,simp_core]
+theorem get_mapIdxMono (f : Idx → Elem → Elem) (cont : Cont) (i : Idx) :
+    get (mapIdxMono f cont) i = f i (get cont i) := sorry_proof
 
-@[simp]
-theorem getElem_map (f : Elem → Elem) (cont : Cont) (i : Idx) :
-    (mapMono f cont)[i] = f cont[i] := sorry_proof
+@[simp,simp_core]
+theorem get_ofFn' (f : Idx → Elem) :
+  get (ofFn (Cont:=Cont) f) = f := sorry_proof
+
+@[simp,simp_core]
+theorem get_modify_eq (xs : Cont) (f : Elem → Elem) (i : Idx) :
+  get (modify xs i f) i = f (get xs i) := by rw[modify_set]; simp[get_set_eq]
+
+@[simp,simp_core]
+theorem get_modify_neq (xs : Cont) (f : Elem → Elem) (i j : Idx) (h : i ≠ j) :
+  get (modify xs i f) j = get xs j := by rw[modify_set]; simp[get_set_neq,h]
+
 
 instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem] [IndexType Idx] :
     ToString (Cont) := ⟨λ x => Id.run do
@@ -78,10 +94,10 @@ instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem] [IndexType Id
   let mut s := "⊞["
   for i in IndexType.univ Idx do
     if fst then
-      s := s ++ toString x[i]
+      s := s ++ toString (get x i)
       fst := false
     else
-      s := s ++ ", " ++ toString x[i]
+      s := s ++ ", " ++ toString (get x i)
   s ++ "]"⟩
 
 /-- Converts array to ArrayType -/
@@ -99,9 +115,9 @@ def _root_.Array.toArrayType {Elem} (Cont : Type u) (Idx : Type v) [IndexType Id
 --   introElem fun i => l.toArray[i.1.toNat]'sorry_proof
 
 instance [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => ElemI i) where
-  structProj := fun x (i,j) => structProj x[i] j
-  structMake := fun f => Indexed.ofFn fun i => structMake fun j => f (i,j)
-  structModify := fun (i,j) f x => Indexed.update x i (fun xi => structModify j f xi)
+  structProj := fun x (i,j) => structProj (get x i) j
+  structMake := fun f => ofFn fun i => structMake fun j => f (i,j)
+  structModify := fun (i,j) f x => modify x i (fun xi => structModify j f xi)
   left_inv := by intro x; simp
   right_inv := by intro x; simp
   structProj_structModify := by intro x; simp
@@ -111,10 +127,10 @@ instance [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => Elem
 
 section Operations
 
-  instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapIdxMono (λ x fx => fx + g[x]) f⟩
-  instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapIdxMono (λ x fx => fx - g[x]) f⟩
-  instance (priority:=low) [Mul Elem] : Mul Cont := ⟨λ f g => mapIdxMono (λ x fx => fx * g[x]) f⟩
-  instance (priority:=low) [Div Elem] : Div Cont := ⟨λ f g => mapIdxMono (λ x fx => fx / g[x]) f⟩
+  instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapIdxMono (λ x fx => fx + get g x) f⟩
+  instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapIdxMono (λ x fx => fx - get g x) f⟩
+  instance (priority:=low) [Mul Elem] : Mul Cont := ⟨λ f g => mapIdxMono (λ x fx => fx * get g x) f⟩
+  instance (priority:=low) [Div Elem] : Div Cont := ⟨λ f g => mapIdxMono (λ x fx => fx / get g x) f⟩
 
   -- instance (priority:=low) {R} [HMul R Elem Elem] : HMul R Cont Cont := ⟨λ r f => map (λ fx => r*(fx : Elem)) f⟩
   instance (priority:=low) {R} [SMul R Elem] : SMul R Cont := ⟨λ r f => mapMono (λ fx => r•(fx : Elem)) f⟩
@@ -122,17 +138,17 @@ section Operations
   instance (priority:=low) [Neg Elem] : Neg Cont := ⟨λ f => mapMono (λ fx => -(fx : Elem)) f⟩
   instance (priority:=low) [Inv Elem] : Inv Cont := ⟨λ f => mapMono (λ fx => (fx : Elem)⁻¹) f⟩
 
-  instance (priority:=low) [One Elem]  : One Cont  := ⟨Indexed.ofFn fun (_ : Idx) => 1⟩
-  instance (priority:=low) [Zero Elem] : Zero Cont := ⟨Indexed.ofFn fun (_ : Idx) => 0⟩
+  instance (priority:=low) [One Elem]  : One Cont  := ⟨ofFn fun (_ : Idx) => 1⟩
+  instance (priority:=low) [Zero Elem] : Zero Cont := ⟨ofFn fun (_ : Idx) => 0⟩
 
-  instance (priority:=low) [LT Elem] : LT Cont := ⟨λ f g => ∀ x, f[x] < g[x]⟩
-  instance (priority:=low) [LE Elem] : LE Cont := ⟨λ f g => ∀ x, f[x] ≤ g[x]⟩
+  instance (priority:=low) [LT Elem] : LT Cont := ⟨λ f g => ∀ x, get f x < get g x⟩
+  instance (priority:=low) [LE Elem] : LE Cont := ⟨λ f g => ∀ x, get f x ≤ get g x⟩
 
   instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont :=
     λ f g => Id.run do
       let mut eq : Bool := true
       for x in IndexType.univ Idx do
-        if f[x] ≠ g[x] then
+        if get f x ≠ get g x then
           eq := false
           break
       if eq then isTrue sorry_proof else isFalse sorry_proof
@@ -141,7 +157,7 @@ section Operations
       Decidable (f < g) := Id.run do
     let mut lt : Bool := true
     for x in IndexType.univ Idx do
-      if ¬(f[x] < g[x]) then
+      if ¬(get f x < get g x) then
         lt := false
         break
     if lt then isTrue sorry_proof else isFalse sorry_proof
@@ -150,73 +166,74 @@ section Operations
       Decidable (f ≤ g) := Id.run do
     let mut le : Bool := true
     for x in IndexType.univ Idx do
-      if ¬(f[x] ≤ g[x]) then
+      if ¬(get f x ≤ get g x) then
         le := false
         break
     if le then isTrue sorry_proof else isFalse sorry_proof
 
-  @[simp, ftrans_simp]
+  --TODO: all of these theorem should be autogenerated based on IsAddGroupHom
+  @[simp, simp_core]
   theorem add_ofFn [Add Elem] (f g: Idx → Elem)
-    : Indexed.ofFn (C:=Cont) f + Indexed.ofFn (C:=Cont) g
+    : ofFn (Cont:=Cont) f + ofFn (Cont:=Cont) g
       =
-      Indexed.ofFn fun i => f i + g i  := by apply ArrayType.ext (Idx:=Idx); simp[HAdd.hAdd, Add.add]
+      ofFn fun i => f i + g i  := by apply ArrayType.ext (Idx:=Idx); simp[HAdd.hAdd, Add.add]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem sub_ofFn [Sub Elem] (f g: Idx → Elem)
-    : Indexed.ofFn (C:=Cont) f - Indexed.ofFn (C:=Cont) g
+    : ofFn (Cont:=Cont) f - ofFn (Cont:=Cont) g
       =
-      Indexed.ofFn fun i => f i - g i  := by apply ArrayType.ext (Idx:=Idx); simp[HSub.hSub, Sub.sub]
+      ofFn fun i => f i - g i  := by apply ArrayType.ext (Idx:=Idx); simp[HSub.hSub, Sub.sub]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem neg_ofFn [Neg Elem] (f: Idx → Elem)
-    : - Indexed.ofFn (C:=Cont) f
+    : - ofFn (Cont:=Cont) f
       =
-      Indexed.ofFn fun i => - f i  := by apply ArrayType.ext (Idx:=Idx); simp[Neg.neg]
+      ofFn fun i => - f i  := by apply ArrayType.ext (Idx:=Idx); simp[Neg.neg]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem smul_ofFn [SMul K Elem] (f : Idx → Elem) (a : K)
-    : a • Indexed.ofFn (C:=Cont) f
+    : a • ofFn (Cont:=Cont) f
       =
-      Indexed.ofFn fun i => a • f i := by apply ArrayType.ext (Idx:=Idx); simp[HSMul.hSMul, SMul.smul];
+      ofFn fun i => a • f i := by apply ArrayType.ext (Idx:=Idx); simp[HSMul.hSMul, SMul.smul];
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem sum_ofFn [AddCommMonoid Elem] {ι} [IndexType ι] (f : ι → Idx → Elem)
-    : ∑ j, Indexed.ofFn (C:=Cont) (fun i => f j i)
+    : ∑ j, ofFn (Cont:=Cont) (fun i => f j i)
       =
-      Indexed.ofFn fun i => ∑ j, f j i
+      ofFn fun i => ∑ j, f j i
     := sorry_proof
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem add_get [Add Elem] (x y : Cont) (i : Idx) :
-      (x + y)[i] = x[i] + y[i] := by simp[HAdd.hAdd,Add.add]
+      get (x + y) i = get x i + get y i := by simp[HAdd.hAdd,Add.add]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem sub_get [Sub Elem] (x y : Cont) (i : Idx) :
-      (x - y)[i] = x[i] - y[i] := by simp[HSub.hSub,Sub.sub]
+      get (x - y) i  = get x i - get y i := by simp[HSub.hSub,Sub.sub]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem mul_get [Mul Elem] (x y : Cont) (i : Idx) :
-      (x * y)[i] = x[i] * y[i] := by simp[HMul.hMul,Mul.mul]
+      get (x * y) i  = get x i * get y i := by simp[HMul.hMul,Mul.mul]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem div_get [Div Elem] (x y : Cont) (i : Idx) :
-      (x / y)[i] = x[i] / y[i] := by simp[HDiv.hDiv,Div.div]
+      get (x / y) i  = get x i / get y i := by simp[HDiv.hDiv,Div.div]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem smul_get {R} [SMul R Elem] (r : R) (x : Cont) (i : Idx) :
-      (r • x)[i] = r • x[i] := by simp[HSMul.hSMul,SMul.smul]
+      get (r • x) i  = r • get x i := by simp[HSMul.hSMul,SMul.smul]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem neg_get [Neg Elem] (x : Cont) (i : Idx) :
-      (- x)[i] = - x[i] := by simp[Neg.neg]
+      get (- x) i  = - get x i := by simp[Neg.neg]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem one_get [One Elem] (i : Idx) :
-      (1 : Cont)[i] = 1 := by simp[One.one,OfNat.ofNat]
+      get (1 : Cont) i  = 1 := by simp[One.one,OfNat.ofNat]
 
-  @[simp, ftrans_simp]
+  @[simp, simp_core]
   theorem zero_get [Zero Elem] (i : Idx) :
-      (0 : Cont)[i] = 0 := by simp[Zero.zero,OfNat.ofNat]
+      get (0 : Cont) i  = 0 := by simp[Zero.zero,OfNat.ofNat]
 
 end Operations
 
@@ -227,30 +244,30 @@ variable [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx]
 
 def argMaxCore (cont : Cont) : Idx × Elem :=
   IndexType.reduceD
-    (fun i => (i,cont[i]))
+    (fun i => (i,get cont i))
     (fun (i,e) (i',e') => if e < e' then (i',e') else (i,e))
-    (default, cont[default])
+    (default, get cont default)
 
 def max (cont : Cont) : Elem :=
   IndexType.reduceD
-    (fun i => cont[i])
+    (fun i => get cont i)
     (fun e e' => if e < e' then e' else e)
-    (cont[default])
+    (get cont default)
 
 def idxMax (cont : Cont) : Idx := (argMaxCore cont).1
 
 
 def argMinCore (cont : Cont ) : Idx × Elem :=
   IndexType.reduceD
-    (fun i => (i,cont[i]))
+    (fun i => (i,get cont i))
     (fun (i,e) (i',e') => if e' < e then (i',e') else (i,e))
-    (default, cont[default])
+    (default, get cont default)
 
 def min (cont : Cont) : Elem :=
   IndexType.reduceD
-    (fun i => cont[i])
+    (fun i => get cont i)
     (fun e e' => if e < e' then e' else e)
-    (cont[default])
+    (get cont default)
 
 def idxMin (cont : Cont) : Idx := (argMinCore cont).1
 

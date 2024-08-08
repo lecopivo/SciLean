@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Group.Basic
 import SciLean.Util.SorryProof
-import SciLean.Tactic.FTrans.Init
+import SciLean.Meta.SimpAttr
+import SciLean.Data.Function
 
 namespace SciLean
 
@@ -19,9 +20,9 @@ class StructType (X : Sort _) (I : (Sort _)) (XI : outParam <| I → Sort _) whe
   structProj_structModify' : ∀ i j f x,
     i ≠ j → structProj (structModify i f x) j = structProj x j
 
-attribute [simp, ftrans_simp] StructType.structProj_structModify StructType.structProj_structModify'
+attribute [simp, simp_core] StructType.structProj_structModify StructType.structProj_structModify'
 export StructType (structProj structMake structModify)
-attribute [simp, ftrans_simp] structProj structMake structModify
+attribute [simp, simp_core] structProj structMake structModify
 
 def oneHot {X I XI} [StructType X I XI] [DecidableEq I] [∀ i, Zero (XI i)] (i : I) (xi : XI i) : X :=
   structMake fun i' =>
@@ -34,19 +35,19 @@ namespace StructType
 
 variable {X I XI} [StructType X I XI]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem structProj_structMake (f : (i : I) → XI i) (i : I)
   : structProj (X:=X) (structMake f) i = f i := by apply congr_fun; apply left_inv
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem structMake_structProj (x : X)
   : structMake (X:=X) (fun (i : I) => structProj x i) = x := by apply right_inv
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem structProj_oneHot [DecidableEq I] [∀ (i : I), Zero (XI i)] (xi : XI i)
   : structProj (oneHot (X:=X) i xi) i = xi := by simp[oneHot]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem structProj_oneHot' [DecidableEq I] [∀ (i : I), Zero (XI i)] (i j : I) (xi : XI i) (h : i≠j)
   : structProj (oneHot (X:=X) i xi) j = 0 :=
 by
@@ -81,23 +82,23 @@ instance (priority:=low) instStructTypeDefault : StructType α Unit (fun _ => α
   structProj_structModify := by simp
   structProj_structModify' := by simp
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem oneHot_unit {X} [Zero X] (x : X)
   : oneHot (X:=X) (I:=Unit) () x = x := by rfl
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem structProj_unit (x : E)
   : structProj (I:=Unit) x ()
     =
     x := rfl
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem structMake_unit (f : Unit → E)
   : structMake (I:=Unit) f
     =
     f () := rfl
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem structModify_unit (f : E → E) (x : E)
   : structModify (I:=Unit) () f x
     =
@@ -230,7 +231,7 @@ instance instStrucTypeSigma
     induction j <;> induction i <;> (simp at h; simp (disch:=assumption))
 
 
--- @[simp, ftrans_simp]
+-- @[simp, simp_core]
 -- theorem structMake_sum_match [StructType E I EI] [StructType F J FJ] (f : (i : I) → EI i) (g : (j : J) → FJ j)
 --   : structMake (X:=E×F) (I:=I⊕J) (fun | .inl i => f i | .inr j => g j)
 --     =
@@ -238,7 +239,7 @@ instance instStrucTypeSigma
 -- by
 --   simp[structMake]
 
-@[simp low, ftrans_simp low]
+@[simp low, simp_core low]
 theorem structModify_inl [StructType E I EI] [StructType F J FJ] (i : I) (f : EI i → EI i) (xy : E×F)
   : structModify (I:=I⊕J) (.inl i) f xy
     =
@@ -248,7 +249,7 @@ by
     lhs
     simp[structModify]
 
--- @[simp, ftrans_simp]
+-- @[simp, simp_core]
 -- theorem structModify_inl' [StructType E I EI] [StructType F J FJ] (i : I) (f : EI i → EI i) (x : E) (y : F)
 --   : structModify (I:=I⊕J) (.inl i) f (x, y)
 --     =
@@ -258,7 +259,7 @@ by
 --     lhs
 --     simp[structModify]
 
-@[simp low, ftrans_simp low]
+@[simp low, simp_core low]
 theorem structModify_inr [StructType E I EI] [StructType F J FJ] (j : J) (f : FJ j → FJ j) (xy : E×F)
   : structModify (I:=I⊕J) (.inr j) f xy
     =
@@ -266,7 +267,7 @@ theorem structModify_inr [StructType E I EI] [StructType F J FJ] (j : J) (f : FJ
 by
   simp[structModify]
 
--- @[simp, ftrans_simp]
+-- @[simp, simp_core]
 -- theorem structModify_inr' [StructType E I EI] [StructType F J FJ] (j : J) (f : FJ j → FJ j) (x : E) (y : F)
 --   : structModify (I:=I⊕J) (.inr j) f (x, y)
 --     =
