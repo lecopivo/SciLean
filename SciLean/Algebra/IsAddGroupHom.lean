@@ -94,7 +94,7 @@ theorem Prod.snd.arg_self.IsAddGroupHom_rule
 
 -- Neg.neg ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
-set_option trace.Meta.Tactic.simp.rewrite true in
+
 @[fun_prop]
 theorem Neg.neg.arg_a0.IsAddGroupHom_rule
     (f : X → Y) (hf : IsAddGroupHom f) : IsAddGroupHom fun x => - f x := by

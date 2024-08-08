@@ -75,7 +75,7 @@
    "type": "git",
    "subDir": null,
    "scope": "",
-   "rev": "0bc27a3615796b3749f35dec1cda8ab440a26440",
+   "rev": "417d8a6b4e8b1de6f42ee2c3e916aeb25495dfd6",
    "name": "leancolls",
    "manifestFile": "lake-manifest.json",
    "inputRev": "main",

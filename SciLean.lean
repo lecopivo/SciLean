@@ -1,16 +1,16 @@
-import SciLean.Core
+import SciLean.Data.ArrayType.Properties
 
-import SciLean.Tactic.MathlibCompiledTactics
-import SciLean.Tactic.Autodiff
-import SciLean.Tactic.IfPull
+-- import SciLean.Tactic.MathlibCompiledTactics
+-- import SciLean.Tactic.Autodiff
+-- import SciLean.Tactic.IfPull
 
-import SciLean.Data.ArrayType
-import SciLean.Data.DataArray
-import SciLean.Data.Fin
+-- import SciLean.Data.ArrayType
+-- import SciLean.Data.DataArray
+-- import SciLean.Data.Fin
 
-import SciLean.Modules.DifferentialEquations
+-- import SciLean.Modules.DifferentialEquations
 
-import SciLean.Util.Profile
+-- import SciLean.Util.Profile
 
 
 /-!
