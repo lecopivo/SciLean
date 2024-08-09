@@ -1,5 +1,6 @@
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.Scalar
+import SciLean.Analysis.Convenient.SemiInnerProductSpace
 
 namespace SciLean
 
@@ -7,28 +8,27 @@ variable
   {R} [RealScalar R]
   {X} [NormedAddCommGroup X] [AdjointSpace R X]
 
-local notation "‖" x "‖₂²" => @inner R _ _ x x
 
 
 /-- Ball using standard Euclidean metric. Empty for negative `r`.
 
 Similar to `Metric.ball` but uses norm originating from inner produce. Note that `ℝ×ℝ` uses
 max norm therefore for `x : ℝ×ℝ` the `Metric.ball x r` is is square rather then a ball.   -/
-def ball₂ (x : X) (r : R) := {y | ‖y - x‖₂² < r}
+def ball₂ (x : X) (r : R) := {y | ‖y - x‖₂²[R] < r^2}
 
 
 /-- Closed ball using standard Euclidean metric. Empty for negative `r`.
 
 Similar to `Metric.closedBall` but uses norm originating from inner produce. Note that `ℝ×ℝ` uses
 max norm therefore for `x : ℝ×ℝ` the `Metric.ball x r` is is square rather then a ball.   -/
-def closedBall₂ (x : X) (r : R) := {y | ‖y - x‖₂² ≤ r}
+def closedBall₂ (x : X) (r : R) := {y | ‖y - x‖₂²[R] ≤ r^2}
 
 
 /-- Sphere using standard Euclidean metric. Empty for negative `r`.
 
 Similar to `Metric.sphere` but uses norm originating from inner produce. Note that `ℝ×ℝ` uses
 max norm therefore for `x : ℝ×ℝ` the `Metric.sphere x r` is is square rather then a sphere.   -/
-def sphere₂ (x : X) (r : R) := {y | ‖y - x‖₂² = r}
+def sphere₂ (x : X) (r : R) := {y | ‖y - x‖₂²[R] = r^2}
 
 
 @[simp,simp_core]

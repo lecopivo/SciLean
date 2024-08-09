@@ -1,7 +1,8 @@
-import SciLean.Core
-import SciLean.Modules.Geometry.Shape.Rotation
-
-import Mathlib.Data.Real.EReal
+-- import SciLean.Core
+-- import SciLean.Modules.Geometry.Shape.Rotation
+import Mathlib.Topology.Basic
+import SciLean.Geometry.BoundingBall
+-- import Mathlib.Data.Real.EReal
 
 namespace SciLean
 
@@ -65,10 +66,15 @@ export Locate (locate)
 
 -- Shape Transform
 ------------------------------------------------------------------------------
-variable (S)
-class Transform (f : X → X) where
+class Transform (f : X → X) (set : S → Set X) where
   transform : S → S
-  is_trans : ∀ (s : S) (x : X), x ∈ toSet s ↔ f x ∈ toSet (transform s)
+  is_trans : ∀ (s : S) (x : X), x ∈ set s ↔ f x ∈ set (transform s)
+
+
+-- variable (S)
+-- class Transform (f : X → X) where
+--   transform : S → S
+--   is_trans : ∀ (s : S) (x : X), x ∈ toSet s ↔ f x ∈ toSet (transform s)
 
 export Transform (transform)
 
@@ -88,10 +94,11 @@ set_default_scalar R
 
 ------------------------------------------------------------------------------
 
+#check Transform
 
 -- Common transformations
 variable (S) (S')
-abbrev Reflect   := Transform S (fun x => - x)
+abbrev Reflect   := Transform (fun x : X => - x)
 abbrev Translate := ∀ t, Transform S (fun x => x + t)
 abbrev Rotate := ∀ r : Rotation R U, Transform S' (fun u => r u)
 abbrev Scale := ∀ s : R, Transform S (fun x => s • x)
