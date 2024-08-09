@@ -1,6 +1,6 @@
 import Lean
 
-namespace SciLean.Tactic.LSimp
+namespace SciLean.Tactic.LSimp.Notation
 
 open Lean.Parser.Tactic
 

@@ -22,7 +22,7 @@ theorem _root_.LeanColls.IndexType.toFin_Fin (i : Fin n) :
 
 
 attribute [optimize_index_access]
-  GetElem.getElem LeanColls.GetElem'.get DataArrayN.get
+  GetElem.getElem DataArrayN.get
   LeanColls.IndexType.toFin_fromFin LeanColls.IndexType.fromFin_toFin Fin.cast Fin.pair
   IndexType.card
 

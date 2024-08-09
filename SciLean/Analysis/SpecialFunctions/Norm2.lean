@@ -1,5 +1,5 @@
 import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Core.Meta.GenerateFunTrans
+import SciLean.Meta.GenerateFunProp
 
 namespace SciLean
 

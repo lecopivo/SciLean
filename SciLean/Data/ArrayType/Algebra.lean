@@ -8,7 +8,7 @@ import SciLean.Data.StructType.Algebra
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 
-import SciLean.Mathlib.Analysis.MetricSpace
+import SciLean.Analysis.MetricSpace
 
 open LeanColls
 
@@ -69,7 +69,7 @@ instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCo
   zero_smul := sorry_proof
 
 open FiniteDimensional IndexType in
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem array_type_finrank {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module R Elem] :
     finrank R Cont = card Idx * finrank R Elem := sorry_proof
 
@@ -88,7 +88,6 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Inner K Elem] : Inner K Co
 instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions Elem] :
     TestFunctions Cont where
   TestFunction x := ∀ i, TestFunction (get x i)
-
 
 noncomputable
 instance (priority := low) {p} [ArrayType Cont Idx Elem] [Dist (WithLp p Elem)] :

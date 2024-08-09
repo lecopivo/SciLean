@@ -58,7 +58,7 @@ instance : Random Id Float where
   random := do
     let N := 1000000000000 -- 1e12
     let n ← randBound Nat 0 N (by decide)
-    let x := n.1.toUSize.toFloat / N.toUSize.toFloat
+    let x := n.1.toUSize.toNat.toFloat / N.toUSize.toNat.toFloat
     let x := 2*x - 1
     return x
 
@@ -69,9 +69,9 @@ instance [Random Id α] [Random Id β] : Random Id (α × β) where
     return (a,b)
 
 open Random
-instance {ι} [IndexType ι] [PlainDataType R] [Random Id R] [Zero R] : Random Id (R^ι) where
+instance {ι} [IndexType ι] [PlainDataType R] [Random Id R] [Zero R] : Random Id (R^[ι]) where
   random := do
-    let mut x : R^ι := 0
+    let mut x : R^[ι] := 0
     for i in IndexType.univ ι do
-      x[i] ← random (α:=R)
+      x := ArrayType.set x i (← random (α:=R))
     return x

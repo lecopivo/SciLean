@@ -12,7 +12,7 @@ import SciLean.Tactic.LSimp
 
 open Lean Meta Qq
 
-namespace SciLean.Tactic.GTrans
+namespace SciLean.Tactic.GTrans.Test
 
 set_option linter.unusedVariables false
 

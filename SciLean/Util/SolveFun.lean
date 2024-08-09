@@ -9,7 +9,6 @@ import SciLean.Lean.Meta.Basic
 import SciLean.Lean.Array
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.SorryProof
-import SciLean.Util.Hold
 
 namespace SciLean
 

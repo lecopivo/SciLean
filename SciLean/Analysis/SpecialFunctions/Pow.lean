@@ -3,7 +3,7 @@ import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
 
-import SciLean.Core.Meta.GenerateFunProp
+import SciLean.Meta.GenerateFunProp
 
 open ComplexConjugate
 
@@ -188,7 +188,7 @@ theorem sqrt.arg_x.revCDeriv_rule_at
     let x' := sqrt xdx.1
     (x', fun dy => xdx.2 (dy / (2 * x'))) := by
   unfold revCDeriv
-  fun_trans (disch:=aesop) only [fwdCDeriv, smul_push, ftrans_simp]
+  fun_trans (disch:=aesop) only [fwdCDeriv, smul_push, simp_core]
   simp; funext dy; congr
   field_simp [mul_comm]
 
@@ -203,6 +203,6 @@ theorem sqrt.arg_x.revCDeriv_rule
       let x' := sqrt xdx.1
       (x', fun dy => xdx.2 (dy / (2 * x'))) := by
   funext u
-  fun_trans (disch:=aesop) only [fwdCDeriv, smul_push, ftrans_simp]
+  fun_trans (disch:=aesop) only [fwdCDeriv, smul_push, simp_core]
 
 end Convenient

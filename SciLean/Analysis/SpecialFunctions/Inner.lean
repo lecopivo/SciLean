@@ -1,8 +1,8 @@
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
 
-import SciLean.Core.Meta.GenerateFunProp
-import SciLean.Core.Meta.GenerateFunTrans
+import SciLean.Meta.GenerateFunProp
+-- import SciLean.Meta.GenerateFunTrans
 
 namespace SciLean
 

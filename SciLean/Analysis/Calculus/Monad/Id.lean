@@ -1,5 +1,5 @@
-import SciLean.Analysis.Calculus.Monad.FwdDerivMonad
-import SciLean.Analysis.Calculus.Monad.RevDerivMonad
+import SciLean.Analysis.Calculus.Monad.FwdCDerivMonad
+import SciLean.Analysis.Calculus.Monad.RevCDerivMonad
 
 namespace SciLean
 
@@ -38,26 +38,26 @@ variable
   {K : Type _} [RCLike K]
 
 noncomputable
-instance : FwdDerivMonad K Id' Id' where
-  fwdDerivM f := fun x dx => pure (fwdDeriv K (fun x => (f x).run) x dx)
+instance : FwdCDerivMonad K Id' Id' where
+  fwdCDerivM f := fun x dx => pure (fwdCDeriv K (fun x => (f x).run) x dx)
   CDifferentiableM f := CDifferentiable K (fun x => (f x).run)
-  fwdDerivM_pure f := by simp[pure]
-  fwdDerivM_bind := by simp[Id',Bind.bind]; sorry_proof
-  fwdDerivM_pair y := by intros; simp; sorry_proof
+  fwdCDerivM_pure f := by simp[pure]
+  fwdCDerivM_bind := by simp[Id',Bind.bind]; sorry_proof
+  fwdCDerivM_pair y := by intros; simp; sorry_proof
   CDifferentiableM_pure := by simp[pure]
   CDifferentiableM_bind := by intros; simp[bind]; sorry_proof
   CDifferentiableM_pair y := by intros; simp[bind,pure]; fun_prop
 
 
 noncomputable
-instance : RevDerivMonad K Id' Id' where
-  revDerivM f := fun x =>
-    let ydf := revDeriv K (fun x => (f x).run) x
+instance : RevCDerivMonad K Id' Id' where
+  revCDerivM f := fun x =>
+    let ydf := revCDeriv K (fun x => (f x).run) x
     pure ((ydf.1, fun dy => pure (ydf.2 dy)))
   HasAdjDiffM f := HasAdjDiff K (fun x => (f x).run)
-  revDerivM_pure f := by intros; funext; simp[pure,revDeriv]
-  revDerivM_bind := by intros; simp; sorry_proof
-  revDerivM_pair y := by intros; simp[Bind.bind]; funext x; sorry_proof
+  revCDerivM_pure f := by intros; funext; simp[pure,revCDeriv]
+  revCDerivM_bind := by intros; simp; sorry_proof
+  revCDerivM_pair y := by intros; simp[Bind.bind]; funext x; sorry_proof
   HasAdjDiffM_pure := by simp[pure]
   HasAdjDiffM_bind := by intros; simp[bind]; sorry_proof
   HasAdjDiffM_pair y := by intros; simp[bind, pure]; fun_prop
@@ -82,10 +82,10 @@ theorem Id'.run.arg_x.CDifferentiable_rule
   : CDifferentiable K (fun x => Id'.run (a x)) := ha
 
 @[fun_trans]
-theorem Id'.run.arg_x.fwdDeriv_rule (a : X → Id' Y)
-  : fwdDeriv K (fun x => Id'.run (a x))
+theorem Id'.run.arg_x.fwdCDeriv_rule (a : X → Id' Y)
+  : fwdCDeriv K (fun x => Id'.run (a x))
     =
-    fun x dx => (fwdDerivM K a x dx).run := by rfl
+    fun x dx => (fwdCDerivM K a x dx).run := by rfl
 
 end OnVec
 
@@ -106,11 +106,11 @@ theorem Id'.run.arg_x.HasAdjDiff_rule
 
 
 @[fun_trans]
-theorem Id'.run.arg_x.revDeriv_rule (a : X → Id' Y)
-  : revDeriv K (fun x => Id'.run (a x))
+theorem Id'.run.arg_x.revCDeriv_rule (a : X → Id' Y)
+  : revCDeriv K (fun x => Id'.run (a x))
     =
     fun x =>
-      let ydf := (revDerivM K a x).run
+      let ydf := (revCDerivM K a x).run
       (ydf.1, fun dy => (ydf.2 dy).run) := by rfl
 
 
@@ -122,12 +122,12 @@ theorem Pure.pure.arg_a0.HasAdjDiff_rule
 
 
 @[fun_trans]
-theorem Pure.pure.arg_a0.fwdDeriv_rule
+theorem Pure.pure.arg_a0.fwdCDeriv_rule
     (a0 : X → Y) :
-    fwdDerivM K (fun x => Pure.pure (f:=Id') (a0 x))
+    fwdCDerivM K (fun x => Pure.pure (f:=Id') (a0 x))
     =
     fun x dx =>
-      let ydy := fwdDeriv K a0 x dx
+      let ydy := fwdCDeriv K a0 x dx
       pure ydy := by rfl
 
 
@@ -140,20 +140,20 @@ theorem Bind.bind.arg_a0a1.HasAdjDiff_rule_on_Id'
 
 
 @[fun_trans]
-theorem Bind.bind.arg_a0a1.revDerivM_rule_on_Id'
+theorem Bind.bind.arg_a0a1.revCDerivM_rule_on_Id'
     (a0 : X → Y) (a1 : X → Y → Z)
     (ha0 : HasAdjDiff K a0) (ha1 : HasAdjDiff K (fun (x,y) => a1 x y)) :
-    (revDerivM (m:=Id') K (fun x => Bind.bind ⟨a0 x⟩ (fun y => ⟨a1 x y⟩)))
+    (revCDerivM (m:=Id') K (fun x => Bind.bind ⟨a0 x⟩ (fun y => ⟨a1 x y⟩)))
     =
     fun x =>
-      let ydg' := revDeriv K a0 x
-      let zdf' := revDeriv K (fun (x,y) => a1 x y) (x,ydg'.1)
+      let ydg' := revCDeriv K a0 x
+      let zdf' := revCDeriv K (fun (x,y) => a1 x y) (x,ydg'.1)
       ⟨(zdf'.1,
        fun dz' =>
          let dxy' := zdf'.2 dz'
          let dx' := ydg'.2 dxy'.2
          ⟨dxy'.1 + dx'⟩)⟩ := by
-  simp[revDerivM,Bind.bind]; fun_trans; simp[revDeriv,revDerivUpdate]; sorry_proof
+  simp[revCDerivM,Bind.bind]; fun_trans; simp[revCDeriv,revCDerivUpdate]; sorry_proof
 
 
 

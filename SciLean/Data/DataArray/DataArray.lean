@@ -179,66 +179,16 @@ instance : Membership α (DataArrayN α ι) where
 instance : Membership (ι × α) (Indexed.WithIdx (DataArrayN α ι)) where
   mem := fun (i,x) xs => xs.1.get i = x
 
-instance : ToMultiset (DataArrayN α ι) α where
-  toMultiset xs := .ofList xs.toList
-
-instance : ToMultiset (Indexed.WithIdx (DataArrayN α ι)) (ι × α) where
-  toMultiset xs := .ofList (xs.1.toListIdx)
-
-instance : Fold (DataArrayN α ι) α where
-  fold  xs f init := fold (IndexType.univ ι) (fun b i => f b (xs.get i)) init
-  foldM xs f init := fold (IndexType.univ ι) (fun b i => do f (← b) (xs.get i)) (pure init)
-
-instance : Fold (Indexed.WithIdx (DataArrayN α ι)) (ι × α) where
-  fold  xs f init := fold (IndexType.univ ι) (fun b i => f b (i, xs.1.get i)) init
-  foldM xs f init := fold (IndexType.univ ι) (fun b i => do f (← b) (i, xs.1.get i)) (pure init)
-
-instance : Size (DataArrayN α ι) where
-  size xs := IndexType.card ι
-
-instance : Size (Indexed.WithIdx (DataArrayN α ι)) where
-  size xs := IndexType.card ι
-
-instance : MultiBag.ReadOnly (DataArrayN α ι) α := ⟨⟩
-instance : MultiBag.ReadOnly (Indexed.WithIdx (DataArrayN α ι)) (ι × α) := ⟨⟩
-
-instance : Indexed (DataArrayN α ι) ι α where
-  toMultiBagWithIdx := inferInstance
+instance : ArrayType (DataArrayN α ι) ι α where
   ofFn f := ⟨DataArray.intro f, sorry_proof⟩
   get xs i := xs.get i
   set xs i x := xs.set i x
-  update xs i f := xs.modify i f
-
-instance : LawfulIndexed (DataArrayN α ι) ι α where
+  modify xs i f := xs.modify i f
   get_ofFn := sorry_proof
+  ofFn_get := sorry_proof
   get_set_eq := sorry_proof
-  get_set_ne := sorry_proof
-  get_update_eq := sorry_proof
-  get_update_ne := sorry_proof
-
-instance : ArrayType (DataArrayN α ι) ι α where
-  get_injective := sorry_proof
-
--- @[inline]
--- instance : GetElem (DataArrayN α ι) ι α (λ _ _ => True) where
---   getElem xs i _ := xs.1.get ((IndexType.toFin i).cast xs.2)
-
--- @[inline]
--- instance : SetElem (DataArrayN α ι) ι α where
---   setElem xs i xi := ⟨xs.1.set ((IndexType.toFin i).cast xs.2) xi, sorry_proof⟩
-
--- @[inline]
--- instance : IntroElem (DataArrayN α ι) ι α where
---   introElem f := ⟨DataArray.intro f, sorry_proof⟩
-
--- instance : StructType (DataArrayN α ι) ι (fun _ => α) where
---   structProj x i := x.get i
---   structMake f := Indexed.ofFn f
---   structModify i f x := Indexed.update x i f
---   left_inv := sorry_proof
---   right_inv := sorry_proof
---   structProj_structModify  := sorry_proof
---   structProj_structModify' := sorry_proof
+  get_set_neq := sorry_proof
+  modify_set := sorry_proof
 
 instance : ArrayTypeNotation (DataArrayN α ι) ι α := ⟨⟩
 
@@ -270,7 +220,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
         h_size := sorry_proof
 
         fromByteArray := λ b i h =>
-          Indexed.ofFn (λ j => panic! "not implemented!")
+          ArrayType.ofFn (λ j => panic! "not implemented!")
         toByteArray   := λ b i h c => panic! "not implemented!"
         toByteArray_size := sorry_proof
         fromByteArray_toByteArray := sorry_proof
@@ -282,7 +232,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
         h_size := sorry_proof
 
         fromByteArray := λ b i h =>
-          Indexed.ofFn (λ j =>
+          ArrayType.ofFn (λ j =>
             let Fin := (i + (IndexType.toFin j).1.toUSize *αByteType.bytes)
             αByteType.fromByteArray b Fin sorry_proof)
         toByteArray   := λ b i h c => Id.run do

@@ -74,62 +74,62 @@ abbrev scalarGradient (f : X → K) (x : X) : X := (revCDeriv K f x).2 1
 -- simplification rules for individual components ------------------------------
 --------------------------------------------------------------------------------
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDeriv_fst (f : X → Y) (x : X)
   : (revCDeriv K f x).1 = f x :=
 by
   rfl
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDeriv_snd_zero (f : X → Y) (x : X)
   : (revCDeriv K f x).2 0 = 0 :=
 by
   simp[revCDeriv]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDerivUpdate_fst (f : X → Y) (x : X)
   : (revCDerivUpdate K f x).1 = f x :=
 by
   rfl
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDerivUpdate_snd_zero (f : X → Y) (x dx : X)
   : (revCDerivUpdate K f x).2 0 dx = dx :=
 by
   simp[revCDerivUpdate]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDerivUpdate_snd_zero' (f : X → Y) (x : X) (dy : Y)
   : (revCDerivUpdate K f x).2 dy 0 = (revCDeriv K f x).2 dy :=
 by
   simp[revCDerivUpdate]
 
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDerivProj_fst (f : X → E) (x : X)
   : (revCDerivProj K (I:=I) f x).1 = f x :=
 by
   rfl
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDerivProj_snd_zero (f : X → E) (x : X) (i : I)
   : (revCDerivProj K I f x).2 i 0 = 0 :=
 by
   simp[revCDerivProj]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDerivProjUpdate_fst (f : X → E) (x : X)
   : (revCDerivProjUpdate K I f x).1 = f x :=
 by
   rfl
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDerivProjUpdate_snd_zero (f : X → E) (x dx : X) (i : I)
   : (revCDerivProjUpdate K I f x).2 i 0 dx = dx :=
 by
   simp[revCDerivProjUpdate]
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem revCDerivProjUpdate_snd_zero' (f : X → Y) (x : X) (dy : Y)
   : (revCDerivUpdate K f x).2 dy 0 = (revCDeriv K f x).2 dy :=
 by
@@ -820,7 +820,7 @@ theorem HSub.hSub.arg_a0a1.revCDerivProj_rule
          let dy' := -dy
          (ydg.2 i dy' dx)) := by
   unfold revCDerivProjUpdate; unfold revCDerivProj
-  fun_trans; simp[revCDerivUpdate, neg_pull,revCDeriv]
+  fun_trans; simp[revCDerivUpdate, revCDeriv]
 
 
 @[fun_trans]
@@ -837,7 +837,7 @@ theorem HSub.hSub.arg_a0a1.revCDerivProjUpdate_rule
          let dy' := -dy
          ydg.2 i dy' dx) := by
   unfold revCDerivProjUpdate
-  fun_trans; simp[revCDerivProjUpdate, neg_pull, revCDerivProj, revCDeriv,add_assoc]
+  fun_trans; simp[revCDerivProjUpdate, revCDerivProj, revCDeriv,add_assoc]
 
 
 -- Neg.neg ---------------------------------------------------------------------

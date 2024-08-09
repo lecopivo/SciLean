@@ -1,7 +1,7 @@
 import SciLean.Analysis.Convenient.ContCDiff
 import SciLean.Analysis.Calculus.FwdCDeriv
 
-import SciLean.Tactic.Autodiff'
+import SciLean.Tactic.Autodiff
 import SciLean.Util.RewriteBy
 
 set_option linter.unusedVariables false
@@ -114,16 +114,19 @@ theorem ContCDiffMapFD.FD_fst (f : X ⟿FD[K,n] Y) (x dx : X) :
 -- Algebra ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance : Add (X ⟿FD[K,n] Y) := ⟨fun f g => fun x ⟿FD[K,n] f x + g x⟩
-instance : Sub (X ⟿FD[K,n] Y) := ⟨fun f g => fun x ⟿FD[K,n] f x - g x⟩
+variable (f g : X ⟿FD[K,∞] Y)
+
+-- TODO: figure out what to do with `X ⟿FD[K,0] Y` and then change thse instancese to
+--       `X ⟿FD[K,n] Y`
+instance : Add (X ⟿FD[K,∞] Y) := ⟨fun f g => fun x ⟿FD[K,∞] f x + g x⟩
+instance : Sub (X ⟿FD[K,∞] Y) := ⟨fun f g => fun x ⟿FD[K,∞] f x - g x⟩
 instance : Neg (X ⟿FD[K,n] Y) := ⟨fun f => fun x ⟿FD[K,n] - f x⟩
-instance : SMul K (X ⟿FD[K,n] Y) := ⟨fun r f => fun x ⟿FD[K,n] r • f x⟩
+instance : SMul K (X ⟿FD[K,∞] Y) := ⟨fun r f => fun x ⟿FD[K,∞] r • f x⟩
 instance : Zero (X ⟿FD[K,n] Y) := ⟨fun (x : X) ⟿FD[K,n] (0:Y)⟩
 
 section AlgebraSimps
 
-variable (f g : X ⟿FD[K,n] Y) (x : X) (r : K)
-
+variable (f g : X ⟿FD[K,∞] Y) (x : X) (r : K)
 
 @[simp, simp_core]
 theorem ContCDiffMapFD.add_apply : (f + g) x = f x + g x := by rfl
@@ -152,7 +155,7 @@ instance : UniformSpace (X ⟿FD[K,n] Y) where
   comp := sorry_proof
   nhds_eq_comap_uniformity := sorry_proof
 
-instance : Vec K (X ⟿FD[K,n] Y) := Vec.mkSorryProofs
+instance : Vec K (X ⟿FD[K,∞] Y) := Vec.mkSorryProofs
 
 
 -- set_option trace.Meta.Tactic.fun_prop.attr true
@@ -172,23 +175,23 @@ theorem ContCDiffMapFD.mk.arg_f.ContCDiff_rule (f : X → Y → Z) (f' : X → Y
     : ContCDiff K ∞ (fun x => (ContCDiffMapFD.mk' K ∞ (fun y => f x y) (f' x) (h x) (h' x))) := sorry_proof
 
 -- I'm not sure if this is true but it sounds plausible
-@[fun_prop]
-theorem ContCDiffMapFD_partial (n : Nat) (f : W → X ⟿FD[K,n] Y) (g : W → X)
-    (hf : ContCDiff K n f) (hg : ContCDiff K n g) : ContCDiff K n (fun w => f w (g w)) := sorry_proof
+-- @[fun_prop]
+-- theorem ContCDiffMapFD_partial (n : Nat) (f : W → X ⟿FD[K,n] Y) (g : W → X)
+--     (hf : ContCDiff K n f) (hg : ContCDiff K n g) : ContCDiff K n (fun w => f w (g w)) := sorry_proof
 
--- I'm not sure if this is true but it sounds plausible
--- TODO: reformulate with `f'` as free variables as in `ContCDiffMapFD.mk.arg_f.ContCDiff_rule`
-@[fun_prop]
-theorem ContCDiffMapFD.mk.arg_f.ContCDiff_rule_partial (n l k : ℕ) (f : X → Y → Z)
-    (hf : ContCDiff K n (fun xy : X×Y => f xy.1 xy.2)) (h : l + k ≤ n) :
-    ContCDiff K k (fun x => (fun y ⟿FD[K,l] f x y)) := sorry_proof
+-- -- I'm not sure if this is true but it sounds plausible
+-- -- TODO: reformulate with `f'` as free variables as in `ContCDiffMapFD.mk.arg_f.ContCDiff_rule`
+-- @[fun_prop]
+-- theorem ContCDiffMapFD.mk.arg_f.ContCDiff_rule_partial (n l k : ℕ) (f : X → Y → Z)
+--     (hf : ContCDiff K n (fun xy : X×Y => f xy.1 xy.2)) (h : l + k ≤ n) :
+--     ContCDiff K k (fun x => (fun y ⟿FD[K,l] f x y)) := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
 
 @[fun_prop]
 theorem ContCDiffMapFD_apply_linearSmoothMap
-    (f : W → X ⟿FD[K,n] Y) (hf : IsSmoothLinearMap K f) (x : X) :
+    (f : W → X ⟿FD[K,∞] Y) (hf : IsSmoothLinearMap K f) (x : X) :
     IsSmoothLinearMap K (fun w => f w x) := sorry_proof
 
 -- this is hard to state as we have to be explicit about `f'`
@@ -197,23 +200,19 @@ theorem ContCDiffMapFD.mk.arg_f.IsSmoothLinearMap_rule
     (f : W → X → Y) (f' : W → X → X → Y×Y)
     (hf₁ : CDifferentiable K (fun (w,x) => f w x))
     (hf₂ : IsLinearMap K f)
-    (hf₃ : ∀ w, ContCDiff K n (f w))
+    (hf₃ : ∀ w, ContCDiff K ∞ (f w))
     (h : ∀ w, (SciLean.fwdCDeriv K fun x => f w x) = f' w)
-    (h' : ∀ w, ContCDiff K n (f w)) :
-    IsSmoothLinearMap K (fun w => ContCDiffMapFD.mk' K n (fun x => f w x) (f' w) (h w) (h' w)) := sorry_proof
+    (h' : ∀ w, ContCDiff K ∞ (f w)) :
+    IsSmoothLinearMap K (fun w => ContCDiffMapFD.mk' K ∞ (fun x => f w x) (f' w) (h w) (h' w)) := sorry_proof
 
-example : IsLinearMap K (fun (w : K) => fun (x : K) ⟿FD[K,n] w*x + w) := by fun_prop
-example : (cderiv K fun (w : K) => fun (x : K) ⟿FD[K,n] w*x + w)
+example : IsLinearMap K (fun (w : K) => fun (x : K) ⟿FD[K,∞] w*x + w) := by fun_prop
+example : (cderiv K fun (w : K) => fun (x : K) ⟿FD[K,∞] w*x + w)
           =
-          fun w dw => fun (x : K) ⟿FD[K,n] dw*x + dw := by
-  (conv => lhs; fun_trans); funext x dx; simp
+          fun w dw => fun (x : K) ⟿FD[K,∞] dw*x + dw := by
+  (conv => lhs; fun_trans)
 
 @[fun_prop]
-theorem ContCDiffMapFD_eval_CDifferentiable (h : 0 < n) :
-    CDifferentiable K (fun (fx : (X ⟿FD[K,n] Y)×X) => fx.1 fx.2) := by sorry_proof
-
-@[fun_prop]
-theorem ContCDiffMapFD_eval_CDifferentiable' :
+theorem ContCDiffMapFD_eval_CDifferentiable :
     CDifferentiable K (fun (fx : (X ⟿FD[K,∞] Y)×X) => fx.1 fx.2) := by sorry_proof
 
 

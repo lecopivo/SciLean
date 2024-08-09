@@ -4,8 +4,7 @@ import SciLean.Analysis.SpecialFunctions.Norm2
 
 import SciLean.Analysis.Calculus.FDeriv
 
-
-import SciLean.Tactic.Autodiff'
+import SciLean.Tactic.Autodiff
 
 open ComplexConjugate
 

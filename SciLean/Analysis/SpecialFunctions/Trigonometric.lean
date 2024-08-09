@@ -3,8 +3,8 @@ import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
 
-import SciLean.Core.Meta.GenerateFunProp
-import SciLean.Core.Meta.GenerateFunTrans
+import SciLean.Meta.GenerateFunProp
+-- import SciLean.Meta.GenerateFunTrans
 
 open ComplexConjugate
 
@@ -21,12 +21,12 @@ variable
 --------------------------------------------------------------------------------
 
 open Scalar in
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem add_sin2_cos2_eq_one (x : C) : sin x * sin x + cos x * cos x = 1 :=
  sorry_proof
 
 open Scalar in
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem add_cos2_sin2_eq_one (x : C) : cos x * cos x + sin x * sin x = 1 :=
  sorry_proof
 

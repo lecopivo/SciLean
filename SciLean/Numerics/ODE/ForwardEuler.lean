@@ -3,7 +3,6 @@ import SciLean.Numerics.ODE.Solvers
 
 import SciLean.Analysis.Calculus.FDeriv
 
-import SciLean.Tactic.Autodiff'
 
 namespace SciLean
 

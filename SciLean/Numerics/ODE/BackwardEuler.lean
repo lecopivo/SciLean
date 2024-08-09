@@ -1,4 +1,4 @@
-import SciLean.Analysis.Calculus.Diffeomorphism
+import SciLean.Analysis.Normed.Diffeomorphism
 import SciLean.Logic.Function.InvFun
 
 import SciLean.Numerics.ODE.Basic

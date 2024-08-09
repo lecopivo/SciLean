@@ -7,8 +7,6 @@ import SciLean.Tactic.FunTrans.Elab
 import SciLean.Analysis.Scalar
 import SciLean.Util.SorryProof
 
-import SciLean.Mathlib.Set
-
 variable {α β γ : Type _}
 
 attribute [fun_trans] Set.preimage
@@ -18,6 +16,21 @@ attribute [fun_trans] Set.preimage_id Set.preimage_id'
 
 namespace Set
 
+/-- Take a slice of a set in the first component. -/
+def fst (A : Set (α×β)) (b : β) : Set α := {x | (x,b) ∈ A}
+
+/-- Take a slice of a set in the second component. -/
+def snd (A : Set (α×β)) (a : α) : Set β := {y | (a,y) ∈ A}
+
+
+@[simp, simp_core]
+theorem mem_fst (x : α) (b : β) (A : Set (α×β)) : (x ∈ A.fst b) = ((x,b) ∈ A) := by rfl
+
+@[simp, simp_core]
+theorem mem_snd (a : α) (y : β) (A : Set (α×β)) : (y ∈ A.snd a) = ((a,y) ∈ A) := by rfl
+
+
+----------------------------------------------------------------------------------------------------
 
 open Classical in
 @[fun_trans]

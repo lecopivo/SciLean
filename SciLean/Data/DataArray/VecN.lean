@@ -37,54 +37,16 @@ namespace Vec2
       v[1,0]
 
 
-  instance : StructType Vec2 (Fin 2) (fun _ => Float) where
-    structProj := get
-    structMake := intro
-    structModify i f x := set x i (f (get x i))
-    left_inv := sorry_proof
-    right_inv := sorry_proof
-    structProj_structModify  := sorry_proof
-    structProj_structModify' := sorry_proof
-
-  instance : Indexed Vec2 (Fin 2) Float where
-    mem x u := (x = u.x) ∨ (x = u.y)
-    toMultiset u := .ofList [u.x,u.y]
-    toMultiBagWithIdx := {
-      mem := fun (i,x) u => x = get u.1 i
-      toMultiset := fun u => .ofList [(0,u.1.x), (1,u.1.y)]
-      fold := fun u f init => (f (f init (0,u.1.x)) (1,u.1.y))
-      size := 2}
-    fold u f init := f (f init u.x) u.y
+  instance : ArrayType Vec2 (Fin 2) Float where
     ofFn := intro
     get := get
-    update u i f := set u i (f (get u i))
-
-  instance : ArrayType Vec2 (Fin 2) Float where
-    get_injective := sorry_proof
+    set := set
+    modify u i f := set u i (f (get u i))
     get_ofFn := sorry_proof
+    ofFn_get := sorry_proof
     get_set_eq := sorry_proof
-    get_set_ne := sorry_proof
-    get_update_eq := sorry_proof
-    get_update_ne := sorry_proof
-
-  instance : PlainDataType Vec2 where
-    btype := .inr {
-      bytes := 2 * Float.byteType.bytes
-      h_size := sorry_proof
-      fromByteArray := fun b i _ =>
-        {
-          x := Float.byteType.fromByteArray b i sorry_proof
-          y := Float.byteType.fromByteArray b (i + Float.byteType.bytes) sorry_proof
-        }
-      toByteArray := fun b i _ v => Id.run do
-        let mut b := b
-        b := Float.byteType.toByteArray b i sorry_proof v.x
-        b := Float.byteType.toByteArray b (i + Float.byteType.bytes) sorry_proof v.y
-        b
-      toByteArray_size := sorry_proof
-      fromByteArray_toByteArray := sorry_proof
-      fromByteArray_toByteArray_other := sorry_proof
-    }
+    get_set_neq := sorry_proof
+    modify_set := sorry_proof
 
 end Vec2
 
@@ -124,58 +86,16 @@ namespace Vec3
     else
       v[1,0,0]
 
-  instance : StructType Vec3 (Fin 3) (fun _ => Float) where
-    structProj := get
-    structMake := intro
-    structModify i f x := set x i (f (get x i))
-    left_inv := sorry_proof
-    right_inv := sorry_proof
-    structProj_structModify  := sorry_proof
-    structProj_structModify' := sorry_proof
-
-  instance : Indexed Vec3 (Fin 3) Float where
-    mem x u := (x = u.x) ∨ (x = u.y)
-    toMultiset u := .ofList [u.x,u.y]
-    toMultiBagWithIdx := {
-      mem := fun (i,x) u => x = get u.1 i
-      toMultiset := fun u => .ofList [(0,u.1.x), (1,u.1.y), (2, u.1.z)]
-      fold := fun u f init => f (f (f init (0,u.1.x)) (1,u.1.y)) (2,u.1.z)
-      size := 3}
-    fold u f init := f (f (f init u.x) u.y) u.z
+  instance : ArrayType Vec3 (Fin 3) Float where
     ofFn := intro
     get := get
-    update u i f := set u i (f (get u i))
-
-
-  instance : ArrayType Vec3 (Fin 3) Float where
-    get_injective := sorry_proof
+    set := set
+    modify u i f := set u i (f (get u i))
     get_ofFn := sorry_proof
+    ofFn_get := sorry_proof
     get_set_eq := sorry_proof
-    get_set_ne := sorry_proof
-    get_update_eq := sorry_proof
-    get_update_ne := sorry_proof
-
-
-  instance : PlainDataType Vec3 where
-    btype := .inr {
-      bytes := 2 * Float.byteType.bytes
-      h_size := sorry_proof
-      fromByteArray := fun b i _ =>
-        {
-          x := Float.byteType.fromByteArray b i sorry_proof
-          y := Float.byteType.fromByteArray b (i + Float.byteType.bytes) sorry_proof
-          z := Float.byteType.fromByteArray b (i + 2*Float.byteType.bytes) sorry_proof
-        }
-      toByteArray := fun b i _ v => Id.run do
-        let mut b := b
-        b := Float.byteType.toByteArray b i sorry_proof v.x
-        b := Float.byteType.toByteArray b (i + Float.byteType.bytes) sorry_proof v.y
-        b := Float.byteType.toByteArray b (i + 2*Float.byteType.bytes) sorry_proof v.z
-        b
-      toByteArray_size := sorry_proof
-      fromByteArray_toByteArray := sorry_proof
-      fromByteArray_toByteArray_other := sorry_proof
-    }
+    get_set_neq := sorry_proof
+    modify_set := sorry_proof
 
 
 end Vec3

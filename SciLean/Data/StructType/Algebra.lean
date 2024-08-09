@@ -7,6 +7,7 @@ import SciLean.Data.StructType.Basic
 
 import SciLean.Tactic.AnalyzeConstLambda
 import SciLean.Meta.GenerateFunProp
+import SciLean.Meta.GenerateAddGroupHomSimp
 
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
@@ -137,12 +138,15 @@ class ZeroStruct (X I XI) [StructType X I XI] [Zero X] [∀ i, Zero (XI i)] : Pr
 class AddStruct (X I XI) [StructType X I XI] [Add X] [∀ i, Add (XI i)] : Prop where
   structProj_add : ∀ (i : I) (x x' : X), structProj (x + x') i = structProj x i + structProj x' i
 
+class NegStruct (X I XI) [StructType X I XI] [Neg X] [∀ i, Neg (XI i)] : Prop where
+  structProj_neg : ∀ (i : I) (x : X), structProj (-x) i = - structProj x i
+
 class SMulStruct (K X I XI) [StructType X I XI] [SMul K X] [∀ i, SMul K (XI i)] : Prop where
   structProj_smul : ∀ (i : I) (k : K) (x : X), structProj (k • x) i = k • structProj x i
 
 class ModuleStruct (K X I XI) [StructType X I XI] [RCLike K] [AddCommGroup X] [Module K X] [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)]
-  extends ZeroStruct X I XI, AddStruct X I XI, SMulStruct K X I XI : Prop where
-  hoh : True := True.intro
+  extends ZeroStruct X I XI, AddStruct X I XI, NegStruct X I XI, SMulStruct K X I XI : Prop where
+    structProj_neg := sorry_proof -- todo: infer this from `structProj_add` and `structProj_smul`
 
 class TopologicalStruct (X I XI) [StructType X I XI] [TopologicalSpace X] [∀ i, TopologicalSpace (XI i)] : Prop
   where
@@ -184,6 +188,21 @@ instance instAddStructProd
   [AddStruct E I EI] [AddStruct F J FJ]
   : AddStruct (E×F) (I⊕J) (Sum.rec EI FJ) where
   structProj_add := by simp[structProj, AddStruct.structProj_add]
+
+
+--------------------------------------------------------------------------------
+-- NegStruct instances ---------------------------------------------------------
+--------------------------------------------------------------------------------
+
+instance (priority:=low) instNegStructDefault
+  {X} [Neg X] : NegStruct X Unit (fun _ => X) where
+  structProj_neg := by simp[structProj]
+
+instance instNegStructProd
+  [Neg E] [Neg F] [∀ i, Neg (EI i)] [∀ j, Neg (FJ j)]
+  [NegStruct E I EI] [NegStruct F J FJ]
+  : NegStruct (E×F) (I⊕J) (Sum.rec EI FJ) where
+  structProj_neg := by simp[structProj, NegStruct.structProj_neg]
 
 
 --------------------------------------------------------------------------------
@@ -262,6 +281,53 @@ namespace StructType
 -- Function properties of structProj, structMake, oneHot -------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+section OnGroup
+variable
+  {X : Type _} [AddCommGroup X]
+  {XI : I → Type _} [∀ i, AddCommGroup (XI i)]
+  [StructType X I XI] [AddStruct X I XI] [NegStruct X I XI]
+
+  def_fun_prop with_transitive (i : I) : IsAddGroupHom fun (x : X) => structProj x i by
+    constructor
+    · apply AddStruct.structProj_add
+    · apply NegStruct.structProj_neg
+
+  def_fun_prop with_transitive : IsAddGroupHom fun (f : (i : I) → XI i) => structMake (X:=X) f by
+    constructor
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[NegStruct.structProj_neg]; simp
+
+  def_fun_prop with_transitive (i : I) : IsAddGroupHom fun (xi : XI i) => oneHot (X:=X) i xi by
+    constructor
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp[oneHot]; aesop
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[NegStruct.structProj_neg]; simp[oneHot]; aesop
+
+  #generate_add_group_hom_simps structProj.arg_x.IsAddGroupHom_rule
+  #generate_add_group_hom_simps structMake.arg_f.IsAddGroupHom_rule
+  #generate_add_group_hom_simps oneHot.arg_xi.IsAddGroupHom_rule
+
+  attribute [simp, simp_core]
+    structProj.arg_x.add_pull
+    structProj.arg_x.sub_pull
+    structProj.arg_x.neg_pull
+
+  attribute [simp, simp_core]
+    structMake.arg_f.add_push
+    structMake.arg_f.sub_push
+    structMake.arg_f.neg_push
+
+  @[simp, simp_core]
+  theorem structMake.arg_f.app_zero' :
+      structMake (X:=X) (fun i : I => 0) = 0 := structMake.arg_f.app_zero
+
+  attribute [simp, simp_core]
+    oneHot.arg_xi.add_push
+    oneHot.arg_xi.sub_push
+    oneHot.arg_xi.neg_push
+
+end OnGroup
+
+
 section OnModule
 variable
   {X : Type _} [AddCommGroup X] [Module K X]
@@ -283,24 +349,18 @@ variable
     · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp[oneHot]; aesop
     · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[SMulStruct.structProj_smul]; simp[oneHot]; aesop
 
-  -- TODO: most of the generated theorems are useless as they can't infer the field `K`
-  --       There should be command `#generate_add_hom_simps` and `#generate_zero_hom_simps`
-  --       or `#generate_add_group_hom_simps`
   #generate_linear_map_simps structProj.arg_x.IsLinearMap_rule
   #generate_linear_map_simps structMake.arg_f.IsLinearMap_rule
   #generate_linear_map_simps oneHot.arg_xi.IsLinearMap_rule
 
   attribute [simp, simp_core]
-    structProj.arg_x.add_pull
-    structProj.arg_x.sub_pull
-    structProj.arg_x.neg_pull
     structProj.arg_x.smul_pull
 
   attribute [simp, simp_core]
-    structMake.arg_f.add_push
-    structMake.arg_f.sub_push
-    structMake.arg_f.neg_push
     structMake.arg_f.smul_push
+
+  attribute [simp, simp_core]
+    oneHot.arg_xi.smul_push
 
 end OnModule
 

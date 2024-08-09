@@ -1,42 +1,42 @@
-import SciLean.Analysis.Calculus.Monad.FwdDerivMonad
-import SciLean.Analysis.Calculus.Monad.RevDerivMonad
+import SciLean.Analysis.Calculus.Monad.FwdCDerivMonad
+import SciLean.Analysis.Calculus.Monad.RevCDerivMonad
 
 namespace SciLean
 
 
-section FwdDerivMonad
+section FwdCDerivMonad
 
 variable
   {K : Type _} [RCLike K]
-  {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [FwdDerivMonad K m m']
+  {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [FwdCDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
 
 
 noncomputable
-instance (S : Type _) [Vec K S] : FwdDerivMonad K (StateT S m) (StateT (S×S) m') where
-  fwdDerivM f := fun x dx sds => do
+instance (S : Type _) [Vec K S] : FwdCDerivMonad K (StateT S m) (StateT (S×S) m') where
+  fwdCDerivM f := fun x dx sds => do
     -- ((y,s'),(dy,ds'))
-    let r ← fwdDerivM K (fun (xs : _×S) => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
+    let r ← fwdCDerivM K (fun (xs : _×S) => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
     -- ((y,dy),(s',ds'))
     pure ((r.1.1,r.2.1),(r.1.2, r.2.2))
 
   CDifferentiableM f := CDifferentiableM K (fun (xs : _×S) => f xs.1 xs.2)
 
-  fwdDerivM_pure f h :=
+  fwdCDerivM_pure f h :=
     by
       funext
-      simp[pure, StateT.pure, fwdDeriv]
+      simp[pure, StateT.pure, fwdCDeriv]
       fun_trans
-      simp [fwdDeriv]
+      simp [fwdCDeriv]
 
-  fwdDerivM_bind f g hf hg :=
+  fwdCDerivM_bind f g hf hg :=
     by
       funext x dx sds
       simp at hf; simp at hg
-      simp[fwdDeriv, bind, StateT.bind, StateT.bind.match_1]
+      simp[fwdCDeriv, bind, StateT.bind, StateT.bind.match_1]
       fun_trans
 
-  fwdDerivM_pair f hf :=
+  fwdCDerivM_pair f hf :=
     by
       funext x dx sds
       simp at hf
@@ -73,7 +73,7 @@ variable
 --------------------------------------------------------------------------------
 
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem _root_.getThe.arg.CDifferentiableValM_rule
   : CDifferentiableValM K (m:=StateT S m) (getThe S) :=
 by
@@ -81,35 +81,35 @@ by
   fun_prop
 
 
-@[simp, ftrans_simp]
-theorem _root_.getThe.arg.fwdDerivValM_rule
-  : fwdDerivValM K (m:=StateT S m) (getThe S)
+@[simp, simp_core]
+theorem _root_.getThe.arg.fwdCDerivValM_rule
+  : fwdCDerivValM K (m:=StateT S m) (getThe S)
     =
     getThe (S×S) :=
 by
   funext
-  simp[getThe, MonadStateOf.get, StateT.get,fwdDerivValM, fwdDerivM, pure, StateT.pure]
+  simp[getThe, MonadStateOf.get, StateT.get,fwdCDerivValM, fwdCDerivM, pure, StateT.pure]
   fun_trans
 
 -- MonadState.get --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 
-@[simp,ftrans_simp]
+@[simp,simp_core]
 theorem _root_.MonadState.get.arg.CDifferentiableValM_rule
   : CDifferentiableValM K (m:=StateT S m) (get) :=
 by
   simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,CDifferentiableValM,CDifferentiableM]
   fun_prop
 
-@[simp, ftrans_simp]
-theorem _root_.MonadState.get.arg.fwdDerivValM_rule
-  : fwdDerivValM K (m:=StateT S m) (get)
+@[simp, simp_core]
+theorem _root_.MonadState.get.arg.fwdCDerivValM_rule
+  : fwdCDerivValM K (m:=StateT S m) (get)
     =
     get :=
 by
   funext
-  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,fwdDerivValM, fwdDerivM]
+  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,fwdCDerivValM, fwdCDerivM]
   fun_trans
 
 -- -- setThe ----------------------------------------------------------------------
@@ -125,16 +125,16 @@ by
 
 
 -- @[fun_trans]
--- theorem _root_.setThe.arg_s.fwdDerivM_rule
+-- theorem _root_.setThe.arg_s.fwdCDerivM_rule
 --   (s : X → S) (hs : CDifferentiable K s)
---   : fwdDerivM K (m:=StateT S m) (fun x => setThe S (s x))
+--   : fwdCDerivM K (m:=StateT S m) (fun x => setThe S (s x))
 --     =
 --     (fun x dx => do
---       let sds := fwdDeriv K s x dx
+--       let sds := fwdCDeriv K s x dx
 --       setThe _ sds
 --       pure ((),())) :=
 -- by
---   simp[setThe, set, StateT.set,fwdDerivM,bind,Bind.bind, StateT.bind]
+--   simp[setThe, set, StateT.set,fwdCDerivM,bind,Bind.bind, StateT.bind]
 --   fun_trans; congr
 
 
@@ -151,17 +151,17 @@ by
 
 
 @[fun_trans]
-theorem _root_.MonadStateOf.set.arg_a0.fwdDerivM_rule
+theorem _root_.MonadStateOf.set.arg_a0.fwdCDerivM_rule
   (s : X → S) (ha0 : CDifferentiable K s)
-  : fwdDerivM K (m:=StateT S m) (fun x => set (s x))
+  : fwdCDerivM K (m:=StateT S m) (fun x => set (s x))
     =
     (fun x dx => do
-      let sds := fwdDeriv K s x dx
+      let sds := fwdCDeriv K s x dx
       set sds
       pure ((),())) :=
 by
   funext
-  simp[set, StateT.set,fwdDerivM, bind,Bind.bind, StateT.bind]
+  simp[set, StateT.set,fwdCDerivM, bind,Bind.bind, StateT.bind]
   fun_trans; congr
 
 
@@ -178,18 +178,18 @@ by
 
 
 @[fun_trans]
-theorem _root_.modifyThe.arg_f.fwdDerivM_rule
+theorem _root_.modifyThe.arg_f.fwdCDerivM_rule
   (f : X → S → S) (ha0 : CDifferentiable K (fun xs : X×S => f xs.1 xs.2))
-  : fwdDerivM K (m:=StateT S m) (fun x => modifyThe S (f x))
+  : fwdCDerivM K (m:=StateT S m) (fun x => modifyThe S (f x))
     =
     (fun x dx => do
       modifyThe (S×S) (fun sds =>
-        let sds := fwdDeriv K (fun xs : X×S => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
+        let sds := fwdCDeriv K (fun xs : X×S => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
         sds)
       pure ((),())) :=
 by
   funext
-  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdDerivM,bind,Bind.bind, StateT.bind]
+  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdCDerivM,bind,Bind.bind, StateT.bind]
   fun_trans; congr
 
 
@@ -206,55 +206,55 @@ by
 
 
 @[fun_trans]
-theorem _root_.modify.arg_f.fwdDerivM_rule
+theorem _root_.modify.arg_f.fwdCDerivM_rule
   (f : X → S → S) (ha0 : CDifferentiable K (fun xs : X×S => f xs.1 xs.2))
-  : fwdDerivM K (m:=StateT S m) (fun x => modify (f x))
+  : fwdCDerivM K (m:=StateT S m) (fun x => modify (f x))
     =
     (fun x dx => do
       modify (fun sds =>
-        let sds := fwdDeriv K (fun xs : X×S => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
+        let sds := fwdCDeriv K (fun xs : X×S => f xs.1 xs.2) (x,sds.1) (dx,sds.2)
         sds)
       pure ((),())) :=
 by
   funext
-  simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdDerivM,bind,Bind.bind, StateT.bind]
+  simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdCDerivM,bind,Bind.bind, StateT.bind]
   fun_trans; congr
 
 
-end FwdDerivMonad
+end FwdCDerivMonad
 
 
-section RevDerivMonad
+section RevCDerivMonad
 
 variable
   {K : Type _} [RCLike K]
-  {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [RevDerivMonad K m m']
+  {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [RevCDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
 
 noncomputable
-instance (S : Type _) [SemiInnerProductSpace K S] : RevDerivMonad K (StateT S m) (StateT S m') where
-  revDerivM f := fun x s => do
-    let ysdf ← revDerivM K (fun (xs : _×S) => f xs.1 xs.2) (x,s)
+instance (S : Type _) [SemiInnerProductSpace K S] : RevCDerivMonad K (StateT S m) (StateT S m') where
+  revCDerivM f := fun x s => do
+    let ysdf ← revCDerivM K (fun (xs : _×S) => f xs.1 xs.2) (x,s)
     pure ((ysdf.1.1, fun dx ds => ysdf.2 (dx,ds)), ysdf.1.2)
 
   HasAdjDiffM f := HasAdjDiffM K (fun (xs : _×S) => f xs.1 xs.2)
 
-  revDerivM_pure f h :=
+  revCDerivM_pure f h :=
     by
       funext
-      simp[pure, StateT.pure, revDeriv]
+      simp[pure, StateT.pure, revCDeriv]
       fun_trans
-      simp [revDeriv]; rfl
+      simp [revCDeriv]; rfl
 
-  revDerivM_bind f g hf hg :=
+  revCDerivM_bind f g hf hg :=
     by
       funext x s
       simp at hf; simp at hg
-      simp[revDeriv, bind, StateT.bind, StateT.bind.match_1, StateT.pure, pure]
+      simp[revCDeriv, bind, StateT.bind, StateT.bind.match_1, StateT.pure, pure]
       fun_trans
       rfl
 
-  revDerivM_pair f hf :=
+  revCDerivM_pair f hf :=
     by
       funext x s
       simp at hf
@@ -290,7 +290,7 @@ variable
 --------------------------------------------------------------------------------
 
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem _root_.getThe.arg.HasAdjDiffValM_rule
   : HasAdjDiffValM K (m:=StateT S m) (getThe S) :=
 by
@@ -298,22 +298,22 @@ by
   fun_prop
 
 
-@[simp, ftrans_simp]
-theorem _root_.getThe.arg.revDerivValM_rule
-  : revDerivValM K (m:=StateT S m) (getThe S)
+@[simp, simp_core]
+theorem _root_.getThe.arg.revCDerivValM_rule
+  : revCDerivValM K (m:=StateT S m) (getThe S)
     =
     (do
       pure ((← getThe S), fun ds => modifyThe S (fun ds' => ds + ds'))) :=
 by
   funext
-  simp[getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet]
+  simp[getThe, MonadStateOf.get, StateT.get,revCDerivValM, revCDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet]
   fun_trans; rfl
 
 -- MonadState.get --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 
-@[simp, ftrans_simp]
+@[simp, simp_core]
 theorem _root_.MonadState.get.arg.HasAdjDiffValM_rule
   : HasAdjDiffValM K (m:=StateT S m) (get) :=
 by
@@ -321,15 +321,15 @@ by
   fun_prop
 
 
-@[simp, ftrans_simp]
-theorem _root_.MonadState.get.arg.revDerivValM_rule
-  : revDerivValM K (m:=StateT S m) (get)
+@[simp, simp_core]
+theorem _root_.MonadState.get.arg.revCDerivValM_rule
+  : revCDerivValM K (m:=StateT S m) (get)
     =
     (do
       pure ((← get), fun ds => modify (fun ds' => ds + ds'))) :=
 by
   funext
-  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,revDerivValM, revDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet, modifyGet]
+  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,revCDerivValM, revCDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet, modifyGet]
   fun_trans; rfl
 
 
@@ -346,19 +346,19 @@ by
 
 
 -- @[fun_trans]
--- theorem _root_.setThe.arg_s.revDerivM_rule
+-- theorem _root_.setThe.arg_s.revCDerivM_rule
 --   (s : X → S) (hs : HasAdjDiff K s)
---   : revDerivM K (m:=StateT S m) (fun x => setThe S (s x))
+--   : revCDerivM K (m:=StateT S m) (fun x => setThe S (s x))
 --     =
 --     (fun x => do
---       let sds := revDeriv K s x
+--       let sds := revCDeriv K s x
 --       pure (← setThe S sds.1,
 --             fun _ => do
 --               let dx := sds.2 (← getThe S)
 --               setThe S 0
 --               pure dx)) :=
 -- by
---   simp[setThe, set, StateT.set, revDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure]
+--   simp[setThe, set, StateT.set, revCDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure]
 --   fun_trans
 
 
@@ -375,12 +375,12 @@ by
 
 
 @[fun_trans]
-theorem _root_.MonadStateOf.set.arg_a0.revDerivM_rule
+theorem _root_.MonadStateOf.set.arg_a0.revCDerivM_rule
   (s : X → S) (ha0 : HasAdjDiff K s)
-  : revDerivM K (m:=StateT S m) (fun x => set (s x))
+  : revCDerivM K (m:=StateT S m) (fun x => set (s x))
     =
     (fun x => do
-      let sds := revDeriv K s x
+      let sds := revCDeriv K s x
       pure (← set sds.1,
             fun _ => do
               let dx := sds.2 (← get)
@@ -388,7 +388,7 @@ theorem _root_.MonadStateOf.set.arg_a0.revDerivM_rule
               pure dx)) :=
 by
   funext
-  simp[set, StateT.set, revDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure, get]
+  simp[set, StateT.set, revCDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure, get]
   fun_trans; congr; funext; simp[StateT.get, StateT.bind,StateT.set,StateT.pure]
 
 -- -- modifyThe ----------------------------------------------------------------------
@@ -404,12 +404,12 @@ by
 
 
 -- @[fun_trans]
--- theorem _root_.modifyThe.arg_f.revDerivM_rule
+-- theorem _root_.modifyThe.arg_f.revCDerivM_rule
 --   (f : X → S → S) (ha0 : HasAdjDiff K (fun xs : X×S => f xs.1 xs.2))
---   : revDerivM K (m:=StateT S m) (fun x => modifyThe S (f x))
+--   : revCDerivM K (m:=StateT S m) (fun x => modifyThe S (f x))
 --     =
 --     (fun x => do
---       let sdf := revDeriv K (fun xs : X×S => f xs.1 xs.2) (x, ← getThe S)
+--       let sdf := revCDeriv K (fun xs : X×S => f xs.1 xs.2) (x, ← getThe S)
 --       setThe S sdf.1
 --       pure ((),
 --             fun _ => do
@@ -417,7 +417,7 @@ by
 --               setThe S dxs.2
 --               pure dxs.1)) :=
 -- by
---   simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, setThe, set, StateT.set]
+--   simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revCDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, setThe, set, StateT.set]
 --   fun_trans; congr
 
 
@@ -434,12 +434,12 @@ by
 
 
 @[fun_trans]
-theorem _root_.modify.arg_f.revDerivM_rule
+theorem _root_.modify.arg_f.revCDerivM_rule
   (f : X → S → S) (ha0 : HasAdjDiff K (fun xs : X×S => f xs.1 xs.2))
-  : revDerivM K (m:=StateT S m) (fun x => modify (f x))
+  : revCDerivM K (m:=StateT S m) (fun x => modify (f x))
     =
     (fun x => do
-      let sdf := revDeriv K (fun xs : X×S => f xs.1 xs.2) (x, ← get)
+      let sdf := revCDeriv K (fun xs : X×S => f xs.1 xs.2) (x, ← get)
       set sdf.1
       pure ((),
             fun _ => do
@@ -448,7 +448,7 @@ theorem _root_.modify.arg_f.revDerivM_rule
               pure dxs.1)) :=
 by
   funext
-  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, set, StateT.set, get, pure, StateT.pure, modify]
+  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revCDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, set, StateT.set, get, pure, StateT.pure, modify]
   fun_trans; congr; funext; simp[StateT.bind,StateT.pure,StateT.get,StateT.set]
 
-end RevDerivMonad
+end RevCDerivMonad

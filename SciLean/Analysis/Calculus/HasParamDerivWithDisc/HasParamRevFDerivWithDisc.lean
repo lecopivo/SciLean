@@ -1,7 +1,8 @@
-import SciLean.Core.FunctionTransformations.RevFDeriv
-import SciLean.Core.Transformations.HasParamDerivWithJumps.HasParamFDerivWithJumps
+import SciLean.Analysis.Calculus.RevFDeriv
+import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
+-- import Mathlib.Lean.CoreM
 import SciLean.Tactic.IfPull
-import Mathlib.Lean.CoreM
+
 
 set_option linter.unusedVariables false
 
@@ -86,10 +87,10 @@ def DiscontinuityRevDataList.getDiscontinuities (d : DiscontinuityRevDataList W 
 
 
 @[gtrans]
-def HasParamRevFDerivWithJumpsAt (f : W → X → Y) (w : W)
+def HasParamRevFDerivWithDiscAt (f : W → X → Y) (w : W)
     (f' : outParam <| X → Y×(Y→W))
     (disc : outParam <| DiscontinuityRevDataList W X Y) :=
-  HasParamFDerivWithJumpsAt R f w
+  HasParamFDerivWithDiscAt R f w
     (fun (dw : W) (x : X) => adjoint R (f' x).2 dw)
     (disc.map (fun ⟨df,s,S⟩ => ⟨df,fun dy x => ⟪s x, dy⟫,S⟩))
   ∧
@@ -103,7 +104,7 @@ open FiniteDimensional
 theorem revFDeriv_under_integral
     (f : W → X → Y) (w : W) (μ : Measure X)
     {f' disc}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' disc) :
+    (hf : HasParamRevFDerivWithDiscAt R f w f' disc) :
     (revFDeriv R (fun w' => ∫ x, f w' x ∂μ) w)
     =
     let val := ∫ x, f w x ∂μ
@@ -130,7 +131,7 @@ theorem revFDeriv_under_integral
 theorem revFDeriv_under_integral_over_set
     (f : W → X → Y) (w : W) (μ : Measure X) (Ω : Set X)
     {f' disc}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' disc)
+    (hf : HasParamRevFDerivWithDiscAt R f w f' disc)
     (hA : AlmostDisjoint (frontier Ω) disc.getDiscontinuity μH[finrank ℝ X - (1:ℕ)]) :
     (revFDeriv R (fun w' => ∫ x in Ω, f w' x ∂μ) w)
     =
@@ -158,27 +159,27 @@ theorem revFDeriv_under_integral_over_set
 -- Lambda rules ------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-namespace HasParamRevFDerivWithJumpsAt
+namespace HasParamRevFDerivWithDiscAt
 
 @[gtrans]
 theorem smooth_rule
     (w : W)
     (f : W → X → Y) (hf : ∀ x, DifferentiableAt R (f · x) w) :
-    HasParamRevFDerivWithJumpsAt R f w (fun x => revFDeriv R (f · x) w) [] := by
+    HasParamRevFDerivWithDiscAt R f w (fun x => revFDeriv R (f · x) w) [] := by
 
-  unfold HasParamRevFDerivWithJumpsAt
+  unfold HasParamRevFDerivWithDiscAt
   constructor
-  · convert HasParamFDerivWithJumpsAt.differentiable_at_rule R w f hf
+  · convert HasParamFDerivWithDiscAt.differentiable_at_rule R w f hf
     · fun_trans [revFDeriv]
   · simp [revFDeriv]
 
 
-theorem comp_differentiable_jumps_rule
+theorem comp_differentiable_discs_rule
     (f : W → Y → Z) (g : W → X → Y) (w : W)
     {g' disc}
     (hf : Differentiable R (fun (w,y) => f w y))
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' disc) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w (g w x)) w
+    (hg : HasParamRevFDerivWithDiscAt R g w g' disc) :
+    HasParamRevFDerivWithDiscAt (R:=R) (fun w x => f w (g w x)) w
       (f' := fun x =>
          let ydg := g' x
          let zdf := revFDeriv R (fun (w,y) => f w y) (w,ydg.1)
@@ -194,9 +195,9 @@ theorem comp_differentiable_jumps_rule
           speedGrad := s
           discontinuity := S }) := by
 
-  unfold HasParamRevFDerivWithJumpsAt
+  unfold HasParamRevFDerivWithDiscAt
   constructor
-  · convert HasParamFDerivWithJumpsAt.comp_differentiable_jumps_rule R f g w hf hg.1
+  · convert HasParamFDerivWithDiscAt.comp_differentiable_discs_rule R f g w hf hg.1
     · rename_i w x
       have hg' : IsContinuousLinearMap R (g' x).2 := by sorry_proof
       simp [revFDeriv, hg.2]
@@ -207,14 +208,14 @@ theorem comp_differentiable_jumps_rule
 
 
 @[gtrans]
-theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
+theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithDiscAt_rule
     (f : W → X → Y) (g : W → X → Z) (w : W)
     {f' fdisc} {g' gdisc}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' fdisc)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' gdisc)
+    (hf : HasParamRevFDerivWithDiscAt R f w f' fdisc)
+    (hg : HasParamRevFDerivWithDiscAt R g w g' gdisc)
     (hdisjoint : AlmostDisjoint fdisc.getDiscontinuity gdisc.getDiscontinuity μH[finrank ℝ X - (1:ℕ)])
-    /- (hIJ : DisjointJumps R Sf Sg) -/ :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => (f w x, g w x)) w
+    /- (hIJ : DisjointDiscs R Sf Sg) -/ :
+    HasParamRevFDerivWithDiscAt (R:=R) (fun w x => (f w x, g w x)) w
       (f' := fun x =>
         let ydf := f' x
         let zdg := g' x
@@ -232,12 +233,12 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
               let z := d.vals x
               ((y, z.1), (y, z.2)) })) := by
 
-  unfold HasParamRevFDerivWithJumpsAt
+  unfold HasParamRevFDerivWithDiscAt
   have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof
   have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry_proof
 
   constructor
-  · convert Prod.mk.arg_fstsnd.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
+  · convert Prod.mk.arg_fstsnd.HasParamFDerivWithDiscAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
     · fun_trans
     · fun_trans
     · simp[List.map_append]; rfl
@@ -245,12 +246,12 @@ theorem _root_.Prod.mk.arg_fstsnd.HasParamRevFDerivWithJumpsAt_rule
 
 
 
-theorem comp1_differentiable_jumps_rule
+theorem comp1_differentiable_discs_rule
     (f : W → Y → Z) (hf : Differentiable R (fun (w,y) => f w y))
     (g : W → X → Y) (w : W)
     {g' disc}
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' disc) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w (g w x)) w
+    (hg : HasParamRevFDerivWithDiscAt R g w g' disc) :
+    HasParamRevFDerivWithDiscAt (R:=R) (fun w x => f w (g w x)) w
       (f' := fun x =>
          let ydg := g' x
          let zdf := revFDeriv R (fun (w,y) => f w y) (w,ydg.1)
@@ -266,18 +267,18 @@ theorem comp1_differentiable_jumps_rule
           speedGrad := speedGrad
           discontinuity := d }) :=
 
-  comp_differentiable_jumps_rule f g w hf hg
+  comp_differentiable_discs_rule f g w hf hg
 
 
 
-theorem comp2_differentiable_jumps_rule
+theorem comp2_differentiable_discs_rule
     (f : W → Y₁ → Y₂ → Z) (hf : Differentiable R (fun (w,y₁,y₂) => f w y₁ y₂))
     (g₁ : W → X → Y₁) (g₂ : W → X → Y₂) (w : W)
     {g₁' dg₁} {g₂' dg₂}
-    (hg₁ : HasParamRevFDerivWithJumpsAt R g₁ w g₁' dg₁)
-    (hg₂ : HasParamRevFDerivWithJumpsAt R g₂ w g₂' dg₂)
+    (hg₁ : HasParamRevFDerivWithDiscAt R g₁ w g₁' dg₁)
+    (hg₂ : HasParamRevFDerivWithDiscAt R g₂ w g₂' dg₂)
     (hdisjoint : AlmostDisjoint dg₁.getDiscontinuity dg₂.getDiscontinuity μH[finrank ℝ X - (1:ℕ)]) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w (g₁ w x) (g₂ w x)) w
+    HasParamRevFDerivWithDiscAt (R:=R) (fun w x => f w (g₁ w x) (g₂ w x)) w
       (f' := fun x =>
          let ydg₁ := g₁' x
          let ydg₂ := g₂' x
@@ -300,65 +301,65 @@ theorem comp2_differentiable_jumps_rule
            let y₂ := d.vals x
            (f w y₁ y₂.1, f w y₁ y₂.2) })) := by
 
-  convert comp_differentiable_jumps_rule (R:=R) (fun w (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
+  convert comp_differentiable_discs_rule (R:=R) (fun w (y:Y₁×Y₂) => f w y.1 y.2) (fun w x => (g₁ w x, g₂ w x)) w
     hf (by gtrans (disch:=first | fun_prop | assumption))
   · fun_trans [hg₁.2,hg₂.2]; ac_rfl
   · simp[List.map_append]; rfl
 
 
-end HasParamRevFDerivWithJumpsAt
-open HasParamRevFDerivWithJumpsAt
+end HasParamRevFDerivWithDiscAt
+open HasParamRevFDerivWithDiscAt
 
 
 @[gtrans]
-def Prod.fst.arg_self.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp1_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Y) (fun _ yz => yz.1) (by fun_prop))
+def Prod.fst.arg_self.HasParamRevFDerivWithDiscAt_rule :=
+  (comp1_differentiable_discs_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Y) (fun _ yz => yz.1) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 @[gtrans]
-def Prod.snd.arg_self.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp1_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Z) (fun _ yz => yz.2) (by fun_prop))
+def Prod.snd.arg_self.HasParamRevFDerivWithDiscAt_rule :=
+  (comp1_differentiable_discs_rule (R:=R) (W:=W) (X:=X) (Y:=Y×Z) (Z:=Z) (fun _ yz => yz.2) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 @[gtrans]
-def HAdd.hAdd.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp2_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ + y₂) (by fun_prop))
+def HAdd.hAdd.arg_a0a1.HasParamRevFDerivWithDiscAt_rule :=
+  (comp2_differentiable_discs_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ + y₂) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 @[gtrans]
-def HSub.hSub.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp2_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ - y₂) (by fun_prop))
+def HSub.hSub.arg_a0a1.HasParamRevFDerivWithDiscAt_rule :=
+  (comp2_differentiable_discs_rule (R:=R) (W:=W) (X:=X) (Y₁:=Y) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ - y₂) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 @[gtrans]
-def Neg.neg.arg_a0.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp1_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=Y) (Z:=Y) (fun _ y => - y) (by fun_prop))
+def Neg.neg.arg_a0.HasParamRevFDerivWithDiscAt_rule :=
+  (comp1_differentiable_discs_rule (R:=R) (W:=W) (X:=X) (Y:=Y) (Z:=Y) (fun _ y => - y) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 @[gtrans]
-def HMul.hMul.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp2_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=R) (Z:=R) (fun _ y₁ y₂ => y₁ * y₂) (by fun_prop))
+def HMul.hMul.arg_a0a1.HasParamRevFDerivWithDiscAt_rule :=
+  (comp2_differentiable_discs_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=R) (Z:=R) (fun _ y₁ y₂ => y₁ * y₂) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 @[gtrans]
-def HPow.hPow.arg_a0.HasParamRevFDerivWithJumpsAt_rule (n:ℕ) :=
-  (comp1_differentiable_jumps_rule (R:=R) (X:=X) (Y:=R) (Z:=R) (fun (w : W) y => y^n) (by fun_prop))
+def HPow.hPow.arg_a0.HasParamRevFDerivWithDiscAt_rule (n:ℕ) :=
+  (comp1_differentiable_discs_rule (R:=R) (X:=X) (Y:=R) (Z:=R) (fun (w : W) y => y^n) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 @[gtrans]
-def HSMul.hSMul.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp2_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ • y₂) (by fun_prop))
+def HSMul.hSMul.arg_a0a1.HasParamRevFDerivWithDiscAt_rule :=
+  (comp2_differentiable_discs_rule (R:=R) (W:=W) (X:=X) (Y₁:=R) (Y₂:=Y) (Z:=Y) (fun _ y₁ y₂ => y₁ • y₂) (by fun_prop))
   rewrite_type_by (repeat ext); autodiff
 
 @[gtrans]
-theorem HDiv.hDiv.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
+theorem HDiv.hDiv.arg_a0a1.HasParamRevFDerivWithDiscAt_rule
     (f g : W → X → R) (w : W)
     {f' df} {g' dg}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' df)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' dg)
+    (hf : HasParamRevFDerivWithDiscAt R f w f' df)
+    (hg : HasParamRevFDerivWithDiscAt R g w g' dg)
     (hdisjoint : AlmostDisjoint df.getDiscontinuity dg.getDiscontinuity μH[finrank ℝ X - (1:ℕ)])
     (hg' : ∀ x, g w x ≠ 0) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => f w x / g w x) w
+    HasParamRevFDerivWithDiscAt (R:=R) (fun w x => f w x / g w x) w
       (f' := fun x =>
         let ydf := f' x
         let zdg := g' x
@@ -378,26 +379,26 @@ theorem HDiv.hDiv.arg_a0a1.HasParamRevFDerivWithJumpsAt_rule
               let z := d.vals x
               (y/z.1, y/z.2) })) := by
 
-  unfold HasParamRevFDerivWithJumpsAt
+  unfold HasParamRevFDerivWithDiscAt
   have : ∀ x, IsContinuousLinearMap R (f' x).2 := sorry_proof
   have : ∀ x, IsContinuousLinearMap R (g' x).2 := sorry_proof
 
   constructor
-  · convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof hg'
+  · convert HDiv.hDiv.arg_a0a1.HasParamFDerivWithDiscAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof hg'
     · fun_trans [hf.2,hg.2]; ring
     · simp[List.map_append]; rfl
   · simp [hf.2, hg.2]
 
 
 @[gtrans]
-theorem ite.arg_te.HasParamRevFDerivWithJumpsAt_rule
+theorem ite.arg_te.HasParamRevFDerivWithDiscAt_rule
     (f g : W → X → Y) (w : W)
     {c : W → X → Prop} [∀ w x, Decidable (c w x)]
     {f' df} {g' dg}
-    (hf : HasParamRevFDerivWithJumpsAt R f w f' df)
-    (hg : HasParamRevFDerivWithJumpsAt R g w g' dg)
+    (hf : HasParamRevFDerivWithDiscAt R f w f' df)
+    (hg : HasParamRevFDerivWithDiscAt R g w g' dg)
     (hdisjoint : AlmostDisjointList (frontier {x | c w x} :: df.getDiscontinuities ++ dg.getDiscontinuities) μH[finrank ℝ X - (1:ℕ)]) :
-    HasParamRevFDerivWithJumpsAt (R:=R) (fun w x => if c w x then f w x else g w x) w
+    HasParamRevFDerivWithDiscAt (R:=R) (fun w x => if c w x then f w x else g w x) w
       (f' := fun x => if c w x then f' x else g' x)
       (disc :=
         {vals := fun x => (f w x, g w x)
@@ -408,38 +409,14 @@ theorem ite.arg_te.HasParamRevFDerivWithJumpsAt_rule
         ++
         dg.map (fun d => {d with discontinuity := d.discontinuity ∩ {x | ¬c w x}})) := by
 
-  unfold HasParamRevFDerivWithJumpsAt
+  unfold HasParamRevFDerivWithDiscAt
   have ⟨_,_⟩ := hf
   have ⟨_,_⟩ := hg
   constructor
-  · convert ite.arg_te.HasParamFDerivWithJumpsAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
+  · convert ite.arg_te.HasParamFDerivWithDiscAt_rule _ _ _ _ (hf.1) (hg.1) sorry_proof
     · fun_trans; simp only [hf.2, hg.2, Tactic.if_pull]
-    · simp[List.map_append,ftrans_simp]
+    · simp[List.map_append,simp_core]
       constructor
       · simp[frontierGrad]; simp (disch:=sorry_proof) only [adjoint_inner_left]; simp [Inner.inner]
       · rfl
   · dsimp; intros; split_ifs <;> simp [hf.2, hg.2]
-
-
-----------------------------------------------------------------------------------------------------
--- Trigonometric functions -------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-open Scalar in
-@[gtrans]
-def Scalar.sin.arg_a0.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp1_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => sin y) (by simp; fun_prop))
-  rewrite_type_by (repeat ext); autodiff
-
-
-open Scalar in
-@[gtrans]
-def Scalar.cos.arg_a0.HasParamRevFDerivWithJumpsAt_rule :=
-  (comp1_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y:=R) (Z:=R) (fun _ y => cos y) (by simp; fun_prop))
-  rewrite_type_by (repeat ext); autodiff
-
-
-@[gtrans]
-def gaussian.arg_a0.HasParamRevFDerivWithJumpsAt_rule (σ : R) :=
-  (comp2_differentiable_jumps_rule (R:=R) (W:=W) (X:=X) (Y₁:=X) (Y₂:=X) (Z:=R) (fun _ μ x => gaussian μ σ x) (by simp; fun_prop))
-  rewrite_type_by (repeat ext); autodiff
