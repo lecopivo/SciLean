@@ -121,13 +121,6 @@ import SciLean.Meta.SimpAttr
 import SciLean.Meta.SimpCore
 import SciLean.Modules.DDG.SurfaceMesh
 import SciLean.Modules.DDG.Trace
--- import SciLean.Modules.DifferentialEquations
--- import SciLean.Modules.DifferentialEquations.DaeSolve
--- import SciLean.Modules.DifferentialEquations.OdeSolve
--- import SciLean.Modules.DifferentialEquations.OdeSolvers.BackwardEuler
--- import SciLean.Modules.DifferentialEquations.OdeSolvers.Basic
--- import SciLean.Modules.DifferentialEquations.OdeSolvers.ForwardEuler
--- import SciLean.Modules.DifferentialEquations.OdeSolvers.Solvers
 -- import SciLean.Modules.FiniteElement.Mesh.Circle
 -- import SciLean.Modules.FiniteElement.Mesh.Line
 -- import SciLean.Modules.FiniteElement.Mesh.Prism
@@ -282,6 +275,10 @@ import SciLean.Tactic.StructuralInverse
 import SciLean.Tactic.StructureDecomposition
 import SciLean.Tactic.TimeTactic
 import SciLean.Topology.Continuous
+import SciLean.Util.Approx.Basic
+import SciLean.Util.Approx.ApproxLimit
+import SciLean.Util.Approx.ApproxSolution
+-- import SciLean.Util.Approx.Test
 import SciLean.Util.Alternatives
 import SciLean.Util.DefOptimize
 import SciLean.Util.Limit
