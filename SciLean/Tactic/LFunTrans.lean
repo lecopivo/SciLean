@@ -17,25 +17,25 @@ syntax (name := lfunTransConvStx) "lfun_trans" (config)? (discharger)? (&" only"
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*) "]")? : conv
 
 
--- @[tactic funTransTacStx]
--- def lfunTransTac : Tactic := fun stx => do
---   match stx with
---   | `(tactic| lfun_trans $[$cfg]? $[$disch]? $[only]? $[[$a,*]]? $[$loc]?) => do
+@[tactic lfunTransTacStx]
+def lfunTransTac : Tactic := fun stx => do
+  match stx with
+  | `(tactic| lfun_trans $[$cfg]? $[$disch]? $[only]? $[[$a,*]]? $[$loc]?) => do
 
---     -- set fun_trans config
---     funTransConfig.modify
---       fun c => { c with funPropConfig := { c.funPropConfig with disch := stxToDischarge disch}}
+    -- set fun_trans config
+    funTransContext.modify
+      fun c => { c with funPropContext := { c.funPropContext with disch := stxToDischarge disch}}
 
---     let a := a.getD (Syntax.TSepArray.mk #[])
---     if stx[3].isNone then
---       evalTactic (← `(tactic| lsimp $[$cfg]? $[$disch]? [↓fun_trans_simproc,$a,*]  $[$loc]?))
---     else
---       evalTactic (← `(tactic| lsimp $[$cfg]? $[$disch]? only [↓fun_trans_simproc,$a,*]  $[$loc]?))
+    let a := a.getD (Syntax.TSepArray.mk #[])
+    if stx[3].isNone then
+      evalTactic (← `(tactic| lsimp $[$cfg]? $[$disch]? [↓fun_trans_simproc,$a,*]))
+    else
+      evalTactic (← `(tactic| lsimp $[$cfg]? $[$disch]? only [↓fun_trans_simproc,$a,*]))
 
---     -- reset fun_trans config
---     funTransConfig.modify fun _ => {}
+    -- reset fun_trans config
+    funTransContext.modify fun _ => {}
 
---   | _ => throwUnsupportedSyntax
+  | _ => throwUnsupportedSyntax
 
 
 @[tactic lfunTransConvStx]

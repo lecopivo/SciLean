@@ -6,8 +6,6 @@ import SciLean.Util.SorryProof
 
 namespace SciLean
 
-open Notation
-
 variable {α} [TopologicalSpace α] [Nonempty α]
 
 abbrev Approx  {N : outParam $ Type _} (lN : Filter N) (a : α)  := ApproxSolution lN (fun x => a=x)

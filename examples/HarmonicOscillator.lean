@@ -1,22 +1,17 @@
 import SciLean
-import SciLean.Core.Approx.ApproxLimit
--- import SciLean.Core.Notation.Gradient
--- -- import SciLean.Tactic.LetNormalize
--- -- import SciLean.Tactic.PullLimitOut
-import SciLean.Modules.DifferentialEquations
-
-set_default_scalar Float
 
 open SciLean
+
+set_default_scalar Float
 
 def H (m k : Float) (x p : Float) := (1/(2*m)) * p*p + k/2 * x*x
 
 approx solver (m k : Float)
-  := odeSolve (λ (t : Float) (x,p) => ( ∇ (p':=p), H m k x  p',
-                                       -∇ (x':=x), H m k x' p))
+  := odeSolve (fun (t : Float) (x,p) => ( ∇ (p':=p), H m k x  p',
+                                         -∇ (x':=x), H m k x' p))
 by
   -- Unfold Hamiltonian and compute gradients
-  unfold H scalarGradient
+  unfold H
   autodiff
 
   -- Apply RK4 method
@@ -44,8 +39,8 @@ def main : IO Unit := do
 
     -- print
     for (j : Nat) in [0:20] do
-      if j < 10*(x+1) then
+      if j.toFloat < 10*(x+1.0) then
         IO.print "o"
     IO.println ""
 
--- #eval main
+#eval main

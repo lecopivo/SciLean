@@ -18,7 +18,7 @@ theorem Filter.limit_of_continuous {α β} [TopologicalSpace α] [TopologicalSpa
   : limit (nhds a) f = f a := sorry_proof
 
 
-namespace SciLean.Notation
+namespace SciLean
 open Lean.Parser.Term
 scoped macro "limit " n:funBinder " → " n':term ", " y:term : term => `((nhds $n').limit (fun $n => $y))
 scoped macro "limit " n:funBinder " → " "∞" ", " y:term : term => `((Filter.atTop).limit (fun $n => $y))
@@ -46,4 +46,4 @@ def unexpandFilterLimit : Lean.PrettyPrinter.Unexpander
 
   | _  => throw ()
 
-end SciLean.Notation
+end SciLean

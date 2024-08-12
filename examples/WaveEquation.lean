@@ -1,13 +1,7 @@
 import SciLean
-import SciLean.Core.Approx.ApproxLimit
-import SciLean.Core.Notation.Gradient
-import SciLean.Modules.DifferentialEquations
+import SciLean
 
-open SciLean Notation
-
-variable {n : Nat}
-
-set_option synthInstance.maxSize 20000
+open SciLean
 
 set_default_scalar Float
 

@@ -9,6 +9,7 @@ Sometimes you know that a certain term has multiple alternative forms and you do
 structure Alternatives {α} (a b : α) where
   eq : a = b
 
+set_option linter.unusedVariables false in
 @[irreducible]
 def Alternatives.choose {α} (a b : α) (ap : Alternatives a b) : α := a
 
@@ -47,17 +48,17 @@ macro " alternatives_snd " : conv => `(conv| simp (config := {zeta := false}) on
 
 
 @[app_unexpander Alternatives.choose] def unexpandAlternativecChoose : Lean.PrettyPrinter.Unexpander
-  | `($(_) $a $b $ap) =>
+  | `($(_) $a $b $_) =>
     `(alternatives
        fst: $a
        snd: $b
        by' _)
-  | `($(_) $a $b $ap $x) =>
+  | `($(_) $a $b $_ $x) =>
     `(alternatives
        fst: $a $x
        snd: $b $x
        by' _)
-  | `($(_) $a $b $ap $x $y) =>
+  | `($(_) $a $b $_ $x $y) =>
     `(alternatives
        fst: $a $x $y
        snd: $b $x $y
@@ -66,6 +67,20 @@ macro " alternatives_snd " : conv => `(conv| simp (config := {zeta := false}) on
 
 
 variable (a b : Nat) (h : a = b)
+
+
+
+/--
+info:  alternatives fst: fun x =>
+  let y := x + x + x + x;
+  y + y snd:
+  fun x =>
+  let y := x + x + x + x;
+  let y := x + x + x + x;
+  x + x + x + x by'
+  _ : Nat → Nat
+-/
+#guard_msgs in
 #check
   alternatives
     fst:

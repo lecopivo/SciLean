@@ -27,7 +27,6 @@ macro_rules
   else
     `(conv| lfun_trans $[$cfg]? $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core])
 
-
 macro_rules
 | `(tactic| autodiff $[$cfg]? $[$disch]?  $[[$a,*]]?) => do
   if a.isSome then

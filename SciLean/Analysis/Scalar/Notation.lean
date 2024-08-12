@@ -6,7 +6,8 @@ namespace NotationOverField
 
 syntax "defaultScalar%" : term
 
-macro_rules | `(defaultScalar%) => Lean.Macro.throwError "\
+macro_rules | `(defaultScalar%) => show MacroM (TSyntax `term) from
+  Lean.Macro.throwError "\
   This expression is using notation requiring to know the default scalar type. \
   To set it, add this command somewhere to your file \
   \n\n set_default_scalar R\
@@ -20,4 +21,4 @@ macro_rules | `(defaultScalar%) => Lean.Macro.throwError "\
   TODO: write a doc page about writing field polymorphic code and add a link here"
 
 macro "set_default_scalar" r:term : command =>
-  `(local macro_rules | `(defaultScalar%) => `($r))
+  `(local macro_rules | `(defaultScalar%) => do pure (← `($r)).raw)

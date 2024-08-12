@@ -75,10 +75,10 @@ class Prod.Set (X : Type) (i : Nat) (T : outParam Type) where
 attribute [reducible] Prod.Set.seti
 
 @[reducible]
-instance (priority := low) : Prod.Set X 0 X := ⟨λ x x₀ => x₀⟩
+instance (priority := low) : Prod.Set X 0 X := ⟨λ _ x₀ => x₀⟩
 
 @[reducible]
-instance : Prod.Set (X×Y) 0 X := ⟨λ (x,y) x₀ => (x₀,y)⟩
+instance : Prod.Set (X×Y) 0 X := ⟨λ (_,y) x₀ => (x₀,y)⟩
 
 @[reducible]
 instance {X Y : Type} {Yₙ : outParam Type} [pg : Prod.Set Y n Yₙ]
