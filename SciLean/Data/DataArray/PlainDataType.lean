@@ -1,10 +1,8 @@
 import SciLean.Util.SorryProof
--- import SciLean.Data.Index
-import LeanColls
+import SciLean.Data.IndexType
 -- import LeanColls.Classes.Ops.Fold
 
 namespace SciLean
-open LeanColls
 
 def _root_.UInt8.toUSize (x : UInt8) : USize := x.toUInt32.toUSize
 def _root_.USize.toUInt8 (x : USize) : UInt8 := x.toUInt32.toUInt8
@@ -332,7 +330,7 @@ def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
     let bytes  := byteSize n
     let ofByte := i
     let mut val : Nat := 0
-    for j in IndexType.univ (Fin bytes) do
+    for j in fullRange (Fin bytes) do
       let val' := ((b[ofByte+j.1.toUSize]'sorry_proof).toNat <<< (j.1*8))
       val := val + val'
     ⟨val, sorry_proof⟩
@@ -342,7 +340,7 @@ def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
     let ofByte := i
 
     let mut b := b
-    for j in IndexType.univ (Fin bytes) do
+    for j in fullRange (Fin bytes) do
       b := b.uset (ofByte+j.1.toUSize) (val.1.toUSize >>> (j.1.toUSize*(8:USize))).toUInt8 sorry_proof
     b
 

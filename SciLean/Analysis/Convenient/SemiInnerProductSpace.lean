@@ -1,5 +1,3 @@
-import LeanColls
-
 import Mathlib.Analysis.InnerProductSpace.Basic
 
 import SciLean.Analysis.Convenient.Vec
@@ -7,7 +5,6 @@ import SciLean.Analysis.Scalar
 import SciLean.Data.IndexType
 
 namespace SciLean
-open LeanColls
 
 open RCLike ComplexConjugate
 
@@ -242,5 +239,5 @@ instance (X Y) [SemiHilbert K X] [SemiHilbert K Y] : SemiHilbert K (X × Y) wher
 instance (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [IndexType ι] : SemiInnerProductSpace K ((i : ι) → X i)
   := SemiInnerProductSpace.mkSorryProofs
 
-instance (ι) (X : ι → Type _) [∀ i, SemiHilbert K (X i)] [IndexType ι] [LawfulIndexType ι] : SemiHilbert K ((i : ι) → X i) where
+instance (ι) (X : ι → Type _) [∀ i, SemiHilbert K (X i)] [IndexType ι] : SemiHilbert K ((i : ι) → X i) where
   test_functions_true := by simp[TestFunction]; intro f i; apply SemiHilbert.test_functions_true

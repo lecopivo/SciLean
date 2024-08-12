@@ -8,7 +8,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace K (E j)]
 
 variable (K)

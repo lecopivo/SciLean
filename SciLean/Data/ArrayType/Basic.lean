@@ -1,14 +1,12 @@
 import SciLean.Util.SorryProof
 import SciLean.Data.ListN
 import SciLean.Data.StructType.Basic
-import SciLean.Data.Function
-import LeanColls
+import SciLean.Data.IndexType
 
 import SciLean.Meta.SimpAttr
 
 namespace SciLean
 
-open LeanColls
 
 /-- This class says that `Cont` behaves like an array with `Elem` values indexed by `Idx`
 
@@ -52,7 +50,7 @@ namespace ArrayType
 
 variable
   {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
-  [IndexType Idx] [outParam <| DecidableEq Idx] [LawfulIndexType Idx]
+  [IndexType Idx] [outParam <| DecidableEq Idx]
   [ArrayType Cont Idx Elem]
 
 @[ext]
@@ -62,10 +60,10 @@ theorem ext (x y : Cont) : (∀ i, get x i = get y i) → x = y := by sorry_proo
 theorem eta (cont : Cont) : (ofFn fun i => get cont i) = cont := sorry_proof
 
 def mapMono (f : Elem → Elem) (cont : Cont) : Cont :=
-  Fold.fold (IndexType.univ Idx) (fun c i => modify c i f) cont
+  IndexType.foldl (fun c i => modify c i f) cont
 
 def mapIdxMono (f : Idx → Elem → Elem) (cont : Cont) : Cont :=
-  Fold.fold (IndexType.univ Idx) (fun c i => modify c i (f i)) cont
+  IndexType.foldl (fun c i => modify c i (f i)) cont
 
 @[simp,simp_core]
 theorem get_mapMono (f : Elem → Elem) (cont : Cont) (i : Idx) :
@@ -92,7 +90,7 @@ instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem] [IndexType Id
     ToString (Cont) := ⟨λ x => Id.run do
   let mut fst := true
   let mut s := "⊞["
-  for i in IndexType.univ Idx do
+  for i in fullRange Idx do
     if fst then
       s := s ++ toString (get x i)
       fst := false
@@ -101,9 +99,9 @@ instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem] [IndexType Id
   s ++ "]"⟩
 
 /-- Converts array to ArrayType -/
-def _root_.Array.toArrayType {Elem} (Cont : Type u) (Idx : Type v) [IndexType Idx] [Indexed Cont Idx Elem]
-  (a : Array Elem) (h : IndexType.card Idx = a.size) : Cont :=
-  Indexed.ofFn fun (i : Idx) => a[h ▸ IndexType.toFin i]
+def _root_.Array.toArrayType {Elem} (Cont : Type u) (Idx : Type v) [IndexType Idx] [ArrayType Cont Idx Elem]
+  (a : Array Elem) (h : size Idx = a.size) : Cont :=
+  ArrayType.ofFn fun (i : Idx) => a[h ▸ IndexType.toFin i]
 
 -- /-- Converts ListN to ArrayType
 
@@ -147,7 +145,7 @@ section Operations
   instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont :=
     λ f g => Id.run do
       let mut eq : Bool := true
-      for x in IndexType.univ Idx do
+      for x in fullRange Idx do
         if get f x ≠ get g x then
           eq := false
           break
@@ -156,7 +154,7 @@ section Operations
   instance (priority:=low) [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) :
       Decidable (f < g) := Id.run do
     let mut lt : Bool := true
-    for x in IndexType.univ Idx do
+    for x in fullRange Idx do
       if ¬(get f x < get g x) then
         lt := false
         break
@@ -165,7 +163,7 @@ section Operations
   instance (priority:=low) [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) :
       Decidable (f ≤ g) := Id.run do
     let mut le : Bool := true
-    for x in IndexType.univ Idx do
+    for x in fullRange Idx do
       if ¬(get f x ≤ get g x) then
         le := false
         break

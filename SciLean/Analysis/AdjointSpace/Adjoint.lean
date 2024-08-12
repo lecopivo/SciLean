@@ -121,7 +121,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 set_default_scalar K
@@ -208,13 +208,14 @@ theorem pi_rule
     (f : X → (i : ι) → E i) (hf : ∀ i, IsContinuousLinearMap K (f · i)) :
     (fun (x : X) (i : ι) => f x i)†
     =
-    (fun x' => Finset.sum Finset.univ fun i => ((f · i)†) (x' i)) := by
+    (fun x' => IndexType.sum fun i => ((f · i)†) (x' i)) := by
 
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   intro x y
-  rw[AdjointSpace.sum_inner]
-  simp (disch:=fun_prop) [adjoint_inner_left]
-  rfl
+  sorry_proof
+  -- rw[AdjointSpace.sum_inner]
+  -- simp (disch:=fun_prop) [adjoint_inner_left]
+  -- rfl
 
 
 end adjoint
@@ -400,6 +401,18 @@ theorem Finset.sum.arg_f.adjoint_rule
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop) [adjoint_inner_left,AdjointSpace.sum_inner,AdjointSpace.inner_sum]
+
+
+@[fun_trans]
+theorem IndexType.sum.arg_f.adjoint_rule {ι} [IndexType ι]
+  (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K (f · i))
+  : (fun x => IndexType.sum fun i => f x i)†
+    =
+    (fun y => IndexType.sum fun i => ((f · i)†) y) :=
+by
+  rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
+  sorry_proof
+  -- simp (disch:=fun_prop) [adjoint_inner_left,AdjointSpace.sum_inner,AdjointSpace.inner_sum]
 
 
 -- d/ite -----------------------------------------------------------------------

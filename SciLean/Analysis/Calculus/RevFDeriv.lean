@@ -37,7 +37,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 
@@ -114,7 +114,7 @@ theorem pi_rule
       let xdf := fun i =>
         (revFDeriv K fun (x : X) => f x i) x
       (fun i => (xdf i).1,
-       fun dy => Finset.univ.sum fun i => (xdf i).2 (dy i))
+       fun dy => IndexType.sum fun i => (xdf i).2 (dy i))
        := by
 
   unfold revFDeriv
@@ -165,7 +165,7 @@ theorem pi_rule_at
     let xdf := fun i =>
       (revFDeriv K fun (x : X) => f x i) x
     (fun i => (xdf i).1,
-     fun dy => Finset.univ.sum fun i => (xdf i).2 (dy i)) := by
+     fun dy => IndexType.sum fun i => (xdf i).2 (dy i)) := by
 
   unfold revFDeriv
   simp (disch:=fun_prop) only [fderiv.pi_rule_at]

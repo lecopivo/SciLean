@@ -12,15 +12,13 @@ import SciLean.Meta.GenerateAddGroupHomSimp
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
 
-open LeanColls
-
 namespace SciLean
 
 variable
   (K : Type _) [RCLike K]
   {ι κ : Type _}
-  [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
+  [IndexType ι] [DecidableEq ι]
+  [IndexType κ] [DecidableEq κ]
   {E I : Type _} {EI : I → Type _}
   [StructType E I EI]
   {F J : Type _} {FJ : J → Type _}
@@ -472,7 +470,7 @@ end VecStruct
 
 open StructType in
 class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I]
-  [LawfulIndexType I] [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)]
+    [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)]
   extends
     VecStruct K X I XI : Prop
   where
@@ -493,7 +491,7 @@ instance (priority:=low) {X} [SemiInnerProductSpace K X] :
 instance
   [SemiInnerProductSpace K E] [SemiInnerProductSpace K F]
   [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)]
-  [IndexType I] [LawfulIndexType I] [IndexType J] [LawfulIndexType J]
+  [IndexType I] [IndexType J]
   [SemiInnerProductSpaceStruct K E I EI] [SemiInnerProductSpaceStruct K F J FJ] :
   SemiInnerProductSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
   -- inner_structProj := sorry_proof
@@ -501,13 +499,13 @@ instance
 
 
 @[simp, simp_core]
-theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I] [LawfulIndexType I]
+theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I]
     [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
     [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
 
 @[simp, simp_core]
-theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I] [LawfulIndexType I]
+theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I]
     [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
     [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof

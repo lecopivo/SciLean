@@ -12,7 +12,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 local notation "∞" => (⊤ : ℕ∞)

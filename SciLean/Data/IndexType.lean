@@ -1,89 +1,151 @@
-import LeanColls
+import Mathlib.Order.Interval.Finset.Fin
+import Mathlib.Data.Int.Interval
+import Mathlib.Data.Fintype.Pi
+import Mathlib.Data.Fintype.Prod
+import Mathlib.Data.Fintype.Sum
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Algebra.Order.GroupWithZero.Canonical
+
 import SciLean.Util.SorryProof
 import SciLean.Tactic.RefinedSimp
-
-
-open LeanColls
+import SciLean.Meta.SimpAttr
 
 open Set
 
+namespace SciLean
+
+class Size {α : Sort u} (a : α) where
+  size : Nat
+
+export Size (size)
+
+instance (a : Array α) : Size a where
+  size := a.size
+
+instance (a : List α) : Size a where
+  size := a.length
+
+inductive IndexType.Range (I : Type u)
+  | full
+
+structure IndexType.Stream (I : Type u) where
+  val : I
+  range : Range I
+
+-- This is alternative to LeanColls.IndexType which unfortunatelly has two universe parameters
+-- and because of that it is very difficult to work with.
+class IndexType (I : Type u) extends Fintype I, Stream (IndexType.Stream I) I, Size I where
+  toFin : I → Fin size
+  fromFin : Fin size → I
+
+def fullRange (I : Type u) [IndexType I] : IndexType.Stream I := sorry
+
+def IndexType.first? (I : Type u) [IndexType I] : Option I :=
+  if h : size I ≠ 0 then
+    .some (IndexType.fromFin ⟨0, by omega⟩)
+  else
+    .none
+
+
+
 
 instance : IndexType Empty where
-  card := 0
+  size := 0
   toFin x := Empty.elim x
-  fromFin i := by have := i.2; simp_all only [not_lt_zero']
-  fold := fun _ _ init => init
-  foldM := fun _ _ init => pure init
+  fromFin i := by have := i.2; simp_all only [Nat.not_lt_zero]
+  next? _ := .none
 
-instance : LawfulIndexType Empty where
-  leftInv := by intro x; aesop
-  rightInv := by intro x; simp[IndexType.card] at x; have := x.2; aesop
-  fold_eq_fold_toList := sorry_proof
-  foldM_eq_fold := sorry_proof
+instance : IndexType Unit where
+  size := 1
+  toFin _ := 1
+  fromFin _ := ()
+  next? _ := .none
+
+instance : IndexType (Fin n) where
+  size := n
+  toFin x := x
+  fromFin x := x
+  next? s :=
+    if h : s.val.1 + 1 < n then
+      let x := ⟨s.val.1+1,by omega⟩
+      .some (x, {s with val := x})
+    else
+      .none
+
+
+instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
+  size := size α * size β
+  toFin := fun (a,b) => ⟨(IndexType.toFin a).1 + size α * (IndexType.toFin b).1, by sorry_proof⟩
+  fromFin ij :=
+    -- this choice will result in column major matrices
+    let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
+    let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
+    (IndexType.fromFin i, IndexType.fromFin j)
+  next? s :=
+    let (a,b) := s.val
+    if let .some sa := Stream.next? (IndexType.Stream.mk a .full) then
+      .some ((sa.1,b), ⟨(sa.1,b),.full⟩)
+    else
+      if let .some sb := Stream.next? (IndexType.Stream.mk b .full) then
+        if let .some a := IndexType.first? α then
+          .some ((a,sb.1), ⟨(a,sb.1),.full⟩)
+        else
+          .none
+      else
+        .none
+
+instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
+  size := size α + size β
+  toFin := fun ab =>
+    match ab with
+    | .inl a => ⟨(IndexType.toFin a).1, by sorry_proof⟩
+    | .inr b => ⟨size α + (IndexType.toFin b).1, by sorry_proof⟩
+  fromFin ij :=
+    if ij.1 < size α then
+      .inl (IndexType.fromFin ⟨ij.1, sorry_proof⟩)
+    else
+      .inr (IndexType.fromFin ⟨ij.1 - size α, sorry_proof⟩)
+  next? s :=
+    match s.val with
+    | .inl a =>
+      if let .some sa := Stream.next? (IndexType.Stream.mk a .full) then
+        .some (.inl sa.1, ⟨.inl sa.1, .full⟩)
+      else
+        if let .some b := IndexType.first? β  then
+          .some (.inr b, ⟨.inr b, .full⟩)
+        else
+          .none
+    | .inr b =>
+      if let .some sb := Stream.next? (IndexType.Stream.mk b .full) then
+        .some (.inr sb.1, ⟨.inr sb.1, .full⟩)
+      else
+        .none
+
+-- todo: if we want to have instances like `IndexType (Fin 4 → Fin 10)` then
+--       `IndexType.Stream (Fin 4 → Fin 10)` should not hold element of `Fin 4 → Fin 10` but some
+--       kind of array holding all the values
+-- instance {α β} [IndexType α] [IndexType β] : IndexType (α → β) where
+--   size := size β ^ size α
+--   toFin := sorry
+--   fromFin := sorry
+--   next? := sorry
 
 instance (a b : Int) : IndexType (Icc a b) where
-  card := ((b + 1) - a).toNat
+  size := ((b + 1) - a).toNat
   toFin i := ⟨(i.1 - a).toNat,
     by
       cases i; case mk i lt =>
         simp at lt ⊢; simp (disch:=aesop) only [Int.toNat_of_nonneg, sub_lt_sub_iff_right]; omega⟩
   fromFin i := ⟨a + i.1, by cases i; case mk i lt => simp at lt ⊢; omega⟩
-  fold := fun _ f init => Id.run do
-    let mut x := init
-    for i in [0:(b-a).toNat] do
-      let i : Icc a b := ⟨a + i, sorry_proof⟩
-      x := f x i
-    return x
-
-  foldM := fun _ f init => do
-    let mut x := init
-    for i in [0:(b-a).toNat] do
-      let i : Icc a b := ⟨a + i, sorry_proof⟩
-      x ← f x i
-    return x
-
-instance (a b : Int) : LawfulIndexType (Icc a b) where
-  leftInv := by
-    intro x
-    simp only [IndexType.toFin, IndexType.fromFin]
-    sorry_proof
-  rightInv := by
-    intro x
-    simp only [IndexType.toFin, IndexType.fromFin, add_sub_cancel_left, Int.toNat_ofNat, Fin.eta]
-  fold_eq_fold_toList := sorry_proof
-  foldM_eq_fold := sorry_proof
-
--- instance (a b : Int) : IndexType (Ioo a b) where
---   card := (b - (a + 1)).toNat
---   toFin i := ⟨(i.1 - (a + 1)).toNat, sorry_proof⟩
---   fromFin i := ⟨(a + 1) + i.1, sorry_proof⟩
-
--- instance (a b : Int) : LawfulIndexType (Ioo a b) where
---   leftInv := by intro x; sorry_proof
---   rightInv := by intro x; sorry_proof
-
--- instance (a b : Int) : IndexType (Ioc a b) where
---   card := ((b + 1) - (a+1)).toNat
---   toFin i := ⟨(i.1 - (a + 1)).toNat, sorry_proof⟩
---   fromFin i := ⟨(a + 1) + i.1, sorry_proof⟩
-
--- instance (a b : Int) : LawfulIndexType (Ioc a b) where
---   leftInv := by intro x; sorry_proof
---   rightInv := by intro x; sorry_proof
-
--- instance (a b : Int) : IndexType (Ico a b) where
---   card := (b - a).toNat
---   toFin i := ⟨(i.1 - a).toNat, sorry_proof⟩
---   fromFin i := ⟨a + i.1, sorry_proof⟩
-
--- instance (a b : Int) : LawfulIndexType (Ico a b) where
---   leftInv := by intro x; sorry_proof
---   rightInv := by intro x; sorry_proof
+  next? s :=
+    if h : s.val.1 + 1 ≤ b then
+      let x := ⟨s.val.1+1,by simp; constructor; sorry_proof; omega⟩
+      .some (x, {s with val := x})
+    else
+      .none
 
 
 namespace SciLean
--- use lean colls
-export LeanColls (IndexType IndexType.card IndexType.univ IndexType.toFin IndexType.fromFin LawfulIndexType)
 end SciLean
 
 namespace IndexType
@@ -92,65 +154,72 @@ variable {ι : Type v} [IndexType ι]
 
 open IndexType
 @[simp]
-theorem card_sum {ι κ} [IndexType ι] [IndexType κ] : card (ι ⊕ κ) = card ι + card κ := by rfl
+theorem size_sum {ι κ} [IndexType ι] [IndexType κ] : size (ι ⊕ κ) = size ι + size κ := by rfl
 
 @[simp]
-theorem card_prod {ι κ} [IndexType ι] [IndexType κ] : card (ι × κ) = card ι * card κ := by rfl
+theorem size_prod {ι κ} [IndexType ι] [IndexType κ] : size (ι × κ) = size ι * size κ := by rfl
 
 @[simp]
-theorem card_unit : card Unit = 1 := by rfl
+theorem size_unit : size Unit = 1 := by rfl
 
 @[simp]
-theorem card_fin (n : Nat) : card (Fin n) = n := by rfl
+theorem size_fin (n : Nat) : size (Fin n) = n := by rfl
 
-instance (P : ι → Prop) [∀ i : ι, Decidable (P i)] : Decidable (∀ i : ι, P i) := Id.run do
-  for i in IndexType.univ ι do
-    if P i then
-      continue
-    else
-      return .isFalse sorry_proof
-  return .isTrue sorry_proof
+-- instance (P : ι → Prop) [∀ i : ι, Decidable (P i)] : Decidable (∀ i : ι, P i) := Id.run do
+--   for i in IndexType.univ ι do
+--     if P i then
+--       continue
+--     else
+--       return .isFalse sorry_proof
+--   return .isTrue sorry_proof
 
-
-
-def reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (default : α) : m α := do
-  let n := IndexType.card ι
-  if n = 0 then
-    return default
-  let mut a := f (IndexType.fromFin ⟨0,sorry_proof⟩)
-  for i in [1:n] do
-    a ← op a (f (IndexType.fromFin ⟨i,sorry_proof⟩))
+def foldlM {m} [Monad m] (op : α → ι → m α) (init : α) : m α := do
+  let mut a := init
+  for i in fullRange ι do
+    a ← op a i
   return a
 
-def reduceD (f : ι → α) (op : α → α → α) (default : α) : α :=
-  let n := IndexType.card ι
-  if n = 0 then
-    default
+def foldl (op : α → ι → α) (init : α) : α := Id.run do
+  foldlM op init
+
+def reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (default : α) : m α := do
+  if let .some i := IndexType.first? ι then
+    let mut a := f i
+    for h : i in [1:size ι] do
+      have := h.1
+      have := h.2
+      a ← op a (f (IndexType.fromFin ⟨i,by simp_all⟩))
+    return a
   else
-    Id.run do
-    let mut a := f (IndexType.fromFin ⟨0,sorry_proof⟩)
-    for i in [0:n-1] do
-      let i : Fin n := ⟨i+1, sorry_proof⟩
-      a := op a (f (IndexType.fromFin i))
-    a
+    return default
+
+def reduceD (f : ι → α) (op : α → α → α) (default : α) : α := Id.run do
+  if let .some i := IndexType.first? ι then
+    let mut a := f i
+    for h : i in [1:size ι] do
+      have := h.1
+      have := h.2
+      a := op a (f (IndexType.fromFin ⟨i,by simp_all⟩))
+    return a
+  else
+    return default
 
 abbrev reduce [Inhabited α] (f : ι → α) (op : α → α → α) : α :=
   reduceD f op default
 
-def argValMax {I} [IndexType.{_,0} I] [Inhabited I]
+def argValMax {I} [IndexType I] [Inhabited I]
     (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I×X :=
   IndexType.reduceD
     (fun i => (i,f i))
     (fun (i,e) (i',e') => if e < e' then (i',e') else (i,e))
     (default, f default)
 
-def argMax {I} [IndexType.{_,0} I] [Inhabited I]
+def argMax {I} [IndexType I] [Inhabited I]
     (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I :=
   (IndexType.argValMax f).1
 
-
 @[specialize] def sum {α : Type u} [Zero α] [Add α] (f : ι → α) : α :=
-  Fold.fold (β:=α) (C:=IndexType.Univ ι) (τ:=ι) (IndexType.univ ι) (fun (s : α) (i : ι) => s + f i) (0 : α)
+  IndexType.reduceD f (fun (s : α) a => s + a) (0 : α)
 
 open Lean.TSyntax.Compat in
 macro (priority:=high) " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``sum xs b
@@ -166,7 +235,7 @@ macro (priority:=high) " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => 
 
 
 @[specialize] def product {α} [One α] [Mul α] {ι} [IndexType ι] (f : ι → α) : α :=
-  Fold.fold (IndexType.univ ι) (fun s i => s * f i) 1
+  IndexType.reduceD f (fun (s : α) a => s * a) 1
 
 open Lean.TSyntax.Compat in
 macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
@@ -184,15 +253,45 @@ macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => 
 
 open IndexType
 @[rsimp guard I .notAppOf ``Fin]
-theorem fold_linearize {I X : Type _} [IndexType I] [LawfulIndexType I] (init : X) (f : X → I → X) :
-    Fold.fold (IndexType.univ I) f init
+theorem reduce_linearize {I X : Type _} [IndexType I] (init : X) (f : I → X) (op : X → X → X) :
+    IndexType.reduceD f op init
     =
-    Fold.fold (IndexType.univ (Fin (IndexType.card I))) (fun x i => f x (IndexType.fromFin i)) init := sorry_proof
+    IndexType.reduceD (fun i : Fin (size I) => f (fromFin i)) op init := sorry_proof
 
 
 open IndexType in
 @[rsimp guard I .notAppOf ``Fin]
-theorem sum_linearize {I X : Type _} [Add X] [Zero X] [IndexType I] [LawfulIndexType I] (f : I → X) :
+theorem sum_linearize {I X : Type _} [Add X] [Zero X] [IndexType I] (f : I → X) :
     ∑ i, f i
     =
-    ∑ i : Fin (card I), f (fromFin i) := by simp only [sum]; rw[fold_linearize]
+    ∑ i : Fin (size I), f (fromFin i) := by simp only [sum]; rw[reduce_linearize]
+
+
+variable {I} [IndexType I]
+
+
+section OnMonoid
+variable [AddCommMonoid α]
+
+@[add_pull, sum_push]
+theorem sum_add_distrib (f g : I → α) : ∑ i , (f i + g i) = (∑ i, f i) + (∑ i, g i) := sorry_proof
+
+@[add_push, sum_pull]
+theorem add_sum (f g : I → α) : (∑ i, f i) + (∑ i, g i) = ∑ i , (f i + g i) := by simp only[add_pull]
+
+end OnMonoid
+
+
+
+section OnSemiring
+variable [NonUnitalNonAssocSemiring α]
+
+@[sum_pull, mul_push]
+theorem sum_mul (f : I → α) (a : α) :
+    (∑ i, f i) * a = ∑ i, f i * a := sorry_proof
+
+@[sum_pull, mul_push]
+theorem mul_sum (f : ι → α) (a : α) :
+    a * ∑ i, f i = ∑ i, a * f i := sorry_proof
+
+end OnSemiring

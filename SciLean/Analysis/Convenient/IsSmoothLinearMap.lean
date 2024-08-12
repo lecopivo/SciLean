@@ -3,7 +3,6 @@ import SciLean.Analysis.Convenient.CDifferentiable
 
 set_option linter.unusedVariables false
 
-open LeanColls
 namespace SciLean
 
 variable
@@ -11,7 +10,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 @[fun_prop]
@@ -74,7 +73,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -213,15 +212,14 @@ by
   case isTrue h  => simp[h]; apply ht
   case isFalse h => simp[h]; apply he
 
-open LeanColls
 namespace SciLean
 section OnFinVec
 
 variable
   {K : Type _} [RCLike K]
-  {IX : Type _} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
-  {IY : Type _} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type _} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
+  {IX : Type _} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+  {IY : Type _} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+  {IZ : Type _} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
 @[fun_prop]
 theorem Basis.proj.arg_x.IsSmoothLinearMap_rule (i : IX)

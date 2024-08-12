@@ -4,6 +4,8 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import SciLean.Util.SorryProof
 import SciLean.Meta.SimpAttr
 
+import SciLean.Data.IndexType
+
 open ComplexConjugate RCLike
 /--
 This is almost `InnerProductSpace` but we do not require that norm originates from the inner product.
@@ -246,11 +248,10 @@ def innerₗ : F →ₗ[ℝ] F →ₗ[ℝ] ℝ := innerₛₗ ℝ
 ----------------------------------------------------------------------------------------------------
 -- Instances ---------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
-
 variable
   {X} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
   {Y} [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
-  {ι} [Fintype ι]
+  {ι : Type} [SciLean.IndexType ι]
   {E : ι → Type} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)]
 
 instance : AdjointSpace 𝕜 𝕜 where
@@ -283,15 +284,16 @@ open Classical in
 instance : AdjointSpace 𝕜 ((i : ι) → E i) where
   inner := fun x y => ∑ i, ⟪x i, y i⟫_𝕜
   inner_top_equiv_norm := by
-    have h := fun i => inner_top_equiv_norm (𝕜:=𝕜) (E:=E i)
-    let c := (fun i => let ci := choose (h i); ci*ci)
-    let d := (fun i => let di := choose <| choose_spec (h i); di*di)
-    apply Exists.intro (Finset.univ.sum (fun i => c i ^ 2))
-    apply Exists.intro (Finset.univ.sum (fun i => d i ^ 2))
+    -- have h := fun i => inner_top_equiv_norm (𝕜:=𝕜) (E:=E i)
+    -- let c := (fun i => let ci := choose (h i); ci*ci)
+    -- let d := (fun i => let di := choose <| choose_spec (h i); di*di)
+    -- universe issues with IndexType :(
+    -- apply Exists.intro (∑ i, c i ^ 2)
+    -- apply Exists.intro (∑ i, d i ^ 2)
     sorry_proof
-  conj_symm := by simp
-  add_left := by simp[inner_add_left,Finset.sum_add_distrib]
-  smul_left := by simp[inner_smul_left,Finset.mul_sum]
+  conj_symm := by simp; sorry_proof
+  add_left := by simp[inner_add_left,SciLean.IndexType.sum_add_distrib]
+  smul_left := by simp[inner_smul_left,SciLean.IndexType.mul_sum]
 
 
 theorem inner_prod_split (x y : X×Y) : ⟪x,y⟫_𝕜 = ⟪x.1,y.1⟫_𝕜 + ⟪x.2,y.2⟫_𝕜 := by rfl

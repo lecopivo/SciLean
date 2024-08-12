@@ -10,6 +10,8 @@ register_simp_attr neg_pull
 register_simp_attr neg_push
 register_simp_attr smul_pull
 register_simp_attr smul_push
+register_simp_attr mul_pull
+register_simp_attr mul_push
 
 
 register_simp_attr simp_core

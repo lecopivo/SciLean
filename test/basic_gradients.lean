@@ -12,20 +12,21 @@ variable
 
 set_default_scalar K
 
-
 example
   : (∇ (x : Fin 10 → K), fun i => x i)
     =
     fun x dx => dx :=
 by
-  (conv => lhs; unfold SciLean.gradient; autodiff; autodiff)
+  unfold adjointFDeriv
+  (conv => lhs; autodiff)
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, x i)
     =
     fun x i => 1 :=
 by
-  (conv => lhs; unfold scalarGradient; autodiff; autodiff)
+  unfold fgradient
+  (conv => lhs; autodiff)
 
 #exit
 

@@ -6,7 +6,6 @@ import SciLean.Tactic.FunTrans.Elab
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
 
-open LeanColls
 
 namespace SciLean
 
@@ -16,7 +15,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 @[fun_prop]
@@ -173,7 +172,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 

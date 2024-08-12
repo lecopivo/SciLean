@@ -10,14 +10,13 @@ namespace SciLean
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
 
-open LeanColls
 
 section GenericArrayType
 
 variable
   {K : Type} [RCLike K]
   {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
-  [ArrayType Cont Idx Elem] [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
+  [ArrayType Cont Idx Elem] [IndexType Idx] [DecidableEq Idx]
 
 
 -- Indexed.get -----------------------------------------------------------------
@@ -253,7 +252,7 @@ by
 
 @[fun_trans]
 theorem GetElem.getElem.arg_cont.revCDerivProj_rule
-  {J ElemJ} [StructType Elem J ElemJ] [IndexType J] [LawfulIndexType J] [DecidableEq J]
+  {J ElemJ} [StructType Elem J ElemJ] [IndexType J] [DecidableEq J]
   [∀ j, SemiInnerProductSpace K (ElemJ j)] [SemiInnerProductSpaceStruct K Elem J ElemJ]
   (f : X → Cont) (idx : Idx)
   (hf : HasAdjDiff K f)
@@ -284,13 +283,13 @@ section OnVectorSpaces
 variable {R : Type} [CommSemiring R] [AddCommGroup Elem] [Module R Elem]
 
 @[fun_prop]
-theorem LeanColls.Indexed.set.arg_contelem.IsLinearMap_rule_simple (idx : Idx) :
+theorem ArrayType.set.arg_contelem.IsLinearMap_rule_simple (idx : Idx) :
     IsLinearMap R (fun ((cont,elem) : Cont×Elem) => Indexed.set cont idx elem) := by
   constructor
   · intros; simp; ext; sorry_proof
   · intros; simp; ext; sorry_proof
 
-#generate_linear_map_simps LeanColls.Indexed.set.arg_contelem.IsLinearMap_rule_simple
+#generate_linear_map_simps ArrayType.set.arg_contelem.IsLinearMap_rule_simple
 
 end OnVectorSpaces
 

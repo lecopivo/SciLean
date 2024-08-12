@@ -72,6 +72,6 @@ open Random
 instance {ι} [IndexType ι] [PlainDataType R] [Random Id R] [Zero R] : Random Id (R^[ι]) where
   random := do
     let mut x : R^[ι] := 0
-    for i in IndexType.univ ι do
+    for i in fullRange ι do
       x := ArrayType.set x i (← random (α:=R))
     return x

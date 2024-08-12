@@ -7,7 +7,6 @@ import SciLean.Meta.SimpAttr
 
 import SciLean.Tactic.AnalyzeConstLambda
 
-open LeanColls
 namespace SciLean
 
 set_option linter.unusedVariables false
@@ -35,7 +34,7 @@ theorem _root_.IsLinearMap.add_pull (x x' : X)
 --       fix this
 theorem _root_.IsLinearMap.sum_push
   {f : X → Y} (hf : IsLinearMap K f)
-  (ι : Type) [IndexType.{_,u} ι] [IndexType.{_,v} ι] (x : ι → X)
+  (ι : Type) [IndexType ι] (x : ι → X)
   : (∑ i : ι, f (x i)) = f (∑ i, x i) := by sorry_proof
 
 -- todo: this is not sufficiently universe polymorphic
@@ -43,7 +42,7 @@ theorem _root_.IsLinearMap.sum_push
 --       fix this
 theorem _root_.IsLinearMap.sum_pull
   {f : X → Y} (hf : IsLinearMap K f)
-  (ι : Type) [IndexType.{_,u} ι] [IndexType.{_,v} ι] (x : ι → X)
+  (ι : Type) [IndexType ι] (x : ι → X)
   : f (∑ i, x i) = ∑ i, f (x i) := by sorry_proof
 
 theorem _root_.IsLinearMap.sub_push (x x' : X)

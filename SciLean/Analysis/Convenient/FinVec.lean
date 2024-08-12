@@ -1,8 +1,7 @@
-import LeanColls
 import SciLean.Analysis.Convenient.SemiInnerProductSpace
+import SciLean.Data.IndexType
 
 open ComplexConjugate
-open LeanColls
 
 namespace SciLean
 
@@ -138,20 +137,20 @@ class OrthonormalBasis (ι K X : Type _) [Semiring K] [Basis ι K X] [Inner K X]
   is_orthonormal : ∀ i, ⟪ⅇ[X] i, ⅇ i⟫[K] = 1
 
 /-- Finite dimensional vector space over `K` with a basis indexed by `ι` -/
-class FinVec (ι : outParam $ Type _) (K : Type _) (X : Type _) [outParam $ IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [RCLike K] extends SemiHilbert K X, Basis ι K X, DualBasis ι K X, BasisDuality X where
+class FinVec (ι : outParam $ Type _) (K : Type _) (X : Type _) [outParam $ IndexType ι] [DecidableEq ι] [RCLike K] extends SemiHilbert K X, Basis ι K X, DualBasis ι K X, BasisDuality X where
   is_basis : ∀ x : X, x = ∑ i : ι, ℼ i x • ⅇ[X] i
   duality : ∀ i j, ⟪ⅇ[X] i, ⅇ'[X] j⟫[K] = if i=j then 1 else 0
   to_dual   : toDual   x = ∑ i,  ℼ i x • ⅇ'[X] i
   from_dual : fromDual x = ∑ i, ℼ' i x •  ⅇ[X] i
 
 
-theorem basis_ext {ι K X} {_ : IndexType ι} [LawfulIndexType ι] [DecidableEq ι] [RCLike K] [FinVec ι K X] (x y : X)
+theorem basis_ext {ι K X} {_ : IndexType ι} [DecidableEq ι] [RCLike K] [FinVec ι K X] (x y : X)
   : (∀ i, ⟪x, ⅇ i⟫[K] = ⟪y, ⅇ i⟫[K]) → (x = y) := sorry_proof
 
-theorem dualBasis_ext {ι K X} {_ : IndexType ι} [LawfulIndexType ι] [DecidableEq ι] [RCLike K] [FinVec ι K X] (x y : X)
+theorem dualBasis_ext {ι K X} {_ : IndexType ι} [DecidableEq ι] [RCLike K] [FinVec ι K X] (x y : X)
   : (∀ i, ⟪x, ⅇ' i⟫[K] = ⟪y, ⅇ' i⟫[K]) → (x = y) := sorry_proof
 
-theorem inner_proj_dualProj {ι K X} {_ : IndexType ι} [LawfulIndexType ι] [DecidableEq ι] [RCLike K] [FinVec ι K X] (x y : X)
+theorem inner_proj_dualProj {ι K X} {_ : IndexType ι} [DecidableEq ι] [RCLike K] [FinVec ι K X] (x y : X)
   : ⟪x, y⟫[K] = ∑ i, ℼ i x * ℼ' i y :=
 by
   calc
@@ -160,14 +159,14 @@ by
          _ = ∑ i, ∑ j, (ℼ i x * ℼ' j y) * if i=j then 1 else 0 := by simp [FinVec.duality]
          _ = ∑ i, ℼ i x * ℼ' i y := sorry_proof -- summing over [[i=j]]
 
-variable {ι K X} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [RCLike K] [FinVec ι K X]
+variable {ι K X} [IndexType ι] [DecidableEq ι] [RCLike K] [FinVec ι K X]
 
 
 namespace FinVec
 scoped instance (priority:=low) : GetElem X ι K (fun _ _ => True) where
   getElem x i _ := ℼ i x
 
-scoped instance (priority:=low) : GetElem X ℕ K (fun _ i => i < IndexType.card ι) where
+scoped instance (priority:=low) : GetElem X ℕ K (fun _ i => i < size ι) where
   getElem x i h := ℼ (IndexType.fromFin ⟨i,h⟩) x
 end FinVec
 
@@ -222,8 +221,8 @@ instance : OrthonormalBasis Unit K K where
 
 -- @[infer_tc_goals_rl]
 instance {ι κ K X Y}
-    [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-    [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
+    [IndexType ι] [DecidableEq ι]
+    [IndexType κ] [DecidableEq κ]
     [RCLike K] [FinVec ι K X] [FinVec κ K Y] :
     FinVec (ι⊕κ) K (X×Y) where
   is_basis := sorry_proof
@@ -232,8 +231,8 @@ instance {ι κ K X Y}
   from_dual := sorry_proof
 
 instance
-    [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-    [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
+    [IndexType ι] [DecidableEq ι]
+    [IndexType κ] [DecidableEq κ]
     [FinVec ι K X] [OrthonormalBasis ι K X]
     [FinVec κ K Y] [OrthonormalBasis κ K Y] :
     OrthonormalBasis (ι⊕κ) K (X×Y) where
@@ -242,19 +241,19 @@ instance
 
 
 -- this might require `FinVec` instance, without it we probably do not know that `⟪0,x⟫ = 0`
-instance [IndexType ι] [IndexType κ] [LawfulIndexType ι] [LawfulIndexType κ] [Zero X] [Basis κ K X] [OrthonormalBasis κ K X] : OrthonormalBasis (ι×κ) K (ι → X) where
+instance [IndexType ι] [IndexType κ] [Zero X] [Basis κ K X] [OrthonormalBasis κ K X] : OrthonormalBasis (ι×κ) K (ι → X) where
   is_orthogonal  := by simp[Inner.inner, Basis.basis]; sorry_proof
   is_orthonormal := by simp[Inner.inner, Basis.basis]; sorry_proof
 
 
-instance (priority:=high) {ι : Type} {K : Type v} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι] [RCLike K]
+instance (priority:=high) {ι : Type} {K : Type v} [IndexType ι] [DecidableEq ι] [RCLike K]
   : FinVec ι K (ι → K) where
   is_basis := sorry_proof
   duality := sorry_proof
   to_dual := sorry_proof
   from_dual := sorry_proof
 
-instance {ι κ : Type} {K X : Type _} [IndexType ι] [IndexType κ] [LawfulIndexType ι] [LawfulIndexType κ] [DecidableEq ι] [DecidableEq κ] [RCLike K] [FinVec κ K X]
+instance {ι κ : Type} {K X : Type _} [IndexType ι] [IndexType κ] [DecidableEq ι] [DecidableEq κ] [RCLike K] [FinVec κ K X]
   : FinVec (ι×κ) K (ι → X) where
   is_basis := sorry_proof
   duality := sorry_proof

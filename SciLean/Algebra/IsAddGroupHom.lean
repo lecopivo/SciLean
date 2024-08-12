@@ -7,7 +7,7 @@ import SciLean.Meta.GenerateLinearMapSimp
 
 import Mathlib.Tactic.FunProp
 
-open LeanColls
+open SciLean
 
 variable {X Y Z ι : Type _} {E : ι → Type _}
   [AddGroup X]

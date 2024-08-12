@@ -1,7 +1,5 @@
 import SciLean.Data.DataArray.DataArray
 
-open LeanColls
-
 namespace SciLean
 
 

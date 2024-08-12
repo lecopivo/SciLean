@@ -381,11 +381,19 @@ theorem HDiv.hDiv.arg_a0.IsContinuousLinearMap_rule
 -- Finset.sum -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-open BigOperators in
 @[fun_prop]
 theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
   (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
   : IsContinuousLinearMap R fun x => ∑ i in A, f x i :=
+{
+  linear := sorry_proof
+  cont := sorry_proof
+}
+
+@[fun_prop]
+theorem SciLean.IndexType.sum.arg_f.IsContinuousLinearMap_rule {ι} [IndexType ι]
+  (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i)
+  : IsContinuousLinearMap R fun x => IndexType.sum (f x) :=
 {
   linear := sorry_proof
   cont := sorry_proof

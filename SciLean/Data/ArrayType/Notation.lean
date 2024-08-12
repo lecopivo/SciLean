@@ -8,7 +8,6 @@ namespace SciLean
 
 open Lean Parser
 open TSyntax.Compat
-open LeanColls
 
 
 
@@ -135,7 +134,7 @@ elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
     let Cont ← mkAppOptM ``arrayTypeCont #[Idx, Elem, none, none]
     let Cont := Cont.getRevArg! 1
 
-    mkAppOptM ``Indexed.ofFn #[Cont, Idx, Elem, none, fn]
+    mkAppOptM ``ArrayType.ofFn #[Cont, Idx, Elem, none, fn]
   catch _ =>
     if arity = 1 then
       elabTerm (← `(Indexed.ofFn fun $xs* => $b)) none
@@ -201,19 +200,19 @@ elab_rules (kind := dataArrayNotation) : term
     return fn
 
 
-/-- Unexpander for `⊞[...]` and `⊞ i => ...` notation.
+-- /-- Unexpander for `⊞[...]` and `⊞ i => ...` notation.
 
-TODO: support matrix literals -/
-@[app_unexpander LeanColls.Indexed.ofFn] def unexpandIndexedOfFn : Lean.PrettyPrinter.Unexpander
-  | `($(_) $f) =>
-    match f with
-    | `(fun $_ => [$xs,*].get! $_) =>
-      `(⊞[$xs,*])
-    | `(fun $i => $b) =>
-      `(⊞ $i => $b)
-    | _ =>
-      throw ()
-  | _ => throw ()
+-- TODO: support matrix literals -/
+-- @[app_unexpander LeanColls.Indexed.ofFn] def unexpandIndexedOfFn : Lean.PrettyPrinter.Unexpander
+--   | `($(_) $f) =>
+--     match f with
+--     | `(fun $_ => [$xs,*].get! $_) =>
+--       `(⊞[$xs,*])
+--     | `(fun $i => $b) =>
+--       `(⊞ $i => $b)
+--     | _ =>
+--       throw ()
+--   | _ => throw ()
 
 
 

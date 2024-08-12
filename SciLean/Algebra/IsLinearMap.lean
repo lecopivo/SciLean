@@ -10,7 +10,6 @@ set_option linter.unusedVariables false
 set_option linter.hashCommand false
 
 --------------------------------------------------------------------------------
-open LeanColls
 namespace IsLinearMap
 
 attribute [fun_prop] IsLinearMap
@@ -72,7 +71,7 @@ theorem LinearMap_coe.apply_left (f : Y →ₗ[R] Z) (g : X → Y) (hg : IsLinea
 end CommSemiring
 
 end IsLinearMap
-open IsLinearMap
+open IsLinearMap SciLean
 
 section Semiring
 variable {R X Y Z ι : Type _} {E : ι → Type _}
@@ -80,7 +79,7 @@ variable {R X Y Z ι : Type _} {E : ι → Type _}
   [AddCommGroup X] [Module R X]
   [AddCommGroup Y] [Module R Y]
   [AddCommGroup Z] [Module R Z]
-  [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  [IndexType ι] [DecidableEq ι]
   [∀ i, AddCommGroup (E i)] [∀ i, Module R (E i)]
 
 theorem by_linear_map {f : X → Y} (g : X →ₗ[R] Y) (h : ∀ x, f x = g x) :
@@ -306,16 +305,15 @@ theorem Inner.inner.arg_a1.IsLinearMap_rule' (y : X) :
 end OnAdjointSpace
 
 
-open LeanColls
 namespace SciLean
 
 section OnFinVec
 
 variable
   {K : Type _} [RCLike K]
-  {IX : Type _} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
-  {IY : Type _} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type _} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
+  {IX : Type _} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+  {IY : Type _} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+  {IZ : Type _} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
 @[fun_prop]
 theorem Basis.proj.arg_x.IsLinearMap_rule (i : IX) :

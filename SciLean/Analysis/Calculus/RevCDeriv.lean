@@ -6,8 +6,6 @@ import SciLean.Data.StructType.Algebra
 
 set_option linter.unusedVariables false
 
-open LeanColls
-
 namespace SciLean
 
 variable
@@ -16,14 +14,14 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
-  {κ : Type _} [IndexType κ] [LawfulIndexType κ] [DecidableEq κ]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  {κ : Type _} [IndexType κ] [DecidableEq κ]
   {E : Type _} {EI : I → Type _}
-  [StructType E I EI] [IndexType I] [LawfulIndexType I] [DecidableEq I]
+  [StructType E I EI] [IndexType I] [DecidableEq I]
   [SemiInnerProductSpace K E] [∀ i, SemiInnerProductSpace K (EI i)]
   [SemiInnerProductSpaceStruct K E I EI]
   {F J : Type _} {FJ : J → Type _}
-  [StructType F J FJ] [IndexType J] [LawfulIndexType J] [DecidableEq J]
+  [StructType F J FJ] [IndexType J] [DecidableEq J]
   [SemiInnerProductSpace K F] [∀ j, SemiInnerProductSpace K (FJ j)]
   [SemiInnerProductSpaceStruct K F J FJ]
 
@@ -217,12 +215,13 @@ theorem pi_rule
       let xdf := fun i => revCDerivUpdate K (f · i) x
       (fun i => (xdf i).1,
        fun dy =>
-         Fold.fold (IndexType.univ I) (fun dx i => (xdf i).2 (dy i) dx) 0) := by
+         IndexType.foldl (fun dx i => (xdf i).2 (dy i) dx) 0) := by
   unfold revCDeriv
   fun_trans;
   funext x; simp
   rw[cderiv.pi_rule (hf:=by fun_prop)]; fun_trans
   simp[revCDerivUpdate,revCDeriv,IndexType.sum]
+  sorry_proof
 
 end revCDeriv
 
@@ -297,7 +296,7 @@ theorem pi_rule
       let xdf := fun i => revCDerivUpdate K (f · i) x
       (fun i => (xdf i).1,
        fun dy dx =>
-         Fold.fold (IndexType.univ I) (fun dx i => (xdf i).2 (dy i) dx) dx) := by
+         IndexType.foldl (fun dx i => (xdf i).2 (dy i) dx) dx) := by
   unfold revCDerivUpdate
   funext x
   rw[revCDeriv.pi_rule (hf:=by fun_prop)]
@@ -391,7 +390,7 @@ theorem pi_rule
       let ydf := fun i => revCDerivUpdate K (f · i) x
       (fun i => (ydf i).1,
        fun _ df =>
-         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 (df i) dx) (0 : X)) := by
+         IndexType.foldl (fun dx i => (ydf i).2 (df i) dx) (0 : X)) := by
   unfold revCDerivProj
   fun_trans
   funext x; simp; funext i de
@@ -494,7 +493,7 @@ theorem pi_rule
       let ydf := fun i => revCDerivUpdate K (f · i) x
       (fun i => (ydf i).1,
        fun _ df dx =>
-         Fold.fold (IndexType.univ ι) (fun dx i => (ydf i).2 (df i) dx) dx) :=
+         IndexType.foldl (fun dx i => (ydf i).2 (df i) dx) dx) :=
 by
   unfold revCDerivProjUpdate
   fun_trans
@@ -519,14 +518,14 @@ variable
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
-  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IndexType Xi] [LawfulIndexType Xi] [DecidableEq Xi]
-  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IndexType Yi] [LawfulIndexType Yi] [DecidableEq Yi]
-  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IndexType Zi] [LawfulIndexType Zi] [DecidableEq Zi]
+  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IndexType Xi] [DecidableEq Xi]
+  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IndexType Yi] [DecidableEq Yi]
+  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IndexType Zi] [DecidableEq Zi]
   [SemiInnerProductSpace K X'] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpaceStruct K X' Xi XI]
   [SemiInnerProductSpace K Y'] [∀ i, SemiInnerProductSpace K (YI i)] [SemiInnerProductSpaceStruct K Y' Yi YI]
   [SemiInnerProductSpace K Z'] [∀ i, SemiInnerProductSpace K (ZI i)] [SemiInnerProductSpaceStruct K Z' Zi ZI]
   {W : Type} [SemiInnerProductSpace K W]
-  {ι : Type} [IndexType ι] [LawfulIndexType ι]
+  {ι : Type} [IndexType ι]
 
 
 
@@ -974,7 +973,7 @@ theorem HMul.hMul.arg_a0a1.revCDerivProjUpdate_rule
 section SMulOnSemiHilbert
 
 variable
-  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IndexType Yi] [LawfulIndexType Yi] [DecidableEq Yi]
+  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IndexType Yi] [DecidableEq Yi]
   [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
 
 @[fun_trans]
@@ -1178,7 +1177,7 @@ def HPow.hPow.arg_a0.revCDerivProjUpdate_rule
 
 section IndexTypeSum
 
-variable {ι : Type} [IndexType ι] [LawfulIndexType ι]
+variable {ι : Type} [IndexType ι]
 
 @[fun_trans]
 theorem IndexType.sum.arg_f.revCDeriv_rule
@@ -1223,7 +1222,7 @@ theorem IndexType.sum.arg_f.revCDerivProj_rule [DecidableEq ι]
       let ydf := revCDerivProjUpdate K (ι×Yi) f x
       (∑ i, ydf.1 i,
        fun j dy =>
-         Fold.fold (IndexType.univ ι) (fun dx i => ydf.2 (i,j) dy dx) 0) := by
+         IndexType.foldl (fun dx i => ydf.2 (i,j) dy dx) 0) := by
   unfold revCDerivProj
   fun_trans
   sorry_proof
@@ -1238,7 +1237,7 @@ theorem IndexType.sum.arg_f.revCDerivProjUpdate_rule [DecidableEq ι]
       let ydf := revCDerivProjUpdate K (ι×Yi) f x
       (∑ i, ydf.1 i,
        fun j dy dx =>
-         Fold.fold (IndexType.univ ι) (fun dx i => ydf.2 (i,j) dy dx) dx) := by
+         IndexType.foldl (fun dx i => ydf.2 (i,j) dy dx) dx) := by
   sorry_proof
 
 

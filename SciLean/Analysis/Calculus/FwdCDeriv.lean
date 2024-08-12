@@ -8,7 +8,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 namespace SciLean
@@ -112,7 +112,6 @@ theorem pi_rule
   funext x; rw[cderiv.pi_rule_at (hf:=by fun_prop)]
 
 
-open SciLean LeanColls
 
 -- Prod.mk -----------------------------------v---------------------------------
 --------------------------------------------------------------------------------

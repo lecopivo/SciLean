@@ -7,7 +7,6 @@ import SciLean.Analysis.Calculus.CDeriv
 
 set_option linter.unusedVariables false
 
-open LeanColls
 
 namespace SciLean
 
@@ -16,7 +15,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 @[fun_prop]
@@ -131,7 +130,7 @@ theorem HasAdjDiff.pi_rule
 -- Function Rules --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-open SciLean LeanColls
+open SciLean
 
 variable
   (K : Type _) [RCLike K]
@@ -139,7 +138,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 

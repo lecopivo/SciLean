@@ -2,11 +2,11 @@ import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ArrayType.Notation
 import SciLean.Tactic.InferVar
+import SciLean.Data.IndexType
 
 set_option linter.unusedVariables false
 
 namespace SciLean
-open LeanColls
 
 def _root_.ByteArray.mkArray (n : Nat) (v : UInt8) : ByteArray := Id.run do
   let mut a : ByteArray := .mkEmpty n
@@ -70,7 +70,7 @@ def DataArray.reserve  (arr : DataArray α) (capacity : Nat) : DataArray α :=
     let newBytes := pd.bytes capacity
     let mut arr' : DataArray α := ⟨ByteArray.mkArray newBytes 0, arr.size, sorry_proof⟩
     -- copy over the old data
-    for i in IndexType.univ (Fin arr.size) do
+    for i in fullRange (Fin arr.size) do
       arr' := arr'.set ⟨i.1,sorry_proof⟩ (arr.get i)
     arr'
 
@@ -119,10 +119,10 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
 
 @[irreducible]
 def DataArray.intro (f : ι → α) : DataArray α := Id.run do
-  let bytes := (pd.bytes (IndexType.card ι))
+  let bytes := (pd.bytes (Size.size ι))
   let d : ByteArray := ByteArray.mkArray bytes 0
-  let mut d' : DataArray α := ⟨d, (IndexType.card ι), sorry_proof⟩
-  for i in IndexType.univ ι do
+  let mut d' : DataArray α := ⟨d, (Size.size ι), sorry_proof⟩
+  for i in fullRange ι do
     d' := d'.set ⟨(IndexType.toFin i).1,sorry_proof⟩ (f i)
   d'
 
@@ -140,15 +140,15 @@ instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
   s ++ "]"⟩
 
 
-structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [IndexType.{0,0} ι] where
+structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [IndexType ι] where
   data : DataArray α
-  h_size : IndexType.card ι = data.size
+  h_size : Size.size ι = data.size
 
 
 def DataArrayN.get (xs : DataArrayN α ι) (i : ι) : α := (xs.1.get ((IndexType.toFin i).cast xs.2))
 
 
-def DataArrayN.linGet (xs : DataArrayN α ι) (i : Fin (IndexType.card ι)) : α := (xs.1.get ⟨i,by rw[←xs.2]; omega⟩)
+def DataArrayN.linGet (xs : DataArrayN α ι) (i : Fin (Size.size ι)) : α := (xs.1.get ⟨i,by rw[←xs.2]; omega⟩)
 
 
 def DataArrayN.set (xs : DataArrayN α ι) (i : ι) (xi : α) : DataArrayN α ι :=
@@ -161,14 +161,14 @@ def DataArrayN.modify (xs : DataArrayN α ι) (i : ι) (f : α → α) : DataArr
 
 def DataArrayN.toList (xs : DataArrayN α ι) : List α := Id.run do
   let mut l : List α := []
-  for i in IndexType.univ ι do
+  for i in fullRange ι do
     l := xs.get i :: l
   return l
 
 
 def DataArrayN.toListIdx (xs : DataArrayN α ι) : List (ι × α) := Id.run do
   let mut l : List (ι × α) := []
-  for i in IndexType.univ ι do
+  for i in fullRange ι do
     l := (i, xs.get i) :: l
   return l
 
@@ -176,8 +176,6 @@ def DataArrayN.toListIdx (xs : DataArrayN α ι) : List (ι × α) := Id.run do
 instance : Membership α (DataArrayN α ι) where
   mem x xs := ∃ i, xs.get i = x
 
-instance : Membership (ι × α) (Indexed.WithIdx (DataArrayN α ι)) where
-  mem := fun (i,x) xs => xs.1.get i = x
 
 instance : ArrayType (DataArrayN α ι) ι α where
   ofFn f := ⟨DataArray.intro f, sorry_proof⟩
@@ -200,12 +198,12 @@ instance : ArrayTypeNotation (DataArrayN α ι) ι α := ⟨⟩
 
 
 def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type) [IndexType κ]
-  (hs : IndexType.card κ = IndexType.card ι)
+  (hs : size κ = size ι)
   : DataArrayN α κ :=
   ⟨x.data, by simp[hs,x.h_size]⟩
 
 def DataArrayN.flatten (x : DataArrayN α ι)
-    {n} (hn : n = IndexType.card ι := by infer_var) :
+    {n} (hn : n = size ι := by infer_var) :
     DataArrayN α (Fin n) :=
   x.reshape (Fin n) (by simp[hn])
 
@@ -228,7 +226,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
       }
     | .inr αByteType =>
       .inr {
-        bytes := (IndexType.card ι).toUSize * αByteType.bytes
+        bytes := (size ι).toUSize * αByteType.bytes
         h_size := sorry_proof
 
         fromByteArray := λ b i h =>
@@ -238,7 +236,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
         toByteArray   := λ b i h c => Id.run do
           let mut b := b
           let mut lj : USize := 0
-          for j in IndexType.univ ι do
+          for j in fullRange ι do
             let Fin := (i + lj*αByteType.bytes)
             lj := lj + 1
             b := αByteType.toByteArray b Fin sorry_proof c[j]
@@ -252,7 +250,7 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
 
 
 def DataArrayN.curry [Inhabited α] (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
-  ⟨⟨x.data.byteData, IndexType.card ι, sorry_proof⟩, sorry_proof⟩
+  ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
 
 
 open Lean in

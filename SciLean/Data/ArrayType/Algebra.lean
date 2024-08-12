@@ -10,13 +10,12 @@ import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 
 import SciLean.Analysis.MetricSpace
 
-open LeanColls
 
 namespace SciLean
 namespace ArrayType
 
 variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
-variable {Idx : Type _} [IndexType Idx] [LawfulIndexType Idx] [DecidableEq Idx]
+variable {Idx : Type _} [IndexType Idx] [DecidableEq Idx]
 
 variable {K : Type _} [RCLike K]
 
@@ -71,7 +70,7 @@ instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCo
 open FiniteDimensional IndexType in
 @[simp, simp_core]
 theorem array_type_finrank {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module R Elem] :
-    finrank R Cont = card Idx * finrank R Elem := sorry_proof
+    finrank R Cont = size Idx * finrank R Elem := sorry_proof
 
 instance (priority := low) {S R} [SMul S Elem] [SMul R Elem] [SMul S R] [IsScalarTower S R Elem]
     [ArrayType Cont Idx Elem] : IsScalarTower S R Cont where

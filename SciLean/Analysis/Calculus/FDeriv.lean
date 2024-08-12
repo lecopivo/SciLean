@@ -13,12 +13,14 @@ import SciLean.Tactic.FunTrans.Elab
 
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 
+open SciLean
+
 variable
   {K : Type _} [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} [Fintype ι]
+  {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
 
 namespace SciLean

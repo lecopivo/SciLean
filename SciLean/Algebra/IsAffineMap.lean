@@ -3,15 +3,16 @@ import SciLean.Algebra.IsLinearMap
 
 set_option linter.unusedVariables false
 
+open SciLean
+
 --------------------------------------------------------------------------------
-open LeanColls
 
 variable {R X Y Z ι : Type _} {E : ι → Type _}
   [CommRing R]
   [AddCommGroup X] [Module R X]
   [AddCommGroup Y] [Module R Y]
   [AddCommGroup Z] [Module R Z]
-  [IndexType ι] [LawfulIndexType ι] [DecidableEq ι]
+  [IndexType ι] [DecidableEq ι]
   [∀ i, AddCommGroup (E i)] [∀ i, Module R (E i)]
 
 variable (R)
@@ -202,9 +203,9 @@ section OnFinVec
 
 variable
   {K : Type _} [RCLike K]
-  {IX : Type} [IndexType IX] [LawfulIndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
-  {IY : Type} [IndexType IY] [LawfulIndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type} [IndexType IZ] [LawfulIndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
+  {IX : Type} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+  {IY : Type} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+  {IZ : Type} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
 @[fun_prop]
 theorem Basis.proj.arg_x.IsAffineMap_rule (i : IX) :
