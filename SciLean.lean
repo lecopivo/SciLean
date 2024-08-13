@@ -26,6 +26,7 @@ import SciLean.Analysis.Calculus.Notation.RevDeriv
 import SciLean.Analysis.Calculus.Notation.Test
 import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
+import SciLean.Analysis.Calculus.RevFDerivProj
 import SciLean.Analysis.Convenient.CDifferentiable
 import SciLean.Analysis.Convenient.ContCDiff
 import SciLean.Analysis.Convenient.Curve

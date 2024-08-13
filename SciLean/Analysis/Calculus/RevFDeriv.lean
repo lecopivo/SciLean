@@ -111,10 +111,10 @@ theorem pi_rule
   : (revFDeriv K fun (x : X) (i : ι) => f x i)
     =
     fun x =>
-      let xdf := fun i =>
-        (revFDeriv K fun (x : X) => f x i) x
-      (fun i => (xdf i).1,
-       fun dy => IndexType.sum fun i => (xdf i).2 (dy i))
+      (fun i => f x i,
+       fun dy => IndexType.sum fun i =>
+         let dx := (revFDeriv K (f · i) x).2 (dy i)
+         dx)
        := by
 
   unfold revFDeriv
@@ -162,11 +162,10 @@ theorem pi_rule_at
     (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f · i) x) :
     (revFDeriv K fun (x : X) (i : ι) => f x i) x
     =
-    let xdf := fun i =>
-      (revFDeriv K fun (x : X) => f x i) x
-    (fun i => (xdf i).1,
-     fun dy => IndexType.sum fun i => (xdf i).2 (dy i)) := by
-
+    (fun i => f x i,
+     fun dy => IndexType.sum fun i =>
+       let dx := (revFDeriv K (f · i) x).2 (dy i)
+       dx) := by
   unfold revFDeriv
   simp (disch:=fun_prop) only [fderiv.pi_rule_at]
   fun_trans

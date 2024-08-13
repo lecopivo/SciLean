@@ -79,6 +79,12 @@ instance [∀ i, Dist (EI i)] [∀ j, Dist (FJ j)] (i : I ⊕ J) : Dist (Sum.rec
   | .inr _ => by infer_instance
 
 @[reducible]
+instance [∀ i, EDist (EI i)] [∀ j, EDist (FJ j)] (i : I ⊕ J) : EDist (Sum.rec EI FJ i) :=
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
 instance [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)] (i : I ⊕ J) :
     TopologicalSpace (Sum.rec EI FJ i) :=
   match i with
@@ -95,6 +101,24 @@ instance [∀ i, UniformSpace (EI i)] [∀ j, UniformSpace (FJ j)] (i : I ⊕ J)
   comp := sorry_proof
   nhds_eq_comap_uniformity := sorry_proof
 
+@[reducible]
+instance [∀ i, MetricSpace (EI i)] [∀ j, MetricSpace (FJ j)] (i : I ⊕ J) :
+    MetricSpace (Sum.rec EI FJ i) where
+  dist_self := sorry_proof
+  dist_comm := sorry_proof
+  dist_triangle := sorry_proof
+  edist := match i with
+    | .inl _ => PseudoMetricSpace.edist
+    | .inr _ => PseudoMetricSpace.edist
+  edist_dist := sorry_proof
+  toUniformSpace := by infer_instance
+  uniformity_dist := sorry_proof
+  toBornology :=
+    match i with
+    | .inl _ => by infer_instance
+    | .inr _ => by infer_instance
+  cobounded_sets := sorry_proof
+  eq_of_dist_eq_zero := sorry_proof
 
 @[reducible]
 instance [∀ i, AddCommGroup (EI i)] [∀ j, AddCommGroup (FJ j)] (i : I ⊕ J) :
@@ -102,10 +126,8 @@ instance [∀ i, AddCommGroup (EI i)] [∀ j, AddCommGroup (FJ j)] (i : I ⊕ J)
 
 @[reducible]
 instance [∀ i, NormedAddCommGroup (EI i)] [∀ j, NormedAddCommGroup (FJ j)] (i : I ⊕ J) :
-    NormedAddCommGroup (Sum.rec EI FJ i) :=
-  match i with
-  | .inl _ => by infer_instance
-  | .inr _ => by infer_instance
+    NormedAddCommGroup (Sum.rec EI FJ i) where
+  dist_eq : ∀ x y, dist x y = ‖x - y‖ := by sorry_proof
 
 
 @[reducible]

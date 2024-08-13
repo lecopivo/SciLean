@@ -48,7 +48,9 @@ def keepAsLetValue (v : Expr) : LSimpM Bool := do
   --   return false
   else if v.isFVar then
     return false
-  else if v.isLambda then
+  -- else if v.isLambda then
+  --   return false
+  else if (← inferType v).isForall then
     return false
   else if ← isProof v then
     return false
