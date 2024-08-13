@@ -67,6 +67,18 @@ instance [∀ i, Sub (EI i)] [∀ j, Sub (FJ j)] (i : I ⊕ J) : Sub (Sum.rec EI
   | .inr _ => by infer_instance
 
 @[reducible]
+instance [∀ i, Norm (EI i)] [∀ j, Norm (FJ j)] (i : I ⊕ J) : Norm (Sum.rec EI FJ i) :=
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
+instance [∀ i, Dist (EI i)] [∀ j, Dist (FJ j)] (i : I ⊕ J) : Dist (Sum.rec EI FJ i) :=
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
+@[reducible]
 instance [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)] (i : I ⊕ J) :
     TopologicalSpace (Sum.rec EI FJ i) :=
   match i with
@@ -83,9 +95,18 @@ instance [∀ i, UniformSpace (EI i)] [∀ j, UniformSpace (FJ j)] (i : I ⊕ J)
   comp := sorry_proof
   nhds_eq_comap_uniformity := sorry_proof
 
+
 @[reducible]
 instance [∀ i, AddCommGroup (EI i)] [∀ j, AddCommGroup (FJ j)] (i : I ⊕ J) :
     AddCommGroup (Sum.rec EI FJ i) := AddCommGroup.mkSorryProofs
+
+@[reducible]
+instance [∀ i, NormedAddCommGroup (EI i)] [∀ j, NormedAddCommGroup (FJ j)] (i : I ⊕ J) :
+    NormedAddCommGroup (Sum.rec EI FJ i) :=
+  match i with
+  | .inl _ => by infer_instance
+  | .inr _ => by infer_instance
+
 
 @[reducible]
 instance

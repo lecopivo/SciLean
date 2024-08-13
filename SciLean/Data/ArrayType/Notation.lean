@@ -137,9 +137,9 @@ elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
     mkAppOptM ``ArrayType.ofFn #[Cont, Idx, Elem, none, fn]
   catch _ =>
     if arity = 1 then
-      elabTerm (← `(Indexed.ofFn fun $xs* => $b)) none
+      elabTerm (← `(ArrayType.ofFn fun $xs* => $b)) none
     else if arity = 2 then
-      elabTerm (← `(Indexed.ofFn (Function.uncurry fun $xs* => $b))) none
+      elabTerm (← `(ArrayType.ofFn (Function.uncurry fun $xs* => $b))) none
     else
       throwError "notation `⊞ _ => _` is not supported for high rank arrays when types are unknown\
                   \nplease specify the types!"

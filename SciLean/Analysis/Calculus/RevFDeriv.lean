@@ -466,3 +466,36 @@ def HPow.hPow.arg_a0.revFDeriv_rule
       (ydf.1 ^ n, fun dx' => (n * (conj ydf.1 ^ (n-1))) • ydf.2 dx') := by
 
   funext; fun_trans
+
+
+
+-- sum -------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_trans]
+theorem IndexType.sum.arg_f.revFDeriv_rule_at {ι} [IndexType ι]
+  (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
+  : revFDeriv K (fun x => IndexType.sum fun i => f x i) x
+    =
+    (IndexType.sum fun i => f x i,
+     fun dy =>
+       IndexType.sum fun i =>
+         let dx := adjointFDeriv K (f · i) x dy
+         dx) :=
+
+by
+  unfold revFDeriv;
+  fun_trans [adjointFDeriv,revFDeriv]
+
+
+@[fun_trans]
+theorem IndexType.sum.arg_f.revFDeriv_rule {ι} [IndexType ι]
+  (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
+  : revFDeriv K (fun x => IndexType.sum fun i => f x i)
+    =
+    fun x =>
+    (IndexType.sum fun i => f x i,
+     fun dy =>
+       IndexType.sum fun i =>
+         let dx := adjointFDeriv K (f · i) x dy
+         dx) := by funext x; fun_trans

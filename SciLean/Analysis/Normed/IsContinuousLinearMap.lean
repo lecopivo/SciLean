@@ -458,4 +458,12 @@ theorem SciLean.IsContinuousLinearMap.differentiable (f : X → Y) (hf : IsConti
   fun_prop
 
 
+@[fun_prop]
+theorem SciLean.IsContinuousLinearMap.differentiableAt (x : X) (f : X → Y) (hf : IsContinuousLinearMap K f) :
+    DifferentiableAt K f x := by
+  have h : f = (fun x =>L[K] f x) := by rfl
+  rw[h]
+  fun_prop
+
+
 end NormedSpace

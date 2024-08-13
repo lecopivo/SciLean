@@ -52,3 +52,7 @@ attribute [simp_core]
 -- finset
 attribute [simp_core]
   Finset.card_singleton Finset.univ_unique Finset.sum_const
+
+-- Eq
+attribute [simp_core]
+  eq_rec_constant

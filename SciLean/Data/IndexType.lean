@@ -259,6 +259,17 @@ theorem reduce_linearize {I X : Type _} [IndexType I] (init : X) (f : I → X) (
     IndexType.reduceD (fun i : Fin (size I) => f (fromFin i)) op init := sorry_proof
 
 
+@[sum_push]
+theorem sum_pair {I X : Type _} [Add X] [Zero X] [IndexType I]
+    (f g : I → X) :
+    ∑ i, (f i, g i) = (∑ i, f i, ∑ i, g i) := sorry_proof
+
+@[sum_pull]
+theorem pair_sum {I X : Type _} [Add X] [Zero X] [IndexType I]
+    (f g : I → X) :
+    (∑ i, f i, ∑ i, g i) = ∑ i, (f i, g i) := sorry_proof
+
+
 open IndexType in
 @[rsimp guard I .notAppOf ``Fin]
 theorem sum_linearize {I X : Type _} [Add X] [Zero X] [IndexType I] (f : I → X) :

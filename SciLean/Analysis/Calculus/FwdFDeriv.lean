@@ -292,6 +292,35 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
   sorry_proof
 
 
+
+@[fun_trans]
+theorem IndexType.sum.arg_f.fwdFDeriv_rule_at {ι} [IndexType ι]
+  (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
+  : fwdFDeriv K (fun x => IndexType.sum fun i => f x i) x
+    =
+    fun dx =>
+      IndexType.sum fun i =>
+        let ydy := fwdFDeriv K (f · i) x dx
+        ydy :=
+by
+  unfold fwdFDeriv;
+  fun_trans [sum_push]
+
+
+@[fun_trans]
+theorem IndexType.sum.arg_f.fwdFDeriv_rule {ι} [IndexType ι]
+  (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
+  : fwdFDeriv K (fun x => IndexType.sum fun i => f x i)
+    =
+    fun x dx =>
+      IndexType.sum fun i =>
+        let ydy := fwdFDeriv K (f · i) x dx
+        ydy :=
+by
+  funext x; fun_trans
+
+
+
 -- d/ite -----------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
