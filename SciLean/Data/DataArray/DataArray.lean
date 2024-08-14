@@ -254,6 +254,9 @@ instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α
 def DataArrayN.curry [Inhabited α] (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
   ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
 
+def DataArrayN.uncurry [Inhabited α] (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
+  ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
+
 
 open Lean in
 private partial def parseDimProd (s : Syntax) : TSyntaxArray `dimSpec :=
