@@ -13,6 +13,11 @@ abbrev mapIdxMono [IndexType I] [PlainDataType X]
   ArrayType.mapIdxMono f x
 
 
+abbrev foldl [IndexType I] [PlainDataType X]
+    (x : DataArrayN X I) (op : X → X → X) (init : X) :=
+  IndexType.foldl (fun b i => op b x[i]) init
+
+
 abbrev reduceD [IndexType I] [PlainDataType X]
     (x : DataArrayN X I) (f : X → X → X) (default : X):=
   IndexType.reduceD (fun i => x[i]) f default
