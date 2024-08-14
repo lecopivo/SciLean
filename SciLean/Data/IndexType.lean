@@ -28,9 +28,13 @@ instance (a : List α) : Size a where
 inductive IndexType.Range (I : Type u)
   | full
 
-structure IndexType.Stream (I : Type u) where
-  val : I
-  range : Range I
+inductive IndexType.Stream (I : Type u) where
+  /-- Stream for range `range` that has not been started -/
+  | start (range : Range I)
+  /-- Running stream with current value `val` and range `range`. -/
+  | val (val : I) (range : Range I)
+  -- /-- Stream that has been exhausted -/
+  -- | done
 
 -- This is alternative to LeanColls.IndexType which unfortunatelly has two universe parameters
 -- and because of that it is very difficult to work with.
@@ -38,7 +42,7 @@ class IndexType (I : Type u) extends Fintype I, Stream (IndexType.Stream I) I, S
   toFin : I → Fin size
   fromFin : Fin size → I
 
-def fullRange (I : Type u) [IndexType I] : IndexType.Stream I := sorry
+def fullRange (I : Type u) [IndexType I] : IndexType.Stream I := .start .full
 
 def IndexType.first? (I : Type u) [IndexType I] : Option I :=
   if h : size I ≠ 0 then
@@ -66,11 +70,19 @@ instance : IndexType (Fin n) where
   toFin x := x
   fromFin x := x
   next? s :=
-    if h : s.val.1 + 1 < n then
-      let x := ⟨s.val.1+1,by omega⟩
-      .some (x, {s with val := x})
-    else
-      .none
+    match s with
+    | .start r =>
+      if h : n ≠ 0 then
+        let x : Fin n := ⟨0, by omega⟩
+        .some (x, .val x r)
+      else
+        .none
+    | .val val r =>
+      if h : val.1 + 1 < n then
+        let x := ⟨val.1+1,by omega⟩
+        .some (x, .val x r)
+      else
+        .none
 
 
 instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
@@ -82,17 +94,26 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
     let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
     (IndexType.fromFin i, IndexType.fromFin j)
   next? s :=
-    let (a,b) := s.val
-    if let .some sa := Stream.next? (IndexType.Stream.mk a .full) then
-      .some ((sa.1,b), ⟨(sa.1,b),.full⟩)
-    else
-      if let .some sb := Stream.next? (IndexType.Stream.mk b .full) then
-        if let .some a := IndexType.first? α then
-          .some ((a,sb.1), ⟨(a,sb.1),.full⟩)
+    match s with
+    | .start _r =>
+      if let .some a := IndexType.first? α then
+        if let .some b := IndexType.first? β then
+          .some ((a,b), .val (a,b) .full) -- todo: split the range somehow
         else
           .none
       else
         .none
+    | .val (a,b) _r =>
+      if let .some sa := Stream.next? (IndexType.Stream.val a .full) then
+        .some ((sa.1,b), .val (sa.1,b) .full)
+      else
+        if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
+          if let .some a := IndexType.first? α then
+            .some ((a,sb.1), .val (a,sb.1) .full)
+          else
+            .none
+        else
+          .none
 
 instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
   size := size α + size β
@@ -106,20 +127,30 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
     else
       .inr (IndexType.fromFin ⟨ij.1 - size α, sorry_proof⟩)
   next? s :=
-    match s.val with
-    | .inl a =>
-      if let .some sa := Stream.next? (IndexType.Stream.mk a .full) then
-        .some (.inl sa.1, ⟨.inl sa.1, .full⟩)
+    match s with
+    | .start _r =>
+      if let .some a := IndexType.first? α then
+        .some (.inl a, .val (.inl a) .full)
       else
-        if let .some b := IndexType.first? β  then
-          .some (.inr b, ⟨.inr b, .full⟩)
+        if let .some b := IndexType.first? β then
+          .some (.inr b, .val (.inr b) .full)
         else
           .none
-    | .inr b =>
-      if let .some sb := Stream.next? (IndexType.Stream.mk b .full) then
-        .some (.inr sb.1, ⟨.inr sb.1, .full⟩)
-      else
-        .none
+    | .val x _r =>
+      match x with
+      | .inl a =>
+        if let .some sa := Stream.next? (IndexType.Stream.val a .full) then
+          .some (.inl sa.1, .val (.inl sa.1) .full)
+        else
+          if let .some b := IndexType.first? β  then
+            .some (.inr b, .val (.inr b) .full)
+          else
+            .none
+      | .inr b =>
+        if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
+          .some (.inr sb.1, .val (.inr sb.1) .full)
+        else
+          .none
 
 -- todo: if we want to have instances like `IndexType (Fin 4 → Fin 10)` then
 --       `IndexType.Stream (Fin 4 → Fin 10)` should not hold element of `Fin 4 → Fin 10` but some
@@ -138,11 +169,18 @@ instance (a b : Int) : IndexType (Icc a b) where
         simp at lt ⊢; simp (disch:=aesop) only [Int.toNat_of_nonneg, sub_lt_sub_iff_right]; omega⟩
   fromFin i := ⟨a + i.1, by cases i; case mk i lt => simp at lt ⊢; omega⟩
   next? s :=
-    if h : s.val.1 + 1 ≤ b then
-      let x := ⟨s.val.1+1,by simp; constructor; sorry_proof; omega⟩
-      .some (x, {s with val := x})
-    else
-      .none
+    match s with
+    | .start r =>
+      if h : a ≤ b then
+        .some (⟨a, by simpa⟩, .val ⟨a, by simpa⟩ r)
+      else
+        .none
+    | .val x r =>
+      if h : x.1 + 1 ≤ b then
+        let x := ⟨x.1+1,by simp; constructor; sorry_proof; omega⟩
+        .some (x, .val x r)
+      else
+        .none
 
 
 namespace SciLean
