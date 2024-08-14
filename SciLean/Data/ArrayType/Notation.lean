@@ -94,20 +94,9 @@ macro x:ident noWs "[" ids:term,* "]" " •= " xi:term : doElem => do
 
 ----------------------------------------------------------------------------------------------------
 
-abbrev typeOf {α} (_ : α) := α
-
-class ArrayTypeNotation (Cont : outParam $ Type _) (Idx Elem : Type _)
-
-abbrev arrayTypeCont (Idx Elem) {Cont : outParam $ Type _} [ArrayTypeNotation Cont Idx Elem] := Cont
-
 
 -- Notation: ⊞ i => f i --
 --------------------------
-
-abbrev ArrayType.ofFnNotation {Cont Idx Elem} [DecidableEq Idx] [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]
-  (f : Idx → Elem)
-  : Cont
-  := ArrayType.ofFn (Cont := arrayTypeCont Idx Elem) f
 
 open Lean.TSyntax.Compat in
 -- macro "⊞ " x:term " => " b:term:51 : term => `(introElemNotation fun $x => $b)
@@ -117,9 +106,8 @@ open Lean.TSyntax.Compat in
 --    see: https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/uncurry.20fails.20with.20.60Icc.60
 open Term Function Lean Elab Term Meta in
 elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
-  let fn ← elabTerm (← `(fun $xs* => $b)) none
+  let fn ← elabTermAndSynthesize (← `(fun $xs* => $b)) none
   let arity := (← inferType fn).forallArity
-
   try
     -- uncurry if necessary
     let fn ←
@@ -131,32 +119,31 @@ elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
     let .some (Idx, Elem) := (← inferType fn).arrow?
       | throwError "⊞ _ => _: expectes function type {← ppExpr (← inferType fn)}"
 
-    let Cont ← mkAppOptM ``arrayTypeCont #[Idx, Elem, none, none]
-    let Cont := Cont.getRevArg! 1
+    let Cont ← mkAppOptM `SciLean.DataArrayN #[Elem, none, Idx, none]
 
-    mkAppOptM ``ArrayType.ofFnNotation #[Cont, Idx, Elem, none, fn]
-  catch _ =>
+    mkAppOptM ``ArrayType.ofFn #[Cont, Idx, Elem, none, fn]
+  catch e =>
     if arity = 1 then
-      elabTerm (← `(ArrayType.ofFnNotation fun $xs* => $b)) none
+      elabTerm (← `(ArrayType.ofFn fun $xs* => $b)) none
     else if arity = 2 then
-      elabTerm (← `(ArrayType.ofFnNotation (Function.uncurry fun $xs* => $b))) none
+      elabTerm (← `(ArrayType.ofFn (Function.uncurry fun $xs* => $b))) none
     else
       throwError "notation `⊞ _ => _` is not supported for high rank arrays when types are unknown\
-                  \nplease specify the types!"
-
-
--- variable {Cont Idx Elem} [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem] (e : Elem) (c : Cont)
-
--- set_option pp.funBinderTypes true in
--- example : c = ⊞ (_ : Idx) => e := sorry
+                  \nplease specify the types!\n{e.toMessageData}"
 
 
 
-
-@[app_unexpander ArrayType.ofFnNotation]
+@[app_unexpander ArrayType.ofFn]
 def unexpandArrayTypeOfFnNotation : Lean.PrettyPrinter.Unexpander
-  | `($(_) fun $x => $b) =>
-    `(⊞ $x:term => $b)
+  | `($(_) $f) =>
+    match f with
+    | `(fun $x => $b) =>
+      `(⊞ $x:term => $b)
+    | `(HasUncurry.uncurry (fun $xs* => $b)) =>
+      `(⊞ $xs* => $b)
+    | `(↿fun $xs* => $b) =>
+      `(⊞ $xs* => $b)
+    | _ => throw ()
   | _  => throw ()
 
 
@@ -287,11 +274,11 @@ elab_rules (kind:=typeIntPower) : term
         return ← mkAppM ``Nat.iterate #[f,n]
       | _ => throwUnsupportedSyntax
 
-  let Y ← expand' ns.getElems.toList
-  let C ← mkFreshTypeMVar
-  let inst ← synthInstance <| mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[C,Y,X]
-  let C ← whnfR (← instantiateMVars C)
-  let result ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,C,inst]
-  return result.getRevArg! 1
+  let I ← expand' ns.getElems.toList
+  -- let C ← mkFreshTypeMVar
+  -- let inst ← synthInstance <| mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[C,Y,X]
+  -- let C ← whnfR (← instantiateMVars C)
+  -- let result ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,C,inst]
+  return ← mkAppOptM `SciLean.DataArrayN #[X,none,I,none] --result.getRevArg! 1
 
 end ArrayType.PowerNotation

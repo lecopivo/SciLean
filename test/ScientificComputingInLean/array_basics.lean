@@ -1,5 +1,4 @@
-import SciLean.Data.DataArray
-import Mathlib
+import SciLean -- .Data.DataArray
 
 open SciLean
 
@@ -12,6 +11,10 @@ info: ⊞[1.000000, 1.000000]
 #guard_msgs in
 #eval ⊞[1.0,1.0]
 
+
+#check ⊞[1.0,1.0]
+
+
 /--
 info: 2.000000
 -/
@@ -20,17 +23,19 @@ info: 2.000000
 
 /--
 warning: application type mismatch
-  dot (ArrayType.ofFn fun i => [1.0, 1.0].get! ↑(IndexType.toFin i))
-    (ArrayType.ofFn fun i => [1.0, 1.0, 1.0].get! ↑(IndexType.toFin i))
+  dot (⊞ i => [1.0, 1.0].get! ↑i) (⊞ i => [1.0, 1.0, 1.0].get! ↑i)
 argument
-  ArrayType.ofFn fun i => [1.0, 1.0, 1.0].get! ↑(IndexType.toFin i)
+  ⊞ i => [1.0, 1.0, 1.0].get! ↑i
 has type
   Float^[3] : Type
 but is expected to have type
   Float^[2] : Type
+---
+info: dot (⊞ i => [1.0, 1.0].get! ↑i) (sorryAx (Float^[2]) true) : Float
 -/
 #guard_msgs in
-#check_failure dot ⊞[1.0,1.0] ⊞[1.0,1.0,1.0]
+#check_failure dot ⊞[1.0,1.0] ⊞[(1.0:Float),1.0,1.0]
+
 
 def u :=  ⊞[1.0, 2.0, 3.0]
 
@@ -55,11 +60,6 @@ def u :=  ⊞[1.0, 2.0, 3.0]
 
 -- remove this once `A` is defined properly
 def A := ⊞[1.0, 2.0, 3.0; 4.0, 5.0, 6.0]
-def B := ⊞[1.0, 2.0; 3.0, 4.0; 5.0, 6.0]
-
-
-
-
 
 /-- info: 2.000000 -/
 #guard_msgs in
@@ -70,10 +70,9 @@ def B := ⊞[1.0, 2.0; 3.0, 4.0; 5.0, 6.0]
 #check fun i j => A[i,j]
 
 
-variable {Cont Idx Elem} [DecidableEq Idx] [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]
-         (f : Idx → Elem)
+variable (f : Fin 10 → Float)
 
-/-- info: ⊞ i => f i : Cont -/
+/-- info: ⊞ i => f i : Float^[10] -/
 #guard_msgs in
 #check ⊞ i => f i
 
@@ -130,3 +129,9 @@ def naturalEquiv'
   left_inv := sorry_proof
   right_inv := sorry_proof
 }
+
+
+set_option linter.unusedVariables false in
+/-- info: ⊞ i j k => 0.0 : Float^[4, 4, 4] -/
+#guard_msgs in
+#check ⊞ (i j k : Fin 4) => (0.0 : Float)

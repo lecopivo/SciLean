@@ -190,8 +190,6 @@ instance : ArrayType (DataArrayN α ι) ι α where
   get_set_neq := sorry_proof
   modify_set := sorry_proof
 
-instance : ArrayTypeNotation (DataArrayN α ι) ι α := ⟨⟩
-
 -- instance : LinearArrayType (λ n => DataArrayN α (Fin n)) α where
 --   toArrayType := by infer_instance
 --   pushElem_getElem := sorry_proof
