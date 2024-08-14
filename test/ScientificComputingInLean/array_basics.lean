@@ -1,7 +1,7 @@
 import SciLean.Data.DataArray
 import Mathlib
 
-open SciLean LeanColls
+open SciLean
 
 
 def dot {n : Nat} (x y : Float^[n]) : Float := ∑ i, x[i] * y[i]
@@ -20,9 +20,10 @@ info: 2.000000
 
 /--
 warning: application type mismatch
-  dot ⊞[1.0, 1.0] ⊞[1.0, 1.0, 1.0]
+  dot (ArrayType.ofFn fun i => [1.0, 1.0].get! ↑(IndexType.toFin i))
+    (ArrayType.ofFn fun i => [1.0, 1.0, 1.0].get! ↑(IndexType.toFin i))
 argument
-  ⊞[1.0, 1.0, 1.0]
+  ArrayType.ofFn fun i => [1.0, 1.0, 1.0].get! ↑(IndexType.toFin i)
 has type
   Float^[3] : Type
 but is expected to have type
@@ -31,7 +32,7 @@ but is expected to have type
 #guard_msgs in
 #check_failure dot ⊞[1.0,1.0] ⊞[1.0,1.0,1.0]
 
-def u :=  ⊞[1.0, 2.0]
+def u :=  ⊞[1.0, 2.0, 3.0]
 
 /-- info: 1.000000 -/
 #guard_msgs in
@@ -41,11 +42,11 @@ def u :=  ⊞[1.0, 2.0]
 #guard_msgs in
 #eval u[1]
 
-/-- info: 3.000000 -/
+/-- info: 6.000000 -/
 #guard_msgs in
 #eval ∑ i, u[i]
 
-/-- info: ![1.000000, 2.000000] -/
+/-- info: ![1.000000, 2.000000, 3.000000] -/
 #guard_msgs in
 #eval fun i => u[i]
 
@@ -53,18 +54,18 @@ def u :=  ⊞[1.0, 2.0]
 -- def A := ⊞[1.0, 2.0; 3.0, 4.0]
 
 -- remove this once `A` is defined properly
-variable (A : Float^[2,2])
+def A := ⊞[1.0, 2.0, 3.0; 4.0, 5.0, 6.0]
+def B := ⊞[1.0, 2.0; 3.0, 4.0; 5.0, 6.0]
 
--- switch to eval once `A` is defined properly
-/-- info: A[0, 1] : Float -/
+
+
+
+
+/-- info: 2.000000 -/
 #guard_msgs in
-#check A[0,1]
+#eval A[(0,1)]
 
-/-- info: A[0, 1] : Float -/
-#guard_msgs in
-#check A[(0,1)]
-
-/-- info: fun i j => A[i, j] : Fin 2 → Fin 2 → Float -/
+/-- info: fun i j => A[i, j] : Fin 2 → Fin 3 → Float -/
 #guard_msgs in
 #check fun i j => A[i,j]
 
@@ -83,49 +84,49 @@ def outerProduct1 {n m : Nat} (x : Float^[n]) (y : Float^[m]) : Float^[n,m] :=
 
 def outerProduct2 {n m : Nat} (x : Float^[n]) (y : Float^[m]) := Id.run do
   let mut A : Float^[n,m] := 0
-  for i in IndexType.univ (Fin n) do
-    for j in IndexType.univ (Fin m) do
+  for i in fullRange (Fin n) do
+    for j in fullRange (Fin m) do
       A[i,j] := x[i]*y[j]
   return A
 
 
 def outerProduct3 {n m : Nat} (x : Float^[n]) (y : Float^[m]) := Id.run do
   let mut A : Float^[n,m] := 0
-  for (i,j) in (IndexType.univ (Fin n × Fin m)) do
+  for (i,j) in (fullRange (Fin n × Fin m)) do
     A[i,j] := x[i]*y[j]
   return A
 
 
 def outerProduct4 {n m : Nat} (x : Float^[n]) (y : Float^[m]) : Float^[n,m] := Id.run do
   let mut A : DataArray Float := .mkEmpty (n*m) -- empty array with capacity `n*m`
-  for (i,j) in (IndexType.univ (Fin n × Fin m)) do
+  for (i,j) in (fullRange (Fin n × Fin m)) do
     A := A.push (x[i]*y[j])
-  return { data:= A, h_size:= sorry }
+  return { data:= A, h_size:= sorry_proof }
 
 
-/-- info: ⊞[3.000000, 4.000000, 6.000000, 8.000000] -/
+/-- info: ⊞[3.000000, 6.000000, 4.000000, 8.000000] -/
 #guard_msgs in
 #eval outerProduct1 ⊞[(1.0 : Float), 2.0] ⊞[(3.0 : Float), 4.0]
 
-/-- info: ⊞[3.000000, 4.000000, 6.000000, 8.000000] -/
+/-- info: ⊞[3.000000, 6.000000, 4.000000, 8.000000] -/
 #guard_msgs in
 #eval outerProduct2 ⊞[(1.0 : Float), 2.0] ⊞[(3.0 : Float), 4.0]
 
-/-- info: ⊞[3.000000, 4.000000, 6.000000, 8.000000] -/
+/-- info: ⊞[3.000000, 6.000000, 4.000000, 8.000000] -/
 #guard_msgs in
 #eval outerProduct3 ⊞[(1.0 : Float), 2.0] ⊞[(3.0 : Float), 4.0]
 
-/-- info: ⊞[3.000000, 4.000000, 6.000000, 8.000000] -/
+/-- info: ⊞[3.000000, 6.000000, 4.000000, 8.000000] -/
 #guard_msgs in
 #eval outerProduct4 ⊞[(1.0 : Float), 2.0] ⊞[(3.0 : Float), 4.0]
 
 
 open IndexType
 def naturalEquiv'
-    (I J : Type) [IndexType I] [IndexType J] [LawfulIndexType I] [LawfulIndexType J]
-    (h : card I = card J) : I ≃ J := {
+    (I J : Type) [IndexType I] [IndexType J]
+    (h : size I = size J) : I ≃ J := {
   toFun := fun i => fromFin (h ▸ toFin i)
   invFun := fun j => fromFin (h ▸ toFin j)
-  left_inv := sorry
-  right_inv := sorry
+  left_inv := sorry_proof
+  right_inv := sorry_proof
 }

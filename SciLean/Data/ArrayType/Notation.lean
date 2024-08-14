@@ -59,31 +59,31 @@ syntax:max (name:=indexedGetRanges) (priority:=high) term noWs "[" elemIndex ","
 
 macro (priority:=high) x:ident noWs "[" ids:term,* "]" " := " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := Indexed.set $x $i $xi)
+  `(doElem| $x:ident := ArrayType.set $x $i $xi)
 
 macro (priority:=high) x:ident noWs "[" ids:term,* "]" " ← " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := Indexed.set $x $i (← $xi))
+  `(doElem| $x:ident := ArrayType.set $x $i (← $xi))
 
 macro x:ident noWs "[" ids:term,* "]" " += " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := Indexed.update $x $i (fun xi => xi + $xi))
+  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => xi + $xi))
 
 macro x:ident noWs "[" ids:term,* "]" " -= " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := Indexed.update $x $i (fun xi => xi - $xi))
+  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => xi - $xi))
 
 macro x:ident noWs "[" ids:term,* "]" " *= " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := Indexed.update $x $i (fun xi => xi * $xi))
+  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => xi * $xi))
 
 macro x:ident noWs "[" ids:term,* "]" " /= " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := Indexed.update $x $i (fun xi => xi / $xi))
+  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => xi / $xi))
 
 macro x:ident noWs "[" ids:term,* "]" " •= " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := Indexed.update $x $i (fun xi => $xi • xi))
+  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => $xi • xi))
 
 
 @[app_unexpander ArrayType.get] def unexpandArrayTypeGet : Lean.PrettyPrinter.Unexpander
@@ -104,7 +104,7 @@ abbrev arrayTypeCont (Idx Elem) {Cont : outParam $ Type _} [ArrayTypeNotation Co
 -- Notation: ⊞ i => f i --
 --------------------------
 
-abbrev introElemNotation {Cont Idx Elem} [DecidableEq Idx] [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]
+abbrev ArrayType.ofFnNotation {Cont Idx Elem} [DecidableEq Idx] [ArrayType Cont Idx Elem] [ArrayTypeNotation Cont Idx Elem]
   (f : Idx → Elem)
   : Cont
   := ArrayType.ofFn (Cont := arrayTypeCont Idx Elem) f
@@ -134,12 +134,12 @@ elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
     let Cont ← mkAppOptM ``arrayTypeCont #[Idx, Elem, none, none]
     let Cont := Cont.getRevArg! 1
 
-    mkAppOptM ``ArrayType.ofFn #[Cont, Idx, Elem, none, fn]
+    mkAppOptM ``ArrayType.ofFnNotation #[Cont, Idx, Elem, none, fn]
   catch _ =>
     if arity = 1 then
-      elabTerm (← `(ArrayType.ofFn fun $xs* => $b)) none
+      elabTerm (← `(ArrayType.ofFnNotation fun $xs* => $b)) none
     else if arity = 2 then
-      elabTerm (← `(ArrayType.ofFn (Function.uncurry fun $xs* => $b))) none
+      elabTerm (← `(ArrayType.ofFnNotation (Function.uncurry fun $xs* => $b))) none
     else
       throwError "notation `⊞ _ => _` is not supported for high rank arrays when types are unknown\
                   \nplease specify the types!"
@@ -153,11 +153,12 @@ elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
 
 
 
-@[app_unexpander introElemNotation]
-def unexpandIntroElemNotation : Lean.PrettyPrinter.Unexpander
+@[app_unexpander ArrayType.ofFnNotation]
+def unexpandArrayTypeOfFnNotation : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x => $b) =>
     `(⊞ $x:term => $b)
   | _  => throw ()
+
 
 
 -- Notation: ⊞[1,2,3] --
@@ -169,7 +170,7 @@ syntax (name := dataArrayNotation) (priority:=high)
 
 
 open Lean Qq Elab Term in
-/-- Elaborate a `⊞[...]` notation into a `Indexed.ofFn` term. -/
+/-- Elaborate a `⊞[...]` notation into a `ArrayType.ofFn` term. -/
 elab_rules (kind := dataArrayNotation) : term
   | `(⊞[$[$[$rows],*];*]) => do
     let m := rows.size
@@ -186,24 +187,26 @@ elab_rules (kind := dataArrayNotation) : term
     let n := Syntax.mkNumLit (toString n)
     let m := Syntax.mkNumLit (toString rows.size)
 
-    let Idx ←
-      if rows.size = 1 then
-        `(Fin $n)
-      else
-        `(Fin $m × Fin $n)
+    if rows.size = 1 then
+      let dataArray := mkIdent `DataArrayN
+      let fn ←
+        elabTerm (←`(@ArrayType.ofFn ($dataArray _ _) _ _ _
+                      fun (i : Fin $n) => [$elems,*].get! i)) none
 
-    let dataArray := mkIdent `DataArrayN
-    let fn ←
-      elabTerm (←`(@Indexed.ofFn.{_,_,_,0} ($dataArray _ _) _ _ _
-                    fun (i : $Idx) => [$elems,*].get! (IndexType.toFin.{_,0} i))) none
+      return fn
+    else
+      let dataArray := mkIdent `DataArrayN
+      let fn ←
+        elabTerm (←`(@ArrayType.ofFn ($dataArray _ _) _ _ _
+                      fun ((i,j) : Fin $m × Fin $n) => [$elems,*].get! (IndexType.toFin (j,i)))) none
+      return fn
 
-    return fn
 
 
 -- /-- Unexpander for `⊞[...]` and `⊞ i => ...` notation.
 
 -- TODO: support matrix literals -/
--- @[app_unexpander LeanColls.Indexed.ofFn] def unexpandIndexedOfFn : Lean.PrettyPrinter.Unexpander
+-- @[app_unexpander LeanColls.ArrayType.ofFn] def unexpandArrayTypeOfFn : Lean.PrettyPrinter.Unexpander
 --   | `($(_) $f) =>
 --     match f with
 --     | `(fun $_ => [$xs,*].get! $_) =>
@@ -221,37 +224,6 @@ elab_rules (kind := dataArrayNotation) : term
 
 namespace ArrayType.PowerNotation
 
--- class SHPow {α : Sort u} {β : Sort v} {γ : outParam (Sort w)} (a :α) (b : β) (c : outParam γ)
--- def SHPow.pow {α β γ} (a : α) (b : β) {c : γ} [SHPow a b c] := c
-
--- instance {Cont Idx Elem} [ArrayTypeNotation Cont Idx Elem] : SHPow Elem Idx (arrayTypeCont Idx Elem)  := ⟨⟩
--- instance {α β γ} (x : α) (y : β) [HPow α β γ] : SHPow x y (HPow.hPow x y):= ⟨⟩
--- open Lean Elab Term Meta in
--- elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term => withFreshMacroScope do
---   let x ← elabTerm (← `(SHPow.pow $x $y)) none
---   return x.getArg! 5
-
--- /- #check K ^ (κ×ι)
--- #eval 2 ^ 3
-
---  -/
-
--- /- open Lean Elab Term in
--- elab:40 (priority:=high) x:term:41 " ^ " y:term:42 : term =>
---   try
---     let y ← elabTerm y none
---     let x ← elabTerm x none
---     let z ← Meta.mkAppOptM ``arrayTypeCont #[y,x,none,none]
---     return z
---   catch _ => do
---     return ← elabTerm (← `(HPow.hPow $x $y)) none
---  -/
--- @[app_unexpander arrayTypeCont] def unexpandArrayTypeCont : Lean.PrettyPrinter.Unexpander
---   | `($(_) $I $X) =>
---     `($X ^ $I)
---   | _  => throw ()
-
-
 -- Notation: Float^[10,20] --
 -----------------------------
 
@@ -266,7 +238,7 @@ syntax "[" term ":" term "]": dimSpec
 
 **type product** `Float^[n]` array of n elemts with values in `Float`
 
-The array notation is quite flexible and allows you to create arrays indexed with various types.
+The array notation is quite flexible and allows you to create arrays arrayType with various types.
 Examples where `n m k l : USize`, `a b : Int64` and `ι κ : Type` are types with `Index _` instance:
 - `Float^[n]` index type: `Idx n` i.e. numbers `0,...,n-1`
 - `Float^[n,m]` index type: `Idx n × Idx m` i.e. paris `(0,0),(0,1),...,(1,0),(1,1),...,(n-1,m-1)`
