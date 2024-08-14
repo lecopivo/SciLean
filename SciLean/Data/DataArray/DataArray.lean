@@ -23,6 +23,8 @@ structure DataArray (α : Type) [pd : PlainDataType α] where
 variable {α : Type} [pd : PlainDataType α]
 variable {ι} [IndexType ι] {κ : Type _} [IndexType κ]
 
+instance [PlainDataType X] : Inhabited (DataArray X) := ⟨.empty, 0, by sorry_proof⟩
+
 @[irreducible]
 def DataArray.get (arr : DataArray α) (i : Fin arr.size) : α := -- pd.get a.data i sorry_proof
   let i := i.1.toUSize
@@ -145,11 +147,11 @@ structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [IndexType 
   h_size : Size.size ι = data.size
 
 
+instance {I} [IndexType I] [PlainDataType X] : Inhabited (DataArrayN X I) := ⟨default, sorry_proof⟩
+
 def DataArrayN.get (xs : DataArrayN α ι) (i : ι) : α := (xs.1.get ((IndexType.toFin i).cast xs.2))
 
-
 def DataArrayN.linGet (xs : DataArrayN α ι) (i : Fin (Size.size ι)) : α := (xs.1.get ⟨i,by rw[←xs.2]; omega⟩)
-
 
 def DataArrayN.set (xs : DataArrayN α ι) (i : ι) (xi : α) : DataArrayN α ι :=
   ⟨xs.1.set ((IndexType.toFin i).cast xs.2) xi, sorry_proof⟩
