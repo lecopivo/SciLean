@@ -188,17 +188,17 @@ elab_rules (kind := dataArrayNotation) : term
     let m := Syntax.mkNumLit (toString rows.size)
 
     if rows.size = 1 then
-      let dataArray := mkIdent `DataArrayN
+      let dataArray := mkIdent `SciLean.DataArrayN
       let fn ←
         elabTerm (←`(@ArrayType.ofFn ($dataArray _ _) _ _ _
-                      fun (i : Fin $n) => [$elems,*].get! i)) none
+                      fun (i : Fin $n) => [$elems,*].get! i.1)) none
 
       return fn
     else
-      let dataArray := mkIdent `DataArrayN
+      let dataArray := mkIdent `SciLean.DataArrayN
       let fn ←
         elabTerm (←`(@ArrayType.ofFn ($dataArray _ _) _ _ _
-                      fun ((i,j) : Fin $m × Fin $n) => [$elems,*].get! (IndexType.toFin (j,i)))) none
+                      fun ((i,j) : Fin $m × Fin $n) => [$elems,*].get! (IndexType.toFin (j,i)).1)) none
       return fn
 
 
