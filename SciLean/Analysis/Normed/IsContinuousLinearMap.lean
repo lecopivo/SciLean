@@ -65,6 +65,8 @@ macro "fun " "(" x:ident " : " X:term ")" " =>L[" R:term "] " b:term : term =>
 
 namespace IsContinuousLinearMap
 
+set_option deprecated.oldSectionVars true
+
 variable
   {R : Type _} [Semiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
@@ -125,6 +127,8 @@ end SciLean
 --------------------------------------------------------------------------------
 
 open SciLean IsContinuousLinearMap ContinuousLinearMap
+
+set_option deprecated.oldSectionVars true
 
 variable
   {R : Type _} [Semiring R]

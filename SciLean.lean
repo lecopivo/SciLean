@@ -3,6 +3,7 @@ import SciLean.Algebra.IsAddGroupHom
 import SciLean.Algebra.IsAffineMap
 import SciLean.Algebra.IsLinearMap
 import SciLean.Analysis.AdjointSpace.Adjoint
+import SciLean.Analysis.AdjointSpace.AdjointProj
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.Geometry
 import SciLean.Analysis.Calculus.CDeriv

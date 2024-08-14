@@ -74,6 +74,9 @@ end IsLinearMap
 open IsLinearMap SciLean
 
 section Semiring
+
+set_option deprecated.oldSectionVars true
+
 variable {R X Y Z ι : Type _} {E : ι → Type _}
   [Semiring R]
   [AddCommGroup X] [Module R X]

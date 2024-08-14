@@ -12,6 +12,8 @@ open RCLike
 
 open scoped ComplexConjugate
 
+set_option deprecated.oldSectionVars true
+
 variable {𝕜 E F G : Type*} [RCLike 𝕜]
 variable [NormedAddCommGroup E] [NormedAddCommGroup F] [NormedAddCommGroup G]
 variable [AdjointSpace 𝕜 E] [AdjointSpace 𝕜 F] [AdjointSpace 𝕜 G]

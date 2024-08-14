@@ -7,6 +7,8 @@ open SciLean
 
 --------------------------------------------------------------------------------
 
+set_option deprecated.oldSectionVars true
+
 variable {R X Y Z ι : Type _} {E : ι → Type _}
   [CommRing R]
   [AddCommGroup X] [Module R X]

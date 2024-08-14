@@ -5,6 +5,8 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
+set_option deprecated.oldSectionVars true
+
 variable
   (K : Type _) [RCLike K]
   {X : Type _} [Vec K X]

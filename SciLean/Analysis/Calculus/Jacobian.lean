@@ -8,6 +8,8 @@ namespace SciLean
 
 set_option linter.unusedVariables false
 
+set_option deprecated.oldSectionVars true
+
 variable
   {R} [RealScalar R]
   {U} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]

@@ -14,6 +14,8 @@ import SciLean.Analysis.MetricSpace
 namespace SciLean
 namespace ArrayType
 
+set_option deprecated.oldSectionVars true
+
 variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
 variable {Idx : Type _} [IndexType Idx] [DecidableEq Idx]
 
@@ -39,7 +41,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [AddGroup Elem] : AddGroup 
   add_assoc := sorry_proof
   zero_add  := sorry_proof
   add_zero  := sorry_proof
-  add_left_neg := sorry_proof
+  neg_add_cancel := sorry_proof
   nsmul n x := ArrayType.mapMono (fun xi => n • xi) x
   nsmul_succ := sorry_proof
   nsmul_zero := sorry_proof

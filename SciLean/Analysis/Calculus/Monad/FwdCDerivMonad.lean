@@ -44,6 +44,7 @@ export FwdCDerivMonad (fwdCDerivM CDifferentiableM)
 attribute [fun_prop] CDifferentiableM
 attribute [fun_trans] fwdCDerivM
 
+set_option deprecated.oldSectionVars true
 
 variable
   (K : Type _) [RCLike K]
@@ -186,6 +187,8 @@ end SciLean
 section CoreFunctionProperties
 
 open SciLean
+
+set_option deprecated.oldSectionVars true
 
 variable
   (K : Type _) [RCLike K]

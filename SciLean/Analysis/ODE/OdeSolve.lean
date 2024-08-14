@@ -116,6 +116,8 @@ end OnNormedSpace
 
 section OnAdjointSpace
 
+set_option deprecated.oldSectionVars true
+
 variable
   {R : Type _} [RCLike R]
   {W : Type _} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]

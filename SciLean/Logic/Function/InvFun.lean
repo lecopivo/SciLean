@@ -5,6 +5,8 @@ import SciLean.Tactic.FunTrans.Elab
 
 set_option linter.unusedVariables false
 
+set_option deprecated.oldSectionVars true
+
 variable
   {X : Type _} [Nonempty X]
   {Y : Type _} [Nonempty Y]

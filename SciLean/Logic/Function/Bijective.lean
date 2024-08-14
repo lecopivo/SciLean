@@ -23,6 +23,8 @@ open Function
 
 namespace Function.Bijective
 
+set_option deprecated.oldSectionVars true
+
 variable
   {X : Type _} [Nonempty X]
   {Y : Type _} [Nonempty Y]

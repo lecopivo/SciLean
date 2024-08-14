@@ -10,6 +10,8 @@ open ComplexConjugate
 
 namespace SciLean
 
+set_option deprecated.oldSectionVars true
+
 variable
   {R C} [Scalar R C] [RealScalar R]
   {W} [Vec R W]
@@ -51,6 +53,8 @@ def_fun_prop with_transitive
 
 
 section OnAdjointSpace
+
+set_option deprecated.oldSectionVars true
 
 variable {U : Type _} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
 

@@ -6,6 +6,7 @@ namespace SciLean
 
 local notation "∞" => (⊤ : ℕ∞)
 
+set_option deprecated.oldSectionVars true
 variable
   (K : Type _) [RCLike K] (n : ℕ∞)
   {X : Type _} [Vec K X]

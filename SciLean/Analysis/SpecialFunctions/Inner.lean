@@ -6,6 +6,8 @@ import SciLean.Meta.GenerateFunProp
 
 namespace SciLean
 
+set_option deprecated.oldSectionVars true
+
 variable
   {R} [RealScalar R]
   {X} [NormedAddCommGroup X] [NormedSpace R X]

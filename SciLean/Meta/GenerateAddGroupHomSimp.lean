@@ -17,6 +17,8 @@ section HelperTheorems
 
 universe u'
 
+set_option deprecated.oldSectionVars true
+
 variable
   {X : Type u} [AddCommGroup X]
   {Y : Type v} [AddCommGroup Y]

@@ -323,6 +323,9 @@ namespace StructType
 ----------------------------------------------------------------------------------------------------
 
 section OnGroup
+
+set_option deprecated.oldSectionVars true
+
 variable
   {X : Type _} [AddCommGroup X]
   {XI : I → Type _} [∀ i, AddCommGroup (XI i)]
@@ -479,6 +482,8 @@ end StructType
 -- oneHot ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option deprecated.oldSectionVars true
+
 variable
   {X XI} [StructType X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI]
   {W} [Vec K W]
@@ -561,6 +566,8 @@ theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I]
 --------------------------------------------------------------------------------
 
 section OneHotSimp
+
+set_option deprecated.oldSectionVars true
 
 variable
   [Zero E] [∀ i, Zero (EI i)] [ZeroStruct E I EI]

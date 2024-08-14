@@ -15,13 +15,14 @@ section HelperTheorems
 
 universe u'
 
+set_option deprecated.oldSectionVars true
+
 variable
   {K : Type u'} [CommSemiring K]
   {X : Type u} [AddCommGroup X] [Module K X]
   {Y : Type v} [AddCommGroup Y] [Module K Y]
   {Z : Type w} [AddCommGroup Z] [Module K Z]
   {f : X → Y} (hf : IsLinearMap K f)
-
 
 theorem _root_.IsLinearMap.add_push (x x' : X)
   : f x + f x' = f (x + x') := by rw[hf.map_add]
@@ -33,7 +34,6 @@ theorem _root_.IsLinearMap.add_pull (x x' : X)
 --       and somethimes forces to write non-universe polymorphic code
 --       fix this
 theorem _root_.IsLinearMap.sum_push
-  {f : X → Y} (hf : IsLinearMap K f)
   (ι : Type) [IndexType ι] (x : ι → X)
   : (∑ i : ι, f (x i)) = f (∑ i, x i) := by sorry_proof
 

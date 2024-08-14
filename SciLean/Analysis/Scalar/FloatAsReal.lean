@@ -21,7 +21,7 @@ instance : CommRing Float where
   add_assoc := sorry_proof
   add_zero := sorry_proof
   zero_add := sorry_proof
-  add_left_neg := sorry_proof
+  neg_add_cancel := sorry_proof
   nsmul n x := n.toFloat * x
   nsmul_zero := sorry_proof
   nsmul_succ n x := sorry_proof

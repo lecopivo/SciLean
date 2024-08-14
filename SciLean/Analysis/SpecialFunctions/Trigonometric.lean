@@ -10,6 +10,8 @@ open ComplexConjugate
 
 namespace SciLean.Scalar
 
+set_option deprecated.oldSectionVars true
+
 variable
   {R C} [Scalar R C] [RealScalar R]
   {W} [Vec C W]

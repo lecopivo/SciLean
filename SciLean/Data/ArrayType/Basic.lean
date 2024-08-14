@@ -48,6 +48,8 @@ instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont Idx (fun _ 
 
 namespace ArrayType
 
+set_option deprecated.oldSectionVars true
+
 variable
   {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
   [IndexType Idx] [outParam <| DecidableEq Idx]

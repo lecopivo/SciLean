@@ -13,6 +13,8 @@ set_option linter.hashCommand false
 
 section GenericArrayType
 
+set_option deprecated.oldSectionVars true
+
 variable
   {K : Type} [RCLike K]
   {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}

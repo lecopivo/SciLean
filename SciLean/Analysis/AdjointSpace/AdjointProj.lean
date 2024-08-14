@@ -4,6 +4,7 @@ import SciLean.Analysis.AdjointSpace.Adjoint
 
 namespace SciLean
 
+set_option deprecated.oldSectionVars true
 
 variable
   (K I : Type _) [RCLike K]
@@ -233,6 +234,8 @@ end adjointProjUpdate
 
 end SciLean
 open SciLean
+
+set_option deprecated.oldSectionVars true
 
 variable
   {K : Type} [RCLike K]

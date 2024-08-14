@@ -7,6 +7,8 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
+set_option deprecated.oldSectionVars true
+
 variable
   (K : Type _) [RCLike K]
   {X : Type _} [Vec K X]
@@ -64,7 +66,6 @@ theorem CDifferentiable.comp_rule
   (hf : CDifferentiable K f) (hg : CDifferentiable K g)
   : CDifferentiable K (fun x => f (g x))
   := by sorry_proof
-
 
 variable (E)
 @[fun_prop]

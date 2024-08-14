@@ -47,6 +47,8 @@ export RevCDerivMonad (revCDerivM HasAdjDiffM)
 attribute [fun_trans] revCDerivM
 attribute [fun_prop] HasAdjDiffM
 
+set_option deprecated.oldSectionVars true
+
 variable
   (K : Type _) [RCLike K]
   {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m'] [RevCDerivMonad K m m']
@@ -195,6 +197,8 @@ end SciLean
 section CoreFunctionProperties
 
 open SciLean
+
+set_option deprecated.oldSectionVars true
 
 variable
   (K : Type _) [RCLike K]

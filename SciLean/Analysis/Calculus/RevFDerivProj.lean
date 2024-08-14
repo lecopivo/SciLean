@@ -10,6 +10,8 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
+set_option deprecated.oldSectionVars true
+
 variable
   (K I : Type _) [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X]
@@ -322,6 +324,8 @@ end revFDerivProjUpdate
 
 end SciLean
 open SciLean
+
+set_option deprecated.oldSectionVars true
 
 variable
   {K : Type} [RCLike K]
