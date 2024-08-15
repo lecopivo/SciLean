@@ -23,15 +23,15 @@ info: 2.000000
 
 /--
 warning: application type mismatch
-  dot (⊞ i => [1.0, 1.0].get! ↑i) (⊞ i => [1.0, 1.0, 1.0].get! ↑i)
+  dot ⊞[1.0, 1.0] ⊞[1.0, 1.0, 1.0]
 argument
-  ⊞ i => [1.0, 1.0, 1.0].get! ↑i
+  ⊞[1.0, 1.0, 1.0]
 has type
   Float^[3] : Type
 but is expected to have type
   Float^[2] : Type
 ---
-info: dot (⊞ i => [1.0, 1.0].get! ↑i) (sorryAx (Float^[2]) true) : Float
+info: dot ⊞[1.0, 1.0] (sorryAx (Float^[2]) true) : Float
 -/
 #guard_msgs in
 #check_failure dot ⊞[1.0,1.0] ⊞[(1.0:Float),1.0,1.0]
