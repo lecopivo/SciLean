@@ -22,10 +22,10 @@ theorem _root_.LeanColls.IndexType.toFin_Fin (i : Fin n) :
 
 
 attribute [optimize_index_access]
-  GetElem.getElem DataArrayN.get
+  GetElem.getElem ArrayType.get DataArrayN.get
   Fin.cast
   Size.size
-  IndexType.sum_linearize IndexType.toFin_Fin IndexType.toFin_fromFin IndexType.fromFin_toFin
+  IndexType.toFin_Fin IndexType.toFin_fromFin IndexType.fromFin_toFin
 
 macro "optimize_index_access" : conv =>
   `(conv| simp (config:={zeta:=false}) only
