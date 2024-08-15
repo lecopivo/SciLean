@@ -133,21 +133,6 @@ elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
 
 
 
-@[app_unexpander ArrayType.ofFn]
-def unexpandArrayTypeOfFnNotation : Lean.PrettyPrinter.Unexpander
-  | `($(_) $f) =>
-    match f with
-    | `(fun $x => $b) =>
-      `(⊞ $x:term => $b)
-    | `(HasUncurry.uncurry (fun $xs* => $b)) =>
-      `(⊞ $xs* => $b)
-    | `(↿fun $xs* => $b) =>
-      `(⊞ $xs* => $b)
-    | _ => throw ()
-  | _  => throw ()
-
-
-
 -- Notation: ⊞[1,2,3] --
 ------------------------
 
@@ -190,20 +175,20 @@ elab_rules (kind := dataArrayNotation) : term
 
 
 
--- /-- Unexpander for `⊞[...]` and `⊞ i => ...` notation.
-
--- TODO: support matrix literals -/
--- @[app_unexpander LeanColls.ArrayType.ofFn] def unexpandArrayTypeOfFn : Lean.PrettyPrinter.Unexpander
---   | `($(_) $f) =>
---     match f with
---     | `(fun $_ => [$xs,*].get! $_) =>
---       `(⊞[$xs,*])
---     | `(fun $i => $b) =>
---       `(⊞ $i => $b)
---     | _ =>
---       throw ()
---   | _ => throw ()
-
+@[app_unexpander ArrayType.ofFn]
+def unexpandArrayTypeOfFnNotation : Lean.PrettyPrinter.Unexpander
+  | `($(_) $f) =>
+    match f with
+    | `(fun $_ => [$xs,*].get! ↑$_) =>
+      `(⊞[$xs,*])
+    | `(fun $x => $b) =>
+      `(⊞ $x:term => $b)
+    | `(HasUncurry.uncurry (fun $xs* => $b)) =>
+      `(⊞ $xs* => $b)
+    | `(↿fun $xs* => $b) =>
+      `(⊞ $xs* => $b)
+    | _ => throw ()
+  | _  => throw ()
 
 
 -- Notation: Float ^ Idx n --
