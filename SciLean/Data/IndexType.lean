@@ -191,17 +191,30 @@ namespace IndexType
 variable {ι : Type v} [IndexType ι]
 
 open IndexType
-@[simp]
+@[simp, simp_core]
 theorem size_sum {ι κ} [IndexType ι] [IndexType κ] : size (ι ⊕ κ) = size ι + size κ := by rfl
 
-@[simp]
+@[simp, simp_core]
 theorem size_prod {ι κ} [IndexType ι] [IndexType κ] : size (ι × κ) = size ι * size κ := by rfl
 
-@[simp]
+@[simp, simp_core]
 theorem size_unit : size Unit = 1 := by rfl
 
-@[simp]
+@[simp, simp_core]
 theorem size_fin (n : Nat) : size (Fin n) = n := by rfl
+
+@[simp, simp_core]
+theorem toFin_Fin (i : Fin n) :
+    IndexType.toFin i = i :=
+  rfl
+
+@[simp, simp_core]
+theorem fromFin_toFin {I} [IndexType I] (i : I) :
+  fromFin (toFin i) = i := sorry_proof
+
+@[simp, simp_core]
+theorem toFin_fromFin {I} [IndexType I] (i : Fin (size I)) :
+  toFin (fromFin (I:=I) i) = i := sorry_proof
 
 -- instance (P : ι → Prop) [∀ i : ι, Decidable (P i)] : Decidable (∀ i : ι, P i) := Id.run do
 --   for i in IndexType.univ ι do

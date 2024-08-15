@@ -25,6 +25,7 @@ attribute [optimize_index_access]
   GetElem.getElem DataArrayN.get
   Fin.cast
   Size.size
+  IndexType.sum_linearize IndexType.toFin_Fin IndexType.toFin_fromFin IndexType.fromFin_toFin
 
 macro "optimize_index_access" : conv =>
   `(conv| simp (config:={zeta:=false}) only
