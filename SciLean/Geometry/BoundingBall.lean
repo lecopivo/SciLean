@@ -33,6 +33,7 @@ variable {R}
 ----------------------------------------------------------------------------------------------------
 
 section IntegralOverBoundingBall
+set_option deprecated.oldSectionVars true
 variable
   {R : Type*} [RealScalar R]
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [MeasurableSpace X] [BorelSpace X]
