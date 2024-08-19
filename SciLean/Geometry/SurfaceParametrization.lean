@@ -33,7 +33,7 @@ structure SurfaceParametrization
 
 
 
-
+set_option deprecated.oldSectionVars true
 variable
   {R} [RealScalar R]
   {X} [NormedAddCommGroup X] [AdjointSpace ℝ X] [AdjointSpace R X] [MeasurableSpace X] [BorelSpace X]
