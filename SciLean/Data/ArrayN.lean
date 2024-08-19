@@ -1,4 +1,3 @@
-
 namespace SciLean
 
 structure ArrayN (α : Type) (n : Nat) where

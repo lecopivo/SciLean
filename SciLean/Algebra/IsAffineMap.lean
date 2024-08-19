@@ -158,11 +158,13 @@ theorem HSMul.hSMul.arg_a1.IsAffineMap_rule_int
 
 @[fun_prop]
 theorem HMul.hMul.arg_a0.IsAffineMap_rule
-    (f : X → R) (hf : IsAffineMap R f) (y' : R) : IsAffineMap R fun x => f x * y' := sorry_proof
+  {𝕜 : Type*} [RCLike 𝕜] [Module 𝕜 R] [Module 𝕜 X] [IsScalarTower 𝕜 R X]
+  (f : X → R) (hf : IsAffineMap R f) (y' : R) : IsAffineMap 𝕜 fun x => f x * y' := sorry_proof
 
 @[fun_prop]
 theorem HMul.hMul.arg_a1.IsAffineMap_rule
-  (f : X → R) (hf : IsAffineMap R f) (y' : R) : IsAffineMap R fun x => y' * f x := sorry_proof
+  {𝕜 : Type*} [RCLike 𝕜] [Module 𝕜 R] [Module 𝕜 X] [IsScalarTower 𝕜 R X]
+  (f : X → R) (hf : IsAffineMap R f) (y' : R) : IsAffineMap 𝕜 fun x => y' * f x := sorry_proof
 
 
 -- IndexType.sum ----------------------------------------------------------------
