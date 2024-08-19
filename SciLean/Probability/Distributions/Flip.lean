@@ -1,5 +1,5 @@
 import SciLean.Probability.Rand
-x
+
 open MeasureTheory ENNReal BigOperators Finset
 
 namespace SciLean.Rand

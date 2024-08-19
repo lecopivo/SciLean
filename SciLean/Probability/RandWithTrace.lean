@@ -202,120 +202,31 @@ theorem trace_sample_pdf (x : Rand X) (n : Name) [MeasureSpace X] :
   fun x' => x.pdf R volume x' := sorry_proof
 
 
-#check ((sample (normal (0.0:Float) 1.0) `v1).traceRand.pdf Float)
-  rewrite_by
-    simp
+
+-- structure HasConditionalRand {X tr T} (x : RandWithTrace X tr T) (tags : List Name)
+--     (tr₁ tr₂ : Trace) (T₁ T₂ : Type)
+--     (p : T → T₁×T₂) (q : T₁ → T₂ → T)
+--     (y : RandWithTrace T₁ tr₁ T₁) (z : T₁ → RandWithTrace X tr₂ T₂) : Prop where
+--   trace_type₁ : tr₁.type = T₁
+--   trace_type₂ : tr₂.type = T₂
+--   left_inv : Function.LeftInverse p ↿q
+--   right_inv : Function.RightInverse p ↿q
+--   trace_tags  : tr₁.tags = tags
+--   trace_union : tr₁ ++ tr₂ = tr
+--   trace_inter : tr₁.tags.inter tr₂.tags = []
+--   hrand : x.traceRand = (do
+--     let ty ← y.traceRand;
+--     let tz ← (z ty).traceRand
+--     return q ty tz)
+--   hmap : x.map = fun w =>
+--     let (u,v) := u
+--     (z (y.map u)).map v
 
 
-set_option trace.Meta.Tactic.simp.rewrite true in
-#check (let x <~ sample (normal (0.0:Float) 1.0) `v1; return' x)
-
-
-#check ((let x <~ sample (normal (0.0:Float) 1.0) `v1; return' x).traceRand.pdf Float)
-  rewrite_by
-    simp[trace_bind_pdf]
-
-
-def tt :=
-    (let (_,x) <~ forLoop (init:=(0.0,#[])) (n:=50) (fun i (x,xs) =>
-                    let x' <~ sample (normal x 1.0) `v1
-                    return' (x', xs.push x'))
-     let y <~ sample (normal x.1.sum 1.0) `y
-     return' y)
-
-
-instance (n:Nat) [MeasureSpace X] : MeasureSpace {a : Array X // a.size = n} := sorry
-instance (n:Nat) [MeasureSpace X] : MeasureSpace (ArrayN X n) := sorry
-
-
-#check (tt.traceRand.pdf Float) rewrite_by
-  unfold tt
-  simp
-
-
-#check (
-    (let x <~ sample (normal (0.0:Float) 1.0) `v1
-     let y <~ sample (normal x 1.0) `v2
-     return' y).traceRand.pdf Float)
-  rewrite_by
-    simp
-
-
-
-#check ((let x <~ sample (normal (0.0:Float) 1.0) `v1;
-         return' x).traceRand.pdf Float)
-  rewrite_by
-    simp[trace_bind_pdf]
-
-
-#check let x <~ sample (normal (0.0:Float) 1.0) `v1;
-       return' x
-
-
-def temperature :=
-    (let tempLower := 2.0
-     let tempUpper := 4.0
-     let invCR := 0.1
-     let tempA := 3.0
-     let rpRate := 5.0
-     let sigma1 := 1.0
-     let sigma0 := 2.0
-     let sqrtTimeStep := 0.1
-
-     let aconInit := false
-     let acons := #[aconInit]
-     let tempInit <~ sample (normal 2.0 0.001) `temp_init
-     let temps := #[tempInit]
-     let dataInit <~ sample (normal tempInit 1.0) `data_init
-     let data := #[dataInit]
-
-     let (_,_,temps,acons,data) <~
-       forLoop (init:=(tempInit,aconInit,temps,acons,data)) (n:=20)
-         (fun i (tempPrev,aconPrev,temps,acons,data) =>
-            let m :=
-              if tempPrev < tempLower then false
-              else if tempPrev > tempUpper then true
-              else aconPrev
-
-            let aconNoise <~ sample (normal m.toNat.toFloat 0.001) `acon_noise
-            let acon := if aconNoise > 0.5 then true else false
-
-            let b := invCR * (tempA - (tempPrev + acon.toNat.toFloat * rpRate))
-            let s := if aconNoise > 0.5 then sigma1 else sigma0
-
-            let temp <~ sample (normal (tempPrev + b) (s * sqrtTimeStep)) `temp
-
-            let dataPoint <~ sample (normal temp 1.0) `data
-
-            return' (tempPrev,aconPrev,temps.push temp,acons.push acon,data.push dataPoint))
-     return' ())
-
--- @[gtrans outparams tr₁ ...]
-
-structure HasConditionalRand {X tr T} (x : RandWithTrace X tr T) (tags : List Name)
-    (tr₁ tr₂ : Trace) (T₁ T₂ : Type)
-    (p : T → T₁×T₂) (q : T₁ → T₂ → T)
-    (y : RandWithTrace T₁ tr₁ T₁) (z : T₁ → RandWithTrace X tr₂ T₂) : Prop where
-  trace_type₁ : tr₁.type = T₁
-  trace_type₂ : tr₂.type = T₂
-  left_inv : Function.LeftInverse p ↿q
-  right_inv : Function.RightInverse p ↿q
-  trace_tags  : tr₁.tags = tags
-  trace_union : tr₁ ++ tr₂ = tr
-  trace_inter : tr₁.tags.inter tr₂.tags = []
-  hrand : x.traceRand = (do
-    let ty ← y.traceRand;
-    let tz ← (z ty).traceRand
-    return q ty tz)
-  hmap : x.map = fun w =>
-    let (u,v) := u
-    (z (y.map u)).map v
-
-
-theorem HasConditionalRand.empty_rule (x : RandWithTrace X tr T) :
-   HasConditionalRand x []
-     .nil tr Unit T (fun t => ((),t)) (fun _ t => t)
-     (return' ()) (fun _ => x) := sorry_proof
+-- theorem HasConditionalRand.empty_rule (x : RandWithTrace X tr T) :
+--    HasConditionalRand x []
+--      .nil tr Unit T (fun t => ((),t)) (fun _ t => t)
+--      (return' ()) (fun _ => x) := sorry_proof
 
 
 -- theorem HasConditionalRand.bind_rule
