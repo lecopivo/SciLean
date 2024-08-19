@@ -5,6 +5,7 @@ import SciLean.Data.ArrayN
 import SciLean.Probability.Rand
 import SciLean.Probability.Distributions.Flip
 import SciLean.Probability.Distributions.Normal
+import SciLean.Probability.Distributions.Uniform
 
 import SciLean.Analysis.Scalar.FloatAsReal
 
@@ -152,7 +153,7 @@ open MeasureTheory
 
 
 def forLoop (f : Nat → X → RandWithTrace X t T) (init : X) (n : Nat) :
-    RandWithTrace X (.array t n) (ArrayN.{0,0} T n) where
+    RandWithTrace X (.array t n) (ArrayN T n) where
   rand := do
     let mut x := init
     for i in [0:n] do
@@ -224,7 +225,7 @@ def tt :=
 
 
 instance (n:Nat) [MeasureSpace X] : MeasureSpace {a : Array X // a.size = n} := sorry
-instance (n:Nat) [MeasureSpace X] : MeasureSpace (ArrayN.{_,0} X n) := sorry
+instance (n:Nat) [MeasureSpace X] : MeasureSpace (ArrayN X n) := sorry
 
 
 #check (tt.traceRand.pdf Float) rewrite_by
@@ -317,15 +318,15 @@ theorem HasConditionalRand.empty_rule (x : RandWithTrace X tr T) :
      (return' ()) (fun _ => x) := sorry_proof
 
 
-theorem HasConditionalRand.bind_rule
-   (x : RandWithTrace X t T) (f : X → RandWithTrace Y s S) (tags : List Name)
-   (hinter : t.tags.inter s.tags = [])
-   (hx : HasConditionalRand x (t.tags.inter tags) t₁ t₂ T₁ T₂ px qx x₁ x₂)
-   {y₁ : X → RandWithTrace Unit s₁ S₁} {y₂ : X → S₁ → RandWithTrace Y s₂ S₂}
-   (hy : ∀ x, HasConditionalRand (f x) (s.tags.inter tags) s₁ s₂ S₁ S₂ py qy (y₁ x) (y₂ x)) :
-   HasConditionalRand (x.bind f hinterx) tags
-     (t₁++s₁) (t₂++s₂) (T₁×S₁) (T₂×S₂)
-     (fun (u,v) => (((px u).1, (py v).1),((px u).2, (py v).2)))
-     (fun (u₁,v₁) (u₂,v₂) => (qx u₁ u₂, qy v₁ v₂))
-     (x₁.bind (fun tx => y₁ (x₁.map tx)) sorry)
-     sorry := sorry_proof
+-- theorem HasConditionalRand.bind_rule
+--    (x : RandWithTrace X t T) (f : X → RandWithTrace Y s S) (tags : List Name)
+--    (hinter : t.tags.inter s.tags = [])
+--    (hx : HasConditionalRand x (t.tags.inter tags) t₁ t₂ T₁ T₂ px qx x₁ x₂)
+--    {y₁ : X → RandWithTrace Unit s₁ S₁} {y₂ : X → S₁ → RandWithTrace Y s₂ S₂}
+--    (hy : ∀ x, HasConditionalRand (f x) (s.tags.inter tags) s₁ s₂ S₁ S₂ py qy (y₁ x) (y₂ x)) :
+--    HasConditionalRand (x.bind f hinterx) tags
+--      (t₁++s₁) (t₂++s₂) (T₁×S₁) (T₂×S₂)
+--      (fun (u,v) => (((px u).1, (py v).1),((px u).2, (py v).2)))
+--      (fun (u₁,v₁) (u₂,v₂) => (qx u₁ u₂, qy v₁ v₂))
+--      (x₁.bind (fun tx => y₁ (x₁.map tx)) sorry)
+--      sorry := sorry_proof

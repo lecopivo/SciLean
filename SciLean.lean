@@ -10,11 +10,11 @@ import SciLean.Analysis.Calculus.CDeriv
 import SciLean.Analysis.Calculus.FDeriv
 import SciLean.Analysis.Calculus.FwdCDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
--- import SciLean.Analysis.Calculus.HasParamDerivWithDiscontinuity.Common
--- import SciLean.Analysis.Calculus.HasParamDerivWithDiscontinuity.Functions
--- import SciLean.Analysis.Calculus.HasParamDerivWithDiscontinuity.HasParamFDerivWithJumps
--- import SciLean.Analysis.Calculus.HasParamDerivWithDiscontinuity.HasParamFwdFDerivWithJumps
--- import SciLean.Analysis.Calculus.HasParamDerivWithDiscontinuity.HasParamRevFDerivWithJumps
+-- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Common
+-- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Functions
+-- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
+-- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
+-- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
 import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Analysis.Calculus.Monad.FwdCDerivMonad
 import SciLean.Analysis.Calculus.Monad.Id
@@ -41,6 +41,7 @@ import SciLean.Analysis.Convenient.Vec
 import SciLean.Analysis.FunctionSpaces.ContCDiffMap
 import SciLean.Analysis.FunctionSpaces.ContCDiffMapFD
 import SciLean.Analysis.FunctionSpaces.SmoothLinearMap
+import SciLean.Analysis.MetricSpace
 import SciLean.Analysis.Normed.Diffeomorphism
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Analysis.ODE.OdeSolve
@@ -62,14 +63,6 @@ import SciLean.Data.ArrayType.Algebra
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ArrayType.Notation
 import SciLean.Data.ArrayType.Properties
--- import SciLean.Data.ArrayType.old.ArrayType
--- import SciLean.Data.ArrayType.old.ArrayTypeProperties
--- import SciLean.Data.ArrayType.old.GenericArrayType
--- import SciLean.Data.ArrayType.old.GenericArrayTypeAlgebra
--- import SciLean.Data.ArrayType.old.GenericArrayTypeProperties
--- import SciLean.Data.ArrayType.old.Operations
--- import SciLean.Data.ArrayType.old.OperationsProperties
--- import SciLean.Data.ArrayType.old.Simp
 import SciLean.Data.ColProd
 import SciLean.Data.Curry
 import SciLean.Data.DataArray
@@ -87,14 +80,19 @@ import SciLean.Data.StructType
 import SciLean.Data.StructType.Algebra
 import SciLean.Data.StructType.Basic
 -- import SciLean.Geometry.Bezier
+import SciLean.Geometry.BoundingBall
+import SciLean.Geometry.FrontierSpeed
 -- import SciLean.Geometry.Shape.AxisAlignedBox
+-- import SciLean.Geometry.Shape.Basic
 -- import SciLean.Geometry.Shape.BasicShapes
 -- import SciLean.Geometry.Shape.Rotation
+-- import SciLean.Geometry.Shape.Segment
 -- import SciLean.Geometry.Shape.Shape
 -- import SciLean.Geometry.Shape.Simplex
 -- import SciLean.Geometry.Shape.Sphere
 -- import SciLean.Geometry.Shape.TransfromedShape
 -- import SciLean.Geometry.Shape.Triangle
+import SciLean.Geometry.SurfaceParametrization
 import SciLean.Lean.Array
 import SciLean.Lean.Expr
 import SciLean.Lean.HashMap
@@ -113,12 +111,14 @@ import SciLean.Logic.Isomorph.Isomorph
 import SciLean.Logic.Isomorph.IsomorphicType
 import SciLean.Logic.Isomorph.RealToFloat.Basic
 import SciLean.Logic.Isomorph.RealToFloat.Type
+import SciLean.MeasureTheory.RnDeriv
+import SciLean.MeasureTheory.WeakIntegral
 -- import SciLean.Meta.DerivingAlgebra
 -- import SciLean.Meta.DerivingOp
 import SciLean.Meta.GenerateAddGroupHomSimp
 import SciLean.Meta.GenerateFunProp
 import SciLean.Meta.GenerateLinearMapSimp
--- import SciLean.Meta.Notation.Do
+import SciLean.Meta.Notation.Do
 import SciLean.Meta.SimpAttr
 import SciLean.Meta.SimpCore
 import SciLean.Modules.DDG.SurfaceMesh
@@ -217,6 +217,17 @@ import SciLean.Numerics.ODE.BackwardEuler
 import SciLean.Numerics.ODE.Basic
 import SciLean.Numerics.ODE.ForwardEuler
 import SciLean.Numerics.ODE.Solvers
+import SciLean.Probability.Distributions.Flip
+import SciLean.Probability.Distributions.Normal
+import SciLean.Probability.Distributions.Uniform
+import SciLean.Probability.Distributions.WalkOnSpheres
+import SciLean.Probability.IsAffineRandMap
+import SciLean.Probability.PullMean
+import SciLean.Probability.PushPullExpectation
+import SciLean.Probability.Rand
+import SciLean.Probability.RandWithTrace
+import SciLean.Probability.SimpAttr
+import SciLean.Probability.Tactic
 -- import SciLean.SpecialFunctions.Convolution
 -- import SciLean.SpecialFunctions.CrossProduct
 -- import SciLean.SpecialFunctions.Divergence
@@ -233,27 +244,21 @@ import SciLean.Tactic.AnalyzeConstLambda
 import SciLean.Tactic.AnalyzeLambda
 import SciLean.Tactic.Autodiff
 import SciLean.Tactic.Basic
--- import SciLean.Tactic.ConvIf
+import SciLean.Tactic.CompiledTactics
+import SciLean.Tactic.ConvIf
 import SciLean.Tactic.ConvInduction
--- import SciLean.Tactic.FTrans.Basic
--- import SciLean.Tactic.FTrans.Init
--- import SciLean.Tactic.FTrans.Simp
--- import SciLean.Tactic.FinishImpl
 import SciLean.Tactic.FunTrans.Attr
 import SciLean.Tactic.FunTrans.Core
 import SciLean.Tactic.FunTrans.Decl
 import SciLean.Tactic.FunTrans.Elab
 import SciLean.Tactic.FunTrans.Theorems
 import SciLean.Tactic.FunTrans.Types
--- import SciLean.Tactic.FunTrans2.Core
--- import SciLean.Tactic.FunTrans2.Test
 import SciLean.Tactic.GTrans
 import SciLean.Tactic.GTrans.Attr
 import SciLean.Tactic.GTrans.Core
 import SciLean.Tactic.GTrans.Decl
 import SciLean.Tactic.GTrans.Elab
 import SciLean.Tactic.GTrans.MetaLCtxM
--- import SciLean.Tactic.GTrans.Test
 import SciLean.Tactic.GTrans.Theorems
 import SciLean.Tactic.IfPull
 import SciLean.Tactic.InferVar
@@ -262,26 +267,24 @@ import SciLean.Tactic.LSimp
 import SciLean.Tactic.LSimp.Elab
 import SciLean.Tactic.LSimp.Main
 import SciLean.Tactic.LSimp.Notation
--- import SciLean.Tactic.LSimp.Test
 import SciLean.Tactic.LSimp.Types
 import SciLean.Tactic.LetEnter
 import SciLean.Tactic.LetNormalize
 import SciLean.Tactic.LetNormalize2
 import SciLean.Tactic.LetUtils
-import SciLean.Tactic.CompiledTactics
 import SciLean.Tactic.MoveTerms
 import SciLean.Tactic.OptimizeIndexAccess
 import SciLean.Tactic.OptimizeIndexAccessInit
+import SciLean.Tactic.PullLimitOut
 import SciLean.Tactic.RefinedSimp
 import SciLean.Tactic.StructuralInverse
 import SciLean.Tactic.StructureDecomposition
 import SciLean.Tactic.TimeTactic
 import SciLean.Topology.Continuous
-import SciLean.Util.Approx.Basic
+import SciLean.Util.Alternatives
 import SciLean.Util.Approx.ApproxLimit
 import SciLean.Util.Approx.ApproxSolution
--- import SciLean.Util.Approx.Test
-import SciLean.Util.Alternatives
+import SciLean.Util.Approx.Basic
 import SciLean.Util.DefOptimize
 import SciLean.Util.Limit
 import SciLean.Util.Profile

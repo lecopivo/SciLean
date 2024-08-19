@@ -9,7 +9,7 @@ def convIf.rhs {α} (P : Prop) [inst : Decidable P] (a : α) := convIf P inst (�
 
 theorem convIf.id {α} (P : Prop) [inst : Decidable P] (a : α) : a = convIf P inst (λ _ => a) (λ _ => a) :=
 by
-  simp[convIf]; cases inst; rename_i q; simp[q]; rename_i q; simp[q]; done
+  simp[convIf]
 
 open Lean.Parser.Tactic.Conv
 syntax (name := conv_if) "if" ident ":" term  "then" convSeq "else" convSeq : conv

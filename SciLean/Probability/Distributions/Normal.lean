@@ -1,4 +1,3 @@
--- import SciLean.Core.Distribution.ParametricDistribFwdDeriv
 import SciLean.Probability.Rand
 import SciLean.Probability.Tactic
 import SciLean.Analysis.SpecialFunctions.Gaussian
