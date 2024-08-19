@@ -4,7 +4,7 @@ open SciLean
 
 set_default_scalar Float
 
-def H (m k : Float) (x p : Float) := (1/(2*m)) * p*p + k/2 * x*x
+def H (m k : Float) (x p : Float) := (1/(2*m)) * p^2 + k/2 * x^2
 
 approx solver (m k : Float)
   := odeSolve (fun (t : Float) (x,p) => ( ∇ (p':=p), H m k x  p',
