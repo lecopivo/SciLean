@@ -21,7 +21,9 @@ syntax "∂>! " "(" diffBinder ")" ", " term:66 : term
 open Lean Elab Term Meta in
 elab_rules : term
 | `(∂> $f $x $xs*) => do
-  elabTerm (← `(fwdFDeriv defaultScalar% $f $x $xs*)) none
+  let X ← inferType (← elabTerm x none)
+  let sX ← exprToSyntax X
+  elabTerm (← `(fwdFDeriv (X:=$sX) defaultScalar% $f $x $xs*)) none
 
 | `(∂> $f) => do
   elabTerm (← `(fwdFDeriv defaultScalar% $f)) none

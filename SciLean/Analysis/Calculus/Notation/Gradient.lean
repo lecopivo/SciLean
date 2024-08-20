@@ -22,12 +22,14 @@ elab_rules (kind:=gradNotation1) : term
   let XY ← mkArrow X Y
   -- Y might also be infered by the function `f`
   let fExpr ← withoutPostponing <| elabTermEnsuringType f XY false
+  let sX ← exprToSyntax X
   let .some (_,Y) := (← inferType fExpr).arrow?
     | return ← throwUnsupportedSyntax
   if (← isDefEq K Y) then
-    elabTerm (← `(fgradient $f $x $xs*)) none false
+    elabTerm (← `(fgradient (X:=$sX) $f $x $xs*)) none false
   else
-    elabTerm (← `(adjointFDeriv defaultScalar% $f $x $xs*)) none false
+    elabTerm (← `(adjointFDeriv (X:=$sX) defaultScalar% $f $x $xs*)) none false
+
 
 | `(∇ $f) => do
   let K ← elabTerm (← `(defaultScalar%)) none
