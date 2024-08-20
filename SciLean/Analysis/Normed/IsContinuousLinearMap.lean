@@ -56,8 +56,17 @@ macro "fun " "(" x:ident " : " X:term ")" " =>L[" R:term "] " b:term : term =>
     | `(fun $x':ident => $b:term) => `(fun $x' =>L[$R] $b)
     | `(fun ($x':ident : $ty) => $b:term) => `(fun ($x' : $ty) =>L[$R] $b)
     | `(fun $x':ident : $ty => $b:term) => `(fun $x' : $ty =>L[$R] $b)
-    | _  => throw ()
+    | _  => `(fun x =>L[$R] $f x)
   | _  => throw ()
+
+
+-- This theorem is necessary for `lsimp` tactic. Normal `simp` seems to have some fancy support
+-- to perform congruence on functions like this automatically.
+@[congr]
+theorem ContinuousLinearMap.mk'_congr
+    (f g : X → Y) (hf : IsContinuousLinearMap R f) (h : f = g) :
+    (fun x =>L[R] f x) = ContinuousLinearMap.mk' R g (by rw[← h]; apply hf) := sorry_proof
+
 
 
 -- Basic rules -----------------------------------------------------------------
