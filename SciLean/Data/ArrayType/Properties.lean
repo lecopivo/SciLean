@@ -2,6 +2,7 @@
 -- import SciLean.Core.FunctionTransformations
 import SciLean.Data.ArrayType.Algebra
 import SciLean.Analysis.Convenient.HasAdjDiff
+import SciLean.Analysis.AdjointSpace.Adjoint
 
 import SciLean.Meta.GenerateAddGroupHomSimp
 
@@ -208,7 +209,46 @@ theorem ArrayType.modify.arg_contf.HasSemiAdjoint_rule
     (f : W → Elem → Elem) (hf : HasSemiAdjoint K (fun (w,x) => f w x)) :
     HasSemiAdjoint K (fun w => ArrayType.modify (cont w) i (f w)) := by sorry_proof
 
-open ArrayType
+end OnSemiInnerProductSpace
+
+section OnAdjointSpace
+
+variable
+  [NormedAddCommGroup Elem] [AdjointSpace K Elem] [CompleteSpace Elem]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
+
+@[fun_trans]
+theorem ArrayType.get.arg_cont.adjoint_rule (i : Idx) :
+    adjoint K (fun c : Cont => ArrayType.get c i)
+    =
+    fun e : Elem => oneHot i e := by sorry_proof
+
+@[fun_trans]
+theorem ArrayType.set.arg_cont.adjoint_rule (i : Idx) :
+    adjoint K (fun c : Cont => ArrayType.set c i 0)
+    =
+    fun c => ArrayType.set c i 0 := by sorry_proof
+
+@[fun_trans]
+theorem ArrayType.set.arg_xi.adjoint_rule (i : Idx) :
+    adjoint K (fun xi : Elem => ArrayType.set (0:Cont) i xi)
+    =
+    fun c => ArrayType.get c i := by sorry_proof
+
+@[fun_trans]
+theorem ArrayType.set.arg_contxi.adjoint_rule (i : Idx) :
+    adjoint K (fun cx : Cont×Elem => ArrayType.set cx.1 i cx.2)
+    =
+    fun c => (ArrayType.set c i (0:Elem), ArrayType.get c i) := by sorry_proof
+
+@[fun_trans]
+theorem ArrayType.ofFn.arg_f.adjoint_rule :
+    adjoint K (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f)
+    =
+    fun c i => ArrayType.get c i := by sorry_proof
+
+end OnAdjointSpace
+
 
 #exit
 
