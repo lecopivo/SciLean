@@ -23,16 +23,20 @@ syntax (name := lautodiffTacticStx) "autodiff" (config)? (discharger)?
 macro_rules
 | `(conv| autodiff $[$cfg]? $[$disch]?  $[[$a,*]]?) => do
   if a.isSome then
-    `(conv| lfun_trans $[$cfg]? $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?)
+    `(conv| ((try unfold deriv fgradient adjointFDeriv); -- todo: investigate why simp sometimes does not unfold and remove this line
+             lfun_trans $[$cfg]? $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
   else
-    `(conv| lfun_trans $[$cfg]? $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core])
+    `(conv| ((try unfold deriv fgradient adjointFDeriv);
+             lfun_trans $[$cfg]? $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
 
 macro_rules
 | `(tactic| autodiff $[$cfg]? $[$disch]?  $[[$a,*]]?) => do
   if a.isSome then
-    `(tactic| lfun_trans $[$cfg]? $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?)
+    `(tactic| ((try unfold deriv fgradient adjointFDeriv);
+               lfun_trans $[$cfg]? $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
   else
-    `(tactic| lfun_trans $[$cfg]? $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core])
+    `(tactic| ((try unfold deriv fgradient adjointFDeriv);
+               lfun_trans $[$cfg]? $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
 
 -- open Lean Meta
 -- simproc_decl lift_lets_simproc (_) := fun e => do
