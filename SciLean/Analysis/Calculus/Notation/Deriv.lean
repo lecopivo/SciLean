@@ -35,7 +35,8 @@ elab_rules : term
     elabTerm (← `(deriv $f $x $xs*)) none false
   else
     -- elabTerm (← `(cderiv defaultScalar% $f $x $xs*)) none false
-    elabTerm (← `(fderiv defaultScalar% $f $x $xs*)) none false
+    let sX ← exprToSyntax X -- by
+    elabTerm (← `(fderiv (E:=$sX) defaultScalar% $f ($x : $sX) $xs*)).raw none false
 
 | `(∂ $f) => do
   let K ← elabTerm (← `(defaultScalar%)) none
