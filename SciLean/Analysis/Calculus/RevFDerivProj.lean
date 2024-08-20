@@ -13,18 +13,18 @@ namespace SciLean
 set_option deprecated.oldSectionVars true
 
 variable
-  (K I : Type _) [RCLike K]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y]
-  {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace K Z]
-  {W : Type _} [NormedAddCommGroup W] [AdjointSpace K W]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
-  {κ : Type _} [IndexType κ] [DecidableEq κ]
-  {E : Type _} {EI : I → Type _}
+  (K I : Type) [RCLike K]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W]
+  {ι : Type} [IndexType ι] [DecidableEq ι]
+  {κ : Type} [IndexType κ] [DecidableEq κ]
+  {E : Type} {EI : I → Type}
   [StructType E I EI] [IndexType I] [DecidableEq I]
   [NormedAddCommGroup E] [AdjointSpace K E] [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)]
   [VecStruct K E I EI] -- todo: define AdjointSpaceStruct
-  {F J : Type _} {FJ : J → Type _}
+  {F J : Type} {FJ : J → Type}
   [StructType F J FJ] [IndexType J] [DecidableEq J]
   [NormedAddCommGroup F] [AdjointSpace K F] [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)]
   [VecStruct K F J FJ] -- todo: define AdjointSpaceStruct
@@ -329,6 +329,7 @@ set_option deprecated.oldSectionVars true
 
 variable
   {K : Type} [RCLike K]
+  {ι : Type} [IndexType ι] [DecidableEq ι]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
   {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
   {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
@@ -339,7 +340,7 @@ variable
   [NormedAddCommGroup Y'] [AdjointSpace K Y'] [∀ i, NormedAddCommGroup (YI i)] [∀ i, AdjointSpace K (YI i)] [VecStruct K Y' Yi YI]
   [NormedAddCommGroup Z'] [AdjointSpace K Z'] [∀ i, NormedAddCommGroup (ZI i)] [∀ i, AdjointSpace K (ZI i)] [VecStruct K Z' Zi ZI]
   {W : Type} [NormedAddCommGroup W] [AdjointSpace K W]
-  {ι : Type} [IndexType ι]
+
 
 
 
@@ -760,18 +761,13 @@ def HPow.hPow.arg_a0.revFDerivProjUpdate_rule
 
 section IndexTypeSum
 
-variable {ι : Type} [IndexType ι]
-
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revFDerivProj_rule [DecidableEq ι]
+theorem IndexType.sum.arg_f.revFDerivProj_rule
     (f : X → ι → Y') (hf : ∀ i, Differentiable K (fun x => f x i)) :
     revFDerivProj K Yi (fun x => ∑ i, f x i)
     =
     fun x =>
-      -- this is not optimal
-      -- we should have but right now there is no appropriate StrucLike instance
-      -- let ydf := revFDerivProj K Yi f x
       let ydf := revFDerivProjUpdate K (ι×Yi) f x
       (∑ i, ydf.1 i,
        fun j dy =>
@@ -855,10 +851,10 @@ theorem dite.arg_te.revFDerivProjUpdate_rule
 section InnerProductSpace
 
 variable
-  {R : Type _} [RealScalar R]
+  {R : Type} [RealScalar R]
   -- {K : Type _} [Scalar R K]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y]
 
 -- Inner -----------------------------------------------------------------------
 --------------------------------------------------------------------------------

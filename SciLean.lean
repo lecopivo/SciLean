@@ -117,6 +117,7 @@ import SciLean.MeasureTheory.WeakIntegral
 -- import SciLean.Meta.DerivingOp
 import SciLean.Meta.GenerateAddGroupHomSimp
 import SciLean.Meta.GenerateFunProp
+import SciLean.Meta.GenerateFunTrans
 import SciLean.Meta.GenerateLinearMapSimp
 import SciLean.Meta.Notation.Do
 import SciLean.Meta.SimpAttr

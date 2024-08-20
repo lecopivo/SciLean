@@ -188,6 +188,17 @@ variable
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 
+-- of linear function ----------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_trans]
+theorem revFDeriv_linear
+  (f : X → Y) (hf : IsContinuousLinearMap K f) :
+  revFDeriv K f
+  =
+  fun x => (f x, adjoint K f) := by unfold revFDeriv; fun_trans
+
+
 -- Prod.mk ----------------------------------- ---------------------------------
 --------------------------------------------------------------------------------
 

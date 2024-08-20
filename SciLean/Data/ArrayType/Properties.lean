@@ -3,6 +3,7 @@
 import SciLean.Data.ArrayType.Algebra
 import SciLean.Analysis.Convenient.HasAdjDiff
 import SciLean.Analysis.AdjointSpace.Adjoint
+import SciLean.Analysis.Calculus.RevFDerivProj
 
 import SciLean.Meta.GenerateAddGroupHomSimp
 
@@ -246,6 +247,50 @@ theorem ArrayType.ofFn.arg_f.adjoint_rule :
     adjoint K (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f)
     =
     fun c i => ArrayType.get c i := by sorry_proof
+
+end OnAdjointSpace
+
+
+section OnAdjointSpace
+
+variable
+  [NormedAddCommGroup Elem] [AdjointSpace K Elem] [CompleteSpace Elem]
+  {I : Type} [IndexType I] [DecidableEq I]
+  {E : I → Type} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)]
+  [∀ i, CompleteSpace (E i)] [StructType Elem I E] [VecStruct K Elem I E]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
+
+
+@[fun_trans]
+theorem ArrayType.get.arg_cont.revFDerivProj_rule (i : Idx)
+    (cont : W → Cont) (hf : Differentiable K cont) :
+    revFDerivProj K I (fun w => ArrayType.get (cont w) i)
+    =
+    fun w : W =>
+      let xi := revFDerivProj K (Idx×I) cont w
+      (ArrayType.get xi.1 i, fun (j : I) (de : E j) =>
+        xi.2 (i,j) de) := by
+  unfold revFDerivProj; fun_trans[oneHot]
+  funext x
+  fun_trans
+  funext i de
+  congr
+  funext i
+  split_ifs
+  · congr; funext i; aesop
+  · aesop
+
+
+@[fun_trans]
+theorem ArrayType.get.arg_cont.revFDerivProjUpdate_rule (i : Idx)
+    (cont : W → Cont) (hf : Differentiable K cont) :
+    revFDerivProjUpdate K I (fun w => ArrayType.get (cont w) i)
+    =
+    fun w : W =>
+      let xi := revFDerivProjUpdate K (Idx×I) cont w
+      (ArrayType.get xi.1 i, fun (j : I) (de : E j) dw =>
+        xi.2 (i,j) de dw) := by unfold revFDerivProjUpdate; fun_trans
+
 
 end OnAdjointSpace
 

@@ -1,0 +1,100 @@
+
+* SciLean
+
+** library for scientific computing 
+
+** motivation - mix of Lean, Mathematica, Julia, JAX
+
+** priorities: usability, performance, ...., formal correctness
+     - SciLean is not formalization project (at least not primarily)
+
+* Harmonic oscillator example
+
+
+* Talk overview
+
+** Working with arrays
+
+** symbolic and automatic differentiation
+
+*** fderiv and how to use autodiff
+
+     ∂ x', f x' = fderiv R f
+
+     
+
+
+     ∂ (x':=x), f x' = fderiv R f x
+
+     ∂ (x':=x;dx), f x' = fderiv R f x dx
+
+     For scalar arguments the notation automatically inserts `dx = 1`
+
+     
+
+*** gradient, start using notation
+
+     - fgradient vs mathlib's gradient  - RxR and Fin n -> R is not InnerProductSpace
+
+*** forward and reverse mode AD
+
+     ∂> x':=x;dx, f x dx = fwdFDeriv R f x dx = (f x, fderiv R f x dx)
+     
+     
+     revFDeriv R f x = (f x, adjoint R (fderiv R f x))
+
+
+*** Working with user defined function
+
+     def foo (x : R) := 3*x^3 + x^2
+
+     def_fun_trans : ∂ x, foo x by unfold foo; autodiff
+     def_fun_trans : ∂> x, foo x by unfold foo; autodiff
+     def_fun_trans : <∂ x, foo x by unfold foo; autodiff
+
+     #print foo.arg_x.fderiv
+     #check foo.arg_x.fderiv_rule
+
+     #check (∂ x, foo x) rewrite_by autodiff
+
+*** general function transformation
+     - tactics:
+       fun_prop - proving function properties like Continuous, Differentiable
+                - part of mathlib
+       fun_trans - function transformation tactic to compute derivatives, adjoint etc.
+                 - part of scilean
+
+     - have a look at documentation of fun_prop
+
+       @[fun_trans]
+       def myderiv (f : R -> R) (x : R) : R := fderiv R f x 1
+
+       @[fun_trans]
+       theorem id_rule : myderiv (fun x : R => x) = fun x => 1 := sorry
+       @[fun_trans]
+       theorem const_rule (y : R) : myderiv (fun x : R => y) = fun x => 0 := sorry
+       -- (f(g(x))' = f'(g(x))*g'(x)
+       @[fun_trans]
+       theorem comp_rule (f g : R -> R) (hf : Differentiable R f) (hg : Differentiable R g) :
+          myderiv (fun x => f (g x))
+          =
+          fun x =>
+            let y := g x
+            let dy := myderiv g x
+            myderiv f (g x) * myderiv g x := sorry
+
+
+       variable (f g : R -> R) (hf : Differentiable R f) (hg : Differentiable R g)
+
+       -- (f + g)' = f' + g'
+       @[fun_trans]
+       theorem add_rule : myderiv (fun x => f x + g x) = fun x => myderiv f x + myderiv g x := sorry
+
+       -- (f * g)' = f'*g + f*g'
+       @[fun_trans]
+       theorem mul_rule : myderiv (fun x => f x * g x) = fun x => myderiv f x * g x + f x * myderiv g x := sorry
+
+
+       #check (myderiv (fun x : R => x*x*x + x*x)) rewrite_by fun_trans
+
+** probabilistic programming

@@ -118,8 +118,32 @@ theorem pi_rule
 
 open SciLean
 
--- Prod.mk -----------------------------------v---------------------------------
+-- of linear function ----------------------------------------------------------
 --------------------------------------------------------------------------------
+
+@[fun_trans]
+theorem fwdFDeriv_linear
+  (f : X → Y) (hf : IsContinuousLinearMap K f) :
+  fwdFDeriv K f
+  =
+  fun x dx => (f x, f dx) := by unfold fwdFDeriv; fun_trans
+
+
+-- Prod.mk ---------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_trans]
+theorem Prod.mk.arg_fstsnd.fwdFDeriv_rule
+    (g : X → Y) (hg : Differentiable K g)
+    (f : X → Z) (hf : Differentiable K f) :
+    fwdFDeriv K (fun x => (g x, f x))
+    =
+    fun x dx =>
+      let ydy := fwdFDeriv K g x dx
+      let zdz := fwdFDeriv K f x dx
+      ((ydy.1, zdz.1), (ydy.2, zdz.2)) := by
+  unfold fwdFDeriv; fun_trans
+
 
 @[fun_trans]
 theorem Prod.mk.arg_fstsnd.fwdFDeriv_rule_at (x : X)
@@ -138,6 +162,13 @@ theorem Prod.mk.arg_fstsnd.fwdFDeriv_rule_at (x : X)
 --------------------------------------------------------------------------------
 
 @[fun_trans]
+theorem Prod.fst.arg_self.fwdFDeriv_rule :
+    fwdFDeriv K (fun xy : X×Y => xy.1)
+    =
+    fun xy dxy => (xy.1, dxy.1) := by
+  unfold fwdFDeriv; fun_trans
+
+@[fun_trans]
 theorem Prod.fst.arg_self.fwdFDeriv_rule_at (x : X)
     (f : X → Y×Z) (hf : DifferentiableAt K f x) :
     fwdFDeriv K (fun x => (f x).1) x
@@ -150,6 +181,14 @@ theorem Prod.fst.arg_self.fwdFDeriv_rule_at (x : X)
 
 -- Prod.snd --------------------------------------------------------------------
 --------------------------------------------------------------------------------
+
+@[fun_trans]
+theorem Prod.snd.arg_self.fwdFDeriv_rule :
+    fwdFDeriv K (fun xy : X×Y => xy.2)
+    =
+    fun xy dxy => (xy.2, dxy.2) := by
+  unfold fwdFDeriv; fun_trans
+
 
 @[fun_trans]
 theorem Prod.snd.arg_self.fwdFDeriv_rule_at (x : X)
@@ -240,6 +279,13 @@ theorem HSMul.hSMul.arg_a0a1.fwdFDeriv_rule_at (x : X)
 --------------------------------------------------------------------------------
 
 @[fun_trans]
+theorem HDiv.hDiv.arg_a0.fwdFDeriv_rule (y : K) :
+    (fwdFDeriv K fun x => x / y)
+    =
+    fun x dx => (x / y, dx / y) := by
+  unfold fwdFDeriv; fun_trans
+
+@[fun_trans]
 theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at (x : X)
     (f : X → K) (g : X → K)
     (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) (hx : g x ≠ 0) :
@@ -262,18 +308,12 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at (x : X)
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-def HPow.hPow.arg_a0.fwdFDeriv_rule_at (n : Nat) (x : X)
-    (f : X → K) (hf : DifferentiableAt K f x) :
-    fwdFDeriv K (fun x => f x ^ n) x
+def HPow.hPow.arg_a0.fwdFDeriv_rule (n : Nat) :
+    fwdFDeriv K (fun x : K => x ^ n)
     =
-    fun dx =>
-      let ydy := fwdFDeriv K f x dx
-      (ydy.1 ^ n, n * ydy.2 * (ydy.1 ^ (n-1))) := by
-  unfold fwdFDeriv;
-  funext dx; simp
-  induction n
-  case zero => simp
-  case h _ => simp[pow_succ]; fun_trans; sorry_proof
+    fun x dx : K =>
+      (x ^ n, n * dx * (x ^ (n-1))) := by
+  unfold fwdFDeriv; fun_trans
 
 
 -- IndexType.sum ----------------------------------------------------------------

@@ -234,7 +234,7 @@ def applyApplyRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp
 
   return none
 
-def applyPiRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Result) := do
+def applyPiRule (funTransDecl : FunTransDecl) (e f : Expr) : SimpM (Option Simp.Result) := do
   let thms ← getLambdaTheorems funTransDecl.funTransName .pi e.getAppNumArgs
 
   if thms.size = 0 then
@@ -242,7 +242,8 @@ def applyPiRule (funTransDecl : FunTransDecl) (e : Expr) : SimpM (Option Simp.Re
     return none
 
   for thm in thms do
-    if let .some r ← tryTheorem? e (.decl thm.thmName) then
+    let .pi id_f := thm.thmArgs | continue
+    if let .some r ← tryTheoremWithHint e (.decl thm.thmName) #[(id_f, f)] then
       return r
 
   return none
@@ -253,7 +254,7 @@ def applyMorTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.F
   match ← fData.isMorApplication with
   | .none => return none
   | .underApplied =>
-    applyPiRule funTransDecl e
+    applyPiRule funTransDecl e (← fData.toExpr)
   | .overApplied =>
     let .some (f,g) ← fData.peeloffArgDecomposition | return none
     applyCompRule funTransDecl e f g
@@ -359,7 +360,7 @@ def tryTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
       return none
     | .gt =>
       trace[Meta.Tactic.fun_trans] s!"adding argument to later use {← ppOrigin' thm.thmOrigin}"
-      if let .some r ← applyPiRule funTransDecl e then
+      if let .some r ← applyPiRule funTransDecl e (← fData.toExpr) then
         return r
       continue
     | .eq =>
@@ -574,7 +575,7 @@ partial def funTrans (e : Expr) : SimpM Simp.Step := do
   | .lam f =>
     trace[Meta.Tactic.fun_trans.step] "lam case on {← ppExpr f}"
     let e := e.setArg funTransDecl.funArgId f -- update e with reduced f
-    toStep <| applyPiRule funTransDecl e
+    toStep <| applyPiRule funTransDecl e f
   | .data fData =>
     let e := e.setArg funTransDecl.funArgId (← fData.toExpr) -- update e with reduced f
 

@@ -39,7 +39,7 @@ inductive LambdaTheoremArgs
   | letE (fArgId gArgId : Nat)
 
   /-- Pi theorem e.g. `fderiv ℝ fun x y => f x y = ...` -/
-  | pi
+  | pi (fArgId : Nat)
   deriving Inhabited, BEq, Repr, Hashable
 
 /-- Tag for one of the 5 basic lambda theorems -/
@@ -66,7 +66,7 @@ def LambdaTheoremArgs.type (t : LambdaTheoremArgs) : LambdaTheoremType :=
   | .comp .. => .comp
   | .letE .. => .letE
   | .apply  => .apply
-  | .pi => .pi
+  | .pi .. => .pi
 
 /-- Decides whether `f` is a function corresponding to one of the lambda theorems. -/
 def detectLambdaTheoremArgs (f : Expr) (ctxVars : Array Expr) :
@@ -91,8 +91,9 @@ def detectLambdaTheoremArgs (f : Expr) (ctxVars : Array Expr) :
       let .some argId_f := ctxVars.findIdx? (fun x => x == (.fvar fId)) | return none
       let .some argId_g := ctxVars.findIdx? (fun x => x == (.fvar gId)) | return none
       return .some <| .letE argId_f argId_g
-    | .lam _ _ (.app (.app (.fvar _) (.bvar 1)) (.bvar 0)) _ =>
-      return .some .pi
+    | .lam _ _ (.app (.app (.fvar fId) (.bvar 1)) (.bvar 0)) _ =>
+      let .some argId_f := ctxVars.findIdx? (fun x => x == (.fvar fId)) | return none
+      return .some <| .pi argId_f
     | _ => return none
   | _ => return none
 
