@@ -36,10 +36,19 @@ class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> out
 
 attribute [simp,simp_core] ArrayType.get_set_eq ArrayType.get_set_neq
 
-instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont Idx (fun _ => Elem) where
-  structProj := fun c i => ArrayType.get c i
-  structMake := ArrayType.ofFn
-  structModify := fun i f c => ArrayType.modify c i f
+-- instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont Idx (fun _ => Elem) where
+--   structProj := fun c i => ArrayType.get c i
+--   structMake := ArrayType.ofFn
+--   structModify := fun i f c => ArrayType.modify c i f
+--   left_inv := sorry_proof
+--   right_inv := sorry_proof
+--   structProj_structModify := sorry_proof
+--   structProj_structModify' := sorry_proof
+
+instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont (Idx×Unit) (fun _ => Elem) where
+  structProj := fun c (i,_) => ArrayType.get c i
+  structMake := fun f => ArrayType.ofFn (fun i => f (i,()))
+  structModify := fun (i,_) f c => ArrayType.modify c i f
   left_inv := sorry_proof
   right_inv := sorry_proof
   structProj_structModify := sorry_proof

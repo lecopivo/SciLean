@@ -90,14 +90,6 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions
     TestFunctions Cont where
   TestFunction x := ∀ i, TestFunction (get x i)
 
-noncomputable
-instance (priority := low) {p} [ArrayType Cont Idx Elem] [Dist (WithLp p Elem)] :
-    Dist (WithLp p Cont) where
-  dist := fun x y =>
-    let x := WithLp.equiv _ _ x
-    let y := WithLp.equiv _ _ y
-    (∑ i, (distP p (get x i) (get y i))^p.toReal)^(1/p.toReal)
-
 instance (priority := low) [ArrayType Cont Idx Elem] [Dist Elem] :
     Dist Cont where
   dist := fun x y =>
@@ -105,23 +97,13 @@ instance (priority := low) [ArrayType Cont Idx Elem] [Dist Elem] :
     let y := Scalar.ofReal Float x -- this ugliness it to dodge noncomputable checker
     Scalar.toReal Float y
 
-noncomputable
-instance (priority := low) [ArrayType Cont Idx Elem] [MetricSpace (WithLp p Elem)] :
-    MetricSpace (WithLp p Cont) where
-  dist_self := sorry_proof
-  dist_comm := sorry_proof
-  dist_triangle := sorry_proof
-  edist_dist := sorry_proof
-  uniformity_dist := sorry_proof
-  cobounded_sets := sorry_proof
-  eq_of_dist_eq_zero := sorry_proof
-
 instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
     NormedAddCommGroup Cont where
   norm := fun x =>
     let x := ∑ i, ‖get x i‖^2
     let y := Scalar.ofReal Float x  -- this ugliness it to dodge noncomputable checker
     Scalar.toReal Float y
+  toDist := by infer_instance
   dist_eq := by simp[dist,NormedAddCommGroup.dist_eq]
   dist_self := sorry_proof
   dist_comm := sorry_proof
@@ -130,7 +112,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
   eq_of_dist_eq_zero := sorry_proof
   toUniformSpace := by infer_instance
   uniformity_dist := sorry_proof
-  -- toBornology := sorry
+  -- toBornology := by infer_instance
   -- cobounded_sets := sorry_proof
 
 
@@ -229,23 +211,23 @@ instance (priority := low) [ArrayType Cont Idx K] : FinVec Idx K Cont where
 
 
 
-instance [ArrayType Cont Idx Elem] [Zero Elem] : ZeroStruct Cont Idx (fun _ => Elem) where
+instance [ArrayType Cont Idx Elem] [Zero Elem] : ZeroStruct Cont (Idx×Unit) (fun _ => Elem) where
   structProj_zero := by intro i; simp[OfNat.ofNat,Zero.zero]
 
-instance [ArrayType Cont Idx Elem] [Add Elem] : AddStruct Cont Idx (fun _ => Elem) where
+instance [ArrayType Cont Idx Elem] [Add Elem] : AddStruct Cont (Idx×Unit) (fun _ => Elem) where
   structProj_add := by intro i; simp[HAdd.hAdd, Add.add]
 
-instance {K} [ArrayType Cont Idx Elem] [SMul K Elem] : SMulStruct K Cont Idx (fun _ => Elem) where
+instance {K} [ArrayType Cont Idx Elem] [SMul K Elem] : SMulStruct K Cont (Idx×Unit) (fun _ => Elem) where
   structProj_smul := by intro i k x; simp[HSMul.hSMul, SMul.smul]
 
-instance {K} [RCLike K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Cont Idx (fun _ => Elem) where
+instance {K} [RCLike K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Cont (Idx×Unit) (fun _ => Elem) where
   structProj_zero := sorry_proof
   structProj_add := sorry_proof
   structProj_smul := sorry_proof
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof
 
-instance {K} [RCLike K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] : SemiInnerProductSpaceStruct K Cont Idx (fun _ => Elem) where
+instance {K} [RCLike K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] : SemiInnerProductSpaceStruct K Cont (Idx×Unit) (fun _ => Elem) where
   inner_structProj := sorry_proof
   testFun_structProj := sorry_proof
 

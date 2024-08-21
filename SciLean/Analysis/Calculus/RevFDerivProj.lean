@@ -171,13 +171,13 @@ theorem pi_rule_unit
   funext x; simp; funext i de
   sorry_proof
 
+
 @[fun_trans]
 theorem pi_rule
     (f :  X → ι → E) (hf : ∀ i, Differentiable K (f · i)) :
     (revFDerivProj K (ι×I) fun (x : X) (i : ι) => f x i)
     =
     fun x =>
-      -- let ydf := fun i => revFDerivProjUpdate K I (f · i) x
       (fun i => f x i,
        fun (i,i') df =>
          let dx := (revFDerivProj K I (f · i) x).2 i' df
@@ -187,7 +187,34 @@ theorem pi_rule
   funext x; simp; funext i de
   sorry_proof
 
-  -- rw[revFDeriv.pi_rule (hf:=by fun_prop)]; simp[oneHot]
+
+section PiRuleNonDep
+
+
+variable
+  {E : Type} {EI : Type}
+  [StructType E I (fun _ => EI)]
+  [NormedAddCommGroup E] [AdjointSpace K E] [NormedAddCommGroup EI] [AdjointSpace K EI]
+  [VecStruct K E I (fun _ => EI)]
+
+
+-- The is some unification problem when applying the dependent version `pi_rule`
+-- Zulip question: https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Unification.20failure.20in.20simp
+@[fun_trans]
+theorem pi_rule_nondep
+    (f :  X → ι → E) (hf : ∀ i, Differentiable K (f · i)) :
+    (revFDerivProj K (ι×I) fun (x : X) (i : ι) => f x i)
+    =
+    fun x =>
+      (fun i => f x i,
+       fun (i,i') df =>
+         let dx := (revFDerivProj K I (f · i) x).2 i' df
+         dx) := by
+  rw[pi_rule K I f hf]
+
+end PiRuleNonDep
+
+
 
 end revFDerivProj
 
@@ -313,6 +340,27 @@ theorem pi_rule
   fun_trans
   funext x; simp; funext i de
   sorry_proof
+
+section PiRuleNonDep
+
+variable
+  {E : Type} {EI : Type}
+  [StructType E I (fun _ => EI)]
+  [NormedAddCommGroup E] [AdjointSpace K E] [NormedAddCommGroup EI] [AdjointSpace K EI]
+  [VecStruct K E I (fun _ => EI)]
+
+@[fun_trans]
+theorem pi_rule_nondep
+    (f :  X → ι → E) (hf : ∀ i, Differentiable K (f · i)) :
+    (revFDerivProjUpdate K (ι×I) fun (x : X) (i : ι) => f x i)
+    =
+    fun x =>
+      (fun i => f x i,
+       fun (i,i') df dx =>
+         let dx := (revFDerivProjUpdate K I (f · i) x).2 i' df dx
+         dx) := pi_rule K I f hf
+
+end PiRuleNonDep
 
 
 end revFDerivProjUpdate

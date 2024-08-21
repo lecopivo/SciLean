@@ -3,58 +3,6 @@ import SciLean
 open SciLean Scalar RealScalar
 
 
-
-@[simp ↓ high, simp_core ↓ high]
-theorem hihih
-  {R : Type} [RCLike R]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [PlainDataType X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
-  {I : Type} [IndexType I]
-  (f : DataArrayN X I → Y)  :
-  revFDeriv R f
-  =
-  fun x =>
-    let ydf := revFDerivProj R Unit f x
-    (ydf.1, ydf.2 ()) := by unfold revFDerivProj revFDeriv; simp
-
-
-@[fun_trans]
-theorem hohoe {n:Nat} (i : Fin n) :
-  revFDerivProjUpdate Float Unit (fun (x : Float^[n]) => x[i])
-  =
-  fun x =>
-    (ArrayType.get x i,
-     fun _ dxi y => ArrayType.modify y i (· + dxi)) := sorry
-
-#check fun (i : Fin 10 × Unit) =>
-            (?inst : (i : Unit) → NormedAddCommGroup ((?EI : Unit → Type) i))
-              i.2
-
-
-
-set_default_scalar Float
-variable (u : Float^[10])
--- set_option trace.Meta.Tactic.fun_trans true in
-set_option trace.Meta.Tactic.fun_trans.unify true in
--- set_option trace.Meta.Tactic.simp.rewrite true in
--- set_option pp.funBinderTypes true in
--- set_option pp.mvars.withType true in
-
-set_option trace.Meta.isDefEq true in
-
-#check (∇ (u':=u), ∑ i, u'[i]^2) rewrite_by
-  unfold fgradient
-  autodiff
-  simp
-  pattern (revFDerivProjUpdate _ _ _)
-  rw[SciLean.revFDerivProjUpdate.pi_rule (K:=Float) (I:=Unit) (f:=fun (x : Float^[10]) i => x[i]^2) (hf:=by fun_prop)]
-
-
-
-
--- =?= fun (i : Fin 10 × Unit) => NonUnitalNormedRing.toNormedAddCommGroup
-
-#exit
 -- __      __       _   _                    _ _   _
 -- \ \    / /__ _ _| |_(_)_ _  __ _  __ __ _(_) |_| |_
 --  \ \/\/ / _ \ '_| / / | ' \/ _` | \ V  V / |  _| ' \
@@ -345,9 +293,12 @@ variable {n : Nat} (A dA : Fin n → Fin n → ℝ) (u du v dv : Fin n → ℝ) 
 -- ∇_u (∑ i, uᵢ²) = ∇_u ‖u‖₂² = 2 • u
 #check (∇ (u':=u), ∑ i, u' i^2) rewrite_by autodiff
 
-
 set_default_scalar Float
+
+
 variable (A dA : Float^[3,3]) (u du : Float^[3])
+
+#check (∇ (u':=u), ∑ i, u'[i]^2) rewrite_by autodiff
 
 -- ∇_u u[i] = [0,...,1,...,0]
 #check (∇ (u':=u), u'[1]) rewrite_by autodiff

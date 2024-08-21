@@ -107,6 +107,10 @@ instance [∀ i, MetricSpace (EI i)] [∀ j, MetricSpace (FJ j)] (i : I ⊕ J) :
   dist_self := sorry_proof
   dist_comm := sorry_proof
   dist_triangle := sorry_proof
+  edist :=
+    match i with
+    | .inl _ => edist
+    | .inr _ => edist
   edist_dist := sorry_proof
   toUniformSpace := by infer_instance
   uniformity_dist := sorry_proof

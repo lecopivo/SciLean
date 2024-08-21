@@ -196,7 +196,6 @@ instance : ArrayType (DataArrayN α ι) ι α where
 --   dropElem_getElem := sorry_proof
 --   reserveElem_id := sorry_proof
 
-
 def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type) [IndexType κ]
   (hs : size κ = size ι)
   : DataArrayN α κ :=
