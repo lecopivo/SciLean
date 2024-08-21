@@ -777,6 +777,37 @@ by
   simp[revFDerivProjUpdate,revFDerivProj,add_assoc,neg_pull,mul_assoc,smul_push]
 
 
+@[fun_trans]
+theorem HDiv.hDiv.arg_a0.revFDerivProj_rule
+    (f : X → K) (y : K) (hf : Differentiable K f) :
+    (revFDerivProj K Unit fun x => f x / y)
+    =
+    fun x =>
+      let ydf := revFDerivProj K Unit f x
+      (ydf.1 / y,
+       fun _ dx' => (1 / (conj y)) • (ydf.2 () dx')) :=
+by
+  unfold revFDerivProj
+  fun_trans (disch:=apply hx); simp[oneHot, structMake,revFDerivProjUpdate,revFDerivProj,smul_push]
+
+
+@[fun_trans]
+theorem HDiv.hDiv.arg_a0.revFDerivProjUpdate_rule
+    (f : X → K) (y : K) (hf : Differentiable K f) :
+    (revFDerivProjUpdate K Unit fun x => f x / y)
+    =
+    fun x =>
+      let ydf := revFDerivProjUpdate K Unit f x
+      (ydf.1 / y,
+       fun _ dx' dx =>
+         let c := (1 / (conj y))
+         ((ydf.2 () (c • dx') dx))) :=
+by
+  unfold revFDerivProjUpdate
+  fun_trans (disch:=assumption)
+  simp[revFDerivProjUpdate,revFDerivProj,add_assoc,neg_pull,mul_assoc,smul_push]
+
+
 -- HPow.hPow -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 

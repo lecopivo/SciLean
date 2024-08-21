@@ -14,7 +14,7 @@ attribute [simp_core] add_zero zero_add sub_zero zero_sub sub_self neg_zero mul_
 attribute [simp_core] Nat.succ_sub_succ_eq_sub Nat.cast_ofNat
 
 -- simp theorems for `Prod`
-attribute [simp_core] Prod.mk.eta Prod.fst_zero Prod.snd_zero Prod.mk_add_mk Prod.mk_mul_mk Prod.mk_sub_mk Prod.neg_mk Prod.vadd_mk -- Prod.smul_mk
+attribute [simp_core] Prod.mk.eta Prod.fst_zero Prod.snd_zero Prod.mk_add_mk Prod.mk_mul_mk Prod.mk_sub_mk Prod.neg_mk Prod.vadd_mk Prod.smul_mk
 
 -- simp theorems for `Equiv`
 attribute [simp_core] Equiv.invFun_as_coe Equiv.symm_symm
