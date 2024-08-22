@@ -247,6 +247,16 @@ theorem Neg.neg.arg_a0.fwdFDeriv_rule (x : X) (f : X → Y) :
 -- HMul.hmul -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+
+@[fun_trans]
+theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule
+    {Y : Type _} [NormedCommRing Y] [NormedAlgebra K Y] :
+    (fwdFDeriv K fun y : Y×Y => y.1 * y.2)
+    =
+    fun y dy =>
+      (y.1 * y.2, y.1 * dy.2 + dy.1 * y.2) := by unfold fwdFDeriv; fun_trans
+
+
 @[fun_trans]
 theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule_at (x : X) (f g : X → K)
     (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) :
