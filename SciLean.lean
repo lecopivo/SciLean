@@ -16,9 +16,10 @@ import SciLean.Analysis.Calculus.FwdFDeriv
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
 import SciLean.Analysis.Calculus.Jacobian
-import SciLean.Analysis.Calculus.Monad.FwdCDerivMonad
+import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
+import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
 import SciLean.Analysis.Calculus.Monad.Id
-import SciLean.Analysis.Calculus.Monad.RevCDerivMonad
+import SciLean.Analysis.Calculus.Monad.RevFDerivMonad
 import SciLean.Analysis.Calculus.Monad.StateT
 import SciLean.Analysis.Calculus.Notation.Deriv
 import SciLean.Analysis.Calculus.Notation.FwdDeriv

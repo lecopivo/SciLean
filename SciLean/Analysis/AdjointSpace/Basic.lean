@@ -263,6 +263,18 @@ instance : AdjointSpace 𝕜 𝕜 where
   add_left := by simp[add_mul]
   smul_left := by simp[mul_assoc]
 
+instance : Inner 𝕜 Unit where
+  inner _ _ := 0
+
+instance : AdjointSpace 𝕜 Unit where
+  inner_top_equiv_norm := by
+    apply Exists.intro 1
+    apply Exists.intro 1
+    simp[Inner.inner]
+  conj_symm := by simp[Inner.inner]
+  add_left := by simp[Inner.inner]
+  smul_left := by simp[Inner.inner]
+
 instance : AdjointSpace 𝕜 (X×Y) where
   inner := fun (x,y) (x',y') => ⟪x,x'⟫_𝕜 + ⟪y,y'⟫_𝕜
   inner_top_equiv_norm := by

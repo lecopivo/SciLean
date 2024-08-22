@@ -1,5 +1,5 @@
-import SciLean.Analysis.Calculus.Monad.FwdCDerivMonad
-import SciLean.Analysis.Calculus.Monad.RevCDerivMonad
+import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
+import SciLean.Analysis.Calculus.Monad.RevFDerivMonad
 
 namespace SciLean
 
@@ -35,126 +35,70 @@ instance : Coe (Id' X) X := ⟨fun x => x.run⟩
 instance : Coe X (Id' X) := ⟨fun x => pure x⟩
 
 variable
-  {K : Type _} [RCLike K]
+  {K : Type} [RCLike K]
+
+instance : DifferentiableMonad K Id' where
+  DifferentiableM f := Differentiable K (fun x => (f x).run)
+  DifferentiableM_pure := by simp[pure]
+  DifferentiableM_bind := by intros; simp[bind]; sorry_proof
+  DifferentiableM_pair y := by intros; simp[bind,pure]; fun_prop
 
 noncomputable
-instance : FwdCDerivMonad K Id' Id' where
-  fwdCDerivM f := fun x dx => pure (fwdCDeriv K (fun x => (f x).run) x dx)
-  CDifferentiableM f := CDifferentiable K (fun x => (f x).run)
-  fwdCDerivM_pure f := by simp[pure]
-  fwdCDerivM_bind := by simp[Id',Bind.bind]; sorry_proof
-  fwdCDerivM_pair y := by intros; simp; sorry_proof
-  CDifferentiableM_pure := by simp[pure]
-  CDifferentiableM_bind := by intros; simp[bind]; sorry_proof
-  CDifferentiableM_pair y := by intros; simp[bind,pure]; fun_prop
-
+instance : FwdFDerivMonad K Id' Id' where
+  fwdFDerivM f := fun x dx => pure (fwdFDeriv K (fun x => (f x).run) x dx)
+  fwdFDerivM_pure f := by simp[pure]
+  fwdFDerivM_bind := by simp[Id',Bind.bind]; sorry_proof
+  fwdFDerivM_pair y := by intros; simp; sorry_proof
 
 noncomputable
-instance : RevCDerivMonad K Id' Id' where
-  revCDerivM f := fun x =>
-    let ydf := revCDeriv K (fun x => (f x).run) x
-    pure ((ydf.1, fun dy => pure (ydf.2 dy)))
-  HasAdjDiffM f := HasAdjDiff K (fun x => (f x).run)
-  revCDerivM_pure f := by intros; funext; simp[pure,revCDeriv]
-  revCDerivM_bind := by intros; simp; sorry_proof
-  revCDerivM_pair y := by intros; simp[Bind.bind]; funext x; sorry_proof
-  HasAdjDiffM_pure := by simp[pure]
-  HasAdjDiffM_bind := by intros; simp[bind]; sorry_proof
-  HasAdjDiffM_pair y := by intros; simp[bind, pure]; fun_prop
-
+instance : RevFDerivMonad K Id' Id' where
+  revFDerivM f := fun x =>
+    let ydf := revFDeriv K (fun x => (f x).run) x
+    pure (ydf.1, fun dy => pure (ydf.2 dy))
+  revFDerivM_pure f := by simp[pure]
+  revFDerivM_bind := by simp[Id',Bind.bind]; sorry_proof
+  revFDerivM_pair y := by intros; simp; sorry_proof
 
 end SciLean
 open SciLean
 
 
-section OnVec
+section OnNormedSpace
 
 variable
-  {K : Type _} [RCLike K]
-  {X : Type} [Vec K X]
-  {Y : Type} [Vec K Y]
-  {Z : Type} [Vec K Z]
-  {E : ι → Type _} [∀ i, Vec K (E i)]
+  {K : Type} [RCLike K]
+  {X : Type} [NormedAddCommGroup X] [NormedSpace K X]
+  {Y : Type} [NormedAddCommGroup Y] [NormedSpace K Y]
+  {Z : Type} [NormedAddCommGroup Z] [NormedSpace K Z]
 
 @[fun_prop]
-theorem Id'.run.arg_x.CDifferentiable_rule
-  (a : X → Id' Y) (ha : CDifferentiableM K a)
-  : CDifferentiable K (fun x => Id'.run (a x)) := ha
+theorem Id'.run.arg_x.Differentiable_rule
+    (a : X → Id' Y) (ha : DifferentiableM K a) :
+    Differentiable K (fun x => Id'.run (a x)) := ha
 
 @[fun_trans]
-theorem Id'.run.arg_x.fwdCDeriv_rule (a : X → Id' Y)
-  : fwdCDeriv K (fun x => Id'.run (a x))
+theorem Id'.run.arg_x.fwdFDeriv_rule (a : X → Id' Y) :
+    fwdFDeriv K (fun x => Id'.run (a x))
     =
-    fun x dx => (fwdCDerivM K a x dx).run := by rfl
+    fun x dx => (fwdFDerivM K a x dx).run := by rfl
 
-end OnVec
+end OnNormedSpace
 
-section OnSemiInnerProductSpace
+section OnAdjointSpace
 
 variable
-  {K : Type _} [RCLike K]
-  {X : Type} [SemiInnerProductSpace K X]
-  {Y : Type} [SemiInnerProductSpace K Y]
-  {Z : Type} [SemiInnerProductSpace K Z]
-  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
-
-
-@[fun_prop]
-theorem Id'.run.arg_x.HasAdjDiff_rule
-  (a : X → Id' Y) (ha : HasAdjDiffM K a)
-  : HasAdjDiff K (fun x => Id'.run (a x)) := ha
-
+  {K : Type} [RCLike K]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
 
 @[fun_trans]
-theorem Id'.run.arg_x.revCDeriv_rule (a : X → Id' Y)
-  : revCDeriv K (fun x => Id'.run (a x))
+theorem Id'.run.arg_x.revFDeriv_rule (a : X → Id' Y) :
+    revFDeriv K (fun x => Id'.run (a x))
     =
     fun x =>
-      let ydf := (revCDerivM K a x).run
-      (ydf.1, fun dy => (ydf.2 dy).run) := by rfl
+      let xda := (revFDerivM K a x).run
+      (xda.1,
+       fun dy => (xda.2 dy).run) := by rfl
 
-
-@[fun_prop]
-theorem Pure.pure.arg_a0.HasAdjDiff_rule
-    (a0 : X → Y) (ha0 : HasAdjDiff K a0) :
-    HasAdjDiffM K (fun x => Pure.pure (f:=Id') (a0 x)) := by
-  simp[Pure.pure,HasAdjDiffM]; fun_prop
-
-
-@[fun_trans]
-theorem Pure.pure.arg_a0.fwdCDeriv_rule
-    (a0 : X → Y) :
-    fwdCDerivM K (fun x => Pure.pure (f:=Id') (a0 x))
-    =
-    fun x dx =>
-      let ydy := fwdCDeriv K a0 x dx
-      pure ydy := by rfl
-
-
-@[fun_prop]
-theorem Bind.bind.arg_a0a1.HasAdjDiff_rule_on_Id'
-    (a0 : X → Y) (a1 : X → Y → Z)
-    (ha0 : HasAdjDiff K a0) (ha1 : HasAdjDiff K (fun (x,y) => a1 x y)) :
-    HasAdjDiffM K (fun x => Bind.bind (m:=Id') ⟨a0 x⟩ (fun y => ⟨a1 x y⟩)) := by
-  simp[Bind.bind,HasAdjDiffM]; fun_prop
-
-
-@[fun_trans]
-theorem Bind.bind.arg_a0a1.revCDerivM_rule_on_Id'
-    (a0 : X → Y) (a1 : X → Y → Z)
-    (ha0 : HasAdjDiff K a0) (ha1 : HasAdjDiff K (fun (x,y) => a1 x y)) :
-    (revCDerivM (m:=Id') K (fun x => Bind.bind ⟨a0 x⟩ (fun y => ⟨a1 x y⟩)))
-    =
-    fun x =>
-      let ydg' := revCDeriv K a0 x
-      let zdf' := revCDeriv K (fun (x,y) => a1 x y) (x,ydg'.1)
-      ⟨(zdf'.1,
-       fun dz' =>
-         let dxy' := zdf'.2 dz'
-         let dx' := ydg'.2 dxy'.2
-         ⟨dxy'.1 + dx'⟩)⟩ := by
-  simp[revCDerivM,Bind.bind]; fun_trans; simp[revCDeriv,revCDerivUpdate]; sorry_proof
-
-
-
-end OnSemiInnerProductSpace
+end OnAdjointSpace
