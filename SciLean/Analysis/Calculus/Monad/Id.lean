@@ -31,6 +31,9 @@ instance : LawfulMonad Id' where
   pure_bind := by aesop
   bind_assoc := by aesop
 
+@[simp, simp_core]
+theorem Id'.run_pure {α} (a : α) : (pure a : Id' α).run = a := by rfl
+
 instance : Coe (Id' X) X := ⟨fun x => x.run⟩
 instance : Coe X (Id' X) := ⟨fun x => pure x⟩
 
