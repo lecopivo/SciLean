@@ -127,13 +127,13 @@ def_fun_prop with_transitive :
 theorem cos.arg_x.fderiv_rule :
     fderiv C (fun x : C => cos x)
     =
-    fun x => fun dx =>L[C] - dx * cos x := sorry_proof
+    fun x => fun dx =>L[C] - dx * sin x := sorry_proof
 
 @[fun_trans]
 theorem cos.arg_x.fwdFDeriv_rule :
     fwdFDeriv C (fun x : C => cos x)
     =
-    fun x dx => (cos x, - dx * cos x) := by unfold fwdFDeriv; fun_trans
+    fun x dx => (cos x, - dx * sin x) := by unfold fwdFDeriv; fun_trans
 
 @[fun_trans]
 theorem cos.arg_x.revFDeriv_rule :
@@ -142,7 +142,7 @@ theorem cos.arg_x.revFDeriv_rule :
     fun x =>
       (cos x,
        fun dy =>
-         let s := conj cos x
+         let s := conj sin x
          (- s * dy)) := by
   unfold revFDeriv
   fun_trans
@@ -155,13 +155,13 @@ def_fun_prop with_transitive :
 theorem cos.arg_x.cderiv_rule :
     cderiv C (fun x : C => cos x)
     =
-    fun x dx => - dx * cos x := sorry_proof
+    fun x dx => - dx * sin x := sorry_proof
 
 @[fun_trans]
 theorem cos.arg_x.fwdCDeriv_rule :
     fwdCDeriv C (fun x : C => cos x)
     =
-    fun x dx => (cos x, - dx * cos x) := by unfold fwdCDeriv; fun_trans
+    fun x dx => (cos x, - dx * sin x) := by unfold fwdCDeriv; fun_trans
 
 @[fun_trans]
 theorem cos.arg_x.revCDeriv_rule :
@@ -170,7 +170,7 @@ theorem cos.arg_x.revCDeriv_rule :
     fun x =>
       (cos x,
        fun dy =>
-         let s := conj cos x
+         let s := conj sin x
          (- s * dy)) := by
   unfold revCDeriv
   fun_trans
