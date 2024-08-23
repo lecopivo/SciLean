@@ -44,6 +44,12 @@ theorem Norm2.norm2.arg_a0.revFDeriv_rule :
   unfold revFDeriv
   fun_trans [smul_smul]
 
+theorem norm2_nonneg (R) [RealScalar R] {X} [NormedAddCommGroup X] [AdjointSpace R X] (x : X) :
+    0 ≤ ‖x‖₂²[R] := by
+  simp[Norm2.norm2]
+  rw[← AdjointSpace.inner_self_ofReal_re]
+  have := AdjointSpace.inner_self_nonneg (𝕜:=R) (x:=x)
+  sorry_proof
 
 
 --  ‖·‖₂ --------------------------------------------------------------------------------------------
@@ -116,3 +122,8 @@ theorem norm₂.arg_x.revFDeriv_rule (f : U → V) (hf : Differentiable R f) (hf
       let y := ‖ydf.1‖₂[R]
       (y, fun dy => ydf.2 ((y⁻¹ * dy) • ydf.1)) := by
   funext x; fun_trans (disch:=apply hf')
+
+
+theorem norm₂_nonneg (R) [RealScalar R] {X} [NormedAddCommGroup X] [AdjointSpace R X] (x : X) :
+    0 ≤ ‖x‖₂²[R] := by
+  sorry_proof
