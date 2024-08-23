@@ -139,6 +139,7 @@ by
     rw[revFDerivM_bind f (fun x => pure (g x))
          hf (DifferentiableM_pure _ hg)]
     simp[revFDerivM_pure g hg]
+  rfl
 
 @[fun_trans]
 theorem let_rule

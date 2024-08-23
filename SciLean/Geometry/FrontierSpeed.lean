@@ -8,6 +8,7 @@ import SciLean.Tactic.Autodiff
 -- import SciLean.Tactic.GTrans
 
 set_option linter.unusedVariables false
+set_option deprecated.oldSectionVars true
 
 open MeasureTheory Topology Filter FiniteDimensional
 
@@ -144,6 +145,8 @@ theorem closedBall₂.arg_xr.frontierSpeed_rule :
 
   unfold closedBall₂
   funext w dw x
+  conv => autodiff
+  set_option trace.Meta.Tactic.fun_trans true in
   conv => autodiff
   simp[smul_sub]
 

@@ -41,6 +41,12 @@ variable
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 
+-- Basic simp lemmas -----------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[simp, simp_core]
+theorem revFDeriv_fst (f : X → Y) (x : X) : (revFDeriv K f x).1 = f x := by rfl
+
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
