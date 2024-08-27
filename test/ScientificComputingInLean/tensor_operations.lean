@@ -1,5 +1,6 @@
 import SciLean
 import SciLean.Tactic.InferVar
+import Mathlib.Tactic.ProxyType
 
 open SciLean Scalar
 
@@ -10,7 +11,7 @@ open SciLean Scalar
 
 def map {I : Type} [IndexType I] (x : Float^[I]) (f : Float → Float) := Id.run do
   let mut x' := x
-  for i in IndexType.univ I do
+  for i in fullRange I do
     x'[i] := f x'[i]
   return x'
 
@@ -19,29 +20,29 @@ def map {I : Type} [IndexType I] (x : Float^[I]) (f : Float → Float) := Id.run
 #guard_msgs in
 #eval ⊞[1.0,2.0,3.0].mapMono (fun x => sqrt x)
 
-/-- info: ⊞[1.000000, 1.414214, 1.732051, 2.000000] -/
+/-- info: ⊞[1.000000, 1.732051, 1.414214, 2.000000] -/
 #guard_msgs in
 #eval ⊞[1.0,2.0;3.0,4.0].mapMono (fun x => sqrt x)
 
 /-- info: ⊞[0.000000, 1.000000, 1.414214, 1.732051, 2.000000, 2.236068, 2.449490, 2.645751] -/
 #guard_msgs in
-#eval (⊞ (i j k : Fin 2) => (IndexType.toFin (i,j,k)).toFloat).mapMono (fun x => sqrt x)
+#eval (⊞ (i j k : Fin 2) => (IndexType.toFin (i,j,k)).1.toFloat).mapMono (fun x => sqrt x)
 
 /-- info: ⊞[0.000000, 1.000000, 1.414214] -/
 #guard_msgs in
-#eval (0 : Float^[3]) |>.mapIdxMono (fun i _ => i.toFloat) |>.mapMono (fun x => sqrt x)
+#eval (0 : Float^[3]) |>.mapIdxMono (fun i _ => i.1.toFloat) |>.mapMono (fun x => sqrt x)
 
 
 /-- info: 6.000000 -/
 #guard_msgs in
-#eval ⊞[(1.0 : Float),2.0,3.0].fold (·+·) 0
+#eval ⊞[(1.0 : Float),2.0,3.0].foldl (·+·) 0
 
 /-- info: 1.000000 -/
 #guard_msgs in
 #eval ⊞[(1.0 :Float),2.0,3.0].reduce (min · ·)
 
 
-def softMax {I} [IndexType I]
+def softMax {I : Type} [IndexType I]
   (r : Float) (x : Float^[I]) : Float^[I] := Id.run do
   let m := x.reduce (max · ·)
   let x := x.mapMono fun x => x-m
@@ -86,7 +87,7 @@ def trace {n : Nat} (A : Float^[n,n]) :=
 --   ⊞ (i : Fin n) => ∑ j, w[j] * x[i-j]
 
 def Fin.shift {n} (i : Fin n) (j : ℤ) : Fin n :=
-    { val := ((i.1 + j) % n ).toNat, isLt := by sorry_proof }
+    { val := ((Int.ofNat i.1 + j) % n ).toNat, isLt := by sorry_proof }
 
 def conv1d {n : Nat} (k : Nat) (w : Float^[[-k:k]]) (x : Float^[n]) :=
     ⊞ (i : Fin n) => ∑ j, w[j] * x[i.shift j.1]
@@ -163,7 +164,7 @@ info: avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0, 5.0] ⋯ : Float^[2]
 #eval avgPool_v4 ⊞[1.0, 2.0, 3.0, 4.0]
 
 
-variable {I} [IndexType I] [DecidableEq I]
+variable {I : Type} [IndexType I] [DecidableEq I]
 
 def avgPool2d
     (x : Float^[I,n₁,n₂]) {m₁ m₂}
@@ -184,10 +185,10 @@ def avgPool2d
 def dense (n : Nat) (A : Float^[n,I]) (b : Float^[n]) (x : Float^[I]) : Float^[n] :=
   ⊞ (i : Fin n) => b[i] + ∑ j, A[i,j] * x[j]
 
-def SciLean.DataArrayN.resize3 (x : Float^[I]) (a b c : Nat) (h : a*b*c = IndexType.card I) :
+def SciLean.DataArrayN.resize3 (x : Float^[I]) (a b c : Nat) (h : a*b*c = size I) :
     Float^[a,b,c] :=
   { data := x.data ,
-    h_size := by simp[IndexType.card]; rw[← mul_assoc,←x.2,h] }
+    h_size := by simp[Size.size]; rw[← mul_assoc,←x.2,h] }
 
 def nnet := fun (w₁,b₁,w₂,b₂,w₃,b₃) (x : Float^[28,28]) =>
   x |>.resize3 1 28 28 (by decide)
@@ -198,3 +199,56 @@ def nnet := fun (w₁,b₁,w₂,b₂,w₃,b₃) (x : Float^[28,28]) =>
     |>.mapMono (fun x => max x 0)
     |> dense 10 w₃ b₃
     |> softMax 0.1
+
+
+----------------------------------------------------------------------------------------------------
+
+open Set
+
+local instance : VAdd Unit I :=
+  ⟨fun _ i => i⟩
+local instance [VAdd I K] [VAdd J L] : VAdd (I×J) (K×L) :=
+  ⟨fun (i,j) (k,l) => (i+ᵥk, j+ᵥl)⟩
+local instance [VAdd I K] [VAdd J L] : VAdd (I⊕J) (K×L) :=
+  ⟨fun ij (k,l) => match ij with | .inl i => (i+ᵥk, l) | .inr j => (k, j+ᵥl)⟩
+
+
+local instance : VAdd ℤ (Fin n) := ⟨fun i j => ⟨((Int.ofNat j.1 + i)%n).toNat, sorry_proof⟩⟩
+local instance (a b : ℤ) : VAdd (Set.Icc a b) (Fin n) := ⟨fun i j => i.1+ᵥj⟩
+local instance : VAdd (Fin k) (Fin n) := ⟨fun i j => ⟨((j.1 + i.1)%n), sorry_proof⟩⟩
+
+
+inductive hoho | neg | pos
+
+#check proxy_equiv% hoho
+
+
+def IndexType.ofEquiv [IndexType I] [Fintype J] [Size J] (eq : I ≃ J) : IndexType J where
+  next? := sorry
+  toFin := sorry
+  fromFin := sorry
+
+local instance : VAdd Bool (Fin n) :=
+  ⟨fun b i => match b with | false => (-1:ℤ)+ᵥi | true => (1:ℤ)+ᵥi⟩
+
+
+def outerproduct {I J : Type} [IndexType I] [IndexType J] (x : Float^[I]) (y : Float^[J]) :
+    Float^[I,J] :=
+  ⊞ i j => x[i] * y[j]
+
+
+-- ⊞[-1.0,1.0]
+def diff := (⊞ (b : Bool) => match b with | false => -1.0 | true => 1.0)
+def average := ⊞[0.25,0.5,0.25]
+
+#eval outerproduct diff average
+#eval outerproduct average diff
+
+#eval  outerproduct ⊞[-1.0,0,1.0] ⊞[0.25,0.5,0.25]
+#check outerproduct (outerproduct ⊞[0.25,0.5,0.25] ⊞[-1.0,0,1.0]) ⊞[0.25,0.5,0.25]
+
+-- X^[I] × X^[J] ≃ X^[I⊕J]
+-- outerproduct
+-- direcadd
+
+#synth VAdd (Bool × Fin 3) (Fin 10 × Fin 10)

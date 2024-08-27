@@ -65,6 +65,18 @@ instance : IndexType Unit where
   fromFin _ := ()
   next? _ := .none
 
+instance : IndexType Bool where
+  size := 2
+  toFin x := match x with | false => 0 | true => 1
+  fromFin x := match x with | ⟨0,_⟩ => false | ⟨1,_⟩ => true
+  next? s :=
+    match s with
+    | .start r => .some (false, .val false r)
+    | .val val r =>
+      match val with
+      | false => .some (true, .val true r)
+      | true => .none
+
 instance : IndexType (Fin n) where
   size := n
   toFin x := x
@@ -110,6 +122,36 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
         if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
           if let .some a := IndexType.first? α then
             .some ((a,sb.1), .val (a,sb.1) .full)
+          else
+            .none
+        else
+          .none
+
+instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) where
+  size := size α * size β
+  toFin := fun ⟨a,b⟩ => ⟨(IndexType.toFin a).1 + size α * (IndexType.toFin b).1, by sorry_proof⟩
+  fromFin ij :=
+    -- this choice will result in column major matrices
+    let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
+    let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
+    ⟨IndexType.fromFin i, IndexType.fromFin j⟩
+  next? s :=
+    match s with
+    | .start _r =>
+      if let .some a := IndexType.first? α then
+        if let .some b := IndexType.first? β then
+          .some (⟨a,b⟩, .val ⟨a,b⟩ .full) -- todo: split the range somehow
+        else
+          .none
+      else
+        .none
+    | .val ⟨a,b⟩ _r =>
+      if let .some sa := Stream.next? (IndexType.Stream.val a .full) then
+        .some (⟨sa.1,b⟩, .val ⟨sa.1,b⟩ .full)
+      else
+        if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
+          if let .some a := IndexType.first? α then
+            .some (⟨a,sb.1⟩, .val ⟨a,sb.1⟩ .full)
           else
             .none
         else
@@ -311,13 +353,13 @@ theorem reduce_linearize {I X : Type _} [IndexType I] (init : X) (f : I → X) (
 
 
 @[sum_push]
-theorem sum_pair {I X : Type _} [Add X] [Zero X] [IndexType I]
-    (f g : I → X) :
+theorem sum_pair {I X : Type _} [Add X] [Zero X] [Add Y] [Zero Y] [IndexType I]
+    (f : I → X) (g : I → Y) :
     ∑ i, (f i, g i) = (∑ i, f i, ∑ i, g i) := sorry_proof
 
 @[sum_pull]
-theorem pair_sum {I X : Type _} [Add X] [Zero X] [IndexType I]
-    (f g : I → X) :
+theorem pair_sum {I X : Type _} [Add X] [Zero X] [Add Y] [Zero Y] [IndexType I]
+    (f : I → X) (g : I → Y) :
     (∑ i, f i, ∑ i, g i) = ∑ i, (f i, g i) := sorry_proof
 
 
