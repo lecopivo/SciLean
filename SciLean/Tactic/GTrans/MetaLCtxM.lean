@@ -38,6 +38,29 @@ def _root_.Lean.Meta.Context.mkCtxCfg (ctx : ContextCtx) (cfg : ContextCfg) : Me
 
 -- TODO: change the monad such that we can only add variables to the context and not remove them
 --       or completely changes the context
+/-- Similar to `MetaM` but allows modifying local context.
+
+Most imporantly it has a variant of `lambdaTelescope` called `introLet` such that instead of
+```
+lambdaTelescope e fun xs b => do
+  f xs b
+```
+we can call
+```
+let (b,xs) ← lambdaIntro e
+f xs b
+```
+
+For example running `lambdaTelescope` does not work well with for loops but `lambdaIntro` does.
+
+Important functions introducing new free variables to the context:
+  - `lambdaIntro`
+  - `letIntro`
+  - `introLocalDecl`
+  - `introLetDecl`
+
+Also you can run `MetaLCtxM` inside of `MetaM` with `MetaLCtxM.runInMeta`.
+ -/
 abbrev MetaLCtxM  := ReaderT Meta.ContextCfg $ StateT Meta.ContextCtx $ StateRefT Meta.State CoreM
 
 
