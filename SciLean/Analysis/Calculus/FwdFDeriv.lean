@@ -22,7 +22,7 @@ variable {K}
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
-namespace FwdFDeriv
+namespace fwdFDeriv
 
 @[fun_trans]
 theorem id_rule
@@ -115,18 +115,33 @@ theorem pi_rule
   rw[fderiv_pi (h:=by fun_prop)]
   simp
 
-
-open SciLean
-
 -- of linear function ----------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-theorem fwdFDeriv_linear
+theorem linear_rule
   (f : X → Y) (hf : IsContinuousLinearMap K f) :
   fwdFDeriv K f
   =
   fun x dx => (f x, f dx) := by unfold fwdFDeriv; fun_trans
+
+end fwdFDeriv
+
+
+--------------------------------------------------------------------------------
+
+end SciLean
+open SciLean
+
+
+variable
+  {K : Type _} [RCLike K]
+  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
+  {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
+  {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
+  {ι : Type _} [IndexType ι]
+  {E : ι → Type _} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace K (E j)]
+
 
 
 -- Prod.mk ---------------------------------------------------------------------

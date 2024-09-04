@@ -92,8 +92,18 @@ def UniformSpace.ofEquiv {X Y : Type*} [UniformSpace X] [TopologicalSpace Y] (f 
   comp := sorry_proof
   nhds_eq_comap_uniformity := sorry_proof
 
-instance {R X Y : Type*} [RCLike R] [Vec R X] [Vec R Y] : Vec R ((_ : X) × Y) := Vec.mkSorryProofs
+instance {X Y : Type*} [AddCommGroup X] [AddCommGroup Y] : AddCommGroup ((_ : X) × Y) where
+  add_assoc := sorry_proof
+  zero_add := sorry_proof
+  add_zero := sorry_proof
+  nsmul n ⟨x,y⟩ := ⟨n•x, n•y⟩
+  zsmul i ⟨x,y⟩ := ⟨i•x, i•y⟩
+  zsmul := sorry_proof
+  neg_add_cancel := sorry_proof
+  add_comm := sorry_proof
 
+
+instance {R X Y : Type*} [RCLike R] [Vec R X] [Vec R Y] : Vec R ((_ : X) × Y) := Vec.mkSorryProofs
 
 instance {X Y} [Add R] [Inner R X] [Inner R Y] : Inner R ((_ : X) × Y) where
   inner | ⟨x1, y1⟩, ⟨x2, y2⟩ => inner x1 x2 + inner y1 y2
