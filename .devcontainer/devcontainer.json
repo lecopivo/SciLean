@@ -1,0 +1,21 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+  "name": "Lean DevContainer on Ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  "onCreateCommand": "lake exe cache get! && lake build",
+
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+
+  "customizations": {
+    "vscode" : {
+      "extensions" : [
+        "leanprover.lean4",
+        "mhutchie.git-graph"
+      ]
+    }
+  }
+}

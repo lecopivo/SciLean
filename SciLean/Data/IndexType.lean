@@ -5,6 +5,8 @@ import Mathlib.Data.Fintype.Prod
 import Mathlib.Data.Fintype.Sum
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.Order.GroupWithZero.Canonical
+import Mathlib.Tactic.ProxyType
+import Mathlib.Tactic.DeriveFintype
 
 import SciLean.Util.SorryProof
 import SciLean.Tactic.RefinedSimp
@@ -27,6 +29,30 @@ instance (a : List α) : Size a where
 
 inductive IndexType.Range (I : Type u)
   | full
+  -- endpoint
+  -- startpoint
+  -- interval
+
+@[inline]
+def IndexType.Range.ofEquiv (_ : I ≃ J) (i : Range I) : Range J :=
+  match i with
+  | .full => .full
+
+@[inline]
+def IndexType.Range.ofProd (i : Range (I×J)) : Range I × Range J :=
+  match i with
+  | .full => (.full, .full)
+
+@[inline]
+def IndexType.Range.prod (i : Range I) (j : Range J) : Range (I×J) :=
+  match i, j with
+  | .full, .full => .full
+
+@[inline]
+def IndexType.Range.ofSigma (i : Range ((_:I)×J)) : Range I × Range J :=
+  match i with
+  | .full => (.full, .full)
+
 
 inductive IndexType.Stream (I : Type u) where
   /-- Stream for range `range` that has not been started -/
@@ -35,6 +61,48 @@ inductive IndexType.Stream (I : Type u) where
   | val (val : I) (range : Range I)
   -- /-- Stream that has been exhausted -/
   -- | done
+
+@[inline]
+def IndexType.Stream.val! [Inhabited I] (s : Stream I) : I :=
+  match s with
+  | .start _ => panic! "can't take value of start stream!"
+  | .val i _ => i
+
+@[inline]
+def IndexType.Stream.ofEquiv (f : I ≃ J) (i : Stream I) : Stream J :=
+  match i with
+  | .start r => .start (r.ofEquiv f)
+  | .val i r => .val (f i) (r.ofEquiv f)
+
+@[inline]
+def IndexType.Stream.ofProd (i : Stream (I×J)) : Stream I × Stream J :=
+  match i with
+  | .start r =>
+    let (r,s) := r.ofProd
+    (.start r, .start s)
+  | .val (i,j) r =>
+    let (r, s) := r.ofProd
+    (.val i r, .val j s)
+
+@[inline]
+def IndexType.Stream.prod (i : Stream I) (j : Stream J) : Stream (I×J) :=
+  match i, j with
+  | .start ri, .start rj => .start (ri.prod rj)
+  | .start ri, .val _ rj => .start (ri.prod rj)
+  | .val _ ri, .start rj => .start (ri.prod rj)
+  | .val i ri, .val j rj => .val (i,j) (ri.prod rj)
+
+
+@[inline]
+def IndexType.Stream.ofSigma (i : Stream ((_:I)×J)) : Stream I × Stream J :=
+  match i with
+  | .start r =>
+    let (r,s) := r.ofSigma
+    (.start r, .start s)
+  | .val ⟨i,j⟩ r =>
+    let (r, s) := r.ofSigma
+    (.val i r, .val j s)
+
 
 -- This is alternative to LeanColls.IndexType which unfortunatelly has two universe parameters
 -- and because of that it is very difficult to work with.
@@ -50,7 +118,13 @@ def IndexType.first? (I : Type u) [IndexType I] : Option I :=
   else
     .none
 
-
+def IndexType.Range.first? {I : Type u} [IndexType I] (r : Range I) : Option I :=
+  match r with
+  | .full =>
+    if h : size I ≠ 0 then
+      .some (IndexType.fromFin ⟨0, by omega⟩)
+    else
+      .none
 
 
 instance : IndexType Empty where
@@ -64,6 +138,18 @@ instance : IndexType Unit where
   toFin _ := 1
   fromFin _ := ()
   next? _ := .none
+
+instance : IndexType Bool where
+  size := 2
+  toFin x := match x with | false => 0 | true => 1
+  fromFin x := match x with | ⟨0,_⟩ => false | ⟨1,_⟩ => true
+  next? s :=
+    match s with
+    | .start r => .some (false, .val false r)
+    | .val val r =>
+      match val with
+      | false => .some (true, .val true r)
+      | true => .none
 
 instance : IndexType (Fin n) where
   size := n
@@ -95,21 +181,68 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
     (IndexType.fromFin i, IndexType.fromFin j)
   next? s :=
     match s with
+    | .start r =>
+      let (ri, rj) := r.ofProd
+      match ri.first?, rj.first? with
+      | .some i, .some j => .some ((i,j), .val (i,j) r)
+      | _, _ => .none
+    | .val (i,j) r =>
+      let (ri,rj) := r.ofProd
+      let si := IndexType.Stream.val i ri
+      let sj := IndexType.Stream.val j rj
+      match Stream.next? si with
+      | .some (i', si) => .some ((i',j), si.prod sj)
+      | .none =>
+        match ri.first?, Stream.next? sj with
+        | .some i', .some (j', sj) => .some ((i',j'), (IndexType.Stream.val i' ri).prod sj)
+        | _, _ => .none
+    -- match s with
+    -- | .start _r =>
+    --   if let .some a := IndexType.first? α then
+    --     if let .some b := IndexType.first? β then
+    --       .some (⟨a,b⟩, .val ⟨a,b⟩ .full) -- todo: split the range somehow
+    --     else
+    --       .none
+    --   else
+    --     .none
+    -- | .val ⟨a,b⟩ _r =>
+    --   if let .some sa := Stream.next? (IndexType.Stream.val a .full) then
+    --     .some (⟨sa.1,b⟩, .val ⟨sa.1,b⟩ .full)
+    --   else
+    --     if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
+    --       if let .some a := IndexType.first? α then
+    --         .some (⟨a,sb.1⟩, .val ⟨a,sb.1⟩ .full)
+    --       else
+    --         .none
+    --     else
+    --       .none
+
+
+instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) where
+  size := size α * size β
+  toFin := fun ⟨a,b⟩ => ⟨(IndexType.toFin a).1 + size α * (IndexType.toFin b).1, by sorry_proof⟩
+  fromFin ij :=
+    -- this choice will result in column major matrices
+    let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
+    let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
+    ⟨IndexType.fromFin i, IndexType.fromFin j⟩
+  next? s :=
+    match s with
     | .start _r =>
       if let .some a := IndexType.first? α then
         if let .some b := IndexType.first? β then
-          .some ((a,b), .val (a,b) .full) -- todo: split the range somehow
+          .some (⟨a,b⟩, .val ⟨a,b⟩ .full) -- todo: split the range somehow
         else
           .none
       else
         .none
-    | .val (a,b) _r =>
+    | .val ⟨a,b⟩ _r =>
       if let .some sa := Stream.next? (IndexType.Stream.val a .full) then
-        .some ((sa.1,b), .val (sa.1,b) .full)
+        .some (⟨sa.1,b⟩, .val ⟨sa.1,b⟩ .full)
       else
         if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
           if let .some a := IndexType.first? α then
-            .some ((a,sb.1), .val (a,sb.1) .full)
+            .some (⟨a,sb.1⟩, .val ⟨a,sb.1⟩ .full)
           else
             .none
         else
@@ -181,6 +314,33 @@ instance (a b : Int) : IndexType (Icc a b) where
         .some (x, .val x r)
       else
         .none
+
+
+def IndexType.ofEquiv [IndexType I] [Fintype J] (f : I≃J) : IndexType J where
+  size := size I
+  toFin j := toFin (f.symm j)
+  fromFin idx := f (fromFin idx)
+  next? s :=
+    match Stream.next? (s.ofEquiv f.symm) with
+    | .some (i, si) => .some (f i, si.ofEquiv f)
+    | .none => .none
+
+
+open Lean Elab Command
+def mkIndexTypeInstanceHandler (declNames : Array Name) : CommandElabM Bool := do
+  if declNames.size != 1 then
+    return false -- mutually inductive types are not supported
+  let id : Ident := mkIdent declNames[0]!
+  try
+    elabCommand (← `(deriving instance Fintype for $id))
+  catch _ =>
+    pure ()
+
+  elabCommand (← `(instance : IndexType $id := IndexType.ofEquiv (proxy_equiv% $id)))
+  return true
+
+initialize
+  registerDerivingHandler ``IndexType mkIndexTypeInstanceHandler
 
 
 namespace SciLean
@@ -311,13 +471,13 @@ theorem reduce_linearize {I X : Type _} [IndexType I] (init : X) (f : I → X) (
 
 
 @[sum_push]
-theorem sum_pair {I X : Type _} [Add X] [Zero X] [IndexType I]
-    (f g : I → X) :
+theorem sum_pair {I X : Type _} [Add X] [Zero X] [Add Y] [Zero Y] [IndexType I]
+    (f : I → X) (g : I → Y) :
     ∑ i, (f i, g i) = (∑ i, f i, ∑ i, g i) := sorry_proof
 
 @[sum_pull]
-theorem pair_sum {I X : Type _} [Add X] [Zero X] [IndexType I]
-    (f g : I → X) :
+theorem pair_sum {I X : Type _} [Add X] [Zero X] [Add Y] [Zero Y] [IndexType I]
+    (f : I → X) (g : I → Y) :
     (∑ i, f i, ∑ i, g i) = ∑ i, (f i, g i) := sorry_proof
 
 

@@ -20,9 +20,21 @@ namespace SciLean.Tactic.LSimp
 -- Result ------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+
+/-- Result of `lsimp` -/
 structure Result where
+  /-- Result of simplification  -/
   expr : Expr
+  /-- Proof that the result is propositionally equal to the original expression. It is `none` if
+  it is defeq to the original. -/
   proof? : Option Expr := none
+  /-- This array keeps track of the newly introduced free variables that appear in the result.
+  We run `lsimp` in `MetaLCtxM` which allows modifying the local context by adding new free
+  variables.
+
+  See `Result.bindVars` which is a function that takes the result and the proof and binds all
+  these newly introduced free variables such that the result is valid in the original context
+  of the expression we are simplifying. -/
   vars : Array Expr := #[]
   cache          : Bool := true
   deriving Inhabited
