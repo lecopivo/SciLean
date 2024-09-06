@@ -68,7 +68,7 @@
 
 * Differentiability at point
 
-  Try define smoothenss/differentiability at a point. I really want to work with =1/x= without problems and assume that it is differentiable for every =x≠0=.
+  Try define smoothness/differentiability at a point. I really want to work with =1/x= without problems and assume that it is differentiable for every =x≠0=.
   
 * Machine learning
 
@@ -106,13 +106,13 @@
 
   - working with polynomials, differential forms, tensor products
 
-**  Goal is to get isomophisms:
+**  Goal is to get isomorphisms:
     
     𝓟[U×V, K] ≅ 𝓟[U, 𝓟[V, K]]
     
   - Using these isomorphisms we can get polynomial to a form 𝓟[ℝ, K] and on that we can define HornerForm is K has HornerForm
 
-  - In some sense these ismorphisms must be true:
+  - In some sense these isomorphisms must be true:
 
     𝓐[U×V, K] ≅ 𝓐[U, 𝓐[V, K]]
     
@@ -133,7 +133,7 @@
 * Approximating Spaces
 
   - Define abstract interface for a type to approximate another type
-  - will be usefull for creating finite elements, hybrid methods
+  - will be useful for creating finite elements, hybrid methods
     or finite elements
 
 * Manifolds through Quot
