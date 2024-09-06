@@ -472,6 +472,14 @@ def fvarAppCase (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
     if let .some r ← tryTheorems funTransDecl e fData thms then
       return r
 
+    -- unfold let fvar and add new let fvar with its transformation
+    if let .some f ← fData.unfoldHeadFVar? then
+      trace[Meta.Tactic.fun_trans] "unfolding local function {Expr.fvar fvarId} ==> {f}"
+      let r' ← Simp.simp (e.setArg funTransDecl.funArgId f)
+      let fname' := (← fvarId.getUserName).appendAfter "'"
+      let e' := Expr.letE fname' (← inferType r'.expr) r'.expr (.bvar 0) false
+      return .some { expr := e', proof? := r'.proof? }
+
     if let .some r ← applyMorTheorems funTransDecl e fData then
       return r
 
@@ -567,7 +575,7 @@ partial def funTrans (e : Expr) : SimpM Simp.Step := do
     else
       return .continue
 
-  match ← FunProp.getFunctionData? f FunProp.defaultUnfoldPred {zeta:=false} with
+  match ← FunProp.getFunctionData? f FunProp.defaultUnfoldPred {zeta:=false,zetaDelta:=false} with
   | .letE f =>
     trace[Meta.Tactic.fun_trans.step] "let case on {← ppExpr f}"
     let e := e.setArg funTransDecl.funArgId f -- update e with reduced f
