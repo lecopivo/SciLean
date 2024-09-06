@@ -7,6 +7,7 @@ import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.Order.GroupWithZero.Canonical
 import Mathlib.Tactic.ProxyType
 import Mathlib.Tactic.DeriveFintype
+import Mathlib.Tactic.Linarith
 
 import SciLean.Util.SorryProof
 import SciLean.Tactic.RefinedSimp
@@ -21,37 +22,149 @@ class Size {α : Sort u} (a : α) where
 
 export Size (size)
 
-instance (a : Array α) : Size a where
-  size := a.size
-
 instance (a : List α) : Size a where
   size := a.length
 
+instance (a : Array α) : Size a where
+  size := a.size
+
+
+------------------
+
+class FirstLast {α : Sort u} (a : α) (β : outParam (Type v)) where
+  /-- The first and the last element of a value or a type
+
+  This function can be called on values
+  ```
+  firstLast? [1,2,3,4] = .some (1,4)
+  ```
+  and on types
+  ```
+  firstLast? (Fin n) = .some (⟨0,⋯⟩, ⟨n-1,⋯⟩)
+  ```
+  -/
+  firstLast? : Option (β×β)
+
+export FirstLast (firstLast?)
+
+/-- The first element of of a value or a type.
+
+This function can be called on values
+```
+first? [1,2,3,4] = .some 0
+```
+and on types
+```
+first? (Fin n) = .some ⟨0,⋯⟩
+```
+-/
+def first? {α : Sort u} (a : α) [FirstLast a β] : Option β :=
+  match FirstLast.firstLast? a with
+  | .some (a,_) => .some a
+  | .none => .none
+
+
+/-- The last element of of a value or a type.
+
+This function can be called on values
+```
+last? [1,2,3,4] = .some 4
+```
+and on types
+```
+last? (Fin n) = .some ⟨n-1,⋯⟩
+```
+-/
+def last? {α : Sort u} (a : α) [FirstLast a β] : Option β :=
+  match FirstLast.firstLast? a with
+  | .some (_,b) => .some b
+  | .none => .none
+
+
+------------------
+
+
+-- TODO: consider adding reverse versions `revfull` `revinterval
+--       such that `.interval 5 0` is empty and should be represented by `revinterval 5 0`
+--       also interval is closed on both sides
 inductive IndexType.Range (I : Type u)
+  /-- Empty range. -/
+  | empty
+  /-- Range over all elements. -/
   | full
-  -- endpoint
-  -- startpoint
-  -- interval
+  /-- Range starting from `a` and ending with `b` inclusive.
+
+  In case `a` is larger then `b` then this range should run in reverse ordering. -/
+  | interval (a b : I)
+
+/-- Reverse range. -/
+def IndexType.Range.reverse {I : Type u} (r : IndexType.Range I) [FirstLast I I] : IndexType.Range I :=
+  match r with
+  | .empty => empty
+  | .full =>
+    match FirstLast.firstLast? I with
+    | .some (a,b) => .interval b a
+    | .none => .empty
+  | interval a b => .interval b a
 
 @[inline]
-def IndexType.Range.ofEquiv (_ : I ≃ J) (i : Range I) : Range J :=
+def IndexType.Range.ofEquiv (f : I ≃ J) (i : Range I) : Range J :=
   match i with
+  | .empty => .empty
   | .full => .full
+  | .interval a b => .interval (f a) (f b)
+
 
 @[inline]
 def IndexType.Range.ofProd (i : Range (I×J)) : Range I × Range J :=
   match i with
+  | .empty => (.empty, .empty)
   | .full => (.full, .full)
+  | .interval (a,a') (b,b') => (.interval a b, .interval a' b')
 
+open FirstLast in
 @[inline]
-def IndexType.Range.prod (i : Range I) (j : Range J) : Range (I×J) :=
+def IndexType.Range.prod (i : Range I) (j : Range J) [FirstLast I I] [FirstLast J J] : Range (I×J) :=
   match i, j with
+  | .empty, _ => .empty
+  | _, .empty => .empty
   | .full, .full => .full
+  | .interval a b, .interval a' b' => .interval (a,a') (b,b')
+  | .interval a b, .full =>
+    match firstLast? J with
+    | .some (a',b') => .interval (a,a') (b,b')
+    | .none => .empty
+  | .full, .interval a' b' =>
+    match firstLast? I with
+    | .some (a,b) => .interval (a,a') (b,b')
+    | .none => .empty
+
 
 @[inline]
 def IndexType.Range.ofSigma (i : Range ((_:I)×J)) : Range I × Range J :=
   match i with
+  | .empty => (.empty, .empty)
   | .full => (.full, .full)
+  | .interval ⟨a,a'⟩ ⟨b,b'⟩ => (.interval a b, .interval a' b')
+
+
+open FirstLast in
+@[inline]
+def IndexType.Range.sprod (i : Range I) (j : Range J) [FirstLast I I] [FirstLast J J] : Range ((_:I)×J) :=
+  match i, j with
+  | .empty, _ => .empty
+  | _, .empty => .empty
+  | .full, .full => .full
+  | .interval a b, .interval a' b' => .interval ⟨a,a'⟩ ⟨b,b'⟩
+  | .interval a b, .full =>
+    match firstLast? J with
+    | .some (a',b') => .interval ⟨a,a'⟩ ⟨b,b'⟩
+    | .none => .empty
+  | .full, .interval a' b' =>
+    match firstLast? I with
+    | .some (a,b) => .interval ⟨a,a'⟩ ⟨b,b'⟩
+    | .none => .empty
+
 
 
 inductive IndexType.Stream (I : Type u) where
@@ -85,7 +198,7 @@ def IndexType.Stream.ofProd (i : Stream (I×J)) : Stream I × Stream J :=
     (.val i r, .val j s)
 
 @[inline]
-def IndexType.Stream.prod (i : Stream I) (j : Stream J) : Stream (I×J) :=
+def IndexType.Stream.prod (i : Stream I) (j : Stream J) [FirstLast I I] [FirstLast J J] : Stream (I×J) :=
   match i, j with
   | .start ri, .start rj => .start (ri.prod rj)
   | .start ri, .val _ rj => .start (ri.prod rj)
@@ -104,27 +217,33 @@ def IndexType.Stream.ofSigma (i : Stream ((_:I)×J)) : Stream I × Stream J :=
     (.val i r, .val j s)
 
 
+@[inline]
+def IndexType.Stream.sprod (i : Stream I) (j : Stream J) [FirstLast I I] [FirstLast J J] :
+    Stream ((_:I)×J) :=
+  match i, j with
+  | .start ri, .start rj => .start (ri.sprod rj)
+  | .start ri, .val _ rj => .start (ri.sprod rj)
+  | .val _ ri, .start rj => .start (ri.sprod rj)
+  | .val i ri, .val j rj => .val ⟨i,j⟩ (ri.sprod rj)
+
+
+
 -- This is alternative to LeanColls.IndexType which unfortunatelly has two universe parameters
 -- and because of that it is very difficult to work with.
-class IndexType (I : Type u) extends Fintype I, Stream (IndexType.Stream I) I, Size I where
+class IndexType (I : Type u) extends Fintype I, Stream (IndexType.Stream I) I, Size I, FirstLast I I where
   toFin : I → Fin size
   fromFin : Fin size → I
+  -- TODO: add bunch of coherence conditions between differente fields
 
 def fullRange (I : Type u) [IndexType I] : IndexType.Stream I := .start .full
 
-def IndexType.first? (I : Type u) [IndexType I] : Option I :=
-  if h : size I ≠ 0 then
-    .some (IndexType.fromFin ⟨0, by omega⟩)
-  else
-    .none
+-- def IndexType.first? (I : Type u) [IndexType I] : Option I := SciLean.first? I
 
-def IndexType.Range.first? {I : Type u} [IndexType I] (r : Range I) : Option I :=
+instance [FirstLast I I] (r : IndexType.Range I) : FirstLast r I :=
   match r with
-  | .full =>
-    if h : size I ≠ 0 then
-      .some (IndexType.fromFin ⟨0, by omega⟩)
-    else
-      .none
+  | .empty => ⟨.none⟩
+  | .full => ⟨FirstLast.firstLast? I⟩
+  | .interval a b => ⟨.some (a,b)⟩
 
 
 instance : IndexType Empty where
@@ -132,43 +251,87 @@ instance : IndexType Empty where
   toFin x := Empty.elim x
   fromFin i := by have := i.2; simp_all only [Nat.not_lt_zero]
   next? _ := .none
+  firstLast? := .none
+
 
 instance : IndexType Unit where
   size := 1
   toFin _ := 1
   fromFin _ := ()
   next? _ := .none
+  firstLast? := .some ((),())
+
 
 instance : IndexType Bool where
   size := 2
   toFin x := match x with | false => 0 | true => 1
   fromFin x := match x with | ⟨0,_⟩ => false | ⟨1,_⟩ => true
+  firstLast? := .some (false, true)
   next? s :=
     match s with
-    | .start r => .some (false, .val false r)
+    | .start r =>
+      match r with
+      | .empty => none
+      | .full => .some (false, .val false r)
+      | .interval a _ => .some (a, .val a r)
+
     | .val val r =>
-      match val with
-      | false => .some (true, .val true r)
-      | true => .none
+      match r, val with
+      | .empty, _ => .none
+      | .full, false => .some (true, .val true r)
+      | .full, true => .none
+      | .interval a b, x =>
+        if a = b
+        then .none
+        else if x = a
+             then .some (b, .val b r)
+             else .none
+
 
 instance : IndexType (Fin n) where
   size := n
   toFin x := x
   fromFin x := x
+  firstLast? :=
+    if h : n ≠ 0 then
+      .some (⟨0, by omega⟩, ⟨n-1,by omega⟩)
+    else
+      .none
   next? s :=
     match s with
     | .start r =>
-      if h : n ≠ 0 then
-        let x : Fin n := ⟨0, by omega⟩
-        .some (x, .val x r)
-      else
-        .none
+      match r with
+      | .empty => none
+      | .full =>
+        if h : n ≠ 0 then
+          let x : Fin n := ⟨0, by omega⟩
+          .some (x, .val x r)
+        else
+          .none
+      | .interval a _ => .some (a, .val a r)
+
     | .val val r =>
-      if h : val.1 + 1 < n then
-        let x := ⟨val.1+1,by omega⟩
-        .some (x, .val x r)
-      else
-        .none
+      match r with
+      | .empty => .none
+      | .full =>
+        if h : val.1 + 1 < n then
+          let x := ⟨val.1+1,by omega⟩
+          .some (x, .val x r)
+        else
+          .none
+      | .interval a b =>
+        if a.1 ≤ b.1 then
+          if h : val.1 + 1 ≤ b.1 then
+            let x := ⟨val.1+1,by omega⟩
+            .some (x, .val x r)
+          else
+            .none
+        else
+          if h : b.1 + 1 ≤ val.1 then
+            let x := ⟨val.1-1,by omega⟩
+            .some (x, .val x r)
+          else
+            .none
 
 
 instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
@@ -179,11 +342,15 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
     let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
     let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
     (IndexType.fromFin i, IndexType.fromFin j)
+  firstLast? :=
+    match FirstLast.firstLast? α, FirstLast.firstLast? β with
+    | .some (a,a'), .some (b,b') => .some ((a,b),(a',b'))
+    | _, _ => .none
   next? s :=
     match s with
     | .start r =>
       let (ri, rj) := r.ofProd
-      match ri.first?, rj.first? with
+      match first? ri, first? rj with
       | .some i, .some j => .some ((i,j), .val (i,j) r)
       | _, _ => .none
     | .val (i,j) r =>
@@ -193,29 +360,9 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
       match Stream.next? si with
       | .some (i', si) => .some ((i',j), si.prod sj)
       | .none =>
-        match ri.first?, Stream.next? sj with
+        match first? ri, Stream.next? sj with
         | .some i', .some (j', sj) => .some ((i',j'), (IndexType.Stream.val i' ri).prod sj)
         | _, _ => .none
-    -- match s with
-    -- | .start _r =>
-    --   if let .some a := IndexType.first? α then
-    --     if let .some b := IndexType.first? β then
-    --       .some (⟨a,b⟩, .val ⟨a,b⟩ .full) -- todo: split the range somehow
-    --     else
-    --       .none
-    --   else
-    --     .none
-    -- | .val ⟨a,b⟩ _r =>
-    --   if let .some sa := Stream.next? (IndexType.Stream.val a .full) then
-    --     .some (⟨sa.1,b⟩, .val ⟨sa.1,b⟩ .full)
-    --   else
-    --     if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
-    --       if let .some a := IndexType.first? α then
-    --         .some (⟨a,sb.1⟩, .val ⟨a,sb.1⟩ .full)
-    --       else
-    --         .none
-    --     else
-    --       .none
 
 
 instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) where
@@ -226,27 +373,58 @@ instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) wher
     let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
     let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
     ⟨IndexType.fromFin i, IndexType.fromFin j⟩
+  firstLast? :=
+    match FirstLast.firstLast? α, FirstLast.firstLast? β with
+    | .some (a,a'), .some (b,b') => .some (⟨a,b⟩,⟨a',b'⟩)
+    | _, _ => .none
   next? s :=
     match s with
-    | .start _r =>
-      if let .some a := IndexType.first? α then
-        if let .some b := IndexType.first? β then
-          .some (⟨a,b⟩, .val ⟨a,b⟩ .full) -- todo: split the range somehow
-        else
-          .none
-      else
-        .none
-    | .val ⟨a,b⟩ _r =>
-      if let .some sa := Stream.next? (IndexType.Stream.val a .full) then
-        .some (⟨sa.1,b⟩, .val ⟨sa.1,b⟩ .full)
-      else
-        if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
-          if let .some a := IndexType.first? α then
-            .some (⟨a,sb.1⟩, .val ⟨a,sb.1⟩ .full)
-          else
-            .none
-        else
-          .none
+    | .start r =>
+      let (ri, rj) := r.ofSigma
+      match first? ri, first? rj with
+      | .some i, .some j => .some (⟨i,j⟩, .val ⟨i,j⟩ r)
+      | _, _ => .none
+    | .val ⟨i,j⟩ r =>
+      let (ri,rj) := r.ofSigma
+      let si := IndexType.Stream.val i ri
+      let sj := IndexType.Stream.val j rj
+      match Stream.next? si with
+      | .some (i', si) => .some (⟨i',j⟩, si.sprod sj)
+      | .none =>
+        match first? ri, Stream.next? sj with
+        | .some i', .some (j', sj) => .some (⟨i',j'⟩, (IndexType.Stream.val i' ri).sprod sj)
+        | _, _ => .none
+
+
+def IndexType.Range.ofSum [FirstLast α α] [FirstLast β β] (r : Range (α ⊕ β)) :
+    (Range α × Range β) ⊕ (Range β × Range α) :=
+  match r with
+  | .empty => .inl (.empty, .empty)
+  | .full => .inl (.full, .full)
+  | .interval (.inl a) (.inl a') => .inl (.interval a a', .empty)
+  | .interval (.inr b) (.inr b') => .inl (.empty, .interval b b')
+  | .interval (.inl a) (.inr b') =>
+    let a' := last? α |>.getD a
+    let b := first? β |>.getD b'
+    .inl (.interval a a', .interval b b')
+  | .interval (.inr b) (.inl a') =>
+    let a := last? α |>.getD a'
+    let b' := first? β |>.getD b
+    .inr (.interval b b', .interval a a')
+
+instance {α β} [FirstLast α α] [FirstLast β β] : FirstLast (α ⊕ β) (α ⊕ β) where
+  firstLast? :=
+    match FirstLast.firstLast? α, FirstLast.firstLast? β with
+    | .some (a,_), .some (_,b') => .some (.inl a, .inr b')
+    | .some (a,a'), .none => .some (.inl a, .inl a')
+    | .none, .some (b,b') => .some (.inr b, .inr b')
+    | .none, .none => .none
+
+
+-- todo: implement this and provide a better implementation of the following instance
+def IndexType.Stream.ofSum [FirstLast α α] [FirstLast β β] (s : Stream (α ⊕ β)) :
+    ((Stream α × Range β)) ⊕ ((Stream β × Range α)) := sorry
+
 
 instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
   size := size α + size β
@@ -260,39 +438,38 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
     else
       .inr (IndexType.fromFin ⟨ij.1 - size α, sorry_proof⟩)
   next? s :=
+    -- there has to be a better implementation of this ...
+    -- we should somehow use `IndexType.Stream.ofSum` and then combine them back together
     match s with
-    | .start _r =>
-      if let .some a := IndexType.first? α then
-        .some (.inl a, .val (.inl a) .full)
-      else
-        if let .some b := IndexType.first? β then
-          .some (.inr b, .val (.inr b) .full)
-        else
-          .none
-    | .val x _r =>
-      match x with
-      | .inl a =>
-        if let .some sa := Stream.next? (IndexType.Stream.val a .full) then
-          .some (.inl sa.1, .val (.inl sa.1) .full)
-        else
-          if let .some b := IndexType.first? β  then
-            .some (.inr b, .val (.inr b) .full)
-          else
-            .none
-      | .inr b =>
-        if let .some sb := Stream.next? (IndexType.Stream.val b .full) then
-          .some (.inr sb.1, .val (.inr sb.1) .full)
-        else
-          .none
+    | .start r =>
+      match first? r with
+      | .some x => .some (x, .val x r)
+      | .none => .none
+    | .val x r =>
+      match x, r.ofSum with
+      | .inl a, .inl (ra, rb) =>
+        match Stream.next? (IndexType.Stream.val a ra) with
+        | .some (a',_) => .some (.inl a', .val (.inl a') r)
+        | .none =>
+          match first? rb with
+          | .some b' => .some (.inr b', .val (.inr b') r)
+          | .none => .none
+      | .inr b, .inl (_, rb) =>
+        match Stream.next? (IndexType.Stream.val b rb) with
+        | .some (b',_) => .some (.inr b', .val (.inr b') r)
+        | .none => .none
+      | .inl a, .inr (_, ra) =>
+        match Stream.next? (IndexType.Stream.val a ra) with
+        | .some (a',_) => .some (.inl a', .val (.inl a') r)
+        | .none => .none
+      | .inr b, .inr (rb, ra) =>
+        match Stream.next? (IndexType.Stream.val b rb) with
+        | .some (b',_) => .some (.inr b', .val (.inr b') r)
+        | .none =>
+          match first? ra with
+          | .some a' => .some (.inl a', .val (.inl a') r)
+          | .none => .none
 
--- todo: if we want to have instances like `IndexType (Fin 4 → Fin 10)` then
---       `IndexType.Stream (Fin 4 → Fin 10)` should not hold element of `Fin 4 → Fin 10` but some
---       kind of array holding all the values
--- instance {α β} [IndexType α] [IndexType β] : IndexType (α → β) where
---   size := size β ^ size α
---   toFin := sorry
---   fromFin := sorry
---   next? := sorry
 
 instance (a b : Int) : IndexType (Icc a b) where
   size := ((b + 1) - a).toNat
@@ -301,25 +478,59 @@ instance (a b : Int) : IndexType (Icc a b) where
       cases i; case mk i lt =>
         simp at lt ⊢; simp (disch:=aesop) only [Int.toNat_of_nonneg, sub_lt_sub_iff_right]; omega⟩
   fromFin i := ⟨a + i.1, by cases i; case mk i lt => simp at lt ⊢; omega⟩
+  firstLast? :=
+    if h :a ≤ b then
+      .some (⟨a,by simpa⟩,⟨b, by simpa⟩)
+    else
+      .none
   next? s :=
     match s with
     | .start r =>
-      if h : a ≤ b then
-        .some (⟨a, by simpa⟩, .val ⟨a, by simpa⟩ r)
-      else
-        .none
-    | .val x r =>
-      if h : x.1 + 1 ≤ b then
-        let x := ⟨x.1+1,by simp; constructor; sorry_proof; omega⟩
-        .some (x, .val x r)
-      else
-        .none
+      match r with
+      | .empty => none
+      | .full =>
+        if h : a ≤ b then
+          let x : Icc a b := ⟨a, by simpa⟩
+          .some (x, .val x r)
+        else
+          .none
+      | .interval a' _ => .some (a', .val a' r)
+
+    | .val val r =>
+      match r with
+      | .empty => .none
+      | .full =>
+        if h : val.1 + 1 ≤ b then
+          have := val.2
+          let x := ⟨val.1+1,by simp_all; omega⟩
+          .some (x, .val x r)
+        else
+          .none
+      | .interval c d =>
+        if _ : c.1 ≤ d.1 then
+          if h : val.1 + 1 ≤ b then
+            have := val.2
+            let x := ⟨val.1+1,by simp_all; omega⟩
+            .some (x, .val x r)
+          else
+            .none
+        else
+          if h : d.1 + 1 ≤ val.1 then
+            have := val.2; have := c.2;  have := d.2
+            let x := ⟨val.1-1,by simp_all; omega⟩
+            .some (x, .val x r)
+          else
+            .none
 
 
 def IndexType.ofEquiv [IndexType I] [Fintype J] (f : I≃J) : IndexType J where
   size := size I
   toFin j := toFin (f.symm j)
   fromFin idx := f (fromFin idx)
+  firstLast? :=
+    match FirstLast.firstLast? I with
+    | .some (a,b) => .some (f a, f b)
+    | .none => none
   next? s :=
     match Stream.next? (s.ofEquiv f.symm) with
     | .some (i, si) => .some (f i, si.ofEquiv f)
@@ -394,7 +605,7 @@ def foldl (op : α → ι → α) (init : α) : α := Id.run do
   foldlM op init
 
 def reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (default : α) : m α := do
-  if let .some i := IndexType.first? ι then
+  if let .some i := first? ι then
     let mut a := f i
     for h : i in [1:size ι] do
       have := h.1
@@ -405,7 +616,7 @@ def reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (default : 
     return default
 
 def reduceD (f : ι → α) (op : α → α → α) (default : α) : α := Id.run do
-  if let .some i := IndexType.first? ι then
+  if let .some i := first? ι then
     let mut a := f i
     for h : i in [1:size ι] do
       have := h.1
