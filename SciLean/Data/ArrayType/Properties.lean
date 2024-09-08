@@ -160,6 +160,8 @@ theorem ArrayType.modify.arg_contf.IsContinuousLinearMap_rule
   --       bacause of this reason it can't apply `IsContinuousLinearMap.continuous`
   sorry_proof
 
+-- TODO: add Differentiable, ContDiff for `modify` function
+
 end OnNormedSpaces
 
 section OnVec

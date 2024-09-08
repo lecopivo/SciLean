@@ -1,3 +1,12 @@
+import SciLean.Data.IndexType.Basic
+import SciLean.Data.IndexType.Init
+import SciLean.Data.IndexType.Operations
+import SciLean.Data.IndexType.Range
+import SciLean.Data.IndexType.Iterator
+import SciLean.Data.IndexType.SumProduct
+
+#exit
+
 import Mathlib.Order.Interval.Finset.Fin
 import Mathlib.Data.Int.Interval
 import Mathlib.Data.Fintype.Pi
