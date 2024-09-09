@@ -1,9 +1,12 @@
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Data.IndexType.Operations
+import SciLean.Tactic.Autodiff
 
 import SciLean.Meta.GenerateAddGroupHomSimp
 import SciLean.Meta.GenerateFunProp
+
+import SciLean.Analysis.Scalar.FloatAsReal
 
 set_option linter.unusedVariables false
 
@@ -159,9 +162,10 @@ theorem IndexType.Range.foldl.arg_init.adjoint_rule (r : Range I)
 
 variable [CompleteSpace W] [CompleteSpace X]
 
---- There are multiple version of this
-@[fun_trans]
-theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule (r : Range I)
+
+/-- Reverse derivative of fold - version storing closures for every step. -/
+-- @[fun_trans]
+theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_closures (r : Range I)
     (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
     (init : W → X) (hinit : Differentiable R init) :
     revFDeriv R (fun w => r.foldl (op w) (init w))
@@ -172,8 +176,55 @@ theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule (r : Range I)
         let (x, dop) := revFDeriv R (fun (w,x) => op w x i) (w,x)
         (dops.push dop, x)) ((#[] : Array (X → W×X)), idi.1)
       (x, fun dx =>
-        let (dw,dx) := dops.foldl (fun (dw,dx) df =>
+        let (dw,dx) := dops.foldr (fun df (dw,dx) =>
           let (dw', dx) := df dx
           (dw + dw', dx)) (0, dx)
         let dw' := idi.2 dx
-        dw + dw') := sorry
+        dw + dw') := sorry_proof
+
+
+
+/-- Reverse derivative of fold - version storing every point -/
+@[fun_trans]
+theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule (r : Range I)
+    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
+    (init : W → X) (hinit : Differentiable R init) :
+    revFDeriv R (fun w => r.foldl (op w) (init w))
+    =
+    fun w =>
+      let idi := revFDeriv R init w
+      let xsx := r.foldl (fun (xs,x) i =>
+        let xs := xs.push (x,i)
+        let x := op w x i
+        (xs,x)) ((#[] : Array (X×I)), idi.1)
+      let xs := xsx.1
+      let x := xsx.2
+      (x, fun dx =>
+        let dwx := xs.foldr (fun (x,i) (dw,dx) =>
+          let dwx := (revFDeriv R (fun (w,x) => op w x i) (w,x)).2 dx
+          (dw + dwx.1, dwx.2)) (0, dx)
+        let dw' := idi.2 dwx.2
+        dwx.1 + dw') := sorry_proof
+
+
+/-- Reverse derivative of fold - version with linear operation, we do not need to store
+values of the forward pass. -/
+@[fun_trans]
+theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_linear (r : Range I)
+    (op : W → X → I → X) (hop : ∀ i, IsContinuousLinearMap R (fun (w,x) => op w x i))
+    (init : W → X) (hinit : Differentiable R init) :
+    revFDeriv R (fun w => r.foldl (op w) (init w))
+    =
+    fun w =>
+      let idi := revFDeriv R init w
+      let x := r.foldl (fun x i =>
+        let x := op w x i
+        x) idi.1
+      (x, fun dx =>
+        let dwx := r.reverse.foldl (fun (dw,dx) i =>
+          let dwx := (revFDeriv R (fun (w,x) => op w x i) (w,0)).2 dx
+          (dw + dwx.1, dwx.2)) (0, dx)
+        let dw' := idi.2 dwx.2
+        dwx.1 + dw') := sorry_proof
+
+-- TODO: add checkpointing version

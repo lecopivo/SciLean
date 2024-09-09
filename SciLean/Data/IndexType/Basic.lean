@@ -14,6 +14,8 @@ class IndexType (I : Type u)
 where
   toFin : I → Fin size
   fromFin : Fin size → I
+  /-- Number of elements in a given range -/
+  rangeSize : IndexType.Range I → Nat
   left_inv : LeftInverse fromFin toFin
   right_inv : RightInverse fromFin toFin
   first_last :
@@ -21,6 +23,7 @@ where
     ∨
     ((_ : size ≠ 0) → firstLast? = some (fromFin ⟨0,by omega⟩, fromFin ⟨size - 1, by omega⟩))
   -- TODO: add something about Iterators such that calling `next?` gives you one more element
+  -- TODO: add condition on rangeSize function
 
 open IndexType in
 def finEquiv (I : Type u) [IndexType I] : I ≃ Fin (size I) where
@@ -31,6 +34,9 @@ def finEquiv (I : Type u) [IndexType I] : I ≃ Fin (size I) where
 
 
 namespace IndexType
+
+instance {ι} [IndexType ι] (r : Range ι) : Size r where
+  size := rangeSize r
 
 def fromNat {ι} [IndexType ι] (n : Nat) (h : n < size ι := by first | omega | simp_all; omega) : ι :=
   fromFin ⟨n, h⟩
@@ -49,6 +55,7 @@ instance [FirstLast I I] (r : Range I) : FirstLast r I :=
 instance : IndexType Empty where
   toFin x := Empty.elim x
   fromFin i := by have := i.2; aesop
+  rangeSize := fun _ => 0
   next? _ := .none
   left_inv := by intro x; aesop
   right_inv := sorry_proof
@@ -58,6 +65,7 @@ instance : IndexType Empty where
 instance : IndexType Unit where
   toFin _ := 1
   fromFin _ := ()
+  rangeSize := fun r => match r with | .empty => 0 | .full | .interval _ _ => 1
   next? _ := .none
   left_inv := by intro; aesop
   right_inv := by intro; aesop
@@ -68,6 +76,11 @@ instance : IndexType Bool where
   size := 2
   toFin x := match x with | false => 0 | true => 1
   fromFin x := match x with | ⟨0,_⟩ => false | ⟨1,_⟩ => true
+  rangeSize := fun r =>
+    match r with
+    | .empty => 0
+    | .full => 2
+    | .interval a b => if a = b then 1 else 2
   next? s :=
     match s with
     | .start r =>
@@ -95,6 +108,11 @@ instance : IndexType Bool where
 instance : IndexType (Fin n) where
   toFin x := x
   fromFin x := x
+  rangeSize := fun r =>
+    match r with
+    | .empty => 0
+    | .full => n
+    | .interval a b => if a.1 ≤ b.1 then (b.1 - a.1) + 1 else (a.1 - b.1) + 1
   next? s :=
     match s with
     | .start r =>
@@ -143,6 +161,11 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
     let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
     let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
     (fromFin i, fromFin j)
+  rangeSize := fun r =>
+    match r with
+    | .empty => 0
+    | .full => rangeSize (.full : Range α) * rangeSize (.full : Range β)
+    | .interval (a,b) (a',b') => rangeSize (.interval a a') * rangeSize (.interval b b')
   next? s :=
     match s with
     | .start r =>
@@ -172,6 +195,11 @@ instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) wher
     let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
     let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
     ⟨fromFin i, fromFin j⟩
+  rangeSize := fun r =>
+    match r with
+    | .empty => 0
+    | .full => rangeSize (.full : Range α) * rangeSize (.full : Range β)
+    | .interval ⟨a,b⟩ ⟨a',b'⟩ => rangeSize (.interval a a') * rangeSize (.interval b b')
   firstLast? :=
     match FirstLast.firstLast? α, FirstLast.firstLast? β with
     | .some (a,a'), .some (b,b') => .some (⟨a,b⟩,⟨a',b'⟩)
@@ -209,6 +237,16 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
       .inl (fromNat ij.1)
     else
       .inr (fromNat (ij.1 - size α))
+  rangeSize := fun r =>
+    match r with
+    | .empty => 0
+    | .full => rangeSize (.full : Range α) + rangeSize (.full : Range β)
+    | .interval (.inl a) (.inl a') => rangeSize (.interval a a')
+    | .interval (.inr b) (.inr b') => rangeSize (.interval b b')
+    | .interval (.inl a) (.inr b') | .interval (.inr b') (.inl a) =>
+      let b := first? β |>.getD b'
+      let a' := last? α |>.getD a
+      rangeSize (.interval a a') + rangeSize (.interval b b')
   next? s :=
     -- there has to be a better implementation of this ...
     -- we should somehow use `Iterator.ofSum` and then combine them back together
@@ -251,6 +289,11 @@ instance (a b : Int) : IndexType (Icc a b) where
   size := size (Icc a b) -- why do we do we need to specify this?
   toFin i := ⟨(i.1 - a).toNat, sorry_proof⟩
   fromFin i := ⟨a + i.1, sorry_proof⟩
+  rangeSize := fun r =>
+    match r with
+    | .empty => 0
+    | .full => (b-a).toNat + 1
+    | .interval c d => |d.1 - c.1|.toNat + 1
   firstLast? :=
     if h :a ≤ b then
       .some (⟨a,by simpa⟩,⟨b, by simpa⟩)

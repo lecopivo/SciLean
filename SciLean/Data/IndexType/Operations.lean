@@ -9,6 +9,14 @@ namespace Range
 
 variable {ι : Type*} [IndexType ι]
 
+def foldlIdxM {m} [Monad m] (r : Range ι) (op : α → ι → Fin (size r) → m α) (init : α) : m α := do
+  let mut a := init
+  let mut idx : Nat := 0
+  for i in Iterator.start r do
+    a ← op a i ⟨idx, sorry_proof⟩
+    idx := idx + 1
+  return a
+
 def foldlM {m} [Monad m] (r : Range ι) (op : α → ι → m α) (init : α) : m α := do
   let mut a := init
   for i in Iterator.start r do
