@@ -13,7 +13,10 @@ Lean is an expressive functional programming language that allows to formalize t
   
 # Documentation
 
-Work in progress book/reference manual: [Scientific Computing in Lean](https://lecopivo.github.io/scientific-computing-lean/)
+Manual:
+- [Scientific Computing in Lean](https://lecopivo.github.io/scientific-computing-lean/)
+  
+  Working in progress book on scientific computing in Lean.
 
 Presentations:
 - [Automatic Differentiation in Lean](https://www.youtube.com/watch?v=Kjx5KvB8FL8)
