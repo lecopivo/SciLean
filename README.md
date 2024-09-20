@@ -17,8 +17,10 @@ Work in progress book/reference manual: [Scientific Computing in Lean](https://l
 
 Presentations:
 - [Automatic Differentiation in Lean](https://www.youtube.com/watch?v=Kjx5KvB8FL8)
+
   Overview and motivation behind automatic differentiation in Lean, examples of forward and reverse mode AD.
 - [Scientific Computing in Lean](https://umbc.webex.com/umbc/ldr.php?RCID=fdb070fac47f174fcecf60a96960eacc)
+
   Overview and motivation behind SciLean, working with n-dimensional arrays and symbolic/automatic differentiation.
   
 # Installation and running examples/tests
