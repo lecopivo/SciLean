@@ -294,4 +294,50 @@ theorem ArrayType.get.arg_cont.revFDerivProjUpdate_rule (i : Idx)
         xi.2 (i,j) de dw) := by unfold revFDerivProjUpdate; fun_trans
 
 
+@[fun_trans]
+theorem ArrayType.ofFn.arg_f.revFDerivProj_rule_unit_simple :
+    revFDerivProj K Unit (fun f : Idx → Elem => ArrayType.ofFn f)
+    =
+    fun f =>
+      (ArrayType.ofFn (Cont:=Cont) f, fun _ (dx : Cont) i => ArrayType.get dx i) := by
+  unfold revFDerivProj; fun_trans[oneHot]
+
+
+-- maybe this should be in compositional form
+@[fun_trans]
+theorem ArrayType.ofFn.arg_f.revFDerivProj_rule_simple :
+    revFDerivProj K (Idx×I) (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f)
+    =
+    fun f =>
+      (ArrayType.ofFn (Cont:=Cont) f, fun (i,j) dei i' => if i = i' then oneHot j dei else 0) := by
+  unfold revFDerivProj; fun_trans[oneHot]
+  funext x; simp; funext (i,j) dei i'
+  apply structExt (I:=I); intro j'
+  split_ifs <;> aesop
+
+@[fun_trans]
+theorem ArrayType.ofFn.arg_f.revFDerivProjUpdate_rule_unit_simple :
+    revFDerivProjUpdate K Unit (fun f : Idx → Elem => ArrayType.ofFn f)
+    =
+    fun f =>
+      (ArrayType.ofFn (Cont:=Cont) f, fun _ (dx : Cont) df i => df i + ArrayType.get dx i) := by
+  unfold revFDerivProjUpdate; fun_trans[oneHot]
+  funext x; simp; funext _ de dx i; simp
+
+
+@[fun_trans]
+theorem ArrayType.ofFn.arg_f.revFDerivProjUpdate_rule_simple :
+    revFDerivProjUpdate K (Idx×I) (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f)
+    =
+    fun f =>
+      (ArrayType.ofFn (Cont:=Cont) f,
+       fun (i,j) dej df i' => if i=i' then structModify j (fun ej => ej + dej) (df i') else df i') := by
+  unfold revFDerivProjUpdate; fun_trans[oneHot]
+  funext x; simp; funext (i,j) de dx i'; simp
+  apply structExt (I:=I); intro j'
+  split_ifs <;> aesop
+
+
+
+
 end OnAdjointSpace
