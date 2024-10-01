@@ -1,5 +1,6 @@
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
+import SciLean.Analysis.Calculus.RevFDerivProj
 import SciLean.Data.IndexType.Operations
 import SciLean.Tactic.Autodiff
 import SciLean.Data.DataArray.DataArray
@@ -184,6 +185,30 @@ theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_closures (r : Range I)
         dw + dw') := sorry_proof
 
 
+/-- Reverse derivative of fold - version storing every point - store in Array if DataArray is not
+available for `X` -/
+@[fun_trans]
+theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_array (r : Range I)
+    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
+    (init : W → X) (hinit : Differentiable R init) :
+    revFDeriv R (fun w => r.foldl (op w) (init w))
+    =
+    fun w =>
+      let idi := revFDeriv R init w
+      let xsx := r.foldl (fun (xs,x) i =>
+        let xs := xs.push (x,i)
+        let x := op w x i
+        (xs,x)) ((#[] : Array (X×I)), idi.1)
+      let xs := xsx.1
+      let x := xsx.2
+      (x, fun dx =>
+        let dwx := xs.foldr (fun (x,i) (dw,dx) =>
+          let dwx := (revFDeriv R (fun (w,x) => op w x i) (w,x)).2 dx
+          (dw + dwx.1, dwx.2)) (0, dx)
+        let dw' := idi.2 dwx.2
+        dwx.1 + dw') := sorry_proof
+
+
 /-- Reverse derivative of fold - version storing every point - use DataArray if possible -/
 @[fun_trans]
 theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_data_array
@@ -210,31 +235,6 @@ theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_data_array
         dwx.1 + dw') := sorry_proof
 
 
-
-/-- Reverse derivative of fold - version storing every point - store in Array if DataArray is not
-available for `X` -/
-@[fun_trans]
-theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_array (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : Differentiable R init) :
-    revFDeriv R (fun w => r.foldl (op w) (init w))
-    =
-    fun w =>
-      let idi := revFDeriv R init w
-      let xsx := r.foldl (fun (xs,x) i =>
-        let xs := xs.push (x,i)
-        let x := op w x i
-        (xs,x)) ((#[] : Array (X×I)), idi.1)
-      let xs := xsx.1
-      let x := xsx.2
-      (x, fun dx =>
-        let dwx := xs.foldr (fun (x,i) (dw,dx) =>
-          let dwx := (revFDeriv R (fun (w,x) => op w x i) (w,x)).2 dx
-          (dw + dwx.1, dwx.2)) (0, dx)
-        let dw' := idi.2 dwx.2
-        dwx.1 + dw') := sorry_proof
-
-
 /-- Reverse derivative of fold - version with linear operation, we do not need to store
 values of the forward pass. -/
 @[fun_trans]
@@ -254,5 +254,33 @@ theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_linear (r : Range I)
           (dw + dwx.1, dwx.2)) (0, dx)
         let dw' := idi.2 dwx.2
         dwx.1 + dw') := sorry_proof
+
+
+@[fun_trans]
+theorem IndexType.Range.foldl.arg_opinit.revFDerivProj_rule_data_array
+    {R : Type} [RCLike R]
+    {I : Type} [IndexType I]
+    {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [PlainDataType X]
+    {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
+    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
+    (init : W → X) (hinit : Differentiable R init) :
+    revFDerivProj R Unit (fun w => (.full : Range I).foldl (op w) (init w))
+    =
+    fun w =>
+      let idi := revFDeriv R init w
+      let xsx := (.full : Range I).foldl (fun (xs,x) i =>
+        let xs := xs.set i x
+        let x := op w x i
+        (xs,x)) ((0 : X^[I]), idi.1)
+      let xs := xsx.1
+      let x := xsx.2
+      (x, fun _ dx =>
+        let dwx := (.full : Range I).reverse.foldl (fun (dw,dx) i  =>
+          let x := xs[i]
+          let dwx : W×X := (revFDerivProjUpdate R Unit (fun (w,x) => op w x i) (w,x)).2 () dx (dw,0)
+          dwx) (0, dx)
+        let dw' := idi.2 dwx.2
+        dwx.1 + dw') := sorry_proof
+
 
 -- TODO: add checkpointing version

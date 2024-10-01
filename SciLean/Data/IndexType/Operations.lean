@@ -30,12 +30,13 @@ def reduceMD {m} [Monad m] (r : Range ι) (f : ι → α) (op : α → α → m 
   match first? r with
   | none => return default
   | .some fst => do
-    r.foldlM (fun a i => op a (f i)) (f fst)
+    let mut a := (f fst)
+    for i in Iterator.val fst r do
+      a ← op a (f i)
+    return a
 
 def reduceD (r : Range ι) (f : ι → α) (op : α → α → α) (default : α) : α := Id.run do
-  match first? r with
-  | none => return default
-  | .some fst => do r.foldl (fun a i => op a (f i)) (f fst)
+  r.reduceMD f (fun x y => pure (op x y)) default
 
 abbrev reduce [Inhabited α] (r : Range ι) (f : ι → α) (op : α → α → α) : α :=
   r.reduceD f op default
@@ -51,7 +52,7 @@ variable {ι : Type*} [IndexType ι]
 abbrev foldlM {m} [Monad m] (op : α → ι → m α) (init : α) : m α :=
   Range.full.foldlM op init
 
-abbrev foldl (op : α → ι → α) (init : α) : α := Id.run do
+abbrev foldl (op : α → ι → α) (init : α) : α :=
   Range.full.foldl op init
 
 abbrev reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (default : α) : m α :=

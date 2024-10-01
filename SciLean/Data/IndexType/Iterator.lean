@@ -62,5 +62,5 @@ def sprod (i : Iterator I) (j : Iterator J) [FirstLast I I] [FirstLast J J] :
 
 
 -- todo: implement this and provide a better implementation of IndexType instance for Sum
-private def ofSum [FirstLast α α] [FirstLast β β] (s : Iterator (α ⊕ β)) :
-    ((Iterator α × Range β)) ⊕ ((Iterator β × Range α)) := sorry
+-- private def ofSum [FirstLast α α] [FirstLast β β] (s : Iterator (α ⊕ β)) :
+--     ((Iterator α × Range β)) ⊕ ((Iterator β × Range α)) := sorry
