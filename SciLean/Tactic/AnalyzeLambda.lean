@@ -206,100 +206,100 @@ partial def analyzeLambda (e : Expr) : MetaM LambdaInfo := do
 
 open Qq
 
-#exit
-def LambdaInfo.print (info : LambdaInfo) : IO Unit := do
-  IO.println s!"arity: {info.arity}"
-  IO.println s!"argNum: {info.argNum}"
-  IO.println s!"headFunction ctor: {info.headFunInfo.ctorName}"
-  IO.println s!"headFunction arity: {info.headFunInfo.arity}"
-  IO.println s!"main ids: {info.mainIds}"
-  IO.println s!"trailing ids: {info.trailingIds}"
-  IO.println s!"main arg case: {repr info.mainArgCase}"
-  IO.println s!"trailing arg case: {repr info.trailingArgCase}"
+-- #exit
+-- def LambdaInfo.print (info : LambdaInfo) : IO Unit := do
+--   IO.println s!"arity: {info.arity}"
+--   IO.println s!"argNum: {info.argNum}"
+--   IO.println s!"headFunction ctor: {info.headFunInfo.ctorName}"
+--   IO.println s!"headFunction arity: {info.headFunInfo.arity}"
+--   IO.println s!"main ids: {info.mainIds}"
+--   IO.println s!"trailing ids: {info.trailingIds}"
+--   IO.println s!"main arg case: {repr info.mainArgCase}"
+--   IO.println s!"trailing arg case: {repr info.trailingArgCase}"
 
 
-#eval show MetaM Unit from do
-  withLocalDeclQ `f .default q(Float → Float → Float) fun f => do
-    let e := q(fun (x,y) (z,h) => $f h ($f z ($f x y)))
-    IO.println (← ppExpr e)
-    let e ← lambdaTelescope e fun xs b => do mkLambdaFVars xs (← whnf b)
-    IO.println (← ppExpr e)
+-- #eval show MetaM Unit from do
+--   withLocalDeclQ `f .default q(Float → Float → Float) fun f => do
+--     let e := q(fun (x,y) (z,h) => $f h ($f z ($f x y)))
+--     IO.println (← ppExpr e)
+--     let e ← lambdaTelescope e fun xs b => do mkLambdaFVars xs (← whnf b)
+--     IO.println (← ppExpr e)
 
 
-#eval show MetaM Unit from do
-  withLocalDeclQ `x .default q(Float×Float) fun x => do
-    let e ← mkLambdaFVars #[x] (Expr.proj ``Prod 0 x)
-    let info ← analyzeLambda e
-    info.print
+-- #eval show MetaM Unit from do
+--   withLocalDeclQ `x .default q(Float×Float) fun x => do
+--     let e ← mkLambdaFVars #[x] (Expr.proj ``Prod 0 x)
+--     let info ← analyzeLambda e
+--     info.print
 
-#eval show MetaM Unit from do
-  let e := q(fun (x : Float × Float) => x.1)
-  let info ← analyzeLambda e
-  info.print
+-- #eval show MetaM Unit from do
+--   let e := q(fun (x : Float × Float) => x.1)
+--   let info ← analyzeLambda e
+--   info.print
 
-#eval show MetaM Unit from do
-  let e := q(fun (x : (Fin 10 → Float) × (Fin 5 → Float)) => x.1)
-  let info ← analyzeLambda (← etaExpand' e)
-  info.print
+-- #eval show MetaM Unit from do
+--   let e := q(fun (x : (Fin 10 → Float) × (Fin 5 → Float)) => x.1)
+--   let info ← analyzeLambda (← etaExpand' e)
+--   info.print
 
-#eval show MetaM Unit from do
-  let e := q(fun (x : (Fin 10 → Float) × (Fin 5 → Float)) i => x.1 i)
-  let info ← analyzeLambda e
-  info.print
-
-
-#eval show MetaM Unit from do
-  let e := q(fun (x : (Fin 10 × Fin 20 → Float) × (Fin 5 → Float)) i j => x.1 (i,j))
-  let info ← analyzeLambda e
-  info.print
+-- #eval show MetaM Unit from do
+--   let e := q(fun (x : (Fin 10 → Float) × (Fin 5 → Float)) i => x.1 i)
+--   let info ← analyzeLambda e
+--   info.print
 
 
-#eval show MetaM Unit from do
-  let e := q(fun (A : (Fin 10 → Fin 5 → Float)) (ij : Fin 10 × Fin 5) => A ij.1 ij.2)
-  let info ← analyzeLambda e
-  info.print
-
-#eval show MetaM Unit from do
-  let e := q(fun (A : (Fin 10 → Fin 5 → Float)) i j => A i j)
-  let info ← analyzeLambda e
-  info.print
-
- #eval show MetaM Unit from do
-  let e := q(fun (A : (Fin 10 → Fin 5 → Float)) j i => A i j)
-  let info ← analyzeLambda e
-  info.print
+-- #eval show MetaM Unit from do
+--   let e := q(fun (x : (Fin 10 × Fin 20 → Float) × (Fin 5 → Float)) i j => x.1 (i,j))
+--   let info ← analyzeLambda e
+--   info.print
 
 
-#eval show MetaM Unit from do
-  let e := q(fun (x : (Fin 10 → Float) × (Fin 5 → Float)) (i : Fin 10 × Fin 5) => x.1 i.1)
-  let info ← analyzeLambda e
-  info.print
+-- #eval show MetaM Unit from do
+--   let e := q(fun (A : (Fin 10 → Fin 5 → Float)) (ij : Fin 10 × Fin 5) => A ij.1 ij.2)
+--   let info ← analyzeLambda e
+--   info.print
 
-#eval show MetaM Unit from do
+-- #eval show MetaM Unit from do
+--   let e := q(fun (A : (Fin 10 → Fin 5 → Float)) i j => A i j)
+--   let info ← analyzeLambda e
+--   info.print
 
-  withLocalDeclQ `i₂ .default q(Fin 2) fun i₂ => do
-  withLocalDeclQ `i₃ .default q(Fin 3) fun i₃ => do
-  withLocalDeclQ `i₅ .default q(Fin 5) fun i₅ => do
-  let e := q(fun (A : (Fin 1 → Fin 2 → Fin 3 → Fin 4 → Fin 5 → Fin 6 → Float)) i₁ i₄ i₆ => A i₁ $i₂ $i₃ i₄ $i₅ i₆)
-  IO.println (← ppExpr e.eta)
-  let _ ← analyzeLambda e
-
-
-#eval show MetaM Unit from do
-
-  withLocalDeclQ `i₂ .default q(Fin 2) fun i₂ => do
-  withLocalDeclQ `i₃ .default q(Fin 3) fun i₃ => do
-  withLocalDeclQ `i₅ .default q(Fin 5) fun i₅ => do
-  let e := q(fun (A : (Fin 1 → Fin 2 → Fin 3 → Fin 4 → Fin 5 → Fin 6 → Float)) (i : Fin 1 × Fin 4 × Fin 6) => A i.1 $i₂ $i₃ i.2.1 $i₅ i.2.2)
-
-  let _ ← analyzeLambda e
+--  #eval show MetaM Unit from do
+--   let e := q(fun (A : (Fin 10 → Fin 5 → Float)) j i => A i j)
+--   let info ← analyzeLambda e
+--   info.print
 
 
-#eval show MetaM Unit from do
+-- #eval show MetaM Unit from do
+--   let e := q(fun (x : (Fin 10 → Float) × (Fin 5 → Float)) (i : Fin 10 × Fin 5) => x.1 i.1)
+--   let info ← analyzeLambda e
+--   info.print
 
-  withLocalDeclQ `i₂ .default q(Fin 2) fun i₂ => do
-  withLocalDeclQ `i₃ .default q(Fin 3) fun i₃ => do
-  withLocalDeclQ `i₅ .default q(Fin 5) fun i₅ => do
-  let e := q(fun (A : (Fin 1 → Fin 2 → Fin 3 → Fin 4 → Fin 5 → Fin 6 → Float)) (i : Fin 4 × Fin 1 × Fin 6) => A i.2.1 $i₂ $i₃ i.1 $i₅ i.2.2)
+-- #eval show MetaM Unit from do
 
-  let _ ← analyzeLambda e
+--   withLocalDeclQ `i₂ .default q(Fin 2) fun i₂ => do
+--   withLocalDeclQ `i₃ .default q(Fin 3) fun i₃ => do
+--   withLocalDeclQ `i₅ .default q(Fin 5) fun i₅ => do
+--   let e := q(fun (A : (Fin 1 → Fin 2 → Fin 3 → Fin 4 → Fin 5 → Fin 6 → Float)) i₁ i₄ i₆ => A i₁ $i₂ $i₃ i₄ $i₅ i₆)
+--   IO.println (← ppExpr e.eta)
+--   let _ ← analyzeLambda e
+
+
+-- #eval show MetaM Unit from do
+
+--   withLocalDeclQ `i₂ .default q(Fin 2) fun i₂ => do
+--   withLocalDeclQ `i₃ .default q(Fin 3) fun i₃ => do
+--   withLocalDeclQ `i₅ .default q(Fin 5) fun i₅ => do
+--   let e := q(fun (A : (Fin 1 → Fin 2 → Fin 3 → Fin 4 → Fin 5 → Fin 6 → Float)) (i : Fin 1 × Fin 4 × Fin 6) => A i.1 $i₂ $i₃ i.2.1 $i₅ i.2.2)
+
+--   let _ ← analyzeLambda e
+
+
+-- #eval show MetaM Unit from do
+
+--   withLocalDeclQ `i₂ .default q(Fin 2) fun i₂ => do
+--   withLocalDeclQ `i₃ .default q(Fin 3) fun i₃ => do
+--   withLocalDeclQ `i₅ .default q(Fin 5) fun i₅ => do
+--   let e := q(fun (A : (Fin 1 → Fin 2 → Fin 3 → Fin 4 → Fin 5 → Fin 6 → Float)) (i : Fin 4 × Fin 1 × Fin 6) => A i.2.1 $i₂ $i₃ i.1 $i₅ i.2.2)
+
+--   let _ ← analyzeLambda e

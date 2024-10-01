@@ -166,143 +166,141 @@ def Lean.Expr.letNormalize (e : Expr)
 
 --     IO.println (← xs'.mapM ppExpr)
 
-#exit
+
+-- open Qq
+-- #eval show MetaM Unit from do
+
+--   let e := q(
+--     fun x =>
+--     let a :=
+--       let b := (10,(20,30))
+--       let i : Fin 10 := ⟨5, by simp⟩
+--       let c := b.1 + 3
+--       b.2.2 + c + 4 + i.1
+--     let d :=
+--       let e := 11
+--       a + 4 + e + x
+--     let z := a + d
+--     let w := z
+--     w
+--     )
+
+--   let e' ← e.letNormalize (config := {removeNum := true})
+
+--   IO.println (← ppExpr e')
 
 
-open Qq
-#eval show MetaM Unit from do
+-- #eval show MetaM Unit from do
 
-  let e := q(
-    fun x =>
-    let a :=
-      let b := (10,(20,30))
-      let i : Fin 10 := ⟨5, by simp⟩
-      let c := b.1 + 3
-      b.2.2 + c + 4 + i.1
-    let d :=
-      let e := 11
-      a + 4 + e + x
-    let z := a + d
-    let w := z
-    w
-    )
+--   withLocalDeclQ `x .default q(Nat × Nat × Nat) fun x => do
+--   let e := q(
+--   let a1 := 42
+--   let a2 := a1
+--   let a3 := a2
+--   let a4 := a3
+--   let a5 := a4
+--   let a6 := a5
+--   let a7 := a6
+--   let a8 := a7
+--   let a9 := a8
+--   let a10 := a9
+--   let a11 := a10
+--   let a12 := a11
+--   let a13 := a12
+--   let a14 := a13
+--   let a15 := a14
+--   let a16 := a15
+--   let a17 := a16
+--   let a18 := a17
+--   let a19 := a18
+--   let a20 := a19
+--   let a21 := a20
+--   let a22 := a21
+--   let a23 := a22
+--   let a24 := a23
+--   let a25 := a24
+--   let a26 := a25
+--   let a27 := a26
+--   let a28 := a27
+--   let a29 := a28
+--   let a30 := a29
+--   let a31 := a30
+--   let a32 := a31
+--   let a33 := a32
+--   let a34 := a33
+--   let a35 := a34
+--   let a36 := a35
+--   let a37 := a36
+--   let a38 := a37
+--   let a39 := a38
+--   let a40 := a39
+--   let a41 := a40
+--   let a42 := a41
+--   let a43 := a42
+--   let a44 := a43
+--   let a45 := a44
+--   let a46 := a45
+--   let a47 := a46
+--   let a48 := a47
+--   let a49 := a48
+--   let a50 := a49
+--   let a51 := a50
+--   let a52 := a51
+--   let a53 := a52
+--   let a54 := a53
+--   let a55 := a54
+--   let a56 := a55
+--   let a57 := a56
+--   let a58 := a57
+--   let a59 := a58
+--   let a60 := a59
+--   let a61 := a60
+--   let a62 := a61
+--   let a63 := a62
+--   let a64 := a63
+--   let a65 := a64
+--   let a66 := a65
+--   let a67 := a66
+--   let a68 := a67
+--   let a69 := a68
+--   let a70 := a69
+--   let a71 := a70
+--   let a72 := a71
+--   let a73 := a72
+--   let a74 := a73
+--   let a75 := a74
+--   let a76 := a75
+--   let a77 := a76
+--   let a78 := a77 + $x.1
+--   let a79 := a78
+--   let a80 := a79
+--   let a81 := a80
+--   let a82 := a81
+--   let a83 := a82
+--   let a84 := a83
+--   let a85 := a84 + $x.2.1
+--   let a86 := a85
+--   let a87 := a86
+--   let a88 := a87
+--   let a89 := a88
+--   let a90 := a89
+--   let a91 := a90
+--   let a92 := a91 + $x.2.2
+--   let a93 := a92
+--   let a94 := a93
+--   let a95 := a94
+--   let a96 := a95
+--   let a97 := a96
+--   let a98 := a97
+--   let a99 := a98
+--   let a100 := a99
+--   a100)
 
-  let e' ← e.letNormalize (config := {removeNum := true})
+--   let e' ← replaceFVarAndPost e x.fvarId! q((1,2,3))
+--     (fun e => do
+--       IO.println s!"running post on {← ppExpr e}"
+--       match ← reduceProjOfCtor? e with
+--       | .some e' => return .yield e'
+--       | .none => return .done e)
 
-  IO.println (← ppExpr e')
-
-
-#eval show MetaM Unit from do
-
-  withLocalDeclQ `x .default q(Nat × Nat × Nat) fun x => do
-  let e := q(
-  let a1 := 42
-  let a2 := a1
-  let a3 := a2
-  let a4 := a3
-  let a5 := a4
-  let a6 := a5
-  let a7 := a6
-  let a8 := a7
-  let a9 := a8
-  let a10 := a9
-  let a11 := a10
-  let a12 := a11
-  let a13 := a12
-  let a14 := a13
-  let a15 := a14
-  let a16 := a15
-  let a17 := a16
-  let a18 := a17
-  let a19 := a18
-  let a20 := a19
-  let a21 := a20
-  let a22 := a21
-  let a23 := a22
-  let a24 := a23
-  let a25 := a24
-  let a26 := a25
-  let a27 := a26
-  let a28 := a27
-  let a29 := a28
-  let a30 := a29
-  let a31 := a30
-  let a32 := a31
-  let a33 := a32
-  let a34 := a33
-  let a35 := a34
-  let a36 := a35
-  let a37 := a36
-  let a38 := a37
-  let a39 := a38
-  let a40 := a39
-  let a41 := a40
-  let a42 := a41
-  let a43 := a42
-  let a44 := a43
-  let a45 := a44
-  let a46 := a45
-  let a47 := a46
-  let a48 := a47
-  let a49 := a48
-  let a50 := a49
-  let a51 := a50
-  let a52 := a51
-  let a53 := a52
-  let a54 := a53
-  let a55 := a54
-  let a56 := a55
-  let a57 := a56
-  let a58 := a57
-  let a59 := a58
-  let a60 := a59
-  let a61 := a60
-  let a62 := a61
-  let a63 := a62
-  let a64 := a63
-  let a65 := a64
-  let a66 := a65
-  let a67 := a66
-  let a68 := a67
-  let a69 := a68
-  let a70 := a69
-  let a71 := a70
-  let a72 := a71
-  let a73 := a72
-  let a74 := a73
-  let a75 := a74
-  let a76 := a75
-  let a77 := a76
-  let a78 := a77 + $x.1
-  let a79 := a78
-  let a80 := a79
-  let a81 := a80
-  let a82 := a81
-  let a83 := a82
-  let a84 := a83
-  let a85 := a84 + $x.2.1
-  let a86 := a85
-  let a87 := a86
-  let a88 := a87
-  let a89 := a88
-  let a90 := a89
-  let a91 := a90
-  let a92 := a91 + $x.2.2
-  let a93 := a92
-  let a94 := a93
-  let a95 := a94
-  let a96 := a95
-  let a97 := a96
-  let a98 := a97
-  let a99 := a98
-  let a100 := a99
-  a100)
-
-  let e' ← replaceFVarAndPost e x.fvarId! q((1,2,3))
-    (fun e => do
-      IO.println s!"running post on {← ppExpr e}"
-      match ← reduceProjOfCtor? e with
-      | .some e' => return .yield e'
-      | .none => return .done e)
-
-  IO.println (← ppExpr e')
+--   IO.println (← ppExpr e')

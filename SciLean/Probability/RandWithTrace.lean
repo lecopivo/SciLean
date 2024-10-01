@@ -143,9 +143,9 @@ def test2 :=
   return' (x.toNat.toFloat+y+z)
 
 
-#eval test2.rand.get
-#eval test2.traceRand.get
-#eval do pure (test2.map (← test2.traceRand.get))
+-- #eval test2.rand.get
+-- #eval test2.traceRand.get
+-- #eval do pure (test2.map (← test2.traceRand.get))
 
 
 variable {R} [RealScalar R]

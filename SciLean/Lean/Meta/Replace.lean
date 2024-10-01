@@ -161,25 +161,3 @@ def replaceWithFVarsNoBVars (e : Expr) (f : Expr → MetaM Bool)
     let vars := vars.map (fun (fvarId, val) => (Expr.fvar fvarId, val))
     let (fvars,vals) := vars.unzip
     k fvars vals e'
-
-
-#exit
-
-open Qq
-#eval show MetaM Unit from do
-
-  let e := q(fun (x : Nat × Nat × Nat) (y : Nat) => x.1 + x.2.1 + y)
-
-  let b := e.bindingBody!
-
-  let b' ← instantiate1AndPost b q((1,2,3))
-    (post := fun e => do
-      if e.hasLooseBVars
-      then return .done e
-      else
-        IO.println (← ppExpr e)
-        match ← reduceProjOfCtor? e with
-        | .some e' => return .yield e'
-        | .none => return .done e)
-
-  IO.println (← ppExpr b')
