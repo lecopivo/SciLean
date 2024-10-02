@@ -1,18 +1,55 @@
-import SciLean.Core
+import SciLean
 import SciLean.Data.DataArray
 import SciLean.Data.ArrayType
+import SciLean.Data.ArrayType.Properties
 
 namespace SciLean.ML
 
+
 variable
   {R : Type} [RealScalar R] [PlainDataType R]
+  {ι : Type} [IndexType ι] [DecidableEq ι]
 
 set_default_scalar K
 
-def dense {ι} [Index ι] (numOutputs : USize)
-  (weights : R^[numOutputs,ι]) (bias : R^[numOutputs]) (x : R^[ι]) : R^[numOutputs] :=
+def dense (n : Nat)
+  (weights : R^[n,ι]) (bias : R^[n]) (x : R^[ι]) : R^[n] :=
   ⊞ j => ∑ i, weights[(j,i)] * x[i] + bias[j]
 
-#generate_revDeriv dense weights bias x
-  prop_by unfold dense; fprop
-  trans_by unfold dense; ftrans
+
+def_fun_prop dense in x : IsAffineMap R
+def_fun_prop dense in weights : IsAffineMap R
+def_fun_prop dense in bias : IsAffineMap R
+def_fun_prop dense in weights bias x
+  with_transitive
+  : Differentiable R
+
+
+
+theorem revFDeriv_eq_revFDerivProj {R} [RCLike R]
+  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {Y} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
+  (f : X → Y) :
+  revFDeriv R f
+  =
+  fun x =>
+    let ydf := revFDerivProj R Unit f x
+    (ydf.1, fun dy => ydf.2 () dy) := by unfold revFDerivProj revFDeriv; simp
+
+
+
+def_fun_trans dense in weights bias x
+  arg_subsets
+  [DecidableEq ι] : revFDerivProj R Unit by (unfold dense; autodiff)
+
+
+def_fun_trans dense in weights bias x
+  arg_subsets
+  [DecidableEq ι] : revFDerivProjUpdate R Unit by (unfold dense; autodiff)
+
+
+#check Nat
+
+def_fun_trans dense in weights bias x
+  arg_subsets
+  [DecidableEq ι] : revFDeriv R  by (rw[revFDeriv_eq_revFDerivProj]; autodiff)
