@@ -1,8 +1,9 @@
-import SciLean.Tactic.FunTrans.Core
-import SciLean.Lean.Meta.Basic
-import SciLean.Util.RewriteBy
-import SciLean.Meta.GenerateFunProp
 import SciLean.Lean.Array
+import SciLean.Lean.Meta.Basic
+import SciLean.Meta.GenerateFunProp
+import SciLean.Tactic.Autodiff
+import SciLean.Tactic.FunTrans.Core
+import SciLean.Util.RewriteBy
 
 open Lean Meta Elab Term Command Mathlib.Meta
 
@@ -178,3 +179,157 @@ elab  "abbrev_fun_trans" _doTrans:("with_transitive")? suffix:(ident)? bs:bracke
     let (e',prf) ← elabConvRewrite e #[] (← `(conv| ($c)))
     let suffix := suffix.map (·.getId)
     let _ ← generateFunTransDefAndTheorem (← mkEq e e') prf (ctx₁++ctx₂) suffix { defineNewFunction := false }
+
+
+
+namespace FunTrans
+
+syntax Parser.suffix := "add_suffix" ident
+syntax Parser.trans := "with_transitive"
+syntax Parser.argSubsets := "arg_subsets"
+syntax Parser.config := Parser.suffix <|> Parser.trans <|> Parser.argSubsets
+
+syntax Parser.funTransProof := "by" Lean.Parser.Tactic.Conv.convSeq
+
+open Lean
+
+structure DefFunTransConfig where
+  argSubsets := false
+  suffix : Option Name := none
+
+open Lean Syntax Elab
+def parseDefFunTransConfig (stx : TSyntaxArray ``Parser.config) : MetaM DefFunTransConfig := do
+
+  let mut cfg : DefFunTransConfig := {}
+
+  for s in stx do
+    cfg ←
+      match s.raw[0]! with
+      | `(Parser.suffix| add_suffix $id:ident) =>
+        if cfg.suffix.isSome then
+          throwErrorAt s.raw s!"suffix already specified as `{cfg.suffix.get!}`"
+        pure {cfg with suffix := id.getId}
+      | `(Parser.argSubsets| arg_subsets) => pure {cfg with argSubsets := true}
+      | _ => throwErrorAt s.raw "invalid option {s}"
+
+  return cfg
+
+def parseFunTransConv (fId : Name) (stx : Option (TSyntax ``Parser.funTransProof)) : MetaM (TSyntax `conv) := do
+  match stx with
+  | .some prf =>
+      match prf.raw with
+      | `(Parser.funTransProof| by $tac:convSeq) => `(conv| ($tac))
+      | _ => Elab.throwUnsupportedSyntax
+  | none =>
+    let fIdent := mkIdent fId
+    `(conv| (unfold $fIdent; autodiff))
+
+open Lean Meta Elab Term in
+
+open Lean Meta Elab Term in
+def defFunTrans (f : Ident) (args : TSyntaxArray `ident)
+  (cfg : TSyntaxArray ``Parser.config) (bs : TSyntaxArray ``Parser.Term.bracketedBinder)
+  (fprop : TSyntax `term) (proof : Option (TSyntax ``Parser.funTransProof)) : Command.CommandElabM Unit := do
+
+  Elab.Command.liftTermElabM <| do
+  -- resolve function name
+  let fId ← resolveUniqueNamespace f
+  let info ← getConstInfo fId
+
+  let cfg ← parseDefFunTransConfig cfg
+  let conv ← parseFunTransConv fId proof
+
+  forallTelescope info.type fun xs _ => do
+  Elab.Term.elabBinders bs.raw fun ctx₂ => do
+
+    -- separate main arguments in which we want to define new function property
+    let args := args.map (fun id => id.getId)
+    let (mainArgs, otherArgs) ← xs.splitM (fun x => do
+      let n ← x.fvarId!.getUserName
+      return args.contains n)
+
+    -- context variable of the statement and the proof
+    let ctx := otherArgs ++ ctx₂
+
+    -- check if all arguments are present
+    for arg in args do
+      if ← mainArgs.allM (fun a => do pure ((← a.fvarId!.getUserName) != arg)) then
+        throwError s!"function `{fId}` does not have argument `{arg}`"
+
+    -- uncurry function appropriatelly
+    let lvls := info.levelParams.map (fun p => Level.param p)
+    let g ← liftM <|
+      mkLambdaFVars mainArgs (mkAppN (Expr.const info.name lvls) xs)
+      >>=
+      mkUncurryFun mainArgs.size
+
+    -- create statement
+    let fprop' ← Elab.Term.elabTerm fprop.raw (← mkArrow (← inferType g) (← mkFreshTypeMVar))
+    let lhs := (← mkAppM' fprop' #[g]).headBeta
+
+    -- elaborate proof and check it worked
+    let (rhs, proof) ← elabConvRewrite lhs #[] conv
+
+    let statement ← mkEq lhs rhs
+
+    -- add new theorem to the enviroment
+    let _ ← generateFunTransDefAndTheorem statement proof ctx cfg.suffix {}
+
+    pure ()
+
+
+def _root_.Array.allSubsets {α} (a : Array α) : Array (Array α) := Id.run do
+  let mut as : Array (Array α) := #[]
+  let n := a.size
+  for i in [0:2^n] do
+    let mut ai : Array α := #[]
+    for h : j in [0:a.size] do
+      if (2^j).toUInt64 &&& i.toUInt64 ≠ 0 then
+        ai := ai.push (a[j])
+
+    as := as.push ai
+  return as
+
+
+
+open Lean Meta Elab Term in
+/-- Define function transformation for a function in particular arguments.
+
+Example:
+```
+def foo (x y z : ℝ) := x*x+y*z
+
+def_fun_trans foo in x y z : fderiv ℝ
+```
+Computes derivative of `foo` in `x`, `y` and `z` and adds is as a new definition `foo.arg_xyz.fderiv`
+and adds a new `fun_trans` theorem `foo.arg_xyz.fderiv_rule`.
+
+You can add additional assumptions, custom tactic to prove the property as demonstrated by the
+following example:
+```
+def_fun_prop bar in x y
+  add_suffix _simple
+  (xy : R×R) (h : xy.2 ≠ 0) : (DifferentiableAt R · xy) by unfold bar; fun_prop (disch:=assumption)
+```
+where
+- `add_suffix _simple` adds `_simple` to the end of the generated theorems
+- `(xy : R×R) (h : xy.2 ≠ 0)` are additional assumptions added to the theorem. These assumptions
+  are stated in the context of the function so for example here we can use `R` without introducing it.
+- `by unfold bar; autodiff ...` you can specify custom tactic to prove the function transformation.
+-/
+elab "def_fun_trans " f:ident "in" args:ident* ppLine
+     cfg:Parser.config*
+     bs:bracketedBinder* " : " fprop:term proof:(Parser.funTransProof)? : command => do
+
+  let c ← Lean.Elab.Command.liftTermElabM <| parseDefFunTransConfig cfg
+
+  defFunTrans f args cfg bs fprop proof
+
+  -- generate the same with all argument subsets
+  if c.argSubsets then
+    for as in args.allSubsets do
+      if as.size = 0 || as.size = args.size then
+        continue
+      defFunTrans f as cfg bs fprop proof
+
+end FunTrans
