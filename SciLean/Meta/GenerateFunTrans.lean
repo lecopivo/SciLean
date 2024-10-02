@@ -2,6 +2,7 @@ import SciLean.Tactic.FunTrans.Core
 import SciLean.Lean.Meta.Basic
 import SciLean.Util.RewriteBy
 import SciLean.Meta.GenerateFunProp
+import SciLean.Lean.Array
 
 open Lean Meta Elab Term Command Mathlib.Meta
 
@@ -12,6 +13,19 @@ initialize registerTraceClass `Meta.Tactic.fun_trans.generate
 structure DefineFunTransConfig where
   defineIfSimilarExists := true
   defineNewFunction := true
+
+def levelMVarToParamArray (es : Array Expr) : MetaM (Array Expr × Array Name) := do
+  let e ← es.joinrM pure (fun x y => mkAppM ``PProd.mk #[x,y])
+  let (e,_) ← (levelMVarToParam e).run {}
+  let lvls := (collectLevelParams {} e).params
+
+  let mut e := e
+  let mut es := #[]
+  while e.isAppOf ``PProd.mk do
+    es := es.push e.appFn!.appArg!
+    e := e.appArg!
+  es := es.push e
+  return (es,lvls)
 
 open FunTrans
 def generateFunTransDefAndTheorem (statement proof : Expr) (ctx : Array Expr)
@@ -37,8 +51,8 @@ def generateFunTransDefAndTheorem (statement proof : Expr) (ctx : Array Expr)
       getTheoremsForFunction funName funTransDecl.funTransName fData.args.size fData.mainArgs
   if similarTheorems.size ≠ 0 then
     unless cfg.defineIfSimilarExists do
-      trace[Meta.Tactic.fun_prop.generate]
-        "not generating `fun_prop` theorem for {statement} because similar theorems exist:
+      trace[Meta.Tactic.fun_trans.generate]
+        "not generating `fun_trans` theorem for {statement} because similar theorems exist:
          {similarTheorems.map (fun t => t.thmOrigin.name)}"
       return false
 
@@ -57,9 +71,9 @@ def generateFunTransDefAndTheorem (statement proof : Expr) (ctx : Array Expr)
   let defCtx  := ctx.filter (fun x => rhs.containsFVar x.fvarId!)
   let defVal  ← mkLambdaFVars defCtx rhs >>= instantiateMVars
 
-  -- how do I extract all level parameters?
-  if defVal.hasLevelParam then
-    throwError "value {← ppExpr defVal} has level parameters!"
+  -- turn level mvars to params
+  let (defVal',lvls) ← levelMVarToParamArray #[defVal]
+  let defVal := defVal'[0]!
 
   let decl : DefinitionVal :=
   {
@@ -68,7 +82,7 @@ def generateFunTransDefAndTheorem (statement proof : Expr) (ctx : Array Expr)
     value := defVal
     hints := .regular 0
     safety := .safe
-    levelParams := []
+    levelParams := lvls.toList
   }
 
   if cfg.defineNewFunction then
@@ -89,18 +103,16 @@ def generateFunTransDefAndTheorem (statement proof : Expr) (ctx : Array Expr)
     >>= instantiateMVars
   let thmVal  ← mkLambdaFVars thmCtx proof >>= instantiateMVars
 
-  if thmType.hasLevelParam then
-    throwError "theorem statement {← ppExpr thmType} has level parameters!"
-  if thmVal.hasLevelParam then
-    throwError "theorem proof {← ppExpr thmVal} has level parameters!"
-
   let thmDecl : TheoremVal :=
   {
     name  := thmName
-    type  := thmType
-    value := thmVal
-    levelParams := []
+    type  := ← instantiateMVars thmType
+    value := ← instantiateMVars thmVal
+    levelParams := lvls.toList
   }
+
+  IO.println (← ppExpr thmType)
+  IO.println (← ppExpr thmVal)
 
   addDecl (.thmDecl thmDecl)
   FunTrans.addTheorem thmName
@@ -143,6 +155,8 @@ partial def defineTransitiveFunTransFromFunProp (proof : Expr) (ctx : Array Expr
 
 
 open Mathlib.Meta
+/-- Define function transformation, the command
+-/
 elab  "def_fun_trans" _doTrans:("with_transitive")? suffix:(ident)? bs:bracketedBinder* ":" e:term "by" c:Lean.Parser.Tactic.Conv.convSeq : command => do
 
   runTermElabM fun ctx₁ => do
