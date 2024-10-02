@@ -112,7 +112,7 @@ partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.forValuesM {α} {m} [Mo
 Given a proof of function property `proof` like `q(by fun_prop : Differentiable Real.sin)`
 generate theorems for all the function properties that follow from this. -/
 partial def defineTransitiveFunProp (proof : Expr) (ctx : Array Expr)
-    (suffix : Option Name := none) : MetaM Unit := do
+    (suffix : Option Name := none) (recursive := false) : MetaM Unit := do
   trace[Meta.Tactic.fun_prop.generate] "generating transitive properties for `{← inferType proof}`"
   let s := FunProp.transitionTheoremsExt.getState (← getEnv)
 
@@ -141,7 +141,7 @@ partial def defineTransitiveFunProp (proof : Expr) (ctx : Array Expr)
                      suffix {defineIfSimilarExists := false}
 
           -- if theorem has been successfully defined we generate all its transitive fun_prop theoresm
-          if r then
+          if r && recursive then
             try
               defineTransitiveFunProp thmProof (ctx++xs') suffix
             catch err =>
