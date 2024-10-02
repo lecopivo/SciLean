@@ -15,13 +15,13 @@ def _root_.ByteArray.mkArray (n : Nat) (v : UInt8) : ByteArray := Id.run do
   a
 
 -- TODO: Quotient it out by trailing bits
-structure DataArray (α : Type) [pd : PlainDataType α] where
+structure DataArray (α : Type*) [pd : PlainDataType α] where
   byteData : ByteArray
   size : Nat
   h_size : pd.bytes size ≤ byteData.size
 
-variable {α : Type} [pd : PlainDataType α]
-variable {ι} [IndexType ι] {κ : Type _} [IndexType κ]
+variable {α : Type*} [pd : PlainDataType α]
+variable {ι} [IndexType ι] {κ : Type*} [IndexType κ]
 
 instance [PlainDataType X] : Inhabited (DataArray X) := ⟨.empty, 0, by sorry_proof⟩
 
@@ -142,7 +142,7 @@ instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
   s ++ "]"⟩
 
 
-structure DataArrayN (α : Type) [pd : PlainDataType α] (ι : Type) [IndexType ι] where
+structure DataArrayN (α : Type*) [pd : PlainDataType α] (ι : Type*) [IndexType ι] where
   data : DataArray α
   h_size : Size.size ι = data.size
 
@@ -196,7 +196,7 @@ instance : ArrayType (DataArrayN α ι) ι α where
 --   dropElem_getElem := sorry_proof
 --   reserveElem_id := sorry_proof
 
-def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type) [IndexType κ]
+def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type*) [IndexType κ]
   (hs : size κ = size ι)
   : DataArrayN α κ :=
   ⟨x.data, by simp[hs,x.h_size]⟩
@@ -207,7 +207,7 @@ def DataArrayN.flatten (x : DataArrayN α ι)
   x.reshape (Fin n) (by simp[hn])
 
 
-instance {Cont ι α : Type} [ArrayType Cont ι α] [IndexType ι] [Inhabited α] [pd : PlainDataType α] :
+instance {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [Inhabited α] [pd : PlainDataType α] :
     PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType =>

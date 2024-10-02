@@ -7,7 +7,7 @@ namespace SciLean
 def _root_.UInt8.toUSize (x : UInt8) : USize := x.toUInt32.toUSize
 def _root_.USize.toUInt8 (x : USize) : UInt8 := x.toUInt32.toUInt8
 
-structure BitType (α : Type) where
+structure BitType (α : Type*) where
   bits : UInt8
   h_size : bits ≤ 8  -- we consider only types fitting into a single byte
   fromByte (b : UInt8) : α
@@ -17,7 +17,7 @@ structure BitType (α : Type) where
   -- TODO: Add condition that fromByte does not use any of the unused bits
   fromByte_toByte : ∀ a, fromByte (toByte a) = a
 
-structure ByteType (α : Type) where
+structure ByteType (α : Type*) where
   bytes : USize
   h_size : 1 < bytes  -- for one byte types use BitInfo
   /-- Read `a : α` from byte array `b` starting at the byte `i` -/
@@ -40,7 +40,7 @@ We distinguish between two main types of POD. `BitType` a type that is smaller o
 
 Potentially surprising edge case is array of fixed length, i.e. the type `{a : Array α // a.size = n}`. It is `PlainDataType` if `α` is `PlainDataType`. However, `Array α` is not `PlainDataType`, even if `α` is `PlainDataType`, as it does not have a fixed byte size.
 -/
-class PlainDataType (α : Type) where
+class PlainDataType (α : Type*) where
   btype : BitType α ⊕ ByteType α
 
   -- get_set       -- setting and getting returns the original
@@ -49,13 +49,13 @@ class PlainDataType (α : Type) where
   -- ext           -- extensionality of ByteData i.e. if ∀ i h h', get d i h = get d' i h' → d = d'
 
 /- How many bytes are needed to hold n elements of type α -/
-def PlainDataType.bytes {α : Type} (pd : PlainDataType α) (n : Nat) : Nat :=
+def PlainDataType.bytes {α : Type*} (pd : PlainDataType α) (n : Nat) : Nat :=
   match pd.btype with
   | .inl bitType => (n + ((8/bitType.bits) - 1).toNat) / (8/bitType.bits).toNat
   | .inr byteType => byteType.bytes.toNat * n
 
 /-- How many `α` can fit into a buffer with `byteNum` bytes -/
-def PlainDataType.capacity {α : Type} (pd : PlainDataType α) (byteNum : Nat) : Nat :=
+def PlainDataType.capacity {α : Type*} (pd : PlainDataType α) (byteNum : Nat) : Nat :=
   match pd.btype with
   | .inl bitType => byteNum * (8/bitType.bits.toNat)
   | .inr byteType => byteNum / byteType.bytes.toNat
