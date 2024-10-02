@@ -857,7 +857,7 @@ theorem IndexType.sum.arg_f.revFDerivProj_rule
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revFDerivProjUpdate_rule [DecidableEq ι]
+theorem IndexType.sum.arg_f.revFDerivProjUpdate_rule
     (f : X → ι → Y') (hf : ∀ i, Differentiable K (fun x => f x i)) :
     revFDerivProjUpdate K Yi (fun x => ∑ i, f x i)
     =
