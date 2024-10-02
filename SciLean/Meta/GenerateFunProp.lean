@@ -8,6 +8,7 @@ namespace SciLean
 
 initialize registerTraceClass `Meta.Tactic.fun_prop.generate
 
+
 open Mathlib.Meta
 
 
@@ -180,3 +181,131 @@ elab  "def_fun_prop" doTrans:("with_transitive")? suffix:(ident)? bs:bracketedBi
     let _ ← defineFunPropTheorem statement prf ctx suffix
     if doTrans.isSome then
       defineTransitiveFunProp prf ctx suffix
+
+
+
+namespace FunProp
+
+syntax Parser.suffix := "add_suffix" ident
+syntax Parser.trans := "with_transitive"
+syntax Parser.config := Parser.suffix <|> Parser.trans
+
+syntax Parser.funPropProof := "by" tacticSeq
+
+open Lean
+
+structure DefFunPropConfig where
+  withTransitive := false
+  suffix : Option Name := none
+
+open Lean Syntax Elab
+def parseDefFunPropConfig (stx : TSyntaxArray ``Parser.config) : MetaM DefFunPropConfig := do
+
+  let mut cfg : DefFunPropConfig := {}
+
+  for s in stx do
+    cfg ←
+      match s.raw[0]! with
+      | `(Parser.suffix| add_suffix $id:ident) =>
+        if cfg.suffix.isSome then
+          throwErrorAt s.raw s!"suffix already specified as `{cfg.suffix.get!}`"
+        pure {cfg with suffix := id.getId}
+      | `(Parser.trans| with_transitive) => pure {cfg with withTransitive := true}
+      | _ => throwErrorAt s.raw "invalid option {s}"
+
+  return cfg
+
+def parseFunPropTactic (fId : Name) (stx : Option (TSyntax ``Parser.funPropProof)) : MetaM (TSyntax `tactic) := do
+  match stx with
+  | .some prf =>
+      match prf.raw with
+      | `(Parser.funPropProof| by $tac:tacticSeq) => pure ⟨tac.raw⟩
+      | _ => Elab.throwUnsupportedSyntax
+  | none =>
+    let fIdent := mkIdent fId
+    `(tactic| (unfold $fIdent; fun_prop))
+
+
+
+
+/-- Define function property for a function in particular arguments.
+
+Example:
+```
+def foo (x y z : ℝ) := x*x+y*z
+
+def_fun_prop foo in x y z : Continuous
+```
+Proves continuity of `foo` in `x`, `y` and `z` as theorem `foo.arg_xyz.Continuous_rule`.
+
+You can add additional assumptions, custom tactic to prove the property as demonstrated by the
+following example:
+```
+def_fun_prop bar in x y
+  add_suffix _simple
+  with_transitive
+  (xy : R×R) (h : xy.2 ≠ 0) : (DifferentiableAt R · xy) by unfold bar; fun_prop (disch:=assumption)
+```
+where
+- `add_suffix _simple` adds `_simple` to the end of the generated theorems
+- `with_transitive` also generates all theorems that can be infered from the current theorem.
+  For example, `DifferentiableAt` implies `ContinuousAt`. All `fun_prop` transition theorems
+  are tried to infer additional function properties.
+- `(xy : R×R) (h : xy.2 ≠ 0)` are additional assumptions added to the theorem. These assumptions
+  are stated in the context of the function so for example here we can use `R` without introducing it.
+- `by unfold bar; fun_prop ...` you can specify custom tactic to prove the function property.
+-/
+elab "def_fun_prop " f:ident "in" args:ident* ppLine
+     cfg:Parser.config*
+     bs:bracketedBinder* " : " fprop:term proofTactic:(Parser.funPropProof)? : command => do
+
+  Elab.Command.liftTermElabM <| do
+  -- resolve function name
+  let fId ← resolveUniqueNamespace f
+  let info ← getConstInfo fId
+
+  let cfg ← parseDefFunPropConfig cfg
+  let tac ← parseFunPropTactic fId proofTactic
+
+  forallTelescope info.type fun xs _ => do
+  Elab.Term.elabBinders bs.raw fun ctx₂ => do
+
+    -- separate main arguments in which we want to define new function property
+    let args := args.map (fun id => id.getId)
+    let (mainArgs, otherArgs) ← xs.splitM (fun x => do
+      let n ← x.fvarId!.getUserName
+      return args.contains n)
+
+    -- context variable of the statement and the proof
+    let ctx := otherArgs ++ ctx₂
+
+    -- check if all arguments are present
+    for arg in args do
+      if ← mainArgs.allM (fun a => do pure ((← a.fvarId!.getUserName) != arg)) then
+        throwError s!"function `{fId}` does not have argument `{arg}`"
+
+    -- uncurry function appropriatelly
+    let lvls := info.levelParams.map (fun p => Level.param p)
+    let g ← liftM <|
+      mkLambdaFVars mainArgs (mkAppN (Expr.const info.name lvls) xs)
+      >>=
+      mkUncurryFun mainArgs.size
+
+    -- create statement
+    let fprop' ← Elab.Term.elabTerm fprop.raw (← mkArrow (← inferType g) (← mkFreshTypeMVar))
+    let statement := (← mkAppM' fprop' #[g]).headBeta
+
+    -- elaborate proof and check it worked
+    let proof ← mkFreshExprMVar statement
+    let (subgoals,_) ← liftM <| Elab.runTactic proof.mvarId! tac.raw
+    if subgoals.length ≠ 0 then
+       throwErrorAt fprop.raw s!"failed to prove `{← ppExpr statement}` with tactic `{tac.raw.prettyPrint}`"
+
+    -- add new theorem to the enviroment
+    let _ ← defineFunPropTheorem statement proof ctx cfg.suffix {}
+
+    -- generate transitive theorem
+    if cfg.withTransitive then
+      defineTransitiveFunProp proof ctx cfg.suffix
+
+    pure ()
