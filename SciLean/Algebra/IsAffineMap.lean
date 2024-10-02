@@ -32,20 +32,20 @@ namespace IsAffineMap
 attribute [fun_prop] IsAffineMap
 
 @[fun_prop]
-theorem IsAffineMap_id : IsAffineMap R (fun x : X ↦ x) := by constructor; simp; fun_prop
+theorem id_rule : IsAffineMap R (fun x : X ↦ x) := by constructor; simp; fun_prop
 
 @[fun_prop]
-theorem IsAffineMap_const (y : Y)
+theorem const_rule (y : Y)
   : IsAffineMap R (fun _ : X => y)
   := by constructor; simp; apply IsLinearMap.isLinearMap_const_zero
 
 @[fun_prop]
-theorem IsAffineMap_comp {f : Y → Z} {g : X → Y}
+theorem comp_rule {f : Y → Z} {g : X → Y}
     (hf : IsAffineMap R f) (hg : IsAffineMap R g) : IsAffineMap R (fun x ↦ f (g x)) := by
   sorry_proof
 
 @[fun_prop]
-theorem IsAffineMap_apply (i : ι) : IsAffineMap R (fun f : (i : ι) → E i ↦ f i) := by sorry_proof
+theorem apply_rule (i : ι) : IsAffineMap R (fun f : (i : ι) → E i ↦ f i) := by sorry_proof
 
 @[fun_prop]
 theorem IsAffineMap_pi (f : X → (i : ι) → E i) (hf : ∀ i, IsAffineMap R (f · i)) :
@@ -64,6 +64,11 @@ theorem IsAffineMap_pi (f : X → (i : ι) → E i) (hf : ∀ i, IsAffineMap R (
 -- @[fun_prop]
 -- theorem LinearMap_coe.apply_left (f : Y →ₗ[R] Z) (g : X → Y) (hg : IsAffineMap R g) :
 --     IsAffineMap R (fun x => f (g x)) := sorry_proof
+
+@[fun_prop]
+theorem ofLinear (f : X → Y) (hf : IsLinearMap R f) : IsAffineMap R f := by
+  constructor
+  simp[hf.map_zero,hf]
 
 
 end IsAffineMap
