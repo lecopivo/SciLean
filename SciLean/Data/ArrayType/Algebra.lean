@@ -16,10 +16,10 @@ namespace ArrayType
 
 set_option deprecated.oldSectionVars true
 
-variable {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
-variable {Idx : Type _} [IndexType Idx] [DecidableEq Idx]
+variable {Cont : Type*} {Idx : Type* |> outParam} {Elem : Type* |> outParam}
+variable {Idx : Type*} [IndexType Idx] [DecidableEq Idx]
 
-variable {K : Type _} [RCLike K]
+variable {K : Type*} [RCLike K]
 
 instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace Elem] : TopologicalSpace Cont where
   IsOpen := fun A => ∀ i, IsOpen (fun x : Elem => ∃ a ∈ A, get a i=x)

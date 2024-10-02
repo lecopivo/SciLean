@@ -251,8 +251,8 @@ def innerₗ : F →ₗ[ℝ] F →ₗ[ℝ] ℝ := innerₛₗ ℝ
 variable
   {X} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
   {Y} [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
-  {ι : Type} [SciLean.IndexType ι]
-  {E : ι → Type} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)]
+  {ι : Type*} [SciLean.IndexType ι]
+  {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)]
 
 instance : AdjointSpace 𝕜 𝕜 where
   inner_top_equiv_norm := by

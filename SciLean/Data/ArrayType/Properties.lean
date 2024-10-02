@@ -18,8 +18,8 @@ section GenericArrayType
 set_option deprecated.oldSectionVars true
 
 variable
-  {K : Type} [RCLike K]
-  {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
+  {K : Type*} [RCLike K]
+  {Cont : Type*} {Idx : Type* |> outParam} {Elem : Type* |> outParam}
   [ArrayType Cont Idx Elem] [IndexType Idx] [DecidableEq Idx]
 
 
@@ -29,8 +29,8 @@ variable
 section OnModule
 open ArrayType
 
-variable {R : Type} [CommSemiring R] [AddCommGroup Elem] [Module R Elem]
-  {W : Type} [AddCommGroup W] [Module R W]
+variable {R : Type*} [CommSemiring R] [AddCommGroup Elem] [Module R Elem]
+  {W : Type*} [AddCommGroup W] [Module R W]
 
 def_fun_prop with_transitive (i : Idx) : IsAddGroupHom (fun xs : Cont => ArrayType.get xs i) by
   constructor <;> simp
@@ -112,7 +112,7 @@ end OnModule
 section OnTopologicalSpace
 
 variable [TopologicalSpace Elem]
-  {W : Type} [TopologicalSpace W]
+  {W : Type*} [TopologicalSpace W]
 
 def_fun_prop with_transitive (i : Idx) :
    Continuous (fun xs : Cont => ArrayType.get xs i) by sorry_proof
@@ -135,7 +135,7 @@ end OnTopologicalSpace
 section OnNormedSpaces
 
 variable [NormedAddCommGroup Elem] [NormedSpace K Elem]
-  {W : Type} [NormedAddCommGroup W] [NormedSpace K W]
+  {W : Type*} [NormedAddCommGroup W] [NormedSpace K W]
 
 def_fun_prop with_transitive (i : Idx) :
     IsContinuousLinearMap K (fun xs : Cont => ArrayType.get xs i) by
@@ -168,7 +168,7 @@ section OnVec
 
 variable
   [Vec K Elem]
-  {W : Type} [Vec K W]
+  {W : Type*} [Vec K W]
 
 def_fun_prop with_transitive (i : Idx) :
     IsSmoothLinearMap K (fun xs : Cont => ArrayType.get xs i) by
@@ -195,7 +195,7 @@ section OnSemiInnerProductSpace
 
 variable
   [SemiInnerProductSpace K Elem]
-  {W : Type} [SemiInnerProductSpace K W]
+  {W : Type*} [SemiInnerProductSpace K W]
 
 def_fun_prop with_transitive (i : Idx) :
     HasSemiAdjoint K (fun xs : Cont => ArrayType.get xs i) by sorry_proof
@@ -218,7 +218,7 @@ section OnAdjointSpace
 
 variable
   [NormedAddCommGroup Elem] [AdjointSpace K Elem] [CompleteSpace Elem]
-  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
+  {W : Type*} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
 
 @[fun_trans]
 theorem ArrayType.get.arg_cont.adjoint_rule (i : Idx) :
@@ -256,6 +256,9 @@ end OnAdjointSpace
 section OnAdjointSpace
 
 variable
+  {K : Type} [RCLike K]
+  {Cont : Type} {Idx : Type |> outParam} {Elem : Type |> outParam}
+  [ArrayType Cont Idx Elem] [IndexType Idx] [DecidableEq Idx]
   [NormedAddCommGroup Elem] [AdjointSpace K Elem] [CompleteSpace Elem]
   {I : Type} [IndexType I] [DecidableEq I]
   {E : I → Type} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)]
