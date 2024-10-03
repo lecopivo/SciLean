@@ -111,3 +111,17 @@ def colexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
       | .gt => return .gt
       | .eq => continue
     return .eq
+
+
+/-- Return array of all subarrays of the input array. -/
+def allSubsets {α} (a : Array α) : Array (Array α) := Id.run do
+  let mut as : Array (Array α) := #[]
+  let n := a.size
+  for i in [0:2^n] do
+    let mut ai : Array α := #[]
+    for h : j in [0:a.size] do
+      if (2^j).toUInt64 &&& i.toUInt64 ≠ 0 then
+        ai := ai.push (a[j])
+
+    as := as.push ai
+  return as
