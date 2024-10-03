@@ -164,6 +164,17 @@ instance [∀ i, SemiHilbert K (EI i)] [∀ j, SemiHilbert K (FJ j)] (i : I ⊕ 
   : SemiHilbert K (Sum.rec EI FJ i) where
   test_functions_true := by induction i <;> apply SemiHilbert.test_functions_true
 
+@[reducible]
+instance [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)]
+         [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)] (i : I ⊕ J)
+  : AdjointSpace K (Sum.rec EI FJ i) where
+  norm_smul_le := sorry_proof
+  inner_top_equiv_norm := sorry_proof
+  conj_symm := sorry_proof
+  add_left := sorry_proof
+  smul_left := sorry_proof
+
+
 -- instance [∀ i, FinVec ι K (EI i)] [∀ j, FinVec ι K (FJ j)] (i : I ⊕ J) :
 --     FinVec ι K (Sum.rec EI FJ i) :=
 --   match i with
@@ -557,6 +568,52 @@ theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I]
 theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I]
     [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
     [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
+    ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
+
+
+
+--------------------------------------------------------------------------------
+-- AdjointSpaceStruct -------------------------------------------------
+--------------------------------------------------------------------------------
+
+open StructType in
+class AdjointSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I]
+    [NormedAddCommGroup X] [AdjointSpace K X] [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)]
+  extends
+    VecStruct K X I XI : Prop
+  where
+    inner_structProj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪structProj x i, structProj x' i⟫[K]
+
+
+--------------------------------------------------------------------------------
+-- AdjointSpaceStruct instances ---------------------------------------
+--------------------------------------------------------------------------------
+
+instance (priority:=low) {X} [NormedAddCommGroup X] [AdjointSpace K X] :
+    AdjointSpaceStruct K X Unit (fun _ => X) where
+  inner_structProj := sorry_proof
+
+
+instance
+  [NormedAddCommGroup E] [AdjointSpace K E] [NormedAddCommGroup F] [AdjointSpace K F]
+  [∀ i, NormedAddCommGroup (EI i)] [∀ j, NormedAddCommGroup (FJ j)] [∀ i, AdjointSpace K (EI i)] [∀ j, AdjointSpace K (FJ j)]
+  [IndexType I] [IndexType J]
+  [AdjointSpaceStruct K E I EI] [AdjointSpaceStruct K F J FJ] :
+  AdjointSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
+  -- inner_structProj := sorry_proof
+  -- testFun_structProj := sorry_proof
+
+
+@[simp, simp_core]
+theorem inner_oneHot_eq_inner_structProj'' [StructType X I XI] [IndexType I] [DecidableEq I]
+    [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [NormedAddCommGroup X] [AdjointSpace K X]
+    [AdjointSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
+    ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
+
+@[simp, simp_core]
+theorem inner_oneHot_eq_inner_proj''' [StructType X I XI] [IndexType I] [DecidableEq I]
+    [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [NormedAddCommGroup X] [AdjointSpace K X]
+    [AdjointSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
 
 

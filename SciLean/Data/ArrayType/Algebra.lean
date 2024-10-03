@@ -231,6 +231,11 @@ instance {K} [RCLike K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem]
   inner_structProj := sorry_proof
   testFun_structProj := sorry_proof
 
+-- TODO: this needs fixing as those continuities should be already infered!
+instance {K} [RCLike K] [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [AdjointSpace K Elem] : AdjointSpaceStruct K Cont (Idx×Unit) (fun _ => Elem) where
+  inner_structProj := sorry_proof
+  structProj_continuous := sorry_proof
+  structMake_continuous := sorry_proof
 
 
 -- TODO: provide proper measurable structure by

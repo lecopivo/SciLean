@@ -36,6 +36,11 @@ namespace StructType
 variable {X I XI} [StructType X I XI]
 
 @[simp, simp_core]
+theorem structProj_structModify'' (x : X) (i j : I) (f : XI i → XI i) (h : i = j) :
+    structProj (structModify i f x) j = h ▸ f (structProj x i) := by
+  subst h; simp only [structProj_structModify]
+
+@[simp, simp_core]
 theorem structProj_structMake (f : (i : I) → XI i) (i : I)
   : structProj (X:=X) (structMake f) i = f i := by apply congr_fun; apply left_inv
 
