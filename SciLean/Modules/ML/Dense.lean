@@ -25,30 +25,13 @@ def_fun_prop dense in weights bias x
   : Differentiable R
 
 
-
-theorem revFDeriv_eq_revFDerivProj {R} [RCLike R]
-  {X} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
-  {Y} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
-  (f : X → Y) :
-  revFDeriv R f
-  =
-  fun x =>
-    let ydf := revFDerivProj R Unit f x
-    (ydf.1, fun dy => ydf.2 () dy) := by unfold revFDerivProj revFDeriv; simp
-
-
-
 def_fun_trans dense in weights bias x
   arg_subsets
   [DecidableEq ι] : revFDerivProj R Unit by (unfold dense; autodiff)
 
-
 def_fun_trans dense in weights bias x
   arg_subsets
   [DecidableEq ι] : revFDerivProjUpdate R Unit by (unfold dense; autodiff)
-
-
-#check Nat
 
 def_fun_trans dense in weights bias x
   arg_subsets
