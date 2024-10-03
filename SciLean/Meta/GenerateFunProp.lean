@@ -188,7 +188,8 @@ namespace FunProp
 
 syntax Parser.suffix := "add_suffix" ident
 syntax Parser.trans := "with_transitive"
-syntax Parser.config := Parser.suffix <|> Parser.trans
+syntax Parser.argSubsets := "arg_subsets"
+syntax Parser.config := Parser.suffix <|> Parser.trans <|> Parser.argSubsets
 
 syntax Parser.funPropProof := "by" tacticSeq
 
@@ -197,6 +198,7 @@ open Lean
 structure DefFunPropConfig where
   withTransitive := false
   suffix : Option Name := none
+  argSubsets := false
 
 open Lean Syntax Elab
 def parseDefFunPropConfig (stx : TSyntaxArray ``Parser.config) : MetaM DefFunPropConfig := do
@@ -211,6 +213,7 @@ def parseDefFunPropConfig (stx : TSyntaxArray ``Parser.config) : MetaM DefFunPro
           throwErrorAt s.raw s!"suffix already specified as `{cfg.suffix.get!}`"
         pure {cfg with suffix := id.getId}
       | `(Parser.trans| with_transitive) => pure {cfg with withTransitive := true}
+      | `(Parser.argSubsets| arg_subsets) => pure {cfg with argSubsets := true}
       | _ => throwErrorAt s.raw "invalid option {s}"
 
   return cfg
@@ -228,44 +231,17 @@ def parseFunPropTactic (fId : Name) (stx : Option (TSyntax ``Parser.funPropProof
 
 
 
-/-- Define function property for a function in particular arguments.
-
-Example:
-```
-def foo (x y z : ℝ) := x*x+y*z
-
-def_fun_prop foo in x y z : Continuous
-```
-Proves continuity of `foo` in `x`, `y` and `z` as theorem `foo.arg_xyz.Continuous_rule`.
-
-You can add additional assumptions, custom tactic to prove the property as demonstrated by the
-following example:
-```
-def_fun_prop bar in x y
-  add_suffix _simple
-  with_transitive
-  (xy : R×R) (h : xy.2 ≠ 0) : (DifferentiableAt R · xy) by unfold bar; fun_prop (disch:=assumption)
-```
-where
-- `add_suffix _simple` adds `_simple` to the end of the generated theorems
-- `with_transitive` also generates all theorems that can be infered from the current theorem.
-  For example, `DifferentiableAt` implies `ContinuousAt`. All `fun_prop` transition theorems
-  are tried to infer additional function properties.
-- `(xy : R×R) (h : xy.2 ≠ 0)` are additional assumptions added to the theorem. These assumptions
-  are stated in the context of the function so for example here we can use `R` without introducing it.
-- `by unfold bar; fun_prop ...` you can specify custom tactic to prove the function property.
--/
-elab "def_fun_prop " f:ident "in" args:ident* ppLine
-     cfg:Parser.config*
-     bs:bracketedBinder* " : " fprop:term proofTactic:(Parser.funPropProof)? : command => do
-
+open Lean Meta Elab Term in
+def defFunProp (f : Ident) (args : TSyntaxArray `ident)
+  (cfg : TSyntaxArray ``Parser.config) (bs : TSyntaxArray ``Parser.Term.bracketedBinder)
+  (fprop : TSyntax `term) (proof : Option (TSyntax ``Parser.funPropProof)) : Command.CommandElabM Unit := do
   Elab.Command.liftTermElabM <| do
   -- resolve function name
   let fId ← resolveUniqueNamespace f
   let info ← getConstInfo fId
 
   let cfg ← parseDefFunPropConfig cfg
-  let tac ← parseFunPropTactic fId proofTactic
+  let tac ← parseFunPropTactic fId proof
 
   forallTelescope info.type fun xs _ => do
   Elab.Term.elabBinders bs.raw fun ctx₂ => do
@@ -309,3 +285,47 @@ elab "def_fun_prop " f:ident "in" args:ident* ppLine
       defineTransitiveFunProp proof ctx cfg.suffix
 
     pure ()
+
+
+
+/-- Define function property for a function in particular arguments.
+
+Example:
+```
+def foo (x y z : ℝ) := x*x+y*z
+
+def_fun_prop foo in x y z : Continuous
+```
+Proves continuity of `foo` in `x`, `y` and `z` as theorem `foo.arg_xyz.Continuous_rule`.
+
+You can add additional assumptions, custom tactic to prove the property as demonstrated by the
+following example:
+```
+def_fun_prop bar in x y
+  add_suffix _simple
+  with_transitive
+  (xy : R×R) (h : xy.2 ≠ 0) : (DifferentiableAt R · xy) by unfold bar; fun_prop (disch:=assumption)
+```
+where
+- `add_suffix _simple` adds `_simple` to the end of the generated theorems
+- `with_transitive` also generates all theorems that can be infered from the current theorem.
+  For example, `DifferentiableAt` implies `ContinuousAt`. All `fun_prop` transition theorems
+  are tried to infer additional function properties.
+- `(xy : R×R) (h : xy.2 ≠ 0)` are additional assumptions added to the theorem. These assumptions
+  are stated in the context of the function so for example here we can use `R` without introducing it.
+- `by unfold bar; fun_prop ...` you can specify custom tactic to prove the function property.
+-/
+elab "def_fun_prop " f:ident "in" args:ident* ppLine
+     cfg:Parser.config*
+     bs:bracketedBinder* " : " fprop:term proof:(Parser.funPropProof)? : command => do
+
+  let c ← Lean.Elab.Command.liftTermElabM <| parseDefFunPropConfig cfg
+
+  defFunProp f args cfg bs fprop proof
+
+  -- generate the same with all argument subsets
+  if c.argSubsets then
+    for as in args.allSubsets do
+      if as.size = 0 || as.size = args.size then
+        continue
+      defFunProp f as cfg bs fprop proof

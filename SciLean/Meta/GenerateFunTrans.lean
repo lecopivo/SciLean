@@ -112,9 +112,6 @@ def generateFunTransDefAndTheorem (statement proof : Expr) (ctx : Array Expr)
     levelParams := lvls.toList
   }
 
-  IO.println (← ppExpr thmType)
-  IO.println (← ppExpr thmVal)
-
   addDecl (.thmDecl thmDecl)
   FunTrans.addTheorem thmName
 
@@ -276,20 +273,6 @@ def defFunTrans (f : Ident) (args : TSyntaxArray `ident)
     let _ ← generateFunTransDefAndTheorem statement proof ctx cfg.suffix {}
 
     pure ()
-
-
-def _root_.Array.allSubsets {α} (a : Array α) : Array (Array α) := Id.run do
-  let mut as : Array (Array α) := #[]
-  let n := a.size
-  for i in [0:2^n] do
-    let mut ai : Array α := #[]
-    for h : j in [0:a.size] do
-      if (2^j).toUInt64 &&& i.toUInt64 ≠ 0 then
-        ai := ai.push (a[j])
-
-    as := as.push ai
-  return as
-
 
 
 open Lean Meta Elab Term in
