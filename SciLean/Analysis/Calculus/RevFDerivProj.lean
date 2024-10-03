@@ -14,19 +14,19 @@ set_option deprecated.oldSectionVars true
 
 variable
   (K I : Type) [RCLike K]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
-  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
-  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
   {ι : Type} [IndexType ι] [DecidableEq ι]
   {κ : Type} [IndexType κ] [DecidableEq κ]
   {E : Type} {EI : I → Type}
   [StructType E I EI] [IndexType I] [DecidableEq I]
-  [NormedAddCommGroup E] [AdjointSpace K E] [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)]
+  [NormedAddCommGroup E] [AdjointSpace K E] [CompleteSpace E] [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)] [∀ i, CompleteSpace (EI i)]
   [VecStruct K E I EI] -- todo: define AdjointSpaceStruct
   {F J : Type} {FJ : J → Type}
   [StructType F J FJ] [IndexType J] [DecidableEq J]
-  [NormedAddCommGroup F] [AdjointSpace K F] [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)]
+  [NormedAddCommGroup F] [AdjointSpace K F] [CompleteSpace F] [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)] [∀ j, CompleteSpace (FJ j)]
   [VecStruct K F J FJ] -- todo: define AdjointSpaceStruct
 
 
@@ -44,13 +44,6 @@ def revFDerivProjUpdate [DecidableEq I]
   (f : X → E) (x : X) : E×((i : I)→EI i→X→X) :=
   let ydf' := revFDerivProj K I f x
   (ydf'.1, fun i de dx => dx + ydf'.2 i de)
-
-
--- noncomputable
--- abbrev gradient (f : X → Y) (x : X) : (Y → X):= (revFDeriv K f x).2
-
--- noncomputable
--- abbrev scalarGradient (f : X → K) (x : X) : X := (revFDeriv K f x).2 1
 
 
 --------------------------------------------------------------------------------
@@ -80,6 +73,15 @@ theorem revFDerivProjUpdate_snd_zero (f : X → E) (x dx : X) (i : I)
   : (revFDerivProjUpdate K I f x).2 i 0 dx = dx :=
 by
   simp[revFDerivProjUpdate]
+
+
+theorem revFDeriv_eq_revFDerivProj (f : X → Y) :
+  revFDeriv K f
+  =
+  fun x =>
+    let ydf := revFDerivProj K Unit f x
+    (ydf.1, fun dy => ydf.2 () dy) := by unfold revFDerivProj revFDeriv; simp
+
 
 
 --------------------------------------------------------------------------------
@@ -378,16 +380,16 @@ set_option deprecated.oldSectionVars true
 variable
   {K : Type} [RCLike K]
   {ι : Type} [IndexType ι] [DecidableEq ι]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
-  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
   {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IndexType Xi] [DecidableEq Xi]
   {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IndexType Yi] [DecidableEq Yi]
   {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IndexType Zi] [DecidableEq Zi]
-  [NormedAddCommGroup X'] [AdjointSpace K X'] [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [VecStruct K X' Xi XI]
-  [NormedAddCommGroup Y'] [AdjointSpace K Y'] [∀ i, NormedAddCommGroup (YI i)] [∀ i, AdjointSpace K (YI i)] [VecStruct K Y' Yi YI]
-  [NormedAddCommGroup Z'] [AdjointSpace K Z'] [∀ i, NormedAddCommGroup (ZI i)] [∀ i, AdjointSpace K (ZI i)] [VecStruct K Z' Zi ZI]
-  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W]
+  [NormedAddCommGroup X'] [AdjointSpace K X'] [CompleteSpace X'] [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [∀ i, CompleteSpace (XI i)] [VecStruct K X' Xi XI]
+  [NormedAddCommGroup Y'] [AdjointSpace K Y'] [CompleteSpace Y'] [∀ i, NormedAddCommGroup (YI i)] [∀ i, AdjointSpace K (YI i)] [∀ i, CompleteSpace (YI i)] [VecStruct K Y' Yi YI]
+  [NormedAddCommGroup Z'] [AdjointSpace K Z'] [CompleteSpace Z'] [∀ i, NormedAddCommGroup (ZI i)] [∀ i, AdjointSpace K (ZI i)] [∀ i, CompleteSpace (ZI i)] [VecStruct K Z' Zi ZI]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
 
 
 
@@ -932,8 +934,8 @@ section InnerProductSpace
 variable
   {R : Type} [RealScalar R]
   -- {K : Type _} [Scalar R K]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
 
 -- Inner -----------------------------------------------------------------------
 --------------------------------------------------------------------------------

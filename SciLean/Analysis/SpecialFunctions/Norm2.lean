@@ -69,7 +69,7 @@ theorem norm₂.arg_x.fderiv_rule_at (x : U) (hx : x ≠ 0) :
     fderiv R (fun x : U => ‖x‖₂[R]) x
     =
     fun dx =>L[R] ⟪dx,x⟫[R] / ‖x‖₂[R] := by
-  unfold norm₂; simp[Norm2.norm2]; fun_trans (disch:=aesop)
+  unfold norm₂; simp[Norm2.norm2]; fun_trans (disch:=simp[hx])
   ext dx; simp
   rw [← AdjointSpace.inner_conj_symm]
   simp; ring

@@ -4,6 +4,8 @@ import SciLean.Analysis.Calculus.Notation.Gradient
 import SciLean.Util.SolveFun
 import SciLean.Tactic.LetEnter
 
+set_option linter.unusedVariables false
+
 namespace SciLean
 
 variable
@@ -50,9 +52,9 @@ def rungeKutta4 (f : R → X → X) (tₙ Δt : R) (xₙ : X) : X :=
 
 
 variable
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
-  {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X]
+  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y]
+  {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace R Z]
 
 
 /-- Symplectic Euler integrator

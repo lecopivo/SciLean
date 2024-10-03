@@ -2,9 +2,9 @@ import SciLean.Analysis.Calculus.FDeriv
 import SciLean.Analysis.AdjointSpace.Adjoint
 
 set_option linter.unusedVariables false
+set_option deprecated.oldSectionVars true
 
 namespace SciLean
-
 
 open ContinuousLinearMap
 
@@ -12,22 +12,22 @@ open ContinuousLinearMap
 noncomputable
 def revFDeriv
   (K : Type _) [RCLike K]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X]
+  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y]
   (f : X → Y) (x : X) : Y×(Y→X) :=
   (f x, adjoint K (fun dx => fderiv K f x dx))
 
 noncomputable
 def fgradient
   {K : Type _} [RCLike K]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X]
   (f : X → K) (x : X) : X := (revFDeriv K f x).2 1
 
 noncomputable
 def adjointFDeriv
   (K : Type _) [RCLike K]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X]
+  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y]
   (f : X → Y) (x : X) (dy : Y) : X := (revFDeriv K f x).2 dy
 
 namespace revFDeriv

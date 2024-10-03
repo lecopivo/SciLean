@@ -8,19 +8,21 @@ set_option deprecated.oldSectionVars true
 
 variable
   (K I : Type _) [RCLike K]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y]
-  {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace K Z]
-  {W : Type _} [NormedAddCommGroup W] [AdjointSpace K W]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
+  {W : Type _} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
   {ι : Type _} [IndexType ι] [DecidableEq ι]
   {κ : Type _} [IndexType κ] [DecidableEq κ]
   {E : Type _} {EI : I → Type _}
   [StructType E I EI] [IndexType I] [DecidableEq I]
-  [NormedAddCommGroup E] [AdjointSpace K E] [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)]
+  [NormedAddCommGroup E] [AdjointSpace K E] [CompleteSpace E]
+  [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)] [∀ i, CompleteSpace (EI i)]
   [VecStruct K E I EI] -- todo: define AdjointSpaceStruct
   {F J : Type _} {FJ : J → Type _}
   [StructType F J FJ] [IndexType J] [DecidableEq J]
-  [NormedAddCommGroup F] [AdjointSpace K F] [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)]
+  [NormedAddCommGroup F] [AdjointSpace K F] [CompleteSpace F]
+  [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)] [∀ j, CompleteSpace (FJ j)]
   [VecStruct K F J FJ] -- todo: define AdjointSpaceStruct
 
 
@@ -239,16 +241,19 @@ set_option deprecated.oldSectionVars true
 
 variable
   {K : Type} [RCLike K]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
-  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
   {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IndexType Xi] [DecidableEq Xi]
   {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IndexType Yi] [DecidableEq Yi]
   {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IndexType Zi] [DecidableEq Zi]
-  [NormedAddCommGroup X'] [AdjointSpace K X'] [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [VecStruct K X' Xi XI]
-  [NormedAddCommGroup Y'] [AdjointSpace K Y'] [∀ i, NormedAddCommGroup (YI i)] [∀ i, AdjointSpace K (YI i)] [VecStruct K Y' Yi YI]
-  [NormedAddCommGroup Z'] [AdjointSpace K Z'] [∀ i, NormedAddCommGroup (ZI i)] [∀ i, AdjointSpace K (ZI i)] [VecStruct K Z' Zi ZI]
-  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W]
+  [NormedAddCommGroup X'] [AdjointSpace K X'] [CompleteSpace X']
+  [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [∀ i, CompleteSpace (XI i)] [VecStruct K X' Xi XI]
+  [NormedAddCommGroup Y'] [AdjointSpace K Y'] [CompleteSpace Y']
+  [∀ i, NormedAddCommGroup (YI i)] [∀ i, AdjointSpace K (YI i)] [∀ i, CompleteSpace (YI i)] [VecStruct K Y' Yi YI]
+  [NormedAddCommGroup Z'] [AdjointSpace K Z'] [CompleteSpace Z']
+  [∀ i, NormedAddCommGroup (ZI i)] [∀ i, AdjointSpace K (ZI i)] [∀ i, CompleteSpace (ZI i)] [VecStruct K Z' Zi ZI]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
   {ι : Type} [IndexType ι]
 
 
@@ -517,7 +522,7 @@ section SMulOnAdjointSpace
 
 variable
   {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IndexType Yi] [DecidableEq Yi]
-  [NormedAddCommGroup Y] [AdjointSpace K Y] [∀ i, NormedAddCommGroup (YI i)] [∀ i, AdjointSpace K (YI i)] [VecStruct K Y Yi YI]
+  [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y] [∀ i, NormedAddCommGroup (YI i)] [∀ i, AdjointSpace K (YI i)] [∀ i, CompleteSpace (YI i)] [VecStruct K Y Yi YI]
 
 
 @[fun_trans]

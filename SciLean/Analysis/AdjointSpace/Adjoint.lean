@@ -24,7 +24,7 @@ set_default_scalar 𝕜
 
 open AdjointSpace SciLean
 
-variable [CompleteSpace E] [CompleteSpace G]
+variable [CompleteSpace E] [CompleteSpace G] [CompleteSpace F]
 
 
 variable (𝕜)
@@ -43,7 +43,7 @@ variable {𝕜}
 postfix:1000 "†" => adjoint defaultScalar%
 
 
-theorem adjoint_ex (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) :
+theorem adjoint_ex [CompleteSpace E] [CompleteSpace F] (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) :
     ∀ x y, ⟪A x, y⟫ = ⟪x, (A†) y⟫ := sorry_proof
 
 theorem adjoint_clm {A : E → F} (hA : IsContinuousLinearMap 𝕜 A) : IsContinuousLinearMap 𝕜 (A†) :=
