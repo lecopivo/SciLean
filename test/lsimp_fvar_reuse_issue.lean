@@ -1,10 +1,10 @@
-import SciLean.Tactic.MathlibCompiledTactics
+import SciLean.Tactic.CompiledTactics
 import SciLean.Tactic.LSimp.Elab
 
 open Lean
 
 
-def Impl {α} (a : α) := α
+def Impl {α} (_ : α) := α
 
 def finish_impl {α} {a : α} : Impl a := a
 

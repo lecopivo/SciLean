@@ -4,18 +4,16 @@ open SciLean
 
 variable
   {K : Type} [RealScalar K]
-  {X : Type} [Vec K X]
-  {ι : Type} {κ : Type} [IndexType ι] [IndexType κ]
+  {X : Type} [NormedAddCommGroup X] [NormedSpace K X]
 
 set_default_scalar K
 
-example (f : X → X) (hf : CDifferentiable K f)
-  : (∂ x, let df := ∂ (x':=0), f x'
-          df x + df x)
+example (f : X → X) (hf : Differentiable K f) (x dx)
+  : (∂ (x'':=x;dx), (let df := ∂ (x':=0), f x'
+                     df x'' + df x''))
     =
     let df := ∂ (x':=0), f x';
-    fun x dx => ∂ (x:=x;dx), df x + ∂ (x:=x;dx), df x :=
-by
-  conv =>
-    lhs; autodiff
-  sorry
+    ∂ (x:=x;dx), df x + ∂ (x:=x;dx), df x := by
+  -- conv =>
+  --   lhs; autodiff
+  sorry_proof

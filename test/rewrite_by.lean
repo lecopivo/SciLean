@@ -1,5 +1,6 @@
 import SciLean
 
+set_option linter.setOption false
 set_option pp.proofs false
 
 /-- info: ⋯ : True -/

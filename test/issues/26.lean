@@ -15,4 +15,4 @@ a + (a + x) : ℕ
     let x := a + a
     x))
   rewrite_by
-    simp (config:={zeta:=false,singlePass:=true}) [Tactic.lift_lets_simproc]
+    lsimp

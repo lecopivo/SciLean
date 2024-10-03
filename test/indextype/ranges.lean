@@ -14,7 +14,7 @@ info: (1, 4)
 -/
 #guard_msgs in
 #eval show IO Unit from do
-  for i in IndexType.Stream.start (I:=Fin 5 × Fin 5) (.interval (1,4) (2,2)) do
+  for i in intervalRange ((1,4) : Fin 5 × Fin 5) (2,2) do
     IO.println i
 
 
@@ -29,8 +29,7 @@ info: (inl (1, 0))
 -/
 #guard_msgs in
 #eval show IO Unit from do
-  for i in IndexType.Stream.start (I:=(Fin 3 × Fin 3) ⊕ Bool)
-           (.interval (.inl (1,0)) (.inr false)) do
+  for i in intervalRange ((.inl (1,0)) : (Fin 3 × Fin 3) ⊕ Bool) (.inr false) do
     IO.println i
 
 
@@ -43,7 +42,7 @@ info: (inl 1)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inl 1) (.inl 4)) do
+  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inl 1) (.inl 4)) do
     IO.println i
 
 /--
@@ -54,7 +53,7 @@ info: (inl 4)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inl 4) (.inl 1)) do
+  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inl 4) (.inl 1)) do
     IO.println i
 
 
@@ -66,7 +65,7 @@ info: (inr 1)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inr 1) (.inr 4)) do
+  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inr 1) (.inr 4)) do
     IO.println i
 
 /--
@@ -77,7 +76,7 @@ info: (inr 4)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inr 4) (.inr 1)) do
+  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inr 4) (.inr 1)) do
     IO.println i
 
 #eval last? (Fin 100)
@@ -91,7 +90,7 @@ info: (inl 3)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inl 3) (.inr 2)) do
+  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inl 3) (.inr 2)) do
     IO.println i
 
 
@@ -104,7 +103,7 @@ info: (inr 2)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inr 2) (.inl 3)) do
+  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inr 2) (.inl 3)) do
     IO.println i
 
 
@@ -126,7 +125,7 @@ Foo.thrd 2
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Foo) (.interval (.fst 1) (.thrd 2)) do
+  for i in IndexType.Iterator.start (I:=Foo) (.interval (.fst 1) (.thrd 2)) do
     IO.println (repr i)
 
 
@@ -140,7 +139,7 @@ Foo.fst 1
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Foo) (.interval (.thrd 2) (.fst 1)) do
+  for i in IndexType.Iterator.start (I:=Foo) (.interval (.thrd 2) (.fst 1)) do
     IO.println (repr i)
 
 
@@ -155,5 +154,5 @@ Foo.thrd 2
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Stream.start (I:=Foo) (.full) do
+  for i in IndexType.Iterator.start (I:=Foo) (.full) do
     IO.println (repr i)

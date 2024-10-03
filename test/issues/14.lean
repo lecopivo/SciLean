@@ -4,26 +4,26 @@ open SciLean
 
 variable
   {R : Type _} [RealScalar R]
-  {X : Type _} [SemiInnerProductSpace R X]
-  {Y : Type _} [SemiHilbert R Y]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
 
 open ComplexConjugate
 
 example
   (f : X → Y) (g : X → Y)
-  (hf : HasAdjDiff R f) (hg : HasAdjDiff R g)
-  : (revDeriv R fun x => ⟪f x, g x⟫[R])
+  (hf : Differentiable R f) (hg : Differentiable R g)
+  : (revFDeriv R fun x => ⟪f x, g x⟫[R])
     =
     fun x =>
-      let y₁df := revDeriv R f x
-      let y₂dg := revDeriv R g x
+      let y₁df := revFDeriv R f x
+      let y₂dg := revFDeriv R g x
       let dx₁ := y₁df.2 y₂dg.1
       let dx₂ := y₂dg.2 y₁df.1
       (⟪y₁df.1, y₂dg.1⟫[R],
        fun dr =>
          conj dr • dx₁ + dr • dx₂):=
 by
-  simp[revDeriv]
+  simp[revFDeriv]
   funext x
   autodiff
-  simp[revDeriv,revDerivUpdate,smul_push]
+  simp[revFDeriv,smul_push]

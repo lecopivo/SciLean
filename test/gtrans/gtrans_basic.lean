@@ -4,6 +4,7 @@ import SciLean
 
 open SciLean
 
+set_option linter.longLine false
 set_option linter.unusedVariables false
 
 @[gtrans]
@@ -54,14 +55,11 @@ variable (n : ℕ)
 /--
 info: HasDeriv (fun x => x * x * x * x * x * x) fun x =>
   let y := x * x * x * x * x;
-  let y_1 := x * x * x * x;
-  let y_2 := x * x * x;
-  let y_3 := x * x;
   fun dx =>
   let dy := x * dx + x * dx;
-  let dy := y_3 * dx + x * dy;
-  let dy := y_2 * dx + x * dy;
-  let dy := y_1 * dx + x * dy;
+  let dy := x * x * dx + x * dy;
+  let dy := x * x * x * dx + x * dy;
+  let dy := x * x * x * x * dx + x * dy;
   y * dx + x * dy : Prop
 -/
 #guard_msgs in
@@ -133,9 +131,11 @@ variable (n:Nat)
 /--
 info: HasDerivOn (fun x => x * n / (x * n)) ((fun x => x * n) ⁻¹' {0})ᶜ fun x =>
   let y := x * n;
+  let z := x * n;
   fun dx =>
   let dy := n * dx;
-  (dy * y - y * dy) / (y * y) : Prop
+  let dz := n * dx;
+  (dy * z - y * dz) / (z * z) : Prop
 -/
 #guard_msgs in
 #check (HasDerivOn (fun x : Nat => x*n/(x*n)) _ _) rewrite_by gtrans (norm:=lsimp)
@@ -147,7 +147,8 @@ info: HasDerivOn (fun x => x * x / (x + x * x * n)) ((fun x => x + x * x * n) �
   let z := x + x * x * n;
   fun dx =>
   let dy := x * dx + x * dx;
-  let dz := n * dy;
+  let dy_1 := x * dx + x * dx;
+  let dz := n * dy_1;
   let dz := dx + dz;
   (dy * z - y * dz) / (z * z) : Prop
 -/

@@ -4,20 +4,18 @@ open SciLean LeanColls
 
 variable
   {K : Type} [RealScalar K]
-  {X : Type} [SemiInnerProductSpace K X]
-  {Y : Type} [SemiInnerProductSpace K Y]
-  {Z : Type} [SemiInnerProductSpace K Z]
-  {ι : Type} [IndexType ι] [DecidableEq ι] [LawfulIndexType ι]
+  {ι : Type} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
+
+#exit
 
 example
   : (∇ (x : Fin 10 → K), fun i => x i)
     =
     fun x dx => dx :=
 by
-  unfold adjointFDeriv
   (conv => lhs; autodiff)
 
 example
@@ -27,8 +25,6 @@ example
 by
   unfold fgradient
   (conv => lhs; autodiff)
-
-#exit
 
 example
   : (∇ (x : Fin 10 → K), ∑ i, ‖x i‖₂²)

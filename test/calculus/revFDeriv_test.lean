@@ -1,8 +1,8 @@
 import SciLean
-import SciLean.Analysis.Calculus.RevFDerivProj
-import SciLean.Util.Profile
 
 open SciLean
+
+set_option deprecated.oldSectionVars true
 
 -- todo: move thi
 section StructTypeSimps
@@ -12,7 +12,7 @@ variable
   {Y J : Type _} {YJ : J → Type _} [StructType Y J YJ] [Zero Y] [∀ j, Zero (YJ j)] [DecidableEq J]
 
 @[simp, simp_core]
-theorem sum_oneHot [Add X] [Zero X] [IndexType I] (xi : (i : I) → XI i) :
+theorem sum_oneHot [Add X] [IndexType I] (xi : (i : I) → XI i) :
     (∑ i : I, oneHot (X:=X) i (xi i)) = structMake xi := sorry_proof
 
 @[simp, simp_core]
@@ -56,29 +56,29 @@ set_default_scalar K
 -- slow `fun_prop`
 example : Differentiable K fun (x : Fin 5 → Fin 10 → Fin 15→ K) i_1 j => x i_1 j i := by fun_prop
 
-@[fun_trans]
-theorem revFDeriv_linear_map_rule (f : X → Y) (hf : IsContinuousLinearMap K f) :
-    revFDeriv K f
-    =
-    fun x => (f x, fun dy => adjoint K f dy) := by unfold revFDeriv; fun_trans
+-- @[fun_trans]
+-- theorem revFDeriv_linear_map_rule (f : X → Y) (hf : IsContinuousLinearMap K f) :
+--     revFDeriv K f
+--     =
+--     fun x => (f x, fun dy => adjoint K f dy) := by unfold revFDeriv; fun_trans
 
 
-@[fun_trans]
-theorem ArrayType.get.arg_cont.adjoint_rule
-    {XI : Type} [NormedAddCommGroup XI] [AdjointSpace K XI] [CompleteSpace XI]
-    [ArrayType X I XI] [DecidableEq I] (i : I) :
-    adjoint K (fun x : X => ArrayType.get x i)
-    =
-    fun xi => oneHot (X:=X) i xi := by sorry_proof
+-- @[fun_trans]
+-- theorem ArrayType.get.arg_cont.adjoint_rule
+--     {XI : Type} [NormedAddCommGroup XI] [AdjointSpace K XI] [CompleteSpace XI]
+--     [ArrayType X I XI] [DecidableEq I] (i : I) :
+--     adjoint K (fun x : X => ArrayType.get x i)
+--     =
+--     fun xi => oneHot (X:=X) i xi := by sorry_proof
 
 
-@[fun_trans]
-theorem ArrayType.ofFn.arg_f.adjoint_rule
-    {XI : Type} [NormedAddCommGroup XI] [AdjointSpace K XI] [CompleteSpace XI]
-    [ArrayType X I XI] [IndexType I] [DecidableEq I] :
-    adjoint K (fun f : I → XI => ArrayType.ofFn (Cont:=X) f)
-    =
-    fun x i => ArrayType.get x i := by sorry_proof
+-- @[fun_trans]
+-- theorem ArrayType.ofFn.arg_f.adjoint_rule
+--     {XI : Type} [NormedAddCommGroup XI] [AdjointSpace K XI] [CompleteSpace XI]
+--     [ArrayType X I XI] [IndexType I] [DecidableEq I] :
+--     adjoint K (fun f : I → XI => ArrayType.ofFn (Cont:=X) f)
+--     =
+--     fun x i => ArrayType.get x i := by sorry_proof
 
 
 example
@@ -166,6 +166,8 @@ example
     fun x => (x, fun dx => dx) :=
 by
   conv => lhs; autodiff
+
+#exit
 
 example
   : revFDerivProj K Unit (fun (x : Fin 10 → K) => ∑ i, x i)

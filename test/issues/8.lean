@@ -1,4 +1,4 @@
-import SciLean.Core
+import SciLean
 
 open SciLean
 

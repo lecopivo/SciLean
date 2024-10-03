@@ -1,3 +1,5 @@
+#exit
+
 import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
 import SciLean.Core.Transformations.SurfaceParametrization
 import SciLean.Core.Rand

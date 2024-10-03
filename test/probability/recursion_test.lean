@@ -31,8 +31,8 @@ def list_sum1_estimator (θ : R) (l : List R) (n : Nat) : Rand R :=
     rw[pull_E_nat_rec (x₀:=_) (r:=_) (hf:=by fun_prop)]
 
 
-#eval print_mean_variance (list_sum1_estimator 0.5 [1.0,2,3,4] 4) 1000 ""
-#eval print_mean_variance (list_sum1_estimator 0.3 [4.0,3,2,1] 4) 1000 ""
+-- #eval print_mean_variance (list_sum1_estimator 0.5 [1.0,2,3,4] 4) 1000 ""
+-- #eval print_mean_variance (list_sum1_estimator 0.3 [4.0,3,2,1] 4) 1000 ""
 
 
 def list_sum2 (l : List R) : R :=
@@ -51,8 +51,8 @@ def list_sum2_estimator (θ : R) (l : List R) : Rand R :=
     rw[pull_E_list_recOn (D:=fun _ => _) (l:=_) (x₀:=_) (r:=_) (hf:=by fun_prop)]
 
 
-#eval print_mean_variance (list_sum2_estimator 0.5 [1.0,2,3,4]) 1000 ""
-#eval print_mean_variance (list_sum2_estimator 0.3 [4.0,3,2,1]) 1000 ""
+-- #eval print_mean_variance (list_sum2_estimator 0.5 [1.0,2,3,4]) 1000 ""
+-- #eval print_mean_variance (list_sum2_estimator 0.3 [4.0,3,2,1]) 1000 ""
 
 
 -- tail recursive version of
@@ -93,5 +93,5 @@ def list_sum3_estimator (θ : R) (l : List R) : Rand R := do
   return f 0
 
 
-#eval print_mean_variance (list_sum3_estimator 0.5 [1.0,2,3,4]) 1000 ""
-#eval print_mean_variance (list_sum3_estimator 0.3 [4.0,3,2,1]) 1000 ""
+-- #eval print_mean_variance (list_sum3_estimator 0.5 [1.0,2,3,4]) 1000 ""
+-- #eval print_mean_variance (list_sum3_estimator 0.3 [4.0,3,2,1]) 1000 ""

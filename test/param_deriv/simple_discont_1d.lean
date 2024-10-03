@@ -1,3 +1,5 @@
+#exit
+
 import SciLean.Core.Transformations.HasParamDerivWithJumps.Common
 import SciLean.Core.Rand
 import SciLean.Tactic.Autodiff

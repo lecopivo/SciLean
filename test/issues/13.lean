@@ -25,7 +25,6 @@ example {Y : Type} [SemiHilbert R Y]
         let dy₂ := g xy.1;
         ⟪xy.snd, g x⟫[R] + ⟪y₁, dy₂⟫[R]) :=
 by
-  intros
   fun_prop
 
 

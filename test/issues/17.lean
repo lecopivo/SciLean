@@ -9,10 +9,8 @@ variable
 
 set_default_scalar K
 
-/--
-info: (∂> (x':=x;dx), f x').2 : Y
--/
+/-- info: (fwdCDeriv K (fun x' => f x') x dx).2 : Y -/
 #guard_msgs in
 #check
-  (∂> (x':=x;dx), f x').snd
-  rewrite_by autodiff
+  (fwdCDeriv K (fun x' => f x') x dx).snd
+  rewrite_by let_normalize

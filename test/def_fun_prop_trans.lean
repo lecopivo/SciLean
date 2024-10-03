@@ -176,3 +176,5 @@ example :
       let dx := dy.1 + dy.2;
       dxdy + dx) := by
   conv => lhs; autodiff
+
+end DefFunPropTransTest

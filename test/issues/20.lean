@@ -5,9 +5,9 @@ open SciLean
 
 /--
 info: fun i =>
-  let foo0 := i * 42;
-  let foo1 := i + 42;
-  (foo0, foo1) : ℕ → ℕ × ℕ
+  let foo := i * 42;
+  let foo_1 := i + 42;
+  (foo, foo_1) : ℕ → ℕ × ℕ
 -/
 #guard_msgs in
 #check
@@ -16,15 +16,13 @@ info: fun i =>
       let foo := ((i * j, i+j), (i ^ j, i / j))
       foo.fst)
    rewrite_by
-     simp (config:={zeta:=false,singlePass:=true}) [Tactic.lift_lets_simproc]
-
-#exit
+     lsimp
 
 /--
 info: fun i =>
-  let foo0 := i * 42;
-  let foo1 := i + 42;
-  (foo0, foo1) : Nat → Nat × Nat
+  let foo := i * 42;
+  let foo_1 := i + 42;
+  (foo, foo_1) : ℕ → ℕ × ℕ
 -/
 #guard_msgs in
 #check
@@ -33,32 +31,30 @@ info: fun i =>
        let foo := ((i * j, i+j), (i ^ j, i / j))
        foo).fst)
    rewrite_by
-     simp (config:={zeta:=false,singlePass:=true}) [Tactic.lift_lets_simproc]
+     lsimp
 
 
 /--
 info: fun i =>
-  let foo0 := i * 42;
-  let foo1 := i + 42;
-  let foo2 := i ^ 42;
-  let foo3 := i / 42;
-  ((foo0, foo1), foo2, foo3).fst.snd : Nat → Nat
+  let j := 42 * i;
+  let foo := i + j;
+  foo : ℕ → ℕ
 -/
 #guard_msgs in
 #check
    (fun i : Nat =>
-      (let j := 42
+      (let j := 42*i
        let foo := ((i * j, i+j), (i ^ j, i / j))
        foo.fst).snd)
    rewrite_by
-     simp (config:={zeta:=false,singlePass:=true}) [Tactic.lift_lets_simproc]
+     lsimp
 
 
 
 /--
 info: fun i =>
-  let foo1 := i + 42;
-  foo1 : Nat → Nat
+  let foo := i + 42;
+  foo : ℕ → ℕ
 -/
 #guard_msgs in
 #check
@@ -67,4 +63,4 @@ info: fun i =>
       let foo := ((i * j, i+j), (i ^ j, i / j))
       foo.fst.snd)
    rewrite_by
-     simp (config:={zeta:=false,singlePass:=true}) [Tactic.lift_lets_simproc]
+     lsimp

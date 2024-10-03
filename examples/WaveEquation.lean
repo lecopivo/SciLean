@@ -47,7 +47,7 @@ def main : IO Unit := do
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
-  for i in [0:1000] do
+  for i in [0:100] do
 
     (x,p) := solver m k (substeps,()) t (t+Δt) (x, p)
     t += Δt
