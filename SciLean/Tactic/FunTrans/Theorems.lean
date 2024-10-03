@@ -7,6 +7,7 @@ import Batteries.Data.RBMap.Alter
 
 import SciLean.Tactic.FunTrans.Decl
 import Mathlib.Tactic.FunProp.Theorems
+import SciLean.Lean.Array
 
 /-!
 ## `fun_trans` enviroment extensions storing thorems for `fun_trans`
@@ -226,6 +227,13 @@ initialize functionTheoremsExt : FunctionTheoremsExt ←
   }
 
 
+def FunctionTheorem.ord (t s : FunctionTheorem) : Ordering :=
+
+  let tl := #[t.appliedArgs, t.mainArgs.size, t.transAppliedArgs]
+  let sl := #[s.appliedArgs, s.mainArgs.size, s.transAppliedArgs]
+
+  tl.lexOrd sl
+
 /-- -/
 def getTheoremsForFunction (funName : Name) (funTransName : Name) (nargs : Option Nat) (mainArgs : Option (Array ℕ)) :
     CoreM (Array FunctionTheorem) := do
@@ -238,7 +246,7 @@ def getTheoremsForFunction (funName : Name) (funTransName : Name) (nargs : Optio
          (nargs.map (fun n => (thm.transAppliedArgs ≤ n : Bool))).getD true
          &&
          (mainArgs.map (fun args => FunProp.isOrderedSubsetOf args thm.mainArgs)).getD true)
-      |>.qsort (fun t t' => t'.transAppliedArgs < t.transAppliedArgs)
+      |>.qsort (fun t t' => t.ord t' == .lt)
 
   return thms
 
