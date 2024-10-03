@@ -14,7 +14,7 @@ class IndexType (I : Type u)
 where
   toFin : I → Fin size
   fromFin : Fin size → I
-  /-- Number of elements in a given range -/
+  /-- Number of elements in a given range. -/
   rangeSize : IndexType.Range I → Nat
   left_inv : LeftInverse fromFin toFin
   right_inv : RightInverse fromFin toFin
@@ -341,6 +341,19 @@ instance (a b : Int) : IndexType (Icc a b) where
   right_inv := sorry_proof
   first_last := sorry_proof
 
+
+def ofEquiv {J : Type*} (I : Type*) [IndexType I] (f : I ≃ J) : IndexType J where
+  toFintype := Fintype.ofEquiv _ f
+  size := size I
+  next? := fun j =>
+    Stream.next? (Iterator.ofEquiv f.symm j) |>.map (fun (i,it) => (f i, Iterator.ofEquiv f it))
+  firstLast? := firstLast? I |>.map (fun (a,b) => (f a, f b))
+  toFin := fun j => toFin (f.symm j)
+  fromFin := fun id => f (fromFin id)
+  rangeSize := fun r => rangeSize (Range.ofEquiv f.symm r)
+  left_inv := sorry_proof
+  right_inv := sorry_proof
+  first_last := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------

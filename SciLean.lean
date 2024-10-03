@@ -270,7 +270,6 @@ import SciLean.Tactic.LFunTrans
 import SciLean.Tactic.LSimp
 import SciLean.Tactic.LSimp.Elab
 import SciLean.Tactic.LSimp.Main
-import SciLean.Tactic.LSimp.Notation
 import SciLean.Tactic.LSimp.Types
 import SciLean.Tactic.LetEnter
 import SciLean.Tactic.LetNormalize
