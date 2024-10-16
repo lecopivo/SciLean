@@ -36,7 +36,8 @@ theorem Measure.prod_restrict {X Y} [MeasurableSpace X] [MeasurableSpace Y]
 
 @[ftrans_simp]
 theorem Measure.prod_volume {X Y} [MeasureSpace X] [MeasureSpace Y]  :
-    (Measure.prod (volume : Measure X) (volume : Measure Y)) = volume := by sorry_proof
+    (Measure.prod (volume : Measure X) (volume : Measure Y)) = volume := by
+    rfl
 
 
 
@@ -138,10 +139,12 @@ theorem ite_pull_measure_restrict {X} [MeasurableSpace X] (c : Prop) [Decidable 
 theorem ite_pull_measureOf {X} [MeasurableSpace X] (c : Prop) [Decidable c] (μ ν : Measure X) (A : Set X) :
     (if c then μ else ν) A
     =
-    (if c then μ A else ν A) := by sorry_proof
+    (if c then μ A else ν A) := by
+    split_ifs <;> rfl
 
 @[simp,ftrans_simp]
 theorem ite_pull_ennreal_toReal (c : Prop) [Decidable c] (x y : ENNReal)  :
     (if c then x else y).toReal
     =
-    (if c then x.toReal else y.toReal) := by sorry_proof
+    (if c then x.toReal else y.toReal) := by
+    split_ifs <;> rfl

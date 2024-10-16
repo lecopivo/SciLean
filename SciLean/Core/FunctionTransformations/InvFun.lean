@@ -25,7 +25,9 @@ attribute [fun_trans] Function.invFun
 theorem id_rule
   : invFun (fun (x : X) => x)
     =
-    fun x => x := by sorry_proof
+    fun x => x := by
+  apply Function.invFun_comp
+  exact Function.injective_id
 
 @[fun_trans]
 theorem comp_rule

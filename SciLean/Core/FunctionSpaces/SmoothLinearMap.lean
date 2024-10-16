@@ -118,7 +118,8 @@ theorem SmoothLinearMap.neg_apply : (- f) x = - f x := by rfl
 theorem SmoothLinearMap.smul_apply : (r • f) x = r • f x := by rfl
 
 @[simp, ftrans_simp]
-theorem SmoothLinearMap.zero_apply : (0 : X⊸[K]Y) x = 0 := by sorry_proof
+theorem SmoothLinearMap.zero_apply : (0 : X⊸[K]Y) x = 0 := by
+  rfl
 
 @[simp,ftrans_simp]
 theorem SmoothLinearMap.apply_zero (f : X ⊸[K] Y) : f 0 = 0 := by sorry_proof

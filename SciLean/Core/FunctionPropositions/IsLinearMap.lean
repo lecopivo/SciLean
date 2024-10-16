@@ -29,7 +29,9 @@ theorem isLinearMap_id : IsLinearMap R (fun x : X ↦ x) := LinearMap.id.isLinea
 @[fun_prop]
 theorem isLinearMap_const_zero
   : IsLinearMap R (fun _ : X => (0 : Y))
-  := by sorry_proof
+  := by
+  constructor
+  all_goals aesop
 
 @[fun_prop]
 theorem isLinearMap_comp {f : Y → Z} {g : X → Y}
@@ -37,7 +39,9 @@ theorem isLinearMap_comp {f : Y → Z} {g : X → Y}
   ((mk' _ hf).comp (mk' _ hg)).isLinear
 
 @[fun_prop]
-theorem isLinearMap_apply (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by sorry_proof
+theorem isLinearMap_apply (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by
+  constructor
+  all_goals aesop
 
 @[fun_prop]
 theorem isLinearMap_pi (f : X → (i : ι) → E i) (hf : ∀ i, IsLinearMap R (f · i)) :

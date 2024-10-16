@@ -39,7 +39,9 @@ def ContCDiff (f : X → Y) : Prop := ∀ x, ContCDiffAt K n f x
 
 @[fun_prop, to_any_point]
 theorem ContCDiffAt.id_rule (x : X) :
-    ContCDiffAt K n (fun x : X => x) x := by sorry_proof
+    ContCDiffAt K n (fun x : X => x) x := by
+  unfold SciLean.ContCDiffAt
+  tauto
 
 @[fun_prop, to_any_point]
 theorem ContCDiffAt.const_rule (y : Y) (x : X) :
@@ -49,7 +51,9 @@ theorem ContCDiffAt.const_rule (y : Y) (x : X) :
 theorem ContCDiffAt.comp_rule (x : X)
     (f : Y → Z) (g : X → Y)
     (hf : ContCDiffAt K n f (g x)) (hg : ContCDiffAt K n g x) :
-    ContCDiffAt K n (fun x => f (g x)) x := by sorry_proof
+    ContCDiffAt K n (fun x => f (g x)) x := by
+  rw [ContCDiffAt] at *
+  aesop
 
 @[fun_prop, to_any_point]
 theorem ContCDiffAt.apply_rule

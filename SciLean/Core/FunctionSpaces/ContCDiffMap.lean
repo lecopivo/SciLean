@@ -125,7 +125,7 @@ theorem ContCDiffMap.neg_apply : (- f) x = - f x := by rfl
 theorem ContCDiffMap.smul_apply : (r • f) x = r • f x := by rfl
 
 @[simp, ftrans_simp]
-theorem ContCDiffMap.zero_apply : (0 : X ⟿[K,n] Y) x = 0 := by sorry_proof
+theorem ContCDiffMap.zero_apply : (0 : X ⟿[K,n] Y) x = 0 := by rfl
 
 end AlgebraSimps
 

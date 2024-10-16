@@ -82,7 +82,9 @@ variable {K n}
   | _  => throw ()
 
 @[simp, ftrans_simp]
-theorem ContCDiffMapFD_eta (f : X ⟿FD[K,n] Y) : (fun x ⟿FD[K,n] f x) = f := by sorry_proof
+theorem ContCDiffMapFD_eta (f : X ⟿FD[K,n] Y) : (fun x ⟿FD[K,n] f x) = f := by
+  simp only [DFunLike.ext_iff]
+  aesop
 
 @[pp_dot]
 def ContCDiffMapFD.FD (f : X ⟿FD[K,n] Y) (x dx : X) : Y×Y := f.toFun x dx
@@ -138,7 +140,8 @@ theorem ContCDiffMapFD.neg_apply : (- f) x = - f x := by rfl
 theorem ContCDiffMapFD.smul_apply : (r • f) x = r • f x := by rfl
 
 @[simp, ftrans_simp]
-theorem ContCDiffMapFD.zero_apply : (0 : X ⟿FD[K,n] Y) x = 0 := by sorry_proof
+theorem ContCDiffMapFD.zero_apply : (0 : X ⟿FD[K,n] Y) x = 0 := by
+  rfl
 
 end AlgebraSimps
 

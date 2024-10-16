@@ -60,12 +60,16 @@ variable
 @[fun_prop]
 theorem Prod.mk.arg_fstsnd.Bijective_rule_simple
   : Bijective (fun xy : X×Y => (xy.1, xy.2))
-  := by sorry_proof
+  := by
+  simp
+  exact Function.bijective_id
 
 @[fun_prop]
 theorem Prod.mk.arg_fstsnd.Bijective_rule_simple'
   : Bijective (fun xy : X×Y => (xy.2, xy.1))
-  := by sorry_proof
+  := by
+  constructor <;> intro h
+  all_goals aesop
 
 
 @[fun_prop]
@@ -241,10 +245,13 @@ by
 theorem Equiv.toFun.arg_a0.Bijective_rule (f : Y ≃ Z) (g : X → Y) (hf : Bijective g)
   : Bijective (fun x => f (g x)) :=
 by
-  sorry_proof
+  inhabit Z
+  exact f.bijective.comp hf
 
 @[fun_prop]
 theorem Equiv.invFun.arg_a0.Bijective_rule (f : Y ≃ Z) (g : X → Z) (hf : Bijective g)
   : Bijective (fun x => f.invFun (g x)) :=
 by
-  sorry_proof
+  convert hf
+  simp [hf]
+  exact f.symm.bijective.comp hf

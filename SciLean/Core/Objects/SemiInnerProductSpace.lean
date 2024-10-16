@@ -62,7 +62,8 @@ theorem norm₂_prod {R K X Y} [Scalar R K] [AddCommMonoid K] [Inner K X] [Inner
 
 @[simp, ftrans_simp]
 theorem norm₂_scalar {R} [RealScalar R] (x : R) :
-  ‖x‖₂[R] = Scalar.abs x := by sorry_proof
+  ‖x‖₂[R] = Scalar.abs x := by
+  rw [SciLean.scalar_norm]
 
 @[simp, ftrans_simp]
 theorem norm2_scalar {R} [RealScalar R] (x : R) :

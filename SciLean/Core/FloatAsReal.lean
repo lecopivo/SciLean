@@ -220,7 +220,8 @@ theorem conj_float  (a : Float)
 
 @[simp]
 theorem re_float  (a : Float)
-  : RCLike.re a = a := by sorry_proof
+  : RCLike.re a = a := by
+  exact RCLike.re_eq_self_of_le le_rfl
 
 open ComplexConjugate
 @[simp]

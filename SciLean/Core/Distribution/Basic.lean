@@ -261,7 +261,8 @@ def unexpandIteD : Lean.PrettyPrinter.Unexpander
 theorem Distribution.action_iteD (A : Set X) (t e : 𝒟'(X,Y)) (φ : 𝒟 X) :
    iteD A t e φ =
         t.extAction (fun x => if x ∈ A then φ x else 0) (fun y ⊸ fun r ⊸ r • y) +
-        e.extAction (fun x => if x ∉ A then φ x else 0) (fun y ⊸ fun r ⊸ r • y) := by sorry_proof
+        e.extAction (fun x => if x ∉ A then φ x else 0) (fun y ⊸ fun r ⊸ r • y) := by
+    aesop
 
 @[simp, ftrans_simp]
 theorem Distribution.iteD_same (A : Set X) (u : 𝒟'(X,Y)) :

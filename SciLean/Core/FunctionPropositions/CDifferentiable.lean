@@ -35,12 +35,17 @@ variable (X)
 @[fun_prop]
 theorem CDifferentiableAt.id_rule (x : X)
   : CDifferentiableAt K (fun x : X => x) x
-  := by sorry_proof
+  := by
+  unfold SciLean.CDifferentiableAt
+  tauto
 
 @[fun_prop]
 theorem CDifferentiable.id_rule
   : CDifferentiable K (fun x : X => x)
-  := by sorry_proof
+  := by
+  intro x
+  unfold SciLean.CDifferentiableAt
+  tauto
 
 @[fun_prop]
 theorem CDifferentiableAt.const_rule (y : Y) (x : X)
@@ -58,7 +63,9 @@ theorem CDifferentiableAt.comp_rule
   (f : Y → Z) (g : X → Y) (x : X)
   (hf : CDifferentiableAt K f (g x)) (hg : CDifferentiableAt K g x)
   : CDifferentiableAt K (fun x => f (g x)) x
-  := by sorry_proof
+  := by
+  rw [CDifferentiableAt] at *
+  aesop
 
 @[fun_prop]
 theorem CDifferentiable.comp_rule

@@ -49,7 +49,10 @@ variable
   [ArrayType Cont Idx Elem]
 
 @[ext]
-theorem ext (x y : Cont) : (∀ i, x[i] = y[i]) → x = y := by sorry_proof
+theorem ext (x y : Cont) : (∀ i, x[i] = y[i]) → x = y := by
+  intro h
+  apply SciLean.ArrayType.get_injective
+  simp only [h]
 
 @[simp]
 theorem eta (cont : Cont) : (Indexed.ofFn fun i => cont[i]) = cont := sorry_proof

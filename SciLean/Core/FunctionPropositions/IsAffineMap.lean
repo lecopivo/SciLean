@@ -42,7 +42,11 @@ theorem IsAffineMap_comp {f : Y → Z} {g : X → Y}
   sorry_proof
 
 @[fun_prop]
-theorem IsAffineMap_apply (i : ι) : IsAffineMap R (fun f : (i : ι) → E i ↦ f i) := by sorry_proof
+theorem IsAffineMap_apply (i : ι) : IsAffineMap R (fun f : (i : ι) → E i ↦ f i) := by
+  constructor
+  constructor
+  simp
+  simp
 
 @[fun_prop]
 theorem IsAffineMap_pi (f : X → (i : ι) → E i) (hf : ∀ i, IsAffineMap R (f · i)) :
