@@ -197,7 +197,7 @@ variable
 -- of linear function ----------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_trans]
+-- @[fun_trans]
 theorem revFDeriv_linear
   (f : X → Y) (hf : IsContinuousLinearMap K f) :
   revFDeriv K f

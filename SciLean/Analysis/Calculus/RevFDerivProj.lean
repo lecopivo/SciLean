@@ -1,6 +1,7 @@
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Analysis.FunctionSpaces.SmoothLinearMap
+import SciLean.Tactic.StructureDecomposition
 
 import SciLean.Data.StructType.Algebra
 
@@ -81,7 +82,6 @@ theorem revFDeriv_eq_revFDerivProj (f : X → Y) :
   fun x =>
     let ydf := revFDerivProj K Unit f x
     (ydf.1, fun dy => ydf.2 () dy) := by unfold revFDerivProj revFDeriv; simp
-
 
 
 --------------------------------------------------------------------------------
@@ -1075,3 +1075,34 @@ theorem SciLean.norm₂.arg_x.revFDerivProjUpdate_rule
   simp[revFDerivProj,revFDerivProjUpdate,smul_pull]
 
 end InnerProductSpace
+
+
+
+
+variable
+  {X₁ : Type} [NormedAddCommGroup X₁] [AdjointSpace K X₁] [CompleteSpace X₁]
+  {X₂ : Type} [NormedAddCommGroup X₂] [AdjointSpace K X₂] [CompleteSpace X₂]
+
+theorem revFDerivProj_decomposition (f : X → Y')
+  (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) (hdec : Meta.IsDecomposition p₁ p₂ q)
+  (hp₁ : IsContinuousLinearMap K p₁)
+  (f' : X₁ → Y') (hf : f = f' ∘ p₁) :
+  revFDerivProj K Yi f
+  =
+  fun x =>
+    let ydf := revFDerivProj K Yi f' (p₁ x)
+    (ydf.1, fun j dy => q (ydf.2 j dy) 0) := sorry
+
+
+theorem revFDerivUpdate_decomposition (f : X → Y')
+  (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) (hdec : Meta.IsDecomposition p₁ p₂ q)
+  (hp₁ : IsContinuousLinearMap K p₁)
+  (f' : X₁ → Y') (hf : f = f' ∘ p₁) :
+  revFDerivProjUpdate K Yi f
+  =
+  fun x =>
+    let ydf := revFDerivProjUpdate K Yi f' (p₁ x)
+    (ydf.1, fun j dy dx =>
+       let dx₁ := p₁ dx
+       let dx₂ := p₂ dx
+       q (ydf.2 j dy dx₁) dx₂) := sorry
