@@ -140,7 +140,7 @@ structure StructureDecomposition where
   p₂ : Q($X → $X₂)
   q  : Q($X₁ → $X₂ → $X)
   proof : Q(IsDecomposition $p₁ $p₂ $q)
-
+deriving Inhabited
 
 /-- Takes a type `X` of a nested structure  and splits it into two `X₁` and `X₂`. Elements `x` for which `split i x` is true are gatherd in `X₁` and rest is in `X₂`.
 Returns function `p₁ : X → X₁`, `p₂ : X → X₂` and `q : X₁ → X₂ → X` that are inverse of each other.
