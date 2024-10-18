@@ -1,4 +1,5 @@
 import SciLean.Probability.RandWithTrace
+import SciLean.Analysis.Scalar.FloatAsReal
 
 open SciLean Rand MeasureTheory
 
@@ -37,10 +38,6 @@ info: tt :
 -/
 #guard_msgs in
 #check tt
-
-
-instance (n:Nat) [MeasureSpace X] : MeasureSpace {a : Array X // a.size = n} := sorry
-instance (n:Nat) [MeasureSpace X] : MeasureSpace (ArrayN X n) := sorry
 
 
 /--
