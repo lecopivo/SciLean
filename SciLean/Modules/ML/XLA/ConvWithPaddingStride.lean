@@ -221,7 +221,7 @@ theorem convWithPaddingStride.arg_x.adjoint_rule
       if h : (0 ≤ di' ∧ di' < outDim) ∧ (ri' = 0) then
         have := h.1
         z[di'] * x[k] * y[j]
-      else 0 := by sorry -- swap sums and rewrite the condition in terms of `i'`
+      else 0 := by sorry -- remove sum over `i`
 
     _ = ∑ (k : TensorIndex spDims), ∑ (j : TensorIndex kerDims),
       let i' := k.1 * xdil + j.1 * ydil - ((kerDims - 1) * ydil - low)
