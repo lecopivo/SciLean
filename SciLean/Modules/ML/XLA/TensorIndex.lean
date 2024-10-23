@@ -3,6 +3,7 @@ import SciLean.Data.ListN
 import SciLean.Data.ArrayN
 import SciLean.Data.DataArray
 import Mathlib.Tactic.Ring
+import SciLean.Tactic.CompiledTactics
 
 namespace SciLean
 
@@ -60,6 +61,10 @@ instance {r} {dim : DimsI r} : DecidableEq (TensorIndexI dim) :=
 @[simp]
 theorem TensorIndex.get_le {r} {dim : Dims r} (i : TensorIndex dim) :
     ∀ (d : Fin r), 0 ≤ i[d] ∧ i[d] < dim[d] := i.2
+
+def TensorIndex.bounds' {r} {dims : Dims r} (i : TensorIndex dims) :
+    ∀ d, (0:ℤ) ≤ i[d] ∧ i[d] < dims[d] := by
+  intro d; have := i.2 d; simp_all only [get_le, and_self]
 
 @[simp]
 theorem TensorIndexI.get_le {r} {dim : DimsI r} (i : TensorIndexI dim) :
@@ -258,3 +263,124 @@ def TensorIndexI.convMap' {kerDim : DimsI r}
 --     =
 --     spDims := by
 --   ext <;> (simp[convDimI,DimsI.rev,Padding.revI]; ring)
+
+#check Finset
+
+#eval ({1,2,3} : Finset ℕ).card
+
+
+def ArrayN.removeIds {n α} (a : ArrayN α n) (ids : Finset (Fin n))
+    {m} (h : m = n - ids.card := by (try simp); (try infer_var)) : ArrayN α m :=
+{
+  data :=
+    let d := ids.map ⟨fun i => i.1, by intro i; aesop⟩
+    a.data.zipWithIndex.filterMap (fun (d',i) => if i ∉ d then .some d' else none)
+  h_size := sorry
+}
+
+
+abbrev Dims.removeDims {r} (dims : Dims r) (d : Finset (Fin r))
+    {s} (h : s = r - d.card := by (try simp); (try infer_var)) : Dims s := dims.removeIds d h
+
+
+/-- Type used to index dimensions of `r+2` rank tensor with `r` spatial dimensions and batch, feature
+dimensions -/
+inductive DimId (r : Nat) where
+  | batchInputDim
+  | featureOutputDim
+  | spatialDim (i : Fin r)
+deriving IndexType
+
+
+/-- This equivalence determines which dimensions of `r+2` tensor are spatial, batch and feature. -/
+def DimMap (r : ℕ) := DimId r ≃ Fin (r+2)
+
+def DimMap.batchDimId {r} (map : DimMap r) : Fin (r+2) := map.toFun .batchInputDim
+def DimMap.featureDimId {r} (map : DimMap r) : Fin (r+2) := map.toFun .featureOutputDim
+instance (r) : CoeFun (DimMap r) (fun _ => Fin r → (Fin (r+2))) :=
+  ⟨fun f i => f.toFun (.spatialDim i)⟩
+
+/-- Takes dimensions spec of `r+2` rank tensor and returns spec of -/
+def DimMap.spatialDims {r} (map : DimMap r) (dims : Dims (r+2)) : Dims r :=
+{
+  data := .ofFn fun i => dims[map.toFun (.spatialDim i)]
+  h_size := by simp
+}
+
+def DimMap.batchDim {r} (map : DimMap r) (dims : Dims (r+2)) : ℤ :=
+  dims[map.toFun (.batchInputDim)]
+
+def DimMap.featureDim {r} (map : DimMap r) (dims : Dims (r+2)) : ℤ :=
+  dims[map.toFun (.featureOutputDim)]
+
+
+open Set in
+def DimMap.indexMap {r} (map : DimMap r) (dims : Dims (r+2))
+   {dims'} (hdims' : dims' = map.spatialDims dims := by (try simp); (try infer_var))
+   {b} (hb : b = map.batchDim dims := by (try simp); (try infer_var))
+   {f} (hf : f = map.featureDim dims := by (try simp); (try infer_var)) :
+   TensorIndex dims
+   ≃
+   Ico 0 b × Ico 0 f × TensorIndex dims' :=
+{
+  toFun := fun i =>
+    (⟨i[map.batchDimId], by rw[hb]; apply i.2⟩,
+     ⟨i[map.featureDimId], by rw[hf]; apply i.2⟩,
+     ⟨.ofFn fun j => i[map.toFun (.spatialDim j)], by
+       intro j
+       let j' := map.toFun (.spatialDim j)
+       have h := i.2 j'
+       simp_all[DimMap.spatialDims]⟩)
+  invFun := fun (i,j,k) =>
+    ⟨.ofFn fun i =>
+       match map.symm i with
+       | .batchInputDim => i
+       | .featureOutputDim => j
+       | .spatialDim i => k[i],
+     by
+       intro i
+       cases (map.symm i)
+       · simp; sorry
+       · simp; sorry
+       · simp; sorry⟩
+  left_inv := sorry
+  right_inv := sorry
+}
+
+
+
+section ArraNMissing
+
+instance : HMul (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi * y[i]⟩
+instance : HDiv (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi / y[i]⟩
+instance : HMod (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi % y[i]⟩
+-- instance : HAdd (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi + y[i]⟩
+-- instance : HSub (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi - y[i]⟩
+
+instance [Sup α] : Sup (ArrayN α r) := ⟨fun x y => x.mapIdx fun i xi => xi ⊔ y[i]⟩
+instance [Mod α] : Mod (ArrayN α r) := ⟨fun x y => x.mapIdx fun i xi => xi % y[i]⟩
+instance [Div α] : Div (ArrayN α r) := ⟨fun x y => x.mapIdx fun i xi => xi / y[i]⟩
+
+def ArrayN.toNat [CoeHTCT α Nat] (x : ArrayN α n) : ArrayN ℕ n := .ofFn fun i => x[i]
+def ArrayN.toInt [CoeHTCT α Int] (x : ArrayN α n) : ArrayN ℤ n := .ofFn fun i => x[i]
+
+
+@[simp]
+theorem ArrayN.hmul_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
+    (x * y)[i] = x[i] * y[i] := by simp[HMul.hMul, ArrayN.mapIdx]
+
+@[simp]
+theorem ArrayN.hdiv_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
+    (x / y)[i] = x[i] / y[i] := by simp[HDiv.hDiv, ArrayN.mapIdx]
+
+@[simp]
+theorem ArrayN.hmod_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
+    (x % y)[i] = x[i] % y[i] := by simp[HMod.hMod, ArrayN.mapIdx]
+
+@[simp]
+def Dims.rank {r} (dims : Dims r) : ℕ := r
+@[simp]
+def _root_.SciLean.ArrayN.size {n α} (a : ArrayN α n) : ℕ := n
+
+
+end ArraNMissing

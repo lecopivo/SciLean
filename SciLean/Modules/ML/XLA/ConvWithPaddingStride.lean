@@ -1,31 +1,13 @@
 import SciLean.Modules.ML.XLA.ConvWithPadding
 import SciLean.Meta.GenerateFunTrans
 import SciLean.Tactic.LetUtils
+import SciLean.Tactic.CompiledTactics
 
 namespace SciLean
 
 
 variable {R} [RealScalar R] [PlainDataType R]
 
-section ArraNMissing
-
-instance : HMul (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi * y[i]⟩
-instance : HDiv (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi / y[i]⟩
-instance : HMod (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi % y[i]⟩
-
-@[simp]
-theorem ArrayN.hmul_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
-    (x * y)[i] = x[i] * y[i] := by simp[HMul.hMul, ArrayN.mapIdx]
-
-@[simp]
-theorem ArrayN.hdiv_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
-    (x / y)[i] = x[i] / y[i] := by simp[HDiv.hDiv, ArrayN.mapIdx]
-
-@[simp]
-theorem ArrayN.hmod_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
-    (x % y)[i] = x[i] % y[i] := by simp[HMod.hMod, ArrayN.mapIdx]
-
-end ArraNMissing
 
 
 /-- output dimension of convolution give strides and dilations -/
@@ -88,11 +70,38 @@ def convWithPaddingStride
         0
 
 
+def convWithPaddingStride'
+    {spDims kerDims : Dims r}
+    (x : TensorIndex spDims → R) (y : TensorIndex kerDims → R)  -- lhs and rhs
+    (low high : ArrayN ℤ r)    -- padding
+    (stride : ArrayN ℕ+ r)    -- window stride
+    (xdil ydil : ArrayN ℕ+ r) -- dillatation
+    {outDim : Dims r}
+    (houtDim : outDim = convOutDim spDims kerDims low high stride xdil ydil := by unfold convOutDim; reduce_dim) :
+    TensorIndex outDim → R :=
+  fun (i : TensorIndex outDim) =>
+    ∑ (j : TensorIndex kerDims),
+      let k := i.1 * stride + j.1 * ydil - low
+      let dk := k / xdil
+      let rk := k % xdil
+      if h : (0 ≤ dk ∧ dk < spDims) ∧ (rk = 0) then
+        have := h.1
+        x ⟨dk, by intro d; have := h.1.1 d; have := h.1.2 d; simp_all⟩ * y j
+      else
+        0
+
+
 def_fun_prop convWithPaddingStride in x
   : IsContinuousLinearMap R by unfold convWithPaddingStride; dsimp; fun_prop
 
 def_fun_prop convWithPaddingStride in y
   : IsContinuousLinearMap R by unfold convWithPaddingStride; dsimp; fun_prop
+
+def_fun_prop convWithPaddingStride' in x
+  : IsContinuousLinearMap R by unfold convWithPaddingStride'; dsimp; fun_prop
+
+def_fun_prop convWithPaddingStride' in y
+  : IsContinuousLinearMap R by unfold convWithPaddingStride'; dsimp; fun_prop
 
 
 @[fun_trans]
@@ -176,82 +185,85 @@ theorem convWithPaddingStride.arg_x.adjoint_rule
 
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   intro z x
-  lsimp (config:={zeta:=false}) [Inner.inner,convWithPaddingStride]
-  intro ker'
-  symm
-  calc
-    _ = ∑ (i : TensorIndex outDim), z[i] * ∑ (j : TensorIndex kerDims),
-      let k := i.1 * stride + j.1 * ydil - low
-      let dk := k / xdil
-      let rk := k % xdil
-      if h : (0 ≤ dk ∧ dk < spDims) ∧ (rk = 0) then
-        have := h.1
-        x[dk] * y[j]
-      else
-        0 := by rfl
+  sorry
 
-    _ = ∑ (i : TensorIndex outDim), ∑ (j : TensorIndex kerDims),
-      let k := i.1 * stride + j.1 * ydil - low
-      let dk := k / xdil
-      let rk := k % xdil
-      if h : (0 ≤ dk ∧ dk < spDims) ∧ (rk = 0) then
-        have := h.1
-        z[i] * x[dk] * y[j]
-      else
-        0 := by sorry -- move `z` in
+   -- some linker issue with lsimp, commenting it out for now
 
-    _ = ∑ (i : TensorIndex outDim), ∑ (j : TensorIndex kerDims), ∑ (k : TensorIndex spDims),
-      if k.1 * xdil = i.1 * stride + j.1 * ydil - low then
-        z[i] * x[k] * y[j]
-      else 0 := by sorry -- introduce sum over `k`
+  -- lsimp (config:={zeta:=false}) [Inner.inner,convWithPaddingStride]
+  -- intro ker'
+  -- symm
+  -- calc
+  --   _ = ∑ (i : TensorIndex outDim), z[i] * ∑ (j : TensorIndex kerDims),
+  --     let k := i.1 * stride + j.1 * ydil - low
+  --     let dk := k / xdil
+  --     let rk := k % xdil
+  --     if h : (0 ≤ dk ∧ dk < spDims) ∧ (rk = 0) then
+  --       have := h.1
+  --       x[dk] * y[j]
+  --     else
+  --       0 := by rfl
 
-    _ = ∑ (k : TensorIndex spDims), ∑ (j : TensorIndex kerDims), ∑ (i : TensorIndex outDim),
-      let i' := k.1 * xdil - j.1 * ydil + low
-      let di' := i' / stride
-      let ri' := i' % stride
-      if i.1 = di' ∧ ri' = 0 then
-        z[i] * x[k] * y[j]
-      else 0 := by sorry -- swap sums and rewrite the condition in terms of `i'`
+  --   _ = ∑ (i : TensorIndex outDim), ∑ (j : TensorIndex kerDims),
+  --     let k := i.1 * stride + j.1 * ydil - low
+  --     let dk := k / xdil
+  --     let rk := k % xdil
+  --     if h : (0 ≤ dk ∧ dk < spDims) ∧ (rk = 0) then
+  --       have := h.1
+  --       z[i] * x[dk] * y[j]
+  --     else
+  --       0 := by sorry -- move `z` in
 
+  --   _ = ∑ (i : TensorIndex outDim), ∑ (j : TensorIndex kerDims), ∑ (k : TensorIndex spDims),
+  --     if k.1 * xdil = i.1 * stride + j.1 * ydil - low then
+  --       z[i] * x[k] * y[j]
+  --     else 0 := by sorry -- introduce sum over `k`
 
-    _ = ∑ (k : TensorIndex spDims), ∑ (j : TensorIndex kerDims),
-      let i' := k.1 * xdil - j.1 * ydil + low
-      let di' := i' / stride
-      let ri' := i' % stride
-      if h : (0 ≤ di' ∧ di' < outDim) ∧ (ri' = 0) then
-        have := h.1
-        z[di'] * x[k] * y[j]
-      else 0 := by sorry -- remove sum over `i`
-
-    _ = ∑ (k : TensorIndex spDims), ∑ (j : TensorIndex kerDims),
-      let i' := k.1 * xdil + j.1 * ydil - ((kerDims - 1) * ydil - low)
-      let di' := i' / stride
-      let ri' := i' % stride
-      if h : (0 ≤ di' ∧ di' < outDim) ∧ (ri' = 0) then
-        have := h.1
-        z[di'] * x[k] * (rev y)[j]
-      else 0 := by sorry -- reverse the sum over `j`, `j --> kerDims - 1 - j`
-
-    _ = ∑ (k : TensorIndex spDims), (∑ (j : TensorIndex kerDims),
-      let i' := k.1 * xdil + j.1 * ydil - ((kerDims - 1) * ydil + 1 - low - 1)
-      let di' := i' / stride
-      let ri' := i' % stride
-      if h : (0 ≤ di' ∧ di' < outDim) ∧ (ri' = 0) then
-        have := h.1
-        z[di'] * (rev y)[j]
-      else 0) * x[k] := by sorry -- move x[k] out
-
-    _ = _ := by  rfl
+  --   _ = ∑ (k : TensorIndex spDims), ∑ (j : TensorIndex kerDims), ∑ (i : TensorIndex outDim),
+  --     let i' := k.1 * xdil - j.1 * ydil + low
+  --     let di' := i' / stride
+  --     let ri' := i' % stride
+  --     if i.1 = di' ∧ ri' = 0 then
+  --       z[i] * x[k] * y[j]
+  --     else 0 := by sorry -- swap sums and rewrite the condition in terms of `i'`
 
 
+  --   _ = ∑ (k : TensorIndex spDims), ∑ (j : TensorIndex kerDims),
+  --     let i' := k.1 * xdil - j.1 * ydil + low
+  --     let di' := i' / stride
+  --     let ri' := i' % stride
+  --     if h : (0 ≤ di' ∧ di' < outDim) ∧ (ri' = 0) then
+  --       have := h.1
+  --       z[di'] * x[k] * y[j]
+  --     else 0 := by sorry -- remove sum over `i`
 
-def_fun_trans convWithPaddingStride in x
-  (hstride : stride ≤ xdil) : revFDeriv R by
-    rw[revFDeriv_linear _ (by fun_prop)]
-    autodiff (disch:=assumption)
+  --   _ = ∑ (k : TensorIndex spDims), ∑ (j : TensorIndex kerDims),
+  --     let i' := k.1 * xdil + j.1 * ydil - ((kerDims - 1) * ydil - low)
+  --     let di' := i' / stride
+  --     let ri' := i' % stride
+  --     if h : (0 ≤ di' ∧ di' < outDim) ∧ (ri' = 0) then
+  --       have := h.1
+  --       z[di'] * x[k] * (rev y)[j]
+  --     else 0 := by sorry -- reverse the sum over `j`, `j --> kerDims - 1 - j`
+
+  --   _ = ∑ (k : TensorIndex spDims), (∑ (j : TensorIndex kerDims),
+  --     let i' := k.1 * xdil + j.1 * ydil - ((kerDims - 1) * ydil + 1 - low - 1)
+  --     let di' := i' / stride
+  --     let ri' := i' % stride
+  --     if h : (0 ≤ di' ∧ di' < outDim) ∧ (ri' = 0) then
+  --       have := h.1
+  --       z[di'] * (rev y)[j]
+  --     else 0) * x[k] := by sorry -- move x[k] out
+
+  --   _ = _ := by  rfl
 
 
-def_fun_trans convWithPaddingStride in y
-  (hstride : stride ≤ ydil) : revFDeriv R by
-    rw[revFDeriv_linear _ (by fun_prop)]
-    autodiff (disch:=assumption)
+-- def_fun_trans convWithPaddingStride in x
+--   (hstride : stride ≤ xdil) : revFDeriv R by
+--     rw[revFDeriv_linear _ (by fun_prop)]
+--     autodiff (disch:=assumption)
+
+
+-- def_fun_trans convWithPaddingStride in y
+--   (hstride : stride ≤ ydil) : revFDeriv R by
+--     rw[revFDeriv_linear _ (by fun_prop)]
+--     autodiff (disch:=assumption)
