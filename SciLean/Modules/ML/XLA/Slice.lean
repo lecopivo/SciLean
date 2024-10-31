@@ -68,7 +68,9 @@ More formally, `result[result_index] = operand[operand_index]` where
 
 -/
 
-def slice.outDims {r}
+namespace Slice
+
+def slice.outShape {r}
     (start_indices limit_indices : ArrayN ℤ r)
     (strides : ArrayN ℕ+ r) : ArrayN ℤ r :=
       .ofFn fun i => Rat.ceil <|
@@ -76,28 +78,41 @@ def slice.outDims {r}
         -- this should be equal to which might be easier to reason about
         -- (limit_indices[i] - start_indices[i] + (strides[i] - 1)).fdiv strides[i]
 
-structure slice.Arguments {r} (inDims outDims : Dims r) where
+structure Args {r} (inDims : Dims r) where
   start_indices : ArrayN ℤ r
   limit_indices : ArrayN ℤ r
   strides : ArrayN ℕ+ r
 
-  c1 : True
-  c2 : start_indices.size = r ∧ limit_indices.size = r ∧ strides.size = r ∧ inDims.size = r
-  c3 : ∀ d, 0 ≤ start_indices[d] ∧ start_indices[d] ≤ limit_indices[d]
-  c4 : 0 < strides.toNat
-  c5 : outDims = slice.outDims start_indices limit_indices strides
+def Args.outShape {r} {inDims : Dims r} (args : Args inDims) : Dims r :=
+      .ofFn fun i => Rat.ceil <|
+        (Rat.ofInt (args.limit_indices[i] - args.start_indices[i])) / (Rat.ofInt (Int.ofNat (args.strides[i])))
+        -- this should be equal to which might be easier to reason about
+        -- (limit_indices[i] - start_indices[i] + (strides[i] - 1)).fdiv strides[i]
 
+structure Preconditions {r} {inDims : Dims r} (args : Args inDims) where
+  c1 : True
+  c2 : args.start_indices.size = r ∧ args.limit_indices.size = r ∧ args.strides.size = r ∧ inDims.size = r
+  c3 : ∀ d, 0 ≤ args.start_indices[d] ∧ args.start_indices[d] ≤ args.limit_indices[d]
+  c4 : 0 < args.strides.toNat
+
+structure Postconditions {r} {inDims : Dims r} (args : Args inDims) (outDims : Dims r) where
+  c5 : outDims = args.outShape
+
+end Slice
+
+open Slice in
 def slice
     {r} {inDims outDims : Dims r}
     (operand : TensorIndex inDims → R)
-    (args : slice.Arguments inDims outDims)
-    (houtDims : outDims = slice.outDims args.start_indices args.limit_indices args.strides := by infer_var) :
+    (args : Args inDims)
+    (h : Preconditions args)
+    (houtDims : outDims = args.outShape := by infer_var) :
     TensorIndex outDims → R :=
   fun result_index =>
     let operand_index := args.start_indices + result_index.1 * args.strides
     operand ⟨operand_index, by
       intro i
-      have h := args.c3 i
+      have h := h.c3 i
       have h' := result_index.2 i
       simp [operand_index]
       constructor;

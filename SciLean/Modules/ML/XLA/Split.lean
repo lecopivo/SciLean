@@ -1,4 +1,5 @@
 import SciLean.Modules.ML.XLA.TensorIndex
+import SciLean.Modules.ML.XLA.Concatenate
 
 
 namespace SciLean
@@ -33,7 +34,6 @@ structure Conditions {r} {inDims : Dims r} (args : Args inDims) (outDims : Dims 
       outDims[d] = inDims[d] / args.split_size
     else
       outDims[d] = inDims[d]
-
 
 structure Args' {r} (inDims outDims : Dims r)
 

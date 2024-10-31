@@ -239,50 +239,83 @@ centralized doc on supported algorithms by backend.
 
 variable {R} [RealScalar R]
 
-structure DotGeneralArgs {r s t} (lhsDims : Dims r) (rhsDims : Dims s) (outDims : Dims t) where
+namespace DotGeneral
+
+structure Args {r s} (lhsDims : Dims r) (rhsDims : Dims s) where
   lhs_batching_dimensions : Array (Fin r)
   rhs_batching_dimensions : Array (Fin s)
   lhs_contracting_dimensions : Array (Fin r)
   rhs_contracting_dimensions : Array (Fin s)
 
-  c1 : lhs_batching_dimensions.size = rhs_batching_dimensions.size
-  c2 : lhs_contracting_dimensions.size = rhs_contracting_dimensions.size
-  c3 : (lhs_batching_dimensions ++ lhs_contracting_dimensions).toList.Nodup
-  c4 : (rhs_batching_dimensions ++ rhs_contracting_dimensions).toList.Nodup
-  c5 : lhs_batching_dimensions.all (fun i => i.val < r)
-  c6 : lhs_contracting_dimensions.all (fun i => i.val < r)
-  c7 : rhs_batching_dimensions.all (fun i => i.val < s)
-  c8 : rhs_contracting_dimensions.all (fun i => i.val < s)
-  c9 : lhs_batching_dimensions.map (lhsDims[·]) = rhs_batching_dimensions.map (rhsDims[·])
-  c10 : lhs_contracting_dimensions.map (lhsDims[·]) = rhs_contracting_dimensions.map (rhsDims[·])
+
+def Args.outShape' {r s} {lhsDims : Dims r} {rhsDims : Dims s} (args : Args lhsDims rhsDims) : Array ℤ :=
+  let lhs_all_dims := List.ofFn (fun i : Fin r => i)
+  let lhs_result_dimensions : Array (Fin r) :=
+    lhs_all_dims.diff (args.lhs_batching_dimensions ++ args.lhs_contracting_dimensions).toList |>.toArray
+
+  let rhs_all_dims := List.ofFn (fun i : Fin s => i)
+  let rhs_result_dimensions : Array (Fin s) :=
+    rhs_all_dims.diff (args.rhs_batching_dimensions ++ args.rhs_contracting_dimensions).toList |>.toArray
+
+  let outShape :=
+    args.lhs_batching_dimensions.map (lhsDims[·])
+    ++
+    lhs_result_dimensions.map (lhsDims[·])
+    ++
+    rhs_result_dimensions.map (rhsDims[·])
+
+  outShape
+
+def Args.outRank {r s} {lhsDims : Dims r} {rhsDims : Dims s} (args : Args lhsDims rhsDims) : ℕ :=
+    args.outShape'.size
+
+def Args.outShape {r s} {lhsDims : Dims r} {rhsDims : Dims s} (args : Args lhsDims rhsDims)
+    {t} (h : t = args.outRank := by (try simp_all); (try infer_var)) : Dims t :=
+  ⟨args.outShape', by simp_all[Args.outRank]⟩
+
+structure Preconditions {r s t} {lhsDims : Dims r} {rhsDims : Dims s} (args : Args lhsDims rhsDims) (outDims : Dims t) where
+  c1 : args.lhs_batching_dimensions.size = args.rhs_batching_dimensions.size
+  c2 : args.lhs_contracting_dimensions.size = args.rhs_contracting_dimensions.size
+  c3 : (args.lhs_batching_dimensions ++ args.lhs_contracting_dimensions).toList.Nodup
+  c4 : (args.rhs_batching_dimensions ++ args.rhs_contracting_dimensions).toList.Nodup
+  c5 : args.lhs_batching_dimensions.all (fun i => i.val < r)
+  c6 : args.lhs_contracting_dimensions.all (fun i => i.val < r)
+  c7 : args.rhs_batching_dimensions.all (fun i => i.val < s)
+  c8 : args.rhs_contracting_dimensions.all (fun i => i.val < s)
+  c9 : args.lhs_batching_dimensions.map (lhsDims[·]) = args.rhs_batching_dimensions.map (rhsDims[·])
+  c10 : args.lhs_contracting_dimensions.map (lhsDims[·]) = args.rhs_contracting_dimensions.map (rhsDims[·])
   c11 : True
   c12 :
     let lhs_result_dimensions : Array (Fin r) :=
-      (Array.ofFn (fun i : Fin r => i)).filter (fun d => ¬lhs_batching_dimensions.contains d ∧ ¬lhs_contracting_dimensions.contains d)
+      (Array.ofFn (fun i : Fin r => i)).filter (fun d => ¬args.lhs_batching_dimensions.contains d ∧ ¬args.lhs_contracting_dimensions.contains d)
     let rhs_result_dimensions : Array (Fin s) :=
-      (Array.ofFn (fun i : Fin s => i)).filter (fun d => ¬rhs_batching_dimensions.contains d ∧ ¬rhs_contracting_dimensions.contains d)
+      (Array.ofFn (fun i : Fin s => i)).filter (fun d => ¬args.rhs_batching_dimensions.contains d ∧ ¬args.rhs_contracting_dimensions.contains d)
     let outShape :=
-      lhs_batching_dimensions.map (lhsDims[·])
+      args.lhs_batching_dimensions.map (lhsDims[·])
       ++
       lhs_result_dimensions.map (lhsDims[·])
       ++
       rhs_result_dimensions.map (rhsDims[·])
     outDims.1 = outShape
-  -- rest is about quantization ... lets ignore it for now
 
-def DotGeneralArgs.batchDims {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
-    (args : DotGeneralArgs lhsDims rhsDims outDims)
+structure Postcondition {r s t} {lhsDims : Dims r} {rhsDims : Dims s} (args : Args lhsDims rhsDims) (outDims : Dims t) where
+  c12' : t = args.outRank
+  c12  : outDims = args.outShape (by simp_all)
+
+
+def Args.batchDims {r s} {lhsDims : Dims r} {rhsDims : Dims s}
+    (args : Args lhsDims rhsDims)
     {n} (h : n = args.lhs_batching_dimensions.size := by infer_var) : Dims n :=
   ⟨args.lhs_batching_dimensions.map (lhsDims[·]), by simp_all⟩
 
-def DotGeneralArgs.contraDims {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
-    (args : DotGeneralArgs lhsDims rhsDims outDims)
+def Args.contraDims {r s} {lhsDims : Dims r} {rhsDims : Dims s}
+    (args : Args lhsDims rhsDims)
     {n} (h : n = args.lhs_contracting_dimensions.size := by infer_var) : Dims n :=
   ⟨args.lhs_contracting_dimensions.map (lhsDims[·]), by simp_all⟩
 
 
-def DotGeneralArgs.lhsResultDims {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
-    (args : DotGeneralArgs lhsDims rhsDims outDims)
+def Args.lhsResultDims {r s} {lhsDims : Dims r} {rhsDims : Dims s}
+    (args : Args lhsDims rhsDims)
     {n} (h : n = r - args.lhs_batching_dimensions.size - args.lhs_contracting_dimensions.size := by infer_var) : Dims n :=
   ⟨(Array.ofFn (fun i : Fin r => i))
     |>.filter (fun d => (d ∉ args.lhs_batching_dimensions) ∧ (d ∉ args.lhs_contracting_dimensions))
@@ -290,8 +323,8 @@ def DotGeneralArgs.lhsResultDims {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {
    by sorry /- this proof depends on `args.c3` ! -/⟩
 
 
-def DotGeneralArgs.rhsResultDims {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
-    (args : DotGeneralArgs lhsDims rhsDims outDims)
+def Args.rhsResultDims {r s} {lhsDims : Dims r} {rhsDims : Dims s}
+    (args : Args lhsDims rhsDims)
     {n} (h : n = r - args.rhs_batching_dimensions.size - args.rhs_contracting_dimensions.size := by infer_var) : Dims n :=
   ⟨(Array.ofFn (fun i : Fin s => i))
     |>.filter (fun d => (d ∉ args.rhs_batching_dimensions) ∧ (d ∉ args.rhs_contracting_dimensions))
@@ -299,8 +332,8 @@ def DotGeneralArgs.rhsResultDims {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {
    by sorry /- this proof depends on `args.c4` ! -/⟩
 
 
-def DotGeneralArgs.lhsIndexMap {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
-    (args : DotGeneralArgs lhsDims rhsDims outDims) :
+def Args.lhsIndexMap {r s} {lhsDims : Dims r} {rhsDims : Dims s}
+    (args : Args lhsDims rhsDims) :
     TensorIndex lhsDims
     ≃
     TensorIndex args.batchDims × TensorIndex args.contraDims × TensorIndex args.lhsResultDims where
@@ -309,25 +342,35 @@ def DotGeneralArgs.lhsIndexMap {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {ou
   left_inv := sorry
   right_inv := sorry
 
-def DotGeneralArgs.rhsIndexMap {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
-  (args : DotGeneralArgs lhsDims rhsDims outDims) :
+
+def Args.rhsIndexMap {r s} {lhsDims : Dims r} {rhsDims : Dims s}
+  (args : Args lhsDims rhsDims) :
   TensorIndex rhsDims
   ≃
   TensorIndex args.batchDims × TensorIndex args.contraDims × TensorIndex args.rhsResultDims := sorry
 
-def DotGeneralArgs.outIndexMap {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
-  (args : DotGeneralArgs lhsDims rhsDims outDims) :
+
+def Args.outIndexMap {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
+  (args : Args lhsDims rhsDims)
+  (h : t = args.outRank := by infer_var)
+  (houtDims : outDims = args.outShape := by infer_var) :
   TensorIndex outDims
   ≃
   TensorIndex args.batchDims × TensorIndex args.lhsResultDims × TensorIndex args.rhsResultDims := sorry
 
 
+end DotGeneral
+
+
+open DotGeneral in
 def dot_general {r s t} {lhsDims : Dims r} {rhsDims : Dims s} {outDims : Dims t}
     (lhs : TensorIndex lhsDims → R)
     (rhs : TensorIndex rhsDims → R)
-    (args : DotGeneralArgs lhsDims rhsDims outDims) :
+    (args : Args lhsDims rhsDims)
+    (ht : t = args.outRank := by infer_var)
+    (houtDims : outDims = args.outShape := by infer_var) :
     TensorIndex outDims → R :=
   fun i =>
-    let (i,j,k) := args.outIndexMap i
+    let (i,j,k) := args.outIndexMap (by simp_all) (by simp_all) i
     ∑ l : TensorIndex args.contraDims,
       lhs (args.lhsIndexMap.symm (i,l,j)) * rhs (args.rhsIndexMap.symm (i,l,k))

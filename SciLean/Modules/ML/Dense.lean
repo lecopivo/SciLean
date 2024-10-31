@@ -36,3 +36,7 @@ def_fun_trans dense in weights bias x
 def_fun_trans dense in weights bias x
   arg_subsets
   [DecidableEq ι] : revFDeriv R  by (rw[revFDeriv_eq_revFDerivProj]; autodiff)
+
+def_fun_trans dense in weights bias x
+  arg_subsets
+  [DecidableEq ι] : fwdFDeriv R  by (unfold dense; autodiff)

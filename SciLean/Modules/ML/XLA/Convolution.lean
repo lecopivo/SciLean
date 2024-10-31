@@ -3,6 +3,8 @@ import SciLean.Modules.ML.XLA.Slice
 import SciLean.Modules.ML.XLA.DotGeneral
 import SciLean.Modules.ML.XLA.Pad
 import SciLean.Modules.ML.XLA.Slice
+import SciLean.Modules.ML.XLA.Concatenate
+import SciLean.Modules.ML.XLA.Split
 
 namespace SciLean
 
@@ -348,40 +350,35 @@ def convolutionCore {r} {lhsDims rhsDims outDims : Dims r}
     let lhs_base_dilation := args.lhsShapeMap (1,args.lhs_dilation,1)
     let lhs_window_dilations := args.lhsShapeMap (1,args.rhs_dilation,1)
 
-    let padded_lhs := pad lhs 0 lhs_padding_low lhs_padding_high lhs_base_dilation.toNat
+    let padArgs : Pad.Args lhsDims := {
+      edge_padding_low := lhs_padding_low
+      edge_padding_high := lhs_padding_high
+      interior_padding := lhs_base_dilation.toNat
+    }
+    let padded_lhs := pad lhs 0 padArgs
       -- there is some issue with elaboration and we have to specify these arguments explicitly
-      (outDims:= pad.outDims lhsDims lhs_padding_low lhs_padding_high lhs_base_dilation.toNat) (by infer_var)
+      (outDims:= padArgs.outShape) (by infer_var)
 
 
     let lhs_window_start : ArrayN ℤ r := args.lhsShapeMap (0,output_spatial_index,0)
-    let lhs_window := slice padded_lhs
-         { start_indices := lhs_window_start
-           limit_indices := (lhs_window_start + lhsWindowShape)
-           strides := lhs_window_dilations
-           c1 := sorry, c2 := sorry, c3 := sorry, c4 := sorry, c5 := sorry }
+    let sliceArgs : Slice.Args padArgs.outShape := {
+      start_indices := lhs_window_start
+      limit_indices := (lhs_window_start + lhsWindowShape)
+      strides := lhs_window_dilations
+    }
+    let lhs_window := slice padded_lhs sliceArgs sorry
       -- there is some issue with elaboration and we have to specify these arguments explicitly
-      (outDims:=slice.outDims lhs_window_start (lhs_window_start + lhsWindowShape) lhs_window_dilations) (by infer_var)
+      (outDims:=sliceArgs.outShape) (by infer_var)
 
-    let dot_product : R :=
-      dot_general lhs_window rhs
+    let dotArgs : DotGeneral.Args sliceArgs.outShape rhsDims :=
         {lhs_batching_dimensions := #[]
          rhs_batching_dimensions := #[]
          lhs_contracting_dimensions := args.input_spatial_dimensions.1 ++ #[args.input_feature_dimension]
-         rhs_contracting_dimensions := args.kernel_spatial_dimensions.1 ++ #[args.kernel_input_feature_dimension]
+         rhs_contracting_dimensions := args.kernel_spatial_dimensions.1 ++ #[args.kernel_input_feature_dimension]}
 
-         c1 := sorry
-         c2 := sorry
-         c3 := sorry
-         c4 := sorry
-         c5 := sorry
-         c6 := sorry
-         c7 := sorry
-         c8 := sorry
-         c9 := sorry
-         c10 := by sorry
-         c11 := by simp
-         c12 := by sorry}
-        (t:=0) (outDims := sorry) sorry
+    let dot_product : R :=
+      dot_general lhs_window rhs dotArgs
+        (t := 0) (outDims := ⟨#[],by simp⟩) (by sorry) (by sorry) ⟨⟨#[],by simp⟩,by simp⟩
 
     dot_product
 
@@ -399,7 +396,11 @@ def convolution {r} {lhsDims rhsDims outDims : Dims r}
     let lhses : Fin args.feature_group_count → TensorIndex lhsDims' → R := sorry
        --split lhs args.feature_group_count args.input_feature_dimension
     let rhsDims' : Dims r := ⟨rhsDims.1.modify args.kernel_output_feature_dimension.1 (fun d => d / args.feature_group_count), sorry⟩
-    let rhses : Fin args.feature_group_count → TensorIndex rhsDims' → R := sorry
+    let rhsSplitArgs : Split.Args rhsDims := {
+      split_size := args.feature_group_count
+      split_dimension := args.kernel_output_feature_dimension
+    }
+    let rhses := split rhs rhsSplitArgs sorry (outDims := rhsSplitArgs.outShape) (by simp)
        --split rhs args.feature_group_count args.kernel_output_feature_dimension
     let results := fun i => convolution (lhses i) (rhses i) args h
     concatenate results args.output_feature_dimension

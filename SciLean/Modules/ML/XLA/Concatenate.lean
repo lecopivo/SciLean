@@ -69,22 +69,31 @@ def Args.outShape {r k} {inDims : Fin k → Dims r} (args : Args inDims) : Dims 
     else
       0
 
-def Args.indexMap {r k} {inDims : Fin k → Dims r} (args : Args inDims) :
-  (i : Fin k) × TensorIndex (inDims i)
-  ≃
-  TensorIndex args.outShape := sorry
-
-structure Constraints {r k} {inDims : Fin k → Dims r} (args : Args inDims) (outDims : Dims r) where
+structure Preconditions {r k} {inDims : Fin k → Dims r} (args : Args inDims) : Prop where
   c1 : True
   c2 : ∀ d, d ≠ args.dimension → ∀ i j, (inDims i)[d] = (inDims j)[d]
   c3 : 0 < k
   c4 : (0:ℕ) ≤ args.dimension ∧ dimension < r
   c5 : True
+
+structure Postconditions {r k} {inDims : Fin k → Dims r} (args : Args inDims) (outDims : Dims r) : Prop where
   c6 : ∀ d,
     if d = args.dimension then
       outDims[d] = ∑ i, (inDims i)[d]
     else
       ∀ i, outDims[d] = (inDims i)[d]
+
+theorem postconditions_true {r k} {inDims : Fin k → Dims r} (args : Args inDims) (h : Preconditions args) :
+    Postconditions args args.outShape := by
+  constructor
+  intro d; split_ifs; unfold Args.outShape; simp_all; unfold Args.outShape; intro i; simp_all; have := i.2; split_ifs; exact h.c2 d (by assumption) ⟨0,by omega⟩ i; have := i.2; simp_all
+
+def Args.indexMap {r k} {inDims : Fin k → Dims r} (args : Args inDims)
+  (h : Preconditions args)
+  {outDims} (houtShape : outDims = args.outShape := by infer_var) :
+  (i : Fin k) × TensorIndex (inDims i)
+  ≃
+  TensorIndex outDims := sorry
 
 
 end Concatenate
@@ -94,9 +103,9 @@ open Concatenate in
 def concatenate {r k} {inDims : Fin k → Dims r} {outDims : Dims r}
     (inputs : (i : Fin k) → TensorIndex (inDims i) → R)
     (args : Args inDims)
-    (h : Constraints args outDims)
-    (houtDims : outDims = args.outShape := by infer_var) :
+    (h : Preconditions args)
+    (houtDims : outDims = args.outShape := by first | (try simp_all) | (try infer_var)) :
     TensorIndex outDims → R :=
   fun i =>
-    let ⟨i,j⟩ := args.indexMap.symm (houtDims ▸ i)
+    let ⟨i,j⟩ := (args.indexMap h (by simp_all)).symm i
     inputs i j
