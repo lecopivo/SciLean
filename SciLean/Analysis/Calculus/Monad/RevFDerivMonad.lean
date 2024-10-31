@@ -138,8 +138,8 @@ by
              fun x => pure (g x) >>= f) by simp]
     rw[revFDerivM_bind f (fun x => pure (g x))
          hf (DifferentiableM_pure _ hg)]
-    simp[revFDerivM_pure g hg]
-  rfl
+    rw[revFDerivM_pure g hg]
+  simp
 
 @[fun_trans]
 theorem let_rule
@@ -251,7 +251,32 @@ by
   have hf : DifferentiableM K f := by simp[f]; fun_prop
 
   rw [RevFDerivMonad.revFDerivM_bind _ _ hf hg]
-  simp [RevFDerivMonad.revFDerivM_pair a0 ha0]
+  rw [RevFDerivMonad.revFDerivM_pair a0 ha0]
+  simp
+
+
+-- Functor.map -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_trans]
+theorem Functor.map.arg_a0a1.revFDerivM_rule
+  (a0 : X → Y → Z) (a1 : X → m Y)
+  (ha0 : Differentiable K (fun (x,y) => a0 x y)) (ha1 : DifferentiableM K a1) :
+  revFDerivM K (fun x => (a0 x) <$> (a1 x))
+  =
+  fun x => do
+    let ydy ← revFDerivM K a1 x
+    let y := ydy.1; let dy' := ydy.2
+    let zdz := revFDeriv K (fun (x,y) => a0 x y) (x,y)
+    let z := zdz.1; let dz' := zdz.2
+    return (z, fun dz => do
+          let dxdy := dz' dz
+          let dx₁ := dxdy.1
+          let dy := dxdy.2
+          let dx₂ ← dy' dy
+          return dx₁ + dx₂) :=
+by
+  simp only [← bind_pure_comp]; fun_trans
 
 
 --------------------------------------------------------------------------------

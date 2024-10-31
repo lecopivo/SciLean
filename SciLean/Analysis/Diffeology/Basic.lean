@@ -1,4 +1,3 @@
-import SciLean.Analysis.Scalar
 import SciLean.Tactic.Autodiff
 
 namespace SciLean
@@ -31,7 +30,7 @@ class TangentSpace (X : Type v) [Diffeology X] (TX : outParam (X → Type w)) [�
   -- maybe replace this with the requirement that the map is linear
   -- requiring that tangent of curve is
   tangent_curve_at_zero (x : X) (dx : TX x) dt :
-    tangent (curve x dx) (curve_is_plot x dx) (fun _ => 0) dt = cast (by simp_all) (dt 0 • dx)
+    tangent (curve x dx) (curve_is_plot x dx) (fun _ => 0) dt = dt 0 • cast (by simp_all) dx
 
   -- I think semilinearity is sufficient
   tangent_linear {n : ℕ} (c : (Fin n → ℝ) → X) (hc : c ∈ plots n (X:=X)) (x : (Fin n) → ℝ) :
@@ -41,7 +40,6 @@ attribute [simp] TangentSpace.curve_at_zero TangentSpace.tangent_curve_at_zero T
 
 
 variable
-  {R : Type*} [RealScalar R]
   {X : Type*} {TX : X → Type*} [Diffeology X] [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
   {Y : Type*} {TY : Y → Type*} [Diffeology Y] [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY]
   {Z : Type*} {TZ : Z → Type*} [Diffeology Z] [∀ z, AddCommGroup (TZ z)] [∀ z, Module ℝ (TZ z)] [TangentSpace Z TZ]
@@ -72,14 +70,14 @@ def mderiv (f : X → Y) (x : X) (dx : TX x) : TY (f x) :=
 @[fun_prop]
 theorem MDifferentiable.id_rule : MDifferentiable (fun x : X => x) := by
   constructor
-  · intros; simp_all [Function.comp]
-  · intros; simp_all [Function.comp]
+  · intros; unfold Function.comp; simp_all
+  · intros; unfold Function.comp; simp_all
 
 @[fun_prop]
 theorem MDifferentiable.const_rule (y : Y) : MDifferentiable (fun _ : X => y) := by
   constructor
-  · intros; simp only [Function.comp_apply, Function.comp, cast_eq]
-  · intros; simp only [Function.comp, Diffeology.const_plot]
+  · intros; simp only [Function.comp_apply, Function.comp_def, cast_eq]
+  · intros; simp only [Function.comp_def, Diffeology.const_plot]
 
 
 @[fun_prop]
@@ -98,35 +96,26 @@ theorem MDifferentiable.comp_rule (f : Y → Z) (g : X → Y)
     exact hf.plot_independence hp' hq' (by simp_all) (hg.plot_independence hp hq hx hdx)
 
 
-set_option trace.Meta.Tactic.fun_prop true in
-example (f : Y → Z) (g : X → Y)
-    (hf : MDifferentiable f) (hg : MDifferentiable g) :
-    MDifferentiable (fun x => f (g x)) := by fun_prop
-
-
-
 theorem mderiv.id_rule :
     mderiv (fun x : X => x) = fun _ dx => dx := by
 
   have h : MDifferentiable (fun x : X => x) := by fun_prop
-  unfold mderiv; simp[h, Function.comp]
+  unfold mderiv; simp[h, Function.comp_def]
 
 theorem mderiv.const_rule :
     mderiv (fun _ : X => y) = fun _ _ => (0 : TY y) := by
 
   have h : MDifferentiable (fun _ : X => y) := by fun_prop
-  unfold mderiv; simp[h, Function.comp]
+  unfold mderiv; simp[h, Function.comp_def]
 
 
 @[simp]
 theorem cast_apply (f : α → β) (a : α) (h' : (α → β) = (α → β')) (h : β = β' := by simp_all) :
   (cast h' f) a = cast h (f a) := by subst h; simp
 
-
 @[simp]
-theorem cast_smul {R M M'} [SMul R M'] (h : M = M') (r : R) (x : M) :
-  have : SMul R M := by rw[h]; infer_instance
-  r • cast h x = cast h (r • x) := by subst h; simp
+theorem cast_smul_cast {α} {X : α → Type u} [∀ a, SMul R (X a)] (a a') (r : R) (x : X a) (h : a = a' := by simp_all) :
+  cast (show X a' = X a by simp_all) (r • cast (by simp_all) x) = r • x := by subst h; simp
 
 @[fun_trans]
 theorem mderiv.comp_rule (f : Y → Z) (g : X → Y)
@@ -136,14 +125,13 @@ theorem mderiv.comp_rule (f : Y → Z) (g : X → Y)
     fun x dx =>
       let y  := g x
       let dy := mderiv g x dx
-      let z  := f y
       let dz := mderiv f y dy
       dz  := by
 
   funext x dx
   have h : MDifferentiable fun x => f (g x) := by fun_prop -- MDifferentiable.comp_rule _ _ hf hg
 
-  -- set up arguments to use `plot_independence` to replace
+  -- set up arguments to use `plot_independence`
   let y  := g x
   let dy := mderiv g x dx
   let p := g ∘ (TangentSpace.curve x dx)
@@ -156,21 +144,66 @@ theorem mderiv.comp_rule (f : Y → Z) (g : X → Y)
   have hdx : tangent p hp t = cast (by simp[hx]) (tangent q hq t) := by
     funext dt
     simp [p,q,tangent_curve_at_zero,t,dy,mderiv,hg]
-    sorry -- just use linearity of `tangent`
+    have h := (TangentSpace.tangent_linear p hp (fun _ => 0)).map_smul (dt 0) (fun _ => 1) |>.symm
+    simp[h]; congr; funext x; simp; congr; ext; simp only [Fin.val_eq_zero, Fin.isValue]
+
+  -- use `plot_independence`
   have h' := hf.plot_independence hp hq hx hdx
+
+  -- now just unfold definitions, use `h'` and we are done
   simp [p] at h'
-  conv =>
-    lhs
-    simp[h, hf, hg, Function.comp, mderiv]
-    rw[h']
+  conv => lhs; simp[h, hf, hg, Function.comp_def, mderiv]; rw[h']
   simp_all [mderiv,hf,hg,q,y,dy]
 
 
 
 
-example (h : α = β) (h' : β = γ) (a : α) : cast h' (cast h a) = cast (by simp_all) a := by simp
 
-structure Id' (α : Type u) where
-  val : α
+def FinAdd.fst (x : Fin (n + m) → ℝ) : Fin n → ℝ := fun i => x ⟨i.1, by omega⟩
+def FinAdd.snd (x : Fin (n + m) → ℝ) : Fin m → ℝ := fun i => x ⟨i.1 + n, by omega⟩
+def FinAdd.mk (x : Fin n → ℝ) (y : Fin m → ℝ) : Fin (n + m) → ℝ :=
+  fun i => if h : i < n then x ⟨i.1, by omega⟩ else y ⟨i.1 - n, by omega⟩
 
-example {α β : Type} (h : α = Id' α) (a : List α) : h.symm ▸ h ▸ a = a := by
+@[simp]
+theorem FinAdd.fst_mk (x : Fin n → ℝ) (y : Fin m → ℝ) : fst (mk x y) = x := by
+  simp (config:={unfoldPartialApp:=true}) [fst,mk]
+@[simp]
+theorem FinAdd.snd_mk (x : Fin n → ℝ) (y : Fin m → ℝ) : snd (mk x y) = y := by
+  simp (config:={unfoldPartialApp:=true}) [snd,mk]
+
+
+open Diffeology in
+instance : Diffeology (X → Y) where
+  plots := fun n p => ∀ m, ∀ q ∈ plots m (X:=X),
+    (fun x : Fin (n + m) → ℝ => p (FinAdd.fst x) (q (FinAdd.snd x))) ∈ plots (n+m)
+  smooth_comp := by
+    intros n m p f hp hf
+    intros m' q hq
+    let f' : (Fin (n + m') → ℝ) → (Fin (m + m') → ℝ) :=
+      fun x => FinAdd.mk (f (FinAdd.fst x)) (FinAdd.snd x)
+    have hf' : Differentiable ℝ f' := by sorry
+    have hp' := Diffeology.smooth_comp (hp m' q hq) hf'
+    simp [Function.comp_def,f'] at hp'
+    exact hp'
+  const_plot := by sorry_proof
+
+
+instance
+    {X : Type*} {TX : X → Type*} [Diffeology X]
+    {Y : Type*} {TY : Y → Type*} [Diffeology Y] [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY] :
+    TangentSpace (X → Y) (fun f => (x : X) → (TY (f x))) where
+  -- {n : ℕ} (c : (Fin n → ℝ) → X) (hc : c ∈ plots n (X:=X)) (x dx : (Fin n) → ℝ) : TX (c x)
+  tangent {n} c hc u du x :=
+    let q := fun _ : Fin 0 => x
+    let hq := Diffeology.const_plot 0 x
+    let p := fun u' => c u' x
+    let hp : p ∈ Diffeology.plots n := hc 0 _ hq
+    TangentSpace.tangent p hp u du
+
+  smooth_comp := sorry_proof
+
+  tangent_const := by intros; funext x; simp
+
+  curve f df t := fun x => TangentSpace.curve (f x) (df x) t
+  curve_at_zero := by intros; simp
+  curve_is_plot := by simp_all[Diffeology.plots]; intros f df n q hq; simp

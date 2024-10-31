@@ -1,6 +1,6 @@
 import SciLean.Analysis.AdjointSpace.Adjoint
 
-open FiniteDimensional
+open Module
 
 namespace SciLean
 

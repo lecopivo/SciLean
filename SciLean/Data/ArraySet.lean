@@ -42,11 +42,11 @@ namespace ArraySet
     return false
 
   instance [DecidableEq α] : Membership α (ArraySet α) where
-    mem a as := as.mem a
+    mem as a := as.mem a
 
   instance [DecidableEq α] (a : α) (as : ArraySet α) : Decidable (a ∈ as) :=
     if h : as.mem a then
-      .isTrue h
+      .isTrue (by exact h)
     else
       .isFalse h
 

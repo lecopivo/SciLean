@@ -341,7 +341,7 @@ set_option deprecated.oldSectionVars true
 variable
   {X : Type _} [AddCommGroup X]
   {XI : I → Type _} [∀ i, AddCommGroup (XI i)]
-  [StructType X I XI] [AddStruct X I XI] [NegStruct X I XI]
+  [StructType X I XI] [addInst : AddStruct X I XI] [negInst : NegStruct X I XI]
 
   def_fun_prop with_transitive (i : I) : IsAddGroupHom fun (x : X) => structProj x i by
     constructor
@@ -350,13 +350,13 @@ variable
 
   def_fun_prop with_transitive : IsAddGroupHom fun (f : (i : I) → XI i) => structMake (X:=X) f by
     constructor
-    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp
-    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[NegStruct.structProj_neg]; simp
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add (self:=addInst)]; simp
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[NegStruct.structProj_neg (self:=negInst)]; simp
 
   def_fun_prop with_transitive (i : I) : IsAddGroupHom fun (xi : XI i) => oneHot (X:=X) i xi by
     constructor
-    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp[oneHot]; aesop
-    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[NegStruct.structProj_neg]; simp[oneHot]; aesop
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add (self:=addInst)]; simp[oneHot]; aesop
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[NegStruct.structProj_neg (self:=negInst)]; simp[oneHot]; aesop
 
   #generate_add_group_hom_simps structProj.arg_x.IsAddGroupHom_rule
   #generate_add_group_hom_simps structMake.arg_f.IsAddGroupHom_rule
@@ -388,7 +388,7 @@ section OnModule
 variable
   {X : Type _} [AddCommGroup X] [Module K X]
   {XI : I → Type _} [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)]
-  [StructType X I XI] [ModuleStruct K X I XI]
+  [StructType X I XI] [inst : ModuleStruct K X I XI]
 
   def_fun_prop with_transitive (i : I) : IsLinearMap K fun (x : X) => structProj x i by
     constructor
@@ -397,13 +397,13 @@ variable
 
   def_fun_prop with_transitive : IsLinearMap K fun (f : (i : I) → XI i) => structMake (X:=X) f by
     constructor
-    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp
-    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[SMulStruct.structProj_smul]; simp
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add (self:=inst.toAddStruct)]; simp
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[SMulStruct.structProj_smul (self:=inst.toSMulStruct)]; simp
 
   def_fun_prop with_transitive (i : I) : IsLinearMap K fun (xi : XI i) => oneHot (X:=X) i xi by
     constructor
-    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add]; simp[oneHot]; aesop
-    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[SMulStruct.structProj_smul]; simp[oneHot]; aesop
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[AddStruct.structProj_add (self:=inst.toAddStruct)]; simp[oneHot]; aesop
+    · intros; apply structExt (I:=I) (XI:=XI); intro i; rw[SMulStruct.structProj_smul (self:=inst.toSMulStruct)]; simp[oneHot]; aesop
 
   #generate_linear_map_simps structProj.arg_x.IsLinearMap_rule
   #generate_linear_map_simps structMake.arg_f.IsLinearMap_rule

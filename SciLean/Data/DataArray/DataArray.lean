@@ -176,7 +176,7 @@ def DataArrayN.toListIdx (xs : DataArrayN α ι) : List (ι × α) := Id.run do
 
 
 instance : Membership α (DataArrayN α ι) where
-  mem x xs := ∃ i, xs.get i = x
+  mem xs x := ∃ i, xs.get i = x
 
 
 instance : ArrayType (DataArrayN α ι) ι α where
@@ -254,7 +254,7 @@ def DataArrayN.curry [Inhabited α] (x : DataArrayN α (ι×κ)) : DataArrayN (D
 def DataArrayN.uncurry [Inhabited α] (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
   ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
 
-
+set_option linter.dupNamespace false in
 open Lean in
 private partial def parseDimProd (s : Syntax) : TSyntaxArray `dimSpec :=
   match s with

@@ -114,7 +114,7 @@ structure LambdaTheorem where
 /-- -/
 structure LambdaTheorems where
   /-- map: function transfromation name × theorem type → lambda theorem -/
-  theorems : HashMap (Name × LambdaTheoremType) (Array LambdaTheorem) := {}
+  theorems : Std.HashMap (Name × LambdaTheoremType) (Array LambdaTheorem) := {}
   deriving Inhabited
 
 
@@ -132,7 +132,7 @@ initialize lambdaTheoremsExt : LambdaTheoremsExt ←
     initial := {}
     addEntry := fun d e =>
       {d with theorems :=
-         let es := d.theorems.findD (e.funTransName, e.thmArgs.type) #[]
+         let es := d.theorems.getD (e.funTransName, e.thmArgs.type) #[]
          d.theorems.insert (e.funTransName, e.thmArgs.type) (es.push e)}
   }
 
@@ -156,7 +156,7 @@ we prefer the version `deriv (fun x' => f (g x')) x` over `deriv (fun x' => f (g
 uses `DifferntiableAt` insed of `Differentiable` as preconditions. -/
 def getLambdaTheorems (funTransName : Name) (type : LambdaTheoremType) (nargs : Option Nat):
     CoreM (Array LambdaTheorem) := do
-  let .some thms := (lambdaTheoremsExt.getState (← getEnv)).theorems.find? (funTransName,type)
+  let .some thms := (lambdaTheoremsExt.getState (← getEnv)).theorems[(funTransName,type)]?
     | return #[]
 
   match nargs with

@@ -1,4 +1,4 @@
-import Mathlib.MeasureTheory.Constructions.Prod.Basic
+import Mathlib.MeasureTheory.Measure.Prod
 
 import SciLean.Analysis.AdjointSpace.Geometry
 import SciLean.Data.ArrayType.Algebra
@@ -42,7 +42,7 @@ theorem integral_eq_E (R) [RealScalar R]
     (r : Rand X) (f : X → Y) (μ : Measure X) /- (hrμ : r.ℙ ≪ μ) -/ :
     ∫ x, f x ∂μ
     =
-    r.𝔼 (fun x =>
+    r.E (fun x =>
       let pdf := r.pdf R μ x
       pdf • f x) := sorry_proof
 
@@ -52,7 +52,7 @@ theorem integral_eq_uniform_E (R) [RealScalar R]
     (f : X → Y) (A : Set X) [UniformRand A] :
     ∫ x in A, f x
     =
-    (uniform A).𝔼 (fun x =>
+    (uniform A).E (fun x =>
       let V : R := Scalar.ofENNReal (volume A)
       V • f x) := sorry_proof
 
@@ -62,7 +62,7 @@ theorem weakIntegral_as_uniform_E_in_set (R) [RealScalar R]
     (f : X → Y) (A : Set X) [UniformRand A] :
     weakIntegral volume f
     =
-    (uniform A).𝔼 (fun x =>
+    (uniform A).E (fun x =>
       let V : R := Scalar.ofENNReal (volume A)
       V • f x) := sorry_proof
 

@@ -108,7 +108,7 @@ unsafe def synthesizeAutoArg (e : Expr) : TermElabM Unit := do
     throwError "expecting mvar of tyep `autoParam _ _`"
   let stx  ← evalExpr Syntax q(Syntax) E.appArg!
   let stx : TSyntax `Lean.Parser.Tactic.tacticSeq := ⟨stx⟩
-  try runTactic e.mvarId! (← `(term| by unfold autoParam; ($stx:tacticSeq))) false
+  try runTactic e.mvarId! (← `(term| by unfold autoParam; ($stx:tacticSeq))) .term false
   catch _ => pure ()
   unless ← e.mvarId!.isAssigned do
     throwError "failed to fill auto parameter {← ppExpr E}"

@@ -44,7 +44,7 @@ local postfix:90 "†" => starRingEnd _
 
 export InnerProductSpace (norm_sq_eq_inner)
 
-open RCLike ComplexConjugate
+open RCLike ComplexConjugate InnerProductSpace
 
 section BasicProperties
 

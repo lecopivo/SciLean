@@ -20,17 +20,17 @@ set_option trace.Meta.Tactic.simp.discharge true
 theorem bind_pull_mean (x : Rand X) (f : X → Rand Y) :
     (x >>= (fun x' => pure (f x').mean)).mean
     =
-    (x >>= f).mean := by simp[rand_push_E]
+    (x >>= f).mean := by simp [rand_push_E]
 
 @[rand_push_E]
 theorem ite_push_E {c} [Decidable c] (t e : Rand X) (φ : X → Y):
-    (if c then t else e).𝔼 φ = (if c then t.𝔼 φ else e.𝔼 φ) := by
+    (if c then t else e).E φ = (if c then t.E φ else e.E φ) := by
   if h : c then simp[h] else simp[h]
 
 -- I don't think this is a desirable `rand_pull_E` theorem as it duplicates the if statement
 -- @[rand_pull_E]
 theorem ite_pull_E {c} [Decidable c] (t e : Rand X) (φ ψ : X → Y):
-    (if c then t.𝔼 φ else e.𝔼 ψ) = (if c then t else e).𝔼 (if c then φ else ψ) := by
+    (if c then t.E φ else e.E ψ) = (if c then t else e).E (if c then φ else ψ) := by
   if h : c then simp[h] else simp[h]
 
 @[rand_push_E]
@@ -56,27 +56,27 @@ theorem ite_pull_mean_f {c} [Decidable c] (t : X) (e : Rand X) :
 -- this has messed up universes
 @[rand_pull_E]
 theorem pull_E_lambda (r : Rand Y) (f : X → Y → Z) :
-    (fun x => r.𝔼 (fun y => f x y))
+    (fun x => r.E (fun y => f x y))
     =
-    r.𝔼 (fun y x => f x y) := sorry_proof
+    r.E (fun y x => f x y) := sorry_proof
 
 -- this has messed up universes
 @[rand_push_E]
 theorem push_E_lambda (r : Rand Y) (f : X → Y → Z) :
-    r.𝔼 (fun y x => f x y)
+    r.E (fun y x => f x y)
     =
-    (fun x => r.𝔼 (fun y => f x y)) := sorry_proof
+    (fun x => r.E (fun y => f x y)) := sorry_proof
 
 -- can't be simp as it has variable head
 set_option linter.unusedVariables false in
 theorem pull_E_affine (r : Rand X) (φ : X → Y)
     (f : Y → Z) (hf : IsAffineMap ℝ f := by fun_prop) :
-    (f (r.𝔼 φ)) = r.𝔼 (fun x => f (φ x)) := by sorry_proof -- have := hf; sorry_proof
+    (f (r.E φ)) = r.E (fun x => f (φ x)) := by sorry_proof -- have := hf; sorry_proof
 
 @[rand_push_E]
 theorem push_E_affine (r : Rand X) (φ : X → Y)
     (f : Y → Z) (hf : IsAffineMap ℝ f := by fun_prop) :
-    r.𝔼 (fun x => f (φ x)) = (f (r.𝔼 φ)) := by rw[pull_E_affine (hf:=hf)]
+    r.E (fun x => f (φ x)) = (f (r.E φ)) := by rw[pull_E_affine (hf:=hf)]
 
 @[rand_pull_E]
 theorem pull_mean_add (x y : Rand X) :
@@ -153,13 +153,12 @@ variable
   [∀ n, MeasurableSpace (C n)] [∀ n, MeasurableSingletonClass (C n)]
   (D : ℕ → Type) [∀ n, MeasurableSpace (D n)] [∀ n, MeasurableSpace (D n)]
 
-
 @[rand_pull_E]
 theorem pull_E_nat_rec (x₀ : C 0) (r : (n : Nat) → Rand (D n))
     (f : (n : ℕ) → C n → D n → (C (n+1))) (hf : ∀ n d, IsAffineMap ℝ (f n · d)) :
     Nat.rec
       x₀
-      (fun n x => (r n).𝔼 (f n x)) n
+      (fun n x => (r n).E (f n x)) n
     =
     (Nat.rec (motive:=fun n => Rand (C n))
       (pure x₀)
@@ -171,15 +170,16 @@ theorem pull_E_nat_rec (x₀ : C 0) (r : (n : Nat) → Rand (D n))
   case zero => simp[mean]
   case succ n hn =>
     simp[hn,mean,map]
-    conv => simp[rand_pull_E,map]
+    conv => simp only [rand_pull_E,map]
     conv =>
       lhs
       enter[1,2,x',1]
       unfold mean
       simp[pull_E_affine (f:=(f n · x'))]
     conv =>
-      simp[rand_pull_E]
+      simp only [rand_pull_E]
     rw[Rand.swap_bind]
+    simp
 
 
 @[rand_pull_E]
@@ -187,7 +187,7 @@ theorem pull_E_nat_recOn (x₀ : C 0) (r : (n : Nat) → Rand (D n))
     (f : (n : ℕ) → C n → D n → (C (n+1))) (hf : ∀ n d, IsAffineMap ℝ (f n · d)) :
     Nat.recOn  n
       x₀
-      (fun n x => (r n).𝔼 (f n x))
+      (fun n x => (r n).E (f n x))
     =
     (Nat.recOn (motive:=fun n => Rand (C n)) n
       (pure x₀)
@@ -214,7 +214,7 @@ theorem pull_E_list_rec (l : List α) (x₀ : C [])
     (hf : ∀ head tail d, IsAffineMap ℝ (f head tail · d)) :
     List.rec
       x₀
-      (fun head tail x => (r head tail).𝔼 (f head tail x)) l
+      (fun head tail x => (r head tail).E (f head tail x)) l
     =
     (List.rec (motive:=fun l => Rand (C l))
       (pure x₀)
@@ -226,15 +226,16 @@ theorem pull_E_list_rec (l : List α) (x₀ : C [])
   case nil => simp[mean]
   case cons _ head tail hn =>
     simp[hn,mean]
-    conv => simp[rand_pull_E,map]
+    conv => simp only [rand_pull_E,map]
     conv =>
       lhs
       enter[1,2,x',1]
       unfold mean
       simp[pull_E_affine (f:=(f head tail · x'))]
     conv =>
-      simp[rand_pull_E]
+      simp only [rand_pull_E]
     rw[Rand.swap_bind]
+    simp
 
 
 @[rand_pull_E]
@@ -244,7 +245,7 @@ theorem pull_E_list_recOn (l : List α) (x₀ : C [])
     (hf : ∀ head tail d, IsAffineMap ℝ (f head tail · d)) :
     List.recOn l
       x₀
-      (fun head tail x => (r head tail).𝔼 (f head tail x))
+      (fun head tail x => (r head tail).E (f head tail x))
     =
     (List.recOn (motive:=fun l => Rand (C l)) l
       (pure x₀)

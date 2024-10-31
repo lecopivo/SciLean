@@ -32,7 +32,8 @@ instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
   DifferentiableM_pair f hf :=
     by
       simp; simp at hf
-      simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
+      simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure, Functor.map]
+      simp only [StateT.map]
       fun_prop
 
 
@@ -64,7 +65,7 @@ instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
     by
       funext x dx sds
       simp [DifferentiableM] at hf
-      simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
+      simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure, Functor.map]
       fun_trans only
       simp
 
@@ -191,6 +192,9 @@ variable
   [DifferentiableMonad K m] [RevFDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
 
+@[simp]
+theorem add_zero {α} [AddGroup α] : (HAdd.hAdd 0 : α → α) = fun x => x := by funext x; simp
+
 noncomputable
 instance (S : Type) [NormedAddCommGroup S] [AdjointSpace K S] [CompleteSpace S] :
     RevFDerivMonad K (StateT S m) (StateT S m') where
@@ -209,7 +213,7 @@ instance (S : Type) [NormedAddCommGroup S] [AdjointSpace K S] [CompleteSpace S] 
     by
       funext x s
       simp [DifferentiableM] at hf; simp [DifferentiableM] at hg
-      simp[revFDeriv, bind, StateT.bind, StateT.bind.match_1, StateT.pure, pure]
+      simp[revFDeriv, bind, StateT.bind, StateT.bind.match_1, StateT.pure, pure,Functor.map]
       fun_trans
       rfl
 
@@ -220,7 +224,8 @@ instance (S : Type) [NormedAddCommGroup S] [AdjointSpace K S] [CompleteSpace S] 
       simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
       fun_trans only
       simp
-      congr; funext ysdf; congr; funext dx ds; congr; funext (dx,ds); simp; rfl
+      congr; funext ysdf; congr; funext (dx,dy) ds; simp only [← bind_pure_comp]
+      congr; funext (dx,ds); simp; rfl
 
 
 variable

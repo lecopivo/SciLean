@@ -4,7 +4,6 @@ import SciLean
 
 open SciLean
 
-set_option linter.longLine false
 set_option linter.unusedVariables false
 
 @[gtrans]

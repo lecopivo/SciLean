@@ -9,6 +9,9 @@ lean_lib SciLean {
   roots := #[`SciLean]
 }
 
+@[test_driver]
+lean_lib Test where
+
 lean_lib CompileTactics where
   -- options for SciLean.Tactic.MySimpProc (and below) modules
   precompileModules := true

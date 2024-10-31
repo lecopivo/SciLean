@@ -191,6 +191,10 @@ abbrev snd (r : Rand (X×Y)) : Rand Y := do
 theorem map_ℙ  (r : Rand X) (f : X → Y) :
   (r.map f).ℙ = r.ℙ.map f := sorry_proof
 
+@[simp, simp_core]
+theorem map_ℙ'  (r : Rand X) (f : X → Y) :
+  (f <$> r).ℙ = r.ℙ.map f := sorry_proof
+
 
 ----------------------------------------------------------------------------------------------------
 -- Expected Value ----------------------------------------------------------------------------------
@@ -206,53 +210,62 @@ variable
   -- {U} [AddCommGroup U] [TopologicalSpace U] [TopologicalAddGroup U] [Module ℝ U] [LocallyConvexSpace ℝ U]
 
 noncomputable
-def 𝔼 (r : Rand X) (φ : X → Y) : Y := weakIntegral r.ℙ  φ
+def E (r : Rand X) (φ : X → Y) : Y := weakIntegral r.ℙ  φ
 
 @[simp, simp_core, rand_push_E]
 theorem pure_𝔼 (x : X) (φ : X → Y) :
-    (pure (f:=Rand) x).𝔼 φ = φ x := by simp [𝔼]
+    (pure (f:=Rand) x).E φ = φ x := by simp [E]
 
 -- What are the right assumptions here? Lambda lawfulness of `x` and `f x'` and integrability of `φ`
 @[rand_push_E]
 theorem bind_E (r : Rand X) (f : X → Rand Y) (φ : Y → Z) :
-    (r >>= f).𝔼 φ = r.𝔼 (fun x' => (f x').𝔼 φ) := by simp[𝔼]; sorry_proof
+    (r >>= f).E φ = r.E (fun x' => (f x').E φ) := by simp[E]; sorry_proof
 
 -- todo: We might want this to hold without lawfulness
 -- consider adding as a property inside of `Distribution` or `Rand`
 @[simp, simp_core, rand_push_E]
 theorem E_zero (r : Rand X) :
-    r.𝔼 (fun _ => (0 : Y)) = 0 := by simp[𝔼]
+    r.E (fun _ => (0 : Y)) = 0 := by simp[E]
 
 @[simp, simp_core, add_pull, rand_push_E]
 theorem E_add (r : Rand X) (φ ψ : X → U)
     (hφ : WeakIntegrable φ r.ℙ) (hψ : WeakIntegrable ψ r.ℙ) :
-    r.𝔼 (fun x => φ x + ψ x) = r.𝔼 φ + r.𝔼 ψ := by
-  simp[𝔼]; rw[weakIntegral_add] <;> assumption
+    r.E (fun x => φ x + ψ x) = r.E φ + r.E ψ := by
+  simp[E]; rw[weakIntegral_add] <;> assumption
 
 @[simp, simp_core, smul_pull, rand_push_E]
 theorem E_smul (r : Rand X) (φ : X → ℝ) (y : Y) :
-    r.𝔼 (fun x' => φ x' • y) = r.𝔼 φ • y := by sorry_proof
+    r.E (fun x' => φ x' • y) = r.E φ • y := by sorry_proof
+
+@[simp, simp_core, rand_push_E]
+theorem map_E (f : X → Y) {r : Rand X} {φ : Y → Z} :
+    (f <$> r).E φ
+    =
+    r.E (φ ∘ f) := by
+  simp[E]
+  rw[weakIntegral_map sorry_proof sorry_proof]
+  rfl
 
 theorem reparameterize [Nonempty X] (f : X → Y) (hf : f.Injective) {r : Rand X} {φ : X → Z} :
-    r.𝔼 φ
+    r.E φ
     =
     let invf := f.invFun
-    (r.map f).𝔼 (fun y => φ (invf y)) := by
-  simp [𝔼]
+    (r.map f).E (fun y => φ (invf y)) := by
+  simp [E]
   rw[weakIntegral_map sorry_proof sorry_proof]
-  simp [𝔼,Function.invFun_comp' hf]
+  simp [E,Function.invFun_comp' hf]
 
 section Mean
 
 variable [AddCommGroup X] [Module ℝ X] [TopologicalSpace X] [LocallyConvexSpace ℝ X]
 
 noncomputable
-def mean (r : Rand X) : X := r.𝔼 id
+def mean (r : Rand X) : X := r.E id
 
 @[rand_pull_E]
 theorem expectedValue_as_mean (x : Rand X) (φ : X → Y) :
-    x.𝔼 φ = (x.map φ).mean := by
-  simp [bind,mean,pure,𝔼]
+    x.E φ = (x.map φ).mean := by
+  simp [bind,mean,pure,E]
   rw[weakIntegral_map sorry_proof sorry_proof]
   rfl
 
@@ -261,12 +274,18 @@ theorem pure_mean (x : X) : (pure (f:=Rand) x).mean = x := by simp[mean]
 
 @[rand_push_E]
 theorem bind_mean (x : Rand X) (f : X → Rand Y) :
-    (x >>= f).mean = x.𝔼 (fun x' => (f x').mean) := by simp[mean,rand_push_E]
+    (x >>= f).mean = x.E (fun x' => (f x').mean) := by simp[mean,rand_push_E]
+
+@[simp, simp_core, rand_push_E]
+theorem map_mean (f : X → Y) {r : Rand X} :
+    (f <$> r).mean
+    =
+    r.E f := by simp[mean]
 
 theorem mean_add  (x : Rand X) (x' : X) : x.mean + x' = (x  + x').mean := by
-  simp[HAdd.hAdd,mean,𝔼,pure,bind]; sorry_proof
+  simp[HAdd.hAdd,mean,E,pure,bind]; sorry_proof
 theorem mean_add' (x : Rand X) (x' : X) : x' + x.mean = (x' +  x).mean := by
-  simp[HAdd.hAdd,mean,𝔼,pure,bind]; sorry_proof
+  simp[HAdd.hAdd,mean,E,pure,bind]; sorry_proof
 
 set_option linter.unusedVariables false in
 theorem mean_affine (x : Rand X) (f : X → Y) (hf : IsAffineMap ℝ f) :
@@ -292,11 +311,11 @@ def estimateE (n : ℕ) (x : Rand X) (f : X → Y) : Rand Y := do
 --     (estimateE R n x f).mean = f (estimateE R n x id).mean := sorry_proof
 
 theorem E_eq_mean_estimateE (n : ℕ) (x : Rand X) (f : X → Y) :
-    x.𝔼 f = (estimateE R n x f).mean := sorry_proof
+    x.E f = (estimateE R n x f).mean := sorry_proof
 
 -- what conditions do we need on `g`? Probably continuity?
 theorem E_eq_limit_estimateE (x : Rand X) (f : X → Y) (g : Y → Z) :
-    g (x.𝔼 f)
+    g (x.E f)
     =
     limit n → ∞,
       let y := (estimateE R n x f).mean

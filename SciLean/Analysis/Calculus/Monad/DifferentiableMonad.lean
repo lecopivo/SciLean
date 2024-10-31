@@ -182,6 +182,18 @@ by
   apply DifferentiableMonad.DifferentiableM_bind _ _ hf hg
 
 
+-- Functor.map -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_prop]
+theorem Functor.map.arg_a0a1.DifferentiableM_rule
+  (a0 : X → Y → Z) (a1 : X → m Y)
+  (ha0 : Differentiable K (fun (x,y) => a0 x y)) (ha1 : DifferentiableM K a1)
+  : DifferentiableM K (fun x => (a0 x) <$> (a1 x)) :=
+by
+  simp only [← bind_pure_comp]; fun_prop
+
+
 -- d/ite -----------------------------------------------------------------------
 --------------------------------------------------------------------------------
 

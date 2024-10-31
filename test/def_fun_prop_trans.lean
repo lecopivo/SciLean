@@ -14,7 +14,6 @@ namespace DefFunPropTransTest
 
 def mul (x y : K) : K := x * y
 
-
 example : Differentiable K (fun xy : K×K => xy.1 * xy.2) := by fun_prop
 
 
@@ -22,6 +21,7 @@ def_fun_prop mul in x y
   with_transitive
   arg_subsets
   : Differentiable K
+
 
 def_fun_trans mul in x y
   arg_subsets

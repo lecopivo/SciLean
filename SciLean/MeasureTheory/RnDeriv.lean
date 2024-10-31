@@ -1,5 +1,5 @@
 import Mathlib.MeasureTheory.Decomposition.Lebesgue
-import Mathlib.MeasureTheory.Constructions.Prod.Basic
+import Mathlib.MeasureTheory.Measure.Prod
 
 import SciLean.Meta.SimpAttr
 import SciLean.Util.SorryProof

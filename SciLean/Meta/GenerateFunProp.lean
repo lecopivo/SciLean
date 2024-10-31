@@ -237,7 +237,7 @@ def defFunProp (f : Ident) (args : TSyntaxArray `ident)
   (fprop : TSyntax `term) (proof : Option (TSyntax ``Parser.funPropProof)) : Command.CommandElabM Unit := do
   Elab.Command.liftTermElabM <| do
   -- resolve function name
-  let fId ← resolveUniqueNamespace f
+  let fId ← ensureNonAmbiguous f (← resolveGlobalConst f)
   let info ← getConstInfo fId
 
   let cfg ← parseDefFunPropConfig cfg

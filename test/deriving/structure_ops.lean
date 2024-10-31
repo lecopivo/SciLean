@@ -1,7 +1,5 @@
 import SciLean
 
-set_option linter.longLine false
-
 open SciLean
 
 -- This look like a good idea to have such that we do not have to deal with XI in some cases

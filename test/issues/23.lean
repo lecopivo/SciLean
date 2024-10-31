@@ -2,8 +2,6 @@ import SciLean
 
 open SciLean
 
-set_option linter.longLine false
-
 variable
   {K : Type _} [RCLike K]
   {X : Type _} [Vec K X]

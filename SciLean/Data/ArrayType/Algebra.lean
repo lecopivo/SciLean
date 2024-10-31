@@ -7,6 +7,7 @@ import SciLean.Data.StructType.Algebra
 
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+import Mathlib.LinearAlgebra.Dimension.Finrank
 
 import SciLean.Analysis.MetricSpace
 
@@ -16,27 +17,27 @@ namespace ArrayType
 
 set_option deprecated.oldSectionVars true
 
-variable {Cont : Type*} {Idx : Type* |> outParam} {Elem : Type* |> outParam}
-variable {Idx : Type*} [IndexType Idx] [DecidableEq Idx]
+variable {Cont : Type*} {Idx : Type* |> outParam} {Elem : Type* |> outParam} [ArrayType Cont Idx Elem]
+variable [IndexType Idx] [DecidableEq Idx]
 
 variable {K : Type*} [RCLike K]
 
-instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace Elem] : TopologicalSpace Cont where
+instance (priority := low) [TopologicalSpace Elem] : TopologicalSpace Cont where
   IsOpen := fun A => ∀ i, IsOpen (fun x : Elem => ∃ a ∈ A, get a i=x)
   isOpen_univ := sorry_proof
   isOpen_inter := sorry_proof
   isOpen_sUnion := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] : UniformSpace Cont where
+instance (priority := low) [UniformSpace Elem] : UniformSpace Cont where
   uniformity := default --sorry_proof
   nhds_eq_comap_uniformity := sorry_proof
   symm := sorry_proof
   comp := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] [CompleteSpace Elem] : CompleteSpace Cont where
+instance (priority := low) [UniformSpace Elem] [CompleteSpace Elem] : CompleteSpace Cont where
   complete := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [AddGroup Elem] : AddGroup Cont where
+instance (priority := low) [AddGroup Elem] : AddGroup Cont where
   sub_eq_add_neg := sorry_proof
   add_assoc := sorry_proof
   zero_add  := sorry_proof
@@ -50,18 +51,18 @@ instance (priority := low) [ArrayType Cont Idx Elem] [AddGroup Elem] : AddGroup 
   zsmul_neg' := sorry_proof
   zsmul_zero' := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [AddCommGroup Elem] : AddCommGroup Cont where
+instance (priority := low) [AddCommGroup Elem] : AddCommGroup Cont where
   add_comm  := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [UniformSpace Elem] [AddGroup Elem] [UniformAddGroup Elem] : UniformAddGroup Cont where
+instance (priority := low) [UniformSpace Elem] [AddGroup Elem] [UniformAddGroup Elem] : UniformAddGroup Cont where
   uniformContinuous_sub := sorry_proof
 
 
-instance (priority := low) [ArrayType Cont Idx Elem] [TopologicalSpace R] [TopologicalSpace Elem] [SMul R Elem] [ContinuousSMul R Elem] : ContinuousSMul R Cont where
+instance (priority := low) [TopologicalSpace R] [TopologicalSpace Elem] [SMul R Elem] [ContinuousSMul R Elem] : ContinuousSMul R Cont where
   continuous_smul := sorry_proof
 
 
-instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module R Elem] : Module R Cont where
+instance (priority := low) {R} [CommSemiring R] [AddCommGroup Elem] [Module R Elem] : Module R Cont where
   one_smul := sorry_proof
   mul_smul := sorry_proof
   smul_zero := sorry_proof
@@ -69,35 +70,35 @@ instance (priority := low) {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCo
   add_smul := sorry_proof
   zero_smul := sorry_proof
 
-open FiniteDimensional IndexType in
+open Module IndexType in
 @[simp, simp_core]
-theorem array_type_finrank {R} [CommSemiring R] [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module R Elem] :
-    finrank R Cont = size Idx * finrank R Elem := sorry_proof
+theorem array_type_finrank {R} [CommSemiring R] [AddCommGroup Elem] [Module R Elem] :
+    Module.finrank R Cont = size Idx * Module.finrank R Elem := sorry_proof
 
-instance (priority := low) {S R} [SMul S Elem] [SMul R Elem] [SMul S R] [IsScalarTower S R Elem]
-    [ArrayType Cont Idx Elem] : IsScalarTower S R Cont where
+instance (priority := low) {S R} [SMul S Elem] [SMul R Elem] [SMul S R] [IsScalarTower S R Elem] :
+    IsScalarTower S R Cont where
   smul_assoc := by intros; ext; simp
 
-instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] : Vec K Cont where
+instance (priority := low) [Vec K Elem] : Vec K Cont where
   scalar_wise_smooth := sorry_proof
   continuous_smul := sorry_proof
 
 
-instance (priority := low) [ArrayType Cont Idx Elem] [Inner K Elem] : Inner K Cont where
+instance (priority := mid) [Inner K Elem] : Inner K Cont where
   inner := λ f g => ∑ x, ⟪get f x, get g x⟫[K]
 
-instance (priority := low) [ArrayType Cont Idx Elem] [Vec K Elem] [TestFunctions Elem] :
+instance (priority := low) [Vec K Elem] [TestFunctions Elem] :
     TestFunctions Cont where
   TestFunction x := ∀ i, TestFunction (get x i)
 
-instance (priority := low) [ArrayType Cont Idx Elem] [Dist Elem] :
+instance (priority := low) [Dist Elem] :
     Dist Cont where
   dist := fun x y =>
     let x := (∑ i, (dist (get x i) (get y i))^2)
     let y := Scalar.ofReal Float x -- this ugliness it to dodge noncomputable checker
     Scalar.toReal Float y
 
-instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
+instance (priority := low) [NormedAddCommGroup Elem] :
     NormedAddCommGroup Cont where
   norm := fun x =>
     let x := ∑ i, ‖get x i‖^2
@@ -116,7 +117,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] :
   -- cobounded_sets := sorry_proof
 
 
-instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace K Elem] :
+instance (priority := low) [NormedAddCommGroup Elem] [NormedSpace K Elem] :
     NormedSpace K Cont where
   one_smul := sorry_proof
   mul_smul := sorry_proof
@@ -126,21 +127,23 @@ instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [
   zero_smul := sorry_proof
   norm_smul_le := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+
+instance (priority := low) [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
     AdjointSpace K Cont where
   inner_top_equiv_norm := sorry_proof
   conj_symm := sorry_proof
   add_left := sorry_proof
   smul_left := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [InnerProductSpace K Elem] :
+
+instance (priority := low) [NormedAddCommGroup Elem] [InnerProductSpace K Elem] :
     InnerProductSpace K Cont where
   norm_sq_eq_inner := sorry_proof
   conj_symm := sorry_proof
   add_left := sorry_proof
   smul_left := sorry_proof
 
-instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] :
+instance (priority := low) [SemiInnerProductSpace K Elem] :
     SemiInnerProductSpace K Cont where
   uniformContinuous_sub := sorry_proof
   continuous_smul := sorry_proof
@@ -154,7 +157,7 @@ instance (priority := low) [ArrayType Cont Idx Elem] [SemiInnerProductSpace K El
   inner_with_testfun_is_continuous := sorry_proof
   inner_norm2 := by simp[Norm2.norm2]
 
-instance (priority := low) [ArrayType Cont Idx Elem] [SemiHilbert K Elem] :
+instance (priority := low) [SemiHilbert K Elem] :
     SemiHilbert K Cont where
   test_functions_true := by simp[TestFunction]; intros; apply SemiHilbert.test_functions_true
 
@@ -211,28 +214,28 @@ instance (priority := low) [ArrayType Cont Idx K] : FinVec Idx K Cont where
 
 
 
-instance [ArrayType Cont Idx Elem] [Zero Elem] : ZeroStruct Cont (Idx×Unit) (fun _ => Elem) where
+instance [Zero Elem] : ZeroStruct Cont (Idx×Unit) (fun _ => Elem) where
   structProj_zero := by intro i; simp[OfNat.ofNat,Zero.zero]
 
-instance [ArrayType Cont Idx Elem] [Add Elem] : AddStruct Cont (Idx×Unit) (fun _ => Elem) where
+instance [Add Elem] : AddStruct Cont (Idx×Unit) (fun _ => Elem) where
   structProj_add := by intro i; simp[HAdd.hAdd, Add.add]
 
-instance {K} [ArrayType Cont Idx Elem] [SMul K Elem] : SMulStruct K Cont (Idx×Unit) (fun _ => Elem) where
+instance {K} [SMul K Elem] : SMulStruct K Cont (Idx×Unit) (fun _ => Elem) where
   structProj_smul := by intro i k x; simp[HSMul.hSMul, SMul.smul]
 
-instance {K} [RCLike K] [ArrayType Cont Idx Elem] [Vec K Elem] : VecStruct K Cont (Idx×Unit) (fun _ => Elem) where
+instance {K} [RCLike K] [Vec K Elem] : VecStruct K Cont (Idx×Unit) (fun _ => Elem) where
   structProj_zero := sorry_proof
   structProj_add := sorry_proof
   structProj_smul := sorry_proof
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof
 
-instance {K} [RCLike K] [ArrayType Cont Idx Elem] [SemiInnerProductSpace K Elem] : SemiInnerProductSpaceStruct K Cont (Idx×Unit) (fun _ => Elem) where
+instance {K} [RCLike K] [SemiInnerProductSpace K Elem] : SemiInnerProductSpaceStruct K Cont (Idx×Unit) (fun _ => Elem) where
   inner_structProj := sorry_proof
   testFun_structProj := sorry_proof
 
 -- TODO: this needs fixing as those continuities should be already infered!
-instance {K} [RCLike K] [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [AdjointSpace K Elem] : AdjointSpaceStruct K Cont (Idx×Unit) (fun _ => Elem) where
+instance {K} [RCLike K] [NormedAddCommGroup Elem] [AdjointSpace K Elem] : AdjointSpaceStruct K Cont (Idx×Unit) (fun _ => Elem) where
   inner_structProj := sorry_proof
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof

@@ -288,9 +288,9 @@ partial def MeshBuilderM.assertNoNonManifoldVertices : MeshBuilderM Unit := retu
 partial def MeshBuilderM.build_
   (positions : Array (SciLean.Vec3)) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit := do {
   let mut existingHalfedges :
-      HashMap (Index `Vertex × Index `Vertex) (Index `Halfedge) := {};
+      Std.HashMap (Index `Vertex × Index `Vertex) (Index `Halfedge) := {};
   let mut edgeCount :
-    HashMap (Index `Vertex × Index `Vertex) Nat := {};
+    Std.HashMap (Index `Vertex × Index `Vertex) Nat := {};
   modify (fun s => { s with positions := positions }); -- store positions in the SurfaceMesh
 
   -- pre-allocate all vertices for random access via faces.
@@ -332,8 +332,8 @@ partial def MeshBuilderM.build_
         if vi <= vj then (vi, vj) else (vj, vi);
       assert! edgeKey.fst <= edgeKey.snd
       let hIx := I + J; -- TODO: cleanup
-      let oldEdgeCount := edgeCount.findD edgeKey 0;
-      match existingHalfedges.find? edgeKey with
+      let oldEdgeCount := edgeCount.getD edgeKey 0;
+      match existingHalfedges[edgeKey]? with
       | .some twin' => {
         -- if a halfedge between vertex i and j has been
         -- created in the past, then it is the twin halfedge
@@ -353,7 +353,7 @@ partial def MeshBuilderM.build_
       -- record the newly created edge and halfedge from vertex i to j
       existingHalfedges := existingHalfedges.insert edgeKey hIx;
 
-      if edgeCount.findD edgeKey 0 > 2 then {
+      if edgeCount.getD edgeKey 0 > 2 then {
         throw <| MeshBuilderError.nonManifoldEdge i j;
       }
     }

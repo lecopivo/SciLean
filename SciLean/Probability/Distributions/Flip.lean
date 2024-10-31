@@ -53,13 +53,13 @@ theorem flip.integral (θ : R) (f : Bool → X) :
     weakIntegral (flip θ).ℙ f = θ • f true + (1-θ) • f false := by
   simp [rand_simp,flip.measure]; sorry_proof
 
-theorem flip.E (θ : R) (f : Bool → X) :
-    (flip θ).𝔼 f = θ • f true + (1-θ) • f false := by
-  simp only [𝔼,flip.integral]
+theorem flip.E_val (θ : R) (f : Bool → X) :
+    (flip θ).E f = θ • f true + (1-θ) • f false := by
+  simp only [E,flip.integral]
 
 theorem add_as_flip_E {x y : X} (θ : R) (h : θ ∈ Set.Ioo 0 1) :
-    x + y = (flip θ).𝔼 (fun b => if b then θ⁻¹ • x else (1-θ)⁻¹ • y) := by
-  simp[flip.E]
+    x + y = (flip θ).E (fun b => if b then θ⁻¹ • x else (1-θ)⁻¹ • y) := by
+  simp[flip.E_val]
   have : θ ≠ 0 := by aesop
   have : 1 - θ ≠ 0 := by sorry_proof
   simp (disch:=assumption)

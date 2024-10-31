@@ -2,7 +2,7 @@ import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Analysis.Calculus.FDeriv
 import SciLean.Algebra.Determinant
 
-open FiniteDimensional
+open Module
 
 namespace SciLean
 

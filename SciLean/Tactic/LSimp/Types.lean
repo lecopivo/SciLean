@@ -1,7 +1,9 @@
 import Lean
 import Lean.Util.Trace
 
-import Aesop
+import Aesop.Nanos
+import Aesop.Util.Basic
+import Batteries.Data.List.Basic
 
 import SciLean.Lean.Meta.Basic
 
@@ -190,7 +192,7 @@ def cacheInsert (e : Expr) (r : Result) : LSimpM Unit := do
 def cacheFind? (e : Expr) : LSimpM (Option Result) := do
   let s ← getThe State
   let c ← s.cache.get
-  return c.findSome? (fun c => c.find? e)
+  return c.findSome? (fun c => c[e]?)
 
 
 -- def traceCache : LSimpM Unit := do

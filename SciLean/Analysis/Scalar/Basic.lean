@@ -10,7 +10,7 @@ import Mathlib.Analysis.Normed.Lp.WithLp
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
 import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Util.SorryProof
+-- import SciLean.Util.SorryProof
 
 namespace SciLean
 

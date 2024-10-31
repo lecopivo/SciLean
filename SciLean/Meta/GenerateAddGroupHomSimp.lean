@@ -148,16 +148,16 @@ def generateAddGroupHomSimp
   addDecl (.thmDecl thrmVal)
 
   if isSimpAttr then
-    let .some ext := (← simpExtensionMapRef.get)[thrmName]
+    let .some ext := (← simpExtensionMapRef.get)[thrmName]?
       | throwError s!"{thrmName} is not a simp attribute"
     addSimpTheorem ext thrmVal.name false false .global (eval_prio default)
 
   if makeSimp then
-    let .some ext := (← simpExtensionMapRef.get)[`simp]
+    let .some ext := (← simpExtensionMapRef.get)[`simp]?
       | throwError s!"simp is not a simp attribute"
     addSimpTheorem ext thrmVal.name false false .global (eval_prio default)
 
-    let .some ext := (← simpExtensionMapRef.get)[`simp_core]
+    let .some ext := (← simpExtensionMapRef.get)[`simp_core]?
       | throwError s!"simp_core is not a simp attribute"
     addSimpTheorem ext thrmVal.name false false .global (eval_prio default)
 

@@ -33,7 +33,7 @@ attribute [simp_core] Pi.zero_apply Pi.add_apply Pi.sub_apply Pi.mul_apply Pi.ne
 
 -- finrank
 attribute [simp_core]
-  FiniteDimensional.finrank_self FiniteDimensional.finrank_prod
+  Module.finrank_self Module.finrank_prod
 
 -- normalize `<` and `≤`
 attribute [simp_core]

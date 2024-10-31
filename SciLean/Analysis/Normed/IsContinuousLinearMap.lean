@@ -2,6 +2,8 @@ import Mathlib.Topology.Algebra.Module.Basic
 import Mathlib.Topology.UniformSpace.Pi
 import Mathlib.Analysis.Normed.Module.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Analysis.Calculus.FDeriv.Basic
+import Mathlib.Analysis.Calculus.FDeriv.Mul
 
 import SciLean.Algebra.IsLinearMap
 
@@ -463,13 +465,13 @@ variable
 --------------------------------------------------------------------------------
 -- Differentiable --------------------------------------------------------------
 
+
 @[fun_prop]
 theorem SciLean.IsContinuousLinearMap.differentiable (f : X → Y) (hf : IsContinuousLinearMap K f) :
     Differentiable K f := by
   have h : f = (fun x =>L[K] f x) := by rfl
   rw[h]
   fun_prop
-
 
 @[fun_prop]
 theorem SciLean.IsContinuousLinearMap.differentiableAt (x : X) (f : X → Y) (hf : IsContinuousLinearMap K f) :

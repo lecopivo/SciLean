@@ -150,7 +150,7 @@ instance : IndexType (Fin n) where
             .none
   left_inv := by intro; aesop
   right_inv := by intro; aesop
-  first_last := by simp[firstLast?]; aesop
+  first_last := by simp[firstLast?]
 
 
 
@@ -226,6 +226,12 @@ instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) wher
   first_last := by sorry_proof
 
 
+-- Really this is not in mathlib?
+instance {α β} [Fintype α] [Fintype β] : Fintype (α ⊕ β) where
+  elems :=
+    ⟨(Fintype.elems (α:=α)).val.liftOn₂
+     (Fintype.elems (α:=β)).val (fun x y => x.map (Sum.inl (β:=β)) ++ y.map (Sum.inr (α:=α))) sorry_proof, sorry_proof⟩
+  complete := sorry_proof
 
 instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
   toFin := fun ab =>
@@ -317,7 +323,7 @@ instance (a b : Int) : IndexType (Icc a b) where
       | .empty => .none
       | .full =>
         if h : val.1 + 1 ≤ b then
-          have := val.2
+          have := val.2.1
           let x := ⟨val.1+1,by simp_all; omega⟩
           .some (x, .val x r)
         else
@@ -325,14 +331,14 @@ instance (a b : Int) : IndexType (Icc a b) where
       | .interval c d =>
         if _ : c.1 ≤ d.1 then
           if h : val.1 + 1 ≤ b then
-            have := val.2
+            have := val.2.1
             let x := ⟨val.1+1,by simp_all; omega⟩
             .some (x, .val x r)
           else
             .none
         else
           if h : d.1 + 1 ≤ val.1 then
-            have := val.2; have := c.2;  have := d.2
+            have := val.2.2; have := d.2.1
             let x := ⟨val.1-1,by simp_all; omega⟩
             .some (x, .val x r)
           else

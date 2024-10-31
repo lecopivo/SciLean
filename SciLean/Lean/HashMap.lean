@@ -3,8 +3,8 @@ open Lean
 
 namespace Lean
 
-unsafe def HashMap.modify {α β} [BEq α] [Hashable α] (m : HashMap α β) (key : α) (f : β → β) : HashMap α β :=
-  if let .some val := m.find? key then
+unsafe def HashMap.modify {α β} [BEq α] [Hashable α] (m : Std.HashMap α β) (key : α) (f : β → β) : Std.HashMap α β :=
+  if let .some val := m[key]? then
     let m := m.insert key (unsafeCast ()) -- ensures linearity?
     m.insert key (f val)
   else

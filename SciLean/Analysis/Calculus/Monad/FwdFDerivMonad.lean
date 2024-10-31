@@ -168,6 +168,7 @@ by
     fun_trans
     simp
 
+
 end fwdFDerivM
 
 end SciLean
@@ -243,7 +244,25 @@ by
   have hf : DifferentiableM K f := by simp [f]; fun_prop
 
   rw [FwdFDerivMonad.fwdFDerivM_bind _ _ hf hg]
-  simp [FwdFDerivMonad.fwdFDerivM_pair a0 ha0]
+  rw[FwdFDerivMonad.fwdFDerivM_pair a0 ha0]
+  simp
+
+
+-- Functor.map -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+@[fun_trans]
+theorem Functor.map.arg_a0a1.fwdFDerivM_rule
+    (a0 : X → Y → Z) (a1 : X → m Y)
+    (ha0 : Differentiable K (fun (x,y) => a0 x y)) (ha1 : DifferentiableM K a1) :
+    fwdFDerivM K (fun x => (a0 x) <$> (a1 x))
+    =
+    fun x dx => do
+      let ydy ← fwdFDerivM K a1 x dx
+      let y := ydy.1; let dy := ydy.2
+      return (fwdFDeriv K (fun (x,y) => a0 x y) (x,y) (dx,dy)) := by
+  simp only [← bind_pure_comp];
+  fun_trans only
 
 
 -- d/ite -----------------------------------------------------------------------

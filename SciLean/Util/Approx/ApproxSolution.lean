@@ -1,6 +1,6 @@
 import Mathlib.Topology.Basic
-import Mathlib.Topology.Separation
 import Mathlib.Order.Filter.Basic
+
 import SciLean.Util.Limit
 
 set_option linter.unusedVariables false
