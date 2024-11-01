@@ -118,11 +118,10 @@ instance : TangentSpace (Array X) (fun x => ArrayN X x.size) where
     constructor <;> (simp[hf]; simp[hf t])
 
 
-
-
 -- def arrayPlot {n} {p : (Fin n → ℝ) → Array X} (hp : p ∈ Diffeology.plots
 
 variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+
 
 theorem Array.get.arg_a.MDifferentiable_rule (i : ℕ) (x₀ : X) :
     MDifferentiable (fun x : Array X => x.getD i x₀) where
@@ -143,7 +142,6 @@ theorem Array.get.arg_a.MDifferentiable_rule (i : ℕ) (x₀ : X) :
       intro x; fun_prop
 
   plot_independence := sorry
-
 
 
 theorem Array.get.arg_a.mderiv_rule (i : ℕ) (x₀ : X) :

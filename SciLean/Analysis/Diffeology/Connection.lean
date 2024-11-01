@@ -106,13 +106,12 @@ class Connection {X : Type*} (E : X → Type*) [Diffeology X] [∀ x, Diffeology
     lift c r t (lift c s r v) = lift c s t v
 
   smooth_comp {n m}
-    {p : (Fin n → ℝ) → X} {x : X}
-    (ht : PlotPointHomotopy p x)
-    (v : (u : (Fin n → ℝ)) → E (p u))
-    (hv : ht.transportSection' lift v ∈ plots n)
+    {p : (Fin n → ℝ) → Sigma E}
+    {ht : PlotPointHomotopy (fun u => (p u).1) x}
+    {hp₂ : ht.transportSection' lift (fun u => (p u).2) ∈ plots n}
     (f : (Fin m → ℝ) → Fin n → ℝ) (hf : Differentiable ℝ f)
-    (ht' : PlotPointHomotopy (p∘f) x) :
-    ht'.transportSection' lift (fun u => v (f u)) ∈ plots m
+    (ht' : PlotPointHomotopy (fun u => (p (f u)).1) x) :
+    ht'.transportSection' lift (fun u => (p (f u)).2) ∈ plots m
 
 
 def PlotPointHomotopy.transportSection
@@ -122,6 +121,12 @@ def PlotPointHomotopy.transportSection
     (v : (u : (Fin n → ℝ)) → E (p u)) : (Fin n → ℝ) → E x :=
   ht.transportSection' Connection.lift v
 
+def PlotPointHomotopy.transportSection''
+    {X : Type*} {E : X → Type*} [Diffeology X] [∀ x, Diffeology (E x)] [Connection E]
+    {x : X}
+    (v : (Fin n → ℝ) → Sigma E)
+    (ht : PlotPointHomotopy (fun u => (v u).1) x) : (Fin n → ℝ) → X × E x :=
+  fun u => ((v u).1, ht.transportSection' Connection.lift (fun w => (v w).2) u)
 
 
 open Diffeology Util in
@@ -142,10 +147,10 @@ instance {X : Type*} (E : X → Type*) [Diffeology X] [∀ x, Diffeology (E x)] 
     · apply smooth_comp hp₁ hf
     · intro x ht
       unfold PlotPointHomotopy.transportSection
-      apply Connection.smooth_comp (v := fun u => (p u).2) (f:=f) (hf:=hf)
-      · apply hp₂
-      · apply PlotPointHomotopy.mk (hp:=hp₁)
-        sorry
+      apply Connection.smooth_comp (f:=f) (hf:=hf) -- (v := fun u => (p u).2) (f:=f) (hf:=hf)
+      sorry
+      sorry
+
 
   const_plot := by
     intros
