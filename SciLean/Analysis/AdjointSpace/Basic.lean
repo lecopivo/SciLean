@@ -25,6 +25,7 @@ class AdjointSpace (𝕜 : Type*) (E : Type*) [RCLike 𝕜] [NormedAddCommGroup 
   /-- The inner product is conjugate linear in the first coordinate. -/
   smul_left : ∀ x y r, inner (r • x) y = conj r * inner x y
 
+attribute [instance low] AdjointSpace.toNormedSpace AdjointSpace.toInner
 
 /-! ### Properties of inner product spaces -/
 

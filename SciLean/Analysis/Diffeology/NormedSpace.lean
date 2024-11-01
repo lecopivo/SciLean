@@ -13,6 +13,7 @@ instance : Diffeology X where
   const_plot := by
     intros; simp_all[Membership.mem,Set.Mem]
 
+
 noncomputable
 instance : TangentSpace X (fun _ => X) where
   tangent c _ t dt := fderiv ℝ c t dt

@@ -131,6 +131,8 @@ class SemiInnerProductSpace (K : Type _) [RCLike K] (X : Type _) extends Vec K X
 
   inner_with_testfun_is_continuous : ∀ ϕ, TestFunction ϕ → Continuous (⟪·, ϕ⟫[K])
 
+
+attribute [instance low] SemiInnerProductSpace.toInner
   -- inner_ext does imply `TestFunction x → x ≠ 0 → ⟪x,x⟫ > 0`
   -- Let ϕ s.t. ⟪x,ϕ⟫ > 0, let (ε > 0)
   --  ⟪x - ε * ϕ, x - ε * ϕ⟫ = ⟪x,x⟫ - 2*ε*⟪x,ϕ⟫ + ε²*⟪ϕ,ϕ⟫ ≥ 0

@@ -36,6 +36,9 @@ class Vec (K : Type _) [RCLike K] (X : Type _)
       ↔
       ∀ x' : X →L[K] K, Curve.Smooth (x'∘c)
 
+attribute [instance low]
+  Vec.toModule Vec.toAddCommGroup Vec.toUniformSpace Vec.toContinuousSMul Vec.toUniformAddGroup
+
 section CommonVectorSpaces
 
   variable {α β ι : Type u}

@@ -143,3 +143,14 @@ theorem Array.get.arg_a.MDifferentiable_rule (i : ℕ) (x₀ : X) :
       intro x; fun_prop
 
   plot_independence := sorry
+
+
+
+theorem Array.get.arg_a.mderiv_rule (i : ℕ) (x₀ : X) :
+    mderiv (fun x : Array X => x.getD i x₀)
+    =
+    fun x dx =>
+      if hi : i < x.size then
+        ArrayType.get dx ⟨i,hi⟩
+      else
+        0 := sorry

@@ -38,10 +38,16 @@ def FinAdd.mk (x : Fin n → ℝ) (y : Fin m → ℝ) : Fin (n + m) → ℝ :=
 @[simp]
 theorem FinAdd.fst_mk (x : Fin n → ℝ) (y : Fin m → ℝ) : fst (mk x y) = x := by
   simp (config:={unfoldPartialApp:=true}) [fst,mk]
+
 @[simp]
 theorem FinAdd.snd_mk (x : Fin n → ℝ) (y : Fin m → ℝ) : snd (mk x y) = y := by
   simp (config:={unfoldPartialApp:=true}) [snd,mk]
 
+@[simp]
+theorem FinAdd.mk_fst_snd (x : Fin (n + m) → ℝ) : mk (fst x) (snd x) = x := by
+  funext i
+  simp (config:={unfoldPartialApp:=true}) [fst,snd,mk]
+  intro h; congr; omega
 
 -- TODO: move this
 @[fun_prop]

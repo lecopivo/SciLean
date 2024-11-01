@@ -28,7 +28,7 @@ class TangentSpace (X : Type v) [Diffeology X] (TX : outParam (X → Type w)) [�
 
   /-- Canonical curve going through `x` in direction `dx`. -/
   curve (x : X) (dx : TX x) : (Fin 1 → ℝ) → X
-  curve_at_zero (x : X) (dx : TX x) : curve x dx (fun _ => 0) = x
+  curve_at_zero (x : X) (dx : TX x) : curve x dx (no_index (fun _ => 0)) = x
   curve_is_plot (x : X) (dx : TX x) : curve x dx ∈ plots 1
 
   -- maybe replace this with the requirement that the map is linear
@@ -99,7 +99,6 @@ theorem MDifferentiable.comp_rule (f : Y → Z) (g : X → Y)
     let hq' := hg.plot_preserving _ hq
     exact hf.plot_independence hp' hq' (by simp_all) (hg.plot_independence hp hq hx hdx)
 
-
 @[fun_trans]
 theorem mderiv.id_rule :
     mderiv (fun x : X => x) = fun _ dx => dx := by
@@ -154,50 +153,7 @@ theorem mderiv.comp_rule (f : Y → Z) (g : X → Y)
   simp_all [mderiv,hf,hg,q,y,dy]
 
 
-variable (X Y)
-structure DiffeologyMap where
-  val : X → Y
-  property : MDifferentiable val
-variable {X Y}
 
-open Diffeology in
-instance : Diffeology (DiffeologyMap X Y) where
-  plots := fun n p => ∀ m, ∀ q ∈ plots m (X:=X),
-    (fun x : Fin (n + m) → ℝ => (p (FinAdd.fst x)).1 (q (FinAdd.snd x))) ∈ plots (n+m)
-  smooth_comp := by
-    intros n m p f hp hf
-    intros m' q hq
-    let f' : (Fin (n + m') → ℝ) → (Fin (m + m') → ℝ) :=
-      fun x => FinAdd.mk (f (FinAdd.fst x)) (FinAdd.snd x)
-    have hf' : Differentiable ℝ f' := by
-      simp (config:={unfoldPartialApp:=true}) [f']; fun_prop
-    have hp' := Diffeology.smooth_comp (hp m' q hq) hf'
-    simp [Function.comp_def,f'] at hp'
-    exact hp'
-  const_plot := by
-    intros n f m p hp
-    exact smooth_comp (n:=n+m) (f:=FinAdd.snd) (f.2.plot_preserving _ hp) (by unfold FinAdd.snd; fun_prop)
-
-
-
-
-variable [Diffeology ℝ] [TangentSpace ℝ (fun _ => ℝ)]
-structure TangentBundle (TX : (x : X) → Type*) [∀ x, Diffeology (TX x)]
-    [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [∀ x, TangentSpace (TX x) (fun _ => (TX x))]
-    where
-  lift : (c : DiffeologyMap ℝ X) → (s : ℝ) → (v : TX (c.1 s)) → (t : ℝ) → TX (c.1 t)
-
-  lift_inv (c : DiffeologyMap ℝ X) (s : ℝ) (v : TX (c.1 s)) (t : ℝ) :
-    lift c t (lift c s v t) s = v
-
-  lift_trans (c : DiffeologyMap ℝ X) (s : ℝ) (v : TX (c.1 s)) (t t' : ℝ) :
-    lift c t (lift c s v t) t' = lift c s v t'
-
-  lift_shift (c : DiffeologyMap ℝ X) (s : ℝ) (v : TX (c.1 s)) (t h : ℝ) :
-    lift c s v t = cast (by simp) (lift ⟨fun t => c.1 (t+h), sorry⟩ (s-h) (cast (by simp) v) (t-h))
-
-
-structure TDiffeologicalMap (f : (x : X) → TX x) where
 
 #exit
 
