@@ -62,6 +62,8 @@ def ArrayN.get_normalize (a : ArrayN α n) (i : Fin n) :
   have := a.2
   a.data[i.1] = a[i] := by simp[ArrayType.get]
 
+@[simp]
+theorem ArrayN.data_size (a : ArrayN β n) : a.data.size = n := by simp[a.2]
 
 instance [Inhabited α] : Inhabited (ArrayN α n) :=
   ⟨{
