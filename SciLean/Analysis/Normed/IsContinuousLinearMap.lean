@@ -14,6 +14,7 @@ variable (R : Type _) [Semiring R]
     {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y]
 
 
+-- TODO: completely remove this is is the same as IsBoundedLinearMap
 @[fun_prop]
 structure IsContinuousLinearMap (f : X → Y) : Prop where
   linear : IsLinearMap R f
@@ -464,7 +465,6 @@ variable
 
 --------------------------------------------------------------------------------
 -- Differentiable --------------------------------------------------------------
-
 
 @[fun_prop]
 theorem SciLean.IsContinuousLinearMap.differentiable (f : X → Y) (hf : IsContinuousLinearMap K f) :

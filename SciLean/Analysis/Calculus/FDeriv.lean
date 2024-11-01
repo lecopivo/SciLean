@@ -20,7 +20,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} [IndexType ι]
+  {ι : Type _} [Fintype ι]
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
 
 namespace SciLean
@@ -38,8 +38,7 @@ theorem fderiv.id_rule :
 theorem fderiv.const_rule (x : X) :
     (fderiv K fun _ : Y => x)
     =
-    -- fun _ => fun =>[K] 0 := by -- todo: fix fun_prop
-    fun _ => ContinuousLinearMap.mk' K (fun _ => 0) (IsContinuousLinearMap.const_rule) := by
+    fun x => fun dy =>L[K] 0 := by
   ext x dx; simp
 
 @[fun_trans]
@@ -47,7 +46,14 @@ theorem fderiv.apply_rule (i : ι) :
     (fderiv K fun (x : (i : ι) → E i) => x i)
     =
     fun _ => fun dx =>L[K] dx i := by
-  funext x; sorry_proof -- somehow use fderiv_pi
+  funext x; ext dx
+  let φ := fun (i : ι) (x : (j : ι) → E j) => x i
+  have h := (fderiv_pi (𝕜:=K) (φ := φ) (h:=by fun_prop) (x:=x))
+       |> (congrArg DFunLike.coe ·)
+       |> (congrFun · dx)
+       |> (congrFun · i)
+  simp [φ] at h
+  simp[h.symm]
 
 @[fun_trans]
 theorem fderiv.comp_rule_at
@@ -145,7 +151,15 @@ open SciLean
 
 @[fun_trans]
 theorem isContinuousLinearMap_fderiv (f : X → Y) (hf : IsContinuousLinearMap K f) :
-    fderiv K f = fun _ => fun dx =>L[K] f dx := sorry_proof
+    fderiv K f = fun _ => fun dx =>L[K] f dx := by
+  ext x dx
+  let hf : IsBoundedLinearMap K f := by
+    have h : f = (fun x =>L[K] f x) := by rfl
+    rw[h]
+    apply ContinuousLinearMap.isBoundedLinearMap
+  rw[IsBoundedLinearMap.fderiv (f:=f) hf]
+  rfl
+
 
 -- Prod.mk -----------------------------------v---------------------------------
 --------------------------------------------------------------------------------
