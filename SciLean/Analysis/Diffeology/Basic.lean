@@ -153,11 +153,11 @@ theorem mderiv.comp_rule (f : Y → Z) (g : X → Y)
   simp_all [mderiv,hf,hg,q,y,dy]
 
 
-class FiberBundle (B : Type u) (E : Type v) where
+class FiberBundle (B : outParam (Type u)) (E : Type v) where
   proj : E → B
 
 open FiberBundle in
-class ConeBundle (B : Type u) (E : Type v) extends MulAction ℝ E, FiberBundle B E where
+class ConeBundle (B : outParam (Type u)) (E : Type v) extends MulAction ℝ E, FiberBundle B E where
   tip : B → E
   proj_smul (s : ℝ) (e : E) : proj (s • e) = proj e
   smul_zero (e : E) : (0:ℝ) • e = tip (proj e)
@@ -296,6 +296,5 @@ theorem tderiv.comp_rule (f : Y → Z) (g : X → Y)
   simp [p] at h'
   conv => lhs; simp[h, hf, hg, Function.comp_def, tderiv]; rw[h']
   simp_all [mderiv,hf,hg,q,ydy,Function.comp_def,tderiv]
-
 
 end TangentBundle
