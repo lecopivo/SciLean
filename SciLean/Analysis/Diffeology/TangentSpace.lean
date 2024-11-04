@@ -12,6 +12,12 @@ Tangent space of diffeological space. It allows us to talk about derivative as a
 two tangent spaces.
 
 
+NOTE: We also define separete notion of `TangentBundle` which should be equivalent to `TangentSpace`
+      - for `TX : X → Type` and `TangentSpace X TX` we have `TangentBundle X (Σ x, TX x)`
+      - for `TX : Type` and `TangentBundle X TX` we have `TangentSpace X (fun x => {dx : TX // π dx = x})`
+      We have both definitions to figure out which one is easier to work with.
+
+
 TODO: The paper 'Tangent spaces and tangent bundles for diffeological spaces'[1]  defines internal
       and external notion of tangent space. Figure out if our definition relates to theirs.
 
@@ -24,7 +30,7 @@ namespace SciLean
 open Diffeology Util
 
 /-- Tangent space `TX x` of `X` at point `x`. Generalization of tangent space for manifolds to
-general diffeological spaces which gives us the minimal structure to talk about derivative.
+general diffeological spaces which gives us the minimal structure to talk about derivatives.
 -/
 class TangentSpace (X : Type v) [Diffeology X] (TX : outParam (X → Type w))
       [∀ x, AddCommGroup (TX x)] [∀ x, outParam <| Module ℝ (TX x)] where
@@ -74,7 +80,7 @@ Smooth function maps plots to plots and tangent depends only on the plot's point
 
 NOTE: There is also `TBSmooth` which is a smooth function between diffological spaces with
       tangent bundle. It should be more or less equivalent definition. We have both to see
-      which one is easier to work with
+      which one is easier to work with.
 -/
 @[fun_prop]
 structure TSSmooth (f : X → Y) extends DSmooth f : Prop where
@@ -101,7 +107,6 @@ theorem const_rule (y : Y) : TSSmooth (fun _ : X => y) := by
   constructor
   · intros; simp only [Function.comp_apply, Function.comp_def, cast_eq]
   · fun_prop
-
 
 @[fun_prop]
 theorem comp_rule (f : Y → Z) (g : X → Y)

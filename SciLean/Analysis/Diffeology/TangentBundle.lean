@@ -1,63 +1,94 @@
 import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.DiffeologyMap
+-- import SciLean.Analysis.Diffeology.DiffeologyMap
+
+/-!
+
+# Tangent bundle of diffeological space and derivative map
+
+Tangent bundle of diffeological space. It allows us to talk about derivative as a function between
+two tangent spaces.
+
+NOTE: We also define separete notion of `TangentSpace` which should be equivalent to `TangentBundle`
+      - for `TX : X → Type` and `TangentSpace X TX` we have `TangentBundle X (Σ x, TX x)`
+      - for `TX : Type` and `TangentBundle X TX` we have `TangentSpace X (fun x => {dx : TX // π dx = x})`
+      We have both definitions to figure out which one is easier to work with.
+
+
+TODO: The paper 'Tangent spaces and tangent bundles for diffeological spaces'[1]  defines internal
+      and external notion of tangent space. Figure out if our definition relates to theirs.
+
+      [1] https://arxiv.org/abs/1411.5425
+-/
+
 
 namespace SciLean
 
 
-variable
-  {X : Type*} {TX : outParam (X → Type*)} [Diffeology X]
-  [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
-  {Y : Type*} {TY : outParam (Y → Type*)} [Diffeology Y]
-  [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY]
-  {Z : Type*} {TZ : outParam (Z → Type*)} [Diffeology Z]
-  [∀ z, AddCommGroup (TZ z)] [∀ z, Module ℝ (TZ z)] [TangentSpace Z TZ]
-
-
-
+/-- `E` is a fiber bundle over `B` -/
 class FiberBundle (B : outParam (Type u)) (E : Type v) where
   proj : E → B
 
 open FiberBundle in
+/-- `ConeBundle B E` says that `E` is a fiber bundle over `B` where each fiber is a cone i.e. has
+multiplicative action by `ℝ`. -/
 class ConeBundle (B : outParam (Type u)) (E : Type v) extends MulAction ℝ E, FiberBundle B E where
+  /-- Tip of the cone, usually zero of the tangent space. -/
   tip : B → E
-  proj_smul (s : ℝ) (e : E) : proj (s • e) = proj e
-  smul_zero (e : E) : (0:ℝ) • e = tip (proj e)
   proj_tip (b : B) : proj (tip b) = b
+  proj_smul (s : ℝ) (e : E) : proj (s • e) = proj e
+  zero_smul (e : E) : (0:ℝ) • e = tip (proj e)
+  smul_zero (s : ℝ) (b : B) : s • (tip b) = tip b
+  smul_smul (s r : ℝ) (e : E) : s • r • e = (s * r) • e
 
-attribute [simp] ConeBundle.proj_smul ConeBundle.smul_zero ConeBundle.proj_tip
+
+attribute [simp] ConeBundle.proj_smul ConeBundle.zero_smul ConeBundle.proj_tip
 
 
 open Diffeology in
+/-- Tangnet bundle `TX` of `X` is a space of pair of a point `x : X` and tangent vector.
+This is a generalization of tangent bundle for manifold which gives us the minimal structure to
+talk about derivatives. -/
 class TangentBundle (X : Type v) [Diffeology X] (TX : outParam (Type w)) extends ConeBundle X TX where
 
+  /-- Map assigning tangent vectors to plots. -/
   tangentMap (c : (Fin n → ℝ) → X) (hc : c ∈ plots n) (x dx : (Fin n) → ℝ) : TX
 
+  /-- Tangent map assigs tangent vector at the expected position. -/
   tangentMap_proj (c : (Fin n → ℝ) → X) (hc : c ∈ plots n) (x dx : (Fin n) → ℝ) :
     proj (tangentMap c hc x dx) = c x
 
+  /-- Chain rule for composing with smooth function -/
   tangentMap_comp
     (c : (Fin n → ℝ) → X) (hc : c ∈ plots n)
-    (f : (Fin m → ℝ) → (Fin n) → ℝ) (hf : Differentiable ℝ f)
+    (f : (Fin m → ℝ) → (Fin n) → ℝ) (hf : ContDiff ℝ ⊤ f)
     (x dx : (Fin m) → ℝ) :
-    tangentMap (c ∘ f) (smooth_comp hc hf) x dx = tangentMap c hc (f x) (fderiv ℝ f x dx)
+    tangentMap (c ∘ f) (plot_comp hc hf) x dx = tangentMap c hc (f x) (fderiv ℝ f x dx)
 
-  smul_tangentMap (c : (Fin n → ℝ) → X) (hc : c ∈ plots n) (x dx : (Fin n) → ℝ) (s : ℝ) :
-    s • (tangentMap c hc x dx) = tangentMap c hc x (s • dx)
+  /-- Tangent of constant function is zero. -/
+  tangentMap_const {n} (x : X) (t dt) :
+    tangentMap (fun _ : Fin n → ℝ => x) (const_plot n x) t dt = tip x
 
+  /-- Tangent map is linear map -/
+  tangentMap_smul {n : ℕ} (p : (Fin n → ℝ) → X) (hp : p ∈ plots n (X:=X)) (x dx : (Fin n) → ℝ) :
+    ∀ (s : ℝ), s • tangentMap p hp x dx = tangentMap p hp x (s•dx)
+
+  /-- Canonical curve going through `xdx`. -/
   exp (xdx : TX) (t : Fin 1 → ℝ) : TX
+  /-- Canonical curve going through `x` does go through `xdx` -/
+  exp_at_zero (xdx : TX) : exp xdx 0 = xdx
 
-  exp_plot (xdx : TX) : (fun t => proj (exp xdx t)) ∈ plots 1
+  /-- Canonical curve is a plot when projected to the base space. -/
+  exp_is_plot (xdx : TX) : (fun t => proj (exp xdx t)) ∈ plots 1
 
-  exp_at_zero (xdx : TX) :
-    exp xdx 0 = xdx
+  /-- Canonical curve going through `xdx` does do in direction `xdx` at zero. -/
+  tangentMap_exp_at_zero (xdx : TX) :
+    tangentMap (fun x => proj (exp xdx x)) (exp_is_plot xdx) 0 = fun s => (s 0) • xdx
 
-  tangentMap_const (x : X)
-    : tangentMap (fun _ : (Fin n → ℝ) => x) (const_plot n x) = fun _ _ => tip x
-
-  tangentMap_exp (xdx : TX) :
-    tangentMap (fun x => proj (exp xdx x)) (exp_plot xdx) (fun _ => 0) = fun s => (s 0) • xdx
-
-attribute [simp] TangentBundle.exp_at_zero TangentBundle.tangentMap_const TangentBundle.tangentMap_exp TangentBundle.smul_tangentMap
+attribute [simp]
+  TangentBundle.exp_at_zero
+  TangentBundle.tangentMap_const
+  TangentBundle.tangentMap_exp_at_zero
+  TangentBundle.tangentMap_smul
 
 section TangentBundle
 
@@ -68,148 +99,108 @@ variable
 
 
 open Diffeology TangentBundle in
+/-- Smooth function between diffeological spaces equiped with tangent bundle.
+
+Smooth function maps plots to plots and tangent depends only on the plot's point and tangent
+
+NOTE: There is also `TSSmooth` which is a smooth function between diffological spaces with
+      tangent space. It should be more or less equivalent definition. We have both to see
+      which one is easier to work with.
+-/
 @[fun_prop]
-structure TDifferentiable (f : X → Y) : Prop where
-  plot_preserving :
-    ∀ {n : ℕ}, ∀ px ∈ plots n, f ∘ px ∈ plots n
+structure TBSmooth (f : X → Y) extends DSmooth f : Prop where
   plot_independence {n : ℕ} {p q : (Fin n → ℝ) → X} {x : Fin n → ℝ}
     (hp : p ∈ plots n) (hq : q ∈ plots n)
     (hdx : tangentMap p hp x = tangentMap q hq x) :
     tangentMap (fun x => f (p x)) (plot_preserving _ hp) x = tangentMap (f∘q) (plot_preserving _ hq) x
 
-
-open Classical Diffeology TangentBundle FiberBundle ConeBundle in
-@[fun_trans]
-noncomputable
-def tderiv (f : X → Y) (xdx : TX) : TY :=
-  if h : TDifferentiable f then
-    tangentMap (f∘(fun t => proj (exp X xdx t))) (h.plot_preserving _ (exp_plot _)) (fun _ => 0) (fun _ => 1)
-  else
-    tip (f (proj xdx))
-
+namespace TBSmooth
 
 @[fun_prop]
-theorem TDifferentiable.id_rule : TDifferentiable (fun x : X => x) := by
+theorem dsmooth_rule (f : X → Y) (hf : TBSmooth f) : DSmooth f := hf.toDSmooth
+
+@[fun_prop]
+theorem id_rule : TBSmooth (fun x : X => x) := by
   constructor
   · intros; unfold Function.comp; simp_all
-  · intros; unfold Function.comp; simp_all
+  · fun_prop
 
 @[fun_prop]
-theorem TDifferentiable.const_rule (y : Y) : TDifferentiable (fun _ : X => y) := by
+theorem const_rule (y : Y) : TBSmooth (fun _ : X => y) := by
   constructor
   · intros; simp only [Function.comp_apply, Function.comp_def, cast_eq]
-  · intros; simp only [Function.comp_def, Diffeology.const_plot]
-
+  · fun_prop
 
 @[fun_prop]
-theorem TDifferentiable.comp_rule (f : Y → Z) (g : X → Y)
-    (hf : TDifferentiable f) (hg : TDifferentiable g) :
-    TDifferentiable (fun x => f (g x)) := by
+theorem comp_rule (f : Y → Z) (g : X → Y)
+    (hf : TBSmooth f) (hg : TBSmooth g) :
+    TBSmooth (fun x => f (g x)) := by
 
   constructor
-  case plot_preserving =>
-    intros n p hp;
-    exact hf.plot_preserving _ (hg.plot_preserving _ hp)
+  case toDSmooth => fun_prop
   case plot_independence =>
     intros n p q x hp hq hdx
     have hp' := hg.plot_preserving _ hp
     have hq' := hg.plot_preserving _ hq
     exact hf.plot_independence hp' hq' (hg.plot_independence hp hq hdx)
 
+end TBSmooth
+
+
+open Classical Diffeology TangentBundle FiberBundle ConeBundle in
+/-- Derivative of a function between two difeological spaces equiped with tangent bundle. -/
 @[fun_trans]
-theorem tderiv.id_rule :
-    tderiv (fun x : X => x) = fun xdx => xdx := by
+noncomputable
+def tbderiv (f : X → Y) (xdx : TX) : TY :=
+  if h : TBSmooth f then
+    let p := f ∘ proj ∘ exp X xdx
+    let hp := (h.plot_preserving _ (exp_is_plot xdx))
+    tangentMap p hp 0 1
+  else
+    tip (f (proj xdx))
 
-  have h : TDifferentiable (fun x : X => x) := by fun_prop
-  unfold tderiv; simp[h, Function.comp_def]
+
+namespace tbderiv
+
+open FiberBundle ConeBundle
 
 @[fun_trans]
-theorem tderiv.const_rule (y : Y) :
-    tderiv (fun _ : X => y) = fun _ => ConeBundle.tip y := by
+theorem id_rule : tbderiv (fun x : X => x) = fun xdx => xdx := by
 
-  have h : TDifferentiable (fun _ : X => y) := by fun_prop
-  unfold tderiv; simp[h, Function.comp_def]
+  have h : TBSmooth (fun x : X => x) := by fun_prop
+  unfold tbderiv; simp[h, Function.comp_def]
+
+@[fun_trans]
+theorem const_rule (y : Y) : tbderiv (fun _ : X => y) = fun _ => tip y := by
+
+  have h : TBSmooth (fun _ : X => y) := by fun_prop
+  unfold tbderiv; simp[h, Function.comp_def]
 
 open TangentBundle FiberBundle in
 @[fun_trans]
-theorem tderiv.comp_rule (f : Y → Z) (g : X → Y)
-    (hf : TDifferentiable f) (hg : TDifferentiable g) :
-    tderiv (fun x => f (g x))
+theorem comp_rule (f : Y → Z) (g : X → Y)
+    (hf : TBSmooth f) (hg : TBSmooth g) :
+    tbderiv (fun x => f (g x))
     =
     fun xdx =>
-      let ydy  := tderiv g xdx
-      tderiv f ydy := by
+      let ydy  := tbderiv g xdx
+      tbderiv f ydy := by
 
   funext xdx
-  have h : TDifferentiable fun x => f (g x) := by fun_prop
+  have h : TBSmooth fun x => f (g x) := by fun_prop
 
-  let ydy := tderiv g xdx
+  let ydy := tbderiv g xdx
   let p := g ∘ (proj ∘ exp X xdx)
   let q := fun t => proj (B:=Y) (exp Y ydy t)
-  have hp := hg.plot_preserving _ (exp_plot (X:=X) xdx)
-  have hq := exp_plot (X:=Y) ydy
-  let t := fun _ : Fin 1 => (0:ℝ)
-  have hdx : tangentMap p hp t = tangentMap q hq t := by
-    simp[p,q,t,ydy,tderiv,hg,Function.comp_def]
-    funext s; congr; funext i; simp; congr; aesop
+  have hp := hg.plot_preserving _ (exp_is_plot (X:=X) xdx)
+  have hq := exp_is_plot (X:=Y) ydy
+  have hdx : tangentMap p hp 0 = tangentMap q hq 0 := by
+    simp[p,q,ydy,tbderiv,hg,Function.comp_def]
+    funext s; congr; funext r; simp[hg]; congr; aesop
 
   have h' := hf.plot_independence hp hq hdx
   simp [p] at h'
-  conv => lhs; simp[h, hf, hg, Function.comp_def, tderiv]; rw[h']
-  simp_all [tsderiv,hf,hg,q,ydy,Function.comp_def,tderiv]
+  conv => lhs; simp[h, hf, hg, Function.comp_def, tbderiv]; rw[h']
+  simp_all [tbderiv,hf,hg,q,ydy,Function.comp_def]
 
-end TangentBundle
-
-variable [Diffeology ℝ] [TangentSpace ℝ (fun _ => ℝ)]
-class FiberBundle (TX : (x : X) → Type*) [∀ x, Diffeology (TX x)]
-    [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [∀ x, TangentSpace (TX x) (fun _ => (TX x))]
-    where
-  lift : (c : DiffeologyMap ℝ X) → (s : ℝ) → (v : TX (c s)) → (t : ℝ) → TX (c.1 t)
-
-  lift_inv (c : DiffeologyMap ℝ X) (s : ℝ) (v : TX (c s)) (t : ℝ) :
-    lift c t (lift c s v t) s = v
-
-  lift_trans (c : DiffeologyMap ℝ X) (s : ℝ) (v : TX (c s)) (t t' : ℝ) :
-    lift c t (lift c s v t) t' = lift c s v t'
-
-
-class FiberBundle' (E : Type u) (B : Type v)
-    [Diffeology E] {TE} [∀ e, AddCommGroup (TE e)] [∀ e, Module ℝ (TE e)] [TangentSpace E TE]
-    [Diffeology B] {TB} [∀ b, AddCommGroup (TB b)] [∀ b, Module ℝ (TB b)] [TangentSpace B TB]
-    where
-  proj : DiffeologyMap E B
-  lift (c : DiffeologyMap ℝ B) (s : ℝ) (e : E) (he : proj e = b) : DiffeologyMap ℝ E
-
-
-variable [Diffeology ℝ] [TangentSpace ℝ (fun _ => ℝ)]
-class TangentBundle (TX : (x : X) → Type*) [∀ x, Diffeology (TX x)]
-    [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [∀ x, TangentSpace (TX x) (fun _ => (TX x))]
-    where
-  lift : (c : DiffeologyMap ℝ X) → (s : ℝ) → (v : TX (c s)) → (t : ℝ) → TX (c.1 t)
-
-  lift_inv (c : DiffeologyMap ℝ X) (s : ℝ) (v : TX (c s)) (t : ℝ) :
-    lift c t (lift c s v t) s = v
-
-  lift_trans (c : DiffeologyMap ℝ X) (s : ℝ) (v : TX (c s)) (t t' : ℝ) :
-    lift c t (lift c s v t) t' = lift c s v t'
-
-  -- lift_shift (c : DiffeologyMap ℝ X) (s : ℝ) (v : TX (c.1 s)) (t h : ℝ) :
-  --   lift c s v t = cast (by simp) (lift ⟨fun t => c.1 (t+h), sorry⟩ (s-h) (cast (by simp) v) (t-h))
-
-
-variable
-    [∀ x, Diffeology (TX x)] [∀ x, TangentSpace (TX x) (fun _ => (TX x))] [TangentBundle TX]
-    [∀ y, Diffeology (TY y)] [∀ y, TangentSpace (TY y) (fun _ => (TY y))] [TangentBundle TY]
-
-
-variable
-  {E : X → Type*} {TE : (x : X) → E x → Type*} [Diffeology (Sigma E)]
-  [∀ x e, AddCommGroup (TE x e)] [∀ x e, Module ℝ (TE x e)] [TangentSpace (Sigma E) (fun p => TX p.1 × TE p.1 p.2)]
-
-
-def covDeriv (f : (x : X) → E x) (x : X) (dx : TX x) : TE _ (f x)  :=
-  let c := TangentSpace.curve x dx
-  let c' := fun x => f (c x)
-  let c' : DiffeologyMap (Fin 1 → ℝ) (Sigma E) := ⟨fun t => ⟨c t, f (c t)⟩, sorry⟩
-  let v'' := TangentSpace.tangent c' sorry (fun _ => 0) (fun _ => 1)
-  cast (by simp[c',c]; rw[TangentSpace.curve_at_zero]) v''.2
+end tbderiv

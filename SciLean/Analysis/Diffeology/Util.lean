@@ -1,4 +1,5 @@
 import SciLean.Data.ArrayN
+import SciLean.Analysis.Calculus.ContDiff
 
 namespace SciLean.Diffeology.Util
 
@@ -60,6 +61,7 @@ theorem dite.arg_te.Differentiable_rule
     Differentiable ℝ (fun x => if h : c then f h x else g h x) := by
   split_ifs <;> aesop
 
-def_fun_prop FinAdd.fst in x : Differentiable ℝ
-def_fun_prop FinAdd.snd in x : Differentiable ℝ
-def_fun_prop FinAdd.mk in x y : Differentiable ℝ
+
+def_fun_prop FinAdd.fst in x with_transitive : ContDiff ℝ ⊤
+def_fun_prop FinAdd.snd in x with_transitive : ContDiff ℝ ⊤
+def_fun_prop FinAdd.mk in x y with_transitive : ContDiff ℝ ⊤
