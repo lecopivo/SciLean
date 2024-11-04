@@ -57,10 +57,11 @@ instance {X : Type*} (E : X → Type*) [Diffeology X] [∀ x, Diffeology (E x)] 
       · apply hp₂
 
   const_plot := by
-    intros
+    intros n xdx
     constructor
     · apply Diffeology.const_plot
-    · intros
+    · intros x₀ ht
+      simp at ht
       simp
       unfold PlotPointHomotopy.transportSection
       unfold PlotPointHomotopy.transportSection'
