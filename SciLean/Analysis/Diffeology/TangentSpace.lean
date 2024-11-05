@@ -29,26 +29,29 @@ namespace SciLean
 
 open Diffeology Util
 
+local notation:max "ℝ^" n:max => (Fin n) → ℝ
+
+
 /-- Tangent space `TX x` of `X` at point `x`. Generalization of tangent space for manifolds to
 general diffeological spaces which gives us the minimal structure to talk about derivatives.
 -/
 class TangentSpace (X : Type v) [Diffeology X] (TX : outParam (X → Type w))
       [∀ x, AddCommGroup (TX x)] [∀ x, outParam <| Module ℝ (TX x)] where
   /-- Map assigning tangent vectors to plots. -/
-  tangentMap {n : ℕ} (c : (Fin n → ℝ) → X) (hc : c ∈ plots n (X:=X)) (x dx : (Fin n) → ℝ) : TX (c x)
+  tangentMap {n : ℕ} (c : ℝ^n → X) (hc : c ∈ plots n (X:=X)) (x dx : ℝ^n) : TX (c x)
   /-- Chain rule for composing with smooth function. -/
-  tangentMap_comp {n m} {p} {f : (Fin n → ℝ) → (Fin m → ℝ)}
+  tangentMap_comp {n m} {p} {f : ℝ^n → ℝ^m}
     (hp : p ∈ plots m) (hf : ContDiff ℝ ⊤ f) (x dx) :
     tangentMap (p∘f) (plot_comp hp hf) x dx = tangentMap p hp (f x) (fderiv ℝ f x dx)
   /-- Tangent of constant function is zero. -/
-  tangentMap_const {n} (x : X) (t dt) : tangentMap (fun _ : Fin n → ℝ => x) (const_plot n x) t dt = 0
+  tangentMap_const {n} (x : X) (t dt) : tangentMap (fun _ : ℝ^n => x) (const_plot n x) t dt = 0
 
   /-- Tangent map is linear map -/
-  tangentMap_linear {n : ℕ} (p : (Fin n → ℝ) → X) (hp : p ∈ plots n (X:=X)) (x : (Fin n) → ℝ) :
+  tangentMap_linear {n : ℕ} (p : ℝ^n → X) (hp : p ∈ plots n (X:=X)) (x : ℝ^n) :
     IsLinearMap ℝ (tangentMap p hp x)
 
   /-- Canonical curve going through `x` in direction `dx`. -/
-  exp (x : X) (dx : TX x) : (Fin 1 → ℝ) → X
+  exp (x : X) (dx : TX x) : ℝ^1 → X
   /-- Canonical curve going through `x` does go through `x` -/
   exp_at_zero (x : X) (dx : TX x) : exp x dx 0 = x
   /-- Canonical curve is a plot. -/
@@ -84,7 +87,7 @@ NOTE: There is also `TBSmooth` which is a smooth function between diffological s
 -/
 @[fun_prop]
 structure TSSmooth (f : X → Y) extends DSmooth f : Prop where
-  plot_independence {n : ℕ} {p q : (Fin n → ℝ) → X} {x : Fin n → ℝ}
+  plot_independence {n : ℕ} {p q : ℝ^n → X} {x : ℝ^n}
     (hp : p ∈ plots n) (hq : q ∈ plots n)
     (hx : p x = q x) (hdx : tangentMap p hp x = cast (by rw[hx]) (tangentMap q hq x)) :
     tangentMap (fun x => f (p x)) (plot_preserving _ hp) x

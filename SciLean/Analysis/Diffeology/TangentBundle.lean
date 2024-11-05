@@ -23,6 +23,7 @@ TODO: The paper 'Tangent spaces and tangent bundles for diffeological spaces'[1]
 
 namespace SciLean
 
+local notation:max "ℝ^" n:max => (Fin n) → ℝ
 
 /-- `E` is a fiber bundle over `B` -/
 class FiberBundle (B : outParam (Type u)) (E : Type v) where
@@ -51,29 +52,29 @@ talk about derivatives. -/
 class TangentBundle (X : Type v) [Diffeology X] (TX : outParam (Type w)) extends ConeBundle X TX where
 
   /-- Map assigning tangent vectors to plots. -/
-  tangentMap (c : (Fin n → ℝ) → X) (hc : c ∈ plots n) (x dx : (Fin n) → ℝ) : TX
+  tangentMap (c : ℝ^n → X) (hc : c ∈ plots n) (x dx : ℝ^n) : TX
 
   /-- Tangent map assigs tangent vector at the expected position. -/
-  tangentMap_proj (c : (Fin n → ℝ) → X) (hc : c ∈ plots n) (x dx : (Fin n) → ℝ) :
+  tangentMap_proj (c : ℝ^n → X) (hc : c ∈ plots n) (x dx : ℝ^n) :
     proj (tangentMap c hc x dx) = c x
 
   /-- Chain rule for composing with smooth function -/
   tangentMap_comp
-    (c : (Fin n → ℝ) → X) (hc : c ∈ plots n)
-    (f : (Fin m → ℝ) → (Fin n) → ℝ) (hf : ContDiff ℝ ⊤ f)
-    (x dx : (Fin m) → ℝ) :
+    (c : ℝ^n → X) (hc : c ∈ plots n)
+    (f : ℝ^m → ℝ^n) (hf : ContDiff ℝ ⊤ f)
+    (x dx : ℝ^m) :
     tangentMap (c ∘ f) (plot_comp hc hf) x dx = tangentMap c hc (f x) (fderiv ℝ f x dx)
 
   /-- Tangent of constant function is zero. -/
   tangentMap_const {n} (x : X) (t dt) :
-    tangentMap (fun _ : Fin n → ℝ => x) (const_plot n x) t dt = tip x
+    tangentMap (fun _ : ℝ^n => x) (const_plot n x) t dt = tip x
 
   /-- Tangent map is linear map -/
-  tangentMap_smul {n : ℕ} (p : (Fin n → ℝ) → X) (hp : p ∈ plots n (X:=X)) (x dx : (Fin n) → ℝ) :
+  tangentMap_smul {n : ℕ} (p : ℝ^n → X) (hp : p ∈ plots n (X:=X)) (x dx : ℝ^n) :
     ∀ (s : ℝ), s • tangentMap p hp x dx = tangentMap p hp x (s•dx)
 
   /-- Canonical curve going through `xdx`. -/
-  exp (xdx : TX) (t : Fin 1 → ℝ) : TX
+  exp (xdx : TX) (t : ℝ^1) : TX
   /-- Canonical curve going through `x` does go through `xdx` -/
   exp_at_zero (xdx : TX) : exp xdx 0 = xdx
 
@@ -109,7 +110,7 @@ NOTE: There is also `TSSmooth` which is a smooth function between diffological s
 -/
 @[fun_prop]
 structure TBSmooth (f : X → Y) extends DSmooth f : Prop where
-  plot_independence {n : ℕ} {p q : (Fin n → ℝ) → X} {x : Fin n → ℝ}
+  plot_independence {n : ℕ} {p q : ℝ^n → X} {x : ℝ^n}
     (hp : p ∈ plots n) (hq : q ∈ plots n)
     (hdx : tangentMap p hp x = tangentMap q hq x) :
     tangentMap (fun x => f (p x)) (plot_preserving _ hp) x = tangentMap (f∘q) (plot_preserving _ hq) x

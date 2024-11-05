@@ -27,6 +27,8 @@ namespace SciLean
 
 open Diffeology.Util
 
+local notation:max "ℝ^" n:max => Fin n → ℝ
+
 /-- Diffeology on `X`, a minimal structure on a type to talk about smoothness.
 
 A generalization of topological spaces and manifolds such that we can talk about smooth maps between
@@ -36,9 +38,9 @@ TODO: plots should be generalized maps from open subsets of `ℝⁿ` to `X`
   -/
 class Diffeology (X : Type v) where
   /-- Set of mooth maps from `ℝ̂ⁿ` to `X`. -/
-  plots (n : ℕ) : Set ((Fin n → ℝ) → X)
+  plots (n : ℕ) : Set (ℝ^n → X)
   /-- Pots are closed under composition with a smooth function. -/
-  plot_comp {n m} {p} {f : (Fin n → ℝ) → (Fin m → ℝ)}
+  plot_comp {n m} {p} {f : ℝ^n → ℝ^m}
     (ph : p ∈ plots m) (hf : ContDiff ℝ ⊤ f) : p ∘ f ∈ plots n
   /-- Constant plots are differentiable. -/
   const_plot (n : ℕ) (x : X) : (fun _ => x) ∈ plots n
@@ -66,7 +68,7 @@ NOTE: To actually compute derivatives we seem to need a more refined definition 
 TODO: Define `DSmoothAt` variant once plots are generalized to maps from open subsets of `ℝⁿ` to `X` -/
 @[fun_prop]
 structure DSmooth (f : X → Y) : Prop where
-  plot_preserving {n : ℕ} (p : (Fin n → ℝ) → X) (hp : p ∈ plots n) : f ∘ p ∈ plots n
+  plot_preserving {n : ℕ} (p : ℝ^n → X) (hp : p ∈ plots n) : f ∘ p ∈ plots n
 
 
 namespace DSmooth

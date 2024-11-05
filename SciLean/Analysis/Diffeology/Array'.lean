@@ -8,6 +8,8 @@ namespace SciLean
 namespace Diffeology.Array.Util
 def StableSize (f : α → Array β) (n : ℕ) := ∀ a, n = (f a).size
 
+def StableSize.comp {f : β → Array γ} {n : ℕ} (hf : StableSize f n) (g : α → β) : StableSize (f∘g) n := fun a => hf (g a)
+
 def fixSize (f : α → Array β) (n) (hn : StableSize f n) : α → ArrayN β n :=
   fun a => ArrayN.mk (f a) (hn a)
 
@@ -44,14 +46,30 @@ theorem fderiv_fixSize
       fderiv ℝ (fixSize f n hn) y dy:= sorry
 
 
-theorem differentiable_fixSize
+theorem contdiff_fixSize_comp
     {X} [NormedAddCommGroup X] [NormedSpace ℝ X]
     {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
     (f : X → Array Y) (n m) (hn : StableSize f n) (hm : StableSize f m)
-    (hf : Differentiable ℝ (fixSize f n hn)) : Differentiable ℝ (fixSize f m hm) := by
+    (hf : ContDiff ℝ ⊤ (fixSize f n hn)) : ContDiff ℝ ⊤ (fixSize f m hm) := by
   have h : m = n := by simp[hn 0, (hm 0).symm]
   subst h
   apply hf
+
+theorem fderiv_fixSize_comp
+    {X} [NormedAddCommGroup X] [NormedSpace ℝ X]
+    {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
+    {Z} [NormedAddCommGroup Z] [NormedSpace ℝ Z]
+    (f : Y → Array Z) (n) (hn : StableSize f n) (hf : ContDiff ℝ ⊤ (fixSize f n hn))
+    (g : X → Y) (hg : ContDiff ℝ ⊤ g) :
+    fderiv ℝ (fixSize (f∘g) n (hn.comp g))
+    =
+    fun x => fun dx =>L[ℝ]
+    fderiv ℝ (fixSize f n hn) (g x) (fderiv ℝ g x dx) := by
+  funext x
+  exact fderiv.comp (𝕜:=ℝ) (g:=fixSize f n hn) (f:=g) x
+    (hf.differentiable le_top (g x)) (hg.differentiable le_top x)
+
+
 
 theorem differentiable_fixSize'
     {X} [NormedAddCommGroup X] [NormedSpace ℝ X]
@@ -71,6 +89,10 @@ theorem fderiv_fixSize_cast
   subst h
   simp
 
+theorem cast_to_rhs {α β} (x : α) (y : β) (h : α = β) : (cast h x = y) = (x = cast h.symm y) := by
+  subst h
+  simp
+
 end Diffeology.Array.Util
 open Diffeology.Array.Util
 
@@ -79,18 +101,18 @@ variable
 
 instance : Diffeology (Array X) where
   plots n f := ∃ m, ∃ (h : StableSize f m),
-    Differentiable ℝ (fun x => fixSize f m h x)
-  smooth_comp := by
+    ContDiff ℝ ⊤ (fun x => fixSize f m h x)
+  plot_comp := by
     intros n m p f hp hf; simp_all[Membership.mem,Set.Mem];
     cases' hp with n' hp; cases' hp with hn' hp
     apply Exists.intro n'
     apply Exists.intro (fun x => hn' (f x))
-    apply Differentiable.comp hp hf
+    apply hp.comp hf
   const_plot := by
     intros n x;
     apply Exists.intro x.size
     apply Exists.intro (fun _ => rfl)
-    apply differentiable_const
+    apply contDiff_const
 
 open Classical in
 theorem choose_stable_size [Inhabited α] (f : α → Array β) (h : ∃ n, StableSize f n) :
@@ -101,7 +123,7 @@ theorem choose_stable_size [Inhabited α] (f : α → Array β) (h : ∃ n, Stab
 open Classical in
 noncomputable
 instance : TangentSpace (Array X) (fun x => ArrayN X x.size) where
-  tangent c _ u du :=
+  tangentMap c _ u du :=
     if h : ∃ n, StableSize c n then
       let n := choose h
       let hn := choose_spec h
@@ -109,43 +131,51 @@ instance : TangentSpace (Array X) (fun x => ArrayN X x.size) where
     else
       0
 
-  smooth_comp := by
+  tangentMap_comp := by
     intros n m p f hp hf u du
-    have a : ∃ n, StableSize p n := Exists.intro (choose hp) (choose (choose_spec hp))
-    have b : ∃ n, StableSize (p ∘ f) n := Exists.intro (choose hp) (fun x => (choose (choose_spec hp)) (f x))
-    let hp := (choose_spec (choose_spec hp))
-    have h : choose b = choose a := by
-      rw[choose_spec b 0]; rw[choose_spec a (f 0)]; rfl
+    -- have a : ∃ n, StableSize p n := Exists.intro (choose hp) (choose (choose_spec hp))
+    -- have b : ∃ n, StableSize (p ∘ f) n := Exists.intro (choose hp) (fun x => (choose (choose_spec hp)) (f x))
+    -- let hp' := (choose_spec (choose_spec hp))
+    -- have h : choose b = choose a := by
+    --   rw[choose_spec b 0]; rw[choose_spec a (f 0)]; rfl
     simp_all
+    rw[cast_to_rhs]
+    -- have hh := fderiv_fixSize_comp (f:=p) (g:=f) (n:=choose a) (hn:=choose_spec a) sorry sorry
+    rw[fderiv_fixSize_comp (f:=p) (g:=f) (n:=choose b) (hn:=sorry) (hf:=sorry) (hg:=hf)]
+    simp
+    rw[hh]
+    rw[fderiv_fixSize_comp (f:=p) (g:=f)]
     rw[fixSize_comp (hn:=by intro x; rw[h]; rw[choose_spec a x])]
     rw[fderiv.comp (hg:=by apply differentiable_fixSize _ _ _ _ _ hp (f u)) (hf:=hf u)]
     rw[fderiv_fixSize_cast (n:=choose a) (m:=choose b) (h:=h)]
     simp
 
-  tangent_const := by
+  tangentMap_const := by
     intros n x t dt
     simp; intro n hn
     rw[fderiv_fixSize (fun _ => (0:Fin n → ℝ)) (fun _ => x) _ sorry sorry (by fun_prop)]
     fun_trans
     sorry
 
-  curve x dx t := (ArrayN.mk x rfl + t 0 • dx).1
-  curve_at_zero := by simp
-  curve_is_plot := by
+  exp x dx t := (x.fixSize x.size rfl + t 0 • dx).1--(ArrayN.mk x rfl + t 0 • dx).1
+  exp_at_zero := by simp[Array.fixSize]
+  exp_is_plot := by
     intro x dx
     simp[Diffeology.plots,Membership.mem,Set.Mem]
     apply Exists.intro x.size
     apply Exists.intro (by intro x; simp)
-    apply differentiable_fixSize' (n:=x.size) (hn:=by intro x; simp)
     simp; fun_prop
-  tangent_curve_at_zero := by
+  tangentMap_exp_at_zero := by
     intros x dx dt; simp;
-    have : ∃ n, StableSize (fun t : Fin 1 → ℝ => (ArrayN.mk x (by rfl) + t 0 • dx).data) n := sorry --by intro x; simp
-    simp_all
-    let m := x.size
-    rw [fderiv_fixSize_cast (n:=_) (m:=m) (h:=by simp[choose_stable_size])]
-    simp; fun_trans
-  tangent_linear := by
+    split_ifs with h
+    · let m := x.size
+      rw [fderiv_fixSize_cast (n:=_) (m:=m) (h:=by simp[choose_stable_size])]
+      simp; fun_trans
+    · by_contra
+      apply h;
+      apply Exists.intro x.size
+      simp[StableSize]
+  tangentMap_linear := by
     intro n f ⟨n,hn,hf⟩ t
     let h := Exists.intro n hn
     constructor
