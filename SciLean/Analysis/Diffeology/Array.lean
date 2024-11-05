@@ -106,8 +106,7 @@ theorem fixSize_arrayN_data [Nonempty α] (f : α → ArrayN β n) :
     fixSize (fun x => (f x).data) = fun x => cast (by simp) (f x) := by
   simp[fixSize]
   funext a
-  sorry
-
+  rw[← cast_arrayN_mk]
 
 @[fun_prop]
 theorem cast_clm
