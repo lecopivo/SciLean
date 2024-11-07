@@ -44,6 +44,60 @@ theorem isLinearMap_apply (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦
 theorem isLinearMap_pi (f : X → (i : ι) → E i) (hf : ∀ i, IsLinearMap R (f · i)) :
     IsLinearMap R (fun x i ↦ f x i) := by sorry_proof
 
+
+
+----------------------------------------------------------------------------------------------------
+-- Lambda notation ---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+variable (R)
+def LinearMap.mk' (f : X → Y) (hf : IsLinearMap R f) : X →ₗ[R] Y := .mk (.mk f hf.1) hf.2
+variable {R}
+
+macro "fun " x:ident " =>ₗ[" R:term "] " b:term : term =>
+  `(LinearMap.mk' $R (fun $x => $b) (by fun_prop))
+
+macro "fun " x:ident " : " X:term " =>ₗ[" R:term "] " b:term : term =>
+  `(LinearMap.mk' $R (fun ($x : $X) => $b) (by fun_prop))
+
+macro "fun " "(" x:ident " : " X:term ")" " =>ₗ[" R:term "] " b:term : term =>
+  `(LinearMap.mk' $R (fun ($x : $X) => $b) (by fun_prop))
+
+
+@[simp, simp_core, simp_core ↓]
+theorem LinearMap.mk'_eval (f : X → Y) (hf : IsLinearMap R f) (x : X) :
+    mk' R f hf x = f x := by rfl
+
+@[simp, simp_core, simp_core ↓]
+theorem LinearMap.mk'_coe (f : X → Y) (hf : IsLinearMap R f) :
+    mk' R f hf = f := by rfl
+
+@[simp, simp_core, simp_core ↓]
+theorem LinearMap.eta_reduce (f : X →ₗ[R] Y) :
+    mk' R f.1 ⟨f.1.2,f.2⟩ = f := by rfl
+
+@[app_unexpander LinearMap.mk'] def unexpandLinearMapMk : Lean.PrettyPrinter.Unexpander
+  | `($(_) $R $f:term $_:term) =>
+    match f with
+    | `(fun $x':ident => $b:term) => `(fun $x' =>ₗ[$R] $b)
+    | `(fun ($x':ident : $ty) => $b:term) => `(fun ($x' : $ty) =>ₗ[$R] $b)
+    | `(fun $x':ident : $ty => $b:term) => `(fun $x' : $ty =>ₗ[$R] $b)
+    | _  => `(fun x =>L[$R] $f x)
+  | _  => throw ()
+
+
+-- This theorem is necessary for `lsimp` tactic. Normal `simp` seems to have some fancy support
+-- to perform congruence on functions like this automatically.
+@[congr]
+theorem LinearMap.mk'_congr
+    (f g : X → Y) (hf : IsLinearMap R f) (h : f = g) :
+    (fun x =>ₗ[R] f x) = LinearMap.mk' R g (by rw[← h]; apply hf) := by ext; simp_all
+
+@[simp]
+theorem LinearMap.mk'_zero  :
+  LinearMap.mk' R (fun _ : X => (0 : Y)) (by fun_prop) = 0 := by rfl
+
+
 end Semiring
 
 section CommSemiring
