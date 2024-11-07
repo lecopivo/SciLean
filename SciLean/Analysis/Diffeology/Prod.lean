@@ -31,13 +31,7 @@ instance
     [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY] :
     TangentSpace (X × Y) (fun xy => TX xy.1 × TY xy.2) where
 
-  tangentMap c hc x dx := (tangentMap (Prod.fst ∘ c) hc.1 x dx, tangentMap (Prod.snd ∘ c) hc.2 x dx)
-
-  tangentMap_comp := by
-    intros n m p f hp hf x dx
-    have := tangentMap_comp hp.1 hf x dx
-    have := tangentMap_comp hp.2 hf x dx
-    simp_all [Function.comp_def]
+  tangentMap c x dx := (tangentMap (Prod.fst ∘ c) x dx, tangentMap (Prod.snd ∘ c) x dx)
 
   tangentMap_const := by
     intro n x t dt

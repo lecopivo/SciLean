@@ -1,9 +1,13 @@
 import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.NormedSpace
+-- import SciLean.Analysis.Diffeology.NormedSpace
+import SciLean.Analysis.Diffeology.VecDiffeology
 import SciLean.Data.ArrayN
+import SciLean.Data.ArrayType
 import SciLean.Meta.GenerateLinearMapSimp
 
 namespace SciLean
+
+local notation:max "ℝ^" n:max => Fin n → ℝ
 
 -- Note that the size is well definew only if `α` is nonempty
 namespace Diffeology.Array.Util
@@ -166,18 +170,11 @@ instance : Diffeology (Array X) where
 open Classical in
 noncomputable
 instance : TangentSpace (Array X) (fun x => ArrayN X x.size) where
-  tangentMap c _ u du :=
+  tangentMap c u du :=
     if h : StableSize c then
       cast (by rw[h.fix_outSize_at u]) (fderiv ℝ (fixSize c) u du)
     else
       0
-
-  tangentMap_comp := by
-    intros n m p f hp hf u du
-    cases' hp with hpn hp
-    have hpfn := hpn.comp f
-    have : outSize p = outSize (p ∘ f) := (hpn.outSize_comp f).symm
-    fun_trans (disch:=assumption) [fixSize_comp,hpn,hpfn]
 
   tangentMap_const := by
     intros n x t dt
@@ -201,36 +198,209 @@ instance : TangentSpace (Array X) (fun x => ArrayN X x.size) where
     · intro s x; simp (disch:=assumption) only [smul_push]
 
 
-#exit
 
-variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+theorem array_getD_inbounds_eq_fixSize_get
+    (f : α → Array β) (hf : StableSize f)
+    (i : ℕ) (hi : i < outSize f)
+    (v₀ : β) (x : α) :
+    (f x).getD i v₀
+    =
+    ArrayType.get (fixSize f x) ⟨i,hi⟩ := by
 
-theorem Array.get.arg_a.MDifferentiable_rule (i : ℕ) (x₀ : X) :
-    TSSmooth (fun x : Array X => x.getD i x₀) where
+  have hi' : i < (f x).size := by simp_all[hf.sizeAt x,outSize]
+  simp [Array.getD_get?,hi',ArrayType.get,fixSize,hf]
+
+theorem array_getD_outbounds_eq_default
+    (f : α → Array β) (hf : StableSize f) (i : ℕ) (hi : ¬(i < outSize f))
+    (v₀ : β) (x : α) :
+    (f x).getD i v₀
+    =
+    v₀ := by
+
+  have hi' : i ≥ (f x).size := by simp_all[hf.sizeAt x,outSize]
+  simp [Array.getD_get?,hi']
+
+section TangentMapCongr
+
+variable
+  {X : Type*} [Diffeology X] {TX : X → Type*}
+  [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
+
+-- not sure if I can prove this ...
+theorem TangentSpace.tangentMap_congr {n} {p q : ℝ^n → X} {u : ℝ^n} :
+    (h : ∀ x, p x = q x) → tangentMap p u = cast (by rw[h u]) (tangentMap q u) := by sorry
+
+class Bundle (X : Type) (TX : outParam (X → Type))  where
+  map : (f : ℝ → X) → (x : ℝ) → TX (f x)
+
+-- open Bundle
+-- theorem bundle_map_cast {X} {TX} [Bundle X TX]
+
+
+end TangentMapCongr
+
+variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] [Diffeology X] [StandardDiffeology X]
+
+
+@[fun_prop]
+theorem Array.getD.arg_av₀.TSSmooth_rule (i : ℕ) :
+    TSSmooth (fun x : (Array X)×X => x.1.getD i x.2) where
   plot_preserving := by
     intro n p hp
-    simp[Function.comp_def]
-    let m : ℕ := (p 0).size
-    let p' := fixSize p (p 0).size hp.1
+    cases' hp.1 with hpn hp1
+    have hp2 := StandardDiffeology.plots_smooth.1 hp.2
+    apply StandardDiffeology.plots_smooth.2
+
+    let m := outSize (Prod.fst ∘ p)
+
     if hi : i < m then
-      let i' : Fin m := ⟨i, hi⟩
-      have h : (fun x => (p x)[i]?.getD x₀) = (fun x => (p' x)[i']) := sorry
-      rw[h]
-      have : Differentiable ℝ (fun x => p' x) := fun x => hp.2 x
-      intro x; fun_prop
+      simp (disch:=aesop) only
+        [Function.comp_def,array_getD_inbounds_eq_fixSize_get (f:=(fun x => (p x).1))]
+      fun_prop
     else
-      have h : (fun x => (p x)[i]?.getD x₀) = (fun x => x₀) := by sorry
-      rw[h]
-      intro x; fun_prop
+      simp (disch:=aesop) only
+        [Function.comp_def,array_getD_outbounds_eq_default (f:=(fun x => (p x).1))]
+      assumption
 
-  plot_independence := sorry
+  plot_independence := by
+    intro n p q u hp hq hx hdx; funext du
+    simp only [Function.comp_def]
+    cases' hp.1 with hpn hp1
+    have hp2 := StandardDiffeology.plots_smooth.1 hp.2
+    cases' hq.1 with hqn hq1
+    have hq2 := StandardDiffeology.plots_smooth.1 hq.2
+
+    let mp := outSize (Prod.fst ∘ p)
+    let mq := outSize (Prod.fst ∘ q)
+
+    have mpq : mp = mq := sorry
+
+    have hdx₁ : fderiv ℝ (fun x => fixSize (fun x => (p x).1) x) u du
+                =
+                cast (by sorry) (fderiv ℝ (fun x => fixSize (fun x => (q x).1) x) u du) := sorry
+
+    have hdx₂ : fderiv ℝ (fun x => (p x).2) u
+                =
+                fderiv ℝ (fun x => (q x).2) u := sorry
+
+    if hip : i < mp then
+      have hiq : i < mq := sorry
+      have hhp := fun x => array_getD_inbounds_eq_fixSize_get (f:=(fun x => (p x).1)) hpn i hip (p x).2 x
+      have hhq := fun x => array_getD_inbounds_eq_fixSize_get (f:=(fun x => (q x).1)) hqn i hiq (q x).2 x
+      rw[TangentSpace.tangentMap_congr hhp]
+      rw[TangentSpace.tangentMap_congr hhq]
+      simp[TangentSpace.tangentMap]
+      fun_trans
+      rw[hdx₁]
+      sorry -- wtf I'm supposed to do here?
+    else
+      have hiq : ¬(i < mq) := sorry
+      have hhp := fun x => array_getD_outbounds_eq_default (f:=(fun x => (p x).1)) hpn i hip (p x).2 x
+      have hhq := fun x => array_getD_outbounds_eq_default (f:=(fun x => (q x).1)) hqn i hiq (q x).2 x
+      rw[TangentSpace.tangentMap_congr hhp]
+      rw[TangentSpace.tangentMap_congr hhq]
+      simp[hdx₂,TangentSpace.tangentMap]
 
 
-theorem Array.get.arg_a.mderiv_rule (i : ℕ) (x₀ : X) :
-    mderiv (fun x : Array X => x.getD i x₀)
+@[fun_prop]
+theorem Array.get?.arg_a.TSSmooth_rule (i : ℕ) :
+    TSSmooth (fun x : Array X => x[i]? i) where
+  plot_preserving := by
+    intro n p hp
+    cases' hp.1 with hpn hp1
+    have hp2 := StandardDiffeology.plots_smooth.1 hp.2
+    apply StandardDiffeology.plots_smooth.2
+
+    let m := outSize (Prod.fst ∘ p)
+
+    if hi : i < m then
+      simp (disch:=aesop) only
+        [Function.comp_def,array_getD_inbounds_eq_fixSize_get (f:=(fun x => (p x).1))]
+      fun_prop
+    else
+      simp (disch:=aesop) only
+        [Function.comp_def,array_getD_outbounds_eq_default (f:=(fun x => (p x).1))]
+      assumption
+
+  plot_independence := by
+    intro n p q u hp hq hx hdx; funext du
+    simp only [Function.comp_def]
+    cases' hp.1 with hpn hp1
+    have hp2 := StandardDiffeology.plots_smooth.1 hp.2
+    cases' hq.1 with hqn hq1
+    have hq2 := StandardDiffeology.plots_smooth.1 hq.2
+
+    let mp := outSize (Prod.fst ∘ p)
+    let mq := outSize (Prod.fst ∘ q)
+
+    have mpq : mp = mq := sorry
+
+    have hdx₁ : fderiv ℝ (fun x => fixSize (fun x => (p x).1) x) u du
+                =
+                cast (by sorry) (fderiv ℝ (fun x => fixSize (fun x => (q x).1) x) u du) := sorry
+
+    have hdx₂ : fderiv ℝ (fun x => (p x).2) u
+                =
+                fderiv ℝ (fun x => (q x).2) u := sorry
+
+    if hip : i < mp then
+      have hiq : i < mq := sorry
+      have hhp := fun x => array_getD_inbounds_eq_fixSize_get (f:=(fun x => (p x).1)) hpn i hip (p x).2 x
+      have hhq := fun x => array_getD_inbounds_eq_fixSize_get (f:=(fun x => (q x).1)) hqn i hiq (q x).2 x
+      rw[TangentSpace.tangentMap_congr hhp]
+      rw[TangentSpace.tangentMap_congr hhq]
+      simp[TangentSpace.tangentMap]
+      fun_trans
+      rw[hdx₁]
+      sorry -- wtf I'm supposed to do here?
+    else
+      have hiq : ¬(i < mq) := sorry
+      have hhp := fun x => array_getD_outbounds_eq_default (f:=(fun x => (p x).1)) hpn i hip (p x).2 x
+      have hhq := fun x => array_getD_outbounds_eq_default (f:=(fun x => (q x).1)) hqn i hiq (q x).2 x
+      rw[TangentSpace.tangentMap_congr hhp]
+      rw[TangentSpace.tangentMap_congr hhq]
+      simp[hdx₂,TangentSpace.tangentMap]
+
+
+
+theorem hoho {X} [Add X] (x y : ArrayN X n) (i : ℕ) :
+  (x + y).data[i]'sorry = x.data[i]'sorry + y.data[i]'sorry := sorry
+
+theorem hihi {X} [SMul R X] (r : R) (x : ArrayN X n) (i : ℕ) :
+  (r • x).data[i]'sorry = r • x.data[i]'sorry := sorry
+
+@[fun_trans]
+theorem Array.get.arg_a.tsderiv_rule (i : ℕ) :
+    tsderiv (fun x : (Array X)×X => x.1.getD i x.2)
     =
     fun x dx =>
-      if hi : i < x.size then
-        ArrayType.get dx ⟨i,hi⟩
+      if hi : i < x.1.size then
+        ArrayType.get dx.1 ⟨i,hi⟩
       else
-        0 := sorry
+        dx.2 := by
+
+  funext x dx
+  unfold tsderiv
+  split_ifs with h hi
+  · simp only [TangentSpace.tangentMap,TangentSpace.exp,Function.comp_def]
+    simp[Array.getD_get?,hi,hoho,hihi];
+    fun_trans
+    rfl
+  · simp only [TangentSpace.tangentMap,TangentSpace.exp,Function.comp_def]
+    simp[Array.getD_get?,hi]
+    fun_trans
+  · by_contra; apply h; fun_prop
+  · by_contra; apply h; fun_prop
+
+
+#check Array.get?
+set_option trace.Meta.Tactic.fun_trans true in
+set_option trace.Meta.Tactic.fun_trans.discharge true in
+set_option trace.Meta.Tactic.fun_trans.unify true in
+#check tsderiv (fun x : (Array ℝ)×ℝ => x.1.getD 0 0) rewrite_by fun_trans only
+
+
+set_option trace.Meta.Tactic.fun_trans true in
+set_option trace.Meta.Tactic.fun_trans.discharge true in
+set_option trace.Meta.Tactic.fun_trans.unify true in
+#check tsderiv (fun x : Array ℝ => x.getD 0 (x.getD 1 0)) rewrite_by fun_trans only

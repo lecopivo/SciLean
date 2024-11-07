@@ -55,11 +55,7 @@ open StandardDiffeology
 noncomputable
 instance (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X] [Diffeology X] [StandardDiffeology X] :
     TangentSpace X (fun _ => X) where
-  tangentMap p _ u du := fderiv ℝ p u du
-  tangentMap_comp := by
-    intro n m p f hp hf u du
-    have := plots_smooth.1 hp
-    fun_trans[Function.comp_def]
+  tangentMap p u du := fderiv ℝ p u du
   tangentMap_const := by
     intros
     fun_trans

@@ -1,4 +1,5 @@
 import Mathlib.Analysis.Calculus.ContDiff.Basic
+import SciLean.Analysis.Normed.IsContinuousLinearMap
 
 namespace SciLean
 
@@ -67,6 +68,17 @@ theorem ContDiff.continuous_top {f : X → Y} (h : ContDiff R ⊤ f) : Continuou
 @[fun_prop]
 theorem ContDiff.differentiable_top {f : X → Y} (h : ContDiff R ⊤ f) : Differentiable R f := by
   fun_prop (disch:=simp)
+
+@[fun_prop]
+theorem contDiff_isContinuousLinearMap
+    (f : X → Y) (hf : IsContinuousLinearMap R f) :
+    ContDiff R ⊤ f := by
+
+  let hf : IsBoundedLinearMap R f := by
+    have h : f = (fun x =>L[R] f x) := by rfl
+    rw[h]
+    apply ContinuousLinearMap.isBoundedLinearMap
+  apply IsBoundedLinearMap.contDiff hf
 
 -- @[fun_prop]
 -- theorem ContDiff.contDiff_top {f : X → Y} {n} (h : ContDiff R ⊤ f) : ContDiff R n f := by

@@ -1,8 +1,54 @@
-import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.NormedSpace
+import SciLean.Analysis.Diffeology.Basic'
+import SciLean.Analysis.Diffeology.TangentSpace'
+import SciLean.Analysis.Calculus.ContDiff
 import SciLean.Data.ArrayN
 
 namespace SciLean
+
+local notation:max "ℝ^" n:max => Fin n → ℝ
+
+
+@[ext]
+structure ArrayPlot (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X](n : ℕ)   where
+  dim : ℕ
+  val : ℝ^n → ArrayN X dim
+  contDiff : ContDiff ℝ ⊤ val
+
+
+
+open Diffeology in
+instance (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X] [Diffeology X] [StandardDiffeology X] :
+    Diffeology (Array X) where
+
+  Plot := ArrayPlot X
+
+  plotEval p u := (p.val u).1
+
+  plot_ext := sorry
+
+  plotComp {n m} p {f} hf := {
+    dim := p.dim
+    val := fun x => p.val (f x)
+    contDiff := by
+      have := p.contDiff
+      fun_prop
+  }
+
+  plotComp_eval := by simp
+
+  constPlot n x := {
+    dim := x.size
+    val := fun _ => ArrayN.mk x rfl
+    contDiff := by fun_prop
+  }
+
+  constPlot_eval := by simp
+
+
+instance (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X] :
+    TangentSpace X (fun x => ArrayN x x.size) where
+
+
 
 
 namespace Diffeology.Array.Util
