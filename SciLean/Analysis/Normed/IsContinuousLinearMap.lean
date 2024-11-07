@@ -68,7 +68,7 @@ macro "fun " "(" x:ident " : " X:term ")" " =>L[" R:term "] " b:term : term =>
 @[congr]
 theorem ContinuousLinearMap.mk'_congr
     (f g : X → Y) (hf : IsContinuousLinearMap R f) (h : f = g) :
-    (fun x =>L[R] f x) = ContinuousLinearMap.mk' R g (by rw[← h]; apply hf) := sorry_proof
+    (fun x =>L[R] f x) = ContinuousLinearMap.mk' R g (by rw[← h]; apply hf) := by ext; simp_all
 
 
 
