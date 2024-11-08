@@ -1,5 +1,6 @@
 import SciLean.Analysis.Diffeology.Basic
 import SciLean.Analysis.Diffeology.TangentSpace
+import SciLean.Analysis.Diffeology.Prod
 -- import SciLean.Analysis.Diffeology.SumInstances
 
 namespace SciLean
@@ -63,7 +64,7 @@ instance {α : Type*} {β : α → Type u} {γ : Type*} {δ : γ → Type u}
   | .inr _ => by infer_instance
 
 
-def tmTranspose'
+def tsSumMap'
     {X : Type*} {TX : X → Type _} [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)]
     {Y : Type*} {TY : Y → Type _} [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)]
     {U : Type*} [AddCommGroup U] [Module ℝ U]:
@@ -77,7 +78,7 @@ def tmTranspose'
   left_inv := by intro x; cases x <;> simp
   right_inv := by intro ⟨x,dx⟩; cases x <;> simp
 
-def tmTranspose
+def tsSumMMap
     {X : Type*} {TX : X → Type _}
     {Y : Type*} {TY : Y → Type _} :
     (Σ x, TX x) ⊕ (Σ y, TY y) ≃ Σ (xy : X⊕Y), (Sum.rec TX TY xy) where
@@ -99,18 +100,20 @@ instance
     [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY] :
     TangentSpace (Sum X Y) (Sum.rec TX TY) where
 
-  tangentMap {n} p u := tmTranspose' (p.map (fun p => tangentMap p u) (fun q => tangentMap q u))
-  exp := fun xdx => (tmTranspose.symm xdx).map (fun xdx => exp xdx) (fun ydy => exp ydy)
+  tangentMap {n} p u := tsSumMap' (p.map (fun p => tangentMap p u) (fun q => tangentMap q u))
+  exp := fun xdx => (tsSumMMap.symm xdx).map (fun xdx => exp xdx) (fun ydy => exp ydy)
 
-  tangentMap_const := by intro n x u; cases x <;> simp[tmTranspose',constPlot]
-  tangentMap_fst := by intro n x u; cases x <;> simp[tmTranspose']
-  exp_at_zero := by intro ⟨x,dx⟩; cases x <;> simp[tmTranspose]
-  tangentMap_exp_at_zero := by intro ⟨x,dx⟩; cases x <;> simp[tmTranspose,tmTranspose',duality]
+  tangentMap_const := by intro n x u; cases x <;> simp[tsSumMap',constPlot]
+  tangentMap_fst := by intro n x u; cases x <;> simp[tsSumMap']
+  exp_at_zero := by intro ⟨x,dx⟩; cases x <;> simp[tsSumMMap]
+  tangentMap_exp_at_zero := by intro ⟨x,dx⟩; cases x <;> simp[tsSumMMap,tsSumMap',duality]
 
 
 variable
-  {X : Type u} [Diffeology X] {TX : X → Type w} [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
-  {Y : Type v} [Diffeology Y] {TY : Y → Type w} [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY]
+  {W : Type _} [Diffeology W] {TW : W → Type _} [∀ w, AddCommGroup (TW w)] [∀ w, Module ℝ (TW w)] [TangentSpace W TW]
+  {X : Type _} [Diffeology X] {TX : X → Type _} [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
+  {Y : Type _} [Diffeology Y] {TY : Y → Type _} [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY]
+  {Z : Type _} [Diffeology Z] {TZ : Z → Type _} [∀ z, AddCommGroup (TZ z)] [∀ z, Module ℝ (TZ z)] [TangentSpace Z TZ]
 
 open TangentSpace
 
@@ -132,6 +135,9 @@ theorem Sum.inl.arg_val.TSSmooth_rule :
   case plot_independence =>
     intro n p q u h
     simp_all[tangentMap]
+  case tangentMap_exp =>
+    intro p u
+    simp_all[tangentMap]
 
 @[fun_prop]
 theorem Sum.inr.arg_val.DSmooth_rule :
@@ -151,3 +157,84 @@ theorem Sum.inr.arg_val.TSSmooth_rule :
   case plot_independence =>
     intro n p q u h
     simp_all[tangentMap]
+  case tangentMap_exp =>
+    intro p u
+    simp_all[tangentMap]
+
+
+
+@[fun_prop]
+theorem Sum.elim.arg_fga0.DSmooth_rule
+    (f : W → X → Z) (hf : DSmooth ↿f) (g : W → Y → Z) (hg : DSmooth ↿g)
+    (a0 : W → X⊕Y) (ha0 : DSmooth a0) :
+    DSmooth (fun w : W => Sum.elim (f w) (g w) (a0 w)) where
+  ex_map_plot := by
+    use (fun n p =>
+             a0 ∘ₚ p |> Sum.map (fun p' => (p,p')) (fun p' => (p,p'))
+                     |> Sum.elim (fun p => ↿f ∘ₚ p) (fun q => ↿g ∘ₚ q))
+    intro n u p; simp
+    have h : a0 (p u) = (a0 ∘[ha0] p) u := by simp
+    rw[h];
+    cases a0 ∘[ha0] p <;> (simp; rfl)
+
+
+@[simp]
+theorem plotMap_sum_elim (p : Plot W n)
+    (f : W → X → Z) (hf : DSmooth ↿f) (g : W → Y → Z) (hg : DSmooth ↿g)
+    (a0 : W → X⊕Y) (ha0 : DSmooth a0) :
+    ((fun w : W => Sum.elim (f w) (g w) (a0 w)) ∘ₚ p)
+    =
+    (a0 ∘ₚ p |> Sum.map (fun p' => (p,p')) (fun p' => (p,p'))
+             |> Sum.elim (fun p => ↿f ∘ₚ p) (fun q => ↿g ∘ₚ q)) := by
+
+  ext u; simp
+  have h : a0 (p u) = (a0 ∘[ha0] p) u := by simp
+  rw[h]; cases (a0 ∘[ha0] p) <;> (simp; rfl)
+
+
+@[fun_prop]
+theorem Sum.elim.arg_fga0.TSSmooth_rule
+    (f : W → X → Z) (hf : TSSmooth ↿f) (g : W → Y → Z) (hg : TSSmooth ↿g)
+    (a0 : W → X⊕Y) (ha0 : TSSmooth a0) :
+    TSSmooth (fun w : W => Sum.elim (f w) (g w) (a0 w)) where
+
+  toDSmooth := by fun_prop
+  plot_independence := by
+    intro n p q u h
+    simp (disch:=fun_prop)
+    have hh := ha0.plot_independence h
+    revert hh
+    cases' a0∘ₚp with p' p'
+    . cases' a0∘ₚq with q'
+      · intro hh
+        simp_all[tangentMap]
+        have hh : tangentMap (p,p') u = tangentMap (X:=W×X) (q,q') u := by simp_all[tangentMap]
+        exact hf.plot_independence hh
+      · simp_all[tangentMap]
+    . cases' a0∘ₚq with q' q'
+      · simp_all[tangentMap]
+      · intro hh
+        simp_all[tangentMap]
+        have hh : tangentMap (p,p') u = tangentMap (X:=W×Y) (q,q') u := by simp_all[tangentMap]
+        exact hg.plot_independence hh
+  tangentMap_exp := by
+    intro p t
+    simp (disch:=fun_prop)
+    have haa := ha0.tangentMap_exp (p:=p) (u:=t)
+    simp[tangentMap] at haa
+    revert haa
+    cases a0 ∘ₚ p
+    cases a0 ∘ₚ exp (duality.symm (tangentMap p t))
+    intro haa
+    · simp_all
+      rw[hf.tangentMap_exp]
+      rw (config := {occs := .pos [2]}) [hf.tangentMap_exp]
+      simp[haa,tangentMap]
+    · simp_all
+    cases a0 ∘ₚ exp (duality.symm (tangentMap p t))
+    · simp_all
+    · intro haa
+      simp_all
+      rw[hg.tangentMap_exp]
+      rw (config := {occs := .pos [2]}) [hg.tangentMap_exp]
+      simp[haa,tangentMap]

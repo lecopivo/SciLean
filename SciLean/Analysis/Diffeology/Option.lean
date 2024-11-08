@@ -123,3 +123,6 @@ theorem Option.some.arg_val.TSSmooth_rule :
   case plot_independence =>
     intro n p q u h
     simp_all[tangentMap]
+  case tangentMap_exp =>
+    intro p u
+    simp_all[tangentMap]

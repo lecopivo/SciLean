@@ -99,6 +99,13 @@ theorem tmTranspose'_symm_tangentMap (p : Plot (X×Y) n) (u):
   (tangentMap p.1 u, tangentMap p.2 u) := by rfl
 
 
+@[simp]
+theorem tmTranspose_duality_tmTranspose (xy : (Σ x, ℝ^1 →ₗ[ℝ] TX x) × (Σ y, ℝ^1 →ₗ[ℝ] TY y)) :
+    tmTranspose.symm (duality.symm (tmTranspose' xy)) = (duality.symm xy.1, duality.symm xy.2) := by
+  cases xy;
+  simp[duality]; rfl
+
+
 variable
   {X : Type*} [Diffeology X] {TX : X → Type*} [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
   {Y : Type*} [Diffeology Y] {TY : Y → Type*} [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY]
@@ -136,6 +143,10 @@ theorem Prod.fst.arg_self.TSSmooth_rule : TSSmooth (fun x : X×Y => x.1) := by
   case plot_independence =>
     intro n (p,p') (q,q') u h
     simp_all[tangentMap]
+  case tangentMap_exp =>
+    intro (p,p') t
+    simp_all[tangentMap,exp]
+
 
 
 @[fun_prop]
@@ -145,6 +156,9 @@ theorem Prod.snd.arg_self.TSSmooth_rule : TSSmooth (fun x : X×Y => x.2) := by
   case plot_independence =>
     intro n (p,p') (q,q') u h
     simp_all[tangentMap]
+  case tangentMap_exp =>
+    intro (p,p') t
+    simp_all[tangentMap,exp]
 
 
 @[fun_prop]
@@ -181,3 +195,9 @@ theorem Prod.mk.arg_self.TSSmooth_rule
     constructor
     · apply hf.plot_independence h
     · apply hg.plot_independence h
+  case tangentMap_exp =>
+    intro p t
+    simp (disch:=fun_prop) [tangentMap]
+    rw[hf.tangentMap_exp]
+    rw[hg.tangentMap_exp]
+    simp

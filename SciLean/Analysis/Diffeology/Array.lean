@@ -193,6 +193,7 @@ theorem Array.get?.arg_a.TSSmooth (i : ℕ) :
       have := plot_tangentMapEq h
       fun_trans; simp_all
     · rfl
+  case tangentMap_exp => sorry
 
 
 ----------------------------------------------------------------------------------------------------
@@ -277,6 +278,7 @@ theorem _root_.Array.append.arg_asbs.TSSmooth_rule : TSSmooth (fun x : Array X×
     apply tsMap'_ext
     · simp_all
     · fun_trans; simp_all
+  case tangentMap_exp => sorry
 
 
 
@@ -338,3 +340,4 @@ theorem _root_.Array.setD.arg_av.TSSmooth_rule (i : ℕ) :
       fun_trans only [hp2x,hp2dx,hp1.1,hp1.2]
     · simp only [hn,reduceDIte]
       exact h.1
+  case tangentMap_exp => sorry
