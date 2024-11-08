@@ -37,13 +37,16 @@ two diffeological spaces.
 TODO: plots should be generalized maps from open subsets of `ℝⁿ` to `X`
   -/
 class Diffeology (X : Type v) where
-  /-- Set of mooth maps from `ℝ̂ⁿ` to `X`. -/
-  plots (n : ℕ) : Set (ℝ^n → X)
+  Plot : ℕ → Type v
+  plotEval {n} : Plot n → ℝ^n → X
+  plot_ext (p q : Plot n) : plotEval p = plotEval q → p = q
   /-- Pots are closed under composition with a smooth function. -/
-  plot_comp {n m} {p} {f : ℝ^n → ℝ^m}
-    (ph : p ∈ plots m) (hf : ContDiff ℝ ⊤ f) : p ∘ f ∈ plots n
+  plotComp {n m} (p : Plot n) {f : ℝ^m → ℝ^n} (hf : ContDiff ℝ ⊤ f) : Plot m
+  plotComp_eval {n m} (p : Plot n) {f : ℝ^m → ℝ^n} (hf : ContDiff ℝ ⊤ f) (u : ℝ^m) :
+    plotEval (plotComp p hf) u = plotEval p (f u)
   /-- Constant plots are differentiable. -/
-  const_plot (n : ℕ) (x : X) : (fun _ => x) ∈ plots n
+  constPlot (n : ℕ) (x : X) : Plot n
+  constPlot_eval (n x u) : plotEval (constPlot n x) u = x
 
 
 section DDifferentiable
@@ -54,6 +57,45 @@ variable
   {X : Type*} [Diffeology X]
   {Y : Type*} [Diffeology Y]
   {Z : Type*} [Diffeology Z]
+
+
+def IsPlot {n} (f : ℝ^n → X) : Prop := ∃ p : Plot X n, plotEval p = f
+
+instance : DFunLike (Plot X n) (ℝ^n) (fun _ => X) where
+  coe := plotEval
+  coe_injective' := plot_ext
+
+theorem Diffeology.Plot.isPlot (p : Plot X n) : IsPlot (X:=X) p := by
+  apply Exists.intro p
+  rfl
+
+@[ext]
+theorem plot_ext (p q : Plot X n) : (∀ x, p x = q x) → p = q := by
+  intro h; apply Diffeology.plot_ext
+  funext x; exact (h x)
+
+@[simp]
+theorem plotEval_normalize (p : Plot X n) : plotEval p = p := by rfl
+
+@[simp]
+theorem constPlot_eval {n} (x : X) : constPlot n x = fun _ : ℝ^n => x := by
+  funext u
+  exact Diffeology.constPlot_eval n x u
+
+def Diffeology.Plot.comp {n} (p : Plot X n) {f : ℝ^m → ℝ^n} (hf : ContDiff ℝ ⊤ f) : Plot X m :=
+  plotComp p hf
+
+@[simp]
+theorem plotComp_normalize (p : Plot X n) {f : ℝ^m → ℝ^n} (hf : ContDiff ℝ ⊤ f) :
+  plotComp p hf = p.comp hf := by rfl
+
+@[simp]
+theorem plotComp_eval (p : Plot X n) {f : ℝ^m → ℝ^n} (hf : ContDiff ℝ ⊤ f) :
+  p.comp hf = fun u => p (f u) := by funext u; exact Diffeology.plotComp_eval p hf u
+
+
+@[simp]
+theorem plot_is_plot {n} (p : Plot X n) : IsPlot p := ⟨p,rfl⟩
 
 /-- Smooth function between diffeological spaces.
 
@@ -68,7 +110,23 @@ NOTE: To actually compute derivatives we seem to need a more refined definition 
 TODO: Define `DSmoothAt` variant once plots are generalized to maps from open subsets of `ℝⁿ` to `X` -/
 @[fun_prop]
 structure DSmooth (f : X → Y) : Prop where
-  plot_preserving {n : ℕ} (p : ℝ^n → X) (hp : p ∈ plots n) : f ∘ p ∈ plots n
+  ex_map_plot : ∃ g : (n : ℕ) → Plot X n → Plot Y n,
+    ∀ n u p, g n p u = f (p u)
+
+open Classical in
+noncomputable
+def DSmooth.mapPlot {n} (f : X → Y) (hf : DSmooth f) (p : Plot X n) : Plot Y n :=
+  choose hf.ex_map_plot n p
+
+
+namespace Diffeology
+scoped notation f:90 " ∘["hf"] " p:91 => DSmooth.mapPlot f hf p
+scoped notation f:90 " ∘ₚ " p:91 => DSmooth.mapPlot f (by fun_prop) p
+end Diffeology
+
+@[simp]
+theorem DMoosth.mapPlot_eval (f : X → Y) (hf : DSmooth f) {n} (p : Plot X n) (u) :
+  (f ∘[hf] p) u = f (p u) := sorry
 
 
 namespace DSmooth
@@ -76,20 +134,20 @@ namespace DSmooth
 @[fun_prop]
 theorem id_rule : DSmooth (fun x : X => x) := by
   constructor
-  · intros; unfold Function.comp; simp_all
+  use (fun _ p => p); simp
 
 @[fun_prop]
 theorem const_rule (y : Y) : DSmooth (fun _ : X => y) := by
   constructor
-  · intros; simp only [Function.comp_def, const_plot]
+  use (fun n _ => constPlot n y); simp
 
 @[fun_prop]
 theorem comp_rule (f : Y → Z) (g : X → Y)
     (hf : DSmooth f) (hg : DSmooth g) :
     DSmooth (fun x => f (g x)) := by
   constructor
-  · intros n p hp;
-    exact hf.plot_preserving _ (hg.plot_preserving _ hp)
+  use (fun _ p => f ∘[hf] (g ∘[hg] p))
+  simp
 
 end DSmooth
 

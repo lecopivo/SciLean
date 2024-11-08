@@ -1,5 +1,5 @@
-import SciLean.Analysis.Diffeology.Basic'
-import SciLean.Analysis.Diffeology.TangentSpace'
+import SciLean.Analysis.Diffeology.Basic
+import SciLean.Analysis.Diffeology.TangentSpace
 -- import SciLean.Analysis.Diffeology.SumInstances
 
 namespace SciLean
@@ -8,39 +8,12 @@ local notation:max "ℝ^" n:max => Fin n → ℝ
 
 open Diffeology
 
-inductive SumPlot (X Y : Type*) [Diffeology X] [Diffeology Y] (n : ℕ) where
-  | inl (p : Plot X n)
-  | inr (p : Plot Y n)
-
 variable {X Y : Type*} [Diffeology X] [Diffeology Y]
-
-def SumPlot.eval {n} (p : SumPlot X Y n) (u : ℝ^n) : X ⊕ Y :=
-  match p with
-  | .inl p => .inl (p u)
-  | .inr p => .inr (p u)
-
-def SumPlot.comp {n} (p : SumPlot X Y n) {f : ℝ^m → ℝ^n} (hf : ContDiff ℝ ⊤ f) : SumPlot X Y m :=
-  match p with
-  | .inl p => .inl (p.comp hf)
-  | .inr p => .inr (p.comp hf)
-
-@[simp]
-theorem SumPlot.eval_inl (f : Plot X n) : SumPlot.eval (.inl (Y:=Y) f) = fun u => .inl (f u) := by rfl
-
-@[simp]
-theorem SumPlot.eval_inr (f : Plot Y n) : SumPlot.eval (.inr (X:=X) f) = fun u => .inr (f u) := by rfl
-
-@[simp]
-theorem SumPlot.comp_eval (p : SumPlot X Y n) {f : ℝ^m → ℝ^n} (hf : ContDiff ℝ ⊤ f) :
-   (p.comp hf).eval = fun u => p.eval (f u) := by
-  funext u
-  cases p <;> (simp[SumPlot.comp]; apply plotComp_eval)
-
 
 open Diffeology in
 instance : Diffeology (Sum X Y) where
-  Plot := SumPlot X Y
-  plotEval := SumPlot.eval
+  Plot n := Plot X n ⊕ Plot Y n
+  plotEval p u := p.map (fun p => p u) (fun q => q u)
   plot_ext p q h :=
     match p, q with
     | .inl p, .inl q => by
@@ -51,16 +24,13 @@ instance : Diffeology (Sum X Y) where
       congr; ext x; simp at h
       have h := congrFun h x
       simp_all
-    | .inl _, .inr _ => by have h := congrFun h 0; simp[SumPlot.eval] at h;
-    | .inr _, .inl _ => by have h := congrFun h 0; simp[SumPlot.eval] at h;
-  plotComp := SumPlot.comp
+    | .inl _, .inr _ => by have h := congrFun h 0; simp at h;
+    | .inr _, .inl _ => by have h := congrFun h 0; simp at h;
+  plotComp p f hf := p.map (fun p => plotComp p hf) (fun q => plotComp q hf)
   plotComp_eval := by
     intro n m p f hf u
     cases p <;> simp
-  constPlot n x? :=
-    match x? with
-    | .inl x => .inl (constPlot n x)
-    | .inr y => .inr (constPlot n y)
+  constPlot n x := x.map (fun x => constPlot n x) (fun y => constPlot n y)
   constPlot_eval := by
     intro n x? u
     cases x? <;> simp
@@ -93,6 +63,34 @@ instance {α : Type*} {β : α → Type u} {γ : Type*} {δ : γ → Type u}
   | .inr _ => by infer_instance
 
 
+def tmTranspose'
+    {X : Type*} {TX : X → Type _} [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)]
+    {Y : Type*} {TY : Y → Type _} [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)]
+    {U : Type*} [AddCommGroup U] [Module ℝ U]:
+    (Σ x, U →ₗ[ℝ] TX x) ⊕ (Σ y, U →ₗ[ℝ] TY y) ≃ Σ (xy : X⊕Y), (U →ₗ[ℝ] Sum.rec TX TY xy) where
+
+  toFun := fun xdx => xdx.elim (fun ⟨x,dx⟩ => ⟨Sum.inl x, dx⟩) (fun ⟨y,dy⟩ => ⟨Sum.inr y, dy⟩)
+  invFun := fun xdx =>
+    match xdx with
+    | ⟨.inl x, dx⟩ => .inl ⟨x,dx⟩
+    | ⟨.inr y, dy⟩ => .inr ⟨y,dy⟩
+  left_inv := by intro x; cases x <;> simp
+  right_inv := by intro ⟨x,dx⟩; cases x <;> simp
+
+def tmTranspose
+    {X : Type*} {TX : X → Type _}
+    {Y : Type*} {TY : Y → Type _} :
+    (Σ x, TX x) ⊕ (Σ y, TY y) ≃ Σ (xy : X⊕Y), (Sum.rec TX TY xy) where
+
+  toFun := fun xdx => xdx.elim (fun ⟨x,dx⟩ => ⟨Sum.inl x, dx⟩) (fun ⟨y,dy⟩ => ⟨Sum.inr y, dy⟩)
+  invFun := fun xdx =>
+    match xdx with
+    | ⟨.inl x, dx⟩ => .inl ⟨x,dx⟩
+    | ⟨.inr y, dy⟩ => .inr ⟨y,dy⟩
+  left_inv := by intro x; cases x <;> simp
+  right_inv := by intro ⟨x,dx⟩; cases x <;> simp
+
+
 open TangentSpace in
 instance
     {X : Type u} {TX : outParam (X → Type v)} [Diffeology X]
@@ -101,27 +99,55 @@ instance
     [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY] :
     TangentSpace (Sum X Y) (Sum.rec TX TY) where
 
-  tangentMap {n} p u du :=
-    match p with
-    | .inl p => tangentMap p u du
-    | .inr p => tangentMap p u du
+  tangentMap {n} p u := tmTranspose' (p.map (fun p => tangentMap p u) (fun q => tangentMap q u))
+  exp := fun xdx => (tmTranspose.symm xdx).map (fun xdx => exp xdx) (fun ydy => exp ydy)
 
-  tangentMap_const := by
-    intro n x? u du
-    cases x? <;> simp
+  tangentMap_const := by intro n x u; cases x <;> simp[tmTranspose',constPlot]
+  tangentMap_fst := by intro n x u; cases x <;> simp[tmTranspose']
+  exp_at_zero := by intro ⟨x,dx⟩; cases x <;> simp[tmTranspose]
+  tangentMap_exp_at_zero := by intro ⟨x,dx⟩; cases x <;> simp[tmTranspose,tmTranspose',duality]
 
-  exp x dx :=
-    match x, dx with
-    | .inl x, dx => .inl (exp x dx)
-    | .inr y, dy => .inr (exp y dy)
 
-  exp_at_zero := by intros x dx; cases x; simp; simp
+variable
+  {X : Type u} [Diffeology X] {TX : X → Type w} [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
+  {Y : Type v} [Diffeology Y] {TY : Y → Type w} [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY]
 
-  tangentMap_exp_at_zero x dx t :=
-    match x, dx with
-    | .inl x, dx => by simp
-    | .inr y, dy => by simp
+open TangentSpace
 
-  tangentMap_linear := by
-    intros n p u
-    cases p <;> apply tangentMap_linear
+@[fun_prop]
+theorem Sum.inl.arg_val.DSmooth_rule :
+    DSmooth (@Sum.inl X Y) := by
+  existsi fun _ p => .inl p
+  intros; simp
+
+@[simp]
+theorem plotMap_inl (p : Plot X n) :
+  (@Sum.inl X Y) ∘ₚ p = @Sum.inl (Plot X n) (Plot Y n) p := by ext u; simp
+
+@[fun_prop]
+theorem Sum.inl.arg_val.TSSmooth_rule :
+    TSSmooth (@Sum.inl X Y) := by
+  constructor
+  case toDSmooth => fun_prop
+  case plot_independence =>
+    intro n p q u h
+    simp_all[tangentMap]
+
+@[fun_prop]
+theorem Sum.inr.arg_val.DSmooth_rule :
+    DSmooth (@Sum.inr X Y) := by
+  existsi fun _ p => .inr p
+  intros; simp
+
+@[simp]
+theorem plotMap_inr (p : Plot Y n) :
+  (@Sum.inr X Y) ∘ₚ p = @Sum.inr (Plot X n) (Plot Y n) p := by ext u; simp
+
+@[fun_prop]
+theorem Sum.inr.arg_val.TSSmooth_rule :
+    TSSmooth (@Sum.inr X Y) := by
+  constructor
+  case toDSmooth => fun_prop
+  case plot_independence =>
+    intro n p q u h
+    simp_all[tangentMap]

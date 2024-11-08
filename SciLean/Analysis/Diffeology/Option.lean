@@ -1,244 +1,125 @@
 import SciLean.Analysis.Diffeology.Basic
 import SciLean.Analysis.Diffeology.TangentSpace
-import SciLean.Tactic.InferVar
+import SciLean.Analysis.Diffeology.OptionInstances
 
 namespace SciLean
 
 local notation:max "ℝ^" n:max => Fin n → ℝ
 
-variable
-  {X : Type*} {TX : outParam (X → Type*)} [Diffeology X] [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
-  {Y : Type*} {TY : outParam (Y → Type*)} [Diffeology Y] [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY]
-  {Z : Type*} {TZ : outParam (Z → Type*)} [Diffeology Z] [∀ z, AddCommGroup (TZ z)] [∀ z, Module ℝ (TZ z)] [TangentSpace Z TZ]
+open Diffeology
 
 
-def NonePlot {n} (p : ℝ^n → Option X) : Prop := ∀ x, p x = none
-def SomePlot {n} (p : ℝ^n → Option X) : Prop :=
-  ∃ q : ℝ^n → X,
-    (∀ x, p x = some (q x))
-    ∧
-    q ∈ Diffeology.plots n
-
-def NonePlot.notSomePlot {n} {p : ℝ^n → Option X} (hp : NonePlot p) :
-  ¬SomePlot p := sorry
-
-noncomputable
-def SomePlot.val {n} {p : ℝ^n → Option X} (hp : SomePlot p) (u : ℝ^n) : X :=
-  Classical.choose hp u
-
-@[simp]
-theorem SomePlot.val_const {x : X} (hp : SomePlot fun _ : ℝ^n => some x) :
-    hp.val = fun _ => x := sorry
-
-@[simp]
-theorem SomePlot.val_some {p : ℝ^n → X} (hp : SomePlot (fun x => some (p x))) :
-    hp.val = p := sorry
-
-noncomputable
-def SomePlot.valAt {n} {p : ℝ^n → Option X} (hp : SomePlot p) (u : ℝ^n) :
-    p u = some (hp.val u) :=
-  sorry
-
-noncomputable
-def NonePlot.valAt {n} {p : ℝ^n → Option X} (hp : NonePlot p) (u : ℝ^n) :
-    p u = none :=
-  sorry
-
-
-open Diffeology in
-@[simp]
-theorem SomePlot.of_some (p : ℝ^n → X) (hp : p ∈ plots n) : SomePlot (fun x => some (p x)) := sorry
+variable {X : Type*} [Diffeology X]
 
 
 open Diffeology in
 instance : Diffeology (Option X) where
-  plots := fun n p => NonePlot p ∨ SomePlot p
-  plot_comp := by
-    intros n m p f hp hf
-    cases hp
-    case inl h => left; intro x; exact h (f x)
-    case inr h =>
-      right
-      cases' h with q hq
-      apply Exists.intro (q ∘ f)
-      constructor
-      · intro x; simp[Function.comp_def,hq.1 (f x)]
-      · apply Diffeology.plot_comp hq.2 hf
-  const_plot := by
-    intros n x
-    cases x
-    case none => left; simp
-    case some x =>
-      right
-      apply Exists.intro (fun _ => x)
-      constructor; simp only [implies_true]; apply Diffeology.const_plot
+  Plot n := Option (Plot X n)
+  plotEval := fun p u => p.map (fun p => p u)
+  plot_ext p q h :=
+    match p, q with
+    | .none, .none => by rfl
+    | .some p, .some q => by
+      congr; ext x; simp at h
+      have h := congrFun h x
+      simp_all
+    | .none, .some q => by have h := congrFun h 0; simp at h
+    | .some p, .none => by have h := congrFun h 0; simp at h
+  plotComp p f hf := p.map (fun p => plotComp p hf)
+  plotComp_eval := by
+    intro n m p f hf u
+    cases p <;> simp
+  constPlot n x? :=
+    match x? with
+    | .none => .none
+    | .some x => .some (constPlot n x)
+  constPlot_eval := by
+    intro n x? u
+    cases x? <;> simp
 
 
+@[simp]
+theorem OptionPlot.eval_none' :
+    DFunLike.coe (F:=Plot (Option X) n) .none = fun _ => .none := by rfl
+
+@[simp]
+theorem OptionPlot.eval_some' (f : Plot X n) :
+    DFunLike.coe (F:=Plot (Option X) n) (.some f) = fun x => .some (f x) := by rfl
+
+@[simp]
+theorem OptionPlot.constPlot_some (x : X) :
+    constPlot (X:=Option X) n (.some x) = .some (constPlot n x)  := by rfl
+
+@[simp]
+theorem OptionPlot.constPlot_none :
+    constPlot (X:=Option X) n .none = .none := by rfl
 
 
---------------------------------------------------------------------------------
--- Algebra instances for Sum.rec ------------------------------------------
---------------------------------------------------------------------------------
--- There are some issues with defEq
+variable
+    {X : Type*} {TX : outParam (X → Type*)} [Diffeology X]
+    [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
+    {U : Type*} [AddCommGroup U] [Module ℝ U]
 
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, Zero (β a)] (a? : Option α) : Zero (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
+def tmOptionTranspose : Option (Σ x, U →ₗ[ℝ] TX x) ≃ (Σ x : Option X, U →ₗ[ℝ] Option.rec PUnit TX x) where
+  invFun := fun ⟨x,dx⟩ =>
+    match x, dx with
+    | .none, _ => .none
+    | .some x, dx => .some ⟨x,dx⟩
 
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, One (β a)] (a? : Option α) : One (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, Add (β a)] (a? : Option α) : Add (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} {S : Type*} [∀ a, SMul S (β a)] (a? : Option α) : SMul S (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, Neg (β a)] (a? : Option α) : Neg (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, Sub (β a)] (a? : Option α) : Sub (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, Norm (β a)] (a? : Option α) : Norm (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, Dist (β a)] (a? : Option α) : Dist (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, EDist (β a)] (a? : Option α) : EDist (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, TopologicalSpace (β a)] (a? : Option α) : TopologicalSpace (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, UniformSpace (β a)] (a? : Option α) : UniformSpace (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, MetricSpace (β a)] (a? : Option α) : MetricSpace (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, AddCommGroup (β a)] (a? : Option α) : AddCommGroup (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} [∀ a, NormedAddCommGroup (β a)] (a? : Option α) : NormedAddCommGroup (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-@[reducible]
-instance {α} {β : α → Type*} {K} [Semiring K] [∀ a, AddCommGroup (β a)] [∀ a, Module K (β a)] (a? : Option α) : Module K (Option.rec PUnit β a?) :=
-  match a? with
-  | .none => by infer_instance
-  | .some _ => by infer_instance
-
-
-theorem cast_to_rhs (x : α) (y : β) (h : α = β) :
-  (cast h x = y) = (x = cast (by rw[h]) y) := by subst h; simp
+  toFun := fun xdx =>
+    match xdx with
+    | .none => ⟨.none, 0⟩
+    | .some ⟨x,dx⟩ => ⟨.some x,dx⟩
+  right_inv := by intro ⟨x,dx⟩; cases x; simp; rfl; simp
+  left_inv := by intro x; cases x <;> simp
 
 open TangentSpace in
-theorem tangentMap_congr {p q : ℝ^n → X} (h : q = p := by simp; infer_var) :
-  tangentMap p u du = cast (by simp[h]) (tangentMap q u du) := by subst h; simp
-
-set_option pp.proofs.withType true in
-open TangentSpace Classical in
+open Classical in
+noncomputable
 instance
     {X : Type*} {TX : outParam (X → Type*)} [Diffeology X]
     [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX] :
     TangentSpace (Option X) (Option.rec PUnit TX) where
 
-  tangentMap {n} p u du :=
-    if q : SomePlot p then
-      cast (by rw[q.valAt u]) (tangentMap q.val u du)
-    else
-      0
+  tangentMap {n} p u :=
+    p |>.map (tangentMap · u)
+      |> tmOptionTranspose
+
   tangentMap_const := by
-    intro n x t dt
-    cases x
-    case none => simp
-    case some x =>
-      simp
-      intro q
-      rw[tangentMap_congr (by simp; infer_var)]
-      fun_trans
+    intro n x t; cases x <;> simp[tmOptionTranspose]
+  tangentMap_fst := by
+    intro n x u; cases x <;> simp[tmOptionTranspose]
 
-  exp x dx t :=
-    match x, dx with
-    | .some x, dx => .some (TangentSpace.exp x dx t)
-    | .none, _ => none
-  exp_at_zero := by intros x dx; cases x <;> simp
-  exp_is_plot x dx:= by
-    cases x
-    case none => left; simp[NonePlot]
-    case some x =>
-      right
-      apply Exists.intro (TangentSpace.exp x dx)
-      simp[TangentSpace.exp_is_plot]
-
+  exp xdx :=
+    tmOptionTranspose.symm (duality xdx) |>.map (fun xdx' => exp (duality.symm xdx'))
+  exp_at_zero := by
+    intro ⟨x,dx⟩
+    cases x <;> simp[tmOptionTranspose,duality]
   tangentMap_exp_at_zero := by
-    intros x dx t
-    cases x
-    · simp
-    · simp[TangentSpace.exp_is_plot]
-      rw[tangentMap_congr (by simp[TangentSpace.exp_is_plot]; infer_var)]
-      simp
+    intro ⟨x,dx⟩
+    cases x <;> simp[tmOptionTranspose,duality]
 
-  tangentMap_linear := by
-    intros n c hc x
-    cases hc
-    case inl hc =>
-      simp_all[hc.notSomePlot]
-      constructor
-      · intro x y; simp; sorry
-      · intro r y;
-        have h : (0 : Option.rec PUnit TX (c x)) = r • 0 := by sorry
-        convert h
-        have hh := hc.valAt x
-        simp[instSMulRecType_sciLean_1]
-        subst hh
+@[fun_prop]
+theorem Option.some.arg_val.DSmooth_rule :
+    DSmooth (fun x : X => some x) := by
+  existsi fun _ p => some p
+  intros; simp
 
+@[simp]
+theorem plotMap_none (p : Plot X n) :
+  (fun _ : X => none (α:=X)) ∘ₚ p = none := by ext u; simp
 
-    case inr hc =>
-      simp_all
-      constructor
-      · intro x y; simp[add_push]; sorry
-      · sorry
+@[simp]
+theorem plotMap_some (p : Plot X n) :
+  (fun x : X => some x) ∘ₚ p = some p := by ext u; simp
+
+open TangentSpace
+@[fun_prop]
+theorem Option.some.arg_val.TSSmooth_rule :
+    TSSmooth (fun x : X => some x) := by
+
+  constructor
+  case toDSmooth => fun_prop
+  case plot_independence =>
+    intro n p q u h
+    simp_all[tangentMap]

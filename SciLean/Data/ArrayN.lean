@@ -70,3 +70,12 @@ instance [Inhabited α] : Inhabited (ArrayN α n) :=
     data := .mkArray n default
     h_size := by simp
   }⟩
+
+theorem ArrayN.ext_data (a b : ArrayN α n) : a.data = b.data → a = b := by
+  cases a; cases b;
+  simp
+
+
+def _root_.Array.fixSize (a : Array α) : ArrayN α a.size := ⟨a,rfl⟩
+
+def ArrayN.sizeCast (a : ArrayN α n) {m} (h : n = m) : ArrayN α m := ⟨a.1,by simp_all⟩
