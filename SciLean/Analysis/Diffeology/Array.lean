@@ -16,7 +16,10 @@ structure ArrayPlot (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X] (n : 
   val : ℝ^n → ArrayN X dim
   contDiff : ContDiff ℝ ⊤ val
 
-
+-- TODO: change assumptions on `X` i.e. it is diffeological space with constant tangent space
+-- (X : Type*) [Diffeology X] (TX : Type*) [AddCommGroup TX] [Module ℝ TX] [TangentSpace X (fun _ : X => TX)]
+--
+-- Also thinkg about what would it take to have general `X` with what ever tangent space
 open Diffeology in
 instance (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X] :
     Diffeology (Array X) where
@@ -193,7 +196,6 @@ theorem Array.get?.arg_a.TSSmooth (i : ℕ) :
       have := plot_tangentMapEq h
       fun_trans; simp_all
     · rfl
-  case tangentMap_exp => sorry
 
 
 ----------------------------------------------------------------------------------------------------
@@ -278,7 +280,6 @@ theorem _root_.Array.append.arg_asbs.TSSmooth_rule : TSSmooth (fun x : Array X×
     apply tsMap'_ext
     · simp_all
     · fun_trans; simp_all
-  case tangentMap_exp => sorry
 
 
 
@@ -340,4 +341,3 @@ theorem _root_.Array.setD.arg_av.TSSmooth_rule (i : ℕ) :
       fun_trans only [hp2x,hp2dx,hp1.1,hp1.2]
     · simp only [hn,reduceDIte]
       exact h.1
-  case tangentMap_exp => sorry

@@ -26,12 +26,12 @@ instance : Diffeology (X × Y) where
   constPlot_eval := by simp
 
 @[simp]
-theorem prodPlot_eval (p : Plot X n) (q : Plot Y n) :
-    (show Plot (X×Y) n from (p, q)) = fun u => (p u, q u) := rfl
+theorem prodPlot_eval (p : Plot X n) (q : Plot Y n) (u) :
+    (show Plot (X×Y) n from (p, q)) u = (p u, q u) := rfl
 
--- @[simp]
--- theorem prodPlot_eval' (p : Plot (X×Y) n) :
---     p = fun u : ℝ^n => (p.1 u ,p.2 u) := rfl
+@[simp]
+theorem prodPlot_eval' (p : Plot (X×Y) n) (u) :
+    p u = (p.1 u ,p.2 u) := rfl
 
 @[simp]
 theorem prodPlot_comp (p : Plot X n) (q : Plot Y n) (f : ℝ^m → ℝ^n) (hf : ContDiff ℝ ⊤ f) :
@@ -45,8 +45,8 @@ def tmTranspose'
 
   toFun := fun (⟨x,df⟩,⟨y,dg⟩) => ⟨(x,y), fun u =>ₗ[ℝ] (df u, dg u)⟩
   invFun := fun ⟨xy,dfg⟩ => (⟨xy.1, fun u =>ₗ[ℝ] (dfg u).1⟩, ⟨xy.2, fun u =>ₗ[ℝ] (dfg u).2⟩)
-  left_inv := by intro ⟨⟨x,dx'⟩,⟨y,dy⟩⟩; simp; constructor <;> apply IsLinearMap.LinearMap.eta_reduce
-  right_inv := by intro ⟨(x,y),dy⟩; simp; exact IsLinearMap.LinearMap.eta_reduce dy
+  left_inv := by intro ⟨⟨x,dx'⟩,⟨y,dy⟩⟩; simp; constructor <;> apply LinearMap.eta_reduce
+  right_inv := by intro ⟨(x,y),dy⟩; simp; exact LinearMap.eta_reduce dy
 
 
 def tmTranspose
@@ -90,8 +90,13 @@ instance
     intro ⟨(x,y),(dx,dy)⟩
     simp[tmTranspose',tmTranspose,duality]
 
-
 open TangentSpace
+
+@[simp]
+theorem plot_exp_prod (x : X) (y : Y) (dx : TX x) (dy : TY y) :
+  exp ⟨(x,y),(dx,dy)⟩ = (exp ⟨x,dx⟩, exp ⟨y,dy⟩) := by rfl
+
+
 @[simp]
 theorem tmTranspose'_symm_tangentMap (p : Plot (X×Y) n) (u):
   tmTranspose'.symm (tangentMap p u)
@@ -143,9 +148,6 @@ theorem Prod.fst.arg_self.TSSmooth_rule : TSSmooth (fun x : X×Y => x.1) := by
   case plot_independence =>
     intro n (p,p') (q,q') u h
     simp_all[tangentMap]
-  case tangentMap_exp =>
-    intro (p,p') t
-    simp_all[tangentMap,exp]
 
 
 
@@ -156,9 +158,6 @@ theorem Prod.snd.arg_self.TSSmooth_rule : TSSmooth (fun x : X×Y => x.2) := by
   case plot_independence =>
     intro n (p,p') (q,q') u h
     simp_all[tangentMap]
-  case tangentMap_exp =>
-    intro (p,p') t
-    simp_all[tangentMap,exp]
 
 
 @[fun_prop]
@@ -195,9 +194,3 @@ theorem Prod.mk.arg_self.TSSmooth_rule
     constructor
     · apply hf.plot_independence h
     · apply hg.plot_independence h
-  case tangentMap_exp =>
-    intro p t
-    simp (disch:=fun_prop) [tangentMap]
-    rw[hf.tangentMap_exp]
-    rw[hg.tangentMap_exp]
-    simp

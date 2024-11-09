@@ -24,31 +24,43 @@ variable {R X Y Z ι : Type _} {E : ι → Type _}
   [∀ i, AddCommMonoid (E i)] [∀ i, Module R (E i)]
 
 @[fun_prop]
-theorem isLinearMap_id : IsLinearMap R (fun x : X ↦ x) := LinearMap.id.isLinear
+theorem id_rule : IsLinearMap R (fun x : X ↦ x) := LinearMap.id.isLinear
 
 -- todo: I think this does not get used at all
 @[fun_prop]
-theorem isLinearMap_const_zero
+theorem const_zero_rule
   : IsLinearMap R (fun _ : X => (0 : Y))
   := by sorry_proof
 
 @[fun_prop]
-theorem isLinearMap_comp {f : Y → Z} {g : X → Y}
+theorem comp_rule {f : Y → Z} {g : X → Y}
     (hf : IsLinearMap R f) (hg : IsLinearMap R g) : IsLinearMap R (fun x ↦ f (g x)) :=
   ((mk' _ hf).comp (mk' _ hg)).isLinear
 
 @[fun_prop]
-theorem isLinearMap_apply (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by sorry_proof
+theorem apply_rule (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by sorry_proof
 
 @[fun_prop]
-theorem isLinearMap_pi (f : X → (i : ι) → E i) (hf : ∀ i, IsLinearMap R (f · i)) :
+theorem pi_rule (f : X → (i : ι) → E i) (hf : ∀ i, IsLinearMap R (f · i)) :
     IsLinearMap R (fun x i ↦ f x i) := by sorry_proof
 
+end Semiring
 
+end IsLinearMap
 
 ----------------------------------------------------------------------------------------------------
 -- Lambda notation ---------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
+
+section LinearMapMk'
+
+variable {R X Y Z ι : Type _} {E : ι → Type _}
+  [Semiring R]
+  [AddCommGroup X] [Module R X]
+  [AddCommGroup Y] [Module R Y]
+  [AddCommGroup Z] [Module R Z]
+  [∀ i, AddCommMonoid (E i)] [∀ i, Module R (E i)]
+
 
 variable (R)
 def LinearMap.mk' (f : X → Y) (hf : IsLinearMap R f) : X →ₗ[R] Y := .mk (.mk f hf.1) hf.2
@@ -97,9 +109,9 @@ theorem LinearMap.mk'_congr
 theorem LinearMap.mk'_zero  :
   LinearMap.mk' R (fun _ : X => (0 : Y)) (by fun_prop) = 0 := by rfl
 
+end LinearMapMk'
 
-end Semiring
-
+namespace IsLinearMap
 section CommSemiring
 
 variable {R X Y Z ι : Type _} {E : ι → Type _}

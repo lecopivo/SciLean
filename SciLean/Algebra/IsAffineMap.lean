@@ -37,7 +37,7 @@ theorem id_rule : IsAffineMap R (fun x : X ↦ x) := by constructor; simp; fun_p
 @[fun_prop]
 theorem const_rule (y : Y)
   : IsAffineMap R (fun _ : X => y)
-  := by constructor; simp; apply IsLinearMap.isLinearMap_const_zero
+  := by constructor; simp; apply IsLinearMap.const_zero_rule
 
 @[fun_prop]
 theorem comp_rule {f : Y → Z} {g : X → Y}

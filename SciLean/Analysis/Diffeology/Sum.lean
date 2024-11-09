@@ -135,9 +135,7 @@ theorem Sum.inl.arg_val.TSSmooth_rule :
   case plot_independence =>
     intro n p q u h
     simp_all[tangentMap]
-  case tangentMap_exp =>
-    intro p u
-    simp_all[tangentMap]
+
 
 @[fun_prop]
 theorem Sum.inr.arg_val.DSmooth_rule :
@@ -157,10 +155,6 @@ theorem Sum.inr.arg_val.TSSmooth_rule :
   case plot_independence =>
     intro n p q u h
     simp_all[tangentMap]
-  case tangentMap_exp =>
-    intro p u
-    simp_all[tangentMap]
-
 
 
 @[fun_prop]
@@ -217,24 +211,3 @@ theorem Sum.elim.arg_fga0.TSSmooth_rule
         simp_all[tangentMap]
         have hh : tangentMap (p,p') u = tangentMap (X:=W×Y) (q,q') u := by simp_all[tangentMap]
         exact hg.plot_independence hh
-  tangentMap_exp := by
-    intro p t
-    simp (disch:=fun_prop)
-    have haa := ha0.tangentMap_exp (p:=p) (u:=t)
-    simp[tangentMap] at haa
-    revert haa
-    cases a0 ∘ₚ p
-    cases a0 ∘ₚ exp (duality.symm (tangentMap p t))
-    intro haa
-    · simp_all
-      rw[hf.tangentMap_exp]
-      rw (config := {occs := .pos [2]}) [hf.tangentMap_exp]
-      simp[haa,tangentMap]
-    · simp_all
-    cases a0 ∘ₚ exp (duality.symm (tangentMap p t))
-    · simp_all
-    · intro haa
-      simp_all
-      rw[hg.tangentMap_exp]
-      rw (config := {occs := .pos [2]}) [hg.tangentMap_exp]
-      simp[haa,tangentMap]

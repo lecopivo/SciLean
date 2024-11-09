@@ -129,12 +129,6 @@ structure TSSmooth (f : X → Y) extends DSmooth f : Prop where
     =
     (tangentMap (f ∘[toDSmooth] q) u)
 
-  tangentMap_exp {p : Plot X 1} {u : ℝ^1} :
-    (tangentMap (f ∘[toDSmooth] p) u)
-    =
-    let xdx := duality.symm (tangentMap p u)
-    (tangentMap (f ∘[toDSmooth] (exp xdx)) 0)
-
 
 open TangentSpace
 
@@ -148,14 +142,14 @@ theorem id_rule : TSSmooth (fun x : X => x) := by
   constructor
   case toDSmooth => fun_prop
   case plot_independence => simp_all
-  case tangentMap_exp => simp_all
+
 
 @[fun_prop]
 theorem const_rule (y : Y) : TSSmooth (fun _ : X => y) := by
   constructor
   case toDSmooth => fun_prop
   case plot_independence => simp_all
-  case tangentMap_exp => simp_all
+
 
 -- set_option pp.proofs.withType true in
 @[fun_prop]
@@ -171,12 +165,6 @@ theorem comp_rule (f : Y → Z) (g : X → Y)
     apply hf.plot_independence
     apply hg.plot_independence
     assumption
-  case tangentMap_exp =>
-    intros p u
-    simp (disch:=fun_prop)
-    rw[hf.tangentMap_exp]
-    rw[hg.tangentMap_exp]
-    rw (config := {occs := .pos [2]}) [hf.tangentMap_exp]
 
 
 
@@ -192,6 +180,16 @@ def fwdTSDeriv (f : X → Y) (xdx : (x : X) × TX x) : (y : Y) × TY y :=
     duality.symm (tangentMap (f ∘ₚ (exp xdx)) 0)
   else
     ⟨f xdx.1, 0⟩
+
+
+theorem fwdTSDeriv_def
+    {X : Type*} [Diffeology X] {TX : X → Type*} [∀ x, AddCommGroup (TX x)] [∀ x, Module ℝ (TX x)] [TangentSpace X TX]
+    {Y : Type*} [Diffeology Y] {TY : Y → Type*} [∀ y, AddCommGroup (TY y)] [∀ y, Module ℝ (TY y)] [TangentSpace Y TY]
+    {f : X → Y} (hf : TSSmooth f)  :
+    fwdTSDeriv f = fun xdx => duality.symm (tangentMap (f ∘ₚ (exp xdx)) 0) := by
+  unfold fwdTSDeriv
+  simp[hf]
+
 
 namespace tsderiv
 
@@ -226,10 +224,9 @@ theorem comp_rule (f : Y → Z) (g : X → Y)
   funext xdx
   have hfg : TSSmooth (f ∘ g) := by fun_prop
   simp (disch:=fun_prop) [hfg,hf,hg,fwdTSDeriv]
-  rw[hf.tangentMap_exp]
-  -- let ydy' := (tangentMap (g ∘ₚ exp xdx)) 0
-  -- let q := exp (duality.symm ydy')
-  -- rw[hf.plot_independence (q:=q) (h:=by simp[q])]
+  let ydy' := (tangentMap (g ∘ₚ exp xdx)) 0
+  let q := exp (duality.symm ydy')
+  rw[hf.plot_independence (q:=q) (h:=by simp[q])]
 
 
 end tsderiv
