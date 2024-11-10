@@ -1,6 +1,3 @@
-import SciLean.Tactic.Autodiff
-import SciLean.Data.ArrayN
-
 import SciLean.Analysis.Diffeology.Util
 
 /-!
@@ -126,7 +123,9 @@ end Diffeology
 
 @[simp]
 theorem DMoosth.mapPlot_eval (f : X → Y) (hf : DSmooth f) {n} (p : Plot X n) (u) :
-  (f ∘[hf] p) u = f (p u) := sorry
+    (f ∘[hf] p) u = f (p u) := by
+  simp[DSmooth.mapPlot]
+  exact Classical.choose_spec hf.ex_map_plot _ u p
 
 
 namespace DSmooth
@@ -148,6 +147,7 @@ theorem comp_rule (f : Y → Z) (g : X → Y)
   constructor
   use (fun _ p => f ∘[hf] (g ∘[hg] p))
   simp
+
 
 end DSmooth
 

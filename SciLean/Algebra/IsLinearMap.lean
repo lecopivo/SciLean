@@ -30,7 +30,7 @@ theorem id_rule : IsLinearMap R (fun x : X ↦ x) := LinearMap.id.isLinear
 @[fun_prop]
 theorem const_zero_rule
   : IsLinearMap R (fun _ : X => (0 : Y))
-  := by sorry_proof
+  := by constructor <;> simp
 
 @[fun_prop]
 theorem comp_rule {f : Y → Z} {g : X → Y}
@@ -38,11 +38,14 @@ theorem comp_rule {f : Y → Z} {g : X → Y}
   ((mk' _ hf).comp (mk' _ hg)).isLinear
 
 @[fun_prop]
-theorem apply_rule (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by sorry_proof
+theorem apply_rule (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by constructor <;> simp
 
 @[fun_prop]
 theorem pi_rule (f : X → (i : ι) → E i) (hf : ∀ i, IsLinearMap R (f · i)) :
-    IsLinearMap R (fun x i ↦ f x i) := by sorry_proof
+    IsLinearMap R (fun x i ↦ f x i) := by
+  constructor
+  · intros; funext i; simp[(hf i).1]
+  · intros; funext i; simp[(hf i).2]
 
 end Semiring
 
@@ -124,15 +127,19 @@ variable {R X Y Z ι : Type _} {E : ι → Type _}
 @[fun_prop]
 theorem mk'.arg_f.IsLinearMap_rule (f : X → Y → Z)
     (hf₁ : ∀ y, IsLinearMap R (f · y)) (hf₂ : ∀ x, IsLinearMap R (f x ·)) :
-    IsLinearMap R (fun x => mk' (f x) (hf₂ x)) := sorry_proof
+    IsLinearMap R (fun x => mk' (f x) (hf₂ x)) := by
+  unfold IsLinearMap.mk'
+  constructor
+  · intro x y; ext y'; simp[(hf₁ y').1]
+  · intro x y; ext y'; simp[(hf₁ y').2]
 
 @[fun_prop]
 theorem LinearMap_coe.apply_right (f : X → Y →ₗ[R] Z) (y : Y) (hf : IsLinearMap R f) :
-    IsLinearMap R (fun x => (f x) y) := sorry_proof
+    IsLinearMap R (fun x => (f x) y) := by constructor; simp[hf.1]; simp[hf.2]
 
 @[fun_prop]
 theorem LinearMap_coe.apply_left (f : Y →ₗ[R] Z) (g : X → Y) (hg : IsLinearMap R g) :
-    IsLinearMap R (fun x => f (g x)) := sorry_proof
+    IsLinearMap R (fun x => f (g x)) := by constructor; simp[hg.1]; simp[hg.2]
 
 end CommSemiring
 
@@ -152,7 +159,10 @@ variable {R X Y Z ι : Type _} {E : ι → Type _}
   [∀ i, AddCommGroup (E i)] [∀ i, Module R (E i)]
 
 theorem by_linear_map {f : X → Y} (g : X →ₗ[R] Y) (h : ∀ x, f x = g x) :
-    IsLinearMap R f := sorry_proof
+    IsLinearMap R f := by
+  constructor
+  intro x y; simp[h (x+y), h x, h y]
+  intro c x; simp[h (c•x), h x]
 
 
 -- Prod.mk ---------------------------------------------------------------------
@@ -243,13 +253,18 @@ theorem HSMul.hSMul.arg_a0.IsLinearMap_rule
 
 @[fun_prop]
 theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_nat
-    (c : ℕ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x :=
-  sorry_proof
+    (c : ℕ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x := by
+  constructor
+  intro x y; simp[hf.1]
+  intro c x; simp[hf.2]; rw [@smul_algebra_smul_comm]
+
 
 @[fun_prop]
 theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_int
-    (c : ℤ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x :=
-  sorry_proof
+    (c : ℤ) (f : X → Y) (hf : IsLinearMap R f) : IsLinearMap R fun x => c • f x := by
+  constructor
+  intro x y; simp[hf.1]
+  intro c x; simp[hf.2]; rw [@smul_comm]
 
 -- IndexType.sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -312,22 +327,18 @@ theorem HSMul.hSMul.arg_a1.IsLinearMap_rule
 
 @[fun_prop]
 theorem HMul.hMul.arg_a0.IsLinearMap_rule
-    (f : X → R) (hf : IsLinearMap R f) (y' : R) : IsLinearMap R fun x => f x * y' :=
-  let a : R →ₗ[R] R := mk' _ (isLinearMap_smul' y')
-  let b := (mk' _ hf)
-  let c := a.comp b
-  sorry_proof
-  -- by_linear_map c sorry
+    (f : X → R) (hf : IsLinearMap R f) (y' : R) : IsLinearMap R fun x => f x * y' := by
+  constructor
+  intro x y; rw[hf.1]; exact RightDistribClass.right_distrib (f x) (f y) y'
+  intro c x; rw[hf.2]; exact smul_mul_assoc c (f x) y'
 
 
 @[fun_prop]
 theorem HMul.hMul.arg_a1.IsLinearMap_rule
-  (f : X → R) (hf : IsLinearMap R f) (y' : R) : IsLinearMap R fun x => y' * f x :=
-  let a : R →ₗ[R] R := mk' _ (isLinearMap_smul y')
-  let b := (mk' _ hf)
-  let c := a.comp b
-  sorry_proof
-  -- by_linear_map c sorry
+  (f : X → R) (hf : IsLinearMap R f) (y' : R) : IsLinearMap R fun x => y' * f x := by
+  constructor
+  intro x y; rw[hf.1]; exact LeftDistribClass.left_distrib y' (f x) (f y)
+  intro c x; rw[hf.2]; exact mul_smul_comm c y' (f x)
 
 
 end CommSemiring

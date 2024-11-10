@@ -1,7 +1,4 @@
 import SciLean.Tactic.Autodiff
-import SciLean.Data.ArrayN
-import SciLean.Tactic.InferVar
-
 import SciLean.Analysis.Diffeology.Basic
 
 
@@ -45,6 +42,7 @@ def TangentSpace.duality : (Σ x, TX x) ≃ Σ x, (ℝ^1 →ₗ[ℝ] TX x) where
       intro s t; rw[← dx'.map_smul]; congr
     simp[h]; ext u; simp; congr; funext x; congr; aesop
 
+
 @[simp]
 theorem TangentSpace.duality_zero (x : X) :
   TangentSpace.duality ⟨x,(0 : TX x)⟩ = ⟨x,0⟩ := by simp[duality]
@@ -52,6 +50,7 @@ theorem TangentSpace.duality_zero (x : X) :
 @[simp]
 theorem TangentSpace.duality_zero' (x : X) :
   TangentSpace.duality.symm ⟨x,0⟩ = ⟨x,(0 : TX x)⟩ := by simp[duality]
+
 
 -- todo: theorem about mapping zerov
 
@@ -135,6 +134,7 @@ open TangentSpace
 @[fun_prop]
 theorem dsmooth_rule (f : X → Y) (hf : TSSmooth f) : DSmooth f := hf.toDSmooth
 
+
 namespace TSSmooth
 
 @[fun_prop]
@@ -142,7 +142,6 @@ theorem id_rule : TSSmooth (fun x : X => x) := by
   constructor
   case toDSmooth => fun_prop
   case plot_independence => simp_all
-
 
 @[fun_prop]
 theorem const_rule (y : Y) : TSSmooth (fun _ : X => y) := by
@@ -165,7 +164,6 @@ theorem comp_rule (f : Y → Z) (g : X → Y)
     apply hf.plot_independence
     apply hg.plot_independence
     assumption
-
 
 
 end TSSmooth

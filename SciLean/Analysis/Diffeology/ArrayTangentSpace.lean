@@ -4,6 +4,7 @@ import SciLean.Analysis.Diffeology.VecDiffeology
 import SciLean.Analysis.Diffeology.Option
 import SciLean.Analysis.Calculus.ContDiff
 import SciLean.Data.ArrayN
+import SciLean.Util.RewriteBy
 
 namespace SciLean
 
@@ -118,6 +119,18 @@ theorem get_append {x y : Array X} (dx : ArrayTangentSpace x) (dy : ArrayTangent
     cast (by simp[Array.getElem_append,h]) (dx.get ⟨i, by have :=i.2; simp_all⟩)
   else
     cast (by simp[Array.getElem_append,h]) (dy.get ⟨i-x.size, by have :=i.2; simp_all; omega⟩) := sorry
+
+
+def set {x : Array X} (dx : ArrayTangentSpace x) (i : Fin x.size) (dxi : TX x[i]) : ArrayTangentSpace x where
+  data := dx.data.set ⟨i,by simp[dx.data_size]⟩ ⟨_,dxi⟩
+  data_size := by simp[dx.data_size]
+  data_cast := by
+    simp[Array.getElem_set]
+    intro j
+    split_ifs with h
+    · cases i; cases j; simp at h; substs h; rfl
+    · have h' := (dx.data_cast j) rewrite_type_by simp
+      exact h'
 
 
 ----------------------------------------------------------------------------------------------------
