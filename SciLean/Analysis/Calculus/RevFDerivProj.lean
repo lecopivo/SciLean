@@ -790,7 +790,7 @@ theorem HDiv.hDiv.arg_a0.revFDerivProj_rule
        fun _ dx' => (1 / (conj y)) • (ydf.2 () dx')) :=
 by
   unfold revFDerivProj
-  fun_trans (disch:=apply hx); simp[oneHot, structMake,revFDerivProjUpdate,revFDerivProj,smul_push]
+  fun_trans (disch:=apply hf); simp[oneHot, structMake,revFDerivProjUpdate,revFDerivProj,smul_push]
 
 
 @[fun_trans]

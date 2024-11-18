@@ -82,7 +82,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let varSet : FVarIdSet := -- collect which xi's are used
       (← (val.collectFVars.run {}))
       |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xIdSet
-    pure (i.1,val,varSet)
+    pure (i,val,varSet)
 
   let mut lctx ← getLCtx
   let  instances ← getLocalInstances
@@ -111,7 +111,8 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let xVar' := varArr[xVarId]!
     let varArrOther := varArr.eraseIdx xVarId
 
-    trace[Meta.Tactic.structuralInverse.step] "resolving {xVar'} from {yVals[j]!} = {← withLCtx lctx instances <| ppExpr yVal}"
+    trace[Meta.Tactic.structuralInverse.step]
+      "resolving {xVar'} from {yVals[j]!} = {← withLCtx lctx instances <| ppExpr yVal}"
 
     let xName ← xVar'.fvarId!.getUserName
 

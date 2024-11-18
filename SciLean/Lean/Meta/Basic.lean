@@ -28,7 +28,7 @@ def getConstExplicitArgIds (constName : Name) : m (Array Nat) := do
 
 def getConstArity (constName : Name) : m Nat := do
   let info ← getConstInfo constName
-  return info.type.forallArity
+  return info.type.getNumHeadForalls
 
 def getConstArgNames (constName : Name) (fixAnonymousNames := false) : m (Array Name) := do
   let info ← getConstInfo constName
@@ -187,7 +187,7 @@ def mkProdProj (x : Expr) (i : Nat) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod
 
 def mkProdSplitElem (xs : Expr) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Array Expr) :=
   (Array.mkArray n 0)
-    |>.mapIdx (λ i _ => i.1)
+    |>.mapIdx (λ i _ => i)
     |>.mapM (λ i => mkProdProj xs i n fst snd)
 
 def mkUncurryFun (n : Nat) (f : Expr) (mk := ``Prod.mk) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM Expr := do

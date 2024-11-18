@@ -367,9 +367,10 @@ instance : PlainDataType UInt8 where
       bits := bt.bits
       h_size := bt.h_size
       fromByte := fun b => ⟨bt.fromByte b⟩
-      toByte   := fun a => bt.toByte a.1
+      toByte   := fun a => bt.toByte a.toNat
       fromByte_toByte := sorry_proof
   }
+
 
 -- This implementation is not ideal, we do a round trip through `Nat`
 instance : PlainDataType UInt16 where
@@ -379,7 +380,7 @@ instance : PlainDataType UInt16 where
     bytes := bt.bytes
     h_size := bt.h_size
     fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
-    toByteArray := fun b i h a => bt.toByteArray b i h a.1
+    toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
     toByteArray_size := sorry_proof
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
@@ -393,7 +394,7 @@ instance : PlainDataType UInt32 where
     bytes := bt.bytes
     h_size := bt.h_size
     fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
-    toByteArray := fun b i h a => bt.toByteArray b i h a.1
+    toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
     toByteArray_size := sorry_proof
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
@@ -407,7 +408,7 @@ instance : PlainDataType UInt64 where
     bytes := bt.bytes
     h_size := bt.h_size
     fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
-    toByteArray := fun b i h a => bt.toByteArray b i h a.1
+    toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
     toByteArray_size := sorry_proof
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
@@ -422,7 +423,7 @@ instance : PlainDataType UInt64 where
     bytes := bt.bytes
     h_size := bt.h_size
     fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
-    toByteArray := fun b i h a => bt.toByteArray b i h a.1
+    toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
     toByteArray_size := sorry_proof
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof

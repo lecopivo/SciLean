@@ -19,6 +19,7 @@ structure ArrayTangentSpace
   data_size : data.size = x.size
   data_cast : ∀ i : Fin x.size, data[i].1 = TX (x[i])
 
+
 variable
   {X : Type u} [Diffeology X] {TX : outParam (X → Type v)}
   [(x : X) → AddCommGroup (TX x)] [(x : X) → outParam (Module ℝ (TX x))] [ts: TangentSpace X TX]

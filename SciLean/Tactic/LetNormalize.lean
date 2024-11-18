@@ -195,18 +195,16 @@ declare_config_elab elabLetNormalizeConfig  LetNormalizeConfig
 
 syntax config := atomic(" (" &"config") " := " withoutPosition(term) ")"
 
-syntax (name := let_normalize) "let_normalize" (config)? : conv
+open Lean.Parser.Tactic in
+syntax (name := let_normalize) "let_normalize" optConfig : conv
 
 @[tactic let_normalize]
 def convLetNormalize : Tactic
-| `(conv| let_normalize $(cfg)?) =>
+| `(conv| let_normalize $cfg) =>
   withTraceNode `let_normalize (fun _ => return "let_normalize") do
   (← getMainGoal).withContext do
 
-    let cfg ←
-      match cfg with
-      | .some stx => elabLetNormalizeConfig (mkNullNode #[stx])
-      | .none => pure {}
+    let cfg ← elabLetNormalizeConfig cfg
 
     let lhs ← getLhs
     let lhs' ← letNormalize lhs cfg
@@ -215,7 +213,9 @@ def convLetNormalize : Tactic
 | _ => Lean.Elab.throwUnsupportedSyntax
 
 macro "let_normalize" : tactic => `(tactic| conv => let_normalize)
-macro "let_normalize" cfg:config : tactic => `(tactic| conv => let_normalize $cfg)
+open Lean.Parser.Tactic in
+macro "let_normalize" cfg:optConfig : tactic => `(tactic| conv => let_normalize $cfg)
+
 
 /--
 info: let x1 := 10;
@@ -253,7 +253,7 @@ x2 + y5 + z3_fst + z3_snd : Nat
       (let z1 := 1; z1 + z1, let z2 := 2; z2 * z2)
     x3 + y5 + z3.1 + z3.2)
     rewrite_by
-      let_normalize (config := {removeNumConst := false})
+      let_normalize -removeNumConst
 
 
 

@@ -19,10 +19,10 @@ namespace Meta.FunTrans
 open Lean.Parser.Tactic
 
 
-syntax (name := funTransTacStx) "fun_trans" (config)? (discharger)? (&" only")?
+syntax (name := funTransTacStx) "fun_trans" optConfig (discharger)? (&" only")?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*,?) "]")? (location)? : tactic
 
-syntax (name := funTransConvStx) "fun_trans" (config)? (discharger)? (&" only")?
+syntax (name := funTransConvStx) "fun_trans" optConfig (discharger)? (&" only")?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*) "]")? : conv
 
 
@@ -46,7 +46,7 @@ def stxToDischarge (stx : Option (TSyntax ``discharger)) : Expr → MetaM (Optio
 @[tactic funTransTacStx]
 def funTransTac : Tactic := fun stx => do
   match stx with
-  | `(tactic| fun_trans $[$cfg]? $[$disch]? $[only]? $[[$a,*]]? $[$loc]?) => do
+  | `(tactic| fun_trans $cfg? $[$disch]? $[only]? $[[$a,*]]? $[$loc]?) => do
 
     -- set fun_trans config
     funTransContext.modify
@@ -54,9 +54,9 @@ def funTransTac : Tactic := fun stx => do
 
     let a := a.getD (Syntax.TSepArray.mk #[])
     if stx[3].isNone then
-      evalTactic (← `(tactic| simp $[$cfg]? $[$disch]? [↓fun_trans_simproc,$a,*]  $[$loc]?))
+      evalTactic (← `(tactic| simp $cfg? $[$disch]? [↓fun_trans_simproc,$a,*]  $[$loc]?))
     else
-      evalTactic (← `(tactic| simp $[$cfg]? $[$disch]? only [↓fun_trans_simproc,$a,*]  $[$loc]?))
+      evalTactic (← `(tactic| simp $cfg? $[$disch]? only [↓fun_trans_simproc,$a,*]  $[$loc]?))
 
     -- reset fun_trans config
     funTransContext.modify fun _ => {}
@@ -67,7 +67,7 @@ def funTransTac : Tactic := fun stx => do
 @[tactic funTransConvStx]
 def funTransConv : Tactic := fun stx => do
   match stx with
-  | `(conv| fun_trans $[$cfg]? $[$disch]? $[only]? $[[$a,*]]?) => do
+  | `(conv| fun_trans $cfg? $[$disch]? $[only]? $[[$a,*]]?) => do
 
     -- set fun_trans config
     funTransContext.modify
@@ -75,9 +75,9 @@ def funTransConv : Tactic := fun stx => do
 
     let a := a.getD (Syntax.TSepArray.mk #[])
     if stx[3].isNone then
-      evalTactic (← `(conv| simp $[$cfg]? $[$disch]? [↓fun_trans_simproc,$a,*]))
+      evalTactic (← `(conv| simp $cfg? $[$disch]? [↓fun_trans_simproc,$a,*]))
     else
-      evalTactic (← `(conv| simp $[$cfg]? $[$disch]? only [↓fun_trans_simproc,$a,*]))
+      evalTactic (← `(conv| simp $cfg? $[$disch]? only [↓fun_trans_simproc,$a,*]))
 
     -- reset fun_trans config
     funTransContext.modify fun _ => {}

@@ -16,7 +16,7 @@ def ArrayN.ofFn (f : Fin n → α) : ArrayN α n :=
 
 def ArrayN.mapIdx {α β : Type*} (a : ArrayN α n) (f : Fin n → α → β) : ArrayN β n :=
 {
-  data := a.data.mapIdx (λ i v => f ⟨i, by have := a.2; omega⟩ v)
+  data := a.data.mapFinIdx (λ i v => f ⟨i, by have := a.2; omega⟩ v)
   h_size := by simp[a.2]
 }
 

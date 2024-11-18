@@ -1,6 +1,8 @@
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.Order.Group.Unbundled.Basic
 import Mathlib.Data.Int.Interval
+import Mathlib.Data.Fintype.Prod
+import Mathlib.Data.Fintype.Sigma
 
 import SciLean.Data.IndexType.Iterator
 import SciLean.Util.SorryProof

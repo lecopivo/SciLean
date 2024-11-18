@@ -135,9 +135,6 @@ that it is valid in the original context e.g. bind all newly introduced free var
     let (a,ctx) ← a cfg ctx'
     k a (.mkCtxCfg ctx cfg)
 
-instance [MetaEval α] : MetaEval (MetaLCtxM α) :=
-  ⟨fun env opts x _ => MetaEval.eval env opts x.run' true⟩
-
 
 instance : MonadControl MetaM MetaLCtxM where
   stM      := fun α => α × ContextCtx
