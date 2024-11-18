@@ -193,8 +193,10 @@ variable
   [LawfulMonad m] [LawfulMonad m']
 
 @[simp]
-theorem add_zero {α} [AddGroup α] : (HAdd.hAdd 0 : α → α) = fun x => x := by funext x; simp
+theorem add_zero_left {α} [AddZeroClass α] :
+  (HAdd.hAdd 0 : α → α) = fun x => x := by funext x; simp
 
+open RevFDerivMonad in
 noncomputable
 instance (S : Type) [NormedAddCommGroup S] [AdjointSpace K S] [CompleteSpace S] :
     RevFDerivMonad K (StateT S m) (StateT S m') where
