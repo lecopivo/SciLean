@@ -1,4 +1,4 @@
-import SciLean.Data.ArrayN
+-- import SciLean.Data.ArrayN
 import SciLean.Analysis.Calculus.ContDiff
 
 namespace SciLean.Diffeology.Util
@@ -62,6 +62,6 @@ theorem dite.arg_te.Differentiable_rule
   split_ifs <;> aesop
 
 
-def_fun_prop FinAdd.fst in x with_transitive : ContDiff ℝ ⊤
-def_fun_prop FinAdd.snd in x with_transitive : ContDiff ℝ ⊤
-def_fun_prop FinAdd.mk in x y with_transitive : ContDiff ℝ ⊤
+-- def_fun_prop FinAdd.fst in x with_transitive : ContDiff ℝ ⊤
+-- def_fun_prop FinAdd.snd in x with_transitive : ContDiff ℝ ⊤
+-- def_fun_prop FinAdd.mk in x y with_transitive : ContDiff ℝ ⊤
