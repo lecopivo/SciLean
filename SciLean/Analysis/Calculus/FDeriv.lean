@@ -27,6 +27,17 @@ namespace SciLean
 
 attribute [fun_trans] fderiv
 
+/-- Turn `deriv` to `fderiv`, this goes against mathlib that turns `fderiv` to `deriv`.
+-/
+@[simp, simp_core]
+theorem deriv_fderiv'
+  {𝕜 : Type*} [NontriviallyNormedField 𝕜]
+  {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X]
+  (f : 𝕜 → X) : deriv f = fun x => fderiv 𝕜 f x 1 := by funext x; rw[← deriv_fderiv]; simp
+
+-- SciLean prefers `fderiv` over `deriv`
+attribute [-simp] fderiv_eq_smul_deriv
+
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -310,11 +321,11 @@ theorem HDiv.hDiv.arg_a0a1.fderiv_rule_at
       (dy * z - y * dz) / z^2 := by
   ext dx
   have h : ∀ (f : X → K) x, fderiv K f x dx = deriv (fun h : K => f (x + h•dx)) 0 := by sorry_proof
-  simp[h]
+  simp[h,-deriv_fderiv']
   rw[deriv_div (c:=(fun h => f (x + h • dx))) (d:=(fun h => g (x + h • dx)))
                (hc:=by sorry_proof) (hd:= by sorry_proof)
                (hx:=by simp; assumption)]
-  simp
+  simp[-deriv_fderiv']
 
 
 -- Inv.inv -------------------------------------------------------------------
