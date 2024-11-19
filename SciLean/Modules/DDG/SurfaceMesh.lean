@@ -294,18 +294,18 @@ partial def MeshBuilderM.build_
   modify (fun s => { s with positions := positions }); -- store positions in the SurfaceMesh
 
   -- pre-allocate all vertices for random access via faces.
-  for _ in List.range positions.size do {
+  for _ in Array.range positions.size do {
       let _ ← newVertex;
   }
   assert! (indices.size % 3 == 0);
-  for i in List.range (indices.size / 3) do {
+  for i in Array.range (indices.size / 3) do {
     let I := i * 3;
     let f ← newFace;
     -- create a halfedge for each edge of the newly created face
-    for _ in List.range 3 do {
+    for _ in Array.range 3 do {
       let _ ← newHalfedge; -- make the new half edges
     }
-    for J in List.range 3 do {
+    for J in Array.range 3 do {
       -- current halfedge goes from vertex i to vertex j
       let K : Nat := (J + 1) % 3;
       let i := I + J;
@@ -362,7 +362,7 @@ partial def MeshBuilderM.build_
   -- also create and insert corners.
   -- Note that every vertex corresponds to the halfedge from that vertex to
   --   the next one in the triangle.
-  for i in List.range indices.size do {
+  for i in Array.range indices.size do {
     let h ← getHalfedge i;
     -- If a halfedge has no twin halfedge, create a new face and
     -- link it the corresponding boundary cycle
@@ -428,7 +428,7 @@ def randVertices [RandomGen γ]
  (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array (SciLean.Vec3)) × γ := Id.run do
   let mut out : Array (SciLean.Vec3) := #[]
   let mut gen := gen
-  for _ in List.range nvertices do
+  for _ in Array.range nvertices do
     let (vertex, gen') := randVertex01 gen; gen := gen'
     let vertex : (SciLean.Vec3) := SciLean.ArrayType.mapMono (fun coord => (coord - 0.5) * scale) vertex
     out := out.push vertex
@@ -446,7 +446,7 @@ def randTriFace [RandomGen γ] (gen : γ) (nvertices : Nat) : (Array Nat) × γ 
 def randTriFaces [RandomGen γ] (gen : γ) (nvertices : Nat) (nfaces : Nat) : (Array Nat) × γ := Id.run do
   let mut out : Array Nat := #[]
   let mut gen := gen
-  for _ in List.range nfaces do
+  for _ in Array.range nfaces do
     let (face, gen') := randTriFace gen nvertices; gen := gen'
     out := out.append face
   return (out, gen)
@@ -486,7 +486,7 @@ def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
   let .some n_faces := n_faces.toNat?
     | throw <| MeshBuilderError.parseError s! "unable to parse num faces {n_faces}"
 
-  for _ in List.range n_vertices do
+  for _ in Array.range n_vertices do
     let coords_raw := lines[i]!.trim.splitOn " "
     let mut v : Array Float := #[]
     for coord in coords_raw do
@@ -496,13 +496,15 @@ def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
     vertices := vertices.push (← V3.ofArray v)
     i := i + 1
 
-  for _ in List.range n_faces do
+  for _ in [0:n_faces] do
     let face_indexes_raw := lines[i]!.trim.splitOn " "
     let mut f : Array Nat := #[]
     for ix in face_indexes_raw.drop 1 do
       let .some ix := ix.toNat?
-        | throw <| MeshBuilderError.parseError s!"unable to parse face index {ix} on line {i+1}"
-        f := f.push ix
+        -- ".. on line {i+1}" -- for some reason adding {i+1} cause stack overflow
+        -- this looks like a compiler bug
+        | throw <| MeshBuilderError.parseError s!"unable to parse face index {ix} on line ..."
+      f := f.push ix
     faces := faces.append f
     i := i + 1
   MeshBuilderM.build_ vertices faces

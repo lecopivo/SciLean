@@ -36,7 +36,7 @@ jobs:
         with:
           build-args: "--log-level=error"
       - name: Run Tests
-        run: make test
+        run: lake test
       - name: Run Examples
         run: make examples
       - name: Setup Pages

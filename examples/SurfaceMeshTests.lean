@@ -19,6 +19,7 @@ def testTetrahedron : IO Bool := do
   assert! mesh.eulerCharacteristic == 2
   return true
 
+
 def testSphere : IO Bool := do
   let sphereData ← SurfaceMesh.fromOFFFile "data/sphere_s3.off" -- load mesh
   IO.println s!"sphere #vertices: {sphereData.vertices.size}"

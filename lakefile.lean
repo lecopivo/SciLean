@@ -10,7 +10,9 @@ lean_lib SciLean {
 }
 
 @[test_driver]
-lean_lib Test where
+lean_lib Test {
+  globs := #[Glob.submodules `Test]
+}
 
 lean_lib CompileTactics where
   -- options for SciLean.Tactic.MySimpProc (and below) modules
