@@ -227,6 +227,17 @@ theorem ArrayType.get.arg_cont.adjoint_rule (i : Idx) :
     fun e : Elem => oneHot (i,()) e := by sorry_proof
 
 @[fun_trans]
+theorem ArrayType.get.arg_cont.revFDeriv_rule (i : Idx)
+    (cont : W → Cont) (hf : Differentiable K cont) :
+    revFDeriv K (fun w => ArrayType.get (cont w) i)
+    =
+    fun w : W =>
+      let xi := revFDeriv K cont w
+      (ArrayType.get xi.1 i, fun (de : Elem) =>
+        xi.2 (oneHot (i,()) de)) := by
+  unfold revFDeriv; fun_trans
+
+@[fun_trans]
 theorem ArrayType.set.arg_cont.adjoint_rule (i : Idx) :
     adjoint K (fun c : Cont => ArrayType.set c i 0)
     =
