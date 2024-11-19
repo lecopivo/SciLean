@@ -458,6 +458,21 @@ theorem HDiv.hDiv.arg_a0a1.revFDeriv_rule
   fun_trans (disch:=apply hx)
 
 
+-- Inv.inv -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+@[fun_trans]
+theorem HInv.hInv.arg_a0a1.revFDeriv_rule_at
+    (x : X) (f : X → K)
+    (hf : DifferentiableAt K f x) (hx : f x ≠ 0) :
+    (revFDeriv K fun x => (f x)⁻¹) x
+    =
+    let ydf := revFDeriv K f x
+    let y := ydf.1
+    let df := ydf.2
+    (y⁻¹, fun dy => - (conj y^2)⁻¹ • (df dy)) := by
+  unfold revFDeriv; fun_trans (disch:=assumption)
+
+
 -- HPow.hPow ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 

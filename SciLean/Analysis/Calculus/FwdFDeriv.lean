@@ -329,6 +329,22 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at (x : X)
   field_simp ; sorry_proof --ring
 
 
+-- Inv.inv -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+@[fun_trans]
+theorem HInv.hInv.arg_a0a1.fwdFDeriv_rule_at
+    (x : X) (f : X → K)
+    (hf : DifferentiableAt K f x) (hx : f x ≠ 0) :
+    (fwdFDeriv K fun x => (f x)⁻¹) x
+    =
+    fun dx =>
+      let ydy := fwdFDeriv K f x dx
+      let y := ydy.1
+      let dy := ydy.2
+      (y⁻¹, -dy / y^2) := by
+  unfold fwdFDeriv; fun_trans (disch:=assumption)
+
+
 -- HPow.hPow -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 

@@ -68,7 +68,7 @@ theorem fderiv.comp_rule_at
       dz :=
 by
   rw[show (fun x => f (g x)) = f ∘ g by rfl]
-  rw[fderiv.comp x hf hg]
+  rw[fderiv_comp x hf hg]
   ext dx; simp
 
 @[fun_trans]
@@ -103,7 +103,7 @@ by
   conv =>
     lhs
     rw[h]
-    rw[fderiv.comp x hf (DifferentiableAt.prod (by simp) hg)]
+    rw[fderiv_comp x hf (DifferentiableAt.prod (by simp) hg)]
     rw[DifferentiableAt.fderiv_prod (by simp) hg]
   ext dx; simp[ContinuousLinearMap.comp]
 
@@ -315,6 +315,35 @@ theorem HDiv.hDiv.arg_a0a1.fderiv_rule_at
                (hc:=by sorry_proof) (hd:= by sorry_proof)
                (hx:=by simp; assumption)]
   simp
+
+
+-- Inv.inv -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+set_option linter.unusedVariables false in
+@[fun_prop]
+theorem _root_.Inv.inv.arg_a0.DifferentiableAt_rule
+    {R} [RCLike R]
+    {W} [NormedAddCommGroup W] [NormedSpace R W]
+    (w : W) (a0 : W → R)
+    (ha0 : DifferentiableAt R a0 w) (ha0' : a0 w ≠ 0) :
+    DifferentiableAt R (fun w => (a0 w)⁻¹) w := sorry_proof
+
+@[fun_trans]
+theorem HInv.hInv.arg_a0a1.fderiv_rule_at
+    (x : X) (f : X → K)
+    (hf : DifferentiableAt K f x) (hx : f x ≠ 0) :
+    (fderiv K fun x => (f x)⁻¹) x
+    =
+    let y := f x
+    fun dx =>L[K]
+      let dy := fderiv K f x dx
+      (-dy) / y^2 := by
+  ext dx
+  rw[fderiv_comp']
+  rw[fderiv_inv]
+  simp; ring
+  apply differentiableAt_inv hx
+  apply hf
 
 
 -- HPow.hPow ---------------------------------------------------------------------
