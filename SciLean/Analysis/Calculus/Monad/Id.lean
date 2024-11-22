@@ -34,7 +34,7 @@ instance : LawfulMonad Id' where
 @[simp, simp_core]
 theorem Id'.run_pure {α} (a : α) : (pure a : Id' α).run = a := by rfl
 
-instance : Coe (Id' X) X := ⟨fun x => x.run⟩
+instance : CoeHead (Id' X) X := ⟨fun x => x.run⟩
 instance : Coe X (Id' X) := ⟨fun x => pure x⟩
 
 variable
