@@ -81,7 +81,10 @@ info: fun x =>
 #guard_msgs in
 #check ∂! (fun x : K×K => x + x)
 
-/-- info: 1 + 1 : K -/
+/--
+info: let dz := 1 + 1;
+dz : K
+-/
 #guard_msgs in
 #check ∂! (fun x => x*x) (1:K)
 
@@ -89,7 +92,10 @@ info: fun x =>
 #guard_msgs in
 #check ∂! (x:=((1:K),(2:K))), (x + x)
 
-/-- info: 1 + 1 : K -/
+/--
+info: let dz := 1 + 1;
+dz : K
+-/
 #guard_msgs in
 #check ∂! (x:=(1:K)), x*x
 
