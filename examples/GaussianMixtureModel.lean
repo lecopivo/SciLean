@@ -93,6 +93,17 @@ def logsumexp (x : R^[I]) : R:=
   let xmax := IndexType.maxD (x[·]) 0
   log (∑ i, exp (x[i] - xmax)) - xmax
 
+-- derivative of `logsumexp` is `softmax`
+-- related to `softmax` is `softmax' x y = ⟪softmax x, y⟫`
+def softmax' (x dx : R^[I]) : R :=
+  let xmax := IndexType.maxD (x[·]) 0
+  (∑ i, dx[i] * exp (x[i] - xmax)) / ∑ j, exp (x[j] - xmax)
+
+-- gradient of `logsumexp` is `softmax`
+def softmax (x : R^[I]) : R^[I] :=
+  let xmax := IndexType.maxD (x[·]) 0
+  ⊞ i => exp (x[i] - xmax) / ∑ j, exp (x[j] - xmax)
+
 theorem log_sum_exp (x : I → R) : log (∑ i, exp (x i)) = logsumexp (⊞ i => x i) := sorry
 
 end SciLean.MatrixOperations
@@ -248,8 +259,6 @@ theorem sum_normalize (x : R^[I]) : ∑ i, x[i] = sum x := rfl
 @[simp_core]
 theorem norm_normalize (x : R^[I]) : ∑ i, ‖x[i]‖₂² = ‖x‖₂² := rfl
 
--- set_option trace.Meta.Tactic.simp.rewrite true in
--- set_option trace.Meta.Tactic.simp.unify true in
 open Param in
 noncomputable
 def loss (m : R) (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (l : R^[((D-1)*D)/2]^[K]) : R :=
@@ -258,10 +267,9 @@ def loss (m : R) (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (
   rewrite_by
     unfold likelihood
     simp only [simp_core, likelihood, prior, σ, w]
-    simp only [simp_core, mul_pull_from_sum, log_mul, log_prod, mul_exp, log_sum_exp, log_pow, log_div, log_inv,sum_push]
+    simp only [simp_core, mul_pull_from_sum,
+               log_mul, log_prod, mul_exp, log_sum_exp, log_pow, log_div, log_inv,sum_push]
 
-
-#check neg_add_rev
 
 variable (x : Fin 10 → R)
 #check (∑ i : Fin 10, ((-1:R)/2) * x i) rewrite_by simp [mul_pull_from_sum]
