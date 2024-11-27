@@ -46,18 +46,3 @@ jobs:
         with:
           # Upload entire repository
           path: '.'
-
-  # Single deploy job since we're just deploying
-  deploy:
-    # only build on `master` branch of the actual remote, NOT on PRs.
-    # this stops PRs from attempting to deploy GH pages and failing to do so.
-    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
