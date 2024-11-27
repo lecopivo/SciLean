@@ -225,8 +225,9 @@ open Lean Meta Elab Term in
 
 open Lean Meta Elab Term in
 def defFunTrans (f : Ident) (args : TSyntaxArray `ident)
-  (cfg : TSyntaxArray ``Parser.config) (bs : TSyntaxArray ``Parser.Term.bracketedBinder)
-  (fprop : TSyntax `term) (proof : Option (TSyntax ``Parser.funTransProof)) : Command.CommandElabM Unit := do
+    (cfg : TSyntaxArray ``Parser.config) (bs : TSyntaxArray ``Parser.Term.bracketedBinder)
+    (fprop : TSyntax `term) (proof : Option (TSyntax ``Parser.funTransProof)) (isDef := true) :
+    Command.CommandElabM Unit := do
 
   Elab.Command.liftTermElabM <| do
   -- resolve function name
@@ -270,12 +271,31 @@ def defFunTrans (f : Ident) (args : TSyntaxArray `ident)
     let statement ← mkEq lhs rhs
 
     -- add new theorem to the enviroment
-    let _ ← generateFunTransDefAndTheorem statement proof ctx cfg.suffix {}
+    let _ ← generateFunTransDefAndTheorem statement proof ctx cfg.suffix {defineNewFunction:=isDef}
 
     pure ()
 
 
 open Lean Meta Elab Term in
+def defFunPropCommand (f : TSyntax `ident) (args : TSyntaxArray `ident)
+    (cfg : TSyntaxArray `SciLean.FunTrans.Parser.config)
+    (bs : TSyntaxArray `Lean.Parser.Term.bracketedBinder)
+    (ftrans : TSyntax `term)
+    (proof : Option (TSyntax `SciLean.FunTrans.Parser.funTransProof))
+    (isDef := true) : CommandElabM Unit := do
+
+  let c ← Lean.Elab.Command.liftTermElabM <| parseDefFunTransConfig cfg
+
+  defFunTrans f args cfg bs ftrans proof isDef
+
+  -- generate the same with all argument subsets
+  if c.argSubsets then
+    for as in args.allSubsets do
+      if as.size = 0 || as.size = args.size then
+        continue
+      defFunTrans f as cfg bs ftrans proof isDef
+
+
 /-- Define function transformation for a function in particular arguments.
 
 Example:
@@ -299,20 +319,28 @@ where
 - `(xy : R×R) (h : xy.2 ≠ 0)` are additional assumptions added to the theorem. These assumptions
   are stated in the context of the function so for example here we can use `R` without introducing it.
 - `by unfold bar; autodiff ...` you can specify custom tactic to prove the function transformation.
+
+
+
+Variant `abbrev_fun_trans`
+---
+
+Often the derivative/function transformation is simple enough that we do not want to hide it
+behind a new definition like `foo.arg_xyz.fderiv_rule`. For example
+`fderiv ℝ (fun x => matmul A x) x dx` should simplify to `matmul A dx` instead of
+`matmul.arg_x.fderiv A x dx`. In cases like this, use `abbrev_fun_trans` which does not use
+the newly defined function on the `fun_trans` theorem.
+
 -/
-elab "def_fun_trans " f:ident "in" args:ident* ppLine
+elab (name:=defFunTransElab) "def_fun_trans " f:ident "in" args:ident* ppLine
      cfg:Parser.config*
-     bs:bracketedBinder* " : " fprop:term proof:(Parser.funTransProof)? : command => do
+     bs:bracketedBinder* " : " ftrans:term proof:(Parser.funTransProof)? : command => do
+  defFunPropCommand f args cfg bs ftrans proof true
 
-  let c ← Lean.Elab.Command.liftTermElabM <| parseDefFunTransConfig cfg
-
-  defFunTrans f args cfg bs fprop proof
-
-  -- generate the same with all argument subsets
-  if c.argSubsets then
-    for as in args.allSubsets do
-      if as.size = 0 || as.size = args.size then
-        continue
-      defFunTrans f as cfg bs fprop proof
+@[inherit_doc defFunTransElab]
+elab "abbrev_fun_trans " f:ident "in" args:ident* ppLine
+     cfg:Parser.config*
+     bs:bracketedBinder* " : " ftrans:term proof:(Parser.funTransProof)? : command => do
+  defFunPropCommand f args cfg bs ftrans proof false
 
 end FunTrans

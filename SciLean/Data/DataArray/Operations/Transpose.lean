@@ -17,14 +17,11 @@ def_fun_prop transpose in A
 #generate_linear_map_simps DataArrayN.transpose.arg_A.IsLinearMap_rule
 
 
--- todo: change to abbrev_def_trans
-def_fun_trans transpose in A [RealScalar R] : fderiv R by autodiff
+abbrev_fun_trans transpose in A [RealScalar R] : fderiv R by autodiff
 
--- todo: change to abbrev_def_trans
-def_fun_trans transpose in A [RealScalar R] : fwdFDeriv R by autodiff
+abbrev_fun_trans transpose in A [RealScalar R] : fwdFDeriv R by autodiff
 
--- todo: change to abbrev_def_trans
-def_fun_trans transpose in A [RealScalar R] : adjoint R by
+abbrev_fun_trans transpose in A [RealScalar R] : adjoint R by
   equals (fun B => B.transpose) =>
     funext x
     apply AdjointSpace.ext_inner_left R
@@ -34,5 +31,4 @@ def_fun_trans transpose in A [RealScalar R] : adjoint R by
          DataArrayN.transpose,sum_over_prod]
     rw[sum_swap]
 
--- todo: change to abbrev_def_trans
-def_fun_trans transpose in A [RealScalar R] : revFDeriv R by unfold revFDeriv; autodiff
+abbrev_fun_trans transpose in A [RealScalar R] : revFDeriv R by unfold revFDeriv; autodiff

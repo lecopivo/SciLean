@@ -1,15 +1,12 @@
-import SciLean.Data.DataArray.Operations
+import SciLean.Data.DataArray.Operations.Simps
 import SciLean.Data.ArrayType.Properties
-
-import SciLean.Analysis.Calculus.ContDiff
-import SciLean.Analysis.Calculus.RevFDerivProj
-
-import SciLean.Meta.GenerateFunProp
 import SciLean.Meta.GenerateFunTrans
+
 
 namespace SciLean
 
 
+--todo: redistribute to appropriate places
 section Missing
 
 variable
@@ -114,18 +111,15 @@ def_fun_prop multiply in y
 def_fun_prop multiply in x y
   with_transitive : Differentiable R by unfold DataArrayN.multiply; sorry_proof
 
--- todo: change to abbrev_def_trans
-def_fun_trans multiply in x y : fderiv R by
+abbrev_fun_trans multiply in x y : fderiv R by
   rw[fderiv_wrt_prod (by fun_prop)]
   fun_trans
 
--- todo: change to abbrev_def_trans
-def_fun_trans multiply in x y : fwdFDeriv R by
+abbrev_fun_trans multiply in x y : fwdFDeriv R by
   rw[fwdFDeriv_wrt_prod (by fun_prop)]
   autodiff
 
--- todo: change to abbrev_def_trans
-def_fun_trans multiply in x : adjoint R  by
+abbrev_fun_trans multiply in x : adjoint R  by
   equals (fun x' => y.multiply x') =>
     funext x
     apply AdjointSpace.ext_inner_left R
@@ -133,8 +127,7 @@ def_fun_trans multiply in x : adjoint R  by
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def,DataArrayN.multiply,mul_assoc]
 
--- todo: change to abbrev_def_trans
-def_fun_trans multiply in y : adjoint R by
+abbrev_fun_trans multiply in y : adjoint R by
   equals (fun y' => x.multiply y') =>
     funext y
     apply AdjointSpace.ext_inner_left R
@@ -143,8 +136,8 @@ def_fun_trans multiply in y : adjoint R by
     simp[DataArrayN.inner_def,DataArrayN.multiply]
     ac_rfl
 
--- todo: change to abbrev_def_trans
-def_fun_trans multiply in x y : revFDeriv R by
+
+abbrev_fun_trans multiply in x y : revFDeriv R by
   rw[revFDeriv_wrt_prod (by fun_prop)]
   unfold revFDeriv
   autodiff

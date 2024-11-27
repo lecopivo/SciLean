@@ -59,6 +59,10 @@ abbrev reshape5 (x : X^[I]) (n₁ n₂ n₃ n₄ n₅ : ℕ)
   x.reshape (Fin n₁ × Fin n₂ × Fin n₃ × Fin n₄ × Fin n₅) (by simp[h]; ac_rfl)
 
 
+----------------------------------------------------------------------------------------------------
+-- Basic Linear Algebra Operations -----------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
 variable [DecidableEq I]
 
 variable {R : Type*} [inst : RealScalar R] [PlainDataType R]
@@ -154,12 +158,46 @@ instance : HPow (R^[I,I]) ℤ (R^[I,I]) where
 
 end Matrix
 
+/-- Inverse of transpose matrix `A⁻ᵀ = Aᵀ⁻¹`
+
+Tranpose and inversion commute, i.e. `Aᵀ⁻¹ = A⁻¹ᵀ`, we prefer `Aᵀ⁻¹` and `simp` by default rewrites
+`A⁻¹ᵀ` to `Aᵀ⁻¹`. -/
+macro:max A:term "⁻ᵀ" :term => `($Aᵀ⁻¹)
+
+@[app_unexpander Inv.inv]
+def _root_.Inv.inv.unexpander : Lean.PrettyPrinter.Unexpander
+  | `($_ $A) =>
+    match A with
+    | `($Aᵀ) => `($A⁻ᵀ)
+    | _ => `($A⁻¹)
+  | _ => throw ()
+
+
 noncomputable
 def solve (A : R^[I,I]) (b : R^[I]) := A⁻¹ * b
 
 noncomputable
 def solve' (A : R^[I,I]) (B : R^[I,J]) := A⁻¹ * B
 
+/-- Rank polymorphic solve -/
+class Solve (R : Type*) (I : Type*) (J : Type*)
+    [RealScalar R] [PlainDataType R] [IndexType I] [IndexType J] where
+  /-- Linear system solve that accepts either vector or matrix as right hand side. -/
+  solve (A : R^[I,I]) (b : R^[J]) : R^[J]
+
+noncomputable
+instance : Solve R I I where
+  solve A b := A.solve b
+
+noncomputable
+instance : Solve R I (I×J) where
+  solve A B := A.solve' B
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Commong Nonlinear Operations --------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 set_default_scalar R
 
@@ -170,15 +208,9 @@ def softmax (x : R^[I]) : R^[I] :=
   let w := ∑ i, exp (x[i] - xmax)
   ⊞ i => exp (x[i] - xmax) / w
 
-def softmax' (x dx : R^[I]) : R :=
-  let xmax := x.maxD 0
-  let w := ∑ i, exp (x[i] - xmax)
-  let z := ∑ i, dx[i] * exp (x[i] - xmax)
-  z / w
-
 def logsumexp (x : R^[I]) : R :=
   let xmax := IndexType.maxD (x[·]) 0
-  log (∑ i, exp (x[i] - xmax)) - xmax
+  log (∑ i, exp (x[i] - xmax)) + xmax
 
 /-- Elementwise exponential -/
 def exp (x : R^[I]) : R^[I] :=

@@ -365,6 +365,11 @@ section OnNormedSpaces
 variable [NormedAddCommGroup Elem] [NormedSpace K Elem]
   {W : Type*} [NormedAddCommGroup W] [NormedSpace K W]
 
+theorem ArrayType.differentiable_elemwise
+    (cont : W → Cont) :
+    (∀ i, Differentiable K (fun w => ArrayType.get (cont w) i))
+    →
+    Differentiable K (fun w => cont w) := sorry_proof
 
 theorem ArrayType.fwdFDeriv_elemwise
     (cont : W → Cont) :
@@ -374,13 +379,43 @@ theorem ArrayType.fwdFDeriv_elemwise
       (cont w,
        ArrayType.ofFn (Elem:=Elem) (Cont:=Cont) fun i =>
          let xdx := fwdFDeriv K (fun w => ArrayType.get (cont w) i) w dw
-         xdx.2) := sorry
+         xdx.2) := sorry_proof
 
 
-theorem DataArrayN.mapMono.arg_fcont.fwdFDeriv_rule
+@[fun_prop]
+theorem ArrayType.mapIdxMono.arg_fcont.IsContinuousLinearMap_rule
+    (cont : W → Cont) (hcont : IsContinuousLinearMap K cont)
+    (f : W → Idx → Elem → Elem) (hf : ∀ i, IsContinuousLinearMap K ↿(f · i ·)) :
+    (IsContinuousLinearMap K fun w : W => mapIdxMono (f w) (cont w)) := sorry_proof
+
+-- todo: add `DifferentiableAt` version
+@[fun_prop]
+theorem ArrayType.mapMono.arg_fcont.Differentiable_rule
     (cont : W → Cont) (hcont : Differentiable K cont)
-    (f : W → Elem → Elem) (hf : Differentiable K fun (w,x) => f w x) :
-    (fwdFDeriv K fun w : W => ArrayType.mapMono (f w) (cont w) )
+    (f : W → Elem → Elem) (hf : Differentiable K ↿f) :
+    Differentiable K fun w : W => mapMono (f w) (cont w) := by
+  apply ArrayType.differentiable_elemwise
+  simp; fun_prop
+
+@[fun_trans]
+theorem ArrayType.mapMono.arg_fcont.fderiv_rule
+    (cont : W → Cont) (hcont : Differentiable K cont)
+    (f : W → Elem → Elem) (hf : Differentiable K ↿f) :
+    (fderiv K fun w : W => mapMono (f w) (cont w) )
+    =
+    fun w => ContinuousLinearMap.mk' K (hf:=sorry_proof) fun dw =>
+      let c := cont w
+      let dc := fderiv K cont w dw
+      ArrayType.mapIdxMono (cont:=dc) (fun i dxi =>
+        let xi := ArrayType.get c i
+        let ydy := fwdFDeriv K (↿f) (w,xi) (dw,dxi)
+        ydy.2) := sorry_proof
+
+@[fun_trans]
+theorem ArrayType.mapMono.arg_fcont.fwdFDeriv_rule
+    (cont : W → Cont) (hcont : Differentiable K cont)
+    (f : W → Elem → Elem) (hf : Differentiable K ↿f) :
+    (fwdFDeriv K fun w : W => mapMono (f w) (cont w) )
     =
     fun w dw =>
       let cdc := fwdFDeriv K cont w dw
@@ -393,8 +428,13 @@ theorem DataArrayN.mapMono.arg_fcont.fwdFDeriv_rule
 
   funext w dw
   rw[ArrayType.fwdFDeriv_elemwise]
-  fun_trans[Function.HasUncurry.uncurry]
-  constructor <;> (apply ArrayType.ext (Idx:=Idx); intro i; simp[fwdFDeriv])
+  simp
+  constructor
+  · apply ArrayType.ext (Idx:=Idx); intro i; rfl
+  · apply ArrayType.ext (Idx:=Idx); intro i
+    fun_trans [fwdFDeriv]
+    rfl
+
 
 
 end OnNormedSpaces

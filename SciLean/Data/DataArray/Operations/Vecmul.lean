@@ -12,18 +12,15 @@ def_fun_prop vecmul in A x  with_transitive : Differentiable R
 #generate_linear_map_simps DataArrayN.vecmul.arg_x.IsLinearMap_rule
 
 
--- todo: change to abbrev_def_trans
-def_fun_trans vecmul in A x : fderiv R by
+abbrev_fun_trans vecmul in A x : fderiv R by
   rw[fderiv_wrt_prod (by fun_prop)]
   fun_trans
 
--- todo: change to abbrev_def_trans
-def_fun_trans vecmul in A x : fwdFDeriv R by
+abbrev_fun_trans vecmul in A x : fwdFDeriv R by
   rw[fwdFDeriv_wrt_prod (by fun_prop)]
   autodiff
 
--- todo: change to abbrev_def_trans
-def_fun_trans vecmul in A : adjoint R by
+abbrev_fun_trans vecmul in A : adjoint R by
   equals (fun y => y.outerprod x) =>
     funext y
     apply AdjointSpace.ext_inner_left R
@@ -33,8 +30,7 @@ def_fun_trans vecmul in A : adjoint R by
          sum_over_prod, Function.HasUncurry.uncurry, sum_pull]
     ac_rfl
 
--- todo: change to abbrev_def_trans
-def_fun_trans vecmul in x : adjoint R by
+abbrev_fun_trans vecmul in x : adjoint R by
   equals (fun y => A.transpose.vecmul y) =>
     funext y
     apply AdjointSpace.ext_inner_left R
@@ -45,8 +41,7 @@ def_fun_trans vecmul in x : adjoint R by
     rw[sum_swap]
     ac_rfl
 
--- todo: change to abbrev_def_trans
-def_fun_trans vecmul in A x : revFDeriv R by
+abbrev_fun_trans vecmul in A x : revFDeriv R by
   rw[revFDeriv_wrt_prod (by fun_prop)]
   unfold revFDeriv
   autodiff
@@ -55,27 +50,6 @@ def_fun_trans vecmul in A x : revFDeriv R by
 
 
 ----------------------------------------------------------------------------------------------------
-
-#check zero_mul
-#check mul_zero
-namespace DataArrayN
-
-variable
-  {I : Type*} [IndexType I] [DecidableEq I]
-  {J : Type*} [IndexType J] [DecidableEq J]
-  {K : Type*} [IndexType K] [DecidableEq K]
-  {R : Type*} [RealScalar R] [PlainDataType R]
-
-@[simp, simp_core]
-theorem identity_vecmul (x : R^[I]) : Matrix.identity (R:=R) (I:=I) * x = A := sorry
-
-@[simp, simp_core]
-theorem zero_vecmul (b : R^[J]) : (0 : R^[I,J]) * b = 0 := sorry
-
-@[simp, simp_core]
-theorem vecmul_zero (A : R^[I,J]) : A * (0 : R^[J]) = 0 := sorry
-
-end DataArrayN
 
 
 variable
@@ -103,11 +77,11 @@ abbrev_fun_trans _matrixvec : fwdFDeriv R (fun Ab : R^[I,J] × R^[J] => Ab.1 * A
 
 abbrev_fun_trans _matrixvec (b : R^[J]) : adjoint R (fun A : R^[I,J] => A * b) by
   equals (fun c => c.outerprod b) =>
-    simp[HMul.hMul]; fun_trans; rfl
+    simp[HMul.hMul]; fun_trans
 
 abbrev_fun_trans _matrixvec (A : R^[I,J]) : adjoint R (fun b : R^[J] => A * b) by
   equals (fun c => Aᵀ * c) =>
-    simp[HMul.hMul]; fun_trans; rfl
+    simp[HMul.hMul]; fun_trans
 
 abbrev_fun_trans _matrixvec : revFDeriv R (fun Ab : R^[I,J] × R^[J] => Ab.1 * Ab.2) by
   rw[revFDeriv_wrt_prod]; unfold revFDeriv; autodiff

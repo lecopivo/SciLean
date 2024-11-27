@@ -12,18 +12,15 @@ def_fun_prop dot in x y  with_transitive : Differentiable R
 #generate_linear_map_simps DataArrayN.dot.arg_y.IsLinearMap_rule
 
 
--- todo: change to abbrev_def_trans
-def_fun_trans dot in x y : fderiv R by
+abbrev_fun_trans dot in x y : fderiv R by
   rw[fderiv_wrt_prod (by fun_prop)]
   fun_trans
 
--- todo: change to abbrev_def_trans
-def_fun_trans dot in x y : fwdFDeriv R by
+abbrev_fun_trans dot in x y : fwdFDeriv R by
   rw[fwdFDeriv_wrt_prod (by fun_prop)]
   autodiff
 
--- todo: change to abbrev_def_trans
-def_fun_trans dot in x : adjoint R by
+abbrev_fun_trans dot in x : adjoint R by
   equals (fun z => z•y) =>
     funext x
     apply AdjointSpace.ext_inner_left R
@@ -33,8 +30,7 @@ def_fun_trans dot in x : adjoint R by
          sum_over_prod, Function.HasUncurry.uncurry, sum_pull]
     ac_rfl
 
--- todo: change to abbrev_def_trans
-def_fun_trans dot in y : adjoint R by
+abbrev_fun_trans dot in y : adjoint R by
   equals (fun z => z•x) =>
     funext y
     apply AdjointSpace.ext_inner_left R
@@ -44,8 +40,7 @@ def_fun_trans dot in y : adjoint R by
          sum_over_prod, Function.HasUncurry.uncurry, sum_pull]
     ac_rfl
 
--- todo: change to abbrev_def_trans
-def_fun_trans dot in x y : revFDeriv R by
+abbrev_fun_trans dot in x y : revFDeriv R by
   rw[revFDeriv_wrt_prod (by fun_prop)]
   unfold revFDeriv
   autodiff

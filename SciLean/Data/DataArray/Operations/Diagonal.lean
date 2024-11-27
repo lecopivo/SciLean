@@ -17,16 +17,13 @@ def_fun_prop diagonal in x
 
 #generate_linear_map_simps DataArrayN.diagonal.arg_x.IsLinearMap_rule
 
--- todo: change to abbrev_def_trans
-def_fun_trans diagonal in x [RealScalar R] : fderiv R by
+abbrev_fun_trans diagonal in x [RealScalar R] : fderiv R by
   fun_trans
 
--- todo: change to abbrev_def_trans
-def_fun_trans diagonal in x [RealScalar R] : fwdFDeriv R by
+abbrev_fun_trans diagonal in x [RealScalar R] : fwdFDeriv R by
   autodiff
 
--- todo: change to abbrev_def_trans
-def_fun_trans diagonal in x [DecidableEq I] [RealScalar R] : adjoint R by
+abbrev_fun_trans diagonal in x [DecidableEq I] [RealScalar R] : adjoint R by
   equals (fun x' => x'.diag) =>
     funext x
     apply AdjointSpace.ext_inner_left R
@@ -36,7 +33,6 @@ def_fun_trans diagonal in x [DecidableEq I] [RealScalar R] : adjoint R by
          DataArrayN.diagonal,DataArrayN.diag,
          sum_over_prod, sum_ite']
 
--- todo: change to abbrev_def_trans
-def_fun_trans diagonal in x [DecidableEq I] [RealScalar R] : revFDeriv R by
+abbrev_fun_trans diagonal in x [DecidableEq I] [RealScalar R] : revFDeriv R by
   unfold revFDeriv
   autodiff
