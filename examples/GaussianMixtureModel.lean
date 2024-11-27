@@ -240,8 +240,16 @@ theorem neg_add_rev' {G : Type*} [SubtractionCommMonoid G] (a b : G) : -(a + b) 
   simp[add_comm]
 
 
+def sum (x : R^[I]) : R := ∑ i, x[i]
 
-set_option trace.Meta.Tactic.simp.rewrite true in
+@[simp_core]
+theorem sum_normalize (x : R^[I]) : ∑ i, x[i] = sum x := rfl
+
+@[simp_core]
+theorem norm_normalize (x : R^[I]) : ∑ i, ‖x[i]‖₂² = ‖x‖₂² := rfl
+
+-- set_option trace.Meta.Tactic.simp.rewrite true in
+-- set_option trace.Meta.Tactic.simp.unify true in
 open Param in
 noncomputable
 def loss (m : R) (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (l : R^[((D-1)*D)/2]^[K]) : R :=
@@ -250,16 +258,11 @@ def loss (m : R) (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (
   rewrite_by
     unfold likelihood
     simp only [simp_core, likelihood, prior, σ, w]
-    simp only [simp_core, mul_pull_from_sum, log_mul, log_prod, mul_exp, log_sum_exp, log_pow, log_div, log_inv]
-    simp only [simp_core, sum_push, mul_pull_from_sum]
-    simp
+    simp only [simp_core, mul_pull_from_sum, log_mul, log_prod, mul_exp, log_sum_exp, log_pow, log_div, log_inv,sum_push]
 
 
 #check neg_add_rev
 
-
 variable (x : Fin 10 → R)
 #check (∑ i : Fin 10, ((-1:R)/2) * x i) rewrite_by simp [mul_pull_from_sum]
-
-
 #check (∑ i : Fin 10, -(2* x i)) rewrite_by simp [mul_pull_from_sum]
