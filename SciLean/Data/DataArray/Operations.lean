@@ -132,6 +132,7 @@ def det {R} [RealScalar R] [PlainDataType R] (A : R^[I,I]) : R :=
   let f := LinearMap.mk' R (fun x : R^[I] => (⊞ i => ∑ j, A[i,j] * x[j])) sorry_proof
   LinearMap.det f
 
+
 namespace Matrix
 
 instance : HMul (R^[I,J]) (R^[J,K]) (R^[I,K]) where
@@ -152,6 +153,13 @@ instance : HPow (R^[I,I]) ℤ (R^[I,I]) where
   hPow A n := A.zpow n
 
 end Matrix
+
+noncomputable
+def solve (A : R^[I,I]) (b : R^[I]) := A⁻¹ * b
+
+noncomputable
+def solve' (A : R^[I,I]) (B : R^[I,J]) := A⁻¹ * B
+
 
 set_default_scalar R
 
