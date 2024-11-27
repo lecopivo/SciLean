@@ -10,6 +10,7 @@ import Mathlib.Analysis.Normed.Lp.WithLp
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
 import SciLean.Analysis.AdjointSpace.Basic
+import SciLean.Analysis.Scalar.Notation
 -- import SciLean.Util.SorryProof
 
 namespace SciLean
@@ -109,6 +110,11 @@ class RealScalar (R : semiOutParam (Type _)) extends Scalar R R, LinearOrder R w
   atan_def : ∀ x, toReal (atan x) = Real.arctan (toReal x)
 
 def RealScalar.pi [RealScalar R] : R := RealScalar.acos (-1)
+
+scoped notation "π" => @RealScalar.pi defaultScalar% inferInstance
+
+@[app_unexpander RealScalar.pi] def unexpandPi : Lean.PrettyPrinter.Unexpander
+  | `($_) => `(π)
 
 
 instance {R} [RealScalar R] : MetricSpace (WithLp p R) := (by infer_instance : MetricSpace R)
