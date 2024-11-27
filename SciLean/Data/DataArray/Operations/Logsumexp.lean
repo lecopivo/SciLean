@@ -11,10 +11,9 @@ variable
 
 set_default_scalar R
 
-/-- Softmax with awful numerical properties but nice for proving theorems. -/
+/-- Logsumexp with awful numerical properties but nice for proving theorems. -/
 def logsumexpSpec (x : R^[I]) : R :=
   Scalar.log (∑ i, Scalar.exp (x[i]))
-
 
 theorem logsumexp_spec (x : R^[I]) : logsumexp x = logsumexpSpec x := sorry_proof
 

@@ -10,20 +10,12 @@ set_default_scalar R
 
 variable {D N K : ℕ}
 
-notation "π" => @RealScalar.pi defaultScalar% inferInstance
-
-@[app_unexpander RealScalar.pi] def unexpandPi : Lean.PrettyPrinter.Unexpander
-  | `($_) => `(π)
-
-
-#check |(1:ℝ)|
 
 namespace SciLean.MatrixOperations
 
-
 @[scoped simp, scoped simp_core]
-theorem matrix_inverse_inverse {I} [IndexType I] [DecidableEq I] (A : R^[I,I]) :
-    (A⁻¹)⁻¹ = A := sorry
+theorem matrix_inverse_inverse {I} [IndexType I] [DecidableEq I] (A : R^[I,I]) (hA : A.Invertible) :
+    (A⁻¹)⁻¹ = A := by simp[hA]
 
 @[scoped simp, scoped simp_core]
 theorem det_inv_eq_inv_det {I} [IndexType I] [DecidableEq I] (A : R^[I,I]) :
@@ -99,11 +91,15 @@ def Q (q : R^[D]) (l : R^[((D-1)*D)/2]) : R^[D,D] :=
 
 def w (α : R^[K]) : R^[K] := ⊞ i => exp α[i] / ∑ k, exp α[k]
 
+
 @[simp, simp_core]
 theorem det_Q (q : R^[D]) (l : R^[((D-1)*D)/2]) : (Q q l).det = exp q.sum := sorry
 
 @[simp, simp_core]
 theorem det_QTQ (q : R^[D]) (l : R^[((D-1)*D)/2]) : ((Q q l)ᵀ * (Q q l)).det = exp (2 * q.sum) := sorry
+
+@[simp, simp_core]
+theorem QTQ_invertible (q : R^[D]) (l : R^[((D-1)*D)/2]) : ((Q q l)ᵀ * (Q q l)).Invertible := sorry
 
 @[simp, simp_core]
 theorem trace_QTQ (q : R^[D]) (l : R^[((D-1)*D)/2]) :
@@ -235,16 +231,13 @@ theorem sum_normalize (x : R^[I]) : ∑ i, x[i] = sum x := rfl
 @[rsimp]
 theorem norm_normalize (x : R^[I]) : ∑ i, ‖x[i]‖₂² = ‖x‖₂² := rfl
 
-theorem sum_over_prod {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]
-    {f : I → J → R} : ∑ i j, f i j = ∑ (i : I×J), f i.1 i.2  := sorry
+-- theorem sum_over_prod {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]
+--     {f : I → J → R} : ∑ i j, f i j = ∑ (i : I×J), f i.1 i.2  := sorry
 
 @[rsimp]
 theorem isum_sum (x : R^[I]^[J]) : ∑ i, x[i].sum = x.uncurry.sum := by
   simp[DataArrayN.uncurry_def,DataArrayN.sum,Function.HasUncurry.uncurry]
   rw[sum_over_prod]
-
-theorem _root_.SciLean.DataArrayN.norm2_def {R : Type*} [RCLike R] {I} [IndexType I] {X} [PlainDataType X] [Inner R X]
-    (x : X^[I]) : ‖x‖₂²[R] = ∑ i, ‖x[i]‖₂²[R] := rfl
 
 @[rsimp]
 theorem isum_norm_exp (x : R^[I]^[J]) :

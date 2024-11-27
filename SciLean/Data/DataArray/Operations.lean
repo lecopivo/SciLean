@@ -240,13 +240,17 @@ set_default_scalar R
 
 open Scalar
 
+/-- Softmax turns array into an array of values in (0,1) -/
 def softmax (x : R^[I]) : R^[I] :=
-  let xmax := x.maxD 0
+  let xmax := x.max
   let w := ∑ i, exp (x[i] - xmax)
   ⊞ i => exp (x[i] - xmax) / w
 
+/-- Logarithm of sum of exponentials, its derivative is softmax.
+
+Common when doing maximul likelihood. -/
 def logsumexp (x : R^[I]) : R :=
-  let xmax := IndexType.maxD (x[·]) 0
+  let xmax := x.max
   log (∑ i, exp (x[i] - xmax)) + xmax
 
 /-- Elementwise exponential -/
