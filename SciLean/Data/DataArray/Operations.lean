@@ -68,18 +68,23 @@ variable [DecidableEq I]
 variable {R : Type*} [inst : RealScalar R] [PlainDataType R]
   -- [Add X] [Sub X] [Mul X] [Zero X] [One X]
 
+/-- Identity matrix -/
 def _root_.SciLean.Matrix.identity : R^[I,I] :=
   ⊞ (i j : I) => if i = j then 1 else 0
 
+/-- Elemtwise product of two vectors, matrices or tensors -/
 def multiply (x y : R^[I]) : R^[I] :=
   x.mapIdxMono (fun i xi => xi * y[i])
 
+/-- Turn vector into diagonal matrix. -/
 def diag (x : R^[I]) : R^[I,I] :=
   ⊞ i j => if i = j then x[i] else 0
 
+/-- Extract diagonal from matrix. -/
 def diagonal (x : R^[I,I]) : R^[I] :=
   ⊞ i => x[i,i]
 
+/-- Outer product of two vector. -/
 def outerprod (x : R^[I]) (y : R^[J]) : R^[I,J] :=
   ⊞ i j => x[i]*y[j]
 
@@ -101,62 +106,25 @@ def dot (x y : R^[I]) : R := ∑ i, x[i]*y[i]
 /-- Matrix × vector multiplication: `A.vecmul x = ⊞ i => ∑ j, A[i,j] * x[j]` -/
 def vecmul (A : R^[I,J]) (x : R^[J]) : R^[I] := ⊞ i => ∑ j, A[i,j] * x[j]
 
+instance : HMul (R^[I,J]) (R^[J]) (R^[I]) where
+  hMul A x := A.vecmul x
+
 /-- Matrix × matrix multiplication: `A.vecmul B = ⊞ i k => ∑ j, A[i,j] * B[j,k]` -/
 def matmul (A : R^[I,J]) (B : R^[J,K]) : R^[I,K] := ⊞ i k => ∑ j, A[i,j] * B[j,k]
 
+instance : HMul (R^[I,J]) (R^[J,K]) (R^[I,K]) where
+  hMul A B := A.matmul B
 
 noncomputable
 def inv (A : R^[I,I]) : R^[I,I] :=
   (fun B : R^[I,I] => A.matmul B).invFun Matrix.identity
 
-/-- Invertible matrix proposition -/
-def Invertible (A : R^[I,I]) : Prop := (fun B : R^[I,I] => A.matmul B).Bijective
-
-def npow (A : R^[I,I]) (n : ℕ) : R^[I,I] :=
-  match n with
-  | 0 => Matrix.identity
-  | 1 => A
-  | n+2 =>
-    if n % 2 = 0 then
-      npow (A.matmul A) (n/2+1)
-    else
-      (npow (A.matmul A) (n/2+1)).matmul A
-
-
-noncomputable
-def zpow (A : R^[I,I]) (n : ℤ) : R^[I,I] :=
-  if 0 ≤ n then
-    A.npow n.toNat
-  else
-    A.inv.npow (-n).toNat
-
-/-- Matrix determinant -/
-noncomputable
-def det {R} [RealScalar R] [PlainDataType R] (A : R^[I,I]) : R :=
-  let f := LinearMap.mk' R (fun x : R^[I] => (⊞ i => ∑ j, A[i,j] * x[j])) sorry_proof
-  LinearMap.det f
-
-
-namespace Matrix
-
-instance : HMul (R^[I,J]) (R^[J,K]) (R^[I,K]) where
-  hMul A B := A.matmul B
-
-instance : HMul (R^[I,J]) (R^[J]) (R^[I]) where
-  hMul A x := A.vecmul x
-
-instance : HPow (R^[I,I]) ℕ (R^[I,I]) where
-  hPow A n := A.npow n
-
 noncomputable
 instance : Inv (R^[I,I]) where
   inv A := A.inv
 
-noncomputable
-instance : HPow (R^[I,I]) ℤ (R^[I,I]) where
-  hPow A n := A.zpow n
-
-end Matrix
+/-- Invertible matrix proposition -/
+def Invertible (A : R^[I,I]) : Prop := (fun B : R^[I,I] => A.matmul B).Bijective
 
 /-- Inverse of transpose matrix `A⁻ᵀ = Aᵀ⁻¹`
 
@@ -172,10 +140,43 @@ def _root_.Inv.inv.unexpander : Lean.PrettyPrinter.Unexpander
     | _ => `($A⁻¹)
   | _ => throw ()
 
+/-- Matrix power with natural number exponent -/
+def npow (A : R^[I,I]) (n : ℕ) : R^[I,I] :=
+  match n with
+  | 0 => Matrix.identity
+  | 1 => A
+  | n+2 =>
+    if n % 2 = 0 then
+      npow (A * A) (n/2+1)
+    else
+      (npow (A * A) (n/2+1)) * A
 
+instance : HPow (R^[I,I]) ℕ (R^[I,I]) where
+  hPow A n := A.npow n
+
+/-- Matrix power with integer exponent -/
+noncomputable
+def zpow (A : R^[I,I]) (n : ℤ) : R^[I,I] :=
+  if 0 ≤ n then
+    A^n.toNat
+  else
+    A⁻¹ ^ (-n).toNat
+
+noncomputable
+instance : HPow (R^[I,I]) ℤ (R^[I,I]) where
+  hPow A n := A.zpow n
+
+/-- Matrix determinant -/
+noncomputable
+def det {R} [RealScalar R] [PlainDataType R] (A : R^[I,I]) : R :=
+  let f := LinearMap.mk' R (fun x : R^[I] => (⊞ i => ∑ j, A[i,j] * x[j])) sorry_proof
+  LinearMap.det f
+
+/-- Returns solution of `A*x = b` -/
 noncomputable
 def solve (A : R^[I,I]) (b : R^[I]) := A⁻¹ * b
 
+/-- Returns solution of `A*X = B` -/
 noncomputable
 def solve' (A : R^[I,I]) (B : R^[I,J]) := A⁻¹ * B
 

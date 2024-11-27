@@ -257,6 +257,9 @@ def DataArrayN.uncurry [Inhabited α] (x : DataArrayN (DataArrayN α κ) ι) : D
 theorem DataArrayN.uncurry_def [Inhabited α] (x : DataArrayN (DataArrayN α κ) ι) :
     x.uncurry = ⊞ i j => x[i][j] := sorry_proof
 
+theorem DataArrayN.curry_def [Inhabited α] (x : DataArrayN α (ι×κ)) :
+    x.curry = ⊞ i => ⊞ j => x[i,j] := sorry_proof
+
 set_option linter.dupNamespace false in
 open Lean in
 private partial def parseDimProd (s : Syntax) : TSyntaxArray `dimSpec :=
