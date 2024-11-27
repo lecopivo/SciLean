@@ -1,5 +1,6 @@
 import SciLean.Data.DataArray.DataArray
 import SciLean.Data.ArrayType.Algebra
+import SciLean.Util.Limit
 
 namespace SciLean.DataArrayN
 
@@ -63,14 +64,21 @@ abbrev reshape5 (x : X^[I]) (n₁ n₂ n₃ n₄ n₅ : ℕ)
 -- Basic Linear Algebra Operations -----------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-variable [DecidableEq I]
+variable [DecidableEq I] [DecidableEq J]
 
 variable {R : Type*} [inst : RealScalar R] [PlainDataType R]
-  -- [Add X] [Sub X] [Mul X] [Zero X] [One X]
+set_default_scalar R
+
 
 /-- Identity matrix -/
-def _root_.SciLean.Matrix.identity : R^[I,I] :=
+def identity : R^[I,I] :=
   ⊞ (i j : I) => if i = j then 1 else 0
+
+@[inherit_doc identity]
+notation "𝐈" => @identity _ _ _ defaultScalar% _ _
+
+@[inherit_doc identity]
+notation "𝐈" n:max => (identity : defaultScalar%^[n,n])
 
 /-- Elemtwise product of two vectors, matrices or tensors -/
 def multiply (x y : R^[I]) : R^[I] :=
@@ -117,7 +125,7 @@ instance : HMul (R^[I,J]) (R^[J,K]) (R^[I,K]) where
 
 noncomputable
 def inv (A : R^[I,I]) : R^[I,I] :=
-  (fun B : R^[I,I] => A.matmul B).invFun Matrix.identity
+  (fun B : R^[I,I] => A.matmul B).invFun (𝐈 I)
 
 noncomputable
 instance : Inv (R^[I,I]) where
@@ -143,13 +151,28 @@ def _root_.Inv.inv.unexpander : Lean.PrettyPrinter.Unexpander
 /-- Matrix power with natural number exponent -/
 def npow (A : R^[I,I]) (n : ℕ) : R^[I,I] :=
   match n with
-  | 0 => Matrix.identity
+  | 0 => 𝐈
   | 1 => A
   | n+2 =>
     if n % 2 = 0 then
       npow (A * A) (n/2+1)
     else
       (npow (A * A) (n/2+1)) * A
+
+/-- Derivative of matrix power i.e. `npowDeriv A B n = ∂ (A':=A;B), A^n` -/
+def npowDeriv (A B : R^[I,I]) (n : ℕ) : R^[I,I] :=
+  match n with
+  | 0 => 0
+  | 1 => B
+  | n+2 =>
+    if n % 2 = 0 then
+      let A' := npow A (n/2 + 1)
+      let B' := npowDeriv A B (n/2 + 1)
+      B' * A' + A' * B'
+    else
+      let A' := npow A (n/2 + 1)
+      let B' := npowDeriv A B (n/2 + 1)
+      B' * A' * A + A' * B' * A + A' * A' * B
 
 instance : HPow (R^[I,I]) ℕ (R^[I,I]) where
   hPow A n := A.npow n
@@ -194,6 +217,19 @@ noncomputable
 instance : Solve R I (I×J) where
   solve A B := A.solve' B
 
+
+/-- Cayley Map: https://en.wikipedia.org/wiki/Cayley_transform#Matrix_map -/
+noncomputable
+def caley (A : R^[I,I]) := (𝐈 + A).solve' (𝐈 - A)
+
+/-- Matrix exponential -/
+noncomputable
+def matexp (A : R^[I,I]) := limit n → ∞, ∑ (i : Fin n), (i.1.factorial : R)⁻¹ • A^i.1
+
+/-- Take function between two vector spaces and return corresponding matrix. -/
+@[fun_trans]
+def toMatrix [Basis J R X] [Basis I R Y] [Inner R Y] (f : X → Y) : R^[I,J] :=
+  ⊞ (i : I) (j : J) => ⟪ⅇ i, (f (ⅇ j))⟫
 
 
 ----------------------------------------------------------------------------------------------------

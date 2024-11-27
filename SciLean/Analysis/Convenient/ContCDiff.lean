@@ -376,7 +376,7 @@ theorem Inner.inner.arg_a0a1.ContCDiff_rule
 theorem Norm2.norm2.arg_a0.ContCDiffAt_rule
   (f : X → Y) (x : X) (hf : ContCDiffAt R n f x)
   : ContCDiffAt R n (fun x => ‖f x‖₂²[R]) x := by
-  simp[← SemiInnerProductSpace.inner_norm2]
+  simp_rw[norm2_def]
   fun_prop
 
 @[fun_prop]

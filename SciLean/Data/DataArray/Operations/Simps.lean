@@ -54,32 +54,34 @@ section
 
 variable [DecidableEq I] [DecidableEq J] [DecidableEq K] [DecidableEq L]
 
+set_default_scalar R
+
 @[simp, simp_core]
-theorem identity_vecmul (x : R^[I]) : Matrix.identity (R:=R) (I:=I) * x = x := by
-  ext; simp[Matrix.identity,vecmul_def,sum_ite']
+theorem identity_vecmul (x : R^[I]) : (𝐈 I) * x = x := by
+  ext; simp[identity,vecmul_def,sum_ite']
 
 @[simp, simp_core]
 theorem identity_vecmul_smul (x : R^[I]) (c : R) :
-    (c • Matrix.identity (R:=R) (I:=I)) * x = c • x := by
-  ext; simp[Matrix.identity,vecmul_def,sum_ite']
+    (c • (𝐈 I)) * x = c • x := by
+  ext; simp[identity,vecmul_def,sum_ite']
 
 @[simp, simp_core]
-theorem identity_matmul (A : R^[I,I]) : Matrix.identity (R:=R) (I:=I) * A = A := by
-  ext i; cases i; simp[Matrix.identity,matmul_def,sum_ite']
+theorem identity_matmul (A : R^[I,I]) : (𝐈 I) * A = A := by
+  ext i; cases i; simp[identity,matmul_def,sum_ite']
 
 @[simp, simp_core]
 theorem identity_matmul_smul (A : R^[I,I]) (c : R) :
-    (c • Matrix.identity (R:=R) (I:=I)) * A = c • A := by
-  ext i; cases i; simp[Matrix.identity,matmul_def,sum_ite']
+    (c • (𝐈 I)) * A = c • A := by
+  ext i; cases i; simp[identity,matmul_def,sum_ite']
 
 @[simp, simp_core]
-theorem matmul_identity (A : R^[I,I]) : A * Matrix.identity (R:=R) (I:=I) = A := by
-  ext i; cases i; simp[Matrix.identity,matmul_def,sum_ite]
+theorem matmul_identity (A : R^[I,I]) : A * (𝐈 I) = A := by
+  ext i; cases i; simp[identity,matmul_def,sum_ite]
 
 @[simp, simp_core]
 theorem matmul_smul_identity (A : R^[I,I]) (c : R) :
-    A * (c • Matrix.identity (R:=R) (I:=I)) = c • A := by
-  ext i; cases i; simp[Matrix.identity,matmul_def,sum_ite,mul_comm]
+    A * (c • (𝐈 I)) = c • A := by
+  ext i; cases i; simp[identity,matmul_def,sum_ite,mul_comm]
 
 end
 
@@ -157,9 +159,24 @@ theorem vecmul_normalize (A : R^[I,J]) (B : R^[J,K]) :
 theorem matmul_normalize (A : R^[I,J]) (B : R^[J,K]) :
     A.matmul B = A * B := rfl
 
-theorem inv_normalize [DecidableEq I] (A : R^[I,I]) :
+
+section
+
+variable [DecidableEq I]
+
+theorem inv_normalize (A : R^[I,I]) :
     A.inv = A⁻¹ := rfl
 
 @[simp, simp_core]
-theorem tranpose_inv_eq_inv_transpose [DecidableEq I] (A : R^[I,I]) :
+theorem tranpose_inv_eq_inv_transpose (A : R^[I,I]) :
     A⁻¹ᵀ = A⁻ᵀ := sorry_proof
+
+@[simp, simp_core]
+theorem inv_inv (A : R^[I,I]) (hA : A.Invertible) : (A⁻¹)⁻¹ = A := sorry_proof
+
+@[simp, simp_core]
+theorem det_inv_eq_inv_det (A : R^[I,I]) :
+    (A⁻¹).det = (A.det)⁻¹ := sorry_proof
+
+
+end

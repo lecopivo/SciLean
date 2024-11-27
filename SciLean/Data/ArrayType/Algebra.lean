@@ -155,7 +155,7 @@ instance (priority := low) [SemiInnerProductSpace K Elem] :
   inner_ext := sorry_proof
   is_lin_subspace := sorry_proof
   inner_with_testfun_is_continuous := sorry_proof
-  inner_norm2 := by simp[Norm2.norm2]
+  inner_norm2 := by intro x; rw[norm2_def]
 
 instance (priority := low) [SemiHilbert K Elem] :
     SemiHilbert K Cont where

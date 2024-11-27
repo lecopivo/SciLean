@@ -1,4 +1,5 @@
 import SciLean
+import SciLean.Data.DataArray.Operations.Simps
 import SciLean.Lean.Meta.Basic
 
 open SciLean Scalar
@@ -26,7 +27,7 @@ theorem matrix_inverse_inverse {I} [IndexType I] [DecidableEq I] (A : R^[I,I]) :
 
 @[scoped simp, scoped simp_core]
 theorem det_inv_eq_inv_det {I} [IndexType I] [DecidableEq I] (A : R^[I,I]) :
-    (A⁻¹).det = (A.det)⁻¹ := sorry
+    (A⁻¹).det = (A.det)⁻¹ := by simp
 
 variable {I J K : Type*} [IndexType I] [IndexType J] [IndexType K]
 
@@ -45,10 +46,6 @@ theorem inner_QTQ (x y : R^[J]) (Q : R^[I,J]) :
 @[scoped simp, scoped simp_core]
 theorem inner_QTQ' (x y : R^[J]) (Q : R^[I,J]) :
    ⟪x, Qᵀ*(Q*y)⟫ = ⟪Q*x,Q*y⟫ := sorry
-
-@[scoped simp, scoped simp_core]
-theorem inner_self (x : R^[I]) :
-   ⟪x, x⟫ = ‖x‖₂² := sorry
 
 @[scoped simp, scoped simp_core]
 theorem gaussian_normalization_invQQT {d : ℕ} (Q : R^[d,d]) :

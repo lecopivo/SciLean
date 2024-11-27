@@ -400,7 +400,7 @@ theorem Norm2.norm2.arg_a0.CDifferentiable_rule
   (f : X → Y) (hf : CDifferentiable R f)
   : CDifferentiable R (fun x => ‖f x‖₂²[R]) :=
 by
-  simp[← SemiInnerProductSpace.inner_norm2]
+  simp_rw[norm2_def]
   fun_prop
 
 
@@ -409,7 +409,7 @@ theorem Norm2.norm2.arg_a0.CDifferentiableAt_rule
   (f : X → Y) (x : X) (hf : CDifferentiableAt R f x)
   : CDifferentiableAt R (fun x => ‖f x‖₂²[R]) x :=
 by
-  simp[← SemiInnerProductSpace.inner_norm2]
+  simp_rw[norm2_def]
   fun_prop
 
 

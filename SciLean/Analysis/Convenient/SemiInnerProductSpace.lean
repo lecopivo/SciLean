@@ -132,6 +132,12 @@ class SemiInnerProductSpace (K : Type _) [RCLike K] (X : Type _) extends Vec K X
   inner_with_testfun_is_continuous : ∀ ϕ, TestFunction ϕ → Continuous (⟪·, ϕ⟫[K])
 
 
+@[simp, simp_core]
+theorem inner_self [Inner K E] (x : E) : ⟪x,x⟫[K] = ‖x‖₂²[K] := by rfl
+
+theorem norm2_def [Inner K E] (x : E) : ‖x‖₂²[K] = ⟪x,x⟫[K] := by rfl
+
+
 attribute [instance low] SemiInnerProductSpace.toInner
   -- inner_ext does imply `TestFunction x → x ≠ 0 → ⟪x,x⟫ > 0`
   -- Let ϕ s.t. ⟪x,ϕ⟫ > 0, let (ε > 0)
@@ -212,7 +218,7 @@ instance (priority:=low) [RCLike K] [NormedAddCommGroup X] [InnerProductSpace K 
   inner_pos := by sorry_proof
   inner_ext := by sorry_proof
   is_lin_subspace := by sorry_proof
-  inner_norm2 := by simp[Norm2.norm2]
+  inner_norm2 := by simp
   inner_with_testfun_is_continuous := by simp[Inner.inner]; continuity
 
 -- Complete AdjointSpace is SemiInnerProductSpace
