@@ -60,75 +60,99 @@ abbrev reshape5 (x : X^[I]) (n₁ n₂ n₃ n₄ n₅ : ℕ)
 
 
 variable [DecidableEq I]
-  [Add X] [Sub X] [Mul X] [Zero X] [One X]
 
-def _root_.SciLean.Matrix.identity : X^[I,I] :=
+variable {R : Type*} [inst : RealScalar R] [PlainDataType R]
+  -- [Add X] [Sub X] [Mul X] [Zero X] [One X]
+
+def _root_.SciLean.Matrix.identity : R^[I,I] :=
   ⊞ (i j : I) => if i = j then 1 else 0
 
-def multiply (x y : X^[I]) : X^[I] :=
+def multiply (x y : R^[I]) : R^[I] :=
   x.mapIdxMono (fun i xi => xi * y[i])
 
-def diag (x : X^[I]) : X^[I,I] :=
+def diag (x : R^[I]) : R^[I,I] :=
   ⊞ i j => if i = j then x[i] else 0
 
-def kronprod (x : X^[I]) (y : X^[J]) : X^[I,J] :=
+def diagonal (x : R^[I,I]) : R^[I] :=
+  ⊞ i => x[i,i]
+
+def outerprod (x : R^[I]) (y : R^[J]) : R^[I,J] :=
   ⊞ i j => x[i]*y[j]
 
--- todo: maybe add complex conjugate
-def dot (x y : X^[I]) : X := ∑ i, x[i]*y[i]
+/-- Sum all elements of a vector, matrix, tensor: `x.sum = ∑ i, x[i]`-/
+def sum (x : R^[I]) : R := ∑ i, x[i]
 
-def vecmul (A : X^[I,J]) (x : X^[J]) : X^[I] := ⊞ i => ∑ j, A[i,j] * x[j]
+/-- Matrix transpose -/
+def transpose (A : R^[I,J]) : R^[J,I] := ⊞ j i => A[i,j]
 
-def matmul (A : X^[I,J]) (B : X^[J,K]) : X^[I,K] := ⊞ i k => ∑ j, A[i,j] * B[j,k]
+@[inherit_doc transpose]
+postfix:max "ᵀ" => transpose
+
+/-- Matrix trace: `A.trace = ∑ i, A[i,i]` -/
+def trace (A : R^[I,I]) : R := ∑ i, A[i,i]
+
+/-- Dot product between vectors, matrices, tensors: `x.dot y = ∑ i, x[i] * y[i]` -/
+def dot (x y : R^[I]) : R := ∑ i, x[i]*y[i]
+
+/-- Matrix × vector multiplication: `A.vecmul x = ⊞ i => ∑ j, A[i,j] * x[j]` -/
+def vecmul (A : R^[I,J]) (x : R^[J]) : R^[I] := ⊞ i => ∑ j, A[i,j] * x[j]
+
+/-- Matrix × matrix multiplication: `A.vecmul B = ⊞ i k => ∑ j, A[i,j] * B[j,k]` -/
+def matmul (A : R^[I,J]) (B : R^[J,K]) : R^[I,K] := ⊞ i k => ∑ j, A[i,j] * B[j,k]
+
 
 noncomputable
-def inv (A : X^[I,I]) : X^[I,I] :=
-  (fun B : X^[I,I] => A.matmul B).invFun Matrix.identity
+def inv (A : R^[I,I]) : R^[I,I] :=
+  (fun B : R^[I,I] => A.matmul B).invFun Matrix.identity
 
-def npow (A : X^[I,I]) (n : ℕ) : X^[I,I] :=
-  if h : n = 0 then
-    Matrix.identity
-  else if _ : n = 1 then
-    A
-  else
-    have : n.log2 < n := by apply (Nat.log2_lt h).2; exact Nat.lt_two_pow n
+/-- Invertible matrix proposition -/
+def Invertible (A : R^[I,I]) : Prop := (fun B : R^[I,I] => A.matmul B).Bijective
+
+def npow (A : R^[I,I]) (n : ℕ) : R^[I,I] :=
+  match n with
+  | 0 => Matrix.identity
+  | 1 => A
+  | n+2 =>
     if n % 2 = 0 then
-      npow (A.matmul A) (n/2)
+      npow (A.matmul A) (n/2+1)
     else
-      (npow (A.matmul A) (n/2)).matmul A
+      (npow (A.matmul A) (n/2+1)).matmul A
+
 
 noncomputable
-def zpow (A : X^[I,I]) (n : ℤ) : X^[I,I] :=
+def zpow (A : R^[I,I]) (n : ℤ) : R^[I,I] :=
   if 0 ≤ n then
     A.npow n.toNat
   else
     A.inv.npow (-n).toNat
 
+/-- Matrix determinant -/
+noncomputable
+def det {R} [RealScalar R] [PlainDataType R] (A : R^[I,I]) : R :=
+  let f := LinearMap.mk' R (fun x : R^[I] => (⊞ i => ∑ j, A[i,j] * x[j])) sorry_proof
+  LinearMap.det f
 
 namespace Matrix
 
-variable [Add X] [Mul X] [Sub X] [Zero X] [One X]
-
-instance : HMul (X^[I,J]) (X^[J,K]) (X^[I,K]) where
+instance : HMul (R^[I,J]) (R^[J,K]) (R^[I,K]) where
   hMul A B := A.matmul B
 
-instance : HMul (X^[I,J]) (X^[J]) (X^[I]) where
+instance : HMul (R^[I,J]) (R^[J]) (R^[I]) where
   hMul A x := A.vecmul x
 
-instance : HPow (X^[I,I]) ℕ (X^[I,I]) where
+instance : HPow (R^[I,I]) ℕ (R^[I,I]) where
   hPow A n := A.npow n
 
 noncomputable
-instance : Inv (X^[I,I]) where
+instance : Inv (R^[I,I]) where
   inv A := A.inv
 
 noncomputable
-instance : HPow (X^[I,I]) ℤ (X^[I,I]) where
+instance : HPow (R^[I,I]) ℤ (R^[I,I]) where
   hPow A n := A.zpow n
 
 end Matrix
 
-variable {R : Type*} [RealScalar R] [PlainDataType R] [DecidableEq I]
 set_default_scalar R
 
 open Scalar
@@ -147,3 +171,11 @@ def softmax' (x dx : R^[I]) : R :=
 def logsumexp (x : R^[I]) : R :=
   let xmax := IndexType.maxD (x[·]) 0
   log (∑ i, exp (x[i] - xmax)) - xmax
+
+/-- Elementwise exponential -/
+def exp (x : R^[I]) : R^[I] :=
+  x.mapMono (fun xi => Scalar.exp xi)
+
+/-- Elementwise logarithm -/
+def log (x : R^[I]) : R^[I] :=
+  x.mapMono (fun xi => Scalar.log xi)
