@@ -4,6 +4,7 @@ import SciLean.Data.ArrayType.Algebra
 import SciLean.Analysis.Convenient.HasAdjDiff
 import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Analysis.Calculus.RevFDerivProj
+import SciLean.Analysis.Calculus.FwdFDeriv
 
 import SciLean.Meta.GenerateAddGroupHomSimp
 
@@ -355,3 +356,76 @@ theorem ArrayType.ofFn.arg_f.revFDerivProjUpdate_rule_simple :
 
 
 end OnAdjointSpace
+
+
+
+
+section OnNormedSpaces
+
+variable [NormedAddCommGroup Elem] [NormedSpace K Elem]
+  {W : Type*} [NormedAddCommGroup W] [NormedSpace K W]
+
+
+theorem ArrayType.fwdFDeriv_elemwise
+    (cont : W → Cont) :
+    fwdFDeriv K cont
+    =
+    fun w dw =>
+      (cont w,
+       ArrayType.ofFn (Elem:=Elem) (Cont:=Cont) fun i =>
+         let xdx := fwdFDeriv K (fun w => ArrayType.get (cont w) i) w dw
+         xdx.2) := sorry
+
+
+theorem DataArrayN.mapMono.arg_fcont.fwdFDeriv_rule
+    (cont : W → Cont) (hcont : Differentiable K cont)
+    (f : W → Elem → Elem) (hf : Differentiable K fun (w,x) => f w x) :
+    (fwdFDeriv K fun w : W => ArrayType.mapMono (f w) (cont w) )
+    =
+    fun w dw =>
+      let cdc := fwdFDeriv K cont w dw
+      let c := cdc.1; let dc := cdc.2
+      (ArrayType.mapMono (f w) c,
+       ArrayType.mapIdxMono (cont:=dc) (fun i dxi =>
+         let xi := ArrayType.get c i
+         let ydy := fwdFDeriv K (↿f) (w,xi) (dw,dxi)
+         ydy.2)) := by
+
+  funext w dw
+  rw[ArrayType.fwdFDeriv_elemwise]
+  fun_trans[Function.HasUncurry.uncurry]
+  constructor <;> (apply ArrayType.ext (Idx:=Idx); intro i; simp[fwdFDeriv])
+
+
+end OnNormedSpaces
+
+
+section OnAdjointSpaces
+
+variable [NormedAddCommGroup Elem] [AdjointSpace K Elem]
+  {W : Type*} [NormedAddCommGroup W] [AdjointSpace K W]
+
+
+
+-- theorem DataArrayN.mapMono.arg_fcont.revFDeriv_rule
+--     (cont : W → Cont) (hcont : Differentiable K cont)
+--     (f : W → Elem → Elem) (hf : Differentiable K fun (w,x) => f w x) :
+--     (revFDeriv K fun w : W => ArrayType.mapMono (f w) (cont w) )
+--     =
+--     fun w =>
+--       let cdc := revFDeriv K cont w
+--       let c := cdc.1; let dc' := cdc.2
+--       (ArrayType.mapMono (f w) c,
+--        fun dc =>
+--          let dw : Cont := 0
+--          let dc : Cont := 0
+--          let (dc,dw) := IndexType.foldl (init:=(dc,dw) fun (dc,dw) i => (dc,dw)
+--          sorry) := by
+
+--   funext w dw
+--   rw[ArrayType.fwdFDeriv_elemwise]
+--   fun_trans[Function.HasUncurry.uncurry]
+--   constructor <;> (apply ArrayType.ext (Idx:=Idx); intro i; simp[fwdFDeriv])
+
+
+end OnAdjointSpaces

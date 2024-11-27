@@ -138,14 +138,14 @@ section Operations
 
   instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapIdxMono (λ x fx => fx + get g x) f⟩
   instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapIdxMono (λ x fx => fx - get g x) f⟩
-  instance (priority:=low) [Mul Elem] : Mul Cont := ⟨λ f g => mapIdxMono (λ x fx => fx * get g x) f⟩
-  instance (priority:=low) [Div Elem] : Div Cont := ⟨λ f g => mapIdxMono (λ x fx => fx / get g x) f⟩
+  -- instance (priority:=low) [Mul Elem] : Mul Cont := ⟨λ f g => mapIdxMono (λ x fx => fx * get g x) f⟩
+  -- instance (priority:=low) [Div Elem] : Div Cont := ⟨λ f g => mapIdxMono (λ x fx => fx / get g x) f⟩
 
   -- instance (priority:=low) {R} [HMul R Elem Elem] : HMul R Cont Cont := ⟨λ r f => map (λ fx => r*(fx : Elem)) f⟩
   instance (priority:=low) {R} [SMul R Elem] : SMul R Cont := ⟨λ r f => mapMono (λ fx => r•(fx : Elem)) f⟩
 
   instance (priority:=low) [Neg Elem] : Neg Cont := ⟨λ f => mapMono (λ fx => -(fx : Elem)) f⟩
-  instance (priority:=low) [Inv Elem] : Inv Cont := ⟨λ f => mapMono (λ fx => (fx : Elem)⁻¹) f⟩
+  -- instance (priority:=low) [Inv Elem] : Inv Cont := ⟨λ f => mapMono (λ fx => (fx : Elem)⁻¹) f⟩
 
   instance (priority:=low) [One Elem]  : One Cont  := ⟨ofFn fun (_ : Idx) => 1⟩
   instance (priority:=low) [Zero Elem] : Zero Cont := ⟨ofFn fun (_ : Idx) => 0⟩
@@ -220,13 +220,13 @@ section Operations
   theorem sub_get [Sub Elem] (x y : Cont) (i : Idx) :
       get (x - y) i  = get x i - get y i := by simp[HSub.hSub,Sub.sub]
 
-  @[simp, simp_core]
-  theorem mul_get [Mul Elem] (x y : Cont) (i : Idx) :
-      get (x * y) i  = get x i * get y i := by simp[HMul.hMul,Mul.mul]
+  -- @[simp, simp_core]
+  -- theorem mul_get [Mul Elem] (x y : Cont) (i : Idx) :
+  --     get (x * y) i  = get x i * get y i := by simp[HMul.hMul,Mul.mul]
 
-  @[simp, simp_core]
-  theorem div_get [Div Elem] (x y : Cont) (i : Idx) :
-      get (x / y) i  = get x i / get y i := by simp[HDiv.hDiv,Div.div]
+  -- @[simp, simp_core]
+  -- theorem div_get [Div Elem] (x y : Cont) (i : Idx) :
+  --     get (x / y) i  = get x i / get y i := by simp[HDiv.hDiv,Div.div]
 
   @[simp, simp_core]
   theorem smul_get {R} [SMul R Elem] (r : R) (x : Cont) (i : Idx) :

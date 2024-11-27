@@ -75,6 +75,10 @@ def argMax {I} [IndexType I] [Inhabited I]
     (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I :=
   (IndexType.argValMax f).1
 
+def maxD {I} [IndexType I]
+    (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] (x₀ : X) : X :=
+  IndexType.reduceD f (fun x x' => if x < x' then x' else x) x₀
+
 variable {I : Type*} [IndexType I]
 
 open IndexType
