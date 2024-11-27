@@ -7,6 +7,7 @@ import SciLean.Analysis.Calculus.RevFDerivProj
 import SciLean.Analysis.Calculus.FwdFDeriv
 
 import SciLean.Meta.GenerateAddGroupHomSimp
+import SciLean.Meta.GenerateFunTrans
 
 namespace SciLean
 
@@ -161,6 +162,15 @@ theorem ArrayType.modify.arg_contf.IsContinuousLinearMap_rule
   --       bacause of this reason it can't apply `IsContinuousLinearMap.continuous`
   sorry_proof
 
+abbrev_fun_trans : fderiv K (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f) by
+  fun_trans
+
+@[fun_trans]
+theorem ArrayType.ofFn.arg_f.fwdFDeriv_rule :
+  fwdFDeriv K (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f)
+  =
+  fun f df => (ArrayType.ofFn (Cont:=Cont) f, ArrayType.ofFn (Cont:=Cont) df) := by fun_trans
+
 -- TODO: add Differentiable, ContDiff for `modify` function
 
 end OnNormedSpaces
@@ -262,6 +272,7 @@ theorem ArrayType.ofFn.arg_f.adjoint_rule :
     =
     fun c i => ArrayType.get c i := by sorry_proof
 
+
 end OnAdjointSpace
 
 
@@ -308,6 +319,13 @@ theorem ArrayType.get.arg_cont.revFDerivProjUpdate_rule (i : Idx)
       (ArrayType.get xi.1 i, fun (j : I) (de : E j) dw =>
         xi.2 (i,j) de dw) := by unfold revFDerivProjUpdate; fun_trans
 
+@[fun_trans]
+theorem ArrayType.ofFn.arg_f.revFDeriv_rule :
+    revFDeriv K (fun f : Idx → Elem => ArrayType.ofFn f)
+    =
+    fun f =>
+      (ArrayType.ofFn (Cont:=Cont) f, fun (dx : Cont) i => ArrayType.get dx i) := by
+  unfold revFDeriv; fun_trans
 
 @[fun_trans]
 theorem ArrayType.ofFn.arg_f.revFDerivProj_rule_unit_simple :
