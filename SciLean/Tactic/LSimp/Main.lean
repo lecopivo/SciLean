@@ -38,6 +38,8 @@ For example `fun x => let y := x; y` should be reduced to `fun x => x` and the l
 
 -/
 def keepAsLetValue (v : Expr) : LSimpM Bool := do
+  let v ← instantiateMVars v
+  let v := v.consumeMData
   if v.isAppOfArity ``Prod.mk 4 then
     return false
   if v.isAppOfArity ``OfNat.ofNat 3 then
