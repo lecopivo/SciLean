@@ -6,20 +6,16 @@ namespace SciLean.DataArrayN
 open Scalar
 
 variable
-  {R : Type*} [RealScalar R] [PlainDataType R]
-  {I : Type*} [IndexType I]
+  {R : Type} [RealScalar R] [PlainDataType R]
+  {I : Type} [IndexType I]
 
 set_default_scalar R
 
-/-- Logsumexp with awful numerical properties but nice for proving theorems. -/
-def logsumexpSpec (x : R^[I]) : R :=
-  Scalar.log (∑ i, Scalar.exp (x[i]))
-
-theorem logsumexp_spec (x : R^[I]) : logsumexp x = logsumexpSpec x := sorry_proof
+theorem logsumexp_def (x : R^[I]) :
+    logsumexp x = Scalar.log (∑ i, Scalar.exp (x[i])) := sorry_proof
 
 def_fun_prop logsumexp in x : Differentiable R by
-  simp_rw[logsumexp_spec]
-  unfold logsumexpSpec
+  simp_rw[logsumexp_def]
   intro x
   have : ∑ i, Scalar.exp x[i] ≠ 0 := sorry_proof
   fun_prop (disch:=dsimp; assumption)
@@ -29,11 +25,10 @@ abbrev_fun_trans DataArrayN.logsumexp in x : fderiv R by
            let x' := softmax x
            ⟪dx, x'⟫[R]) =>
 
-    simp_rw[logsumexp_spec]
+    simp_rw[logsumexp_def]
     funext x
     ext dx
     have hw : ∑ i, Scalar.exp x[i] ≠ 0 := sorry_proof
-    unfold logsumexpSpec
     fun_trans (disch:=dsimp; assumption) [multiply,inner_def]
     have h : Scalar.abs ( ∑ i, (Scalar.exp x[i], dx[i] * Scalar.exp x[i])).1
              =
@@ -42,7 +37,7 @@ abbrev_fun_trans DataArrayN.logsumexp in x : fderiv R by
               =
               (∑ i, dx[i] * Scalar.exp x[i]) := sorry_proof
     simp_rw[h,h']
-    simp_rw[softmax_spec]; unfold softmaxSpec
+    simp_rw[softmax_def]
     simp
     -- almost done, just need to pull `w` out of the sum
     sorry_proof
@@ -53,4 +48,12 @@ abbrev_fun_trans logsumexp in x : fwdFDeriv R by
 
 abbrev_fun_trans logsumexp in x [DecidableEq I] : revFDeriv R by
   unfold revFDeriv
+  autodiff
+
+abbrev_fun_trans logsumexp in x [DecidableEq I] : revFDerivProj R Unit by
+  unfold revFDerivProj
+  autodiff
+
+abbrev_fun_trans logsumexp in x [DecidableEq I] : revFDerivProjUpdate R Unit by
+  unfold revFDerivProjUpdate
   autodiff

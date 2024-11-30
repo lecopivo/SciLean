@@ -7,10 +7,10 @@ namespace SciLean.DataArrayN
 open  Scalar
 
 variable
-  {R : Type*} [RealScalar R] [PlainDataType R]
+  {R : Type} [RealScalar R] [PlainDataType R]
   {W} [NormedAddCommGroup W] [NormedSpace R W]
   {U} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
-  {I : Type*} [IndexType I]
+  {I : Type} [IndexType I]
 
 set_default_scalar R
 

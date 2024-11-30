@@ -40,11 +40,11 @@ end Missing
 namespace DataArrayN
 
 variable
-  {I : Type*} [IndexType I]
-  {J : Type*} [IndexType J]
-  {K : Type*} [IndexType K]
-  {L : Type*} [IndexType L]
-  {R : Type*} [RealScalar R] [PlainDataType R]
+  {I : Type} [IndexType I]
+  {J : Type} [IndexType J]
+  {K : Type} [IndexType K]
+  {L : Type} [IndexType L]
+  {R : Type} [RealScalar R] [PlainDataType R]
 
 theorem vecmul_def (A : R^[I,J]) (x : R^[J]) : A * x = ⊞ i => ∑ j, A[i,j] * x[j] := rfl
 

@@ -49,6 +49,16 @@ abbrev_fun_trans matmul in A B : revFDeriv R by
   unfold revFDeriv
   autodiff
 
+abbrev_fun_trans matmul in A B : revFDerivProj R Unit by
+  rw[revFDerivProj_wrt_prod (by fun_prop)]
+  unfold revFDerivProj
+  autodiff
+
+abbrev_fun_trans matmul in A B : revFDerivProjUpdate R Unit by
+  rw[revFDerivProjUpdate_wrt_prod (by fun_prop)]
+  unfold revFDerivProjUpdate
+  autodiff
+
 
 
 
@@ -56,10 +66,10 @@ abbrev_fun_trans matmul in A B : revFDeriv R by
 
 
 variable
-  {I : Type*} [IndexType I] [DecidableEq I]
-  {J : Type*} [IndexType J] [DecidableEq J]
-  {K : Type*} [IndexType K] [DecidableEq K]
-  {R : Type*} [RealScalar R] [PlainDataType R]
+  {I : Type} [IndexType I] [DecidableEq I]
+  {J : Type} [IndexType J] [DecidableEq J]
+  {K : Type} [IndexType K] [DecidableEq K]
+  {R : Type} [RealScalar R] [PlainDataType R]
 
 
 def_fun_prop _matrix (B : R^[J,K]) : IsContinuousLinearMap R (fun A : R^[I,J] => A * B) by
@@ -96,3 +106,9 @@ abbrev_fun_trans _matrix (A : R^[I,J]) : adjoint R (fun B : R^[J,K] => A * B) by
 
 abbrev_fun_trans _matrix : revFDeriv R (fun AB : R^[I,J] × R^[J,K] => AB.1 * AB.2) by
   rw[revFDeriv_wrt_prod]; unfold revFDeriv; autodiff
+
+abbrev_fun_trans _matrix : revFDerivProj R Unit (fun AB : R^[I,J] × R^[J,K] => AB.1 * AB.2) by
+  rw[revFDerivProj_wrt_prod]; unfold revFDerivProj; autodiff
+
+abbrev_fun_trans _matrix : revFDerivProjUpdate R Unit (fun AB : R^[I,J] × R^[J,K] => AB.1 * AB.2) by
+  rw[revFDerivProjUpdate_wrt_prod]; unfold revFDerivProjUpdate; autodiff
