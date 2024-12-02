@@ -42,16 +42,16 @@ variable (A : R^[n,n])
 info: fun x =>
   IndexType.foldl
     (fun dx i =>
-      let zdg := x[i];
+      let zdf := x[i];
       let dx :=
         IndexType.foldl
           (fun dx i_1 =>
-            let ydf := A[i, i_1];
-            let ydf_1 := ydf * zdg;
-            let zdg := x[i_1];
-            let dy₂ := ydf * zdg;
-            let dx := ArrayType.modify dx i_1 fun xi => xi + ydf_1;
+            let ydg := A[i, i_1];
+            let zdf' := ydg * zdf;
+            let zdf := x[i_1];
+            let dy₂ := ydg * zdf;
             let dx := ArrayType.modify dx i fun xi => xi + dy₂;
+            let dx := ArrayType.modify dx i_1 fun xi => xi + zdf';
             dx)
           dx;
       dx)
