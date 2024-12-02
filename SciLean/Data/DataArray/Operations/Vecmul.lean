@@ -46,6 +46,16 @@ abbrev_fun_trans vecmul in A x : revFDeriv R by
   unfold revFDeriv
   autodiff
 
+abbrev_fun_trans vecmul in A x : revFDerivProj R Unit by
+  rw[revFDerivProj_wrt_prod (by fun_prop)]
+  unfold revFDerivProj
+  autodiff
+
+abbrev_fun_trans vecmul in A x : revFDerivProjUpdate R Unit by
+  rw[revFDerivProjUpdate_wrt_prod (by fun_prop)]
+  unfold revFDerivProjUpdate
+  autodiff
+
 
 
 
@@ -53,10 +63,10 @@ abbrev_fun_trans vecmul in A x : revFDeriv R by
 
 
 variable
-  {I : Type*} [IndexType I] [DecidableEq I]
-  {J : Type*} [IndexType J] [DecidableEq J]
-  {K : Type*} [IndexType K] [DecidableEq K]
-  {R : Type*} [RealScalar R] [PlainDataType R]
+  {I : Type} [IndexType I] [DecidableEq I]
+  {J : Type} [IndexType J] [DecidableEq J]
+  {K : Type} [IndexType K] [DecidableEq K]
+  {R : Type} [RealScalar R] [PlainDataType R]
 
 
 def_fun_prop _matrixvec (b : R^[J]) : IsContinuousLinearMap R (fun A : R^[I,J] => A * b) by
@@ -85,3 +95,9 @@ abbrev_fun_trans _matrixvec (A : R^[I,J]) : adjoint R (fun b : R^[J] => A * b) b
 
 abbrev_fun_trans _matrixvec : revFDeriv R (fun Ab : R^[I,J] × R^[J] => Ab.1 * Ab.2) by
   rw[revFDeriv_wrt_prod]; unfold revFDeriv; autodiff
+
+abbrev_fun_trans _matrixvec : revFDerivProj R Unit (fun Ab : R^[I,J] × R^[J] => Ab.1 * Ab.2) by
+  rw[revFDerivProj_wrt_prod]; unfold revFDerivProj; autodiff
+
+abbrev_fun_trans _matrixvec : revFDerivProjUpdate R Unit (fun Ab : R^[I,J] × R^[J] => Ab.1 * Ab.2) by
+  rw[revFDerivProjUpdate_wrt_prod]; unfold revFDerivProjUpdate; autodiff

@@ -42,7 +42,8 @@ theorem comp_rule_at (x : X)
     =
     fun dx =>
       let ydy := fwdFDeriv K g x dx
-      let zdz := fwdFDeriv K f ydy.1 ydy.2
+      let y := ydy.1; let dy := ydy.2
+      let zdz := fwdFDeriv K f y dy
       zdz := by
   unfold fwdFDeriv; fun_trans
 
@@ -54,7 +55,8 @@ theorem comp_rule
     =
     fun x dx =>
       let ydy := fwdFDeriv K g x dx
-      let zdz := fwdFDeriv K f ydy.1 ydy.2
+      let y := ydy.1; let dy := ydy.2
+      let zdz := fwdFDeriv K f y dy
       zdz := by
   unfold fwdFDeriv; fun_trans
 
@@ -67,7 +69,8 @@ theorem let_rule_at (x : X)
     =
     fun dx =>
       let ydy := fwdFDeriv K g x dx
-      let zdz := fwdFDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
+      let y := ydy.1; let dy := ydy.2
+      let zdz := fwdFDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,y) (dx,dy)
       zdz := by
   funext dx
   unfold fwdFDeriv
@@ -81,7 +84,8 @@ theorem let_rule
     =
     fun x dx =>
       let ydy := fwdFDeriv K g x dx
-      let zdz := fwdFDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,ydy.1) (dx,ydy.2)
+      let y := ydy.1; let dy := ydy.2
+      let zdz := fwdFDeriv K (fun (xy : X×Y) => f xy.1 xy.2) (x,y) (dx,dy)
       zdz := by funext x; fun_trans
 
 @[fun_trans]
@@ -96,7 +100,10 @@ theorem pi_rule_at (x : X)
     fwdFDeriv K (fun (x : X) (i : ι) => f x i) x
     =
     fun dx =>
-      (fun i => f x i, fun i => (fwdFDeriv K (f · i) x dx).2) := by
+      (fun i => f x i, fun i =>
+        let xdxi := fwdFDeriv K (f · i) x dx
+        let dxi := xdxi.2
+        dxi) := by
   unfold fwdFDeriv; fun_trans
   funext x; simp
   rw[fderiv_pi (h:=by fun_prop)]
@@ -108,7 +115,10 @@ theorem pi_rule
     fwdFDeriv K (fun (x : X) (i : ι) => f x i)
     =
     fun x dx =>
-      (fun i => f x i, fun i => (fwdFDeriv K (f · i) x dx).2) := by
+      (fun i => f x i, fun i =>
+        let xdxi := fwdFDeriv K (f · i) x dx
+        let dxi := xdxi.2
+        dxi) := by
 
   unfold fwdFDeriv; fun_trans
   funext x
@@ -155,8 +165,10 @@ theorem Prod.mk.arg_fstsnd.fwdFDeriv_rule
     =
     fun x dx =>
       let ydy := fwdFDeriv K g x dx
+      let y := ydy.1; let dy := ydy.2
       let zdz := fwdFDeriv K f x dx
-      ((ydy.1, zdz.1), (ydy.2, zdz.2)) := by
+      let z := zdz.1; let dz := zdz.2
+      ((y,z), (dy, dz)) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -168,8 +180,10 @@ theorem Prod.mk.arg_fstsnd.fwdFDeriv_rule_at (x : X)
     =
     fun dx =>
       let ydy := fwdFDeriv K g x dx
+      let y := ydy.1; let dy := ydy.2
       let zdz := fwdFDeriv K f x dx
-      ((ydy.1, zdz.1), (ydy.2, zdz.2)) := by
+      let z := zdz.1; let dz := zdz.2
+      ((y,z), (dy, dz)) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -190,7 +204,8 @@ theorem Prod.fst.arg_self.fwdFDeriv_rule_at (x : X)
     =
     fun dx =>
       let yzdyz := fwdFDeriv K f x dx
-      (yzdyz.1.1, yzdyz.2.1) := by
+      let y := yzdyz.1.1; let dy := yzdyz.2.1
+      (y,dy) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -212,7 +227,8 @@ theorem Prod.snd.arg_self.fwdFDeriv_rule_at (x : X)
     =
     fun dx =>
       let yzdyz := fwdFDeriv K f x dx
-      (yzdyz.1.2, yzdyz.2.2) := by
+      let z := yzdyz.1.2; let dz := yzdyz.2.2
+      (z,dz) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -226,8 +242,10 @@ theorem HAdd.hAdd.arg_a0a1.fwdFDeriv_rule_at (x : X)
     =
     fun dx =>
       let ydy := fwdFDeriv K f x dx
+      let y := ydy.1; let dy := ydy.2
       let zdz := fwdFDeriv K g x dx
-      ydy + zdz := by
+      let z := zdz.1; let dz := zdz.2
+      (y + z, dy + dz) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -241,8 +259,10 @@ theorem HSub.hSub.arg_a0a1.fwdFDeriv_rule_at (x : X)
     =
     fun dx =>
       let ydy := fwdFDeriv K f x dx
+      let y := ydy.1; let dy := ydy.2
       let zdz := fwdFDeriv K g x dx
-      ydy - zdz  := by
+      let z := zdz.1; let dz := zdz.2
+      (y - z, dy - dz) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -255,7 +275,8 @@ theorem Neg.neg.arg_a0.fwdFDeriv_rule (x : X) (f : X → Y) :
     =
     fun dx =>
       let ydy := fwdFDeriv K f x dx
-      (-ydy) := by
+      let y := ydy.1; let dy := ydy.2
+      (-y, -dy) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -269,7 +290,9 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule
     (fwdFDeriv K fun y : Y×Y => y.1 * y.2)
     =
     fun y dy =>
-      (y.1 * y.2, y.1 * dy.2 + dy.1 * y.2) := by unfold fwdFDeriv; fun_trans
+      let y₁ := y.1; let y₂ := y.2
+      let dy₁ := dy.1; let dy₂ := dy.2
+      (y₁ * y₂, y₁ * dy₂ + dy₁ * y₂) := by unfold fwdFDeriv; fun_trans
 
 
 @[fun_trans]
@@ -279,8 +302,10 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule_at (x : X) (f g : X → K)
     =
     fun dx =>
       let ydy := (fwdFDeriv K f x dx)
+      let y := ydy.1; let dy := ydy.2
       let zdz := (fwdFDeriv K g x dx)
-      (ydy.1 * zdz.1, zdz.2 * ydy.1 + ydy.2 * zdz.1) := by
+      let z := zdz.1; let dz := zdz.2
+      (y * z, dz * y + dy * z) := by
   funext dx; unfold fwdFDeriv; fun_trans; simp[mul_comm]
 
 
@@ -295,8 +320,10 @@ theorem HSMul.hSMul.arg_a0a1.fwdFDeriv_rule_at (x : X)
     =
     fun dx =>
       let ydy := (fwdFDeriv K f x dx)
+      let y := ydy.1; let dy := ydy.2
       let zdz := (fwdFDeriv K g x dx)
-      (ydy.1 • zdz.1, ydy.1 • zdz.2 + ydy.2 • zdz.1) := by
+      let z := zdz.1; let dz := zdz.2
+      (y • z, y • dz + dy • z) := by
   unfold fwdFDeriv; fun_trans
 
 
@@ -318,8 +345,10 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at (x : X)
     =
     fun dx =>
       let ydy := (fwdFDeriv K f x dx)
+      let y := ydy.1; let dy := ydy.2
       let zdz := (fwdFDeriv K g x dx)
-      (ydy.1 / zdz.1, (ydy.2 * zdz.1 - ydy.1 * zdz.2) / zdz.1^2) := by
+      let z := zdz.1; let dz := zdz.2
+      (y / z, (dy * z - y * dz) / z^2) := by
   unfold fwdFDeriv
   funext dx; simp
   conv =>
@@ -339,8 +368,7 @@ theorem HInv.hInv.arg_a0a1.fwdFDeriv_rule_at
     =
     fun dx =>
       let ydy := fwdFDeriv K f x dx
-      let y := ydy.1
-      let dy := ydy.2
+      let y := ydy.1; let dy := ydy.2
       (y⁻¹, -dy / y^2) := by
   unfold fwdFDeriv; fun_trans (disch:=assumption)
 

@@ -24,3 +24,5 @@ import SciLean.Data.DataArray.Operations.Vecmul
 import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.DataArray.RevDeriv
 import SciLean.Data.DataArray.VecN
+import SciLean.Data.DataArray.Operations.LowerTriangular
+import SciLean.Data.DataArray.Operations.LowerTriangularPart

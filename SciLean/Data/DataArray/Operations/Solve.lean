@@ -4,11 +4,11 @@ import SciLean.Data.DataArray.Operations.Vecmul
 namespace SciLean
 
 variable
-  {I : Type*} [IndexType I] [DecidableEq I]
-  {J : Type*} [IndexType J] --[DecidableEq J]
-  {R : Type*} [RealScalar R] [PlainDataType R]
-  {X : Type*} [NormedAddCommGroup X] [NormedSpace R X]
-  {U : Type*} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
+  {I : Type} [IndexType I] [DecidableEq I]
+  {J : Type} [IndexType J] --[DecidableEq J]
+  {R : Type} [RealScalar R] [PlainDataType R]
+  {X : Type} [NormedAddCommGroup X] [NormedSpace R X]
+  {U : Type} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
 
 namespace DataArrayN
 

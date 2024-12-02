@@ -4,6 +4,8 @@ import SciLean.Util.Limit
 
 namespace SciLean.DataArrayN
 
+section GeneralFunctions
+
 variable
   {I : Type*} [IndexType I]
   {J : Type*} [IndexType J]
@@ -59,14 +61,23 @@ abbrev reshape5 (x : X^[I]) (n₁ n₂ n₃ n₄ n₅ : ℕ)
     (h : Size.size I = n₁*n₂*n₃*n₄*n₅ := by reshape_tactic) : X^[n₁,n₂,n₃,n₄,n₅] :=
   x.reshape (Fin n₁ × Fin n₂ × Fin n₃ × Fin n₄ × Fin n₅) (by simp[h]; ac_rfl)
 
+end GeneralFunctions
 
 ----------------------------------------------------------------------------------------------------
 -- Basic Linear Algebra Operations -----------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+section LinearAlgebra
+
+variable
+  {I : Type} [IndexType I]
+  {J : Type} [IndexType J]
+  {K : Type} [IndexType K]
+
 variable [DecidableEq I] [DecidableEq J]
 
-variable {R : Type*} [inst : RealScalar R] [PlainDataType R]
+variable {R : Type} [inst : RealScalar R] [PlainDataType R]
+
 set_default_scalar R
 
 
@@ -101,6 +112,84 @@ def sum (x : R^[I]) : R := ∑ i, x[i]
 
 /-- Matrix transpose -/
 def transpose (A : R^[I,J]) : R^[J,I] := ⊞ j i => A[i,j]
+
+/-- Make lower triangular matrix out of a vector.
+
+`offset = 1` creates strict lower triangular matrix.
+
+Examples:
+```
+lowerTriangular ⊞[1,2,3] 2 0
+=
+⊞[1,0;
+  2,3]
+
+lowerTriangular ⊞[1,2,3] 3 1
+=
+⊞[0,0,0;
+  1,0,0;
+  2,3,0]
+
+lowerTriangular ⊞[1,2,3] 3 2
+=
+⊞[0,0,0,0;
+  0,0,0,0;
+  1,0,0,0;
+  2,3,0,0]
+```
+
+TODO: allow offset to be integer and output to be rectangular -/
+def lowerTriangular {k : ℕ} (x : R^[k]) (n : ℕ) (offset : ℕ := 0)
+    (h : k = ((n-offset)*(n+1-offset))/2 := by first | decide | simp_all) : R^[n,n] :=
+  ⊞ (i j : Fin n) =>
+    if i ≥ j + offset then
+      let a := n-offset-j.1
+      let b := n-offset
+      let colOffset := (((b+a)*(b-a+1))/2) - a
+      let idx : Fin k := ⟨i.1-offset-j.1+colOffset, sorry_proof⟩
+      x[idx]
+    else
+      0
+
+
+/-- Take lower triangular part of a matrix and flatten it to a vector.
+
+To turn the resulting vector into
+
+Examples:
+```
+lowerTriangularPart ⊞[1,2;
+                      3,4] 0
+=
+⊞[1,3,4]
+
+lowerTriangular ⊞[1,2,3;
+                  4,5,6;
+                  7,8,9] 0
+=
+⊞[1,4,7,5,8,9]
+
+lowerTriangular ⊞[1,2,3;
+                  4,5,6;
+                  7,8,9] 1
+=
+⊞[4,7,8]
+```
+-/
+def lowerTriangularPart {n : ℕ} (A : R^[n,n]) (offset : ℕ := 0)
+    {k} (h : k = ((n-offset)*(n+1-offset))/2 := by simp; infer_var) : R^[k] := Id.run do
+  let mut x : R^[k] := 0
+  let mut i := offset
+  let mut j := 0
+  for idx in [0:k] do
+    let idx : Fin k := ⟨idx, sorry_proof⟩
+    x[idx] := A[⟨i,sorry_proof⟩,⟨j,sorry_proof⟩]
+    i := i + 1
+    if i ≥ n then
+      j := j + 1
+      i := offset + j
+  return x
+
 
 @[inherit_doc transpose]
 postfix:max "ᵀ" => transpose
@@ -191,7 +280,7 @@ instance : HPow (R^[I,I]) ℤ (R^[I,I]) where
 
 /-- Matrix determinant -/
 noncomputable
-def det {R} [RealScalar R] [PlainDataType R] (A : R^[I,I]) : R :=
+def det {R : Type} [RealScalar R] [PlainDataType R] (A : R^[I,I]) : R :=
   let f := LinearMap.mk' R (fun x : R^[I] => (⊞ i => ∑ j, A[i,j] * x[j])) sorry_proof
   LinearMap.det f
 
@@ -204,7 +293,7 @@ noncomputable
 def solve' (A : R^[I,I]) (B : R^[I,J]) := A⁻¹ * B
 
 /-- Rank polymorphic solve -/
-class Solve (R : Type*) (I : Type*) (J : Type*)
+class Solve (R : Type) (I : Type) (J : Type*)
     [RealScalar R] [PlainDataType R] [IndexType I] [IndexType J] where
   /-- Linear system solve that accepts either vector or matrix as right hand side. -/
   solve (A : R^[I,I]) (b : R^[J]) : R^[J]

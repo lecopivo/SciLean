@@ -32,3 +32,11 @@ abbrev_fun_trans diag in x : adjoint R by
 abbrev_fun_trans diag in x : revFDeriv R by
   unfold revFDeriv
   autodiff
+
+abbrev_fun_trans diag in x : revFDerivProj R Unit by
+  unfold revFDerivProj
+  autodiff
+
+abbrev_fun_trans diag in x : revFDerivProjUpdate R Unit by
+  unfold revFDerivProjUpdate
+  autodiff

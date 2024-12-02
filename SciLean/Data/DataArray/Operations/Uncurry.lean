@@ -43,3 +43,15 @@ abbrev_fun_trans uncurry in x
 abbrev_fun_trans uncurry in x
     {R} [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] [CompleteSpace α] :
     revFDeriv R by unfold revFDeriv; fun_trans
+
+abbrev_fun_trans
+  {α : Type} [pd : PlainDataType α]
+  {ι : Type} [inst : IndexType ι] {κ : Type} [IndexType κ] [Inhabited α]
+  {R : Type} [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] [CompleteSpace α] :
+  revFDerivProj R Unit (fun (x : DataArrayN (DataArrayN α κ) ι) => x.uncurry) by unfold revFDerivProj; fun_trans
+
+abbrev_fun_trans
+  {α : Type} [pd : PlainDataType α]
+  {ι : Type} [inst : IndexType ι] {κ : Type} [IndexType κ] [Inhabited α]
+  {R : Type} [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] [CompleteSpace α] :
+  revFDerivProjUpdate R Unit (fun (x : DataArrayN (DataArrayN α κ) ι) => x.uncurry) by unfold revFDerivProjUpdate; fun_trans

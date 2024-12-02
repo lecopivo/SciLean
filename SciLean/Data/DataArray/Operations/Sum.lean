@@ -3,9 +3,9 @@ import SciLean.Data.DataArray.Operations.Diag
 namespace SciLean
 
 variable
-  {I : Type*} [IndexType I] [DecidableEq I]
-  {J : Type*} [IndexType J] [DecidableEq J]
-  {R : Type*} [RealScalar R] [PlainDataType R]
+  {I : Type} [IndexType I] [DecidableEq I]
+  {J : Type} [IndexType J] [DecidableEq J]
+  {R : Type} [RealScalar R] [PlainDataType R]
 
 open DataArrayN
 
@@ -28,4 +28,12 @@ abbrev_fun_trans sum in x : adjoint R by
 
 abbrev_fun_trans sum in x : revFDeriv R by
   unfold revFDeriv
+  autodiff
+
+abbrev_fun_trans sum in x : revFDerivProj R Unit by
+  unfold revFDerivProj
+  autodiff
+
+abbrev_fun_trans sum in x : revFDerivProjUpdate R Unit by
+  unfold revFDerivProjUpdate
   autodiff

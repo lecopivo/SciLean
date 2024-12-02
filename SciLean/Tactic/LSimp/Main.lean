@@ -38,6 +38,8 @@ For example `fun x => let y := x; y` should be reduced to `fun x => x` and the l
 
 -/
 def keepAsLetValue (v : Expr) : LSimpM Bool := do
+  let v ← instantiateMVars v
+  let v := v.consumeMData
   if v.isAppOfArity ``Prod.mk 4 then
     return false
   if v.isAppOfArity ``OfNat.ofNat 3 then
@@ -642,7 +644,11 @@ partial def processCongrHypothesis (h : Expr) : LSimpM Bool := do
       return r.proof?.isSome || (xs.size > 0 && lhs != r.expr)
 
 /-- Try to rewrite `e` children using the given congruence theorem -/
-partial def trySimpCongrTheorem? (c : SimpCongrTheorem) (e : Expr) : LSimpM (Option Result) := withNewMCtxDepth do
+partial def trySimpCongrTheorem? (c : SimpCongrTheorem) (e : Expr) : LSimpM (Option Result) :=
+  -- Looks like that `withNewMCtxDepth` does not work well with `MetaLCtxM` so we need to
+  -- add `withoutModifyingLCtx`
+  withoutModifyingLCtx (fun r? => r?.mapM (Result.bindVars ·)) do
+  withNewMCtxDepth do
   trace[Debug.Meta.Tactic.simp.congr] "{c.theoremName}, {e}"
   let thm ← mkConstWithFreshMVarLevels c.theoremName
   let (xs, bis, type) ← forallMetaTelescopeReducing (← inferType thm)

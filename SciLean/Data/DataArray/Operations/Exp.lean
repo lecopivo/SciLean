@@ -27,3 +27,11 @@ abbrev_fun_trans DataArrayN.exp in x : fwdFDeriv R by
 abbrev_fun_trans DataArrayN.exp in x [DecidableEq I] : revFDeriv R by
   unfold revFDeriv
   autodiff
+
+abbrev_fun_trans DataArrayN.exp in x [DecidableEq I] : revFDerivProj R Unit by
+  unfold revFDerivProj
+  autodiff
+
+abbrev_fun_trans DataArrayN.exp in x [DecidableEq I] : revFDerivProjUpdate R Unit by
+  unfold revFDerivProjUpdate
+  autodiff

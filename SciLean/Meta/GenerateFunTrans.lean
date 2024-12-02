@@ -231,7 +231,7 @@ def defFunTrans (f : Ident) (args : TSyntaxArray `ident)
 
   Elab.Command.liftTermElabM <| do
   -- resolve function name
-  let fId ← resolveUniqueNamespace f
+  let fId ← ensureNonAmbiguous f (← resolveGlobalConst f)
   let info ← getConstInfo fId
 
   let cfg ← parseDefFunTransConfig cfg
