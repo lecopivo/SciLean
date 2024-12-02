@@ -180,3 +180,11 @@ theorem det_inv_eq_inv_det (A : R^[I,I]) :
 
 
 end
+
+section CrossProduct
+
+@[simp, simp_core]
+theorem cossmatrix_antisymmpart (x : R^[3]) :
+  x.crossmatrix.antisymmpart = x := by sorry_proof
+
+end CrossProduct

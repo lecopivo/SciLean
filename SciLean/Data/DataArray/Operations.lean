@@ -306,6 +306,23 @@ noncomputable
 instance : Solve R I (I×J) where
   solve A B := A.solve' B
 
+/-- Cross product of two vector. -/
+def cross (x y : R^[3]) : R^[3] :=
+  ⊞[x[1]*y[2] - x[2]*y[1],
+    x[2]*y[0] - x[0]*y[2],
+    x[0]*y[1] - x[1]*y[0]]
+
+/-- Matrix corresponding to taking cross product with `x`  -/
+def crossmatrix (x : R^[3]) : R^[3,3] := Id.run do
+  let mut A : R^[3,3] := 0
+  A[0,2] := x[1]; A[0,1] := - x[2]
+  A[1,0] := x[2]; A[1,2] := - x[0]
+  A[2,1] := x[0]; A[2,0] := - x[1]
+  return A
+
+/-- Takes antisymmetric part of matrix `A` and stacks into a vector. -/
+def antisymmpart (A : R^[3,3]) : R^[3] :=
+  ⊞[0.5 * (A[2,1] - A[1,2]), 0.5 * (A[0,2] - A[2,0]), 0.5 * (A[1,0] - A[0,1])]
 
 /-- Cayley Map: https://en.wikipedia.org/wiki/Cayley_transform#Matrix_map -/
 noncomputable
