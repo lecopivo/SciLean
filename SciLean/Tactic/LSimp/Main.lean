@@ -532,7 +532,6 @@ partial def simpLet (e : Expr) : LSimpM Result := do
       let rbx ← lsimp bx
       return ← r.mkEqTrans rbx
 
-@[export scilean_ldsimp]
 partial def ldsimpImpl (e : Expr) : LSimpM Expr := timeThis "dsimp" do
   let cfg ← getConfig
   unless cfg.dsimp do
@@ -552,6 +551,7 @@ partial def ldsimpImpl (e : Expr) : LSimpM Expr := timeThis "dsimp" do
     if eNew != e then return .visit eNew else return .done e
   transform (usedLetOnly := cfg.zeta) e (pre := pre) (post := post)
 
+initialize ldsimpRef.set ldsimpImpl
 
 partial def visitFn (e : Expr) : LSimpM Result := do
   let f := e.getAppFn
@@ -764,7 +764,6 @@ where
       r ← r.mkEqTrans (← simpLoop r.expr)
     cacheResult e cfg r
 
-@[export scilean_lsimp]
 partial def lsimpImpl (e : Expr) : LSimpM Result := do
 --   withIncRecDepth do
   if (← isProof e) then
@@ -788,6 +787,8 @@ where
 
     trace[Meta.Tactic.simp.heads] "{repr e.toHeadIndex}"
     simpLoop e
+
+initialize lsimpRef.set lsimpImpl
 
 
 /-- Run `lsimp` on `e` and process result with `k r' where `k` is executed in modified local context

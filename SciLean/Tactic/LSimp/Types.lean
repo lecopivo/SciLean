@@ -213,11 +213,11 @@ def cacheFind? (e : Expr) : LSimpM (Option Result) := do
 -- LSimp forward declaration -----------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-@[extern "scilean_lsimp"]
-opaque lsimp (e : Expr) : LSimpM Result
+initialize lsimpRef  : IO.Ref (Expr → LSimpM Result) ← IO.mkRef (fun e => return {expr := e})
+initialize ldsimpRef : IO.Ref (Expr → LSimpM Expr)   ← IO.mkRef (fun e => return e)
 
-@[extern "scilean_ldsimp"]
-opaque ldsimp (e : Expr) : LSimpM Expr
+def lsimp  (e : Expr) : LSimpM Result := do (← lsimpRef.get) e
+def ldsimp (e : Expr) : LSimpM Expr   := do (← ldsimpRef.get) e
 
 
 ----------------------------------------------------------------------------------------------------
