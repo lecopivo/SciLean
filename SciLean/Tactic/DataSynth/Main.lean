@@ -7,20 +7,110 @@ namespace SciLean.Tactic.DataSynth
 open Lean Meta
 
 
+def Simp.lsimp (e : Expr) : SimpM Simp.Result :=
+  let r := do
+    let r ← LSimp.lsimp e
+    r.bindVars
+  fun mthds ctx s => do
+    let mthds := Simp.MethodsRef.toMethods mthds
+    let cache : IO.Ref LSimp.Cache ← IO.mkRef {}
+    let r := r mthds ctx {cache := cache, simpState := s}
+    withoutModifyingLCtx
+      (fun (r,_) => return { expr := r.expr, proof? := r.proof?})
+      r
+
+partial def flattenLet (e : Expr) : Expr :=
+  match e with
+  | .letE n2 t2 (.letE n1 t1 v1 v2 ndep1) b ndep2 =>
+    let b := b.liftLooseBVars 1 1
+    flattenLet <| .letE n1 t1 v1 (.letE n2 t2 v2 b ndep2) ndep1
+  | .letE n t v b ndep =>
+    .letE n t v (flattenLet b) ndep
+  | _ => e
+
+
+def reduceProdProj (e : Expr) : Expr :=
+  match e with
+  | mkApp3 (.const ``Prod.fst lvl) X Y xy =>
+    match reduceProdProj xy with
+    | (mkApp4 (.const ``Prod.mk _) _ _ x _) => x
+    | xy => mkApp3 (.const ``Prod.fst lvl) X Y xy
+  | mkApp3 (.const ``Prod.snd lvl) X Y xy =>
+    match reduceProdProj xy with
+    | (mkApp4 (.const ``Prod.mk _) _ _ _ y) => y
+    | xy => mkApp3 (.const ``Prod.snd lvl) X Y xy
+  | _ => e
+
+
+open Lean Meta in
+partial def splitLet (e : Expr) : Expr :=
+  match e with
+  | .letE n t v b ndep =>
+
+  -- | .letE n2 t2 (.letE n1 t1 v1 v2 ndep1) b ndep2 =>
+  --   let b := b.liftLooseBVars 1 1
+  --   flattenLet <| .letE n1 t1 v1 (.letE n2 t2 v2 b ndep2) ndep1
+
+    match v with
+    | .letE n' t' v' v ndep' =>
+      let b := b.liftLooseBVars 1 1
+      splitLet <| .letE n' t' v' (.letE n t v b ndep) ndep'
+
+    | (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y x y) =>
+
+      let b := b.liftLooseBVars 1 2
+      let b := b.instantiate1 (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y (.bvar 1) (.bvar 0))
+
+      splitLet <|
+        .letE (n.appendAfter "₁") X x (nonDep:=ndep) <|
+        .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nonDep:=ndep) b
+
+    | (.bvar ..) | (.fvar ..) | (.lam ..) =>
+      splitLet <| b.instantiate1 v
+
+    | (.app (.lam _ _ b' _) x) =>
+      splitLet <| .letE n t (b'.instantiate1 x) b ndep
+
+    | (mkApp3 (.const ``Prod.fst _) ..)
+    | (mkApp3 (.const ``Prod.snd _) ..) =>
+      let v' := reduceProdProj v
+      if v'==v then
+        .letE n t v (splitLet b) ndep
+      else
+        splitLet (.letE n t v' b ndep)
+
+    | v => .letE n t v (splitLet b) ndep
+
+  | .app f x =>
+    .app (splitLet f) (splitLet x)
+  | .lam n t b bi =>
+    .lam n t (splitLet b) bi
+  | _ => e
+
+
 def normalize (e : Expr) : DataSynthM (Simp.Result) := do
 
-  let e₀ := e
+  withTraceNode
+    `Meta.Tactic.data_synth
+    (fun _ => return m!"normalization") do
 
   let cfg := (← read).config
+
+  let e₀ := e
   let mut e := e
 
   -- fast let normalization
-  if cfg.flatten then
-    e ← lambdaTelescope e fun xs b =>
-      mkLambdaFVars xs (flattenLetCore b)
+  if cfg.normalizeLet then
+    e ← lambdaTelescope e fun xs b => do
+      mkLambdaFVars xs (splitLet (b))
 
-  -- heavy duty normalization using `lsimp`
-  let r ← if cfg.lsimp then Simp.lsimp e else pure { expr := e }
+  let mut r : Simp.Result := { expr := e }
+
+  if cfg.lsimp then
+    r ← r.mkEqTrans (← Simp.lsimp r.expr)
+
+  if cfg.simp then
+    r ← r.mkEqTrans (← Simp.simp r.expr)
 
   -- report only when something has been done
   if ¬(e₀==r.expr) then
@@ -37,6 +127,8 @@ def discharge? (e : Expr) : DataSynthM (Option Expr) := do
 def Goal.getCandidateTheorems (g : Goal) : DataSynthM (Array DataSynthTheorem) := do
   let (_,e) ← g.mkFreshProofGoal
   let ext := dataSynthTheoremsExt.getState (← getEnv)
+  -- let keys ← Mathlib.Meta.FunProp.RefinedDiscrTree.mkDTExpr e {}
+  -- trace[Meta.Tactic.data_synth] "keys: {keys}"
   let thms ← ext.theorems.getMatchWithScore e false {} -- {zeta:=false, zetaDelta:=false}
   let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
   return thms
@@ -120,7 +212,7 @@ def tryTheorem? (e : Expr) (thm : DataSynthTheorem) : DataSynthM (Option Expr) :
   let thmProof := thmProof.beta xs
 
   unless (← isDefEq e type) do
-    trace[Meta.Tactic.data_synth] "unification failed {e}=?={type}"
+    trace[Meta.Tactic.data_synth] "unification failed\n{e}\n=?=\n{type}"
     return none
 
   -- todo: redo this, make a queue of all argument an try synthesize them over and over, until done or no progress
@@ -128,11 +220,14 @@ def tryTheorem? (e : Expr) (thm : DataSynthTheorem) : DataSynthM (Option Expr) :
   for x in xs do
     let _ ← synthesizeArgument x
 
+  for x in xs do
+    let _ ← synthesizeArgument x
+
   -- check if all arguments have been synthesized
   for x in xs do
     let x ← instantiateMVars x
-    if x.hasMVar then
-      trace[Meta.Tactic.data_synth] "failed to synthesize argument {x}"
+    if x.isMVar then
+      trace[Meta.Tactic.data_synth] "failed to synthesize argument {x} : {← inferType x}"
       return none
 
   return some thmProof
@@ -184,7 +279,7 @@ def mainCached (goal : Goal) (initialTrace := true) : DataSynthM (Option Result)
     withTraceNode `Meta.Tactic.data_synth
       (fun r =>
         match r with
-        | .ok (some r) => return m!"[✅] {← goal.pp}"
+        | .ok (some _r) => return m!"[✅] {← goal.pp}"
         | .ok none => return m!"[❌] {← goal.pp}"
         | .error e => return m!"[💥️] {← goal.pp}\n{e.toMessageData}")
       go
@@ -225,34 +320,66 @@ private def mkHasFwdDerivAt (f : Expr) (x : Expr) : MetaM (Option Goal) := do
   return goal
 
 
+-- theorem name, gId, fId, hgId, hfId
+def letTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat) :=
+  Std.HashMap.empty
+    |>.insert `HasFwdDerivAt (`HasFwdDerivAt.let_rule, 3, 4, 8, 9)
+    |>.insert `SciLean.HasFwdFDerivAt (`SciLean.HasFwdFDerivAt.let_rule, 11, 12, 16, 17)
+    |>.insert `SciLean.HasRevFDeriv (`SciLean.HasRevFDeriv.let_rule, 14, 15, 18, 19)
+
+
 /-- Given goal for composition `fun x => let y:=g x; f y x` and given `f` and `g` return corresponding goals for `↿f` and `g` -/
 def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) := do
-  -- hacky extract `x`
-  let hoh ← mkAppOptM `HasFwdDerivAt.let_rule #[none,none,none,g,f]
-  let (xs, _, thm) ← forallMetaTelescope (← inferType hoh)
-  let (ys, _, _) ← forallMetaTelescope (← inferType fgGoal.goal)
-  if (← isDefEq (thm) (fgGoal.goal.beta ys)) then
-    let hg ← inferType xs[3]!
-    let hf ← inferType xs[4]!
-    let some ggoal ← isDataSynthGoal? hg | return none
-    let some fgoal ← isDataSynthGoal? hf | return none
-    return (fgoal, ggoal)
-  else
+
+  let some (thmName, gId, fId, hgId, hfId) := letTheorems[fgGoal.dataSynthDecl.name]?
+    | return none
+
+  let info ← getConstInfo thmName
+  let (xs, _, thm) ← forallMetaTelescope info.type
+
+  xs[gId]!.mvarId!.assignIfDefeq g
+  xs[fId]!.mvarId!.assignIfDefeq f
+
+  let rhs := (← fgGoal.mkFreshProofGoal).2
+  if ¬(← isDefEq thm rhs) then
     return none
+
+  let hg ← inferType xs[hgId]! >>= instantiateMVars
+  let hf ← inferType xs[hfId]! >>= instantiateMVars
+  let some ggoal ← isDataSynthGoal? hg | return none
+  let some fgoal ← isDataSynthGoal? hf | return none
+  return (fgoal, ggoal)
 
 /-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
 def letResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
 
-  let x ← lambdaTelescope fgGoal.goal fun _ b => pure b.appArg!
-  let proof ← mkAppM `HasFwdDerivAt.let_rule #[g,f,hg.proof,hf.proof]
+  let some (thmName, gId, fId, hgId, hfId) := letTheorems[fgGoal.dataSynthDecl.name]?
+    | return none
+
+  let mut args? : Array (Option Expr) := .mkArray (max hgId hfId+1) none
+  args? := args?.set! gId g
+  args? := args?.set! fId f
+  args? := args?.set! hgId hg.proof
+  args? := args?.set! hfId hf.proof
+
+  let proof ← mkAppOptM thmName args?
   let Proof ← inferType proof
-  let fg' := Proof.appFn!.appArg!
+
+  -- extract data from the result
+  let (xs,g) ← fgGoal.mkFreshProofGoal
+  if ¬(← isDefEq g Proof) then
+    return none
+  let xs ← xs.mapM instantiateMVars
+
   let r : Result := {
-    xs := #[← instantiateMVars fg']
+    xs := xs
     proof := ← instantiateMVars proof
     goal := fgGoal
   }
-  let r ← r.congr #[← normalize fg']
+
+  -- normalize all output data
+  let r ← r.congr (← xs.mapM normalize)
+
   return r
 
 

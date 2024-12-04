@@ -44,7 +44,7 @@ syntax (name:=data_synth_conv) "data_synth" optConfig : conv
     if ← isDefEq e e' then
       Conv.changeLhs e'
     else
-      throwError "faield to assign data"
+      throwError "faield to assign data {e'}"
   | none =>
     throwError "`data_synth` failed"
 | _ => throwUnsupportedSyntax

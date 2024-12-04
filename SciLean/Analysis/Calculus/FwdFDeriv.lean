@@ -305,8 +305,8 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule_at (x : X) (f g : X → K)
       let y := ydy.1; let dy := ydy.2
       let zdz := (fwdFDeriv K g x dx)
       let z := zdz.1; let dz := zdz.2
-      (y * z, dz * y + dy * z) := by
-  funext dx; unfold fwdFDeriv; fun_trans; simp[mul_comm]
+      (y * z, y * dz + dy * z) := by
+  funext dx; unfold fwdFDeriv; fun_trans
 
 
 -- HSMul.hSMul -----------------------------------------------------------------

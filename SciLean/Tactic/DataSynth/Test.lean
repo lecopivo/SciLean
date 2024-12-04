@@ -6,7 +6,7 @@ import SciLean.Tactic.CompiledTactics
 import SciLean.Tactic.LSimp.Elab
 
 @[data_synth out f' in f]
-def HasDerivAt {X Y: Type*} (f : X → Y) (f' : X → X → Y) (x : X) : Prop := sorry
+def HasDerivAt {X Y: Type} (f : X → Y) (f' : X → X → Y) (x : X) : Prop := sorry
 
 @[data_synth]
 theorem id_rule {X} (x : X): HasDerivAt (fun x : X => x) (fun x dx => dx) x := sorry
@@ -55,7 +55,7 @@ set_option trace.Meta.Tactic.data_synth true in
 
 
 @[data_synth out f' in f]
-def HasFwdDerivAt {X Y: Type*} (f : X → Y) (f' : X → X → Y×Y) (x : X) : Prop := sorry
+def HasFwdDerivAt {X Y: Type} (f : X → Y) (f' : X → X → Y×Y) (x : X) : Prop := sorry
 
 namespace HasFwdDerivAt
 @[data_synth]
@@ -108,8 +108,13 @@ theorem mul_rule {X Y} [Add Y] [Mul Y]
   HasFwdDerivAt (fun x => f x * g x)
     (fun x dx =>
       let ydy := f' x dx
+      let y := ydy.1; let dy := ydy.2
       let zdz := g' x dx
-      (ydy.1 * zdz.1, ydy.2 * zdz.1 + ydy.1 * zdz.2)) x := sorry
+      let z := zdz.1; let dz := zdz.2
+      (y * z, dy * z + y * dz)) x := sorry
+      -- let ydy := f' x dx
+      -- let zdz := g' x dx
+      -- (ydy.1 * zdz.1, ydy.2 * zdz.1 + ydy.1 * zdz.2)) x := sorry
 
 @[data_synth]
 theorem fst_rule {X Y}
@@ -133,17 +138,16 @@ variable (x' : Nat)
 set_option trace.Meta.Tactic.data_synth true in
 #check (HasFwdDerivAt (fun x : Nat =>
             x*x*x*x*x*x) ?f' 0) rewrite_by
-              data_synth +lsimp -zeta
+              data_synth
 
 
 set_option trace.Meta.Tactic.data_synth true in
 set_option trace.Meta.Tactic.data_synth.normalize true in
 set_option trace.Meta.Tactic.data_synth.input true in
 #check (HasFwdDerivAt (fun x : Nat =>
-            let y := x*x
+            let y := (x+x)*(x+x)
             x * y) ?f' 0) rewrite_by
               data_synth
-
 
 
 set_option trace.Meta.Tactic.data_synth true in
@@ -158,10 +162,39 @@ set_option trace.Meta.Tactic.data_synth.input true in
               data_synth
 
 
+set_option trace.Meta.Tactic.data_synth true in
+set_option trace.Meta.Tactic.data_synth.normalize true in
+set_option trace.Meta.Tactic.data_synth.input true in
+#check (HasFwdDerivAt (fun x : Nat =>
+            let x₁ := x*x
+            let x₂ := x*x₁
+            let x₃ := x*x₁*x₂
+            let x₄ := x*x₁*x₂*x₃
+            x*x₁*x₂*x₃*x₄) ?f' 0) rewrite_by
+              data_synth
+
+
+-- set_option trace.Meta.Tactic.data_synth true in
+-- set_option trace.Meta.Tactic.data_synth.normalize true in
+-- set_option trace.Meta.Tactic.data_synth.input true in
+#check (HasFwdDerivAt (fun x : Nat =>
+            let x₁ := x*x
+            let x₂ := x*x₁
+            let x₃ := x*x₁*x₂
+            let x₄ := x*x₁*x₂*x₃
+            let x₅ := x*x₁*x₂*x₃*x₄
+            let x₆ := x*x₁*x₂*x₃*x₄*x₅
+            x*x₁*x₂*x₃*x₄*x₅*x₆) ?f' 0) rewrite_by
+              data_synth
+
+
 open Lean Meta Elab Qq
 #eval show TermElabM Unit from do
 
-  for i in [0:10] do
+  let mut counts : Array Float := #[]
+  let mut times : Array Float := #[]
+  let N := 11
+  for i in [1:N] do
     let n := 10*i + 2
 
     let f ← withLocalDeclD `x q(Nat) fun x => do
@@ -170,34 +203,20 @@ open Lean Meta Elab Qq
     let e ← mkAppM ``HasFwdDerivAt #[f,f',q(0)]
 
     let start ← IO.monoNanosNow
-    let (e',_) ← SciLean.elabConvRewrite e #[] (← `(conv| (data_synth +flatten;)))
+    let (e',_) ← SciLean.elabConvRewrite e #[] (← `(conv| (data_synth)))
     let stop ← IO.monoNanosNow
-    IO.println s!"n={n}, time: {(stop - start).toFloat/1e6}ms  | {hash e'}"
-
-#exit
-
-  /- let e := q(HasFwdDerivAt (fun x : Nat =>
-            x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x
-            *x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x) $f' 0)
- -/
-  IO.println s!"Result:\n{← ppExpr e'}"
+    let time := (stop - start).toFloat/1e6
+    times := times.push time
+    counts := counts.push n.toFloat
+    IO.println s!"n={n}, time: {time}ms  | {hash e'}"
 
 
+  let x := counts.map (·.log)
+  let y := times.map (·.log)
 
-#exit
+  let N := x.size
+  let dom := N.toFloat * (∑ i, (x.get i)^2) - (∑ i, x.get i)^2
+  let nom := (N.toFloat * (∑ i, (x.get i)*y.get! i) - (∑ i, x.get i)*(∑ i, y.get i))
+  let slope := nom / dom
 
-open Lean Meta Qq
-#eval show MetaM Unit from do
-
-  let f' := q(fun x : Nat =>
-              let y := x * x
-              fun dx : Nat =>
-                let dy := dx * x + x * dx
-                (y, dy))
-
-  let g ← mkFreshExprMVarQ q(Nat → Nat → Nat×Nat)
-
-  if ← isDefEq f g then
-    IO.println (← ppExpr g)
-  else
-    throwError "uhg"
+  IO.println s!"scaling {slope}"

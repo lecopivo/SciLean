@@ -9,20 +9,6 @@ namespace SciLean.Tactic.DataSynth
 
 -------------------------------------------------
 
-def Simp.lsimp (e : Expr) : SimpM Simp.Result :=
-  let r := do
-    let r ← LSimp.lsimp e
-    r.bindVars
-  fun mthds ctx s => do
-    let mthds := Simp.MethodsRef.toMethods mthds
-    let cache : IO.Ref LSimp.Cache ← IO.mkRef {}
-    let r := r mthds ctx {cache := cache, simpState := s}
-    withoutModifyingLCtx
-      (fun (r,_) => return { expr := r.expr, proof? := r.proof?})
-      r
-
-------------------------------------------
-
 
 structure Goal where
   /-- Expression for `fun (x₁ : X₁) ... (xₙ : Xₙ) → P` for some `P : Prop`
@@ -40,8 +26,8 @@ def mkFreshProofGoal (g : Goal) : MetaM (Array Expr × Expr) := do
 
 /-- Pretty print of the goal -/
 def pp (g : Goal) : MetaM MessageData := do
-  let (_,_,e) ← lambdaMetaTelescope g.goal
-  return m!"{e}"
+  let (xs,_,e) ← lambdaMetaTelescope g.goal
+  return m!"{xs}, {e}"
 
 end Goal
 
@@ -62,15 +48,15 @@ namespace Result
 Return result with `xs` data. -/
 def congr (r : Result) (rs : Array Simp.Result) : MetaM Result := do
   let goal := r.goal.goal
-  let hgoal ← (r.xs.zip rs).foldlM (init:=goal)
+  -- todo: this proof can be optimized as there is no need to start with `← mkEqRefl goal`
+  let hgoal ← (r.xs.zip rs).foldlM (init:= ← mkEqRefl goal)
     (fun g (x,r) =>
       match r.proof? with
-      | some hx => mkCongrArg g hx
-      | none => mkEqRefl x >>= mkCongrArg g)
+      | some hx => mkCongr g hx
+      | none => mkCongrFun g x)
   let xs := rs.map (·.expr)
   let proof ← mkAppOptM ``Eq.mp #[← inferType r.proof, goal.beta xs, hgoal, r.proof]
   return { xs := xs, proof := proof, goal := r.goal }
-
 
 def getSolvedGoal (r : Result) : Expr := r.goal.goal.beta r.xs
 
@@ -81,18 +67,11 @@ end Result
 
 structure DataSynthConfig where
   maxNumSteps := 100
-  flatten := true
+  normalizeLet := true
   lsimp := false
+  simp := false
 
 structure Config extends DataSynthConfig, Simp.Config
-
-open Lean in
-partial def flattenLetCore (e : Expr) : Expr :=
-  match e with
-  | .letE n2 t2 (.letE n1 t1 v1 v2 _) b _ =>
-    let b := b.liftLooseBVars 1 1
-    .letE n1 t1 v1 (flattenLetCore (.letE n2 t2 v2 (flattenLetCore b) false)) false
-  | _ => e
 
 
 structure Context where
