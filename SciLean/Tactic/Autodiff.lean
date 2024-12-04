@@ -13,30 +13,30 @@ import SciLean.Tactic.LFunTrans
 namespace SciLean.Tactic
 
 open Lean Meta Elab Tactic Mathlib.Meta.FunTrans Lean.Parser.Tactic in
-syntax (name := lautodiffConvStx) "autodiff" (config)? (discharger)?
+syntax (name := lautodiffConvStx) "autodiff" optConfig (discharger)?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*) "]")? : conv
 
 open Lean Meta Elab Tactic Mathlib.Meta.FunTrans Lean.Parser.Tactic in
-syntax (name := lautodiffTacticStx) "autodiff" (config)? (discharger)?
+syntax (name := lautodiffTacticStx) "autodiff" optConfig (discharger)?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*) "]")? : tactic
 
 macro_rules
-| `(conv| autodiff $[$cfg]? $[$disch]?  $[[$a,*]]?) => do
+| `(conv| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
   if a.isSome then
     `(conv| ((try unfold deriv fgradient adjointFDeriv); -- todo: investigate why simp sometimes does not unfold and remove this line
-             lfun_trans $[$cfg]? $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
+             lfun_trans $cfg $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
   else
     `(conv| ((try unfold deriv fgradient adjointFDeriv);
-             lfun_trans $[$cfg]? $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
+             lfun_trans $cfg $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
 
 macro_rules
-| `(tactic| autodiff $[$cfg]? $[$disch]?  $[[$a,*]]?) => do
+| `(tactic| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
   if a.isSome then
     `(tactic| ((try unfold deriv fgradient adjointFDeriv);
-               lfun_trans $[$cfg]? $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
+               lfun_trans $cfg $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
   else
     `(tactic| ((try unfold deriv fgradient adjointFDeriv);
-               lfun_trans $[$cfg]? $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
+               lfun_trans $cfg $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
 
 -- open Lean Meta
 -- simproc_decl lift_lets_simproc (_) := fun e => do

@@ -9,12 +9,12 @@ open Lean Meta
 
 
 open Lean.Parser.Tactic in
-syntax (name:=lsimp_conv) "lsimp" (config)? (discharger)? (&" only")?
+syntax (name:=lsimp_conv) "lsimp" optConfig (discharger)? (&" only")?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*,?) "]")? : conv
 
 
 open Lean.Parser.Tactic in
-syntax (name:=lsimp_tactic) "lsimp" (config)? (discharger)? (&" only")?
+syntax (name:=lsimp_tactic) "lsimp" optConfig (discharger)? (&" only")?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*,?) "]")? : tactic
 
 
