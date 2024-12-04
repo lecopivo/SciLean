@@ -362,13 +362,17 @@ partial def simpLambda (e : Expr) : LSimpM Result := do
   withParent e <| lambdaTelescopeDSimp e fun xs e => do
     withoutModifyingLCtx pure do withoutModifyingCache do withNewLemmas xs do
       let r ← lsimp e
+
       let (eNew,vars)  ← xs.foldrM (init:=(r.expr,r.vars)) fun x (e,vars) => do
         let deps ← collectForwardDeps #[x] false
         let (vars', vars) := vars.partition deps.contains
         let e ← mkLambdaFVars (#[x] ++ vars') e
         pure (e,vars)
       let eNew ← mkLambdaFVars vars eNew
+
       let r ← r.bindVars
+      let pullLetOutOfLambda := false -- todo: turn this into `lsimp` config option
+      let eNew ← if pullLetOutOfLambda then pure eNew else mkLambdaFVars xs r.expr
       match r.proof? with
       | none   => return { expr := eNew }
       | some h =>
