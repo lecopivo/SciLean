@@ -154,10 +154,12 @@ k #[y₁, ..., yₙ] (f y₁ ... yₙ)
 ```
 where `yᵢ` are fresh free variables. -/
 def uncurryLambdaTelescopeOnceImpl [Inhabited α] (f : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := do
-  let .lam xname X b bi := f | throwError "lambda function expected in `uncurryLambdaTelescopeOnce`"
+  forallBoundedTelescope (← inferType f) (some 1) fun xs b => do
+    if xs.size = 0 then
+      throwError "function expected in `uncurryLambdaTelescopeOnce` got {f}"
 
-  withLocalDecl xname bi X fun x => do
-    uncurryBodyTelescope (b.instantiate1 x) x k
+    let x := xs[0]!
+    uncurryBodyTelescope (f.beta #[x]) x k
 
 /-- Simproc that replaces `↿f` with `f` in uncurried lambda form. -/
 dsimproc_decl hasUncurryNormalize (↿_) := fun e => do
