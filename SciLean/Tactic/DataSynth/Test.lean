@@ -134,6 +134,11 @@ theorem snd_rule {X Y}
 
 variable (x' : Nat)
 
+set_option trace.Meta.Tactic.data_synth true in
+#check (HasFwdDerivAt (fun x : Nat×Nat => x) ?f' 0) rewrite_by
+              data_synth
+
+
 
 set_option trace.Meta.Tactic.data_synth true in
 #check (HasFwdDerivAt (fun x : Nat =>
@@ -177,6 +182,7 @@ set_option trace.Meta.Tactic.data_synth.input true in
 -- set_option trace.Meta.Tactic.data_synth true in
 -- set_option trace.Meta.Tactic.data_synth.normalize true in
 -- set_option trace.Meta.Tactic.data_synth.input true in
+set_option profiler true in
 #check (HasFwdDerivAt (fun x : Nat =>
             let x₁ := x*x
             let x₂ := x*x₁
@@ -185,7 +191,8 @@ set_option trace.Meta.Tactic.data_synth.input true in
             let x₅ := x*x₁*x₂*x₃*x₄
             let x₆ := x*x₁*x₂*x₃*x₄*x₅
             x*x₁*x₂*x₃*x₄*x₅*x₆) ?f' 0) rewrite_by
-              data_synth
+              data_synth -normalizeLet +normalizeCore
+              -- data_synth
 
 
 open Lean Meta Elab Qq
@@ -203,7 +210,7 @@ open Lean Meta Elab Qq
     let e ← mkAppM ``HasFwdDerivAt #[f,f',q(0)]
 
     let start ← IO.monoNanosNow
-    let (e',_) ← SciLean.elabConvRewrite e #[] (← `(conv| (data_synth)))
+    let (e',_) ← SciLean.elabConvRewrite e #[] (← `(conv| (data_synth -normalizeLet +normalizeCore)))
     let stop ← IO.monoNanosNow
     let time := (stop - start).toFloat/1e6
     times := times.push time

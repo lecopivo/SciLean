@@ -24,7 +24,9 @@ syntax (name:=data_synth_conv) "data_synth" optConfig : conv
   let some g ← isDataSynthGoal? e
     | throwError "{e} is not `data_synth` goal"
 
-  let ((r?, _),_) ← dataSynth g |>.run {config := cfg} |>.run {}
+  let stateRef : IO.Ref DataSynth.State ← IO.mkRef {}
+
+  let (r?,_) ← dataSynth g |>.run {config := cfg} |>.run stateRef
     |>.run (← Simp.mkDefaultMethods).toMethodsRef
     |>.run {config := cfg.toConfig, simpTheorems := #[← getSimpTheorems]}
     |>.run {}

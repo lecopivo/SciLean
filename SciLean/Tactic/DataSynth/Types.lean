@@ -3,12 +3,22 @@ import SciLean.Tactic.LSimp.Main
 import SciLean.Tactic.DataSynth.Decl
 import SciLean.Lean.Meta.Uncurry
 
+import Mathlib.Logic.Equiv.Defs
+
 open Lean Meta
 
 namespace SciLean.Tactic.DataSynth
 
 -------------------------------------------------
 
+/-- Cache for normalization results
+
+ -/
+abbrev NormCache := ExprMap Expr
+
+def NormM := StateM NormCache
+
+-------------------------------------------------
 
 structure Goal where
   /-- Expression for `fun (x₁ : X₁) ... (xₙ : Xₙ) → P` for some `P : Prop`
@@ -29,6 +39,7 @@ def pp (g : Goal) : MetaM MessageData := do
   let (xs,_,e) ← lambdaMetaTelescope g.goal
   return m!"{xs}, {e}"
 
+
 end Goal
 
 /-- Result of data synthesization.
@@ -42,34 +53,66 @@ structure Result where
 
 namespace Result
 
+def getSolvedGoal (r : Result) : Expr := r.goal.goal.beta r.xs
+
 /-- Given result for `g` and alternative data `xs` that is propositional to the data of the result `hs`. Proof `hs[i]` can be none if
 `r.xs[i]` and `xs[i]` are defeq.
 
 Return result with `xs` data. -/
 def congr (r : Result) (rs : Array Simp.Result) : MetaM Result := do
   let goal := r.goal.goal
-  -- todo: this proof can be optimized as there is no need to start with `← mkEqRefl goal`
-  let hgoal ← (r.xs.zip rs).foldlM (init:= ← mkEqRefl goal)
-    (fun g (x,r) =>
-      match r.proof? with
-      | some hx => mkCongr g hx
-      | none => mkCongrFun g x)
+
+  -- proof that original result is equal to the result with normalized data
+  let hgoal ←
+    withTraceNode `Meta.Tactic.data_synth (fun _ => return m!"goal congr fold") do
+      (r.xs.zip rs).foldlM (init:= ← mkEqRefl goal)
+        (fun g (x,r) =>
+          match r.proof? with
+          | some hx => mkCongr g hx
+          | none => mkCongrFun g x)
   let xs := rs.map (·.expr)
-  let proof ← mkAppOptM ``Eq.mp #[← inferType r.proof, goal.beta xs, hgoal, r.proof]
+
+  -- cast proof of the orignal result to a proof of the new goal
+  -- note: originaly we used `mkAppOptM` but replacing it with the following made
+  --       `data_synth` four times faster on one test
+  let .sort u ← inferType r.getSolvedGoal | throwError "bug"
+  let proof := mkAppN (.const ``Eq.mp [u]) #[r.getSolvedGoal, goal.beta xs, hgoal, r.proof]
+
   return { xs := xs, proof := proof, goal := r.goal }
 
-def getSolvedGoal (r : Result) : Expr := r.goal.goal.beta r.xs
-
 end Result
+
+
+/-- For a `Goal` and its proof extract `Result` from it. -/
+def Goal.getResultFrom (g : Goal) (proof : Expr) : MetaM Result := do
+
+  -- todo: maybe add same sanity checks that we are doing reasonable things
+
+  let P ← inferType proof
+  let args := P.getAppArgs
+
+  let xs := g.dataSynthDecl.outputArgs.map (fun i => args[i]!)
+
+  let r : Result := {
+    xs := xs
+    proof := proof
+    goal := g
+  }
+
+  return r
 
 
 ---------------------------------------------------
 
 structure DataSynthConfig where
   maxNumSteps := 100
-  normalizeLet := true
+  normalizeLet := false
+  normalizeLet' := false
+  normalizeCore := true
   lsimp := false
   simp := false
+  dsimp' := false
+  domainDec := true
 
 structure Config extends DataSynthConfig, Simp.Config
 
@@ -85,9 +128,12 @@ structure State where
   cache : Std.HashMap Goal Result := {}
   /-- cache for failed goals -/
   failedCache : Std.HashSet Goal := {}
+  -- /-- normalization cache -/
+  -- normCache : Std.HashMap ExprStructEq Expr := {}
 
 
-abbrev DataSynthM := ReaderT Context $ StateRefT State Simp.SimpM
+abbrev DataSynthM := ReaderT Context $ MonadCacheT ExprStructEq Expr $ StateRefT State Simp.SimpM
+
 
 -----------
 
@@ -107,8 +153,30 @@ structure FunData where
   body : Expr
   deriving Inhabited
 
+
+/-- Size of product type, assuming it is right associated
+i.e. `prodSize (A×B×C) = 3` but `prodSize ((A×B)×C) = 2`
+ -/
+private def prodSize (e : Expr) : Nat :=
+  go e 1
+where
+  go (e : Expr) (n : Nat) :=
+    match e with
+    | Expr.mkApp2 (.const ``Prod _) _ Y =>
+      go Y (n+1)
+    | _ => n
+
+def curryLambdaTelescope (f : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := do
+  let .forallE _ xType _ _ := (← inferType f)
+    | throwError "can't curry `{← ppExpr f}` not a function"
+
+  let n := prodSize xType
+  let f ← mkCurryFun n f
+
+  lambdaTelescope f k
+
 def getFunData (f : Expr) : MetaM FunData :=
-  uncurryLambdaTelescopeOnceImpl f fun xs b => do
+  curryLambdaTelescope f fun xs b => do
     let data : FunData :=
       { lctx := ← getLCtx
         insts := ← getLocalInstances
@@ -195,14 +263,44 @@ def decompose (f : FunData) : MetaM FunDecomp := do
       return .letE f g
 
 
+/-- Given a function `f : X → Y` find
+`p₁ : X → X₁`, `p₂ : X → X₂` and `q : X₁ → X₂`  and `g : X₁ → Y`  -/
+def decomposeDomain? (f : FunData) : MetaM (Option (Expr × Expr × Expr × FunData)) := do
+  withLCtx f.lctx f.insts do
+
+    if f.xs.size ≤ 1 then
+      return none
+
+    let vars := (← f.body.collectFVars |>.run {}).2.fvarSet
+    let (xs₁, xs₂) := f.xs.split (fun x => vars.contains x.fvarId!)
+
+    if xs₂.size = 0 then
+      return none
+
+    let g : FunData := {f with xs := xs₁}
+
+    let p₁ ←
+      mkUncurryLambdaFVars f.xs (← mkProdElem xs₁) (withLet:=false)
+    let p₂ ←
+      mkUncurryLambdaFVars f.xs (← mkProdElem xs₂) (withLet:=false)
+
+    let q ←
+      mkUncurryLambdaFVars xs₂ (← mkProdElem f.xs) (withLet:=false)
+      >>=
+      mkUncurryLambdaFVars xs₁ (withLet:=false)
+
+    return some (p₁,p₂,q,g)
+
+
 end FunData
 
--- data synth driven by a function
+
 initialize dataSynthFunRef : IO.Ref (Goal → FunData → DataSynthM (Option Result)) ←
   IO.mkRef (fun _ _ => return none)
+
+/-- Tactic `data_synth` driven by a input function `f` -/
 def dataSynthFun (e : Goal) (f : FunData) : DataSynthM (Option Result) := do
   (← dataSynthFunRef.get) e f
-
 
 
 --------------------------------------------------------------------------------------------------

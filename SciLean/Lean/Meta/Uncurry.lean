@@ -38,7 +38,7 @@ fun x =>
   let xₙ := x.2....2
   b
 ``` -/
-def mkUncurryLambdaFVars (xs : Array Expr) (b : Expr) : MetaM Expr := do
+def mkUncurryLambdaFVars (xs : Array Expr) (b : Expr) (withLet:=true) : MetaM Expr := do
 
   if xs.size = 1 then return ← mkLambdaFVars xs b
 
@@ -51,14 +51,13 @@ def mkUncurryLambdaFVars (xs : Array Expr) (b : Expr) : MetaM Expr := do
 
     let xvals := mkProdSplitElem' xvar xs.size
 
-    -- tag values with meta-data
-    -- let mdata := MData.empty |>.set `uncurry_fun true |>.set `uncurry_fun_size n
-    -- let xvals := xvals.mapIdx (fun i xval =>
-    --   Expr.mdata (mdata.set `uncurry_fun_idx i) xval)
-
-    withLetDecls xnames xvals fun xvars => do
-      let b := b.replaceFVars xs xvars
-      mkLambdaFVars (#[xvar] ++ xvars) b
+    if withLet then
+      withLetDecls xnames xvals fun xvars => do
+        let b := b.replaceFVars xs xvars
+        mkLambdaFVars (#[xvar] ++ xvars) b
+    else
+      let b := b.replaceFVars xs xvals
+      mkLambdaFVars #[xvar] b
 
 
 /-- Takes function of `n` arguments and returns uncurried version of `f` in specific form:
@@ -115,7 +114,7 @@ where
       -- let xi := x.2. ...  but not what we expected
       else if xi.isProjOf x' then
         let x' := (.proj ``Prod 1 x')
-        withLocalDeclD default (← inferType x') fun xivar => do
+        withLocalDeclD `x (← inferType x') fun xivar => do
           -- here we do not instantiate!
           -- but call again with updated `x'`
           go (.letE n t xi b ndep) x' (fvars.push xivar)
@@ -127,13 +126,13 @@ where
         if b.containsFVar x.fvarId! then
           k #[x] e
         else
-          withLocalDeclD default (← inferType x') fun xivar => do
+          withLocalDeclD `x (← inferType x') fun xivar => do
             k (fvars.push xivar) b
     | _ =>
       if fvars.size = 0 then
         k #[x] e
       else
-        withLocalDeclD default (← inferType x') fun xivar => do
+        withLocalDeclD `x (← inferType x') fun xivar => do
           k (fvars.push xivar) b
 
 

@@ -2,9 +2,15 @@ import SciLean.Tactic.DataSynth.Types
 import SciLean.Tactic.DataSynth.Theorems
 import Batteries.Tactic.Exact
 
+import Lean.Meta.Transform
+
 namespace SciLean.Tactic.DataSynth
 
 open Lean Meta
+
+/-- Tracing node that does not do any pretty printing so it is usefull for profiling. -/
+private def withProfileTrace (msg : String) (x : DataSynthM α) : DataSynthM α :=
+  withTraceNode `Meta.Tactic.data_synth.profile (fun _ => return msg) x
 
 
 def Simp.lsimp (e : Expr) : SimpM Simp.Result :=
@@ -19,39 +25,69 @@ def Simp.lsimp (e : Expr) : SimpM Simp.Result :=
       (fun (r,_) => return { expr := r.expr, proof? := r.proof?})
       r
 
-partial def flattenLet (e : Expr) : Expr :=
-  match e with
-  | .letE n2 t2 (.letE n1 t1 v1 v2 ndep1) b ndep2 =>
-    let b := b.liftLooseBVars 1 1
-    flattenLet <| .letE n1 t1 v1 (.letE n2 t2 v2 b ndep2) ndep1
-  | .letE n t v b ndep =>
-    .letE n t v (flattenLet b) ndep
-  | _ => e
-
 
 def reduceProdProj (e : Expr) : Expr :=
   match e with
-  | mkApp3 (.const ``Prod.fst lvl) X Y xy =>
+  | .proj ``Prod 0 xy
+  | mkApp3 (.const ``Prod.fst _) _ _ xy =>
     match reduceProdProj xy with
     | (mkApp4 (.const ``Prod.mk _) _ _ x _) => x
-    | xy => mkApp3 (.const ``Prod.fst lvl) X Y xy
-  | mkApp3 (.const ``Prod.snd lvl) X Y xy =>
+    | xy => .proj ``Prod 0 xy
+  | .proj ``Prod 1 xy
+  | mkApp3 (.const ``Prod.snd _) _ _ xy =>
     match reduceProdProj xy with
     | (mkApp4 (.const ``Prod.mk _) _ _ _ y) => y
-    | xy => mkApp3 (.const ``Prod.snd lvl) X Y xy
+    | xy => .proj ``Prod 1 xy
   | _ => e
+
+
+def normalizeLet' (e : Expr) : CoreM Expr :=
+
+ Lean.Core.transform e
+   (post := fun e =>
+     match e with
+     | mkApp3 (.const ``Prod.fst _) _ _ (mkApp4 (.const ``Prod.mk _) _ _ x y) =>
+       return .done x
+     | mkApp3 (.const ``Prod.snd _) _ _ (mkApp4 (.const ``Prod.mk _) _ _ x y) =>
+       return .done y
+     | .proj ``Prod 0 (mkApp4 (.const ``Prod.mk _) _ _ x y) =>
+       return .done x
+     | .proj ``Prod 1 (mkApp4 (.const ``Prod.mk _) _ _ x y) =>
+       return .done y
+     | _ => return .done e)
+
+   (pre := fun e =>
+     match e with
+     | .letE n t v b ndep =>
+       match v with
+       | .letE n' t' v' v ndep' =>
+         let b := b.liftLooseBVars 1 1
+         return .visit (.letE n' t' v' (.letE n t v b ndep) ndep')
+
+       | (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y x y) =>
+
+         let b := b.liftLooseBVars 1 2
+         let b := b.instantiate1 (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y (.bvar 1) (.bvar 0))
+
+         return .visit <|
+           .letE (n.appendAfter "₁") X x (nonDep:=ndep) <|
+           .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nonDep:=ndep) b
+
+       | (.bvar ..) | (.fvar ..) | (.lam ..) =>
+         return .visit <| b.instantiate1 v
+
+       | (.app (.lam _ _ b' _) x) =>
+         return .visit <| .letE n t (b'.instantiate1 x) b ndep
+       | _ => return .continue
+     | _ => return .continue)
 
 
 open Lean Meta in
 partial def splitLet (e : Expr) : Expr :=
-  match e with
+  match e.headBeta with
   | .letE n t v b ndep =>
 
-  -- | .letE n2 t2 (.letE n1 t1 v1 v2 ndep1) b ndep2 =>
-  --   let b := b.liftLooseBVars 1 1
-  --   flattenLet <| .letE n1 t1 v1 (.letE n2 t2 v2 b ndep2) ndep1
-
-    match v with
+    match v.headBeta with
     | .letE n' t' v' v ndep' =>
       let b := b.liftLooseBVars 1 1
       splitLet <| .letE n' t' v' (.letE n t v b ndep) ndep'
@@ -71,21 +107,78 @@ partial def splitLet (e : Expr) : Expr :=
     | (.app (.lam _ _ b' _) x) =>
       splitLet <| .letE n t (b'.instantiate1 x) b ndep
 
-    | (mkApp3 (.const ``Prod.fst _) ..)
-    | (mkApp3 (.const ``Prod.snd _) ..) =>
-      let v' := reduceProdProj v
-      if v'==v then
-        .letE n t v (splitLet b) ndep
+    | v =>
+      let v' := splitLet v
+      if v==v' then
+        .letE n t v' (splitLet b) ndep
       else
-        splitLet (.letE n t v' b ndep)
+        splitLet (.letE n t v' (splitLet b) ndep)
 
-    | v => .letE n t v (splitLet b) ndep
-
+  | .proj ``Prod ..
+  | (mkApp3 (.const ``Prod.fst _) ..)
+  | (mkApp3 (.const ``Prod.snd _) ..) =>
+    let v' := reduceProdProj e
+    if v'==e then
+      e
+    else
+      splitLet v'
   | .app f x =>
     .app (splitLet f) (splitLet x)
   | .lam n t b bi =>
     .lam n t (splitLet b) bi
-  | _ => e
+  | .mdata d e =>
+    .mdata d (splitLet e)
+  | e => e
+
+
+open Lean Meta in
+partial def normalizeCore (e : Expr) : DataSynthM Expr :=
+  checkCache { val := e : ExprStructEq } fun _ => Core.withIncRecDepth do
+    match e.headBeta with
+    | .letE n t v b ndep =>
+
+      match v.headBeta with
+      | .letE n' t' v' v ndep' =>
+        let b := b.liftLooseBVars 1 1
+        normalizeCore <| .letE n' t' v' (.letE n t v b ndep) ndep'
+
+      | (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y x y) =>
+
+        let b := b.liftLooseBVars 1 2
+        let b := b.instantiate1 (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y (.bvar 1) (.bvar 0))
+
+        normalizeCore <|
+          .letE (n.appendAfter "₁") X x (nonDep:=ndep) <|
+          .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nonDep:=ndep) b
+
+      | (.bvar ..) | (.fvar ..) | (.lam ..) =>
+        normalizeCore <| b.instantiate1 v
+
+      | (.app (.lam _ _ b' _) x) =>
+        normalizeCore <| .letE n t (b'.instantiate1 x) b ndep
+
+      | v => do
+        let v' ← normalizeCore v
+        if v==v' then
+          return (.letE n t v' (← normalizeCore b) ndep)
+        else
+          normalizeCore (.letE n t v' (← normalizeCore b) ndep)
+
+    | .proj ``Prod ..
+    | (mkApp3 (.const ``Prod.fst _) ..)
+    | (mkApp3 (.const ``Prod.snd _) ..) =>
+      let v' := reduceProdProj e
+      if v'==e then
+        return e
+      else
+        normalizeCore v'
+    | .app f x => do
+      return .app (← normalizeCore f) (← normalizeCore x)
+    | .lam n t b bi =>
+      return .lam n t (← normalizeCore b) bi
+    | .mdata d e =>
+      return .mdata d (← normalizeCore e)
+    | e => return e
 
 
 def normalize (e : Expr) : DataSynthM (Simp.Result) := do
@@ -99,10 +192,18 @@ def normalize (e : Expr) : DataSynthM (Simp.Result) := do
   let e₀ := e
   let mut e := e
 
-  -- fast let normalization
+  if cfg.normalizeLet' then
+    e ← normalizeLet' e
+
   if cfg.normalizeLet then
-    e ← lambdaTelescope e fun xs b => do
-      mkLambdaFVars xs (splitLet (b))
+    e := splitLet e
+
+  -- this looks like the best option right now
+  if cfg.normalizeCore then
+    e ← normalizeCore e
+
+  if cfg.dsimp' then
+    e ← Simp.dsimp e
 
   let mut r : Simp.Result := { expr := e }
 
@@ -116,9 +217,15 @@ def normalize (e : Expr) : DataSynthM (Simp.Result) := do
   if ¬(e₀==r.expr) then
     trace[Meta.Tactic.data_synth.normalize] m!"\n{e₀}\n==>\n{r.expr}"
 
-  -- todo run normalization from context
+  -- user specified normalization
+  r ← r.mkEqTrans (← (← read).normalize r.expr)
 
   return r
+
+
+def Result.normalize (r : Result) : DataSynthM Result := do
+  withProfileTrace "normalize result" do
+  r.congr (← r.xs.mapM DataSynth.normalize)
 
 
 def discharge? (e : Expr) : DataSynthM (Option Expr) := do
@@ -133,39 +240,43 @@ def Goal.getCandidateTheorems (g : Goal) : DataSynthM (Array DataSynthTheorem) :
   let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
   return thms
 
-def replaceMVarsWithFVars (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := do
-  let fn := e.getAppFn'
-  let args := e.getAppArgs'
-  go fn args.toList #[]
-where
-  go (e : Expr) (args : List Expr) (fvars : Array Expr) : MetaM α := do
-  match args with
-  | [] => k fvars e
-  | a :: as =>
-    if ¬(← instantiateMVars a).isMVar then
-      go (e.app a) as fvars
-    else
-      let type := (← inferType e).bindingDomain!
-      let name := Name.mkSimple (String.stripPrefix s!"{← ppExpr a}" "?")
-      withLocalDeclD name type fun x => do
-        go (e.app x) as (fvars.push x)
-
 
 def isDataSynthGoal? (e : Expr) : MetaM (Option Goal) := do
 
   let .some dataSynthDecl ← isDataSynth? e | return none
 
-  let goal ← replaceMVarsWithFVars (← instantiateMVars e) mkLambdaFVars
+  let fn := e.getAppFn'
+  let args := e.getAppArgs
 
-  return some { goal := goal, dataSynthDecl := dataSynthDecl }
+  let mut outArgs := Array.mkArray args.size false
+  for i in dataSynthDecl.outputArgs do
+    outArgs := outArgs.set! i true
+
+  let e' ← go fn args.toList outArgs.toList #[]
+
+  return some {
+    goal := e'
+    dataSynthDecl := dataSynthDecl
+  }
+where
+  -- replaces out arguments in `e` with free variables
+  go (fn : Expr) (args : List Expr) (outArgs : List Bool) (fvars : Array Expr) :=
+    match args, outArgs with
+    | a :: as, false :: os => go (fn.app a) as os fvars
+    | a :: as, true :: os => do
+      withLocalDeclD `x (← inferType a) fun var => do
+        go (fn.app var) as os (fvars.push var)
+    | [], _
+    | _ , [] => mkLambdaFVars fvars fn
+
 
 def synthesizeArgument (x : Expr) : DataSynthM Bool := do
-
   let x ← instantiateMVars x
   let X ← inferType x
 
   -- skip if already synthesized
   unless x.isMVar do return true
+  withProfileTrace "synthesizeArgument" do
 
   if let .some g ← isDataSynthGoal? X then
     -- try recursive call
@@ -201,6 +312,7 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
 /-
  -/
 def tryTheorem? (e : Expr) (thm : DataSynthTheorem) : DataSynthM (Option Expr) := do
+  withProfileTrace "tryTheorem" do
 
   withTraceNode
     `Meta.Tactic.data_synth
@@ -220,8 +332,8 @@ def tryTheorem? (e : Expr) (thm : DataSynthTheorem) : DataSynthM (Option Expr) :
   for x in xs do
     let _ ← synthesizeArgument x
 
-  for x in xs do
-    let _ ← synthesizeArgument x
+  -- for x in xs do
+  --   let _ ← synthesizeArgument x
 
   -- check if all arguments have been synthesized
   for x in xs do
@@ -232,14 +344,18 @@ def tryTheorem? (e : Expr) (thm : DataSynthTheorem) : DataSynthM (Option Expr) :
 
   return some thmProof
 
+
 -- main function that looks up theorems
 partial def main (goal : Goal) : DataSynthM (Option Result) := do
+  withProfileTrace "main" do
 
   let thms ← goal.getCandidateTheorems
 
   if thms.size = 0 then
     trace[Meta.Tactic.data_synth] "no applicable theorems"
     return none
+
+  trace[Meta.Tactic.data_synth] "candidates {thms.map (fun t => t.thmName)}"
 
   for thm in thms do
     -- for each theorem we generate a fresh data mvars `xs` because them might get partially filled
@@ -289,15 +405,8 @@ def mainCached (goal : Goal) (initialTrace := true) : DataSynthM (Option Result)
 
 def Goal.getInputFun? (g : Goal) : MetaM (Option Expr) := do
   let some i := g.dataSynthDecl.inputArg | return none
-  lambdaTelescope g.goal fun xs b => do
-    let f := b.getArg! i
-
-    -- just check that `f` is not output argument
-    if xs.any (f==·) then
-      return none
-    else
-      return f
-
+  lambdaTelescope g.goal fun _ b => do
+    return b.getArg! i
 
 
 --------------------------------------------------------------------------------------------------
@@ -309,27 +418,18 @@ def compGoals (fgGoal : DataSyntGoal) (f g : Expr) : DataSynthM (Option (Goal×G
 def compResults (hf hg : DataySynthResult) : DataSynthM (Option Result) := return none
 
 
-private def mkHasFwdDerivAt (f : Expr) (x : Expr) : MetaM (Option Goal) := do
-
-  let some (fX,fY) := (← inferType f).arrow? | return none
-  let f' ← mkFreshExprMVar (← mkArrow fX (← mkArrow fX (← mkAppM ``Prod #[fY,fY])))
-  let h ← mkAppM `HasFwdDerivAt #[f,f',x]
-
-  let some goal ← isDataSynthGoal? h | return none
-  trace[Meta.Tactic.data_synth] "created goal {← goal.pp}"
-  return goal
-
-
 -- theorem name, gId, fId, hgId, hfId
 def letTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat) :=
   Std.HashMap.empty
     |>.insert `HasFwdDerivAt (`HasFwdDerivAt.let_rule, 3, 4, 8, 9)
     |>.insert `SciLean.HasFwdFDerivAt (`SciLean.HasFwdFDerivAt.let_rule, 11, 12, 16, 17)
     |>.insert `SciLean.HasRevFDeriv (`SciLean.HasRevFDeriv.let_rule, 14, 15, 18, 19)
+    |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.let_rule, 14, 15, 18, 19)
 
 
 /-- Given goal for composition `fun x => let y:=g x; f y x` and given `f` and `g` return corresponding goals for `↿f` and `g` -/
 def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) := do
+  withProfileTrace "letGoals" do
 
   let some (thmName, gId, fId, hgId, hfId) := letTheorems[fgGoal.dataSynthDecl.name]?
     | return none
@@ -337,8 +437,12 @@ def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) :=
   let info ← getConstInfo thmName
   let (xs, _, thm) ← forallMetaTelescope info.type
 
-  xs[gId]!.mvarId!.assignIfDefeq g
-  xs[fId]!.mvarId!.assignIfDefeq f
+  try
+    withTraceNode `Meta.Tactic.data_synth (fun _ => return m!"assigning data") do
+    xs[gId]!.mvarId!.assignIfDefeq g
+    xs[fId]!.mvarId!.assignIfDefeq f
+  catch _ =>
+    return none
 
   let rhs := (← fgGoal.mkFreshProofGoal).2
   if ¬(← isDefEq thm rhs) then
@@ -352,6 +456,7 @@ def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) :=
 
 /-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
 def letResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
+  withProfileTrace "letResults" do
 
   let some (thmName, gId, fId, hgId, hfId) := letTheorems[fgGoal.dataSynthDecl.name]?
     | return none
@@ -362,26 +467,15 @@ def letResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Optio
   args? := args?.set! hgId hg.proof
   args? := args?.set! hfId hf.proof
 
-  let proof ← mkAppOptM thmName args?
-  let Proof ← inferType proof
+  let proof ←
+    withTraceNode `Meta.Tactic.data_synth (fun _ => return m!"theorem application") do
+    mkAppOptM thmName args?
 
-  -- extract data from the result
-  let (xs,g) ← fgGoal.mkFreshProofGoal
-  if ¬(← isDefEq g Proof) then
-    return none
-  let xs ← xs.mapM instantiateMVars
-
-  let r : Result := {
-    xs := xs
-    proof := ← instantiateMVars proof
-    goal := fgGoal
-  }
-
-  -- normalize all output data
-  let r ← r.congr (← xs.mapM normalize)
+  let r ←
+    withTraceNode `Meta.Tactic.data_synth (fun _ => return m!"getting result from proof") do
+    fgGoal.getResultFrom proof
 
   return r
-
 
 /-- Given goal for composition `fun x i => f x i` and given free var `i` and `f` return goal for `(f · i)` -/
 def piGoal (fGoal : DataSyntGoal) (i : Expr) (fi : Expr) : DataSynthM (Option Goal) := return none
@@ -390,39 +484,133 @@ def piGoal (fGoal : DataSyntGoal) (i : Expr) (fi : Expr) : DataSynthM (Option Go
 def piResult (hf : Result) (i : Expr) : DataSynthM (Option Result) := return none
 
 
+-- theorem name, fId, gId, p₁Id, p₂Id, qId, hgId
+def projTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat × Nat × Nat) :=
+  Std.HashMap.empty
+    |>.insert `SciLean.HasRevFDeriv (`SciLean.HasRevFDeriv.proj_rule, 13, 15, 16, 17, 18, 19)
+    |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.proj_rule, 12, 14, 15, 16, 17, 18)
+
+def projGoals (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option Goal) := do
+  withProfileTrace "projGoals" do
+
+  let some (thmName, fId, gId, p₁Id, p₂Id, qId, hgId) := projTheorems[fGoal.dataSynthDecl.name]?
+    | return none
+
+  let info ← getConstInfo thmName
+  let (xs, _, thm) ← forallMetaTelescope info.type
+
+  xs[fId]!.mvarId!.assignIfDefeq f
+  xs[gId]!.mvarId!.assignIfDefeq g
+  xs[p₁Id]!.mvarId!.assignIfDefeq p₁
+  xs[p₂Id]!.mvarId!.assignIfDefeq p₂
+  xs[qId]!.mvarId!.assignIfDefeq q
+
+  let rhs := (← fGoal.mkFreshProofGoal).2
+  if ¬(← isDefEq thm rhs) then
+    return none
+
+  let hg ← inferType xs[hgId]! >>= instantiateMVars
+  let some ggoal ← isDataSynthGoal? hg | return none
+  return some ggoal
+
+/-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
+def projResults (fGoal : Goal) (f g p₁ p₂ q : Expr) (hg : Result) : DataSynthM (Option Result) := do
+  withProfileTrace "projResults" do
+
+  let some (thmName, fId, gId, p₁Id, p₂Id, qId, hgId) := projTheorems[fGoal.dataSynthDecl.name]?
+    | return none
+
+  let mut args? : Array (Option Expr) := .mkArray (hgId+1) none
+  args? := args?.set! fId f
+  args? := args?.set! gId g
+  args? := args?.set! p₁Id p₁
+  args? := args?.set! p₂Id p₂
+  args? := args?.set! qId q
+  args? := args?.set! hgId hg.proof
+
+  let proof ← mkAppOptM thmName args?
+  let Proof ← inferType proof
+
+  -- extract data from the result
+  let (xs,goal) ← fGoal.mkFreshProofGoal
+  if ¬(← isDefEq goal Proof) then
+    return none
+  let xs ← xs.mapM instantiateMVars
+
+  let r : Result := {
+    xs := xs
+    proof := ← instantiateMVars proof
+    goal := fGoal
+  }
+
+  -- normalize all output data
+  let r ← r.congr (← xs.mapM normalize)
+
+  return r
+
+
+def decomposeDomain? (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
+  if ¬(← read).config.domainDec then
+    return none
+  let some (p₁,p₂,q,g) ← f.decomposeDomain? | return none
+  withProfileTrace "decomposeDomain" do
+    let some ggoal ← projGoals goal (← f.toExpr) (← g.toExpr) p₁ p₂ q | pure none
+    let some hg ← dataSynthFun ggoal g | pure none
+    projResults goal (← f.toExpr) (← g.toExpr) p₁ p₂ q hg
+
+
+def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
+  withProfileTrace "comp case" do
+  let some (fgoal, ggoal) ← compGoals goal (← f.toExpr) (← g.toExpr) | return none
+  let some hg ← dataSynthFun ggoal g | return none
+  let some hf ← dataSynthFun fgoal f | return none
+  let r ← compResults hf hg
+  return r
+
+
+def letCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
+  withProfileTrace "letCase" do
+  let some (fgoal, ggoal) ← letGoals goal (← f.toExprCurry1) (← g.toExpr) | return none
+  let some hg ← dataSynthFun ggoal g | return none
+  let some hf ← dataSynthFun fgoal f | return none
+  let some r ← letResults goal (← f.toExprCurry1) (← g.toExpr) hf hg | return none
+  let r ← r.normalize
+  return r
+
+def lamCase (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
+  withProfileTrace "lamCase" do
+  lambdaBoundedTelescope f.body 1 fun is b => do
+    let i := is[0]!
+    let fi := {f with body := f.body.beta is}
+    let some figoal ← piGoal goal i (← fi.toExpr) | return none
+    let some hfi ← dataSynthFun figoal fi | return none
+    let some r ← piResult hfi i | return none
+    let r ← r.normalize
+    return r
+
+
 /-- Similar to `dataSynth` but driven by function. -/
 partial def mainFun (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
+  withProfileTrace "mainFun" do
+
+  -- decompose domain if possible
+  if let some r ← decomposeDomain? goal f then
+    return r
 
   let h ← f.funHead
   trace[Meta.Tactic.data_synth] "function case {repr h}"
 
-  match ← f.funHead with
+  match h with
   | .app => mainCached goal (initialTrace:=false)
   | .fvar n => mainCached goal (initialTrace:=false)
   | .bvar n => mainCached goal (initialTrace:=false)
   | .letE =>
     match ← f.decompose with
-    | .comp f g =>
-      let some (fgoal, ggoal) ← compGoals goal (← f.toExpr) (← g.toExpr) | return none
-      let some hg ← dataSynthFun ggoal g | return none
-      let some hf ← dataSynthFun fgoal f | return none
-      compResults hf hg -- normalize
-    | .letE f g =>
-      let some (fgoal, ggoal) ← letGoals goal (← f.toExprCurry1) (← g.toExpr) | return none
-      let some hg ← dataSynthFun ggoal g | return none
-      let some hf ← dataSynthFun fgoal f | return none
-      letResults goal (← f.toExprCurry1) (← g.toExpr) hf hg
-    | _=> return none
-  | .lam =>
-    lambdaBoundedTelescope f.body 1 fun is b => do
-      let i := is[0]!
-      let fi := {f with body := f.body.beta is}
-      let some figoal ← piGoal goal i (← fi.toExpr) | return none
-      let some hfi ← dataSynthFun figoal fi | return none
-      piResult hfi i -- normalize
+    | .comp f g => compCase goal f g
+    | .letE f g => letCase goal f g
+    | _ => return none
+  | .lam => lamCase goal f
   | _ => return none
-
-
 
 
 def mainFunCached (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
@@ -450,7 +638,6 @@ def mainFunCached (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
       return none
 
 
-
 def dataSynthImpl (goal : Goal) : DataSynthM (Option Result) := do
   if let .some f ← goal.getInputFun? then
     mainFunCached goal (← getFunData f)
@@ -469,3 +656,4 @@ initialize dataSynthFunRef.set dataSynthFunImpl
 initialize registerTraceClass `Meta.Tactic.data_synth
 initialize registerTraceClass `Meta.Tactic.data_synth.input
 initialize registerTraceClass `Meta.Tactic.data_synth.normalize
+initialize registerTraceClass `Meta.Tactic.data_synth.profile
