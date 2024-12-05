@@ -48,7 +48,7 @@ instance {X Y : Type*} [Norm X] [Norm Y] : Norm ((_ : X) × Y) where
   norm := fun ⟨a,b⟩ => ‖a‖ ⊔ ‖b‖
 
 instance {R X Y : Type*} [Add R] [Inner R X] [Inner R Y] : Inner R ((_ : X) × Y) where
-  inner := fun ⟨a,b⟩ ⟨c,d⟩ => ⟪a,c⟫_R + ⟪b,d⟫_R
+  inner := fun ⟨a,b⟩ ⟨c,d⟩ => Inner.inner (𝕜:=R) a c + Inner.inner (𝕜:=R) b d
 
 
 def Add.ofEquiv {X Y : Type*} [Add X] (f : X ≃ Y) : Add Y where
@@ -82,7 +82,7 @@ def Norm.ofEquiv {X Y : Type*} [Norm X] (f : X ≃ Y) : Norm Y where
   norm := fun y => ‖f.symm y‖
 
 def Inner.ofEquiv {R X Y : Type*} [Inner R X] (f : X ≃ Y) : Inner R Y where
-  inner := fun y y' => ⟪f.symm y, f.symm y'⟫_R
+  inner := fun y y' => Inner.inner (𝕜:=R) (f.symm y) (f.symm y')
 
 
 ----------------------------------------------------------------------------------------------------

@@ -297,7 +297,6 @@ import SciLean.Tactic.DataSynth.HasFwdFDeriv
 import SciLean.Tactic.DataSynth.HasRevFDeriv
 import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 import SciLean.Tactic.DataSynth.Main
-import SciLean.Tactic.DataSynth.Test
 import SciLean.Tactic.DataSynth.Theorems
 import SciLean.Tactic.DataSynth.Types
 import SciLean.Tactic.FunTrans.Attr
@@ -337,7 +336,6 @@ import SciLean.Util.Alternatives
 import SciLean.Util.Approx.ApproxLimit
 import SciLean.Util.Approx.ApproxSolution
 import SciLean.Util.Approx.Basic
-import SciLean.Util.Approx.Test
 import SciLean.Util.DefOptimize
 import SciLean.Util.Limit
 import SciLean.Util.Profile

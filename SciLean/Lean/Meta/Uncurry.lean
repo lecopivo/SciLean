@@ -182,8 +182,3 @@ dsimproc_decl uncurryNormalize (Function.uncurry _) := fun e => do
   | (``Function.uncurry, #[_,_,_,f]) =>
       return .visit (← mkUncurryFun' 2 f)
   | _ => return .continue
-
-
-
-#check (fun x => (↿(fun a b c d e : ℕ => a + e)) x) rewrite_by simp -zeta [hasUncurryNormalize]
-#check (fun x => (↿(fun a b c d e : ℕ => a + c)) x) rewrite_by simp -zeta [hasUncurryNormalize]
