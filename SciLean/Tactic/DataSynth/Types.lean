@@ -64,7 +64,6 @@ def congr (r : Result) (rs : Array Simp.Result) : MetaM Result := do
 
   -- proof that original result is equal to the result with normalized data
   let hgoal ←
-    withTraceNode `Meta.Tactic.data_synth (fun _ => return m!"goal congr fold") do
       (r.xs.zip rs).foldlM (init:= ← mkEqRefl goal)
         (fun g (x,r) =>
           match r.proof? with
