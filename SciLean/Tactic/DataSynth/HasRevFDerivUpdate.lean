@@ -199,6 +199,8 @@ theorem HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule
   · fun_prop
 
 
+#exit
+
 set_option trace.Meta.Tactic.data_synth true in
 #check (HasRevFDerivUpdate R (fun x : R => x*x*x*x*x) _ )
   rewrite_by

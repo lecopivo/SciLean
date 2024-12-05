@@ -346,6 +346,7 @@ set_default_scalar R
 
 open Scalar
 
+
 /-- Softmax turns array into an array of values in (0,1) -/
 def softmax (x : R^[I]) : R^[I] :=
   let xmax := x.max

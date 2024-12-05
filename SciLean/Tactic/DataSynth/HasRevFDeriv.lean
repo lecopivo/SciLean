@@ -1,8 +1,8 @@
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Elab
-import SciLean.Tactic.LSimp.Elab
 import SciLean.Tactic.Autodiff
+import SciLean.Meta.Notation.Let'
 
 namespace SciLean
 
@@ -13,36 +13,6 @@ variable {R : Type} [RCLike R]
   {X₁ : Type} [NormedAddCommGroup X₁] [AdjointSpace R X₁] [CompleteSpace X₁]
   {X₂ : Type} [NormedAddCommGroup X₂] [AdjointSpace R X₂] [CompleteSpace X₂]
 
-syntax "let'" "(" ident,* ")" ":=" term ";" term : term
-
-macro_rules
-| `(let' ($x,$y) := $v; $b) =>
-  `(let x := $v
-    let $x := Prod.fst x
-    let $y := Prod.snd x
-    $b)
-| `(let' ($x,$y,$z) := $v; $b) =>
-  `(let x := $v
-    let $x := Prod.fst x
-    let $y := Prod.fst (Prod.snd x)
-    let $z := Prod.snd (Prod.snd x)
-    $b)
-
-| `(let' ($x,$y,$z,$w) := $v; $b) =>
-  `(let x := $v
-    let $x := Prod.fst x
-    let $y := Prod.fst (Prod.snd x)
-    let $z := Prod.fst (Prod.snd (Prod.snd x))
-    let $w := Prod.snd (Prod.snd (Prod.snd x))
-    $b)
-
-macro "let'" "(" "(" x:ident "," y:ident ")" "," z:ident ")" ":=" v:term ";" b:term : term =>
-  `(let x := $v
-    let $x := x.1.1
-    let $y := x.1.2
-    let $z := x.2
-    $b)
-
 
 variable (R)
 @[data_synth out f' in f]
@@ -50,6 +20,12 @@ structure HasRevFDeriv (f : X → Y) (f' : X → Y×(Y→X))  where
   val : ∀ x, f' x = revFDeriv R f x
   prop : Differentiable R f
 variable {R}
+
+omit [CompleteSpace X] [CompleteSpace Y] in
+theorem HasRevFDeriv.revFDeriv {f : X → Y} {f'} (hf : HasRevFDeriv R f f') :
+    revFDeriv R f = f' := by
+  funext dx; cases hf
+  simp_all [SciLean.revFDeriv]
 
 
 namespace HasRevFDeriv
@@ -78,11 +54,6 @@ theorem proj_rule (f : X → Y) {g'}
       (y, fun dy =>
         let dz := dg dy
         q dz 0)) := by sorry_proof
-
-
-#check LinearIsometry
-
-
 
 
 theorem comp_rule (f : Y → Z) (g : X → Y) (f' g')
@@ -262,26 +233,8 @@ theorem HMul.hMul.arg_a0a1.HasRevFDeriv_rule
   · intro dx; fun_trans only; simp_all
   · fun_prop
 
-open ComplexConjugate
-@[data_synth]
-theorem HMul.hMul.arg_a0a1.HasRevFDeriv_rule' :
-    HasRevFDeriv R (fun x : R×R => x.1 * x.2)
-      (fun x =>
-        (x.1 * x.2, fun dx =>
-           ((conj x.2) * dx, (conj x.1) * dx))) := by
-  constructor
-  · intro dx; fun_trans only; simp_all
-  · fun_prop
 
-
-
-omit [CompleteSpace X] [CompleteSpace Y] in
-theorem HasRevFDeriv.revFDeriv {f : X → Y} {f'} (hf : HasRevFDeriv R f f') :
-    revFDeriv R f = f' := by
-  funext dx; cases hf
-  simp_all [SciLean.revFDeriv]
-
-
+#exit
 
 
 -- open SciLean Lean Meta in
