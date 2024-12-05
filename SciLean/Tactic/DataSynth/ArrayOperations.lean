@@ -556,3 +556,11 @@ set_option trace.Meta.Tactic.data_synth true in
   rewrite_by
     data_synth
     lsimp
+
+
+
+set_option trace.Meta.Tactic.data_synth true in
+#check (HasRevFDerivUpdate R (fun x : R^[I] => (∑ i, x[i])*‖x - ‖x‖₂²•1‖₂²) _)
+  rewrite_by
+    data_synth
+    lsimp

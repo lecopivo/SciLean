@@ -136,8 +136,8 @@ partial def splitLet (e : Expr) : Expr :=
 
 
 open Lean Meta in
-partial def normalizeCore (e : Expr) : DataSynthM Expr :=
-  checkCache { val := e : ExprStructEq } fun _ => Core.withIncRecDepth do
+partial def normalizeCore (e : Expr) : DataSynthM Expr := do
+  -- checkCache { val := e : ExprStructEq } fun _ => Core.withIncRecDepth do
     match e.headBeta with
     | .letE n t v b ndep =>
 
@@ -192,6 +192,8 @@ def normalize (e : Expr) : DataSynthM (Simp.Result) := do
 
   let cfg := (← read).config
 
+  -- some of the normalization procedures do not work with meta variables
+  let e ← instantiateMVars e
   let e₀ := e
   let mut e := e
 
@@ -202,18 +204,18 @@ def normalize (e : Expr) : DataSynthM (Simp.Result) := do
     e := splitLet e
 
   -- this looks like the best option right now
-  if cfg.normalizeCore then
+  if cfg.norm_core then
     e ← normalizeCore e
 
-  if cfg.dsimp' then
+  if cfg.norm_dsimp then
     e ← Simp.dsimp e
 
   let mut r : Simp.Result := { expr := e }
 
-  if cfg.lsimp then
+  if cfg.norm_lsimp then
     r ← r.mkEqTrans (← Simp.lsimp r.expr)
 
-  if cfg.simp then
+  if cfg.norm_simp then
     r ← r.mkEqTrans (← Simp.simp r.expr)
 
   -- report only when something has been done
@@ -228,11 +230,8 @@ def normalize (e : Expr) : DataSynthM (Simp.Result) := do
 
 def Result.normalize (r : Result) : DataSynthM Result := do
   withProfileTrace "normalize result" do
-  r.congr (← r.xs.mapM DataSynth.normalize)
+  r.congr (← r.xs.mapM (DataSynth.normalize))
 
-
-def discharge? (e : Expr) : DataSynthM (Option Expr) := do
-  (← read).discharge e
 
 def Goal.getCandidateTheorems (g : Goal) : DataSynthM (Array DataSynthTheorem) := do
   let (_,e) ← g.mkFreshProofGoal
@@ -271,6 +270,10 @@ where
         go (fn.app var) as os (fvars.push var)
     | [], _
     | _ , [] => mkLambdaFVars fvars fn
+
+
+def discharge? (e : Expr) : DataSynthM (Option Expr) := do
+  (← read).discharge e
 
 
 def synthesizeArgument (x : Expr) : DataSynthM Bool := do
@@ -347,7 +350,7 @@ def tryTheorem? (e : Expr) (thm : DataSynthTheorem) : DataSynthM (Option Expr) :
   return some thmProof
 
 
-def Goal.tryTheorem? (goal : Goal) (thm : DataSynthTheorem) (normalize := true) : DataSynthM (Option Result) := do
+def Goal.tryTheorem? (goal : Goal) (thm : DataSynthTheorem) : DataSynthM (Option Result) := do
   withProfileTrace "tryTheorem" do
 
   let (xs, e) ← goal.mkFreshProofGoal
@@ -356,8 +359,7 @@ def Goal.tryTheorem? (goal : Goal) (thm : DataSynthTheorem) (normalize := true) 
 
   let mut r := Result.mk xs prf goal
 
-  if normalize then
-    r ← r.normalize
+  r ← r.normalize
 
   return r
 
@@ -554,28 +556,19 @@ def projResults (fGoal : Goal) (f g p₁ p₂ q : Expr) (hg : Result) : DataSynt
 
 def constCase? (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
 
+  -- todo: this work of checking free variables should be shared with `decomposeDomain?`
+  --       Maybe `FunData` should carry a `FVarSet`
   let vars := (← f.body.collectFVars |>.run {}).2.fvarSet
-  let (xs₁, xs₂) := f.xs.split (fun x => vars.contains x.fvarId!)
+  let (xs₁, _) := f.xs.split (fun x => vars.contains x.fvarId!)
 
   unless xs₁.size = 0 do return none
   withProfileTrace "const case" do
   withMainTrace (fun _ => return "constant function") do
 
-  let (xs, e) ← goal.mkFreshProofGoal
-
   let thm : DataSynthTheorem ←
      getTheoremFromConst (goal.dataSynthDecl.name.append `const_rule)
 
-  let .some prf ← tryTheorem? e thm | return none
-
-    -- result
-  let r := Result.mk xs prf goal
-
-  -- fix proof
-  let r ← r.normalize
-  return r
-
-
+  goal.tryTheorem? thm
 
 
 def decomposeDomain? (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do

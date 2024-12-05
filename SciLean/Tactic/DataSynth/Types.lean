@@ -107,10 +107,10 @@ structure DataSynthConfig where
   maxNumSteps := 100
   normalizeLet := false
   normalizeLet' := false
-  normalizeCore := true
-  lsimp := false
-  simp := false
-  dsimp' := false
+  norm_core := true
+  norm_lsimp := false
+  norm_simp := false
+  norm_dsimp := false
   domainDec := true
 
 structure Config extends DataSynthConfig, Simp.Config

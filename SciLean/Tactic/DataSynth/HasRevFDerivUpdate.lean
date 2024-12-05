@@ -47,8 +47,8 @@ theorem comp_rule (f : Y → Z) (g : X → Y) (f' g')
     HasRevFDerivUpdate R
       (fun x : X => f (g x))
       (fun x =>
-        let' (y,dg) := g' x;
-        let' (z,df) := f' y;
+        let' (y,dg) := g' x
+        let' (z,df) := f' y
         (z, fun dz dx =>
               let dy := df dz 0
               dg dy dx)) := by
@@ -65,8 +65,8 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {f' g'}
     HasRevFDerivUpdate R
       (fun x : X => let y := g x; f y x)
       (fun x =>
-        let' (y,dg) := g' x;
-        let' (z,df) := f' (y,x);
+        let' (y,dg) := g' x
+        let' (z,df) := f' (y,x)
         (z, fun dz dx =>
           let' (dy,dx) := df dz (0,dx);
           dg dy dx)) := by
@@ -100,10 +100,10 @@ theorem Prod.mk.arg_a0a1.HasRevFDerivUpdate_rule
   HasRevFDerivUpdate R
     (fun x => (f x, g x))
     (fun x =>
-      let' (y,df) := f' x;
-      let' (z,dg) := g' x;
+      let' (y,df) := f' x
+      let' (z,dg) := g' x
       ((y,z), fun dyz dx =>
-        let' (dy,dz) := dyz;
+        let' (dy,dz) := dyz
         let dx := df dy dx
         dg dz dx)) := by
 
@@ -119,7 +119,7 @@ theorem Prod.fst.arg_self.HasRevFDerivUpdate_rule
   HasRevFDerivUpdate R
     (fun x => (f x).1)
     (fun x =>
-      let' ((y,z),df) := f' x;
+      let' ((y,z),df) := f' x
       (y, fun dy dx => df (dy,0) dx)) := by
   cases hf
   constructor
@@ -133,7 +133,7 @@ theorem Prod.snd.arg_self.HasRevFDerivUpdate_rule
   HasRevFDerivUpdate R
     (fun x => (f x).2)
     (fun x =>
-      let' ((y,z),df) := f' x;
+      let' ((y,z),df) := f' x
       (z, fun dz dx => df (0,dz) dx)) := by
   cases hf
   constructor
@@ -147,8 +147,8 @@ theorem HAdd.hAdd.arg_a0a1.HasRevFDerivUpdate_rule
     (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
     HasRevFDerivUpdate R (fun x => f x + g x)
       (fun x =>
-        let' (y,df) := f' x;
-        let' (z,dg) := g' x;
+        let' (y,df) := f' x
+        let' (z,dg) := g' x
         (y + z, fun dy dx =>
                   let dx := df dy dx
                   dg dy dx)) := by
@@ -164,8 +164,8 @@ theorem HSub.hSub.arg_a0a1.HasRevFDerivUpdate_rule
     (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
     HasRevFDerivUpdate R (fun x => f x - g x)
       (fun x =>
-        let' (y,df) := f' x;
-        let' (z,dg) := g' x;
+        let' (y,df) := f' x
+        let' (z,dg) := g' x
         (y - z, fun dy dx =>
                   let dx := df dy dx
                   dg (-dy) dx)) := by
@@ -185,8 +185,8 @@ theorem HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule
     (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
     HasRevFDerivUpdate R (fun x => f x * g x)
       (fun x =>
-        let' (y,df) := f' x;
-        let' (z,dg) := g' x;
+        let' (y,df) := f' x
+        let' (z,dg) := g' x
         (y * z, fun dy dx =>
            let dy₁ := (conj z) • dy
            let dy₂ := (conj y) • dy
@@ -208,8 +208,8 @@ theorem HSMul.hSMul.arg_a0a1.HasRevFDerivUpdate_rule
     (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
     HasRevFDerivUpdate R (fun x => f x • g x)
       (fun x =>
-        let' (y,df) := f' x;
-        let' (z,dg) := g' x;
+        let' (y,df) := f' x
+        let' (z,dg) := g' x
         (y • z, fun dy dx =>
            let dy₁ := ⟪z, dy⟫[R]
            let dy₂ := (conj y) • dy
@@ -235,8 +235,8 @@ theorem HDiv.hDiv.arg_a0a1.HasRevFDerivUpdate_rule
     HasRevFDerivUpdate R
      (fun x => f x / g x)
      (fun x =>
-       let' (y,df) := f' x;
-       let' (z,dg) := g' x;
+       let' (y,df) := f' x
+       let' (z,dg) := g' x
        (y / z,
          fun dr dx =>
            let s := ((conj z)^2)⁻¹
@@ -260,7 +260,7 @@ theorem HInv.hInv.arg_a0.HasRevFDerivUpdate_rule
   (hf : HasRevFDerivUpdate R f f') (hx : ∀ x, f x ≠ 0) :
   HasRevFDerivUpdate R (fun x => (f x)⁻¹)
     (fun x =>
-      let' (y,df) := f' x;
+      let' (y,df) := f' x
       (y⁻¹, fun dy dx =>
         let dx := df (-((conj y)^2)⁻¹*dy) dx
         dx)) := by
@@ -278,7 +278,7 @@ theorem HPow.hPow.arg_a0.HasRevFDerivUpdate_rule
   (hf : HasRevFDerivUpdate R f f') :
   HasRevFDerivUpdate R (fun x => f x ^ n)
     (fun x =>
-      let' (y,df) := f' x;
+      let' (y,df) := f' x
       (y ^ n, fun dy dx =>
         let dx := df (n * (conj y)^(n-1) • dy) dx
         dx)) := by
@@ -300,7 +300,7 @@ theorem IndexType.sum.arg_f.HasRevFDerivUpdate
       ((∑ i, f w i), fun dx dw =>
         IndexType.foldl (init:=dw)
           (fun dw (i : I) =>
-            let' (_x,df) := f' i w;
+            let' (_x,df) := f' i w
             df dx dw))) := by
   have := fun i => (hz i).val
   have : ∀ (i : I), Differentiable R fun x => f x i := fun i => (hz i).prop
@@ -325,8 +325,8 @@ theorem Inner.inner.arg_a0a1.HasRevFDerivUpdate_rule
   HasRevFDerivUpdate R
     (fun x => ⟪f x, g x⟫[R])
     (fun x =>
-      let' (y,df) := f' x;
-      let' (z,dg) := g' x;
+      let' (y,df) := f' x
+      let' (z,dg) := g' x
       (⟪y,z⟫[R], fun dr dx =>
         let dx := df (conj dr • z) dx
         let dx := dg (conj dr • y) dx
@@ -346,7 +346,7 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_rule
   HasRevFDerivUpdate R
     (fun x => ‖f x‖₂²[R])
     (fun x =>
-      let' (y,df) := f' x;
+      let' (y,df) := f' x
       let z := ‖y‖₂²[R];
       (z, fun dr dx =>
         let dx := df ((2 * conj dr) • y) dx
@@ -358,9 +358,7 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_rule
 
 end OverReals
 
-#eval 0
 
-#exit
 
 set_option trace.Meta.Tactic.data_synth true in
 #check (HasRevFDerivUpdate R (fun x : R => x*x*x*x*x) _ )
@@ -390,15 +388,15 @@ set_option trace.Meta.Tactic.data_synth.normalize true in
 
 #check SciLean.HasRevFDerivUpdate.let_rule
 
+set_option pp.deepTerms.threshold 1000000000000000
 
 #check (HasRevFDerivUpdate R (fun x : R => x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x) _ )
   rewrite_by
-    data_synth
+    data_synth -normalizeCore
 
 #check (HasRevFDerivUpdate R (fun x : R×R×R×R => x.1) _) rewrite_by
               data_synth
 
-set_option pp.deepTerms.threshold 1000000000000000
 
 
 set_option profiler true in
