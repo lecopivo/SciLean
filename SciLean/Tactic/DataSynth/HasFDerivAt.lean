@@ -38,21 +38,3 @@ attribute [data_synth]
   HasFDerivAt.neg
   HasFDerivAt.mul
   HasFDerivAt.smul
-
-
-
-variable {𝕜 : Type} [NontriviallyNormedField 𝕜] (x : 𝕜)
-
-set_option profiler true in
-set_option trace.Meta.Tactic.data_synth true in
-set_option trace.Meta.Tactic.data_synth.normalize true in
-#check (HasFDerivAt (𝕜:=𝕜) (fun x : 𝕜 => x * x * x) _ x)
-  rewrite_by
-    data_synth +simp
-
-
-
-set_option profiler true in
-#check (HasFDerivAt (𝕜:=𝕜) (fun yx : 𝕜×𝕜 => yx.1 * yx.2* yx.2* yx.2* yx.2* yx.2* yx.2* yx.2* yx.2* yx.2* yx.2* yx.2* yx.2* yx.2) _ (x, x))
-  rewrite_by
-    data_synth +simp

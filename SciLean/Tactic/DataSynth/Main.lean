@@ -278,11 +278,15 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
   unless x.isMVar do return true
   withProfileTrace "synthesizeArgument" do
 
-  if let .some g ← isDataSynthGoal? X then
-    -- try recursive call
-    if let .some r ← do dataSynth g then
-      x.mvarId!.assignIfDefeq r.proof
-      return true
+
+  let b ← forallTelescope X fun ys X => do
+    if let .some g ← isDataSynthGoal? X then
+      -- try recursive call
+      if let .some r ← do dataSynth g then
+        x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
+        return true
+    return false
+  if b then return true
 
   -- type class synthesis
   if let .some _ ← isClass? X then
@@ -571,8 +575,12 @@ def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
 def letCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "letCase" do
   let some (fgoal, ggoal) ← letGoals goal (← f.toExprCurry1) (← g.toExpr) | return none
-  let some hg ← dataSynthFun ggoal g | return none
-  let some hf ← dataSynthFun fgoal f | return none
+  let some hg ←
+    withProfileTrace "solving g" do
+    dataSynthFun ggoal g | return none
+  let some hf ←
+    withProfileTrace "solving f" do
+    dataSynthFun fgoal f | return none
   let some r ← letResults goal (← f.toExprCurry1) (← g.toExpr) hf hg | return none
   let r ← r.normalize
   return r

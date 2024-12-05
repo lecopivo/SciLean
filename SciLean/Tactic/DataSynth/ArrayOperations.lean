@@ -1,6 +1,7 @@
 import SciLean.Data.DataArray
 import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 
+
 namespace SciLean
 
 set_option linter.unusedSectionVars false
@@ -15,6 +16,10 @@ variable [DecidableEq I] [DecidableEq J]
 variable
   {R : Type} [inst : RealScalar R] [PlainDataType R]
   {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
+
 
 set_default_scalar R
 
@@ -441,3 +446,123 @@ theorem exp.arg_x.HasRevFDerivUpdate
   constructor
   · intro w; fun_trans only; simp_all
   · fun_prop
+
+
+@[data_synth]
+theorem ArrayType.get.arg_cont.HasRevFDerivUpdate (i : I) :
+  (HasRevFDerivUpdate R
+    (fun x : R^[I] => x[i])
+    (fun x => (x[i], fun dxi dx => ArrayType.modify dx i (fun xi => xi + dxi)))) := by
+
+  constructor
+  · intro w; fun_trans;
+    funext dxi dx
+    apply ArrayType.ext; intro j
+    by_cases h : i = j <;> simp[h,oneHot]
+  · fun_prop
+
+
+@[data_synth]
+theorem ArrayType.set.arg_contxi.HasRevFDerivUpdate (i : I)
+  (x : W → R^[I]) (xi : W → R) (x' xi')
+  (hx : HasRevFDerivUpdate R x x') (hxi : HasRevFDerivUpdate R xi xi') :
+  (HasRevFDerivUpdate R
+    (fun w => ArrayType.set (x w) i (xi w))
+    (fun w =>
+      let' (x,dx) := x' w;
+      let' (xi,dxi) := xi' w;
+      (ArrayType.set x i xi,
+       fun dy dw =>
+         let dw := dx (ArrayType.set dy i 0) dw
+         let dw := dxi (dy[i]) dw
+         dw))) := by
+  cases hx; cases hxi
+  constructor
+  · intro w; fun_trans[revFDeriv]; simp_all; ac_rfl
+  · fun_prop
+
+
+-- @[data_synth]
+-- theorem ArrayType.modify.arg_contxi.HasRevFDerivUpdate (i : I)
+--   (x : W → R^[I]) (f : W → R → R) (x' f')
+--   (hx : HasRevFDerivUpdate R x x') (hxi : HasRevFDerivUpdate R (fun x : W×R => f x.1 x.2) f') :
+--   (HasRevFDerivUpdate R
+--     (fun w => ArrayType.modify (x w) i (f w))
+--     (fun w =>
+--       let' (x,dx) := x' w;
+--       let xi := x[i]
+--       let' (xi,df) := f' (w,xi);
+--       (ArrayType.set x i xi,
+--        fun dy dw => sorry))) := sorry
+
+
+@[data_synth]
+theorem ArrayType.ofFn.arg_f.HasRevFDerivUpdate
+  (f : W → I → R) (f' : I → _) (hz : ∀ i, HasRevFDerivUpdate R (f · i) (f' i)) :
+  (HasRevFDerivUpdate R
+    (fun w => ⊞ i => f w i)
+    (fun w =>
+       (⊞ i => f w i,
+        fun dx dw =>
+          IndexType.foldl (init:=dw) (fun dw (i : I) =>
+            let' (y,df) := f' i w;
+            df (dx[i]) dw)))) := by
+  have := fun i => (hz i).val
+  have : ∀ (i : I), Differentiable R fun x => f x i := fun i => (hz i).prop
+  constructor
+  · intro w; fun_trans;
+    funext dx dw
+    rw[revFDeriv.pi_rule (hf:=by fun_prop)]
+    simp_all
+    sorry_proof
+  · fun_prop
+
+
+@[data_synth]
+theorem IndexType.sum.arg_f.HasRevFDerivUpdate
+  (f : W → I → X) (f' : I → _) (hz : ∀ i, HasRevFDerivUpdate R (f · i) (f' i)) :
+  HasRevFDerivUpdate R
+    (fun w => ∑ i, f w i)
+    (fun w =>
+      ((∑ i, f w i), fun dx dw =>
+        IndexType.foldl (init:=dw)
+          (fun dw (i : I) =>
+            let' (_x,df) := f' i w;
+            df dx dw))) := by
+  have := fun i => (hz i).val
+  have : ∀ (i : I), Differentiable R fun x => f x i := fun i => (hz i).prop
+  constructor
+  · intro w; fun_trans[adjointFDeriv]
+    sorry_proof
+  · fun_prop
+
+
+example (f : W → I → X)
+ (hf : ∀ (i : I), Differentiable R fun x => f x i)
+  : Differentiable R fun w =>  ∑ i, f w i := by fun_prop
+
+example : Differentiable R (fun x : R => ∑ (i : I), x) := by fun_prop
+
+set_option trace.Meta.Tactic.data_synth true in
+#check (HasRevFDerivUpdate R (fun x : R^[I] => ∑ i, x[i]) _)
+  rewrite_by
+    data_synth
+
+#check (HasRevFDerivUpdate R (fun x : R^[I] => ∑ i, x[i]*x[i]) _)
+  rewrite_by
+    data_synth
+
+#check (HasRevFDerivUpdate R (fun x : R^[I] => ∑ i, x[i]*x[i]) _)
+  rewrite_by
+    data_synth
+
+#check (HasRevFDerivUpdate R (fun x : R^[I] => ∑ i, let xi:= x[i]; (xi*xi + xi)) _)
+  rewrite_by
+    data_synth
+    lsimp
+
+set_option trace.Meta.Tactic.data_synth true in
+#check (HasRevFDerivUpdate R (fun x : R^[I] => (∑ i, x[i])•x) _)
+  rewrite_by
+    data_synth
+    lsimp

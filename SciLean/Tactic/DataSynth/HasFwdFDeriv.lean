@@ -159,6 +159,8 @@ theorem HasFwdFDerivAt.fwdFDeriv {f : X → Y} {x} {f'} (hf : HasFwdFDerivAt R f
   unfold SciLean.fwdFDeriv
   simp_all
 
+#exit
+
 open SciLean Lean Meta in
 simproc [] dataSynthFwdFDeriv (fwdFDeriv _ _ _) := fun e => do
 

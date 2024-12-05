@@ -199,6 +199,30 @@ theorem HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule
   · fun_prop
 
 
+@[data_synth]
+theorem HSMul.hSMul.arg_a0a1.HasRevFDerivUpdate_rule
+    (f : X → R) (g : X → Y) (f' g')
+    (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
+    HasRevFDerivUpdate R (fun x => f x • g x)
+      (fun x =>
+        let' (y,df) := f' x;
+        let' (z,dg) := g' x;
+        (y • z, fun dy dx =>
+           let dy₁ := ⟪z, dy⟫[R]
+           let dy₂ := (conj y) • dy
+           let dx := df dy₁ dx
+           let dx := dg dy₂ dx
+           dx)) := by
+  cases hf; cases hg
+  constructor
+  · intro dx; fun_trans only; simp_all
+    funext dy dx
+    simp[revFDeriv,smul_push]
+    ac_rfl
+  · fun_prop
+
+
+
 #exit
 
 set_option trace.Meta.Tactic.data_synth true in
@@ -327,9 +351,10 @@ set_option trace.Meta.Tactic.data_synth.input true in
               data_synth
 
 
-set_option pp.deepTerms.threshold 100000000000000
+set_option pp.deepTerms.threshold 100000000000000000
 set_option profiler true in
 -- set_option trace.Meta.Tactic.data_synth true in
+set_option trace.Meta.Tactic.data_synth.profile true in
 -- set_option trace.Meta.Tactic.data_synth.normalize true in
 -- set_option trace.Meta.Tactic.data_synth.input true in
 #check (HasRevFDerivUpdate R (fun x : R =>
@@ -341,8 +366,7 @@ set_option profiler true in
             let x₆ := x*x₁*x₂*x₃*x₄*x₅
             let x₇ := x*x₁*x₂*x₃*x₄*x₅*x₆
             x*x₁*x₂*x₃*x₄*x₅*x₆*x₇) _) rewrite_by
-              data_synth -normalizeLet +normalizeCore
-
+              data_synth
 
 
 #exit
