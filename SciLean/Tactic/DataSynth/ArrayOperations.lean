@@ -537,6 +537,8 @@ theorem IndexType.sum.arg_f.HasRevFDerivUpdate
   · fun_prop
 
 
+#exit
+
 example (f : W → I → X)
  (hf : ∀ (i : I), Differentiable R fun x => f x i)
   : Differentiable R fun w =>  ∑ i, f w i := by fun_prop

@@ -15,82 +15,6 @@ section MoveMe
 end MoveMe
 
 
-def Add.ofEquiv {X Y : Type*} [Add X] (f : X ≃ Y) : Add Y where
-  add a b := f (f.symm a + f.symm b)
-
-def Sub.ofEquiv {X Y : Type*} [Sub X] (f : X ≃ Y) : Sub Y where
-  sub a b := f (f.symm a - f.symm b)
-
-def Mul.ofEquiv {X Y : Type*} [Mul X] (f : X ≃ Y) : Mul Y where
-  mul a b := f (f.symm a * f.symm b)
-
-def Div.ofEquiv {X Y : Type*} [Div X] (f : X ≃ Y) : Div Y where
-  div a b := f (f.symm a / f.symm b)
-
-def Neg.ofEquiv {X Y : Type*} [Neg X] (f : X ≃ Y) : Neg Y where
-  neg a := f (- f.symm a)
-
-def Inv.ofEquiv {X Y : Type*} [Inv X] (f : X ≃ Y) : Inv Y where
-  inv a := f (f.symm a)⁻¹
-
-def Zero.ofEquiv {X Y : Type*} [Zero X] (f : X ≃ Y) : Zero Y where
-  zero := f 0
-
-def One.ofEquiv {X Y : Type*} [One X] (f : X ≃ Y) : One Y where
-  one := f 1
-
-def SMul.ofEquiv (R : Type*) {X Y : Type*} [SMul R X] (f : X ≃ Y) : SMul R Y where
-  smul r a := f (r • f.symm a)
-
-instance {X Y : Type*} [Add X] [Add Y] : Add ((_ : X) × Y) where
-  add | ⟨x1, y1⟩, ⟨x2, y2⟩ => ⟨x1 + x2, y1 + y2⟩
-
-instance {X Y : Type*} [Sub X] [Sub Y] : Sub ((_ : X) × Y) where
-  sub | ⟨x1, y1⟩, ⟨x2, y2⟩ => ⟨x1 - x2, y1 - y2⟩
-
-instance {X Y : Type*} [Mul X] [Mul Y] : Mul ((_ : X) × Y) where
-  mul | ⟨x1, y1⟩, ⟨x2, y2⟩ => ⟨x1 * x2, y1 * y2⟩
-
-instance {X Y : Type*} [Div X] [Div Y] : Div ((_ : X) × Y) where
-  div | ⟨x1, y1⟩, ⟨x2, y2⟩ => ⟨x1 / x2, y1 / y2⟩
-
-instance {X Y : Type*} [Neg X] [Neg Y] : Neg ((_ : X) × Y) where
-  neg | ⟨x, y⟩ => ⟨-x, -y⟩
-
-instance {X Y : Type*} [Inv X] [Inv Y] : Inv ((_ : X) × Y) where
-  inv | ⟨x, y⟩ => ⟨x⁻¹, y⁻¹⟩
-
-instance {X Y : Type*} [Zero X] [Zero Y] : Zero ((_ : X) × Y) where
-  zero := ⟨0, 0⟩
-
-instance {X Y : Type*} [One X] [One Y] : One ((_ : X) × Y) where
-  one := ⟨1, 1⟩
-
-instance {R X Y : Type*} [SMul R X] [SMul R Y] : SMul R ((_ : X) × Y) where
-  smul r | ⟨x, y⟩ => ⟨r • x, r • y⟩
-
-
-def TopologicalSpace.ofEquiv {X Y : Type*} [TopologicalSpace X] (f : X ≃ Y) :
-    TopologicalSpace Y where
-  IsOpen A := IsOpen (f⁻¹' A)
-  isOpen_univ := by simp_all only [Set.preimage_univ, isOpen_univ]
-  isOpen_inter := sorry_proof
-  isOpen_sUnion := sorry_proof
-
-
-instance {X Y : Type*} [UniformSpace X] [UniformSpace Y] : UniformSpace ((_ : X) × Y) where
-  uniformity := sorry
-  symm := sorry_proof
-  comp := sorry_proof
-  nhds_eq_comap_uniformity := sorry_proof
-
-def UniformSpace.ofEquiv {X Y : Type*} [UniformSpace X] [TopologicalSpace Y] (f : X ≃ Y) :
-    UniformSpace Y where
-  uniformity := sorry
-  symm := sorry_proof
-  comp := sorry_proof
-  nhds_eq_comap_uniformity := sorry_proof
-
 -- instance {X Y : Type*} [AddCommGroup X] [AddCommGroup Y] : AddCommGroup ((_ : X) × Y) where
 --   add_assoc := sorry_proof
 --   zero_add := sorry_proof
@@ -103,13 +27,6 @@ def UniformSpace.ofEquiv {X Y : Type*} [UniformSpace X] [TopologicalSpace Y] (f 
 
 instance {R X Y : Type*} [RCLike R] [Vec R X] [Vec R Y] : Vec R ((_ : X) × Y) := Vec.mkSorryProofs
 
-instance {X Y} [Add R] [Inner R X] [Inner R Y] : Inner R ((_ : X) × Y) where
-  inner | ⟨x1, y1⟩, ⟨x2, y2⟩ => inner x1 x2 + inner y1 y2
-
-def Inner.ofEquiv (R : Type*) {X Y : Type*} [Inner R X] (f : X ≃ Y) : Inner R Y where
-  inner a b := inner (f.symm a) (f.symm b)
-
-
 instance {X Y : Type*} [TestFunctions X] [TestFunctions Y] : TestFunctions ((_ : X) × Y) where
   TestFunction | ⟨x, y⟩ => TestFunction x ∧ TestFunction y
 
@@ -121,7 +38,7 @@ instance {R X Y : Type*} [RCLike R]
     SemiInnerProductSpace R ((_ : X) × Y) := SemiInnerProductSpace.mkSorryProofs
 
 instance {X Y ι κ K} [Basis ι K X] [Basis κ K Y] [Zero X] [Zero Y] :
-    Basis (ι ⊕ κ) K ((_ : X) × Y)  where
+    Basis (ι ⊕ κ) K ((_ : X) × Y) where
   basis := λ i =>
     match i with
     | Sum.inl ix => ⟨ⅇ ix, 0⟩
