@@ -1,10 +1,13 @@
 import SciLean.Tactic.DataSynth.HasRevFDeriv
+import SciLean.Analysis.SpecialFunctions.Inner
+import SciLean.Analysis.SpecialFunctions.Norm2
 
 set_option linter.unusedVariables false
 
 namespace SciLean
 
 variable {R : Type} [RCLike R]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
   {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
   {Z : Type} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
@@ -222,6 +225,140 @@ theorem HSMul.hSMul.arg_a0a1.HasRevFDerivUpdate_rule
   · fun_prop
 
 
+#check Nat
+
+
+@[fun_trans]
+theorem HDiv.hDiv.arg_a0a1.HasRevFDerivUpdate_rule
+    (f g : X → R) (f' g')
+    (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') (hx : ∀ x, g x ≠ 0) :
+    HasRevFDerivUpdate R
+     (fun x => f x / g x)
+     (fun x =>
+       let' (y,df) := f' x;
+       let' (z,dg) := g' x;
+       (y / z,
+         fun dr dx =>
+           let s := ((conj z)^2)⁻¹
+           let dx := df (s*(conj z)*dr) dx
+           let dx := dg (-s*(conj y)*dr) dx
+           dx)) := by
+  cases hf; cases hg
+  constructor
+  · intro dx; fun_trans (disch:=apply hx) only; simp_all
+    funext dy dx
+    simp[revFDeriv,smul_push,neg_pull,sub_eq_add_neg]
+    ac_rfl
+  · sorry_proof
+    --fun_prop (disch:=apply hx) -- missing theorem about division
+
+
+
+@[data_synth]
+theorem HInv.hInv.arg_a0.HasRevFDerivUpdate_rule
+  (f : X → R) (f')
+  (hf : HasRevFDerivUpdate R f f') (hx : ∀ x, f x ≠ 0) :
+  HasRevFDerivUpdate R (fun x => (f x)⁻¹)
+    (fun x =>
+      let' (y,df) := f' x;
+      (y⁻¹, fun dy dx =>
+        let dx := df (-((conj y)^2)⁻¹*dy) dx
+        dx)) := by
+  cases hf
+  constructor
+  · intro dx; fun_trans (disch:=apply hx) only; simp_all
+    funext dy dx
+    simp[revFDeriv,neg_pull,smul_push]
+  · sorry_proof
+
+
+@[data_synth]
+theorem HPow.hPow.arg_a0.HasRevFDerivUpdate_rule
+  (f : X → R) (n : ℕ) (f')
+  (hf : HasRevFDerivUpdate R f f') :
+  HasRevFDerivUpdate R (fun x => f x ^ n)
+    (fun x =>
+      let' (y,df) := f' x;
+      (y ^ n, fun dy dx =>
+        let dx := df (n * (conj y)^(n-1) • dy) dx
+        dx)) := by
+  cases hf
+  constructor
+  · intro dx; fun_trans only; simp_all
+    funext dy dx
+    simp[revFDeriv,smul_push]; ac_rfl
+  · fun_prop
+
+
+@[data_synth]
+theorem IndexType.sum.arg_f.HasRevFDerivUpdate
+  {I : Type} [IndexType I]
+  (f : W → I → X) (f' : I → _) (hz : ∀ i, HasRevFDerivUpdate R (f · i) (f' i)) :
+  HasRevFDerivUpdate R
+    (fun w => ∑ i, f w i)
+    (fun w =>
+      ((∑ i, f w i), fun dx dw =>
+        IndexType.foldl (init:=dw)
+          (fun dw (i : I) =>
+            let' (_x,df) := f' i w;
+            df dx dw))) := by
+  have := fun i => (hz i).val
+  have : ∀ (i : I), Differentiable R fun x => f x i := fun i => (hz i).prop
+  constructor
+  · intro w; fun_trans[adjointFDeriv]
+    sorry_proof
+  · fun_prop
+
+
+section OverReals
+
+variable {R : Type} [RealScalar R]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
+
+
+@[data_synth]
+theorem Inner.inner.arg_a0a1.HasRevFDerivUpdate_rule
+  (f g : X → Y) (f' g')
+  (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
+  HasRevFDerivUpdate R
+    (fun x => ⟪f x, g x⟫[R])
+    (fun x =>
+      let' (y,df) := f' x;
+      let' (z,dg) := g' x;
+      (⟪y,z⟫[R], fun dr dx =>
+        let dx := df (conj dr • z) dx
+        let dx := dg (conj dr • y) dx
+        dx)) := by
+  cases hf; cases hg
+  constructor
+  · intro dx; fun_trans only; simp_all
+    funext dy dx
+    simp [revFDeriv,smul_push]; ac_rfl
+  · fun_prop
+
+
+@[data_synth]
+theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_rule
+  (f : X → Y) (f')
+  (hf : HasRevFDerivUpdate R f f') :
+  HasRevFDerivUpdate R
+    (fun x => ‖f x‖₂²[R])
+    (fun x =>
+      let' (y,df) := f' x;
+      let z := ‖y‖₂²[R];
+      (z, fun dr dx =>
+        let dx := df ((2 * conj dr) • y) dx
+        dx)) := by
+  cases hf
+  constructor
+  · intro dx; fun_trans only; simp_all
+  · fun_prop
+
+end OverReals
+
+#eval 0
 
 #exit
 

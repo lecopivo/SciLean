@@ -233,7 +233,7 @@ theorem HMul.hMul.arg_a0a1.HasRevFDeriv_rule
   · intro dx; fun_trans only; simp_all
   · fun_prop
 
-
+#exit
 
 -- open SciLean Lean Meta in
 -- simproc [] dataSynthRevFDeriv (revFDeriv _ _ _) := fun e => do
@@ -255,11 +255,19 @@ theorem HMul.hMul.arg_a0a1.HasRevFDeriv_rule
 
 --   return .visit { expr := e', proof? := ← mkAppM ``HasRevFDeriv.revFDeriv #[r.proof] }
 
-#exit
+
 
 #check (HasRevFDeriv R (fun x : R => let y := x; x) _ )
   rewrite_by
     data_synth -normalizeLet +normalizeCore
+
+
+variable (y : Y)
+
+set_option trace.Meta.Tactic.data_synth true inx
+#check (HasRevFDeriv R (fun x : R => y) _ )
+  rewrite_by
+    data_synth
 
 
 #check (HasRevFDeriv R (fun x : R => x*x) _ )

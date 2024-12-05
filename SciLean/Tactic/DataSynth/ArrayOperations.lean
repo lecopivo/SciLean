@@ -518,26 +518,6 @@ theorem ArrayType.ofFn.arg_f.HasRevFDerivUpdate
   · fun_prop
 
 
-@[data_synth]
-theorem IndexType.sum.arg_f.HasRevFDerivUpdate
-  (f : W → I → X) (f' : I → _) (hz : ∀ i, HasRevFDerivUpdate R (f · i) (f' i)) :
-  HasRevFDerivUpdate R
-    (fun w => ∑ i, f w i)
-    (fun w =>
-      ((∑ i, f w i), fun dx dw =>
-        IndexType.foldl (init:=dw)
-          (fun dw (i : I) =>
-            let' (_x,df) := f' i w;
-            df dx dw))) := by
-  have := fun i => (hz i).val
-  have : ∀ (i : I), Differentiable R fun x => f x i := fun i => (hz i).prop
-  constructor
-  · intro w; fun_trans[adjointFDeriv]
-    sorry_proof
-  · fun_prop
-
-
-#exit
 
 example (f : W → I → X)
  (hf : ∀ (i : I), Differentiable R fun x => f x i)
@@ -565,6 +545,14 @@ set_option trace.Meta.Tactic.data_synth true in
 
 set_option trace.Meta.Tactic.data_synth true in
 #check (HasRevFDerivUpdate R (fun x : R^[I] => (∑ i, x[i])•x) _)
+  rewrite_by
+    data_synth
+    lsimp
+
+
+
+set_option trace.Meta.Tactic.data_synth true in
+#check (HasRevFDerivUpdate R (fun x : R^[I] => (∑ i, x[i])*‖x - ‖x‖₂²•1‖₂²) _)
   rewrite_by
     data_synth
     lsimp
