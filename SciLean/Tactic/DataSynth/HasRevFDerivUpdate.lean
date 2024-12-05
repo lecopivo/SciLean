@@ -359,6 +359,8 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_rule
 end OverReals
 
 
+#exit
+
 
 set_option trace.Meta.Tactic.data_synth true in
 #check (HasRevFDerivUpdate R (fun x : R => x*x*x*x*x) _ )
