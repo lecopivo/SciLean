@@ -137,7 +137,7 @@ partial def splitLet (e : Expr) : Expr :=
 
 open Lean Meta in
 partial def normalizeCore (e : Expr) : DataSynthM Expr := do
-  -- checkCache { val := e : ExprStructEq } fun _ => Core.withIncRecDepth do
+  checkCache { val := e : ExprStructEq } fun _ => Core.withIncRecDepth do
     match e.headBeta with
     | .letE n t v b ndep =>
 
@@ -164,18 +164,30 @@ partial def normalizeCore (e : Expr) : DataSynthM Expr := do
       | v => do
         let v' ← normalizeCore v
         if v==v' then
-          return (.letE n t v' (← normalizeCore b) ndep)
+          let b' ← normalizeCore b
+          if ¬b'.hasLooseBVar 0 then
+            return b'.lowerLooseBVars 1 1
+          else
+            return (.letE n t v' b' ndep)
         else
-          normalizeCore (.letE n t v' (← normalizeCore b) ndep)
+          normalizeCore (.letE n t v' b ndep)
 
-    | .proj ``Prod ..
-    | (mkApp3 (.const ``Prod.fst _) ..)
-    | (mkApp3 (.const ``Prod.snd _) ..) =>
-      let v' := reduceProdProj e
-      if v'==e then
-        return e
-      else
-        normalizeCore v'
+    | .proj ``Prod 0 xy =>
+      match (← normalizeCore xy) with
+      | mkApp4 (.const ``Prod.mk _) _ _ x _ => return x
+      | xy => return .proj ``Prod 0 xy
+    | .proj ``Prod 1 xy =>
+      match (← normalizeCore xy) with
+      | mkApp4 (.const ``Prod.mk _) _ _ _ y => return y
+      | xy => return .proj ``Prod 1 xy
+    | (mkApp3 (.const ``Prod.fst lvl) X Y xy) =>
+      match (← normalizeCore xy) with
+      | mkApp4 (.const ``Prod.mk _) _ _ x _ => return x
+      | xy => return (mkApp3 (.const ``Prod.fst lvl) X Y xy)
+    | (mkApp3 (.const ``Prod.snd lvl) X Y xy) =>
+      match (← normalizeCore xy) with
+      | mkApp4 (.const ``Prod.mk _) _ _ _ y => return y
+      | xy => return (mkApp3 (.const ``Prod.snd lvl) X Y xy)
     | .app f x => do
       return .app (← normalizeCore f) (← normalizeCore x)
     | .lam n t b bi =>
@@ -230,7 +242,7 @@ def normalize (e : Expr) : DataSynthM (Simp.Result) := do
 
 def Result.normalize (r : Result) : DataSynthM Result := do
   withProfileTrace "normalize result" do
-  r.congr (← r.xs.mapM (DataSynth.normalize))
+  r.congr (← r.xs.mapM (fun x => instantiateMVars x >>= DataSynth.normalize ))
 
 
 def Goal.getCandidateTheorems (g : Goal) : DataSynthM (Array DataSynthTheorem) := do
@@ -276,12 +288,14 @@ where
 def Goal.assumption? (goal : Goal) : DataSynthM (Option Result) := do
   withProfileTrace "assumption?" do
   (← getLCtx).findDeclRevM? fun localDecl => do
+    forallTelescope localDecl.type fun xs type => do
     if localDecl.isImplementationDetail then
       return none
-    else if localDecl.type.isAppOf' goal.dataSynthDecl.name then
+    else if type.isAppOf' goal.dataSynthDecl.name then
       let (_,e) ← goal.mkFreshProofGoal
-      if (← isDefEq e localDecl.type) then
-        return ← goal.getResultFrom (.fvar localDecl.fvarId)
+      let (ys, _, type') ← forallMetaTelescope localDecl.type
+      if (← isDefEq e type') then
+        return ← goal.getResultFrom (mkAppN (.fvar localDecl.fvarId) ys)
       else
         return none
     else
@@ -474,7 +488,7 @@ def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) :=
   catch _ =>
     return none
 
-  let rhs := (← fgGoal.mkFreshProofGoal).2
+  let (_,rhs) ← fgGoal.mkFreshProofGoal
   if ¬(← isDefEq thm rhs) then
     return none
 
@@ -498,9 +512,7 @@ def letResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Optio
   args? := args?.set! hfId hf.proof
 
   let proof ← mkAppOptM thmName args?
-
   let r ← fgGoal.getResultFrom proof
-
   return r
 
 /-- Given goal for composition `fun x i => f x i` and given free var `i` and `f` return goal for `(f · i)` -/
@@ -531,7 +543,7 @@ def projGoals (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option Goal)
   xs[p₂Id]!.mvarId!.assignIfDefeq p₂
   xs[qId]!.mvarId!.assignIfDefeq q
 
-  let rhs := (← fGoal.mkFreshProofGoal).2
+  let (_,rhs) ← fGoal.mkFreshProofGoal
   if ¬(← isDefEq thm rhs) then
     return none
 
@@ -555,23 +567,7 @@ def projResults (fGoal : Goal) (f g p₁ p₂ q : Expr) (hg : Result) : DataSynt
   args? := args?.set! hgId hg.proof
 
   let proof ← mkAppOptM thmName args?
-  let Proof ← inferType proof
-
-  -- extract data from the result
-  let (xs,goal) ← fGoal.mkFreshProofGoal
-  if ¬(← isDefEq goal Proof) then
-    return none
-  let xs ← xs.mapM instantiateMVars
-
-  let r : Result := {
-    xs := xs
-    proof := ← instantiateMVars proof
-    goal := fGoal
-  }
-
-  -- normalize all output data
-  let r ← r.congr (← xs.mapM normalize)
-
+  let r ← fGoal.getResultFrom proof
   return r
 
 
@@ -597,9 +593,12 @@ def decomposeDomain? (goal : Goal) (f : FunData) : DataSynthM (Option Result) :=
     return none
   let some (p₁,p₂,q,g) ← f.decomposeDomain? | return none
   withProfileTrace "decomposeDomain" do
-    let some ggoal ← projGoals goal (← f.toExpr) (← g.toExpr) p₁ p₂ q | pure none
-    let some hg ← dataSynthFun ggoal g | pure none
-    projResults goal (← f.toExpr) (← g.toExpr) p₁ p₂ q hg
+  withMainTrace (fun r => pure m!"[{ExceptToEmoji.toEmoji r}] domain projection {p₁}") do
+    let some ggoal ← projGoals goal (← f.toExpr) (← g.toExpr) p₁ p₂ q | return none
+    let some hg ← dataSynthFun ggoal g | return none
+    let some r ← projResults goal (← f.toExpr) (← g.toExpr) p₁ p₂ q hg | return none
+    let r ← r.normalize
+    return r
 
 
 def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do

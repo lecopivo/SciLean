@@ -89,16 +89,16 @@ def Goal.getResultFrom (g : Goal) (proof : Expr) : MetaM Result := do
   -- todo: maybe add same sanity checks that we are doing reasonable things
 
   let P ← inferType proof
-  let args := P.getAppArgs
-
-  let xs := g.dataSynthDecl.outputArgs.map (fun i => args[i]!)
+  let (xs,goal) ← g.mkFreshProofGoal
+  if ¬(← isDefEq goal P) then
+    throwError "invalid result of {← ppExpr P}"
+  let xs ← xs.mapM instantiateMVars
 
   let r : Result := {
     xs := xs
-    proof := proof
+    proof := ← instantiateMVars proof
     goal := g
   }
-
   return r
 
 

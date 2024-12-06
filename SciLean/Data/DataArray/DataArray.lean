@@ -207,7 +207,7 @@ def DataArrayN.flatten (x : DataArrayN α ι)
   x.reshape (Fin n) (by simp[hn])
 
 
-instance {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [Inhabited α] [pd : PlainDataType α] :
+instance {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [pd : PlainDataType α] :
     PlainDataType Cont where
   btype := match pd.btype with
     | .inl αBitType =>
@@ -217,8 +217,12 @@ instance {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [Inhabited �
         h_size := sorry_proof
 
         fromByteArray := λ b i h =>
-          ArrayType.ofFn (λ j => panic! "not implemented!")
-        toByteArray   := λ b i h c => panic! "not implemented!"
+          ArrayType.ofFn (λ j =>
+            dbg_trace "fix me! instance implementation in DataArray.lean"
+            αBitType.fromByte 0)
+        toByteArray   := λ b i h c =>
+          dbg_trace "fix me! instance implementation in DataArray.lean"
+          b
         toByteArray_size := sorry_proof
         fromByteArray_toByteArray := sorry_proof
         fromByteArray_toByteArray_other := sorry_proof
@@ -248,16 +252,16 @@ instance {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [Inhabited �
 
 
 
-def DataArrayN.curry [Inhabited α] (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
+def DataArrayN.curry (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
   ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
 
-def DataArrayN.uncurry [Inhabited α] (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
+def DataArrayN.uncurry (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
   ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
 
-theorem DataArrayN.uncurry_def [Inhabited α] (x : DataArrayN (DataArrayN α κ) ι) :
+theorem DataArrayN.uncurry_def (x : DataArrayN (DataArrayN α κ) ι) :
     x.uncurry = ⊞ i j => x[i][j] := sorry_proof
 
-theorem DataArrayN.curry_def [Inhabited α] (x : DataArrayN α (ι×κ)) :
+theorem DataArrayN.curry_def (x : DataArrayN α (ι×κ)) :
     x.curry = ⊞ i => ⊞ j => x[i,j] := sorry_proof
 
 set_option linter.dupNamespace false in

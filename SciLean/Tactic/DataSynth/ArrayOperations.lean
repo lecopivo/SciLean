@@ -20,7 +20,6 @@ variable
   {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
   {Z : Type} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
 
-
 set_default_scalar R
 
 namespace DataArrayN
@@ -449,9 +448,24 @@ theorem exp.arg_x.HasRevFDerivUpdate
 
 
 @[data_synth]
-theorem ArrayType.get.arg_cont.HasRevFDerivUpdate (i : I) :
+theorem uncurry.arg_x.HasRevFDerivUpdate [PlainDataType X]
+  (x : W → X^[I]^[J]) (x') (hx : HasRevFDerivUpdate R x x') :
+  HasRevFDerivUpdate R
+    (fun w => (x w).uncurry)
+    (fun w =>
+      let' (x,dx) := x' w;
+      (x.uncurry, fun dy dw =>
+        dx dy.curry dw)) := by
+  cases hx
+  constructor
+  · intro w; fun_trans only; simp_all
+  · fun_prop
+
+
+@[data_synth]
+theorem _root_.SciLean.ArrayType.get.arg_cont.HasRevFDerivUpdate [PlainDataType X] (i : I) :
   (HasRevFDerivUpdate R
-    (fun x : R^[I] => x[i])
+    (fun x : X^[I] => x[i])
     (fun x => (x[i], fun dxi dx => ArrayType.modify dx i (fun xi => xi + dxi)))) := by
 
   constructor
@@ -463,7 +477,7 @@ theorem ArrayType.get.arg_cont.HasRevFDerivUpdate (i : I) :
 
 
 @[data_synth]
-theorem ArrayType.set.arg_contxi.HasRevFDerivUpdate (i : I)
+theorem _root_.SciLean.ArrayType.set.arg_contxi.HasRevFDerivUpdate (i : I)
   (x : W → R^[I]) (xi : W → R) (x' xi')
   (hx : HasRevFDerivUpdate R x x') (hxi : HasRevFDerivUpdate R xi xi') :
   (HasRevFDerivUpdate R
@@ -497,8 +511,8 @@ theorem ArrayType.set.arg_contxi.HasRevFDerivUpdate (i : I)
 
 
 @[data_synth]
-theorem ArrayType.ofFn.arg_f.HasRevFDerivUpdate
-  (f : W → I → R) (f' : I → _) (hz : ∀ i, HasRevFDerivUpdate R (f · i) (f' i)) :
+theorem _root_.SciLean.ArrayType.ofFn.arg_f.HasRevFDerivUpdate [PlainDataType X]
+  (f : W → I → X) (f' : I → _) (hz : ∀ i, HasRevFDerivUpdate R (f · i) (f' i)) :
   (HasRevFDerivUpdate R
     (fun w => ⊞ i => f w i)
     (fun w =>
@@ -518,6 +532,7 @@ theorem ArrayType.ofFn.arg_f.HasRevFDerivUpdate
   · fun_prop
 
 
+#exit
 
 example (f : W → I → X)
  (hf : ∀ (i : I), Differentiable R fun x => f x i)

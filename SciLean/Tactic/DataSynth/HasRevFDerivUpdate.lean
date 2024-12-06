@@ -357,11 +357,17 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_rule
 
 end OverReals
 
-
 #exit
+
 variable (f : X → X) (f') (hf : HasRevFDerivUpdate R f f')
 
+variable (g : X → Fin n → R) (g' : Fin n → _) (hf : ∀ i, HasRevFDerivUpdate R (g · i) (g' i))
+         (i j : Fin n)
+
 #check (HasRevFDerivUpdate R (fun x => f x) _) rewrite_by data_synth
+
+set_option trace.Meta.Tactic.data_synth true in
+#check (HasRevFDerivUpdate R (fun x => (g x i) * (g x j)) _) rewrite_by data_synth
 
 #check (HasRevFDerivUpdate R f _) rewrite_by data_synth
 
@@ -495,7 +501,7 @@ set_option trace.Meta.Tactic.data_synth.input true in
 set_option pp.deepTerms.threshold 100000000000000000
 set_option profiler true in
 -- set_option trace.Meta.Tactic.data_synth true in
-set_option trace.Meta.Tactic.data_synth.profile true in
+-- set_option trace.Meta.Tactic.data_synth.profile true in
 -- set_option trace.Meta.Tactic.data_synth.normalize true in
 -- set_option trace.Meta.Tactic.data_synth.input true in
 #check (HasRevFDerivUpdate R (fun x : R =>
