@@ -2,6 +2,7 @@ import Lean
 import SciLean.Tactic.LSimp.Main
 import SciLean.Tactic.DataSynth.Decl
 import SciLean.Lean.Meta.Uncurry
+import SciLean.Lean.Meta.Basic
 
 import Mathlib.Logic.Equiv.Defs
 
@@ -174,8 +175,8 @@ def curryLambdaTelescope (f : Expr) (k : Array Expr → Expr → MetaM α) : Met
 
   lambdaTelescope f k
 
-def getFunData (f : Expr) : MetaM FunData :=
-  curryLambdaTelescope f fun xs b => do
+def getFunData (f : Expr) : MetaM FunData := do
+  curryLambdaTelescope (← ensureEtaExpanded f) fun xs b => do
     let data : FunData :=
       { lctx := ← getLCtx
         insts := ← getLocalInstances

@@ -272,6 +272,22 @@ where
     | _ , [] => mkLambdaFVars fvars fn
 
 
+
+def Goal.assumption? (goal : Goal) : DataSynthM (Option Result) := do
+  withProfileTrace "assumption?" do
+  (← getLCtx).findDeclRevM? fun localDecl => do
+    if localDecl.isImplementationDetail then
+      return none
+    else if localDecl.type.isAppOf' goal.dataSynthDecl.name then
+      let (_,e) ← goal.mkFreshProofGoal
+      if (← isDefEq e localDecl.type) then
+        return ← goal.getResultFrom (.fvar localDecl.fvarId)
+      else
+        return none
+    else
+      return none
+
+
 def discharge? (e : Expr) : DataSynthM (Option Expr) := do
   (← read).discharge e
 
@@ -291,6 +307,11 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
       if let .some r ← do dataSynth g then
         x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
         return true
+
+      if let some r ← g.assumption? then
+        x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
+        return true
+
     return false
   if b then return true
 
@@ -371,15 +392,15 @@ partial def main (goal : Goal) : DataSynthM (Option Result) := do
 
   let thms ← goal.getCandidateTheorems
 
-  if thms.size = 0 then
-    trace[Meta.Tactic.data_synth] "no applicable theorems"
-    return none
-
   trace[Meta.Tactic.data_synth] "candidates {thms.map (fun t => t.thmName)}"
 
   for thm in thms do
     if let .some r ← goal.tryTheorem? thm then
       return r
+
+  -- try local theorems
+  if let some r ← goal.assumption? then
+    return r
 
   return none
 

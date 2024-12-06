@@ -79,7 +79,7 @@ theorem diagonal.arg_x.HasRevFDerivUpdate
 
 @[data_synth]
 theorem outerprod.arg_xy.HasRevFDerivUpdate
-  (x y : W → R^[I]) (x' y') (hx : HasRevFDerivUpdate R x x') (hy : HasRevFDerivUpdate R y y') :
+  (x : W → R^[I]) (y : W → R^[J]) (x' y') (hx : HasRevFDerivUpdate R x x') (hy : HasRevFDerivUpdate R y y') :
   HasRevFDerivUpdate R
     (fun w => (x w).outerprod (y w))
     (fun w =>
@@ -551,6 +551,7 @@ set_option trace.Meta.Tactic.data_synth true in
 
 
 
+set_option trace.Meta.Tactic.data_synth.input true in
 set_option trace.Meta.Tactic.data_synth true in
 #check (HasRevFDerivUpdate R (fun x : R^[I] => (∑ i, x[i])*‖x - ‖x‖₂²•1‖₂²) _)
   rewrite_by

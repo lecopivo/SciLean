@@ -35,7 +35,6 @@ theorem id_rule : HasRevFDerivUpdate R (fun x : X => x) (fun x => (x, fun dx dx�
   · fun_prop
 
 
-@[data_synth]
 theorem const_rule (y : Y) :  HasRevFDerivUpdate R (fun x : X => y) (fun x => (y, fun _ dx => dx)) := by
   constructor
   · fun_trans
@@ -360,6 +359,11 @@ end OverReals
 
 
 #exit
+variable (f : X → X) (f') (hf : HasRevFDerivUpdate R f f')
+
+#check (HasRevFDerivUpdate R (fun x => f x) _) rewrite_by data_synth
+
+#check (HasRevFDerivUpdate R f _) rewrite_by data_synth
 
 
 set_option trace.Meta.Tactic.data_synth true in
@@ -394,7 +398,7 @@ set_option pp.deepTerms.threshold 1000000000000000
 
 #check (HasRevFDerivUpdate R (fun x : R => x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x) _ )
   rewrite_by
-    data_synth -normalizeCore
+    data_synth
 
 #check (HasRevFDerivUpdate R (fun x : R×R×R×R => x.1) _) rewrite_by
               data_synth

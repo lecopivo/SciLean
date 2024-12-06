@@ -11,6 +11,7 @@ open Parser.Tactic in
 /-- `date_synth` as conv tactic will fill in meta variables in generalized transformation -/
 syntax (name:=data_synth_conv) "data_synth" optConfig : conv
 
+
 /- syntax (name := simp) "simp" optConfig (discharger)? (&" only")?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*,?) "]")? (location)? : tactic
  -/
@@ -47,6 +48,46 @@ syntax (name:=data_synth_conv) "data_synth" optConfig : conv
       Conv.changeLhs e'
     else
       throwError "faield to assign data {e'}"
+  | none =>
+    throwError "`data_synth` failed"
+| _ => throwUnsupportedSyntax
+
+
+
+open Parser.Tactic Conv in
+syntax (name:=data_synth_tac) "data_synth" optConfig ("=>" convSeq)? : tactic
+
+@[tactic data_synth_tac] unsafe def dataSynthTactic : Tactic
+| `(tactic| data_synth $cfg:optConfig $[=> $c]?) => do
+  let m ← getMainGoal
+  let e ← m.getType
+
+  let cfg ← elabDataSynthConfig cfg
+
+  let some g ← isDataSynthGoal? e
+    | throwError "{e} is not `data_synth` goal"
+
+  let stateRef : IO.Ref DataSynth.State ← IO.mkRef {}
+
+  let (r?,_) ← dataSynth g |>.run {config := cfg} |>.run stateRef
+    |>.run (← Simp.mkDefaultMethods).toMethodsRef
+    |>.run {config := cfg.toConfig, simpTheorems := #[← getSimpTheorems]}
+    |>.run {}
+
+  match r? with
+  | some r =>
+    let mut e' := r.getSolvedGoal
+    if let some c := c then
+      let (e'',eq) ← elabConvRewrite e' #[] (← `(conv| ($c)))
+      if ← isDefEq e e'' then
+        m.assign (← mkEqMP eq r.proof)
+        setGoals []
+    else
+      if ← isDefEq e e' then
+        m.assign r.proof
+        setGoals []
+      else
+        throwError "faield to assign data {e'}"
   | none =>
     throwError "`data_synth` failed"
 | _ => throwUnsupportedSyntax

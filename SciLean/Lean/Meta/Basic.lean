@@ -113,6 +113,14 @@ def etaExpandN (e : Expr) (n : Nat) : MetaM Expr :=
 def etaExpand' (e : Expr) : MetaM Expr :=
   withDefault do forallTelescopeReducing (← inferType e) fun xs _ => mkLambdaFVars xs (mkAppN e xs).headBeta
 
+/-- Ensures that function is eta expanded -/
+def ensureEtaExpanded (e : Expr) : MetaM Expr := do
+  if e.isLambda then
+    return e
+  else
+    let .forallE n t _ _ ← inferType e | throwError "function expected"
+    return .lam n t (e.app (.bvar 0)) default
+
 
 /--
   Same as `mkAppM` but does not leave trailing implicit arguments.
