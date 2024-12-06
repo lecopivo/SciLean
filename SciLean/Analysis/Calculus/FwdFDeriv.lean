@@ -385,7 +385,7 @@ def HPow.hPow.arg_a0.fwdFDeriv_rule (n : Nat) :
   unfold fwdFDeriv; fun_trans
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 open BigOperators in
@@ -403,12 +403,12 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.fwdFDeriv_rule_at {ι} [IndexType ι]
+theorem sum.arg_f.fwdFDeriv_rule_at {ι} [IndexType ι]
   (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
-  : fwdFDeriv K (fun x => IndexType.sum fun i => f x i) x
+  : fwdFDeriv K (fun x => sum fun i => f x i) x
     =
     fun dx =>
-      IndexType.sum fun i =>
+      sum fun i =>
         let ydy := fwdFDeriv K (f · i) x dx
         ydy :=
 by
@@ -417,12 +417,12 @@ by
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.fwdFDeriv_rule {ι} [IndexType ι]
+theorem sum.arg_f.fwdFDeriv_rule {ι} [IndexType ι]
   (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
-  : fwdFDeriv K (fun x => IndexType.sum fun i => f x i)
+  : fwdFDeriv K (fun x => sum fun i => f x i)
     =
     fun x dx =>
-      IndexType.sum fun i =>
+      sum fun i =>
         let ydy := fwdFDeriv K (f · i) x dx
         ydy :=
 by

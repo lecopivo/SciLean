@@ -837,14 +837,14 @@ def HPow.hPow.arg_a0.revFDerivProjUpdate_rule
   unfold revFDerivProjUpdate; fun_trans
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 section IndexTypeSum
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revFDerivProj_rule
+theorem sum.arg_f.revFDerivProj_rule
     (f : X → ι → Y') (hf : ∀ i, Differentiable K (fun x => f x i)) :
     revFDerivProj K Yi (fun x => ∑ i, f x i)
     =
@@ -859,7 +859,7 @@ theorem IndexType.sum.arg_f.revFDerivProj_rule
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revFDerivProjUpdate_rule
+theorem sum.arg_f.revFDerivProjUpdate_rule
     (f : X → ι → Y') (hf : ∀ i, Differentiable K (fun x => f x i)) :
     revFDerivProjUpdate K Yi (fun x => ∑ i, f x i)
     =

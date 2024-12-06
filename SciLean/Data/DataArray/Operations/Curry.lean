@@ -38,7 +38,7 @@ abbrev_fun_trans curry in x
     apply AdjointSpace.ext_inner_left R
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
-    simp only [inner, curry_def, ArrayType.get_ofFn', uncurry_def, sum_over_prod, uncurry_appply2]
+    simp only [inner, curry_def, ArrayType.get_ofFn', uncurry_def, sum_prod_eq_sum_sum, uncurry_appply2]
 
 abbrev_fun_trans curry in x
     {R} [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] [CompleteSpace α] :

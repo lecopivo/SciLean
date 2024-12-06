@@ -450,11 +450,11 @@ def HPow.hPow.arg_a0.cderiv_rule (n : Nat)
   funext x; fun_trans
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.cderiv_rule_at
+theorem sum.arg_f.cderiv_rule_at
   (f : X → ι → Y) (x : X) (hf : ∀ i, CDifferentiableAt K (f · i) x)
   : cderiv K (fun x => ∑ i, f x i) x
     =
@@ -465,7 +465,7 @@ by
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.cderiv_rule
+theorem sum.arg_f.cderiv_rule
   (f : X → ι → Y) (hf : ∀ i, CDifferentiable K (f · i))
   : cderiv K (fun x => ∑ i, f x i)
     =

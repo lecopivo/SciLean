@@ -27,7 +27,7 @@ abbrev_fun_trans matmul in A : adjoint R by
     intro D
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def, DataArrayN.matmul, DataArrayN.transpose,
-         sum_over_prod, Function.HasUncurry.uncurry, sum_pull]
+         sum_prod_eq_sum_sum, Function.HasUncurry.uncurry, sum_pull]
     conv => lhs; enter[1,i]; rw[sum_swap]
     ac_rfl
 
@@ -38,7 +38,7 @@ abbrev_fun_trans matmul in B : adjoint R by
     intro D
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def, DataArrayN.matmul, DataArrayN.transpose,
-         sum_over_prod, Function.HasUncurry.uncurry, sum_pull]
+         sum_prod_eq_sum_sum, Function.HasUncurry.uncurry, sum_pull]
     conv => lhs; enter[1,i]; rw[sum_swap]
     rw[sum_swap]
     conv => lhs; enter[1,i]; rw[sum_swap]

@@ -364,11 +364,11 @@ def HPow.hPow.arg_a0.fwdCDeriv_rule (n : Nat)
   unfold fwdCDeriv; fun_trans
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.fwdCDeriv_rule_at (x : X)
+theorem sum.arg_f.fwdCDeriv_rule_at (x : X)
     (f : X → ι → Y) (hf : ∀ i, CDifferentiableAt K (f · i) x) :
     fwdCDeriv K (fun x => ∑ i, f x i) x
     =
@@ -378,7 +378,7 @@ theorem IndexType.sum.arg_f.fwdCDeriv_rule_at (x : X)
   unfold fwdCDeriv; fun_trans; sorry_proof -- need linearity of prod.mk
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.fwdCDeriv_rule
+theorem sum.arg_f.fwdCDeriv_rule
     (f : X → ι → Y) (hf : ∀ i, CDifferentiable K (f · i)) :
     fwdCDeriv K (fun x => ∑ i, f x i)
     =

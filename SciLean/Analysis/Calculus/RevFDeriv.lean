@@ -118,7 +118,7 @@ theorem pi_rule
     =
     fun x =>
       (fun i => f x i,
-       fun dy => IndexType.sum fun i =>
+       fun dy => sum fun i =>
          let dx := (revFDeriv K (f · i) x).2 (dy i)
          dx)
        := by
@@ -169,7 +169,7 @@ theorem pi_rule_at
     (revFDeriv K fun (x : X) (i : ι) => f x i) x
     =
     (fun i => f x i,
-     fun dy => IndexType.sum fun i =>
+     fun dy => sum fun i =>
        let dx := (revFDeriv K (f · i) x).2 (dy i)
        dx) := by
   unfold revFDeriv
@@ -504,13 +504,13 @@ def HPow.hPow.arg_a0.revFDeriv_rule
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revFDeriv_rule_at {ι} [IndexType ι]
+theorem sum.arg_f.revFDeriv_rule_at {ι} [IndexType ι]
   (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
-  : revFDeriv K (fun x => IndexType.sum fun i => f x i) x
+  : revFDeriv K (fun x => sum fun i => f x i) x
     =
-    (IndexType.sum fun i => f x i,
+    (sum fun i => f x i,
      fun dy =>
-       IndexType.sum fun i =>
+       sum fun i =>
          let dx := adjointFDeriv K (f · i) x dy
          dx) :=
 
@@ -520,13 +520,13 @@ by
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revFDeriv_rule {ι} [IndexType ι]
+theorem sum.arg_f.revFDeriv_rule {ι} [IndexType ι]
   (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
-  : revFDeriv K (fun x => IndexType.sum fun i => f x i)
+  : revFDeriv K (fun x => sum fun i => f x i)
     =
     fun x =>
-    (IndexType.sum fun i => f x i,
+    (sum fun i => f x i,
      fun dy =>
-       IndexType.sum fun i =>
+       sum fun i =>
          let dx := adjointFDeriv K (f · i) x dy
          dx) := by funext x; fun_trans

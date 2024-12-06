@@ -179,11 +179,11 @@ theorem HSMul.hSMul.arg_a1.IsSmoothLinearMap_rule_int
   constructor <;> fun_prop
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.IsSmoothLinearMap_rule
+theorem sum.arg_f.IsSmoothLinearMap_rule
     (f : X → ι → Y) (hf : ∀ i, IsSmoothLinearMap K (f · i)) :
     IsSmoothLinearMap K fun x => ∑ i, f x i := by constructor <;> fun_prop
 

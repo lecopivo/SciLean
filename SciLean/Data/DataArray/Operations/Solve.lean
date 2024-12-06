@@ -89,7 +89,7 @@ theorem solve.arg_A.fwdFDeriv_rule :
   fun_trans (disch:=apply hA')
   cases fwdFDeriv R A x dx; cases fwdFDeriv R b x dx;
   dsimp
-  simp[matmul_assoc,vecmul_assoc,neg_push]
+  simp[matmul_assoc,vecmul_assoc,neg_pull]
 
 
 include hA hA' hB in

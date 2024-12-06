@@ -1,4 +1,5 @@
 import SciLean.Data.DataArray.Operations
+import SciLean.Data.ArrayType.Properties
 
 /-! Basic simp theorems about matrix operations -/
 
@@ -6,24 +7,6 @@ import SciLean.Data.DataArray.Operations
 namespace SciLean
 
 section Missing
-
-
-theorem sum_over_prod' {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]
-    {f : I → J → R} : ∑ i j, f i j = ∑ (i : I×J), f i.1 i.2  := sorry
-
-theorem sum_over_prod {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]
-    {f : I×J → R} : ∑ i, f i = ∑ i j, f (i,j)  := sorry
-
-@[rsimp]
-theorem sum_ite {R} [AddCommMonoid R] {I : Type*} [IndexType I] [DecidableEq I]
-    {f : I → R} (j : I) : (∑ i, if i = j then f i else 0) = f j  := sorry
-
-@[rsimp]
-theorem sum_ite' {R} [AddCommMonoid R] {I : Type*} [IndexType I] [DecidableEq I]
-    {f : I → R} (j : I) : (∑ i, if j = i then f i else 0) = f j  := sorry
-
-theorem sum_swap {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]
-    {f : I → J → R} : ∑ i j, f i j = ∑ j i, f i j  := sorry
 
 @[simp,simp_core]
 theorem uncurry_appply2 (f : α → β → γ) (x : α) (y : β) :
@@ -131,11 +114,10 @@ theorem matmul_neg_pull_right (A : R^[I,J]) (B : R^[J,K]) :
     A*-B = -(A*B) := by
   ext i; cases i;
   simp [neg_pull,matmul_def]
-  sorry_proof
 
 @[neg_push]
 theorem vecmul_neg_push (A : R^[I,J]) (x : R^[J]) :
-    -(A*x) = -A*x := by
+    -(A*x) = A*(-x) := by
   ext i
   simp[vecmul_def]
   sorry_proof
@@ -143,14 +125,23 @@ theorem vecmul_neg_push (A : R^[I,J]) (x : R^[J]) :
 @[neg_pull]
 theorem vecmul_neg_pull_left (A : R^[I,J]) (x : R^[J]) :
     -A*x = -(A*x) := by
-  simp only [neg_push]
+  ext i
+  simp only [neg_pull,vecmul_def]
+
+  sorry_proof
+
+@[neg_push]
+theorem neg_fun_push [Neg X] (f : α → X) :
+    - f = fun x => - (f x) := by rfl
 
 @[neg_pull]
 theorem vecmul_neg_pull_right (A : R^[I,J]) (x : R^[J]) :
     A*-x = -(A*x) := by
   ext i
-  simp [neg_pull,vecmul_def]
+  simp only [neg_pull,vecmul_def]
+  conv => rhs; simp only [neg_push]
   sorry_proof
+
 
 
 theorem vecmul_normalize (A : R^[I,J]) (B : R^[J,K]) :

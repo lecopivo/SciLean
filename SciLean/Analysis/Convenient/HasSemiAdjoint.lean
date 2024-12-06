@@ -334,7 +334,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem SciLean.IndexType.sum.arg_f.HasSemiAdjoint_rule
+theorem SciLean.sum.arg_f.HasSemiAdjoint_rule
   (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K fun x : X => f x i)
   : HasSemiAdjoint K fun x => ∑ i, f x i :=
 by

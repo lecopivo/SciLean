@@ -643,7 +643,7 @@ def HPow.hPow.arg_a0.adjointProjUpdate_rule
   unfold adjointProjUpdate; fun_trans
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 section IndexTypeSum
@@ -652,7 +652,7 @@ variable {ι : Type} [IndexType ι]
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.adjointProj_rule [DecidableEq ι]
+theorem sum.arg_f.adjointProj_rule [DecidableEq ι]
     (f : X → ι → Y') (hf : ∀ i, IsContinuousLinearMap K (fun x => f x i)) :
     adjointProj K Yi (fun x => ∑ i, f x i)
     =
@@ -670,7 +670,7 @@ theorem IndexType.sum.arg_f.adjointProj_rule [DecidableEq ι]
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.adjointProjUpdate_rule [DecidableEq ι]
+theorem sum.arg_f.adjointProjUpdate_rule [DecidableEq ι]
     (f : X → ι → Y') (hf : ∀ i, IsContinuousLinearMap K (fun x => f x i)) :
     adjointProjUpdate K Yi (fun x => ∑ i, f x i)
     =

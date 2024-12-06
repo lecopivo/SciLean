@@ -9,15 +9,15 @@ variable
 
 open DataArrayN
 
-def_fun_prop sum in x with_transitive : IsContinuousLinearMap R
+def_fun_prop DataArrayN.sum in x with_transitive : IsContinuousLinearMap R
 
 #generate_linear_map_simps DataArrayN.sum.arg_x.IsLinearMap_rule
 
-abbrev_fun_trans sum in x : fderiv R by fun_trans
+abbrev_fun_trans DataArrayN.sum in x : fderiv R by fun_trans
 
-abbrev_fun_trans sum in x : fwdFDeriv R by autodiff
+abbrev_fun_trans DataArrayN.sum in x : fwdFDeriv R by autodiff
 
-abbrev_fun_trans sum in x : adjoint R by
+abbrev_fun_trans DataArrayN.sum in x : adjoint R by
   equals (fun x' => x' • 1) =>
     funext x
     apply AdjointSpace.ext_inner_left R
@@ -26,14 +26,14 @@ abbrev_fun_trans sum in x : adjoint R by
     simp[DataArrayN.inner_def,Function.HasUncurry.uncurry,
          DataArrayN.sum, sum_pull]
 
-abbrev_fun_trans sum in x : revFDeriv R by
+abbrev_fun_trans DataArrayN.sum in x : revFDeriv R by
   unfold revFDeriv
   autodiff
 
-abbrev_fun_trans sum in x : revFDerivProj R Unit by
+abbrev_fun_trans DataArrayN.sum in x : revFDerivProj R Unit by
   unfold revFDerivProj
   autodiff
 
-abbrev_fun_trans sum in x : revFDerivProjUpdate R Unit by
+abbrev_fun_trans DataArrayN.sum in x : revFDerivProjUpdate R Unit by
   unfold revFDerivProjUpdate
   autodiff

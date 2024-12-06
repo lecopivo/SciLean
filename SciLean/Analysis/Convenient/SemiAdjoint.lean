@@ -241,11 +241,11 @@ by
   sorry_proof
 
 
--- IndexType.sum ------------------------------------------------------------------
+-- sum ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.semiAdjoint_rule
+theorem sum.arg_f.semiAdjoint_rule
   (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K (f · i))
   : semiAdjoint K (fun x => ∑ i, f x i)
     =

@@ -222,7 +222,7 @@ theorem pi_rule
   fun_trans;
   funext x; simp
   rw[cderiv.pi_rule (hf:=by fun_prop)]; fun_trans
-  simp[revCDerivUpdate,revCDeriv,IndexType.sum]
+  simp[revCDerivUpdate,revCDeriv,sum]
   sorry_proof
 
 end revCDeriv
@@ -1176,7 +1176,7 @@ def HPow.hPow.arg_a0.revCDerivProjUpdate_rule
   unfold revCDerivProjUpdate; fun_trans; simp[oneHot,structMake,revCDerivUpdate]
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 section IndexTypeSum
@@ -1184,7 +1184,7 @@ section IndexTypeSum
 variable {ι : Type} [IndexType ι]
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revCDeriv_rule
+theorem sum.arg_f.revCDeriv_rule
   (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i))
   : revCDeriv K (fun x => ∑ i, f x i)
     =
@@ -1202,7 +1202,7 @@ by
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revCDerivUpdate_rule
+theorem sum.arg_f.revCDerivUpdate_rule
     (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (fun x => f x i)) :
     revCDerivUpdate K (fun x => ∑ i, f x i)
     =
@@ -1215,7 +1215,7 @@ theorem IndexType.sum.arg_f.revCDerivUpdate_rule
   fun_trans
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revCDerivProj_rule [DecidableEq ι]
+theorem sum.arg_f.revCDerivProj_rule [DecidableEq ι]
     (f : X → ι → Y') (hf : ∀ i, HasAdjDiff K (fun x => f x i)) :
     revCDerivProj K Yi (fun x => ∑ i, f x i)
     =
@@ -1233,7 +1233,7 @@ theorem IndexType.sum.arg_f.revCDerivProj_rule [DecidableEq ι]
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.revCDerivProjUpdate_rule [DecidableEq ι]
+theorem sum.arg_f.revCDerivProjUpdate_rule [DecidableEq ι]
     (f : X → ι → Y') (hf : ∀ i, HasAdjDiff K (fun x => f x i)) :
     revCDerivProjUpdate K Yi (fun x => ∑ i, f x i)
     =

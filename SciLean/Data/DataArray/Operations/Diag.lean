@@ -27,7 +27,7 @@ abbrev_fun_trans diag in x : adjoint R by
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def,Function.HasUncurry.uncurry,
          DataArrayN.diag,DataArrayN.diagonal,
-         sum_over_prod, sum_ite']
+         sum_prod_eq_sum_sum, sum_ite']
 
 abbrev_fun_trans diag in x : revFDeriv R by
   unfold revFDeriv

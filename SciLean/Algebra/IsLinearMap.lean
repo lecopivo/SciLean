@@ -266,11 +266,11 @@ theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_int
   intro x y; simp[hf.1]
   intro c x; simp[hf.2]; rw [@smul_comm]
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.IsLinearMap_rule
+theorem sum.arg_f.IsLinearMap_rule
   (f : X → ι → Y) (hf : ∀ i, IsLinearMap R (f · i))
   : IsLinearMap R fun x => ∑ i, f x i := by sorry_proof
 

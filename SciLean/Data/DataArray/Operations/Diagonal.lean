@@ -31,7 +31,7 @@ abbrev_fun_trans diagonal in x [DecidableEq I] [RealScalar R] : adjoint R by
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def,Function.HasUncurry.uncurry,
          DataArrayN.diagonal,DataArrayN.diag,
-         sum_over_prod, sum_ite']
+         sum_prod_eq_sum_sum, sum_ite']
 
 abbrev_fun_trans diagonal in x [DecidableEq I] [RealScalar R] : revFDeriv R by
   unfold revFDeriv

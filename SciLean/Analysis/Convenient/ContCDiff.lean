@@ -331,17 +331,17 @@ def HPow.hPow.arg_a0.ContCDiff_rule
     ContCDiff K n (fun x => f x ^ m) := by intro x; fun_prop
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.ContCDiffAt_rule
+theorem sum.arg_f.ContCDiffAt_rule
   (f : X → ι → Y) (x : X) (hf : ∀ i, ContCDiffAt K n (fun x => f x i) x)
   : ContCDiffAt K n (fun x => ∑ i, f x i) x := by sorry_proof
 
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.ContCDiff_rule
+theorem sum.arg_f.ContCDiff_rule
   (f : X → ι → Y) (hf : ∀ i, ContCDiff K n (fun x => f x i))
   : ContCDiff K n (fun x => ∑ i, f x i) := by intro x; fun_prop
 

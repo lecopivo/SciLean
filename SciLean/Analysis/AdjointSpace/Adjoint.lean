@@ -210,7 +210,7 @@ theorem pi_rule
     (f : X → (i : ι) → E i) (hf : ∀ i, IsContinuousLinearMap K (f · i)) :
     (fun (x : X) (i : ι) => f x i)†
     =
-    (fun x' => IndexType.sum fun i => ((f · i)†) (x' i)) := by
+    (fun x' => sum fun i => ((f · i)†) (x' i)) := by
 
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   intro x y
@@ -406,11 +406,11 @@ by
 
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.adjoint_rule {ι} [IndexType ι]
+theorem sum.arg_f.adjoint_rule {ι} [IndexType ι]
   (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K (f · i))
-  : (fun x => IndexType.sum fun i => f x i)†
+  : (fun x => sum fun i => f x i)†
     =
-    (fun y => IndexType.sum fun i => ((f · i)†) y) :=
+    (fun y => sum fun i => ((f · i)†) y) :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   sorry_proof

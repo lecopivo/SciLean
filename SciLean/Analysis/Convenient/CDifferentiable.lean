@@ -348,12 +348,12 @@ def HPow.hPow.arg_a0.CDifferentiableAt_rule
 
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 ---------------------------------------------------------------------------------
 
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.CDifferentiableAt_rule
+theorem sum.arg_f.CDifferentiableAt_rule
   (f : X → ι → Y) (x : X) (hf : ∀ i, CDifferentiableAt K (fun x => f x i) x)
   : CDifferentiableAt K (fun x => ∑ i, f x i) x :=
 by
@@ -361,7 +361,7 @@ by
 
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.CDifferentiable_rule
+theorem sum.arg_f.CDifferentiable_rule
   (f : X → ι → Y) (hf : ∀ i, CDifferentiable K (fun x => f x i))
   : CDifferentiable K (fun x => ∑ i, f x i) :=
 by

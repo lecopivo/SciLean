@@ -172,11 +172,11 @@ theorem HMul.hMul.arg_a1.IsAffineMap_rule
   (f : X → R) (hf : IsAffineMap R f) (y' : R) : IsAffineMap 𝕜 fun x => y' * f x := sorry_proof
 
 
--- IndexType.sum ----------------------------------------------------------------
+-- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.IsAffineMap_rule
+theorem sum.arg_f.IsAffineMap_rule
   (f : X → ι → Y) (hf : ∀ i, IsAffineMap R (f · i))
   : IsAffineMap R fun x => ∑ i, f x i := by sorry_proof
 

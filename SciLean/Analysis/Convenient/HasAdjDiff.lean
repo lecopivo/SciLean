@@ -352,17 +352,17 @@ def HPow.hPow.arg_a0.HasAdjDiff_rule
   intro x; fun_prop
 
 
--- IndexType.sum ---------------------------------------------------------------
+-- sum ---------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.HasAdjDiffAt_rule (x : X)
+theorem sum.arg_f.HasAdjDiffAt_rule (x : X)
     (f : X → ι → Y) (hf : ∀ i, HasAdjDiffAt K (f · i) x) :
     HasAdjDiffAt K (fun x => ∑ i, f x i) x := by
   constructor; fun_prop; fun_trans; fun_prop
 
 @[fun_prop]
-theorem IndexType.sum.arg_f.HasAdjDiff_rule
+theorem sum.arg_f.HasAdjDiff_rule
     (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i)) :
     HasAdjDiff K (fun x => ∑ i, f x i) := by
   intro x; fun_prop

@@ -37,7 +37,7 @@ abbrev_fun_trans cross in y : adjoint R by
     intro y
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def, DataArrayN.cross,
-         sum_over_prod, sum_pull]
+         sum_prod_eq_sum_sum, sum_pull]
     -- expand the sum explicitely and call ring
     sorry_proof
 

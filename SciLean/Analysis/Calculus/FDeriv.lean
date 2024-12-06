@@ -390,12 +390,12 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.fderiv_rule_at {ι} [IndexType ι]
+theorem sum.arg_f.fderiv_rule_at {ι} [IndexType ι]
   (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
-  : fderiv K (fun x => IndexType.sum fun i => f x i) x
+  : fderiv K (fun x => sum fun i => f x i) x
     =
     fun dx =>L[K]
-      IndexType.sum fun i =>
+      sum fun i =>
         let dy := fderiv K (f · i) x dx
         dy :=
 by
@@ -405,12 +405,12 @@ by
   apply hf
 
 @[fun_trans]
-theorem IndexType.sum.arg_f.fderiv_rule {ι} [IndexType ι]
+theorem sum.arg_f.fderiv_rule {ι} [IndexType ι]
   (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
-  : fderiv K (fun x => IndexType.sum fun i => f x i)
+  : fderiv K (fun x => sum fun i => f x i)
     =
     fun x => fun dx =>L[K]
-      IndexType.sum fun i =>
+      sum fun i =>
         let dy := fderiv K (f · i) x dx
         dy :=
 by

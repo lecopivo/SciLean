@@ -290,7 +290,7 @@ theorem HPow.hPow.arg_a0.HasRevFDerivUpdate_rule
 
 
 @[data_synth]
-theorem IndexType.sum.arg_f.HasRevFDerivUpdate
+theorem sum.arg_f.HasRevFDerivUpdate
   {I : Type} [IndexType I]
   (f : W → I → X) (f' : I → _) (hz : ∀ i, HasRevFDerivUpdate R (f · i) (f' i)) :
   HasRevFDerivUpdate R

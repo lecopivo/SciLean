@@ -2,8 +2,6 @@ import SciLean.Data.IndexType.Operations
 
 namespace SciLean
 
-namespace IndexType
-
 variable {ι : Type*} [IndexType ι]
 
 @[specialize] def sum {α : Type u} [Zero α] [Add α] (f : ι → α) : α :=
@@ -38,6 +36,8 @@ macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => 
   | _  => throw ()
 
 
+theorem sum_swap {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]
+    {f : I → J → R} : ∑ i j, f i j = ∑ j i, f i j  := sorry_proof
 
 @[sum_push]
 theorem sum_pair {I X : Type _} [Add X] [Zero X] [Add Y] [Zero Y] [IndexType I]
@@ -58,6 +58,20 @@ theorem sum_linearize {I X : Type _} [Add X] [Zero X] [IndexType I] (f : I → X
     ∑ i : Fin (size I), f (fromFin i) := by simp only [sum]; rw[reduce_linearize]
 
 
+theorem sum_sum_eq_sum_prod {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]
+    {f : I → J → R} : ∑ i j, f i j = ∑ (i : I×J), f i.1 i.2  := sorry_proof
+
+theorem sum_prod_eq_sum_sum {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]
+    {f : I×J → R} : ∑ i, f i = ∑ i j, f (i,j)  := sorry_proof
+
+@[rsimp]
+theorem sum_ite {R} [AddCommMonoid R] {I : Type*} [IndexType I] [DecidableEq I]
+    {f : I → R} (j : I) : (∑ i, if i = j then f i else 0) = f j  := sorry_proof
+
+@[rsimp]
+theorem sum_ite' {R} [AddCommMonoid R] {I : Type*} [IndexType I] [DecidableEq I]
+    {f : I → R} (j : I) : (∑ i, if j = i then f i else 0) = f j  := sorry_proof
+
 
 variable {I : Type*} [IndexType I]
 
@@ -71,6 +85,17 @@ theorem sum_add_distrib (f g : I → α) : ∑ i , (f i + g i) = (∑ i, f i) + 
 theorem add_sum (f g : I → α) : (∑ i, f i) + (∑ i, g i) = ∑ i , (f i + g i) := by simp only[add_pull]
 
 end OnMonoid
+
+section OnGroup
+variable [AddCommGroup α]
+
+@[neg_push, sum_pull]
+theorem neg_sum (f : I → α) : -(∑ i, f i) = ∑ i , -(f i) := by sorry_proof
+
+@[neg_pull, sum_push]
+theorem sum_neg (f : I → α) : (∑ i, -f i) = - ∑ i , (f i) := by simp only [neg_push]
+
+end OnGroup
 
 
 

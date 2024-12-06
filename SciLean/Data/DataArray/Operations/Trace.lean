@@ -22,6 +22,6 @@ abbrev_fun_trans trace in A [DecidableEq I] : adjoint R by
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def,Function.uncurry,
-         DataArrayN.trace,identity, sum_pull, sum_over_prod, sum_ite']
+         DataArrayN.trace,identity, sum_pull, sum_prod_eq_sum_sum, sum_ite']
 
 abbrev_fun_trans trace in A : revFDeriv R by unfold revFDeriv; autodiff
