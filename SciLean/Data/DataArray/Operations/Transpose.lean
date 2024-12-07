@@ -44,17 +44,6 @@ omit [RealScalar R] in
 @[simp, simp_core]
 theorem transpose_transpose : Aᵀᵀ = A := by ext i; cases i; simp[transpose]
 
--- TODO: move this
-@[sum_pull]
-theorem ArrayType.ofFn.arg_f.sum_pull (f : I → J → R) : ⊞ i => ∑ j, f i j = ∑ j, ⊞ i => f i j := by
-  ext
-  simp
-
--- TODO: move this
-@[sum_pull]
-theorem ArrayType.get.arg_cont.sum_pull {X} [AddCommGroup X] [ArrayType Cont I X] (i : I)
-  (f : J → Cont) : ArrayType.get (∑ j, f j) i = ∑ j, ArrayType.get (f j) i := sorry_proof
-
 theorem inner_transpose_right : ⟪x, A*v⟫ = ⟪Aᵀ*x, v⟫ := by
   rw[← adjoint_inner_left _ (by fun_prop)]
   fun_trans
@@ -63,10 +52,6 @@ theorem inner_transpose_left : ⟪A*u, y⟫ = ⟪u, Aᵀ*y⟫ := by
   rw[← adjoint_inner_right _ (by fun_prop)]
   fun_trans
 
-
--- TODO: remove simp from this!
-#check ArrayType.sum_ofFn
---set_option trace.Meta.Tactic.simp.unify true in
 
 theorem inner_AAT_right : ⟪x, A*(Aᵀ*y)⟫ = ⟪Aᵀ*x,Aᵀ*y⟫ := by
   rw[inner_transpose_right]

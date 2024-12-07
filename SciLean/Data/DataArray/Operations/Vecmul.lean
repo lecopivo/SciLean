@@ -27,7 +27,8 @@ abbrev_fun_trans vecmul in A : adjoint R by
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def, DataArrayN.vecmul, DataArrayN.outerprod,
-         sum_prod_eq_sum_sum, Function.HasUncurry.uncurry, sum_pull]
+         sum_prod_eq_sum_sum, Function.HasUncurry.uncurry]
+    simp only [sum_pull]
     ac_rfl
 
 abbrev_fun_trans vecmul in x : adjoint R by
@@ -37,7 +38,8 @@ abbrev_fun_trans vecmul in x : adjoint R by
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
     simp[DataArrayN.inner_def, DataArrayN.vecmul, DataArrayN.transpose,
-         sum_prod_eq_sum_sum, Function.HasUncurry.uncurry, sum_pull]
+         sum_prod_eq_sum_sum, Function.HasUncurry.uncurry]
+    simp only [sum_pull]
     rw[sum_swap]
     ac_rfl
 

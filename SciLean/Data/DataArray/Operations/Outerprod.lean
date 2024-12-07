@@ -32,8 +32,9 @@ abbrev_fun_trans outerprod in x : adjoint R by
     apply AdjointSpace.ext_inner_left R
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
-    simp[DataArrayN.inner_def, DataArrayN.outerprod, DataArrayN.vecmul,
-         sum_prod_eq_sum_sum, sum_pull]
+    simp only [outerprod, inner_def, ArrayType.get_ofFn', RCLike.inner_apply, conj_for_real_scalar,
+               sum_prod_eq_sum_sum, uncurry_appply2, vecmul]
+    simp only [sum_pull]
     ac_rfl
 
 abbrev_fun_trans outerprod in y : adjoint R by
@@ -42,8 +43,9 @@ abbrev_fun_trans outerprod in y : adjoint R by
     apply AdjointSpace.ext_inner_left R
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
-    simp[DataArrayN.inner_def, DataArrayN.outerprod, DataArrayN.vecmul, DataArrayN.transpose,
-         sum_prod_eq_sum_sum, sum_pull]
+    simp only [outerprod, inner_def, ArrayType.get_ofFn', RCLike.inner_apply, conj_for_real_scalar,
+               sum_prod_eq_sum_sum, uncurry_appply2, vecmul, transpose]
+    simp only [sum_pull]
     rw[sum_swap]
     ac_rfl
 

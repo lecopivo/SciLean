@@ -87,15 +87,16 @@ theorem matmul_zero (A : R^[I,J]) : A * (0 : R^[J,K]) = 0 := by
 theorem vecmul_assoc (A : R^[I,J]) (B : R^[J,K]) (x : R^[K]) :
     A * B * x = A * (B * x) := by
   ext i
-  simp[vecmul_def,matmul_def,sum_pull,mul_assoc]
+  simp only [matmul_def, vecmul_def, ArrayType.get_ofFn', uncurry_appply2]
+  simp only [sum_pull]
   rw[sum_swap]
+  ac_rfl
 
 theorem matmul_assoc (A : R^[I,J]) (B : R^[J,K]) (C : R^[K,L]) :
     A * B * C = A * (B * C) := by
   ext i; cases i
-  simp[matmul_def,sum_pull,mul_assoc]
+  simp only [matmul_def, ArrayType.get_ofFn', uncurry_appply2, sum_mul, mul_assoc, mul_sum]
   rw[sum_swap]
-
 
 @[neg_push]
 theorem matmul_neg_push (A : R^[I,J]) (B : R^[J,K]) :
@@ -179,3 +180,36 @@ theorem cossmatrix_antisymmpart (x : R^[3]) :
   x.crossmatrix.antisymmpart = x := by sorry_proof
 
 end CrossProduct
+
+set_default_scalar R
+
+@[simp, simp_core]
+theorem inv_identity {N} [IndexType N] [DecidableEq N] : (𝐈 N)⁻¹ = 𝐈 := sorry_proof
+
+@[simp, simp_core]
+theorem transpose_identity {N} [IndexType N] [DecidableEq N] : (𝐈 N)ᵀ = 𝐈 := sorry_proof
+
+theorem transpose_mul {I J K} [IndexType I] [IndexType J] [IndexType K] (A : R^[I,J]) (B : R^[J,K]) :
+    (A * B)ᵀ = Bᵀ * Aᵀ := sorry_proof
+
+@[simp, simp_core]
+theorem det_identity {N} [IndexType N] [DecidableEq N] : (𝐈 N).det = 1 := sorry_proof
+
+@[simp, simp_core]
+theorem det_transpose {I} [IndexType I] (A : R^[I,I]) :
+    (Aᵀ).det = A.det := sorry_proof
+
+theorem det_mul {I} [IndexType I] (A B : R^[I,I]) :
+    (A * B).det = A.det * B.det := sorry_proof
+
+@[simp, simp_core]
+theorem invertible_mul {I} [IndexType I] (A B : R^[I,I]) (hA : A.Invertible) (hB : B.Invertible) :
+  (A * B).Invertible := sorry_proof
+
+@[simp, simp_core]
+theorem invertible_transpose {I} [IndexType I] (A: R^[I,I]) (hA : A.Invertible) :
+  (Aᵀ).Invertible := sorry_proof
+
+@[simp, simp_core]
+theorem invertible_inv {I} [IndexType I] [DecidableEq I] (A: R^[I,I]) (hA : A.Invertible) :
+  (A⁻¹).Invertible := sorry_proof

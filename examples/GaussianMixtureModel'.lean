@@ -1,8 +1,9 @@
 import SciLean
 import SciLean.Tactic.DataSynth.DefRevDeriv
+import SciLean.Data.DataArray.Operations.GaussianN
+
 
 open SciLean Scalar SciLean.Meta
-
 
 
 section Missing
@@ -51,6 +52,7 @@ theorem inner_QTQ' : ⟪u, Qᵀ*(Q*v)⟫ = ⟪Q*u,Q*v⟫ := by sorry_proof
 
 attribute [scoped simp, scoped simp_core] inner_QQT inner_QQT' inner_QTQ inner_QTQ'
 
+
 @[scoped simp, scoped simp_core]
 theorem gaussian_normalization_invQQT {d : ℕ} (Q : R^[d,d]) :
    (((2 * π) • (Q*Qᵀ)⁻¹).det) ^ (-(1:R) / 2)
@@ -69,14 +71,11 @@ open MatrixOperations
 
 noncomputable
 def likelihood (x : R^[D]^[N]) (w : R^[K]) (μ : R^[D]^[K]) (σ : R^[D,D]^[K]) : R :=
-  ∏ i, ∑ k, w[k] * (((2*π) • σ[k]).det)^(-(1:R)/2) *
-    exp (-(1:R)/2 * ⟪x[i] - μ[k], (σ[k]⁻¹ * (x[i] - μ[k]) : R^[D])⟫)
+  ∏ i, ∑ k, w[k] * gaussianN (μ[k]) (σ[k]) (x[i])
 
 namespace Param
 
-
 def Q (q : R^[D]) (l : R^[((D-1)*D)/2]) : R^[D,D] := q.exp.diag + l.lowerTriangular D 1
-
 
 def_rev_deriv Q in q l by
   unfold Q
