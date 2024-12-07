@@ -2,6 +2,8 @@ import SciLean.Analysis.Convenient.FinVec
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.Scalar.FloatAsReal
 
+import SciLean.Algebra.Dimension
+
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.StructType.Algebra
 
@@ -268,6 +270,9 @@ instance [ArrayType Cont Idx Elem] [MeasurableSpace Elem] [TopologicalSpace Elem
   measurable_eq := sorry_proof
 
 
+instance {d} [ArrayType Cont Idx Elem] [AddCommGroup Elem] [Module K Elem] [Dimension K Elem d] :
+    Dimension K Cont ((size Idx)*d) where
+  is_dim := by conv => lhs; simp
 
 -- This is problem as `Vec` and `NormedAddCommGroup` provide different topologie on `Elem`
 -- example {R} [RCLike R] [ArrayType Cont Idx Elem] [NormedAddCommGroup Elem] [NormedSpace ℝ Elem] [Vec R Elem] :

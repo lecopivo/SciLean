@@ -2,12 +2,9 @@ import SciLean
 import SciLean.Tactic.DataSynth.DefRevDeriv
 import SciLean.Data.DataArray.Operations.GaussianN
 
-
 open SciLean Scalar SciLean.Meta
 
-
 section Missing
-
 
 variable
   {R : Type} [RealScalar R] [PlainDataType R]
@@ -16,6 +13,7 @@ variable
 
 variable {I : Type} [IndexType I]
 
+@[log_push]
 theorem log_sum_exp (x : I → R) : log (∑ i, exp (x i)) = (⊞ i => x i).logsumexp := sorry_proof
 
 end Missing
@@ -26,13 +24,9 @@ section Missing
 variable {R} [RealScalar R]
 variable {I : Type} [IndexType I]
 
-theorem log_prod (x : I → R) : log (∏ i, x i) = ∑ i, log (x i) := sorry_proof
-theorem mul_exp (x y : R) : exp x * exp y = exp (x + y) := sorry_proof
-theorem log_pow (x y : R) : Scalar.log (x^y) = y * Scalar.log x := sorry_proof
-
 @[rsimp]
 theorem IndexType.sum_const {X} [AddCommGroup X] (x : X) :
-  (∑ (i : I), x) = Size.size I • x := sorry_proof
+  (∑ (i : I), x) = Size.size I • x := by sorry_proof
 
 end Missing
 
@@ -40,38 +34,10 @@ variable {R : Type} [RealScalar R] [PlainDataType R]
 
 set_default_scalar R
 
-namespace SciLean.MatrixOperations
-
-variable {I J K : Type} [IndexType I] [IndexType J] [IndexType K]
-variable (x y : R^[I]) (u v : R^[J]) (Q : R^[I,J])
-
-theorem inner_QQT  : ⟪x, Q*Qᵀ*y⟫   = ⟪Qᵀ*x,Qᵀ*y⟫ := by sorry_proof
-theorem inner_QQT' : ⟪x, Q*(Qᵀ*y)⟫ = ⟪Qᵀ*x,Qᵀ*y⟫ := by sorry_proof
-theorem inner_QTQ  : ⟪u, Qᵀ*Q*v⟫   = ⟪Q*u,Q*v⟫ := by sorry_proof
-theorem inner_QTQ' : ⟪u, Qᵀ*(Q*v)⟫ = ⟪Q*u,Q*v⟫ := by sorry_proof
-
-attribute [scoped simp, scoped simp_core] inner_QQT inner_QQT' inner_QTQ inner_QTQ'
-
-
-@[scoped simp, scoped simp_core]
-theorem gaussian_normalization_invQQT {d : ℕ} (Q : R^[d,d]) :
-   (((2 * π) • (Q*Qᵀ)⁻¹).det) ^ (-(1:R) / 2)
-   =
-   (2 * π)^(-(d:R)/2) * Q.det := sorry_proof
-
-@[scoped simp, scoped simp_core]
-theorem gaussian_normalization_invQTQ {d : ℕ} (Q : R^[d,d]) :
-   (((2 * π) • (Qᵀ*Q)⁻¹).det) ^ (-(1:R) / 2)
-   =
-   (2 * π)^(-(d:R)/2) * Q.det := sorry_proof
-
-end SciLean.MatrixOperations
-
-open MatrixOperations
 
 noncomputable
 def likelihood (x : R^[D]^[N]) (w : R^[K]) (μ : R^[D]^[K]) (σ : R^[D,D]^[K]) : R :=
-  ∏ i, ∑ k, w[k] * gaussianN (μ[k]) (σ[k]) (x[i])
+  ∏ i, ∑ k, w[k] * gaussianS (μ[k]) (σ[k]) (x[i])
 
 namespace Param
 
@@ -90,23 +56,25 @@ variable (q : R^[D]) (l : R^[((D-1)*D)/2])
 
 -- properties of parametrization
 theorem det_Q : (Q q l).det = exp q.sum := sorry_proof
-theorem det_QTQ : ((Q q l)ᵀ * (Q q l)).det = exp (2 * q.sum) := sorry_proof
+theorem det_QTQ : ((Q q l)ᵀ * (Q q l)).det = exp (2 * q.sum) := by
+  simp[DataArrayN.det_mul,det_Q,exp_pull]; ring_nf
+theorem Q_invertible : (Q q l).Invertible := sorry_proof
 theorem QTQ_invertible : ((Q q l)ᵀ * (Q q l)).Invertible := sorry_proof
 theorem trace_QTQ : ((Q q l)ᵀ * Q q l).trace = ‖q.exp‖₂² + ‖l‖₂² := sorry_proof
 
-attribute [simp, simp_core] det_Q det_QTQ QTQ_invertible trace_QTQ
+attribute [simp, simp_core] det_Q det_QTQ Q_invertible trace_QTQ
 end Param
 
 open Param in
-noncomputable
 def likelihood' (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (l : R^[((D-1)*D)/2]^[K]) : R :=
   likelihood x (α.softmax) μ (⊞ k => ((Q q[k] l[k])ᵀ * Q q[k] l[k])⁻¹)
   rewrite_by
     unfold likelihood
-    simp
+    simp (disch:=aesop) [gaussianS_ATA]
+
 
 noncomputable
-def prior (m : R) (σ : R^[D,D]^[K]) := ∏ k, /- C(D,m) -/ (σ[k].det)^m * exp ((-(1:R)/2) * ((σ[k])⁻¹).trace)
+def prior (m : R) (σ : R^[D,D]^[K]) := ∏ k, /- C(D,m) -/ (σ[k].det)^m * exp (-((σ[k])⁻¹).trace/2)
 
 
 open Lean Meta
@@ -148,7 +116,7 @@ partial def parse (e : Expr) : Option (List Expr × List Expr × Bool) :=
 
 
 open Qq Lean Meta Mathlib.Tactic in
-simproc_decl mul_pull_from_sum (IndexType.sum _) := fun e => do
+simproc_decl mul_pull_from_sum (sum _) := fun e => do
   let f := e.appArg!
   Lean.Meta.lambdaBoundedTelescope f 1 fun is b => do
     let i := is[0]!
@@ -176,7 +144,7 @@ simproc_decl mul_pull_from_sum (IndexType.sum _) := fun e => do
     let e₂ ← merge m₂ d₂
 
     let mut e' ← mkLambdaFVars #[i] e₂
-    e' ← mkAppM ``IndexType.sum #[e']
+    e' ← mkAppM ``sum #[e']
     e' ← mkAppM ``HMul.hMul #[e₁,e']
 
     -- if nothing changes there is no need to pulute the proof with sorry
@@ -192,10 +160,6 @@ simproc_decl mul_pull_from_sum (IndexType.sum _) := fun e => do
 
 attribute [-simp_core] SciLean.ArrayType.sum_ofFn
 attribute [rsimp] SciLean.ArrayType.sum_ofFn
-
-#check SciLean.IndexType.sum_add_distrib
-
-
 
 @[simp_core]
 theorem neg_add_rev' {G : Type*} [SubtractionCommMonoid G] (a b : G) : -(a + b) = -a + -b := by
@@ -217,47 +181,52 @@ theorem norm_normalize {X} [PlainDataType X] [NormedAddCommGroup X] [AdjointSpac
 @[rsimp]
 theorem isum_sum (x : R^[I]^[J]) : ∑ i, x[i].sum = x.uncurry.sum := by
   simp[DataArrayN.uncurry_def,DataArrayN.sum,Function.HasUncurry.uncurry]
-  rw[sum_over_prod]
+  rw[sum_sum_eq_sum_prod]
 
 @[rsimp]
 theorem isum_norm_exp (x : R^[I]^[J]) :
     ∑ j, ‖x[j].exp‖₂² = ‖x.uncurry.exp‖₂² := by
   simp[DataArrayN.uncurry_def,DataArrayN.sum,Function.HasUncurry.uncurry,
        DataArrayN.norm2_def,DataArrayN.exp]
-  rw[sum_over_prod]
+  rw[sum_sum_eq_sum_prod]
 
 @[rsimp]
 theorem isum_norm (x : R^[I]^[J]) :
     (∑ j, ‖x[j]‖₂²) = ‖x.uncurry‖₂² := by
   simp[DataArrayN.uncurry_def,DataArrayN.sum,Function.HasUncurry.uncurry,
        DataArrayN.norm2_def]
-  rw[sum_over_prod]
+  rw[sum_sum_eq_sum_prod]
 
 
 open Param Scalar in
 noncomputable
 def loss (m : R) (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (l : R^[((D-1)*D)/2]^[K]) : R :=
-  let σ := ⊞ k => ((Q q[k] l[k])ᵀ * Q q[k] l[k])⁻¹
-  (- log (likelihood x (α.softmax) μ σ * prior m σ))
+  (let S := ⊞ k => ((Q q[k] l[k])ᵀ * Q q[k] l[k])⁻¹
+   (- log (likelihood x (α.softmax) μ S))) --  * prior m S)))
   rewrite_by
     unfold likelihood
-    simp only [simp_core, likelihood, prior, σ, DataArrayN.softmax_def]
-    simp only [simp_core, mul_pull_from_sum, refinedRewritePost, sum_push,
-               log_mul, log_prod, mul_exp, log_sum_exp, log_pow, log_div, log_inv]
+    simp (disch:=aesop) [gaussianS_ATA]
+
+    simp (disch:=aesop) [simp_core, likelihood, prior, DataArrayN.softmax_def]
+    simp only [simp_core, mul_pull_from_sum, refinedRewritePost, sum_push, gaussian,
+               log_push,exp_pull]
     ring_nf
 
+
 set_option pp.deepTerms.threshold 10000
-set_option maxHeartbeats 10000000
-
-macro "cleanup_pass" : conv => `(conv| lsimp (config:={singlePass:=true}) only [simp_core, ↓prodFunSimproc])
-
-
 set_option profiler true
-set_option trace.Meta.Tactic.data_synth.profile true
+
+
 def_rev_deriv loss in α μ q l by
   unfold loss
-  lsimp
   data_synth => skip
+
+
+
+
+def hoh := argmin α μ q l,
+
+
 
 
 #exit

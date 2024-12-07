@@ -38,6 +38,11 @@ elab "dim(" X:term ")" : term => do
   let (dim,_) ← elabConvRewrite dim #[] (← `(conv| simp -failIfUnchanged))
   return dim
 
+@[simp, simp_core]
+theorem finrank_dimension {R X d} [Ring R] [AddCommGroup X] [Module R X] [hd : Dimension R X d] :
+  Module.finrank R X = d := hd.is_dim
+
+
 
 instance : Dimension ℝ ℝ 1 where
   is_dim := by simp

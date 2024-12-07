@@ -1,21 +1,25 @@
+import SciLean.Algebra.Dimension
+import SciLean.Analysis.Calculus.FDeriv
+import SciLean.Analysis.Calculus.ContDiff
 import SciLean.Analysis.SpecialFunctions.Exp
 import SciLean.Analysis.SpecialFunctions.Log
 import SciLean.Analysis.SpecialFunctions.Norm2
-
-import SciLean.Analysis.Calculus.FDeriv
-
+import SciLean.Meta.GenerateFunTrans
+import SciLean.Meta.Notation.Let'
 import SciLean.Tactic.Autodiff
+import SciLean.Lean.ToSSA
 
-open ComplexConjugate
+import Mathlib.Probability.Distributions.Gaussian
 
 namespace SciLean
+
+open Scalar RealScalar ComplexConjugate
 
 set_option deprecated.oldSectionVars true
 
 variable
   {R C} [Scalar R C] [RealScalar R]
-  {W} [Vec R W]
-  {U} [SemiHilbert R U]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] {d : outParam ℕ} [hdim : Dimension R X d]
 
 set_default_scalar R
 
@@ -23,80 +27,60 @@ set_default_scalar R
 -- Gaussian ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-open Scalar RealScalar in
-def gaussian {U} [Sub U] [SMul R U] [Inner R U] (μ : U) (σ : R) (x : U) : R :=
+def gaussian [Dimension R X d] (μ : X) (σ : R) (x : X) : R :=
   let x' := σ⁻¹ • (x - μ)
-  1/(σ*sqrt (2*(pi : R))) * exp (- ‖x'‖₂²/2)
+  (2*π*σ^2)^(-(d:R)/2) * exp (- ‖x'‖₂²/2)
 
-
-open Scalar RealScalar in
 @[simp, simp_core]
-theorem log_gaussian (μ : U) (σ : R) (x : U) :
+theorem log_gaussian (μ : X) (σ : R) (x : X) :
     log (gaussian μ σ x)
     =
     let x' := σ⁻¹ • (x - μ)
-    (- ‖x'‖₂²/2 - log σ - log (sqrt (2*(pi :R)))) := by
+    (- d/2 * (log (2*π) + 2 * log σ) - ‖x'‖₂²/2 ) := by
 
   unfold gaussian
-  simp [log_inv,log_mul,log_div,log_exp,log_one]
+  simp [log_push]
   ring
 
-def_fun_prop with_transitive
-    {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] (σ : R) :
-    Differentiable R (fun (μx : X×X) => gaussian μx.1 σ μx.2) by
-  unfold gaussian; fun_prop
 
-def_fun_prop with_transitive
-    {X : Type _} [SemiHilbert R X] (σ : R) :
-    HasAdjDiff R (fun (μx : X×X) => gaussian μx.1 σ μx.2) by
-  unfold gaussian; fun_prop
+def_fun_prop gaussian in μ x with_transitive : Differentiable R
 
 
-section OnAdjointSpace
-
-set_option deprecated.oldSectionVars true
-
-variable {U : Type _} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
-
-@[fun_trans]
-theorem gaussian.arg_μx.fderiv_rule (σ : R) :
-    fderiv R (fun μx : U×U => gaussian μx.1 σ μx.2)
-    =
-    fun μx => fun dμx =>L[R]
-      let dx' := - (σ^2)⁻¹ * ⟪dμx.2-dμx.1, μx.2-μx.1⟫
-      dx' * gaussian μx.1 σ μx.2 := by
-  ext x dx <;>
-   (unfold gaussian; simp
-    conv => lhs; autodiff
-    simp[smul_pull]
-    ring)
+abbrev_fun_trans gaussian in μ x : fderiv R by
+  equals (fun μx => fun dμx =>L[R]
+            let' (μ,x) := μx
+            let' (dμ,dx) := dμx
+            let dx' := - (σ^2)⁻¹ * ⟪dx-dμ, x-μ⟫[R]
+            dx' * gaussian μ σ x) =>
+  unfold gaussian
+  fun_trans
+  funext x;
+  ext dx <;> (simp[smul_pull]; ring)
 
 
-@[fun_trans]
-theorem gaussian.arg_μx.fwdFDeriv_rule (σ : R) :
-    fwdFDeriv R (fun μx : U×U => gaussian μx.1 σ μx.2)
-    =
-    fun μx  dμx =>
-      let x' := gaussian μx.1 σ μx.2
-      let dx' := - (σ^2)⁻¹ * ⟪dμx.2-dμx.1, μx.2-μx.1⟫
-      (x', dx' * x') := by
+abbrev_fun_trans gaussian in μ x : fwdFDeriv R by
+  -- ideally
+  -- unfold fwdFDeriv
+  -- autodiff
+  -- run common subexpression elimination
+  equals (fun μx dμx =>
+            let' (μ,x) := μx
+            let' (dμ,dx) := dμx
+            let dx' := - (σ^2)⁻¹ * ⟪dx-dμ, x-μ⟫[R]
+            let G := gaussian μ σ x
+            (G, dx' * G)) =>
   unfold fwdFDeriv
   fun_trans
 
 
-@[fun_trans]
-theorem gaussian.arg_μx.revFDeriv_rule (σ : R) :
-    revFDeriv R (fun μx : U×U => gaussian μx.1 σ μx.2)
-    =
-    fun μx =>
-      let s := gaussian μx.1 σ μx.2
-      (s, fun dr =>
-        let dx := (dr * s * (σ^2)⁻¹) • (μx.1-μx.2)
-        (- dx, dx)) := by
+abbrev_fun_trans gaussian in μ x [CompleteSpace X] : revFDeriv R by
+  equals (fun μx =>
+            let' (μ,x) := μx
+            let G := gaussian μ σ x
+            (G, fun dr =>
+              let dx := (G*(σ^2)⁻¹*dr) • (x-μ)
+              (dx,-dx))) =>
   unfold revFDeriv
-  funext μx; simp; funext dr
-  fun_trans [smul_smul,neg_push];
-  ring_nf
-  simp [smul_sub,neg_sub]
-
-end OnAdjointSpace
+  funext x; fun_trans
+  funext dx; simp only [Prod.mk.injEq, neg_inj]
+  constructor <;> module

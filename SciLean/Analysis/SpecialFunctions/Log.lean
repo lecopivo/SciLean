@@ -213,13 +213,42 @@ theorem log.arg_x.revCDeriv_rule
 
 end Convenient
 
+open Scalar
 
-@[simp, simp_core]
-theorem log_one : Scalar.log (1:R) = 0 := sorry_proof
-@[simp, simp_core]
-theorem log_exp (x : R) : Scalar.log (Scalar.exp x) = x := sorry_proof
-theorem log_mul (x y : R) : Scalar.log (x*y) = Scalar.log x + Scalar.log y := sorry_proof
-theorem log_div (x y : R) : Scalar.log (x/y) = Scalar.log x - Scalar.log y := sorry_proof
-theorem log_inv (x : R) : Scalar.log x⁻¹ = - Scalar.log x := sorry_proof
+@[simp, simp_core, log_push]
+theorem log_one : log (1:R) = 0 := sorry_proof
+@[simp, simp_core, log_push]
+theorem log_exp (x : R) : log (exp x) = x := sorry_proof
+
+@[log_push]
+theorem log_mul (x y : R) : log (x*y) = log x + log y := sorry_proof
+@[log_pull]
+theorem add_log (x y : R) : log x + log y = log (x*y) := sorry_proof
+
+@[log_push]
+theorem log_div (x y : R) : log (x/y) = log x - log y := sorry_proof
+@[log_pull]
+theorem sub_log (x y : R) : log x - log y = log (x/y) := sorry_proof
+
+@[log_push]
+theorem log_inv (x : R) : log (x⁻¹) = - log x := sorry_proof
+@[log_pull]
+theorem neg_log (x : R) : - log x = log (x⁻¹) := sorry_proof
+
+@[log_push]
+theorem log_pow (x y : R) : log (x^y) = y * log x := sorry_proof
+@[log_push]
+theorem log_pow_nat (x : R) (n : ℕ) : log (x^n) = n * log x := sorry_proof
+@[log_push]
+theorem log_pow_int (x : R) (n : ℤ) : log (x^n) = n * log x := sorry_proof
+@[log_pull]
+theorem mul_log (x y : R) : y * log x = log (x^y) := sorry_proof
+@[log_pull]
+theorem mul_log' (x y : R) : (log x) * y = log (x^y) := sorry_proof
+
+@[log_push]
+theorem log_prod {I} [IndexType I] (f : I → R) : log (∏ i, f i) = ∑ i, log (f i) := sorry_proof
+@[log_pull]
+theorem sum_log {I} [IndexType I] (f : I → R) : (∑ i, log (f i)) = log (∏ i, f i) := sorry_proof
 
 end Log

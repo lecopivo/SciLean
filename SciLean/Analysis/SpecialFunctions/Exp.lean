@@ -2,6 +2,7 @@ import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.FwdCDeriv
+import SciLean.Analysis.Calculus.ContDiff
 
 open ComplexConjugate
 
@@ -15,24 +16,12 @@ variable
   {U} [SemiInnerProductSpace C U]
 
 
---------------------------------------------------------------------------------
--- Exp -------------------------------------------------------------------------
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+-- Exp ---------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
-set_option linter.unusedVariables false in
-@[fun_prop]
-theorem exp.arg_x.DifferentiableAt_rule
-    {W} [NormedAddCommGroup W] [NormedSpace C W]
-    (w : W) (x : W → C) (hx : DifferentiableAt C x w) :
-    DifferentiableAt C (fun w => exp (x w)) w := sorry_proof
-
-
-@[fun_prop]
-theorem exp.arg_x.Differentiable_rule
-    {W} [NormedAddCommGroup W] [NormedSpace C W]
-    (x : W → C) (hx : Differentiable C x) :
-    Differentiable C fun w => exp (x w) := by intro x; fun_prop
-
+def_fun_prop exp in x with_transitive : Differentiable K by sorry_proof
+def_fun_prop exp in x with_transitive : ContDiff K ⊤ by sorry_proof
 
 set_option linter.unusedVariables false in
 @[fun_trans]
@@ -128,3 +117,31 @@ theorem exp.arg_x.revCDeriv_rule
       (exp xdx.1, fun dy => xdx.2 (conj (exp xdx.1) * dy)) := by
   unfold revCDeriv
   fun_trans [fwdCDeriv, smul_push, simp_core]
+
+
+
+
+@[simp, simp_core, exp_push]
+theorem exp_zero : exp (0:R) = 1 := sorry_proof
+@[simp, simp_core, exp_push]
+theorem exp_log (x : R) : exp (log x) = abs x := sorry_proof
+
+@[exp_push]
+theorem exp_add (x y : R) : exp (x+y) = exp x * exp y := sorry_proof
+@[exp_pull]
+theorem mul_exp (x y : R) : exp x * exp y = exp (x+y) := sorry_proof
+
+@[exp_push]
+theorem exp_sub (x y : R) : exp (x-y) = exp x / exp y := sorry_proof
+@[exp_pull]
+theorem div_exp (x y : R) : exp x / exp y = exp (x-y) := sorry_proof
+
+@[exp_push]
+theorem exp_inv (x : R) : exp (-x) = (exp x)⁻¹ := sorry_proof
+@[exp_pull]
+theorem inv_exp (x : R) : (exp x)⁻¹ = exp (-x) := sorry_proof
+
+@[exp_push]
+theorem exp_mul (x y : R) : (exp x*y) = (exp x)^y := sorry_proof
+@[exp_pull]
+theorem pow_exp (x y : R) : (exp x)^y = exp (x*y) := sorry_proof

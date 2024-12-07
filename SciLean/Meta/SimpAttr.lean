@@ -13,6 +13,14 @@ register_simp_attr smul_push
 register_simp_attr mul_pull
 register_simp_attr mul_push
 
+register_simp_attr pow_push
+register_simp_attr pow_pull
+
+register_simp_attr exp_push
+register_simp_attr exp_pull
+register_simp_attr log_push
+register_simp_attr log_pull
+
 
 register_simp_attr simp_core
 -- register_simp_attr ftrans_simp
