@@ -12,7 +12,10 @@ variable
 set_default_scalar R
 
 theorem logsumexp_def (x : R^[I]) :
-    logsumexp x = Scalar.log (∑ i, Scalar.exp (x[i])) := sorry_proof
+    logsumexp x = Scalar.log (∑ i, Scalar.exp (x[i])) := by
+  unfold logsumexp
+  simp only [exp_push]
+  sorry_proof
 
 def_fun_prop logsumexp in x : Differentiable R by
   simp_rw[logsumexp_def]
@@ -57,3 +60,9 @@ abbrev_fun_trans logsumexp in x [DecidableEq I] : revFDerivProj R Unit by
 abbrev_fun_trans logsumexp in x [DecidableEq I] : revFDerivProjUpdate R Unit by
   unfold revFDerivProjUpdate
   autodiff
+
+
+@[log_push]
+theorem log_sum_exp (x : I → R) :
+    Scalar.log (∑ i, Scalar.exp (x i)) = (⊞ i => x i).logsumexp := by
+  simp [logsumexp_def]

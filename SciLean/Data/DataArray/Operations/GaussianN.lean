@@ -97,3 +97,24 @@ theorem gaussianS_ATA (μ : R^[n]) (A : R^[n,n]) (hA : A.Invertible) (x : R^[n])
   rw[gaussianS_ATA' hA]
   unfold gaussian gaussianS
   simp
+
+
+
+@[exp_push]
+theorem mul_exp_gaussianS (x : R) (μ : R^[n]) (S : R^[n,n]) (y : R^[n]) :
+    Scalar.exp x * gaussianS μ S y
+    =
+    let y' := y-μ
+    (2*π)^(-(n:R)/2) * S.det^(-(1:R)/2) * Scalar.exp (- ⟪y', (S⁻¹)*y'⟫/2 + x) := by
+  unfold gaussianS
+  rw [mul_comm]
+  simp only [mul_assoc,exp_pull]
+
+@[exp_push]
+theorem mul_gaussianS_exp (μ : R^[n]) (S : R^[n,n]) (x : R^[n]) (y : R) :
+    gaussianS μ S x * Scalar.exp y
+    =
+    let x' := x-μ
+    (2*π)^(-(n:R)/2) * S.det^(-(1:R)/2) * Scalar.exp (- ⟪x', (S⁻¹)*x'⟫/2 + y) := by
+  unfold gaussianS
+  simp only [mul_assoc,exp_pull]

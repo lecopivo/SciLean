@@ -170,6 +170,13 @@ theorem inv_inv (A : R^[I,I]) (hA : A.Invertible) : (A⁻¹)⁻¹ = A := sorry_p
 theorem det_inv_eq_inv_det (A : R^[I,I]) :
     (A⁻¹).det = (A.det)⁻¹ := sorry_proof
 
+/- Sherman–Morrison formula -/
+theorem inv_add_outerprod (A : R^[I,I]) (x y : R^[I]) :
+    (A + x.outerprod y)⁻¹
+    =
+    let x' := A⁻¹*x
+    let y' := A⁻¹*y
+    A⁻¹ - ((1:R) + ⟪y, x'⟫[R])⁻¹ • x'.outerprod y' := sorry_proof
 
 end
 

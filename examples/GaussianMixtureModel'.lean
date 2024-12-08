@@ -13,9 +13,6 @@ variable
 
 variable {I : Type} [IndexType I]
 
-@[log_push]
-theorem log_sum_exp (x : I → R) : log (∑ i, exp (x i)) = (⊞ i => x i).logsumexp := sorry_proof
-
 end Missing
 
 
@@ -202,7 +199,7 @@ open Param Scalar in
 noncomputable
 def loss (m : R) (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (l : R^[((D-1)*D)/2]^[K]) : R :=
   (let S := ⊞ k => ((Q q[k] l[k])ᵀ * Q q[k] l[k])⁻¹
-   (- log (likelihood x (α.softmax) μ S))) --  * prior m S)))
+   (- log (likelihood x (α.softmax) μ S * prior m S)))
   rewrite_by
     unfold likelihood
     simp (disch:=aesop) [gaussianS_ATA]
@@ -216,15 +213,38 @@ def loss (m : R) (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (
 set_option pp.deepTerms.threshold 10000
 set_option profiler true
 
-
 def_rev_deriv loss in α μ q l by
   unfold loss
   data_synth => skip
 
 
+open Lean Parser Term in
+syntax "argmin" funBinder* ", " term : term
+
+open Lean Elab Parser Term in
+elab_rules : term
+| `(argmin $xs:funBinder* , $b:term) => do
+ let f ← elabTerm (← `(fun $xs* => $b)) none
+ let f ← mkUncurryFun' xs.size f
+ let x ← mkAppM ``Function.argmin #[f]
+ return x
 
 
-def hoh := argmin α μ q l,
+#check Function.argmin
+
+
+
+noncomputable
+def hoh {D N K} (m : R) (x : R^[D]^[N]) :=
+  (argmin (α : R^[K]) μ q l, loss m x α μ q l)
+  rewrite_by
+    skip
+
+
+#check solveFun
+
+
+#print hoh
 
 
 
