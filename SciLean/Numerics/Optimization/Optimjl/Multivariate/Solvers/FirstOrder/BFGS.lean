@@ -36,32 +36,40 @@ let ⟨fst,snd⟩ := (1,2)
 fst + snd
 ```
  -/
-syntax (name:=let_struct_syntax) withPosition("let" "⟨..⟩" (ident)? ":=" term) optSemicolon(term) : term
+syntax (name:=let_struct_syntax) withPosition("let" "⟨..⟩" ":=" term) optSemicolon(term) : term
 
 open Lean Elab Term Syntax Meta
 elab_rules (kind:=let_struct_syntax) : term
-| `(let ⟨..⟩ $[$suffix:ident]? := $x:term
+| `(let ⟨..⟩ := $x:term
     $b) => do
 
   let X ← inferType (← elabTerm x none)
   let .const struct _ := X.getAppFn' | throwError "structure expected"
   let info := getStructureInfo (← getEnv) struct
-  let addSuffix := fun n : Name => suffix.map (fun s => n.appendAfter (s.getId.toString)) |>.getD n
-  let ids := info.fieldNames.map (fun n => mkIdent (addSuffix n))
+  let ids := info.fieldNames.map (fun n => mkIdent n)
   let stx ← `(let ⟨$ids,*⟩ := $x; $b)
   elabTerm stx none
 
-open Lean Parser
-syntax atomic(Term.ident) noWs "." noWs ident ":=" term : doElem
+
+syntax (name:=pack_struct_syntax) (priority:=high) "pack" ident  : term
+
+open Lean Elab Term Syntax Meta
+elab_rules (kind:=pack_struct_syntax) : term
+| `(pack $s:ident) => do
+  let info := getStructureInfo (← getEnv) s.getId
+  let ids := info.fieldNames.map (fun n => mkIdent n)
+  let stx ← `(⟨$ids,*⟩)
+  elabTerm stx none
+
 
 macro_rules
-| `(doElem| $s:ident . $a:ident := $x) => `(doElem| $s:ident := {$s with $a:ident := $x})
+| `(doElem| $x:ident := $val) => do
+  let .str n f := x.getId | Macro.throwUnsupported
+  if n == .anonymous then Macro.throwUnsupported
+  let o := mkIdentFrom x n
+  let field := mkIdentFrom x (Name.mkSimple f)
+  `(doElem| $o:ident := {$o with $field:ident := $val})
 
-
-  -- generalize it to abstract vector array types
-  -- todo: define class `MatrixType M X` saying that `M` is matrix associated with `X`
-  -- {X : Type} [ArrayType X I R]
-  -- {M : Type} [ArrayType M (I×I) R] -- [MatrixType M X]
 
 variable
   {R : Type} [RealScalar R] [PlainDataType R] [ToString R]
@@ -139,22 +147,23 @@ def perform_linesearch (state : State R n) (method : Method R n) (d : ObjectiveF
     (State R n × Bool) := Id.run do
 
   let mut state := state
-  let mut dphi_0 := ⟪state.g, state.s⟫
+  let mut dϕ₀ := ⟪state.g, state.s⟫
 
-  if dphi_0 >= 0 then
+  -- not decreasing, we have to reset the gradient
+  if dϕ₀ >= 0 then
     state := reset_search_direction state d method
-    dphi_0 := ⟪state.g, state.s⟫
+    dϕ₀ := ⟪state.g, state.s⟫
 
-  let phi_0 := state.f_x
+  let ϕ₀ := state.f_x
 
-  state := method.alphaguess state phi_0 dphi_0 d
+  state := method.alphaguess state ϕ₀ dϕ₀ d
 
-  state . f_x_previous := phi_0
-  state . x_previous   := state.x
+  state.f_x_previous := ϕ₀
+  state.x_previous   := state.x
 
   if let some (alpha, ϕalpha) :=
-        method.linesearch d state.x state.s state.alpha state.x_ls phi_0 dphi_0 then
-    state . alpha := alpha
+      method.linesearch d state.x state.s state.alpha state.x_ls ϕ₀ dϕ₀ then
+    state.alpha := alpha
     return (state, true)
   else
     return (state, false)
@@ -166,16 +175,16 @@ def updateState (d : ObjectiveFunction R (R^[n])) (state : State R n) (method : 
 
   let mut state := state
 
-  state . s := - (state.invH * state.g)
-  state . g_previous := state.g
+  state.s := - (state.invH * state.g)
+  state.g_previous := state.g
 
   let mut ls_success := false
   (state,ls_success) := perform_linesearch state method d
 
-  state . dx := state.alpha • state.s
-  state . x_previous := state.x
-  state . x := state.s + state.x
-  state . f_x_previous := state.f_x
+  state.dx := state.alpha • state.s
+  state.x_previous := state.x
+  state.x := state.s + state.x
+  state.f_x_previous := state.f_x
 
   return (state,ls_success)
 
