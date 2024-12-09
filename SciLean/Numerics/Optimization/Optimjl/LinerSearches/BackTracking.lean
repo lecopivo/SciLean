@@ -1,5 +1,6 @@
 import SciLean.Data.DataArray
 import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
+import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Analysis.Calculus.Notation.Deriv
 import SciLean.Analysis.Calculus.Notation.FwdDeriv
 
@@ -18,15 +19,16 @@ structure BackTracking where
     order : ℕ := 3
     maxstep : Option R := none
 variable {R}
-    --cache::Union{Nothing,LineSearchCache{TF}} = nothing
+
+-- cache::Union{Nothing,LineSearchCache{TF}} = nothing
 
 
 namespace BackTracking
 
 variable [ToString R]
 
-def call (ls : BackTracking R) (ϕ : R → R) /-(dϕ : R → R) (ϕdϕ : R → R×R)-/ (αinitial ϕ₀ dϕ₀ : R) : R×R := Id.run do
-  let mut ⟨c₁, ρ_hi, ρ_lo, iterations, order, _⟩ := ls
+def call (ϕ : R → R) (ϕ₀ dϕ₀ x₀ : R) : LineSearchM (BackTracking R) Unit (R×R) := do
+  let ⟨c₁, ρ_hi, ρ_lo, iterations, order, _⟩ ← read
 
   -- emptycache!(cache)
   -- pushcache!(cache, 0, ϕ₀, dϕ₀)  # backtracking doesn't use the slope except here
@@ -38,113 +40,87 @@ def call (ls : BackTracking R) (ϕ : R → R) /-(dϕ : R → R) (ϕdϕ : R → R
   let mut ϕx₀ := ϕ₀
   let mut ϕx₁ := ϕ₀
 
-  let mut α₁ := αinitial
-  let mut α₂ := αinitial
+  let mut x₁ := x₀
+  let mut x₂ := x₀
 
-  ϕx₁ := ϕ α₁
+  ϕx₁ := ϕ x₁
 
   -- Hard-coded backtrack until we find a finite function value
-  -- let iterfinitemax : R := sorry -- -log2(eps(real(Tα)))
+  -- let iterfinitemax : R := sorry -- -log2(eps(real(Tx)))
   -- iterfinite = 0
   -- while !isfinite(ϕx₁) && iterfinite < iterfinitemax
   --     iterfinite += 1
-  --     α₁ = α₂
-  --     α₂ = α₁/2
+  --     x₁ = x₂
+  --     x₂ = x₁/2
 
-  --     ϕx₁ = ϕ(α₂)
+  --     ϕx₁ = ϕ(x₂)
   --   end
-  --   pushcache!(cache, αinitial, ϕx₁)
-  dbg_trace s!"iter: {iteration}, α₁ := {α₁}, α₂ := {α₂}, ϕ(α₁) := {ϕx₀}, ϕ(α₂) := {ϕx₁}"
+  --   pushcache!(cache, xinitial, ϕx₁)
+  dbg_trace s!"iter: {iteration}, x₁ := {x₁}, x₂ := {x₂}, ϕ(x₁) := {ϕx₀}, ϕ(x₂) := {ϕx₁}"
 
   -- Backtrack until we satisfy sufficient decrease condition
-  while ϕx₁ > ϕ₀ + c₁ * α₂ * dϕ₀ do
+  while ϕx₁ > ϕ₀ + c₁ * x₂ * dϕ₀ do
     -- Increment the number of steps we've had to perform
     iteration += 1
 
     -- Ensure termination
     if iteration > iterations then
-      panic! s!"Linesearch failed to converge, reached maximum iterations {iterations}." -- α₂
+      panic! s!"Linesearch failed to converge, reached maximum iterations {iterations}." -- x₂
 
-    let mut α_tmp : R := 0
+    let mut x_tmp : R := 0
     -- Shrink proposed step-size:
     if order == 2 || iteration == 1 then
       -- backtracking via quadratic interpolation:
       -- This interpolates the available data
-      --    f(0), f'(0), f(α)
+      --    f(0), f'(0), f(x)
       -- with a quadractic which is then minimised; this comes with a
       -- guaranteed backtracking factor 0.5 * (1-c₁)^{-1} which is < 1
       -- provided that c₁ < 1/2; the backtrack_condition at the beginning
       -- of the function guarantees at least a backtracking factor ρ.
-      α_tmp := - (dϕ₀ * α₂^2) / ( 2 * (ϕx₁ - ϕ₀ - dϕ₀*α₂) )
+      x_tmp := - (dϕ₀ * x₂^2) / ( 2 * (ϕx₁ - ϕ₀ - dϕ₀*x₂) )
     else
-      let div := (1:R) / (α₁^2 * α₂^2 * (α₂ - α₁))
-      let a := (α₁^2*(ϕx₁ - ϕ₀ - dϕ₀*α₂) - α₂^2*(ϕx₀ - ϕ₀ - dϕ₀*α₁))*div
-      let b := (-α₁^3*(ϕx₁ - ϕ₀ - dϕ₀*α₂) + α₂^3*(ϕx₀ - ϕ₀ - dϕ₀*α₁))*div
+      let div := (1:R) / (x₁^2 * x₂^2 * (x₂ - x₁))
+      let a := (x₁^2*(ϕx₁ - ϕ₀ - dϕ₀*x₂) - x₂^2*(ϕx₀ - ϕ₀ - dϕ₀*x₁))*div
+      let b := (-x₁^3*(ϕx₁ - ϕ₀ - dϕ₀*x₂) + x₂^3*(ϕx₀ - ϕ₀ - dϕ₀*x₁))*div
 
-      if Scalar.abs (a) ≤ 1e-14 /- isapprox(a, zero(a), atol=eps(real(Tα))) -/ then
-        α_tmp := dϕ₀ / (2*b)
+      if Scalar.abs (a) ≤ 1e-14 /- isapprox(a, zero(a), atol=eps(real(Tx))) -/ then
+        x_tmp := dϕ₀ / (2*b)
       else
         -- discriminant
         let d := max (b^2 - 3*a*dϕ₀) 0
         -- quadratic equation root
-        α_tmp := (-b + Scalar.sqrt d) / (3*a)
+        x_tmp := (-b + Scalar.sqrt d) / (3*a)
 
-    α₁ := α₂
+    x₁ := x₂
 
-    dbg_trace s!"α_tmp := {α_tmp}"
-
-    α_tmp := min α_tmp (α₂*ρ_hi) -- avoid too small reductions
-    dbg_trace s!"α_tmp := {α_tmp}"
-    α₂ := max α_tmp (α₂*ρ_lo) -- avoid too big reductions
-    dbg_trace s!"α_tmp := {α₂}"
+    x_tmp := min x_tmp (x₂*ρ_hi) -- avoid too small reductions
+    x₂ := max x_tmp (x₂*ρ_lo) -- avoid too big reductions
 
     -- Evaluate f(x) at proposed position
     ϕx₀ := ϕx₁
-    ϕx₁ := ϕ α₂
+    ϕx₁ := ϕ x₂
 
-    dbg_trace s!"iter: {iteration}, α₁ := {α₁}, α₂ := {α₂}, ϕ(α₁) := {ϕx₀}, ϕ(α₂) := {ϕx₁}, α_tmp {α_tmp}, log(α₂) := {Scalar.log α₂}"
+    dbg_trace s!"iter: {iteration}, x₁ := {x₁}, x₂ := {x₂}, ϕ(x₁) := {ϕx₀}, ϕ(x₂) := {ϕx₁}, x_tmp {x_tmp}, log(x₂) := {Scalar.log x₂}"
 
-    -- pushcache!(cache, α₂, ϕx₁)
-  return (α₂, ϕx₁)
-
-
-variable {X} [NormedAddCommGroup X] [AdjointSpace R X]
+    -- pushcache!(cache, x₂, ϕx₁)
+  return (x₂, ϕx₁)
 
 
-def init (ls : BackTracking R) (d : ObjectiveFunction R X) (x s : X) (α₀ : R) (ϕ₀ dϕ₀ : Option R) (alphamax : R) : R×R :=
-    let ϕ := fun α : R => d.f (x + α•s) -- make_ϕ_dϕ(df, x_new, x, s)
-
-    let ϕ₀  := ϕ₀.getD (ϕ 0)
-    let dϕ₀ := dϕ₀.getD ⟪(d.f' x).2 1, s⟫
-
-    let alphamax := if let some ms := ls.maxstep then (min alphamax  (ms / ‖s‖₂)) else alphamax
-    let α₀ := min α₀ alphamax
-    (ls.call ϕ α₀ ϕ₀ dϕ₀)
+variable [ToString R]
 
 
-set_default_scalar Float
+instance : LineSearch0 R (BackTracking R) Unit where
+  c₁ ls := ls.c_1
+  summary ls verbose :=
+    if ¬verbose then
+       "Backtracking Line Search"
+    else
+       s!"Backtracking Line Search\
+        \n  c₁ := {ls.c_1}\
+        \n  ρ₁ := {ls.ρ_hi}\"
+        \n  ρ₀ := {ls.ρ_lo}\
+        \n  max iterations := {ls.iterations}\
+        \n  order := {ls.order}\
+        \n  max step := {if let some s := ls.maxstep then toString s else "∞"}"
 
-
-def rosenbrock (a b : Float) (x y : Float) := (a - x)^2 + b*(y-x)^2
-
-
-def f (a b x₀ y₀ dx₀ dy₀ t) := rosenbrock a b (x₀ + t*dx₀) (y₀ + t*dy₀)
-
-
-def_fun_trans f in t : fwdFDeriv Float by unfold f rosenbrock; autodiff
-
-
-def foo (n : ℕ) (x₀ y₀ dx₀ dy₀ : Float) (α₀) :=
-  let a := 1.0
-  let b := 100.0
-  let ϕ := (f a b x₀ y₀ dx₀ dy₀)
-  let dϕ₀ := ((∂>! (t:=0;1), ϕ t).2)
-  dbg_trace s!"dϕ₀ := {dϕ₀}"
-  ({order := n} : BackTracking Float).call ϕ α₀ (ϕ 0) dϕ₀
-
-#check Nat
-
-
-#eval foo 3 1.3 0.8 (-1) (-1) 150.23
-#eval foo 3 1.3 0.8 (-1) (-1) 150.23
-#eval foo 3 0 0 (1) (1) 21.23
+  call φ φ₀ dφ₀ x₀ := call φ φ₀ dφ₀ x₀

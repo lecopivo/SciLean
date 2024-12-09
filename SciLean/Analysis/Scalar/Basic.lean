@@ -84,6 +84,15 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends RCLike 
   abs (x : K) : R
   abs_def : ∀ x, toReal (abs x) = Complex.abs (toComplex x)
 
+  /-- Is `x` finite number? For `ℝ` and `ℂ` this should be always true.
+  TODO: make dedicated class `FloatLike` that has this and `Scalar` derives from. -/
+  isFinite (x : K) : Bool
+  /-- Is `x` not a number? For `ℝ` and `ℂ` this should be always false.
+  TODO: make dedicated class `FloatLike` that has this and `Scalar` derives from. -/
+  isNaN (x : K) : Bool
+  /-- Is `x` infinite? For `ℝ` and `ℂ` this should be always false.
+  TODO: make dedicated class `FloatLike` that has this and `Scalar` derives from. -/
+  isInf (x : K) : Bool
   -- exp2 : K → K
   -- log2 : K → K
   -- log10 : K → K
@@ -134,9 +143,8 @@ instance {R} [RealScalar R] : AdjointSpace ℝ R where
 -- instance {R} [RealScalar R] : MeasureSpace R := sorry
 
 instance {R K} [Scalar R K] : HPow K K K := ⟨fun x y => Scalar.pow x y⟩
-
-
 instance {R} [RealScalar R] : ZeroLEOneClass R := sorry_proof
+instance {R} [RealScalar R] : WellFoundedLT R := sorry_proof
 
   -- floor
   -- ceil
@@ -209,7 +217,9 @@ instance : Scalar ℝ ℂ where
   abs x := Complex.abs x
   abs_def := by intros; simp
 
-
+  isFinite x := true
+  isNaN x := false
+  isInf x := false
 
 noncomputable instance : RealScalar ℝ where
   toComplex x := ⟨x,0⟩
@@ -264,6 +274,9 @@ noncomputable instance : RealScalar ℝ where
 
   is_real := by intros; simp
 
+  isFinite x := true
+  isNaN x := false
+  isInf x := false
 
   le_total := by sorry_proof
 

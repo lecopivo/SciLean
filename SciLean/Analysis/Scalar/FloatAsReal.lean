@@ -202,6 +202,10 @@ instance : RealScalar Float where
   abs x := x.abs
   abs_def := sorry_proof
 
+  isNaN x := x.isNaN
+  isInf x := x.isInf
+  isFinite x := x.isFinite
+
   le_total := by sorry_proof
   decidableLE := inferInstance
   decidableEq := inferInstance
