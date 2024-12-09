@@ -469,6 +469,7 @@ def letTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat) :=
     |>.insert `SciLean.HasFwdFDerivAt (`SciLean.HasFwdFDerivAt.let_rule, 11, 12, 16, 17)
     |>.insert `SciLean.HasRevFDeriv (`SciLean.HasRevFDeriv.let_rule, 14, 15, 18, 19)
     |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.let_rule, 14, 15, 18, 19)
+    |>.insert `SciLean.RealToFloatFun (`SciLean.RealToFloatFun.let_rule, 9, 10, 13, 14)
 
 
 /-- Given goal for composition `fun x => let y:=g x; f y x` and given `f` and `g` return corresponding goals for `↿f` and `g` -/
@@ -484,9 +485,15 @@ def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) :=
   try
     withMainTrace (fun _ => return m!"assigning data") do
     xs[gId]!.mvarId!.assignIfDefeq g
+  catch e =>
+    throwError s!"{← ppExpr (xs[gId]!)} : {← ppExpr (← inferType xs[gId]!)} := {← ppExpr g}"
+
+  try
+    withMainTrace (fun _ => return m!"assigning data") do
     xs[fId]!.mvarId!.assignIfDefeq f
-  catch _ =>
-    return none
+  catch e =>
+    throwError s!"{← ppExpr (xs[fId]!)} : {← ppExpr (← inferType xs[fId]!)} := {← ppExpr f}"
+
 
   let (_,rhs) ← fgGoal.mkFreshProofGoal
   if ¬(← isDefEq thm rhs) then
