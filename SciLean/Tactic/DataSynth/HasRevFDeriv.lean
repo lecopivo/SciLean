@@ -235,6 +235,22 @@ theorem HMul.hMul.arg_a0a1.HasRevFDeriv_rule
   · fun_prop
 
 
+@[data_synth]
+theorem HPow.hPow.arg_a0a1.HasRevFDeriv_rule_nat
+    (f : X → R) (f') (n : ℕ)
+    (hf : HasRevFDeriv R f f') :
+    HasRevFDeriv R (fun x => f x ^ n)
+      (fun x =>
+        let' (y,df) := f' x
+        (y ^ n, fun dx =>
+           let dy := df dx
+           (n * (conj y) ^ (n-1)) • dy)) := by
+  cases hf;
+  constructor
+  · intro dx; fun_trans only; simp_all
+  · fun_prop
+
+
 #exit
 -- open SciLean Lean Meta in
 -- simproc [] dataSynthRevFDeriv (revFDeriv _ _ _) := fun e => do

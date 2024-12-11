@@ -1,5 +1,4 @@
 import SciLean.Data.DataArray
-import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Analysis.Calculus.Notation.Deriv
 import SciLean.Analysis.Calculus.Notation.FwdDeriv
 
@@ -17,33 +16,44 @@ inductive LineSearchError where
   | notSupported
 
 
-abbrev LineSearchM (Config State : Type) :=
-  ReaderT Config $ StateT State (EIO LineSearchError)
+abbrev LineSearchM (Method State : Type) :=
+  ReaderT Method $ StateT State (EIO LineSearchError)
 
 
 variable (R)
-class LineSearch (Config State : Type) where
+class LineSearch (Method State : Type) where
   /-- Line search finds `x` such that `φ x ≤ φ 0 + c₁ * x * dφ 0`. -/
-  c₁ (cfg : Config) : R
+  c₁ (method : Method) : R
 
   /-- Print summary of the methods.
 
   With `verbose := false` this should be just a name.
   With `verbose := true` this should print the name and all the settings.  -/
-  summary (cfg : Config) (verbose := false) : String
+  summary (method : Method) (verbose := false) : String
 
 
-class LineSearch0 (Config State : Type) extends LineSearch R Config State where
+class LineSearch0 (Method State : Type) extends LineSearch R Method State where
   /-- Find `x` such that `φ x ≤ φ 0 + c₁ * x * dφ 0`. Return `x` and `φ x`.
 
   Method using only function values and derivative information at the beggining. -/
   call (Φ : R → R) (φ₀ dφ₀ : R) (x₀ : R) :
-    LineSearchM Config State (Option (R×R)) := throw .notSupported
+    LineSearchM Method State (R×R) := throw .notSupported
 
 
-class LineSearch1 (Config State : Type) extends LineSearch R Config State where
+class LineSearch1 (Method State : Type) extends LineSearch R Method State where
   /-- Find `x` such that `φ x ≤ φ 0 + c₁ * x * dφ 0`. Return `x` and `φ x`.
 
   First order method using derivative information. -/
   call (Φdφ : R → R → R×R) (x₀ : R) (φdφ₀ : Option (R×R)) :
-    LineSearchM Config State (Option (R×R)) := throw .notSupported
+    LineSearchM Method State (R×R) := throw .notSupported
+
+
+structure LineSearch0Obj (R : Type) [RealScalar R] where
+  Method : Type
+  m : Method
+  inst : LineSearch0 R Method Unit := by infer_instance
+
+variable {R}
+
+def LineSearch0Obj.call (ls : LineSearch0Obj R) (φ : R → R) (φ₀ dφ₀ : R) (x₀ : R) :=
+  ls.inst.call φ φ₀ dφ₀ x₀ ls.m

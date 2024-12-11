@@ -1,4 +1,6 @@
 import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
+import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
+import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
 
 /-! Port of Optim.jl, file src/multivariate/solvers/first_order/bfgs.jl
 
@@ -8,7 +10,6 @@ https://github.com/JuliaNLSolvers/Optim.jl/blob/711dfec61acf5dbed677e1af15f2a334
 -/
 
 namespace SciLean.Optimjl
-
 
 
 /-- Let binding that deconstructs structure into its fields.
@@ -51,17 +52,9 @@ elab_rules (kind:=let_struct_syntax) : term
   elabTerm stx none
 
 
-syntax (name:=pack_struct_syntax) (priority:=high) "pack" ident  : term
+/-- Structure field assigment, allows for `s.x := x'` notation in `do` block.
 
-open Lean Elab Term Syntax Meta
-elab_rules (kind:=pack_struct_syntax) : term
-| `(pack $s:ident) => do
-  let info := getStructureInfo (← getEnv) s.getId
-  let ids := info.fieldNames.map (fun n => mkIdent n)
-  let stx ← `(⟨$ids,*⟩)
-  elabTerm stx none
-
-
+`s.x := x'` expands into `s := {s with x := x'}` -/
 macro_rules
 | `(doElem| $x:ident := $val) => do
   let .str n f := x.getId | Macro.throwUnsupported
@@ -74,122 +67,143 @@ macro_rules
 variable
   {R : Type} [RealScalar R] [PlainDataType R] [ToString R]
 
-def _root_.SciLean.DataArrayN.abs {I} [IndexType I] (x : R^[I]) : R^[I] :=
-    x.mapMono (fun x => Scalar.abs x)
+
+variable (R)
+inductive BFGS.InitialInvH (n : ℕ) where
+/-- Initialize inverse Hessian to this specified value -/
+| invH (invH : R^[n,n])
+/-- Initialize inverse Hessian such that the step length is the specified `stepnorm` -/
+| stepnorm (stepnorm : R)
+/-- Initialize inverse Hessian to identity matrix -/
+| identity
+
+open BFGS in
+structure BFGS extends Options R where
+  /-- Linear search that finds appropriate `α` `xₙ₊₁ = xₙ + α • sₙ` -/
+  lineSearch : LineSearch0Obj R := .mk (BackTracking R) {}
+  /-- Guess initial `α` to try given function value and gradient -/
+  alphaguess (φ₀ dφ₀ : R) (d : ObjectiveFunction R (R^[n])) : R := 1
+  /-- How to initialize inverse Hessian at the start.
+
+  This is also use on gradient reset when invalid   -/
+  initialInvH : InitialInvH R n := .identity
+variable {R}
 
 
 set_default_scalar R
 
 namespace BFGS
 
+
 /-- BFGS configuration -/
 structure Method (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R]  where
-  alphaguess (phi_0 dphi_0 : R) (d : ObjectiveFunction R (R^[n])) : R
-  linesearch (d : ObjectiveFunction R (R^[n])) (x s : R^[n]) (alpha x_ls phi_0 dphi_0 : R) : Option (R × R)
+  alphaguess (φ₀ dφ₀ : R) (d : ObjectiveFunction R (R^[n])) : R
+  linesearch (d : ObjectiveFunction R (R^[n])) (x s x_ls : R^[n]) (α₀ φ₀ dφ₀ : R) : Option (R × R)
   initial_invH (x : R^[n]) : Option (R^[n,n]) := none
   initial_stepnorm : Option R := none
   -- manifold : Manifold
+
 
 structure State (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R] where
    /-- current position `xₙ` -/
    x : R^[n]
    /-- previous position `xₙ₋₁`-/
-   x_previous : R^[n]
+   x_previous : R^[n] := x
    /-- current gradient `∇f(xₙ)` -/
-   g : R^[n]
+   g : R^[n] := 0
    /-- previous gradient `∇f(xₙ₋₁)` -/
-   g_previous : R^[n]
+   g_previous : R^[n] := g
    /-- current valus `f(xₙ)` -/
    f_x : R
    /-- previous valus `f(xₙ₋₁)` -/
-   f_x_previous : R
+   f_x_previous : R := f_x
    /-- position difference `xₙ-xₙ₋₁` -/
-   dx : R^[n]
+   dx : R^[n] := 0
    /-- gradient difference `∇f(xₙ)-∇f(xₙ₋₁)`-/
-   dg : R^[n]
+   dg : R^[n] := 0
    /-- `(∇²f)⁻¹(xₙ)*(xₙ-xₙ₋₁)` i.e. `invH*dx`  -/
-   u : R^[n]
+   u : R^[n] := 0
    /-- current inverse hessian `(∇²f)⁻¹(xₙ)` -/
-   invH : R^[n,n]
+   invH : R^[n,n] := .identity
    /-- step direction `- (∇²f)⁻¹ ∇f` i.e. `- (invH * g)` -/
-   s : R^[n]
+   s : R^[n] := - g
    /-- line search scalle `dx := α • s` -/
-   alpha : R
+   alpha : R := 1
    /-- somethig to do with line search -/
-   x_ls : R^[n]
-   --@add_linesearch_fields()
-   f_calls : ℕ
-   g_calls : ℕ
-   h_calls : ℕ
-
+   x_ls : R^[n] := 0
+   f_calls : ℕ := 0
+   g_calls : ℕ := 0
+   h_calls : ℕ := 0
 
 
 -- this should be specific to BFGS
-def reset_search_direction (state : State R n) (d : ObjectiveFunction R (R^[n]))
-    (method : Method R n) : State R n := Id.run do
+def reset_search_direction (method : BFGS R) (state : State R n)
+    : State R n := Id.run do
 
   let mut ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩ := state
 
-  if let some invH₀ := method.initial_invH x then
-    invH := invH₀
-  else
-    if let some stepnorm₀ := method.initial_stepnorm  then
-      let initial_scale := stepnorm₀ * ‖g‖₂⁻¹
-      invH := initial_scale • 𝐈 n
-    else
-      invH := 𝐈 n
+  match method.initialInvH with
+  | .invH iH =>     invH := iH
+  | .stepnorm sn => invH := (sn / ‖g‖₂⁻¹) • 𝐈 n
+  | .identity =>    invH := 𝐈 n
 
-  s := -g
+  s := - invH * g -- original code has only `- g` for some reason
   return ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩
 
 
-def perform_linesearch (state : State R n) (method : Method R n) (d : ObjectiveFunction R (R^[n])) :
-    (State R n × Bool) := Id.run do
+def perform_linesearch (method : BFGS R) (state : State R n) (d : ObjectiveFunction R (R^[n])) :
+    (Except LineSearchError (State R n)) := Id.run do
 
   let mut state := state
-  let mut dϕ₀ := ⟪state.g, state.s⟫
+  let mut dφ₀ := ⟪state.g, state.s⟫
 
   -- not decreasing, we have to reset the gradient
-  if dϕ₀ >= 0 then
-    state := reset_search_direction state d method
-    dϕ₀ := ⟪state.g, state.s⟫
+  if dφ₀ >= 0 then
+    state := reset_search_direction method state
+    dφ₀ := ⟪state.g, state.s⟫
 
-  let ϕ₀ := state.f_x
+  let φ₀ := state.f_x
 
-  state := method.alphaguess state ϕ₀ dϕ₀ d
+  state.alpha := method.alphaguess φ₀ dφ₀ d
 
-  state.f_x_previous := ϕ₀
+  state.f_x_previous := φ₀
   state.x_previous   := state.x
 
-  if let some (alpha, ϕalpha) :=
-      method.linesearch d state.x state.s state.alpha state.x_ls ϕ₀ dϕ₀ then
-    state.alpha := alpha
-    return (state, true)
-  else
-    return (state, false)
+  let φ := fun α => d.f (state.x + α • state.s)
+
+  -- WARNING! Here we run IO code in pure code, the last `()` is `IO.RealWorld`
+  --          This hould be fixed, eiter remove LineSearch.call from IO or make this function in IO
+  match method.lineSearch.call φ φ₀ dφ₀ state.alpha () () with
+  | .ok ((α, φα),_) _ =>
+    state.alpha := α
+    return .ok state
+  | .error e _ =>
+    return .error e
 
 
-
-def updateState (d : ObjectiveFunction R (R^[n])) (state : State R n) (method : Method R n) :
-    (State R n × Bool) := Id.run do
+def updateState (method : BFGS R) (state : State R n) (d : ObjectiveFunction R (R^[n])) :
+    (Except LineSearchError (State R n)) := Id.run do
 
   let mut state := state
 
   state.s := - (state.invH * state.g)
   state.g_previous := state.g
 
-  let mut ls_success := false
-  (state,ls_success) := perform_linesearch state method d
+  match perform_linesearch method state d with
+  | .error e => return .error e
+  | .ok state' =>
+    state := state'
 
   state.dx := state.alpha • state.s
   state.x_previous := state.x
-  state.x := state.s + state.x
+  state.x := state.x + state.dx
   state.f_x_previous := state.f_x
 
-  return (state,ls_success)
+  -- dbg_trace s!"  done\tαₙ := {state.alpha}\txₙ := {state.x}\tf(xₙ) := {d.f state.x}"
+  return .ok state
 
 
-def updateFG (d : ObjectiveFunction R (R^[n])) (state : State R n) (method : Method R n) :
+def updateFG (state : State R n) (d : ObjectiveFunction R (R^[n])) :
     State R n := Id.run do
 
   let mut ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩ := state
@@ -207,8 +221,7 @@ def updateFG (d : ObjectiveFunction R (R^[n])) (state : State R n) (method : Met
   return ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩
 
 
-
-def updateH (d : ObjectiveFunction R (R^[n])) (state : State R n) (method : Method R n) :
+def updateH (state : State R n)  :
     State R n := Id.run do
 
   let mut ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩ := state
@@ -229,10 +242,11 @@ def updateH (d : ObjectiveFunction R (R^[n])) (state : State R n) (method : Meth
 
   return ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩
 
-def assessConvergence (state : State R n) (d : ObjectiveFunction R (R^[n])) (options : Options R) :=
+
+def assessConvergence (method : BFGS R) (state : State R n) :=
 
     let ⟨..⟩ := state
-    let ⟨..⟩ := options
+    let ⟨..⟩ := method.toOptions
 
     Id.run do
 
@@ -260,19 +274,44 @@ def assessConvergence (state : State R n) (d : ObjectiveFunction R (R^[n])) (opt
 
     return (x_converged, f_converged, g_converged, f_increased)
 
+def initState (method : BFGS R) (d : ObjectiveFunction R (R^[n])) (x₀ : R^[n]) : BFGS.State R n := Id.run do
+
+  let (fx,df) := d.f' x₀
+  let g := df 1
+
+  let mut state : BFGS.State R n := {
+    x := x₀
+    f_x := fx
+    f_x_previous := fx
+    g := g
+    f_calls := 1
+    g_calls := 1
+  }
+
+  state := reset_search_direction method state
+
+  return state
 
 end BFGS
 
 
-set_option linter.unusedVariables false in
-instance {n} : AbstractOptimizerState R (R^[n]) (BFGS.State R n) (BFGS.Method R n) where
+instance {n} : AbstractOptimizer (BFGS R) (BFGS.State R n) R (R^[n]) where
 
-  initialConvergence d state x₀ options := (false,false)
-  assessConvergence := BFGS.assessConvergence
+  getOptions m := m.toOptions
+  getPosition s := s.x
+  getGradient s := s.g
 
-  updateState := BFGS.updateState
-  updateFG := BFGS.updateFG
-  updateH := BFGS.updateH
+  initialConvergence method state := (false,false)
+  assessConvergence method state := BFGS.assessConvergence method state
+
+  printStateHeader := s!"xₙ\tf(xₙ)\t∇f(xₙ)\tsₙ\tα"
+  printState state := s!"{state.x}\t{state.f_x}\t{state.g}\t{state.s}\t{state.alpha}"
+
+  initState m d x₀ := BFGS.initState m d x₀
+
+  updateState method state d := BFGS.updateState method state d
+  updateFG method state d := BFGS.updateFG state d
+  updateH method state d := BFGS.updateH state
 
   pick_best_x take_prev state   := if take_prev then state.x_previous else state.x
   pick_best_f take_prev state d := if take_prev then state.f_x_previous else state.f_x

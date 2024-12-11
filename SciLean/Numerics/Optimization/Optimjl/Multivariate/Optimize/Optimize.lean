@@ -11,16 +11,18 @@ namespace SciLean.Optimjl
 variable
   {R : Type} [RealScalar R]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
-  {S M : Type}
+  {Method : Type*} {State : Type}
 
-variable [AbstractOptimizerState R X S M]
+variable [AbstractOptimizer Method State R X]
 
+open AbstractOptimizer
 def optimize
-    (d : ObjectiveFunction R X) (x₀ : X)
-    (method : M)
-    (options : Options R)
-    (state₀ : S) :
+    (d : ObjectiveFunction R X)
+    (method : Method)
+    (x₀ : X) :
     IO (MultivariateOptimizationResults R X) := do
+
+  let options := getOptions X method
 
   let t₀ ← IO.monoNanosNow
   --  tr = OptimizationTrace{typeof(value(d)), typeof(method)}()
@@ -37,12 +39,17 @@ def optimize
   let mut f_increased := false
   let mut counter_f_tol := 0
 
+  let state₀ := initState method d x₀
   let mut state := state₀
 
-  (f_converged, g_converged) := initialConvergence M d state x₀ options
+  (f_converged, g_converged) := initialConvergence R X method state
   let mut converged := f_converged || g_converged
 
   let mut iteration := 0
+
+  if options.show_trace then
+    IO.println s!"{iteration}\t{printStateHeader Method R X}"
+    IO.println s!"{iteration}\t{printState Method R X state}"
 
   -- options.show_trace && print_header(method)
   let mut _time ← IO.monoNanosNow
@@ -51,22 +58,37 @@ def optimize
 
   while !converged && !stopped && iteration < options.iterations do
     iteration += 1
-    (state, ls_success) := updateState d state method
-    if !ls_success then
-      break
-    state := updateFG d state method
-    (x_converged, f_converged, g_converged, f_increased) := assessConvergence M state d options
+
+    -- move point `xₙ` to `xₙ₊₁`
+    match updateState method state d with
+    | .ok state' => state := state'
+    | .error e => break
+
+    -- compute `f(xₙ₊₁)` and `∇f(xₙ₊₁)`
+    state := updateFG method state d
+
+    -- assess convergence
+    (x_converged, f_converged, g_converged, f_increased) := assessConvergence R X method state
     counter_f_tol := if f_converged then counter_f_tol+1 else 0
     converged := x_converged || g_converged || (counter_f_tol > options.successive_f_tol)
+
+    -- compute `∇²f(xₙ₊₁)`
     -- if !(converged && method.isNewton) && !(method.isNewtonTrustRegion) then
-    if true then
-       state := updateH d state method
-    -- if tracing then
+    -- todo: probably skip if converged
+    state := updateH method state d
+
+    if options.show_trace then
+      IO.println s!"{iteration}\t{printState Method R X state}"
+
     --     -- update trace; callbacks can stop routine early by returning true
     --     stopped_by_callback = trace!(tr, d, state, iteration, method, options, time()-t0)
+
+    -- check time
     _time ← IO.monoNanosNow
     if let some time_limit := options.time_limit? then
       stopped_by_time_limit := _time - t₀ > time_limit
+
+
     -- f_limit_reached = options.f_calls_limit > 0 && f_calls(d) >= options.f_calls_limit ? true : false
     -- g_limit_reached = options.g_calls_limit > 0 && g_calls(d) >= options.g_calls_limit ? true : false
     -- h_limit_reached = options.h_calls_limit > 0 && h_calls(d) >= options.h_calls_limit ? true : false
@@ -109,28 +131,28 @@ def optimize
 
 
   return {
-    initial_x := x₀
-    minimizer := pick_best_x R M f_incr_pick state
-    minimum := pick_best_f M f_incr_pick state d
+    initial_x := getPosition Method R state₀
+    minimizer := pick_best_x Method R f_incr_pick state
+    minimum := pick_best_f Method f_incr_pick state d
     iterations := iteration
     iteration_converged := iteration == options.iterations
     x_converged := x_converged
     x_abstol := options.x_abstol
     x_reltol := options.x_reltol
-    x_abschange := x_abschange X M state
-    x_relchange := x_relchange X M state
+    x_abschange := x_abschange Method X state
+    x_relchange := x_relchange Method X state
     f_converged := f_converged
     f_abstol := options.f_abstol
     f_reltol := options.f_reltol
-    f_abschange := f_abschange M d state
-    f_relchange := f_relchange M d state
+    f_abschange := f_abschange Method d state
+    f_relchange := f_relchange Method d state
     g_converged := g_converged
     g_abstol := options.g_abstol
-    g_residual := g_residual M d state
+    g_residual := g_residual Method d state
     f_increased := f_increased
-    f_calls := f_calls M d state
-    g_calls := g_calls M d state
-    h_calls := h_calls M d state
+    f_calls := f_calls Method d state
+    g_calls := g_calls Method d state
+    h_calls := h_calls Method d state
     ls_success := ls_success
     time_limit? := options.time_limit?
     time_run := _time - t₀

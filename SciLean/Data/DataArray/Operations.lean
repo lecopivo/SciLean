@@ -367,3 +367,7 @@ def exp (x : R^[I]) : R^[I] :=
 /-- Elementwise logarithm -/
 def log (x : R^[I]) : R^[I] :=
   x.mapMono (fun xi => Scalar.log xi)
+
+/-- Elementwise absolute value -/
+def abs (x : R^[I]) : R^[I] :=
+    x.mapMono (fun x => Scalar.abs x)

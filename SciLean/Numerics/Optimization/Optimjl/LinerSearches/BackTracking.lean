@@ -56,7 +56,8 @@ def call (ϕ : R → R) (ϕ₀ dϕ₀ x₀ : R) : LineSearchM (BackTracking R) U
   --     ϕx₁ = ϕ(x₂)
   --   end
   --   pushcache!(cache, xinitial, ϕx₁)
-  dbg_trace s!"iter: {iteration}, x₁ := {x₁}, x₂ := {x₂}, ϕ(x₁) := {ϕx₀}, ϕ(x₂) := {ϕx₁}"
+  -- dbg_trace s!"  iteration\tαₙ\tf(x+αₙ•sₙ)"
+  -- dbg_trace s!"  {iteration}\t{x₂}\t{ϕx₁}"
 
   -- Backtrack until we satisfy sufficient decrease condition
   while ϕx₁ > ϕ₀ + c₁ * x₂ * dϕ₀ do
@@ -100,7 +101,7 @@ def call (ϕ : R → R) (ϕ₀ dϕ₀ x₀ : R) : LineSearchM (BackTracking R) U
     ϕx₀ := ϕx₁
     ϕx₁ := ϕ x₂
 
-    dbg_trace s!"iter: {iteration}, x₁ := {x₁}, x₂ := {x₂}, ϕ(x₁) := {ϕx₀}, ϕ(x₂) := {ϕx₁}, x_tmp {x_tmp}, log(x₂) := {Scalar.log x₂}"
+    -- dbg_trace s!"  {iteration}\t{x₂}\t{ϕx₁}"
 
     -- pushcache!(cache, x₂, ϕx₁)
   return (x₂, ϕx₁)

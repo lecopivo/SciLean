@@ -26,6 +26,17 @@ structure HasRevFDerivUpdate (f : X → Y) (f' : X → Y×(Y→X→X))  where
 variable {R}
 
 
+omit [CompleteSpace X] [CompleteSpace Y] in
+theorem HasRevFDeriv_from_HasRevFDerivUpdate (f : X → Y) {f' : X → Y×(Y→X→X)} :
+    HasRevFDerivUpdate R f f'
+    →
+    HasRevFDeriv R f (fun x => let' (y,df) := f' x; (y, fun dy => (df dy 0))) := by
+  intro hf; cases hf
+  constructor
+  · intros; simp_all; rfl
+  · fun_prop
+
+
 namespace HasRevFDerivUpdate
 
 @[data_synth]

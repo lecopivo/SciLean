@@ -1,5 +1,6 @@
 import SciLean.Data.DataArray
 import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
+import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Meta.Notation.Do
 
 /-! Port of Optim.jl, file src/types.jl
@@ -121,6 +122,7 @@ def print : IO Unit := do
     IO.print s!" * Status: {status_string}\n\n"
 
     IO.print " * Candidate solution\n"
+    IO.print s!"    Minimizer:                 {r.minimizer}\n"
     IO.print s!"    Final objective value:     {r.minimum}\n"
     IO.print s!"\n"
 
@@ -154,45 +156,44 @@ def print : IO Unit := do
 end MultivariateOptimizationResults
 
 
-structure OptimizationState (R : Type) [RealScalar R] where
-    iteration : ℕ
-    value : R
-    g_norm : R
-    --metadata : Dict
-
-
 structure ObjectiveFunction (R X : Type) [RealScalar R] [NormedAddCommGroup X] [AdjointSpace R X] where
   f : X → R
-  f' : X → R × (R → X)
+  {f' : X → R × (R → X)}
   hf : HasRevFDeriv R f f'
 
 variable
   {R : Type} [RealScalar R]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
 
+-- R X are `outParam` as they should be inferable from `State` type
+class AbstractOptimizer (Method : Type*) (State : outParam Type) (R X : Type)
+    [RealScalar R] [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]  where
 
-variable (R X)
-class AbstractOptimizerState (S : Type) (Method : Type) where
-  initialConvergence (d : ObjectiveFunction R X) (state : S) (x₀ : X) (options : Options R) : (Bool×Bool)
-  assessConvergence (state : S) (d : ObjectiveFunction R X) (options : Options R) : (Bool×Bool×Bool×Bool)
+  getOptions : Method → Options R
+  getPosition : State → X
+  getGradient : State → X
 
-  updateState (d : ObjectiveFunction R X) (state : S) (method : Method) : (S×Bool)
-  updateFG (d : ObjectiveFunction R X) (state : S) (method : Method) : S
-  updateH (d : ObjectiveFunction R X) (state : S) (method : Method) : S
+  printStateHeader : String
+  printState : State → String
 
-  pick_best_x (f_inc_pick : Bool) (state : S) : X
-  pick_best_f (f_inc_pick : Bool) (state : S) (d : ObjectiveFunction R X) : R
+  initState (method : Method) (d : ObjectiveFunction R X) (x₀ : X) : State
 
-  x_abschange (state : S) : R
-  x_relchange (state : S) : R
-  f_abschange (d : ObjectiveFunction R X) (state : S) : R
-  f_relchange (d : ObjectiveFunction R X) (state : S) : R
-  g_residual (d : ObjectiveFunction R X) (state : S) : R
+  initialConvergence (method : Method) (state : State) : (Bool×Bool)
+  assessConvergence (method : Method) (state : State) : (Bool×Bool×Bool×Bool)
 
-  f_calls (d : ObjectiveFunction R X) (state : S) : ℕ
-  g_calls (d : ObjectiveFunction R X) (state : S) : ℕ
-  h_calls (d : ObjectiveFunction R X) (state : S) : ℕ
+  updateState (method : Method) (state : State) (d : ObjectiveFunction R X) : Except LineSearchError State
+  updateFG (method : Method) (state : State) (d : ObjectiveFunction R X) : State
+  updateH (method : Method) (state : State) (d : ObjectiveFunction R X) : State
 
-export AbstractOptimizerState (initialConvergence assessConvergence updateState updateFG updateH
-       pick_best_x pick_best_f x_abschange x_relchange f_abschange f_relchange g_residual
-       f_calls g_calls h_calls)
+  pick_best_x (f_inc_pick : Bool) (state : State) : X
+  pick_best_f (f_inc_pick : Bool) (state : State) (d : ObjectiveFunction R X) : R
+
+  x_abschange (state : State) : R
+  x_relchange (state : State) : R
+  f_abschange (d : ObjectiveFunction R X) (state : State) : R
+  f_relchange (d : ObjectiveFunction R X) (state : State) : R
+  g_residual (d : ObjectiveFunction R X) (state : State) : R
+
+  f_calls (d : ObjectiveFunction R X) (state : State) : ℕ
+  g_calls (d : ObjectiveFunction R X) (state : State) : ℕ
+  h_calls (d : ObjectiveFunction R X) (state : State) : ℕ
