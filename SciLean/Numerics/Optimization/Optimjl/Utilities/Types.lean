@@ -43,12 +43,6 @@ structure Options (R : Type) [RealScalar R] where
   time_limit? : Option ℕ := none
 
 
-structure Method where
-  isNewton : Bool
-  isNewtonTrustRegion : Bool
-  isNelderMead : Bool
-
-
 structure MultivariateOptimizationResults (R X : Type) where
     initial_x : X
     minimizer : X
