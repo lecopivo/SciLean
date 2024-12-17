@@ -4,6 +4,8 @@ import Batteries.Tactic.Exact
 
 import Lean.Meta.Transform
 
+-- set_option linter.unusedVariables false
+
 namespace SciLean.Tactic.DataSynth
 
 open Lean Meta
@@ -50,13 +52,13 @@ def normalizeLet' (e : Expr) : CoreM Expr :=
  Lean.Core.transform e
    (post := fun e =>
      match e with
-     | mkApp3 (.const ``Prod.fst _) _ _ (mkApp4 (.const ``Prod.mk _) _ _ x y) =>
+     | mkApp3 (.const ``Prod.fst _) _ _ (mkApp4 (.const ``Prod.mk _) _ _ x _y) =>
        return .done x
-     | mkApp3 (.const ``Prod.snd _) _ _ (mkApp4 (.const ``Prod.mk _) _ _ x y) =>
+     | mkApp3 (.const ``Prod.snd _) _ _ (mkApp4 (.const ``Prod.mk _) _ _ _x y) =>
        return .done y
-     | .proj ``Prod 0 (mkApp4 (.const ``Prod.mk _) _ _ x y) =>
+     | .proj ``Prod 0 (mkApp4 (.const ``Prod.mk _) _ _ x _y) =>
        return .done x
-     | .proj ``Prod 1 (mkApp4 (.const ``Prod.mk _) _ _ x y) =>
+     | .proj ``Prod 1 (mkApp4 (.const ``Prod.mk _) _ _ _x y) =>
        return .done y
      | _ => return .done e)
 
@@ -288,7 +290,7 @@ where
 def Goal.assumption? (goal : Goal) : DataSynthM (Option Result) := do
   withProfileTrace "assumption?" do
   (← getLCtx).findDeclRevM? fun localDecl => do
-    forallTelescope localDecl.type fun xs type => do
+    forallTelescope localDecl.type fun _xs type => do
     if localDecl.isImplementationDetail then
       return none
     else if type.isAppOf' goal.dataSynthDecl.name then
@@ -485,13 +487,13 @@ def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) :=
   try
     withMainTrace (fun _ => return m!"assigning data") do
     xs[gId]!.mvarId!.assignIfDefeq g
-  catch e =>
+  catch _e =>
     throwError s!"{← ppExpr (xs[gId]!)} : {← ppExpr (← inferType xs[gId]!)} := {← ppExpr g}"
 
   try
     withMainTrace (fun _ => return m!"assigning data") do
     xs[fId]!.mvarId!.assignIfDefeq f
-  catch e =>
+  catch _e =>
     throwError s!"{← ppExpr (xs[fId]!)} : {← ppExpr (← inferType xs[fId]!)} := {← ppExpr f}"
 
 
@@ -522,9 +524,12 @@ def letResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Optio
   let r ← fgGoal.getResultFrom proof
   return r
 
+
+set_option linter.unusedVariables false in
 /-- Given goal for composition `fun x i => f x i` and given free var `i` and `f` return goal for `(f · i)` -/
 def piGoal (fGoal : DataSyntGoal) (i : Expr) (fi : Expr) : DataSynthM (Option Goal) := return none
 
+set_option linter.unusedVariables false in
 /-- Given result for `(f · i)` and free variable `i` return result for `f`-/
 def piResult (hf : Result) (i : Expr) : DataSynthM (Option Result) := return none
 
@@ -632,7 +637,7 @@ def letCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
 
 def lamCase (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "lamCase" do
-  lambdaBoundedTelescope f.body 1 fun is b => do
+  lambdaBoundedTelescope f.body 1 fun is _b => do
     let i := is[0]!
     let fi := {f with body := f.body.beta is}
     let some figoal ← piGoal goal i (← fi.toExpr) | return none
@@ -675,7 +680,7 @@ def mainFunCached (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
   withMainTrace
     (fun r =>
       match r with
-      | .ok (some r) => return m!"[✅] {← goal.pp}"
+      | .ok (some _r) => return m!"[✅] {← goal.pp}"
       | .ok none => return m!"[❌] {← goal.pp}"
       | .error e => return m!"[💥️] {← goal.pp}\n{e.toMessageData}") do
 

@@ -1,3 +1,4 @@
+
 import Lake
 open Lake DSL System
 
@@ -42,6 +43,15 @@ lean_exe Ballistic {
 lean_exe WalkOnSpheres {
   root := `examples.WalkOnSpheres
 }
+
+lean_exe BFGS {
+  root := `Test.optimjl.bfgs
+}
+
+lean_exe LBFGS {
+  root := `Test.optimjl.lbfgs
+}
+
 
 
 lean_exe ForLoopTest {

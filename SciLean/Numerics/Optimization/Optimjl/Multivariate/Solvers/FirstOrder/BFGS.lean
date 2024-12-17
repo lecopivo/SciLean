@@ -12,58 +12,6 @@ https://github.com/JuliaNLSolvers/Optim.jl/blob/711dfec61acf5dbed677e1af15f2a334
 namespace SciLean.Optimjl
 
 
-/-- Let binding that deconstructs structure into its fields.
-
-The notation
-```
-let ⟨..⟩ := s
-b
-```
-expands to
-```
-let ⟨x₁,...,xₙ⟩ := s
-b
-```
-where `x₁` are field names of struct `s`.
-
-For example, `Prod` has field `fst` and `snd` therefore
-```
-let ⟨..⟩ := (1,2)
-fst + snd
-```
-as it expands to
-```
-let ⟨fst,snd⟩ := (1,2)
-fst + snd
-```
- -/
-syntax (name:=let_struct_syntax) withPosition("let" "⟨..⟩" ":=" term) optSemicolon(term) : term
-
-open Lean Elab Term Syntax Meta
-elab_rules (kind:=let_struct_syntax) : term
-| `(let ⟨..⟩ := $x:term
-    $b) => do
-
-  let X ← inferType (← elabTerm x none)
-  let .const struct _ := X.getAppFn' | throwError "structure expected"
-  let info := getStructureInfo (← getEnv) struct
-  let ids := info.fieldNames.map (fun n => mkIdent n)
-  let stx ← `(let ⟨$ids,*⟩ := $x; $b)
-  elabTerm stx none
-
-
-/-- Structure field assigment, allows for `s.x := x'` notation in `do` block.
-
-`s.x := x'` expands into `s := {s with x := x'}` -/
-macro_rules
-| `(doElem| $x:ident := $val) => do
-  let .str n f := x.getId | Macro.throwUnsupported
-  if n == .anonymous then Macro.throwUnsupported
-  let o := mkIdentFrom x n
-  let field := mkIdentFrom x (Name.mkSimple f)
-  `(doElem| $o:ident := {$o with $field:ident := $val})
-
-
 variable
   {R : Type} [RealScalar R] [PlainDataType R] [ToString R]
 
@@ -93,15 +41,6 @@ variable {R}
 set_default_scalar R
 
 namespace BFGS
-
-
-/-- BFGS configuration -/
-structure Method (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R]  where
-  alphaguess (φ₀ dφ₀ : R) (d : ObjectiveFunction R (R^[n])) : R
-  linesearch (d : ObjectiveFunction R (R^[n])) (x s x_ls : R^[n]) (α₀ φ₀ dφ₀ : R) : Option (R × R)
-  initial_invH (x : R^[n]) : Option (R^[n,n]) := none
-  initial_stepnorm : Option R := none
-  -- manifold : Manifold
 
 
 structure State (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R] where
@@ -152,7 +91,7 @@ def reset_search_direction (method : BFGS R) (state : State R n)
 
 
 def perform_linesearch (method : BFGS R) (state : State R n) (d : ObjectiveFunction R (R^[n])) :
-    (Except LineSearchError (State R n)) := Id.run do
+    (Except LineSearchError (R×R)) := Id.run do
 
   let mut state := state
   let mut dφ₀ := ⟪state.g, state.s⟫
@@ -174,9 +113,8 @@ def perform_linesearch (method : BFGS R) (state : State R n) (d : ObjectiveFunct
   -- WARNING! Here we run IO code in pure code, the last `()` is `IO.RealWorld`
   --          This hould be fixed, eiter remove LineSearch.call from IO or make this function in IO
   match method.lineSearch.call φ φ₀ dφ₀ state.alpha () () with
-  | .ok ((α, φα),_) _ =>
-    state.alpha := α
-    return .ok state
+  | .ok (αφα,_) _ =>
+    return .ok αφα
   | .error e _ =>
     return .error e
 
@@ -191,15 +129,20 @@ def updateState (method : BFGS R) (state : State R n) (d : ObjectiveFunction R (
 
   match perform_linesearch method state d with
   | .error e => return .error e
-  | .ok state' =>
-    state := state'
+  | .ok (α,φα) =>
 
+  state.alpha := α
+
+  -- update position
   state.dx := state.alpha • state.s
   state.x_previous := state.x
   state.x := state.x + state.dx
-  state.f_x_previous := state.f_x
 
-  -- dbg_trace s!"  done\tαₙ := {state.alpha}\txₙ := {state.x}\tf(xₙ) := {d.f state.x}"
+  -- do not update `f_x` as it will be updated in `updateFG`
+
+  -- TODO: update f_calls and g_calls
+  --       this information should be somehow given by line search
+
   return .ok state
 
 

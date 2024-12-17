@@ -87,3 +87,55 @@ macro_rules (kind :=let'_syntax')
     let $y := x.1.2
     let $z := x.2
     $b)
+
+
+/-- Let binding that deconstructs structure into its fields.
+
+The notation
+```
+let ⟨..⟩ := s
+b
+```
+expands to
+```
+let ⟨x₁,...,xₙ⟩ := s
+b
+```
+where `x₁` are field names of struct `s`.
+
+For example, `Prod` has field `fst` and `snd` therefore
+```
+let ⟨..⟩ := (1,2)
+fst + snd
+```
+as it expands to
+```
+let ⟨fst,snd⟩ := (1,2)
+fst + snd
+```
+ -/
+syntax (name:=let_struct_syntax) withPosition("let" "⟨..⟩" ":=" term) optSemicolon(term) : term
+
+open Lean Elab Term Syntax Meta
+elab_rules (kind:=let_struct_syntax) : term
+| `(let ⟨..⟩ := $x:term
+    $b) => do
+
+  let X ← inferType (← elabTerm x none)
+  let .const struct _ := X.getAppFn' | throwError "structure expected"
+  let info := getStructureInfo (← getEnv) struct
+  let ids := info.fieldNames.map (fun n => mkIdent n)
+  let stx ← `(let ⟨$ids,*⟩ := $x; $b)
+  elabTerm stx none
+
+
+/-- Structure field assigment, allows for `s.x := x'` notation in `do` block.
+
+`s.x := x'` expands into `s := {s with x := x'}` -/
+macro_rules
+| `(doElem| $x:ident := $val) => do
+  let .str n f := x.getId | Macro.throwUnsupported
+  if n == .anonymous then Macro.throwUnsupported
+  let o := mkIdentFrom x n
+  let field := mkIdentFrom x (Name.mkSimple f)
+  `(doElem| $o:ident := {$o with $field:ident := $val})

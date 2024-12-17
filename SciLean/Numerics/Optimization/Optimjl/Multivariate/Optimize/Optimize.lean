@@ -48,8 +48,7 @@ def optimize
   let mut iteration := 0
 
   if options.show_trace then
-    IO.println s!"{iteration}\t{printStateHeader Method R X}"
-    IO.println s!"{iteration}\t{printState Method R X state}"
+    IO.println s!"n\t{printStateHeader Method R X}"
 
   -- options.show_trace && print_header(method)
   let mut _time ← IO.monoNanosNow
@@ -78,7 +77,7 @@ def optimize
     state := updateH method state d
 
     if options.show_trace then
-      IO.println s!"{iteration}\t{printState Method R X state}"
+      IO.println s!"{iteration-1}\t{printState Method R X state}"
 
     --     -- update trace; callbacks can stop routine early by returning true
     --     stopped_by_callback = trace!(tr, d, state, iteration, method, options, time()-t0)
