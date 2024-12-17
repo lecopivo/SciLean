@@ -183,6 +183,8 @@ theorem ofScientific.RealToFloatVal_rule :
     RealToFloatVal (OfScientific.ofScientific n b m :ℝ) (OfScientific.ofScientific n b m :Float) := ⟨⟩
 
 
+#exit
+
 #check WeierstrassCurve
 
 instance : RealToFloatType (WeierstrassCurve ℝ) (WeierstrassCurve Float) := ⟨⟩

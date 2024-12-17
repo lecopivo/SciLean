@@ -1,4 +1,5 @@
 import SciLean.Algebra.Determinant
+import SciLean.Algebra.Dimension
 import SciLean.Algebra.IsAddGroupHom
 import SciLean.Algebra.IsAffineMap
 import SciLean.Algebra.IsLinearMap
@@ -40,6 +41,23 @@ import SciLean.Analysis.Convenient.IsSmoothLinearMap
 import SciLean.Analysis.Convenient.SemiAdjoint
 import SciLean.Analysis.Convenient.SemiInnerProductSpace
 import SciLean.Analysis.Convenient.Vec
+-- import SciLean.Analysis.Diffeology.Array
+-- import SciLean.Analysis.Diffeology.ArrayTangentSpace
+-- import SciLean.Analysis.Diffeology.Basic
+-- import SciLean.Analysis.Diffeology.Connection
+-- import SciLean.Analysis.Diffeology.DiffeologyMap
+-- import SciLean.Analysis.Diffeology.IsConstantOnPlots
+-- import SciLean.Analysis.Diffeology.Option
+-- import SciLean.Analysis.Diffeology.OptionInstances
+-- import SciLean.Analysis.Diffeology.Pi
+-- import SciLean.Analysis.Diffeology.PlotConstant
+-- import SciLean.Analysis.Diffeology.PlotHomotopy
+-- import SciLean.Analysis.Diffeology.Prod
+-- import SciLean.Analysis.Diffeology.Sum
+-- import SciLean.Analysis.Diffeology.TangentBundle
+-- import SciLean.Analysis.Diffeology.TangentSpace
+-- import SciLean.Analysis.Diffeology.Util
+-- import SciLean.Analysis.Diffeology.VecDiffeology
 import SciLean.Analysis.FunctionSpaces.ContCDiffMap
 import SciLean.Analysis.FunctionSpaces.ContCDiffMapFD
 import SciLean.Analysis.FunctionSpaces.SmoothLinearMap
@@ -50,8 +68,10 @@ import SciLean.Analysis.ODE.OdeSolve
 import SciLean.Analysis.Scalar
 import SciLean.Analysis.Scalar.Basic
 import SciLean.Analysis.Scalar.FloatAsReal
+import SciLean.Analysis.Scalar.FloatRealEquiv
 import SciLean.Analysis.Scalar.Notation
 import SciLean.Analysis.SpecialFunctions.Exp
+import SciLean.Analysis.SpecialFunctions.GaborWavelet
 import SciLean.Analysis.SpecialFunctions.Gaussian
 import SciLean.Analysis.SpecialFunctions.Inner
 import SciLean.Analysis.SpecialFunctions.Log
@@ -79,6 +99,7 @@ import SciLean.Data.DataArray.Operations.Diag
 import SciLean.Data.DataArray.Operations.Diagonal
 import SciLean.Data.DataArray.Operations.Dot
 import SciLean.Data.DataArray.Operations.Exp
+import SciLean.Data.DataArray.Operations.GaussianS
 import SciLean.Data.DataArray.Operations.Inv
 import SciLean.Data.DataArray.Operations.Log
 import SciLean.Data.DataArray.Operations.Logsumexp
@@ -258,6 +279,12 @@ import SciLean.Numerics.ODE.BackwardEuler
 import SciLean.Numerics.ODE.Basic
 import SciLean.Numerics.ODE.ForwardEuler
 import SciLean.Numerics.ODE.Solvers
+import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
+import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
+import SciLean.Numerics.Optimization.Optimjl.Multivariate.Optimize.Optimize
+import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.BFGS
+import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.LBFGS
+import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Probability.Distributions.Flip
 import SciLean.Probability.Distributions.Normal
 import SciLean.Probability.Distributions.Uniform
@@ -291,9 +318,11 @@ import SciLean.Tactic.ConvInduction
 import SciLean.Tactic.DataSynth.ArrayOperations
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Decl
+import SciLean.Tactic.DataSynth.DefRevDeriv
 import SciLean.Tactic.DataSynth.Elab
 import SciLean.Tactic.DataSynth.HasFDerivAt
 import SciLean.Tactic.DataSynth.HasFwdFDeriv
+import SciLean.Tactic.DataSynth.HasFwdFDerivAt
 import SciLean.Tactic.DataSynth.HasRevFDeriv
 import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 import SciLean.Tactic.DataSynth.Main
