@@ -365,6 +365,11 @@ theorem Scalar.oftoReal (x : R) :
     x := sorry_proof
 
 @[simp, simp_core]
+theorem Scalar.toReal_ofReal {R K} [Scalar R K] (x : ℝ)  :
+    Scalar.toReal (K:=K) (Scalar.ofReal (K:=K) x) = x :=
+  sorry_proof
+
+@[simp, simp_core]
 theorem Scalar.ofReal_zero :
   Scalar.ofReal R (0 : ℝ) = (0:R) := sorry_proof
 

@@ -188,6 +188,21 @@ theorem HSub.hSub.arg_a0a1.HasRevFDerivUpdate_rule
   · fun_prop
 
 
+@[data_synth]
+theorem Neg.neg.arg_a0.HasRevFDerivUpdate_rule
+    (f : X → Y) (f')
+    (hf : HasRevFDerivUpdate R f f') :
+    HasRevFDerivUpdate R (fun x => -f x)
+      (fun x =>
+        let' (y,df) := f' x
+        (-y, fun dy dx => df (-dy) dx)) := by
+  cases hf;
+  constructor
+  · intro dx; fun_trans only;
+    simp_all[revFDeriv,neg_pull]
+  · fun_prop
+
+
 open ComplexConjugate
 @[data_synth]
 theorem HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule
@@ -235,13 +250,32 @@ theorem HSMul.hSMul.arg_a0a1.HasRevFDerivUpdate_rule
   · fun_prop
 
 
-#check Nat
+@[data_synth]
+theorem HDiv.hDiv.arg_a0.HasRevFDerivUpdate_rule
+    (f : X → R) (c : R) (f')
+    (hf : HasRevFDerivUpdate R f f') :
+    HasRevFDerivUpdate R
+     (fun x => f x / c)
+     (fun x =>
+       let' (y,df) := f' x
+       (y / c,
+         fun dr dx =>
+           let s := (conj c)⁻¹
+           let dx := df (s*dr) dx
+           dx)) := by
+  cases hf
+  constructor
+  · intro dx; fun_trans; simp_all
+    funext dy dx
+    simp[revFDeriv,smul_push,neg_pull,sub_eq_add_neg]
+    fun_trans
+  · fun_prop
 
 
-@[fun_trans]
+@[data_synth]
 theorem HDiv.hDiv.arg_a0a1.HasRevFDerivUpdate_rule
     (f g : X → R) (f' g')
-    (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') (hx : ∀ x, g x ≠ 0) :
+    (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') /- (hx : ∀ x, g x ≠ 0)-/ :
     HasRevFDerivUpdate R
      (fun x => f x / g x)
      (fun x =>
@@ -254,6 +288,7 @@ theorem HDiv.hDiv.arg_a0a1.HasRevFDerivUpdate_rule
            let dx := dg (-s*(conj y)*dr) dx
            dx)) := by
   cases hf; cases hg
+  have hx : ∀ x, g x ≠ 0 := sorry_proof
   constructor
   · intro dx; fun_trans (disch:=apply hx) only; simp_all
     funext dy dx
@@ -262,6 +297,27 @@ theorem HDiv.hDiv.arg_a0a1.HasRevFDerivUpdate_rule
   · sorry_proof
     --fun_prop (disch:=apply hx) -- missing theorem about division
 
+
+@[data_synth]
+theorem HDiv.hDiv.arg_a0.HasRevFDerivUpdate_rule'
+    (c : R)  :
+    HasRevFDerivUpdate R
+     (fun x : R => x / c)
+     (fun x =>
+       (x / c,
+         fun dr dx =>
+           let s := (conj c)⁻¹
+           let dx := dx + (s*dr)
+           dx)) := by
+  have : c ≠ 0 := sorry_proof
+  have : conj c ≠ 0 := sorry_proof
+  constructor
+  · intro dx; fun_trans (disch:=assumption)
+    funext dy dx
+    simp[revFDeriv,smul_push,neg_pull,sub_eq_add_neg]
+    field_simp
+    ring
+  · fun_prop
 
 
 @[data_synth]

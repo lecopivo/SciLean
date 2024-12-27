@@ -6,18 +6,6 @@ open SciLean Scalar SciLean.Meta
 
 section Missing
 
-variable
-  {R : Type} [RealScalar R] [PlainDataType R]
-  {X : Type} [NormedAddCommGroup X] [NormedSpace R X]
-  {Y : Type} [NormedAddCommGroup Y] [NormedSpace R Y]
-
-variable {I : Type} [IndexType I]
-
-end Missing
-
-
-section Missing
-
 variable {R} [RealScalar R]
 variable {I : Type} [IndexType I]
 
@@ -196,7 +184,6 @@ theorem isum_norm (x : R^[I]^[J]) :
 
 
 open Param Scalar in
-noncomputable
 def loss (m : R) (x : R^[D]^[N]) (α : R^[K]) (μ : R^[D]^[K]) (q : R^[D]^[K]) (l : R^[((D-1)*D)/2]^[K]) : R :=
   (let S := ⊞ k => ((Q q[k] l[k])ᵀ * Q q[k] l[k])⁻¹
    (- log (likelihood x (α.softmax) μ S * prior m S)))
@@ -217,7 +204,38 @@ def_rev_deriv loss in α μ q l by
   unfold loss
   data_synth => skip
 
+open Optimjl
 
+
+def f {D N : Nat} (K : Nat) (m : Float) (x : Float^[D]^[N]) := {
+  f := fun (α,μ,q,l) => loss (K:=K) m x α μ q l
+  hf := by
+    simp
+    apply HasRevFDeriv_from_HasRevFDerivUpdate
+    data_synth => skip
+  f' := _
+    : ObjectiveFunction _ _}
+
+
+#check Nat
+
+set_option profiler true
+
+
+
+def main : IO Unit := do
+  let K := 2
+  let m := 0.0
+  let xs := ⊞[⊞[1.01,5.0], ⊞[1.03,5.1],⊞[1.1,4.8], ⊞[-1.03,5.0], ⊞[-0.9,4.7],⊞[-1.1,5.1]]
+  let r ← optimize (f K m xs) {show_trace:=true : LBFGS Float K} (0,⊞[⊞[1,0],⊞[-1,2]],0,0)
+  r.print
+
+#check Nat
+
+
+#eval! main
+
+#exit
 open Lean Parser Term in
 syntax "argmin" funBinder* ", " term : term
 
@@ -231,7 +249,6 @@ elab_rules : term
 
 
 #check Function.argmin
-
 
 
 noncomputable

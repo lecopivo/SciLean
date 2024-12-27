@@ -52,6 +52,9 @@ lean_exe LBFGS {
   root := `Test.optimjl.lbfgs
 }
 
+lean_exe GMM {
+  root := `SciLean.Examples.GMM.Main
+}
 
 
 lean_exe ForLoopTest {

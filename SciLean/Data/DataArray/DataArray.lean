@@ -256,7 +256,7 @@ def DataArrayN.curry (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ
   ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
 
 def DataArrayN.uncurry (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
-  ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
+  ⟨⟨x.data.byteData, Size.size ι * Size.size κ, sorry_proof⟩, sorry_proof⟩
 
 theorem DataArrayN.uncurry_def (x : DataArrayN (DataArrayN α κ) ι) :
     x.uncurry = ⊞ i j => x[i][j] := sorry_proof

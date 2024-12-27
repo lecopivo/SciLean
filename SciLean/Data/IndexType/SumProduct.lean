@@ -84,10 +84,17 @@ theorem sum_add_distrib (f g : I → α) : ∑ i , (f i + g i) = (∑ i, f i) + 
 @[add_push, sum_pull]
 theorem add_sum (f g : I → α) : (∑ i, f i) + (∑ i, g i) = ∑ i , (f i + g i) := by simp only[add_pull]
 
+
 end OnMonoid
 
 section OnGroup
 variable [AddCommGroup α]
+
+@[sub_pull, sum_push]
+theorem sum_sub_distrib (f g : I → α) : ∑ i , (f i - g i) = (∑ i, f i) - (∑ i, g i) := sorry_proof
+
+@[sub_push, sum_pull]
+theorem sub_sum (f g : I → α) : (∑ i, f i) - (∑ i, g i) = ∑ i , (f i - g i) := by simp only[sub_pull]
 
 @[neg_push, sum_pull]
 theorem neg_sum (f : I → α) : -(∑ i, f i) = ∑ i , -(f i) := by sorry_proof

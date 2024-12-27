@@ -1,6 +1,7 @@
 import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
+import SciLean.Data.ArrayN
 
 set_option linter.unusedVariables false
 
@@ -16,56 +17,49 @@ namespace SciLean.Optimjl
 
 variable
   {R : Type} [RealScalar R] [PlainDataType R] [ToString R]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [ToString X] [CompleteSpace X]
 
 
-variable (R)
-inductive LBFGS.InitialInvH (n : ℕ) where
-/-- Initialize inverse Hessian to this specified value -/
-| invH (invH : R^[n,n])
-/-- Initialize inverse Hessian such that the step length is the specified `stepnorm` -/
-| stepnorm (stepnorm : R)
-/-- Initialize inverse Hessian to identity matrix -/
-| identity
+variable (R X)
 
-open LBFGS in
 structure LBFGS (m : ℕ) extends Options R where
   /-- Linear search that finds appropriate `α` `xₙ₊₁ = xₙ + α • sₙ` -/
   lineSearch : LineSearch0Obj R := .mk (BackTracking R) {}
   /-- Guess initial `α` to try given function value and gradient -/
-  alphaguess (φ₀ dφ₀ : R) (d : ObjectiveFunction R (R^[n])) : R := 1
+  alphaguess (φ₀ dφ₀ : R) /-(d : ObjectiveFunction R X)-/ : R := 1
   -- P : T
   -- precondprep!::Tprep
   -- scaleinvH0 : Bool := true
-variable {R}
+variable {R X}
 
 set_default_scalar R
 
 namespace LBFGS
 
 
-structure State (R : Type) (n m : ℕ) [RealScalar R] [PlainDataType R] where
+structure State (R X : Type) (m : ℕ) [Zero X] [Neg X] [RealScalar R] [PlainDataType R] where
    /-- current position `xₙ₊₁` -/
-   x : R^[n]
+   x : X
    /-- previous position `xₙ`-/
-   x_previous : R^[n] := x
+   x_previous : X := x
    /-- current gradient `∇f(xₙ₊₁)` -/
-   g : R^[n] := 0
+   g : X := 0
    /-- previous gradient `∇f(xₙ)` -/
-   g_previous : R^[n] := g
+   g_previous : X := g
    /-- current valus `f(xₙ₊₁)` -/
    f_x : R
    /-- previous valus `f(xₙ)` -/
    f_x_previous : R := f_x
    /-- difference between positions `xₙ₊₁ - xₙ` -/
-   dx : R^[n] := 0
+   dx : X := 0
    /-- difference between positions `xₙ₊₁ - xₙ` -/
-   dg : R^[n] := 0
+   dg : X := 0
    /-- step direction `- (∇²f)⁻¹ ∇f` -/
-   s : R^[n] := - g
+   s : X := - g
    /-- position difference `xₙ₊₁-xₙ` -/
-   dx_history : R^[n]^[m] := 0
+   dx_history : ArrayN X m := 0
    /-- gradient difference `∇f(xₙ₊₁)-∇f(xₙ)`-/
-   dg_history : R^[n]^[m] := 0
+   dg_history : ArrayN X m := 0
    /-- ρₙ := 1 / ⟪∇f(xₙ₊₁) - ∇f(xₙ), xₙ₊₁ - xₙ⟫ -/
    ρ : R^[m] := 0
    /-- -/
@@ -81,9 +75,9 @@ structure State (R : Type) (n m : ℕ) [RealScalar R] [PlainDataType R] where
 
 open Set in
 /-- This function updates search direction `s` from gradient `g` by so called "two loop recursion". -/
-def twoloop (g : R^[n]) (k : ℤ) (m : ℕ)
-    (ρ : Icc (k-m) (k-1) → R) (dx dg : Icc (k-m) (k-1) → R^[n])
-    /- (scaleinvH0 : Bool) (precon : R) -/ : R^[n] := Id.run do
+def twoloop (g : X) (k : ℤ) (m : ℕ)
+    (ρ : Icc (k-m) (k-1) → R) (dx dg : Icc (k-m) (k-1) → X)
+    /- (scaleinvH0 : Bool) (precon : R) -/ : X := Id.run do
   if h : m = 0 then
     -g
   else if k-m < 0 then
@@ -142,7 +136,7 @@ def twoloop (g : R^[n]) (k : ℤ) (m : ℕ)
 
 
 open Set in
-def updateSearchDirection (method : LBFGS R m) (state : State R n m) : State R n m :=  Id.run do
+def updateSearchDirection (method : LBFGS R m) (state : State R X m) : State R X m :=  Id.run do
   let mut state := state
 
   let k : ℤ := state.pseudo_iteration
@@ -151,11 +145,11 @@ def updateSearchDirection (method : LBFGS R m) (state : State R n m) : State R n
     let i : Fin m := ⟨(i.1%m).toNat, by sorry_proof⟩
     state.ρ[i]
 
-  let dx : Icc (k-m) (k-1) → R^[n] := fun i =>
+  let dx : Icc (k-m) (k-1) → X := fun i =>
     let i : Fin m := ⟨(i.1%m).toNat, by sorry_proof⟩
     state.dx_history[i]
 
-  let dg : Icc (k-m) (k-1) → R^[n] := fun i =>
+  let dg : Icc (k-m) (k-1) → X := fun i =>
     let i : Fin m := ⟨(i.1%m).toNat, by sorry_proof⟩
     state.dg_history[i]
 
@@ -164,8 +158,8 @@ def updateSearchDirection (method : LBFGS R m) (state : State R n m) : State R n
   return state
 
 
-def reset_search_direction (state : State R n m)
-    : State R n m := Id.run do
+def reset_search_direction (state : State R X m)
+    : State R X m := Id.run do
 
   let mut state := state
 
@@ -182,8 +176,8 @@ def reset_search_direction (state : State R n m)
 
 
 /-- Find appropriate step length `α`. Resets the search direction if the it is invalid. -/
-def perform_linesearch (method : LBFGS R m) (state : State R n m) (d : ObjectiveFunction R (R^[n])) :
-    (Except LineSearchError (State R n m)) := Id.run do
+def perform_linesearch (method : LBFGS R m) (state : State R X m) (d : ObjectiveFunction R X) :
+    (Except LineSearchError (State R X m)) := Id.run do
 
   let mut state := state
   let mut dφ₀ := ⟪state.g, state.s⟫
@@ -195,7 +189,7 @@ def perform_linesearch (method : LBFGS R m) (state : State R n m) (d : Objective
     state := reset_search_direction state
     dφ₀ := ⟪state.g, state.s⟫
 
-  state.alpha := method.alphaguess φ₀ dφ₀ d
+  state.alpha := method.alphaguess φ₀ dφ₀
 
   state.f_x_previous := φ₀
   state.x_previous   := state.x
@@ -212,8 +206,8 @@ def perform_linesearch (method : LBFGS R m) (state : State R n m) (d : Objective
     return .error e
 
 
-def updateState (method : LBFGS R m) (state : State R n m) (d : ObjectiveFunction R (R^[n])) :
-    (Except LineSearchError (State R n m)) := Id.run do
+def updateState (method : LBFGS R m) (state : State R X m) (d : ObjectiveFunction R X) :
+    (Except LineSearchError (State R X m)) := Id.run do
 
   let mut state := state
 
@@ -250,8 +244,8 @@ def updateState (method : LBFGS R m) (state : State R n m) (d : ObjectiveFunctio
   return .ok state
 
 
-def updateFG (state : State R n m) (d : ObjectiveFunction R (R^[n])) :
-    State R n m := Id.run do
+def updateFG (state : State R X m) (d : ObjectiveFunction R X) :
+    State R X m := Id.run do
 
   let mut state := state
 
@@ -268,8 +262,8 @@ def updateFG (state : State R n m) (d : ObjectiveFunction R (R^[n])) :
   return state
 
 
-def updateH (state : State R n m)  :
-    State R n m := Id.run do
+def updateH (state : State R X m)  :
+    State R X m := Id.run do
 
   let mut state := state
 
@@ -293,7 +287,7 @@ def updateH (state : State R n m)  :
   return state
 
 
-def assessConvergence (method : LBFGS R m) (state : State R n m) :=
+def assessConvergence (method : LBFGS R m) (state : State R X m) :=
 
     let ⟨..⟩ := state
     let ⟨..⟩ := method.toOptions
@@ -305,10 +299,10 @@ def assessConvergence (method : LBFGS R m) (state : State R n m) :=
     let mut f_increased := false
     let mut g_converged := false
 
-    if (x - x_previous).abs.max ≤ x_abstol then
+    if ‖x - x_previous‖₂² ≤ x_abstol then
       x_converged := true
 
-    if (x - x_previous).abs.max ≤ x_reltol * x.abs.max then
+    if ‖x - x_previous‖₂² ≤ x_reltol * ‖x‖₂² then
       x_converged := true
 
     if Scalar.abs (f_x - f_x_previous) ≤ f_abstol then
@@ -320,17 +314,17 @@ def assessConvergence (method : LBFGS R m) (state : State R n m) :=
     if f_x > f_x_previous then
       f_increased := true
 
-    g_converged := g.abs.max ≤ g_abstol
+    g_converged := ‖g‖₂² ≤ g_abstol
 
     return (x_converged, f_converged, g_converged, f_increased)
 
 
-def initState (method : LBFGS R m) (d : ObjectiveFunction R (R^[n])) (x₀ : R^[n]) : LBFGS.State R n m := Id.run do
+def initState (method : LBFGS R m) (d : ObjectiveFunction R X) (x₀ : X) : LBFGS.State R X m := Id.run do
 
   let (fx,df) := d.f' x₀
   let g := df 1
 
-  let mut state : LBFGS.State R n m := {
+  let mut state : LBFGS.State R X m := {
     x := x₀
     f_x := fx
     f_x_previous := fx
@@ -346,7 +340,7 @@ def initState (method : LBFGS R m) (d : ObjectiveFunction R (R^[n])) (x₀ : R^[
 end LBFGS
 
 
-instance {n} : AbstractOptimizer (LBFGS R m) (LBFGS.State R n m) R (R^[n]) where
+instance : AbstractOptimizer (LBFGS R m) (LBFGS.State R X m) R X where
 
   getOptions m := m.toOptions
   getPosition s := s.x
@@ -367,11 +361,11 @@ instance {n} : AbstractOptimizer (LBFGS R m) (LBFGS.State R n m) R (R^[n]) where
   pick_best_x take_prev state   := if take_prev then state.x_previous else state.x
   pick_best_f take_prev state d := if take_prev then state.f_x_previous else state.f_x
 
-  x_abschange state := (state.x - state.x_previous).abs.max
-  x_relchange state := (state.x - state.x_previous).abs.max / state.x.abs.max
+  x_abschange state := ‖state.x - state.x_previous‖₂²
+  x_relchange state := ‖state.x - state.x_previous‖₂² / ‖state.x‖₂²
   f_abschange d state := Scalar.abs (state.f_x - state.f_x_previous)
   f_relchange d state := Scalar.abs (state.f_x - state.f_x_previous) / Scalar.abs (state.f_x)
-  g_residual d state := state.g.abs.max
+  g_residual d state := ‖state.g‖₂²
 
   f_calls d state := state.f_calls
   g_calls d state := state.g_calls
