@@ -139,6 +139,10 @@ import SciLean.Data.Random
 import SciLean.Data.StructType
 import SciLean.Data.StructType.Algebra
 import SciLean.Data.StructType.Basic
+import SciLean.Data.VectorType.Basic
+import SciLean.Data.VectorType.Init
+import SciLean.Data.VectorType.Optimize
+import SciLean.Data.MatrixType.Basic
 -- import SciLean.Geometry.Bezier
 import SciLean.Geometry.BoundingBall
 import SciLean.Geometry.FrontierSpeed

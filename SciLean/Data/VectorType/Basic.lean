@@ -267,7 +267,7 @@ def equivₗ : (X n) ≃ₗ[K] (n → K) :=
 
 
 /-- Continuous linear equivalence between vector type `X` and `n → K` -/
-def equivL : (X n) ≃L[K] (n → K) := ContinuousLinearEquiv.mk equivₗ (by sorry) (by sorry)
+def equivL : (X n) ≃L[K] (n → K) := ContinuousLinearEquiv.mk equivₗ (by sorry_proof) (by sorry_proof)
 
 
 instance : FiniteDimensional K (X n) :=
