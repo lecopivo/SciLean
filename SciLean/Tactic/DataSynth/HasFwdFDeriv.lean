@@ -3,6 +3,8 @@ import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Elab
 import SciLean.Tactic.LSimp.Elab
 
+set_option linter.unusedVariables false
+
 namespace SciLean
 
 variable {R : Type} [RCLike R]
@@ -158,66 +160,3 @@ theorem HasFwdFDeriv.fwdFDeriv {f : X → Y} {x} {f'} (hf : HasFwdFDeriv R f f')
   funext dx; cases hf
   unfold SciLean.fwdFDeriv
   simp_all
-
-#exit
-
-open SciLean Lean Meta in
-simproc [] dataSynthFwdFDeriv (fwdFDeriv _ _ _) := fun e => do
-
-  let .mkApp2 _ f x := e | return .continue
-  let R := e.getArg! 0
-
-  let h ← mkAppM ``HasFwdFDeriv #[R,f]
-  let (xs,_) ← forallMetaTelescope (← inferType h)
-  let h := h.beta #[xs[0]!, x]
-
-  let some goal ← Tactic.DataSynth.isDataSynthGoal? h
-    | return .continue
-
-  let (some r,_) ← Tactic.DataSynth.dataSynth goal |>.run {} |>.run {}
-    | return .continue
-
-  let e' := r.xs[0]!.beta #[x]
-
-  return .visit { expr := e', proof? := ← mkAppM ``HasFwdFDeriv.fwdFDeriv #[r.proof] }
-
-
-set_option trace.Meta.Tactic.data_synth true in
-set_option trace.Meta.Tactic.data_synth.input true in
-
-example : (fwdFDeriv R (fun x : R => x * x * x) 2)
-          =
-          fun dx => (2 * 2 * 2, 2 * 2 * dx + (2 * dx + dx * 2) * 2) := by
-  conv =>
-    lhs
-    simp -zeta [dataSynthFwdFDeriv]
-
-
-
-set_option trace.Meta.Tactic.data_synth true in
-set_option trace.Meta.Tactic.data_synth.input true in
-example : (fwdFDeriv R (fun x : R => let y := x * x; y * x) 2)
-          =
-          fun dx => (2 * 2 * 2, 2 * 2 * dx + (2 * dx + dx * 2) * 2) := by
-  conv =>
-    lhs
-    simp -zeta [dataSynthFwdFDeriv]
-
-
-#check (HasFwdFDeriv R (fun x : R => let y := x * x; y * x) _ 2)
-  rewrite_by
-    data_synth
-
-
-
-set_option trace.Meta.Tactic.simp.rewrite true in
-#check (fwdFDeriv R (fun x : R => let x₁ := x * x; let x₂ := x*x₁; let x₃ := x*x₁*x₂; x*x₁*x₂*x₃) 2)
-  rewrite_by
-    simp -zeta only [dataSynthFwdFDeriv]
-
-
-set_option profiler true in
-
-#check (HasFwdFDeriv R (fun x : R×R =>) _ 2)
-  rewrite_by
-    data_synth +lsimp -zeta

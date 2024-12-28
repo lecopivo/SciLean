@@ -2,6 +2,7 @@ import SciLean.Analysis.Calculus.FDeriv
 
 namespace SciLean
 
+set_option linter.unusedVariables false
 
 variable
   {K : Type _} [RCLike K]

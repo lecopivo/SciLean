@@ -5,6 +5,7 @@ import SciLean.Meta.GenerateFunProp
 namespace SciLean
 
 set_option deprecated.oldSectionVars true
+set_option linter.unusedVariables false
 
 variable
   {R} [RealScalar R]

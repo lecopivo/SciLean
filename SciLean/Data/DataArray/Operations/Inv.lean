@@ -35,7 +35,7 @@ theorem inv.arg_A.fderiv_rule (A : X → R^[I,I])
      fun x => fun dx =>L[R]
        let dA := fderiv R A x dx
        let A := A x
-       (- A.inv * dA * A.inv) := sorry
+       (- A.inv * dA * A.inv) := sorry_proof
 
 
 @[fun_trans]
@@ -58,7 +58,7 @@ theorem inv.arg_A.fwdFDeriv_rule (A : X → R^[I,I])
        let AdA := fwdFDeriv R A x dx
        let A := AdA.1; let dA := AdA.2
        let A' := A.inv
-       (A', - A' * dA * A') := sorry
+       (A', - A' * dA * A') := sorry_proof
 
 
 @[fun_trans]

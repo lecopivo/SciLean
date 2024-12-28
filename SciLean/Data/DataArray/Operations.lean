@@ -2,6 +2,8 @@ import SciLean.Data.DataArray.DataArray
 import SciLean.Data.ArrayType.Algebra
 import SciLean.Util.Limit
 
+set_option linter.unusedVariables false
+
 namespace SciLean.DataArrayN
 
 section GeneralFunctions

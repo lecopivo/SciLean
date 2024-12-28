@@ -4,6 +4,8 @@ import Qq
 import SciLean.Lean.Meta.Basic
 import SciLean.Data.ArraySet
 
+set_option linter.unusedVariables false
+
 open Lean Meta
 
 namespace SciLean
@@ -118,7 +120,7 @@ private def analyzeHeadFun (fn : Expr) (xs : Array Expr) : MetaM HeadFunInfo := 
   | .const name _ =>
     pure (.const name (← getConstArity name))
   | .fvar id =>
-    let arity := (← inferType fn).forallArity
+    let arity := (← inferType fn).getNumHeadForalls
     if let .some i := xs.findIdx? (fun x => x.fvarId! == id) then
       pure (.bvar i arity)
     else

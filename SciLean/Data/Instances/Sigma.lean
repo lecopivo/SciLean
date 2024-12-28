@@ -11,7 +11,7 @@ import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Util.SorryProof
 import SciLean.Util.RewriteBy
 
-
+set_option linter.unusedVariables false
 
 ----------------------------------------------------------------------------------------------------
 -- Operations --------------------------------------------------------------------------------------

@@ -61,7 +61,7 @@ def optimize
     -- move point `xₙ` to `xₙ₊₁`
     match updateState method state d with
     | .ok state' => state := state'
-    | .error e => break
+    | .error _e => break
 
     -- compute `f(xₙ₊₁)` and `∇f(xₙ₊₁)`
     state := updateFG method state d

@@ -519,7 +519,7 @@ theorem _root_.SciLean.ArrayType.ofFn.arg_f.HasRevFDerivUpdate [PlainDataType X]
        (⊞ i => f w i,
         fun dx dw =>
           IndexType.foldl (init:=dw) (fun dw (i : I) =>
-            let' (y,df) := f' i w;
+            let' (_y,df) := f' i w;
             df (dx[i]) dw)))) := by
   have := fun i => (hz i).val
   have : ∀ (i : I), Differentiable R fun x => f x i := fun i => (hz i).prop
@@ -530,53 +530,3 @@ theorem _root_.SciLean.ArrayType.ofFn.arg_f.HasRevFDerivUpdate [PlainDataType X]
     simp_all
     sorry_proof
   · fun_prop
-
-
-#exit
-
-example (f : W → I → X)
- (hf : ∀ (i : I), Differentiable R fun x => f x i)
-  : Differentiable R fun w =>  ∑ i, f w i := by fun_prop
-
-example : Differentiable R (fun x : R => ∑ (i : I), x) := by fun_prop
-
-set_option trace.Meta.Tactic.data_synth true in
-#check (HasRevFDerivUpdate R (fun x : R^[I] => ∑ i, x[i]) _)
-  rewrite_by
-    data_synth
-
-#check (HasRevFDerivUpdate R (fun x : R^[I] => ∑ i, x[i]*x[i]) _)
-  rewrite_by
-    data_synth
-
-#check (HasRevFDerivUpdate R (fun x : R^[I] => ∑ i, x[i]*x[i]) _)
-  rewrite_by
-    data_synth
-
-#check (HasRevFDerivUpdate R (fun x : R^[I] => ∑ i, let xi:= x[i]; (xi*xi + xi)) _)
-  rewrite_by
-    data_synth
-    lsimp
-
-set_option trace.Meta.Tactic.data_synth true in
-#check (HasRevFDerivUpdate R (fun x : R^[I] => (∑ i, x[i])•x) _)
-  rewrite_by
-    data_synth
-    lsimp
-
-
-
-set_option trace.Meta.Tactic.data_synth.input true in
-set_option trace.Meta.Tactic.data_synth true in
-#check (HasRevFDerivUpdate R (fun x : R^[I] => (∑ i, x[i])*‖x - ‖x‖₂²•1‖₂²) _)
-  rewrite_by
-    data_synth
-    lsimp
-
-
-
-set_option trace.Meta.Tactic.data_synth true in
-#check (HasRevFDerivUpdate R (fun x : R^[I] => (∑ i, x[i])*‖x - ‖x‖₂²•1‖₂²) _)
-  rewrite_by
-    data_synth
-    lsimp

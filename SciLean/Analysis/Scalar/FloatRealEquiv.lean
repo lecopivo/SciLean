@@ -6,10 +6,9 @@ import SciLean.Analysis.Scalar.FloatAsReal
 import SciLean.Tactic.DataSynth.Elab
 import SciLean.Tactic.DataSynth.Attr
 
+set_option linter.unusedVariables false
+
 namespace SciLean
-
-
-
 
 /-- Class indicating that type `RealType` containing real values corresponds to type `FloatType`
 containing equivalent floats.
@@ -181,50 +180,3 @@ theorem OfNat.ofNat.RealtoFloatVal_rule
 @[data_synth]
 theorem ofScientific.RealToFloatVal_rule :
     RealToFloatVal (OfScientific.ofScientific n b m :ℝ) (OfScientific.ofScientific n b m :Float) := ⟨⟩
-
-
-#exit
-
-#check WeierstrassCurve
-
-instance : RealToFloatType (WeierstrassCurve ℝ) (WeierstrassCurve Float) := ⟨⟩
-
-#eval WeierstrassCurve.Δ ⟨1.0,2.0,3.0,4.0,5.0⟩
-
-
-#check WeierstrassCurve.Projective.dblX
-
-#synth RealScalar Float
-#check WeierstrassCurve.Δ
-
-set_option trace.Meta.Tactic.data_synth true in
-#check (RealToFloatFun (WeierstrassCurve.Δ : _ → ℝ) _)
-  rewrite_by
-    simp +unfoldPartialApp only [WeierstrassCurve.Δ, WeierstrassCurve.b₂, WeierstrassCurve.b₄]
-    simp +unfoldPartialApp only [WeierstrassCurve.b₈]
-    data_synth
-
-
-set_option pp.funBinderTypes true
-#check (RealToFloatFun (fun x : ℝ =>
-          let y := x + x;
-          let z := x + y;
-          y + z + x + x + x) _)
-  rewrite_by
-    data_synth
-
-
-set_option trace.Meta.Tactic.data_synth true in
-#check (RealToFloatFun (fun x : ℝ => (1.001 : ℝ) + 0.1 + x) _)
-  rewrite_by
-    data_synth
-
-
-#check (RealToFloatFun (fun x : ℝ => 1) _)
-  rewrite_by
-    data_synth
-
-
-#check (RealToFloatFun (fun x : ℝ => ((1:ℕ):ℝ)) _)
-  rewrite_by
-    data_synth

@@ -107,7 +107,7 @@ open Lean.TSyntax.Compat in
 open Term Function Lean Elab Term Meta in
 elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
   let fn ← elabTermAndSynthesize (← `(fun $xs* => $b)) none
-  let arity := (← inferType fn).forallArity
+  let arity := (← inferType fn).getNumHeadForalls
   try
     -- uncurry if necessary
     let fn ←

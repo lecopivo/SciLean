@@ -104,7 +104,7 @@ theorem ContCDiffMapFD_eval_cdifferentiable (f : X ⟿FD[K,n] Y) (h : 0 < n) :
 @[fun_prop]
 theorem ContCDiffMapFD_eval_cdifferentiable' (f : X ⟿FD[K,∞] Y) :
     CDifferentiable K (fun x => f x) := by
-  fun_prop (disch:=apply ENat.zero_lt_top)
+  fun_prop (disch:=apply ENat.top_pos)
 
 @[simp, simp_core]
 theorem ContCDiffMapFD.FD_fst (f : X ⟿FD[K,n] Y) (x dx : X) :

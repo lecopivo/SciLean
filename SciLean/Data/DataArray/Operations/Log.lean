@@ -2,6 +2,8 @@ import SciLean.Data.DataArray.Operations.Multiply
 import SciLean.Data.ArrayType.Properties
 import SciLean.Analysis.SpecialFunctions.Log
 
+set_option linter.unusedVariables false
+
 namespace SciLean.DataArrayN
 
 open  Scalar

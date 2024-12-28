@@ -2,15 +2,16 @@ import SciLean.Data.DataArray.Operations.Multiply
 import SciLean.Data.DataArray.Operations.Outerprod
 import SciLean.Analysis.SpecialFunctions.Exp
 
+set_option linter.unusedVariables false
+
 namespace SciLean.DataArrayN
 
 open  Scalar
 
-
 section Missing
 @[fun_prop]
 theorem HDiv.hDiv.arg_a0a1.Differentiable_rule {R : Type*} [RCLike R] {x : R×R} (hx : x.2 ≠ 0) :
-    DifferentiableAt R (fun x : R×R => x.1 / x.2) x := sorry
+    DifferentiableAt R (fun x : R×R => x.1 / x.2) x := sorry_proof
 
 end Missing
 

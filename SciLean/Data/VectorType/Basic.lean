@@ -25,42 +25,63 @@ Providing an instance of `VectorType X n K` will automatically provide the follo
 This class is designed to provide Basic Linear Algebra Subprograms(BLAS) which allows us to define
 vector space structure on `X` that is computationally efficient.
  -/
-class VectorType (X : Type*) (n : outParam (Type*)) {R : outParam (Type*)} (K : outParam (Type*))
-        [Scalar R K] [Fintype n] where
-  equiv : X ≃ (n → K) -- maybe EuclideanSpace K n?
+class VectorType (X : (n : Type*) → [IndexType n] → Type*) {R : outParam (Type*)} (K : outParam (Type*))
+        [Scalar R K] where
 
-  const (k : K) : X
+  equiv {n} [IndexType n] : X n ≃ (n → K) -- maybe EuclideanSpace K n?
 
-  scal (alpha : K) (x : X) : X
+  /-- Constant vector with all elements equial to `k`. -/
+  const (n) [IndexType n] (k : K) : X n
 
-  asum (x : X) : R
-  nrm2 (x : X) : R
-  iamax (x : X) : n
-  dot (x y : X) : K
+  const_spec {n} [IndexType n] (k : K) : equiv (const n k) = fun _ => k
 
-  axpy (alpha : K) (x y : X) : X
-  axpby (alpha beta : K) (x y : X) : X := axpy alpha x (scal beta y)
+  /-- Scalar multiplication. -/
+  scal {n} [IndexType n]  (alpha : K) (x : X n) : X n
 
-  const_spec (k : K) : equiv (const k) = fun _ => k
-
-  scal_spec (alpha : K) (x : X) :
+  scal_spec {n} [IndexType n] (alpha : K) (x : X n) :
     equiv (scal alpha x) = alpha • equiv x
 
-  asum_spec (x : X) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 1 (n → K)).symm (equiv x)‖
-  nrm2_spec (x : X) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 2 (n → K)).symm (equiv x)‖
-  iamax_spec (x : X) : Scalar.abs (equiv x (iamax x)) = Scalar.ofReal (K:=K) ‖equiv x‖
+  /-- `asum x = ∑ i, |x[i]|` -/
+  asum {n} [IndexType n] (x : X n) : R
 
-  dot_spec (x y : X) :
+  asum_spec {n} [IndexType n] (x : X n) : asum x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 1 (n → K)).symm (equiv x)‖
+
+  /-- `nrm2 x = √∑ i, |x[i]|²` -/
+  nrm2 {n} [IndexType n] (x : X n) : R
+
+  nrm2_spec {n} [IndexType n] (x : X n) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 2 (n → K)).symm (equiv x)‖
+
+  /-- `iamax x = argmaxᵢ |x[i]|` -/
+  iamax {n} [IndexType n] (x : X n) : n
+
+  iamax_spec {n} [IndexType n] (x : X n) : Scalar.abs (equiv x (iamax x)) = Scalar.ofReal (K:=K) ‖equiv x‖
+
+  /-- `dot x y = ∑ i, conj x[i] y[i]` -/
+  dot {n} [IndexType n] (x y : X n) : K
+
+  dot_spec {n} [IndexType n] (x y : X n) :
     (dot x y) =
     let x' := (WithLp.equiv 2 (n → K)).symm (equiv x)
     let y' := (WithLp.equiv 2 (n → K)).symm (equiv y)
     (⟪x',y'⟫_K)
 
-  axpy_spec (alpha : K) (x y : X) :
+  /-- `axpy a x y = a • x + y` -/
+  axpy {n} [IndexType n] (alpha : K) (x y : X n) : X n
+
+  axpy_spec {n} [IndexType n] (alpha : K) (x y : X n) :
     equiv (axpy alpha x y) = alpha • equiv x + equiv y
 
-  axpby_spec (alpha beta : K) (x y : X) :
+  /-- `axpby a b x y = a • x + b • y` -/
+  axpby {n} [IndexType n] (alpha beta : K) (x y : X n) : X n := axpy alpha x (scal beta y)
+
+  axpby_spec {n} [IndexType n] (alpha beta : K) (x y : X n) :
     equiv (axpby alpha beta x y) = alpha • equiv x + beta • equiv y
+
+  /-- Element wise multiplication. -/
+  mul {n} [IndexType n] (x y : X n) : X n
+
+  mul_spec {n} [IndexType n] (x y : X n) :
+    equiv (mul x y) = equiv x * equiv y
 
 
 namespace VectorType
@@ -88,54 +109,54 @@ attribute [vector_from_spec ←]
 section BasicOperations
 
 variable
-  {X : Type*} {n R K :  Type*}
-  [Scalar R K] [Fintype n] [VectorType X n K]
+  {X : (n : Type u) → [IndexType n] → Type*} {n : Type u} {R K :  Type*}
+  [Scalar R K] [IndexType n] [VectorType X K]
 
 open VectorType
 
-instance : Add X := ⟨fun x y => axpy 1 x y⟩
-instance : Sub X := ⟨fun x y => axpby 1 (-1) x y⟩
-instance : Neg X := ⟨fun x => scal (-1) x⟩
-instance : SMul K X := ⟨fun s x => scal s x⟩
+instance : Add (X n) := ⟨fun x y => axpy 1 x y⟩
+instance : Sub (X n) := ⟨fun x y => axpby 1 (-1) x y⟩
+instance : Neg (X n) := ⟨fun x => scal (-1) x⟩
+instance : SMul K (X n) := ⟨fun s x => scal s x⟩
 
-instance : Zero X := ⟨const 0⟩
+instance : Zero (X n) := ⟨const n 0⟩
 
-instance : Inner K X := ⟨fun x y => dot x y⟩
-instance : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
-instance : Dist X := ⟨fun x y => ‖x-y‖⟩
+instance : Inner K (X n) := ⟨fun x y => dot x y⟩
+instance : Norm (X n) := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
+instance : Dist (X n) := ⟨fun x y => ‖x-y‖⟩
 
 @[vector_to_spec, vector_from_spec ←]
-theorem add_spec (x y : X) : equiv (x + y) = equiv x + equiv y := by
+theorem add_spec (x y : X n) : equiv (x + y) = equiv x + equiv y := by
   simp only [HAdd.hAdd, Add.add, axpy_spec, Pi.smul_apply, smul_eq_mul, one_mul]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem sub_spec (x y : X) : equiv (x - y) = equiv x - equiv y := by
+theorem sub_spec (x y : X n) : equiv (x - y) = equiv x - equiv y := by
   conv => lhs; simp only [HSub.hSub,Sub.sub,axpby_spec]
   simp only [one_smul, neg_smul, sub_eq_add_neg]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem neg_spec (x : X) : equiv (- x) = - equiv x := by
+theorem neg_spec (x : X n) : equiv (- x) = - equiv x := by
   simp only [Neg.neg, scal_spec, neg_smul, Pi.smul_apply, smul_eq_mul, one_mul]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem smul_spec (k : K) (x : X) : equiv (k • x) = k • equiv x := by
+theorem smul_spec (k : K) (x : X n) : equiv (k • x) = k • equiv x := by
   conv => lhs; simp only [HSMul.hSMul, SMul.smul,scal_spec]
   funext i; simp only [Pi.smul_apply, smul_eq_mul]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem zero_spec : equiv (0 : X) = 0 := by
+theorem zero_spec : equiv (0 : X n) = 0 := by
   conv => lhs; simp only [Zero.zero,OfNat.ofNat,const_spec]
   rfl
 
 @[vector_to_spec, vector_from_spec ←]
-theorem inner_spec (x y : X) :
+theorem inner_spec (x y : X n) :
     ⟪x,y⟫_K
     =
     ⟪(WithLp.equiv 2 (n → K)).symm (equiv x), (WithLp.equiv 2 (n → K)).symm (equiv y)⟫_K := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem norm_spec (x : X) :
+theorem norm_spec (x : X n) :
     ‖x‖
     =
     ‖(WithLp.equiv 2 (n → K)).symm (equiv x)‖ := by
@@ -143,7 +164,7 @@ theorem norm_spec (x : X) :
   simp only [Scalar.toReal_ofReal]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem dist_spec (x y : X) :
+theorem dist_spec (x y : X n) :
     dist x y
     =
     dist ((WithLp.equiv 2 (n → K)).symm (equiv x)) ((WithLp.equiv 2 (n → K)).symm (equiv y)) := by
@@ -156,12 +177,12 @@ end BasicOperations
 section AlgebraicInstances
 
 variable
-  {X : Type*} {n R K :  Type*}
-  [Scalar R K] [Fintype n] [VectorType X n K]
+  {X : (n : Type u) → [IndexType n] → Type*} {n : Type u} {R K :  Type*}
+  [Scalar R K] [IndexType n] [VectorType X K]
 
 open VectorType
 
-instance : AddCommGroup X where
+instance : AddCommGroup (X n) where
   add_assoc := by intros; apply equiv.injective; simp only [add_spec, add_assoc]
   zero_add := by intros; apply equiv.injective; simp only [add_spec, zero_spec, zero_add]
   add_zero := by intros; apply equiv.injective; simp only [add_spec, zero_spec, add_zero]
@@ -176,12 +197,12 @@ instance : AddCommGroup X where
   zsmul_neg' := by intros; apply equiv.injective; simp[zsmul_neg',scal_spec,add_smul,vector_to_spec]
   zsmul_succ' := by intros; apply equiv.injective; simp[scal_spec,add_smul,vector_to_spec]
 
-instance : PseudoMetricSpace X where
+instance : PseudoMetricSpace (X n) where
   dist_self := by intros; simp[dist_spec]
   dist_comm := by intros; simp[dist_spec,dist_comm]
   dist_triangle := by intros; simp[dist_spec,dist_triangle]
 
-instance : NormedAddCommGroup X where
+instance : NormedAddCommGroup (X n) where
   dist_eq := by intros; rfl
   eq_of_dist_eq_zero := by
     intro x y h;
@@ -190,7 +211,7 @@ instance : NormedAddCommGroup X where
     simp only [dist_spec] at h
     exact (eq_of_dist_eq_zero h)
 
-instance : NormedSpace K X where
+instance : NormedSpace K (X n) where
   one_smul := by intros; apply equiv.injective; simp[vector_to_spec]
   mul_smul := by intros; apply equiv.injective; simp[mul_smul,vector_to_spec]
   smul_zero := by intros; apply equiv.injective; simp[vector_to_spec]
@@ -202,7 +223,7 @@ instance : NormedSpace K X where
     simp [norm_smul_le,vector_to_spec]
 
 
-instance : InnerProductSpace K X where
+instance : InnerProductSpace K (X n) where
   norm_sq_eq_inner := by
     simp only [inner_spec,norm_spec]
     intro x
@@ -217,7 +238,7 @@ instance : InnerProductSpace K X where
     intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
 
 
-instance : AdjointSpace K X where
+instance : AdjointSpace K (X n) where
   inner_top_equiv_norm := by
     use 1; use 1
     simp only [inner_spec,norm_spec]
@@ -240,28 +261,28 @@ instance : AdjointSpace K X where
 
 
 /-- Linear equivalence between vector type `X` and `n → K` -/
-def equivₗ : X ≃ₗ[K] (n → K) :=
+def equivₗ : (X n) ≃ₗ[K] (n → K) :=
   LinearEquiv.mk ⟨⟨equiv,by simp[vector_to_spec]⟩,by simp[vector_to_spec]⟩
     equiv.symm (equiv.left_inv) (equiv.right_inv)
 
 
 /-- Continuous linear equivalence between vector type `X` and `n → K` -/
-def equivL : X ≃L[K] (n → K) := ContinuousLinearEquiv.mk equivₗ (by sorry) (by sorry)
+def equivL : (X n) ≃L[K] (n → K) := ContinuousLinearEquiv.mk equivₗ (by sorry) (by sorry)
 
 
-instance : FiniteDimensional K X :=
+instance : FiniteDimensional K (X n) :=
    FiniteDimensional.of_injective (V₂:=n→K) (equivₗ (X:=X) (n:=n) (K:=K)).1
   (equivₗ.left_inv.injective)
 
 
 variable (X)
 noncomputable
-def basis : Basis n K X := Basis.ofEquivFun (ι:=n) (R:=K) (M:=X) equivₗ
+def basis : Basis n K (X n) := Basis.ofEquivFun (ι:=n) (R:=K) (M:=X n) equivₗ
 variable {X}
 
 
 @[simp, simp_core]
-theorem finrank_eq_index_card : Module.finrank K X = Fintype.card n :=
+theorem finrank_eq_index_card : Module.finrank K (X n) = Fintype.card n :=
   Module.finrank_eq_card_basis (basis X)
 
 

@@ -8,6 +8,8 @@ import SciLean.Util.RewriteBy
 
 import Mathlib.Logic.Function.Basic
 
+set_option linter.unusedVariables false
+
 namespace Lean.Meta
 
 

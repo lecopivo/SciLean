@@ -63,10 +63,16 @@ theorem frontierSpeed.comp_rule
       frontierSpeed R f udu.1 udu.2 x := sorry_proof
 
 
-
 ----------------------------------------------------------------------------------------------------
--- todo: return signed-distance function of a set
-def _root_.Set.sdf (A : Set X) (x : X) : R := sorry
+open Classical Metric in
+noncomputable
+def _root_.Set.sdf (A : Set X) (x : X) : R :=
+  let A := closure A
+  if x ∈ A then
+    Scalar.ofReal R (- infDist x Aᶜ)
+  else
+    Scalar.ofReal R (infDist x A)
+
 
 -- todo: the value is not good in case `d₁ > 0` and `d₂ > 0` then we should do some more elaborate
 --       mix of the values

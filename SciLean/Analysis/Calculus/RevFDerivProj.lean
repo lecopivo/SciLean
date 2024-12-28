@@ -1091,7 +1091,7 @@ theorem revFDerivProj_decomposition (f : X → Y')
   =
   fun x =>
     let ydf := revFDerivProj K Yi f' (p₁ x)
-    (ydf.1, fun j dy => q (ydf.2 j dy) 0) := sorry
+    (ydf.1, fun j dy => q (ydf.2 j dy) 0) := sorry_proof
 
 
 theorem revFDerivUpdate_decomposition (f : X → Y')
@@ -1105,4 +1105,4 @@ theorem revFDerivUpdate_decomposition (f : X → Y')
     (ydf.1, fun j dy dx =>
        let dx₁ := p₁ dx
        let dx₂ := p₂ dx
-       q (ydf.2 j dy dx₁) dx₂) := sorry
+       q (ydf.2 j dy dx₁) dx₂) := sorry_proof

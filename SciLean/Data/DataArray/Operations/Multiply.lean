@@ -2,6 +2,7 @@ import SciLean.Data.DataArray.Operations.Simps
 import SciLean.Data.ArrayType.Properties
 import SciLean.Meta.GenerateFunTrans
 
+set_option linter.unusedVariables false
 
 namespace SciLean
 
@@ -26,7 +27,7 @@ theorem fderiv_wrt_prod
     let dx := dxy.1; let dy := dxy.2
     let dzdx := fderiv R (f · y) x dx
     let dzdy := fderiv R (f x ·) y dy
-    dzdx + dzdy := sorry
+    dzdx + dzdy := sorry_proof
 
 theorem fwdFDeriv_wrt_prod
     {f : X → Y → Z} (hf : Differentiable R ↿f := by fun_prop) :
@@ -62,7 +63,7 @@ theorem adjoint_wrt_prod
     fun (z : Z) =>
       let x := adjoint R (f · 0) z
       let y := adjoint R (f 0 ·) z
-      (x,y) := sorry
+      (x,y) := sorry_proof
 
 
 theorem revFDeriv_wrt_prod

@@ -129,7 +129,7 @@ def updateState (method : BFGS R) (state : State R n) (d : ObjectiveFunction R (
 
   match perform_linesearch method state d with
   | .error e => return .error e
-  | .ok (α,φα) =>
+  | .ok (α,_φα) =>
 
   state.alpha := α
 
@@ -237,7 +237,7 @@ def initState (method : BFGS R) (d : ObjectiveFunction R (R^[n])) (x₀ : R^[n])
 
 end BFGS
 
-
+set_option linter.unusedVariables false in
 instance {n} : AbstractOptimizer (BFGS R) (BFGS.State R n) R (R^[n]) where
 
   getOptions m := m.toOptions

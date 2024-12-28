@@ -165,6 +165,7 @@ theorem IndexType.Range.foldl.arg_init.adjoint_rule (r : Range I)
 variable [CompleteSpace W] [CompleteSpace X]
 
 
+omit [CompleteSpace W] [CompleteSpace X] in
 /-- Reverse derivative of fold - version storing closures for every step. -/
 -- @[fun_trans]
 theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_closures (r : Range I)
@@ -185,6 +186,7 @@ theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_closures (r : Range I)
         dw + dw') := sorry_proof
 
 
+omit [CompleteSpace W] [CompleteSpace X] in
 /-- Reverse derivative of fold - version storing every point - store in Array if DataArray is not
 available for `X` -/
 @[fun_trans]
@@ -209,6 +211,7 @@ theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_array (r : Range I)
         dwx.1 + dw') := sorry_proof
 
 
+omit [CompleteSpace W] [CompleteSpace X] in
 /-- Reverse derivative of fold - version storing every point - use DataArray if possible -/
 @[fun_trans]
 theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_data_array
@@ -234,7 +237,7 @@ theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_data_array
         let dw' := idi.2 dwx.2
         dwx.1 + dw') := sorry_proof
 
-
+omit [CompleteSpace W] [CompleteSpace X] in
 /-- Reverse derivative of fold - version with linear operation, we do not need to store
 values of the forward pass. -/
 @[fun_trans]

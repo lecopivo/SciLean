@@ -1,6 +1,8 @@
 import SciLean.Data.DataArray.Operations
 import SciLean.Data.ArrayType.Properties
 
+set_option linter.unusedVariables false
+
 /-! Basic simp theorems about matrix operations -/
 
 
@@ -16,7 +18,7 @@ theorem uncurry_appply2 (f : α → β → γ) (x : α) (y : β) :
 -- we do not run `rsimp` by default
 @[simp, simp_core]
 theorem sum_const_scalar {R} [RCLike R] {I : Type*} [IndexType I] (c : R) :
-    ∑ (i : I), c = (Size.size I : R) • c := sorry
+    ∑ (i : I), c = (Size.size I : R) • c := sorry_proof
 
 end Missing
 

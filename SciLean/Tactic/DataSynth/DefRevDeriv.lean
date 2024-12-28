@@ -86,7 +86,7 @@ def getCompositionalGoal (fId : Name) (argNames : Array Name)
   let info ← getConstInfo fId
 
   forallTelescope info.type fun xs _ => do
-  Term.elabBinders extra.raw fun extraArgs => do
+  Term.elabBinders extra.raw fun _extraArgs => do
 
     -- split arguments `xs` into main and other
     let (mainArgs, otherArgs) ← xs.splitM (fun x => do
@@ -125,7 +125,7 @@ def getCompositionalGoal (fId : Name) (argNames : Array Name)
 
 
     let lvlNames := info.levelParams
-    let lvls := lvlNames.map (fun p => Level.param p)
+    let _lvls := lvlNames.map (fun p => Level.param p)
     let f ←
       withLocalDecl `w default W fun w => do
         let vals := args.map (fun x => x.app w)

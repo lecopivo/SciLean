@@ -3,6 +3,8 @@ import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
 
 namespace SciLean
 
+set_option linter.unusedVariables false
+
 /-- `FwdFDerivMonad K m m'` states that the monad `m'` allows us to compute reverse pass of the
  reverse derivative of functions in the  monad `m`. The rought idea is that if the monad `m` reads
 some state `S` then the monad `m'` should write into `S`. State monad reads and writes, so for
@@ -213,7 +215,7 @@ by
 theorem Pure.pure.arg.revFDerivValM_rule (x : X)
   : revFDerivValM K (pure (f:=m) x)
     =
-    pure (x,fun dy => pure 0) :=
+    pure (x,fun _dy => pure 0) :=
 by
   unfold revFDerivValM; rw[RevFDerivMonad.revFDerivM_pure]; fun_trans; fun_prop
 

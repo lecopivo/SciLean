@@ -2,6 +2,8 @@ import SciLean.Analysis.Calculus.FDeriv
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Elab
 
+set_option linter.unusedVariables false
+
 section Missing
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]

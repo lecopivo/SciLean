@@ -3,6 +3,7 @@ import SciLean.Analysis.Calculus.CDeriv
 open SciLean
 
 set_option deprecated.oldSectionVars true
+set_option linter.unusedVariables false
 
 variable
   {K : Type _} [RCLike K]

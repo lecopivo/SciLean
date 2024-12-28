@@ -4,7 +4,7 @@ import Batteries.Tactic.Exact
 
 import Lean.Meta.Transform
 
--- set_option linter.unusedVariables false
+set_option linter.unusedVariables false
 
 namespace SciLean.Tactic.DataSynth
 
