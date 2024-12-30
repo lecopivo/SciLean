@@ -63,9 +63,8 @@ class DenseMatrixType
     =
     (mequiv A)ᵀ
 
-  /-- Transpose matrix ----
--- This will be used to implement `transpose`
-/
+  /-- Transpose matrix -/
+
   conjTranspose  {m n} [IndexType m] [IndexType n] (A : M m n) : M n m
 
   conjTranspose_spec  {m n} [IndexType m] [IndexType n] (alpha beta : K) (A : M m n) :
