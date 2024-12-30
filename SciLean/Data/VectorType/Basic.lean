@@ -13,6 +13,15 @@ namespace SciLean
 
 open InnerProductSpace
 
+structure IndexEquiv (I J : Type*) [IndexType I] [IndexType J] extends Equiv I J where
+  protected size_eq : size I = size J
+  protected toFin_toFun  : ∀ i : I, IndexType.toFin (toFun i) = (size_eq ▸ IndexType.toFin i)
+  protected toFin_invFun : ∀ j : J, IndexType.toFin (invFun j) = (size_eq ▸ IndexType.toFin j)
+
+class VectorType.Base (X : (n : Type*) → [IndexType n] → Type*) {R : outParam (Type*)} (K : outParam (Type*))
+        [Scalar R K] where
+
+
 /-- `VectorType X n K` says that `X` behaves like a vector indexed by `n` and with values in `K`.
 
 Providing an instance of `VectorType X n K` will automatically provide the following instances
@@ -32,29 +41,41 @@ class VectorType (X : (n : Type*) → [IndexType n] → Type*) {R : outParam (Ty
 
   /-- Constant vector with all elements equial to `k`. -/
   const (n) [IndexType n] (k : K) : X n
-
   const_spec {n} [IndexType n] (k : K) : equiv (const n k) = fun _ => k
 
   /-- Scalar multiplication. -/
   scal {n} [IndexType n]  (alpha : K) (x : X n) : X n
-
   scal_spec {n} [IndexType n] (alpha : K) (x : X n) :
     equiv (scal alpha x) = alpha • equiv x
 
+  /-- Scalar multiplication and scalar addition -/
+  scalAdd {n} [IndexType n]  (alpha beta : K) (x : X n) : X n
+  scalAdd_spec {n} [IndexType n] (alpha : K) (x : X n) :
+    equiv (scal alpha x) = fun i => alpha * equiv x i + beta
+
+  /-- `sum x = ∑ i, x[i]` -/
+  sum {n} [IndexType n] (x : X n) : K
+  sum_spec {n} [IndexType n] (x : X n) : sum x = Finset.univ.sum (fun i => equiv x i)
+
   /-- `asum x = ∑ i, |x[i]|` -/
   asum {n} [IndexType n] (x : X n) : R
-
   asum_spec {n} [IndexType n] (x : X n) : asum x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 1 (n → K)).symm (equiv x)‖
 
   /-- `nrm2 x = √∑ i, |x[i]|²` -/
   nrm2 {n} [IndexType n] (x : X n) : R
-
   nrm2_spec {n} [IndexType n] (x : X n) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 2 (n → K)).symm (equiv x)‖
 
   /-- `iamax x = argmaxᵢ |x[i]|` -/
   iamax {n} [IndexType n] (x : X n) : n
-
   iamax_spec {n} [IndexType n] (x : X n) : Scalar.abs (equiv x (iamax x)) = Scalar.ofReal (K:=K) ‖equiv x‖
+
+  -- /-- `imax x = argmaxᵢ x[i]` -/
+  -- imaxRe {n} [IndexType n] (x : X n) : n
+  -- imaxRe_spec {n} [IndexType n] (x : X n) : Scalar.real (equiv x (imaxRe x)) = iSup (fun i => Scalar.real (K:=K) (equiv x))
+
+  -- /-- `imax x = argmaxᵢ x[i]` -/
+  -- imin {n} [IndexType n] (x : X n) : n
+  -- imin_spec {n} [IndexType n] (x : X n) : (equiv x (imin x)) = Scalar.ofReal (K:=K) ‖equiv x‖
 
   /-- `dot x y = ∑ i, conj x[i] y[i]` -/
   dot {n} [IndexType n] (x y : X n) : K
@@ -77,11 +98,123 @@ class VectorType (X : (n : Type*) → [IndexType n] → Type*) {R : outParam (Ty
   axpby_spec {n} [IndexType n] (alpha beta : K) (x y : X n) :
     equiv (axpby alpha beta x y) = alpha • equiv x + beta • equiv y
 
+  /-  Element wise operations -/
+
   /-- Element wise multiplication. -/
   mul {n} [IndexType n] (x y : X n) : X n
-
   mul_spec {n} [IndexType n] (x y : X n) :
     equiv (mul x y) = equiv x * equiv y
+
+  /-- Element wise division. -/
+  div {n} [IndexType n] (x y : X n) : X n
+  div_spec {n} [IndexType n] (x y : X n) :
+    equiv (div x y) = equiv x / equiv y
+
+  /-- Element wise inverse. -/
+  inv {n} [IndexType n] (x : X n) : X n
+  inv_spec {n} [IndexType n] (x : X n) :
+    equiv (inv x) = fun i => (equiv x i)⁻¹
+
+  /-- Element wise exponentiation. -/
+  exp {n} [IndexType n] (x : X n) : X n
+  exp_spec {n} [IndexType n] (x : X n) :
+    equiv (exp x) = fun i => Scalar.exp (equiv x i)
+
+  -- /-- Element wise logarithm. -/
+  -- log {n} [IndexType n] (x : X n) : X n
+  -- log_spec {n} [IndexType n] (x : X n) :
+  --   equiv (log x) = fun i => Scalar.log (equiv x i)
+
+  -- /-- Element wise square root. -/
+  -- sqrt {n} [IndexType n] (x : X n) : X n
+  -- sqrt_spec {n} [IndexType n] (x : X n) :
+  --   equiv (sqrt x) = fun i => Scalar.sqrt (equiv x i)
+
+  -- /-- Element wise sine. -/
+  -- sin {n} [IndexType n] (x : X n) : X n
+  -- sin_spec {n} [IndexType n] (x : X n) :
+  --   equiv (sin x) = fun i => Scalar.sin (equiv x i)
+
+  -- /-- Element wise cosine. -/
+  -- cos {n} [IndexType n] (x : X n) : X n
+  -- cos_spec {n} [IndexType n] (x : X n) :
+  --   equiv (cos x) = fun i => Scalar.cos (equiv x i)
+
+  -- /-- Element wise tangent. -/
+  -- tan {n} [IndexType n] (x : X n) : X n
+  -- tan_spec {n} [IndexType n] (x : X n) :
+  --   equiv (tan x) = fun i => Scalar.tan (equiv x i)
+
+  -- /-- Element wise hyperbolic sine. -/
+  -- sinh {n} [IndexType n] (x : X n) : X n
+  -- sinh_spec {n} [IndexType n] (x : X n) :
+  --   equiv (sinh x) = fun i => Scalar.sinh (equiv x i)
+
+  -- /-- Element wise hyperbolic cosine. -/
+  -- cosh {n} [IndexType n] (x : X n) : X n
+  -- cosh_spec {n} [IndexType n] (x : X n) :
+  --   equiv (cosh x) = fun i => Scalar.cosh (equiv x i)
+
+  -- /-- Element wise hyperbolic tangent. -/
+  -- tanh {n} [IndexType n] (x : X n) : X n
+  -- tanh_spec {n} [IndexType n] (x : X n) :
+  --   equiv (tanh x) = fun i => Scalar.tanh (equiv x i)
+
+  -- /-- Element wise inverse sine. -/
+  -- asin {n} [IndexType n] (x : X n) : X n
+  -- asin_spec {n} [IndexType n] (x : X n) :
+  --   equiv (asin x) = fun i => Scalar.asin (equiv x i)
+
+  -- /-- Element wise inverse cosine. -/
+  -- acos {n} [IndexType n] (x : X n) : X n
+  -- acos_spec {n} [IndexType n] (x : X n) :
+  --   equiv (acos x) = fun i => Scalar.acos (equiv x i)
+
+  -- /-- Element wise inverse tangent. -/
+  -- atan {n} [IndexType n] (x : X n) : X n
+  -- atan_spec {n} [IndexType n] (x : X n) :
+  --   equiv (atan x) = fun i => Scalar.atan (equiv x i)
+
+  -- /-- Element wise inverse tangent of `y/x`. -/
+  -- atan2 {n} [IndexType n] (y x : X n) : X n
+  -- atan2_spec {n} [IndexType n] (y x : X n) :
+  --   equiv (atan2 y x) = fun i => Scalar.atan2 (equiv y i) (equiv x i)
+
+  -- /-- Element wise inverse hyperbolic sine. -/
+  -- asinh {n} [IndexType n] (x : X n) : X n
+  -- asinh_spec {n} [IndexType n] (x : X n) :
+  --   equiv (asinh x) = fun i => Scalar.asinh (equiv x i)
+
+  -- /-- Element wise inverse hyperbolic cosine. -/
+  -- acosh {n} [IndexType n] (x : X n) : X n
+  -- acosh_spec {n} [IndexType n] (x : X n) :
+  --   equiv (acosh x) = fun i => Scalar.acosh (equiv x i)
+
+  -- /-- Element wise inverse hyperbolic tangent. -/
+  -- atanh {n} [IndexType n] (x : X n) : X n
+  -- atanh_spec {n} [IndexType n] (x : X n) :
+  --   equiv (atanh x) = fun i => Scalar.atanh (equiv x i)
+
+  -- /-- Element wise power. -/
+  -- pow {n} [IndexType n] (x : X n) (n : ℕ) : X n
+  -- pow_spec {n} [IndexType n] (x : X n) (n : ℕ) :
+  --   equiv (pow x n) = fun i => Scalar.pow (equiv x i) n
+
+  -- /-- Element wise square. -/
+  -- sqr {n} [IndexType n] (x : X n) : X n
+  -- sqr_spec {n} [IndexType n] (x : X n) :
+  --   equiv (sqr x) = fun i => Scalar.sqr (equiv x i)
+
+  -- /-- Element wise cube. -/
+  -- cube {n} [IndexType n] (x : X n) : X n
+  -- cube_spec {n} [IndexType n] (x : X n) :
+  --   equiv (cube x) = fun i => Scalar.cube (equiv x i)
+
+  -- /-- Element wise sign. -/
+  -- sign {n} [IndexType n] (x : X n) : X n
+  -- sign_spec {n} [IndexType n] (x : X n) :
+  --   equiv (sign x) = fun i => Scalar.sign (equiv x i)
+
 
 
 namespace VectorType
@@ -89,6 +222,7 @@ namespace VectorType
 attribute [vector_to_spec]
   const_spec
   scal_spec
+  sum_spec
   asum_spec
   nrm2_spec
   iamax_spec
@@ -99,6 +233,7 @@ attribute [vector_to_spec]
 attribute [vector_from_spec ←]
   const_spec
   scal_spec
+  sum_spec
   asum_spec
   nrm2_spec
   iamax_spec
@@ -197,6 +332,14 @@ instance : AddCommGroup (X n) where
   zsmul_neg' := by intros; apply equiv.injective; simp[zsmul_neg',scal_spec,add_smul,vector_to_spec]
   zsmul_succ' := by intros; apply equiv.injective; simp[scal_spec,add_smul,vector_to_spec]
 
+instance : Module K (X n) where
+  one_smul := by intros; apply equiv.injective; simp[vector_to_spec]
+  mul_smul := by intros; apply equiv.injective; simp[mul_smul,vector_to_spec]
+  smul_zero := by intros; apply equiv.injective; simp[vector_to_spec]
+  smul_add := by intros; apply equiv.injective; simp[vector_to_spec]
+  add_smul := by intros; apply equiv.injective; simp[add_smul,vector_to_spec]
+  zero_smul := by intros; apply equiv.injective; simp[vector_to_spec]
+
 instance : PseudoMetricSpace (X n) where
   dist_self := by intros; simp[dist_spec]
   dist_comm := by intros; simp[dist_spec,dist_comm]
@@ -212,16 +355,9 @@ instance : NormedAddCommGroup (X n) where
     exact (eq_of_dist_eq_zero h)
 
 instance : NormedSpace K (X n) where
-  one_smul := by intros; apply equiv.injective; simp[vector_to_spec]
-  mul_smul := by intros; apply equiv.injective; simp[mul_smul,vector_to_spec]
-  smul_zero := by intros; apply equiv.injective; simp[vector_to_spec]
-  smul_add := by intros; apply equiv.injective; simp[vector_to_spec]
-  add_smul := by intros; apply equiv.injective; simp[add_smul,vector_to_spec]
-  zero_smul := by intros; apply equiv.injective; simp[vector_to_spec]
   norm_smul_le := by
     simp only [norm_spec]
     simp [norm_smul_le,vector_to_spec]
-
 
 instance : InnerProductSpace K (X n) where
   norm_sq_eq_inner := by
@@ -236,7 +372,6 @@ instance : InnerProductSpace K (X n) where
     intros; simp only [inner_spec,add_spec, WithLp.equiv_symm_add,add_left]
   smul_left := by
     intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
-
 
 instance : AdjointSpace K (X n) where
   inner_top_equiv_norm := by

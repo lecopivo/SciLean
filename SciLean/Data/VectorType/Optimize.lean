@@ -64,3 +64,13 @@ theorem axpby_scal_left (a b c : K) (x : X n) : (axpby a b (scal c x) y)  = axpb
 theorem axpby_scal_right (a b c : K) (x : X n) : (axpby a b x (scal c y))  = axpby a (b*c) x y := by
   apply equiv.injective
   simp[vector_to_spec,smul_smul]
+
+open ComplexConjugate in
+@[vector_optimize]
+theorem dot_const_left (a : K) (x : X n) : dot (const n a) x  = conj a * sum x := by
+  simp[vector_to_spec,smul_smul,Finset.mul_sum]
+
+open ComplexConjugate in
+@[vector_optimize]
+theorem dot_const_right (a : K) (x : X n) : dot x (const n a)  = conj (sum x) * a := by
+  simp[vector_to_spec,smul_smul,Finset.sum_mul]
