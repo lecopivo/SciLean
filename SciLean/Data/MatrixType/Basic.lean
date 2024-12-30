@@ -1,39 +1,12 @@
-import Mathlib.Data.Matrix.Basic
-import Mathlib.Data.Matrix.Mul
-import SciLean.Data.IndexType
-
-import SciLean.Analysis.Scalar
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.Convenient.SemiInnerProductSpace
-
-import SciLean.Data.VectorType.Basic
 import SciLean.Data.MatrixType.Init
+import SciLean.Data.MatrixType.Base
+import SciLean.Data.MatrixType.Square
+import SciLean.Data.MatrixType.Transpose
+import SciLean.Data.MatrixType.MatMul
 
 namespace SciLean
 
 open Matrix VectorType
-
--- matrix X → Y
-class DenseMatrixType.Base where
-
--- matrix X → X
-class DenseMatrixType.Square where
-
--- matrix X → Y and matrix Y → X
-class DenseMatrixType.Transpose where
-
--- matrix X → Y and matrix Y → Z
-class DenseMatrixType.Mul where
-
--- matrix X → Y and matrix Z → Y
-class DenseMatrixType.MulIT where
-
--- matrix Y → X and matrix Y → Z
-class DenseMatrixType.MulTI where
-
--- matrix Y → X and matrix Z → Y
-class DenseMatrixType.MulTT where
-
 
 /-- `DenseMatrixType M X Y` says that `M` is a matrix transforming vectors of type `X` to vectors
 of type `Y`.
