@@ -1,4 +1,5 @@
 import SciLean.Data.MatrixType.Base
+import SciLean.Data.MatrixType.Dense
 
 /-!
 
@@ -11,7 +12,7 @@ universal algorithm for them. Often they are computed only approximately.
 
 namespace SciLean
 
-namespace DenseMatrixType
+namespace MatrixType
 
 
 section SquareMatrices
@@ -20,7 +21,7 @@ variable
   {R K} [RealScalar R] [Scalar R K]
   {n : Type u} [IndexType n] [DecidableEq n]
   {X} [VectorType.Base X n K]
-  {M} [DenseMatrixType.Base M X X]
+  {M} [MatrixType.Base M X X]
 
 
 /-- Deteminant of a matrix.
@@ -29,27 +30,27 @@ It is computable but you really do not want to run it so we disable it.
 -/
 noncomputable
 def det (A : M) : K :=
-  let A := mequiv A
+  let A := toMatrix A
   A.det
 
 /-- Inverse of a matrix. -/
 noncomputable
-def inv (A : M) : M :=
-  let A := mequiv A
-  mequiv.symm (A⁻¹)
+def inv [MatrixType.Dense M] (A : M) : M :=
+  let A := toMatrix A
+  fromMatrix (A⁻¹)
 
 #check Matrix.inv
 
 def IsInvertible (A : M) : Prop :=
-  let A := mequiv A
+  let A := toMatrix A
   IsUnit A
 
-open Matrix in
+open Matrix VectorType in
 /-- Solve linear system of equations `A*x = b`. -/
 noncomputable
-def linSolve (A : M) (b : X) : X :=
-  let A := mequiv A
-  let b := VectorType.Base.vequiv b
-  VectorType.Base.vequiv.symm (A⁻¹ *ᵥ b)
+def linSolve [VectorType.Dense X n K] (A : M) (b : X) : X :=
+  let A := toMatrix A
+  let b := toVec b
+  fromVec (A⁻¹ *ᵥ b)
 
 end SquareMatrices

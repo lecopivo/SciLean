@@ -17,73 +17,77 @@ open InnerProductSpace
 
 Providing an instance of `VectorType X n K` will automatically provide the following instances
   - `Add X`, `Sub X`, `Neg X`, `SMul K X`, `Zero X`, `Inner K X`, ...
+
+To provide algebraic instances you also need to assume `VectorType.Lawful X n K`. Then you obtain
   - `NormedAddCommGroup X` with l₂ norm
   - `InnerProductSpace K X`
   - `AdjointSpace K X`
-  - `FiniteDimensional K X`
+
+To provide a finite dimensional instance you also need to assume `VectorType.Dense X n K`. Then you obtain
+  - `FiniteDimensional K X` with the dimension equal to the cardinality of `n`.
 
 This class is designed to provide Basic Linear Algebra Subprograms(BLAS) which allows us to define
 vector space structure on `X` that is computationally efficient.
  -/
 class VectorType.Base (X : Type*) (n : outParam (Type*)) [IndexType n] {R : outParam (Type*)}  (K : outParam (Type*))
         [Scalar R R] [Scalar R K] where
-  vequiv : X ≃ (n → K) -- maybe EuclideanSpace K n?
+  toVec : X → (n → K) -- maybe map to Euclidean space
 
-  /-- Constant vector with all elements equial to `k`. -/
-  const (k : K) : X
-  const_spec (k : K) : vequiv (const k) = fun _ => k
+  /-- Zero vector. -/
+  zero : X
+  zero_spec : toVec zero = 0
 
   /-- Scalar multiplication.
 
   `x` should be modified if it is passed with ref counter one. -/
   scal  (alpha : K) (x : X) : X
   scal_spec (alpha : K) (x : X) :
-    vequiv (scal alpha x) = alpha • vequiv x
+    toVec (scal alpha x) = alpha • toVec x
 
   /-- Scalar multiplication and scalar addition
 
   `x` should be modified if it is passed with ref counter one. -/
   scalAdd  (alpha beta : K) (x : X) : X
   scalAdd_spec (alpha : K) (x : X) :
-    vequiv (scal alpha x) = fun i => alpha * vequiv x i + beta
+    toVec (scal alpha x) = fun i => alpha * toVec x i + beta
 
   /-- `sum x = ∑ i, x[i]` -/
   sum (x : X) : K
-  sum_spec (x : X) : sum x = Finset.univ.sum (fun i : n => vequiv x i)
+  sum_spec (x : X) : sum x = Finset.univ.sum (fun i : n => toVec x i)
 
   /-- `asum x = ∑ i, |x[i]|` -/
   asum (x : X) : R
-  asum_spec (x : X) : asum x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 1 (n → K)).symm (vequiv x)‖
+  asum_spec (x : X) : asum x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 1 (n → K)).symm (toVec x)‖
 
   /-- `nrm2 x = √∑ i, |x[i]|²` -/
   nrm2 (x : X) : R
-  nrm2_spec (x : X) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 2 (n → K)).symm (vequiv x)‖
+  nrm2_spec (x : X) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 2 (n → K)).symm (toVec x)‖
 
   /-- `iamax x = argmaxᵢ |x[i]|` -/
   iamax (x : X) : n
-  iamax_spec (x : X) : Scalar.abs (vequiv x (iamax x)) = Scalar.ofReal (K:=K) ‖vequiv x‖
+  iamax_spec (x : X) : Scalar.abs (toVec x (iamax x)) = Scalar.ofReal (K:=K) ‖toVec x‖
 
   /-- `imaxRe x = argmaxᵢ (real x[i])` -/
   imaxRe (x : X) (h : 0 < size n) : n
   imaxRe_spec (x : X) (h : 0 < size n) :
-    Scalar.toReal R (Scalar.real (vequiv x (imaxRe x h)))
+    Scalar.toReal R (Scalar.real (toVec x (imaxRe x h)))
     =
-    iSup (α:=ℝ) (fun i => Scalar.toReal R <| Scalar.real (K:=K) (vequiv x i))
+    iSup (α:=ℝ) (fun i => Scalar.toReal R <| Scalar.real (K:=K) (toVec x i))
 
   /-- `iminRe x = argmaxᵢ (re x[i])` -/
   iminRe (x : X) (h : 0 < size n) : n
   iminRe_spec (x : X) (h : 0 < size n) :
-    Scalar.toReal R (Scalar.real (vequiv x (iminRe x h)))
+    Scalar.toReal R (Scalar.real (toVec x (iminRe x h)))
     =
-    iInf (α:=ℝ) (fun i => Scalar.toReal R <| Scalar.real (K:=K) (vequiv x i))
+    iInf (α:=ℝ) (fun i => Scalar.toReal R <| Scalar.real (K:=K) (toVec x i))
 
   /-- `dot x y = ∑ i, conj x[i] y[i]` -/
   dot (x y : X) : K
 
   dot_spec (x y : X) :
     (dot x y) =
-    let x' := (WithLp.equiv 2 (n → K)).symm (vequiv x)
-    let y' := (WithLp.equiv 2 (n → K)).symm (vequiv y)
+    let x' := (WithLp.equiv 2 (n → K)).symm (toVec x)
+    let y' := (WithLp.equiv 2 (n → K)).symm (toVec y)
     (⟪x',y'⟫_K)
 
   /-- `axpy a x y = a • x + y`
@@ -92,7 +96,7 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [IndexType n] {R : outP
   axpy (alpha : K) (x y : X) : X
 
   axpy_spec (alpha : K) (x y : X) :
-    vequiv (axpy alpha x y) = alpha • vequiv x + vequiv y
+    toVec (axpy alpha x y) = alpha • toVec x + toVec y
 
   /-- `axpby a b x y = a • x + b • y`
 
@@ -100,7 +104,7 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [IndexType n] {R : outP
   axpby (alpha beta : K) (x y : X) : X := axpy alpha x (scal beta y)
 
   axpby_spec (alpha beta : K) (x y : X) :
-    vequiv (axpby alpha beta x y) = alpha • vequiv x + beta • vequiv y
+    toVec (axpby alpha beta x y) = alpha • toVec x + beta • toVec y
 
   /-  Element wise operations -/
 
@@ -109,132 +113,167 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [IndexType n] {R : outP
   `x` should be modified if it is passed with ref counter one. -/
   mul (x y : X) : X
   mul_spec (x y : X) :
-    vequiv (mul x y) = vequiv x * vequiv y
+    toVec (mul x y) = toVec x * toVec y
+
+
+/-- Lawful a vector `x : X` is fully determined by its elements.
+
+This provides the following extensionality property `x = y` if `∀ i, x[i] = y[i]` -/
+class VectorType.Lawful (X : Type*)
+    {n : outParam (Type*)} [IndexType n]
+    {R : outParam (Type*)} {K : outParam (Type*)}
+    [Scalar R R] [Scalar R K] [VectorType.Base X n K] : Prop where
+  toVec_injective : Function.Injective (VectorType.Base.toVec (X:=X))
+
+open Function VectorType.Base in
+class VectorType.Dense (X : Type*)
+    {n : outParam (Type*)} [IndexType n]
+    {R K : outParam (Type*)} [Scalar R R] [Scalar R K]
+    [VectorType.Base X n K] where
+  fromVec : (n → K) → X
+  protected left_inv : LeftInverse fromVec toVec
+  protected right_inv : RightInverse fromVec toVec
+
+  /-- Constant vector with all elements equial to `k`. -/
+  const (k : K) : X
+  const_spec (k : K) : toVec (const k) = fun _ => k
 
   /-- Element wise division.
 
   `x` should be modified if it is passed with ref counter one. -/
   div (x y : X) : X
   div_spec (x y : X) :
-    vequiv (div x y) = vequiv x / vequiv y
+    toVec (div x y) = toVec x / toVec y
 
   /-- Element wise inverse.
 
   `x` should be modified if it is passed with ref counter one. -/
   inv (x : X) : X
   inv_spec (x : X) :
-    vequiv (inv x) = fun i => (vequiv x i)⁻¹
+    toVec (inv x) = fun i => (toVec x i)⁻¹
 
   /-- Element wise exponentiation.
 
   `x` should be modified if it is passed with ref counter one. -/
   exp (x : X) : X
   exp_spec (x : X) :
-    vequiv (exp x) = fun i => Scalar.exp (vequiv x i)
+    toVec (exp x) = fun i => Scalar.exp (toVec x i)
 
   -- /-- Element wise logarithm. -/
   -- log {n} [IndexType n] (x : X) : X
   -- log_spec {n} [IndexType n] (x : X) :
-  --   vequiv (log x) = fun i => Scalar.log (vequiv x i)
+  --   toVec (log x) = fun i => Scalar.log (toVec x i)
 
   -- /-- Element wise square root. -/
   -- sqrt {n} [IndexType n] (x : X) : X
   -- sqrt_spec {n} [IndexType n] (x : X) :
-  --   vequiv (sqrt x) = fun i => Scalar.sqrt (vequiv x i)
+  --   toVec (sqrt x) = fun i => Scalar.sqrt (toVec x i)
 
   -- /-- Element wise sine. -/
   -- sin {n} [IndexType n] (x : X) : X
   -- sin_spec {n} [IndexType n] (x : X) :
-  --   vequiv (sin x) = fun i => Scalar.sin (vequiv x i)
+  --   toVec (sin x) = fun i => Scalar.sin (toVec x i)
 
   -- /-- Element wise cosine. -/
   -- cos {n} [IndexType n] (x : X) : X
   -- cos_spec {n} [IndexType n] (x : X) :
-  --   vequiv (cos x) = fun i => Scalar.cos (vequiv x i)
+  --   toVec (cos x) = fun i => Scalar.cos (toVec x i)
 
   -- /-- Element wise tangent. -/
   -- tan {n} [IndexType n] (x : X) : X
   -- tan_spec {n} [IndexType n] (x : X) :
-  --   vequiv (tan x) = fun i => Scalar.tan (vequiv x i)
+  --   toVec (tan x) = fun i => Scalar.tan (toVec x i)
 
   -- /-- Element wise hyperbolic sine. -/
   -- sinh {n} [IndexType n] (x : X) : X
   -- sinh_spec {n} [IndexType n] (x : X) :
-  --   vequiv (sinh x) = fun i => Scalar.sinh (vequiv x i)
+  --   toVec (sinh x) = fun i => Scalar.sinh (toVec x i)
 
   -- /-- Element wise hyperbolic cosine. -/
   -- cosh {n} [IndexType n] (x : X) : X
   -- cosh_spec {n} [IndexType n] (x : X) :
-  --   vequiv (cosh x) = fun i => Scalar.cosh (vequiv x i)
+  --   toVec (cosh x) = fun i => Scalar.cosh (toVec x i)
 
   -- /-- Element wise hyperbolic tangent. -/
   -- tanh {n} [IndexType n] (x : X) : X
   -- tanh_spec {n} [IndexType n] (x : X) :
-  --   vequiv (tanh x) = fun i => Scalar.tanh (vequiv x i)
+  --   toVec (tanh x) = fun i => Scalar.tanh (toVec x i)
 
   -- /-- Element wise inverse sine. -/
   -- asin {n} [IndexType n] (x : X) : X
   -- asin_spec {n} [IndexType n] (x : X) :
-  --   vequiv (asin x) = fun i => Scalar.asin (vequiv x i)
+  --   toVec (asin x) = fun i => Scalar.asin (toVec x i)
 
   -- /-- Element wise inverse cosine. -/
   -- acos {n} [IndexType n] (x : X) : X
   -- acos_spec {n} [IndexType n] (x : X) :
-  --   vequiv (acos x) = fun i => Scalar.acos (vequiv x i)
+  --   toVec (acos x) = fun i => Scalar.acos (toVec x i)
 
   -- /-- Element wise inverse tangent. -/
   -- atan {n} [IndexType n] (x : X) : X
   -- atan_spec {n} [IndexType n] (x : X) :
-  --   vequiv (atan x) = fun i => Scalar.atan (vequiv x i)
+  --   toVec (atan x) = fun i => Scalar.atan (toVec x i)
 
   -- /-- Element wise inverse tangent of `y/x`. -/
   -- atan2 {n} [IndexType n] (y x : X) : X
   -- atan2_spec {n} [IndexType n] (y x : X) :
-  --   vequiv (atan2 y x) = fun i => Scalar.atan2 (vequiv y i) (vequiv x i)
+  --   toVec (atan2 y x) = fun i => Scalar.atan2 (toVec y i) (toVec x i)
 
   -- /-- Element wise inverse hyperbolic sine. -/
   -- asinh {n} [IndexType n] (x : X) : X
   -- asinh_spec {n} [IndexType n] (x : X) :
-  --   vequiv (asinh x) = fun i => Scalar.asinh (vequiv x i)
+  --   toVec (asinh x) = fun i => Scalar.asinh (toVec x i)
 
   -- /-- Element wise inverse hyperbolic cosine. -/
   -- acosh {n} [IndexType n] (x : X) : X
   -- acosh_spec {n} [IndexType n] (x : X) :
-  --   vequiv (acosh x) = fun i => Scalar.acosh (vequiv x i)
+  --   toVec (acosh x) = fun i => Scalar.acosh (toVec x i)
 
   -- /-- Element wise inverse hyperbolic tangent. -/
   -- atanh {n} [IndexType n] (x : X) : X
   -- atanh_spec {n} [IndexType n] (x : X) :
-  --   vequiv (atanh x) = fun i => Scalar.atanh (vequiv x i)
+  --   toVec (atanh x) = fun i => Scalar.atanh (toVec x i)
 
   -- /-- Element wise power. -/
   -- pow {n} [IndexType n] (x : X) (n : ℕ) : X
   -- pow_spec {n} [IndexType n] (x : X) (n : ℕ) :
-  --   vequiv (pow X) = fun i => Scalar.pow (vequiv x i) n
+  --   toVec (pow X) = fun i => Scalar.pow (toVec x i) n
 
   -- /-- Element wise square. -/
   -- sqr {n} [IndexType n] (x : X) : X
   -- sqr_spec {n} [IndexType n] (x : X) :
-  --   vequiv (sqr x) = fun i => Scalar.sqr (vequiv x i)
+  --   toVec (sqr x) = fun i => Scalar.sqr (toVec x i)
 
   -- /-- Element wise cube. -/
   -- cube {n} [IndexType n] (x : X) : X
   -- cube_spec {n} [IndexType n] (x : X) :
-  --   vequiv (cube x) = fun i => Scalar.cube (vequiv x i)
+  --   toVec (cube x) = fun i => Scalar.cube (toVec x i)
 
   -- /-- Element wise sign. -/
   -- sign {n} [IndexType n] (x : X) : X
   -- sign_spec {n} [IndexType n] (x : X) :
-  --   vequiv (sign x) = fun i => Scalar.sign (vequiv x i)
+  --   toVec (sign x) = fun i => Scalar.sign (toVec x i)
+
+
+
+instance (X : Type*) (n : outParam (Type*)) [IndexType n] {R : outParam (Type*)} (K : outParam (Type*))
+    [Scalar R R] [Scalar R K] [VectorType.Base X n K] [VectorType.Dense X] :
+    VectorType.Lawful X where
+  toVec_injective := (VectorType.Dense.left_inv (X:=X) (n:=n) (K:=K)).injective
 
 namespace VectorType
 
 export VectorType.Base
-  (vequiv const const_spec scal scal_spec scalAdd scalAdd_spec sum sum_spec asum asum_spec nrm2 nrm2_spec
+  (toVec zero zero_spec scal scal_spec scalAdd scalAdd_spec sum sum_spec asum asum_spec nrm2 nrm2_spec
    iamax iamax_spec imaxRe imaxRe_spec iminRe iminRe_spec dot dot_spec axpy axpy_spec axpby axpby_spec
-   mul mul_spec div div_spec inv inv_spec exp exp_spec)
+   mul mul_spec)
+
+export VectorType.Lawful (toVec_injective)
+
+export VectorType.Dense (fromVec const const_spec div div_spec inv inv_spec exp exp_spec)
 
 attribute [vector_to_spec,vector_from_spec ←]
+  zero_spec
   const_spec
   scal_spec
   sum_spec
@@ -258,47 +297,47 @@ instance : Sub X := ⟨fun x y => axpby 1 (-1) x y⟩
 instance : Neg X := ⟨fun x => scal (-1) x⟩
 instance : SMul K X := ⟨fun s x => scal s x⟩
 
-instance : Zero X := ⟨const 0⟩
+instance : Zero X := ⟨zero⟩
 
 instance : Inner K X := ⟨fun x y => dot x y⟩
 instance : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
 instance : Dist X := ⟨fun x y => ‖x-y‖⟩
 
 @[vector_to_spec, vector_from_spec ←]
-theorem add_spec (x y : X) : vequiv (x + y) = vequiv x + vequiv y := by
+theorem add_spec (x y : X) : toVec (x + y) = toVec x + toVec y := by
   simp only [HAdd.hAdd, Add.add, axpy_spec, Pi.smul_apply, smul_eq_mul, one_mul]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem sub_spec (x y : X) : vequiv (x - y) = vequiv x - vequiv y := by
+theorem sub_spec (x y : X) : toVec (x - y) = toVec x - toVec y := by
   conv => lhs; simp only [HSub.hSub,Sub.sub,axpby_spec]
   simp only [one_smul, neg_smul, sub_eq_add_neg]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem neg_spec (x : X) : vequiv (- x) = - vequiv x := by
+theorem neg_spec (x : X) : toVec (- x) = - toVec x := by
   simp only [Neg.neg, scal_spec, neg_smul, Pi.smul_apply, smul_eq_mul, one_mul]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem smul_spec (k : K) (x : X) : vequiv (k • x) = k • vequiv x := by
+theorem smul_spec (k : K) (x : X) : toVec (k • x) = k • toVec x := by
   conv => lhs; simp only [HSMul.hSMul, SMul.smul,scal_spec]
   funext i; simp only [Pi.smul_apply, smul_eq_mul]
 
 @[vector_to_spec, vector_from_spec ←]
-theorem zero_spec : vequiv (0 : X) = 0 := by
-  conv => lhs; simp only [Zero.zero,OfNat.ofNat,const_spec]
-  rfl
+theorem zero_spec' : toVec (0 : X) = 0 := by
+  conv => lhs; simp only [Zero.zero,OfNat.ofNat]
+  simp only [zero_spec]
 
 @[vector_to_spec, vector_from_spec ←]
 theorem inner_spec (x y : X) :
     ⟪x,y⟫_K
     =
-    ⟪(WithLp.equiv 2 (n → K)).symm (vequiv x), (WithLp.equiv 2 (n → K)).symm (vequiv y)⟫_K := by
+    ⟪(WithLp.equiv 2 (n → K)).symm (toVec x), (WithLp.equiv 2 (n → K)).symm (toVec y)⟫_K := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 
 @[vector_to_spec, vector_from_spec ←]
 theorem norm_spec (x : X) :
     ‖x‖
     =
-    ‖(WithLp.equiv 2 (n → K)).symm (vequiv x)‖ := by
+    ‖(WithLp.equiv 2 (n → K)).symm (toVec x)‖ := by
   conv => lhs; simp only [norm]; simp only [nrm2_spec]
   simp only [Scalar.toReal_ofReal]
 
@@ -306,7 +345,7 @@ theorem norm_spec (x : X) :
 theorem dist_spec (x y : X) :
     dist x y
     =
-    dist ((WithLp.equiv 2 (n → K)).symm (vequiv x)) ((WithLp.equiv 2 (n → K)).symm (vequiv y)) := by
+    dist ((WithLp.equiv 2 (n → K)).symm (toVec x)) ((WithLp.equiv 2 (n → K)).symm (toVec y)) := by
   conv => lhs; simp [Dist.dist,vector_to_spec]
   conv => rhs; rw[NormedAddCommGroup.dist_eq]
 
@@ -317,32 +356,39 @@ section AlgebraicInstances
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  [Scalar R R] [Scalar R K] [IndexType n] [VectorType.Base X n K]
+  [Scalar R R] [Scalar R K] [IndexType n] [VectorType.Base X n K] [VectorType.Lawful X]
 
 open VectorType
 
+@[ext]
+theorem ext (x y : X) : (∀ (i : n), toVec x i = toVec y i) → x = y := by
+  intro h
+  apply toVec_injective
+  funext i
+  exact (h i)
+
 instance : AddCommGroup X where
-  add_assoc := by intros; apply vequiv.injective; simp only [add_spec, add_assoc]
-  zero_add := by intros; apply vequiv.injective; simp only [add_spec, zero_spec, zero_add]
-  add_zero := by intros; apply vequiv.injective; simp only [add_spec, zero_spec, add_zero]
-  neg_add_cancel := by intros; apply vequiv.injective; simp only [add_spec, neg_spec, neg_add_cancel, zero_spec]
-  add_comm := by intros; apply vequiv.injective; simp only [add_spec, add_comm]
-  sub_eq_add_neg := by intros; apply vequiv.injective; simp only [sub_spec, sub_eq_add_neg, add_spec, neg_spec]
+  add_assoc := by intros; ext; simp only [add_spec, add_assoc]
+  zero_add := by intros; ext; simp only [add_spec, zero_spec', zero_add]
+  add_zero := by intros; ext; simp only [add_spec, zero_spec', add_zero]
+  neg_add_cancel := by intros; ext; simp only [add_spec, neg_spec, neg_add_cancel, zero_spec']
+  add_comm := by intros; ext; simp only [add_spec, add_comm]
+  sub_eq_add_neg := by intros; ext; simp only [sub_spec, sub_eq_add_neg, add_spec, neg_spec]
   nsmul n x := scal (n:K) x
-  nsmul_zero := by intros; apply vequiv.injective; simp only [CharP.cast_eq_zero, scal_spec, zero_smul, zero_spec]
-  nsmul_succ := by intros; apply vequiv.injective; simp only [Nat.cast_add, Nat.cast_one, scal_spec, add_smul, one_smul, add_spec]
+  nsmul_zero := by intros; ext; simp only [CharP.cast_eq_zero, scal_spec, zero_smul, zero_spec']
+  nsmul_succ := by intros; ext; simp only [Nat.cast_add, Nat.cast_one, scal_spec, add_smul, one_smul, add_spec]
   zsmul n x := scal (n:K) x
-  zsmul_zero' := by intros; apply vequiv.injective; simp[scal_spec,vector_to_spec]
-  zsmul_neg' := by intros; apply vequiv.injective; simp[zsmul_neg',scal_spec,add_smul,vector_to_spec]
-  zsmul_succ' := by intros; apply vequiv.injective; simp[scal_spec,add_smul,vector_to_spec]
+  zsmul_zero' := by intros; ext; simp[scal_spec,vector_to_spec]
+  zsmul_neg' := by intros; ext; simp[zsmul_neg',scal_spec,add_smul,vector_to_spec,add_mul]
+  zsmul_succ' := by intros; ext; simp[scal_spec,add_smul,vector_to_spec,add_mul]
 
 instance : Module K X where
-  one_smul := by intros; apply vequiv.injective; simp[vector_to_spec]
-  mul_smul := by intros; apply vequiv.injective; simp[mul_smul,vector_to_spec]
-  smul_zero := by intros; apply vequiv.injective; simp[vector_to_spec]
-  smul_add := by intros; apply vequiv.injective; simp[vector_to_spec]
-  add_smul := by intros; apply vequiv.injective; simp[add_smul,vector_to_spec]
-  zero_smul := by intros; apply vequiv.injective; simp[vector_to_spec]
+  one_smul := by intros; ext; simp[vector_to_spec]
+  mul_smul := by intros; ext; simp[mul_smul,vector_to_spec,mul_assoc]
+  smul_zero := by intros; ext; simp[vector_to_spec]
+  smul_add := by intros; ext; simp[vector_to_spec,mul_add]
+  add_smul := by intros; ext; simp[add_smul,vector_to_spec,add_mul]
+  zero_smul := by intros; ext; simp[vector_to_spec]
 
 instance : PseudoMetricSpace X where
   dist_self := by intros; simp[dist_spec]
@@ -352,8 +398,8 @@ instance : PseudoMetricSpace X where
 instance : NormedAddCommGroup X where
   dist_eq := by intros; rfl
   eq_of_dist_eq_zero := by
-    intro x y h;
-    apply vequiv.injective;
+    intro x y h
+    apply toVec_injective
     apply (WithLp.equiv 2 (n → K)).symm.injective
     simp only [dist_spec] at h
     exact (eq_of_dist_eq_zero h)
@@ -399,6 +445,25 @@ instance : AdjointSpace K X where
     intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
 
 
+end AlgebraicInstances
+
+
+section Equivalences
+
+variable
+  {X : Type*} {n : Type u} {R K :  Type*}
+  [Scalar R R] [Scalar R K] [IndexType n] [VectorType.Base X n K] [VectorType.Dense X]
+
+def vequiv : X ≃ (n → K) where
+  toFun := toVec
+  invFun := fromVec
+  left_inv := Dense.left_inv
+  right_inv := Dense.right_inv
+
+@[vector_to_spec]
+theorem vequiv_apply_eq_toVec (x : X) :
+  vequiv x = toVec x := rfl
+
 /-- Linear vequivalence between vector type `X` and `n → K` -/
 def vequivₗ : X ≃ₗ[K] (n → K) :=
   LinearEquiv.mk ⟨⟨vequiv,by simp[vector_to_spec]⟩,by simp[vector_to_spec]⟩
@@ -425,4 +490,4 @@ theorem finrank_eq_index_card : Module.finrank K X = Fintype.card n :=
   Module.finrank_eq_card_basis (basis X)
 
 
-end AlgebraicInstances
+end Equivalences

@@ -2,7 +2,7 @@ import SciLean.Data.VectorType.Base
 
 namespace SciLean
 
-open IndexType
+open IndexType VectorType
 /-- `VectorType X K` says that `X n` behaves like a vector indexed by `n` and with values in `K`.
 
 Providing an instance of `VectorType X K` will automatically provide the following instances
@@ -27,9 +27,14 @@ class VectorType
   cast {n : Type u} [IndexType n] (x : X n) (m : Type u) [IndexType m] (h : size m = size n) : X m
   cast_spec {n : Type u} [IndexType n] (x : X n) (m : Type u) [IndexType m]
     (h : size m = size n) :
-    VectorType.Base.vequiv (cast x m h)
+    toVec (cast x m h)
     =
-    fun j => VectorType.Base.vequiv x (fromFin (I:=n) ((toFin (I:=m) j).cast h))
+    fun j => toVec x (fromFin (I:=n) ((toFin (I:=m) j).cast h))
+
+
+
+
+
 
 
 instance

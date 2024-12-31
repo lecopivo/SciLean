@@ -14,11 +14,11 @@ namespace SciLean
 
 open Matrix VectorType
 
-/-- `DenseMatrixType M X Y` says that `M` is a matrix transforming vectors of type `X` to vectors
+/-- `MatrixType M X Y` says that `M` is a matrix transforming vectors of type `X` to vectors
 of type `Y`.
 
 This class provides functionality implementable using BLAS. -/
-class DenseMatrixType.Base
+class MatrixType.Base
       (M : Type*)
       {m n : outParam (Type*)} [IndexType m] [IndexType n]
       {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
@@ -27,63 +27,46 @@ class DenseMatrixType.Base
     VectorType.Base M (m×n) K
   where
 
-  mequiv : M ≃ Matrix m n K
+  toMatrix : M → Matrix m n K
 
-  mequiv_eq_vequiv (A : M) : mequiv A = fun (i : m) (j : n) => vequiv A (i,j)
+  toVec_eq_toMatrix (A : M) : toVec A = fun (i,j) => toMatrix A i j
 
-  /-    Level 1 like BLAS operations    -/
+  /-    Row and column operations    -/
+  /- Setting rows and columns is found in `MatrixType.Dense` -/
 
   -- TODO: This should return `SubMatrix m n (point i) id`
   /-- Get row of matrix -/
   row (A : M) (i : m) : X
   row_spec (A : M) (i : m) :
-    VectorType.vequiv (row A i)
+    VectorType.toVec (row A i)
     =
-    let A := mequiv A
+    let A := toMatrix A
     fun j => A i j
 
   /-- Sum rows of a matrix. -/
   sumRows (A : M) : Y
   sumRows_spec (A : M):
-    VectorType.vequiv (sumRows A)
+    VectorType.toVec (sumRows A)
     =
-    let A := mequiv A
+    let A := toMatrix A
     fun i => ∑ j, A i j
-
-  /-- Update row, i.e. set row to a given vector. -/
-  updateRow (A : M) (i : m) (x : X) : M
-  updateRow_spec (A : M) (i : m) (x : X) [DecidableEq m] :
-    mequiv (updateRow A i x)
-    =
-    let A := mequiv A
-    let x := VectorType.vequiv x
-    A.updateRow i x
 
   -- TODO: This should return `SubMatrix m n id (point j)`
   /-- Get column of matrix -/
   col (A : M) (j : n) : Y
   col_spec (A : M) (j : n) :
-    VectorType.vequiv (col A j)
+    VectorType.toVec (col A j)
     =
-    let A := (mequiv A)
+    let A := (toMatrix A)
     fun i => A i j
 
   /-- Sum columns of a matrix -/
   sumCols (A : M) : X
   sumCols_spec (A : M):
-    VectorType.vequiv (sumCols A)
+    VectorType.toVec (sumCols A)
     =
-    let A := mequiv A
+    let A := toMatrix A
     fun j => ∑ i, A i j
-
-  /-- Update column, i.e. set column to a given vector. -/
-  updateCol (A : M) (j : n) (y : Y) : M
-  updateCol_spec (A : M) (j : n) (y : Y) [DecidableEq n] :
-    mequiv (updateCol A i x)
-    =
-    let A := mequiv A
-    let y := VectorType.vequiv y
-    A.updateColumn j y
 
 
   /- Level 2 like BLAS operations -/
@@ -94,11 +77,11 @@ class DenseMatrixType.Base
   gemv (alpha beta : K) (A : M) (x : X) (y : Y) : Y
 
   gemv_spec (alpha beta : K) (A : M) (x : X) (y : Y) :
-    VectorType.vequiv (gemv alpha beta A x y)
+    VectorType.toVec (gemv alpha beta A x y)
     =
-    let A := mequiv A
-    let x := VectorType.vequiv x
-    let y := VectorType.vequiv y
+    let A := toMatrix A
+    let x := VectorType.toVec x
+    let y := VectorType.toVec y
     alpha • A *ᵥ x + beta • y
 
   /-- Transpose matrix vector multiplication.
@@ -107,11 +90,11 @@ class DenseMatrixType.Base
   gemvT (alpha beta : K) (A : M) (y : Y) (x : X) : X
 
   gemvT_spec (alpha beta : K) (A : M) (y : Y) (x : X) :
-    VectorType.vequiv (gemvT alpha beta A y x)
+    VectorType.toVec (gemvT alpha beta A y x)
     =
-    let A := mequiv A
-    let x := VectorType.vequiv x
-    let y := VectorType.vequiv y
+    let A := toMatrix A
+    let x := VectorType.toVec x
+    let y := VectorType.toVec y
     alpha • Aᵀ *ᵥ y + beta • x
 
 
@@ -121,135 +104,133 @@ class DenseMatrixType.Base
   gemvH (alpha beta : K) (A : M) (y : Y) (x : X) : X
 
   gemvH_spec (alpha beta : K) (A : M) (y : Y) (x : X) :
-    VectorType.vequiv (gemvH alpha beta A y x)
+    VectorType.toVec (gemvH alpha beta A y x)
     =
-    let A := mequiv A
-    let x := VectorType.vequiv x
-    let y := VectorType.vequiv y
+    let A := toMatrix A
+    let x := VectorType.toVec x
+    let y := VectorType.toVec y
     alpha • Aᴴ *ᵥ y + beta • x
 
-
-  /-- Add outer product of two vectors to a matrix
-
-  `outerprdoAdd a y x A = a • y * xᴴ + A`
-
-  Impementable using BLAS `ger`, `geru`, `gerc`. -/
-  outerprodAdd (alpha : K) (y : Y) (x : X) (A : M) : M
-
-  outerprodAdd_spec  (alpha : K) (y : Y) (x : X) (A : M) :
-    mequiv (outerprodAdd alpha y x A)
-    =
-    let A := mequiv A
-    let x := (Matrix.col (Fin 1) (VectorType.vequiv x))
-    let y := (Matrix.col (Fin 1) (VectorType.vequiv y))
-    alpha • (y * xᴴ) + A
+open MatrixType.Base Function in
+class MatrixType.Lawful
+    (M : Type*)
+    {m n : outParam (Type*)} [IndexType m] [IndexType n]
+    {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+    {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y]
+  -- extends
+  --   VectorType.Lawful M (m×n) K
+  where
+  toMatrix_injective : Injective (toMatrix (M:=M))
 
 
-namespace DenseMatrixType
+-- should this be instance? then we would get to `@[ext]` theorems on matrix type `M`
+open MatrixType Base Lawful in
+def MatrixType.vectorTypeLawful (M : Type*)
+    {m n : outParam (Type*)} [IndexType m] [IndexType n]
+    {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+    (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [MatrixType.Lawful M] : VectorType.Lawful M (m×n) K where
 
-export DenseMatrixType.Base (mequiv mequiv_eq_vequiv row row_spec sumRows sumRows_spec updateRow updateRow_spec
-  col col_spec sumCols sumCols_spec updateCol updateCol_spec
-  gemv gemv_spec gemvT gemvT_spec gemvH gemvH_spec outerprodAdd outerprodAdd_spec)
+  toVec_injective := by
+    intro A B h
+    simp only [toVec_eq_toMatrix] at h
+    apply toMatrix_injective
+    funext i j
+    exact congrFun h (i,j)
 
-attribute [matrix_to_spec, matrix_from_spec ←] row_spec sumRows_spec updateRow_spec
-  col_spec sumCols_spec updateCol_spec gemv_spec gemvT_spec gemvH_spec
-  outerprodAdd_spec
+
+namespace MatrixType
+
+export MatrixType.Base (toMatrix toVec_eq_toMatrix row row_spec sumRows sumRows_spec
+  col col_spec sumCols sumCols_spec gemv gemv_spec gemvT gemvT_spec gemvH gemvH_spec)
+
+export MatrixType.Lawful (toMatrix_injective)
+
+attribute [matrix_to_spec, matrix_from_spec ←] row_spec sumRows_spec
+  col_spec sumCols_spec gemv_spec gemvT_spec gemvH_spec
 
 
 section BasicOperations
-
 
 variable
   {R K} [RealScalar R] [Scalar R K]
   {m n : Type*} [IndexType m] [IndexType n]
   {X Y} [VectorType.Base X n K] [VectorType.Base Y m K]
-  {M} [DenseMatrixType.Base M X Y]
+  {M} [MatrixType.Base M X Y]
 
+theorem toMatrix_eq_toVec (A : M) : toMatrix A = fun i j => toVec A (i,j) := by
+  rw[toVec_eq_toMatrix A]
 
 set_default_scalar K
 
-open DenseMatrixType
+@[ext]
+theorem ext [MatrixType.Lawful M] (A B : M) :
+    (∀ i j, toMatrix A i j = toMatrix B i j) → A = B := by
+  intro h; apply toMatrix_injective; funext i j;
+  exact h i j
 
 @[matrix_to_spec, matrix_from_spec ←]
-theorem add_spec (A B : M) : mequiv (A + B) = mequiv A + mequiv B := by
+theorem add_spec (A B : M) : toMatrix (A + B) = toMatrix A + toMatrix B := by
   funext i j
-  simp[mequiv_eq_vequiv, vector_to_spec]
+  simp[toMatrix_eq_toVec, vector_to_spec]
 
 @[matrix_to_spec, matrix_from_spec ←]
-theorem sub_spec (A B : M) : mequiv (A - B) = mequiv A - mequiv B := by
+theorem sub_spec (A B : M) : toMatrix (A - B) = toMatrix A - toMatrix B := by
   funext i j
-  simp[mequiv_eq_vequiv, vector_to_spec]
+  simp[toMatrix_eq_toVec, vector_to_spec]
 
 @[matrix_to_spec, matrix_from_spec ←]
-theorem neg_spec (A : M) : mequiv (-A) = -mequiv A := by
+theorem neg_spec (A : M) : toMatrix (-A) = -toMatrix A := by
   funext i j
-  simp[mequiv_eq_vequiv, vector_to_spec]
+  simp[toMatrix_eq_toVec, vector_to_spec]
 
 @[matrix_to_spec, matrix_from_spec ←]
-theorem smul_spec (a : K) (A : M) : mequiv (a • A) = a • mequiv A := by
+theorem smul_spec (a : K) (A : M) : toMatrix (a • A) = a • toMatrix A := by
   funext i j
-  simp[mequiv_eq_vequiv, vector_to_spec]
+  simp[toMatrix_eq_toVec, vector_to_spec]
 
 @[matrix_to_spec, matrix_from_spec ←]
-theorem zero_spec : mequiv (0 : M) = 0 := by
+theorem zero_spec : toMatrix (0 : M) = 0 := by
   funext i j
-  simp[mequiv_eq_vequiv, vector_to_spec]
+  simp[toMatrix_eq_toVec, vector_to_spec]
 
 -- @[matrix_to_spec, matrix_from_spec ←]
--- theorem inner_spec (A B : M) : ⟪A, B⟫ = ⟪(WithLp.equiv 2 (Matrix m n K)).symm (mequiv A), (WithLp.equiv 2 (Matrix m n K)).symm (equiv B)⟫ := by
+-- theorem inner_spec (A B : M) : ⟪A, B⟫ = ⟪(WithLp.equiv 2 (Matrix m n K)).symm (toMatrix A), (WithLp.equiv 2 (Matrix m n K)).symm (equiv B)⟫ := by
 --   simp only [inner, dot, matrix_to_spec]
 
 -- @[matrix_to_spec, matrix_from_spec ←]
--- theorem norm_spec (A : M) : ‖A‖ = ‖mequiv A‖ := by
+-- theorem norm_spec (A : M) : ‖A‖ = ‖toMatrix A‖ := by
 --   simp only [norm, Norm.norm, Scalar.toReal, nrm2, matrix_to_spec]
 
 -- @[matrix_to_spec, matrix_from_spec ←]
--- theorem dist_spec (A B : M) : dist A B = ‖mequiv A - mequiv B‖ := by
+-- theorem dist_spec (A B : M) : dist A B = ‖toMatrix A - toMatrix B‖ := by
 --   simp only [dist, Norm.dist, norm, Norm.norm, Scalar.toReal, nrm2, matrix_to_spec]
 
 end BasicOperations
 
 
-section AlgebraicInstances
-
+section Instances
 
 variable
-  {R K} [RealScalar R] [Scalar R K]
-  {m n : Type*} [IndexType m] [IndexType n]
-  {X Y} [VectorType.Base X n K] [VectorType.Base Y m K]
-  {M} [DenseMatrixType.Base M X Y]
+      {M : Type*}
+      {m n : outParam (Type*)} [IndexType m] [IndexType n]
+      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+      {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
+      [MatrixType.Base M X Y] [MatrixType.Lawful M]
 
-open DenseMatrixType
+attribute [local instance] MatrixType.vectorTypeLawful
 
-/-- Linear equivalence between matrix type `M` and `Matrix m n K` -/
-def mequivₗ : M ≃ₗ[K] (Matrix m n K) :=
-  LinearEquiv.mk ⟨⟨mequiv,by simp only [matrix_to_spec,implies_true]⟩,by simp[matrix_to_spec]⟩
-    mequiv.symm (mequiv.left_inv) (mequiv.right_inv)
+instance : AddCommGroup M := by infer_instance
+instance : Module K M := by infer_instance
+instance : PseudoMetricSpace M := by infer_instance
+instance : NormedAddCommGroup M := by infer_instance
+instance : NormedSpace K M := by infer_instance
+instance : InnerProductSpace K M := by infer_instance
+instance : AdjointSpace K M := by infer_instance
 
-/-- Continuous linear equivalence between matrix type `M` and `Matrix m n K` -/
-def mequivL : M ≃L[K] (Matrix m n K) := ContinuousLinearEquiv.mk mequivₗ (by sorry_proof) (by sorry_proof)
+end Instances
 
-
-instance : FiniteDimensional K (M) :=
-   FiniteDimensional.of_injective (V₂:=Matrix m n K) mequivₗ.1
-  (mequivₗ.left_inv.injective)
-
-
-variable (M)
-noncomputable
-def basis : Basis (m×n) K (M) := Basis.ofEquivFun (ι:=m×n) (R:=K) (M:=M)
-  (mequivₗ.trans (LinearEquiv.curry K K m n).symm)
-variable {M}
-
-
-@[simp, simp_core]
-theorem finrank_eq_index_card : Module.finrank K (M) = Fintype.card m * Fintype.card n := by
-  rw[Module.finrank_eq_card_basis (basis M)]
-  simp only [Fintype.card_prod]
-
-
-end AlgebraicInstances
-
-end DenseMatrixType
+end MatrixType
 
 end SciLean
