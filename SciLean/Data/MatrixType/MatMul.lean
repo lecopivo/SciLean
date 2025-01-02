@@ -140,9 +140,9 @@ section SquareInstances
 
 variable
       {M : Type*}
-      {n : outParam (Type*)} [IndexType n] [DecidableEq n]
-      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
-      {X : outParam (Type*)} [VectorType.Base X n K] [VectorType.Dense X n K]
+      {n : outParam (Type*)} {_ : outParam (IndexType n)}
+      {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
+      {X : outParam (Type*)} [VectorType.Base X n K] [VectorType.Dense X]
       [MatrixType.Base M X X] [MatrixType.Lawful M]
       [MatrixType.Square M]
       [MatrixType.MatMul M M M]
@@ -150,6 +150,7 @@ variable
 
 instance : Mul M := ⟨fun A B => A * B⟩
 
+open Classical in
 instance : Monoid M where
   mul_assoc := by intros; ext; simp only [hmul_to_spec, mul_assoc]
   one_mul := by intros; ext; simp only [hmul_to_spec, one_spec, one_mul]
@@ -161,10 +162,11 @@ instance : Semiring M where
   zero_mul := by intros; ext; simp only [hmul_to_spec, zero_spec, zero_mul]
   mul_zero := by intros; ext; simp only [hmul_to_spec, zero_spec, mul_zero]
   mul_assoc := by intros; ext; simp only [mul_assoc, hmul_to_spec]
-  one_mul := by intros; ext; simp only [one_mul]
-  mul_one := by intros; ext; simp only [mul_one]
+  one_mul := by intros; ext; simp only [hmul_to_spec, one_spec, one_mul]
+  mul_one := by intros; ext; simp only [hmul_to_spec, one_spec, mul_one]
 
-instance : Algebra K M where
+open Classical in
+instance instAlgebra : Algebra K M where
   toFun k := diagonal (VectorType.const k)
   map_one' := by ext; simp [matrix_to_spec, vector_to_spec]
   map_mul' := by intros; ext; simp [matrix_to_spec, vector_to_spec]
@@ -172,6 +174,8 @@ instance : Algebra K M where
   map_add' := by intros; ext; simp [matrix_to_spec, vector_to_spec,←Matrix.diagonal_add]
   commutes' := by intros; ext; simp [matrix_to_spec, vector_to_spec,mul_comm]
   smul_def' := by intros; ext; simp [matrix_to_spec, vector_to_spec]
+
+-- set_synth_order instAlgebra #[11, 9, 10, 2, 3, 6, 7, 12, 13, 14]
 
 
 end SquareInstances

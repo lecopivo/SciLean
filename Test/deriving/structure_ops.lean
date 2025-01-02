@@ -24,7 +24,7 @@ end MoveMe
 --   neg_add_cancel := sorry_proof
 --   add_comm := sorry_proof
 
-
+#exit
 instance {R X Y : Type*} [RCLike R] [Vec R X] [Vec R Y] : Vec R ((_ : X) × Y) := Vec.mkSorryProofs
 
 instance {X Y : Type*} [TestFunctions X] [TestFunctions Y] : TestFunctions ((_ : X) × Y) where

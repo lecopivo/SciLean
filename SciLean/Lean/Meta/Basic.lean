@@ -485,7 +485,7 @@ def withLetDecls [MonadControlT MetaM n] [Monad n]
 
 private def letTelescopeImpl (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α :=
   lambdaLetTelescope e λ xs b => do
-    if let .some i ← xs.findIdxM? (λ x => do pure ¬(← x.fvarId!.isLetVar)) then
+    if let .some i ← xs.findIdxM? (λ x => do pure !(← x.fvarId!.isLetVar)) then
       k xs[0:i] (← mkLambdaFVars xs[i:] b)
     else
       k xs b

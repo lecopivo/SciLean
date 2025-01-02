@@ -252,7 +252,7 @@ def Goal.getCandidateTheorems (g : Goal) : DataSynthM (Array DataSynthTheorem) :
   let ext := dataSynthTheoremsExt.getState (← getEnv)
   -- let keys ← Mathlib.Meta.FunProp.RefinedDiscrTree.mkDTExpr e {}
   -- trace[Meta.Tactic.data_synth] "keys: {keys}"
-  let thms ← ext.theorems.getMatchWithScore e false {} -- {zeta:=false, zetaDelta:=false}
+  let thms ← ext.theorems.getMatchWithScore e false -- {zeta:=false, zetaDelta:=false}
   let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
   return thms
 
@@ -588,7 +588,7 @@ def constCase? (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
   -- todo: this work of checking free variables should be shared with `decomposeDomain?`
   --       Maybe `FunData` should carry a `FVarSet`
   let vars := (← f.body.collectFVars |>.run {}).2.fvarSet
-  let (xs₁, _) := f.xs.split (fun x => vars.contains x.fvarId!)
+  let (xs₁, _) := f.xs.partition (fun x => vars.contains x.fvarId!)
 
   unless xs₁.size = 0 do return none
   withProfileTrace "const case" do

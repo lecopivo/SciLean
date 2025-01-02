@@ -119,10 +119,9 @@ private def projectCore? (e : Expr) (i : Nat) : MetaM (Option Expr) := do
     else
       return none
 
-
-partial def whnf' (e : Expr) (config : WhnfCoreConfig := {}) : MetaM Expr :=
+partial def whnf' (e : Expr) : MetaM Expr :=
   withIncRecDepth <| whnfEasyCases e fun e => do
-    let e' ← whnfCore e config
+    let e' ← whnfCore e
     match (← reduceNat? e') with
     | some v => return v
     | none   =>
@@ -131,19 +130,26 @@ partial def whnf' (e : Expr) (config : WhnfCoreConfig := {}) : MetaM Expr :=
       | none   => return e'
 
 
-def project? (e : Expr) (i : Nat) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
-  projectCore? (← whnf' e config) i
+def project? (e : Expr) (i : Nat) : MetaM (Option Expr) := do
+  projectCore? (← whnf e) i
   -- projectCore? (← whnf e) i
 
 /-- Reduce kernel projection `Expr.proj ..` expression. -/
-def reduceProj? (e : Expr) (config : WhnfCoreConfig := {}) : MetaM (Option Expr) := do
+def reduceProj? (e : Expr) : MetaM (Option Expr) := do
   match e with
-  | .proj _ i c => project? c i config
+  | .proj _ i c => project? c i -- config
   | _           => return none
 
-def getWhnfConfig : SimpM WhnfCoreConfig := do
-  let cfg ← Simp.getConfig
-  return Simp.getDtConfig cfg
+def withSimpConfig (a : MetaM α) : SimpM α := do
+  let cfg' ← Simp.getConfig
+  withConfig (fun cfg =>
+    {cfg with
+     iota := cfg'.iota
+     beta := cfg'.beta
+     proj := if cfg'.proj then .yes else .no
+     zeta := cfg'.zeta
+     zetaDelta := cfg'.zetaDelta}) a
+
 
 private def reduceProjFnAux? (e : Expr) : LSimpM (Option Expr) := do
   matchConst e.getAppFn (fun _ => pure none) fun cinfo _ => do
@@ -155,7 +161,7 @@ private def reduceProjFnAux? (e : Expr) : LSimpM (Option Expr) := do
         match e? with
         | none   => pure none
         | some e =>
-          match (← reduceProj? e.getAppFn (← getWhnfConfig)) with
+          match (← withSimpConfig (reduceProj? e.getAppFn)) with
           | some f => return some (mkAppN f e.getAppArgs)
           | none   => return none
       if projInfo.fromClass then
@@ -819,7 +825,7 @@ def main (e : Expr) (k : Result → MetaM α)
   let state : State := { cache := lcacheRef, simpState := stateRef }
 
   -- load context
-  let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
+  -- let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
   Simp.withSimpContext ctx do
 
     -- run simp

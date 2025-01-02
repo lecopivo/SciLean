@@ -4,7 +4,7 @@ namespace SciLean.VectorType
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  [Scalar R R] [Scalar R K] [IndexType n] [VectorType.Base X n K] [VectorType.Lawful X n K]
+  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
 
 
 --- arithmetic operations to axp(b)y and scal
@@ -14,15 +14,15 @@ theorem add_to_axpy (x y : X) : x+y = axpby 1 1 x y := by
   ext
   simp[vector_to_spec]
 
-omit [Lawful X n K] in
+omit [Lawful X] in
 @[vector_optimize]
 theorem sub_to_axpby (x y : X) : x-y = axpby 1 (-1) x y := by rfl
 
-omit [Lawful X n K] in
+omit [Lawful X] in
 @[vector_optimize]
 theorem neg_to_scal (x : X) : -x = scal (-1) x := by rfl
 
-omit [Lawful X n K] in
+omit [Lawful X] in
 @[vector_optimize]
 theorem smul_to_scal (a : K) (x : X) : a•x = scal a x := by rfl
 
@@ -81,14 +81,14 @@ theorem axpby_scal_right (a b c : K) (x : X) : (axpby a b x (scal c y))  = axpby
 
 -- dot const
 
-omit [Lawful X n K] in
+omit [Lawful X] in
 open ComplexConjugate in
 @[vector_optimize]
-theorem dot_const_left [VectorType.Dense X n K] (a : K) (x : X) : dot (const a) x  = conj a * sum x := by
+theorem dot_const_left [VectorType.Dense X] (a : K) (x : X) : dot (const a) x  = conj a * sum x := by
   simp[vector_to_spec,smul_smul,Finset.mul_sum]
 
-omit [Lawful X n K] in
+omit [Lawful X] in
 open ComplexConjugate in
 @[vector_optimize]
-theorem dot_const_right [VectorType.Dense X n K] (a : K) (x : X) : dot x (const a)  = conj (sum x) * a := by
+theorem dot_const_right [VectorType.Dense X] (a : K) (x : X) : dot x (const a)  = conj (sum x) * a := by
   simp[vector_to_spec,smul_smul,Finset.sum_mul]

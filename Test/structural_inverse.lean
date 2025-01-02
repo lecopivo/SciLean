@@ -22,12 +22,12 @@ info: fun ij1 y =>
   IO.println (← ppExpr f'.invFun)
 
 /--
-info: fun ij1 y =>
+info: fun ij0 y =>
   let ij2' := fun ij0 => Function.invFun (fun ij2 => ij0 + ij2) y.1;
-  let ij0' := fun ij1 => Function.invFun (fun ij0 => ij1 + ij0 + ij2' ij0) y.2;
-  let ij0'' := ij0' ij1;
-  let ij2'' := ij2' ij0'';
-  (ij0'', ij1, ij2'')
+  let ij1' := fun ij0 => Function.invFun (fun ij1 => ij1 + ij0 + ij2' ij0) y.2;
+  let ij1'' := ij1' ij0;
+  let ij2'' := ij2' ij0;
+  (ij0, ij1'', ij2'')
 -/
 #guard_msgs in
 #eval show MetaM Unit from do
@@ -59,12 +59,12 @@ info: fun y => (y.2.1, y.2.2, y.1)
 
 
 /--
-info: fun x1 y =>
+info: fun x2 y =>
   let x0' := fun x1 => Function.invFun (fun x0 => x0 + x1) y.2;
-  let x2' := fun x1 => Function.invFun (fun x2 => x0' x1 + x1 + x2) y.1;
-  let x2'' := x2' x1;
-  let x0'' := x0' x1;
-  (x0'', x1, x2'')
+  let x1' := fun x2 => Function.invFun (fun x1 => x0' x1 + x1 + x2) y.1;
+  let x1'' := x1' x2;
+  let x0'' := x0' x1'';
+  (x0'', x1'', x2)
 -/
 #guard_msgs in
 #eval show MetaM Unit from do

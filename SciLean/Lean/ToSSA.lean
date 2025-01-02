@@ -49,9 +49,9 @@ where
         withLCtx lctx' (← getLocalInstances) do
           if arg'.consumeMData.isApp then
             withLetDecl Name.anonymous (← inferType arg') arg' fun argVar => do
-              goApp fn (args.set ⟨i,h⟩ argVar) infos (fvars.push argVar) (i+1) (lets ++ lets'.push argVar)
+              goApp fn (args.set i argVar h) infos (fvars.push argVar) (i+1) (lets ++ lets'.push argVar)
           else
-            goApp fn (args.set ⟨i,h⟩ arg') infos fvars (i+1) (lets++lets')
+            goApp fn (args.set i arg' h) infos fvars (i+1) (lets++lets')
       else
         return (mkAppN fn args, lets, ← getLCtx)
 

@@ -76,7 +76,7 @@ def addFunTransDecl (declName : Name) : MetaM Unit := do
 
   let lvls := info.levelParams.map (fun l => Level.param l)
   let e := mkAppN (.const declName lvls) xs[0:funArgId+1]
-  let path ← DiscrTree.mkPath e {}
+  let path ← DiscrTree.mkPath e
 
   let decl : FunTransDecl := {
     funTransName := declName
@@ -96,8 +96,10 @@ def getFunTrans? (e : Expr) : MetaM (Option (FunTransDecl × Expr)) := do
 
   let ext := funTransDeclsExt.getState (← getEnv)
 
-  let decls ← ext.decls.getMatchWithExtra e
-    {zeta:=false,zetaDelta:=false,proj:=.no,iota:=false,beta:=false}
+  let decls ←
+    withConfig (fun cfg => {cfg with zeta:=false,zetaDelta:=false,proj:=.no,iota:=false,beta:=false}) <|
+    ext.decls.getMatchWithExtra e
+
 
   if decls.size = 0 then
     return none

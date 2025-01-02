@@ -272,7 +272,7 @@ def decomposeDomain? (f : FunData) : MetaM (Option (Expr × Expr × Expr × FunD
       return none
 
     let vars := (← f.body.collectFVars |>.run {}).2.fvarSet
-    let (xs₁, xs₂) := f.xs.split (fun x => vars.contains x.fvarId!)
+    let (xs₁, xs₂) := f.xs.partition (fun x => vars.contains x.fvarId!)
 
     if xs₂.size = 0 then
       return none

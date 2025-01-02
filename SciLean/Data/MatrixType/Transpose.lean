@@ -2,34 +2,34 @@ import SciLean.Data.MatrixType.Base
 
 namespace SciLean
 
-open Matrix
+open Matrix MatrixType VectorType
 
-class DenseMatrixType.Transpose
+class MatrixType.Transpose
       (M : Type*) (M' : outParam (Type*))
-      {m n : outParam (Type*)} [IndexType m] [IndexType n]
-      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+      {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
+      {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
       (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
-      [DenseMatrixType.Base M X Y] [DenseMatrixType.Base M' Y X]
+      [MatrixType.Base M X Y] [MatrixType.Base M' Y X]
   where
 
     transpose (A : M) : M'
     transpose_spec (A : M) :
-      mequiv (transpose A)
+      toMatrix (transpose A)
       =
-      let A := mequiv A
+      let A := toMatrix A
       Aᵀ
 
     conjTranspose (A : M) : M'
     conjTranspose_spec (A : M) :
-      mequiv (conjTranspose A)
+      toMatrix (conjTranspose A)
       =
-      let A := mequiv A
+      let A := toMatrix A
       Aᴴ
 
 
 namespace DenseMatrixType
 
-export DenseMatrixType.Transpose (
+export MatrixType.Transpose (
   transpose
   transpose_spec
   conjTranspose
@@ -44,17 +44,17 @@ section Instances
 
 variable
   {M : Type*}
-  {n : Type*} [IndexType n]
-  {R K : Type*} [RealScalar R] [Scalar R K]
+  {n : Type*} {_ : IndexType n}
+  {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {X : Type*} [VectorType.Base X n K]
-  [DenseMatrixType.Base M X X]
-  [DenseMatrixType.Transpose M M X X]
+  [MatrixType.Base M X X]
+  [MatrixType.Transpose M M X X]
 
 instance : Star M := ⟨conjTranspose⟩
 
 @[matrix_to_spec, matrix_from_spec ←]
 theorem star_spec (A : M) :
-    mequiv (star A) = star (mequiv A) := by
+    toMatrix (star A) = star (toMatrix A) := by
   conv => lhs; dsimp[star]
   simp only [conjTranspose_spec]
   rfl

@@ -125,7 +125,7 @@ def withoutModifyingLCtx (k : X → MetaM Y) (x : LSimpM X) : LSimpM Y := do
     Meta.withoutModifyingLCtx (fun (x,s') => do pure (← k x, s'))
       (x mths ctx s)
 
-@[deprecated]
+-- @[deprecated]
 def LSimpM.runInMeta (x : LSimpM X) (k : X → MetaM Y) : LSimpM Y := do
   fun mths ctx s => do
     -- let m : Simp.Methods := Simp.MethodsRef.toMethods mths.toMethodsRef
@@ -263,8 +263,14 @@ def post (e : Expr) : LSimpM Step := do
 def getConfig : LSimpM Simp.Config :=
   return (← getContext).config
 
-@[inline] def withParent (parent : Expr) (f : LSimpM α) : LSimpM α :=
-  withTheReader Simp.Context (fun ctx => { ctx with parent? := parent }) f
+
+def getContextWithParent (e : Expr) : SimpM Simp.Context := do
+  Simp.withParent e (readThe Simp.Context)
+
+open private Lean.Meta.Simp.Context.mk from Lean.Meta.Tactic.Simp.Types in -- this does not work :(
+@[inline] def withParent (parent : Expr) (f : LSimpM α) : LSimpM α := do
+  let ctx' ← getContextWithParent parent
+  withTheReader Simp.Context (fun _ctx => ctx') f
 
 @[inline] def withSimpTheorems (s : SimpTheoremsArray) (x : LSimpM α) : LSimpM α := do
-  savingCache <| withTheReader Simp.Context (fun ctx => { ctx with simpTheorems := s }) x
+  savingCache <| withTheReader Simp.Context (fun ctx => ctx.setSimpTheorems s) x

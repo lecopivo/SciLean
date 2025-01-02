@@ -5,8 +5,8 @@ namespace SciLean
 open Matrix MatrixType VectorType
 class MatrixType.Square
       (M : Type*)
-      {n : outParam (Type*)} [IndexType n]
-      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+      {n : outParam (Type*)} {_ : outParam (IndexType n)}
+      {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
       {X : outParam (Type*)} [VectorType.Base X n K]
       [MatrixType.Base M X X]
   where
@@ -65,15 +65,16 @@ section Instances
 
 variable
   {M : Type*}
-  {n : Type*} [IndexType n] [DecidableEq n]
-  {R K : Type*} [RealScalar R] [Scalar R K]
-  {X : Type*} [VectorType.Base X n K] [VectorType.Dense X n K]
+  {n : Type*} {_ : IndexType n}
+  {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
+  {X : Type*} [VectorType.Base X n K] [VectorType.Dense X]
   [MatrixType.Base M X X]
   [MatrixType.Square M]
 
 
 instance : One M := ⟨diagonal (VectorType.const 1)⟩
 
+open Classical in
 @[matrix_to_spec, matrix_from_spec ←]
 theorem one_spec : toMatrix (1 : M) = (1 : Matrix n n K) := by
   conv => lhs; dsimp [One.one, OfNat.ofNat]

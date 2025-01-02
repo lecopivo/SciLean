@@ -261,7 +261,8 @@ def applyMorTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.F
   | .exact =>
     let ext := (morTheoremsExt.getState (← getEnv))
 
-    let candidates ← ext.theorems.getMatchWithScoreWithExtra e false { iota := false, zeta := false }
+    let candidates ← withConfig (fun cfg => {cfg with iota :=false, zeta := false}) <|
+      ext.theorems.getMatchWithScoreWithExtra e false
     let candidates := candidates.map (·.1) |>.flatten
 
     trace[Meta.Tactic.fun_trans]
@@ -277,7 +278,8 @@ def applyFVarTheorems (e : Expr) : SimpM (Option Simp.Result) := do
 
   let ext := (fvarTheoremsExt.getState (← getEnv))
 
-  let candidates ← ext.theorems.getMatchWithScoreWithExtra e false { iota := false, zeta := false }
+  let candidates ← withConfig (fun cfg => {cfg with iota :=false, zeta := false}) <|
+    ext.theorems.getMatchWithScoreWithExtra e false
   let candidates := candidates.map (·.1) |>.flatten
 
   trace[Meta.Tactic.fun_trans]
@@ -575,7 +577,8 @@ partial def funTrans (e : Expr) : SimpM Simp.Step := do
     else
       return .continue
 
-  match ← FunProp.getFunctionData? f FunProp.defaultUnfoldPred {zeta:=false,zetaDelta:=false} with
+  match ← withConfig (fun cfg => {cfg with zeta := false, zetaDelta := false}) <|
+    FunProp.getFunctionData? f FunProp.defaultUnfoldPred with
   | .letE f =>
     trace[Meta.Tactic.fun_trans.step] "let case on {← ppExpr f}"
     let e := e.setArg funTransDecl.funArgId f -- update e with reduced f

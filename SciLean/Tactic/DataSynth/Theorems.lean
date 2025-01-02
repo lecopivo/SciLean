@@ -70,7 +70,7 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
     args := args.set! i (← mkFreshExprMVar X)
 
   let b := fn.beta args
-  let keys ← RefinedDiscrTree.mkDTExprs b {} false
+  let keys ← RefinedDiscrTree.mkDTExprs b false
 
   trace[Meta.Tactic.data_synth]
     "dataSynth: {dataSynthDecl.name}\

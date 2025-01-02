@@ -7,12 +7,12 @@ open Matrix VectorType
 open Function MatrixType.Base in
 class MatrixType.Dense
     (M : Type*)
-    {m n : outParam (Type*)} [IndexType m] [IndexType n]
-    {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+    {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
+    {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
     {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
     [MatrixType.Base M X Y]
   extends
-    VectorType.Dense M (m×n) K
+    VectorType.Dense M
   where
 
   -- maybe it should be `Matrix m n K → M → M` such that `Dense` works also for submatrices
@@ -59,8 +59,8 @@ class MatrixType.Dense
 
 
 instance (M : Type*)
-    {m n : outParam (Type*)} [IndexType m] [IndexType n]
-    {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+    {m n : outParam (Type*)} {_ : IndexType m} {_ : IndexType n}
+    {R K : outParam (Type*)} {_ : RealScalar R} {_ : Scalar R K}
     (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
     [MatrixType.Base M X Y] [MatrixType.Dense M] : MatrixType.Lawful M where
 
@@ -84,9 +84,9 @@ attribute [matrix_to_spec, matrix_from_spec ←]
 section Equivalences
 
 variable
-  {R K} [RealScalar R] [Scalar R K]
-  {m n : Type*} [IndexType m] [IndexType n]
-  {X Y} [VectorType.Base X n K] [VectorType.Base Y m K]
+  {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
+  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
+  {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
   {M} [MatrixType.Base M X Y] [MatrixType.Dense M]
 
 open MatrixType

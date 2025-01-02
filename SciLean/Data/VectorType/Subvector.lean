@@ -9,9 +9,9 @@ open VectorType Classical
 on `X` modifying only `X'` part of it. -/
 class SubvectorType
       (X : outParam (Type*)) (X' : Type*)
-      {n n' : Type*} [IndexType n] [IndexType n']
+      {n n' : Type*} {_ : IndexType n} {_ : IndexType n'}
       (ι : {f : n' → n // f.Injective })
-      {R K} [RealScalar R] [Scalar R K]
+      {R K} {_ : RealScalar R} {_ : Scalar R K}
       [VectorType.Base X n K] [VectorType.Base X' n' K]
   where
 

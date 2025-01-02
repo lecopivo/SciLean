@@ -25,9 +25,9 @@ def ArrayN.map {α β : Type*} (a : ArrayN α n) (f : α → β) : ArrayN β n :
 
 instance : ArrayType (ArrayN α n) (Fin n) α where
   ofFn := ArrayN.ofFn
-  get := fun a i => a.data.get ⟨i, by have := a.2; have := i.2; simp_all⟩
+  get := fun a i => a.data.get i (by have := a.2; have := i.2; simp_all)
   set := fun a i v => {
-    data := a.data.set ⟨i.1, by have := a.2; omega⟩ v
+    data := a.data.set i.1 v (by have := a.2; omega)
     h_size := by have := a.2; simp_all
   }
   modify := fun a i f => {
@@ -45,7 +45,7 @@ instance : ArrayType (ArrayN α n) (Fin n) α where
     intro a i v; simp
     sorry_proof
 instance : GetElem (ArrayN α n) (Fin n) α (λ _ _ => True) where
-  getElem arr i _ := arr.data.get ⟨i.1, by have := arr.2; omega⟩
+  getElem arr i _ := arr.data.get i.1 (by have := arr.2; omega)
 
 
 @[simp]

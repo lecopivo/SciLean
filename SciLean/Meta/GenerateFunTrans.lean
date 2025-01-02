@@ -39,7 +39,8 @@ def generateFunTransDefAndTheorem (statement proof : Expr) (ctx : Array Expr)
   let .some (funTransDecl, f) ← Mathlib.Meta.FunTrans.getFunTrans? lhs
     | throwError s!"unrecognized function transformation {← ppExpr lhs}!"
 
-  let .data fData ← FunProp.getFunctionData? f FunProp.defaultUnfoldPred {zeta:=false}
+  let .data fData ← withConfig (fun cfg => {cfg with zeta := false}) <|
+    FunProp.getFunctionData? f FunProp.defaultUnfoldPred
     | throwError s!"invalid function {← ppExpr f}"
 
   let .some funName ← fData.getFnConstName?

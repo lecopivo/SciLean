@@ -75,7 +75,7 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
   let thm : GTransTheorem := {
     gtransName := gtransDecl.gtransName
     thmName := declName
-    keys    := ← RefinedDiscrTree.mkDTExprs b {} false
+    keys    := ← RefinedDiscrTree.mkDTExprs b false
     priority  := prio
   }
   return thm

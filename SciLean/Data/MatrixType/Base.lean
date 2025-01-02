@@ -114,8 +114,8 @@ class MatrixType.Base
 open MatrixType.Base Function in
 class MatrixType.Lawful
     (M : Type*)
-    {m n : outParam (Type*)} [IndexType m] [IndexType n]
-    {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+    {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
+    {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
     {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
     [MatrixType.Base M X Y]
   -- extends
@@ -127,10 +127,10 @@ class MatrixType.Lawful
 -- should this be instance? then we would get to `@[ext]` theorems on matrix type `M`
 open MatrixType Base Lawful in
 def MatrixType.vectorTypeLawful (M : Type*)
-    {m n : outParam (Type*)} [IndexType m] [IndexType n]
-    {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
-    (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
-    [MatrixType.Base M X Y] [MatrixType.Lawful M] : VectorType.Lawful M (m×n) K where
+    {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
+    {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
+    {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [MatrixType.Lawful M] : VectorType.Lawful M where
 
   toVec_injective := by
     intro A B h
@@ -154,8 +154,8 @@ attribute [matrix_to_spec, matrix_from_spec ←] row_spec sumRows_spec
 section BasicOperations
 
 variable
-  {R K} [RealScalar R] [Scalar R K]
-  {m n : Type*} [IndexType m] [IndexType n]
+  {R K} {_ : RealScalar R} {_ : Scalar R K}
+  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
   {X Y} [VectorType.Base X n K] [VectorType.Base Y m K]
   {M} [MatrixType.Base M X Y]
 
@@ -214,8 +214,8 @@ section Instances
 
 variable
       {M : Type*}
-      {m n : outParam (Type*)} [IndexType m] [IndexType n]
-      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+      {m n : outParam (Type*)} {_ : IndexType m} {_ : IndexType n}
+      {R K : outParam (Type*)} {_ : RealScalar R} {_ : Scalar R K}
       {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
       [MatrixType.Base M X Y] [MatrixType.Lawful M]
 
@@ -226,8 +226,21 @@ instance : Module K M := by infer_instance
 instance : PseudoMetricSpace M := by infer_instance
 instance : NormedAddCommGroup M := by infer_instance
 instance : NormedSpace K M := by infer_instance
-instance : InnerProductSpace K M := by infer_instance
-instance : AdjointSpace K M := by infer_instance
+instance instInnerProductSpace : InnerProductSpace K M := by infer_instance
+instance instAdjointSpace : AdjointSpace K M := by infer_instance
+
+example {R : Type _} [RealScalar R] {X : Type _}
+  [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] :
+  Inner R X := by infer_instance
+
+example   {R : Type _} [RealScalar R]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] :
+  HAdd X X X := by infer_instance
+
+
+-- -- temporary hack
+-- set_synth_order instInnerProductSpace #[13, 11, 12, 14, 3, 4, 7, 8]
+-- set_synth_order instAdjointSpace #[13, 11, 12, 14, 3, 4, 7, 8]
 
 end Instances
 

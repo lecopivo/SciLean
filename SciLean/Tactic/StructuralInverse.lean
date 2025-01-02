@@ -109,7 +109,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
     let .some xVarId ← varArr.findIdxM? fun var => do pure (← isDefEq yType (← inferType var))
       | return none
     let xVar' := varArr[xVarId]!
-    let varArrOther := varArr.eraseIdx xVarId
+    let varArrOther := varArr.eraseIdx! xVarId
 
     trace[Meta.Tactic.structuralInverse.step]
       "resolving {xVar'} from {yVals[j]!} = {← withLCtx lctx instances <| ppExpr yVal}"

@@ -23,8 +23,8 @@ open Lean Elab Tactic in
 @[tactic lsimp_conv] unsafe def lsimpConv : Tactic := fun stx => do
   withMainContext do withSimpDiagnostics do
     let { ctx, simprocs, dischargeWrapper } ← mkSimpContext stx (eraseLocal := false)
-    let ctx := { ctx with config := { ctx.config with zeta := false } }
-    let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
+    let ctx := ctx.setConfig {ctx.config with zeta:=false}
+    -- let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
 
     let stats ← dischargeWrapper.with fun discharge? => do
       let e ← Conv.getLhs
@@ -46,8 +46,8 @@ open Lean Elab Tactic in
 @[tactic lsimp_tactic] unsafe def lsimpTactic : Tactic := fun stx => do
   withMainContext do withSimpDiagnostics do
     let { ctx, simprocs, dischargeWrapper } ← mkSimpContext stx (eraseLocal := false)
-    let ctx := { ctx with config := { ctx.config with zeta := false } }
-    let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
+    let ctx := ctx.setConfig {ctx.config with zeta := false}
+    -- let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
 
     let stats ← dischargeWrapper.with fun discharge? => do
       let goal ← getMainGoal

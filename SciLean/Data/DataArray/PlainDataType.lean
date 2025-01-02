@@ -4,9 +4,6 @@ import SciLean.Data.IndexType
 
 namespace SciLean
 
-def _root_.UInt8.toUSize (x : UInt8) : USize := x.toUInt32.toUSize
-def _root_.USize.toUInt8 (x : USize) : UInt8 := x.toUInt32.toUInt8
-
 structure BitType (α : Type*) where
   bits : UInt8
   h_size : bits ≤ 8  -- we consider only types fitting into a single byte

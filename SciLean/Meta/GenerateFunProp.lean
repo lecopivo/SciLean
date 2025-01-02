@@ -30,7 +30,8 @@ def defineFunPropTheorem (statement proof : Expr) (ctx : Array Expr)
   let .some (funPropDecl, f) ← Mathlib.Meta.FunProp.getFunProp? statement
     | throwError s!"unrecognized function proposition {← ppExpr statement}!"
 
-  let .data fData ← FunProp.getFunctionData? f FunProp.defaultUnfoldPred {zeta:=false}
+  let .data fData ← withConfig (fun cfg => {cfg with zeta:=false}) <|
+    FunProp.getFunctionData? f FunProp.defaultUnfoldPred
     | throwError s!"invalid function {← ppExpr f}"
 
   let .some funName ← fData.getFnConstName?

@@ -6,7 +6,6 @@ import Mathlib.Data.Matrix.Basic
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.Scalar
 import SciLean.Data.IndexType
-
 import SciLean.Data.VectorType.Init
 
 namespace SciLean
@@ -29,8 +28,8 @@ To provide a finite dimensional instance you also need to assume `VectorType.Den
 This class is designed to provide Basic Linear Algebra Subprograms(BLAS) which allows us to define
 vector space structure on `X` that is computationally efficient.
  -/
-class VectorType.Base (X : Type*) (n : outParam (Type*)) [IndexType n] {R : outParam (Type*)}  (K : outParam (Type*))
-        [Scalar R R] [Scalar R K] where
+class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)] {R : outParam (Type*)}  (K : outParam (Type*))
+        [outParam (Scalar R R)] [outParam (Scalar R K)] where
   toVec : X → (n → K) -- maybe map to Euclidean space
 
   /-- Zero vector. -/
@@ -123,11 +122,11 @@ class VectorType.Lawful (X : Type*)
     {n : outParam (Type*)} [IndexType n]
     {R : outParam (Type*)} {K : outParam (Type*)}
     [Scalar R R] [Scalar R K] [VectorType.Base X n K] : Prop where
-  toVec_injective : Function.Injective (VectorType.Base.toVec (X:=X))
+  toVec_injective : Function.Injective (VectorType.Base.toVec (X:=X) (n:=n))
 
 open Function VectorType.Base in
 class VectorType.Dense (X : Type*)
-    {n : outParam (Type*)} [IndexType n]
+    {n : outParam (Type*)} {_ : outParam (IndexType n)}
     {R K : outParam (Type*)} [Scalar R R] [Scalar R K]
     [VectorType.Base X n K] where
   fromVec : (n → K) → X
@@ -256,8 +255,8 @@ class VectorType.Dense (X : Type*)
 
 
 
-instance (X : Type*) (n : outParam (Type*)) [IndexType n] {R : outParam (Type*)} (K : outParam (Type*))
-    [Scalar R R] [Scalar R K] [VectorType.Base X n K] [VectorType.Dense X] :
+instance (X : Type*) (n : outParam (Type*)) {_ : outParam (IndexType n)} {R : outParam (Type*)} (K : outParam (Type*))
+    {_ : outParam (Scalar R R)} {_ : outParam (Scalar R K)} [VectorType.Base X n K] [VectorType.Dense X] :
     VectorType.Lawful X where
   toVec_injective := (VectorType.Dense.left_inv (X:=X) (n:=n) (K:=K)).injective
 
@@ -288,7 +287,7 @@ section BasicOperations
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  [Scalar R R] [Scalar R K] [IndexType n] [VectorType.Base X n K]
+  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K]
 
 open VectorType
 
@@ -355,8 +354,8 @@ end BasicOperations
 section AlgebraicInstances
 
 variable
-  {X : Type*} {n : Type u} {R K :  Type*}
-  [Scalar R R] [Scalar R K] [IndexType n] [VectorType.Base X n K] [VectorType.Lawful X]
+  {X : Type*} {n : Type*} {R K : Type*}
+  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
 
 open VectorType
 
@@ -367,6 +366,7 @@ theorem ext (x y : X) : (∀ (i : n), toVec x i = toVec y i) → x = y := by
   funext i
   exact (h i)
 
+--set_option trace.Meta.synthOrder true
 instance : AddCommGroup X where
   add_assoc := by intros; ext; simp only [add_spec, add_assoc]
   zero_add := by intros; ext; simp only [add_spec, zero_spec', zero_add]
@@ -409,7 +409,7 @@ instance : NormedSpace K X where
     simp only [norm_spec]
     simp [norm_smul_le,vector_to_spec]
 
-instance : InnerProductSpace K X where
+instance instInnerProductSpace : InnerProductSpace K X where
   norm_sq_eq_inner := by
     simp only [inner_spec,norm_spec]
     intro x
@@ -423,7 +423,7 @@ instance : InnerProductSpace K X where
   smul_left := by
     intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
 
-instance : AdjointSpace K X where
+instance instAdjointSpace : AdjointSpace K X where
   inner_top_equiv_norm := by
     use 1; use 1
     simp only [inner_spec,norm_spec]
@@ -452,7 +452,7 @@ section Equivalences
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  [Scalar R R] [Scalar R K] [IndexType n] [VectorType.Base X n K] [VectorType.Dense X]
+  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Dense X]
 
 def vequiv : X ≃ (n → K) where
   toFun := toVec

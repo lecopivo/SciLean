@@ -17,9 +17,9 @@ inductive ApproxSolution {α : Type _} [TopologicalSpace α] [Nonempty α] : {N 
     (specₙ : N → α → Prop)
     (lN : Filter N) (lM : Filter M)
     (consistent : ∀ (aₙ : N → α), (∀ n, specₙ n (aₙ n)) → (∀ a, (a = limit n ∈ lN, aₙ n) → spec a))
-    (convergence : ∀ (a' : N → M → α), (∀ n, specₙ n (limit m ∈ lM, a' n m)) → ∃ a, a = limit (n,m) ∈ lN.prod lM, a' n m)
+    (convergence : ∀ (a' : N → M → α), (∀ n, specₙ n (limit m ∈ lM, a' n m)) → ∃ a, a = limit (n,m) ∈ lN ×ˢ lM, a' n m)
     (impl : (n : N) → ApproxSolution lM (specₙ n))
-    : ApproxSolution (lN.prod lM) spec
+    : ApproxSolution (lN ×ˢ lM) spec
 
 
 variable {α} [TopologicalSpace α] [Nonempty α]

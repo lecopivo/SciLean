@@ -5,11 +5,10 @@ namespace Lean.Elab.Tactic.Conv
 open Meta
 
 private def getContext : MetaM Simp.Context := do
-  return {
-    simpTheorems  := {}
-    congrTheorems := (← getSimpCongrTheorems)
-    config        := Simp.neutralConfig
-  }
+  Simp.mkContext
+    (config        := Simp.neutralConfig)
+    (simpTheorems  := {})
+    (congrTheorems := (← getSimpCongrTheorems))
 
 private def pre (letName : Name) (state : IO.Ref (MVarId ⊕ Nat)) (e : Expr) : SimpM Simp.Step := do
   match ← state.get with

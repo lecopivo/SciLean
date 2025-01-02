@@ -87,7 +87,7 @@ syntax (name := move_terms_to) "move" ident+ "terms_to_lhs" : conv
 
     -- split terms on rhs
     let terms ← splitAddOfType eqRhs E
-    let (eqRhsIn, eqRhsOut) := terms.split (fun term => fvars.any (fun fvar => term.containsFVar fvar))
+    let (eqRhsIn, eqRhsOut) := terms.partition (fun term => fvars.any (fun fvar => term.containsFVar fvar))
 
     let eqLhs' ← mkAppFoldlM ``HSub.hSub (#[eqLhs].append eqRhsIn)
     let eqRhs' ← mkAppFoldlM ``HAdd.hAdd eqRhsOut

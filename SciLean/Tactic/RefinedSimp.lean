@@ -104,7 +104,7 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) (pos
     (guards : Array (ℕ × ArgGuard)) : MetaM RefinedSimpTheorem := do
   let info ← getConstInfo declName
   let (_,_,b') ← forallMetaTelescope info.type
-  let keys := ← RefinedDiscrTree.mkDTExprs b'.appFn!.appArg! {} false
+  let keys := ← RefinedDiscrTree.mkDTExprs b'.appFn!.appArg! false
   let thm : RefinedSimpTheorem := {
     keys        := keys
     levelParams := info.levelParams.toArray
@@ -175,7 +175,9 @@ def refinedRewrite (post : Bool) (e : Expr) : SimpM Simp.Step := do
   let s := (refinedSimpTheoremsExt.getState (← getEnv))
   let s := if post then s.post else s.pre
 
-  let candidates ← s.getMatchWithScoreWithExtra e false (Simp.getDtConfig (← Simp.getConfig))
+  let cfg' ← Simp.getConfig
+  let candidates ← withConfig (fun cfg => { cfg with iota := cfg'.iota, zeta := cfg'.zeta, zetaDelta := cfg'.zetaDelta }) <|
+    s.getMatchWithScoreWithExtra e false
 
   -- flatten, ignore score but keep extra arguments
   -- then sort by priority

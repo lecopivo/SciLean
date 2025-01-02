@@ -13,7 +13,7 @@ abbrev Approx  {N : outParam $ Type _} (lN : Filter N) (a : α)  := ApproxSoluti
 abbrev Approx.exact {a : α} := ApproxSolution.exact a rfl
 abbrev Approx.limit {N} {lN : Filter N} (M) (lM : Filter M)
   {aₙ : N → α} (x : (n : N) → Approx lM (aₙ n))
-  : Approx (lN.prod lM) (limit n ∈ lN, aₙ n) :=
+  : Approx (lN ×ˢ lM) (limit n ∈ lN, aₙ n) :=
   ApproxSolution.approx _ lN lM
     (by intro aₙ' h a h'; simp[h,h'])
     (by sorry_proof)

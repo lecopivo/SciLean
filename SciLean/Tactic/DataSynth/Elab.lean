@@ -29,7 +29,7 @@ syntax (name:=data_synth_conv) "data_synth" optConfig : conv
 
   let (r?,_) ← dataSynth g |>.run {config := cfg} |>.run stateRef
     |>.run (← Simp.mkDefaultMethods).toMethodsRef
-    |>.run {config := cfg.toConfig, simpTheorems := #[← getSimpTheorems]}
+    |>.run (← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems]))
     |>.run {}
 
   -- let cacheRef : IO.Ref LSimp.Cache ← IO.mkRef {}
@@ -71,7 +71,7 @@ syntax (name:=data_synth_tac) "data_synth" optConfig ("=>" convSeq)? : tactic
 
   let (r?,_) ← dataSynth g |>.run {config := cfg} |>.run stateRef
     |>.run (← Simp.mkDefaultMethods).toMethodsRef
-    |>.run {config := cfg.toConfig, simpTheorems := #[← getSimpTheorems]}
+    |>.run (← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems]))
     |>.run {}
 
   match r? with

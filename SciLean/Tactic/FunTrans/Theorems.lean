@@ -354,7 +354,8 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
       | throwError "unrecognized function transformation `{← ppExpr lhs}`"
     let funTransName := decl.funTransName
 
-    let fData? ← FunProp.getFunctionData? f FunProp.defaultUnfoldPred {zeta:=false}
+    let fData? ← withConfig (fun cfg => {cfg with zeta:=false}) <|
+      FunProp.getFunctionData? f FunProp.defaultUnfoldPred
 
     if let .some thmArgs ← detectLambdaTheoremArgs (← fData?.get) xs then
       return .lam {
@@ -387,7 +388,7 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
       }
     | .fvar .. =>
       let (_,_,b') ← forallMetaTelescope info.type
-      let keys := ← FunProp.RefinedDiscrTree.mkDTExprs (b'.getArg! 1) {} false
+      let keys := ← FunProp.RefinedDiscrTree.mkDTExprs (b'.getArg! 1) false
       let thm : GeneralTheorem := {
         funTransName := funTransName
         thmName := declName

@@ -32,13 +32,8 @@ class VectorType
     fun j => toVec x (fromFin (I:=n) ((toFin (I:=m) j).cast h))
 
 
-
-
-
-
-
 instance
     (X : (n : Type u) → [IndexType n] → Type*)
-    {R : outParam (Type*)} (K : outParam (Type*)) [Scalar R R] [Scalar R K]
-    {n : Type u} [IndexType n]
+    {R : outParam (Type*)} (K : outParam (Type*)) {_ : Scalar R R} {_ : Scalar R K}
+    {n : Type u} {_ : IndexType n}
     [inst : VectorType X K] : VectorType.Base (X n) n K := inst.base n

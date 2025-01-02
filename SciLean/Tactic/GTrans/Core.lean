@@ -202,12 +202,12 @@ unsafe def gtrans (e : Expr) : GTransM (Option Expr) := do
     | throwError "expected application of generalized transformation, got {← ppExpr e}"
 
   let ext := gtransTheoremsExt.getState (← getEnv)
-  let thms ← ext.theorems.getMatchWithScore e false {}
+  let thms ← ext.theorems.getMatchWithScore e false
   let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
 
   withTraceNode `Meta.Tactic.gtrans (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] {← ppExpr e}") do
 
-  let keys := ← RefinedDiscrTree.mkDTExprs e {} false
+  let keys := ← RefinedDiscrTree.mkDTExprs e false
   trace[Meta.Tactic.gtrans.candidates] "look up key: {keys}"
   trace[Meta.Tactic.gtrans.candidates] "candidates: {thms.map (·.thmName)}"
 
