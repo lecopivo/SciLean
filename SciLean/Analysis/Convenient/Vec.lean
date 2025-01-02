@@ -46,7 +46,7 @@ section CommonVectorSpaces
   variable {U V} [Vec K U] [Vec K V]
   variable {E : ι → Type v}
 
-  instance {X} [Vec K X] : Inhabited X := ⟨0⟩
+  -- instance {X} [Vec K X] : Inhabited X := ⟨0⟩
 
   abbrev AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α := AddSemigroup.mk sorry_proof
   abbrev AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α :=

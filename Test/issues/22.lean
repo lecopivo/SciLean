@@ -3,7 +3,7 @@ import SciLean
 open SciLean
 
 variable
-  {K : Type _} [RCLike K]
+  {K : Type} [RCLike K]
   {α : Type}
 
 example (i : α) : CDifferentiable K (fun (xy : (α → K) × (α → K)) => xy.fst i) := by fun_prop

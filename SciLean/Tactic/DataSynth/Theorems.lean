@@ -1,5 +1,5 @@
 import Lean
-import Mathlib.Tactic.FunProp.RefinedDiscrTree
+import Mathlib.Lean.Meta.RefinedDiscrTree
 
 import SciLean.Tactic.DataSynth.Decl
 import SciLean.Lean.Meta.Basic

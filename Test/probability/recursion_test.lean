@@ -13,6 +13,8 @@ open SciLean Rand
 set_option deprecated.oldSectionVars true
 variable {R} [RealScalar R] [MeasureSpace R] [BorelSpace R] [ToString R]
 
+local instance [Zero R] : Inhabited R := ⟨0⟩
+
 def list_sum1 (l : List R) (n : Nat) : R :=
   match n with
   | 0 => 0

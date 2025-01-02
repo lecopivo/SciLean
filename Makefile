@@ -14,6 +14,10 @@ examples:
 	./.lake/build/bin/HarmonicOscillator
 	lake build WaveEquation
 	./.lake/build/bin/WaveEquation
+	lake build BFGS
+	./.lake/build/bin/BFGS
+	lake build LBFGS
+	./.lake/build/bin/LBFGS
 
 lint: build
 	./build/bin/runLinter

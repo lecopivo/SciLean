@@ -33,8 +33,8 @@ abbrev reduce [Inhabited X] (x : DataArrayN X I) (f : X → X → X) :=
 
 abbrev maxD [Max X] (x : DataArrayN X I) (x₀ : X) : X := x.reduceD (max · ·) x₀
 abbrev minD [Min X] (x : DataArrayN X I) (x₀ : X) : X := x.reduceD (min · ·) x₀
-abbrev max [Max X] [Inhabited X] (x : DataArrayN X I) : X := x.maxD default
-abbrev min [Min X] [Inhabited X] (x : DataArrayN X I) : X := x.minD default
+abbrev max [Max X] [Zero X] (x : DataArrayN X I) : X := x.maxD 0
+abbrev min [Min X] [Zero X] (x : DataArrayN X I) : X := x.minD 0
 
 
 macro "reshape_tactic" : tactic => `(tactic| first | decide | simp | (fail "failed to reshape"))
@@ -308,11 +308,14 @@ noncomputable
 instance : Solve R I (I×J) where
   solve A B := A.solve' B
 
+local instance [Zero X] : Inhabited X := ⟨0⟩
+
 /-- Cross product of two vector. -/
 def cross (x y : R^[3]) : R^[3] :=
   ⊞[x[1]*y[2] - x[2]*y[1],
     x[2]*y[0] - x[0]*y[2],
     x[0]*y[1] - x[1]*y[0]]
+
 
 /-- Matrix corresponding to taking cross product with `x`  -/
 def crossmatrix (x : R^[3]) : R^[3,3] := Id.run do
@@ -348,18 +351,17 @@ set_default_scalar R
 
 open Scalar
 
-
 /-- Softmax turns array into an array of values in (0,1) -/
 def softmax (x : R^[I]) : R^[I] :=
-  let xmax := x.max
+  let xmax := x.maxD 0
   let w := ∑ i, exp (x[i] - xmax)
-  ⊞ i => exp (x[i] - xmax) / w
+  ⊞ i => exp (x[i] - xmax) / w -- --exp (x[i] - xmax) / w
 
 /-- Logarithm of sum of exponentials, its derivative is softmax.
 
 Common when doing maximul likelihood. -/
 def logsumexp (x : R^[I]) : R :=
-  let xmax := x.max
+  let xmax := x.maxD 0
   log (∑ i, exp (x[i] - xmax)) + xmax
 
 /-- Elementwise exponential -/

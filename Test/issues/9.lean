@@ -8,6 +8,8 @@ variable
   {K} [RCLike K]
   {X} [Vec K X] [Vec K Y] [Vec K Z] [Vec K W]
 
+local instance [Zero X] : Inhabited X := ⟨0⟩
+
 opaque inv1 [Inhabited X] (f : X → Y) (y : Y) : X
 opaque inv2 [Inhabited X] (f : X → Y) (y : Y) : X
 

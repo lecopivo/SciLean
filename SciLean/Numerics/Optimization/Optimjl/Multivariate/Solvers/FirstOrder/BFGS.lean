@@ -185,6 +185,7 @@ def updateH (state : State R n)  :
 
   return ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩
 
+local instance [Zero R] : Inhabited R := ⟨0⟩
 
 def assessConvergence (method : BFGS R) (state : State R n) :=
 

@@ -1,6 +1,7 @@
 import Mathlib.Tactic.FunProp
 import SciLean.Lean.Meta.Basic
 import SciLean.Util.RewriteBy
+import Mathlib.Lean.Meta.RefinedDiscrTree
 
 open Lean Meta Elab Term Command
 
@@ -93,8 +94,8 @@ def defineFunPropTheorem (statement proof : Expr) (ctx : Array Expr)
   return true
 
 
-partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.Trie.forValuesM {α} {m} [Monad m]
-    (t : Mathlib.Meta.FunProp.RefinedDiscrTree.Trie α) (f : α → m Unit) : m Unit := do
+partial def _root_.Lean.Meta.RefinedDiscrTree.Trie.forValuesM {α} {m} [Monad m]
+    (t : Lean.Meta.RefinedDiscrTree.Trie α) (f : α → m Unit) : m Unit := do
 
   match t with
   | .node children =>
@@ -105,8 +106,8 @@ partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.Trie.forValuesM {α} {m
     for v in vs do
       f v
 
-partial def _root_.Mathlib.Meta.FunProp.RefinedDiscrTree.forValuesM {α} {m} [Monad m]
-    (t : Mathlib.Meta.FunProp.RefinedDiscrTree α) (f : α → m Unit) : m Unit := do
+partial def _root_.Lean.Meta.RefinedDiscrTree.forValuesM {α} {m} [Monad m]
+    (t : Lean.Meta.RefinedDiscrTree α) (f : α → m Unit) : m Unit := do
   t.root.forM (fun _ trie => trie.forValuesM f)
 
 

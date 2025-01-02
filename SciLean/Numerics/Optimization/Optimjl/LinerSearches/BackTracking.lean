@@ -27,6 +27,8 @@ namespace BackTracking
 
 variable [ToString R]
 
+local instance [Zero R] : Inhabited R := ⟨0⟩
+
 def call (ϕ : R → R) (ϕ₀ dϕ₀ x₀ : R) : LineSearchM (BackTracking R) Unit (R×R) := do
   let ⟨c₁, ρ_hi, ρ_lo, iterations, order, _⟩ ← read
 

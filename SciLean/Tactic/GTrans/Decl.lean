@@ -1,5 +1,5 @@
 import Lean
-import Mathlib.Tactic.FunProp.RefinedDiscrTree
+import Mathlib.Lean.Meta.RefinedDiscrTree
 
 
 open Lean Meta

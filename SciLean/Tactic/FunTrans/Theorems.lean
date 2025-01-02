@@ -7,7 +7,10 @@ import Batteries.Data.RBMap.Alter
 
 import SciLean.Tactic.FunTrans.Decl
 import Mathlib.Tactic.FunProp.Theorems
+import Mathlib.Lean.Meta.RefinedDiscrTree
 import SciLean.Lean.Array
+
+
 
 /-!
 ## `fun_trans` enviroment extensions storing thorems for `fun_trans`
@@ -261,7 +264,7 @@ structure GeneralTheorem where
   /-- theorem name -/
   thmName     : Name
   /-- discriminatory tree keys used to index this theorem -/
-  keys        : List FunProp.RefinedDiscrTree.DTExpr
+  keys        : List RefinedDiscrTree.DTExpr
   /-- priority -/
   priority    : Nat  := eval_prio default
   deriving Inhabited, BEq
@@ -273,7 +276,7 @@ def GeneralTheorem.getProof (thm : GeneralTheorem) : MetaM Expr := do
 /-- -/
 structure GeneralTheorems where
   /-- -/
-  theorems     : FunProp.RefinedDiscrTree GeneralTheorem := {}
+  theorems     : RefinedDiscrTree GeneralTheorem := {}
   deriving Inhabited
 
 /-- -/
@@ -285,7 +288,7 @@ initialize morTheoremsExt : GeneralTheoremsExt ←
     name     := by exact decl_name%
     initial  := {}
     addEntry := fun d e =>
-      {d with theorems := e.keys.foldl (FunProp.RefinedDiscrTree.insertDTExpr · · e) d.theorems}
+      {d with theorems := e.keys.foldl (RefinedDiscrTree.insertDTExpr · · e) d.theorems}
   }
 
 
@@ -295,7 +298,7 @@ initialize fvarTheoremsExt : GeneralTheoremsExt ←
     name     := by exact decl_name%
     initial  := {}
     addEntry := fun d e =>
-      {d with theorems := e.keys.foldl (FunProp.RefinedDiscrTree.insertDTExpr · · e) d.theorems}
+      {d with theorems := e.keys.foldl (RefinedDiscrTree.insertDTExpr · · e) d.theorems}
   }
 
 
@@ -388,7 +391,7 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
       }
     | .fvar .. =>
       let (_,_,b') ← forallMetaTelescope info.type
-      let keys := ← FunProp.RefinedDiscrTree.mkDTExprs (b'.getArg! 1) false
+      let keys := ← RefinedDiscrTree.mkDTExprs (b'.getArg! 1) false
       let thm : GeneralTheorem := {
         funTransName := funTransName
         thmName := declName

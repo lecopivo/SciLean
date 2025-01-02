@@ -42,5 +42,3 @@ def main : IO Unit := do
       if j.toFloat < 10*(x+1.0) then
         IO.print "o"
     IO.println ""
-
-#eval main

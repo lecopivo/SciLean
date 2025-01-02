@@ -1,6 +1,7 @@
 import Lean.Meta.Tactic.Simp
 
-import Mathlib.Tactic.FunProp.RefinedDiscrTree
+import Mathlib.Lean.Meta.RefinedDiscrTree
+import Mathlib.Lean.Meta.RefinedDiscrTree.Lookup
 
 namespace SciLean
 

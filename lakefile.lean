@@ -4,7 +4,7 @@ open Lake DSL System
 
 package scilean
 
-def moreLinkArgs := #["-lm"]
+def moreLinkArgs : Array String := #[] -- #["-lm"]
 
 @[default_target]
 lean_lib SciLean {
@@ -16,6 +16,7 @@ lean_lib SciLean {
 @[test_driver]
 lean_lib Test {
   globs := #[Glob.submodules `Test]
+  moreLinkArgs := moreLinkArgs
 }
 
 lean_lib CompileTactics where
@@ -29,10 +30,17 @@ lean_exe Doodle {
 
 lean_exe WaveEquation {
   root := `examples.WaveEquation
+  moreLinkArgs := moreLinkArgs
 }
+
+lean_exe HelloWorld {
+  root := `examples.HelloWorld
+}
+
 
 lean_exe HarmonicOscillator {
   root := `examples.HarmonicOscillator
+  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe CircleOptimisation {
@@ -68,6 +76,7 @@ lean_exe ForLoopTest {
 
 lean_exe SurfaceMeshTests {
   root := `examples.SurfaceMeshTests
+  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe MNISTClassifier where
@@ -78,7 +87,8 @@ lean_exe MNISTClassifier where
 meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
 
-require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.15.0-rc1"
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "master"
+-- require leanblast from git "https://github.com/lecopivo/LeanBLAS" @ "master"
 
 set_option linter.unusedVariables false
 
