@@ -10,13 +10,13 @@ variable
 --- arithmetic operations to axp(b)y and scal
 
 @[vector_optimize]
-theorem add_to_axpy (x y : X) : x+y = axpby 1 1 x y := by
+theorem add_to_axpy (x y : X) : x+y = axpby 1 x 1 y := by
   ext
   simp[vector_to_spec]
 
 omit [Lawful X] in
 @[vector_optimize]
-theorem sub_to_axpby (x y : X) : x-y = axpby 1 (-1) x y := by rfl
+theorem sub_to_axpby (x y : X) : x-y = axpby 1 x (-1) y := by rfl
 
 omit [Lawful X] in
 @[vector_optimize]
@@ -32,7 +32,7 @@ theorem smul_to_scal (a : K) (x : X) : a•x = scal a x := by rfl
 -- We case every  axpy` to `axpby` as the writting out all the combinations of `axp(b)y`
 -- was getting too tedious
 @[vector_optimize]
-theorem axpy_to_axpby (a : K) (x y : X) : axpy a x y = axpby a 1 x y := by
+theorem axpy_to_axpby (a : K) (x y : X) : axpy a x y = axpby a x 1 y := by
   ext
   simp[vector_to_spec]
 
@@ -45,7 +45,7 @@ We associated `axpby` to the right as the right hand side can be used destructiv
 left hand side. -/
 @[vector_optimize]
 theorem axpby_assoc_right (a b c d : K) (x y z: X) :
-    axpby a b (axpby c d x y) z  = axpy (a*c) x (axpby (a*d) b y z) := by
+    axpby a (axpby c x d y) b z  = axpy (a*c) x (axpby (a*d) y b z) := by
   ext
   simp[vector_to_spec,smul_smul,add_assoc]
 
@@ -61,7 +61,7 @@ theorem scal_scal (a b : K) (x : X) : scal a (scal b x)  = scal (a*b) x := by
 -- scal axpy composition
 
 @[vector_optimize]
-theorem scal_axpby (a b c : K) (x : X) : scal a (axpby b c x y)  = axpby (a*b) (a*c) x y := by
+theorem scal_axpby (a b c : K) (x : X) : scal a (axpby b x c y)  = axpby (a*b) x (a*c) y := by
   ext
   simp[vector_to_spec,smul_smul,mul_add,mul_assoc]
 
@@ -69,12 +69,12 @@ theorem scal_axpby (a b c : K) (x : X) : scal a (axpby b c x y)  = axpby (a*b) (
 -- axpy scal composition
 
 @[vector_optimize]
-theorem axpby_scal_left (a b c : K) (x : X) : (axpby a b (scal c x) y)  = axpby (a*c) b x y := by
+theorem axpby_scal_left (a b c : K) (x : X) : (axpby a (scal c x) b y)  = axpby (a*c) x b y := by
   ext
   simp[vector_to_spec,smul_smul]
 
 @[vector_optimize]
-theorem axpby_scal_right (a b c : K) (x : X) : (axpby a b x (scal c y))  = axpby a (b*c) x y := by
+theorem axpby_scal_right (a b c : K) (x : X) : (axpby a x b (scal c y))  = axpby a x (b*c) y := by
   ext
   simp[vector_to_spec,smul_smul]
 

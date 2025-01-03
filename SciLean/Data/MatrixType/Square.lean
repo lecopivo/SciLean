@@ -27,31 +27,31 @@ class MatrixType.Square
     let A := toMatrix A
     A.diag
 
-  /-- Add outer product of a vector to a matrix.
+  -- /-- Add outer product of a vector to a matrix.
 
-  `outerprodselfAdd a x A = a•(x*xᴴ) + A`  (`xᴴ = xᵀ` for real vectors)
+  -- `outerprodselfAdd a x A = a•(x*xᴴ) + A`  (`xᴴ = xᵀ` for real vectors)
 
-  Impementable using BLAS `her`, `hpr`, `syr`, `spr`. -/
-  outerprodselfAdd (alpha : K) (x : X) (A : M) : M
+  -- Impementable using BLAS `her`, `hpr`, `syr`, `spr`. -/
+  -- outerprodselfAdd (alpha : K) (x : X) (A : M) : M
 
-  outerprodselfAdd_spec (alpha : K) (x : X) (A : M) :
-    toMatrix (outerprodselfAdd alpha x A)
-    =
-    let x := Matrix.col (Fin 1) (toVec x)
-    alpha • (x * xᴴ) + toMatrix A
+  -- outerprodselfAdd_spec (alpha : K) (x : X) (A : M) :
+  --   toMatrix (outerprodselfAdd alpha x A)
+  --   =
+  --   let x := Matrix.col (Fin 1) (toVec x)
+  --   alpha • (x * xᴴ) + toMatrix A
 
-  /-- Add symmetric outer product of two vectors to a matrix.
+  -- /-- Add symmetric outer product of two vectors to a matrix.
 
-  `outerprodselfAdd a x A = a•(x*yᴴ) + (y*(a•x)ᴴ) + A`  (`xᴴ = xᵀ` for real vectors)
+  -- `outerprodselfAdd a x A = a•(x*yᴴ) + (y*(a•x)ᴴ) + A`  (`xᴴ = xᵀ` for real vectors)
 
-  Impementable using BLAS `ger`, `geru`, `gerc`. -/
-  outerprodsymmAdd (alpha : K) (x y : X) (A : M) : M
+  -- Impementable using BLAS `ger`, `geru`, `gerc`. -/
+  -- outerprodsymmAdd (alpha : K) (x y : X) (A : M) : M
 
-  outerprodsymmAdd_spec (alpha : K) (x y : X) (A : M) :
-    toMatrix (outerprodsymmAdd alpha x y A)
-    =
-    let x := (Matrix.col (Fin 1) (toVec x))
-    alpha • (x * xᴴ) + (x * (alpha • x)ᴴ) + toMatrix A
+  -- outerprodsymmAdd_spec (alpha : K) (x y : X) (A : M) :
+  --   toMatrix (outerprodsymmAdd alpha x y A)
+  --   =
+  --   let x := (Matrix.col (Fin 1) (toVec x))
+  --   alpha • (x * xᴴ) + (x * (alpha • x)ᴴ) + toMatrix A
 
 
 namespace MatrixType

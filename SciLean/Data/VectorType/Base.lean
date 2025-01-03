@@ -100,10 +100,10 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
   /-- `axpby a b x y = a • x + b • y`
 
   `y` should be modified if it is passed with ref counter one. -/
-  axpby (alpha beta : K) (x y : X) : X := axpy alpha x (scal beta y)
+  axpby (alpha : K) (x : X) (beta : K) (y : X) : X := axpy alpha x (scal beta y)
 
   axpby_spec (alpha beta : K) (x y : X) :
-    toVec (axpby alpha beta x y) = alpha • toVec x + beta • toVec y
+    toVec (axpby alpha x beta y) = alpha • toVec x + beta • toVec y
 
   /-  Element wise operations -/
 
@@ -124,13 +124,14 @@ class VectorType.Lawful (X : Type*)
     [Scalar R R] [Scalar R K] [VectorType.Base X n K] : Prop where
   toVec_injective : Function.Injective (VectorType.Base.toVec (X:=X) (n:=n))
 
+
 open Function VectorType.Base in
 class VectorType.Dense (X : Type*)
     {n : outParam (Type*)} {_ : outParam (IndexType n)}
     {R K : outParam (Type*)} [Scalar R R] [Scalar R K]
     [VectorType.Base X n K] where
   fromVec : (n → K) → X
-  protected left_inv : LeftInverse fromVec toVec
+  -- protected left_inv : LeftInverse fromVec toVec
   protected right_inv : RightInverse fromVec toVec
 
   /-- Constant vector with all elements equial to `k`. -/
@@ -255,10 +256,10 @@ class VectorType.Dense (X : Type*)
 
 
 
-instance (X : Type*) (n : outParam (Type*)) {_ : outParam (IndexType n)} {R : outParam (Type*)} (K : outParam (Type*))
-    {_ : outParam (Scalar R R)} {_ : outParam (Scalar R K)} [VectorType.Base X n K] [VectorType.Dense X] :
-    VectorType.Lawful X where
-  toVec_injective := (VectorType.Dense.left_inv (X:=X) (n:=n) (K:=K)).injective
+-- instance (X : Type*) (n : outParam (Type*)) {_ : outParam (IndexType n)} {R : outParam (Type*)} (K : outParam (Type*))
+--     {_ : outParam (Scalar R R)} {_ : outParam (Scalar R K)} [VectorType.Base X n K] [VectorType.Dense X] :
+--     VectorType.Lawful X where
+--   toVec_injective := (VectorType.Dense.left_inv (X:=X) (n:=n) (K:=K)).injective
 
 namespace VectorType
 
@@ -292,7 +293,7 @@ variable
 open VectorType
 
 instance : Add X := ⟨fun x y => axpy 1 x y⟩
-instance : Sub X := ⟨fun x y => axpby 1 (-1) x y⟩
+instance : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
 instance : Neg X := ⟨fun x => scal (-1) x⟩
 instance : SMul K X := ⟨fun s x => scal s x⟩
 
@@ -452,13 +453,20 @@ section Equivalences
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Dense X]
+  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X] [VectorType.Dense X]
 
 def vequiv : X ≃ (n → K) where
   toFun := toVec
   invFun := fromVec
-  left_inv := Dense.left_inv
+  left_inv := by
+    have h : (toVec : X → (n → K)).Bijective := by
+      constructor
+      · apply Lawful.toVec_injective
+      · apply Dense.right_inv.surjective
+    intro x
+    sorry_proof -- this should be true
   right_inv := Dense.right_inv
+
 
 @[vector_to_spec]
 theorem vequiv_apply_eq_toVec (x : X) :

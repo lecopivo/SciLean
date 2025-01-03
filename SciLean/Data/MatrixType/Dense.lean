@@ -18,7 +18,7 @@ class MatrixType.Dense
   -- maybe it should be `Matrix m n K → M → M` such that `Dense` works also for submatrices
   -- the current definition forces lawfulness which excludes submatrices
   fromMatrix : Matrix m n K → M
-  protected left_inv'  : LeftInverse fromMatrix MatrixType.Base.toMatrix
+  -- protected left_inv'  : LeftInverse fromMatrix MatrixType.Base.toMatrix
   protected right_inv' : RightInverse fromMatrix MatrixType.Base.toMatrix
 
 
@@ -39,7 +39,7 @@ class MatrixType.Dense
     =
     let A := toMatrix A
     let y := toVec y
-    A.updateColumn j y
+    A.updateCol j y
 
 
   /-- Add outer product of two vectors to a matrix
@@ -56,18 +56,6 @@ class MatrixType.Dense
     let x := (Matrix.col (Fin 1) (toVec x))
     let y := (Matrix.col (Fin 1) (toVec y))
     alpha • (y * xᴴ) + A
-
-
-instance (M : Type*)
-    {m n : outParam (Type*)} {_ : IndexType m} {_ : IndexType n}
-    {R K : outParam (Type*)} {_ : RealScalar R} {_ : Scalar R K}
-    (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
-    [MatrixType.Base M X Y] [MatrixType.Dense M] : MatrixType.Lawful M where
-
-  toMatrix_injective := by
-    intro A B h
-    apply (MatrixType.Dense.left_inv' (M:=M)).injective
-    exact h
 
 
 namespace MatrixType
@@ -87,7 +75,7 @@ variable
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {m n : Type*} {_ : IndexType m} {_ : IndexType n}
   {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
-  {M} [MatrixType.Base M X Y] [MatrixType.Dense M]
+  {M} [MatrixType.Base M X Y] [MatrixType.Lawful M] [MatrixType.Dense M]
 
 open MatrixType
 
@@ -95,7 +83,13 @@ open MatrixType
 def mequiv : M ≃ Matrix m n K where
   toFun := toMatrix
   invFun := fromMatrix
-  left_inv := MatrixType.Dense.left_inv'
+  left_inv := by
+    have h : (toMatrix : M → (Matrix m n K)).Bijective := by
+      constructor
+      · apply Lawful.toMatrix_injective
+      · apply Dense.right_inv'.surjective
+    intro x
+    sorry_proof -- this should be true
   right_inv := MatrixType.Dense.right_inv'
 
 @[matrix_to_spec]
