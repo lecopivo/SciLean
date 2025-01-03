@@ -8,6 +8,8 @@ build:
 	lake build
 
 examples:
+	lake build HelloWorld
+	./.lake/build/bin/HelloWorld
 	lake build SurfaceMeshTests
 	./.lake/build/bin/SurfaceMeshTests
 	lake build HarmonicOscillator
@@ -18,6 +20,8 @@ examples:
 	./.lake/build/bin/BFGS
 	lake build LBFGS
 	./.lake/build/bin/LBFGS
+	lake build BlasTest
+	./.lake/build/bin/BlasTest
 
 lint: build
 	./build/bin/runLinter

@@ -4,7 +4,7 @@ open Lake DSL System
 
 package scilean
 
-def moreLinkArgs : Array String := #[] -- #["-lm"]
+def moreLinkArgs : Array String := #["-lm", "-lblas"]
 
 @[default_target]
 lean_lib SciLean {
@@ -35,6 +35,7 @@ lean_exe WaveEquation {
 
 lean_exe HelloWorld {
   root := `examples.HelloWorld
+  moreLinkArgs := moreLinkArgs
 }
 
 
@@ -57,14 +58,21 @@ lean_exe WalkOnSpheres {
 
 lean_exe BFGS {
   root := `Test.optimjl.bfgs
+  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe LBFGS {
   root := `Test.optimjl.lbfgs
+  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe GMM {
   root := `SciLean.Examples.GMM.Main
+}
+
+lean_exe BlasTest {
+  root := `examples.BlasTest
+  moreLinkArgs := moreLinkArgs
 }
 
 
@@ -88,7 +96,7 @@ meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
 
 require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "master"
--- require leanblast from git "https://github.com/lecopivo/LeanBLAS" @ "master"
+require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "master"
 
 set_option linter.unusedVariables false
 
