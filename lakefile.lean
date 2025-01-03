@@ -87,6 +87,11 @@ lean_exe SurfaceMeshTests {
   moreLinkArgs := moreLinkArgs
 }
 
+lean_exe FloatMatrixTest {
+  root := `examples.FloatMatrixTest
+  moreLinkArgs := moreLinkArgs
+}
+
 lean_exe MNISTClassifier where
   root := `examples.MNISTClassifier
 

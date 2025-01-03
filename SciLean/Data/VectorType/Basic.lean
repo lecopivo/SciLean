@@ -17,9 +17,11 @@ vector space structure on `(X n)` that is computationally efficient.
  -/
 class VectorType
     (X : (n : Type u) → [IndexType n] → Type*)
-    {R : outParam (Type*)} (K : outParam (Type*)) [Scalar R R] [Scalar R K]
+    {R : outParam (Type*)} (K : outParam (Type*)) [RealScalar R] [Scalar R K]
   where
   [base : ∀ (n : Type u) [IndexType n], VectorType.Base (X n) n K]
+  [dense : ∀ (n : Type u) [IndexType n], VectorType.Dense (X n)]
+  [lawful : ∀ (n : Type u) [IndexType n], VectorType.Lawful (X n)]
 
   /-- Index vector with different index type with the same number of elements.
 
@@ -34,6 +36,18 @@ class VectorType
 
 instance
     (X : (n : Type u) → [IndexType n] → Type*)
-    {R : outParam (Type*)} (K : outParam (Type*)) {_ : Scalar R R} {_ : Scalar R K}
-    {n : Type u} {_ : IndexType n}
+    {R : outParam (Type*)} (K : outParam (Type*)) {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
+    {n : outParam (Type u)} {_ : outParam (IndexType n)}
     [inst : VectorType X K] : VectorType.Base (X n) n K := inst.base n
+
+instance
+    (X : (n : Type u) → [IndexType n] → Type*)
+    {R : outParam (Type*)} (K : outParam (Type*)) {_ : RealScalar R} {_ : Scalar R K}
+    {n : Type u} {_ : IndexType n}
+    [inst : VectorType X K] : VectorType.Dense (X n) := inst.dense n
+
+instance
+    (X : (n : Type u) → [IndexType n] → Type*)
+    {R : outParam (Type*)} (K : outParam (Type*)) {_ : RealScalar R} {_ : Scalar R K}
+    {n : Type u} {_ : IndexType n}
+    [inst : VectorType X K] : VectorType.Lawful (X n) := inst.lawful n

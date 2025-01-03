@@ -21,8 +21,8 @@ section BLASMissing
 
 end BLASMissing
 
-structure FloatMatrix' (storage : DenseMatrix.Storage) (m n : Type*) [IndexType m] [IndexType n] where
-  data : DenseMatrix FloatArray storage (size m) (size n) Float
+structure FloatMatrix' (ord : BLAS.Order) (storage : DenseMatrix.Storage) (m n : Type*) [IndexType m] [IndexType n] where
+  data : DenseMatrix FloatArray ord storage (size m) (size n) Float
 
 -- abbrev FloatMatrix (n : Type*) [IndexType n] := FloatMatrix' DenseMatrix.packedStorage n
 
@@ -32,7 +32,7 @@ variable
   {strg : DenseMatrix.Storage}
   {k m n : Type*} [IndexType k] [IndexType m] [IndexType n]
 
-instance : VectorType.Base (FloatMatrix' strg m n) (m×n) Float where
+instance : VectorType.Base (FloatMatrix' ord strg m n) (m×n) Float where
   toVec A := fun (i,j) => A.data.get (toFin i) (toFin j)
   zero := ⟨DenseMatrix.const (Array:=FloatArray) (size m) (size n) strg 0.0⟩
   zero_spec := sorry_proof
@@ -68,60 +68,64 @@ instance : VectorType.Base (FloatMatrix' strg m n) (m×n) Float where
   mul_spec := sorry_proof
 
 
-instance : VectorType.Dense (FloatMatrix' strg m n) where
+instance : VectorType.Dense (FloatMatrix' ord strg m n) where
   fromVec f := ⟨DenseMatrix.ofFn (fun (i : Fin (size m)) (j : Fin (size n)) => f (fromFin i, fromFin j))⟩
   right_inv := by intro f; simp[VectorType.toVec]
   const k := ⟨DenseMatrix.const _ _ _ k⟩
-  const_spec := sorry
+  const_spec := sorry_proof
   div x y := ⟨DenseMatrix.div x.data y.data⟩
-  div_spec := sorry
+  div_spec := sorry_proof
   inv x := ⟨DenseMatrix.inv x.data⟩
-  inv_spec := sorry
+  inv_spec := sorry_proof
   exp x := ⟨DenseMatrix.exp x.data⟩
-  exp_spec := sorry
+  exp_spec := sorry_proof
 
 
 
 -- Because `MatrixType.Base` has `X` and `Y` as `outParam` we are forced to pick particular
 -- storage option for input and output vectors ... this does not look ideal
-instance : MatrixType.Base (FloatMatrix' strg m n) (FloatVector n) (FloatVector m) where
+instance : MatrixType.Base (FloatMatrix' ord strg m n) (FloatVector n) (FloatVector m) where
 
   toMatrix A i j:= A.data.get (toFin i) (toFin j)
   toVec_eq_toMatrix := by intros; rfl
-  row A i := ⟨A.data.row (toFin i)⟩
+  row A i := ⟨A.data.row (toFin i) |>.toNormal⟩
   row_spec := sorry_proof
-  sumRows A := ⟨A.data.sumRows⟩
+  sumRows A := ⟨.ofFn fun i => (A.data.row i).sum⟩
   sumRows_spec := sorry_proof
-  col A j := ⟨A.data.col (toFin j)⟩
-  col_spec := sorry
-  sumCols A := ⟨A.data.sumCols⟩
-  sumCols_spec := sorry
+  col A j := ⟨A.data.col (toFin j) |>.toNormal⟩
+  col_spec := sorry_proof
+  sumCols A := ⟨.ofFn fun j => (A.data.col j).sum⟩
+  sumCols_spec := sorry_proof
   gemv a b A x y := ⟨DenseMatrix.gemv a A.data x.data b y.data⟩
-  gemv_spec := sorry
+  gemv_spec := sorry_proof
   gemvT a b A x y := ⟨DenseMatrix.gemvT a A.data x.data b y.data⟩
-  gemvT_spec := sorry
+  gemvT_spec := sorry_proof
   gemvH a b A x y := ⟨DenseMatrix.gemvH a A.data x.data b y.data⟩
-  gemvH_spec := sorry
+  gemvH_spec := sorry_proof
 
 
-instance : MatrixType.Dense (FloatMatrix' strg m n) where
+instance : MatrixType.Dense (FloatMatrix' ord strg m n) where
   fromMatrix f := ⟨DenseMatrix.ofFn fun i j => f (fromFin i) (fromFin j)⟩
   right_inv' := by intro A; simp[MatrixType.toMatrix]
-  updateRow A i x := ⟨DenseMatrix.rowSet A.data (toFin i) x.data⟩
-  updateRow_spec := sorry
-  updateCol A j y := ⟨DenseMatrix.colSet A.data (toFin j) y.data⟩
-  updateCol_spec := sorry
+  updateRow A i x :=
+    let A := A.data.row (toFin i) |>.set x.data
+    ⟨⟨A.data, sorry⟩⟩
+  updateRow_spec := sorry_proof
+  updateCol A j y :=
+    let A := A.data.col (toFin j) |>.set y.data
+    ⟨⟨A.data, sorry⟩⟩
+  updateCol_spec := sorry_proof
   outerprodAdd a x y A := ⟨DenseMatrix.ger a x.data y.data A.data⟩
-  outerprodAdd_spec := sorry
+  outerprodAdd_spec := sorry_proof
 
 
-instance : MatrixType.Square (FloatMatrix' strg n n) where
+instance : MatrixType.Square (FloatMatrix' ord strg n n) where
   diagonal x := ⟨DenseMatrix.diag x.data⟩
-  diagonal_spec := sorry
+  diagonal_spec := sorry_proof
   diag A := ⟨A.data.diagonal⟩
-  diag_spec := sorry
+  diag_spec := sorry_proof
 
 
 -- instance : MatrixType.MatMul (FloatMatrix' strg m n) (FloatMatrix' strg k m) (FloatMatrix' strg k n) where
---   matmul := sorry
---   matmul_spec := sorry
+--   matmul := sorry_proof
+--   matmul_spec := sorry_proof

@@ -121,6 +121,8 @@ import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.DataArray.RevDeriv
 import SciLean.Data.DataArray.VecN
 import SciLean.Data.FinProd
+import SciLean.Data.FloatVector
+import SciLean.Data.FloatMatrix
 import SciLean.Data.Function
 import SciLean.Data.IndexType
 import SciLean.Data.IndexType.Basic

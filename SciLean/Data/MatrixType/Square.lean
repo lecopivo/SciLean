@@ -21,7 +21,7 @@ class MatrixType.Square
 
   /-- Extract diagonal of matrix -/
   diag (A : M) : X
-  diag_spec {n} [IndexType n] (A : M) :
+  diag_spec (A : M) :
     toVec (diag A)
     =
     let A := toMatrix A

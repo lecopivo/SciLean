@@ -8,15 +8,11 @@ namespace SciLean
 
 open BLAS IndexType
 
-section BLASMissing
-def _root_.BLAS.DenseVector.packedStorage : DenseVector.Storage := {offset:=0, inc:=1, bufferSize := .exact}
-
-end BLASMissing
 
 structure FloatVector' (storage : DenseVector.Storage) (n : Type*) [IndexType n] where
   data : DenseVector FloatArray storage (size n) Float
 
-abbrev FloatVector (n : Type*) [IndexType n] := FloatVector' DenseVector.packedStorage n
+abbrev FloatVector (n : Type*) [IndexType n] := FloatVector' .normal n
 
 namespace FloatVector
 
@@ -72,5 +68,5 @@ instance : VectorType.Lawful (FloatVector n) where
     intro x y h;
     cases' x with x; cases' y with y
     simp only [FloatVector'.mk.injEq]
-    simp [VectorType.toVec,DenseVector.get,DenseVector.packedStorage] at h
-    sorry
+    simp [VectorType.toVec,DenseVector.get] at h
+    sorry_proof
