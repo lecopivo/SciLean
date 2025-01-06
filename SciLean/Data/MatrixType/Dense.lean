@@ -9,7 +9,7 @@ class MatrixType.Dense
     (M : Type*)
     {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
     {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
-    {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
+    {X Y : outParam (Type*)} {_ : outParam (VectorType.Base X n K)} {_ : outParam (VectorType.Base Y m K)}
     [MatrixType.Base M X Y]
   extends
     VectorType.Dense M

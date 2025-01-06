@@ -499,3 +499,39 @@ theorem finrank_eq_index_card : Module.finrank K X = Fintype.card n :=
 
 
 end Equivalences
+
+
+section Functions
+
+variable
+  {X : Type*} {n : Type u} {R :  Type*}
+  {_ : RealScalar R} {_ : IndexType n} [VectorType.Base X n R] [VectorType.Dense X]
+
+def max (x : X) : R :=
+  if h : 0 < size n then
+    toVec x (imaxRe x h)
+  else
+    0
+
+def min (x : X) : R :=
+  if h : 0 < size n then
+    toVec x (iminRe x h)
+  else
+    0
+
+def logsumexp (x : X) : R :=
+  if 0 < size n then
+    let xmax := max x
+    let x := exp (scalAdd 1 (-xmax) x)
+    let s := sum x
+    Scalar.log s + xmax
+  else
+    0
+
+def softmax (x : X) : X :=
+  let xmax := max x
+  let x' := scalAdd 1 (-xmax) x
+  let w := sum (exp x')
+  scal w⁻¹ x'
+
+end Functions

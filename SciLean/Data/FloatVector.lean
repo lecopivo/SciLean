@@ -17,7 +17,7 @@ abbrev FloatVector (n : Type*) [IndexType n] := FloatVector' .normal n
 namespace FloatVector
 
 variable
-  {strg : DenseVector.Storage} {n : Type*} [IndexType n]
+  {strg : DenseVector.Storage} {n : Type*} {_ : IndexType n}
 
 
 instance : VectorType.Base (FloatVector' strg n) n Float where

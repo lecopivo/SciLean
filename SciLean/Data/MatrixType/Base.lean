@@ -20,9 +20,9 @@ of type `Y`.
 This class provides functionality implementable using BLAS. -/
 class MatrixType.Base
       (M : Type*)
-      {m n : outParam (Type*)} [IndexType m] [IndexType n]
-      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
-      (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
+      {m n : outParam (Type*)} [outParam <| IndexType m] [outParam <| IndexType n]
+      {R K : outParam (Type*)} [outParam <| RealScalar R] [outParam <| Scalar R K]
+      (X Y : outParam (Type*)) [outParam <| VectorType.Base X n K] [outParam <| VectorType.Base Y m K]
   extends
     VectorType.Base M (m×n) K
   where
@@ -216,7 +216,7 @@ variable
       {M : Type*}
       {m n : outParam (Type*)} {_ : IndexType m} {_ : IndexType n}
       {R K : outParam (Type*)} {_ : RealScalar R} {_ : Scalar R K}
-      {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
+      {X Y : outParam (Type*)} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
       [MatrixType.Base M X Y] [MatrixType.Lawful M]
 
 attribute [local instance] MatrixType.vectorTypeLawful
@@ -228,19 +228,6 @@ instance : NormedAddCommGroup M := by infer_instance
 instance : NormedSpace K M := by infer_instance
 instance instInnerProductSpace : InnerProductSpace K M := by infer_instance
 instance instAdjointSpace : AdjointSpace K M := by infer_instance
-
-example {R : Type _} [RealScalar R] {X : Type _}
-  [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] :
-  Inner R X := by infer_instance
-
-example   {R : Type _} [RealScalar R]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] :
-  HAdd X X X := by infer_instance
-
-
--- -- temporary hack
--- set_synth_order instInnerProductSpace #[13, 11, 12, 14, 3, 4, 7, 8]
--- set_synth_order instAdjointSpace #[13, 11, 12, 14, 3, 4, 7, 8]
 
 end Instances
 

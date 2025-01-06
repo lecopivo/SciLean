@@ -9,9 +9,9 @@ open MatrixType VectorType
 
 class MatrixType.MatMul
       (M₁ M₂ : Type*) (M₃ : outParam (Type*))
-      {l m n : outParam (Type*)} [IndexType l] [IndexType m] [IndexType n]
-      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
-      {X Y Z : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K] [VectorType.Base Z l K]
+      {l m n : outParam <| (Type*)} {_ : outParam <| IndexType l} {_ : outParam <| IndexType m} {_ : outParam <| IndexType n}
+      {R K : outParam <| (Type*)} {_ : outParam <| RealScalar R} {_ : outParam <| Scalar R K}
+      {X Y Z : outParam <| (Type*)} {_ : outParam <| VectorType.Base X n K} {_ : outParam <| VectorType.Base Y m K} {_ : outParam <| VectorType.Base Z l K}
       [MatrixType.Base M₁ X Y] [MatrixType.Base M₂ Y Z] [MatrixType.Base M₃ X Z]
   where
 
@@ -114,9 +114,9 @@ section Instances
 
 variable
       {M₁ M₂ : Type*} {M₃ : outParam (Type*)}
-      {l m n : outParam (Type*)} [IndexType l] [IndexType m] [IndexType n]
-      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
-      {X Y Z : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K] [VectorType.Base Z l K]
+      {l m n : outParam <| (Type*)} {_ : outParam <| IndexType l} {_ : outParam <| IndexType m} {_ : outParam <| IndexType n}
+      {R K : outParam <| (Type*)} {_ : outParam <| RealScalar R} {_ : outParam <| Scalar R K}
+      {X Y Z : outParam <| (Type*)} {_ : outParam <| VectorType.Base X n K} {_ : outParam <| VectorType.Base Y m K} {_ : outParam <| VectorType.Base Z l K}
       [MatrixType.Base M₁ X Y] [MatrixType.Base M₂ Y Z] [MatrixType.Base M₃ X Z]
       [MatrixType.MatMul M₁ M₂ M₃]
 
@@ -142,8 +142,8 @@ variable
       {M : Type*}
       {n : outParam (Type*)} {_ : outParam (IndexType n)}
       {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
-      {X : outParam (Type*)} [VectorType.Base X n K] [VectorType.Dense X]
-      [MatrixType.Base M X X] [MatrixType.Lawful M]
+      {X : outParam (Type*)} {_ : VectorType.Base X n K}
+      [MatrixType.Base M X X] [VectorType.Dense X] [MatrixType.Lawful M]
       [MatrixType.Square M]
       [MatrixType.MatMul M M M]
 
@@ -159,11 +159,12 @@ instance : Monoid M where
 instance : Semiring M where
   left_distrib := by intros; ext; simp [hmul_to_spec,add_spec,left_distrib]
   right_distrib := by intros; ext; simp only [hmul_to_spec, add_spec, right_distrib]
-  zero_mul := by intros; ext; simp only [hmul_to_spec, zero_spec, zero_mul]
-  mul_zero := by intros; ext; simp only [hmul_to_spec, zero_spec, mul_zero]
-  mul_assoc := by intros; ext; simp only [mul_assoc, hmul_to_spec]
-  one_mul := by intros; ext; simp only [hmul_to_spec, one_spec, one_mul]
-  mul_one := by intros; ext; simp only [hmul_to_spec, one_spec, mul_one]
+  zero_mul := by intros; ext; simp [matrix_to_spec]
+  mul_zero := by intros; ext; simp [matrix_to_spec]
+  mul_assoc := by intros; ext; simp [matrix_to_spec, mul_assoc]
+  one_mul := by intros; ext; simp [matrix_to_spec]
+  mul_one := by intros; ext; simp [matrix_to_spec]
+
 
 open Classical in
 instance instAlgebra : Algebra K M where
@@ -174,8 +175,6 @@ instance instAlgebra : Algebra K M where
   map_add' := by intros; ext; simp [matrix_to_spec, vector_to_spec,←Matrix.diagonal_add]
   commutes' := by intros; ext; simp [matrix_to_spec, vector_to_spec,mul_comm]
   smul_def' := by intros; ext; simp [matrix_to_spec, vector_to_spec]
-
--- set_synth_order instAlgebra #[11, 9, 10, 2, 3, 6, 7, 12, 13, 14]
 
 
 end SquareInstances

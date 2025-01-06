@@ -30,7 +30,7 @@ namespace FloatVector
 
 variable
   {strg : DenseMatrix.Storage}
-  {k m n : Type*} [IndexType k] [IndexType m] [IndexType n]
+  {k m n : Type*} {_ : IndexType k} {_ : IndexType m} {_ : IndexType n}
 
 instance : VectorType.Base (FloatMatrix' ord strg m n) (m×n) Float where
   toVec A := fun (i,j) => A.data.get (toFin i) (toFin j)

@@ -12,7 +12,7 @@ open SciLean
 /-!  This file test that `MatrixType` and `VectorType` instances do not break normal instances
 -/
 
-example   {K : Type} [RCLike K] {X : Type} [SemiHilbert K X] : HSMul K X X := by infer_instance
+example {K : Type} [RCLike K] {X : Type} [SemiHilbert K X] : HSMul K X X := by infer_instance
 
 example {R : Type _} [RealScalar R] {X : Type _}
   [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] :
@@ -21,3 +21,8 @@ example {R : Type _} [RealScalar R] {X : Type _}
 example   {R : Type _} [RealScalar R]
   {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] :
   HAdd X X X := by infer_instance
+
+
+-- set_option synthInstance.maxHeartbeats 1000 in
+-- set_option trace.Meta.synthInstance true in
+example : Inner Float (Float^[2]) := by infer_instance

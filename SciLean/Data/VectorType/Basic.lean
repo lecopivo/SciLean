@@ -17,7 +17,7 @@ vector space structure on `(X n)` that is computationally efficient.
  -/
 class VectorType
     (X : (n : Type u) → [IndexType n] → Type*)
-    {R : outParam (Type*)} (K : outParam (Type*)) [RealScalar R] [Scalar R K]
+    {R : outParam (Type*)} (K : outParam (Type*)) [outParam (RealScalar R)] [outParam (Scalar R K)]
   where
   [base : ∀ (n : Type u) [IndexType n], VectorType.Base (X n) n K]
   [dense : ∀ (n : Type u) [IndexType n], VectorType.Dense (X n)]
