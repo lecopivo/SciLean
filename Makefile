@@ -22,6 +22,8 @@ examples:
 	./.lake/build/bin/LBFGS
 	lake build BlasTest
 	./.lake/build/bin/BlasTest
+	lake build FloatTest
+	./.lake/build/bin/FloatTest
 
 lint: build
 	./build/bin/runLinter

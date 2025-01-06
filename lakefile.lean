@@ -24,6 +24,19 @@ lean_lib CompileTactics where
   precompileModules := true
   roots := #[`SciLean.Tactic.LSimp.LetNormalize,`SciLean.Tactic.CompiledTactics]
 
+
+target scileanc pkg : FilePath := do
+  let oFile := pkg.buildDir / "c" / "scileanc.o"
+  let srcJob ← inputFile (text:=true) <| pkg.dir / "C" / "math.c"
+  let weakArgs := #["-I", (← getLeanIncludeDir).toString]
+  buildO oFile srcJob weakArgs #["-fPIC"] "gcc"
+
+extern_lib libscileanc pkg := do
+  let name := nameToStaticLib "scileanc"
+  let ffiO ← fetch <| pkg.target ``scileanc
+  buildStaticLib (pkg.nativeLibDir / name) #[ffiO]
+
+
 lean_exe Doodle {
   root := `examples.Doodle
 }
@@ -75,6 +88,10 @@ lean_exe BlasTest {
   moreLinkArgs := moreLinkArgs
 }
 
+lean_exe FloatTest {
+  root := `examples.FloatTest
+  moreLinkArgs := moreLinkArgs
+}
 
 lean_exe ForLoopTest {
   buildType := .release
