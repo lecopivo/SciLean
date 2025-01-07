@@ -3,7 +3,9 @@ import SciLean.Data.MatrixType.Base
 import SciLean.Data.MatrixType.Dense
 import SciLean.Data.MatrixType.Square
 import SciLean.Data.MatrixType.MatMul
+import SciLean.Data.MatrixType.Basic
 import SciLean.Data.FloatVector
+import SciLean.Data.DataArray.PlainDataType
 
 import LeanBLAS.Matrix.DenseMatrix
 
@@ -82,6 +84,9 @@ instance : VectorType.Dense (FloatMatrix' ord strg m n) where
   exp_spec := sorry_proof
 
 
+instance : VectorType.Lawful (FloatMatrix' ord .normal m n) where
+  toVec_injective :=  sorry_proof
+
 
 -- Because `MatrixType.Base` has `X` and `Y` as `outParam` we are forced to pick particular
 -- storage option for input and output vectors ... this does not look ideal
@@ -130,3 +135,29 @@ instance : MatrixType.Square (FloatMatrix' ord strg n n) where
 -- instance : MatrixType.MatMul (FloatMatrix' strg m n) (FloatMatrix' strg k m) (FloatMatrix' strg k n) where
 --   matmul := sorry_proof
 --   matmul_spec := sorry_proof
+
+
+instance : MatrixType.Lawful (FloatMatrix' ord .normal m n) where
+  toMatrix_injective :=  sorry_proof
+
+
+instance : MatrixType (FloatMatrix' ord .normal) FloatVector where
+
+instance : ToString (FloatMatrix' ord strg n m) := ⟨fun A => A.data.toString⟩
+
+instance : PlainDataType (FloatMatrix' ord .normal n m) where
+  btype := .inr {
+    bytes := (size m * size n * 8).toUSize
+    h_size := sorry_proof
+    fromByteArray arr i _ :=
+      let size := size m * size n * 8
+      let r := ByteArray.copySlice arr i.toNat (ByteArray.mkEmpty 0) 0 size
+      ⟨⟨r.toFloatArray sorry_proof,sorry_proof⟩⟩ -- unsafe cast here
+    toByteArray arr i _ A :=
+      let size := size m * size n * 8
+      let v' : ByteArray := A.data.data.toByteArray
+      ByteArray.copySlice v' 0 arr i.toNat size
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }

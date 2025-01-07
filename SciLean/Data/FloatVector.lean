@@ -1,13 +1,15 @@
 import LeanBLAS.Vector.DenseVector
 
 import SciLean.Data.IndexType
-import SciLean.Data.VectorType.Base
+import SciLean.Data.VectorType.Basic
 import SciLean.Analysis.Scalar.FloatAsReal
+import SciLean.Data.DataArray.PlainDataType
+import SciLean.Data.DataArray
+import SciLean.Data.FloatArray
 
 namespace SciLean
 
 open BLAS IndexType
-
 
 structure FloatVector' (storage : DenseVector.Storage) (n : Type*) [IndexType n] where
   data : DenseVector FloatArray storage (size n) Float
@@ -18,7 +20,6 @@ namespace FloatVector
 
 variable
   {strg : DenseVector.Storage} {n : Type*} {_ : IndexType n}
-
 
 instance : VectorType.Base (FloatVector' strg n) n Float where
   toVec x i := x.data.get (toFin i)
@@ -74,3 +75,31 @@ instance : VectorType.Lawful (FloatVector n) where
     simp only [FloatVector'.mk.injEq]
     simp [VectorType.toVec,DenseVector.get] at h
     sorry_proof
+
+
+instance : VectorType FloatVector Float where
+  cast {n} _ x n' _ h :=
+    ⟨⟨x.data.data,
+     by have := x.data.valid_storage; simp_all[DenseVector.Storage.IsValid]⟩⟩
+  cast_spec := by
+     intro n _ x n' _ h; funext i
+     simp[VectorType.toVec, DenseVector.get]
+
+instance : ToString (FloatVector' strg n) := ⟨fun arr => arr.data.toString⟩
+
+instance : PlainDataType (FloatVector n) where
+  btype := .inr {
+    bytes := (size n * 8).toUSize
+    h_size := sorry_proof
+    fromByteArray arr i _ :=
+      let b := (size n * 8).toUSize
+      let r := ByteArray.copySlice arr i.toNat (ByteArray.mkEmpty 0) 0 b.toNat
+      ⟨⟨r.toFloatArray sorry_proof,sorry_proof⟩⟩ -- unsafe cast here
+    toByteArray arr i _ v :=
+      let v' : ByteArray := v.data.data.toByteArray
+      let b := (size n * 8).toUSize
+      ByteArray.copySlice v' 0 arr i.toNat b.toNat
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }

@@ -22,19 +22,20 @@ lean_lib Test {
 lean_lib CompileTactics where
   -- options for SciLean.Tactic.MySimpProc (and below) modules
   precompileModules := true
-  roots := #[`SciLean.Tactic.LSimp.LetNormalize,`SciLean.Tactic.CompiledTactics]
+  roots := #[`SciLean.Tactic.LSimp.LetNormalize,`SciLean.Tactic.CompiledTactics,`SciLean.Data.Float,`SciLean.Data.FloatArray]
+  moreLinkArgs := moreLinkArgs
 
-
-target scileanc pkg : FilePath := do
-  let oFile := pkg.buildDir / "c" / "scileanc.o"
-  let srcJob ← inputFile (text:=true) <| pkg.dir / "C" / "math.c"
-  let weakArgs := #["-I", (← getLeanIncludeDir).toString]
-  buildO oFile srcJob weakArgs #["-fPIC"] "gcc"
 
 extern_lib libscileanc pkg := do
+  let mut oFiles : Array (BuildJob FilePath) := #[]
+  for file in (← (pkg.dir / "C").readDir) do
+    if file.path.extension == some "c" then
+      let oFile := pkg.buildDir / "c" / (file.fileName.stripSuffix ".c" ++ ".o")
+      let srcJob ← inputTextFile file.path
+      let weakArgs := #["-I", (← getLeanIncludeDir).toString]
+      oFiles := oFiles.push (← buildO oFile srcJob weakArgs #["-fPIC"] "gcc" getLeanTrace)
   let name := nameToStaticLib "scileanc"
-  let ffiO ← fetch <| pkg.target ``scileanc
-  buildStaticLib (pkg.nativeLibDir / name) #[ffiO]
+  buildStaticLib (pkg.nativeLibDir / name) oFiles
 
 
 lean_exe Doodle {
