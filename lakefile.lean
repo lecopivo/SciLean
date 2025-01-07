@@ -81,6 +81,7 @@ lean_exe LBFGS {
 
 lean_exe GMM {
   root := `SciLean.Examples.GMM.Main
+  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe BlasTest {

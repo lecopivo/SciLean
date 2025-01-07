@@ -6,6 +6,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
 import Mathlib.Analysis.Normed.Lp.WithLp
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
@@ -83,6 +84,14 @@ class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends RCLike 
 
   abs (x : K) : R
   abs_def : ∀ x, toReal (abs x) = Complex.abs (toComplex x)
+
+  tgamma (x : K) : K
+  tgamma_def (x : K) :
+    toComplex (tgamma x) = Complex.Gamma (toComplex x)
+
+  lgamma (x : K) : R
+  lgamma_def (x : K) :
+    toReal (lgamma x) = Real.log (Complex.Gamma (toComplex x)).abs
 
   /-- Is `x` finite number? For `ℝ` and `ℂ` this should be always true.
   TODO: make dedicated class `FloatLike` that has this and `Scalar` derives from. -/
@@ -217,6 +226,12 @@ instance : Scalar ℝ ℂ where
   abs x := Complex.abs x
   abs_def := by intros; simp
 
+  tgamma x := x.Gamma
+  tgamma_def := by intros; simp
+
+  lgamma x := x.Gamma.abs.log
+  lgamma_def := by intros; simp
+
   isFinite x := true
   isNaN x := false
   isInf x := false
@@ -271,6 +286,12 @@ noncomputable instance : RealScalar ℝ where
 
   abs x := abs x
   abs_def := by intros; simp[Complex.abs]; sorry_proof
+
+  tgamma x := x.Gamma
+  tgamma_def := by intros; simp; sorry_proof
+
+  lgamma x := |x.Gamma|.log
+  lgamma_def := by intros; simp; sorry_proof
 
   is_real := by intros; simp
 

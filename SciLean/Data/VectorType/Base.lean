@@ -47,8 +47,8 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
 
   `x` should be modified if it is passed with ref counter one. -/
   scalAdd  (alpha beta : K) (x : X) : X
-  scalAdd_spec (alpha : K) (x : X) :
-    toVec (scal alpha x) = fun i => alpha * toVec x i + beta
+  scalAdd_spec (alpha beta : K) (x : X) :
+    toVec (scalAdd alpha beta x) = fun i => alpha * toVec x i + beta
 
   /-- `sum x = ∑ i, x[i]` -/
   sum (x : X) : K
@@ -63,7 +63,7 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
   nrm2_spec (x : X) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 2 (n → K)).symm (toVec x)‖
 
   /-- `iamax x = argmaxᵢ |x[i]|` -/
-  iamax (x : X) : n
+  iamax (x : X) : n -- this is inconsistent if `n` is empty
   iamax_spec (x : X) : Scalar.abs (toVec x (iamax x)) = Scalar.ofReal (K:=K) ‖toVec x‖
 
   /-- `imaxRe x = argmaxᵢ (real x[i])` -/
@@ -133,6 +133,9 @@ class VectorType.Dense (X : Type*)
   fromVec : (n → K) → X
   -- protected left_inv : LeftInverse fromVec toVec
   protected right_inv : RightInverse fromVec toVec
+
+  /-- Set the `i`-th element of `x` to `v`. -/
+  set (x : X) (i : n) (v : K) : X
 
   /-- Constant vector with all elements equial to `k`. -/
   const (k : K) : X
@@ -270,12 +273,13 @@ export VectorType.Base
 
 export VectorType.Lawful (toVec_injective)
 
-export VectorType.Dense (fromVec const const_spec div div_spec inv inv_spec exp exp_spec)
+export VectorType.Dense (fromVec set const const_spec div div_spec inv inv_spec exp exp_spec)
 
 attribute [vector_to_spec,vector_from_spec ←]
   zero_spec
   const_spec
   scal_spec
+  scalAdd_spec
   sum_spec
   asum_spec
   nrm2_spec
@@ -283,6 +287,10 @@ attribute [vector_to_spec,vector_from_spec ←]
   dot_spec
   axpy_spec
   axpby_spec
+  div_spec
+  inv_spec
+  exp_spec
+  mul_spec
 
 section BasicOperations
 
@@ -348,6 +356,25 @@ theorem dist_spec (x y : X) :
     dist ((WithLp.equiv 2 (n → K)).symm (toVec x)) ((WithLp.equiv 2 (n → K)).symm (toVec y)) := by
   conv => lhs; simp [Dist.dist,vector_to_spec]
   conv => rhs; rw[NormedAddCommGroup.dist_eq]
+
+
+def iamax? (x : X) : Option n :=
+  if h : 0 < size n then
+    some (iamax x)
+  else
+    none
+
+def imaxRe? (x : X) : Option n :=
+  if h : 0 < size n then
+    some (imaxRe x h)
+  else
+    none
+
+def iminRe? (x : X) : Option n :=
+  if h : 0 < size n then
+    some (iminRe x h)
+  else
+    none
 
 end BasicOperations
 

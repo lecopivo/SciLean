@@ -71,6 +71,7 @@ instance : VectorType.Base (FloatMatrix' ord strg m n) (m×n) Float where
 instance : VectorType.Dense (FloatMatrix' ord strg m n) where
   fromVec f := ⟨DenseMatrix.ofFn (fun (i : Fin (size m)) (j : Fin (size n)) => f (fromFin i, fromFin j))⟩
   right_inv := by intro f; simp[VectorType.toVec]
+  set x i v := ⟨x.data⟩
   const k := ⟨DenseMatrix.const _ _ _ k⟩
   const_spec := sorry_proof
   div x y := ⟨DenseMatrix.div x.data y.data⟩
@@ -108,12 +109,12 @@ instance : MatrixType.Dense (FloatMatrix' ord strg m n) where
   fromMatrix f := ⟨DenseMatrix.ofFn fun i j => f (fromFin i) (fromFin j)⟩
   right_inv' := by intro A; simp[MatrixType.toMatrix]
   updateRow A i x :=
-    let A := A.data.row (toFin i) |>.set x.data
-    ⟨⟨A.data, sorry⟩⟩
+    let A := A.data.row (toFin i) |>.setArray x.data
+    ⟨⟨A.data, sorry_proof⟩⟩
   updateRow_spec := sorry_proof
   updateCol A j y :=
-    let A := A.data.col (toFin j) |>.set y.data
-    ⟨⟨A.data, sorry⟩⟩
+    let A := A.data.col (toFin j) |>.setArray y.data
+    ⟨⟨A.data, sorry_proof⟩⟩
   updateCol_spec := sorry_proof
   outerprodAdd a x y A := ⟨DenseMatrix.ger a x.data y.data A.data⟩
   outerprodAdd_spec := sorry_proof

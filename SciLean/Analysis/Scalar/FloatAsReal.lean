@@ -1,5 +1,6 @@
 import SciLean.Analysis.Scalar.Basic
 import SciLean.Logic.Isomorph.RealToFloat.Basic
+import SciLean.Data.Float
 
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 
@@ -201,6 +202,12 @@ instance : RealScalar Float where
 
   abs x := x.abs
   abs_def := sorry_proof
+
+  tgamma x := x.tgamma
+  tgamma_def := sorry_proof
+
+  lgamma x := x.lgamma
+  lgamma_def := sorry_proof
 
   isNaN x := x.isNaN
   isInf x := x.isInf

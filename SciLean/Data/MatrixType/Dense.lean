@@ -21,6 +21,8 @@ class MatrixType.Dense
   -- protected left_inv'  : LeftInverse fromMatrix MatrixType.Base.toMatrix
   protected right_inv' : RightInverse fromMatrix MatrixType.Base.toMatrix
 
+  -- /-- Set element at `(i,j)` to `v`. -/
+  -- set (A : M) (i : m) (j : n) (v : K) : M
 
   /-- Update row, i.e. set row to a given vector. -/
   updateRow (A : M) (i : m) (x : X) : M

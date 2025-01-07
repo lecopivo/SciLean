@@ -20,9 +20,9 @@ of type `Y`.
 This class provides functionality implementable using BLAS. -/
 class MatrixType.Base
       (M : Type*)
-      {m n : outParam (Type*)} [outParam <| IndexType m] [outParam <| IndexType n]
-      {R K : outParam (Type*)} [outParam <| RealScalar R] [outParam <| Scalar R K]
-      (X Y : outParam (Type*)) [outParam <| VectorType.Base X n K] [outParam <| VectorType.Base Y m K]
+      {m n : outParam (Type*)} [IndexType m] [IndexType n]
+      {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
+      (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
   extends
     VectorType.Base M (m×n) K
   where

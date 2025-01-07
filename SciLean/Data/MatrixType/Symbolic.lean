@@ -18,10 +18,11 @@ namespace MatrixType
 section SquareMatrices
 
 variable
-  {R K} [RealScalar R] [Scalar R K]
-  {n : Type u} [IndexType n] [DecidableEq n]
-  {X} [VectorType.Base X n K]
+  {R K} {_ : RealScalar R} {_ : Scalar R K}
+  {n} {_ : IndexType n}
+  {X} {_ : VectorType.Base X n K}
   {M} [MatrixType.Base M X X]
+  [DecidableEq n]
 
 
 /-- Deteminant of a matrix.
@@ -39,8 +40,6 @@ def inv [MatrixType.Dense M] (A : M) : M :=
   let A := toMatrix A
   fromMatrix (A⁻¹)
 
-#check Matrix.inv
-
 def IsInvertible (A : M) : Prop :=
   let A := toMatrix A
   IsUnit A
@@ -48,7 +47,7 @@ def IsInvertible (A : M) : Prop :=
 open Matrix VectorType in
 /-- Solve linear system of equations `A*x = b`. -/
 noncomputable
-def linSolve [VectorType.Dense X n K] (A : M) (b : X) : X :=
+def linSolve [VectorType.Dense X] (A : M) (b : X) : X :=
   let A := toMatrix A
   let b := toVec b
   fromVec (A⁻¹ *ᵥ b)

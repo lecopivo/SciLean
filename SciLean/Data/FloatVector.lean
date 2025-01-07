@@ -53,6 +53,10 @@ instance : VectorType.Base (FloatVector' strg n) n Float where
 instance : VectorType.Dense (FloatVector' strg n) where
   fromVec f := ⟨DenseVector.ofFn (fun i => f (fromFin i))⟩
   right_inv := by intro f; simp[VectorType.toVec]
+  set x i v :=
+    let i := toFin i
+    let x := x.data.data.set i.1 v sorry_proof
+    ⟨⟨x,sorry_proof⟩⟩
   const k := ⟨DenseVector.const (size n) _ k⟩
   const_spec := sorry_proof
   div x y := ⟨x.data.div y.data⟩

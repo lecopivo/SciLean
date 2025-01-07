@@ -3,6 +3,7 @@ import Mathlib.Algebra.Order.Group.Unbundled.Basic
 import Mathlib.Data.Int.Interval
 import Mathlib.Data.Fintype.Prod
 import Mathlib.Data.Fintype.Sigma
+import Mathlib.Data.Fintype.Sum
 
 import SciLean.Data.IndexType.Iterator
 import SciLean.Util.SorryProof
@@ -227,13 +228,6 @@ instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) wher
   right_inv := by intro; sorry_proof
   first_last := by sorry_proof
 
-
--- Really this is not in mathlib?
-instance {α β} [Fintype α] [Fintype β] : Fintype (α ⊕ β) where
-  elems :=
-    ⟨(Fintype.elems (α:=α)).val.liftOn₂
-     (Fintype.elems (α:=β)).val (fun x y => x.map (Sum.inl (β:=β)) ++ y.map (Sum.inr (α:=α))) sorry_proof, sorry_proof⟩
-  complete := sorry_proof
 
 instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
   toFin := fun ab =>

@@ -144,7 +144,16 @@ import SciLean.Data.StructType.Basic
 import SciLean.Data.VectorType.Basic
 import SciLean.Data.VectorType.Init
 import SciLean.Data.VectorType.Optimize
+import SciLean.Data.VectorType.Prod
+import SciLean.Data.VectorType.Scalar
 import SciLean.Data.MatrixType.Basic
+import SciLean.Data.MatrixType.Base
+import SciLean.Data.MatrixType.Dense
+import SciLean.Data.MatrixType.Square
+import SciLean.Data.MatrixType.Transpose
+import SciLean.Data.MatrixType.MatMul
+import SciLean.Data.MatrixType.BlockMatrix
+import SciLean.Data.MatrixType.Symbolic
 -- import SciLean.Geometry.Bezier
 import SciLean.Geometry.BoundingBall
 import SciLean.Geometry.FrontierSpeed
