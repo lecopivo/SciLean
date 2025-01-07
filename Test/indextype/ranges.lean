@@ -79,7 +79,6 @@ info: (inr 4)
   for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inr 4) (.inr 1)) do
     IO.println i
 
-#eval last? (Fin 100)
 
 /--
 info: (inl 3)
