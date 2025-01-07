@@ -92,13 +92,13 @@ instance : PlainDataType (FloatVector n) where
     bytes := (size n * 8).toUSize
     h_size := sorry_proof
     fromByteArray arr i _ :=
-      let b := (size n * 8).toUSize
-      let r := ByteArray.copySlice arr i.toNat (ByteArray.mkEmpty 0) 0 b.toNat
-      ⟨⟨r.toFloatArray sorry_proof,sorry_proof⟩⟩ -- unsafe cast here
+      let size := size n * 8
+      let r := ByteArray.copySlice arr i.toNat (ByteArray.mkEmpty 0) 0 size
+      ⟨⟨r.toFloatArray sorry_proof,sorry_proof⟩⟩
     toByteArray arr i _ v :=
+      let size := size n * 8
       let v' : ByteArray := v.data.data.toByteArray
-      let b := (size n * 8).toUSize
-      ByteArray.copySlice v' 0 arr i.toNat b.toNat
+      ByteArray.copySlice v' 0 arr i.toNat size
     toByteArray_size := sorry_proof
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
