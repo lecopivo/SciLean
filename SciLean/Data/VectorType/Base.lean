@@ -30,7 +30,7 @@ vector space structure on `X` that is computationally efficient.
  -/
 class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)] {R : outParam (Type*)}  (K : outParam (Type*))
         [outParam (Scalar R R)] [outParam (Scalar R K)] where
-  toVec : X → (n → K) -- maybe map to Euclidean space
+  toVec (x : X) : (n → K) -- maybe map to Euclidean space
 
   /-- Zero vector. -/
   zero : X
@@ -125,7 +125,7 @@ class VectorType.Lawful (X : Type*)
   toVec_injective : Function.Injective (VectorType.Base.toVec (X:=X) (n:=n))
 
 
-open Function VectorType.Base in
+open Function VectorType.Base Classical in
 class VectorType.Dense (X : Type*)
     {n : outParam (Type*)} {_ : outParam (IndexType n)}
     {R K : outParam (Type*)} [Scalar R R] [Scalar R K]
@@ -136,6 +136,14 @@ class VectorType.Dense (X : Type*)
 
   /-- Set the `i`-th element of `x` to `v`. -/
   set (x : X) (i : n) (v : K) : X
+  set_spec (x : X) (i : n) (v : K) :
+    toVec (set x i v)
+    =
+    fun j =>
+      if j = i then
+         v
+      else
+         toVec x j
 
   /-- Constant vector with all elements equial to `k`. -/
   const (k : K) : X
@@ -273,7 +281,7 @@ export VectorType.Base
 
 export VectorType.Lawful (toVec_injective)
 
-export VectorType.Dense (fromVec set const const_spec div div_spec inv inv_spec exp exp_spec)
+export VectorType.Dense (fromVec set set_spec const const_spec div div_spec inv inv_spec exp exp_spec)
 
 attribute [vector_to_spec,vector_from_spec ←]
   zero_spec
@@ -291,6 +299,7 @@ attribute [vector_to_spec,vector_from_spec ←]
   inv_spec
   exp_spec
   mul_spec
+  set_spec
 
 section BasicOperations
 
@@ -375,6 +384,11 @@ def iminRe? (x : X) : Option n :=
     some (iminRe x h)
   else
     none
+
+def updateElem [Dense X] (x : X) (i : n) (f : K → K) : X :=
+  let xi := toVec x i
+  VectorType.set x i (f xi)
+
 
 end BasicOperations
 
@@ -480,7 +494,17 @@ section Equivalences
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X] [VectorType.Dense X]
+  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
+
+def toVecₗ : X →ₗ[K] (n → K) :=
+  ⟨⟨VectorType.toVec, by simp[vector_to_spec]⟩,by simp[vector_to_spec]⟩
+
+instance : FiniteDimensional K X :=
+   FiniteDimensional.of_injective (V₂:=n→K) toVecₗ VectorType.Lawful.toVec_injective
+
+instance : CompleteSpace X := sorry_proof
+
+variable [VectorType.Dense X]
 
 def vequiv : X ≃ (n → K) where
   toFun := toVec
@@ -501,29 +525,21 @@ theorem vequiv_apply_eq_toVec (x : X) :
 
 /-- Linear vequivalence between vector type `X` and `n → K` -/
 def vequivₗ : X ≃ₗ[K] (n → K) :=
-  LinearEquiv.mk ⟨⟨vequiv,by simp[vector_to_spec]⟩,by simp[vector_to_spec]⟩
-    vequiv.symm (vequiv.left_inv) (vequiv.right_inv)
-
-
-/-- Continuous linear vequivalence between vector type `X` and `n → K` -/
-def vequivL : X ≃L[K] (n → K) := ContinuousLinearEquiv.mk vequivₗ (by sorry_proof) (by sorry_proof)
-
-
-instance : FiniteDimensional K X :=
-   FiniteDimensional.of_injective (V₂:=n→K) (vequivₗ (X:=X) (n:=n) (K:=K)).1
-  (vequivₗ.left_inv.injective)
-
+  LinearEquiv.mk toVecₗ vequiv.symm (vequiv.left_inv) (vequiv.right_inv)
 
 variable (X)
 noncomputable
 def basis : Basis n K X := Basis.ofEquivFun (ι:=n) (R:=K) (M:=X) vequivₗ
 variable {X}
 
-
 @[simp, simp_core]
 theorem finrank_eq_index_card : Module.finrank K X = Fintype.card n :=
   Module.finrank_eq_card_basis (basis X)
 
+/-- Continuous linear vequivalence between vector type `X` and `n → K` -/
+def vequivL : X ≃L[K] (n → K) := ContinuousLinearEquiv.mk vequivₗ
+  (by simp; apply LinearMap.continuous_of_finiteDimensional)
+  (by simp; apply LinearMap.continuous_of_finiteDimensional)
 
 end Equivalences
 

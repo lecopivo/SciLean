@@ -58,6 +58,7 @@ instance : VectorType.Dense (FloatVector' strg n) where
     let i := toFin i
     let x := x.data.data.set i.1 v sorry_proof
     ⟨⟨x,sorry_proof⟩⟩
+  set_spec := sorry_proof
   const k := ⟨DenseVector.const (size n) _ k⟩
   const_spec := sorry_proof
   div x y := ⟨x.data.div y.data⟩

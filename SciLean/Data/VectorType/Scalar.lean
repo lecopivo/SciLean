@@ -43,6 +43,7 @@ local instance {R K} [RealScalar R] [Scalar R K] : VectorType.Dense (n:=Unit) (K
   fromVec := fun f => f ()
   right_inv := by intro x; simp[VectorType.toVec]
   set := fun x i v => v
+  set_spec := by intros; simp[toVec]
   const := fun k => k
   const_spec := by simp[toVec]
   div := fun x y => x / y

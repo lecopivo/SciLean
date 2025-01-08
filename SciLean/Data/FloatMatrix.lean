@@ -73,7 +73,8 @@ instance : VectorType.Base (FloatMatrix' ord strg m n) (m×n) Float where
 instance : VectorType.Dense (FloatMatrix' ord strg m n) where
   fromVec f := ⟨DenseMatrix.ofFn (fun (i : Fin (size m)) (j : Fin (size n)) => f (fromFin i, fromFin j))⟩
   right_inv := by intro f; simp[VectorType.toVec]
-  set x i v := ⟨x.data⟩
+  set := fun x (i,j) v => ⟨x.data.set (toFin i) (toFin j) v⟩
+  set_spec := sorry_proof
   const k := ⟨DenseMatrix.const _ _ _ k⟩
   const_spec := sorry_proof
   div x y := ⟨DenseMatrix.div x.data y.data⟩

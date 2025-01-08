@@ -106,6 +106,13 @@ instance
     match ij with
     | .inl i => (set x i v, y)
     | .inr j => (x, set y j v)
+  set_spec := by
+    intro (x,y) ij k; funext ij';
+    cases ij'
+    <;> cases ij
+    <;> simp[toVec,vector_to_spec]
+    <;> split_ifs
+    <;> simp_all
   const k := (const k, const k)
   const_spec := by intros; funext i; cases i <;> simp[toVec,vector_to_spec]
   div := fun (x,y) (x',y') => (div x x', div y y')
