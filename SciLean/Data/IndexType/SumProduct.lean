@@ -1,4 +1,6 @@
 import SciLean.Data.IndexType.Operations
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset
 
 namespace SciLean
 
@@ -34,6 +36,12 @@ macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => 
   | `($(_) fun ($x:ident : $ty:term) => $b) =>
     `(∏ ($x:ident : $ty), $b)
   | _  => throw ()
+
+theorem sum_to_finset_sum {α} [AddCommGroup α] {ι} [IndexType ι] (f : ι → α) :
+  ∑ i, f i = Finset.univ.sum f := sorry_proof
+
+theorem prod_to_finset_prod {α} [CommGroup α] {ι} [IndexType ι] (f : ι → α) :
+  ∏ i, f i = Finset.univ.prod f := sorry_proof
 
 
 theorem sum_swap {R} [AddCommMonoid R] {I J : Type*} [IndexType I] [IndexType J]

@@ -130,7 +130,7 @@ class VectorType.Dense (X : Type*)
     {n : outParam (Type*)} {_ : outParam (IndexType n)}
     {R K : outParam (Type*)} [Scalar R R] [Scalar R K]
     [VectorType.Base X n K] where
-  fromVec : (n → K) → X
+  fromVec (f : n → K) : X
   -- protected left_inv : LeftInverse fromVec toVec
   protected right_inv : RightInverse fromVec toVec
 
@@ -368,7 +368,7 @@ theorem dist_spec (x y : X) :
 
 
 def iamax? (x : X) : Option n :=
-  if h : 0 < size n then
+  if _ : 0 < size n then
     some (iamax x)
   else
     none
@@ -522,6 +522,22 @@ def vequiv : X ≃ (n → K) where
 @[vector_to_spec]
 theorem vequiv_apply_eq_toVec (x : X) :
   vequiv x = toVec x := rfl
+
+@[vector_to_spec]
+theorem vequiv_symm_apply_eq_fromVec (f : n → K) :
+  vequiv.symm f = fromVec (X:=X) f := rfl
+
+@[simp, simp_core]
+theorem toVec_fromVec (f : n → K) :
+    toVec (fromVec (X:=X) f) = f := by
+  rw[← vequiv_apply_eq_toVec, ← vequiv_symm_apply_eq_fromVec]
+  simp
+
+@[simp, simp_core]
+theorem fromVec_toVec (x : X) :
+    fromVec (toVec x) = x := by
+  rw[← vequiv_apply_eq_toVec, ← vequiv_symm_apply_eq_fromVec]
+  simp
 
 /-- Linear vequivalence between vector type `X` and `n → K` -/
 def vequivₗ : X ≃ₗ[K] (n → K) :=
