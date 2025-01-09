@@ -576,11 +576,11 @@ theorem vequiv_apply_eq_toVec (x : X) :
 theorem vequiv_symm_apply_eq_fromVec (f : n → K) :
   vequiv.symm f = fromVec (X:=X) f := rfl
 
+omit [Lawful X] in
 @[simp, simp_core]
 theorem toVec_fromVec (f : n → K) :
     toVec (fromVec (X:=X) f) = f := by
-  rw[← vequiv_apply_eq_toVec, ← vequiv_symm_apply_eq_fromVec]
-  simp
+  rw[VectorType.Dense.right_inv]
 
 @[simp, simp_core]
 theorem fromVec_toVec (x : X) :

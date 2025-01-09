@@ -2,6 +2,7 @@ import SciLean.Data.VectorType.Base
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
+import SciLean.Tactic.DataSynth.DefRevDeriv
 -- import SciLean.Analysis.Normed.IsContinuousLinearMap
 
 import SciLean.Meta.GenerateFunTrans
@@ -11,13 +12,6 @@ namespace SciLean
 
 def_fun_prop VectorType.toVec in x [VectorType.Lawful X] : IsLinearMap K by
   constructor <;> (intros; simp[vector_to_spec])
-
-@[fun_prop]
-theorem adsf {R S} [CommSemiring R] [Semiring S] [Algebra R S]
-  {X} [AddCommGroup X] [Module R X] [Module S X]
-  {Y} [AddCommGroup Y] [Module R Y] [Module S Y]
-  [LinearMap.CompatibleSMul X Y S R]
-  (f : X → Y) (hf : IsLinearMap S f) : IsLinearMap R f := sorry
 
 def_fun_prop VectorType.toVec in x
     add_suffix _real
@@ -62,7 +56,7 @@ abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] : fwdFDeriv K by
   fun_trans
 
 abbrev_fun_trans VectorType.toVec in x
-    add_suffix _real [ScalarSMul R K] [VectorType.Lawful X] : fwdFDeriv K by
+    add_suffix _real [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] : fwdFDeriv R by
   fun_trans
 
 

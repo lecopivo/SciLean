@@ -113,6 +113,8 @@ instance : MatrixType.Base (FloatMatrix' ord strg m n) (FloatVector n) (FloatVec
 
 instance : MatrixType.Dense (FloatMatrix' ord strg m n) where
   fromMatrix f := ⟨DenseMatrix.ofFn fun i j => f (fromFin i) (fromFin j)⟩
+  set' A i j v := ⟨A.data.set (toFin i) (toFin j) v⟩
+  set'_spec := by simp[VectorType.set, MatrixType.set']
   right_inv' := by intro A; simp[MatrixType.toMatrix]
   updateRow A i x :=
     let A := A.data.row (toFin i) |>.setArray x.data

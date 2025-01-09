@@ -21,8 +21,11 @@ class MatrixType.Dense
   -- protected left_inv'  : LeftInverse fromMatrix MatrixType.Base.toMatrix
   protected right_inv' : RightInverse fromMatrix MatrixType.Base.toMatrix
 
-  -- /-- Set element at `(i,j)` to `v`. -/
-  -- set (A : M) (i : m) (j : n) (v : K) : M
+  /-- Set element at `(i,j)` to `v`. -/
+  set' (A : M) (i : m) (j : n) (v : K) : M
+  set'_spec (A : M) (i : m) (j : n) (v : K) :
+    set' A i j v = VectorType.set A (i,j) v
+
 
   /-- Update row, i.e. set row to a given vector. -/
   updateRow (A : M) (i : m) (x : X) : M
@@ -63,7 +66,7 @@ class MatrixType.Dense
 namespace MatrixType
 
 export MatrixType.Dense (fromMatrix updateRow updateRow_spec updateCol updateCol_spec outerprodAdd
-  outerprodAdd_spec)
+  outerprodAdd_spec set' set'_spec)
 
 attribute [matrix_to_spec, matrix_from_spec ←]
   updateRow_spec
@@ -71,12 +74,29 @@ attribute [matrix_to_spec, matrix_from_spec ←]
   outerprodAdd_spec
 
 
+
+section Operations
+
+variable
+  {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
+  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
+  {X Y : Type*} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
+  {M} [MatrixType.Base M X Y] [MatrixType.Lawful M] [MatrixType.Dense M]
+
+def updateElem (A : M) (i : m) (j : n) (f : K → K) : M :=
+  let aij := toMatrix A i j
+  MatrixType.set' A i j (f aij)
+
+
+end Operations
+
+
 section Equivalences
 
 variable
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {m n : Type*} {_ : IndexType m} {_ : IndexType n}
-  {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
+  {X Y : Type*} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
   {M} [MatrixType.Base M X Y] [MatrixType.Lawful M] [MatrixType.Dense M]
 
 open MatrixType
@@ -96,6 +116,22 @@ def mequiv : M ≃ Matrix m n K where
 
 @[matrix_to_spec]
 theorem mequiv_apply_eq_toMatrix (A : M) : mequiv A = toMatrix A := rfl
+
+@[matrix_to_spec]
+theorem mequiv_symm_apply_eq_fromMatrix (f : m → n → K) : mequiv.symm f = fromMatrix (M:=M) f := rfl
+
+@[simp, simp_core]
+theorem fromMatrix_toMatrix (A : M) :
+    fromMatrix (toMatrix A) = A := by
+  rw[← mequiv_apply_eq_toMatrix, ← mequiv_symm_apply_eq_fromMatrix]
+  simp only [Equiv.symm_apply_apply]
+
+omit [Lawful M] in
+@[simp, simp_core]
+theorem toMatrix_fromMatrix (f : m → n → K) :
+    toMatrix (fromMatrix (M:=M) f) = f := by
+  rw[MatrixType.Dense.right_inv']
+
 
 /-- Linear equivalence between matrix type `M` and `Matrix m n K` -/
 def mequivₗ : M ≃ₗ[K] (Matrix m n K) :=

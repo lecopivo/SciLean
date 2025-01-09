@@ -9,24 +9,27 @@ open SciLean
 open Lean Elab Command Meta Qq
 
 def getScalar? : MetaM (Option (Expr×Expr)) := do
-  (← getLCtx).findDeclRevM? fun decl =>
-    let type := decl.type
+  (← getLCtx).findDeclRevM? fun decl => do
+    let type ← whnf decl.type
+    dbg_trace (← ppExpr type)
     if (type.isAppOfArity ``RealScalar 1) ||
-       (type.isAppOfArity ``RCLike 1) then
+       (type.isAppOfArity ``RCLike 1) ||
+       (type.isAppOfArity ``Scalar 2)  then
       return (decl.toExpr, decl.type.appArg!)
     else
       return none
 
 def fixTypeUniverseQ (X : Expr) : MetaM ((u : Level) × Q(Type $u)) := do
-  let .sort (Level.succ u) ← inferType X | throwError "not a type{indentExpr X}"
+  let .sort (Level.succ u) ← whnf (← inferType X) | throwError "not a type{indentExpr X}, has type {← ppExpr (← inferType X )}"
   return ⟨u,X⟩
 
 def getScalarQ? : MetaM (Option ((u : Level) × (R : Q(Type u)) × Q(RCLike $R))) := do
   (← getLCtx).findDeclRevM? fun decl => do
-    let type := decl.type
+    let type ← whnf decl.type
     if (type.isAppOfArity ``RealScalar 1) ||
-       (type.isAppOfArity ``RCLike 1) then
-      let R := decl.type.appArg!
+       (type.isAppOfArity ``RCLike 1) ||
+       (type.isAppOfArity ``Scalar 2) then
+      let R := type.appArg!
       let ⟨u,R⟩ ← fixTypeUniverseQ R
       let inst ← synthInstanceQ q(RCLike $R)
       return some ⟨u,R,inst⟩

@@ -27,7 +27,7 @@ class MatrixType.Base
     VectorType.Base M (m×n) K
   where
 
-  toMatrix : M → Matrix m n K
+  toMatrix (A: M) : Matrix m n K
 
   toVec_eq_toMatrix (A : M) : toVec A = fun (i,j) => toMatrix A i j
 
