@@ -240,6 +240,16 @@ open SciLean
 set_default_scalar K
 
 
+theorem SciLean.adjoint_wrt_prod
+    {f : X → Y → Z} (hf : IsContinuousLinearMap K ↿f := by fun_prop) :
+    adjoint K (fun xy : X×Y => f xy.1 xy.2)
+    =
+    fun (z : Z) =>
+      let x := adjoint K (f · 0) z
+      let y := adjoint K (f 0 ·) z
+      (x,y) := sorry_proof
+
+
 -- Prod ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 

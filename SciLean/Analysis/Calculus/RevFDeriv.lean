@@ -204,6 +204,22 @@ theorem revFDeriv_linear
   =
   fun x => (f x, adjoint K f) := by unfold revFDeriv; fun_trans
 
+theorem SciLean.revFDeriv_wrt_prod
+    {f : X → Y → Z} (hf : Differentiable K ↿f := by fun_prop) :
+    revFDeriv K (fun xy : X×Y => f xy.1 xy.2)
+    =
+    fun (xy : X×Y) =>
+      let x := xy.1; let y := xy.2
+      let zdz₁ := revFDeriv K (f · y) x
+      let zdz₂ := revFDeriv K (f x ·) y
+      let z := zdz₁.1; let dz₁ := zdz₁.2; let dz₂ := zdz₂.2
+      (z, fun dz => (dz₁ dz, dz₂ dz)) := by
+
+  unfold revFDeriv
+  funext (x,y)
+  rw[fderiv_wrt_prod hf]
+  fun_trans
+
 
 -- Prod.mk ----------------------------------- ---------------------------------
 --------------------------------------------------------------------------------

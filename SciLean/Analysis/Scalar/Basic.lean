@@ -335,6 +335,14 @@ noncomputable instance : RealScalar ℝ where
 ----------------------------------------------------------------------------------------------------
 -- Simp theorems -----------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
+section SimpTheoremsComplex
+
+variable {R K} [RealScalar R] [Scalar R K]
+
+@[simp, simp_core]
+theorem scalar_make_one : Scalar.make (1 : R) 0 = (1 : K) := by sorry_proof
+
+end SimpTheoremsComplex
 
 section SimpTheorems
 
@@ -511,5 +519,75 @@ theorem Scalar.toENNReal_dite (c : Prop) [Decidable c]
     if h : c then Scalar.toENNReal (t h) else Scalar.toENNReal (e h) := by
   if h : c then simp[h] else simp[h]
 
-
 end SimpTheorems
+
+
+/-- Class saying that scalar multiplication between `R` and `K` is compatible with multiplication
+for  `[RealScalar R]` and `[Scalar R K]`
+
+This class is necessary if you want to consider `K` as vector spaces over `R`. -/
+class ScalarSMul (R K : Type*) [RealScalar R] [Scalar R K] extends SMul R K where
+  smul_eq_mul_make (r : R) (k : K) : r • k = Scalar.make r 0 * k
+
+class ScalarInner (R K : Type*) [RealScalar R] [Scalar R K] extends Inner R K where
+  inner_eq_inner_re_im (x y : K) :
+    Inner.inner (𝕜:=R) x y
+    =
+    Scalar.real x * Scalar.real y + Scalar.imag x * Scalar.imag y
+
+section ScalarSMul
+
+instance {R} [RealScalar R] : ScalarSMul R R where
+  smul_eq_mul_make := sorry_proof
+
+instance {R} [RealScalar R] : ScalarInner R R where
+  inner_eq_inner_re_im := sorry_proof
+
+instance instModuleScalarSMul {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] : Module R K where
+  one_smul := sorry_proof
+  mul_smul := sorry_proof
+  smul_zero := sorry_proof
+  smul_add := sorry_proof
+  add_smul := sorry_proof
+  zero_smul := sorry_proof
+
+instance instNormedSpaceRK {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] :
+    NormedSpace R K where
+  norm_smul_le := sorry_proof
+
+instance instInnerProductSpaceRK {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K] :
+    InnerProductSpace R K where
+  norm_sq_eq_inner := sorry_proof
+  conj_symm := sorry_proof
+  add_left := sorry_proof
+  smul_left := sorry_proof
+
+instance instAdjointSpaceRK {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K] :
+    AdjointSpace R K where
+  inner_top_equiv_norm := sorry_proof
+  conj_symm := sorry_proof
+  add_left := sorry_proof
+  smul_left := sorry_proof
+
+instance {R K X} [RealScalar R] [Scalar R K] [ScalarSMul R K] [AddCommGroup X] [Module K X] [Module R X] :
+    IsScalarTower R K X where
+  smul_assoc := sorry_proof
+
+-- It is important that we maintain that these instances are defeq
+example {R} [RealScalar R] :
+  (instModuleScalarSMul : Module R R).toSMul = (NormedSpace.toModule : Module R R).toSMul := rfl
+
+instance {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] : Algebra R K where
+  toFun := fun r => Scalar.make r 0
+  map_one' := sorry_proof
+  map_mul' := sorry_proof
+  map_zero' := sorry_proof
+  map_add' := sorry_proof
+  commutes' := sorry_proof
+  smul_def' := sorry_proof
+
+instance {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] : NormedAlgebra R K where
+  norm_smul_le := sorry_proof
+
+
+end ScalarSMul

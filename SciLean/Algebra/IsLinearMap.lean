@@ -141,6 +141,18 @@ theorem LinearMap_coe.apply_right (f : X → Y →ₗ[R] Z) (y : Y) (hf : IsLine
 theorem LinearMap_coe.apply_left (f : Y →ₗ[R] Z) (g : X → Y) (hg : IsLinearMap R g) :
     IsLinearMap R (fun x => f (g x)) := by constructor; simp[hg.1]; simp[hg.2]
 
+theorem restrictScalars {S} [Semiring S] [Algebra R S]
+    {X : Type u_3} [AddCommGroup X] [Module R X] [Module S X] [IsScalarTower R S X]
+    {Y : Type u_4} [AddCommGroup Y] [Module R Y] [Module S Y] [IsScalarTower R S Y]
+    {f : X → Y} (h : IsLinearMap S f) : IsLinearMap R f := by
+  constructor
+  · apply h.map_add
+  · intro c x
+    calc _ = f (c • (1 • x)) := by simp
+         _ = f ((c • (1:S)) • x) := by simp
+         _ = (c • (1:S)) • f (x) := by apply h.map_smul
+         _ = c • f x := by simp
+
 end CommSemiring
 
 end IsLinearMap

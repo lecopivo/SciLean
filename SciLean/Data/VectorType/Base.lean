@@ -29,7 +29,7 @@ This class is designed to provide Basic Linear Algebra Subprograms(BLAS) which a
 vector space structure on `X` that is computationally efficient.
  -/
 class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)] {R : outParam (Type*)}  (K : outParam (Type*))
-        [outParam (Scalar R R)] [outParam (Scalar R K)] where
+        [outParam (RealScalar R)] [outParam (Scalar R K)] where
   toVec (x : X) : (n → K) -- maybe map to Euclidean space
 
   /-- Zero vector. -/
@@ -121,14 +121,14 @@ This provides the following extensionality property `x = y` if `∀ i, x[i] = y[
 class VectorType.Lawful (X : Type*)
     {n : outParam (Type*)} [IndexType n]
     {R : outParam (Type*)} {K : outParam (Type*)}
-    [Scalar R R] [Scalar R K] [VectorType.Base X n K] : Prop where
+    [RealScalar R] [Scalar R K] [VectorType.Base X n K] : Prop where
   toVec_injective : Function.Injective (VectorType.Base.toVec (X:=X) (n:=n))
 
 
 open Function VectorType.Base Classical in
 class VectorType.Dense (X : Type*)
     {n : outParam (Type*)} {_ : outParam (IndexType n)}
-    {R K : outParam (Type*)} [Scalar R R] [Scalar R K]
+    {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
     [VectorType.Base X n K] where
   fromVec (f : n → K) : X
   -- protected left_inv : LeftInverse fromVec toVec
@@ -305,7 +305,7 @@ section BasicOperations
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K]
+  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K]
 
 open VectorType
 
@@ -313,10 +313,12 @@ instance : Add X := ⟨fun x y => axpy 1 x y⟩
 instance : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
 instance : Neg X := ⟨fun x => scal (-1) x⟩
 instance : SMul K X := ⟨fun s x => scal s x⟩
+instance : SMul R X := ⟨fun s x => scal (Scalar.make s 0) x⟩
 
 instance : Zero X := ⟨zero⟩
 
 instance : Inner K X := ⟨fun x y => dot x y⟩
+instance : Inner R X := ⟨fun x y => Scalar.real (dot x y)⟩
 instance : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
 instance : Dist X := ⟨fun x y => ‖x-y‖⟩
 
@@ -339,6 +341,12 @@ theorem smul_spec (k : K) (x : X) : toVec (k • x) = k • toVec x := by
   funext i; simp only [Pi.smul_apply, smul_eq_mul]
 
 @[vector_to_spec, vector_from_spec ←]
+theorem smul_spec' [Module R K] (r : R) (x : X) : toVec (r • x) = r • toVec x := by
+  conv => lhs; simp only [HSMul.hSMul, SMul.smul,scal_spec]
+  funext i; simp only [Pi.smul_apply, smul_eq_mul]
+  sorry_proof
+
+@[vector_to_spec, vector_from_spec ←]
 theorem zero_spec' : toVec (0 : X) = 0 := by
   conv => lhs; simp only [Zero.zero,OfNat.ofNat]
   simp only [zero_spec]
@@ -349,6 +357,14 @@ theorem inner_spec (x y : X) :
     =
     ⟪(WithLp.equiv 2 (n → K)).symm (toVec x), (WithLp.equiv 2 (n → K)).symm (toVec y)⟫_K := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
+
+@[vector_to_spec, vector_from_spec ←]
+theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] (x y : X) :
+    ⟪x,y⟫_R
+    =
+    ⟪(WithLp.equiv 2 (n → K)).symm (toVec x), (WithLp.equiv 2 (n → K)).symm (toVec y)⟫_R := by
+  simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
+  sorry_proof
 
 @[vector_to_spec, vector_from_spec ←]
 theorem norm_spec (x : X) :
@@ -397,7 +413,7 @@ section AlgebraicInstances
 
 variable
   {X : Type*} {n : Type*} {R K : Type*}
-  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
+  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
 
 open VectorType
 
@@ -432,6 +448,14 @@ instance : Module K X where
   add_smul := by intros; ext; simp[add_smul,vector_to_spec,add_mul]
   zero_smul := by intros; ext; simp[vector_to_spec]
 
+instance [ScalarSMul R K] : Module R X where
+  one_smul := by intros; ext; simp[vector_to_spec]
+  mul_smul := by intros; ext; simp[mul_smul,vector_to_spec,mul_assoc]
+  smul_zero := by intros; ext; simp[vector_to_spec]
+  smul_add := by intros; ext; simp[vector_to_spec,mul_add]
+  add_smul := by intros; ext; simp[add_smul,vector_to_spec,add_mul]
+  zero_smul := by intros; ext; simp[vector_to_spec]
+
 instance : PseudoMetricSpace X where
   dist_self := by intros; simp[dist_spec]
   dist_comm := by intros; simp[dist_spec,dist_comm]
@@ -450,6 +474,11 @@ instance : NormedSpace K X where
   norm_smul_le := by
     simp only [norm_spec]
     simp [norm_smul_le,vector_to_spec]
+
+instance [ScalarSMul R K] : NormedSpace R X where
+  norm_smul_le := by
+    simp only [norm_spec]
+    simp [norm_smul_le,vector_to_spec, ScalarSMul.smul_eq_mul_make]
 
 instance instInnerProductSpace : InnerProductSpace K X where
   norm_sq_eq_inner := by
@@ -486,6 +515,26 @@ instance instAdjointSpace : AdjointSpace K X where
   smul_left := by
     intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
 
+instance instAdjointSpaceReal [ScalarSMul R K] [ScalarInner R K] : AdjointSpace R X where
+  inner_top_equiv_norm := by
+    use 1; use 1
+    simp only [inner_spec,norm_spec]
+    constructor
+    · simp only [gt_iff_lt, zero_lt_one]
+    constructor
+    · simp only [gt_iff_lt, zero_lt_one]
+    · intro x
+      constructor
+      · rw[norm_sq_eq_inner (𝕜:=K)]; simp only [one_smul,le_refl]; sorry_proof
+      · rw[norm_sq_eq_inner (𝕜:=K)]; simp only [one_smul,le_refl]; sorry_proof
+  conj_symm := by
+    intro x y;
+    simp only [inner_spec_real]
+    apply conj_symm
+  add_left := by
+    intros; simp [vector_to_spec, WithLp.equiv_symm_add,add_left]
+  smul_left := by
+    intros; simp [vector_to_spec, WithLp.equiv_symm_smul,smul_left]
 
 end AlgebraicInstances
 
@@ -494,7 +543,7 @@ section Equivalences
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : Scalar R R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
+  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
 
 def toVecₗ : X →ₗ[K] (n → K) :=
   ⟨⟨VectorType.toVec, by simp[vector_to_spec]⟩,by simp[vector_to_spec]⟩

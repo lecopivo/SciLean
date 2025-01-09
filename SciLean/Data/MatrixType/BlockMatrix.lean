@@ -28,17 +28,17 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
     | .inr i, .inl j => toVec A₂₁ (i,j)
     | .inr i, .inr j => toVec A₂₂ (i,j)
   zero := ⟨zero, zero, zero, zero⟩
-  zero_spec := sorry
+  zero_spec := sorry_proof
   scal := fun k ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => ⟨scal k A₁₁, scal k A₁₂, scal k A₂₁, scal k A₂₂⟩
-  scal_spec := sorry
+  scal_spec := sorry_proof
   scalAdd := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => ⟨scalAdd a b A₁₁, scalAdd a b A₁₂, scalAdd a b A₂₁, scalAdd a b A₂₂⟩
-  scalAdd_spec := sorry
+  scalAdd_spec := sorry_proof
   sum := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => VectorType.sum A₁₁ + VectorType.sum A₁₂ + VectorType.sum A₂₁ + VectorType.sum A₂₂
-  sum_spec := sorry
+  sum_spec := sorry_proof
   asum := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => asum A₁₁ + asum A₁₂ + asum A₂₁ + asum A₂₂
-  asum_spec := sorry
+  asum_spec := sorry_proof
   nrm2 := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => Scalar.sqrt ((nrm2 A₁₁)^2 + (nrm2 A₁₂)^2 + (nrm2 A₂₁)^2 + (nrm2 A₂₂)^2)
-  nrm2_spec := sorry
+  nrm2_spec := sorry_proof
   iamax := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ =>
     let i₁₁ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := iamax? A₁₁ |>.map (fun (i,j) => (.inl i, .inl j))
     let i₁₂ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := iamax? A₁₂ |>.map (fun (i,j) => (.inl i, .inr j))
@@ -58,8 +58,8 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
       | some i, some j =>
         if Scalar.abs (f i) > Scalar.abs (f j) then some i else some j)
     i?.get sorry_proof -- here we break consistency if matrix has zero dimension, we have to fix type signature of `iamax`
-  iamax_spec := sorry
-  imaxRe := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ h =>
+  iamax_spec := sorry_proof
+  imaxRe := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ _h =>
     let i₁₁ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := imaxRe? A₁₁ |>.map (fun (i,j) => (.inl i, .inl j))
     let i₁₂ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := imaxRe? A₁₂ |>.map (fun (i,j) => (.inl i, .inr j))
     let i₂₁ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := imaxRe? A₂₁ |>.map (fun (i,j) => (.inr i, .inl j))
@@ -78,8 +78,8 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
       | some i, some j =>
         if Scalar.real (f i) > Scalar.real (f j) then some i else some j)
     i?.get sorry_proof -- this should be guaranteed by `h` but proobably tedious to prove
-  imaxRe_spec := sorry
-  iminRe := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ h =>
+  imaxRe_spec := sorry_proof
+  iminRe := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ _h =>
     let i₁₁ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := iminRe? A₁₁ |>.map (fun (i,j) => (.inl i, .inl j))
     let i₁₂ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := iminRe? A₁₂ |>.map (fun (i,j) => (.inl i, .inr j))
     let i₂₁ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := iminRe? A₂₁ |>.map (fun (i,j) => (.inr i, .inl j))
@@ -98,15 +98,15 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
       | some i, some j =>
         if Scalar.real (f i) < Scalar.real (f j) then some i else some j)
     i?.get sorry_proof -- this should be guaranteed by `h` but proobably tedious to prove
-  iminRe_spec := sorry
+  iminRe_spec := sorry_proof
   dot := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨B₁₁,B₁₂,B₂₁,B₂₂⟩ => dot A₁₁ B₁₁ + dot A₁₂ B₁₂ + dot A₂₁ B₂₁ + dot A₂₂ B₂₂
-  dot_spec := sorry
+  dot_spec := sorry_proof
   axpy := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨B₁₁,B₁₂,B₂₁,B₂₂⟩ => ⟨axpy a A₁₁ B₁₁, axpy a A₁₂ B₁₂, axpy a A₂₁ B₂₁, axpy a A₂₂ B₂₂⟩
-  axpy_spec := sorry
+  axpy_spec := sorry_proof
   axpby := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ b ⟨B₁₁,B₁₂,B₂₁,B₂₂⟩ => ⟨axpby a A₁₁ b B₁₁, axpby a A₁₂ b B₁₂, axpby a A₂₁ b B₂₁, axpby a A₂₂ b B₂₂⟩
-  axpby_spec := sorry
+  axpby_spec := sorry_proof
   mul := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨B₁₁,B₁₂,B₂₁,B₂₂⟩ => ⟨mul A₁₁ B₁₁, mul A₁₂ B₁₂, mul A₂₁ B₂₁, mul A₂₂ B₂₂⟩
-  mul_spec := sorry
+  mul_spec := sorry_proof
 
 theorem _root_.Finset.sum_sum {α β γ : Type*} [AddCommMonoid β]
     (s : Finset α) (t : Finset γ) (f : α ⊕ γ → β) :
@@ -125,25 +125,25 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
     | .inl i, .inr j => toMatrix A₁₂ i j
     | .inr i, .inl j => toMatrix A₂₁ i j
     | .inr i, .inr j => toMatrix A₂₂ i j
-  toVec_eq_toMatrix := sorry
+  toVec_eq_toMatrix := sorry_proof
 
   row := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ i =>
     match i with
     | .inl i => (row A₁₁ i, row A₁₂ i)
     | .inr i => (row A₂₁ i, row A₂₂ i)
-  row_spec := sorry
+  row_spec := sorry_proof
 
   sumRows := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => (sumRows A₁₁ + sumRows A₁₂, sumRows A₂₁ + sumRows A₂₂)
-  sumRows_spec := sorry
+  sumRows_spec := sorry_proof
 
   col := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ j =>
     match j with
     | .inl j => (col A₁₁ j, col A₂₁ j)
     | .inr j => (col A₁₂ j, col A₂₂ j)
-  col_spec := sorry
+  col_spec := sorry_proof
 
   sumCols := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => (sumCols A₁₁ + sumCols A₂₁, sumCols A₁₂ + sumCols A₂₂)
-  sumCols_spec := sorry
+  sumCols_spec := sorry_proof
 
   gemv := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) =>
     (gemv a 1 A₁₂ x₂ (gemv a b A₁₁ x₁ y₁), gemv a 1 A₂₂ x₂ (gemv a b A₂₁ x₁ y₂))

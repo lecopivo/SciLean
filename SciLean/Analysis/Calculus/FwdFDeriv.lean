@@ -457,3 +457,23 @@ theorem dite.arg_te.fwdFDeriv_rule
   induction dec
   case isTrue h  => ext y; simp[h]; simp[h]
   case isFalse h => ext y; simp[h]; simp[h]
+
+
+--------------------------------------------------------------------------------
+
+
+theorem SciLean.fwdFDeriv_wrt_prod
+    {f : X → Y → Z} (hf : Differentiable K ↿f := by fun_prop) :
+    fwdFDeriv K (fun xy : X×Y => f xy.1 xy.2)
+    =
+    fun (xy dxy : X×Y) =>
+      let x := xy.1; let y := xy.2
+      let dx := dxy.1; let dy := dxy.2
+      let zdz₁ := fwdFDeriv K (f · y) x dx
+      let zdz₂ := fwdFDeriv K (f x ·) y dy
+      let z := zdz₁.1; let dz₁ := zdz₁.2; let dz₂ := zdz₂.2
+      (z, dz₁ + dz₂) := by
+
+  unfold fwdFDeriv
+  rw[fderiv_wrt_prod hf]
+  fun_trans

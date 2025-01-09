@@ -415,3 +415,18 @@ theorem sum.arg_f.fderiv_rule {ι} [IndexType ι]
         dy :=
 by
   funext x; fun_trans
+
+
+
+--------------------------------------------------------------------------------
+
+theorem SciLean.fderiv_wrt_prod
+  {f : X → Y → Z} (hf : Differentiable K ↿f := by fun_prop) :
+  fderiv K (fun xy : X×Y => f xy.1 xy.2)
+  =
+  fun xy => fun dxy =>L[K]
+    let x := xy.1; let y := xy.2
+    let dx := dxy.1; let dy := dxy.2
+    let dzdx := fderiv K (f · y) x dx
+    let dzdy := fderiv K (f x ·) y dy
+    dzdx + dzdy := sorry_proof

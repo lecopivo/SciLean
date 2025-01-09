@@ -12,6 +12,20 @@ namespace SciLean
 def_fun_prop VectorType.toVec in x [VectorType.Lawful X] : IsLinearMap K by
   constructor <;> (intros; simp[vector_to_spec])
 
+@[fun_prop]
+theorem adsf {R S} [CommSemiring R] [Semiring S] [Algebra R S]
+  {X} [AddCommGroup X] [Module R X] [Module S X]
+  {Y} [AddCommGroup Y] [Module R Y] [Module S Y]
+  [LinearMap.CompatibleSMul X Y S R]
+  (f : X → Y) (hf : IsLinearMap S f) : IsLinearMap R f := sorry
+
+def_fun_prop VectorType.toVec in x
+    add_suffix _real
+    [ScalarSMul R K] [VectorType.Lawful X] :
+    IsLinearMap R by
+  apply IsLinearMap.restrictScalars (S:=K)
+  fun_prop
+
 
 def_fun_prop VectorType.toVec in x [VectorType.Lawful X] : Continuous by
   rename_i i _
@@ -25,6 +39,14 @@ def_fun_prop VectorType.Base.toVec in x [VectorType.Lawful X] : IsContinuousLine
   · fun_prop
   · dsimp only [autoParam]; fun_prop
 
+def_fun_prop VectorType.Base.toVec in x
+    add_suffix _real
+    [ScalarSMul R K] [VectorType.Lawful X] :
+    IsContinuousLinearMap R by
+  constructor
+  · fun_prop
+  · dsimp only [autoParam]; fun_prop
+
 
 #generate_linear_map_simps VectorType.Base.toVec.arg_x.IsLinearMap_rule
 
@@ -32,8 +54,15 @@ def_fun_prop VectorType.Base.toVec in x [VectorType.Lawful X] : IsContinuousLine
 abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] : fderiv K by
   fun_trans
 
+abbrev_fun_trans VectorType.toVec in x
+    add_suffix _real [ScalarSMul R K] [VectorType.Lawful X] : fderiv R by
+  fun_trans
 
 abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] : fwdFDeriv K by
+  fun_trans
+
+abbrev_fun_trans VectorType.toVec in x
+    add_suffix _real [ScalarSMul R K] [VectorType.Lawful X] : fwdFDeriv K by
   fun_trans
 
 
@@ -56,7 +85,7 @@ abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X
 @[data_synth]
 theorem VectorType.Base.toVec.arg_x.HasRevFDerivUpdate_rule
     {X : Type} {n : (Type)} {inst : (IndexType n)} {R : (Type)}
-    {K : (Type)} {inst_1 : (Scalar R R)} {inst_2 : (Scalar R K)}
+    {K : (Type)} {inst_1 : (RealScalar R)} {inst_2 : (Scalar R K)}
     [self : VectorType.Base X n K] [inst_3 : VectorType.Lawful X] [inst_4 : VectorType.Dense X]
     (i : n) :
     HasRevFDerivUpdate K
