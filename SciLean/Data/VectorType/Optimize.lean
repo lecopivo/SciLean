@@ -14,15 +14,15 @@ theorem add_to_axpy (x y : X) : x+y = axpby 1 x 1 y := by
   ext
   simp[vector_to_spec]
 
-omit [Lawful X] in
+-- omit [Lawful X] in
 @[vector_optimize]
 theorem sub_to_axpby (x y : X) : x-y = axpby 1 x (-1) y := by rfl
 
-omit [Lawful X] in
+-- omit [Lawful X] in
 @[vector_optimize]
 theorem neg_to_scal (x : X) : -x = scal (-1) x := by rfl
 
-omit [Lawful X] in
+-- omit [Lawful X] in
 @[vector_optimize]
 theorem smul_to_scal (a : K) (x : X) : a•x = scal a x := by rfl
 

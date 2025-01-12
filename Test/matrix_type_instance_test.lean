@@ -1,11 +1,11 @@
--- import SciLean.Data.MatrixType.MatMul
--- import SciLean.Data.MatrixType.Transpose
--- import SciLean.Data.MatrixType.Square
--- import SciLean.Data.ArrayType
--- import SciLean.Data.DataArray
--- import SciLean.Data.StructType
--- import SciLean.Analysis.Scalar
-import SciLean
+import SciLean.Data.MatrixType.MatMul
+import SciLean.Data.MatrixType.Transpose
+import SciLean.Data.MatrixType.Square
+import SciLean.Data.ArrayType
+import SciLean.Data.DataArray
+import SciLean.Data.StructType
+import SciLean.Analysis.Scalar
+
 
 open SciLean
 
@@ -22,7 +22,9 @@ example   {R : Type _} [RealScalar R]
   {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] :
   HAdd X X X := by infer_instance
 
-
--- set_option synthInstance.maxHeartbeats 1000 in
--- set_option trace.Meta.synthInstance true in
 example : Inner Float (Float^[2]) := by infer_instance
+
+
+example {K : Type} [RealScalar K]
+  {Y : Type} [NormedAddCommGroup Y] [Module K Y] : ZeroStruct (Y × Y) Unit fun _ => Y × Y := by
+  infer_instance

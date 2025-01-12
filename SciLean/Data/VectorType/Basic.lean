@@ -34,19 +34,19 @@ class VectorType
     fun j => toVec x (fromFin (I:=n) ((toFin (I:=m) j).cast h))
 
 
-instance
+instance (priority:=low)
     (X : (n : Type u) → [IndexType n] → Type*)
     {R : outParam (Type*)} (K : outParam (Type*)) {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
     {n : outParam (Type u)} {_ : outParam (IndexType n)}
     [inst : VectorType X K] : VectorType.Base (X n) n K := inst.base n
 
-instance
+instance (priority:=low)
     (X : (n : Type u) → [IndexType n] → Type*)
     {R : outParam (Type*)} (K : outParam (Type*)) {_ : RealScalar R} {_ : Scalar R K}
     {n : Type u} {_ : IndexType n}
     [inst : VectorType X K] : VectorType.Dense (X n) := inst.dense n
 
-instance
+instance (priority:=low)
     (X : (n : Type u) → [IndexType n] → Type*)
     {R : outParam (Type*)} (K : outParam (Type*)) {_ : RealScalar R} {_ : Scalar R K}
     {n : Type u} {_ : IndexType n}

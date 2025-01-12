@@ -72,7 +72,7 @@ variable
   [MatrixType.Square M]
 
 
-instance : One M := ⟨diagonal (VectorType.const 1)⟩
+instance (priority:=low) : One M := ⟨diagonal (VectorType.const 1)⟩
 
 open Classical in
 @[matrix_to_spec, matrix_from_spec ←]

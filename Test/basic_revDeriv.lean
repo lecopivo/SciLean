@@ -12,7 +12,6 @@ variable
 
 set_default_scalar K
 
-
 example
   : revCDeriv K (fun xy : X×Y => (xy.1,xy.2))
     =
@@ -33,6 +32,7 @@ variable (f : Y → X → X)
   (hf₂ : ∀ y, HasAdjDiff K (fun x => f y x))
   (x : X)
 
+set_option synthInstance.maxHeartbeats 100000 in
 example
   : revCDeriv K (fun yy : Y×Y×Y => f yy.1 (f yy.2.1 (f yy.2.2 x)))
     =
@@ -57,7 +57,7 @@ example
 by
   conv => lhs; autodiff
 
-
+set_option synthInstance.maxHeartbeats 100000 in
 example
   : revCDeriv K (fun yy : Y×Y×Y×Y => f yy.1 (f yy.2.1 (f yy.2.2.1 (f yy.2.2.2 x))))
     =

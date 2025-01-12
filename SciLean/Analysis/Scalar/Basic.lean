@@ -26,7 +26,7 @@ This class allows us to write code independent of particular implementation of r
 The main motivation for this class is to treat floating point numbers as real numbers but to minimize the impact of such unsoundness. We can write code with valid proofs and only at the last step before compilation provide inconsistent instance `Scalar Float Float`.
 
 An alternative approach to get executable code would be to add a custom compiler step which would replace every occurance of real or complex numbers with their floating point equivalent. Implementing such compiler step turned out to be quite a non-trivial task thus we are taking this type class approach. -/
-class Scalar (R : outParam (Type _)) (K : semiOutParam (Type _)) extends RCLike K where
+class Scalar (R : outParam (Type _)) (K : (Type _)) extends RCLike K where
   -- used for specification
   toComplex : K → ℂ
   toReal    : R → ℝ
@@ -115,7 +115,7 @@ This class allows us to write code independent of particular implementation of r
 
 See `Scalar` for motivation for this class.
 -/
-class RealScalar (R : semiOutParam (Type _)) extends Scalar R R, LinearOrder R where
+class RealScalar (R :(Type _)) extends Scalar R R, LinearOrder R where
   is_real : ∀ x : R, im x = 0
 
   asin (x : R) : R
@@ -543,7 +543,7 @@ instance {R} [RealScalar R] : ScalarSMul R R where
 instance {R} [RealScalar R] : ScalarInner R R where
   inner_eq_inner_re_im := sorry_proof
 
-instance instModuleScalarSMul {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] : Module R K where
+instance (priority:=low) instModuleScalarSMul {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] : Module R K where
   one_smul := sorry_proof
   mul_smul := sorry_proof
   smul_zero := sorry_proof
@@ -551,25 +551,25 @@ instance instModuleScalarSMul {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K]
   add_smul := sorry_proof
   zero_smul := sorry_proof
 
-instance instNormedSpaceRK {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] :
+instance (priority:=low) instNormedSpaceRK {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] :
     NormedSpace R K where
   norm_smul_le := sorry_proof
 
-instance instInnerProductSpaceRK {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K] :
+instance (priority:=low) instInnerProductSpaceRK {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] [ScalarInner R K] :
     InnerProductSpace R K where
   norm_sq_eq_inner := sorry_proof
   conj_symm := sorry_proof
   add_left := sorry_proof
   smul_left := sorry_proof
 
-instance instAdjointSpaceRK {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K] :
+instance (priority:=low) instAdjointSpaceRK {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] [ScalarInner R K] :
     AdjointSpace R K where
   inner_top_equiv_norm := sorry_proof
   conj_symm := sorry_proof
   add_left := sorry_proof
   smul_left := sorry_proof
 
-instance {R K X} [RealScalar R] [Scalar R K] [ScalarSMul R K] [AddCommGroup X] [Module K X] [Module R X] :
+instance (priority:=low) {R K X} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] [AddCommGroup X] [Module K X] [Module R X] :
     IsScalarTower R K X where
   smul_assoc := sorry_proof
 
@@ -577,7 +577,7 @@ instance {R K X} [RealScalar R] [Scalar R K] [ScalarSMul R K] [AddCommGroup X] [
 example {R} [RealScalar R] :
   (instModuleScalarSMul : Module R R).toSMul = (NormedSpace.toModule : Module R R).toSMul := rfl
 
-instance {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] : Algebra R K where
+instance (priority:=low) {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] : Algebra R K where
   toFun := fun r => Scalar.make r 0
   map_one' := sorry_proof
   map_mul' := sorry_proof
@@ -586,7 +586,7 @@ instance {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] : Algebra R K where
   commutes' := sorry_proof
   smul_def' := sorry_proof
 
-instance {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] : NormedAlgebra R K where
+instance (priority:=low) {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] : NormedAlgebra R K where
   norm_smul_le := sorry_proof
 
 

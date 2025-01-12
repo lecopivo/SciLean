@@ -120,7 +120,7 @@ variable
       [MatrixType.Base M₁ X Y] [MatrixType.Base M₂ Y Z] [MatrixType.Base M₃ X Z]
       [MatrixType.MatMul M₁ M₂ M₃]
 
-instance : HMul M₂ M₁ M₃ := ⟨(MatrixType.MatMul.matmul 1 1 · · 0)⟩
+instance (priority:=low) : HMul M₂ M₁ M₃ := ⟨(MatrixType.MatMul.matmul 1 1 · · 0)⟩
 
 @[matrix_to_spec, matrix_from_spec ←]
 theorem hmul_to_spec (A : M₂) (B : M₁) :
@@ -148,15 +148,15 @@ variable
       [MatrixType.MatMul M M M]
 
 
-instance : Mul M := ⟨fun A B => A * B⟩
+instance (priority:=low) : Mul M := ⟨fun A B => A * B⟩
 
 open Classical in
-instance : Monoid M where
+instance (priority:=low) : Monoid M where
   mul_assoc := by intros; ext; simp only [hmul_to_spec, mul_assoc]
   one_mul := by intros; ext; simp only [hmul_to_spec, one_spec, one_mul]
   mul_one := by intros; ext; simp only [hmul_to_spec, one_spec, mul_one]
 
-instance : Semiring M where
+instance (priority:=low) : Semiring M where
   left_distrib := by intros; ext; simp [hmul_to_spec,add_spec,left_distrib]
   right_distrib := by intros; ext; simp only [hmul_to_spec, add_spec, right_distrib]
   zero_mul := by intros; ext; simp [matrix_to_spec]
@@ -167,7 +167,7 @@ instance : Semiring M where
 
 
 open Classical in
-instance instAlgebra : Algebra K M where
+instance (priority:=low) instAlgebra : Algebra K M where
   toFun k := diagonal (VectorType.const k)
   map_one' := by ext; simp [matrix_to_spec, vector_to_spec]
   map_mul' := by intros; ext; simp [matrix_to_spec, vector_to_spec]

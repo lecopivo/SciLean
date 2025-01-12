@@ -221,13 +221,13 @@ variable
 
 attribute [local instance] MatrixType.vectorTypeLawful
 
-instance : AddCommGroup M := by infer_instance
-instance : Module K M := by infer_instance
-instance : PseudoMetricSpace M := by infer_instance
-instance : NormedAddCommGroup M := by infer_instance
-instance : NormedSpace K M := by infer_instance
-instance instInnerProductSpace : InnerProductSpace K M := by infer_instance
-instance instAdjointSpace : AdjointSpace K M := by infer_instance
+instance (priority:=low) : AddCommGroup M := by infer_instance
+instance (priority:=low) : Module K M := by infer_instance
+instance (priority:=low) : PseudoMetricSpace M := by infer_instance
+instance (priority:=low) : NormedAddCommGroup M := by infer_instance
+instance (priority:=low) : NormedSpace K M := by infer_instance
+instance (priority:=low) instInnerProductSpace : InnerProductSpace K M := by infer_instance
+instance (priority:=low) instAdjointSpace : AdjointSpace K M := by infer_instance
 
 end Instances
 

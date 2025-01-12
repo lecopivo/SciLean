@@ -217,7 +217,7 @@ class VecStruct (K X I XI) [StructType X I XI] [RCLike K]
 -- ZeroStruct instances ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) instZeroStructDefault
+instance instZeroStructDefault
   {X} [Zero X] : ZeroStruct X Unit (fun _ => X) where
   structProj_zero := by simp[structProj]
 
@@ -232,7 +232,7 @@ instance instZeroStructProd
 -- AddStruct instances ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) instAddStructDefault
+instance instAddStructDefault
   {X} [Add X] : AddStruct X Unit (fun _ => X) where
   structProj_add := by simp[structProj]
 
@@ -247,7 +247,7 @@ instance instAddStructProd
 -- NegStruct instances ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) instNegStructDefault
+instance instNegStructDefault
   {X} [Neg X] : NegStruct X Unit (fun _ => X) where
   structProj_neg := by simp[structProj]
 
@@ -262,7 +262,7 @@ instance instNegStructProd
 -- SMulStruct instances ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) instSMulStructDefault
+instance instSMulStructDefault
   {X} [SMul K X] : SMulStruct K X Unit (fun _ => X) where
   structProj_smul := by simp[structProj]
 
@@ -277,7 +277,7 @@ instance instSMulStructProd
 -- TopologicalStruct instances -------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) instTopologicalStructDefault
+instance instTopologicalStructDefault
   {X} [TopologicalSpace X] : TopologicalStruct X Unit (fun _ => X) where
   structProj_continuous := sorry_proof
   structMake_continuous := sorry_proof
@@ -294,7 +294,7 @@ instance instTopologicalStructProd
 -- ModuleStruct instances ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) instModuleStructDefault
+instance instModuleStructDefault
   {X} [AddCommGroup X] [Module K X] : ModuleStruct K X Unit (fun _ => X) where
 
 instance instModuleStructProd
@@ -307,7 +307,7 @@ instance instModuleStructProd
 -- VecStruct instances ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) instVecStructDefault
+instance instVecStructDefault
   {X} [AddCommGroup X] [Module K X] [TopologicalSpace X] : VecStruct K X Unit (fun _ => X) where
 
 instance instVecStructProd
@@ -542,7 +542,7 @@ class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [Ind
 -- SemiInnerProductSpaceStruct instances ---------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) {X} [SemiInnerProductSpace K X] :
+instance {X} [SemiInnerProductSpace K X] :
     SemiInnerProductSpaceStruct K X Unit (fun _ => X) where
   inner_structProj := sorry_proof
   testFun_structProj := sorry_proof
@@ -589,7 +589,7 @@ class AdjointSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I]
 -- AdjointSpaceStruct instances ---------------------------------------
 --------------------------------------------------------------------------------
 
-instance (priority:=low) {X} [NormedAddCommGroup X] [AdjointSpace K X] :
+instance {X} [NormedAddCommGroup X] [AdjointSpace K X] :
     AdjointSpaceStruct K X Unit (fun _ => X) where
   inner_structProj := sorry_proof
 

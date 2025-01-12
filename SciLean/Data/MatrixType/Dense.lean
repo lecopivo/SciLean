@@ -142,7 +142,7 @@ def mequivₗ : M ≃ₗ[K] (Matrix m n K) :=
 def mequivL : M ≃L[K] (Matrix m n K) := ContinuousLinearEquiv.mk mequivₗ (by sorry_proof) (by sorry_proof)
 
 
-instance : FiniteDimensional K (M) :=
+instance (priority:=low) : FiniteDimensional K (M) :=
    FiniteDimensional.of_injective (V₂:=Matrix m n K) mequivₗ.1
   (mequivₗ.left_inv.injective)
 

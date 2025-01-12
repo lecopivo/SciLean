@@ -309,18 +309,18 @@ variable
 
 open VectorType
 
-instance : Add X := ⟨fun x y => axpy 1 x y⟩
-instance : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
-instance : Neg X := ⟨fun x => scal (-1) x⟩
-instance : SMul K X := ⟨fun s x => scal s x⟩
-instance : SMul R X := ⟨fun s x => scal (Scalar.make s 0) x⟩
+instance (priority:=low) : Add X := ⟨fun x y => axpy 1 x y⟩
+instance (priority:=low) : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
+instance (priority:=low) : Neg X := ⟨fun x => scal (-1) x⟩
+instance (priority:=low) : SMul K X := ⟨fun s x => scal s x⟩
+instance (priority:=low) : SMul R X := ⟨fun s x => scal (Scalar.make s 0) x⟩
 
-instance : Zero X := ⟨zero⟩
+instance (priority:=low) : Zero X := ⟨zero⟩
 
-instance : Inner K X := ⟨fun x y => dot x y⟩
-instance : Inner R X := ⟨fun x y => Scalar.real (dot x y)⟩
-instance : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
-instance : Dist X := ⟨fun x y => ‖x-y‖⟩
+instance (priority:=low) : Inner K X := ⟨fun x y => dot x y⟩
+instance (priority:=low) : Inner R X := ⟨fun x y => Scalar.real (dot x y)⟩
+instance (priority:=low) : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
+instance (priority:=low) : Dist X := ⟨fun x y => ‖x-y‖⟩
 
 @[vector_to_spec, vector_from_spec ←]
 theorem add_spec (x y : X) : toVec (x + y) = toVec x + toVec y := by
@@ -425,7 +425,7 @@ theorem ext (x y : X) : (∀ (i : n), toVec x i = toVec y i) → x = y := by
   exact (h i)
 
 --set_option trace.Meta.synthOrder true
-instance : AddCommGroup X where
+instance (priority:=low) : AddCommGroup X where
   add_assoc := by intros; ext; simp only [add_spec, add_assoc]
   zero_add := by intros; ext; simp only [add_spec, zero_spec', zero_add]
   add_zero := by intros; ext; simp only [add_spec, zero_spec', add_zero]
@@ -440,7 +440,7 @@ instance : AddCommGroup X where
   zsmul_neg' := by intros; ext; simp[zsmul_neg',scal_spec,add_smul,vector_to_spec,add_mul]
   zsmul_succ' := by intros; ext; simp[scal_spec,add_smul,vector_to_spec,add_mul]
 
-instance : Module K X where
+instance (priority:=low) : Module K X where
   one_smul := by intros; ext; simp[vector_to_spec]
   mul_smul := by intros; ext; simp[mul_smul,vector_to_spec,mul_assoc]
   smul_zero := by intros; ext; simp[vector_to_spec]
@@ -448,7 +448,7 @@ instance : Module K X where
   add_smul := by intros; ext; simp[add_smul,vector_to_spec,add_mul]
   zero_smul := by intros; ext; simp[vector_to_spec]
 
-instance [ScalarSMul R K] : Module R X where
+instance (priority:=low) [ScalarSMul R K] : Module R X where
   one_smul := by intros; ext; simp[vector_to_spec]
   mul_smul := by intros; ext; simp[mul_smul,vector_to_spec,mul_assoc]
   smul_zero := by intros; ext; simp[vector_to_spec]
@@ -456,12 +456,12 @@ instance [ScalarSMul R K] : Module R X where
   add_smul := by intros; ext; simp[add_smul,vector_to_spec,add_mul]
   zero_smul := by intros; ext; simp[vector_to_spec]
 
-instance : PseudoMetricSpace X where
+instance (priority:=low) : PseudoMetricSpace X where
   dist_self := by intros; simp[dist_spec]
   dist_comm := by intros; simp[dist_spec,dist_comm]
   dist_triangle := by intros; simp[dist_spec,dist_triangle]
 
-instance : NormedAddCommGroup X where
+instance (priority:=low) : NormedAddCommGroup X where
   dist_eq := by intros; rfl
   eq_of_dist_eq_zero := by
     intro x y h
@@ -470,17 +470,17 @@ instance : NormedAddCommGroup X where
     simp only [dist_spec] at h
     exact (eq_of_dist_eq_zero h)
 
-instance : NormedSpace K X where
+instance (priority:=low) : NormedSpace K X where
   norm_smul_le := by
     simp only [norm_spec]
     simp [norm_smul_le,vector_to_spec]
 
-instance [ScalarSMul R K] : NormedSpace R X where
+instance (priority:=low) [ScalarSMul R K] : NormedSpace R X where
   norm_smul_le := by
     simp only [norm_spec]
     simp [norm_smul_le,vector_to_spec, ScalarSMul.smul_eq_mul_make]
 
-instance instInnerProductSpace : InnerProductSpace K X where
+instance (priority:=low) instInnerProductSpace : InnerProductSpace K X where
   norm_sq_eq_inner := by
     simp only [inner_spec,norm_spec]
     intro x
@@ -494,7 +494,7 @@ instance instInnerProductSpace : InnerProductSpace K X where
   smul_left := by
     intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
 
-instance instAdjointSpace : AdjointSpace K X where
+instance (priority:=low) instAdjointSpace : AdjointSpace K X where
   inner_top_equiv_norm := by
     use 1; use 1
     simp only [inner_spec,norm_spec]
@@ -515,7 +515,7 @@ instance instAdjointSpace : AdjointSpace K X where
   smul_left := by
     intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
 
-instance instAdjointSpaceReal [ScalarSMul R K] [ScalarInner R K] : AdjointSpace R X where
+instance (priority:=low) instAdjointSpaceReal [ScalarSMul R K] [ScalarInner R K] : AdjointSpace R X where
   inner_top_equiv_norm := by
     use 1; use 1
     simp only [inner_spec,norm_spec]
@@ -548,10 +548,10 @@ variable
 def toVecₗ : X →ₗ[K] (n → K) :=
   ⟨⟨VectorType.toVec, by simp[vector_to_spec]⟩,by simp[vector_to_spec]⟩
 
-instance : FiniteDimensional K X :=
+instance (priority:=low) : FiniteDimensional K X :=
    FiniteDimensional.of_injective (V₂:=n→K) toVecₗ VectorType.Lawful.toVec_injective
 
-instance : CompleteSpace X := sorry_proof
+instance (priority:=low): CompleteSpace X := sorry_proof
 
 variable [VectorType.Dense X]
 

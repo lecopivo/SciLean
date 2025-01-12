@@ -50,7 +50,7 @@ variable
   [MatrixType.Base M X X]
   [MatrixType.Transpose M M X X]
 
-instance : Star M := ⟨conjTranspose⟩
+instance (priority:=low) : Star M := ⟨conjTranspose⟩
 
 @[matrix_to_spec, matrix_from_spec ←]
 theorem star_spec (A : M) :
