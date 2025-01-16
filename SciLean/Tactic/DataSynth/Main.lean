@@ -473,6 +473,10 @@ def letTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat) :=
     |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.let_rule, 14, 15, 18, 19)
     |>.insert `SciLean.RealToFloatFun (`SciLean.RealToFloatFun.let_rule, 9, 10, 13, 14)
 
+-- theorem name, fId, hfid
+def piTheorems : Std.HashMap Name (Name × Nat × Nat) :=
+  Std.HashMap.empty
+    |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.pi_rule, 12, 14)
 
 /-- Given goal for composition `fun x => let y:=g x; f y x` and given `f` and `g` return corresponding goals for `↿f` and `g` -/
 def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) := do
@@ -526,12 +530,47 @@ def letResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Optio
 
 
 set_option linter.unusedVariables false in
-/-- Given goal for composition `fun x i => f x i` and given free var `i` and `f` return goal for `(f · i)` -/
-def piGoal (fGoal : DataSyntGoal) (i : Expr) (fi : Expr) : DataSynthM (Option Goal) := return none
+/-- Given goal for `fun x i => f x i` return goal for `fun x => f x i` -/
+def piGoal (fGoal : Goal) (f : Expr) (i : Expr) : DataSynthM (Option Goal) :=
+  withProfileTrace "piGoals" do
+
+  let some (thmName, fId, hfId) := piTheorems[fGoal.dataSynthDecl.name]?
+    | return none
+
+  let info ← getConstInfo thmName
+  let (xs, _, thm) ← forallMetaTelescope info.type
+
+  try
+    withMainTrace (fun _ => return m!"assigning data") do
+    xs[fId]!.mvarId!.assignIfDefeq f
+  catch _e =>
+    throwError s!"{← ppExpr (xs[fId]!)} : {← ppExpr (← inferType xs[fId]!)} := {← ppExpr f}"
+
+  let (_,rhs) ← fGoal.mkFreshProofGoal
+  if ¬(← isDefEq thm rhs) then
+    return none
+
+  let hf ← inferType xs[hfId]! >>= instantiateMVars
+  let .forallE _ _ hf _ := hf | throwError "expected forall {← ppExpr hf}"
+  let hf := hf.instantiate1 i
+  let some fgoal ← isDataSynthGoal? hf | return none
+  return fgoal
 
 set_option linter.unusedVariables false in
 /-- Given result for `(f · i)` and free variable `i` return result for `f`-/
-def piResult (hf : Result) (i : Expr) : DataSynthM (Option Result) := return none
+def piResult (fGoal : Goal) (f : Expr) (i : Expr) (hfi : Result) : DataSynthM (Option Result) :=
+  withProfileTrace "piResults" do
+
+  let some (thmName, fId, hfId) := piTheorems[fGoal.dataSynthDecl.name]?
+    | return none
+
+  let mut args? : Array (Option Expr) := .mkArray (hfId+1) none
+  args? := args?.set! fId f
+  args? := args?.set! hfId (← mkLambdaFVars #[i] hfi.proof)
+
+  let proof ← mkAppOptM thmName args?
+  let r ← fGoal.getResultFrom proof
+  return r
 
 
 -- theorem name, fId, gId, p₁Id, p₂Id, qId, hgId
@@ -637,12 +676,11 @@ def letCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
 
 def lamCase (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "lamCase" do
-  lambdaBoundedTelescope f.body 1 fun is _b => do
-    let i := is[0]!
-    let fi := {f with body := f.body.beta is}
-    let some figoal ← piGoal goal i (← fi.toExpr) | return none
+  let fExpr ← f.toExpr
+  f.bodyLambdaTelescope1 fun i fi => do
+    let some figoal ← piGoal goal fExpr i | return none
     let some hfi ← dataSynthFun figoal fi | return none
-    let some r ← piResult hfi i | return none
+    let some r ← piResult goal fExpr i hfi | return none
     let r ← r.normalize
     return r
 

@@ -173,7 +173,7 @@ def curryLambdaTelescope (f : Expr) (k : Array Expr → Expr → MetaM α) : Met
   let n := prodSize xType
   let f ← mkCurryFun n f
 
-  lambdaTelescope f k
+  lambdaBoundedTelescope f n k
 
 def getFunData (f : Expr) : MetaM FunData := do
   curryLambdaTelescope (← ensureEtaExpanded f) fun xs b => do
@@ -231,6 +231,23 @@ def funHead (f : FunData) : MetaM FunHead :=
   | .sort .. | .mdata .. | .mvar .. | .forallE .. | .bvar .. | .lit .. =>
     withLCtx f.lctx f.insts do
       throwError "invalid function body, ctor:{f.body.ctorName}\n{← ppExpr f.body}"
+
+/-- For function `f` representing `fun ((x₁,x₂,...,xₙ) : X₁×X₂×...×Xₙ) (y : Y) => f x₁ ... xₙ) y`
+    return `y` as free variables and `fun ((x₁,x₂,...,xₙ) : X₁×X₂×...×Xₙ) => f x₁ ... xₙ) y`
+    i.e. removes `y` binder in the body. -/
+def bodyLambdaTelescope1 (f : FunData) (k : Expr → FunData → DataSynthM α) : DataSynthM α := do
+  withLCtx f.lctx f.insts do
+    let .lam n t b bi  := f.body
+      | throwError "FunData.introBodyLambda: expected lambda in the function body {←f.pp}"
+    withLocalDecl n bi t fun y => do
+      let f : FunData := {
+        lctx := ← getLCtx
+        insts := ← getLocalInstances
+        xs := f.xs
+        body := b.instantiate1 y
+      }
+      k y f
+
 
 /-- Composition of two function.-/
 inductive FunDecomp where

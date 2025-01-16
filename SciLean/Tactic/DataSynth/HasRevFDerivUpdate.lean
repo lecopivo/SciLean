@@ -13,7 +13,7 @@ variable {R : Type} [RCLike R]
   {Z : Type} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
   {X₁ : Type} [NormedAddCommGroup X₁] [AdjointSpace R X₁] [CompleteSpace X₁]
   {X₂ : Type} [NormedAddCommGroup X₂] [AdjointSpace R X₂] [CompleteSpace X₂]
-
+  {I : Type} [IndexType I]
 
 variable (R)
 @[data_synth out f' in f]
@@ -50,6 +50,27 @@ theorem const_rule (y : Y) :  HasRevFDerivUpdate R (fun x : X => y) (fun x => (y
   constructor
   · fun_trans
   · fun_prop
+
+
+theorem pi_rule (f : X → I → Y) (f' : I → _)
+    (hf : ∀ i, HasRevFDerivUpdate R (f · i) (f' i)) :
+    HasRevFDerivUpdate R
+      (fun (x : X) i => f x i)
+      (fun x =>
+        (f x,
+         fun dy dx =>
+           IndexType.foldl (init:=dx) (fun dx i => (f' i x).2 (dy i) dx))) := by
+  have hf' := fun i => (hf i).1
+  have := fun i => (hf i).2
+  constructor
+  · intro dx
+    fun_trans[hf']
+    funext dy dx
+    rw[revFDeriv.pi_rule (hf:=by fun_prop)]
+    simp
+    sorry_proof
+  · apply differentiable_pi''
+    assumption
 
 
 theorem comp_rule (f : Y → Z) (g : X → Y) (f' g')
@@ -421,5 +442,6 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_rule
   constructor
   · intro dx; fun_trans only; simp_all
   · fun_prop
+
 
 end OverReals
