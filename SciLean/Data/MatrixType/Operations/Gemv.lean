@@ -5,8 +5,7 @@ import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 
 namespace SciLean
 
-#check MatrixType.Base.gemv
-
+#exit
 
 theorem differentiable_iff_toVec_differentiable
   {R K} {_ : RealScalar R} {_ : Scalar R K}

@@ -477,32 +477,36 @@ by
 section OnRealSpace
 
 variable
-  {R : Type _} [RealScalar R]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
-
+  {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X] [CompleteSpace X]
+  {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y] [AdjointSpace K Y] [CompleteSpace Y]
+  -- maybe [IsScalarTower R K X] [IsScalarTower R K Y] ?
+  -- This should be done properly with proofs to make sure it is correct
 open SciLean
 
-set_default_scalar R
+@[fun_trans]
+theorem Inner.inner.arg_a1.adjoint_rule_real
+  (f : X → Y) (hf : IsContinuousLinearMap R f) (y : Y)
+  : adjoint R (fun x => ⟪y, f x⟫[K])
+    =
+    fun z => z • (adjoint R f) y :=
+by
+  rw[← (eq_adjoint_iff _ _ (by sorry_proof)).2]
+  sorry_proof
 
--- inner product is not ℂ-linear in its first argument thus it can't have an adjoint
 open ComplexConjugate in
 @[fun_trans]
 theorem Inner.inner.arg_a0.adjoint_rule
   (f : X → Y) (hf : IsContinuousLinearMap R f) (y : Y)
-  : (fun x => ⟪f x, y⟫)†
+  : adjoint R (fun x => ⟪f x, y⟫[K])
     =
-    fun z => (conj z) • (f†) y :=
+    fun z => (conj z) • (adjoint R f) y :=
 by
   rw[← (eq_adjoint_iff _ _ (by sorry_proof)).2]
-  simp (disch:=fun_prop)
-    [adjoint_inner_left,AdjointSpace.inner_smul_left,AdjointSpace.conj_symm]
-  intros
-  rw[← AdjointSpace.conj_symm]; simp
+  sorry_proof
 
 
 end OnRealSpace
-
 
 
 
@@ -511,28 +515,65 @@ end OnRealSpace
 section IsContinuousLinearMap
 
 variable
-  {R : Type _} [RealScalar R]
-  {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
+  {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K]
+  {X : Type*} [TopologicalSpace X] [AddCommMonoid X] [Module R X] [Module K X]
+  {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y] [AdjointSpace K Y] [CompleteSpace Y]
 
-set_default_scalar R
+-- set_default_scalar R
 
 -- Inner -----------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 @[fun_prop]
 theorem Inner.inner.arg_a0.IsContinuousLinearMap_rule
-  (f : X → Y) (_ : IsContinuousLinearMap R f) (y : Y)
-  : IsContinuousLinearMap R fun x => ⟪f x, y⟫ :=
+  (f : X → Y) (hf : IsContinuousLinearMap R f) (y : Y)
+  : IsContinuousLinearMap R fun x => ⟪f x, y⟫[K] :=
 by
-  sorry_proof
+  constructor
+  · constructor
+    · intros
+      rw[hf.linear.map_add]
+      rw[AdjointSpace.inner_add_left]
+    · intro c x
+      rw[hf.linear.map_smul]
+      calc _ = ⟪(c • (1:K)) • f x, y⟫[K] := by simp
+           _ = (conj (c • (1:K))) * ⟪f x, y⟫[K] := by rw[AdjointSpace.inner_smul_left]
+           _ = c • ⟪f x, y⟫[K] := by simp[ScalarSMul.smul_eq_mul_make]; sorry_proof
+  · sorry_proof
+
 
 @[fun_prop]
 theorem Inner.inner.arg_a1.IsContinuousLinearMap_rule
-  (f : X → Y) (_ : IsContinuousLinearMap R f) (y : Y)
-  : IsContinuousLinearMap R fun x => ⟪y, f x⟫ :=
+  (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
+  : IsContinuousLinearMap K fun x => ⟪y, f x⟫[K] :=
 by
-  sorry_proof
+  constructor
+  · constructor
+    · intros
+      rw[hf.linear.map_add]
+      rw[AdjointSpace.inner_add_right]
+    · intros
+      rw[hf.linear.map_smul]
+      simp only [AdjointSpace.inner_smul_right]
+      rfl
+  · sorry_proof
+
+
+@[fun_prop]
+theorem Inner.inner.arg_a1.IsContinuousLinearMap_rule_real
+  (f : X → Y) (hf : IsContinuousLinearMap R f) (y : Y)
+  : IsContinuousLinearMap R fun x => ⟪y, f x⟫[K] :=
+by
+  constructor
+  · constructor
+    · intros
+      rw[hf.linear.map_add]
+      rw[AdjointSpace.inner_add_right]
+    · intro c x
+      calc _ = ⟪y, (c • (1:K)) • f x⟫[K] := by simp[hf.linear.map_smul]
+           _ = ((c • (1:K))) * ⟪y, f x⟫[K] := by rw[AdjointSpace.inner_smul_right]
+           _ = c • ⟪y, f x⟫[K] := by simp[ScalarSMul.smul_eq_mul_make]
+  · sorry_proof
 
 
 end IsContinuousLinearMap

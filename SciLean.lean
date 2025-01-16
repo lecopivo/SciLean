@@ -146,6 +146,11 @@ import SciLean.Data.VectorType.Init
 import SciLean.Data.VectorType.Optimize
 import SciLean.Data.VectorType.Prod
 import SciLean.Data.VectorType.Scalar
+import SciLean.Data.VectorType.Operations.Dot
+import SciLean.Data.VectorType.Operations.Scal
+-- import SciLean.Data.VectorType.Operations.ScalAdd
+import SciLean.Data.VectorType.Operations.ToVec
+import SciLean.Data.VectorType.Operations.FromVec
 import SciLean.Data.MatrixType.Basic
 import SciLean.Data.MatrixType.Base
 import SciLean.Data.MatrixType.Dense
@@ -154,6 +159,9 @@ import SciLean.Data.MatrixType.Transpose
 import SciLean.Data.MatrixType.MatMul
 import SciLean.Data.MatrixType.BlockMatrix
 import SciLean.Data.MatrixType.Symbolic
+-- import SciLean.Data.MatrixType.Operations.Gemv
+import SciLean.Data.MatrixType.Operations.ToMatrix
+import SciLean.Data.MatrixType.Operations.FromMatrix
 -- import SciLean.Geometry.Bezier
 import SciLean.Geometry.BoundingBall
 import SciLean.Geometry.FrontierSpeed

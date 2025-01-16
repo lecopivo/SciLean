@@ -17,7 +17,7 @@ class MatrixType.Dense
 
   -- maybe it should be `Matrix m n K → M → M` such that `Dense` works also for submatrices
   -- the current definition forces lawfulness which excludes submatrices
-  fromMatrix : Matrix m n K → M
+  fromMatrix (f : Matrix m n K) : M
   -- protected left_inv'  : LeftInverse fromMatrix MatrixType.Base.toMatrix
   protected right_inv' : RightInverse fromMatrix MatrixType.Base.toMatrix
 
@@ -87,7 +87,6 @@ def updateElem (A : M) (i : m) (j : n) (f : K → K) : M :=
   let aij := toMatrix A i j
   MatrixType.set' A i j (f aij)
 
-
 end Operations
 
 
@@ -132,6 +131,11 @@ theorem toMatrix_fromMatrix (f : m → n → K) :
     toMatrix (fromMatrix (M:=M) f) = f := by
   rw[MatrixType.Dense.right_inv']
 
+theorem fromMatrix_eq_fromVec {f : Matrix m n K} :
+    fromMatrix (M:=M) f = VectorType.fromVec fun (i,j) => f i j := by
+  apply toMatrix_injective
+  conv => rhs; simp only [toMatrix_eq_toVec]
+  simp
 
 /-- Linear equivalence between matrix type `M` and `Matrix m n K` -/
 def mequivₗ : M ≃ₗ[K] (Matrix m n K) :=

@@ -47,10 +47,13 @@ def logWishartPrior {k d : Nat} (Qs : (M (Fin d) (Fin d))^[k]) (qsums : V (Fin k
     let p := d
     let n := p + wishartM + 1
     let c := (n * p) * (log wishartGamma - 0.5 * log 2) - (logMultiGamma ((0.5:R) * n) p)
-    let frobenius : R := ∑ i, ‖Qs[i]‖₂²
+    let frobenius : R := ‖Qs‖₂²
     let sumQs := VectorType.sum qsums
     0.5 * wishartGamma * wishartGamma * frobenius - wishartM * sumQs - k * c
 
+
+variable (d k : Nat)
+#check <∂! (x : V (Fin k)), VectorType.sum x
 
 open Scalar VectorType in
 def gmmObjective {d k n : Nat}

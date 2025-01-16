@@ -10,18 +10,19 @@ import Mathlib.Analysis.Calculus.Deriv.Inv
 
 import SciLean.Tactic.FunTrans.Attr
 import SciLean.Tactic.FunTrans.Elab
+import SciLean.Meta.Notation.Let'
 
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 
 open SciLean
 
 variable
-  {K : Type _} [RCLike K]
-  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
-  {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
-  {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} [Fintype ι]
-  {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
+  {K : Type*} [RCLike K]
+  {X : Type*} [NormedAddCommGroup X] [NormedSpace K X]
+  {Y : Type*} [NormedAddCommGroup Y] [NormedSpace K Y]
+  {Z : Type*} [NormedAddCommGroup Z] [NormedSpace K Z]
+  {ι : Type*} [Fintype ι]
+  {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace K (E i)]
 
 namespace SciLean
 
@@ -421,7 +422,7 @@ by
 --------------------------------------------------------------------------------
 
 theorem SciLean.fderiv_wrt_prod
-  {f : X → Y → Z} (hf : Differentiable K ↿f := by fun_prop) :
+  {f : X → Y → Z} (_hf : Differentiable K ↿f := by fun_prop) :
   fderiv K (fun xy : X×Y => f xy.1 xy.2)
   =
   fun xy => fun dxy =>L[K]
@@ -430,3 +431,22 @@ theorem SciLean.fderiv_wrt_prod
     let dzdx := fderiv K (f · y) x dx
     let dzdy := fderiv K (f x ·) y dy
     dzdx + dzdy := sorry_proof
+
+
+variable
+  {X₁ : Type*} [NormedAddCommGroup X₁] [NormedSpace K X₁]
+  {X₂ : Type*} [NormedAddCommGroup X₂] [NormedSpace K X₂]
+  {X₃ : Type*} [NormedAddCommGroup X₃] [NormedSpace K X₃]
+
+
+theorem SciLean.fderiv_wrt_prod3
+  {f : X₁ → X₂ → X₃ → Z} (_hf : Differentiable K ↿f := by fun_prop) :
+  fderiv K (fun x : X₁×X₂×X₃ => f x.1 x.2.1 x.2.2)
+  =
+  fun x => fun dx =>L[K]
+    let' (x₁,x₂,x₃) := x
+    let' (dx₁,dx₂,dx₃) := dx
+    let dzdx₁ := fderiv K (f · x₂ x₃) x₁ dx₁
+    let dzdx₂ := fderiv K (f x₁ · x₃) x₂ dx₂
+    let dzdx₃ := fderiv K (f x₁ x₂ ·) x₃ dx₃
+    dzdx₁ + dzdx₂ + dzdx₃ := sorry_proof

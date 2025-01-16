@@ -8,14 +8,13 @@ set_option deprecated.oldSectionVars true
 set_option linter.unusedVariables false
 
 variable
-  {R} [RealScalar R]
-  {X} [NormedAddCommGroup X] [NormedSpace R X]
-  {U} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
-  {V} [NormedAddCommGroup V] [AdjointSpace R V] [CompleteSpace V]
+  {R : Type*} [RealScalar R]
+  {X : Type*} [NormedAddCommGroup X] [NormedSpace R X]
+  {U : Type*} [NormedAddCommGroup U] [AdjointSpace R U] [CompleteSpace U]
+  {V : Type*} [NormedAddCommGroup V] [AdjointSpace R V] [CompleteSpace V]
 
 def_fun_prop with_transitive : Differentiable R (fun u : U => ‖u‖₂²[R]) by
   unfold Norm2.norm2; fun_prop [Norm2.norm2]
-
 
 @[fun_trans]
 theorem Norm2.norm2.arg_a0.fderiv_rule :

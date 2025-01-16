@@ -19,7 +19,7 @@ def_fun_prop VectorType.fromVec in f [VectorType.Lawful X] : IsContinuousLinearM
   · dsimp only [autoParam]; fun_prop
 
 
-#generate_linear_map_simps VectorType.Base.toVec.arg_x.IsLinearMap_rule
+#generate_linear_map_simps VectorType.Dense.fromVec.arg_f.IsLinearMap_rule
 
 
 abbrev_fun_trans VectorType.fromVec in f [VectorType.Lawful X] : fderiv K by
@@ -48,7 +48,7 @@ abbrev_fun_trans VectorType.fromVec in f [VectorType.Lawful X] : revFDeriv K by
 @[data_synth]
 theorem VectorType.Base.fromVec.arg_f.HasRevFDerivUpdate_rule
     {X : Type} {n : (Type)} {inst : (IndexType n)} {R : (Type)}
-    {K : (Type)} {inst_1 : (Scalar R R)} {inst_2 : (Scalar R K)}
+    {K : (Type)} {inst_1 : (RealScalar R)} {inst_2 : (Scalar R K)}
     [self : VectorType.Base X n K] [inst_3 : VectorType.Lawful X] [inst_4 : VectorType.Dense X] :
     HasRevFDerivUpdate K
       (VectorType.fromVec (X:=X))
