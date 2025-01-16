@@ -148,6 +148,7 @@ import SciLean.Data.VectorType.Prod
 import SciLean.Data.VectorType.Scalar
 import SciLean.Data.VectorType.Operations.Dot
 import SciLean.Data.VectorType.Operations.Scal
+import SciLean.Data.VectorType.Operations.Sum
 -- import SciLean.Data.VectorType.Operations.ScalAdd
 import SciLean.Data.VectorType.Operations.ToVec
 import SciLean.Data.VectorType.Operations.FromVec

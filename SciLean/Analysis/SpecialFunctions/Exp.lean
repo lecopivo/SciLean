@@ -26,8 +26,8 @@ abbrev_fun_trans exp in x : fderiv K by equals (fun x => fun dx =>L[K] dx • ex
 abbrev_fun_trans exp in x : fwdFDeriv K by unfold fwdFDeriv; fun_trans; to_ssa
 abbrev_fun_trans exp in x : revFDeriv K by unfold revFDeriv; fun_trans; to_ssa
 
-@[fun_trans]
-theorem exp.arg_x.hasRevFDerivUpdate_rule
+@[data_synth]
+theorem exp.arg_x.HasRevFDerivUpdate_rule
     {R K} [RealScalar R] [Scalar R K]
     {W} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
     (x : W → K) (x') (hx : HasRevFDerivUpdate K x x') :

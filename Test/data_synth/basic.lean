@@ -73,6 +73,25 @@ info: HasRevFDerivUpdate R (fun x i => ↑↑i • x) fun x =>
 
 
 /--
+info: HasRevFDerivUpdate R (fun x i j => (↑↑i + ↑↑j) • x) fun x =>
+  (fun i j => (↑↑i + ↑↑j) • x, fun dy dx =>
+    IndexType.foldl
+      (fun dx i =>
+        IndexType.foldl
+          (fun dx i_1 =>
+            let x₁ := ↑↑i + ↑↑i_1;
+            let dy₂ := (starRingEnd R) x₁ • dy i i_1;
+            let dx := dx + dy₂;
+            dx)
+          dx)
+      dx) : Prop
+-/
+#guard_msgs in
+#check (HasRevFDerivUpdate R (fun (x : X) (i j : Fin 3) => (i.1+j.1:R)•x) _) rewrite_by
+  data_synth
+
+
+/--
 info: HasRevFDerivUpdate R
   (fun x =>
     let y := x;
