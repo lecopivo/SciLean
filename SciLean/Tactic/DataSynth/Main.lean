@@ -177,27 +177,38 @@ partial def normalizeCore (e : Expr) : DataSynthM Expr := do
     | .proj ``Prod 0 xy =>
       match (← normalizeCore xy) with
       | mkApp4 (.const ``Prod.mk _) _ _ x _ => return x
+      | .letE n t v b nonDep => normalizeCore (.letE n t v (.proj ``Prod 0 b) nonDep)
       | xy => return .proj ``Prod 0 xy
     | .proj ``Prod 1 xy =>
       match (← normalizeCore xy) with
       | mkApp4 (.const ``Prod.mk _) _ _ _ y => return y
+      | .letE n t v b nonDep => normalizeCore (.letE n t v (.proj ``Prod 1 b) nonDep)
       | xy => return .proj ``Prod 1 xy
     | (mkApp3 (.const ``Prod.fst lvl) X Y xy) =>
       match (← normalizeCore xy) with
       | mkApp4 (.const ``Prod.mk _) _ _ x _ => return x
+      | .letE n t v b nonDep => normalizeCore (.letE n t v (mkApp3 (.const ``Prod.fst lvl) X Y b) nonDep)
       | xy => return (mkApp3 (.const ``Prod.fst lvl) X Y xy)
     | (mkApp3 (.const ``Prod.snd lvl) X Y xy) =>
       match (← normalizeCore xy) with
       | mkApp4 (.const ``Prod.mk _) _ _ _ y => return y
+      | .letE n t v b nonDep => normalizeCore (.letE n t v (mkApp3 (.const ``Prod.snd lvl) X Y b) nonDep)
       | xy => return (mkApp3 (.const ``Prod.snd lvl) X Y xy)
     | .app f x => do
-      return .app (← normalizeCore f) (← normalizeCore x)
+      let f' ← normalizeCore f
+      let x' ← normalizeCore x
+      if f==f' ∧ x==x' then
+        return .app f x
+      else
+        match f', x' with
+        | .letE n t v b nonDep, x => normalizeCore (.letE n t v (.app b (x.liftLooseBVars 0 1)) nonDep)
+        | f, .letE n t v b nonDep => normalizeCore (.letE n t v (.app (f.liftLooseBVars 0 1) b) nonDep)
+        | f, x => normalizeCore (.app f x)
     | .lam n t b bi =>
       return .lam n t (← normalizeCore b) bi
     | .mdata d e =>
       return .mdata d (← normalizeCore e)
     | e => return e
-
 
 def normalize (e : Expr) : DataSynthM (Simp.Result) := do
 
