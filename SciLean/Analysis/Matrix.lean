@@ -11,9 +11,8 @@ variable
     {R m n α : Type*}
     [IndexType m] [IndexType n]
 
-instance [AddCommMonoid R] [Inner R α] : Inner R (Matrix m n α) := by
-  unfold Matrix
-  infer_instance
+instance [AddCommMonoid R] [Inner R α] : Inner R (Matrix m n α) :=
+  show Inner R (m → n → α) from inferInstance
 
 instance [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] : AdjointSpace R (Matrix m n α) where
   inner_top_equiv_norm := sorry_proof

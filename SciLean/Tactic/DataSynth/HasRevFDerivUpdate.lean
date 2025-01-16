@@ -397,6 +397,38 @@ theorem sum.arg_f.HasRevFDerivUpdate
   · fun_prop
 
 
+omit [CompleteSpace W] [CompleteSpace X] in
+@[data_synth]
+theorem ite.arg_te.HasRevFDerivUpdate_rule (c : Prop) (dec : Decidable c)
+  (f g : W → X) (f' g') (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
+  HasRevFDerivUpdate R
+    (fun w => if c then f w else g w)
+    (fun w => if c then f' w else g' w) := by
+  have ⟨hf',_⟩ := hf
+  have ⟨hg',_⟩ := hg
+  constructor
+  · intro w;
+    split_ifs <;> fun_trans[hf',hg']
+  · fun_prop
+
+omit [CompleteSpace W] [CompleteSpace X] in
+@[data_synth]
+theorem dite.arg_te.HasRevFDerivUpdate_rule (c : Prop) (dec : Decidable c)
+  (f : W → c → X) (f' : c → _) (g : W → ¬c → X) (g' : ¬c → _)
+  (hf : ∀ hc, HasRevFDerivUpdate R (f · hc) (f' hc))
+  (hg : ∀ hc, HasRevFDerivUpdate R (g · hc) (g' hc)) :
+  HasRevFDerivUpdate R
+    (fun w => if h : c then f w h else g w h)
+    (fun w => if h : c then f' h w else g' h w) := by
+  have hf' := fun hc => (hf hc).1
+  have _ := fun hc => (hf hc).2
+  have hg' := fun hc => (hg hc).1
+  have _ := fun hc => (hg hc).2
+  constructor
+  · intro w;
+    split_ifs <;> fun_trans[hf',hg']
+  · split_ifs <;> simp_all
+
 section OverReals
 
 variable {R : Type} [RealScalar R]
