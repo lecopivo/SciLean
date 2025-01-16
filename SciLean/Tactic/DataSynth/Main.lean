@@ -514,6 +514,7 @@ def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) :=
 
   let (_,rhs) ← fgGoal.mkFreshProofGoal
   if ¬(← isDefEq thm rhs) then
+    trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr thm} =?= {← ppExpr rhs}"
     return none
 
   let hg ← inferType xs[hgId]! >>= instantiateMVars
@@ -559,6 +560,7 @@ def piGoal (fGoal : Goal) (f : Expr) (i : Expr) : DataSynthM (Option Goal) :=
 
   let (_,rhs) ← fGoal.mkFreshProofGoal
   if ¬(← isDefEq thm rhs) then
+    trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr thm} =?= {← ppExpr rhs}"
     return none
 
   let hf ← inferType xs[hfId]! >>= instantiateMVars
