@@ -24,6 +24,10 @@ example   {R : Type _} [RealScalar R]
 
 example : Inner Float (Float^[2]) := by infer_instance
 
+open VectorType in
+example {R} [RealScalar R] {n} [IndexType n] {X} [VectorType.Base X n R] [VectorType.Lawful X] :
+   (instAdjointSpace : AdjointSpace R X) = (instAdjointSpaceReal : AdjointSpace R X) := by
+  rfl
 
 example {K : Type} [RealScalar K]
   {Y : Type} [NormedAddCommGroup Y] [Module K Y] : ZeroStruct (Y × Y) Unit fun _ => Y × Y := by

@@ -25,12 +25,12 @@ def_fun_prop VectorType.Base.dot in y [VectorType.Lawful X] : IsContinuousLinear
   fun_prop
 
 def_fun_prop VectorType.Base.dot in y
-    add_suffix _real [ScalarSMul R K] [VectorType.Lawful X] : IsContinuousLinearMap R by
+    add_suffix _real [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : IsContinuousLinearMap R by
   simp[vector_to_spec]
   fun_prop
 
 
-def_fun_prop VectorType.Base.dot in x [ScalarSMul R K] [VectorType.Lawful X] : IsContinuousLinearMap R by
+def_fun_prop VectorType.Base.dot in x [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : IsContinuousLinearMap R by
   simp[vector_to_spec]
   fun_prop
 
@@ -38,20 +38,20 @@ def_fun_prop VectorType.Base.dot in x y [VectorType.Lawful X] : Continuous by
   simp[vector_to_spec]
   fun_prop
 
-def_fun_prop VectorType.Base.dot in x y [ScalarSMul R K] [VectorType.Lawful X] : Differentiable R by
+def_fun_prop VectorType.Base.dot in x y [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : Differentiable R by
   simp only [VectorType.dot_spec, PiLp.inner_apply, WithLp.equiv_symm_pi_apply, RCLike.inner_apply]
   fun_prop
 
-abbrev_fun_trans VectorType.Base.dot in x y [ScalarSMul R K] [VectorType.Lawful X] : fderiv R by
+abbrev_fun_trans VectorType.Base.dot in x y [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : fderiv R by
   rw[fderiv_wrt_prod (by fun_prop)]
   autodiff
 
-abbrev_fun_trans VectorType.Base.dot in x y [ScalarSMul R K] [VectorType.Lawful X] : fwdFDeriv R by
+abbrev_fun_trans VectorType.Base.dot in x y [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : fwdFDeriv R by
   rw[fwdFDeriv_wrt_prod (by fun_prop)]
   autodiff
 
 open ComplexConjugate in
-abbrev_fun_trans VectorType.Base.dot in x [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] : adjoint R by
+abbrev_fun_trans VectorType.Base.dot in x [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : adjoint R by
   equals (fun c => (conj c)•y) =>
     funext c
     apply AdjointSpace.ext_inner_left R
@@ -61,7 +61,7 @@ abbrev_fun_trans VectorType.Base.dot in x [ScalarSMul R K] [ScalarInner R K] [Ve
     simp[inner,AdjointSpace.toInner,ScalarInner.inner_eq_inner_re_im]
     sorry_proof -- this should be true, just missing some API involving complex multiplication
 
-abbrev_fun_trans VectorType.Base.dot in y [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] : adjoint R by
+abbrev_fun_trans VectorType.Base.dot in y [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : adjoint R by
   equals (fun c => c•x) =>
     funext c
     apply AdjointSpace.ext_inner_left R
@@ -71,7 +71,7 @@ abbrev_fun_trans VectorType.Base.dot in y [ScalarSMul R K] [ScalarInner R K] [Ve
     simp[inner,AdjointSpace.toInner,ScalarInner.inner_eq_inner_re_im]
     sorry_proof -- this should be true, just missing some API involving complex multiplication
 
-abbrev_fun_trans VectorType.Base.dot in x y [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] : revFDeriv R by
+abbrev_fun_trans VectorType.Base.dot in x y [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : revFDeriv R by
   rw[revFDeriv_wrt_prod (by fun_prop)]
   unfold revFDeriv
   autodiff
@@ -82,7 +82,7 @@ section HasRevFDerivUpdate
 variable
   {R K} {_ : RealScalar R} {_ : Scalar R K}
   {n} {_ : IndexType n}
-  {X} [VectorType.Base X n K] [VectorType.Lawful X] [ScalarSMul R K] [ScalarInner R K]
+  {X} [VectorType.Base X n K] [VectorType.Lawful X] [ScalarSMul R K] [ScalarInner R K] [VectorType.RealOp X]
   {W} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
 
 

@@ -15,7 +15,7 @@ def_fun_prop VectorType.toVec in x [VectorType.Lawful X] : IsLinearMap K by
 
 def_fun_prop VectorType.toVec in x
     add_suffix _real
-    [ScalarSMul R K] [VectorType.Lawful X] :
+    [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] :
     IsLinearMap R by
   apply IsLinearMap.restrictScalars (S:=K)
   fun_prop
@@ -35,7 +35,7 @@ def_fun_prop VectorType.Base.toVec in x [VectorType.Lawful X] : IsContinuousLine
 
 def_fun_prop VectorType.Base.toVec in x
     add_suffix _real
-    [ScalarSMul R K] [VectorType.Lawful X] :
+    [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] :
     IsContinuousLinearMap R by
   constructor
   · fun_prop
@@ -49,14 +49,15 @@ abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] : fderiv K by
   fun_trans
 
 abbrev_fun_trans VectorType.toVec in x
-    add_suffix _real [ScalarSMul R K] [VectorType.Lawful X] : fderiv R by
+    add_suffix _real [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : fderiv R by
   fun_trans
 
 abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] : fwdFDeriv K by
   fun_trans
 
 abbrev_fun_trans VectorType.toVec in x
-    add_suffix _real [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] : fwdFDeriv R by
+    add_suffix _real
+    [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : fwdFDeriv R by
   fun_trans
 
 
