@@ -62,6 +62,8 @@ instance : VectorType.Base (FloatMatrix' ord strg m n) (m×n) Float where
   iminRe_spec := sorry_proof
   dot x y := x.data.dot y.data
   dot_spec := sorry_proof
+  conj x := x
+  conj_spec := sorry_proof
   axpy a x y := ⟨DenseMatrix.axpy a x.data y.data⟩
   axpy_spec := sorry_proof
   axpby a x b y := ⟨DenseMatrix.axpby a x.data b y.data⟩

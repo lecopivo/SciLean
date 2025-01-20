@@ -89,6 +89,12 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
     let y' := (WithLp.equiv 2 (n → K)).symm (toVec y)
     (⟪x',y'⟫_K)
 
+  conj (x : X) : X
+  conj_spec (x : X) :
+    toVec (conj x)
+    =
+    fun i => starRingEnd _ (toVec x i)
+
   /-- `axpy a x y = a • x + y`
 
   `y` should be modified if it is passed with ref counter one. -/
@@ -295,7 +301,7 @@ namespace VectorType
 export VectorType.Base
   (toVec zero zero_spec scal scal_spec scalAdd scalAdd_spec sum sum_spec asum asum_spec nrm2 nrm2_spec
    iamax iamax_spec imaxRe imaxRe_spec iminRe iminRe_spec dot dot_spec axpy axpy_spec axpby axpby_spec
-   mul mul_spec)
+   mul mul_spec conj conj_spec)
 
 export VectorType.Lawful (toVec_injective)
 
@@ -312,6 +318,7 @@ attribute [vector_to_spec,vector_from_spec ←]
   nrm2_spec
   iamax_spec
   dot_spec
+  conj_spec
   axpy_spec
   axpby_spec
   div_spec
@@ -669,8 +676,8 @@ def logsumexp (x : X) : R :=
 
 def softmax (x : X) : X :=
   let xmax := max x
-  let x' := scalAdd 1 (-xmax) x
-  let w := sum (exp x')
+  let x' := exp (scalAdd 1 (-xmax) x)
+  let w := sum x'
   scal w⁻¹ x'
 
 end Functions

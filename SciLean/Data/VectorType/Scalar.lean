@@ -5,8 +5,8 @@ namespace SciLean
 
 namespace VectorTypeScalar
 
-open ComplexConjugate in
-scoped instance {R K} [RealScalar R] [Scalar R K] : VectorType.Base K Unit K where
+-- open ComplexConjugate in
+scoped instance {R K} [RealScalar R] [Scalar R K] : VectorType.Base K Unit K := {
   toVec := fun x _ => x
   zero := 0
   zero_spec := by funext i; simp
@@ -26,14 +26,17 @@ scoped instance {R K} [RealScalar R] [Scalar R K] : VectorType.Base K Unit K whe
   imaxRe_spec := by intros; simp
   iminRe := fun x _ => ()
   iminRe_spec := by intros; simp
-  dot := fun x y => conj x * y
+  dot := fun x y => starRingEnd _ x * y
   dot_spec := by simp
+  conj := fun x => starRingEnd _ x
+  conj_spec := by intros; rfl
   axpy := fun a x y => a * x + y
   axpy_spec := by intros; funext i; simp
   axpby := fun a x b y => a * x + b * y
   axpby_spec := by intros; funext i; simp
   mul := fun x y => x * y
   mul_spec := by intros; funext i; simp
+}
 
 
 example {R K} [RealScalar R] [Scalar R K] : VectorType.Base K Unit K := by infer_instance

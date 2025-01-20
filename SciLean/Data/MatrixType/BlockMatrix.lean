@@ -101,6 +101,8 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
   iminRe_spec := sorry_proof
   dot := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨B₁₁,B₁₂,B₂₁,B₂₂⟩ => dot A₁₁ B₁₁ + dot A₁₂ B₁₂ + dot A₂₁ B₂₁ + dot A₂₂ B₂₂
   dot_spec := sorry_proof
+  conj := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => ⟨conj A₁₁, conj A₁₂, conj A₂₁, conj A₂₂⟩
+  conj_spec := sorry_proof
   axpy := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨B₁₁,B₁₂,B₂₁,B₂₂⟩ => ⟨axpy a A₁₁ B₁₁, axpy a A₁₂ B₁₂, axpy a A₂₁ B₂₁, axpy a A₂₂ B₂₂⟩
   axpy_spec := sorry_proof
   axpby := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ b ⟨B₁₁,B₁₂,B₂₁,B₂₂⟩ => ⟨axpby a A₁₁ b B₁₁, axpby a A₁₂ b B₁₂, axpby a A₂₁ b B₂₁, axpby a A₂₂ b B₂₂⟩

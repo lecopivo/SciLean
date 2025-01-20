@@ -80,6 +80,8 @@ instance
   iminRe_spec := sorry_proof
   dot := fun (x₁,y₁) (x₂,y₂) => dot x₁ x₂ + dot y₁ y₂
   dot_spec := sorry_proof
+  conj := fun (x₁,x₂) => (conj x₁, conj x₂)
+  conj_spec := sorry_proof
   axpy := fun a (x₁,y₁) (x₂,y₂) => (axpy a x₁ x₂, axpy a y₁ y₂)
   axpy_spec := sorry_proof
   axpby := fun a (x₁,y₁) b (x₂,y₂) => (axpby a x₁ b x₂, axpby a y₁ b y₂)

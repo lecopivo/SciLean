@@ -43,6 +43,8 @@ instance : VectorType.Base (FloatVector' strg n) n Float where
   iminRe_spec := sorry_proof
   dot x y := x.data.dot y.data
   dot_spec := sorry_proof
+  conj x := x
+  conj_spec := by simp
   axpy a x y := ⟨DenseVector.axpy a x.data y.data⟩
   axpy_spec := sorry_proof
   axpby a x b y := ⟨DenseVector.axpby a x.data b y.data⟩

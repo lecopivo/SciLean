@@ -148,8 +148,13 @@ import SciLean.Data.VectorType.Prod
 import SciLean.Data.VectorType.Scalar
 import SciLean.Data.VectorType.Operations.Dot
 import SciLean.Data.VectorType.Operations.Scal
+import SciLean.Data.VectorType.Operations.Axpy
+import SciLean.Data.VectorType.Operations.Exp
+import SciLean.Data.VectorType.Operations.Logsumexp
+import SciLean.Data.VectorType.Operations.Mul
+import SciLean.Data.VectorType.Operations.Softmax
 import SciLean.Data.VectorType.Operations.Sum
--- import SciLean.Data.VectorType.Operations.ScalAdd
+import SciLean.Data.VectorType.Operations.ScalAdd
 import SciLean.Data.VectorType.Operations.ToVec
 import SciLean.Data.VectorType.Operations.FromVec
 import SciLean.Data.MatrixType.Basic

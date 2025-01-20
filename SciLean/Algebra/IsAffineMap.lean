@@ -21,6 +21,8 @@ variable (R)
 -- poor man's version of affine map
 -- todo: align with mathlib more in particular it should be defined ove affine space rather then
 --       over module
+--       see: https://leanprover.zulipchat.com/#narrow/channel/217875-Is-there-code-for-X.3F/topic/AffineSpace.20class
+
 @[fun_prop]
 structure IsAffineMap (f : X → Y) : Prop where
   is_affine : IsLinearMap R (fun x => f x - f 0)

@@ -3,8 +3,6 @@ import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 import SciLean.Tactic.DataSynth.DefRevDeriv
--- import SciLean.Analysis.Normed.IsContinuousLinearMap
-
 import SciLean.Meta.GenerateFunTrans
 
 namespace SciLean
@@ -20,18 +18,27 @@ def_fun_prop VectorType.toVec in x
   apply IsLinearMap.restrictScalars (S:=K)
   fun_prop
 
-
 def_fun_prop VectorType.toVec in x [VectorType.Lawful X] : Continuous by
   rename_i i _
   have h : (fun x => VectorType.toVec (X:=X) x i) = fun x =>ₗ[K] VectorType.toVec x i := rfl
   rw[h];
   apply LinearMap.continuous_of_finiteDimensional
 
-
 def_fun_prop VectorType.Base.toVec in x [VectorType.Lawful X] : IsContinuousLinearMap K by
   constructor
   · fun_prop
   · dsimp only [autoParam]; fun_prop
+
+theorem toVec_fderiv
+    {R K} {_ : RealScalar R} {_ : Scalar R K}
+    {n} {_ : IndexType n}
+    {X} [VectorType.Base X n K] [VectorType.Lawful X]
+    {W} [NormedAddCommGroup W] [NormedSpace K W]
+    (f : W → X) (hf : Differentiable K f) (w dw : W) :
+    VectorType.toVec (fderiv K f w dw)
+    =
+    fun i => fderiv K (fun w => VectorType.toVec (f w) i) w dw := by
+  fun_trans
 
 def_fun_prop VectorType.Base.toVec in x
     add_suffix _real
