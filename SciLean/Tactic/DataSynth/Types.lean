@@ -23,7 +23,7 @@ def NormM := StateM NormCache
 
 structure Goal where
   /-- Expression for `fun (x₁ : X₁) ... (xₙ : Xₙ) → P` for some `P : Prop`
-  The goal is to find `x₁`, ..., `xₙ` and proof of `goal x₁ ... xₙ` -/
+  The goal is to find `x₁`, ..., `xₙ` and proof of `P x₁ ... xₙ` -/
   goal : Expr
   dataSynthDecl : DataSynthDecl
 deriving Hashable, BEq
@@ -145,10 +145,21 @@ def dataSynth (g : Goal) : DataSynthM (Option Result) := do (← dataSynthRef.ge
 
 ----
 
+/-- Structure representing function of the form
 
+```
+let y₁ := ..; ...; let yₘ := ...;
+fun (x₁,...,xₙ) => b
+```
+where `leadingLets := #[y₁,...,yₘ]`, `xs := #[x₁,...,xₙ]` and `body := b`
+
+`body` is and expresion of containing free/let variables `y₁,...,yₘ,x₁,...,xₙ` which are well
+defined in the local context `lctx` and `insts`.
+-/
 structure FunData where
   lctx : LocalContext
   insts : LocalInstances
+  leadingLets : Array Expr
   xs : Array Expr
   body : Expr
   deriving Inhabited
@@ -176,14 +187,15 @@ def curryLambdaTelescope (f : Expr) (k : Array Expr → Expr → MetaM α) : Met
   lambdaBoundedTelescope f n k
 
 def getFunData (f : Expr) : MetaM FunData := do
+  letTelescope f fun ys f => do
   curryLambdaTelescope (← ensureEtaExpanded f) fun xs b => do
     let data : FunData :=
       { lctx := ← getLCtx
         insts := ← getLocalInstances
+        leadingLets := ys
         xs := xs
         body := b }
     return data
-
 
 namespace FunData
 
@@ -197,15 +209,20 @@ def pp (f : FunData) : MetaM String :=
         "(" ++ xnames.joinl id (· ++ ", " ++ ·) ++ ")"
     return s!"fun {binder} => {← ppExpr f.body}"
 
+
 /-- Return `fun ((x₁,x₂,...,xₙ) : X₁×X₂×...×Xₙ) => f x₁ ... xₙ)` -/
 def toExpr (f : FunData) : MetaM Expr :=
   withLCtx f.lctx f.insts do
     mkUncurryLambdaFVars f.xs f.body
+    >>=
+    mkLambdaFVars f.leadingLets
 
 /-- Returnns `(fun (x₁ : X₁) ((x₂,...,xₙ) : X₂×...×Xₙ) => f x₁ ... xₙ)` -/
 def toExprCurry1 (f : FunData) : MetaM Expr :=
   withLCtx f.lctx f.insts do
     mkLambdaFVars #[f.xs[0]!] (← mkUncurryLambdaFVars f.xs[1:] f.body)
+    >>=
+    mkLambdaFVars f.leadingLets
 
 inductive FunHead where
   | bvar (i : Nat)
@@ -243,41 +260,136 @@ def bodyLambdaTelescope1 (f : FunData) (k : Expr → FunData → DataSynthM α) 
       let f : FunData := {
         lctx := ← getLCtx
         insts := ← getLocalInstances
+        leadingLets := f.leadingLets
         xs := f.xs
         body := b.instantiate1 y
       }
       k y f
 
 
-/-- Composition of two function.-/
-inductive FunDecomp where
-/-- Standard composition of `f` and `g` as `f∘g` -/
+-- /-- Composition of two function.-/
+-- inductive FunDecomp where
+-- /-- Standard composition of `f` and `g` as `f∘g` -/
+-- | comp (f g : FunData)
+-- /-- Composition through letbinding, `fun x => let y := g x; f y x` -/
+-- | letE (f g : FunData)
+-- | none
+
+/-- If function body has leading let binding we distinguish three cases. -/
+inductive BodyLetCase where
+/-- Function is in the form
+```
+fun x =>
+  let y := g x
+  f y
+```
+i.e. body of let does not depend on `x`-/
 | comp (f g : FunData)
-/-- Composition through letbinding, `fun x => let y := g x; f y x` -/
+/-- Function is in the form
+```
+fun x =>
+  let y := g x
+  f y x
+```
+let binding in its generality.
+
+Returned `f` is a function in `y,x₁,...,xₙ` for `x = (x₁,...,xₙ)`. -/
 | letE (f g : FunData)
-| none
+/-- Function is in the form
+```
+fun x =>
+  let y := v
+  f y x
+```
+or
+```
+fun x =>
+  let y := v
+  f x
+```
+i.e. value of let binding does not depend on the function argument or body of let does not depend on the let value
+-/
+| simple (f : FunData)
 
-/-- Decompose function as composition of two functions. -/
-def decompose (f : FunData) : MetaM FunDecomp := do
+def getBodyLetCase (f : FunData) : MetaM BodyLetCase := do
+  let .letE n t v b _ := f.body | panic! "getBodyLetCase error: function body is expected to contain let binding!"
+
+  -- let binding is not used so we just remove it
+  if ¬b.hasLooseBVars then
+    return .simple {f with body := b}
+
   withLCtx f.lctx f.insts do
-    let .letE n t v b _ := f.body | return .none
 
-    let g : FunData := {
-      lctx := f.lctx
-      insts := f.insts
-      xs := f.xs
-      body := v
-    }
+  -- does expression `e` contain any of the input variables `xᵢ`?
+  let containsX (e : Expr) : Bool := (e.hasAnyFVar (fun id => f.xs.contains (.fvar id)))
 
-    withLocalDeclD n t fun y => do
-      let f : FunData := {
+  -- test for simple case
+  -- does `v` has any of the `xᵢ` vars in it?
+  if ¬(containsX v) then
+    withLetDecl n t v fun y => do
+      return .simple {
         lctx := ← getLCtx
-        insts := f.insts
-        xs := #[y] ++ f.xs
+        insts := ← getLocalInstances
+        leadingLets := f.leadingLets.push y
+        xs := f.xs
         body := b.instantiate1 y
       }
+  else
+    if ¬(containsX b) then
+       return .comp
+         (← withLocalDecl n .default t fun y => do pure {
+           lctx := ← getLCtx
+           insts := ← getLocalInstances
+           leadingLets := f.leadingLets
+           xs := #[y]
+           body := b.instantiate1 y
+         })
+         { -- g
+           lctx := ← getLCtx
+           insts := ← getLocalInstances
+           leadingLets := f.leadingLets
+           xs := f.xs
+           body := v
+         }
+    else
+       return .letE
+         (← withLocalDecl n .default t fun y => do pure {
+           lctx := ← getLCtx
+           insts := ← getLocalInstances
+           leadingLets := f.leadingLets
+           xs := #[y] ++ f.xs
+           body := b.instantiate1 y
+         })
+         { -- g
+           lctx := ← getLCtx
+           insts := ← getLocalInstances
+           leadingLets := f.leadingLets
+           xs := f.xs
+           body := v
+         }
 
-      return .letE f g
+
+-- /-- Decompose function as composition of two functions. -/
+-- def decompose (f : FunData) : MetaM FunDecomp := do
+--   withLCtx f.lctx f.insts do
+--     let .letE n t v b _ := f.body | return .none
+
+--     let g : FunData := {
+--       lctx := f.lctx
+--       insts := f.insts
+--       xs := f.xs
+--       body := v
+--     }
+
+--     withLocalDeclD n t fun y => do
+--       let f : FunData := {
+--         lctx := ← getLCtx
+--         insts := f.insts
+--         xs := #[y] ++ f.xs
+--         body := b.instantiate1 y
+--       }
+
+--       return .letE f g
 
 
 /-- Given a function `f : X → Y` find

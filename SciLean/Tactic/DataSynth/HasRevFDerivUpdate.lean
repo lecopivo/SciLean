@@ -73,8 +73,8 @@ theorem pi_rule (f : X → I → Y) (f' : I → _)
     assumption
 
 
-theorem comp_rule (f : Y → Z) (g : X → Y) (f' g')
-    (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
+theorem comp_rule (g : X → Y) (f : Y → Z) {f' g'}
+    (hg : HasRevFDerivUpdate R g g') (hf : HasRevFDerivUpdate R f f') :
     HasRevFDerivUpdate R
       (fun x : X => f (g x))
       (fun x =>
@@ -108,7 +108,16 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {f' g'}
   · fun_prop
 
 
-omit [CompleteSpace X] [CompleteSpace Y] [CompleteSpace X₁] [AdjointSpace R X₂] [CompleteSpace X₂] [NormedAddCommGroup X₂] in
+omit [CompleteSpace X] [CompleteSpace Y] in
+theorem letNonComp_rule (f : α → X → Y) {f' : α → _} (a : α)
+    (hf : ∀ a, HasRevFDerivUpdate R (f a) (f' a))  :
+    HasRevFDerivUpdate R
+      (fun x : X => let b := a; f b x)
+      (fun x => let b := a; f' b x) := hf a
+
+
+omit [CompleteSpace X] [CompleteSpace Y] [CompleteSpace X₁]
+     [AdjointSpace R X₂] [CompleteSpace X₂] [NormedAddCommGroup X₂] in
 theorem proj_rule (f : X → Y) {g'}
     (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X)
     (hg : HasRevFDerivUpdate R g g') :
@@ -123,6 +132,7 @@ theorem proj_rule (f : X → Y) {g'}
 
 
 end HasRevFDerivUpdate
+
 
 @[data_synth]
 theorem Prod.mk.arg_a0a1.HasRevFDerivUpdate_rule

@@ -1,4 +1,4 @@
-import SciLean
+import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 
 
 open SciLean
@@ -20,6 +20,49 @@ variable (x₀ : X)
 /-- info: HasRevFDerivUpdate R (fun x => x₀) fun x => (x₀, fun x dx => dx) : Prop -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun _ : X => x₀) _) rewrite_by data_synth
+
+/--
+info: HasRevFDerivUpdate R
+  (fun x =>
+    let c := 42;
+    x)
+  fun x => (x, fun dx dx₀ => dx₀ + dx) : Prop
+---
+warning: unused variable `c`
+note: this linter can be disabled with `set_option linter.unusedVariables false`
+-/
+#guard_msgs in
+#check (HasRevFDerivUpdate R (fun x : R => let c : Nat := 42;x) _) rewrite_by data_synth
+
+/--
+info: HasRevFDerivUpdate R
+  (let c := 42;
+  fun x => c * x)
+  fun x =>
+  let x₁ := 42;
+  (x₁ * x, fun dy dx =>
+    let dy₂ := (starRingEnd R) x₁ • dy;
+    let dx := dx + dy₂;
+    dx) : Prop
+-/
+#guard_msgs in
+#check (HasRevFDerivUpdate R (let c : R := 42; fun x : R => (c:R)*x) _) rewrite_by data_synth
+
+/--
+info: HasRevFDerivUpdate R
+  (fun x =>
+    let y := x ^ 2;
+    y ^ 2)
+  fun x =>
+  let x₁ := x ^ 2;
+  let x₁_1 := x₁ ^ 2;
+  (x₁_1, fun dz dx =>
+    let dx_1 := 0 + ↑2 * (starRingEnd R) x₁ ^ (2 - 1) • dz;
+    let dx := dx + ↑2 * (starRingEnd R) x ^ (2 - 1) • dx_1;
+    dx) : Prop
+-/
+#guard_msgs in
+#check (HasRevFDerivUpdate R (fun x : R => let y := x^2; y^2) _) rewrite_by data_synth
 
 
 /--
@@ -45,11 +88,7 @@ info: HasRevFDerivUpdate R
   (fun x =>
     let x_1 := x;
     x)
-  fun x =>
-  (x, fun dz dx =>
-    let dx₂ := 0;
-    let dx₁ := dx + dz;
-    dx₁ + dx₂) : Prop
+  fun x => (x, fun dx dx₀ => dx₀ + dx) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : X => let _ := x; x) _) rewrite_by data_synth
@@ -98,9 +137,8 @@ info: HasRevFDerivUpdate R
     y)
   fun x =>
   (x, fun dz dx =>
-    let dx₁ := 0;
-    let dx₁ := dx₁ + dz;
-    dx + dx₁) : Prop
+    let dy := 0 + dz;
+    dx + dy) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : X => let y := x; y) _) rewrite_by data_synth
@@ -231,10 +269,9 @@ info: HasRevFDerivUpdate R
   fun x =>
   let x₁ := x + x;
   (x₁, fun dz dx =>
-    let dx₁ := 0;
-    let dx_1 := dx₁ + dz;
-    let dx₁ := dx_1 + dz;
-    dx + dx₁) : Prop
+    let dx_1 := 0 + dz;
+    let dy := dx_1 + dz;
+    dx + dy) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : R => let y := x; y+y) _ )
@@ -328,12 +365,10 @@ info: HasRevFDerivUpdate R
   let x₁ := x * x;
   let x₁_1 := x₁ * x₁;
   (x₁_1, fun dz dx =>
-    let dx₁ := 0;
-    let dx₁_1 := 0;
-    let dx₁_2 := dx₁_1 + dz;
-    let dy₁ := (starRingEnd R) x₁ • dx₁_2;
-    let dy₂ := (starRingEnd R) x₁ • dx₁_2;
-    let dx_1 := dx₁ + dy₁;
+    let dy := 0 + dz;
+    let dy₁ := (starRingEnd R) x₁ • dy;
+    let dy₂ := (starRingEnd R) x₁ • dy;
+    let dx_1 := 0 + dy₁;
     let dx_2 := dx_1 + dy₂;
     let dy₁ := (starRingEnd R) x • dx_2;
     let dy₂ := (starRingEnd R) x • dx_2;
