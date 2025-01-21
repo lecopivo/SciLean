@@ -41,6 +41,8 @@ abbrev_fun_trans MatrixType.col in A [VectorType.Lawful M] [MatrixType.Dense M] 
   unfold revFDeriv
   autodiff
 
+attribute [local instance] MatrixType.vectorTypeLawful
+
 def_rev_deriv MatrixType.col in A
     [MatrixType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful Y] [DecidableEq m] by
   constructor

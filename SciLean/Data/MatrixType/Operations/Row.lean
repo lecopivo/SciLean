@@ -41,8 +41,10 @@ abbrev_fun_trans MatrixType.row in A [VectorType.Lawful M] [MatrixType.Dense M] 
   unfold revFDeriv
   autodiff
 
+attribute [local instance] MatrixType.vectorTypeLawful
+
 def_rev_deriv MatrixType.row in A
-    [MatrixType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [DecidableEq m] by
+    [MatrixType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [DecidableEq m] by
   constructor
   · intro A
     conv => rhs; autodiff; simp -zeta [vector_optimize]
