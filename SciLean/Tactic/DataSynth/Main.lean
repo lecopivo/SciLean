@@ -472,6 +472,8 @@ def Goal.getInputFun? (g : Goal) : MetaM (Option Expr) := do
 def compTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat) :=
   Std.HashMap.empty
     |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.comp_rule, 14, 15, 18, 19)
+    |>.insert `SciLean.HasRevFDeriv (`SciLean.HasRevFDeriv.comp_rule, 14, 15, 18, 19)
+
 
 
 /-- Given goal for composition `f∘g` and given `f` and `g` return corresponding goals for `f` and `g` -/
@@ -821,7 +823,13 @@ partial def mainFun (goal : Goal) (f : FunData) : DataSynthM (Option Result) := 
   trace[Meta.Tactic.data_synth] "function case {repr h}"
 
   match h with
-  | .app => mainCached goal (initialTrace:=false)
+  | .app =>
+    if let .some r ← mainCached goal (initialTrace:=false) then
+      return r
+    else if let .some (f,g) ← f.nontrivialAppDecomposition then
+      compCase goal f g
+    else
+      return none
   | .fvar n => mainCached goal (initialTrace:=false)
   | .bvar n => mainCached goal (initialTrace:=false)
   | .letE =>

@@ -81,6 +81,18 @@ def getSimpleGoal (fId : Name) (argNames : Array Name)
     let statement ← mkForallFVars args goal
     return (statement,args.size,lvlNames)
 
+private partial def mkUnusedName (names : List Name) (baseName : Name) : Name :=
+  if not (names.contains baseName) then
+    baseName
+  else
+    let rec loop (i : Nat := 0) : Name :=
+      let w := Name.appendIndexAfter baseName i
+      if names.contains w then
+        loop (i + 1)
+      else
+        w
+    loop 1
+
 
 def getCompositionalGoal (fId : Name) (argNames : Array Name)
     (extra : TSyntaxArray `Lean.Parser.Term.bracketedBinder) :
@@ -89,7 +101,7 @@ def getCompositionalGoal (fId : Name) (argNames : Array Name)
   let info ← getConstInfo fId
 
   forallTelescope info.type fun xs _ => do
-  Term.elabBinders extra.raw fun _extraArgs => do
+  Term.elabBinders extra.raw fun extraArgs => do
 
     -- split arguments `xs` into main and other
     let (mainArgs, otherArgs) ← xs.splitM (fun x => do
@@ -105,11 +117,17 @@ def getCompositionalGoal (fId : Name) (argNames : Array Name)
     let some ⟨_,R,_⟩ ← getScalarQ?
       | throwError "can't determinal scalar field"
 
-    -- introduce
-    withLocalDeclQ `W .implicit q(Type) fun W => do
-    withLocalDeclQ `inst1 .instImplicit q(NormedAddCommGroup $W) fun inst1 => do
-    withLocalDeclQ `inst2 .instImplicit q(AdjointSpace $R $W) fun inst2 => do
-    withLocalDeclQ `inst3 .instImplicit q(CompleteSpace $W) fun inst3 => do
+    -- gather universe params
+    let lvlNames := info.levelParams
+    let u := mkUnusedName lvlNames `u
+    let lvlNames := u :: lvlNames
+    let u : Level := Level.param u
+
+    -- introduce auxiliary space
+    withLocalDecl `W .implicit q(Type $u) fun W => do -- todo: make universe polymorphic
+    withLocalDecl `inst1 .instImplicit (← mkAppM ``NormedAddCommGroup #[W]) fun inst1 => do
+    withLocalDecl `inst2 .instImplicit (← mkAppOptM ``AdjointSpace #[R,W,none,none]) fun inst2 => do
+    withLocalDecl `inst3 .instImplicit (← mkAppOptM ``CompleteSpace #[W,none]) fun inst3 => do
 
     -- prepare names and types for main arguments parametrized by `W`
     let xnames ← mainArgs.mapM (fun x => x.fvarId!.getUserName)
@@ -117,29 +135,41 @@ def getCompositionalGoal (fId : Name) (argNames : Array Name)
     let hxnames := xnames.map (fun n => n.appendBefore "h")
     let xtypes ← mainArgs.mapM (fun x => do mkArrow W (← inferType x))
     let xtypes' ← mainArgs.mapM (fun x => do
-      let W := (← checkTypeQ W q(Type)).get!
-      let X := (← checkTypeQ (← inferType x) q(Type)).get!
-      return q($W → $X×($X → $W → $W)))
+      let X ← inferType x
+      -- construct expr for `W → X×(X→W→W)`
+      let XWW ← mkArrow X (← mkArrow W W)
+      let XXWW ← mkAppM ``Prod #[X,XWW]
+      let WXXWW ← mkArrow W XXWW
+      pure WXXWW)
 
     withLocalDecls' xnames default xtypes fun args => do
     withLocalDecls' xnames' default xtypes' fun args' => do
     let hxtypes ← (args.zip args').mapM (fun (arg,arg') => mkAppM ``HasRevFDerivUpdate #[R,arg,arg'])
     withLocalDecls' hxnames default hxtypes fun hargs => do
 
-
-    let lvlNames := info.levelParams
-    let _lvls := lvlNames.map (fun p => Level.param p)
     let f ←
       withLocalDecl `w default W fun w => do
         let vals := args.map (fun x => x.app w)
         mkLambdaFVars #[w] ((← mkAppOptM fId (xs.map some)).replaceFVars mainArgs vals)
 
-    let args := otherArgs ++ (#[W,inst1,inst2,inst3] : Array Expr) ++ args ++ args' ++ hargs
+    let args := otherArgs ++ extraArgs ++ (#[W,inst1,inst2,inst3] : Array Expr) ++ args ++ args' ++ hargs
     let statement ← mkAppM ``HasRevFDerivUpdate #[R,f]
     -- eta expand rest of the arguments
     let statement ← forallTelescope (← inferType statement) fun ys _ =>
       mkForallFVars ys (statement.beta ys)
     let statement ← mkForallFVars args statement
+
+    let fvars := (Lean.collectFVars {} statement).fvarIds
+    if h : fvars.size ≠ 0 then
+      throwError m!"resulting statement contains free variable {Expr.fvar fvars[0]}\n{statement}"
+
+    let fvars := (Lean.collectFVars {} statement).fvarIds
+    if h : fvars.size ≠ 0 then
+      throwError m!"resulting statement contains free variable {Expr.fvar fvars[0]}\n{statement}"
+
+    let mvars := statement.collectMVars {} |>.result
+    if h : mvars.size ≠ 0 then
+      throwError m!"resulting statement contains meta variable {Expr.mvar mvars[0]}\n{statement}"
 
     return (statement, args.size, lvlNames)
 
@@ -162,7 +192,7 @@ elab "def_rev_deriv" fId:ident "in" args:ident* bs:bracketedBinder* "by" tac:tac
     let (_,_) ← runTactic proof.mvarId! tac
 
     let suffix := (argNames.foldl (init:=`arg_) (·.appendAfter ·.toString))
-    let thmName := fId.append suffix |>.append `HasRevFDeriv_simple_rule
+    let thmName := fId.append suffix |>.append `HasRevFDerivUpdate_simple_rule
 
     let thmVal : TheoremVal :=
     {
@@ -193,7 +223,7 @@ elab "def_rev_deriv'" fId:ident "in" args:ident* bs:bracketedBinder* "by" tac:ta
     let (_,_) ← runTactic proof.mvarId! tac
 
     let suffix := (argNames.foldl (init:=`arg_) (·.appendAfter ·.toString))
-    let thmName := fId.append suffix |>.append `HasRevFDeriv_comp_rule
+    let thmName := fId.append suffix |>.append `HasRevFDerivUpdate_comp_rule
 
     let thmVal : TheoremVal :=
     {

@@ -39,8 +39,6 @@ theorem id_rule : HasRevFDeriv R (fun x : X => x) (fun x => (x, fun dx => dx)) :
   · fun_trans
   · fun_prop
 
-set_option linter.unusedVariables false in
-@[data_synth]
 theorem const_rule (y : Y) :  HasRevFDeriv R (fun x : X => y) (fun x => (y, fun _ => 0)) := by
   constructor
   · fun_trans

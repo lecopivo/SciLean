@@ -101,7 +101,6 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {f' g'}
         (z, fun dz dx =>
           let' (dy,dx) := df dz (0,dx);
           dg dy dx)) := by
-
   cases hf; cases hg
   constructor
   · intro dx; fun_trans only; simp_all; ac_rfl

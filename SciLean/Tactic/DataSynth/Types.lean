@@ -421,6 +421,61 @@ def decomposeDomain? (f : FunData) : MetaM (Option (Expr × Expr × Expr × FunD
     return some (p₁,p₂,q,g)
 
 
+/-- Tries to write function `fun (x₁,...,xₙ) => f x₁ ... x₂` as composition of two non-trivial functions. -/
+def nontrivialAppDecomposition (fData : FunData) : MetaM (Option (FunData × FunData)) := do
+  withLCtx fData.lctx fData.insts do
+
+    let fn := fData.body.getAppFn
+    let args := fData.body.getAppArgs'
+
+    let containsX (e : Expr) : Bool := (e.hasAnyFVar (fun id => fData.xs.contains (.fvar id)))
+
+    -- we do not currently support cases where the body head depends on `x`
+    if containsX fn then return none
+
+    -- figure out which arguments contains `xᵢ`
+    let mut depArgIds : Array Nat := #[]
+    let mut yVals : Array Expr := #[]
+    let mut yNames : Array Name := #[]
+    for arg in args, i in [0:args.size] do
+      if containsX arg then
+        depArgIds := depArgIds.push i
+        yVals := yVals.push arg
+        yNames := yNames.push (Name.appendAfter `y (toString i))
+
+    -- early return for constant functions
+    if depArgIds.size = 0 then return none
+
+    -- gather types and
+    withLocalDecls' yNames .default (← yVals.mapM inferType) fun yVars => do
+
+      -- replace values with free variables
+      let args' := (depArgIds.zip yVars).foldl (init:=args) (fun args' (i,var) => args'.set! i var)
+
+      let f : FunData := {
+        lctx := ← getLCtx
+        insts := ← getLocalInstances
+        leadingLets := fData.leadingLets
+        xs := yVars
+        body := mkAppN fn args'
+      }
+
+      let g : FunData := {
+        lctx := ← getLCtx
+        insts := ← getLocalInstances
+        leadingLets := fData.leadingLets
+        xs := fData.xs
+        body := ← mkProdElem yVals
+      }
+
+      -- check nontriviality (there might be a better way of doing this, but this should be fool proof)
+      if (← isDefEq (← fData.toExpr) (← f.toExpr)) ||
+         (← isDefEq (← fData.toExpr) (← g.toExpr)) then
+        return none
+
+      return .some (f,g)
+
+
 end FunData
 
 
