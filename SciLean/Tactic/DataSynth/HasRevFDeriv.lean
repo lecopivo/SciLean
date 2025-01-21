@@ -9,12 +9,12 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-variable {R : Type} [RCLike R]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
-  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
-  {X₁ : Type} [NormedAddCommGroup X₁] [AdjointSpace R X₁] [CompleteSpace X₁]
-  {X₂ : Type} [NormedAddCommGroup X₂] [AdjointSpace R X₂] [CompleteSpace X₂]
+variable {R : Type*} [RCLike R]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
+  {Z : Type*} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
+  {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace R X₁] [CompleteSpace X₁]
+  {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace R X₂] [CompleteSpace X₂]
 
 
 variable (R)
@@ -59,8 +59,8 @@ theorem proj_rule (f : X → Y) {g'}
         q dz 0)) := by sorry_proof
 
 
-theorem comp_rule (f : Y → Z) (g : X → Y) (f' g')
-    (hf : HasRevFDeriv R f f') (hg : HasRevFDeriv R g g') :
+theorem comp_rule (g : X → Y) (f : Y → Z) (f' g')
+    (hg : HasRevFDeriv R g g') (hf : HasRevFDeriv R f f') :
     HasRevFDeriv R
       (fun x : X => f (g x))
       (fun x =>

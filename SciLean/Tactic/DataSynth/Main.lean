@@ -481,7 +481,7 @@ def compGoals (fgGoal : Goal) (f g : Expr) : DataSynthM (Option (Goal×Goal)) :=
   let some (thmName, gId, fId, hgId, hfId) := compTheorems[fgGoal.dataSynthDecl.name]?
     | return none
   let info ← getConstInfo thmName
-  let (xs, _, thm) ← forallMetaTelescope info.type
+  let (xs, _, thm) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
   try
     withMainTrace (fun _ => return m!"assigning data") do
     xs[gId]!.mvarId!.assignIfDefeq g
@@ -544,20 +544,24 @@ def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) :=
   let some (thmName, gId, fId, hgId, hfId) := letTheorems[fgGoal.dataSynthDecl.name]?
     | return none
 
-  let info ← getConstInfo thmName
-  let (xs, _, thm) ← forallMetaTelescope info.type
+  -- let info ← getConstInfo thmName
+  let (xs, _, thm) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
 
   try
     withMainTrace (fun _ => return m!"assigning data") do
     xs[gId]!.mvarId!.assignIfDefeq g
   catch _e =>
-    throwError s!"{← ppExpr (xs[gId]!)} : {← ppExpr (← inferType xs[gId]!)} := {← ppExpr g}"
+    trace[Meta.Tactic.data_synth] "failed assigning `{g} : {← inferType g}`  to `{xs[gId]!} :{← inferType xs[gId]!}`"
+    trace[Meta.Tactic.data_synth] "{_e.toMessageData}"
+
+    throwError s!"data_synth bug"
 
   try
     withMainTrace (fun _ => return m!"assigning data") do
     xs[fId]!.mvarId!.assignIfDefeq f
   catch _e =>
-    throwError s!"{← ppExpr (xs[fId]!)} : {← ppExpr (← inferType xs[fId]!)} := {← ppExpr f}"
+    trace[Meta.Tactic.data_synth] "failed assigning {f} to {xs[fId]!} of type {← inferType xs[fId]!}"
+    throwError s!"data_synth bug"
 
 
   let (_,rhs) ← fgGoal.mkFreshProofGoal
@@ -651,8 +655,8 @@ def piGoal (fGoal : Goal) (f : Expr) (i : Expr) : DataSynthM (Option Goal) :=
   let some (thmName, fId, hfId) := piTheorems[fGoal.dataSynthDecl.name]?
     | return none
 
-  let info ← getConstInfo thmName
-  let (xs, _, thm) ← forallMetaTelescope info.type
+  -- let info ← getConstInfo thmName
+  let (xs, _, thm) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
 
   try
     withMainTrace (fun _ => return m!"assigning data") do
@@ -700,8 +704,8 @@ def projGoals (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option Goal)
   let some (thmName, fId, gId, p₁Id, p₂Id, qId, hgId) := projTheorems[fGoal.dataSynthDecl.name]?
     | return none
 
-  let info ← getConstInfo thmName
-  let (xs, _, thm) ← forallMetaTelescope info.type
+  -- let info ← getConstInfo thmName
+  let (xs, _, thm) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
 
   xs[fId]!.mvarId!.assignIfDefeq f
   xs[gId]!.mvarId!.assignIfDefeq g

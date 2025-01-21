@@ -3,13 +3,13 @@ import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 
 open SciLean
 
-variable {R : Type} [RCLike R]
-  {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
-  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
-  {X₁ : Type} [NormedAddCommGroup X₁] [AdjointSpace R X₁] [CompleteSpace X₁]
-  {X₂ : Type} [NormedAddCommGroup X₂] [AdjointSpace R X₂] [CompleteSpace X₂]
+variable {R : Type*} [RCLike R]
+  {W : Type*} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
+  {Z : Type*} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
+  {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace R X₁] [CompleteSpace X₁]
+  {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace R X₂] [CompleteSpace X₂]
 
 variable (x₀ : X)
 
