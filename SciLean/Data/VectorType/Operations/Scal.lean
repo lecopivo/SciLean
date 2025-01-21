@@ -9,7 +9,21 @@ section Simps
 variable
   {R K} {_ : RealScalar R} {_ : Scalar R K}
   {n} {_ : IndexType n}
-  {X} [VectorType.Base X n K]
+  {X} [VectorType.Base X n K] [VectorType.Lawful X]
+
+@[simp, simp_core]
+theorem VectorType.scal_one (x : X) :
+    VectorType.scal 1 x = x := by ext i; simp[vector_to_spec]
+
+@[simp, simp_core]
+theorem VectorType.scal_zero (x : X) :
+    VectorType.scal 0 x = 0 := by ext i; simp[vector_to_spec]
+
+@[simp, simp_core]
+theorem VectorType.scal_zero' (a : K) :
+    VectorType.scal a (0:X) = 0 := by ext i; simp[vector_to_spec]
+
+end Simps
 
 set_option linter.unusedVariables false in
 theorem IsContinuousLinearMap.injective_comp_iff

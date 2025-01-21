@@ -2,23 +2,152 @@ import SciLean.Data.MatrixType.Base
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
+import SciLean.Data.VectorType.Operations.Scal
+import SciLean.Data.MatrixType.Operations.ToMatrix
+import SciLean.Meta.Notation.Let'
+import SciLean.Lean.ToSSA
 
 namespace SciLean
 
-#exit
 
-theorem differentiable_iff_toVec_differentiable
-  {R K} {_ : RealScalar R} {_ : Scalar R K}
-  {n} {_ : IndexType n}
-  {X} [VectorType.Base X n K] [VectorType.Lawful X]
-  {W} [NormedAddCommGroup W] [NormedSpace K W]
-  {f : W → X} :
-  Differentiable K f ↔ Differentiable K (fun w => VectorType.toVec (f w)) := sorry_proof
+section Simps
 
-def_fun_prop MatrixType.Base.gemv in alpha beta A x y
+variable
+  {M : Type u_1} {m : outParam (Type u_2)}
+  {n : outParam (Type u_3)} {_: IndexType m} {_ : IndexType n} {R : outParam (Type u_4)}
+  {K : outParam (Type u_5)} {_ : RealScalar R} {_ : Scalar R K} {X : outParam (Type u_6)}
+  {Y : outParam (Type u_7)} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
+  [self : MatrixType.Base M X Y] [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y]
+
+
+omit [MatrixType.Lawful M] [VectorType.Lawful X] in
+@[simp, simp_core]
+theorem MatrixType.gemv_zero_alpha (b : K) (A : M) (x : X) (y : Y) :
+    MatrixType.gemv 0 b A x y = b•y := by
+  ext i; simp[vector_to_spec,matrix_to_spec]
+
+omit [VectorType.Lawful X] in
+@[simp, simp_core]
+theorem MatrixType.gemv_zero_A (a b : K) (x : X) (y : Y) :
+    MatrixType.gemv a b (0:M) x y = b•y := by
+  ext i; simp[vector_to_spec,matrix_to_spec]
+
+omit [MatrixType.Lawful M] in
+@[simp, simp_core]
+theorem MatrixType.gemv_zero_x (a b : K) (A : M) (y : Y) :
+    MatrixType.gemv a b A 0 y = b•y := by
+  ext i; simp[vector_to_spec,matrix_to_spec]
+
+end Simps
+
+
+namespace GemvImpl
+-- local macro does not work for some reason, so we use scoped macro
+scoped macro "linearity_proof" : tactic =>
+  `(tactic|
+    (apply (IsContinuousLinearMap.injective_comp_iff VectorType.toVec (by fun_prop) (VectorType.Lawful.toVec_injective)).2
+     simp +unfoldPartialApp [matrix_to_spec, vector_to_spec, Matrix.mulVec, dotProduct]
+     fun_prop))
+end GemvImpl
+open GemvImpl
+
+-- All possible combinations or arguments that makes `gemv` a linear function
+def_fun_prop MatrixType.gemv in alpha beta [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    IsContinuousLinearMap K by linearity_proof
+
+def_fun_prop MatrixType.gemv in alpha y [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    IsContinuousLinearMap K by linearity_proof
+
+def_fun_prop MatrixType.gemv in A beta [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    IsContinuousLinearMap K by linearity_proof
+
+def_fun_prop MatrixType.gemv in A y [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    IsContinuousLinearMap K by linearity_proof
+
+def_fun_prop MatrixType.gemv in x beta [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    IsContinuousLinearMap K by linearity_proof
+
+def_fun_prop MatrixType.gemv in x y [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    IsContinuousLinearMap K by linearity_proof
+
+-- Differentiable
+def_fun_prop MatrixType.gemv in alpha beta A x y
     [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
     Differentiable K by
-  apply differentiable_iff_toVec_differentiable.2
-  simp +unfoldPartialApp [matrix_to_spec,vector_to_spec,Matrix.mulVec,dotProduct]
+  apply (Differentiable.injective_comp_iff VectorType.toVec (by fun_prop) (VectorType.Lawful.toVec_injective)).2
+  simp +unfoldPartialApp [matrix_to_spec, vector_to_spec, Matrix.mulVec, dotProduct]
   fun_prop
-  sorry
+
+abbrev_fun_trans MatrixType.gemv in alpha beta A x y
+    [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    fderiv K by
+  equals (fun x => ContinuousLinearMap.mk' K (fun dx =>
+    let' (a,b,A,x,y) := x
+    let' (da,db,dA,dx,dy) := dx
+    let dz₁ := MatrixType.gemv a b A dx dy
+    let dz₂ := MatrixType.gemv da db A x y
+    MatrixType.gemv a (1:K) dA x (dz₁+dz₂)) (by simp; fun_prop)) => sorry_proof
+
+abbrev_fun_trans MatrixType.gemv in alpha beta A x y -- arg_subsets -- too slow :(
+    [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    fwdFDeriv K by
+  unfold fwdFDeriv
+  autodiff; to_ssa
+
+
+abbrev_fun_trans MatrixType.gemv in A x y
+    [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    fwdFDeriv K by
+  unfold fwdFDeriv
+  autodiff; to_ssa
+
+open ComplexConjugate in
+abbrev_fun_trans MatrixType.gemv in x y
+    [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    adjoint K by
+  equals (fun z => (MatrixType.gemvH (conj alpha) 0 A z 0, VectorType.scal (conj beta) z)) =>
+    funext z
+    apply AdjointSpace.ext_inner_left K
+    intro x
+    rw[← adjoint_ex _ (by fun_prop)]
+    -- simp +unfoldPartialApp [vector_to_spec, matrix_to_spec, sum_pull,Inner.inner,
+    --      Matrix.mulVec, dotProduct, Finset.mul_sum, Finset.sum_mul]
+    sorry_proof
+
+open ComplexConjugate in
+abbrev_fun_trans MatrixType.gemv in A y
+    [MatrixType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    adjoint K by
+  equals (fun z => (MatrixType.outerprodAdd (conj alpha) z x 0, VectorType.scal (conj beta) z)) =>
+    funext z
+    apply AdjointSpace.ext_inner_left K
+    intro x
+    rw[← adjoint_ex _ (by fun_prop)]
+    -- simp +unfoldPartialApp [vector_to_spec, matrix_to_spec, sum_pull,Inner.inner,
+    --      Matrix.mulVec, dotProduct, Finset.mul_sum, Finset.sum_mul]
+    sorry_proof
+
+abbrev_fun_trans MatrixType.gemv in alpha beta
+    [MatrixType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    adjoint K by
+  equals (fun z => (VectorType.dot (MatrixType.gemv 1 0 A x 0) z, VectorType.dot y z)) =>
+    funext z
+    apply AdjointSpace.ext_inner_left K
+    intro x
+    rw[← adjoint_ex _ (by fun_prop)]
+    -- simp +unfoldPartialApp [vector_to_spec, matrix_to_spec, sum_pull,Inner.inner,
+    --      Matrix.mulVec, dotProduct, Finset.mul_sum, Finset.sum_mul]
+    sorry_proof
+
+
+abbrev_fun_trans MatrixType.gemv in alpha beta A x y
+    [MatrixType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    revFDeriv K by
+  unfold revFDeriv
+  fun_trans
+
+abbrev_fun_trans MatrixType.gemv in A x y
+    [MatrixType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    revFDeriv K by
+  unfold revFDeriv
+  fun_trans

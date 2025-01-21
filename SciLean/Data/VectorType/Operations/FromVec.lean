@@ -46,7 +46,7 @@ abbrev_fun_trans VectorType.fromVec in f [VectorType.Lawful X] : revFDeriv K by
 
 
 @[data_synth]
-theorem VectorType.Base.fromVec.arg_f.HasRevFDerivUpdate_rule
+theorem VectorType.Base.fromVec.arg_f.HasRevFDerivUpdate_simple_rule
     {X : Type} {n : (Type)} {inst : (IndexType n)} {R : (Type)}
     {K : (Type)} {inst_1 : (RealScalar R)} {inst_2 : (Scalar R K)}
     [self : VectorType.Base X n K] [inst_3 : VectorType.Lawful X] [inst_4 : VectorType.Dense X] :
@@ -59,4 +59,23 @@ theorem VectorType.Base.fromVec.arg_f.HasRevFDerivUpdate_rule
     fun_trans
     funext dk dx j
     simp
+  · fun_prop
+
+
+@[data_synth]
+theorem VectorType.Base.fromVec.arg_f.HasRevFDerivUpdate_comp_rule
+    {X : Type} {n : (Type)} {inst : (IndexType n)} {R : (Type)}
+    {K : (Type)} {inst_1 : (RealScalar R)} {inst_2 : (Scalar R K)}
+    [self : VectorType.Base X n K] [inst_3 : VectorType.Lawful X] [inst_4 : VectorType.Dense X]
+    {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
+    (f : W → n → K) {f'} (hf : HasRevFDerivUpdate K f f') :
+    HasRevFDerivUpdate K
+      (fun w => VectorType.fromVec (X:=X) (f w))
+      (fun w =>
+        let (g, df) := f' w
+        (VectorType.fromVec g,
+        fun dx dw => df (toVec dx) dw)) := by
+  have ⟨hf', _⟩ := hf
+  constructor
+  · fun_trans [hf']
   · fun_prop

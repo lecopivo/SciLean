@@ -68,6 +68,23 @@ macro_rules (kind :=let'_syntax)
     let $w := Prod.snd (Prod.snd (Prod.snd x))
     $b)
 
+| `(let' ($x,$y,$z,$w,$a) := $v
+    $b) =>
+  `(let x := $v
+    let $x := Prod.fst x
+    let $y := Prod.fst (Prod.snd x)
+    let $z := Prod.fst (Prod.snd (Prod.snd x))
+    let $w := Prod.fst (Prod.snd (Prod.snd (Prod.snd x)))
+    let $a := Prod.snd (Prod.snd (Prod.snd (Prod.snd x)))
+    $b)
+| `(let' ($x,$y,$z,$w,$a) := $v; $b) =>
+  `(let x := $v
+    let $x := Prod.fst x
+    let $y := Prod.fst (Prod.snd x)
+    let $z := Prod.fst (Prod.snd (Prod.snd x))
+    let $w := Prod.fst (Prod.snd (Prod.snd (Prod.snd x)))
+    let $a := Prod.snd (Prod.snd (Prod.snd (Prod.snd x)))
+    $b)
 
 
 syntax (name:=let'_syntax') withPosition("let'" "(" "(" ident "," ident ")" "," ident ")" ":=" term) optSemicolon(term) : term

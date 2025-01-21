@@ -165,7 +165,7 @@ import SciLean.Data.MatrixType.Transpose
 import SciLean.Data.MatrixType.MatMul
 import SciLean.Data.MatrixType.BlockMatrix
 import SciLean.Data.MatrixType.Symbolic
--- import SciLean.Data.MatrixType.Operations.Gemv
+import SciLean.Data.MatrixType.Operations.Gemv
 import SciLean.Data.MatrixType.Operations.ToMatrix
 import SciLean.Data.MatrixType.Operations.FromMatrix
 -- import SciLean.Geometry.Bezier
