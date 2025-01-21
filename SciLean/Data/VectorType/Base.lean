@@ -433,6 +433,21 @@ def updateElem [Dense X] (x : X) (i : n) (f : K → K) : X :=
   let xi := toVec x i
   VectorType.set x i (f xi)
 
+@[simp, simp_core]
+theorem add_set_zero_eq_updateElem [Lawful X] [Dense X] (x : X) (i : n) (xi : K) :
+    x + set 0 i xi = updateElem x i (fun xi' => xi' + xi) := by
+  apply Lawful.toVec_injective;
+  funext j
+  simp[vector_to_spec,updateElem]
+  split_ifs <;> simp_all
+
+@[simp, simp_core]
+theorem set_zero_add_eq_updateElem [Lawful X] [Dense X] (x : X) (i : n) (xi : K) :
+    set 0 i xi + x = updateElem x i (fun xi' => xi + xi') := by
+  apply Lawful.toVec_injective;
+  funext j
+  simp[vector_to_spec,updateElem]
+  split_ifs <;> simp_all
 
 end BasicOperations
 

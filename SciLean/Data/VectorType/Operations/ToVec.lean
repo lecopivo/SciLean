@@ -83,22 +83,24 @@ abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X
   unfold revFDeriv
   autodiff
 
-
-@[data_synth]
-theorem VectorType.Base.toVec.arg_x.HasRevFDerivUpdate_rule
-    {X : Type} {n : (Type)} {inst : (IndexType n)} {R : (Type)}
-    {K : (Type)} {inst_1 : (RealScalar R)} {inst_2 : (Scalar R K)}
-    [self : VectorType.Base X n K] [inst_3 : VectorType.Lawful X] [inst_4 : VectorType.Dense X]
-    (i : n) :
-    HasRevFDerivUpdate K
-      (VectorType.toVec (X:=X) · i)
-      (fun x => (VectorType.toVec x i,
-        fun dk dx => VectorType.updateElem dx i (· + dk))) := by
+def_rev_deriv VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] by
   constructor
-  · intros
-    fun_trans
-    funext dk dx
-    apply VectorType.Lawful.toVec_injective
-    funext j
-    by_cases j = i <;> simp_all[vector_to_spec,updateElem]
+  · intros x
+    conv => rhs; autodiff
+  · fun_prop
+
+def_rev_deriv' VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] by
+  have hh : revFDeriv K x
+         =
+         fun w =>
+           let' (y,dx) := x' w
+           (y, (dx · 0)) := by simp[hx.1]; unfold revFDeriv; simp
+  -- have q : ∀ w u dy dw, u + (x' w).2 dy dw = (x' w).2 dy (dw + u) := sorry
+  have := hx.2
+  constructor
+  · intros x
+    conv =>
+      rhs
+      autodiff
+      -- lsimp -zeta [q]
   · fun_prop

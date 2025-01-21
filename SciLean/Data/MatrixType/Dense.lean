@@ -40,7 +40,7 @@ class MatrixType.Dense
   /-- Update column, i.e. set column to a given vector. -/
   updateCol (A : M) (j : n) (y : Y) : M
   updateCol_spec (A : M) (j : n) (y : Y) [DecidableEq n] :
-    toMatrix (updateCol A i x)
+    toMatrix (updateCol A j y)
     =
     let A := toMatrix A
     let y := toVec y

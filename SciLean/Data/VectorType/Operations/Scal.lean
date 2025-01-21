@@ -89,35 +89,31 @@ abbrev_fun_trans VectorType.scal in alpha [VectorType.Lawful X] : adjoint K by
     sorry_proof
 
 abbrev_fun_trans VectorType.scal in alpha x [VectorType.Lawful X] : revFDeriv K by
-  equals
-    (fun x : K×X =>
-      let' (alpha, x) := x
-      (VectorType.scal alpha x,
-      fun y =>
-        (VectorType.dot x y,
-         VectorType.scal ((starRingEnd K) alpha) y))) =>
   unfold revFDeriv
-  fun_trans
+  autodiff; fun_trans
+  -- equals
+  --   (fun x : K×X =>
+  --     let' (alpha, x) := x
+  --     (VectorType.scal alpha x,
+  --     fun y =>
+  --       (VectorType.dot x y,
+  --        VectorType.scal ((starRingEnd K) alpha) y))) =>
+  -- unfold revFDeriv
+  -- fun_trans
 
-
-@[data_synth]
-theorem VectorType.Base.scal.arg_alphax.HasRevFDerivUpdate_rule
-    {X : Type} {n : outParam (Type)} {inst : outParam (IndexType n)} {R : outParam (Type)}
-    {K : outParam (Type)} {inst_1 : outParam (RealScalar R)} {inst_2 : outParam (Scalar R K)}
-    [self : VectorType.Base X n K] [inst_3 : VectorType.Lawful X] :
-    HasRevFDerivUpdate K
-      (fun alphax : K×X => VectorType.scal alphax.1 alphax.2)
-      (fun x : K×X =>
+def_rev_deriv VectorType.scal in alpha x [VectorType.Lawful X] by
+  constructor
+  · intro x
+    conv =>
+      -- rhs; autodiff;
+      -- simp[Prod.add_def,vector_optimize]; to_ssa
+      rhs;
+      equals (
         let' (alpha, x) := x
         (VectorType.scal alpha x,
         fun y dalphax  =>
           let' (dalpha,dx) := dalphax
           (dalpha + VectorType.dot x y,
-           VectorType.axpy ((starRingEnd K) alpha) y dx))) := by
-  constructor
-  · fun_trans
-    intros a y; funext dy (da, dx)
-    simp
-    apply VectorType.Lawful.toVec_injective
-    simp[vector_to_spec,add_comm]
+           VectorType.axpy ((starRingEnd K) alpha) y dx))) =>
+        simp; funext dy dx; cases dx; autodiff; simp; ext i; simp[vector_to_spec]; ac_rfl
   · fun_prop

@@ -44,7 +44,6 @@ abbrev_fun_trans VectorType.fromVec in f [VectorType.Lawful X] : revFDeriv K by
   unfold revFDeriv
   autodiff
 
-
 @[data_synth]
 theorem VectorType.Base.fromVec.arg_f.HasRevFDerivUpdate_simple_rule
     {X : Type} {n : (Type)} {inst : (IndexType n)} {R : (Type)}
