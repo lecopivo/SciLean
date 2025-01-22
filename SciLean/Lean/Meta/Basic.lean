@@ -46,6 +46,15 @@ where
           getArgNames body (names.push name) i
     | _ => names
 
+open Lean Meta in
+def getConstArgId (thmName argName : Name) : MetaM Nat := do
+  let info ← getConstInfo thmName
+  forallTelescope info.type fun xs _ => do
+    if let .some id ← xs.findIdxM? (fun x => do return (← x.fvarId!.getUserName) == argName) then
+      return id
+    else
+      throwError "argId: {argName} is not an argument of {thmName}"
+
 
 /-- Returns name of the head function of an expression
 

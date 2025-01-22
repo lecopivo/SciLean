@@ -1,9 +1,10 @@
-import SciLean.Analysis.Calculus.RevFDeriv
+simport SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Elab
 import SciLean.Tactic.Autodiff
 import SciLean.Meta.Notation.Let'
 import SciLean.Util.Profile
+import SciLean.Lean.Meta.Basic
 
 set_option linter.unusedVariables false
 
@@ -56,7 +57,6 @@ theorem proj_rule (f : X → Y) {g'}
         let dz := dg dy
         q dz 0)) := by sorry_proof
 
-
 theorem comp_rule (g : X → Y) (f : Y → Z) (f' g')
     (hg : HasRevFDeriv R g g') (hf : HasRevFDeriv R f f') :
     HasRevFDeriv R
@@ -96,6 +96,17 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {f' g'}
   constructor
   · intro dx; fun_trans only; simp_all
   · fun_prop
+
+open Lean Meta
+#eval show MetaM Unit from do
+   Tactic.DataSynth.addLambdaTheorem (.const ``HasRevFDeriv ``const_rule)
+   Tactic.DataSynth.addLambdaTheorem (.comp ``HasRevFDeriv ``comp_rule
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
+   Tactic.DataSynth.addLambdaTheorem (.letE ``HasRevFDeriv ``let_rule
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
+   -- Tactic.DataSynth.addLambdaTheorem (.pi ``HasRevFDeriv ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
+   Tactic.DataSynth.addLambdaTheorem (.proj ``HasRevFDeriv ``proj_rule
+      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
 
 
 end HasRevFDeriv

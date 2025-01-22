@@ -2,22 +2,13 @@ import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Elab
 import SciLean.Meta.Notation.Let'
+import SciLean.Lean.Meta.Basic
 
 variable
   {K : Type*} [RCLike K]
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace K X]
   {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace K Y]
   {Z : Type*} [NormedAddCommGroup Z] [AdjointSpace K Z]
-
--- todo: move this utility function
-open Lean Meta in
-private def argId (thmName argName : Name) : MetaM Nat := do
-  let info ← getConstInfo thmName
-  forallTelescope info.type fun xs _ => do
-    if let .some id ← xs.findIdxM? (fun x => do return (← x.fvarId!.getUserName) == argName) then
-      return id
-    else
-      throwError "argId: {argName} is not an argument of {thmName}"
 
 namespace SciLean
 
@@ -118,16 +109,16 @@ theorem proj_rule
     (hg : HasAdjoint K g g') :
     HasAdjoint K f (fun y => q (g' y) 0) := sorry_proof
 
-
+open Lean Meta
 #eval show MetaM Unit from do
    Tactic.DataSynth.addLambdaTheorem (.const ``HasAdjoint ``const_rule )
    Tactic.DataSynth.addLambdaTheorem (.comp ``HasAdjoint ``comp_rule
-      (← argId ``comp_rule `g) (← argId ``comp_rule `f) (← argId ``comp_rule `hg) (← argId ``comp_rule `hf))
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
    Tactic.DataSynth.addLambdaTheorem (.letE ``HasAdjoint ``let_rule
-      (← argId ``let_rule `g) (← argId ``let_rule `f) (← argId ``let_rule `hg) (← argId ``let_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.pi ``HasAdjoint ``pi_rule (← argId ``pi_rule `f) (← argId ``pi_rule `hf))
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
+   Tactic.DataSynth.addLambdaTheorem (.pi ``HasAdjoint ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
    Tactic.DataSynth.addLambdaTheorem (.proj ``HasAdjoint ``proj_rule
-      (← argId ``proj_rule `f) (← argId ``proj_rule `g) (← argId ``proj_rule `p₁) (← argId ``proj_rule `p₂) (← argId ``proj_rule `q) (← argId ``proj_rule `hg))
+      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
 
 end HasAdjoint
 
@@ -192,18 +183,19 @@ theorem proj_rule
       (fun y x =>
         let x₁ := p₁ x
         let x₂ := p₂ x
-        q (g' y x₁) x₂) := sorry_proof
+        let x₁ := (g' y x₁)
+        q x₁ x₂) := sorry_proof
 
-
+open Lean Meta in
 #eval show MetaM Unit from do
-   Tactic.DataSynth.addLambdaTheorem (.const ``HasAdjointUpdate ``const_rule )
+   Tactic.DataSynth.addLambdaTheorem (.const ``HasAdjointUpdate ``const_rule)
    Tactic.DataSynth.addLambdaTheorem (.comp ``HasAdjointUpdate ``comp_rule
-      (← argId ``comp_rule `g) (← argId ``comp_rule `f) (← argId ``comp_rule `hg) (← argId ``comp_rule `hf))
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
    Tactic.DataSynth.addLambdaTheorem (.letE ``HasAdjointUpdate ``let_rule
-      (← argId ``let_rule `g) (← argId ``let_rule `f) (← argId ``let_rule `hg) (← argId ``let_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.pi ``HasAdjointUpdate ``pi_rule (← argId ``pi_rule `f) (← argId ``pi_rule `hf))
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
+   Tactic.DataSynth.addLambdaTheorem (.pi ``HasAdjointUpdate ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
    Tactic.DataSynth.addLambdaTheorem (.proj ``HasAdjointUpdate ``proj_rule
-      (← argId ``proj_rule `f) (← argId ``proj_rule `g) (← argId ``proj_rule `p₁) (← argId ``proj_rule `p₂) (← argId ``proj_rule `q) (← argId ``proj_rule `hg))
+      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
 
 end HasAdjointUpdate
 

@@ -468,51 +468,44 @@ def Goal.getInputFun? (g : Goal) : MetaM (Option Expr) := do
 
 --------------------------------------------------------------------------------------------------
 
--- theorem name, gId, fId, hgId, hfId
-def compTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat) :=
-  Std.HashMap.empty
-    |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.comp_rule, 14, 15, 18, 19)
-    |>.insert `SciLean.HasRevFDeriv (`SciLean.HasRevFDeriv.comp_rule, 14, 15, 18, 19)
-
-
 
 /-- Given goal for composition `f∘g` and given `f` and `g` return corresponding goals for `f` and `g` -/
-def compGoals (fgGoal : Goal) (f g : Expr) : DataSynthM (Option (Goal×Goal)) := do
+def compGoals (fgGoal : Goal) (f g : Expr) : DataSynthM (Option (LambdaTheorem×Goal×Goal)) := do
   withProfileTrace "compGoals" do
+  let thms ← getLambdaTheorems fgGoal.dataSynthDecl.name .comp
+  for thm in thms do
+    let .comp _ thmName gId fId hgId hfId := thm | throwError m!"invalid composition theorem {thm.thmName}"
+    let info ← getConstInfo thmName
+    let (xs, _, statment) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
+    try
+      withMainTrace (fun _ => return m!"assigning data") do
+      xs[gId]!.mvarId!.assignIfDefeq g
+    catch _e =>
+      throwError s!"failed assigning data {← ppExpr g} to {← ppExpr (xs[gId]!)} of type {← ppExpr (← inferType xs[gId]!)}"
 
-  let some (thmName, gId, fId, hgId, hfId) := compTheorems[fgGoal.dataSynthDecl.name]?
-    | return none
-  let info ← getConstInfo thmName
-  let (xs, _, thm) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
-  try
-    withMainTrace (fun _ => return m!"assigning data") do
-    xs[gId]!.mvarId!.assignIfDefeq g
-  catch _e =>
-    throwError s!"failed assigning data {← ppExpr g} to {← ppExpr (xs[gId]!)} of type {← ppExpr (← inferType xs[gId]!)}"
+    try
+      withMainTrace (fun _ => return m!"assigning data") do
+      xs[fId]!.mvarId!.assignIfDefeq f
+    catch _e =>
+      throwError s!"failed assigning data {← ppExpr (xs[fId]!)} to {← ppExpr (xs[fId]!)} of type {← ppExpr (← inferType xs[fId]!)}"
 
-  try
-    withMainTrace (fun _ => return m!"assigning data") do
-    xs[fId]!.mvarId!.assignIfDefeq f
-  catch _e =>
-    throwError s!"failed assigning data {← ppExpr (xs[fId]!)} to {← ppExpr (xs[fId]!)} of type {← ppExpr (← inferType xs[fId]!)}"
-
-  let (_,rhs) ← fgGoal.mkFreshProofGoal
-  if ¬(← isDefEq thm rhs) then
-    trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr thm} =?= {← ppExpr rhs}"
-    return none
-  let hg ← inferType xs[hgId]! >>= instantiateMVars
-  let hf ← inferType xs[hfId]! >>= instantiateMVars
-  let some ggoal ← isDataSynthGoal? hg | return none
-  let some fgoal ← isDataSynthGoal? hf | return none
-  return (fgoal, ggoal)
+    let (_,rhs) ← fgGoal.mkFreshProofGoal
+    if ¬(← isDefEq statment rhs) then
+      trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statment} =?= {← ppExpr rhs}"
+      return none
+    let hg ← inferType xs[hgId]! >>= instantiateMVars
+    let hf ← inferType xs[hfId]! >>= instantiateMVars
+    let some ggoal ← isDataSynthGoal? hg | return none
+    let some fgoal ← isDataSynthGoal? hf | return none
+    return .some (thm, fgoal, ggoal)
+  return none
 
 
 /-- Given result for `f` and `g` return result for `f∘g` -/
-def compResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
+def compResults (fgGoal : Goal) (thm : LambdaTheorem) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
   withProfileTrace "compResults" do
 
-  let some (thmName, gId, fId, hgId, hfId) := compTheorems[fgGoal.dataSynthDecl.name]?
-    | return none
+  let .comp _ thmName gId fId hgId hfId := thm | throwError m!"invalid composition theorem {thm.thmName}"
 
   let mut args? : Array (Option Expr) := .mkArray (max hgId hfId + 1) none
   args? := args?.set! gId g
@@ -524,65 +517,52 @@ def compResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Opti
   let r ← fgGoal.getResultFrom proof
   return r
 
-
--- theorem name, gId, fId, hgId, hfId
-def letTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat) :=
-  Std.HashMap.empty
-    |>.insert `HasFwdDerivAt (`HasFwdDerivAt.let_rule, 3, 4, 8, 9)
-    |>.insert `SciLean.HasFwdFDerivAt (`SciLean.HasFwdFDerivAt.let_rule, 11, 12, 16, 17)
-    |>.insert `SciLean.HasRevFDeriv (`SciLean.HasRevFDeriv.let_rule, 14, 15, 18, 19)
-    |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.let_rule, 14, 15, 18, 19)
-    |>.insert `SciLean.RealToFloatFun (`SciLean.RealToFloatFun.let_rule, 9, 10, 13, 14)
-
--- theorem name, fId, hfid
-def piTheorems : Std.HashMap Name (Name × Nat × Nat) :=
-  Std.HashMap.empty
-    |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.pi_rule, 12, 14)
 
 /-- Given goal for composition `fun x => let y:=g x; f y x` and given `f` and `g` return corresponding goals for `↿f` and `g` -/
-def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) := do
+def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (LambdaTheorem×Goal×Goal)) := do
   withProfileTrace "letGoals" do
 
-  let some (thmName, gId, fId, hgId, hfId) := letTheorems[fgGoal.dataSynthDecl.name]?
-    | return none
+  let thms ← getLambdaTheorems fgGoal.dataSynthDecl.name .letE
+  for thm in thms do
+    let .letE _ thmName gId fId hgId hfId := thm | throwError m!"invalid let theorem {thm.thmName}"
 
-  -- let info ← getConstInfo thmName
-  let (xs, _, thm) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
+    -- let info ← getConstInfo thmName
+    let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
 
-  try
-    withMainTrace (fun _ => return m!"assigning data") do
-    xs[gId]!.mvarId!.assignIfDefeq g
-  catch _e =>
-    trace[Meta.Tactic.data_synth] "failed assigning `{g} : {← inferType g}`  to `{xs[gId]!} :{← inferType xs[gId]!}`"
-    trace[Meta.Tactic.data_synth] "{_e.toMessageData}"
+    try
+      withMainTrace (fun _ => return m!"assigning data") do
+      xs[gId]!.mvarId!.assignIfDefeq g
+    catch _e =>
+      trace[Meta.Tactic.data_synth] "failed assigning `{g} : {← inferType g}`  to `{xs[gId]!} :{← inferType xs[gId]!}`"
+      trace[Meta.Tactic.data_synth] "{_e.toMessageData}"
 
-    throwError s!"data_synth bug"
+      throwError s!"data_synth bug"
 
-  try
-    withMainTrace (fun _ => return m!"assigning data") do
-    xs[fId]!.mvarId!.assignIfDefeq f
-  catch _e =>
-    trace[Meta.Tactic.data_synth] "failed assigning {f} to {xs[fId]!} of type {← inferType xs[fId]!}"
-    throwError s!"data_synth bug"
+    try
+      withMainTrace (fun _ => return m!"assigning data") do
+      xs[fId]!.mvarId!.assignIfDefeq f
+    catch _e =>
+      trace[Meta.Tactic.data_synth] "failed assigning {f} to {xs[fId]!} of type {← inferType xs[fId]!}"
+      throwError s!"data_synth bug"
 
 
-  let (_,rhs) ← fgGoal.mkFreshProofGoal
-  if ¬(← isDefEq thm rhs) then
-    trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr thm} =?= {← ppExpr rhs}"
-    return none
+    let (_,rhs) ← fgGoal.mkFreshProofGoal
+    if ¬(← isDefEq statement rhs) then
+      trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statement} =?= {← ppExpr rhs}"
+      return none
 
-  let hg ← inferType xs[hgId]! >>= instantiateMVars
-  let hf ← inferType xs[hfId]! >>= instantiateMVars
-  let some ggoal ← isDataSynthGoal? hg | return none
-  let some fgoal ← isDataSynthGoal? hf | return none
-  return (fgoal, ggoal)
+    let hg ← inferType xs[hgId]! >>= instantiateMVars
+    let hf ← inferType xs[hfId]! >>= instantiateMVars
+    let some ggoal ← isDataSynthGoal? hg | return none
+    let some fgoal ← isDataSynthGoal? hf | return none
+    return (thm, fgoal, ggoal)
+  return none
 
 /-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
-def letResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
+def letResults (fgGoal : Goal) (thm : LambdaTheorem) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
   withProfileTrace "letResults" do
 
-  let some (thmName, gId, fId, hgId, hfId) := letTheorems[fgGoal.dataSynthDecl.name]?
-    | return none
+  let .letE _ thmName gId fId hgId hfId := thm | throwError m!"invalid composition theorem {thm.thmName}"
 
   let mut args? : Array (Option Expr) := .mkArray (max hgId hfId + 1) none
   args? := args?.set! gId g
@@ -593,97 +573,43 @@ def letResults (fgGoal : Goal) (f g : Expr) (hf hg : Result) : DataSynthM (Optio
   let proof ← mkAppOptM thmName args?
   let r ← fgGoal.getResultFrom proof
   return r
-
--- -- theorem name, fId, hfid
--- def letNonCompTheorems : Std.HashMap Name (Name × Nat × Nat × Nat) :=
---   Std.HashMap.empty
---     |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.letNonComp_rule, 9, 11, 12)
-
--- /-- `f : α → X → Y` -/
--- def letNonCompGoals (fGoal : Goal) (f : Expr) (aVal aVar : Expr) : DataSynthM (Option Goal) := do
---   withProfileTrace "letNonCompGoals" do
-
---   let some (thmName, fId, aId, hfId) := letNonCompTheorems[fGoal.dataSynthDecl.name]?
---     | return none
-
---   let info ← getConstInfo thmName
---   let (xs, _, thm) ← forallMetaTelescope info.type
-
---   try
---     withMainTrace (fun _ => return m!"assigning data") do
---     xs[fId]!.mvarId!.assignIfDefeq f
---   catch _e =>
---     throwError s!"{← ppExpr (xs[fId]!)} : {← ppExpr (← inferType xs[fId]!)} := {← ppExpr f}"
-
---   try
---     withMainTrace (fun _ => return m!"assigning data") do
---     xs[aId]!.mvarId!.assignIfDefeq aVal
---   catch _e =>
---     throwError s!"{← ppExpr (xs[aId]!)} : {← ppExpr (← inferType xs[aId]!)} := {← ppExpr aVal}"
-
-
---   let (_,rhs) ← fGoal.mkFreshProofGoal
---   if ¬(← isDefEq thm rhs) then
---     trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr thm} =?= {← ppExpr rhs}"
---     return none
-
---   let hf ← inferType xs[hfId]! >>= instantiateMVars
---   let .forallE _ _ hf _ := hf | throwError "expected forall {← ppExpr hf}"
---   let hf := hf.instantiate1 aVar
---   let some fagoal ← isDataSynthGoal? hf | return none
---   return fagoal
-
--- def letNonCompResults (fGoal : Goal) (f aVal aVar : Expr) (hfa : Result) : DataSynthM (Option Result) := do
---   withProfileTrace "letNonCompResults" do
-
---   let some (thmName, fId, aId, hfId) := letNonCompTheorems[fGoal.dataSynthDecl.name]?
---     | return none
-
---   let mut args? : Array (Option Expr) := .mkArray (hfId+1) none
---   args? := args?.set! fId f
---   args? := args?.set! aId aVal
---   args? := args?.set! hfId (← mkLambdaFVars #[aVar] hfa.proof)
-
---   let proof ← mkAppOptM thmName args?
---   let r ← fGoal.getResultFrom proof
---   return r
-
 
 set_option linter.unusedVariables false in
 /-- Given goal for `fun x i => f x i` return goal for `fun x => f x i` -/
-def piGoal (fGoal : Goal) (f : Expr) (i : Expr) : DataSynthM (Option Goal) :=
+def piGoal (fGoal : Goal) (f : Expr) (i : Expr) : DataSynthM (Option (LambdaTheorem×Goal)) :=
   withProfileTrace "piGoals" do
 
-  let some (thmName, fId, hfId) := piTheorems[fGoal.dataSynthDecl.name]?
-    | return none
+  let thms ← getLambdaTheorems fGoal.dataSynthDecl.name .pi
+  for thm in thms do
+    let .pi _ thmName fId hfId := thm | throwError m!"invalid pi theorem {thm.thmName}"
 
-  -- let info ← getConstInfo thmName
-  let (xs, _, thm) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
+    let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
 
-  try
-    withMainTrace (fun _ => return m!"assigning data") do
-    xs[fId]!.mvarId!.assignIfDefeq f
-  catch _e =>
-    throwError s!"{← ppExpr (xs[fId]!)} : {← ppExpr (← inferType xs[fId]!)} := {← ppExpr f}"
+    try
+      withMainTrace (fun _ => return m!"assigning data") do
+      xs[fId]!.mvarId!.assignIfDefeq f
+    catch _e =>
+      throwError s!"{← ppExpr (xs[fId]!)} : {← ppExpr (← inferType xs[fId]!)} := {← ppExpr f}"
 
-  let (_,rhs) ← fGoal.mkFreshProofGoal
-  if ¬(← isDefEq thm rhs) then
-    trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr thm} =?= {← ppExpr rhs}"
-    return none
+    let (_,rhs) ← fGoal.mkFreshProofGoal
+    if ¬(← isDefEq statement rhs) then
+      trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statement} =?= {← ppExpr rhs}"
+      return none
 
-  let hf ← inferType xs[hfId]! >>= instantiateMVars
-  let .forallE _ _ hf _ := hf | throwError "expected forall {← ppExpr hf}"
-  let hf := hf.instantiate1 i
-  let some fgoal ← isDataSynthGoal? hf | return none
-  return fgoal
+    let hf ← inferType xs[hfId]! >>= instantiateMVars
+    let .forallE _ _ hf _ := hf | throwError "expected forall {← ppExpr hf}"
+    let hf := hf.instantiate1 i
+    let some fgoal ← isDataSynthGoal? hf | return none
+    return (thm,fgoal)
+  return none
 
 set_option linter.unusedVariables false in
 /-- Given result for `(f · i)` and free variable `i` return result for `f`-/
-def piResult (fGoal : Goal) (f : Expr) (i : Expr) (hfi : Result) : DataSynthM (Option Result) :=
+def piResult (fGoal : Goal) (thm : LambdaTheorem) (f : Expr) (i : Expr) (hfi : Result) :
+    DataSynthM (Option Result) :=
   withProfileTrace "piResults" do
 
-  let some (thmName, fId, hfId) := piTheorems[fGoal.dataSynthDecl.name]?
-    | return none
+  let .pi _ thmName fId hfId := thm | throwError m!"invalid pi theorem {thm.thmName}"
 
   let mut args? : Array (Option Expr) := .mkArray (hfId + 1) none
   args? := args?.set! fId f
@@ -694,41 +620,38 @@ def piResult (fGoal : Goal) (f : Expr) (i : Expr) (hfi : Result) : DataSynthM (O
   return r
 
 
--- theorem name, fId, gId, p₁Id, p₂Id, qId, hgId
-def projTheorems : Std.HashMap Name (Name × Nat × Nat × Nat × Nat × Nat × Nat) :=
-  Std.HashMap.empty
-    |>.insert `SciLean.HasRevFDeriv (`SciLean.HasRevFDeriv.proj_rule, 13, 15, 16, 17, 18, 19)
-    |>.insert `SciLean.HasRevFDerivUpdate (`SciLean.HasRevFDerivUpdate.proj_rule, 12, 14, 15, 16, 17, 18)
-
-def projGoals (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option Goal) := do
+def projGoals (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option (LambdaTheorem×Goal)) := do
   withProfileTrace "projGoals" do
 
-  let some (thmName, fId, gId, p₁Id, p₂Id, qId, hgId) := projTheorems[fGoal.dataSynthDecl.name]?
-    | return none
+  let thms ← getLambdaTheorems fGoal.dataSynthDecl.name .proj
+  for thm in thms do
 
-  -- let info ← getConstInfo thmName
-  let (xs, _, thm) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
+    let .proj _ thmName fId gId p₁Id p₂Id qId hgId := thm
+      | throwError m!"invalid proj theorem {thm.thmName}"
 
-  xs[fId]!.mvarId!.assignIfDefeq f
-  xs[gId]!.mvarId!.assignIfDefeq g
-  xs[p₁Id]!.mvarId!.assignIfDefeq p₁
-  xs[p₂Id]!.mvarId!.assignIfDefeq p₂
-  xs[qId]!.mvarId!.assignIfDefeq q
+    let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thmName))
 
-  let (_,rhs) ← fGoal.mkFreshProofGoal
-  if ¬(← isDefEq thm rhs) then
-    return none
+    xs[fId]!.mvarId!.assignIfDefeq f
+    xs[gId]!.mvarId!.assignIfDefeq g
+    xs[p₁Id]!.mvarId!.assignIfDefeq p₁
+    xs[p₂Id]!.mvarId!.assignIfDefeq p₂
+    xs[qId]!.mvarId!.assignIfDefeq q
 
-  let hg ← inferType xs[hgId]! >>= instantiateMVars
-  let some ggoal ← isDataSynthGoal? hg | return none
-  return some ggoal
+    let (_,rhs) ← fGoal.mkFreshProofGoal
+    if ¬(← isDefEq statement rhs) then
+      return none
+
+    let hg ← inferType xs[hgId]! >>= instantiateMVars
+    let some ggoal ← isDataSynthGoal? hg | return none
+    return some (thm,ggoal)
+  return none
 
 /-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
-def projResults (fGoal : Goal) (f g p₁ p₂ q : Expr) (hg : Result) : DataSynthM (Option Result) := do
+def projResults (fGoal : Goal) (thm : LambdaTheorem) (f g p₁ p₂ q : Expr) (hg : Result) : DataSynthM (Option Result) := do
   withProfileTrace "projResults" do
 
-  let some (thmName, fId, gId, p₁Id, p₂Id, qId, hgId) := projTheorems[fGoal.dataSynthDecl.name]?
-    | return none
+  let .proj _ thmName fId gId p₁Id p₂Id qId hgId := thm
+    | throwError m!"invalid proj theorem {thm.thmName}"
 
   let mut args? : Array (Option Expr) := .mkArray (hgId + 1) none
   args? := args?.set! fId f
@@ -766,33 +689,33 @@ def decomposeDomain? (goal : Goal) (f : FunData) : DataSynthM (Option Result) :=
   let some (p₁,p₂,q,g) ← f.decomposeDomain? | return none
   withProfileTrace "decomposeDomain" do
   withMainTrace (fun r => pure m!"[{ExceptToEmoji.toEmoji r}] domain projection {p₁}") do
-    let some ggoal ← projGoals goal (← f.toExpr) (← g.toExpr) p₁ p₂ q | return none
+    let some (thm,ggoal) ← projGoals goal (← f.toExpr) (← g.toExpr) p₁ p₂ q | return none
     let some hg ← dataSynthFun ggoal g | return none
-    let some r ← projResults goal (← f.toExpr) (← g.toExpr) p₁ p₂ q hg | return none
+    let some r ← projResults goal thm (← f.toExpr) (← g.toExpr) p₁ p₂ q hg | return none
     let r ← r.normalize
     return r
 
 
 def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "comp case" do
-  let some (fgoal, ggoal) ← compGoals goal (← f.toExpr) (← g.toExpr) | return none
+  let some (thm, fgoal, ggoal) ← compGoals goal (← f.toExpr) (← g.toExpr) | return none
   let some hg ← dataSynthFun ggoal g | return none
   let some hf ← dataSynthFun fgoal f | return none
-  let some r ← compResults goal (← f.toExpr) (← g.toExpr) hf hg | return none
+  let some r ← compResults goal thm (← f.toExpr) (← g.toExpr) hf hg | return none
   let r ← r.normalize
   return r
 
 
 def letCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "letCase" do
-  let some (fgoal, ggoal) ← letGoals goal (← f.toExprCurry1) (← g.toExpr) | return none
+  let some (thm, fgoal, ggoal) ← letGoals goal (← f.toExprCurry1) (← g.toExpr) | return none
   let some hg ←
     withProfileTrace "solving g" do
     dataSynthFun ggoal g | return none
   let some hf ←
     withProfileTrace "solving f" do
     dataSynthFun fgoal f | return none
-  let some r ← letResults goal (← f.toExprCurry1) (← g.toExpr) hf hg | return none
+  let some r ← letResults goal thm (← f.toExprCurry1) (← g.toExpr) hf hg | return none
   let r ← r.normalize
   return r
 
@@ -800,9 +723,9 @@ def lamCase (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "lamCase" do
   let fExpr ← f.toExpr
   f.bodyLambdaTelescope1 fun i fi => do
-    let some figoal ← piGoal goal fExpr i | return none
+    let some (thm,figoal) ← piGoal goal fExpr i | return none
     let some hfi ← dataSynthFun figoal fi | return none
-    let some r ← piResult goal fExpr i hfi | return none
+    let some r ← piResult goal thm fExpr i hfi | return none
     let r ← r.normalize
     return r
 

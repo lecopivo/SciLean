@@ -7,6 +7,7 @@ import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Analysis.AdjointSpace.AdjointProj
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.Geometry
+import SciLean.Analysis.AdjointSpace.HasAdjoint
 import SciLean.Analysis.Calculus.CDeriv
 import SciLean.Analysis.Calculus.ContDiff
 import SciLean.Analysis.Calculus.FDeriv
