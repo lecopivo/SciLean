@@ -541,9 +541,11 @@ by
            _ = c • ⟪f x, y⟫[K] := by simp[ScalarSMul.smul_eq_mul_make]; sorry_proof
   · sorry_proof
 
-
 @[fun_prop]
 theorem Inner.inner.arg_a1.IsContinuousLinearMap_rule
+  {K : Type*} [RCLike K]
+  {X : Type*} [TopologicalSpace X] [AddCommMonoid X] [Module K X]
+  {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace K Y]
   (f : X → Y) (hf : IsContinuousLinearMap K f) (y : Y)
   : IsContinuousLinearMap K fun x => ⟪y, f x⟫[K] :=
 by
