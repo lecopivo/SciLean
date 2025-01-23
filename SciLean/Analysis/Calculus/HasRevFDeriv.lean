@@ -99,28 +99,67 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
   case adjoint => intro; eta_expand; simp; data_synth
   case simp => simp_all; ac_rfl
 
-#exit
+set_option linter.unusedVariables false in
 theorem pi_rule {I : Type*} [IndexType I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
     HasRevFDeriv K
       (fun x i => f x i)
-      (fun y =>
-        IndexType.foldl (init:=(0:X)) fun x i => f' i (y i) x) := by
-  constructor
-  case adjoint =>
-    intro x y
-    have h := fun i => (hf i).adjoint 0
-    simp[Inner.inner, h]
-    sorry_proof
-  case is_linear => apply IsContinuousLinearMap.pi_rule _ (fun i => (hf i).is_linear)
+      (fun x =>
+        (fun i => f x i,
+         fun dy =>
+          IndexType.foldl (init:=(0:X)) fun dx i => (f' i x).2 (dy i) dx)) := by
+  sorry_proof
+
+#exit
 
 set_option linter.unusedVariables false in
 theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
-    (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
-    (hg : HasRevFDeriv K g g') :
-    HasRevFDeriv K f (fun y => q (g' y) 0) := sorry_proof
+    (f : X → Y) (g : X₁ → Y) /- (eq : X ≃L[K] X₁×X₂) -/ (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
+    (hg : HasRevFDeriv K g g') (hf : f = fun x => g (p₁ x))
+    (hp₁ : IsContinuousLinearMap K p₁) :
+    HasRevFDeriv K f
+      (fun x =>
+        let x₁ := p₁ x
+        let' (y,dg') := g' x₁
+        (y, fun dy =>
+          let dx₁ := dg' dy
+          q dx₁ 0)) := by
+  rcases hg with ⟨_,dg,hdg,_⟩
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv =>
+    intro x
+    rw[hf]
+    have h := (fun x =>L[K] p₁ x).hasFDerivAt (x:=x); simp at h
+    have h' := hdg (p₁ x)
+    set_option trace.Meta.Tactic.data_synth true in
+    data_synth -- bug :(
+  case adjoint => sorry
+  case simp => sorry
+
+
+theorem proj_rule'
+    {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
+    {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
+    (f : X → Y) (g : X₁ → Y) (dec : X ≃L[K] X₁×X₂) {g'}
+    (hg : HasRevFDeriv K g g') (hf : f = fun x => g (dec x).1) :
+    HasRevFDeriv K f
+      (fun x =>
+        let x₁ := (dec x).1
+        let' (y,dg') := g' x₁
+        (y, fun dy =>
+          let dx₁ := dg' dy
+          dec.symm (dx₁,0))) := by
+  rcases hg with ⟨_,_,_,_⟩
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv =>
+    intro; rw[hf]
+    set_option trace.Meta.Tactic.data_synth true in
+    data_synth
+  case adjoint => intro; eta_expand; simp; data_synth
+  case simp => simp_all; ac_rfl
+
 
 open Lean Meta
 #eval show MetaM Unit from do
@@ -134,6 +173,8 @@ open Lean Meta
       (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
 
 end HasRevFDeriv
+
+#exit
 
 namespace HasRevFDerivUpdate
 
