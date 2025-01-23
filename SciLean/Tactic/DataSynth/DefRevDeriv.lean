@@ -235,3 +235,12 @@ elab "def_rev_deriv'" fId:ident "in" args:ident* bs:bracketedBinder* "by" tac:ta
 
     addDecl (.thmDecl thmVal)
     Tactic.DataSynth.addTheorem thmName
+
+
+
+def foo {R} [RealScalar R] (x : R) := x + x
+
+def_rev_deriv foo in x by
+  unfold foo
+  data_synth =>
+    ring_nf

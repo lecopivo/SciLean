@@ -60,6 +60,7 @@ syntax (name:=data_synth_tac) "data_synth" optConfig ("=>" convSeq)? : tactic
 @[tactic data_synth_tac] unsafe def dataSynthTactic : Tactic
 | `(tactic| data_synth $cfg:optConfig $[=> $c]?) => do
   let m ← getMainGoal
+  m.withContext do
   let e ← m.getType
 
   let cfg ← elabDataSynthConfig cfg

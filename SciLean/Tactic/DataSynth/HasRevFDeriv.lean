@@ -1,4 +1,4 @@
-simport SciLean.Analysis.Calculus.RevFDeriv
+import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Elab
 import SciLean.Tactic.Autodiff

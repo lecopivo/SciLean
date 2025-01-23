@@ -1,8 +1,10 @@
-import SciLean.Analysis.AdjointSpace.Adjoint
-import SciLean.Tactic.DataSynth.Attr
-import SciLean.Tactic.DataSynth.Elab
-import SciLean.Meta.Notation.Let'
-import SciLean.Lean.Meta.Basic
+import SciLean.Analysis.AdjointSpace.HasAdjoint
+import SciLean.Analysis.Calculus.HasFDeriv
+-- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
+-- import SciLean.Tactic.DataSynth.DefRevDeriv
+
+
+namespace SciLean
 
 variable
   {K : Type*} [RCLike K]
@@ -10,86 +12,97 @@ variable
   {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace K Y]
   {Z : Type*} [NormedAddCommGroup Z] [AdjointSpace K Z]
 
-namespace SciLean
-
-open Lean
-
 variable (K)
 @[data_synth out f' in f]
-structure HasAdjoint (f : X → Y) (f' : Y → X) : Prop where
-  adjoint : ∀ x y, ⟪f x, y⟫[K] = ⟪x, f' y⟫[K]
-  is_linear : IsContinuousLinearMap K f
+structure HasRevFDeriv (f : X → Y) (f' : X → Y×(Y→X)) where
+  val : ∀ x, (f' x).1 = f x
+  deriv : ∃ df : X → X →L[K] Y,
+      (∀ x, HasFDerivAt f (df x) x)
+      ∧
+      (∀ x, HasAdjoint K (df x) (f' x).2)
 
 @[data_synth out f' in f]
-structure HasAdjointUpdate (f : X → Y) (f' : Y → X → X) : Prop where
-  adjoint : ∀ (x' : X) x y, ⟪f x, y⟫[K] = ⟪x, f' y x'⟫[K] - ⟪x, x'⟫[K]
-  is_linear : IsContinuousLinearMap K f
+structure HasRevFDerivUpdate (f : X → Y) (f' : X → Y×(Y→X→X)) where
+  val : ∀ x, (f' x).1 = f x
+  deriv : ∃ df : X → X →L[K] Y,
+    (∀ x, HasFDerivAt f (df x) x)
+    ∧
+    ∃ df' : X → Y →L[K] X,
+      (∀ x, HasAdjoint K (df x) (df' x))
+      ∧
+      (∀ x dy dx, (f' x).2 dy dx = dx + df' x dy)
 variable {K}
 
-theorem hasAdjointUpdate_eq_hasAdjoint_add (f : X → Y) {f' f''}
-    (hf : HasAdjoint K f f') (hf' : HasAdjointUpdate K f f'') :
-    f'' y x = f' y + x := by
-  apply AdjointSpace.ext_inner_left K
-  intro x'
-  calc _ = (⟪x', f'' y x⟫[K] - ⟪x', x⟫[K]) + ⟪x',x⟫[K] := by ring
-       _ = ⟪f x', y⟫[K] + ⟪x', x⟫[K] := by rw[← hf'.adjoint x]
-       _ = _ := by rw[hf.adjoint]; rw[AdjointSpace.inner_add_right]
+set_option linter.unusedVariables false in
+theorem hasRevFDeriv_from_hasFDerivAt_hasAdjoint {f : X → Y}
+    {df : X → X →L[K] Y} (deriv : ∀ x, HasFDerivAt f (df x) x)
+    {df' : X → Y → X} (adjoint : ∀ x, HasAdjoint K (df x) (df' x))
+    {f'} (simp : f' = (fun x => (f x, df' x))) :
+    HasRevFDeriv K f f' := sorry_proof
 
-theorem HasAdjointUpdate.adjoint' {f : X → Y} {f' : Y → X → X} (h : HasAdjointUpdate K f f') :
-  ∀ x yx, ⟪(f x, x), yx⟫[K] = ⟪x, f' yx.1 yx.2⟫[K] := by
-  intro x y
-  simp_rw[AdjointSpace.inner_prod_split]
-  rw[h.adjoint y.2]
-  ring
-
-theorem hasAdjointUpdate_from_hasAdjoint {f : X → Y} {f' : Y → X} {f'' : Y → X → X}
-    (hf : HasAdjoint K f f') (hf' : ∀ y x, f'' y x = x + f' y) :
-    HasAdjointUpdate K f f'' := by
-  constructor
-  case adjoint => intro x' x y; simp[hf.adjoint,hf',AdjointSpace.inner_add_right]
-  case is_linear => have := hf.is_linear; fun_prop
+set_option linter.unusedVariables false in
+theorem hasRevFDerivUpdate_from_hasFDerivAt_hasAdjoint {f : X → Y}
+    {df : X → X →L[K] Y} (deriv : ∀ x, HasFDerivAt f (df x) x)
+    {df' : X → Y → X → X} (adjoint : ∀ x, HasAdjointUpdate K (df x) (df' x))
+    {f'} (simp : f' = (fun x => (f x, df' x))) :
+    HasRevFDerivUpdate K f f' := sorry_proof
 
 
-namespace HasAdjoint
+namespace HasRevFDeriv
 
 @[data_synth]
-theorem id_rule : HasAdjoint K (fun x : X => x) (fun x => x) := by
-  constructor
-  case adjoint => simp
-  case is_linear => fun_prop
+theorem id_rule : HasRevFDeriv K (fun x : X => x) (fun x => (x,fun dy => dy)) := by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intro; simp; data_synth
+  case simp => rfl
 
-theorem const_rule : HasAdjoint K (fun _ : X => (0 : Y)) (fun _ => 0) := by
-  constructor
-  case adjoint => simp
-  case is_linear => fun_prop
+theorem const_rule : HasRevFDeriv K (fun _ : X => (0 : Y)) (fun _ => 0) := by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intro; eta_expand; simp; data_synth
+  case simp => rfl
 
 theorem comp_rule (g : X → Y) (f : Y → Z) {g' f'}
-    (hg : HasAdjoint K g g') (hf : HasAdjoint K f f') :
-    HasAdjoint K (fun x => f (g x)) (fun z => g' (f' z)) := by
-  constructor
-  case adjoint => intro x y; simp_rw [hf.adjoint,hg.adjoint]
-  case is_linear => have := hg.is_linear; have := hf.is_linear; fun_prop
+    (hg : HasRevFDeriv K g g') (hf : HasRevFDeriv K f f') :
+    HasRevFDeriv K
+      (fun x => f (g x))
+      (fun x =>
+        let' (y,dg') := g' x
+        let' (z,df') := f' y
+        (z, fun dz =>
+          let dy := df' dz
+          dg' dy)) := by
+  rcases hf with ⟨_,_,_,_⟩
+  rcases hg with ⟨_,_,_,_⟩
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intro; eta_expand; simp; data_synth
+  case simp => simp_all
 
 theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
-    (hg : HasAdjointUpdate K g g') (hf : HasAdjoint K (fun yx : Y×X => f yx.1 yx.2) f') :
-    HasAdjoint K
+    (hg : HasRevFDerivUpdate K g g') (hf : HasRevFDeriv K (fun yx : Y×X => f yx.1 yx.2) f') :
+    HasRevFDeriv K
       (fun x =>
         let y := g x
         f y x)
-      (fun z =>
-        let' (y,x) := f' z
-        g' y x) := by
-  constructor
-  case adjoint =>
-    intro x z; dsimp
-    have h := hf.adjoint ((g x),x) z; simp at h; rw[h]
-    rw[hg.adjoint']
-  case is_linear => have := hg.is_linear; have := hf.is_linear; fun_prop
+      (fun x =>
+        let' (y,dg') := g' x
+        let' (z,df') := f' (y,x)
+        (z, fun dz =>
+          let' (dy, dx) := df' dz
+          dg' dy dx)) := by
+  rcases hf with ⟨_,_,_,_⟩
+  rcases hg with ⟨_,_,_,_,_,_⟩
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intro; eta_expand; simp; data_synth
+  case simp => simp_all; ac_rfl
 
-
+#exit
 theorem pi_rule {I : Type*} [IndexType I]
-    (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasAdjointUpdate K (f · i) (f' i)) :
-    HasAdjoint K
+    (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
+    HasRevFDeriv K
       (fun x i => f x i)
       (fun y =>
         IndexType.foldl (init:=(0:X)) fun x i => f' i (y i) x) := by
@@ -106,45 +119,45 @@ theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
-    (hg : HasAdjoint K g g') :
-    HasAdjoint K f (fun y => q (g' y) 0) := sorry_proof
+    (hg : HasRevFDeriv K g g') :
+    HasRevFDeriv K f (fun y => q (g' y) 0) := sorry_proof
 
 open Lean Meta
 #eval show MetaM Unit from do
-   Tactic.DataSynth.addLambdaTheorem (.const ``HasAdjoint ``const_rule )
-   Tactic.DataSynth.addLambdaTheorem (.comp ``HasAdjoint ``comp_rule
+   Tactic.DataSynth.addLambdaTheorem (.const ``HasRevFDeriv ``const_rule )
+   Tactic.DataSynth.addLambdaTheorem (.comp ``HasRevFDeriv ``comp_rule
       (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.letE ``HasAdjoint ``let_rule
+   Tactic.DataSynth.addLambdaTheorem (.letE ``HasRevFDeriv ``let_rule
       (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.pi ``HasAdjoint ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.proj ``HasAdjoint ``proj_rule
+   Tactic.DataSynth.addLambdaTheorem (.pi ``HasRevFDeriv ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
+   Tactic.DataSynth.addLambdaTheorem (.proj ``HasRevFDeriv ``proj_rule
       (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
 
-end HasAdjoint
+end HasRevFDeriv
 
-namespace HasAdjointUpdate
+namespace HasRevFDerivUpdate
 
 @[data_synth]
-theorem id_rule : HasAdjointUpdate K (fun x : X => x) (fun x x' => x' + x) := by
+theorem id_rule : HasRevFDerivUpdate K (fun x : X => x) (fun x x' => x' + x) := by
   constructor
   case adjoint => simp[AdjointSpace.inner_add_right]
   case is_linear => fun_prop
 
-theorem const_rule : HasAdjointUpdate K (fun _ : X => (0 : Y)) (fun _ x => x) := by
+theorem const_rule : HasRevFDerivUpdate K (fun _ : X => (0 : Y)) (fun _ x => x) := by
   constructor
   case adjoint => simp
   case is_linear => fun_prop
 
 theorem comp_rule (g : X → Y) (f : Y → Z) {g' f'}
-    (hg : HasAdjointUpdate K g g') (hf : HasAdjoint K f f') :
-    HasAdjointUpdate K (fun x => f (g x)) (fun z => g' (f' z)) := by
+    (hg : HasRevFDerivUpdate K g g') (hf : HasRevFDeriv K f f') :
+    HasRevFDerivUpdate K (fun x => f (g x)) (fun z => g' (f' z)) := by
   constructor
   case adjoint => intro x y; simp [hf.adjoint,hg.adjoint x]
   case is_linear => have := hg.is_linear; have := hf.is_linear; fun_prop
 
 theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
-    (hg : HasAdjointUpdate K g g') (hf : HasAdjointUpdate K (fun yx : Y×X => f yx.1 yx.2) f') :
-    HasAdjointUpdate K
+    (hg : HasRevFDerivUpdate K g g') (hf : HasRevFDerivUpdate K (fun yx : Y×X => f yx.1 yx.2) f') :
+    HasRevFDerivUpdate K
       (fun x =>
         let y := g x
         f y x)
@@ -160,8 +173,8 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
   case is_linear => have := hg.is_linear; have := hf.is_linear; fun_prop
 
 theorem pi_rule {I : Type*} [IndexType I]
-    (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasAdjointUpdate K (f · i) (f' i)) :
-    HasAdjointUpdate K
+    (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
+    HasRevFDerivUpdate K
       (fun x i => f x i)
       (fun y x =>
         IndexType.foldl (init:=x) fun x i => f' i (y i) x) := by
@@ -178,8 +191,8 @@ theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
-    (hg : HasAdjointUpdate K g g') :
-    HasAdjointUpdate K f
+    (hg : HasRevFDerivUpdate K g g') :
+    HasRevFDerivUpdate K f
       (fun y x =>
         let x₁ := p₁ x
         let x₂ := p₂ x
@@ -188,24 +201,24 @@ theorem proj_rule
 
 open Lean Meta in
 #eval show MetaM Unit from do
-   Tactic.DataSynth.addLambdaTheorem (.const ``HasAdjointUpdate ``const_rule)
-   Tactic.DataSynth.addLambdaTheorem (.comp ``HasAdjointUpdate ``comp_rule
+   Tactic.DataSynth.addLambdaTheorem (.const ``HasRevFDerivUpdate ``const_rule)
+   Tactic.DataSynth.addLambdaTheorem (.comp ``HasRevFDerivUpdate ``comp_rule
       (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.letE ``HasAdjointUpdate ``let_rule
+   Tactic.DataSynth.addLambdaTheorem (.letE ``HasRevFDerivUpdate ``let_rule
       (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.pi ``HasAdjointUpdate ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.proj ``HasAdjointUpdate ``proj_rule
+   Tactic.DataSynth.addLambdaTheorem (.pi ``HasRevFDerivUpdate ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
+   Tactic.DataSynth.addLambdaTheorem (.proj ``HasRevFDerivUpdate ``proj_rule
       (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
 
-end HasAdjointUpdate
+end HasRevFDerivUpdate
 
 end SciLean
 open SciLean
 
 @[data_synth]
-theorem Prod.mk.arg_a0a1.HasAdjoint_comp_rule (f : X → Y) (g : X → Z)
-  (hf : HasAdjoint K f f') (hg : HasAdjointUpdate K g g') :
-  HasAdjoint K
+theorem Prod.mk.arg_a0a1.HasRevFDeriv_rule (f : X → Y) (g : X → Z)
+  (hf : HasRevFDeriv K f f') (hg : HasRevFDerivUpdate K g g') :
+  HasRevFDeriv K
     (fun x => (f x, g x))
     (fun yz =>
       let' (y,z) := yz
@@ -217,9 +230,9 @@ theorem Prod.mk.arg_a0a1.HasAdjoint_comp_rule (f : X → Y) (g : X → Z)
   case is_linear => have := hf.is_linear; have := hg.is_linear; fun_prop
 
 -- reverse version of the previous theorem, not sure which one is better
-theorem Prod.mk.arg_a0a1.HasAdjoint_rule' (f : X → Y) (g : X → Z)
-  (hf : HasAdjointUpdate K f f') (hg : HasAdjoint K g g') :
-  HasAdjoint K
+theorem Prod.mk.arg_a0a1.HasRevFDeriv_rule' (f : X → Y) (g : X → Z)
+  (hf : HasRevFDerivUpdate K f f') (hg : HasRevFDeriv K g g') :
+  HasRevFDeriv K
     (fun x => (f x, g x))
     (fun yz =>
       let' (y,z) := yz
@@ -231,9 +244,9 @@ theorem Prod.mk.arg_a0a1.HasAdjoint_rule' (f : X → Y) (g : X → Z)
   case is_linear => have := hf.is_linear; have := hg.is_linear; fun_prop
 
 @[data_synth]
-theorem Prod.mk.arg_a0a1.HasAdjointUpdate_comp_rule (f : X → Y) (g : X → Z)
-  (hf : HasAdjointUpdate K f f') (hg : HasAdjointUpdate K g g') :
-  HasAdjointUpdate K
+theorem Prod.mk.arg_a0a1.HasRevFDerivUpdate_rule (f : X → Y) (g : X → Z)
+  (hf : HasRevFDerivUpdate K f f') (hg : HasRevFDerivUpdate K g g') :
+  HasRevFDerivUpdate K
     (fun x => (f x, g x))
     (fun yz x =>
       let' (y,z) := yz
@@ -245,44 +258,8 @@ theorem Prod.mk.arg_a0a1.HasAdjointUpdate_comp_rule (f : X → Y) (g : X → Z)
   case is_linear => have := hf.is_linear; have := hg.is_linear; fun_prop
 
 @[data_synth]
-theorem Prod.fst.arg_self.HasAdjoint_simple_rule :
-    HasAdjoint K (fun xy : X×Y => xy.1) (fun x => (x,0)) := by
-  constructor
-  case adjoint => simp[AdjointSpace.inner_prod_split]
-  case is_linear => fun_prop
-
-@[data_synth]
-theorem Prod.fst.arg_self.HasAdjointUpdate_simple_rule :
-    HasAdjointUpdate K
-      (fun xy : X×Y => xy.1)
-      (fun x xy =>
-        let' (x',y') := xy
-        (x' + x, y')) := by
-  constructor
-  case adjoint => simp[AdjointSpace.inner_prod_split, AdjointSpace.inner_add_right]
-  case is_linear => fun_prop
-
-@[data_synth]
-theorem Prod.snd.arg_self.HasAdjoint_simple_rule :
-    HasAdjoint K (fun xy : X×Y => xy.2) (fun y => (0,y)) := by
-  constructor
-  case adjoint => simp[AdjointSpace.inner_prod_split]
-  case is_linear => fun_prop
-
-@[data_synth]
-theorem Prod.snd.arg_self.HasAdjointUpdate_simple_rule :
-    HasAdjointUpdate K
-      (fun xy : X×Y => xy.2)
-      (fun y xy =>
-        let' (x',y') := xy
-        (x', y' + y)) := by
-  constructor
-  case adjoint => simp[AdjointSpace.inner_prod_split, AdjointSpace.inner_add_right]
-  case is_linear => fun_prop
-
-@[data_synth]
-theorem HAdd.hAdd.arg_a0a1.HasAdjoint_simple_rule :
-    HasAdjoint K
+theorem HAdd.hAdd.arg_a0a1.HasRevFDeriv_simple_rule :
+    HasRevFDeriv K
       (fun x : X×X => x.1 + x.2)
       (fun x => (x,x)) := by
   constructor
@@ -290,8 +267,8 @@ theorem HAdd.hAdd.arg_a0a1.HasAdjoint_simple_rule :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem HAdd.hAdd.arg_a0a1.HasAdjointUpdate_simple_rule :
-    HasAdjointUpdate K
+theorem HAdd.hAdd.arg_a0a1.HasRevFDerivUpdate_simple_rule :
+    HasRevFDerivUpdate K
       (fun x : X×X => x.1 + x.2)
       (fun x x' =>
          let' (x'₁, x'₂) := x'
@@ -301,8 +278,8 @@ theorem HAdd.hAdd.arg_a0a1.HasAdjointUpdate_simple_rule :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem HSub.hSub.arg_a0a1.HasAdjoint_simple_rule :
-    HasAdjoint K
+theorem HSub.hSub.arg_a0a1.HasRevFDeriv_simple_rule :
+    HasRevFDeriv K
       (fun x : X×X => x.1 - x.2)
       (fun x => (x, -x)) := by
   constructor
@@ -310,8 +287,8 @@ theorem HSub.hSub.arg_a0a1.HasAdjoint_simple_rule :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem HSub.hSub.arg_a0a1.HasAdjointUpdate_simple_rule :
-    HasAdjointUpdate K
+theorem HSub.hSub.arg_a0a1.HasRevFDerivUpdate_simple_rule :
+    HasRevFDerivUpdate K
       (fun x : X×X => x.1 - x.2)
       (fun x x' =>
          let' (x'₁, x'₂) := x'
@@ -323,8 +300,8 @@ theorem HSub.hSub.arg_a0a1.HasAdjointUpdate_simple_rule :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem Neg.neg.arg_a0.HasAdjoint_simple_rule :
-    HasAdjoint K
+theorem Neg.neg.arg_a0.HasRevFDeriv_simple_rule :
+    HasRevFDeriv K
       (fun x : X => -x)
       (fun x => -x) := by
   constructor
@@ -332,8 +309,8 @@ theorem Neg.neg.arg_a0.HasAdjoint_simple_rule :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem Neg.neg.arg_a0.HasAdjointUpdate_simple_rule :
-    HasAdjointUpdate K
+theorem Neg.neg.arg_a0.HasRevFDerivUpdate_simple_rule :
+    HasRevFDerivUpdate K
       (fun x : X => -x)
       (fun x x' => x' - x) := by
   constructor
@@ -341,8 +318,8 @@ theorem Neg.neg.arg_a0.HasAdjointUpdate_simple_rule :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem HSmul.hSMul.arg_a0.HasAdjoint_simp_rule (x : X) :
-    HasAdjoint K
+theorem HSmul.hSMul.arg_a0.HasRevFDeriv_simp_rule (x : X) :
+    HasRevFDeriv K
       (fun k : K => k • x)
       (fun y => ⟪x,y⟫[K]) := by
   constructor
@@ -350,8 +327,8 @@ theorem HSmul.hSMul.arg_a0.HasAdjoint_simp_rule (x : X) :
   case is_linear => sorry_proof
 
 @[data_synth]
-theorem HSmul.hSMul.arg_a0.HasAdjointUpdate_simp_rule (x : X) :
-    HasAdjointUpdate K
+theorem HSmul.hSMul.arg_a0.HasRevFDerivUpdate_simp_rule (x : X) :
+    HasRevFDerivUpdate K
       (fun k : K => k • x)
       (fun y k => k + ⟪x,y⟫[K]) := by
   constructor
@@ -360,8 +337,8 @@ theorem HSmul.hSMul.arg_a0.HasAdjointUpdate_simp_rule (x : X) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule (k : K) :
-    HasAdjoint K
+theorem HSMul.hSMul.arg_a1.HasRevFDeriv_simple_rule (k : K) :
+    HasRevFDeriv K
       (fun x : X => k • x)
       (fun x => conj k • x) := by
   constructor
@@ -370,8 +347,8 @@ theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule (k : K) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule (k : K) :
-    HasAdjointUpdate K
+theorem HSMul.hSMul.arg_a1.HasRevFDerivUpdate_simple_rule (k : K) :
+    HasRevFDerivUpdate K
       (fun x : X => k • x)
       (fun x x' => x' + conj k • x) := by
   constructor
@@ -382,8 +359,8 @@ theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule (k : K) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_nat (n : ℕ) :
-    HasAdjoint K
+theorem HSMul.hSMul.arg_a1.HasRevFDeriv_simple_rule_nat (n : ℕ) :
+    HasRevFDeriv K
       (fun x : X => n • x)
       (fun x => n • x) := by
   constructor
@@ -392,8 +369,8 @@ theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_nat (n : ℕ) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule_nat (n : ℕ) :
-    HasAdjointUpdate K
+theorem HSMul.hSMul.arg_a1.HasRevFDerivUpdate_simple_rule_nat (n : ℕ) :
+    HasRevFDerivUpdate K
       (fun x : X => n • x)
       (fun x x' => x' + n • x) := by
   constructor
@@ -403,11 +380,11 @@ theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule_nat (n : ℕ) :
 -- todo: finish the proof as I'm not sure if these assumptions are sufficient!!! (but very plausible)
 open ComplexConjugate in
 @[data_synth]
-theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_complex_over_real
+theorem HSMul.hSMul.arg_a1.HasRevFDeriv_simple_rule_complex_over_real
     {R} [RealScalar R] {K} [RCLike K] [Algebra R K]
     {X} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X] [IsScalarTower R K X]
     (k : K) :
-    HasAdjoint R
+    HasRevFDeriv R
       (fun x : X => k • x)
       (fun x => (conj k) • x) := by
   constructor
@@ -417,11 +394,11 @@ theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_complex_over_real
 -- todo: finish the proof as I'm not sure if these assumptions are sufficient!!! (but very plausible)
 open ComplexConjugate in
 @[data_synth]
-theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule_complex_over_real
+theorem HSMul.hSMul.arg_a1.HasRevFDerivUpdate_simple_rule_complex_over_real
     {R} [RealScalar R] {K} [RCLike K] [Algebra R K]
     {X} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X] [IsScalarTower R K X]
     (k : K) :
-    HasAdjointUpdate R
+    HasRevFDerivUpdate R
       (fun x : X => k • x)
       (fun x x'=> x' + (conj k) • x) := by
   constructor
@@ -430,8 +407,8 @@ theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule_complex_over_real
 
 open ComplexConjugate in
 @[data_synth]
-theorem HMul.hMul.arg_a0.HasAdjoint_simp_rule (y : K) :
-    HasAdjoint K
+theorem HMul.hMul.arg_a0.HasRevFDeriv_simp_rule (y : K) :
+    HasRevFDeriv K
       (fun x => x * y)
       (fun z => z * conj y) := by
   constructor
@@ -440,8 +417,8 @@ theorem HMul.hMul.arg_a0.HasAdjoint_simp_rule (y : K) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HMul.hMul.arg_a0.HasAdjointUpdate_simp_rule (y : K) :
-    HasAdjointUpdate K
+theorem HMul.hMul.arg_a0.HasRevFDerivUpdate_simp_rule (y : K) :
+    HasRevFDerivUpdate K
       (fun x => x * y)
       (fun z x' => x' + z * conj y) := by
   constructor
@@ -450,8 +427,8 @@ theorem HMul.hMul.arg_a0.HasAdjointUpdate_simp_rule (y : K) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HMul.hMul.arg_a1.HasAdjoint_simp_rule (x : K) :
-    HasAdjoint K
+theorem HMul.hMul.arg_a1.HasRevFDeriv_simp_rule (x : K) :
+    HasRevFDeriv K
       (fun y => x * y)
       (fun z => conj x * z) := by
   constructor
@@ -460,8 +437,8 @@ theorem HMul.hMul.arg_a1.HasAdjoint_simp_rule (x : K) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HMul.hMul.arg_a1.HasAdjointUpdate_simp_rule (x : K) :
-    HasAdjointUpdate K
+theorem HMul.hMul.arg_a1.HasRevFDerivUpdate_simp_rule (x : K) :
+    HasRevFDerivUpdate K
       (fun y => x * y)
       (fun z y' => y' + conj x * z) := by
   constructor
@@ -470,8 +447,8 @@ theorem HMul.hMul.arg_a1.HasAdjointUpdate_simp_rule (x : K) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HDiv.hDiv.arg_a0.HasAdjoint_simp_rule (y : K) :
-    HasAdjoint K
+theorem HDiv.hDiv.arg_a0.HasRevFDeriv_simp_rule (y : K) :
+    HasRevFDeriv K
       (fun x => x / y)
       (fun z => z / conj y) := by
   constructor
@@ -480,8 +457,8 @@ theorem HDiv.hDiv.arg_a0.HasAdjoint_simp_rule (y : K) :
 
 open ComplexConjugate in
 @[data_synth]
-theorem HDiv.hDiv.arg_a0.HasAdjointUpdate_simp_rule (y : K) :
-    HasAdjointUpdate K
+theorem HDiv.hDiv.arg_a0.HasRevFDerivUpdate_simp_rule (y : K) :
+    HasRevFDerivUpdate K
       (fun x => x / y)
       (fun z x' => x' + z / conj y) := by
   constructor
@@ -489,8 +466,8 @@ theorem HDiv.hDiv.arg_a0.HasAdjointUpdate_simp_rule (y : K) :
   case is_linear => sorry_proof
 
 @[data_synth]
-theorem SciLean.sum.arg_f.HasAdjoint_simp_rule {I : Type*} [IndexType I] :
-    HasAdjoint K
+theorem SciLean.sum.arg_f.HasRevFDeriv_simp_rule {I : Type*} [IndexType I] :
+    HasRevFDeriv K
       (fun f : I → X => sum f)
       (fun k _ => k) := by
   constructor
@@ -498,8 +475,8 @@ theorem SciLean.sum.arg_f.HasAdjoint_simp_rule {I : Type*} [IndexType I] :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem SciLean.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} [IndexType I] :
-    HasAdjointUpdate K
+theorem SciLean.sum.arg_f.HasRevFDerivUpdate_simp_rule {I : Type*} [IndexType I] :
+    HasRevFDerivUpdate K
       (fun f : I → X => sum f)
       (fun k f' i => f' i + k) := by
   constructor
@@ -507,8 +484,8 @@ theorem SciLean.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} [IndexType I] :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem Finset.sum.arg_f.HasAdjoint_simp_rule {I : Type*} (A : Finset I) [IndexType I] :
-    HasAdjoint K
+theorem Finset.sum.arg_f.HasRevFDeriv_simp_rule {I : Type*} (A : Finset I) [IndexType I] :
+    HasRevFDeriv K
       (fun f : I → X => A.sum f)
       (fun k i => A.toSet.indicator (fun _ => k) i) := by
   constructor
@@ -516,8 +493,8 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule {I : Type*} (A : Finset I) [IndexT
   case is_linear => fun_prop
 
 @[data_synth]
-theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} (A : Finset I) [IndexType I] :
-    HasAdjointUpdate K
+theorem Finset.sum.arg_f.HasRevFDerivUpdate_simp_rule {I : Type*} (A : Finset I) [IndexType I] :
+    HasRevFDerivUpdate K
       (fun f : I → X => A.sum f)
       (fun k f i => f i + A.toSet.indicator (fun _ => k) i) := by
   constructor
@@ -525,8 +502,8 @@ theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} (A : Finset I) [
   case is_linear => fun_prop
 
 @[data_synth]
-theorem ite.arg_te.HasAdjoint_simple_rule {c : Prop} [Decidable c] :
-    HasAdjoint K
+theorem ite.arg_te.HasRevFDeriv_simple_rule {c : Prop} [Decidable c] :
+    HasRevFDeriv K
       (fun te : X×X => if c then te.1 else te.2)
       (fun y => if c then (y,0) else (0,y)) := by
   constructor
@@ -534,8 +511,8 @@ theorem ite.arg_te.HasAdjoint_simple_rule {c : Prop} [Decidable c] :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem ite.arg_te.HasAdjointUpdate_simple_rule {c : Prop} [Decidable c] :
-    HasAdjointUpdate K
+theorem ite.arg_te.HasRevFDerivUpdate_simple_rule {c : Prop} [Decidable c] :
+    HasRevFDerivUpdate K
       (fun te : X×X => if c then te.1 else te.2)
       (fun y te =>
         let' (t,e) := te
@@ -548,11 +525,11 @@ theorem ite.arg_te.HasAdjointUpdate_simple_rule {c : Prop} [Decidable c] :
 
 open ComplexConjugate in
 @[data_synth]
-theorem Inner.inner.arg_a0.HasAdjoint_simple_rule
+theorem Inner.inner.arg_a0.HasRevFDeriv_simple_rule
     {R} [RealScalar R]
     {X} [NormedAddCommGroup X] [AdjointSpace R X]
     (y : X) :
-    HasAdjoint R
+    HasRevFDeriv R
       (fun x : X => ⟪x,y⟫[R])
       (fun k => k•y) := by
   constructor
@@ -564,11 +541,11 @@ theorem Inner.inner.arg_a0.HasAdjoint_simple_rule
 
 open ComplexConjugate in
 @[data_synth]
-theorem Inner.inner.arg_a0.HasAdjointUpdate_simple_rule
+theorem Inner.inner.arg_a0.HasRevFDerivUpdate_simple_rule
     {R} [RealScalar R]
     {X} [NormedAddCommGroup X] [AdjointSpace R X]
     (y : X) :
-    HasAdjointUpdate R
+    HasRevFDerivUpdate R
       (fun x : X => ⟪x,y⟫[R])
       (fun k x => x + k•y) := by
   constructor
@@ -580,8 +557,8 @@ theorem Inner.inner.arg_a0.HasAdjointUpdate_simple_rule
   case is_linear => fun_prop
 
 @[data_synth]
-theorem Inner.inner.arg_a1.HasAdjoint_simple_rule (x : X) :
-    HasAdjoint K
+theorem Inner.inner.arg_a1.HasRevFDeriv_simple_rule (x : X) :
+    HasRevFDeriv K
       (fun y : X => ⟪x,y⟫[K])
       (fun k => k • x) := by
   constructor
@@ -589,8 +566,8 @@ theorem Inner.inner.arg_a1.HasAdjoint_simple_rule (x : X) :
   case is_linear => fun_prop
 
 @[data_synth]
-theorem Inner.inner.arg_a1.HasAdjointUpdate_simple_rule (x : X) :
-    HasAdjointUpdate K
+theorem Inner.inner.arg_a1.HasRevFDerivUpdate_simple_rule (x : X) :
+    HasRevFDerivUpdate K
       (fun y : X => ⟪x,y⟫[K])
       (fun k x' => x' + k • x) := by
   constructor

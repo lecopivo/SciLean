@@ -677,10 +677,20 @@ def constCase? (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "const case" do
   withMainTrace (fun _ => return "constant function") do
 
-  let thm : DataSynthTheorem ←
-     getTheoremFromConst (goal.dataSynthDecl.name.append `const_rule)
+  let thms ← getLambdaTheorems goal.dataSynthDecl.name .const
 
-  goal.tryTheorem? thm
+  for thm in thms do
+
+    let thm : DataSynthTheorem := {
+      name := thm.dataSynthName
+      thmName := thm.thmName
+      keys := []
+    }
+
+    if let some r ← goal.tryTheorem? thm then
+      return r
+
+  return none
 
 
 def decomposeDomain? (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
