@@ -314,10 +314,23 @@ def Goal.assumption? (goal : Goal) : DataSynthM (Option Result) := do
     else
       return none
 
-
 def discharge? (e : Expr) : DataSynthM (Option Expr) := do
   (← read).discharge e
 
+def synthesizeAutoParam (x X : Expr) : DataSynthM Bool := do
+  let .some (.const tacticDecl ..) := X.getAutoParamTactic?
+    | return false
+  let env ← getEnv
+  match Lean.Elab.evalSyntaxConstant env (← getOptions) tacticDecl with
+  | .error err       => throwError err
+  | .ok tacticSyntax =>
+    let disch := Mathlib.Meta.FunProp.tacticToDischarge ⟨tacticSyntax⟩
+    let some r ← disch X.appFn!.appArg! | return false
+    try
+      x.mvarId!.assignIfDefeq r
+      return true
+    catch _e =>
+      return false
 
 def synthesizeArgument (x : Expr) : DataSynthM Bool := do
   let x ← instantiateMVars x
@@ -326,7 +339,6 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
   -- skip if already synthesized
   unless x.isMVar do return true
   withProfileTrace "synthesizeArgument" do
-
 
   let b ← forallTelescope X fun ys X => do
     if let .some g ← isDataSynthGoal? X then
@@ -350,6 +362,11 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
       return true
     catch _ =>
       return false
+
+  -- try auto param
+  if X.isAppOfArity' ``autoParam 2 then
+    if ← synthesizeAutoParam x X then
+      return true
 
   -- try assumptions
   if (← inferType X).isProp then
