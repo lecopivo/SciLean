@@ -9,8 +9,17 @@ open Mathlib.Meta.FunProp
 
 namespace SciLean.Tactic.DataSynth
 
+structure Theorem where
+  dataSynthName : Name
+  thmName : Name
+deriving Inhabited, BEq, Hashable
 
-inductive LambdaTheorem where
+/-- Get proof of a theorem. -/
+def Theorem.getProof (thm : Theorem) : MetaM Expr := do
+  mkConstWithFreshMVarLevels thm.thmName
+
+
+inductive LambdaTheoremData where
   /-- Composition theorem
 
   The theorem should have roughly the following form
@@ -19,7 +28,7 @@ inductive LambdaTheorem where
   ```
   and `gId`, `fId`, `hgId`, `hfId` are indices of corresponding arguments in the theorem `thmName`
    -/
-  | comp (dataSynthName thrmName : Name) (gId fId hgId hfId : Nat)
+  | comp (gId fId hgId hfId : Nat)
   /-- Let binding theorem
 
   The theorem should have roughly the following form
@@ -28,7 +37,7 @@ inductive LambdaTheorem where
   ```
   and `gId`, `fId`, `hgId`, `hfId` are indices of corresponding arguments in the theorem `thmName`
   -/
-  | letE (dataSynthName thrmName : Name) (gId fId hgId hfId : Nat)
+  | letE (gId fId hgId hfId : Nat)
   /-- Pi theorem
 
   The theorem should have roughly the following form
@@ -37,14 +46,14 @@ inductive LambdaTheorem where
   ```
   and `fId`, `hfId` are indices of corresponding arguments in the theorem `thmName`
   -/
-  | pi   (dataSynthName thrmName : Name) (fId hfId : Nat)
+  | pi (fId hfId : Nat)
   /-- Constant theorem
 
   The theorem should have roughly the following form
   ```
   (y : Y) → P (fun x => y) c'
   `` -/
-  | const (dataSynthName thrmName : Name)
+  | const
   /-- Projection theorem
 
   This theorem says that if we can restrict `f : X → Y` to a smaller domain `X₁` and we know how
@@ -57,42 +66,51 @@ inductive LambdaTheorem where
 
   TODO: There has to be some condition on p₁,p₂,q that they really form a decomposition.
   -/
-  | proj (dataSynthName thrmName : Name) (fId gId p₁Id p₂Id qId hgId : Nat)
-  deriving Inhabited
+  | proj (fId gId p₁Id p₂Id qId hgId /- hdec -/ : Nat)
+  deriving Inhabited, BEq, Hashable
 
 inductive LambdaTheoremType where | comp | letE | pi | const | proj
   deriving BEq, Inhabited, Hashable
 
-/-- Get name of the theorem. -/
-def LambdaTheorem.thmName (thm : LambdaTheorem) : Name :=
-  match thm with
-  | .comp _ thmName _ _ _ _ => thmName
-  | .letE _ thmName _ _ _ _ => thmName
-  | .pi   _ thmName _ _     => thmName
-  | .const _ thmName        => thmName
-  | .proj _ thmName _ _ _ _ _ _ => thmName
-
-/-- Get name of the data synthesis. -/
-def LambdaTheorem.dataSynthName (thm : LambdaTheorem) : Name :=
-  match thm with
-  | .comp dataSynthName _ _ _ _ _ => dataSynthName
-  | .letE dataSynthName _ _ _ _ _ => dataSynthName
-  | .pi   dataSynthName _ _ _     => dataSynthName
-  | .const dataSynthName _        => dataSynthName
-  | .proj dataSynthName _ _ _ _ _ _ _ => dataSynthName
+structure LambdaTheorem extends Theorem where
+  data : LambdaTheoremData
+  deriving BEq, Inhabited, Hashable
 
 /-- Get proof of a theorem. -/
 def LambdaTheorem.getProof (thm : LambdaTheorem) : MetaM Expr :=
-  match thm with
-  | .comp _ thmName _ _ _ _ => mkConstWithFreshMVarLevels thmName
-  | .letE _ thmName _ _ _ _ => mkConstWithFreshMVarLevels thmName
-  | .pi   _ thmName _ _     => mkConstWithFreshMVarLevels thmName
-  | .const _ thmName        => mkConstWithFreshMVarLevels thmName
-  | .proj _ thmName _ _ _ _ _ _ => mkConstWithFreshMVarLevels thmName
+  thm.toTheorem.getProof
+
+def LambdaTheorem.getHint (thm : LambdaTheorem) (args : Array Expr) : MetaM (Array (Nat×Expr)) :=
+  match thm.data with
+  | .comp gId fId hgId hfId =>
+    if h : args.size = 4 then
+      return #[(gId,args[0]),(fId,args[1]),(hgId,args[2]),(hfId,args[3])]
+    else
+      throwError "comp theorem expects 4 arguments"
+  | .letE gId fId hgId hfId =>
+    if h : args.size = 4 then
+      return #[(gId,args[0]),(fId,args[1]),(hgId,args[2]),(hfId,args[3])]
+    else
+      throwError "letE theorem expects 4 arguments"
+  | .pi fId hfId =>
+    if h : args.size = 2 then
+      return #[(fId,args[0]),(hfId,args[1])]
+    else
+      throwError "pi theorem expects 2 arguments"
+  | .const =>
+    if h : args.size = 0 then
+      return #[]
+    else
+      throwError "const theorem expects 1 argument"
+  | .proj fId gId p₁Id p₂Id qId hgId =>
+    if h : args.size = 6 then
+      return #[(fId,args[0]),(gId,args[1]),(p₁Id,args[2]),(p₂Id,args[3]),(qId,args[4]),(hgId,args[5])]
+    else
+      throwError "proj theorem expects 6 arguments"
 
 /-- Get type of the theorem. -/
 def LambdaTheorem.type (thm : LambdaTheorem) : LambdaTheoremType :=
-  match thm with
+  match thm.data with
   | .comp .. => LambdaTheoremType.comp
   | .letE .. => LambdaTheoremType.letE
   | .pi   .. => LambdaTheoremType.pi
@@ -121,11 +139,7 @@ def getLambdaTheorems (dataSynthName : Name) (thmType : LambdaTheoremType) :
 ----------------------------------------------------------------------------------------------------
 
 /-- Generalized transformation theorem -/
-structure DataSynthTheorem where
-  /-- Name of generalized transformation -/
-  name : Name
-  /-- Name of lambda theorem -/
-  thmName : Name
+structure GeneralTheorem extends Theorem where
   /-- discrimination tree keys used to index this theorem -/
   keys        : List RefinedDiscrTree.DTExpr
   /-- priority -/
@@ -135,7 +149,7 @@ structure DataSynthTheorem where
 
 
 /-- Get proof of a theorem. -/
-def DataSynthTheorem.getProof (thm : DataSynthTheorem) : MetaM Expr := do
+def DataSynthTheorem.getProof (thm : GeneralTheorem) : MetaM Expr := do
   mkConstWithFreshMVarLevels thm.thmName
 
 
@@ -143,11 +157,11 @@ open Mathlib.Meta.FunProp in
 /-- -/
 structure DataSynthTheorems where
   /-- -/
-  theorems     : RefinedDiscrTree DataSynthTheorem := {}
+  theorems     : RefinedDiscrTree GeneralTheorem := {}
   deriving Inhabited
 
 /-- -/
-abbrev DataSynthTheoremsExt := SimpleScopedEnvExtension DataSynthTheorem DataSynthTheorems
+abbrev DataSynthTheoremsExt := SimpleScopedEnvExtension GeneralTheorem DataSynthTheorems
 
 
 open Mathlib.Meta.FunProp in
@@ -162,7 +176,7 @@ initialize dataSynthTheoremsExt : DataSynthTheoremsExt ←
 
 
 
-def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : MetaM DataSynthTheorem := do
+def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : MetaM GeneralTheorem := do
   let info ← getConstInfo declName
 
   let (_,_,b) ← forallMetaTelescope info.type
@@ -188,8 +202,8 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
    \nkeys: {keys}"
 
 
-  let thm : DataSynthTheorem := {
-    name := dataSynthDecl.name
+  let thm : GeneralTheorem := {
+    dataSynthName := dataSynthDecl.name
     thmName := declName
     keys    := keys
     priority  := prio
@@ -198,7 +212,6 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
 
 
 def addTheorem (declName : Name) (kind : AttributeKind := .global) (prio : Nat := eval_prio default) : MetaM Unit := do
-
 
   let thm ← getTheoremFromConst declName prio
 

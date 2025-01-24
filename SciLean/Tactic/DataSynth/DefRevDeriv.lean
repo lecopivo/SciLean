@@ -243,4 +243,5 @@ def foo {R} [RealScalar R] (x : R) := x + x
 def_rev_deriv foo in x by
   unfold foo
   data_synth =>
+    enter [3]
     ring_nf

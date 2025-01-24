@@ -117,16 +117,22 @@ theorem proj_rule
     (hg : HasAdjoint K g g') :
     HasAdjoint K f (fun y => q (g' y) 0) := sorry_proof
 
+
 open Lean Meta
 #eval show MetaM Unit from do
-   Tactic.DataSynth.addLambdaTheorem (.const ``HasAdjoint ``const_rule )
-   Tactic.DataSynth.addLambdaTheorem (.comp ``HasAdjoint ``comp_rule
-      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.letE ``HasAdjoint ``let_rule
-      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.pi ``HasAdjoint ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.proj ``HasAdjoint ``proj_rule
-      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjoint,``const_rule⟩, .const⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjoint, ``comp_rule⟩, .comp
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f)
+      (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjoint,``let_rule⟩, .letE
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f)
+      (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjoint,``pi_rule⟩, .pi
+      (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjoint,``proj_rule⟩, .proj
+      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g)
+      (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂)
+      (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
 
 end HasAdjoint
 
@@ -194,16 +200,21 @@ theorem proj_rule
         let x₁ := (g' y x₁)
         q x₁ x₂) := sorry_proof
 
-open Lean Meta in
+open Lean Meta
 #eval show MetaM Unit from do
-   Tactic.DataSynth.addLambdaTheorem (.const ``HasAdjointUpdate ``const_rule)
-   Tactic.DataSynth.addLambdaTheorem (.comp ``HasAdjointUpdate ``comp_rule
-      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.letE ``HasAdjointUpdate ``let_rule
-      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.pi ``HasAdjointUpdate ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.proj ``HasAdjointUpdate ``proj_rule
-      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjointUpdate,``const_rule⟩, .const⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjointUpdate, ``comp_rule⟩, .comp
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f)
+      (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjointUpdate,``let_rule⟩, .letE
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f)
+      (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjointUpdate,``pi_rule⟩, .pi
+      (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasAdjointUpdate,``proj_rule⟩, .proj
+      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g)
+      (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂)
+      (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
 
 end HasAdjointUpdate
 

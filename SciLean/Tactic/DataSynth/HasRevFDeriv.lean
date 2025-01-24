@@ -99,14 +99,14 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {f' g'}
 
 open Lean Meta
 #eval show MetaM Unit from do
-   Tactic.DataSynth.addLambdaTheorem (.const ``HasRevFDeriv ``const_rule)
-   Tactic.DataSynth.addLambdaTheorem (.comp ``HasRevFDeriv ``comp_rule
-      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.letE ``HasRevFDeriv ``let_rule
-      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDeriv,``const_rule⟩, .const⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDeriv, ``comp_rule⟩, .comp
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDeriv,``let_rule⟩, .letE
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf)⟩
    -- Tactic.DataSynth.addLambdaTheorem (.pi ``HasRevFDeriv ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.proj ``HasRevFDeriv ``proj_rule
-      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDeriv,``proj_rule⟩, .proj
+      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
 
 
 end HasRevFDeriv

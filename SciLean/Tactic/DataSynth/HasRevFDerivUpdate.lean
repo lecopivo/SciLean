@@ -131,15 +131,19 @@ theorem proj_rule (f : X → Y) {g'}
 
 open Lean Meta
 #eval show MetaM Unit from do
-   Tactic.DataSynth.addLambdaTheorem (.const ``HasRevFDerivUpdate ``const_rule )
-   Tactic.DataSynth.addLambdaTheorem (.comp ``HasRevFDerivUpdate ``comp_rule
-      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f) (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.letE ``HasRevFDerivUpdate ``let_rule
-      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f) (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.pi ``HasRevFDerivUpdate ``pi_rule (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf))
-   Tactic.DataSynth.addLambdaTheorem (.proj ``HasRevFDerivUpdate ``proj_rule
-      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g) (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂) (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg))
-
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivUpdate,``const_rule⟩, .const⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivUpdate, ``comp_rule⟩, .comp
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f)
+      (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivUpdate,``let_rule⟩, .letE
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f)
+      (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivUpdate,``pi_rule⟩, .pi
+      (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivUpdate,``proj_rule⟩, .proj
+      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g)
+      (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂)
+      (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
 
 end HasRevFDerivUpdate
 
