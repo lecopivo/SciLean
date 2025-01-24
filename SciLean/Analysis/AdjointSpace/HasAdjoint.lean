@@ -42,6 +42,14 @@ theorem HasAdjointUpdate.adjoint' {f : X → Y} {f' : Y → X → X} (h : HasAdj
   rw[h.adjoint y.2]
   ring
 
+set_option linter.unusedVariables false in
+theorem HasAdjointUpdate.apply_eq_zero_add {f : X → Y} {f' : Y → X → X}
+    (h : HasAdjointUpdate K f f') (x y) :
+    f' y x = f' y 0 + x := by
+  apply AdjointSpace.ext_inner_left K
+  intro x'
+  sorry_proof
+
 theorem hasAdjointUpdate_from_hasAdjoint {f : X → Y} {f' : Y → X} {f'' : Y → X → X}
     (hf : HasAdjoint K f f') (hf' : ∀ y x, f'' y x = x + f' y) :
     HasAdjointUpdate K f f'' := by
