@@ -261,8 +261,8 @@ def Result.normalize (r : Result) : DataSynthM Result := do
 def Goal.getCandidateTheorems (g : Goal) : DataSynthM (Array GeneralTheorem) := do
   let (_,e) ← g.mkFreshProofGoal
   let ext := dataSynthTheoremsExt.getState (← getEnv)
-  -- let keys ← Mathlib.Meta.FunProp.RefinedDiscrTree.mkDTExpr e {}
-  -- trace[Meta.Tactic.data_synth] "keys: {keys}"
+  let keys ← Lean.Meta.RefinedDiscrTree.mkDTExpr e
+  trace[Meta.Tactic.data_synth] "keys: {keys}"
   let thms ← ext.theorems.getMatchWithScore e false -- {zeta:=false, zetaDelta:=false}
   let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
   return thms
@@ -324,12 +324,16 @@ def synthesizeAutoParam (x X : Expr) : DataSynthM Bool := do
   match Lean.Elab.evalSyntaxConstant env (← getOptions) tacticDecl with
   | .error err       => throwError err
   | .ok tacticSyntax =>
+    let X' := X.appFn!.appArg! -- extract the actual type from `autoParam _ _`
     let disch := Mathlib.Meta.FunProp.tacticToDischarge ⟨tacticSyntax⟩
-    let some r ← disch X.appFn!.appArg! | return false
+    trace[Meta.Tactic.data_synth] "calling auto param tactic {tacticSyntax.prettyPrint} to prove {X'}"
+    let some r ← disch X' | return false
     try
       x.mvarId!.assignIfDefeq r
+      trace[Meta.Tactic.data_synth] "auto param success"
       return true
     catch _e =>
+      trace[Meta.Tactic.data_synth] "auto param failed"
       return false
 
 def synthesizeArgument (x : Expr) : DataSynthM Bool := do
@@ -387,8 +391,11 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
 
 You can provide certain theorem arguments explicitelly with `hint` i.e. for `hint = #[(id₁,e₁),...]`
 we assign `eᵢ` to `idᵢ`-th argument of theorem `thm`.
+
+Hints `hintPre` are applied before unification of `e` with theorem statement and `hintPost` are
+applied after unification.
  -/
-def tryTheorem? (e : Expr) (thm : Theorem) (hint : Array (Nat×Expr) := #[]) : DataSynthM (Option Expr) := do
+def tryTheorem? (e : Expr) (thm : Theorem) (hintPre hintPost : Array (Nat×Expr) := #[]) : DataSynthM (Option Expr) := do
 
   withMainTrace
     (fun r => return m!"[{ExceptToEmoji.toEmoji r}] applying {← ppOrigin (.decl thm.thmName)}") do
@@ -398,18 +405,30 @@ def tryTheorem? (e : Expr) (thm : Theorem) (hint : Array (Nat×Expr) := #[]) : D
   let (xs, _, type) ← forallMetaTelescope type
   let thmProof := thmProof.beta xs
 
-  for (id, arg) in hint do
+  let argNames ← getConstArgNames thm.thmName
+  for (id, arg) in hintPre do
     let mvarId := xs[id]!.mvarId!
-    try
-      mvarId.assignIfDefeq arg
-      trace[Meta.Tactic.data_synth] "setting {Expr.mvar mvarId} to {arg}"
-    catch _e =>
-      trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
-      return none
+    if ¬(← mvarId.isAssigned) then
+      try
+        mvarId.assignIfDefeq arg
+        trace[Meta.Tactic.data_synth] "setting {argNames[id]!} to {arg}"
+      catch _e =>
+        trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
+        return none
 
   unless (← isDefEq e type) do
     trace[Meta.Tactic.data_synth] "unification failed\n{e}\n=?=\n{type}"
     return none
+
+  for (id, arg) in hintPost do
+    let mvarId := xs[id]!.mvarId!
+    if ¬(← mvarId.isAssigned) then
+      try
+        mvarId.assignIfDefeq arg
+        trace[Meta.Tactic.data_synth] "setting {argNames[id]!} to {arg}"
+      catch _e =>
+        trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
+        return none
 
   -- todo: redo this, make a queue of all argument an try synthesize them over and over, until done or no progress
   -- try to synthesize all arguments
@@ -426,12 +445,12 @@ def tryTheorem? (e : Expr) (thm : Theorem) (hint : Array (Nat×Expr) := #[]) : D
   return some thmProof
 
 
-def Goal.tryTheorem? (goal : Goal) (thm : Theorem) (hint : Array (Nat×Expr) := #[]) : DataSynthM (Option Result) := do
+def Goal.tryTheorem? (goal : Goal) (thm : Theorem) (hintPre hintPost : Array (Nat×Expr) := #[]) : DataSynthM (Option Result) := do
   withProfileTrace "tryTheorem" do
 
   let (xs, e) ← goal.mkFreshProofGoal
 
-  let .some prf ← DataSynth.tryTheorem? e thm hint | return none
+  let .some prf ← DataSynth.tryTheorem? e thm hintPre hintPost | return none
 
   let mut r := Result.mk xs prf goal
 
@@ -532,8 +551,8 @@ def compGoals (fgGoal : Goal) (f g : Expr) : DataSynthM (Option (LambdaTheorem×
 /-- Given result for `f` and `g` return result for `f∘g` -/
 def compResults (fgGoal : Goal) (thm : LambdaTheorem) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
   withProfileTrace "compResults" do
-    let hint ← thm.getHint #[g,f,hg.proof,hf.proof]
-    fgGoal.tryTheorem? thm.toTheorem hint
+    let (hintPre, hintPost) ← thm.getHint #[g,f,hg.proof,hf.proof]
+    fgGoal.tryTheorem? thm.toTheorem hintPre hintPost
 
 
 /-- Given goal for composition `fun x => let y:=g x; f y x` and given `f` and `g` return corresponding goals for `↿f` and `g` -/
@@ -579,8 +598,8 @@ def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (LambdaTheorem×
 /-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
 def letResults (fgGoal : Goal) (thm : LambdaTheorem) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
   withProfileTrace "letResults" do
-    let hint ← thm.getHint #[g,f,hg.proof,hf.proof]
-    fgGoal.tryTheorem? thm.toTheorem hint
+    let (hintPre,hintPost) ← thm.getHint #[g,f,hg.proof,hf.proof]
+    fgGoal.tryTheorem? thm.toTheorem hintPre hintPost
 
 set_option linter.unusedVariables false in
 /-- Given goal for `fun x i => f x i` return goal for `fun x => f x i` -/
@@ -616,9 +635,8 @@ set_option linter.unusedVariables false in
 def piResult (fGoal : Goal) (thm : LambdaTheorem) (f : Expr) (i : Expr) (hfi : Result) :
     DataSynthM (Option Result) :=
   withProfileTrace "piResults" do
-    let hint ← thm.getHint #[f,(← mkLambdaFVars #[i] hfi.proof)]
-    fGoal.tryTheorem? thm.toTheorem hint
-
+    let (hintPre,hintPost) ← thm.getHint #[f,(← mkLambdaFVars #[i] hfi.proof)]
+    fGoal.tryTheorem? thm.toTheorem hintPre hintPost
 
 def projGoals (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option (LambdaTheorem×Goal)) := do
   withProfileTrace "projGoals" do
@@ -649,8 +667,8 @@ def projGoals (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option (Lamb
 /-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
 def projResults (fGoal : Goal) (thm : LambdaTheorem) (f g p₁ p₂ q : Expr) (hg : Result) : DataSynthM (Option Result) := do
   withProfileTrace "projResults" do
-    let hint ← thm.getHint #[f,g,p₁,p₂,q,hg.proof]
-    fGoal.tryTheorem? thm.toTheorem hint
+    let (hintPre, hintPost) ← thm.getHint #[f,g,p₁,p₂,q,hg.proof]
+    fGoal.tryTheorem? thm.toTheorem hintPre hintPost
 
 
 def constCase? (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
@@ -667,13 +685,7 @@ def constCase? (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
   let thms ← getLambdaTheorems goal.dataSynthDecl.name .const
 
   for thm in thms do
-
-    let thm : Theorem := {
-      dataSynthName := thm.dataSynthName
-      thmName := thm.thmName
-    }
-
-    if let some r ← goal.tryTheorem? thm then
+    if let some r ← goal.tryTheorem? thm.toTheorem then
       return r
 
   return none

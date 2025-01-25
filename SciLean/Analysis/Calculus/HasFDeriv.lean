@@ -46,23 +46,21 @@ theorem hasFDerivAt_proj
   simp at hp₁'
   exact hg.comp x hp₁'
 
--- add data_synth lambda_theorems
--- todo: this should be done automatically by @[data_synth] attribute the same way @[fun_prop] works
-open Lean Meta SciLean in
+open Lean Meta
 #eval show MetaM Unit from do
-   Tactic.DataSynth.addLambdaTheorem (.const ``HasFDerivAt ``hasFDerivAt_const)
-   Tactic.DataSynth.addLambdaTheorem (.comp ``HasFDerivAt ``hasFDerivAt_comp
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasFDerivAt,``hasFDerivAt_const⟩, .const⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasFDerivAt, ``hasFDerivAt_comp⟩, .comp
       (← getConstArgId ``hasFDerivAt_comp `g) (← getConstArgId ``hasFDerivAt_comp `f)
-      (← getConstArgId ``hasFDerivAt_comp `hg) (← getConstArgId ``hasFDerivAt_comp `hf))
-   Tactic.DataSynth.addLambdaTheorem (.letE ``HasFDerivAt ``hasFDerivAt_let
+      (← getConstArgId ``hasFDerivAt_comp `hg) (← getConstArgId ``hasFDerivAt_comp `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasFDerivAt,``hasFDerivAt_let⟩, .letE
       (← getConstArgId ``hasFDerivAt_let `g) (← getConstArgId ``hasFDerivAt_let `f)
-      (← getConstArgId ``hasFDerivAt_let `hg) (← getConstArgId ``hasFDerivAt_let `hf))
-   Tactic.DataSynth.addLambdaTheorem (.pi ``HasFDerivAt ``hasFDerivAt_pi''
-      (← getConstArgId ``hasFDerivAt_pi'' `Φ) (← getConstArgId ``hasFDerivAt_pi'' `hφ))
-   Tactic.DataSynth.addLambdaTheorem (.proj ``HasFDerivAt ``hasFDerivAt_proj
+      (← getConstArgId ``hasFDerivAt_let `hg) (← getConstArgId ``hasFDerivAt_let `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasFDerivAt,``hasFDerivAt_pi''⟩, .pi
+      (← getConstArgId ``hasFDerivAt_pi'' `Φ) (← getConstArgId ``hasFDerivAt_pi'' `hφ)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasFDerivAt,``hasFDerivAt_proj⟩, .proj
       (← getConstArgId ``hasFDerivAt_proj `f) (← getConstArgId ``hasFDerivAt_proj `g)
       (← getConstArgId ``hasFDerivAt_proj `p₁) (← getConstArgId ``hasFDerivAt_proj `p₂)
-      (← getConstArgId ``hasFDerivAt_proj `q) (← getConstArgId ``hasFDerivAt_proj `hg))
+      (← getConstArgId ``hasFDerivAt_proj `q) (← getConstArgId ``hasFDerivAt_proj `hg)⟩
 
 end LambdaTheorems
 
@@ -124,6 +122,17 @@ theorem HMul.hMul.arg_a0a1.HasFDerivAt_simple_rule (xy : K×K) :
       (fun dx =>L[K] xy.1 * dx.2 +  xy.2 * dx.1) xy :=
   HasFDerivAt.mul (hasFDerivAt_id (𝕜:=K) xy).fst (hasFDerivAt_id (𝕜:=K) xy).snd
 
+@[data_synth]
+theorem HPow.hPow.arg_a0.HasFDerivAt_simple_rule_nat (x : K) (n : ℕ) :
+    HasFDerivAt (fun x : K => x^n)
+      (fun dx =>L[K] n*x^(n-1)*dx) x := sorry_proof
+
+-- #check Scalar.pow
+-- @[data_synth]
+-- theorem HPow.hPow.arg_a0.HasFDerivAt_simple_rule (xy : K×K) (h : xy.1 ∈ Scalar.slitPlane) :
+--     HasFDerivAt (fun xy : K×K => (Scalar.pow (R:=R) xy.1 xy.2))
+--       (fun dx =>L[K] (xy.2)*xy.1^(xy.2-1)*dx) xy := sorry_proof
+
 set_option linter.unusedVariables false in
 open ComplexConjugate in
 @[data_synth]
@@ -146,7 +155,7 @@ theorem SciLean.sum.arg_f.HasFDerivAt_simp_rule {I : Type*} [IndexType I] (f : I
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasFDerivAt_simp_rule {I : Type*} (A : Finset I) [Fintype I] (f : I → X) :
-    HasFDerivAt (fun f => A.sum f) (fun df =>L[K] A.sum df) f :=
+    HasFDerivAt (fun f => A.sum (fun i => f i)) (fun df =>L[K] A.sum (fun i => df i)) f :=
   (fun f : I → X =>L[K] A.sum f).hasFDerivAt (x:=f)
 
 @[data_synth]

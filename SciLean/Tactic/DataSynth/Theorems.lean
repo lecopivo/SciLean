@@ -80,31 +80,33 @@ structure LambdaTheorem extends Theorem where
 def LambdaTheorem.getProof (thm : LambdaTheorem) : MetaM Expr :=
   thm.toTheorem.getProof
 
-def LambdaTheorem.getHint (thm : LambdaTheorem) (args : Array Expr) : MetaM (Array (Nat×Expr)) :=
+/-- Returns hints that should be applied before and after unification in `tryTheorem?` -/
+def LambdaTheorem.getHint (thm : LambdaTheorem) (args : Array Expr) :
+    MetaM (Array (Nat×Expr) × Array (Nat×Expr)) :=
   match thm.data with
   | .comp gId fId hgId hfId =>
     if h : args.size = 4 then
-      return #[(gId,args[0]),(fId,args[1]),(hgId,args[2]),(hfId,args[3])]
+      return (#[(gId,args[0]),(fId,args[1])],#[(hgId,args[2]),(hfId,args[3])])
     else
       throwError "comp theorem expects 4 arguments"
   | .letE gId fId hgId hfId =>
     if h : args.size = 4 then
-      return #[(gId,args[0]),(fId,args[1]),(hgId,args[2]),(hfId,args[3])]
+      return (#[(gId,args[0]),(fId,args[1])],#[(hgId,args[2]),(hfId,args[3])])
     else
       throwError "letE theorem expects 4 arguments"
   | .pi fId hfId =>
     if h : args.size = 2 then
-      return #[(fId,args[0]),(hfId,args[1])]
+      return (#[(fId,args[0])],#[(hfId,args[1])])
     else
       throwError "pi theorem expects 2 arguments"
   | .const =>
     if h : args.size = 0 then
-      return #[]
+      return (#[],#[])
     else
       throwError "const theorem expects 1 argument"
   | .proj fId gId p₁Id p₂Id qId hgId =>
     if h : args.size = 6 then
-      return #[(fId,args[0]),(gId,args[1]),(p₁Id,args[2]),(p₂Id,args[3]),(qId,args[4]),(hgId,args[5])]
+      return (#[(fId,args[0]),(gId,args[1]),(p₁Id,args[2]),(p₂Id,args[3]),(qId,args[4])],#[(hgId,args[5])])
     else
       throwError "proj theorem expects 6 arguments"
 

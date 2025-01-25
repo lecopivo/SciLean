@@ -477,6 +477,20 @@ theorem HMul.hMul.arg_a1.HasAdjoint_simp_rule (x : K) :
   case adjoint => intro k y; simp; ac_rfl;
   case is_linear => sorry_proof
 
+set_option linter.unusedVariables false in
+open ComplexConjugate in
+@[data_synth]
+theorem HMul.hMul.arg_a1.HasAdjoint_comp_rule
+    (y : K) (f : X → K) {f'} (hf : HasAdjoint K f f') :
+    HasAdjoint K
+      (fun x => y * f x)
+      (fun z =>
+        let x := f' z
+        conj y • x) := by
+  constructor
+  case adjoint => intro k y; sorry_proof
+  case is_linear => sorry_proof
+
 open ComplexConjugate in
 @[data_synth]
 theorem HMul.hMul.arg_a1.HasAdjointUpdate_simp_rule (x : K) :
@@ -485,6 +499,20 @@ theorem HMul.hMul.arg_a1.HasAdjointUpdate_simp_rule (x : K) :
       (fun z y' => y' + conj x * z) := by
   constructor
   case adjoint => intro k y; simp; ring_nf; simp
+  case is_linear => sorry_proof
+
+set_option linter.unusedVariables false in
+open ComplexConjugate in
+@[data_synth]
+theorem HMul.hMul.arg_a1.HasAdjointUpdate_comp_rule
+    (y : K) (f : X → K) {f'} (hf : HasAdjointUpdate K f f') :
+    HasAdjointUpdate K
+      (fun x => y * f x)
+      (fun z y' =>
+        let x := f' (conj y • z) y'
+        x) := by
+  constructor
+  case adjoint => intro k y; dsimp; sorry_proof
   case is_linear => sorry_proof
 
 open ComplexConjugate in
@@ -510,25 +538,37 @@ theorem HDiv.hDiv.arg_a0.HasAdjointUpdate_simp_rule (y : K) :
 @[data_synth]
 theorem SciLean.sum.arg_f.HasAdjoint_simp_rule {I : Type*} [IndexType I] :
     HasAdjoint K
-      (fun f : I → X => sum f)
+      (fun f : I → X => ∑ i, f i)
       (fun k _ => k) := by
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
 
 @[data_synth]
+theorem SciLean.sum.arg_f.HasAdjoint_simp_rule' {I : Type*} [IndexType I] :
+    HasAdjoint K
+      (fun f : I → X => sum f)
+      (fun k _ => k) := SciLean.sum.arg_f.HasAdjoint_simp_rule
+
+@[data_synth]
 theorem SciLean.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} [IndexType I] :
     HasAdjointUpdate K
-      (fun f : I → X => sum f)
+      (fun f : I → X => ∑ i, f i)
       (fun k f' i => f' i + k) := by
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
 
 @[data_synth]
+theorem SciLean.sum.arg_f.HasAdjointUpdate_simp_rule' {I : Type*} [IndexType I] :
+    HasAdjointUpdate K
+      (fun f : I → X => sum f)
+      (fun k f' i => f' i + k) := SciLean.sum.arg_f.HasAdjointUpdate_simp_rule
+
+@[data_synth]
 theorem Finset.sum.arg_f.HasAdjoint_simp_rule {I : Type*} (A : Finset I) [IndexType I] :
     HasAdjoint K
-      (fun f : I → X => A.sum f)
+      (fun f : I → X => A.sum (fun i => f i))
       (fun k i => A.toSet.indicator (fun _ => k) i) := by
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
@@ -537,7 +577,7 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule {I : Type*} (A : Finset I) [IndexT
 @[data_synth]
 theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} (A : Finset I) [IndexType I] :
     HasAdjointUpdate K
-      (fun f : I → X => A.sum f)
+      (fun f : I → X => A.sum (fun i => f i))
       (fun k f i => f i + A.toSet.indicator (fun _ => k) i) := by
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
