@@ -1,5 +1,6 @@
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Elab
+import SciLean.Tactic.DataSynth.DefDataSynth
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Analysis.Normed.IsContinuousLinearMap
@@ -16,6 +17,9 @@ variable (𝕜 : Type*) {E F : Type*} [NontriviallyNormedField 𝕜]
   [NormedAddCommGroup E] [NormedSpace 𝕜 E]
   [NormedAddCommGroup F] [NormedSpace 𝕜 F]
   [NormedAddCommGroup G] [NormedSpace 𝕜 G]
+
+theorem hasFDerivAt_from_hasFDerivAt {f : E → F} {f' f'' : E →L[𝕜] F} {x}
+  (deriv : HasFDerivAt f f' x) (simp : f'' = f') : HasFDerivAt f f'' x := by rw[simp]; exact deriv
 
 open ContinuousLinearMap
 
@@ -168,13 +172,61 @@ theorem ite.arg_te.HasFDerivAt_simple_rule {c : Prop} [Decidable c] (te : X×X) 
 
 @[data_synth]
 theorem Inner.inner.arg_a0a1.HasFDerivAt_simple_rule
-    {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K]
-    {X} [NormedAddCommGroup X] [AdjointSpace K X] [AdjointSpace R X] (xy) :
+    {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K]
+    {X : Type*} [NormedAddCommGroup X] [AdjointSpace K X] [AdjointSpace R X] (xy) :
     HasFDerivAt (𝕜:=R) (fun x : X×X => ⟪x.1,x.2⟫[K])
       (fun dx =>L[R] ⟪dx.1,xy.2⟫[K] + ⟪xy.1,dx.2⟫[K]) xy := sorry_proof
 
 @[data_synth]
+theorem Inner.inner.arg_a0a1.HasFDerivAt_comp_rule
+    {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K]
+    {W : Type*} [NormedAddCommGroup W] [AdjointSpace K W] [AdjointSpace R W]
+    {X : Type*} [NormedAddCommGroup X] [AdjointSpace K X] [AdjointSpace R X]
+    (f g : W → X) {f' g' : _ →L[R] _} (w) (hf : HasFDerivAt f f' w) (hg : HasFDerivAt g g' w) :
+    HasFDerivAt (𝕜:=R) (fun w => ⟪f w, g w⟫[K])
+      (fun dw =>L[R]
+        let y := f w
+        let dy := f' dw
+        let z := g w
+        let dz := g' dw
+        ⟪dy,z⟫[K] + ⟪y,dz⟫[K]) w := by
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv => data_synth
+  case simp => simp
+
+@[data_synth]
 theorem Inner.inner.arg_a1.HasFDerivAt_simple_rule
-    {K} [RCLike K] {X} [NormedAddCommGroup X] [AdjointSpace K X] (x y) :
+    {K X : Type*} [RCLike K] [NormedAddCommGroup X] [AdjointSpace K X] (x y) :
     HasFDerivAt (fun y : X => ⟪x,y⟫[K])
       (fun dy =>L[K] ⟪x,dy⟫[K]) y := sorry_proof
+
+@[data_synth]
+theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_complex
+  {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace K X] [AdjointSpace R X] (x) :
+  HasFDerivAt
+    (fun x : X => ‖x‖₂²[K])
+    (fun dx =>L[R]
+      let s₁ := ⟪dx,x⟫[K]
+      let s₂ := ⟪x,dx⟫[K]
+      s₁ + s₂) x := by
+  simp +unfoldPartialApp only [Norm2.norm2]
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv => data_synth
+  case simp => ext; dsimp
+
+@[data_synth]
+theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_real
+  {R : Type*} [RealScalar R]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace R X] (x) :
+  HasFDerivAt
+    (fun x : X => ‖x‖₂²[R])
+    (fun dx =>L[R]
+      let s := ⟪x,dx⟫[R]
+      2 * s) x := by
+  simp +unfoldPartialApp only [Norm2.norm2]
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv => data_synth
+  case simp =>
+    ext; dsimp; (conv => rhs; enter[1]; rw[← AdjointSpace.conj_symm])
+    simp only [conj_for_real_scalar]; ring

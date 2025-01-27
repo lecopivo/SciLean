@@ -33,6 +33,12 @@ structure HasRevFDerivUpdate (f : X → Y) (f' : X → Y×(Y→X→X)) where
       (∀ x dy dx, (f' x).2 dy dx = dx + df' x dy)
 variable {K}
 
+elab "def_HasRevFDeriv" fId:ident "in" args:ident* bs:bracketedBinder* "by" tac:tacticSeq : command => do
+  Tactic.DataSynth.defDataSynth ``HasRevFDeriv fId args bs tac
+
+elab "def_HasRevFDerivUpdate" fId:ident "in" args:ident* bs:bracketedBinder* "by" tac:tacticSeq : command => do
+  Tactic.DataSynth.defDataSynth ``HasRevFDerivUpdate fId args bs tac
+
 
 ----------------------------------------------------------------------------------------------------
 -- API for constructing and deconstructing HasRevFDeriv(Update)  -----------------------------------
@@ -51,6 +57,18 @@ theorem hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate {f : X → Y}
     {df' : X → Y → X → X} (adjoint : ∀ x, HasAdjointUpdate K (df x) (df' x))
     {f'} (simp : f' = (fun x => (f x, df' x))) :
     HasRevFDerivUpdate K f f' := sorry_proof
+
+theorem hasRevFDeriv_from_hasRevFDeriv {f : X → Y}
+    {f'} (deriv : HasRevFDeriv K f f')
+    {f''} (simp : f'' = f') :
+    HasRevFDeriv K f f'' := by rw[simp]; exact deriv
+
+def HasRevFDeriv.toHasRevFDerivUpdate {f : X → Y} {f' : X → Y×(Y→X)}
+    (h : HasRevFDeriv K f f') :
+    HasRevFDerivUpdate K f
+      (fun x =>
+        let (y,df') := f' x
+        (y, fun dy dx => dx + df' dy)) := sorry_proof
 
 set_option linter.unusedVariables false in
 def HasRevFDeriv.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X)}
@@ -767,51 +785,72 @@ theorem dite.arg_te.HasRevFDerivUpdate_rule (c : Prop) (dec : Decidable c)
   · simp [h]; apply (hg h)
 
 
--- section OverReals
+section OverReals
 
--- variable {R : Type} [RealScalar R]
---   {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
---   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
---   {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y] [CompleteSpace Y]
-
-
--- @[data_synth]
--- theorem Inner.inner.arg_a0a1.HasRevFDerivUpdate_rule
---   (f g : X → Y) (f' g')
---   (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
---   HasRevFDerivUpdate R
---     (fun x => ⟪f x, g x⟫[R])
---     (fun x =>
---       let' (y,df) := f' x
---       let' (z,dg) := g' x
---       (⟪y,z⟫[R], fun dr dx =>
---         let dx := df (conj dr • z) dx
---         let dx := dg (conj dr • y) dx
---         dx)) := by
---   cases hf; cases hg
---   constructor
---   · intro dx; fun_trans only; simp_all
---     funext dy dx
---     simp [revFDeriv,smul_push]; ac_rfl
---   · fun_prop
+variable {R : Type} [RealScalar R]
+  {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y]
 
 
--- @[data_synth]
--- theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_rule
---   (f : X → Y) (f')
---   (hf : HasRevFDerivUpdate R f f') :
---   HasRevFDerivUpdate R
---     (fun x => ‖f x‖₂²[R])
---     (fun x =>
---       let' (y,df) := f' x
---       let z := ‖y‖₂²[R];
---       (z, fun dr dx =>
---         let dx := df ((2 * conj dr) • y) dx
---         dx)) := by
---   cases hf
---   constructor
---   · intro dx; fun_trans only; simp_all
---   · fun_prop
+@[data_synth]
+theorem Inner.inner.arg_a0a1.HasRevFDeriv_comp_rule
+  (f g : X → Y) (f' g')
+  (hf : HasRevFDeriv R f f') (hg : HasRevFDerivUpdate R g g') :
+  HasRevFDeriv R
+    (fun x => ⟪f x, g x⟫[R])
+    (fun x =>
+      let' (y,df) := f' x
+      let' (z,dg) := g' x
+      (⟪y,z⟫[R], fun dr =>
+        let dx := df (dr • z)
+        let dx := dg (dr • y) dx
+        dx)) := by
+  have ⟨_,_,_,_⟩ := hf.deriv_adjoint
+  have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intro x; simp; data_synth
+  case simp => simp_all
+
+@[data_synth]
+theorem Inner.inner.arg_a0a1.HasRevFDerivUpdate_comp_rule
+  (f g : X → Y) (f' g')
+  (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
+  HasRevFDerivUpdate R
+    (fun x => ⟪f x, g x⟫[R])
+    (fun x =>
+      let' (y,df) := f' x
+      let' (z,dg) := g' x
+      (⟪y,z⟫[R], fun dr dx =>
+        let dx := df (dr • z) dx
+        let dx := dg (dr • y) dx
+        dx)) := by
+  have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
+  have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intro; data_synth
+  case adjoint => intro x; simp; data_synth
+  case simp => simp_all
+
+@[data_synth]
+theorem Norm2.norm2.arg_a0.HasRevFDeriv_comp_rule
+  (f : X → Y) (f')
+  (hf : HasRevFDeriv R f f') :
+  HasRevFDeriv R
+    (fun x => ‖f x‖₂²[R])
+    (fun x =>
+      let' (y,df) := f' x
+      let z := ‖y‖₂²[R];
+      (z, fun dr =>
+        df ((2 * dr) • y))) := by
+  have ⟨_,_,_,_⟩ := hf.deriv_adjoint
+  have := hf.toHasRevFDerivUpdate
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    simp +unfoldPartialApp only [Norm2.norm2]
+    data_synth
+  case simp => funext x; simp; funext dk; sorry_proof
 
 
--- end OverReals
+end OverReals

@@ -1,6 +1,7 @@
 import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Elab
+import SciLean.Tactic.DataSynth.DefDataSynth
 import SciLean.Meta.Notation.Let'
 import SciLean.Lean.Meta.Basic
 
@@ -50,12 +51,28 @@ theorem HasAdjointUpdate.apply_eq_zero_add {f : X → Y} {f' : Y → X → X}
   intro x'
   sorry_proof
 
+set_option linter.unusedVariables false in
+theorem HasAdjointUpdate.smul_left {f : X → Y} {f' : Y → X → X}
+    (h : HasAdjointUpdate K f f') (x y) (k : K) :
+    f' (k•y) x = k•f' y x - k•x + x  := by
+  apply AdjointSpace.ext_inner_left K
+  intro x'
+  sorry_proof
+
 theorem hasAdjointUpdate_from_hasAdjoint {f : X → Y} {f' : Y → X} {f'' : Y → X → X}
     (hf : HasAdjoint K f f') (hf' : ∀ y x, f'' y x = x + f' y) :
     HasAdjointUpdate K f f'' := by
   constructor
   case adjoint => intro x' x y; simp[hf.adjoint,hf',AdjointSpace.inner_add_right]
   case is_linear => have := hf.is_linear; fun_prop
+
+set_option linter.unusedVariables false in
+theorem HasAdjoint.isContinuousLinearMap {f : X → Y} {f' : Y → X} (hf : HasAdjoint K f f') :
+    IsContinuousLinearMap K f := sorry_proof
+
+set_option linter.unusedVariables false in
+theorem HasAdjoint.isContinuousLinearMap' {f : X → Y} {f' : Y → X} (hf : HasAdjoint K f f') :
+    IsContinuousLinearMap K f' := sorry_proof
 
 
 namespace HasAdjoint
@@ -657,3 +674,28 @@ theorem Inner.inner.arg_a1.HasAdjointUpdate_simple_rule (x : X) :
     intro y z; simp[AdjointSpace.inner_smul_right, AdjointSpace.inner_add_right]
     intros; ring
   case is_linear => fun_prop
+
+-- @[data_synth]
+-- theorem Inner.inner.arg_a1.HasAdjoint_comp_rule (x : Y)
+--     (f : X → Y) {f'} (hf : HasAdjoint K f f') :
+--     HasAdjoint K
+--       (fun y : X => ⟪x,f y⟫[K])
+--       (fun k => k • f' x) := by
+--   constructor
+--   case adjoint =>
+--     intro y z;
+--     simp[AdjointSpace.inner_smul_left, AdjointSpace.inner_smul_right, hf.1, mul_comm]
+--   case is_linear => have := hf.isContinuousLinearMap; fun_prop
+
+-- @[data_synth]
+-- theorem Inner.inner.arg_a1.HasAdjointUpdate_comp_rule (x : Y)
+--     (f : X → Y) {f'} (hf : HasAdjointUpdate K f f') :
+--     HasAdjointUpdate K
+--       (fun y : X => ⟪x,f y⟫[K])
+--       (fun k x' => f' (k • x) x') := by
+--   constructor
+--   case adjoint =>
+--     intro y z x'
+--     simp[AdjointSpace.inner_smul_right, AdjointSpace.inner_add_right,hf.smul_left,
+--          AdjointSpace.inner_sub_right, hf.1 y, sub_mul]; ring
+--   case is_linear => have := hf.is_linear; fun_prop

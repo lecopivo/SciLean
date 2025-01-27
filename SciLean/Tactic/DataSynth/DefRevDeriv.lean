@@ -2,7 +2,7 @@ import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 -- import SciLean.Tactic.DataSynth.ArrayOperations
 import SciLean.Tactic.DataSynth.Elab
 
-namespace Scilean.Tactic.DataSynth
+namespace SciLean.Tactic.DataSynth
 
 open SciLean
 
