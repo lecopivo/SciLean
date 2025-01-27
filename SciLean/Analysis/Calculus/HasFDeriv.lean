@@ -5,21 +5,34 @@ import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Analysis.Calculus.FDeriv
-
-import SciLean.Analysis.Calculus.FDeriv
+import SciLean.Analysis.Normed.IsContinuousLinearMap
 
 open SciLean
 
 attribute [data_synth out f' in f] HasFDerivAt
 
 section LambdaTheorems
-variable (𝕜 : Type*) {E F : Type*} [NontriviallyNormedField 𝕜]
+variable {𝕜 : Type*} {E F : Type*} [NontriviallyNormedField 𝕜]
   [NormedAddCommGroup E] [NormedSpace 𝕜 E]
   [NormedAddCommGroup F] [NormedSpace 𝕜 F]
   [NormedAddCommGroup G] [NormedSpace 𝕜 G]
 
 theorem hasFDerivAt_from_hasFDerivAt {f : E → F} {f' f'' : E →L[𝕜] F} {x}
   (deriv : HasFDerivAt f f' x) (simp : f'' = f') : HasFDerivAt f f'' x := by rw[simp]; exact deriv
+
+theorem hasFDerivAt_from_isContinuousLinearMap
+    {f : E → F} {x₀ : E} (hf : IsContinuousLinearMap 𝕜 f := by fun_prop) :
+    HasFDerivAt f (fun x =>L[𝕜] f x) x₀ :=
+  (fun x =>L[𝕜] f x).hasFDerivAt
+
+set_option linter.unusedVariables false in
+theorem hasFDerivAt_from_fderiv
+    {f : E → F} {x₀ : E}
+    {f'} (deriv : f' = fderiv 𝕜 f x₀)
+    (diff : Differentiable 𝕜 f := by fun_prop) :
+    HasFDerivAt f f' x₀ :=
+  sorry_proof
+
 
 open ContinuousLinearMap
 
@@ -35,7 +48,7 @@ theorem hasFDerivAt_comp {g : E → F} {f : F → G} {g' : E →L[𝕜] F} {f'  
 theorem hasFDerivAt_let {g : E → F} {f : F → E → G} {g' : E →L[𝕜] F} {f'  : F×E →L[𝕜] G} (x : E)
     (hg : HasFDerivAt g g' x) (hf : HasFDerivAt ↿f f' (g x,x)) :
     HasFDerivAt (fun x => let y := g x; f y x) (fun dx =>L[𝕜] f' (g' dx, dx)) x :=
-  hasFDerivAt_comp 𝕜 x (hg.prod (hasFDerivAt_id x)) hf
+  hasFDerivAt_comp x (hg.prod (hasFDerivAt_id x)) hf
 
 set_option linter.unusedVariables false in
 theorem hasFDerivAt_proj

@@ -407,9 +407,9 @@ open BigOperators in
 @[fun_trans]
 theorem Finset.sum.arg_f.adjoint_rule
   (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K (f · i)) (A : Finset ι)
-  : (fun x => Finset.sum Finset.univ fun i => f x i)†
+  : (fun x => Finset.sum A fun i => f x i)†
     =
-    (fun y => Finset.sum Finset.univ fun i => ((f · i)†) y) :=
+    (fun y => Finset.sum A fun i => ((f · i)†) y) :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop) [adjoint_inner_left,AdjointSpace.sum_inner,AdjointSpace.inner_sum]

@@ -1,12 +1,14 @@
 import SciLean.Data.VectorType.Base
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
-import SciLean.Tactic.DataSynth.DefRevDeriv
+import SciLean.Analysis.AdjointSpace.HasAdjoint
+import SciLean.Analysis.Calculus.HasRevFDeriv
+-- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
+-- import SciLean.Tactic.DataSynth.DefRevDeriv
 import SciLean.Meta.GenerateFunTrans
+import SciLean.Tactic.ConvAssign
 
 namespace SciLean
-
 
 def_fun_prop VectorType.toVec in x [VectorType.Lawful X] : IsLinearMap K by
   constructor <;> (intros; simp[vector_to_spec])
@@ -28,6 +30,10 @@ def_fun_prop VectorType.Base.toVec in x [VectorType.Lawful X] : IsContinuousLine
   constructor
   · fun_prop
   · dsimp only [autoParam]; fun_prop
+
+abbrev_data_synth VectorType.toVec in x [VectorType.Lawful X] (x₀ : X) :
+    (HasFDerivAt (𝕜:=K) · · x₀) by
+  exact hasFDerivAt_from_isContinuousLinearMap
 
 theorem toVec_fderiv
     {R K} {_ : RealScalar R} {_ : Scalar R K}
@@ -67,7 +73,6 @@ abbrev_fun_trans VectorType.toVec in x
     [ScalarSMul R K] [ScalarInner R K] [VectorType.Lawful X] [VectorType.RealOp X] : fwdFDeriv R by
   fun_trans
 
-
 open Classical in
 abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] : adjoint K by
   tactic => rename_i i _ _
@@ -76,31 +81,37 @@ abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X
     apply AdjointSpace.ext_inner_left K
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
-    simp[vector_to_spec, Finset.sum_ite, Finset.filter_eq]
+    simp[vector_to_spec,Finset.sum_ite_eq']
 
+open Classical in
+abbrev_data_synth VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] :
+    HasAdjoint K by
+  conv => enter[3]; assign (fun k => VectorType.set (0:X) i k)
+  constructor
+  case adjoint => intro z x; simp[vector_to_spec]
+  case is_linear => fun_prop
+
+abbrev_data_synth VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] :
+    HasAdjointUpdate K by
+  conv => enter[3]; assign (fun k (x : X) => VectorType.updateElem x i (fun xi => xi + k))
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => intros; simp
 
 abbrev_fun_trans VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] : revFDeriv K by
   unfold revFDeriv
   autodiff
 
-def_rev_deriv VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] by
-  constructor
-  · intros x
-    conv => rhs; autodiff
-  · fun_prop
+abbrev_data_synth VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intros; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => rfl
 
-def_rev_deriv' VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] by
-  have hh : revFDeriv K x
-         =
-         fun w =>
-           let' (y,dx) := x' w
-           (y, (dx · 0)) := by simp[hx.1]; unfold revFDeriv; simp
-  -- have q : ∀ w u dy dw, u + (x' w).2 dy dw = (x' w).2 dy (dw + u) := sorry
-  have := hx.2
-  constructor
-  · intros x
-    conv =>
-      rhs
-      autodiff
-      -- lsimp -zeta [q]
-  · fun_prop
+abbrev_data_synth VectorType.toVec in x [VectorType.Lawful X] [VectorType.Dense X] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intros; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => rfl

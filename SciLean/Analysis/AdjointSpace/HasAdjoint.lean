@@ -60,11 +60,11 @@ theorem HasAdjointUpdate.smul_left {f : X → Y} {f' : Y → X → X}
   sorry_proof
 
 theorem hasAdjointUpdate_from_hasAdjoint {f : X → Y} {f' : Y → X} {f'' : Y → X → X}
-    (hf : HasAdjoint K f f') (hf' : ∀ y x, f'' y x = x + f' y) :
+    (adjoint : HasAdjoint K f f') (simp : ∀ y x, f'' y x = x + f' y) :
     HasAdjointUpdate K f f'' := by
   constructor
-  case adjoint => intro x' x y; simp[hf.adjoint,hf',AdjointSpace.inner_add_right]
-  case is_linear => have := hf.is_linear; fun_prop
+  case adjoint => intro x' x y; simp[adjoint.adjoint,simp,AdjointSpace.inner_add_right]
+  case is_linear => have := adjoint.is_linear; fun_prop
 
 set_option linter.unusedVariables false in
 theorem HasAdjoint.isContinuousLinearMap {f : X → Y} {f' : Y → X} (hf : HasAdjoint K f f') :

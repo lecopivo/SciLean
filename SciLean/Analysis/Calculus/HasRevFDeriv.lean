@@ -33,12 +33,6 @@ structure HasRevFDerivUpdate (f : X → Y) (f' : X → Y×(Y→X→X)) where
       (∀ x dy dx, (f' x).2 dy dx = dx + df' x dy)
 variable {K}
 
-elab "def_HasRevFDeriv" fId:ident "in" args:ident* bs:bracketedBinder* "by" tac:tacticSeq : command => do
-  Tactic.DataSynth.defDataSynth ``HasRevFDeriv fId args bs tac
-
-elab "def_HasRevFDerivUpdate" fId:ident "in" args:ident* bs:bracketedBinder* "by" tac:tacticSeq : command => do
-  Tactic.DataSynth.defDataSynth ``HasRevFDerivUpdate fId args bs tac
-
 
 ----------------------------------------------------------------------------------------------------
 -- API for constructing and deconstructing HasRevFDeriv(Update)  -----------------------------------
@@ -63,6 +57,7 @@ theorem hasRevFDeriv_from_hasRevFDeriv {f : X → Y}
     {f''} (simp : f'' = f') :
     HasRevFDeriv K f f'' := by rw[simp]; exact deriv
 
+set_option linter.unusedVariables false in
 def HasRevFDeriv.toHasRevFDerivUpdate {f : X → Y} {f' : X → Y×(Y→X)}
     (h : HasRevFDeriv K f f') :
     HasRevFDerivUpdate K f

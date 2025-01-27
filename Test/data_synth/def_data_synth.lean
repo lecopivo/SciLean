@@ -1,5 +1,6 @@
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.AdjointSpace.HasAdjoint
+import SciLean.Tactic.ConvAssign
 
 open SciLean
 
@@ -22,10 +23,6 @@ abbrev_data_synth foo in r x (rx₀) : (HasFDerivAt (𝕜:=K) · · rx₀) by un
 
 
 def bar (x : X) : X := x
-
-/-- Assuming that the goal is a metavariable, `assign t` assigns term `t` to that metavariable. -/
-macro (name := Conv.assign) "assign " t:term : conv =>
-  `(conv| tactic => exact (rfl : (_ = $t)))
 
 -- todo: allow universe polymorphic `R` here!
 abbrev_data_synth bar in x {R : Type} [RealScalar R] [NormedAddCommGroup X] [AdjointSpace R X] :

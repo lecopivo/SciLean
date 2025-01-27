@@ -22,59 +22,45 @@ def_fun_prop VectorType.fromVec in f [VectorType.Lawful X] : IsContinuousLinearM
 #generate_linear_map_simps VectorType.Dense.fromVec.arg_f.IsLinearMap_rule
 
 
+-- fderiv
 abbrev_fun_trans VectorType.fromVec in f [VectorType.Lawful X] : fderiv K by
   fun_trans
 
+abbrev_data_synth VectorType.fromVec in f [VectorType.Lawful X] (f₀) : (HasFDerivAt (𝕜:=K) · · f₀) by
+  exact hasFDerivAt_from_isContinuousLinearMap
 
+-- forward AD
 abbrev_fun_trans VectorType.fromVec in f [VectorType.Lawful X] : fwdFDeriv K by
   fun_trans
 
-
+-- adjoint
 open Classical in
 abbrev_fun_trans VectorType.fromVec in f [VectorType.Lawful X] : adjoint K by
-  equals (fun x => VectorType.toVec x) => -- todo: add specific definition for canonical basis: `VectorType.set 0 i 1`
+  equals (fun x => VectorType.toVec x) =>
     funext f
     apply AdjointSpace.ext_inner_left K
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
     simp[vector_to_spec, Finset.sum_ite, Finset.filter_eq,Inner.inner,sum_to_finset_sum]
 
+abbrev_data_synth VectorType.fromVec in f [VectorType.Lawful X] : HasAdjoint K by
+  conv => enter [3]; assign (fun x : X => VectorType.toVec x)
+  constructor
+  case adjoint => intros; simp[vector_to_spec, Inner.inner,sum_to_finset_sum]
+  case is_linear => fun_prop
 
+abbrev_data_synth VectorType.fromVec in f [VectorType.Lawful X] : HasAdjointUpdate K by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => intros; rfl
+
+-- reverse AD
 abbrev_fun_trans VectorType.fromVec in f [VectorType.Lawful X] : revFDeriv K by
   unfold revFDeriv
   autodiff
 
-@[data_synth]
-theorem VectorType.Base.fromVec.arg_f.HasRevFDerivUpdate_simple_rule
-    {X : Type} {n : (Type)} {inst : (IndexType n)} {R : (Type)}
-    {K : (Type)} {inst_1 : (RealScalar R)} {inst_2 : (Scalar R K)}
-    [self : VectorType.Base X n K] [inst_3 : VectorType.Lawful X] [inst_4 : VectorType.Dense X] :
-    HasRevFDerivUpdate K
-      (VectorType.fromVec (X:=X))
-      (fun f => (VectorType.fromVec f,
-        fun dk dx i => dx i + VectorType.toVec dk i)) := by
-  constructor
-  · intros
-    fun_trans
-    funext dk dx j
-    simp
-  · fun_prop
-
-
-@[data_synth]
-theorem VectorType.Base.fromVec.arg_f.HasRevFDerivUpdate_comp_rule
-    {X : Type} {n : (Type)} {inst : (IndexType n)} {R : (Type)}
-    {K : (Type)} {inst_1 : (RealScalar R)} {inst_2 : (Scalar R K)}
-    [self : VectorType.Base X n K] [inst_3 : VectorType.Lawful X] [inst_4 : VectorType.Dense X]
-    {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
-    (f : W → n → K) {f'} (hf : HasRevFDerivUpdate K f f') :
-    HasRevFDerivUpdate K
-      (fun w => VectorType.fromVec (X:=X) (f w))
-      (fun w =>
-        let (g, df) := f' w
-        (VectorType.fromVec g,
-        fun dx dw => df (toVec dx) dw)) := by
-  have ⟨hf', _⟩ := hf
-  constructor
-  · fun_trans [hf']
-  · fun_prop
+abbrev_data_synth VectorType.fromVec in f [VectorType.Lawful X] : HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intros; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => rfl

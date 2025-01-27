@@ -19,6 +19,7 @@ theorem VectorType.dot_zero_left (x : X) : VectorType.dot 0 x = 0 := by simp[vec
 
 end Simps
 
+open VectorType ComplexConjugate
 
 def_fun_prop VectorType.Base.dot in y [VectorType.Lawful X] : IsContinuousLinearMap K by
   simp[vector_to_spec]

@@ -30,7 +30,7 @@ vector space structure on `X` that is computationally efficient.
  -/
 class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)] {R : outParam (Type*)}  (K : outParam (Type*))
         [outParam (RealScalar R)] [outParam (Scalar R K)] where
-  toVec (x : X) : (n → K) -- maybe map to Euclidean space
+  toVec (x : X) (i : n) : K -- maybe map to Euclidean space
 
   /-- Zero vector. -/
   zero : X
@@ -45,7 +45,9 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
 
   /-- Scalar multiplication and scalar addition
 
-  `x` should be modified if it is passed with ref counter one. -/
+  `x` should be modified if it is passed with ref counter one.
+
+  TODO: move this to `Dense` !!! -/
   scalAdd  (alpha beta : K) (x : X) : X
   scalAdd_spec (alpha beta : K) (x : X) :
     toVec (scalAdd alpha beta x) = fun i => alpha * toVec x i + beta

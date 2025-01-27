@@ -1,4 +1,5 @@
 import SciLean.Data.VectorType.Base
+-- import SciLean.Data.VectorType.Dense
 
 namespace SciLean.VectorType
 
@@ -25,6 +26,9 @@ theorem neg_to_scal (x : X) : -x = scal (-1) x := by rfl
 -- omit [Lawful X] in
 @[vector_optimize]
 theorem smul_to_scal (a : K) (x : X) : a•x = scal a x := by rfl
+
+@[vector_optimize]
+theorem inner_to_dot (x y : X) : (Inner.inner (𝕜:=K) x y) = dot x y := by rfl
 
 
 -- remove axpy
@@ -92,3 +96,33 @@ open ComplexConjugate in
 @[vector_optimize]
 theorem dot_const_right [VectorType.Dense X] (a : K) (x : X) : dot x (const a)  = conj (sum x) * a := by
   simp[vector_to_spec,smul_smul,Finset.sum_mul]
+
+
+-- axpby scalAdd
+
+@[vector_optimize]
+theorem axpby_scalAdd_x (a b c d : K) (x y : X) :
+    axpby a (scalAdd c d x) b y = scalAdd 1 (a*d) (axpby (a*c) x b y) := by
+  ext i; simp[vector_to_spec]; ring
+
+@[vector_optimize]
+theorem axpby_scalAdd_y (a b c d : K) (x y : X) :
+    axpby a x b (scalAdd c d y) = scalAdd 1 (b*d) (axpby a x (b*c) y) := by
+  ext i; simp[vector_to_spec]; ring
+
+-- axpby const
+@[vector_optimize]
+theorem axpby_const_x [Dense X] (a b c : K) (y : X) :
+  axpby a (const c) b y = scalAdd b (a*c) y := by ext i; simp[vector_to_spec]; ring
+
+@[vector_optimize]
+theorem axpby_const_y [Dense X] (a b c : K) (x : X) :
+  axpby a x b (const c) = scalAdd a (b*c) x := by ext i; simp[vector_to_spec]
+
+
+-- scalAdd scalAdd
+
+@[vector_optimize]
+theorem scalAdd_scalAdd (a b c d : K) (x : X) :
+    scalAdd a b (scalAdd c d x) = scalAdd (a*c) (a*d+b) x := by
+  ext i; simp[vector_to_spec]; ring
