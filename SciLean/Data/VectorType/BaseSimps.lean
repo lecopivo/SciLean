@@ -63,6 +63,13 @@ theorem scalAdd_zero_b  [Dense X] (a : K) (x : X) :
 theorem scalAdd_zero_x [Dense X] (a b : K) :
     scalAdd a b (0:X) = const b := by ext i; simp[vector_to_spec]
 
+@[simp, simp_core]
+theorem dot_zero_x (y : X) :
+    dot 0 y = 0 := by simp[vector_to_spec]
+
+@[simp, simp_core]
+theorem dot_zero_y (x : X) :
+    dot x 0 = 0 := by simp[vector_to_spec]
 
 ----------------------------------------------------------------------------------------------------
 
@@ -85,3 +92,47 @@ theorem axpby_to_module (a b : K) (x y : X) :
 @[blas_to_module]
 theorem axpy_to_module (a : K) (x y : X) :
    axpy a x y = a • x + y := by ext i; simp[vector_to_spec]
+
+
+----------------------------------------------------------------------------------------------------
+
+@[rsimp]
+theorem foldl_updateElem_add [Dense X] (u : n → K) (x : X) :
+  IndexType.foldl (fun x i => updateElem x i fun xi => xi + u i) x
+  =
+  x + fromVec u := sorry_proof
+
+@[rsimp]
+theorem foldl_updateElem_add' [Dense X] (u : n → K) (x : X) :
+  IndexType.foldl (fun x i => updateElem x i fun xi => u i + xi) x
+  =
+  x + fromVec u := by simp only [add_comm,foldl_updateElem_add]
+
+
+----------------------------------------------------------------------------------------------------
+
+@[vector_from_spec]
+theorem fromVec_const [Dense X] (k : K) :
+    fromVec (X:=X) (fun _ : n => k) = const k := by
+  ext i; simp [vector_to_spec]
+
+@[vector_from_spec]
+theorem fromVec_mul [Dense X] (x y : n → K) :
+    fromVec (X:=X) (x * y) = mul (fromVec x) (fromVec y) := by
+  ext i; simp [vector_to_spec]
+
+@[vector_from_spec]
+theorem fromVec_mul' [Dense X] (x y : n → K) :
+    fromVec (X:=X) (fun i => x i * y i) = mul (fromVec (fun i => x i)) (fromVec (fun i => y i)) := by
+  ext i; simp [vector_to_spec]
+
+@[vector_from_spec]
+theorem fromVec_exp [Dense X] (x : n → K) :
+    fromVec (X:=X) (fun i => Scalar.exp (x i)) = exp (fromVec x) := by
+  ext i; simp [vector_to_spec]
+
+@[vector_to_spec]
+theorem toVec_finset_sum {I} [Fintype I] (A : Finset I) (f : I → X) :
+    toVec (A.sum f) = fun j => A.sum (fun i => toVec (f i) j) := by
+  funext i
+  sorry_proof

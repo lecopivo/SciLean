@@ -101,12 +101,12 @@ theorem dot_const_right [VectorType.Dense X] (a : K) (x : X) : dot x (const a)  
 -- axpby scalAdd
 
 @[vector_optimize]
-theorem axpby_scalAdd_x (a b c d : K) (x y : X) :
+theorem axpby_scalAdd_x [Dense X] (a b c d : K) (x y : X) :
     axpby a (scalAdd c d x) b y = scalAdd 1 (a*d) (axpby (a*c) x b y) := by
   ext i; simp[vector_to_spec]; ring
 
 @[vector_optimize]
-theorem axpby_scalAdd_y (a b c d : K) (x y : X) :
+theorem axpby_scalAdd_y [Dense X] (a b c d : K) (x y : X) :
     axpby a x b (scalAdd c d y) = scalAdd 1 (b*d) (axpby a x (b*c) y) := by
   ext i; simp[vector_to_spec]; ring
 
@@ -123,6 +123,13 @@ theorem axpby_const_y [Dense X] (a b c : K) (x : X) :
 -- scalAdd scalAdd
 
 @[vector_optimize]
-theorem scalAdd_scalAdd (a b c d : K) (x : X) :
+theorem scalAdd_scalAdd [Dense X] (a b c d : K) (x : X) :
     scalAdd a b (scalAdd c d x) = scalAdd (a*c) (a*d+b) x := by
+  ext i; simp[vector_to_spec]; ring
+
+-- scalAdd scal
+
+@[vector_optimize]
+theorem scalAdd_scal [Dense X] (a b c : K) (x : X) :
+    scalAdd a b (scal c x) = scalAdd (a*c) b x := by
   ext i; simp[vector_to_spec]; ring

@@ -1,6 +1,4 @@
 import SciLean.Data.DataArray
-import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
-
 
 namespace SciLean
 
@@ -23,6 +21,8 @@ variable
 set_default_scalar R
 
 namespace DataArrayN
+
+#exit
 
 @[data_synth]
 theorem multiply.arg_xy.HasRevFDerivUpdate

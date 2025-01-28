@@ -6,18 +6,15 @@ namespace SciLean
 def_fun_prop VectorType.fromVec in f [VectorType.Lawful X] : IsLinearMap K by
   constructor <;> (intros; ext i; simp[vector_to_spec])
 
-
 def_fun_prop VectorType.fromVec in f [VectorType.Lawful X] : Continuous by
   have h : (fun x => VectorType.fromVec (X:=X) x) = fun f =>ₗ[K] VectorType.fromVec f := rfl
   rw[h];
   apply LinearMap.continuous_of_finiteDimensional
 
-
 def_fun_prop VectorType.fromVec in f [VectorType.Lawful X] : IsContinuousLinearMap K by
   constructor
   · fun_prop
   · dsimp only [autoParam]; fun_prop
-
 
 #generate_linear_map_simps VectorType.Dense.fromVec.arg_f.IsLinearMap_rule
 

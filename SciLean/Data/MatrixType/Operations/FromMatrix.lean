@@ -2,19 +2,21 @@ import SciLean.Data.MatrixType.Operations.ToMatrix
 
 namespace SciLean
 
-def_fun_prop MatrixType.fromMatrix in f [MatrixType.Lawful M] : IsLinearMap K by
+open MatrixType
+
+def_fun_prop fromMatrix in f [VectorType.Lawful M] : IsLinearMap K by
   constructor <;>
   (intros; ext i;
-   simp[matrix_to_spec,vector_to_spec,←MatrixType.toVec_eq_toMatrix])
+   simp[vector_to_spec])
 
 
-def_fun_prop MatrixType.fromMatrix in f [MatrixType.Lawful M] : Continuous by
-  have h : (fun x => MatrixType.fromMatrix (M:=M) x) = fun f =>ₗ[K] MatrixType.fromMatrix f := rfl
+def_fun_prop fromMatrix in f [VectorType.Lawful M] : Continuous by
+  have h : (fun x => fromMatrix (M:=M) x) = fun f =>ₗ[K] fromMatrix f := rfl
   rw[h];
   apply LinearMap.continuous_of_finiteDimensional
 
 
-def_fun_prop MatrixType.fromMatrix in f [MatrixType.Lawful M] : IsContinuousLinearMap K by
+def_fun_prop fromMatrix in f [VectorType.Lawful M] : IsContinuousLinearMap K by
   constructor
   · fun_prop
   · dsimp only [autoParam]; fun_prop
@@ -22,66 +24,57 @@ def_fun_prop MatrixType.fromMatrix in f [MatrixType.Lawful M] : IsContinuousLine
 
 #generate_linear_map_simps MatrixType.Dense.fromMatrix.arg_f.IsLinearMap_rule
 
-
-abbrev_fun_trans MatrixType.fromMatrix in f [MatrixType.Lawful M] : fderiv K by
+-- fderiv
+abbrev_fun_trans fromMatrix in f [VectorType.Lawful M] : fderiv K by
   fun_trans
 
+abbrev_data_synth fromMatrix in f [VectorType.Lawful M] (f₀) : (HasFDerivAt (𝕜:=K) · · f₀) by
+  apply hasFDerivAt_from_fderiv
+  case deriv => conv => rhs; fun_trans
+  case diff => dsimp [autoParam]; fun_prop
 
-abbrev_fun_trans MatrixType.fromMatrix in f [MatrixType.Lawful M] : fwdFDeriv K by
+-- forward AD
+abbrev_fun_trans fromMatrix in f [VectorType.Lawful M] : fwdFDeriv K by
   fun_trans
 
-
+-- adjoint
 open Classical in
-abbrev_fun_trans MatrixType.fromMatrix in f [MatrixType.Lawful M] : adjoint K by
-  equals (fun x => MatrixType.toMatrix x) =>
+abbrev_fun_trans fromMatrix in f [VectorType.Lawful M] : adjoint K by
+  equals (fun x => toMatrix x) =>
     funext f
     apply AdjointSpace.ext_inner_left K
     intro z
     rw[← adjoint_ex _ (by fun_prop)]
-    simp[vector_to_spec,matrix_to_spec,
+    simp[vector_to_spec,
          Finset.sum_ite, Finset.filter_eq,Inner.inner,sum_to_finset_sum,
-         MatrixType.toVec_eq_toMatrix, ←Finset.univ_product_univ, Finset.sum_product]
+         ←Finset.univ_product_univ, Finset.sum_product]
 
-abbrev_fun_trans MatrixType.fromMatrix in f [MatrixType.Lawful M] : revFDeriv K by
+abbrev_data_synth fromMatrix in f [VectorType.Lawful M] : HasAdjoint K by
+   conv => enter[3]; assign (fun A : M => toMatrix A)
+   constructor
+   case adjoint =>
+     intros; simp[vector_to_spec,sum_to_finset_sum,Inner.inner,
+                  ←Finset.univ_product_univ, Finset.sum_product]
+   case is_linear => fun_prop
+
+abbrev_data_synth fromMatrix in f [VectorType.Lawful M] : HasAdjointUpdate K by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => intros; rfl
+
+-- reverse AD
+abbrev_fun_trans fromMatrix in f [VectorType.Lawful M] : revFDeriv K by
   unfold revFDeriv
   autodiff
 
+abbrev_data_synth fromMatrix in f [VectorType.Lawful M] : HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => rfl
 
-@[data_synth]
-theorem MatrixType.Base.fromMatrix.arg_f.HasRevFDerivUpdate_rule_simple
-    {M : Type} {m : outParam (Type)}
-    {n : outParam (Type)} {x : outParam (IndexType m)} {_ : outParam (IndexType n)} {R : outParam (Type)}
-    {K : outParam (Type)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)} {X : outParam (Type)}
-    {Y : outParam (Type)} {_ : outParam (VectorType.Base X n K)} {_ : outParam (VectorType.Base Y m K)}
-    {inst : MatrixType.Base M X Y} [self : MatrixType.Dense M] [MatrixType.Lawful M] :
-    HasRevFDerivUpdate K
-        (MatrixType.fromMatrix (M:=M))
-        (fun f => (MatrixType.fromMatrix f,
-           fun dA dB i j=>
-             let dAij := MatrixType.toMatrix dA i j
-             dB i j + dAij)) := by
-  constructor
-  · fun_trans; rfl
-  · fun_prop
-
-
-@[data_synth]
-theorem MatrixType.Base.fromMatrix.arg_f.HasRevFDerivUpdate_rule
-    {M : Type} {m : outParam (Type)}
-    {n : outParam (Type)} {x : outParam (IndexType m)} {_ : outParam (IndexType n)} {R : outParam (Type)}
-    {K : outParam (Type)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)} {X : outParam (Type)}
-    {Y : outParam (Type)} {_ : outParam (VectorType.Base X n K)} {_ : outParam (VectorType.Base Y m K)}
-    {inst : MatrixType.Base M X Y} [self : MatrixType.Dense M] [MatrixType.Lawful M]
-    {W : Type} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
-    (f : W → Matrix m n K) (f') (hf : HasRevFDerivUpdate K f f') :
-    HasRevFDerivUpdate K
-        (fun w => MatrixType.fromMatrix (M:=M) (f w))
-        (fun w =>
-           let' (A,df') := f' w
-           (MatrixType.fromMatrix A,
-           fun dA dw =>
-             df' (MatrixType.toMatrix dA) dw)) := by
-  have ⟨hf',_⟩ := hf
-  constructor
-  · fun_trans[hf']
-  · fun_prop
+abbrev_data_synth fromMatrix in f [VectorType.Lawful M] : HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intro; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => rfl

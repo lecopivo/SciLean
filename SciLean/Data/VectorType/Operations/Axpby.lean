@@ -6,27 +6,19 @@ namespace SciLean
 open VectorType ComplexConjugate
 
 def_fun_prop axpby in alpha y with_transitive [Lawful X] : IsContinuousLinearMap K by
-  apply (IsContinuousLinearMap.injective_comp_iff toVec (by fun_prop) (toVec_injective)).2
-  simp[vector_to_spec]
-  fun_prop
+  simp only [blas_to_module]; fun_prop
 
 def_fun_prop axpby in alpha beta with_transitive [Lawful X] : IsContinuousLinearMap K by
-  apply (IsContinuousLinearMap.injective_comp_iff toVec (by fun_prop) (toVec_injective)).2
-  simp[vector_to_spec]
-  fun_prop
+  simp only [blas_to_module]; fun_prop
 
 def_fun_prop axpby in x y with_transitive [Lawful X] : IsContinuousLinearMap K by
-  apply (IsContinuousLinearMap.injective_comp_iff toVec (by fun_prop) (toVec_injective)).2
-  simp[vector_to_spec]
-  fun_prop
+  simp only [blas_to_module]; fun_prop
 
 -- #generate_linear_map_simps VectorType.Base.axpby.arg_alphay.IsLinearMap_rule
 -- #generate_linear_map_simps VectorType.Base.axpby.arg_xy.IsLinearMap_rule
 
 def_fun_prop axpby in alpha x beta y [Lawful X] : Differentiable K by
-  apply (Differentiable.injective_comp_iff toVec (by fun_prop) (toVec_injective)).2
-  simp[vector_to_spec]
-  fun_prop
+  simp only [blas_to_module]; fun_prop
 
 
 -- fderiv

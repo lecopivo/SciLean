@@ -12,8 +12,6 @@ scoped instance {R K} [RealScalar R] [Scalar R K] : VectorType.Base K Unit K := 
   zero_spec := by funext i; simp
   scal := fun k x => k * x
   scal_spec := by intros; funext i; simp
-  scalAdd := fun a b x => a *x + b
-  scalAdd_spec := by intros; funext i; simp
   sum := fun x => x
   sum_spec := by simp
   asum := fun x => Scalar.abs x
@@ -49,6 +47,8 @@ local instance {R K} [RealScalar R] [Scalar R K] : VectorType.Dense (n:=Unit) (K
   set_spec := by intros; simp[toVec]
   const := fun k => k
   const_spec := by simp[toVec]
+  scalAdd := fun a b x => a * x + b
+  scalAdd_spec := by simp[toVec]
   div := fun x y => x / y
   div_spec := by intros; funext i; simp[toVec]
   inv := fun x => x⁻¹

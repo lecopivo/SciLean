@@ -3,58 +3,58 @@ import SciLean.Lean.ToSSA
 
 namespace SciLean
 
-def_fun_prop VectorType.Base.axpy in alpha y [VectorType.Lawful X] : IsContinuousLinearMap K by
-  apply (IsContinuousLinearMap.injective_comp_iff VectorType.toVec (by fun_prop) (VectorType.Lawful.toVec_injective)).2
-  simp[vector_to_spec]
-  fun_prop
+open VectorType ComplexConjugate
 
-def_fun_prop VectorType.Base.axpy in x y [VectorType.Lawful X] : IsContinuousLinearMap K by
-  apply (IsContinuousLinearMap.injective_comp_iff VectorType.toVec (by fun_prop) (VectorType.Lawful.toVec_injective)).2
-  simp[vector_to_spec]
-  fun_prop
+def_fun_prop axpy in alpha y with_transitive [Lawful X] : IsContinuousLinearMap K by
+  simp only [blas_to_module]; fun_prop
 
-def_fun_prop VectorType.Base.axpy in alpha [VectorType.Lawful X] : IsAffineMap K by
-  sorry_proof
+def_fun_prop axpy in x y with_transitive [Lawful X] : IsContinuousLinearMap K by
+  simp only [blas_to_module]; fun_prop
 
-def_fun_prop VectorType.Base.axpy in alpha x y [VectorType.Lawful X] : Differentiable K by
-  apply (Differentiable.injective_comp_iff VectorType.toVec (by fun_prop) (VectorType.Lawful.toVec_injective)).2
-  simp[vector_to_spec]
-  fun_prop
+-- #generate_linear_map_simps VectorType.Base.axpy.arg_alphay.IsLinearMap_rule
+-- #generate_linear_map_simps VectorType.Base.axpy.arg_xy.IsLinearMap_rule
 
-abbrev_fun_trans VectorType.Base.axpy in alpha [VectorType.Lawful X] : fderiv K by
-  equals (fun _ => fun da =>L[K] VectorType.scal da x) =>
-    funext a; ext : 1
-    apply VectorType.Lawful.toVec_injective; funext i
-    rw[toVec_fderiv (hf:=by fun_prop)]; simp [vector_to_spec]
+def_fun_prop axpy in alpha x y [Lawful X] : Differentiable K by
+  simp only [blas_to_module]; fun_prop
 
-abbrev_fun_trans VectorType.Base.axpy in alpha x y [VectorType.Lawful X] : fderiv K by
-  rw[fderiv_wrt_prod (K:=K) (f:=fun a (xy : X×X) => VectorType.axpy a xy.1 xy.2) (by fun_prop)]
-  autodiff
 
-abbrev_fun_trans VectorType.Base.axpy in alpha x y [VectorType.Lawful X] : fwdFDeriv K by
-  unfold fwdFDeriv
-  autodiff
+-- fderiv
+abbrev_fun_trans axpy in alpha x y [Lawful X] : fderiv K by
+  simp only [blas_to_module]
+  fun_trans only; simp[vector_optimize]
 
-open ComplexConjugate in
-abbrev_fun_trans VectorType.Base.axpy in x y [VectorType.Lawful X] : adjoint K by
-  equals (fun z => (VectorType.scal (conj alpha) z, z)) =>
-    funext z
-    apply AdjointSpace.ext_inner_left K
-    intro c
-    rw[← adjoint_ex _ (by fun_prop)]
-    simp[vector_to_spec, sum_pull,Inner.inner, Finset.sum_add_distrib, add_mul]
-    ac_rfl
+-- forward AD
+abbrev_fun_trans axpy in alpha x y [VectorType.Lawful X] : fwdFDeriv K by
+  simp only [blas_to_module]
+  autodiff; simp[vector_optimize]; to_ssa; to_ssa; lsimp
 
-abbrev_fun_trans VectorType.Base.axpy in alpha y [VectorType.Lawful X] : adjoint K by
-  equals (fun z => (VectorType.dot x z, z)) =>
-    funext z
-    apply AdjointSpace.ext_inner_left K
-    intro c
-    rw[← adjoint_ex _ (by fun_prop)]
-    simp[vector_to_spec, sum_pull,Inner.inner, Finset.sum_add_distrib, add_mul, Finset.mul_sum]
-    ac_rfl
+abbrev_data_synth axpy in alpha x y [Lawful X] (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by
+  simp only [blas_to_module]
+  data_synth => enter[2]; simp[vector_optimize]
 
-abbrev_fun_trans VectorType.Base.axpy in alpha x y [VectorType.Lawful X] : revFDeriv K by
-  unfold revFDeriv
-  fun_trans
-  -- to_ssa  -- I don't like the current result
+-- adoint
+abbrev_data_synth axpy in x y [Lawful X] : HasAdjoint K by
+  simp only [blas_to_module]
+  data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+abbrev_data_synth axpy in x y [Lawful X] : HasAdjointUpdate K by
+  simp only [blas_to_module]
+  data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+abbrev_data_synth axpy in alpha y [Lawful X] : HasAdjoint K by
+  simp only [blas_to_module]
+  data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+abbrev_data_synth axpy in alpha y [Lawful X] : HasAdjointUpdate K by
+  simp only [blas_to_module]
+  data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+
+-- reverse AD
+abbrev_data_synth axpy in alpha x y [Lawful X] : HasRevFDeriv K by
+  simp only [blas_to_module]
+  data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+abbrev_data_synth axpy in alpha x y [Lawful X] : HasRevFDerivUpdate K by
+  simp only [blas_to_module]
+  data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp

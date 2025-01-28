@@ -1,12 +1,13 @@
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
-
 import SciLean.Meta.GenerateFunProp
 -- import SciLean.Meta.GenerateFunTrans
 
 namespace SciLean
 
 set_option deprecated.oldSectionVars true
+
+open ComplexConjugate
 
 variable
   {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
@@ -32,19 +33,33 @@ theorem _root_.Inner.inner.arg_a0a1.fderiv_rule :
   fderiv R (fun x : U×U => ⟪x.1, x.2⟫[K])
   =
   fun x => fun dx =>L[R]
-    ⟪x.1,dx.2⟫[K] + ⟪dx.1,x.2⟫[K] := by sorry_proof
+    let' (x,y) := x
+    let' (dx,dy) := dx
+    let s₁ := ⟪x,dy⟫[K]
+    let s₂ := ⟪dx,y⟫[K]
+    s₁ + s₂ := by sorry_proof
 
 @[fun_trans]
 theorem _root_.Inner.inner.arg_a0a1.fwdFDeriv_rule :
   fwdFDeriv R (fun x : U×U => ⟪x.1, x.2⟫[K])
   =
   fun x dx =>
-    (⟪x.1,x.2⟫[K], ⟪x.1,dx.2⟫[K] + ⟪dx.1,x.2⟫[K]) := by unfold fwdFDeriv; fun_trans
+    let' (x,y) := x
+    let' (dx,dy) := dx
+    let s₀ := ⟪x,y⟫[K]
+    let s₁ := ⟪x,dy⟫[K]
+    let s₂ := ⟪dx,y⟫[K]
+    (s₀, s₁ + s₂) := by unfold fwdFDeriv; fun_trans
 
-open ComplexConjugate in
+
 @[fun_trans]
 theorem _root_.Inner.inner.arg_a0a1.revFDeriv_rule :
   revFDeriv R (fun x : U×U => ⟪x.1, x.2⟫[K])
   =
   fun x =>
-    (⟪x.1,x.2⟫[K], fun dr => (conj dr • x.2, dr • x.1)) := by unfold revFDeriv; fun_trans
+    let' (x,y) := x
+    let s := ⟪x,y⟫[K]
+    (s, fun dr =>
+      let dy := conj dr • y
+      let dx := dr • x
+      (dy, dx)) := by unfold revFDeriv; fun_trans

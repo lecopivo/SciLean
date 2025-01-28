@@ -31,8 +31,6 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
   zero_spec := sorry_proof
   scal := fun k ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => ⟨scal k A₁₁, scal k A₁₂, scal k A₂₁, scal k A₂₂⟩
   scal_spec := sorry_proof
-  scalAdd := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => ⟨scalAdd a b A₁₁, scalAdd a b A₁₂, scalAdd a b A₂₁, scalAdd a b A₂₂⟩
-  scalAdd_spec := sorry_proof
   sum := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => VectorType.sum A₁₁ + VectorType.sum A₁₂ + VectorType.sum A₂₁ + VectorType.sum A₂₂
   sum_spec := sorry_proof
   asum := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => asum A₁₁ + asum A₁₂ + asum A₂₁ + asum A₂₂
@@ -110,14 +108,6 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
   mul := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨B₁₁,B₁₂,B₂₁,B₂₂⟩ => ⟨mul A₁₁ B₁₁, mul A₁₂ B₁₂, mul A₂₁ B₂₁, mul A₂₂ B₂₂⟩
   mul_spec := sorry_proof
 
-theorem _root_.Finset.sum_sum {α β γ : Type*} [AddCommMonoid β]
-    (s : Finset α) (t : Finset γ) (f : α ⊕ γ → β) :
-    (s.disjSum t).sum (fun x => f x)
-    =
-    s.sum (fun x => f (.inl x)) + t.sum (fun x => f (.inr x)) := by
-  have h : f = Sum.elim (fun x => f (.inl x)) (fun x => f (.inr x)) := by funext x; cases x <;> rfl
-  conv => lhs; rw [h]
-  rw [Finset.sum_sum_elim]
 
 open MatrixType in
 example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁⊕m₂) (n:=n₁⊕n₂) (R:=R) (K:=K) (X₁×X₂) (Y₁×Y₂) where
@@ -155,7 +145,7 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
     cases i <;>
     (simp[matrix_to_spec,vector_to_spec,VectorType.toVec,
           Matrix.mulVec, dotProduct, add_left_inj,
-          ←Finset.univ_disjSum_univ, Finset.sum_sum]
+          ←Finset.univ_disjSum_univ, Finset.sum_product]
      ring)
 
   gemvT := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) =>
@@ -166,7 +156,7 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
     cases i <;>
     (simp[matrix_to_spec,vector_to_spec,VectorType.toVec,
           Matrix.mulVec, dotProduct, add_left_inj,
-          ←Finset.univ_disjSum_univ, Finset.sum_sum]
+          ←Finset.univ_disjSum_univ, Finset.sum_product]
      ring)
 
   gemvH := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) =>
@@ -177,5 +167,5 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
     cases i <;>
     (simp[matrix_to_spec,vector_to_spec,VectorType.toVec,
           Matrix.mulVec, dotProduct, add_left_inj,
-          ←Finset.univ_disjSum_univ, Finset.sum_sum]
+          ←Finset.univ_disjSum_univ, Finset.sum_product]
      ring)

@@ -248,3 +248,7 @@ end Tactic.RefinedSimp
 
 simproc_decl refinedRewritePre (_)  := Tactic.RefinedSimp.refinedRewrite false
 simproc_decl refinedRewritePost (_) := Tactic.RefinedSimp.refinedRewrite true
+simproc_decl rsimp (_) :=
+  Lean.Meta.Simp.andThen
+    (Tactic.RefinedSimp.refinedRewrite false)
+    (Tactic.RefinedSimp.refinedRewrite true)

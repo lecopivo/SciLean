@@ -1,5 +1,5 @@
 import SciLean.Data.DataArray
-import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
+-- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Meta.Notation.Do
 

@@ -1,51 +1,70 @@
 import SciLean.Data.VectorType.Operations.Scal
+import SciLean.Data.VectorType.Operations.ToVec
+import SciLean.Data.VectorType.Operations.FromVec
 
 namespace SciLean
 
+open VectorType
+set_option linter.unusedVariables false in
+theorem IsContinuousLinearMap.injective_comp_iff
+  {R : Type*} [RCLike R]
+  {X : Type*} [NormedAddCommGroup X] [NormedSpace R X]
+  {Y : Type*} [NormedAddCommGroup Y] [NormedSpace R Y]
+  {Z : Type*} [NormedAddCommGroup Z] [NormedSpace R Z]
+  {f : X → Y} (g : Y → Z) (hg : IsContinuousLinearMap R g) (hg' : g.Injective)  :
+  IsContinuousLinearMap R f ↔ IsContinuousLinearMap R (fun x => g (f x)) := sorry_proof
 
-section Simps
+set_option linter.unusedVariables false in
+theorem Differentiable.injective_comp_iff
+  {R : Type*} [RCLike R]
+  {X : Type*} [NormedAddCommGroup X] [NormedSpace R X]
+  {Y : Type*} [NormedAddCommGroup Y] [NormedSpace R Y]
+  {Z : Type*} [NormedAddCommGroup Z] [NormedSpace R Z]
+  {f : X → Y} (g : Y → Z) (hg : Differentiable R g) (hg' : g.Injective)  :
+  Differentiable R f ↔ Differentiable R (fun x => g (f x)) := sorry_proof
 
-variable
-  {R K} {_ : RealScalar R} {_ : Scalar R K}
-  {n} {_ : IndexType n}
-  {X} [VectorType.Base X n K] [VectorType.Lawful X]
-
-@[simp,simp_core]
-theorem VectorType.mul_zero_right (x : X) : VectorType.mul x 0 = 0 := by
-  apply VectorType.toVec_injective; simp[vector_to_spec]
-
-@[simp,simp_core]
-theorem VectorType.mul_zero_left (x : X) : VectorType.mul 0 x = 0 := by
-  apply VectorType.toVec_injective; simp[vector_to_spec]
-
-end Simps
-
-
-def_fun_prop VectorType.Base.mul in x [VectorType.Lawful X] : IsContinuousLinearMap K by
-  apply (IsContinuousLinearMap.injective_comp_iff VectorType.toVec (by fun_prop) (VectorType.Lawful.toVec_injective)).2
+-- linear, differentiable
+def_fun_prop mul in x [Lawful X] : IsContinuousLinearMap K by
+  apply (IsContinuousLinearMap.injective_comp_iff toVec (by fun_prop) (Lawful.toVec_injective)).2
   simp[vector_to_spec]
   fun_prop
 
-def_fun_prop VectorType.Base.mul in y [VectorType.Lawful X] : IsContinuousLinearMap K by
-  apply (IsContinuousLinearMap.injective_comp_iff VectorType.toVec (by fun_prop) (VectorType.Lawful.toVec_injective)).2
+def_fun_prop mul in y [Lawful X] : IsContinuousLinearMap K by
+  apply (IsContinuousLinearMap.injective_comp_iff toVec (by fun_prop) (Lawful.toVec_injective)).2
   simp[vector_to_spec]
   fun_prop
 
-def_fun_prop VectorType.Base.mul in x y [VectorType.Lawful X] : Differentiable K by
-  apply (Differentiable.injective_comp_iff VectorType.toVec (by fun_prop) (VectorType.Lawful.toVec_injective)).2
+def_fun_prop mul in x y [Lawful X] : Differentiable K by
+  apply (Differentiable.injective_comp_iff toVec (by fun_prop) (Lawful.toVec_injective)).2
   simp[vector_to_spec]
   fun_prop
 
-abbrev_fun_trans VectorType.Base.mul in x y [VectorType.Lawful X] : fderiv K by
+-- fderiv
+abbrev_fun_trans mul in x y [Lawful X] : fderiv K by
+  -- conv => enter [2,xy]; rw[← fromVec_toVec (mul _ _)]; simp[vector_to_spec]
+  -- fun_trans
+  -- simp[vector_from_spec]
   rw[fderiv_wrt_prod (by fun_prop)]
   autodiff
 
-abbrev_fun_trans VectorType.Base.mul in x y [VectorType.Lawful X] : fwdFDeriv K by
+abbrev_data_synth mul in x y [Lawful X] (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by
+  apply hasFDerivAt_from_fderiv
+  case deriv => conv => rhs; autodiff
+  case diff => dsimp[autoParam]; fun_prop
+
+-- forward AD
+abbrev_fun_trans mul in x y [Lawful X] : fwdFDeriv K by
+  -- conv => enter [2,xy]; rw[← fromVec_toVec (mul _ _)]; simp[vector_to_spec]
+  -- fun_trans
+  -- simp[vector_from_spec]; to_ssa; to_ssa; lsimp
   rw[fwdFDeriv_wrt_prod (by fun_prop)]
   autodiff
 
-abbrev_fun_trans VectorType.Base.mul in x [VectorType.Lawful X] : adjoint K by
-  equals (fun z => VectorType.mul (VectorType.conj y) z) =>
+-- adjoint
+abbrev_fun_trans mul in x [Lawful X] : adjoint K by
+  -- conv => enter [2,xy]; rw[← fromVec_toVec (mul _ _)]; simp[vector_to_spec]; eta_expand; simp
+  -- fun_trans
+  equals (fun z => mul (conj y) z) =>
     funext x
     apply AdjointSpace.ext_inner_left K
     intro z
@@ -53,8 +72,8 @@ abbrev_fun_trans VectorType.Base.mul in x [VectorType.Lawful X] : adjoint K by
     simp[vector_to_spec, sum_pull,Inner.inner]
     ac_rfl
 
-abbrev_fun_trans VectorType.Base.mul in y [VectorType.Lawful X] : adjoint K by
-  equals (fun z => VectorType.mul (VectorType.conj x) z) =>
+abbrev_fun_trans mul in y [Lawful X] : adjoint K by
+  equals (fun z => mul (conj x) z) =>
     funext y
     apply AdjointSpace.ext_inner_left K
     intro z
@@ -62,54 +81,43 @@ abbrev_fun_trans VectorType.Base.mul in y [VectorType.Lawful X] : adjoint K by
     simp[vector_to_spec, sum_pull,Inner.inner]
     ac_rfl
 
-abbrev_fun_trans VectorType.Base.mul in x y [VectorType.Lawful X] : revFDeriv K by
+abbrev_data_synth mul in x [Lawful X] : HasAdjoint K by
+  conv => enter[3]; assign (fun z => mul (conj y) z)
+  constructor
+  case adjoint => intros; simp[vector_to_spec]; ac_rfl
+  case is_linear => fun_prop
+
+abbrev_data_synth mul in x [Lawful X] : HasAdjointUpdate K by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => intros; conv => rhs; simp[vector_optimize]; rfl
+
+abbrev_data_synth mul in y [Lawful X] : HasAdjoint K by
+  conv => enter[3]; assign (fun z => mul (conj x) z)
+  constructor
+  case adjoint => intros; simp[vector_to_spec]; ac_rfl
+  case is_linear => fun_prop
+
+abbrev_data_synth mul in y [Lawful X] : HasAdjointUpdate K by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => intros; conv => rhs; simp[vector_optimize]; rfl
+
+
+-- reverse AD
+abbrev_fun_trans mul in x y [Lawful X] : revFDeriv K by
   rw[revFDeriv_wrt_prod (by fun_prop)]
   unfold revFDeriv
   autodiff
 
+abbrev_data_synth mul in x y [Lawful X] : HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intros; dsimp; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
 
-section HasRevFDerivUpdate
-
-variable
-  {R K} {_ : RealScalar R} {_ : Scalar R K}
-  {n} {_ : IndexType n}
-  {X} [VectorType.Base X n K] [VectorType.Lawful X]
-  {W} [NormedAddCommGroup W] [AdjointSpace K W] [CompleteSpace W]
-
-@[data_synth]
-theorem VectorType.Base.mul.arg_xy.HasRevFDerivUpdate_rule_simple :
-  HasRevFDerivUpdate K
-    (fun x : X×X => VectorType.Base.mul x.1 x.2)
-    (fun xy : X×X =>
-      let' (x,y) := xy
-      (VectorType.Base.mul x y,
-       fun dz dxy =>
-         let' (dx,dy) := dxy
-         (dx + mul (conj y) dz, dy + mul (conj x) dz))) := by
-  constructor
-  · intro (x,y)
-    fun_trans
-    funext dz (dx,dy)
-    ext i <;> (simp[vector_to_spec])
-  · fun_prop
-
-
-@[data_synth]
-theorem VectorType.Base.mul.arg_xy.HasRevFDerivUpdate_rule
-  (f g : W → X) {f' g'} (hf : HasRevFDerivUpdate K f f') (hg : HasRevFDerivUpdate K g g') :
-  HasRevFDerivUpdate K
-    (fun w => VectorType.Base.mul (f w) (g w))
-    (fun w  =>
-      let' (x,df') := f' w
-      let' (y,dg') := g' w
-      (VectorType.Base.mul x y,
-       fun dz dw =>
-         dg' (mul (conj x) dz) (df' (mul (conj y) dz) dw))) := by
-  have ⟨hf',_⟩ := hf
-  have ⟨hg',_⟩ := hg
-  constructor
-  · fun_trans [hf',hg',add_assoc]
-  · fun_prop
-
-
-end HasRevFDerivUpdate
+abbrev_data_synth mul in x y [Lawful X] : HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intros; dsimp; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp

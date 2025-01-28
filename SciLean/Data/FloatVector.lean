@@ -27,8 +27,6 @@ instance : VectorType.Base (FloatVector' strg n) n Float where
   zero_spec := sorry_proof
   scal k x := ⟨x.data.scal k⟩
   scal_spec := sorry_proof
-  scalAdd a b x := ⟨x.data.scalAdd a b⟩
-  scalAdd_spec := sorry_proof
   sum x := x.data.sum
   sum_spec := sorry_proof
   asum x := x.data.asum
@@ -63,6 +61,8 @@ instance : VectorType.Dense (FloatVector' strg n) where
   set_spec := sorry_proof
   const k := ⟨DenseVector.const (size n) _ k⟩
   const_spec := sorry_proof
+  scalAdd a b x := ⟨x.data.scalAdd a b⟩
+  scalAdd_spec := sorry_proof
   div x y := ⟨x.data.div y.data⟩
   div_spec := sorry_proof
   inv x := ⟨x.data.inv⟩

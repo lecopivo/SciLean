@@ -9,7 +9,7 @@ variable
   {m : Type*} {_ : IndexType m}
   {X : Type*} [VectorType.Base X n K] [VectorType.Lawful X]
   {Y : Type*} [VectorType.Base Y m K] [VectorType.Lawful Y]
-  {M : Type*} [MatrixType.Base M X Y] [MatrixType.Lawful M]
+  {M : Type*} [MatrixType.Base M X Y] [VectorType.Lawful M]
 
 open VectorType MatrixType
 
@@ -51,7 +51,7 @@ omit [VectorType.Lawful X] [VectorType.Lawful Y] in
 @[vector_optimize]
 theorem axpby_outerprodAdd_zero [Dense M] (a b c : K) (A : M) (x : X) (y : Y) :
     axpby a A b (outerprodAdd c y x 0) = outerprodAdd (b*c) y x (scal a A) := by
-  ext i j;
+  ext ij;
   simp[toMatrix_eq_toVec, vector_to_spec]
   simp[toVec_eq_toMatrix, matrix_to_spec]
   simp[toMatrix_eq_toVec, vector_to_spec]
@@ -60,19 +60,16 @@ theorem axpby_outerprodAdd_zero [Dense M] (a b c : K) (A : M) (x : X) (y : Y) :
 
 -- updateRow and axpby
 
-omit [VectorType.Lawful X] [VectorType.Lawful Y] in
+omit [Lawful X] [Lawful Y] in
+open Classical in
 @[vector_optimize]
-theorem axpby_updateRow_zero [DecidableEq m] [Dense M] (a b : K) (A : M) (x : X) (i : m) :
+theorem axpby_updateRow_zero [Dense M] (a b : K) (A : M) (x : X) (i : m) :
     axpby a A b (updateRow 0 i x)
     =
     let ri := row A i
     updateRow (scal a A) i (axpby a ri b x) := by
-  ext i' j'
-  simp[vector_to_spec, toMatrix_eq_toVec]
-  simp[vector_to_spec, matrix_to_spec, toVec_eq_toMatrix]
-  by_cases h : i' = i
-  · simp [h]
-  · simp [h, matrix_to_spec, toMatrix_eq_toVec, vector_to_spec]
+  ext ij'; rcases ij' with ⟨i',j'⟩
+  by_cases h : i' = i <;> simp [h, vector_to_spec]
 
 
 omit [VectorType.Lawful X] [VectorType.Lawful Y] in
@@ -82,9 +79,5 @@ theorem axpby_updateCol_zero [DecidableEq n] [Dense M] (a b : K) (A : M) (y : Y)
     =
     let cj := col A j
     updateCol (scal a A) j (axpby a cj b y) := by
-  ext i' j'
-  simp[vector_to_spec, toMatrix_eq_toVec]
-  simp[vector_to_spec, matrix_to_spec, toVec_eq_toMatrix]
-  by_cases h : j' = j
-  · simp [h]
-  · simp [h, matrix_to_spec, toMatrix_eq_toVec, vector_to_spec]
+  ext ij'; rcases ij' with ⟨i',j'⟩
+  by_cases h : j' = j <;> simp [h, vector_to_spec]

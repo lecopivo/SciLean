@@ -6,6 +6,7 @@ import SciLean.Data.IndexType
 import SciLean.Analysis.Scalar
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.Convenient.SemiInnerProductSpace
+import SciLean.Analysis.Matrix
 
 import SciLean.Data.VectorType.Base
 import SciLean.Data.MatrixType.Init
@@ -111,33 +112,33 @@ class MatrixType.Base
     let y := VectorType.toVec y
     alpha • Aᴴ *ᵥ y + beta • x
 
-open MatrixType.Base Function in
-class MatrixType.Lawful
-    (M : Type*)
-    {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
-    {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
-    {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
-    [MatrixType.Base M X Y]
-  -- extends
-  --   VectorType.Lawful M (m×n) K
-  where
-  toMatrix_injective : Injective (toMatrix (M:=M))
+-- open MatrixType.Base Function in
+-- class MatrixType.Lawful
+--     (M : Type*)
+--     {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
+--     {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
+--     {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
+--     [MatrixType.Base M X Y]
+--   -- extends
+--   --   VectorType.Lawful M (m×n) K
+--   where
+--   toMatrix_injective : Injective (toMatrix (M:=M))
 
 
--- should this be instance? then we would get to `@[ext]` theorems on matrix type `M`
-open MatrixType Base Lawful in
-def MatrixType.vectorTypeLawful (M : Type*)
-    {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
-    {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
-    {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
-    [MatrixType.Base M X Y] [MatrixType.Lawful M] : VectorType.Lawful M where
+-- -- should this be instance? then we would get to `@[ext]` theorems on matrix type `M`
+-- open MatrixType Base Lawful in
+-- def MatrixType.vectorTypeLawful (M : Type*)
+--     {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
+--     {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
+--     {X Y : outParam (Type*)} [VectorType.Base X n K] [VectorType.Base Y m K]
+--     [MatrixType.Base M X Y] [MatrixType.Lawful M] : VectorType.Lawful M where
 
-  toVec_injective := by
-    intro A B h
-    simp only [toVec_eq_toMatrix] at h
-    apply toMatrix_injective
-    funext i j
-    exact congrFun h (i,j)
+--   toVec_injective := by
+--     intro A B h
+--     simp only [toVec_eq_toMatrix] at h
+--     apply toMatrix_injective
+--     funext i j
+--     exact congrFun h (i,j)
 
 
 namespace MatrixType
@@ -145,9 +146,9 @@ namespace MatrixType
 export MatrixType.Base (toMatrix toVec_eq_toMatrix row row_spec sumRows sumRows_spec
   col col_spec sumCols sumCols_spec gemv gemv_spec gemvT gemvT_spec gemvH gemvH_spec)
 
-export MatrixType.Lawful (toMatrix_injective)
+-- export MatrixType.Lawful (toMatrix_injective)
 
-attribute [matrix_to_spec, matrix_from_spec ←] row_spec sumRows_spec
+attribute [vector_to_spec] row_spec sumRows_spec
   col_spec sumCols_spec gemv_spec gemvT_spec gemvH_spec
 
 
@@ -159,46 +160,49 @@ variable
   {X Y} [VectorType.Base X n K] [VectorType.Base Y m K]
   {M} [MatrixType.Base M X Y]
 
+@[vector_to_spec]
 theorem toMatrix_eq_toVec (A : M) : toMatrix A = fun i j => toVec A (i,j) := by
   rw[toVec_eq_toMatrix A]
 
 set_default_scalar K
 
-@[ext]
-theorem ext [MatrixType.Lawful M] (A B : M) :
+theorem toMatrix_injective [Lawful M] : Function.Injective (toMatrix : M → Matrix m n K) := sorry_proof
+
+theorem ext [Lawful M] (A B : M) :
     (∀ i j, toMatrix A i j = toMatrix B i j) → A = B := by
   intro h; apply toMatrix_injective; funext i j;
   exact h i j
 
-@[matrix_to_spec, matrix_from_spec ←]
-theorem add_spec (A B : M) : toMatrix (A + B) = toMatrix A + toMatrix B := by
+-- to we need these theorems?
+@[matrix_to_spec]
+theorem toMatrix_add (A B : M) : toMatrix (A + B) = toMatrix A + toMatrix B := by
+  funext i j
+  simp[vector_to_spec]
+
+@[matrix_to_spec]
+theorem toMatrix_sub (A B : M) : toMatrix (A - B) = toMatrix A - toMatrix B := by
+  funext i j
+  simp[vector_to_spec]
+
+@[matrix_to_spec]
+theorem toMatrix_neg (A : M) : toMatrix (-A) = -toMatrix A := by
   funext i j
   simp[toMatrix_eq_toVec, vector_to_spec]
 
-@[matrix_to_spec, matrix_from_spec ←]
-theorem sub_spec (A B : M) : toMatrix (A - B) = toMatrix A - toMatrix B := by
+@[matrix_to_spec]
+theorem toMatrix_smul (a : K) (A : M) : toMatrix (a • A) = a • toMatrix A := by
   funext i j
   simp[toMatrix_eq_toVec, vector_to_spec]
 
-@[matrix_to_spec, matrix_from_spec ←]
-theorem neg_spec (A : M) : toMatrix (-A) = -toMatrix A := by
+@[matrix_to_spec]
+theorem toMatrix_zero : toMatrix (0 : M) = 0 := by
   funext i j
   simp[toMatrix_eq_toVec, vector_to_spec]
 
-@[matrix_to_spec, matrix_from_spec ←]
-theorem smul_spec (a : K) (A : M) : toMatrix (a • A) = a • toMatrix A := by
-  funext i j
-  simp[toMatrix_eq_toVec, vector_to_spec]
-
-@[matrix_to_spec, matrix_from_spec ←]
-theorem zero_spec : toMatrix (0 : M) = 0 := by
-  funext i j
-  simp[toMatrix_eq_toVec, vector_to_spec]
-
--- @[matrix_to_spec, matrix_from_spec ←]
--- theorem inner_spec (A B : M) : ⟪A, B⟫ = ⟪(WithLp.equiv 2 (Matrix m n K)).symm (toMatrix A), (WithLp.equiv 2 (Matrix m n K)).symm (equiv B)⟫ := by
---   simp only [inner, dot, matrix_to_spec]
-
+set_option pp.notation false in
+@[matrix_to_spec]
+theorem inner_spec (A B : M) : ⟪A, B⟫ = ⟪toMatrix A, toMatrix B⟫ := by
+  simp[vector_to_spec, ← Finset.univ_product_univ,Finset.sum_product,Inner.inner,sum_to_finset_sum]
 -- @[matrix_to_spec, matrix_from_spec ←]
 -- theorem norm_spec (A : M) : ‖A‖ = ‖toMatrix A‖ := by
 --   simp only [norm, Norm.norm, Scalar.toReal, nrm2, matrix_to_spec]
@@ -208,28 +212,6 @@ theorem zero_spec : toMatrix (0 : M) = 0 := by
 --   simp only [dist, Norm.dist, norm, Norm.norm, Scalar.toReal, nrm2, matrix_to_spec]
 
 end BasicOperations
-
-
-section Instances
-
-variable
-      {M : Type*}
-      {m n : outParam (Type*)} {_ : IndexType m} {_ : IndexType n}
-      {R K : outParam (Type*)} {_ : RealScalar R} {_ : Scalar R K}
-      {X Y : outParam (Type*)} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
-      [MatrixType.Base M X Y] [MatrixType.Lawful M]
-
-attribute [local instance] MatrixType.vectorTypeLawful
-
-instance (priority:=low) : AddCommGroup M := by infer_instance
-instance (priority:=low) : Module K M := by infer_instance
-instance (priority:=low) : PseudoMetricSpace M := by infer_instance
-instance (priority:=low) : NormedAddCommGroup M := by infer_instance
-instance (priority:=low) : NormedSpace K M := by infer_instance
-instance (priority:=low) instInnerProductSpace : InnerProductSpace K M := by infer_instance
-instance (priority:=low) instAdjointSpace : AdjointSpace K M := by infer_instance
-
-end Instances
 
 end MatrixType
 

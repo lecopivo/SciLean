@@ -18,6 +18,8 @@ import SciLean.Analysis.Calculus.FwdFDeriv
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
+import SciLean.Analysis.Calculus.HasFDeriv
+import SciLean.Analysis.Calculus.HasRevFDeriv
 import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
 import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
@@ -76,6 +78,7 @@ import SciLean.Analysis.SpecialFunctions.GaborWavelet
 import SciLean.Analysis.SpecialFunctions.Gaussian
 import SciLean.Analysis.SpecialFunctions.Inner
 import SciLean.Analysis.SpecialFunctions.Log
+import SciLean.Analysis.SpecialFunctions.MultiGamma
 import SciLean.Analysis.SpecialFunctions.Norm2
 import SciLean.Analysis.SpecialFunctions.Pow
 import SciLean.Analysis.SpecialFunctions.Trigonometric
@@ -347,16 +350,9 @@ import SciLean.Tactic.Basic
 import SciLean.Tactic.CompiledTactics
 import SciLean.Tactic.ConvIf
 import SciLean.Tactic.ConvInduction
-import SciLean.Tactic.DataSynth.ArrayOperations
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Decl
-import SciLean.Tactic.DataSynth.DefRevDeriv
 import SciLean.Tactic.DataSynth.Elab
-import SciLean.Tactic.DataSynth.HasFDerivAt
-import SciLean.Tactic.DataSynth.HasFwdFDeriv
-import SciLean.Tactic.DataSynth.HasFwdFDerivAt
-import SciLean.Tactic.DataSynth.HasRevFDeriv
-import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 import SciLean.Tactic.DataSynth.Main
 import SciLean.Tactic.DataSynth.Theorems
 import SciLean.Tactic.DataSynth.Types

@@ -19,8 +19,6 @@ instance
   zero_spec := by funext ij; cases ij <;> simp[vector_to_spec]
   scal := fun k (x,y) => (scal k x, scal k y)
   scal_spec := by intro k (x,y); funext ij; cases ij <;> simp[vector_to_spec]
-  scalAdd := fun a b (x,y) => (scalAdd a b x, scalAdd a b y)
-  scalAdd_spec := by intro a b (x,y); funext ij; cases ij <;> simp[vector_to_spec]
   sum := fun (x,y) => VectorType.sum x + VectorType.sum y
   sum_spec := by intro (x,y); simp[vector_to_spec]
   asum := fun (x,y) => asum x + asum y
@@ -117,6 +115,8 @@ instance
     <;> simp_all
   const k := (const k, const k)
   const_spec := by intros; funext i; cases i <;> simp[toVec,vector_to_spec]
+  scalAdd := fun a b (x,y) => (scalAdd a b x, scalAdd a b y)
+  scalAdd_spec := by intro a b (x,y); funext ij; cases ij <;> simp[toVec,vector_to_spec]
   div := fun (x,y) (x',y') => (div x x', div y y')
   div_spec := by intro (x,y) (x',y'); funext i; cases i <;> simp[toVec,vector_to_spec]
   inv := fun (x,y) => (inv x, inv y)

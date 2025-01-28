@@ -43,15 +43,6 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
   scal_spec (alpha : K) (x : X) :
     toVec (scal alpha x) = alpha • toVec x
 
-  /-- Scalar multiplication and scalar addition
-
-  `x` should be modified if it is passed with ref counter one.
-
-  TODO: move this to `Dense` !!! -/
-  scalAdd  (alpha beta : K) (x : X) : X
-  scalAdd_spec (alpha beta : K) (x : X) :
-    toVec (scalAdd alpha beta x) = fun i => alpha * toVec x i + beta
-
   /-- `sum x = ∑ i, x[i]` -/
   sum (x : X) : K
   sum_spec (x : X) : sum x = Finset.univ.sum (fun i : n => toVec x i)
@@ -174,6 +165,14 @@ class VectorType.Dense (X : Type*)
   /-- Constant vector with all elements equial to `k`. -/
   const (k : K) : X
   const_spec (k : K) : toVec (const k) = fun _ => k
+
+  /-- Scalar multiplication and scalar addition
+
+  `x` should be modified if it is passed with ref counter one.  -/
+  scalAdd  (alpha beta : K) (x : X) : X
+  scalAdd_spec (alpha beta : K) (x : X) :
+    toVec (scalAdd alpha beta x) = fun i => alpha * toVec x i + beta
+
 
   /-- Element wise division.
 
@@ -301,16 +300,17 @@ class VectorType.Dense (X : Type*)
 namespace VectorType
 
 export VectorType.Base
-  (toVec zero zero_spec scal scal_spec scalAdd scalAdd_spec sum sum_spec asum asum_spec nrm2 nrm2_spec
+  (toVec zero zero_spec scal scal_spec sum sum_spec asum asum_spec nrm2 nrm2_spec
    iamax iamax_spec imaxRe imaxRe_spec iminRe iminRe_spec dot dot_spec axpy axpy_spec axpby axpby_spec
    mul mul_spec conj conj_spec)
 
 export VectorType.Lawful (toVec_injective)
 
-export VectorType.Dense (fromVec set set_spec const const_spec div div_spec inv inv_spec exp exp_spec)
+export VectorType.Dense (fromVec set set_spec const const_spec scalAdd scalAdd_spec div div_spec
+  inv inv_spec exp exp_spec)
 export VectorType.RealOp (rscal rscal_spec rdot rdot_spec)
 
-attribute [vector_to_spec,vector_from_spec ←]
+attribute [vector_to_spec]
   zero_spec
   const_spec
   scal_spec
@@ -339,6 +339,17 @@ variable
 
 open VectorType
 
+@[ext]
+theorem ext [Lawful X] (x y : X) : (∀ (i : n), toVec x i = toVec y i) → x = y := by
+  intro h
+  apply toVec_injective
+  funext i
+  exact (h i)
+
+@[simp, simp_core]
+theorem toVec_fromVec [Dense X] (x : n → K) : toVec (fromVec (X:=X) x) = x := by
+  apply Dense.right_inv
+
 instance (priority:=low) : Add X := ⟨fun x y => axpy 1 x y⟩
 instance (priority:=low) : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
 instance (priority:=low) : Neg X := ⟨fun x => scal (-1) x⟩
@@ -352,43 +363,74 @@ instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : Inner R
 instance (priority:=low) : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
 instance (priority:=low) : Dist X := ⟨fun x y => ‖x-y‖⟩
 
-@[vector_to_spec, vector_from_spec ←]
-theorem add_spec (x y : X) : toVec (x + y) = toVec x + toVec y := by
-  simp only [HAdd.hAdd, Add.add, axpy_spec, Pi.smul_apply, smul_eq_mul, one_mul]
+@[vector_to_spec]
+theorem toVec_add (x y : X) : toVec (x + y) = toVec x + toVec y := by
+  ext; simp[vector_to_spec,HAdd.hAdd,Add.add]
 
-@[vector_to_spec, vector_from_spec ←]
-theorem sub_spec (x y : X) : toVec (x - y) = toVec x - toVec y := by
-  conv => lhs; simp only [HSub.hSub,Sub.sub,axpby_spec]
-  simp only [one_smul, neg_smul, sub_eq_add_neg]
+@[vector_from_spec]
+theorem fromVec_add [Lawful X] [Dense X] (x y : n → K) :
+    fromVec (X:=X) (x + y) = fromVec x + fromVec y := by
+  apply toVec_injective; simp[vector_to_spec]
 
-@[vector_to_spec, vector_from_spec ←]
-theorem neg_spec (x : X) : toVec (- x) = - toVec x := by
-  simp only [Neg.neg, scal_spec, neg_smul, Pi.smul_apply, smul_eq_mul, one_mul]
+@[vector_to_spec]
+theorem toVec_sub (x y : X) : toVec (x - y) = toVec x - toVec y := by
+  ext; conv => lhs; simp[vector_to_spec,HSub.hSub,Sub.sub]
+  simp[sub_eq_add_neg]
 
-@[vector_to_spec, vector_from_spec ←]
-theorem smul_spec (k : K) (x : X) : toVec (k • x) = k • toVec x := by
+@[vector_from_spec]
+theorem fromVec_sub [Lawful X] [Dense X] (x y : n → K) :
+    fromVec (X:=X) (x - y) = fromVec x - fromVec y := by
+  apply toVec_injective; simp[vector_to_spec]
+
+@[vector_to_spec]
+theorem toVec_neg (x : X) : toVec (- x) = - toVec x := by
+  ext; simp[vector_to_spec,Neg.neg]
+
+@[vector_from_spec]
+theorem fromVec_neg [Lawful X] [Dense X] (x : n → K) :
+    fromVec (X:=X) (- x) = - fromVec x := by
+  apply toVec_injective; simp[vector_to_spec]
+
+@[vector_to_spec]
+theorem toVec_smul (k : K) (x : X) : toVec (k • x) = k • toVec x := by
   conv => lhs; simp only [HSMul.hSMul, SMul.smul,scal_spec]
   funext i; simp only [Pi.smul_apply, smul_eq_mul]
 
-@[vector_to_spec, vector_from_spec ←]
-theorem smul_spec' [ScalarSMul R K] [ScalarInner R K] [RealOp X] (r : R) (x : X) : toVec (r • x) = r • toVec x := by
+@[vector_from_spec]
+theorem fromVec_smul [Lawful X] [Dense X] (k : K) (x : n → K) :
+    fromVec (X:=X) (k • x) = k • fromVec x := by
+  apply toVec_injective; simp[vector_to_spec]
+
+@[vector_to_spec]
+theorem toVec_smul' [ScalarSMul R K] [ScalarInner R K] [RealOp X] (r : R) (x : X) :
+    toVec (r • x) = r • toVec x := by
   conv => lhs; simp only [HSMul.hSMul, SMul.smul,scal_spec]
   funext i; simp only [Pi.smul_apply, smul_eq_mul]
   sorry_proof
 
-@[vector_to_spec, vector_from_spec ←]
-theorem zero_spec' : toVec (0 : X) = 0 := by
+@[vector_from_spec]
+theorem fromVec_smul' [Lawful X] [Dense X] [ScalarSMul R K] [ScalarInner R K] [RealOp X]
+    (r : R) (x : n → K) :
+    fromVec (X:=X) (r • x) = r • fromVec x := by
+  apply toVec_injective; simp[vector_to_spec]
+
+@[vector_to_spec]
+theorem toVec_zero : toVec (0 : X) = 0 := by
   conv => lhs; simp only [Zero.zero,OfNat.ofNat]
   simp only [zero_spec]
 
-@[vector_to_spec, vector_from_spec ←]
+@[vector_from_spec]
+theorem fromVec_zero [Lawful X] [Dense X] : fromVec (X:=X) 0 = 0 := by
+  apply toVec_injective; simp[vector_to_spec]
+
+@[vector_to_spec]
 theorem inner_spec (x y : X) :
     ⟪x,y⟫_K
     =
     ⟪(WithLp.equiv 2 (n → K)).symm (toVec x), (WithLp.equiv 2 (n → K)).symm (toVec y)⟫_K := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 
-@[vector_to_spec, vector_from_spec ←]
+@[vector_to_spec]
 theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) :
     ⟪x,y⟫_R
     =
@@ -396,7 +438,7 @@ theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) 
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
   sorry_proof
 
-@[vector_to_spec, vector_from_spec ←]
+@[vector_to_spec]
 theorem norm_spec (x : X) :
     ‖x‖
     =
@@ -404,7 +446,7 @@ theorem norm_spec (x : X) :
   conv => lhs; simp only [norm]; simp only [nrm2_spec]
   simp only [Scalar.toReal_ofReal]
 
-@[vector_to_spec, vector_from_spec ←]
+@[vector_to_spec]
 theorem dist_spec (x y : X) :
     dist x y
     =
@@ -462,13 +504,6 @@ variable
 
 open VectorType
 
-@[ext]
-theorem ext (x y : X) : (∀ (i : n), toVec x i = toVec y i) → x = y := by
-  intro h
-  apply toVec_injective
-  funext i
-  exact (h i)
-
 instance [VectorType.Base X n R] : VectorType.RealOp X where
   rscal := VectorType.Base.scal
   rscal_spec := by simp[vector_to_spec]
@@ -478,19 +513,19 @@ instance [VectorType.Base X n R] : VectorType.RealOp X where
 
 --set_option trace.Meta.synthOrder true
 instance (priority:=low) : AddCommGroup X where
-  add_assoc := by intros; ext; simp only [add_spec, add_assoc]
-  zero_add := by intros; ext; simp only [add_spec, zero_spec', zero_add]
-  add_zero := by intros; ext; simp only [add_spec, zero_spec', add_zero]
-  neg_add_cancel := by intros; ext; simp only [add_spec, neg_spec, neg_add_cancel, zero_spec']
-  add_comm := by intros; ext; simp only [add_spec, add_comm]
-  sub_eq_add_neg := by intros; ext; simp only [sub_spec, sub_eq_add_neg, add_spec, neg_spec]
+  add_assoc := by intros; ext; simp [vector_to_spec, add_assoc]
+  zero_add  := by intros; ext; simp [vector_to_spec]
+  add_zero  := by intros; ext; simp [vector_to_spec]
+  neg_add_cancel := by intros; ext; simp [vector_to_spec]
+  add_comm       := by intros; ext; simp [vector_to_spec, add_comm]
+  sub_eq_add_neg := by intros; ext; simp [vector_to_spec, sub_eq_add_neg]
   nsmul n x := scal (n:K) x
-  nsmul_zero := by intros; ext; simp only [CharP.cast_eq_zero, scal_spec, zero_smul, zero_spec']
-  nsmul_succ := by intros; ext; simp only [Nat.cast_add, Nat.cast_one, scal_spec, add_smul, one_smul, add_spec]
+  nsmul_zero := by intros; ext; simp [vector_to_spec]
+  nsmul_succ := by intros; ext; simp [vector_to_spec, add_mul]
   zsmul n x := scal (n:K) x
-  zsmul_zero' := by intros; ext; simp[scal_spec,vector_to_spec]
-  zsmul_neg' := by intros; ext; simp[zsmul_neg',scal_spec,add_smul,vector_to_spec,add_mul]
-  zsmul_succ' := by intros; ext; simp[scal_spec,add_smul,vector_to_spec,add_mul]
+  zsmul_zero' := by intros; ext; simp[vector_to_spec]
+  zsmul_neg'  := by intros; ext; simp[vector_to_spec, add_mul]
+  zsmul_succ' := by intros; ext; simp[vector_to_spec, add_mul]
 
 instance (priority:=low) : Module K X where
   one_smul := by intros; ext; simp[vector_to_spec]
@@ -549,9 +584,9 @@ instance (priority:=low) instAdjointSpace : AdjointSpace K X where
     intro x y;
     apply conj_symm
   add_left := by
-    intros; simp only [inner_spec,add_spec, WithLp.equiv_symm_add,add_left]
+    intros; simp only [vector_to_spec, WithLp.equiv_symm_add,add_left]
   smul_left := by
-    intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
+    intros; simp only [vector_to_spec, WithLp.equiv_symm_smul,smul_left]
 
 instance (priority:=low) instAdjointSpaceReal [ScalarSMul R K] [ScalarInner R K] [RealOp X] :
     AdjointSpace R X where
@@ -586,9 +621,9 @@ instance (priority:=low) instInnerProductSpace : InnerProductSpace K X where
     intro x y;
     apply conj_symm
   add_left := by
-    intros; simp only [inner_spec,add_spec, WithLp.equiv_symm_add,add_left]
+    intros; simp [vector_to_spec, WithLp.equiv_symm_add,add_left]
   smul_left := by
-    intros; simp only [inner_spec,smul_spec, WithLp.equiv_symm_smul,smul_left]
+    intros; simp only [vector_to_spec, WithLp.equiv_symm_smul,smul_left]
 
 
 end AlgebraicInstances
@@ -630,12 +665,6 @@ theorem vequiv_apply_eq_toVec (x : X) :
 @[vector_to_spec]
 theorem vequiv_symm_apply_eq_fromVec (f : n → K) :
   vequiv.symm f = fromVec (X:=X) f := rfl
-
-omit [Lawful X] in
-@[simp, simp_core]
-theorem toVec_fromVec (f : n → K) :
-    toVec (fromVec (X:=X) f) = f := by
-  rw[VectorType.Dense.right_inv]
 
 @[simp, simp_core]
 theorem fromVec_toVec (x : X) :

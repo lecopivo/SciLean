@@ -561,6 +561,8 @@ theorem SciLean.sum.arg_f.HasAdjoint_simp_rule {I : Type*} [IndexType I] :
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
 
+-- we have to formulate it this way too because some issue with RefinedDiscrTree
+-- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem SciLean.sum.arg_f.HasAdjoint_simp_rule' {I : Type*} [IndexType I] :
     HasAdjoint K
@@ -576,6 +578,8 @@ theorem SciLean.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} [IndexType I] :
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
 
+-- we have to formulate it this way too because some issue with RefinedDiscrTree
+-- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem SciLean.sum.arg_f.HasAdjointUpdate_simp_rule' {I : Type*} [IndexType I] :
     HasAdjointUpdate K
@@ -591,6 +595,17 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule {I : Type*} (A : Finset I) [IndexT
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
 
+-- we have to formulate it this way too because some issue with RefinedDiscrTree
+-- once mathlib PR #11968 is merges this should not be necessaryx
+@[data_synth]
+theorem Finset.sum.arg_f.HasAdjoint_simp_rule' {I : Type*} (A : Finset I) [IndexType I] :
+    HasAdjoint K
+      (fun f : I → X => A.sum f)
+      (fun k i => A.toSet.indicator (fun _ => k) i) := by
+  constructor
+  case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
+  case is_linear => fun_prop
+
 @[data_synth]
 theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} (A : Finset I) [IndexType I] :
     HasAdjointUpdate K
@@ -599,6 +614,18 @@ theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule {I : Type*} (A : Finset I) [
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
+
+-- we have to formulate it this way too because some issue with RefinedDiscrTree
+-- once mathlib PR #11968 is merges this should not be necessaryx
+@[data_synth]
+theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule' {I : Type*} (A : Finset I) [IndexType I] :
+    HasAdjointUpdate K
+      (fun f : I → X => A.sum f)
+      (fun k f i => f i + A.toSet.indicator (fun _ => k) i) := by
+  constructor
+  case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
+  case is_linear => fun_prop
+
 
 @[data_synth]
 theorem ite.arg_te.HasAdjoint_simple_rule {c : Prop} [Decidable c] :
@@ -624,36 +651,36 @@ theorem ite.arg_te.HasAdjointUpdate_simple_rule {c : Prop} [Decidable c] :
 
 open ComplexConjugate in
 @[data_synth]
-theorem Inner.inner.arg_a0.HasAdjoint_simple_rule
-    {R} [RealScalar R]
-    {X} [NormedAddCommGroup X] [AdjointSpace R X]
+theorem Inner.inner.arg_a0.HasAdjoint_simple_rule_real
+    {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
+    {X} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X]
+    -- add some condition that connects inner product over R and K
+    --   ∀ (x y : X), Scalar.real ⟪x,y⟫[K] = ⟪x,y⟫[R]
     (y : X) :
     HasAdjoint R
-      (fun x : X => ⟪x,y⟫[R])
-      (fun k => k•y) := by
+      (fun x : X => ⟪x,y⟫[K])
+      (fun k => (conj k)•y) := by
   constructor
   case adjoint =>
     intro x k
     simp[AdjointSpace.inner_smul_right,ScalarInner.inner_eq_inner_re_im]
-    ac_rfl
+    -- lhs has complex inner product and rhs has real inner product
+    -- it should work out
+    sorry_proof
   case is_linear => fun_prop
 
 open ComplexConjugate in
 @[data_synth]
-theorem Inner.inner.arg_a0.HasAdjointUpdate_simple_rule
-    {R} [RealScalar R]
-    {X} [NormedAddCommGroup X] [AdjointSpace R X]
+theorem Inner.inner.arg_a0.HasAdjointUpdate_simple_rule_real
+    {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
+    {X} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X]
     (y : X) :
     HasAdjointUpdate R
-      (fun x : X => ⟪x,y⟫[R])
-      (fun k x => x + k•y) := by
-  constructor
-  case adjoint =>
-    intro x k
-    simp[AdjointSpace.inner_smul_right,ScalarInner.inner_eq_inner_re_im,
-         AdjointSpace.inner_add_right]
-    intros; ring
-  case is_linear => fun_prop
+      (fun x : X => ⟪x,y⟫[K])
+      (fun k x => x + (conj k)•y) := by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => simp
 
 @[data_synth]
 theorem Inner.inner.arg_a1.HasAdjoint_simple_rule (x : X) :
@@ -663,6 +690,19 @@ theorem Inner.inner.arg_a1.HasAdjoint_simple_rule (x : X) :
   constructor
   case adjoint => intro y z; simp[AdjointSpace.inner_smul_right]; ac_rfl
   case is_linear => fun_prop
+
+@[data_synth]
+theorem Inner.inner.arg_a1.HasAdjoint_simple_rule_real
+    {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
+    {X} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X]
+    (x : X) :
+    HasAdjoint R
+      (fun y : X => ⟪x,y⟫[K])
+      (fun k => k • x) := by
+  constructor
+  case adjoint => intro y z;  simp[ScalarInner.inner_eq_inner_re_im]; sorry_proof
+  case is_linear => fun_prop
+
 
 @[data_synth]
 theorem Inner.inner.arg_a1.HasAdjointUpdate_simple_rule (x : X) :
@@ -675,27 +715,14 @@ theorem Inner.inner.arg_a1.HasAdjointUpdate_simple_rule (x : X) :
     intros; ring
   case is_linear => fun_prop
 
--- @[data_synth]
--- theorem Inner.inner.arg_a1.HasAdjoint_comp_rule (x : Y)
---     (f : X → Y) {f'} (hf : HasAdjoint K f f') :
---     HasAdjoint K
---       (fun y : X => ⟪x,f y⟫[K])
---       (fun k => k • f' x) := by
---   constructor
---   case adjoint =>
---     intro y z;
---     simp[AdjointSpace.inner_smul_left, AdjointSpace.inner_smul_right, hf.1, mul_comm]
---   case is_linear => have := hf.isContinuousLinearMap; fun_prop
-
--- @[data_synth]
--- theorem Inner.inner.arg_a1.HasAdjointUpdate_comp_rule (x : Y)
---     (f : X → Y) {f'} (hf : HasAdjointUpdate K f f') :
---     HasAdjointUpdate K
---       (fun y : X => ⟪x,f y⟫[K])
---       (fun k x' => f' (k • x) x') := by
---   constructor
---   case adjoint =>
---     intro y z x'
---     simp[AdjointSpace.inner_smul_right, AdjointSpace.inner_add_right,hf.smul_left,
---          AdjointSpace.inner_sub_right, hf.1 y, sub_mul]; ring
---   case is_linear => have := hf.is_linear; fun_prop
+@[data_synth]
+theorem Inner.inner.arg_a1.HasAdjointUpdate_simple_rule_real
+    {R K} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
+    {X} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X]
+    (x : X) :
+    HasAdjointUpdate R
+      (fun y : X => ⟪x,y⟫[K])
+      (fun k y => y + k • x) := by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => simp

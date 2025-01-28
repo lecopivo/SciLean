@@ -1,39 +1,8 @@
 import SciLean.Data.VectorType.Operations.ToVec
-import SciLean.Data.VectorType.BaseSimps
 import SciLean.Analysis.SpecialFunctions.StarRingEnd
-import SciLean.Data.VectorType.Optimize
 import SciLean.Lean.ToSSA
 
 namespace SciLean
-
-
-section Simps
-
-variable
-  {R K} {_ : RealScalar R} {_ : Scalar R K}
-  {n} {_ : IndexType n}
-  {X} [VectorType.Base X n K] [VectorType.Lawful X]
-
-
-end Simps
-
-set_option linter.unusedVariables false in
-theorem IsContinuousLinearMap.injective_comp_iff
-  {R : Type*} [RCLike R]
-  {X : Type*} [NormedAddCommGroup X] [NormedSpace R X]
-  {Y : Type*} [NormedAddCommGroup Y] [NormedSpace R Y]
-  {Z : Type*} [NormedAddCommGroup Z] [NormedSpace R Z]
-  {f : X → Y} (g : Y → Z) (hg : IsContinuousLinearMap R g) (hg' : g.Injective)  :
-  IsContinuousLinearMap R f ↔ IsContinuousLinearMap R (fun x => g (f x)) := sorry_proof
-
-set_option linter.unusedVariables false in
-theorem Differentiable.injective_comp_iff
-  {R : Type*} [RCLike R]
-  {X : Type*} [NormedAddCommGroup X] [NormedSpace R X]
-  {Y : Type*} [NormedAddCommGroup Y] [NormedSpace R Y]
-  {Z : Type*} [NormedAddCommGroup Z] [NormedSpace R Z]
-  {f : X → Y} (g : Y → Z) (hg : Differentiable R g) (hg' : g.Injective)  :
-  Differentiable R f ↔ Differentiable R (fun x => g (f x)) := sorry_proof
 
 open VectorType ComplexConjugate
 

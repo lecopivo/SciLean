@@ -112,7 +112,7 @@ theorem id_rule : HasRevFDeriv K (fun x : X => x) (fun x => (x,fun dy => dy)) :=
   case adjoint => intro; simp; data_synth
   case simp => rfl
 
-theorem const_rule : HasRevFDeriv K (fun _ : X => (0 : Y)) (fun _ => 0) := by
+theorem const_rule (y : Y) : HasRevFDeriv K (fun _ : X => y) (fun _ => (y, fun _ => 0)) := by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intro; data_synth
   case adjoint => intro; eta_expand; simp; data_synth
@@ -175,8 +175,8 @@ theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
-    (hg : HasRevFDeriv K g g') (hf : f = fun x => g (p₁ x))
-    (hp₁ : IsContinuousLinearMap K p₁) /- (hdec : Decomposition p₁ p₂ q) -/ :
+    (hg : HasRevFDeriv K g g') (hf : f = fun x => g (p₁ x) := by simp)
+    (hp₁ : IsContinuousLinearMap K p₁ := by fun_prop) /- (hdec : Decomposition p₁ p₂ q) -/ :
     HasRevFDeriv K f
       (fun x =>
         let x₁ := p₁ x
@@ -285,7 +285,8 @@ theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
-    (hg : HasRevFDerivUpdate K g g') :
+    (hg : HasRevFDerivUpdate K g g') (hf : f = fun x => g (p₁ x) := by simp)
+    (hp₁ : IsContinuousLinearMap K p₁ := by fun_prop) :
     HasRevFDerivUpdate K f
       (fun x =>
         let x₁ := p₁ x
@@ -561,6 +562,28 @@ theorem HMul.hMul.arg_a0a1.HasRevFDeriv_rule
   case adjoint => intro x; eta_expand; simp; data_synth
   case simp => simp_all; sorry_proof -- push smul
 
+open ComplexConjugate in
+@[data_synth]
+theorem HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule
+    (f g : X → K) (f' g')
+    (hf : HasRevFDerivUpdate K f f') (hg : HasRevFDerivUpdate K g g') :
+    HasRevFDerivUpdate K (fun x => f x * g x)
+      (fun x =>
+        let' (y,df) := f' x
+        let' (z,dg) := g' x
+        (y * z, fun dy dx =>
+          let dy₁ := (conj y) • dy
+          let dy₂ := (conj z) • dy
+          let dx := dg dy₁ dx
+          let dx := df dy₂ dx
+          dx)) := by
+  have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
+  have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intro; data_synth
+  case adjoint => intro x; eta_expand; simp; data_synth
+  case simp => simp_all
+
 -- TODO: !!!check this!!!
 set_option linter.unusedVariables false in
 open ComplexConjugate in
@@ -706,6 +729,15 @@ theorem SciLean.sum.arg_f.HasRevFDeriv_rule
   case simp => simp_all
 
 @[data_synth]
+theorem SciLean.sum.arg_f.HasRevFDeriv_rule'
+    {I : Type*} [IndexType I] :
+    HasRevFDeriv K
+      (fun f : I → X => sum f)
+      (fun f =>
+        (∑ i, f i, fun dx _ => dx)) := by
+  apply SciLean.sum.arg_f.HasRevFDeriv_rule
+
+@[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule
     {I : Type*} [IndexType I] :
     HasRevFDerivUpdate K
@@ -716,6 +748,17 @@ theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule
   case deriv => intro; data_synth
   case adjoint => intro x; simp; data_synth
   case simp => simp_all
+
+-- we have to formulate it this way too because some issue with RefinedDiscrTree
+-- once mathlib PR #11968 is merges this should not be necessaryx
+@[data_synth]
+theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule'
+    {I : Type*} [IndexType I] :
+    HasRevFDerivUpdate K
+      (fun f : I → X => sum f)
+      (fun f =>
+        (∑ i, f i, fun dx df i => df i + dx)) := by
+  apply SciLean.sum.arg_f.HasRevFDerivUpdate_rule
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDeriv_rule
@@ -729,6 +772,17 @@ theorem Finset.sum.arg_f.HasRevFDeriv_rule
   case adjoint => intro x; simp; data_synth
   case simp => rfl
 
+-- we have to formulate it this way too because some issue with RefinedDiscrTree
+-- once mathlib PR #11968 is merges this should not be necessaryx
+@[data_synth]
+theorem Finset.sum.arg_f.HasRevFDeriv_rule'
+    {I : Type*} [IndexType I] (A : Finset I) :
+    HasRevFDeriv K
+      (fun f : I → X => A.sum f)
+      (fun f =>
+        (A.sum (fun i => f i), fun dx i => A.toSet.indicator (fun _ => dx) i)) := by
+  apply Finset.sum.arg_f.HasRevFDeriv_rule
+
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule
     {I : Type*} [IndexType I] (A : Finset I) :
@@ -740,6 +794,17 @@ theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule
   case deriv => intro; data_synth
   case adjoint => intro x; simp; data_synth
   case simp => rfl
+
+-- we have to formulate it this way too because some issue with RefinedDiscrTree
+-- once mathlib PR #11968 is merges this should not be necessaryx
+@[data_synth]
+theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule'
+    {I : Type*} [IndexType I] (A : Finset I) :
+    HasRevFDerivUpdate K
+      (fun f : I → X => A.sum (f))
+      (fun f =>
+        (A.sum (fun i => f i), fun dx df i => df i + A.toSet.indicator (fun _ => dx) i)) := by
+  apply Finset.sum.arg_f.HasRevFDerivUpdate_rule
 
 @[data_synth]
 theorem ite.arg_te.HasRevFDeriv_rule (c : Prop) (dec : Decidable c)
@@ -782,23 +847,24 @@ theorem dite.arg_te.HasRevFDerivUpdate_rule (c : Prop) (dec : Decidable c)
 
 section OverReals
 
-variable {R : Type} [RealScalar R]
-  {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace R Y]
+variable {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
+  {W : Type*} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
+  {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y] [AdjointSpace K Y]
 
+open ComplexConjugate
 
 @[data_synth]
 theorem Inner.inner.arg_a0a1.HasRevFDeriv_comp_rule
   (f g : X → Y) (f' g')
   (hf : HasRevFDeriv R f f') (hg : HasRevFDerivUpdate R g g') :
   HasRevFDeriv R
-    (fun x => ⟪f x, g x⟫[R])
+    (fun x => ⟪f x, g x⟫[K])
     (fun x =>
       let' (y,df) := f' x
       let' (z,dg) := g' x
-      (⟪y,z⟫[R], fun dr =>
-        let dx := df (dr • z)
+      (⟪y,z⟫[K], fun dr =>
+        let dx := df (conj dr • z)
         let dx := dg (dr • y) dx
         dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjoint
@@ -813,12 +879,12 @@ theorem Inner.inner.arg_a0a1.HasRevFDerivUpdate_comp_rule
   (f g : X → Y) (f' g')
   (hf : HasRevFDerivUpdate R f f') (hg : HasRevFDerivUpdate R g g') :
   HasRevFDerivUpdate R
-    (fun x => ⟪f x, g x⟫[R])
+    (fun x => ⟪f x, g x⟫[K])
     (fun x =>
       let' (y,df) := f' x
       let' (z,dg) := g' x
-      (⟪y,z⟫[R], fun dr dx =>
-        let dx := df (dr • z) dx
+      (⟪y,z⟫[K], fun dr dx =>
+        let dx := df (conj dr • z) dx
         let dx := dg (dr • y) dx
         dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
@@ -829,23 +895,27 @@ theorem Inner.inner.arg_a0a1.HasRevFDerivUpdate_comp_rule
   case simp => simp_all
 
 @[data_synth]
-theorem Norm2.norm2.arg_a0.HasRevFDeriv_comp_rule
-  (f : X → Y) (f')
-  (hf : HasRevFDeriv R f f') :
+theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule :
   HasRevFDeriv R
-    (fun x => ‖f x‖₂²[R])
+    (fun x : X => ‖x‖₂²[R])
     (fun x =>
-      let' (y,df) := f' x
-      let z := ‖y‖₂²[R];
-      (z, fun dr =>
-        df ((2 * dr) • y))) := by
-  have ⟨_,_,_,_⟩ := hf.deriv_adjoint
-  have := hf.toHasRevFDerivUpdate
-  apply hasRevFDeriv_from_hasRevFDeriv
-  case deriv =>
-    simp +unfoldPartialApp only [Norm2.norm2]
-    data_synth
-  case simp => funext x; simp; funext dk; sorry_proof
+      let s := ‖x‖₂²[R];
+      (s, fun dr => (2*dr) • x)) := by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intro; dsimp; data_synth
+  case simp => funext x; simp; funext dr; module
 
+@[data_synth]
+theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_simple_rule :
+  HasRevFDerivUpdate R
+    (fun x : X => ‖x‖₂²[R])
+    (fun x =>
+      let s := ‖x‖₂²[R];
+      (s, fun dr x' => (2*dr) • x + x')) := by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intro; data_synth
+  case adjoint => intro; dsimp; data_synth
+  case simp => funext x; simp; funext dr x'; module
 
 end OverReals

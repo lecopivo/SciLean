@@ -18,7 +18,7 @@ class MatrixType
   where
   [base : ∀ (m n : Type u) [IndexType m] [IndexType n], MatrixType.Base (M m n) (X n) (X m)]
   [dense : ∀ (m n : Type u) [IndexType m] [IndexType n], MatrixType.Dense (M m n)]
-  [lawful : ∀ (m n : Type u) [IndexType m] [IndexType n], MatrixType.Lawful (M m n)]
+  [lawful : ∀ (m n : Type u) [IndexType m] [IndexType n], Lawful (M m n)]
   [square : ∀ (n : Type u) [IndexType n], MatrixType.Square (M n n)]
 
   -- cast
@@ -51,7 +51,7 @@ instance
     {R : outParam (Type*)} {K : outParam (Type*)} {_ : RealScalar R} {_ : Scalar R K}
     [VectorType X K] [inst : MatrixType M X]
     {m n : Type u} {_ : IndexType m} {_ : IndexType n} :
-    MatrixType.Lawful (M m n) := inst.lawful m n
+    VectorType.Lawful (M m n) := inst.lawful m n
 
 instance
     (M : (m n : Type u) → [IndexType m] → [IndexType n] → Type*)

@@ -40,8 +40,6 @@ instance : VectorType.Base (FloatMatrix' ord strg m n) (m×n) Float where
   zero_spec := sorry_proof
   scal k x := ⟨x.data.scal k⟩
   scal_spec := sorry_proof
-  scalAdd a b x := ⟨x.data.scalAdd a b⟩
-  scalAdd_spec := sorry_proof
   sum x := x.data.sum
   sum_spec := sorry_proof
   asum x := x.data.asum
@@ -79,6 +77,8 @@ instance : VectorType.Dense (FloatMatrix' ord strg m n) where
   set_spec := sorry_proof
   const k := ⟨DenseMatrix.const _ _ _ k⟩
   const_spec := sorry_proof
+  scalAdd a b x := ⟨x.data.scalAdd a b⟩
+  scalAdd_spec := sorry_proof
   div x y := ⟨DenseMatrix.div x.data y.data⟩
   div_spec := sorry_proof
   inv x := ⟨DenseMatrix.inv x.data⟩
@@ -140,11 +140,6 @@ instance : MatrixType.Square (FloatMatrix' ord strg n n) where
 -- instance : MatrixType.MatMul (FloatMatrix' strg m n) (FloatMatrix' strg k m) (FloatMatrix' strg k n) where
 --   matmul := sorry_proof
 --   matmul_spec := sorry_proof
-
-
-instance : MatrixType.Lawful (FloatMatrix' ord .normal m n) where
-  toMatrix_injective :=  sorry_proof
-
 
 instance : MatrixType (FloatMatrix' ord .normal) FloatVector where
 

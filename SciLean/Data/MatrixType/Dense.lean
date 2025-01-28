@@ -29,22 +29,24 @@ class MatrixType.Dense
 
   /-- Update row, i.e. set row to a given vector. -/
   updateRow (A : M) (i : m) (x : X) : M
-  updateRow_spec (A : M) (i : m) (x : X) [DecidableEq m] :
-    toMatrix (updateRow A i x)
+  updateRow_spec (A : M) (i' : m) (x : X) [DecidableEq m] :
+    toVec (updateRow A i' x)
     =
-    let A := toMatrix A
-    let x := VectorType.toVec x
-    A.updateRow i x
+    fun (i,j) =>
+      let A := toMatrix A
+      let x := VectorType.toVec x
+      A.updateRow i' x i j
 
 
   /-- Update column, i.e. set column to a given vector. -/
   updateCol (A : M) (j : n) (y : Y) : M
-  updateCol_spec (A : M) (j : n) (y : Y) [DecidableEq n] :
-    toMatrix (updateCol A j y)
+  updateCol_spec (A : M) (j' : n) (y : Y) [DecidableEq n] :
+    toVec (updateCol A j' y)
     =
-    let A := toMatrix A
-    let y := toVec y
-    A.updateCol j y
+    fun (i,j) =>
+      let A := toMatrix A
+      let y := toVec y
+      A.updateCol j' y i j
 
 
   /-- Add outer product of two vectors to a matrix
@@ -55,12 +57,13 @@ class MatrixType.Dense
   outerprodAdd (alpha : K) (y : Y) (x : X) (A : M) : M
 
   outerprodAdd_spec  (alpha : K) (y : Y) (x : X) (A : M) :
-    toMatrix (outerprodAdd alpha y x A)
+    toVec (outerprodAdd alpha y x A)
     =
-    let A := toMatrix A
-    let x := (Matrix.col (Fin 1) (toVec x))
-    let y := (Matrix.col (Fin 1) (toVec y))
-    alpha • (y * xᴴ) + A
+    fun (i,j) =>
+      let A := toMatrix A
+      let x := (Matrix.col (Fin 1) (toVec x))
+      let y := (Matrix.col (Fin 1) (toVec y))
+      (alpha • (y * xᴴ) + A) i j
 
 
 namespace MatrixType
@@ -68,7 +71,7 @@ namespace MatrixType
 export MatrixType.Dense (fromMatrix updateRow updateRow_spec updateCol updateCol_spec outerprodAdd
   outerprodAdd_spec set' set'_spec)
 
-attribute [matrix_to_spec, matrix_from_spec ←]
+attribute [vector_to_spec]
   updateRow_spec
   updateCol_spec
   outerprodAdd_spec
@@ -81,7 +84,7 @@ variable
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {m n : Type*} {_ : IndexType m} {_ : IndexType n}
   {X Y : Type*} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
-  {M} [MatrixType.Base M X Y] [MatrixType.Lawful M] [MatrixType.Dense M]
+  {M} [MatrixType.Base M X Y] [Lawful M] [MatrixType.Dense M]
 
 def updateElem (A : M) (i : m) (j : n) (f : K → K) : M :=
   let aij := toMatrix A i j
@@ -96,7 +99,7 @@ variable
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {m n : Type*} {_ : IndexType m} {_ : IndexType n}
   {X Y : Type*} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
-  {M} [MatrixType.Base M X Y] [MatrixType.Lawful M] [MatrixType.Dense M]
+  {M} [MatrixType.Base M X Y] [Lawful M] [MatrixType.Dense M]
 
 open MatrixType
 
@@ -107,7 +110,7 @@ def mequiv : M ≃ Matrix m n K where
   left_inv := by
     have h : (toMatrix : M → (Matrix m n K)).Bijective := by
       constructor
-      · apply Lawful.toMatrix_injective
+      · apply toMatrix_injective
       · apply Dense.right_inv'.surjective
     intro x
     sorry_proof -- this should be true
@@ -131,6 +134,7 @@ theorem toMatrix_fromMatrix (f : m → n → K) :
     toMatrix (fromMatrix (M:=M) f) = f := by
   rw[MatrixType.Dense.right_inv']
 
+@[vector_to_spec]
 theorem fromMatrix_eq_fromVec {f : Matrix m n K} :
     fromMatrix (M:=M) f = VectorType.fromVec fun (i,j) => f i j := by
   apply toMatrix_injective
@@ -153,7 +157,7 @@ instance (priority:=low) : FiniteDimensional K (M) :=
 
 variable (M)
 noncomputable
-def basis : Basis (m×n) K (M) := Basis.ofEquivFun (ι:=m×n) (R:=K) (M:=M)
+def basis : _root_.Basis (m×n) K (M) := Basis.ofEquivFun (ι:=m×n) (R:=K) (M:=M)
   (mequivₗ.trans (LinearEquiv.curry K K m n).symm)
 variable {M}
 

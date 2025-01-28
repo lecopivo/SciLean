@@ -6,6 +6,8 @@ import SciLean.Analysis.SpecialFunctions.Log
 
 namespace SciLean
 
+open VectorType
+
 section Simps
 
 variable
@@ -21,71 +23,43 @@ theorem VectorType.softmax_spec (x : X) :
 
 end Simps
 
-def_fun_prop VectorType.softmax in x with_transitive [VectorType.Lawful X] : Differentiable R by
-  -- simp only [VectorType.softmax_spec]
-  -- have h : ∀ (w : X), VectorType.sum (VectorType.exp w) ≠ 0 := sorry_proof
+def_fun_prop softmax in x with_transitive [Lawful X] : Differentiable R by
+  -- simp only [softmax_spec]
+  -- have h : ∀ (w : X), sum (exp w) ≠ 0 := sorry_proof
   -- fun_prop (disch:=sorry_proof)
   sorry_proof
 
-abbrev_fun_trans VectorType.softmax in x [VectorType.Lawful X] : fderiv R by
+-- fderiv
+abbrev_fun_trans softmax in x [Lawful X] : fderiv R by
   equals (fun x => fun dx =>L[R]
-           let x' := VectorType.softmax x
+           let x' := softmax x
            let s := - ⟪dx, x'⟫[R]
-           VectorType.axpy s x' (VectorType.mul x' dx)) =>
+           axpy s x' (mul x' dx)) =>
     sorry_proof
 
-abbrev_fun_trans VectorType.softmax in x [VectorType.Lawful X] : fwdFDeriv R by
+abbrev_data_synth softmax in x [Lawful X] (x₀) : (HasFDerivAt (𝕜:=R) · · x₀) by
+  apply hasFDerivAt_from_fderiv
+  case deriv => conv => rhs; autodiff
+  case diff => dsimp[autoParam]; fun_prop
+
+-- forward AD
+abbrev_fun_trans softmax in x [Lawful X] : fwdFDeriv R by
   unfold fwdFDeriv
   fun_trans; to_ssa
 
-abbrev_fun_trans VectorType.softmax in x [VectorType.Lawful X] : revFDeriv R by
+-- reverse AD
+abbrev_fun_trans softmax in x [Lawful X] : revFDeriv R by
   unfold revFDeriv
   fun_trans; to_ssa
 
+abbrev_data_synth softmax in x [Lawful X] : HasRevFDeriv R by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intros; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => conv => rhs; simp [vector_optimize]; to_ssa; to_ssa; lsimp
 
-@[data_synth]
-theorem VectorType.softmax.arg_alphax.HasRevFDerivUpdate_simple_rule
-    {X : Type} {n : outParam (Type)} {inst : outParam (IndexType n)} {R : outParam (Type)}
-    {inst_1 : outParam (RealScalar R)}
-    [self : VectorType.Base X n R] [inst_3 : VectorType.Lawful X] [VectorType.Dense X] :
-    HasRevFDerivUpdate R
-      (fun x : X => VectorType.softmax x)
-      (fun x =>
-        let a := VectorType.softmax x;
-        (a, fun z dx =>
-          let a_1 := VectorType.dot a z;
-          let dx := VectorType.axpy (-a_1) a dx
-          let a := VectorType.conj a;
-          let a := VectorType.mul a z;
-          dx + a)) := by
-  constructor
-  · fun_trans; intro x; funext dy dx
-    apply toVec_injective; funext i
-    simp[vector_to_spec];
-    ac_rfl
-  · fun_prop
-
-@[data_synth]
-theorem VectorType.softmax.arg_alphax.HasRevFDerivUpdate_comp_rule
-    {X : Type} {n : outParam (Type)} {inst : outParam (IndexType n)} {R : outParam (Type)}
-    {inst_1 : outParam (RealScalar R)}
-    [self : VectorType.Base X n R] [inst_3 : VectorType.Lawful X] [VectorType.Dense X]
-    {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
-    (f : W → X) (f') (hf : HasRevFDerivUpdate R f f') :
-    HasRevFDerivUpdate R
-      (fun w => VectorType.softmax (f w))
-      (fun w =>
-        let' (x,df') := f' w
-        let y := VectorType.softmax x;
-        (y, fun z dw =>
-          let a_1 := VectorType.dot y z;
-          let a_2 := a_1 • y;
-          let a_3 := -a_2;
-          let a := VectorType.conj y;
-          let a := VectorType.mul a z;
-          let dx := a_3 + a
-          df' dx dw)) := by
-  have ⟨hf',_⟩ := hf
-  constructor
-  · fun_trans [hf']
-  · fun_prop
+abbrev_data_synth softmax in x [Lawful X] : HasRevFDerivUpdate R by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intros; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => conv => rhs; simp [vector_optimize]; to_ssa; to_ssa; lsimp

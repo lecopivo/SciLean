@@ -1,5 +1,6 @@
 import SciLean.Data.VectorType.Operations.ToVec
 import SciLean.Data.VectorType.Optimize
+import SciLean.Data.VectorType.BaseSimps
 import SciLean.Analysis.SpecialFunctions.StarRingEnd
 
 namespace SciLean
@@ -11,17 +12,6 @@ variable
   {R K} {_ : RealScalar R} {_ : Scalar R K}
   {n} {_ : IndexType n}
   {X} [VectorType.Base X n K]
-
-theorem hoho [Dense X] (x : X) : x = fromVec (toVec x) := sorry_proof
-
-@[vector_from_spec]
-theorem fromVec_const [Lawful X] [Dense X] (k : K) :
-    fromVec (X:=X) (fun _ : n => k) = const k := by
-  ext i; simp [vector_to_spec]
-
-@[vector_from_spec]
-theorem toVec_sum [Lawful X] {I} [Fintype I] (A : Finset I) (f : I → X) :
-    toVec (A.sum f) = fun j => A.sum (fun i => toVec (f i) j) := sorry_proof
 
 -- linearity
 def_fun_prop VectorType.sum in x with_transitive [VectorType.Lawful X] : IsContinuousLinearMap K by
@@ -45,15 +35,12 @@ open Classical in
 abbrev_fun_trans VectorType.sum in x [Lawful X] [Dense X] : adjoint K by
   enter[y]; simp[vector_to_spec]
   fun_trans
-  rw[hoho (Finset.sum _ _)]; simp [vector_from_spec, vector_to_spec]
+  rw[← fromVec_toVec (Finset.sum _ _)]; simp[vector_to_spec]; simp [vector_from_spec]
 
-open Classical in
 abbrev_data_synth VectorType.sum in x [Lawful X] [Dense X] :
     HasAdjoint K by
-  conv => enter[3]; assign (fun y => VectorType.const (X:=X) y)
-  constructor
-  case adjoint   => intros; simp[vector_to_spec,Finset.sum_mul]
-  case is_linear => fun_prop
+  conv => enter[2,x]; simp[vector_to_spec]
+  data_synth => enter[3]; simp[vector_from_spec,rsimp]
 
 abbrev_data_synth VectorType.sum in x [Lawful X] [Dense X] :
     HasAdjointUpdate K by
