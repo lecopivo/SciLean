@@ -1,4 +1,4 @@
-import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
+import SciLean.Analysis.Calculus.HasRevFDeriv
 
 
 open SciLean
@@ -13,7 +13,7 @@ variable {R : Type*} [RCLike R]
 
 variable (x₀ : X)
 
-/-- info: HasRevFDerivUpdate R (fun x => x) fun x => (x, fun dx dx₀ => dx₀ + dx) : Prop -/
+/-- info: HasRevFDerivUpdate R (fun x => x) fun x => (x, fun dx dx' => dx' + dx) : Prop -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : X => x) _) rewrite_by data_synth
 
@@ -24,15 +24,12 @@ variable (x₀ : X)
 /--
 info: HasRevFDerivUpdate R
   (fun x =>
-    let c := 42;
+    let x_1 := 42;
     x)
-  fun x => (x, fun dx dx₀ => dx₀ + dx) : Prop
----
-warning: unused variable `c`
-note: this linter can be disabled with `set_option linter.unusedVariables false`
+  fun x => (x, fun dx dx' => dx' + dx) : Prop
 -/
 #guard_msgs in
-#check (HasRevFDerivUpdate R (fun x : R => let c : Nat := 42;x) _) rewrite_by data_synth
+#check (HasRevFDerivUpdate R (fun x : R => let _ : Nat := 42;x) _) rewrite_by data_synth
 
 /--
 info: HasRevFDerivUpdate R
@@ -41,8 +38,8 @@ info: HasRevFDerivUpdate R
   fun x =>
   let x₁ := 42;
   (x₁ * x, fun dy dx =>
-    let dy₂ := (starRingEnd R) x₁ • dy;
-    let dx := dx + dy₂;
+    let dy₁ := (starRingEnd R) x₁ • dy;
+    let dx := dx + dy₁;
     dx) : Prop
 -/
 #guard_msgs in
@@ -57,7 +54,7 @@ info: HasRevFDerivUpdate R
   let x₁ := x ^ 2;
   let x₁_1 := x₁ ^ 2;
   (x₁_1, fun dz dx =>
-    let dx_1 := 0 + ↑2 * (starRingEnd R) x₁ ^ (2 - 1) • dz;
+    let dx_1 := ↑2 * (starRingEnd R) x₁ ^ (2 - 1) • dz;
     let dx := dx + ↑2 * (starRingEnd R) x ^ (2 - 1) • dx_1;
     dx) : Prop
 -/
@@ -75,9 +72,9 @@ info: HasRevFDerivUpdate R
   let x₁ := x + x₁;
   (x₁, fun dz dx =>
     let dx₂ := 0;
-    let dx₁ := dx + dz;
-    let dx₁_1 := dx₂ + dz;
-    dx₁ + dx₁_1) : Prop
+    let dx₂_1 := dx + dz;
+    let x₁ := dx₂ + dz;
+    dx₂_1 + x₁) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : X => let y := x₀+x; x+y) _) rewrite_by data_synth
@@ -88,7 +85,7 @@ info: HasRevFDerivUpdate R
   (fun x =>
     let x_1 := x;
     x)
-  fun x => (x, fun dx dx₀ => dx₀ + dx) : Prop
+  fun x => (x, fun dx dx' => dx' + dx) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : X => let _ := x; x) _) rewrite_by data_synth
@@ -101,8 +98,7 @@ info: HasRevFDerivUpdate R (fun x i => ↑↑i • x) fun x =>
     IndexType.foldl
       (fun dx i =>
         let x₁ := ↑↑i;
-        let dy₂ := (starRingEnd R) x₁ • dy i;
-        let dx := dx + dy₂;
+        let dx := dx + (starRingEnd R) x₁ • dy i;
         dx)
       dx) : Prop
 -/
@@ -119,8 +115,7 @@ info: HasRevFDerivUpdate R (fun x i j => (↑↑i + ↑↑j) • x) fun x =>
         IndexType.foldl
           (fun dx i_1 =>
             let x₁ := ↑↑i + ↑↑i_1;
-            let dy₂ := (starRingEnd R) x₁ • dy i i_1;
-            let dx := dx + dy₂;
+            let dx := dx + (starRingEnd R) x₁ • dy i i_1;
             dx)
           dx)
       dx) : Prop
@@ -135,10 +130,7 @@ info: HasRevFDerivUpdate R
   (fun x =>
     let y := x;
     y)
-  fun x =>
-  (x, fun dz dx =>
-    let dy := 0 + dz;
-    dx + dy) : Prop
+  fun x => (x, fun dz dx => dx + dz) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : X => let y := x; y) _) rewrite_by data_synth
@@ -186,18 +178,18 @@ info: HasRevFDerivUpdate R (fun x => x * x * x * x * x) fun x =>
   let x₁_1 := x₁ * x;
   let x₁_2 := x₁_1 * x;
   (x₁_2 * x, fun dy dx =>
-    let dy₁ := (starRingEnd R) x • dy;
-    let dy₂ := (starRingEnd R) x₁_2 • dy;
-    let dy₁_1 := (starRingEnd R) x • dy₁;
-    let dy₂_1 := (starRingEnd R) x₁_1 • dy₁;
-    let dy₁ := (starRingEnd R) x • dy₁_1;
-    let dy₂_2 := (starRingEnd R) x₁ • dy₁_1;
-    let dy₁_2 := (starRingEnd R) x • dy₁;
-    let dy₂_3 := (starRingEnd R) x • dy₁;
-    let dx := dx + dy₁_2;
-    let dx := dx + dy₂_3;
-    let dx := dx + dy₂_2;
-    let dx := dx + dy₂_1;
+    let dy₁ := (starRingEnd R) x₁_2 • dy;
+    let dy₂ := (starRingEnd R) x • dy;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_1 • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁ • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
     let dx := dx + dy₂;
     dx) : Prop
 -/
@@ -218,22 +210,22 @@ info: HasRevFDerivUpdate R (fun x => x.1 * x.2 * x.1 * x.1 * x.2) fun x =>
   let x₁_6 := x₁_4 * x₁_5;
   let x₁_7 := x.2;
   (x₁_6 * x₁_7, fun dy dx =>
-    let dy₁ := (starRingEnd R) x₁_7 • dy;
-    let dy₂ := (starRingEnd R) x₁_6 • dy;
-    let dy₁_1 := (starRingEnd R) x₁_5 • dy₁;
-    let dy₂_1 := (starRingEnd R) x₁_4 • dy₁;
-    let dy₁ := (starRingEnd R) x₁_3 • dy₁_1;
-    let dy₂_2 := (starRingEnd R) x₁_2 • dy₁_1;
-    let dy₁_2 := (starRingEnd R) x₁_1 • dy₁;
-    let dy₂_3 := (starRingEnd R) x₁ • dy₁;
-    let dx₁ := dx.1;
-    let dx₂ := dx.2;
-    let dx₁ := dx₁ + dy₁_2;
-    let dx₁_1 := dx₂ + dy₂_3;
-    let dx₁ := dx₁ + dy₂_2;
-    let dx₁ := dx₁ + dy₂_1;
-    let dx₁_2 := dx₁_1 + dy₂;
-    (dx₁, dx₁_2)) : Prop
+    let dy₁ := (starRingEnd R) x₁_6 • dy;
+    let dy₂ := (starRingEnd R) x₁_7 • dy;
+    let dx₁ := dx.2;
+    let dx₂ := dx.1;
+    let dx₂_1 := dx₁ + dy₁;
+    let dy₁ := (starRingEnd R) x₁_4 • dy₂;
+    let dy₂ := (starRingEnd R) x₁_5 • dy₂;
+    let dx₁ := dx₂ + dy₁;
+    let dy₁ := (starRingEnd R) x₁_2 • dy₂;
+    let dy₂ := (starRingEnd R) x₁_3 • dy₂;
+    let dx₁ := dx₁ + dy₁;
+    let dy₁ := (starRingEnd R) x₁ • dy₂;
+    let dy₂ := (starRingEnd R) x₁_1 • dy₂;
+    let dx₂ := dx₂_1 + dy₁;
+    let dx₁ := dx₁ + dy₂;
+    (dx₁, dx₂)) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : R×R => x.1 * x.2 * x.1 * x.1 * x.2) _) rewrite_by
@@ -250,11 +242,13 @@ info: HasRevFDerivUpdate R (fun x => x.1 * x.2.1) fun x =>
     let dx₁₁ := dx.1;
     let dx₁₂ := dx.2.1;
     let dx₂ := dx.2.2;
-    let dy₁ := (starRingEnd R) x₁₂ • dy;
-    let dy₂ := (starRingEnd R) x₁₁ • dy;
-    let dx₁ := dx₁₁ + dy₁;
-    let dx₁_1 := dx₁₂ + dy₂;
-    (dx₁, dx₁_1, dx₂)) : Prop
+    let dy₂ := (starRingEnd R) x₁₂ • dy;
+    (let dx₁ := dx₁₁ + dy₂;
+      dx₁,
+      let dy₁ := (starRingEnd R) x₁₁ • dy;
+      (let dx₂ := dx₁₂ + dy₁;
+        dx₂,
+        dx₂))) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : R×R×R => x.1 * x.2.1) _) rewrite_by
@@ -269,8 +263,7 @@ info: HasRevFDerivUpdate R
   fun x =>
   let x₁ := x + x;
   (x₁, fun dz dx =>
-    let dx_1 := 0 + dz;
-    let dy := dx_1 + dz;
+    let dy := dz + dz;
     dx + dy) : Prop
 -/
 #guard_msgs in
@@ -304,33 +297,33 @@ info: HasRevFDerivUpdate R (fun x => x * x * x * x * x * x * x * x * x * x * x *
   let x₁_17 := x₁_16 * x;
   let x₁_18 := x₁_17 * x;
   (x₁_18 * x, fun dy dx =>
-    let dy₁ := (starRingEnd R) x • dy;
-    let dy₂ := (starRingEnd R) x₁_18 • dy;
-    let dy₁_1 := (starRingEnd R) x • dy₁;
-    let dy₂_1 := (starRingEnd R) x₁_17 • dy₁;
-    let dy₁ := (starRingEnd R) x • dy₁_1;
-    let dy₂_2 := (starRingEnd R) x₁_16 • dy₁_1;
-    let dy₁_2 := (starRingEnd R) x • dy₁;
-    let dy₂_3 := (starRingEnd R) x₁_15 • dy₁;
-    let dy₁ := (starRingEnd R) x • dy₁_2;
-    let dy₂_4 := (starRingEnd R) x₁_14 • dy₁_2;
-    let dy₁_3 := (starRingEnd R) x • dy₁;
-    let dy₂_5 := (starRingEnd R) x₁_13 • dy₁;
-    let dy₁ := (starRingEnd R) x • dy₁_3;
-    let dy₂_6 := (starRingEnd R) x₁_12 • dy₁_3;
-    let dy₁_4 := (starRingEnd R) x • dy₁;
-    let dy₂_7 := (starRingEnd R) x₁_11 • dy₁;
-    let dy₁ := (starRingEnd R) x • dy₁_4;
-    let dy₂_8 := (starRingEnd R) x₁_10 • dy₁_4;
-    let dy₁_5 := (starRingEnd R) x • dy₁;
-    let dy₂_9 := (starRingEnd R) x₁_9 • dy₁;
-    let dy₁ := (starRingEnd R) x • dy₁_5;
-    let dy₂_10 := (starRingEnd R) x₁_8 • dy₁_5;
-    let dy₁_6 := (starRingEnd R) x • dy₁;
-    let dy₂_11 := (starRingEnd R) x₁_7 • dy₁;
-    let dy₁ := (starRingEnd R) x • dy₁_6;
-    let dy₂_12 := ⋯ • dy₁_6;
-    let dy₁_7 := ⋯;
+    let dy₁ := (starRingEnd R) x₁_18 • dy;
+    let dy₂ := (starRingEnd R) x • dy;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_17 • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_16 • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_15 • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_14 • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_13 • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_12 • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_11 • dy₂;
+    let dy₂ := (starRingEnd R) x • dy₂;
+    let dx := dx + dy₁;
+    let dy₁ := (starRingEnd R) x₁_10 • dy₂;
+    let dy₂ := ⋯ • dy₂;
+    let dx := ⋯;
     ⋯) : Prop
 -/
 #guard_msgs in
@@ -346,8 +339,7 @@ info: HasRevFDerivUpdate R (fun x => x.1) fun x =>
     let dx₂₁ := dx.2.1;
     let dx₂₂₁ := dx.2.2.1;
     let dx₂₂₂ := dx.2.2.2;
-    let dx₁ := dx₁ + dy;
-    (dx₁, dx₂₁, dx₂₂₁, dx₂₂₂)) : Prop
+    (dx₁ + dy, dx₂₁, dx₂₂₁, dx₂₂₂)) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : R×R×R×R => x.1) _) rewrite_by
@@ -365,13 +357,11 @@ info: HasRevFDerivUpdate R
   let x₁ := x * x;
   let x₁_1 := x₁ * x₁;
   (x₁_1, fun dz dx =>
-    let dy := 0 + dz;
-    let dy₁ := (starRingEnd R) x₁ • dy;
-    let dy₂ := (starRingEnd R) x₁ • dy;
-    let dx_1 := 0 + dy₁;
-    let dx_2 := dx_1 + dy₂;
-    let dy₁ := (starRingEnd R) x • dx_2;
-    let dy₂ := (starRingEnd R) x • dx_2;
+    let dy₁ := (starRingEnd R) x₁ • dz;
+    let dy₂ := (starRingEnd R) x₁ • dz;
+    let dx_1 := dy₁ + dy₂;
+    let dy₁ := (starRingEnd R) x • dx_1;
+    let dy₂ := (starRingEnd R) x • dx_1;
     let dx := dx + dy₁;
     let dx := dx + dy₂;
     dx) : Prop
@@ -403,25 +393,34 @@ info: HasRevFDerivUpdate R
     let dx₂ := 0;
     let dx₁₁_1 := 0;
     let dx₁₁_2 := 0;
-    let dy₁ := (starRingEnd R) x₁_3 • dz;
-    let dy₂ := (starRingEnd R) x • dz;
-    let dx₁ := dx + dy₁;
-    let dx₁_1 := dx₁₁_2 + dy₂;
-    let dy₁ := (starRingEnd R) x₁_2 • dx₁_1;
-    let dy₂ := (starRingEnd R) x • dx₁_1;
-    let dx₁ := dx₁ + dy₁;
-    let dx₁_2 := dx₁₁_1 + dy₂;
-    let dy₁ := (starRingEnd R) x₁_1 • dx₁_2;
-    let dy₂ := (starRingEnd R) x • dx₁_2;
-    let dx₁ := dx₁ + dy₁;
-    let dx₁_3 := dx₁₁ + dy₂;
-    let dy₁ := (starRingEnd R) x₁ • dx₁_3;
-    let dy₂ := (starRingEnd R) x • dx₁_3;
-    let dx₁ := dx₁ + dy₁;
-    let dx₁_4 := dx₂ + dy₂;
-    let dy₁ := (starRingEnd R) x • dx₁_4;
-    let dy₂ := (starRingEnd R) x • dx₁_4;
-    let dx := dx₁ + dy₁;
+    let dy₁ := (starRingEnd R) x • dz;
+    let dx₁ := dx₁₁_2 + dy₁;
+    let dy₁ := (starRingEnd R) x • dx₁;
+    let dx₁ := dx₁₁_1 + dy₁;
+    let dy₁ := (starRingEnd R) x • dx₁;
+    let dx₁ := dx₁₁ + dy₁;
+    let dx₁₁ := 0;
+    let dx₁₁_3 := 0;
+    let dy₁ := (starRingEnd R) x • dz;
+    let dx₁_1 := dx₁₁_3 + dy₁;
+    let dy₁ := (starRingEnd R) x • dx₁_1;
+    let dx₁_2 := dx₁₁ + dy₁;
+    let dx₁₁ := 0;
+    let dy₁ := (starRingEnd R) x • dz;
+    let dx₁_3 := dx₁₁ + dy₁;
+    let dy₂ := (starRingEnd R) x₁_3 • dz;
+    let dx₂_1 := dx + dy₂;
+    let dy₂ := (starRingEnd R) x₁_2 • dx₁_3;
+    let dx₂_2 := dx₂_1 + dy₂;
+    let dy₂ := (starRingEnd R) x₁_1 • dx₁_2;
+    let dx₂_3 := dx₂_2 + dy₂;
+    let dy₁ := (starRingEnd R) x • dx₁;
+    let dy₂ := (starRingEnd R) x₁ • dx₁;
+    let dx₁ := dx₂ + dy₁;
+    let dx₂ := dx₂_3 + dy₂;
+    let dy₁ := (starRingEnd R) x • dx₁;
+    let dy₂ := (starRingEnd R) x • dx₁;
+    let dx := dx₂ + dy₁;
     let dx := dx + dy₂;
     dx) : Prop
 -/
@@ -456,40 +455,40 @@ info: HasRevFDerivUpdate R
   let x₁_9 := x₁_8 * x₁_3;
   let x₁_10 := x₁_9 * x₁_6;
   (x₁_10, fun dz dx =>
-    let dy₁ := (starRingEnd R) x₁_6 • dz;
-    let dy₂ := (starRingEnd R) x₁_9 • dz;
-    let dx₁₁ := 0;
-    let dx₁₂₁ := 0;
-    let dx₁₂₂₁ := 0;
-    let dx₂ := 0;
-    let dy₁_1 := (starRingEnd R) x₁_3 • dy₁;
-    let dy₂_1 := (starRingEnd R) x₁_8 • dy₁;
-    let dy₁ := (starRingEnd R) x₁_1 • dy₁_1;
-    let dy₂_2 := (starRingEnd R) x₁_7 • dy₁_1;
-    let dy₁_2 := (starRingEnd R) x₁ • dy₁;
-    let dy₂_3 := (starRingEnd R) x • dy₁;
-    let dx₁ := dx + dy₁_2;
-    let dx₁_1 := dx₁₂₂₁ + dy₂_3;
-    let dx₁_2 := dx₁₂₁ + dy₂_2;
-    let dx₁_3 := dx₁₁ + dy₂_1;
-    let dx₁_4 := dx₂ + dy₂;
-    let dy₁ := (starRingEnd R) x₁_3 • dx₁_4;
-    let dy₂ := (starRingEnd R) x₁_5 • dx₁_4;
-    let dy₁_3 := (starRingEnd R) x₁_1 • dy₁;
-    let dy₂_4 := (starRingEnd R) x₁_4 • dy₁;
-    let dy₁ := (starRingEnd R) x₁ • dy₁_3;
-    let dy₂_5 := (starRingEnd R) x • dy₁_3;
+    let dy₁ := (starRingEnd R) x₁_9 • dz;
+    let dy₂ := (starRingEnd R) x₁_6 • dz;
+    let dx₁ := 0;
+    let dx₂₁ := 0;
+    let dx₂₂₁ := 0;
+    let dx₂₂₂₁ := 0;
     let dx₁ := dx₁ + dy₁;
-    let dx₁_5 := dx₁_1 + dy₂_5;
-    let dx₁_6 := dx₁_2 + dy₂_4;
-    let dx₁_7 := dx₁_3 + dy₂;
-    let dy₁ := (starRingEnd R) x₁_1 • dx₁_7;
-    let dy₂ := (starRingEnd R) x₁_2 • dx₁_7;
-    let dy₁_4 := (starRingEnd R) x₁ • dy₁;
-    let dy₂_6 := (starRingEnd R) x • dy₁;
-    let dx₁ := dx₁ + dy₁_4;
-    let dx₁_8 := dx₁_5 + dy₂_6;
-    let dx₁_9 := dx₁_6 + dy₂;
+    let dy₁ := (starRingEnd R) x₁_8 • dy₂;
+    let dx₁_1 := dx₂₁ + dy₁;
+    let dy₂_1 := (starRingEnd R) x₁_3 • dy₂;
+    let dy₁ := (starRingEnd R) x₁_7 • dy₂_1;
+    let dx₁_2 := dx₂₂₁ + dy₁;
+    let dy₂_2 := (starRingEnd R) x₁_3 • dy₂;
+    let dy₂_3 := (starRingEnd R) x₁_1 • dy₂_2;
+    let dy₁ := (starRingEnd R) x • dy₂_3;
+    let dx₁_3 := dx₂₂₂₁ + dy₁;
+    let dy₂ := (starRingEnd R) x₁_3 • dy₂;
+    let dy₂ := (starRingEnd R) x₁_1 • dy₂;
+    let dy₂ := (starRingEnd R) x₁ • dy₂;
+    let dx₂ := dx + dy₂;
+    let dy₁ := (starRingEnd R) x₁_5 • dx₁;
+    let dy₂ := (starRingEnd R) x₁_3 • dx₁;
+    let dx₁ := dx₁_1 + dy₁;
+    let dy₁ := (starRingEnd R) x₁_4 • dy₂;
+    let dx₁_4 := dx₁_2 + dy₁;
+    let dy₂_4 := (starRingEnd R) x₁_1 • dy₂;
+    let dy₁ := (starRingEnd R) x • dy₂_4;
+    let dx₁_5 := dx₁_3 + dy₁;
+    let dy₂ := (starRingEnd R) x₁_1 • dy₂;
+    let dy₂ := (starRingEnd R) x₁ • dy₂;
+    let dx₂ := dx₂ + dy₂;
+    let dy₁ := (starRingEnd R) x₁_2 • dx₁;
+    let dy₂ := (starRingEnd R) x₁_1 • dx₁;
+    let dx₁ := dx₁_4 + dy₁;
     let dy₁ := ⋯;
     ⋯) : Prop
 -/
