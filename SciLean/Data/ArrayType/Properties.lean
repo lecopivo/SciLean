@@ -5,9 +5,11 @@ import SciLean.Analysis.Convenient.HasAdjDiff
 import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Analysis.Calculus.RevFDerivProj
 import SciLean.Analysis.Calculus.FwdFDeriv
+import SciLean.Analysis.Calculus.HasRevFDeriv
 
 import SciLean.Meta.GenerateAddGroupHomSimp
 import SciLean.Meta.GenerateFunTrans
+import SciLean.Tactic.ConvAssign
 
 namespace SciLean
 
@@ -171,6 +173,22 @@ theorem ArrayType.ofFn.arg_f.fwdFDeriv_rule :
   =
   fun f df => (ArrayType.ofFn (Cont:=Cont) f, ArrayType.ofFn (Cont:=Cont) df) := by fun_trans
 
+
+abbrev_data_synth ArrayType.get in cont
+    {K : Type} [RCLike K] [IndexType Idx] [NormedAddCommGroup Elem] [NormedSpace K Elem] (f₀) :
+    (HasFDerivAt (𝕜:=K) · · f₀) by
+  apply hasFDerivAt_from_isContinuousLinearMap (by fun_prop)
+
+abbrev_data_synth ArrayType.ofFn in f
+    {K : Type} [RCLike K] [IndexType Idx] [NormedAddCommGroup Elem] [NormedSpace K Elem] (f₀) :
+    (HasFDerivAt (𝕜:=K) · · f₀) by
+  apply hasFDerivAt_from_isContinuousLinearMap (by fun_prop)
+
+abbrev_data_synth ArrayType.set in cont xi
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [NormedSpace K Elem] (f₀) :
+    (HasFDerivAt (𝕜:=K) · · f₀) by
+  apply hasFDerivAt_from_isContinuousLinearMap (by simp; fun_prop)
+
 -- TODO: add Differentiable, ContDiff for `modify` function
 
 end OnNormedSpaces
@@ -271,6 +289,54 @@ theorem ArrayType.ofFn.arg_f.adjoint_rule :
     adjoint K (fun f : Idx → Elem => ArrayType.ofFn (Cont:=Cont) f)
     =
     fun c i => ArrayType.get c i := by sorry_proof
+
+
+abbrev_data_synth ArrayType.get in cont
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasAdjoint K by
+  conv => enter[3]; assign (fun xi : Elem => ArrayType.ofFn (Cont:=Cont) fun j => if i=j then xi else 0)
+  constructor
+  case adjoint => intros; simp[Inner.inner]; sorry_proof
+  case is_linear => fun_prop
+
+abbrev_data_synth ArrayType.get in cont
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasAdjointUpdate K by
+  conv => enter[3]; assign (fun (xi : Elem) (x : Cont) => ArrayType.modify x i (fun xi' => xi' + xi))
+  constructor
+  case adjoint => intros; simp[Inner.inner]; sorry_proof
+  case is_linear => fun_prop
+
+abbrev_data_synth ArrayType.ofFn in f
+    {K : Type} [RCLike K] [IndexType Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasAdjoint K by
+  conv => enter[3]; assign (fun (x : Cont) i => ArrayType.get x i)
+  constructor
+  case adjoint => intros; simp[Inner.inner]
+  case is_linear => fun_prop
+
+abbrev_data_synth ArrayType.ofFn in f
+    {K : Type} [RCLike K] [IndexType Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasAdjointUpdate K by
+  conv => enter[3]; assign (fun (x : Cont) (f : Idx → Elem) i => f i + ArrayType.get x i)
+  constructor
+  case adjoint =>
+    intros; simp[Inner.inner,sum_to_finset_sum,← Finset.sum_sub_distrib]
+    congr; funext i; simp[AdjointSpace.inner_add_right]
+  case is_linear => fun_prop
+
+abbrev_data_synth ArrayType.set in cont xi
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasAdjoint K by
+  conv => enter[3]; assign (fun (x : Cont) => (ArrayType.set x i 0, ArrayType.get x i))
+  sorry_proof
+
+abbrev_data_synth ArrayType.set in cont xi
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasAdjointUpdate K by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => dsimp; data_synth
+  case simp => intros; conv => rhs; simp[Prod.add_def]
 
 
 end OnAdjointSpace

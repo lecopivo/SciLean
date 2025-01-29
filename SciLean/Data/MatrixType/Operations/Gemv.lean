@@ -80,6 +80,7 @@ def_fun_prop MatrixType.gemv in alpha beta A x y
   simp +unfoldPartialApp [matrix_to_spec, vector_to_spec, Matrix.mulVec, dotProduct]
   fun_prop
 
+-- fderiv
 abbrev_fun_trans MatrixType.gemv in alpha beta A x y
     [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
     fderiv K by
@@ -96,7 +97,93 @@ abbrev_fun_trans MatrixType.gemv in alpha beta A x y -- arg_subsets -- too slow 
   unfold fwdFDeriv
   autodiff; to_ssa
 
+abbrev_data_synth MatrixType.gemv in A x y
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] (Axy₀) :
+    (HasFDerivAt (𝕜:=K) · · Axy₀) by
+  apply hasFDerivAt_from_fderiv
+  case deriv => conv => rhs; fun_trans
+  case diff => dsimp [autoParam]; fun_prop
 
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in A x
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] (Axy₀) :
+    (HasFDerivAt (𝕜:=K) · · Axy₀) by
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv =>
+    apply hasFDerivAt_comp
+              (g:=fun Ax : M×X => (Ax.1,Ax.2,y))
+              (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv =>
+    rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in A y
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] (Axy₀) :
+    (HasFDerivAt (𝕜:=K) · · Axy₀) by
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv =>
+    apply hasFDerivAt_comp
+              (g:=fun Ay : M×Y => (Ay.1,x,Ay.2))
+              (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in x y
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] (Axy₀) :
+    (HasFDerivAt (𝕜:=K) · · Axy₀) by
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv =>
+    apply hasFDerivAt_comp
+              (g:=fun xy : X×Y => (A,xy.1,xy.2))
+              (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in A
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] (Axy₀) :
+    (HasFDerivAt (𝕜:=K) · · Axy₀) by
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv =>
+    apply hasFDerivAt_comp
+              (g:=fun A : M => (A,x,y))
+              (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in x
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] (Axy₀) :
+    (HasFDerivAt (𝕜:=K) · · Axy₀) by
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv =>
+    apply hasFDerivAt_comp
+              (g:=fun x : X => (A,x,y))
+              (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in y
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] (Axy₀) :
+    (HasFDerivAt (𝕜:=K) · · Axy₀) by
+  apply hasFDerivAt_from_hasFDerivAt
+  case deriv =>
+    apply hasFDerivAt_comp
+              (g:=fun y : Y => (A,x,y))
+              (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- forward AD
 abbrev_fun_trans MatrixType.gemv in A x y
     [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
     fwdFDeriv K by
@@ -141,8 +228,39 @@ abbrev_fun_trans MatrixType.gemv in alpha beta
     --      Matrix.mulVec, dotProduct, Finset.mul_sum, Finset.sum_mul]
     sorry_proof
 
+open ComplexConjugate
+abbrev_data_synth MatrixType.gemv in x y
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasAdjoint K by
+  conv => enter[3]; assign (fun z => (MatrixType.gemvH (conj alpha) 0 A z 0,
+                                      VectorType.scal (conj beta) z))
+  sorry_proof
+
+open ComplexConjugate
+abbrev_data_synth MatrixType.gemv in x y
+    [VectorType.Lawful M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasAdjointUpdate K by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => intros; conv => rhs; simp[Prod.add_def,vector_optimize]
+
+open ComplexConjugate
+abbrev_data_synth MatrixType.gemv in A y
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasAdjoint K by
+  conv => enter[3]; assign (fun z : Y => (MatrixType.outerprodAdd (conj alpha) z x (0:M),
+                                          VectorType.scal (conj beta) z))
+  sorry_proof
+
+abbrev_data_synth MatrixType.gemv in A y
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasAdjointUpdate K by
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  case simp => intros; conv => rhs; simp[Prod.add_def,vector_optimize]
 
 
+-- reverse AD
 abbrev_fun_trans MatrixType.gemv in alpha beta A x y
     [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
     revFDeriv K by
@@ -155,46 +273,102 @@ abbrev_fun_trans MatrixType.gemv in A x y
   unfold revFDeriv
   fun_trans
 
+abbrev_data_synth MatrixType.gemv in A x y
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intros; dsimp; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => conv => rhs; lsimp
 
--- def_rev_deriv MatrixType.gemv in alpha beta A x y
---   [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
---   constructor
---   · intro x
---     conv =>
---       rhs; dsimp
---       autodiff
---       simp [Prod.add_def, vector_optimize,VectorType.scal_one]
---   · fun_prop
+abbrev_data_synth MatrixType.gemv in A x y
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intros; dsimp; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
 
--- def_rev_deriv MatrixType.gemv in A x y
---   [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
---   constructor
---   · intro x
---     conv =>
---       rhs; dsimp
---       autodiff
---       simp [Prod.add_def, vector_optimize]
---   · fun_prop
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in A x
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+            (g:=fun Ax : M×X => (Ax.1,Ax.2,y))
+            (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    conv => rhs; lsimp
 
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in A x
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+            (g:=fun Ax : M×X => (Ax.1,Ax.2,y))
+            (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
 
--- def_rev_deriv' MatrixType.gemv in A x
---   [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
---   have := hA.2
---   have := hx.2
---   have : revFDeriv K A
---          =
---          fun w =>
---            let' (A,dA) := A' w
---            (A, (dA · 0)) := by simp[hA.1]; rfl
---   have : revFDeriv K x
---          =
---          fun w =>
---            let' (x,dx) := x' w
---            (x, (dx · 0)) := by simp[hx.1]; rfl
---   constructor
---   · intro x
---     conv =>
---       rhs; dsimp
---       autodiff
---       simp [Prod.add_def, vector_optimize]; to_ssa; lsimp
---   · fun_prop
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in x
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+            (g:=fun x : X => (A,x,y))
+            (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in x
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+            (g:=fun x : X => (A,x,y))
+            (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in y
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+            (g:=fun y : Y => (A,x,y))
+            (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in y
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+            (g:=fun y : Y => (A,x,y))
+            (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
