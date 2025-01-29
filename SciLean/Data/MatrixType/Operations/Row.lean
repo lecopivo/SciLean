@@ -7,6 +7,7 @@ namespace SciLean
 
 open MatrixType
 
+
 -- linear, continusous, differentiable
 def_fun_prop MatrixType.row in A [VectorType.Lawful M] [VectorType.Lawful X] : IsLinearMap K by
   constructor <;> (intros; ext i; simp[vector_to_spec,matrix_to_spec])
@@ -71,14 +72,3 @@ abbrev_data_synth row in A [VectorType.Lawful M] [Dense M] [VectorType.Lawful X]
   case deriv => intros; data_synth
   case adjoint => intros; dsimp; data_synth
   case simp => rfl
-
-
-#exit
-attribute [local instance] MatrixType.vectorTypeLawful
-
-def_rev_deriv MatrixType.row in A
-    [MatrixType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [DecidableEq m] by
-  constructor
-  · intro A
-    conv => rhs; autodiff; simp -zeta [vector_optimize]
-  · fun_prop
