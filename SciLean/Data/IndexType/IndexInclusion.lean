@@ -1,4 +1,3 @@
-import Mathlib
 import SciLean.Data.IndexType.Basic
 
 namespace SciLean

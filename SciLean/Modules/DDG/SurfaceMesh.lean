@@ -7,7 +7,6 @@ Surface Mesh based on discrete differential geometry.
 https://github.com/GeometryCollective/geometry-processing-js/blob/c7ea47ae808979a5361e3fcd61bf921a194bf897/core/mesh.js#L3-L213
 -/
 
--- import SciLean.Core
 import SciLean.Data.DataArray.VecN
 import Lean.Data.HashMap
 

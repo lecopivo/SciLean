@@ -10,3 +10,6 @@
 *.olean
 /.lake/
 SciLean/Doodle*
+SciLean/Core_old/
+SciLean/Mathlib_old/
+Doodle*

@@ -155,47 +155,46 @@ abbrev_fun_trans MatrixType.gemv in A x y
   unfold revFDeriv
   fun_trans
 
-#exit
 
-def_rev_deriv MatrixType.gemv in alpha beta A x y
-  [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
-  constructor
-  · intro x
-    conv =>
-      rhs; dsimp
-      autodiff
-      simp [Prod.add_def, vector_optimize,VectorType.scal_one]
-  · fun_prop
+-- def_rev_deriv MatrixType.gemv in alpha beta A x y
+--   [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
+--   constructor
+--   · intro x
+--     conv =>
+--       rhs; dsimp
+--       autodiff
+--       simp [Prod.add_def, vector_optimize,VectorType.scal_one]
+--   · fun_prop
 
-def_rev_deriv MatrixType.gemv in A x y
-  [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
-  constructor
-  · intro x
-    conv =>
-      rhs; dsimp
-      autodiff
-      simp [Prod.add_def, vector_optimize]
-  · fun_prop
+-- def_rev_deriv MatrixType.gemv in A x y
+--   [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
+--   constructor
+--   · intro x
+--     conv =>
+--       rhs; dsimp
+--       autodiff
+--       simp [Prod.add_def, vector_optimize]
+--   · fun_prop
 
 
-def_rev_deriv' MatrixType.gemv in A x
-  [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
-  have := hA.2
-  have := hx.2
-  have : revFDeriv K A
-         =
-         fun w =>
-           let' (A,dA) := A' w
-           (A, (dA · 0)) := by simp[hA.1]; rfl
-  have : revFDeriv K x
-         =
-         fun w =>
-           let' (x,dx) := x' w
-           (x, (dx · 0)) := by simp[hx.1]; rfl
-  constructor
-  · intro x
-    conv =>
-      rhs; dsimp
-      autodiff
-      simp [Prod.add_def, vector_optimize]; to_ssa; lsimp
-  · fun_prop
+-- def_rev_deriv' MatrixType.gemv in A x
+--   [VectorType.Lawful M] [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] by
+--   have := hA.2
+--   have := hx.2
+--   have : revFDeriv K A
+--          =
+--          fun w =>
+--            let' (A,dA) := A' w
+--            (A, (dA · 0)) := by simp[hA.1]; rfl
+--   have : revFDeriv K x
+--          =
+--          fun w =>
+--            let' (x,dx) := x' w
+--            (x, (dx · 0)) := by simp[hx.1]; rfl
+--   constructor
+--   · intro x
+--     conv =>
+--       rhs; dsimp
+--       autodiff
+--       simp [Prod.add_def, vector_optimize]; to_ssa; lsimp
+--   · fun_prop
