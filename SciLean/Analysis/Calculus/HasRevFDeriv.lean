@@ -132,7 +132,8 @@ theorem comp_rule (g : X → Y) (f : Y → Z) {g' f'}
         let' (z,df') := f' y
         (z, fun dz =>
           let dy := df' dz
-          dg' dy)) := by
+          let dx := dg' dy
+          dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjoint
   have ⟨_,_,_,_⟩ := hg.deriv_adjoint
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
@@ -151,7 +152,8 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
         let' (z,df') := f' (y,x)
         (z, fun dz =>
           let' (dy, dx) := df' dz
-          dg' dy dx)) := by
+          let dx := dg' dy dx
+          dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjoint
   have ⟨_,_,_,_,_,_⟩ := hg.deriv_adjoint
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
@@ -167,7 +169,11 @@ theorem pi_rule {I : Type*} [IndexType I]
       (fun x =>
         (fun i => f x i,
          fun dy =>
-          IndexType.foldl (init:=(0:X)) fun dx i => (f' i x).2 (dy i) dx)) := by
+          IndexType.foldl (init:=(0:X)) fun dx i =>
+            let' (y,df') := f' i x
+            let dyi := dy i
+            let dx := df' dyi dx
+            dx)) := by
   sorry_proof
 
 -- structure Decomposition (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) : Prop where
@@ -188,7 +194,8 @@ theorem proj_rule
         let' (y,dg') := g' x₁
         (y, fun dy =>
           let dx₁ := dg' dy
-          q dx₁ 0)) := by
+          let dx := q dx₁ 0
+          dx)) := by
   rcases hg with ⟨_,dg,hdg,_⟩
   sorry_proof
   -- apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
@@ -245,7 +252,8 @@ theorem comp_rule (g : X → Y) (f : Y → Z) {g' f'}
         let' (z,df') := f' y
         (z, fun dz dx =>
           let dy := df' dz
-          dg' dy dx)) := by
+          let dx := dg' dy dx
+          dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjoint
   have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
@@ -264,7 +272,8 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
         let' (z,df') := f' (y,x)
         (z, fun dz dx =>
           let' (dy,dx) := df' dz (0,dx)
-          dg' dy dx)) := by
+          let dx := dg' dy dx
+          dx)) := by
   have ⟨_,_,_,_,_,_⟩ := hf.deriv_adjoint
   have ⟨_,_,_,hg'⟩ := hg.deriv_adjointUpdate
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
@@ -282,7 +291,11 @@ theorem pi_rule {I : Type*} [IndexType I]
       (fun x i => f x i)
       (fun x =>
         (f x, fun dy dx =>
-        IndexType.foldl (init:=dx) fun dx i => (f' i x).2 (dy i) dx)) := by
+        IndexType.foldl (init:=dx) fun dx i =>
+          let' (y,df') := f' i x
+          let dyi := dy i
+          let dx := df' dyi dx
+          dx)) := by
   sorry_proof
 
 set_option linter.unusedVariables false in
@@ -299,7 +312,9 @@ theorem proj_rule
         (y, fun dy dx =>
           let dx₁ := p₁ dx
           let dx₂ := p₂ dx
-          q (dg' dy dx₁) dx₂)) := sorry_proof
+          let dx₁ := dg' dy dx₁
+          let dx := q dx₁ dx₂
+          dx)) := sorry_proof
 
 open Lean Meta
 #eval show MetaM Unit from do
@@ -340,7 +355,9 @@ theorem Prod.mk.arg_a0a1.HasRevFDeriv_comp_rule (f : X → Y) (g : X → Z)
       let' (z, dg') := g' x
       ((y,z), fun dyz =>
         let' (dy,dz) := dyz
-        dg' dz (df' dy))) := by
+        let dx := df' dy
+        let dx := dg' dz dx
+        dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjoint
   have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
@@ -358,7 +375,9 @@ theorem Prod.mk.arg_a0a1.HasRevFDerivUpdate_comp_rule (f : X → Y) (g : X → Z
       let' (z, dg') := g' x
       ((y,z), fun dyz dx =>
         let' (dy,dz) := dyz
-        dg' dz (df' dy dx))) := by
+        let dx := df' dy dx
+        let dx := dg' dz dx
+        dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
   have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
@@ -412,7 +431,8 @@ theorem HAdd.hAdd.arg_a0a1.HasRevFDeriv_rule
         let' (z,dg) := g' x
         (y + z, fun dy =>
                   let dx := df dy
-                  dg dy dx)) := by
+                  let dx := dg dy dx
+                  dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjoint
   have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
@@ -430,7 +450,8 @@ theorem HAdd.hAdd.arg_a0a1.HasRevFDerivUpdate_rule
         let' (z,dg) := g' x
         (y + z, fun dy dx =>
                   let dx := df dy dx
-                  dg dy dx)) := by
+                  let dx := dg dy dx
+                  dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
   have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
@@ -448,7 +469,8 @@ theorem HSub.hSub.arg_a0a1.HasRevFDeriv_rule
         let' (z,dg) := g' x
         (y - z, fun dy =>
                   let dx := df dy
-                  dg (-dy) dx)) := by
+                  let dx := dg (-dy) dx
+                  dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjoint
   have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
@@ -466,7 +488,8 @@ theorem HSub.hSub.arg_a0a1.HasRevFDerivUpdate_rule
         let' (z,dg) := g' x
         (y - z, fun dy dx =>
                   let dx := df dy dx
-                  dg (-dy) dx)) := by
+                  let dx := dg (-dy) dx
+                  dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
   have ⟨_,_,_,_⟩ := hg.deriv_adjointUpdate
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
@@ -482,7 +505,8 @@ theorem Neg.neg.arg_a0.HasRevFDeriv_rule
       (fun x =>
         let' (y,df) := f' x
         (-y, fun dy =>
-          df (-dy))) := by
+          let dx := df (-dy)
+          dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjoint
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intro; data_synth
@@ -496,7 +520,9 @@ theorem Neg.neg.arg_a0.HasRevFDerivUpdate_rule
     HasRevFDerivUpdate K (fun x => -f x)
       (fun x =>
         let' (y,df) := f' x
-        (-y, fun dy dx => df (-dy) dx)) := by
+        (-y, fun dy dx =>
+          let dx := df (-dy) dx
+          dx)) := by
   have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intro; data_synth
@@ -748,7 +774,10 @@ theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule
     HasRevFDerivUpdate K
       (fun f : I → X => ∑ i, f i)
       (fun f =>
-        (∑ i, f i, fun dx df i => df i + dx)) := by
+        (∑ i, f i, fun dx df i =>
+          let dxi := df i
+          let dx := dxi + dx
+          dx)) := by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intro; data_synth
   case adjoint => intro x; simp; data_synth
@@ -762,7 +791,10 @@ theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule'
     HasRevFDerivUpdate K
       (fun f : I → X => sum f)
       (fun f =>
-        (∑ i, f i, fun dx df i => df i + dx)) := by
+        (∑ i, f i, fun dx df i =>
+          let dxi := df i
+          let dx := dxi + dx
+          dx)) := by
   apply SciLean.sum.arg_f.HasRevFDerivUpdate_rule
 
 @[data_synth]
@@ -808,7 +840,10 @@ theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule'
     HasRevFDerivUpdate K
       (fun f : I → X => A.sum (f))
       (fun f =>
-        (A.sum (fun i => f i), fun dx df i => df i + A.toSet.indicator (fun _ => dx) i)) := by
+        (A.sum (fun i => f i), fun dx df i =>
+          let dxi := df i
+          let dx := dxi + A.toSet.indicator (fun _ => dx) i
+          dx)) := by
   apply Finset.sum.arg_f.HasRevFDerivUpdate_rule
 
 @[data_synth]
@@ -905,7 +940,9 @@ theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule :
     (fun x : X => ‖x‖₂²[R])
     (fun x =>
       let s := ‖x‖₂²[R];
-      (s, fun dr => (2*dr) • x)) := by
+      (s, fun dr =>
+        let dx := (2*dr) • x
+        dx)) := by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intro; data_synth
   case adjoint => intro; dsimp; data_synth
@@ -917,7 +954,9 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_simple_rule :
     (fun x : X => ‖x‖₂²[R])
     (fun x =>
       let s := ‖x‖₂²[R];
-      (s, fun dr x' => (2*dr) • x + x')) := by
+      (s, fun dr x' =>
+        let dx := (2*dr) • x + x'
+        dx)) := by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intro; data_synth
   case adjoint => intro; dsimp; data_synth

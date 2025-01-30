@@ -179,7 +179,7 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
       (fun x =>
         let y := g x
         f y x)
-      (fun z x=>
+      (fun z x =>
         let' (y,x) := f' z (0,x)
         g' y x) := by
   constructor
@@ -248,7 +248,7 @@ theorem Prod.mk.arg_a0a1.HasAdjoint_comp_rule (f : X → Y) (g : X → Z)
       g' z (f' y)) := by
   constructor
   case adjoint =>
-    intro x y;
+    intro x y
     simp[AdjointSpace.inner_prod_split,hf.adjoint,hg.adjoint (f' y.1)]
   case is_linear => have := hf.is_linear; have := hg.is_linear; fun_prop
 
@@ -416,6 +416,7 @@ theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule (k : K) :
     simp [AdjointSpace.inner_smul_left,AdjointSpace.inner_smul_right,AdjointSpace.inner_add_right]
   case is_linear => sorry_proof
 
+#check nsmul_eq_smul_cast
 open ComplexConjugate in
 @[data_synth]
 theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_nat (n : ℕ) :
@@ -423,8 +424,12 @@ theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_nat (n : ℕ) :
       (fun x : X => n • x)
       (fun x => n • x) := by
   constructor
-  case adjoint => intro x y; sorry_proof
-  case is_linear => sorry_proof
+  case adjoint =>
+    intro x y;
+    simp [← Nat.cast_smul_eq_nsmul (R:=K),AdjointSpace.inner_smul_left,
+          AdjointSpace.inner_smul_right,AdjointSpace.inner_add_right]
+  case is_linear =>
+    simp [← Nat.cast_smul_eq_nsmul (R:=K)]; fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -433,8 +438,38 @@ theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule_nat (n : ℕ) :
       (fun x : X => n • x)
       (fun x x' => x' + n • x) := by
   constructor
-  case adjoint => intro x y; sorry_proof
-  case is_linear => sorry_proof
+  case adjoint =>
+    intros x y
+    simp [← Nat.cast_smul_eq_nsmul (R:=K),AdjointSpace.inner_smul_left,
+          AdjointSpace.inner_smul_right,AdjointSpace.inner_add_right]
+  case is_linear =>
+    simp [← Nat.cast_smul_eq_nsmul (R:=K)]; fun_prop
+
+  @[data_synth]
+  theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_int (n : Int) :
+    HasAdjoint K
+      (fun x : X => n • x)
+      (fun x => n • x) := by
+    constructor
+    case adjoint =>
+      intro x y;
+      simp [← Int.cast_smul_eq_zsmul (R:=K),AdjointSpace.inner_smul_left,
+            AdjointSpace.inner_smul_right,AdjointSpace.inner_add_right]
+    case is_linear =>
+      simp [← Int.cast_smul_eq_zsmul (R:=K)]; fun_prop
+
+  @[data_synth]
+  theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule_int (n : Int) :
+    HasAdjointUpdate K
+      (fun x : X => n • x)
+      (fun x x' => x' + n • x) := by
+    constructor
+    case adjoint =>
+      intro x y;
+      simp [← Int.cast_smul_eq_zsmul (R:=K),AdjointSpace.inner_smul_left,
+            AdjointSpace.inner_smul_right,AdjointSpace.inner_add_right]
+    case is_linear =>
+      simp [← Int.cast_smul_eq_zsmul (R:=K)]; fun_prop
 
 -- todo: finish the proof as I'm not sure if these assumptions are sufficient!!! (but very plausible)
 open ComplexConjugate in
@@ -491,7 +526,7 @@ theorem HMul.hMul.arg_a1.HasAdjoint_simp_rule (x : K) :
       (fun y => x * y)
       (fun z => conj x * z) := by
   constructor
-  case adjoint => intro k y; simp; ac_rfl;
+  case adjoint => intro k y; simp; ac_rfl
   case is_linear => sorry_proof
 
 set_option linter.unusedVariables false in

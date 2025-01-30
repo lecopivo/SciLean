@@ -372,3 +372,31 @@ abbrev_data_synth MatrixType.gemv in y
             (hf:=by data_synth)
   case simp =>
     conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in A
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+            (g:=fun A : M => (A,x,y))
+            (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth MatrixType.gemv in A
+    [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful X] [VectorType.Lawful Y] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+            (g:=fun A : M => (A,x,y))
+            (f:=fun Axy : M×X×Y => MatrixType.gemv alpha beta Axy.1 Axy.2.1 Axy.2.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp

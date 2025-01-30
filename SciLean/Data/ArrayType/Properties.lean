@@ -290,25 +290,51 @@ theorem ArrayType.ofFn.arg_f.adjoint_rule :
     =
     fun c i => ArrayType.get c i := by sorry_proof
 
-
+-- get
 abbrev_data_synth ArrayType.get in cont
-    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
     HasAdjoint K by
   conv => enter[3]; assign (fun xi : Elem => ArrayType.ofFn (Cont:=Cont) fun j => if i=j then xi else 0)
   constructor
   case adjoint => intros; simp[Inner.inner]; sorry_proof
   case is_linear => fun_prop
 
+
 abbrev_data_synth ArrayType.get in cont
-    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
     HasAdjointUpdate K by
+  -- apply hasAdjointUpdate_from_hasAdjoint
+  -- case adjoint => data_synth
+  -- case simp => intros; conv => rhs; rw[← ArrayType.eta (_ + _)]; simp
   conv => enter[3]; assign (fun (xi : Elem) (x : Cont) => ArrayType.modify x i (fun xi' => xi' + xi))
   constructor
   case adjoint => intros; simp[Inner.inner]; sorry_proof
   case is_linear => fun_prop
 
+abbrev_data_synth ArrayType.get in cont
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intros; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => rfl
+
+abbrev_data_synth ArrayType.get in cont
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intros; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => rfl
+
+-- ofFn
 abbrev_data_synth ArrayType.ofFn in f
-    {K : Type} [RCLike K] [IndexType Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    {K : Type} [RCLike K] [IndexType Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
     HasAdjoint K by
   conv => enter[3]; assign (fun (x : Cont) i => ArrayType.get x i)
   constructor
@@ -316,7 +342,8 @@ abbrev_data_synth ArrayType.ofFn in f
   case is_linear => fun_prop
 
 abbrev_data_synth ArrayType.ofFn in f
-    {K : Type} [RCLike K] [IndexType Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    {K : Type} [RCLike K] [IndexType Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
     HasAdjointUpdate K by
   conv => enter[3]; assign (fun (x : Cont) (f : Idx → Elem) i => f i + ArrayType.get x i)
   constructor
@@ -325,19 +352,113 @@ abbrev_data_synth ArrayType.ofFn in f
     congr; funext i; simp[AdjointSpace.inner_add_right]
   case is_linear => fun_prop
 
+abbrev_data_synth ArrayType.ofFn in f
+    {K : Type} [RCLike K] [IndexType Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intro; dsimp; data_synth
+  case simp => rfl
+
+abbrev_data_synth ArrayType.ofFn in f
+    {K : Type} [RCLike K] [IndexType Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intro; data_synth
+  case adjoint => intro; dsimp; data_synth
+  case simp => rfl
+
+-- set
 abbrev_data_synth ArrayType.set in cont xi
-    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
     HasAdjoint K by
   conv => enter[3]; assign (fun (x : Cont) => (ArrayType.set x i 0, ArrayType.get x i))
   sorry_proof
 
 abbrev_data_synth ArrayType.set in cont xi
-    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
     HasAdjointUpdate K by
   apply hasAdjointUpdate_from_hasAdjoint
   case adjoint => dsimp; data_synth
   case simp => intros; conv => rhs; simp[Prod.add_def]
 
+abbrev_data_synth ArrayType.set in cont xi
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; dsimp; data_synth
+  case adjoint => intro; dsimp; data_synth
+  case simp => conv => rhs; lsimp
+
+abbrev_data_synth ArrayType.set in cont xi
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intro; dsimp; data_synth
+  case adjoint => intro; dsimp; data_synth
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth ArrayType.set in cont
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+            (g:=fun cont => (cont, xi))
+            (f:=fun contxi : Cont×Elem => ArrayType.set contxi.1 i contxi.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth ArrayType.set in cont
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+            (g:=fun cont => (cont, xi))
+            (f:=fun contxi : Cont×Elem => ArrayType.set contxi.1 i contxi.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth ArrayType.set in xi
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+            (g:=fun xi => (cont, xi))
+            (f:=fun contxi : Cont×Elem => ArrayType.set contxi.1 i contxi.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth ArrayType.set in xi
+    {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx]
+    [NormedAddCommGroup Elem] [AdjointSpace K Elem] :
+    HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+            (g:=fun xi => (cont, xi))
+            (f:=fun contxi : Cont×Elem => ArrayType.set contxi.1 i contxi.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
 
 end OnAdjointSpace
 
@@ -534,7 +655,7 @@ variable [NormedAddCommGroup Elem] [AdjointSpace K Elem]
 -- theorem DataArrayN.mapMono.arg_fcont.revFDeriv_rule
 --     (cont : W → Cont) (hcont : Differentiable K cont)
 --     (f : W → Elem → Elem) (hf : Differentiable K fun (w,x) => f w x) :
---     (revFDeriv K fun w : W => ArrayType.mapMono (f w) (cont w) )
+--     (revFDeriv K fun w : W => ArrayType.mapMono (f w) (cont w))
 --     =
 --     fun w =>
 --       let cdc := revFDeriv K cont w
