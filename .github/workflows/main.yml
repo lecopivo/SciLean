@@ -1,37 +1,34 @@
 name: CI
 
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ["master"]
-
-  # Runs on PRs against master.
+    branches:
+      - master
+      - blas
   pull_request:
     branches:
       - master
-
-
-  # Allows you to run this workflow manually from the Actions tab
+      - blas
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: lean action
+      - name: Install OpenBLAS
+        run: sudo apt-get install -y libopenblas-dev
+      - name: Lean Action
         uses: leanprover/lean-action@v1
         with:
           build-args: "--log-level=error"
@@ -44,5 +41,48 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          # Upload entire repository
+          path: '.'
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install OpenBLAS
+        run: choco install openblas
+      - name: Lean Action
+        uses: leanprover/lean-action@v1
+        with:
+          build-args: "--log-level=error"
+      - name: Run Tests
+        run: lake test
+      - name: Run Examples
+        run: make examples
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: '.'
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install OpenBLAS
+        run: brew install openblas
+      - name: Lean Action
+        uses: leanprover/lean-action@v1
+        with:
+          build-args: "--log-level=error"
+      - name: Run Tests
+        run: lake test
+      - name: Run Examples
+        run: make examples
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
           path: '.'
