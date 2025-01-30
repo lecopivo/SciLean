@@ -90,7 +90,12 @@ theorem const_rule : HasAdjoint K (fun _ : X => (0 : Y)) (fun _ => 0) := by
 
 theorem comp_rule (g : X → Y) (f : Y → Z) {g' f'}
     (hg : HasAdjoint K g g') (hf : HasAdjoint K f f') :
-    HasAdjoint K (fun x => f (g x)) (fun z => g' (f' z)) := by
+    HasAdjoint K
+      (fun x => f (g x))
+      (fun z =>
+        let y := f' z
+        let x := g' y
+        x) := by
   constructor
   case adjoint => intro x y; simp_rw [hf.adjoint,hg.adjoint]
   case is_linear => have := hg.is_linear; have := hf.is_linear; fun_prop
@@ -103,7 +108,8 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
         f y x)
       (fun z =>
         let' (y,x) := f' z
-        g' y x) := by
+        let x := g' y x
+        x) := by
   constructor
   case adjoint =>
     intro x z; dsimp
@@ -117,7 +123,10 @@ theorem pi_rule {I : Type*} [IndexType I]
     HasAdjoint K
       (fun x i => f x i)
       (fun y =>
-        IndexType.foldl (init:=(0:X)) fun x i => f' i (y i) x) := by
+        IndexType.foldl (init:=(0:X)) fun x i =>
+          let yi := y i
+          let x := f' i yi x
+          x) := by
   constructor
   case adjoint =>
     intro x y
@@ -132,7 +141,10 @@ theorem proj_rule
     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
     (hg : HasAdjoint K g g') :
-    HasAdjoint K f (fun y => q (g' y) 0) := sorry_proof
+    HasAdjoint K f (fun y =>
+      let x₁ := g' y
+      let x := q x₁ 0
+      x) := sorry_proof
 
 
 open Lean Meta
@@ -168,7 +180,12 @@ theorem const_rule : HasAdjointUpdate K (fun _ : X => (0 : Y)) (fun _ x => x) :=
 
 theorem comp_rule (g : X → Y) (f : Y → Z) {g' f'}
     (hg : HasAdjointUpdate K g g') (hf : HasAdjoint K f f') :
-    HasAdjointUpdate K (fun x => f (g x)) (fun z => g' (f' z)) := by
+    HasAdjointUpdate K
+      (fun x => f (g x))
+      (fun z x =>
+        let y := f' z
+        let x := g' y x
+        x) := by
   constructor
   case adjoint => intro x y; simp [hf.adjoint,hg.adjoint x]
   case is_linear => have := hg.is_linear; have := hf.is_linear; fun_prop
@@ -181,7 +198,8 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
         f y x)
       (fun z x =>
         let' (y,x) := f' z (0,x)
-        g' y x) := by
+        let x := g' y x
+        x) := by
   constructor
   case adjoint =>
     intro x' x z; dsimp
@@ -195,7 +213,10 @@ theorem pi_rule {I : Type*} [IndexType I]
     HasAdjointUpdate K
       (fun x i => f x i)
       (fun y x =>
-        IndexType.foldl (init:=x) fun x i => f' i (y i) x) := by
+        IndexType.foldl (init:=x) fun x i =>
+          let yi := y i
+          let x := f' i yi x
+          x) := by
   constructor
   case adjoint =>
     intro x y
@@ -215,7 +236,8 @@ theorem proj_rule
         let x₁ := p₁ x
         let x₂ := p₂ x
         let x₁ := (g' y x₁)
-        q x₁ x₂) := sorry_proof
+        let x := q x₁ x₂
+        x) := sorry_proof
 
 open Lean Meta
 #eval show MetaM Unit from do
@@ -416,7 +438,6 @@ theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule (k : K) :
     simp [AdjointSpace.inner_smul_left,AdjointSpace.inner_smul_right,AdjointSpace.inner_add_right]
   case is_linear => sorry_proof
 
-#check nsmul_eq_smul_cast
 open ComplexConjugate in
 @[data_synth]
 theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_nat (n : ℕ) :

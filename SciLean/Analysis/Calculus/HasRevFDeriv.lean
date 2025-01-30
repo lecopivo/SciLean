@@ -186,7 +186,7 @@ theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
-    (hg : HasRevFDeriv K g g') (hf : f = fun x => g (p₁ x) := by simp)
+    (hg : HasRevFDeriv K g g') (hf : f = fun x => g (p₁ x) := by rfl)
     (hp₁ : IsContinuousLinearMap K p₁ := by fun_prop) /- (hdec : Decomposition p₁ p₂ q) -/ :
     HasRevFDeriv K f
       (fun x =>
@@ -303,7 +303,7 @@ theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace K X₂]
     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
-    (hg : HasRevFDerivUpdate K g g') (hf : f = fun x => g (p₁ x) := by simp)
+    (hg : HasRevFDerivUpdate K g g') (hf : f = fun x => g (p₁ x) := by rfl)
     (hp₁ : IsContinuousLinearMap K p₁ := by fun_prop) :
     HasRevFDerivUpdate K f
       (fun x =>

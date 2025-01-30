@@ -42,12 +42,24 @@ theorem hasFDerivAt_id' (x : E) : HasFDerivAt (fun x : E => x) (fun dx =>L[𝕜]
 
 theorem hasFDerivAt_comp {g : E → F} {f : F → G} {g' : E →L[𝕜] F} {f'  : F →L[𝕜] G} (x : E)
     (hg : HasFDerivAt g g' x) (hf : HasFDerivAt f f' (g x)) :
-    HasFDerivAt (fun x => f (g x)) (fun dx =>L[𝕜] f' (g' dx)) x :=
+    HasFDerivAt
+      (fun x => f (g x))
+      (fun dx =>L[𝕜]
+        let dy := g' dx
+        let dz := f' dy
+        dz) x :=
   HasFDerivAtFilter.comp x hf hg hg.continuousAt
 
 theorem hasFDerivAt_let {g : E → F} {f : F → E → G} {g' : E →L[𝕜] F} {f'  : F×E →L[𝕜] G} (x : E)
     (hg : HasFDerivAt g g' x) (hf : HasFDerivAt ↿f f' (g x,x)) :
-    HasFDerivAt (fun x => let y := g x; f y x) (fun dx =>L[𝕜] f' (g' dx, dx)) x :=
+    HasFDerivAt
+      (fun x =>
+        let y := g x
+        f y x)
+      (fun dx =>L[𝕜]
+        let dy := g' dx
+        let dz := f' (dy,dx)
+        dz) x :=
   hasFDerivAt_comp x (hg.prod (hasFDerivAt_id x)) hf
 
 set_option linter.unusedVariables false in
@@ -57,7 +69,11 @@ theorem hasFDerivAt_proj
     (f : E → F) (g : E₁ → F) (p₁ : E → E₁) (p₂ : E → E₂) (q : E₁ → E₂ → E)
     (x : E) {g' : E₁ →L[𝕜] F} (hg : HasFDerivAt g g' (p₁ x))
     (hp₁ : IsContinuousLinearMap 𝕜 p₁ := by fun_prop) (hf : ∀ x, f x = g (p₁ x) := by simp) :
-    HasFDerivAt f (fun dx : E =>L[𝕜] g' (p₁ dx)) x := by
+    HasFDerivAt f
+      (fun dx : E =>L[𝕜]
+        let dx₁ := p₁ dx
+        let dy := g' dx₁
+        dy) x := by
   conv => enter[1,x]; rw[hf]
   have hp₁' := (fun x =>L[𝕜] p₁ x).hasFDerivAt (x:=x)
   simp at hp₁'
@@ -92,18 +108,33 @@ variable
 theorem Prod.mk.arg_a0a1.HasFDerivAt_comp_rule (f : X → Y) (g : X → Z) (x : X) {f' g' : _ →L[K] _}
     (hf : HasFDerivAt f f' x)
     (hg : HasFDerivAt g g' x) :
-    HasFDerivAt (fun x => (f x, g x)) (fun dx =>L[K] (f' dx, g' dx)) x :=
+    HasFDerivAt
+      (fun x => (f x, g x))
+      (fun dx =>L[K]
+        let dy := f' dx
+        let dz := g' dx
+        (dy,dz)) x :=
   hf.prod hg
 
 @[data_synth]
-theorem Prod.fst.arg_self.HasFDerivAt_comp_rule (f : X → X×Y) (x : X)
+theorem Prod.fst.arg_self.HasFDerivAt_comp_rule (f : X → Y×Z) (x : X)
     {f' : _ →L[K] _} (hf : HasFDerivAt f f' x) :
-    HasFDerivAt (fun x => (f x).1) (fun dx =>L[K] (f' dx).1) x := hf.fst
+    HasFDerivAt
+      (fun x => (f x).1)
+      (fun dx =>L[K]
+        let dyz := f' dx
+        let dy := dyz.1
+        dy) x := hf.fst
 
 @[data_synth]
-theorem Prod.snd.arg_self.HasFDerivAt_comp_rule (f : X → X×Y) (x : X)
+theorem Prod.snd.arg_self.HasFDerivAt_comp_rule (f : X → Y×Z) (x : X)
     {f' : _ →L[K] _} (hf : HasFDerivAt f f' x) :
-    HasFDerivAt (fun x => (f x).2) (fun dx =>L[K] (f' dx).2) x := hf.snd
+    HasFDerivAt
+      (fun x => (f x).2)
+      (fun dx =>L[K]
+        let dyz := f' dx
+        let dz := dyz.2
+        dz) x := hf.snd
 
 attribute [data_synth]
   HasFDerivAt.add HasFDerivAt.sub HasFDerivAt.neg
