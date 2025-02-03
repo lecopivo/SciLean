@@ -428,6 +428,7 @@ import SciLean.Lean.ToSSA
 import SciLean.Logic.Function.Bijective
 import SciLean.Logic.Function.InvFun
 import SciLean.Logic.Function.Preimage
+import SciLean.Logic.If
 import SciLean.Logic.Isomorph.Isomorph
 import SciLean.Logic.Isomorph.IsomorphicType
 import SciLean.Logic.Isomorph.RealToFloat.Basic
@@ -623,6 +624,7 @@ import SciLean.Tactic.GTrans.Elab
 import SciLean.Tactic.GTrans.MetaLCtxM
 import SciLean.Tactic.GTrans.Theorems
 import SciLean.Tactic.IfPull
+import SciLean.Tactic.IfLetNormalize
 import SciLean.Tactic.InferVar
 import SciLean.Tactic.LFunTrans
 import SciLean.Tactic.LSimp
