@@ -53,3 +53,21 @@ jobs:
         run: lake test
       - name: Run Examples
         run: make examples
+
+  build-macos-m1:
+    runs-on: macos-14-xlarge
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install OpenBLAS
+        run: brew install openblas
+      - name: Lean Action
+        uses: leanprover/lean-action@v1
+      - name: Build project
+        run: lake build
+      - name: Run Tests
+        run: lake test
+      - name: Run Examples
+        run: make examples
+
+
