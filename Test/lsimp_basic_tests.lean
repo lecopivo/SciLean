@@ -101,7 +101,8 @@ example :
   (conv => lhs; lsimp)
 
 
--- test projection, simp does not preserve the let bindings even with `zeta:=false`
+-- OLD COMMENT: test projection, simp does not preserve the let bindings even with `zeta:=false`
+-- UPDATE: This is no longer the case! Yay!
 section LetAndProjections
 variable (a b c : Nat)
 /--
@@ -113,7 +114,11 @@ x : ℕ
         let y := x * c
         (x,y)).1 rewrite_by lsimp
 
-/-- info: a * b : ℕ -/
+/--
+info: (let x := a * b;
+  let y := x * c;
+  (x, y)).1 : ℕ
+-/
 #guard_msgs in
 #check (let x := a * b
         let y := x * c

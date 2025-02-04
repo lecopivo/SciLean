@@ -807,6 +807,8 @@ where
 initialize lsimpRef.set lsimpImpl
 
 
+open private Lean.Meta.Simp.withSimpContext from Lean.Meta.Tactic.Simp.Main
+
 /-- Run `lsimp` on `e` and process result with `k r' where `k` is executed in modified local context
 where all `r.vars` are valid free vars.
  -/
@@ -826,7 +828,7 @@ def main (e : Expr) (k : Result → MetaM α)
 
   -- load context
   -- let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
-  Simp.withSimpContext ctx do
+  Lean.Meta.Simp.withSimpContext ctx do
 
     -- run simp
     let (a,s) ← Meta.withoutModifyingLCtx (fun (r,s) => do pure (← k r,s)) do

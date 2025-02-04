@@ -578,11 +578,12 @@ example {R} [RealScalar R] :
   (instModuleScalarSMul : Module R R).toSMul = (NormedSpace.toModule : Module R R).toSMul := rfl
 
 instance (priority:=low) {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] : Algebra R K where
-  toFun := fun r => Scalar.make r 0
-  map_one' := sorry_proof
-  map_mul' := sorry_proof
-  map_zero' := sorry_proof
-  map_add' := sorry_proof
+  -- toFun := fun r => Scalar.make r 0
+  -- map_one' := sorry_proof
+  -- map_mul' := sorry_proof
+  -- map_zero' := sorry_proof
+  -- map_add' := sorry_proof
+  algebraMap := ⟨⟨⟨fun r => Scalar.make r 0, sorry_proof⟩, sorry_proof⟩, sorry_proof, sorry_proof⟩
   commutes' := sorry_proof
   smul_def' := sorry_proof
 

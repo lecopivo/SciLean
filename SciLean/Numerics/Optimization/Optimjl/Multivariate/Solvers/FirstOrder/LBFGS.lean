@@ -92,7 +92,7 @@ def twoloop (g : X) (k : ℤ) (m : ℕ)
   -- Backward pass
   for h : j in [0:m] do
     have : 0 ≤ j := h.1
-    have : j < m := h.2
+    have : j < m := h.2.1
     -- indices going in reverse order
     let iᵣ : Icc (k-m) (k-1) := ⟨k-1-j, by constructor <;> omega⟩
     let jᵣ : Fin m := ⟨m-j-1, by omega⟩
@@ -118,7 +118,7 @@ def twoloop (g : X) (k : ℤ) (m : ℕ)
   -- forward pass
   for h : j in [0:m] do
     have : 0 ≤ j := h.1
-    have : j < m := h.2
+    have : j < m := h.2.1
     -- indices going in forward order
     let i : Icc (k-m) (k-1) := ⟨k-m+j, by constructor <;> omega⟩
     let j : Fin m := ⟨j, by omega⟩

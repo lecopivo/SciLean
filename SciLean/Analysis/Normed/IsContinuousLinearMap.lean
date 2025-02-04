@@ -400,7 +400,7 @@ theorem HDiv.hDiv.arg_a0.IsContinuousLinearMap_rule
 @[fun_prop]
 theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
   (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
-  : IsContinuousLinearMap R fun x => ∑ i in A, f x i :=
+  : IsContinuousLinearMap R fun x => ∑ i ∈ A, f x i :=
 {
   linear := sorry_proof
   cont := sorry_proof

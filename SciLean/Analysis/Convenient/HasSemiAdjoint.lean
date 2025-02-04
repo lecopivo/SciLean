@@ -323,10 +323,10 @@ open BigOperators in
 @[fun_prop]
 theorem Finset.sum.arg_f.HasSemiAdjoint_rule {ι : Type _} [Fintype ι]
   (f : X → ι → Y) (_ : ∀ i, HasSemiAdjoint K fun x : X => f x i) (A : Finset ι)
-  : HasSemiAdjoint K fun x => ∑ i in A, f x i :=
+  : HasSemiAdjoint K fun x => ∑ i ∈ A, f x i :=
 by
   constructor
-  · apply Exists.intro (fun (y' : Y) => ∑ i in A, semiAdjoint K (f · i) y' ) _
+  · apply Exists.intro (fun (y' : Y) => ∑ i ∈ A, semiAdjoint K (f · i) y' ) _
     sorry_proof
   · sorry_proof -- fun_prop (disch:=sorry_proof)
 

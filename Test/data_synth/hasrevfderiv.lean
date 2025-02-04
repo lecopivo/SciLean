@@ -76,8 +76,9 @@ info: HasRevFDeriv R
   let x₁ := x + x₁;
   (x₁, fun dz =>
     let dx₁ := 0;
-    let x₁ := dx₁ + dz;
-    dz + x₁) : Prop
+    let dx₁ := dx₁ + dz;
+    let dx := dz + dx₁;
+    dx) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDeriv R (fun x : X => let y := x₀+x; x+y) _) rewrite_by data_synth

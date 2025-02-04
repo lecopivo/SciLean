@@ -81,8 +81,8 @@ namespace ArraySet
   instance (a b : ArraySet α) [DecidableEq α] : Decidable (a = b) := Id.run do
     if h : a.size = b.size then
       for h' : i in [0:a.size] do
-        have : i < a.size := h'.2
-        have : i < b.size := h ▸ h'.2
+        have : i < a.size := h'.2.1
+        have : i < b.size := h ▸ h'.2.1
         if a[i] ≠ b[i] then
           return isFalse sorry_proof
       return isTrue sorry_proof

@@ -1,6 +1,6 @@
 import SciLean.Data.IndexType.Operations
 import Mathlib.Data.Fintype.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib.Algebra.BigOperators.Group.Finset.Defs
 
 namespace SciLean
 
@@ -10,7 +10,8 @@ variable {ι : Type*} [IndexType ι]
   IndexType.reduceD f (fun (s : α) a => s + a) (0 : α)
 
 open Lean.TSyntax.Compat in
-macro (priority:=high) " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``sum xs b
+macro (priority:=high) " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term =>
+  Lean.expandExplicitBinders ``sum xs b
 
 @[app_unexpander sum] def unexpandSum : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:ident => $b) =>
@@ -26,7 +27,8 @@ macro (priority:=high) " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term => 
   IndexType.reduceD f (fun (s : α) a => s * a) 1
 
 open Lean.TSyntax.Compat in
-macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term => Lean.expandExplicitBinders ``product xs b
+macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term =>
+  Lean.expandExplicitBinders ``product xs b
 
 @[app_unexpander product] def unexpandProduct : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:ident => $b) =>
@@ -87,10 +89,12 @@ section OnMonoid
 variable [AddCommMonoid α]
 
 @[add_pull, sum_push]
-theorem sum_add_distrib (f g : I → α) : ∑ i , (f i + g i) = (∑ i, f i) + (∑ i, g i) := sorry_proof
+theorem sum_add_distrib (f g : I → α) : ∑ i , (f i + g i) = (∑ i, f i) + (∑ i, g i) :=
+  sorry_proof
 
 @[add_push, sum_pull]
-theorem add_sum (f g : I → α) : (∑ i, f i) + (∑ i, g i) = ∑ i , (f i + g i) := by simp only[add_pull]
+theorem add_sum (f g : I → α) : (∑ i, f i) + (∑ i, g i) = ∑ i , (f i + g i) := by
+  simp only[add_pull]
 
 
 end OnMonoid
@@ -99,10 +103,12 @@ section OnGroup
 variable [AddCommGroup α]
 
 @[sub_pull, sum_push]
-theorem sum_sub_distrib (f g : I → α) : ∑ i , (f i - g i) = (∑ i, f i) - (∑ i, g i) := sorry_proof
+theorem sum_sub_distrib (f g : I → α) : ∑ i , (f i - g i) = (∑ i, f i) - (∑ i, g i) :=
+  sorry_proof
 
 @[sub_push, sum_pull]
-theorem sub_sum (f g : I → α) : (∑ i, f i) - (∑ i, g i) = ∑ i , (f i - g i) := by simp only[sub_pull]
+theorem sub_sum (f g : I → α) : (∑ i, f i) - (∑ i, g i) = ∑ i , (f i - g i) := by
+  simp only[sub_pull]
 
 @[neg_push, sum_pull]
 theorem neg_sum (f : I → α) : -(∑ i, f i) = ∑ i , -(f i) := by sorry_proof

@@ -112,11 +112,7 @@ instance : StarRing Float where
 
 instance : Algebra ℝ Float where
   smul := fun r x => realToFloat r * x
-  toFun := realToFloat
-  map_one' := sorry_proof
-  map_mul' := sorry_proof
-  map_zero' := sorry_proof
-  map_add' := sorry_proof
+  algebraMap := ⟨⟨⟨fun r => realToFloat r, sorry_proof⟩, sorry_proof⟩, sorry_proof, sorry_proof⟩
   commutes' := sorry_proof
   smul_def' := sorry_proof
 

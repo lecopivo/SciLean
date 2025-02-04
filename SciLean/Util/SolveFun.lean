@@ -2,13 +2,15 @@ import Lean
 import Mathlib.Logic.Nonempty
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Logic.Function.Basic
-import Mathlib.Algebra.Group.Int
+import Mathlib.Algebra.Group.Int.Defs
 
 import SciLean.Data.Curry
 import SciLean.Lean.Meta.Basic
 import SciLean.Lean.Array
 import SciLean.Tactic.LetNormalize
 import SciLean.Util.SorryProof
+
+import Batteries.Data.Array.Merge
 
 namespace SciLean
 

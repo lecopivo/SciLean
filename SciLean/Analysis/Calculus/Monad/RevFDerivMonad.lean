@@ -165,7 +165,7 @@ by
     lhs
     rw[show ((fun x => f x (g x))
              =
-             fun x => pure (g' x) >>= f') by simp]
+             fun x => pure (g' x) >>= f') by simp[f',g']]
     rw[revFDerivM_bind f' (fun x => pure (g' x)) hf (DifferentiableM_pure g' hg')]
     simp[revFDerivM_pure (K:=K) g' hg']
     -- fun_trans; simp
@@ -254,7 +254,7 @@ by
 
   rw [RevFDerivMonad.revFDerivM_bind _ _ hf hg]
   rw [RevFDerivMonad.revFDerivM_pair a0 ha0]
-  simp
+  simp[f]
 
 
 -- Functor.map -----------------------------------------------------------------

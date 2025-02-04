@@ -3,37 +3,30 @@ import SciLean.Analysis.SpecialFunctions.MultiGamma
 
 open SciLean
 
+set_default_scalar Float
 
-variable {M V R} [RealScalar R] [VectorType V R] [MatrixType M V]
-  [∀ n [IndexType n], PlainDataType (V n)]
-  [∀ n m [IndexType n] [IndexType m], PlainDataType (M n m)]
+local macro (priority:=high+1) "Float^[" M:term ", " N:term "]" : term =>
+  `(FloatMatrix' .RowMajor .normal (Fin $M) (Fin $N))
 
-set_default_scalar R
-
--- local macro (priority:=high+1) "Float^[" M:term ", " N:term "]" : term =>
---   `(FloatMatrix' .RowMajor .normal (Fin $M) (Fin $N))
-
--- local macro (priority:=high+1) "Float^[" N:term "]" : term =>
---   `(FloatVector (Fin $N))
+local macro (priority:=high+1) "Float^[" N:term "]" : term =>
+  `(FloatVector (Fin $N))
 
 -- -- notation: `v[i] := vᵢ`
 -- local macro (priority:=high+10) id:ident noWs "[" i:term "]" " := " v:term : doElem =>
 --    `(doElem| $id:ident := VectorType.set $id $i $v)
 
--- -- notation: `A[i,:] := r`
--- local macro (priority:=high+10) id:ident noWs "[" i:term "," ":" "]" " := " v:term : doElem =>
---    `(doElem| $id:ident := MatrixType.updateRow $id $i $v)
+-- notation: `A[i,:] := r`
+local macro (priority:=high+10) id:ident noWs "[" i:term "," ":" "]" " := " v:term : doElem =>
+   `(doElem| $id:ident := MatrixType.updateRow $id $i $v)
 
 -- -- notation: `⊞ i => vᵢ`
 -- open Lean Parser Term in
 -- local macro (priority:=high+10) "⊞" i:funBinder " => " b:term : term =>
 --    `(term| VectorType.fromVec  fun $i => $b)
 
-
-
 open DenseMatrixType VectorType Scalar in
 /-- unlack `logdiag` and `lt` to lower triangular matrix -/
-def unpackQ {d : Nat} (logdiag : V (Fin d)) (lt : V (Fin ((d-1)*d/2))) : M (Fin d) (Fin d)  :=
+def unpackQ {d : Nat} (logdiag : Float^[d]) (lt : Float^[(d-1)*d/2]) : Float^[d,d] :=
   MatrixType.fromMatrix fun i j =>
     if i < j then 0
        else if i == j then exp (toVec logdiag i)
@@ -43,37 +36,34 @@ def unpackQ {d : Nat} (logdiag : V (Fin d)) (lt : V (Fin ((d-1)*d/2))) : M (Fin 
 
 
 open Scalar in
-def logWishartPrior {k d : Nat} (Qs : (M (Fin d) (Fin d))^[k]) (qsums : V (Fin k)) (wishartGamma : R) (wishartM : Nat) :=
+def logWishartPrior {k d : Nat} (Qs : (Float^[d,d])^[k]) (qsums : Float^[k]) (wishartGamma : Float) (wishartM : Nat) :=
     let p := d
     let n := p + wishartM + 1
-    let c := (n * p) * (log wishartGamma - 0.5 * log 2) - (logMultiGamma ((0.5:R) * n) p)
-    let frobenius : R := ‖Qs‖₂²
+    let c := (n * p) * (log wishartGamma - 0.5 * log 2) - (logMultiGamma ((0.5:Float) * n) p)
+    let frobenius := ‖Qs‖₂²[Float]
     let sumQs := VectorType.sum qsums
     0.5 * wishartGamma * wishartGamma * frobenius - wishartM * sumQs - k * c
 
 
-variable (d k : Nat)
-#check <∂! (x : V (Fin k)), VectorType.sum x
-
 open Scalar VectorType in
 def gmmObjective {d k n : Nat}
-      (alphas: V (Fin k)) (means: M (Fin k) (Fin d))
-      (logdiag : M (Fin k) (Fin d)) (lt : M (Fin k) (Fin ((d-1)*d/2)))
-      (x : M (Fin n) (Fin d)) (wishartGamma : R) (wishartM: Nat) :=
+      (alphas: Float^[k]) (means: Float^[k,d])
+      (logdiag : Float^[k,d]) (lt : Float^[k,(d-1)*d/2])
+      (x : Float^[n,d]) (wishartGamma : Float) (wishartM: Nat) :=
     let C := -(n * d * 0.5 * log (2 * π))
 
     -- qsAndSums
-    let Qs := ⊞ i => unpackQ (M:=M) (MatrixType.row logdiag i) (MatrixType.row lt i)
-    let qsums : V (Fin k) := VectorType.fromVec (fun i => VectorType.sum (MatrixType.row logdiag i))
+    let Qs := ⊞ i => unpackQ (MatrixType.row logdiag i) (MatrixType.row lt i)
+    let qsums := VectorType.fromVec (X:=Float^[k]) (fun i => VectorType.sum (MatrixType.row logdiag i))
 
     let slse :=
-      ∑ (i : Fin n), logsumexp (VectorType.fromVec (X:=V (Fin k))
+      ∑ (i : Fin n), logsumexp (VectorType.fromVec (X:=Float^[k])
         fun (j : Fin k) =>
           toVec alphas j
           +
           toVec qsums j
           -
-          0.5 * ‖MatrixType.gemv 1 1 Qs[j] ((MatrixType.row x i) - (MatrixType.row means j)) 0‖₂²)
+          0.5 * ‖MatrixType.gemv 1 1 Qs[j] ((MatrixType.row x i) - (MatrixType.row means j)) 0‖₂²[Float])
 
     C + slse  - n * logsumexp alphas + logWishartPrior Qs qsums wishartGamma wishartM
 

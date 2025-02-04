@@ -176,11 +176,8 @@ instance (priority:=low) : Semiring M where
 
 open Classical in
 instance (priority:=low) instAlgebra : Algebra K M where
-  toFun k := diagonal (VectorType.const k)
-  map_one' := by ext; sorry_proof -- simp [matrix_to_spec, vector_to_spec]
-  map_mul' := by intros; ext; sorry_proof -- simp [matrix_to_spec, vector_to_spec]
-  map_zero' := by ext; sorry_proof --simp [matrix_to_spec, vector_to_spec]
-  map_add' := by intros; ext; sorry_proof --simp [matrix_to_spec, vector_to_spec,←Matrix.diagonal_add]
+  algebraMap := ⟨⟨⟨fun k => diagonal (VectorType.const k), sorry_proof⟩,
+                  sorry_proof⟩, sorry_proof, sorry_proof⟩
   commutes' := by intros; ext; simp [matrix_to_spec, vector_to_spec,mul_comm]
   smul_def' := by intros; ext; simp [matrix_to_spec, vector_to_spec]
 

@@ -4,7 +4,7 @@ open Lake DSL System
 
 package scilean
 
-def moreLinkArgs : Array String := #["-lm", "-lblas"]
+def moreLinkArgs : Array String := #["-lm", "-L/usr/lib/x86_64-linux-gnu","-lblas"]
 
 @[default_target]
 lean_lib SciLean {
@@ -22,12 +22,15 @@ lean_lib Test {
 lean_lib CompileTactics where
   -- options for SciLean.Tactic.MySimpProc (and below) modules
   precompileModules := true
-  roots := #[`SciLean.Tactic.LSimp.LetNormalize,`SciLean.Tactic.CompiledTactics,`SciLean.Data.Float,`SciLean.Data.FloatArray]
+  roots := #[`SciLean.Tactic.LSimp.LetNormalize,
+             `SciLean.Tactic.CompiledTactics,
+             `SciLean.Data.Float,
+             `SciLean.Data.FloatArray]
   moreLinkArgs := moreLinkArgs
 
 
 extern_lib libscileanc pkg := do
-  let mut oFiles : Array (BuildJob FilePath) := #[]
+  let mut oFiles : Array (Job FilePath) := #[]
   for file in (← (pkg.dir / "C").readDir) do
     if file.path.extension == some "c" then
       let oFile := pkg.buildDir / "c" / (file.fileName.stripSuffix ".c" ++ ".o")
@@ -119,7 +122,7 @@ lean_exe MNISTClassifier where
 meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
 
-require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "master"
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.16.0"
 require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "master"
 
 set_option linter.unusedVariables false

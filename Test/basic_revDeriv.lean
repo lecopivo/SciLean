@@ -148,7 +148,7 @@ example
     =
     fun x => (∑ i, (x i)^2, fun dx i => 2 * dx * (x i)) :=
 by
-  conv => lhs; autodiff
+  conv => lhs; fun_trans
 
 #exit
 
