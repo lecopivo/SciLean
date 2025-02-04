@@ -350,7 +350,7 @@ theorem ext [Lawful X] (x y : X) : (∀ (i : n), toVec x i = toVec y i) → x = 
 theorem toVec_fromVec [Dense X] (x : n → K) : toVec (fromVec (X:=X) x) = x := by
   apply Dense.right_inv
 
-instance (priority:=low) : Add X := ⟨fun x y => axpy 1 x y⟩
+instance (priority:=low) : Add X := ⟨fun x y => axpby 1 x 1 y⟩
 instance (priority:=low) : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
 instance (priority:=low) : Neg X := ⟨fun x => scal (-1) x⟩
 instance (priority:=low) : SMul K X := ⟨fun s x => scal s x⟩
