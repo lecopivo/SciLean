@@ -2,21 +2,36 @@
 import Lake
 open Lake DSL System
 
-package scilean
+def linkArgs :=
+  if System.Platform.isWindows then
+    #[]
+  else if System.Platform.isOSX then
+    #["-L/opt/homebrew/opt/openblas/lib", "-lblas", "-lm"]
+  else -- assuming linux
+    #["-L/usr/lib/x86_64-linux-gnu/", "-lblas", "-lm"]
+def inclArgs :=
+  if System.Platform.isWindows then
+    #[]
+  else if System.Platform.isOSX then
+    #["-I/opt/homebrew/opt/openblas/include"]
+  else -- assuming linux
+    #[]
 
-def moreLinkArgs : Array String := #["-lm", "-L/usr/lib/x86_64-linux-gnu","-lblas"]
+package scilean {
+  moreLinkArgs := linkArgs
+  moreLeancArgs := inclArgs
+}
+
 
 @[default_target]
 lean_lib SciLean {
   -- precompileModules := true
   roots := #[`SciLean]
-  moreLinkArgs := moreLinkArgs
 }
 
 @[test_driver]
 lean_lib Test {
   globs := #[Glob.submodules `Test]
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_lib CompileTactics where
@@ -26,7 +41,6 @@ lean_lib CompileTactics where
              `SciLean.Tactic.CompiledTactics,
              `SciLean.Data.Float,
              `SciLean.Data.FloatArray]
-  moreLinkArgs := moreLinkArgs
 
 
 extern_lib libscileanc pkg := do
@@ -47,18 +61,15 @@ lean_exe Doodle {
 
 lean_exe WaveEquation {
   root := `examples.WaveEquation
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe HelloWorld {
   root := `examples.HelloWorld
-  moreLinkArgs := moreLinkArgs
 }
 
 
 lean_exe HarmonicOscillator {
   root := `examples.HarmonicOscillator
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe CircleOptimisation {
@@ -75,27 +86,22 @@ lean_exe WalkOnSpheres {
 
 lean_exe BFGS {
   root := `Test.optimjl.bfgs
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe LBFGS {
   root := `Test.optimjl.lbfgs
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe GMM {
   root := `SciLean.Examples.GMM.Main
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe BlasTest {
   root := `examples.BlasTest
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe FloatTest {
   root := `examples.FloatTest
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe ForLoopTest {
@@ -106,12 +112,10 @@ lean_exe ForLoopTest {
 
 lean_exe SurfaceMeshTests {
   root := `examples.SurfaceMeshTests
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe FloatMatrixTest {
   root := `examples.FloatMatrixTest
-  moreLinkArgs := moreLinkArgs
 }
 
 lean_exe MNISTClassifier where

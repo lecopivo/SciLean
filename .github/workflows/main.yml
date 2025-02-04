@@ -23,6 +23,7 @@ concurrency:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,40 +31,12 @@ jobs:
         run: sudo apt-get install -y libopenblas-dev
       - name: Lean Action
         uses: leanprover/lean-action@v1
-        with:
-          build-args: "--log-level=error"
+      - name: Build project
+        run: lake build
       - name: Run Tests
         run: lake test
       - name: Run Examples
         run: make examples
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: '.'
-
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install OpenBLAS
-        run: choco install openblas
-      - name: Lean Action
-        uses: leanprover/lean-action@v1
-        with:
-          build-args: "--log-level=error"
-      - name: Run Tests
-        run: lake test
-      - name: Run Examples
-        run: make examples
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: '.'
 
   build-macos:
     runs-on: macos-latest
@@ -74,15 +47,9 @@ jobs:
         run: brew install openblas
       - name: Lean Action
         uses: leanprover/lean-action@v1
-        with:
-          build-args: "--log-level=error"
+      - name: Build project
+        run: lake build
       - name: Run Tests
         run: lake test
       - name: Run Examples
         run: make examples
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: '.'
