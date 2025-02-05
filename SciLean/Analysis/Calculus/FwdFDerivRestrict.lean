@@ -22,8 +22,7 @@ theorem fwdFDeriv_restrict
       let x₁ := p x
       let dx₁ := p dx
       fwdFDeriv R g x₁ dx₁ := by
-
-  funext x dx;
+  funext x dx
   conv => lhs; enter [2,x]; rw[←hg' x]
   fun_trans
 
