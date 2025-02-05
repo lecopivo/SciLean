@@ -32,48 +32,17 @@ class MatrixType.Base
 
   toVec_eq_toMatrix (A : M) : toVec A = fun (i,j) => toMatrix A i j
 
-  /-    Row and column operations    -/
-  /- Setting rows and columns is found in `MatrixType.Dense` -/
-
-  -- TODO: This should return `SubMatrix m n (point i) id`
-  /-- Get row of matrix -/
-  row (A : M) (i : m) : X
-  row_spec (A : M) (i : m) :
-    VectorType.toVec (row A i)
-    =
-    let A := toMatrix A
-    fun j => A i j
-
-  /-- Sum rows of a matrix. -/
-  sumRows (A : M) : Y
-  sumRows_spec (A : M):
-    VectorType.toVec (sumRows A)
-    =
-    let A := toMatrix A
-    fun i => ∑ j, A i j
-
-  -- TODO: This should return `SubMatrix m n id (point j)`
-  /-- Get column of matrix -/
-  col (A : M) (j : n) : Y
-  col_spec (A : M) (j : n) :
-    VectorType.toVec (col A j)
-    =
-    let A := (toMatrix A)
-    fun i => A i j
-
-  /-- Sum columns of a matrix -/
-  sumCols (A : M) : X
-  sumCols_spec (A : M):
-    VectorType.toVec (sumCols A)
-    =
-    let A := toMatrix A
-    fun j => ∑ i, A i j
-
 
   /- Level 2 like BLAS operations -/
 
+  -- add
+  -- mulVec
+  -- mulVecT
+  -- mulVecH
+
   /-- Matrix vector multiplication.
 
+  -- todo: rename to -- mulVecAdd
   Implementable using BLAS `gemv`. -/
   gemv (alpha beta : K) (A : M) (x : X) (y : Y) : Y
 
@@ -86,6 +55,8 @@ class MatrixType.Base
     alpha • A *ᵥ x + beta • y
 
   /-- Transpose matrix vector multiplication.
+
+  -- todo: rename to -- mulTVecAdd
 
   Implementable using BLAS `gemv`. -/
   gemvT (alpha beta : K) (A : M) (y : Y) (x : X) : X
@@ -100,6 +71,8 @@ class MatrixType.Base
 
 
   /-- Conjugate transpose matrix vector multiplication.
+
+  -- todo: rename to -- mulHVecAdd
 
   Implementable using BLAS `gemv`. -/
   gemvH (alpha beta : K) (A : M) (y : Y) (x : X) : X
@@ -143,13 +116,11 @@ class MatrixType.Base
 
 namespace MatrixType
 
-export MatrixType.Base (toMatrix toVec_eq_toMatrix row row_spec sumRows sumRows_spec
-  col col_spec sumCols sumCols_spec gemv gemv_spec gemvT gemvT_spec gemvH gemvH_spec)
+export MatrixType.Base (toMatrix toVec_eq_toMatrix gemv gemv_spec gemvT gemvT_spec gemvH gemvH_spec)
 
 -- export MatrixType.Lawful (toMatrix_injective)
 
-attribute [vector_to_spec] row_spec sumRows_spec
-  col_spec sumCols_spec gemv_spec gemvT_spec gemvH_spec
+attribute [vector_to_spec] gemv_spec gemvT_spec gemvH_spec
 
 
 section BasicOperations

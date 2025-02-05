@@ -33,7 +33,7 @@ abbrev_fun_trans MatrixType.col in A [VectorType.Lawful M] [VectorType.Lawful Y]
   autodiff
 
 -- adjoint
-abbrev_fun_trans MatrixType.col in A [VectorType.Lawful M] [Dense M] [VectorType.Lawful Y] : adjoint K by
+abbrev_fun_trans MatrixType.col in A [VectorType.Lawful M] [VectorType.Lawful Y] : adjoint K by
   equals (fun r => MatrixType.Dense.updateCol 0 j r) =>
     funext x
     apply AdjointSpace.ext_inner_left K
@@ -42,30 +42,30 @@ abbrev_fun_trans MatrixType.col in A [VectorType.Lawful M] [Dense M] [VectorType
     simp[vector_to_spec]
     sorry_proof
 
-abbrev_data_synth col in A [VectorType.Lawful M] [Dense M] [VectorType.Lawful Y] : HasAdjoint K by
+abbrev_data_synth col in A [VectorType.Lawful M] [VectorType.Lawful Y] : HasAdjoint K by
   conv => enter[3]; assign (fun r => updateCol (0:M) j r)
   constructor
   case adjoint => intros; simp[vector_to_spec]; sorry_proof
   case is_linear => fun_prop
 
-abbrev_data_synth col in A [VectorType.Lawful M] [Dense M] [VectorType.Lawful Y] : HasAdjointUpdate K by
+abbrev_data_synth col in A [VectorType.Lawful M] [VectorType.Lawful Y] : HasAdjointUpdate K by
   conv => enter[3]; assign (fun c (A : M) => let cj := col A j; updateCol A j (cj + c))
   constructor
   case adjoint => intros; simp[vector_to_spec]; sorry_proof
   case is_linear => fun_prop
 
 -- reverse AD
-abbrev_fun_trans MatrixType.col in A [VectorType.Lawful M] [MatrixType.Dense M] [VectorType.Lawful Y] : revFDeriv K by
+abbrev_fun_trans MatrixType.col in A [VectorType.Lawful M] [VectorType.Lawful Y] : revFDeriv K by
   unfold revFDeriv
   autodiff
 
-abbrev_data_synth col in A [VectorType.Lawful M] [Dense M] [VectorType.Lawful Y] : HasRevFDeriv K by
+abbrev_data_synth col in A [VectorType.Lawful M] [VectorType.Lawful Y] : HasRevFDeriv K by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intros; data_synth
   case adjoint => intros; dsimp; data_synth
   case simp => rfl
 
-abbrev_data_synth col in A [VectorType.Lawful M] [Dense M] [VectorType.Lawful Y] : HasRevFDerivUpdate K by
+abbrev_data_synth col in A [VectorType.Lawful M] [VectorType.Lawful Y] : HasRevFDerivUpdate K by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intros; data_synth
   case adjoint => intros; dsimp; data_synth

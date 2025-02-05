@@ -26,6 +26,43 @@ class MatrixType.Dense
   set'_spec (A : M) (i : m) (j : n) (v : K) :
     set' A i j v = VectorType.set A (i,j) v
 
+  /-    Row and column operations    -/
+  /- Setting rows and columns is found in `MatrixType.Dense` -/
+
+  -- TODO: This should return `SubMatrix m n (point i) id`
+  /-- Get row of matrix -/
+  row (A : M) (i : m) : X
+  row_spec (A : M) (i : m) :
+    VectorType.toVec (row A i)
+    =
+    let A := toMatrix A
+    fun j => A i j
+
+  /-- Sum rows of a matrix. -/
+  sumRows (A : M) : Y
+  sumRows_spec (A : M):
+    VectorType.toVec (sumRows A)
+    =
+    let A := toMatrix A
+    fun i => ∑ j, A i j
+
+  -- TODO: This should return `SubMatrix m n id (point j)`
+  /-- Get column of matrix -/
+  col (A : M) (j : n) : Y
+  col_spec (A : M) (j : n) :
+    VectorType.toVec (col A j)
+    =
+    let A := (toMatrix A)
+    fun i => A i j
+
+  /-- Sum columns of a matrix -/
+  sumCols (A : M) : X
+  sumCols_spec (A : M):
+    VectorType.toVec (sumCols A)
+    =
+    let A := toMatrix A
+    fun j => ∑ i, A i j
+
 
   /-- Update row, i.e. set row to a given vector. -/
   updateRow (A : M) (i : m) (x : X) : M
@@ -68,14 +105,17 @@ class MatrixType.Dense
 
 namespace MatrixType
 
-export MatrixType.Dense (fromMatrix updateRow updateRow_spec updateCol updateCol_spec outerprodAdd
+export MatrixType.Dense (fromMatrix
+  row row_spec sumRows sumRows_spec col col_spec sumCols sumCols_spec
+  updateRow updateRow_spec updateCol updateCol_spec outerprodAdd
   outerprodAdd_spec set' set'_spec)
 
 attribute [vector_to_spec]
+  row_spec sumRows_spec
+  col_spec sumCols_spec
   updateRow_spec
   updateCol_spec
   outerprodAdd_spec
-
 
 
 section Operations

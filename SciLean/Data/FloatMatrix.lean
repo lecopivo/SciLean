@@ -97,14 +97,6 @@ instance : MatrixType.Base (FloatMatrix' ord strg m n) (FloatVector n) (FloatVec
 
   toMatrix A i j:= A.data.get (toFin i) (toFin j)
   toVec_eq_toMatrix := by intros; rfl
-  row A i := ⟨A.data.row (toFin i) |>.toNormal⟩
-  row_spec := sorry_proof
-  sumRows A := ⟨.ofFn fun i => (A.data.row i).sum⟩
-  sumRows_spec := sorry_proof
-  col A j := ⟨A.data.col (toFin j) |>.toNormal⟩
-  col_spec := sorry_proof
-  sumCols A := ⟨.ofFn fun j => (A.data.col j).sum⟩
-  sumCols_spec := sorry_proof
   gemv a b A x y := ⟨DenseMatrix.gemv a A.data x.data b y.data⟩
   gemv_spec := sorry_proof
   gemvT a b A x y := ⟨DenseMatrix.gemvT a A.data x.data b y.data⟩
@@ -118,6 +110,14 @@ instance : MatrixType.Dense (FloatMatrix' ord strg m n) where
   set' A i j v := ⟨A.data.set (toFin i) (toFin j) v⟩
   set'_spec := by simp[VectorType.set, MatrixType.set']
   right_inv' := by intro A; simp[MatrixType.toMatrix]
+  row A i := ⟨A.data.row (toFin i) |>.toNormal⟩
+  row_spec := sorry_proof
+  sumRows A := ⟨.ofFn fun i => (A.data.row i).sum⟩
+  sumRows_spec := sorry_proof
+  col A j := ⟨A.data.col (toFin j) |>.toNormal⟩
+  col_spec := sorry_proof
+  sumCols A := ⟨.ofFn fun j => (A.data.col j).sum⟩
+  sumCols_spec := sorry_proof
   updateRow A i x :=
     let A := A.data.row (toFin i) |>.setArray x.data
     ⟨⟨A.data, sorry_proof⟩⟩

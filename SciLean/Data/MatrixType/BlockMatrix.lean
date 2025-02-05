@@ -119,24 +119,6 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
     | .inr i, .inr j => toMatrix A₂₂ i j
   toVec_eq_toMatrix := sorry_proof
 
-  row := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ i =>
-    match i with
-    | .inl i => (row A₁₁ i, row A₁₂ i)
-    | .inr i => (row A₂₁ i, row A₂₂ i)
-  row_spec := sorry_proof
-
-  sumRows := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => (sumRows A₁₁ + sumRows A₁₂, sumRows A₂₁ + sumRows A₂₂)
-  sumRows_spec := sorry_proof
-
-  col := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ j =>
-    match j with
-    | .inl j => (col A₁₁ j, col A₂₁ j)
-    | .inr j => (col A₁₂ j, col A₂₂ j)
-  col_spec := sorry_proof
-
-  sumCols := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => (sumCols A₁₁ + sumCols A₂₁, sumCols A₁₂ + sumCols A₂₂)
-  sumCols_spec := sorry_proof
-
   gemv := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) =>
     (gemv a 1 A₁₂ x₂ (gemv a b A₁₁ x₁ y₁), gemv a 1 A₂₂ x₂ (gemv a b A₂₁ x₁ y₂))
   gemv_spec := by
@@ -169,3 +151,23 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
           Matrix.mulVec, dotProduct, add_left_inj,
           ←Finset.univ_disjSum_univ, Finset.sum_product]
      ring)
+
+
+  -- for now we moved row/column to dense matrices
+  -- row := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ i =>
+  --   match i with
+  --   | .inl i => (row A₁₁ i, row A₁₂ i)
+  --   | .inr i => (row A₂₁ i, row A₂₂ i)
+  -- row_spec := sorry_proof
+
+  -- sumRows := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => (sumRows A₁₁ + sumRows A₁₂, sumRows A₂₁ + sumRows A₂₂)
+  -- sumRows_spec := sorry_proof
+
+  -- col := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ j =>
+  --   match j with
+  --   | .inl j => (col A₁₁ j, col A₂₁ j)
+  --   | .inr j => (col A₁₂ j, col A₂₂ j)
+  -- col_spec := sorry_proof
+
+  -- sumCols := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => (sumCols A₁₁ + sumCols A₂₁, sumCols A₁₂ + sumCols A₂₂)
+  -- sumCols_spec := sorry_proof
