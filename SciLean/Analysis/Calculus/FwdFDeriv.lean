@@ -95,18 +95,26 @@ theorem apply_rule (i : ι) :
   unfold fwdFDeriv
   fun_trans
 
+
+def _root_.Equiv.piProdTranpose {α : Type*} {β γ : α → Type*} :
+    ((a : α) → β a × γ a) ≃ (((a : α) → β a) × ((a : α) → γ a)) := {
+  toFun f := (fun a => (f a).1, fun a => (f a).2)
+  invFun := fun (f,g) a => (f a, g a)
+  left_inv := by intro; simp
+  right_inv := by intro; simp
+}
+
+
 @[fun_trans]
 theorem pi_rule_at (x : X)
     (f : X → (i : ι) → E i) (hf : ∀ i, DifferentiableAt K (f · i) x) :
     fwdFDeriv K (fun (x : X) (i : ι) => f x i) x
     =
     fun dx =>
-      (fun i => f x i, fun i =>
-        let xdxi := fwdFDeriv K (f · i) x dx
-        let dxi := xdxi.2
-        dxi) := by
+      let f' := (fun i => fwdFDeriv K (fun x => f x i) x dx)
+      Equiv.piProdTranpose f' := by
   unfold fwdFDeriv; fun_trans
-  funext x; simp
+  funext x; simp[Equiv.piProdTranpose]
   rw[fderiv_pi (h:=by fun_prop)]
   simp
 
@@ -116,15 +124,13 @@ theorem pi_rule
     fwdFDeriv K (fun (x : X) (i : ι) => f x i)
     =
     fun x dx =>
-      (fun i => f x i, fun i =>
-        let xdxi := fwdFDeriv K (f · i) x dx
-        let dxi := xdxi.2
-        dxi) := by
+      let f' := (fun i => fwdFDeriv K (fun x => f x i) x dx)
+      Equiv.piProdTranpose f' := by
 
   unfold fwdFDeriv; fun_trans
   funext x
   rw[fderiv_pi (h:=by fun_prop)]
-  simp
+  simp[Equiv.piProdTranpose]
 
 -- of linear function ----------------------------------------------------------
 --------------------------------------------------------------------------------

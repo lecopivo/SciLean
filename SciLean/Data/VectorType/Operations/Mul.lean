@@ -110,14 +110,70 @@ abbrev_fun_trans mul in x y [Lawful X] : revFDeriv K by
   unfold revFDeriv
   autodiff
 
-abbrev_data_synth mul in x y [Lawful X] : HasRevFDeriv K by
+abbrev_data_synth mul in x y [Lawful X]
+    -- arg_subsets [x] [y]
+    : HasRevFDeriv K by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intros; dsimp; data_synth
   case adjoint => intros; dsimp; data_synth
   case simp => conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
 
-abbrev_data_synth mul in x y [Lawful X] : HasRevFDerivUpdate K by
+abbrev_data_synth mul in x y [Lawful X]
+    -- arg_subsets [x] [y]
+    : HasRevFDerivUpdate K by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intros; dsimp; data_synth
   case adjoint => intros; dsimp; data_synth
   case simp => conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+
+-- abbrev_data_synth_args mul in [x] [y] from [x,y] [Lawful X] : HasRevFDeriv K by
+--   lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth mul in x [Lawful X] : HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+              (g:=fun x => (x,y))
+              (f:=fun xy : X×X => mul xy.1 xy.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth mul in y [Lawful X] : HasRevFDeriv K by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+              (g:=fun y => (x,y))
+              (f:=fun xy : X×X => mul xy.1 xy.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+
+-- abbrev_data_synth_args mul in [x] [y] from [x,y] [Lawful X] : HasRevFDerivUpdate K by
+--   lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth mul in x [Lawful X] : HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+              (g:=fun x => (x,y))
+              (f:=fun xy : X×X => mul xy.1 xy.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
+
+-- argument subset - todo: automate this!
+abbrev_data_synth mul in y [Lawful X] : HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+              (g:=fun y => (x,y))
+              (f:=fun xy : X×X => mul xy.1 xy.2)
+              (hg:=by data_synth)
+              (hf:=by data_synth)
+  case simp => conv => rhs; lsimp
