@@ -41,3 +41,14 @@ simproc_decl restrict_domain (@fwdFDeriv _ _ (_ × _) _ _ _ _ _ _) := fun e => d
     let new_thm : Expr ← mkAppM' new_thm #[hp₁, hp₂]
     return .visit { expr := (← inferType new_thm).getAppArgs.get! 2, proof? := some new_thm }
   | _ => return .continue
+
+
+variable (a b c d da db dc dd : R)
+set_default_scalar R
+
+/-- info: (∂> (x0x3:=(a, d);(da, dd)), (x0x3.1 + x0x3.2), ∂> x, x) : (R × R) × (R → R → R × R) -/
+#guard_msgs in
+#check (∂> (x:=(a,b,c,d);(da,db,dc,dd)), (x.1 + x.2.2.2),
+        ∂> x : R, x)
+  rewrite_by
+    simp only [restrict_domain]
