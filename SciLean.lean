@@ -382,9 +382,11 @@ import SciLean.Data.VectorType.Operations.Dot
 import SciLean.Data.VectorType.Operations.Exp
 import SciLean.Data.VectorType.Operations.FromVec
 import SciLean.Data.VectorType.Operations.Logsumexp
+import SciLean.Data.VectorType.Operations.MapIdx
 import SciLean.Data.VectorType.Operations.Mul
 import SciLean.Data.VectorType.Operations.Scal
 import SciLean.Data.VectorType.Operations.ScalAdd
+import SciLean.Data.VectorType.Operations.Set
 import SciLean.Data.VectorType.Operations.Softmax
 import SciLean.Data.VectorType.Operations.Sum
 import SciLean.Data.VectorType.Operations.ToVec
@@ -623,8 +625,8 @@ import SciLean.Tactic.GTrans.Decl
 import SciLean.Tactic.GTrans.Elab
 import SciLean.Tactic.GTrans.MetaLCtxM
 import SciLean.Tactic.GTrans.Theorems
-import SciLean.Tactic.IfPull
 import SciLean.Tactic.IfLetNormalize
+import SciLean.Tactic.IfPull
 import SciLean.Tactic.InferVar
 import SciLean.Tactic.LFunTrans
 import SciLean.Tactic.LSimp

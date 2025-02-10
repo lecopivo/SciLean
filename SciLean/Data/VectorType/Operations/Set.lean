@@ -5,8 +5,6 @@ namespace SciLean
 
 open VectorType
 
-#check VectorType.set
-
 def_fun_prop VectorType.set in x v
     [VectorType.Lawful X] :
     IsLinearMap K by
