@@ -2,8 +2,6 @@ import SciLean
 
 open SciLean
 
-#check FloatVector
-
 macro "Float^[" n:term "]" : term => `(FloatVector (Fin $n))
 
 open VectorType

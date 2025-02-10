@@ -64,7 +64,7 @@ def_fun_prop mapIdx in x [Lawful X] (hf : ∀ i, Differentiable K (f i)) :
 
 -- fderiv
 @[fun_trans]
-theorem VectorType.mapIdx.arg_f.fderiv_rule
+theorem VectorType.mapIdx.arg_fx.fderiv_rule
     (f : W → n → K → K) (x : W → X)
     (hf : ∀ i, Differentiable K (fun (w,x) => f w i x))
     (hx : Differentiable K x) :
@@ -81,7 +81,30 @@ theorem VectorType.mapIdx.arg_f.fderiv_rule
   sorry_proof
 
 @[fun_trans]
-theorem VectorType.mapIdx.arg_f.fwdFDeriv_rule
+theorem VectorType.mapIdx.arg_x.fderiv_rule
+    (f : n → K → K) (x : W → X)
+    (hf : ∀ i, Differentiable K (f i))
+    (hx : Differentiable K x) :
+    fderiv K (fun w => mapIdx f (x w))
+    =
+    fun w => fun dw =>L[K]
+      let x₀  := x w
+      let dx₀ := fderiv K x w dw
+      mapIdx (fun i dxi => fderiv K (f i) (toVec x₀ i) (dxi)) dx₀ := by
+  autodiff
+  dsimp
+
+set_option linter.unusedVariables false in
+abbrev_data_synth mapIdx in x
+    {f' : n → _} (hf : ∀ i x, HasFDerivAt (𝕜:=K) (f i) (f' i) x)
+    [Lawful X] (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by
+  have : ∀ i, Differentiable K (f i) := sorry_proof
+  apply hasFDerivAt_from_fderiv
+  case deriv => fun_trans only; rfl
+  case diff => dsimp[autoParam]; fun_prop
+
+@[fun_trans]
+theorem VectorType.mapIdx.arg_fx.fwdFDeriv_rule
     (f : W → n → K → K) (x : W → X)
     (hf : ∀ i, Differentiable K (fun (w,x) => f w i x))
     (hx : Differentiable K x) :
@@ -104,7 +127,7 @@ variable [VectorType.Lawful X]
 -- adjoint
 set_option linter.unusedVariables false in
 @[data_synth]
-theorem VectorType.mapIdx.arg_f.HasAdjoint_rule
+theorem VectorType.mapIdx.arg_fx.HasAdjoint_rule
     (f : W → n → K → K) (x : W → X)
     {f' : n → _} (hf : ∀ i, HasAdjointUpdate K (fun (w,x) => f w i x) (f' i))
     {x'} (hx : HasAdjointUpdate K x x') :
@@ -118,11 +141,10 @@ theorem VectorType.mapIdx.arg_f.HasAdjoint_rule
         x' dx dw) := by
   sorry_proof
 
-
 -- reverse AD
 set_option linter.unusedVariables false in
 @[data_synth]
-theorem VectorType.mapIdx.arg_f.HasAdjointUpdate_rule
+theorem VectorType.mapIdx.arg_fx.HasAdjointUpdate_rule
     (f : W → n → K → K) (x : W → X)
     {f' : n → _} (hf : ∀ i, HasAdjointUpdate K (fun (w,x) => f w i x) (f' i))
     {x'} (hx : HasAdjointUpdate K x x') :
@@ -134,6 +156,106 @@ theorem VectorType.mapIdx.arg_f.HasAdjointUpdate_rule
           let' (dw,dxi) := f' i yi (dw,0)
           (dw,set dx i dxi)
         x' dx dw) := by
+  sorry_proof
+
+set_option linter.unusedVariables false in
+abbrev_data_synth mapIdx in x
+    {f' : n → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
+    [Lawful X] :
+    HasAdjoint K by
+  conv => enter [3]; assign (fun y : X => mapIdx f' y)
+  constructor
+  case adjoint =>
+    have := fun i => (hf i).adjoint
+    simp_all [mapIdx_spec,vector_to_spec]
+  case is_linear =>
+    have := fun i => (hf i).isContinuousLinearMap
+    -- fun_prop - some odd bug in `fun_prop`
+    sorry_proof
+
+set_option linter.unusedVariables false in
+abbrev_data_synth mapIdx in x
+    {f' : n → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
+    [Lawful X] :
+    HasAdjointUpdate K by
+  conv => enter [3]; assign (fun (y : X) x' => x' + mapIdx f' y)
+  constructor
+  case adjoint =>
+    have h := fun i => (hf i).adjoint
+    simp_all [mapIdx_spec,vector_to_spec,←Finset.sum_sub_distrib,mul_add]
+  case is_linear =>
+    have := fun i => (hf i).isContinuousLinearMap
+    -- fun_prop - some odd bug in `fun_prop`
+    sorry_proof
+
+
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem VectorType.mapIdx.arg_x.HasAdjoint_rule
+    (f : n → K → K) (x : W → X)
+    {f' : n → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
+    {x'} (hx : HasAdjoint K x x') :
+    HasAdjoint K
+      (fun w => mapIdx f (x w))
+      (fun y =>
+        let y := mapIdx f' y
+        let w := x' y
+        w) := by
+  sorry_proof
+
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem VectorType.mapIdx.arg_x.HasAdjointUpdate_rule
+    (f : n → K → K) (x : W → X)
+    {f' : n → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
+    {x'} (hx : HasAdjointUpdate K x x') :
+    HasAdjointUpdate K
+      (fun w => mapIdx f (x w))
+      (fun y w =>
+        let y := mapIdx f' y
+        let w := x' y w
+        w) := by
+  sorry_proof
+
+
+set_option linter.unusedVariables false in
+@[fun_trans]
+theorem VectorType.mapIdx.arg_fx.HasRevFDeriv_rule
+    (f : W → n → K → K) (x : W → X)
+    {f' : n → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
+    {x'} (hx : HasRevFDerivUpdate K x x') :
+    HasRevFDeriv K
+      (fun w => mapIdx (f w) (x w))
+      (fun w =>
+        let' (x₀,dx₀) := x' w
+        let df' := fun (i : n) (xi : K) => (f' i (w,xi)).2
+        let y := mapIdx (f w) x₀
+        (y, fun dy =>
+          let' (dw,dx) := IndexType.foldl (init:=((0:W),(0:X))) fun (dw,dx) i =>
+            let xi₀ := toVec x₀ i
+            let dyi := toVec dy i
+            let' (dw,dxi) := df' i xi₀ dyi (dw,0)
+            (dw,set dx i dxi)
+          dx₀ dx dw)) := by
+  sorry_proof
+
+set_option linter.unusedVariables false in
+@[fun_trans]
+theorem VectorType.mapIdx.arg_fx.HasRevFDerivUpdate_rule
+    (f : W → n → K → K) (x : W → X)
+    {f' : n → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
+    {x'} (hx : HasRevFDerivUpdate K x x') :
+    HasRevFDerivUpdate K
+      (fun w => mapIdx (f w) (x w))
+      (fun w =>
+        let' (x₀,dx₀) := x' w
+        let df' := fun (i : n) (xi : K) => (f' i (w,xi)).2
+        let y := mapIdx (f w) x₀
+        (y, fun dy dw =>
+          let' (dw,dx) := IndexType.foldl (init:=(dw,(0:X))) fun (dw,dx) i =>
+            let' (dw,dxi) := df' i (toVec x₀ i) (toVec dy i) (dw,0)
+            (dw,set dx i dxi)
+          dx₀ dx dw)) := by
   sorry_proof
 
 set_option linter.unusedVariables false in
@@ -174,4 +296,27 @@ theorem VectorType.mapIdx.arg_f.HasRevFDerivUpdate_rule
             let' (dw,dxi) := df' i (toVec x₀ i) (toVec dy i) (dw,0)
             (dw,set dx i dxi)
           dx₀ dx dw)) := by
+  sorry_proof
+
+
+set_option linter.unusedVariables false in
+abbrev_data_synth mapIdx in x
+    {f' : n → _} (hf : ∀ i, HasRevFDeriv K (fun x => f i x) (f' i))
+    [Lawful X] :
+    HasRevFDeriv K by
+  conv => enter[3]; assign (fun (x : X) =>
+     let y := mapIdx f x
+     let df := fun i dxi => ((f' i) (toVec x i)).2 dxi
+     (y, fun (dy : X) => mapIdx df dy))
+  sorry_proof
+
+set_option linter.unusedVariables false in
+abbrev_data_synth mapIdx in x
+    {f' : n → _} (hf : ∀ i, HasRevFDeriv K (fun x => f i x) (f' i))
+    [Lawful X] :
+    HasRevFDerivUpdate K by
+  conv => enter[3]; assign (fun (x : X) =>
+     let y := mapIdx f x
+     let df := fun i dxi => ((f' i) (toVec x i)).2 dxi
+     (y, fun (dy dx' : X) => mapIdx (fun i dxi' => dxi' + df i (toVec dy i)) dx'))
   sorry_proof
