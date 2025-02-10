@@ -558,6 +558,28 @@ theorem Neg.neg.arg_a0.HasRevFDerivUpdate_rule
   case adjoint => intro x; eta_expand; simp; data_synth
   case simp => simp_all
 
+@[data_synth]
+theorem Neg.neg.arg_a0.HasRevFDeriv_simple_rule :
+    HasRevFDeriv K (fun x : X => -x)
+      (fun x =>
+        let x := -x
+        (x, fun dy => let dy := -dy; dy)) := by
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth
+  case adjoint => intro x; eta_expand; simp; data_synth
+  case simp => simp_all
+
+@[data_synth]
+theorem Neg.neg.arg_a0.HasRevFDerivUpdate_simple_rule :
+    HasRevFDerivUpdate K (fun x : X => -x)
+      (fun x =>
+        let x := -x
+        (x, fun dy dx => let dx := dx - dy; dx)) := by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intro; data_synth
+  case adjoint => intro x; eta_expand; simp; data_synth
+  case simp => simp_all
+
 open ComplexConjugate in
 @[data_synth]
 theorem HSMul.hSMul.arg_a0a1.HasRevFDeriv_rule

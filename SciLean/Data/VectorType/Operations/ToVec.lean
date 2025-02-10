@@ -6,7 +6,7 @@ import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.AdjointSpace.HasAdjoint
 import SciLean.Analysis.Calculus.HasRevFDeriv
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
--- import SciLean.Tactic.DataSynth.DefRevDeriv
+import SciLean.Tactic.DFunLikeCoeZetaDelta
 import SciLean.Meta.GenerateFunTrans
 import SciLean.Tactic.ConvAssign
 import SciLean.Lean.ToSSA

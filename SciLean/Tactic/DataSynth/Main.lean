@@ -380,10 +380,12 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
     catch _ =>
       pure ()
 
-  if let .some prf ← discharge? X then
-    if ← isDefEq (← inferType prf) X then
-      x.mvarId!.assignIfDefeq prf
-      return true
+  -- try discharger
+  if (← inferType X).isProp then
+    if let .some prf ← discharge? X then
+      if ← isDefEq (← inferType prf) X then
+        x.mvarId!.assignIfDefeq prf
+        return true
 
   return false
 
