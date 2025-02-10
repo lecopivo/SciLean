@@ -3,7 +3,6 @@ import SciLean.Analysis.Calculus.HasFDeriv
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 -- import SciLean.Tactic.DataSynth.DefRevDeriv
 
-
 namespace SciLean
 
 variable
@@ -161,6 +160,19 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
   case adjoint => intro; eta_expand; simp; data_synth
   case simp => simp_all; ac_rfl
 
+@[data_synth]
+theorem apply_rule {I} [IndexType I] [DecidableEq I] (i : I) :
+    HasRevFDeriv K (fun x : I → X => x i)
+      (fun x =>
+        (x i, fun dxi j => if i=j then dxi else 0)) := sorry_proof
+
+-- this should not be necessary if once we improve function decomposition in `data_synth` tactic
+@[data_synth]
+theorem apply_rule' {I} [IndexType I] [DecidableEq I] (i : I) :
+    HasRevFDeriv K (fun x : (I → X)×Y => x.1 i)
+      (fun x =>
+        (x.1 i, fun dxi => (fun j => if i=j then dxi else 0, 0))) := sorry_proof
+
 set_option linter.unusedVariables false in
 theorem pi_rule {I : Type*} [IndexType I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
@@ -284,6 +296,19 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
     have h := fun x => (hg' x).apply_eq_zero_add;
     simp +singlePass [h]; ac_rfl
 
+@[data_synth]
+theorem apply_rule {I} [IndexType I] [DecidableEq I] (i : I) :
+    HasRevFDerivUpdate K (fun x : I → X => x i)
+      (fun x =>
+        (x i, fun dxi dx j => if i=j then dx j + dxi else dx j)) := sorry_proof
+
+-- this should not be necessary if once we improve function decomposition in `data_synth` tactic
+@[data_synth]
+theorem apply_rule' {I} [IndexType I] [DecidableEq I] (i : I) :
+    HasRevFDerivUpdate K (fun x : (I → X)×Y => x.1 i)
+      (fun x =>
+        (x.1 i, fun dxi dx => (fun j => if i=j then dx.1 j + dxi else dx.1 j, dx.2))) := sorry_proof
+
 set_option linter.unusedVariables false in
 theorem pi_rule {I : Type*} [IndexType I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
@@ -336,6 +361,10 @@ end HasRevFDerivUpdate
 
 end SciLean
 open SciLean
+
+----------------------------------------------------------------------------------------------------
+-- Function Theorems  ------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 variable
   {K : Type*} [RCLike K]
@@ -963,3 +992,105 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_simple_rule :
   case simp => funext x; simp; funext dr x'; module
 
 end OverReals
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Loop theorems  ----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem IndexType.Range.foldl.arg_opinit.HasRevFDeriv_rule_direct
+    {I : Type*} [IndexType I] (r : IndexType.Range I)
+    (op : W → X → I → X) {op' : I → _}
+    (init : W → X) {init'}
+    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i))
+    (hinit : HasRevFDerivUpdate K init init')  :
+    HasRevFDeriv K
+      (fun w => r.foldl (op w) (init w))
+      (fun w =>
+        let' (x₀,dx₀) := init' w
+        let' (y,df) := r.foldl
+             -- the function we pass around is accumulator in `dw` and modification in `dx`
+             (init:=(x₀, fun dx dw => (dx,dw)))
+             (fun xdf i =>
+               let' (x,df) := xdf
+               let' (y,dfᵢ) := op' i (w,x)
+               (y, fun dx dw =>
+                 let' (dw,dx) := dfᵢ dx (dw,0)
+                 let' (dw,dx) := df dx dw
+                 (dw,dx)))
+        (y, fun dx =>
+          let' (dx,dw) := df dx 0
+          let dw := dx₀ dx dw
+          dw)) := sorry_proof
+
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem IndexType.Range.foldl.arg_op.HasRevFDeriv_rule_direct
+    {I : Type*} [IndexType I] (r : IndexType.Range I)
+    (op : W → X → I → X) {op' : I → _}
+    (init : X)
+    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i)) :
+    HasRevFDeriv K
+      (fun w => r.foldl (op w) init)
+      (fun w =>
+        let' (y,df) := r.foldl
+             -- the function we pass around is accumulator in `dw` and modification in `dx`
+             (init:=(init, fun dx dw => (dx,dw)))
+             (fun xdf i =>
+               let' (x,df) := xdf
+               let' (y,dfᵢ) := op' i (w,x)
+               (y, fun dx dw =>
+                 let' (dw,dx) := dfᵢ dx (dw,0)
+                 let' (dw,dx) := df dx dw
+                 (dw,dx)))
+        (y, fun dx =>
+          let' (dx,dw) := df dx 0
+          dw)) := sorry_proof
+
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem IndexType.Range.foldl.arg_init.HasRevFDeriv_rule_direct
+   {I : Type*} [IndexType I] (r : IndexType.Range I)
+   (op : X → I → X)
+   (init : W → X) {init'}
+   (hinit : HasRevFDeriv K init init')  :
+   HasRevFDeriv K
+     (fun w => r.foldl op (init w))
+     (fun w =>
+       let' (x₀,dx₀) := init' w
+       let x := r.foldl (init:=x₀) op
+       (y, fun dx =>
+         let dw := dx₀ dx
+         dw)) := sorry_proof
+
+
+set_option linter.unusedVariables false in
+theorem IndexType.Range.foldl.arg_opinit.HasRevFDeriv_rule_array_cached
+   {I : Type*} [IndexType I] (r : IndexType.Range I)
+   (op : W → X → I → X) {op' : I → _}
+   (init : W → X) {init'}
+   (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i))
+   (hinit : HasRevFDerivUpdate K init init')  :
+   HasRevFDeriv K
+     (fun w => r.foldl (op w) (init w))
+     (fun w =>
+       let' (x₀,dx₀) := init' w
+       let' (x,xs) := r.foldl (init:=(x₀,(#[] : Array X)))
+         (fun xxs i =>
+           let' (x,xs) := xxs
+           let x := op w x i
+           (x,xs.push x))
+       (x, fun dx =>
+         let' (dw,dx,xs) := r.reverse.foldl (init:=((0:W),dx,xs))
+           (fun dwdxxs i =>
+             let' (dw,dx,xs) := dwdxxs
+             -- get last element, this should be fine becase we run over the range `r` both times
+             let x := xs[xs.size-1]'sorry_proof
+             let xs := xs.pop
+             let (dw,dx) := (op' i (w,x)).2 dx (dw,(0:X))
+             (dw,dx,xs.pop))
+         let dw := dx₀ dx dw
+         dw)) := sorry_proof

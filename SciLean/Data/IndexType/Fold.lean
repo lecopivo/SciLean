@@ -113,11 +113,9 @@ theorem IndexType.Range.foldl.arg_opinit.fwdFDeriv_rule (r : Range I)
     fwdFDeriv R (fun w => r.foldl (op w) (init w))
     =
     fun w dw =>
-      let init' := init w
-      let dinit' := fderiv R init w dw
+      let' (init',dinit') := fwdFDeriv R init w dw
       let op' := fun ((x,dx) : (X×X)) (i : I) =>
-        let x' := op w x i
-        let dx' := fderiv R (fun (w,x) => op w x i) (w,x) (dw,dx)
+        let (x',dx') := fwdFDeriv R (fun (w,x) => op w x i) (w,x) (dw,dx)
         (x',dx')
       (r.foldl op' (init',dinit')) := by
   unfold fwdFDeriv; fun_trans

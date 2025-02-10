@@ -695,6 +695,29 @@ end Equivalences
 
 section Functions
 
+end Functions
+
+variable
+  {X : Type*} {n : Type u} {R K :  Type*}
+  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Dense X]
+
+def mapIdx (f : n → K → K) (x : X) : X :=
+  IndexType.foldl (init:=x) (fun x i =>
+    let xi := toVec x i
+    set x i (f i xi))
+
+def mapIdx₂ (f : n → K → K → K×K) (x y : X) : X×X :=
+  IndexType.foldl (init:=(x,y)) (fun (x,y) i =>
+    let xi := toVec x i
+    let yi := toVec y i
+    let (xi',yi') := f i xi yi
+    (set x i xi', set y i yi'))
+
+def map (f : K → K) (x : X) : X := mapIdx (fun _ => f) x
+def map₂ (f : K → K → K×K) (x y : X) : X×X := mapIdx₂ (fun _ => f) x y
+
+section Functions
+
 variable
   {X : Type*} {n : Type u} {R :  Type*}
   {_ : RealScalar R} {_ : IndexType n} [VectorType.Base X n R] [VectorType.Dense X]

@@ -43,6 +43,16 @@ theorem ContinuousLinearMap.mk'_coe
 theorem ContinuousLinearMap.eta_reduce (f : X →L[R] Y)
   : (mk' R f ⟨⟨f.1.1.2,f.1.2⟩,f.2⟩) = f := by ext; simp
 
+macro "fun " x:ident " =>L[" R:term "]'(" prf:term ")" b:term : term =>
+  `(ContinuousLinearMap.mk' $R (fun $x => $b) $prf)
+
+macro "fun " x:ident " : " X:term " =>L[" R:term "]'(" prf:term ")" b:term : term =>
+  `(ContinuousLinearMap.mk' $R (fun ($x : $X) => $b) $prf)
+
+macro "fun " "(" x:ident " : " X:term ")" " =>L[" R:term "]'(" prf:term ")" b:term : term =>
+  `(ContinuousLinearMap.mk' $R (fun ($x : $X) => $b) $prf)
+
+
 macro "fun " x:ident " =>L[" R:term "] " b:term : term =>
   `(ContinuousLinearMap.mk' $R (fun $x => $b) (by fun_prop))
 
