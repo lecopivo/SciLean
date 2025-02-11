@@ -17,9 +17,9 @@ def foo (r : K) (x : X) : X := x + r•x
 abbrev_data_synth foo in x : HasAdjoint K by unfold foo; data_synth
 abbrev_data_synth foo in x : HasAdjointUpdate K by unfold foo; data_synth
 
-abbrev_data_synth foo in x (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by unfold foo; data_synth
-def_data_synth foo in r (r₀) : (HasFDerivAt (𝕜:=K) · · r₀) by unfold foo; data_synth
-abbrev_data_synth foo in r x (rx₀) : (HasFDerivAt (𝕜:=K) · · rx₀) by unfold foo; data_synth
+abbrev_data_synth foo in x (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by unfold foo; data_synth => simp
+def_data_synth foo in r (r₀) : (HasFDerivAt (𝕜:=K) · · r₀) by unfold foo; data_synth => simp
+abbrev_data_synth foo in r x (rx₀) : (HasFDerivAt (𝕜:=K) · · rx₀) by unfold foo; data_synth => simp
 
 /--
 info: foo.arg_x.HasFDerivAt_simple_rule.{u_1, u_2} {K : Type u_1} [RCLike K] {X : Type u_2} [NormedAddCommGroup X]
@@ -31,7 +31,7 @@ info: foo.arg_x.HasFDerivAt_simple_rule.{u_1, u_2} {K : Type u_1} [RCLike K] {X 
 
 /--
 info: foo.arg_r.HasFDerivAt_simple_rule.{u_1, u_2} {K : Type u_1} [RCLike K] {X : Type u_2} [NormedAddCommGroup X]
-  [AdjointSpace K X] (x : X) (r₀ : K) : HasFDerivAt (fun r => foo r x) (foo.arg_r.HasFDerivAt_f' x r₀) r₀
+  [AdjointSpace K X] (x : X) (r₀ : K) : HasFDerivAt (fun r => foo r x) (foo.arg_r.HasFDerivAt_f' x) r₀
 -/
 #guard_msgs in
 #check foo.arg_r.HasFDerivAt_simple_rule

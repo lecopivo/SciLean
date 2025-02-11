@@ -89,41 +89,42 @@ def abbrevDataSynth (dataSynthStatement : TSyntax `term) (fId : Ident)
     let thmName := fId.append suffix
       |>.append (.mkSimple s!"{dataSynthDecl.name.getString!}_simple_rule")
 
-    let argNames ← getConstArgNames dataSynthDecl.name
-    for outArgId in dataSynthDecl.outputArgs do
-      let output ← instantiateMVars (statement.getArg! outArgId)
-      let defName := fId.append suffix
-        |>.append (.mkSimple s!"{dataSynthDecl.name.getString!}_{argNames[outArgId]!}")
+    if useDef then
+      let argNames ← getConstArgNames dataSynthDecl.name
+      for outArgId in dataSynthDecl.outputArgs do
+        let output ← instantiateMVars (statement.getArg! outArgId)
+        let defName := fId.append suffix
+          |>.append (.mkSimple s!"{dataSynthDecl.name.getString!}_{argNames[outArgId]!}")
 
-      -- filter input arguments to the minimal required
-      let xs' := xs.filter (fun x => output.containsFVar x.fvarId!)
+        -- filter input arguments to the minimal required
+        let xs' := xs.filter (fun x => output.containsFVar x.fvarId!)
 
-      let val ← mkLambdaFVars xs' output
-      let type ← inferType val
+        let val ← mkLambdaFVars xs' output
+        let type ← inferType val
 
-      checkNoMVars val
-      checkNoMVars type
+        checkNoMVars val
+        checkNoMVars type
 
-      -- gel all level args
-      let lvls' := (collectLevelParams {} type).params
+        -- gel all level args
+        let lvls' := (collectLevelParams {} type).params
 
-      let defVal : DefinitionVal := {
-        name  := defName
-        type  := type
-        value := val
-        hints := .regular 0
-        safety := .safe
-        levelParams := lvls'.toList
-      }
+        let defVal : DefinitionVal := {
+          name  := defName
+          type  := type
+          value := val
+          hints := .regular 0
+          safety := .safe
+          levelParams := lvls'.toList
+        }
 
-      addDecl (.defnDecl defVal)
-      try
-        compileDecl (.defnDecl defVal)
-      catch _ =>
-        throwError "failed to complie {defName}!"
-      let lvls' := lvls'.map (Level.param) |>.toList
-      if useDef then
-        statement := statement.setArg outArgId (mkAppN (.const defName lvls') xs')
+        addDecl (.defnDecl defVal)
+        try
+          compileDecl (.defnDecl defVal)
+        catch _ =>
+          throwError "failed to complie {defName}!"
+        let lvls' := lvls'.map (Level.param) |>.toList
+        if useDef then
+          statement := statement.setArg outArgId (mkAppN (.const defName lvls') xs')
 
     let thmVal : TheoremVal :=
     {
