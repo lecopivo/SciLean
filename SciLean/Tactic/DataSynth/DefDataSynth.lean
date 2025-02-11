@@ -52,11 +52,21 @@ def getSimpleGoal' (dataSynthStatement : TSyntax `term) (fId : Name) (argNames :
 
     return (statement,args.size,lvlNames)
 
+
+def checkNoMVars (e : Expr) : MetaM Unit := do
+  let mvars := (e.collectMVars {}).result
+  if h : 0 < mvars.size then
+    throwError m!"{e} containt mvar {mvars[0]}"
+  let valLvlMVars := (collectLevelMVars {} e).result
+  if h : 0 < valLvlMVars.size then
+    throwError m!"{e} containt level mvar {Level.mvar valLvlMVars[0]}"
+
 open Qq in
 def abbrevDataSynth (dataSynthStatement : TSyntax `term) (fId : Ident)
     (args : TSyntaxArray `ident)
     (bs : TSyntaxArray `Lean.Parser.Term.bracketedBinder)
-    (tac : TSyntax `Lean.Parser.Tactic.tacticSeq) : CommandElabM Unit := do
+    (tac : TSyntax `Lean.Parser.Tactic.tacticSeq)
+    (useDef := false) : CommandElabM Unit := do
 
   Elab.Command.liftTermElabM <| do
   -- resolve function name
@@ -65,9 +75,10 @@ def abbrevDataSynth (dataSynthStatement : TSyntax `term) (fId : Ident)
   let argNames := args.map (fun id => id.getId)
 
   let (simpleGoal,n,lvls) ← getSimpleGoal' dataSynthStatement fId argNames bs
+  let simpleGoal ← instantiateMVars simpleGoal
 
   forallBoundedTelescope simpleGoal n fun xs e => do
-    let (_,_,statement) ← forallMetaTelescope (← etaExpand e)
+    let mut (_,_,statement) ← forallMetaTelescope (← etaExpand e)
     let .some dataSynthDecl ← isDataSynth? statement
       | throwError s!"not data_synth goal {← ppExpr statement}"
 
@@ -75,7 +86,44 @@ def abbrevDataSynth (dataSynthStatement : TSyntax `term) (fId : Ident)
     let (_,_) ← runTactic proof.mvarId! tac
 
     let suffix := (argNames.foldl (init:=`arg_) (·.appendAfter ·.toString))
-    let thmName := fId.append suffix |>.append (dataSynthDecl.name.appendAfter "simple_rule")
+    let thmName := fId.append suffix
+      |>.append (.mkSimple s!"{dataSynthDecl.name.getString!}_simple_rule")
+
+    let argNames ← getConstArgNames dataSynthDecl.name
+    for outArgId in dataSynthDecl.outputArgs do
+      let output ← instantiateMVars (statement.getArg! outArgId)
+      let defName := fId.append suffix
+        |>.append (.mkSimple s!"{dataSynthDecl.name.getString!}_{argNames[outArgId]!}")
+
+      -- filter input arguments to the minimal required
+      let xs' := xs.filter (fun x => output.containsFVar x.fvarId!)
+
+      let val ← mkLambdaFVars xs' output
+      let type ← inferType val
+
+      checkNoMVars val
+      checkNoMVars type
+
+      -- gel all level args
+      let lvls' := (collectLevelParams {} type).params
+
+      let defVal : DefinitionVal := {
+        name  := defName
+        type  := type
+        value := val
+        hints := .regular 0
+        safety := .safe
+        levelParams := lvls'.toList
+      }
+
+      addDecl (.defnDecl defVal)
+      try
+        compileDecl (.defnDecl defVal)
+      catch _ =>
+        throwError "failed to complie {defName}!"
+      let lvls' := lvls'.map (Level.param) |>.toList
+      if useDef then
+        statement := statement.setArg outArgId (mkAppN (.const defName lvls') xs')
 
     let thmVal : TheoremVal :=
     {
@@ -93,4 +141,10 @@ elab "abbrev_data_synth" fId:ident
        "in"  args:ident* bs:bracketedBinder*
        " : " dataSynthStatement:term
        "by"  tac:tacticSeq : command => do
-  Tactic.DataSynth.abbrevDataSynth dataSynthStatement fId args bs tac
+  Tactic.DataSynth.abbrevDataSynth dataSynthStatement fId args bs tac (useDef:=false)
+
+elab "def_data_synth" fId:ident
+       "in"  args:ident* bs:bracketedBinder*
+       " : " dataSynthStatement:term
+       "by"  tac:tacticSeq : command => do
+  Tactic.DataSynth.abbrevDataSynth dataSynthStatement fId args bs tac (useDef:=true)
