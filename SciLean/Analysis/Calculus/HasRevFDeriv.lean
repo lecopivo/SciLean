@@ -1050,6 +1050,33 @@ theorem IndexType.Range.foldl.arg_opinit.HasRevFDeriv_rule_direct
 
 set_option linter.unusedVariables false in
 @[data_synth]
+theorem IndexType.Range.foldl.arg_opinit.HasRevFDerivUpdate_rule_direct
+    {I : Type*} [IndexType I] (r : IndexType.Range I)
+    (op : W → X → I → X) {op' : I → _}
+    (init : W → X) {init'}
+    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i))
+    (hinit : HasRevFDerivUpdate K init init')  :
+    HasRevFDerivUpdate K
+      (fun w => r.foldl (op w) (init w))
+      (fun w =>
+        let' (x₀,dx₀) := init' w
+        let' (y,df) := r.foldl
+             -- the function we pass around is accumulator in `dw` and modification in `dx`
+             (init:=(x₀, fun dx dw => (dx,dw)))
+             (fun xdf i =>
+               let' (x,df) := xdf
+               let' (y,dfᵢ) := op' i (w,x)
+               (y, fun dx dw =>
+                 let' (dw,dx) := dfᵢ dx (dw,0)
+                 let' (dw,dx) := df dx dw
+                 (dw,dx)))
+        (y, fun dx dw=>
+          let' (dx,dw) := df dx dw
+          let dw := dx₀ dx dw
+          dw)) := sorry_proof
+
+set_option linter.unusedVariables false in
+@[data_synth]
 theorem IndexType.Range.foldl.arg_op.HasRevFDeriv_rule_direct
     {I : Type*} [IndexType I] (r : IndexType.Range I)
     (op : W → X → I → X) {op' : I → _}
@@ -1074,6 +1101,30 @@ theorem IndexType.Range.foldl.arg_op.HasRevFDeriv_rule_direct
 
 set_option linter.unusedVariables false in
 @[data_synth]
+theorem IndexType.Range.foldl.arg_op.HasRevFDerivUpdate_rule_direct
+    {I : Type*} [IndexType I] (r : IndexType.Range I)
+    (op : W → X → I → X) {op' : I → _}
+    (init : X)
+    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i)) :
+    HasRevFDerivUpdate K
+      (fun w => r.foldl (op w) init)
+      (fun w =>
+        let' (y,df) := r.foldl
+             -- the function we pass around is accumulator in `dw` and modification in `dx`
+             (init:=(init, fun dx dw => (dx,dw)))
+             (fun xdf i =>
+               let' (x,df) := xdf
+               let' (y,dfᵢ) := op' i (w,x)
+               (y, fun dx dw =>
+                 let' (dw,dx) := dfᵢ dx (dw,0)
+                 let' (dw,dx) := df dx dw
+                 (dw,dx)))
+        (y, fun dx dw =>
+          let' (dx,dw) := df dx dw
+          dw)) := sorry_proof
+
+set_option linter.unusedVariables false in
+@[data_synth]
 theorem IndexType.Range.foldl.arg_init.HasRevFDeriv_rule_direct
    {I : Type*} [IndexType I] (r : IndexType.Range I)
    (op : X → I → X)
@@ -1086,6 +1137,22 @@ theorem IndexType.Range.foldl.arg_init.HasRevFDeriv_rule_direct
        let x := r.foldl (init:=x₀) op
        (y, fun dx =>
          let dw := dx₀ dx
+         dw)) := sorry_proof
+
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem IndexType.Range.foldl.arg_init.HasRevFDerivUpdate_rule_direct
+   {I : Type*} [IndexType I] (r : IndexType.Range I)
+   (op : X → I → X)
+   (init : W → X) {init'}
+   (hinit : HasRevFDerivUpdate K init init')  :
+   HasRevFDerivUpdate K
+     (fun w => r.foldl op (init w))
+     (fun w =>
+       let' (x₀,dx₀) := init' w
+       let x := r.foldl (init:=x₀) op
+       (y, fun dx dw =>
+         let dw := dx₀ dx dw
          dw)) := sorry_proof
 
 
