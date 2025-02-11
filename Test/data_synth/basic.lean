@@ -497,3 +497,71 @@ info: HasRevFDerivUpdate R
             let x₄ := x*x₁*x₂*x₃
             x*x₁*x₂*x₃*x₄) _) rewrite_by
               data_synth
+
+
+
+/--
+info: HasRevFDerivUpdate R
+  (fun x =>
+    let a := x.1 * x.2.2.2.2;
+    let b := x.2.1 * x.2.2.2.2;
+    let c := x.2.2.1 * x.2.2.2.2;
+    let d := x.2.2.2.1 * x.2.2.2.2;
+    a * b * c * d)
+  fun x =>
+  let x₁₁ := x.1;
+  let x₁₂ := x.2.2.2.2;
+  let x₁ := x₁₁ * x₁₂;
+  let x₁₂₁ := x.2.1;
+  let x₁₂₂₁ := x.2.2.1;
+  let x₁₂₂₂₁ := x.2.2.2.1;
+  let x₁₂₂₂₂ := x.2.2.2.2;
+  let x₁_1 := x₁₂₁ * x₁₂₂₂₂;
+  let x₁_2 := x₁₂₂₁ * x₁₂₂₂₂;
+  let x₁_3 := x₁₂₂₂₁ * x₁₂₂₂₂;
+  let x₁_4 := x₁ * x₁_1;
+  let x₁_5 := x₁_4 * x₁_2;
+  let x₁_6 := x₁_5 * x₁_3;
+  (x₁_6, fun dz dx =>
+    let dx₁₁ := 0;
+    let dx₁₂₁ := dx.2.1;
+    let dx₁₂₂₁ := dx.2.2.1;
+    let dx₁₂₂₂₁ := dx.2.2.2.1;
+    let dx₁₂₂₂₂ := dx.2.2.2.2;
+    let dx₂ := dx.1;
+    let dx₁₁_1 := 0;
+    let dx₁₁_2 := 0;
+    let dx₁₁_3 := 0;
+    let dy₁ := (starRingEnd R) x₁_5 • dz;
+    let dy₂ := (starRingEnd R) x₁_3 • dz;
+    let dx₁ := dx₁₁_3 + dy₁;
+    let dy₁ := (starRingEnd R) x₁_4 • dy₂;
+    let dy₂ := (starRingEnd R) x₁_2 • dy₂;
+    let dx₁_1 := dx₁₁_2 + dy₁;
+    let dy₁ := (starRingEnd R) x₁ • dy₂;
+    let dy₂ := (starRingEnd R) x₁_1 • dy₂;
+    let dx₁_2 := dx₁₁_1 + dy₁;
+    let dx₁_3 := dx₁₁ + dy₂;
+    let dy₁ := (starRingEnd R) x₁₂₂₂₁ • dx₁;
+    let dy₂ := (starRingEnd R) x₁₂₂₂₂ • dx₁;
+    let dx₁ := dx₁₂₂₂₂ + dy₁;
+    let dx₁_4 := dx₁₂₂₂₁ + dy₂;
+    let dy₁ := (starRingEnd R) x₁₂₂₁ • dx₁_1;
+    let dy₂ := (starRingEnd R) x₁₂₂₂₂ • dx₁_1;
+    let dx₁ := dx₁ + dy₁;
+    let dx₁_5 := dx₁₂₂₁ + dy₂;
+    let dy₁ := (starRingEnd R) x₁₂₁ • dx₁_2;
+    let dy₂ := (starRingEnd R) x₁₂₂₂₂ • dx₁_2;
+    let dx₁ := dx₁ + dy₁;
+    let dx₁_6 := dx₁₂₁ + dy₂;
+    let dy₁ := ⋯ • dx₁_3;
+    let dy₂ := ⋯;
+    ⋯) : Prop
+-/
+#guard_msgs in
+#check (HasRevFDerivUpdate R (fun x : R×R×R×R×R =>
+    let a := x.1 * x.2.2.2.2
+    let b := x.2.1 * x.2.2.2.2
+    let c := x.2.2.1 * x.2.2.2.2
+    let d := x.2.2.2.1 * x.2.2.2.2
+    a*b*c*d) _) rewrite_by data_synth

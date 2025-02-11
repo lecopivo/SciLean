@@ -194,7 +194,8 @@ def getFunData (f : Expr) : MetaM FunData := do
         insts := ← getLocalInstances
         leadingLets := ys
         xs := xs
-        body := b }
+        body := ← withConfig (fun cfg => {cfg with zeta:=false, zetaDelta:=false}) <|
+          whnfR <| b }
     return data
 
 namespace FunData
@@ -469,7 +470,8 @@ def nontrivialAppDecomposition (fData : FunData) : MetaM (Option (FunData × Fun
         insts := ← getLocalInstances
         leadingLets := fData.leadingLets
         xs := yVars
-        body := mkAppN fn args'
+        body := ← withConfig (fun cfg => {cfg with zeta:=false, zetaDelta:=false}) <|
+          whnfR <| mkAppN fn args'
       }
 
       let g : FunData := {
