@@ -51,7 +51,10 @@ abbrev_fun_trans VectorType.set in x v
 abbrev_fun_trans VectorType.set in x v
     [VectorType.Lawful X] :
     adjoint K by
-  equals (fun y : X => (VectorType.set y i 0, toVec y i)) =>
+  equals (fun y : X =>
+      let xi := toVec y i
+      let y := VectorType.set y i 0
+      (y, xi)) =>
     funext x
     apply AdjointSpace.ext_inner_left K
     intro z
@@ -62,7 +65,10 @@ abbrev_fun_trans VectorType.set in x v
 abbrev_data_synth VectorType.set in x v
     [VectorType.Lawful X] :
     HasAdjoint K by
-  conv => enter[3]; assign (fun y : X => (VectorType.set y i 0, toVec y i))
+  conv => enter[3]; assign (fun y : X =>
+    let xi := toVec y i
+    let y := VectorType.set y i 0
+    (y, xi))
   constructor
   case adjoint =>
     intros Ar B;
@@ -72,12 +78,14 @@ abbrev_data_synth VectorType.set in x v
     sorry_proof
   case is_linear => fun_prop
 
+-- TODO: the result is not ideal w.r.t. memory management!!! we should first extract en element and
+--       only then set the elemen to zero
 abbrev_data_synth VectorType.set in x v
     [VectorType.Lawful X] :
     HasAdjointUpdate K by
   apply hasAdjointUpdate_from_hasAdjoint
-  case adjoint => dsimp; data_synth
-  case simp => intro B Ar; conv => rhs; simp[Prod.add_def]; to_ssa; lsimp
+  case adjoint => data_synth
+  case simp => intro B Ar; conv => rhs; simp [Prod.add_def]; to_ssa; lsimp
 
 -- reverse AD
 abbrev_fun_trans VectorType.set in x v [VectorType.Lawful X] : revFDeriv K by
