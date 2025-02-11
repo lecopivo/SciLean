@@ -709,8 +709,8 @@ def decomposeDomain? (goal : Goal) (f : FunData) : DataSynthM (Option Result) :=
 def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "comp case" do
   let some (thm, fgoal, ggoal) ← compGoals goal (← f.toExpr) (← g.toExpr) | return none
-  let some hg ← dataSynthFun ggoal g | return none
   let some hf ← dataSynthFun fgoal f | return none
+  let some hg ← dataSynthFun ggoal g | return none
   let some r ← compResults goal thm (← f.toExpr) (← g.toExpr) hf hg | return none
   let r ← r.normalize
   return r
@@ -719,12 +719,12 @@ def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
 def letCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "letCase" do
   let some (thm, fgoal, ggoal) ← letGoals goal (← f.toExprCurry1) (← g.toExpr) | return none
-  let some hg ←
-    withProfileTrace "solving g" do
-    dataSynthFun ggoal g | return none
   let some hf ←
     withProfileTrace "solving f" do
     dataSynthFun fgoal f | return none
+  let some hg ←
+    withProfileTrace "solving g" do
+    dataSynthFun ggoal g | return none
   let some r ← letResults goal thm (← f.toExprCurry1) (← g.toExpr) hf hg | return none
   let r ← r.normalize
   return r
