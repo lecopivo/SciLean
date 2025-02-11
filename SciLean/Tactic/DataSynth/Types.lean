@@ -436,6 +436,30 @@ def decomposeDomain? (f : FunData) : MetaM (Option (Expr × Expr × Expr × FunD
 
 /-- Tries to write function `fun (x₁,...,xₙ) => f x₁ ... x₂` as composition of two non-trivial functions. -/
 def nontrivialAppDecomposition (fData : FunData) : MetaM (Option (FunData × FunData)) := do
+  match fData.body with
+  | .proj t i b => do
+
+    if b == .bvar 0 then return .none
+
+    let f : FunData := ← withLocalDeclD `x (← inferType b) fun x => do pure {
+      lctx := ← getLCtx
+      insts := ← getLocalInstances
+      leadingLets := #[]
+      xs := #[x]
+      body := .proj t i x
+    }
+
+    let g : FunData := {
+      lctx := fData.lctx
+      insts := fData.insts
+      leadingLets := fData.leadingLets
+      xs := fData.xs
+      body := b
+    }
+
+    return .some (f,g)
+
+  | .app .. =>
   withLCtx fData.lctx fData.insts do
 
     let fn := fData.body.getAppFn
@@ -488,6 +512,7 @@ def nontrivialAppDecomposition (fData : FunData) : MetaM (Option (FunData × Fun
         return none
 
       return .some (f,g)
+  | _ => return .none
 
 
 end FunData

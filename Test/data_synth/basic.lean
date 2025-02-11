@@ -615,3 +615,61 @@ info: HasRevFDerivUpdate R
     let a := x.1 * x.1 * x.2
     let b := x.1 * x.2 * x.2
     a*b) _) rewrite_by data_synth
+
+
+
+
+/--
+info: HasRevFDerivUpdate R (fun x => x.1.2.1) fun x =>
+  let x₁ := x.1;
+  let x₁ := x₁.2;
+  let x₁ := x₁.1;
+  (x₁, fun dy dx =>
+    let dx₁ := dx.1;
+    let dx₂ := dx.2;
+    let dy₂ := 0;
+    let dx' := dx₁.1;
+    let dy' := dx₁.2;
+    let dx₂_1 := dy' + (dy, dy₂);
+    ((dx', dx₂_1), dx₂)) : Prop
+-/
+#guard_msgs in
+#check (HasRevFDerivUpdate R
+          (fun x : (R×R×R)×R=> x.1.2.1)
+          _) rewrite_by simp; data_synth
+
+
+
+/--
+info: HasRevFDerivUpdate R
+  (fun x =>
+    match x with
+    | (w, x) => x + w.1 + w.2.2)
+  fun x =>
+  let x₁ := x.2;
+  let x₁_1 := x.1;
+  let x₁_2 := x₁_1.1;
+  let x₁ := x₁ + x₁_2;
+  let x₁_3 := x.1;
+  let x₁_4 := x₁_3.2;
+  let x₁_5 := x₁_4.2;
+  let x₁ := x₁ + x₁_5;
+  (x₁, fun dz dx =>
+    let dx₂ := 0;
+    let dx₁ := dx₂ + dz;
+    let dx₁_1 := dx.2;
+    let dx₂ := dx.1;
+    let dx₁_2 := dx₁_1 + dz;
+    let dx' := dx₂.1;
+    let dy' := dx₂.2;
+    let dx₁₁ := dx' + dz;
+    let dy₁ := 0;
+    let dx₂ := dy' + (dy₁, dx₁);
+    ((dx₁₁, dx₂), dx₁_2)) : Prop
+-/
+#guard_msgs in
+#check (HasRevFDerivUpdate R
+          (fun x : (R×R×R)×R=>
+            match x with
+            | (w, x) => x + w.1 + w.2.2)
+          _) rewrite_by data_synth
