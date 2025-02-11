@@ -187,7 +187,7 @@ abbrev_data_synth ArrayType.ofFn in f
 abbrev_data_synth ArrayType.set in cont xi
     {K : Type} [RCLike K] [IndexType Idx] [DecidableEq Idx] [NormedAddCommGroup Elem] [NormedSpace K Elem] (f₀) :
     (HasFDerivAt (𝕜:=K) · · f₀) by
-  apply hasFDerivAt_from_isContinuousLinearMap (by simp; fun_prop)
+  apply hasFDerivAt_from_isContinuousLinearMap (by fun_prop)
 
 -- TODO: add Differentiable, ContDiff for `modify` function
 

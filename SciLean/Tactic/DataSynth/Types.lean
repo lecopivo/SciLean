@@ -213,14 +213,14 @@ def pp (f : FunData) : MetaM String :=
 /-- Return `fun ((x₁,x₂,...,xₙ) : X₁×X₂×...×Xₙ) => f x₁ ... xₙ)` -/
 def toExpr (f : FunData) : MetaM Expr :=
   withLCtx f.lctx f.insts do
-    mkUncurryLambdaFVars f.xs f.body
+    mkUncurryLambdaFVars f.xs f.body (withLet:=false)
     >>=
     mkLambdaFVars f.leadingLets
 
 /-- Returnns `(fun (x₁ : X₁) ((x₂,...,xₙ) : X₂×...×Xₙ) => f x₁ ... xₙ)` -/
 def toExprCurry1 (f : FunData) : MetaM Expr :=
   withLCtx f.lctx f.insts do
-    mkLambdaFVars #[f.xs[0]!] (← mkUncurryLambdaFVars f.xs[1:] f.body)
+    mkLambdaFVars #[f.xs[0]!] (← mkUncurryLambdaFVars f.xs[1:] f.body (withLet:=false))
     >>=
     mkLambdaFVars f.leadingLets
 
@@ -319,6 +319,18 @@ def getBodyLetCase (f : FunData) : MetaM BodyLetCase := do
     return .simple {f with body := b}
 
   withLCtx f.lctx f.insts do
+
+  let v ← withConfig (fun cfg => {cfg with zeta:=false, zetaDelta:=false}) <|
+    whnfR v
+
+  -- let binding is just an fvar, it is uninteresting so we ignore it!
+  -- this is a case for example when having `f : FunData` that reprents this function
+  --   `fun xy : X×X => let x := xy.1; let y := xy.2; x + y`
+  -- the first two should be ignored as `f` stores this function curried form
+  --   `fun x y => let x' := (x,y).1; let y' := (x,y).2; x' + y'`
+  -- thus these let bindings reduce to `let x' := x` and `let y' := y` and are uninteresting
+  if v.isFVar then
+    return .simple {f with body := b.instantiate1 v}
 
   -- does expression `e` contain any of the input variables `xᵢ`?
   let containsX (e : Expr) : Bool := (e.hasAnyFVar (fun id => f.xs.contains (.fvar id)))

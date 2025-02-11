@@ -71,12 +71,12 @@ fun x =>
   let xₙ := x.2....2
   f x₁ ... xₙ
 ``` -/
-def mkUncurryFun' (n : Nat) (f : Expr) : MetaM Expr := do
+def mkUncurryFun' (n : Nat) (f : Expr) (withLet := true) : MetaM Expr := do
   if n ≤ 1 then
     return f
   else
     lambdaBoundedTelescope f n fun xs b => do
-      mkUncurryLambdaFVars xs b
+      mkUncurryLambdaFVars xs b (withLet := withLet)
 
 
 private def _root_.Lean.Expr.isProjOf (x y : Expr) : Bool :=

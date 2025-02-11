@@ -461,12 +461,12 @@ def Goal.tryTheorem? (goal : Goal) (thm : Theorem) (hintPre hintPost : Array (Na
   return r
 
 
-
 -- main function that looks up theorems
 partial def main (goal : Goal) : DataSynthM (Option Result) := do
   withProfileTrace "main" do
 
-  let thms ← goal.getCandidateTheorems
+  let thms ← -- withConfig (fun cfg => {cfg with zeta:=false, zetaDelta:=false}) <|
+    goal.getCandidateTheorems
 
   trace[Meta.Tactic.data_synth] "candidates {thms.map (fun t => t.thmName)}"
 
@@ -751,6 +751,8 @@ partial def mainFun (goal : Goal) (f : FunData) : DataSynthM (Option Result) := 
   -- decompose domain if possible
   if let some r ← decomposeDomain? goal f then
     return r
+
+  trace[Meta.Tactic.data_synth] "main function {←f.pp}"
 
   let h ← f.funHead
   trace[Meta.Tactic.data_synth] "function case {repr h}"

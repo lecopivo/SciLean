@@ -136,10 +136,7 @@ info: HasRevFDerivUpdate R
   (fun x =>
     let y := x;
     y)
-  fun x =>
-  (x, fun dz dx =>
-    let dx := dx + dz;
-    dx) : Prop
+  fun x => (x, fun dx dx' => dx' + dx) : Prop
 -/
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x : X => let y := x; y) _) rewrite_by data_synth
@@ -269,10 +266,9 @@ info: HasRevFDerivUpdate R
     let y := x;
     y + y)
   fun x =>
-  let x₁ := x + x;
-  (x₁, fun dz dx =>
-    let dx_1 := dz + dz;
-    let dx := dx + dx_1;
+  (x + x, fun dy dx =>
+    let dx := dx + dy;
+    let dx := dx + dy;
     dx) : Prop
 -/
 #guard_msgs in

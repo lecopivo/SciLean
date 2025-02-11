@@ -38,7 +38,7 @@ def getSimpleGoal' (dataSynthStatement : TSyntax `term) (fId : Name) (argNames :
     let f ← liftM <|
       mkLambdaFVars mainArgs (mkAppN (Expr.const info.name lvls) xs)
       >>=
-      mkUncurryFun' mainArgs.size
+      mkUncurryFun' mainArgs.size (withLet := false)
 
     let dataSynthType ← mkArrow (← inferType f) (← mkFreshTypeMVar)
     let dataSynthFun ← Elab.Term.elabTerm dataSynthStatement dataSynthType
