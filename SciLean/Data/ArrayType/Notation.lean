@@ -170,7 +170,7 @@ elab_rules (kind := dataArrayNotation) : term
       let dataArray := mkIdent `SciLean.DataArrayN
       let fn ←
         elabTerm (←`(@ArrayType.ofFn ($dataArray _ _) _ _ _
-                      fun ((i,j) : Fin $m × Fin $n) => [$elems,*].get! (IndexType.toFin (j,i)).1)) none
+                      fun ((i,j) : Fin $m × Fin $n) => [$elems,*].get! (IndexType.toFin (i,j)).1)) none
       return fn
 
 

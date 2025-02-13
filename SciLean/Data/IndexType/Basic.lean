@@ -158,11 +158,12 @@ instance : IndexType (Fin n) where
 
 
 instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
-  toFin := fun (a,b) => ⟨(toFin a).1 + size α * (toFin b).1, by sorry_proof⟩
+  -- this choice will result in row major matrices/tensors
+  toFin := fun (a,b) => ⟨size β * (toFin a).1 + (toFin b).1, by sorry_proof⟩
   fromFin ij :=
-    -- this choice will result in column major matrices
-    let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
-    let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
+    -- this choice will result in row major matrices
+    let i : Fin (size α) := ⟨ij.1 / size β, by sorry_proof⟩
+    let j : Fin (size β) := ⟨ij.1 % size β, by sorry_proof⟩
     (fromFin i, fromFin j)
   rangeSize := fun r =>
     match r with
@@ -180,33 +181,29 @@ instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
       let (ri,rj) := r.ofProd
       let si := Iterator.val i ri
       let sj := Iterator.val j rj
-      match Stream.next? si with
-      | .some (i', si) => .some ((i',j), si.prod sj)
+      match Stream.next? sj with
+      | .some (j', sj) => .some ((i,j'), si.prod sj)
       | .none =>
-        match first? ri, Stream.next? sj with
-        | .some i', .some (j', sj) => .some ((i',j'), (Iterator.val i' ri).prod sj)
+        match Stream.next? si, first? rj with
+        | .some (i',si), .some j' => .some ((i',j'), si.prod (Iterator.val j' rj))
         | _, _ => .none
   left_inv := by intro; sorry_proof
   right_inv := by intro; sorry_proof
   first_last := by simp[firstLast?]; sorry_proof
 
-
 instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) where
-  toFin := fun ⟨a,b⟩ => ⟨(toFin a).1 + size α * (toFin b).1, by sorry_proof⟩
+  -- this choice will result in row major matrices/tensors
+  toFin := fun ⟨a,b⟩ => ⟨size β * (toFin a).1 + (toFin b).1, by sorry_proof⟩
   fromFin ij :=
-    -- this choice will result in column major matrices
-    let i : Fin (size α) := ⟨ij.1 % size α, by sorry_proof⟩
-    let j : Fin (size β) := ⟨ij.1 / size α, by sorry_proof⟩
+    -- this choice will result in row major matrices
+    let i : Fin (size α) := ⟨ij.1 / size β, by sorry_proof⟩
+    let j : Fin (size β) := ⟨ij.1 % size β, by sorry_proof⟩
     ⟨fromFin i, fromFin j⟩
   rangeSize := fun r =>
     match r with
     | .empty => 0
     | .full => rangeSize (.full : Range α) * rangeSize (.full : Range β)
     | .interval ⟨a,b⟩ ⟨a',b'⟩ => rangeSize (.interval a a') * rangeSize (.interval b b')
-  firstLast? :=
-    match FirstLast.firstLast? α, FirstLast.firstLast? β with
-    | .some (a,a'), .some (b,b') => .some (⟨a,b⟩,⟨a',b'⟩)
-    | _, _ => .none
   next? s :=
     match s with
     | .start r =>
@@ -218,12 +215,16 @@ instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) wher
       let (ri,rj) := r.ofSigma
       let si := Iterator.val i ri
       let sj := Iterator.val j rj
-      match Stream.next? si with
-      | .some (i', si) => .some (⟨i',j⟩, si.sprod sj)
+      match Stream.next? sj with
+      | .some (j', sj) => .some (⟨i,j'⟩, si.sprod sj)
       | .none =>
-        match first? ri, Stream.next? sj with
-        | .some i', .some (j', sj) => .some (⟨i',j'⟩, (Iterator.val i' ri).sprod sj)
+        match Stream.next? si, first? rj with
+        | .some (i',si), .some j' => .some (⟨i',j'⟩, si.sprod (Iterator.val j' rj))
         | _, _ => .none
+  firstLast? :=
+    match FirstLast.firstLast? α, FirstLast.firstLast? β with
+    | .some (a,a'), .some (b,b') => .some (⟨a,b⟩,⟨a',b'⟩)
+    | _, _ => .none
   left_inv := by intro; sorry_proof
   right_inv := by intro; sorry_proof
   first_last := by sorry_proof

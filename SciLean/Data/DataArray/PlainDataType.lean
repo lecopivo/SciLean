@@ -9,7 +9,6 @@ structure BitType (α : Type*) where
   h_size : bits ≤ 8  -- we consider only types fitting into a single byte
   fromByte (b : UInt8) : α
   toByte   (a : α) : UInt8
-
   -- TODO: Add condition that toByte sets all unused bits to zero
   -- TODO: Add condition that fromByte does not use any of the unused bits
   fromByte_toByte : ∀ a, fromByte (toByte a) = a

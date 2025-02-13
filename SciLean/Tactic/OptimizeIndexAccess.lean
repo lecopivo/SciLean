@@ -12,7 +12,7 @@ open Lean Meta
 open IndexType in
 @[optimize_index_access]
 theorem IndexType.toFin_prod {I J} [IndexType I] [IndexType J] (i : I) (j : J) :
-    IndexType.toFin (i, j) = ⟨(toFin i).1 + size I * (toFin j).1, sorry_proof⟩ :=
+    IndexType.toFin (i, j) = ⟨size J * (toFin i).1 + (toFin j).1, sorry_proof⟩ :=
   rfl
 
 @[optimize_index_access]

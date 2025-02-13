@@ -207,50 +207,68 @@ def DataArrayN.flatten (x : DataArrayN α ι)
   x.reshape (Fin n) (by simp[hn])
 
 
-instance {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [pd : PlainDataType α] :
-    PlainDataType Cont where
-  btype := match pd.btype with
-    | .inl αBitType =>
-      -- TODO: Fixme !!!!
-      .inr {
-        bytes := 2
-        h_size := sorry_proof
+instance {ι α : Type*} [IndexType ι] [pd : PlainDataType α] :
+    PlainDataType (DataArrayN α ι) where
 
-        fromByteArray := λ b i h =>
-          ArrayType.ofFn (λ j =>
-            dbg_trace "fix me! instance implementation in DataArray.lean"
-            αBitType.fromByte 0)
-        toByteArray   := λ b i h c =>
-          dbg_trace "fix me! instance implementation in DataArray.lean"
-          b
-        toByteArray_size := sorry_proof
-        fromByteArray_toByteArray := sorry_proof
-        fromByteArray_toByteArray_other := sorry_proof
-      }
-    | .inr αByteType =>
-      .inr {
-        bytes := (size ι).toUSize * αByteType.bytes
-        h_size := sorry_proof
+  btype := .inr {
+    bytes := (pd.bytes (size ι)).toUSize
+    h_size := sorry_proof
 
-        fromByteArray := λ b i h =>
-          ArrayType.ofFn (λ j =>
-            let Fin := (i + (IndexType.toFin j).1.toUSize *αByteType.bytes)
-            αByteType.fromByteArray b Fin sorry_proof)
-        toByteArray   := λ b i h c => Id.run do
-          let mut b := b
-          let mut lj : USize := 0
-          for j in fullRange ι do
-            let Fin := (i + lj*αByteType.bytes)
-            lj := lj + 1
-            b := αByteType.toByteArray b Fin sorry_proof c[j]
-          b
+    fromByteArray := λ b i h =>
+      let N := pd.bytes (size ι)
+      let bi := b.copySlice (i.toNat) (ByteArray.mkEmpty N) 0 N
+      ⟨⟨bi,size ι,sorry_proof⟩,rfl⟩
+    toByteArray   := λ b i h c => Id.run do
+      let N := pd.bytes (size ι)
+      let b := c.1.1.copySlice 0 b (i.toNat) N
+      b
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
 
-        toByteArray_size := sorry_proof
-        fromByteArray_toByteArray := sorry_proof
-        fromByteArray_toByteArray_other := sorry_proof
-      }
+-- def ArrayType.instPlainDataType {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [pd : PlainDataType α] :
+--     PlainDataType Cont where
+--   btype := match pd.btype with
+--     | .inl αBitType =>
+--       -- TODO: Fixme !!!!
+--       .inr {
+--         bytes := 2
+--         h_size := sorry_proof
 
+--         fromByteArray := λ b i h =>
+--           ArrayType.ofFn (λ j =>
+--             dbg_trace "fix me! instance implementation in DataArray.lean"
+--             αBitType.fromByte 0)
+--         toByteArray   := λ b i h c =>
+--           dbg_trace "fix me! instance implementation in DataArray.lean"
+--           b
+--         toByteArray_size := sorry_proof
+--         fromByteArray_toByteArray := sorry_proof
+--         fromByteArray_toByteArray_other := sorry_proof
+--       }
+--     | .inr αByteType =>
+--       .inr {
+--         bytes := (size ι).toUSize * αByteType.bytes
+--         h_size := sorry_proof
 
+--         fromByteArray := λ b i h =>
+--           ArrayType.ofFn (λ j =>
+--             let Fin := (i + (IndexType.toFin j).1.toUSize *αByteType.bytes)
+--             αByteType.fromByteArray b Fin sorry_proof)
+--         toByteArray   := λ b i h c => Id.run do
+--           let mut b := b
+--           let mut lj : USize := 0
+--           for j in fullRange ι do
+--             let Fin := (i + lj*αByteType.bytes)
+--             lj := lj + 1
+--             b := αByteType.toByteArray b Fin sorry_proof c[j]
+--           b
+
+--         toByteArray_size := sorry_proof
+--         fromByteArray_toByteArray := sorry_proof
+--         fromByteArray_toByteArray_other := sorry_proof
+--       }
 
 def DataArrayN.curry (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
   ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
@@ -262,7 +280,8 @@ theorem DataArrayN.uncurry_def (x : DataArrayN (DataArrayN α κ) ι) :
     x.uncurry = ⊞ i j => x[i][j] := sorry_proof
 
 theorem DataArrayN.curry_def (x : DataArrayN α (ι×κ)) :
-    x.curry = ⊞ i => ⊞ j => x[i,j] := sorry_proof
+    x.curry = ⊞ i => ⊞ j => x[i,j] := by
+  sorry_proof
 
 set_option linter.dupNamespace false in
 open Lean in
