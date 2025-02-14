@@ -27,8 +27,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install OpenBLAS
-        run: sudo apt-get install -y libopenblas-dev
       - name: Lean Action
         uses: leanprover/lean-action@v1
       - name: Build project
@@ -43,8 +41,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install OpenBLAS
-        run: brew install openblas
       - name: Lean Action
         uses: leanprover/lean-action@v1
       - name: Build project
