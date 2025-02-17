@@ -6,6 +6,7 @@ open Lake DSL System
 def linkArgs := #["-L.lake/packages/leanblas/.lake/build/lib/", "-lopenblas"]
 
 package scilean {
+  moreLinkArgs := linkArgs
 }
 
 @[default_target]
