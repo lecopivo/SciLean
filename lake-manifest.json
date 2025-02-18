@@ -5,7 +5,7 @@
    "type": "git",
    "subDir": null,
    "scope": "",
-   "rev": "06609e6fa46288274a843d163fbf8e303955ff61",
+   "rev": "cb01009c65fc263d9a5abc4bb1ec57109de15ddd",
    "name": "leanblas",
    "manifestFile": "lake-manifest.json",
    "inputRev": "master",

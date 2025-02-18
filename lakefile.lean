@@ -3,11 +3,14 @@ import Lake
 open Lake DSL System
 
 
-def linkArgs := #["-L.lake/packages/leanblas/.lake/build/lib/", "-lopenblas"]
+def linkArgs := #["-L./.lake/packages/leanblas/.lake/build/lib/", "-lopenblas"]
+def moreLeanArgs := #["--load-dynlib=./.lake/packages/leanblas/.lake/build/lib/libopenblas.so"]
 
 package scilean {
   moreLinkArgs := linkArgs
-}
+  moreLeanArgs := moreLeanArgs
+}                               --
+
 
 @[default_target]
 lean_lib SciLean {
@@ -28,7 +31,6 @@ lean_lib CompileTactics where
              `SciLean.Data.Float,
              `SciLean.Data.FloatArray]
 
-
 extern_lib libscileanc pkg := do
   let mut oFiles : Array (Job FilePath) := #[]
   for file in (← (pkg.dir / "C").readDir) do
@@ -39,7 +41,6 @@ extern_lib libscileanc pkg := do
       oFiles := oFiles.push (← buildO oFile srcJob weakArgs #["-fPIC"] "gcc" getLeanTrace)
   let name := nameToStaticLib "scileanc"
   buildStaticLib (pkg.nativeLibDir / name) oFiles
-
 
 lean_exe Doodle {
   root := `examples.Doodle
