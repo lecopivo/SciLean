@@ -1,55 +1,67 @@
-name: CI
+name: Lean Action CI
 
 on:
   push:
-    branches:
-      - master
-      - blas
   pull_request:
-    branches:
-      - master
-      - blas
   workflow_dispatch:
+  release:
+    types: [published]
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Lean Action
-        uses: leanprover/lean-action@v1
-      - name: Build BLAS
-        run: lake build leanblas
-      - name: Build project
-        run: lake build
-      - name: Run Tests
-        run: lake test
-      - name: Run Examples
-        run: make examples
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - name: Linux-x86_64
+          os: ubuntu-20.04
+        - name: macOS-aarch64
+          os: macos-latest
+        - name: macOS-x86_64
+          os: macos-13
 
-  build-macos:
-    runs-on: macos-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Lean Action
-        uses: leanprover/lean-action@v1
-      - name: Build BLAS
-        run: lake build leanblas
-      - name: Build project
-        run: lake build
-      - name: Run Tests
-        run: lake test
-      - name: Run Examples
-        run: make examples
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install BLAS/Linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libopenblas-dev
+
+    - name: Install BLAS/MacOS
+      if: runner.os == 'macOS'
+      run: |
+        brew install openblas
+
+    - name: Set up Lean
+      uses: leanprover/lean-action@v1
+      with:
+        auto-config: false
+        use-github-cache: false
+        
+    - name: Build project
+      run: lake build
+
+    - name: Test project
+      run: lake test
+
+    - name: Run Examples
+      run: make examples
+
+    - name: Purge Disk Cache # https://github.com/actions/runner-images/issues/2619
+      if: github.event_name == 'release' && runner.os == 'macOS'
+      run: sudo /usr/sbin/purge
+
+    - name: Upload Release Artifact
+      if: github.event_name == 'release'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ github.event.release.tag_name }}
+      run: lake upload $TAG
+
