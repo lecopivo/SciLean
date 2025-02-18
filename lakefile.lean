@@ -3,12 +3,28 @@ import Lake
 open Lake DSL System
 
 
-def linkArgs := #["-L./.lake/packages/leanblas/.lake/build/lib/", "-lopenblas"]
-def moreLeanArgs := #["--load-dynlib=./.lake/packages/leanblas/.lake/build/lib/libopenblas.so"]
+-- def linkArgs := #["-L./.lake/packages/leanblas/.lake/build/lib/", "-lopenblas"]
+-- def moreLeanArgs := #["--load-dynlib=./.lake/packages/leanblas/.lake/build/lib/libopenblas.so"]
+
+def linkArgs :=
+  if System.Platform.isWindows then
+    #[]
+  else if System.Platform.isOSX then
+    #["-L/opt/homebrew/opt/openblas/lib", "-lblas", "-lm"]
+  else -- assuming linux
+    #["-L/usr/lib/x86_64-linux-gnu/", "-lblas", "-lm"]
+def inclArgs :=
+  if System.Platform.isWindows then
+    #[]
+  else if System.Platform.isOSX then
+    #["-I/opt/homebrew/opt/openblas/include"]
+  else -- assuming linux
+    #[]
+
 
 package scilean {
   moreLinkArgs := linkArgs
-  moreLeanArgs := moreLeanArgs
+  -- moreLeanArgs := moreLeanArgs
 }                               --
 
 
