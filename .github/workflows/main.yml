@@ -18,7 +18,7 @@ jobs:
       matrix:
         include:
         - name: Linux-x86_64
-          os: ubuntu-20.04
+          os: ubuntu-latest
         - name: macOS-aarch64
           os: macos-latest
         - name: macOS-x86_64
