@@ -10,14 +10,16 @@ def linkArgs :=
   if System.Platform.isWindows then
     #[]
   else if System.Platform.isOSX then
-    #["-L/opt/homebrew/opt/openblas/lib", "-lblas"]
+    #["-L/opt/homebrew/opt/openblas/lib",
+      "-L/usr/local/opt/openblas/lib", "-lblas"]
   else -- assuming linux
     #["-L/usr/lib/x86_64-linux-gnu/", "-lblas", "-lm"]
 def inclArgs :=
   if System.Platform.isWindows then
     #[]
   else if System.Platform.isOSX then
-    #["-I/opt/homebrew/opt/openblas/include"]
+    #["-I/opt/homebrew/opt/openblas/include",
+      "-I/usr/local/opt/openblas/include"]
   else -- assuming linux
     #[]
 
