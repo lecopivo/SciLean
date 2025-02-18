@@ -29,6 +29,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Lean Action
         uses: leanprover/lean-action@v1
+      - name: Build BLAS
+        run: lake build leanblas
       - name: Build project
         run: lake build
       - name: Run Tests
@@ -43,6 +45,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Lean Action
         uses: leanprover/lean-action@v1
+      - name: Build BLAS
+        run: lake build leanblas
       - name: Build project
         run: lake build
       - name: Run Tests
