@@ -164,7 +164,6 @@ variable
 -- FunLike.coe -----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-
 -- This one is necessary because of some issues with topology on product spaces
 -- This problem has to be a bug somewhere ...
 @[fun_prop]
@@ -472,9 +471,22 @@ variable
   {K : Type _} [RCLike K]
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
+  {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
 
 --------------------------------------------------------------------------------
 -- Differentiable --------------------------------------------------------------
+
+set_option linter.unusedVariables false in
+@[fun_prop]
+theorem ContinuousLinearMap.mk'.arg_f.IsContinuousLinearMap
+    (f : X → Y → Z) (hf : Continuous ↿f) (hfx : ∀ y, IsLinearMap K (f · y))
+    (hfy : ∀ x, IsContinuousLinearMap K (f x ·)) :
+    IsContinuousLinearMap K (fun x => fun y =>L[K] f x y) := by
+  constructor
+  · constructor
+    · intro x x'; ext y; apply (hfx y).1 x x'
+    · intro k x; ext y; apply (hfx y).2 k x
+  · dsimp[autoParam]; sorry_proof
 
 @[fun_prop]
 theorem SciLean.IsContinuousLinearMap.differentiable (f : X → Y) (hf : IsContinuousLinearMap K f) :
