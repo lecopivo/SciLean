@@ -46,7 +46,9 @@ jobs:
         use-github-cache: false
         
     - name: Build project
-      run: lake build
+      run: |
+        lake build leanblas
+        lake build
 
     - name: Test project
       run: lake test
