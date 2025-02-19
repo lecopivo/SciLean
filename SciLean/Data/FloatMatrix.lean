@@ -1,3 +1,4 @@
+#exit
 import SciLean.Data.VectorType.Base
 import SciLean.Data.MatrixType.Base
 import SciLean.Data.MatrixType.Dense

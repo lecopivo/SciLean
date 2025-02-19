@@ -2,6 +2,7 @@ import LeanBLAS
 
 open BLAS
 
+#exit
 def main : IO Unit := do
 
   let v := DenseVector.ofFn (Array:=FloatArray) (vstrg := .normal) (fun (i : Fin 3) => i.1.toFloat)
