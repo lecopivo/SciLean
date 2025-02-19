@@ -6,6 +6,8 @@ namespace SciLean
 
 open VectorType ComplexConjugate
 
+set_option linter.unusedVariables false
+
 -- max function is differentiable at points that have unique maximum value
 def_fun_prop VectorType.max in x [Lawful X]
     (x₀ : X) (hx₀ : ¬(∃ i j, i ≠ j ∧ toVec x₀ i = max x₀ ∧ toVec x₀ j = max x₀)) :

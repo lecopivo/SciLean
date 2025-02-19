@@ -332,9 +332,6 @@ import SciLean.Data.DataArray.ScalarArrayEquiv
 import SciLean.Data.DataArray.VecN
 import SciLean.Data.FinProd
 import SciLean.Data.Float
-import SciLean.Data.FloatArray
-import SciLean.Data.FloatMatrix
-import SciLean.Data.FloatVector
 import SciLean.Data.Function
 import SciLean.Data.IndexType
 import SciLean.Data.IndexType.Basic

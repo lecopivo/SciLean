@@ -11,6 +11,8 @@ import SciLean.Lean.ToSSA
 
 namespace SciLean
 
+set_option linter.unusedVariables false
+
 -- TODO: This is not completely true!!! We should have only `DifferentiableAt
 @[fun_prop]
 theorem IndexType.maxD.arg_f.Differentiable_rule
