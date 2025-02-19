@@ -2,9 +2,11 @@ import LeanBLAS
 
 open BLAS
 
-#exit
-def main : IO Unit := do
 
+def main : IO Unit := do
+  IO.println "fix this test!"
+
+#exit
   let v := DenseVector.ofFn (Array:=FloatArray) (vstrg := .normal) (fun (i : Fin 3) => i.1.toFloat)
 
   IO.println s!"v := {v}"

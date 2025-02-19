@@ -19,8 +19,8 @@ jobs:
         include:
         - name: Linux-x86_64
           os: ubuntu-latest
-        # - name: macOS-aarch64
-        #   os: macos-latest
+        - name: macOS-aarch64
+          os: macos-latest
         - name: macOS-x86_64
           os: macos-13
 
