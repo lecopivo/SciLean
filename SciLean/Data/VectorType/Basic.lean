@@ -21,17 +21,17 @@ class VectorType
   where
   [base : ∀ (n : Type u) [IndexType n], VectorType.Base (X n) n K]
   [dense : ∀ (n : Type u) [IndexType n], VectorType.Dense (X n)]
-  [lawful : ∀ (n : Type u) [IndexType n], VectorType.Lawful (X n)]
+  [lawful : ∀ (n : Type u) [IndexType n], InjectiveGetElem (X n) n]
 
   /-- Index vector with different index type with the same number of elements.
 
   This operation should no perform any computation and be only a type cast. -/
   cast {n : Type u} [IndexType n] (x : X n) (m : Type u) [IndexType m] (h : size m = size n) : X m
   cast_spec {n : Type u} [IndexType n] (x : X n) (m : Type u) [IndexType m]
-    (h : size m = size n) :
-    toVec (cast x m h)
+    (h : size m = size n) (j : m) :
+    (cast x m h)[j]
     =
-    fun j => toVec x (fromFin (I:=n) ((toFin (I:=m) j).cast h))
+    x[fromFin (I:=n) ((toFin (I:=m) j).cast h)]
 
 
 instance (priority:=low)
@@ -50,4 +50,4 @@ instance (priority:=low)
     (X : (n : Type u) → [IndexType n] → Type*)
     {R : outParam (Type*)} (K : outParam (Type*)) {_ : RealScalar R} {_ : Scalar R K}
     {n : Type u} {_ : IndexType n}
-    [inst : VectorType X K] : VectorType.Lawful (X n) := inst.lawful n
+    [inst : VectorType X K] : InjectiveGetElem (X n) n  := inst.lawful n

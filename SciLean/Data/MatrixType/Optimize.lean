@@ -7,22 +7,23 @@ variable
   {R K :  Type*} {_ : RealScalar R} {_ : Scalar R K}
   {n : Type*} {_ : IndexType n}
   {m : Type*} {_ : IndexType m}
-  {X : Type*} [VectorType.Base X n K] [VectorType.Lawful X]
-  {Y : Type*} [VectorType.Base Y m K] [VectorType.Lawful Y]
-  {M : Type*} [MatrixType.Base M X Y] [VectorType.Lawful M]
+  {X : Type*} [VectorType.Base X n K] [InjectiveGetElem X n]
+  {Y : Type*} [VectorType.Base Y m K] [InjectiveGetElem Y m]
+  {M : Type*} [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)]
 
 open VectorType MatrixType
 
 
 --  gemv and axpby
 
-omit [VectorType.Lawful X] [Lawful M] in
+
+omit [InjectiveGetElem X n] [InjectiveGetElem M (m × n)] in
 @[vector_optimize]
 theorem axpby_gemv_zero_left (a b c d : K) (A : M) (x : X) (y : Y) :
     axpby a y b (gemv c d A x 0) = gemv (b*c) a A x y := by
   ext i; simp[vector_to_spec,matrix_to_spec]; ring
 
-omit [VectorType.Lawful X] [Lawful M] in
+omit [InjectiveGetElem X n] [InjectiveGetElem M (m × n)] in
 @[vector_optimize]
 theorem axpby_gemv_zero_right (a b c d : K) (A : M) (x : X) (y : Y) :
     axpby b (gemv c d A x 0) a y = gemv (b*c) a A x y := by
@@ -31,13 +32,13 @@ theorem axpby_gemv_zero_right (a b c d : K) (A : M) (x : X) (y : Y) :
 
 --  gemv and axpby
 
-omit [VectorType.Lawful Y] [Lawful M] in
+omit [InjectiveGetElem Y m] [InjectiveGetElem M (m × n)] in
 @[vector_optimize]
 theorem axpby_gemvH_zero_left (a b c d : K) (A : M) (x : X) (y : Y) :
     axpby a x b (gemvH c d A y 0) = gemvH (b*c) a A y x := by
   ext i; simp[vector_to_spec,matrix_to_spec]; ring
 
-omit [VectorType.Lawful Y] [Lawful M] in
+omit [InjectiveGetElem Y m] [InjectiveGetElem M (m × n)] in
 @[vector_optimize]
 theorem axpby_gemvH_zero_right (a b c d : K) (A : M) (x : X) (y : Y) :
     axpby b (gemvH c d A y 0) a x = gemvH (b*c) a A y x := by
@@ -46,12 +47,12 @@ theorem axpby_gemvH_zero_right (a b c d : K) (A : M) (x : X) (y : Y) :
 
 -- outerprodAdd and apxby
 
-omit [VectorType.Lawful X] [VectorType.Lawful Y] in
+omit [InjectiveGetElem X n] [InjectiveGetElem Y m] in
 -- we expect that offten `a = 1` and `scal` on the rhs will get optimized away
 @[vector_optimize]
 theorem axpby_outerprodAdd_zero [Dense M] (a b c : K) (A : M) (x : X) (y : Y) :
     axpby a A b (outerprodAdd c y x 0) = outerprodAdd (b*c) y x (scal a A) := by
-  ext ij;
+  ext ij; cases ij
   simp[toMatrix_eq_toVec, vector_to_spec]
   simp[toVec_eq_toMatrix, matrix_to_spec]
   simp[toMatrix_eq_toVec, vector_to_spec]
@@ -60,7 +61,7 @@ theorem axpby_outerprodAdd_zero [Dense M] (a b c : K) (A : M) (x : X) (y : Y) :
 
 -- updateRow and axpby
 
-omit [Lawful X] [Lawful Y] in
+omit [InjectiveGetElem X n] [InjectiveGetElem Y m] in
 open Classical in
 @[vector_optimize]
 theorem axpby_updateRow_zero [Dense M] (a b : K) (A : M) (x : X) (i : m) :
@@ -72,7 +73,7 @@ theorem axpby_updateRow_zero [Dense M] (a b : K) (A : M) (x : X) (i : m) :
   by_cases h : i' = i <;> simp [h, vector_to_spec]
 
 
-omit [VectorType.Lawful X] [VectorType.Lawful Y] in
+omit [InjectiveGetElem X n] [InjectiveGetElem Y m] in
 @[vector_optimize]
 theorem axpby_updateCol_zero [DecidableEq n] [Dense M] (a b : K) (A : M) (y : Y) (j : n) :
     axpby a A b (updateCol 0 j y)

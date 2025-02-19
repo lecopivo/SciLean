@@ -13,12 +13,11 @@ class MatrixType.Square
 
   /-- Turn vector `x` into diagonal matrix -/
   diagonal (x : X) : M
-  diagonal_spec (x : X) [DecidableEq n] :
-    toVec (diagonal x)
+  diagonal_spec (x : X) [DecidableEq n] (i j : n)  :
+    (diagonal x)[(i,j)]
     =
-    fun (i,j) =>
-      let x := toVec x
-      (Matrix.diagonal x) i j
+    let x := fun i : n => x[i]
+    (Matrix.diagonal x) i j
 
   -- /- Set diagonal of matrix `A` to `x` -/
   -- setDiagonal (A : M) (x : X) : M
@@ -32,11 +31,11 @@ class MatrixType.Square
 
   /-- Extract diagonal of matrix -/
   diag (A : M) : X
-  diag_spec (A : M) :
-    toVec (diag A)
+  diag_spec (A : M) (i : n) :
+    (diag A)[i]
     =
     let A := toMatrix A
-    A.diag
+    A.diag i
 
   -- /-- Add outer product of a vector to a matrix.
 
@@ -86,14 +85,14 @@ omit [VectorType.Dense X] in
 open Classical in
 @[matrix_to_spec]
 theorem toMatrix_diagonal (x : X) :
-    toMatrix (diagonal (M:=M) x) = Matrix.diagonal (toVec x) := by
+    toMatrix (diagonal (M:=M) x) = Matrix.diagonal (getElem x · (by dsimp)) := by
   ext i; simp[vector_to_spec]
 
 instance (priority:=low) : One M := ⟨diagonal (VectorType.const 1)⟩
 
 open Classical in
 @[vector_to_spec]
-theorem one_spec : toVec (1 : M) = fun (i,j) => (1 : Matrix n n K) i j := by
+theorem one_spec (i j : n) : (1 : M)[(i,j)] = (1 : Matrix n n K) i j := by
   conv => lhs; dsimp [One.one, OfNat.ofNat]
   simp[vector_to_spec]
   rfl

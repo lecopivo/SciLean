@@ -5,7 +5,7 @@ namespace SciLean.VectorType
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
+  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 
 --- arithmetic operations to axp(b)y and scal
@@ -51,7 +51,7 @@ left hand side. -/
 theorem axpby_assoc_right (a b c d : K) (x y z: X) :
     axpby a (axpby c x d y) b z  = axpy (a*c) x (axpby (a*d) y b z) := by
   ext
-  simp[vector_to_spec,smul_smul,add_assoc]
+  simp[vector_to_spec,smul_smul,add_assoc]; ring
 
 
 -- scal composition
@@ -75,23 +75,23 @@ theorem scal_axpby (a b c : K) (x : X) : scal a (axpby b x c y)  = axpby (a*b) x
 @[vector_optimize]
 theorem axpby_scal_left (a b c : K) (x : X) : (axpby a (scal c x) b y)  = axpby (a*c) x b y := by
   ext
-  simp[vector_to_spec,smul_smul]
+  simp[vector_to_spec,smul_smul]; ring
 
 @[vector_optimize]
 theorem axpby_scal_right (a b c : K) (x : X) : (axpby a x b (scal c y))  = axpby a x (b*c) y := by
   ext
-  simp[vector_to_spec,smul_smul]
+  simp[vector_to_spec,smul_smul]; ring
 
 
 -- dot const
 
-omit [Lawful X] in
+omit [InjectiveGetElem X n] in
 open ComplexConjugate in
 @[vector_optimize]
 theorem dot_const_left [VectorType.Dense X] (a : K) (x : X) : dot (const a) x  = conj a * sum x := by
   simp[vector_to_spec,smul_smul,Finset.mul_sum]
 
-omit [Lawful X] in
+omit [InjectiveGetElem X n] in
 open ComplexConjugate in
 @[vector_optimize]
 theorem dot_const_right [VectorType.Dense X] (a : K) (x : X) : dot x (const a)  = conj (sum x) * a := by

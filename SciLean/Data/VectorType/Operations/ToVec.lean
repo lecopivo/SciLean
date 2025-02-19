@@ -13,114 +13,141 @@ import SciLean.Lean.ToSSA
 
 namespace SciLean
 
-open VectorType
+namespace VectorType
 
-def_fun_prop toVec in x [Lawful X] : IsLinearMap K by
+-- def_fun_prop toVec in x [Lawful X] : IsLinearMap K by
+--   constructor <;> (intros; simp[vector_to_spec])
+
+variable {R K} [RealScalar R] [Scalar R K] {n} [IndexType n] {X}
+  [VectorType.Base X n K] [InjectiveGetElem X n]
+
+@[fun_prop]
+theorem getElem.arg_xs.IsLinearMap_rule (i : n) :
+    IsLinearMap K (fun x : X => x[i]) := by
   constructor <;> (intros; simp[vector_to_spec])
 
-#generate_linear_map_simps VectorType.Base.toVec.arg_x.IsLinearMap_rule
+#generate_linear_map_simps getElem.arg_xs.IsLinearMap_rule
 
-def_fun_prop toVec in x
-    add_suffix _real
-    [ScalarSMul R K] [ScalarInner R K] [Lawful X] [RealOp X] :
-    IsLinearMap R by
-  apply IsLinearMap.restrictScalars (S:=K)
-  fun_prop
+@[fun_prop]
+theorem getElem.arg_xs.IsLinearMap_rule_real
+    [ScalarSMul R K] [ScalarInner R K] [RealOp X] (i : n) :
+    IsLinearMap R (fun x : X => x[i]) := by
+  constructor <;> (intros; simp[vector_to_spec])
 
-def_fun_prop toVec in x [Lawful X] : Continuous by
-  rename_i i _
-  have h : (fun x => toVec (X:=X) x i) = fun x =>ₗ[K] toVec x i := rfl
+#generate_linear_map_simps getElem.arg_xs.IsLinearMap_rule_real
+
+@[fun_prop]
+theorem getElem.arg_xs.Continuous_rule (i : n) :
+    Continuous (fun x : X => x[i]) := by
+  have h : (fun x : X => x[i]) = fun x =>ₗ[K] x[i] := rfl
   rw[h];
   apply LinearMap.continuous_of_finiteDimensional
 
-def_fun_prop toVec in x [Lawful X] : IsContinuousLinearMap K by
+@[fun_prop]
+theorem getElem.arg_xs.IsContinuousLinearMap_rule (i : n) :
+    IsContinuousLinearMap K (fun x : X => x[i]) := by
   constructor
   · fun_prop
   · dsimp only [autoParam]; fun_prop
 
-theorem toVec_fderiv
-    {R K} {_ : RealScalar R} {_ : Scalar R K}
-    {n} {_ : IndexType n}
-    {X} [Base X n K] [Lawful X]
-    {W} [NormedAddCommGroup W] [NormedSpace K W]
-    (f : W → X) (hf : Differentiable K f) (w dw : W) :
-    toVec (fderiv K f w dw)
-    =
-    fun i => fderiv K (fun w => toVec (f w) i) w dw := by
-  fun_trans
-
-def_fun_prop toVec in x
-    add_suffix _real
-    [ScalarSMul R K] [ScalarInner R K] [Lawful X] [RealOp X] :
-    IsContinuousLinearMap R by
+@[fun_prop]
+theorem getElem.arg_xs.IsContinuousLinearMap_rule_real
+    [ScalarSMul R K] [ScalarInner R K] [RealOp X] (i : n) :
+    IsContinuousLinearMap R (fun x : X => x[i]) := by
   constructor
   · fun_prop
   · dsimp only [autoParam]; fun_prop
-
-
-#generate_linear_map_simps VectorType.Base.toVec.arg_x.IsLinearMap_rule
 
 -- fderiv
-abbrev_fun_trans toVec in x [Lawful X] : fderiv K by
+theorem getElem_fderiv
+    {W} [NormedAddCommGroup W] [NormedSpace K W]
+    (f : W → X) (hf : Differentiable K f) (w dw : W) (i : n) :
+    (fderiv K f w dw)[i]
+    =
+    fderiv K (fun w => (f w)[i]) w dw := by
   fun_trans
 
-abbrev_fun_trans toVec in x
-    add_suffix _real [ScalarSMul R K] [ScalarInner R K] [Lawful X] [RealOp X] : fderiv R by
+@[fun_trans]
+theorem getElem.arg_xs.fderiv_rule (i : n) :
+    fderiv K (fun x : X => x[i])
+    =
+    fun x => fun dx =>L[K] dx[i] := by
   fun_trans
 
-abbrev_data_synth toVec in x [Lawful X] (x₀ : X) :
-    (HasFDerivAt (𝕜:=K) · · x₀) by
-  exact hasFDerivAt_from_isContinuousLinearMap
+@[fun_trans]
+theorem getElem.arg_xs.fderiv_rule_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (i : n) :
+    fderiv R (fun x : X => x[i])
+    =
+    fun x => fun dx =>L[R] dx[i] := by
+  fun_trans
+
+@[data_synth]
+theorem getElem.arg_xs.HasFDerivAt_rule (i : n) (x : X) :
+    HasFDerivAt (fun x : X => x[i]) (fun dx =>L[K] dx[i]) x := by sorry_proof
 
 -- forward AD
-abbrev_fun_trans toVec in x [Lawful X] : fwdFDeriv K by
+@[fun_trans]
+theorem getElem.arg_xs.fwdFDeriv_rule (i : n) :
+    fwdFDeriv K (fun x : X => x[i])
+    =
+    fun x dx => (x[i],dx[i]) := by
   fun_trans
 
-abbrev_fun_trans toVec in x
-    add_suffix _real
-    [ScalarSMul R K] [ScalarInner R K] [Lawful X] [RealOp X] : fwdFDeriv R by
-  fun_trans
 
 -- adjoint
-open Classical in
-abbrev_fun_trans toVec in x [Lawful X] [Dense X] : adjoint K by
-  tactic => rename_i i _ _
-  equals (fun k => set 0 i k) => -- todo: add specific definition for canonical basis: `set 0 i 1`
-    funext x
-    apply AdjointSpace.ext_inner_left K
-    intro z
-    rw[← adjoint_ex _ (by fun_prop)]
-    simp[vector_to_spec,Finset.sum_ite_eq']
+@[fun_trans]
+theorem getElem.arg_xs.adjoint_rule [Dense X] (i : n) :
+    adjoint K (fun x : X => x[i])
+    =
+    fun k : K => setElem (0 : X) i k (by dsimp) := by
+  funext x
+  apply AdjointSpace.ext_inner_left K
+  intro z
+  rw[← adjoint_ex _ (by fun_prop)]
+  simp[vector_to_spec,Finset.sum_ite_eq']
+  sorry_proof
 
-open Classical in
-abbrev_data_synth toVec in x [Lawful X] [Dense X] :
-    HasAdjoint K by
-  conv => enter[3]; assign (fun k => set (0:X) i k)
+@[data_synth]
+theorem getElem.arg_xs.HasAdjoint_rule [Dense X] (i : n) :
+    HasAdjoint K (fun x : X => x[i])
+     (fun k : K => setElem (0 : X) i k (by dsimp)) := by
   constructor
-  case adjoint => intro z x; simp[vector_to_spec]
+  case adjoint => intro z x; simp[vector_to_spec]; sorry_proof
   case is_linear => fun_prop
 
-abbrev_data_synth toVec in x [Lawful X] [Dense X] :
-    HasAdjointUpdate K by
-  conv => enter[3]; assign (fun k (x : X) => updateElem x i (fun xi => xi + k))
-  apply hasAdjointUpdate_from_hasAdjoint
-  case adjoint => data_synth
-  case simp => intros; simp
+@[data_synth]
+theorem getElem.arg_xs.HasAdjointUpdate_rule [Dense X] (i : n) :
+    HasAdjointUpdate K (fun x : X => x[i])
+     (fun (k : K) x => setElem x i (x[i] + k) (by dsimp)) := by
+  constructor
+  case adjoint => intro z x; simp[vector_to_spec]; sorry_proof
+  case is_linear => fun_prop
+
 
 -- reverse AD
-abbrev_fun_trans toVec in x [Lawful X] [Dense X] : revFDeriv K by
+@[fun_trans]
+theorem getElem.arg_xs.revFDeriv_rule [Dense X] (i : n) :
+    revFDeriv K (fun x : X => x[i])
+    =
+    fun x => (x[i], fun k : K => setElem (0 : X) i k (by dsimp)) := by
   unfold revFDeriv
-  autodiff
+  fun_trans
 
-abbrev_data_synth toVec in x [Lawful X] [Dense X] :
-    HasRevFDeriv K by
+@[data_synth]
+theorem getElem.arg_xs.HasRevFDeriv_rule [Dense X] (i : n) :
+    HasRevFDeriv K (fun x : X => x[i])
+     (fun x => (x[i], fun k : K => setElem (0 : X) i k (by dsimp))) := by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intros; data_synth
   case adjoint => intros; dsimp; data_synth
   case simp => rfl
 
-abbrev_data_synth toVec in x [Lawful X] [Dense X] :
-    HasRevFDerivUpdate K by
+@[data_synth]
+theorem getElem.arg_xs.HasRevFDerivUpdate_rule [Dense X] (i : n) :
+    HasRevFDerivUpdate K (fun x : X => x[i])
+     (fun x => (x[i], fun (k : K) x' =>
+       let xi := x'[i]
+       setElem x' i (xi + k) (by dsimp))) := by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intros; data_synth
   case adjoint => intros; dsimp; data_synth

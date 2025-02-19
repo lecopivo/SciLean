@@ -49,7 +49,7 @@ open Matrix VectorType in
 noncomputable
 def linSolve [VectorType.Dense X] (A : M) (b : X) : X :=
   let A := toMatrix A
-  let b := toVec b
+  let b := fun i : n => b[i]
   fromVec (A⁻¹ *ᵥ b)
 
 end SquareMatrices

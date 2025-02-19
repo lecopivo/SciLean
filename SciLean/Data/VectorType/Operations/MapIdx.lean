@@ -18,7 +18,7 @@ theorem mapIdx_spec (f : n → K → K) (x : X) :
 section NormedSpaces
 
 variable {W : Type*} [NormedAddCommGroup W] [NormedSpace K W]
-variable [VectorType.Lawful X]
+variable [InjectiveGetElem X n]
 
 -- linear, continuous, differentiable
 @[fun_prop]
@@ -40,7 +40,7 @@ theorem VectorType.mapIdx.arg_f.IsContinusousLinearMap_rule
   simp only [mapIdx_spec]
   fun_prop
 
-def_fun_prop mapIdx in x [Lawful X] (hf : ∀ i, IsContinuousLinearMap K (f i)) :
+def_fun_prop mapIdx in x [InjectiveGetElem X n] (hf : ∀ i, IsContinuousLinearMap K (f i)) :
     IsContinuousLinearMap K by
 
   simp only [mapIdx_spec]
@@ -56,12 +56,12 @@ theorem VectorType.mapIdx.arg_f.Differentiable_rule
   simp only [mapIdx_spec]
   fun_prop
 
-def_fun_prop mapIdx in x [Lawful X] (hf : ∀ i, Differentiable K (f i)) :
+def_fun_prop mapIdx in x [InjectiveGetElem X n] (hf : ∀ i, Differentiable K (f i)) :
     Differentiable K by
   simp only [mapIdx_spec]
   fun_prop
 
-
+set_option linter.unusedVariables false
 -- fderiv
 @[fun_trans]
 theorem VectorType.mapIdx.arg_fx.fderiv_rule
@@ -97,7 +97,7 @@ theorem VectorType.mapIdx.arg_x.fderiv_rule
 set_option linter.unusedVariables false in
 abbrev_data_synth mapIdx in x
     {f' : n → _} (hf : ∀ i x, HasFDerivAt (𝕜:=K) (f i) (f' i) x)
-    [Lawful X] (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by
+    [InjectiveGetElem X n] (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by
   have : ∀ i, Differentiable K (f i) := sorry_proof
   apply hasFDerivAt_from_fderiv
   case deriv => fun_trans only; rfl
@@ -114,7 +114,9 @@ theorem VectorType.mapIdx.arg_fx.fwdFDeriv_rule
       let' (x,dx) := fwdFDeriv K x w dw
       let  f' := fun i xi dxi => fwdFDeriv K (fun (w,x) => f w i x) (w,xi) (dw,dxi)
       mapIdx₂ f' x dx := by
-  unfold mapIdx; fun_trans; rfl
+  unfold mapIdx;
+  fun_trans
+  sorry_proof
 
 
 end NormedSpaces
@@ -122,7 +124,7 @@ end NormedSpaces
 section AdjointSpace
 
 variable {W : Type*} [NormedAddCommGroup W] [AdjointSpace K W]
-variable [VectorType.Lawful X]
+variable [InjectiveGetElem X n]
 
 -- adjoint
 set_option linter.unusedVariables false in
@@ -136,7 +138,7 @@ theorem VectorType.mapIdx.arg_fx.HasAdjoint_rule
       (fun y =>
         let' (dw,dx) := IndexType.foldl (init:=((0:W),(0:X))) fun (dw,dx) i =>
           let yi := toVec y i
-          let' (dw,dxi) := f' i yi (dw,0)
+          let' (dw,dxi) := f' i yi (dw,(0:K))
           (dw,set dx i dxi)
         x' dx dw) := by
   sorry_proof
@@ -153,7 +155,7 @@ theorem VectorType.mapIdx.arg_fx.HasAdjointUpdate_rule
       (fun y w' =>
         let' (dw,dx) := IndexType.foldl (init:=(w',(0:X))) fun (dw,dx) i =>
           let yi := toVec y i
-          let' (dw,dxi) := f' i yi (dw,0)
+          let' (dw,dxi) := f' i yi (dw,(0:K))
           (dw,set dx i dxi)
         x' dx dw) := by
   sorry_proof
@@ -161,7 +163,7 @@ theorem VectorType.mapIdx.arg_fx.HasAdjointUpdate_rule
 set_option linter.unusedVariables false in
 abbrev_data_synth mapIdx in x
     {f' : n → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
-    [Lawful X] :
+    [InjectiveGetElem X n] :
     HasAdjoint K by
   conv => enter [3]; assign (fun y : X => mapIdx f' y)
   constructor
@@ -176,7 +178,7 @@ abbrev_data_synth mapIdx in x
 set_option linter.unusedVariables false in
 abbrev_data_synth mapIdx in x
     {f' : n → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
-    [Lawful X] :
+    [InjectiveGetElem X n] :
     HasAdjointUpdate K by
   conv => enter [3]; assign (fun (y : X) x' => x' + mapIdx f' y)
   constructor
@@ -302,7 +304,7 @@ theorem VectorType.mapIdx.arg_f.HasRevFDerivUpdate_rule
 set_option linter.unusedVariables false in
 abbrev_data_synth mapIdx in x
     {f' : n → _} (hf : ∀ i, HasRevFDeriv K (fun x => f i x) (f' i))
-    [Lawful X] :
+    [InjectiveGetElem X n] :
     HasRevFDeriv K by
   conv => enter[3]; assign (fun (x : X) =>
      let y := mapIdx f x
@@ -313,7 +315,7 @@ abbrev_data_synth mapIdx in x
 set_option linter.unusedVariables false in
 abbrev_data_synth mapIdx in x
     {f' : n → _} (hf : ∀ i, HasRevFDeriv K (fun x => f i x) (f' i))
-    [Lawful X] :
+    [InjectiveGetElem X n] :
     HasRevFDerivUpdate K by
   conv => enter[3]; assign (fun (x : X) =>
      let y := mapIdx f x

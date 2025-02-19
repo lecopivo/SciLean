@@ -7,6 +7,7 @@ import SciLean.Data.MatrixType.Square
 namespace SciLean
 
 
+open IndexType in
 /-- This instance says that `X` is equivalent to an array of `size I` scalars `K` and it will
 automatically provide vector space structure on `X` through this equivalence.
 
@@ -17,25 +18,28 @@ The index type `I` is the canonical type to index scalar compotents of `X`.
 The type parameter `R` represents the type of reals associated with scalar `K` which is expected
 to model eiter complex or real numbers. When `K` models real numbers then `R` is the same as `K`. -/
 class ScalarArrayEquiv (X : Type*) (Array I R K : outParam Type*)
-    [IndexType I] [BLAS Array R K] where
+    [BLAS Array R K] [IndexType I] [GetElem X I K (fun _ _ => True)] where
   /-- Array of `X` as byte array (this is `DataArray X`) can be converted to an array of scalars
   that has `m*(size I)` elements for appropriate `I`. -/
   equiv : X ≃ { a : Array // BLAS.LevelOneData.size a = size I }
-  -- this equivalence should respect some indexing but which indexing
-  -- For `R^[J]^[I]` the natural index is `J` but scalar array index is `I×J` so we need some kind of
-  -- flat index access
+  getElem_equiv : ∀ (x : X) (i : I), BLAS.LevelOneData.get (equiv x).1 (toFin i).1 = x[i]
 
 namespace ScalarArrayEquiv
 
 section Simps
 variable (X : Type*) (Array I R K : outParam Type*)
-  [IndexType I] [BLAS Array R K] [ScalarArrayEquiv X Array I R K]
+  [GetElem X I K (fun _ _ => True)] [IndexType I] [BLAS Array R K] [ScalarArrayEquiv X Array I R K]
 
 @[simp]
 theorem size_equiv (x : X) : BLAS.LevelOneData.size (equiv x).1 = size I := by sorry_proof
 
 end Simps
 
+-- this is a bad istance ...
+-- we should have some `HasUncurry` for `DataArray` and use that!
+-- instance {R X} [PlainDataType X] {I J} [IndexType I] [IndexType J]
+--   [GetElem X J R (fun _ _ => True)] : GetElem (X^[I]) (I×J) R (fun _ _ => True) where
+--   getElem x ij _ := x[ij.1][ij.2]
 
 /-- `ScalarArray` implies `ScalarArrayEquiv` -/
 instance {R Array I} [RealScalar R] [PlainDataType R] [ScalarArray R Array] [IndexType I] :
@@ -46,12 +50,11 @@ instance {R Array I} [RealScalar R] [PlainDataType R] [ScalarArray R Array] [Ind
     left_inv := by intro x; simp
     right_inv := by intro x; simp
   }
+  getElem_equiv := sorry_proof
 
-instance {R Array I J}
-  [RealScalar R] [PlainDataType R] [ScalarArray R Array]
-  [IndexType J]
-  [PlainDataType X] [ScalarArrayEquiv X Array J R R] [IndexType I]  :
-    ScalarArrayEquiv (X^[I]) Array (I×J) R R where
+instance
+  {R Array I} [RealScalar R] [PlainDataType R] [ScalarArray R Array] [IndexType I] [IndexType J] :
+    ScalarArrayEquiv (R^[J]^[I]) Array (I×J) R R where
   equiv := {
     -- X^[I] --> R^[I×J] --> Array
     toFun x :=
@@ -67,18 +70,19 @@ instance {R Array I J}
     left_inv := sorry_proof
     right_inv := sorry_proof
   }
+  getElem_equiv := sorry_proof
 
 section Operations
 
 variable (X : Type*) (Array I R K : outParam Type*) [RealScalar R] [Scalar R K]
-  [IndexType I] [BLAS Array R K] [ScalarArrayEquiv X Array I R K]
+  [IndexType I] [BLAS Array R K] [GetElem X I K (fun _ _ => True)] [ScalarArrayEquiv X Array I R K]
 
 open IndexType in
 instance (X : Type*) (Array I R K : outParam Type*)
     {_ : RealScalar R} {_ : Scalar R K} {_ : BLAS Array R K} {_ : IndexType I}
+    {_ : GetElem X I K (fun _ _ => True)}
     [e : ScalarArrayEquiv X Array I R K] [LawfulBLAS Array R K] :
     VectorType.Base X I K where
-  toVec x i := BLAS.LevelOneData.get (e.equiv x).1 (toFin i)
   zero :=
     let N := size I
     let x' := BLAS.LevelOneDataExt.const N 0
@@ -90,9 +94,8 @@ instance (X : Type*) (Array I R K : outParam Type*)
     let x' := BLAS.LevelOneData.scal N a xptr 0 1
     e.equiv.symm ⟨x', sorry_proof⟩
   scal_spec := by
-    intro a x
-    funext i
-    simp
+    intro a x i
+    simp[← ScalarArrayEquiv.getElem_equiv]
     rw[BLAS.LevelOneSpec.scal_spec, Nat.mod_one]
     · simp
     · intro i
@@ -167,26 +170,37 @@ instance (X : Type*) (Array I R K : outParam Type*)
     e.equiv.symm ⟨y', sorry_proof⟩
   mul_spec := sorry_proof
 
-instance (X : Type*) (Array I R K : outParam Type*)
-    {_ : RealScalar R} {_ : Scalar R K} {_ : BLAS Array R K} {_ : IndexType I}
-    [e : ScalarArrayEquiv X Array I R K] [LawfulBLAS Array R K] :
-    VectorType.Lawful X where
-  toVec_injective := sorry_proof
+-- instance (X : Type*) (Array I R K : outParam Type*)
+--     {_ : RealScalar R} {_ : Scalar R K} {_ : BLAS Array R K} {_ : IndexType I}
+--     {_ : GetElem X I K (fun _ _ => True)}
+--     [e : ScalarArrayEquiv X Array I R K] [LawfulBLAS Array R K] :
+--     LawfulGetElem X I where
+--   getElem_injective := sorry_proof
+
+-- open IndexType in
+-- instance (X : Type*) (Array I R K : outParam Type*)
+--     {_ : RealScalar R} {_ : Scalar R K} {_ : BLAS Array R K} {_ : IndexType I}
+--     {_ : GetElem X I K (fun _ _ => True)}
+--     [e : ScalarArrayEquiv X Array I R K] [LawfulBLAS Array R K] :
+--     SetElem X I K (fun _ _ => True) where
+--   setElem x i v _ :=
+--     let x := e.equiv x
+--     let x := BLAS.LevelOneData.set x.1 (toFin i) v
+--     e.equiv.symm ⟨x, sorry_proof⟩
+--   setElem_valid := sorry_proof
 
 open IndexType in
 instance (X : Type*) (Array I R K : outParam Type*)
     {_ : RealScalar R} {_ : Scalar R K} {_ : BLAS Array R K} {_ : IndexType I}
-    [e : ScalarArrayEquiv X Array I R K] [LawfulBLAS Array R K] :
+    {_ : GetElem X I K (fun _ _ => True)}
+    [e : ScalarArrayEquiv X Array I R K] [LawfulBLAS Array R K]
+    [SetElem X I K (fun _ _ => True)] [LawfulSetElem X I] :
     VectorType.Dense X where
   fromVec f :=
     let x := BLAS.LevelOneData.ofFn (Array:=Array) (fun i => f (fromFin i))
     e.equiv.symm ⟨x, sorry_proof⟩
   right_inv := sorry_proof
-  set x i v :=
-    let x := e.equiv x
-    let x := BLAS.LevelOneData.set x.1 (toFin i) v
-    e.equiv.symm ⟨x, sorry_proof⟩
-  set_spec := sorry_proof
+  -- set_spec := sorry_proof
   const v :=
     let x := BLAS.LevelOneDataExt.const (size I) v
     e.equiv.symm ⟨x, sorry_proof⟩
@@ -237,7 +251,7 @@ instance (R m n : Type*) (Array : outParam Type*)
     [e : ScalarArray R Array] [LawfulBLAS Array R R] :
     MatrixType.Base (R^[m,n]) (R^[n]) (R^[m]) where
   toMatrix A i j := A[i,j]
-  toVec_eq_toMatrix := by simp[VectorType.toVec]; sorry_proof
+  toVec_eq_toMatrix := by intros; rfl
   gemv a b A x y :=
     let A := e.equiv A.1
     let x := e.equiv x.1
@@ -311,6 +325,27 @@ instance (R m n : Type*) (Array : outParam Type*)
     let A := BLAS.LevelTwoData.ger .RowMajor (size m) (size n) a x 0 1 y 0 1 A 0 (size n)
     ⟨e.equiv.symm A, sorry_proof⟩
   outerprodAdd_spec := sorry_proof
+
+-- open IndexType in
+-- instance (R n : Type*) (Array : outParam Type*)
+--     [RealScalar R] [PlainDataType R] [IndexType n]
+--     [e : ScalarArray R Array] [LawfulBLAS Array R R] :
+--     MatrixType.Square (R^[n,n]) where
+--   diagonal d := sorry
+--   diagonal_spec := sorry
+--   diag := sorry
+--   diag_spec := sorry
+
+
+section ArithmeticOperations
+
+variable (R m n : Type*) (Array : outParam Type*)
+  [RealScalar R] [PlainDataType R] [IndexType m] [IndexType n]
+  [e : ScalarArray R Array] [LawfulBLAS Array R R]
+
+instance : HMul (R^[m,n]) (R^[n]) (R^[m]) := ⟨fun A x => MatrixType.gemv 1 1 A x 0⟩
+
+end ArithmeticOperations
 
 end Operations
 

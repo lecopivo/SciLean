@@ -4,6 +4,7 @@ import SciLean.Analysis.Calculus.RevFDerivProj
 
 namespace SciLean
 
+
 /-- When we run reverse mode derivative w.r.t to an array we switch to optimized(but experimental)
 version of reverse mode derivative that should yield much more performant code. -/
 @[simp ↓ high, simp_core ↓ high]

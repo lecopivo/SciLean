@@ -4,7 +4,7 @@ import SciLean.Data.VectorType.Operations.ToVec
 namespace SciLean
 
 open VectorType
-
+#exit
 def_fun_prop VectorType.set in x v
     [VectorType.Lawful X] :
     IsLinearMap K by

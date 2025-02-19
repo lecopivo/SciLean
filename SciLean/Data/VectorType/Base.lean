@@ -8,6 +8,8 @@ import SciLean.Analysis.Scalar
 import SciLean.Data.IndexType
 import SciLean.Data.VectorType.Init
 
+import SciLean.Data.ArrayLike
+
 namespace SciLean
 
 open InnerProductSpace
@@ -30,80 +32,82 @@ vector space structure on `X` that is computationally efficient.
  -/
 class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)] {R : outParam (Type*)}  (K : outParam (Type*))
         [outParam (RealScalar R)] [outParam (Scalar R K)]
-    where
-  toVec (x : X) (i : n) : K -- maybe map to Euclidean space
+  extends
+    GetElem X n K (fun _ _ => True)
+  where
+  -- toVec (x : X) (i : n) : K -- maybe map to Euclidean space
 
   /-- Zero vector. -/
   zero : X
-  zero_spec : toVec zero = 0
+  zero_spec (i : n) : zero[i]  = 0
 
   /-- Scalar multiplication.
 
   `x` should be modified if it is passed with ref counter one. -/
   scal  (alpha : K) (x : X) : X
-  scal_spec (alpha : K) (x : X) :
-    toVec (scal alpha x) = alpha • toVec x
+  scal_spec (alpha : K) (x : X) (i : n) :
+    (scal alpha x)[i] = alpha • x[i]
 
   /-- `sum x = ∑ i, x[i]` -/
   sum (x : X) : K
-  sum_spec (x : X) : sum x = Finset.univ.sum (fun i : n => toVec x i)
+  sum_spec (x : X) : sum x = Finset.univ.sum (fun i : n => x[i])
 
   /-- `asum x = ∑ i, |x[i]|` -/
   asum (x : X) : R
-  asum_spec (x : X) : asum x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 1 (n → K)).symm (toVec x)‖
+  asum_spec (x : X) : asum x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 1 (n → K)).symm (fun i : n => x[i])‖
 
   /-- `nrm2 x = √∑ i, |x[i]|²` -/
   nrm2 (x : X) : R
-  nrm2_spec (x : X) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 2 (n → K)).symm (toVec x)‖
+  nrm2_spec (x : X) : nrm2 x = Scalar.ofReal (K:=K) ‖(WithLp.equiv 2 (n → K)).symm (fun i : n => x[i])‖
 
   /-- `iamax x = argmaxᵢ |x[i]|` -/
   iamax (x : X) : n -- this is inconsistent if `n` is empty
-  iamax_spec (x : X) : Scalar.abs (toVec x (iamax x)) = Scalar.ofReal (K:=K) ‖toVec x‖
+  iamax_spec (x : X) : Scalar.abs (x[iamax x]) = Scalar.ofReal (K:=K) ‖fun i : n => x[i]‖
 
   /-- `imaxRe x = argmaxᵢ (real x[i])` -/
   imaxRe (x : X) (h : 0 < size n) : n
   imaxRe_spec (x : X) (h : 0 < size n) :
-    Scalar.toReal R (Scalar.real (toVec x (imaxRe x h)))
+    Scalar.toReal R (Scalar.real (x[imaxRe x h]))
     =
-    iSup (α:=ℝ) (fun i => Scalar.toReal R <| Scalar.real (K:=K) (toVec x i))
+    iSup (α:=ℝ) (fun i : n => Scalar.toReal R <| Scalar.real (K:=K) (x[i]))
 
   /-- `iminRe x = argmaxᵢ (re x[i])` -/
   iminRe (x : X) (h : 0 < size n) : n
   iminRe_spec (x : X) (h : 0 < size n) :
-    Scalar.toReal R (Scalar.real (toVec x (iminRe x h)))
+    Scalar.toReal R (Scalar.real (x[iminRe x h]))
     =
-    iInf (α:=ℝ) (fun i => Scalar.toReal R <| Scalar.real (K:=K) (toVec x i))
+    iInf (α:=ℝ) (fun i : n => Scalar.toReal R <| Scalar.real (K:=K) (x[i]))
 
   /-- `dot x y = ∑ i, conj x[i] y[i]` -/
   dot (x y : X) : K
 
   dot_spec (x y : X) :
     (dot x y) =
-    let x' := (WithLp.equiv 2 (n → K)).symm (toVec x)
-    let y' := (WithLp.equiv 2 (n → K)).symm (toVec y)
+    let x' := (WithLp.equiv 2 (n → K)).symm (fun i : n => x[i])
+    let y' := (WithLp.equiv 2 (n → K)).symm (fun i : n => y[i])
     (⟪x',y'⟫_K)
 
   conj (x : X) : X
-  conj_spec (x : X) :
-    toVec (conj x)
+  conj_spec (x : X) (i : n) :
+    (conj x)[i]
     =
-    fun i => starRingEnd _ (toVec x i)
+    starRingEnd _ x[i]
 
   /-- `axpy a x y = a • x + y`
 
   `y` should be modified if it is passed with ref counter one. -/
   axpy (alpha : K) (x y : X) : X
 
-  axpy_spec (alpha : K) (x y : X) :
-    toVec (axpy alpha x y) = alpha • toVec x + toVec y
+  axpy_spec (alpha : K) (x y : X) (i : n) :
+    (axpy alpha x y)[i] = alpha • x[i] + y[i]
 
   /-- `axpby a b x y = a • x + b • y`
 
   `y` should be modified if it is passed with ref counter one. -/
   axpby (alpha : K) (x : X) (beta : K) (y : X) : X := axpy alpha x (scal beta y)
 
-  axpby_spec (alpha beta : K) (x y : X) :
-    toVec (axpby alpha x beta y) = alpha • toVec x + beta • toVec y
+  axpby_spec (alpha beta : K) (x y : X) (i : n) :
+    (axpby alpha x beta y)[i] = alpha • x[i] + beta • y[i]
 
   /-  Element wise operations -/
 
@@ -111,35 +115,38 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
 
   `x` should be modified if it is passed with ref counter one. -/
   mul (x y : X) : X
-  mul_spec (x y : X) :
-    toVec (mul x y) = toVec x * toVec y
+  mul_spec (x y : X) (i : n) :
+    (mul x y)[i] = x[i] * y[i]
 
-open VectorType.Base Function in
-/-- Lawful a vector `x : X` is fully determined by its elements.
 
-This provides the following extensionality property `x = y` if `∀ i, x[i] = y[i]` -/
-class VectorType.Lawful (X : Type*)
-    {n : outParam (Type*)} [IndexType n]
-    {R : outParam (Type*)} {K : outParam (Type*)}
-    [RealScalar R] [Scalar R K] [VectorType.Base X n K] : Prop where
-  toVec_injective : Injective (toVec (X:=X) (n:=n))
+-- open VectorType.Base Function in
+-- /-- Lawful a vector `x : X` is fully determined by its elements.
+
+-- This provides the following extensionality property `x = y` if `∀ i, x[i] = y[i]` -/
+-- class VectorType.Lawful (X : Type*)
+--     {n : outParam (Type*)} [IndexType n]
+--     {R : outParam (Type*)} {K : outParam (Type*)}
+--     [RealScalar R] [Scalar R K] [VectorType.Base X n K] : Prop where
+--   toVec_injective : Injective (toVec (X:=X) (n:=n))
+
 
 open VectorType.Base in
+/-- Scalar multiplication by real number and dot product over real numbers for `VectorType` -/
 class VectorType.RealOp (X : Type*)
     {n : outParam (Type*)} [IndexType n]
     {R : outParam (Type*)} {K : outParam (Type*)}
     {_  : outParam (RealScalar R)} {_ : outParam (Scalar R K)} [VectorType.Base X n K]
     [ScalarSMul R K] [ScalarInner R K]  where
   rscal (a : R) (x : X) : X
-  rscal_spec (a : R) (x : X) :
-    toVec (rscal a x) = a • toVec x
+  rscal_spec (a : R) (x : X) (i : n):
+    (rscal a x)[i] = a • x[i]
 
   rdot (x y : X) : R
-  rdot_spec (x y : X) :
+  rdot_spec (x y : X) (i : n) :
     (rdot x y)
     =
-    let x' := (WithLp.equiv 2 (n → K)).symm (toVec x)
-    let y' := (WithLp.equiv 2 (n → K)).symm (toVec y)
+    let x' := (WithLp.equiv 2 (n → K)).symm (fun i : n => x[i])
+    let y' := (WithLp.equiv 2 (n → K)).symm (fun i : n => y[i])
     (⟪x',y'⟫_R)
 
 
@@ -147,54 +154,47 @@ open Function VectorType.Base Classical in
 class VectorType.Dense (X : Type*)
     {n : outParam (Type*)} {_ : outParam (IndexType n)}
     {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
-    [VectorType.Base X n K] where
+    [VectorType.Base X n K]
+  extends
+    SetElem X n K (fun _ _ => True),
+    LawfulSetElem X n
+  where
   fromVec (f : n → K) : X
   -- protected left_inv : LeftInverse fromVec toVec
-  protected right_inv : RightInverse fromVec toVec
-
-  /-- Set the `i`-th element of `x` to `v`. -/
-  set (x : X) (i : n) (v : K) : X
-  set_spec (x : X) (i : n) (v : K) :
-    toVec (set x i v)
-    =
-    fun j =>
-      if j = i then
-         v
-      else
-         toVec x j
+  protected right_inv : RightInverse fromVec (fun (x : X) (i : n) => x[i])
 
   /-- Constant vector with all elements equial to `k`. -/
   const (k : K) : X
-  const_spec (k : K) : toVec (const k) = fun _ => k
+  const_spec (k : K) (i : n) : (const k)[i] = k
 
   /-- Scalar multiplication and scalar addition
 
   `x` should be modified if it is passed with ref counter one.  -/
   scalAdd  (alpha beta : K) (x : X) : X
-  scalAdd_spec (alpha beta : K) (x : X) :
-    toVec (scalAdd alpha beta x) = fun i => alpha * toVec x i + beta
+  scalAdd_spec (alpha beta : K) (x : X) (i : n) :
+    (scalAdd alpha beta x)[i] = alpha * x[i] + beta
 
 
   /-- Element wise division.
 
   `x` should be modified if it is passed with ref counter one. -/
   div (x y : X) : X
-  div_spec (x y : X) :
-    toVec (div x y) = toVec x / toVec y
+  div_spec (x y : X) (i : n) :
+    (div x y)[i] = x[i] / y[i]
 
   /-- Element wise inverse.
 
   `x` should be modified if it is passed with ref counter one. -/
   inv (x : X) : X
-  inv_spec (x : X) :
-    toVec (inv x) = fun i => (toVec x i)⁻¹
+  inv_spec (x : X) (i : n) :
+    (inv x)[i] = (x[i])⁻¹
 
   /-- Element wise exponentiation.
 
   `x` should be modified if it is passed with ref counter one. -/
   exp (x : X) : X
-  exp_spec (x : X) :
-    toVec (exp x) = fun i => Scalar.exp (toVec x i)
+  exp_spec (x : X) (i : n) :
+    (exp x)[i] = Scalar.exp (x[i])
 
   -- /-- Element wise logarithm. -/
   -- log {n} [IndexType n] (x : X) : X
@@ -301,13 +301,13 @@ class VectorType.Dense (X : Type*)
 namespace VectorType
 
 export VectorType.Base
-  (toVec zero zero_spec scal scal_spec sum sum_spec asum asum_spec nrm2 nrm2_spec
+  (zero zero_spec scal scal_spec sum sum_spec asum asum_spec nrm2 nrm2_spec
    iamax iamax_spec imaxRe imaxRe_spec iminRe iminRe_spec dot dot_spec axpy axpy_spec axpby axpby_spec
    mul mul_spec conj conj_spec)
 
-export VectorType.Lawful (toVec_injective)
+-- export VectorType.Lawful (toVec_injective)
 
-export VectorType.Dense (fromVec set set_spec const const_spec scalAdd scalAdd_spec div div_spec
+export VectorType.Dense (fromVec const const_spec scalAdd scalAdd_spec div div_spec
   inv inv_spec exp exp_spec)
 export VectorType.RealOp (rscal rscal_spec rdot rdot_spec)
 
@@ -328,7 +328,6 @@ attribute [vector_to_spec]
   inv_spec
   exp_spec
   mul_spec
-  set_spec
   rscal_spec
   rdot_spec
 
@@ -341,15 +340,19 @@ variable
 open VectorType
 
 @[ext]
-theorem ext [Lawful X] (x y : X) : (∀ (i : n), toVec x i = toVec y i) → x = y := by
+theorem ext [InjectiveGetElem X n] (x y : X) : (∀ (i : n), x[i] = y[i]) → x = y := by
   intro h
-  apply toVec_injective
+  apply getElem_injective (idx:=n)
   funext i
   exact (h i)
 
 @[simp, simp_core]
-theorem toVec_fromVec [Dense X] (x : n → K) : toVec (fromVec (X:=X) x) = x := by
-  apply Dense.right_inv
+theorem getElem_fromVec [Dense X] (x : n → K) (i : n) : (fromVec (X:=X) x)[i] = x i := by
+  exact congrFun (Dense.right_inv (X:=X) x) i
+
+-- todo: deprecate this
+abbrev toVec (x : X) : n → K := fun i => x[i]
+abbrev set [Dense X] (x : X) (i : n) (v : K) : X := setElem x i v .intro
 
 instance (priority:=low) : Add X := ⟨fun x y => axpby 1 x 1 y⟩
 instance (priority:=low) : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
@@ -364,78 +367,47 @@ instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : Inner R
 instance (priority:=low) : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
 instance (priority:=low) : Dist X := ⟨fun x y => ‖x-y‖⟩
 
-@[vector_to_spec]
-theorem toVec_add (x y : X) : toVec (x + y) = toVec x + toVec y := by
-  ext; simp[vector_to_spec,HAdd.hAdd,Add.add]
+@[simp, simp_core, vector_to_spec]
+theorem toVec_add (x y : X) (i : n) : (x + y)[i] = x[i] + y[i] := by
+  simp[vector_to_spec,HAdd.hAdd,Add.add]
 
-@[vector_from_spec]
-theorem fromVec_add [Lawful X] [Dense X] (x y : n → K) :
-    fromVec (X:=X) (x + y) = fromVec x + fromVec y := by
-  apply toVec_injective; simp[vector_to_spec]
-
-@[vector_to_spec]
-theorem toVec_sub (x y : X) : toVec (x - y) = toVec x - toVec y := by
-  ext; conv => lhs; simp[vector_to_spec,HSub.hSub,Sub.sub]
+@[simp, simp_core, vector_to_spec]
+theorem toVec_sub (x y : X) (i : n) : (x - y)[i] = x[i] - y[i] := by
+  conv => lhs; simp[vector_to_spec,HSub.hSub,Sub.sub]
   simp[sub_eq_add_neg]
 
-@[vector_from_spec]
-theorem fromVec_sub [Lawful X] [Dense X] (x y : n → K) :
-    fromVec (X:=X) (x - y) = fromVec x - fromVec y := by
-  apply toVec_injective; simp[vector_to_spec]
+@[simp, simp_core, vector_to_spec]
+theorem toVec_neg (x : X) (i : n) : (- x)[i] = - x[i] := by
+  simp[vector_to_spec,Neg.neg]
 
-@[vector_to_spec]
-theorem toVec_neg (x : X) : toVec (- x) = - toVec x := by
-  ext; simp[vector_to_spec,Neg.neg]
-
-@[vector_from_spec]
-theorem fromVec_neg [Lawful X] [Dense X] (x : n → K) :
-    fromVec (X:=X) (- x) = - fromVec x := by
-  apply toVec_injective; simp[vector_to_spec]
-
-@[vector_to_spec]
-theorem toVec_smul (k : K) (x : X) : toVec (k • x) = k • toVec x := by
+@[simp, simp_core, vector_to_spec]
+theorem toVec_smul (k : K) (x : X) (i : n) : (k • x)[i] = k • x[i] := by
   conv => lhs; simp only [HSMul.hSMul, SMul.smul,scal_spec]
-  funext i; simp only [Pi.smul_apply, smul_eq_mul]
+  simp only [Pi.smul_apply, smul_eq_mul]
 
-@[vector_from_spec]
-theorem fromVec_smul [Lawful X] [Dense X] (k : K) (x : n → K) :
-    fromVec (X:=X) (k • x) = k • fromVec x := by
-  apply toVec_injective; simp[vector_to_spec]
+@[simp, simp_core, vector_to_spec]
+theorem toVec_smul' [ScalarSMul R K] [ScalarInner R K] [RealOp X] (r : R) (x : X) (i : n) :
+    (r • x)[i] = r • x[i] := by
+  conv => lhs; simp only [HSMul.hSMul, SMul.smul,rscal_spec]
+  rfl
 
-@[vector_to_spec]
-theorem toVec_smul' [ScalarSMul R K] [ScalarInner R K] [RealOp X] (r : R) (x : X) :
-    toVec (r • x) = r • toVec x := by
-  conv => lhs; simp only [HSMul.hSMul, SMul.smul,scal_spec]
-  funext i; simp only [Pi.smul_apply, smul_eq_mul]
-  sorry_proof
-
-@[vector_from_spec]
-theorem fromVec_smul' [Lawful X] [Dense X] [ScalarSMul R K] [ScalarInner R K] [RealOp X]
-    (r : R) (x : n → K) :
-    fromVec (X:=X) (r • x) = r • fromVec x := by
-  apply toVec_injective; simp[vector_to_spec]
-
-@[vector_to_spec]
-theorem toVec_zero : toVec (0 : X) = 0 := by
+@[simp, simp_core, vector_to_spec]
+theorem toVec_zero (i : n) : (0 : X)[i] = 0 := by
   conv => lhs; simp only [Zero.zero,OfNat.ofNat]
   simp only [zero_spec]
-
-@[vector_from_spec]
-theorem fromVec_zero [Lawful X] [Dense X] : fromVec (X:=X) 0 = 0 := by
-  apply toVec_injective; simp[vector_to_spec]
 
 @[vector_to_spec]
 theorem inner_spec (x y : X) :
     ⟪x,y⟫_K
     =
-    ⟪(WithLp.equiv 2 (n → K)).symm (toVec x), (WithLp.equiv 2 (n → K)).symm (toVec y)⟫_K := by
+    ⟪(WithLp.equiv 2 (n → K)).symm (fun i : n => x[i]), (WithLp.equiv 2 (n → K)).symm (fun i : n => y[i])⟫_K := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 
 @[vector_to_spec]
 theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) :
     ⟪x,y⟫_R
     =
-    ⟪(WithLp.equiv 2 (n → K)).symm (toVec x), (WithLp.equiv 2 (n → K)).symm (toVec y)⟫_R := by
+    ⟪(WithLp.equiv 2 (n → K)).symm (fun i : n => x[i]), (WithLp.equiv 2 (n → K)).symm (fun i : n => y[i])⟫_R := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
   sorry_proof
 
@@ -443,7 +415,7 @@ theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) 
 theorem norm_spec (x : X) :
     ‖x‖
     =
-    ‖(WithLp.equiv 2 (n → K)).symm (toVec x)‖ := by
+    ‖(WithLp.equiv 2 (n → K)).symm (fun i : n => x[i])‖ := by
   conv => lhs; simp only [norm]; simp only [nrm2_spec]
   simp only [Scalar.toReal_ofReal]
 
@@ -451,9 +423,10 @@ theorem norm_spec (x : X) :
 theorem dist_spec (x y : X) :
     dist x y
     =
-    dist ((WithLp.equiv 2 (n → K)).symm (toVec x)) ((WithLp.equiv 2 (n → K)).symm (toVec y)) := by
+    dist ((WithLp.equiv 2 (n → K)).symm (fun i : n => x[i])) ((WithLp.equiv 2 (n → K)).symm (fun i : n => y[i])) := by
   conv => lhs; simp [Dist.dist,vector_to_spec]
   conv => rhs; rw[NormedAddCommGroup.dist_eq]
+  rfl
 
 
 def iamax? (x : X) : Option n :=
@@ -475,24 +448,24 @@ def iminRe? (x : X) : Option n :=
     none
 
 def updateElem [Dense X] (x : X) (i : n) (f : K → K) : X :=
-  let xi := toVec x i
-  VectorType.set x i (f xi)
+  let xi := x[i]
+  setElem x i (f xi) (by dsimp)
 
 @[simp, simp_core]
-theorem add_set_zero_eq_updateElem [Lawful X] [Dense X] (x : X) (i : n) (xi : K) :
-    x + set 0 i xi = updateElem x i (fun xi' => xi' + xi) := by
-  apply Lawful.toVec_injective;
-  funext j
+theorem add_set_zero_eq_updateElem [InjectiveGetElem X n] [Dense X] (x : X) (i : n) (xi : K) :
+    x + setElem 0 i xi (by dsimp) = updateElem x i (fun xi' => xi' + xi) := by
+  ext
   simp[vector_to_spec,updateElem]
-  split_ifs <;> simp_all
+  sorry_proof --split_ifs <;> simp_all
 
 @[simp, simp_core]
-theorem set_zero_add_eq_updateElem [Lawful X] [Dense X] (x : X) (i : n) (xi : K) :
-    set 0 i xi + x = updateElem x i (fun xi' => xi + xi') := by
-  apply Lawful.toVec_injective;
-  funext j
-  simp[vector_to_spec,updateElem]
-  split_ifs <;> simp_all
+theorem set_zero_add_eq_updateElem [InjectiveGetElem X n] [Dense X] (x : X) (i : n) (xi : K) :
+    setElem 0 i xi (by dsimp) + x = updateElem x i (fun xi' => xi + xi') := by
+  sorry_proof
+  -- apply Lawful.toVec_injective;
+  -- funext j
+  -- simp[vector_to_spec,updateElem]
+  -- split_ifs <;> simp_all
 
 end BasicOperations
 
@@ -501,7 +474,7 @@ section AlgebraicInstances
 
 variable
   {X : Type*} {n : Type*} {R K : Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
+  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 open VectorType
 
@@ -553,20 +526,23 @@ instance (priority:=low) : NormedAddCommGroup X where
   dist_eq := by intros; rfl
   eq_of_dist_eq_zero := by
     intro x y h
-    apply toVec_injective
-    apply (WithLp.equiv 2 (n → K)).symm.injective
-    simp only [dist_spec] at h
-    exact (eq_of_dist_eq_zero h)
+    apply ext
+    sorry_proof
+    -- apply (WithLp.equiv 2 (n → K)).symm.injective
+    -- simp only [dist_spec] at h
+    -- exact (eq_of_dist_eq_zero h)
 
 instance (priority:=low) instNormedSpace : NormedSpace K X where
   norm_smul_le := by
     simp only [norm_spec]
     simp [norm_smul_le,vector_to_spec]
+    sorry_proof
 
 instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : NormedSpace R X where
   norm_smul_le := by
     simp only [norm_spec]
     simp [norm_smul_le,vector_to_spec, ScalarSMul.smul_eq_mul_make]
+    sorry_proof
 
 instance (priority:=low) instAdjointSpace : AdjointSpace K X where
   inner_top_equiv_norm := by
@@ -585,9 +561,9 @@ instance (priority:=low) instAdjointSpace : AdjointSpace K X where
     intro x y;
     apply conj_symm
   add_left := by
-    intros; simp only [vector_to_spec, WithLp.equiv_symm_add,add_left]
+    intros; simp [vector_to_spec, WithLp.equiv_symm_add,add_left,←Finset.sum_add_distrib,add_mul]
   smul_left := by
-    intros; simp only [vector_to_spec, WithLp.equiv_symm_smul,smul_left]
+    intros; simp [vector_to_spec, WithLp.equiv_symm_smul,smul_left,Finset.mul_sum,mul_assoc]
 
 instance (priority:=low) instAdjointSpaceReal [ScalarSMul R K] [ScalarInner R K] [RealOp X] :
     AdjointSpace R X where
@@ -607,9 +583,9 @@ instance (priority:=low) instAdjointSpaceReal [ScalarSMul R K] [ScalarInner R K]
     simp only [inner_spec_real]
     apply conj_symm
   add_left := by
-    intros; simp [vector_to_spec, WithLp.equiv_symm_add,add_left]
+    intros; simp [vector_to_spec, WithLp.equiv_symm_add,add_left,←Finset.sum_add_distrib]
   smul_left := by
-    intros; simp [vector_to_spec, WithLp.equiv_symm_smul,smul_left]
+    intros; simp [vector_to_spec, WithLp.equiv_symm_smul,smul_left,Finset.mul_sum]
 
 instance (priority:=low) instInnerProductSpace : InnerProductSpace K X where
   -- toNormedSpace := instNormedSpace
@@ -622,9 +598,10 @@ instance (priority:=low) instInnerProductSpace : InnerProductSpace K X where
     intro x y;
     apply conj_symm
   add_left := by
-    intros; simp [vector_to_spec, WithLp.equiv_symm_add,add_left]
+    intros; simp [vector_to_spec, WithLp.equiv_symm_add,add_left,←Finset.sum_add_distrib,add_mul]
   smul_left := by
-    intros; simp only [vector_to_spec, WithLp.equiv_symm_smul,smul_left]
+    intros; simp only [vector_to_spec, WithLp.equiv_symm_smul,smul_left,Finset.mul_sum]
+    sorry_proof
 
 
 end AlgebraicInstances
@@ -634,34 +611,30 @@ section Equivalences
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
+  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 def toVecₗ : X →ₗ[K] (n → K) :=
-  ⟨⟨VectorType.toVec, by simp[vector_to_spec]⟩,by simp[vector_to_spec]⟩
+  ⟨⟨fun (x : X) (i : n) => x[i],
+   by intros; funext i; simp[vector_to_spec]⟩,
+   by intros; funext i; simp[vector_to_spec]⟩
 
 instance (priority:=low) : FiniteDimensional K X :=
-   FiniteDimensional.of_injective (V₂:=n→K) toVecₗ VectorType.Lawful.toVec_injective
+   FiniteDimensional.of_injective (V₂:=n→K) toVecₗ (getElem_injective)
 
 instance (priority:=low): CompleteSpace X := sorry_proof
 
 variable [VectorType.Dense X]
 
 def vequiv : X ≃ (n → K) where
-  toFun := toVec
+  toFun x i := x[i]
   invFun := fromVec
-  left_inv := by
-    have h : (toVec : X → (n → K)).Bijective := by
-      constructor
-      · apply Lawful.toVec_injective
-      · apply Dense.right_inv.surjective
-    intro x
-    sorry_proof -- this should be true
+  left_inv := by intro x; ext; simp
   right_inv := Dense.right_inv
 
 
 @[vector_to_spec]
 theorem vequiv_apply_eq_toVec (x : X) :
-  vequiv x = toVec x := rfl
+  vequiv x = fun i : n => x[i] := rfl
 
 @[vector_to_spec]
 theorem vequiv_symm_apply_eq_fromVec (f : n → K) :
@@ -669,7 +642,7 @@ theorem vequiv_symm_apply_eq_fromVec (f : n → K) :
 
 @[simp, simp_core]
 theorem fromVec_toVec (x : X) :
-    fromVec (toVec x) = x := by
+    fromVec (getElem x · (by dsimp)) = x := by
   rw[← vequiv_apply_eq_toVec, ← vequiv_symm_apply_eq_fromVec]
   simp
 
@@ -703,16 +676,16 @@ variable
   {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Dense X]
 
 def mapIdx (f : n → K → K) (x : X) : X :=
-  IndexType.foldl (init:=x) (fun x i =>
-    let xi := toVec x i
-    set x i (f i xi))
+  IndexType.foldl (init:=x) (fun x (i : n) =>
+    let xi := x[i]
+    setElem x i (f i xi) (by dsimp))
 
 def mapIdx₂ (f : n → K → K → K×K) (x y : X) : X×X :=
-  IndexType.foldl (init:=(x,y)) (fun (x,y) i =>
-    let xi := toVec x i
-    let yi := toVec y i
+  IndexType.foldl (init:=(x,y)) (fun (x,y) (i : n) =>
+    let xi := x[i]
+    let yi := y[i]
     let (xi',yi') := f i xi yi
-    (set x i xi', set y i yi'))
+    (setElem x i xi' (by dsimp), setElem y i yi' (by dsimp)))
 
 def map (f : K → K) (x : X) : X := mapIdx (fun _ => f) x
 def map₂ (f : K → K → K×K) (x y : X) : X×X := mapIdx₂ (fun _ => f) x y
@@ -723,15 +696,21 @@ variable
   {X : Type*} {n : Type u} {R :  Type*}
   {_ : RealScalar R} {_ : IndexType n} [VectorType.Base X n R] [VectorType.Dense X]
 
+def amax (x : X) : R :=
+  if h : 0 < size n then
+    x[iamax x]
+  else
+    0
+
 def max (x : X) : R :=
   if h : 0 < size n then
-    toVec x (imaxRe x h)
+    x[imaxRe x h]
   else
     0
 
 def min (x : X) : R :=
   if h : 0 < size n then
-    toVec x (iminRe x h)
+    x[iminRe x h]
   else
     0
 

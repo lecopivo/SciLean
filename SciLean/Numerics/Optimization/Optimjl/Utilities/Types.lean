@@ -1,4 +1,4 @@
-import SciLean.Data.DataArray
+import SciLean.Analysis.Calculus.HasRevFDeriv
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Meta.Notation.Do

@@ -8,13 +8,13 @@ namespace SciLean
 open MatrixType Classical ComplexConjugate
 
 def_fun_prop updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     IsLinearMap K by
   constructor <;>
-  (intros; ext i; simp[vector_to_spec,Matrix.updateRow,Function.update]; split_ifs <;> simp)
+  (intros; ext i; cases i; simp[vector_to_spec,Matrix.updateRow,Function.update]; split_ifs <;> simp)
 
 def_fun_prop MatrixType.updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     Continuous by
   have h : (fun x : M×X => MatrixType.updateRow (M:=M) (X:=X) (Y:=Y) x.1 i x.2)
            =
@@ -23,7 +23,7 @@ def_fun_prop MatrixType.updateRow in A x
   apply LinearMap.continuous_of_finiteDimensional
 
 def_fun_prop MatrixType.updateRow in A x with_transitive
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     IsContinuousLinearMap K by
   constructor
   · fun_prop
@@ -31,24 +31,24 @@ def_fun_prop MatrixType.updateRow in A x with_transitive
 
 -- fderiv
 abbrev_fun_trans MatrixType.updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     fderiv K by
   autodiff
 
 abbrev_data_synth updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] (A₀) :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] (A₀) :
     (HasFDerivAt (𝕜:=K) · · A₀) by
   apply hasFDerivAt_from_isContinuousLinearMap (by fun_prop)
 
 -- forward AD
 abbrev_fun_trans MatrixType.updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     fwdFDeriv K by
   autodiff
 
 -- adjoint
 abbrev_fun_trans MatrixType.updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     adjoint K by
   equals (fun B : M => (updateRow B i 0, row B i)) =>
     funext x
@@ -59,7 +59,7 @@ abbrev_fun_trans MatrixType.updateRow in A x
     sorry_proof
 
 abbrev_data_synth updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     HasAdjoint K by
   conv => enter[3]; assign (fun B : M => (updateRow B i 0, row B i))
   constructor
@@ -79,19 +79,19 @@ abbrev_data_synth updateRow in A x
   case is_linear => fun_prop
 
 abbrev_data_synth updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     HasAdjointUpdate K by
   apply hasAdjointUpdate_from_hasAdjoint
   case adjoint => dsimp; data_synth
   case simp => intro B Ar; conv => rhs; simp[Prod.add_def]; to_ssa;  lsimp
 
 -- reverse AD
-abbrev_fun_trans MatrixType.updateRow in A x [VectorType.Lawful M] [VectorType.Lawful X] : revFDeriv K by
+abbrev_fun_trans MatrixType.updateRow in A x [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] : revFDeriv K by
   unfold revFDeriv
   autodiff
 
 abbrev_data_synth updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     HasRevFDeriv K by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intros; data_synth
@@ -99,7 +99,7 @@ abbrev_data_synth updateRow in A x
   case simp => rfl
 
 abbrev_data_synth updateRow in A x
-    [VectorType.Lawful M] [VectorType.Lawful X] :
+    [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     HasRevFDerivUpdate K by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intros; data_synth

@@ -24,7 +24,7 @@ class MatrixType.Dense
   /-- Set element at `(i,j)` to `v`. -/
   set' (A : M) (i : m) (j : n) (v : K) : M
   set'_spec (A : M) (i : m) (j : n) (v : K) :
-    set' A i j v = VectorType.set A (i,j) v
+    set' A i j v = setElem A (i,j) v (by dsimp)
 
   /-    Row and column operations    -/
   /- Setting rows and columns is found in `MatrixType.Dense` -/
@@ -32,58 +32,56 @@ class MatrixType.Dense
   -- TODO: This should return `SubMatrix m n (point i) id`
   /-- Get row of matrix -/
   row (A : M) (i : m) : X
-  row_spec (A : M) (i : m) :
-    VectorType.toVec (row A i)
+  row_spec (A : M) (i : m) (j : n) :
+    (row A i)[j]
     =
     let A := toMatrix A
-    fun j => A i j
+    A i j
 
   /-- Sum rows of a matrix. -/
   sumRows (A : M) : Y
-  sumRows_spec (A : M):
-    VectorType.toVec (sumRows A)
+  sumRows_spec (A : M) (i : m) :
+    (sumRows A)[i]
     =
     let A := toMatrix A
-    fun i => ∑ j, A i j
+    ∑ j, A i j
 
   -- TODO: This should return `SubMatrix m n id (point j)`
   /-- Get column of matrix -/
   col (A : M) (j : n) : Y
-  col_spec (A : M) (j : n) :
-    VectorType.toVec (col A j)
+  col_spec (A : M) (i : m) (j : n) :
+    (col A j)[i]
     =
     let A := (toMatrix A)
-    fun i => A i j
+    A i j
 
   /-- Sum columns of a matrix -/
   sumCols (A : M) : X
-  sumCols_spec (A : M):
-    VectorType.toVec (sumCols A)
+  sumCols_spec (A : M) (j : n) :
+    (sumCols A)[j]
     =
     let A := toMatrix A
-    fun j => ∑ i, A i j
+    ∑ i, A i j
 
 
   /-- Update row, i.e. set row to a given vector. -/
   updateRow (A : M) (i : m) (x : X) : M
-  updateRow_spec (A : M) (i' : m) (x : X) [DecidableEq m] :
-    toVec (updateRow A i' x)
+  updateRow_spec (A : M) (i' : m) (x : X) [DecidableEq m] (i : m) (j : n) :
+    (updateRow A i' x)[(i,j)]
     =
-    fun (i,j) =>
-      let A := toMatrix A
-      let x := VectorType.toVec x
-      A.updateRow i' x i j
+    let A := toMatrix A
+    let x := fun j : n => x[j]
+    A.updateRow i' x i j
 
 
   /-- Update column, i.e. set column to a given vector. -/
   updateCol (A : M) (j : n) (y : Y) : M
-  updateCol_spec (A : M) (j' : n) (y : Y) [DecidableEq n] :
-    toVec (updateCol A j' y)
+  updateCol_spec (A : M) (j' : n) (y : Y) [DecidableEq n] (i : m) (j : n) :
+    (updateCol A j' y)[(i,j)]
     =
-    fun (i,j) =>
-      let A := toMatrix A
-      let y := toVec y
-      A.updateCol j' y i j
+    let A := toMatrix A
+    let y := fun i : m => y[i]
+    A.updateCol j' y i j
 
 
   /-- Add outer product of two vectors to a matrix
@@ -93,14 +91,13 @@ class MatrixType.Dense
   Impementable using BLAS `ger`, `geru`, `gerc`. -/
   outerprodAdd (alpha : K) (y : Y) (x : X) (A : M) : M
 
-  outerprodAdd_spec  (alpha : K) (y : Y) (x : X) (A : M) :
-    toVec (outerprodAdd alpha y x A)
+  outerprodAdd_spec  (alpha : K) (y : Y) (x : X) (A : M) (i : m) (j : n) :
+    (outerprodAdd alpha y x A)[(i,j)]
     =
-    fun (i,j) =>
-      let A := toMatrix A
-      let x := (Matrix.col (Fin 1) (toVec x))
-      let y := (Matrix.col (Fin 1) (toVec y))
-      (alpha • (y * xᴴ) + A) i j
+    let A := toMatrix A
+    let x := (Matrix.col (Fin 1) (fun i : n => x[i]))
+    let y := (Matrix.col (Fin 1) (fun i : m => y[i]))
+    (alpha • (y * xᴴ) + A) i j
 
 
 namespace MatrixType
@@ -124,7 +121,7 @@ variable
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {m n : Type*} {_ : IndexType m} {_ : IndexType n}
   {X Y : Type*} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
-  {M} [MatrixType.Base M X Y] [Lawful M] [MatrixType.Dense M]
+  {M} [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
 
 def updateElem (A : M) (i : m) (j : n) (f : K → K) : M :=
   let aij := toMatrix A i j
@@ -139,7 +136,7 @@ variable
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {m n : Type*} {_ : IndexType m} {_ : IndexType n}
   {X Y : Type*} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
-  {M} [MatrixType.Base M X Y] [Lawful M] [MatrixType.Dense M]
+  {M} [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
 
 open MatrixType
 
@@ -168,7 +165,7 @@ theorem fromMatrix_toMatrix (A : M) :
   rw[← mequiv_apply_eq_toMatrix, ← mequiv_symm_apply_eq_fromMatrix]
   simp only [Equiv.symm_apply_apply]
 
-omit [Lawful M] in
+omit [InjectiveGetElem M (m×n)] in
 @[simp, simp_core]
 theorem toMatrix_fromMatrix (f : m → n → K) :
     toMatrix (fromMatrix (M:=M) f) = f := by

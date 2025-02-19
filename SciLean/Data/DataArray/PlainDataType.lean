@@ -57,6 +57,44 @@ def PlainDataType.capacity {α : Type*} (pd : PlainDataType α) (byteNum : Nat) 
   | .inr byteType => byteNum / byteType.bytes.toNat
 
 
+
+set_option linter.unusedVariables false in
+/-- Get `i`-th element from `ByteArray`. -/
+def PlainDataType.fromByteArray {α : Type*} (pd : PlainDataType α) (data : ByteArray) (i : Nat) (hi : i*pd.bytes < data.size): α :=
+  match pd.btype with
+  | .inl bitType =>
+    let i := i.toUSize
+    let perByte := 8/bitType.bits
+    let inByte  := (i % perByte.toUSize).toUInt8
+    let ofByte  := i / perByte.toUSize
+    let ones : UInt8 := 255
+    let mask    := (ones - (ones <<< bitType.bits))   -- 00000111
+    -- masking is note necessary if `fromBytes` correctly ignores unused bits
+    let byte    := mask &&& (data.uget ofByte sorry_proof >>> (inByte*bitType.bits))
+    bitType.fromByte byte
+  | .inr byteType =>
+    -- todo: add bound check
+    byteType.fromByteArray data (i.toUSize*byteType.bytes) sorry_proof
+
+set_option linter.unusedVariables false in
+/-- Write `v` to `ByteArray` at `i`-th position. -/
+def PlainDataType.toByteArray {α : Type*} (pd : PlainDataType α) (data : ByteArray) (i : Nat) (v : α) (hi : i*pd.bytes < data.size): ByteArray :=
+  match pd.btype with
+  | .inl bitType =>
+    let i := i.toUSize
+    let perByte := 8/bitType.bits
+    let inByte  := (i % perByte.toUSize).toUInt8
+    let ofByte  := i / perByte.toUSize
+    let ones : UInt8 := 255
+    let mask    := ones - ((ones - (ones <<< bitType.bits)) <<< (inByte*bitType.bits))  --- 11000111 for bitType.bits = 3 and inByte = 1
+    let byte    := data.uget ofByte sorry_proof
+    let newByte := (mask &&& byte) + (bitType.toByte v <<< (inByte*bitType.bits))
+    data.uset ofByte newByte sorry_proof
+  | .inr byteType =>
+    -- todo: add bound check
+    byteType.toByteArray data (i.toUSize*byteType.bytes) sorry_proof v
+
+
 --------------- Prod -------------------------------------------------
 ----------------------------------------------------------------------
 

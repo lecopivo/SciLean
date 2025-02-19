@@ -1,6 +1,7 @@
 import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
+import SciLean.Data.DataArray.ScalarArrayEquiv
 
 /-! Port of Optim.jl, file src/multivariate/solvers/first_order/bfgs.jl
 
@@ -13,7 +14,7 @@ namespace SciLean.Optimjl
 
 
 variable
-  {R : Type} [RealScalar R] [PlainDataType R] [ToString R]
+  {R : Type} [RealScalar R] [PlainDataType R] [ToString R] {Array} [ScalarArray R Array]
 
 
 variable (R)
@@ -63,7 +64,7 @@ structure State (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R] where
    /-- `(∇²f)⁻¹(xₙ)*(xₙ-xₙ₋₁)` i.e. `invH*dx`  -/
    u : R^[n] := 0
    /-- current inverse hessian `(∇²f)⁻¹(xₙ)` -/
-   invH : R^[n,n] := .identity
+   invH : R^[n,n] := ⊞ (i j : Fin n) => if i=j then 1 else 0
    /-- step direction `- (∇²f)⁻¹ ∇f` i.e. `- (invH * g)` -/
    s : R^[n] := - g
    /-- line search scalle `dx := α • s` -/
@@ -83,8 +84,8 @@ def reset_search_direction (method : BFGS R) (state : State R n)
 
   match method.initialInvH with
   | .invH iH =>     invH := iH
-  | .stepnorm sn => invH := (sn / ‖g‖₂⁻¹) • 𝐈 n
-  | .identity =>    invH := 𝐈 n
+  | .stepnorm sn => invH := (sn / ‖g‖₂⁻¹) • ⊞ (i j : Fin n) => if i=j then 1 else 0
+  | .identity =>    invH := ⊞ (i j : Fin n) => if i=j then 1 else 0
 
   s := - invH * g -- original code has only `- g` for some reason
   return ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩
@@ -180,8 +181,9 @@ def updateH (state : State R n)  :
     let c1 := (dx_dg + ⟪dg,u⟫)/dx_dg^2
     let c2 := dx_dg⁻¹
     -- todo: add `A.addsmulouterprod s x y` function
-    invH := invH + c1 • dx.outerprod dx
-                 - c2 • (u.outerprod dx + dx.outerprod u)
+    invH := invH |> MatrixType.Dense.outerprodAdd c1 dx dx
+                 |> MatrixType.Dense.outerprodAdd (-c2) u dx
+                 |> MatrixType.Dense.outerprodAdd (-c2) dx u
 
   return ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩
 
@@ -199,10 +201,10 @@ def assessConvergence (method : BFGS R) (state : State R n) :=
     let mut f_increased := false
     let mut g_converged := false
 
-    if (x - x_previous).abs.max ≤ x_abstol then
+    if VectorType.amax (x - x_previous) ≤ x_abstol then
       x_converged := true
 
-    if (x - x_previous).abs.max ≤ x_reltol * x.abs.max then
+    if VectorType.amax (x - x_previous) ≤ x_reltol * VectorType.amax x then
       x_converged := true
 
     if Scalar.abs (f_x - f_x_previous) ≤ f_abstol then
@@ -214,7 +216,7 @@ def assessConvergence (method : BFGS R) (state : State R n) :=
     if f_x > f_x_previous then
       f_increased := true
 
-    g_converged := g.abs.max ≤ g_abstol
+    g_converged := VectorType.amax g ≤ g_abstol
 
     return (x_converged, f_converged, g_converged, f_increased)
 
@@ -260,11 +262,11 @@ instance {n} : AbstractOptimizer (BFGS R) (BFGS.State R n) R (R^[n]) where
   pick_best_x take_prev state   := if take_prev then state.x_previous else state.x
   pick_best_f take_prev state d := if take_prev then state.f_x_previous else state.f_x
 
-  x_abschange state := (state.x - state.x_previous).abs.max
-  x_relchange state := (state.x - state.x_previous).abs.max / state.x.abs.max
+  x_abschange state := VectorType.amax (state.x - state.x_previous)
+  x_relchange state :=  VectorType.amax (state.x - state.x_previous) / VectorType.amax state.x
   f_abschange d state := Scalar.abs (state.f_x - state.f_x_previous)
   f_relchange d state := Scalar.abs (state.f_x - state.f_x_previous) / Scalar.abs (state.f_x)
-  g_residual d state := state.g.abs.max
+  g_residual d state :=  VectorType.amax state.g
 
   f_calls d state := state.f_calls
   g_calls d state := state.g_calls

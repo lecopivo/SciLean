@@ -30,8 +30,7 @@ class MatrixType.Base
 
   toMatrix (A: M) : Matrix m n K
 
-  toVec_eq_toMatrix (A : M) : toVec A = fun (i,j) => toMatrix A i j
-
+  toVec_eq_toMatrix (A : M) (i : m) (j : n) : A[(i,j)] = toMatrix A i j
 
   /- Level 2 like BLAS operations -/
 
@@ -46,13 +45,13 @@ class MatrixType.Base
   Implementable using BLAS `gemv`. -/
   gemv (alpha beta : K) (A : M) (x : X) (y : Y) : Y
 
-  gemv_spec (alpha beta : K) (A : M) (x : X) (y : Y) :
-    VectorType.toVec (gemv alpha beta A x y)
+  gemv_spec (alpha beta : K) (A : M) (x : X) (y : Y) (i : m) :
+    (gemv alpha beta A x y)[i]
     =
     let A := toMatrix A
-    let x := VectorType.toVec x
-    let y := VectorType.toVec y
-    alpha • A *ᵥ x + beta • y
+    let x := fun j : n => x[j]
+    let y := fun i : m => y[i]
+    (alpha • A *ᵥ x + beta • y) i
 
   /-- Transpose matrix vector multiplication.
 
@@ -61,13 +60,13 @@ class MatrixType.Base
   Implementable using BLAS `gemv`. -/
   gemvT (alpha beta : K) (A : M) (y : Y) (x : X) : X
 
-  gemvT_spec (alpha beta : K) (A : M) (y : Y) (x : X) :
-    VectorType.toVec (gemvT alpha beta A y x)
+  gemvT_spec (alpha beta : K) (A : M) (y : Y) (x : X) (j : n) :
+    (gemvT alpha beta A y x)[j]
     =
     let A := toMatrix A
-    let x := VectorType.toVec x
-    let y := VectorType.toVec y
-    alpha • Aᵀ *ᵥ y + beta • x
+    let x := fun j : n => x[j]
+    let y := fun i : m => y[i]
+    (alpha • Aᵀ *ᵥ y + beta • x) j
 
 
   /-- Conjugate transpose matrix vector multiplication.
@@ -77,13 +76,13 @@ class MatrixType.Base
   Implementable using BLAS `gemv`. -/
   gemvH (alpha beta : K) (A : M) (y : Y) (x : X) : X
 
-  gemvH_spec (alpha beta : K) (A : M) (y : Y) (x : X) :
-    VectorType.toVec (gemvH alpha beta A y x)
+  gemvH_spec (alpha beta : K) (A : M) (y : Y) (x : X) (j : n) :
+    (gemvH alpha beta A y x)[j]
     =
     let A := toMatrix A
-    let x := VectorType.toVec x
-    let y := VectorType.toVec y
-    alpha • Aᴴ *ᵥ y + beta • x
+    let x := fun j : n => x[j]
+    let y := fun i : m => y[i]
+    (alpha • Aᴴ *ᵥ y + beta • x) j
 
 -- open MatrixType.Base Function in
 -- class MatrixType.Lawful
@@ -132,14 +131,15 @@ variable
   {M} [MatrixType.Base M X Y]
 
 @[vector_to_spec]
-theorem toMatrix_eq_toVec (A : M) : toMatrix A = fun i j => toVec A (i,j) := by
+theorem toMatrix_eq_toVec (A : M) : toMatrix A = fun i j => A[(i,j)] := by
+  funext i j
   rw[toVec_eq_toMatrix A]
 
 set_default_scalar K
 
-theorem toMatrix_injective [Lawful M] : Function.Injective (toMatrix : M → Matrix m n K) := sorry_proof
+theorem toMatrix_injective [InjectiveGetElem M (m×n)] : Function.Injective (toMatrix : M → Matrix m n K) := sorry_proof
 
-theorem ext [Lawful M] (A B : M) :
+theorem ext [InjectiveGetElem M (m×n)] (A B : M) :
     (∀ i j, toMatrix A i j = toMatrix B i j) → A = B := by
   intro h; apply toMatrix_injective; funext i j;
   exact h i j

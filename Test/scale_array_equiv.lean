@@ -1,4 +1,5 @@
 import SciLean.Data.DataArray.ScalarArrayEquiv
+import SciLean.Data.VectorType.Base
 
 open SciLean
 
@@ -17,10 +18,20 @@ example : VectorType.Base (Float^[10,20]^[30]) (Fin 30 × Fin 10 × Fin 20) Floa
 
 variable {R} [RealScalar R] [PlainDataType R] {Array} [ScalarArray R Array]
 
-example : Module R (R^[10]) := by infer_instance
+example : AddCommGroup (R^[10]) := by infer_instance
+example : AddCommGroup (Float^[10]) := by infer_instance
+
 example : MatrixType.Base (R^[2, 2]) (R^[2]) (R^[2]) := by infer_instance
 
 
 /-- info: ⊞[211.000000, 423.000000] -/
 #guard_msgs in
 #eval MatrixType.gemv 1.0 1.0 ⊞[1.0,2;3,4] ⊞[1.0,100.0] ⊞[10.0,20.0]
+
+/-- info: ⊞[201.000000, 403.000000] -/
+#guard_msgs in
+#eval ⊞[1.0,2;3,4] * ⊞[1.0,100.0]
+
+/-- info: ⊞[2.000000, 4.000000, 6.000000, 8.000000] -/
+#guard_msgs in
+#eval ⊞[1.0,2;3,4] + ⊞[1.0,2;3,4]

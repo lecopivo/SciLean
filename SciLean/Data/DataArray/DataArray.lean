@@ -3,6 +3,7 @@ import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ArrayType.Notation
 import SciLean.Tactic.InferVar
 import SciLean.Data.IndexType
+import SciLean.Data.ArrayLike
 
 set_option linter.unusedVariables false
 
@@ -156,9 +157,22 @@ def DataArrayN.linGet (xs : DataArrayN α ι) (i : Fin (Size.size ι)) : α := (
 def DataArrayN.set (xs : DataArrayN α ι) (i : ι) (xi : α) : DataArrayN α ι :=
   ⟨xs.1.set ((IndexType.toFin i).cast xs.2) xi, sorry_proof⟩
 
-
 def DataArrayN.modify (xs : DataArrayN α ι) (i : ι) (f : α → α) : DataArrayN α ι :=
   xs.set i (f (xs.get i))
+
+instance : GetElem (α^[ι]) ι α (fun _ _ => True) where
+  getElem x i _ := x.get i
+
+instance : InjectiveGetElem (α^[ι]) ι where
+  getElem_injective := sorry_proof
+
+instance : SetElem (α^[ι]) ι α (fun _ _ => True) where
+  setElem x i v _ := x.set i v
+  setElem_valid := sorry_proof
+
+instance  : LawfulSetElem (α^[ι]) ι where
+  getElem_setElem_eq  := sorry_proof
+  getElem_setElem_neq := sorry_proof
 
 
 def DataArrayN.toList (xs : DataArrayN α ι) : List α := Id.run do
@@ -226,6 +240,24 @@ instance {ι α : Type*} [IndexType ι] [pd : PlainDataType α] :
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
   }
+
+variable {κ : Type*} [IndexType κ]
+
+open IndexType in
+instance : GetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
+  getElem x ij _ := pd.fromByteArray x.1.1 (toFin ij).1 sorry_proof
+
+instance : InjectiveGetElem (α^[ι]) ι where
+  getElem_injective := sorry_proof
+
+open IndexType
+instance : SetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
+  setElem x ij v _ := ⟨⟨pd.toByteArray x.1.1 (toFin ij).1 v sorry_proof, x.1.2, sorry_proof⟩, sorry_proof⟩
+  setElem_valid := sorry_proof
+
+instance  : LawfulSetElem (α^[ι]) ι where
+  getElem_setElem_eq  := sorry_proof
+  getElem_setElem_neq := sorry_proof
 
 -- def ArrayType.instPlainDataType {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [pd : PlainDataType α] :
 --     PlainDataType Cont where

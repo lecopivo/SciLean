@@ -21,12 +21,12 @@ variable
 
 open VectorType in
 instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁⊕m₂)×(n₁⊕n₂)) K where
-  toVec := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (i,j) =>
+  getElem := fun ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (i,j) _ =>
     match i, j with
-    | .inl i, .inl j => toVec A₁₁ (i,j)
-    | .inl i, .inr j => toVec A₁₂ (i,j)
-    | .inr i, .inl j => toVec A₂₁ (i,j)
-    | .inr i, .inr j => toVec A₂₂ (i,j)
+    | .inl i, .inl j => A₁₁[(i,j)]
+    | .inl i, .inr j => A₁₂[(i,j)]
+    | .inr i, .inl j => A₂₁[(i,j)]
+    | .inr i, .inr j => A₂₂[(i,j)]
   zero := ⟨zero, zero, zero, zero⟩
   zero_spec := sorry_proof
   scal := fun k ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ => ⟨scal k A₁₁, scal k A₁₂, scal k A₂₁, scal k A₂₂⟩
@@ -44,10 +44,10 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
     let i₂₂ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := iamax? A₂₂ |>.map (fun (i,j) => (.inr i, .inr j))
     let f := fun ((i,j) : (m₁⊕m₂)×(n₁⊕n₂)) =>
       match i, j with
-      | .inl i, .inl j => toVec A₁₁ (i,j)
-      | .inl i, .inr j => toVec A₁₂ (i,j)
-      | .inr i, .inl j => toVec A₂₁ (i,j)
-      | .inr i, .inr j => toVec A₂₂ (i,j)
+      | .inl i, .inl j => A₁₁[(i,j)]
+      | .inl i, .inr j => A₁₂[(i,j)]
+      | .inr i, .inl j => A₂₁[(i,j)]
+      | .inr i, .inr j => A₂₂[(i,j)]
     let i? : Option ((m₁⊕m₂)×(n₁⊕n₂)) := [i₁₁, i₁₂, i₂₁, i₂₂].foldl (init:=none) (fun i j =>
       match i, j with
       | none, none => none
@@ -64,10 +64,10 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
     let i₂₂ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := imaxRe? A₂₂ |>.map (fun (i,j) => (.inr i, .inr j))
     let f := fun ((i,j) : (m₁⊕m₂)×(n₁⊕n₂)) =>
       match i, j with
-      | .inl i, .inl j => toVec A₁₁ (i,j)
-      | .inl i, .inr j => toVec A₁₂ (i,j)
-      | .inr i, .inl j => toVec A₂₁ (i,j)
-      | .inr i, .inr j => toVec A₂₂ (i,j)
+      | .inl i, .inl j => A₁₁[(i,j)]
+      | .inl i, .inr j => A₁₂[(i,j)]
+      | .inr i, .inl j => A₂₁[(i,j)]
+      | .inr i, .inr j => A₂₂[(i,j)]
     let i? : Option ((m₁⊕m₂)×(n₁⊕n₂)) := [i₁₁, i₁₂, i₂₁, i₂₂].foldl (init:=none) (fun i j =>
       match i, j with
       | none, none => none
@@ -84,10 +84,10 @@ instance : VectorType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) ((m₁�
     let i₂₂ : Option ((m₁⊕m₂)×(n₁⊕n₂)) := iminRe? A₂₂ |>.map (fun (i,j) => (.inr i, .inr j))
     let f := fun ((i,j) : (m₁⊕m₂)×(n₁⊕n₂)) =>
       match i, j with
-      | .inl i, .inl j => toVec A₁₁ (i,j)
-      | .inl i, .inr j => toVec A₁₂ (i,j)
-      | .inr i, .inl j => toVec A₂₁ (i,j)
-      | .inr i, .inr j => toVec A₂₂ (i,j)
+      | .inl i, .inl j => A₁₁[(i,j)]
+      | .inl i, .inr j => A₁₂[(i,j)]
+      | .inr i, .inl j => A₂₁[(i,j)]
+      | .inr i, .inr j => A₂₂[(i,j)]
     let i? : Option ((m₁⊕m₂)×(n₁⊕n₂)) := [i₁₁, i₁₂, i₂₁, i₂₂].foldl (init:=none) (fun i j =>
       match i, j with
       | none, none => none
@@ -122,10 +122,9 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
   gemv := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) =>
     (gemv a 1 A₁₂ x₂ (gemv a b A₁₁ x₁ y₁), gemv a 1 A₂₂ x₂ (gemv a b A₂₁ x₁ y₂))
   gemv_spec := by
-    intro a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂)
-    funext i
+    intro a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) i
     cases i <;>
-    (simp[matrix_to_spec,vector_to_spec,VectorType.toVec,
+    (simp[matrix_to_spec,vector_to_spec,getElem,
           Matrix.mulVec, dotProduct, add_left_inj,
           ←Finset.univ_disjSum_univ, Finset.sum_product]
      ring)
@@ -133,10 +132,10 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
   gemvT := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) =>
     (gemvT a 1 A₁₁ x₁ (gemvT a b A₂₁ x₂ y₁), gemvT a 1 A₁₂ x₁ (gemvT a b A₂₂ x₂ y₂))
   gemvT_spec := by
-    intro a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂)
-    funext i
+    intro a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) i
+
     cases i <;>
-    (simp[matrix_to_spec,vector_to_spec,VectorType.toVec,
+    (simp[matrix_to_spec,vector_to_spec,getElem,
           Matrix.mulVec, dotProduct, add_left_inj,
           ←Finset.univ_disjSum_univ, Finset.sum_product]
      ring)
@@ -144,10 +143,9 @@ example : MatrixType.Base (BlockMatrix M₁₁ M₁₂ M₂₁ M₂₂) (m:=m₁
   gemvH := fun a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) =>
     (gemvH a 1 A₁₁ x₁ (gemvH a b A₂₁ x₂ y₁), gemvH a 1 A₁₂ x₁ (gemvH a b A₂₂ x₂ y₂))
   gemvH_spec := by
-    intro a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂)
-    funext i
+    intro a b ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ (x₁,x₂) (y₁,y₂) i
     cases i <;>
-    (simp[matrix_to_spec,vector_to_spec,VectorType.toVec,
+    (simp[matrix_to_spec,vector_to_spec,getElem,
           Matrix.mulVec, dotProduct, add_left_inj,
           ←Finset.univ_disjSum_univ, Finset.sum_product]
      ring)

@@ -4,7 +4,7 @@ namespace SciLean.VectorType
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Lawful X]
+  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 
 @[simp, simp_core]
@@ -132,7 +132,6 @@ theorem fromVec_exp [Dense X] (x : n → K) :
   ext i; simp [vector_to_spec]
 
 @[vector_to_spec]
-theorem toVec_finset_sum {I} [Fintype I] (A : Finset I) (f : I → X) :
-    toVec (A.sum f) = fun j => A.sum (fun i => toVec (f i) j) := by
-  funext i
+theorem toVec_finset_sum {I} [Fintype I] (A : Finset I) (f : I → X) (j : n) :
+    (A.sum f)[j] = A.sum (fun i => (f i)[j]) := by
   sorry_proof

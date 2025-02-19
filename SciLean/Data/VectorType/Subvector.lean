@@ -16,19 +16,18 @@ class SubvectorType
   where
 
     subvector (x : X) : X'
-    subvector_spec (x : X) :
-      toVec (subvector x)
+    subvector_spec (x : X) (i' :n') :
+      (subvector x)[i']
       =
-      fun i' => toVec x (ι.1 i')
+       x[ι.1 i']
 
     /-- Modify part of `x` with -/
     axpby (a : K) (x' : X') (b : K) (x : X) : X
-    axpby_spec (a : K) (x' : X') (b : K) (x : X) :
-      toVec (axpby a x' b x)
+    axpby_spec (a : K) (x' : X') (b : K) (x : X) (i : n) :
+      (axpby a x' b x)[i]
       =
-      fun i =>
-        if h : ∃ (i' : n'), ι.1 i' = i then
-           let i' := choose h
-           a • (toVec x' i') + b • (toVec x (ι.1 i'))
-        else
-           toVec x i
+      if h : ∃ (i' : n'), ι.1 i' = i then
+         let i' := choose h
+         a • (x'[i']) + b • (x[ι.1 i'])
+      else
+         x[i]

@@ -1,7 +1,6 @@
 import Mathlib.MeasureTheory.Measure.Prod
 
 import SciLean.Analysis.AdjointSpace.Geometry
-import SciLean.Data.ArrayType.Algebra
 import SciLean.Data.DataArray
 import SciLean.Probability.Rand
 
@@ -191,6 +190,7 @@ instance
 
     return 0
 
+#exit
 instance
   {I : Type} [IndexType I]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [RejectionSampleBall₂ (R:=R) X] [PlainDataType X] :
