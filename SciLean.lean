@@ -327,6 +327,8 @@ import SciLean.Data.DataArray.Operations.Uncurry
 import SciLean.Data.DataArray.Operations.Vecmul
 import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.DataArray.RevDeriv
+import SciLean.Data.DataArray.ScalarArray
+import SciLean.Data.DataArray.ScalarArrayEquiv
 import SciLean.Data.DataArray.VecN
 import SciLean.Data.FinProd
 import SciLean.Data.Float
@@ -343,6 +345,7 @@ import SciLean.Data.IndexType.IndexInclusion
 import SciLean.Data.IndexType.Init
 import SciLean.Data.IndexType.Iterator
 import SciLean.Data.IndexType.Operations
+import SciLean.Data.IndexType.Operations.MaxD
 import SciLean.Data.IndexType.Range
 import SciLean.Data.IndexType.SumProduct
 import SciLean.Data.Instances.Sigma
@@ -383,6 +386,7 @@ import SciLean.Data.VectorType.Operations.Exp
 import SciLean.Data.VectorType.Operations.FromVec
 import SciLean.Data.VectorType.Operations.Logsumexp
 import SciLean.Data.VectorType.Operations.MapIdx
+import SciLean.Data.VectorType.Operations.Max
 import SciLean.Data.VectorType.Operations.Mul
 import SciLean.Data.VectorType.Operations.Scal
 import SciLean.Data.VectorType.Operations.ScalAdd
@@ -603,6 +607,7 @@ import SciLean.Tactic.CompiledTactics
 import SciLean.Tactic.ConvAssign
 import SciLean.Tactic.ConvIf
 import SciLean.Tactic.ConvInduction
+import SciLean.Tactic.DFunLikeCoeZetaDelta
 import SciLean.Tactic.DataSynth.ArrayOperations
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Decl
