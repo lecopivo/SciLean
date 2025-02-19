@@ -10,7 +10,6 @@ import LeanBLAS
 
 namespace SciLean
 
-
 /-- This class says that `Array` is the canonical `Array` storing sequence of scalars `R`.
 It provides BLAS operations on `Array` that are used to implement vector space operations on `X`.
 
@@ -23,7 +22,8 @@ TODO: Also figure out what to do about complex numbers.
       Probaly ditch `R` *and* `K` type arguments on all BLAS functions. -/
 class ScalarArray (R : Type*) (Array : outParam Type*) [PlainDataType R] [RealScalar R]
   extends
-    BLAS Array R R
+    BLAS Array R R,
+    LawfulBLAS Array R R
   where
     equiv : DataArray R ≃ Array
 
@@ -39,6 +39,8 @@ theorem size_equiv (x : DataArray R) :
 theorem size_symm_equiv (x : Array) :
     ((ScalarArray.equiv (R:=R)).symm x).size = BLAS.LevelOneData.size x := sorry_proof
 
+instance : BLAS.LevelOneSpec FloatArray Float Float := sorry_proof
+instance : LawfulBLAS FloatArray Float Float where
 
 instance : ScalarArray Float FloatArray where
   equiv := {
@@ -49,30 +51,3 @@ instance : ScalarArray Float FloatArray where
   }
 
 end ScalarArray
-
-
-/-- This instance says that `X` is equivalent to an array of `size I` scalars and it will
-automatically provide vector space structure on `X` through this equivalence. For this purpose
-it is expected that this equivalence is cheap at runtime.
-
-The index type `I` is the canonical type to index scalar compotents of `X`. -/
-class ScalarArrayEquiv (X : Type*) (Array I R K : outParam Type*)
-    [Size I] [BLAS.LevelOneData Array R K] where
-  /-- Array of `X` as byte array (this is `DataArray X`) can be converted to an array of scalars
-  that has `m*(size I)` elements for appropriate `I`. -/
-  equiv : X ≃ { a : Array // BLAS.LevelOneData.size a = size I }
-
-namespace ScalarArrayEquiv
-
-/-- `ScalarArray` implies `ScalarArrayEquiv` -/
-instance {R Array I} [RealScalar R] [PlainDataType R] [ScalarArray R Array] [IndexType I]
-    [BLAS.LevelOne Array R R] :
-    ScalarArrayEquiv (R^[I]) Array I R R where
-  equiv := {
-    toFun x := ⟨ScalarArray.equiv x.1, by have h := x.2; simp_all⟩
-    invFun a := ⟨ScalarArray.equiv.symm a.1, by have := a.2; simp_all⟩
-    left_inv := by intro x; simp
-    right_inv := by intro x; simp
-  }
-
-end ScalarArrayEquiv

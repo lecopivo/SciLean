@@ -29,7 +29,8 @@ This class is designed to provide Basic Linear Algebra Subprograms(BLAS) which a
 vector space structure on `X` that is computationally efficient.
  -/
 class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)] {R : outParam (Type*)}  (K : outParam (Type*))
-        [outParam (RealScalar R)] [outParam (Scalar R K)] where
+        [outParam (RealScalar R)] [outParam (Scalar R K)]
+    where
   toVec (x : X) (i : n) : K -- maybe map to Euclidean space
 
   /-- Zero vector. -/
