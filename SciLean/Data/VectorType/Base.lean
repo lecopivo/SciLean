@@ -700,7 +700,7 @@ variable
 
 def amax (x : X) : R :=
   if h : 0 < size n then
-    x[iamax x]
+    Scalar.abs x[iamax x]
   else
     0
 
