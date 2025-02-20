@@ -1,5 +1,6 @@
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ListN
+import SciLean.Data.ArrayLike
 import Batteries.Lean.Expr
 import Qq
 
@@ -22,11 +23,10 @@ elab:max (priority:=high+1) x:term noWs "[" i:term "]" : term => do
     let x ← elabTerm x none
     let X ← inferType x
     let Idx ← mkFreshTypeMVar
-    let Elem ← mkFreshTypeMVar
-    let cls := (mkAppN (← mkConstWithFreshMVarLevels ``ArrayType) #[X, Idx, Elem])
-    let inst ← synthInstance cls
+    let cls := (mkAppN (← mkConstWithFreshMVarLevels ``DefaultIndex) #[X, Idx])
+    let _ ← synthInstance cls
     let i ← elabTerm i Idx
-    return ← mkAppOptM ``ArrayType.get #[X,Idx,Elem,inst,x,i]
+    return ← mkAppOptM ``getElem #[X,Idx,none,none,x,i,Expr.const ``True.intro []]
   catch _ =>
     return ← elabTerm (← `(getElem $x $i (by get_elem_tactic))) none
 

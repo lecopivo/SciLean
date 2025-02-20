@@ -166,14 +166,23 @@ instance : GetElem (α^[ι]) ι α (fun _ _ => True) where
 instance : InjectiveGetElem (α^[ι]) ι where
   getElem_injective := sorry_proof
 
+instance : DefaultIndex (α^[ι]) ι where
+
 instance : SetElem (α^[ι]) ι α (fun _ _ => True) where
   setElem x i v _ := x.set i v
   setElem_valid := sorry_proof
 
-instance  : LawfulSetElem (α^[ι]) ι where
+instance : LawfulSetElem (α^[ι]) ι where
   getElem_setElem_eq  := sorry_proof
   getElem_setElem_neq := sorry_proof
 
+instance : OfFn (α^[ι]) ι α where
+  ofFn f := ⟨DataArray.intro f, sorry_proof⟩
+
+instance : LawfulOfFn (α^[ι]) ι where
+  getElem_ofFn := sorry_proof
+
+instance {α} [PlainDataType α] {ι} [IndexType ι] : DefaultCollection (α^[ι]) ι α where
 
 def DataArrayN.toList (xs : DataArrayN α ι) : List α := Id.run do
   let mut l : List α := []
@@ -243,22 +252,6 @@ instance {ι α : Type*} [IndexType ι] [pd : PlainDataType α] :
 
 variable {κ : Type*} [IndexType κ]
 
-open IndexType in
-instance : GetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
-  getElem x ij _ := pd.fromByteArray x.1.1 (toFin ij).1 sorry_proof
-
-instance : InjectiveGetElem (α^[ι]) ι where
-  getElem_injective := sorry_proof
-
-open IndexType
-instance : SetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
-  setElem x ij v _ := ⟨⟨pd.toByteArray x.1.1 (toFin ij).1 v sorry_proof, x.1.2, sorry_proof⟩, sorry_proof⟩
-  setElem_valid := sorry_proof
-
-instance  : LawfulSetElem (α^[ι]) ι where
-  getElem_setElem_eq  := sorry_proof
-  getElem_setElem_neq := sorry_proof
-
 -- def ArrayType.instPlainDataType {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [pd : PlainDataType α] :
 --     PlainDataType Cont where
 --   btype := match pd.btype with
@@ -302,18 +295,75 @@ instance  : LawfulSetElem (α^[ι]) ι where
 --         fromByteArray_toByteArray_other := sorry_proof
 --       }
 
+@[inline]
 def DataArrayN.curry (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
   ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
 
+@[inline]
 def DataArrayN.uncurry (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
   ⟨⟨x.data.byteData, Size.size ι * Size.size κ, sorry_proof⟩, sorry_proof⟩
 
 theorem DataArrayN.uncurry_def (x : DataArrayN (DataArrayN α κ) ι) :
     x.uncurry = ⊞ i j => x[i][j] := sorry_proof
 
+theorem DataArrayN.uncurry_getElem (x : DataArrayN (DataArrayN α κ) ι) (i : ι) (j : κ) :
+    x.uncurry[i,j] = x[i][j] := sorry_proof
+
 theorem DataArrayN.curry_def (x : DataArrayN α (ι×κ)) :
     x.curry = ⊞ i => ⊞ j => x[i,j] := by
   sorry_proof
+
+theorem DataArrayN.curry_getElem (x : DataArrayN α (ι×κ)) (i : ι) (j : κ) :
+    x.curry[i][j] = x[i,j] := by
+  sorry_proof
+
+
+
+open IndexType in
+/-- This instance is for convenience and for other type classes realted to `VectorType`.
+
+But `x[i,j]` for `x : α^[κ]^[ι]` is considered to be confusing so the simp normal form of it is
+`x.uncurry[i,j]`.  -/
+instance : GetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
+  getElem x ij _ := x.uncurry[ij]
+
+/-- Expression `x[i,j]` for `x : α^[κ]^[ι]` is not considered to be in simp normal form so we
+transform it to `x.uncurry[i,j]` -/
+@[simp, simp_core]
+theorem DataAraryN.getElem_uncurry (x : α^[κ]^[ι]) (i : ι) (j : κ) :
+    x[i,j] = x.uncurry[i,j] := rfl
+
+instance : InjectiveGetElem (α^[κ]^[ι]) (ι×κ) where
+  getElem_injective := by
+    intro x y h
+    apply getElem_injective (idx:=ι); funext i
+    apply getElem_injective (idx:=κ); funext j
+    simp [← DataArrayN.uncurry_getElem]
+    exact congrFun h (i,j)
+
+open IndexType
+instance : SetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
+  setElem x ij v _ := (setElem x.uncurry ij v .intro).curry
+  setElem_valid := sorry_proof
+
+instance : LawfulSetElem (α^[κ]^[ι]) (ι×κ)  where
+  getElem_setElem_eq  := sorry_proof
+  getElem_setElem_neq := sorry_proof
+
+instance : OfFn (α^[κ]^[ι]) (ι×κ) α  where
+  ofFn f := (ofFn (coll:=α^[ι,κ]) f).curry
+
+/-- Expression `ofFn (coll:=α^[κ]^[ι]) f` is not considerd to be in simp normal form so we
+immediatelly simplify it to `(ofFn (coll:=α^[ι×κ]) f).curry` -/
+@[simp, simp_core]
+theorem DataAraryN.ofFn_curry (f : ι×κ → α) :
+    (ofFn (coll:=α^[κ]^[ι]) f) = (ofFn (coll:=α^[ι×κ]) f).curry := rfl
+
+instance : LawfulOfFn (α^[κ]^[ι]) (ι×κ)  where
+  getElem_ofFn := by
+    intro f (i,j)
+    simp[DataArrayN.uncurry_getElem,DataArrayN.curry_getElem]
+
 
 set_option linter.dupNamespace false in
 open Lean in

@@ -20,7 +20,7 @@ TODO: `Array` should not be `outParam` but we should employ similar trick as wit
 
 TODO: Also figure out what to do about complex numbers.
       Probaly ditch `R` *and* `K` type arguments on all BLAS functions. -/
-class ScalarArray (R : Type*) (Array : outParam Type*) [PlainDataType R] [RealScalar R]
+class ScalarArray (R : Type*) [PlainDataType R] [RealScalar R] (Array : outParam Type*)
   extends
     BLAS Array R R,
     LawfulBLAS Array R R

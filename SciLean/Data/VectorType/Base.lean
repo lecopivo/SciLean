@@ -157,7 +157,9 @@ class VectorType.Dense (X : Type*)
     [VectorType.Base X n K]
   extends
     SetElem X n K (fun _ _ => True),
-    LawfulSetElem X n
+    LawfulSetElem X n,
+    OfFn X n K,
+    LawfulOfFn X n
   where
   fromVec (f : n → K) : X
   -- protected left_inv : LeftInverse fromVec toVec

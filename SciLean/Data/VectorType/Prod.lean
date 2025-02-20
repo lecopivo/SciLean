@@ -10,11 +10,6 @@ instance
   {m n : Type*} {_ : IndexType m} {_ : IndexType n}
   {X Y : Type*} [VectorType.Base X m K] [VectorType.Base Y n K]
   : VectorType.Base (X×Y) (m⊕n) K where
-
-  getElem := fun (x,y) ij _ =>
-    match ij with
-    | .inl i => x[i]
-    | .inr j => y[j]
   zero := (zero, zero)
   zero_spec := by intro ij; cases ij <;> simp[vector_to_spec]
   scal := fun k (x,y) => (scal k x, scal k y)

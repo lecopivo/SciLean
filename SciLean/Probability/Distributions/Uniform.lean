@@ -2,6 +2,7 @@ import Mathlib.MeasureTheory.Measure.Prod
 
 import SciLean.Analysis.AdjointSpace.Geometry
 import SciLean.Data.DataArray
+import SciLean.Data.DataArray.ScalarArrayEquiv
 import SciLean.Probability.Rand
 
 open MeasureTheory Set
@@ -190,19 +191,19 @@ instance
 
     return 0
 
-#exit
+
 instance
   {I : Type} [IndexType I]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [RejectionSampleBall₂ (R:=R) X] [PlainDataType X] :
-  RejectionSampleBall₂ (R:=R) (X^[I]) where
+  {R : Type} [RealScalar R] [PlainDataType R] [MeasureSpace R] {Array : outParam Type} [ScalarArray R Array] :
+  RejectionSampleBall₂ (R:=R) (R^[I]) where
 
   sample := do
-    let go : Rand (Option (X^[I])) := do
+    let go : Rand (Option (R^[I])) := do
 
       let mut s : R := 0
-      let mut x : X^[I] := 0
+      let mut x : R^[I] := 0
       for i in fullRange I do
-        let xi ← RejectionSampleBall₂.sample (R:=R) (X:=X)
+        let xi ← uniform (Set.Icc (-1) (1))
         s := s + ‖xi‖₂²[R]
         if s > 1 then return none
         x[i] := xi
@@ -217,6 +218,10 @@ instance
 
     return 0
 
+-- why does TC fail here? some issue with `RealScalar Float` instance and nonassignable metavariable
+-- def sample_test := do
+--   let y ← (RejectionSampleBall₂.sample Float (X:=Float^[5])).get
+--   return y
 
 instance {X} [NormedAddCommGroup X] [AdjointSpace R X] [RejectionSampleBall₂ (R:=R) X] [MeasureSpace X]
     (x : X) (r : R) :

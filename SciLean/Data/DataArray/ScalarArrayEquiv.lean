@@ -194,7 +194,8 @@ instance (X : Type*) (Array I R K : outParam Type*)
     {_ : RealScalar R} {_ : Scalar R K} {_ : BLAS Array R K} {_ : IndexType I}
     {_ : GetElem X I K (fun _ _ => True)}
     [e : ScalarArrayEquiv X Array I R K] [LawfulBLAS Array R K]
-    [SetElem X I K (fun _ _ => True)] [LawfulSetElem X I] :
+    [SetElem X I K (fun _ _ => True)] [LawfulSetElem X I]
+    [OfFn X I K] [LawfulOfFn X I] :
     VectorType.Dense X where
   fromVec f :=
     let x := BLAS.LevelOneData.ofFn (Array:=Array) (fun i => f (fromFin i))

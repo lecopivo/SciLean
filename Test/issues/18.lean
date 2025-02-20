@@ -20,8 +20,9 @@ open Lean Meta Qq in
   IO.println (← isDefEq hx h)
 
 -- TODO: fix index access herel
+set_option pp.notation false in
 example
-  (x : Float → DataArrayN Float (Fin 10)) (hx : Differentiable Float x)
+  (x : Float → Float^[10]) (hx : Differentiable Float x)
   : Differentiable Float (fun w => ⊞ (i : Fin 10) => (x w)[i]) :=
 by
   fun_prop

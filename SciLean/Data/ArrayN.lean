@@ -60,7 +60,7 @@ def ArrayN.mk_get (data : Array α) (h_size : n = data.size) (i : Fin n) :
 @[simp]
 def ArrayN.get_normalize (a : ArrayN α n) (i : Fin n) :
   have := a.2
-  a.data[i.1] = a[i] := by simp[ArrayType.get]
+  a.data[i.1] = a[i] := by rfl
 
 @[simp]
 theorem ArrayN.data_size (a : ArrayN β n) : a.data.size = n := by simp[a.2]
