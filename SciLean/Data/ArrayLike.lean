@@ -131,6 +131,7 @@ instance [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True
     GetElem (α×β) (ι⊕κ) γ (fun _ _ => True) where
   getElem x i _ := match x, i with | (x,y), .inl i => x[i] | (x,y), .inr j => y[j]
 
+
 instance [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True)]
          [InjectiveGetElem α ι] [InjectiveGetElem β κ] : InjectiveGetElem (α×β) (ι⊕κ) where
   getElem_injective := by
@@ -141,6 +142,7 @@ instance [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True
       exact congrFun h (.inl i)
     · apply getElem_injective (idx:=κ); funext j
       exact congrFun h (.inr j)
+
 
 instance [OfFn α ι γ] [OfFn β κ γ] : OfFn (α×β) (ι⊕κ) γ where
   ofFn f := (ofFn (fun i => f (.inl i)), ofFn (fun j => f (.inr j)))

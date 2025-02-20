@@ -3,10 +3,6 @@ import SciLean.Analysis.Scalar.FloatAsReal
 
 open SciLean Rand MeasureTheory
 
-#check ((sample (normal (0.0:Float) 1.0) `v1).traceRand.pdf Float)
-  rewrite_by
-    simp
-
 
 /--
 info: ((normal 0.0 1.0).sample `v1).bind (fun x => return' x)

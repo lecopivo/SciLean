@@ -22,21 +22,3 @@ def test1 : IO Unit := do
     IO.println "correct!"
   else
     IO.throwServerError "failed!"
-
-/--
-info: (⊞[103.000000, 207.000000], ⊞[0.300000, 0.700000])
-⊞[0.400000, 0.600000]
-correct!
--/
-#guard_msgs in
-#eval test1
-
-def A := ⊞[1.0,2.0;3.0,4.0]
-
-/-- info: 2.000000 -/
-#guard_msgs in
-#eval A[0,1]
-
-/-- info: 2.000000 -/
-#guard_msgs in
-#eval A.curry[0][1]

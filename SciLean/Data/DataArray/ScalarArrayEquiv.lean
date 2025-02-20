@@ -337,17 +337,6 @@ instance (R m n : Type*) (Array : outParam Type*)
 --   diag := sorry
 --   diag_spec := sorry
 
-
-section ArithmeticOperations
-
-variable (R m n : Type*) (Array : outParam Type*)
-  [RealScalar R] [PlainDataType R] [IndexType m] [IndexType n]
-  [e : ScalarArray R Array] [LawfulBLAS Array R R]
-
-instance : HMul (R^[m,n]) (R^[n]) (R^[m]) := ⟨fun A x => MatrixType.gemv 1 1 A x 0⟩
-
-end ArithmeticOperations
-
 end Operations
 
 end ScalarArrayEquiv

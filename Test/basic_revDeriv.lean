@@ -99,32 +99,32 @@ theorem fold_function_modify_simplify {ι} [IndexType ι] [DecidableEq ι] {X} [
     fun i => h i + g i := sorry_proof
 
 -- todo: add LawfulIndexType (right now I'm on old LeanColls)
-@[simp, simp_core]
-theorem fold_indexed_update_simplify
-  {Idx Cont} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [ArrayType Cont Idx Elem]
-  (h : Cont) (g : Idx → Elem) :
-  IndexType.foldl (fun f i => ArrayType.modify f i fun fi => fi + g i) h
-  =
-  ArrayType.ofFn fun i => h[i] + g i := sorry_proof
+-- @[simp, simp_core]
+-- theorem fold_indexed_update_simplify
+--   {Idx Cont} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [ArrayType Cont Idx Elem]
+--   (h : Cont) (g : Idx → Elem) :
+--   IndexType.foldl (fun f i => ArrayType.modify f i fun fi => fi + g i) h
+--   =
+--   ArrayType.ofFn fun i => h[i] + g i := sorry_proof
 
-@[simp, simp_core]
-theorem fold_struct_modify_simplify
-  {Idx Cont} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem]
-  [StructType Cont Idx (fun _ => Elem)] (h : Cont) (g : Idx → Elem) :
-  IndexType.foldl (fun f i => structModify i (fun fi => fi + g i) f) h
-  =
-  structMake fun i => structProj h i + g i := sorry_proof
+-- @[simp, simp_core]
+-- theorem fold_struct_modify_simplify
+--   {Idx Cont} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem]
+--   [StructType Cont Idx (fun _ => Elem)] (h : Cont) (g : Idx → Elem) :
+--   IndexType.foldl (fun f i => structModify i (fun fi => fi + g i) f) h
+--   =
+--   structMake fun i => structProj h i + g i := sorry_proof
 
 
--- simplifier seems to have hard time applying this
-@[simp, simp_core]
-theorem fold_ofFn_simplify
-  {J} [IndexType J]
-  {Idx} [DecidableEq Idx] {Elem} [AddGroup Elem] {Cont} [ArrayType Cont Idx Elem]
-  (h : Cont) (g : Idx → J → Elem):
-  IndexType.foldl (no_index (fun (x : Cont) j => ArrayType.ofFn fun i => x[i] + g i j)) (no_index h)
-  =
-  ArrayType.ofFn fun i => IndexType.foldl (fun xi j => xi + g i j) h[i] := sorry_proof
+-- -- simplifier seems to have hard time applying this
+-- @[simp, simp_core]
+-- theorem fold_ofFn_simplify
+--   {J} [IndexType J]
+--   {Idx} [DecidableEq Idx] {Elem} [AddGroup Elem] {Cont} [ArrayType Cont Idx Elem]
+--   (h : Cont) (g : Idx → J → Elem):
+--   IndexType.foldl (no_index (fun (x : Cont) j => ArrayType.ofFn fun i => x[i] + g i j)) (no_index h)
+--   =
+--   ArrayType.ofFn fun i => IndexType.foldl (fun xi j => xi + g i j) h[i] := sorry_proof
 
 ----------------
 ----------------

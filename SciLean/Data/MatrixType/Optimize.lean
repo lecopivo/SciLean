@@ -1,6 +1,9 @@
 import SciLean.Data.MatrixType.Base
 import SciLean.Data.MatrixType.Dense
 
+import SciLean.Data.VectorType.Optimize
+import SciLean.Util.RewriteBy
+
 namespace SciLean.MatrixType
 
 variable
@@ -14,8 +17,14 @@ variable
 open VectorType MatrixType
 
 
---  gemv and axpby
+--- arithmetic operations to axp(b)y and scal
+omit [InjectiveGetElem X n] [InjectiveGetElem Y m] [InjectiveGetElem M (m × n)] in
+@[vector_optimize]
+theorem matMul_eq_gemv (A : M) (x : X) :
+    A * x = gemv 1 1 A x 0 := by rfl
 
+
+--  gemv and axpby
 
 omit [InjectiveGetElem X n] [InjectiveGetElem M (m × n)] in
 @[vector_optimize]
@@ -28,6 +37,24 @@ omit [InjectiveGetElem X n] [InjectiveGetElem M (m × n)] in
 theorem axpby_gemv_zero_right (a b c d : K) (A : M) (x : X) (y : Y) :
     axpby b (gemv c d A x 0) a y = gemv (b*c) a A x y := by
   ext i; simp[vector_to_spec,matrix_to_spec]; ring
+
+omit [InjectiveGetElem X n] [InjectiveGetElem M (m × n)] in
+@[vector_optimize]
+theorem gemv_scal_A (a b c : K) (A : M) (x : X) (y : Y) :
+    gemv a b (scal c A) x y = gemv (a*c) b A x y := by
+  ext i; simp[vector_to_spec,matrix_to_spec,Matrix.mulVec,dotProduct,Finset.mul_sum,]; ac_rfl
+
+omit [InjectiveGetElem X n] [InjectiveGetElem M (m × n)] in
+@[vector_optimize]
+theorem gemv_scal_x (a b c : K) (A : M) (x : X) (y : Y) :
+    gemv a b A (scal c x) y = gemv (a*c) b A x y := by
+  ext i; simp[vector_to_spec,matrix_to_spec,Matrix.mulVec,dotProduct,Finset.mul_sum,]; ac_rfl
+
+omit [InjectiveGetElem X n] [InjectiveGetElem M (m × n)] in
+@[vector_optimize]
+theorem gemv_scal_y (a b c : K) (A : M) (x : X) (y : Y) :
+    gemv a b A x (scal c y) = gemv a (b*c) A x y := by
+  ext i; simp[vector_to_spec,matrix_to_spec,Matrix.mulVec,dotProduct,Finset.mul_sum,]; ac_rfl
 
 
 --  gemv and axpby
