@@ -60,3 +60,9 @@ abbrev_data_synth VectorType.fromVec in f [InjectiveGetElem X n] : HasRevFDeriv 
   case deriv => intros; data_synth
   case adjoint => intros; dsimp; data_synth
   case simp => rfl
+
+abbrev_data_synth VectorType.fromVec in f [InjectiveGetElem X n] : HasRevFDerivUpdate K by
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intros; data_synth
+  case adjoint => intros; dsimp; data_synth
+  case simp => rfl

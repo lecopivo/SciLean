@@ -16,7 +16,6 @@ example : VectorType.Base (Float^[10]) (Fin 10) Float := by infer_instance
 example : VectorType.Base (Float^[10,20]) (Fin 10 × Fin 20) Float := by infer_instance
 example : VectorType.Dense (Float^[10,20]) := by infer_instance
 example : VectorType.Base (Float^[10,20]^[30]) (Fin 30 × Fin 10 × Fin 20) Float := by infer_instance
-set_option trace.Meta.synthInstance true in
 example : VectorType.Dense (Float^[10,20]^[30]) := by infer_instance
 
 variable {R} [RealScalar R] [PlainDataType R] {Array} [ScalarArray R Array]

@@ -63,10 +63,12 @@ theorem scalAdd_zero_b  [Dense X] (a : K) (x : X) :
 theorem scalAdd_zero_x [Dense X] (a b : K) :
     scalAdd a b (0:X) = const b := by ext i; simp[vector_to_spec]
 
+omit [InjectiveGetElem X n] in
 @[simp, simp_core]
 theorem dot_zero_x (y : X) :
     dot 0 y = 0 := by simp[vector_to_spec]
 
+omit [InjectiveGetElem X n] in
 @[simp, simp_core]
 theorem dot_zero_y (x : X) :
     dot x 0 = 0 := by simp[vector_to_spec]
@@ -81,6 +83,7 @@ theorem scal_to_module (a : K) (x : X) :
 theorem scalAdd_to_module [Dense X] (a b : K) (x : X) :
    scalAdd a b x = a • x + b • (const 1) := by ext i; simp[vector_to_spec]
 
+omit [InjectiveGetElem X n] in
 @[blas_to_module]
 theorem dot_to_module (x y : X) :
    dot x y = (Inner.inner (𝕜:=K) x y) := by rfl
@@ -95,13 +98,14 @@ theorem axpy_to_module (a : K) (x y : X) :
 
 
 ----------------------------------------------------------------------------------------------------
-
+omit [InjectiveGetElem X n] in
 @[rsimp]
 theorem foldl_updateElem_add [Dense X] (u : n → K) (x : X) :
   IndexType.foldl (fun x i => updateElem x i fun xi => xi + u i) x
   =
   x + fromVec u := sorry_proof
 
+omit [InjectiveGetElem X n] in
 @[rsimp]
 theorem foldl_updateElem_add' [Dense X] (u : n → K) (x : X) :
   IndexType.foldl (fun x i => updateElem x i fun xi => u i + xi) x

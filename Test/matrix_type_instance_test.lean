@@ -1,11 +1,11 @@
-import SciLean.Data.MatrixType.MatMul
-import SciLean.Data.MatrixType.Transpose
-import SciLean.Data.MatrixType.Square
-import SciLean.Data.ArrayType
-import SciLean.Data.DataArray
-import SciLean.Data.StructType
-import SciLean.Analysis.Scalar
-
+-- import SciLean.Data.MatrixType.MatMul
+-- import SciLean.Data.MatrixType.Transpose
+-- import SciLean.Data.MatrixType.Square
+-- import SciLean.Data.ArrayType
+-- import SciLean.Data.DataArray
+-- import SciLean.Data.StructType
+-- import SciLean.Analysis.Scalar
+import SciLean
 
 open SciLean
 
@@ -25,7 +25,7 @@ example   {R : Type _} [RealScalar R]
 example : Inner Float (Float^[2]) := by infer_instance
 
 open VectorType in
-example {R} [RealScalar R] {n} [IndexType n] {X} [VectorType.Base X n R] [VectorType.Lawful X] :
+example {R} [RealScalar R] {n} [IndexType n] {X} [VectorType.Base X n R] [InjectiveGetElem X n] :
    (instAdjointSpace : AdjointSpace R X) = (instAdjointSpaceReal : AdjointSpace R X) := by
   rfl
 

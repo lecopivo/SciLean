@@ -1,6 +1,7 @@
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ListN
 import SciLean.Data.ArrayLike
+import SciLean.Lean.Meta.Basic
 import Batteries.Lean.Expr
 import Qq
 
@@ -15,19 +16,26 @@ open TSyntax.Compat
 -- Element access notation -------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+initialize registerTraceClass `getElem_notation
 
 open Lean Elab Term Meta in
 -- @[inherit_doc ArrayType.get]
 elab:max (priority:=high+1) x:term noWs "[" i:term "]" : term => do
   try
-    let x ← elabTerm x none
+    let x ← elabTermAndSynthesize x none
     let X ← inferType x
     let Idx ← mkFreshTypeMVar
+    let Elem ← mkFreshTypeMVar
+    let Valid ← mkFreshExprMVar none
     let cls := (mkAppN (← mkConstWithFreshMVarLevels ``DefaultIndex) #[X, Idx])
     let _ ← synthInstance cls
+    trace[getElem_notation] "Default index type {Idx} for {X}"
+    let getElemCls := mkAppN (← mkConstWithFreshMVarLevels ``GetElem) #[X, Idx, Elem, Valid]
+    let inst ← synthInstance getElemCls
     let i ← elabTerm i Idx
-    return ← mkAppOptM ``getElem #[X,Idx,none,none,x,i,Expr.const ``True.intro []]
-  catch _ =>
+    return ← mkAppOptM ``getElem #[X,Idx,Elem,Valid,inst,x,i,Expr.const ``True.intro []]
+  catch e =>
+    trace[getElem_notation] "Failed to infer default index type with error:\n{e.toMessageData}"
     return ← elabTerm (← `(getElem $x $i (by get_elem_tactic))) none
 
 /-- Turn an array of terms in into a tuple. -/
@@ -98,38 +106,79 @@ macro x:ident noWs "[" ids:term,* "]" " •= " xi:term : doElem => do
 -- Notation: ⊞ i => f i --
 --------------------------
 
-open Lean.TSyntax.Compat in
+-- open Lean.TSyntax.Compat in
 -- macro "⊞ " x:term " => " b:term:51 : term => `(introElemNotation fun $x => $b)
 -- macro "⊞ " x:term " : " X:term " => " b:term:51 : term => `(introElemNotation fun ($x : $X) => $b)
 
--- The `by exact` is a hack to make certain case work
---    see: https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/uncurry.20fails.20with.20.60Icc.60
-open Term Function Lean Elab Term Meta in
-elab "⊞ " xs:funBinder* " => " b:term:51 : term  => do
-  let fn ← elabTermAndSynthesize (← `(fun $xs* => $b)) none
-  let arity := (← inferType fn).getNumHeadForalls
-  try
+initialize registerTraceClass `ofFn_notation
+
+open Term  in
+/-- Notation `⊞ i => f i` creates an array with element `f i`. It is a syntax for `ofFn f`.
+
+For example:
+```
+variable (f : Fin n → Float) (g : Fin m → Fin n → Float)
+
+#check ⊞ i => f i             -- Float^[n]
+#check ⊞ i j => g i j         -- Float^[m,n]
+#check ⊞ i => ⊞ j => g i j    -- Float^[n]^[m]
+#check ⊞ i j k => g i j + f k -- Float^[m,n,n]
+```
+The preferd way of creating a matrix is `⊞ i j => g i j` not `⊞ (i,j) => g i j`. Both versions
+work but the former notaion allows us to writh `⊞ i (j : Fin 5) => f i` instead of
+`⊞ ((i,j) : _ ×Fin 4) => f i`. This is also the reson for the somewhat unexpected fact that
+`⊞ i => ⊞ j => g i j ≠ ⊞ i j => g i j`.
+
+The resulting type does not always have to be `Float^[n]`(notation for `DataArrayN Float (Fin n)`).
+When we explicitely force the resulting type we can obtain different array type.
+For this to work there has to be instance `OfFn coll idx elem` for `f : idx → elem`.
+
+For example:
+```
+#check (⊞ i => f i : Vector Float 2) -- Vector Float 2
+```
+
+Examples of notation expansion
+```
+variable (f : Fin n → Float) (g : Fin m → Fin n → Float)
+
+(⊞ i => f i)          ==> ofFn (coll:=Float^[n]) f
+(⊞ i => f i : Vector Float 2) ==> ofFn (coll:=Vector Float 2) f
+(⊞ i j => g i j)      ==> ofFn (coll:=Float^[m,n]) ↿g
+(⊞ i => ⊞ j => g i j) ==> ofFn (coll:=Float^[n]^[m]) (fun i => ofFn (coll:=Float^[n]) (g i))
+```
+the operation `↿` uncurries a function i.e. `↿g = fun (i,j) => g i j`
+  -/
+syntax (name:=ofFnNotation) "⊞ " funBinder* " => " term:51 : term
+
+open Term Function Elab Term Meta in
+@[term_elab ofFnNotation]
+def ofFnElab : TermElab := fun stx expectedType? =>
+  match stx with
+  | `(⊞ $xs* => $b) => do
+    let fn ← elabTermAndSynthesize (← `(fun $xs* => $b)) none
+    let arity := (← inferType fn).getNumHeadForalls
     -- uncurry if necessary
     let fn ←
       if arity = 1 then
         pure fn
       else
+        -- mkUncurryFun arity fn
         mkAppM ``HasUncurry.uncurry #[fn]
 
     let .some (Idx, Elem) := (← inferType fn).arrow?
       | throwError "⊞ _ => _: expectes function type {← ppExpr (← inferType fn)}"
 
-    let Cont ← mkAppOptM `SciLean.DataArrayN #[Elem, none, Idx, none]
+    let Coll := expectedType?.getD (←mkFreshTypeMVar)
+    try do
+      let cls := mkAppN (← mkConstWithFreshMVarLevels ``DefaultCollection) #[Coll, Idx, Elem]
+      let _ ← synthInstance cls
+    catch _ =>
+      -- todo: do some tracing
+      pure ()
 
-    mkAppOptM ``ArrayType.ofFn #[Cont, Idx, Elem, none, fn]
-  catch e =>
-    if arity = 1 then
-      elabTerm (← `(ArrayType.ofFn fun $xs* => $b)) none
-    else if arity = 2 then
-      elabTerm (← `(ArrayType.ofFn (Function.uncurry fun $xs* => $b))) none
-    else
-      throwError "notation `⊞ _ => _` is not supported for high rank arrays when types are unknown\
-                  \nplease specify the types!\n{e.toMessageData}"
+    mkAppOptM ``ofFn #[Coll, Idx, Elem, none, fn]
+  | _ => throwUnsupportedSyntax
 
 
 
@@ -175,7 +224,7 @@ elab_rules (kind := dataArrayNotation) : term
 
 
 
-@[app_unexpander ArrayType.ofFn]
+@[app_unexpander ofFn]
 def unexpandArrayTypeOfFnNotation : Lean.PrettyPrinter.Unexpander
   | `($(_) $f) =>
     match f with

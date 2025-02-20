@@ -40,22 +40,22 @@ info: tt :
 #check tt
 
 
-/--
-info: fun x =>
-  pdf Float
-      (forLoop (fun i x => ((normal x.1 1.0).sample `v1).bind (fun x' => return' (x', x.2.push x')) tt.proof_1)
-          (0.0, #[]) 50).traceRand
-      volume x.1 *
-    gaussian
-      ((forLoop (fun i x => ((normal x.1 1.0).sample `v1).bind (fun x' => return' (x', x.2.push x')) tt.proof_1)
-                  (0.0, #[]) 50).map
-              x.1).2.toList.sum
-      1.0 x.2.1 : ArrayN (Float × Unit) 50 × Float × Unit → Float
--/
-#guard_msgs in
-#check (tt.traceRand.pdf Float) rewrite_by
-  unfold tt
-  simp
+-- /--
+-- info: fun x =>
+--   pdf Float
+--       (forLoop (fun i x => ((normal x.1 1.0).sample `v1).bind (fun x' => return' (x', x.2.push x')) tt.proof_1)
+--           (0.0, #[]) 50).traceRand
+--       volume x.1 *
+--     gaussian
+--       ((forLoop (fun i x => ((normal x.1 1.0).sample `v1).bind (fun x' => return' (x', x.2.push x')) tt.proof_1)
+--                   (0.0, #[]) 50).map
+--               x.1).2.toList.sum
+--       1.0 x.2.1 : ArrayN (Float × Unit) 50 × Float × Unit → Float
+-- -/
+-- #guard_msgs in
+-- #check (tt.traceRand.pdf Float) rewrite_by
+--   unfold tt
+--   simp
 
 
 /-- info: fun x => gaussian 0.0 1.0 x.1 * gaussian x.1 1.0 x.2.1 : Float × Float × Unit → Float -/

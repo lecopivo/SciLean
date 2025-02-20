@@ -356,18 +356,18 @@ theorem getElem_fromVec [Dense X] (x : n → K) (i : n) : (fromVec (X:=X) x)[i] 
 abbrev toVec (x : X) : n → K := fun i => x[i]
 abbrev set [Dense X] (x : X) (i : n) (v : K) : X := setElem x i v .intro
 
-instance (priority:=low) : Add X := ⟨fun x y => axpby 1 x 1 y⟩
-instance (priority:=low) : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
-instance (priority:=low) : Neg X := ⟨fun x => scal (-1) x⟩
-instance (priority:=low) : SMul K X := ⟨fun s x => scal s x⟩
-instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : SMul R X := ⟨fun s x => rscal s x⟩
+instance : Add X := ⟨fun x y => axpby 1 x 1 y⟩
+instance : Sub X := ⟨fun x y => axpby 1 x (-1) y⟩
+instance : Neg X := ⟨fun x => scal (-1) x⟩
+instance : SMul K X := ⟨fun s x => scal s x⟩
+instance [ScalarSMul R K] [ScalarInner R K] [RealOp X] : SMul R X := ⟨fun s x => rscal s x⟩
 
-instance (priority:=low) : Zero X := ⟨zero⟩
+instance : Zero X := ⟨zero⟩
 
-instance (priority:=low) : Inner K X := ⟨fun x y => dot x y⟩
-instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : Inner R X := ⟨fun x y => (rdot x y)⟩
-instance (priority:=low) : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
-instance (priority:=low) : Dist X := ⟨fun x y => ‖x-y‖⟩
+instance : Inner K X := ⟨fun x y => dot x y⟩
+instance [ScalarSMul R K] [ScalarInner R K] [RealOp X] : Inner R X := ⟨fun x y => (rdot x y)⟩
+instance : Norm X := ⟨fun x => Scalar.toReal (K:=K) (nrm2 x)⟩
+instance : Dist X := ⟨fun x y => ‖x-y‖⟩
 
 @[simp, simp_core, vector_to_spec]
 theorem toVec_add (x y : X) (i : n) : (x + y)[i] = x[i] + y[i] := by

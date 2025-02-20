@@ -64,7 +64,7 @@ structure State (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R] where
    /-- `(∇²f)⁻¹(xₙ)*(xₙ-xₙ₋₁)` i.e. `invH*dx`  -/
    u : R^[n] := 0
    /-- current inverse hessian `(∇²f)⁻¹(xₙ)` -/
-   invH : R^[n,n] := ⊞ (i j : Fin n) => if i=j then 1 else 0
+   invH : R^[n,n] := ⊞ (i j : Fin n) => if i=j then (1:R) else 0
    /-- step direction `- (∇²f)⁻¹ ∇f` i.e. `- (invH * g)` -/
    s : R^[n] := - g
    /-- line search scalle `dx := α • s` -/
@@ -84,8 +84,8 @@ def reset_search_direction (method : BFGS R) (state : State R n)
 
   match method.initialInvH with
   | .invH iH =>     invH := iH
-  | .stepnorm sn => invH := (sn / ‖g‖₂⁻¹) • ⊞ (i j : Fin n) => if i=j then 1 else 0
-  | .identity =>    invH := ⊞ (i j : Fin n) => if i=j then 1 else 0
+  | .stepnorm sn => invH := (sn / ‖g‖₂⁻¹) • ⊞ (i j : Fin n) => if i=j then (1:R) else 0
+  | .identity =>    invH := ⊞ (i j : Fin n) => if i=j then (1:R) else 0
 
   s := - invH * g -- original code has only `- g` for some reason
   return ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩

@@ -359,6 +359,7 @@ import SciLean.Data.VectorType.Operations.ScalAdd
 import SciLean.Data.VectorType.Operations.Set
 import SciLean.Data.VectorType.Operations.Softmax
 import SciLean.Data.VectorType.Operations.Sum
+import SciLean.Data.VectorType.Operations.OfFn
 import SciLean.Data.VectorType.Operations.ToVec
 import SciLean.Data.VectorType.Optimize
 import SciLean.Data.VectorType.Prod

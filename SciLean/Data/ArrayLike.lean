@@ -157,3 +157,8 @@ theorem getElem_prod_inl [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ 
 @[simp, simp_core]
 theorem getElem_prod_inr [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True)]
         (x : α) (y : β) (j : κ) : (x,y)[Sum.inr (α:=ι) j] = y[j] := by rfl
+
+
+-- Vector
+instance : OfFn (Vector α n) (Fin n) α where
+  ofFn := Vector.ofFn
