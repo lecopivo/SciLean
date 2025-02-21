@@ -288,6 +288,9 @@ import SciLean.Analysis.SpecialFunctions.Trigonometric
 -- import SciLean.Core_old.old.Vec
 import SciLean.Data.ArrayLike
 import SciLean.Data.ArrayN
+import SciLean.Data.ArrayOperations.Algebra
+import SciLean.Data.ArrayOperations.Basic
+import SciLean.Data.ArrayOperations.Operations.GetElem
 import SciLean.Data.ArraySet
 import SciLean.Data.ArrayType
 -- import SciLean.Data.ArrayType.Algebra_old
@@ -348,6 +351,7 @@ import SciLean.Data.IndexType.Operations
 import SciLean.Data.IndexType.Operations.MaxD
 import SciLean.Data.IndexType.Range
 import SciLean.Data.IndexType.SumProduct
+import SciLean.Data.IndexType.TensorIndex
 import SciLean.Data.Instances.Sigma
 import SciLean.Data.Int64
 import SciLean.Data.ListN
