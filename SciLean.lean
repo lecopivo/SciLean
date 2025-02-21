@@ -291,6 +291,8 @@ import SciLean.Data.ArrayN
 import SciLean.Data.ArrayOperations.Algebra
 import SciLean.Data.ArrayOperations.Basic
 import SciLean.Data.ArrayOperations.Operations.GetElem
+import SciLean.Data.ArrayOperations.Operations.OfFn
+import SciLean.Data.ArrayOperations.Operations.SetElem
 import SciLean.Data.ArraySet
 import SciLean.Data.ArrayType
 -- import SciLean.Data.ArrayType.Algebra_old
