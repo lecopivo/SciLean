@@ -444,6 +444,34 @@ theorem HSMul.hSMul.arg_a0a1.revFDeriv_rule
 --------------------------------------------------------------------------------
 
 @[fun_trans]
+theorem HDiv.hDiv.arg_a0.revFDeriv_rule_at
+    (f : X → K) (c : K) (x : X)
+    (hf : DifferentiableAt K f x) :
+    (revFDeriv K fun x => f x / c) x
+    =
+    let ydf := revFDeriv K f x
+    (ydf.1 / c,
+     fun dx' => (conj c)⁻¹ • ydf.2 dx') := by
+
+  unfold revFDeriv
+  fun_trans
+
+
+@[fun_trans]
+theorem HDiv.hDiv.arg_a0.revFDeriv_rule
+    (f : X → K) (c : K)
+    (hf : Differentiable K f) :
+    (revFDeriv K fun x => f x / c)
+    =
+    fun x =>
+      let ydf := revFDeriv K f x
+      (ydf.1 / c,
+       fun dx' => (conj c)⁻¹ • ydf.2 dx') := by
+  funext
+  fun_trans
+
+
+@[fun_trans]
 theorem HDiv.hDiv.arg_a0a1.revFDeriv_rule_at
     (f g : X → K) (x : X)
     (hf : DifferentiableAt K f x) (hg : DifferentiableAt K g x) (hx : g x ≠ 0) :
