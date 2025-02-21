@@ -171,7 +171,7 @@ class VectorType.Dense (X : Type*)
   /-- Scalar multiplication and scalar addition
 
   `x` should be modified if it is passed with ref counter one.  -/
-  scalAdd  (alpha beta : K) (x : X) : X
+  scalAdd (alpha beta : K) (x : X) : X
   scalAdd_spec (alpha beta : K) (x : X) (i : n) :
     (scalAdd alpha beta x)[i] = alpha * x[i] + beta
 

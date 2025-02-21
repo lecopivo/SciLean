@@ -73,7 +73,7 @@ theorem ofFn.arg_f.HasAdjointUpdate_rule {𝕜 X I Y : Type*}
   case simp => intros; funext i; simp
 
 @[data_synth]
-theorem ofFn.arg_f.HasRevFDeriv_rule_applied_index {𝕜 X I Y : Type*}
+theorem ofFn.arg_f.HasRevFDeriv_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
     [IndexType I] [RCLike 𝕜]
@@ -91,7 +91,7 @@ theorem ofFn.arg_f.HasRevFDeriv_rule_applied_index {𝕜 X I Y : Type*}
   case simp => rfl
 
 @[data_synth]
-theorem getElem.arg_xs.HasRevFDerivUpdate_rule_applied_index {𝕜 X I Y : Type*}
+theorem ofFn.arg_f.HasRevFDerivUpdate_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
     [IndexType I] [RCLike 𝕜]

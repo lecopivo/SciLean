@@ -291,6 +291,8 @@ import SciLean.Data.ArrayN
 import SciLean.Data.ArrayOperations.Algebra
 import SciLean.Data.ArrayOperations.Basic
 import SciLean.Data.ArrayOperations.Operations.GetElem
+import SciLean.Data.ArrayOperations.Operations.OfFn
+import SciLean.Data.ArrayOperations.Operations.SetElem
 import SciLean.Data.ArraySet
 import SciLean.Data.ArrayType
 -- import SciLean.Data.ArrayType.Algebra_old
@@ -337,7 +339,6 @@ import SciLean.Data.DataArray.VecN
 import SciLean.Data.FinProd
 import SciLean.Data.Float
 import SciLean.Data.FloatArray
-import SciLean.Data.FloatVector
 import SciLean.Data.Function
 import SciLean.Data.IndexType
 import SciLean.Data.IndexType.Basic
@@ -392,7 +393,6 @@ import SciLean.Data.VectorType.Operations.Logsumexp
 import SciLean.Data.VectorType.Operations.MapIdx
 import SciLean.Data.VectorType.Operations.Max
 import SciLean.Data.VectorType.Operations.Mul
-import SciLean.Data.VectorType.Operations.OfFn
 import SciLean.Data.VectorType.Operations.Scal
 import SciLean.Data.VectorType.Operations.ScalAdd
 import SciLean.Data.VectorType.Operations.Set
