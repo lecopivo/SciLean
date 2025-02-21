@@ -7,8 +7,7 @@ import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.Scalar
 import SciLean.Data.IndexType
 import SciLean.Data.VectorType.Init
-
-import SciLean.Data.ArrayLike
+import SciLean.Data.ArrayOperations.Algebra
 
 namespace SciLean
 
@@ -373,6 +372,9 @@ instance : Dist X := ⟨fun x y => ‖x-y‖⟩
 theorem toVec_add (x y : X) (i : n) : (x + y)[i] = x[i] + y[i] := by
   simp[vector_to_spec,HAdd.hAdd,Add.add]
 
+instance : IsAddGetElem X n where
+  getElem_add := by simp
+
 @[simp, simp_core, vector_to_spec]
 theorem toVec_sub (x y : X) (i : n) : (x - y)[i] = x[i] - y[i] := by
   conv => lhs; simp[vector_to_spec,HSub.hSub,Sub.sub]
@@ -382,10 +384,16 @@ theorem toVec_sub (x y : X) (i : n) : (x - y)[i] = x[i] - y[i] := by
 theorem toVec_neg (x : X) (i : n) : (- x)[i] = - x[i] := by
   simp[vector_to_spec,Neg.neg]
 
+instance : IsNegGetElem X n where
+  getElem_neg := by simp
+
 @[simp, simp_core, vector_to_spec]
 theorem toVec_smul (k : K) (x : X) (i : n) : (k • x)[i] = k • x[i] := by
   conv => lhs; simp only [HSMul.hSMul, SMul.smul,scal_spec]
   simp only [Pi.smul_apply, smul_eq_mul]
+
+instance : IsSMulGetElem K X n where
+  getElem_smul := by simp
 
 @[simp, simp_core, vector_to_spec]
 theorem toVec_smul' [ScalarSMul R K] [ScalarInner R K] [RealOp X] (r : R) (x : X) (i : n) :
@@ -393,10 +401,16 @@ theorem toVec_smul' [ScalarSMul R K] [ScalarInner R K] [RealOp X] (r : R) (x : X
   conv => lhs; simp only [HSMul.hSMul, SMul.smul,rscal_spec]
   rfl
 
+instance [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsSMulGetElem R X n where
+  getElem_smul := by simp
+
 @[simp, simp_core, vector_to_spec]
 theorem toVec_zero (i : n) : (0 : X)[i] = 0 := by
   conv => lhs; simp only [Zero.zero,OfNat.ofNat]
   simp only [zero_spec]
+
+instance : IsZeroGetElem X n where
+  getElem_zero := by simp
 
 @[vector_to_spec]
 theorem inner_spec (x y : X) :
@@ -405,6 +419,9 @@ theorem inner_spec (x y : X) :
     ⟪(WithLp.equiv 2 (n → K)).symm (fun i : n => x[i]), (WithLp.equiv 2 (n → K)).symm (fun i : n => y[i])⟫_K := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 
+instance : IsInnerGetElem K X n where
+  inner_eq_sum_getElem := by simp[vector_to_spec, sum_to_finset_sum]
+
 @[vector_to_spec]
 theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) :
     ⟪x,y⟫_R
@@ -412,6 +429,9 @@ theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) 
     ⟪(WithLp.equiv 2 (n → K)).symm (fun i : n => x[i]), (WithLp.equiv 2 (n → K)).symm (fun i : n => y[i])⟫_R := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
   sorry_proof
+
+instance [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsInnerGetElem K X n where
+  inner_eq_sum_getElem := by simp[vector_to_spec, sum_to_finset_sum]
 
 @[vector_to_spec]
 theorem norm_spec (x : X) :
@@ -511,6 +531,8 @@ instance (priority:=low) : Module K X where
   add_smul := by intros; ext; simp[add_smul,vector_to_spec,add_mul]
   zero_smul := by intros; ext; simp[vector_to_spec]
 
+instance : IsModuleGetElem K X n where
+
 instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : Module R X where
   one_smul := by intros; ext; simp[vector_to_spec]
   mul_smul := by intros; ext; simp[mul_smul,vector_to_spec,mul_assoc]
@@ -518,6 +540,8 @@ instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : Module 
   smul_add := by intros; ext; simp[vector_to_spec,mul_add]
   add_smul := by intros; ext; simp[add_smul,vector_to_spec,add_mul]
   zero_smul := by intros; ext; simp[vector_to_spec]
+
+instance [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsModuleGetElem R X n where
 
 instance (priority:=low) : PseudoMetricSpace X where
   dist_self := by intros; simp[dist_spec]
@@ -539,6 +563,9 @@ instance (priority:=low) instNormedSpace : NormedSpace K X where
     simp only [norm_spec]
     simp [norm_smul_le,vector_to_spec]
     sorry_proof
+
+instance : IsContinuousGetElem X n where
+  continuous_getElem := by sorry_proof
 
 instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : NormedSpace R X where
   norm_smul_le := by
@@ -654,7 +681,7 @@ def vequivₗ : X ≃ₗ[K] (n → K) :=
 
 variable (X)
 noncomputable
-def basis : Basis n K X := Basis.ofEquivFun (ι:=n) (R:=K) (M:=X) vequivₗ
+def basis : _root_.Basis n K X := Basis.ofEquivFun (ι:=n) (R:=K) (M:=X) vequivₗ
 variable {X}
 
 @[simp, simp_core]

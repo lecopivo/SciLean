@@ -35,18 +35,28 @@ theorem getElem.arg_xs.HasAdjoint_rule_free_index {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [OfFn X I Y] [LawfulOfFn X I] [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] :
-    HasAdjoint 𝕜 (fun (x : X) (i : I) => x[i]) (fun f => ofFn f) := by
+    HasAdjoint 𝕜
+      (fun (x : X) (i : I) => x[i])
+      (fun f =>
+        let x := ofFn f
+        x) := by
   constructor
   case adjoint => intro x f; simp[Inner.inner, inner_eq_sum_getElem (I:=I)]
   case is_linear => fun_prop
 
+open Classical
 @[data_synth]
 theorem getElem.arg_xs.HasAdjoint_rule_applied_index {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [OfFn X I Y] [LawfulOfFn X I]
-    [IndexType I] [DecidableEq I] [RCLike 𝕜]
+    [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
+    [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
-    HasAdjoint 𝕜 (fun (x : X) => x[i]) (fun xi => ofFn (fun j => if j=i then xi else 0)) := by
+    HasAdjoint 𝕜
+      (fun (x : X) => x[i])
+      (fun xi =>
+        let x := setElem (0:X) i xi .intro
+        x) := by
   constructor
   case adjoint => intro x y; simp[inner_eq_sum_getElem (I:=I),Tactic.if_pull,sum_to_finset_sum]
   case is_linear => fun_prop
@@ -55,30 +65,35 @@ theorem getElem.arg_xs.HasAdjoint_rule_applied_index {𝕜 X I Y : Type*}
 theorem getElem.arg_xs.HasAdjointUpdate_rule_applied_index {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [IndexType I] [DecidableEq I] [RCLike 𝕜]
+    [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
     HasAdjointUpdate 𝕜
       (fun (x : X) => x[i])
-      (fun xi' x => let xi := x[i]; setElem x i (xi + xi') .intro) := by
+      (fun xi' x =>
+        let xi := x[i];
+        let x :=setElem x i (xi + xi') .intro
+        x) := by
   apply hasAdjointUpdate_from_hasAdjoint
   case adjoint => data_synth
   case simp =>
     intros; simp
     apply getElem_injective (idx:=I); funext j
-    by_cases (i=j)
-    · simp_all
-    · simp_all; aesop
+    by_cases (i=j) <;> simp_all
 
 @[data_synth]
 theorem getElem.arg_xs.HasRevFDeriv_rule_applied_index {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [OfFn X I Y] [LawfulOfFn X I]
-    [IndexType I] [DecidableEq I] [RCLike 𝕜]
+    [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
+    [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
     HasRevFDeriv 𝕜
       (fun (x : X) => x[i])
-      (fun x => (x[i], fun xi => ofFn (fun j => if j=i then xi else 0))) := by
+      (fun x => (x[i],
+        fun xi =>
+          let x' := setElem (0: X) i xi .intro
+          x')) := by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intro; data_synth
   case adjoint => intro; simp; data_synth
@@ -88,12 +103,16 @@ theorem getElem.arg_xs.HasRevFDeriv_rule_applied_index {𝕜 X I Y : Type*}
 theorem getElem.arg_xs.HasRevFDerivUpdate_rule_applied_index {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [IndexType I] [DecidableEq I] [RCLike 𝕜]
+    [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
     HasRevFDerivUpdate 𝕜
       (fun (x : X) => x[i])
-      (fun x => (x[i], fun xi' x => let xi := x[i]; setElem x i (xi + xi') .intro)) := by
+      (fun x => (x[i],
+        fun xi' x =>
+          let xi := x[i];
+          let x := setElem x i (xi + xi') .intro
+          x)) := by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intro; data_synth
   case adjoint => intro; simp; data_synth

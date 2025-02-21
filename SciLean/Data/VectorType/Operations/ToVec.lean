@@ -10,6 +10,7 @@ import SciLean.Tactic.DFunLikeCoeZetaDelta
 import SciLean.Meta.GenerateFunTrans
 import SciLean.Tactic.ConvAssign
 import SciLean.Lean.ToSSA
+import SciLean.Data.ArrayOperations.Operations.GetElem
 
 namespace SciLean
 
@@ -23,40 +24,34 @@ variable {R K} [RealScalar R] [Scalar R K] {n} [IndexType n] {X}
 
 @[fun_prop]
 theorem getElem.arg_xs.IsLinearMap_rule (i : n) :
-    IsLinearMap K (fun x : X => x[i]) := by
-  constructor <;> (intros; simp[vector_to_spec])
+    IsLinearMap K (fun x : X => x[i]) := by fun_prop
+  -- constructor <;> (intros; simp[vector_to_spec])
 
 #generate_linear_map_simps getElem.arg_xs.IsLinearMap_rule
 
 @[fun_prop]
 theorem getElem.arg_xs.IsLinearMap_rule_real
     [ScalarSMul R K] [ScalarInner R K] [RealOp X] (i : n) :
-    IsLinearMap R (fun x : X => x[i]) := by
-  constructor <;> (intros; simp[vector_to_spec])
+    IsLinearMap R (fun x : X => x[i]) := by fun_prop
+  -- constructor <;> (intros; simp[vector_to_spec])
 
 #generate_linear_map_simps getElem.arg_xs.IsLinearMap_rule_real
 
 @[fun_prop]
 theorem getElem.arg_xs.Continuous_rule (i : n) :
-    Continuous (fun x : X => x[i]) := by
-  have h : (fun x : X => x[i]) = fun x =>ₗ[K] x[i] := rfl
-  rw[h];
-  apply LinearMap.continuous_of_finiteDimensional
+    Continuous (fun x : X => x[i]) := by fun_prop
 
 @[fun_prop]
 theorem getElem.arg_xs.IsContinuousLinearMap_rule (i : n) :
-    IsContinuousLinearMap K (fun x : X => x[i]) := by
-  constructor
-  · fun_prop
-  · dsimp only [autoParam]; fun_prop
+    IsContinuousLinearMap K (fun x : X => x[i]) := by fun_prop
 
 @[fun_prop]
 theorem getElem.arg_xs.IsContinuousLinearMap_rule_real
     [ScalarSMul R K] [ScalarInner R K] [RealOp X] (i : n) :
-    IsContinuousLinearMap R (fun x : X => x[i]) := by
-  constructor
-  · fun_prop
-  · dsimp only [autoParam]; fun_prop
+    IsContinuousLinearMap R (fun x : X => x[i]) := by fun_prop
+  -- constructor
+  -- · fun_prop
+  -- · dsimp only [autoParam]; fun_prop
 
 -- fderiv
 theorem getElem_fderiv
@@ -83,7 +78,8 @@ theorem getElem.arg_xs.fderiv_rule_real [ScalarSMul R K] [ScalarInner R K] [Real
 
 @[data_synth]
 theorem getElem.arg_xs.HasFDerivAt_rule (i : n) (x : X) :
-    HasFDerivAt (fun x : X => x[i]) (fun dx =>L[K] dx[i]) x := by sorry_proof
+    HasFDerivAt (fun x : X => x[i]) (fun dx =>L[K] dx[i]) x := by
+  data_synth
 
 -- forward AD
 @[fun_trans]
@@ -111,17 +107,16 @@ theorem getElem.arg_xs.adjoint_rule [Dense X] (i : n) :
 theorem getElem.arg_xs.HasAdjoint_rule [Dense X] (i : n) :
     HasAdjoint K (fun x : X => x[i])
      (fun k : K => setElem (0 : X) i k (by dsimp)) := by
-  constructor
-  case adjoint => intro z x; simp[vector_to_spec]; sorry_proof
-  case is_linear => fun_prop
+  data_synth
+  -- constructor
+  -- case adjoint => intro z x; simp[vector_to_spec]; sorry_proof
+  -- case is_linear => fun_prop
 
 @[data_synth]
 theorem getElem.arg_xs.HasAdjointUpdate_rule [Dense X] (i : n) :
     HasAdjointUpdate K (fun x : X => x[i])
      (fun (k : K) x => setElem x i (x[i] + k) (by dsimp)) := by
-  constructor
-  case adjoint => intro z x; simp[vector_to_spec]; sorry_proof
-  case is_linear => fun_prop
+  data_synth
 
 
 -- reverse AD
@@ -137,10 +132,7 @@ theorem getElem.arg_xs.revFDeriv_rule [Dense X] (i : n) :
 theorem getElem.arg_xs.HasRevFDeriv_rule [Dense X] (i : n) :
     HasRevFDeriv K (fun x : X => x[i])
      (fun x => (x[i], fun k : K => setElem (0 : X) i k (by dsimp))) := by
-  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
-  case simp => rfl
+  data_synth
 
 @[data_synth]
 theorem getElem.arg_xs.HasRevFDerivUpdate_rule [Dense X] (i : n) :
@@ -148,7 +140,4 @@ theorem getElem.arg_xs.HasRevFDerivUpdate_rule [Dense X] (i : n) :
      (fun x => (x[i], fun (k : K) x' =>
        let xi := x'[i]
        setElem x' i (xi + k) (by dsimp))) := by
-  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
-  case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
-  case simp => rfl
+  data_synth

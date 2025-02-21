@@ -30,8 +30,8 @@ theorem getElem_ext {coll idx elem : Type*}
 class SetElem (coll : Type u) (idx : Type v) (elem : outParam (Type w))
               (valid : outParam (coll → idx → Prop)) where
   setElem (xs : coll) (i : idx) (v : elem) (h : valid xs i) : coll
-  setElem_valid {xs : coll} {i j : idx} {v : elem} {hi : valid xs i} (hj : valid xs j) :
-    valid (setElem xs i v hi) j
+  setElem_valid {xs : coll} {i j : idx} {v : elem} {hi : valid xs i} :
+    valid xs j ↔ valid (setElem xs i v hi) j
 
 export SetElem (setElem setElem_valid)
 
@@ -42,13 +42,21 @@ class LawfulSetElem (coll : Type u) (idx : Type v)
     {elem : outParam (Type w)} {valid : outParam (coll → idx → Prop)}
     [SetElem coll idx elem valid] [GetElem coll idx elem valid] : Prop where
   getElem_setElem_eq (xs : coll) (i : idx) (v : elem) (h : valid xs i) :
-    getElem (setElem xs i v h) i (setElem_valid h) = v
-  getElem_setElem_neq (xs : coll) (i j : idx) (v : elem) (hi : valid xs i) (hj : valid xs j) :
-    i≠j → getElem (setElem xs i v hi) j (setElem_valid hj) = getElem xs j hj
+    getElem (setElem xs i v h) i (setElem_valid.1 h) = v
+  getElem_setElem_neq (xs : coll) (i j : idx) (v : elem) (hi : valid xs i) (hj) :
+    i≠j → getElem (setElem xs i v hi) j (hj) = getElem xs j (setElem_valid.2 hj)
 
 export LawfulSetElem (getElem_setElem_eq getElem_setElem_neq)
 
 attribute [simp, simp_core] getElem_setElem_eq getElem_setElem_neq
+
+@[simp, simp_core]
+theorem getElem_setElem (coll idx elem : Type*) (valid)
+    [GetElem coll idx elem valid] [SetElem coll idx elem valid] [LawfulSetElem coll idx]
+    [DecidableEq idx]
+    (xs : coll) (i j : idx) (v : elem) (hi hj) :
+    getElem (setElem xs i v hi) j hj = if i=j then v else getElem xs j (setElem_valid.2 hj) := by
+  by_cases (i=j) <;> simp_all
 
 class ArrayLike (coll : Type u) (idx : Type v) (elem : outParam (Type w)) extends
    GetElem coll idx elem (fun _ _ => True),
