@@ -39,10 +39,10 @@ macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term =>
     `(∏ ($x:ident : $ty), $b)
   | _  => throw ()
 
-theorem sum_to_finset_sum {α} [AddCommGroup α] {ι} [IndexType ι] (f : ι → α) :
+theorem sum_to_finset_sum {α} [AddCommMonoid α] {ι} [IndexType ι] (f : ι → α) :
   ∑ i, f i = Finset.univ.sum f := sorry_proof
 
-theorem prod_to_finset_prod {α} [CommGroup α] {ι} [IndexType ι] (f : ι → α) :
+theorem prod_to_finset_prod {α} [CommMonoid α] {ι} [IndexType ι] (f : ι → α) :
   ∏ i, f i = Finset.univ.prod f := sorry_proof
 
 

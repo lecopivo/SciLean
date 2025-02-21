@@ -286,21 +286,55 @@ import SciLean.Analysis.SpecialFunctions.Trigonometric
 -- import SciLean.Core_old.old.VariationalCalculus
 -- import SciLean.Core_old.old.VariationalCalculus.Examples
 -- import SciLean.Core_old.old.Vec
+import SciLean.Data.ArrayLike
 import SciLean.Data.ArrayN
 import SciLean.Data.ArraySet
 import SciLean.Data.ArrayType
+-- import SciLean.Data.ArrayType.Algebra_old
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ArrayType.Notation
+-- import SciLean.Data.ArrayType.Properties_old
 import SciLean.Data.ColProd
 import SciLean.Data.Curry
 import SciLean.Data.DataArray
 import SciLean.Data.DataArray.DataArray
+-- import SciLean.Data.DataArray.Operations_old
+-- import SciLean.Data.DataArray.Operations_old.AntiSymmPart
+-- import SciLean.Data.DataArray.Operations_old.Cross
+-- import SciLean.Data.DataArray.Operations_old.CrossMatrix
+-- import SciLean.Data.DataArray.Operations_old.Curry
+-- import SciLean.Data.DataArray.Operations_old.Det
+-- import SciLean.Data.DataArray.Operations_old.Diag
+-- import SciLean.Data.DataArray.Operations_old.Diagonal
+-- import SciLean.Data.DataArray.Operations_old.Dot
+-- import SciLean.Data.DataArray.Operations_old.Exp
+-- import SciLean.Data.DataArray.Operations_old.GaussianS
+-- import SciLean.Data.DataArray.Operations_old.Inv
+-- import SciLean.Data.DataArray.Operations_old.Log
+-- import SciLean.Data.DataArray.Operations_old.Logsumexp
+-- import SciLean.Data.DataArray.Operations_old.LowerTriangular
+-- import SciLean.Data.DataArray.Operations_old.LowerTriangularPart
+-- import SciLean.Data.DataArray.Operations_old.Matmul
+-- import SciLean.Data.DataArray.Operations_old.Multiply
+-- import SciLean.Data.DataArray.Operations_old.NPow
+-- import SciLean.Data.DataArray.Operations_old.Outerprod
+-- import SciLean.Data.DataArray.Operations_old.Simps
+-- import SciLean.Data.DataArray.Operations_old.Softmax
+-- import SciLean.Data.DataArray.Operations_old.Solve
+-- import SciLean.Data.DataArray.Operations_old.Sum
+-- import SciLean.Data.DataArray.Operations_old.Trace
+-- import SciLean.Data.DataArray.Operations_old.Transpose
+-- import SciLean.Data.DataArray.Operations_old.Uncurry
+-- import SciLean.Data.DataArray.Operations_old.Vecmul
 import SciLean.Data.DataArray.PlainDataType
+import SciLean.Data.DataArray.RevDeriv
 import SciLean.Data.DataArray.ScalarArray
 import SciLean.Data.DataArray.ScalarArrayEquiv
 import SciLean.Data.DataArray.VecN
 import SciLean.Data.FinProd
 import SciLean.Data.Float
+import SciLean.Data.FloatArray
+import SciLean.Data.FloatVector
 import SciLean.Data.Function
 import SciLean.Data.IndexType
 import SciLean.Data.IndexType.Basic
@@ -354,12 +388,12 @@ import SciLean.Data.VectorType.Operations.Logsumexp
 import SciLean.Data.VectorType.Operations.MapIdx
 import SciLean.Data.VectorType.Operations.Max
 import SciLean.Data.VectorType.Operations.Mul
+import SciLean.Data.VectorType.Operations.OfFn
 import SciLean.Data.VectorType.Operations.Scal
 import SciLean.Data.VectorType.Operations.ScalAdd
 import SciLean.Data.VectorType.Operations.Set
 import SciLean.Data.VectorType.Operations.Softmax
 import SciLean.Data.VectorType.Operations.Sum
-import SciLean.Data.VectorType.Operations.OfFn
 import SciLean.Data.VectorType.Operations.ToVec
 import SciLean.Data.VectorType.Optimize
 import SciLean.Data.VectorType.Prod
