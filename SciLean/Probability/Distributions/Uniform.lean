@@ -2,7 +2,6 @@ import Mathlib.MeasureTheory.Measure.Prod
 
 import SciLean.Analysis.AdjointSpace.Geometry
 import SciLean.Data.DataArray
-import SciLean.Data.DataArray.ScalarArrayEquiv
 import SciLean.Probability.Rand
 
 open MeasureTheory Set
@@ -194,7 +193,7 @@ instance
 
 instance
   {I : Type} [IndexType I]
-  {R : Type} [RealScalar R] [PlainDataType R] [MeasureSpace R] {Array : outParam Type} [ScalarArray R Array] :
+  {R : Type} [RealScalar R] [PlainDataType R] [MeasureSpace R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] :
   RejectionSampleBall₂ (R:=R) (R^[I]) where
 
   sample := do

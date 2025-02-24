@@ -4,6 +4,10 @@ import SciLean.Meta.SimpAttr
 namespace SciLean
 
 
+/-- Abbreviation for `GetElem coll idx elem (fun _ _ => True)` -/
+abbrev GetElem' (coll : Type*) (idx : Type*) (elem : outParam Type*) :=
+  GetElem coll idx elem (fun _ _ => True)
+
 open Function
 /-- Type `coll` is fully determined by all its elements accesible with index notation `x[i]`.
 
@@ -17,6 +21,9 @@ class InjectiveGetElem (coll : Type*) (idx : Type*) {elem : outParam Type*}
 /-- Default index type of `coll` is `idx`. This class is used when elaborating `x[i]` where `i`
 has  unknown type. -/
 class DefaultIndex (coll : Type*) (idx : outParam Type*) where
+
+/-- Index under which we can access `coll` and get elements of type `elem`. -/
+class ValueIndex (coll elem : Type*) (idx : outParam Type*) where
 
 export InjectiveGetElem (getElem_injective)
 
@@ -32,6 +39,10 @@ class SetElem (coll : Type u) (idx : Type v) (elem : outParam (Type w))
   setElem (xs : coll) (i : idx) (v : elem) (h : valid xs i) : coll
   setElem_valid {xs : coll} {i j : idx} {v : elem} {hi : valid xs i} :
     valid xs j ↔ valid (setElem xs i v hi) j
+
+/-- Abbreviation for `SetElem coll idx elem (fun _ _ => True)` -/
+abbrev SetElem' (coll : Type*) (idx : Type*) (elem : outParam Type*) :=
+  SetElem coll idx elem (fun _ _ => True)
 
 export SetElem (setElem setElem_valid)
 
@@ -59,8 +70,8 @@ theorem getElem_setElem (coll idx elem : Type*) (valid)
   by_cases (i=j) <;> simp_all
 
 class ArrayLike (coll : Type u) (idx : Type v) (elem : outParam (Type w)) extends
-   GetElem coll idx elem (fun _ _ => True),
-   SetElem coll idx elem (fun _ _ => True)
+   GetElem' coll idx elem,
+   SetElem' coll idx elem
 
 class LawfulArrayLike (coll : Type u) (idx : Type v) (elem : outParam (Type w))
       [ArrayLike coll idx elem] extends
@@ -73,7 +84,7 @@ class OfFn (coll : Type u) (idx : Type v) (elem : outParam (Type w)) where
 export OfFn (ofFn)
 
 class LawfulOfFn (coll : Type u) (idx : Type v) {elem : outParam (Type w)}
-    [OfFn coll idx elem] [GetElem coll idx elem (fun _ _ => True)] where
+    [OfFn coll idx elem] [GetElem' coll idx elem] where
   getElem_ofFn (f : idx → elem) (i : idx) : (ofFn (coll:=coll) f)[i] = f i
 
 export LawfulOfFn (getElem_ofFn)
@@ -87,13 +98,13 @@ class DefaultCollection (coll : outParam Type*) (idx : Type*) (elem : Type*) whe
 
 theorem ofFn_rightInverse
     (coll : Type u) (idx : Type v) {elem : outParam (Type w)}
-    [GetElem coll idx elem (fun _ _ => True)] [OfFn coll idx elem] [LawfulOfFn coll idx] :
+    [GetElem' coll idx elem] [OfFn coll idx elem] [LawfulOfFn coll idx] :
     RightInverse (ofFn : (idx → elem) → coll) (fun (x : coll) (i : idx) => x[i]) := by
   intro f; funext i; simp
 
 theorem ofFn_injective
     (coll : Type u) (idx : Type v) {elem : outParam (Type w)}
-    [GetElem coll idx elem (fun _ _ => True)] [InjectiveGetElem coll idx]
+    [GetElem' coll idx elem] [InjectiveGetElem coll idx]
     [OfFn coll idx elem] [LawfulOfFn coll idx] :
     Function.Surjective (ofFn : (idx → elem) → coll) := by
   intro x
@@ -103,7 +114,7 @@ theorem ofFn_injective
 
 theorem ofFn_surjective
     (coll : Type u) (idx : Type v) {elem : outParam (Type w)}
-    [GetElem coll idx elem (fun _ _ => True)] [InjectiveGetElem coll idx]
+    [GetElem' coll idx elem] [InjectiveGetElem coll idx]
     [OfFn coll idx elem] [LawfulOfFn coll idx] :
     Function.Surjective (ofFn : (idx → elem) → coll) := by
   intro x
@@ -112,8 +123,26 @@ theorem ofFn_surjective
   simp
 
 theorem getElem_surjective (coll : Type u) (idx : Type v) {elem : outParam (Type w)}
-    [GetElem coll idx elem (fun _ _ => True)] [OfFn coll idx elem] [LawfulOfFn coll idx] :
+    [GetElem' coll idx elem] [OfFn coll idx elem] [LawfulOfFn coll idx] :
     Surjective (fun (x : coll) (i : idx) => x[i]) := (ofFn_rightInverse coll idx).surjective
+
+
+
+----------------------------------------------------------------------------------------------------
+-- (Un)curry element access ------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- Compatibilty class saying `x[i,j] = x[i][j]`. -/
+class IsGetElemCurry (X : Type*) {Y Z : Type*} (I J : Type*)
+    [GetElem' X I Y] [GetElem' X (I×J) Z] [GetElem' Y J Z] : Prop where
+  getElem_curry : ∀ (x : X) (ij : I×J), x[ij] = x[ij.1][ij.2]
+
+export IsGetElemCurry (getElem_curry)
+
+theorem getElem_uncurry {X Y Z I J : Type*}
+    [GetElem' X I Y] [GetElem' X (I×J) Z] [GetElem' Y J Z] [h : IsGetElemCurry X I J]
+    (x : X) (i : I) (j : J) : x[i][j] = x[(i,j)] := by
+  rw [h.getElem_curry]
 
 
 ----------------------------------------------------------------------------------------------------
@@ -121,7 +150,7 @@ theorem getElem_surjective (coll : Type u) (idx : Type v) {elem : outParam (Type
 
 
 -- Unit
-instance : GetElem α Unit α (fun _ _ => True) where
+instance : GetElem' α Unit α where
   getElem x _ _ := x
 
 instance : InjectiveGetElem α Unit where
@@ -135,12 +164,12 @@ instance : LawfulOfFn α Unit where
 
 
 -- Prod
-instance [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True)] :
+instance [GetElem' α ι γ] [GetElem' β κ γ] :
     GetElem (α×β) (ι⊕κ) γ (fun _ _ => True) where
   getElem x i _ := match x, i with | (x,y), .inl i => x[i] | (x,y), .inr j => y[j]
 
 
-instance [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True)]
+instance [GetElem' α ι γ] [GetElem' β κ γ]
     [InjectiveGetElem α ι] [InjectiveGetElem β κ] :
     InjectiveGetElem (α×β) (ι⊕κ) where
   getElem_injective := by
@@ -157,24 +186,24 @@ instance [OfFn α ι γ] [OfFn β κ γ] :
     OfFn (α×β) (ι⊕κ) γ where
   ofFn f := (ofFn (fun i => f (.inl i)), ofFn (fun j => f (.inr j)))
 
-instance [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True)]
+instance [GetElem' α ι γ] [GetElem' β κ γ]
     [OfFn α ι γ] [OfFn β κ γ] [LawfulOfFn α ι] [LawfulOfFn β κ] :
     LawfulOfFn (α×β) (ι⊕κ) where
   getElem_ofFn := by intro f i; cases i <;> simp[getElem,ofFn]
 
 @[simp, simp_core]
-theorem getElem_prod_inl [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True)]
+theorem getElem_prod_inl [GetElem' α ι γ] [GetElem' β κ γ]
         (x : α) (y : β) (i : ι) : (x,y)[Sum.inl (β:=κ) i] = x[i] := by rfl
 
 @[simp, simp_core]
-theorem getElem_prod_inr [GetElem α ι γ (fun _ _ => True)] [GetElem β κ γ (fun _ _ => True)]
+theorem getElem_prod_inr [GetElem' α ι γ] [GetElem' β κ γ]
         (x : α) (y : β) (j : κ) : (x,y)[Sum.inr (α:=ι) j] = y[j] := by rfl
 
 
 -- Vector
 instance : DefaultIndex (Vector α n) (Fin n) where
 
-instance : SetElem (Vector α n) (Fin n) α (fun _ _ => True) where
+instance : SetElem' (Vector α n) (Fin n) α where
   setElem x i v _ := x.set i v
   setElem_valid := by simp
 

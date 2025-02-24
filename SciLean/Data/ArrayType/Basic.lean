@@ -136,24 +136,24 @@ instance [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => Elem
 
 section Operations
 
-  instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapIdxMono (λ x fx => fx + get g x) f⟩
-  instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapIdxMono (λ x fx => fx - get g x) f⟩
+  scoped instance (priority:=low) [Add Elem] : Add Cont := ⟨λ f g => mapIdxMono (λ x fx => fx + get g x) f⟩
+  scoped instance (priority:=low) [Sub Elem] : Sub Cont := ⟨λ f g => mapIdxMono (λ x fx => fx - get g x) f⟩
   -- instance (priority:=low) [Mul Elem] : Mul Cont := ⟨λ f g => mapIdxMono (λ x fx => fx * get g x) f⟩
   -- instance (priority:=low) [Div Elem] : Div Cont := ⟨λ f g => mapIdxMono (λ x fx => fx / get g x) f⟩
 
   -- instance (priority:=low) {R} [HMul R Elem Elem] : HMul R Cont Cont := ⟨λ r f => map (λ fx => r*(fx : Elem)) f⟩
-  instance (priority:=low) {R} [SMul R Elem] : SMul R Cont := ⟨λ r f => mapMono (λ fx => r•(fx : Elem)) f⟩
+  scoped instance (priority:=low) {R} [SMul R Elem] : SMul R Cont := ⟨λ r f => mapMono (λ fx => r•(fx : Elem)) f⟩
 
-  instance (priority:=low) [Neg Elem] : Neg Cont := ⟨λ f => mapMono (λ fx => -(fx : Elem)) f⟩
+  scoped instance (priority:=low) [Neg Elem] : Neg Cont := ⟨λ f => mapMono (λ fx => -(fx : Elem)) f⟩
   -- instance (priority:=low) [Inv Elem] : Inv Cont := ⟨λ f => mapMono (λ fx => (fx : Elem)⁻¹) f⟩
 
-  instance (priority:=low) [One Elem]  : One Cont  := ⟨ofFn fun (_ : Idx) => 1⟩
-  instance (priority:=low) [Zero Elem] : Zero Cont := ⟨ofFn fun (_ : Idx) => 0⟩
+  scoped instance (priority:=low) [One Elem]  : One Cont  := ⟨ofFn fun (_ : Idx) => 1⟩
+  scoped instance (priority:=low) [Zero Elem] : Zero Cont := ⟨ofFn fun (_ : Idx) => 0⟩
 
-  instance (priority:=low) [LT Elem] : LT Cont := ⟨λ f g => ∀ x, get f x < get g x⟩
-  instance (priority:=low) [LE Elem] : LE Cont := ⟨λ f g => ∀ x, get f x ≤ get g x⟩
+  scoped instance (priority:=low) [LT Elem] : LT Cont := ⟨λ f g => ∀ x, get f x < get g x⟩
+  scoped instance (priority:=low) [LE Elem] : LE Cont := ⟨λ f g => ∀ x, get f x ≤ get g x⟩
 
-  instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont :=
+  scoped instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont :=
     λ f g => Id.run do
       let mut eq : Bool := true
       for x in fullRange Idx do
@@ -162,7 +162,7 @@ section Operations
           break
       if eq then isTrue sorry_proof else isFalse sorry_proof
 
-  instance (priority:=low) [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) :
+  scoped instance (priority:=low) [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) :
       Decidable (f < g) := Id.run do
     let mut lt : Bool := true
     for x in fullRange Idx do
@@ -171,7 +171,7 @@ section Operations
         break
     if lt then isTrue sorry_proof else isFalse sorry_proof
 
-  instance (priority:=low) [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) :
+  scoped instance (priority:=low) [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) :
       Decidable (f ≤ g) := Id.run do
     let mut le : Bool := true
     for x in fullRange Idx do

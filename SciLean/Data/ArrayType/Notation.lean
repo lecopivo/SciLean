@@ -64,34 +64,33 @@ macro:max (name:=indexedGet) (priority:=high+1) x:term noWs "[" i:term ", " is:t
 @[inherit_doc indexedGet]
 syntax:max (name:=indexedGetRanges) (priority:=high) term noWs "[" elemIndex "," elemIndex,* "]" : term
 
-
 macro (priority:=high) x:ident noWs "[" ids:term,* "]" " := " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := ArrayType.set $x $i $xi)
+  `(doElem| $x:ident := setElem $x $i $xi (by get_elem_tactic))
 
 macro (priority:=high) x:ident noWs "[" ids:term,* "]" " ← " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := ArrayType.set $x $i (← $xi))
+  `(doElem| $x:ident := setElem $x $i (← $xi) (by get_elem_tactic))
 
 macro x:ident noWs "[" ids:term,* "]" " += " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => xi + $xi))
+  `(doElem| $x:ident := let xi := $x[$i]; setElem $x $i (xi + $xi) (by get_elem_tactic))
 
 macro x:ident noWs "[" ids:term,* "]" " -= " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => xi - $xi))
+  `(doElem| $x:ident := let xi := $x[$i]; setElem $x $i (xi - $xi) (by get_elem_tactic))
 
 macro x:ident noWs "[" ids:term,* "]" " *= " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => xi * $xi))
+  `(doElem| $x:ident := let xi := $x[$i]; setElem $x $i (xi * $xi) (by get_elem_tactic))
 
 macro x:ident noWs "[" ids:term,* "]" " /= " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => xi / $xi))
+  `(doElem| $x:ident := let xi := $x[$i]; setElem $x $i (xi / $xi) (by get_elem_tactic))
 
 macro x:ident noWs "[" ids:term,* "]" " •= " xi:term : doElem => do
   let i ← mkTuple ids.getElems
-  `(doElem| $x:ident := ArrayType.modify $x $i (fun xi => $xi • xi))
+  `(doElem| $x:ident := let xi := $x[$i]; setElem $x $i ($xi • xi) (by get_elem_tactic))
 
 
 @[app_unexpander ArrayType.get] def unexpandArrayTypeGet : Lean.PrettyPrinter.Unexpander

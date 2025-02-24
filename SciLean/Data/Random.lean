@@ -1,4 +1,5 @@
 import SciLean.Data.DataArray.DataArray
+import SciLean.Data.DataArray.VectorType
 import SciLean.Data.Int64
 import Mathlib.Control.Random
 
@@ -71,7 +72,7 @@ instance [Random Id α] [Random Id β] : Random Id (α × β) where
 open Random
 instance {ι : Type} [IndexType ι] [PlainDataType R] [Random Id R] [Zero R] : Random Id (R^[ι]) where
   random := do
-    let mut x : R^[ι] := 0
+    let mut x : R^[ι] := ⊞ (_:ι) => (0:R)
     for i in fullRange ι do
       x := ArrayType.set x i (← random (α:=R))
     return x

@@ -2,8 +2,7 @@ import SciLean
 
 open SciLean
 
-variable {R : Type} [RealScalar R] [PlainDataType R] {Array} [ScalarArray R Array]
-  {n : Nat}
+variable {R : Type} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] {n : Nat}
 
 
 set_default_scalar R

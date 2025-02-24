@@ -29,16 +29,6 @@ end StructTypeSimps
 section ArrayTypeSimps
 
 
-variable {X I XI : Type _} [ArrayType X I XI] [Add XI] [Zero XI] [IndexType I]
-
-@[simp, simp_core]
-theorem sum_modify (f : I → XI → XI) :
-    (∑ i : I, ArrayType.modify (0 : X) i (f i))
-    =
-    ArrayType.ofFn (fun i => f i 0) := sorry_proof
-
-end ArrayTypeSimps
-
 
 -- ∑ i, oneHot i (dy i)
 

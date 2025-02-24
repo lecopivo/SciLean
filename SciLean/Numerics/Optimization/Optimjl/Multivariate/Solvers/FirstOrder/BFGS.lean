@@ -1,7 +1,8 @@
 import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
-import SciLean.Data.DataArray.ScalarArrayEquiv
+import SciLean.Data.DataArray.VectorType
+import SciLean.Data.DataArray.MatrixType
 
 /-! Port of Optim.jl, file src/multivariate/solvers/first_order/bfgs.jl
 
@@ -14,7 +15,7 @@ namespace SciLean.Optimjl
 
 
 variable
-  {R : Type} [RealScalar R] [PlainDataType R] [ToString R] {Array} [ScalarArray R Array]
+  {R : Type} [RealScalar R] [PlainDataType R] [ToString R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
 
 
 variable (R)
@@ -44,7 +45,7 @@ set_default_scalar R
 namespace BFGS
 
 
-structure State (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R] where
+structure State (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] where
    /-- current position `xₙ` -/
    x : R^[n]
    /-- previous position `xₙ₋₁`-/

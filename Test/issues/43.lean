@@ -2,7 +2,7 @@ import SciLean
 
 open SciLean
 
-variable {R} [RealScalar R] [PlainDataType R] (n : Nat) {Array} [ScalarArray R Array]
+variable {R} [RealScalar R] [PlainDataType R] (n : Nat) [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
 
 
 -- This should be fixed!!!

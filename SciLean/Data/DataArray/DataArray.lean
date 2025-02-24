@@ -319,50 +319,50 @@ theorem DataArrayN.curry_getElem (x : DataArrayN α (ι×κ)) (i : ι) (j : κ) 
 
 
 
-open IndexType in
-/-- This instance is for convenience and for other type classes realted to `VectorType`.
+-- open IndexType in
+-- /-- This instance is for convenience and for other type classes realted to `VectorType`.
 
-But `x[i,j]` for `x : α^[κ]^[ι]` is considered to be confusing so the simp normal form of it is
-`x.uncurry[i,j]`.  -/
-instance : GetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
-  getElem x ij _ := x.uncurry[ij]
+-- But `x[i,j]` for `x : α^[κ]^[ι]` is considered to be confusing so the simp normal form of it is
+-- `x.uncurry[i,j]`.  -/
+-- instance : GetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
+--   getElem x ij _ := x.uncurry[ij]
 
-/-- Expression `x[i,j]` for `x : α^[κ]^[ι]` is not considered to be in simp normal form so we
-transform it to `x.uncurry[i,j]` -/
-@[simp, simp_core]
-theorem DataAraryN.getElem_uncurry (x : α^[κ]^[ι]) (i : ι) (j : κ) :
-    x[i,j] = x.uncurry[i,j] := rfl
+-- /-- Expression `x[i,j]` for `x : α^[κ]^[ι]` is not considered to be in simp normal form so we
+-- transform it to `x.uncurry[i,j]` -/
+-- @[simp, simp_core]
+-- theorem DataAraryN.getElem_uncurry (x : α^[κ]^[ι]) (i : ι) (j : κ) :
+--     x[i,j] = x.uncurry[i,j] := rfl
 
-instance : InjectiveGetElem (α^[κ]^[ι]) (ι×κ) where
-  getElem_injective := by
-    intro x y h
-    apply getElem_injective (idx:=ι); funext i
-    apply getElem_injective (idx:=κ); funext j
-    simp [← DataArrayN.uncurry_getElem]
-    exact congrFun h (i,j)
+-- instance : InjectiveGetElem (α^[κ]^[ι]) (ι×κ) where
+--   getElem_injective := by
+--     intro x y h
+--     apply getElem_injective (idx:=ι); funext i
+--     apply getElem_injective (idx:=κ); funext j
+--     simp [← DataArrayN.uncurry_getElem]
+--     exact congrFun h (i,j)
 
-open IndexType
-instance : SetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
-  setElem x ij v _ := (setElem x.uncurry ij v .intro).curry
-  setElem_valid := sorry_proof
+-- open IndexType
+-- instance : SetElem (α^[κ]^[ι]) (ι×κ) α (fun _ _ => True) where
+--   setElem x ij v _ := (setElem x.uncurry ij v .intro).curry
+--   setElem_valid := sorry_proof
 
-instance : LawfulSetElem (α^[κ]^[ι]) (ι×κ)  where
-  getElem_setElem_eq  := sorry_proof
-  getElem_setElem_neq := sorry_proof
+-- instance : LawfulSetElem (α^[κ]^[ι]) (ι×κ)  where
+--   getElem_setElem_eq  := sorry_proof
+--   getElem_setElem_neq := sorry_proof
 
-instance : OfFn (α^[κ]^[ι]) (ι×κ) α  where
-  ofFn f := (ofFn (coll:=α^[ι,κ]) f).curry
+-- instance : OfFn (α^[κ]^[ι]) (ι×κ) α  where
+--   ofFn f := (ofFn (coll:=α^[ι,κ]) f).curry
 
-/-- Expression `ofFn (coll:=α^[κ]^[ι]) f` is not considerd to be in simp normal form so we
-immediatelly simplify it to `(ofFn (coll:=α^[ι×κ]) f).curry` -/
-@[simp, simp_core]
-theorem DataAraryN.ofFn_curry (f : ι×κ → α) :
-    (ofFn (coll:=α^[κ]^[ι]) f) = (ofFn (coll:=α^[ι×κ]) f).curry := rfl
+-- /-- Expression `ofFn (coll:=α^[κ]^[ι]) f` is not considerd to be in simp normal form so we
+-- immediatelly simplify it to `(ofFn (coll:=α^[ι×κ]) f).curry` -/
+-- @[simp, simp_core]
+-- theorem DataAraryN.ofFn_curry (f : ι×κ → α) :
+--     (ofFn (coll:=α^[κ]^[ι]) f) = (ofFn (coll:=α^[ι×κ]) f).curry := rfl
 
-instance : LawfulOfFn (α^[κ]^[ι]) (ι×κ)  where
-  getElem_ofFn := by
-    intro f (i,j)
-    simp[DataArrayN.uncurry_getElem,DataArrayN.curry_getElem]
+-- instance : LawfulOfFn (α^[κ]^[ι]) (ι×κ)  where
+--   getElem_ofFn := by
+--     intro f (i,j)
+--     simp[DataArrayN.uncurry_getElem,DataArrayN.curry_getElem]
 
 
 set_option linter.dupNamespace false in

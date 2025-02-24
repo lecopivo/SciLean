@@ -1,7 +1,7 @@
 import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
-import SciLean.Data.ArrayN
+import SciLean.Data.DataArray
 
 set_option linter.unusedVariables false
 
@@ -16,7 +16,8 @@ namespace SciLean.Optimjl
 
 
 variable
-  {R : Type} [RealScalar R] [PlainDataType R] [ToString R]
+  {R : Type} [RealScalar R] [PlainDataType R]
+  [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] [ToString R]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [ToString X] [CompleteSpace X]
 
 
@@ -36,8 +37,8 @@ set_default_scalar R
 
 namespace LBFGS
 
-
-structure State (R X : Type) (m : ℕ) [Zero X] [Neg X] [RealScalar R] [PlainDataType R] where
+structure State (R X : Type) (m : ℕ) [Zero X] [Neg X] [RealScalar R] [PlainDataType R]
+   [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] where
    /-- current position `xₙ₊₁` -/
    x : X
    /-- previous position `xₙ`-/
@@ -57,11 +58,11 @@ structure State (R X : Type) (m : ℕ) [Zero X] [Neg X] [RealScalar R] [PlainDat
    /-- step direction `- (∇²f)⁻¹ ∇f` -/
    s : X := - g
    /-- position difference `xₙ₊₁-xₙ` -/
-   dx_history : ArrayN X m := 0
+   dx_history : Vector X m := ⊞ (i:Fin m) => (0:X)
    /-- gradient difference `∇f(xₙ₊₁)-∇f(xₙ)`-/
-   dg_history : ArrayN X m := 0
+   dg_history : Vector X m := ⊞ (i:Fin m) => (0:X)
    /-- ρₙ := 1 / ⟪∇f(xₙ₊₁) - ∇f(xₙ), xₙ₊₁ - xₙ⟫ -/
-   ρ : R^[m] := 0
+   ρ : R^[m] := (0 : R^[m])
    /-- -/
    pseudo_iteration : ℤ := 0
    -- /-- preconditioner scale -/

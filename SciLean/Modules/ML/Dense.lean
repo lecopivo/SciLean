@@ -7,12 +7,12 @@ namespace SciLean.ML
 
 
 variable
-  {R : Type} [RealScalar R] [PlainDataType R] {Array} [ScalarArray R Array]
+  {R : Type} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
   {ι : Type} [IndexType ι] [DecidableEq ι]
 
 set_default_scalar K
 
-def dense {Array} [ScalarArray R Array] (n : Nat)
+def dense [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] (n : Nat)
     (weights : R^[n,ι]) (bias : R^[n]) (x : R^[ι]) : R^[n] :=
   (weights * x + bias) rewrite_by simp[vector_optimize]
 
