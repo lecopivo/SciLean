@@ -305,6 +305,8 @@ import SciLean.Data.DataArray
 import SciLean.Data.DataArray.DataArray
 import SciLean.Data.DataArray.DataArrayEquiv
 import SciLean.Data.DataArray.Float
+import SciLean.Data.DataArray.FloatN
+import SciLean.Data.DataArray.FloatNN
 import SciLean.Data.DataArray.MatrixType
 -- import SciLean.Data.DataArray.Operations_old
 -- import SciLean.Data.DataArray.Operations_old.AntiSymmPart
@@ -336,7 +338,6 @@ import SciLean.Data.DataArray.MatrixType
 -- import SciLean.Data.DataArray.Operations_old.Vecmul
 import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.DataArray.RevDeriv
-import SciLean.Data.DataArray.VecN
 import SciLean.Data.DataArray.VectorType
 import SciLean.Data.FinProd
 import SciLean.Data.Float

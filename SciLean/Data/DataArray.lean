@@ -1,4 +1,6 @@
 import SciLean.Data.DataArray.DataArray
 import SciLean.Data.DataArray.PlainDataType
-import SciLean.Data.DataArray.VecN
+import SciLean.Data.DataArray.Float
+import SciLean.Data.DataArray.FloatN
+import SciLean.Data.DataArray.FloatNN
 import SciLean.Data.DataArray.VectorType

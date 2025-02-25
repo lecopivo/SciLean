@@ -7,7 +7,7 @@ Surface Mesh based on discrete differential geometry.
 https://github.com/GeometryCollective/geometry-processing-js/blob/c7ea47ae808979a5361e3fcd61bf921a194bf897/core/mesh.js#L3-L213
 -/
 
-import SciLean.Data.DataArray.VecN
+import SciLean.Data.DataArray.FloatN
 import Lean.Data.HashMap
 
 open Lean Data
@@ -66,7 +66,7 @@ deriving Inhabited
  * @property {Array.<module:Core.Halfedge[]>} generators An array of halfedge arrays, i.e.,
  -/
 structure SurfaceMesh where
-  positions  : Array SciLean.Vec3 := {}
+  positions  : Array SciLean.Float3 := {}
   vertices   : Array Vertex := {}
   edges      : Array Edge := {}
   faces      : Array Face := {}
@@ -285,7 +285,7 @@ partial def MeshBuilderM.assertNoIsolatedFaces : MeshBuilderM Unit := return ()
 partial def MeshBuilderM.assertNoNonManifoldVertices : MeshBuilderM Unit := return ()
 
 partial def MeshBuilderM.build_
-  (positions : Array (SciLean.Vec3)) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit := do {
+  (positions : Array (SciLean.Float3)) (indices : Array (Index ``Vertex)) : MeshBuilderM Unit := do {
   let mut existingHalfedges :
       Std.HashMap (Index `Vertex × Index `Vertex) (Index `Halfedge) := {};
   let mut edgeCount :
@@ -388,15 +388,15 @@ def MeshBuilderM.run (mb : MeshBuilderM Unit) : Except MeshBuilderError SurfaceM
   | .error  err _ => .error err
 
 
-def SurfaceMesh.build (positions: Array (SciLean.Vec3)) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build (positions: Array (SciLean.Float3)) (indices: Array (Index ``Vertex)) :
   Except MeshBuilderError SurfaceMesh :=
   (MeshBuilderM.build_ positions indices).run
 
-def SurfaceMesh.build' (positions: Array (SciLean.Vec3)) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build' (positions: Array (SciLean.Float3)) (indices: Array (Index ``Vertex)) :
   Option SurfaceMesh :=
   (build positions indices).toOption
 
-def SurfaceMesh.build! (positions: Array (SciLean.Vec3)) (indices: Array (Index ``Vertex)) :
+def SurfaceMesh.build! (positions: Array (SciLean.Float3)) (indices: Array (Index ``Vertex)) :
   SurfaceMesh := (build' positions indices).get!
 
 /-
@@ -415,7 +415,7 @@ def randFloat01 [G : RandomGen γ] (gen : γ) : Float × γ := Id.run do
   return ((Float.ofNat <| val - lo) / (Float.ofNat <| hi - lo), gen)
 
 /-- Create a random vertex with coordinates sampled from uniform [0, 1] -/
-def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Vec3 × γ := Id.run do
+def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Float3 × γ := Id.run do
   let (val1, gen) := randFloat01 gen
   let (val2, gen) := randFloat01 gen
   let (val3, gen) := randFloat01 gen
@@ -424,12 +424,12 @@ def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Vec3 × γ := Id.run do
 
 /-- Create `nvertices` random vertices with coordinates sampled from [-scale/2, scale/2] -/
 def randVertices [RandomGen γ]
- (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array (SciLean.Vec3)) × γ := Id.run do
-  let mut out : Array (SciLean.Vec3) := #[]
+ (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array (SciLean.Float3)) × γ := Id.run do
+  let mut out : Array (SciLean.Float3) := #[]
   let mut gen := gen
   for _ in Array.range nvertices do
     let (vertex, gen') := randVertex01 gen; gen := gen'
-    let vertex : (SciLean.Vec3) := SciLean.ArrayType.mapMono (fun coord => (coord - 0.5) * scale) vertex
+    let vertex : (SciLean.Float3) := ⊞ i => (vertex[i] - 0.5) * scale
     out := out.push vertex
   return (out, gen)
 
@@ -459,16 +459,16 @@ def SurfaceMesh.rand [RandomGen γ] (gen : γ) (nvertices : Nat) (nfaces : Nat) 
 
 
 /-- Coerce a list of reals into a vector. Throws a ParseError if length of list is not 3 -/
-def V3.ofList : List Float → MeshBuilderM (SciLean.Vec3)
+def V3.ofList : List Float → MeshBuilderM (SciLean.Float3)
 | [x, y, z] => pure { x := x, y := y, z := z }
 | xs => throw <| MeshBuilderError.parseError s!"unable to convert list to vertex '{xs}'"
 
-def V3.ofArray (xs : Array Float) : MeshBuilderM (SciLean.Vec3) :=
+def V3.ofArray (xs : Array Float) : MeshBuilderM (SciLean.Float3) :=
   return (⟨xs[0]!, xs[1]!, xs[2]!⟩)
 
 /-- Load the mesh data from a .OFF format string -/
 def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
-  let mut vertices : Array (SciLean.Vec3) := #[]
+  let mut vertices : Array (SciLean.Float3) := #[]
   let mut faces : Array Nat := #[]
   let mut i := 0
   if lines[i]!.trim != "OFF"

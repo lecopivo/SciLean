@@ -19,13 +19,9 @@ class DataArrayEquiv (X : Type*) (I : Type*) (K : Type*)
 It is an abbreviation for `DataArrayEquiv.equiv (K:=K)`.
 
 Often used with as `dataArrayEquiv Float` or `dataArrayEquiv ComplexFloat`. -/
-abbrev dataArrayEquiv {X : Type*} (K I : Type*)
+abbrev dataArrayEquiv {X : Type*} (I K : Type*)
     [IndexType I] [PlainDataType K] [DataArrayEquiv X I K] :
     X ≃ K^[I] := DataArrayEquiv.equiv
-
-abbrev dataArrayEquivSymm (X : Type*) {K I : Type*}
-    [IndexType I] [PlainDataType K] [DataArrayEquiv X I K] :
-    K^[I] ≃ X := DataArrayEquiv.equiv.symm
 
 -- base case
 instance {I} [IndexType I] {K} [PlainDataType K] :
@@ -67,6 +63,12 @@ instance {K I : Type*} [PlainDataType K] [IndexType I] [IndexType J] [PlainDataT
     [DefaultDataArrayEquiv X J K] :
     DefaultDataArrayEquiv (X^[I]) (I×J) K where
 
+abbrev toRn {X I K : Type*} [IndexType I] [PlainDataType K] [DefaultDataArrayEquiv X I K]
+  (x : X) : K^[I] := dataArrayEquiv I K x
+
+abbrev fromRn {X I K : Type*} [IndexType I] [PlainDataType K] [DefaultDataArrayEquiv X I K]
+  (x : K^[I]) : X := (dataArrayEquiv I K).symm x
+
 
 ----------------------------------------------------------------------------------------------------
 -- Get Element -------------------------------------------------------------------------------------
@@ -78,7 +80,7 @@ instance {I J} [IndexType I] [IndexType J]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     GetElem (X^[I]) (I×J) K (fun _ _ => True) where
   getElem xs ij _ :=
-    let scalarArray := dataArrayEquiv K (I×J) xs
+    let scalarArray := dataArrayEquiv (I×J) K xs
     scalarArray[ij]
 
 /-- `x[i,j] = x[i][j]` for `x : X^[I]` -/
@@ -87,7 +89,7 @@ instance {I J} [IndexType I] [IndexType J]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     IsGetElemCurry (X^[I]) I J where
   getElem_curry := by
-    apply (Equiv.forall_congr_left (dataArrayEquiv (X:=X^[I]) (K:=K) (I:=(I×J))) (p:=fun x => ∀ ij, x[ij] = _)).2
+    apply (Equiv.forall_congr_left (dataArrayEquiv (K:=K) (X:=X^[I]) (I:=(I×J))) (p:=fun x => ∀ ij, x[ij] = _)).2
     intro x ij
     -- not sure if this is provable, we need
     --   `∀ j, x[j] = ((dataArrayEquiv K).symm x)[j]`
@@ -113,7 +115,7 @@ instance {I J} [IndexType I] [IndexType J]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     SetElem (X^[I]) (I×J) K (fun _ _ => True) where
   setElem xs ij v _ :=
-    let scalarArray := dataArrayEquiv K (I×J) xs
+    let scalarArray := dataArrayEquiv (I×J) K xs
     (dataArrayEquiv _ _).symm (setElem scalarArray ij v .intro)
   setElem_valid := by simp
 
