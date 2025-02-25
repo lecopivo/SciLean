@@ -7,14 +7,14 @@ import SciLean.Tactic.IfPull
 namespace SciLean
 
 @[fun_prop]
-theorem getElem.arg_xs.IsLinearMap_rule {𝕜 X I Y : Type*} [GetElem X I Y (fun _ _ => True)]
+theorem getElem.arg_xs.IsLinearMap_rule {𝕜 X I Y : Type*} [GetElem' X I Y]
     [Ring 𝕜] [AddCommGroup X] [Module 𝕜 X] [AddCommGroup Y] [Module 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] (i : I) :
     IsLinearMap 𝕜 (fun x : X => x[i]) := by constructor <;> (intros; simp)
 
 @[fun_prop]
 theorem getElem.arg_xs.IsContinuousLinearMap_rule {𝕜 X I Y : Type*}
-    [GetElem X I Y (fun _ _ => True)] [Ring 𝕜]
+    [GetElem' X I Y] [Ring 𝕜]
     [AddCommGroup X] [Module 𝕜 X] [TopologicalSpace X]
     [AddCommGroup Y] [Module 𝕜 Y] [TopologicalSpace Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (i : I) :
@@ -23,7 +23,7 @@ theorem getElem.arg_xs.IsContinuousLinearMap_rule {𝕜 X I Y : Type*}
 
 @[data_synth]
 theorem getElem.arg_xs.HasFDerivAt_rule {𝕜 X I Y : Type*}
-    [GetElem X I Y (fun _ _ => True)] [RCLike 𝕜]
+    [GetElem' X I Y] [RCLike 𝕜]
     [NormedAddCommGroup X] [NormedSpace 𝕜 X]
     [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (i : I) (x₀ : X) :
@@ -32,7 +32,7 @@ theorem getElem.arg_xs.HasFDerivAt_rule {𝕜 X I Y : Type*}
 
 @[data_synth]
 theorem getElem.arg_xs.HasAdjoint_rule_free_index {𝕜 X I Y : Type*}
-    [GetElem X I Y (fun _ _ => True)] [OfFn X I Y] [LawfulOfFn X I] [IndexType I] [RCLike 𝕜]
+    [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I] [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] :
     HasAdjoint 𝕜
@@ -47,8 +47,8 @@ theorem getElem.arg_xs.HasAdjoint_rule_free_index {𝕜 X I Y : Type*}
 open Classical
 @[data_synth]
 theorem getElem.arg_xs.HasAdjoint_rule_applied_index {𝕜 X I Y : Type*}
-    [GetElem X I Y (fun _ _ => True)] [OfFn X I Y] [LawfulOfFn X I]
-    [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
+    [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I]
+    [SetElem' X I Y] [LawfulSetElem X I]
     [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
@@ -63,8 +63,8 @@ theorem getElem.arg_xs.HasAdjoint_rule_applied_index {𝕜 X I Y : Type*}
 
 @[data_synth]
 theorem getElem.arg_xs.HasAdjointUpdate_rule_applied_index {𝕜 X I Y : Type*}
-    [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
-    [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
+    [GetElem' X I Y] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
+    [SetElem' X I Y] [LawfulSetElem X I]
     [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
@@ -83,8 +83,8 @@ theorem getElem.arg_xs.HasAdjointUpdate_rule_applied_index {𝕜 X I Y : Type*}
 
 @[data_synth]
 theorem getElem.arg_xs.HasRevFDeriv_rule_applied_index {𝕜 X I Y : Type*}
-    [GetElem X I Y (fun _ _ => True)] [OfFn X I Y] [LawfulOfFn X I]
-    [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
+    [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I]
+    [SetElem' X I Y] [LawfulSetElem X I]
     [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
@@ -101,8 +101,8 @@ theorem getElem.arg_xs.HasRevFDeriv_rule_applied_index {𝕜 X I Y : Type*}
 
 @[data_synth]
 theorem getElem.arg_xs.HasRevFDerivUpdate_rule_applied_index {𝕜 X I Y : Type*}
-    [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
-    [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
+    [GetElem' X I Y] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
+    [SetElem' X I Y] [LawfulSetElem X I]
     [IndexType I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
