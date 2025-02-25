@@ -1,7 +1,6 @@
 import SciLean.Data.DataArray.VectorType
 import SciLean.Data.DataArray.MatrixType
 import SciLean.Data.DataArray.Float
-import SciLean.Data.VectorType.Base
 
 open SciLean
 
@@ -23,6 +22,29 @@ example : AddCommGroup (R^[10]) := by infer_instance
 example : AddCommGroup (Float^[10]) := by infer_instance
 
 example : MatrixType.Base (R^[2, 2]) (R^[2]) (R^[2]) := by infer_instance
+
+example : GetElem' (Float^[n]^[m]) (Fin m×Fin n) Float := by infer_instance
+example : IsAddGetElem (Float^[n]^[m]) (Fin m × Fin n) := by infer_instance
+example : IsNegGetElem (Float^[n]^[m]) (Fin m × Fin n) := by infer_instance
+example : IsModuleGetElem Float (Float^[n]^[m]) (Fin m × Fin n) := by infer_instance
+example : IsInnerGetElem Float (Float^[n]^[m]) (Fin m × Fin n) := by infer_instance
+example : IsContinuousGetElem (Float^[n]^[m]) (Fin m × Fin n) := by infer_instance
+
+example : GetElem' (Float^[n]^[m]) (Fin m) (Float^[n]) := by infer_instance
+-- example : IsAddGetElem (Float^[n]^[m]) (Fin m) := by infer_instance
+-- example : IsNegGetElem (Float^[n]^[m]) (Fin m) := by infer_instance
+example : IsModuleGetElem Float (Float^[n]^[m]) (Fin m) := by infer_instance
+example : IsInnerGetElem Float (Float^[n]^[m]) (Fin m) := by infer_instance
+-- example : IsContinuousGetElem (Y:=Float^[n]) (Float^[n]^[m]) (Fin m) := by
+
+example : GetElem' (Float^[k]^[n]^[m]) (Fin m) (Float^[k]^[n]) := by infer_instance
+-- example : IsModuleGetElem Float (Float^[k]^[n]^[m]) (Fin m) := by infer_instance
+
+example : GetElem' (Float^[k]^[n]^[m]) (Fin m×Fin n) (Float^[k]) := by infer_instance
+-- example : IsModuleGetElem Float (Float^[k]^[n]^[m]) (Fin m×Fin n) := by infer_instance
+
+example : GetElem' (Float^[k]^[n]^[m]) (Fin m×Fin n×Fin k) (Float) := by infer_instance
+example : IsModuleGetElem Float (Float^[k]^[n]^[m]) (Fin m×Fin n×Fin k) := by infer_instance
 
 
 /-- info: ⊞[211.000000, 423.000000] -/
