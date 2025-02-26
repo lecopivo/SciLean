@@ -367,13 +367,24 @@ theorem DataArrayN.curry_getElem (x : DataArrayN α (ι×κ)) (i : ι) (j : κ) 
 
 set_option linter.dupNamespace false in
 open Lean in
-private partial def parseDimProd (s : Syntax) : Lean.PrettyPrinter.UnexpandM (TSyntaxArray `dimSpec) :=
+partial def parseDimProd (s : Syntax) : Lean.PrettyPrinter.UnexpandM (TSyntaxArray `dimSpec) := do
   match s with
-  | `(Fin $n)      => return #[⟨n.raw⟩]
-  | `(↑(Set.Icc $a $b))      => return #[← `(dimSpec| [$a :$b])]
-  | `(Fin $n × $I) => return #[⟨n.raw⟩] ++ (← parseDimProd I)
-  | `($J × $I)     => return #[⟨J.raw⟩] ++ (← parseDimProd I)
-  | `($I)          => return #[⟨I.raw⟩]
+  | .node _ ``coeNotation #[.atom _ "↑", .node _ ``Lean.Parser.Term.app #[.ident _ _ ``Set.Icc _,.node _ _ #[a,b]]] =>
+    let a : Term := ⟨a⟩
+    let b : Term := ⟨b⟩
+    return #[← `(dimSpec| [$a :$b])]
+  | _ =>
+    match s with
+    | `(Fin $n)      => return #[⟨n.raw⟩]
+    | `($J × $I)     =>
+      let js ← parseDimProd J
+      let is ← parseDimProd I
+      if js.size = 1 then
+        return js ++ is
+      else
+        return #[← `(dimSpec| [$js,*])] ++ is
+    | `($I)          => return #[⟨I.raw⟩]
+
 
 @[app_unexpander DataArrayN]
 def unexpandDataArrayN : Lean.PrettyPrinter.Unexpander
