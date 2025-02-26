@@ -1,7 +1,7 @@
 import SciLean.Data.DataArray.DataArray
 import SciLean.Data.ArrayOperations.Operations
 
-namespace SciLean.DataArray
+namespace SciLean.DataArrayN
 
 variable {X : Type*} [PlainDataType X] {I : Type*} [IndexType I]
 
