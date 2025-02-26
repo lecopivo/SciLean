@@ -3,6 +3,9 @@ import SciLean.Data.ListN
 import SciLean.Data.ArrayLike
 import SciLean.Lean.Meta.Basic
 import Batteries.Lean.Expr
+
+import Mathlib.Data.Matrix.Notation
+
 import Qq
 
 
@@ -185,13 +188,14 @@ def ofFnElab : TermElab := fun stx expectedType? =>
 ------------------------
 
 /-- A notation for creating a `DataArray` from a list of elements. -/
-syntax (name := dataArrayNotation) (priority:=high)
+syntax (name := ofFnExplicitNotation) (priority:=high)
   "⊞[" ppRealGroup(sepBy1(ppGroup(term,+,?), ";", "; ", allowTrailingSep)) "]" : term
 
 
-open Lean Qq Elab Term in
-/-- Elaborate a `⊞[...]` notation into a `ArrayType.ofFn` term. -/
-elab_rules (kind := dataArrayNotation) : term
+open Term Function Elab Term Meta in
+@[term_elab ofFnExplicitNotation]
+def ofFnExplicitElab : TermElab := fun stx expectedType? =>
+  match stx with
   | `(⊞[$[$[$rows],*];*]) => do
     let m := rows.size
     let n := if h : 0 < m then rows[0].size else 0
@@ -208,31 +212,29 @@ elab_rules (kind := dataArrayNotation) : term
     let m := Syntax.mkNumLit (toString rows.size)
 
     if rows.size = 1 then
-      let dataArray := mkIdent `SciLean.DataArrayN
       let fn ←
-        elabTerm (←`(@ArrayType.ofFn ($dataArray _ _) _ _ _
-                      fun (i : Fin $n) => [$elems,*].get! i.1)) none
+        elabTerm (←`(⊞ (i : Fin $n) => ![$elems,*] i)) expectedType?
 
       return fn
     else
-      let dataArray := mkIdent `SciLean.DataArrayN
       let fn ←
-        elabTerm (←`(@ArrayType.ofFn ($dataArray _ _) _ _ _
-                      fun ((i,j) : Fin $m × Fin $n) => [$elems,*].get! (IndexType.toFin (i,j)).1)) none
-      return fn
+        elabTerm (←`(⊞ (i : Fin $m) (j : Fin $n) => !![$[$[$rows],*];*] i j))
+          expectedType?
 
+      return fn
+  | _ => throwUnsupportedSyntax
 
 
 @[app_unexpander ofFn]
 def unexpandArrayTypeOfFnNotation : Lean.PrettyPrinter.Unexpander
   | `($(_) $f) =>
     match f with
-    | `(fun $_ => [$xs,*].get! ↑$_) =>
+    | `(fun $_ => ![$xs,*] $_) =>
       `(⊞[$xs,*])
     | `(fun $x => $b) =>
       `(⊞ $x:term => $b)
-    | `(HasUncurry.uncurry (fun $xs* => $b)) =>
-      `(⊞ $xs* => $b)
+    | `(↿fun $_ $_ => !![$[$[$xs],*];*] $_ $_) =>
+      `(⊞[$[$[$xs],*];*])
     | `(↿fun $xs* => $b) =>
       `(⊞ $xs* => $b)
     | _ => throw ()

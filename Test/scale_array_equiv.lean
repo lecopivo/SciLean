@@ -47,6 +47,18 @@ example : GetElem' (Float^[k]^[n]^[m]) (Fin m×Fin n×Fin k) (Float) := by infer
 example : IsModuleGetElem Float (Float^[k]^[n]^[m]) (Fin m×Fin n×Fin k) := by infer_instance
 
 
+/-- info: ⊞[1.0, 2, 3] : Float^[3] -/
+#guard_msgs in
+#check ⊞[1.0,2,3]
+
+/-- info: ⊞[1.0, 2, 3] : Vector Float 3 -/
+#guard_msgs in
+#check (⊞[1.0,2,3] : Vector Float 3)
+
+/-- info: ⊞[1.0, 2; 3, 4] : Float^[2, 2] -/
+#guard_msgs in
+#check ⊞[1.0,2;3,4]
+
 /-- info: ⊞[211.000000, 423.000000] -/
 #guard_msgs in
 #eval MatrixType.gemv 1.0 1.0 ⊞[1.0,2;3,4] ⊞[1.0,100.0] ⊞[10.0,20.0]
