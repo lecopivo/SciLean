@@ -26,3 +26,16 @@ It is just and abbreviation for a call to `IndexType.reduce` which does reductio
 type `I`. -/
 abbrev reduce [Inhabited X] (op : X → X → X) (xs : X^[I]) : X :=
   IndexType.reduce (fun (i:I) => xs[i]) op
+
+
+/-- Reshape array to one dimensional array of `n` elements. -/
+abbrev reshape1 (x : X^[I]) (n : Nat) (h : size I = n) : X^[n] :=
+  x.reshape (Fin n) (by simp_all)
+
+/-- Reshape array to two dimensional array. -/
+abbrev reshape2 (x : X^[I]) (m n : Nat) (h : size I = m*n) : X^[m,n] :=
+  x.reshape (Fin m × Fin n) (by simp_all)
+
+/-- Reshape array to three dimensional array. -/
+abbrev reshape3 (x : X^[I]) (l m n : Nat) (h : size I = l*m*n) : X^[l,m,n] :=
+  x.reshape (Fin l × Fin m × Fin n) (by simp_all; ac_rfl)
