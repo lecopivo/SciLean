@@ -367,16 +367,17 @@ theorem DataArrayN.curry_getElem (x : DataArrayN α (ι×κ)) (i : ι) (j : κ) 
 
 set_option linter.dupNamespace false in
 open Lean in
-private partial def parseDimProd (s : Syntax) : TSyntaxArray `dimSpec :=
+private partial def parseDimProd (s : Syntax) : Lean.PrettyPrinter.UnexpandM (TSyntaxArray `dimSpec) :=
   match s with
-  | `(Fin $n)      => #[⟨n.raw⟩]
-  | `(Fin $n × $I) => #[⟨n.raw⟩] ++ parseDimProd I
-  | `($J × $I)     => #[⟨J.raw⟩] ++ parseDimProd I
-  | `($I)          => #[⟨I.raw⟩]
+  | `(Fin $n)      => return #[⟨n.raw⟩]
+  | `(↑(Set.Icc $a $b))      => return #[← `(dimSpec| [$a :$b])]
+  | `(Fin $n × $I) => return #[⟨n.raw⟩] ++ (← parseDimProd I)
+  | `($J × $I)     => return #[⟨J.raw⟩] ++ (← parseDimProd I)
+  | `($I)          => return #[⟨I.raw⟩]
 
 @[app_unexpander DataArrayN]
 def unexpandDataArrayN : Lean.PrettyPrinter.Unexpander
-  | `($(_) $α $I) =>
-    let dims := parseDimProd I
+  | `($(_) $α $I) => do
+    let dims ← parseDimProd I
     `($α^[$dims,*])
   | _  => throw ()
