@@ -290,6 +290,7 @@ import SciLean.Data.ArrayLike
 import SciLean.Data.ArrayN
 import SciLean.Data.ArrayOperations.Algebra
 import SciLean.Data.ArrayOperations.Basic
+import SciLean.Data.ArrayOperations.Operations
 import SciLean.Data.ArrayOperations.Operations.GetElem
 import SciLean.Data.ArrayOperations.Operations.OfFn
 import SciLean.Data.ArrayOperations.Operations.SetElem
@@ -308,6 +309,7 @@ import SciLean.Data.DataArray.Float
 import SciLean.Data.DataArray.FloatN
 import SciLean.Data.DataArray.FloatNN
 import SciLean.Data.DataArray.MatrixType
+import SciLean.Data.DataArray.Operations
 -- import SciLean.Data.DataArray.Operations_old
 -- import SciLean.Data.DataArray.Operations_old.AntiSymmPart
 -- import SciLean.Data.DataArray.Operations_old.Cross
