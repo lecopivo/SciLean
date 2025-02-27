@@ -406,6 +406,13 @@ abbrev_data_synth MatrixType.gemv in A
 -- HMul notation -----------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+@[fun_prop]
+theorem HMul.hMul.arg_a0a1.Differentiable_rule_matVec_mul.{u_1, u_2, u_3, u_4, u_5, u_6, u_7} {M : Type u_1} {m : Type u_2}
+  {n : Type u_3} [IndexType m] [IndexType n] {R : Type u_4} {K : Type u_5} [RealScalar R] [Scalar R K] {X : Type u_6}
+  {Y : Type u_7} [VectorType.Base X n K] [VectorType.Base Y m K] [MatrixType.Base M X Y] [InjectiveGetElem M (m × n)]
+  [MatrixType.Dense M] [InjectiveGetElem X n] [InjectiveGetElem Y m] :
+  Differentiable K (fun Ax : M×X => Ax.1 * Ax.2) := by simp[HMul.hMul]; fun_prop
+
 @[fun_trans]
 theorem _root_.HMul.hMul.arg_a0a1.revFDeriv_rule_matVec_mul
     {M m n : Type*} [IndexType m] [IndexType n]
