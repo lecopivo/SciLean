@@ -30,7 +30,7 @@ This class is designed to provide Basic Linear Algebra Subprograms(BLAS) which a
 vector space structure on `X` that is computationally efficient.
  -/
 class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)] {R : outParam (Type*)}  (K : outParam (Type*))
-        [outParam (RealScalar R)] [outParam (Scalar R K)]
+        [ (RealScalar R)] [ (Scalar R K)]
   extends
     GetElem X n K (fun _ _ => True)
   where
