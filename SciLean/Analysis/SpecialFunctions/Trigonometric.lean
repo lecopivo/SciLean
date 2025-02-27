@@ -61,7 +61,7 @@ abbrev_fun_trans sin in x : revCDeriv K by unfold revCDeriv; fun_trans; to_ssa
 def_fun_prop cos in x with_transitive : Differentiable K by sorry_proof
 def_fun_prop cos in x with_transitive : ContDiff K ⊤ by sorry_proof
 
-abbrev_fun_trans cos in x : fderiv K by equals (fun x => fun dx =>L[K] (-dx) • cos x) => sorry_proof
+abbrev_fun_trans cos in x : fderiv K by equals (fun x => fun dx =>L[K] (-dx) • sin x) => sorry_proof
 abbrev_fun_trans cos in x : fwdFDeriv K by unfold fwdFDeriv; fun_trans; to_ssa
 abbrev_fun_trans cos in x : revFDeriv K by unfold revFDeriv; fun_trans; to_ssa
 
