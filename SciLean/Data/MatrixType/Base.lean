@@ -182,7 +182,7 @@ theorem inner_spec (A B : M) : ⟪A, B⟫ = ⟪toMatrix A, toMatrix B⟫ := by
 -- theorem dist_spec (A B : M) : dist A B = ‖toMatrix A - toMatrix B‖ := by
 --   simp only [dist, Norm.dist, norm, Norm.norm, Scalar.toReal, nrm2, matrix_to_spec]
 
-instance : HMul M X Y := ⟨fun A x => MatrixType.gemv (1:K) (1:K) A x (0:Y)⟩
+instance : HMul M X Y := ⟨fun A x => MatrixType.gemv (1:K) (0:K) A x (0:Y)⟩
 
 end BasicOperations
 

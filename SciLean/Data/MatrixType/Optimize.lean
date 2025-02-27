@@ -18,10 +18,12 @@ open VectorType MatrixType
 
 
 --- arithmetic operations to axp(b)y and scal
+-- fun_trans, fun_prop, data_synth can't deal with such polymorphic multiplication
+-- so we simplify it down to gemv immediatelly
 omit [InjectiveGetElem X n] [InjectiveGetElem Y m] [InjectiveGetElem M (m × n)] in
-@[vector_optimize]
+@[vector_optimize, simp ↓, simp_core ↓]
 theorem matMul_eq_gemv (A : M) (x : X) :
-    A * x = gemv 1 1 A x 0 := by rfl
+    A * x = gemv 1 0 A x 0 := by rfl
 
 
 --  gemv and axpby
