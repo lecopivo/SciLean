@@ -400,3 +400,168 @@ abbrev_data_synth MatrixType.gemv in A
             (hf:=by data_synth)
   case simp =>
     conv => rhs; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+
+----------------------------------------------------------------------------------------------------
+-- HMul notation -----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+@[fun_trans]
+theorem _root_.HMul.hMul.arg_a0a1.revFDeriv_rule_matVec_mul
+    {M m n : Type*} [IndexType m] [IndexType n]
+    {R K : Type*} [RealScalar R] [Scalar R K]
+    {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
+    [InjectiveGetElem X n] [InjectiveGetElem Y m] :
+    revFDeriv K (fun Ax : M×X => Ax.1 * Ax.2)
+    =
+    fun Ax =>
+      let' (A,x) := Ax
+      (A*x, fun dy =>
+        let dA := MatrixType.Dense.outerprodAdd 1 dy x (0:M)
+        let dx := MatrixType.Base.gemvH 1 0 A dy (0:X)
+        (dA,dx)) := by
+  simp[HMul.hMul]
+  fun_trans
+
+@[data_synth]
+theorem _root_.HMul.hMul.arg_a0a1.HasRevFDeriv_rule_matVec_mul
+    {M m n : Type*} [IndexType m] [IndexType n]
+    {R K : Type*} [RealScalar R] [Scalar R K]
+    {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
+    [InjectiveGetElem X n] [InjectiveGetElem Y m] :
+    HasRevFDeriv K
+      (fun Ax : M×X => Ax.1 * Ax.2)
+      (fun Ax =>
+        let' (A,x) := Ax
+        (A*x, fun dy =>
+          let dA := MatrixType.Dense.outerprodAdd 1 dy x (0:M)
+          let dx := MatrixType.Base.gemvH 1 0 A dy (0:X)
+          (dA,dx))) := by
+  sorry_proof -- some issue computing `HasFDerivAt` here
+  -- apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  -- simp [HMul.hMul]
+  -- case deriv => intros; data_synth -- some problem assigning the result, has to be a bug in `data_synth`
+  -- case adjoint => sorry
+  -- case simp => sorry
+
+-- argument subset - todo: automate this!
+@[data_synth]
+theorem _root_.HMul.hMul.arg_a0.HasRevFDeriv_rule_matVec_mul
+    {M m n : Type*} [IndexType m] [IndexType n]
+    {R K : Type*} [RealScalar R] [Scalar R K]
+    {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
+    [InjectiveGetElem X n] [InjectiveGetElem Y m] (x : X) :
+    HasRevFDeriv K
+      (fun A : M => A * x)
+      (fun A =>
+        (A*x, fun dy =>
+          let dA := MatrixType.Dense.outerprodAdd 1 dy x (0:M)
+          dA)) := by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+            (g:=fun A : M => (A,x))
+            (f:=fun Ax : M×X => Ax.1 * Ax.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp => simp
+
+-- argument subset - todo: automate this!
+@[data_synth]
+theorem _root_.HMul.hMul.arg_a1.HasRevFDeriv_rule_matVec_mul
+    {M m n : Type*} [IndexType m] [IndexType n]
+    {R K : Type*} [RealScalar R] [Scalar R K]
+    {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
+    [InjectiveGetElem X n] [InjectiveGetElem Y m] (A : M) :
+    HasRevFDeriv K
+      (fun x : X => A * x)
+      (fun x =>
+        (A*x, fun dy =>
+          let dx := MatrixType.Base.gemvH 1 0 A dy (0:X)
+          dx)) := by
+  apply hasRevFDeriv_from_hasRevFDeriv
+  case deriv =>
+    apply HasRevFDeriv.comp_rule
+            (g:=fun x : X => (A,x))
+            (f:=fun Ax : M×X => Ax.1 * Ax.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp => simp
+
+
+@[data_synth]
+theorem _root_.HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule_matVec_mul
+    {M m n : Type*} [IndexType m] [IndexType n]
+    {R K : Type*} [RealScalar R] [Scalar R K]
+    {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
+    [InjectiveGetElem X n] [InjectiveGetElem Y m] :
+    HasRevFDerivUpdate K
+      (fun Ax : M×X => Ax.1 * Ax.2)
+      (fun Ax =>
+        let' (A,x) := Ax
+        (A*x, fun dy dAx =>
+          let' (dA,dx) := dAx
+          let dA := MatrixType.Dense.outerprodAdd 1 dy x dA
+          let dx := MatrixType.Base.gemvH 1 1 A dy dx
+          (dA,dx))) := by
+  sorry_proof -- some issue computing `HasFDerivUpdateAt` here
+  -- apply hasRevFDerivUpdate_from_hasFDerivUpdateAt_hasAdjoint
+  -- simp [HMul.hMul]
+  -- case derivUpdate => intros; data_synth -- some problem assigning the result, has to be a bug in `data_synth`
+  -- case adjoint => sorry
+  -- case simp => sorry
+
+-- argument subset - todo: automate this!
+@[data_synth]
+theorem _root_.HMul.hMul.arg_a0.HasRevFDerivUpdate_rule_matVec_mul
+    {M m n : Type*} [IndexType m] [IndexType n]
+    {R K : Type*} [RealScalar R] [Scalar R K]
+    {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
+    [InjectiveGetElem X n] [InjectiveGetElem Y m] (x : X) :
+    HasRevFDerivUpdate K
+      (fun A : M => A * x)
+      (fun A =>
+        (A*x, fun dy dA =>
+          let dA := MatrixType.Dense.outerprodAdd 1 dy x dA
+          dA)) := by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+            (g:=fun A : M => (A,x))
+            (f:=fun Ax : M×X => Ax.1 * Ax.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    funext A; simp; funext dy dA; ext ⟨i,j⟩
+    simp[vector_to_spec]; ac_rfl
+
+-- argument subset - todo: automate this!
+@[data_synth]
+theorem _root_.HMul.hMul.arg_a1.HasRevFDerivUpdate_rule_matVec_mul
+    {M m n : Type*} [IndexType m] [IndexType n]
+    {R K : Type*} [RealScalar R] [Scalar R K]
+    {X Y : Type*} [VectorType.Base X n K] [VectorType.Base Y m K]
+    [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
+    [InjectiveGetElem X n] [InjectiveGetElem Y m] (A : M) :
+    HasRevFDerivUpdate K
+      (fun x : X => A * x)
+      (fun x =>
+        (A*x, fun dy dx =>
+          let dx := MatrixType.Base.gemvH 1 1 A dy dx
+          dx)) := by
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv =>
+    apply HasRevFDerivUpdate.comp_rule
+            (g:=fun x : X => (A,x))
+            (f:=fun Ax : M×X => Ax.1 * Ax.2)
+            (hg:=by data_synth)
+            (hf:=by data_synth)
+  case simp =>
+    funext A; simp; funext dy dx; ext i; simp
+    simp [vector_to_spec]; ac_rfl
