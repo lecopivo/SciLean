@@ -21,7 +21,7 @@ abbrev LineSearchM (Method State : Type) :=
 
 
 variable (R)
-class LineSearch (Method State : Type) where
+class LineSearch (Method : Type) (State : outParam Type) where
   /-- Line search finds `x` such that `φ x ≤ φ 0 + c₁ * x * dφ 0`. -/
   c₁ (method : Method) : R
 
@@ -32,7 +32,7 @@ class LineSearch (Method State : Type) where
   summary (method : Method) (verbose := false) : String
 
 
-class LineSearch0 (Method State : Type) extends LineSearch R Method State where
+class LineSearch0 (Method : Type) (State : outParam Type) extends LineSearch R Method State where
   /-- Find `x` such that `φ x ≤ φ 0 + c₁ * x * dφ 0`. Return `x` and `φ x`.
 
   Method using only function values and derivative information at the beggining. -/
@@ -40,7 +40,7 @@ class LineSearch0 (Method State : Type) extends LineSearch R Method State where
     LineSearchM Method State (R×R) := throw .notSupported
 
 
-class LineSearch1 (Method State : Type) extends LineSearch R Method State where
+class LineSearch1 (Method : Type) (State : outParam Type) extends LineSearch R Method State where
   /-- Find `x` such that `φ x ≤ φ 0 + c₁ * x * dφ 0`. Return `x` and `φ x`.
 
   First order method using derivative information. -/

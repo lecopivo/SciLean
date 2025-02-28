@@ -31,8 +31,8 @@ open BFGS in
 structure BFGS extends Options R where
   /-- Linear search that finds appropriate `α` `xₙ₊₁ = xₙ + α • sₙ` -/
   lineSearch : LineSearch0Obj R := .mk (BackTracking R) {}
-  /-- Guess initial `α` to try given function value and gradient -/
-  alphaguess (φ₀ dφ₀ : R) (d : ObjectiveFunction R (R^[n])) : R := 1
+  -- /-- Guess initial `α` to try given function value and gradient -/
+  -- alphaguess (φ₀ dφ₀ : R) (d : ObjectiveFunction R (R^[n])) : R := 1
   /-- How to initialize inverse Hessian at the start.
 
   This is also use on gradient reset when invalid   -/
@@ -105,7 +105,8 @@ def perform_linesearch (method : BFGS R) (state : State R n) (d : ObjectiveFunct
 
   let φ₀ := state.f_x
 
-  state.alpha := method.alphaguess φ₀ dφ₀ d
+  state.alpha := method.init_alpha
+    -- method.alphaguess φ₀ dφ₀ d
 
   state.f_x_previous := φ₀
   state.x_previous   := state.x
@@ -244,6 +245,7 @@ end BFGS
 set_option linter.unusedVariables false in
 instance {n} : AbstractOptimizer (BFGS R) (BFGS.State R n) R (R^[n]) where
 
+  setOptions m opt := {m with toOptions := opt}
   getOptions m := m.toOptions
   getPosition s := s.x
   getGradient s := s.g

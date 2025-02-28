@@ -26,12 +26,14 @@ variable (R X)
 structure LBFGS (m : ℕ) extends Options R where
   /-- Linear search that finds appropriate `α` `xₙ₊₁ = xₙ + α • sₙ` -/
   lineSearch : LineSearch0Obj R := .mk (BackTracking R) {}
-  /-- Guess initial `α` to try given function value and gradient -/
-  alphaguess (φ₀ dφ₀ : R) /-(d : ObjectiveFunction R X)-/ : R := 1
+  -- /-- Guess initial `α` to try given function value and gradient -/
+  -- alphaguess (φ₀ dφ₀ : R) /-(d : ObjectiveFunction R X)-/ : R := 1
   -- P : T
   -- precondprep!::Tprep
   -- scaleinvH0 : Bool := true
 variable {R X}
+
+instance : Inhabited (LBFGS R m) := ⟨{}⟩
 
 set_default_scalar R
 
@@ -190,7 +192,8 @@ def perform_linesearch (method : LBFGS R m) (state : State R X m) (d : Objective
     state := reset_search_direction state
     dφ₀ := ⟪state.g, state.s⟫
 
-  state.alpha := method.alphaguess φ₀ dφ₀
+  state.alpha := method.init_alpha
+    -- method.alphaguess φ₀ dφ₀
 
   state.f_x_previous := φ₀
   state.x_previous   := state.x
@@ -343,6 +346,7 @@ end LBFGS
 
 instance : AbstractOptimizer (LBFGS R m) (LBFGS.State R X m) R X where
 
+  setOptions m opt := {m with toOptions := opt}
   getOptions m := m.toOptions
   getPosition s := s.x
   getGradient s := s.g

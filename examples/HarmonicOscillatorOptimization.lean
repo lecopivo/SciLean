@@ -44,8 +44,8 @@ open Optimjl
 opaque Options.filter {R : Type} [RealScalar R] : Filter (Options R) := default
 
 theorem argmin_eq_limit_optimize
-    {R : Type} [RealScalar R]
-    {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+    {R : Type} [RealScalar R] [ToString R]
+    {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [ToString X]
     {Method : Type*} {State : outParam Type} [AbstractOptimizer Method State R X]
     (method : Method) (x₀ : X)
     {f : X → R} :
@@ -144,19 +144,12 @@ by
 #check Nat
 
 
-
-#eval solver (m:=1) (T:=1) (X:=1) (k₀:=60) ({g_abstol := 1e-15, init_alpha := 10, show_trace := true},200,())
-
-
-
-#exit
-
-open Scalar
-
-set_default_scalar Float
+#eval solver (m:=1) (T:=1) (X:=1) (k₀:=60)
+        ({show_trace := true, result_trace := true},200,())
 
 
-set_option trace.Meta.Tactic.fun_trans true in
-#check
-  (let f := holdLet (exp : Float → Float)
-   (∂> f 0)) rewrite_by lfun_trans -zeta
+#eval solver (m:=1) (T:=1) (X:=1) (k₀:=60)
+        ({x_abstol := 1e-16, g_abstol := 0, init_alpha := 10,
+          show_trace := true, result_trace := true},200,())
+
+#eval 4*π^2

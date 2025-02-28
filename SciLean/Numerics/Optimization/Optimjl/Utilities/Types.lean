@@ -18,6 +18,7 @@ structure Options (R : Type) [RealScalar R] where
   f_abstol : R := 0
   f_reltol : R := 0
   g_abstol : R := 1e-8
+  init_alpha : R := 1.0
   -- g_reltol : R := 1e-8
   outer_x_abstol : R := 0
   outer_x_reltol : R := 0
@@ -36,6 +37,7 @@ structure Options (R : Type) [RealScalar R] where
   store_trace : Bool := false
   trace_simplex : Bool := false
   show_trace : Bool := false
+  result_trace : Bool := false
   extended_trace : Bool := false
   show_warnings : Bool := true
   show_every: ℕ := 1
@@ -147,6 +149,69 @@ def print : IO Unit := do
     -- if isa(r.method, Newton) || isa(r.method, NewtonTrustRegion)
     IO.print s!"    ∇²f(x) calls:  {r.h_calls}\n"
 
+
+open IO in
+def toString : String := Id.run do
+
+    let mut msg : String := ""
+    -- take = Iterators.take
+
+    let mut status_string := ""
+    if r.converged then
+      status_string := "success"
+    else
+      status_string := "failure"
+
+    if r.iteration_converged then
+      status_string := status_string ++ " (reached maximum number of iterations)"
+
+    if r.f_increased && !r.iteration_converged then
+      status_string := status_string ++ " (objective increased between iterations)"
+
+    if !r.ls_success then
+      status_string := status_string ++ " (line search failed)"
+
+    if let some tl := r.time_limit? then
+      if r.time_run > tl then
+        status_string := status_string ++ " (exceeded time limit of $(time_limit(r)))"
+
+
+    msg := msg ++ s!" * Status: {status_string}\n\n"
+
+    msg := msg ++ " * Candidate solution\n"
+    msg := msg ++ s!"    Minimizer:                 {r.minimizer}\n"
+    msg := msg ++ s!"    Final objective value:     {r.minimum}\n"
+    msg := msg ++ s!"\n"
+
+    msg := msg ++ s!" * Found with\n"
+    msg := msg ++ s!"    Algorithm:     (TODO: implement this)\n"
+
+
+    msg := msg ++ s!"\n"
+    msg := msg ++ s!" * Convergence measures\n"
+    -- if r.method.isNelderMead then
+    --     msg := msg ++ s!"    √(Σ(yᵢ-ȳ)²)/n {(if r.g_converged then "≤" else "≰")} {r.g_abstol}\n"
+    -- else
+    if true then
+      msg := msg ++ s!"    |x - x'|               = {r.x_abschange} {if r.x_abschange<=r.x_abstol then "≤" else "≰"} {r.x_abstol}\n"
+      msg := msg ++ s!"    |x - x'|               = {r.x_relchange} {if r.x_relchange<=r.x_reltol then "≤" else "≰"} {r.x_reltol}\n"
+      msg := msg ++ s!"    |f(x) - f(x')|         = {r.f_abschange} {if r.f_abschange<=r.f_abstol then "≤" else "≰"} {r.f_abstol}\n"
+      msg := msg ++ s!"    |f(x) - f(x')|/|f(x')| = {r.f_relchange} {if r.f_relchange<=r.f_reltol then "≤" else "≰"} {r.f_reltol}\n"
+      msg := msg ++ s!"    |g(x)|                 = {r.g_residual} {if r.g_residual<=r.g_abstol then "≤" else "≰"} {r.g_abstol}\n"
+
+    msg := msg ++ s!"\n"
+
+    msg := msg ++ s!" * Work counters\n"
+    msg := msg ++ s!"    Seconds run:   {r.time_run}ns   (vs limit {if let some tl := r.time_limit? then (ToString.toString tl) else "∞"}ns)\n"
+    msg := msg ++ s!"    Iterations:    {r.iterations}\n"
+    msg := msg ++ s!"    f(x) calls:    {r.f_calls}\n"
+    -- if !(isa(r.method, NelderMead) || isa(r.method, SimulatedAnnealing))
+    msg := msg ++ s!"    ∇f(x) calls:   {r.g_calls}\n"
+    -- if isa(r.method, Newton) || isa(r.method, NewtonTrustRegion)
+    msg := msg ++ s!"    ∇²f(x) calls:  {r.h_calls}\n"
+
+    return msg
+
 end MultivariateOptimizationResults
 
 
@@ -163,6 +228,7 @@ variable
 class AbstractOptimizer (Method : Type*) (State : outParam Type) (R X : Type)
     [RealScalar R] [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]  where
 
+  setOptions : Method → Options R → Method
   getOptions : Method → Options R
   getPosition : State → X
   getGradient : State → X
