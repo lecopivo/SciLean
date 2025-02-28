@@ -33,6 +33,7 @@ open Lean Meta in
 def approxLimitTactic : Tactic
 | `(tactic| approx_limit $n:ident $prf:term) => do
   let mainGoal ← getMainGoal
+  mainGoal.withContext do
   let goal ← instantiateMVars (← mainGoal.getType)
 
   Lean.Meta.letTelescope goal fun xs goal' => do

@@ -11,6 +11,8 @@ open Lean.Elab.Tactic
 open Qq in
 def pullLimitOut (e : Expr) : MetaM Expr := do
   let e ← instantiateMVars e
+
+  -- find the first subexpression `Filter.limit filter f`
   let .some limitExpr := e.find?
     (fun e => e.isAppOf' ``Filter.limit && e.getAppNumArgs ≥ 0)
     | throwError s!"no limit found in {← ppExpr e}"
@@ -31,9 +33,9 @@ def pullLimitOut (e : Expr) : MetaM Expr := do
         if fName == ``Filter.limit && args.size ≥ 6 then
           let type'   := args[0]!
           let filter' := args[4]!
-          let f := limitExpr.getArg!' 5
+          let f := e.getArg!' 5
           if (← isDefEq xType type') && (← isDefEq filter filter') then
-            return .done (mkAppN (f.app x).headBeta args[6:])
+            return .done (f.beta (#[x] ++ args[6:]))
           else
             return .continue
         else

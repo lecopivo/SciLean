@@ -16,7 +16,7 @@ namespace SciLean
 
 set_option linter.unusedVariables false
 
-attribute [local instance] Classical.propDecidable
+open Classical
 
 structure HasSolution {F Xs} [UncurryAll F Xs Prop] (P : F) : Prop where
   ex : ∃ xs, uncurryAll P xs

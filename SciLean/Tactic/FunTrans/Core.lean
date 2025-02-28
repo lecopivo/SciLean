@@ -401,24 +401,36 @@ def letCase (funTransDecl : FunTransDecl) (e f : Expr) : SimpM (Option Simp.Resu
 
   let .lam xName xType (.letE yName yType yVal yBody _) xBi := f | return none
 
-  match (yBody.hasLooseBVar 0), (yBody.hasLooseBVar 1) with
-  | true, true =>
+  match (yVal.hasLooseBVar 0), (yBody.hasLooseBVar 0), (yBody.hasLooseBVar 1) with
+  | false, _, _ =>
+    -- this probably breaks with dependent functions
+    let f := Expr.lam xName xType (yBody.swapBVars 0 1) xBi
+    let e' := Expr.letE yName yType yVal (e.setArg (funTransDecl.funArgId) f) false
+
+    trace[Meta.Tactic.fun_trans.step] "{e} ==> {e'}"
+
+    return .some ({expr := e'})
+
+  | _, true, true =>
 
     let f := Expr.lam xName xType (.lam yName yType yBody .default) xBi
     let g := Expr.lam xName xType yVal .default
 
     applyLetRule funTransDecl e f g
-  | true, false =>
+  | _, true, false =>
     let f := Expr.lam yName yType yBody default
     let g := Expr.lam xName xType yVal default
 
     applyCompRule funTransDecl e f g
 
-  | false, _ =>
+  | true, false, _ =>
     let f := Expr.lam xName xType (yBody.lowerLooseBVars 1 1) xBi
     let e' := e.setArg (funTransDecl.funArgId) f
 
+    trace[Meta.Tactic.fun_trans.step] "{e} ==> {e'}"
+
     return .some ({expr := e'})
+
 
 
 
@@ -477,10 +489,16 @@ def fvarAppCase (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
     -- unfold let fvar and add new let fvar with its transformation
     if let .some f ← fData.unfoldHeadFVar? then
       trace[Meta.Tactic.fun_trans] "unfolding local function {Expr.fvar fvarId} ==> {f}"
-      let r' ← Simp.simp (e.setArg funTransDecl.funArgId f)
+      let r' := e.setArg funTransDecl.funArgId f
       let fname' := (← fvarId.getUserName).appendAfter "'"
-      let e' := Expr.letE fname' (← inferType r'.expr) r'.expr (.bvar 0) false
-      return .some { expr := e', proof? := r'.proof? }
+      let e' := Expr.letE fname' (← inferType r') r' (.bvar 0) false
+      trace[Meta.Tactic.fun_trans] "{e} ==> {e'}"
+      return .some { expr := e' }
+
+      -- let r' ← Simp.simp (e.setArg funTransDecl.funArgId f)
+      -- let fname' := (← fvarId.getUserName).appendAfter "'"
+      -- let e' := Expr.letE fname' (← inferType r'.expr) r'.expr (.bvar 0) false
+      -- return .some { expr := e', proof? := r'.proof? }
 
     if let .some r ← applyMorTheorems funTransDecl e fData then
       return r

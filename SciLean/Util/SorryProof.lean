@@ -12,7 +12,7 @@ macro "sorry_proof" : term => do  `(sorryProofAxiom)
 
 `sorry_proof` is very useful when writing programs such that you do not accidantelly add `sorry`
 which would prevent compiler fomr generating executable code. -/
-macro "sorry_proof" : tactic => `(tactic| apply sorry_proof)
+macro "sorry_proof" : tactic => `(tactic| exact sorry_proof)
 
 
 axiom sorryDataAxiom {α : Type _} : α

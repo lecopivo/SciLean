@@ -13,6 +13,7 @@ import Lean.Meta.Tactic.Simp.Rewrite
 import Lean.Meta.Match.Value
 
 import SciLean.Tactic.LSimp.Types
+import SciLean.Util.HoldLet
 
 open Lean Meta
 
@@ -40,9 +41,11 @@ For example `fun x => let y := x; y` should be reduced to `fun x => x` and the l
 def keepAsLetValue (v : Expr) : LSimpM Bool := do
   let v ← instantiateMVars v
   let v := v.consumeMData
-  if v.isAppOfArity ``Prod.mk 4 then
+  if v.isAppOfArity ``holdLet 2 then
+    return true
+  else if v.isAppOfArity ``Prod.mk 4 then
     return false
-  if v.isAppOfArity ``OfNat.ofNat 3 then
+  else if v.isAppOfArity ``OfNat.ofNat 3 then
     return false
   else if v.isAppOfArity ``OfScientific.ofScientific 5 then
     return false

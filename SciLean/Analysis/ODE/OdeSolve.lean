@@ -65,7 +65,7 @@ theorem odeSolve.arg_ft₀tx₀.cderiv_rule
     let x₀dx₀ := fwdFDeriv R x₀ w dw
     let Tf := fwdFDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
 
-    let_fun F := fun (t : R) (xdx : X×X) =>
+    let F := holdLet <| fun (t : R) (xdx : X×X) =>
       let x  := xdx.1
       let dx := xdx.2
       Tf (w,t,x) (dw,t₀dt₀.2,dx)
@@ -90,7 +90,7 @@ theorem odeSolve.arg_ft₀tx₀.fwdDeriv_rule
       let x₀dx₀ := fwdFDeriv R x₀ w dw
       let Tf := fwdFDeriv R (fun wkx : W×R×X => f wkx.1 wkx.2.1 wkx.2.2)
 
-      let_fun F := fun (t : R) (xdx : X×X) =>
+      let F := holdLet <| fun (t : R) (xdx : X×X) =>
         let x  := xdx.1
         let dx := xdx.2
         Tf (w,t,x) (dw,t₀dt₀.2,dx)
@@ -132,7 +132,7 @@ theorem odeSolve.arg_x₀.semiAdjoint_rule
   : adjoint R (fun w => odeSolve f t₀ t (x₀ w))
     =
     fun x₀' =>
-      let_fun f' := (fun s y => - adjoint R (f s) y)
+      let f' := holdLet <| (fun s y => - adjoint R (f s) y)
       let y := odeSolve f' t t₀ x₀'
       adjoint R x₀ y :=
 by
@@ -160,8 +160,8 @@ theorem odeSolve.arg_x₀.revFDeriv_rule
     =
     fun w =>
       let x₀dx₀ := revFDeriv R x₀ w
-      let_fun x := fun s => odeSolve f t₀ s x₀dx₀.1
-      let_fun dfdx := fun s dx' => - adjointFDeriv R (fun x' => f s x') (x s) dx'
+      let x := holdLet <| fun s => odeSolve f t₀ s x₀dx₀.1
+      let dfdx := holdLet <| fun s dx' => - adjointFDeriv R (fun x' => f s x') (x s) dx'
       (x t,
        fun dx =>
          let dx := odeSolve dfdx t₀ t dx
