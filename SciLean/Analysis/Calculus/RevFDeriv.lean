@@ -47,6 +47,7 @@ variable
 @[simp, simp_core]
 theorem revFDeriv_fst (f : X → Y) (x : X) : (revFDeriv K f x).1 = f x := by rfl
 
+
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
