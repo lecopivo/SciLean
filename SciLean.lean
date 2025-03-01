@@ -580,6 +580,8 @@ import SciLean.Numerics.ODE.BackwardEuler
 import SciLean.Numerics.ODE.Basic
 import SciLean.Numerics.ODE.ForwardEuler
 import SciLean.Numerics.ODE.Solvers
+import SciLean.Numerics.Optimization.ArgMin
+import SciLean.Numerics.Optimization.Optimjl
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Numerics.Optimization.Optimjl.Multivariate.Optimize.Optimize
@@ -665,6 +667,7 @@ import SciLean.Util.Approx.ApproxLimit
 import SciLean.Util.Approx.ApproxSolution
 import SciLean.Util.Approx.Basic
 import SciLean.Util.DefOptimize
+import SciLean.Util.HoldLet
 import SciLean.Util.Limit
 import SciLean.Util.Profile
 import SciLean.Util.RecVal

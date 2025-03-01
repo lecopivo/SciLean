@@ -1,4 +1,6 @@
+import SciLean.Numerics.Optimization.ArgMin
 import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
+import SciLean.Util.Limit
 
 /-! Port of Optim.jl, file src/multivariate/optimize/optimize.jl
 
@@ -15,8 +17,9 @@ variable
 
 variable [AbstractOptimizer Method State R X]
 
+-- TODO: generalize to arbitrary monad that supports timing and logging
 open AbstractOptimizer
-def optimize
+def optimizeM
     (d : ObjectiveFunction R X)
     (method : Method)
     (x₀ : X) :
@@ -159,7 +162,12 @@ def optimize
 
 
 open AbstractOptimizer
-def optimize'
+/-- Finds minimum of `d.f` using optimization algorithm `method` using starting point `x₀`
+
+This function and corresponding optimization algorithms are direct port of Optim.jl
+source: https://github.com/JuliaNLSolvers/Optim.jl
+-/
+def optimize
     (d : ObjectiveFunction R X)
     (method : Method)
     (x₀ : X) :

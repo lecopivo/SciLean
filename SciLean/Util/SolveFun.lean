@@ -18,6 +18,8 @@ set_option linter.unusedVariables false
 
 open Classical
 
+-- TODO: ditch `UncurryAll` and use mathlib's `Function.Uncurry`
+
 structure HasSolution {F Xs} [UncurryAll F Xs Prop] (P : F) : Prop where
   ex : ∃ xs, uncurryAll P xs
 
