@@ -668,6 +668,7 @@ import SciLean.Util.Approx.ApproxSolution
 import SciLean.Util.Approx.Basic
 import SciLean.Util.DefOptimize
 import SciLean.Util.HoldLet
+import SciLean.Util.HoldLetProperties
 import SciLean.Util.Limit
 import SciLean.Util.Profile
 import SciLean.Util.RecVal
