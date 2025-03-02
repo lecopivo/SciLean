@@ -41,37 +41,3 @@ theorem argmin_eq_limit_optimize
       let f' := holdLet <| revFDeriv R f
       let r := optimize {f:=f,f':=f',hf:=sorry_proof} (AbstractOptimizer.setOptions X method opts) x₀
       r.minimizer := sorry_proof
-
-
-#check LBFGS Float 1
-
-set_default_scalar Float
-
-open Scalar
-
-approx mySqrt_v1 (y : Float) := argmin (x : Float), ‖x^2-y‖₂²
-by
-  rw[argmin_eq_limit_optimize (method := (default : LBFGS Float 1)) (x₀:=1)]
-
-  approx_limit options sorry_proof
-
-  conv in (revFDeriv _ _) => autodiff
-
-
-def mySqrt_v2  (y : Float) :=
-  let r := optimize (d:={f := fun (x : Float) => ‖x^2-y‖₂²,
-                         f' := _,
-                         hf := by data_synth => enter[3]; lsimp})
-                    (method := (default : LBFGS Float 1))
-                    (x₀ := 1)
-  r.minimizer
-
-
-
-/-- info: 1.414212 -/
-#guard_msgs in
-#eval mySqrt_v1 2 ({},())
-
-/-- info: 1.414214 -/
-#guard_msgs in
-#eval mySqrt_v1 2 ({x_abstol := 1e-16, g_abstol := 0},())

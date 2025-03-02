@@ -33,7 +33,7 @@ syntax (name:=data_synth_conv) "data_synth" optConfig (discharger)? : conv
     | none => fun _ => return none
     | some stx => Mathlib.Meta.FunProp.tacticToDischarge ⟨stx.raw[3]⟩
 
-  let (r?,_) ← dataSynth g |>.run {config := cfg, discharge := disch} |>.run stateRef
+  let (r?,_) ← dataSynth g |>.run {config := cfg, discharge := fun e => do disch e} |>.run stateRef
     |>.run (← Simp.mkDefaultMethods).toMethodsRef
     |>.run (← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems]))
     |>.run {}
@@ -81,7 +81,7 @@ syntax (name:=data_synth_tac) "data_synth" optConfig (discharger)? ("=>" convSeq
 
   let stateRef : IO.Ref DataSynth.State ← IO.mkRef {}
 
-  let (r?,_) ← dataSynth g |>.run {config := cfg, discharge := disch} |>.run stateRef
+  let (r?,_) ← dataSynth g |>.run {config := cfg, discharge := fun e => do disch e} |>.run stateRef
     |>.run (← Simp.mkDefaultMethods).toMethodsRef
     |>.run (← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems]))
     |>.run {}

@@ -26,6 +26,16 @@ structure HasUniqueOdeSolution (f : R → X → X) extends HasOdeSolution f : Pr
   uniq : ∀ t₀ x₀ x x', IsOdeSolution f t₀ x₀ x → IsOdeSolution f t₀ x₀ x' → x = x'
 
 open Classical in
+/-- Solution of ordinary differentiale equation.
+
+Function `x := fun t => odeSolve f t₀ t x₀` satisfies ODE
+```
+∂ x t = f t (x t)
+```
+with initial condition `x t₀ = x₀`.
+
+Junk value is returned if `f` does define ODE with an unique solution.
+ -/
 noncomputable
 def odeSolve (f : R → X → X) (t₀ t : R) (x₀ : X) : X :=
   if h : HasUniqueOdeSolution f -- TODO: can we reduce it to just HasOdeSolution?

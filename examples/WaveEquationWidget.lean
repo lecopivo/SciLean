@@ -26,7 +26,6 @@ def frame : Frame where
   width := 400
   height := 400
 
-
 def isvg (n) : InteractiveSvg (State n) where
   init := (⊞ (i : Fin n) => (0:Float), -- 0 * Float.sin (2*RealScalar.pi*(i.toFloat)/40),
            ⊞ (i : Fin n) => (0:Float))
@@ -43,12 +42,12 @@ def isvg (n) : InteractiveSvg (State n) where
     if let .some pos := mouseEnd then
       if action.kind == .mousedown then
         let θ := Float.atan2 pos.toAbsolute.2 pos.toAbsolute.1
-        for i in IndexType.univ (Fin n) do
+        for i in fullRange (Fin n) do
           let θ' := (2 * (RealScalar.pi : Float) * i.1) / n
           let θ' := if θ' ≤ RealScalar.pi then θ' else θ' - 2*RealScalar.pi
           let w := min (θ - θ').abs (θ - θ' + 2*RealScalar.pi).abs
           x[i] += Float.exp (- 50*w^2)
-    (solver m k).val (1,()) time (time + Δt) (x,v)
+    solver m k (1,()) time (time + Δt) (x,v)
 
   render time mouseStart mouseEnd state :=
     {
@@ -56,7 +55,7 @@ def isvg (n) : InteractiveSvg (State n) where
         let mut pts : Array (Point frame) := .mkEmpty n
         -- let mut qts : Array (Point frame) := .mkEmpty n.toNat
         let Δθ := 2*(RealScalar.pi : Float) / n
-        for i in IndexType.univ (Fin n) do
+        for i in fullRange (Fin n) do
           let θ := i.1 * Δθ
           let r := 0.5 + 0.2*state.1[i]
           pts := pts.push (.abs (r*θ.cos) (r*θ.sin))

@@ -1013,6 +1013,36 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_simple_rule :
   case adjoint => intro; dsimp; data_synth
   case simp => funext x; simp; funext dr x'; module
 
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem norm2.arg_a0.HasRevFDeriv_rule
+    (f : X → Y) (f')
+    (hf : HasRevFDeriv R f f') (hf' : ∀ x, f x ≠ 0) :
+    HasRevFDeriv R (fun x => ‖f x‖₂[R])
+      (fun x =>
+        let' (y,df) := f' x
+        let ynorm := ‖y‖₂[R]
+        (ynorm, fun dr =>
+          let dy := (dr * ynorm⁻¹) • y
+          let dx := df dy
+          dx)) := by
+  sorry_proof
+
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem norm2.arg_a0.HasRevFDerivUpdate_rule
+    (f : X → Y) (f')
+    (hf : HasRevFDerivUpdate R f f') (hf' : ∀ x, f x ≠ 0) :
+    HasRevFDerivUpdate R (fun x => ‖f x‖₂[R])
+      (fun x =>
+        let' (y,df) := f' x
+        let ynorm := ‖y‖₂[R]
+        (ynorm, fun dr dx =>
+          let dy := (dr * ynorm⁻¹) • y
+          let dx := df dy dx
+          dx)) := by
+  sorry_proof
+
 end OverReals
 
 

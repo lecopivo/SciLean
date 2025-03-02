@@ -120,7 +120,7 @@ structure Config extends DataSynthConfig, Simp.Config
 structure Context where
   config : Config := {}
   normalize : Expr → Simp.SimpM Simp.Result := fun e => return {expr := e}
-  discharge : Expr → MetaM (Option Expr) := fun _ => return .none
+  discharge : Expr → SimpM (Option Expr) := fun _ => return .none
 
 structure State where
   numSteps := 0
