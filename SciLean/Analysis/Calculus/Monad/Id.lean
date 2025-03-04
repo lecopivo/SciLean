@@ -1,5 +1,6 @@
 import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
 import SciLean.Analysis.Calculus.Monad.RevFDerivMonad
+import SciLean.Analysis.Calculus.Monad.HasRevFDerivMonad
 
 namespace SciLean
 
@@ -62,6 +63,15 @@ instance : RevFDerivMonad K Id' Id' where
   revFDerivM_bind := by simp[Id',Bind.bind]; sorry_proof
   revFDerivM_pair y := by intros; simp; sorry_proof
 
+instance : HasRevFDerivMonad K Id' Id' where
+  HasRevFDerivM f f' :=
+    HasRevFDeriv K
+      (fun x => (f x).run)
+      (fun x => let ydf := (f' x).run; (ydf.1, fun dy => (ydf.2 dy).run))
+  HasRevFDerivM_pure f := by simp[pure]
+  HasRevFDerivM_bind := by intros; simp[Id',Bind.bind]; sorry_proof
+  HasRevFDerivM_pair y := by intros; simp; sorry_proof
+
 end SciLean
 open SciLean
 
@@ -104,4 +114,32 @@ theorem Id'.run.arg_x.revFDeriv_rule (a : X → Id' Y) :
       (xda.1,
        fun dy => (xda.2 dy).run) := by rfl
 
+
+@[data_synth]
+theorem Id'.HasRevFDerivM_const_rule (y : Id' Y) :
+    HasRevFDerivM K (fun _ : X => y) (fun _ => pure (0, fun _ => pure 0)) := by
+  sorry_proof
+
+@[data_synth]
+theorem Id'.HasRevFDerivUpdateM_const_rule (y : Id' Y) :
+    HasRevFDerivUpdateM K (fun _ : X => y) (fun _ => pure (0, fun _ dx => pure dx)) := by
+  sorry_proof
+
+@[data_synth]
+theorem Id'.run.arg_x.HasRevFDeriv_rule
+    (f : X → Id' Y) {f'} (hf : HasRevFDerivM K f f') :
+    HasRevFDeriv K (fun x => (f x).run)
+      (fun x => Id'.run do
+        let ydf ← f' x
+        pure (ydf.1, fun dy => Id'.run do
+          let dx ← ydf.2 dy
+          pure dx)) := sorry_proof
+
 end OnAdjointSpace
+
+
+-- set_option trace.Meta.Tactic.data_synth true in
+-- #check (HasRevFDeriv ℝ (fun x : ℝ => Id'.run do
+--            let mut x := x
+--            x := x * x
+--            return x) _) rewrite_by data_synth -- bug in data_synth :(
