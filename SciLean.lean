@@ -23,6 +23,7 @@ import SciLean.Analysis.Calculus.HasRevFDeriv
 import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
 import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
+import SciLean.Analysis.Calculus.Monad.HasRevFDerivMonad
 import SciLean.Analysis.Calculus.Monad.Id
 import SciLean.Analysis.Calculus.Monad.RevFDerivMonad
 import SciLean.Analysis.Calculus.Monad.StateT
@@ -658,6 +659,7 @@ import SciLean.Tactic.OptimizeIndexAccess
 import SciLean.Tactic.OptimizeIndexAccessInit
 import SciLean.Tactic.PullLimitOut
 import SciLean.Tactic.RefinedSimp
+import SciLean.Tactic.SimpleProxyType
 import SciLean.Tactic.StructuralInverse
 import SciLean.Tactic.StructureDecomposition
 import SciLean.Tactic.TimeTactic
