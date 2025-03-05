@@ -2,8 +2,10 @@ import SciLean.Data.DataArray.DataArray
 import SciLean.Data.DataArray.DataArrayEquiv
 import SciLean.Data.DataArray.VectorType
 import SciLean.Data.DataArray.Float
-
 import SciLean.Data.Instances.Sigma
+
+import SciLean.Tactic.SimpleProxyType
+import SciLean.Tactic.LSimp
 
 namespace SciLean
 
@@ -19,6 +21,50 @@ namespace Float2
   instance : Size Float2 where
     size := 2
 
+  inductive Index | x | y
+    deriving IndexType
+
+  -- Array Operations with `Index` ---
+  instance : GetElem' Float2 Index Float where
+    getElem v i _ :=
+      match i with
+      | .x => v.x
+      | .y => v.y
+
+  instance : InjectiveGetElem Float2 (Index) where
+    getElem_injective := by
+      rintro ⟨x,y⟩ ⟨x',y'⟩ h
+      have := congrFun h .x
+      have := congrFun h .y
+      simp_all [getElem]
+
+  instance : SetElem' Float2 (Index) Float where
+    setElem v i vi _ :=
+      match i with
+      | .x => ⟨vi, v.y⟩
+      | .y => ⟨v.x, vi⟩
+    setElem_valid := by simp
+
+  instance : LawfulSetElem Float2 Index where
+    getElem_setElem_eq := sorry_proof
+    getElem_setElem_neq := sorry_proof
+
+  instance : OfFn Float2 (Index) Float where
+    ofFn f := ⟨f .x, f .y⟩
+
+  instance : LawfulOfFn Float2 (Index) where
+    getElem_ofFn := by intro f i; cases i <;> rfl
+
+ instance : DataArrayEquiv Float2 Index Float where
+    equiv := {
+      toFun := fun v => ⊞[v.x, v.y] |>.reshape Index sorry_proof
+      invFun := fun v => ⟨v[.x], v[.y]⟩,
+      left_inv := sorry_proof
+      right_inv := sorry_proof
+    }
+
+
+  -- Array Operations with `Fin 2` ---
   instance : GetElem' Float2 (Fin 2) Float where
     getElem v i _ := if i = 0 then v.x else v.y
 
@@ -48,28 +94,6 @@ namespace Float2
       match i with
       | ⟨0,_⟩ | ⟨1,_⟩ => rfl
 
-  -- todo: this should be derived from `PlainDataType.ofEquiv`
-  instance : PlainDataType Float2 where
-    btype := .inr {
-      bytes := 16
-      h_size := sorry_proof
-      fromByteArray b i _ :=
-        let b := b.toFloatArray sorry_proof
-        let x := b.get (i/8).toNat sorry_proof
-        let y := b.get (i/8 + 1).toNat sorry_proof
-        ⟨x,y⟩
-      toByteArray b i _ v :=
-        let b := b.toFloatArray sorry_proof
-        let b := b.set (i/8).toNat v.x sorry_proof
-        let b := b.set (i/8 + 1).toNat v.y sorry_proof
-        b.toByteArray
-      toByteArray_size := sorry_proof
-      fromByteArray_toByteArray := sorry_proof
-      fromByteArray_toByteArray_other := sorry_proof
-    }
-
-  -- This instance does not immediately provide `VectorType.Base Float2 (Fin 2) Float`
-  -- as to derive that we need `DefaultDataArrayEquiv Float2 (Fin 2) Float`.
   instance : DataArrayEquiv Float2 (Fin 2) Float where
     equiv := {
       toFun := fun v => ⊞[v.x, v.y]
@@ -78,10 +102,16 @@ namespace Float2
       right_inv := sorry_proof
     }
 
-  -- We do not want to have `DefaultDataArrayEquiv Float2 Fin 2 Float`
-  -- as this would derive algebraic instances on `Float2` throught `DataArray` which would
-  -- yield inefficient code. Instead, we want to derive instances on `Float2` directly.
-  instance {I} [IndexType I] : DefaultDataArrayEquiv (Float2^[I]) (I × Fin 2) Float where
+  -- Byte Level Operations
+  -- todo: this should be derived from `PlainDataType.ofEquiv`
+  instance : PlainDataType Float2 := (PlainDataType.ofEquiv (simple_proxy_equiv% Float2))
+    rewrite_by
+      lsimp[Float2.simpleProxyTypeEquiv,PlainDataType.ofEquiv,Prod.byteTypeProd]
+
+  --- Default Operations
+  -- we prefer indexing `Float2` by `Float2.Index`
+  instance : DefaultIndex Float2 Index where
+  instance {I} [IndexType I] : DefaultDataArrayEquiv (Float2^[I]) (I × Index) Float where
 
   instance : Add Float2 := (Add.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
   instance : Sub Float2 := (Sub.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
