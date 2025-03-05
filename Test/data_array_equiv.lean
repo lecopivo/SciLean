@@ -31,14 +31,19 @@ example : IsInnerGetElem Float (Float^[n]^[m]) (Fin m × Fin n) := by infer_inst
 example : IsContinuousGetElem (Float^[n]^[m]) (Fin m × Fin n) := by infer_instance
 
 example : GetElem' (Float^[n]^[m]) (Fin m) (Float^[n]) := by infer_instance
--- example : IsAddGetElem (Float^[n]^[m]) (Fin m) := by infer_instance
--- example : IsNegGetElem (Float^[n]^[m]) (Fin m) := by infer_instance
+example : IsAddGetElem (Float^[n]^[m]) (Fin m) := by infer_instance
+example : IsNegGetElem (Float^[n]^[m]) (Fin m) := by infer_instance
 example : IsModuleGetElem Float (Float^[n]^[m]) (Fin m) := by infer_instance
 example : IsInnerGetElem Float (Float^[n]^[m]) (Fin m) := by infer_instance
--- example : IsContinuousGetElem (Y:=Float^[n]) (Float^[n]^[m]) (Fin m) := by
+-- this instance is currently short circuited by an instancence making `IsContinuousGetElem` true all the time
+-- there are some strage interactions with `VectorType.Base` we could not resolve
+example : IsContinuousGetElem (Float^[n]^[m]) (Fin m) := by infer_instance
 
 example : GetElem' (Float^[k]^[n]^[m]) (Fin m) (Float^[k]^[n]) := by infer_instance
+-- example : IsAddGetElem (Float^[k]^[n]^[m]) (Fin m) := by infer_instance
+-- example : IsNegGetElem (Float^[k]^[n]^[m]) (Fin m) := by infer_instance
 -- example : IsModuleGetElem Float (Float^[k]^[n]^[m]) (Fin m) := by infer_instance
+
 
 example : GetElem' (Float^[k]^[n]^[m]) (Fin m×Fin n) (Float^[k]) := by infer_instance
 -- example : IsModuleGetElem Float (Float^[k]^[n]^[m]) (Fin m×Fin n) := by infer_instance

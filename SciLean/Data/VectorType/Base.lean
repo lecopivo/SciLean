@@ -29,8 +29,9 @@ To provide a finite dimensional instance you also need to assume `VectorType.Den
 This class is designed to provide Basic Linear Algebra Subprograms(BLAS) which allows us to define
 vector space structure on `X` that is computationally efficient.
  -/
-class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)] {R : outParam (Type*)}  (K : outParam (Type*))
-        [ (RealScalar R)] [ (Scalar R K)]
+class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)]
+    {R : outParam (Type*)}  (K : outParam (Type*))
+    [outParam (RealScalar R)] [outParam (Scalar R K)]
   extends
     GetElem X n K (fun _ _ => True)
   where
@@ -564,8 +565,8 @@ instance (priority:=low) instNormedSpace : NormedSpace K X where
     simp [norm_smul_le,vector_to_spec]
     sorry_proof
 
-instance : IsContinuousGetElem X n where
-  continuous_getElem := by sorry_proof
+-- instance : IsContinuousGetElem X n where
+--   continuous_getElem := by sorry_proof
 
 instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : NormedSpace R X where
   norm_smul_le := by

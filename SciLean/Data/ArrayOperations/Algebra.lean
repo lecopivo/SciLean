@@ -32,7 +32,7 @@ export IsInnerGetElem (inner_eq_sum_getElem)
 
 attribute [simp, simp_core] getElem_zero getElem_add getElem_neg getElem_smul
 
-class IsModuleGetElem (𝕜 X I : Type*) {Y : outParam Type*} [GetElem' X I Y]
+class IsModuleGetElem (𝕜 : outParam Type*) (X I : Type*) {Y : outParam Type*} [GetElem' X I Y]
     [Ring 𝕜] [AddCommGroup X] [Module 𝕜 X] [AddCommGroup Y] [Module 𝕜 Y]
   extends
     IsZeroGetElem X I,
@@ -158,22 +158,29 @@ instance {X Y Z I J 𝕜}
     [IsModuleGetElem 𝕜 X (I×J)] [IsModuleGetElem 𝕜 Y J]  :
     IsModuleGetElem 𝕜 X I where
 
-instance {X Y Z I J}
-    [GetElem' X I Y] [GetElem' X (I×J) Z]
-    [GetElem' Y J Z] [IsGetElemCurry X I J]
-    [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z]
-    [IsContinuousGetElem X I] [IsContinuousGetElem Y J] :
-    IsContinuousGetElem X (I×J) where
-  continuous_getElem := by simp[getElem_curry]; fun_prop
 
-instance {X Y Z I J}
-    [DefaultIndex Y J]
-    [GetElem' X I Y] [GetElem' X (I×J) Z]
-    [GetElem' Y J Z] [IsGetElemCurry X I J]
-    [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z]
-    [IsContinuousGetElem X (I×J)] [IsContinuousGetElem Y J] :
+-- I'm having some serious issues with interaction of `IsContinuousGetElem` and `VectorType.Base` :(
+instance {X Y I} [GetElem' X I Y]
+    [TopologicalSpace X] [TopologicalSpace Y] :
     IsContinuousGetElem X I where
-  continuous_getElem := by
-    -- not sure what exact assumptions are needed
-    -- this is somehow connected to the problem that we want `ofFn` to be continuous
-    sorry_proof
+  continuous_getElem := sorry_proof
+
+-- instance {X Y Z I J}
+--     [GetElem' X I Y] [GetElem' X (I×J) Z]
+--     [GetElem' Y J Z] [IsGetElemCurry X I J]
+--     [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z]
+--     [IsContinuousGetElem X I] [IsContinuousGetElem Y J] :
+--     IsContinuousGetElem X (I×J) where
+--   continuous_getElem := by simp[getElem_curry]; fun_prop
+
+-- instance {X Y Z I J}
+--     [DefaultIndex Y J]
+--     [GetElem' X I Y] [GetElem' X (I×J) Z]
+--     [GetElem' Y J Z] [IsGetElemCurry X I J]
+--     [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z]
+--     [IsContinuousGetElem X (I×J)] [IsContinuousGetElem Y J] :
+--     IsContinuousGetElem X I where
+--   continuous_getElem := by
+--     -- not sure what exact assumptions are needed
+--     -- this is somehow connected to the problem that we want `ofFn` to be continuous
+--     sorry_proof
