@@ -94,6 +94,39 @@ def PlainDataType.toByteArray {α : Type*} (pd : PlainDataType α) (data : ByteA
     -- todo: add bound check
     byteType.toByteArray data (i.toUSize*byteType.bytes) sorry_proof v
 
+/-- Translate `PlainDataType X` along equivalence `f : X ≃ Y` to `PlainDataType Y` -/
+def PlainDataType.ofEquiv {X Y : Type*} [pd : PlainDataType X] (f : X ≃ Y) : PlainDataType Y where
+  btype :=
+    match pd.btype with
+    | .inl bt => .inl {
+      bits := bt.bits
+      h_size := bt.h_size
+      fromByte b :=
+        let x := bt.fromByte b
+        let y := f x
+        y
+      toByte vx  :=
+        let vx := f.symm vx
+        let b := bt.toByte vx
+        b
+      fromByte_toByte := sorry_proof
+      : BitType Y}
+    | .inr bt => .inr {
+      bytes := bt.bytes
+      h_size := bt.h_size
+      fromByteArray b i h :=
+        let x := bt.fromByteArray b i h
+        let y := f x
+        y
+      toByteArray b i h vy :=
+        let vx := f.symm vy
+        let b := bt.toByteArray b i h vx
+        b
+      toByteArray_size := sorry_proof
+      fromByteArray_toByteArray := sorry_proof
+      fromByteArray_toByteArray_other := sorry_proof
+      : ByteType Y }
+
 
 --------------- Prod -------------------------------------------------
 ----------------------------------------------------------------------
@@ -216,6 +249,132 @@ instance instPlainDataTypeProd [ta : PlainDataType α] [tb : PlainDataType β] :
     | .inl aBitType,  .inr bByteType => .inr <| Prod.bitTypeByteTypeProd aBitType bByteType
     | .inr aByteType, .inl bBitType  => .inr <| Prod.byteTypeBitTypeProd aByteType bBitType
     | .inr aByteType, .inr bByteType => .inr <| Prod.byteTypeProd aByteType bByteType
+
+
+
+--------------- Sigma -------------------------------------------------
+----------------------------------------------------------------------
+
+def Sigma.bitTypeSigma {α β} (ta : BitType α) (tb : BitType β) : BitType ((_ : α) × β) ⊕ ByteType ((_ : α) × β) :=
+  if h : ta.bits + tb.bits ≤ 8 then
+    .inl {
+      bits   := ta.bits + tb.bits
+      h_size := h
+
+      fromByte := λ byte =>
+        -- Maybe the mask is not necessary of `fromByte` correctly ignores unused bits
+        let ones  := (255 : UInt8)
+        let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111
+        let bMask := (ones - (ones <<< tb.bits)) <<< ta.bits -- e.g. 00011000
+        ⟨ta.fromByte (aMask &&& byte), tb.fromByte ((bMask &&& byte) >>> ta.bits)⟩
+      toByte   := λ ⟨a,b⟩ =>
+        -- let ones  := (255 : UInt8)
+        -- let aMask := ones - (ones <<< ta.bits)               -- e.g. 00000111
+        -- let bMask := (ones - (ones <<< tb.bits)) <<< ta.bits -- e.g. 00011000
+        let aByte := ta.toByte a
+        let bByte := tb.toByte b
+        -- Masking is not necessary if `toByte` correctly sets unused bits to zero
+        aByte /- &&& aMask -/ + (bByte <<< ta.bits) /- &&& bMask -/
+
+      fromByte_toByte := sorry_proof
+    }
+  else
+    .inr {
+      bytes := 2
+      h_size := by sorry_proof
+
+      fromByteArray := λ b i _ =>
+        let aByte := b[2*i]'sorry_proof
+        let bByte := b[2*i+1]'sorry_proof
+        ⟨ta.fromByte aByte, tb.fromByte bByte⟩
+      toByteArray := λ arr i _ ⟨a,b⟩ =>
+        arr |>.uset (2*i) (ta.toByte a) sorry_proof
+            |>.uset (2*i+1) (tb.toByte b) sorry_proof
+
+      toByteArray_size := sorry_proof
+      fromByteArray_toByteArray := sorry_proof
+      fromByteArray_toByteArray_other := sorry_proof
+    }
+
+def Sigma.bitTypeByteTypeSigma {α β} (ta : BitType α) (tb : ByteType β) : ByteType ((_ : α) × β) :=
+  {
+    bytes := tb.bytes + 1
+    h_size := sorry_proof
+
+    fromByteArray := λ arr i _ =>
+      let aByte := arr[i]'sorry_proof
+      ⟨ta.fromByte aByte, tb.fromByteArray arr (i+1) sorry_proof⟩
+    toByteArray := λ arr i _ ⟨a,b⟩ =>
+      arr |>.uset i (ta.toByte a) sorry_proof
+          |> (tb.toByteArray · (i+1) sorry_proof b)
+
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+def Sigma.byteTypeBitTypeSigma {α β} (ta : ByteType α) (tb : BitType β) : ByteType ((_ : α) × β) :=
+  {
+    bytes := ta.bytes + 1
+    h_size := sorry_proof
+
+    fromByteArray := λ arr i _ =>
+      let bByte := arr[i + ta.bytes]'sorry_proof
+      ⟨ta.fromByteArray arr i sorry_proof, tb.fromByte bByte⟩
+    toByteArray := λ arr i _ ⟨a,b⟩ =>
+      arr |> (ta.toByteArray · i sorry_proof a)
+          |>.uset (i + ta.bytes) (tb.toByte b) sorry_proof
+
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+
+def Sigma.byteTypeSigma {α β} (ta : ByteType α) (tb : ByteType β) : ByteType ((_ : α) × β) :=
+  {
+    bytes := ta.bytes + tb.bytes
+    h_size := sorry_proof
+
+    fromByteArray := λ arr i _ =>
+      let a := ta.fromByteArray arr i sorry_proof
+      let b := tb.fromByteArray arr (i+ta.bytes) sorry_proof
+      ⟨a, b⟩
+    toByteArray := λ arr i _ ⟨a,b⟩ =>
+      let arr := (ta.toByteArray arr (i) sorry_proof a)
+      let arr := (tb.toByteArray arr (i+ta.bytes) sorry_proof b)
+      arr
+
+    toByteArray_size := sorry_proof
+    fromByteArray_toByteArray := sorry_proof
+    fromByteArray_toByteArray_other := sorry_proof
+  }
+
+/-- Sigma of `PlainDataType` is `PlainDataType`
+
+**Instance diamond:** This instance is currently prefered over `instPlainDataTypeEnumtype`.
+
+This instance makes a diamond together with `instPlainDataTypeEnumtype`  when `α` and `β` are `Enumtype`. Using this instance is less computationally intensive when writting and reading from `DataArra` but it consumes more memory. The `instPlainDataTypeEnumtype` is doing the exact opposite.
+
+Example: `Fin (2^4+1) × Fin (2^4-1)`
+
+As Sigmauct:
+  The type `Fin (2^4+1)` needs 5 bits.
+  The type `Fin (2^4-1)` needs 4 bits.
+  Thus `Fin (2^4+1) × Fin (2^4-1)` needs 9 bits, thus 2 bytes, as `instPlainDataTypeSigma`
+
+As Enumtype:
+  `Fin (2^4+1) × Fin (2^4-1) ≈ Fin (2^8-1)`
+  The type `Fin (2^8-1)` needs 8 bits thus only a single byte as `instPlainDataTypeEnumtype`
+
+-/
+instance instPlainDataTypeSigma [ta : PlainDataType α] [tb : PlainDataType β] : PlainDataType ((_ : α)×β) where
+  btype :=
+    match ta.btype, tb.btype with
+    | .inl aBitType,  .inl bBitType  => Sigma.bitTypeSigma aBitType bBitType
+    | .inl aBitType,  .inr bByteType => .inr <| Sigma.bitTypeByteTypeSigma aBitType bByteType
+    | .inr aByteType, .inl bBitType  => .inr <| Sigma.byteTypeBitTypeSigma aByteType bBitType
+    | .inr aByteType, .inr bByteType => .inr <| Sigma.byteTypeSigma aByteType bByteType
 
 
 --------------- MProd -------------------------------------------------
