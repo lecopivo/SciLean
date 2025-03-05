@@ -125,6 +125,7 @@ theorem Id'.HasRevFDerivUpdateM_const_rule (y : Id' Y) :
     HasRevFDerivUpdateM K (fun _ : X => y) (fun _ => pure (0, fun _ dx => pure dx)) := by
   sorry_proof
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem Id'.run.arg_x.HasRevFDeriv_rule
     (f : X → Id' Y) {f'} (hf : HasRevFDerivM K f f') :

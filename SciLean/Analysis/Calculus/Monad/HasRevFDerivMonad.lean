@@ -206,6 +206,7 @@ theorem Pure.pure.arg_a0.HasRevFDerivM_rule
         pure (ydf.1, fun dy => pure (ydf.2 dy))) :=
   HasRevFDerivM_pure _ ha0
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem Pure.pure.arg.HasRevFDerivUpdateM_rule
     (a0 : X → Y) {a0'} (ha0 : HasRevFDerivUpdate K a0 a0') :
@@ -222,6 +223,7 @@ theorem Pure.pure.arg.HasRevFDerivUpdateM_rule
 -- Bind.bind -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem Bind.bind.arg_a0a1.HasRevFDerivM_rule
     (a0 : X → m Y) {a0'} (ha0 : HasRevFDerivM K a0 a0')
@@ -237,6 +239,7 @@ theorem Bind.bind.arg_a0a1.HasRevFDerivM_rule
                 pure (dxy.1 + dx))) := by
   sorry_proof
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem Bind.bind.arg_a0a1.HasRevFDerivUpdateM_rule
     (a0 : X → m Y) {a0'} (ha0 : HasRevFDerivUpdateM K a0 a0')
@@ -257,6 +260,7 @@ theorem Bind.bind.arg_a0a1.HasRevFDerivUpdateM_rule
 -- Functor.map -----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem Functor.map.arg_a0a1.HasRevFDerivM_rule
   (a0 : X → Y → Z) {a0'} (ha0 : HasRevFDeriv K (fun xy : X×Y => a0 xy.1 xy.2) a0')
@@ -275,6 +279,7 @@ theorem Functor.map.arg_a0a1.HasRevFDerivM_rule
             return dx)) := by
   sorry_proof
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem Functor.map.arg_a0a1.HasRevFDerivUpdateM_rule
   (a0 : X → Y → Z) {a0'} (ha0 : HasRevFDerivUpdate K (fun xy : X×Y => a0 xy.1 xy.2) a0')
