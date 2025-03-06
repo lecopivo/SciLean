@@ -4,6 +4,8 @@ import SciLean.Analysis.Calculus.RevFDeriv
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 -- import SciLean.Tactic.DataSynth.DefRevDeriv
 
+import SciLean.Util.RewriteBy
+
 namespace SciLean
 
 variable
@@ -109,32 +111,8 @@ theorem revFDeriv_from_hasRevFDeriv
   {f : X → Y} {f'} (hf : HasRevFDeriv K f f') :
   revFDeriv K f = f' := sorry_proof
 
-open Lean Meta in
-/-- Compute `revFDeriv R f` with calling data_synth on `HasRevFDeriv R f ?f'`. -/
-simproc_decl revFDeriv_simproc (revFDeriv _ _) := fun e => do
-
-  -- get field and function to differentiate
-  let K := e.getArg! 0
-  let f := e.appArg!
-
-  -- craft `HasRevFDeriv K f ?f'`
-  let goal ← mkAppM ``HasRevFDeriv #[K,f]
-  let (xs,_,_) ← forallMetaTelescope (← inferType goal)
-  let f' := xs[0]!
-  let goal := goal.app f'
-
-  -- extract data_synth goal
-  let .some goal ← Tactic.DataSynth.isDataSynthGoal? goal
-    | throwError m!"revFDeriv_simproc error: expected `data_synth` goal, got {goal} instead!"
-
-  -- run data_synth
-  let .some r ← Tactic.DataSynth.dataSynth goal |>.runInSimpM
-    | return .continue
-
-  let f'' := r.xs[0]!
-  let prf ← mkAppM ``revFDeriv_from_hasRevFDeriv #[r.proof]
-
-  return .visit { expr := f'', proof? := prf }
+simproc_decl revFDeriv_simproc (revFDeriv _ _) :=
+  mkDataSynthSimproc `revFDeriv_simproc ``revFDeriv_from_hasRevFDeriv
 
 
 ----------------------------------------------------------------------------------------------------
