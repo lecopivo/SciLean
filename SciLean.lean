@@ -627,6 +627,7 @@ import SciLean.Tactic.DataSynth.DefDataSynth
 import SciLean.Tactic.DataSynth.DefRevDeriv
 import SciLean.Tactic.DataSynth.Elab
 import SciLean.Tactic.DataSynth.Main
+import SciLean.Tactic.DataSynth.Simproc
 import SciLean.Tactic.DataSynth.Theorems
 import SciLean.Tactic.DataSynth.Types
 import SciLean.Tactic.FunTrans.Attr
