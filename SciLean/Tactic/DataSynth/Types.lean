@@ -134,9 +134,15 @@ structure State where
 
 abbrev DataSynthM := ReaderT Context $ MonadCacheT ExprStructEq Expr $ StateRefT State Simp.SimpM
 
+/-- Run `DataSynthM` in `SimpM` with default context and config
+
+TODO: Add a mechanism to specify `DataSynth.Config`  -/
+def DataSynthM.runInSimpM (e : DataSynthM α) : SimpM α := do
+  let disch? := (← Simp.getMethods).discharge?
+  let r := e { discharge := disch? } (← ST.mkRef {}) (← ST.mkRef {})
+  r
 
 -----------
-
 -- forward declaration
 
 initialize dataSynthRef : IO.Ref (Goal → DataSynthM (Option Result)) ← IO.mkRef (fun _ => return none)

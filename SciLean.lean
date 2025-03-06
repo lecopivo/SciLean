@@ -663,6 +663,7 @@ import SciLean.Tactic.SimpleProxyType
 import SciLean.Tactic.StructuralInverse
 import SciLean.Tactic.StructureDecomposition
 import SciLean.Tactic.TimeTactic
+import SciLean.Tactic.UnsafeAD
 import SciLean.Topology.Continuous
 import SciLean.Util.Alternatives
 import SciLean.Util.Approx.ApproxLimit
