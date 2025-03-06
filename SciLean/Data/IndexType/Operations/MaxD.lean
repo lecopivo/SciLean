@@ -28,7 +28,7 @@ theorem IndexType.maxD.arg_f.HasRevFDeriv_rule
     (x₀ : R) :
     HasRevFDeriv R (fun w : W => IndexType.maxD (f w) x₀)
       (fun w =>
-        let (i,x) := IndexType.argValMax (f w)
+        let' (i,x) := IndexType.argValMax (f w)
         (x, fun dxi =>
           let dw := (f' i w).2 dxi
           dw)) := sorry_proof
@@ -41,7 +41,7 @@ theorem IndexType.maxD.arg_f.HasRevFDerivUpdate_rule
     (x₀ : R) :
     HasRevFDerivUpdate R (fun w : W => IndexType.maxD (f w) x₀)
       (fun w =>
-        let (i,x) := IndexType.argValMax (f w)
+        let' (i,x) := IndexType.argValMax (f w)
         (x, fun dxi dw =>
           let dw := (f' i w).2 dxi dw
           dw)) := sorry_proof

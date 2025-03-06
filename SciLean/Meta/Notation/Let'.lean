@@ -105,6 +105,26 @@ macro_rules (kind :=let'_syntax')
     let $z := x.2
     $b)
 
+syntax (name:=let'_syntax'') withPosition("let'" "(" "(" ident "," ident ")" "," "(" ident "," ident ")"  ")" ":=" term) optSemicolon(term) : term
+
+@[inherit_doc let'_syntax]
+macro_rules (kind :=let'_syntax'')
+| `(let' (($x,$y),($z,$w)) := $v
+    $b) =>
+  `(let x := $v
+    let $x := x.1.1
+    let $y := x.1.2
+    let $z := x.2.1
+    let $w := x.2.2
+    $b)
+| `(let' (($x,$y),($z,$w)) := $v; $b) =>
+  `(let x := $v
+    let $x := x.1.1
+    let $y := x.1.2
+    let $z := x.2.1
+    let $w := x.2.2
+    $b)
+
 
 /-- Let binding that deconstructs structure into its fields.
 
