@@ -273,6 +273,9 @@ def bodyLambdaTelescope1 (f : FunData) (k : Expr → FunData → DataSynthM α) 
       }
       k y f
 
+def lambdaTelescope1 (f : FunData) (k : Expr → FunData → DataSynthM α) : DataSynthM α := do
+  withLCtx f.lctx f.insts do
+    k f.xs[0]! {f with xs := f.xs[1:]}
 
 -- /-- Composition of two function.-/
 -- inductive FunDecomp where

@@ -446,6 +446,59 @@ def tryTheorem? (e : Expr) (thm : Theorem) (hintPre hintPost : Array (Nat×Expr)
 
   return some thmProof
 
+/-- Same as `tryTheorem?` but post hints are lazily evaluated only after unification succeded! -/
+def tryTheorem?' (e : Expr) (thm : Theorem)
+    (hintPre : Array (Nat×Expr)) (hintPost : DataSynthM (Option (Array (Nat×Expr)))) : DataSynthM (Option Expr) := do
+
+  withMainTrace
+    (fun r => return m!"[{ExceptToEmoji.toEmoji r}] applying {← ppOrigin (.decl thm.thmName)}") do
+
+  let thmProof ← thm.getProof
+  let type ← inferType thmProof
+  let (xs, _, type) ← forallMetaTelescope type
+  let thmProof := thmProof.beta xs
+
+  let argNames ← getConstArgNames thm.thmName
+  for (id, arg) in hintPre do
+    let mvarId := xs[id]!.mvarId!
+    if ¬(← mvarId.isAssigned) then
+      try
+        mvarId.assignIfDefeq arg
+        trace[Meta.Tactic.data_synth] "setting {argNames[id]!} to {arg}"
+      catch _e =>
+        trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
+        return none
+
+  unless (← isDefEq e type) do
+    trace[Meta.Tactic.data_synth] "unification failed\n{e}\n=?=\n{type}"
+    return none
+
+  let .some hintPost ← hintPost | return none
+  for (id, arg) in hintPost do
+    let mvarId := xs[id]!.mvarId!
+    if ¬(← mvarId.isAssigned) then
+      try
+        mvarId.assignIfDefeq arg
+        trace[Meta.Tactic.data_synth] "setting {argNames[id]!} to {arg}"
+      catch _e =>
+        trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
+        return none
+
+  -- todo: redo this, make a queue of all argument an try synthesize them over and over, until done or no progress
+  -- try to synthesize all arguments
+  for x in xs do
+    let _ ← synthesizeArgument x
+
+  -- check if all arguments have been synthesized
+  for x in xs do
+    let x ← instantiateMVars x
+    if x.isMVar then
+      trace[Meta.Tactic.data_synth] "failed to synthesize argument {x} : {← inferType x}"
+      return none
+
+  return some thmProof
+
+
 
 def Goal.tryTheorem? (goal : Goal) (thm : Theorem) (hintPre hintPost : Array (Nat×Expr) := #[]) : DataSynthM (Option Result) := do
   withProfileTrace "tryTheorem" do
@@ -453,6 +506,20 @@ def Goal.tryTheorem? (goal : Goal) (thm : Theorem) (hintPre hintPost : Array (Na
   let (xs, e) ← goal.mkFreshProofGoal
 
   let .some prf ← DataSynth.tryTheorem? e thm hintPre hintPost | return none
+
+  let mut r := Result.mk xs prf goal
+
+  r ← r.normalize
+
+  return r
+
+def Goal.tryTheorem?' (goal : Goal) (thm : Theorem)
+    (hintPre : Array (Nat×Expr)) (hintPost : DataSynthM (Option (Array (Nat×Expr)))) : DataSynthM (Option Result) := do
+  withProfileTrace "tryTheorem" do
+
+  let (xs, e) ← goal.mkFreshProofGoal
+
+  let .some prf ← DataSynth.tryTheorem?' e thm hintPre hintPost | return none
 
   let mut r := Result.mk xs prf goal
 
@@ -558,49 +625,88 @@ def compResults (fgGoal : Goal) (thm : LambdaTheorem) (f g : Expr) (hf hg : Resu
 
 
 /-- Given goal for composition `fun x => let y:=g x; f y x` and given `f` and `g` return corresponding goals for `↿f` and `g` -/
-def letGoals (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (LambdaTheorem×Goal×Goal)) := do
+def letGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g  : Expr) : DataSynthM (Option (Goal×Goal)) := do
   withProfileTrace "letGoals" do
+  let .letE gId fId hgId hfId := thm.data | throwError m!"invalid let theorem {thm.thmName}"
 
-  let thms ← getLambdaTheorems fgGoal.dataSynthDecl.name .letE
-  for thm in thms do
-    let .letE gId fId hgId hfId := thm.data | throwError m!"invalid let theorem {thm.thmName}"
+  let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thm.thmName))
 
-    -- let info ← getConstInfo thmName
-    let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thm.thmName))
+  try
+    withMainTrace (fun _ => return m!"assigning data") do
+    xs[gId]!.mvarId!.assignIfDefeq g
+  catch _e =>
+    trace[Meta.Tactic.data_synth] "failed assigning `{g} : {← inferType g}`  to `{xs[gId]!} :{← inferType xs[gId]!}`"
+    trace[Meta.Tactic.data_synth] "{_e.toMessageData}"
 
-    try
-      withMainTrace (fun _ => return m!"assigning data") do
-      xs[gId]!.mvarId!.assignIfDefeq g
-    catch _e =>
-      trace[Meta.Tactic.data_synth] "failed assigning `{g} : {← inferType g}`  to `{xs[gId]!} :{← inferType xs[gId]!}`"
-      trace[Meta.Tactic.data_synth] "{_e.toMessageData}"
+    throwError s!"data_synth bug"
 
-      throwError s!"data_synth bug"
+  try
+    withMainTrace (fun _ => return m!"assigning data") do
+    xs[fId]!.mvarId!.assignIfDefeq f
+  catch _e =>
+    trace[Meta.Tactic.data_synth] "failed assigning {f} to {xs[fId]!} of type {← inferType xs[fId]!}"
+    throwError s!"data_synth bug"
 
-    try
-      withMainTrace (fun _ => return m!"assigning data") do
-      xs[fId]!.mvarId!.assignIfDefeq f
-    catch _e =>
-      trace[Meta.Tactic.data_synth] "failed assigning {f} to {xs[fId]!} of type {← inferType xs[fId]!}"
-      throwError s!"data_synth bug"
+  let (_,rhs) ← fgGoal.mkFreshProofGoal
+  if ¬(← isDefEq statement rhs) then
+    trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statement} =?= {← ppExpr rhs}"
+    return none
 
-
-    let (_,rhs) ← fgGoal.mkFreshProofGoal
-    if ¬(← isDefEq statement rhs) then
-      trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statement} =?= {← ppExpr rhs}"
+  let hg ← inferType xs[hgId]! >>= instantiateMVars
+  let hf ← inferType xs[hfId]! >>= instantiateMVars
+  let some ggoal ← isDataSynthGoal? hg
+    | trace[Meta.Tactic.data_synth] "not data_synth goal {hg}"
       return none
+  let some fgoal ← isDataSynthGoal? hf
+    | trace[Meta.Tactic.data_synth] "not data_synth goal {hf}"
+      return none
+  return (fgoal, ggoal)
 
-    let hg ← inferType xs[hgId]! >>= instantiateMVars
-    let hf ← inferType xs[hfId]! >>= instantiateMVars
-    let some ggoal ← isDataSynthGoal? hg | return none
-    let some fgoal ← isDataSynthGoal? hf | return none
-    return (thm, fgoal, ggoal)
-  return none
 
 /-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
 def letResults (fgGoal : Goal) (thm : LambdaTheorem) (f g : Expr) (hf hg : Result) : DataSynthM (Option Result) := do
   withProfileTrace "letResults" do
     let (hintPre,hintPost) ← thm.getHint #[g,f,hg.proof,hf.proof]
+    fgGoal.tryTheorem? thm.toTheorem hintPre hintPost
+
+/-- Given goal for composition `fun x => let y:=g x; f y x` and given `f` and `g` return corresponding goal for `(f y ·)` -/
+def letSkipGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g  : Expr) (y : Expr) : DataSynthM (Option Goal) := do
+  withProfileTrace "letSkipGoals" do
+  let .letSkip gId fId hfId := thm.data | throwError m!"invalid let theorem {thm.thmName}"
+
+  let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thm.thmName))
+
+  try
+    withMainTrace (fun _ => return m!"assigning data") do
+    xs[gId]!.mvarId!.assignIfDefeq g
+  catch _e =>
+    trace[Meta.Tactic.data_synth] "failed assigning `{g} : {← inferType g}`  to `{xs[gId]!} :{← inferType xs[gId]!}`"
+    trace[Meta.Tactic.data_synth] "{_e.toMessageData}"
+
+    throwError s!"data_synth bug"
+
+  try
+    withMainTrace (fun _ => return m!"assigning data") do
+    xs[fId]!.mvarId!.assignIfDefeq f
+  catch _e =>
+    trace[Meta.Tactic.data_synth] "failed assigning {f} to {xs[fId]!} of type {← inferType xs[fId]!}"
+    throwError s!"data_synth bug"
+
+  let (_,rhs) ← fgGoal.mkFreshProofGoal
+  if ¬(← isDefEq statement rhs) then
+    trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statement} =?= {← ppExpr rhs}"
+    return none
+
+  let hf ← inferType xs[hfId]! >>= instantiateMVars
+  let .forallE _ _ hf _ := hf | throwError "expected forall {← ppExpr hf}"
+  let hf := hf.instantiate1 y
+  let some fgoal ← isDataSynthGoal? hf | return none
+  return fgoal
+
+/-- Given result for `(f y ·)` return result for `fun x => let y:=g x; f y x` -/
+def letSkipResults (fgGoal : Goal) (thm : LambdaTheorem) (f g y : Expr) (hfy : Result) : DataSynthM (Option Result) := do
+  withProfileTrace "letSkipResults" do
+    let (hintPre,hintPost) ← thm.getHint #[g,f, (← mkLambdaFVars #[y] hfy.proof)]
     fgGoal.tryTheorem? thm.toTheorem hintPre hintPost
 
 set_option linter.unusedVariables false in
@@ -718,16 +824,63 @@ def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
 
 def letCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "letCase" do
-  let some (thm, fgoal, ggoal) ← letGoals goal (← f.toExprCurry1) (← g.toExpr) | return none
-  let some hf ←
-    withProfileTrace "solving f" do
-    dataSynthFun fgoal f | return none
-  let some hg ←
-    withProfileTrace "solving g" do
-    dataSynthFun ggoal g | return none
-  let some r ← letResults goal thm (← f.toExprCurry1) (← g.toExpr) hf hg | return none
-  let r ← r.normalize
-  return r
+  let fExpr ← f.toExprCurry1
+  let gExpr ← g.toExpr
+
+  -- normal let theorems
+  let thms ← getLambdaTheorems goal.dataSynthDecl.name .letE
+  trace[Meta.Tactic.data_synth] "let theorems: {thms.map (fun t => t.thmName)}"
+  for thm in thms do
+    let .letE gId fId hgId hfId := thm.data | continue
+    try
+      trace[Meta.Tactic.data_synth] "trying let theorem {thm.thmName}"
+      let some (fgoal, ggoal) ← letGoals thm goal fExpr gExpr | continue
+      -- let some hf ←
+      --   withProfileTrace "solving f" do
+      --   dataSynthFun fgoal f | continue
+      -- let some hg ←
+      --   withProfileTrace "solving g" do
+      --   dataSynthFun ggoal g | continue
+      -- let some r ← letResults goal thm fExpr gExpr hf hg | continue
+
+      let hintPost : DataSynthM (Option (Array (ℕ×Expr))) := do
+        let some hg ←
+          withProfileTrace "solving g" do
+          dataSynthFun ggoal g | pure none
+        let some hf ←
+          withProfileTrace "solving f" do
+          dataSynthFun fgoal f | pure none
+        pure (.some #[(hgId,hg.proof),(hfId,hf.proof)])
+
+      let hintPre := #[(gId,gExpr),(fId,fExpr)]
+
+      let some r ← goal.tryTheorem?' thm.toTheorem hintPre hintPost | continue
+      let r ← r.normalize
+      return r
+    catch e =>
+      trace[Meta.Tactic.data_synth] "trying let theorem {thm.thmName} failed badly\n{e.toMessageData}"
+
+  -- let theorems that skip the let binding
+  let thms ← getLambdaTheorems goal.dataSynthDecl.name .letSkip
+  trace[Meta.Tactic.data_synth] "let theorems: {thms.map (fun t => t.thmName)}"
+
+  f.lambdaTelescope1 fun y fy => do
+  for thm in thms do
+    try
+      trace[Meta.Tactic.data_synth] "trying let theorem {thm.thmName}"
+      let some fygoal ← letSkipGoals thm goal fExpr gExpr y | continue
+      let some hfy ←
+        withProfileTrace "solving f" do
+        dataSynthFun fygoal fy | continue
+
+      let some r ← letSkipResults goal thm fExpr gExpr y hfy | continue
+      let r ← r.normalize
+      return r
+    catch e =>
+      trace[Meta.Tactic.data_synth] "trying let theorem {thm.thmName} failed badly\n{e.toMessageData}"
+
+  return none
+
 
 def lamCase (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "lamCase" do

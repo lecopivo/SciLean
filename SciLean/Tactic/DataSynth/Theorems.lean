@@ -38,6 +38,18 @@ inductive LambdaTheoremData where
   and `gId`, `fId`, `hgId`, `hfId` are indices of corresponding arguments in the theorem `thmName`
   -/
   | letE (gId fId hgId hfId : Nat)
+  /-- Let binding theorem where we skip let binding
+
+  This theorem can be used on functions like `fun x => let y := let n := ⌊x⌋; x + n` which is
+  differentiable everywhere except integers.
+
+  The theorem should have roughly the following form
+  ```
+  (g : X → Y) (f : Y → X → Z) (hf : ∀ y, P (f y) (f' y)) → P (fun x => let y := g x; f y x) fg'
+  ```
+  and `gId`, `fId`,  `hfId` are indices of corresponding arguments in the theorem `thmName`
+  -/
+  | letSkip (gId fId hfId : Nat)
   /-- Pi theorem
 
   The theorem should have roughly the following form
@@ -69,7 +81,7 @@ inductive LambdaTheoremData where
   | proj (fId gId p₁Id p₂Id qId hgId /- hdec -/ : Nat)
   deriving Inhabited, BEq, Hashable
 
-inductive LambdaTheoremType where | comp | letE | pi | const | proj
+inductive LambdaTheoremType where | comp | letE | letSkip | pi | const | proj
   deriving BEq, Inhabited, Hashable
 
 structure LambdaTheorem extends Theorem where
@@ -94,6 +106,11 @@ def LambdaTheorem.getHint (thm : LambdaTheorem) (args : Array Expr) :
       return (#[(gId,args[0]),(fId,args[1])],#[(hgId,args[2]),(hfId,args[3])])
     else
       throwError "letE theorem expects 4 arguments"
+  | .letSkip gId fId hfId =>
+    if h : args.size = 3 then
+      return (#[(gId,args[0]),(fId,args[1])],#[(hfId,args[2])])
+    else
+      throwError "letSkip theorem expects 3 arguments"
   | .pi fId hfId =>
     if h : args.size = 2 then
       return (#[(fId,args[0])],#[(hfId,args[1])])
@@ -115,6 +132,7 @@ def LambdaTheorem.type (thm : LambdaTheorem) : LambdaTheoremType :=
   match thm.data with
   | .comp .. => LambdaTheoremType.comp
   | .letE .. => LambdaTheoremType.letE
+  | .letSkip .. => LambdaTheoremType.letSkip
   | .pi   .. => LambdaTheoremType.pi
   | .const .. => LambdaTheoremType.const
   | .proj .. => LambdaTheoremType.proj
