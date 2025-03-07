@@ -1,5 +1,6 @@
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.Calculus.HasRevFDeriv
+import SciLean.Analysis.Calculus.HasFwdFDeriv
 import SciLean.Data.ArrayOperations.Algebra
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.IfPull
@@ -80,6 +81,57 @@ theorem setElem.arg_v.HasFDerivAt_rule {𝕜 X I Y : Type*}
   have h := setElem.arg_xsv.HasFDerivAt_rule (𝕜:=𝕜) (X:=X) (I:=I) i (x,y₀)
             |>.comp (f:=fun y : Y => (x,y)) (hf:=by data_synth)
   apply h
+
+
+@[data_synth]
+theorem setElem.arg_xsv.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
+    [GetElem' X I Y] [InjectiveGetElem X I]
+    [SetElem' X I Y] [LawfulSetElem X I] [RCLike 𝕜]
+    [NormedAddCommGroup X] [NormedSpace 𝕜 X]
+    [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
+    [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (i : I) :
+    HasFwdFDeriv 𝕜
+      (fun xy : X×Y => setElem xy.1 i xy.2 .intro)
+      (fun xy dxy : X×Y =>
+        (setElem xy.1 i xy.2 .intro,
+         setElem dxy.1 i dxy.2 .intro)) := by
+  apply hasFwdFDeriv_from_hasFDerivAt
+  case deriv => intros; data_synth
+  case simp => simp
+
+-- TODO: generate automatically from `setElem.arg_xsv.HasFwdFDeriv_rule`
+@[data_synth]
+theorem setElem.arg_xs.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
+    [GetElem' X I Y] [InjectiveGetElem X I]
+    [SetElem' X I Y] [LawfulSetElem X I] [RCLike 𝕜]
+    [NormedAddCommGroup X] [NormedSpace 𝕜 X]
+    [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
+    [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (i : I) (y : Y) :
+    HasFwdFDeriv 𝕜
+      (fun x : X => setElem x i y .intro)
+      (fun x dx : X =>
+        (setElem x i y .intro,
+         setElem dx i 0 .intro)) := by
+  apply hasFwdFDeriv_from_hasFDerivAt
+  case deriv => intros; data_synth
+  case simp => simp
+
+-- TODO: generate automatically from `setElem.arg_xsv.HasFwdFDeriv_rule`
+@[data_synth]
+theorem setElem.arg_v.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
+    [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
+    [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I] [RCLike 𝕜]
+    [NormedAddCommGroup X] [NormedSpace 𝕜 X]
+    [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
+    [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (i : I) (x : X) :
+    HasFwdFDeriv 𝕜
+      (fun y : Y => setElem x i y .intro)
+      (fun y dy : Y =>
+        (setElem x i y .intro,
+         setElem 0 i dy .intro)) := by
+  apply hasFwdFDeriv_from_hasFDerivAt
+  case deriv => intros; data_synth
+  case simp => simp
 
 @[data_synth]
 theorem setElem.arg_xs.HasAdjoint_rule {𝕜 X I Y : Type*}

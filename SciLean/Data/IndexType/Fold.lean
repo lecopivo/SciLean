@@ -124,7 +124,7 @@ theorem IndexType.Range.foldl.arg_opinit.fwdFDeriv_rule (r : Range I)
   -- how to prove this?
   sorry_proof
 
-@[fun_trans]
+@[data_synth]
 theorem IndexType.Range.foldl.arg_opinit.HasFwdFDeriv (r : Range I)
     (op : W → X → I → X) {op' : I → _}
     (hop : ∀ i, HasFwdFDeriv R (fun (w,x) => op w x i) (op' i))

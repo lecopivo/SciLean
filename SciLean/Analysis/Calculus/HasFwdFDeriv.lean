@@ -1,5 +1,6 @@
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
+import SciLean.Logic.Function.Constant
 
 namespace SciLean
 
@@ -43,7 +44,7 @@ theorem fwdFDeriv_from_hasFwdFDeriv
   fwdFDeriv K f = f' := sorry_proof
 
 simproc_decl fwdFDeriv_simproc (fwdFDeriv _ _) :=
-  mkDataSynthSimproc `revFDeriv_simproc ``fwdFDeriv_from_hasFwdFDeriv
+  mkDataSynthSimproc `fwdFDeriv_simproc ``fwdFDeriv_from_hasFwdFDeriv
 
 
 
@@ -52,14 +53,14 @@ simproc_decl fwdFDeriv_simproc (fwdFDeriv _ _) :=
 ----------------------------------------------------------------------------------------------------
 
 @[data_synth]
-theorem id_rule : HasFwdFDeriv K (id : X → X) (λ x dx => (x, dx)) := by
+theorem id_rule : HasFwdFDeriv K (fun x : X => x) (λ x dx => (x, dx)) := by
   apply hasFwdFDeriv_from_hasFDerivAt
   case deriv =>
     intro x
     apply hasFDerivAt_id
   case simp => simp
 
-theorem const_rule (c : Y) : HasFwdFDeriv K (Function.const X c) (λ _ _ => (c, 0)) := by
+theorem const_rule (c : Y) : HasFwdFDeriv K (fun _ : X => c) (λ _ _ => (c, 0)) := by
   apply hasFwdFDeriv_from_hasFDerivAt
   case deriv =>
     intro x
@@ -85,7 +86,7 @@ theorem comp_rule {g : X → Y} {f : Y → Z} {g' : X → X → Y×Y} {f' : Y �
     simp_all
 
 theorem let_rule {g : X → Y} {f : Y → X → Z} {f' g'}
-    (hg : HasFwdFDeriv K g g') (hf : HasFwdFDeriv K (↿f) f') :
+    (hg : HasFwdFDeriv K g g') (hf : HasFwdFDeriv K (fun yx : Y×X => f yx.1 yx.2) f') :
     HasFwdFDeriv K
       (fun x =>
         let y := g x
@@ -107,7 +108,19 @@ theorem let_rule {g : X → Y} {f : Y → X → Z} {f' g'}
   case simp =>
     intros
     simp_all
-    rfl
+
+@[data_synth]
+theorem apply_rule {I} [IndexType I] [DecidableEq I] (i : I) :
+    HasFwdFDeriv K (fun x : I → X => x i)
+      (fun x dx =>
+        (x i, dx i)) := sorry_proof
+
+-- this should not be necessary if once we improve function decomposition in `data_synth` tactic
+@[data_synth]
+theorem apply_rule' {I} [IndexType I] [DecidableEq I] (i : I) :
+    HasFwdFDeriv K (fun x : (I → X)×Y => x.1 i)
+      (fun x dx =>
+        (x.1 i, dx.1 i)) := sorry_proof
 
 set_option linter.unusedVariables false in
 theorem pi_rule {I : Type*} [IndexType I]
@@ -140,6 +153,22 @@ theorem proj_rule
         ydy) := by
   sorry_proof
 
+set_option linter.unusedVariables false in
+theorem let_skip_rule
+    {α : Type*} [TopologicalSpace α] [DiscreteTopology α]
+    {g : X → α} {f : α → X → Z} {f' : α → _}
+    (hf : ∀ a, HasFwdFDeriv K (f a) (f' a))
+    (hg : g.IsConstant) :
+    HasFwdFDeriv K
+      (fun x =>
+        let y := g x
+        f y x)
+      (fun x dx =>
+        let a := g x
+        let' (z, dz) := f' a x dx
+        (z, dz)) := by
+  sorry_proof
+
 
 open Lean Meta
 #eval show MetaM Unit from do
@@ -156,6 +185,9 @@ open Lean Meta
       (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g)
       (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂)
       (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasFwdFDeriv,``let_skip_rule⟩, .letSkip
+      (← getConstArgId ``let_skip_rule `g) (← getConstArgId ``let_skip_rule `f)
+      (← getConstArgId ``let_skip_rule `hf)⟩
 
 end SciLean
 open SciLean
@@ -432,6 +464,7 @@ theorem Inner.inner.arg_a0a1.HasFwdFDeriv_comp_rule
   case deriv => intros; data_synth
   case simp => intros; simp_all
 
+
 @[data_synth]
 theorem Norm2.norm2.arg_a0.HasFwdFDeriv_simple_rule :
     HasFwdFDeriv R
@@ -443,7 +476,7 @@ theorem Norm2.norm2.arg_a0.HasFwdFDeriv_simple_rule :
   case deriv => intros; data_synth
   case simp => intros; simp_all
 
-@[data_synth]
+@[data_synth high]
 theorem Norm2.norm2.arg_a0.HasFwdFDeriv_simple_rule_real :
     HasFwdFDeriv R
       (fun x : Y => ‖x‖₂²[R])
@@ -453,13 +486,16 @@ theorem Norm2.norm2.arg_a0.HasFwdFDeriv_simple_rule_real :
   case deriv => intros; data_synth
   case simp => intros; simp_all; (conv_rhs => enter[1]; rw[←AdjointSpace.conj_symm]; simp); ring
 
+
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem SciLean.norm₂.arg_x.HasFwdFDeriv_comp_rule
-    (f : X → Y) {f'} (hf : HasFwdFDeriv R f f') (hf' : f x ≠ 0) :
+    (f : X → Y) {f'} (hf : HasFwdFDeriv R f f') (hf' : ∀ x, f x ≠ 0) :
     HasFwdFDeriv R (fun x => ‖f x‖₂[K]) (fun x dx =>
       let' (y, dy) := f' x dx;
       let yn := ‖y‖₂[K]
       (yn, ⟪y, dy⟫[K] / yn)) := by
   have ⟨_,_,_,_⟩ := hf
   sorry_proof
+
+end OverReals

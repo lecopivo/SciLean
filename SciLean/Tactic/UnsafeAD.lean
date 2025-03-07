@@ -1,9 +1,10 @@
 import Mathlib.Algebra.Group.Defs
-
+import SciLean.Logic.Function.Constant
 
 namespace SciLean.UnsafeAD
 
 axiom unsafeNonzero {α} [Zero α] (a : α) : a ≠ 0
+axiom unsafeIsConstant {α β} (f : α → β) : f.IsConstant
 
 /-- This tactic is used to ignore common assumptions of differentiation rules when used as discharger
 in `autodiff` tactic.
@@ -15,4 +16,4 @@ TODO: Add differentiation rules for if statement where the condition depends on 
       make this tactic compatible with this rule.
 -/
 macro "unsafeAD" : tactic =>
-  `(tactic| (intros; simp only [not_false_eq_true, ne_eq, unsafeNonzero]))
+  `(tactic| (intros; simp only [not_false_eq_true, ne_eq, unsafeNonzero, unsafeIsConstant]))
