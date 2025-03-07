@@ -1,6 +1,7 @@
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.RevFDerivProj
+import SciLean.Analysis.Calculus.HasFwdFDeriv
 import SciLean.Data.IndexType.Operations
 import SciLean.Tactic.Autodiff
 import SciLean.Data.DataArray.DataArray
@@ -114,12 +115,28 @@ theorem IndexType.Range.foldl.arg_opinit.fwdFDeriv_rule (r : Range I)
     =
     fun w dw =>
       let' (init',dinit') := fwdFDeriv R init w dw
-      let op' := fun ((x,dx) : (X×X)) (i : I) =>
-        let (x',dx') := fwdFDeriv R (fun (w,x) => op w x i) (w,x) (dw,dx)
+      let op' := fun ((xdx) : (X×X)) (i : I) =>
+        let' (x,dx) := xdx
+        let' (x',dx') := fwdFDeriv R (fun (w,x) => op w x i) (w,x) (dw,dx)
         (x',dx')
       (r.foldl op' (init',dinit')) := by
   unfold fwdFDeriv; fun_trans
   -- how to prove this?
+  sorry_proof
+
+@[fun_trans]
+theorem IndexType.Range.foldl.arg_opinit.HasFwdFDeriv (r : Range I)
+    (op : W → X → I → X) {op' : I → _}
+    (hop : ∀ i, HasFwdFDeriv R (fun (w,x) => op w x i) (op' i))
+    (init : W → X) {init'} (hinit : HasFwdFDeriv R init init') :
+    HasFwdFDeriv R (fun w => r.foldl (op w) (init w))
+      (fun w dw =>
+        let' (init',dinit') := fwdFDeriv R init w dw
+        let op' := fun ((xdx) : (X×X)) (i : I) =>
+          let' (x,dx) := xdx
+          let' (x',dx') := op' i (w,x) (dw,dx)
+          (x',dx')
+        (r.foldl op' (init',dinit'))) := by
   sorry_proof
 
 end OnNormedSpace
