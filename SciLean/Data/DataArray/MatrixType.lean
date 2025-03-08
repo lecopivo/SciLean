@@ -31,12 +31,12 @@ instance {m n R K : Type*}
   gemvT a b A x y :=
     -- am I calling this right?
     let y := BLAS.LevelTwoData.gemv .RowMajor .Trans
-      (size m) (size n) 1 A.1 0 (size n) x.1 0 1 0 y.1 0 1
+      (size m) (size n) 1 A.1 0 (size n) x.1 0 1 b y.1 0 1
     ⟨y, sorry_proof⟩
   gemvT_spec := sorry_proof
   gemvH a b A x y :=
     let y := BLAS.LevelTwoData.gemv .RowMajor .ConjTrans
-      (size m) (size n) 1 A.1 0 (size n) x.1 0 1 0 y.1 0 1
+      (size m) (size n) 1 A.1 0 (size n) x.1 0 1 b y.1 0 1
     ⟨y, sorry_proof⟩
   gemvH_spec := sorry_proof
 
