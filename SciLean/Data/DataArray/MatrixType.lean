@@ -73,6 +73,6 @@ instance {m n R K : Type*}
   updateCol_spec := sorry_proof
   outerprodAdd a x y A :=
     -- I don't  understand the last (size m), I though it should be `(size n)`
-    let A := BLAS.LevelTwoData.ger .RowMajor (size m) (size n) a x.1 0 1 y.1 0 1 A.1 0 (size m)
+    let A := BLAS.LevelTwoData.ger .RowMajor (size n) (size m) a y.1 0 1 x.1 0 1 A.1 0 (size n)
     ⟨A, sorry_proof⟩
   outerprodAdd_spec := sorry_proof
