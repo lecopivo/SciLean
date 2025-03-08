@@ -113,6 +113,21 @@ theorem foldl_updateElem_add' [Dense X] (u : n → K) (x : X) :
   x + fromVec u := by simp only [add_comm,foldl_updateElem_add]
 
 
+omit [InjectiveGetElem X n] in
+@[rsimp]
+theorem foldl_setElem_add [Dense X] (u : n → K) (x : X) :
+  IndexType.foldl (fun x i => setElem x i (x[i] + u i) .intro) x
+  =
+  x + fromVec u := sorry_proof
+
+omit [InjectiveGetElem X n] in
+@[rsimp]
+theorem foldl_setElem_add' [Dense X] (u : n → K) (x : X) :
+  IndexType.foldl (fun x i => setElem x i (u i + x[i]) .intro) x
+  =
+  x + fromVec u := by sorry_proof
+
+
 ----------------------------------------------------------------------------------------------------
 
 @[vector_from_spec]
