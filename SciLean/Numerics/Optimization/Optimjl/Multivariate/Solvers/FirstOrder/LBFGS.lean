@@ -2,6 +2,7 @@ import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
 import SciLean.Data.DataArray
+import SciLean.Data.Vector
 
 set_option linter.unusedVariables false
 

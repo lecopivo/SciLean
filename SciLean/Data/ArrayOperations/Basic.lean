@@ -46,8 +46,6 @@ abbrev SetElem' (coll : Type*) (idx : Type*) (elem : outParam Type*) :=
 
 export SetElem (setElem setElem_valid)
 
-attribute [simp, simp_core] setElem_valid
-
 open SetElem
 class LawfulSetElem (coll : Type u) (idx : Type v)
     {elem : outParam (Type w)} {valid : outParam (coll → idx → Prop)}
@@ -199,19 +197,5 @@ theorem getElem_prod_inl [GetElem' α ι γ] [GetElem' β κ γ]
 theorem getElem_prod_inr [GetElem' α ι γ] [GetElem' β κ γ]
         (x : α) (y : β) (j : κ) : (x,y)[Sum.inr (α:=ι) j] = y[j] := by rfl
 
-
--- Vector
-instance : DefaultIndex (Vector α n) (Fin n) where
-
-instance : SetElem' (Vector α n) (Fin n) α where
-  setElem x i v _ := x.set i v
-  setElem_valid := by simp
-
-instance : OfFn (Vector α n) (Fin n) α where
-  ofFn := Vector.ofFn
-
--- Array
-instance : OfFn (Array α) (Fin n) α where
-  ofFn := Array.ofFn
 
 ----------------------------------------------------------------------------------------------------
