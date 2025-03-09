@@ -57,7 +57,8 @@ instance {m n R K : Type*}
     ⊞ (i : m) => BLAS.LevelOneDataExt.sum (size n) A.1 (toFin i * size n) 1
   sumRows_spec := sorry_proof
   col A j :=
-    let c := BLAS.LevelOneData.copy (size m) A.1 (toFin j) (size n) (panic "col for R^[m,n] not implented!") 0 1
+    let c : K^[m] := 0
+    let c := BLAS.LevelOneData.copy (size m) A.1 (toFin j) (size n) c.1 0 1
     ⟨c, sorry_proof⟩
   col_spec := sorry_proof
   sumCols A :=
@@ -72,7 +73,11 @@ instance {m n R K : Type*}
     ⟨A, sorry_proof⟩
   updateCol_spec := sorry_proof
   outerprodAdd a x y A :=
-    -- I don't  understand the last (size m), I though it should be `(size n)`
+    -- I do not understant why I should call it this way, it seems that x and y are swapped ...
     let A := BLAS.LevelTwoData.ger .RowMajor (size n) (size m) a y.1 0 1 x.1 0 1 A.1 0 (size n)
+
+    -- for some reason this is incorrect
+    -- let A := BLAS.LevelTwoData.ger .RowMajor (size m) (size n) a y.1 0 1 x.1 0 1 A.1 0 (size n)
+
     ⟨A, sorry_proof⟩
   outerprodAdd_spec := sorry_proof
