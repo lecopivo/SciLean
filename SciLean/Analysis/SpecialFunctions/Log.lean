@@ -2,6 +2,8 @@ import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.FwdCDeriv
+import SciLean.Analysis.Calculus.HasRevFDeriv
+import SciLean.Analysis.Calculus.HasFwdFDeriv
 
 open ComplexConjugate
 
@@ -81,6 +83,30 @@ theorem log.arg_x.fwdFDeriv_rule
 by
   unfold fwdFDeriv; fun_trans (disch:=assumption); simp[fwdFDeriv]
 
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem log.arg_x.HasFDerivAt_rule
+    (w : W) (x : W → R) {x'} (hx : HasFDerivAt (𝕜:=R) x x' w) (hw : x w ≠ 0) :
+    HasFDerivAt (fun w => log (x w))
+      (ContinuousLinearMap.mk' R (fun dw =>
+        let x := x w
+        let dx := x' dw
+        dx / abs x) (by fun_prop)) w := sorry_proof
+
+@[data_synth]
+theorem log.arg_x.HasFwdFDerivAt_rule
+    (x : W → R) {x'} (hx : HasFwdFDeriv R x x') (hw : ∀ w, x w ≠ 0) :
+    HasFwdFDeriv R (fun w => log (x w))
+      (fun w dw =>
+        let' (x,dx) := x' w dw
+        let r := log x
+        let dr := dx / abs x
+        (r, dr)) := by
+  have ⟨_,_,_,_⟩ := hx
+  apply hasFwdFDeriv_from_hasFDerivAt
+  case deriv => intro; data_synth (disch:=aesop)
+  case simp => simp_all
+
 
 open ComplexConjugate
 @[fun_trans]
@@ -105,6 +131,44 @@ theorem log.arg_x.revFDeriv_rule
   unfold revFDeriv
   fun_trans (disch:=assumption) [fwdFDeriv, smul_push, simp_core]
 
+
+omit [CompleteSpace U] in
+@[data_synth]
+theorem log.arg_x.HasRevFDeriv_rule
+    (x : U → R) {x'} (hx : HasRevFDeriv R x x') (hu : ∀ u, x u ≠ 0) :
+    HasRevFDeriv R (fun u => log (x u))
+      (fun u =>
+        let' (x,dx) := x' u
+        (log x, fun dy =>
+          let du := dx (dy / (abs (x)))
+          du)) := by
+  have ⟨_,_,_,_⟩ := hx.deriv_adjoint
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  case deriv => intro; data_synth (disch:=apply hu)
+  case adjoint => intros; dsimp; data_synth
+  case simp =>
+    funext u;
+    have h : (x' u).1 = x u := sorry_proof
+    simp[h]
+
+omit [CompleteSpace U] in
+@[data_synth]
+theorem log.arg_x.HasRevFDerivUpdate_rule
+    (x : U → R) {x'} (hx : HasRevFDerivUpdate R x x') (hu : ∀ u, x u ≠ 0) :
+    HasRevFDerivUpdate R (fun u => log (x u))
+      (fun u =>
+        let' (x,dx) := x' u
+        (log x, fun dy du =>
+          let du := dx (dy / (abs (x))) du
+          du)) := by
+  have ⟨_,_,_,_⟩ := hx.deriv_adjointUpdate
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  case deriv => intro; data_synth (disch:=apply hu)
+  case adjoint => intros; dsimp; data_synth
+  case simp =>
+    funext u;
+    have h : (x' u).1 = x u := sorry_proof
+    simp[h]
 
 end Normed
 
@@ -210,6 +274,7 @@ theorem log.arg_x.revCDeriv_rule
       (log xdx.1, fun dy => xdx.2 ((abs (x u))⁻¹ * dy)) := by
   unfold revCDeriv
   fun_trans (disch:=assumption) [fwdCDeriv, smul_push, simp_core]
+
 
 end Convenient
 
