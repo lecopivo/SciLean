@@ -14,7 +14,7 @@ instance : CommRing Float where
   right_distrib := by intros; apply isomorph.ext `FloatToReal; simp; fun_trans; rw[add_mul]
   mul_one := by intros; apply isomorph.ext `FloatToReal; simp; fun_trans
   one_mul := by intros; apply isomorph.ext `FloatToReal; simp; fun_trans
-  npow n x := x.pow (n.toFloat)  --- TODO: change this implementation
+  npow n x := x.npow n
   npow_zero n := sorry_proof
   npow_succ n x := sorry_proof
   mul_assoc := sorry_proof
@@ -39,6 +39,10 @@ instance : CommRing Float where
   intCast_negSucc := sorry_proof
 
 instance : Field Float where
+  zpow n x := x.zpow n
+  zpow_zero' := sorry_proof
+  zpow_succ' := sorry_proof
+  zpow_neg' := sorry_proof
   exists_pair_ne := sorry_proof
   div_eq_mul_inv := sorry_proof
   mul_inv_cancel := sorry_proof
