@@ -47,7 +47,7 @@ def ofProd (i : Range (I×J)) : Range I × Range J :=
   | .interval (a,a') (b,b') => (.interval a b, .interval a' b')
 
 open FirstLast in
-@[inline]
+-- @[inline] -- inlining breaks the current compiler on tests in `Test/indextype/fold.lean`
 def prod (i : Range I) (j : Range J) [FirstLast I I] [FirstLast J J] : Range (I×J) :=
   match i, j with
   | .empty, _ => .empty
