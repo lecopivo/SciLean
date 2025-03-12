@@ -21,6 +21,19 @@ def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType
     (xs : X^[I]) (i : I) : X :=
   pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
+-- this is evil instance, as there is the same one but without `[IdxType I n]`
+instance {X} [PlainDataType X] {I n} [IndexType I] [IdxType I n] : GetElem' (X^[I]) I X where
+  getElem xs i _ := xs.idxGet i
+
+open Lean Parser Term in
+macro (name:=minStx) "minᴵ" xs:funBinder* ", " b:term : term => do
+  if xs.size = 1 then
+    let x := xs[0]!
+    `(IdxType.min fun $x => $b)
+  else
+    `(Function.argmin ↿fun $xs* => $b)
+
+
 instance : Coe Nat USize := ⟨fun n => n.toUSize⟩
 
 @[extern "scilean_kmeans"]
@@ -75,16 +88,15 @@ def kmeansSciLean_no_blas (d n k : Nat) (points centroids : FloatArray) : Float 
   let points : Float^[Idx d]^[Idx n] := ⟨⟨points.toByteArray, n, sorry_proof⟩, sorry_proof⟩
   let centroids : Float^[Idx d]^[Idx k] := ⟨⟨centroids.toByteArray, n, sorry_proof⟩, sorry_proof⟩
 
-  ∑'' (i : Idx n), IdxType.min (fun (j : Idx k) => ∑'' (l : Idx d),
-     let xil := points.uncurry.idxGet (i,l)
-     let cjl := centroids.uncurry.idxGet (j,l)
-     (xil - cjl)^2)
+  ∑ᴵ (i : Idx n), minᴵ (j : Idx k), ∑ᴵ (l : Idx d),
+     (points.uncurry[i,l] - centroids.uncurry[j,l])^2
 
 
 def kmeansSciLean (d n k : Nat) (points centroids : FloatArray) : Float :=
 
   let points : Float^[d]^[n] := ⟨⟨points.toByteArray, n, sorry_proof⟩, sorry_proof⟩
   let centroids : Float^[d]^[k] := ⟨⟨centroids.toByteArray, n, sorry_proof⟩, sorry_proof⟩
+
   ∑ i, IndexType.min (fun j => ‖points[i] - centroids[j]‖₂²[Float])
 
 def main : IO Unit := do

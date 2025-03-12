@@ -11,17 +11,19 @@ namespace IdxType
 def sum [Zero α] [Add α] (f : I → α) : α :=
   IdxType.foldl (IndexType.Range.full (I:=I)) (init := 0) (fun i s => s + f i)
 
+
 open Lean.TSyntax.Compat in
-macro " ∑'' " xs:Lean.explicitBinders ", " b:term:66 : term =>
+/-- `∑ᴵ (i : I), f i` is sum over indextype `I` i.e. has instance `IdxType I n`. -/
+macro " ∑ᴵ " xs:Lean.explicitBinders ", " b:term:66 : term =>
   Lean.expandExplicitBinders ``IdxType.sum xs b
 
 @[app_unexpander sum] def unexpandIdxTypeSum : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:ident => $b) =>
-    `(∑'' $x:ident, $b)
+    `(∑ᴵ $x:ident, $b)
   | `($(_) fun $x:ident $xs:ident* => $b) =>
-    `(∑'' $x:ident, fun $xs* => $b)
+    `(∑ᴵ $x:ident, fun $xs* => $b)
   | `($(_) fun ($x:ident : $ty:term) => $b) =>
-    `(∑'' ($x:ident : $ty), $b)
+    `(∑ᴵ ($x:ident : $ty), $b)
   | _  => throw ()
 
 set_option pp.universes true
