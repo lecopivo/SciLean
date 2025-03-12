@@ -133,6 +133,9 @@ lean_exe FloatMatrixTest {
 lean_exe ProfileKMeans {
   root := `examples.Profile.KMeans
 }
+lean_exe ProfileKMeansDirection {
+  root := `examples.Profile.KMeansDirection
+}
 
 lean_exe MNISTClassifier where
   root := `examples.MNISTClassifier
