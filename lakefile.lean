@@ -2,9 +2,6 @@
 import Lake
 open Lake DSL System
 
--- def linkArgs := #["-L./.lake/packages/leanblas/.lake/build/lib/", "-lopenblas"]
--- def moreLeanArgs := #["--load-dynlib=./.lake/packages/leanblas/.lake/build/lib/libopenblas.so"]
-
 def linkArgs :=
   if System.Platform.isWindows then
     #[]
@@ -25,8 +22,13 @@ def inclArgs :=
 
 package scilean {
   moreLinkArgs := linkArgs
-  -- moreLeanArgs := moreLeanArgs
 }                               --
+
+meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
+require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
+
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.16.0"
+require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "master"
 
 
 @[default_target]
@@ -39,14 +41,17 @@ lean_lib Test {
   globs := #[Glob.submodules `Test]
 }
 
-lean_lib CompileTactics where
-  -- options for SciLean.Tactic.MySimpProc (and below) modules
+-- Files that should be compile, either to get fast tactic or to make FFI functions work in editor
+lean_lib CompiledFiles where
   precompileModules := true
   roots := #[`SciLean.Tactic.LSimp.LetNormalize,
              `SciLean.Tactic.CompiledTactics,
              `SciLean.Data.Float,
-             `SciLean.Data.FloatArray]
+             `SciLean.Data.FloatArray,
+             `SciLean.Data.ByteArray]
 
+
+-- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library
 extern_lib libscileanc pkg := do
   let mut oFiles : Array (Job FilePath) := #[]
   for file in (← (pkg.dir / "C").readDir) do
@@ -54,10 +59,13 @@ extern_lib libscileanc pkg := do
       let oFile := pkg.buildDir / "c" / (file.fileName.stripSuffix ".c" ++ ".o")
       let srcJob ← inputTextFile file.path
       let weakArgs := #["-I", (← getLeanIncludeDir).toString]
-      oFiles := oFiles.push (← buildO oFile srcJob weakArgs #["-fPIC"] "gcc" getLeanTrace)
+      oFiles := oFiles.push (← buildO oFile srcJob weakArgs #["-fPIC", "-O3", "-DNDEBUG"] "gcc" getLeanTrace)
   let name := nameToStaticLib "scileanc"
   buildStaticLib (pkg.nativeLibDir / name) oFiles
 
+
+
+----------------------------------------------------------------------------------------------------
 lean_exe Doodle {
   root := `examples.Doodle
 }
@@ -121,15 +129,10 @@ lean_exe FloatMatrixTest {
   root := `examples.FloatMatrixTest
 }
 
+
+lean_exe ProfileKMeans {
+  root := `examples.Profile.KMeans
+}
+
 lean_exe MNISTClassifier where
   root := `examples.MNISTClassifier
-
-
-
-meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
-require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
-
-require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.16.0"
-require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "master"
-
-set_option linter.unusedVariables false

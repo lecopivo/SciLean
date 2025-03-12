@@ -12,6 +12,8 @@ class IdxType.Fold (I : Type u) (m : Type v → Type w) where
   -- TODO: some property that the forIn and foldM are doing the right thing in *the* order aligned
   --       with `IndexType`
 
+abbrev IdxType.Fold'.{u,v} (I : Type u) := IdxType.Fold.{u,v,v} I Id
+
 attribute [specialize] IdxType.Fold.forIn
 
 namespace IdxType
