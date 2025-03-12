@@ -14,20 +14,45 @@ class IdxType.Fold (I : Type u) (m : Type v → Type w) where
 
 attribute [specialize] IdxType.Fold.forIn
 
+namespace IdxType
+
+export IdxType.Fold (forIn)
 
 @[inline, specialize]
-abbrev IdxType.Fold.foldlM {I m β} [IdxType.Fold I m] [Monad m]
+def foldlM {I m β} [IdxType.Fold I m] [Monad m]
     (r : IndexType.Range I) (init : β) (f : I → β → m β) : m β :=
   forIn r init (fun i x => do return .yield (← f i x))
 
 @[inline, specialize]
-abbrev IdxType.Fold.foldl {I β} [IdxType.Fold I Id]
+def foldl {I β} [IdxType.Fold I Id]
     (r : IndexType.Range I) (init : β) (f : I → β → β) : β :=
   foldlM (m:=Id) r init (fun i x => pure (f i x))
 
 instance {m : Type v → Type w} [IdxType.Fold I m] :
     ForIn m (IndexType.Range I) I where
   forIn := IdxType.Fold.forIn
+
+@[inline, specialize]
+def reduceDM {I m β} [IdxType.Fold I m] [Monad m]
+    (r : IndexType.Range I) (f : I → m β) (op : β → β → m β) (default : β) : m β := do
+  let mut val := default
+  let mut first := true
+  for i in r do
+    if first then
+      val ← f i
+    else
+      val ← op val (← f i)
+  return val
+
+@[inline, specialize]
+def reduceD {I β} [IdxType.Fold I Id]
+    (r : IndexType.Range I) (f : I → β) (op : β → β → β) (default : β) : β :=
+  reduceDM (m:=Id) r f op default
+
+@[inline, specialize]
+abbrev reduce {I β} [IdxType.Fold I Id] [Inhabited β]
+    (r : IndexType.Range I) (f : I → β) (op : β → β → β) : β :=
+  reduceD r f op default
 
 
 ----------------------------------------------------------------------------------------------------

@@ -21,7 +21,7 @@ import SciLean.Analysis.Calculus.HasFwdFDeriv
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
 import SciLean.Analysis.Calculus.HasRevFDeriv
--- import SciLean.Analysis.Calculus.HasVecFwdFDeriv
+import SciLean.Analysis.Calculus.HasVecFwdFDeriv
 import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
 import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
@@ -354,6 +354,7 @@ import SciLean.Data.Idx.Basic
 import SciLean.Data.Idx.GetElemIdx
 import SciLean.Data.IdxType.Basic
 import SciLean.Data.IdxType.Fold
+import SciLean.Data.IdxType.Operations
 import SciLean.Data.IndexType
 import SciLean.Data.IndexType.Basic
 import SciLean.Data.IndexType.DeriveIndexType
