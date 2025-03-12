@@ -14,12 +14,14 @@ import SciLean.Analysis.Calculus.FDeriv
 import SciLean.Analysis.Calculus.FwdCDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.HasFDeriv
+import SciLean.Analysis.Calculus.HasFwdFDeriv
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Common
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Functions
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
 import SciLean.Analysis.Calculus.HasRevFDeriv
+-- import SciLean.Analysis.Calculus.HasVecFwdFDeriv
 import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
 import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
@@ -301,6 +303,7 @@ import SciLean.Data.ArrayType
 import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ArrayType.Notation
 -- import SciLean.Data.ArrayType.Properties_old
+import SciLean.Data.ByteArray
 import SciLean.Data.ColProd
 import SciLean.Data.Curry
 import SciLean.Data.DataArray
@@ -346,6 +349,11 @@ import SciLean.Data.FinProd
 import SciLean.Data.Float
 import SciLean.Data.FloatArray
 import SciLean.Data.Function
+import SciLean.Data.Idx
+import SciLean.Data.Idx.Basic
+import SciLean.Data.Idx.GetElemIdx
+import SciLean.Data.IdxType.Basic
+import SciLean.Data.IdxType.Fold
 import SciLean.Data.IndexType
 import SciLean.Data.IndexType.Basic
 import SciLean.Data.IndexType.DeriveIndexType
@@ -385,6 +393,7 @@ import SciLean.Data.Random
 import SciLean.Data.StructType
 import SciLean.Data.StructType.Algebra
 import SciLean.Data.StructType.Basic
+import SciLean.Data.Vector
 import SciLean.Data.VectorType.Base
 import SciLean.Data.VectorType.BaseSimps
 import SciLean.Data.VectorType.Basic
@@ -443,8 +452,10 @@ import SciLean.Lean.Name
 import SciLean.Lean.String
 import SciLean.Lean.ToSSA
 import SciLean.Logic.Function.Bijective
+import SciLean.Logic.Function.Constant
 import SciLean.Logic.Function.InvFun
 import SciLean.Logic.Function.Preimage
+import SciLean.Logic.Function.Sort
 import SciLean.Logic.If
 import SciLean.Logic.Isomorph.Isomorph
 import SciLean.Logic.Isomorph.IsomorphicType

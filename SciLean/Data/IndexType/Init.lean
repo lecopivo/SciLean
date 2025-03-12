@@ -75,6 +75,19 @@ theorem size_Icc (a b : Int) : size (Icc a b) = (b - a + 1).toNat := by rfl
 
 end Size
 
+-- TODO: remove `Size` and replace it with this
+class Size' {X : Sort*} (x : X) (n : outParam Nat)
+
+namespace Size'
+
+instance : Size' Empty 0 where
+instance : Size' Unit 1 where
+instance : Size' Bool 2 where
+instance : Size' (Fin n) n where
+instance [Size' α m] [Size' β n] : Size' (α×β) (m*n) where
+instance [Size' α m] [Size' β n] : Size' (α⊕β) (m+n) where
+
+end Size'
 ------------------
 
 class FirstLast {α : Sort u} (a : α) (β : outParam (Type v)) where
