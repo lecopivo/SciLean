@@ -1,5 +1,6 @@
 import Mathlib.Logic.Function.Defs
 import SciLean.Meta.SimpAttr
+import SciLean.Lean.Expr
 
 namespace SciLean
 
@@ -199,3 +200,28 @@ theorem getElem_prod_inr [GetElem' α ι γ] [GetElem' β κ γ]
 
 
 ----------------------------------------------------------------------------------------------------
+-- GetElem OfFn simproc ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+open Lean Meta Expr
+/-- Simproc for zetaDelta reduction in very specific case:
+
+Consider that we create and array and then immediatelly take an element of it.
+```
+let xs := ⊞ i => f i
+xs[i]
+```
+we want this to reduce to `f i`. This simproc does that witout the need of turing on
+ `zeta`/`zeteDelta` option of `simp`.
+
+ -/
+simproc_decl getElem_ofFn_zetaDelta (getElem _ _ _) := fun e => do
+  if e.isAppOfArity' ``getElem 8 then
+    let xs := e.getArg! 5
+    if xs.isFVar then
+      if let .some val ← xs.fvarId!.getValue? then
+        if val.isAppOfArity ``ofFn 5 then
+          let e' : Expr :=
+            Expr.letE `xi (← inferType e) (e.setArg 5 val) (.bvar 0) false
+          return .continue (.some { expr := e'})
+  return .continue
