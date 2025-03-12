@@ -1,5 +1,6 @@
 import SciLean.Util.SorryProof
 import SciLean.Data.IndexType
+import SciLean.Data.ByteArray
 -- import LeanColls.Classes.Ops.Fold
 
 namespace SciLean
@@ -27,6 +28,7 @@ structure ByteType (α : Type*) where
   fromByteArray_toByteArray : ∀ a b i h h', fromByteArray (toByteArray b i h a) i h' = a
   /-- `toByteArray` does not affect other bytes -/
   fromByteArray_toByteArray_other : ∀ a b i j h, (j < i) ∨ (i + bytes) ≤ j → (toByteArray b i h a).uget j sorry_proof = b.uget j sorry_proof
+
 
 /-- This rougly corresponds to Plain Old Data(POD)/Passive Data known from OOP
 
@@ -59,11 +61,14 @@ def PlainDataType.capacity {α : Type*} (pd : PlainDataType α) (byteNum : Nat) 
 
 
 set_option linter.unusedVariables false in
-/-- Get `i`-th element from `ByteArray`. -/
-def PlainDataType.fromByteArray {α : Type*} (pd : PlainDataType α) (data : ByteArray) (i : Nat) (hi : i*pd.bytes < data.size): α :=
+/-- Get `i`-th element from `ByteArray`.
+
+The index `i` is `i`-th element *not* `i`-th byte!. -/
+@[inline]
+def PlainDataType.fromByteArray {α : Type*} (pd : PlainDataType α) (data : ByteArray) (i : USize) (hi : i.toNat*pd.bytes < data.size): α :=
   match pd.btype with
   | .inl bitType =>
-    let i := i.toUSize
+    let i := i
     let perByte := 8/bitType.bits
     let inByte  := (i % perByte.toUSize).toUInt8
     let ofByte  := i / perByte.toUSize
@@ -74,7 +79,7 @@ def PlainDataType.fromByteArray {α : Type*} (pd : PlainDataType α) (data : Byt
     bitType.fromByte byte
   | .inr byteType =>
     -- todo: add bound check
-    byteType.fromByteArray data (i.toUSize*byteType.bytes) sorry_proof
+    byteType.fromByteArray data (i*byteType.bytes) sorry_proof
 
 set_option linter.unusedVariables false in
 /-- Write `v` to `ByteArray` at `i`-th position. -/
@@ -131,6 +136,7 @@ def PlainDataType.ofEquiv {X Y : Type*} [pd : PlainDataType X] (f : X ≃ Y) : P
 --------------- Prod -------------------------------------------------
 ----------------------------------------------------------------------
 
+@[inline]
 def Prod.bitTypeProd {α β} (ta : BitType α) (tb : BitType β) : BitType (α × β) ⊕ ByteType (α × β) :=
   if h : ta.bits + tb.bits ≤ 8 then
     .inl {
@@ -172,6 +178,7 @@ def Prod.bitTypeProd {α β} (ta : BitType α) (tb : BitType β) : BitType (α �
       fromByteArray_toByteArray_other := sorry_proof
     }
 
+@[inline]
 def Prod.bitTypeByteTypeProd {α β} (ta : BitType α) (tb : ByteType β) : ByteType (α × β) :=
   {
     bytes := tb.bytes + 1
@@ -189,6 +196,7 @@ def Prod.bitTypeByteTypeProd {α β} (ta : BitType α) (tb : ByteType β) : Byte
     fromByteArray_toByteArray_other := sorry_proof
   }
 
+@[inline]
 def Prod.byteTypeBitTypeProd {α β} (ta : ByteType α) (tb : BitType β) : ByteType (α × β) :=
   {
     bytes := ta.bytes + 1
@@ -206,7 +214,7 @@ def Prod.byteTypeBitTypeProd {α β} (ta : ByteType α) (tb : BitType β) : Byte
     fromByteArray_toByteArray_other := sorry_proof
   }
 
-
+@[inline]
 def Prod.byteTypeProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType (α × β) :=
   {
     bytes := ta.bytes + tb.bytes
@@ -255,6 +263,7 @@ instance instPlainDataTypeProd [ta : PlainDataType α] [tb : PlainDataType β] :
 --------------- Sigma -------------------------------------------------
 ----------------------------------------------------------------------
 
+@[inline]
 def Sigma.bitTypeSigma {α β} (ta : BitType α) (tb : BitType β) : BitType ((_ : α) × β) ⊕ ByteType ((_ : α) × β) :=
   if h : ta.bits + tb.bits ≤ 8 then
     .inl {
@@ -296,6 +305,7 @@ def Sigma.bitTypeSigma {α β} (ta : BitType α) (tb : BitType β) : BitType ((_
       fromByteArray_toByteArray_other := sorry_proof
     }
 
+@[inline]
 def Sigma.bitTypeByteTypeSigma {α β} (ta : BitType α) (tb : ByteType β) : ByteType ((_ : α) × β) :=
   {
     bytes := tb.bytes + 1
@@ -313,6 +323,7 @@ def Sigma.bitTypeByteTypeSigma {α β} (ta : BitType α) (tb : ByteType β) : By
     fromByteArray_toByteArray_other := sorry_proof
   }
 
+@[inline]
 def Sigma.byteTypeBitTypeSigma {α β} (ta : ByteType α) (tb : BitType β) : ByteType ((_ : α) × β) :=
   {
     bytes := ta.bytes + 1
@@ -330,7 +341,7 @@ def Sigma.byteTypeBitTypeSigma {α β} (ta : ByteType α) (tb : BitType β) : By
     fromByteArray_toByteArray_other := sorry_proof
   }
 
-
+@[inline]
 def Sigma.byteTypeSigma {α β} (ta : ByteType α) (tb : ByteType β) : ByteType ((_ : α) × β) :=
   {
     bytes := ta.bytes + tb.bytes
@@ -381,6 +392,7 @@ instance instPlainDataTypeSigma [ta : PlainDataType α] [tb : PlainDataType β] 
 ----------------------------------------------------------------------
 -- TODO: somehow reuse implementation for Prod rather then copy paste
 
+@[inline]
 def MProd.bitTypeMProd {α β} (ta : BitType α) (tb : BitType β) : BitType (MProd α β) ⊕ ByteType (MProd α β) :=
   if h : ta.bits + tb.bits ≤ 8 then
     .inl {
@@ -422,6 +434,7 @@ def MProd.bitTypeMProd {α β} (ta : BitType α) (tb : BitType β) : BitType (MP
       fromByteArray_toByteArray_other := sorry_proof
     }
 
+@[inline]
 def MProd.bitTypeByteTypeMProd {α β} (ta : BitType α) (tb : ByteType β) : ByteType (MProd α β) :=
   {
     bytes := tb.bytes + 1
@@ -439,6 +452,7 @@ def MProd.bitTypeByteTypeMProd {α β} (ta : BitType α) (tb : ByteType β) : By
     fromByteArray_toByteArray_other := sorry_proof
   }
 
+@[inline]
 def MProd.byteTypeBitTypeMProd {α β} (ta : ByteType α) (tb : BitType β) : ByteType (MProd α β) :=
   {
     bytes := ta.bytes + 1
@@ -456,7 +470,7 @@ def MProd.byteTypeBitTypeMProd {α β} (ta : ByteType α) (tb : BitType β) : By
     fromByteArray_toByteArray_other := sorry_proof
   }
 
-
+@[inline]
 def MProd.byteTypeMProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType (MProd α β) :=
   {
     bytes := ta.bytes + tb.bytes
@@ -486,6 +500,7 @@ instance instPlainDataTypeMProd [ta : PlainDataType α] [tb : PlainDataType β] 
 --------------- Bool n ------------------------------------------------
 -----------------------------------------------------------------------
 
+@[inline]
 def Bool.bitType : BitType Bool where
   bits := 1
   h_size := by aesop
@@ -501,12 +516,15 @@ instance : PlainDataType Bool where
 ----------------------------------------------------------------------
 
 /-- Number of bits necessary to store `Fin n` -/
+@[inline]
 def Fin.bitSize  (n : Nat) : Nat := (Nat.log2 n + (n - (1 <<< (Nat.log2 n)) != 0).toUInt64.toNat)
+@[inline]
 def Fin.byteSize (n : Nat) : Nat := (Fin.bitSize n + 7) / 8
 
 
 -- INCONSISTENT: This breaks consistency with (n=0) as we could make `Fin 0` from a byte
 -- Adding assumption (n≠0) is really annoying, what to do about this?
+@[inline]
 def Fin.bitType (n : Nat) (_ : n ≤ 256) : BitType (Fin n) where
   bits := (bitSize n).toUInt8
   h_size := sorry_proof
@@ -514,7 +532,7 @@ def Fin.bitType (n : Nat) (_ : n ≤ 256) : BitType (Fin n) where
   toByte   b := b.1.toUInt8
   fromByte_toByte := sorry_proof
 
-
+@[inline]
 def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
   bytes := (byteSize n).toUSize
   h_size := sorry_proof
@@ -674,20 +692,16 @@ instance : PlainDataType UInt64 where
 -------------- Float -------------------------------------------------
 ----------------------------------------------------------------------
 
+@[inline]
 def Float.byteType : ByteType Float where
   bytes := 8
   h_size := sorry_proof
 
-  fromByteArray arr i _ :=
-    if i % 8 = 0 then
-      let arr : FloatArray := cast sorry_proof arr
-      arr[i/8]'sorry_proof
-    else
-      panic! "Can't read float from ByteArray from nonaligned position i={i}! i % 8 = {i%8} ≠ 0. Please implement this case in C!"
+  fromByteArray arr i _ := arr.ugetFloatAtByte i sorry_proof
   toByteArray arr i _ a :=
     if i % 8 = 0 then
       let arr : FloatArray := cast sorry_proof arr
-      cast sorry_proof (arr.uset (i/8) a sorry_proof)
+      cast sorry_proof (arr.uset (i<<<3) a sorry_proof)
     else
       panic! "Can't write float to ByteArray to nonaligned position i={i}! i % 8 = {i%8} ≠ 0. Please implement this case in C!"
 

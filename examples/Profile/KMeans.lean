@@ -17,14 +17,9 @@ def FloatArray.rand01 (n : Nat) : IO FloatArray := do
 
 
 @[inline]
-def _root_.SciLean.DataArrayN.idxGet2 (xs : Float^[Idx m, Idx n]) (i : Idx m) (j : Idx n) : Float :=
-  xs.1.1.ugetFloat (toIdx (i,j)) sorry_proof
-
-
-@[inline]
-def _root_.SciLean.DataArrayN.idxGet {I n} [IdxType I n] [IndexType I] (xs : Float^[I]) (i : I) : Float :=
-  xs.1.1.ugetFloat (toIdx i) sorry_proof
-
+def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IdxType I n]
+    (xs : X^[I]) (i : I) : X :=
+  pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
 instance : Coe Nat USize := ⟨fun n => n.toUSize⟩
 
@@ -43,6 +38,29 @@ def kmeansBestLeanImpl (d n k : Nat) (points centroids : FloatArray) : Float := 
       for l in IndexType.Range.full (I:=Idx d) do
         let xil := points.uget (i.1*d.toUSize + l.1) sorry_proof
         let cjl := centroids.uget (j.1*d.toUSize + l.1) sorry_proof
+        norm2 := norm2 + (xil - cjl)*(xil - cjl)
+
+      if norm2 < minNorm2 then
+        minNorm2 := norm2
+
+    loss := loss + minNorm2
+  return loss
+
+
+def kmeansByteArrayProblem (d n k : Nat) (points centroids : FloatArray) : Float := Id.run do
+  let points := points.toByteArray
+  let centroids := centroids.toByteArray
+  let mut loss := 0.0
+  for i in IndexType.Range.full (I:=Idx n) do
+
+    let mut minNorm2 := Float.inf
+
+    for j in IndexType.Range.full (I:=Idx k) do
+
+      let mut norm2 := 0.0
+      for l in IndexType.Range.full (I:=Idx d) do
+        let xil := points.ugetFloat (i.1*d.toUSize + l.1) sorry_proof
+        let cjl := centroids.ugetFloat (j.1*d.toUSize + l.1) sorry_proof
         norm2 := norm2 + (xil - cjl)*(xil - cjl)
 
       if norm2 < minNorm2 then
@@ -104,6 +122,19 @@ def main : IO Unit := do
   let timeMs := timeNs.toFloat / 1e6
   IO.println
     s!"best lean impl         time := {timeMs}ms \tloss := {loss}"
+
+  IO.sleep 1000
+
+  -- just switching from `FloatArray` to `ByteArray` cases issue
+  -- I have no idea what is going wrong here
+  -- This is the main slow down
+  let s ← IO.monoNanosNow
+  let loss := kmeansByteArrayProblem d n k points centroids
+  let e ← IO.monoNanosNow
+  let timeNs := e - s
+  let timeMs := timeNs.toFloat / 1e6
+  IO.println
+    s!"ByteArray issue        time := {timeMs}ms \tloss := {loss}"
 
   IO.sleep 1000
 
