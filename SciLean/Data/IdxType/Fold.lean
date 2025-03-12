@@ -40,6 +40,7 @@ def reduceDM {I m β} [IdxType.Fold I m] [Monad m]
   for i in r do
     if first then
       val ← f i
+      first := false
     else
       val ← op val (← f i)
   return val
