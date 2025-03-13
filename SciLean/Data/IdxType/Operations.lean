@@ -34,28 +34,28 @@ abbrev min [Min α] [Inhabited α] (f : I → α) : α :=
 abbrev max [Max α] [Inhabited α] (f : I → α) : α :=
   IdxType.reduce (IndexType.Range.full (I:=I)) f (Max.max · ·)
 
-abbrev argMinVal {I α : Type}
-    [IdxType.Fold.{0,0,0} I Id]
+abbrev argMinVal {I α : Type*} {n}
+    [IdxType I n] [IdxType.Fold' I]
     [LE α] [DecidableLE α] [Inhabited I]
     (f : I → α) : (I×α) :=
   IdxType.reduceD (IndexType.Range.full (I:=I))
     (fun i => (i,f i)) (fun (i,xi) (j,xj) => if xi ≤ xj then (i,xi) else (j,xj))
     (default, f default)
 
-abbrev argMaxVal {I α : Type}
-    [IdxType.Fold.{0,0,0} I Id]
+abbrev argMaxVal {I α : Type*} {n}
+    [IdxType I n] [IdxType.Fold' I]
     [LE α] [DecidableLE α] [Inhabited I]
     (f : I → α) : (I×α) :=
   IdxType.reduceD (IndexType.Range.full (I:=I))
     (fun i => (i,f i)) (fun (i,xi) (j,xj) => if xi ≤ xj then (j,xj) else (i,xi))
     (default, f default)
 
-abbrev argMin {I α : Type}
-    [IdxType.Fold.{0,0,0} I Id]
+abbrev argMin {I α : Type*} {n}
+    [IdxType I n] [IdxType.Fold' I]
     [LE α] [DecidableLE α] [Inhabited I]
     (f : I → α) : I := (argMinVal f).1
 
-abbrev argMax {I α : Type}
-    [IdxType.Fold.{0,0,0} I Id]
+abbrev argMax {I α : Type*}
+    [IdxType I n] [IdxType.Fold' I]
     [LE α] [DecidableLE α] [Inhabited I]
     (f : I → α) : I := (argMaxVal f).1

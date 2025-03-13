@@ -6,13 +6,21 @@ namespace SciLean
 
 Note: This function is not part of `IndexType` because of the two universe parameters `v` and `w`
 which were causing lot of issues during type class synthesis. -/
-class IdxType.Fold (I : Type u) (m : Type v → Type w) where
+class IdxType.Fold (I : Type u) (m : Type v → Type w) {n : outParam ℕ} [IdxType I n] where
   forIn {β} [Monad m] (r : IndexType.Range I) (init : β) (f : I → β → m (ForInStep β)) : m β
 
   -- TODO: some property that the forIn and foldM are doing the right thing in *the* order aligned
-  --       with `IndexType`
+  --       with `IdxType`
 
-abbrev IdxType.Fold'.{u,v} (I : Type u) := IdxType.Fold.{u,v,v} I Id
+/--
+Abbreviation for `IdxType.Fold I Id`
+
+Implementation of a fold over index type `I`.
+
+Warning: This class has an universe parameter `v` that is not deducible from the its parameters.
+  Sometimes you might have to specify the universe parameter manually e.g. `IndexType.Fold'.{_,0} I`
+-/
+abbrev IdxType.Fold'.{u,v} (I : Type u) [IdxType I n] := IdxType.Fold.{u,v,v} I Id
 
 attribute [specialize] IdxType.Fold.forIn
 
@@ -21,39 +29,40 @@ namespace IdxType
 export IdxType.Fold (forIn)
 
 @[inline, specialize]
-def foldlM {I m β} [IdxType.Fold I m] [Monad m]
+def foldlM {I n m β} [IdxType I n] [IdxType.Fold I m] [Monad m]
     (r : IndexType.Range I) (init : β) (f : I → β → m β) : m β :=
   forIn r init (fun i x => do return .yield (← f i x))
 
 @[inline, specialize]
-def foldl {I β} [IdxType.Fold I Id]
+def foldl {I n β} [IdxType I n] [IdxType.Fold I Id]
     (r : IndexType.Range I) (init : β) (f : I → β → β) : β :=
   foldlM (m:=Id) r init (fun i x => pure (f i x))
 
-instance {m : Type v → Type w} [IdxType.Fold I m] :
+instance {m : Type v → Type w} {n} [IdxType I n] [IdxType.Fold I m] :
     ForIn m (IndexType.Range I) I where
   forIn := IdxType.Fold.forIn
 
 @[inline, specialize]
-def reduceDM {I m β} [IdxType.Fold I m] [Monad m]
+def reduceDM {I : Type u} {β : Type v} {m : Type v → Type w} {n : ℕ}
+    [IdxType I n] [IdxType.Fold I m] [Monad m]
     (r : IndexType.Range I) (f : I → m β) (op : β → β → m β) (default : β) : m β := do
   let mut val := default
-  let mut first := true
+  let mut first : ULift.{v,0} Bool := ULift.up true
   for i in r do
-    if first then
+    if ULift.down first then
       val ← f i
-      first := false
+      first := ULift.up false
     else
       val ← op val (← f i)
   return val
 
 @[inline, specialize]
-def reduceD {I β} [IdxType.Fold I Id]
+def reduceD {I n β} [IdxType I n] [IdxType.Fold I Id]
     (r : IndexType.Range I) (f : I → β) (op : β → β → β) (default : β) : β :=
   reduceDM (m:=Id) r f op default
 
 @[inline, specialize]
-abbrev reduce {I β} [IdxType.Fold I Id] [Inhabited β]
+abbrev reduce {I n β} [IdxType I n] [IdxType.Fold I Id] [Inhabited β]
     (r : IndexType.Range I) (f : I → β) (op : β → β → β) : β :=
   reduceD r f op default
 
@@ -65,7 +74,7 @@ abbrev reduce {I β} [IdxType.Fold I Id] [Inhabited β]
 -- TODO: This does not break correctly! Fix this!
 --       It is not hard to implement but unclear if it negativelly impacts performance.
 --       It will require careful testing.
-instance {I J} [fi : IdxType.Fold I m] [fj : IdxType.Fold J m] :
+instance {I J n n'} [IdxType I n] [fi : IdxType.Fold I m] [IdxType J n'] [fj : IdxType.Fold J m] :
     IdxType.Fold (I × J) m  where
   forIn r init f :=
     let (ri,rj) := r.ofProd
@@ -80,7 +89,9 @@ instance {I J} [fi : IdxType.Fold I m] [fj : IdxType.Fold J m] :
 
 -- TODO: this does not break correctly! fix this!
 --       not hard to implement but unclear if it negativelly impacts performance
-instance {I J} [FirstLast I I] [FirstLast J J] [IdxType.Fold I m] [IdxType.Fold J m] :
+instance {I J n n'}
+    [FirstLast I I] [IdxType I n] [IdxType.Fold I m]
+    [FirstLast J J] [IdxType J n'] [IdxType.Fold J m] :
     IdxType.Fold (I ⊕ J) m  where
   forIn r init f :=
     match r.ofSum with
@@ -116,7 +127,7 @@ where
 
 
 /-- Run `f` starting at `a` up to `a`(inclusive) -/
-@[inline]
+@[inline, specialize]
 partial def Idx.forInIntervalUp {β} [Monad m]
     (a b : Idx n) (init : β) (f : Idx n → β → m (ForInStep β)) : m β :=
   loop init a.1
@@ -131,7 +142,7 @@ where
 
 
 /-- Run `f` starting at `b` down to `a`(inclusive) (assuming `a<b`)  -/
-@[inline]
+@[inline, specialize]
 partial def Idx.forInIntervalDown {β} [Monad m]
     (a b : Idx n) (init : β) (f : Idx n → β → m (ForInStep β)) : m β :=
   loop init b
