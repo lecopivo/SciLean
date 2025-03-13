@@ -25,8 +25,15 @@ theorem SciLean.sum.arg_f.HasRevFDeriv_rule_scalar
 
 
 def objective {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
-  ∑ i, (- IndexType.maxD (fun j => -‖points[i] - centroids[j]‖₂) 0)
+  ∑ i, (- IndexType.maxD (fun j => -‖points[i] - centroids[j]‖₂²) 0)
 
+-- TODO: this version should be differentiable too!
+-- def objective {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
+--   ∑ (i : Fin n), (- IndexType.maxD (fun (j : Fin k) => ∑ (l : Fin d), (-(points[i,l] - centroids[j,l])^2 : Float)) 0)
+
+
+set_option maxHeartbeats 1000000
+set_option maxRecDepth 1000000
 
 def direction {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
   (let' ((_a,J),(_b,Hdiag)) :=
