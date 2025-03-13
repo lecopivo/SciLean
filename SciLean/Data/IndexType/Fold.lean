@@ -1,6 +1,5 @@
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.RevFDerivProj
 import SciLean.Analysis.Calculus.HasFwdFDeriv
 import SciLean.Data.IndexType.Operations
 import SciLean.Tactic.Autodiff

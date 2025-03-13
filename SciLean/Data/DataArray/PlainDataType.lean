@@ -1,6 +1,8 @@
 import SciLean.Util.SorryProof
 import SciLean.Data.IndexType
 import SciLean.Data.ByteArray
+import SciLean.Data.Idx
+import SciLean.Data.IdxType.Fold
 -- import LeanColls.Classes.Ops.Fold
 
 namespace SciLean
@@ -541,8 +543,8 @@ def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
     let bytes  := byteSize n
     let ofByte := i
     let mut val : Nat := 0
-    for j in fullRange (Fin bytes) do
-      let val' := ((b[ofByte+j.1.toUSize]'sorry_proof).toNat <<< (j.1*8))
+    for j in fullRange (Idx bytes) do
+      let val' := ((b.uget (ofByte+j.1) sorry_proof).toNat <<< (j.1*8).toNat)
       val := val + val'
     ⟨val, sorry_proof⟩
 
@@ -551,8 +553,8 @@ def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
     let ofByte := i
 
     let mut b := b
-    for j in fullRange (Fin bytes) do
-      b := b.uset (ofByte+j.1.toUSize) (val.1.toUSize >>> (j.1.toUSize*(8:USize))).toUInt8 sorry_proof
+    for j in fullRange (Idx bytes) do
+      b := b.uset (ofByte+j.1) (val.1.toUSize >>> (j.1*(8:USize))).toUInt8 sorry_proof
     b
 
   toByteArray_size := sorry_proof

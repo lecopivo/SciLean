@@ -33,11 +33,11 @@ def adjointFDeriv
 namespace revFDeriv
 
 variable
-  (K : Type _) [RCLike K]
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-  {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
-  {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
-  {ι : Type _} [IndexType ι]
+  (K : Type u') [RCLike K]
+  {X : Type u} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {Y : Type v} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {Z : Type w} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
+  {ι : Type _} {nι} [IdxType ι nι]
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 
@@ -66,8 +66,10 @@ theorem const_rule (y : Y) :
 
 
 @[fun_trans]
-theorem proj_rule [DecidableEq ι] (i : ι) :
-    revFDeriv K (fun (x : (i' : ι) → E i') => x i)
+theorem proj_rule
+    {n} [IdxType I n] [IdxType.Fold' I] [DecidableEq I]
+    {E : I → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)] :
+    revFDeriv K (fun (x : (i' : I) → E i') => x i)
     =
     fun x =>
       (x i, fun dxi j => if h : i=j then h ▸ dxi else 0) := by
@@ -111,22 +113,22 @@ theorem let_rule
   unfold revFDeriv
   fun_trans
 
-
 @[fun_trans]
-theorem pi_rule
+theorem pi_rule [IdxType.Fold' ι] [IdxType.Fold' ι] -- these instances have different universes
   (f : X → (i : ι) → E i) (hf : ∀ i, Differentiable K (f · i))
   : (revFDeriv K fun (x : X) (i : ι) => f x i)
     =
     fun x =>
       (fun i => f x i,
-       fun dy => sum fun i =>
+       fun dy => IdxType.sum fun i =>
          let dx := (revFDeriv K (f · i) x).2 (dy i)
          dx)
        := by
 
   unfold revFDeriv
-  simp (disch:=fun_prop) only [fderiv.pi_rule_at]
+  simp (disch:=fun_prop) only [fderiv.pi_rule_at,adjoint.pi_rule]
   fun_trans
+  sorry_proof
 
 
 @[fun_trans]
@@ -165,17 +167,18 @@ theorem let_rule_at
 
 
 @[fun_trans]
-theorem pi_rule_at
+theorem pi_rule_at [IdxType.Fold' ι] [IdxType.Fold' ι]
     (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f · i) x) :
     (revFDeriv K fun (x : X) (i : ι) => f x i) x
     =
     (fun i => f x i,
-     fun dy => sum fun i =>
+     fun dy => IdxType.sum fun i =>
        let dx := (revFDeriv K (f · i) x).2 (dy i)
        dx) := by
   unfold revFDeriv
   simp (disch:=fun_prop) only [fderiv.pi_rule_at]
   fun_trans
+  sorry_proof
 
 
 end SciLean.revFDeriv
@@ -573,5 +576,35 @@ theorem sum.arg_f.revFDeriv_rule {ι} [IndexType ι]
     (sum fun i => f x i,
      fun dy =>
        sum fun i =>
+         let dx := adjointFDeriv K (f · i) x dy
+         dx) := by funext x; fun_trans
+
+
+@[fun_trans]
+theorem IdxType.sum.arg_f.revFDeriv_rule_at {I n} [IdxType I n] [IdxType.Fold' I]
+  (x : X) (f : X → I → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
+  : revFDeriv K (fun x => ∑ᴵ i, f x i) x
+    =
+    (∑ᴵ i, f x i,
+     fun dy =>
+       ∑ᴵ (i : I),
+         let dx := adjointFDeriv K (f · i) x dy
+         dx) :=
+
+by
+  unfold revFDeriv;
+  fun_trans [adjointFDeriv,revFDeriv]
+  simp (disch:=fun_prop) [fderiv.pi_rule_at]
+
+
+@[fun_trans]
+theorem IdxType.sum.arg_f.revFDeriv_rule {I n} [IdxType I n] [IdxType.Fold' I]
+  (f : X → I → Y) (hf : ∀ i, Differentiable K (f · i))
+  : revFDeriv K (fun x => ∑ᴵ i, f x i)
+    =
+    fun x =>
+    (∑ᴵ i, f x i,
+     fun dy =>
+       ∑ᴵ i,
          let dx := adjointFDeriv K (f · i) x dy
          dx) := by funext x; fun_trans

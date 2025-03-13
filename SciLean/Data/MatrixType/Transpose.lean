@@ -6,7 +6,7 @@ open Matrix MatrixType VectorType
 
 class MatrixType.Transpose
       (M : Type*) (M' : outParam (Type*))
-      {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
+      {m n : outParam (Type*)} {nm nn : outParam ℕ} {_ : outParam (IdxType m nm)} {_ : outParam (IdxType n nn)}
       {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
       (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
       [MatrixType.Base M X Y] [MatrixType.Base M' Y X]
@@ -44,7 +44,7 @@ section Instances
 
 variable
   {M : Type*}
-  {n : Type*} {_ : IndexType n}
+  {n : Type*} {nn} {_ : IdxType n nn}
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {X : Type*} [VectorType.Base X n K]
   [MatrixType.Base M X X]

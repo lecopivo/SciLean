@@ -29,14 +29,14 @@ namespace IdxType
 export IdxType.Fold (forIn)
 
 @[inline, specialize]
-def foldlM {I n m β} [IdxType I n] [IdxType.Fold I m] [Monad m]
+def foldM {I n m β} [IdxType I n] [IdxType.Fold I m] [Monad m]
     (r : IndexType.Range I) (init : β) (f : I → β → m β) : m β :=
   forIn r init (fun i x => do return .yield (← f i x))
 
 @[inline, specialize]
-def foldl {I n β} [IdxType I n] [IdxType.Fold I Id]
+def fold {I n β} [IdxType I n] [IdxType.Fold I Id]
     (r : IndexType.Range I) (init : β) (f : I → β → β) : β :=
-  foldlM (m:=Id) r init (fun i x => pure (f i x))
+  foldM (m:=Id) r init (fun i x => pure (f i x))
 
 instance {m : Type v → Type w} {n} [IdxType I n] [IdxType.Fold I m] :
     ForIn m (IndexType.Range I) I where
@@ -74,7 +74,9 @@ abbrev reduce {I n β} [IdxType I n] [IdxType.Fold I Id] [Inhabited β]
 -- TODO: This does not break correctly! Fix this!
 --       It is not hard to implement but unclear if it negativelly impacts performance.
 --       It will require careful testing.
-instance {I J n n'} [IdxType I n] [fi : IdxType.Fold I m] [IdxType J n'] [fj : IdxType.Fold J m] :
+instance
+    {I nI} [IdxType I nI] [fi : IdxType.Fold I m]
+    {J nJ} [IdxType J nJ] [fj : IdxType.Fold J m] :
     IdxType.Fold (I × J) m  where
   forIn r init f :=
     let (ri,rj) := r.ofProd
@@ -167,3 +169,64 @@ instance : IdxType.Fold (Idx n) m  where
         Idx.forInIntervalUp a b init f
       else
         Idx.forInIntervalDown b a init f
+
+
+----------------------------------------------------------------------------------------------------
+-- Instance for `Fin n` ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- Run `f` for all `Fin n` -/
+@[inline, specialize]
+partial def Fin.forInFull {β} [Monad m]
+    (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
+  loopSmall init 0
+where
+  @[specialize] loopSmall (x : β) (i : USize) : m β := do
+    if i < n.toUSize then
+      match (← f ⟨i.toNat, sorry_proof⟩ x) with
+      | .yield x => loopSmall x (i+1)
+      | .done x => pure x
+    else
+      pure x
+
+
+/-- Run `f` starting at `a` up to `a`(inclusive) -/
+@[inline, specialize]
+partial def Fin.forInIntervalUp {β} [Monad m]
+    (a b : Fin n) (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
+  loop init a.1.toUSize
+where
+  @[specialize] loop (x : β) (i : USize) : m β := do
+    if i <= b.1.toUSize then
+      match (← f ⟨i.toNat, sorry_proof⟩ x) with
+      | .yield x => loop x (i+1)
+      | .done x => pure x
+    else
+      pure x
+
+
+/-- Run `f` starting at `b` down to `a`(inclusive) (assuming `a<b`)  -/
+@[inline, specialize]
+partial def Fin.forInIntervalDown {β} [Monad m]
+    (a b : Fin n) (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
+  loop init b
+where
+  @[specialize] loop (x : β) (i : Fin n) : m β := do
+    match (← f i x) with
+    | .yield x =>
+      if a ≥ i then
+        pure x
+      else
+        loop x ⟨i-1, sorry_proof⟩
+    | .done x => pure x
+
+instance : IdxType.Fold (Fin n) m  where
+  forIn r init f :=
+    match r with
+    | .empty => pure init
+    | .full => Fin.forInFull init f
+    | .interval a b =>
+      if a ≤ b then
+        Fin.forInIntervalUp a b init f
+      else
+        Fin.forInIntervalDown b a init f

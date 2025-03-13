@@ -8,13 +8,13 @@ namespace SciLean
 attribute [instance] Matrix.normedAddCommGroup Matrix.normedSpace
 
 variable
-    {R m n α : Type*}
-    [IndexType m] [IndexType n]
+    {R I J α : Type*} {nI nJ : ℕ}
+    [IdxType I nI] [IdxType J nJ] [IdxType.Fold' I] [IdxType.Fold' J]
 
-instance [AddCommMonoid R] [Inner R α] : Inner R (Matrix m n α) :=
-  show Inner R (m → n → α) from inferInstance
+instance [AddCommMonoid R] [Inner R α] : Inner R (Matrix I J α) :=
+  show Inner R (I → J → α) from inferInstance
 
-instance [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] : AdjointSpace R (Matrix m n α) where
+instance [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] : AdjointSpace R (Matrix I J α) where
   inner_top_equiv_norm := sorry_proof
   conj_symm := sorry_proof
   add_left := sorry_proof

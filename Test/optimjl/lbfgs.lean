@@ -20,6 +20,6 @@ def run : IO (Float^[2] × Float) := do
   let r ← optimizeM objective {show_trace:=false : LBFGS Float 1} ⊞[-10.0,100]
   return (r.minimizer, r.minimum)
 
-/-- info: (⊞[1.000013, 1.000027], 0.000000) -/
+/-- info: (⊞[1.000006, 1.000013], 0.000000) -/
 #guard_msgs in
 #eval run

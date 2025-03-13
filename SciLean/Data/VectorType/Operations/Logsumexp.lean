@@ -10,13 +10,13 @@ open VectorType
 section Simps
 
 variable
-  {X : Type*} {n : Type u} {R :  Type*}
-  {_ : RealScalar R} {_ : IndexType n} [VectorType.Base X n R] [Dense X]
+  {X : Type*} {I : Type u} {R :  Type*}
+  {_ : RealScalar R} {nI} {_ : IdxType I nI} [VectorType.Base X I R] [Dense X]
 
 theorem VectorType.logsumexp_spec (x : X) :
   VectorType.logsumexp x
   =
-  if 0 < size n then
+  if 0 < nI then
     Scalar.log (sum (exp x))
   else
     0 := sorry_proof

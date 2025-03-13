@@ -7,7 +7,7 @@ open Matrix VectorType
 open Function MatrixType.Base in
 class MatrixType.Dense
     (M : Type*)
-    {m n : outParam (Type*)} {_ : outParam (IndexType m)} {_ : outParam (IndexType n)}
+    {m n : outParam (Type*)} {nm nn : outParam ℕ} {_ : outParam (IdxType m nm)} {_ : outParam (IdxType n nn)}
     {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
     {X Y : outParam (Type*)} {_ : outParam (VectorType.Base X n K)} {_ : outParam (VectorType.Base Y m K)}
     [MatrixType.Base M X Y]
@@ -44,7 +44,7 @@ class MatrixType.Dense
     (sumRows A)[i]
     =
     let A := toMatrix A
-    ∑ j, A i j
+    Finset.univ.sum fun j => A i j
 
   -- TODO: This should return `SubMatrix m n id (point j)`
   /-- Get column of matrix -/
@@ -61,7 +61,7 @@ class MatrixType.Dense
     (sumCols A)[j]
     =
     let A := toMatrix A
-    ∑ i, A i j
+    Finset.univ.sum fun i => A i j
 
 
   /-- Update row, i.e. set row to a given vector. -/
@@ -119,7 +119,7 @@ section Operations
 
 variable
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
-  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
+  {m n : Type*} {nm nn : ℕ} {_ : IdxType m nm} {_ : IdxType n nn}
   {X Y : Type*} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
   {M} [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
 
@@ -134,7 +134,7 @@ section Equivalences
 
 variable
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
-  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
+  {m n : Type*} {nm nn : ℕ} {_ : IdxType m nm} {_ : IdxType n nn}
   {X Y : Type*} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
   {M} [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [MatrixType.Dense M]
 

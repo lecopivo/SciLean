@@ -8,8 +8,8 @@ namespace SciLean.MatrixType
 
 variable
   {R K :  Type*} {_ : RealScalar R} {_ : Scalar R K}
-  {n : Type*} {_ : IndexType n}
-  {m : Type*} {_ : IndexType m}
+  {n : Type*} {nn} {_ : IdxType n nn}
+  {m : Type*} {nm} {_ : IdxType m nm}
   {X : Type*} [VectorType.Base X n K] [InjectiveGetElem X n]
   {Y : Type*} [VectorType.Base Y m K] [InjectiveGetElem Y m]
   {M : Type*} [MatrixType.Base M X Y] [InjectiveGetElem M (m×n)]

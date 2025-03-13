@@ -122,19 +122,19 @@ instance : IdxType (Idx n) n where
   right_inv := sorry_proof
 
 
-instance {α β} [IdxType α m] [IdxType β n] : IdxType (α × β) (m*n) where
+instance {I J nI nJ} [IdxType I nI] [IdxType J nJ] : IdxType (I × J) (nI*nJ) where
   -- this choice will result in row major matrices/tensors
-  toIdx := fun (a,b) => ⟨n.toUSize * (toIdx a).1 + (toIdx b).1, by sorry_proof⟩
+  toIdx := fun (a,b) => ⟨nJ.toUSize * toIdx a + toIdx b, by sorry_proof⟩
   fromIdx ij :=
     -- this choice will result in row major matrices
-    let i : Idx m := ⟨ij.1 / n.toUSize, by sorry_proof⟩
-    let j : Idx n := ⟨ij.1 % n.toUSize, by sorry_proof⟩
+    let i : Idx nI := ⟨ij.1 / nJ.toUSize, by sorry_proof⟩
+    let j : Idx nJ := ⟨ij.1 % nJ.toUSize, by sorry_proof⟩
     (fromIdx i, fromIdx j)
-  toFin := fun (a,b) => ⟨n * (toFin a).1 + (toFin b).1, by sorry_proof⟩
+  toFin := fun (a,b) => ⟨nJ * (toFin a).1 + (toFin b).1, by sorry_proof⟩
   fromFin ij :=
     -- this choice will result in row major matrices
-    let i : Fin m := ⟨ij.1 / n, by sorry_proof⟩
-    let j : Fin n := ⟨ij.1 % n, by sorry_proof⟩
+    let i : Fin nI := ⟨ij.1 / nJ, by sorry_proof⟩
+    let j : Fin nJ := ⟨ij.1 % nJ, by sorry_proof⟩
     (fromFin i, fromFin j)
   toFin_eq_toIdx := sorry_proof
   fromIdx_eq_fromFin := sorry_proof
@@ -165,6 +165,18 @@ instance {α β} [IdxType α m] [IdxType β n] : IdxType (α ⊕ β) (m + n) whe
   fromIdx_eq_fromFin := sorry_proof
   left_inv := by intro; sorry_proof
   right_inv := by intro; sorry_proof
+
+
+def ofEquiv {J : Type*} (I : Type*) [Fintype J] [IdxType I n] (f : I ≃ J) : IdxType J n where
+  toIdx y := toIdx (f.symm y)
+  fromIdx i := f (fromIdx i)
+  toFin y := toFin (f.symm y)
+  fromFin i := f (fromFin i)
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
+  left_inv := sorry_proof
+  right_inv := sorry_proof
+
 
 
 end Instances

@@ -207,6 +207,12 @@ theorem Finset.sum.arg_f.HasFDerivAt_simp_rule {I : Type*} (A : Finset I) [Finty
   (fun f : I → X =>L[K] A.sum f).hasFDerivAt (x:=f)
 
 @[data_synth]
+theorem SciLean.IdxType.sum.arg_f.HasFDerivAt_simp_rule
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] (f : I → X) :
+    HasFDerivAt (fun f => ∑ᴵ i, f i) (fun df =>L[K] ∑ᴵ i, df i) f :=
+  (fun f : I → X =>L[K] ∑ᴵ i, f i).hasFDerivAt (x:=f)
+
+@[data_synth]
 theorem ite.arg_te.HasFDerivAt_simple_rule {c : Prop} [Decidable c] (te : X×X) :
     HasFDerivAt (fun te => if c then te.1 else te.2)
       (fun dte =>L[K] if c then dte.1 else dte.2) te := by

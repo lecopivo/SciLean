@@ -7,7 +7,7 @@ open VectorType
 
 instance
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
-  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
+  {m n : Type*} {nm nn : ℕ} {_ : IdxType m nm} {_ : IdxType n nn}
   {X Y : Type*} [VectorType.Base X m K] [VectorType.Base Y n K]
   : VectorType.Base (X×Y) (m⊕n) K where
   zero := (zero, zero)
@@ -21,51 +21,51 @@ instance
   nrm2 := fun (x,y) => Scalar.sqrt ((nrm2 x)^2 + (nrm2 y)^2)
   nrm2_spec := by intro (x,y); simp[vector_to_spec,Norm.norm]; sorry_proof -- some API for Scalar is missing
   iamax := fun (x,y) =>
-    if h : 0 < size m ∧ 0 < size n then
+    if h : 0 < nm ∧ 0 < nn then
       let i := iamax x
       let j := iamax y
       if Scalar.abs (x[i]) < Scalar.abs (y[j]) then
         .inr j
       else
         .inl i
-    else if h : 0 < size n then
+    else if h : 0 < nn then
       let j := iamax y
       .inr j
-    else if h : 0 < size m then
+    else if h : 0 < nm then
       let i := iamax x
       .inl i
     else
       .inl (iamax x) -- this is inconsistent!
   iamax_spec := by intro (x,y); simp; sorry_proof
   imaxRe := fun (x,y) h =>
-    if h : 0 < size m ∧ 0 < size n then
+    if h : 0 < nm ∧ 0 < nn then
       let i := imaxRe x h.1
       let j := imaxRe y h.2
       if Scalar.real (x[i]) < Scalar.real (y[j]) then
         .inr j
       else
         .inl i
-    else if h : 0 < size n then
+    else if h : 0 < nn then
       let j := imaxRe y h
       .inr j
-    else if h : 0 < size m then
+    else if h : 0 < nm then
       let i := imaxRe x h
       .inl i
     else
       (by simp_all) -- unreachable
   imaxRe_spec := sorry_proof
   iminRe := fun (x,y) h =>
-    if h : 0 < size m ∧ 0 < size n then
+    if h : 0 < nm ∧ 0 < nn then
       let i := iminRe x h.1
       let j := iminRe y h.2
       if Scalar.real (x[i]) < Scalar.real (y[j]) then
         .inl i
       else
         .inr j
-    else if h : 0 < size n then
+    else if h : 0 < nn then
       let j := iminRe y h
       .inr j
-    else if h : 0 < size m then
+    else if h : 0 < nm then
       let i := iminRe x h
       .inl i
     else
@@ -82,21 +82,10 @@ instance
   mul := fun (x₁,y₁) (x₂,y₂) => (mul x₁ x₂, mul y₁ y₂)
   mul_spec := sorry_proof
 
-instance
-  {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
-  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
-  {X Y : Type*} [VectorType.Base X m K] [VectorType.Base Y n K]
-  [VectorType.Dense X] [VectorType.Dense Y]
-  : SetElem (X×Y) (m⊕n) K (fun _ _ => True) where
-    setElem := fun (x,y) ij v _ =>
-      match ij with
-      | .inl i => (setElem (valid:=fun _ _ => True) x i v (True.intro), y)
-      | .inr j => (x, setElem y j v (by dsimp))
-    setElem_valid := sorry_proof
 
 instance
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
-  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
+  {m n : Type*} {nm nn : ℕ} {_ : IdxType m nm} {_ : IdxType n nn}
   {X Y : Type*} [VectorType.Base X m K] [VectorType.Base Y n K]
   [VectorType.Dense X] [VectorType.Dense Y]
   : VectorType.Dense (X×Y) where

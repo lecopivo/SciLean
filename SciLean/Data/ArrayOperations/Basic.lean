@@ -1,6 +1,7 @@
 import Mathlib.Logic.Function.Defs
 import SciLean.Meta.SimpAttr
 import SciLean.Lean.Expr
+import SciLean.Util.SorryProof
 
 namespace SciLean
 
@@ -179,6 +180,21 @@ instance [GetElem' α ι γ] [GetElem' β κ γ]
       exact congrFun h (.inl i)
     · apply getElem_injective (idx:=κ); funext j
       exact congrFun h (.inr j)
+
+instance [SetElem' α ι γ] [SetElem' β κ γ] :
+    SetElem (α×β) (ι⊕κ) γ (fun _ _ => True) where
+  setElem x i v _ :=
+    match x, i with
+    | (x,y), .inl i => (setElem x i v .intro,y)
+    | (x,y), .inr j => (x, setElem y j v .intro)
+  setElem_valid := by simp
+
+instance [SetElem' α ι γ] [SetElem' β κ γ]
+         [GetElem' α ι γ] [GetElem' β κ γ]
+         [LawfulSetElem α ι] [LawfulSetElem β κ] :
+    LawfulSetElem (α×β) (ι⊕κ) where
+  getElem_setElem_eq := sorry_proof
+  getElem_setElem_neq := sorry_proof
 
 
 instance [OfFn α ι γ] [OfFn β κ γ] :

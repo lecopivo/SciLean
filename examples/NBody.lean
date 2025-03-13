@@ -22,51 +22,52 @@ macro "unsafeAD" : tactic =>
 
 
 open Lean Meta
-instance : MonadLift Tactic.DataSynth.DataSynthM SimpM where
-  monadLift e := do
-    let disch? := (← Simp.getMethods).discharge?
-    -- discharge? : Expr → SimpM (Option Expr) := fun _ => return none
-    let r := e { discharge := disch? } (← ST.mkRef {}) (← ST.mkRef {})
-    r
+-- instance : MonadLift Tactic.DataSynth.DataSynthM SimpM where
+--   monadLift e := do
+--     let disch? := (← Simp.getMethods).discharge?
+--     -- discharge? : Expr → SimpM (Option Expr) := fun _ => return none
+--     let r := e { discharge := disch? } (← ST.mkRef {}) (← ST.mkRef {})
+--     r
+
+-- def SciLean.Tactic.DataSynth.DataSynthM.runInSimpM (e : DataSynthM α) : SimpM α := do
+--   let disch? := (← Simp.getMethods).discharge?
+--   -- discharge? : Expr → SimpM (Option Expr) := fun _ => return none
+--   let r := e { discharge := disch? } (← ST.mkRef {}) (← ST.mkRef {})
+--   r
+
+-- theorem revFDeriv_from_hasRevFDeriv {K} [RCLike K]
+--   {X} [NormedAddCommGroup X] [AdjointSpace K X]
+--   {Y} [NormedAddCommGroup Y] [AdjointSpace K Y]
+--   {f : X → Y} {f'} (hf : HasRevFDeriv K f f') :
+--   revFDeriv K f = f' := sorry_proof
 
 
-theorem revFDeriv_from_hasRevFDeriv {K} [RCLike K]
-  {X} [NormedAddCommGroup X] [AdjointSpace K X]
-  {Y} [NormedAddCommGroup Y] [AdjointSpace K Y]
-  {f : X → Y} {f'} (hf : HasRevFDeriv K f f') :
-  revFDeriv K f = f' := sorry_proof
+-- open Lean Meta in
+-- /-- Compute `revFDeriv R f` with calling data_synth on `HasRevFDeriv R f ?f'`. -/
+-- simproc_decl revFDeriv_simproc (revFDeriv _ _) := fun e => do
 
+--   -- get field and function to differentiate
+--   let K := e.getArg! 0
+--   let f := e.appArg!
 
-open Lean Meta in
-/-- Compute `revFDeriv R f` with calling data_synth on `HasRevFDeriv R f ?f'`. -/
-simproc_decl revFDeriv_simproc (revFDeriv _ _) := fun e => do
+--   -- craft `HasRevFDeriv K f ?f'`
+--   let goal ← mkAppM ``HasRevFDeriv #[K,f]
+--   let (xs,_,_) ← forallMetaTelescope (← inferType goal)
+--   let f' := xs[0]!
+--   let goal := goal.app f'
 
-  -- get field and function to differentiate
-  let K := e.getArg! 0
-  let f := e.appArg!
+--   -- extract data_synth goal
+--   let .some goal ← Tactic.DataSynth.isDataSynthGoal? goal
+--     | throwError "something went really wrong"
 
-  -- craft `HasRevFDeriv K f ?f'`
-  let goal ← mkAppM ``HasRevFDeriv #[K,f]
-  let (xs,_,_) ← forallMetaTelescope (← inferType goal)
-  let f' := xs[0]!
-  let goal := goal.app f'
+--   -- run data_synth
+--   let .some r ← Tactic.DataSynth.dataSynth goal |>.runInSimpM
+--     | return .continue
 
-  -- extract data_synth goal
-  let .some goal ← Tactic.DataSynth.isDataSynthGoal? goal
-    | throwError "something went really wrong"
+--   let f'' := r.xs[0]!
+--   let prf ← mkAppM ``revFDeriv_from_hasRevFDeriv #[r.proof]
 
-  -- run data_synth
-  let .some r ← Tactic.DataSynth.dataSynth goal
-    | return .continue
-
-  let f'' := r.xs[0]!
-  let prf ← mkAppM ``revFDeriv_from_hasRevFDeriv #[r.proof]
-  -- IO.println (← ppExpr (← inferType prf))
-
-  -- let eq ← mkEq e f''
-  -- let prf ← mkSorry eq false
-
-  return .visit { expr := f'', proof? := prf }
+--   return .visit { expr := f'', proof? := prf }
 
 
 set_default_scalar Float
@@ -80,8 +81,7 @@ def H {n} (m : Fin n → Float) (x p : Float^[n,2]) : Float :=
   -
   (∑ (i : Fin n) (j : Fin i.1),
     let j := j.castLT (by omega)
-    (m i*m j) * ‖x[i,:] - x[j,:]‖₂⁻¹)
-
+    (m i * m j) * ‖x[i,:] - x[j,:]‖₂⁻¹)
 
 
 #check (<∂ x':=(⊞[1.0,2.0,3.0]:Float3), ‖x'‖₂⁻¹) rewrite_by

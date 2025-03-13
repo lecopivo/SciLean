@@ -8,7 +8,7 @@ namespace SciLean.ML
 
 variable
   {R : Type} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
-  {ι : Type} [IndexType ι] [DecidableEq ι]
+  {ι : Type} {nι} [IdxType ι nι] [DecidableEq ι]
 
 set_default_scalar K
 

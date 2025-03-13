@@ -10,8 +10,8 @@ inductive Iterator (I : Type u) where
   -- /-- Iterator that has been exhausted -/
   -- | done
 
-def _root_.SciLean.fullRange (I : Type u) : IndexType.Iterator I := .start .full
-def _root_.SciLean.intervalRange {I : Type u} (a b : I): IndexType.Iterator I := .start (.interval a b)
+def _root_.SciLean.fullRange (I : Type u) : IndexType.Range I := .full
+def _root_.SciLean.intervalRange {I : Type u} (a b : I) : IndexType.Range I := (.interval a b)
 
 namespace Iterator
 

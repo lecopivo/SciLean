@@ -3,6 +3,8 @@ import SciLean.Data.ArrayType.Basic
 import SciLean.Data.ArrayType.Notation
 import SciLean.Tactic.InferVar
 import SciLean.Data.IndexType
+import SciLean.Data.IdxType.Basic
+import SciLean.Data.IdxType.Fold
 import SciLean.Data.ArrayLike
 
 set_option linter.unusedVariables false
@@ -22,13 +24,13 @@ structure DataArray (α : Type*) [pd : PlainDataType α] where
   h_size : pd.bytes size ≤ byteData.size
 
 variable {α : Type*} [pd : PlainDataType α]
-variable {ι} [IndexType ι] {κ : Type*} [IndexType κ]
+variable {ι n} [IdxType ι n] {κ : Type*} {m} [IdxType κ m]
 
 instance [PlainDataType X] : Inhabited (DataArray X) := ⟨.empty, 0, by sorry_proof⟩
 
-@[irreducible]
-def DataArray.get (arr : DataArray α) (i : Fin arr.size) : α := -- pd.get a.data i sorry_proof
-  let i := i.1.toUSize
+@[inline, irreducible]
+def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α := -- pd.get a.data i sorry_proof
+  let i := i.1
   match pd.btype with
   | .inl bitType =>
     let perByte := 8/bitType.bits
@@ -42,12 +44,12 @@ def DataArray.get (arr : DataArray α) (i : Fin arr.size) : α := -- pd.get a.da
   | .inr byteType =>
     byteType.fromByteArray arr.byteData (byteType.bytes * i) sorry_proof
 
-instance : GetElem (DataArray α) Nat α (fun a i => i < a.size) where
+instance : GetElem (DataArray α) USize α (fun a i => i.toNat < a.size) where
   getElem := fun x i h => x.get ⟨i,h⟩
 
-@[irreducible]
-def DataArray.set (arr : DataArray α) (i : Fin arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
-  let i := i.1.toUSize
+@[inline,irreducible]
+def DataArray.set (arr : DataArray α) (i : Idx arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
+  let i := i.1
   match pd.btype with
   | .inl bitType =>
     let perByte := 8/bitType.bits
@@ -73,7 +75,7 @@ def DataArray.reserve  (arr : DataArray α) (capacity : Nat) : DataArray α :=
     let newBytes := pd.bytes capacity
     let mut arr' : DataArray α := ⟨ByteArray.mkArray newBytes 0, arr.size, sorry_proof⟩
     -- copy over the old data
-    for i in fullRange (Fin arr.size) do
+    for i in fullRange (Idx arr.size) do
       arr' := arr'.set ⟨i.1,sorry_proof⟩ (arr.get i)
     arr'
 
@@ -92,8 +94,8 @@ def DataArray.push (arr : DataArray α) (val : α) (k : Nat := 1) : DataArray α
   let newSize := arr.size + k
   let mut arr' := arr.reserve newSize
   arr' := ⟨arr'.byteData, newSize, sorry_proof⟩
-  for i in [oldSize:newSize] do
-    arr' := arr'.set ⟨i,sorry_proof⟩ val
+  for i in fullRange (Idx k) do
+    arr' := arr'.set ⟨oldSize.toUSize+i,sorry_proof⟩ val
   arr'
 
 /-- Extensionality of DataArray
@@ -102,7 +104,7 @@ Currently this is inconsistent, we need to turn DataArray into quotient!
 -/
 theorem DataArray.ext (d d' : DataArray α) : (h : d.size = d'.size) → (∀ i, d.get i = d'.get (h ▸ i)) → d = d' := sorry_proof
 
-def DataArray.swap (arr : DataArray α) (i j : Fin arr.size) : DataArray α :=
+def DataArray.swap (arr : DataArray α) (i j : Idx arr.size) : DataArray α :=
   let ai := arr.get i
   let aj := arr.get j
   let arr := arr.set i aj
@@ -113,50 +115,55 @@ def DataArray.swap (arr : DataArray α) (i j : Fin arr.size) : DataArray α :=
 def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
   let mut arr := arr
   let n := arr.size
-  for i in [0:n/2] do
-    let i' : Fin arr.size := ⟨i, sorry_proof⟩
-    let j' : Fin arr.size := ⟨n - i - 1, sorry_proof⟩
+  for i in fullRange (Idx (n/2)) do
+    let i' : Idx arr.size := ⟨i, sorry_proof⟩
+    let j' : Idx arr.size := ⟨n.toUSize - i - 1, sorry_proof⟩
     arr := arr.swap i' j'
   arr
 
 
-@[irreducible]
-def DataArray.intro (f : ι → α) : DataArray α := Id.run do
-  let bytes := (pd.bytes (Size.size ι))
+@[irreducible, inline, specialize]
+def DataArray.intro {ι n} [IdxType ι n] [IdxType.Fold' ι]
+    (f : ι → α) : DataArray α := Id.run do
+  let bytes := (pd.bytes n)
   let d : ByteArray := ByteArray.mkArray bytes 0
-  let mut d' : DataArray α := ⟨d, (Size.size ι), sorry_proof⟩
+  let mut d' : DataArray α := ⟨d, n, sorry_proof⟩
   for i in fullRange ι do
-    d' := d'.set ⟨(IndexType.toFin i).1,sorry_proof⟩ (f i)
+    d' := d'.set ⟨toIdx i,sorry_proof⟩ (f i)
   d'
 
 
 instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
   let mut fst := true
   let mut s := "⊞["
-  for i in [0:x.size] do
-    let i : Fin (x.size) := ⟨i, sorry_proof⟩
+  for i in fullRange (Idx x.size) do
+    -- let i : Idx (x.size) := ⟨i, sorry_proof⟩
     if fst then
-      s := s ++ toString x[i]
+      s := s ++ toString (x.get i)
       fst := false
     else
-      s := s ++ ", " ++ toString x[i]
+      s := s ++ ", " ++ toString (x.get i)
   s ++ "]"⟩
 
 
-structure DataArrayN (α : Type*) [pd : PlainDataType α] (ι : Type*) [IndexType ι] where
+structure DataArrayN (α : Type*) [pd : PlainDataType α] (ι : Type*) {n : outParam ℕ} [IdxType ι n] : Type where
   data : DataArray α
-  h_size : Size.size ι = data.size
+  h_size : n = data.size
 
 
-instance {I} [IndexType I] [PlainDataType X] : Inhabited (DataArrayN X I) := ⟨default, sorry_proof⟩
+instance {I n} [IdxType I n] [PlainDataType X] : Inhabited (DataArrayN X I) := ⟨default, sorry_proof⟩
 
-def DataArrayN.get (xs : DataArrayN α ι) (i : ι) : α := (xs.1.get ((IndexType.toFin i).cast xs.2))
+@[inline]
+def DataArrayN.get (xs : DataArrayN α ι) (i : ι) : α := (xs.1.get ((toIdx i).cast xs.2))
 
-def DataArrayN.linGet (xs : DataArrayN α ι) (i : Fin (Size.size ι)) : α := (xs.1.get ⟨i,by rw[←xs.2]; omega⟩)
+@[inline]
+def DataArrayN.linGet (xs : DataArrayN α ι) (i : Idx n) : α := (xs.1.get (i.cast xs.2))
 
+@[inline]
 def DataArrayN.set (xs : DataArrayN α ι) (i : ι) (xi : α) : DataArrayN α ι :=
-  ⟨xs.1.set ((IndexType.toFin i).cast xs.2) xi, sorry_proof⟩
+  ⟨xs.1.set ((toIdx i).cast xs.2) xi, sorry_proof⟩
 
+@[inline]
 def DataArrayN.modify (xs : DataArrayN α ι) (i : ι) (f : α → α) : DataArrayN α ι :=
   xs.set i (f (xs.get i))
 
@@ -176,22 +183,22 @@ instance : LawfulSetElem (α^[ι]) ι where
   getElem_setElem_eq  := sorry_proof
   getElem_setElem_neq := sorry_proof
 
-instance : OfFn (α^[ι]) ι α where
+instance [IdxType.Fold' ι] : OfFn (α^[ι]) ι α where
   ofFn f := ⟨DataArray.intro f, sorry_proof⟩
 
-instance : LawfulOfFn (α^[ι]) ι where
+instance [IdxType.Fold' ι] : LawfulOfFn (α^[ι]) ι where
   getElem_ofFn := sorry_proof
 
-instance {α} [PlainDataType α] {ι} [IndexType ι] : DefaultCollection (α^[ι]) ι α where
+instance {α} [PlainDataType α] {ι n} [IdxType ι n] : DefaultCollection (α^[ι]) ι α where
 
-def DataArrayN.toList (xs : DataArrayN α ι) : List α := Id.run do
+def DataArrayN.toList [IdxType.Fold' ι] (xs : DataArrayN α ι) : List α := Id.run do
   let mut l : List α := []
   for i in fullRange ι do
     l := xs.get i :: l
   return l
 
 
-def DataArrayN.toListIdx (xs : DataArrayN α ι) : List (ι × α) := Id.run do
+def DataArrayN.toListIdx [IdxType.Fold' ι] (xs : DataArrayN α ι) : List (ι × α) := Id.run do
   let mut l : List (ι × α) := []
   for i in fullRange ι do
     l := (i, xs.get i) :: l
@@ -201,8 +208,7 @@ def DataArrayN.toListIdx (xs : DataArrayN α ι) : List (ι × α) := Id.run do
 instance : Membership α (DataArrayN α ι) where
   mem xs x := ∃ i, xs.get i = x
 
-
-instance : ArrayType (DataArrayN α ι) ι α where
+instance [IdxType.Fold' ι] : ArrayType (DataArrayN α ι) ι α where
   ofFn f := ⟨DataArray.intro f, sorry_proof⟩
   get xs i := xs.get i
   set xs i x := xs.set i x
@@ -213,36 +219,35 @@ instance : ArrayType (DataArrayN α ι) ι α where
   get_set_neq := sorry_proof
   modify_set := sorry_proof
 
--- instance : LinearArrayType (λ n => DataArrayN α (Fin n)) α where
+-- instance : LinearArrayType (λ n => DataArrayN α (Idx n)) α where
 --   toArrayType := by infer_instance
 --   pushElem_getElem := sorry_proof
 --   dropElem_getElem := sorry_proof
 --   reserveElem_id := sorry_proof
 
-def DataArrayN.reshape (x : DataArrayN α ι) (κ : Type*) [IndexType κ]
-  (hs : size κ = size ι)
+def DataArrayN.reshape {ι n} [IdxType ι n] (x : DataArrayN α ι) (κ : Type*) {m} [IdxType κ m]
+  (hs : m = n)
   : DataArrayN α κ :=
-  ⟨x.data, by simp[hs,x.h_size]⟩
+  ⟨x.data, by rw[hs]; exact x.h_size⟩
 
-def DataArrayN.flatten (x : DataArrayN α ι)
-    {n} (hn : n = size ι := by infer_var) :
-    DataArrayN α (Fin n) :=
-  x.reshape (Fin n) (by simp[hn])
+def DataArrayN.flatten {ι n} [IdxType ι n] (x : DataArrayN α ι) :
+    DataArrayN α (Idx n) :=
+  x.reshape (Idx n) rfl
 
 
-instance {ι α : Type*} [IndexType ι] [pd : PlainDataType α] :
+instance {ι α : Type*} {n} [IdxType ι n] [pd : PlainDataType α] :
     PlainDataType (DataArrayN α ι) where
 
   btype := .inr {
-    bytes := (pd.bytes (size ι)).toUSize
+    bytes := (pd.bytes n).toUSize
     h_size := sorry_proof
 
     fromByteArray := λ b i h =>
-      let N := pd.bytes (size ι)
+      let N := pd.bytes n
       let bi := b.copySlice (i.toNat) (ByteArray.mkEmpty N) 0 N
-      ⟨⟨bi,size ι,sorry_proof⟩,rfl⟩
+      ⟨⟨bi,n,sorry_proof⟩,rfl⟩
     toByteArray   := λ b i h c => Id.run do
-      let N := pd.bytes (size ι)
+      let N := pd.bytes n
       let b := c.1.1.copySlice 0 b (i.toNat) N
       b
     toByteArray_size := sorry_proof
@@ -250,7 +255,6 @@ instance {ι α : Type*} [IndexType ι] [pd : PlainDataType α] :
     fromByteArray_toByteArray_other := sorry_proof
   }
 
-variable {κ : Type*} [IndexType κ]
 
 -- def ArrayType.instPlainDataType {Cont ι α : Type*} [ArrayType Cont ι α] [IndexType ι] [pd : PlainDataType α] :
 --     PlainDataType Cont where
@@ -279,15 +283,15 @@ variable {κ : Type*} [IndexType κ]
 
 --         fromByteArray := λ b i h =>
 --           ArrayType.ofFn (λ j =>
---             let Fin := (i + (IndexType.toFin j).1.toUSize *αByteType.bytes)
---             αByteType.fromByteArray b Fin sorry_proof)
+--             let Idx := (i + (IndexType.toIdx j).1.toUSize *αByteType.bytes)
+--             αByteType.fromByteArray b Idx sorry_proof)
 --         toByteArray   := λ b i h c => Id.run do
 --           let mut b := b
 --           let mut lj : USize := 0
 --           for j in fullRange ι do
---             let Fin := (i + lj*αByteType.bytes)
+--             let Idx := (i + lj*αByteType.bytes)
 --             lj := lj + 1
---             b := αByteType.toByteArray b Fin sorry_proof c[j]
+--             b := αByteType.toByteArray b Idx sorry_proof c[j]
 --           b
 
 --         toByteArray_size := sorry_proof
@@ -295,21 +299,31 @@ variable {κ : Type*} [IndexType κ]
 --         fromByteArray_toByteArray_other := sorry_proof
 --       }
 
+variable
+  {α : Type u} [PlainDataType α]
+  {ι : Type v} {n : ℕ} [IdxType ι n]
+  {κ : Type w} {m : ℕ} [IdxType κ m]
+
 @[inline]
 def DataArrayN.curry (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
-  ⟨⟨x.data.byteData, Size.size ι, sorry_proof⟩, sorry_proof⟩
+  ⟨⟨x.data.byteData, n, sorry_proof⟩, sorry_proof⟩
 
 @[inline]
 def DataArrayN.uncurry (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
-  ⟨⟨x.data.byteData, Size.size ι * Size.size κ, sorry_proof⟩, sorry_proof⟩
+  ⟨⟨x.data.byteData, n * m, sorry_proof⟩, sorry_proof⟩
 
-theorem DataArrayN.uncurry_def (x : DataArrayN (DataArrayN α κ) ι) :
-    x.uncurry = ⊞ i j => x[i][j] := sorry_proof
 
-theorem DataArrayN.uncurry_getElem (x : DataArrayN (DataArrayN α κ) ι) (i : ι) (j : κ) :
+theorem DataArrayN.uncurry_def [IdxType.Fold'.{_,0} ι] [IdxType.Fold'.{_,0} κ]
+    (x : DataArrayN (DataArrayN α κ) ι) :
+    -- x.uncurry = ⊞ i j => x[i][j] := sorry_proof
+    x.uncurry = ofFn (↿fun i j => x[i][j]) := sorry_proof
+
+theorem DataArrayN.uncurry_getElem
+    (x : DataArrayN (DataArrayN α κ) ι) (i : ι) (j : κ) :
     x.uncurry[i,j] = x[i][j] := sorry_proof
 
-theorem DataArrayN.curry_def (x : DataArrayN α (ι×κ)) :
+theorem DataArrayN.curry_def [IdxType.Fold'.{_,0} ι] [IdxType.Fold'.{_,0} κ]
+    (x : DataArrayN α (ι×κ)) :
     x.curry = ⊞ i => ⊞ j => x[i,j] := by
   sorry_proof
 
@@ -375,7 +389,7 @@ partial def parseDimProd (s : Syntax) : Lean.PrettyPrinter.UnexpandM (TSyntaxArr
     return #[← `(dimSpec| [$a :$b])]
   | _ =>
     match s with
-    | `(Fin $n)      => return #[⟨n.raw⟩]
+    | `(Idx $n)      => return #[⟨n.raw⟩]
     | `($J × $I)     =>
       let js ← parseDimProd J
       let is ← parseDimProd I

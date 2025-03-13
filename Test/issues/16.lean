@@ -10,14 +10,14 @@ example
     fun (_,_,_) (_,_,dz) => dz := by fun_trans only
 
 example
-  : Differentiable Float (fun x : Float => ⊞ (_ : Fin 10) => x) :=
+  : Differentiable Float (fun x : Float => ⊞ (_ : Idx 10) => x) :=
 by
   fun_prop
 
 example
-  : fderiv Float (fun x : Float => ⊞ (_ : Fin 10) => x)
+  : fderiv Float (fun x : Float => ⊞ (_ : Idx 10) => x)
     =
-    (fun _ => fun dx : Float =>L[Float] ⊞ (i : Fin 10) => dx) :=
+    (fun _ => fun dx : Float =>L[Float] ⊞ (i : Idx 10) => dx) :=
 by
   fun_trans
 

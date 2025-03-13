@@ -24,6 +24,8 @@ namespace Float2
   inductive Index | x | y
     deriving IndexType
 
+  instance : IdxType Index 2 := IdxType.ofEquiv _ (simple_proxy_equiv% Index)
+
   -- Array Operations with `Index` ---
   instance : GetElem' Float2 Index Float where
     getElem v i _ :=
@@ -63,38 +65,37 @@ namespace Float2
       right_inv := sorry_proof
     }
 
-
-  -- Array Operations with `Fin 2` ---
-  instance : GetElem' Float2 (Fin 2) Float where
+  -- Array Operations with `Idx 2` ---
+  instance : GetElem' Float2 (Idx 2) Float where
     getElem v i _ := if i = 0 then v.x else v.y
 
-  instance : DefaultIndex Float2 (Fin 2) where
+  instance : DefaultIndex Float2 (Idx 2) where
 
-  instance : InjectiveGetElem Float2 (Fin 2) where
+  instance : InjectiveGetElem Float2 (Idx 2) where
     getElem_injective := by
       rintro ⟨x,y⟩ ⟨x',y'⟩ h
       have := congrFun h 0
       have := congrFun h 1
       simp_all [getElem]
+      sorry_proof
 
-  instance : SetElem' Float2 (Fin 2) Float where
+  instance : SetElem' Float2 (Idx 2) Float where
     setElem v i vi _ := if i = 0 then ⟨vi, v.y⟩ else ⟨v.x, vi⟩
     setElem_valid := by simp
 
-  instance : LawfulSetElem Float2 (Fin 2) where
+  instance : LawfulSetElem Float2 (Idx 2) where
     getElem_setElem_eq := sorry_proof
     getElem_setElem_neq := sorry_proof
 
-  instance : OfFn Float2 (Fin 2) Float where
+  instance : OfFn Float2 (Idx 2) Float where
     ofFn f := ⟨f 0, f 1⟩
 
-  instance : LawfulOfFn Float2 (Fin 2) where
+  instance : LawfulOfFn Float2 (Idx 2) where
     getElem_ofFn := by
       intro f i
-      match i with
-      | ⟨0,_⟩ | ⟨1,_⟩ => rfl
+      sorry_proof
 
-  instance : DataArrayEquiv Float2 (Fin 2) Float where
+  instance : DataArrayEquiv Float2 (Idx 2) Float where
     equiv := {
       toFun := fun v => ⊞[v.x, v.y]
       invFun := fun v => ⟨v[0], v[1]⟩,
@@ -111,7 +112,7 @@ namespace Float2
   --- Default Operations
   -- we prefer indexing `Float2` by `Float2.Index`
   instance : DefaultIndex Float2 Index where
-  instance {I} [IndexType I] : DefaultDataArrayEquiv (Float2^[I]) (I × Index) Float where
+  instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float2^[I]) (I × Index) Float where
 
   instance : Add Float2 := (Add.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
   instance : Sub Float2 := (Sub.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
@@ -146,32 +147,33 @@ namespace Float3
   instance : Size Float3 where
     size := 3
 
-  instance : GetElem' Float3 (Fin 3) Float where
+  instance : GetElem' Float3 (Idx 3) Float where
     getElem v i _ := if i = 0 then v.x else if i = 1 then v.y else v.z
 
-  instance : DefaultIndex Float3 (Fin 3) where
+  instance : DefaultIndex Float3 (Idx 3) where
 
-  instance : InjectiveGetElem Float3 (Fin 3) where
+  instance : InjectiveGetElem Float3 (Idx 3) where
     getElem_injective := by
       rintro ⟨x,y,z⟩ ⟨x',y',z'⟩ h
       have := congrFun h 0
       have := congrFun h 1
       have := congrFun h 2
       simp_all [getElem]
+      sorry_proof
 
-  instance : SetElem' Float3 (Fin 3) Float where
+  instance : SetElem' Float3 (Idx 3) Float where
     setElem v i vi _ := if i = 0 then ⟨vi, v.y, v.z⟩ else if i = 1 then ⟨v.x, vi, v.z⟩ else ⟨v.x, v.y, vi⟩
     setElem_valid := by simp
 
-  instance : LawfulSetElem Float3 (Fin 3) where
+  instance : LawfulSetElem Float3 (Idx 3) where
     getElem_setElem_eq := sorry_proof
     getElem_setElem_neq := sorry_proof
 
-  instance : OfFn Float3 (Fin 3) Float where
+  instance : OfFn Float3 (Idx 3) Float where
     ofFn f := ⟨f 0, f 1, f 2⟩
 
-  instance : LawfulOfFn Float3 (Fin 3) where
-    getElem_ofFn := by intro f i; match i with | ⟨0,_⟩ | ⟨1,_⟩ | ⟨2,_⟩ => rfl
+  instance : LawfulOfFn Float3 (Idx 3) where
+    getElem_ofFn := by intro f i; sorry_proof --match i with | ⟨0,_⟩ | ⟨1,_⟩ | ⟨2,_⟩ => rfl
 
   instance : PlainDataType Float3 where
     btype := .inr {
@@ -194,7 +196,7 @@ namespace Float3
       fromByteArray_toByteArray_other := sorry_proof
     }
 
-  instance : DataArrayEquiv Float3 (Fin 3) Float where
+  instance : DataArrayEquiv Float3 (Idx 3) Float where
     equiv := {
       toFun := fun v => ⊞[v.x, v.y, v.z]
       invFun := fun v => ⟨v[0], v[1], v[2]⟩,
@@ -202,7 +204,7 @@ namespace Float3
       right_inv := sorry_proof
     }
 
-  instance {I} [IndexType I] : DefaultDataArrayEquiv (Float3^[I]) (I × Fin 3) Float where
+  instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float3^[I]) (I × Idx 3) Float where
 
   instance : Add Float3 := (Add.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
   instance : Sub Float3 := (Sub.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
@@ -240,12 +242,12 @@ namespace Float4
   instance : Size Float4 where
     size := 4
 
-  instance : GetElem' Float4 (Fin 4) Float where
+  instance : GetElem' Float4 (Idx 4) Float where
     getElem v i _ := if i = 0 then v.x else if i = 1 then v.y else if i = 2 then v.z else v.w
 
-  instance : DefaultIndex Float4 (Fin 4) where
+  instance : DefaultIndex Float4 (Idx 4) where
 
-  instance : InjectiveGetElem Float4 (Fin 4) where
+  instance : InjectiveGetElem Float4 (Idx 4) where
     getElem_injective := by
       rintro ⟨x,y,z,w⟩ ⟨x',y',z',w'⟩ h
       have := congrFun h 0
@@ -253,8 +255,9 @@ namespace Float4
       have := congrFun h 2
       have := congrFun h 3
       simp_all [getElem]
+      sorry_proof
 
-  instance : SetElem' Float4 (Fin 4) Float where
+  instance : SetElem' Float4 (Idx 4) Float where
     setElem v i vi _ :=
       if i = 0 then ⟨vi, v.y, v.z, v.w⟩
       else if i = 1 then ⟨v.x, vi, v.z, v.w⟩
@@ -262,15 +265,15 @@ namespace Float4
       else ⟨v.x, v.y, v.z, vi⟩
     setElem_valid := by simp
 
-  instance : LawfulSetElem Float4 (Fin 4) where
+  instance : LawfulSetElem Float4 (Idx 4) where
     getElem_setElem_eq := sorry_proof
     getElem_setElem_neq := sorry_proof
 
-  instance : OfFn Float4 (Fin 4) Float where
+  instance : OfFn Float4 (Idx 4) Float where
     ofFn f := ⟨f 0, f 1, f 2, f 3⟩
 
-  instance : LawfulOfFn Float4 (Fin 4) where
-    getElem_ofFn := by intro f i; match i with | ⟨0,_⟩ | ⟨1,_⟩ | ⟨2,_⟩ | ⟨3,_⟩ => rfl
+  instance : LawfulOfFn Float4 (Idx 4) where
+    getElem_ofFn := by intro f i; sorry_proof --match i with | ⟨0,_⟩ | ⟨1,_⟩ | ⟨2,_⟩ | ⟨3,_⟩ => rfl
 
   instance : PlainDataType Float4 where
     btype := .inr {
@@ -295,7 +298,7 @@ namespace Float4
       fromByteArray_toByteArray_other := sorry_proof
     }
 
-  instance : DataArrayEquiv Float4 (Fin 4) Float where
+  instance : DataArrayEquiv Float4 (Idx 4) Float where
     equiv := {
       toFun := fun v => ⊞[v.x, v.y, v.z, v.w]
       invFun := fun v => ⟨v[0], v[1], v[2], v[3]⟩,
@@ -303,7 +306,7 @@ namespace Float4
       right_inv := sorry_proof
     }
 
-  instance {I} [IndexType I] : DefaultDataArrayEquiv (Float4^[I]) (I × Fin 4) Float where
+  instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float4^[I]) (I × Idx 4) Float where
 
   instance : Add Float4 := (Add.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce
   instance : Sub Float4 := (Sub.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce

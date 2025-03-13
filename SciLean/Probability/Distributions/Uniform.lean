@@ -191,42 +191,42 @@ instance
     return 0
 
 
-instance
-  {I : Type} [IndexType I]
-  {R : Type} [RealScalar R] [PlainDataType R] [MeasureSpace R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] :
-  RejectionSampleBall₂ (R:=R) (R^[I]) where
+-- instance
+--   {I : Type} [IndexType I]
+--   {R : Type} [RealScalar R] [PlainDataType R] [MeasureSpace R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] :
+--   RejectionSampleBall₂ (R:=R) (R^[I]) where
 
-  sample := do
-    let go : Rand (Option (R^[I])) := do
+--   sample := do
+--     let go : Rand (Option (R^[I])) := do
 
-      let mut s : R := 0
-      let mut x : R^[I] := 0
-      for i in fullRange I do
-        let xi ← uniform (Set.Icc (-1) (1))
-        s := s + ‖xi‖₂²[R]
-        if s > 1 then return none
-        x[i] := xi
+--       let mut s : R := 0
+--       let mut x : R^[I] := 0
+--       for i in fullRange I do
+--         let xi ← uniform (Set.Icc (-1) (1))
+--         s := s + ‖xi‖₂²[R]
+--         if s > 1 then return none
+--         x[i] := xi
 
-      return x
+--       return x
 
-    while true do
-      if let .some x ← go then
-        return x
-      else
-        continue
+--     while true do
+--       if let .some x ← go then
+--         return x
+--       else
+--         continue
 
-    return 0
+--     return 0
 
 -- why does TC fail here? some issue with `RealScalar Float` instance and nonassignable metavariable
 -- def sample_test := do
 --   let y ← (RejectionSampleBall₂.sample Float (X:=Float^[5])).get
 --   return y
 
-instance {X} [NormedAddCommGroup X] [AdjointSpace R X] [RejectionSampleBall₂ (R:=R) X] [MeasureSpace X]
-    (x : X) (r : R) :
-    UniformRand (closedBall₂ x r) where
-  uniform := do
-    let y ← RejectionSampleBall₂.sample (R:=R) (X:=X)
-    return r • y + x
-  is_uniform := sorry_proof
-  is_prob := sorry_proof
+-- instance {X} [NormedAddCommGroup X] [AdjointSpace R X] [RejectionSampleBall₂ (R:=R) X] [MeasureSpace X]
+--     (x : X) (r : R) :
+--     UniformRand (closedBall₂ x r) where
+--   uniform := do
+--     let y ← RejectionSampleBall₂.sample (R:=R) (X:=X)
+--     return r • y + x
+--   is_uniform := sorry_proof
+--   is_prob := sorry_proof

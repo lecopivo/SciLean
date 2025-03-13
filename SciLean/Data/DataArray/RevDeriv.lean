@@ -1,6 +1,5 @@
 import SciLean.Data.DataArray.DataArray
 -- import SciLean.Data.ArrayType.Algebra
-import SciLean.Analysis.Calculus.RevFDerivProj
 
 namespace SciLean
 

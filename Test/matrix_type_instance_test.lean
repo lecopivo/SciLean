@@ -25,7 +25,7 @@ example   {R : Type _} [RealScalar R]
 example : Inner Float (Float^[2]) := by infer_instance
 
 open VectorType in
-example {R} [RealScalar R] {n} [IndexType n] {X} [VectorType.Base X n R] [InjectiveGetElem X n] :
+example {R} [RealScalar R] {n nn} [IdxType n nn] {X} [VectorType.Base X n R] [InjectiveGetElem X n] :
    (instAdjointSpace : AdjointSpace R X) = (instAdjointSpaceReal : AdjointSpace R X) := by
   rfl
 

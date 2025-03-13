@@ -94,40 +94,34 @@ info: HasRevFDerivUpdate R
 
 
 /--
-info: HasRevFDerivUpdate R (fun x i => ↑↑i • x) fun x =>
-  (fun i => ↑↑i • x, fun dy dx =>
-    IndexType.foldl
-      (fun dx i =>
-        let x₁ := ↑↑i;
-        let dyi := dy i;
-        let dx := dx + (starRingEnd R) x₁ • dyi;
-        dx)
+info: HasRevFDerivUpdate R (fun x i => ↑(↑i).toNat • x) fun x =>
+  (fun i => ↑(↑i).toNat • x, fun dy dx =>
+    IdxType.fold IndexType.Range.full dx fun i dx =>
+      let x₁ := ↑(↑i).toNat;
+      let dyi := dy i;
+      let dx := dx + (starRingEnd R) x₁ • dyi;
       dx) : Prop
 -/
 #guard_msgs in
-#check (HasRevFDerivUpdate R (fun (x : X) (i : Fin 3) => (i.1:R)•x) _) rewrite_by
+#check (HasRevFDerivUpdate R (fun (x : X) (i : Idx 3) => (i.1.toNat:R)•x) _) rewrite_by
   data_synth
 
 
 /--
-info: HasRevFDerivUpdate R (fun x i j => (↑↑i + ↑↑j) • x) fun x =>
-  (fun i j => (↑↑i + ↑↑j) • x, fun dy dx =>
-    IndexType.foldl
-      (fun dx i =>
-        let dyi := dy i;
-        let dx :=
-          IndexType.foldl
-            (fun dx i_1 =>
-              let x₁ := ↑↑i + ↑↑i_1;
-              let dyi := dyi i_1;
-              let dx := dx + (starRingEnd R) x₁ • dyi;
-              dx)
-            dx;
-        dx)
+info: HasRevFDerivUpdate R (fun x i j => ↑(↑i + ↑j).toNat • x) fun x =>
+  (fun i j => ↑(↑i + ↑j).toNat • x, fun dy dx =>
+    IdxType.fold IndexType.Range.full dx fun i dx =>
+      let dyi := dy i;
+      let dx :=
+        IdxType.fold IndexType.Range.full dx fun i_1 dx =>
+          let x₁ := ↑(↑i + ↑i_1).toNat;
+          let dyi := dyi i_1;
+          let dx := dx + (starRingEnd R) x₁ • dyi;
+          dx;
       dx) : Prop
 -/
 #guard_msgs in
-#check (HasRevFDerivUpdate R (fun (x : X) (i j : Fin 3) => (i.1+j.1:R)•x) _) rewrite_by
+#check (HasRevFDerivUpdate R (fun (x : X) (i j : Idx 3) => ((i.1+j.1).toNat:R)•x) _) rewrite_by
   data_synth
 
 
@@ -164,8 +158,8 @@ info: HasRevFDerivUpdate R (fun x => f x + f x) fun x =>
 #guard_msgs in
 #check (HasRevFDerivUpdate R (fun x => (f x)+(f x)) _) rewrite_by data_synth
 
-variable (g : X → Fin n → R) (g' : Fin n → _) (hf : ∀ i, HasRevFDerivUpdate R (g · i) (g' i))
-         (i j : Fin n)
+variable (g : X → Idx n → R) (g' : Idx n → _) (hf : ∀ i, HasRevFDerivUpdate R (g · i) (g' i))
+         (i j : Idx n)
 
 
 /-- info: HasRevFDerivUpdate R (fun x => g x i) (g' i) : Prop -/

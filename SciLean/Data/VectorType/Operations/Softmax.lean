@@ -11,8 +11,8 @@ open VectorType
 section Simps
 
 variable
-  {X : Type*} {n : Type u} {R :  Type*}
-  {_ : RealScalar R} {_ : IndexType n} [VectorType.Base X n R] [VectorType.Dense X]
+  {X : Type*} {I : Type u} {R :  Type*}
+  {_ : RealScalar R} {nI} {_ : IdxType I nI} [VectorType.Base X I R] [Dense X]
 
 theorem VectorType.softmax_spec (x : X) :
   VectorType.softmax x

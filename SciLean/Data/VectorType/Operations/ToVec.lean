@@ -19,7 +19,7 @@ namespace VectorType
 -- def_fun_prop toVec in x [Lawful X] : IsLinearMap K by
 --   constructor <;> (intros; simp[vector_to_spec])
 
-variable {R K} [RealScalar R] [Scalar R K] {n} [IndexType n] {X}
+variable {R : Type u} {K : Type v} [RealScalar R] [Scalar R K] {n : Type w} {nn} [IdxType n nn] {X}
   [VectorType.Base X n K] [InjectiveGetElem X n]
 
 @[fun_prop]
@@ -103,8 +103,9 @@ theorem getElem.arg_xs.adjoint_rule [Dense X] (i : n) :
   simp[vector_to_spec,Finset.sum_ite_eq']
   sorry_proof
 
+set_option pp.universes true
 @[data_synth]
-theorem getElem.arg_xs.HasAdjoint_rule [Dense X] (i : n) :
+theorem getElem.arg_xs.HasAdjoint_rule [IdxType.Fold'.{_,v} n] [Dense X] (i : n) :
     HasAdjoint K (fun x : X => x[i])
      (fun k : K => setElem (0 : X) i k (by dsimp)) := by
   data_synth
@@ -113,7 +114,7 @@ theorem getElem.arg_xs.HasAdjoint_rule [Dense X] (i : n) :
   -- case is_linear => fun_prop
 
 @[data_synth]
-theorem getElem.arg_xs.HasAdjointUpdate_rule [Dense X] (i : n) :
+theorem getElem.arg_xs.HasAdjointUpdate_rule [IdxType.Fold'.{_,v} n] [Dense X] (i : n) :
     HasAdjointUpdate K (fun x : X => x[i])
      (fun (k : K) x => setElem x i (x[i] + k) (by dsimp)) := by
   data_synth
@@ -129,13 +130,13 @@ theorem getElem.arg_xs.revFDeriv_rule [Dense X] (i : n) :
   fun_trans
 
 @[data_synth]
-theorem getElem.arg_xs.HasRevFDeriv_rule [Dense X] (i : n) :
+theorem getElem.arg_xs.HasRevFDeriv_rule [IdxType.Fold'.{_,v} n] [Dense X] (i : n) :
     HasRevFDeriv K (fun x : X => x[i])
      (fun x => (x[i], fun k : K => setElem (0 : X) i k (by dsimp))) := by
   data_synth
 
 @[data_synth]
-theorem getElem.arg_xs.HasRevFDerivUpdate_rule [Dense X] (i : n) :
+theorem getElem.arg_xs.HasRevFDerivUpdate_rule [IdxType.Fold'.{_,v} n] [Dense X] (i : n) :
     HasRevFDerivUpdate K (fun x : X => x[i])
      (fun x => (x[i], fun (k : K) x' =>
        let xi := x'[i]

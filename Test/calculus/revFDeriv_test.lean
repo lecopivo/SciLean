@@ -97,14 +97,14 @@ elab "rhs_of" h:term : term => do
   return rhs
 
 
-example
-  : revFDerivProj K Unit (fun xy : X×Y => (xy.2,xy.1))
-    =
-    fun x => ((x.snd, x.fst), fun _ dyz => (dyz.snd, dyz.fst)) :=
-by
-  conv =>
-    lhs
-    autodiff
+-- example
+--   : revFDerivProj K Unit (fun xy : X×Y => (xy.2,xy.1))
+--     =
+--     fun x => ((x.snd, x.fst), fun _ dyz => (dyz.snd, dyz.fst)) :=
+-- by
+--   conv =>
+--     lhs
+--     autodiff
 
 variable (f : Y → X → X)
   (hf : Differentiable K (fun yx : Y×X => f yx.1 yx.2))
@@ -151,7 +151,7 @@ by
 ----------------
 
 example
-  : revFDeriv K (fun (x : Fin 10 → K) => fun i => x i)
+  : revFDeriv K (fun (x : Idx 10 → K) => fun i => x i)
     =
     fun x => (x, fun dx => dx) :=
 by

@@ -119,7 +119,7 @@ open Term  in
 
 For example:
 ```
-variable (f : Fin n → Float) (g : Fin m → Fin n → Float)
+variable (f : Idx n → Float) (g : Idx m → Idx n → Float)
 
 #check ⊞ i => f i             -- Float^[n]
 #check ⊞ i j => g i j         -- Float^[m,n]
@@ -127,11 +127,11 @@ variable (f : Fin n → Float) (g : Fin m → Fin n → Float)
 #check ⊞ i j k => g i j + f k -- Float^[m,n,n]
 ```
 The preferd way of creating a matrix is `⊞ i j => g i j` not `⊞ (i,j) => g i j`. Both versions
-work but the former notaion allows us to writh `⊞ i (j : Fin 5) => f i` instead of
-`⊞ ((i,j) : _ ×Fin 4) => f i`. This is also the reson for the somewhat unexpected fact that
+work but the former notaion allows us to writh `⊞ i (j : Idx 5) => f i` instead of
+`⊞ ((i,j) : _ ×Idx 4) => f i`. This is also the reson for the somewhat unexpected fact that
 `⊞ i => ⊞ j => g i j ≠ ⊞ i j => g i j`.
 
-The resulting type does not always have to be `Float^[n]`(notation for `DataArrayN Float (Fin n)`).
+The resulting type does not always have to be `Float^[n]`(notation for `DataArrayN Float (Idx n)`).
 When we explicitely force the resulting type we can obtain different array type.
 For this to work there has to be instance `OfFn coll idx elem` for `f : idx → elem`.
 
@@ -142,7 +142,7 @@ For example:
 
 Examples of notation expansion
 ```
-variable (f : Fin n → Float) (g : Fin m → Fin n → Float)
+variable (f : Idx n → Float) (g : Idx m → Idx n → Float)
 
 (⊞ i => f i)          ==> ofFn (coll:=Float^[n]) f
 (⊞ i => f i : Vector Float 2) ==> ofFn (coll:=Vector Float 2) f
@@ -213,12 +213,12 @@ def ofFnExplicitElab : TermElab := fun stx expectedType? =>
 
     if rows.size = 1 then
       let fn ←
-        elabTerm (←`(⊞ (i : Fin $n) => ![$elems,*] i)) expectedType?
+        elabTerm (←`(⊞ (i : Idx $n) => ![$elems,*] i)) expectedType?
 
       return fn
     else
       let fn ←
-        elabTerm (←`(⊞ (i : Fin $m) (j : Fin $n) => !![$[$[$rows],*];*] i j))
+        elabTerm (←`(⊞ (i : Idx $m) (j : Idx $n) => !![$[$[$rows],*];*] i j))
           expectedType?
 
       return fn
@@ -281,10 +281,10 @@ partial def expand' (l : List (TSyntax `dimSpec)) : TermElabM Expr :=
     | `(dimSpec| $n:term) => do
       try
         let n ← elabTerm n q(Nat)
-        return ← mkAppM ``Fin #[n]
+        return ← mkAppM ``Idx #[n]
       catch _ =>
         return ← elabTerm n none
-    | `(dimSpec| [$n:term : $m:term]) => do elabTerm (← `(↑(Set.Icc ($n : Int) ($m : Int)))) q(Type)
+    | `(dimSpec| [$n:term : $m:term]) => do elabTerm (← `(↑(Set.Icc ($n : Int64) ($m : Int64)))) q(Type)
     | `(dimSpec| [$ds:dimSpec,*]) => expand' ds.getElems.toList
     | _ => throwError "unexpected type power syntax"
   | t :: l' =>  do
@@ -314,6 +314,6 @@ elab_rules (kind:=typeIntPower) : term
   -- let inst ← synthInstance <| mkAppN (← mkConstWithFreshMVarLevels ``ArrayTypeNotation) #[C,Y,X]
   -- let C ← whnfR (← instantiateMVars C)
   -- let result ← instantiateMVars <| ← mkAppOptM ``arrayTypeCont #[Y,X,C,inst]
-  return ← mkAppOptM `SciLean.DataArrayN #[X,none,I,none] --result.getRevArg! 1
+  return ← mkAppOptM `SciLean.DataArrayN #[X,none,I,none,none] --result.getRevArg! 1
 
 end ArrayType.PowerNotation

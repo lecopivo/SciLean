@@ -19,7 +19,7 @@ section SquareMatrices
 
 variable
   {R K} {_ : RealScalar R} {_ : Scalar R K}
-  {n} {_ : IndexType n}
+  {n nn} {_ : IdxType n nn}
   {X} {_ : VectorType.Base X n K}
   {M} [MatrixType.Base M X X]
   [DecidableEq n]

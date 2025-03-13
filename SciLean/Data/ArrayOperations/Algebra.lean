@@ -1,6 +1,9 @@
 import SciLean.Data.ArrayOperations.Basic
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.Adjoint
+import SciLean.Data.IdxType.Basic
+import SciLean.Data.IdxType.Fold
+import SciLean.Data.IdxType.Operations
 
 namespace SciLean
 
@@ -21,8 +24,8 @@ class IsSMulGetElem (𝕜 X I : Type*) {Y : outParam Type*} [GetElem' X I Y]
   getElem_smul (c : 𝕜) (x : X) (i : I) : (c • x)[i] = c • x[i]
 
 class IsInnerGetElem (𝕜 X I : Type*) {Y : outParam Type*} [GetElem' X I Y]
-    [Zero 𝕜] [Add 𝕜] [IndexType I] [Inner 𝕜 X] [Inner 𝕜 Y] : Prop where
-  inner_eq_sum_getElem (x x' : X) : ⟪x,x'⟫[𝕜] = ∑ (i : I), ⟪x[i],x'[i]⟫[𝕜]
+    [Zero 𝕜] [Add 𝕜] {n} [IdxType I n] [IdxType.Fold' I] [Inner 𝕜 X] [Inner 𝕜 Y] : Prop where
+  inner_eq_sum_getElem (x x' : X) : ⟪x,x'⟫[𝕜] = ∑ᴵ (i : I), ⟪x[i],x'[i]⟫[𝕜]
 
 export IsZeroGetElem (getElem_zero)
 export IsAddGetElem (getElem_add)
@@ -123,7 +126,7 @@ instance {X Y Z I J 𝕜}
 instance {X Y Z I J 𝕜}
     [GetElem' X I Y] [GetElem' X (I×J) Z]
     [GetElem' Y J Z] [IsGetElemCurry X I J]
-    [Zero 𝕜] [Add 𝕜] [IndexType I] [IndexType J]
+    [Zero 𝕜] [Add 𝕜] {nI} [IdxType I nI] [IdxType.Fold' I] {nJ} [IdxType J nJ] [IdxType.Fold' J]
     [Inner 𝕜 X] [Inner 𝕜 Y] [Inner 𝕜 Z]
     [IsInnerGetElem 𝕜 X I] [IsInnerGetElem 𝕜 Y J] :
     IsInnerGetElem 𝕜 X (I×J) where
@@ -135,7 +138,7 @@ instance {X Y Z I J 𝕜}
     [DefaultIndex Y J]
     [GetElem' X I Y] [GetElem' X (I×J) Z]
     [GetElem' Y J Z] [IsGetElemCurry X I J]
-    [Zero 𝕜] [Add 𝕜] [IndexType I] [IndexType J]
+    [Zero 𝕜] [Add 𝕜] {nI} [IdxType I nI] [IdxType.Fold' I] {nJ} [IdxType J nJ] [IdxType.Fold' J]
     [Inner 𝕜 X] [Inner 𝕜 Y] [Inner 𝕜 Z]
     [IsInnerGetElem 𝕜 X (I×J)] [IsInnerGetElem 𝕜 Y J] :
     IsInnerGetElem 𝕜 X I where

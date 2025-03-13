@@ -44,7 +44,7 @@ theorem getElem.arg_xs.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
 
 @[data_synth]
 theorem getElem.arg_xs.HasAdjoint_rule_free_index {𝕜 X I Y : Type*}
-    [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I] [IndexType I] [RCLike 𝕜]
+    [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I] {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] :
     HasAdjoint 𝕜
@@ -61,7 +61,7 @@ open Classical
 theorem getElem.arg_xs.HasAdjoint_rule_applied_index {𝕜 X I Y : Type*}
     [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem' X I Y] [LawfulSetElem X I]
-    [IndexType I] [RCLike 𝕜]
+    {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
     HasAdjoint 𝕜
@@ -70,14 +70,14 @@ theorem getElem.arg_xs.HasAdjoint_rule_applied_index {𝕜 X I Y : Type*}
         let x := setElem (0:X) i xi .intro
         x) := by
   constructor
-  case adjoint => intro x y; simp[inner_eq_sum_getElem (I:=I),Tactic.if_pull,sum_to_finset_sum]
+  case adjoint => intro x y; simp[inner_eq_sum_getElem (I:=I),Tactic.if_pull,IdxType.sum_eq_finset_sum]
   case is_linear => fun_prop
 
 @[data_synth]
 theorem getElem.arg_xs.HasAdjointUpdate_rule_applied_index {𝕜 X I Y : Type*}
     [GetElem' X I Y] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem' X I Y] [LawfulSetElem X I]
-    [IndexType I] [RCLike 𝕜]
+    {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
     HasAdjointUpdate 𝕜
@@ -97,7 +97,7 @@ theorem getElem.arg_xs.HasAdjointUpdate_rule_applied_index {𝕜 X I Y : Type*}
 theorem getElem.arg_xs.HasRevFDeriv_rule_applied_index {𝕜 X I Y : Type*}
     [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem' X I Y] [LawfulSetElem X I]
-    [IndexType I] [RCLike 𝕜]
+    {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
     HasRevFDeriv 𝕜
@@ -115,7 +115,7 @@ theorem getElem.arg_xs.HasRevFDeriv_rule_applied_index {𝕜 X I Y : Type*}
 theorem getElem.arg_xs.HasRevFDerivUpdate_rule_applied_index {𝕜 X I Y : Type*}
     [GetElem' X I Y] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem' X I Y] [LawfulSetElem X I]
-    [IndexType I] [RCLike 𝕜]
+    {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]  (i : I) :
     HasRevFDerivUpdate 𝕜

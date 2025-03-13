@@ -39,7 +39,8 @@ def ofEquiv (f : I ≃ J) (i : Range I) : Range J :=
   | .interval a b => .interval (f a) (f b)
 
 
-@[inline]
+
+-- @[inline] -- inlining breaks the current compiler on tests in `Test/indextype/ranges.lean`
 def ofProd (i : Range (I×J)) : Range I × Range J :=
   match i with
   | .empty => (.empty, .empty)

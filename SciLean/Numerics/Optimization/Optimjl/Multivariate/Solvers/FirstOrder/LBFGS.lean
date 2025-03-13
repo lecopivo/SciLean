@@ -108,7 +108,7 @@ def twoloop (g : X) (k : ℤ) (m : ℕ)
     let dxi := dx iᵣ
     let dgi := dg iᵣ
     let α' := ρ iᵣ * ⟪dxi, q⟫
-    α[jᵣ] := α'
+    α[jᵣ.toIdx] := α'
     q -= α' • dgi
 
   let mut s :=
@@ -134,7 +134,7 @@ def twoloop (g : X) (k : ℤ) (m : ℕ)
     let dxi := dx i
     let dgi := dg i
     let β := ρ i * ⟪dgi,s⟫
-    s += (α[j] - β) • dxi
+    s += (α[j.toIdx] - β) • dxi
 
   return - s
 
@@ -147,7 +147,7 @@ def updateSearchDirection (method : LBFGS R m) (state : State R X m) : State R X
 
   let ρ : Icc (k-m) (k-1) → R := fun i =>
     let i : Fin m := ⟨(i.1%m).toNat, by sorry_proof⟩
-    state.ρ[i]
+    state.ρ[i.toIdx]
 
   let dx : Icc (k-m) (k-1) → X := fun i =>
     let i : Fin m := ⟨(i.1%m).toNat, by sorry_proof⟩
@@ -285,7 +285,7 @@ def updateH (state : State R X m)  :
   let i : Fin m := ⟨(k%m).toNat, by sorry_proof⟩
   state.dx_history[i] := state.dx
   state.dg_history[i] := state.dg
-  state.ρ[i] := ρ
+  state.ρ[i.toIdx] := ρ
 
   state.pseudo_iteration += 1
 

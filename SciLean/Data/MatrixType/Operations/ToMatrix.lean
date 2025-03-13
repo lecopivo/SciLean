@@ -66,27 +66,27 @@ abbrev_fun_trans toMatrix in A
   fun_trans
 
 -- adjoint
-abbrev_data_synth toMatrix in A [InjectiveGetElem M (m×n)] [Dense M] : HasAdjoint K by
+abbrev_data_synth toMatrix in A [IdxType.Fold' n] [IdxType.Fold' m] [InjectiveGetElem M (m×n)] [Dense M] : HasAdjoint K by
   conv => enter[3]; assign (fun f => fromMatrix (M:=M) f)
   constructor
   case adjoint =>
-    intros; simp[vector_to_spec,Inner.inner,sum_to_finset_sum,
+    intros; simp[vector_to_spec,Inner.inner,IdxType.sum_eq_finset_sum,
                  ←Finset.univ_product_univ,Finset.sum_product]
   case is_linear => fun_prop
 
-abbrev_data_synth toMatrix in A [InjectiveGetElem M (m×n)] [Dense M] : HasAdjointUpdate K by
+abbrev_data_synth toMatrix in A [IdxType.Fold' n] [IdxType.Fold' m] [InjectiveGetElem M (m×n)] [Dense M] : HasAdjointUpdate K by
   apply hasAdjointUpdate_from_hasAdjoint
   case adjoint => data_synth
   case simp => intros; rfl
 
 -- reverse AD
-abbrev_data_synth toMatrix in A [InjectiveGetElem M (m×n)] [Dense M] : HasRevFDeriv K by
+abbrev_data_synth toMatrix in A [IdxType.Fold' n] [IdxType.Fold' m] [InjectiveGetElem M (m×n)] [Dense M] : HasRevFDeriv K by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intros; data_synth
   case adjoint => intros; dsimp; data_synth
   case simp => rfl
 
-abbrev_data_synth toMatrix in A [InjectiveGetElem M (m×n)] [Dense M] : HasRevFDerivUpdate K by
+abbrev_data_synth toMatrix in A [IdxType.Fold' n] [IdxType.Fold' m] [InjectiveGetElem M (m×n)] [Dense M] : HasRevFDerivUpdate K by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intros; data_synth
   case adjoint => intros; dsimp; data_synth
@@ -94,7 +94,7 @@ abbrev_data_synth toMatrix in A [InjectiveGetElem M (m×n)] [Dense M] : HasRevFD
 
 @[data_synth]
 theorem MatrixType.Base.toMatrix.arg_A.HasRevFDeriv_simple_rule_ij {M : Type u_1} {m : outParam (Type u_2)}
-    {n : outParam (Type u_3)} {inst : IndexType m} {_ : IndexType n} {R : outParam (Type u_4)}
+    {n : outParam (Type u_3)} {nn nm} {inst : IdxType m nm} {_ : IdxType n nn} {R : outParam (Type u_4)}
     {K : outParam (Type u_5)} {_ : RealScalar R} {_ : Scalar R K} {X : outParam (Type u_6)}
     {Y : outParam (Type u_7)} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K} [self : Base M X Y]
     [InjectiveGetElem M (m×n)] [Dense M]
@@ -107,7 +107,7 @@ theorem MatrixType.Base.toMatrix.arg_A.HasRevFDeriv_simple_rule_ij {M : Type u_1
 @[data_synth]
 theorem MatrixType.Base.toMatrix.arg_A.HasRevFDerivUpdate_simple_rule_ij
     {M : Type u_1} {m : outParam (Type u_2)}
-    {n : outParam (Type u_3)} {inst : IndexType m} {_ : IndexType n} {R : outParam (Type u_4)}
+    {n : outParam (Type u_3)} {nm nn} {inst : IdxType m nm} {_ : IdxType n nn} {R : outParam (Type u_4)}
     {K : outParam (Type u_5)} {_ : RealScalar R} {_ : Scalar R K} {X : outParam (Type u_6)}
     {Y : outParam (Type u_7)} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K} [self : Base M X Y]
     [InjectiveGetElem M (m×n)] [Dense M]

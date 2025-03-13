@@ -69,10 +69,16 @@ instance [Random Id α] [Random Id β] : Random Id (α × β) where
     let b ← rand β
     return (a,b)
 
-open Random
-instance {ι : Type} [IndexType ι] [PlainDataType R] [Random Id R] [Zero R] : Random Id (R^[ι]) where
-  random := do
-    let mut x : R^[ι] := ⊞ (_:ι) => (0:R)
-    for i in fullRange ι do
-      x := ArrayType.set x i (← random (α:=R))
-    return x
+-- open Random
+-- instance
+--     {I : Type} {nI} [IdxType I nI] [IdxType.Fold' I]
+--     {R : Type} [PlainDataType R] [Random Id R] [Zero R] :
+--     Random Id (R^[I]) where
+--   random :=
+--     let x : R^[I] := Id.run do
+--       let mut x : DataArray R := DataArray.mkEmpty nI
+--       for i in fullRange I do
+--         x := x.push (← random (α:=R))
+--         -- x := ArrayType.set x i (← random (α:=R))
+--       return ⟨x, nI, sorry_proof⟩
+--     sorry

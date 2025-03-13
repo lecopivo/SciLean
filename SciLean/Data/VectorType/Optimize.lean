@@ -5,7 +5,7 @@ namespace SciLean.VectorType
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [InjectiveGetElem X n]
+  {_ : RealScalar R} {_ : Scalar R K} {nn} {_ : IdxType n nn} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 
 --- arithmetic operations to axp(b)y and scal

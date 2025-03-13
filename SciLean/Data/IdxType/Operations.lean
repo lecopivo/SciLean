@@ -3,17 +3,19 @@ import SciLean.Data.IndexType.SumProduct
 
 namespace SciLean
 
-variable {I : Type u} {α : Type}  {n} [IdxType I n] [IdxType.Fold.{u,0,0} I Id]
+variable {I : Type u} {α : Type v}  {n} [IdxType I n] [IdxType.Fold.{u,v,v} I Id]
 
 namespace IdxType
 
 @[specialize, inline]
 def sum [Zero α] [Add α] (f : I → α) : α :=
-  IdxType.foldl (IndexType.Range.full (I:=I)) (init := 0) (fun i s => s + f i)
+  IdxType.fold (IndexType.Range.full (I:=I)) (init := 0) (fun i s => s + f i)
 
 
 open Lean.TSyntax.Compat in
-/-- `∑ᴵ (i : I), f i` is sum over indextype `I` i.e. has instance `IdxType I n`. -/
+/-- `∑ᴵ (i : I), f i` is sum over indextype `I`.
+
+There has to be an instance `IdxType I n` and `IdxType.Fold' I`. -/
 macro " ∑ᴵ " xs:Lean.explicitBinders ", " b:term:66 : term =>
   Lean.expandExplicitBinders ``IdxType.sum xs b
 
@@ -26,7 +28,8 @@ macro " ∑ᴵ " xs:Lean.explicitBinders ", " b:term:66 : term =>
     `(∑ᴵ ($x:ident : $ty), $b)
   | _  => throw ()
 
-set_option pp.universes true
+theorem sum_eq_finset_sum {α} [AddCommMonoid α] (f : I → α) :
+  ∑ᴵ i, f i = Finset.univ.sum f := sorry_proof
 
 abbrev min [Min α] [Inhabited α] (f : I → α) : α :=
   IdxType.reduce (IndexType.Range.full (I:=I)) f (Min.min · ·)

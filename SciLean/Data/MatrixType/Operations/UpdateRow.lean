@@ -59,6 +59,7 @@ abbrev_fun_trans MatrixType.updateRow in A x
     sorry_proof
 
 abbrev_data_synth updateRow in A x
+    [IdxType.Fold' m] [IdxType.Fold' n]
     [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     HasAdjoint K by
   conv => enter[3]; assign (fun B : M => (updateRow B i 0, row B i))
@@ -70,15 +71,16 @@ abbrev_data_synth updateRow in A x
          Matrix.updateRow, Function.update]
     conv =>
       rhs; enter[2]
-      equals (∑ i' : m, ∑ x : n,
+      equals (∑ᴵ i' : m, ∑ᴵ x : n,
                if i'=i then conj (VectorType.toVec Ar.2 x) * VectorType.toVec B (i, x) else 0) =>
-        simp [sum_to_finset_sum]
-    simp only [←Finset.sum_add_distrib,sum_to_finset_sum]
+        simp [IdxType.sum_eq_finset_sum]
+    simp only [←Finset.sum_add_distrib,IdxType.sum_eq_finset_sum]
     congr 1; funext i; congr 1; funext j
     split_ifs <;> simp_all;
   case is_linear => fun_prop
 
 abbrev_data_synth updateRow in A x
+    [IdxType.Fold' m] [IdxType.Fold' n]
     [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     HasAdjointUpdate K by
   apply hasAdjointUpdate_from_hasAdjoint
@@ -91,6 +93,7 @@ abbrev_fun_trans MatrixType.updateRow in A x [InjectiveGetElem M (m×n)] [Inject
   autodiff
 
 abbrev_data_synth updateRow in A x
+    [IdxType.Fold' m] [IdxType.Fold' n]
     [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     HasRevFDeriv K by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
@@ -99,6 +102,7 @@ abbrev_data_synth updateRow in A x
   case simp => rfl
 
 abbrev_data_synth updateRow in A x
+    [IdxType.Fold' m] [IdxType.Fold' n]
     [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] :
     HasRevFDerivUpdate K by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate

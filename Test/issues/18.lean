@@ -10,7 +10,7 @@ info: false
 open Lean Meta Qq in
 #eval show MetaM Unit from do
 
-  let X : Q(Type) := q(Float → DataArrayN Float (Fin 10))
+  let X : Q(Type) := q(Float → DataArrayN Float (Idx 10))
   withLocalDeclQ `x default X fun x => do
   let HX := q(Differentiable Float $x)
   withLocalDeclQ `hx default HX fun hx => do
@@ -23,6 +23,6 @@ open Lean Meta Qq in
 set_option pp.notation false in
 example
   (x : Float → Float^[10]) (hx : Differentiable Float x)
-  : Differentiable Float (fun w => ⊞ (i : Fin 10) => (x w)[i]) :=
+  : Differentiable Float (fun w => ⊞ (i : Idx 10) => (x w)[i]) :=
 by
   fun_prop

@@ -424,6 +424,15 @@ theorem SciLean.sum.arg_f.IsContinuousLinearMap_rule {ι} [IndexType ι]
   cont := sorry_proof
 }
 
+@[fun_prop]
+theorem SciLean.IdxType.sum.arg_f.IsContinuousLinearMap_rule {ι n} [IdxType ι n] [IdxType.Fold' ι]
+  (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i)
+  : IsContinuousLinearMap R fun x => ∑ᴵ i, f x i :=
+{
+  linear := sorry_proof
+  cont := sorry_proof
+}
+
 -- do we need this one?
 -- open BigOperators in
 -- @[fun_prop]

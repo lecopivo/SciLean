@@ -16,7 +16,7 @@ section Simps
 
 variable
   {M : Type u_1} {m : outParam (Type u_2)}
-  {n : outParam (Type u_3)} {_: IndexType m} {_ : IndexType n} {R : outParam (Type u_4)}
+  {n : outParam (Type u_3)} {nm nn} {_: IdxType m nm} {_ : IdxType n nn} {R : outParam (Type u_4)}
   {K : outParam (Type u_5)} {_ : RealScalar R} {_ : Scalar R K} {X : outParam (Type u_6)}
   {Y : outParam (Type u_7)} {_ : VectorType.Base X n K} {_ : VectorType.Base Y m K}
   [self : MatrixType.Base M X Y] [InjectiveGetElem M (m×n)] [InjectiveGetElem X n] [InjectiveGetElem Y m]

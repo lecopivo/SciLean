@@ -13,8 +13,8 @@ namespace BlockMatrix
 
 variable
   {R K : Type*} {ir : RealScalar R} {is : Scalar R K}
-  {m₁ m₂ : Type*} {_ : IndexType m₁} {_ : IndexType m₂}
-  {n₁ n₂ : Type*} {_ : IndexType n₁} {_ : IndexType n₂}
+  {m₁ m₂ : Type*} {nm₁ nm₂} {_ : IdxType m₁ nm₁} {_ : IdxType m₂ nm₂}
+  {n₁ n₂ : Type*} {nn₁ nn₂} {_ : IdxType n₁ nn₁} {_ : IdxType n₂ nn₂}
   {X₁ X₂ : Type*} {_ : VectorType.Base X₁ n₁ K} {_ : VectorType.Base X₂ n₂ K}
   {Y₁ Y₂ : Type*} {_ : VectorType.Base Y₁ m₁ K} {_ : VectorType.Base Y₂ m₂ K}
   [MatrixType.Base M₁₁ X₁ Y₁] [MatrixType.Base M₁₂ X₂ Y₁] [MatrixType.Base M₂₁ X₁ Y₂] [MatrixType.Base M₂₂ X₂ Y₂]

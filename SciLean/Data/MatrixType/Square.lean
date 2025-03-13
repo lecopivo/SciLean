@@ -5,7 +5,7 @@ namespace SciLean
 open Matrix MatrixType VectorType
 class MatrixType.Square
       (M : Type*)
-      {n : outParam (Type*)} {_ : outParam (IndexType n)}
+      {n : outParam (Type*)} {nn : outParam ℕ} {_ : outParam (IdxType n nn)}
       {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
       {X : outParam (Type*)} [VectorType.Base X n K]
       [MatrixType.Base M X X]
@@ -75,7 +75,7 @@ section Instances
 
 variable
   {M : Type*}
-  {n : Type*} {_ : IndexType n}
+  {n : Type*} {nn} {_ : IdxType n nn}
   {R K : Type*} {_ : RealScalar R} {_ : Scalar R K}
   {X : Type*} [VectorType.Base X n K] [VectorType.Dense X]
   [MatrixType.Base M X X]

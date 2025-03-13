@@ -8,22 +8,22 @@ namespace SciLean
 open VectorType ComplexConjugate
 
 variable
-  {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n}
-  [VectorType.Base X n K] [VectorType.Dense X]
+  {X : Type*} {I : Type u} {R K :  Type*}
+  {_ : RealScalar R} {_ : Scalar R K} {nI} {_ : IdxType I nI}
+  [VectorType.Base X I K] [VectorType.Dense X] [IdxType.Fold' I]
 
-theorem mapIdx_spec (f : n → K → K) (x : X) :
+theorem mapIdx_spec (f : I → K → K) (x : X) :
   mapIdx f x = fromVec (fun i => f i (toVec x i)) := sorry_proof
 
 section NormedSpaces
 
 variable {W : Type*} [NormedAddCommGroup W] [NormedSpace K W]
-variable [InjectiveGetElem X n]
+variable [InjectiveGetElem X I]
 
 -- linear, continuous, differentiable
 @[fun_prop]
 theorem VectorType.mapIdx.arg_fx.IsContinusousLinearMap_rule
-    (f : W → n → K → K) (x : W → X)
+    (f : W → I → K → K) (x : W → X)
     (hf : ∀ i, IsContinuousLinearMap K (fun (w,x) => f w i x))
     (hx : IsContinuousLinearMap K x) :
     IsContinuousLinearMap K (fun w => mapIdx (f w) (x w)) := by
@@ -33,7 +33,7 @@ theorem VectorType.mapIdx.arg_fx.IsContinusousLinearMap_rule
 
 @[fun_prop]
 theorem VectorType.mapIdx.arg_f.IsContinusousLinearMap_rule
-    (f : W → n → K → K) (x : X)
+    (f : W → I → K → K) (x : X)
     (hf : ∀ i x, IsContinuousLinearMap K (f · i x)) :
     IsContinuousLinearMap K (fun w => mapIdx (f w) x) := by
 
@@ -48,7 +48,7 @@ def_fun_prop mapIdx in x [InjectiveGetElem X n] (hf : ∀ i, IsContinuousLinearM
 
 @[fun_prop]
 theorem VectorType.mapIdx.arg_f.Differentiable_rule
-    (f : W → n → K → K) (x : W → X)
+    (f : W → I → K → K) (x : W → X)
     (hf : ∀ i, Differentiable K (fun (w,x) => f w i x))
     (hx : Differentiable K x) :
     Differentiable K (fun w => mapIdx (f w) (x w)) := by
@@ -65,7 +65,7 @@ set_option linter.unusedVariables false
 -- fderiv
 @[fun_trans]
 theorem VectorType.mapIdx.arg_fx.fderiv_rule
-    (f : W → n → K → K) (x : W → X)
+    (f : W → I → K → K) (x : W → X)
     (hf : ∀ i, Differentiable K (fun (w,x) => f w i x))
     (hx : Differentiable K x) :
     fderiv K (fun w => mapIdx (f w) (x w))
@@ -82,7 +82,7 @@ theorem VectorType.mapIdx.arg_fx.fderiv_rule
 
 @[fun_trans]
 theorem VectorType.mapIdx.arg_x.fderiv_rule
-    (f : n → K → K) (x : W → X)
+    (f : I → K → K) (x : W → X)
     (hf : ∀ i, Differentiable K (f i))
     (hx : Differentiable K x) :
     fderiv K (fun w => mapIdx f (x w))
@@ -105,7 +105,7 @@ abbrev_data_synth mapIdx in x
 
 @[fun_trans]
 theorem VectorType.mapIdx.arg_fx.fwdFDeriv_rule
-    (f : W → n → K → K) (x : W → X)
+    (f : W → I → K → K) (x : W → X)
     (hf : ∀ i, Differentiable K (fun (w,x) => f w i x))
     (hx : Differentiable K x) :
     fwdFDeriv K (fun w => mapIdx (f w) (x w))
@@ -124,20 +124,20 @@ end NormedSpaces
 section AdjointSpace
 
 variable {W : Type*} [NormedAddCommGroup W] [AdjointSpace K W]
-variable [InjectiveGetElem X n]
+variable [InjectiveGetElem X I]
 
 -- adjoint
 set_option linter.unusedVariables false in
 @[data_synth]
-theorem VectorType.mapIdx.arg_fx.HasAdjoint_rule
-    (f : W → n → K → K) (x : W → X)
-    {f' : n → _} (hf : ∀ i, HasAdjointUpdate K (fun (w,x) => f w i x) (f' i))
+theorem VectorType.mapIdx.arg_fx.HasAdjoint_rule [IdxType.Fold' I]
+    (f : W → I → K → K) (x : W → X)
+    {f' : I → _} (hf : ∀ i, HasAdjointUpdate K (fun (w,x) => f w i x) (f' i))
     {x'} (hx : HasAdjointUpdate K x x') :
     HasAdjoint K
       (fun w => mapIdx (f w) (x w))
       (fun y =>
-        let' (dw,dx) := IndexType.foldl (init:=((0:W),(0:X))) fun (dw,dx) i =>
-          let yi := toVec y i
+        let' (dw,dx) := IdxType.fold .full (init:=((0:W),(0:X))) fun i (dw,dx) =>
+          let yi := y[i]
           let' (dw,dxi) := f' i yi (dw,(0:K))
           (dw,set dx i dxi)
         x' dx dw) := by
@@ -146,15 +146,15 @@ theorem VectorType.mapIdx.arg_fx.HasAdjoint_rule
 -- reverse AD
 set_option linter.unusedVariables false in
 @[data_synth]
-theorem VectorType.mapIdx.arg_fx.HasAdjointUpdate_rule
-    (f : W → n → K → K) (x : W → X)
-    {f' : n → _} (hf : ∀ i, HasAdjointUpdate K (fun (w,x) => f w i x) (f' i))
+theorem VectorType.mapIdx.arg_fx.HasAdjointUpdate_rule [IdxType.Fold' I]
+    (f : W → I → K → K) (x : W → X)
+    {f' : I → _} (hf : ∀ i, HasAdjointUpdate K (fun (w,x) => f w i x) (f' i))
     {x'} (hx : HasAdjointUpdate K x x') :
     HasAdjointUpdate K
       (fun w => mapIdx (f w) (x w))
       (fun y w' =>
-        let' (dw,dx) := IndexType.foldl (init:=(w',(0:X))) fun (dw,dx) i =>
-          let yi := toVec y i
+        let' (dw,dx) := IdxType.fold .full (init:=(w',(0:X))) fun i (dw,dx) =>
+          let yi := y[i]
           let' (dw,dxi) := f' i yi (dw,(0:K))
           (dw,set dx i dxi)
         x' dx dw) := by
@@ -194,8 +194,8 @@ abbrev_data_synth mapIdx in x
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem VectorType.mapIdx.arg_x.HasAdjoint_rule
-    (f : n → K → K) (x : W → X)
-    {f' : n → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
+    (f : I → K → K) (x : W → X)
+    {f' : I → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
     {x'} (hx : HasAdjoint K x x') :
     HasAdjoint K
       (fun w => mapIdx f (x w))
@@ -208,8 +208,8 @@ theorem VectorType.mapIdx.arg_x.HasAdjoint_rule
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem VectorType.mapIdx.arg_x.HasAdjointUpdate_rule
-    (f : n → K → K) (x : W → X)
-    {f' : n → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
+    (f : I → K → K) (x : W → X)
+    {f' : I → _} (hf : ∀ i, HasAdjoint K (fun x => f i x) (f' i))
     {x'} (hx : HasAdjointUpdate K x x') :
     HasAdjointUpdate K
       (fun w => mapIdx f (x w))
@@ -222,18 +222,18 @@ theorem VectorType.mapIdx.arg_x.HasAdjointUpdate_rule
 
 set_option linter.unusedVariables false in
 @[fun_trans]
-theorem VectorType.mapIdx.arg_fx.HasRevFDeriv_rule
-    (f : W → n → K → K) (x : W → X)
-    {f' : n → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
+theorem VectorType.mapIdx.arg_fx.HasRevFDeriv_rule [IdxType.Fold' I]
+    (f : W → I → K → K) (x : W → X)
+    {f' : I → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
     {x'} (hx : HasRevFDerivUpdate K x x') :
     HasRevFDeriv K
       (fun w => mapIdx (f w) (x w))
       (fun w =>
         let' (x₀,dx₀) := x' w
-        let df' := fun (i : n) (xi : K) => (f' i (w,xi)).2
+        let df' := fun (i : I) (xi : K) => (f' i (w,xi)).2
         let y := mapIdx (f w) x₀
         (y, fun dy =>
-          let' (dw,dx) := IndexType.foldl (init:=((0:W),(0:X))) fun (dw,dx) i =>
+          let' (dw,dx) := IdxType.fold .full (init:=((0:W),(0:X))) fun i (dw,dx) =>
             let xi₀ := toVec x₀ i
             let dyi := toVec dy i
             let' (dw,dxi) := df' i xi₀ dyi (dw,0)
@@ -243,18 +243,18 @@ theorem VectorType.mapIdx.arg_fx.HasRevFDeriv_rule
 
 set_option linter.unusedVariables false in
 @[fun_trans]
-theorem VectorType.mapIdx.arg_fx.HasRevFDerivUpdate_rule
-    (f : W → n → K → K) (x : W → X)
-    {f' : n → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
+theorem VectorType.mapIdx.arg_fx.HasRevFDerivUpdate_rule [IdxType.Fold' I]
+    (f : W → I → K → K) (x : W → X)
+    {f' : I → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
     {x'} (hx : HasRevFDerivUpdate K x x') :
     HasRevFDerivUpdate K
       (fun w => mapIdx (f w) (x w))
       (fun w =>
         let' (x₀,dx₀) := x' w
-        let df' := fun (i : n) (xi : K) => (f' i (w,xi)).2
+        let df' := fun (i : I) (xi : K) => (f' i (w,xi)).2
         let y := mapIdx (f w) x₀
         (y, fun dy dw =>
-          let' (dw,dx) := IndexType.foldl (init:=(dw,(0:X))) fun (dw,dx) i =>
+          let' (dw,dx) := IdxType.fold .full (init:=(dw,(0:X))) fun i (dw,dx) =>
             let' (dw,dxi) := df' i (toVec x₀ i) (toVec dy i) (dw,0)
             (dw,set dx i dxi)
           dx₀ dx dw)) := by
@@ -262,18 +262,18 @@ theorem VectorType.mapIdx.arg_fx.HasRevFDerivUpdate_rule
 
 set_option linter.unusedVariables false in
 @[fun_trans]
-theorem VectorType.mapIdx.arg_f.HasRevFDeriv_rule
-    (f : W → n → K → K) (x : W → X)
-    {f' : n → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
+theorem VectorType.mapIdx.arg_f.HasRevFDeriv_rule [IdxType.Fold' I]
+    (f : W → I → K → K) (x : W → X)
+    {f' : I → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
     {x'} (hx : HasRevFDerivUpdate K x x') :
     HasRevFDeriv K
       (fun w => mapIdx (f w) (x w))
       (fun w =>
         let' (x₀,dx₀) := x' w
-        let df' := fun (i : n) (xi : K) => (f' i (w,xi)).2
+        let df' := fun (i : I) (xi : K) => (f' i (w,xi)).2
         let y := mapIdx (f w) x₀
         (y, fun dy =>
-          let' (dw,dx) := IndexType.foldl (init:=((0:W),(0:X))) fun (dw,dx) i =>
+          let' (dw,dx) := IdxType.fold .full (init:=((0:W),(0:X))) fun i (dw,dx) =>
             let xi₀ := toVec x₀ i
             let dyi := toVec dy i
             let' (dw,dxi) := df' i xi₀ dyi (dw,0)
@@ -283,18 +283,18 @@ theorem VectorType.mapIdx.arg_f.HasRevFDeriv_rule
 
 set_option linter.unusedVariables false in
 @[fun_trans]
-theorem VectorType.mapIdx.arg_f.HasRevFDerivUpdate_rule
-    (f : W → n → K → K) (x : W → X)
-    {f' : n → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
+theorem VectorType.mapIdx.arg_f.HasRevFDerivUpdate_rule [IdxType.Fold' I]
+    (f : W → I → K → K) (x : W → X)
+    {f' : I → _ } (hf : ∀ i, HasRevFDerivUpdate K (fun (w,x) => f w i x) (f' i))
     {x'} (hx : HasRevFDerivUpdate K x x') :
     HasRevFDerivUpdate K
       (fun w => mapIdx (f w) (x w))
       (fun w =>
         let' (x₀,dx₀) := x' w
-        let df' := fun (i : n) (xi : K) => (f' i (w,xi)).2
+        let df' := fun (i : I) (xi : K) => (f' i (w,xi)).2
         let y := mapIdx (f w) x₀
         (y, fun dy dw =>
-          let' (dw,dx) := IndexType.foldl (init:=(dw,(0:X))) fun (dw,dx) i =>
+          let' (dw,dx) := IdxType.fold .full (init:=(dw,(0:X))) fun i (dw,dx) =>
             let' (dw,dxi) := df' i (toVec x₀ i) (toVec dy i) (dw,0)
             (dw,set dx i dxi)
           dx₀ dx dw)) := by

@@ -3,7 +3,7 @@ import SciLean.Data.ArrayOperations.Operations
 
 namespace SciLean.DataArrayN
 
-variable {X : Type*} [PlainDataType X] {I : Type*} [IndexType I]
+variable {X : Type*} [PlainDataType X] {I : Type*} {n} [IdxType I n] [IdxType.Fold' I]
 
 /-- Transform all elements of `xs^[I]` using `f : X → X`. -/
 abbrev mapMono (f : X → X) (xs : X^[I]) : X^[I] :=
@@ -18,24 +18,24 @@ abbrev mapIdxMono (f : I → X → X) (xs : X^[I]) : X^[I] :=
 It is just and abbreviation for a call to `IndexType.foldl` which runs a fold over the index
 type `I`. -/
 abbrev foldl (op : α → X → α) (init : α) (xs : X^[I]) : α :=
-  IndexType.foldl (init:=init) (fun a i => op a xs[i])
+  IdxType.fold .full (init:=init) (fun i a => op a xs[i])
 
 /-- Reduce elements of `xs : X^[I]` using `op : X → X → X`.
 
 It is just and abbreviation for a call to `IndexType.reduce` which does reduction over the index
 type `I`. -/
 abbrev reduce [Inhabited X] (op : X → X → X) (xs : X^[I]) : X :=
-  IndexType.reduce (fun (i:I) => xs[i]) op
+  IdxType.reduce .full (fun (i:I) => xs[i]) op
 
 
 /-- Reshape array to one dimensional array of `n` elements. -/
-abbrev reshape1 (x : X^[I]) (n : Nat) (h : size I = n) : X^[n] :=
-  x.reshape (Fin n) (by simp_all)
+abbrev reshape1 (x : X^[I]) (m : Nat) (h : m = n) : X^[m] :=
+  x.reshape (Idx m) h
 
 /-- Reshape array to two dimensional array. -/
-abbrev reshape2 (x : X^[I]) (m n : Nat) (h : size I = m*n) : X^[m,n] :=
-  x.reshape (Fin m × Fin n) (by simp_all)
+abbrev reshape2 (x : X^[I]) (m₁ m₂ : Nat) (h : m₁*m₂ = n) : X^[m₁,m₂] :=
+  x.reshape (Idx m₁ × Idx m₂) h
 
 /-- Reshape array to three dimensional array. -/
-abbrev reshape3 (x : X^[I]) (l m n : Nat) (h : size I = l*m*n) : X^[l,m,n] :=
-  x.reshape (Fin l × Fin m × Fin n) (by simp_all; ac_rfl)
+abbrev reshape3 (x : X^[I]) (m₁ m₂ m₃ : Nat) (h : m₁*(m₂*m₃) = n) : X^[m₁,m₂,m₃] :=
+  x.reshape (Idx m₁ × Idx m₂ × Idx m₃) h

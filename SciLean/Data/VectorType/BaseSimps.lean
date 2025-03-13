@@ -4,7 +4,7 @@ namespace SciLean.VectorType
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [InjectiveGetElem X n]
+  {_ : RealScalar R} {_ : Scalar R K} {nn} {_ : IdxType n nn} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 
 @[simp, simp_core]
@@ -100,30 +100,30 @@ theorem axpy_to_module (a : K) (x y : X) :
 ----------------------------------------------------------------------------------------------------
 omit [InjectiveGetElem X n] in
 @[rsimp]
-theorem foldl_updateElem_add [Dense X] (u : n → K) (x : X) :
-  IndexType.foldl (fun x i => updateElem x i fun xi => xi + u i) x
+theorem foldl_updateElem_add [IdxType.Fold' n] [Dense X] (u : n → K) (x : X) :
+  IdxType.fold .full x (fun i x => updateElem x i fun xi => xi + u i)
   =
   x + fromVec u := sorry_proof
 
 omit [InjectiveGetElem X n] in
 @[rsimp]
-theorem foldl_updateElem_add' [Dense X] (u : n → K) (x : X) :
-  IndexType.foldl (fun x i => updateElem x i fun xi => u i + xi) x
+theorem foldl_updateElem_add' [IdxType.Fold' n] [Dense X] (u : n → K) (x : X) :
+  IdxType.fold .full x (fun i x => updateElem x i fun xi => u i + xi)
   =
   x + fromVec u := by simp only [add_comm,foldl_updateElem_add]
 
 
 omit [InjectiveGetElem X n] in
 @[rsimp]
-theorem foldl_setElem_add [Dense X] (u : n → K) (x : X) :
-  IndexType.foldl (fun x i => setElem x i (x[i] + u i) .intro) x
+theorem foldl_setElem_add [IdxType.Fold' n] [Dense X] (u : n → K) (x : X) :
+  IdxType.fold .full x (fun i x => setElem x i (x[i] + u i) .intro)
   =
   x + fromVec u := sorry_proof
 
 omit [InjectiveGetElem X n] in
 @[rsimp]
-theorem foldl_setElem_add' [Dense X] (u : n → K) (x : X) :
-  IndexType.foldl (fun x i => setElem x i (u i + x[i]) .intro) x
+theorem foldl_setElem_add' [IdxType.Fold' n] [Dense X] (u : n → K) (x : X) :
+  IdxType.fold .full x (fun i x => setElem x i (u i + x[i]) .intro)
   =
   x + fromVec u := by sorry_proof
 

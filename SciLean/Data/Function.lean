@@ -1,22 +1,24 @@
 import Mathlib.Logic.Function.Basic
 -- import SciLean.Data.Index
 import SciLean.Data.IndexType
+import SciLean.Data.IdxType.Basic
+import SciLean.Data.IdxType.Fold
 
 def Function.Inverse (g : β → α) (f : α → β) :=
   Function.LeftInverse g f ∧ Function.RightInverse g f
 
 open SciLean
 
-variable {α β}
-  {ι} [IndexType ι] [DecidableEq ι]
+variable {α β} {m} [Monad m]
+  {ι n} [IdxType ι n] [DecidableEq ι]
 
-def Function.foldlM {m} [Monad m] (f : ι → α) (op : β → α → m β) (init : β) : m β := do
+def Function.foldlM [IdxType.Fold ι m] (f : ι → α) (op : β → α → m β) (init : β) : m β := do
   let mut b := init
   for i in fullRange ι do
     b ← op b (f i)
   return b
 
-def Function.foldl (f : ι → α) (op : β → α → β) (init : β) : β :=
+def Function.foldl [IdxType.Fold' ι] (f : ι → α) (op : β → α → β) (init : β) : β :=
   Id.run <| Function.foldlM f (fun x y => pure (op x y)) init
 
 

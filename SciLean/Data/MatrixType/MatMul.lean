@@ -9,7 +9,7 @@ open MatrixType VectorType
 
 class MatrixType.MatMul
       (M₁ M₂ : Type*) (M₃ : outParam (Type*))
-      {l m n : outParam <| (Type*)} {_ : outParam <| IndexType l} {_ : outParam <| IndexType m} {_ : outParam <| IndexType n}
+      {l m n : outParam <| (Type*)} {nl nm nn : outParam ℕ} {_ : outParam (IdxType l nl)} {_ : outParam (IdxType m nm)} {_ : outParam (IdxType n nn)}
       {R K : outParam <| (Type*)} {_ : outParam <| RealScalar R} {_ : outParam <| Scalar R K}
       {X Y Z : outParam <| (Type*)} {_ : outParam <| VectorType.Base X n K} {_ : outParam <| VectorType.Base Y m K} {_ : outParam <| VectorType.Base Z l K}
       [MatrixType.Base M₁ X Y] [MatrixType.Base M₂ Y Z] [MatrixType.Base M₃ X Z]
@@ -27,7 +27,7 @@ class MatrixType.MatMul
 
 class MatrixType.MatMulTI
       (M₁ M₂ : Type*) (M₃ : outParam (Type*))
-      {l m n : outParam (Type*)} [IndexType l] [IndexType m] [IndexType n]
+      {l m n : outParam (Type*)} {nl} [IdxType l nl] {nm} [IdxType m nm] {nn} [IdxType n nn]
       {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
       (X Y Z : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K] [VectorType.Base Z l K]
       [MatrixType.Base M₁ X Y] [MatrixType.Base M₂ Z Y] [MatrixType.Base M₃ X Z]
@@ -56,7 +56,7 @@ class MatrixType.MatMulTI
 
 class MatrixType.MatMulIT
       (M₁ M₂ : Type*) (M₃ : outParam (Type*))
-      {l m n : outParam (Type*)} [IndexType l] [IndexType m] [IndexType n]
+      {l m n : outParam (Type*)} {nl} [IdxType l nl] {nm} [IdxType m nm] {nn} [IdxType n nn]
       {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
       (X Y Z : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K] [VectorType.Base Z l K]
       [MatrixType.Base M₁ Y X] [MatrixType.Base M₂ Y Z] [MatrixType.Base M₃ X Z]
@@ -83,7 +83,7 @@ class MatrixType.MatMulIT
 
 class MatrixType.MatMulTT
       (M₁ M₂ : Type*) (M₃ : outParam (Type*))
-      {l m n : outParam (Type*)} [IndexType l] [IndexType m] [IndexType n]
+      {l m n : outParam (Type*)} {nl} [IdxType l nl] {nm} [IdxType m nm] {nn} [IdxType n nn]
       {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
       (X Y Z : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K] [VectorType.Base Z l K]
       [MatrixType.Base M₁ Y X] [MatrixType.Base M₂ Z Y] [MatrixType.Base M₃ X Z]
@@ -114,7 +114,7 @@ section Instances
 
 variable
       {M₁ M₂ : Type*} {M₃ : outParam (Type*)}
-      {l m n : outParam <| (Type*)} {_ : outParam <| IndexType l} {_ : outParam <| IndexType m} {_ : outParam <| IndexType n}
+      {l m n : outParam <| (Type*)} {nl nm nn : outParam ℕ} {_ : outParam (IdxType l nl)} {_ : outParam (IdxType m nm)} {_ : outParam (IdxType n nn)}
       {R K : outParam <| (Type*)} {_ : outParam <| RealScalar R} {_ : outParam <| Scalar R K}
       {X Y Z : outParam <| (Type*)} {_ : outParam <| VectorType.Base X n K} {_ : outParam <| VectorType.Base Y m K} {_ : outParam <| VectorType.Base Z l K}
       [MatrixType.Base M₁ X Y] [MatrixType.Base M₂ Y Z] [MatrixType.Base M₃ X Z]
@@ -142,7 +142,7 @@ section SquareInstances
 
 variable
       {M : Type*}
-      {n : outParam (Type*)} {_ : outParam (IndexType n)}
+      {n : outParam (Type*)} {nn : outParam ℕ} {_ : outParam (IdxType n nn)}
       {R K : outParam (Type*)} {_ : outParam (RealScalar R)} {_ : outParam (Scalar R K)}
       {X : outParam (Type*)} {_ : VectorType.Base X n K}
       [MatrixType.Base M X X] [VectorType.Dense X] [InjectiveGetElem M (n×n)]

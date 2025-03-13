@@ -173,27 +173,27 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
   case simp => simp_all; ac_rfl
 
 @[data_synth]
-theorem apply_rule {I} [IndexType I] [DecidableEq I] (i : I) :
+theorem apply_rule {I} {nI} [IdxType I nI] [IdxType.Fold' I] [DecidableEq I] (i : I) :
     HasRevFDeriv K (fun x : I → X => x i)
       (fun x =>
         (x i, fun dxi j => if i=j then dxi else 0)) := sorry_proof
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
-theorem apply_rule' {I} [IndexType I] [DecidableEq I] (i : I) :
+theorem apply_rule' {I} {nI} [IdxType I nI] [IdxType.Fold' I] [DecidableEq I] (i : I) :
     HasRevFDeriv K (fun x : (I → X)×Y => x.1 i)
       (fun x =>
         (x.1 i, fun dxi => (fun j => if i=j then dxi else 0, 0))) := sorry_proof
 
 set_option linter.unusedVariables false in
-theorem pi_rule {I : Type*} [IndexType I]
+theorem pi_rule {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
     HasRevFDeriv K
       (fun x i => f x i)
       (fun x =>
         (fun i => f x i,
          fun dy =>
-          IndexType.foldl (init:=(0:X)) fun dx i =>
+          IdxType.fold .full (init:=(0:X)) fun i dx =>
             let' (y,df') := f' i x
             let dyi := dy i
             let dx := df' dyi dx
@@ -309,26 +309,26 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
     simp +singlePass [h]; ac_rfl
 
 @[data_synth]
-theorem apply_rule {I} [IndexType I] [DecidableEq I] (i : I) :
+theorem apply_rule {I} {nI} [IdxType I nI] [IdxType.Fold' I] [DecidableEq I] (i : I) :
     HasRevFDerivUpdate K (fun x : I → X => x i)
       (fun x =>
         (x i, fun dxi dx j => if i=j then dx j + dxi else dx j)) := sorry_proof
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
-theorem apply_rule' {I} [IndexType I] [DecidableEq I] (i : I) :
+theorem apply_rule' {I} {nI} [IdxType I nI] [IdxType.Fold' I] [DecidableEq I] (i : I) :
     HasRevFDerivUpdate K (fun x : (I → X)×Y => x.1 i)
       (fun x =>
         (x.1 i, fun dxi dx => (fun j => if i=j then dx.1 j + dxi else dx.1 j, dx.2))) := sorry_proof
 
 set_option linter.unusedVariables false in
-theorem pi_rule {I : Type*} [IndexType I]
+theorem pi_rule {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
     HasRevFDerivUpdate K
       (fun x i => f x i)
       (fun x =>
         (f x, fun dy dx =>
-        IndexType.foldl (init:=dx) fun dx i =>
+        IdxType.fold .full (init:=dx) fun i dx =>
           let' (y,df') := f' i x
           let dyi := dy i
           let dx := df' dyi dx
@@ -812,11 +812,11 @@ theorem HPow.hPow.arg_a0.HasRevFDerivUpdate_rule
 
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDeriv_rule
-    {I : Type*} [IndexType I] :
+    {I : Type*} {nI} [IdxType I nI]  [IdxType.Fold' I]  [IdxType.Fold' I] :
     HasRevFDeriv K
-      (fun f : I → X => ∑ i, f i)
+      (fun f : I → X => ∑ᴵ i, f i)
       (fun f =>
-        (∑ i, f i, fun dx _ => dx)) := by
+        (∑ᴵ i, f i, fun dx _ => dx)) := by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intro; data_synth
   case adjoint => intro x; simp; data_synth
@@ -824,20 +824,20 @@ theorem SciLean.sum.arg_f.HasRevFDeriv_rule
 
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDeriv_rule'
-    {I : Type*} [IndexType I] :
+    {I : Type*} {nI} [IdxType I nI]  [IdxType.Fold' I] [IdxType.Fold' I] :
     HasRevFDeriv K
-      (fun f : I → X => sum f)
+      (fun f : I → X => IdxType.sum f)
       (fun f =>
-        (∑ i, f i, fun dx _ => dx)) := by
+        (∑ᴵ i, f i, fun dx _ => dx)) := by
   apply SciLean.sum.arg_f.HasRevFDeriv_rule
 
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule
-    {I : Type*} [IndexType I] :
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] :
     HasRevFDerivUpdate K
-      (fun f : I → X => ∑ i, f i)
+      (fun f : I → X => ∑ᴵ i, f i)
       (fun f =>
-        (∑ i, f i, fun dx df i =>
+        (∑ᴵ i, f i, fun dx df i =>
           let dxi := df i
           let dx := dxi + dx
           dx)) := by
@@ -850,11 +850,11 @@ theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule'
-    {I : Type*} [IndexType I] :
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] :
     HasRevFDerivUpdate K
-      (fun f : I → X => sum f)
+      (fun f : I → X => IdxType.sum f)
       (fun f =>
-        (∑ i, f i, fun dx df i =>
+        (∑ᴵ i, f i, fun dx df i =>
           let dxi := df i
           let dx := dxi + dx
           dx)) := by
@@ -862,7 +862,7 @@ theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule'
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDeriv_rule
-    {I : Type*} [IndexType I] (A : Finset I) :
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] (A : Finset I) :
     HasRevFDeriv K
       (fun f : I → X => A.sum (fun i => f i))
       (fun f =>
@@ -876,7 +876,7 @@ theorem Finset.sum.arg_f.HasRevFDeriv_rule
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDeriv_rule'
-    {I : Type*} [IndexType I] (A : Finset I) :
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] (A : Finset I) :
     HasRevFDeriv K
       (fun f : I → X => A.sum f)
       (fun f =>
@@ -885,7 +885,7 @@ theorem Finset.sum.arg_f.HasRevFDeriv_rule'
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule
-    {I : Type*} [IndexType I] (A : Finset I) :
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] (A : Finset I) :
     HasRevFDerivUpdate K
       (fun f : I → X => A.sum (fun i => f i))
       (fun f =>
@@ -899,7 +899,7 @@ theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule'
-    {I : Type*} [IndexType I] (A : Finset I) :
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] (A : Finset I) :
     HasRevFDerivUpdate K
       (fun f : I → X => A.sum (f))
       (fun f =>
@@ -1065,20 +1065,20 @@ end OverReals
 
 set_option linter.unusedVariables false in
 @[data_synth]
-theorem IndexType.Range.foldl.arg_opinit.HasRevFDeriv_rule_direct
-    {I : Type*} [IndexType I] (r : IndexType.Range I)
-    (op : W → X → I → X) {op' : I → _}
+theorem IndexType.Range.fold.arg_opinit.HasRevFDeriv_rule_direct
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] (r : IndexType.Range I)
+    (op : W → I → X → X) {op' : I → _}
     (init : W → X) {init'}
-    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i))
+    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w i x) (op' i))
     (hinit : HasRevFDerivUpdate K init init')  :
     HasRevFDeriv K
-      (fun w => r.foldl (op w) (init w))
+      (fun w => IdxType.fold r (init w) (op w))
       (fun w =>
         let' (x₀,dx₀) := init' w
-        let' (y,df) := r.foldl
+        let' (y,df) := IdxType.fold r
              -- the function we pass around is accumulator in `dw` and modification in `dx`
              (init:=(x₀, fun dx dw => (dx,dw)))
-             (fun xdf i =>
+             (fun i xdf =>
                let' (x,df) := xdf
                let' (y,dfᵢ) := op' i (w,x)
                (y, fun dx dw =>
@@ -1093,19 +1093,19 @@ theorem IndexType.Range.foldl.arg_opinit.HasRevFDeriv_rule_direct
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem IndexType.Range.foldl.arg_opinit.HasRevFDerivUpdate_rule_direct
-    {I : Type*} [IndexType I] (r : IndexType.Range I)
-    (op : W → X → I → X) {op' : I → _}
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] (r : IndexType.Range I)
+    (op : W → I → X → X) {op' : I → _}
     (init : W → X) {init'}
-    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i))
+    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w i x) (op' i))
     (hinit : HasRevFDerivUpdate K init init')  :
     HasRevFDerivUpdate K
-      (fun w => r.foldl (op w) (init w))
+      (fun w => IdxType.fold r (init w) (op w))
       (fun w =>
         let' (x₀,dx₀) := init' w
-        let' (y,df) := r.foldl
+        let' (y,df) := IdxType.fold r
              -- the function we pass around is accumulator in `dw` and modification in `dx`
              (init:=(x₀, fun dx dw => (dx,dw)))
-             (fun xdf i =>
+             (fun i xdf =>
                let' (x,df) := xdf
                let' (y,dfᵢ) := op' i (w,x)
                (y, fun dx dw =>
@@ -1120,17 +1120,17 @@ theorem IndexType.Range.foldl.arg_opinit.HasRevFDerivUpdate_rule_direct
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem IndexType.Range.foldl.arg_op.HasRevFDeriv_rule_direct
-    {I : Type*} [IndexType I] (r : IndexType.Range I)
-    (op : W → X → I → X) {op' : I → _}
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] (r : IndexType.Range I)
+    (op : W → I → X → X) {op' : I → _}
     (init : X)
-    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i)) :
+    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w i x) (op' i)) :
     HasRevFDeriv K
-      (fun w => r.foldl (op w) init)
+      (fun w => IdxType.fold r init (op w))
       (fun w =>
-        let' (y,df) := r.foldl
+        let' (y,df) := IdxType.fold r
              -- the function we pass around is accumulator in `dw` and modification in `dx`
              (init:=(init, fun dx dw => (dx,dw)))
-             (fun xdf i =>
+             (fun i xdf =>
                let' (x,df) := xdf
                let' (y,dfᵢ) := op' i (w,x)
                (y, fun dx dw =>
@@ -1144,17 +1144,17 @@ theorem IndexType.Range.foldl.arg_op.HasRevFDeriv_rule_direct
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem IndexType.Range.foldl.arg_op.HasRevFDerivUpdate_rule_direct
-    {I : Type*} [IndexType I] (r : IndexType.Range I)
-    (op : W → X → I → X) {op' : I → _}
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] (r : IndexType.Range I)
+    (op : W → I → X → X) {op' : I → _}
     (init : X)
-    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i)) :
+    (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w i x) (op' i)) :
     HasRevFDerivUpdate K
-      (fun w => r.foldl (op w) init)
+      (fun w => IdxType.fold r init (op w))
       (fun w =>
-        let' (y,df) := r.foldl
+        let' (y,df) := IdxType.fold r
              -- the function we pass around is accumulator in `dw` and modification in `dx`
              (init:=(init, fun dx dw => (dx,dw)))
-             (fun xdf i =>
+             (fun i xdf =>
                let' (x,df) := xdf
                let' (y,dfᵢ) := op' i (w,x)
                (y, fun dx dw =>
@@ -1168,15 +1168,15 @@ theorem IndexType.Range.foldl.arg_op.HasRevFDerivUpdate_rule_direct
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem IndexType.Range.foldl.arg_init.HasRevFDeriv_rule_direct
-   {I : Type*} [IndexType I] (r : IndexType.Range I)
-   (op : X → I → X)
+   {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] (r : IndexType.Range I)
+   (op : I → X → X)
    (init : W → X) {init'}
    (hinit : HasRevFDeriv K init init')  :
    HasRevFDeriv K
-     (fun w => r.foldl op (init w))
+     (fun w => IdxType.fold r (init w) op)
      (fun w =>
        let' (x₀,dx₀) := init' w
-       let x := r.foldl (init:=x₀) op
+       let x := IdxType.fold r (init:=x₀) op
        (y, fun dx =>
          let dw := dx₀ dx
          dw)) := sorry_proof
@@ -1184,44 +1184,15 @@ theorem IndexType.Range.foldl.arg_init.HasRevFDeriv_rule_direct
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem IndexType.Range.foldl.arg_init.HasRevFDerivUpdate_rule_direct
-   {I : Type*} [IndexType I] (r : IndexType.Range I)
-   (op : X → I → X)
+   {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] (r : IndexType.Range I)
+   (op : I → X → X)
    (init : W → X) {init'}
    (hinit : HasRevFDerivUpdate K init init')  :
    HasRevFDerivUpdate K
-     (fun w => r.foldl op (init w))
+     (fun w => IdxType.fold r (init w) op)
      (fun w =>
        let' (x₀,dx₀) := init' w
-       let x := r.foldl (init:=x₀) op
+       let x := IdxType.fold r (init:=x₀) op
        (y, fun dx dw =>
-         let dw := dx₀ dx dw
-         dw)) := sorry_proof
-
-
-set_option linter.unusedVariables false in
-theorem IndexType.Range.foldl.arg_opinit.HasRevFDeriv_rule_array_cached
-   {I : Type*} [IndexType I] (r : IndexType.Range I)
-   (op : W → X → I → X) {op' : I → _}
-   (init : W → X) {init'}
-   (hop : ∀ i, HasRevFDerivUpdate K (fun (w,x) => op w x i) (op' i))
-   (hinit : HasRevFDerivUpdate K init init')  :
-   HasRevFDeriv K
-     (fun w => r.foldl (op w) (init w))
-     (fun w =>
-       let' (x₀,dx₀) := init' w
-       let' (x,xs) := r.foldl (init:=(x₀,(#[] : Array X)))
-         (fun xxs i =>
-           let' (x,xs) := xxs
-           let x := op w x i
-           (x,xs.push x))
-       (x, fun dx =>
-         let' (dw,dx,xs) := r.reverse.foldl (init:=((0:W),dx,xs))
-           (fun dwdxxs i =>
-             let' (dw,dx,xs) := dwdxxs
-             -- get last element, this should be fine becase we run over the range `r` both times
-             let x := xs[xs.size-1]'sorry_proof
-             let xs := xs.pop
-             let (dw,dx) := (op' i (w,x)).2 dx (dw,(0:X))
-             (dw,dx,xs.pop))
          let dw := dx₀ dx dw
          dw)) := sorry_proof

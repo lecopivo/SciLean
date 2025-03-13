@@ -21,7 +21,7 @@ of type `Y`.
 This class provides functionality implementable using BLAS. -/
 class MatrixType.Base
       (M : Type*)
-      {m n : outParam (Type*)} [IndexType m] [IndexType n]
+      {m n : outParam (Type*)} {nm nn : outParam ℕ} [IdxType m nm] [IdxType n nn]
       {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
       (X Y : outParam (Type*)) [VectorType.Base X n K] [VectorType.Base Y m K]
   extends
@@ -126,7 +126,7 @@ section BasicOperations
 
 variable
   {R K} {_ : RealScalar R} {_ : Scalar R K}
-  {m n : Type*} {_ : IndexType m} {_ : IndexType n}
+  {m n : Type*} {nm nn : ℕ} {_ : IdxType m nm} {_ : IdxType n nn}
   {X Y} [VectorType.Base X n K] [VectorType.Base Y m K]
   {M} [MatrixType.Base M X Y]
 
@@ -170,10 +170,9 @@ theorem toMatrix_zero : toMatrix (0 : M) = 0 := by
   funext i j
   simp[toMatrix_eq_toVec, vector_to_spec]
 
-set_option pp.notation false in
 @[matrix_to_spec]
-theorem inner_spec (A B : M) : ⟪A, B⟫ = ⟪toMatrix A, toMatrix B⟫ := by
-  simp[vector_to_spec, ← Finset.univ_product_univ,Finset.sum_product,Inner.inner,sum_to_finset_sum]
+theorem inner_spec [IdxType.Fold' m] [IdxType.Fold' n] (A B : M) : ⟪A, B⟫ = ⟪toMatrix A, toMatrix B⟫ := by
+  simp[vector_to_spec, ← Finset.univ_product_univ,Finset.sum_product,Inner.inner,IdxType.sum_eq_finset_sum]
 -- @[matrix_to_spec, matrix_from_spec ←]
 -- theorem norm_spec (A : M) : ‖A‖ = ‖toMatrix A‖ := by
 --   simp only [norm, Norm.norm, Scalar.toReal, nrm2, matrix_to_spec]

@@ -2,6 +2,8 @@ import SciLean
 
 open SciLean
 
+set_default_scalar Float
+
 def rand01 : IO Float := do
   let N : Nat := 10^16
   let i ← IO.rand 0 N
@@ -21,9 +23,9 @@ def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType
     (xs : X^[I]) (i : I) : X :=
   pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
--- this is evil instance, as there is the same one but without `[IdxType I n]`
-instance {X} [PlainDataType X] {I n} [IndexType I] [IdxType I n] : GetElem' (X^[I]) I X where
-  getElem xs i _ := xs.idxGet i
+-- -- this is evil instance, as there is the same one but without `[IdxType I n]`
+-- instance {X} [PlainDataType X] {I n} [IndexType I] [IdxType I n] : GetElem' (X^[I]) I X where
+--   getElem xs i _ := xs.idxGet i
 
 open Lean Parser Term in
 macro (name:=minStx) "minᴵ" xs:funBinder* ", " b:term : term => do
@@ -89,7 +91,7 @@ def kmeansSciLean_no_blas (d n k : Nat) (points centroids : FloatArray) : Float 
   let centroids : Float^[Idx d]^[Idx k] := ⟨⟨centroids.toByteArray, n, sorry_proof⟩, sorry_proof⟩
 
   ∑ᴵ (i : Idx n), minᴵ (j : Idx k), ∑ᴵ (l : Idx d),
-     (points.uncurry[i,l] - centroids.uncurry[j,l])^2
+     (points[i,l] - centroids[j,l])^2
 
 
 def kmeansSciLean (d n k : Nat) (points centroids : FloatArray) : Float :=
@@ -97,7 +99,7 @@ def kmeansSciLean (d n k : Nat) (points centroids : FloatArray) : Float :=
   let points : Float^[d]^[n] := ⟨⟨points.toByteArray, n, sorry_proof⟩, sorry_proof⟩
   let centroids : Float^[d]^[k] := ⟨⟨centroids.toByteArray, n, sorry_proof⟩, sorry_proof⟩
 
-  ∑ i, IndexType.min (fun j => ‖points[i] - centroids[j]‖₂²[Float])
+  ∑ᴵ i, IdxType.min (fun j => ‖points[i] - centroids[j]‖₂²)
 
 def main : IO Unit := do
 

@@ -4,7 +4,9 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import SciLean.Util.SorryProof
 import SciLean.Meta.SimpAttr
 
-import SciLean.Data.IndexType
+import SciLean.Data.IdxType.Basic
+import SciLean.Data.IdxType.Fold
+import SciLean.Data.IdxType.Operations
 
 open ComplexConjugate RCLike
 /--
@@ -252,8 +254,6 @@ def innerₗ : F →ₗ[ℝ] F →ₗ[ℝ] ℝ := innerₛₗ ℝ
 variable
   {X} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
   {Y} [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
-  {ι : Type*} [SciLean.IndexType ι]
-  {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)]
 
 instance : AdjointSpace 𝕜 𝕜 where
   inner_top_equiv_norm := by
@@ -293,9 +293,18 @@ instance : AdjointSpace 𝕜 (X×Y) where
   add_left := by simp[inner_add_left]; intros; ac_rfl
   smul_left := by simp[inner_smul_left,mul_add]
 
+
+variable
+  {ι : Type*} {n} [SciLean.IdxType ι n] [SciLean.IdxType.Fold' ι]
+  {E : ι → Type*}
+
+instance {𝕜 : Type*} [AddCommMonoid 𝕜] [∀ i, Inner 𝕜 (E i)] :
+    Inner 𝕜 ((i : ι) → E i) where
+  inner := fun x y => ∑ᴵ i, ⟪x i, y i⟫_𝕜
+
 open Classical in
-instance : AdjointSpace 𝕜 ((i : ι) → E i) where
-  inner := fun x y => ∑ i, ⟪x i, y i⟫_𝕜
+instance [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)] :
+    AdjointSpace 𝕜 ((i : ι) → E i) where
   inner_top_equiv_norm := by
     -- have h := fun i => inner_top_equiv_norm (𝕜:=𝕜) (E:=E i)
     -- let c := (fun i => let ci := choose (h i); ci*ci)
@@ -304,12 +313,18 @@ instance : AdjointSpace 𝕜 ((i : ι) → E i) where
     -- apply Exists.intro (∑ i, c i ^ 2)
     -- apply Exists.intro (∑ i, d i ^ 2)
     sorry_proof
-  conj_symm := by simp; sorry_proof
-  add_left := by simp[inner_add_left,SciLean.sum_add_distrib]
-  smul_left := by simp[inner_smul_left,SciLean.mul_sum]
+  conj_symm := by simp[Inner.inner]; sorry_proof
+  add_left := by simp[Inner.inner, inner_add_left,SciLean.sum_add_distrib]; sorry_proof
+  smul_left := by simp[Inner.inner, inner_smul_left,SciLean.mul_sum]; sorry_proof
 
-
+-- deprecate these
 theorem inner_prod_split (x y : X×Y) : ⟪x,y⟫_𝕜 = ⟪x.1,y.1⟫_𝕜 + ⟪x.2,y.2⟫_𝕜 := by rfl
+theorem inner_forall_split [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)]
+    (f g : (i : ι) → E i) :
+    ⟪f,g⟫_𝕜 = ∑ᴵ i, ⟪f i, g i⟫_𝕜 := by rfl
 
-theorem inner_forall_split (f g : (i : ι) → E i) :
-    ⟪f,g⟫_𝕜 = ∑ i, ⟪f i, g i⟫_𝕜 := by rfl
+-- prefere these
+-- theorem inner_prod_def (x y : X×Y) : ⟪x,y⟫_𝕜 = ⟪x.1,y.1⟫_𝕜 + ⟪x.2,y.2⟫_𝕜 := by rfl
+-- theorem inner_forall_def [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)]
+--     (f g : (i : ι) → E i) :
+--     ⟪f,g⟫_𝕜 = ∑ᴵ i, ⟪f i, g i⟫_𝕜 := by rfl

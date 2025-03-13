@@ -6,6 +6,8 @@ import Mathlib.Data.Matrix.Basic
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.Scalar
 import SciLean.Data.IndexType
+import SciLean.Data.IdxType.Basic
+import SciLean.Data.IdxType.Fold
 import SciLean.Data.VectorType.Init
 import SciLean.Data.ArrayOperations.Algebra
 
@@ -29,7 +31,7 @@ To provide a finite dimensional instance you also need to assume `VectorType.Den
 This class is designed to provide Basic Linear Algebra Subprograms(BLAS) which allows us to define
 vector space structure on `X` that is computationally efficient.
  -/
-class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)]
+class VectorType.Base (X : Type*) (n : outParam (Type*)) {nn : outParam ℕ} [outParam (IdxType n nn)]
     {R : outParam (Type*)}  (K : outParam (Type*))
     [outParam (RealScalar R)] [outParam (Scalar R K)]
   extends
@@ -65,15 +67,15 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
   iamax_spec (x : X) : Scalar.abs (x[iamax x]) = Scalar.ofReal (K:=K) ‖fun i : n => x[i]‖
 
   /-- `imaxRe x = argmaxᵢ (real x[i])` -/
-  imaxRe (x : X) (h : 0 < size n) : n
-  imaxRe_spec (x : X) (h : 0 < size n) :
+  imaxRe (x : X) (h : 0 < nn) : n
+  imaxRe_spec (x : X) (h : 0 < nn) :
     Scalar.toReal R (Scalar.real (x[imaxRe x h]))
     =
     iSup (α:=ℝ) (fun i : n => Scalar.toReal R <| Scalar.real (K:=K) (x[i]))
 
   /-- `iminRe x = argmaxᵢ (re x[i])` -/
-  iminRe (x : X) (h : 0 < size n) : n
-  iminRe_spec (x : X) (h : 0 < size n) :
+  iminRe (x : X) (h : 0 < nn) : n
+  iminRe_spec (x : X) (h : 0 < nn) :
     Scalar.toReal R (Scalar.real (x[iminRe x h]))
     =
     iInf (α:=ℝ) (fun i : n => Scalar.toReal R <| Scalar.real (K:=K) (x[i]))
@@ -133,7 +135,7 @@ class VectorType.Base (X : Type*) (n : outParam (Type*)) [outParam (IndexType n)
 open VectorType.Base in
 /-- Scalar multiplication by real number and dot product over real numbers for `VectorType` -/
 class VectorType.RealOp (X : Type*)
-    {n : outParam (Type*)} [IndexType n]
+    {n : outParam (Type*)} {nn : outParam ℕ} [IdxType n nn]
     {R : outParam (Type*)} {K : outParam (Type*)}
     {_  : outParam (RealScalar R)} {_ : outParam (Scalar R K)} [VectorType.Base X n K]
     [ScalarSMul R K] [ScalarInner R K]  where
@@ -152,7 +154,7 @@ class VectorType.RealOp (X : Type*)
 
 open Function VectorType.Base Classical in
 class VectorType.Dense (X : Type*)
-    {n : outParam (Type*)} {_ : outParam (IndexType n)}
+    {n : outParam (Type*)} {nn : outParam ℕ} {_ : outParam (IdxType n nn)}
     {R K : outParam (Type*)} [RealScalar R] [Scalar R K]
     [VectorType.Base X n K]
   extends
@@ -337,7 +339,7 @@ section BasicOperations
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K]
+  {_ : RealScalar R} {_ : Scalar R K} {nn : ℕ} {_ : IdxType n nn} [VectorType.Base X n K]
 
 open VectorType
 
@@ -420,8 +422,8 @@ theorem inner_spec (x y : X) :
     ⟪(WithLp.equiv 2 (n → K)).symm (fun i : n => x[i]), (WithLp.equiv 2 (n → K)).symm (fun i : n => y[i])⟫_K := by
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 
-instance : IsInnerGetElem K X n where
-  inner_eq_sum_getElem := by simp[vector_to_spec, sum_to_finset_sum]
+instance [IdxType.Fold' n] : IsInnerGetElem K X n where
+  inner_eq_sum_getElem := by simp[vector_to_spec, IdxType.sum_eq_finset_sum]
 
 @[vector_to_spec]
 theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) :
@@ -431,8 +433,8 @@ theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) 
   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
   sorry_proof
 
-instance [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsInnerGetElem K X n where
-  inner_eq_sum_getElem := by simp[vector_to_spec, sum_to_finset_sum]
+instance [IdxType.Fold' n] [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsInnerGetElem K X n where
+  inner_eq_sum_getElem := by simp[vector_to_spec, IdxType.sum_eq_finset_sum]
 
 @[vector_to_spec]
 theorem norm_spec (x : X) :
@@ -453,19 +455,19 @@ theorem dist_spec (x y : X) :
 
 
 def iamax? (x : X) : Option n :=
-  if _ : 0 < size n then
+  if _ : 0 < nn then
     some (iamax x)
   else
     none
 
 def imaxRe? (x : X) : Option n :=
-  if h : 0 < size n then
+  if h : 0 < nn then
     some (imaxRe x h)
   else
     none
 
 def iminRe? (x : X) : Option n :=
-  if h : 0 < size n then
+  if h : 0 < nn then
     some (iminRe x h)
   else
     none
@@ -497,7 +499,7 @@ section AlgebraicInstances
 
 variable
   {X : Type*} {n : Type*} {R K : Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [InjectiveGetElem X n]
+  {_ : RealScalar R} {_ : Scalar R K} {nn} {_ : IdxType n nn} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 open VectorType
 
@@ -641,7 +643,7 @@ section Equivalences
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [InjectiveGetElem X n]
+  {_ : RealScalar R} {_ : Scalar R K} {nn} {_ : IdxType n nn} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 def toVecₗ : X →ₗ[K] (n → K) :=
   ⟨⟨fun (x : X) (i : n) => x[i],
@@ -703,15 +705,18 @@ end Functions
 
 variable
   {X : Type*} {n : Type u} {R K :  Type*}
-  {_ : RealScalar R} {_ : Scalar R K} {_ : IndexType n} [VectorType.Base X n K] [VectorType.Dense X]
+  {_ : RealScalar R} {_ : Scalar R K} {nn : ℕ} {_ : IdxType n nn}
+  [VectorType.Base X n K] [VectorType.Dense X] [IdxType.Fold' n]
 
+@[inline]
 def mapIdx (f : n → K → K) (x : X) : X :=
-  IndexType.foldl (init:=x) (fun x (i : n) =>
+  IdxType.fold .full (init:=x) (fun (i : n) x =>
     let xi := x[i]
     setElem x i (f i xi) (by dsimp))
 
+@[inline]
 def mapIdx₂ (f : n → K → K → K×K) (x y : X) : X×X :=
-  IndexType.foldl (init:=(x,y)) (fun (x,y) (i : n) =>
+  IdxType.fold .full (init:=(x,y)) (fun (i : n) (x,y)  =>
     let xi := x[i]
     let yi := y[i]
     let (xi',yi') := f i xi yi
@@ -724,28 +729,29 @@ section Functions
 
 variable
   {X : Type*} {n : Type u} {R :  Type*}
-  {_ : RealScalar R} {_ : IndexType n} [VectorType.Base X n R] [VectorType.Dense X]
+  {_ : RealScalar R} {nn : ℕ} {_ : IdxType n nn}
+  [VectorType.Base X n R] [VectorType.Dense X]
 
 def amax (x : X) : R :=
-  if h : 0 < size n then
+  if h : 0 < nn then
     Scalar.abs x[iamax x]
   else
     0
 
 def max (x : X) : R :=
-  if h : 0 < size n then
+  if h : 0 < nn then
     x[imaxRe x h]
   else
     0
 
 def min (x : X) : R :=
-  if h : 0 < size n then
+  if h : 0 < nn then
     x[iminRe x h]
   else
     0
 
 def logsumexp (x : X) : R :=
-  if 0 < size n then
+  if 0 < nn then
     let xmax := max x
     let x := exp (scalAdd 1 (-xmax) x)
     let s := sum x

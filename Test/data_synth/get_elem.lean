@@ -4,7 +4,7 @@ import SciLean.Data.DataArray.VectorType
 
 open SciLean
 
-variable {n} (i : Fin n) (j : Fin 3)
+variable {n} (i : Idx n) (j : Idx 3)
 
 /--
 info: HasRevFDeriv Float (fun x => x[i]) fun x =>

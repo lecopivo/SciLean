@@ -18,8 +18,8 @@ local instance : Coe (FloatArray) (DataArray Float) := ⟨fun x =>
 
 instance : LevelOneData (DataArray Float) Float Float where
   size x := x.size
-  get x i := if h : i < x.size then x.get ⟨i,h⟩ else 0
-  set x i v := if h : i < x.size then x.set ⟨i,h⟩ v else x
+  get x i := if i < x.size then x.get ⟨i.toUSize,sorry_proof⟩ else 0
+  set x i v := if  i < x.size then x.set ⟨i.toUSize,sorry_proof⟩ v else x
   ofFn {n} f := Id.run do
     let mut x : FloatArray := FloatArray.mkEmpty n
     for h : i in [0:n] do
