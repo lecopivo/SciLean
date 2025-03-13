@@ -10,13 +10,13 @@ instance {n:ℕ} : Inhabited (Fin n) := ⟨0, sorry_proof⟩
 theorem SciLean.sum.arg_f.HasRevFDeriv_rule_scalar
     {K} [RCLike K]
     {W} [NormedAddCommGroup W] [AdjointSpace K W]
-    {I : Type*} [IndexType I]
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
     (f : W → I → K) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i))  :
     HasRevFDeriv K
-      (fun w => sum (f w))
+      (fun w => IdxType.sum (f w))
       (fun w =>
-        let' (s,dw) := IndexType.foldl (init := ((0 : K), (0:W)))
-          (fun sdw (i : I) =>
+        let' (s,dw) := IdxType.fold .full (init := ((0 : K), (0:W)))
+          (fun (i : I) sdw =>
             let' (s,dw) := sdw
             let' (x,df) := f' i w
             let s := s + x
@@ -25,7 +25,7 @@ theorem SciLean.sum.arg_f.HasRevFDeriv_rule_scalar
 
 
 def objective {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
-  ∑ i, (- IndexType.maxD (fun j => -‖points[i] - centroids[j]‖₂²) 0)
+  ∑ᴵ i, minᴵ j, ‖points[i] - centroids[j]‖₂²
 
 -- TODO: this version should be differentiable too!
 -- def objective {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
@@ -43,4 +43,4 @@ def direction {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k])
   VectorType.div J Hdiag)
 rewrite_by
   unfold objective
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc,↓fwdFDeriv_simproc]
+  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]

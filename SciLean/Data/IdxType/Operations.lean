@@ -7,13 +7,15 @@ variable {I : Type u} {α : Type v}  {n} [IdxType I n] [IdxType.Fold.{u,v,v} I I
 
 namespace IdxType
 
+
+/-- `sum f` returns sum of `f` over index type `I`. -/
 @[specialize, inline]
 def sum [Zero α] [Add α] (f : I → α) : α :=
   IdxType.fold (IndexType.Range.full (I:=I)) (init := 0) (fun i s => s + f i)
 
 
 open Lean.TSyntax.Compat in
-/-- `∑ᴵ (i : I), f i` is sum over indextype `I`.
+/-- `∑ᴵ (i : I), f i` is sum of values of `f` over the index type `I`.
 
 There has to be an instance `IdxType I n` and `IdxType.Fold' I`. -/
 macro " ∑ᴵ " xs:Lean.explicitBinders ", " b:term:66 : term =>
@@ -31,13 +33,18 @@ macro " ∑ᴵ " xs:Lean.explicitBinders ", " b:term:66 : term =>
 theorem sum_eq_finset_sum {α} [AddCommMonoid α] (f : I → α) :
   ∑ᴵ i, f i = Finset.univ.sum f := sorry_proof
 
-abbrev min [Min α] [Inhabited α] (f : I → α) : α :=
+
+----------------------------------------------------------------------------------------------------
+-- min ---------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- `min f` returns minimum of `f` over index type `I`. -/
+@[specialize, inline]
+def min [Min α] [Inhabited α] (f : I → α) : α :=
   IdxType.reduce (IndexType.Range.full (I:=I)) f (Min.min · ·)
 
-abbrev max [Max α] [Inhabited α] (f : I → α) : α :=
-  IdxType.reduce (IndexType.Range.full (I:=I)) f (Max.max · ·)
-
-abbrev argMinVal {I α : Type*} {n}
+@[specialize, inline]
+def argMinVal {I α : Type*} {n}
     [IdxType I n] [IdxType.Fold' I]
     [LE α] [DecidableLE α] [Inhabited I]
     (f : I → α) : (I×α) :=
@@ -45,20 +52,82 @@ abbrev argMinVal {I α : Type*} {n}
     (fun i => (i,f i)) (fun (i,xi) (j,xj) => if xi ≤ xj then (i,xi) else (j,xj))
     (default, f default)
 
-abbrev argMaxVal {I α : Type*} {n}
-    [IdxType I n] [IdxType.Fold' I]
-    [LE α] [DecidableLE α] [Inhabited I]
-    (f : I → α) : (I×α) :=
-  IdxType.reduceD (IndexType.Range.full (I:=I))
-    (fun i => (i,f i)) (fun (i,xi) (j,xj) => if xi ≤ xj then (j,xj) else (i,xi))
-    (default, f default)
-
-abbrev argMin {I α : Type*} {n}
+/-- `argMin f` returns index at which `f` is minimal over index type `I`. -/
+@[specialize, inline]
+def argMin {I α : Type*} {n}
     [IdxType I n] [IdxType.Fold' I]
     [LE α] [DecidableLE α] [Inhabited I]
     (f : I → α) : I := (argMinVal f).1
 
-abbrev argMax {I α : Type*}
+open Lean.Parser.Term in
+/-- `mᴵ (i : I), f i` returns minimum of `f` over index type `I`.
+
+There has to be an instance `IdxType I n` and `IdxType.Fold' I`. -/
+macro "minᴵ " x:funBinder ", " b:term:66 : term => `(IdxType.min fun $x => $b)
+
+open Lean.Parser.Term in
+@[app_unexpander min] def unexpandIdxTypeMin : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:funBinder => $b) =>
+    `(minᴵ $x, $b)
+  | _  => throw ()
+
+
+open Lean.Parser.Term in
+/-- `argMinᴵ (i : I), f i` returns index at which `f` is minimal over index type `I`.-/
+macro "argMinᴵ " x:funBinder ", " b:term:66 : term => `(IdxType.argMin fun $x => $b)
+
+open Lean.Parser.Term in
+@[app_unexpander argMin] def unexpandIdxTypeArgMin : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:funBinder => $b) =>
+    `(argMinᴵ $x, $b)
+  | _  => throw ()
+
+
+
+----------------------------------------------------------------------------------------------------
+-- max ---------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- `max f` returns maximum of `f` over index type `I`. -/
+@[specialize, inline]
+def max [Max α] [Inhabited α] (f : I → α) : α :=
+  IdxType.reduce (IndexType.Range.full (I:=I)) f (Max.max · ·)
+
+@[specialize, inline]
+def argMaxVal {I α : Type*} {n}
+    [IdxType I n] [IdxType.Fold' I]
+    [LE α] [DecidableLE α] [Inhabited I]
+    (f : I → α) : (I×α) :=
+  IdxType.reduceD (IndexType.Range.full (I:=I))
+    (fun i => (i,f i)) (fun (i,xi) (j,xj) => if xj ≤ xi then (i,xi) else (j,xj))
+    (default, f default)
+
+/-- `argMax f` returns index at which `f` is maximal over index type `I`. -/
+@[specialize, inline]
+def argMax {I α : Type*} {n}
     [IdxType I n] [IdxType.Fold' I]
     [LE α] [DecidableLE α] [Inhabited I]
     (f : I → α) : I := (argMaxVal f).1
+
+open Lean.Parser.Term in
+/-- `mᴵ (i : I), f i` returns maximum of `f` over index type `I`.
+
+There has to be an instance `IdxType I n` and `IdxType.Fold' I`. -/
+macro "maxᴵ " x:funBinder ", " b:term:66 : term => `(IdxType.max fun $x => $b)
+
+open Lean.Parser.Term in
+@[app_unexpander max] def unexpandIdxTypeMax : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:funBinder => $b) =>
+    `(maxᴵ $x, $b)
+  | _  => throw ()
+
+
+open Lean.Parser.Term in
+/-- `argMaxᴵ (i : I), f i` returns index at which `f` is maximal over index type `I`.-/
+macro "argMaxᴵ " x:funBinder ", " b:term:66 : term => `(IdxType.argMax fun $x => $b)
+
+open Lean.Parser.Term in
+@[app_unexpander argMax] def unexpandIdxTypeArgMax : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:funBinder => $b) =>
+    `(argMaxᴵ $x, $b)
+  | _  => throw ()
