@@ -87,27 +87,23 @@ def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IdxType I n] (x : Floa
 
 
 def kmeansDirBestLeanImpl {n k d : ℕ} [NeZero k]
-    (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] := Id.run do
+    (points : Float^[Idx n, Idx d]) (centroids : Float^[Idx k, Idx d]) : Float^[Idx k, Idx d] := Id.run do
 
-  let mut J : Float^[d]^[k] := 0
-  let mut diagH : Float^[d]^[k] := 0
+  let mut J : Float^[Idx k, Idx d] := 0
+  let mut diagH : Float^[Idx k, Idx d] := 0
 
   for i in (IndexType.Range.full (I:=Idx n)) do
-    let i := i.toFin
 
-    let F := fun (i : Idx n) (j : Idx k) (l : Idx d) => points.uncurry.idxGet (i.toFin,l.toFin) - centroids.uncurry.idxGet (j,l.toFin)
+    let F := fun (i : Idx n) (j : Idx k) (l : Idx d) => points.idxGet (i,l) - centroids.idxGet (j,l)
 
     let a := IdxType.argMin fun (j : Idx k) =>
-      ∑ᴵ (l : Idx d), (F i.toIdx j l)^2
+      ∑ᴵ (l : Idx d), (F i j l)^2
 
-    let a := a.toFin
     for l in (IndexType.Range.full (I:=Idx d)) do
-      let l := l.toFin
-      let Hal := diagH[a,l]
-      diagH := (diagH.uncurry.idxSet (a,l) (diagH[a,l] + 2.0)).curry
+      diagH := (diagH.idxSet (a,l) (diagH.idxGet (a,l) + 2.0))
 
-      let dJ := 2 • (centroids.uncurry.idxGet (a,l) - points.uncurry.idxGet (i,l))
-      J := (J.uncurry.idxSet (a,l) (J[a,l] + dJ)).curry
+      let dJ := 2 • (centroids.idxGet (a,l) - points.idxGet (i,l))
+      J := (J.idxSet (a,l) (J.idxGet (a,l) + dJ))
 
   return J + diagH -- VectorType.div J diagH
 
@@ -144,7 +140,7 @@ def main : IO Unit := do
 
   -- this should be the best possible Lean implementation
   let s ← IO.monoNanosNow
-  let dir := kmeansDirBestLeanImpl points centroids
+  let dir := kmeansDirBestLeanImpl (points.uncurry.reshape (Idx n×Idx d) sorry_proof) (centroids.uncurry.reshape (Idx k×Idx d) sorry_proof)
   let e ← IO.monoNanosNow
   let timeNs := e - s
   let timeMs := timeNs.toFloat / 1e6
