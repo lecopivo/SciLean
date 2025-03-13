@@ -701,7 +701,7 @@ def Float.byteType : ByteType Float where
   toByteArray arr i _ a :=
     if i % 8 = 0 then
       let arr : FloatArray := cast sorry_proof arr
-      cast sorry_proof (arr.uset (i<<<3) a sorry_proof)
+      cast sorry_proof (arr.uset (i>>>3) a sorry_proof)
     else
       panic! "Can't write float to ByteArray to nonaligned position i={i}! i % 8 = {i%8} ≠ 0. Please implement this case in C!"
 
