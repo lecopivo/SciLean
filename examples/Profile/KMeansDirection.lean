@@ -15,7 +15,6 @@ def FloatArray.rand01 (n : Nat) : IO FloatArray := do
     xs := xs.push (← _root_.rand01)
   return xs
 
-
 @[inline]
 def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IdxType I n]
     (xs : X^[I]) (i : I) : X :=
@@ -34,6 +33,7 @@ macro (name:=minStx) "minᴵ" xs:funBinder* ", " b:term : term => do
 
 instance : Coe Nat USize := ⟨fun n => n.toUSize⟩
 
+set_default_scalar Float
 
 def kmeansDirSciLean {n k d : ℕ} [NeZero k]
     (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
@@ -42,7 +42,7 @@ def kmeansDirSciLean {n k d : ℕ} [NeZero k]
         (fun x i =>
           let x_1 := x.1;
           let dx := x.2;
-          let a := IndexType.argMax fun j => -‖points[i] - centroids[j]‖₂[Float];
+          let a := IndexType.argMax fun j => -‖points[i] - centroids[j]‖₂²;
           let ydy₁ := centroids[a];
           let ydy₂ := (VectorType.const 1);
           let x₁₂₁ := x_1.1;
@@ -52,82 +52,63 @@ def kmeansDirSciLean {n k d : ℕ} [NeZero k]
           let x₁ := points[i];
           let ydy₁ := x₁ - ydy₁;
           let ydy₂ := -ydy₂;
-          let yn := ‖ydy₁‖₂[Float];
-          let ydy₂_1 := ⟪ydy₁, ydy₂⟫[Float] / yn;
-          let x₁ := -yn;
+          let ydy₁_1 := ‖ydy₁‖₂²;
+          let ydy₂_1 := 2 * ⟪ydy₁, ydy₂⟫;
+          let x₁ := -ydy₁_1;
           let x₂ := -ydy₂_1;
           let x₁ := -x₁;
           let x₂ := -x₂;
-          let ydy₁_1 := x₁₂₁ + x₁;
+          let ydy₁_2 := x₁₂₁ + x₁;
           let ydy₂_2 := dx₁₂₁ + x₂;
-          let iy := yn⁻¹;
-          let x₂ := -(iy ^ 2 * ydy₂_1);
-          let ydy₁_2 := iy • ydy₁;
-          let ydy₂ := iy • ydy₂ + x₂ • ydy₁;
-          let ydy₁ := x₁₂₂[a];
+          let ydy₁ := 2 • ydy₁;
+          let ydy₂ := 2 • ydy₂;
+          let ydy₁_3 := x₁₂₂[a];
           let ydy₂_3 := dx₁₂₂[a];
-          let x₁ := -ydy₁_2;
+          let x₁ := -ydy₁;
           let x₂ := -ydy₂;
-          let ydy₁ := ydy₁ + x₁;
+          let ydy₁ := ydy₁_3 + x₁;
           let ydy₂ := ydy₂_3 + x₂;
           let x₁ := setElem x₁₂₂ a ydy₁ True.intro;
           let x₂ := setElem dx₁₂₂ a ydy₂ True.intro;
-          ((ydy₁_1, x₁), ydy₂_2, x₂))
+          ((ydy₁_2, x₁), ydy₂_2, x₂))
         ((0, 0), 0);
     let y := x.1;
     let dy := x.2;
     let ydy₁ := y.2;
     let ydy₂ := dy.2;
-    ydy₁ + ydy₂ -- VectorType.div ydy₁ ydy₂
+    ydy₁ + ydy₂ --- VectorType.div ydy₁ ydy₂
+
+
+def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IdxType I n] (x : Float^[I]) (i : I) (val : Float) : Float^[I] :=
+
+  let data := x.1.1.toFloatArray sorry_proof
+  let data := data.uset (toIdx i) val sorry_proof
+  ⟨⟨data.toByteArray, n, sorry_proof⟩, sorry_proof⟩
 
 
 def kmeansDirBestLeanImpl {n k d : ℕ} [NeZero k]
     (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] := Id.run do
 
-  let mut loss : Float := 0
   let mut J : Float^[d]^[k] := 0
-  let mut sumJ : Float := 0
   let mut diagH : Float^[d]^[k] := 0
 
   for i in (IndexType.Range.full (I:=Idx n)) do
     let i := i.toFin
 
-    let x_1 := (loss,J)
-    let dx := (sumJ,diagH)
-    let a := IndexType.argMax fun j => -‖points[i] - centroids[j]‖₂[Float];
-    let ydy₁ := centroids[a];
-    let ydy₂ := (VectorType.const 1);
-    let x₁₂₁ := x_1.1;
-    let x₁₂₂ := x_1.2;
-    let dx₁₂₁ := dx.1;
-    let dx₁₂₂ := dx.2;
-    let x₁ := points[i];
-    let ydy₁ := x₁ - ydy₁;
-    let ydy₂ := -ydy₂;
-    let yn := ‖ydy₁‖₂[Float];
-    let ydy₂_1 := ⟪ydy₁, ydy₂⟫[Float] / yn;
-    let x₁ := -yn;
-    let x₂ := -ydy₂_1;
-    let x₁ := -x₁;
-    let x₂ := -x₂;
-    let ydy₁_1 := x₁₂₁ + x₁;
-    let ydy₂_2 := dx₁₂₁ + x₂;
-    let iy := yn⁻¹;
-    let x₂ := -(iy ^ 2 * ydy₂_1);
-    let ydy₁_2 := iy • ydy₁;
-    let ydy₂ := iy • ydy₂ + x₂ • ydy₁;
-    let ydy₁ := x₁₂₂[a];
-    let ydy₂_3 := dx₁₂₂[a];
-    let x₁ := -ydy₁_2;
-    let x₂ := -ydy₂;
-    let ydy₁ := ydy₁ + x₁;
-    let ydy₂ := ydy₂_3 + x₂;
-    let x₁ := setElem x₁₂₂ a ydy₁ True.intro;
-    let x₂ := setElem dx₁₂₂ a ydy₂ True.intro;
-    loss := ydy₁_1
-    J := x₁
-    sumJ := ydy₂_2
-    diagH := x₂
+    let F := fun (i : Idx n) (j : Idx k) (l : Idx d) => points.uncurry.idxGet (i.toFin,l.toFin) - centroids.uncurry.idxGet (j,l.toFin)
+
+    let a := IdxType.argMin fun (j : Idx k) =>
+      ∑ᴵ (l : Idx d), (F i.toIdx j l)^2
+
+    let a := a.toFin
+    for l in (IndexType.Range.full (I:=Idx d)) do
+      let l := l.toFin
+      let Hal := diagH[a,l]
+      diagH := (diagH.uncurry.idxSet (a,l) (diagH[a,l] + 2.0)).curry
+
+      let dJ := 2 • (centroids.uncurry.idxGet (a,l) - points.uncurry.idxGet (i,l))
+      J := (J.uncurry.idxSet (a,l) (J[a,l] + dJ)).curry
+
   return J + diagH -- VectorType.div J diagH
 
 
@@ -146,7 +127,7 @@ def main : IO Unit := do
        k := {k}, n := {n}, d := {d}"
   IO.println ""
 
-  let points : Float^[d]^[k] := ⟨⟨points.toByteArray, k, sorry_proof⟩, sorry_proof⟩
+  let points : Float^[d]^[n] := ⟨⟨points.toByteArray, k, sorry_proof⟩, sorry_proof⟩
   let centroids : Float^[d]^[k] := ⟨⟨centroids.toByteArray, k, sorry_proof⟩, sorry_proof⟩
 
   -- this should be reference C implementation
