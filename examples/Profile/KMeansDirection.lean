@@ -35,6 +35,40 @@ instance : Coe Nat USize := ⟨fun n => n.toUSize⟩
 
 set_default_scalar Float
 
+
+/-- info: ⊞[⊞[1.000000, 2.000000], ⊞[3.000000, 4.000000]] -/
+#guard_msgs in
+#eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]]
+
+/-- info: ⊞[⊞[-1.000000, -2.000000], ⊞[-3.000000, -4.000000]] -/
+#guard_msgs in
+#eval -⊞[⊞[1.0,2.0],⊞[3.0,4.0]]
+
+/-- info: ⊞[⊞[11.000000, 102.000000], ⊞[1003.000000, 1004.000000]] -/
+#guard_msgs in
+#eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]] + ⊞[⊞[10.0,100.0],⊞[1000.0,1000.0]]
+
+/-- info: ⊞[⊞[-9.000000, -98.000000], ⊞[-997.000000, -996.000000]] -/
+#guard_msgs in
+#eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]] - ⊞[⊞[10.0,100.0],⊞[1000.0,1000.0]]
+
+/-- info: ⊞[⊞[1.000000, 2.000000], ⊞[10.000000, 100.000000]] -/
+#guard_msgs in
+#eval setElem ⊞[⊞[1.0,2.0],⊞[3.0,4.0]] (1 : Idx 2) ⊞[10.0,100.0] .intro
+
+/-- info: ⊞[3.000000, 4.000000] -/
+#guard_msgs in
+#eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]][1]
+
+/-- info: ⊞[⊞[1.000000, 1.000000], ⊞[1.000000, 1.000000]] -/
+#guard_msgs in
+#eval (VectorType.const 1 : Float^[2]^[2])
+
+/-- info: ⊞[⊞[2.000000, 4.000000], ⊞[6.000000, 8.000000]] -/
+#guard_msgs in
+#eval 2 • ⊞[⊞[1.0,2.0],⊞[3.0,4.0]]
+
+
 def kmeansDirSciLean {n k d : ℕ} [NeZero k]
     (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
   let x :=
@@ -115,6 +149,7 @@ def main : IO Unit := do
   let n := 10000
   let k := 1000
 
+  IO.setRandSeed 0
   let points ← FloatArray.rand01 (n*d)
   let centroids ← FloatArray.rand01 (k*d)
 

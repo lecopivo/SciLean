@@ -8,24 +8,12 @@ namespace SciLean
 
 open BLAS CBLAS
 
-local instance : Coe (DataArray Float) FloatArray := ⟨fun x =>
-    let data := x.1.toFloatArray sorry_proof
-    data⟩
-
-local instance : Coe (FloatArray) (DataArray Float) := ⟨fun x =>
-    let data := x.toByteArray
-    ⟨data, sorry_proof⟩⟩
+local instance : Coe (DataArray Float) Float64Array := ⟨fun x => cast sorry_proof x⟩
+local instance : Coe (Float64Array) (DataArray Float) := ⟨fun x => cast sorry_proof x⟩
 
 instance : LevelOneData (DataArray Float) Float Float where
   size x := x.size
   get x i := if i < x.size then x.get ⟨i.toUSize,sorry_proof⟩ else 0
-  set x i v := if  i < x.size then x.set ⟨i.toUSize,sorry_proof⟩ v else x
-  ofFn {n} f := Id.run do
-    let mut x : FloatArray := FloatArray.mkEmpty n
-    for h : i in [0:n] do
-      let i : Fin n := ⟨i, h.2.1⟩
-      x := x.push (f i)
-    return x
   dot N X offX incX Y offY incY := ddot N.toUSize X offX.toUSize incX.toUSize Y offY.toUSize incY.toUSize
   nrm2 N X offX incX := dnrm2 N.toUSize X offX.toUSize incX.toUSize
   asum N X offX incX := dasum N.toUSize X offX.toUSize incX.toUSize
