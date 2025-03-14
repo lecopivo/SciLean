@@ -41,7 +41,7 @@ We distinguish between two main types of POD. `BitType` a type that is smaller o
 Potentially surprising edge case is array of fixed length, i.e. the type `{a : Array α // a.size = n}`. It is `PlainDataType` if `α` is `PlainDataType`. However, `Array α` is not `PlainDataType`, even if `α` is `PlainDataType`, as it does not have a fixed byte size.
 -/
 class PlainDataType (α : Type*) where
-  btype : BitType α ⊕ ByteType α
+  btype : ByteType α
 
   -- get_set       -- setting and getting returns the original
   -- get_set_other -- set does not affects other elements
@@ -50,15 +50,11 @@ class PlainDataType (α : Type*) where
 
 /- How many bytes are needed to hold n elements of type α -/
 def PlainDataType.bytes {α : Type*} (pd : PlainDataType α) (n : Nat) : Nat :=
-  match pd.btype with
-  | .inl bitType => (n + ((8/bitType.bits) - 1).toNat) / (8/bitType.bits).toNat
-  | .inr byteType => byteType.bytes.toNat * n
+  pd.btype.bytes.toNat * n
 
 /-- How many `α` can fit into a buffer with `byteNum` bytes -/
 def PlainDataType.capacity {α : Type*} (pd : PlainDataType α) (byteNum : Nat) : Nat :=
-  match pd.btype with
-  | .inl bitType => byteNum * (8/bitType.bits.toNat)
-  | .inr byteType => byteNum / byteType.bytes.toNat
+  byteNum / pd.btype.bytes.toNat
 
 
 
@@ -68,71 +64,89 @@ set_option linter.unusedVariables false in
 The index `i` is `i`-th element *not* `i`-th byte!. -/
 @[inline]
 def PlainDataType.fromByteArray {α : Type*} (pd : PlainDataType α) (data : ByteArray) (i : USize) (hi : i.toNat*pd.bytes < data.size): α :=
-  match pd.btype with
-  | .inl bitType =>
-    let i := i
-    let perByte := 8/bitType.bits
-    let inByte  := (i % perByte.toUSize).toUInt8
-    let ofByte  := i / perByte.toUSize
-    let ones : UInt8 := 255
-    let mask    := (ones - (ones <<< bitType.bits))   -- 00000111
-    -- masking is note necessary if `fromBytes` correctly ignores unused bits
-    let byte    := mask &&& (data.uget ofByte sorry_proof >>> (inByte*bitType.bits))
-    bitType.fromByte byte
-  | .inr byteType =>
-    -- todo: add bound check
-    byteType.fromByteArray data (i*byteType.bytes) sorry_proof
+  pd.btype.fromByteArray data (i*pd.btype.bytes) sorry_proof
+  -- match pd.btype with
+  -- | .inl bitType =>
+  --   let i := i
+  --   let perByte := 8/bitType.bits
+  --   let inByte  := (i % perByte.toUSize).toUInt8
+  --   let ofByte  := i / perByte.toUSize
+  --   let ones : UInt8 := 255
+  --   let mask    := (ones - (ones <<< bitType.bits))   -- 00000111
+  --   -- masking is note necessary if `fromBytes` correctly ignores unused bits
+  --   let byte    := mask &&& (data.uget ofByte sorry_proof >>> (inByte*bitType.bits))
+  --   bitType.fromByte byte
+  -- | .inr byteType =>
+  --   -- todo: add bound check
+  --   byteType.
 
 set_option linter.unusedVariables false in
 /-- Write `v` to `ByteArray` at `i`-th position. -/
 def PlainDataType.toByteArray {α : Type*} (pd : PlainDataType α) (data : ByteArray) (i : Nat) (v : α) (hi : i*pd.bytes < data.size): ByteArray :=
-  match pd.btype with
-  | .inl bitType =>
-    let i := i.toUSize
-    let perByte := 8/bitType.bits
-    let inByte  := (i % perByte.toUSize).toUInt8
-    let ofByte  := i / perByte.toUSize
-    let ones : UInt8 := 255
-    let mask    := ones - ((ones - (ones <<< bitType.bits)) <<< (inByte*bitType.bits))  --- 11000111 for bitType.bits = 3 and inByte = 1
-    let byte    := data.uget ofByte sorry_proof
-    let newByte := (mask &&& byte) + (bitType.toByte v <<< (inByte*bitType.bits))
-    data.uset ofByte newByte sorry_proof
-  | .inr byteType =>
-    -- todo: add bound check
-    byteType.toByteArray data (i.toUSize*byteType.bytes) sorry_proof v
+  pd.btype.toByteArray data (i.toUSize*pd.btype.bytes) sorry_proof v
+
+  -- match pd.btype with
+  -- | .inl bitType =>
+  --   let i := i.toUSize
+  --   let perByte := 8/bitType.bits
+  --   let inByte  := (i % perByte.toUSize).toUInt8
+  --   let ofByte  := i / perByte.toUSize
+  --   let ones : UInt8 := 255
+  --   let mask    := ones - ((ones - (ones <<< bitType.bits)) <<< (inByte*bitType.bits))  --- 11000111 for bitType.bits = 3 and inByte = 1
+  --   let byte    := data.uget ofByte sorry_proof
+  --   let newByte := (mask &&& byte) + (bitType.toByte v <<< (inByte*bitType.bits))
+  --   data.uset ofByte newByte sorry_proof
+  -- | .inr byteType =>
+  --   -- todo: add bound check
+  --   byteType.toByteArray data (i.toUSize*byteType.bytes) sorry_proof v
 
 /-- Translate `PlainDataType X` along equivalence `f : X ≃ Y` to `PlainDataType Y` -/
 def PlainDataType.ofEquiv {X Y : Type*} [pd : PlainDataType X] (f : X ≃ Y) : PlainDataType Y where
-  btype :=
-    match pd.btype with
-    | .inl bt => .inl {
-      bits := bt.bits
-      h_size := bt.h_size
-      fromByte b :=
-        let x := bt.fromByte b
-        let y := f x
-        y
-      toByte vx  :=
-        let vx := f.symm vx
-        let b := bt.toByte vx
-        b
-      fromByte_toByte := sorry_proof
-      : BitType Y}
-    | .inr bt => .inr {
-      bytes := bt.bytes
-      h_size := bt.h_size
+  btype := {
+      bytes := pd.btype.bytes
+      h_size := pd.btype.h_size
       fromByteArray b i h :=
-        let x := bt.fromByteArray b i h
+        let x := pd.btype.fromByteArray b i h
         let y := f x
         y
       toByteArray b i h vy :=
         let vx := f.symm vy
-        let b := bt.toByteArray b i h vx
+        let b := pd.btype.toByteArray b i h vx
         b
       toByteArray_size := sorry_proof
       fromByteArray_toByteArray := sorry_proof
       fromByteArray_toByteArray_other := sorry_proof
       : ByteType Y }
+
+    -- match pd.btype with
+    -- | .inl bt => .inl {
+    --   bits := bt.bits
+    --   h_size := bt.h_size
+    --   fromByte b :=
+    --     let x := bt.fromByte b
+    --     let y := f x
+    --     y
+    --   toByte vx  :=
+    --     let vx := f.symm vx
+    --     let b := bt.toByte vx
+    --     b
+    --   fromByte_toByte := sorry_proof
+    --   : BitType Y}
+    -- | .inr bt => .inr {
+    --   bytes := bt.bytes
+    --   h_size := bt.h_size
+    --   fromByteArray b i h :=
+    --     let x := bt.fromByteArray b i h
+    --     let y := f x
+    --     y
+    --   toByteArray b i h vy :=
+    --     let vx := f.symm vy
+    --     let b := bt.toByteArray b i h vx
+    --     b
+    --   toByteArray_size := sorry_proof
+    --   fromByteArray_toByteArray := sorry_proof
+    --   fromByteArray_toByteArray_other := sorry_proof
+    --   : ByteType Y }
 
 
 --------------- Prod -------------------------------------------------
@@ -253,12 +267,12 @@ As Enumtype:
 
 -/
 instance instPlainDataTypeProd [ta : PlainDataType α] [tb : PlainDataType β] : PlainDataType (α×β) where
-  btype :=
-    match ta.btype, tb.btype with
-    | .inl aBitType,  .inl bBitType  => Prod.bitTypeProd aBitType bBitType
-    | .inl aBitType,  .inr bByteType => .inr <| Prod.bitTypeByteTypeProd aBitType bByteType
-    | .inr aByteType, .inl bBitType  => .inr <| Prod.byteTypeBitTypeProd aByteType bBitType
-    | .inr aByteType, .inr bByteType => .inr <| Prod.byteTypeProd aByteType bByteType
+  btype := Prod.byteTypeProd ta.btype tb.btype
+    -- match ta.btype, tb.btype with
+    -- | .inl aBitType,  .inl bBitType  => Prod.bitTypeProd aBitType bBitType
+    -- | .inl aBitType,  .inr bByteType => .inr <| Prod.bitTypeByteTypeProd aBitType bByteType
+    -- | .inr aByteType, .inl bBitType  => .inr <| Prod.byteTypeBitTypeProd aByteType bBitType
+    -- | .inr aByteType, .inr bByteType => .inr <| Prod.byteTypeProd aByteType bByteType
 
 
 
@@ -382,12 +396,13 @@ As Enumtype:
 
 -/
 instance instPlainDataTypeSigma [ta : PlainDataType α] [tb : PlainDataType β] : PlainDataType ((_ : α)×β) where
-  btype :=
-    match ta.btype, tb.btype with
-    | .inl aBitType,  .inl bBitType  => Sigma.bitTypeSigma aBitType bBitType
-    | .inl aBitType,  .inr bByteType => .inr <| Sigma.bitTypeByteTypeSigma aBitType bByteType
-    | .inr aByteType, .inl bBitType  => .inr <| Sigma.byteTypeBitTypeSigma aByteType bBitType
-    | .inr aByteType, .inr bByteType => .inr <| Sigma.byteTypeSigma aByteType bByteType
+  btype := Sigma.byteTypeSigma ta.btype tb.btype
+
+    -- match ta.btype, tb.btype with
+    -- | .inl aBitType,  .inl bBitType  => Sigma.bitTypeSigma aBitType bBitType
+    -- | .inl aBitType,  .inr bByteType => .inr <| Sigma.bitTypeByteTypeSigma aBitType bByteType
+    -- | .inr aByteType, .inl bBitType  => .inr <| Sigma.byteTypeBitTypeSigma aByteType bBitType
+    -- | .inr aByteType, .inr bByteType => .inr <| Sigma.byteTypeSigma aByteType bByteType
 
 
 --------------- MProd -------------------------------------------------
@@ -491,27 +506,27 @@ def MProd.byteTypeMProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType
   }
 
 instance instPlainDataTypeMProd [ta : PlainDataType α] [tb : PlainDataType β] : PlainDataType (MProd α β) where
-  btype :=
-    match ta.btype, tb.btype with
-    | .inl aBitType,  .inl bBitType  => MProd.bitTypeMProd aBitType bBitType
-    | .inl aBitType,  .inr bByteType => .inr <| MProd.bitTypeByteTypeMProd aBitType bByteType
-    | .inr aByteType, .inl bBitType  => .inr <| MProd.byteTypeBitTypeMProd aByteType bBitType
-    | .inr aByteType, .inr bByteType => .inr <| MProd.byteTypeMProd aByteType bByteType
+  btype := MProd.byteTypeMProd ta.btype tb.btype
+    -- match ta.btype, tb.btype with
+    -- | .inl aBitType,  .inl bBitType  => MProd.bitTypeMProd aBitType bBitType
+    -- | .inl aBitType,  .inr bByteType => .inr <| MProd.bitTypeByteTypeMProd aBitType bByteType
+    -- | .inr aByteType, .inl bBitType  => .inr <| MProd.byteTypeBitTypeMProd aByteType bBitType
+    -- | .inr aByteType, .inr bByteType => .inr <| MProd.byteTypeMProd aByteType bByteType
 
 
 --------------- Bool n ------------------------------------------------
 -----------------------------------------------------------------------
 
-@[inline]
-def Bool.bitType : BitType Bool where
-  bits := 1
-  h_size := by aesop
-  fromByte b := if (b &&& 1) == 1 then true else false
-  toByte b := if b == true then 1 else 0
-  fromByte_toByte := sorry_proof
+-- @[inline]
+-- def Bool.bitType : BitType Bool where
+--   bits := 1
+--   h_size := by aesop
+--   fromByte b := if (b &&& 1) == 1 then true else false
+--   toByte b := if b == true then 1 else 0
+--   fromByte_toByte := sorry_proof
 
-instance : PlainDataType Bool where
-  btype := .inl Bool.bitType
+-- instance : PlainDataType Bool where
+--   btype := .inl Bool.bitType
 
 
 --------------- Fin n ------------------------------------------------
@@ -535,7 +550,7 @@ def Fin.bitType (n : Nat) (_ : n ≤ 256) : BitType (Fin n) where
   fromByte_toByte := sorry_proof
 
 @[inline]
-def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
+def Fin.byteType (n : Nat) : ByteType (Fin n) where
   bytes := (byteSize n).toUSize
   h_size := sorry_proof
 
@@ -563,84 +578,84 @@ def Fin.byteType (n : Nat) (_ : 256 < n) : ByteType (Fin n) where
 
 -- INCONSISTENT: This breaks consistency see Fin.bitType
 instance (n) : PlainDataType (Fin n) where
-  btype :=
-    if h : n ≤ 256
-    then .inl (Fin.bitType n h)
-    else .inr (Fin.byteType n (by simp at h; apply h))
+  btype := Fin.byteType n
+    -- if h : n ≤ 256
+    -- then .inl (Fin.bitType n h)
+    -- else .inr (Fin.byteType n (by simp at h; apply h))
 
 
 --------------- UInt* ------------------------------------------------
 -----------------------------------------------------------------------
 
 -- This implementation is not ideal, we do a round trip through `Nat`
-instance : PlainDataType UInt8 where
-  btype :=
-    let bt := Fin.bitType UInt8.size (by decide)
-    .inl {
-      bits := bt.bits
-      h_size := bt.h_size
-      fromByte := fun b => ⟨bt.fromByte b⟩
-      toByte   := fun a => bt.toByte a.toNat
-      fromByte_toByte := sorry_proof
-  }
+-- instance : PlainDataType UInt8 where
+--   btype :=
+--     let bt := Fin.bitType UInt8.size (by decide)
+--     .inl {
+--       bits := bt.bits
+--       h_size := bt.h_size
+--       fromByte := fun b => ⟨bt.fromByte b⟩
+--       toByte   := fun a => bt.toByte a.toNat
+--       fromByte_toByte := sorry_proof
+--   }
 
 
 -- This implementation is not ideal, we do a round trip through `Nat`
-instance : PlainDataType UInt16 where
-  btype :=
-    let bt := Fin.byteType UInt16.size (by decide)
-    .inr {
-    bytes := bt.bytes
-    h_size := bt.h_size
-    fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
-    toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
-    toByteArray_size := sorry_proof
-    fromByteArray_toByteArray := sorry_proof
-    fromByteArray_toByteArray_other := sorry_proof
-  }
+-- instance : PlainDataType UInt16 where
+--   btype :=
+--     let bt := Fin.byteType UInt16.size (by decide)
+--     {
+--     bytes := bt.bytes
+--     h_size := bt.h_size
+--     fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
+--     toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
+--     toByteArray_size := sorry_proof
+--     fromByteArray_toByteArray := sorry_proof
+--     fromByteArray_toByteArray_other := sorry_proof
+--   }
 
 -- This implementation is not ideal, we do a round trip through `Nat`
-instance : PlainDataType UInt32 where
-  btype :=
-    let bt := Fin.byteType UInt32.size (by decide)
-    .inr {
-    bytes := bt.bytes
-    h_size := bt.h_size
-    fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
-    toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
-    toByteArray_size := sorry_proof
-    fromByteArray_toByteArray := sorry_proof
-    fromByteArray_toByteArray_other := sorry_proof
-  }
+-- instance : PlainDataType UInt32 where
+--   btype :=
+--     let bt := Fin.byteType UInt32.size (by decide)
+--     .inr {
+--     bytes := bt.bytes
+--     h_size := bt.h_size
+--     fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
+--     toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
+--     toByteArray_size := sorry_proof
+--     fromByteArray_toByteArray := sorry_proof
+--     fromByteArray_toByteArray_other := sorry_proof
+--   }
 
 -- This implementation is not ideal, we do a round trip through `Nat`
-instance : PlainDataType UInt64 where
-  btype :=
-    let bt := Fin.byteType UInt64.size (by decide)
-    .inr {
-    bytes := bt.bytes
-    h_size := bt.h_size
-    fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
-    toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
-    toByteArray_size := sorry_proof
-    fromByteArray_toByteArray := sorry_proof
-    fromByteArray_toByteArray_other := sorry_proof
-  }
+-- instance : PlainDataType UInt64 where
+--   btype :=
+--     let bt := Fin.byteType UInt64.size (by decide)
+--     .inr {
+--     bytes := bt.bytes
+--     h_size := bt.h_size
+--     fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
+--     toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
+--     toByteArray_size := sorry_proof
+--     fromByteArray_toByteArray := sorry_proof
+--     fromByteArray_toByteArray_other := sorry_proof
+--   }
 
 
 -- This implementation is not ideal, we do a round trip through `Nat`
-instance : PlainDataType UInt64 where
-  btype :=
-    let bt := Fin.byteType UInt64.size (by decide)
-    .inr {
-    bytes := bt.bytes
-    h_size := bt.h_size
-    fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
-    toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
-    toByteArray_size := sorry_proof
-    fromByteArray_toByteArray := sorry_proof
-    fromByteArray_toByteArray_other := sorry_proof
-  }
+-- instance : PlainDataType UInt64 where
+--   btype :=
+--     let bt := Fin.byteType UInt64.size (by decide)
+--     .inr {
+--     bytes := bt.bytes
+--     h_size := bt.h_size
+--     fromByteArray := fun b i h => ⟨bt.fromByteArray b i h⟩
+--     toByteArray := fun b i h a => bt.toByteArray b i h a.toNat
+--     toByteArray_size := sorry_proof
+--     fromByteArray_toByteArray := sorry_proof
+--     fromByteArray_toByteArray_other := sorry_proof
+--   }
 
 
 
@@ -713,4 +728,4 @@ def Float.byteType : ByteType Float where
 
 
 instance : PlainDataType Float where
-  btype := .inr Float.byteType
+  btype := Float.byteType

@@ -13,90 +13,95 @@ namespace SciLean
 
 def _root_.ByteArray.mkArray (n : Nat) (v : UInt8) : ByteArray := Id.run do
   let mut a : ByteArray := .mkEmpty n
-  for i in [0:n] do
+  for i in fullRange (Idx n) do
     a := a.push v
   a
 
 -- TODO: Quotient it out by trailing bits
+@[unbox]
 structure DataArray (α : Type*) [pd : PlainDataType α] where
   byteData : ByteArray
-  size : Nat
-  h_size : pd.bytes size ≤ byteData.size
+  h_size : byteData.size % pd.btype.bytes.toNat = 0
 
 variable {α : Type*} [pd : PlainDataType α]
 variable {ι n} [IdxType ι n] {κ : Type*} {m} [IdxType κ m]
 
-instance [PlainDataType X] : Inhabited (DataArray X) := ⟨.empty, 0, by sorry_proof⟩
+instance [PlainDataType X] : Inhabited (DataArray X) := ⟨.empty, by sorry_proof⟩
+
+@[inline]
+def DataArray.size (xs : DataArray α) : Nat := xs.byteData.size / pd.btype.bytes.toNat
 
 @[inline, irreducible]
-def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α := -- pd.get a.data i sorry_proof
-  let i := i.1
-  match pd.btype with
-  | .inl bitType =>
-    let perByte := 8/bitType.bits
-    let inByte  := (i % perByte.toUSize).toUInt8
-    let ofByte  := i / perByte.toUSize
-    let ones : UInt8 := 255
-    let mask    := (ones - (ones <<< bitType.bits))   -- 00000111
-    -- masking is note necessary if `fromBytes` correctly ignores unused bits
-    let byte    := mask &&& (arr.byteData.uget ofByte sorry_proof >>> (inByte*bitType.bits))
-    bitType.fromByte byte
-  | .inr byteType =>
-    byteType.fromByteArray arr.byteData (byteType.bytes * i) sorry_proof
+def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α :=
+  pd.btype.fromByteArray arr.byteData (pd.btype.bytes * i) sorry_proof
+
+  -- let i := i.1
+  -- match pd.btype with
+  -- | .inl bitType =>
+  --   let perByte := 8/bitType.bits
+  --   let inByte  := (i % perByte.toUSize).toUInt8
+  --   let ofByte  := i / perByte.toUSize
+  --   let ones : UInt8 := 255
+  --   let mask    := (ones - (ones <<< bitType.bits))   -- 00000111
+  --   -- masking is note necessary if `fromBytes` correctly ignores unused bits
+  --   let byte    := mask &&& (arr.byteData.uget ofByte sorry_proof >>> (inByte*bitType.bits))
+  --   bitType.fromByte byte
+  -- | .inr byteType =>
+  --   byteType.fromByteArray arr.byteData (byteType.bytes * i) sorry_proof
 
 instance : GetElem (DataArray α) USize α (fun a i => i.toNat < a.size) where
   getElem := fun x i h => x.get ⟨i,h⟩
 
 @[inline,irreducible]
 def DataArray.set (arr : DataArray α) (i : Idx arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
-  let i := i.1
-  match pd.btype with
-  | .inl bitType =>
-    let perByte := 8/bitType.bits
-    let inByte  := (i % perByte.toUSize).toUInt8
-    let ofByte  := i / perByte.toUSize
-    let ones : UInt8 := 255
-    let mask    := ones - ((ones - (ones <<< bitType.bits)) <<< (inByte*bitType.bits))  --- 11000111 for bitType.bits = 3 and inByte = 1
-    let byte    := arr.byteData.uget ofByte sorry_proof
-    let newByte := (mask &&& byte) + (bitType.toByte val <<< (inByte*bitType.bits))
-    ⟨arr.byteData.uset ofByte newByte sorry_proof, arr.size, sorry_proof⟩
-  | .inr byteType =>
-    ⟨byteType.toByteArray arr.byteData (byteType.bytes * i) sorry_proof val, arr.size, sorry_proof⟩
+  ⟨pd.btype.toByteArray arr.byteData (pd.btype.bytes * i) sorry_proof val, sorry_proof⟩
+
+  -- let i := i.1
+  -- match pd.btype with
+  -- | .inl bitType =>
+  --   let perByte := 8/bitType.bits
+  --   let inByte  := (i % perByte.toUSize).toUInt8
+  --   let ofByte  := i / perByte.toUSize
+  --   let ones : UInt8 := 255
+  --   let mask    := ones - ((ones - (ones <<< bitType.bits)) <<< (inByte*bitType.bits))  --- 11000111 for bitType.bits = 3 and inByte = 1
+  --   let byte    := arr.byteData.uget ofByte sorry_proof
+  --   let newByte := (mask &&& byte) + (bitType.toByte val <<< (inByte*bitType.bits))
+  --   ⟨arr.byteData.uset ofByte newByte sorry_proof, arr.size, sorry_proof⟩
+  -- | .inr byteType =>
+  --   ⟨byteType.toByteArray arr.byteData (byteType.bytes * i) sorry_proof val, arr.size, sorry_proof⟩
 
 
 /-- Capacity of an array. The return type is `Squash Nat` as the capacity is is just an implementation detail and should not affect semantics of the program. -/
 def DataArray.capacity (arr : DataArray α) : Squash Nat := Quot.mk _ (pd.capacity (arr.byteData.size))
 
-/-- Makes sure that `arr` fits at least `n` elements of `α` -/
-def DataArray.reserve  (arr : DataArray α) (capacity : Nat) : DataArray α :=
-  if capacity ≤ (pd.capacity (arr.byteData.size)) then
-    arr
-  else Id.run do
-    let newBytes := pd.bytes capacity
-    let mut arr' : DataArray α := ⟨ByteArray.mkArray newBytes 0, arr.size, sorry_proof⟩
-    -- copy over the old data
-    for i in fullRange (Idx arr.size) do
-      arr' := arr'.set ⟨i.1,sorry_proof⟩ (arr.get i)
-    arr'
+-- /-- Makes sure that `arr` fits at least `n` elements of `α` -/
+-- def DataArray.reserve  (arr : DataArray α) (capacity : Nat) : DataArray α :=
+--   ⟨arr.byteData, sorry_proof⟩
+  -- if capacity ≤ (pd.capacity (arr.byteData.size)) then
+  --   arr
+  -- else Id.run do
+  --   let newBytes := pd.bytes capacity
+  --   let mut arr' : DataArray α := ⟨ByteArray.mkArray newBytes 0, arr.size, sorry_proof⟩
+  --   -- copy over the old data
+  --   for i in fullRange (Idx arr.size) do
+  --     arr' := arr'.set ⟨i.1,sorry_proof⟩ (arr.get i)
+  --   arr'
 
 def DataArray.mkEmpty (capacity : Nat) : DataArray α := Id.run do
   let newBytes := pd.bytes capacity
-  { byteData := .mkArray newBytes 0
-    size := 0
+  { byteData := .mkEmpty newBytes
     h_size := by sorry_proof }
 
+-- def DataArray.drop (arr : DataArray α) (k : Nat) : DataArray α := ⟨arr.byteData, arr.size - k, sorry_proof⟩
 
-def DataArray.drop (arr : DataArray α) (k : Nat) : DataArray α := ⟨arr.byteData, arr.size - k, sorry_proof⟩
-
-
-def DataArray.push (arr : DataArray α) (val : α) (k : Nat := 1) : DataArray α := Id.run do
-  let oldSize := arr.size
-  let newSize := arr.size + k
-  let mut arr' := arr.reserve newSize
-  arr' := ⟨arr'.byteData, newSize, sorry_proof⟩
-  for i in fullRange (Idx k) do
-    arr' := arr'.set ⟨oldSize.toUSize+i,sorry_proof⟩ val
-  arr'
+-- def DataArray.push (arr : DataArray α) (val : α) (k : Nat := 1) : DataArray α := Id.run do
+--   let oldSize := arr.size
+--   let newSize := arr.size + k
+--   let mut arr' := arr.reserve newSize
+--   arr' := ⟨arr'.byteData, newSize, sorry_proof⟩
+--   for i in fullRange (Idx k) do
+--     arr' := arr'.set ⟨oldSize.toUSize+i,sorry_proof⟩ val
+--   arr'
 
 /-- Extensionality of DataArray
 
@@ -127,9 +132,9 @@ def DataArray.intro {ι n} [IdxType ι n] [IdxType.Fold' ι]
     (f : ι → α) : DataArray α := Id.run do
   let bytes := (pd.bytes n)
   let d : ByteArray := ByteArray.mkArray bytes 0
-  let mut d' : DataArray α := ⟨d, n, sorry_proof⟩
+  let mut d' : DataArray α := ⟨d, sorry_proof⟩
   for i in fullRange ι do
-    d' := d'.set ⟨toIdx i,sorry_proof⟩ (f i)
+    d' := d'.set ⟨toIdx i, sorry_proof⟩ (f i)
   d'
 
 
@@ -146,6 +151,7 @@ instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
   s ++ "]"⟩
 
 
+@[unbox]
 structure DataArrayN (α : Type*) [pd : PlainDataType α] (ι : Type*) {n : outParam ℕ} [IdxType ι n] : Type where
   data : DataArray α
   h_size : n = data.size
@@ -238,14 +244,14 @@ def DataArrayN.flatten {ι n} [IdxType ι n] (x : DataArrayN α ι) :
 instance {ι α : Type*} {n} [IdxType ι n] [pd : PlainDataType α] :
     PlainDataType (DataArrayN α ι) where
 
-  btype := .inr {
+  btype := {
     bytes := (pd.bytes n).toUSize
     h_size := sorry_proof
 
     fromByteArray := λ b i h =>
       let N := pd.bytes n
       let bi := b.copySlice (i.toNat) (ByteArray.mkEmpty N) 0 N
-      ⟨⟨bi,n,sorry_proof⟩,rfl⟩
+      ⟨⟨bi,sorry_proof⟩,sorry_proof⟩
     toByteArray   := λ b i h c => Id.run do
       let N := pd.bytes n
       let b := c.1.1.copySlice 0 b (i.toNat) N
@@ -306,11 +312,11 @@ variable
 
 @[inline]
 def DataArrayN.curry (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
-  ⟨⟨x.data.byteData, n, sorry_proof⟩, sorry_proof⟩
+  ⟨⟨x.data.byteData, sorry_proof⟩, sorry_proof⟩
 
 @[inline]
 def DataArrayN.uncurry (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
-  ⟨⟨x.data.byteData, n * m, sorry_proof⟩, sorry_proof⟩
+  ⟨⟨x.data.byteData, sorry_proof⟩, sorry_proof⟩
 
 
 theorem DataArrayN.uncurry_def [IdxType.Fold'.{_,0} ι] [IdxType.Fold'.{_,0} κ]

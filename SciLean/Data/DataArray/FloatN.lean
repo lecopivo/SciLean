@@ -176,7 +176,7 @@ namespace Float3
     getElem_ofFn := by intro f i; sorry_proof --match i with | ⟨0,_⟩ | ⟨1,_⟩ | ⟨2,_⟩ => rfl
 
   instance : PlainDataType Float3 where
-    btype := .inr {
+    btype := {
       bytes := 24
       h_size := sorry_proof
       fromByteArray b i _ :=
@@ -276,7 +276,7 @@ namespace Float4
     getElem_ofFn := by intro f i; sorry_proof --match i with | ⟨0,_⟩ | ⟨1,_⟩ | ⟨2,_⟩ | ⟨3,_⟩ => rfl
 
   instance : PlainDataType Float4 where
-    btype := .inr {
+    btype := {
       bytes := 32
       h_size := sorry_proof
       fromByteArray b i _ :=

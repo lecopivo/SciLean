@@ -14,7 +14,7 @@ local instance : Coe (DataArray Float) FloatArray := ⟨fun x =>
 
 local instance : Coe (FloatArray) (DataArray Float) := ⟨fun x =>
     let data := x.toByteArray
-    ⟨data, x.size, sorry_proof⟩⟩
+    ⟨data, sorry_proof⟩⟩
 
 instance : LevelOneData (DataArray Float) Float Float where
   size x := x.size

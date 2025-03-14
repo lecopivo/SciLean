@@ -11,7 +11,7 @@ This class us useful for uncurrying arrays. For example derive equivalence
 This class is often used in conjunction with `GetElem` or `DefaultIndex` to derive `K` or `I` as `outParam`. -/
 class DataArrayEquiv (X : Type*) (I : Type*) (K : Type*)
     {n : outParam ℕ} [IdxType I n] [PlainDataType K] where
-  equiv : X ≃ K^[I]
+  equiv : X ≃ K^[I]  -- compiler can't see through Equiv!!!
   -- maybe require that `X` can be indexed by `I` and get `K` and the indexing commutes with this equivalence
   -- but that is a problem because we want to use this class to implement the index access
 
@@ -19,6 +19,7 @@ class DataArrayEquiv (X : Type*) (I : Type*) (K : Type*)
 It is an abbreviation for `DataArrayEquiv.equiv (K:=K)`.
 
 Often used with as `dataArrayEquiv Float` or `dataArrayEquiv ComplexFloat`. -/
+@[inline]
 abbrev dataArrayEquiv {X : Type*} (I K : Type*)
     {n} [IdxType I n] [PlainDataType K] [DataArrayEquiv X I K] :
     X ≃ K^[I] := DataArrayEquiv.equiv
@@ -26,7 +27,12 @@ abbrev dataArrayEquiv {X : Type*} (I K : Type*)
 -- base case
 instance {I n} [IdxType I n] {K} [PlainDataType K] :
   DataArrayEquiv (K^[I]) I K where
-  equiv := Equiv.refl _
+  equiv := {
+    toFun := fun x => x
+    invFun := fun x => x
+    left_inv := by intro; simp
+    right_inv := by intro; simp
+  }
 
 -- inductive
 instance {I J X K : Type*}
@@ -34,12 +40,8 @@ instance {I J X K : Type*}
     [PlainDataType X] [DataArrayEquiv X J K] :
     DataArrayEquiv (X^[I]) (I×J) K where
   equiv := {
-      toFun x :=
-        let data := x.1.1
-        ⟨⟨data, nI * nJ, sorry_proof⟩, sorry_proof⟩
-      invFun x :=
-        let data := x.1.1
-        ⟨⟨data, nI, sorry_proof⟩, sorry_proof⟩
+      toFun  x := ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
+      invFun x := ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
       right_inv := sorry_proof
       left_inv := sorry_proof
     }
@@ -63,11 +65,13 @@ instance {K I : Type*} [PlainDataType K] {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     [DefaultDataArrayEquiv X J K] :
     DefaultDataArrayEquiv (X^[I]) (I×J) K where
 
+@[inline]
 abbrev toRn {X I K : Type*} {nI} [IdxType I nI] [PlainDataType K] [DefaultDataArrayEquiv X I K]
-  (x : X) : K^[I] := dataArrayEquiv I K x
+  (x : X) : K^[I] := (dataArrayEquiv I K).toFun x
 
+@[inline]
 abbrev fromRn {X I K : Type*} {nI} [IdxType I nI] [PlainDataType K] [DefaultDataArrayEquiv X I K]
-  (x : K^[I]) : X := (dataArrayEquiv I K).symm x
+  (x : K^[I]) : X := (dataArrayEquiv I K).invFun x
 
 
 ----------------------------------------------------------------------------------------------------
@@ -80,7 +84,7 @@ instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     GetElem (X^[I]) (I×J) K (fun _ _ => True) where
   getElem xs ij _ :=
-    let scalarArray := dataArrayEquiv (I×J) K xs
+    let scalarArray := (dataArrayEquiv (I×J) K).toFun xs
     scalarArray[ij]
 
 /-- `x[i,j] = x[i][j]` for `x : X^[I]` -/

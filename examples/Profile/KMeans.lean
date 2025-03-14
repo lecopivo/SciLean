@@ -2,6 +2,18 @@ import SciLean
 
 open SciLean
 
+
+-- @[extern c inline
+-- "lean_obj_res r;
+-- if (lean_is_exclusive(a)) r = #1;
+-- else r = lean_copy_float_array(#1);
+-- lean_sarray_object * o = lean_to_sarray(r);
+-- o->m_size *= 8;
+-- o->m_capacity *= 8;
+-- lean_set_st_header((lean_object*)o, LeanScalarArray, 1);
+-- return r;"]
+-- opaque FloatArray.toByteArray' (x : FloatArray) : ByteArray
+
 set_default_scalar Float
 
 def rand01 : IO Float := do
@@ -19,13 +31,14 @@ def FloatArray.rand01 (n : Nat) : IO FloatArray := do
 
 
 @[inline]
-def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IdxType I n]
+def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IdxType I n]
     (xs : X^[I]) (i : I) : X :=
+  -- xs.1.1.ugetFloat (toIdx i) sorry_proof
   pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
--- -- this is evil instance, as there is the same one but without `[IdxType I n]`
--- instance {X} [PlainDataType X] {I n} [IndexType I] [IdxType I n] : GetElem' (X^[I]) I X where
---   getElem xs i _ := xs.idxGet i
+-- -- -- this is evil instance, as there is the same one but without `[IdxType I n]`
+-- instance (priofi{X} [PlainDataType X] {I n} [IdxType I n] {J m} [IdxType J m] : GetElem' (X^[I]^[J]) (I×J) X where
+--   getElem xs i _ := (⟨⟨xs.1.1, n*m, sorry_proof⟩,sorry_proof⟩ : DataArrayN X (I×J)).idxGet i
 
 instance : Coe Nat USize := ⟨fun n => n.toUSize⟩
 
@@ -53,9 +66,7 @@ def kmeansBestLeanImpl (d n k : Nat) (points centroids : FloatArray) : Float := 
   return loss
 
 
-def kmeansByteArrayProblem (d n k : Nat) (points centroids : FloatArray) : Float := Id.run do
-  let points := points.toByteArray
-  let centroids := centroids.toByteArray
+def kmeansByteArrayProblem (d n k : Nat) (points centroids : ByteArray) : Float := Id.run do
   let mut loss := 0.0
   for i in IndexType.Range.full (I:=Idx n) do
 
@@ -75,22 +86,35 @@ def kmeansByteArrayProblem (d n k : Nat) (points centroids : FloatArray) : Float
     loss := loss + minNorm2
   return loss
 
+@[inline]
+def toRn' (xs : Float^[n]^[m]) : Float^[m,n] := ⟨⟨xs.1.1,sorry_proof⟩, sorry_proof⟩
 
-def kmeansSciLean_no_blas (d n k : Nat) (points centroids : FloatArray) : Float :=
+instance (priority:=high) {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {K} [PlainDataType K]
+    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
+    GetElem (X^[I]) (I×J) K (fun _ _ => True) where
+  getElem xs ij _ :=
+    let scalarArray : K^[I,J] := (dataArrayEquiv (I×J) K).toFun xs
+    scalarArray[ij]
 
-  let points : Float^[d]^[n] := ⟨⟨points.toByteArray, n, sorry_proof⟩, sorry_proof⟩
-  let centroids : Float^[d]^[k] := ⟨⟨centroids.toByteArray, n, sorry_proof⟩, sorry_proof⟩
+
+def kmeansSciLean_no_blas (d n k : Nat) (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float :=
+
+  -- let points := setElem points (⟨0,sorry_proof⟩ : Idx n) 0 .intro
+  -- let centroids := setElem centroids (⟨0,sorry_proof⟩ : Idx k) 0 .intro
 
   ∑ᴵ (i : Idx n), minᴵ (j : Idx k), ∑ᴵ (l : Idx d),
-     (points[i,l] - centroids[j,l])^2
+     -- (points.1.1.ugetFloat (toIdx (i,l)) sorry_proof - centroids.1.1.ugetFloat (toIdx (j,l)) sorry_proof)^2
+     (points[i,l] - centroids[j,l])^2 -- slow
+     -- ((toRn' points)[i,l] - (toRn' centroids)[j,l])^2
 
   -- ∑ᴵ i, minᴵ j, ∑ᴵ l, (points[i,l] - centroids[j,l])^2
 
 
 def kmeansSciLean (d n k : Nat) (points centroids : FloatArray) : Float :=
 
-  let points : Float^[d]^[n] := ⟨⟨points.toByteArray, n, sorry_proof⟩, sorry_proof⟩
-  let centroids : Float^[d]^[k] := ⟨⟨centroids.toByteArray, n, sorry_proof⟩, sorry_proof⟩
+  let points : Float^[d]^[n] := ⟨⟨points.toByteArray,sorry_proof⟩, sorry_proof⟩
+  let centroids : Float^[d]^[k] := ⟨⟨centroids.toByteArray,sorry_proof⟩, sorry_proof⟩
 
   ∑ᴵ i, IdxType.min (fun j => ‖points[i] - centroids[j]‖₂²)
 
@@ -136,7 +160,7 @@ def main : IO Unit := do
   -- I have no idea what is going wrong here
   -- This is the main slow down
   let s ← IO.monoNanosNow
-  let loss := kmeansByteArrayProblem d n k points centroids
+  let loss := kmeansByteArrayProblem d n k points.toByteArray centroids.toByteArray
   let e ← IO.monoNanosNow
   let timeNs := e - s
   let timeMs := timeNs.toFloat / 1e6
@@ -146,7 +170,9 @@ def main : IO Unit := do
   IO.sleep 1000
 
   let s ← IO.monoNanosNow
-  let loss := kmeansSciLean_no_blas d n k points centroids
+  let loss := kmeansSciLean_no_blas d n k
+    ⟨⟨points.toByteArray, sorry_proof⟩, sorry_proof⟩
+    ⟨⟨centroids.toByteArray, sorry_proof⟩, sorry_proof⟩
   let e ← IO.monoNanosNow
   let timeNs := e - s
   let timeMs := timeNs.toFloat / 1e6
