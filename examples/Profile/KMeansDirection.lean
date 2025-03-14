@@ -15,10 +15,6 @@ def FloatArray.rand01 (n : Nat) : IO FloatArray := do
     xs := xs.push (← _root_.rand01)
   return xs
 
-@[inline]
-def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IdxType I n]
-    (xs : X^[I]) (i : I) : X :=
-  pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
 -- instance {X} [PlainDataType X] {I n} [IndexType I] [IdxType I n] : GetElem' (X^[I]) I X where
 --   getElem xs i _ := xs.idxGet i
@@ -36,90 +32,82 @@ instance : Coe Nat USize := ⟨fun n => n.toUSize⟩
 set_default_scalar Float
 
 
-/-- info: ⊞[⊞[1.000000, 2.000000], ⊞[3.000000, 4.000000]] -/
-#guard_msgs in
-#eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]]
-
-/-- info: ⊞[⊞[-1.000000, -2.000000], ⊞[-3.000000, -4.000000]] -/
-#guard_msgs in
-#eval -⊞[⊞[1.0,2.0],⊞[3.0,4.0]]
-
-/-- info: ⊞[⊞[11.000000, 102.000000], ⊞[1003.000000, 1004.000000]] -/
-#guard_msgs in
-#eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]] + ⊞[⊞[10.0,100.0],⊞[1000.0,1000.0]]
-
-/-- info: ⊞[⊞[-9.000000, -98.000000], ⊞[-997.000000, -996.000000]] -/
-#guard_msgs in
-#eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]] - ⊞[⊞[10.0,100.0],⊞[1000.0,1000.0]]
-
-/-- info: ⊞[⊞[1.000000, 2.000000], ⊞[10.000000, 100.000000]] -/
-#guard_msgs in
-#eval setElem ⊞[⊞[1.0,2.0],⊞[3.0,4.0]] (1 : Idx 2) ⊞[10.0,100.0] .intro
-
-/-- info: ⊞[3.000000, 4.000000] -/
-#guard_msgs in
-#eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]][1]
-
-/-- info: ⊞[⊞[1.000000, 1.000000], ⊞[1.000000, 1.000000]] -/
-#guard_msgs in
-#eval (VectorType.const 1 : Float^[2]^[2])
-
-/-- info: ⊞[⊞[2.000000, 4.000000], ⊞[6.000000, 8.000000]] -/
-#guard_msgs in
-#eval 2 • ⊞[⊞[1.0,2.0],⊞[3.0,4.0]]
-
-
 def kmeansDirSciLean {n k d : ℕ} [NeZero k]
     (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
   let x :=
-      IndexType.Range.full.foldl
-        (fun x i =>
-          let x_1 := x.1;
-          let dx := x.2;
-          let a := IdxType.argMax fun j => -‖points[i] - centroids[j]‖₂²;
-          let ydy₁ := centroids[a];
-          let ydy₂ := (VectorType.const 1);
-          let x₁₂₁ := x_1.1;
-          let x₁₂₂ := x_1.2;
-          let dx₁₂₁ := dx.1;
-          let dx₁₂₂ := dx.2;
-          let x₁ := points[i];
-          let ydy₁ := x₁ - ydy₁;
-          let ydy₂ := -ydy₂;
-          let ydy₁_1 := ‖ydy₁‖₂²;
-          let ydy₂_1 := 2 * ⟪ydy₁, ydy₂⟫;
-          let x₁ := -ydy₁_1;
-          let x₂ := -ydy₂_1;
-          let x₁ := -x₁;
-          let x₂ := -x₂;
-          let ydy₁_2 := x₁₂₁ + x₁;
-          let ydy₂_2 := dx₁₂₁ + x₂;
-          let ydy₁ := 2 • ydy₁;
-          let ydy₂ := 2 • ydy₂;
-          let ydy₁_3 := x₁₂₂[a];
-          let ydy₂_3 := dx₁₂₂[a];
-          let x₁ := -ydy₁;
-          let x₂ := -ydy₂;
-          let ydy₁ := ydy₁_3 + x₁;
-          let ydy₂ := ydy₂_3 + x₂;
-          let x₁ := setElem x₁₂₂ a ydy₁ True.intro;
-          let x₂ := setElem dx₁₂₂ a ydy₂ True.intro;
-          ((ydy₁_2, x₁), ydy₂_2, x₂))
-        ((0, 0), 0);
-    let y := x.1;
-    let dy := x.2;
-    let ydy₁ := y.2;
-    let ydy₂ := dy.2;
-    ydy₁ + ydy₂ --- VectorType.div ydy₁ ydy₂
+    IdxType.fold IndexType.Range.full (0, 0)
+      fun (i : Idx n) (xdx : (Float^[d]^[k]×Float^[d]^[k])) =>
+      let x := xdx.1;
+      let dx := xdx.2;
+      let a := argMinᴵ (j : Idx k), ‖points[i] - centroids[j]‖₂²;
+      let ydy₁ := centroids[a];
+      let ydy₂ : Float^[d] := (VectorType.const (1.0));
+      let x₁ := points[i];
+      let ydy₁ := x₁ - ydy₁;
+      let ydy₂ := -ydy₂;
+      let ydy₁ := 2 • ydy₁;
+      let ydy₂ := 2 • ydy₂;
+      let ydy₁_1 := x[a];
+      let ydy₂_1 := dx[a];
+      let ydy₁ := -ydy₁;
+      let ydy₂ := -ydy₂;
+      let ydy₁ := ydy₁_1 + ydy₁;
+      let ydy₂ := ydy₂_1 + ydy₂;
+      let x₁ := setElem x a ydy₁ True.intro;
+      let x₂ := setElem dx a ydy₂ True.intro;
+      (x₁, x₂);
+  let x_1 := x.1;
+  let dx := x.2;
+  x_1 + dx -- VectorType.div x_1 dx
 
+
+def kmeansDirSciLeanNoBLAS {n k d : ℕ} [NeZero k]
+    (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
+  let x :=
+    IdxType.fold IndexType.Range.full (0, 0) fun (i : Idx n) xdx =>
+      let x := xdx.1;
+      let dx := xdx.2;
+      let a := argMinᴵ (j : Idx k), ∑ᴵ (l : Idx d), (points[(i, l)] - centroids[(j, l)]) ^ 2;
+      let x :=
+        IdxType.fold IndexType.Range.full (x, dx)
+          fun (i_1 : Idx d) (xdx : (Float^[d]^[k]×Float^[d]^[k])) =>
+          let x := xdx.1;
+          let dx := xdx.2;
+          let x₁ := centroids[(a, i_1)];
+          let x₂ := 1.0;
+          let x₁_1 := points[(i, i_1)];
+          let ydy₁ := x₁_1 - x₁;
+          let ydy₂ := -x₂;
+          let ydy₁_1 := x[(a, i_1)];
+          let ydy₂_1 := dx[(a, i_1)];
+          let x₁ := 2 * ydy₁;
+          let x₂ := 2 * ydy₂;
+          let ydy₁ := -x₁;
+          let ydy₂ := -x₂;
+          let ydy₁ := ydy₁_1 + ydy₁;
+          let ydy₂ := ydy₂_1 + ydy₂;
+          let x₁ := setElem x (a, i_1) ydy₁ True.intro;
+          let x₂ := setElem dx (a, i_1) ydy₂ True.intro;
+          (x₁, x₂);
+      let x_1 := x.1;
+      let dx := x.2;
+      (x_1, dx);
+  let x_1 := x.1;
+  let dx := x.2;
+  x_1 + dx -- VectorType.div x_1 dx
+
+
+@[inline]
+def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IdxType I n]
+    (xs : X^[I]) (i : I) : X :=
+  pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
 def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IdxType I n] (x : Float^[I]) (i : I) (val : Float) : Float^[I] :=
-
   let data := x.1.1.toFloatArray sorry_proof
   let data := data.uset (toIdx i) val sorry_proof
   ⟨⟨data.toByteArray, sorry_proof⟩, sorry_proof⟩
 
-
+-- todo: rewrite this in terms of `FloatArray` to have a really raw Lean implementation
 def kmeansDirBestLeanImpl {n k d : ℕ} [NeZero k]
     (points : Float^[Idx n, Idx d]) (centroids : Float^[Idx k, Idx d]) : Float^[Idx k, Idx d] := Id.run do
 
@@ -184,6 +172,16 @@ def main : IO Unit := do
 
   IO.sleep 1000
 
+
+  let s ← IO.monoNanosNow
+  let dir := kmeansDirSciLeanNoBLAS points centroids
+  let e ← IO.monoNanosNow
+  let timeNs := e - s
+  let timeMs := timeNs.toFloat / 1e6
+  IO.println
+    s!"SciLean no BLAS        time := {timeMs}ms \tdir norm := {‖dir‖₂²[Float]}"
+
+  IO.sleep 1000
 
   let s ← IO.monoNanosNow
   let dir := kmeansDirSciLean points centroids

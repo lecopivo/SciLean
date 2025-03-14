@@ -353,6 +353,7 @@ import SciLean.Data.Idx.GetElemIdx
 import SciLean.Data.IdxType.Basic
 import SciLean.Data.IdxType.Fold
 import SciLean.Data.IdxType.Operations
+import SciLean.Data.IdxType.Operations.Fold
 import SciLean.Data.IdxType.Operations.Max
 import SciLean.Data.IdxType.Operations.Min
 import SciLean.Data.IdxType.Operations.Sum

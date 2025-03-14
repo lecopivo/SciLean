@@ -1,3 +1,5 @@
+import Mathlib.Topology.Order
+
 import SciLean.Data.IndexType.Basic
 
 namespace SciLean
@@ -360,5 +362,8 @@ instance : IndexType (Idx n) where
   right_inv := sorry_proof
   first_last := sorry_proof
 
+-- maybe move these such that we do not have to import `Mathlib.Topology.Order`
+instance {n} : TopologicalSpace (Idx n) := ⊥
+instance {n} : DiscreteTopology (Idx n) := ⟨rfl⟩
 
 end Idx

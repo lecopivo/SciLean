@@ -49,7 +49,40 @@ theorem sum.arg_f.HasFwdDeriv_rule
   sorry_proof
 
 
-@[data_synth high]
+@[data_synth]
+theorem sum.arg_f.HasRevFDeriv_rule
+    {W} [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
+    {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+    (f : W → I → X) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate 𝕜 (f · i) (f' i))  :
+    HasRevFDeriv 𝕜
+      (fun w => sum (f w))
+      (fun w =>
+        let s := ∑ᴵ i, (f w i)
+        (s, fun dx =>
+          let dw := IdxType.fold .full (init := (0:W)) (fun i dw =>
+            let dw := (f' i w).2 dx dw
+            dw)
+          dw)) := sorry_proof
+
+
+@[data_synth]
+theorem sum.arg_f.HasRevFDerivUpdate_rule
+    {W} [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
+    {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
+    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+    (f : W → I → X) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate 𝕜 (f · i) (f' i))  :
+    HasRevFDerivUpdate 𝕜
+      (fun w => sum (f w))
+      (fun w =>
+        let s := ∑ᴵ i, (f w i)
+        (s, fun dx dw =>
+          let dw := IdxType.fold .full (init := dw) (fun i dw =>
+            let dw := (f' i w).2 dx dw
+            dw)
+          dw)) := sorry_proof
+
+
 theorem sum.arg_f.HasRevFDeriv_rule_scalar
     {K} [RCLike K]
     {W} [NormedAddCommGroup W] [AdjointSpace K W]
@@ -67,7 +100,6 @@ theorem sum.arg_f.HasRevFDeriv_rule_scalar
         (s, fun dx => dx•dw)) := sorry_proof
 
 
-@[data_synth high]
 theorem sum.arg_f.HasRevFDerivUpdate_rule_scalar
     {K} [RCLike K]
     {W} [NormedAddCommGroup W] [AdjointSpace K W]

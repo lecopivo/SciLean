@@ -284,6 +284,15 @@ theorem Neg.neg.arg_a0.HasFwdFDeriv_comp_rule
   case simp => intros; simp_all
 
 @[data_synth]
+theorem Neg.neg.arg_a0.HasFwdFDeriv_simple_rule :
+    HasFwdFDeriv K
+      (fun x : X => - x)
+      (fun x dx => (- x, - dx)) := by
+  apply hasFwdFDeriv_from_hasFDerivAt
+  case deriv => intros; data_synth
+  case simp => intros; simp_all
+
+@[data_synth]
 theorem HSMul.hSMul.arg_a0a1.HasFwdFDeriv_comp_rule
     {f : X → K} {g : X → Y} {f' g'}
     (hf : HasFwdFDeriv K f f') (hg : HasFwdFDeriv K g g') :
