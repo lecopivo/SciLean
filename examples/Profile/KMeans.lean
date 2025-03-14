@@ -86,36 +86,12 @@ def kmeansByteArrayProblem (d n k : Nat) (points centroids : ByteArray) : Float 
     loss := loss + minNorm2
   return loss
 
-@[inline]
-def toRn' (xs : Float^[n]^[m]) : Float^[m,n] := ⟨⟨xs.1.1,sorry_proof⟩, sorry_proof⟩
-
--- instance (priority:=high) {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
---     {K} [PlainDataType K]
---     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
---     GetElem (X^[I]) (I×J) K (fun _ _ => True) where
---   getElem xs ij _ :=
---     let scalarArray : K^[I,J] := cast sorry_proof xs
---     scalarArray[ij]
-
 
 def kmeansSciLean_no_blas (d n k : Nat) (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float :=
-
-  -- let points := setElem points (⟨0,sorry_proof⟩ : Idx n) 0 .intro
-  -- let centroids := setElem centroids (⟨0,sorry_proof⟩ : Idx k) 0 .intro
-
   ∑ᴵ (i : Idx n), minᴵ (j : Idx k), ∑ᴵ (l : Idx d),
-     -- (points.1.1.ugetFloat (toIdx (i,l)) sorry_proof - centroids.1.1.ugetFloat (toIdx (j,l)) sorry_proof)^2
-     (points[i,l] - centroids[j,l])^2 -- slow
-     -- ((toRn' points)[i,l] - (toRn' centroids)[j,l])^2
+     (points[i,l] - centroids[j,l])^2
 
-  -- ∑ᴵ i, minᴵ j, ∑ᴵ l, (points[i,l] - centroids[j,l])^2
-
-
-def kmeansSciLean (d n k : Nat) (points centroids : FloatArray) : Float :=
-
-  let points : Float^[d]^[n] := ⟨⟨points.toByteArray,sorry_proof⟩, sorry_proof⟩
-  let centroids : Float^[d]^[k] := ⟨⟨centroids.toByteArray,sorry_proof⟩, sorry_proof⟩
-
+def kmeansSciLean (d n k : Nat) (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float :=
   ∑ᴵ i, IdxType.min (fun j => ‖points[i] - centroids[j]‖₂²)
 
 def main : IO Unit := do
@@ -156,11 +132,14 @@ def main : IO Unit := do
 
   IO.sleep 1000
 
+  let points := points.toByteArray
+  let centroids := centroids.toByteArray
+
   -- just switching from `FloatArray` to `ByteArray` cases issue
   -- I have no idea what is going wrong here
   -- This is the main slow down
   let s ← IO.monoNanosNow
-  let loss := kmeansByteArrayProblem d n k points.toByteArray centroids.toByteArray
+  let loss := kmeansByteArrayProblem d n k points centroids
   let e ← IO.monoNanosNow
   let timeNs := e - s
   let timeMs := timeNs.toFloat / 1e6
@@ -169,10 +148,11 @@ def main : IO Unit := do
 
   IO.sleep 1000
 
+  let points : Float^[d]^[n] := cast sorry_proof points
+  let centroids : Float^[d]^[k] := cast sorry_proof centroids
+
   let s ← IO.monoNanosNow
-  let loss := kmeansSciLean_no_blas d n k
-    ⟨⟨points.toByteArray, sorry_proof⟩, sorry_proof⟩
-    ⟨⟨centroids.toByteArray, sorry_proof⟩, sorry_proof⟩
+  let loss := kmeansSciLean_no_blas d n k points centroids
   let e ← IO.monoNanosNow
   let timeNs := e - s
   let timeMs := timeNs.toFloat / 1e6

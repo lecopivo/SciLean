@@ -42,7 +42,7 @@ def kmeansDirSciLean {n k d : ℕ} [NeZero k]
         (fun x i =>
           let x_1 := x.1;
           let dx := x.2;
-          let a := IndexType.argMax fun j => -‖points[i] - centroids[j]‖₂²;
+          let a := IdxType.argMax fun j => -‖points[i] - centroids[j]‖₂²;
           let ydy₁ := centroids[a];
           let ydy₂ := (VectorType.const 1);
           let x₁₂₁ := x_1.1;
@@ -83,7 +83,7 @@ def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IdxType I n] (x : Floa
 
   let data := x.1.1.toFloatArray sorry_proof
   let data := data.uset (toIdx i) val sorry_proof
-  ⟨⟨data.toByteArray, n, sorry_proof⟩, sorry_proof⟩
+  ⟨⟨data.toByteArray, sorry_proof⟩, sorry_proof⟩
 
 
 def kmeansDirBestLeanImpl {n k d : ℕ} [NeZero k]
@@ -123,8 +123,8 @@ def main : IO Unit := do
        k := {k}, n := {n}, d := {d}"
   IO.println ""
 
-  let points : Float^[d]^[n] := ⟨⟨points.toByteArray, k, sorry_proof⟩, sorry_proof⟩
-  let centroids : Float^[d]^[k] := ⟨⟨centroids.toByteArray, k, sorry_proof⟩, sorry_proof⟩
+  let points : Float^[d]^[n] := cast sorry_proof points.toByteArray
+  let centroids : Float^[d]^[k] := cast sorry_proof centroids.toByteArray
 
   -- this should be reference C implementation
   -- let s ← IO.monoNanosNow
@@ -140,7 +140,7 @@ def main : IO Unit := do
 
   -- this should be the best possible Lean implementation
   let s ← IO.monoNanosNow
-  let dir := kmeansDirBestLeanImpl (points.uncurry.reshape (Idx n×Idx d) sorry_proof) (centroids.uncurry.reshape (Idx k×Idx d) sorry_proof)
+  let dir := kmeansDirBestLeanImpl (points.uncurry) (centroids.uncurry)
   let e ← IO.monoNanosNow
   let timeNs := e - s
   let timeMs := timeNs.toFloat / 1e6

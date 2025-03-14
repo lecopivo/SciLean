@@ -18,7 +18,6 @@ def _root_.ByteArray.mkArray (n : Nat) (v : UInt8) : ByteArray := Id.run do
   a
 
 -- TODO: Quotient it out by trailing bits
-@[unbox]
 structure DataArray (α : Type*) [pd : PlainDataType α] where
   byteData : ByteArray
   h_size : byteData.size % pd.btype.bytes.toNat = 0
@@ -151,7 +150,6 @@ instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
   s ++ "]"⟩
 
 
-@[unbox]
 structure DataArrayN (α : Type*) [pd : PlainDataType α] (ι : Type*) {n : outParam ℕ} [IdxType ι n] : Type where
   data : DataArray α
   h_size : n = data.size
