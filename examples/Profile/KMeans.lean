@@ -89,13 +89,13 @@ def kmeansByteArrayProblem (d n k : Nat) (points centroids : ByteArray) : Float 
 @[inline]
 def toRn' (xs : Float^[n]^[m]) : Float^[m,n] := ⟨⟨xs.1.1,sorry_proof⟩, sorry_proof⟩
 
-instance (priority:=high) {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
-    {K} [PlainDataType K]
-    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
-    GetElem (X^[I]) (I×J) K (fun _ _ => True) where
-  getElem xs ij _ :=
-    let scalarArray : K^[I,J] := (dataArrayEquiv (I×J) K).toFun xs
-    scalarArray[ij]
+-- instance (priority:=high) {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+--     {K} [PlainDataType K]
+--     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
+--     GetElem (X^[I]) (I×J) K (fun _ _ => True) where
+--   getElem xs ij _ :=
+--     let scalarArray : K^[I,J] := cast sorry_proof xs
+--     scalarArray[ij]
 
 
 def kmeansSciLean_no_blas (d n k : Nat) (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float :=

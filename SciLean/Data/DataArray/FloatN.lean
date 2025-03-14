@@ -58,12 +58,10 @@ namespace Float2
     getElem_ofFn := by intro f i; cases i <;> rfl
 
  instance : DataArrayEquiv Float2 Index Float where
-    equiv := {
-      toFun := fun v => ⊞[v.x, v.y] |>.reshape Index sorry_proof
-      invFun := fun v => ⟨v[.x], v[.y]⟩,
-      left_inv := sorry_proof
-      right_inv := sorry_proof
-    }
+    toRn := fun v => ⊞[v.x, v.y] |>.reshape Index sorry_proof
+    fromRn := fun v => ⟨v[.x], v[.y]⟩
+    left_inv := sorry_proof
+    right_inv := sorry_proof
 
   -- Array Operations with `Idx 2` ---
   instance : GetElem' Float2 (Idx 2) Float where
@@ -96,12 +94,11 @@ namespace Float2
       sorry_proof
 
   instance : DataArrayEquiv Float2 (Idx 2) Float where
-    equiv := {
-      toFun := fun v => ⊞[v.x, v.y]
-      invFun := fun v => ⟨v[0], v[1]⟩,
-      left_inv := sorry_proof
-      right_inv := sorry_proof
-    }
+    toRn := fun v => ⊞[v.x, v.y]
+    fromRn := fun v => ⟨v[0], v[1]⟩
+    left_inv := sorry_proof
+    right_inv := sorry_proof
+
 
   -- Byte Level Operations
   -- todo: this should be derived from `PlainDataType.ofEquiv`
@@ -197,12 +194,10 @@ namespace Float3
     }
 
   instance : DataArrayEquiv Float3 (Idx 3) Float where
-    equiv := {
-      toFun := fun v => ⊞[v.x, v.y, v.z]
-      invFun := fun v => ⟨v[0], v[1], v[2]⟩,
-      left_inv := sorry_proof
-      right_inv := sorry_proof
-    }
+    toRn := fun v => ⊞[v.x, v.y, v.z]
+    fromRn := fun v => ⟨v[0], v[1], v[2]⟩
+    left_inv := sorry_proof
+    right_inv := sorry_proof
 
   instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float3^[I]) (I × Idx 3) Float where
 
@@ -299,12 +294,10 @@ namespace Float4
     }
 
   instance : DataArrayEquiv Float4 (Idx 4) Float where
-    equiv := {
-      toFun := fun v => ⊞[v.x, v.y, v.z, v.w]
-      invFun := fun v => ⟨v[0], v[1], v[2], v[3]⟩,
-      left_inv := sorry_proof
-      right_inv := sorry_proof
-    }
+    toRn := fun v => ⊞[v.x, v.y, v.z, v.w]
+    fromRn := fun v => ⟨v[0], v[1], v[2], v[3]⟩
+    left_inv := sorry_proof
+    right_inv := sorry_proof
 
   instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float4^[I]) (I × Idx 4) Float where
 

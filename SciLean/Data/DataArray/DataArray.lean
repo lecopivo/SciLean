@@ -312,11 +312,11 @@ variable
 
 @[inline]
 def DataArrayN.curry (x : DataArrayN α (ι×κ)) : DataArrayN (DataArrayN α κ) ι :=
-  ⟨⟨x.data.byteData, sorry_proof⟩, sorry_proof⟩
+  cast sorry_proof x -- this is slow at runtime ⟨⟨x.data.byteData, sorry_proof⟩, sorry_proof⟩
 
 @[inline]
 def DataArrayN.uncurry (x : DataArrayN (DataArrayN α κ) ι) : DataArrayN α (ι×κ) :=
-  ⟨⟨x.data.byteData, sorry_proof⟩, sorry_proof⟩
+  cast sorry_proof x -- this is slow at runtime ⟨⟨x.data.byteData, sorry_proof⟩, sorry_proof⟩
 
 
 theorem DataArrayN.uncurry_def [IdxType.Fold'.{_,0} ι] [IdxType.Fold'.{_,0} κ]
