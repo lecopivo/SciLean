@@ -89,3 +89,12 @@ abbrev_data_synth scalAdd in alpha beta x [InjectiveGetElem X n] : HasRevFDeriv 
 abbrev_data_synth scalAdd in alpha beta x [InjectiveGetElem X n] : HasRevFDerivUpdate K by
   simp only [blas_to_module]
   data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+
+abbrev_data_synth scalAdd in beta x [InjectiveGetElem X n] : HasRevFDeriv K by
+  simp only [blas_to_module]
+  data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp
+
+abbrev_data_synth scalAdd in beta x [InjectiveGetElem X n] : HasRevFDerivUpdate K by
+  simp only [blas_to_module]
+  data_synth => enter[3]; simp[vector_optimize]; to_ssa; to_ssa; lsimp
