@@ -7,27 +7,12 @@ def rand01 : IO Float := do
   let i ← IO.rand 0 N
   return i.toFloat / N.toFloat
 
-def Float.inf := 1.0/0.0
-
 def FloatArray.rand01 (n : Nat) : IO FloatArray := do
   let mut xs : FloatArray := .mkEmpty n
   for _ in [0:n] do
     xs := xs.push (← _root_.rand01)
   return xs
 
-
--- instance {X} [PlainDataType X] {I n} [IndexType I] [IdxType I n] : GetElem' (X^[I]) I X where
---   getElem xs i _ := xs.idxGet i
-
-open Lean Parser Term in
-macro (name:=minStx) "minᴵ" xs:funBinder* ", " b:term : term => do
-  if xs.size = 1 then
-    let x := xs[0]!
-    `(IdxType.min fun $x => $b)
-  else
-    `(Function.argmin ↿fun $xs* => $b)
-
-instance : Coe Nat USize := ⟨fun n => n.toUSize⟩
 
 set_default_scalar Float
 
@@ -100,12 +85,15 @@ def kmeansDirSciLeanNoBLAS {n k d : ℕ} [NeZero k]
 @[inline]
 def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IdxType I n]
     (xs : X^[I]) (i : I) : X :=
-  pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
+  xs[i]
+  -- pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
+@[inline]
 def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IdxType I n] (x : Float^[I]) (i : I) (val : Float) : Float^[I] :=
-  let data := x.1.1.toFloatArray sorry_proof
-  let data := data.uset (toIdx i) val sorry_proof
-  ⟨⟨data.toByteArray, sorry_proof⟩, sorry_proof⟩
+  setElem x i val .intro
+  -- let data := x.1.1.toFloatArray sorry_proof
+  -- let data := data.uset (toIdx i) val sorry_proof
+  -- ⟨⟨data.toByteArray, sorry_proof⟩, sorry_proof⟩
 
 -- todo: rewrite this in terms of `FloatArray` to have a really raw Lean implementation
 def kmeansDirBestLeanImpl {n k d : ℕ} [NeZero k]
@@ -116,16 +104,13 @@ def kmeansDirBestLeanImpl {n k d : ℕ} [NeZero k]
 
   for i in (IndexType.Range.full (I:=Idx n)) do
 
-    let F := fun (i : Idx n) (j : Idx k) (l : Idx d) => points.idxGet (i,l) - centroids.idxGet (j,l)
-
     let a := IdxType.argMin fun (j : Idx k) =>
-      ∑ᴵ (l : Idx d), (F i j l)^2
+      ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
 
     for l in (IndexType.Range.full (I:=Idx d)) do
-      diagH := (diagH.idxSet (a,l) (diagH.idxGet (a,l) + 2.0))
+      diagH[a,l] += 2.0
+      J[a,l] += 2 • (centroids[a,l] - points[i,l])
 
-      let dJ := 2 • (centroids.idxGet (a,l) - points.idxGet (i,l))
-      J := (J.idxSet (a,l) (J.idxGet (a,l) + dJ))
 
   return J + diagH -- VectorType.div J diagH
 

@@ -1,3 +1,4 @@
+import Mathlib.Order.Notation
 
 namespace Float
 
@@ -39,3 +40,9 @@ partial def zpow (x : Float) (n : Int) : Float :=
     x.npow n.toNat
   else
     (1.0/x).npow (-n).toNat
+
+
+def inf := 1.0/0.0
+def ninf := -Float.inf
+instance : Top Float := ⟨Float.inf⟩
+instance : Bot Float := ⟨Float.ninf⟩

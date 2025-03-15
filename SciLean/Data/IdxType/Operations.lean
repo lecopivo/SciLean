@@ -40,23 +40,25 @@ theorem sum_eq_finset_sum {α} [AddCommMonoid α] (f : I → α) :
 
 /-- `min f` returns minimum of `f` over index type `I`. -/
 @[specialize, inline]
-def min [Min α] [Inhabited α] (f : I → α) : α :=
-  IdxType.reduce (IndexType.Range.full (I:=I)) f (Min.min · ·)
+def min [Min α] [Top α] (f : I → α) : α :=
+  IdxType.fold (IndexType.Range.full (I:=I)) (init:=(⊤:α)) (fun i m => Min.min (f i) m)
 
 @[specialize, inline]
 def argMinVal {I α : Type*} {n}
     [IdxType I n] [IdxType.Fold' I]
-    [LE α] [DecidableLE α] [Inhabited I]
+    [LE α] [DecidableLE α] [Inhabited I] [Top α]
     (f : I → α) : (I×α) :=
-  IdxType.reduceD (IndexType.Range.full (I:=I))
-    (fun i => (i,f i)) (fun (i,xi) (j,xj) => if xi ≤ xj then (i,xi) else (j,xj))
-    (default, f default)
+  IdxType.fold (IndexType.Range.full (I:=I))
+    (init := (default, ⊤))
+    (fun j (i,xi)  =>
+      let xj := f j
+      if xi ≤ xj then (i,xi) else (j,xj))
 
 /-- `argMin f` returns index at which `f` is minimal over index type `I`. -/
 @[specialize, inline]
 def argMin {I α : Type*} {n}
     [IdxType I n] [IdxType.Fold' I]
-    [LE α] [DecidableLE α] [Inhabited I]
+    [LE α] [DecidableLE α] [Inhabited I] [Top α]
     (f : I → α) : I := (argMinVal f).1
 
 open Lean.Parser.Term in
@@ -90,23 +92,26 @@ open Lean.Parser.Term in
 
 /-- `max f` returns maximum of `f` over index type `I`. -/
 @[specialize, inline]
-def max [Max α] [Inhabited α] (f : I → α) : α :=
-  IdxType.reduce (IndexType.Range.full (I:=I)) f (Max.max · ·)
+def max [Max α] [Bot α] (f : I → α) : α :=
+  IdxType.fold (IndexType.Range.full (I:=I)) (init:=(⊥:α)) (fun i m => Max.max (f i) m)
 
 @[specialize, inline]
 def argMaxVal {I α : Type*} {n}
     [IdxType I n] [IdxType.Fold' I]
-    [LE α] [DecidableLE α] [Inhabited I]
+    [LE α] [DecidableLE α] [Inhabited I] [Bot α]
     (f : I → α) : (I×α) :=
-  IdxType.reduceD (IndexType.Range.full (I:=I))
-    (fun i => (i,f i)) (fun (i,xi) (j,xj) => if xj ≤ xi then (i,xi) else (j,xj))
-    (default, f default)
+  IdxType.fold (IndexType.Range.full (I:=I))
+    (init := (default, ⊥))
+    (fun j (i,xi)  =>
+      let xj := f j
+      if xi ≤ xj then (j,xj) else (i,xi))
+
 
 /-- `argMax f` returns index at which `f` is maximal over index type `I`. -/
 @[specialize, inline]
 def argMax {I α : Type*} {n}
     [IdxType I n] [IdxType.Fold' I]
-    [LE α] [DecidableLE α] [Inhabited I]
+    [LE α] [DecidableLE α] [Inhabited I] [Bot α]
     (f : I → α) : I := (argMaxVal f).1
 
 open Lean.Parser.Term in

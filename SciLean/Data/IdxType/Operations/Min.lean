@@ -7,7 +7,7 @@ namespace SciLean.IdxType
 set_option linter.unusedVariables false
 
 variable
-  {𝕜 : Type u} [RealScalar 𝕜] [Inhabited 𝕜]
+  {𝕜 : Type u} [RealScalar 𝕜] [Top 𝕜]
   {W : Type*} [NormedAddCommGroup W] [NormedSpace 𝕜 W]
   {U : Type*} [NormedAddCommGroup U] [AdjointSpace 𝕜 U]
   -- {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X]

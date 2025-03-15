@@ -22,7 +22,7 @@ Warning: This class has an universe parameter `v` that is not deducible from the
 -/
 abbrev IdxType.Fold'.{u,v} (I : Type u) [IdxType I n] := IdxType.Fold.{u,v,v} I Id
 
-attribute [specialize] IdxType.Fold.forIn
+attribute [specialize, inline] IdxType.Fold.forIn
 
 namespace IdxType
 
