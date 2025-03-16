@@ -6,11 +6,17 @@ import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Analysis.SpecialFunctions.Inner
 import SciLean.Data.DataArray.MatrixType
 
+import SciLean.Tactic.SimpleProxyType
+import SciLean.Data.Instances.Sigma
 
 namespace SciLean
 
--- open TensorProduct
+-- todo move this
+open NormedSpace in
+def AdjointSpace.toDual (𝕜 : Type u_1) {E : Type u_2} [RCLike 𝕜] [NormedAddCommGroup E] [AdjointSpace 𝕜 E] (x : E) : Dual 𝕜 E := fun x' =>L[𝕜] ⟪x,x'⟫[𝕜]
 
+
+open TensorProduct NormedSpace AdjointSpace in
 /-- `X ⊗' Y` is tensor product of `X` and `Y`.
 
 Mathematically the same as `X ⊗ Y` (without the dash) but `X ⊗' Y` has efficient computatinal
@@ -32,7 +38,7 @@ class TensorProductType (R Y X YX : Type*) [RCLike R]
 
     It is marked as `Erased` as many mathlib functions about the tensor product are noncomputable. -/
     -- NOTE: maybe `Y` should be dual here as `X ⊗' Y` should behave like matrices !!!
-    equiv : Erased (YX ≃ₗ[R] TensorProduct R Y (X →L[R] R))
+    equiv : Erased (YX ≃ₗ[R] (Y ⊗[R] Dual R X))
 
     /-- Outer/tensor product of two vectors added to a matrix
 
@@ -59,48 +65,17 @@ class TensorProductType (R Y X YX : Type*) [RCLike R]
     tmulAdd_eq_tmul : ∀ r x y A,
       equiv.out (tmulAdd r y x A)
       =
-      r•TensorProduct.tmul R y (fun x' =>L[R] ⟪x, x'⟫[R]) + equiv.out A
+      r • (y ⊗ₜ[R] toDual R x) + equiv.out A
 
 
 /-- Tag class used to obtain the canonical tensor product type of `Y` and `X` -/
 class TensorProductGetYX (R Y X : Type*) (YX : outParam Type*)
 
-/-- Tag class used to obtain the canonical tensor product type of `Y` and `X` -/
+/-- Tag class used to obtain the output type `Y` of matrix multiplication `Y ⊗ X → X → Y` -/
 class TensorProductGetY (R Y : outParam Type*) (X YX : Type*)
 
-/-- Tag class used to obtain the canonical tensor product type of `Y` and `X` -/
+/-- Tag class used to obtain the output type `X` of transposed matrix multiplication `Y ⊗ X → Y → X` -/
 class TensorProductGetX (R : outParam Type*) (Y : Type*) (X : outParam Type*) (YX : Type*)
-
-
-
-section Identity
-variable {R : Type*} [RealScalar R] -- todo: generalize to complex numbers
-  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
-
-open ComplexConjugate
-set_option trace.Meta.Tactic.simp.discharge true in
-instance : TensorProductType R R X X where
-  equiv := ⟨fun _ => True, sorry_proof⟩
-  tmulAdd a x y A := (a*x) • y + A
-  matVecMul a A x b y := a*⟪A,x⟫[R] + b*y
-  matHVecMul a A y b x := (a*y)•A + b • x
-  tmulAdd_eq_tmul := sorry_proof
-
--- this creates a diamond with the previous for `ttmul` on `R ⊗'[R] R`
--- what to do about this?
-instance (priority:=low) : TensorProductType R X R X where
-  equiv := ⟨fun _ => True, sorry_proof⟩
-  tmulAdd a x y A := (a*y)•x + A
-  matVecMul a A y b x := (a*y)•A + b • x
-  matHVecMul a A x b y := a*⟪A,x⟫[R] + b*y
-  tmulAdd_eq_tmul := sorry_proof
-
-instance {R} [RealScalar R] : TensorProductGetYX R R X X := ⟨⟩
-instance {R} [RealScalar R] : TensorProductGetYX R X R X := ⟨⟩
-
-
-end Identity
-
 
 open TensorProductType in
 /-- Outer/tensor product of two vectors. -/
@@ -114,6 +89,10 @@ abbrev tmul
     (y : Y) (x : X) : YX :=
   tmulAdd (1:R) y x 0
 
+
+----------------------------------------------------------------------------------------------------
+-- Notation ----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 /-- Notation class for tensor multiplication `⊗` over ring `R`
 
@@ -184,3 +163,36 @@ instance (R Y X YX : Type*) [TensorProductGetY R Y X YX]
     [TensorProductType R Y X YX] :
     HMul YX X Y where
   hMul A x := matVecMul (1:R) A x 0 0
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Instances ---------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+section Identity
+variable {R : Type*} [RealScalar R] -- todo: generalize to complex numbers
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
+
+open ComplexConjugate
+set_option trace.Meta.Tactic.simp.discharge true in
+instance : TensorProductType R R X X where
+  equiv := ⟨fun _ => True, sorry_proof⟩
+  tmulAdd a x y A := (a*x) • y + A
+  matVecMul a A x b y := a*⟪A,x⟫[R] + b*y
+  matHVecMul a A y b x := (a*y)•A + b • x
+  tmulAdd_eq_tmul := sorry_proof
+
+-- this creates a diamond with the previous for `ttmul` on `R ⊗'[R] R`
+-- what to do about this?
+instance (priority:=low) : TensorProductType R X R X where
+  equiv := ⟨fun _ => True, sorry_proof⟩
+  tmulAdd a x y A := (a*y)•x + A
+  matVecMul a A y b x := (a*y)•A + b • x
+  matHVecMul a A x b y := a*⟪A,x⟫[R] + b*y
+  tmulAdd_eq_tmul := sorry_proof
+
+instance {R} [RealScalar R] : TensorProductGetYX R R X X := ⟨⟩
+instance {R} [RealScalar R] : TensorProductGetYX R X R X := ⟨⟩
+
+end Identity

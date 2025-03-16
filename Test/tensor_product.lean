@@ -1,7 +1,6 @@
 import SciLean.Data.DataArray.TensorProduct
 import SciLean.Data.DataArray.DataArrayEquiv
--- import SciLean.Data.DataArray.VectorType
--- import SciLean.Data.DataArray.MatrixType
+import SciLean.Algebra.TensorProduct.Prod
 import SciLean.Data.DataArray.Float
 
 open SciLean
@@ -32,3 +31,53 @@ open TensorProductType in
 /-- info: ⊞[3210.000000, 32100.000000] -/
 #guard_msgs in
 #eval (matHVecMul (X:=Float^[2]) (YX:=Float^[3,2]) (1.0 : Float) (⊞[1.0,2.0,3.0] ⊗ ⊞[100.0,1000.0]) ⊞[0.1,1.0,10.0] 0 0)
+
+
+
+
+#eval 0
+
+
+/--
+info: (⊞[1.0, 2.0], ⊞[10.0, 100.0]) ⊗ ⊞[0.1, 1e-2] : BlockMatrixCol (Float^[2, 2]) (Float^[2, 2])
+-/
+#guard_msgs in
+#check (⊞[1.0,2.0],⊞[10.0,100.0]) ⊗ ⊞[0.1,0.01]
+
+
+/--
+info: ⊞[0.1, 1e-2] ⊗ (⊞[1.0, 2.0], ⊞[10.0, 100.0]) : BlockMatrixRow (Float^[2, 2]) (Float^[2, 2])
+-/
+#guard_msgs in
+#check ⊞[0.1,0.01] ⊗ (⊞[1.0,2.0],⊞[10.0,100.0])
+
+
+set_option synthInstance.maxSize 1000
+
+/-- info: BlockMatrix (Float^[2, 2]) (Float^[2, 2]) (Float^[2, 2]) (Float^[2, 2]) : Type -/
+#guard_msgs in
+#check (Float^[2] × Float^[2]) ⊗ (Float^[2] × Float^[2])
+
+
+/--
+info: (⊞[1.0, 2.0], ⊞[10.0, 100.0], ⊞[0.1, 1e-2]) ⊗
+  (⊞[1.0, 2.0], ⊞[10.0, 100.0],
+    ⊞[0.1,
+        1e-2]) : BlockMatrix (Float^[2, 2]) (BlockMatrixRow (Float^[2, 2]) (Float^[2, 2]))
+  (BlockMatrixCol (Float^[2, 2]) (Float^[2, 2]))
+  (BlockMatrix (Float^[2, 2]) (Float^[2, 2]) (Float^[2, 2]) (Float^[2, 2]))
+-/
+#guard_msgs in
+#check (⊞[1.0,2.0],⊞[10.0,100.0],⊞[0.1,0.01]) ⊗ (⊞[1.0,2.0],⊞[10.0,100.0],⊞[0.1,0.01])
+
+
+/-- info: instTensorProductTypeProdBlockMatrix Float -/
+#guard_msgs in
+#synth TensorProductType Float (Float^[2] × Float^[2]) (Float^[2] × Float^[2])
+  (BlockMatrix (Float^[2,2]) (Float^[2,2]) (Float^[2,2]) (Float^[2,2]))
+
+
+/-- info: instTensorProductGetYXProdBlockMatrix Float -/
+#guard_msgs in
+#synth TensorProductGetYX Float (Float^[2] × Float^[2]) (Float^[2] × Float^[2])
+  (BlockMatrix (Float^[2,2]) (Float^[2,2]) (Float^[2,2]) (Float^[2,2]))
