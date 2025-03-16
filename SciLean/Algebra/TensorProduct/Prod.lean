@@ -24,10 +24,10 @@ instance (priority:=low) : TensorProductType R (Y₁ × Y₂) X₁ (BlockMatrixC
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd := fun r ⟨y₁,y₂⟩ x ⟨A₁,A₂⟩ =>
     ⟨tmulAdd r y₁ x A₁, tmulAdd r y₂ x A₂⟩
-  matVecMul := fun a ⟨A₁,A₂⟩ x b ⟨y₁,y₂⟩ =>
-    ⟨matVecMul a A₁ x b y₁, matVecMul a A₂ x b y₂⟩
-  matHVecMul := fun a ⟨A₁,A₂⟩ ⟨y₁,y₂⟩ b x =>
-    matHVecMul a A₂ y₂ 1 (matHVecMul a A₁ y₁ b x)
+  matVecMulAdd := fun a ⟨A₁,A₂⟩ x b ⟨y₁,y₂⟩ =>
+    ⟨matVecMulAdd a A₁ x b y₁, matVecMulAdd a A₂ x b y₂⟩
+  matHVecMulAdd := fun a ⟨A₁,A₂⟩ ⟨y₁,y₂⟩ b x =>
+    matHVecMulAdd a A₂ y₂ 1 (matHVecMulAdd a A₁ y₁ b x)
   tmulAdd_eq_tmul := sorry_proof
 
 instance [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₂ X₁ YX₂₁] :
@@ -43,10 +43,10 @@ instance (priority:=low) : TensorProductType R Y₁ (X₁ × X₂) (BlockMatrixR
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd := fun r y ⟨x₁,x₂⟩ ⟨A₁,A₂⟩ =>
     ⟨tmulAdd r y x₁ A₁, tmulAdd r y x₂ A₂⟩
-  matVecMul := fun a ⟨A₁,A₂⟩ ⟨x₁,x₂⟩ b y =>
-    matVecMul a A₂ x₂ b (matVecMul a A₁ x₁ b y)
-  matHVecMul := fun a ⟨A₁,A₂⟩ y b ⟨x₁,x₂⟩ =>
-    ⟨matHVecMul a A₁ y 1 x₁, matHVecMul a A₂ y b x₂⟩
+  matVecMulAdd := fun a ⟨A₁,A₂⟩ ⟨x₁,x₂⟩ b y =>
+    matVecMulAdd a A₂ x₂ b (matVecMulAdd a A₁ x₁ b y)
+  matHVecMulAdd := fun a ⟨A₁,A₂⟩ y b ⟨x₁,x₂⟩ =>
+    ⟨matHVecMulAdd a A₁ y 1 x₁, matHVecMulAdd a A₂ y b x₂⟩
   tmulAdd_eq_tmul := sorry_proof
 
 instance [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₁ X₂ YX₁₂] :
@@ -67,15 +67,15 @@ instance : TensorProductType R (Y₁ × Y₂) (X₁ × X₂) (BlockMatrix YX₁�
       A₂₁ := tmulAdd r y₂ x₁ A₂₁
       A₂₂ := tmulAdd r y₂ x₂ A₂₂
     }
-  matVecMul := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨x₁,x₂⟩ b ⟨y₁,y₂⟩ =>
+  matVecMulAdd := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨x₁,x₂⟩ b ⟨y₁,y₂⟩ =>
     {
-      fst := matVecMul a A₁₁ x₁ b (matVecMul a A₁₂ x₂ b y₁)
-      snd := matVecMul a A₂₁ x₁ b (matVecMul a A₂₂ x₂ b y₂)
+      fst := matVecMulAdd a A₁₁ x₁ b (matVecMulAdd a A₁₂ x₂ b y₁)
+      snd := matVecMulAdd a A₂₁ x₁ b (matVecMulAdd a A₂₂ x₂ b y₂)
     }
-  matHVecMul := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨y₁,y₂⟩ b ⟨x₁,x₂⟩ =>
+  matHVecMulAdd := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨y₁,y₂⟩ b ⟨x₁,x₂⟩ =>
     {
-      fst := matHVecMul a A₁₁ y₁ b (matHVecMul a A₂₁ y₂ b x₁)
-      snd := matHVecMul a A₁₂ y₁ b (matHVecMul a A₂₂ y₂ b x₂)
+      fst := matHVecMulAdd a A₁₁ y₁ b (matHVecMulAdd a A₂₁ y₂ b x₁)
+      snd := matHVecMulAdd a A₁₂ y₁ b (matHVecMulAdd a A₂₂ y₂ b x₂)
     }
   tmulAdd_eq_tmul := sorry_proof
 

@@ -437,7 +437,7 @@ theorem HSMul.hSMul.arg_a0a1.HasVecRevFDerivUpdate_comp_rule :
       (fun x =>
         (x.1 • x.2, fun dx' dwx =>
           let' (dw,dx) := dwx
-          ⟨matVecMul (1:𝕜) dx' x.2 1 dw,
+          ⟨matVecMulAdd (1:𝕜) dx' x.2 1 dw,
            dx + x.1 • dx'⟩)) := by
   sorry_proof
 

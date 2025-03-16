@@ -14,6 +14,8 @@ import SciLean.Analysis.Calculus.FwdCDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.Calculus.HasFwdFDeriv
+import SciLean.Analysis.Calculus.HasVecFwdFDeriv
+import SciLean.Analysis.Calculus.HasVecRevFDeriv
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Common
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Functions
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
@@ -312,6 +314,7 @@ import SciLean.Data.DataArray.FloatN
 import SciLean.Data.DataArray.FloatNN
 import SciLean.Data.DataArray.MatrixType
 import SciLean.Data.DataArray.Operations
+import SciLean.Data.DataArray.TensorProduct
 -- import SciLean.Data.DataArray.Operations_old
 -- import SciLean.Data.DataArray.Operations_old.AntiSymmPart
 -- import SciLean.Data.DataArray.Operations_old.Cross
@@ -375,7 +378,7 @@ import SciLean.Data.Int64
 import SciLean.Data.ListN
 import SciLean.Data.MatrixType.Base
 import SciLean.Data.MatrixType.Basic
-import SciLean.Data.MatrixType.BlockMatrix
+-- import SciLean.Data.MatrixType.BlockMatrix
 import SciLean.Data.MatrixType.Dense
 import SciLean.Data.MatrixType.Init
 import SciLean.Data.MatrixType.MatMul

@@ -13,7 +13,8 @@ namespace SciLean
 
 -- todo move this
 open NormedSpace in
-def AdjointSpace.toDual (𝕜 : Type u_1) {E : Type u_2} [RCLike 𝕜] [NormedAddCommGroup E] [AdjointSpace 𝕜 E] (x : E) : Dual 𝕜 E := fun x' =>L[𝕜] ⟪x,x'⟫[𝕜]
+def AdjointSpace.toDual (𝕜 : Type u_1) {E : Type u_2} [RCLike 𝕜] [NormedAddCommGroup E] [AdjointSpace 𝕜 E]
+  (x : E) : Dual 𝕜 E := fun x' =>L[𝕜] ⟪x,x'⟫[𝕜]
 
 
 open TensorProduct NormedSpace AdjointSpace in
@@ -46,27 +47,31 @@ class TensorProductType (R Y X YX : Type*) [RCLike R]
     tmulAdd' a y x A = a•y*xᴴ + A
     ```
     -/
-    tmulAdd : R → Y → X → YX → YX
+    tmulAdd (a : R) (y : Y) (x : X) (A : YX) : YX
+
+    tmulAdd_eq_tmul : ∀ r x y A,
+      tmulAdd r y x A
+      =
+      equiv.out.symm (r • (y ⊗ₜ[R] toDual R x) + equiv.out A)
+
 
     /-- Matrix vector multiplication
     ```
     matVecMul a A x b y = a•A*x + b•y
     ```
     -/
-    matVecMul : R → YX → X → R → Y → Y
+    matVecMulAdd (a : R) (A : YX) (x : X) (b : R) (y : Y) : Y
+
 
     /-- Conjugate/transpose matrix vector multiplication
     ```
     vecMul a A y b x = a•Aᴴ*y + b•x
     ```
     -/
-    matHVecMul : R → YX → Y → R → X → X
+    matHVecMulAdd (a : R) (A : YX) (y : Y) (b : R) (x : X) : X
 
-    tmulAdd_eq_tmul : ∀ r x y A,
-      equiv.out (tmulAdd r y x A)
-      =
-      r • (y ⊗ₜ[R] toDual R x) + equiv.out A
 
+export TensorProductType (tmulAdd matVecMulAdd matHVecMulAdd)
 
 /-- Tag class used to obtain the canonical tensor product type of `Y` and `X` -/
 class TensorProductGetYX (R Y X : Type*) (YX : outParam Type*)
@@ -158,6 +163,11 @@ macro:100 x:term:101 " ⊗ " y:term:100 : term => `($x ⊗[defaultScalar%] $y)
   | _ => throw ()
 
 
+
+----------------------------------------------------------------------------------------------------
+-- Vector-matrix multiplication --------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
 open TensorProductType in
 /-- Matrix vector multiplication instances.
 
@@ -169,7 +179,20 @@ instance (R Y X YX : Type*) [TensorProductGetY R Y X YX]
     [AddCommGroup YX] [Module R YX]
     [TensorProductType R Y X YX] :
     HMul YX X Y where
-  hMul A x := matVecMul (1:R) A x 0 0
+  hMul A x := matVecMulAdd (1:R) A x 0 0
+
+
+/-- Vector matrix multiplication instances.
+
+We use tag class `TensorProductGetX` to infer the product output type `X` and ring `R` -/
+instance (R Y X YX : Type*) [TensorProductGetX R Y X YX]
+    [RCLike R]
+    [NormedAddCommGroup Y] [AdjointSpace R Y]
+    [NormedAddCommGroup X] [AdjointSpace R X]
+    [AddCommGroup YX] [Module R YX]
+    [TensorProductType R Y X YX] :
+    HMul Y YX X where
+  hMul y A := matHVecMulAdd (1:R) A y 0 0
 
 
 ----------------------------------------------------------------------------------------------------
@@ -183,12 +206,11 @@ variable {R : Type*} [RCLike R]
 
 -- TODO: !!!Fix this for complex `R`!!! it is missing complex conjugates
 open ComplexConjugate
-set_option trace.Meta.Tactic.simp.discharge true in
 instance : TensorProductType R R X X where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd a x y A := (a*x) • /- star -/ y + A
-  matVecMul a A x b y := a*⟪A,x⟫[R] + b*y
-  matHVecMul a A y b x := (a*/- conj -/y)•A + b • x
+  matVecMulAdd a A x b y := a*⟪A,x⟫[R] + b*y
+  matHVecMulAdd a A y b x := (a*/- conj -/y)•A + b • x
   tmulAdd_eq_tmul := sorry_proof
 
 -- this creates a diamond with the previous for `ttmul` on `R ⊗'[R] R`
@@ -197,11 +219,105 @@ instance : TensorProductType R R X X where
 instance (priority:=low) : TensorProductType R X R X where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd a x y A := (a*/- conj -/ y)•x + A
-  matVecMul a A y b x := (a*y)• /- star -/ A + b • x
-  matHVecMul a A x b y := a*⟪A,x⟫[R] + b*y
+  matVecMulAdd a A y b x := (a*y)• /- star -/ A + b • x
+  matHVecMulAdd a A x b y := a*⟪A,x⟫[R] + b*y
   tmulAdd_eq_tmul := sorry_proof
 
 instance {R} [RCLike R] : TensorProductGetYX R R X X := ⟨⟩
 instance {R} [RCLike R] : TensorProductGetYX R X R X := ⟨⟩
 
 end Identity
+
+
+
+section Simps
+
+variable
+  {R Y X YX : Type*} [RCLike R]
+  [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedAddCommGroup X] [AdjointSpace R X]
+  [AddCommGroup YX] [Module R YX]
+  [TensorProductType R Y X YX]
+
+
+section MatVecNotation
+
+variable [TensorProductGetY R Y X YX]
+
+theorem matVecMulAdd_def
+    (a b : R) (A : YX) (x : X) (y : Y) :
+  matVecMulAdd a A x b y = a•A*x + b•y := sorry_proof
+
+@[simp, simp_core]
+theorem matVecMul_zero_A (x : X) : (0 : YX) * x = 0 := sorry_proof
+
+@[simp, simp_core]
+theorem matVecMul_zero_x (A : YX) : (A : YX) * (0 : X) = 0 := sorry_proof
+
+theorem add_matVecMul (A B : YX) (x : X) : (A+B)*x = A*x + B*x := sorry_proof
+theorem matVecMul_add (A : YX) (x y : X) : A*(x+y) = A*x + A*y := sorry_proof
+
+theorem matVecMul_smul_assoc (a : R) (A : YX) (x : X) : (a•A)*x = a•(A*x) := sorry_proof
+
+end MatVecNotation
+
+section VecMatNotation
+
+variable [TensorProductGetX R Y X YX]
+
+-- TODO: this theorem is missing `(star y)` !!! we would probably add `Star` to `AdjointSpace`
+theorem matHVecMulAdd_def
+    (a b : R) (A : YX) (x : X) (y : Y) :
+  matHVecMulAdd a A y b x = a•/-star-/y*A + b•x := sorry_proof
+
+@[simp, simp_core]
+theorem vecMatMul_zero_A (y : Y) : y * (0 : YX) = 0 := sorry_proof
+
+@[simp, simp_core]
+theorem vecMatMul_zero_y (A : YX) : (0 : Y) * (A : YX) = 0 := sorry_proof
+
+theorem vecMatMul_add (A B : YX) (y : Y) : y*(A+B) = y*A + y*B := sorry_proof
+theorem add_vecMatMul (A : YX) (x y : Y) : (x+y)*A = x*A + y*A := sorry_proof
+
+-- TODO: this is wrong onver complex numbers
+--       it is missing some conjugations!!!
+theorem vecMatMul_smul_assoc (a : R) (y : Y) (A : YX) : y*(a•A) = a•(y*A) := sorry_proof
+
+end VecMatNotation
+
+
+@[simp, simp_core]
+theorem matVecMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
+    matVecMulAdd 0 A x b y = b•y := by
+  have : TensorProductGetY R Y X YX := ⟨⟩
+  simp[matVecMulAdd_def]
+
+@[simp, simp_core]
+theorem matVecMulAdd_zero_A (a b : R) (x : X) (y : Y) :
+    matVecMulAdd a (0 : YX) x b y = b•y := by
+  have : TensorProductGetY R Y X YX := ⟨⟩
+  simp[matVecMulAdd_def]
+
+@[simp, simp_core]
+theorem matVecMulAdd_zero_x (a b : R) (A : YX) (y : Y) :
+    matVecMulAdd a A (0:X) b y = b•y := by
+  have : TensorProductGetY R Y X YX := ⟨⟩
+  simp[matVecMulAdd_def]
+
+
+@[simp, simp_core]
+theorem matHVecMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
+    matHVecMulAdd 0 A y b x = b•x := by
+  have : TensorProductGetX R Y X YX := ⟨⟩
+  simp[matHVecMulAdd_def]
+
+@[simp, simp_core]
+theorem matHVecMulAdd_zero_A (a b : R) (x : X) (y : Y) :
+  matHVecMulAdd a (0 : YX) y b x = b•x := by
+  have : TensorProductGetX R Y X YX := ⟨⟩
+  simp[matHVecMulAdd_def]
+
+@[simp, simp_core]
+theorem matHVecMulAdd_zero_y (a b : R) (A : YX) (x : X) :
+  matHVecMulAdd a A (0:Y) b x = b•x := by
+  have : TensorProductGetX R Y X YX := ⟨⟩
+  simp[matHVecMulAdd_def]

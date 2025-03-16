@@ -30,12 +30,7 @@ set_default_scalar Float
 open TensorProductType in
 /-- info: ⊞[3210.000000, 32100.000000] -/
 #guard_msgs in
-#eval (matHVecMul (X:=Float^[2]) (YX:=Float^[3,2]) (1.0 : Float) (⊞[1.0,2.0,3.0] ⊗ ⊞[100.0,1000.0]) ⊞[0.1,1.0,10.0] 0 0)
-
-
-
-
-#eval 0
+#eval (matHVecMulAdd (X:=Float^[2]) (YX:=Float^[3,2]) (1.0 : Float) (⊞[1.0,2.0,3.0] ⊗ ⊞[100.0,1000.0]) ⊞[0.1,1.0,10.0] 0 0)
 
 
 /--

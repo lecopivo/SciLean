@@ -427,7 +427,7 @@ theorem Inner.inner.arg_a0a1.HasVecFwdFDeriv_comp_rule
         let' (y, dy) := f' x dx;
         let' (z, dz) := g' x dx;
         -- ⟪dy[i], z⟫[K] + ⟪y, dz[i]⟫[K]
-        (⟪y, z⟫[𝕜], matHVecMul (1:𝕜) dy z (0:𝕜) (matHVecMul (1:𝕜) dz y (0:𝕜) 0))) := by
+        (⟪y, z⟫[𝕜], matHVecMulAdd (1:𝕜) dy z (0:𝕜) (matHVecMulAdd (1:𝕜) dz y (0:𝕜) 0))) := by
   sorry_proof
 
 
@@ -436,7 +436,7 @@ theorem Norm2.norm2.arg_a0.HasVecFwdFDeriv_simple_rule :
     HasVecFwdFDeriv 𝕜 W
       (fun x : Y => ‖x‖₂²[𝕜])
       (fun x dx =>
-        (‖x‖₂²[𝕜], matHVecMul (2:𝕜) dx x (0:𝕜) 0)) := by
+        (‖x‖₂²[𝕜], matHVecMulAdd (2:𝕜) dx x (0:𝕜) 0)) := by
   sorry_proof
 
 @[data_synth]
@@ -445,7 +445,7 @@ theorem SciLean.norm₂.arg_x.HasVecFwdFDeriv_comp_rule
     HasVecFwdFDeriv 𝕜 W (fun x => ‖f x‖₂[𝕜]) (fun x dx =>
       let' (y, dy) := f' x dx;
       let yn := ‖y‖₂[𝕜]
-      (yn, matHVecMul (yn⁻¹) dx x (0:𝕜) 0)) := by
+      (yn, matHVecMulAdd (yn⁻¹) dx x (0:𝕜) 0)) := by
   sorry_proof
 
 end OverReals
