@@ -109,19 +109,19 @@ fun {n k d} [NeZero k] points centroids =>
 
 
 
-def objective_v3 {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
-  ∑ᴵ (i : Idx n),
-    let dx := ⊞ (j : Idx k) => ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
-    minᴵ (j : Idx k), dx[j]
+-- def objective_v3 {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
+--   ∑ᴵ (i : Idx n),
+--     let dx := ⊞ (j : Idx k) => ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
+--     minᴵ (j : Idx k), dx[j]
 
-set_option trace.Meta.Tactic.data_synth true in
-def direction_v3 {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
-  (let' ((_a,J),(_b,Hdiag)) :=
-    ∂> (c:=centroids;VectorType.const 1),
-      let' (y,df) := <∂ (objective_v3 points) c
-      (y,df 1)
-  VectorType.div J Hdiag)
-rewrite_by
-  unfold objective_v3
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc]
+-- set_option trace.Meta.Tactic.data_synth true in
+-- def direction_v3 {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
+--   (let' ((_a,J),(_b,Hdiag)) :=
+--     ∂> (c:=centroids;VectorType.const 1),
+--       let' (y,df) := <∂ (objective_v3 points) c
+--       (y,df 1)
+--   VectorType.div J Hdiag)
+-- rewrite_by
+--   unfold objective_v3
+--   lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]
+--   lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc]

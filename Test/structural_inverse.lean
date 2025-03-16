@@ -22,12 +22,12 @@ info: fun ij1 y =>
   IO.println (← ppExpr f'.invFun)
 
 /--
-info: fun ij0 y =>
-  let ij2' := fun ij0 => Function.invFun (fun ij2 => ij0 + ij2) y.1;
-  let ij1' := fun ij0 => Function.invFun (fun ij1 => ij1 + ij0 + ij2' ij0) y.2;
-  let ij1'' := ij1' ij0;
-  let ij2'' := ij2' ij0;
-  (ij0, ij1'', ij2'')
+info: fun ij2 y =>
+  let ij0' := fun ij2 => Function.invFun (fun ij0 => ij0 + ij2) y.1;
+  let ij1' := fun ij2 => Function.invFun (fun ij1 => ij1 + ij0' ij2 + ij2) y.2;
+  let ij1'' := ij1' ij2;
+  let ij0'' := ij0' ij2;
+  (ij0'', ij1'', ij2)
 -/
 #guard_msgs in
 #eval show MetaM Unit from do
