@@ -28,13 +28,13 @@ macro_rules (kind :=let'_syntax)
 | `(let' ($x,$y) := $v
     $b) =>
   `(let x := $v
-    let $x := Prod.fst x
-    let $y := Prod.snd x
+    let $x := x.1
+    let $y := x.2
     $b)
 | `(let' ($x,$y) := $v; $b) =>
   `(let x := $v
-    let $x := Prod.fst x
-    let $y := Prod.snd x
+    let $x := x.1
+    let $y := x.2
     $b)
 
 | `(let' ($x,$y,$z) := $v

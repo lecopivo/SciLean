@@ -1,4 +1,5 @@
 import SciLean.Algebra.TensorProduct.Basic
+import SciLean.Algebra.TensorProduct.MatMul
 import SciLean.Data.DataArray.DataArray
 
 import SciLean.Analysis.Scalar.FloatAsReal
@@ -8,7 +9,7 @@ namespace SciLean
 variable
   {R : Type*} [RealScalar R] [PlainDataType R]
   [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
-  {I nI} [IdxType I nI] {J nJ} [IdxType J nJ]
+  {I nI} [IdxType I nI] {J nJ} [IdxType J nJ] {K nK} [IdxType K nK]
 
 
 instance : TensorProductType R (R^[I]) (R^[J]) (R^[I,J]) where
@@ -30,6 +31,16 @@ instance : TensorProductType R (R^[I]) (R^[J]) (R^[I,J]) where
   tmulAdd_eq_tmul := sorry_proof
 
 
+instance : TensorProductMul R (R^[I]) (R^[K]) (R^[J]) (R^[I,K]) (R^[K,J]) (R^[I,J]) where
+  matMul := sorry -- todo: update LeanBLAS with level 3 functions
+
+
 instance : TensorProductGetYX R (R^[I]) (R^[J]) (R^[I,J]) := ⟨⟩
 instance : TensorProductGetY R (R^[I]) (R^[J]) (R^[I,J]) := ⟨⟩
 instance : TensorProductGetX R (R^[I]) (R^[J]) (R^[I,J]) := ⟨⟩
+instance : TensorProductGetRXY R (R^[I]) (R^[J]) (R^[I,J]) := ⟨⟩
+
+
+variable (A : R^[10,20]) (B : R^[20,5]) (x : R^[5])
+
+#check A*B*x

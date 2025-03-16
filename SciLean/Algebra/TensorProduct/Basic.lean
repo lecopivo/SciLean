@@ -77,10 +77,17 @@ class TensorProductGetY (R Y : outParam Type*) (X YX : Type*)
 /-- Tag class used to obtain the output type `X` of transposed matrix multiplication `Y ⊗ X → Y → X` -/
 class TensorProductGetX (R : outParam Type*) (Y : Type*) (X : outParam Type*) (YX : Type*)
 
+/-- Tag class to infer `R`,`X` and `Y` from `YX = Y ⊗[R] X`.
+
+Together with `TensorProductGetYX` it is use to infer the result type of matrix-matrix
+multiplication -/
+class TensorProductGetRXY (R Y X : outParam Type*) (YX : Type*)
+
+
 open TensorProductType in
 /-- Outer/tensor product of two vectors. -/
 abbrev tmul
-    (R : Type*) {Y X YX : Type*} [TensorProductGetYX R Y X YX] -- infer `YX` from R X and Y
+    (R : Type*) {Y X : Type*} {YX : Type*} [TensorProductGetYX R Y X YX] -- infer `YX` from R X and Y
     [RCLike R]
     [NormedAddCommGroup Y] [AdjointSpace R Y]
     [NormedAddCommGroup X] [AdjointSpace R X]
@@ -137,13 +144,13 @@ For types:
 For vectors, `x : R^[m]` and `y : R^[n]`
 `x ⊗ y` is outer product resulting in `m×n` matrix.
  -/
-elab (name:=tmulElab) x:term:101 " ⊗[" R:term "]" y:term:100 : term => do
-  let tp ← elabTerm (← `(TMul $R $x $y _)) none
-  let _ ← synthInstance tp
-  return (tp.appArg!)
+elab (name:=tmulSyntax) x:term:101 " ⊗[" R:term "]" y:term:100 : term => do
+    let tp ← elabTerm (← `(TMul $R $x $y _)) none
+    let _ ← synthInstance tp
+    return (tp.appArg!)
 
 
-@[inherit_doc tmulElab]
+@[inherit_doc tmulSyntax]
 macro:100 x:term:101 " ⊗ " y:term:100 : term => `($x ⊗[defaultScalar%] $y)
 
 @[app_unexpander tmul] def unexpandTMul : Lean.PrettyPrinter.Unexpander
@@ -165,34 +172,36 @@ instance (R Y X YX : Type*) [TensorProductGetY R Y X YX]
   hMul A x := matVecMul (1:R) A x 0 0
 
 
-
 ----------------------------------------------------------------------------------------------------
 -- Instances ---------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
 section Identity
-variable {R : Type*} [RealScalar R] -- todo: generalize to complex numbers
+variable {R : Type*} [RCLike R]
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
 
+
+-- TODO: !!!Fix this for complex `R`!!! it is missing complex conjugates
 open ComplexConjugate
 set_option trace.Meta.Tactic.simp.discharge true in
 instance : TensorProductType R R X X where
   equiv := ⟨fun _ => True, sorry_proof⟩
-  tmulAdd a x y A := (a*x) • y + A
+  tmulAdd a x y A := (a*x) • /- star -/ y + A
   matVecMul a A x b y := a*⟪A,x⟫[R] + b*y
-  matHVecMul a A y b x := (a*y)•A + b • x
+  matHVecMul a A y b x := (a*/- conj -/y)•A + b • x
   tmulAdd_eq_tmul := sorry_proof
 
 -- this creates a diamond with the previous for `ttmul` on `R ⊗'[R] R`
 -- what to do about this?
+-- TODO: !!!Fix this for complex `R`!!! it is missing complex conjugates
 instance (priority:=low) : TensorProductType R X R X where
   equiv := ⟨fun _ => True, sorry_proof⟩
-  tmulAdd a x y A := (a*y)•x + A
-  matVecMul a A y b x := (a*y)•A + b • x
+  tmulAdd a x y A := (a*/- conj -/ y)•x + A
+  matVecMul a A y b x := (a*y)• /- star -/ A + b • x
   matHVecMul a A x b y := a*⟪A,x⟫[R] + b*y
   tmulAdd_eq_tmul := sorry_proof
 
-instance {R} [RealScalar R] : TensorProductGetYX R R X X := ⟨⟩
-instance {R} [RealScalar R] : TensorProductGetYX R X R X := ⟨⟩
+instance {R} [RCLike R] : TensorProductGetYX R R X X := ⟨⟩
+instance {R} [RCLike R] : TensorProductGetYX R X R X := ⟨⟩
 
 end Identity
