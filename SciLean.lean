@@ -20,7 +20,7 @@ import SciLean.Analysis.Calculus.HasFwdFDeriv
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
 import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.HasVecFwdFDeriv
+-- import SciLean.Analysis.Calculus.HasVecFwdFDeriv
 import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
 import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad

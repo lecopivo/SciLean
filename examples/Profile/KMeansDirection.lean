@@ -1,4 +1,5 @@
 import SciLean
+import SciLean.Data.IndexType.RangeNotation
 
 open SciLean
 
@@ -16,6 +17,40 @@ def FloatArray.rand01 (n : Nat) : IO FloatArray := do
 
 set_default_scalar Float
 
+@[inline]
+def SciLean.DataArrayN.setFloatUnsafe (xs : Float^[m,n]) (i : Idx m) (j : Idx n) (v : Float) : Float^[m,n] :=
+  let data : ByteArray := cast sorry_proof xs
+  let data := data.usetFloatUnsafe (toIdx (i,j)) v sorry_proof
+  cast sorry_proof data
+
+
+def SciLean.DataArrayN.mkExclusive {X} [PlainDataType X] {I n} [IdxType I n]
+    (xs : X^[I]) (uniqueName : Name) : X^[I] :=
+  -- let i : I := fromIdx ⟨0,sorry_proof⟩
+  -- setElem xs i xs[i] .intro
+  let data : ByteArray := cast sorry_proof xs
+  let data := data.mkExclusive uniqueName
+  cast sorry_proof data
+
+-- #eval
+--   let a := ⊞[1.0,2;3,4]
+--   let b := a.setFloatUnsafe 1 1 100
+--   let c := b.setFloatUnsafe 0 1 42
+--   (a,b,c)
+
+@[inline]
+def SciLean.DataArrayN.addFloatUnsafe (xs : Float^[m,n]) (i : Idx m) (j : Idx n) (v : Float) : Float^[m,n] :=
+  let vi := xs[i,j]
+  let data : ByteArray := cast sorry_proof xs
+  let data := data.usetFloatUnsafe (toIdx (i,j)) (vi + v) sorry_proof
+  cast sorry_proof data
+
+
+@[extern "scilean_kmeans_direction"]
+opaque kmeansDirCImpl (d n k : USize) (points : ByteArray) (centroids : ByteArray) : ByteArray
+
+def kmeansDirC {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
+  cast sorry_proof (kmeansDirCImpl d.toUSize n.toUSize k.toUSize points.1.1 centroids.1.1)
 
 def kmeansDirSciLean {n k d : ℕ} [NeZero k]
     (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
@@ -95,21 +130,65 @@ def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IdxType I n] (x : Floa
   -- let data := data.uset (toIdx i) val sorry_proof
   -- ⟨⟨data.toByteArray, sorry_proof⟩, sorry_proof⟩
 
--- todo: rewrite this in terms of `FloatArray` to have a really raw Lean implementation
-def kmeansDirBestLeanImpl {n k d : ℕ} [NeZero k]
+
+def kmeansDirBestLeanImpl {n k d : ℕ}
     (points : Float^[Idx n, Idx d]) (centroids : Float^[Idx k, Idx d]) : Float^[Idx k, Idx d] := Id.run do
 
   let mut J : Float^[Idx k, Idx d] := 0
   let mut diagH : Float^[Idx k, Idx d] := 0
 
-  for i in (IndexType.Range.full (I:=Idx n)) do
+  -- J := J.mkExclusive `J
+  -- diagH := diagH.mkExclusive `diagH
+
+  for i in [:n] do
+
+    let mut minj : Idx k := ⟨0,sorry_proof⟩
+    let mut minNorm : Float := Float.inf
+
+    for j in [:k] do
+
+      let mut norm : Float := 0.0
+
+      for l in [:d] do
+        norm := norm + (points[i,l] - centroids[j,l])^2
+
+      if norm < minNorm then
+        minj := j
+        minNorm := norm
+
+    for l in [:d] do
+      -- diagH := diagH.setFloatUnsafe minj l (diagH[minj,l] + 2.0)
+      -- J := J.setFloatUnsafe minj l (J[minj,l] + 2 • (centroids[minj,l] - points[i,l]))
+      diagH[minj,l] += 2.0
+      J[minj,l] += 2 • (centroids[minj,l] - points[i,l])
+
+  for j in [:k] do
+    for l in [:d] do
+      J[j,l] += diagH[j,l]
+
+  return J -- VectorType.div J diagH
+
+
+-- todo: rewrite this in terms of `FloatArray` to have a really raw Lean implementation
+def kmeansDirBestLeanImpl' {n k d : ℕ} [NeZero k]
+    (points : Float^[Idx n, Idx d]) (centroids : Float^[Idx k, Idx d]) : Float^[Idx k, Idx d] := Id.run do
+
+  let mut J : Float^[Idx k, Idx d] := 0
+  let mut diagH : Float^[Idx k, Idx d] := 0
+
+  J := J.mkExclusive `J
+  diagH := diagH.mkExclusive `diagH
+
+  for i in [:n] do
 
     let a := IdxType.argMin fun (j : Idx k) =>
       ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
 
-    for l in (IndexType.Range.full (I:=Idx d)) do
-      diagH[a,l] += 2.0
-      J[a,l] += 2 • (centroids[a,l] - points[i,l])
+    for l in [:d] do
+      diagH := diagH.setFloatUnsafe a l (diagH[a,l] + 2.0)
+      J := J.setFloatUnsafe a l (J[a,l] + 2 • (centroids[a,l] - points[i,l]))
+      -- diagH[a,l] += 2.0
+      -- J[a,l] += 2 • (centroids[a,l] - points[i,l])
 
 
   return J + diagH -- VectorType.div J diagH
@@ -133,6 +212,16 @@ def main : IO Unit := do
 
   let points : Float^[d]^[n] := cast sorry_proof points.toByteArray
   let centroids : Float^[d]^[k] := cast sorry_proof centroids.toByteArray
+
+  let s ← IO.monoNanosNow
+  let dir := kmeansDirC points centroids
+  let e ← IO.monoNanosNow
+  let timeNs := e - s
+  let timeMs := timeNs.toFloat / 1e6
+  IO.println
+    s!"c implementation       time := {timeMs}ms \tdir norm := {‖dir‖₂²[Float]}"
+
+  IO.sleep 1000
 
   -- this should be reference C implementation
   -- let s ← IO.monoNanosNow
@@ -168,10 +257,10 @@ def main : IO Unit := do
 
   IO.sleep 1000
 
-  let s ← IO.monoNanosNow
-  let dir := kmeansDirSciLean points centroids
-  let e ← IO.monoNanosNow
-  let timeNs := e - s
-  let timeMs := timeNs.toFloat / 1e6
-  IO.println
-    s!"SciLean impl           time := {timeMs}ms \tdir norm := {‖dir‖₂²[Float]}"
+  -- let s ← IO.monoNanosNow
+  -- let dir := kmeansDirSciLean points centroids
+  -- let e ← IO.monoNanosNow
+  -- let timeNs := e - s
+  -- let timeMs := timeNs.toFloat / 1e6
+  -- IO.println
+  --   s!"SciLean impl           time := {timeMs}ms \tdir norm := {‖dir‖₂²[Float]}"

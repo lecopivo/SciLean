@@ -1,5 +1,6 @@
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.Calculus.HasRevFDeriv
+import SciLean.Analysis.Calculus.HasFwdFDeriv
 import SciLean.Data.ArrayOperations.Algebra
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.IfPull
@@ -40,6 +41,22 @@ theorem ofFn.arg_f.HasFDerivAt_rule {𝕜 X I Y : Type*}
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (f₀ : I → Y) :
     HasFDerivAt (fun f : I → Y => ofFn (coll:=X) f) (fun df : I → Y =>L[𝕜] ofFn (coll:=X) df) f₀ := by
   apply hasFDerivAt_from_isContinuousLinearMap (𝕜:=𝕜) (x₀:=f₀)
+
+
+@[data_synth]
+theorem ofFn.arg_f.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
+    [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
+    [RCLike 𝕜] [Fintype I]
+    [NormedAddCommGroup X] [NormedSpace 𝕜 X]
+    [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
+    [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] :
+    HasFwdFDeriv 𝕜
+      (fun f : I → Y => ofFn (coll:=X) f)
+      (fun f df => (ofFn f, ofFn df)) := by
+  apply hasFwdFDeriv_from_hasFDerivAt
+  case deriv => intros; data_synth
+  case simp => intros; rfl
+
 
 @[data_synth]
 theorem ofFn.arg_f.HasAdjoint_rule {𝕜 X I Y : Type*}
