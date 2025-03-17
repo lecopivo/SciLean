@@ -226,6 +226,14 @@ instance (priority:=low) : TensorProductType R X R X where
 instance {R} [RCLike R] : TensorProductGetYX R R X X := ⟨⟩
 instance {R} [RCLike R] : TensorProductGetYX R X R X := ⟨⟩
 
+@[simp, simp_core]
+theorem tmul_scalar_left (a : R) (x : X) :
+  a ⊗[R] x = a • x := by simp[tmul,tmulAdd]
+
+@[simp, simp_core]
+theorem tmul_scalar_right (a : R) (x : X) :
+  x ⊗[R] a = a • x := by simp[tmul,tmulAdd]
+
 end Identity
 
 

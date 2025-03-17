@@ -31,9 +31,9 @@ class CanonicalBasis (I : outParam $ Type v) (𝕜 : Type w) (X : Type u)
 
   basis_complete (x : X) : x = Finset.univ.sum (fun i : I => (proj i x) • basis i)
 
-  basis_dualBasis (i j : I) : ⟪basis i, dualBasis i⟫[𝕜] = (if i = j then 1 else 0)
-  proj_basis (i j : I) : proj i (basis i) = (if i = j then 1 else 0)
-  dualProj_dualBasis (i j : I) : dualProj i (dualBasis i) = (if i = j then 1 else 0)
+  basis_dualBasis (i j : I) : ⟪basis i, dualBasis j⟫[𝕜] = (if i = j then 1 else 0)
+  proj_basis (i j : I) : proj i (basis j) = (if i = j then 1 else 0)
+  dualProj_dualBasis (i j : I) : dualProj i (dualBasis j) = (if i = j then 1 else 0)
 
   proj_linear : ∀ i, IsContinuousLinearMap 𝕜 (proj i)
   dualProj_linear : ∀ i, IsContinuousLinearMap 𝕜 (dualProj i)

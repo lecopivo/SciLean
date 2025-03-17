@@ -1,5 +1,9 @@
 import SciLean.Algebra.TensorProduct.Prod
 import SciLean.Algebra.TensorProduct.Pi
+import SciLean.Algebra.TensorProduct.Assoc
+import SciLean.Algebra.TensorProduct.Curry
+import SciLean.Algebra.TensorProduct.Swap
+import SciLean.Algebra.TensorProduct.Util
 import SciLean.Analysis.Calculus.HasRevFDeriv
 
 set_option linter.unusedVariables false
@@ -325,6 +329,33 @@ theorem HMul.hMul.arg_a0a1.HasVecFwdFDeriv_comp_rule
         let' (y, dy) := f' x dx;
         let' (z, dz) := g' x dx;
         (y * z, y ⊗ dz + z ⊗ dy)) := by
+  sorry_proof
+
+-- ugh really? can't this be simpler?
+@[data_synth]
+theorem SciLean.tmul.arg_yx.HasVecFwdFDeriv_comp_rule
+    {YZ} [NormedAddCommGroup YZ] [AdjointSpace 𝕜 YZ] [TensorProductType 𝕜 Y Z YZ] [TensorProductGetYX 𝕜 Y Z YZ]
+    {WZ} [NormedAddCommGroup WZ] [AdjointSpace 𝕜 WZ] [TensorProductType 𝕜 W Z WZ] [TensorProductGetYX 𝕜 W Z WZ]
+    {YZ_W} [NormedAddCommGroup YZ_W] [AdjointSpace 𝕜 YZ_W] [TensorProductType 𝕜 YZ W YZ_W] [TensorProductGetYX 𝕜 YZ W YZ_W]
+    {Y_ZW} [NormedAddCommGroup Y_ZW] [AdjointSpace 𝕜 Y_ZW] [TensorProductType 𝕜 Y ZW Y_ZW] [TensorProductGetYX 𝕜 Y ZW Y_ZW]
+    {YW_Z} [NormedAddCommGroup YW_Z] [AdjointSpace 𝕜 YW_Z] [TensorProductType 𝕜 YW Z YW_Z] [TensorProductGetYX 𝕜 YW Z YW_Z]
+    {Y_WZ} [NormedAddCommGroup Y_WZ] [AdjointSpace 𝕜 Y_WZ] [TensorProductType 𝕜 Y WZ Y_WZ] [TensorProductGetYX 𝕜 Y WZ Y_WZ]
+    [TensorProductAssoc 𝕜 Y W Z] [TensorProductAssoc 𝕜 Y Z W]
+    [TensorProductGetRXY 𝕜 YW Z YW_Z] [TensorProductGetRXY 𝕜 Y W YW]
+    [TensorProductGetRXY 𝕜 YZ W YZ_W] [TensorProductGetRXY 𝕜 Y Z YZ]
+    [TensorProductGetRXY 𝕜 Y WZ Y_WZ] [TensorProductGetRXY 𝕜 W Z WZ]
+    [tc : TensorProductCurry 𝕜 Y WZ Y_ZW] [TensorProductSwap 𝕜 W Z]
+    {f : X → Y} {g : X → Z} {f' g'}
+    (hf : HasVecFwdFDeriv 𝕜 W f f') (hg : HasVecFwdFDeriv 𝕜 W g g') :
+    HasVecFwdFDeriv 𝕜 W
+      (fun x => f x ⊗ g x)
+      (fun x dx =>
+        let' (y, dy) := f' x dx;
+        let' (z, dz) := g' x dx;
+        (y ⊗ z,
+          let y_dz : (Y ⊗ Z) ⊗ W := tmulAssoc.symm (y ⊗ dz)
+          let dy_z : (Y ⊗ Z) ⊗ W := tmulAssoc.symm (tswapRight (tmulAssoc (dy ⊗ z)))
+          y_dz + dy_z)) := by
   sorry_proof
 
 

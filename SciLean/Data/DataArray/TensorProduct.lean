@@ -1,7 +1,13 @@
 import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.Self
+import SciLean.Algebra.TensorProduct.Curry
 import SciLean.Algebra.TensorProduct.MatMul
+import SciLean.Algebra.TensorProduct.Self
+import SciLean.Algebra.TensorProduct.Swap
+import SciLean.Algebra.TensorProduct.Assoc
+import SciLean.Data.ArrayOperations.Operations.GetElem
+import SciLean.Data.ArrayOperations.Operations.OfFn
 import SciLean.Data.DataArray.DataArray
+import SciLean.Data.DataArray.Basis
 
 import SciLean.Analysis.Scalar.FloatAsReal
 
@@ -44,6 +50,11 @@ instance : TensorProductGetY R (R^[I]) (R^[J]) (R^[I,J]) := ⟨⟩
 instance : TensorProductGetX R (R^[I]) (R^[J]) (R^[I,J]) := ⟨⟩
 instance : TensorProductGetRXY R (R^[I]) (R^[J]) (R^[I,J]) := ⟨⟩
 
+@[simp, simp_core]
+theorem DataArrayN.tmul_getElem (x : R^[I]) (y : R^[J]) (ij : I×J) :
+    (x ⊗[R] y)[ij] = x[ij.1] * y[ij.2] := sorry_proof
+
+
 
 instance : TensorProductSelf R (R^[I]) (R^[I,I]) where
 
@@ -60,6 +71,54 @@ instance : TensorProductSelf R (R^[I]) (R^[I,I]) where
 
   addIdentityMatrix_spec := sorry_proof
 
+variable [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
+
+instance : TensorProductSwap R (R^[I]) (R^[J]) where
+
+  tswap := {
+    toFun  := fun A => ⊞ j i => A[i,j]
+    invFun := fun A => ⊞ j i => A[i,j]
+    left_inv  := by intro A; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]
+    right_inv := by intro A; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]
+    continuous_toFun := by fun_prop
+    continuous_invFun := by fun_prop
+    map_add' := by intro x y; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]
+    map_smul' := by intro x y; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]
+  }
+
+
+instance : TensorProductAssoc R (R^[I]) (R^[J]) (R^[K]) where
+
+  tmulAssoc := {
+    toFun := fun A => A.reshape (I×J×K) (by ac_rfl)
+    invFun := fun A => A.reshape ((I×J)×K) (by ac_rfl)
+    left_inv := by intro A; simp[DataArrayN.reshape]
+    right_inv := by intro A; simp[DataArrayN.reshape]
+    continuous_toFun := sorry_proof
+    continuous_invFun := sorry_proof
+    map_add' := sorry_proof
+    map_smul' := sorry_proof
+  }
+
+  assoc_tmul_tmul := by
+    intro x y z; ext ⟨i,j,k⟩
+    simp
+    sorry_proof
+
+
+instance {Y} [NormedAddCommGroup Y] [AdjointSpace R Y] :
+    TensorProductCurry R (R^[I]) (R^[J]) Y where
+
+  tcurry := {
+    toFun := fun f => fun x =>L[R] fun y =>L[R] f (⊞ (ij : I×J) => x[ij.1]*y[ij.2])
+    invFun := fun f => fun A =>L[R] ∑ᴵ (i : I) (j : J), A[i,j] • f (ⅇ[R,_,i]) (ⅇ[R,_,j])
+    left_inv := by intro f; ext A; simp; sorry_proof
+    right_inv := by intro f; ext x y; simp; sorry_proof
+    continuous_toFun := sorry_proof
+    continuous_invFun := sorry_proof
+    map_add' := sorry_proof
+    map_smul' := sorry_proof
+  }
 
 
 variable (A : R^[10,20]) (B : R^[20,5]) (x : R^[5])
