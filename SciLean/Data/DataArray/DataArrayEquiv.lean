@@ -60,7 +60,7 @@ For example for `X = Float^[k]^[n]^[m]` this class inferes `I = Fin m × Fin n �
 class DefaultDataArrayEquiv (X : Type*) (I K : outParam Type*) {n : outParam ℕ} [IdxType I n] [PlainDataType K]
   extends DataArrayEquiv X I K where
 
-instance {R K I : Type*} {n} [IdxType I n] [Scalar R K] [PlainDataType K] :
+instance {K I : Type*} {n} [IdxType I n] [RCLike K] [PlainDataType K] :
     DefaultDataArrayEquiv (K^[I]) I K where
 
 instance {K I : Type*} [PlainDataType K] {nI} [IdxType I nI] {nJ} [IdxType J nJ] [PlainDataType X]

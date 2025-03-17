@@ -429,45 +429,45 @@ theorem norm₂.arg_x.CDifferentiableAt_rule
 end InnerProductSpace
 
 
-section OnFinVec
+-- section OnFinVec
 
-variable
-  {K : Type _} [RCLike K]
-  {IX : Type _} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
-  {IY : Type _} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type _} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
+-- variable
+--   {K : Type _} [RCLike K]
+--   {IX : Type _} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+--   {IY : Type _} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+--   {IZ : Type _} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
-@[fun_prop]
-theorem Basis.proj.arg_x.CDifferentiable_rule (i : IX)
-  : CDifferentiable K (fun x : X => ℼ i x) := by sorry_proof
+-- @[fun_prop]
+-- theorem Basis.proj.arg_x.CDifferentiable_rule (i : IX)
+--   : CDifferentiable K (fun x : X => ℼ i x) := by sorry_proof
 
-@[fun_prop]
-theorem Basis.proj.arg_x.CDifferentiableAt_rule (i : IX) (x)
-  : CDifferentiableAt K (fun x : X => ℼ i x) x := by fun_prop
+-- @[fun_prop]
+-- theorem Basis.proj.arg_x.CDifferentiableAt_rule (i : IX) (x)
+--   : CDifferentiableAt K (fun x : X => ℼ i x) x := by fun_prop
 
-@[fun_prop]
-theorem DualBasis.dualProj.arg_x.CDifferentiable_rule (i : IX)
-  : CDifferentiable K (fun x : X => ℼ' i x) := by sorry_proof
+-- @[fun_prop]
+-- theorem DualBasis.dualProj.arg_x.CDifferentiable_rule (i : IX)
+--   : CDifferentiable K (fun x : X => ℼ' i x) := by sorry_proof
 
-@[fun_prop]
-theorem DualBasis.dualProj.arg_x.CDifferentiableAt_rule (i : IX) (x)
-  : CDifferentiableAt K (fun x : X => ℼ' i x) x := by fun_prop
+-- @[fun_prop]
+-- theorem DualBasis.dualProj.arg_x.CDifferentiableAt_rule (i : IX) (x)
+--   : CDifferentiableAt K (fun x : X => ℼ' i x) x := by fun_prop
 
-@[fun_prop]
-theorem BasisDuality.toDual.arg_x.CDifferentiable_rule
-  : CDifferentiable K (fun x : X => BasisDuality.toDual x) := by sorry_proof
+-- @[fun_prop]
+-- theorem BasisDuality.toDual.arg_x.CDifferentiable_rule
+--   : CDifferentiable K (fun x : X => BasisDuality.toDual x) := by sorry_proof
 
-@[fun_prop]
-theorem BasisDuality.toDual.arg_x.CDifferentiableAt_rule (x)
-  : CDifferentiableAt K (fun x : X => BasisDuality.toDual x) x := by fun_prop
+-- @[fun_prop]
+-- theorem BasisDuality.toDual.arg_x.CDifferentiableAt_rule (x)
+--   : CDifferentiableAt K (fun x : X => BasisDuality.toDual x) x := by fun_prop
 
-@[fun_prop]
-theorem BasisDuality.fromDual.arg_x.CDifferentiable_rule
-  : CDifferentiable K (fun x : X => BasisDuality.fromDual x) := by sorry_proof
+-- @[fun_prop]
+-- theorem BasisDuality.fromDual.arg_x.CDifferentiable_rule
+--   : CDifferentiable K (fun x : X => BasisDuality.fromDual x) := by sorry_proof
 
-@[fun_prop]
-theorem BasisDuality.fromDual.arg_x.CDifferentiableAt_rule (x)
-  : CDifferentiableAt K (fun x : X => BasisDuality.fromDual x) x := by fun_prop
+-- @[fun_prop]
+-- theorem BasisDuality.fromDual.arg_x.CDifferentiableAt_rule (x)
+--   : CDifferentiableAt K (fun x : X => BasisDuality.fromDual x) x := by fun_prop
 
-end OnFinVec
-end SciLean
+-- end OnFinVec
+-- end SciLean

@@ -398,45 +398,45 @@ theorem norm₂.arg_x.ContCDiff_rule
 
 end InnerProductSpace
 
-section OnFinVec
+-- section OnFinVec
 
-variable
-  {K : Type _} [RCLike K]
-  {IX : Type} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
-  {IY : Type} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
+-- variable
+--   {K : Type _} [RCLike K]
+--   {IX : Type} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+--   {IY : Type} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+--   {IZ : Type} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
-@[fun_prop]
-theorem Basis.proj.arg_x.ContCDiffAt_rule (i : IX) (x)
-  : ContCDiffAt K n (fun x : X => ℼ i x) x := by sorry_proof
+-- @[fun_prop]
+-- theorem Basis.proj.arg_x.ContCDiffAt_rule (i : IX) (x)
+--   : ContCDiffAt K n (fun x : X => ℼ i x) x := by sorry_proof
 
-@[fun_prop]
-theorem DualBasis.dualProj.arg_x.ContCDiffAt_rule (i : IX) (x)
-  : ContCDiffAt K n (fun x : X => ℼ' i x) x := by sorry_proof
+-- @[fun_prop]
+-- theorem DualBasis.dualProj.arg_x.ContCDiffAt_rule (i : IX) (x)
+--   : ContCDiffAt K n (fun x : X => ℼ' i x) x := by sorry_proof
 
-@[fun_prop]
-theorem BasisDuality.toDual.arg_x.ContCDiffAt_rule (x)
-  : ContCDiffAt K n (fun x : X => BasisDuality.toDual x) x := by sorry_proof
+-- @[fun_prop]
+-- theorem BasisDuality.toDual.arg_x.ContCDiffAt_rule (x)
+--   : ContCDiffAt K n (fun x : X => BasisDuality.toDual x) x := by sorry_proof
 
-@[fun_prop]
-theorem BasisDuality.fromDual.arg_x.ContCDiffAt_rule (x)
-  : ContCDiffAt K n (fun x : X => BasisDuality.fromDual x) x := by sorry_proof
+-- @[fun_prop]
+-- theorem BasisDuality.fromDual.arg_x.ContCDiffAt_rule (x)
+--   : ContCDiffAt K n (fun x : X => BasisDuality.fromDual x) x := by sorry_proof
 
-@[fun_prop]
-theorem Basis.proj.arg_x.ContCDiff_rule (i : IX)
-  : ContCDiff K n (fun x : X => ℼ i x) := by sorry_proof
+-- @[fun_prop]
+-- theorem Basis.proj.arg_x.ContCDiff_rule (i : IX)
+--   : ContCDiff K n (fun x : X => ℼ i x) := by sorry_proof
 
-@[fun_prop]
-theorem DualBasis.dualProj.arg_x.ContCDiff_rule (i : IX)
-  : ContCDiff K n (fun x : X => ℼ' i x) := by sorry_proof
+-- @[fun_prop]
+-- theorem DualBasis.dualProj.arg_x.ContCDiff_rule (i : IX)
+--   : ContCDiff K n (fun x : X => ℼ' i x) := by sorry_proof
 
-@[fun_prop]
-theorem BasisDuality.toDual.arg_x.ContCDiff_rule
-  : ContCDiff K n (fun x : X => BasisDuality.toDual x) := by sorry_proof
+-- @[fun_prop]
+-- theorem BasisDuality.toDual.arg_x.ContCDiff_rule
+--   : ContCDiff K n (fun x : X => BasisDuality.toDual x) := by sorry_proof
 
-@[fun_prop]
-theorem BasisDuality.fromDual.arg_x.ContCDiff_rule
-  : ContCDiff K n (fun x : X => BasisDuality.fromDual x) := by sorry_proof
+-- @[fun_prop]
+-- theorem BasisDuality.fromDual.arg_x.ContCDiff_rule
+--   : ContCDiff K n (fun x : X => BasisDuality.fromDual x) := by sorry_proof
 
-end OnFinVec
-end SciLean
+-- end OnFinVec
+-- end SciLean

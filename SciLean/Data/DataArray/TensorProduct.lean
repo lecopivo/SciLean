@@ -106,7 +106,8 @@ instance : TensorProductAssoc R (R^[I]) (R^[J]) (R^[K]) where
     sorry_proof
 
 
-instance {Y} [NormedAddCommGroup Y] [AdjointSpace R Y] :
+instance {Y} [NormedAddCommGroup Y] [AdjointSpace R Y]
+    [DecidableEq I] [DecidableEq J] :
     TensorProductCurry R (R^[I]) (R^[J]) Y where
 
   tcurry := {

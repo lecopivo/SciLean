@@ -17,11 +17,11 @@ def FloatArray.rand01 (n : Nat) : IO FloatArray := do
 
 set_default_scalar Float
 
-@[inline]
-def SciLean.DataArrayN.setFloatUnsafe (xs : Float^[m,n]) (i : Idx m) (j : Idx n) (v : Float) : Float^[m,n] :=
-  let data : ByteArray := cast sorry_proof xs
-  let data := data.usetFloatUnsafe (toIdx (i,j)) v sorry_proof
-  cast sorry_proof data
+-- @[inline]
+-- def SciLean.DataArrayN.setFloatUnsafe (xs : Float^[m,n]) (i : Idx m) (j : Idx n) (v : Float) : Float^[m,n] :=
+--   let data : ByteArray := cast sorry_proof xs
+--   let data := data.usetFloatUnsafe (toIdx (i,j)) v sorry_proof
+--   cast sorry_proof data
 
 
 def SciLean.DataArrayN.mkExclusive {X} [PlainDataType X] {I n} [IdxType I n]
@@ -38,12 +38,12 @@ def SciLean.DataArrayN.mkExclusive {X} [PlainDataType X] {I n} [IdxType I n]
 --   let c := b.setFloatUnsafe 0 1 42
 --   (a,b,c)
 
-@[inline]
-def SciLean.DataArrayN.addFloatUnsafe (xs : Float^[m,n]) (i : Idx m) (j : Idx n) (v : Float) : Float^[m,n] :=
-  let vi := xs[i,j]
-  let data : ByteArray := cast sorry_proof xs
-  let data := data.usetFloatUnsafe (toIdx (i,j)) (vi + v) sorry_proof
-  cast sorry_proof data
+-- @[inline]
+-- def SciLean.DataArrayN.addFloatUnsafe (xs : Float^[m,n]) (i : Idx m) (j : Idx n) (v : Float) : Float^[m,n] :=
+--   let vi := xs[i,j]
+--   let data : ByteArray := cast sorry_proof xs
+--   let data := data.usetFloatUnsafe (toIdx (i,j)) (vi + v) sorry_proof
+--   cast sorry_proof data
 
 
 @[extern "scilean_kmeans_direction"]
@@ -185,10 +185,10 @@ def kmeansDirBestLeanImpl' {n k d : ℕ} [NeZero k]
       ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
 
     for l in [:d] do
-      diagH := diagH.setFloatUnsafe a l (diagH[a,l] + 2.0)
-      J := J.setFloatUnsafe a l (J[a,l] + 2 • (centroids[a,l] - points[i,l]))
-      -- diagH[a,l] += 2.0
-      -- J[a,l] += 2 • (centroids[a,l] - points[i,l])
+      -- diagH := diagH.setFloatUnsafe a l (diagH[a,l] + 2.0)
+      -- J := J.setFloatUnsafe a l (J[a,l] + 2 • (centroids[a,l] - points[i,l]))
+      diagH[a,l] += 2.0
+      J[a,l] += 2 • (centroids[a,l] - points[i,l])
 
 
   return J + diagH -- VectorType.div J diagH

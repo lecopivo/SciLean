@@ -17,6 +17,17 @@ def AdjointSpace.toDual (𝕜 : Type u_1) {E : Type u_2} [RCLike 𝕜] [NormedAd
   (x : E) : Dual 𝕜 E := fun x' =>L[𝕜] ⟪x,x'⟫[𝕜]
 
 
+/--
+Tage type to indicate what implementation of tensor product we want.
+
+Because tensor product is usually implemented with matrices/tensors we have two main tags
+`dense` and `sparse`. To make keep this user extensible we also support `custom n`.
+ -/
+inductive TansorProductTag where
+  | dense
+  | sparse
+  | custom (name : Name)
+
 open TensorProduct NormedSpace AdjointSpace in
 /-- `X ⊗' Y` is tensor product of `X` and `Y`.
 

@@ -214,30 +214,30 @@ by
   case isTrue h  => simp[h]; apply ht
   case isFalse h => simp[h]; apply he
 
-namespace SciLean
-section OnFinVec
+-- namespace SciLean
+-- section OnFinVec
 
-variable
-  {K : Type _} [RCLike K]
-  {IX : Type _} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
-  {IY : Type _} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type _} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
+-- variable
+--   {K : Type _} [RCLike K]
+--   {IX : Type _} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+--   {IY : Type _} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+--   {IZ : Type _} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
-@[fun_prop]
-theorem Basis.proj.arg_x.IsSmoothLinearMap_rule (i : IX)
-  : IsSmoothLinearMap K (fun x : X => ℼ i x) := by constructor <;> fun_prop
+-- @[fun_prop]
+-- theorem Basis.proj.arg_x.IsSmoothLinearMap_rule (i : IX)
+--   : IsSmoothLinearMap K (fun x : X => ℼ i x) := by constructor <;> fun_prop
 
-@[fun_prop]
-theorem DualBasis.dualProj.arg_x.IsSmoothLinearMap_rule (i : IX)
-  : IsSmoothLinearMap K (fun x : X => ℼ' i x) := by constructor <;> fun_prop
+-- @[fun_prop]
+-- theorem DualBasis.dualProj.arg_x.IsSmoothLinearMap_rule (i : IX)
+--   : IsSmoothLinearMap K (fun x : X => ℼ' i x) := by constructor <;> fun_prop
 
-@[fun_prop]
-theorem BasisDuality.toDual.arg_x.IsSmoothLinearMap_rule
-  : IsSmoothLinearMap K (fun x : X => BasisDuality.toDual x) := by constructor <;> fun_prop
+-- @[fun_prop]
+-- theorem BasisDuality.toDual.arg_x.IsSmoothLinearMap_rule
+--   : IsSmoothLinearMap K (fun x : X => BasisDuality.toDual x) := by constructor <;> fun_prop
 
-@[fun_prop]
-theorem BasisDuality.fromDual.arg_x.IsSmoothLinearMap_rule
-  : IsSmoothLinearMap K (fun x : X => BasisDuality.fromDual x) := by constructor <;> fun_prop
+-- @[fun_prop]
+-- theorem BasisDuality.fromDual.arg_x.IsSmoothLinearMap_rule
+--   : IsSmoothLinearMap K (fun x : X => BasisDuality.fromDual x) := by constructor <;> fun_prop
 
-end OnFinVec
-end SciLean
+-- end OnFinVec
+-- end SciLean

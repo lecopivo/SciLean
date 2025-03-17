@@ -397,39 +397,39 @@ theorem Inner.inner.arg_a1.IsLinearMap_rule' (y : X) :
 end OnAdjointSpace
 
 
-namespace SciLean
+-- namespace SciLean
 
-section OnFinVec
+-- section OnFinVec
 
-variable
-  {K : Type _} [RCLike K]
-  {IX : Type _} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
-  {IY : Type _} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
-  {IZ : Type _} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
+-- variable
+--   {K : Type _} [RCLike K]
+--   {IX : Type _} [IndexType IX] [DecidableEq IX] {X : Type _} [FinVec IX K X]
+--   {IY : Type _} [IndexType IY] [DecidableEq IY] {Y : Type _} [FinVec IY K Y]
+--   {IZ : Type _} [IndexType IZ] [DecidableEq IZ] {Z : Type _} [FinVec IZ K Z]
 
-@[fun_prop]
-theorem Basis.proj.arg_x.IsLinearMap_rule (i : IX) :
-    IsLinearMap K (fun x : X => ℼ i x) := by sorry_proof
+-- @[fun_prop]
+-- theorem Basis.proj.arg_x.IsLinearMap_rule (i : IX) :
+--     IsLinearMap K (fun x : X => ℼ i x) := by sorry_proof
 
-#generate_linear_map_simps SciLean.Basis.proj.arg_x.IsLinearMap_rule
+-- #generate_linear_map_simps SciLean.Basis.proj.arg_x.IsLinearMap_rule
 
-@[fun_prop]
-theorem DualBasis.dualProj.arg_x.IsLinearMap_rule (i : IX) :
-    IsLinearMap K (fun x : X => ℼ' i x) := by sorry_proof
+-- @[fun_prop]
+-- theorem DualBasis.dualProj.arg_x.IsLinearMap_rule (i : IX) :
+--     IsLinearMap K (fun x : X => ℼ' i x) := by sorry_proof
 
-#generate_linear_map_simps SciLean.DualBasis.dualProj.arg_x.IsLinearMap_rule
+-- #generate_linear_map_simps SciLean.DualBasis.dualProj.arg_x.IsLinearMap_rule
 
-@[fun_prop]
-theorem BasisDuality.toDual.arg_x.IsLinearMap_rule :
-    IsLinearMap K (fun x : X => BasisDuality.toDual x) := by sorry_proof
+-- @[fun_prop]
+-- theorem BasisDuality.toDual.arg_x.IsLinearMap_rule :
+--     IsLinearMap K (fun x : X => BasisDuality.toDual x) := by sorry_proof
 
-#generate_linear_map_simps SciLean.BasisDuality.toDual.arg_x.IsLinearMap_rule
+-- #generate_linear_map_simps SciLean.BasisDuality.toDual.arg_x.IsLinearMap_rule
 
-@[fun_prop]
-theorem BasisDuality.fromDual.arg_x.IsLinearMap_rule :
-    IsLinearMap K (fun x : X => BasisDuality.fromDual x) := by sorry_proof
+-- @[fun_prop]
+-- theorem BasisDuality.fromDual.arg_x.IsLinearMap_rule :
+--     IsLinearMap K (fun x : X => BasisDuality.fromDual x) := by sorry_proof
 
-#generate_linear_map_simps SciLean.BasisDuality.fromDual.arg_x.IsLinearMap_rule
+-- #generate_linear_map_simps SciLean.BasisDuality.fromDual.arg_x.IsLinearMap_rule
 
-end OnFinVec
-end SciLean
+-- end OnFinVec
+-- end SciLean
