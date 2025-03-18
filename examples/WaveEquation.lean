@@ -7,7 +7,7 @@ set_default_scalar Float
 variable {n : Nat}
 set_option synthInstance.maxSize 1000
 
-def _root_.Fin.shift (i : Fin n) (j : Nat) : Fin n := ⟨(i.1+j)%n, sorry_proof⟩
+def _root_.SciLean.Idx.shift (i : Idx n) (j : USize) : Idx n := ⟨(i.1+j)%n, sorry_proof⟩
 
 def H (m k : Float) (x p : Float^[n]) : Float :=
   let Δx := 1.0/n.toFloat
@@ -41,8 +41,8 @@ def main : IO Unit := do
   let N : Nat := 100
 
   let Δt := 0.1
-  let x₀ : Float^[N] := ⊞ (i : Fin N) => (Scalar.sin (i.1.toFloat/10))
-  let p₀ : Float^[N] := ⊞ (i : Fin N) => (0 : Float)
+  let x₀ : Float^[N] := ⊞ (i : Idx N) => (Scalar.sin (i.1.toNat.toFloat/10))
+  let p₀ : Float^[N] := ⊞ (i : Idx N) => (0 : Float)
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
@@ -52,10 +52,10 @@ def main : IO Unit := do
     t += Δt
 
     let M : Nat := 20
-    for m in fullRange (Fin M) do
-      for n in fullRange (Fin N) do
+    for m in fullRange (Idx N) do
+      for n in fullRange (Idx N) do
         let xi := x[n]
-        if (2*m.1.toFloat - M.toFloat)/(M.toFloat) - xi < 0  then
+        if (2*m.1.toNat.toFloat - M.toFloat)/(M.toFloat) - xi < 0  then
           IO.print "x"
         else
           IO.print "."
