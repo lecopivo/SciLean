@@ -26,8 +26,8 @@ instance (priority:=low) : TensorProductType R (Y₁ × Y₂) X₁ (BlockMatrixC
     ⟨tmulAdd r y₁ x A₁, tmulAdd r y₂ x A₂⟩
   matVecMulAdd := fun a ⟨A₁,A₂⟩ x b ⟨y₁,y₂⟩ =>
     ⟨matVecMulAdd a A₁ x b y₁, matVecMulAdd a A₂ x b y₂⟩
-  matHVecMulAdd := fun a ⟨A₁,A₂⟩ ⟨y₁,y₂⟩ b x =>
-    matHVecMulAdd a A₂ y₂ 1 (matHVecMulAdd a A₁ y₁ b x)
+  vecMatMulAdd := fun a ⟨A₁,A₂⟩ ⟨y₁,y₂⟩ b x =>
+    vecMatMulAdd a A₂ y₂ 1 (vecMatMulAdd a A₁ y₁ b x)
   tmulAdd_eq_tmul := sorry_proof
 
 instance [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₂ X₁ YX₂₁] :
@@ -45,8 +45,8 @@ instance (priority:=low) : TensorProductType R Y₁ (X₁ × X₂) (BlockMatrixR
     ⟨tmulAdd r y x₁ A₁, tmulAdd r y x₂ A₂⟩
   matVecMulAdd := fun a ⟨A₁,A₂⟩ ⟨x₁,x₂⟩ b y =>
     matVecMulAdd a A₂ x₂ b (matVecMulAdd a A₁ x₁ b y)
-  matHVecMulAdd := fun a ⟨A₁,A₂⟩ y b ⟨x₁,x₂⟩ =>
-    ⟨matHVecMulAdd a A₁ y 1 x₁, matHVecMulAdd a A₂ y b x₂⟩
+  vecMatMulAdd := fun a y ⟨A₁,A₂⟩ b ⟨x₁,x₂⟩ =>
+    ⟨vecMatMulAdd a y A₁ 1 x₁, vecMatMulAdd a y A₂ b x₂⟩
   tmulAdd_eq_tmul := sorry_proof
 
 instance [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₁ X₂ YX₁₂] :
@@ -72,10 +72,10 @@ instance : TensorProductType R (Y₁ × Y₂) (X₁ × X₂) (BlockMatrix YX₁�
       fst := matVecMulAdd a A₁₁ x₁ b (matVecMulAdd a A₁₂ x₂ b y₁)
       snd := matVecMulAdd a A₂₁ x₁ b (matVecMulAdd a A₂₂ x₂ b y₂)
     }
-  matHVecMulAdd := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨y₁,y₂⟩ b ⟨x₁,x₂⟩ =>
+  vecMatMulAdd := fun a ⟨y₁,y₂⟩ ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ b ⟨x₁,x₂⟩ =>
     {
-      fst := matHVecMulAdd a A₁₁ y₁ b (matHVecMulAdd a A₂₁ y₂ b x₁)
-      snd := matHVecMulAdd a A₁₂ y₁ b (matHVecMulAdd a A₂₂ y₂ b x₂)
+      fst := vecMatMulAdd a y₁ A₁₁ b (vecMatMulAdd a y₂ A₂₁ b x₁)
+      snd := vecMatMulAdd a y₁ A₁₂ b (vecMatMulAdd a y₂ A₂₂ b x₂)
     }
   tmulAdd_eq_tmul := sorry_proof
 

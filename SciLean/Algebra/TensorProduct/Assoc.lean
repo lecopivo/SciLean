@@ -15,10 +15,6 @@ class TensorProductAssoc
     [NormedAddCommGroup X_YZ] [AdjointSpace R X_YZ]
     [TensorProductType R X Y XY] [TensorProductType R Y Z YZ]
     [TensorProductType R XY Z XY_Z] [TensorProductType R X YZ X_YZ]
-    [TensorProductGetYX R X Y XY]
-    [TensorProductGetYX R XY Z XY_Z]
-    [TensorProductGetYX R Y Z YZ]
-    [TensorProductGetYX R X YZ X_YZ]
   where
     tmulAssoc : XY_Z ≃L[R] X_YZ
 
@@ -39,11 +35,6 @@ variable
     [NormedAddCommGroup X_YZ] [AdjointSpace R X_YZ]
     [TensorProductType R X Y XY] [TensorProductType R Y Z YZ]
     [TensorProductType R XY Z XY_Z] [TensorProductType R X YZ X_YZ]
-
-    [TensorProductGetYX R X Y XY]
-    [TensorProductGetYX R XY Z XY_Z]
-    [TensorProductGetYX R Y Z YZ]
-    [TensorProductGetYX R X YZ X_YZ]
 
     [TensorProductGetRXY R XY Z XY_Z]
     [TensorProductGetRXY R X Y XY]
@@ -67,11 +58,6 @@ def tmulAssoc {R X Y Z XY YZ XY_Z X_YZ : Type*} [RCLike R]
 
     [TensorProductGetRXY R XY Z XY_Z]
     [TensorProductGetRXY R X Y XY]
-
-    [TensorProductGetYX R X Y XY]
-    [TensorProductGetYX R XY Z XY_Z]
-    [TensorProductGetYX R Y Z YZ]
-    [TensorProductGetYX R X YZ X_YZ]
 
     [TensorProductAssoc R X Y Z]:
     XY_Z ≃L[R] X_YZ :=

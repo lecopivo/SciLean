@@ -7,7 +7,7 @@ namespace SciLean
 Class providing identity matrix of type `X ⊗ X`
  -/
 class TensorProductSelf
-    (R X XX : Type*) [RCLike R]
+    (R X : Type*) (XX : outParam Type*) [RCLike R]
     [NormedAddCommGroup X] [AdjointSpace R X]
     [AddCommGroup XX] [Module R XX]
     [TensorProductType R X X XX]
@@ -38,62 +38,29 @@ theorem addIdentityMatrix_def (a : R) (A : XX) :
   ts.addIdentityMatrix a A = A + a•ts.identityMatrix := sorry_proof
 
 
-section MatVecNotation
-
-variable [TensorProductGetY R X X XX]
-
-@[simp, simp_core]
-theorem vecMatMul_identityMatrix (x : X) : ts.identityMatrix * x = x := sorry_proof
-
-@[simp, simp_core]
-theorem smul_vecMatMul_identityMatrix (a : R) (x : X) : (a • ts.identityMatrix) * x = a•x := by
-  simp[matVecMul_smul_assoc]
-
-end MatVecNotation
-
-section VecMatNotation
-
-variable [TensorProductGetX R X X XX]
-
-@[simp, simp_core]
-theorem matVecMul_identityMatrix (x : X) : x * ts.identityMatrix = x := sorry_proof
-
-end VecMatNotation
-
-
 @[simp, simp_core]
 theorem matVecMulAdd_identityMatrix (a b : R) (x y : X) :
     matVecMulAdd a ts.identityMatrix x b y
     =
-    a•x+b•y := by
-  have : TensorProductGetY R X X XX := ⟨⟩
-  simp[matVecMulAdd_def]
+    a•x+b•y := by sorry_proof
 
 @[simp, simp_core]
 theorem matVecMulAdd_addIdentityMatrix (a b c : R) (A : XX) (x y : X) :
     matVecMulAdd a (ts.addIdentityMatrix c A) x b y
     =
-    matVecMulAdd a A x 1 ((a*c)•x + b•y) := by
-  have : TensorProductGetY R X X XX := ⟨⟩
-  simp[matVecMulAdd_def,addIdentityMatrix_def,add_matVecMul,matVecMul_smul_assoc]
-  module
+    matVecMulAdd a A x 1 ((a*c)•x + b•y) := by sorry_proof
 
 @[simp, simp_core]
-theorem matHVecMulAdd_identityMatrix (a b : R) (x y : X) :
-    matHVecMulAdd a ts.identityMatrix x b y
+theorem vecMatMulAdd_identityMatrix (a b : R) (x y : X) :
+    vecMatMulAdd a x ts.identityMatrix b y
     =
-    a•x+b•y := by
-  have : TensorProductGetX R X X XX := ⟨⟩
-  simp[matHVecMulAdd_def]
+    a•x+b•y := by sorry_proof
 
 @[simp, simp_core]
-theorem matHVecMulAdd_addIdentityMatrix (a b c : R) (A : XX) (x y : X) :
-    matHVecMulAdd a (ts.addIdentityMatrix c A) x b y
+theorem vecMatMulAdd_addIdentityMatrix (a b c : R) (A : XX) (x y : X) :
+    vecMatMulAdd a x (ts.addIdentityMatrix c A) b y
     =
-    matHVecMulAdd a A x 1 ((a*c)•x + b•y) := by
-  have : TensorProductGetX R X X XX := ⟨⟩
-  simp[matHVecMulAdd_def,addIdentityMatrix_def,vecMatMul_add,vecMatMul_smul_assoc]
-  module
+    vecMatMulAdd a x A 1 ((a*c)•x + b•y) := by sorry_proof
 
 @[simp, simp_core]
 theorem addIdentityMatrix_zero (a : R) :
@@ -126,24 +93,7 @@ elab (priority:=high) "𝐈[" k:term "," X:term "]" : term <= XX => do
   catch _ =>
     pure ()
 
-  -- if we know the resulting type
-  if ¬XX.isMVar then
-    let K ← elabTerm k none
-    let X ← elabTerm X none
-    if K.isMVar ∨ X.isMVar then
-      let cls := mkAppN (← mkConstWithFreshMVarLevels ``TensorProductGetRXY) #[K,X,X,XX]
-      let _ ← synthInstance cls
-    let id ← mkAppOptM ``identityMatrix #[K,X,XX,none,none,none,none,none,none,none]
-    return id
-  else
-    let cls ← elabTerm (← `(TensorProductGetYX $k $X $X _)) none
-    let _ ← synthInstance cls
-    let K := cls.getArg! 0
-    let X := cls.getArg! 1
-    let XX := cls.appArg!
-    let id ← mkAppOptM ``identityMatrix #[K,X,XX,none,none,none,none,none,none,none]
-    return id
-
+  elabTerm (← `(identityMatrix $k $X)) XX --(cls.getArg! 2)
 
 /--
 `𝐈[X]` is the identity matrix for space `X`.

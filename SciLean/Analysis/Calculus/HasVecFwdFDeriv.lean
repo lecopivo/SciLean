@@ -7,6 +7,7 @@ import SciLean.Algebra.TensorProduct.Util
 import SciLean.Analysis.Calculus.HasRevFDeriv
 
 set_option linter.unusedVariables false
+set_option linter.unusedSectionVars false
 
 namespace SciLean
 
@@ -19,9 +20,9 @@ variable
   {XW : Type*} [NormedAddCommGroup XW] [AdjointSpace 𝕜 XW]
   {YW : Type*} [NormedAddCommGroup YW] [AdjointSpace 𝕜 YW]
   {ZW : Type*} [NormedAddCommGroup ZW] [AdjointSpace 𝕜 ZW]
-  [TensorProductGetYX 𝕜 X W XW] [TensorProductType 𝕜 X W XW]
-  [TensorProductGetYX 𝕜 Y W YW] [TensorProductType 𝕜 Y W YW]
-  [TensorProductGetYX 𝕜 Z W ZW] [TensorProductType 𝕜 Z W ZW]
+  [TensorProductType 𝕜 X W XW]
+  [TensorProductType 𝕜 Y W YW]
+  [TensorProductType 𝕜 Z W ZW]
 
 
 set_default_scalar 𝕜
@@ -210,9 +211,9 @@ variable
   {XW : Type*} [NormedAddCommGroup XW] [AdjointSpace 𝕜 XW]
   {YW : Type*} [NormedAddCommGroup YW] [AdjointSpace 𝕜 YW]
   {ZW : Type*} [NormedAddCommGroup ZW] [AdjointSpace 𝕜 ZW]
-  [TensorProductGetYX 𝕜 X W XW] [TensorProductType 𝕜 X W XW]
-  [TensorProductGetYX 𝕜 Y W YW] [TensorProductType 𝕜 Y W YW]
-  [TensorProductGetYX 𝕜 Z W ZW] [TensorProductType 𝕜 Z W ZW]
+  [TensorProductType 𝕜 X W XW]
+  [TensorProductType 𝕜 Y W YW]
+  [TensorProductType 𝕜 Z W ZW]
 
 
 
@@ -334,12 +335,12 @@ theorem HMul.hMul.arg_a0a1.HasVecFwdFDeriv_comp_rule
 -- ugh really? can't this be simpler?
 @[data_synth]
 theorem SciLean.tmul.arg_yx.HasVecFwdFDeriv_comp_rule
-    {YZ} [NormedAddCommGroup YZ] [AdjointSpace 𝕜 YZ] [TensorProductType 𝕜 Y Z YZ] [TensorProductGetYX 𝕜 Y Z YZ]
-    {WZ} [NormedAddCommGroup WZ] [AdjointSpace 𝕜 WZ] [TensorProductType 𝕜 W Z WZ] [TensorProductGetYX 𝕜 W Z WZ]
-    {YZ_W} [NormedAddCommGroup YZ_W] [AdjointSpace 𝕜 YZ_W] [TensorProductType 𝕜 YZ W YZ_W] [TensorProductGetYX 𝕜 YZ W YZ_W]
-    {Y_ZW} [NormedAddCommGroup Y_ZW] [AdjointSpace 𝕜 Y_ZW] [TensorProductType 𝕜 Y ZW Y_ZW] [TensorProductGetYX 𝕜 Y ZW Y_ZW]
-    {YW_Z} [NormedAddCommGroup YW_Z] [AdjointSpace 𝕜 YW_Z] [TensorProductType 𝕜 YW Z YW_Z] [TensorProductGetYX 𝕜 YW Z YW_Z]
-    {Y_WZ} [NormedAddCommGroup Y_WZ] [AdjointSpace 𝕜 Y_WZ] [TensorProductType 𝕜 Y WZ Y_WZ] [TensorProductGetYX 𝕜 Y WZ Y_WZ]
+    {YZ} [NormedAddCommGroup YZ] [AdjointSpace 𝕜 YZ] [TensorProductType 𝕜 Y Z YZ]
+    {WZ} [NormedAddCommGroup WZ] [AdjointSpace 𝕜 WZ] [TensorProductType 𝕜 W Z WZ]
+    {YZ_W} [NormedAddCommGroup YZ_W] [AdjointSpace 𝕜 YZ_W] [TensorProductType 𝕜 YZ W YZ_W]
+    {Y_ZW} [NormedAddCommGroup Y_ZW] [AdjointSpace 𝕜 Y_ZW] [TensorProductType 𝕜 Y ZW Y_ZW]
+    {YW_Z} [NormedAddCommGroup YW_Z] [AdjointSpace 𝕜 YW_Z] [TensorProductType 𝕜 YW Z YW_Z]
+    {Y_WZ} [NormedAddCommGroup Y_WZ] [AdjointSpace 𝕜 Y_WZ] [TensorProductType 𝕜 Y WZ Y_WZ]
     [TensorProductAssoc 𝕜 Y W Z] [TensorProductAssoc 𝕜 Y Z W]
     [TensorProductGetRXY 𝕜 YW Z YW_Z] [TensorProductGetRXY 𝕜 Y W YW]
     [TensorProductGetRXY 𝕜 YZ W YZ_W] [TensorProductGetRXY 𝕜 Y Z YZ]
@@ -458,7 +459,7 @@ theorem Inner.inner.arg_a0a1.HasVecFwdFDeriv_comp_rule
         let' (y, dy) := f' x dx;
         let' (z, dz) := g' x dx;
         -- ⟪dy[i], z⟫[K] + ⟪y, dz[i]⟫[K]
-        (⟪y, z⟫[𝕜], matHVecMulAdd (1:𝕜) dy z (0:𝕜) (matHVecMulAdd (1:𝕜) dz y (0:𝕜) 0))) := by
+        (⟪y, z⟫[𝕜], vecMatMulAdd (1:𝕜) z dy (0:𝕜) (vecMatMulAdd (1:𝕜) y dz (0:𝕜) 0))) := by
   sorry_proof
 
 
@@ -467,7 +468,7 @@ theorem Norm2.norm2.arg_a0.HasVecFwdFDeriv_simple_rule :
     HasVecFwdFDeriv 𝕜 W
       (fun x : Y => ‖x‖₂²[𝕜])
       (fun x dx =>
-        (‖x‖₂²[𝕜], matHVecMulAdd (2:𝕜) dx x (0:𝕜) 0)) := by
+        (‖x‖₂²[𝕜], vecMatMulAdd (2:𝕜) x dx (0:𝕜) 0)) := by
   sorry_proof
 
 @[data_synth]
@@ -476,7 +477,7 @@ theorem SciLean.norm₂.arg_x.HasVecFwdFDeriv_comp_rule
     HasVecFwdFDeriv 𝕜 W (fun x => ‖f x‖₂[𝕜]) (fun x dx =>
       let' (y, dy) := f' x dx;
       let yn := ‖y‖₂[𝕜]
-      (yn, matHVecMulAdd (yn⁻¹) dx x (0:𝕜) 0)) := by
+      (yn, vecMatMulAdd (yn⁻¹) x dx (0:𝕜) 0)) := by
   sorry_proof
 
 end OverReals

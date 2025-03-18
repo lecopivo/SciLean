@@ -5,6 +5,7 @@ import SciLean.Algebra.TensorProduct.Pi
 import SciLean.Analysis.Calculus.HasRevFDeriv
 
 set_option linter.unusedVariables false
+set_option linter.unusedSectionVars false
 
 namespace SciLean
 
@@ -17,9 +18,9 @@ variable
   {WX : Type*} [NormedAddCommGroup WX] [AdjointSpace 𝕜 WX]
   {WY : Type*} [NormedAddCommGroup WY] [AdjointSpace 𝕜 WY]
   {WZ : Type*} [NormedAddCommGroup WZ] [AdjointSpace 𝕜 WZ]
-  [TensorProductType 𝕜 W X WX] [TensorProductGetYX 𝕜 W X WX]
-  [TensorProductType 𝕜 W Y WY] [TensorProductGetYX 𝕜 W Y WY]
-  [TensorProductType 𝕜 W Z WZ] [TensorProductGetYX 𝕜 W Z WZ]
+  [TensorProductType 𝕜 W X WX]
+  [TensorProductType 𝕜 W Y WY]
+  [TensorProductType 𝕜 W Z WZ]
 
 set_default_scalar 𝕜
 
@@ -348,9 +349,9 @@ variable
   {WX : Type*} [NormedAddCommGroup WX] [AdjointSpace 𝕜 WX]
   {WY : Type*} [NormedAddCommGroup WY] [AdjointSpace 𝕜 WY]
   {WZ : Type*} [NormedAddCommGroup WZ] [AdjointSpace 𝕜 WZ]
-  [TensorProductType 𝕜 W X WX] [TensorProductGetYX 𝕜 W X WX]
-  [TensorProductType 𝕜 W Y WY] [TensorProductGetYX 𝕜 W Y WY]
-  [TensorProductType 𝕜 W Z WZ] [TensorProductGetYX 𝕜 W Z WZ]
+  [TensorProductType 𝕜 W X WX]
+  [TensorProductType 𝕜 W Y WY]
+  [TensorProductType 𝕜 W Z WZ]
 
 set_default_scalar 𝕜
 

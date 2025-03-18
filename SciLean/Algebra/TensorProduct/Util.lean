@@ -3,6 +3,8 @@ import SciLean.Algebra.TensorProduct.Assoc
 import SciLean.Algebra.TensorProduct.Curry
 import SciLean.Algebra.TensorProduct.Swap
 
+set_option linter.unusedSectionVars false
+
 open SciLean
 
 macro "variable_vec[" k:term "]" X:ident : command =>
@@ -19,7 +21,7 @@ variable {XY :Type*} [NormedAddCommGroup XY] [AdjointSpace 𝕜 XY] [TensorProdu
          [TensorProductGetYX 𝕜 X Y XY] [TensorProductGetRXY 𝕜 X Y XY]
 ```
 -/
-elab "variable_tprod[" k:term "]" X:term:120 "⊗" Y:term:120 : command => do
+elab "variable_tprod[" k:term "]" X:term:120 "⊗'" Y:term:120 : command => do
 
   let (x,y) ← runTermElabM fun _ => do
     let xVar ← elabTermAndSynthesize X none
@@ -51,8 +53,8 @@ variable_vec[𝕜] B
 variable_vec[𝕜] C
 variable_vec[𝕜] D
 
-variable_tprod[𝕜] A ⊗ B
-variable_tprod[𝕜] C ⊗ D
+variable_tprod[𝕜] A ⊗' B
+variable_tprod[𝕜] C ⊗' D
 
 variable [TensorProductCurry 𝕜 A B CD]
 
@@ -72,10 +74,10 @@ variable_vec[𝕜] A
 variable_vec[𝕜] B
 variable_vec[𝕜] C
 
-variable_tprod[𝕜] A ⊗ B
-variable_tprod[𝕜] B ⊗ A
-variable_tprod[𝕜] (A ⊗ B) ⊗ C
-variable_tprod[𝕜] (B ⊗ A) ⊗ C
+variable_tprod[𝕜] A ⊗' B
+variable_tprod[𝕜] B ⊗' A
+variable_tprod[𝕜] (A ⊗ B) ⊗' C
+variable_tprod[𝕜] (B ⊗ A) ⊗' C
 
 variable
   [TensorProductCurry 𝕜 (A⊗[𝕜]B) C ((B⊗[𝕜]A)⊗[𝕜]C)]
@@ -107,10 +109,10 @@ variable_vec[𝕜] A
 variable_vec[𝕜] B
 variable_vec[𝕜] C
 
-variable_tprod[𝕜] B ⊗ C
-variable_tprod[𝕜] C ⊗ B
-variable_tprod[𝕜] A ⊗ (B ⊗ C)
-variable_tprod[𝕜] A ⊗ (C ⊗ B)
+variable_tprod[𝕜] B ⊗' C
+variable_tprod[𝕜] C ⊗' B
+variable_tprod[𝕜] A ⊗' (B ⊗ C)
+variable_tprod[𝕜] A ⊗' (C ⊗ B)
 
 variable
   [TensorProductCurry 𝕜 A (B⊗[𝕜]C) (A⊗[𝕜](C⊗[𝕜]B))]

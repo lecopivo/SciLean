@@ -9,9 +9,6 @@ class TensorProductSwap (𝕜 X Y : Type*)
     {XY : Type*} [NormedAddCommGroup XY] [AdjointSpace 𝕜 XY]
     {YX : Type*} [NormedAddCommGroup YX] [AdjointSpace 𝕜 YX]
     [TensorProductType 𝕜 X Y XY] [TensorProductType 𝕜 Y X YX]
-    [TensorProductGetRXY 𝕜 X Y XY] [TensorProductGetYX 𝕜 Y X YX]
-    -- [TensorProductGetRXY 𝕜 Y X YX]
-    [TensorProductGetYX 𝕜 X Y XY]
   where
   tswap : (X ⊗[𝕜] Y) ≃L[𝕜] (Y ⊗[𝕜] X)
 
@@ -25,9 +22,7 @@ def tswap {𝕜 X Y : Type*}
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     {XY : Type*} [NormedAddCommGroup XY] [AdjointSpace 𝕜 XY]
     {YX : Type*} [NormedAddCommGroup YX] [AdjointSpace 𝕜 YX]
-    [TensorProductType 𝕜 X Y XY] [TensorProductType 𝕜 Y X YX]
-    [TensorProductGetRXY 𝕜 X Y XY]
-    [TensorProductGetYX 𝕜 Y X YX]
-    [TensorProductGetYX 𝕜 X Y XY]
+    [TensorProductType 𝕜 X Y XY] [TensorProductGetRXY 𝕜 X Y XY]
+    [TensorProductType 𝕜 Y X YX]
     [ts : TensorProductSwap 𝕜 X Y] :
     X ⊗[𝕜] Y →L[𝕜] Y ⊗[𝕜] X := ts.tswap

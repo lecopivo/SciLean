@@ -42,7 +42,7 @@ Float^[m] ⊗' Float^[n] = Float^[m,n]
 Float^[m] ⊗' Float     = Float^[m]
     Float ⊗' Float^[n] = Float^[n]
 ```-/
-class TensorProductType (R Y X YX : Type*) [RCLike R]
+class TensorProductType (R Y X : Type*) (YX : outParam Type*) [RCLike R]
   [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedAddCommGroup X] [AdjointSpace R X]
   [AddCommGroup YX] [Module R YX]
   where
@@ -55,7 +55,7 @@ class TensorProductType (R Y X YX : Type*) [RCLike R]
     /-- Outer/tensor product of two vectors added to a matrix
 
     ```
-    tmulAdd' a y x A = a•y*xᴴ + A
+    tmulAdd a y x A = a•y*xᴴ + A
     ```
     -/
     tmulAdd (a : R) (y : Y) (x : X) (A : YX) : YX
@@ -74,15 +74,15 @@ class TensorProductType (R Y X YX : Type*) [RCLike R]
     matVecMulAdd (a : R) (A : YX) (x : X) (b : R) (y : Y) : Y
 
 
-    /-- Conjugate/transpose matrix vector multiplication
+    /-- Vector matrix multiplication
     ```
-    vecMul a A y b x = a•Aᴴ*y + b•x
+    vecMatMulAdd a y A b x = a•y*A + b•x
     ```
     -/
-    matHVecMulAdd (a : R) (A : YX) (y : Y) (b : R) (x : X) : X
+    vecMatMulAdd (a : R) (y : Y) (A : YX) (b : R) (x : X) : X
 
 
-export TensorProductType (tmulAdd matVecMulAdd matHVecMulAdd)
+export TensorProductType (tmulAdd matVecMulAdd vecMatMulAdd)
 
 /-- Tag class used to obtain the canonical tensor product type of `Y` and `X` -/
 class TensorProductGetYX (R Y X : Type*) (YX : outParam Type*)
@@ -103,7 +103,7 @@ class TensorProductGetRXY (R Y X : outParam Type*) (YX : Type*)
 open TensorProductType in
 /-- Outer/tensor product of two vectors. -/
 abbrev tmul
-    (R : Type*) {Y X : Type*} {YX : Type*} [TensorProductGetYX R Y X YX] -- infer `YX` from R X and Y
+    (R : Type*) {Y X : Type*} {YX : Type*}
     [RCLike R]
     [NormedAddCommGroup Y] [AdjointSpace R Y]
     [NormedAddCommGroup X] [AdjointSpace R X]
@@ -117,57 +117,27 @@ abbrev tmul
 -- Notation ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-/-- Notation class for tensor multiplication `⊗` over ring `R`
 
-It is defined in this way, unlike `HAdd`, to support tensor product of elements and types at the same
-time.
- -/
-class TMul (R : Type*) {α β : Sort*} {γ : outParam Sort*} (a : α) (b : β) (c : outParam γ) where
+open Lean Elab Term Meta Qq in
+elab (priority:=high) x:term:101 " ⊗[" R:term "] " y:term:100 : term => do
 
-/--
-Notation instance for tensor multiplication of two types.
+  let xType ← inferType (← elabTerm x none)
+  let yType ← inferType (← elabTerm y none)
 
-To infer the tensor type we use the tag class `TensorProductGetYX`.
- -/
-instance (R Y X YX : Type*) [TensorProductGetYX R Y X YX]
-    [RCLike R]
-    [NormedAddCommGroup Y] [AdjointSpace R Y]
-    [NormedAddCommGroup X] [AdjointSpace R X]
-    [AddCommGroup YX] [Module R YX]
-    [TensorProductType R Y X YX] :
-    TMul R Y X YX := ⟨⟩
+  if xType.isSort ∧ yType.isSort then
 
-/--
-Notation instance for tensor multiplication of two elements.
+    let cls ← elabTerm (← `(TensorProductType $R $x $y _)) none
+    let _ ← synthInstance cls
 
-To infer the tensor type we use the tag class `TensorProductGetYX`.
- -/
-instance (R Y X YX : Type*) [TensorProductGetYX R Y X YX] -- infer `YX` from R X and Y
-    [RCLike R]
-    [NormedAddCommGroup Y] [AdjointSpace R Y]
-    [NormedAddCommGroup X] [AdjointSpace R X]
-    [AddCommGroup YX] [Module R YX]
-    [TensorProductType R Y X YX]
-    (y : Y) (x : X) :
-    TMul R y x (tmul R y x) := ⟨⟩
+    return cls.getArg! 3
+  else
+    let cls ← elabTerm (← `(TensorProductType $R (type_of% $x) (type_of% $y) _)) none
+    let _ ← synthInstance? cls
 
-open Lean Meta Elab Term in
-/-- Outer/tensor product of vectors or types.
+    let t ← elabTerm  (← `(tmul $R $x $y)) (cls.getArg! 3)
+    return t
 
-For types:
-`R^[m] ⊗ R^[n]` is equal to `R^[m,n]`.
-
-For vectors, `x : R^[m]` and `y : R^[n]`
-`x ⊗ y` is outer product resulting in `m×n` matrix.
- -/
-elab (name:=tmulSyntax) x:term:101 " ⊗[" R:term "]" y:term:100 : term => do
-    let tp ← elabTerm (← `(TMul $R $x $y _)) none
-    let _ ← synthInstance tp
-    return (tp.appArg!)
-
-
-@[inherit_doc tmulSyntax]
-macro:100 x:term:101 " ⊗ " y:term:100 : term => `($x ⊗[defaultScalar%] $y)
+macro (priority:=high) x:term:101 " ⊗ " y:term:100 : term => `($x ⊗[defaultScalar%] $y)
 
 @[app_unexpander tmul] def unexpandTMul : Lean.PrettyPrinter.Unexpander
   | `($(_) $_ $y $x) => `($y ⊗ $x)
@@ -175,35 +145,6 @@ macro:100 x:term:101 " ⊗ " y:term:100 : term => `($x ⊗[defaultScalar%] $y)
 
 
 
-----------------------------------------------------------------------------------------------------
--- Vector-matrix multiplication --------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-open TensorProductType in
-/-- Matrix vector multiplication instances.
-
-We use tag class `TensorProductGetY` to infer the product output type `Y` and ring `R` -/
-instance (R Y X YX : Type*) [TensorProductGetY R Y X YX]
-    [RCLike R]
-    [NormedAddCommGroup Y] [AdjointSpace R Y]
-    [NormedAddCommGroup X] [AdjointSpace R X]
-    [AddCommGroup YX] [Module R YX]
-    [TensorProductType R Y X YX] :
-    HMul YX X Y where
-  hMul A x := matVecMulAdd (1:R) A x 0 0
-
-
-/-- Vector matrix multiplication instances.
-
-We use tag class `TensorProductGetX` to infer the product output type `X` and ring `R` -/
-instance (R Y X YX : Type*) [TensorProductGetX R Y X YX]
-    [RCLike R]
-    [NormedAddCommGroup Y] [AdjointSpace R Y]
-    [NormedAddCommGroup X] [AdjointSpace R X]
-    [AddCommGroup YX] [Module R YX]
-    [TensorProductType R Y X YX] :
-    HMul Y YX X where
-  hMul y A := matHVecMulAdd (1:R) A y 0 0
 
 
 ----------------------------------------------------------------------------------------------------
@@ -221,7 +162,7 @@ instance : TensorProductType R R X X where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd a x y A := (a*x) • /- star -/ y + A
   matVecMulAdd a A x b y := a*⟪A,x⟫[R] + b*y
-  matHVecMulAdd a A y b x := (a*/- conj -/y)•A + b • x
+  vecMatMulAdd a y A b x := (a*/- conj -/y)•A + b • x
   tmulAdd_eq_tmul := sorry_proof
 
 -- this creates a diamond with the previous for `ttmul` on `R ⊗'[R] R`
@@ -231,7 +172,7 @@ instance (priority:=low) : TensorProductType R X R X where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd a x y A := (a*/- conj -/ y)•x + A
   matVecMulAdd a A y b x := (a*y)• /- star -/ A + b • x
-  matHVecMulAdd a A x b y := a*⟪A,x⟫[R] + b*y
+  vecMatMulAdd a x A b y := a*⟪A,x⟫[R] + b*y
   tmulAdd_eq_tmul := sorry_proof
 
 instance {R} [RCLike R] : TensorProductGetYX R R X X := ⟨⟩
@@ -248,6 +189,9 @@ theorem tmul_scalar_right (a : R) (x : X) :
 end Identity
 
 
+----------------------------------------------------------------------------------------------------
+-- Simps -------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 section Simps
 
@@ -258,85 +202,26 @@ variable
   [TensorProductType R Y X YX]
 
 
-section MatVecNotation
-
-variable [TensorProductGetY R Y X YX]
-
-theorem matVecMulAdd_def
-    (a b : R) (A : YX) (x : X) (y : Y) :
-  matVecMulAdd a A x b y = a•A*x + b•y := sorry_proof
-
-@[simp, simp_core]
-theorem matVecMul_zero_A (x : X) : (0 : YX) * x = 0 := sorry_proof
-
-@[simp, simp_core]
-theorem matVecMul_zero_x (A : YX) : (A : YX) * (0 : X) = 0 := sorry_proof
-
-theorem add_matVecMul (A B : YX) (x : X) : (A+B)*x = A*x + B*x := sorry_proof
-theorem matVecMul_add (A : YX) (x y : X) : A*(x+y) = A*x + A*y := sorry_proof
-
-theorem matVecMul_smul_assoc (a : R) (A : YX) (x : X) : (a•A)*x = a•(A*x) := sorry_proof
-
-end MatVecNotation
-
-section VecMatNotation
-
-variable [TensorProductGetX R Y X YX]
-
--- TODO: this theorem is missing `(star y)` !!! we would probably add `Star` to `AdjointSpace`
-theorem matHVecMulAdd_def
-    (a b : R) (A : YX) (x : X) (y : Y) :
-  matHVecMulAdd a A y b x = a•/-star-/y*A + b•x := sorry_proof
-
-@[simp, simp_core]
-theorem vecMatMul_zero_A (y : Y) : y * (0 : YX) = 0 := sorry_proof
-
-@[simp, simp_core]
-theorem vecMatMul_zero_y (A : YX) : (0 : Y) * (A : YX) = 0 := sorry_proof
-
-theorem vecMatMul_add (A B : YX) (y : Y) : y*(A+B) = y*A + y*B := sorry_proof
-theorem add_vecMatMul (A : YX) (x y : Y) : (x+y)*A = x*A + y*A := sorry_proof
-
--- TODO: this is wrong onver complex numbers
---       it is missing some conjugations!!!
-theorem vecMatMul_smul_assoc (a : R) (y : Y) (A : YX) : y*(a•A) = a•(y*A) := sorry_proof
-
-end VecMatNotation
-
-
 @[simp, simp_core]
 theorem matVecMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
-    matVecMulAdd 0 A x b y = b•y := by
-  have : TensorProductGetY R Y X YX := ⟨⟩
-  simp[matVecMulAdd_def]
+    matVecMulAdd 0 A x b y = b•y := by sorry_proof
 
 @[simp, simp_core]
 theorem matVecMulAdd_zero_A (a b : R) (x : X) (y : Y) :
-    matVecMulAdd a (0 : YX) x b y = b•y := by
-  have : TensorProductGetY R Y X YX := ⟨⟩
-  simp[matVecMulAdd_def]
+    matVecMulAdd a (0 : YX) x b y = b•y := by sorry_proof
 
 @[simp, simp_core]
 theorem matVecMulAdd_zero_x (a b : R) (A : YX) (y : Y) :
-    matVecMulAdd a A (0:X) b y = b•y := by
-  have : TensorProductGetY R Y X YX := ⟨⟩
-  simp[matVecMulAdd_def]
-
+    matVecMulAdd a A (0:X) b y = b•y := by sorry_proof
 
 @[simp, simp_core]
-theorem matHVecMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
-    matHVecMulAdd 0 A y b x = b•x := by
-  have : TensorProductGetX R Y X YX := ⟨⟩
-  simp[matHVecMulAdd_def]
+theorem vecMatMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
+    vecMatMulAdd 0 y A b x = b•x := by sorry_proof
 
 @[simp, simp_core]
-theorem matHVecMulAdd_zero_A (a b : R) (x : X) (y : Y) :
-  matHVecMulAdd a (0 : YX) y b x = b•x := by
-  have : TensorProductGetX R Y X YX := ⟨⟩
-  simp[matHVecMulAdd_def]
+theorem vecMatMulAdd_zero_A (a b : R) (x : X) (y : Y) :
+  vecMatMulAdd a y (0 : YX) b x = b•x := by sorry_proof
 
 @[simp, simp_core]
-theorem matHVecMulAdd_zero_y (a b : R) (A : YX) (x : X) :
-  matHVecMulAdd a A (0:Y) b x = b•x := by
-  have : TensorProductGetX R Y X YX := ⟨⟩
-  simp[matHVecMulAdd_def]
+theorem vecMatMulAdd_zero_y (a b : R) (A : YX) (x : X) :
+  vecMatMulAdd a (0:Y) A b x = b•x := by sorry_proof
