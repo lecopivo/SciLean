@@ -19,13 +19,13 @@ set_default_scalar K
 #check ∂ (x:=(1:K)), x*x
 
 variable (f : K → K → K)
--- /--
--- info: ∂ x,
---   match x with
---   | (x, y) => f x y : K × K → K × K → K
--- -/
--- #guard_msgs in
--- #check ((∂ (x,y), f x y) : K×K → K×K → K)
+/--
+info: ∂ x,
+  match x with
+  | (x, y) => f x y : K × K → K × K →L[K] K
+-/
+#guard_msgs in
+#check ((∂ (x,y), f x y) : K×K → K×K →L[K] K)
 
 /-- info: ∂ (x:=1), x * x : K -/
 #guard_msgs in
