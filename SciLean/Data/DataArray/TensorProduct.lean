@@ -4,6 +4,7 @@ import SciLean.Algebra.TensorProduct.MatMul
 import SciLean.Algebra.TensorProduct.Self
 import SciLean.Algebra.TensorProduct.Swap
 import SciLean.Algebra.TensorProduct.Assoc
+import SciLean.Algebra.MatrixType
 import SciLean.Data.ArrayOperations.Operations.GetElem
 import SciLean.Data.ArrayOperations.Operations.OfFn
 import SciLean.Data.DataArray.DataArray
@@ -20,7 +21,7 @@ variable
 
 
 
-instance : TensorProductType R (R^[I]) (R^[J]) (R^[I,J]) where
+instance : MatrixType R (R^[I]) (R^[J]) (R^[I,J]) where
   equiv := ⟨fun _ => True, sorry_proof⟩ -- TODO: provide proper implementation of the equivalence
   tmulAdd a y x A :=
     -- I do not understant why I should call it this way, it seems that x and y are swapped ...
@@ -38,6 +39,9 @@ instance : TensorProductType R (R^[I]) (R^[J]) (R^[I,J]) where
     ⟨x, sorry_proof⟩
   tmulAdd_eq_tmul := sorry_proof
 
+instance {R : Type u'} [PlainDataType R]
+    {I : Type u} {nI} [IdxType I nI] {J : Type v} {nJ} [IdxType J nJ] :
+    MatrixMulNotation (R^[I,J]) := ⟨⟩
 
 -- TODO: use BLAS `gemm`!!!
 instance [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J] [IdxType.Fold' K] :
@@ -122,8 +126,8 @@ instance {Y} [NormedAddCommGroup Y] [AdjointSpace R Y]
   }
 
 
-variable (A : R^[10,20]) (B : R^[20,5]) (x : R^[5])
+-- variable (A : R^[10,20]) (B : R^[20,5]) (x : R^[5])
 
-/-- info: A * B * x : R^[10] -/
-#guard_msgs in
-#check A*B*x
+-- /-- info: A * B * x : R^[10] -/
+-- #guard_msgs in
+-- #check A*B*x

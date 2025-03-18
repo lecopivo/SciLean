@@ -3,21 +3,39 @@ import SciLean.Algebra.TensorProduct.Self
 
 namespace SciLean
 
-class MatrixType (R : outParam Type*) (M : Type*) (X Y : outParam Type*) [RCLike R]
+class MatrixType (R : outParam Type*) (Y X : outParam Type*) (M : Type*) [RCLike R]
   [NormedAddCommGroup X] [AdjointSpace R X] [NormedAddCommGroup Y] [AdjointSpace R Y]
   [AddCommGroup M] [Module R M]
   extends
     TensorProductType R Y X M
   where
 
+/-- Class that allows matrix-vector multiplication -/
+class MatrixMulNotation (M : Type*) where
+
 variable
   {R : Type*} [RCLike R]
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
   {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y]
-  {M : Type*} [AddCommGroup M] [Module R M] [MatrixType R M X Y]
+  {M : Type*} [AddCommGroup M] [Module R M] [MatrixType R Y X M]
 
-instance : HMul M X Y := ⟨fun A x => TensorProductType.matVecMulAdd (1:R) A x 0 (0:Y)⟩
-instance : HMul Y M X := ⟨fun y A => TensorProductType.vecMatMulAdd (1:R) y A 0 (0:X)⟩
+instance
+  {M : Type*} [MatrixMulNotation M]
+  {R : Type*} {_ : RCLike R}
+  {X : Type*} {_ : NormedAddCommGroup X} {_ : AdjointSpace R X}
+  {Y : Type*} {_ : NormedAddCommGroup Y} {_ : AdjointSpace R Y}
+  [AddCommGroup M] {_ : Module R M} [MatrixType R Y X M] :
+  HMul M X Y := ⟨fun A x => TensorProductType.matVecMulAdd (1:R) A x 0 (0:Y)⟩
+
+instance
+  {M : Type*} [MatrixMulNotation M]
+  {R : Type*} {_ : RCLike R}
+  {X : Type*} {_ : NormedAddCommGroup X} {_ : AdjointSpace R X}
+  {Y : Type*} {_ : NormedAddCommGroup Y} {_ : AdjointSpace R Y}
+  [AddCommGroup M] {_ : Module R M} [MatrixType R Y X M] :
+  HMul Y M X := ⟨fun y A => TensorProductType.vecMatMulAdd (1:R) y A 0 (0:X)⟩
+
+variable [MatrixMulNotation M]
 
 @[simp, simp_core] theorem zero_matVecMul (x : X) : (0 : M) * x = 0 := sorry_proof
 @[simp, simp_core] theorem matVecMul_zero (A : M) : A * (0 : X) = 0 := sorry_proof
@@ -34,7 +52,8 @@ theorem vecMatMul_smul_assoc (a : R) (y : Y) (A : M) : y*(a•A) = a•(y*A) := 
 section MatVecNotation
 
 variable
-  {XX : Type*} [AddCommGroup XX] [Module R XX] [MatrixType R XX X X] [TensorProductSelf R X XX]
+  {XX : Type*} [AddCommGroup XX] [Module R XX] [MatrixType R X X XX] [TensorProductSelf R X XX]
+  [MatrixMulNotation XX]
 
 set_default_scalar R
 
