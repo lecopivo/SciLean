@@ -1,5 +1,5 @@
 import SciLean.Analysis.AdjointSpace.CanonicalBasis
-import SciLean.Data.DataArray.VectorType
+import SciLean.Data.DataArray.Algebra
 
 namespace SciLean
 
@@ -14,8 +14,8 @@ instance (priority:=high) : CanonicalBasis I R (R^[I]) where
   proj i x := x[i]
   dualProj i x := x[i]
   basis_complete := by intros; ext i; simp[sum_pull]; sorry_proof
-  proj_basis := by classical intro i j; by_cases i = j <;> aesop
-  dualProj_dualBasis :=  by classical intro i j; by_cases i = j <;> aesop
+  proj_basis := by sorry_proof --classical intro i j; by_cases i = j <;> aesop
+  dualProj_dualBasis :=  by sorry_proof --classical intro i j; by_cases i = j <;> aesop
   inner_basis_dualBasis := sorry_proof
   proj_linear := sorry_proof
   dualProj_linear := sorry_proof

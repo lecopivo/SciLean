@@ -16,6 +16,7 @@ namespace SciLean
 
 namespace VectorType
 
+
 -- def_fun_prop toVec in x [Lawful X] : IsLinearMap K by
 --   constructor <;> (intros; simp[vector_to_spec])
 
@@ -105,7 +106,7 @@ theorem getElem.arg_xs.adjoint_rule [Dense X] (i : n) :
 
 set_option pp.universes true
 @[data_synth]
-theorem getElem.arg_xs.HasAdjoint_rule [IdxType.Fold'.{_,v} n] [Dense X] (i : n) :
+theorem getElem.arg_xs.HasAdjoint_rule [IdxType.Fold'.{_,_} n] [Dense X] (i : n) :
     HasAdjoint K (fun x : X => x[i])
      (fun k : K => setElem (0 : X) i k (by dsimp)) := by
   data_synth

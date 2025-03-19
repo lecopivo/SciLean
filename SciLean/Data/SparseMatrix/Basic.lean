@@ -143,6 +143,9 @@ class ApproxZero (R : Type*) [Zero R] where
   is_zero (r : R) : approxZero r ↔ r = 0
 
 
+-- TODO: maybe expose row/col major into the type such that you do not accidantely work with
+--       a mixture of row/col major matrices which would be slow
+
 /-- Sparse matrix with values in `R` index by `I` and `J`
 
 There are three different formats of sparse matrix

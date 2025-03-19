@@ -3,78 +3,108 @@ import SciLean.Data.ArrayOperations.Algebra
 
 namespace SciLean
 
-open Function in
+open Function
+
+
 /-- Type `X` is equivalent to `K^[I]`.
 
 This class us useful for uncurrying arrays. For example derive equivalence
 `K^[k]^[n]^[m] ≃ K^[m,n,k]` or `K^[k]^[n]^[m] ≃ K^[k]^[n,m]`
 
 This class is often used in conjunction with `GetElem` or `DefaultIndex` to derive `K` or `I` as `outParam`. -/
-class DataArrayEquiv (X : Type*) (I : Type*) (K : Type*)
+class DataArrayEquiv (X : Type*) (I : Type*) (K : outParam Type*)
     {n : outParam ℕ} [IdxType I n] [PlainDataType K] where
-  toRn : X → K^[I]
-  fromRn : K^[I] → X
-  left_inv : LeftInverse fromRn toRn
-  right_inv : RightInverse fromRn toRn
+  toKn : X → K^[I]
+  fromKn : K^[I] → X
+  protected left_inv : LeftInverse fromKn toKn
+  protected right_inv : RightInverse fromKn toKn
 
-  -- equiv : X ≃ K^[I]  -- compiler can't see through Equiv!!!
   -- maybe require that `X` can be indexed by `I` and get `K` and the indexing commutes with this equivalence
   -- but that is a problem because we want to use this class to implement the index access
 
--- /-- `dataArrayEquiv K` is an equivalence between type `X` and `K^[I]` for appropriate `I`.
--- It is an abbreviation for `DataArrayEquiv.equiv (K:=K)`.
+  -- also probably require that `X` is `PlainDataType` and `toByteArray` commutes with `toKn`
 
--- Often used with as `dataArrayEquiv Float` or `dataArrayEquiv ComplexFloat`. -/
--- @[inline]
--- abbrev dataArrayEquiv {X : Type*} (I K : Type*)
---     {n} [IdxType I n] [PlainDataType K] [DataArrayEquiv X I K] :
---     X ≃ K^[I] := DataArrayEquiv.equiv
 
--- base case
-instance {I n} [IdxType I n] {K} [PlainDataType K] :
-    DataArrayEquiv (K^[I]) I K where
-  toRn := fun x => x
-  fromRn := fun x => x
-  left_inv := by intro; simp
-  right_inv := by intro; simp
+/-- `HasRnEquiv X n R` says that `X` is canonically isomorphic to `R^[n]`
+
+This provides class provides:
+  - `toRn : X → R^[n]`
+  - `fromRn : R^[n] → X`
+
+This class is supposed to be zero cost at runtime or close to zero.
+-/
+class HasRnEquiv (X : Type*) (I R : outParam Type*) {nI : outParam ℕ}
+    [RealScalar R] [PlainDataType R] [IdxType I nI]
+  extends
+    DataArrayEquiv X I R
+  where
+
+
+@[inline]
+abbrev toKn {X : Type*} (I K : Type*) {nI} [IdxType I nI] [PlainDataType K] [DataArrayEquiv X I K]
+  (x : X) : K^[I] := DataArrayEquiv.toKn x
+
+@[inline]
+abbrev fromKn (X : Type*) {I K : Type*} {nI} [IdxType I nI] [PlainDataType K] [DataArrayEquiv X I K]
+  (x : K^[I]) : X := DataArrayEquiv.fromKn x
+
+/--
+Converts `X` to `R^[I]`
+
+Similar to `toKn` but can infere `R` and `I` automatically.
+-/
+@[inline]
+abbrev toRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I nI] [HasRnEquiv X I R]
+  (x : X) : R^[I] := DataArrayEquiv.toKn x
+
+/--
+Converts `R^[I]` to `X`
+
+Similar to `fromKn` can infere `R` and `I` automatically.
+-/
+@[inline]
+abbrev fromRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I nI] [HasRnEquiv X I R]
+  (x : R^[I]) : X := DataArrayEquiv.fromKn x
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Basic Instances ---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 -- inductive
 instance {I J X K : Type*}
     {nI} [IdxType I nI] {nJ} [IdxType J nJ] [PlainDataType K]
     [PlainDataType X] [DataArrayEquiv X J K] :
     DataArrayEquiv (X^[I]) (I×J) K where
-  toRn  x := cast sorry_proof x -- this is slow ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
-  fromRn x := cast sorry_proof x -- this is slow ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
+  toKn  x := cast sorry_proof x -- this is slow ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
+  fromKn x := cast sorry_proof x -- this is slow ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
   right_inv := sorry_proof
   left_inv := sorry_proof
 
 
+-- base case
+instance {I n} [IdxType I n] {K} [PlainDataType K] :
+    DataArrayEquiv (K^[I]) I K where
+  toKn := fun x => x
+  fromKn := fun x => x
+  left_inv := by intro; simp
+  right_inv := by intro; simp
+
+
+-- self
+instance {K} [PlainDataType K] :
+    DataArrayEquiv K (Idx 1) K where
+  toKn := fun x => ⊞ (_ : Idx 1) => x
+  fromKn := fun x => x[0]
+  left_inv := by intro; simp
+  right_inv := by intro; simp; sorry_proof
+
+
+
 ----------------------------------------------------------------------------------------------------
--- Default DataArrayEquiv for type `X` -------------------------------------------------------------
+-- Index Get/Set Currying and Uncurrying -----------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
-
-/-- Same as `DataArrayEquiv` but `I` and `K` are inferred based on `X`.
-
-For example for `X = Float^[k]^[n]^[m]` this class inferes `I = Fin m × Fin n × Fin k` and `K = Float`.
--/
-class DefaultDataArrayEquiv (X : Type*) (I K : outParam Type*) {n : outParam ℕ} [IdxType I n] [PlainDataType K]
-  extends DataArrayEquiv X I K where
-
-instance {K I : Type*} {n} [IdxType I n] [RCLike K] [PlainDataType K] :
-    DefaultDataArrayEquiv (K^[I]) I K where
-
-instance {K I : Type*} [PlainDataType K] {nI} [IdxType I nI] {nJ} [IdxType J nJ] [PlainDataType X]
-    [DefaultDataArrayEquiv X J K] :
-    DefaultDataArrayEquiv (X^[I]) (I×J) K where
-
-@[inline]
-abbrev toRn {X : Type*} (I K : Type*) {nI} [IdxType I nI] [PlainDataType K] [DataArrayEquiv X I K]
-  (x : X) : K^[I] := DataArrayEquiv.toRn x
-
-@[inline]
-abbrev fromRn (X : Type*) {I K : Type*} {nI} [IdxType I nI] [PlainDataType K] [DataArrayEquiv X I K]
-  (x : K^[I]) : X := DataArrayEquiv.fromRn x
-
 
 ----------------------------------------------------------------------------------------------------
 -- Get Element -------------------------------------------------------------------------------------
@@ -83,10 +113,10 @@ abbrev fromRn (X : Type*) {I K : Type*} {nI} [IdxType I nI] [PlainDataType K] [D
 /-- Uncurry element access `x[i][j]` for `x : X^[I]` where `X` can be element accessed with `j : J` -/
 instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     {K} [PlainDataType K]
-    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
+    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem' X J K] :
     GetElem (X^[I]) (I×J) K (fun _ _ => True) where
   getElem xs ij _ :=
-    let scalarArray := toRn (I×J) K xs
+    let scalarArray := toKn (I×J) K xs
     scalarArray[ij]
 
 /-- `x[i,j] = x[i][j]` for `x : X^[I]` -/
@@ -116,8 +146,8 @@ instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     SetElem (X^[I]) (I×J) K (fun _ _ => True) where
   setElem xs ij v _ :=
-    let scalarArray := toRn (I×J) K xs
-    fromRn _ (setElem scalarArray ij v .intro)
+    let scalarArray := toKn (I×J) K xs
+    fromKn _ (setElem scalarArray ij v .intro)
   setElem_valid := by simp
 
 instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
@@ -136,7 +166,7 @@ instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ] [IdxType.Fold'.{_,0} I] [
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     OfFn (X^[I]) (I×J) K where
-  ofFn f := fromRn _ (⊞ ij => f ij)
+  ofFn f := fromKn _ (⊞ ij => f ij)
 
 instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ] [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
     {K} [PlainDataType K]

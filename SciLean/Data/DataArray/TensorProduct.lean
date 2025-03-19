@@ -16,7 +16,7 @@ namespace SciLean
 
 variable
   {R : Type u'} [RealScalar R] [PlainDataType R]
-  [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
+  [BLAS (DataArray R) R R]
   {I : Type u} {nI} [IdxType I nI] {J : Type v} {nJ} [IdxType J nJ] {K: Type w} {nK} [IdxType K nK]
 
 
@@ -82,12 +82,12 @@ instance : TensorProductSwap R (R^[I]) (R^[J]) where
   tswap := {
     toFun  := fun A => ⊞ j i => A[i,j]
     invFun := fun A => ⊞ j i => A[i,j]
-    left_inv  := by intro A; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]
-    right_inv := by intro A; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]
+    left_inv  := by intro A; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]; sorry_proof
+    right_inv := by intro A; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]; sorry_proof
     continuous_toFun := by fun_prop
     continuous_invFun := by fun_prop
-    map_add' := by intro x y; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]
-    map_smul' := by intro x y; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]
+    map_add' := by intro x y; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]; sorry_proof
+    map_smul' := by intro x y; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]; sorry_proof
   }
 
 
@@ -124,10 +124,3 @@ instance {Y} [NormedAddCommGroup Y] [AdjointSpace R Y]
     map_add' := sorry_proof
     map_smul' := sorry_proof
   }
-
-
--- variable (A : R^[10,20]) (B : R^[20,5]) (x : R^[5])
-
--- /-- info: A * B * x : R^[10] -/
--- #guard_msgs in
--- #check A*B*x

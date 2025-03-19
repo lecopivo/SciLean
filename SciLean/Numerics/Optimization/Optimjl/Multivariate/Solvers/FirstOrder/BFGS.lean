@@ -1,8 +1,8 @@
 import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
-import SciLean.Data.DataArray.VectorType
-import SciLean.Data.DataArray.MatrixType
+import SciLean.Data.DataArray.Algebra
+import SciLean.Data.DataArray.TensorProduct
 
 /-! Port of Optim.jl, file src/multivariate/solvers/first_order/bfgs.jl
 
@@ -15,7 +15,7 @@ namespace SciLean.Optimjl
 
 
 variable
-  {R : Type} [RealScalar R] [PlainDataType R] [ToString R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
+  {R : Type} [RealScalar R] [PlainDataType R] [ToString R] [BLAS (DataArray R) R R]
 
 
 variable (R)
@@ -45,7 +45,7 @@ set_default_scalar R
 namespace BFGS
 
 
-structure State (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] where
+structure State (R : Type) (n : ℕ) [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R] where
    /-- current position `xₙ` -/
    x : R^[n]
    /-- previous position `xₙ₋₁`-/
@@ -183,9 +183,13 @@ def updateH (state : State R n)  :
     let c1 := (dx_dg + ⟪dg,u⟫)/dx_dg^2
     let c2 := dx_dg⁻¹
     -- todo: add `A.addsmulouterprod s x y` function
-    invH := invH |> MatrixType.Dense.outerprodAdd c1 dx dx
-                 |> MatrixType.Dense.outerprodAdd (-c2) u dx
-                 |> MatrixType.Dense.outerprodAdd (-c2) dx u
+    invH := c1•(dx⊗dx) - c2•(u⊗dx + dx⊗u) + invH
+       -- rewrite_by
+       --   simp[blas_optimize]
+
+    -- invH := invH |> MatrixType.Dense.outerprodAdd c1 dx dx
+    --              |> MatrixType.Dense.outerprodAdd (-c2) u dx
+    --              |> MatrixType.Dense.outerprodAdd (-c2) dx u
 
   return ⟨x, x_previous, g, g_previous, f_x, f_x_previous, dx, dg, u, invH, s,alpha,x_ls,f_calls, g_calls, h_calls⟩
 
@@ -203,10 +207,14 @@ def assessConvergence (method : BFGS R) (state : State R n) :=
     let mut f_increased := false
     let mut g_converged := false
 
-    if VectorType.amax (x - x_previous) ≤ x_abstol then
+    -- if VectorType.amax (x - x_previous) ≤ x_abstol then
+    --   x_converged := true
+    if ‖(x - x_previous)‖₂² ≤ x_abstol^2 then
       x_converged := true
 
-    if VectorType.amax (x - x_previous) ≤ x_reltol * VectorType.amax x then
+    -- if VectorType.amax (x - x_previous) ≤ x_reltol * VectorType.amax x then
+    --   x_converged := true
+    if ‖(x - x_previous)‖₂² ≤ x_reltol^2 * ‖x‖₂² then
       x_converged := true
 
     if Scalar.abs (f_x - f_x_previous) ≤ f_abstol then
@@ -218,7 +226,8 @@ def assessConvergence (method : BFGS R) (state : State R n) :=
     if f_x > f_x_previous then
       f_increased := true
 
-    g_converged := VectorType.amax g ≤ g_abstol
+    -- g_converged := VectorType.amax g ≤ g_abstol
+    g_converged := ‖g‖₂² ≤ g_abstol^2
 
     return (x_converged, f_converged, g_converged, f_increased)
 
@@ -241,6 +250,7 @@ def initState (method : BFGS R) (d : ObjectiveFunction R (R^[n])) (x₀ : R^[n])
   return state
 
 end BFGS
+
 
 set_option linter.unusedVariables false in
 instance {n} : AbstractOptimizer (BFGS R) (BFGS.State R n) R (R^[n]) where
@@ -265,11 +275,17 @@ instance {n} : AbstractOptimizer (BFGS R) (BFGS.State R n) R (R^[n]) where
   pick_best_x take_prev state   := if take_prev then state.x_previous else state.x
   pick_best_f take_prev state d := if take_prev then state.f_x_previous else state.f_x
 
-  x_abschange state := VectorType.amax (state.x - state.x_previous)
-  x_relchange state :=  VectorType.amax (state.x - state.x_previous) / VectorType.amax state.x
+  -- x_abschange state := VectorType.amax (state.x - state.x_previous)
+  -- x_relchange state :=  VectorType.amax (state.x - state.x_previous) / VectorType.amax state.x
+  -- f_abschange d state := Scalar.abs (state.f_x - state.f_x_previous)
+  -- f_relchange d state := Scalar.abs (state.f_x - state.f_x_previous) / Scalar.abs (state.f_x)
+  -- g_residual d state :=  VectorType.amax state.g
+
+  x_abschange state := ‖state.x - state.x_previous‖₂²
+  x_relchange state := ‖state.x - state.x_previous‖₂² / ‖state.x‖₂²
   f_abschange d state := Scalar.abs (state.f_x - state.f_x_previous)
   f_relchange d state := Scalar.abs (state.f_x - state.f_x_previous) / Scalar.abs (state.f_x)
-  g_residual d state :=  VectorType.amax state.g
+  g_residual d state := ‖state.g‖₂²
 
   f_calls d state := state.f_calls
   g_calls d state := state.g_calls

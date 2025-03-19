@@ -567,8 +567,8 @@ instance (priority:=low) instNormedSpace : NormedSpace K X where
     simp [norm_smul_le,vector_to_spec]
     sorry_proof
 
--- instance : IsContinuousGetElem X n where
---   continuous_getElem := by sorry_proof
+instance : IsContinuousGetElem X n where
+  continuous_getElem := by sorry_proof
 
 instance (priority:=low) [ScalarSMul R K] [ScalarInner R K] [RealOp X] : NormedSpace R X where
   norm_smul_le := by

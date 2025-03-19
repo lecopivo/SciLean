@@ -15,7 +15,7 @@ info: fun x =>
     dx : R^[n] → R^[n]
 -/
 #guard_msgs in
-#check (∇ (x : R^[n]), ∑ i, x[i]) rewrite_by autodiff
+#check (∇ (x : R^[n]), ∑ᴵ i, x[i]) rewrite_by autodiff
 
 
 /--

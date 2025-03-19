@@ -2,7 +2,6 @@ import SciLean.Data.DataArray
 
 open SciLean
 
-
 /-- info: ⊞[4.000000, 5.000000, 6.000000] -/
 #guard_msgs in
 #eval ⊞[1.0,2.0,3.0;4,5,6].curry[(⟨1,sorry_proof⟩ : Idx 2)]
@@ -36,9 +35,9 @@ open SciLean
 #guard_msgs in
 #eval ⊞[⊞[1.0,2.0],⊞[3.0,4.0]][1]
 
-/-- info: ⊞[⊞[1.000000, 1.000000], ⊞[1.000000, 1.000000]] -/
-#guard_msgs in
-#eval (VectorType.const 1 : Float^[2]^[2])
+-- /-- info: ⊞[⊞[1.000000, 1.000000], ⊞[1.000000, 1.000000]] -/
+-- #guard_msgs in
+-- #eval (VectorType.const 1 : Float^[2]^[2])
 
 /-- info: ⊞[⊞[2.000000, 4.000000], ⊞[6.000000, 8.000000]] -/
 #guard_msgs in

@@ -58,8 +58,8 @@ namespace Float2
     getElem_ofFn := by intro f i; cases i <;> rfl
 
  instance : DataArrayEquiv Float2 Index Float where
-    toRn := fun v => ⊞[v.x, v.y] |>.reshape Index sorry_proof
-    fromRn := fun v => ⟨v[.x], v[.y]⟩
+    toKn := fun v => ⊞[v.x, v.y] |>.reshape Index sorry_proof
+    fromKn := fun v => ⟨v[.x], v[.y]⟩
     left_inv := sorry_proof
     right_inv := sorry_proof
 
@@ -94,8 +94,8 @@ namespace Float2
       sorry_proof
 
   instance : DataArrayEquiv Float2 (Idx 2) Float where
-    toRn := fun v => ⊞[v.x, v.y]
-    fromRn := fun v => ⟨v[0], v[1]⟩
+    toKn := fun v => ⊞[v.x, v.y]
+    fromKn := fun v => ⟨v[0], v[1]⟩
     left_inv := sorry_proof
     right_inv := sorry_proof
 
@@ -109,7 +109,7 @@ namespace Float2
   --- Default Operations
   -- we prefer indexing `Float2` by `Float2.Index`
   instance : DefaultIndex Float2 Index where
-  instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float2^[I]) (I × Index) Float where
+  instance {I n} [IdxType I n] : HasRnEquiv (Float2^[I]) (I × Index) Float where
 
   instance : Add Float2 := (Add.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
   instance : Sub Float2 := (Sub.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
@@ -194,12 +194,12 @@ namespace Float3
     }
 
   instance : DataArrayEquiv Float3 (Idx 3) Float where
-    toRn := fun v => ⊞[v.x, v.y, v.z]
-    fromRn := fun v => ⟨v[0], v[1], v[2]⟩
+    toKn := fun v => ⊞[v.x, v.y, v.z]
+    fromKn := fun v => ⟨v[0], v[1], v[2]⟩
     left_inv := sorry_proof
     right_inv := sorry_proof
 
-  instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float3^[I]) (I × Idx 3) Float where
+  instance {I n} [IdxType I n] : HasRnEquiv (Float3^[I]) (I × Idx 3) Float where
 
   instance : Add Float3 := (Add.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
   instance : Sub Float3 := (Sub.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
@@ -294,12 +294,12 @@ namespace Float4
     }
 
   instance : DataArrayEquiv Float4 (Idx 4) Float where
-    toRn := fun v => ⊞[v.x, v.y, v.z, v.w]
-    fromRn := fun v => ⟨v[0], v[1], v[2], v[3]⟩
+    toKn := fun v => ⊞[v.x, v.y, v.z, v.w]
+    fromKn := fun v => ⟨v[0], v[1], v[2], v[3]⟩
     left_inv := sorry_proof
     right_inv := sorry_proof
 
-  instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float4^[I]) (I × Idx 4) Float where
+  instance {I n} [IdxType I n] : HasRnEquiv (Float4^[I]) (I × Idx 4) Float where
 
   instance : Add Float4 := (Add.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce
   instance : Sub Float4 := (Sub.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce

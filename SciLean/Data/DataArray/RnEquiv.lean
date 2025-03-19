@@ -1,5 +1,6 @@
 import LeanBLAS
 import SciLean.Data.DataArray.DataArray
+import SciLean.Data.DataArray.DataArrayEquiv
 import SciLean.Analysis.Scalar.Basic
 import SciLean.Analysis.AdjointSpace.Basic
 
@@ -15,106 +16,75 @@ Functions to transfer structures from `R^[n]` to `X`
 
 namespace SciLean
 
+namespace DataArrayN
 
 
-open Function in
-/-- `HasRnEquiv X n R` says that `X` is canonically isomorphic to `R^[n]`
+instance instHasRnEquivInductive
+    {R : Type*} [RealScalar R] [PlainDataType R]
+    {I nI} [IdxType I nI] {J nJ} [IdxType J nJ]
+    {X : Type*} [HasRnEquiv X J R] [PlainDataType X] :
+    HasRnEquiv (X^[I]) (I × J) R where
 
-This provides class provides:
-  - `toRn : X → R^[n]`
-  - `fromRn : R^[n] → X`
-
-This class is supposed to be zero cost at runtime or close to zero.
--/
-class HasRnEquiv (X : Type*) (n : outParam ℕ) (R : outParam Type*)
-    [RealScalar R] [PlainDataType R] where
-  toRn : X → R^[n]
-  fromRn : R^[n] → X
-  protected left_inv : LeftInverse fromRn toRn
-  protected right_inv : RightInverse fromRn toRn
-
-
-export HasRnEquiv (toRn fromRn)
-
-section Simps
-
-variable (X : Type*) {n : ℕ}
-  {R : Type*} [RealScalar R] [PlainDataType R] [HasRnEquiv X n R]
-
-@[simp, simp_core]
-theorem toRn_fromRn (x : R^[n]) : toRn (fromRn x : X) = x := HasRnEquiv.right_inv _
-
-@[simp, simp_core]
-theorem fromRn_toRn (x : X) : fromRn (toRn x) = x := HasRnEquiv.left_inv _
-
-end Simps
-
-
-instance {R : Type*} [RealScalar R] [PlainDataType R] :
-    HasRnEquiv R 1 R where
-  toRn x := ⊞[x]
-  fromRn x := x[0]
-  left_inv := by intro x; simp
-  right_inv := by sorry_proof
-
-instance {X R : Type*} [RealScalar R] [PlainDataType R]
-    [HasRnEquiv X n R] [PlainDataType X]
+instance instHasRnEquivBase
+    {R : Type*} [RealScalar R] [PlainDataType R]
     {I nI} [IdxType I nI] :
-    HasRnEquiv (X^[I]) (nI*n) R where
-  toRn x := cast sorry_proof x
-  fromRn x := cast sorry_proof x
-  left_inv := by sorry_proof
-  right_inv := by sorry_proof
+    HasRnEquiv (R^[I]) I R where
+
+instance instHasRnEquivSelf
+    {R : Type*} [RealScalar R] [PlainDataType R] :
+    HasRnEquiv R (Idx 1) R where
 
 
 section Operations
 
-variable (X : Type*) {n : ℕ}
-  {R : Type*} [RealScalar R] [PlainDataType R] [HasRnEquiv X n R]
-  [BLAS (DataArray R) R R]
+variable (X : Type*)
+  {I : Type*} {nI : ℕ} [IdxType I nI]
+  {R : Type*} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
+  [HasRnEquiv X I R]
+
 
 @[inline]
 def _root_.Add.ofRnEquiv : Add X := ⟨fun x y =>
-  let data := BLAS.LevelOneData.axpy n 1 (toRn x).1 0 1 (toRn y).1 0 1
-  fromRn (⟨data,sorry_proof⟩ : R^[n])⟩
+  let data := BLAS.LevelOneData.axpy nI 1 (toRn x).1 0 1 (toRn y).1 0 1
+  fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
 @[inline]
 def _root_.Sub.ofRnEquiv : Sub X := ⟨fun x y =>
-  let data := BLAS.LevelOneDataExt.axpby n 1 (toRn x).1 0 1 (-1) (toRn y).1 0 1
-  fromRn (⟨data,sorry_proof⟩ : R^[n])⟩
+  let data := BLAS.LevelOneDataExt.axpby nI 1 (toRn x).1 0 1 (-1) (toRn y).1 0 1
+  fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
 @[inline]
 def _root_.Neg.ofRnEquiv : Neg X := ⟨fun x =>
-  let data := BLAS.LevelOneData.scal n (-1) (toRn x).1 0 1
-  fromRn (⟨data,sorry_proof⟩ : R^[n])⟩
+  let data := BLAS.LevelOneData.scal nI (-1) (toRn x).1 0 1
+  fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
 @[inline]
 def _root_.SMul.ofRnEquiv : SMul R X := ⟨fun r x =>
-  let data := BLAS.LevelOneData.scal n r (toRn x).1 0 1
-  fromRn (⟨data,sorry_proof⟩ : R^[n])⟩
+  let data := BLAS.LevelOneData.scal nI r (toRn x).1 0 1
+  fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
 @[inline]
 def _root_.Zero.ofRnEquiv : Zero X := ⟨
-  let data := BLAS.LevelOneDataExt.const n (0:R)
-  fromRn (⟨data,sorry_proof⟩ : R^[n])⟩
+  let data := BLAS.LevelOneDataExt.const nI (0:R)
+  fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
 @[inline]
 def _root_.Inner.ofRnEquiv : Inner R X := ⟨fun x y =>
-  BLAS.LevelOneData.dot n (toRn x).1 0 1 (toRn y).1 0 1⟩
+  BLAS.LevelOneData.dot nI (toRn x).1 0 1 (toRn y).1 0 1⟩
 
 @[inline]
 def _root_.NSMul.ofRnEquiv : SMul ℕ X := ⟨fun m x =>
-  let data := BLAS.LevelOneData.scal n (m:R) (toRn x).1 0 1
-  fromRn (⟨data,sorry_proof⟩ : R^[n])⟩
+  let data := BLAS.LevelOneData.scal nI (m:R) (toRn x).1 0 1
+  fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
 @[inline]
 def _root_.ZSMul.ofRnEquiv : SMul ℤ X := ⟨fun z x =>
-  let data := BLAS.LevelOneData.scal n (z:R) (toRn x).1 0 1
-  fromRn (⟨data,sorry_proof⟩ : R^[n])⟩
+  let data := BLAS.LevelOneData.scal nI (z:R) (toRn x).1 0 1
+  fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
 @[inline]
 def _root_.Norm.ofRnEquiv : Norm X := ⟨fun x =>
-  let norm := BLAS.LevelOneData.nrm2 n (toRn x).1 0 1
+  let norm := BLAS.LevelOneData.nrm2 nI (toRn x).1 0 1
   Scalar.toReal R norm⟩
 
 end Operations
@@ -122,12 +92,13 @@ end Operations
 
 section Algebra
 
-variable (X : Type*) {n : ℕ}
-  {R : Type*} [RealScalar R] [PlainDataType R] [HasRnEquiv X n R]
-  [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
+variable (X : Type*)
+  {I : Type*} {nI : ℕ} [IdxType I nI]
+  {R : Type*} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
+  [HasRnEquiv X I R]
 
 
-/-- Transfers `AddCommGroup` structure from `R^[n]` to `X` together with all operations. -/
+/-- Transfers `AddCommGroup` structure from `R^[I]` to `X` together with all operations. -/
 def _root_.NormedAddCommGroup.ofRnEquiv : NormedAddCommGroup X := {
   toAdd := Add.ofRnEquiv X
   toSub := Sub.ofRnEquiv X
@@ -174,20 +145,3 @@ def _root_.AdjointSpace.ofRnEquiv [NormedAddCommGroup X] : AdjointSpace R X := {
 
 
 end Algebra
-
-
-
-
-/-- Equivalence with `R^[n]` is consistent with getting elements. -/
-class IsRnEquivGetElem (X I R : Type*)
-    {nI} [IdxType I nI] [RealScalar R] [PlainDataType R] [HasRnEquiv X nI R]
-    [GetElem' X I R] : Prop where
-  getElem_eq_toRn_getElem (x : X) (i : I) :
-    x[i] = (toRn x)[toIdx i]
-
-/-- Equivalence with `R^[n]` is consistent with settting elements. -/
-class IsRnEquivSetElem (X I R : Type*)
-    {nI} [IdxType I nI] [RealScalar R] [PlainDataType R] [HasRnEquiv X nI R]
-    [SetElem' X I R] : Prop where
-  setElem_eq_toRn_setElem (x : X) (i : I) (v : R) :
-    setElem x i v .intro = fromRn (setElem (toRn x) (toIdx i) v .intro)

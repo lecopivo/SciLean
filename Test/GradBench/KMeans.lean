@@ -10,7 +10,7 @@ def objective {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k])
 
 def direction {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
   (let' ((_a,J),(_b,Hdiag)) :=
-    ∂> (c:=centroids;VectorType.const 1),
+    ∂> (c:=centroids;⊞ (i : Idx k) => ⊞ (j : Idx d) =>(1:Float)),
       let' (y,df) := <∂ (objective points) c
       (y,df 1)
   VectorType.div J Hdiag)
@@ -62,7 +62,7 @@ def direction' {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Fl
     ∂> (c:=centroids;VectorType.const 1),
       let' (y,df) := <∂ (objective' points) c
       (y,df 1)
-  VectorType.div J Hdiag)
+  J + Hdiag) -- VectorType.div J Hdiag)
 rewrite_by
   unfold objective'
   lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]

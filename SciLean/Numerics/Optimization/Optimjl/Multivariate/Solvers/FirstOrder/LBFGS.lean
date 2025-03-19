@@ -2,6 +2,8 @@ import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
 import SciLean.Data.DataArray
+import SciLean.Data.DataArray.Algebra
+import SciLean.Data.DataArray.TensorProduct
 import SciLean.Data.Vector
 
 set_option linter.unusedVariables false
@@ -18,7 +20,7 @@ namespace SciLean.Optimjl
 
 variable
   {R : Type} [RealScalar R] [PlainDataType R]
-  [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] [ToString R]
+  [BLAS (DataArray R) R R] [ToString R]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [ToString X] [CompleteSpace X]
 
 
@@ -41,7 +43,7 @@ set_default_scalar R
 namespace LBFGS
 
 structure State (R X : Type) (m : ℕ) [Zero X] [Neg X] [RealScalar R] [PlainDataType R]
-   [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R] where
+   [BLAS (DataArray R) R R] where
    /-- current position `xₙ₊₁` -/
    x : X
    /-- previous position `xₙ`-/

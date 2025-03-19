@@ -1,6 +1,6 @@
 import SciLean.Data.ArrayOperations.Operations.GetElem
 import SciLean.Data.DataArray.Float
-import SciLean.Data.DataArray.VectorType
+import SciLean.Data.DataArray.Algebra
 
 open SciLean
 

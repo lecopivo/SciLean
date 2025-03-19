@@ -70,7 +70,7 @@ theorem ofFn.arg_f.HasAdjoint_rule {𝕜 X I Y : Type*}
          let xi := x[i]
          xi) := by
   constructor
-  case adjoint => intro x f; simp[Inner.inner, inner_eq_sum_getElem (I:=I)]
+  case adjoint => intro x f; simp[Inner.inner, inner_eq_sum_getElem (I:=I), IdxType.sum_eq_finset_sum]
   case is_linear => fun_prop
 
 @[data_synth]

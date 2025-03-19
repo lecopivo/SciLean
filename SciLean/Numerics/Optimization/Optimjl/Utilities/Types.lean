@@ -222,11 +222,11 @@ structure ObjectiveFunction (R X : Type) [RealScalar R] [NormedAddCommGroup X] [
 
 variable
   {R : Type} [RealScalar R]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace R X]
 
 -- R X are `outParam` as they should be inferable from `State` type
 class AbstractOptimizer (Method : Type*) (State : outParam Type) (R X : Type)
-    [RealScalar R] [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X]  where
+    [RealScalar R] [NormedAddCommGroup X] [AdjointSpace R X]  where
 
   setOptions : Method → Options R → Method
   getOptions : Method → Options R
