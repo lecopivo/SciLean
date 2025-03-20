@@ -44,8 +44,7 @@ namespace SciLean
 
 --   proj_basis (i j : I) : proj i (basis j) = if i = j then 1 else 0
 --   dualProj_dualBasis (i j : I) : dualProj i (dualBasis j) = if i = j then 1 else 0
---   inner
-  _basis_dualBasis (i j : I) : ⟪basis i, dualBasis j⟫[𝕜] = if i = j then 1 else 0
+--   inner_basis_dualBasis (i j : I) : ⟪basis i, dualBasis j⟫[𝕜] = if i = j then 1 else 0
 
 
 

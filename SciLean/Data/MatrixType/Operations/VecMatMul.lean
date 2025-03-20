@@ -67,6 +67,31 @@ theorem vecMatMul.arg_x.HasFwdFDeriv_rule (A : M) :
 
 
 @[data_synth]
+theorem vecMatMul.arg_y.HasAdjoint_rule (A : M) :
+  HasAdjoint R
+    (fun y : Y => y * A)
+    (fun x => A * x) := sorry_proof
+
+@[data_synth]
+theorem vecMatMul.arg_y.HasAdjointUpdate_rule (A : M) :
+  HasAdjointUpdate R
+    (fun y : Y => y * A)
+    (fun x y' => matVecMulAdd (1:R) A x (1:R) y') := sorry_proof
+
+@[data_synth]
+theorem vecMatMul.arg_A.HasAdjoint_rule (y : Y) :
+  HasAdjoint R
+    (fun A : M => y * A)
+    (fun x => y ⊗ x) := sorry_proof
+
+@[data_synth]
+theorem vecMatMul.arg_A.HasAdjointUpdate_rule (y : Y) :
+  HasAdjointUpdate R
+    (fun A : M => y * A)
+    (fun x A' => tmulAdd (1:R) y x A') := sorry_proof
+
+
+@[data_synth]
 theorem vecMatMul.arg_yA.HasRevFDeriv_rule :
   HasRevFDeriv R
     (fun yA : Y×M => yA.1 * yA.2)
@@ -97,18 +122,18 @@ theorem vecMatMul.arg_yA.HasRevFDerivUpdate_rule :
       let' (y,A) := yA
       (y*A, fun dx yA' =>
         let' (y',A') := yA'
-        (vecMatMulAdd (1:R) dy A (1:R) x',
-         tmulAdd (1:R) dy x A'))) := sorry_proof
+        (matVecMulAdd (1:R) A dx (1:R) y',
+         tmulAdd (1:R) y dx A'))) := sorry_proof
 
 -- todo: arg subset, generate automatically
 @[data_synth]
 theorem vecMatMul.arg_A.HasRevFDerivUpdate_rule (y : Y) :
   HasRevFDerivUpdate R
     (fun A : M => y * A)
-    (fun A => (A*x, fun dy A' => tmulAdd (1:R) dy x A')) := sorry_proof
+    (fun A => (y*A, fun dx A' => tmulAdd (1:R) y dx A')) := sorry_proof
 
 @[data_synth]
 theorem vecMatMul.arg_x.HasRevFDerivUpdate_rule (A : M) :
   HasRevFDerivUpdate R
     (fun y : Y => y * A)
-    (fun x => (A*x, fun dy x' => vecMatMulAdd (1:R) dy A (1:R) x')) := sorry_proof
+    (fun y => (y*A, fun dx y' => matVecMulAdd (1:R) A dx (1:R) y')) := sorry_proof

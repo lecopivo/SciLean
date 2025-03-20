@@ -1,10 +1,27 @@
+import SciLean.Algebra.CanonicalBasis
 import SciLean.Algebra.Determinant
 import SciLean.Algebra.Dimension
 import SciLean.Algebra.IsAddGroupHom
 import SciLean.Algebra.IsAffineMap
 import SciLean.Algebra.IsLinearMap
+import SciLean.Algebra.TensorProduct.Assoc
+import SciLean.Algebra.TensorProduct.Basic
+import SciLean.Algebra.TensorProduct.Curry
+import SciLean.Algebra.TensorProduct.MatMul
+import SciLean.Algebra.TensorProduct.Pi
+import SciLean.Algebra.TensorProduct.Prod
+import SciLean.Algebra.TensorProduct.ProdMatrix
+import SciLean.Algebra.TensorProduct.ProdMatrixCol
+import SciLean.Algebra.TensorProduct.ProdMatrixRow
+import SciLean.Algebra.TensorProduct.Self
+import SciLean.Algebra.TensorProduct.Swap
+import SciLean.Algebra.TensorProduct.Transpose
+import SciLean.Algebra.TensorProduct.Util
+import SciLean.Algebra.VectorOptimize.Basic
+import SciLean.Algebra.VectorOptimize.Init
 import SciLean.Analysis.AdjointSpace.Adjoint
 import SciLean.Analysis.AdjointSpace.Basic
+import SciLean.Analysis.AdjointSpace.CanonicalBasis
 import SciLean.Analysis.AdjointSpace.Geometry
 import SciLean.Analysis.AdjointSpace.HasAdjoint
 import SciLean.Analysis.Calculus.CDeriv
@@ -14,15 +31,14 @@ import SciLean.Analysis.Calculus.FwdCDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.Calculus.HasFwdFDeriv
-import SciLean.Analysis.Calculus.HasVecFwdFDeriv
-import SciLean.Analysis.Calculus.HasVecRevFDeriv
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Common
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Functions
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
 import SciLean.Analysis.Calculus.HasRevFDeriv
--- import SciLean.Analysis.Calculus.HasVecFwdFDeriv
+import SciLean.Analysis.Calculus.HasVecFwdFDeriv
+import SciLean.Analysis.Calculus.HasVecRevFDeriv
 import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
 import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
@@ -295,6 +311,7 @@ import SciLean.Data.ArrayOperations.Algebra
 import SciLean.Data.ArrayOperations.Basic
 import SciLean.Data.ArrayOperations.Operations
 import SciLean.Data.ArrayOperations.Operations.GetElem
+import SciLean.Data.ArrayOperations.Operations.MapIdxMonoAcc
 import SciLean.Data.ArrayOperations.Operations.OfFn
 import SciLean.Data.ArrayOperations.Operations.SetElem
 import SciLean.Data.ArraySet
@@ -307,6 +324,8 @@ import SciLean.Data.ByteArray
 import SciLean.Data.ColProd
 import SciLean.Data.Curry
 import SciLean.Data.DataArray
+import SciLean.Data.DataArray.Algebra
+import SciLean.Data.DataArray.Basis
 import SciLean.Data.DataArray.DataArray
 import SciLean.Data.DataArray.DataArrayEquiv
 import SciLean.Data.DataArray.Float
@@ -314,7 +333,10 @@ import SciLean.Data.DataArray.FloatN
 import SciLean.Data.DataArray.FloatNN
 import SciLean.Data.DataArray.MatrixType
 import SciLean.Data.DataArray.Operations
-import SciLean.Data.DataArray.TensorProduct
+import SciLean.Data.DataArray.Operations.Col
+import SciLean.Data.DataArray.Operations.Curry
+import SciLean.Data.DataArray.Operations.Row
+import SciLean.Data.DataArray.Operations.Uncurry
 -- import SciLean.Data.DataArray.Operations_old
 -- import SciLean.Data.DataArray.Operations_old.AntiSymmPart
 -- import SciLean.Data.DataArray.Operations_old.Cross
@@ -345,6 +367,8 @@ import SciLean.Data.DataArray.TensorProduct
 -- import SciLean.Data.DataArray.Operations_old.Vecmul
 import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.DataArray.RevDeriv
+import SciLean.Data.DataArray.RnEquiv
+import SciLean.Data.DataArray.TensorProduct
 import SciLean.Data.DataArray.VectorType
 import SciLean.Data.FinProd
 import SciLean.Data.Float
@@ -371,59 +395,63 @@ import SciLean.Data.IndexType.Iterator
 import SciLean.Data.IndexType.Operations
 import SciLean.Data.IndexType.Operations.MaxD
 import SciLean.Data.IndexType.Range
+import SciLean.Data.IndexType.RangeNotation
 import SciLean.Data.IndexType.SumProduct
 import SciLean.Data.IndexType.TensorIndex
 import SciLean.Data.Instances.Sigma
 import SciLean.Data.Int64
 import SciLean.Data.ListN
--- import SciLean.Data.MatrixType.Base
--- import SciLean.Data.MatrixType.Basic
--- -- import SciLean.Data.MatrixType.ProdMatrix
--- import SciLean.Data.MatrixType.Dense
--- import SciLean.Data.MatrixType.Init
--- import SciLean.Data.MatrixType.MatMul
--- import SciLean.Data.MatrixType.Operations.Col
--- import SciLean.Data.MatrixType.Operations.Diagonal
--- import SciLean.Data.MatrixType.Operations.FromMatrix
--- import SciLean.Data.MatrixType.Operations.Gemv
--- import SciLean.Data.MatrixType.Operations.Row
--- import SciLean.Data.MatrixType.Operations.ToMatrix
--- import SciLean.Data.MatrixType.Operations.UpdateCol
--- import SciLean.Data.MatrixType.Operations.UpdateRow
--- import SciLean.Data.MatrixType.Optimize
--- import SciLean.Data.MatrixType.Square
--- import SciLean.Data.MatrixType.Symbolic
--- import SciLean.Data.MatrixType.Transpose
+import SciLean.Data.MatrixType.Basic
+-- import SciLean.Data.MatrixType.MatrixType_old.Base
+-- import SciLean.Data.MatrixType.MatrixType_old.BlockMatrix
+-- import SciLean.Data.MatrixType.MatrixType_old.Dense
+-- import SciLean.Data.MatrixType.MatrixType_old.Init
+-- import SciLean.Data.MatrixType.MatrixType_old.MatMul
+-- import SciLean.Data.MatrixType.MatrixType_old.Operations.Col
+-- import SciLean.Data.MatrixType.MatrixType_old.Operations.Diagonal
+-- import SciLean.Data.MatrixType.MatrixType_old.Operations.FromMatrix
+-- import SciLean.Data.MatrixType.MatrixType_old.Operations.Gemv
+-- import SciLean.Data.MatrixType.MatrixType_old.Operations.Row
+-- import SciLean.Data.MatrixType.MatrixType_old.Operations.ToMatrix
+-- import SciLean.Data.MatrixType.MatrixType_old.Operations.UpdateCol
+-- import SciLean.Data.MatrixType.MatrixType_old.Operations.UpdateRow
+-- import SciLean.Data.MatrixType.MatrixType_old.Optimize
+-- import SciLean.Data.MatrixType.MatrixType_old.Square
+-- import SciLean.Data.MatrixType.MatrixType_old.Symbolic
+-- import SciLean.Data.MatrixType.MatrixType_old.Transpose
+import SciLean.Data.MatrixType.Operations.MatVecMul
+import SciLean.Data.MatrixType.Operations.VecMatMul
 import SciLean.Data.Prod
 import SciLean.Data.Random
+import SciLean.Data.SparseMatrix.Basic
 import SciLean.Data.StructType
 import SciLean.Data.StructType.Algebra
 import SciLean.Data.StructType.Basic
 import SciLean.Data.Vector
--- import SciLean.Data.VectorType.Base
--- import SciLean.Data.VectorType.BaseSimps
--- import SciLean.Data.VectorType.Basic
--- import SciLean.Data.VectorType.BinOps
--- import SciLean.Data.VectorType.Init
--- import SciLean.Data.VectorType.Operations.Axpby
--- import SciLean.Data.VectorType.Operations.Axpy
--- import SciLean.Data.VectorType.Operations.Dot
--- import SciLean.Data.VectorType.Operations.Exp
--- import SciLean.Data.VectorType.Operations.FromVec
--- import SciLean.Data.VectorType.Operations.Logsumexp
--- import SciLean.Data.VectorType.Operations.MapIdx
--- import SciLean.Data.VectorType.Operations.Max
--- import SciLean.Data.VectorType.Operations.Mul
--- import SciLean.Data.VectorType.Operations.Scal
--- import SciLean.Data.VectorType.Operations.ScalAdd
--- import SciLean.Data.VectorType.Operations.Set
--- import SciLean.Data.VectorType.Operations.Softmax
--- import SciLean.Data.VectorType.Operations.Sum
--- import SciLean.Data.VectorType.Operations.ToVec
--- import SciLean.Data.VectorType.Optimize
--- import SciLean.Data.VectorType.Prod
--- import SciLean.Data.VectorType.Scalar
--- import SciLean.Data.VectorType.Subvector
+import SciLean.Data.VectorType.Base
+-- import SciLean.Data.VectorType.VectorType_old.BaseSimps
+-- import SciLean.Data.VectorType.VectorType_old.Basic
+-- import SciLean.Data.VectorType.VectorType_old.BinOps
+-- import SciLean.Data.VectorType.VectorType_old.Init
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Axpby
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Axpy
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Dot
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Exp
+-- import SciLean.Data.VectorType.VectorType_old.Operations.FromVec
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Logsumexp
+-- import SciLean.Data.VectorType.VectorType_old.Operations.MapIdx
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Max
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Mul
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Scal
+-- import SciLean.Data.VectorType.VectorType_old.Operations.ScalAdd
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Set
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Softmax
+-- import SciLean.Data.VectorType.VectorType_old.Operations.Sum
+-- import SciLean.Data.VectorType.VectorType_old.Operations.ToVec
+-- import SciLean.Data.VectorType.VectorType_old.Optimize
+-- import SciLean.Data.VectorType.VectorType_old.Prod
+-- import SciLean.Data.VectorType.VectorType_old.Scalar
+-- import SciLean.Data.VectorType.VectorType_old.Subvector
 -- import SciLean.Doodle
 -- import SciLean.Examples.GMM.Main
 -- import SciLean.Examples.GMM.Objective
@@ -450,7 +478,6 @@ import SciLean.Lean.Expr
 import SciLean.Lean.HashMap
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
-import SciLean.Lean.Meta.LiftLets
 import SciLean.Lean.Meta.Replace
 import SciLean.Lean.Meta.Structure
 import SciLean.Lean.Meta.Uncurry

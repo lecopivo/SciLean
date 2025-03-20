@@ -4,7 +4,7 @@ import Mathlib
 
 namespace SciLean
 
-
+#exit
 structure SparseMatrixUnassembled (R : Type*) [PlainDataType R] (I J : Type*)
     {nI} [IdxType I nI] {nJ} [IdxType J nJ] where
 

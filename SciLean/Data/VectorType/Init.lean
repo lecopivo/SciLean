@@ -1,6 +1,0 @@
-import Lean
-
-register_simp_attr vector_to_spec
-register_simp_attr vector_from_spec
-register_simp_attr vector_optimize
-register_simp_attr blas_to_module

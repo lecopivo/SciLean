@@ -39,7 +39,6 @@ theorem matVecMul.arg_Ax.Continusous_rule :
   Continuous (fun Ax : M×X => Ax.1 * Ax.2) := by fun_prop
 
 
-
 @[data_synth]
 theorem matVecMul.arg_Ax.HasFwdFDeriv_rule :
   HasFwdFDeriv R
@@ -64,6 +63,40 @@ theorem matVecMul.arg_x.HasFwdFDeriv_rule (A : M) :
     (fun x : X => A * x)
     (fun x dx =>
       (A*x, A*dx)) := sorry_proof
+
+@[data_synth]
+theorem matVecMul.arg_x.HasAdjoint_rule (A : M) :
+  HasAdjoint R
+    (fun x : X => A * x)
+    (fun y => y * A) := sorry_proof
+
+@[data_synth]
+theorem matVecMul.arg_x.HasAdjointUpdate_rule (A : M) :
+  HasAdjointUpdate R
+    (fun x : X => A * x)
+    (fun y x' => vecMatMulAdd (1:R) y A (1:R) x') := sorry_proof
+
+@[data_synth]
+theorem matVecMul.arg_A.HasAdjoint_rule (x : X) :
+  HasAdjoint R
+    (fun A : M => A * x)
+    (fun y => y ⊗ x) := sorry_proof
+
+@[data_synth]
+theorem matVecMul.arg_A.HasAdjointUpdate_rule (x : X) :
+  HasAdjointUpdate R
+    (fun A : M => A * x)
+    (fun y A' => tmulAdd (1:R) y x A') := sorry_proof
+
+
+@[data_synth]
+theorem vecMatMul.arg_yA.HasRevFDeriv_rule :
+  HasRevFDeriv R
+    (fun yA : Y×M => yA.1 * yA.2)
+    (fun yA =>
+      let' (y,A) := yA
+      (y*A, fun dx =>
+        (A*dx, y⊗dx))) := sorry_proof
 
 
 @[data_synth]

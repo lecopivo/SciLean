@@ -1,4 +1,5 @@
 import Mathlib.Order.Notation
+import Batteries.Lean.Float
 
 namespace Float
 
@@ -42,7 +43,6 @@ partial def zpow (x : Float) (n : Int) : Float :=
     (1.0/x).npow (-n).toNat
 
 
-def inf := 1.0/0.0
 def ninf := -Float.inf
 instance : Top Float := ⟨Float.inf⟩
 instance : Bot Float := ⟨Float.ninf⟩

@@ -8,7 +8,6 @@ import SciLean.Analysis.Scalar
 import SciLean.Data.IndexType
 import SciLean.Data.IdxType.Basic
 import SciLean.Data.IdxType.Fold
-import SciLean.Data.VectorType.Init
 import SciLean.Data.ArrayOperations.Algebra
 
 namespace SciLean
@@ -295,25 +294,6 @@ export VectorType.Dense (const const_spec scalAdd scalAdd_spec div div_spec
   inv inv_spec exp exp_spec)
 -- export VectorType.RealOp (rscal rscal_spec rdot rdot_spec)
 
-attribute [vector_to_spec]
-  zero_spec
-  const_spec
-  scal_spec
-  scalAdd_spec
-  sum_spec
-  asum_spec
-  nrm2_spec
-  iamax_spec
-  dot_spec
-  conj_spec
-  axpy_spec
-  axpby_spec
-  div_spec
-  inv_spec
-  exp_spec
-  mul_spec
-  -- rscal_spec
-  -- rdot_spec
 
 section BasicOperations
 
