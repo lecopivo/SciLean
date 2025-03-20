@@ -1,5 +1,0 @@
-import Lean
-
-register_simp_attr matrix_to_spec
-register_simp_attr matrix_from_spec
-register_simp_attr matrix_optimize

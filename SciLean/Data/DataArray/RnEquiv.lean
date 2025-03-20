@@ -35,6 +35,8 @@ instance instHasRnEquivSelf
     HasRnEquiv R Unit R where
 
 
+-- I'm unsure if we really want these instances or operations like this should be done
+-- through `toRn` and `fromRn`
 section RGetSet
 
 variable {X : Type*} [PlainDataType X]

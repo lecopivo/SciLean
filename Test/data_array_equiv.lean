@@ -8,9 +8,9 @@ open SciLean
 
 
 
-example : HasRnEquiv (Float^[10]) (Idx 10 × Idx 1) Float := by infer_instance
-example : HasRnEquiv (Float^[10]^[20]) (Idx 20 × Idx 10 × Idx 1) Float := by infer_instance
-example : HasRnEquiv (Float^[10,20]) ((Idx 10 × Idx 20) × Idx 1) Float := by infer_instance
+example : HasRnEquiv (Float^[10]) (Idx 10 × Unit) Float := by infer_instance
+example : HasRnEquiv (Float^[10]^[20]) (Idx 20 × Idx 10 × Unit) Float := by infer_instance
+example : HasRnEquiv (Float^[10,20]) ((Idx 10 × Idx 20) × Unit) Float := by infer_instance
 -- example : DataArrayEquiv (Float^[10]^[20]) (Idx 20) (Float^[10]) := by infer_instance
 -- example : DataArrayEquiv (Float^[10,20]^[30]) (Idx 30 × Idx 10 × Idx 20) Float := by infer_instance
 
