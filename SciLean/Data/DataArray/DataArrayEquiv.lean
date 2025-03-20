@@ -67,13 +67,14 @@ abbrev fromRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I n
   (x : R^[I]) : X := DataArrayEquiv.fromKn x
 
 
-
+namespace DataArrayN
 ----------------------------------------------------------------------------------------------------
 -- Basic Instances ---------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
 -- inductive
-instance {I J X K : Type*}
+instance instDataArrayEquivInductive
+    {I J X K : Type*}
     {nI} [IdxType I nI] {nJ} [IdxType J nJ] [PlainDataType K]
     [PlainDataType X] [DataArrayEquiv X J K] :
     DataArrayEquiv (X^[I]) (I×J) K where
@@ -84,7 +85,8 @@ instance {I J X K : Type*}
 
 
 -- base case
-instance {I n} [IdxType I n] {K} [PlainDataType K] :
+instance instDataArrayEquivBase
+    {I n} [IdxType I n] {K} [PlainDataType K] :
     DataArrayEquiv (K^[I]) I K where
   toKn := fun x => x
   fromKn := fun x => x
@@ -93,10 +95,11 @@ instance {I n} [IdxType I n] {K} [PlainDataType K] :
 
 
 -- self
-instance {K} [PlainDataType K] :
-    DataArrayEquiv K (Idx 1) K where
-  toKn := fun x => ⊞ (_ : Idx 1) => x
-  fromKn := fun x => x[0]
+instance instDataArrayEquivSelf
+    {K} [PlainDataType K] :
+    DataArrayEquiv K Unit K where
+  toKn := fun x => (⊞ (_ : Unit) => x : K^[Unit])
+  fromKn := fun x => x[()]
   left_inv := by intro; simp
   right_inv := by intro; simp; sorry_proof
 
@@ -111,25 +114,30 @@ instance {K} [PlainDataType K] :
 ----------------------------------------------------------------------------------------------------
 
 /-- Uncurry element access `x[i][j]` for `x : X^[I]` where `X` can be element accessed with `j : J` -/
-instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+instance instGetElemUncurry
+    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     {K} [PlainDataType K]
-    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem' X J K] :
+    {X} [PlainDataType X] [DataArrayEquiv X J K] :
     GetElem (X^[I]) (I×J) K (fun _ _ => True) where
   getElem xs ij _ :=
     let scalarArray := toKn (I×J) K xs
     scalarArray[ij]
 
 /-- `x[i,j] = x[i][j]` for `x : X^[I]` -/
-instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+instance instIsGetElemCurry
+    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     {K} [PlainDataType K]
-    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
+    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem' X J K] :
     IsGetElemCurry (X^[I]) I J where
   getElem_curry := by
+    -- I don't think it is provable with the current set of assumptions
+    -- something extra is likely necessary
     sorry_proof
 
-instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+instance instInjectiveGetElemUncurry
+    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     {K} [PlainDataType K]
-    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
+    {X} [PlainDataType X] [DataArrayEquiv X J K] :
     InjectiveGetElem (X^[I]) (I×J) where
   getElem_injective := by
     -- this should be an easy proof if we use that `I×J → K ≃ I → J → K`
@@ -141,16 +149,18 @@ instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
 -- Set Element -------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+instance instSetElemUncurry
+    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     {K} [PlainDataType K]
-    {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
+    {X} [PlainDataType X] [DataArrayEquiv X J K] :
     SetElem (X^[I]) (I×J) K (fun _ _ => True) where
   setElem xs ij v _ :=
     let scalarArray := toKn (I×J) K xs
     fromKn _ (setElem scalarArray ij v .intro)
   setElem_valid := by simp
 
-instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+instance instLawfulSetElemUncurry
+    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     LawfulSetElem (X^[I]) (I×J) where
@@ -162,13 +172,15 @@ instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
 -- OfFn --------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ] [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
+instance instOfFnUncurry
+    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ] [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     OfFn (X^[I]) (I×J) K where
   ofFn f := fromKn _ (⊞ ij => f ij)
 
-instance {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ] [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
+instance instLawfulOfFnUncurry
+    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ] [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     LawfulOfFn (X^[I]) (I×J) where

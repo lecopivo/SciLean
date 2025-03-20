@@ -7,28 +7,65 @@ namespace SciLean
 
 namespace ArrayOps
 
-variable {coll idx elem : Type*} {n} [IdxType idx n] [IdxType.Fold' idx]
-  [GetElem' coll idx elem]
-  [SetElem' coll idx elem]
+variable {X I Y : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+  [GetElem' X I Y]
+  [SetElem' X I Y]
 
-@[inline,specialize]
-def mapIdxMono (f : idx → elem → elem) (xs : coll) : coll :=
-  IdxType.fold (init:=xs) .full (fun (i : idx) xs  =>
-    let xi := xs[i]
-    let xi' := f i xi
-    setElem xs i xi' .intro)
+/--
+Maps elements of `xs` by `f` with data accessor `g`.
 
+```
+(mapIdxMono2 f g xs)[i] = f i (g i) x[i]
+```
 
--- this version should be used if we access some other data with the index. This data access should
--- be done through `g`
-@[inline,specialize]
-def mapIdxMono2 (f : idx → Z → elem → elem) (g : idx → Z) (xs : coll) : coll :=
-  IdxType.fold (init:=xs) .full (fun (i : idx) xs  =>
+This is a low level function that provides additional agument `g` which is used as data accessor
+inside of `f`. For example, instead of writing
+```
+def add (x y : X) := mapIdxMono (fun i xi => xi + y[i]) x
+```
+you should write
+```
+def add (x y : X) := mapIdxMono2 (fun i yi xi => xi + yi) (fun i => y[i]) x
+```
+This way reverse mode AD can produce better code.
+
+An example of higer arity function
+```
+def mulAdd (x y z : X) := mapIdxMono2 (fun i (xi,yi) zi => xi*yi + zi) (fun i => (x[i],y[i])) z
+```
+-/
+@[inline, specialize]
+def mapIdxMonoAcc (f : I → Z → Y → Y) (g : I → Z) (xs : X) : X :=
+  IdxType.fold (init:=xs) .full (fun (i : I) xs  =>
     let xi := xs[i]
     let yi := g i
     let xi' := f i (g i) xi
     setElem xs i xi' .intro)
 
-@[inline,specialize]
-abbrev mapMono [DefaultIndex coll idx] (f : elem → elem) (xs : coll) : coll :=
-  mapIdxMono (fun _ : idx => f) xs
+
+/--
+Maps elements of `xs` by `f`.
+
+```
+(mapIdxMono2 f xs)[i] = f i x[i]
+```
+
+Note: Consider using `mapIdxMono2` if `f` is accesing element of another array,
+      like `f := fun i xi => xi + y[i]`. Reverse mode AD is able to produce better gradients for
+      `mapIdxMono2`.
+-/
+@[inline, specialize]
+abbrev mapIdxMono (f : I → Y → Y) (xs : X) : X :=
+  mapIdxMonoAcc (fun i _ y => f i y) (fun _ => ()) xs
+
+
+/--
+Maps elements of `xs` by `f`.
+
+```
+(mapIdxMono2 f xs)[i] = f x[i]
+```
+-/
+@[inline, specialize]
+abbrev mapMono [DefaultIndex X I] (f : Y → Y) (xs : X) : X :=
+  mapIdxMono (fun _ : I => f) xs

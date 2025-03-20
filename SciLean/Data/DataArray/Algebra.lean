@@ -83,6 +83,9 @@ instance instIsZeroGetElemUncurry {L nL} [IdxType L nL]
     IsZeroGetElem (X^[L]^[I]) (I × J) where
   getElem_zero := by intro ⟨i,j⟩; simp[getElem_curry]
 
+instance instIsZeroGetElemUncurryBase : IsZeroGetElem (R^[I]) (I × Unit) where
+  getElem_zero := by sorry_proof
+
 instance instIsZeroGetElemRn [HasRnEquiv X K R] : IsZeroGetElem (X^[I]) (Idx (nI*nK)) where
   getElem_zero := sorry_proof
 
@@ -113,6 +116,9 @@ instance instIsAddGetElemUncurry {L nL} [IdxType L nL]
     IsAddGetElem (X^[L]^[I]) (I × J) where
   getElem_add := sorry_proof
 
+instance instIsAddGetElemUncurryBase : IsAddGetElem (R^[I]) (I × Unit) where
+  getElem_add := by sorry_proof
+
 instance instIsAddGetElemRn [HasRnEquiv X K R] : IsAddGetElem (X^[I]) (Idx (nI*nK)) where
   getElem_add := sorry_proof
 
@@ -142,6 +148,9 @@ instance instIsNegGetElemUncurry {L nL} [IdxType L nL]
     IsNegGetElem (X^[L]^[I]) (I × J) where
   getElem_neg := by intro ⟨i,j⟩; simp[getElem_curry]
 
+instance instIsNegGetElemUncurryBase : IsNegGetElem (R^[I]) (I × Unit) where
+  getElem_neg := by sorry_proof
+
 instance instIsNegGetElemRn [HasRnEquiv X K R] : IsNegGetElem (X^[I]) (Idx (nI*nK)) where
   getElem_neg := sorry_proof
 
@@ -170,6 +179,9 @@ instance instIsSMulGetElemUncurry {L nL} [IdxType L nL]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsSMulGetElem R (X^[L]) J] :
     IsSMulGetElem R (X^[L]^[I]) (I × J) where
   getElem_smul := sorry_proof
+
+instance instIsSMulGetElemUncurryBase : IsSMulGetElem R (R^[I]) (I × Unit) where
+  getElem_smul := by sorry_proof
 
 instance instIsSMulGetElemRn [HasRnEquiv X K R] : IsSMulGetElem R (X^[I]) (Idx (nI*nK)) where
   getElem_smul := sorry_proof
@@ -203,6 +215,9 @@ instance instIsInnerGetElemUncurry {L nL} [IdxType L nL]
     IsInnerGetElem R (X^[L]^[I]) (I × J) where
   inner_eq_sum_getElem := sorry_proof
 
+instance instIsInnerGetElemUncurryBase : IsInnerGetElem R (R^[I]) (I × Unit) where
+  inner_eq_sum_getElem := by sorry_proof
+
 instance instIsInnerGetElemRn [HasRnEquiv X K R] : IsInnerGetElem R (X^[I]) (Idx (nI*nK)) where
   inner_eq_sum_getElem := sorry_proof
 
@@ -230,6 +245,8 @@ instance instIsModuleGetElemUncurry {L nL} [IdxType L nL]
     {Y} [PlainDataType Y] [AddCommGroup Y] [Module R Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsModuleGetElem R (X^[L]) J] :
     IsModuleGetElem R (X^[L]^[I]) (I × J) where
+
+instance instIsModuleGetElemUncurryBase : IsModuleGetElem R (R^[I]) (I × Unit) where
 
 instance instIsModuleGetElemRn [HasRnEquiv X K R] : IsModuleGetElem R (X^[I]) (Idx (nI*nK)) where
 
@@ -260,6 +277,9 @@ instance instIsContinuousGetElemUncurry {L nL} [IdxType L nL]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsContinuousGetElem (X^[L]) J] :
     IsContinuousGetElem (X^[L]^[I]) (I × J) where
   continuous_getElem := by intro ⟨i,j⟩; simp[getElem_curry]; fun_prop
+
+instance instIsContinuousGetElemUncurryBase : IsContinuousGetElem (R^[I]) (I × Unit) where
+  continuous_getElem := sorry_proof
 
 instance instContinuousGetElemRn [HasRnEquiv X K R] : IsContinuousGetElem (X^[I]) (Idx (nI*nK)) where
   continuous_getElem := sorry_proof

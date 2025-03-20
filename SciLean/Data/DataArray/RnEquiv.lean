@@ -32,7 +32,7 @@ instance instHasRnEquivInductive
 
 instance instHasRnEquivSelf
     {R : Type*} [RealScalar R] [PlainDataType R] :
-    HasRnEquiv R (Idx 1) R where
+    HasRnEquiv R Unit R where
 
 
 section RGetSet

@@ -21,7 +21,7 @@ abbrev mapIdxMono (f : I → X → X) (xs : X^[I]) : X^[I] :=
 
 It is just and abbreviation for a call to `IndexType.foldl` which runs a fold over the index
 type `I`. -/
-abbrev foldl (op : α → X → α) (init : α) (xs : X^[I]) : α :=
+ abbrev foldl (op : α → X → α) (init : α) (xs : X^[I]) : α :=
   IdxType.fold .full (init:=init) (fun i a => op a xs[i])
 
 /-- Reduce elements of `xs : X^[I]` using `op : X → X → X`.
@@ -52,42 +52,55 @@ section OverReals
 
 variable
   {R : Type*} [RealScalar R] [PlainDataType R]
-  {J nJ} [IdxType J nJ]
+  {J nJ} [IdxType J nJ] [IdxType.Fold' I] [IdxType.Fold' J]
   [HasRnEquiv X J R]
 
+
 /--
-Map real scalars of `x : X^[I]` by `f : R → R`
+Map real scalars of `x : X^[I]` by `f : R → R`.
 
 It is required that `X ≃ R^[J]` for some `J`
+
+The function `f` provides two indices `(i : X)` and `(j : J)`
+  - `i` maps to the particular `X`
+  - `j` maps to the particular real scalar in `X`
+
+Note that calling this function on `R^[n]` will give you `j : Idx 1`.
 -/
 @[inline, specialize]
 abbrev rmapIdx (f : I → J → R → R) (x : X^[I]) : X^[I] :=
   ArrayOps.mapIdxMono
-    (fun idx : Idx (nI*nJ) =>
-      let (i,j) := fromIdx idx
+    (fun ij : I×J =>
+      let' (i,j) := ij
       f i j) x
 
 /--
-Map real scalars of `x : X^[I]` by `f : R → R`
+Map real scalars of `x : X^[I]` by `f : R → R`.
 
 It is required that `X ≃ R^[J]` for some `J`
 -/
 @[inline, specialize]
 abbrev rmap (f : R → R) (x : X^[I]) : X^[I] :=
-  ArrayOps.mapIdxMono (fun _ : Idx (nI*nJ) => f) x
+  rmapIdx (fun _ _ => f) x
 
 /--
 Map2 real scalars of `x y : X^[I]` by `f : R → R → R`
 
-The first argument `x` is mutated.
+The first argument `x` is mutated if possible.
 
 It is required that `X ≃ R^[J]` for some `J`
+
+The function `f` provides two indices `(i : X)` and `(j : J)`
+  - `i` maps to the particular `X` in `X^[I]`
+  - `j` maps to the particular real scalar `R` in `X`
+
+Note that calling this function on `R^[n]` will give you `j : Idx 1`.
 
 TODO: make this function to decide whether to mutate `x` or `y`
 -/
 @[inline, specialize]
 abbrev rmapIdx2 (f : I → J → R → R → R) (x y : X^[I]) : X^[I] :=
-  ArrayOps.mapIdxMono2
+  ArrayOps.mapIdxMonoAcc
     (fun (idx : Idx (nI*nJ)) xi =>
       let (i,j) := fromIdx idx
       (f i j · xi))
@@ -95,11 +108,10 @@ abbrev rmapIdx2 (f : I → J → R → R → R) (x y : X^[I]) : X^[I] :=
     x
 
 
-
 /--
 Map2 real scalars of `x y : X^[I]` by `f : R → R → R`
 
-The first argument `x` is mutated.
+The first argument `x` is mutated if possible.
 
 It is required that `X ≃ R^[J]` for some `J`
 
@@ -107,7 +119,4 @@ TODO: make this function to decide whether to mutate `x` or `y`
 -/
 @[inline, specialize]
 abbrev rmap2 (f : R → R → R) (x y : X^[I]) : X^[I] :=
-  ArrayOps.mapIdxMono2
-    (fun (i : Idx (nI*nJ)) xi => (f · xi))
-    (fun i => y[i])
-    x
+  rmapIdx2 (fun _ _ => f) x y
