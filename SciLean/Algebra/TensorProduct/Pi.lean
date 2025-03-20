@@ -1,9 +1,5 @@
 import SciLean.Algebra.TensorProduct.Basic
 
-import SciLean.Algebra.TensorProduct.BlockMatrixCol
-import SciLean.Algebra.TensorProduct.BlockMatrixRow
-import SciLean.Algebra.TensorProduct.BlockMatrix
-
 namespace SciLean
 
 variable (R : Type*) [RCLike R]

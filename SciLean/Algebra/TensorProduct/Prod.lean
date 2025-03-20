@@ -1,8 +1,8 @@
 import SciLean.Algebra.TensorProduct.Basic
 
-import SciLean.Algebra.TensorProduct.BlockMatrixCol
-import SciLean.Algebra.TensorProduct.BlockMatrixRow
-import SciLean.Algebra.TensorProduct.BlockMatrix
+import SciLean.Algebra.TensorProduct.ProdMatrixCol
+import SciLean.Algebra.TensorProduct.ProdMatrixRow
+import SciLean.Algebra.TensorProduct.ProdMatrix
 
 namespace SciLean
 
@@ -20,7 +20,7 @@ variable (R : Type*) [RCLike R]
 
 
 open TensorProductType in
-instance (priority:=low) : TensorProductType R (Y₁ × Y₂) X₁ (BlockMatrixCol YX₁₁ YX₂₁) where
+instance (priority:=low) : TensorProductType R (Y₁ × Y₂) X₁ (ProdMatrixCol YX₁₁ YX₂₁) where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd := fun r ⟨y₁,y₂⟩ x ⟨A₁,A₂⟩ =>
     ⟨tmulAdd r y₁ x A₁, tmulAdd r y₂ x A₂⟩
@@ -31,15 +31,15 @@ instance (priority:=low) : TensorProductType R (Y₁ × Y₂) X₁ (BlockMatrixC
   tmulAdd_eq_tmul := sorry_proof
 
 instance [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₂ X₁ YX₂₁] :
-  TensorProductGetYX R (Y₁ × Y₂) X₁ (BlockMatrixCol YX₁₁ YX₂₁) := ⟨⟩
+  TensorProductGetYX R (Y₁ × Y₂) X₁ (ProdMatrixCol YX₁₁ YX₂₁) := ⟨⟩
 instance [TensorProductGetY R Y₁ X₁ YX₁₁] [TensorProductGetY R Y₂ X₁ YX₂₁] :
-  TensorProductGetY R (Y₁ × Y₂) X₁ (BlockMatrixCol YX₁₁ YX₂₁) := ⟨⟩
+  TensorProductGetY R (Y₁ × Y₂) X₁ (ProdMatrixCol YX₁₁ YX₂₁) := ⟨⟩
 instance [TensorProductGetX R Y₁ X₁ YX₁₁] [TensorProductGetX R Y₂ X₁ YX₂₁] :
-  TensorProductGetX R (Y₁ × Y₂) X₁ (BlockMatrixCol YX₁₁ YX₂₁) := ⟨⟩
+  TensorProductGetX R (Y₁ × Y₂) X₁ (ProdMatrixCol YX₁₁ YX₂₁) := ⟨⟩
 
 
 open TensorProductType in
-instance (priority:=low) : TensorProductType R Y₁ (X₁ × X₂) (BlockMatrixRow YX₁₁ YX₁₂) where
+instance (priority:=low) : TensorProductType R Y₁ (X₁ × X₂) (ProdMatrixRow YX₁₁ YX₁₂) where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd := fun r y ⟨x₁,x₂⟩ ⟨A₁,A₂⟩ =>
     ⟨tmulAdd r y x₁ A₁, tmulAdd r y x₂ A₂⟩
@@ -50,15 +50,15 @@ instance (priority:=low) : TensorProductType R Y₁ (X₁ × X₂) (BlockMatrixR
   tmulAdd_eq_tmul := sorry_proof
 
 instance [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₁ X₂ YX₁₂] :
-  TensorProductGetYX R Y₁ (X₁ × X₂) (BlockMatrixRow YX₁₁ YX₁₂) := ⟨⟩
+  TensorProductGetYX R Y₁ (X₁ × X₂) (ProdMatrixRow YX₁₁ YX₁₂) := ⟨⟩
 instance [TensorProductGetY R Y₁ X₁ YX₁₁] [TensorProductGetY R Y₁ X₂ YX₁₂] :
-  TensorProductGetY R Y₁ (X₁ × X₂) (BlockMatrixRow YX₁₁ YX₁₂) := ⟨⟩
+  TensorProductGetY R Y₁ (X₁ × X₂) (ProdMatrixRow YX₁₁ YX₁₂) := ⟨⟩
 instance [TensorProductGetX R Y₁ X₁ YX₁₁] [TensorProductGetX R Y₁ X₂ YX₁₂] :
-  TensorProductGetX R Y₁ (X₁ × X₂) (BlockMatrixRow YX₁₁ YX₁₂) := ⟨⟩
+  TensorProductGetX R Y₁ (X₁ × X₂) (ProdMatrixRow YX₁₁ YX₁₂) := ⟨⟩
 
 
 open TensorProductType in
-instance : TensorProductType R (Y₁ × Y₂) (X₁ × X₂) (BlockMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) where
+instance : TensorProductType R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd := fun r ⟨y₁,y₂⟩ ⟨x₁,x₂⟩ ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ =>
     {
@@ -82,12 +82,12 @@ instance : TensorProductType R (Y₁ × Y₂) (X₁ × X₂) (BlockMatrix YX₁�
 instance
   [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₁ X₂ YX₁₂]
   [TensorProductGetYX R Y₂ X₁ YX₂₁] [TensorProductGetYX R Y₂ X₂ YX₂₂] :
-  TensorProductGetYX R (Y₁ × Y₂) (X₁ × X₂) (BlockMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
+  TensorProductGetYX R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
 instance
   [TensorProductGetY R Y₁ X₁ YX₁₁] [TensorProductGetY R Y₁ X₂ YX₁₂]
   [TensorProductGetY R Y₂ X₁ YX₂₁] [TensorProductGetY R Y₂ X₂ YX₂₂] :
-  TensorProductGetY R (Y₁ × Y₂) (X₁ × X₂) (BlockMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
+  TensorProductGetY R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
 instance
   [TensorProductGetX R Y₁ X₁ YX₁₁] [TensorProductGetX R Y₁ X₂ YX₁₂]
   [TensorProductGetX R Y₂ X₁ YX₂₁] [TensorProductGetX R Y₂ X₂ YX₂₂] :
-  TensorProductGetX R (Y₁ × Y₂) (X₁ × X₂) (BlockMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
+  TensorProductGetX R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩

@@ -4,17 +4,8 @@ import Mathlib.Data.Erased
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Data.DataArray.MatrixType
-
-import SciLean.Tactic.SimpleProxyType
-import SciLean.Data.Instances.Sigma
 
 namespace SciLean
-
--- todo move this
-open NormedSpace in
-def AdjointSpace.toDual (𝕜 : Type u_1) {E : Type u_2} [RCLike 𝕜] [NormedAddCommGroup E] [AdjointSpace 𝕜 E]
-  (x : E) : Dual 𝕜 E := fun x' =>L[𝕜] ⟪x,x'⟫[𝕜]
 
 
 /--
@@ -107,7 +98,7 @@ class TensorProductGetRXY (R Y X : outParam Type*) (YX : Type*)
 
 open TensorProductType in
 /-- Outer/tensor product of two vectors. -/
-abbrev tmul
+def tmul
     (R : Type*) {Y X : Type*} {YX : Type*}
     [RCLike R]
     [NormedAddCommGroup Y] [AdjointSpace R Y]

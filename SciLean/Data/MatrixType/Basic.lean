@@ -7,7 +7,32 @@ namespace SciLean
 `MatrixType R Y X M` says that `M` is a matrix and it maps `(x : X)` to `(y : Y)` as a `R`-linear
 map.
 
-Abstractly it is understood an element of `Y ⊗ X*`.
+This class provides three main operations:
+  - **outer product**: `y ⊗ x` for `y : Y` and `x : X`
+  - **matrix-vector multiplication**: `A*x` for `A : M` and `x : X`
+  - **vector-matrix multiplication**: `y*A` for `y : Y` and `A : M`
+
+There operations are implemented using:
+  - `y ⊗ x = tmul (1:R) y x (0:M)`
+  - `A*x = matVecMulAdd (1:R) A x (0:R) (0:Y)`
+  - `y*A = vecMatMulAdd (1:R) y A (0:R) (0:X)`
+
+Which are computationaly more efficient when chained together. For example:
+```
+a₁•y₁⊗x₁ + a₂•y₂⊗x₂ + A = tmulAdd a₁ y₁ x₁ (tmulAdd a₂ y₂ x₂ A)
+```
+The expression on the right is computationally much more efficient.
+
+You can use `simp only [vector_optimize]` to optimize expression using `•`, `*` and `⊗` to more
+efficient operations
+```
+-- tmulAdd a₁ y₁ x₁ (tmulAdd a₂ y₂ x₂ A)
+#check (a₁•y₁⊗x₁ + a₂•y₂⊗x₂ + A) rewrite_by simp only [blas_optimize]
+```
+
+---
+
+Abstractly, `M` it is understood an element of `Y ⊗ X` hence it extends `TensorProductType R Y X M`
 -/
 class MatrixType (R : outParam Type*) (Y X : outParam Type*) (M : Type*) [RCLike R]
   [NormedAddCommGroup X] [AdjointSpace R X] [NormedAddCommGroup Y] [AdjointSpace R Y]

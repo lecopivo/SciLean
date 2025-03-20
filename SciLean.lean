@@ -378,7 +378,7 @@ import SciLean.Data.Int64
 import SciLean.Data.ListN
 -- import SciLean.Data.MatrixType.Base
 -- import SciLean.Data.MatrixType.Basic
--- -- import SciLean.Data.MatrixType.BlockMatrix
+-- -- import SciLean.Data.MatrixType.ProdMatrix
 -- import SciLean.Data.MatrixType.Dense
 -- import SciLean.Data.MatrixType.Init
 -- import SciLean.Data.MatrixType.MatMul
