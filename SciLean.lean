@@ -376,54 +376,54 @@ import SciLean.Data.IndexType.TensorIndex
 import SciLean.Data.Instances.Sigma
 import SciLean.Data.Int64
 import SciLean.Data.ListN
-import SciLean.Data.MatrixType.Base
-import SciLean.Data.MatrixType.Basic
--- import SciLean.Data.MatrixType.BlockMatrix
-import SciLean.Data.MatrixType.Dense
-import SciLean.Data.MatrixType.Init
-import SciLean.Data.MatrixType.MatMul
-import SciLean.Data.MatrixType.Operations.Col
-import SciLean.Data.MatrixType.Operations.Diagonal
-import SciLean.Data.MatrixType.Operations.FromMatrix
-import SciLean.Data.MatrixType.Operations.Gemv
-import SciLean.Data.MatrixType.Operations.Row
-import SciLean.Data.MatrixType.Operations.ToMatrix
-import SciLean.Data.MatrixType.Operations.UpdateCol
-import SciLean.Data.MatrixType.Operations.UpdateRow
-import SciLean.Data.MatrixType.Optimize
-import SciLean.Data.MatrixType.Square
-import SciLean.Data.MatrixType.Symbolic
-import SciLean.Data.MatrixType.Transpose
+-- import SciLean.Data.MatrixType.Base
+-- import SciLean.Data.MatrixType.Basic
+-- -- import SciLean.Data.MatrixType.BlockMatrix
+-- import SciLean.Data.MatrixType.Dense
+-- import SciLean.Data.MatrixType.Init
+-- import SciLean.Data.MatrixType.MatMul
+-- import SciLean.Data.MatrixType.Operations.Col
+-- import SciLean.Data.MatrixType.Operations.Diagonal
+-- import SciLean.Data.MatrixType.Operations.FromMatrix
+-- import SciLean.Data.MatrixType.Operations.Gemv
+-- import SciLean.Data.MatrixType.Operations.Row
+-- import SciLean.Data.MatrixType.Operations.ToMatrix
+-- import SciLean.Data.MatrixType.Operations.UpdateCol
+-- import SciLean.Data.MatrixType.Operations.UpdateRow
+-- import SciLean.Data.MatrixType.Optimize
+-- import SciLean.Data.MatrixType.Square
+-- import SciLean.Data.MatrixType.Symbolic
+-- import SciLean.Data.MatrixType.Transpose
 import SciLean.Data.Prod
 import SciLean.Data.Random
 import SciLean.Data.StructType
 import SciLean.Data.StructType.Algebra
 import SciLean.Data.StructType.Basic
 import SciLean.Data.Vector
-import SciLean.Data.VectorType.Base
-import SciLean.Data.VectorType.BaseSimps
-import SciLean.Data.VectorType.Basic
-import SciLean.Data.VectorType.BinOps
-import SciLean.Data.VectorType.Init
-import SciLean.Data.VectorType.Operations.Axpby
-import SciLean.Data.VectorType.Operations.Axpy
-import SciLean.Data.VectorType.Operations.Dot
-import SciLean.Data.VectorType.Operations.Exp
-import SciLean.Data.VectorType.Operations.FromVec
-import SciLean.Data.VectorType.Operations.Logsumexp
-import SciLean.Data.VectorType.Operations.MapIdx
-import SciLean.Data.VectorType.Operations.Max
-import SciLean.Data.VectorType.Operations.Mul
-import SciLean.Data.VectorType.Operations.Scal
-import SciLean.Data.VectorType.Operations.ScalAdd
-import SciLean.Data.VectorType.Operations.Set
-import SciLean.Data.VectorType.Operations.Softmax
-import SciLean.Data.VectorType.Operations.Sum
-import SciLean.Data.VectorType.Operations.ToVec
-import SciLean.Data.VectorType.Optimize
-import SciLean.Data.VectorType.Prod
-import SciLean.Data.VectorType.Scalar
-import SciLean.Data.VectorType.Subvector
+-- import SciLean.Data.VectorType.Base
+-- import SciLean.Data.VectorType.BaseSimps
+-- import SciLean.Data.VectorType.Basic
+-- import SciLean.Data.VectorType.BinOps
+-- import SciLean.Data.VectorType.Init
+-- import SciLean.Data.VectorType.Operations.Axpby
+-- import SciLean.Data.VectorType.Operations.Axpy
+-- import SciLean.Data.VectorType.Operations.Dot
+-- import SciLean.Data.VectorType.Operations.Exp
+-- import SciLean.Data.VectorType.Operations.FromVec
+-- import SciLean.Data.VectorType.Operations.Logsumexp
+-- import SciLean.Data.VectorType.Operations.MapIdx
+-- import SciLean.Data.VectorType.Operations.Max
+-- import SciLean.Data.VectorType.Operations.Mul
+-- import SciLean.Data.VectorType.Operations.Scal
+-- import SciLean.Data.VectorType.Operations.ScalAdd
+-- import SciLean.Data.VectorType.Operations.Set
+-- import SciLean.Data.VectorType.Operations.Softmax
+-- import SciLean.Data.VectorType.Operations.Sum
+-- import SciLean.Data.VectorType.Operations.ToVec
+-- import SciLean.Data.VectorType.Optimize
+-- import SciLean.Data.VectorType.Prod
+-- import SciLean.Data.VectorType.Scalar
+-- import SciLean.Data.VectorType.Subvector
 -- import SciLean.Doodle
 -- import SciLean.Examples.GMM.Main
 -- import SciLean.Examples.GMM.Objective

@@ -10,23 +10,32 @@ set_default_scalar R
 
 /--
 info: fun x =>
-   ∑ i,
-    let dx := setElem 0 i 1 True.intro;
-    dx : R^[n] → R^[n]
+  let dw :=
+    IdxType.fold IndexType.Range.full 0 fun i dw =>
+      let xi := dw[i];
+      let x := setElem dw i (xi + 1) True.intro;
+      x;
+  dw : R^[n] → R^[n]
 -/
 #guard_msgs in
-#check (∇ (x : R^[n]), ∑ᴵ i, x[i]) rewrite_by autodiff
+#check (∇ (x : R^[n]), ∑ᴵ i, x[i]) rewrite_by
+  lsimp +unfoldPartialApp [fgradient,↓revFDeriv_simproc]
 
 
 /--
 info: fun x =>
-   ∑ i,
-    let ydf := x[i];
-    let dx := (2 * ydf) • setElem 0 i 1 True.intro;
-    dx : R^[n] → R^[n]
+  let dw :=
+    IdxType.fold IndexType.Range.full 0 fun i dw =>
+      let x₁ := x[i];
+      let xi := dw[i];
+      let x := setElem dw i (xi + 2 * x₁) True.intro;
+      x;
+  dw : R^[n] → R^[n]
 -/
 #guard_msgs in
-#check (∇ (x : R^[n]), ∑ i, x[i]^2) rewrite_by autodiff
+#check (∇ (x : R^[n]), ∑ᴵ i, x[i]^2) rewrite_by
+  lsimp +unfoldPartialApp [fgradient,↓revFDeriv_simproc]
+
 
 
 variable (A : R^[n,n])
@@ -34,16 +43,23 @@ variable (A : R^[n,n])
 
 /--
 info: fun x =>
-   ∑ i,
-    let
-      dx := ∑ i_1,
-        let ydf := A[(i, i_1)];
-        let zdg := x[i];
-        let ydf_1 := ydf * zdg;
-        let zdg := x[i_1];
-        let dx := zdg • ydf • setElem 0 i 1 True.intro + ydf_1 • setElem 0 i_1 1 True.intro;
-        dx;
-    dx : R^[n] → R^[n]
+  let dw :=
+    IdxType.fold IndexType.Range.full 0 fun i dw =>
+      let dw :=
+        IdxType.fold IndexType.Range.full dw fun i_1 dw =>
+          let x₁ := A[(i, i_1)];
+          let x₁_1 := x[i];
+          let x₁_2 := x₁ * x₁_1;
+          let x₁_3 := x[i_1];
+          let xi := dw[i_1];
+          let x := setElem dw i_1 (xi + x₁_2) True.intro;
+          let dy₁ := x₁ * x₁_3;
+          let xi := x[i];
+          let x := setElem x i (xi + dy₁) True.intro;
+          x;
+      dw;
+  dw : R^[n] → R^[n]
 -/
 #guard_msgs in
-#check (∇ (x : R^[n]), ∑ i j, A[i,j]*x[i]*x[j]) rewrite_by autodiff
+#check (∇ (x : R^[n]), ∑ᴵ i j, A[i,j]*x[i]*x[j]) rewrite_by
+  lsimp +unfoldPartialApp [fgradient,↓revFDeriv_simproc]

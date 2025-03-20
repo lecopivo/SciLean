@@ -1,9 +1,13 @@
 import SciLean.Data.DataArray.DataArray
+import SciLean.Data.DataArray.RnEquiv
+import SciLean.Meta.Notation.Let'
 import SciLean.Data.ArrayOperations.Operations
+
+import SciLean.Analysis.Scalar.FloatAsReal
 
 namespace SciLean.DataArrayN
 
-variable {X : Type*} [PlainDataType X] {I : Type*} {n} [IdxType I n] [IdxType.Fold' I]
+variable {X : Type*} [PlainDataType X] {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
 
 /-- Transform all elements of `xs^[I]` using `f : X → X`. -/
 abbrev mapMono (f : X → X) (xs : X^[I]) : X^[I] :=
@@ -29,13 +33,81 @@ abbrev reduce [Inhabited X] (op : X → X → X) (xs : X^[I]) : X :=
 
 
 /-- Reshape array to one dimensional array of `n` elements. -/
-abbrev reshape1 (x : X^[I]) (m : Nat) (h : m = n) : X^[m] :=
+abbrev reshape1 (x : X^[I]) (m : Nat) (h : m = nI) : X^[m] :=
   x.reshape (Idx m) h
 
 /-- Reshape array to two dimensional array. -/
-abbrev reshape2 (x : X^[I]) (m₁ m₂ : Nat) (h : m₁*m₂ = n) : X^[m₁,m₂] :=
+abbrev reshape2 (x : X^[I]) (m₁ m₂ : Nat) (h : m₁*m₂ = nI) : X^[m₁,m₂] :=
   x.reshape (Idx m₁ × Idx m₂) h
 
 /-- Reshape array to three dimensional array. -/
-abbrev reshape3 (x : X^[I]) (m₁ m₂ m₃ : Nat) (h : m₁*(m₂*m₃) = n) : X^[m₁,m₂,m₃] :=
+abbrev reshape3 (x : X^[I]) (m₁ m₂ m₃ : Nat) (h : m₁*(m₂*m₃) = nI) : X^[m₁,m₂,m₃] :=
   x.reshape (Idx m₁ × Idx m₂ × Idx m₃) h
+
+
+
+
+
+section OverReals
+
+variable
+  {R : Type*} [RealScalar R] [PlainDataType R]
+  {J nJ} [IdxType J nJ]
+  [HasRnEquiv X J R]
+
+/--
+Map real scalars of `x : X^[I]` by `f : R → R`
+
+It is required that `X ≃ R^[J]` for some `J`
+-/
+@[inline, specialize]
+abbrev rmapIdx (f : I → J → R → R) (x : X^[I]) : X^[I] :=
+  ArrayOps.mapIdxMono
+    (fun idx : Idx (nI*nJ) =>
+      let (i,j) := fromIdx idx
+      f i j) x
+
+/--
+Map real scalars of `x : X^[I]` by `f : R → R`
+
+It is required that `X ≃ R^[J]` for some `J`
+-/
+@[inline, specialize]
+abbrev rmap (f : R → R) (x : X^[I]) : X^[I] :=
+  ArrayOps.mapIdxMono (fun _ : Idx (nI*nJ) => f) x
+
+/--
+Map2 real scalars of `x y : X^[I]` by `f : R → R → R`
+
+The first argument `x` is mutated.
+
+It is required that `X ≃ R^[J]` for some `J`
+
+TODO: make this function to decide whether to mutate `x` or `y`
+-/
+@[inline, specialize]
+abbrev rmapIdx2 (f : I → J → R → R → R) (x y : X^[I]) : X^[I] :=
+  ArrayOps.mapIdxMono2
+    (fun (idx : Idx (nI*nJ)) xi =>
+      let (i,j) := fromIdx idx
+      (f i j · xi))
+    (fun idx => y[idx])
+    x
+
+
+
+/--
+Map2 real scalars of `x y : X^[I]` by `f : R → R → R`
+
+The first argument `x` is mutated.
+
+It is required that `X ≃ R^[J]` for some `J`
+
+TODO: make this function to decide whether to mutate `x` or `y`
+-/
+@[inline, specialize]
+abbrev rmap2 (f : R → R → R) (x y : X^[I]) : X^[I] :=
+  ArrayOps.mapIdxMono2
+    (fun (i : Idx (nI*nJ)) xi => (f · xi))
+    (fun i => y[i])
+    x

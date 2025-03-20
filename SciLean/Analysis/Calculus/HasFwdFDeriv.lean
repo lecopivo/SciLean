@@ -52,6 +52,8 @@ simproc_decl fwdFDeriv_simproc (fwdFDeriv _ _) :=
 -- Lambda Theorems ---------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+namespace HasFwdFDeriv
+
 @[data_synth]
 theorem id_rule : HasFwdFDeriv K (fun x : X => x) (λ x dx => (x, dx)) := by
   apply hasFwdFDeriv_from_hasFDerivAt
@@ -189,6 +191,7 @@ open Lean Meta
       (← getConstArgId ``let_skip_rule `g) (← getConstArgId ``let_skip_rule `f)
       (← getConstArgId ``let_skip_rule `hf)⟩
 
+end HasFwdFDeriv
 end SciLean
 open SciLean
 

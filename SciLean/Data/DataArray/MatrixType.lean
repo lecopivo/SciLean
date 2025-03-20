@@ -1,14 +1,14 @@
-import SciLean.Data.DataArray.VectorType
-import SciLean.Data.MatrixType.Base
-import SciLean.Data.MatrixType.Dense
-import SciLean.Data.MatrixType.Square
-import SciLean.Data.MatrixType.MatMul
+-- import SciLean.Data.DataArray.VectorType
+-- import SciLean.Data.MatrixType.Base
+-- import SciLean.Data.MatrixType.Dense
+-- import SciLean.Data.MatrixType.Square
+-- import SciLean.Data.MatrixType.MatMul
 
-import LeanBLAS
+-- import LeanBLAS
 
 namespace SciLean
 
-open BLAS
+-- open BLAS
 
 
 -- ----------------------------------------------------------------------------------------------------

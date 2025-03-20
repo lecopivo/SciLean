@@ -74,9 +74,7 @@ theorem IndexType.Range.foldl.arg_opinit.IsContinuousLinearMap_rule (r : Range I
   have := fun i => (hop i).2
   have := hinit.2
   simp_all
-  constructor
-  · fun_prop
-  · simp[autoParam]; fun_prop
+  constructor <;> fun_prop
 
 
 @[fun_prop]

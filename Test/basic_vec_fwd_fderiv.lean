@@ -105,7 +105,6 @@ info: fun x => ‖x‖₂[Float]⁻¹ • 𝐈 + x ⊗ (-(‖x‖₂²⁻¹ • 
     simp
 
 
-
 /--
 info: fun x =>
   (vecFwdFDeriv Float (Float^[3]) (fun x => ‖x‖₂[Float]⁻¹ • 𝐈 + x ⊗ (-(‖x‖₂²⁻¹ • ‖x‖₂[Float]⁻¹ • x))) x

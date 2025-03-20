@@ -25,15 +25,45 @@ instance instHasRnEquivInductive
     {X : Type*} [HasRnEquiv X J R] [PlainDataType X] :
     HasRnEquiv (X^[I]) (I × J) R where
 
-instance instHasRnEquivBase
-    {R : Type*} [RealScalar R] [PlainDataType R]
-    {I nI} [IdxType I nI] :
-    HasRnEquiv (R^[I]) I R where
+-- instance instHasRnEquivBase
+--     {R : Type*} [RealScalar R] [PlainDataType R]
+--     {I nI} [IdxType I nI] :
+--     HasRnEquiv (R^[I]) I R where
 
 instance instHasRnEquivSelf
     {R : Type*} [RealScalar R] [PlainDataType R] :
     HasRnEquiv R (Idx 1) R where
 
+
+section RGetSet
+
+variable {X : Type*} [PlainDataType X]
+  {I : Type*} {nI : ℕ} [IdxType I nI] {J : Type*} {nJ : ℕ} [IdxType J nJ]
+  {R : Type*} [RealScalar R] [PlainDataType R]
+  [HasRnEquiv X J R]
+
+instance : GetElem' (X^[I]) (Idx (nI*nJ)) R where
+  getElem x i _ := (toRn x).linGet i
+
+instance : InjectiveGetElem (X^[I]) (Idx (nI*nJ)) where
+  getElem_injective := sorry_proof
+
+instance : SetElem' (X^[I]) (Idx (nI*nJ)) R where
+  setElem x i v _ := fromRn ((toRn x).linSet i v)
+  setElem_valid := sorry_proof
+
+instance : LawfulSetElem (X^[I]) (Idx (nI*nJ)) where
+  getElem_setElem_eq := sorry_proof
+  getElem_setElem_neq := sorry_proof
+
+instance : OfFn (X^[I]) (Idx (nI*nJ)) R where
+  ofFn f := fromRn ((ofFn f : R^[nI*nJ]).reshape (I×J) sorry_proof)
+
+instance : LawfulOfFn (X^[I]) (Idx (nI*nJ)) where
+  getElem_ofFn := sorry_proof
+
+abbrev rget (x : X^[I]) (i : Idx (nI*nJ)) : R := x[i]
+abbrev rset (x : X^[I]) (i : Idx (nI*nJ)) (v : R) : X^[I] := setElem x i v .intro
 
 section Operations
 

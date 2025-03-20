@@ -26,11 +26,14 @@ variable
 
 
 -- Derive operations and algebraic structures in `X^[I]`
-instance instNormedAddCommGroupInductive [HasRnEquiv X K R] :
+instance instNormedAddCommGroup [HasRnEquiv X K R] :
     NormedAddCommGroup (X^[I]) := NormedAddCommGroup.ofRnEquiv (X^[I])
 
-instance instAdjointSpaceInductive [HasRnEquiv X K R] :
+instance instAdjointSpace [HasRnEquiv X K R] :
     AdjointSpace R (X^[I]) := AdjointSpace.ofRnEquiv (X^[I])
+
+instance instCompleteSpace [HasRnEquiv X K R] :
+    CompleteSpace (X^[I]) := sorry_proof
 
 
 -- short circuit instances
@@ -40,9 +43,13 @@ instance [HasRnEquiv X K R] : Neg (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : SMul ℕ (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : SMul ℤ (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : SMul R (X^[I]) := by infer_instance
+instance [HasRnEquiv X K R] : MulAction ℕ (X^[I]) := by infer_instance
+instance [HasRnEquiv X K R] : MulAction ℤ (X^[I]) := by infer_instance
+instance [HasRnEquiv X K R] : MulAction R (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : Inner R (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : AddCommGroup (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : Module R (X^[I]) := by infer_instance
+instance [HasRnEquiv X K R] : TopologicalSpace (X^[I]) := by infer_instance
 
 
 example : Add (R^[I]) := by infer_instance
@@ -76,6 +83,8 @@ instance instIsZeroGetElemUncurry {L nL} [IdxType L nL]
     IsZeroGetElem (X^[L]^[I]) (I × J) where
   getElem_zero := by intro ⟨i,j⟩; simp[getElem_curry]
 
+instance instIsZeroGetElemRn [HasRnEquiv X K R] : IsZeroGetElem (X^[I]) (Idx (nI*nK)) where
+  getElem_zero := sorry_proof
 
 example : IsZeroGetElem (R^[I]) I := by infer_instance
 example : IsZeroGetElem (R^[I,J]) (I×J) := by infer_instance
@@ -85,6 +94,7 @@ example : IsZeroGetElem (R^[J]^[I]) (I×J) := by infer_instance
 example : IsZeroGetElem (R^[I]^[J]) J := by infer_instance
 example : IsZeroGetElem (R^[I]^[J]^[I]) (I) := by infer_instance
 example : IsZeroGetElem (R^[I]^[J]^[I]) (I×J) := by infer_instance
+example : IsZeroGetElem (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
 
 ----------------------------------------------------------------------------------------------------
 
@@ -103,6 +113,8 @@ instance instIsAddGetElemUncurry {L nL} [IdxType L nL]
     IsAddGetElem (X^[L]^[I]) (I × J) where
   getElem_add := sorry_proof
 
+instance instIsAddGetElemRn [HasRnEquiv X K R] : IsAddGetElem (X^[I]) (Idx (nI*nK)) where
+  getElem_add := sorry_proof
 
 example : IsAddGetElem (R^[I]) I := by infer_instance
 example : IsAddGetElem (R^[I,J]) (I×J) := by infer_instance
@@ -111,6 +123,7 @@ example : IsAddGetElem (R^[I]^[J]) J := by infer_instance
 example : IsAddGetElem (R^[I]^[J]^[I]) (I) := by infer_instance
 example : IsAddGetElem (R^[I]^[J]^[I]) (I×J) := by infer_instance
 example : IsAddGetElem (R^[I]^[J]^[I]) (I×J×I) := by infer_instance
+example : IsAddGetElem (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
 
 ----------------------------------------------------------------------------------------------------
 
@@ -129,6 +142,9 @@ instance instIsNegGetElemUncurry {L nL} [IdxType L nL]
     IsNegGetElem (X^[L]^[I]) (I × J) where
   getElem_neg := by intro ⟨i,j⟩; simp[getElem_curry]
 
+instance instIsNegGetElemRn [HasRnEquiv X K R] : IsNegGetElem (X^[I]) (Idx (nI*nK)) where
+  getElem_neg := sorry_proof
+
 
 example : IsNegGetElem (R^[I]) I := by infer_instance
 example : IsNegGetElem (R^[I,J]) (I×J) := by infer_instance
@@ -136,7 +152,7 @@ example : IsNegGetElem (R^[J]^[I]) (I×J) := by infer_instance
 example : IsNegGetElem (R^[I]^[J]) J := by infer_instance
 example : IsNegGetElem (R^[I]^[J]^[I]) (I) := by infer_instance
 example : IsNegGetElem (R^[I]^[J]^[I]) (I×J) := by infer_instance
-
+example : IsNegGetElem (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
 ----------------------------------------------------------------------------------------------------
 
 
@@ -155,6 +171,9 @@ instance instIsSMulGetElemUncurry {L nL} [IdxType L nL]
     IsSMulGetElem R (X^[L]^[I]) (I × J) where
   getElem_smul := sorry_proof
 
+instance instIsSMulGetElemRn [HasRnEquiv X K R] : IsSMulGetElem R (X^[I]) (Idx (nI*nK)) where
+  getElem_smul := sorry_proof
+
 
 example : IsSMulGetElem R (R^[I]) I := by infer_instance
 example : IsSMulGetElem R (R^[I,J]) (I×J) := by infer_instance
@@ -162,6 +181,8 @@ example : IsSMulGetElem R (R^[J]^[I]) (I×J) := by infer_instance
 example : IsSMulGetElem R (R^[I]^[J]) J := by infer_instance
 example : IsSMulGetElem R (R^[I]^[J]^[I]) (I) := by infer_instance
 example : IsSMulGetElem R (R^[I]^[J]^[I]) (I×J) := by infer_instance
+example : IsSMulGetElem R (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
+example : IsSMulGetElem R (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
 
 ----------------------------------------------------------------------------------------------------
 
@@ -182,6 +203,9 @@ instance instIsInnerGetElemUncurry {L nL} [IdxType L nL]
     IsInnerGetElem R (X^[L]^[I]) (I × J) where
   inner_eq_sum_getElem := sorry_proof
 
+instance instIsInnerGetElemRn [HasRnEquiv X K R] : IsInnerGetElem R (X^[I]) (Idx (nI*nK)) where
+  inner_eq_sum_getElem := sorry_proof
+
 
 example : IsInnerGetElem R (R^[I]) I := by infer_instance
 example : IsInnerGetElem R (R^[I,J]) (I×J) := by infer_instance
@@ -189,6 +213,7 @@ example : IsInnerGetElem R (R^[J]^[I]) (I×J) := by infer_instance
 example : IsInnerGetElem R (R^[I]^[J]) J := by infer_instance
 example : IsInnerGetElem R (R^[I]^[J]^[I]) (I) := by infer_instance
 example : IsInnerGetElem R (R^[I]^[J]^[I]) (I×J) := by infer_instance
+example : IsInnerGetElem R (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
 
 ----------------------------------------------------------------------------------------------------
 
@@ -197,7 +222,7 @@ example : IsInnerGetElem R (R^[I]^[J]^[I]) (I×J) := by infer_instance
 instance instIsModuleGetElemInductive [HasRnEquiv X K R] :
     IsModuleGetElem R (X^[J]^[I]) I where
 
-instance instIsModuleGetElemBase : IsModuleGetElem R (R^[I]) I := by sorry_proof
+instance instIsModuleGetElemBase : IsModuleGetElem R (R^[I]) I where
 
 -- this has incorrect assumptions
 instance instIsModuleGetElemUncurry {L nL} [IdxType L nL]
@@ -206,12 +231,16 @@ instance instIsModuleGetElemUncurry {L nL} [IdxType L nL]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsModuleGetElem R (X^[L]) J] :
     IsModuleGetElem R (X^[L]^[I]) (I × J) where
 
+instance instIsModuleGetElemRn [HasRnEquiv X K R] : IsModuleGetElem R (X^[I]) (Idx (nI*nK)) where
+
+
 example : IsModuleGetElem R (R^[I]) I := by infer_instance
 example : IsModuleGetElem R (R^[I,J]) (I×J) := by infer_instance
 example : IsModuleGetElem R (R^[J]^[I]) (I×J) := by infer_instance
 example : IsModuleGetElem R (R^[I]^[J]) J := by infer_instance
 example : IsModuleGetElem R (R^[I]^[J]^[I]) (I) := by infer_instance
 example : IsModuleGetElem R (R^[I]^[J]^[I]) (I×J) := by infer_instance
+example : IsModuleGetElem R (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
 
 ----------------------------------------------------------------------------------------------------
 
@@ -232,11 +261,16 @@ instance instIsContinuousGetElemUncurry {L nL} [IdxType L nL]
     IsContinuousGetElem (X^[L]^[I]) (I × J) where
   continuous_getElem := by intro ⟨i,j⟩; simp[getElem_curry]; fun_prop
 
+instance instContinuousGetElemRn [HasRnEquiv X K R] : IsContinuousGetElem (X^[I]) (Idx (nI*nK)) where
+  continuous_getElem := sorry_proof
+
+
 example : IsContinuousGetElem (R^[I]) I := by infer_instance
 example : IsContinuousGetElem (R^[I,J]) (I×J) := by infer_instance
 example : IsContinuousGetElem (R^[J]^[I]) (I×J) := by infer_instance
 example : IsContinuousGetElem (R^[I]^[J]) J := by infer_instance
 example : IsContinuousGetElem (R^[I]^[J]^[I]) (I) := by infer_instance
 example : IsContinuousGetElem (R^[I]^[J]^[I]) (I×J) := by infer_instance
+example : IsContinuousGetElem (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
 
 ----------------------------------------------------------------------------------------------------

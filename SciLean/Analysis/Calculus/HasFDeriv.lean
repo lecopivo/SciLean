@@ -21,7 +21,7 @@ theorem hasFDerivAt_from_hasFDerivAt {f : E → F} {f' f'' : E →L[𝕜] F} {x}
   (deriv : HasFDerivAt f f' x) (simp : f'' = f') : HasFDerivAt f f'' x := by rw[simp]; exact deriv
 
 theorem hasFDerivAt_from_isContinuousLinearMap
-    {f : E → F} {x₀ : E} (hf : IsContinuousLinearMap 𝕜 f := by fun_prop) :
+    {f : E → F} {x₀ : E} (hf : IsContinuousLinearMap 𝕜 f) :
     HasFDerivAt f (fun x =>L[𝕜] f x) x₀ :=
   (fun x =>L[𝕜] f x).hasFDerivAt
 

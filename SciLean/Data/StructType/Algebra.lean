@@ -449,7 +449,7 @@ variable
   def_fun_prop with_transitive (i : I) : IsContinuousLinearMap K fun (x : X) => structProj x i by
     constructor
     · fun_prop
-    · simp[autoParam]; apply TopologicalStruct.structProj_continuous
+    · apply TopologicalStruct.structProj_continuous
 
   def_fun_prop with_transitive : IsContinuousLinearMap K fun (f : (i : I) → XI i) => structMake (X:=X) f by
     constructor

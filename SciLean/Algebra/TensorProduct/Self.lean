@@ -1,5 +1,6 @@
 import SciLean.Algebra.TensorProduct.Basic
 import SciLean.Analysis.AdjointSpace.CanonicalBasis
+import SciLean.Data.DataArray.DataArray
 
 namespace SciLean
 

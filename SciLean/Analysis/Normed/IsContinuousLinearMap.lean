@@ -18,7 +18,7 @@ variable (R : Type _) [Semiring R]
 @[fun_prop]
 structure IsContinuousLinearMap (f : X → Y) : Prop where
   linear : IsLinearMap R f
-  cont : Continuous f := by continuity
+  cont : Continuous f
 
 
 -- Lambda function notation ----------------------------------------------------
