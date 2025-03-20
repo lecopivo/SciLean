@@ -4,7 +4,7 @@ import SciLean.Algebra.TensorProduct.MatMul
 import SciLean.Algebra.TensorProduct.Self
 import SciLean.Algebra.TensorProduct.Swap
 import SciLean.Algebra.TensorProduct.Assoc
-import SciLean.Algebra.MatrixType
+import SciLean.Data.MatrixType.Basic
 import SciLean.Data.ArrayOperations.Operations.GetElem
 import SciLean.Data.ArrayOperations.Operations.OfFn
 import SciLean.Data.DataArray.DataArray

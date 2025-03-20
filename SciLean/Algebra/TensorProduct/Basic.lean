@@ -22,35 +22,40 @@ Tage type to indicate what implementation of tensor product we want.
 
 Because tensor product is usually implemented with matrices/tensors we have two main tags
 `dense` and `sparse`. To make keep this user extensible we also support `custom n`.
+
+TODO: TensorProductType should accept this as an input
  -/
 inductive TansorProductTag where
   | dense
   | sparse
   | custom (name : Name)
 
-open TensorProduct NormedSpace AdjointSpace in
-/-- `X ⊗' Y` is tensor product of `X` and `Y`.
+open TensorProduct  in
+/-- `TensorProductType R Y X YX` says that `YX` is mathematical tensor product `Y ⊗ X`.
 
-Mathematically the same as `X ⊗ Y` (without the dash) but `X ⊗' Y` has efficient computatinal
-representation.
-
-When the default scalar type it not set you have to write `X ⊗'[R] Y`
+When the default scalar type it not set you have to write `X ⊗[R] Y`
 
 Example:
 ```
-Float^[m] ⊗' Float^[n] = Float^[m,n]
-Float^[m] ⊗' Float     = Float^[m]
-    Float ⊗' Float^[n] = Float^[n]
-```-/
+Float^[m] ⊗ Float^[n] = Float^[m,n]
+Float^[m] ⊗ Float     = Float^[m]
+    Float ⊗ Float^[n] = Float^[n]
+(Float^[m] × Float^[n]) ⊗ Float^[k] = Float^[m,k] × Float^[n,k]
+```
+
+Because we consider tensor product only on inner product spaces we identify `Dual R X` with `X` and
+because `(Y ⊗ Dual R X) ≃ (X →L[R] Y)` we consider elements of `(Y ⊗ X)` as linear maps.
+Thus this class also provides matrix-vector multiplication `matVecMulAdd` and vector-matrix
+multiplication `vecMatMulAdd` (when we identity `Dual R Y` with `Y`).
+-/
 class TensorProductType (R Y X : Type*) (YX : outParam Type*) [RCLike R]
   [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedAddCommGroup X] [AdjointSpace R X]
   [AddCommGroup YX] [Module R YX]
   where
-    /-- Equivalence between the computational tensor product `XY` and the mathematical `X ⊗ Y`
+    /-- Equivalence between the computational tensor product `YX` and the mathematical `Y ⊗ X`
 
     It is marked as `Erased` as many mathlib functions about the tensor product are noncomputable. -/
-    -- NOTE: maybe `Y` should be dual here as `X ⊗' Y` should behave like matrices !!!
-    equiv : Erased (YX ≃ₗ[R] (Y ⊗[R] Dual R X))
+    equiv : Erased (YX ≃ₗ[R] (Y ⊗[R] X))
 
     /-- Outer/tensor product of two vectors added to a matrix
 
@@ -63,7 +68,7 @@ class TensorProductType (R Y X : Type*) (YX : outParam Type*) [RCLike R]
     tmulAdd_eq_tmul : ∀ r x y A,
       tmulAdd r y x A
       =
-      equiv.out.symm (r • (y ⊗ₜ[R] toDual R x) + equiv.out A)
+      equiv.out.symm (r • (y ⊗ₜ[R] x) + equiv.out A)
 
 
     /-- Matrix vector multiplication
@@ -142,7 +147,6 @@ macro (priority:=high) x:term:101 " ⊗ " y:term:100 : term => `($x ⊗[defaultS
 @[app_unexpander tmul] def unexpandTMul : Lean.PrettyPrinter.Unexpander
   | `($(_) $_ $y $x) => `($y ⊗ $x)
   | _ => throw ()
-
 
 
 
