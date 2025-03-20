@@ -13,11 +13,11 @@ def direction {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Flo
     ∂> (c:=centroids;⊞ (i : Idx k) => ⊞ (j : Idx d) =>(1:Float)),
       let' (y,df) := <∂ (objective points) c
       (y,df 1)
-  VectorType.div J Hdiag)
+  J.rmap2 (·/·) Hdiag)
 rewrite_by
   unfold objective
   lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc]
+  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc,getElem_ofFn_zetaDelta]
 
 
 /--
@@ -29,7 +29,7 @@ fun {n k d} [NeZero k] points centroids =>
       let dx := xdx.2;
       let a := argMinᴵ j, ‖points[i] - centroids[j]‖₂²;
       let ydy₁ := centroids[a];
-      let ydy₂ := (VectorType.const 1)[a];
+      let ydy₂ := ⊞ j => 1;
       let x₁ := points[i];
       let ydy₁ := x₁ - ydy₁;
       let ydy₂ := -ydy₂;
@@ -46,7 +46,7 @@ fun {n k d} [NeZero k] points centroids =>
       (x₁, x₂);
   let x_1 := x.1;
   let dx := x.2;
-  VectorType.div x_1 dx
+  DataArrayN.rmap2 (fun x1 x2 => x1 / x2) x_1 dx
 -/
 #guard_msgs in
 #print direction
@@ -59,14 +59,15 @@ def objective' {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]
 
 def direction' {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
   (let' ((_a,J),(_b,Hdiag)) :=
-    ∂> (c:=centroids;VectorType.const 1),
+    ∂> (c:=centroids;⊞ (i : Idx k) (j : Idx d) => 1.0),
       let' (y,df) := <∂ (objective' points) c
       (y,df 1)
-  J + Hdiag) -- VectorType.div J Hdiag)
+  J.rmap2 (·/·) Hdiag)
 rewrite_by
   unfold objective'
   lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc]
+  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc,Function.HasUncurry.uncurry,id]
+
 
 /--
 info: def direction' : {n k d : ℕ} → [inst : NeZero k] → Float^[d]^[n] → Float^[d]^[k] → Float^[d]^[k] :=
@@ -81,10 +82,9 @@ fun {n k d} [NeZero k] points centroids =>
           let x := xdx.1;
           let dx := xdx.2;
           let x₁ := centroids[(a, i_1)];
-          let x₂ := (VectorType.const 1)[(a, i_1)];
           let x₁_1 := points[(i, i_1)];
           let ydy₁ := x₁_1 - x₁;
-          let ydy₂ := -x₂;
+          let ydy₂ := -1.0;
           let ydy₁_1 := x[(a, i_1)];
           let ydy₂_1 := dx[(a, i_1)];
           let x₁ := 2 * ydy₁;
@@ -101,7 +101,7 @@ fun {n k d} [NeZero k] points centroids =>
       (x_1, dx);
   let x_1 := x.1;
   let dx := x.2;
-  VectorType.div x_1 dx
+  DataArrayN.rmap2 (fun x1 x2 => x1 / x2) x_1 dx
 -/
 #guard_msgs in
 #print direction'

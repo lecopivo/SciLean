@@ -46,19 +46,18 @@ def gmmObjective {d k n : Nat}
     let C := -(n * d * 0.5 * log (2 * π))
 
     -- qsAndSums
-    let Qs := ⊞ i => unpackQ (MatrixType.row logdiag i) (MatrixType.row lt i)
-    let qsums := ⊞ i => VectorType.sum (MatrixType.row logdiag i)
+    let Qs := ⊞ i => unpackQ (logdiag.row i) (lt.row i)
+    let qsums := ⊞ i => VectorType.sum (logdiag.row i)
 
     let slse : Float :=
-      ∑ᴵ (i : Idx n), logsumexp (VectorType.fromVec (X:=Float^[k])
-        fun (j : Idx k) =>
+      ∑ᴵ (i : Idx n), VectorType.sum /- logsumexp -/ (⊞ (j : Idx k) =>
           alphas[j]
           +
           qsums[j]
           -
-          0.5 * ‖MatrixType.gemv 1 1 Qs[j] ((MatrixType.row x i) - (MatrixType.row means j)) 0‖₂²)
+          0.5 * ‖Qs[j] * ((x.row i) - (means.row j))‖₂²)
 
-    C + slse - n * VectorType.logsumexp alphas + logWishartPrior Qs qsums wishartGamma wishartM
+    C + slse - n * VectorType.sum /- logsumexp -/ alphas + logWishartPrior Qs qsums wishartGamma wishartM
 
 
 abbrev_data_synth gmmObjective in alphas means logdiag lt : HasRevFDeriv Float by
