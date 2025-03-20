@@ -33,7 +33,7 @@ attribute [data_synth high] SciLean.IdxType.fold.arg_initf.HasRevFDeriv_scalar_r
 info: fun x =>
   let x₁ := x + x;
   let x₁_1 := ⊞ i => x₁[i] ^ 2;
-  let r := ArrayOps.mapIdxMono2 (fun idx xi x => x * xi) (fun idx => x₁_1[idx]) x₁;
+  let r := ArrayOps.mapIdxMonoAcc (fun idx xi x => x * xi) (fun idx => x₁_1[idx]) x₁;
   (r, fun dz =>
     let dw :=
       IdxType.fold IndexType.Range.full 0 fun i dw =>
@@ -75,7 +75,7 @@ info: fun x =>
 info: fun w =>
   let xs := w.1;
   let r :=
-    ArrayOps.mapIdxMono2
+    ArrayOps.mapIdxMonoAcc
       (fun i x y =>
         let i := i.1;
         y ^ 2 * w.2[i])
@@ -116,7 +116,7 @@ info: fun w =>
 /--
 info: fun w =>
   let xs := w.1;
-  let r := ArrayOps.mapIdxMono2 (fun idx xi x => x / xi) (fun idx => w.2[idx]) xs;
+  let r := ArrayOps.mapIdxMonoAcc (fun idx xi x => x / xi) (fun idx => w.2[idx]) xs;
   (r, fun dy =>
     let dw :=
       IdxType.fold IndexType.Range.full 0 fun i dw =>
@@ -153,7 +153,7 @@ info: fun w =>
 info: fun x =>
   let x₁ := x.1;
   let x₁_1 := x.2;
-  let r := ArrayOps.mapIdxMono2 (fun i x y => x₁[i] + y) (fun x => ()) x₁_1;
+  let r := ArrayOps.mapIdxMonoAcc (fun i x y => x₁[i] + y) (fun x => ()) x₁_1;
   (r, fun dz =>
     let dw :=
       IdxType.fold IndexType.Range.full 0 fun i dw =>
@@ -183,7 +183,7 @@ info: fun x =>
 info: fun x =>
   let x₁ := x.1;
   let x₁_1 := x.2;
-  let r := ArrayOps.mapIdxMono2 (fun i x y => x₁[i] * x₁_1[i] + y) (fun x => ()) x₁_1;
+  let r := ArrayOps.mapIdxMonoAcc (fun i x y => x₁[i] * x₁_1[i] + y) (fun x => ()) x₁_1;
   (r, fun dz =>
     let dw :=
       IdxType.fold IndexType.Range.full 0 fun i dw =>
@@ -218,7 +218,7 @@ info: fun x =>
   let x₁ := x.1;
   let x₁₁ := x.2.1;
   let x₁₂ := x.2.2;
-  let r := ArrayOps.mapIdxMono2 (fun x x zi => x.1 * x.2 + zi) (fun i => (x₁[i], x₁₁[i])) x₁₂;
+  let r := ArrayOps.mapIdxMonoAcc (fun x x zi => x.1 * x.2 + zi) (fun i => (x₁[i], x₁₁[i])) x₁₂;
   (r, fun dz =>
     let dw :=
       IdxType.fold IndexType.Range.full 0 fun i dw =>
@@ -246,7 +246,7 @@ info: fun x =>
 #guard_msgs in
 #check (<∂ x : Float^[10]×Float^[10]×Float^[10],
        let' (x,y,z) := x
-       ArrayOps.mapIdxMono2 (fun _ (xi,yi) zi => xi*yi + zi) (fun i => (x[i],y[i])) z)
+       ArrayOps.mapIdxMonoAcc (fun _ (xi,yi) zi => xi*yi + zi) (fun i => (x[i],y[i])) z)
   rewrite_by
     unfold DataArrayN.rmap2
     lsimp -zeta (disch:=unsafeAD) only [simp_core, ↓revFDeriv_simproc,fromIdx]
