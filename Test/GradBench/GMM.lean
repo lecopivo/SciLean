@@ -1,4 +1,5 @@
 import SciLean
+import SciLean.AD.Rules.DataArrayN.RSum
 
 open SciLean Scalar
 
@@ -29,7 +30,7 @@ def logWishartPrior {k d : Nat} (Qs : Float^[d,d]^[k]) (qsums : Float^[k]) (wish
     let n := p + wishartM + 1
     let c := (n * p) * (log wishartGamma - 0.5 * log 2) - (logMultiGamma (0.5 * n.toFloat) p)
     let frobenius : Float := ‖Qs‖₂²
-    let sumQs : Float := VectorType.sum qsums
+    let sumQs : Float := qsums.sum
     0.5 * wishartGamma * wishartGamma * frobenius - wishartM * sumQs - k * c
 
 
@@ -47,17 +48,17 @@ def gmmObjective {d k n : Nat}
 
     -- qsAndSums
     let Qs := ⊞ i => unpackQ (logdiag.row i) (lt.row i)
-    let qsums := ⊞ i => VectorType.sum (logdiag.row i)
+    let qsums := logdiag.sumRows
 
     let slse : Float :=
-      ∑ᴵ (i : Idx n), VectorType.sum /- logsumexp -/ (⊞ (j : Idx k) =>
+      ∑ᴵ (i : Idx n),  (⊞ (j : Idx k) =>
           alphas[j]
           +
           qsums[j]
           -
-          0.5 * ‖Qs[j] * ((x.row i) - (means.row j))‖₂²)
+          0.5 * ‖Qs[j] * ((x.row i) - (means.row j))‖₂²).logsumexp
 
-    C + slse - n * VectorType.sum /- logsumexp -/ alphas + logWishartPrior Qs qsums wishartGamma wishartM
+    C + slse - n * alphas.logsumexp + logWishartPrior Qs qsums wishartGamma wishartM
 
 
 abbrev_data_synth gmmObjective in alphas means logdiag lt : HasRevFDeriv Float by
@@ -71,24 +72,22 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
   HasRevFDeriv Float (fun x_1 => gmmObjective x_1.1 x_1.2.1 x_1.2.2.1 x_1.2.2.2 x wishartGamma wishartM) fun x_1 =>
     let x₁₁ := x_1.2.2.1;
     let x₁₂ := x_1.2.2.2;
-    let x₁ := ⊞ i => unpackQ (MatrixType.row x₁₁ i) (MatrixType.row x₁₂ i);
+    let x₁ := ⊞ i => unpackQ (x₁₁.row i) (x₁₂.row i);
     let x₁₂₁ := x_1.1;
     let x₁₂₂₁ := x_1.2.1;
     let x₁₂₂₂ := x_1.2.2.1;
-    let x₁_1 := ⊞ i => VectorType.sum (MatrixType.row x₁₂₂₂ i);
-    let
-      s := ∑ᴵ i,
-        logsumexp
-          (fromVec fun j =>
-            x₁₂₁[j] + x₁_1[j] - 0.5 * ‖MatrixType.gemv 1 1 x₁[j] (MatrixType.row x i - MatrixType.row x₁₂₂₁ j) 0‖₂²);
+    let x₁_1 := x₁₂₂₂.sumRows;
+    let s := ∑ᴵ i, (⊞ j => x₁₂₁[j] + x₁_1[j] - 0.5 * ‖x₁[j] * (x.row i - x₁₂₂₁.row j)‖₂²).logsumexp;
     let x₁_2 := -(↑n * ↑d * 0.5 * log (2 * π));
     let x₁_3 := x₁_2 + s;
     let x₁_4 := ↑n;
-    let a := logsumexp x₁₂₁;
-    let x₁_5 := x₁_4 * a;
+    let x_2 := x₁₂₁.logsumexpSoftmax;
+    let w := x_2.1;
+    let x' := x_2.2;
+    let x₁_5 := x₁_4 * w;
     let x₁_6 := x₁_3 - x₁_5;
     let s := ‖x₁‖₂²;
-    let x₁_7 := VectorType.sum x₁_1;
+    let x₁_7 := x₁_1.sum;
     let x₁_8 := 0.5 * wishartGamma * wishartGamma;
     let x₁_9 := x₁_8 * s;
     let x₁_10 := ↑wishartM;
@@ -102,59 +101,52 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
     let x₁_15 := x₁_6 + x₁_14;
     (x₁_15, fun dz =>
       let dy₁ := -(x₁_4 * dz);
-      let a := softmax x₁₂₁;
-      let dx := scal dy₁ a;
+      let dx := dy₁ • x';
       let dy₁ := x₁_8 * dz;
       let dy₁_1 := -(x₁_10 * dz);
-      let dx₁ := const dy₁_1;
+      let dx₁ := DataArrayN.scalAdd 0 1 dy₁_1;
       let dx_1 := (2 * dy₁) • x₁;
       let dw :=
         IdxType.fold IndexType.Range.full (dx₁, dx_1, dx, 0) fun i dw =>
-          let x₁_16 :=
-            fromVec fun j =>
-              x₁₂₁[j] + x₁_1[j] - 0.5 * ‖MatrixType.gemv 1 1 x₁[j] (MatrixType.row x i - MatrixType.row x₁₂₂₁ j) 0‖₂²;
-          let a := softmax x₁_16;
-          let dy := scal dz a;
+          let x₁_16 := ⊞ j => x₁₂₁[j] + x₁_1[j] - 0.5 * ‖x₁[j] * (x.row i - x₁₂₂₁.row j)‖₂²;
+          let x_3 := x₁_16.logsumexpSoftmax;
+          let x' := x_3.2;
+          let dx := dz • x';
           let dx :=
-            IdxType.fold IndexType.Range.full dw fun i_1 dx =>
+            IdxType.fold IndexType.Range.full dw fun i_1 dx_2 =>
               let x₁ := x₁[i_1];
-              let x₁_17 := MatrixType.row x i;
-              let x₁_18 := MatrixType.row x₁₂₂₁ i_1;
+              let x₁_17 := x.row i;
+              let x₁_18 := x₁₂₂₁.row i_1;
               let x₁_19 := x₁_17 - x₁_18;
-              let x := MatrixType.gemv 1 1 x₁ x₁_19 0;
-              let dyi := dy[i_1];
-              let dx₁₁ := dx.1;
-              let dx₁₂ := dx.2.2.1;
-              let dx₂₁ := dx.2.1;
-              let dx₂₂ := dx.2.2.2;
+              let x₁_20 := x₁ * x₁_19;
+              let dxi := dx[i_1];
+              let dx₁₁ := dx_2.1;
+              let dx₁₂ := dx_2.2.2.1;
+              let dx₂₁ := dx_2.2.1;
+              let dx₂₂ := dx_2.2.2.2;
               let xi := dx₁₂[i_1];
-              let x_2 := setElem dx₁₂ i_1 (xi + dyi) True.intro;
+              let x := setElem dx₁₂ i_1 (xi + dxi) True.intro;
               let xi := dx₁₁[i_1];
-              let x_3 := setElem dx₁₁ i_1 (xi + dyi) True.intro;
-              let dy₁ := -(0.5 * dyi);
-              let dx := (2 * dy₁) • x;
-              let y₁ := MatrixType.outerprodAdd 1 dx x₁_19 0;
-              let x₁₁ := MatrixType.gemvH 1 1 x₁ dx 0;
+              let x_4 := setElem dx₁₁ i_1 (xi + dxi) True.intro;
+              let dy₁ := -(0.5 * dxi);
+              let dx := (2 * dy₁) • x₁_20;
+              let dy₁ := dx ⊗ x₁_19;
+              let dy₂ := dx * x₁;
               let xi := dx₂₁[i_1];
-              let x := setElem dx₂₁ i_1 (xi + y₁) True.intro;
-              let ri := MatrixType.row dx₂₂ i_1;
-              let dx := MatrixType.updateRow dx₂₂ i_1 (ri + -x₁₁);
-              (x_3, x, x_2, dx);
+              let x_5 := setElem dx₂₁ i_1 (xi + dy₁) True.intro;
+              let A := dx₂₂.curry;
+              let ai := A[i_1];
+              let A := (setElem A i_1 (ai + -dy₂) True.intro).uncurry;
+              (x_4, x_5, x, A);
           dx;
       let dx₁ := dw.1;
       let dx₂₁ := dw.2.1;
       let dx₂₂₁ := dw.2.2.1;
       let dx₂₂₂₁ := dw.2.2.2;
+      let dx₁ := DataArrayN.scalAddCols 0 1 dx₁;
       let dx :=
-        IdxType.fold IndexType.Range.full 0 fun i dx =>
-          let dxi := dx₁[i];
-          let dy := const dxi;
-          let ri := MatrixType.row dx i;
-          let dx := MatrixType.updateRow dx i (ri + dy);
-          dx;
-      let dx :=
-        IdxType.fold IndexType.Range.full (dx, 0) fun i dx =>
-          let x₁ := MatrixType.row x₁₁ i;
+        IdxType.fold IndexType.Range.full (dx₁, 0) fun i dx =>
+          let x₁ := x₁₁.row i;
           let dxi := dx₂₁[i];
           let dx_2 :=
             IdxType.fold IndexType.Range.full 0 fun i dx =>
@@ -162,11 +154,10 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
               else
                 if h : i.1 = i.2 then
                   let x₁ := x₁[i.1];
-                  let a := Scalar.exp x₁;
                   let dxi := dxi[i];
                   let dx₁ := dx.1;
                   let dx₂ := dx.2;
-                  let dy := dxi * a;
+                  let dy := dxi * Scalar.exp x₁;
                   let xi := dx₁[i.1];
                   let x := setElem dx₁ i.1 (xi + dy) True.intro;
                   (x, dx₂)
@@ -183,11 +174,13 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
           let dz := dx_2.2;
           let dx₁ := dx.1;
           let dx₂ := dx.2;
-          let ri := MatrixType.row dx₁ i;
-          let dx₁ := MatrixType.updateRow dx₁ i (ri + dy);
-          let ri := MatrixType.row dx₂ i;
-          let dx₁_1 := MatrixType.updateRow dx₂ i (ri + dz);
-          (dx₁, dx₁_1);
+          let A := dx₁.curry;
+          let ai := A[i];
+          let A := (setElem A i (ai + dy) True.intro).uncurry;
+          let A_1 := dx₂.curry;
+          let ai := A_1[i];
+          let A_2 := (setElem A_1 i (ai + dz) True.intro).uncurry;
+          (A, A_2);
       let dx₂₂₁_1 := dx.1;
       let dx₂₂₂ := dx.2;
       (dx₂₂₁, dx₂₂₂₁, dx₂₂₁_1, dx₂₂₂))

@@ -11,7 +11,7 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-def _root_.ByteArray.mkArray (n : Nat) (v : UInt8) : ByteArray := Id.run do
+def _root_.ByteArray.replicate (n : Nat) (v : UInt8) : ByteArray := Id.run do
   let mut a : ByteArray := .mkEmpty n
   for i in fullRange (Idx n) do
     a := a.push v
@@ -55,6 +55,10 @@ instance : GetElem (DataArray α) USize α (fun a i => i.toNat < a.size) where
 def DataArray.set (arr : DataArray α) (i : Idx arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
   ⟨pd.btype.toByteArray arr.byteData (pd.btype.bytes * i) sorry_proof val, sorry_proof⟩
 
+instance : SetElem (DataArray α) USize α (fun a i => i.toNat < a.size) where
+  setElem := fun x i v h => x.set ⟨i,h⟩ v
+  setElem_valid := sorry_proof
+
   -- let i := i.1
   -- match pd.btype with
   -- | .inl bitType =>
@@ -91,16 +95,33 @@ def DataArray.mkEmpty (capacity : Nat) : DataArray α := Id.run do
   { byteData := .mkEmpty newBytes
     h_size := by sorry_proof }
 
--- def DataArray.drop (arr : DataArray α) (k : Nat) : DataArray α := ⟨arr.byteData, arr.size - k, sorry_proof⟩
+def DataArray.mkZero (n : Nat) : DataArray α := Id.run do
+  ⟨ByteArray.replicate (pd.bytes n) 0, sorry_proof⟩
 
--- def DataArray.push (arr : DataArray α) (val : α) (k : Nat := 1) : DataArray α := Id.run do
---   let oldSize := arr.size
---   let newSize := arr.size + k
---   let mut arr' := arr.reserve newSize
---   arr' := ⟨arr'.byteData, newSize, sorry_proof⟩
---   for i in fullRange (Idx k) do
---     arr' := arr'.set ⟨oldSize.toUSize+i,sorry_proof⟩ val
---   arr'
+def DataArray.replicate (n : Nat) (v : α) : DataArray α := Id.run do
+  -- TODO: make unsafe version that does not zero initialize
+  let mut data : DataArray α := .mkZero n
+  for i in fullRange (Idx data.size) do
+    data := data.set ⟨i,sorry_proof⟩ v
+  return data
+
+
+/-- Push array `y` to array `x` `k`-times  -/
+def _root_.SciLean.DataArray.pushArray (x y : DataArray α) (k : Nat := 1) : DataArray α := Id.run do
+  let mut data := x.1 -- todo: reserve enough memory upfront
+  let ydata := y.1
+  let offset := data.size.toUSize
+  let width := ydata.size.toUSize
+  for i in fullRange (Idx k) do
+    let idx := offset + i*width
+    data := ydata.copySlice 0 data idx.toNat width.toNat
+  return ⟨data, sorry_proof⟩
+
+/-- Push element `v` to array `x` `k`-times  -/
+def _root_.SciLean.DataArray.push (x : DataArray α) (v : α) (k : Nat := 1) : DataArray α := Id.run do
+  let v' := DataArray.replicate 1 v
+  x.pushArray v' k
+
 
 /-- Extensionality of DataArray
 
@@ -129,9 +150,7 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
 @[irreducible, inline, specialize]
 def DataArray.intro {ι n} [IdxType ι n] [IdxType.Fold' ι]
     (f : ι → α) : DataArray α := Id.run do
-  let bytes := (pd.bytes n)
-  let d : ByteArray := ByteArray.mkArray bytes 0
-  let mut d' : DataArray α := ⟨d, sorry_proof⟩
+  let mut d' : DataArray α := .mkZero n
   for i in fullRange ι do
     d' := d'.set ⟨toIdx i, sorry_proof⟩ (f i)
   d'
@@ -233,9 +252,13 @@ instance [IdxType.Fold' ι] : ArrayType (DataArrayN α ι) ι α where
 --   dropElem_getElem := sorry_proof
 --   reserveElem_id := sorry_proof
 
-def DataArrayN.reshape {ι n} [IdxType ι n] (x : DataArrayN α ι) (κ : Type*) {m} [IdxType κ m]
-  (hs : m = n)
-  : DataArrayN α κ :=
+@[inline]
+unsafe def DataArrayN.reshapeUnsafe {ι n} [IdxType ι n] (x : DataArrayN α ι) (κ : Type*) {m} [IdxType κ m]
+  (hs : m = n) : DataArrayN α κ := unsafeCast x
+
+@[inline, implemented_by DataArrayN.reshapeUnsafe]
+def DataArrayN.reshape {I nI} [IdxType I nI] (x : DataArrayN α I) (J : Type*) {nJ} [IdxType J nJ]
+  (hs : nJ = nI) : DataArrayN α J :=
   ⟨x.data, by rw[hs]; exact x.h_size⟩
 
 def DataArrayN.flatten {ι n} [IdxType ι n] (x : DataArrayN α ι) :

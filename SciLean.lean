@@ -1,3 +1,15 @@
+import SciLean.AD.Rules.Common
+import SciLean.AD.Rules.DataArrayN.FromRn
+import SciLean.AD.Rules.DataArrayN.Logsumexp
+import SciLean.AD.Rules.DataArrayN.RSum
+import SciLean.AD.Rules.DataArrayN.Reshape
+import SciLean.AD.Rules.DataArrayN.Softmax
+import SciLean.AD.Rules.DataArrayN.Sum
+import SciLean.AD.Rules.DataArrayN.SumMiddleR
+import SciLean.AD.Rules.DataArrayN.SumRows
+import SciLean.AD.Rules.DataArrayN.ToRn
+import SciLean.AD.Rules.Exp
+import SciLean.AD.Rules.Log
 import SciLean.Algebra.CanonicalBasis
 import SciLean.Algebra.Determinant
 import SciLean.Algebra.Dimension
@@ -93,11 +105,9 @@ import SciLean.Analysis.Scalar.Basic
 import SciLean.Analysis.Scalar.FloatAsReal
 import SciLean.Analysis.Scalar.FloatRealEquiv
 import SciLean.Analysis.Scalar.Notation
-import SciLean.Analysis.SpecialFunctions.Exp
 import SciLean.Analysis.SpecialFunctions.GaborWavelet
 import SciLean.Analysis.SpecialFunctions.Gaussian
 import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Analysis.SpecialFunctions.Log
 import SciLean.Analysis.SpecialFunctions.MultiGamma
 import SciLean.Analysis.SpecialFunctions.Norm2
 import SciLean.Analysis.SpecialFunctions.Pow
@@ -368,6 +378,7 @@ import SciLean.Data.DataArray.Operations.Uncurry
 import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.DataArray.RevDeriv
 import SciLean.Data.DataArray.RnEquiv
+import SciLean.Data.DataArray.TensorOperations
 import SciLean.Data.DataArray.TensorProduct
 import SciLean.Data.DataArray.VectorType
 import SciLean.Data.FinProd
@@ -478,6 +489,7 @@ import SciLean.Lean.Expr
 import SciLean.Lean.HashMap
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
+import SciLean.Lean.Meta.LiftLets
 import SciLean.Lean.Meta.Replace
 import SciLean.Lean.Meta.Structure
 import SciLean.Lean.Meta.Uncurry

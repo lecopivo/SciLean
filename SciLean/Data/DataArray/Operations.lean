@@ -1,5 +1,8 @@
 import SciLean.Data.DataArray.DataArray
 import SciLean.Data.DataArray.RnEquiv
+import SciLean.Data.DataArray.Algebra
+import SciLean.Data.DataArray.Float
+import SciLean.Data.DataArray.FloatN
 import SciLean.Meta.Notation.Let'
 import SciLean.Data.ArrayOperations.Operations
 
@@ -21,7 +24,7 @@ abbrev mapIdxMono (f : I → X → X) (xs : X^[I]) : X^[I] :=
 
 It is just and abbreviation for a call to `IndexType.foldl` which runs a fold over the index
 type `I`. -/
- abbrev foldl (op : α → X → α) (init : α) (xs : X^[I]) : α :=
+abbrev foldl (op : α → X → α) (init : α) (xs : X^[I]) : α :=
   IdxType.fold .full (init:=init) (fun i a => op a xs[i])
 
 /-- Reduce elements of `xs : X^[I]` using `op : X → X → X`.
@@ -47,37 +50,37 @@ abbrev reshape3 (x : X^[I]) (m₁ m₂ m₃ : Nat) (h : m₁*(m₂*m₃) = nI) :
 
 
 
-
 section OverReals
 
 variable
-  {R : Type*} [RealScalar R] [PlainDataType R]
-  {J nJ} [IdxType J nJ] [IdxType.Fold' I] [IdxType.Fold' J]
-  [HasRnEquiv X J R]
+  {R : Type*} [RealScalar R] [pd : PlainDataType R]
+  [IdxType.Fold' I]
+  {ι nι} [IdxType ι nι] [IdxType.Fold' ι]
+  [HasRnEquiv X ι R]
 
 
 /--
 Map real scalars of `x : X^[I]` by `f : R → R`.
 
-It is required that `X ≃ R^[J]` for some `J`
+It is required that `X ≃ R^[ι]` for some `ι`
 
-The function `f` provides two indices `(i : X)` and `(j : J)`
+The function `f` provides two indices `(i : X)` and `(j : ι)`
   - `i` maps to the particular `X`
   - `j` maps to the particular real scalar in `X`
 
-Note that calling this function on `R^[n]` will give you `j : Idx 1`.
+Note that calling this function on `R^[n]` will give you `j : Unit`.
 -/
 @[inline, specialize]
-abbrev rmapIdx (f : I → J → R → R) (x : X^[I]) : X^[I] :=
+abbrev rmapIdx (f : I → ι → R → R) (x : X^[I]) : X^[I] :=
   ArrayOps.mapIdxMono
-    (fun ij : I×J =>
+    (fun ij : I×ι =>
       let' (i,j) := ij
       f i j) x
 
 /--
 Map real scalars of `x : X^[I]` by `f : R → R`.
 
-It is required that `X ≃ R^[J]` for some `J`
+It is required that `X ≃ R^[ι]` for some `ι`
 -/
 @[inline, specialize]
 abbrev rmap (f : R → R) (x : X^[I]) : X^[I] :=
@@ -88,20 +91,20 @@ Map2 real scalars of `x y : X^[I]` by `f : R → R → R`
 
 The first argument `x` is mutated if possible.
 
-It is required that `X ≃ R^[J]` for some `J`
+It is required that `X ≃ R^[ι]` for some `ι`
 
-The function `f` provides two indices `(i : X)` and `(j : J)`
+The function `f` provides two indices `(i : X)` and `(j : ι)`
   - `i` maps to the particular `X` in `X^[I]`
   - `j` maps to the particular real scalar `R` in `X`
 
-Note that calling this function on `R^[n]` will give you `j : Idx 1`.
+Note that calling this function on `R^[n]` will give you `j : Unit`.
 
 TODO: make this function to decide whether to mutate `x` or `y`
 -/
 @[inline, specialize]
-abbrev rmapIdx2 (f : I → J → R → R → R) (x y : X^[I]) : X^[I] :=
+abbrev rmapIdx2 (f : I → ι → R → R → R) (x y : X^[I]) : X^[I] :=
   ArrayOps.mapIdxMonoAcc
-    (fun (idx : Idx (nI*nJ)) xi =>
+    (fun (idx : Idx (nI*nι)) xi =>
       let (i,j) := fromIdx idx
       (f i j · xi))
     (fun idx => y[idx])

@@ -7,6 +7,12 @@ open SciLean
 
 open Lean Elab Command Meta Qq
 
+-- todo: use local environment extension
+initialize dataSynthVariableBinders : IO.Ref (TSyntaxArray `Lean.Parser.Term.bracketedBinder) ← ST.mkRef {}
+
+elab "data_synth_variable " bs:bracketedBinder* : command => do
+  dataSynthVariableBinders.set bs
+
 
 /-- For function `f` return `HasRevFDerivUpdate` statement in specified arguments `args`.
 
@@ -21,7 +27,8 @@ def getSimpleGoal' (dataSynthStatement : TSyntax `term) (fId : Name) (argNames :
 
   forallTelescope info.type fun xs _ => do
   -- todo: this can introduce new level mvars, please handle them!!!
-  Term.elabBinders extra.raw fun extraArgs => do
+  let variableBinders ← dataSynthVariableBinders.get
+  Term.elabBinders (variableBinders ++ extra).raw fun extraArgs => do
 
     -- split arguments `xs` into main and other
     let (mainArgs, otherArgs) ← xs.splitM (fun x => do
@@ -50,7 +57,9 @@ def getSimpleGoal' (dataSynthStatement : TSyntax `term) (fId : Name) (argNames :
     let args := otherArgs++extraArgs
     let statement ← mkForallFVars args goal
 
-    return (statement,args.size,lvlNames)
+    let lvls := (collectLevelParams {} statement).params
+
+    return (statement,args.size,lvls.toList/-lvlNames-/)
 
 
 def checkNoMVars (e : Expr) : MetaM Unit := do

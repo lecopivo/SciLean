@@ -1,20 +1,11 @@
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Calculus.RevCDeriv
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.FwdCDeriv
-import SciLean.Analysis.Calculus.ContDiff
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Meta.GenerateFunTrans
-import SciLean.Lean.ToSSA
+import SciLean.AD.Rules.Common
 
 open ComplexConjugate
 
 namespace SciLean.Scalar
 
 set_option deprecated.oldSectionVars true
-
-
-
+set_option linter.unusedTactic false
 ----------------------------------------------------------------------------------------------------
 -- Exp ---------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -31,23 +22,8 @@ abbrev_data_synth exp in x (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by
   case deriv => conv => rhs; fun_trans
   case diff => dsimp[autoParam]; fun_prop
 
-abbrev_data_synth exp in x : HasRevFDeriv K by
-  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
-  case simp => conv => rhs; to_ssa
-
-abbrev_data_synth exp in x : HasRevFDerivUpdate K by
-  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
-  case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
-  case simp => conv => rhs; to_ssa
-
-def_fun_prop exp in x with_transitive : HasAdjDiff K by sorry_proof
-
-abbrev_fun_trans exp in x : cderiv K by equals (fun x dx => dx • exp x) => sorry_proof
-abbrev_fun_trans exp in x : fwdCDeriv K by unfold fwdCDeriv; fun_trans; to_ssa
-abbrev_fun_trans exp in x : revCDeriv K by unfold revCDeriv; fun_trans; to_ssa
+abbrev_data_synth exp in x : HasRevFDeriv K by hasRevFDeriv_from_def => skip
+abbrev_data_synth exp in x : HasRevFDerivUpdate K by hasRevFDerivUpdate_from_def => skip
 
 
 variable {R C} [RealScalar R] [Scalar R C]

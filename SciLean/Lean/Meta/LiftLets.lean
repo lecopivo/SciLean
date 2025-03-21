@@ -11,7 +11,6 @@ import SciLean.Lean.Meta.Structure
 import SciLean.Lean.Meta.Replace
 
 
-namespac
 open Lean Elab Parser Meta Tactic SciLean
 
 /-- Configuration for `Lean.Expr.liftLets` and the `lift_lets` tactic. -/

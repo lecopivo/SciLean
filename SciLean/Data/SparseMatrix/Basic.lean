@@ -1,10 +1,9 @@
 import SciLean.Data.DataArray.DataArray
 import SciLean.Meta.Notation.Do
-import Mathlib
+-- import Mathlib
 
 namespace SciLean
 
-#exit
 structure SparseMatrixUnassembled (R : Type*) [PlainDataType R] (I J : Type*)
     {nI} [IdxType I nI] {nJ} [IdxType J nJ] where
 

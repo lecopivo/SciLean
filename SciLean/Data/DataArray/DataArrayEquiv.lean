@@ -54,7 +54,7 @@ Converts `X` to `R^[I]`
 Similar to `toKn` but can infere `R` and `I` automatically.
 -/
 @[inline]
-abbrev toRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I nI] [HasRnEquiv X I R]
+def toRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I nI] [HasRnEquiv X I R]
   (x : X) : R^[I] := DataArrayEquiv.toKn x
 
 /--
@@ -63,7 +63,7 @@ Converts `R^[I]` to `X`
 Similar to `fromKn` can infere `R` and `I` automatically.
 -/
 @[inline]
-abbrev fromRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I nI] [HasRnEquiv X I R]
+def fromRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I nI] [HasRnEquiv X I R]
   (x : R^[I]) : X := DataArrayEquiv.fromKn x
 
 

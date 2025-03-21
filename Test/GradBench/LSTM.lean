@@ -37,20 +37,20 @@ def lstmModel {d : ℕ}
               (hidden: Float^[d])
               (cell: Float^[d])
               (input: Float^[d]) : Float^[d] × Float^[d] :=
-  let forget  := input  |> (mul · (row weight 0)) |> (· + (row bias 0)) |> (map sigmoid ·)
-  let ingate  := hidden |> (mul · (row weight 1)) |> (· + (row bias 1)) |> (map sigmoid ·)
-  let outgate := input  |> (mul · (row weight 2)) |> (· + (row bias 2)) |> (map sigmoid ·)
-  let change  := hidden |> (mul · (row weight 3)) |> (· + (row bias 3)) |> (map tanh ·)
+  let forget  := input  |> (mul · (weight.row 0)) |> (· + (bias.row 0)) |>.rmap sigmoid
+  let ingate  := hidden |> (mul · (weight.row 1)) |> (· + (bias.row 1)) |>.rmap sigmoid
+  let outgate := input  |> (mul · (weight.row 2)) |> (· + (bias.row 2)) |>.rmap sigmoid
+  let change  := hidden |> (mul · (weight.row 3)) |> (· + (bias.row 3)) |>.rmap tanh
   let t1s := mul cell forget
   let t2s := mul ingate change
   let cell2 := t1s + t2s
-  let hidden2 := mul outgate (map tanh cell2)
+  let hidden2 := mul outgate (cell2.rmap tanh)
   (hidden2, cell2)
 
 set_option maxRecDepth 1000000
 
 def_data_synth lstmModel in weight bias hidden cell input : HasRevFDeriv Float by
-  unfold lstmModel VectorType.map; dsimp -zeta
+  unfold lstmModel; dsimp -zeta
   data_synth => enter[3]; lsimp
 
 def_data_synth lstmModel in weight bias hidden cell input : HasRevFDerivUpdate Float by
