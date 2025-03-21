@@ -61,7 +61,7 @@ def kmeansDirSciLean {n k d : ℕ} [NeZero k]
       let dx := xdx.2;
       let a := argMinᴵ (j : Idx k), ‖points[i] - centroids[j]‖₂²;
       let ydy₁ := centroids[a];
-      let ydy₂ : Float^[d] := (VectorType.const (1.0));
+      let ydy₂ : Float^[d] := .replicate (Idx d) (1.0)
       let x₁ := points[i];
       let ydy₁ := x₁ - ydy₁;
       let ydy₂ := -ydy₂;

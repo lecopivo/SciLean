@@ -3,6 +3,7 @@ import SciLean.AD.Rules.DataArrayN.FromRn
 import SciLean.AD.Rules.DataArrayN.Logsumexp
 import SciLean.AD.Rules.DataArrayN.RSum
 import SciLean.AD.Rules.DataArrayN.Reshape
+import SciLean.AD.Rules.DataArrayN.ScalAdd
 import SciLean.AD.Rules.DataArrayN.Softmax
 import SciLean.AD.Rules.DataArrayN.Sum
 import SciLean.AD.Rules.DataArrayN.SumMiddleR

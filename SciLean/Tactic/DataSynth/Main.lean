@@ -496,6 +496,17 @@ def tryTheorem?' (e : Expr) (thm : Theorem)
       trace[Meta.Tactic.data_synth] "failed to synthesize argument {x} : {← inferType x}"
       return none
 
+  let thmProof ← instantiateMVars thmProof
+
+  if thmProof.hasMVar then
+    let mvars := (e.collectMVars {}).result
+    if h : 0 < mvars.size then
+      throwError m!"proof contains mvar {mvars[0]}"
+    let valLvlMVars := (collectLevelMVars {} e).result
+    if h : 0 < valLvlMVars.size then
+      throwError m!"proof contains level mvar {Level.mvar valLvlMVars[0]}"
+    trace[Meta.Tactic.data_synth] "bug in data_synth"
+
   return some thmProof
 
 

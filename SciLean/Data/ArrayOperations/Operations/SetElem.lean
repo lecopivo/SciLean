@@ -137,7 +137,7 @@ theorem setElem.arg_v.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
 theorem setElem.arg_xs.HasAdjoint_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [RCLike 𝕜] {nI} [IdxType I nI] [IdxType.Fold' I]
+    [RCLike 𝕜] {nI} [IdxType I nI]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] (i : I) :
@@ -161,7 +161,7 @@ open Classical
 theorem setElem.arg_xs.HasAdjointUpdate_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [RCLike 𝕜] {nI} [IdxType I nI] [IdxType.Fold' I]
+    [RCLike 𝕜] {nI} [IdxType I nI]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] (i : I) :
@@ -181,7 +181,7 @@ theorem setElem.arg_xs.HasAdjointUpdate_rule {𝕜 X I Y : Type*}
 theorem setElem.arg_xs.HasRevFDeriv_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [RCLike 𝕜] {nI} [IdxType I nI] [IdxType.Fold' I]
+    [RCLike 𝕜] {nI} [IdxType I nI]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] (i : I) :
@@ -203,7 +203,7 @@ open Classical
 theorem setElem.arg_xs.HasRevFDerivUpdate_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [RCLike 𝕜] {nI} [IdxType I nI] [IdxType.Fold' I]
+    [RCLike 𝕜] {nI} [IdxType I nI]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] (i : I) :

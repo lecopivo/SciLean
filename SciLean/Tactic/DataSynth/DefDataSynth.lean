@@ -70,6 +70,14 @@ def checkNoMVars (e : Expr) : MetaM Unit := do
   if h : 0 < valLvlMVars.size then
     throwError m!"{e} containt level mvar {Level.mvar valLvlMVars[0]}"
 
+def checkNoMVarsInForallBinders (e : Expr) : MetaM Unit := do
+
+  forallTelescope e fun xs _ => do
+    for x in xs do
+      let tx ← inferType x
+      if tx.hasMVar then
+        throwError m!"({x} : {tx}) containt level mvar!"
+
 open Qq in
 def abbrevDataSynth (dataSynthStatement : TSyntax `term) (fId : Ident)
     (args : TSyntaxArray `ident)
@@ -135,11 +143,18 @@ def abbrevDataSynth (dataSynthStatement : TSyntax `term) (fId : Ident)
         if useDef then
           statement := statement.setArg outArgId (mkAppN (.const defName lvls') xs')
 
+    let ty :=  ← instantiateMVars (← mkForallFVars xs statement)
+    let val := ← instantiateMVars (← mkLambdaFVars xs proof)
+
+    checkNoMVars ty
+    checkNoMVars val
+    checkNoMVarsInForallBinders ty
+
     let thmVal : TheoremVal :=
     {
       name  := thmName
-      type  := ← instantiateMVars (← mkForallFVars xs statement)
-      value := ← instantiateMVars (← mkLambdaFVars xs proof)
+      type  := ty
+      value := val
       levelParams := lvls
     }
 

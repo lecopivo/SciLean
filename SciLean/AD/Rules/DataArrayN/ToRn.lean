@@ -25,6 +25,6 @@ data_synth_variable [BLAS (DataArray R) R R] [NormedAddCommGroup X] [AdjointSpac
 abbrev_data_synth toRn in x (x₀ : X) : (HasFDerivAt (𝕜:=R) · · x₀) by hasFDerivAt_from_linear
 abbrev_data_synth toRn in x : HasFwdFDeriv R by hasFwdFDeriv_from_def => simp
 abbrev_data_synth toRn in x : (HasAdjoint R · fromRn) by  sorry_proof
-abbrev_data_synth toRn in x : HasAdjointUpdate R by hasAdointUpdate_from_adjoint => skip
+abbrev_data_synth toRn in x : HasAdjointUpdate R by hasAdjointUpdate_from_adjoint => skip
 abbrev_data_synth toRn in x : HasRevFDeriv R by hasRevFDeriv_from_def => skip
 abbrev_data_synth toRn in x : HasRevFDerivUpdate R by hasRevFDerivUpdate_from_def => skip

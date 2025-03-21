@@ -92,7 +92,7 @@ def kmeansSciLean_no_blas (d n k : Nat) (points : Float^[d]^[n]) (centroids : Fl
        (points[i,l] - centroids[j,l])^2
 
 def kmeansSciLean (d n k : Nat) (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float :=
-  ∑ᴵ i, IdxType.min (fun j => ‖points[i] - centroids[j]‖₂²)
+  ∑ᴵ i, minᴵ j, ‖points[i] - centroids[j]‖₂²
 
 def main : IO Unit := do
 

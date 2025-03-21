@@ -21,7 +21,7 @@ macro "hasFwdFDeriv_from_def" "=>" cleanUp:tactic : tactic =>
      case simp => intros; $cleanUp; rfl))
 
 
-macro "hasAdointUpdate_from_adjoint" "=>" cleanUp:tactic : tactic =>
+macro "hasAdjointUpdate_from_adjoint" "=>" cleanUp:tactic : tactic =>
   `(tactic|
     (apply hasAdjointUpdate_from_hasAdjoint
      case adjoint => data_synth

@@ -1,5 +1,8 @@
 import SciLean
 
+import SciLean.AD.Rules.Exp
+import SciLean.AD.Rules.DataArrayN.ScalAdd
+
 open SciLean Scalar Lean ToJson FromJson
 
 set_option pp.deepTerms true
@@ -27,46 +30,70 @@ abbrev_data_synth Scalar.tanh in x : HasRevFDeriv K by
   sorry_proof
 
 
+variable (w : Float^[10,10]) (ij : Idx 10 × Idx 10) (x : Float)
+
+#check (HasRevFDerivUpdate Float (fun w : Float^[10,10] =>
+         let' (i,j) := ij
+         sigmoid (w[i,j]*x+ w[i,j])) _)
+  rewrite_by
+    data_synth
+
+#check (HasRevFDerivUpdate Float (fun w : Float^[10,10] =>
+         let' (i,j) := ij
+         tanh (w[i,j]*x+ w[i,j])) _)
+  rewrite_by
+    data_synth; lsimp
+
+
+set_option trace.Meta.Tactic.data_synth true in
+#check (HasFwdFDeriv Float (fun (((a,b,c),d) : (Float×Float×Float)×Float) => a) _)
+  rewrite_by
+    lsimp
+    data_synth -domainDec
+
+
 @[simp,simp_core]
 theorem VectorType.conj_real (x : Float^[n]) : VectorType.conj x = x := sorry_proof
 
-open VectorType MatrixType in
+set_option synthInstance.maxSize 2000
+open ArrayOps in
 def lstmModel {d : ℕ}
               (weight: Float^[4,d])
               (bias: Float^[4,d])
               (hidden: Float^[d])
               (cell: Float^[d])
               (input: Float^[d]) : Float^[d] × Float^[d] :=
-  let forget  := input  |> (mul · (weight.row 0)) |> (· + (bias.row 0)) |>.rmap sigmoid
-  let ingate  := hidden |> (mul · (weight.row 1)) |> (· + (bias.row 1)) |>.rmap sigmoid
-  let outgate := input  |> (mul · (weight.row 2)) |> (· + (bias.row 2)) |>.rmap sigmoid
-  let change  := hidden |> (mul · (weight.row 3)) |> (· + (bias.row 3)) |>.rmap tanh
-  let t1s := mul cell forget
-  let t2s := mul ingate change
-  let cell2 := t1s + t2s
-  let hidden2 := mul outgate (cell2.rmap tanh)
+  let forget  := input  |> mapIdxMonoAcc (fun _ (wi,bi) xi => sigmoid (wi*xi + bi)) (fun i => (weight[0,i],bias[0,i]))
+  let ingate  := hidden |> mapIdxMonoAcc (fun _ (wi,bi) xi => sigmoid (wi*xi + bi)) (fun i => (weight[1,i],bias[1,i]))
+  let outgate := input  |> mapIdxMonoAcc (fun _ (wi,bi) xi => sigmoid (wi*xi + bi)) (fun i => (weight[2,i],bias[2,i]))
+  let change  := hidden |> mapIdxMonoAcc (fun _ (wi,bi) xi =>    tanh (wi*xi + bi)) (fun i => (weight[3,i],bias[2,i]))
+  let cell2   := mapIdxMonoAcc (fun _ (a,b,c) d => a*b + c*d) (fun i => (cell[i],forget[i],ingate[i])) change
+  let hidden2 := mapIdxMonoAcc (fun _ a b => tanh a * b) (cell[·]) outgate
   (hidden2, cell2)
 
 set_option maxRecDepth 1000000
 
 def_data_synth lstmModel in weight bias hidden cell input : HasRevFDeriv Float by
-  unfold lstmModel; dsimp -zeta
-  data_synth => enter[3]; lsimp
+  unfold lstmModel
+  data_synth => enter[3]; lsimp only [simp_core]
 
 def_data_synth lstmModel in weight bias hidden cell input : HasRevFDerivUpdate Float by
-  unfold lstmModel VectorType.map; dsimp -zeta
-  data_synth => enter[3]; lsimp
+  unfold lstmModel
+  data_synth => enter[3]; lsimp only [simp_core]
 
-open VectorType MatrixType in
+
+open ArrayOps in
 def lstmPredict {slen d : ℕ}
                 (mainParams: (Float^[4,d])^[slen,2])
                 (extraParams: Float^[3,d])
                 (state: (Float^[d])^[slen,2])
                 (input: Float^[d]) : Float^[d] × Float^[d]^[slen,2] :=
-  let x₀ := mul input (row extraParams 0)
+
+  let x₀ := mapIdxMonoAcc (fun _ a b => a*b) (extraParams[0,·]) input
   let state₀ : (Float^[d])^[slen,2] := 0
 
-  let' (state',x') := IdxType.fold .full (init:=(state₀,x₀))
+  let' (state',x') :=
+   IdxType.fold .full (init:=(state₀,x₀))
     (fun (i : Idx slen) sx =>
       let' (s,x) := sx
       let' (h,c) := lstmModel mainParams[i,0] mainParams[i,1] state[i,0] state[i,1] x
@@ -74,13 +101,18 @@ def lstmPredict {slen d : ℕ}
       let s := setElem s (i,(1:Idx 2)) c .intro
       (s,h))
 
-  let v' := mul x' (row extraParams 1) + (row extraParams 2)
+  let v' := x' |> mapIdxMonoAcc (fun _ (a,b) x => a*x+b) (fun i => (extraParams[1,i], extraParams[2,i]))
   (v', state')
-
 
 def_data_synth lstmPredict in mainParams extraParams state : HasRevFDeriv Float by
   unfold lstmPredict; --dsimp -zeta
-  data_synth => enter[3]; lsimp
+  data_synth => enter[3]; lsimp only [simp_core]
+
+
+-- set_option trace.Meta.Tactic.data_synth true in
+-- def_data_synth lstmPredict in mainParams extraParams : HasRevFDerivUpdate Float by
+--   unfold lstmPredict; --dsimp -zeta
+--   data_synth => enter[3]; lsimp only [simp_core]
 
 
 open VectorType in
@@ -105,19 +137,18 @@ def lstmObjective {slen lenSeq d : ℕ}
       let' (oldState, oldTotal) := st
       let' (y_pred, newState) := lstmPredict mainParams extraParams oldState sequence[⟨i.1,sorry_proof⟩]
       -- y_pred: DV [d]f64, newState: DM
-      let tmp_sum := sum (exp y_pred)
+      let tmp_sum := ∑ᴵ i, exp (y_pred[i])
       let tmp_log := - Scalar.log (tmp_sum + 2.0)
-      let ynorm := scalAdd 1 tmp_log y_pred
+      let ynorm := y_pred.scalAdd 1 tmp_log
       let newTotal := oldTotal + (⟪sequence[⟨i.1 + 1,sorry_proof⟩], ynorm⟫)
       (newState, newTotal)
 
   let count := d * (lenSeq - 1) |>.toFloat
   (-total * count⁻¹)
 
-
 abbrev_data_synth lstmObjective in mainParams extraParams : HasRevFDeriv Float by
   unfold lstmObjective; --dsimp -zeta
-  data_synth => enter[3]; lsimp
+  data_synth => enter[3]; lsimp only [simp_core]
 
 
 /--
@@ -137,30 +168,33 @@ info: lstmObjective.arg_mainParamsextraParams.HasRevFDeriv_simple_rule {slen len
         let z := x.1;
         let x₁ := z.1;
         let x₁_1 := z.2;
-        let a := VectorType.exp x₁;
-        let x₁_2 := VectorType.sum a;
-        let x₁_3 := x₁_2 + 2.0;
-        let x₁_4 := Scalar.log x₁_3;
-        let x₁_5 := -x₁_4;
-        let a_1 := VectorType.scalAdd 1 x₁_5 x₁;
-        let x₁ := sequence[{ val := ↑i + 1, isLt := ⋯ }];
-        let x₁_6 := ⟪x₁, a_1⟫;
-        let x₁_7 := x₁₂ + x₁_6;
-        ((x₁_1, x₁_7), fun dx dw =>
+        let s := ∑ᴵ i, exp x₁[i];
+        let x₁_2 := s + 2.0;
+        let x₁_3 := Scalar.log x₁_2;
+        let x₁_4 := -x₁_3;
+        let x₁_5 := x₁.scalAdd 1 x₁_4;
+        let x₁_6 := sequence[{ val := ↑i + 1, isLt := ⋯ }];
+        let x₁_7 := ⟪x₁_6, x₁_5⟫;
+        let x₁_8 := x₁₂ + x₁_7;
+        ((x₁_1, x₁_8), fun dx dw =>
           let dy := dx.1;
           let dz := dx.2;
-          let dx := dz • x₁;
-          let a_2 := VectorType.sum dx;
-          let dy_1 := -a_2 / x₁_3;
-          let dy_2 := VectorType.const dy_1;
-          let a := VectorType.mul a dy_2;
-          let dx := VectorType.axpby 1 dx 1 a;
-          let dy := x.2 (dx, dy);
-          let dy_3 := dy.1;
+          let dx := dz • x₁_6;
+          let dy₂ := dx.sum;
+          let dy_1 := -dy₂ / x₁_2;
+          let dw_1 :=
+            IdxType.fold IndexType.Range.full dx fun i dw =>
+              let x₁ := x₁[i];
+              let dy := dy_1 * exp x₁;
+              let xi := dw[i];
+              let x := setElem dw i (xi + dy) True.intro;
+              x;
+          let dy := x.2 (dw_1, dy);
+          let dy_2 := dy.1;
           let dz_1 := dy.2;
           let dx₁ := dw.1;
           let dx₂₂ := dw.2;
-          let dx₁ := dx₁ + dy_3;
+          let dx₁ := dx₁ + dy_2;
           let dy := dz_1.1;
           let dz_2 := dz_1.2;
           let dx₁_1 := dx₂₂ + dy;

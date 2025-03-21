@@ -26,6 +26,6 @@ data_synth_variable
 abbrev_data_synth reshape in x (x₀ : α^[I]) : (HasFDerivAt (𝕜:=R) · · x₀) by hasFDerivAt_from_linear
 abbrev_data_synth reshape in x : HasFwdFDeriv R by hasFwdFDeriv_from_def => simp
 abbrev_data_synth reshape in x : (HasAdjoint R · (reshape · I hs.symm)) by sorry_proof
-abbrev_data_synth reshape in x : HasAdjointUpdate R by hasAdointUpdate_from_adjoint => skip
+abbrev_data_synth reshape in x : HasAdjointUpdate R by hasAdjointUpdate_from_adjoint => skip
 abbrev_data_synth reshape in x : HasRevFDeriv R by hasRevFDeriv_from_def => skip
 abbrev_data_synth reshape in x : HasRevFDerivUpdate R by hasRevFDerivUpdate_from_def => skip
