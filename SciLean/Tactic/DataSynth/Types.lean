@@ -450,6 +450,7 @@ def decomposeDomain? (f : FunData) : MetaM (Option (Expr × Expr × Expr × FunD
 
 /-- Tries to write function `fun (x₁,...,xₙ) => f x₁ ... x₂` as composition of two non-trivial functions. -/
 def nontrivialAppDecomposition (fData : FunData) : MetaM (Option (FunData × FunData)) := do
+  withLCtx fData.lctx fData.insts do
   match fData.body with
   | .proj t i b => do
 
@@ -474,7 +475,6 @@ def nontrivialAppDecomposition (fData : FunData) : MetaM (Option (FunData × Fun
     return .some (f,g)
 
   | .app .. =>
-  withLCtx fData.lctx fData.insts do
 
     let fn := fData.body.getAppFn
     let args := fData.body.getAppArgs'
