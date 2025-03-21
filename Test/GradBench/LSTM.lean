@@ -21,36 +21,12 @@ abbrev_data_synth sigmoid in x : HasRevFDerivUpdate R by
   unfold sigmoid
   data_synth (disch:=sorry_proof) => enter[3]; simp; to_ssa; to_ssa; lsimp
 
-
 open Scalar in
 abbrev_data_synth Scalar.tanh in x : HasRevFDeriv K by
   conv => enter[3]; assign (fun x : K =>
     let y := tanh x
     (y, fun dy => dy*(1 - y^2)))
   sorry_proof
-
-
-variable (w : Float^[10,10]) (ij : Idx 10 × Idx 10) (x : Float)
-
-#check (HasRevFDerivUpdate Float (fun w : Float^[10,10] =>
-         let' (i,j) := ij
-         sigmoid (w[i,j]*x+ w[i,j])) _)
-  rewrite_by
-    data_synth
-
-#check (HasRevFDerivUpdate Float (fun w : Float^[10,10] =>
-         let' (i,j) := ij
-         tanh (w[i,j]*x+ w[i,j])) _)
-  rewrite_by
-    data_synth; lsimp
-
-
-set_option trace.Meta.Tactic.data_synth true in
-#check (HasFwdFDeriv Float (fun (((a,b,c),d) : (Float×Float×Float)×Float) => a) _)
-  rewrite_by
-    lsimp
-    data_synth -domainDec
-
 
 @[simp,simp_core]
 theorem VectorType.conj_real (x : Float^[n]) : VectorType.conj x = x := sorry_proof
