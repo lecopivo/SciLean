@@ -40,14 +40,14 @@ def addDataSynthDecl (declName : Name) (outArgs : Array Name) (inArg? : Option N
 
   let info ← getConstInfo declName
 
-  let (xs,_,b) ← forallMetaTelescope info.type
+  let (xs,_,_) ← forallMetaTelescope info.type
 
   let argNames ←
     forallTelescope info.type fun xs _ =>
       xs.mapM (fun x => x.fvarId!.getUserName)
 
-  if ¬b.isProp then
-    throwError "invalid data synthesis declaration, has to be `Prop` valued function"
+  -- if ¬b.isProp then
+  --   throwError "invalid data synthesis declaration, has to be `Prop` valued function"
 
   -- convert names to indices
   let outputArgs : Array Nat ←

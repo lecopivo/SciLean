@@ -23,7 +23,7 @@ initialize dataSynthAttr : Unit ←
        let info ← getConstInfo declName
 
        forallTelescope info.type fun _ b => do
-         if b.isProp then
+         if b.isSort then
            match stx with
            | `(attr| data_synth out $outArgs* $[in $inArg]?) =>
               let outArgs := outArgs.map (fun arg => arg.getId)
