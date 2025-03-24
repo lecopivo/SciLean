@@ -11,7 +11,8 @@ def _root_.SciLean.Idx.shift (i : Idx n) (j : USize) : Idx n := ⟨(i.1+j)%n, so
 
 def H (m k : Float) (x p : Float^[n]) : Float :=
   let Δx := 1.0/n.toFloat
-  (Δx/(2*m)) * ‖p‖₂² + (Δx * k/2) * (∑ i, ‖x[i.shift 1] - x[i]‖₂²)
+  (Δx/(2*m)) * ‖p‖₂² + (Δx * k/2) * (∑ᴵ i, ‖x[i.shift 1] - x[i]‖₂²)
+
 
 approx solver (m k : Float)
   :=  odeSolve (λ t (x,p) => ( ∇ (p':=p), H (n:=n) m k x p',
@@ -21,7 +22,7 @@ by
   unfold H
 
   -- compute derivatives
-  autodiff
+  lsimp -zeta only [fgradient,revFDeriv_simproc]
 
   -- apply RK4 method
   conv in odeSolve _ =>
@@ -42,11 +43,11 @@ def main : IO Unit := do
 
   let Δt := 0.1
   let x₀ : Float^[N] := ⊞ (i : Idx N) => (Scalar.sin (i.1.toNat.toFloat/10))
-  let p₀ : Float^[N] := ⊞ (i : Idx N) => (0 : Float)
+  let p₀ : Float^[N] := ⊞ (_ : Idx N) => (0 : Float)
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
-  for i in [0:100] do
+  for _ in [0:100] do
 
     (x,p) := solver m k (substeps,()) t (t+Δt) (x, p)
     t += Δt
