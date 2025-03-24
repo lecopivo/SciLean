@@ -2,12 +2,12 @@ import SciLean
 
 open SciLean
 
-example : CDifferentiable ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z) := by fun_prop
+example : Differentiable ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z) := by fun_prop
 
 example
-  : (cderiv ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z))
+  : (fderiv ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z))
     =
-    fun (_,_,_) (_,_,dz) => dz := by fun_trans only
+    fun (_,_,_) => fun dx =>L[ℝ] dx.2.2 := by fun_trans
 
 example
   : Differentiable Float (fun x : Float => ⊞ (_ : Idx 10) => x) :=
@@ -17,7 +17,7 @@ by
 example
   : fderiv Float (fun x : Float => ⊞ (_ : Idx 10) => x)
     =
-    (fun _ => fun dx : Float =>L[Float] ⊞ (i : Idx 10) => dx) :=
+    (fun _ => fun dx : Float =>L[Float] ⊞ (_ : Idx 10) => dx) :=
 by
   fun_trans
 

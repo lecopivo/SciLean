@@ -4,9 +4,9 @@ open SciLean
 
 variable
   (K : Type _) [RCLike K]
-  {W : Type _} [Vec K W]
-  {X : Type _} [Vec K X]
-  {Y : Type _} [Vec K Y]
+  {W : Type _} [NormedAddCommGroup W] [NormedSpace K W]
+  {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
+  {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
 
 
 -- This works

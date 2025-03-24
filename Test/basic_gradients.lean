@@ -5,7 +5,6 @@ open SciLean
 variable
   {K : Type} [RealScalar K]
   {ι : Type} [IndexType ι nι] [DecidableEq ι]
-  {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
 

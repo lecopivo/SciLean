@@ -8,7 +8,6 @@ variable
   {Y} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {Z} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
   {ι : Type} [IndexType ι nι]
-  {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
 

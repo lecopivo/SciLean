@@ -4,14 +4,15 @@ open SciLean
 
 variable
   {K : Type} [RCLike K]
-  {α : Type}
+  {α : Type} [Fintype α]
 
-example (i : α) : CDifferentiable K (fun (xy : (α → K) × (α → K)) => xy.fst i) := by fun_prop
+
+example (i : α) : Differentiable K (fun (xy : (α → K) × (α → K)) => xy.fst i) := by fun_prop
 
 example (i : α)
-  : cderiv K (fun (xy : (α → K) × (α → K)) => xy.fst i)
+  : fderiv K (fun (xy : (α → K) × (α → K)) => xy.fst i)
     =
-    fun _ dxy =>
+    fun _ => fun dxy =>L[K]
       dxy.1 i :=
 by
   conv => lhs; autodiff

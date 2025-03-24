@@ -104,9 +104,6 @@ info: DefFunPropTransTest.add.arg_xy.revFDeriv_rule {X : Type} [NormedAddCommGro
 #check add.arg_xy.revFDeriv_rule
 
 
-def smul {X : Type} [SemiHilbert K X]
- (x : K) (y : X) : X := x • y
-
 
 example :
   (revFDeriv K fun (x : K) =>
