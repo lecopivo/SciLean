@@ -123,7 +123,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
   {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
-  {ι : Type _} {n} [IndexType ι n] [IndexType.Fold' ι]
+  {ι : Type _} {n} [IndexType ι n] [Fold ι]
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 set_default_scalar K
@@ -426,7 +426,7 @@ by
 --   sorry_proof
 
 @[fun_trans]
-theorem SciLean.IndexType.sum.arg_f.adjoint_rule {ι n} [IndexType ι n] [IndexType.Fold' ι]
+theorem SciLean.IndexType.sum.arg_f.adjoint_rule {ι n} [IndexType ι n] [Fold ι]
   (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K (f · i))
   : (fun x => ∑ᴵ i, f x i)†
     =

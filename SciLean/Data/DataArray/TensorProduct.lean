@@ -44,7 +44,7 @@ instance {R : Type u'} [PlainDataType R]
     MatrixMulNotation (R^[I,J]) := ⟨⟩
 
 -- TODO: use BLAS `gemm`!!!
-instance [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J] [IndexType.Fold' K] :
+instance [Fold.{_,0} I] [Fold.{_,0} J] [Fold K] :
     TensorProductMul R (R^[I]) (R^[K]) (R^[J]) (R^[I,K]) (R^[K,J]) (R^[I,J]) where
   matMul a A B b C := ⊞ (i:I) (j:J) => b • C[i,j] + a • ∑ᴵ (k:K), A[i,k] * B[k,j]
 
@@ -75,7 +75,7 @@ instance : TensorProductSelf R (R^[I]) (R^[I,I]) where
 
   addIdentityMatrix_spec := sorry_proof
 
-variable [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J]
+variable [Fold.{_,0} I] [Fold.{_,0} J]
 
 instance : TensorProductSwap R (R^[I]) (R^[J]) where
 

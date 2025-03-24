@@ -44,7 +44,7 @@ theorem getElem.arg_xs.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
 
 @[data_synth]
 theorem getElem.arg_xs.HasAdjoint_rule_free_index {𝕜 X I Y : Type*}
-    [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I] {nI} [IndexType I nI] [IndexType.Fold' I] [RCLike 𝕜]
+    [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I] {nI} [IndexType I nI] [Fold I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] :
     HasAdjoint 𝕜

@@ -10,7 +10,7 @@ variable
   {𝕜 : Type*} [RCLike 𝕜]
   {W : Type*} [NormedAddCommGroup W] [NormedSpace 𝕜 W]
   {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-  {I : Type*} {nI : ℕ} [IndexType I nI] [IndexType.Fold' I]
+  {I : Type*} {nI : ℕ} [IndexType I nI] [Fold I]
 
 
 @[fun_prop]
@@ -52,7 +52,7 @@ variable
 
 
 @[data_synth]
-theorem fold.arg_initf.HasRevFDeriv_rule [IndexType.Fold' I]
+theorem fold.arg_initf.HasRevFDeriv_rule [Fold I]
     (r : IndexType.Range I)
     (init : W → X) {init'} (hinit : HasRevFDerivUpdate 𝕜 init init')
     (f : W → I → X → X) {f' : I → _}
@@ -77,7 +77,7 @@ theorem fold.arg_initf.HasRevFDeriv_rule [IndexType.Fold' I]
 
 
 @[data_synth]
-theorem fold.arg_initf.HasRevFDerivUpdate_rule [IndexType.Fold' I]
+theorem fold.arg_initf.HasRevFDerivUpdate_rule [Fold I]
     (r : IndexType.Range I)
     (init : W → X) {init'} (hinit : HasRevFDerivUpdate 𝕜 init init')
     (f : W → I → X → X) {f' : I → _}
@@ -101,7 +101,7 @@ theorem fold.arg_initf.HasRevFDerivUpdate_rule [IndexType.Fold' I]
           dw)) := by sorry_proof
 
 
-theorem fold.arg_initf.HasRevFDeriv_scalar_rule [IndexType.Fold' I]
+theorem fold.arg_initf.HasRevFDeriv_scalar_rule [Fold I]
     (r : IndexType.Range I)
     (init : W → 𝕜) {init'} (hinit : HasRevFDerivUpdate 𝕜 init init')
     (f : W → I → 𝕜 → 𝕜) {f' : I → _}
@@ -129,7 +129,7 @@ theorem fold.arg_initf.HasRevFDeriv_scalar_rule [IndexType.Fold' I]
 
 
 -- @[data_synth]
--- theorem fold.arg_initf.HasRevFDerivUpdate_rule [IndexType.Fold' I]
+-- theorem fold.arg_initf.HasRevFDerivUpdate_rule [Fold I]
 --     (r : IndexType.Range I)
 --     (init : W → X) {init'} (hinit : HasRevFDerivUpdate 𝕜 init init')
 --     (f : W → I → X → X) {f' : I → _}

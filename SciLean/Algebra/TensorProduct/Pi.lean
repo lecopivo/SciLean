@@ -6,8 +6,8 @@ variable (R : Type*) [RCLike R]
   {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y]
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
   {YX : Type*} [AddCommGroup YX] [Module R YX] [TensorProductType R Y X YX]
-  {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I]
-  {J nJ} [IndexType J nJ] [IndexType.Fold' J] [IndexType.Fold' J]
+  {I nI} [IndexType I nI] [Fold I] [Fold I]
+  {J nJ} [IndexType J nJ] [Fold J] [Fold J]
 
 
 -- todo: convert to `structure` to preven defeq abuse

@@ -7,7 +7,7 @@ namespace SciLean
 
 namespace ArrayOps
 
-variable {X I Y : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
+variable {X I Y : Type*} {nI} [IndexType I nI] [Fold I]
   [GetElem' X I Y]
   [SetElem' X I Y]
 

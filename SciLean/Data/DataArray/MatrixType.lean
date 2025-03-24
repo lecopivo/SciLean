@@ -46,7 +46,7 @@ namespace SciLean
 --     {nm} [IndexType m nm] {nn} [IndexType n nn] [PlainDataType K]
 --     [RealScalar R] [Scalar R K]
 --     [BLAS (DataArray K) R K] [LawfulBLAS (DataArray K) R K]
---     [IndexType.Fold' m] [IndexType.Fold' n] :
+--     [Fold m] [Fold n] :
 --     MatrixType.Dense (K^[m,n]) where
 --   fromMatrix f := ⊞ i j => f i j
 --   right_inv' := sorry_proof

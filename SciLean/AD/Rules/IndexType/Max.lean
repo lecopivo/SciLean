@@ -11,7 +11,7 @@ variable
   {W : Type*} [NormedAddCommGroup W] [NormedSpace 𝕜 W]
   {U : Type*} [NormedAddCommGroup U] [AdjointSpace 𝕜 U]
   -- {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-  {I : Type v} {nI : ℕ} [IndexType I nI] [IndexType.Fold'.{v,u} I] [IndexType.Fold'.{v,max u v} I] [Inhabited I]
+  {I : Type v} {nI : ℕ} [IndexType I nI] [Fold.{v,u} I] [Fold.{v,max u v} I] [Inhabited I]
 
 
 @[fun_prop]

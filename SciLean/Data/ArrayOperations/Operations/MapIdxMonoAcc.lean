@@ -15,7 +15,7 @@ theorem mapIdxMonoAcc.arg_fxs.HasRevFDeriv_rule
     {𝕜 : Type u} {X : Type v} {I : Type*} {Y : Type w}
     [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem' X I Y] [LawfulSetElem X I]
-    {nI} [IndexType I nI] [IndexType.Fold'.{_,v} I] [RCLike 𝕜]
+    {nI} [IndexType I nI] [Fold.{_,v} I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [NormedAddCommGroup W] [AdjointSpace 𝕜 W] [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]
@@ -46,7 +46,7 @@ theorem mapIdxMonoAcc.arg_fxs.HasRevFDerivUpdate_rule
     {𝕜 : Type u} {X : Type v} {I : Type*} {Y : Type w}
     [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem' X I Y] [LawfulSetElem X I]
-    {nI} [IndexType I nI] [IndexType.Fold'.{_,v} I] [RCLike 𝕜]
+    {nI} [IndexType I nI] [Fold.{_,v} I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [NormedAddCommGroup W] [AdjointSpace 𝕜 W] [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]

@@ -12,13 +12,13 @@ open SciLean
 variable {α β} {m} [Monad m]
   {ι n} [IndexType ι n] [DecidableEq ι]
 
-def Function.foldlM [IndexType.Fold ι m] (f : ι → α) (op : β → α → m β) (init : β) : m β := do
+def Function.foldlM [FoldM ι m] (f : ι → α) (op : β → α → m β) (init : β) : m β := do
   let mut b := init
   for i in fullRange ι do
     b ← op b (f i)
   return b
 
-def Function.foldl [IndexType.Fold' ι] (f : ι → α) (op : β → α → β) (init : β) : β :=
+def Function.foldl [Fold ι] (f : ι → α) (op : β → α → β) (init : β) : β :=
   Id.run <| Function.foldlM f (fun x y => pure (op x y)) init
 
 

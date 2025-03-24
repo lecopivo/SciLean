@@ -13,11 +13,11 @@ namespace SciLean.DataArrayN
 
 variable
   {R : Type*} [RealScalar R] [pd : PlainDataType R] [BLAS (DataArray R) R R]
-  {I nI} [IndexType I nI] [IndexType.Fold' I]
-  {J nJ} [IndexType J nJ] [IndexType.Fold' J]
-  {K nK} [IndexType K nK] [IndexType.Fold' K]
-  {L nL} [IndexType L nL] [IndexType.Fold' L]
-  {M nM} [IndexType M nM] [IndexType.Fold' M]
+  {I nI} [IndexType I nI] [Fold I]
+  {J nJ} [IndexType J nJ] [Fold J]
+  {K nK} [IndexType K nK] [Fold K]
+  {L nL} [IndexType L nL] [Fold L]
+  {M nM} [IndexType M nM] [Fold M]
 
 
 ----------------------------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ def outerAddR (a : R) (x : R^[I]) (y : R^[J]) (z : R^[I,J]) : R^[I,J] := Id.run 
 ----------------------------------------------------------------------------------------------------
 
 variable
-  {ι nι} [IndexType ι nι] [IndexType.Fold' ι]
+  {ι nι} [IndexType ι nι] [Fold ι]
   {X : Type*} [PlainDataType X] [HasRnEquiv X ι R]
 
 
@@ -288,7 +288,7 @@ def logsumexp (x : X^[I]) : R :=
 
 -- ugh universes require additional `Fold` :/
 open Scalar in
-def softmax [IndexType.Fold' ι] [IndexType.Fold' I] (x : X^[I]) : X^[I] :=
+def softmax [Fold ι] [Fold I] (x : X^[I]) : X^[I] :=
   let x := toRn x
   let m := x.rmax
   let w := ∑ᴵ i, exp (x[i] - m)
@@ -296,7 +296,7 @@ def softmax [IndexType.Fold' ι] [IndexType.Fold' I] (x : X^[I]) : X^[I] :=
   fromRn x
 
 open Scalar in
-def logsumexpSoftmax [IndexType.Fold' ι] [IndexType.Fold' I] (x : X^[I]) : (R × X^[I]) :=
+def logsumexpSoftmax [Fold ι] [Fold I] (x : X^[I]) : (R × X^[I]) :=
   let x := toRn x
   let m := x.rmax
   let w := ∑ᴵ i, exp (x[i] - m)

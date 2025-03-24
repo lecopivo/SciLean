@@ -208,7 +208,7 @@ theorem Finset.sum.arg_f.HasFDerivAt_simp_rule {I : Type*} (A : Finset I) [Finty
 
 @[data_synth]
 theorem SciLean.IndexType.sum.arg_f.HasFDerivAt_simp_rule
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] (f : I → X) :
+    {I : Type*} {nI} [IndexType I nI] [Fold I] (f : I → X) :
     HasFDerivAt (fun f => ∑ᴵ i, f i) (fun df =>L[K] ∑ᴵ i, df i) f :=
   (fun f : I → X =>L[K] ∑ᴵ i, f i).hasFDerivAt (x:=f)
 

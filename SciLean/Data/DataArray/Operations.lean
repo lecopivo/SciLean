@@ -10,7 +10,7 @@ import SciLean.Analysis.Scalar.FloatAsReal
 
 namespace SciLean.DataArrayN
 
-variable {X : Type*} [PlainDataType X] {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
+variable {X : Type*} [PlainDataType X] {I : Type*} {nI} [IndexType I nI] [Fold I]
 
 /-- Transform all elements of `xs^[I]` using `f : X → X`. -/
 abbrev mapMono (f : X → X) (xs : X^[I]) : X^[I] :=
@@ -54,8 +54,8 @@ section OverReals
 
 variable
   {R : Type*} [RealScalar R] [pd : PlainDataType R]
-  [IndexType.Fold' I]
-  {ι nι} [IndexType ι nι] [IndexType.Fold' ι]
+  [Fold I]
+  {ι nι} [IndexType ι nι] [Fold ι]
   [HasRnEquiv X ι R]
 
 

@@ -10,7 +10,7 @@ variable
   {𝕜 : Type*} [RCLike 𝕜]
   {W : Type*} [NormedAddCommGroup W] [NormedSpace 𝕜 W]
   {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-  {I : Type*} {nI : ℕ} [IndexType I nI] [IndexType.Fold' I]
+  {I : Type*} {nI : ℕ} [IndexType I nI] [Fold I]
 
 
 -- @[fun_prop] -- already exists
@@ -53,7 +53,7 @@ theorem sum.arg_f.HasFwdDeriv_rule
 theorem sum.arg_f.HasRevFDeriv_rule
     {W} [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
     {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [Fold I]
     (f : W → I → X) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate 𝕜 (f · i) (f' i))  :
     HasRevFDeriv 𝕜
       (fun w => sum (f w))
@@ -70,7 +70,7 @@ theorem sum.arg_f.HasRevFDeriv_rule
 theorem sum.arg_f.HasRevFDerivUpdate_rule
     {W} [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
     {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [Fold I]
     (f : W → I → X) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate 𝕜 (f · i) (f' i))  :
     HasRevFDerivUpdate 𝕜
       (fun w => sum (f w))
@@ -86,7 +86,7 @@ theorem sum.arg_f.HasRevFDerivUpdate_rule
 theorem sum.arg_f.HasRevFDeriv_rule_scalar
     {K} [RCLike K]
     {W} [NormedAddCommGroup W] [AdjointSpace K W]
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [Fold I]
     (f : W → I → K) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i))  :
     HasRevFDeriv K
       (fun w => sum (f w))
@@ -103,7 +103,7 @@ theorem sum.arg_f.HasRevFDeriv_rule_scalar
 theorem sum.arg_f.HasRevFDerivUpdate_rule_scalar
     {K} [RCLike K]
     {W} [NormedAddCommGroup W] [AdjointSpace K W]
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [Fold I]
     (f : W → I → K) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i))  :
     HasRevFDerivUpdate K
       (fun w => sum (f w))

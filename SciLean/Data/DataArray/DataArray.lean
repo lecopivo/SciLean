@@ -148,7 +148,7 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
 
 
 @[irreducible, inline, specialize]
-def DataArray.intro {ι n} [IndexType ι n] [IndexType.Fold' ι]
+def DataArray.intro {ι n} [IndexType ι n] [Fold ι]
     (f : ι → α) : DataArray α := Id.run do
   let mut d' : DataArray α := .mkZero n
   for i in fullRange ι do
@@ -210,22 +210,22 @@ instance : LawfulSetElem (α^[ι]) ι where
   getElem_setElem_eq  := sorry_proof
   getElem_setElem_neq := sorry_proof
 
-instance [IndexType.Fold' ι] : OfFn (α^[ι]) ι α where
+instance [Fold ι] : OfFn (α^[ι]) ι α where
   ofFn f := ⟨DataArray.intro f, sorry_proof⟩
 
-instance [IndexType.Fold' ι] : LawfulOfFn (α^[ι]) ι where
+instance [Fold ι] : LawfulOfFn (α^[ι]) ι where
   getElem_ofFn := sorry_proof
 
 instance {α} [PlainDataType α] {ι n} [IndexType ι n] : DefaultCollection (α^[ι]) ι α where
 
-def DataArrayN.toList [IndexType.Fold' ι] (xs : DataArrayN α ι) : List α := Id.run do
+def DataArrayN.toList [Fold ι] (xs : DataArrayN α ι) : List α := Id.run do
   let mut l : List α := []
   for i in fullRange ι do
     l := xs.get i :: l
   return l
 
 
-def DataArrayN.toListIdx [IndexType.Fold' ι] (xs : DataArrayN α ι) : List (ι × α) := Id.run do
+def DataArrayN.toListIdx [Fold ι] (xs : DataArrayN α ι) : List (ι × α) := Id.run do
   let mut l : List (ι × α) := []
   for i in fullRange ι do
     l := (i, xs.get i) :: l
@@ -235,7 +235,7 @@ def DataArrayN.toListIdx [IndexType.Fold' ι] (xs : DataArrayN α ι) : List (ι
 instance : Membership α (DataArrayN α ι) where
   mem xs x := ∃ i, xs.get i = x
 
-instance [IndexType.Fold' ι] : ArrayType (DataArrayN α ι) ι α where
+instance [Fold ι] : ArrayType (DataArrayN α ι) ι α where
   ofFn f := ⟨DataArray.intro f, sorry_proof⟩
   get xs i := xs.get i
   set xs i x := xs.set i x
@@ -344,7 +344,7 @@ def DataArrayN.uncurry (x : X^[J]^[I]) : X^[I,J] :=
   cast sorry_proof x -- this is slow at runtime ⟨⟨x.data.byteData, sorry_proof⟩, sorry_proof⟩
 
 
-theorem DataArrayN.uncurry_def [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J]
+theorem DataArrayN.uncurry_def [Fold.{_,0} I] [Fold.{_,0} J]
     (x : DataArrayN (DataArrayN X J) I) :
     -- x.uncurry = ⊞ i j => x[i][j] := sorry_proof
     x.uncurry = ofFn (↿fun i j => x[i][j]) := sorry_proof
@@ -353,7 +353,7 @@ theorem DataArrayN.uncurry_getElem
     (x : DataArrayN (DataArrayN X J) I) (i : I) (j : J) :
     x.uncurry[i,j] = x[i][j] := sorry_proof
 
-theorem DataArrayN.curry_def [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J]
+theorem DataArrayN.curry_def [Fold.{_,0} I] [Fold.{_,0} J]
     (x : DataArrayN X (I×J)) :
     x.curry = ⊞ i => ⊞ j => x[i,j] := by
   sorry_proof

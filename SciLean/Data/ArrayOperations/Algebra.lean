@@ -126,7 +126,7 @@ attribute [fun_prop] continuous_getElem
 -- instance {X Y Z I J 𝕜}
 --     [GetElem' X I Y] [GetElem' X (I×J) Z]
 --     [GetElem' Y J Z] [IsGetElemCurry X I J]
---     [Zero 𝕜] [Add 𝕜] {nI} [IndexType I nI] [IndexType.Fold' I] {nJ} [IndexType J nJ] [IndexType.Fold' J]
+--     [Zero 𝕜] [Add 𝕜] {nI} [IndexType I nI] [Fold I] {nJ} [IndexType J nJ] [Fold J]
 --     [Inner 𝕜 X] [Inner 𝕜 Y] [Inner 𝕜 Z]
 --     [IsInnerGetElem 𝕜 X I] [IsInnerGetElem 𝕜 Y J] :
 --     IsInnerGetElem 𝕜 X (I×J) where
@@ -138,7 +138,7 @@ attribute [fun_prop] continuous_getElem
 --     [DefaultIndex Y J]
 --     [GetElem' X I Y] [GetElem' X (I×J) Z]
 --     [GetElem' Y J Z] [IsGetElemCurry X I J]
---     [Zero 𝕜] [Add 𝕜] {nI} [IndexType I nI] [IndexType.Fold' I] {nJ} [IndexType J nJ] [IndexType.Fold' J]
+--     [Zero 𝕜] [Add 𝕜] {nI} [IndexType I nI] [Fold I] {nJ} [IndexType J nJ] [Fold J]
 --     [Inner 𝕜 X] [Inner 𝕜 Y] [Inner 𝕜 Z]
 --     [IsInnerGetElem 𝕜 X (I×J)] [IsInnerGetElem 𝕜 Y J] :
 --     IsInnerGetElem 𝕜 X I where

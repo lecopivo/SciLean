@@ -410,7 +410,7 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
 
 
 @[fun_trans]
-theorem sum.arg_f.fwdFDeriv_rule_at {ι nι} [IndexType ι nι] [IndexType.Fold' ι]
+theorem sum.arg_f.fwdFDeriv_rule_at {ι nι} [IndexType ι nι] [Fold ι]
   (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
   : fwdFDeriv K (fun x => IndexType.sum fun i => f x i) x
     =
@@ -425,7 +425,7 @@ by
 
 
 @[fun_trans]
-theorem sum.arg_f.fwdFDeriv_rule {ι nι} [IndexType ι nι] [IndexType.Fold' ι]
+theorem sum.arg_f.fwdFDeriv_rule {ι nι} [IndexType ι nι] [Fold ι]
   (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
   : fwdFDeriv K (fun x => IndexType.sum fun i => f x i)
     =

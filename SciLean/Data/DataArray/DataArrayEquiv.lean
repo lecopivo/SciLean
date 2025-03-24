@@ -173,14 +173,14 @@ instance instLawfulSetElemUncurry
 ----------------------------------------------------------------------------------------------------
 
 instance instOfFnUncurry
-    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ] [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ] [Fold.{_,0} I] [Fold.{_,0} J]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     OfFn (X^[I]) (I×J) K where
   ofFn f := fromKn _ (⊞ ij => f ij)
 
 instance instLawfulOfFnUncurry
-    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ] [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ] [Fold.{_,0} I] [Fold.{_,0} J]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     LawfulOfFn (X^[I]) (I×J) where

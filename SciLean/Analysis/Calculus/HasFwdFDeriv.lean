@@ -392,7 +392,7 @@ theorem HPow.hPow.arg_a0.HasFwdFDeriv_rule_nat
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem SciLean.sum.arg_f.HasFwdFDeriv_rule
-    {I : Type*} [IndexType I NI] [IndexType.Fold' I]
+    {I : Type*} [IndexType I NI] [Fold I]
     {f : X → I → Y} {f' : I → _}
     (hf : ∀ i, HasFwdFDeriv K (f · i) (f' i)) :
     HasFwdFDeriv K

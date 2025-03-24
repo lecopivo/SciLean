@@ -379,7 +379,7 @@ open VectorType
 --     ⟪(WithLp.equiv 2 (I → K)).symm (fun i : I => x[i]), (WithLp.equiv 2 (I → K)).symm (fun i : I => y[i])⟫_K := by
 --   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 
--- instance [IndexType.Fold' n] : IsInnerGetElem K X n where
+-- instance [Fold n] : IsInnerGetElem K X n where
 --   inner_eq_sum_getElem := by simp[vector_to_spec, IndexType.sum_eq_finset_sum]
 
 -- @[vector_to_spec]
@@ -390,7 +390,7 @@ open VectorType
 --   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 --   sorry_proof
 
--- instance [IndexType.Fold' n] [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsInnerGetElem K X n where
+-- instance [Fold n] [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsInnerGetElem K X n where
 --   inner_eq_sum_getElem := by simp[vector_to_spec, IndexType.sum_eq_finset_sum]
 
 -- @[vector_to_spec]
@@ -663,7 +663,7 @@ open VectorType
 -- variable
 --   {X : Type*} {n : Type u} {R K :  Type*}
 --   {_ : RealScalar R} {_ : Scalar R K} {nn : ℕ} {_ : IndexType n nn}
---   [VectorType.Base X n K] [VectorType.Dense X] [IndexType.Fold' n]
+--   [VectorType.Base X n K] [VectorType.Dense X] [Fold n]
 
 -- @[inline]
 -- def mapIdx (f : I → K → K) (x : X) : X :=

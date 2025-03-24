@@ -128,19 +128,19 @@ theorem let_rule {g : X → Y} {f : Y → X → Z} {f' g'}
   sorry_proof
 
 @[data_synth]
-theorem apply_rule {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] (i : I) :
+theorem apply_rule {I nI} [IndexType I nI] [Fold I] [Fold I] (i : I) :
     HasVecFwdFDeriv 𝕜 W (fun x : I → X => x i)
       (fun x dx =>
         (x i, dx i)) := sorry_proof
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
-theorem apply_rule' {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] (i : I) :
+theorem apply_rule' {I nI} [IndexType I nI] [Fold I] [Fold I] (i : I) :
     HasVecFwdFDeriv 𝕜 W (fun x : (I → X)×Y => x.1 i)
       (fun x dx =>
         (x.1 i, dx.1 i)) := sorry_proof
 
-theorem pi_rule {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I]
+theorem pi_rule {I nI} [IndexType I nI] [Fold I] [Fold I]
     {f : X → I → Y} {f' : I → _} (hf : ∀ i, HasVecFwdFDeriv 𝕜 W (f · i) (f' i)) :
     HasVecFwdFDeriv 𝕜 W f
       (fun x dx => (fun i => f x i, fun i => (f' i x dx).2)) := by
@@ -417,7 +417,7 @@ theorem HPow.hPow.arg_a0.HasVecFwdFDeriv_rule_nat
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem SciLean.IndexType.sum.arg_f.HasVecFwdFDeriv_rule
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I]
     {f : X → I → Y} {f' : I → _}
     (hf : ∀ i, HasVecFwdFDeriv 𝕜 W (f · i) (f' i)) :
     HasVecFwdFDeriv 𝕜 W

@@ -3,49 +3,50 @@ import SciLean.Data.IndexType.Range
 
 namespace SciLean
 
+
 /-- Implementation of a fold over index type `I` in the monad `m`.
 
 Note: This function is not part of `IndexType` because of the two universe parameters `v` and `w`
 which were causing lot of issues during type class synthesis. -/
-class IndexType.Fold (I : Type u) (m : Type v → Type w) {n : outParam ℕ} [IndexType I n] where
+class FoldM (I : Type u) (m : Type v → Type w) {n : outParam ℕ} [IndexType I n] where
   forIn {β} [Monad m] (r : IndexType.Range I) (init : β) (f : I → β → m (ForInStep β)) : m β
 
   -- TODO: some property that the forIn and foldM are doing the right thing in *the* order aligned
   --       with `IndexType`
 
 /--
-Abbreviation for `IndexType.Fold I Id`
+Abbreviation for `FoldM I Id`
 
 Implementation of a fold over index type `I`.
 
 Warning: This class has an universe parameter `v` that is not deducible from the its parameters.
-  Sometimes you might have to specify the universe parameter manually e.g. `IndexType.Fold'.{_,0} I`
+  Sometimes you might have to specify the universe parameter manually e.g. `Fold.{_,0} I`
 -/
-abbrev IndexType.Fold'.{u,v} (I : Type u) [IndexType I n] := IndexType.Fold.{u,v,v} I Id
+abbrev Fold.{u,v} (I : Type u) [IndexType I n] := FoldM.{u,v,v} I Id
 
-attribute [specialize, inline] IndexType.Fold.forIn
+attribute [specialize, inline] FoldM.forIn
 
 namespace IndexType
 
-export IndexType.Fold (forIn)
+export FoldM (forIn)
 
 @[inline, specialize]
-def foldM {I n m β} [IndexType I n] [IndexType.Fold I m] [Monad m]
+def foldM {I n m β} [IndexType I n] [FoldM I m] [Monad m]
     (r : IndexType.Range I) (init : β) (f : I → β → m β) : m β :=
   forIn r init (fun i x => do return .yield (← f i x))
 
 @[inline, specialize]
-def fold {I n β} [IndexType I n] [IndexType.Fold I Id]
+def fold {I n β} [IndexType I n] [FoldM I Id]
     (r : IndexType.Range I) (init : β) (f : I → β → β) : β :=
   foldM (m:=Id) r init (fun i x => pure (f i x))
 
-instance {m : Type v → Type w} {n} [IndexType I n] [IndexType.Fold I m] :
+instance {m : Type v → Type w} {n} [IndexType I n] [FoldM I m] :
     ForIn m (IndexType.Range I) I where
-  forIn := IndexType.Fold.forIn
+  forIn := forIn
 
 @[inline, specialize]
 def reduceDM {I : Type u} {β : Type v} {m : Type v → Type w} {n : ℕ}
-    [IndexType I n] [IndexType.Fold I m] [Monad m]
+    [IndexType I n] [FoldM I m] [Monad m]
     (r : IndexType.Range I) (f : I → m β) (op : β → β → m β) (default : β) : m β := do
   let mut val := default
   let mut first : ULift.{v,0} Bool := ULift.up true
@@ -58,12 +59,12 @@ def reduceDM {I : Type u} {β : Type v} {m : Type v → Type w} {n : ℕ}
   return val
 
 @[inline, specialize]
-def reduceD {I n β} [IndexType I n] [IndexType.Fold I Id]
+def reduceD {I n β} [IndexType I n] [FoldM I Id]
     (r : IndexType.Range I) (f : I → β) (op : β → β → β) (default : β) : β :=
   reduceDM (m:=Id) r f op default
 
 @[inline, specialize]
-abbrev reduce {I n β} [IndexType I n] [IndexType.Fold I Id] [Inhabited β]
+abbrev reduce {I n β} [IndexType I n] [FoldM I Id] [Inhabited β]
     (r : IndexType.Range I) (f : I → β) (op : β → β → β) : β :=
   reduceD r f op default
 
@@ -72,7 +73,7 @@ abbrev reduce {I n β} [IndexType I n] [IndexType.Fold I Id] [Inhabited β]
 -- Instance for `Unit` -----------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-instance : IndexType.Fold Unit m  where
+instance : FoldM Unit m  where
   forIn r init f :=
     match r with
     | .empty => pure init
@@ -92,9 +93,9 @@ instance : IndexType.Fold Unit m  where
 --       It is not hard to implement but unclear if it negativelly impacts performance.
 --       It will require careful testing.
 instance
-    {I nI} [IndexType I nI] [fi : IndexType.Fold I m]
-    {J nJ} [IndexType J nJ] [fj : IndexType.Fold J m] :
-    IndexType.Fold (I × J) m  where
+    {I nI} [IndexType I nI] [fi : FoldM I m]
+    {J nJ} [IndexType J nJ] [fj : FoldM J m] :
+    FoldM (I × J) m  where
   forIn r init f :=
     let (ri,rj) := r.ofProd
     fi.forIn ri init fun i x => do
@@ -109,20 +110,20 @@ instance
 -- TODO: this does not break correctly! fix this!
 --       not hard to implement but unclear if it negativelly impacts performance
 instance {I J n n'}
-    [FirstLast I I] [IndexType I n] [IndexType.Fold I m]
-    [FirstLast J J] [IndexType J n'] [IndexType.Fold J m] :
-    IndexType.Fold (I ⊕ J) m  where
+    [FirstLast I I] [IndexType I n] [FoldM I m]
+    [FirstLast J J] [IndexType J n'] [FoldM J m] :
+    FoldM (I ⊕ J) m  where
   forIn r init f :=
     match r.ofSum with
     | .inl (ri, rj) => do
       let x := init
-      let x ← IndexType.Fold.forIn ri x (fun i x => f (.inl i) x)
-      let x ← IndexType.Fold.forIn rj x (fun j x => f (.inr j) x)
+      let x ← forIn ri x (fun i x => f (.inl i) x)
+      let x ← forIn rj x (fun j x => f (.inr j) x)
       return x
     | .inr (rj, ri) => do
       let x := init
-      let x ← IndexType.Fold.forIn rj x (fun j x => f (.inr j) x)
-      let x ← IndexType.Fold.forIn ri x (fun i x => f (.inl i) x)
+      let x ← forIn rj x (fun j x => f (.inr j) x)
+      let x ← forIn ri x (fun i x => f (.inl i) x)
       return x
 
 
@@ -176,7 +177,7 @@ where
     | .done x => pure x
 
 
-instance : IndexType.Fold (Idx n) m  where
+instance : FoldM (Idx n) m  where
   forIn r init f :=
     match r with
     | .empty => pure init
@@ -237,7 +238,7 @@ where
         loop x ⟨i-1, sorry_proof⟩
     | .done x => pure x
 
-instance : IndexType.Fold (Fin n) m  where
+instance : FoldM (Fin n) m  where
   forIn r init f :=
     match r with
     | .empty => pure init

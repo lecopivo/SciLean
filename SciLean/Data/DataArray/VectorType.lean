@@ -108,7 +108,7 @@ instance
 --     [RealScalar R] [Scalar R K]
 --     [BLAS (DataArray K) R K] [LawfulBLAS (DataArray K) R K]
 --     [SetElem' X I K] [LawfulSetElem X I]
---     [OfFn X I K] [LawfulOfFn X I] [IndexType.Fold' I] :
+--     [OfFn X I K] [LawfulOfFn X I] [Fold I] :
 --     VectorType.Dense X where
 --   fromVec f :=
 --     let x := DataArray.intro fun i => f i

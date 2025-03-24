@@ -61,7 +61,7 @@ set_option deprecated.oldSectionVars true
 
 variable
   {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
-  {n} [IndexType Idx n] [IndexType.Fold' Idx] [outParam <| DecidableEq Idx]
+  {n} [IndexType Idx n] [Fold Idx] [outParam <| DecidableEq Idx]
   [ArrayType Cont Idx Elem]
 
 @[ext]
@@ -98,7 +98,7 @@ theorem get_modify_neq (xs : Cont) (f : Elem → Elem) (i j : Idx) (h : i ≠ j)
 
 
 instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem]
-    {n} [IndexType Idx n] [IndexType.Fold' Idx] :
+    {n} [IndexType Idx n] [Fold Idx] :
     ToString (Cont) := ⟨λ x => Id.run do
   let mut fst := true
   let mut s := "⊞["

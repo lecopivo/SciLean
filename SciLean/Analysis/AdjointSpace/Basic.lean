@@ -295,7 +295,7 @@ instance : AdjointSpace 𝕜 (X×Y) where
 
 
 variable
-  {ι : Type*} {n} [SciLean.IndexType ι n] [SciLean.IndexType.Fold' ι]
+  {ι : Type*} {n} [SciLean.IndexType ι n] [SciLean.Fold ι]
   {E : ι → Type*}
 
 instance {𝕜 : Type*} [AddCommMonoid 𝕜] [∀ i, Inner 𝕜 (E i)] :

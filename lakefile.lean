@@ -34,6 +34,8 @@ lean_lib SciLean {
   roots := #[`SciLean]
 }
 
+#check IO.Process.SpawnArgs
+
 @[test_driver]
 lean_lib Test {
   globs := #[Glob.submodules `Test]

@@ -173,20 +173,20 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
   case simp => simp_all; ac_rfl
 
 @[data_synth]
-theorem apply_rule {I} {nI} [IndexType I nI] [IndexType.Fold' I] [DecidableEq I] (i : I) :
+theorem apply_rule {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
     HasRevFDeriv K (fun x : I → X => x i)
       (fun x =>
         (x i, fun dxi j => if i=j then dxi else 0)) := sorry_proof
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
-theorem apply_rule' {I} {nI} [IndexType I nI] [IndexType.Fold' I] [DecidableEq I] (i : I) :
+theorem apply_rule' {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
     HasRevFDeriv K (fun x : (I → X)×Y => x.1 i)
       (fun x =>
         (x.1 i, fun dxi => (fun j => if i=j then dxi else 0, 0))) := sorry_proof
 
 set_option linter.unusedVariables false in
-theorem pi_rule {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I]
+theorem pi_rule {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
     HasRevFDeriv K
       (fun x i => f x i)
@@ -309,20 +309,20 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
     simp +singlePass [h]; ac_rfl
 
 @[data_synth]
-theorem apply_rule {I} {nI} [IndexType I nI] [IndexType.Fold' I] [DecidableEq I] (i : I) :
+theorem apply_rule {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
     HasRevFDerivUpdate K (fun x : I → X => x i)
       (fun x =>
         (x i, fun dxi dx j => if i=j then dx j + dxi else dx j)) := sorry_proof
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
-theorem apply_rule' {I} {nI} [IndexType I nI] [IndexType.Fold' I] [DecidableEq I] (i : I) :
+theorem apply_rule' {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
     HasRevFDerivUpdate K (fun x : (I → X)×Y => x.1 i)
       (fun x =>
         (x.1 i, fun dxi dx => (fun j => if i=j then dx.1 j + dxi else dx.1 j, dx.2))) := sorry_proof
 
 set_option linter.unusedVariables false in
-theorem pi_rule {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I]
+theorem pi_rule {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i)) :
     HasRevFDerivUpdate K
       (fun x i => f x i)
@@ -812,7 +812,7 @@ theorem HPow.hPow.arg_a0.HasRevFDerivUpdate_rule
 
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDeriv_rule
-    {I : Type*} {nI} [IndexType I nI]  [IndexType.Fold' I]  [IndexType.Fold' I] :
+    {I : Type*} {nI} [IndexType I nI]  [Fold I]  [Fold I] :
     HasRevFDeriv K
       (fun f : I → X => ∑ᴵ i, f i)
       (fun f =>
@@ -824,7 +824,7 @@ theorem SciLean.sum.arg_f.HasRevFDeriv_rule
 
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDeriv_rule'
-    {I : Type*} {nI} [IndexType I nI]  [IndexType.Fold' I] [IndexType.Fold' I] :
+    {I : Type*} {nI} [IndexType I nI]  [Fold I] [Fold I] :
     HasRevFDeriv K
       (fun f : I → X => IndexType.sum f)
       (fun f =>
@@ -833,7 +833,7 @@ theorem SciLean.sum.arg_f.HasRevFDeriv_rule'
 
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] :
+    {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I] :
     HasRevFDerivUpdate K
       (fun f : I → X => ∑ᴵ i, f i)
       (fun f =>
@@ -850,7 +850,7 @@ theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule'
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] :
+    {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I] :
     HasRevFDerivUpdate K
       (fun f : I → X => IndexType.sum f)
       (fun f =>
@@ -862,7 +862,7 @@ theorem SciLean.sum.arg_f.HasRevFDerivUpdate_rule'
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDeriv_rule
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] (A : Finset I) :
+    {I : Type*} {nI} [IndexType I nI] [Fold I] (A : Finset I) :
     HasRevFDeriv K
       (fun f : I → X => A.sum (fun i => f i))
       (fun f =>
@@ -876,7 +876,7 @@ theorem Finset.sum.arg_f.HasRevFDeriv_rule
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDeriv_rule'
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] (A : Finset I) :
+    {I : Type*} {nI} [IndexType I nI] [Fold I] (A : Finset I) :
     HasRevFDeriv K
       (fun f : I → X => A.sum f)
       (fun f =>
@@ -885,7 +885,7 @@ theorem Finset.sum.arg_f.HasRevFDeriv_rule'
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] (A : Finset I) :
+    {I : Type*} {nI} [IndexType I nI] [Fold I] (A : Finset I) :
     HasRevFDerivUpdate K
       (fun f : I → X => A.sum (fun i => f i))
       (fun f =>
@@ -899,7 +899,7 @@ theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule'
-    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] (A : Finset I) :
+    {I : Type*} {nI} [IndexType I nI] [Fold I] (A : Finset I) :
     HasRevFDerivUpdate K
       (fun f : I → X => A.sum (f))
       (fun f =>

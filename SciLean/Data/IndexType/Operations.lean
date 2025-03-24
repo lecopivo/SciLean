@@ -7,7 +7,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Defs
 
 namespace SciLean
 
-variable {I : Type u} {α : Type v}  {n} [IndexType I n] [IndexType.Fold.{u,v,v} I Id]
+variable {I : Type u} {α : Type v}  {n} [IndexType I n] [FoldM.{u,v,v} I Id]
 
 namespace IndexType
 
@@ -21,7 +21,7 @@ def sum [Zero α] [Add α] (f : I → α) : α :=
 open Lean.TSyntax.Compat in
 /-- `∑ᴵ (i : I), f i` is sum of values of `f` over the index type `I`.
 
-There has to be an instance `IndexType I n` and `IndexType.Fold' I`. -/
+There has to be an instance `IndexType I n` and `Fold I`. -/
 macro " ∑ᴵ " xs:Lean.explicitBinders ", " b:term:66 : term =>
   Lean.expandExplicitBinders ``IndexType.sum xs b
 
@@ -49,7 +49,7 @@ def min [Min α] [Top α] (f : I → α) : α :=
 
 @[specialize, inline]
 def argMinVal {I α : Type*} {n}
-    [IndexType I n] [IndexType.Fold' I]
+    [IndexType I n] [Fold I]
     [LE α] [DecidableLE α] [Inhabited I] [Top α]
     (f : I → α) : (I×α) :=
   IndexType.fold (IndexType.Range.full (I:=I))
@@ -61,14 +61,14 @@ def argMinVal {I α : Type*} {n}
 /-- `argMin f` returns index at which `f` is minimal over index type `I`. -/
 @[specialize, inline]
 def argMin {I α : Type*} {n}
-    [IndexType I n] [IndexType.Fold' I]
+    [IndexType I n] [Fold I]
     [LE α] [DecidableLE α] [Inhabited I] [Top α]
     (f : I → α) : I := (argMinVal f).1
 
 open Lean.Parser.Term in
 /-- `mᴵ (i : I), f i` returns minimum of `f` over index type `I`.
 
-There has to be an instance `IndexType I n` and `IndexType.Fold' I`. -/
+There has to be an instance `IndexType I n` and `Fold I`. -/
 macro "minᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.min fun $x => $b)
 
 open Lean.Parser.Term in
@@ -101,7 +101,7 @@ def max [Max α] [Bot α] (f : I → α) : α :=
 
 @[specialize, inline]
 def argMaxVal {I α : Type*} {n}
-    [IndexType I n] [IndexType.Fold' I]
+    [IndexType I n] [Fold I]
     [LE α] [DecidableLE α] [Inhabited I] [Bot α]
     (f : I → α) : (I×α) :=
   IndexType.fold (IndexType.Range.full (I:=I))
@@ -114,14 +114,14 @@ def argMaxVal {I α : Type*} {n}
 /-- `argMax f` returns index at which `f` is maximal over index type `I`. -/
 @[specialize, inline]
 def argMax {I α : Type*} {n}
-    [IndexType I n] [IndexType.Fold' I]
+    [IndexType I n] [Fold I]
     [LE α] [DecidableLE α] [Inhabited I] [Bot α]
     (f : I → α) : I := (argMaxVal f).1
 
 open Lean.Parser.Term in
 /-- `mᴵ (i : I), f i` returns maximum of `f` over index type `I`.
 
-There has to be an instance `IndexType I n` and `IndexType.Fold' I`. -/
+There has to be an instance `IndexType I n` and `Fold I`. -/
 macro "maxᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.max fun $x => $b)
 
 open Lean.Parser.Term in
