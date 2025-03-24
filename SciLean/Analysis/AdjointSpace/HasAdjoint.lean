@@ -74,6 +74,12 @@ set_option linter.unusedVariables false in
 theorem HasAdjoint.isContinuousLinearMap' {f : X → Y} {f' : Y → X} (hf : HasAdjoint K f f') :
     IsContinuousLinearMap K f' := sorry_proof
 
+theorem HasAdjointUpdate.hasAdjoint {f : X → Y} {f' : Y → X → X}
+    (h : HasAdjointUpdate K f f') :
+    HasAdjoint K f (f' · 0) := by
+  constructor
+  · intros; rw[h.adjoint (x':=0)]; simp
+  · apply h.is_linear
 
 namespace HasAdjoint
 

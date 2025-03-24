@@ -1,6 +1,8 @@
 import SciLean.Analysis.Calculus.FDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
+import SciLean.Analysis.Calculus.HasFwdFDeriv
+import SciLean.Analysis.Calculus.HasRevFDeriv
 import SciLean.Analysis.Calculus.Notation.Deriv
 -- import SciLean.Analysis.Calculus.Notation.RevDeriv
 
@@ -53,7 +55,7 @@ variable
 
 
 @[fun_prop]
-theorem odeSolve.arg_ft₀tx₀.CDifferentiable_rule
+theorem odeSolve.arg_ft₀tx₀.Differentiable_rule
     (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X)
     (hf : Differentiable R (fun (w,t,x) => f w t x))
     (ht₀ : Differentiable R t₀) (ht : Differentiable R t)
@@ -116,6 +118,28 @@ by
   sorry_proof
 
 
+@[data_synth]
+theorem odeSolve.arg_ft₀tx₀.HasFwdFDeriv_rule
+  (f : W → R → X → X) (t₀ t : W → R) (x₀ : W → X) {f' t₀' t' x₀'}
+  (hf : HasFwdFDeriv R (fun (w,t,x) => f w t x) f')
+  (ht₀ : HasFwdFDeriv R t₀ t₀') (ht : HasFwdFDeriv R t t')
+  (hx : HasFwdFDeriv R x₀ x₀')
+  : HasFwdFDeriv R (fun w => odeSolve (f w) (t₀ w) (t w) (x₀ w))
+      (fun w dw =>
+        let' (t₀,dt₀) := t₀' w dw
+        let' (t,dt)   := t' w dw
+        let' (x₀,dx₀) := x₀' w dw
+
+        let F := holdLet <| fun (t : R) (xdx : X×X) =>
+          let' (x,dx)  := xdx
+          f' (w,t,x) (dw,dt₀,dx)
+
+        let' (x,dx) := odeSolve F t₀ t x₀dx₀
+
+        (x, dx + dt • f w t x)) := by
+  sorry_proof
+
+
 @[fun_prop]
 theorem odeSolve.arg_x₀.IsContinuousLinearMap_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
@@ -136,7 +160,7 @@ variable
   {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace R Z] [CompleteSpace Z]
 
 @[fun_trans]
-theorem odeSolve.arg_x₀.semiAdjoint_rule
+theorem odeSolve.arg_x₀.adjoint_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
   (hf : ∀ t, IsContinuousLinearMap R (f t)) (hx₀ : IsContinuousLinearMap R x₀)
   : adjoint R (fun w => odeSolve f t₀ t (x₀ w))
@@ -161,6 +185,34 @@ by
   sorry_proof
 
 
+@[data_synth]
+theorem odeSolve.arg_x₀.HasAdjoint_rule
+  (f : R → X → X) (t₀ t : R) (x₀ : W → X) {f' : R → _} {x₀'}
+  (hf : ∀ t, HasAdjoint R (f t) (f' t)) (hx₀ : HasAdjoint R x₀ x₀')
+  : HasAdjoint R
+      (fun w => odeSolve f t₀ t (x₀ w))
+      (fun x' =>
+        let y := odeSolve (fun s y => - f' s y) t t₀ x'
+        let y := x₀' y
+        y) := by
+  sorry_proof
+
+@[data_synth]
+theorem odeSolve.arg_x₀.HasAdjointAupdate_rule
+  (f : R → X → X) (t₀ t : R) (x₀ : W → X) {f' : R → _} {x₀'}
+  (hf : ∀ t, HasAdjoint R (f t) (f' t)) (hx₀ : HasAdjointUpdate R x₀ x₀')
+  : HasAdjointUpdate R
+      (fun w => odeSolve f t₀ t (x₀ w))
+      (fun x' w' =>
+        let y := odeSolve (fun s y => - f' s y) t t₀ x'
+        let w' := x₀' y w'
+        w') := by
+  have := hx₀.hasAdjoint
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => data_synth
+  intros; dsimp; rw[hx₀.apply_eq_zero_add]; ac_rfl
+
+
 @[fun_trans]
 theorem odeSolve.arg_x₀.revFDeriv_rule
   (f : R → X → X) (t₀ t : R) (x₀ : W → X)
@@ -169,13 +221,13 @@ theorem odeSolve.arg_x₀.revFDeriv_rule
   : revFDeriv R (fun w => odeSolve f t₀ t (x₀ w))
     =
     fun w =>
-      let x₀dx₀ := revFDeriv R x₀ w
-      let x := holdLet <| fun s => odeSolve f t₀ s x₀dx₀.1
+      let' (x₀,dx₀') := revFDeriv R x₀ w
+      let x := holdLet <| fun s => odeSolve f t₀ s x₀
       let dfdx := holdLet <| fun s dx' => - adjointFDeriv R (fun x' => f s x') (x s) dx'
       (x t,
        fun dx =>
          let dx := odeSolve dfdx t₀ t dx
-         x₀dx₀.2 dx) :=
+         dx₀' dx) :=
 by
   unfold adjointFDeriv revFDeriv
   fun_trans
@@ -183,6 +235,24 @@ by
   -- set_option trace.Meta.Tactic.simp.discharge true in
   -- set_option trace.Meta.Tactic.simp.unify true in
   -- set_option trace.Meta.Tactic.fun_trans.step true in
+  sorry_proof
+
+
+@[data_synth]
+theorem odeSolve.arg_x₀.HasRevFDeriv_rule
+  (f : R → X → X) (t₀ t : R) (x₀ : W → X) {f' : R → _} {x₀'}
+  (hf : ∀ t, HasRevFDeriv R (f t ·) (f' t))
+  (hx : HasRevFDeriv R x₀ x₀') :
+  HasRevFDeriv R
+    (fun w => odeSolve f t₀ t (x₀ w))
+    (fun w =>
+      let' (x₀,dx₀') := x₀' w
+      let x := holdLet <| fun s => odeSolve f t₀ s x₀
+      (x t,
+       fun dx =>
+         let dx := odeSolve (fun s dx' => - (f' t (x s)).2 dx') t₀ t dx
+         dx₀' dx)) :=
+by
   sorry_proof
 
 
