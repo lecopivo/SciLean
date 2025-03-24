@@ -1,6 +1,6 @@
-import SciLean.Analysis.Calculus.CDeriv
 import SciLean.Analysis.Calculus.FDeriv
 import SciLean.Tactic.Autodiff
+import SciLean.Util.RewriteBy
 
 --------------------------------------------------------------------------------
 -- Notation  -------------------------------------------------------------------

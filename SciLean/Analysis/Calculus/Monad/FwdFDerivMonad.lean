@@ -190,7 +190,6 @@ variable
   {X : Type} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {E : ι → Type} [∀ i, Vec K (E i)]
 
 
 --------------------------------------------------------------------------------

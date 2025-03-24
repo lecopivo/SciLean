@@ -1,4 +1,3 @@
-import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
 
 import SciLean.Meta.SimpCore

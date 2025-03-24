@@ -1,6 +1,4 @@
-import SciLean.Analysis.Calculus.FwdCDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
 import SciLean.Analysis.Calculus.ContDiff
 
@@ -16,8 +14,6 @@ set_option deprecated.oldSectionVars true
 
 variable
   {R C} [Scalar R C] [RealScalar R]
-  {W} [Vec C W]
-  {U} [SemiInnerProductSpace C U]
 
 
 --------------------------------------------------------------------------------
@@ -70,5 +66,3 @@ def_fun_prop tanh in x with_transitive : ContDiff K ⊤ by sorry_proof
 abbrev_fun_trans tanh in x : fderiv K by equals (fun x => fun dx =>L[K] let t := tanh x; dx * (1 - t^2)) => sorry_proof
 abbrev_fun_trans tanh in x : fwdFDeriv K by unfold fwdFDeriv; fun_trans; to_ssa; lsimp
 abbrev_fun_trans tanh in x : revFDeriv K by unfold revFDeriv; fun_trans; to_ssa; lsimp
-
-def_fun_prop tanh in x with_transitive : HasAdjDiff K by sorry_proof

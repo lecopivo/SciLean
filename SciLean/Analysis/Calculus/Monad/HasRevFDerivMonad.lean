@@ -190,7 +190,6 @@ variable
   {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
   {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
-  {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
 
 
 --------------------------------------------------------------------------------

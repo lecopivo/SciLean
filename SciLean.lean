@@ -41,10 +41,10 @@ import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.CanonicalBasis
 import SciLean.Analysis.AdjointSpace.Geometry
 import SciLean.Analysis.AdjointSpace.HasAdjoint
-import SciLean.Analysis.Calculus.CDeriv
+-- import SciLean.Analysis.Calculus.CDeriv
 import SciLean.Analysis.Calculus.ContDiff
 import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Analysis.Calculus.FwdCDeriv
+-- import SciLean.Analysis.Calculus.FwdCDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.Calculus.HasFwdFDeriv
@@ -68,18 +68,18 @@ import SciLean.Analysis.Calculus.Notation.FwdDeriv
 import SciLean.Analysis.Calculus.Notation.Gradient
 import SciLean.Analysis.Calculus.Notation.RevDeriv
 import SciLean.Analysis.Calculus.Notation.Test
-import SciLean.Analysis.Calculus.RevCDeriv
+-- import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Convenient.CDifferentiable
-import SciLean.Analysis.Convenient.ContCDiff
-import SciLean.Analysis.Convenient.Curve
-import SciLean.Analysis.Convenient.FinVec
-import SciLean.Analysis.Convenient.HasAdjDiff
-import SciLean.Analysis.Convenient.HasSemiAdjoint
-import SciLean.Analysis.Convenient.IsSmoothLinearMap
-import SciLean.Analysis.Convenient.SemiAdjoint
-import SciLean.Analysis.Convenient.SemiInnerProductSpace
-import SciLean.Analysis.Convenient.Vec
+-- import SciLean.Analysis.Convenient.CDifferentiable
+-- import SciLean.Analysis.Convenient.ContCDiff
+-- import SciLean.Analysis.Convenient.Curve
+-- import SciLean.Analysis.Convenient.FinVec
+-- import SciLean.Analysis.Convenient.HasAdjDiff
+-- import SciLean.Analysis.Convenient.HasSemiAdjoint
+-- import SciLean.Analysis.Convenient.IsSmoothLinearMap
+-- import SciLean.Analysis.Convenient.SemiAdjoint
+-- import SciLean.Analysis.Convenient.SemiInnerProductSpace
+-- import SciLean.Analysis.Convenient.Vec
 -- import SciLean.Analysis.Diffeology.Array
 -- import SciLean.Analysis.Diffeology.ArrayTangentSpace
 -- import SciLean.Analysis.Diffeology.Basic
@@ -97,9 +97,6 @@ import SciLean.Analysis.Convenient.Vec
 -- import SciLean.Analysis.Diffeology.TangentSpace
 -- import SciLean.Analysis.Diffeology.Util
 -- import SciLean.Analysis.Diffeology.VecDiffeology
-import SciLean.Analysis.FunctionSpaces.ContCDiffMap
-import SciLean.Analysis.FunctionSpaces.ContCDiffMapFD
-import SciLean.Analysis.FunctionSpaces.SmoothLinearMap
 import SciLean.Analysis.Matrix
 import SciLean.Analysis.MetricSpace
 import SciLean.Analysis.Normed.Diffeomorphism

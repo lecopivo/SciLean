@@ -1,7 +1,7 @@
-import SciLean.Analysis.Convenient.IsSmoothLinearMap
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Algebra.IsAffineMap
 import SciLean.Topology.Continuous
+import SciLean.Analysis.Sorry
 
 import SciLean.Data.StructType.Basic
 
@@ -137,10 +137,6 @@ instance
     [∀ j, AddCommGroup (FJ j)] [∀ j, Module K (FJ j)] (i : I ⊕ J) :
     Module K (Sum.rec EI FJ i) := Module.mkSorryProofs
 
-@[reducible]
-instance [∀ i, Vec K (EI i)] [∀ j, Vec K (FJ j)] (i : I ⊕ J) : Vec K (Sum.rec EI FJ i) :=
-  Vec.mkSorryProofs
--- all the proofs should be solvable `by induction i <;> infer_instance`
 
 @[reducible]
 instance [∀ i, Inner K (EI i)] [∀ j, Inner K (FJ j)] (i : I ⊕ J) : Inner K (Sum.rec EI FJ i) :=
@@ -148,21 +144,6 @@ instance [∀ i, Inner K (EI i)] [∀ j, Inner K (FJ j)] (i : I ⊕ J) : Inner K
   | .inl _ => by infer_instance
   | .inr _ => by infer_instance
 
-@[reducible]
-instance [∀ i, TestFunctions (EI i)] [∀ j, TestFunctions (FJ j)] (i : I ⊕ J) :
-    TestFunctions (Sum.rec EI FJ i) :=
-  match i with
-  | .inl _ => by infer_instance
-  | .inr _ => by infer_instance
-
-@[reducible]
-instance [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)] (i : I ⊕ J)
-  : SemiInnerProductSpace K (Sum.rec EI FJ i) := SemiInnerProductSpace.mkSorryProofs
-
-@[reducible]
-instance [∀ i, SemiHilbert K (EI i)] [∀ j, SemiHilbert K (FJ j)] (i : I ⊕ J)
-  : SemiHilbert K (Sum.rec EI FJ i) where
-  test_functions_true := by induction i <;> apply SemiHilbert.test_functions_true
 
 @[reducible]
 instance [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)]
@@ -476,99 +457,9 @@ variable
 
 end OnNormedSpace
 
-section OnConvenientSpace
-variable
-  {X : Type _} [Vec K X]
-  {XI : I → Type _} [∀ i, Vec K (XI i)]
-  [StructType X I XI] [VecStruct K X I XI]
-
-  def_fun_prop with_transitive (i : I) : IsSmoothLinearMap K fun (x : X) => structProj x i by sorry_proof
-  def_fun_prop with_transitive : IsSmoothLinearMap K fun (f : (i : I) → XI i) => structMake (X:=X) f by sorry_proof
-  def_fun_prop with_transitive (i : I) : IsSmoothLinearMap K fun (xi : XI i) => oneHot (X:=X) i xi by sorry_proof
-
-end OnConvenientSpace
 
 end StructType
 
-
--- oneHot ------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-set_option deprecated.oldSectionVars true
-
-variable
-  {X XI} [StructType X I XI] [DecidableEq I] [∀ i, Vec K (XI i)] [Vec K X] [VecStruct K X I XI]
-  {W} [Vec K W]
-
-
-@[simp, simp_core]
-theorem add_oneHot_eq_structModify (i : I) (xi : XI i) (x : X)
-  : x + oneHot (X:=X) i xi = structModify i (fun xi' => xi' + xi) x :=
-by
-  apply structExt (I:=I);
-  sorry_proof
-  -- todo: fix generated simp thereom about structProj
-  -- simp
-  -- intro j
-  -- if h:i=j then
-  --   subst h; simp
-  -- else
-  --   simp[h]
-
-@[simp, simp_core]
-theorem add_oneHot_eq_structModify' (i : I) (xi : XI i) (x : X)
-  : oneHot (X:=X) i xi + x = structModify i (fun xi' => xi + xi') x :=
-by
-  simp[add_comm]
-
-end VecStruct
-
-
---------------------------------------------------------------------------------
--- SemiInnerProductSpaceStruct -------------------------------------------------
---------------------------------------------------------------------------------
-
-open StructType in
-class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I nI]
-    [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)]
-  extends
-    VecStruct K X I XI : Prop
-  where
-    inner_structProj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪structProj x i, structProj x' i⟫[K]
-    testFun_structProj : ∀ (x : X), TestFunction x ↔ (∀ i : I, TestFunction (structProj x i))
-
-
---------------------------------------------------------------------------------
--- SemiInnerProductSpaceStruct instances ---------------------------------------
---------------------------------------------------------------------------------
-
-instance {X} [SemiInnerProductSpace K X] :
-    SemiInnerProductSpaceStruct K X Unit (fun _ => X) where
-  inner_structProj := sorry_proof
-  testFun_structProj := sorry_proof
-
-
-instance
-  [SemiInnerProductSpace K E] [SemiInnerProductSpace K F]
-  [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)]
-  [IndexType I nI] [IndexType J nJ]
-  [SemiInnerProductSpaceStruct K E I EI] [SemiInnerProductSpaceStruct K F J FJ] :
-  SemiInnerProductSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
-  -- inner_structProj := sorry_proof
-  -- testFun_structProj := sorry_proof
-
-
-@[simp, simp_core]
-theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I NI]
-    [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
-    [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
-    ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
-
-@[simp, simp_core]
-theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I NI]
-    [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
-    [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
-    ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
 
 
 
@@ -603,13 +494,15 @@ instance
   -- inner_structProj := sorry_proof
   -- testFun_structProj := sorry_proof
 
-
+omit [DecidableEq I] in
 @[simp, simp_core]
 theorem inner_oneHot_eq_inner_structProj'' [StructType X I XI] [IndexType I NI] [DecidableEq I]
     [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [NormedAddCommGroup X] [AdjointSpace K X]
     [AdjointSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
 
+
+omit [DecidableEq I] in
 @[simp, simp_core]
 theorem inner_oneHot_eq_inner_proj''' [StructType X I XI] [IndexType I NI] [DecidableEq I]
     [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [NormedAddCommGroup X] [AdjointSpace K X]

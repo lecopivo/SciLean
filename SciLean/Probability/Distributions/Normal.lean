@@ -8,7 +8,7 @@ namespace SciLean.Rand
 
 variable
   {R} [RealScalar R] [MeasureSpace R]
-  {U} [SemiHilbert R U] [MeasureSpace U]
+  {U} [NormedAddCommGroup U] [AdjointSpace R U] [MeasureSpace U]
 
 set_default_scalar R
 

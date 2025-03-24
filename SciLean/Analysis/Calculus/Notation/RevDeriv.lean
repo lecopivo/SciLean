@@ -1,5 +1,4 @@
 import SciLean.Analysis.Calculus.Notation.Deriv
-import SciLean.Analysis.Calculus.RevCDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
 
 

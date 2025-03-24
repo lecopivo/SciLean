@@ -395,6 +395,7 @@ def HPow.hPow.arg_a0.fwdFDeriv_rule (n : Nat) :
 -- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.unusedVariables false in
 open BigOperators in
 @[fun_trans]
 theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)

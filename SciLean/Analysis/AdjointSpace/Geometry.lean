@@ -1,6 +1,6 @@
 import SciLean.Analysis.AdjointSpace.Basic
+import SciLean.Analysis.Normed.Norm2
 import SciLean.Analysis.Scalar
-import SciLean.Analysis.Convenient.SemiInnerProductSpace
 
 namespace SciLean
 

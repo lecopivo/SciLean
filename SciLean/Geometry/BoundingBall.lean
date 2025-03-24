@@ -3,7 +3,6 @@ import Mathlib.MeasureTheory.Integral.Bochner
 
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.Geometry
-import SciLean.Analysis.Convenient.SemiInnerProductSpace
 import SciLean.Analysis.Scalar
 import SciLean.Logic.Function.Preimage
 

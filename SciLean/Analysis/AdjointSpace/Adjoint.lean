@@ -1,7 +1,7 @@
 import SciLean.Analysis.AdjointSpace.Basic
 
 import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.Convenient.SemiInnerProductSpace
+import SciLean.Analysis.Normed.Norm2
 
 import SciLean.Tactic.FunTrans.Elab
 import SciLean.Tactic.FunTrans.Attr

@@ -201,25 +201,6 @@ theorem Float3.x.arg_self.IsLinearMap_rule : IsLinearMap Float (fun v => Float3.
 
 #generate_linear_map_simps Float3.x.arg_self.IsLinearMap_rule
 
-@[fun_prop]
-theorem Float3.x.arg_self.CDifferentiable_rule : CDifferentiable Float (fun v => Float3.x v) := by
-  rw[Float3.x.as_struct_proj]
-  sorry_proof -- use fact about structProj
-
-@[fun_prop]
-theorem Float3.x.arg_self.IsSmoothLinearMap_rule : IsSmoothLinearMap Float (fun v => Float3.x v) := by
-  constructor <;> fun_prop
-
-@[fun_prop]
-theorem Float3.x.arg_self.HasSemiAdjoint_rule : HasSemiAdjoint Float (fun v => Float3.x v) := by
-  rw[Float3.x.as_struct_proj]
-  sorry_proof -- use fact about structProj
-
-theorem Float3.x.arg_self.HasAdjDiff_rule : HasAdjDiff Float (fun v => Float3.x v) := by
-  intro x
-  constructor
-  . fun_prop
-  . fun_trans; fun_prop
 
 -- todo add transformation rules
 
