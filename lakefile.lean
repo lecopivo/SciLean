@@ -24,8 +24,6 @@ package scilean {
   moreLinkArgs := linkArgs
 }                               --
 
-meta if get_config? doc = some "dev" then -- do not download and build doc-gen4 by default
-require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "master"
 
 require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.16.0"
 require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "master"
