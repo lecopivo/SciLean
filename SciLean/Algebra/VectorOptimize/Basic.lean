@@ -154,6 +154,12 @@ theorem matVecMulAdd_spec (a b : R) (A : YX) (x : X) (y : Y) :
     have : MatrixMulNotation YX := ⟨⟩
     a•(A*x) + b•y := sorry_proof
 
+@[vector_optimize]
+theorem matVecMul_eq_matVecMulAdd
+    {M : Type*} [AddCommGroup M] [Module R M] [MatrixType R Y X M] [MatrixMulNotation M]
+    (A : M) (x : X) :
+    A * x = matVecMulAdd (1:R) A x (0:R) (0:Y) := by simp[matVecMulAdd_spec]
+
 variable [Axpby R Y]
 
 @[vector_optimize]
@@ -184,6 +190,12 @@ theorem vecMatMulAdd_spec (a b : R) (A : YX) (x : X) (y : Y) :
     have : MatrixType R Y X YX := ⟨⟩
     have : MatrixMulNotation YX := ⟨⟩
     a•(y*A) + b•x := sorry_proof
+
+@[vector_optimize]
+theorem vecMatMul_eq_vecMatMulAdd
+    {M : Type*} [AddCommGroup M] [Module R M] [MatrixType R Y X M] [MatrixMulNotation M]
+    (A : M) (y : Y) :
+    y * A = vecMatMulAdd (1:R) y A (0:R) (0:X) := by simp[vecMatMulAdd_spec]
 
 variable [Axpby R X]
 
