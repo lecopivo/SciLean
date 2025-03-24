@@ -11,7 +11,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  -- {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 namespace semiAdjoint
@@ -47,18 +47,18 @@ theorem let_rule
       let x' := semiAdjoint K g xy.2
       xy.1 + x' := by sorry_proof
 
-@[fun_trans]
-theorem apply_rule [DecidableEq ι] (i : ι) :
-    semiAdjoint K (fun (f : (i:ι) → E i) => f i)
-    =
-    fun y => (fun j => if h : i=j then h▸y else 0) := sorry_proof
+-- @[fun_trans]
+-- theorem apply_rule [DecidableEq ι] (i : ι) :
+--     semiAdjoint K (fun (f : (i:ι) → E i) => f i)
+--     =
+--     fun y => (fun j => if h : i=j then h▸y else 0) := sorry_proof
 
-@[fun_trans]
-theorem pi_rule
-    (f : X → (i : ι) → E i) (hf : ∀ i, HasSemiAdjoint K (f · i)) :
-    semiAdjoint K (fun (x : X) (i : ι) => f x i)
-    =
-    (fun x' => ∑ i, semiAdjoint K (fun x => f x i) (x' i)) := sorry_proof
+-- @[fun_trans]
+-- theorem pi_rule
+--     (f : X → (i : ι) → E i) (hf : ∀ i, HasSemiAdjoint K (f · i)) :
+--     semiAdjoint K (fun (x : X) (i : ι) => f x i)
+--     =
+--     (fun x' => ∑ i, semiAdjoint K (fun x => f x i) (x' i)) := sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  -- {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 open SciLean
@@ -244,14 +244,14 @@ by
 -- sum ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_trans]
-theorem sum.arg_f.semiAdjoint_rule
-  (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K (f · i))
-  : semiAdjoint K (fun x => ∑ i, f x i)
-    =
-    (fun y => ∑ i, semiAdjoint K (f · i) y) :=
-by
-  sorry_proof
+-- @[fun_trans]
+-- theorem sum.arg_f.semiAdjoint_rule
+--   (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K (f · i))
+--   : semiAdjoint K (fun x => ∑ i, f x i)
+--     =
+--     (fun y => ∑ i, semiAdjoint K (f · i) y) :=
+-- by
+--   sorry_proof
 
 
 -- d/ite -----------------------------------------------------------------------

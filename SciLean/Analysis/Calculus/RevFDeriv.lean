@@ -551,34 +551,6 @@ def HPow.hPow.arg_a0.revFDeriv_rule
 -- sum -------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_trans]
-theorem sum.arg_f.revFDeriv_rule_at {ι} [IndexType ι]
-  (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
-  : revFDeriv K (fun x => sum fun i => f x i) x
-    =
-    (sum fun i => f x i,
-     fun dy =>
-       sum fun i =>
-         let dx := adjointFDeriv K (f · i) x dy
-         dx) :=
-
-by
-  unfold revFDeriv;
-  fun_trans [adjointFDeriv,revFDeriv]
-
-
-@[fun_trans]
-theorem sum.arg_f.revFDeriv_rule {ι} [IndexType ι]
-  (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
-  : revFDeriv K (fun x => sum fun i => f x i)
-    =
-    fun x =>
-    (sum fun i => f x i,
-     fun dy =>
-       sum fun i =>
-         let dx := adjointFDeriv K (f · i) x dy
-         dx) := by funext x; fun_trans
-
 
 @[fun_trans]
 theorem IdxType.sum.arg_f.revFDeriv_rule_at {I n} [IdxType I n] [IdxType.Fold' I]

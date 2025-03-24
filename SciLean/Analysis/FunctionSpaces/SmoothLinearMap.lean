@@ -10,7 +10,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  -- {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -142,9 +142,9 @@ open BigOperators in
 theorem SmoothLinearMap.fintype_sum_apply {I} (A : Finset I) (f : I → X⊸[K] Y) (x : X) :
     (Finset.sum A f) x = Finset.sum A (f · x)  := by sorry_proof
 
-@[simp, simp_core]
-theorem SmoothLinearMap.indextype_sum_apply {I} [IndexType I] (f : I → X⊸[K] Y) (x : X) :
-    (∑ i, f i) x = ∑ i, f i x  := by sorry_proof
+-- @[simp, simp_core]
+-- theorem SmoothLinearMap.indextype_sum_apply {I} [IndexType I] (f : I → X⊸[K] Y) (x : X) :
+--     (∑ i, f i) x = ∑ i, f i x  := by sorry_proof
 
 
 

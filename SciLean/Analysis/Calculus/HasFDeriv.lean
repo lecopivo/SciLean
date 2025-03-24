@@ -196,10 +196,10 @@ theorem Inv.inv.arg_a0.HasFDerivAt_simp_rule (x : K) (h : x ≠ 0) :
       (fun dx =>L[K] -dx / x^2) x :=
   sorry_proof
 
-@[data_synth]
-theorem SciLean.sum.arg_f.HasFDerivAt_simp_rule {I : Type*} [IndexType I] (f : I → X) :
-    HasFDerivAt (fun f => ∑ i, f i) (fun df =>L[K] ∑ i, df i) f :=
-  (fun f : I → X =>L[K] ∑ i, f i).hasFDerivAt (x:=f)
+-- @[data_synth]
+-- theorem SciLean.sum.arg_f.HasFDerivAt_simp_rule {I : Type*} [IndexType I] (f : I → X) :
+--     HasFDerivAt (fun f => ∑ i, f i) (fun df =>L[K] ∑ i, df i) f :=
+--   (fun f : I → X =>L[K] ∑ i, f i).hasFDerivAt (x:=f)
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasFDerivAt_simp_rule {I : Type*} (A : Finset I) [Fintype I] (f : I → X) :

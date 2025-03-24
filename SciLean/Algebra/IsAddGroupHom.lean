@@ -131,11 +131,11 @@ theorem HSub.hSub.arg_a0a1.IsAddGroupHom_rule
 -- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem sum.arg_f.IsAddGroupHom_rule
-  [IndexType ι]
-  (f : X → ι → Y) (hf : ∀ i, IsAddGroupHom (f · i))
-  : IsAddGroupHom fun x => ∑ i, f x i := by have := hf; sorry_proof
+-- @[fun_prop]
+-- theorem sum.arg_f.IsAddGroupHom_rule
+--   [IndexType ι]
+--   (f : X → ι → Y) (hf : ∀ i, IsAddGroupHom (f · i))
+--   : IsAddGroupHom fun x => ∑ i, f x i := by have := hf; sorry_proof
 
 
 -- d/ite -----------------------------------------------------------------------

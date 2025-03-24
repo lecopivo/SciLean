@@ -16,14 +16,14 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
-  {κ : Type _} [IndexType κ] [DecidableEq κ]
+  {ι : Type _} [IdxType ι nι] [DecidableEq ι]
+  {κ : Type _} [IdxType κ nκ] [DecidableEq κ]
   {E : Type _} {EI : I → Type _}
-  [StructType E I EI] [IndexType I] [DecidableEq I]
+  [StructType E I EI] [IdxType I NI] [DecidableEq I]
   [SemiInnerProductSpace K E] [∀ i, SemiInnerProductSpace K (EI i)]
   [SemiInnerProductSpaceStruct K E I EI]
   {F J : Type _} {FJ : J → Type _}
-  [StructType F J FJ] [IndexType J] [DecidableEq J]
+  [StructType F J FJ] [IdxType J NJ] [DecidableEq J]
   [SemiInnerProductSpace K F] [∀ j, SemiInnerProductSpace K (FJ j)]
   [SemiInnerProductSpaceStruct K F J FJ]
 
@@ -199,31 +199,31 @@ theorem let_rule
   unfold revCDerivUpdate revCDeriv
   fun_trans
 
-@[fun_trans]
-theorem apply_rule (i : I) :
-    revCDeriv K (fun (x : (i:I) → EI i) => x i)
-    =
-    fun x =>
-      (x i, fun dxi => oneHot i dxi) := by
-  unfold revCDeriv
-  fun_trans; simp[oneHot]
+-- @[fun_trans]
+-- theorem apply_rule (i : I) :
+--     revCDeriv K (fun (x : (i:I) → EI i) => x i)
+--     =
+--     fun x =>
+--       (x i, fun dxi => oneHot i dxi) := by
+--   unfold revCDeriv
+--   fun_trans; simp[oneHot]
 
-@[fun_trans]
-theorem pi_rule
-    (f :  X → (i : I) → EI i) (hf : ∀ i, HasAdjDiff K (f · i)) :
-    (revCDeriv K fun (x : X) (i : I) => f x i)
-    =
-    fun x =>
-      let xdf := fun i => revCDerivUpdate K (f · i) x
-      (fun i => (xdf i).1,
-       fun dy =>
-         IndexType.foldl (fun dx i => (xdf i).2 (dy i) dx) 0) := by
-  unfold revCDeriv
-  fun_trans;
-  funext x; simp
-  rw[cderiv.pi_rule (hf:=by fun_prop)]; fun_trans
-  simp[revCDerivUpdate,revCDeriv,sum]
-  sorry_proof
+-- @[fun_trans]
+-- theorem pi_rule
+--     (f :  X → (i : I) → EI i) (hf : ∀ i, HasAdjDiff K (f · i)) :
+--     (revCDeriv K fun (x : X) (i : I) => f x i)
+--     =
+--     fun x =>
+--       let xdf := fun i => revCDerivUpdate K (f · i) x
+--       (fun i => (xdf i).1,
+--        fun dy =>
+--          IndexType.foldl (fun dx i => (xdf i).2 (dy i) dx) 0) := by
+--   unfold revCDeriv
+--   fun_trans;
+--   funext x; simp
+--   rw[cderiv.pi_rule (hf:=by fun_prop)]; fun_trans
+--   simp[revCDerivUpdate,revCDeriv,sum]
+--   sorry_proof
 
 end revCDeriv
 
@@ -280,30 +280,30 @@ theorem let_rule
   fun_trans [revCDerivUpdate,revCDeriv,add_assoc]
 
 
-@[fun_trans]
-theorem apply_rule (i : I) :
-    revCDerivUpdate K (fun (x : (i:I) → EI i) => x i)
-    =
-    fun x =>
-      (x i, fun dxi dx => structModify i (fun dxi' => dxi' + dxi) dx) := by
-  unfold revCDerivUpdate
-  fun_trans
+-- @[fun_trans]
+-- theorem apply_rule (i : I) :
+--     revCDerivUpdate K (fun (x : (i:I) → EI i) => x i)
+--     =
+--     fun x =>
+--       (x i, fun dxi dx => structModify i (fun dxi' => dxi' + dxi) dx) := by
+--   unfold revCDerivUpdate
+--   fun_trans
 
-@[fun_trans]
-theorem pi_rule
-    (f :  X → (i : I) → EI i) (hf : ∀ i, HasAdjDiff K (f · i)) :
-    (revCDerivUpdate K fun (x : X) (i : I) => f x i)
-    =
-    fun x =>
-      let xdf := fun i => revCDerivUpdate K (f · i) x
-      (fun i => (xdf i).1,
-       fun dy dx =>
-         IndexType.foldl (fun dx i => (xdf i).2 (dy i) dx) dx) := by
-  unfold revCDerivUpdate
-  funext x
-  rw[revCDeriv.pi_rule (hf:=by fun_prop)]
-  simp
-  sorry_proof
+-- @[fun_trans]
+-- theorem pi_rule
+--     (f :  X → (i : I) → EI i) (hf : ∀ i, HasAdjDiff K (f · i)) :
+--     (revCDerivUpdate K fun (x : X) (i : I) => f x i)
+--     =
+--     fun x =>
+--       let xdf := fun i => revCDerivUpdate K (f · i) x
+--       (fun i => (xdf i).1,
+--        fun dy dx =>
+--          IndexType.foldl (fun dx i => (xdf i).2 (dy i) dx) dx) := by
+--   unfold revCDerivUpdate
+--   funext x
+--   rw[revCDeriv.pi_rule (hf:=by fun_prop)]
+--   simp
+--   sorry_proof
 
 
 end revCDerivUpdate
@@ -334,26 +334,26 @@ theorem const_rule (x : E)
        fun i (de : EI i) => 0) := by
   unfold revCDerivProj; fun_trans
 
-@[fun_trans]
-theorem apply_rule [DecidableEq I] (i : ι) :
-    revCDerivProj K I (fun (f : ι → E) => f i)
-    =
-    fun f : ι → E =>
-      (f i, fun j dxj => oneHot (X:=ι→E) (I:=ι×I) (i,j) dxj) :=
-by
-  unfold revCDerivProj;
-  fun_trans; simp[oneHot]
-  funext x; simp; funext j de i'
-  if h:i=i' then
-    subst h
-    simp; congr; funext j'
-    if h':j=j' then
-      subst h'
-      simp
-    else
-      simp[h']
-  else
-    simp[h]
+-- @[fun_trans]
+-- theorem apply_rule [DecidableEq I] (i : ι) :
+--     revCDerivProj K I (fun (f : ι → E) => f i)
+--     =
+--     fun f : ι → E =>
+--       (f i, fun j dxj => oneHot (X:=ι→E) (I:=ι×I) (i,j) dxj) :=
+-- by
+--   unfold revCDerivProj;
+--   fun_trans; simp[oneHot]
+--   funext x; simp; funext j de i'
+--   if h:i=i' then
+--     subst h
+--     simp; congr; funext j'
+--     if h':j=j' then
+--       subst h'
+--       simp
+--     else
+--       simp[h']
+--   else
+--     simp[h]
 
 @[fun_trans]
 theorem comp_rule
@@ -383,20 +383,20 @@ theorem let_rule
          ydg'.2 dxy.2 dxy.1) := by
   unfold revCDerivProj revCDerivUpdate revCDeriv; fun_trans
 
-@[fun_trans]
-theorem pi_rule
-    (f :  X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i)) :
-    (revCDerivProj K Unit fun (x : X) (i : ι) => f x i)
-    =
-    fun x =>
-      let ydf := fun i => revCDerivUpdate K (f · i) x
-      (fun i => (ydf i).1,
-       fun _ df =>
-         IndexType.foldl (fun dx i => (ydf i).2 (df i) dx) (0 : X)) := by
-  unfold revCDerivProj
-  fun_trans
-  funext x; simp; funext i de
-  rw[revCDeriv.pi_rule (hf:=by fun_prop)]; simp[oneHot]
+-- @[fun_trans]
+-- theorem pi_rule
+--     (f :  X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i)) :
+--     (revCDerivProj K Unit fun (x : X) (i : ι) => f x i)
+--     =
+--     fun x =>
+--       let ydf := fun i => revCDerivUpdate K (f · i) x
+--       (fun i => (ydf i).1,
+--        fun _ df =>
+--          IndexType.foldl (fun dx i => (ydf i).2 (df i) dx) (0 : X)) := by
+--   unfold revCDerivProj
+--   fun_trans
+--   funext x; simp; funext i de
+--   rw[revCDeriv.pi_rule (hf:=by fun_prop)]; simp[oneHot]
 
 end revCDerivProj
 
@@ -463,46 +463,46 @@ by
   unfold revCDerivProjUpdate
   simp [revCDerivProj.let_rule _ _ _ _ hf hg,add_assoc,add_comm,revCDerivUpdate]
 
-@[fun_trans]
-theorem apply_rule [DecidableEq I] (i : ι)
-  : revCDerivProjUpdate K I (fun (f : ι → E) => f i)
-    =
-    fun f =>
-      (f i, fun j dxj df i' =>
-        if i=i' then
-          structModify j (fun xj => xj + dxj) (df i')
-        else
-          df i') :=
-by
-  funext x;
-  unfold revCDerivProjUpdate
-  fun_trans
-  funext j dxj f i'
-  apply structExt (I:=I)
-  intro j'
-  if h :i'=i then
-    subst h; simp
-  else
-    have h' : i≠i' := by intro h''; simp[h''] at h
-    simp[h,h',Function.update]
+-- @[fun_trans]
+-- theorem apply_rule [DecidableEq I] (i : ι)
+--   : revCDerivProjUpdate K I (fun (f : ι → E) => f i)
+--     =
+--     fun f =>
+--       (f i, fun j dxj df i' =>
+--         if i=i' then
+--           structModify j (fun xj => xj + dxj) (df i')
+--         else
+--           df i') :=
+-- by
+--   funext x;
+--   unfold revCDerivProjUpdate
+--   fun_trans
+--   funext j dxj f i'
+--   apply structExt (I:=I)
+--   intro j'
+--   if h :i'=i then
+--     subst h; simp
+--   else
+--     have h' : i≠i' := by intro h''; simp[h''] at h
+--     simp[h,h',Function.update]
 
-@[fun_trans]
-theorem pi_rule
-    (f :  X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i)) :
-    (revCDerivProjUpdate K Unit fun (x : X) (i : ι) => f x i)
-    =
-    fun x =>
-      let ydf := fun i => revCDerivUpdate K (f · i) x
-      (fun i => (ydf i).1,
-       fun _ df dx =>
-         IndexType.foldl (fun dx i => (ydf i).2 (df i) dx) dx) :=
-by
-  unfold revCDerivProjUpdate
-  fun_trans
-  unfold revCDerivProj
-  funext x; simp; funext i de dx
-  rw[revCDeriv.pi_rule (hf:=by fun_prop)]; simp[oneHot,revCDerivUpdate]
-  sorry_proof
+-- @[fun_trans]
+-- theorem pi_rule
+--     (f :  X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i)) :
+--     (revCDerivProjUpdate K Unit fun (x : X) (i : ι) => f x i)
+--     =
+--     fun x =>
+--       let ydf := fun i => revCDerivUpdate K (f · i) x
+--       (fun i => (ydf i).1,
+--        fun _ df dx =>
+--          IndexType.foldl (fun dx i => (ydf i).2 (df i) dx) dx) :=
+-- by
+--   unfold revCDerivProjUpdate
+--   fun_trans
+--   unfold revCDerivProj
+--   funext x; simp; funext i de dx
+--   rw[revCDeriv.pi_rule (hf:=by fun_prop)]; simp[oneHot,revCDerivUpdate]
+--   sorry_proof
 
 
 end revCDerivProjUpdate
@@ -516,20 +516,20 @@ end SciLean
 open SciLean
 
 set_option deprecated.oldSectionVars true
-
+#exit
 variable
   {K : Type} [RCLike K]
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
-  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IndexType Xi] [DecidableEq Xi]
-  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IndexType Yi] [DecidableEq Yi]
-  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IndexType Zi] [DecidableEq Zi]
+  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IdxType X NXi] [DecidableEq Xi]
+  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IdxType Y NYi] [DecidableEq Yi]
+  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IdxType Z NZi] [DecidableEq Zi]
   [SemiInnerProductSpace K X'] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpaceStruct K X' Xi XI]
   [SemiInnerProductSpace K Y'] [∀ i, SemiInnerProductSpace K (YI i)] [SemiInnerProductSpaceStruct K Y' Yi YI]
   [SemiInnerProductSpace K Z'] [∀ i, SemiInnerProductSpace K (ZI i)] [SemiInnerProductSpaceStruct K Z' Zi ZI]
   {W : Type} [SemiInnerProductSpace K W]
-  {ι : Type} [IndexType ι]
+  {ι : Type} [IdxType ι nι]
 
 
 
@@ -977,7 +977,7 @@ theorem HMul.hMul.arg_a0a1.revCDerivProjUpdate_rule
 section SMulOnSemiHilbert
 
 variable
-  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IndexType Yi] [DecidableEq Yi]
+  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IdxType Y NYi] [DecidableEq Yi]
   [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
 
 @[fun_trans]
@@ -1181,7 +1181,7 @@ def HPow.hPow.arg_a0.revCDerivProjUpdate_rule
 
 section IndexTypeSum
 
-variable {ι : Type} [IndexType ι]
+variable {ι : Type} [IdxType ι nι]
 
 @[fun_trans]
 theorem sum.arg_f.revCDeriv_rule

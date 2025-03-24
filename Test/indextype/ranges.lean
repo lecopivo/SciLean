@@ -42,7 +42,7 @@ info: (inl 1)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inl 1) (.inl 4)) do
+  for i in intervalRange (.inl 1 : Fin 5 ⊕ Fin 5) (.inl 4) do
     IO.println i
 
 /--
@@ -53,7 +53,7 @@ info: (inl 4)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inl 4) (.inl 1)) do
+  for i in intervalRange (.inl 4 : Fin 5 ⊕ Fin 5) (.inl 1) do
     IO.println i
 
 
@@ -65,7 +65,7 @@ info: (inr 1)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inr 1) (.inr 4)) do
+  for i in intervalRange (.inr 1 : Fin 5 ⊕ Fin 10) (.inr 4) do
     IO.println i
 
 /--
@@ -76,7 +76,7 @@ info: (inr 4)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inr 4) (.inr 1)) do
+  for i in intervalRange (.inr 4 : Fin 5 ⊕ Fin 10) (.inr 1) do
     IO.println i
 
 
@@ -89,7 +89,7 @@ info: (inl 3)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 10) (.interval (.inl 3) (.inr 2)) do
+  for i in intervalRange (.inl 3 : Fin 5 ⊕ Fin 10) (.inr 2) do
     IO.println i
 
 
@@ -102,7 +102,7 @@ info: (inr 2)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Fin 5 ⊕ Fin 5) (.interval (.inr 2) (.inl 3)) do
+  for i in intervalRange (.inr 2 : Fin 5 ⊕ Fin 10) (.inl 3) do
     IO.println i
 
 /--
@@ -143,7 +143,7 @@ info: (inl 1)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Idx 5 ⊕ Idx 5) (.interval (.inl 1) (.inl 4)) do
+  for i in intervalRange (.inl 1 : Idx 5 ⊕ Idx 5) (.inl 4) do
     IO.println i
 
 /--
@@ -154,7 +154,7 @@ info: (inl 4)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Idx 5 ⊕ Idx 5) (.interval (.inl 4) (.inl 1)) do
+  for i in intervalRange (.inl 4 : Idx 5 ⊕ Idx 5) (.inl 1) do
     IO.println i
 
 
@@ -166,7 +166,7 @@ info: (inr 1)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Idx 5 ⊕ Idx 10) (.interval (.inr 1) (.inr 4)) do
+  for i in intervalRange (.inr 1 : Idx 5 ⊕ Idx 10) (.inr 4) do
     IO.println i
 
 /--
@@ -177,7 +177,7 @@ info: (inr 4)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Idx 5 ⊕ Idx 10) (.interval (.inr 4) (.inr 1)) do
+  for i in intervalRange (.inr 4 : Idx 5 ⊕ Idx 10) (.inr 1) do
     IO.println i
 
 
@@ -190,7 +190,7 @@ info: (inl 3)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Idx 5 ⊕ Idx 10) (.interval (.inl 3) (.inr 2)) do
+  for i in intervalRange (.inl 3 : Idx 5 ⊕ Idx 10) (.inr 2) do
     IO.println i
 
 
@@ -203,7 +203,7 @@ info: (inr 2)
 -/
 #guard_msgs in
 #eval! show IO Unit from do
-  for i in IndexType.Iterator.start (I:=Idx 5 ⊕ Idx 5) (.interval (.inr 2) (.inl 3)) do
+  for i in intervalRange (.inr 2 : Idx 5 ⊕ Idx 5) (.inl 3) do
     IO.println i
 
 
@@ -242,7 +242,7 @@ instance : IdxType Foo (2 + 2 + 3) := IdxType.ofEquiv _ (simple_proxy_equiv% Foo
 -- -/
 -- #guard_msgs in
 -- #eval! show IO Unit from do
---   for i in IndexType.Iterator.start (I:=Foo) (.interval (.thrd 2) (.fst 1)) do
+--   for i in intervalRange (.thrd 2 : Foo) (.fst 1) do
 --     IO.println (repr i)
 
 

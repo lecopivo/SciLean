@@ -22,7 +22,7 @@ namespace Float2
     size := 2
 
   inductive Index | x | y
-    deriving IndexType
+    deriving Fintype
 
   instance : IdxType Index 2 := IdxType.ofEquiv _ (simple_proxy_equiv% Index)
 

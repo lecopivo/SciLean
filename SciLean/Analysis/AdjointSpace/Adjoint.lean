@@ -415,15 +415,15 @@ by
   simp (disch:=fun_prop) [adjoint_inner_left,AdjointSpace.sum_inner,AdjointSpace.inner_sum]
 
 
-@[fun_trans]
-theorem sum.arg_f.adjoint_rule {ι} [IndexType ι]
-  (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K (f · i))
-  : (fun x => sum fun i => f x i)†
-    =
-    (fun y => sum fun i => ((f · i)†) y) :=
-by
-  rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
-  sorry_proof
+-- @[fun_trans]
+-- theorem sum.arg_f.adjoint_rule {ι} [IndexType ι]
+--   (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap K (f · i))
+--   : (fun x => sum fun i => f x i)†
+--     =
+--     (fun y => sum fun i => ((f · i)†) y) :=
+-- by
+--   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
+--   sorry_proof
 
 @[fun_trans]
 theorem SciLean.IdxType.sum.arg_f.adjoint_rule {ι n} [IdxType ι n] [IdxType.Fold' ι]

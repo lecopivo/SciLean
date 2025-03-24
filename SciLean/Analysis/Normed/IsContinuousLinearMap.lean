@@ -415,14 +415,14 @@ theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
   cont := sorry_proof
 }
 
-@[fun_prop]
-theorem SciLean.sum.arg_f.IsContinuousLinearMap_rule {ι} [IndexType ι]
-  (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i)
-  : IsContinuousLinearMap R fun x => sum (f x) :=
-{
-  linear := sorry_proof
-  cont := sorry_proof
-}
+-- @[fun_prop]
+-- theorem SciLean.sum.arg_f.IsContinuousLinearMap_rule {ι} [IndexType ι]
+--   (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i)
+--   : IsContinuousLinearMap R fun x => sum (f x) :=
+-- {
+--   linear := sorry_proof
+--   cont := sorry_proof
+-- }
 
 @[fun_prop]
 theorem SciLean.IdxType.sum.arg_f.IsContinuousLinearMap_rule {ι n} [IdxType ι n] [IdxType.Fold' ι]

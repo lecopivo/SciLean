@@ -12,7 +12,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  -- {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 @[fun_prop]
@@ -75,7 +75,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  -- {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -182,10 +182,10 @@ theorem HSMul.hSMul.arg_a1.IsSmoothLinearMap_rule_int
 -- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem sum.arg_f.IsSmoothLinearMap_rule
-    (f : X → ι → Y) (hf : ∀ i, IsSmoothLinearMap K (f · i)) :
-    IsSmoothLinearMap K fun x => ∑ i, f x i := by constructor <;> fun_prop
+-- @[fun_prop]
+-- theorem sum.arg_f.IsSmoothLinearMap_rule
+--     (f : X → ι → Y) (hf : ∀ i, IsSmoothLinearMap K (f · i)) :
+--     IsSmoothLinearMap K fun x => ∑ i, f x i := by constructor <;> fun_prop
 
 
 

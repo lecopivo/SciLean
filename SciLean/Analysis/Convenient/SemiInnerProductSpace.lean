@@ -68,10 +68,10 @@ theorem norm₂_scalar {R} [RealScalar R] (x : R) :
 theorem norm2_scalar {R} [RealScalar R] (x : R) :
   ‖x‖₂²[R] = x^2 := by sorry_proof
 
-instance (priority:=low) (K ι) (X : ι → Type _)
-  [AddCommMonoid K] [∀ i, Inner K (X i)] [IndexType ι]
-  : Inner K ((i : ι) → X i) where
-  inner := λ f g => ∑ i, ⟪f i, g i⟫[K]
+-- instance (priority:=low) (K ι) (X : ι → Type _)
+--   [AddCommMonoid K] [∀ i, Inner K (X i)] [IndexType ι]
+--   : Inner K ((i : ι) → X i) where
+--   inner := λ f g => ∑ i, ⟪f i, g i⟫[K]
 
 end Inner
 
@@ -244,8 +244,8 @@ instance (X Y) [SemiHilbert K X] [SemiHilbert K Y] : SemiHilbert K (X × Y) wher
 
 -- instance (X) [SemiInnerProductSpace K X] (ι) [Fintype ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
 -- instance (X) [SemiInnerProductSpace K X] (ι) [IndexType ι] : SemiInnerProductSpace K (ι → X) := SemiInnerProductSpace.mkSorryProofs
-instance (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [IndexType ι] : SemiInnerProductSpace K ((i : ι) → X i)
-  := SemiInnerProductSpace.mkSorryProofs
+-- instance (ι) (X : ι → Type _) [∀ i, SemiInnerProductSpace K (X i)] [IndexType ι] : SemiInnerProductSpace K ((i : ι) → X i)
+--   := SemiInnerProductSpace.mkSorryProofs
 
-instance (ι) (X : ι → Type _) [∀ i, SemiHilbert K (X i)] [IndexType ι] : SemiHilbert K ((i : ι) → X i) where
-  test_functions_true := by simp[TestFunction]; intro f i; apply SemiHilbert.test_functions_true
+-- instance (ι) (X : ι → Type _) [∀ i, SemiHilbert K (X i)] [IndexType ι] : SemiHilbert K ((i : ι) → X i) where
+--   test_functions_true := by simp[TestFunction]; intro f i; apply SemiHilbert.test_functions_true

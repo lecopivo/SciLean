@@ -66,8 +66,8 @@ instance {R} [Field R] {n m}
   is_dim := by
     simp [dX.is_dim, dY.is_dim]
 
-instance {R} [Field R] {n}
-    {I} [IndexType I]
-    {X} [AddCommGroup X] [Module R X] [Module.Finite R X] [_dX : Dimension R X n] :
-    Dimension R (I → X) (size I * n) where
-  is_dim := by sorry_proof
+-- instance {R} [Field R] {n}
+--     {I} [IndexType I]
+--     {X} [AddCommGroup X] [Module R X] [Module.Finite R X] [_dX : Dimension R X n] :
+--     Dimension R (I → X) (size I * n) where
+--   is_dim := by sorry_proof

@@ -10,7 +10,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  -- {ι : Type _} [IndexType ι] [DecidableEq ι]
 
 namespace SciLean
 

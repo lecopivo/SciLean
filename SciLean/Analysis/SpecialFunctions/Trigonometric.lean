@@ -47,12 +47,6 @@ abbrev_fun_trans sin in x : fwdFDeriv K by unfold fwdFDeriv; fun_trans; to_ssa
 abbrev_fun_trans sin in x : revFDeriv K by unfold revFDeriv; fun_trans; to_ssa
 
 
-def_fun_prop sin in x with_transitive : HasAdjDiff K by sorry_proof
-
-abbrev_fun_trans sin in x : cderiv K by equals (fun x dx => dx • cos x) => sorry_proof
-abbrev_fun_trans sin in x : fwdCDeriv K by unfold fwdCDeriv; fun_trans; to_ssa
-abbrev_fun_trans sin in x : revCDeriv K by unfold revCDeriv; fun_trans; to_ssa
-
 
 --------------------------------------------------------------------------------
 -- Cos -------------------------------------------------------------------------
@@ -66,13 +60,6 @@ abbrev_fun_trans cos in x : fwdFDeriv K by unfold fwdFDeriv; fun_trans; to_ssa
 abbrev_fun_trans cos in x : revFDeriv K by unfold revFDeriv; fun_trans; to_ssa
 
 
-def_fun_prop cos in x with_transitive : HasAdjDiff K by sorry_proof
-
-abbrev_fun_trans cos in x : cderiv K by equals (fun x dx => (-dx) • sin x) => sorry_proof
-abbrev_fun_trans cos in x : fwdCDeriv K by unfold fwdCDeriv; fun_trans; to_ssa
-abbrev_fun_trans cos in x : revCDeriv K by unfold revCDeriv; fun_trans; to_ssa
-
-
 --------------------------------------------------------------------------------
 -- Tanh -------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -84,9 +71,4 @@ abbrev_fun_trans tanh in x : fderiv K by equals (fun x => fun dx =>L[K] let t :=
 abbrev_fun_trans tanh in x : fwdFDeriv K by unfold fwdFDeriv; fun_trans; to_ssa; lsimp
 abbrev_fun_trans tanh in x : revFDeriv K by unfold revFDeriv; fun_trans; to_ssa; lsimp
 
-
 def_fun_prop tanh in x with_transitive : HasAdjDiff K by sorry_proof
-
-abbrev_fun_trans tanh in x : cderiv K by equals (fun x dx => let t := tanh x; dx * (1 - t^2)) => sorry_proof
-abbrev_fun_trans tanh in x : fwdCDeriv K by unfold fwdCDeriv; fun_trans; to_ssa; lsimp
-abbrev_fun_trans tanh in x : revCDeriv K by unfold revCDeriv; fun_trans; to_ssa; lsimp

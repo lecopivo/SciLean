@@ -35,18 +35,18 @@ theorem _root_.IsAddGroupHom.add_pull (x x' : X)
 -- todo: this is not sufficiently universe polymorphic
 --       and somethimes forces to write non-universe polymorphic code
 --       fix this
-theorem _root_.IsAddGroupHom.sum_push
-  {f : X → Y} (hf : IsAddGroupHom f)
-  (ι : Type) [IndexType ι] (x : ι → X)
-  : (∑ i : ι, f (x i)) = f (∑ i, x i) := by sorry_proof
+-- theorem _root_.IsAddGroupHom.sum_push
+--   {f : X → Y} (hf : IsAddGroupHom f)
+--   (ι : Type) [IndexType ι] (x : ι → X)
+--   : (∑ i : ι, f (x i)) = f (∑ i, x i) := by sorry_proof
 
 -- todo: this is not sufficiently universe polymorphic
 --       and somethimes forces to write non-universe polymorphic code
 --       fix this
-theorem _root_.IsAddGroupHom.sum_pull
-  {f : X → Y} (hf : IsAddGroupHom f)
-  (ι : Type) [IndexType ι] (x : ι → X)
-  : f (∑ i, x i) = ∑ i, f (x i) := by sorry_proof
+-- theorem _root_.IsAddGroupHom.sum_pull
+--   {f : X → Y} (hf : IsAddGroupHom f)
+--   (ι : Type) [IndexType ι] (x : ι → X)
+--   : f (∑ i, x i) = ∑ i, f (x i) := by sorry_proof
 
 theorem _root_.IsAddGroupHom.sub_push (x x' : X)
   : f x - f x' = f (x - x') := by simp[← neg_add_eq_sub,hf.map_add,hf.map_neg]

@@ -4,6 +4,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Defs
 
 namespace SciLean
 
+#exit
 variable {ι : Type*} [IndexType ι]
 
 @[specialize] def sum {α : Type u} [Zero α] [Add α] (f : ι → α) : α :=

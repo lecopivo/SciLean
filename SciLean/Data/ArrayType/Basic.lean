@@ -207,18 +207,18 @@ section Operations
       =
       ofFn fun i => a • f i := by apply ArrayType.ext (Idx:=Idx); simp[HSMul.hSMul, SMul.smul];
 
-  @[simp, simp_core, sum_push]
-  theorem sum_ofFn [AddCommMonoid Elem] {ι} [IndexType ι] (f : ι → Idx → Elem)
-    : ∑ j, ofFn (Cont:=Cont) (fun i => f j i)
-      =
-      ofFn fun i => ∑ j, f j i
-    := sorry_proof
+  -- @[simp, simp_core, sum_push]
+  -- theorem sum_ofFn [AddCommMonoid Elem] {ι} [IndexType ι] (f : ι → Idx → Elem)
+  --   : ∑ j, ofFn (Cont:=Cont) (fun i => f j i)
+  --     =
+  --     ofFn fun i => ∑ j, f j i
+  --   := sorry_proof
 
-  @[sum_pull]
-  theorem ofFn_sum [AddCommMonoid Elem] {ι} [IndexType ι] (f : ι → Idx → Elem)
-    : ofFn (Cont:=Cont) (fun i => ∑ j, f j i)
-      =
-      ∑ j, ofFn (Cont:=Cont) (fun i => f j i) := by simp only [sum_ofFn]
+  -- @[sum_pull]
+  -- theorem ofFn_sum [AddCommMonoid Elem] {ι} [IndexType ι] (f : ι → Idx → Elem)
+  --   : ofFn (Cont:=Cont) (fun i => ∑ j, f j i)
+  --     =
+  --     ∑ j, ofFn (Cont:=Cont) (fun i => f j i) := by simp only [sum_ofFn]
 
   @[simp, simp_core]
   theorem add_get [Add Elem] (x y : Cont) (i : Idx) :

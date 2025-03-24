@@ -12,6 +12,8 @@ namespace SciLean
 
 open Function
 
+#exit
+
 class IndexType (I : Type u)
   extends Fintype I, Stream (IndexType.Iterator I) I, Size I, FirstLast I I
 where

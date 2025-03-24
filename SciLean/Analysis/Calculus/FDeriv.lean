@@ -390,32 +390,32 @@ by
 -- sum -------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_trans]
-theorem sum.arg_f.fderiv_rule_at {ι} [IndexType ι]
-  (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
-  : fderiv K (fun x => sum fun i => f x i) x
-    =
-    fun dx =>L[K]
-      sum fun i =>
-        let dy := fderiv K (f · i) x dx
-        dy :=
-by
-  ext dx
-  fun_trans [ContinuousLinearMap.mk']
-  rw[fderiv.pi_rule_at]; simp
-  apply hf
+-- @[fun_trans]
+-- theorem sum.arg_f.fderiv_rule_at {ι} [IndexType ι]
+--   (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
+--   : fderiv K (fun x => sum fun i => f x i) x
+--     =
+--     fun dx =>L[K]
+--       sum fun i =>
+--         let dy := fderiv K (f · i) x dx
+--         dy :=
+-- by
+--   ext dx
+--   fun_trans [ContinuousLinearMap.mk']
+--   rw[fderiv.pi_rule_at]; simp
+--   apply hf
 
-@[fun_trans]
-theorem sum.arg_f.fderiv_rule {ι} [IndexType ι]
-  (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
-  : fderiv K (fun x => sum fun i => f x i)
-    =
-    fun x => fun dx =>L[K]
-      sum fun i =>
-        let dy := fderiv K (f · i) x dx
-        dy :=
-by
-  funext x; fun_trans
+-- @[fun_trans]
+-- theorem sum.arg_f.fderiv_rule {ι} [IndexType ι]
+--   (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
+--   : fderiv K (fun x => sum fun i => f x i)
+--     =
+--     fun x => fun dx =>L[K]
+--       sum fun i =>
+--         let dy := fderiv K (f · i) x dx
+--         dy :=
+-- by
+--   funext x; fun_trans
 
 
 

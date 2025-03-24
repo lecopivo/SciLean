@@ -12,7 +12,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [IndexType ι]
+  -- {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 /-- `CDifferentiableAt f x` - conveniently differentiable function `f` at point `x`. -/
@@ -138,7 +138,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [IndexType ι]
+  -- {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -334,16 +334,16 @@ def HPow.hPow.arg_a0.ContCDiff_rule
 -- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem sum.arg_f.ContCDiffAt_rule
-  (f : X → ι → Y) (x : X) (hf : ∀ i, ContCDiffAt K n (fun x => f x i) x)
-  : ContCDiffAt K n (fun x => ∑ i, f x i) x := by sorry_proof
+-- @[fun_prop]
+-- theorem sum.arg_f.ContCDiffAt_rule
+--   (f : X → ι → Y) (x : X) (hf : ∀ i, ContCDiffAt K n (fun x => f x i) x)
+--   : ContCDiffAt K n (fun x => ∑ i, f x i) x := by sorry_proof
 
 
-@[fun_prop]
-theorem sum.arg_f.ContCDiff_rule
-  (f : X → ι → Y) (hf : ∀ i, ContCDiff K n (fun x => f x i))
-  : ContCDiff K n (fun x => ∑ i, f x i) := by intro x; fun_prop
+-- @[fun_prop]
+-- theorem sum.arg_f.ContCDiff_rule
+--   (f : X → ι → Y) (hf : ∀ i, ContCDiff K n (fun x => f x i))
+--   : ContCDiff K n (fun x => ∑ i, f x i) := by intro x; fun_prop
 
 
 --------------------------------------------------------------------------------

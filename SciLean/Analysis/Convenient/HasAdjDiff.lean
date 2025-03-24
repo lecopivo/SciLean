@@ -17,7 +17,7 @@ variable
   {X : Type _} [SemiInnerProductSpace K X]
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  {ι : Type _} [IdxType ι nι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 @[fun_prop]
@@ -83,17 +83,17 @@ theorem HasAdjDiffAt.const_rule (x) (y : Y) : HasAdjDiffAt K (fun _ : X => y) x 
 theorem HasAjdDiff.const_rule (y : Y) : HasAdjDiff K (fun _ : X => y) := by
   intro x; fun_prop
 
-@[fun_prop]
-theorem HasAdjDiffAt.apply_rule (x) (i : ι) :
-    HasAdjDiffAt K (fun x : (i : ι) → E i => x i) x := by
-  constructor
-  · fun_prop
-  · fun_trans; fun_prop
+-- @[fun_prop]
+-- theorem HasAdjDiffAt.apply_rule (x) (i : ι) :
+--     HasAdjDiffAt K (fun x : (i : ι) → E i => x i) x := by
+--   constructor
+--   · fun_prop
+--   · fun_trans; fun_prop
 
-@[fun_prop]
-theorem HasAdjDiff.apply_rule (i : ι) :
-    HasAdjDiff K (fun x : (i : ι) → E i => x i) := by
-  intro x; fun_prop
+-- @[fun_prop]
+-- theorem HasAdjDiff.apply_rule (i : ι) :
+--     HasAdjDiff K (fun x : (i : ι) → E i => x i) := by
+--   intro x; fun_prop
 
 @[fun_prop]
 theorem HasAdjDiffAt.comp_rule
@@ -111,21 +111,21 @@ theorem HasAdjDiff.comp_rule
   · fun_prop
   · fun_trans; fun_prop
 
-@[fun_prop]
-theorem HasAdjDiffAt.pi_rule
-    (f : X → (i : ι) → E i) (x) (hf : ∀ i, HasAdjDiffAt K (f · i) x) :
-    HasAdjDiffAt K (fun x i => f x i) x := by
-  have := fun i => (hf i).1
-  constructor
-  · fun_prop
-  · rw[cderiv.pi_rule_at (hf:=by assumption)]
-    fun_prop
+-- @[fun_prop]
+-- theorem HasAdjDiffAt.pi_rule
+--     (f : X → (i : ι) → E i) (x) (hf : ∀ i, HasAdjDiffAt K (f · i) x) :
+--     HasAdjDiffAt K (fun x i => f x i) x := by
+--   have := fun i => (hf i).1
+--   constructor
+--   · fun_prop
+--   · rw[cderiv.pi_rule_at (hf:=by assumption)]
+--     fun_prop
 
-@[fun_prop]
-theorem HasAdjDiff.pi_rule
-    (f : X → (i : ι) → E i) (hf : ∀ i, HasAdjDiff K (f · i)) :
-    HasAdjDiff K (fun x i => f x i) := by
-  intro x; apply HasAdjDiffAt.pi_rule; fun_prop
+-- @[fun_prop]
+-- theorem HasAdjDiff.pi_rule
+--     (f : X → (i : ι) → E i) (hf : ∀ i, HasAdjDiff K (f · i)) :
+--     HasAdjDiff K (fun x i => f x i) := by
+--   intro x; apply HasAdjDiffAt.pi_rule; fun_prop
 
 
 --------------------------------------------------------------------------------
@@ -142,7 +142,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  {ι : Type _} [IdxType ι nι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
@@ -355,17 +355,17 @@ def HPow.hPow.arg_a0.HasAdjDiff_rule
 -- sum ---------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem sum.arg_f.HasAdjDiffAt_rule (x : X)
-    (f : X → ι → Y) (hf : ∀ i, HasAdjDiffAt K (f · i) x) :
-    HasAdjDiffAt K (fun x => ∑ i, f x i) x := by
-  constructor; fun_prop; fun_trans; fun_prop
+-- @[fun_prop]
+-- theorem sum.arg_f.HasAdjDiffAt_rule (x : X)
+--     (f : X → ι → Y) (hf : ∀ i, HasAdjDiffAt K (f · i) x) :
+--     HasAdjDiffAt K (fun x => ∑ i, f x i) x := by
+--   constructor; fun_prop; fun_trans; fun_prop
 
-@[fun_prop]
-theorem sum.arg_f.HasAdjDiff_rule
-    (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i)) :
-    HasAdjDiff K (fun x => ∑ i, f x i) := by
-  intro x; fun_prop
+-- @[fun_prop]
+-- theorem sum.arg_f.HasAdjDiff_rule
+--     (f : X → ι → Y) (hf : ∀ i, HasAdjDiff K (f · i)) :
+--     HasAdjDiff K (fun x => ∑ i, f x i) := by
+--   intro x; fun_prop
 
 
 -- d/ite -----------------------------------------------------------------------

@@ -7,6 +7,8 @@ namespace IndexType
 
 namespace Range
 
+#exit
+
 variable {ι : Type*} [IndexType ι]
 
 def foldlIdxM {m} [Monad m] (r : Range ι) (op : α → ι → Fin (size r) → m α) (init : α) : m α := do

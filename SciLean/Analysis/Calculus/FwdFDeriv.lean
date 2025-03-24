@@ -9,7 +9,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} [IndexType ι]
+  {ι : Type _} {nι} [IdxType ι nι]
   {E : ι → Type _} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace K (E j)]
 
 variable (K)
@@ -156,7 +156,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} [IndexType ι]
+  {ι : Type _} {nι} [IdxType ι nι]
   {E : ι → Type _} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace K (E j)]
 
 
@@ -410,26 +410,27 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
 
 
 @[fun_trans]
-theorem sum.arg_f.fwdFDeriv_rule_at {ι} [IndexType ι]
+theorem sum.arg_f.fwdFDeriv_rule_at {ι nι} [IdxType ι nι] [IdxType.Fold' ι]
   (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
-  : fwdFDeriv K (fun x => sum fun i => f x i) x
+  : fwdFDeriv K (fun x => IdxType.sum fun i => f x i) x
     =
     fun dx =>
-      sum fun i =>
+      IdxType.sum fun i =>
         let ydy := fwdFDeriv K (f · i) x dx
         ydy :=
 by
   unfold fwdFDeriv;
   fun_trans [sum_push]
+  sorry_proof
 
 
 @[fun_trans]
-theorem sum.arg_f.fwdFDeriv_rule {ι} [IndexType ι]
+theorem sum.arg_f.fwdFDeriv_rule {ι nι} [IdxType ι nι] [IdxType.Fold' ι]
   (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
-  : fwdFDeriv K (fun x => sum fun i => f x i)
+  : fwdFDeriv K (fun x => IdxType.sum fun i => f x i)
     =
     fun x dx =>
-      sum fun i =>
+      IdxType.sum fun i =>
         let ydy := fwdFDeriv K (f · i) x dx
         ydy :=
 by

@@ -125,8 +125,8 @@ theorem mul_log (x y : R) : y * log x = log (x^y) := sorry_proof
 theorem mul_log' (x y : R) : (log x) * y = log (x^y) := sorry_proof
 
 @[log_push]
-theorem log_prod {I} [IndexType I] (f : I → R) : log (∏ i, f i) = ∑ i, log (f i) := sorry_proof
+theorem log_prod {I} [Fintype I] (f : I → R) : log (∏ i, f i) = ∑ i, log (f i) := sorry_proof
 @[log_pull]
-theorem sum_log {I} [IndexType I] (f : I → R) : (∑ i, log (f i)) = log (∏ i, f i) := sorry_proof
+theorem sum_log {I} [Fintype I] (f : I → R) : (∑ i, log (f i)) = log (∏ i, f i) := sorry_proof
 
 end Log

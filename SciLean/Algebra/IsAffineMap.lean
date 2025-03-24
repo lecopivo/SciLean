@@ -14,7 +14,7 @@ variable {R X Y Z ι : Type _} {E : ι → Type _}
   [AddCommGroup X] [Module R X]
   [AddCommGroup Y] [Module R Y]
   [AddCommGroup Z] [Module R Z]
-  [IndexType ι] [DecidableEq ι]
+  -- [IndexType ι] [DecidableEq ι]
   [∀ i, AddCommGroup (E i)] [∀ i, Module R (E i)]
 
 variable (R)
@@ -177,10 +177,10 @@ theorem HMul.hMul.arg_a1.IsAffineMap_rule
 -- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem sum.arg_f.IsAffineMap_rule
-  (f : X → ι → Y) (hf : ∀ i, IsAffineMap R (f · i))
-  : IsAffineMap R fun x => ∑ i, f x i := by sorry_proof
+-- @[fun_prop]
+-- theorem sum.arg_f.IsAffineMap_rule
+--   (f : X → ι → Y) (hf : ∀ i, IsAffineMap R (f · i))
+--   : IsAffineMap R fun x => ∑ i, f x i := by sorry_proof
 
 
 -- d/ite -----------------------------------------------------------------------

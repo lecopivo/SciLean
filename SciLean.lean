@@ -396,21 +396,21 @@ import SciLean.Data.IdxType.Operations.Fold
 import SciLean.Data.IdxType.Operations.Max
 import SciLean.Data.IdxType.Operations.Min
 import SciLean.Data.IdxType.Operations.Sum
-import SciLean.Data.IndexType
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.DeriveIndexType
-import SciLean.Data.IndexType.Fold
-import SciLean.Data.IndexType.IndexEquiv
-import SciLean.Data.IndexType.IndexInclusion
-import SciLean.Data.IndexType.Init
-import SciLean.Data.IndexType.Iterator
-import SciLean.Data.IndexType.Operations
-import SciLean.Data.IndexType.Operations.MaxD
-import SciLean.Data.IndexType.Range
-import SciLean.Data.IndexType.RangeNotation
-import SciLean.Data.IndexType.SumProduct
-import SciLean.Data.IndexType.TensorIndex
-import SciLean.Data.Instances.Sigma
+-- import SciLean.Data.IndexType
+-- import SciLean.Data.IndexType.Basic
+-- import SciLean.Data.IndexType.DeriveIndexType
+-- import SciLean.Data.IndexType.Fold
+-- import SciLean.Data.IndexType.IndexEquiv
+-- import SciLean.Data.IndexType.IndexInclusion
+-- import SciLean.Data.IndexType.Init
+-- import SciLean.Data.IndexType.Iterator
+-- import SciLean.Data.IndexType.Operations
+-- import SciLean.Data.IndexType.Operations.MaxD
+-- import SciLean.Data.IndexType.Range
+-- import SciLean.Data.IndexType.RangeNotation
+-- import SciLean.Data.IndexType.SumProduct
+-- import SciLean.Data.IndexType.TensorIndex
+-- import SciLean.Data.Instances.Sigma
 import SciLean.Data.Int64
 import SciLean.Data.ListN
 import SciLean.Data.MatrixType.Basic

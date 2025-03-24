@@ -32,7 +32,7 @@ def multiGamma_one (x : R) :
 /-- Logarithm of multivariate gamma function -/
 def logMultiGamma (x : R) (p : ℕ) : R :=
   0.25 * p * (p - 1) * log π +
-  ∑ (j : Fin p), lgamma (x - 0.5 * j)
+  ∑ᴵ (j : Fin p), lgamma (x - 0.5 * j)
 
 
 @[simp, simp_core]

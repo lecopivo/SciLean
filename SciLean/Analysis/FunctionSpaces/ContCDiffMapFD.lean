@@ -8,6 +8,7 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
+#exit
 variable
   (K : Type _) [RCLike K]
   {X : Type _} [Vec K X]

@@ -33,17 +33,17 @@ theorem _root_.IsLinearMap.add_pull (x x' : X)
 -- todo: this is not sufficiently universe polymorphic
 --       and somethimes forces to write non-universe polymorphic code
 --       fix this
-theorem _root_.IsLinearMap.sum_push
-  (ι : Type) [IndexType ι] (x : ι → X)
-  : (∑ i : ι, f (x i)) = f (∑ i, x i) := by sorry_proof
+-- theorem _root_.IsLinearMap.sum_push
+--   (ι : Type) [IndexType ι] (x : ι → X)
+--   : (∑ i : ι, f (x i)) = f (∑ i, x i) := by sorry_proof
 
 -- todo: this is not sufficiently universe polymorphic
 --       and somethimes forces to write non-universe polymorphic code
 --       fix this
-theorem _root_.IsLinearMap.sum_pull
-  {f : X → Y} (hf : IsLinearMap K f)
-  (ι : Type) [IndexType ι] (x : ι → X)
-  : f (∑ i, x i) = ∑ i, f (x i) := by sorry_proof
+-- theorem _root_.IsLinearMap.sum_pull
+--   {f : X → Y} (hf : IsLinearMap K f)
+--   (ι : Type) [IndexType ι] (x : ι → X)
+--   : f (∑ i, x i) = ∑ i, f (x i) := by sorry_proof
 
 theorem _root_.IsLinearMap.sub_push (x x' : X)
   : f x - f x' = f (x - x') := by rw[hf.map_sub]

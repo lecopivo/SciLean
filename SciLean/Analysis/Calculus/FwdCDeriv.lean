@@ -1,6 +1,7 @@
 import SciLean.Analysis.Calculus.CDeriv
 
 open SciLean
+#exit
 
 set_option deprecated.oldSectionVars true
 set_option linter.unusedVariables false

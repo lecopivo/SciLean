@@ -17,7 +17,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  -- {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 @[fun_prop]
@@ -148,20 +148,20 @@ theorem comp_rule
     repeat assumption
   · fun_prop
 
-@[fun_prop]
-theorem apply_rule (i : ι) :
-    HasSemiAdjoint K (fun x : (i : ι) → E i => x i) := by
-  constructor
-  · apply Exists.intro (fun (y : E i) j => if h : i=j then h▸y else 0) _
-    intros; simp[Inner.inner]; sorry_proof
-  · fun_prop
+-- @[fun_prop]
+-- theorem apply_rule (i : ι) :
+--     HasSemiAdjoint K (fun x : (i : ι) → E i => x i) := by
+--   constructor
+--   · apply Exists.intro (fun (y : E i) j => if h : i=j then h▸y else 0) _
+--     intros; simp[Inner.inner]; sorry_proof
+--   · fun_prop
 
-@[fun_prop]
-theorem pi_rule
-    (f : X → (i : ι) → E i) (hf : ∀ i, HasSemiAdjoint K (f · i)) :
-    HasSemiAdjoint K (fun x i => f x i) := by
-  -- apply Exists.intro (fun g => ∑ i, semiAdjoint K (f · i) (g i)) _
-  sorry_proof
+-- @[fun_prop]
+-- theorem pi_rule
+--     (f : X → (i : ι) → E i) (hf : ∀ i, HasSemiAdjoint K (f · i)) :
+--     HasSemiAdjoint K (fun x i => f x i) := by
+--   -- apply Exists.intro (fun g => ∑ i, semiAdjoint K (f · i) (g i)) _
+--   sorry_proof
 
 
 --------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IndexType ι] [DecidableEq ι]
+  -- {ι : Type _} [IndexType ι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, SemiInnerProductSpace K (E i)]
 
 
@@ -333,14 +333,14 @@ by
 -- EnumType.sum -------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem SciLean.sum.arg_f.HasSemiAdjoint_rule
-  (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K fun x : X => f x i)
-  : HasSemiAdjoint K fun x => ∑ i, f x i :=
-by
-  -- unfold HasSemiAdjoint
-  -- apply Exists.intro (fun (y' : Y) => ∑ i, semiAdjoint K (f · i) y') _
-  sorry_proof
+-- @[fun_prop]
+-- theorem SciLean.sum.arg_f.HasSemiAdjoint_rule
+--   (f : X → ι → Y) (hf : ∀ i, HasSemiAdjoint K fun x : X => f x i)
+--   : HasSemiAdjoint K fun x => ∑ i, f x i :=
+-- by
+--   -- unfold HasSemiAdjoint
+--   -- apply Exists.intro (fun (y' : Y) => ∑ i, semiAdjoint K (f · i) y') _
+--   sorry_proof
 
 
 -- do we need this one?

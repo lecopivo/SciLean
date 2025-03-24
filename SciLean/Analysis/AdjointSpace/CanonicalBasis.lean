@@ -219,8 +219,7 @@ variable (I 𝕜) in
 theorem dualBasis_ext {x y : X} :
   (∀ (i : I), ⟪x, ⅇ'[i]⟫ = ⟪y, ⅇ'[i]⟫) → (x = y) := sorry_proof
 
--- TODO: remove `IndexType`
-theorem inner_eq_sum_proj_dualProj [IndexType I] (x y : X)
+theorem inner_eq_sum_proj_dualProj (x y : X)
   : ⟪x, y⟫ = ∑ (i : I), ℼ[i] x * ℼ'[i] y :=
 by
   classical
@@ -275,7 +274,7 @@ theorem CanonicalBasis.dualProj.arg_x.IsContinuousLinearMap_rule (i : I) :
 
 -- TODO: remove `IndexType`
 @[simp]
-theorem inner_dualBasis_right_eq_proj [IndexType I] (i : I) (x : X) :
+theorem inner_dualBasis_right_eq_proj (i : I) (x : X) :
     ⟪x, ⅇ'[i]⟫ = ℼ[i] x := by
   classical
   calc

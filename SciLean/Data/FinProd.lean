@@ -1,7 +1,7 @@
 import SciLean.Data.IndexType
 
 namespace SciLean
-
+#exit
 /-- Give `Fin n₁ × ... × Fin nₘ` for a list `[n₁,..., nₘ]`  -/
 def FinProd : List Nat → Type
   | [] => Unit

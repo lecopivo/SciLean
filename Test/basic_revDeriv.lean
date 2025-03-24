@@ -4,37 +4,37 @@ open SciLean
 
 variable
   {K : Type} [RealScalar K]
-  {X : Type} [SemiInnerProductSpace K X]
-  {Y : Type} [SemiInnerProductSpace K Y]
-  {Z : Type} [SemiInnerProductSpace K Z]
-  {ι : Type} [IndexType ι]
+  {X} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {Y} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {Z} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
+  {ι : Type} [IdxType ι nι]
   {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
 
 example
-  : revCDeriv K (fun xy : X×Y => (xy.1,xy.2))
+  : revFDeriv K (fun xy : X×Y => (xy.1,xy.2))
     =
     fun x => (x, fun dyz => dyz) :=
 by
   conv => lhs; fun_trans
 
 example
-  : revCDeriv K (fun xy : X×Y => (xy.2,xy.1))
+  : revFDeriv K (fun xy : X×Y => (xy.2,xy.1))
     =
     fun x => ((x.snd, x.fst), fun dyz => (dyz.snd, dyz.fst)) :=
 by
   conv => lhs; fun_trans
 
 variable (f : Y → X → X)
-  (hf : HasAdjDiff K (fun yx : Y×X => f yx.1 yx.2))
-  (hf₁ : ∀ x, HasAdjDiff K (fun y => f y x))
-  (hf₂ : ∀ y, HasAdjDiff K (fun x => f y x))
+  (hf : Differentiable K (fun yx : Y×X => f yx.1 yx.2))
+  (hf₁ : ∀ x, Differentiable K (fun y => f y x))
+  (hf₂ : ∀ y, Differentiable K (fun x => f y x))
   (x : X)
 
 set_option synthInstance.maxHeartbeats 100000 in
 example
-  : revCDeriv K (fun yy : Y×Y×Y => f yy.1 (f yy.2.1 (f yy.2.2 x)))
+  : revFDeriv K (fun yy : Y×Y×Y => f yy.1 (f yy.2.1 (f yy.2.2 x)))
     =
     fun x_1 =>
       let ydg := x_1.1;
@@ -42,11 +42,11 @@ example
       let ydg_1 := yzdf.1;
       let yzdf := x_1.2;
       let ydg_2 := yzdf.2;
-      let zdf := revCDeriv K (fun x0 => f x0 x) ydg_2;
+      let zdf := revFDeriv K (fun x0 => f x0 x) ydg_2;
       let zdf_1 := zdf.1;
-      let zdf_2 := revCDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg_1, zdf_1);
+      let zdf_2 := revFDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg_1, zdf_1);
       let zdf_3 := zdf_2.1;
-      let zdf_4 := revCDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg, zdf_3);
+      let zdf_4 := revFDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg, zdf_3);
       (zdf_4.1, fun dz =>
         let dy := zdf_4.2 dz;
         let dx := dy.1;
@@ -59,7 +59,7 @@ by
 
 set_option synthInstance.maxHeartbeats 100000 in
 example
-  : revCDeriv K (fun yy : Y×Y×Y×Y => f yy.1 (f yy.2.1 (f yy.2.2.1 (f yy.2.2.2 x))))
+  : revFDeriv K (fun yy : Y×Y×Y×Y => f yy.1 (f yy.2.1 (f yy.2.2.1 (f yy.2.2.2 x))))
     =
     fun x_1 =>
       let ydg := x_1.1;
@@ -71,13 +71,13 @@ example
       let xydf := x_1.2;
       let yzdf := xydf.2;
       let ydg_3 := yzdf.2;
-      let zdf := revCDeriv K (fun x0 => f x0 x) ydg_3;
+      let zdf := revFDeriv K (fun x0 => f x0 x) ydg_3;
       let zdf_1 := zdf.1;
-      let zdf_2 := revCDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg_2, zdf_1);
+      let zdf_2 := revFDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg_2, zdf_1);
       let zdf_3 := zdf_2.1;
-      let zdf_4 := revCDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg_1, zdf_3);
+      let zdf_4 := revFDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg_1, zdf_3);
       let zdf_5 := zdf_4.1;
-      let zdf_6 := revCDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg, zdf_5);
+      let zdf_6 := revFDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg, zdf_5);
       (zdf_6.1, fun dz =>
         let dy := zdf_6.2 dz;
         let dx := dy.1;
@@ -91,17 +91,17 @@ by
   conv => lhs; autodiff
 
 
-@[simp, simp_core]
-theorem fold_function_modify_simplify {ι} [IndexType ι] [DecidableEq ι] {X} [AddGroup X]
-    (g h : ι → X) :
-    IndexType.foldl (fun f i => Function.modify f i fun fi => fi + g i) (h : ι → X)
-    =
-    fun i => h i + g i := sorry_proof
+-- @[simp, simp_core]
+-- theorem fold_function_modify_simplify {ι} [IdxType ι nι] [DecidableEq ι] {X} [AddGroup X]
+--     (g h : ι → X) :
+--     IndexType.foldl (fun f i => Function.modify f i fun fi => fi + g i) (h : ι → X)
+--     =
+--     fun i => h i + g i := sorry_proof
 
--- todo: add LawfulIndexType (right now I'm on old LeanColls)
+-- todo: add LawfulIdxType ( n(right now I'm on old LeanColls)
 -- @[simp, simp_core]
 -- theorem fold_indexed_update_simplify
---   {Idx Cont} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [ArrayType Cont Idx Elem]
+--   {Idx Cont} [IdxType I NIdx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [ArrayType Cont Idx Elem]
 --   (h : Cont) (g : Idx → Elem) :
 --   IndexType.foldl (fun f i => ArrayType.modify f i fun fi => fi + g i) h
 --   =
@@ -109,7 +109,7 @@ theorem fold_function_modify_simplify {ι} [IndexType ι] [DecidableEq ι] {X} [
 
 -- @[simp, simp_core]
 -- theorem fold_struct_modify_simplify
---   {Idx Cont} [IndexType Idx] [DecidableEq Idx] {Elem} [AddCommGroup Elem]
+--   {Idx Cont} [IdxType I NIdx] [DecidableEq Idx] {Elem} [AddCommGroup Elem]
 --   [StructType Cont Idx (fun _ => Elem)] (h : Cont) (g : Idx → Elem) :
 --   IndexType.foldl (fun f i => structModify i (fun fi => fi + g i) f) h
 --   =
@@ -119,7 +119,7 @@ theorem fold_function_modify_simplify {ι} [IndexType ι] [DecidableEq ι] {X} [
 -- -- simplifier seems to have hard time applying this
 -- @[simp, simp_core]
 -- theorem fold_ofFn_simplify
---   {J} [IndexType J]
+--   {J} [IdxType J NJ]
 --   {Idx} [DecidableEq Idx] {Elem} [AddGroup Elem] {Cont} [ArrayType Cont Idx Elem]
 --   (h : Cont) (g : Idx → J → Elem):
 --   IndexType.foldl (no_index (fun (x : Cont) j => ArrayType.ofFn fun i => x[i] + g i j)) (no_index h)
@@ -130,30 +130,32 @@ theorem fold_function_modify_simplify {ι} [IndexType ι] [DecidableEq ι] {X} [
 ----------------
 
 example
-  : revCDeriv K (fun (x : Fin 10 → K) => fun i => x i)
+  : revFDeriv K (fun (x : Fin 10 → K) => fun i => x i)
     =
     fun x => (x, fun dx => dx) :=
 by
   conv => lhs; autodiff
 
 example
-  : revCDeriv K (fun (x : Fin 10 → K) => ∑ i, x i)
+  : revFDeriv K (fun (x : Fin 10 → K) => ∑ᴵ i, x i)
     =
-    fun x => (∑ i, x i, fun dx _ => dx) :=
+    fun x => (∑ᴵ i, x i, fun dx _ => dx) :=
 by
   conv => lhs; autodiff
+  sorry_proof
 
 example
-  : revCDeriv K (fun (x : Fin 10 → K) => ∑ i, ‖x i‖₂²)
+  : revFDeriv K (fun (x : Fin 10 → K) => ∑ᴵ i, ‖x i‖₂²)
     =
-    fun x => (∑ i, (x i)^2, fun dx i => 2 * dx * (x i)) :=
+    fun x => (∑ᴵ i, (x i)^2, fun dx i => 2 * dx * (x i)) :=
 by
-  conv => lhs; fun_trans
+  conv => lhs; autodiff
+  sorry_proof
 
 #exit
 
 example (A : Fin 5 → Fin 10 → K)
-  : revCDeriv K (fun (x : Fin 10 → K) => fun i => ∑ j, A i j * x j)
+  : revFDeriv K (fun (x : Fin 10 → K) => fun i => ∑ j, A i j * x j)
     =
     fun x => (fun i => ∑ j, A i j * x j, fun dy j => ∑ i, A i j * dy i) :=
 by
@@ -163,49 +165,49 @@ variable [PlainDataType K]
 
 
 example
-  : revCDeriv K (fun (x : K^[Fin 10]) => fun i => x[i])
+  : revFDeriv K (fun (x : K^[Fin 10]) => fun i => x[i])
     =
     fun (x : K^[Fin 10]) => (fun i => x[i], fun dx => ⊞ i => dx i) :=
 by
   conv => lhs; autodiff; simp
 
 example
-  : revCDeriv K (fun (x : K^[Fin 10]) => ⊞ i => x[i])
+  : revFDeriv K (fun (x : K^[Fin 10]) => ⊞ i => x[i])
     =
     fun x => (x, fun dx => dx) :=
 by
   conv => lhs; autodiff; simp
 
 example
-  : revCDeriv K (fun (x : K^[Fin 10]) => ∑ i, x[i])
+  : revFDeriv K (fun (x : K^[Fin 10]) => ∑ i, x[i])
     =
     fun (x : K^[Fin 10]) => (∑ i, x[i], fun dy => ⊞ _ => dy) :=
 by
   conv => lhs; autodiff; simp
 
 example
-  : revCDeriv K (fun (x : K^[Fin 10]) => ∑ i, ‖x[i]‖₂²)
+  : revFDeriv K (fun (x : K^[Fin 10]) => ∑ i, ‖x[i]‖₂²)
     =
     fun (x : DataArrayN K (Fin 10)) => (∑ i, ‖x[i]‖₂², fun dy : K => ⊞ i => 2 * dy * (x[i])) :=
 by
   conv => lhs; autodiff; simp
 
 example (A : Fin 5 → Fin 10 → K)
-  : revCDeriv K (fun (x : K^[Fin 10]) => fun i => ∑ j, A i j * x[j])
+  : revFDeriv K (fun (x : K^[Fin 10]) => fun i => ∑ j, A i j * x[j])
     =
     fun (x : K^[Fin 10]) => (fun i => ∑ j, A i j * x[j], fun dy => ⊞ j => ∑ i, A i j * dy i) :=
 by
   conv => lhs; autodiff; simp
 
 example
-  : revCDeriv K (fun (x : Fin 5 → Fin 10 → K) => fun i j => x i j)
+  : revFDeriv K (fun (x : Fin 5 → Fin 10 → K) => fun i j => x i j)
     =
     fun x => (x, fun dx => dx) :=
 by
   conv => lhs; autodiff
 
 example
-  : revCDeriv K (fun (x : Fin 5 → Fin 10 → Fin 15→ K) => fun i j k => x i j k)
+  : revFDeriv K (fun (x : Fin 5 → Fin 10 → Fin 15→ K) => fun i j k => x i j k)
     =
     fun x => (x, fun dx => dx) :=
 by
@@ -214,21 +216,21 @@ by
 #exit
 
 example
-  : revCDeriv K (fun (x : Fin 5 → Fin 10 → Fin 15→ K) => fun k i j => x i j k)
+  : revFDeriv K (fun (x : Fin 5 → Fin 10 → Fin 15→ K) => fun k i j => x i j k)
     =
     fun x => (fun k i j => x i j k, fun dx i j k => dx k i j) :=
 by
   (conv => lhs; fun_trans (config:={zeta:=false,singlePass:=true}); simp [simp_core])
 
 example
-  : revCDeriv K (fun (x : Fin 10 → K) => fun ij : Fin 5 × Fin 10 => x ij.2)
+  : revFDeriv K (fun (x : Fin 10 → K) => fun ij : Fin 5 × Fin 10 => x ij.2)
     =
     fun x => (fun ij : Fin 5 × Fin 10 => x ij.2, fun dx i => ∑ j, dx (j,i)) :=
 by
   conv => lhs; fun_trans
 
 example
-  : revCDeriv K (fun (x : Fin 5 → K) => fun ij : Fin 5 × Fin 10 => x ij.1)
+  : revFDeriv K (fun (x : Fin 5 → K) => fun ij : Fin 5 × Fin 10 => x ij.1)
     =
     fun x => (fun ij : Fin 5 × Fin 10 => x ij.1, fun dx i => ∑ j, dx (i,j)) :=
 by
@@ -236,10 +238,10 @@ by
   sorry_proof
 
 example (f : X → Fin 5 → Fin 10 → Fin 15→ K) (hf : ∀ i j k, HasAdjDiff K (f · i j k))
-  : revCDeriv K (fun (x : X) => fun k i j => f x i j k)
+  : revFDeriv K (fun (x : X) => fun k i j => f x i j k)
     =
     fun x =>
-      let ydf := revCDeriv K f x
+      let ydf := revFDeriv K f x
       (fun k i j => ydf.1 i j k,
        fun dy => ydf.2 fun i j k => dy k i j) :=
 by
@@ -247,7 +249,7 @@ by
   sorry_proof
 
 example
-  : revCDeriv K (fun (x : K ^ Idx 10) => fun (ij : Idx 5 × Idx 10) => x[ij.snd])
+  : revFDeriv K (fun (x : K ^ Idx 10) => fun (ij : Idx 5 × Idx 10) => x[ij.snd])
     =
     fun x =>
       (fun (ij : Idx 5 × Idx 10) => x[ij.snd],
@@ -257,7 +259,7 @@ by
   sorry_proof
 
 example
-  : revCDeriv K (fun (x : K ^ (Idx 10 × Idx 5)) => fun i j => x[(i,j)])
+  : revFDeriv K (fun (x : K ^ (Idx 10 × Idx 5)) => fun i j => x[(i,j)])
     =
     fun x => (fun i j => x[(i,j)],
               fun dx => ⊞ ij => dx ij.1 ij.2) :=
@@ -265,7 +267,7 @@ by
   conv => lhs; ftrans; simp (config:={zeta:=false}) only [simp_core]
 
 example
-  : revCDeriv K (fun (x : K ^ (Idx 5 × Idx 10 × Idx 15)) => fun i j k => x[(k,i,j)])
+  : revFDeriv K (fun (x : K ^ (Idx 5 × Idx 10 × Idx 15)) => fun i j k => x[(k,i,j)])
     =
     fun x =>
       (fun i j k => x[(k,i,j)],
@@ -275,7 +277,7 @@ by
   sorry_proof
 
 example
-  : revCDeriv K (fun (x : K ^ (Idx 5 × Idx 10 × Idx 15)) => fun k i j => x[(i, j, k)])
+  : revFDeriv K (fun (x : K ^ (Idx 5 × Idx 10 × Idx 15)) => fun k i j => x[(i, j, k)])
     =
     fun x =>
       (fun k i j => x[(i,j,k)],
@@ -285,7 +287,7 @@ by
   sorry_proof
 
 example
-  : revCDeriv K (fun (x : Fin 10 → K) => fun i j => x i * x j)
+  : revFDeriv K (fun (x : Fin 10 → K) => fun i j => x i * x j)
     =
     fun x =>
       (fun i j => x i * x j,
@@ -295,7 +297,7 @@ by
   sorry_proof
 
 example
-  : revCDeriv K (fun (x : Fin 10 → K) => fun (i : Fin 10) (j : Fin 5) => x (i+j))
+  : revFDeriv K (fun (x : Fin 10 → K) => fun (i : Fin 10) (j : Fin 5) => x (i+j))
     =
     fun x =>
       (fun (i : Fin 10) (j : Fin 5) => x (i+j),
@@ -305,7 +307,7 @@ by
   sorry_proof
 
 example (w : Idx' (-5) 5 → K)
-  : revCDeriv K (fun (x : Idx 10 → K) => fun (i : Idx 10) (j : Idx' (-5) 5) => w j * x (j.1 +ᵥ i))
+  : revFDeriv K (fun (x : Idx 10 → K) => fun (i : Idx 10) (j : Idx' (-5) 5) => w j * x (j.1 +ᵥ i))
     =
     fun x =>
       (fun (i : Idx 10) (j : Idx' (-5) 5) => w j * x (j.1 +ᵥ i),
@@ -316,7 +318,7 @@ by
 
 
 example  (w : Idx' (-5) 5 → K)
-  : revCDeriv K (fun (x : Idx 10 → K) => fun (i : Idx 10) => ∑ j, w j * x (j.1 +ᵥ i))
+  : revFDeriv K (fun (x : Idx 10 → K) => fun (i : Idx 10) => ∑ j, w j * x (j.1 +ᵥ i))
     =
     fun x =>
       (fun (i : Idx 10) => ∑ j, w j * x (j.1 +ᵥ i),

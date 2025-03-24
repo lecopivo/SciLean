@@ -315,52 +315,52 @@ instance : FirstLast (Idx n) (Idx n) where
     else
       none
 
-instance : IndexType (Idx n) where
-  toFin x := x.toFin
-  fromFin x := x.toIdx
-  rangeSize := fun r =>
-    match r with
-    | .empty => 0
-    | .full => n
-    | .interval a b => if a.1 ≤ b.1 then ((b.1 - a.1) + 1).toNat else ((a.1 - b.1) + 1).toNat
-  next? s :=
-    match s with
-    | .start r =>
-      match r with
-      | .empty => none
-      | .full =>
-        if h : n ≠ 0 then
-          let x : Idx n := ⟨0, by sorry_proof⟩
-          .some (x, .val x r)
-        else
-          .none
-      | .interval a _ => .some (a, .val a r)
+-- instance : IndexType (Idx n) where
+--   toFin x := x.toFin
+--   fromFin x := x.toIdx
+--   rangeSize := fun r =>
+--     match r with
+--     | .empty => 0
+--     | .full => n
+--     | .interval a b => if a.1 ≤ b.1 then ((b.1 - a.1) + 1).toNat else ((a.1 - b.1) + 1).toNat
+--   next? s :=
+--     match s with
+--     | .start r =>
+--       match r with
+--       | .empty => none
+--       | .full =>
+--         if h : n ≠ 0 then
+--           let x : Idx n := ⟨0, by sorry_proof⟩
+--           .some (x, .val x r)
+--         else
+--           .none
+--       | .interval a _ => .some (a, .val a r)
 
-    | .val val r =>
-      match r with
-      | .empty => .none
-      | .full =>
-        if h : val.1 + 1 < n.toUSize then
-          let x := ⟨val.1+1, sorry_proof⟩
-          .some (x, .val x r)
-        else
-          .none
-      | .interval a b =>
-        if a.1 ≤ b.1 then
-          if h : val.1 + 1 ≤ b.1 then
-            let x := ⟨val.1+1, sorry_proof⟩
-            .some (x, .val x r)
-          else
-            .none
-        else
-          if h : b.1 + 1 ≤ val.1 then
-            let x := ⟨val.1-1, sorry_proof⟩
-            .some (x, .val x r)
-          else
-            .none
-  left_inv := sorry_proof
-  right_inv := sorry_proof
-  first_last := sorry_proof
+--     | .val val r =>
+--       match r with
+--       | .empty => .none
+--       | .full =>
+--         if h : val.1 + 1 < n.toUSize then
+--           let x := ⟨val.1+1, sorry_proof⟩
+--           .some (x, .val x r)
+--         else
+--           .none
+--       | .interval a b =>
+--         if a.1 ≤ b.1 then
+--           if h : val.1 + 1 ≤ b.1 then
+--             let x := ⟨val.1+1, sorry_proof⟩
+--             .some (x, .val x r)
+--           else
+--             .none
+--         else
+--           if h : b.1 + 1 ≤ val.1 then
+--             let x := ⟨val.1-1, sorry_proof⟩
+--             .some (x, .val x r)
+--           else
+--             .none
+--   left_inv := sorry_proof
+--   right_inv := sorry_proof
+--   first_last := sorry_proof
 
 -- maybe move these such that we do not have to import `Mathlib.Topology.Order`
 instance {n} : TopologicalSpace (Idx n) := ⊥

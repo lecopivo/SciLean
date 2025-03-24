@@ -167,7 +167,7 @@ variable {R X Y Z ι : Type _} {E : ι → Type _}
   [AddCommGroup X] [Module R X]
   [AddCommGroup Y] [Module R Y]
   [AddCommGroup Z] [Module R Z]
-  [IndexType ι] [DecidableEq ι]
+  -- [IndexType ι] [DecidableEq ι]
   [∀ i, AddCommGroup (E i)] [∀ i, Module R (E i)]
 
 theorem by_linear_map {f : X → Y} (g : X →ₗ[R] Y) (h : ∀ x, f x = g x) :
@@ -281,10 +281,10 @@ theorem HSMul.hSMul.arg_a1.IsLinearMap_rule_int
 -- sum ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-@[fun_prop]
-theorem sum.arg_f.IsLinearMap_rule
-  (f : X → ι → Y) (hf : ∀ i, IsLinearMap R (f · i))
-  : IsLinearMap R fun x => ∑ i, f x i := by sorry_proof
+-- @[fun_prop]
+-- theorem sum.arg_f.IsLinearMap_rule
+--   (f : X → ι → Y) (hf : ∀ i, IsLinearMap R (f · i))
+--   : IsLinearMap R fun x => ∑ i, f x i := by sorry_proof
 
 
 -- d/ite -----------------------------------------------------------------------

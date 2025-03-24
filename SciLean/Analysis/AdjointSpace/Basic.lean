@@ -314,8 +314,8 @@ instance [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)] :
     -- apply Exists.intro (∑ i, d i ^ 2)
     sorry_proof
   conj_symm := by simp[Inner.inner]; sorry_proof
-  add_left := by simp[Inner.inner, inner_add_left,SciLean.sum_add_distrib]; sorry_proof
-  smul_left := by simp[Inner.inner, inner_smul_left,SciLean.mul_sum]; sorry_proof
+  add_left := by simp[Inner.inner, inner_add_left]; sorry_proof
+  smul_left := by simp[Inner.inner, inner_smul_left]; sorry_proof
 
 -- deprecate these
 theorem inner_prod_split (x y : X×Y) : ⟪x,y⟫_𝕜 = ⟪x.1,y.1⟫_𝕜 + ⟪x.2,y.2⟫_𝕜 := by rfl

@@ -14,7 +14,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [IndexType ι]
+  -- {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 /-- `CDifferentiableAt f x` - conveniently differentiable function `f` at point `x`. -/
@@ -124,7 +124,7 @@ variable
   {X : Type _} [Vec K X]
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
-  {ι : Type _} [IndexType ι]
+  -- {ι : Type _} [IndexType ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 
@@ -352,20 +352,20 @@ def HPow.hPow.arg_a0.CDifferentiableAt_rule
 ---------------------------------------------------------------------------------
 
 
-@[fun_prop]
-theorem sum.arg_f.CDifferentiableAt_rule
-  (f : X → ι → Y) (x : X) (hf : ∀ i, CDifferentiableAt K (fun x => f x i) x)
-  : CDifferentiableAt K (fun x => ∑ i, f x i) x :=
-by
-  sorry_proof
+-- @[fun_prop]
+-- theorem sum.arg_f.CDifferentiableAt_rule
+--   (f : X → ι → Y) (x : X) (hf : ∀ i, CDifferentiableAt K (fun x => f x i) x)
+--   : CDifferentiableAt K (fun x => ∑ i, f x i) x :=
+-- by
+--   sorry_proof
 
 
-@[fun_prop]
-theorem sum.arg_f.CDifferentiable_rule
-  (f : X → ι → Y) (hf : ∀ i, CDifferentiable K (fun x => f x i))
-  : CDifferentiable K (fun x => ∑ i, f x i) :=
-by
-  sorry_proof
+-- @[fun_prop]
+-- theorem sum.arg_f.CDifferentiable_rule
+--   (f : X → ι → Y) (hf : ∀ i, CDifferentiable K (fun x => f x i))
+--   : CDifferentiable K (fun x => ∑ i, f x i) :=
+-- by
+--   sorry_proof
 
 
 --------------------------------------------------------------------------------
