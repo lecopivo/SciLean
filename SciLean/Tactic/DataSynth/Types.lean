@@ -142,10 +142,12 @@ def DataSynthM.runInSimpM (e : DataSynthM α) : SimpM α := do
   let r := e { discharge := disch? } (← ST.mkRef {}) (← ST.mkRef {})
   r
 
-
-open Lean Meta in
-def _root_.SciLean.Tactic.DataSynth.DataSynthM.runInMetaM (e : DataSynthM α) : MetaM α := do
-  e.runInSimpM.run (← Simp.mkDefaultMethods).toMethodsRef (← Simp.mkContext) (← ST.mkRef {})
+def DataSynthM.runInMetaM (e : DataSynthM α) : MetaM α := do
+  e {} (← ST.mkRef {})
+       (← ST.mkRef {})
+       (← Simp.mkDefaultMethods).toMethodsRef
+       (← Simp.mkContext)
+       (← ST.mkRef {})
 
 -----------
 -- forward declaration
