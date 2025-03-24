@@ -2,7 +2,7 @@ import SciLean.Analysis.Calculus.HasRevFDeriv
 import SciLean.Analysis.Calculus.HasFwdFDeriv
 
 
-namespace SciLean.IdxType
+namespace SciLean.IndexType
 
 set_option linter.unusedVariables false
 
@@ -10,7 +10,7 @@ variable
   {𝕜 : Type*} [RCLike 𝕜]
   {W : Type*} [NormedAddCommGroup W] [NormedSpace 𝕜 W]
   {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-  {I : Type*} {nI : ℕ} [IdxType I nI] [IdxType.Fold' I]
+  {I : Type*} {nI : ℕ} [IndexType I nI] [IndexType.Fold' I]
 
 
 -- @[fun_prop] -- already exists
@@ -53,14 +53,14 @@ theorem sum.arg_f.HasFwdDeriv_rule
 theorem sum.arg_f.HasRevFDeriv_rule
     {W} [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
     {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
-    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
     (f : W → I → X) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate 𝕜 (f · i) (f' i))  :
     HasRevFDeriv 𝕜
       (fun w => sum (f w))
       (fun w =>
         let s := ∑ᴵ i, (f w i)
         (s, fun dx =>
-          let dw := IdxType.fold .full (init := (0:W)) (fun i dw =>
+          let dw := IndexType.fold .full (init := (0:W)) (fun i dw =>
             let dw := (f' i w).2 dx dw
             dw)
           dw)) := sorry_proof
@@ -70,14 +70,14 @@ theorem sum.arg_f.HasRevFDeriv_rule
 theorem sum.arg_f.HasRevFDerivUpdate_rule
     {W} [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
     {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
-    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
     (f : W → I → X) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate 𝕜 (f · i) (f' i))  :
     HasRevFDerivUpdate 𝕜
       (fun w => sum (f w))
       (fun w =>
         let s := ∑ᴵ i, (f w i)
         (s, fun dx dw =>
-          let dw := IdxType.fold .full (init := dw) (fun i dw =>
+          let dw := IndexType.fold .full (init := dw) (fun i dw =>
             let dw := (f' i w).2 dx dw
             dw)
           dw)) := sorry_proof
@@ -86,12 +86,12 @@ theorem sum.arg_f.HasRevFDerivUpdate_rule
 theorem sum.arg_f.HasRevFDeriv_rule_scalar
     {K} [RCLike K]
     {W} [NormedAddCommGroup W] [AdjointSpace K W]
-    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
     (f : W → I → K) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i))  :
     HasRevFDeriv K
       (fun w => sum (f w))
       (fun w =>
-        let' (s,dw) := IdxType.fold .full (init := ((0 : K), (0:W)))
+        let' (s,dw) := IndexType.fold .full (init := ((0 : K), (0:W)))
           (fun (i : I) sdw =>
             let' (s,dw) := sdw
             let' (x,df) := f' i w
@@ -103,12 +103,12 @@ theorem sum.arg_f.HasRevFDeriv_rule_scalar
 theorem sum.arg_f.HasRevFDerivUpdate_rule_scalar
     {K} [RCLike K]
     {W} [NormedAddCommGroup W] [AdjointSpace K W]
-    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
     (f : W → I → K) {f' : I → _} (hf : ∀ i, HasRevFDerivUpdate K (f · i) (f' i))  :
     HasRevFDerivUpdate K
       (fun w => sum (f w))
       (fun w =>
-        let' (s,dw) := IdxType.fold .full (init := ((0 : K), (0:W)))
+        let' (s,dw) := IndexType.fold .full (init := ((0 : K), (0:W)))
           (fun (i : I) sdw =>
             let' (s,dw) := sdw
             let' (x,df) := f' i w

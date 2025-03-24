@@ -112,20 +112,20 @@ theorem let_rule {g : X → Y} {f : Y → X → Z} {f' g'}
     simp_all
 
 @[data_synth]
-theorem apply_rule {I} [IdxType I NI] [DecidableEq I] (i : I) :
+theorem apply_rule {I} [IndexType I NI] [DecidableEq I] (i : I) :
     HasFwdFDeriv K (fun x : I → X => x i)
       (fun x dx =>
         (x i, dx i)) := sorry_proof
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
-theorem apply_rule' {I} [IdxType I NI] [DecidableEq I] (i : I) :
+theorem apply_rule' {I} [IndexType I NI] [DecidableEq I] (i : I) :
     HasFwdFDeriv K (fun x : (I → X)×Y => x.1 i)
       (fun x dx =>
         (x.1 i, dx.1 i)) := sorry_proof
 
 set_option linter.unusedVariables false in
-theorem pi_rule {I : Type*} [IdxType I NI]
+theorem pi_rule {I : Type*} [IndexType I NI]
     {f : X → I → Y} {f' : I → _} (hf : ∀ i, HasFwdFDeriv K (f · i) (f' i)) :
     HasFwdFDeriv K f
       (fun x dx =>
@@ -392,7 +392,7 @@ theorem HPow.hPow.arg_a0.HasFwdFDeriv_rule_nat
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem SciLean.sum.arg_f.HasFwdFDeriv_rule
-    {I : Type*} [IdxType I NI] [IdxType.Fold' I]
+    {I : Type*} [IndexType I NI] [IndexType.Fold' I]
     {f : X → I → Y} {f' : I → _}
     (hf : ∀ i, HasFwdFDeriv K (f · i) (f' i)) :
     HasFwdFDeriv K

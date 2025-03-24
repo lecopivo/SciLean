@@ -6,7 +6,7 @@ namespace SciLean
 
 variable {R : Type*} [RealScalar R] [PlainDataType R]
   [BLAS (DataArray R) R R] [LawfulBLAS (DataArray R) R R]
-  {I nI} [IdxType I nI]
+  {I nI} [IndexType I nI]
 
 instance (priority:=high) : CanonicalBasis I R (R^[I]) where
   basis i := setElem (0 : R^[I]) i 1 .intro
@@ -22,7 +22,7 @@ instance (priority:=high) : CanonicalBasis I R (R^[I]) where
 
 
 -- instance
---     {X : Type*} {nI} [IdxType I nI] [PlainDataType K]
+--     {X : Type*} {nI} [IndexType I nI] [PlainDataType K]
 --     [DefaultDataArrayEquiv X I K] [GetElem X I K (fun _ _ => True)]
 --     [RealScalar R] [Scalar R K]
 --     [BLAS (DataArray K) R K] [LawfulBLAS (DataArray K) R K] :

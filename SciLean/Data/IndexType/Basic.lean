@@ -1,382 +1,182 @@
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Algebra.Order.Group.Unbundled.Basic
-import Mathlib.Data.Int.Interval
-import Mathlib.Data.Fintype.Prod
-import Mathlib.Data.Fintype.Sigma
-import Mathlib.Data.Fintype.Sum
+import SciLean.Data.Idx.Basic
+import SciLean.Data.ArrayOperations.Basic
 
-import SciLean.Data.IndexType.Iterator
-import SciLean.Util.SorryProof
+import Mathlib.Data.Fintype.Prod
+import Mathlib.Data.Fintype.Sum
 
 namespace SciLean
 
 open Function
 
-#exit
 
-class IndexType (I : Type u)
-  extends Fintype I, Stream (IndexType.Iterator I) I, Size I, FirstLast I I
-where
-  toFin : I → Fin size
-  fromFin : Fin size → I
-  /-- Number of elements in a given range. -/
-  rangeSize : IndexType.Range I → Nat
+/--
+Type `I` is isomorphic to `Idx n` and `Fin n`
+
+The isomorphism with `Idx n` is required only if the size of `I` is smaller then `USize.size`.
+In applications, we can't work with larger types as they would not fit into memory.
+-/
+class IndexType (I : Type*) (n : outParam Nat) extends Fintype I, Size' I n where
+  toIdx : I → Idx n
+  fromIdx : Idx n → I
+
+  toFin : I → Fin n
+  fromFin : Fin n→ I
+
+  toFin_eq_toIdx (i : I) (h : n < USize.size) : toFin i = (toIdx i : ℕ)
+  fromIdx_eq_fromFin (i : Idx n) :
+    (fromIdx i : I) = (fromFin i.toFin : I)
+
   left_inv : LeftInverse fromFin toFin
   right_inv : RightInverse fromFin toFin
-  first_last :
-    (size = 0 ∧ firstLast? = none)
-    ∨
-    ((_ : size ≠ 0) → firstLast? = some (fromFin ⟨0,by omega⟩, fromFin ⟨size - 1, by omega⟩))
-  -- TODO: add something about Iterators such that calling `next?` gives you one more element
-  -- TODO: add condition on rangeSize function
 
-open IndexType in
-def finEquiv (I : Type u) [IndexType I] : I ≃ Fin (size I) where
-  toFun := toFin
-  invFun := fromFin
-  left_inv := left_inv
-  right_inv := right_inv
+export IndexType (toIdx fromIdx)
 
+set_option linter.unusedVariables false in
+def idxEquiv (I : Type*) {n} [IndexType I n] (h : n < USize.size) : I ≃ Idx n :=
+  {
+    toFun := toIdx
+    invFun := fromIdx
+    left_inv := sorry_proof
+    right_inv := sorry_proof
+  }
 
 namespace IndexType
 
-instance {ι} [IndexType ι] (r : Range ι) : Size r where
-  size := rangeSize r
+variable {I n} [IndexType I n]
 
-def fromNat {ι} [IndexType ι] (n : Nat) (h : n < size ι := by first | omega | simp_all; omega) : ι :=
-  fromFin ⟨n, h⟩
+set_option linter.unusedVariables false in
+theorem left_inv' (h : n < USize.size) :  LeftInverse fromIdx (toIdx : I → Idx n) := sorry_proof
+
+set_option linter.unusedVariables false in
+theorem right_inv' (h : n < USize.size) :  RightInverse fromIdx (toIdx : I → Idx n) := sorry_proof
+
+@[simp, simp_core]
+theorem toIdx_fromIdx (i : Idx n) : toIdx (fromIdx i : I) = i := by
+  have hsize : n < USize.size := by sorry_proof
+  apply right_inv' hsize
+
+@[simp, simp_core]
+theorem fromIdx_toIdx (i : I) : fromIdx (toIdx i) = i := by
+  have hsize : n < USize.size := by sorry_proof
+  apply left_inv' hsize
+
 
 ----------------------------------------------------------------------------------------------------
 -- Instances ---------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-instance [FirstLast I I] (r : Range I) : FirstLast r I :=
-  match r with
-  | .empty => ⟨.none⟩
-  | .full => ⟨FirstLast.firstLast? I⟩
-  | .interval a b => ⟨.some (a,b)⟩
+section Instances
 
-
-instance : IndexType Empty where
+instance : IndexType Empty 0 where
+  toIdx x := Empty.elim x
+  fromIdx i := by have := i.2; aesop
   toFin x := Empty.elim x
   fromFin i := by have := i.2; aesop
-  rangeSize := fun _ => 0
-  next? _ := .none
-  left_inv := by intro x; aesop
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
+  left_inv := sorry_proof
   right_inv := sorry_proof
-  first_last := sorry_proof
 
 
-instance : IndexType Unit where
-  toFin _ := 1
+instance : IndexType Unit 1 where
+  toIdx _ := 0
+  fromIdx _ := ()
+  toFin _ := 0
   fromFin _ := ()
-  rangeSize := fun r => match r with | .empty => 0 | .full | .interval _ _ => 1
-  next? _ := .none
-  left_inv := by intro; aesop
-  right_inv := by intro; aesop
-  first_last := by aesop
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
+  left_inv := sorry_proof
+  right_inv := sorry_proof
 
 
-instance : IndexType Bool where
-  size := 2
+instance : IndexType Bool 2 where
+  toIdx x := match x with | false => 0 | true => 1
+  fromIdx x := if x = 0 then false else true
   toFin x := match x with | false => 0 | true => 1
-  fromFin x := match x with | ⟨0,_⟩ => false | ⟨1,_⟩ => true
-  rangeSize := fun r =>
-    match r with
-    | .empty => 0
-    | .full => 2
-    | .interval a b => if a = b then 1 else 2
-  next? s :=
-    match s with
-    | .start r =>
-      match r with
-      | .empty => none
-      | .full => .some (false, .val false r)
-      | .interval a _ => .some (a, .val a r)
-
-    | .val val r =>
-      match r, val with
-      | .empty, _ => .none
-      | .full, false => .some (true, .val true r)
-      | .full, true => .none
-      | .interval a b, x =>
-        if a = b
-        then .none
-        else if x = a
-             then .some (b, .val b r)
-             else .none
-  left_inv := by intro; aesop
-  right_inv := by intro; aesop
-  first_last := by aesop
+  fromFin x := if x = 0 then false else true
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
+  left_inv := sorry_proof
+  right_inv := sorry_proof
 
 
-instance : IndexType (Fin n) where
+instance : IndexType (Fin n) n where
+  toIdx x := x.toIdx
+  fromIdx x := x.toFin
   toFin x := x
   fromFin x := x
-  rangeSize := fun r =>
-    match r with
-    | .empty => 0
-    | .full => n
-    | .interval a b => if a.1 ≤ b.1 then (b.1 - a.1) + 1 else (a.1 - b.1) + 1
-  next? s :=
-    match s with
-    | .start r =>
-      match r with
-      | .empty => none
-      | .full =>
-        if h : n ≠ 0 then
-          let x : Fin n := ⟨0, by omega⟩
-          .some (x, .val x r)
-        else
-          .none
-      | .interval a _ => .some (a, .val a r)
-
-    | .val val r =>
-      match r with
-      | .empty => .none
-      | .full =>
-        if h : val.1 + 1 < n then
-          let x := ⟨val.1+1,by omega⟩
-          .some (x, .val x r)
-        else
-          .none
-      | .interval a b =>
-        if a.1 ≤ b.1 then
-          if h : val.1 + 1 ≤ b.1 then
-            let x := ⟨val.1+1,by omega⟩
-            .some (x, .val x r)
-          else
-            .none
-        else
-          if h : b.1 + 1 ≤ val.1 then
-            let x := ⟨val.1-1,by omega⟩
-            .some (x, .val x r)
-          else
-            .none
-  left_inv := by intro; aesop
-  right_inv := by intro; aesop
-  first_last := by simp[firstLast?]
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
+  left_inv := sorry_proof
+  right_inv := sorry_proof
 
 
+instance : IndexType (Idx n) n where
+  toIdx x := x
+  fromIdx x := x
+  toFin x := x.toFin
+  fromFin x := x.toIdx
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
+  left_inv := sorry_proof
+  right_inv := sorry_proof
 
-instance {α β} [IndexType α] [IndexType β] : IndexType (α × β) where
+
+instance {I J nI nJ} [IndexType I nI] [IndexType J nJ] : IndexType (I × J) (nI*nJ) where
   -- this choice will result in row major matrices/tensors
-  toFin := fun (a,b) => ⟨size β * (toFin a).1 + (toFin b).1, by sorry_proof⟩
+  toIdx := fun (a,b) => ⟨nJ.toUSize * toIdx a + toIdx b, by sorry_proof⟩
+  fromIdx ij :=
+    -- this choice will result in row major matrices
+    let i : Idx nI := ⟨ij.1 / nJ.toUSize, by sorry_proof⟩
+    let j : Idx nJ := ⟨ij.1 % nJ.toUSize, by sorry_proof⟩
+    (fromIdx i, fromIdx j)
+  toFin := fun (a,b) => ⟨nJ * (toFin a).1 + (toFin b).1, by sorry_proof⟩
   fromFin ij :=
     -- this choice will result in row major matrices
-    let i : Fin (size α) := ⟨ij.1 / size β, by sorry_proof⟩
-    let j : Fin (size β) := ⟨ij.1 % size β, by sorry_proof⟩
+    let i : Fin nI := ⟨ij.1 / nJ, by sorry_proof⟩
+    let j : Fin nJ := ⟨ij.1 % nJ, by sorry_proof⟩
     (fromFin i, fromFin j)
-  rangeSize := fun r =>
-    match r with
-    | .empty => 0
-    | .full => rangeSize (.full : Range α) * rangeSize (.full : Range β)
-    | .interval (a,b) (a',b') => rangeSize (.interval a a') * rangeSize (.interval b b')
-  next? s :=
-    match s with
-    | .start r =>
-      let (ri, rj) := r.ofProd
-      match first? ri, first? rj with
-      | .some i, .some j => .some ((i,j), .val (i,j) r)
-      | _, _ => .none
-    | .val (i,j) r =>
-      let (ri,rj) := r.ofProd
-      let si := Iterator.val i ri
-      let sj := Iterator.val j rj
-      match Stream.next? sj with
-      | .some (j', sj) => .some ((i,j'), si.prod sj)
-      | .none =>
-        match Stream.next? si, first? rj with
-        | .some (i',si), .some j' => .some ((i',j'), si.prod (Iterator.val j' rj))
-        | _, _ => .none
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
   left_inv := by intro; sorry_proof
   right_inv := by intro; sorry_proof
-  first_last := by simp[firstLast?]; sorry_proof
-
-instance {α β} [IndexType α] [IndexType β] : IndexType ((_ : α) × β) where
-  -- this choice will result in row major matrices/tensors
-  toFin := fun ⟨a,b⟩ => ⟨size β * (toFin a).1 + (toFin b).1, by sorry_proof⟩
-  fromFin ij :=
-    -- this choice will result in row major matrices
-    let i : Fin (size α) := ⟨ij.1 / size β, by sorry_proof⟩
-    let j : Fin (size β) := ⟨ij.1 % size β, by sorry_proof⟩
-    ⟨fromFin i, fromFin j⟩
-  rangeSize := fun r =>
-    match r with
-    | .empty => 0
-    | .full => rangeSize (.full : Range α) * rangeSize (.full : Range β)
-    | .interval ⟨a,b⟩ ⟨a',b'⟩ => rangeSize (.interval a a') * rangeSize (.interval b b')
-  next? s :=
-    match s with
-    | .start r =>
-      let (ri, rj) := r.ofSigma
-      match first? ri, first? rj with
-      | .some i, .some j => .some (⟨i,j⟩, .val ⟨i,j⟩ r)
-      | _, _ => .none
-    | .val ⟨i,j⟩ r =>
-      let (ri,rj) := r.ofSigma
-      let si := Iterator.val i ri
-      let sj := Iterator.val j rj
-      match Stream.next? sj with
-      | .some (j', sj) => .some (⟨i,j'⟩, si.sprod sj)
-      | .none =>
-        match Stream.next? si, first? rj with
-        | .some (i',si), .some j' => .some (⟨i',j'⟩, si.sprod (Iterator.val j' rj))
-        | _, _ => .none
-  firstLast? :=
-    match FirstLast.firstLast? α, FirstLast.firstLast? β with
-    | .some (a,a'), .some (b,b') => .some (⟨a,b⟩,⟨a',b'⟩)
-    | _, _ => .none
-  left_inv := by intro; sorry_proof
-  right_inv := by intro; sorry_proof
-  first_last := by sorry_proof
 
 
-instance {α β} [IndexType α] [IndexType β] : IndexType (α ⊕ β) where
+instance {α β} [IndexType α m] [IndexType β n] : IndexType (α ⊕ β) (m + n) where
+  toIdx := fun ab =>
+    match ab with
+    | .inl a => ⟨(toIdx a).1, by sorry_proof⟩
+    | .inr b => ⟨m.toUSize + (toIdx b).1, by sorry_proof⟩
+  fromIdx ij :=
+    if h : ij.1 < m.toUSize then
+      .inl (fromIdx ⟨ij.1,sorry_proof⟩)
+    else
+      .inr (fromIdx ⟨ij.1 - m.toUSize,sorry_proof⟩)
   toFin := fun ab =>
     match ab with
     | .inl a => ⟨(toFin a).1, by sorry_proof⟩
-    | .inr b => ⟨size α + (toFin b).1, by sorry_proof⟩
+    | .inr b => ⟨m + (toFin b).1, by sorry_proof⟩
   fromFin ij :=
-    if h : ij.1 < size α then
-      .inl (fromNat ij.1)
+    if h : ij.1 < m then
+      .inl (fromFin ⟨ij.1,sorry_proof⟩)
     else
-      .inr (fromNat (ij.1 - size α))
-  rangeSize := fun r =>
-    match r with
-    | .empty => 0
-    | .full => rangeSize (.full : Range α) + rangeSize (.full : Range β)
-    | .interval (.inl a) (.inl a') => rangeSize (.interval a a')
-    | .interval (.inr b) (.inr b') => rangeSize (.interval b b')
-    | .interval (.inl a) (.inr b') | .interval (.inr b') (.inl a) =>
-      let b := first? β |>.getD b'
-      let a' := last? α |>.getD a
-      rangeSize (.interval a a') + rangeSize (.interval b b')
-  next? s :=
-    -- there has to be a better implementation of this ...
-    -- we should somehow use `Iterator.ofSum` and then combine them back together
-    match s with
-    | .start r =>
-      match first? r with
-      | .some x => .some (x, .val x r)
-      | .none => .none
-    | .val x r =>
-      match x, r.ofSum with
-      | .inl a, .inl (ra, rb) =>
-        match Stream.next? (Iterator.val a ra) with
-        | .some (a',_) => .some (.inl a', .val (.inl a') r)
-        | .none =>
-          match first? rb with
-          | .some b' => .some (.inr b', .val (.inr b') r)
-          | .none => .none
-      | .inr b, .inl (_, rb) =>
-        match Stream.next? (Iterator.val b rb) with
-        | .some (b',_) => .some (.inr b', .val (.inr b') r)
-        | .none => .none
-      | .inl a, .inr (_, ra) =>
-        match Stream.next? (Iterator.val a ra) with
-        | .some (a',_) => .some (.inl a', .val (.inl a') r)
-        | .none => .none
-      | .inr b, .inr (rb, ra) =>
-        match Stream.next? (Iterator.val b rb) with
-        | .some (b',_) => .some (.inr b', .val (.inr b') r)
-        | .none =>
-          match first? ra with
-          | .some a' => .some (.inl a', .val (.inl a') r)
-          | .none => .none
+      .inr (fromFin ⟨ij.1 - m,sorry_proof⟩)
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
   left_inv := by intro; sorry_proof
   right_inv := by intro; sorry_proof
-  first_last := by sorry_proof
 
 
-open Set in
-instance (a b : Int) : IndexType (Icc a b) where
-  size := size (Icc a b) -- why do we do we need to specify this?
-  toFin i := ⟨(i.1 - a).toNat, sorry_proof⟩
-  fromFin i := ⟨a + i.1, sorry_proof⟩
-  rangeSize := fun r =>
-    match r with
-    | .empty => 0
-    | .full => (b-a).toNat + 1
-    | .interval c d => |d.1 - c.1|.toNat + 1
-  firstLast? :=
-    if h :a ≤ b then
-      .some (⟨a,by simpa⟩,⟨b, by simpa⟩)
-    else
-      .none
-  next? s :=
-    match s with
-    | .start r =>
-      match r with
-      | .empty => none
-      | .full =>
-        if h : a ≤ b then
-          let x : Icc a b := ⟨a, by simpa⟩
-          .some (x, .val x r)
-        else
-          .none
-      | .interval a' _ => .some (a', .val a' r)
-
-    | .val val r =>
-      match r with
-      | .empty => .none
-      | .full =>
-        if h : val.1 + 1 ≤ b then
-          have := val.2.1
-          let x := ⟨val.1+1,by simp_all; omega⟩
-          .some (x, .val x r)
-        else
-          .none
-      | .interval c d =>
-        if _ : c.1 ≤ d.1 then
-          if h : val.1 + 1 ≤ b then
-            have := val.2.1
-            let x := ⟨val.1+1,by simp_all; omega⟩
-            .some (x, .val x r)
-          else
-            .none
-        else
-          if h : d.1 + 1 ≤ val.1 then
-            have := val.2.2; have := d.2.1
-            let x := ⟨val.1-1,by simp_all; omega⟩
-            .some (x, .val x r)
-          else
-            .none
+def ofEquiv {J : Type*} (I : Type*) [Fintype J] [IndexType I n] (f : I ≃ J) : IndexType J n where
+  toIdx y := toIdx (f.symm y)
+  fromIdx i := f (fromIdx i)
+  toFin y := toFin (f.symm y)
+  fromFin i := f (fromFin i)
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
   left_inv := sorry_proof
   right_inv := sorry_proof
-  first_last := sorry_proof
 
 
-def ofEquiv {J : Type*} (I : Type*) [IndexType I] (f : I ≃ J) : IndexType J where
-  toFintype := Fintype.ofEquiv _ f
-  size := size I
-  next? := fun j =>
-    Stream.next? (Iterator.ofEquiv f.symm j) |>.map (fun (i,it) => (f i, Iterator.ofEquiv f it))
-  firstLast? := firstLast? I |>.map (fun (a,b) => (f a, f b))
-  toFin := fun j => toFin (f.symm j)
-  fromFin := fun id => f (fromFin id)
-  rangeSize := fun r => rangeSize (Range.ofEquiv f.symm r)
-  left_inv := sorry_proof
-  right_inv := sorry_proof
-  first_last := sorry_proof
 
-
-----------------------------------------------------------------------------------------------------
--- Basic properties --------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-variable {ι : Type v} [IndexType ι]
-
-
-@[simp, simp_core]
-theorem toFin_Fin (i : Fin n) :
-    toFin i = i :=
-  rfl
-
-@[simp, simp_core]
-theorem fromFin_toFin {I} [IndexType I] (i : I) :
-  fromFin (toFin i) = i := sorry_proof
-
-@[simp, simp_core]
-theorem toFin_fromFin {I} [IndexType I] (i : Fin (size I)) :
-  toFin (fromFin (I:=I) i) = i := sorry_proof
+end Instances

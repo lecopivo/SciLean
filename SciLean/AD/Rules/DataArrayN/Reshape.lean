@@ -13,7 +13,7 @@ open DataArrayN
 def_fun_prop reshape in x
     with_transitive
     {R : Type*} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
-    {ι : Type*} {nι} [IdxType ι nι] [HasRnEquiv α ι R] :
+    {ι : Type*} {nι} [IndexType ι nι] [HasRnEquiv α ι R] :
     IsContinuousLinearMap R by
   sorry_proof
 
@@ -21,7 +21,7 @@ def_fun_prop reshape in x
 
 data_synth_variable
   {R : Type*} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
-  {ι : Type*} {nι} [IdxType ι nι] [HasRnEquiv α ι R]
+  {ι : Type*} {nι} [IndexType ι nι] [HasRnEquiv α ι R]
 
 abbrev_data_synth reshape in x (x₀ : α^[I]) : (HasFDerivAt (𝕜:=R) · · x₀) by hasFDerivAt_from_linear
 abbrev_data_synth reshape in x : HasFwdFDeriv R by hasFwdFDeriv_from_def => simp

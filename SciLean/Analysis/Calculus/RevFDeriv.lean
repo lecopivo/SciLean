@@ -37,7 +37,7 @@ variable
   {X : Type u} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
   {Y : Type v} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {Z : Type w} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
-  {ι : Type _} {nι} [IdxType ι nι]
+  {ι : Type _} {nι} [IndexType ι nι]
   {E : ι → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)]
 
 
@@ -67,7 +67,7 @@ theorem const_rule (y : Y) :
 
 @[fun_trans]
 theorem proj_rule
-    {n} [IdxType I n] [IdxType.Fold' I] [DecidableEq I]
+    {n} [IndexType I n] [IndexType.Fold' I] [DecidableEq I]
     {E : I → Type _} [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace K (E i)] [∀ i, CompleteSpace (E i)] :
     revFDeriv K (fun (x : (i' : I) → E i') => x i)
     =
@@ -114,13 +114,13 @@ theorem let_rule
   fun_trans
 
 @[fun_trans]
-theorem pi_rule [IdxType.Fold' ι] [IdxType.Fold' ι] -- these instances have different universes
+theorem pi_rule [IndexType.Fold' ι] [IndexType.Fold' ι] -- these instances have different universes
   (f : X → (i : ι) → E i) (hf : ∀ i, Differentiable K (f · i))
   : (revFDeriv K fun (x : X) (i : ι) => f x i)
     =
     fun x =>
       (fun i => f x i,
-       fun dy => IdxType.sum fun i =>
+       fun dy => IndexType.sum fun i =>
          let dx := (revFDeriv K (f · i) x).2 (dy i)
          dx)
        := by
@@ -167,12 +167,12 @@ theorem let_rule_at
 
 
 @[fun_trans]
-theorem pi_rule_at [IdxType.Fold' ι] [IdxType.Fold' ι]
+theorem pi_rule_at [IndexType.Fold' ι] [IndexType.Fold' ι]
     (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f · i) x) :
     (revFDeriv K fun (x : X) (i : ι) => f x i) x
     =
     (fun i => f x i,
-     fun dy => IdxType.sum fun i =>
+     fun dy => IndexType.sum fun i =>
        let dx := (revFDeriv K (f · i) x).2 (dy i)
        dx) := by
   unfold revFDeriv
@@ -553,7 +553,7 @@ def HPow.hPow.arg_a0.revFDeriv_rule
 
 
 @[fun_trans]
-theorem IdxType.sum.arg_f.revFDeriv_rule_at {I n} [IdxType I n] [IdxType.Fold' I]
+theorem IndexType.sum.arg_f.revFDeriv_rule_at {I n} [IndexType I n] [IndexType.Fold' I]
   (x : X) (f : X → I → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
   : revFDeriv K (fun x => ∑ᴵ i, f x i) x
     =
@@ -570,7 +570,7 @@ by
 
 
 @[fun_trans]
-theorem IdxType.sum.arg_f.revFDeriv_rule {I n} [IdxType I n] [IdxType.Fold' I]
+theorem IndexType.sum.arg_f.revFDeriv_rule {I n} [IndexType I n] [IndexType.Fold' I]
   (f : X → I → Y) (hf : ∀ i, Differentiable K (f · i))
   : revFDeriv K (fun x => ∑ᴵ i, f x i)
     =

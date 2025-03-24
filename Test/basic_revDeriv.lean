@@ -7,7 +7,7 @@ variable
   {X} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
   {Y} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {Z} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
-  {ι : Type} [IdxType ι nι]
+  {ι : Type} [IndexType ι nι]
   {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
@@ -92,16 +92,16 @@ by
 
 
 -- @[simp, simp_core]
--- theorem fold_function_modify_simplify {ι} [IdxType ι nι] [DecidableEq ι] {X} [AddGroup X]
+-- theorem fold_function_modify_simplify {ι} [IndexType ι nι] [DecidableEq ι] {X} [AddGroup X]
 --     (g h : ι → X) :
 --     IndexType.foldl (fun f i => Function.modify f i fun fi => fi + g i) (h : ι → X)
 --     =
 --     fun i => h i + g i := sorry_proof
 
--- todo: add LawfulIdxType ( n(right now I'm on old LeanColls)
+-- todo: add LawfulIndexType ( n(right now I'm on old LeanColls)
 -- @[simp, simp_core]
 -- theorem fold_indexed_update_simplify
---   {Idx Cont} [IdxType I NIdx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [ArrayType Cont Idx Elem]
+--   {Idx Cont} [IndexType I NIdx] [DecidableEq Idx] {Elem} [AddCommGroup Elem] [ArrayType Cont Idx Elem]
 --   (h : Cont) (g : Idx → Elem) :
 --   IndexType.foldl (fun f i => ArrayType.modify f i fun fi => fi + g i) h
 --   =
@@ -109,7 +109,7 @@ by
 
 -- @[simp, simp_core]
 -- theorem fold_struct_modify_simplify
---   {Idx Cont} [IdxType I NIdx] [DecidableEq Idx] {Elem} [AddCommGroup Elem]
+--   {Idx Cont} [IndexType I NIdx] [DecidableEq Idx] {Elem} [AddCommGroup Elem]
 --   [StructType Cont Idx (fun _ => Elem)] (h : Cont) (g : Idx → Elem) :
 --   IndexType.foldl (fun f i => structModify i (fun fi => fi + g i) f) h
 --   =
@@ -119,7 +119,7 @@ by
 -- -- simplifier seems to have hard time applying this
 -- @[simp, simp_core]
 -- theorem fold_ofFn_simplify
---   {J} [IdxType J NJ]
+--   {J} [IndexType J NJ]
 --   {Idx} [DecidableEq Idx] {Elem} [AddGroup Elem] {Cont} [ArrayType Cont Idx Elem]
 --   (h : Cont) (g : Idx → J → Elem):
 --   IndexType.foldl (no_index (fun (x : Cont) j => ArrayType.ofFn fun i => x[i] + g i j)) (no_index h)

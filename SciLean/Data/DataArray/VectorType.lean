@@ -15,7 +15,7 @@ open BLAS
 
 open IndexType in
 instance
-    {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {nI} [IndexType I nI] {nJ} [IndexType J nJ]
     {R : Type*} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
     {X : Type*} [PlainDataType X] [HasRnEquiv (X^[J]) I R]
     [GetElem' (X^[J]) I R] :
@@ -103,12 +103,12 @@ instance
 -- #exit
 
 -- instance {X I R K : Type*}
---     {nI} [IdxType I nI] [PlainDataType K]
+--     {nI} [IndexType I nI] [PlainDataType K]
 --     [DefaultDataArrayEquiv X I K] [GetElem' X I K]
 --     [RealScalar R] [Scalar R K]
 --     [BLAS (DataArray K) R K] [LawfulBLAS (DataArray K) R K]
 --     [SetElem' X I K] [LawfulSetElem X I]
---     [OfFn X I K] [LawfulOfFn X I] [IdxType.Fold' I] :
+--     [OfFn X I K] [LawfulOfFn X I] [IndexType.Fold' I] :
 --     VectorType.Dense X where
 --   fromVec f :=
 --     let x := DataArray.intro fun i => f i

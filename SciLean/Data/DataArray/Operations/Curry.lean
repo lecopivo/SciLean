@@ -18,10 +18,10 @@ namespace SciLean.DataArrayN
 
 variable
   {X : Type u} [PlainDataType X]
-  {I : Type v} {nI : ℕ} [IdxType I nI]
-  {J : Type w} {nJ : ℕ} [IdxType J nJ]
+  {I : Type v} {nI : ℕ} [IndexType I nI]
+  {J : Type w} {nJ : ℕ} [IndexType J nJ]
   [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
-  {K nK} [IdxType K nK]
+  {K nK} [IndexType K nK]
   [HasRnEquiv X K R]
 
 
@@ -31,7 +31,7 @@ variable
 scoped macro "data_array_fun_prop" f:ident X:ident R:ident "in" xs:ident* ":" prop:term  "by" tac:tacticSeq : command =>
   `(def_fun_prop $f in $xs* {$R : Type*}
       [RealScalar $R] [PlainDataType $R] [BLAS (DataArray $R) $R $R]
-      {K nK} [IdxType K nK] [HasRnEquiv $X K $R] :
+      {K nK} [IndexType K nK] [HasRnEquiv $X K $R] :
       $prop by $tac)
 
 -- this macro is here only because `variable` can't add extra hypothesis to `def_fun_prop` command
@@ -40,14 +40,14 @@ scoped macro "data_array_fun_prop" f:ident X:ident R:ident "in" xs:ident* ":" pr
 scoped macro "data_array_data_synth_abbrev" f:ident X:ident R:ident "in" xs:ident*  bs:bracketedBinder* ":" prop:term  "by" tac:tacticSeq : command =>
   `(abbrev_data_synth $f in $xs* {$R : Type}  --- BUG in `abbrev_data_synth` it can't handle universe polymorphims here
       [RealScalar $R] [PlainDataType $R] [BLAS (DataArray $R) $R $R]
-      {K nK} [IdxType K nK] [HasRnEquiv $X K $R] $bs* :
+      {K nK} [IndexType K nK] [HasRnEquiv $X K $R] $bs* :
       $prop by $tac)
 
 
 --- I want this to look this way
 -- def_fun_prop_variable {R : Type*}
 --   [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
---   {K nK} [IdxType K nK] [HasRnEquiv X K R]
+--   {K nK} [IndexType K nK] [HasRnEquiv X K R]
 
 -- def_fun_prop DataArrayN.curry in x : IsLinearMap R by sorry_proof
 -- def_fun_prop DataArrayN.curry in x : Continuous by sorry_proof

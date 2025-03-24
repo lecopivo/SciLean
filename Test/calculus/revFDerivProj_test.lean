@@ -11,7 +11,7 @@ set_default_scalar R
 /--
 info: fun x =>
   let dw :=
-    IdxType.fold IndexType.Range.full 0 fun i dw =>
+    IndexType.fold IndexType.Range.full 0 fun i dw =>
       let xi := dw[i];
       let x := setElem dw i (xi + 1) True.intro;
       x;
@@ -25,7 +25,7 @@ info: fun x =>
 /--
 info: fun x =>
   let dw :=
-    IdxType.fold IndexType.Range.full 0 fun i dw =>
+    IndexType.fold IndexType.Range.full 0 fun i dw =>
       let x₁ := x[i];
       let xi := dw[i];
       let x := setElem dw i (xi + 2 * x₁) True.intro;
@@ -44,9 +44,9 @@ variable (A : R^[n,n])
 /--
 info: fun x =>
   let dw :=
-    IdxType.fold IndexType.Range.full 0 fun i dw =>
+    IndexType.fold IndexType.Range.full 0 fun i dw =>
       let dw :=
-        IdxType.fold IndexType.Range.full dw fun i_1 dw =>
+        IndexType.fold IndexType.Range.full dw fun i_1 dw =>
           let x₁ := A[(i, i_1)];
           let x₁_1 := x[i];
           let x₁_2 := x₁ * x₁_1;

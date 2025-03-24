@@ -24,7 +24,7 @@ set_default_scalar Float
 --   cast sorry_proof data
 
 
-def SciLean.DataArrayN.mkExclusive {X} [PlainDataType X] {I n} [IdxType I n]
+def SciLean.DataArrayN.mkExclusive {X} [PlainDataType X] {I n} [IndexType I n]
     (xs : X^[I]) (uniqueName : Name) : X^[I] :=
   -- let i : I := fromIdx ⟨0,sorry_proof⟩
   -- setElem xs i xs[i] .intro
@@ -55,7 +55,7 @@ def kmeansDirC {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]
 def kmeansDirSciLean {n k d : ℕ} [NeZero k]
     (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
   let x :=
-    IdxType.fold IndexType.Range.full (0, 0)
+    IndexType.fold IndexType.Range.full (0, 0)
       fun (i : Idx n) (xdx : (Float^[d]^[k]×Float^[d]^[k])) =>
       let x := xdx.1;
       let dx := xdx.2;
@@ -84,12 +84,12 @@ def kmeansDirSciLean {n k d : ℕ} [NeZero k]
 def kmeansDirSciLeanNoBLAS {n k d : ℕ} [NeZero k]
     (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
   let x :=
-    IdxType.fold IndexType.Range.full (0, 0) fun (i : Idx n) xdx =>
+    IndexType.fold IndexType.Range.full (0, 0) fun (i : Idx n) xdx =>
       let x := xdx.1;
       let dx := xdx.2;
       let a := argMinᴵ (j : Idx k), ∑ᴵ (l : Idx d), (points[(i, l)] - centroids[(j, l)]) ^ 2;
       let x :=
-        IdxType.fold IndexType.Range.full (x, dx)
+        IndexType.fold IndexType.Range.full (x, dx)
           fun (i_1 : Idx d) (xdx : (Float^[d]^[k]×Float^[d]^[k])) =>
           let x := xdx.1;
           let dx := xdx.2;
@@ -118,13 +118,13 @@ def kmeansDirSciLeanNoBLAS {n k d : ℕ} [NeZero k]
 
 
 @[inline]
-def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IdxType I n]
+def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IndexType I n]
     (xs : X^[I]) (i : I) : X :=
   xs[i]
   -- pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
 @[inline]
-def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IdxType I n] (x : Float^[I]) (i : I) (val : Float) : Float^[I] :=
+def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IndexType I n] (x : Float^[I]) (i : I) (val : Float) : Float^[I] :=
   setElem x i val .intro
   -- let data := x.1.1.toFloatArray sorry_proof
   -- let data := data.uset (toIdx i) val sorry_proof
@@ -181,7 +181,7 @@ def kmeansDirBestLeanImpl' {n k d : ℕ} [NeZero k]
 
   for i in [:n] do
 
-    let a := IdxType.argMin fun (j : Idx k) =>
+    let a := IndexType.argMin fun (j : Idx k) =>
       ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
 
     for l in [:d] do

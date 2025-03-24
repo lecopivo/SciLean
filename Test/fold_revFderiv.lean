@@ -8,7 +8,7 @@ set_default_scalar Float
 
 
 noncomputable
-def foo := (∇ (x:= ⊞[1.0,2,3,4]), IdxType.fold .full (init:=1.0) (fun i s => s * x[i]))
+def foo := (∇ (x:= ⊞[1.0,2,3,4]), IndexType.fold .full (init:=1.0) (fun i s => s * x[i]))
 
 
 /-- info: ⊞[24.000000, 12.000000, 8.000000, 6.000000] -/
@@ -18,7 +18,7 @@ def foo := (∇ (x:= ⊞[1.0,2,3,4]), IdxType.fold .full (init:=1.0) (fun i s =>
     unfold foo fgradient
     lsimp -zeta only [simp_core, ↓revFDeriv_simproc]
 
-attribute [data_synth high] SciLean.IdxType.fold.arg_initf.HasRevFDeriv_scalar_rule
+attribute [data_synth high] SciLean.IndexType.fold.arg_initf.HasRevFDeriv_scalar_rule
 
 
 /-- info: ⊞[24.000000, 12.000000, 8.000000, 6.000000] -/
@@ -36,7 +36,7 @@ info: fun x =>
   let r := ArrayOps.mapIdxMonoAcc (fun idx xi x => x * xi) (fun idx => x₁_1[idx]) x₁;
   (r, fun dz =>
     let dw :=
-      IdxType.fold IndexType.Range.full 0 fun i dw =>
+      IndexType.fold IndexType.Range.full 0 fun i dw =>
         let xi := x₁[i];
         let dyi := dz[i];
         let x₁ := x₁_1[i];
@@ -52,7 +52,7 @@ info: fun x =>
     let dy := dw.1;
     let dx := dw.2;
     let dx :=
-      IdxType.fold IndexType.Range.full dx fun i dx =>
+      IndexType.fold IndexType.Range.full dx fun i dx =>
         let x₁ := x₁[i];
         let dxi := dy[i];
         let xi := dx[i];
@@ -82,7 +82,7 @@ info: fun w =>
       (fun x => ()) xs;
   (r, fun dy =>
     let dw :=
-      IdxType.fold IndexType.Range.full 0 fun i dw =>
+      IndexType.fold IndexType.Range.full 0 fun i dw =>
         let xi := xs[i];
         let dyi := dy[i];
         let x₁ := xi ^ 2;
@@ -119,7 +119,7 @@ info: fun w =>
   let r := ArrayOps.mapIdxMonoAcc (fun idx xi x => x / xi) (fun idx => w.2[idx]) xs;
   (r, fun dy =>
     let dw :=
-      IdxType.fold IndexType.Range.full 0 fun i dw =>
+      IndexType.fold IndexType.Range.full 0 fun i dw =>
         let xi := xs[i];
         let dyi := dy[i];
         let x₁ := w.2;
@@ -156,7 +156,7 @@ info: fun x =>
   let r := ArrayOps.mapIdxMonoAcc (fun i x y => x₁[i] + y) (fun x => ()) x₁_1;
   (r, fun dz =>
     let dw :=
-      IdxType.fold IndexType.Range.full 0 fun i dw =>
+      IndexType.fold IndexType.Range.full 0 fun i dw =>
         let dyi := dz[i];
         let x' := setElem 0 i dyi True.intro;
         let dx' := dw.1;
@@ -186,7 +186,7 @@ info: fun x =>
   let r := ArrayOps.mapIdxMonoAcc (fun i x y => x₁[i] * x₁_1[i] + y) (fun x => ()) x₁_1;
   (r, fun dz =>
     let dw :=
-      IdxType.fold IndexType.Range.full 0 fun i dw =>
+      IndexType.fold IndexType.Range.full 0 fun i dw =>
         let dyi := dz[i];
         let x₁ := x₁[i];
         let x₁_2 := x₁_1[i];
@@ -221,7 +221,7 @@ info: fun x =>
   let r := ArrayOps.mapIdxMonoAcc (fun x x zi => x.1 * x.2 + zi) (fun i => (x₁[i], x₁₁[i])) x₁₂;
   (r, fun dz =>
     let dw :=
-      IdxType.fold IndexType.Range.full 0 fun i dw =>
+      IndexType.fold IndexType.Range.full 0 fun i dw =>
         let dyi := dz[i];
         let x₁ := x₁[i];
         let x₁_1 := x₁₁[i];

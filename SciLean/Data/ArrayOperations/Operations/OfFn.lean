@@ -61,7 +61,7 @@ theorem ofFn.arg_f.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
 @[data_synth]
 theorem ofFn.arg_f.HasAdjoint_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
-    {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
+    {nI} [IndexType I nI] [IndexType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] :
     HasAdjoint 𝕜
@@ -70,14 +70,14 @@ theorem ofFn.arg_f.HasAdjoint_rule {𝕜 X I Y : Type*}
          let xi := x[i]
          xi) := by
   constructor
-  case adjoint => intro x f; simp[Inner.inner, inner_eq_sum_getElem (I:=I), IdxType.sum_eq_finset_sum]
+  case adjoint => intro x f; simp[Inner.inner, inner_eq_sum_getElem (I:=I), IndexType.sum_eq_finset_sum]
   case is_linear => fun_prop
 
 @[data_synth]
 theorem ofFn.arg_f.HasAdjointUpdate_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
+    {nI} [IndexType I nI] [IndexType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] :
     HasAdjointUpdate 𝕜
@@ -93,7 +93,7 @@ theorem ofFn.arg_f.HasAdjointUpdate_rule {𝕜 X I Y : Type*}
 theorem ofFn.arg_f.HasRevFDeriv_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
+    {nI} [IndexType I nI] [IndexType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] :
     HasRevFDeriv 𝕜
@@ -111,7 +111,7 @@ theorem ofFn.arg_f.HasRevFDeriv_rule {𝕜 X I Y : Type*}
 theorem ofFn.arg_f.HasRevFDerivUpdate_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    {nI} [IdxType I nI] [IdxType.Fold' I] [RCLike 𝕜]
+    {nI} [IndexType I nI] [IndexType.Fold' I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] :
     HasRevFDerivUpdate 𝕜

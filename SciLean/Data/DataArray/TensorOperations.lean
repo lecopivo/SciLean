@@ -13,11 +13,11 @@ namespace SciLean.DataArrayN
 
 variable
   {R : Type*} [RealScalar R] [pd : PlainDataType R] [BLAS (DataArray R) R R]
-  {I nI} [IdxType I nI] [IdxType.Fold' I]
-  {J nJ} [IdxType J nJ] [IdxType.Fold' J]
-  {K nK} [IdxType K nK] [IdxType.Fold' K]
-  {L nL} [IdxType L nL] [IdxType.Fold' L]
-  {M nM} [IdxType M nM] [IdxType.Fold' M]
+  {I nI} [IndexType I nI] [IndexType.Fold' I]
+  {J nJ} [IndexType J nJ] [IndexType.Fold' J]
+  {K nK} [IndexType K nK] [IndexType.Fold' K]
+  {L nL} [IndexType L nL] [IndexType.Fold' L]
+  {M nM} [IndexType M nM] [IndexType.Fold' M]
 
 
 ----------------------------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ def outerAddR (a : R) (x : R^[I]) (y : R^[J]) (z : R^[I,J]) : R^[I,J] := Id.run 
 ----------------------------------------------------------------------------------------------------
 
 variable
-  {ι nι} [IdxType ι nι] [IdxType.Fold' ι]
+  {ι nι} [IndexType ι nι] [IndexType.Fold' ι]
   {X : Type*} [PlainDataType X] [HasRnEquiv X ι R]
 
 
@@ -264,14 +264,14 @@ abbrev rmax (x : X^[I]) : R :=
   -- TODO: add Scalar.ninf
   have : Bot R := ⟨(-1:R)/(0:R)⟩
   let x := toRn x
-  IdxType.max (fun i => x[i])
+  IndexType.max (fun i => x[i])
 
 
 abbrev rmin (x : X^[I]) : R :=
   -- TODO: add Scalar.inf
   have : Top R := ⟨(1:R)/(0:R)⟩
   let x := toRn x
-  IdxType.min (fun i => x[i])
+  IndexType.min (fun i => x[i])
 
 
 
@@ -288,7 +288,7 @@ def logsumexp (x : X^[I]) : R :=
 
 -- ugh universes require additional `Fold` :/
 open Scalar in
-def softmax [IdxType.Fold' ι] [IdxType.Fold' I] (x : X^[I]) : X^[I] :=
+def softmax [IndexType.Fold' ι] [IndexType.Fold' I] (x : X^[I]) : X^[I] :=
   let x := toRn x
   let m := x.rmax
   let w := ∑ᴵ i, exp (x[i] - m)
@@ -296,7 +296,7 @@ def softmax [IdxType.Fold' ι] [IdxType.Fold' I] (x : X^[I]) : X^[I] :=
   fromRn x
 
 open Scalar in
-def logsumexpSoftmax [IdxType.Fold' ι] [IdxType.Fold' I] (x : X^[I]) : (R × X^[I]) :=
+def logsumexpSoftmax [IndexType.Fold' ι] [IndexType.Fold' I] (x : X^[I]) : (R × X^[I]) :=
   let x := toRn x
   let m := x.rmax
   let w := ∑ᴵ i, exp (x[i] - m)

@@ -12,7 +12,7 @@ variable
   {Y J : Type _} {YJ : J → Type _} [StructType Y J YJ] [Zero Y] [∀ j, Zero (YJ j)] [DecidableEq J]
 
 -- @[simp, simp_core]
--- theorem sum_oneHot [Add X] [IdxType I NI] (xi : (i : I) → XI i) :
+-- theorem sum_oneHot [Add X] [IndexType I NI] (xi : (i : I) → XI i) :
 --     (∑ i : I, oneHot (X:=X) i (xi i)) = structMake xi := sorry_proof
 
 @[simp, simp_core]
@@ -38,7 +38,7 @@ variable
   {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
   {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
-  {ι : Type} [IdxType ι nι] [DecidableEq ι]
+  {ι : Type} [IndexType ι nι] [DecidableEq ι]
   -- {E : ι → Type} [∀ i, SemiInnerProductSpace K (E i)]
 
 set_default_scalar K
@@ -65,7 +65,7 @@ example : Differentiable K fun (x : Fin 5 → Fin 10 → Fin 15→ K) i_1 j => x
 -- @[fun_trans]
 -- theorem ArrayType.ofFn.arg_f.adjoint_rule
 --     {XI : Type} [NormedAddCommGroup XI] [AdjointSpace K XI] [CompleteSpace XI]
---     [ArrayType X I XI] [IdxType I NI] [DecidableEq I] :
+--     [ArrayType X I XI] [IndexType I NI] [DecidableEq I] :
 --     adjoint K (fun f : I → XI => ArrayType.ofFn (Cont:=X) f)
 --     =
 --     fun x i => ArrayType.get x i := by sorry_proof

@@ -26,7 +26,7 @@ def_fun_prop logsumexp in x
 -- todo: add compatibility condition between `X` and `R^[ι
 data_synth_variable
   [BLAS (DataArray R) R R] [NormedAddCommGroup X] [AdjointSpace R X]
-  [IdxType.Fold' ι] [IdxType.Fold' ι] [IdxType.Fold' I]
+  [IndexType.Fold' ι] [IndexType.Fold' ι] [IndexType.Fold' I]
 
 
 abbrev_data_synth logsumexp in x (x₀ : X^[I]) :

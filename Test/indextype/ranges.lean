@@ -1,4 +1,4 @@
-import SciLean.Data.IdxType.Fold
+import SciLean.Data.IndexType.Fold
 import SciLean.Tactic.SimpleProxyType
 
 open SciLean
@@ -215,8 +215,8 @@ inductive Foo where
 deriving Repr
 
 instance : Fintype Foo := Fintype.ofEquiv _ (simple_proxy_equiv% Foo)
-instance : IdxType Foo (2 + 2 + 3) := IdxType.ofEquiv _ (simple_proxy_equiv% Foo)
--- instance {m} [Monad m] : IdxType.Fold Foo m := IdxType.Fold.ofEquiv _ (simple_proxy_equiv% Foo)
+instance : IndexType Foo (2 + 2 + 3) := IndexType.ofEquiv _ (simple_proxy_equiv% Foo)
+-- instance {m} [Monad m] : IndexType.Fold Foo m := IndexType.Fold.ofEquiv _ (simple_proxy_equiv% Foo)
 
 -- /--
 -- info: Foo.fst 1

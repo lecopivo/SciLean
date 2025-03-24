@@ -17,7 +17,7 @@ namespace SciLean
 variable
   {R : Type u'} [RealScalar R] [PlainDataType R]
   [BLAS (DataArray R) R R]
-  {I : Type u} {nI} [IdxType I nI] {J : Type v} {nJ} [IdxType J nJ] {K: Type w} {nK} [IdxType K nK]
+  {I : Type u} {nI} [IndexType I nI] {J : Type v} {nJ} [IndexType J nJ] {K: Type w} {nK} [IndexType K nK]
 
 
 
@@ -40,11 +40,11 @@ instance : MatrixType R (R^[I]) (R^[J]) (R^[I,J]) where
   tmulAdd_eq_tmul := sorry_proof
 
 instance {R : Type u'} [PlainDataType R]
-    {I : Type u} {nI} [IdxType I nI] {J : Type v} {nJ} [IdxType J nJ] :
+    {I : Type u} {nI} [IndexType I nI] {J : Type v} {nJ} [IndexType J nJ] :
     MatrixMulNotation (R^[I,J]) := ⟨⟩
 
 -- TODO: use BLAS `gemm`!!!
-instance [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J] [IdxType.Fold' K] :
+instance [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J] [IndexType.Fold' K] :
     TensorProductMul R (R^[I]) (R^[K]) (R^[J]) (R^[I,K]) (R^[K,J]) (R^[I,J]) where
   matMul a A B b C := ⊞ (i:I) (j:J) => b • C[i,j] + a • ∑ᴵ (k:K), A[i,k] * B[k,j]
 
@@ -75,7 +75,7 @@ instance : TensorProductSelf R (R^[I]) (R^[I,I]) where
 
   addIdentityMatrix_spec := sorry_proof
 
-variable [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
+variable [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J]
 
 instance : TensorProductSwap R (R^[I]) (R^[J]) where
 

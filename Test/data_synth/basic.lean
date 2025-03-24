@@ -96,7 +96,7 @@ info: HasRevFDerivUpdate R
 /--
 info: HasRevFDerivUpdate R (fun x i => ↑(↑i).toNat • x) fun x =>
   (fun i => ↑(↑i).toNat • x, fun dy dx =>
-    IdxType.fold IndexType.Range.full dx fun i dx =>
+    IndexType.fold IndexType.Range.full dx fun i dx =>
       let x₁ := ↑(↑i).toNat;
       let dyi := dy i;
       let dx := dx + (starRingEnd R) x₁ • dyi;
@@ -110,10 +110,10 @@ info: HasRevFDerivUpdate R (fun x i => ↑(↑i).toNat • x) fun x =>
 /--
 info: HasRevFDerivUpdate R (fun x i j => ↑(↑i + ↑j).toNat • x) fun x =>
   (fun i j => ↑(↑i + ↑j).toNat • x, fun dy dx =>
-    IdxType.fold IndexType.Range.full dx fun i dx =>
+    IndexType.fold IndexType.Range.full dx fun i dx =>
       let dyi := dy i;
       let dx :=
-        IdxType.fold IndexType.Range.full dx fun i_1 dx =>
+        IndexType.fold IndexType.Range.full dx fun i_1 dx =>
           let x₁ := ↑(↑i + ↑i_1).toNat;
           let dyi := dyi i_1;
           let dx := dx + (starRingEnd R) x₁ • dyi;

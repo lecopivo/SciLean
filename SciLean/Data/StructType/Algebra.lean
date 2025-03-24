@@ -17,8 +17,8 @@ namespace SciLean
 variable
   (K : Type _) [RCLike K]
   {ι κ : Type _} {nι nκ : ℕ}
-  [IdxType ι nι] [DecidableEq ι]
-  [IdxType κ nκ] [DecidableEq κ]
+  [IndexType ι nι] [DecidableEq ι]
+  [IndexType κ nκ] [DecidableEq κ]
   {E I : Type _} {EI : I → Type _}
   [StructType E I EI]
   {F J : Type _} {FJ : J → Type _}
@@ -529,7 +529,7 @@ end VecStruct
 --------------------------------------------------------------------------------
 
 open StructType in
-class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IdxType I nI]
+class SemiInnerProductSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I nI]
     [SemiInnerProductSpace K X] [∀ i, SemiInnerProductSpace K (XI i)]
   extends
     VecStruct K X I XI : Prop
@@ -551,7 +551,7 @@ instance {X} [SemiInnerProductSpace K X] :
 instance
   [SemiInnerProductSpace K E] [SemiInnerProductSpace K F]
   [∀ i, SemiInnerProductSpace K (EI i)] [∀ j, SemiInnerProductSpace K (FJ j)]
-  [IdxType I nI] [IdxType J nJ]
+  [IndexType I nI] [IndexType J nJ]
   [SemiInnerProductSpaceStruct K E I EI] [SemiInnerProductSpaceStruct K F J FJ] :
   SemiInnerProductSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
   -- inner_structProj := sorry_proof
@@ -559,13 +559,13 @@ instance
 
 
 @[simp, simp_core]
-theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IdxType I NI]
+theorem inner_oneHot_eq_inner_structProj [StructType X I XI] [IndexType I NI]
     [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
     [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
 
 @[simp, simp_core]
-theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IdxType I NI]
+theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IndexType I NI]
     [DecidableEq I] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpace K X]
     [SemiInnerProductSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
@@ -577,7 +577,7 @@ theorem inner_oneHot_eq_inner_proj' [StructType X I XI] [IdxType I NI]
 --------------------------------------------------------------------------------
 
 open StructType in
-class AdjointSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IdxType I NI]
+class AdjointSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I NI]
     [NormedAddCommGroup X] [AdjointSpace K X] [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)]
   extends
     VecStruct K X I XI : Prop
@@ -597,7 +597,7 @@ instance {X} [NormedAddCommGroup X] [AdjointSpace K X] :
 instance
   [NormedAddCommGroup E] [AdjointSpace K E] [NormedAddCommGroup F] [AdjointSpace K F]
   [∀ i, NormedAddCommGroup (EI i)] [∀ j, NormedAddCommGroup (FJ j)] [∀ i, AdjointSpace K (EI i)] [∀ j, AdjointSpace K (FJ j)]
-  [IdxType I NI] [IdxType J NJ]
+  [IndexType I NI] [IndexType J NJ]
   [AdjointSpaceStruct K E I EI] [AdjointSpaceStruct K F J FJ] :
   AdjointSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
   -- inner_structProj := sorry_proof
@@ -605,13 +605,13 @@ instance
 
 
 @[simp, simp_core]
-theorem inner_oneHot_eq_inner_structProj'' [StructType X I XI] [IdxType I NI] [DecidableEq I]
+theorem inner_oneHot_eq_inner_structProj'' [StructType X I XI] [IndexType I NI] [DecidableEq I]
     [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [NormedAddCommGroup X] [AdjointSpace K X]
     [AdjointSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
 
 @[simp, simp_core]
-theorem inner_oneHot_eq_inner_proj''' [StructType X I XI] [IdxType I NI] [DecidableEq I]
+theorem inner_oneHot_eq_inner_proj''' [StructType X I XI] [IndexType I NI] [DecidableEq I]
     [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [NormedAddCommGroup X] [AdjointSpace K X]
     [AdjointSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
     ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof

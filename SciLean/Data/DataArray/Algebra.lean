@@ -16,12 +16,12 @@ namespace DataArrayN
 
 variable
   (X I Y : Type*)
-  {nI} [IdxType I nI]
+  {nI} [IndexType I nI]
   [PlainDataType Y]
   [PlainDataType X]
   [DataArrayEquiv X I Y]
-  {J nJ} [IdxType J nJ] -- uncurry index
-  {K nK} [IdxType K nK] -- this will be the canonical index to get to the data
+  {J nJ} [IndexType J nJ] -- uncurry index
+  {K nK} [IndexType K nK] -- this will be the canonical index to get to the data
   {R} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
 
 
@@ -76,7 +76,7 @@ instance instIsZeroGetElemInductive [HasRnEquiv X K R] :
 
 instance  instIsZeroGetElemBase  : IsZeroGetElem (R^[I]) I := by sorry_proof
 
-instance instIsZeroGetElemUncurry {L nL} [IdxType L nL]
+instance instIsZeroGetElemUncurry {L nL} [IndexType L nL]
     [HasRnEquiv X K R]
     {Y} [PlainDataType Y] [Zero Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsZeroGetElem (X^[L]) J] :
@@ -109,7 +109,7 @@ instance instIsAddGetElemInductive [HasRnEquiv X K R] :
 instance instIsAddGetElemBase : IsAddGetElem (R^[I]) I := by sorry_proof
 
 -- this has incorrect assumptions
-instance instIsAddGetElemUncurry {L nL} [IdxType L nL]
+instance instIsAddGetElemUncurry {L nL} [IndexType L nL]
     [HasRnEquiv X K R]
     {Y} [PlainDataType Y] [Add Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsAddGetElem (X^[L]) J] :
@@ -141,7 +141,7 @@ instance instIsNegGetElemInductive [HasRnEquiv X K R] :
 
 instance instIsNegGetElemBase : IsNegGetElem (R^[I]) I := by sorry_proof
 
-instance instIsNegGetElemUncurry {L nL} [IdxType L nL]
+instance instIsNegGetElemUncurry {L nL} [IndexType L nL]
     [HasRnEquiv X K R]
     {Y} [PlainDataType Y] [Neg Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsNegGetElem (X^[L]) J] :
@@ -173,7 +173,7 @@ instance instIsSMulGetElemInductive [HasRnEquiv X K R] :
 instance instIsSMulGetElemBase : IsSMulGetElem R (R^[I]) I := by sorry_proof
 
 -- this has incorrect assumptions
-instance instIsSMulGetElemUncurry {L nL} [IdxType L nL]
+instance instIsSMulGetElemUncurry {L nL} [IndexType L nL]
     [HasRnEquiv X K R]
     {Y} [PlainDataType Y] [SMul R Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsSMulGetElem R (X^[L]) J] :
@@ -208,7 +208,7 @@ instance instIsInnerGetElemInductive [HasRnEquiv X K R] :
 instance instIsInnerGetElemBase : IsInnerGetElem R (R^[I]) I := by sorry_proof
 
 -- this has incorrect assumptions
-instance instIsInnerGetElemUncurry {L nL} [IdxType L nL]
+instance instIsInnerGetElemUncurry {L nL} [IndexType L nL]
     [HasRnEquiv X K R]
     {Y} [PlainDataType Y] [Inner R Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsInnerGetElem R (X^[L]) J] :
@@ -240,7 +240,7 @@ instance instIsModuleGetElemInductive [HasRnEquiv X K R] :
 instance instIsModuleGetElemBase : IsModuleGetElem R (R^[I]) I where
 
 -- this has incorrect assumptions
-instance instIsModuleGetElemUncurry {L nL} [IdxType L nL]
+instance instIsModuleGetElemUncurry {L nL} [IndexType L nL]
     [HasRnEquiv X K R]
     {Y} [PlainDataType Y] [AddCommGroup Y] [Module R Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsModuleGetElem R (X^[L]) J] :
@@ -271,7 +271,7 @@ instance instIsContinuousGetElemInductive [HasRnEquiv X K R] :
 instance instIsContinuousGetElemBase : IsContinuousGetElem (R^[I]) I := by sorry_proof
 
 -- this has incorrect assumptions
-instance instIsContinuousGetElemUncurry {L nL} [IdxType L nL]
+instance instIsContinuousGetElemUncurry {L nL} [IndexType L nL]
     [HasRnEquiv X K R]
     {Y} [PlainDataType Y] [TopologicalSpace Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsContinuousGetElem (X^[L]) J] :

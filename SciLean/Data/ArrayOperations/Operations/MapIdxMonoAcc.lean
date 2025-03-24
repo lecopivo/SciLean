@@ -15,7 +15,7 @@ theorem mapIdxMonoAcc.arg_fxs.HasRevFDeriv_rule
     {𝕜 : Type u} {X : Type v} {I : Type*} {Y : Type w}
     [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem' X I Y] [LawfulSetElem X I]
-    {nI} [IdxType I nI] [IdxType.Fold'.{_,v} I] [RCLike 𝕜]
+    {nI} [IndexType I nI] [IndexType.Fold'.{_,v} I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [NormedAddCommGroup W] [AdjointSpace 𝕜 W] [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]
@@ -29,7 +29,7 @@ theorem mapIdxMonoAcc.arg_fxs.HasRevFDeriv_rule
         let xs := xs w
         let r := mapIdxMonoAcc (f w) (g w) xs
         (r, fun dy =>
-          let dw := IdxType.fold .full (init:=(0:W)) (fun (i : I) dw =>
+          let dw := IndexType.fold .full (init:=(0:W)) (fun (i : I) dw =>
             let xi := xs[i]
             let dyi := dy[i]
             let' (zi,dz') := g' i w
@@ -46,7 +46,7 @@ theorem mapIdxMonoAcc.arg_fxs.HasRevFDerivUpdate_rule
     {𝕜 : Type u} {X : Type v} {I : Type*} {Y : Type w}
     [GetElem' X I Y] [OfFn X I Y] [LawfulOfFn X I]
     [SetElem' X I Y] [LawfulSetElem X I]
-    {nI} [IdxType I nI] [IdxType.Fold'.{_,v} I] [RCLike 𝕜]
+    {nI} [IndexType I nI] [IndexType.Fold'.{_,v} I] [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X] [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [NormedAddCommGroup W] [AdjointSpace 𝕜 W] [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I]
@@ -60,7 +60,7 @@ theorem mapIdxMonoAcc.arg_fxs.HasRevFDerivUpdate_rule
         let xs := xs w
         let r := mapIdxMonoAcc (f w) (g w) xs
         (r, fun dy dw =>
-          let dw := IdxType.fold .full (init:=dw) (fun (i : I) dw =>
+          let dw := IndexType.fold .full (init:=dw) (fun (i : I) dw =>
             let xi := xs[i]
             let dyi := dy[i]
             let' (zi,dz') := g' i w

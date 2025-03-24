@@ -9,7 +9,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} {nι} [IdxType ι nι]
+  {ι : Type _} {nι} [IndexType ι nι]
   {E : ι → Type _} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace K (E j)]
 
 variable (K)
@@ -156,7 +156,7 @@ variable
   {X : Type _} [NormedAddCommGroup X] [NormedSpace K X]
   {Y : Type _} [NormedAddCommGroup Y] [NormedSpace K Y]
   {Z : Type _} [NormedAddCommGroup Z] [NormedSpace K Z]
-  {ι : Type _} {nι} [IdxType ι nι]
+  {ι : Type _} {nι} [IndexType ι nι]
   {E : ι → Type _} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace K (E j)]
 
 
@@ -410,12 +410,12 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
 
 
 @[fun_trans]
-theorem sum.arg_f.fwdFDeriv_rule_at {ι nι} [IdxType ι nι] [IdxType.Fold' ι]
+theorem sum.arg_f.fwdFDeriv_rule_at {ι nι} [IndexType ι nι] [IndexType.Fold' ι]
   (x : X) (f : X → ι → Y) (hf : ∀ i, DifferentiableAt K (f · i) x)
-  : fwdFDeriv K (fun x => IdxType.sum fun i => f x i) x
+  : fwdFDeriv K (fun x => IndexType.sum fun i => f x i) x
     =
     fun dx =>
-      IdxType.sum fun i =>
+      IndexType.sum fun i =>
         let ydy := fwdFDeriv K (f · i) x dx
         ydy :=
 by
@@ -425,12 +425,12 @@ by
 
 
 @[fun_trans]
-theorem sum.arg_f.fwdFDeriv_rule {ι nι} [IdxType ι nι] [IdxType.Fold' ι]
+theorem sum.arg_f.fwdFDeriv_rule {ι nι} [IndexType ι nι] [IndexType.Fold' ι]
   (f : X → ι → Y) (hf : ∀ i, Differentiable K (f · i))
-  : fwdFDeriv K (fun x => IdxType.sum fun i => f x i)
+  : fwdFDeriv K (fun x => IndexType.sum fun i => f x i)
     =
     fun x dx =>
-      IdxType.sum fun i =>
+      IndexType.sum fun i =>
         let ydy := fwdFDeriv K (f · i) x dx
         ydy :=
 by

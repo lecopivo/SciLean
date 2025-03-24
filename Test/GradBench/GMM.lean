@@ -107,13 +107,13 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
       let dx₁ := DataArrayN.scalAdd 0 1 dy₁_1;
       let dx_1 := (2 * dy₁) • x₁;
       let dw :=
-        IdxType.fold IndexType.Range.full (dx₁, dx_1, dx, 0) fun i dw =>
+        IndexType.fold IndexType.Range.full (dx₁, dx_1, dx, 0) fun i dw =>
           let x₁_16 := ⊞ j => x₁₂₁[j] + x₁_1[j] - 0.5 * ‖x₁[j] * (x.row i - x₁₂₂₁.row j)‖₂²;
           let x_3 := x₁_16.logsumexpSoftmax;
           let x' := x_3.2;
           let dx := dz • x';
           let dx :=
-            IdxType.fold IndexType.Range.full dw fun i_1 dx_2 =>
+            IndexType.fold IndexType.Range.full dw fun i_1 dx_2 =>
               let x₁ := x₁[i_1];
               let x₁_17 := x.row i;
               let x₁_18 := x₁₂₂₁.row i_1;
@@ -145,11 +145,11 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
       let dx₂₂₂₁ := dw.2.2.2;
       let dx₁ := DataArrayN.scalAddCols 0 1 dx₁;
       let dx :=
-        IdxType.fold IndexType.Range.full (dx₁, 0) fun i dx =>
+        IndexType.fold IndexType.Range.full (dx₁, 0) fun i dx =>
           let x₁ := x₁₁.row i;
           let dxi := dx₂₁[i];
           let dx_2 :=
-            IdxType.fold IndexType.Range.full 0 fun i dx =>
+            IndexType.fold IndexType.Range.full 0 fun i dx =>
               if h : i.1 < i.2 then dx
               else
                 if h : i.1 = i.2 then

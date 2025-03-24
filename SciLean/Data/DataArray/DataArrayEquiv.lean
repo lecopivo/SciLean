@@ -13,7 +13,7 @@ This class us useful for uncurrying arrays. For example derive equivalence
 
 This class is often used in conjunction with `GetElem` or `DefaultIndex` to derive `K` or `I` as `outParam`. -/
 class DataArrayEquiv (X : Type*) (I : Type*) (K : outParam Type*)
-    {n : outParam ℕ} [IdxType I n] [PlainDataType K] where
+    {n : outParam ℕ} [IndexType I n] [PlainDataType K] where
   toKn : X → K^[I]
   fromKn : K^[I] → X
   protected left_inv : LeftInverse fromKn toKn
@@ -34,18 +34,18 @@ This provides class provides:
 This class is supposed to be zero cost at runtime or close to zero.
 -/
 class HasRnEquiv (X : Type*) (I R : outParam Type*) {nI : outParam ℕ}
-    [RealScalar R] [PlainDataType R] [IdxType I nI]
+    [RealScalar R] [PlainDataType R] [IndexType I nI]
   extends
     DataArrayEquiv X I R
   where
 
 
 @[inline]
-abbrev toKn {X : Type*} (I K : Type*) {nI} [IdxType I nI] [PlainDataType K] [DataArrayEquiv X I K]
+abbrev toKn {X : Type*} (I K : Type*) {nI} [IndexType I nI] [PlainDataType K] [DataArrayEquiv X I K]
   (x : X) : K^[I] := DataArrayEquiv.toKn x
 
 @[inline]
-abbrev fromKn (X : Type*) {I K : Type*} {nI} [IdxType I nI] [PlainDataType K] [DataArrayEquiv X I K]
+abbrev fromKn (X : Type*) {I K : Type*} {nI} [IndexType I nI] [PlainDataType K] [DataArrayEquiv X I K]
   (x : K^[I]) : X := DataArrayEquiv.fromKn x
 
 /--
@@ -54,7 +54,7 @@ Converts `X` to `R^[I]`
 Similar to `toKn` but can infere `R` and `I` automatically.
 -/
 @[inline]
-def toRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I nI] [HasRnEquiv X I R]
+def toRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IndexType I nI] [HasRnEquiv X I R]
   (x : X) : R^[I] := DataArrayEquiv.toKn x
 
 /--
@@ -63,7 +63,7 @@ Converts `R^[I]` to `X`
 Similar to `fromKn` can infere `R` and `I` automatically.
 -/
 @[inline]
-def fromRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IdxType I nI] [HasRnEquiv X I R]
+def fromRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IndexType I nI] [HasRnEquiv X I R]
   (x : R^[I]) : X := DataArrayEquiv.fromKn x
 
 
@@ -75,7 +75,7 @@ namespace DataArrayN
 -- inductive
 instance instDataArrayEquivInductive
     {I J X K : Type*}
-    {nI} [IdxType I nI] {nJ} [IdxType J nJ] [PlainDataType K]
+    {nI} [IndexType I nI] {nJ} [IndexType J nJ] [PlainDataType K]
     [PlainDataType X] [DataArrayEquiv X J K] :
     DataArrayEquiv (X^[I]) (I×J) K where
   toKn  x := cast sorry_proof x -- this is slow ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
@@ -86,7 +86,7 @@ instance instDataArrayEquivInductive
 
 -- base case
 instance instDataArrayEquivBase
-    {I n} [IdxType I n] {K} [PlainDataType K] :
+    {I n} [IndexType I n] {K} [PlainDataType K] :
     DataArrayEquiv (K^[I]) I K where
   toKn := fun x => x
   fromKn := fun x => x
@@ -115,7 +115,7 @@ instance instDataArrayEquivSelf
 
 /-- Uncurry element access `x[i][j]` for `x : X^[I]` where `X` can be element accessed with `j : J` -/
 instance instGetElemUncurry
-    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] :
     GetElem (X^[I]) (I×J) K (fun _ _ => True) where
@@ -125,7 +125,7 @@ instance instGetElemUncurry
 
 /-- `x[i,j] = x[i][j]` for `x : X^[I]` -/
 instance instIsGetElemCurry
-    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem' X J K] :
     IsGetElemCurry (X^[I]) I J where
@@ -135,7 +135,7 @@ instance instIsGetElemCurry
     sorry_proof
 
 instance instInjectiveGetElemUncurry
-    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] :
     InjectiveGetElem (X^[I]) (I×J) where
@@ -150,7 +150,7 @@ instance instInjectiveGetElemUncurry
 ----------------------------------------------------------------------------------------------------
 
 instance instSetElemUncurry
-    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] :
     SetElem (X^[I]) (I×J) K (fun _ _ => True) where
@@ -160,7 +160,7 @@ instance instSetElemUncurry
   setElem_valid := by simp
 
 instance instLawfulSetElemUncurry
-    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     LawfulSetElem (X^[I]) (I×J) where
@@ -173,14 +173,14 @@ instance instLawfulSetElemUncurry
 ----------------------------------------------------------------------------------------------------
 
 instance instOfFnUncurry
-    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ] [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ] [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     OfFn (X^[I]) (I×J) K where
   ofFn f := fromKn _ (⊞ ij => f ij)
 
 instance instLawfulOfFnUncurry
-    {I J} {nI} [IdxType I nI] {nJ} [IdxType J nJ] [IdxType.Fold'.{_,0} I] [IdxType.Fold'.{_,0} J]
+    {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ] [IndexType.Fold'.{_,0} I] [IndexType.Fold'.{_,0} J]
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     LawfulOfFn (X^[I]) (I×J) where

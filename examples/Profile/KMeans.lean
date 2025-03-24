@@ -17,7 +17,7 @@ def FloatArray.rand01 (n : Nat) : IO FloatArray := do
 
 
 @[inline]
-def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IdxType I n]
+def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I n]
     (xs : X^[I]) (i : I) : X :=
   -- xs.1.1.ugetFloat (toIdx i) sorry_proof
   pd.fromByteArray xs.1.1 (toIdx i) sorry_proof

@@ -1,13 +1,13 @@
 import SciLean.Data.ArrayOperations.Basic
 import SciLean.Data.IndexType
-import SciLean.Data.IdxType.Basic
-import SciLean.Data.IdxType.Fold
+import SciLean.Data.IndexType.Basic
+import SciLean.Data.IndexType.Fold
 
 namespace SciLean
 
 namespace ArrayOps
 
-variable {X I Y : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+variable {X I Y : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
   [GetElem' X I Y]
   [SetElem' X I Y]
 
@@ -36,7 +36,7 @@ def mulAdd (x y z : X) := mapIdxMono2 (fun i (xi,yi) zi => xi*yi + zi) (fun i =>
 -/
 @[inline, specialize]
 def mapIdxMonoAcc (f : I → Z → Y → Y) (g : I → Z) (xs : X) : X :=
-  IdxType.fold (init:=xs) .full (fun (i : I) xs  =>
+  IndexType.fold (init:=xs) .full (fun (i : I) xs  =>
     let xi := xs[i]
     let yi := g i
     let xi' := f i (g i) xi

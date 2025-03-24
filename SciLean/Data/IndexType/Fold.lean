@@ -1,301 +1,249 @@
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
-import SciLean.Data.IndexType.Operations
-import SciLean.Tactic.Autodiff
-import SciLean.Data.DataArray.DataArray
-
-import SciLean.Meta.GenerateAddGroupHomSimp
-import SciLean.Meta.GenerateFunProp
-
-import SciLean.Analysis.Scalar.FloatAsReal
-
-set_option linter.unusedVariables false
+import SciLean.Data.IndexType.Basic
+import SciLean.Data.IndexType.Range
 
 namespace SciLean
 
-open IndexType Range
+/-- Implementation of a fold over index type `I` in the monad `m`.
 
-variable {I: Type*} [IndexType I]
+Note: This function is not part of `IndexType` because of the two universe parameters `v` and `w`
+which were causing lot of issues during type class synthesis. -/
+class IndexType.Fold (I : Type u) (m : Type v → Type w) {n : outParam ℕ} [IndexType I n] where
+  forIn {β} [Monad m] (r : IndexType.Range I) (init : β) (f : I → β → m (ForInStep β)) : m β
 
-section OnModule
+  -- TODO: some property that the forIn and foldM are doing the right thing in *the* order aligned
+  --       with `IndexType`
 
-variable
-  {R : Type*} [CommSemiring R]
-  {X : Type*} [AddCommGroup X] [Module R X]
-  {W : Type*} [AddCommGroup W] [Module R W]
+/--
+Abbreviation for `IndexType.Fold I Id`
 
-@[fun_prop]
-theorem IndexType.Range.foldl.arg_opinit.IsAddGroupHom_rule (r : Range I)
-  (op : W → X → I → X) (hop : ∀ i, IsAddGroupHom (fun (w,x) => op w x i))
-  (init : W → X) (hinit : IsAddGroupHom init) :
-  IsAddGroupHom (fun w => r.foldl (op w) (init w)) := by sorry_proof
+Implementation of a fold over index type `I`.
 
-@[fun_prop]
-theorem IndexType.Range.foldl.arg_opinit.IsLinearMap_rule (r : Range I)
-  (op : W → X → I → X) (hop : ∀ i, IsLinearMap R (fun (w,x) => op w x i))
-  (init : W → X) (hinit : IsLinearMap R init) :
-  IsLinearMap R (fun w => r.foldl (op w) (init w)) := by sorry_proof
+Warning: This class has an universe parameter `v` that is not deducible from the its parameters.
+  Sometimes you might have to specify the universe parameter manually e.g. `IndexType.Fold'.{_,0} I`
+-/
+abbrev IndexType.Fold'.{u,v} (I : Type u) [IndexType I n] := IndexType.Fold.{u,v,v} I Id
 
+attribute [specialize, inline] IndexType.Fold.forIn
 
-end OnModule
+namespace IndexType
 
+export IndexType.Fold (forIn)
 
+@[inline, specialize]
+def foldM {I n m β} [IndexType I n] [IndexType.Fold I m] [Monad m]
+    (r : IndexType.Range I) (init : β) (f : I → β → m β) : m β :=
+  forIn r init (fun i x => do return .yield (← f i x))
 
-section OnTopologicalSpace
+@[inline, specialize]
+def fold {I n β} [IndexType I n] [IndexType.Fold I Id]
+    (r : IndexType.Range I) (init : β) (f : I → β → β) : β :=
+  foldM (m:=Id) r init (fun i x => pure (f i x))
 
-variable
-  {X : Type*} [TopologicalSpace X]
-  {W : Type*} [TopologicalSpace W]
+instance {m : Type v → Type w} {n} [IndexType I n] [IndexType.Fold I m] :
+    ForIn m (IndexType.Range I) I where
+  forIn := IndexType.Fold.forIn
 
-@[fun_prop]
-theorem IndexType.Range.foldl.arg_opinit.Continuous_rule (r : Range I)
-  (op : W → X → I → X) (hop : ∀ i, Continuous (fun (w,x) => op w x i))
-  (init : W → X) (hinit : Continuous init) :
-  Continuous (fun w => r.foldl (op w) (init w)) := by sorry_proof
+@[inline, specialize]
+def reduceDM {I : Type u} {β : Type v} {m : Type v → Type w} {n : ℕ}
+    [IndexType I n] [IndexType.Fold I m] [Monad m]
+    (r : IndexType.Range I) (f : I → m β) (op : β → β → m β) (default : β) : m β := do
+  let mut val := default
+  let mut first : ULift.{v,0} Bool := ULift.up true
+  for i in r do
+    if ULift.down first then
+      val ← f i
+      first := ULift.up false
+    else
+      val ← op val (← f i)
+  return val
 
-end OnTopologicalSpace
+@[inline, specialize]
+def reduceD {I n β} [IndexType I n] [IndexType.Fold I Id]
+    (r : IndexType.Range I) (f : I → β) (op : β → β → β) (default : β) : β :=
+  reduceDM (m:=Id) r f op default
 
-
-
-section OnNormedSpace
-
-variable
-  {R : Type*} [RCLike R]
-  {X : Type*} [NormedAddCommGroup X] [NormedSpace R X]
-  {W : Type*} [NormedAddCommGroup W] [NormedSpace R W]
-
-@[fun_prop]
-theorem IndexType.Range.foldl.arg_opinit.IsContinuousLinearMap_rule (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, IsContinuousLinearMap R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : IsContinuousLinearMap R init) :
-    IsContinuousLinearMap R (fun w => r.foldl (op w) (init w)) := by
-
-  have := fun i => (hop i).2
-  have := hinit.2
-  simp_all
-  constructor <;> fun_prop
-
-
-@[fun_prop]
-theorem IndexType.Range.foldl.arg_opinit.Differentiable_rule (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : Differentiable R init) :
-    Differentiable R (fun w => r.foldl (op w) (init w)) := by sorry_proof
-
--- @[fun_prop]
--- theorem IndexType.Range.foldl.arg_opinit.ContDiff_rule (r : Range I) (n : ℕ∞)
---     (op : W → X → I → X) (hop : ∀ i, ContDiff R n (fun (w,x) => op w x i))
---     (init : W → X) (hinit : ContDiff R n init) :
---     ContDiff R n (fun w => r.foldl (op w) (init w)) := by sorry_proof
-
-@[fun_trans]
-theorem IndexType.Range.foldl.arg_opinit.fderiv_rule (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : Differentiable R init) :
-    fderiv R (fun w => r.foldl (op w) (init w))
-    =
-    fun w => ContinuousLinearMap.mk' R (fun dw : W =>
-      let init' := init w
-      let dinit' := fderiv R init w dw
-      let op' := fun ((x,dx) : (X×X)) (i : I) =>
-        let x' := op w x i
-        let dx' := fderiv R (fun (w,x) => op w x i) (w,x) (dw,dx)
-        (x',dx')
-      (r.foldl op' (init',dinit')).2) (sorry_proof /- this is tricky -/) := by sorry_proof
-
-@[fun_trans]
-theorem IndexType.Range.foldl.arg_opinit.fwdFDeriv_rule (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : Differentiable R init) :
-    fwdFDeriv R (fun w => r.foldl (op w) (init w))
-    =
-    fun w dw =>
-      let' (init',dinit') := fwdFDeriv R init w dw
-      let op' := fun ((xdx) : (X×X)) (i : I) =>
-        let' (x,dx) := xdx
-        let' (x',dx') := fwdFDeriv R (fun (w,x) => op w x i) (w,x) (dw,dx)
-        (x',dx')
-      (r.foldl op' (init',dinit')) := by
-  unfold fwdFDeriv; fun_trans
-  -- how to prove this?
-  sorry_proof
-
-@[data_synth]
-theorem IndexType.Range.foldl.arg_opinit.HasFwdFDeriv (r : Range I)
-    (op : W → X → I → X) {op' : I → _}
-    (hop : ∀ i, HasFwdFDeriv R (fun (w,x) => op w x i) (op' i))
-    (init : W → X) {init'} (hinit : HasFwdFDeriv R init init') :
-    HasFwdFDeriv R (fun w => r.foldl (op w) (init w))
-      (fun w dw =>
-        let' (init',dinit') := fwdFDeriv R init w dw
-        let op' := fun ((xdx) : (X×X)) (i : I) =>
-          let' (x,dx) := xdx
-          let' (x',dx') := op' i (w,x) (dw,dx)
-          (x',dx')
-        (r.foldl op' (init',dinit'))) := by
-  sorry_proof
-
-end OnNormedSpace
+@[inline, specialize]
+abbrev reduce {I n β} [IndexType I n] [IndexType.Fold I Id] [Inhabited β]
+    (r : IndexType.Range I) (f : I → β) (op : β → β → β) : β :=
+  reduceD r f op default
 
 
+----------------------------------------------------------------------------------------------------
+-- Instance for `Unit` -----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+instance : IndexType.Fold Unit m  where
+  forIn r init f :=
+    match r with
+    | .empty => pure init
+    | .full => do
+       match ← f () init with
+       | .done v | .yield v => pure v
+    | .interval _ _ => do
+       match ← f () init with
+       | .done v | .yield v => pure v
 
 
-section OnAdjointSpace
+----------------------------------------------------------------------------------------------------
+-- Instance for `I × J` ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
-variable
-  {R : Type*} [RCLike R]
-  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
-  {W : Type*} [NormedAddCommGroup W] [AdjointSpace R W]
-
-@[fun_trans]
-theorem IndexType.Range.foldl.arg_opinit.adjoint_rule (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, IsContinuousLinearMap R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : IsContinuousLinearMap R init) :
-    adjoint R (fun w => r.foldl (op w) (init w))
-    =
-    fun x' =>
-      let (w,x) := r.reverse.foldl (fun (w,x) i =>
-        let (w',x) := adjoint R (fun (w,x) => op w x i) x
-        (w + w', x)) (0, init w)
-      let w' := adjoint R init x
-      w + w' := sorry_proof
-
-@[fun_trans]
-theorem IndexType.Range.foldl.arg_init.adjoint_rule (r : Range I)
-    (op : X → I → X) (hop : ∀ i, IsContinuousLinearMap R (fun x => op x i))
-    (init : W → X) (hinit : IsContinuousLinearMap R init) :
-    adjoint R (fun w => r.foldl op (init w))
-    =
-    fun x' =>
-      let x := r.reverse.foldl (fun x i =>
-        let x := adjoint R (fun x => op x i) x
-        x) (init w)
-      let w := adjoint R init x
-      w := sorry_proof
-
-variable [CompleteSpace W] [CompleteSpace X]
+-- TODO: This does not break correctly! Fix this!
+--       It is not hard to implement but unclear if it negativelly impacts performance.
+--       It will require careful testing.
+instance
+    {I nI} [IndexType I nI] [fi : IndexType.Fold I m]
+    {J nJ} [IndexType J nJ] [fj : IndexType.Fold J m] :
+    IndexType.Fold (I × J) m  where
+  forIn r init f :=
+    let (ri,rj) := r.ofProd
+    fi.forIn ri init fun i x => do
+      let x' ← fj.forIn rj x fun j x => f (i,j) x
+      return .yield x'
 
 
-omit [CompleteSpace W] [CompleteSpace X] in
-/-- Reverse derivative of fold - version storing closures for every step. -/
--- @[fun_trans]
-theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_closures (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : Differentiable R init) :
-    revFDeriv R (fun w => r.foldl (op w) (init w))
-    =
-    fun w =>
-      let idi := revFDeriv R init w
-      let (dops,x) := r.foldl (fun (dops,x) i =>
-        let (x, dop) := revFDeriv R (fun (w,x) => op w x i) (w,x)
-        (dops.push dop, x)) ((#[] : Array (X → W×X)), idi.1)
-      (x, fun dx =>
-        let (dw,dx) := dops.foldr (fun df (dw,dx) =>
-          let (dw', dx) := df dx
-          (dw + dw', dx)) (0, dx)
-        let dw' := idi.2 dx
-        dw + dw') := sorry_proof
+----------------------------------------------------------------------------------------------------
+-- Instance for `I ⊕ J` ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+-- TODO: this does not break correctly! fix this!
+--       not hard to implement but unclear if it negativelly impacts performance
+instance {I J n n'}
+    [FirstLast I I] [IndexType I n] [IndexType.Fold I m]
+    [FirstLast J J] [IndexType J n'] [IndexType.Fold J m] :
+    IndexType.Fold (I ⊕ J) m  where
+  forIn r init f :=
+    match r.ofSum with
+    | .inl (ri, rj) => do
+      let x := init
+      let x ← IndexType.Fold.forIn ri x (fun i x => f (.inl i) x)
+      let x ← IndexType.Fold.forIn rj x (fun j x => f (.inr j) x)
+      return x
+    | .inr (rj, ri) => do
+      let x := init
+      let x ← IndexType.Fold.forIn rj x (fun j x => f (.inr j) x)
+      let x ← IndexType.Fold.forIn ri x (fun i x => f (.inl i) x)
+      return x
 
 
-omit [CompleteSpace W] [CompleteSpace X] in
-/-- Reverse derivative of fold - version storing every point - store in Array if DataArray is not
-available for `X` -/
-@[fun_trans]
-theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_array (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : Differentiable R init) :
-    revFDeriv R (fun w => r.foldl (op w) (init w))
-    =
-    fun w =>
-      let idi := revFDeriv R init w
-      let xsx := r.foldl (fun (xs,x) i =>
-        let xs := xs.push (x,i)
-        let x := op w x i
-        (xs,x)) ((#[] : Array (X×I)), idi.1)
-      let xs := xsx.1
-      let x := xsx.2
-      (x, fun dx =>
-        let dwx := xs.foldr (fun (x,i) (dw,dx) =>
-          let dwx := (revFDeriv R (fun (w,x) => op w x i) (w,x)).2 dx
-          (dw + dwx.1, dwx.2)) (0, dx)
-        let dw' := idi.2 dwx.2
-        dwx.1 + dw') := sorry_proof
+----------------------------------------------------------------------------------------------------
+-- Instance for `Idx n` ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- Run `f` for all `Idx n` -/
+@[inline, specialize]
+partial def Idx.forInFull {β} [Monad m]
+    (init : β) (f : Idx n → β → m (ForInStep β)) : m β :=
+  loop init 0
+where
+  @[specialize] loop (x : β) (i : USize) : m β := do
+    if i < n.toUSize then
+      match (← f ⟨i, sorry_proof⟩ x) with
+      | .yield x => loop x (i+1)
+      | .done x => pure x
+    else
+      pure x
 
 
--- omit [CompleteSpace W] [CompleteSpace X] in
--- /-- Reverse derivative of fold - version storing every point - use DataArray if possible -/
--- @[fun_trans]
--- theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_data_array
---     {I: Type} [IndexType I]
---     {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [PlainDataType X]
---     (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
---     (init : W → X) (hinit : Differentiable R init) :
---     revFDeriv R (fun w => (.full : Range I).foldl (op w) (init w))
---     =
---     fun w =>
---       let idi := revFDeriv R init w
---       let xsx := (.full : Range I).foldl (fun (xs,x) i =>
---         let xs := xs.set i x
---         let x := op w x i
---         (xs,x)) ((0 : X^[I]), idi.1)
---       let xs := xsx.1
---       let x := xsx.2
---       (x, fun dx =>
---         let dwx := (.full : Range I).reverse.foldl (fun (dw,dx) i  =>
---           let x := xs[i]
---           let dwx := (revFDeriv R (fun (w,x) => op w x i) (w,x)).2 dx
---           (dw + dwx.1, dwx.2)) (0, dx)
---         let dw' := idi.2 dwx.2
---         dwx.1 + dw') := sorry_proof
-
-omit [CompleteSpace W] [CompleteSpace X] in
-/-- Reverse derivative of fold - version with linear operation, we do not need to store
-values of the forward pass. -/
-@[fun_trans]
-theorem IndexType.Range.foldl.arg_opinit.revFDeriv_rule_linear (r : Range I)
-    (op : W → X → I → X) (hop : ∀ i, IsContinuousLinearMap R (fun (w,x) => op w x i))
-    (init : W → X) (hinit : Differentiable R init) :
-    revFDeriv R (fun w => r.foldl (op w) (init w))
-    =
-    fun w =>
-      let idi := revFDeriv R init w
-      let x := r.foldl (fun x i =>
-        let x := op w x i
-        x) idi.1
-      (x, fun dx =>
-        let dwx := r.reverse.foldl (fun (dw,dx) i =>
-          let dwx := (revFDeriv R (fun (w,x) => op w x i) (w,0)).2 dx
-          (dw + dwx.1, dwx.2)) (0, dx)
-        let dw' := idi.2 dwx.2
-        dwx.1 + dw') := sorry_proof
+/-- Run `f` starting at `a` up to `a`(inclusive) -/
+@[inline, specialize]
+partial def Idx.forInIntervalUp {β} [Monad m]
+    (a b : Idx n) (init : β) (f : Idx n → β → m (ForInStep β)) : m β :=
+  loop init a.1
+where
+  @[specialize] loop (x : β) (i : USize) : m β := do
+    if i <= b.1 then
+      match (← f ⟨i, sorry_proof⟩ x) with
+      | .yield x => loop x (i+1)
+      | .done x => pure x
+    else
+      pure x
 
 
--- @[fun_trans]
--- theorem IndexType.Range.foldl.arg_opinit.revFDerivProj_rule_data_array
---     {R : Type} [RCLike R]
---     {I : Type} [IndexType I]
---     {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [CompleteSpace X] [PlainDataType X]
---     {W : Type} [NormedAddCommGroup W] [AdjointSpace R W] [CompleteSpace W]
---     (op : W → X → I → X) (hop : ∀ i, Differentiable R (fun (w,x) => op w x i))
---     (init : W → X) (hinit : Differentiable R init) :
---     revFDerivProj R Unit (fun w => (.full : Range I).foldl (op w) (init w))
---     =
---     fun w =>
---       let idi := revFDeriv R init w
---       let xsx := (.full : Range I).foldl (fun (xs,x) i =>
---         let xs := xs.set i x
---         let x := op w x i
---         (xs,x)) ((0 : X^[I]), idi.1)
---       let xs := xsx.1
---       let x := xsx.2
---       (x, fun _ dx =>
---         let dwx := (.full : Range I).reverse.foldl (fun (dw,dx) i  =>
---           let x := xs[i]
---           let dwx : W×X := (revFDerivProjUpdate R Unit (fun (w,x) => op w x i) (w,x)).2 () dx (dw,0)
---           dwx) (0, dx)
---         let dw' := idi.2 dwx.2
---         dwx.1 + dw') := sorry_proof
+/-- Run `f` starting at `b` down to `a`(inclusive) (assuming `a<b`)  -/
+@[inline, specialize]
+partial def Idx.forInIntervalDown {β} [Monad m]
+    (a b : Idx n) (init : β) (f : Idx n → β → m (ForInStep β)) : m β :=
+  loop init b
+where
+  @[specialize] loop (x : β) (i : Idx n) : m β := do
+    match (← f i x) with
+    | .yield x =>
+      if a ≥ i then
+        pure x
+      else
+        loop x ⟨i-1, sorry_proof⟩
+    | .done x => pure x
 
 
--- TODO: add checkpointing version
+instance : IndexType.Fold (Idx n) m  where
+  forIn r init f :=
+    match r with
+    | .empty => pure init
+    | .full => Idx.forInFull init f
+    | .interval a b =>
+      if a ≤ b then
+        Idx.forInIntervalUp a b init f
+      else
+        Idx.forInIntervalDown b a init f
+
+
+----------------------------------------------------------------------------------------------------
+-- Instance for `Fin n` ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- Run `f` for all `Fin n` -/
+@[inline, specialize]
+partial def Fin.forInFull {β} [Monad m]
+    (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
+  loopSmall init 0
+where
+  @[specialize] loopSmall (x : β) (i : USize) : m β := do
+    if i < n.toUSize then
+      match (← f ⟨i.toNat, sorry_proof⟩ x) with
+      | .yield x => loopSmall x (i+1)
+      | .done x => pure x
+    else
+      pure x
+
+
+/-- Run `f` starting at `a` up to `a`(inclusive) -/
+@[inline, specialize]
+partial def Fin.forInIntervalUp {β} [Monad m]
+    (a b : Fin n) (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
+  loop init a.1.toUSize
+where
+  @[specialize] loop (x : β) (i : USize) : m β := do
+    if i <= b.1.toUSize then
+      match (← f ⟨i.toNat, sorry_proof⟩ x) with
+      | .yield x => loop x (i+1)
+      | .done x => pure x
+    else
+      pure x
+
+
+/-- Run `f` starting at `b` down to `a`(inclusive) (assuming `a<b`)  -/
+@[inline, specialize]
+partial def Fin.forInIntervalDown {β} [Monad m]
+    (a b : Fin n) (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
+  loop init b
+where
+  @[specialize] loop (x : β) (i : Fin n) : m β := do
+    match (← f i x) with
+    | .yield x =>
+      if a ≥ i then
+        pure x
+      else
+        loop x ⟨i-1, sorry_proof⟩
+    | .done x => pure x
+
+instance : IndexType.Fold (Fin n) m  where
+  forIn r init f :=
+    match r with
+    | .empty => pure init
+    | .full => Fin.forInFull init f
+    | .interval a b =>
+      if a ≤ b then
+        Fin.forInIntervalUp a b init f
+      else
+        Fin.forInIntervalDown b a init f

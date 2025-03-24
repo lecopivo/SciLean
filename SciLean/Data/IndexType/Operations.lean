@@ -1,102 +1,142 @@
-import SciLean.Data.IndexType.Basic
-import SciLean.Tactic.RefinedSimp
+import SciLean.Data.IndexType.Fold
+
+
+import Mathlib.Data.Finset.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Defs
+-- import SciLean.Data.IndexType.SumProduct
 
 namespace SciLean
 
+variable {I : Type u} {α : Type v}  {n} [IndexType I n] [IndexType.Fold.{u,v,v} I Id]
+
 namespace IndexType
 
-namespace Range
 
-#exit
+/-- `sum f` returns sum of `f` over index type `I`. -/
+@[specialize, inline]
+def sum [Zero α] [Add α] (f : I → α) : α :=
+  IndexType.fold (IndexType.Range.full (I:=I)) (init := 0) (fun i s => s + f i)
 
-variable {ι : Type*} [IndexType ι]
 
-def foldlIdxM {m} [Monad m] (r : Range ι) (op : α → ι → Fin (size r) → m α) (init : α) : m α := do
-  let mut a := init
-  let mut idx : Nat := 0
-  for i in Iterator.start r do
-    a ← op a i ⟨idx, sorry_proof⟩
-    idx := idx + 1
-  return a
+open Lean.TSyntax.Compat in
+/-- `∑ᴵ (i : I), f i` is sum of values of `f` over the index type `I`.
 
-def foldlM {m} [Monad m] (r : Range ι) (op : α → ι → m α) (init : α) : m α := do
-  let mut a := init
-  for i in Iterator.start r do
-    a ← op a i
-  return a
+There has to be an instance `IndexType I n` and `IndexType.Fold' I`. -/
+macro " ∑ᴵ " xs:Lean.explicitBinders ", " b:term:66 : term =>
+  Lean.expandExplicitBinders ``IndexType.sum xs b
 
-def foldl (r : Range ι) (op : α → ι → α) (init : α) : α := Id.run do
-  r.foldlM op init
+@[app_unexpander sum] def unexpandIndexTypeSum : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:ident => $b) =>
+    `(∑ᴵ $x:ident, $b)
+  | `($(_) fun $x:ident $xs:ident* => $b) =>
+    `(∑ᴵ $x:ident, fun $xs* => $b)
+  | `($(_) fun ($x:ident : $ty:term) => $b) =>
+    `(∑ᴵ ($x:ident : $ty), $b)
+  | _  => throw ()
 
-def reduceMD {m} [Monad m] (r : Range ι) (f : ι → α) (op : α → α → m α) (default : α) : m α := do
-  match first? r with
-  | none => return default
-  | .some fst => do
-    let mut a := (f fst)
-    for i in Iterator.val fst r do
-      a ← op a (f i)
-    return a
-
-def reduceD (r : Range ι) (f : ι → α) (op : α → α → α) (default : α) : α := Id.run do
-  r.reduceMD f (fun x y => pure (op x y)) default
-
-abbrev reduce [Inhabited α] (r : Range ι) (f : ι → α) (op : α → α → α) : α :=
-  r.reduceD f op default
+theorem sum_eq_finset_sum {α} [AddCommMonoid α] (f : I → α) :
+  ∑ᴵ i, f i = Finset.univ.sum f := sorry_proof
 
 
 ----------------------------------------------------------------------------------------------------
+-- min ---------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-end Range
+/-- `min f` returns minimum of `f` over index type `I`. -/
+@[specialize, inline]
+def min [Min α] [Top α] (f : I → α) : α :=
+  IndexType.fold (IndexType.Range.full (I:=I)) (init:=(⊤:α)) (fun i m => Min.min (f i) m)
 
-variable {ι : Type*} [IndexType ι]
+@[specialize, inline]
+def argMinVal {I α : Type*} {n}
+    [IndexType I n] [IndexType.Fold' I]
+    [LE α] [DecidableLE α] [Inhabited I] [Top α]
+    (f : I → α) : (I×α) :=
+  IndexType.fold (IndexType.Range.full (I:=I))
+    (init := (default, ⊤))
+    (fun j (i,xi)  =>
+      let xj := f j
+      if xi ≤ xj then (i,xi) else (j,xj))
 
-abbrev foldlM {m} [Monad m] (op : α → ι → m α) (init : α) : m α :=
-  Range.full.foldlM op init
+/-- `argMin f` returns index at which `f` is minimal over index type `I`. -/
+@[specialize, inline]
+def argMin {I α : Type*} {n}
+    [IndexType I n] [IndexType.Fold' I]
+    [LE α] [DecidableLE α] [Inhabited I] [Top α]
+    (f : I → α) : I := (argMinVal f).1
 
-abbrev foldl (op : α → ι → α) (init : α) : α :=
-  Range.full.foldl op init
+open Lean.Parser.Term in
+/-- `mᴵ (i : I), f i` returns minimum of `f` over index type `I`.
 
-abbrev reduceMD {m} [Monad m] (f : ι → α) (op : α → α → m α) (default : α) : m α :=
-  Range.full.reduceMD f op default
+There has to be an instance `IndexType I n` and `IndexType.Fold' I`. -/
+macro "minᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.min fun $x => $b)
 
-abbrev reduceD (f : ι → α) (op : α → α → α) (default : α) : α :=
-  Range.full.reduceD f op default
-
-abbrev reduce [Inhabited α] (f : ι → α) (op : α → α → α) : α :=
-  reduceD f op default
-
-def argValMax {I} [IndexType I] [Inhabited I]
-    (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I×X :=
-  IndexType.reduceD
-    (fun i => (i,f i))
-    (fun (i,e) (i',e') => if e < e' then (i',e') else (i,e))
-    (default, f default)
-
-def argMax {I} [IndexType I] [Inhabited I]
-    (f : I → X) [LT X] [∀ x x' : X, Decidable (x<x')] : I :=
-  (IndexType.argValMax f).1
-
-def maxD {I} [IndexType I] [LE X] [DecidableLE X]
-    (f : I → X) (x₀ : X) : X :=
-  IndexType.reduceD f (fun x x' => if x ≤ x' then x' else x) x₀
-
-def minD {I} [IndexType I] [LE X] [DecidableLE X]
-    (f : I → X) (x₀ : X) : X :=
-  IndexType.reduceD f (fun x x' => if x ≤ x' then x else x') x₀
-
-abbrev max {I} [IndexType I] [Inhabited X] [LE X] [DecidableLE X]
-    (f : I → X) : X := maxD f default
-
-abbrev min {I} [IndexType I] [Inhabited X] [LE X] [DecidableLE X]
-    (f : I → X) : X := minD f default
+open Lean.Parser.Term in
+@[app_unexpander min] def unexpandIndexTypeMin : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:funBinder => $b) =>
+    `(minᴵ $x, $b)
+  | _  => throw ()
 
 
-variable {I : Type*} [IndexType I]
+open Lean.Parser.Term in
+/-- `argMinᴵ (i : I), f i` returns index at which `f` is minimal over index type `I`.-/
+macro "argMinᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.argMin fun $x => $b)
 
-open IndexType
-@[rsimp guard I .notAppOf ``Fin]
-theorem reduce_linearize {I X : Type _} [IndexType I] (init : X) (f : I → X) (op : X → X → X) :
-    IndexType.reduceD f op init
-    =
-    IndexType.reduceD (fun i : Fin (size I) => f (fromFin i)) op init := sorry_proof
+open Lean.Parser.Term in
+@[app_unexpander argMin] def unexpandIndexTypeArgMin : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:funBinder => $b) =>
+    `(argMinᴵ $x, $b)
+  | _  => throw ()
+
+
+
+----------------------------------------------------------------------------------------------------
+-- max ---------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- `max f` returns maximum of `f` over index type `I`. -/
+@[specialize, inline]
+def max [Max α] [Bot α] (f : I → α) : α :=
+  IndexType.fold (IndexType.Range.full (I:=I)) (init:=(⊥:α)) (fun i m => Max.max (f i) m)
+
+@[specialize, inline]
+def argMaxVal {I α : Type*} {n}
+    [IndexType I n] [IndexType.Fold' I]
+    [LE α] [DecidableLE α] [Inhabited I] [Bot α]
+    (f : I → α) : (I×α) :=
+  IndexType.fold (IndexType.Range.full (I:=I))
+    (init := (default, ⊥))
+    (fun j (i,xi)  =>
+      let xj := f j
+      if xi ≤ xj then (j,xj) else (i,xi))
+
+
+/-- `argMax f` returns index at which `f` is maximal over index type `I`. -/
+@[specialize, inline]
+def argMax {I α : Type*} {n}
+    [IndexType I n] [IndexType.Fold' I]
+    [LE α] [DecidableLE α] [Inhabited I] [Bot α]
+    (f : I → α) : I := (argMaxVal f).1
+
+open Lean.Parser.Term in
+/-- `mᴵ (i : I), f i` returns maximum of `f` over index type `I`.
+
+There has to be an instance `IndexType I n` and `IndexType.Fold' I`. -/
+macro "maxᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.max fun $x => $b)
+
+open Lean.Parser.Term in
+@[app_unexpander max] def unexpandIndexTypeMax : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:funBinder => $b) =>
+    `(maxᴵ $x, $b)
+  | _  => throw ()
+
+
+open Lean.Parser.Term in
+/-- `argMaxᴵ (i : I), f i` returns index at which `f` is maximal over index type `I`.-/
+macro "argMaxᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.argMax fun $x => $b)
+
+open Lean.Parser.Term in
+@[app_unexpander argMax] def unexpandIndexTypeArgMax : Lean.PrettyPrinter.Unexpander
+  | `($(_) fun $x:funBinder => $b) =>
+    `(argMaxᴵ $x, $b)
+  | _  => throw ()

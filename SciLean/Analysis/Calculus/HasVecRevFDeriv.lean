@@ -136,25 +136,25 @@ theorem let_rule {g : X → Y} {f : Y → X → Z} {f' g'}
 
 
 @[data_synth]
-theorem apply_rule {I nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] (i : I) :
+theorem apply_rule {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] (i : I) :
     HasVecRevFDeriv 𝕜 W (fun x : I → X => x i)
       (fun x =>
         (x i, fun dx i => dx)) := sorry_proof
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
-theorem apply_rule' {I nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] (i : I) :
+theorem apply_rule' {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] (i : I) :
     HasVecRevFDeriv 𝕜 W (fun x : (I → X)×Y => x.1 i)
       (fun x =>
         (x.1 i, fun dx => ⟨fun i => dx, 0⟩)) := sorry_proof
 
-theorem pi_rule {I nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] [IdxType.Fold' I]
+theorem pi_rule {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] [IndexType.Fold' I]
     {f : X → I → Y} {f' : I → _} (hf : ∀ i, HasVecRevFDerivUpdate 𝕜 W (f · i) (f' i)) :
     HasVecRevFDeriv 𝕜 W f
       (fun x =>
         (fun i => f x i,
          fun dy =>
-           IdxType.fold .full (init:=(0:WX)) (fun i dx =>
+           IndexType.fold .full (init:=(0:WX)) (fun i dx =>
              let' (y,df') := f' i x
              let dyi := dy i
              let dx := df' dyi dx
@@ -258,25 +258,25 @@ theorem let_rule {g : X → Y} {f : Y → X → Z} {f' g'}
 
 
 @[data_synth]
-theorem apply_rule {I nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] (i : I) :
+theorem apply_rule {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] (i : I) :
     HasVecRevFDerivUpdate 𝕜 W (fun x : I → X => x i)
       (fun x =>
         (x i, fun dx dx' i => dx' i + dx)) := sorry_proof
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
-theorem apply_rule' {I nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] (i : I) :
+theorem apply_rule' {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] (i : I) :
     HasVecRevFDerivUpdate 𝕜 W (fun x : (I → X)×Y => x.1 i)
       (fun x =>
         (x.1 i, fun dx dx' => ⟨fun i => dx'.1 i + dx, dx'.2⟩)) := sorry_proof
 
-theorem pi_rule {I nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I] [IdxType.Fold' I]
+theorem pi_rule {I nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I] [IndexType.Fold' I]
     {f : X → I → Y} {f' : I → _} (hf : ∀ i, HasVecRevFDerivUpdate 𝕜 W (f · i) (f' i)) :
     HasVecRevFDerivUpdate 𝕜 W f
       (fun x =>
         (fun i => f x i,
          fun dy dx =>
-           IdxType.fold .full (init:=dx) (fun i dx =>
+           IndexType.fold .full (init:=dx) (fun i dx =>
              let' (y,df') := f' i x
              let dyi := dy i
              let dx := df' dyi dx
@@ -555,8 +555,8 @@ theorem HPow.hPow.arg_a0.HasVecRevFDerivUpdate_rule_nat
 
 set_option linter.unusedVariables false in
 @[data_synth]
-theorem SciLean.IdxType.sum.arg_f.HasVecRevFDeriv_rule
-    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I]
+theorem SciLean.IndexType.sum.arg_f.HasVecRevFDeriv_rule
+    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I]
     {f : X → I → Y} {f' : I → _}
     (hf : ∀ i, HasVecRevFDerivUpdate 𝕜 W (f · i) (f' i)) :
     HasVecRevFDeriv 𝕜 W
@@ -564,15 +564,15 @@ theorem SciLean.IdxType.sum.arg_f.HasVecRevFDeriv_rule
       (fun x =>
         (∑ᴵ i, f x i,
          fun dy =>
-           IdxType.fold .full (init:=(0 : W⊗X)) fun i dx =>
+           IndexType.fold .full (init:=(0 : W⊗X)) fun i dx =>
              let dx := (f' i x).2 dy dx
              dx)) := by
   sorry_proof
 
 set_option linter.unusedVariables false in
 @[data_synth]
-theorem SciLean.IdxType.sum.arg_f.HasVecRevFDerivUpdate_rule
-    {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I] [IdxType.Fold' I]
+theorem SciLean.IndexType.sum.arg_f.HasVecRevFDerivUpdate_rule
+    {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I] [IndexType.Fold' I]
     {f : X → I → Y} {f' : I → _}
     (hf : ∀ i, HasVecRevFDerivUpdate 𝕜 W (f · i) (f' i)) :
     HasVecRevFDerivUpdate 𝕜 W
@@ -580,7 +580,7 @@ theorem SciLean.IdxType.sum.arg_f.HasVecRevFDerivUpdate_rule
       (fun x =>
         (∑ᴵ i, f x i,
          fun dy dx =>
-           IdxType.fold .full (init:=dx) fun i dx =>
+           IndexType.fold .full (init:=dx) fun i dx =>
              let dx := (f' i x).2 dy dx
              dx)) := by
   sorry_proof

@@ -425,7 +425,7 @@ theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
 -- }
 
 @[fun_prop]
-theorem SciLean.IdxType.sum.arg_f.IsContinuousLinearMap_rule {ι n} [IdxType ι n] [IdxType.Fold' ι]
+theorem SciLean.IndexType.sum.arg_f.IsContinuousLinearMap_rule {ι n} [IndexType ι n] [IndexType.Fold' ι]
   (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i)
   : IsContinuousLinearMap R fun x => ∑ᴵ i, f x i :=
 {

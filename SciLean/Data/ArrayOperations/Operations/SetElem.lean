@@ -137,7 +137,7 @@ theorem setElem.arg_v.HasFwdFDeriv_rule {𝕜 X I Y : Type*}
 theorem setElem.arg_xs.HasAdjoint_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [RCLike 𝕜] {nI} [IdxType I nI]
+    [RCLike 𝕜] {nI} [IndexType I nI]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] (i : I) :
@@ -151,7 +151,7 @@ theorem setElem.arg_xs.HasAdjoint_rule {𝕜 X I Y : Type*}
   case adjoint =>
     rintro ⟨x,y⟩ x'
     simp[inner_eq_sum_getElem (I:=I),Tactic.if_pull,AdjointSpace.inner_prod_split,
-         IdxType.sum_eq_finset_sum, Finset.sum_ite]
+         IndexType.sum_eq_finset_sum, Finset.sum_ite]
     simp only [Finset.sum_filter]
     simp; ac_rfl
   case is_linear => apply setElem.arg_xsv.IsContinuousLinearMap_rule
@@ -161,7 +161,7 @@ open Classical
 theorem setElem.arg_xs.HasAdjointUpdate_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [RCLike 𝕜] {nI} [IdxType I nI]
+    [RCLike 𝕜] {nI} [IndexType I nI]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] (i : I) :
@@ -181,7 +181,7 @@ theorem setElem.arg_xs.HasAdjointUpdate_rule {𝕜 X I Y : Type*}
 theorem setElem.arg_xs.HasRevFDeriv_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [RCLike 𝕜] {nI} [IdxType I nI]
+    [RCLike 𝕜] {nI} [IndexType I nI]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] (i : I) :
@@ -203,7 +203,7 @@ open Classical
 theorem setElem.arg_xs.HasRevFDerivUpdate_rule {𝕜 X I Y : Type*}
     [GetElem X I Y (fun _ _ => True)] [InjectiveGetElem X I]
     [SetElem X I Y (fun _ _ => True)] [LawfulSetElem X I]
-    [RCLike 𝕜] {nI} [IdxType I nI]
+    [RCLike 𝕜] {nI} [IndexType I nI]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] [IsInnerGetElem 𝕜 X I] (i : I) :

@@ -17,7 +17,7 @@ namespace SciLean
 
 -- open IndexType in
 -- instance {m n R K : Type*}
---     {nm} [IdxType m nm] {nn} [IdxType n nn] [PlainDataType K]
+--     {nm} [IndexType m nm] {nn} [IndexType n nn] [PlainDataType K]
 --     [RealScalar R] [Scalar R K]
 --     [BLAS (DataArray K) R K] [LawfulBLAS (DataArray K) R K]  :
 --     MatrixType.Base (K^[m,n]) (K^[n]) (K^[m]) where
@@ -43,10 +43,10 @@ namespace SciLean
 
 -- open IndexType in
 -- instance {m n R K : Type*}
---     {nm} [IdxType m nm] {nn} [IdxType n nn] [PlainDataType K]
+--     {nm} [IndexType m nm] {nn} [IndexType n nn] [PlainDataType K]
 --     [RealScalar R] [Scalar R K]
 --     [BLAS (DataArray K) R K] [LawfulBLAS (DataArray K) R K]
---     [IdxType.Fold' m] [IdxType.Fold' n] :
+--     [IndexType.Fold' m] [IndexType.Fold' n] :
 --     MatrixType.Dense (K^[m,n]) where
 --   fromMatrix f := ⊞ i j => f i j
 --   right_inv' := sorry_proof

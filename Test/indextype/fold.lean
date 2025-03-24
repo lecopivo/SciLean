@@ -1,4 +1,4 @@
-import SciLean.Data.IdxType.Fold
+import SciLean.Data.IndexType.Fold
 
 
 open SciLean
@@ -17,7 +17,7 @@ info: 0 (0, 0)
 #guard_msgs in
 #eval show IO Unit from do
   let r := (IndexType.Range.full (I:=Idx 2))
-  IdxType.foldM (m:=IO) (r.prod (r.prod r)) ()
+  IndexType.foldM (m:=IO) (r.prod (r.prod r)) ()
     fun (i,j) _ => do
       IO.println s!"{i} {j}"
 
@@ -45,7 +45,7 @@ info: 6 (0, 6)
 #eval show IO Unit from do
   let s := (IndexType.Range.full (I:=Idx 2))
   let r := (IndexType.Range.interval (I:=Idx 10) 6 4)
-  IdxType.foldM (m:=IO) (r.prod (s.prod r)) ()
+  IndexType.foldM (m:=IO) (r.prod (s.prod r)) ()
     fun (i,j) _ => do
       IO.println s!"{i} {j}"
 
@@ -61,7 +61,7 @@ info: (inl 6)
 #guard_msgs in
 #eval show IO Unit from do
   let r := (IndexType.Range.interval (I:=Idx 8 ⊕ Idx 10) (.inl 6) (.inr 3))
-  IdxType.foldM (m:=IO) r ()
+  IndexType.foldM (m:=IO) r ()
     fun i _ => do
       IO.println s!"{i}"
 
@@ -77,6 +77,6 @@ info: (inr 3)
 #guard_msgs in
 #eval show IO Unit from do
   let r := (IndexType.Range.interval (I:=Idx 8 ⊕ Idx 10) (.inr 3) (.inl 6))
-  IdxType.foldM (m:=IO) r ()
+  IndexType.foldM (m:=IO) r ()
     fun i _ => do
       IO.println s!"{i}"

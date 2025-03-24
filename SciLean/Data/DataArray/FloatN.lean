@@ -24,7 +24,7 @@ namespace Float2
   inductive Index | x | y
     deriving Fintype
 
-  instance : IdxType Index 2 := IdxType.ofEquiv _ (simple_proxy_equiv% Index)
+  instance : IndexType Index 2 := IndexType.ofEquiv _ (simple_proxy_equiv% Index)
 
   -- Array Operations with `Index` ---
   instance : GetElem' Float2 Index Float where
@@ -109,7 +109,7 @@ namespace Float2
   --- Default Operations
   -- we prefer indexing `Float2` by `Float2.Index`
   instance : DefaultIndex Float2 Index where
-  instance {I n} [IdxType I n] : HasRnEquiv (Float2^[I]) (I × Index) Float where
+  instance {I n} [IndexType I n] : HasRnEquiv (Float2^[I]) (I × Index) Float where
 
   instance : Add Float2 := (Add.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
   instance : Sub Float2 := (Sub.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
@@ -199,7 +199,7 @@ namespace Float3
     left_inv := sorry_proof
     right_inv := sorry_proof
 
-  instance {I n} [IdxType I n] : HasRnEquiv (Float3^[I]) (I × Idx 3) Float where
+  instance {I n} [IndexType I n] : HasRnEquiv (Float3^[I]) (I × Idx 3) Float where
 
   instance : Add Float3 := (Add.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
   instance : Sub Float3 := (Sub.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
@@ -299,7 +299,7 @@ namespace Float4
     left_inv := sorry_proof
     right_inv := sorry_proof
 
-  instance {I n} [IdxType I n] : HasRnEquiv (Float4^[I]) (I × Idx 4) Float where
+  instance {I n} [IndexType I n] : HasRnEquiv (Float4^[I]) (I × Idx 4) Float where
 
   instance : Add Float4 := (Add.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce
   instance : Sub Float4 := (Sub.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce

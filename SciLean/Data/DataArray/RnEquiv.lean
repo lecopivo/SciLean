@@ -21,13 +21,13 @@ namespace DataArrayN
 
 instance instHasRnEquivInductive
     {R : Type*} [RealScalar R] [PlainDataType R]
-    {I nI} [IdxType I nI] {J nJ} [IdxType J nJ]
+    {I nI} [IndexType I nI] {J nJ} [IndexType J nJ]
     {X : Type*} [HasRnEquiv X J R] [PlainDataType X] :
     HasRnEquiv (X^[I]) (I × J) R where
 
 -- instance instHasRnEquivBase
 --     {R : Type*} [RealScalar R] [PlainDataType R]
---     {I nI} [IdxType I nI] :
+--     {I nI} [IndexType I nI] :
 --     HasRnEquiv (R^[I]) I R where
 
 instance instHasRnEquivSelf
@@ -40,7 +40,7 @@ instance instHasRnEquivSelf
 section RGetSet
 
 variable {X : Type*} [PlainDataType X]
-  {I : Type*} {nI : ℕ} [IdxType I nI] {J : Type*} {nJ : ℕ} [IdxType J nJ]
+  {I : Type*} {nI : ℕ} [IndexType I nI] {J : Type*} {nJ : ℕ} [IndexType J nJ]
   {R : Type*} [RealScalar R] [PlainDataType R]
   [HasRnEquiv X J R]
 
@@ -70,7 +70,7 @@ abbrev rset (x : X^[I]) (i : Idx (nI*nJ)) (v : R) : X^[I] := setElem x i v .intr
 section Operations
 
 variable (X : Type*)
-  {I : Type*} {nI : ℕ} [IdxType I nI]
+  {I : Type*} {nI : ℕ} [IndexType I nI]
   {R : Type*} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
   [HasRnEquiv X I R]
 
@@ -125,7 +125,7 @@ end Operations
 section Algebra
 
 variable (X : Type*)
-  {I : Type*} {nI : ℕ} [IdxType I nI]
+  {I : Type*} {nI : ℕ} [IndexType I nI]
   {R : Type*} [RealScalar R] [PlainDataType R] [BLAS (DataArray R) R R]
   [HasRnEquiv X I R]
 

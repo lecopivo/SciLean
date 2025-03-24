@@ -81,7 +81,7 @@ namespace SciLean
 --       right_inv := sorry_proof
 --     }
 
---   instance {I} {nI} [IdxType I nI] : DefaultDataArrayEquiv (Float22^[I]) (I × Idx 2 × Idx 2) Float where
+--   instance {I} {nI} [IndexType I nI] : DefaultDataArrayEquiv (Float22^[I]) (I × Idx 2 × Idx 2) Float where
 
 --   instance : Add Float22 := (Add.ofEquiv (proxy_equiv% Float22)) rewrite_by reduce
 --   instance : Sub Float22 := (Sub.ofEquiv (proxy_equiv% Float22)) rewrite_by reduce
@@ -219,7 +219,7 @@ namespace SciLean
 --       right_inv := sorry_proof
 --     }
 
---   instance {I} {nI} [IdxType I nI] : DefaultDataArrayEquiv (Float33^[I]) (I × Idx 3 × Idx 3) Float where
+--   instance {I} {nI} [IndexType I nI] : DefaultDataArrayEquiv (Float33^[I]) (I × Idx 3 × Idx 3) Float where
 
 --   instance : Add Float33 := (Add.ofEquiv (proxy_equiv% Float33)) rewrite_by reduce
 --   instance : Sub Float33 := (Sub.ofEquiv (proxy_equiv% Float33)) rewrite_by reduce
@@ -398,7 +398,7 @@ namespace SciLean
 --       right_inv := sorry_proof
 --     }
 
---   instance {I n} [IdxType I n] : DefaultDataArrayEquiv (Float44^[I]) (I × Idx 4 × Idx 4) Float where
+--   instance {I n} [IndexType I n] : DefaultDataArrayEquiv (Float44^[I]) (I × Idx 4 × Idx 4) Float where
 
 --   instance : Add Float44 := (Add.ofEquiv (proxy_equiv% Float44)) rewrite_by reduce
 --   instance : Sub Float44 := (Sub.ofEquiv (proxy_equiv% Float44)) rewrite_by reduce

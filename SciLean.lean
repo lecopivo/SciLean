@@ -9,6 +9,10 @@ import SciLean.AD.Rules.DataArrayN.Sum
 import SciLean.AD.Rules.DataArrayN.SumMiddleR
 import SciLean.AD.Rules.DataArrayN.SumRows
 import SciLean.AD.Rules.DataArrayN.ToRn
+import SciLean.AD.Rules.IndexType.Fold
+import SciLean.AD.Rules.IndexType.Max
+import SciLean.AD.Rules.IndexType.Min
+import SciLean.AD.Rules.IndexType.Sum
 import SciLean.AD.Rules.Exp
 import SciLean.AD.Rules.Log
 import SciLean.Algebra.CanonicalBasis
@@ -389,22 +393,15 @@ import SciLean.Data.Function
 import SciLean.Data.Idx
 import SciLean.Data.Idx.Basic
 import SciLean.Data.Idx.GetElemIdx
-import SciLean.Data.IdxType.Basic
-import SciLean.Data.IdxType.Fold
-import SciLean.Data.IdxType.Operations
-import SciLean.Data.IdxType.Operations.Fold
-import SciLean.Data.IdxType.Operations.Max
-import SciLean.Data.IdxType.Operations.Min
-import SciLean.Data.IdxType.Operations.Sum
--- import SciLean.Data.IndexType
--- import SciLean.Data.IndexType.Basic
+import SciLean.Data.IndexType
+import SciLean.Data.IndexType.Basic
 -- import SciLean.Data.IndexType.DeriveIndexType
--- import SciLean.Data.IndexType.Fold
+import SciLean.Data.IndexType.Fold
 -- import SciLean.Data.IndexType.IndexEquiv
 -- import SciLean.Data.IndexType.IndexInclusion
 -- import SciLean.Data.IndexType.Init
 -- import SciLean.Data.IndexType.Iterator
--- import SciLean.Data.IndexType.Operations
+import SciLean.Data.IndexType.Operations
 -- import SciLean.Data.IndexType.Operations.MaxD
 -- import SciLean.Data.IndexType.Range
 -- import SciLean.Data.IndexType.RangeNotation

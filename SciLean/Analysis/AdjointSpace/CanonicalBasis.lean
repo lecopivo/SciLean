@@ -162,7 +162,7 @@ instance {𝕜} [RCLike 𝕜]
 instance {𝕜} [RCLike 𝕜]
     {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
     {I : Type*} [Fintype I] [CanonicalBasis I 𝕜 X]
-    {J : Type*} {nJ} [IdxType J nJ] [IdxType.Fold' J] [DecidableEq J] :
+    {J : Type*} {nJ} [IndexType J nJ] [IndexType.Fold' J] [DecidableEq J] :
     CanonicalBasis (J × I) 𝕜 (J → X)
   where
   basis := fun (j,i) => fun j' => if j' = j then ⅇ[𝕜,X,i] else 0

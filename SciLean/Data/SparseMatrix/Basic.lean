@@ -5,7 +5,7 @@ import SciLean.Meta.Notation.Do
 namespace SciLean
 
 structure SparseMatrixUnassembled (R : Type*) [PlainDataType R] (I J : Type*)
-    {nI} [IdxType I nI] {nJ} [IdxType J nJ] where
+    {nI} [IndexType I nI] {nJ} [IndexType J nJ] where
 
   row : DataArray (Fin nI)
   col : DataArray (Fin nJ)
@@ -19,7 +19,7 @@ namespace SparseMatrixUnassembled
 
 variable
   {R : Type*} [PlainDataType R] {I J : Type*}
-  {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+  {nI} [IndexType I nI] {nJ} [IndexType J nJ]
   [DecidableEq I] [DecidableEq J]
 
 def get [Zero R] [Add R] (A : SparseMatrixUnassembled R I J) (i : I) (j : J) : R := Id.run do
@@ -47,14 +47,14 @@ This is **the** function to build sparse matrices element by element. -/
 def add [Zero R] [Add R] (A : SparseMatrixUnassembled R I J) (i : I) (j : J) (v : R) :
     SparseMatrixUnassembled R I J :=
   let ⟨row,col,data,_,_⟩ := A
-  ⟨row.push (IdxType.toFin i), col.push (IdxType.toFin j), data.push v, sorry_proof, sorry_proof⟩
+  ⟨row.push (IndexType.toFin i), col.push (IndexType.toFin j), data.push v, sorry_proof, sorry_proof⟩
 
 end SparseMatrixUnassembled
 
 
 -- TODO: change `Fin` to `Idx`
 structure SparseMatrixAssembled (R : Type*) [PlainDataType R] (I J : Type*)
-    {nI} [IdxType I nI] {nJ} [IdxType J nJ] where
+    {nI} [IndexType I nI] {nJ} [IndexType J nJ] where
 
   /-- Non-zero elements in a given column. -/
   indexMap : Vector (DataArray (Fin nI)) nJ
@@ -71,13 +71,13 @@ namespace SparseMatrixAssembled
 
 variable
   {R : Type*} [PlainDataType R] {I J : Type*}
-  {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+  {nI} [IndexType I nI] {nJ} [IndexType J nJ]
   [DecidableEq I] [DecidableEq J]
 
 def get [Zero R] (A : SparseMatrixAssembled R I J) (i : I) (j : J) : R := Id.run do
 
-  let i := IdxType.toFin i
-  let j := IdxType.toFin j
+  let i := IndexType.toFin i
+  let j := IndexType.toFin j
   let is := A.indexMap[j]
 
   -- this loop assumes that indices are sorted!
@@ -98,7 +98,7 @@ end SparseMatrixAssembled
 namespace SparseMatrix
 
 inductive Repr (R : Type*) [PlainDataType R] (I J : Type*)
-    {nI} [IdxType I nI] {nJ} [IdxType J nJ] where
+    {nI} [IndexType I nI] {nJ} [IndexType J nJ] where
   | unassembled (A : SparseMatrixUnassembled R I J)
   | colMajor (A : SparseMatrixAssembled R I J)
   | rowMajor (A : SparseMatrixAssembled R J I)
@@ -106,7 +106,7 @@ inductive Repr (R : Type*) [PlainDataType R] (I J : Type*)
 namespace Repr
 
 variable {R : Type*} [PlainDataType R] [Zero R] [Add R] {I J : Type*}
-    {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {nI} [IndexType I nI] {nJ} [IndexType J nJ]
 
 def get (A : Repr R I J) (i : I) (j : J) : R :=
   match A with
@@ -118,7 +118,7 @@ end Repr
 
 
 variable (R : Type*) [PlainDataType R] [Zero R] [Add R] (I J : Type*)
-    {nI} [IdxType I nI] {nJ} [IdxType J nJ]
+    {nI} [IndexType I nI] {nJ} [IndexType J nJ]
 
 instance setoid : Setoid (Repr R I J) where
   r A B := ∀ i j, A.get i j = B.get i j
@@ -155,5 +155,5 @@ There are three different formats of sparse matrix
 g-/
 def SparseMatrix
     (R : Type*) [PlainDataType R] [Zero R] [Add R]
-    (I J : Type*) {nI} [IdxType I nI] {nJ} [IdxType J nJ] : Type :=
+    (I J : Type*) {nI} [IndexType I nI] {nJ} [IndexType J nJ] : Type :=
   Quotient (SparseMatrix.setoid R I J)

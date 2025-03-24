@@ -19,6 +19,10 @@ inductive Range (I : Type u)
   In case `a` is larger then `b` then this range should run in reverse ordering. -/
   | interval (a b : I)
 
+
+def _root_.SciLean.fullRange (I : Type*) : Range I := .full
+def _root_.SciLean.intervalRange {I : Type*} (a b : I) : Range I := .interval a b
+
 namespace Range
 
 /-- Reverse range. -/

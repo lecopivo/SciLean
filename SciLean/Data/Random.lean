@@ -71,7 +71,7 @@ instance [Random Id α] [Random Id β] : Random Id (α × β) where
 
 -- open Random
 -- instance
---     {I : Type} {nI} [IdxType I nI] [IdxType.Fold' I]
+--     {I : Type} {nI} [IndexType I nI] [IndexType.Fold' I]
 --     {R : Type} [PlainDataType R] [Random Id R] [Zero R] :
 --     Random Id (R^[I]) where
 --   random :=

@@ -61,7 +61,7 @@ set_option deprecated.oldSectionVars true
 
 variable
   {Cont : Type _} {Idx : Type _ |> outParam} {Elem : Type _ |> outParam}
-  {n} [IdxType Idx n] [IdxType.Fold' Idx] [outParam <| DecidableEq Idx]
+  {n} [IndexType Idx n] [IndexType.Fold' Idx] [outParam <| DecidableEq Idx]
   [ArrayType Cont Idx Elem]
 
 @[ext]
@@ -71,10 +71,10 @@ theorem ext (x y : Cont) : (∀ i, get x i = get y i) → x = y := by sorry_proo
 theorem eta (cont : Cont) : (ofFn fun i => get cont i) = cont := sorry_proof
 
 def mapMono (f : Elem → Elem) (cont : Cont) : Cont :=
-  IdxType.fold .full cont (fun i c => modify c i f)
+  IndexType.fold .full cont (fun i c => modify c i f)
 
 def mapIdxMono (f : Idx → Elem → Elem) (cont : Cont) : Cont :=
-  IdxType.fold .full cont (fun i c => modify c i (f i))
+  IndexType.fold .full cont (fun i c => modify c i (f i))
 
 @[simp,simp_core]
 theorem get_mapMono (f : Elem → Elem) (cont : Cont) (i : Idx) :
@@ -98,7 +98,7 @@ theorem get_modify_neq (xs : Cont) (f : Elem → Elem) (i j : Idx) (h : i ≠ j)
 
 
 instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem]
-    {n} [IdxType Idx n] [IdxType.Fold' Idx] :
+    {n} [IndexType Idx n] [IndexType.Fold' Idx] :
     ToString (Cont) := ⟨λ x => Id.run do
   let mut fst := true
   let mut s := "⊞["
@@ -112,7 +112,7 @@ instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem]
 
 -- /-- Converts array to ArrayType -/
 -- def _root_.Array.toArrayType {Elem} (Cont : Type u) (Idx : Type v)
---   {n} [IdxType Idx n] [ArrayType Cont Idx Elem]
+--   {n} [IndexType Idx n] [ArrayType Cont Idx Elem]
 --   (a : Array Elem) (h : n = a.size) : Cont :=
 --   ArrayType.ofFn fun (i : Idx) => a[h ▸ IndexType.toFin i]
 
@@ -260,14 +260,14 @@ section UsefulFunctions
 variable [LT Elem] [∀ x y : Elem, Decidable (x < y)] [Inhabited Idx]
 
 def argMaxCore (cont : Cont) : Idx × Elem :=
-  IdxType.reduceD
+  IndexType.reduceD
     .full
     (fun i => (i,get cont i))
     (fun (i,e) (i',e') => if e < e' then (i',e') else (i,e))
     (default, get cont default)
 
 def max (cont : Cont) : Elem :=
-  IdxType.reduceD
+  IndexType.reduceD
     .full
     (fun i => get cont i)
     (fun e e' => if e < e' then e' else e)
@@ -277,14 +277,14 @@ def idxMax (cont : Cont) : Idx := (argMaxCore cont).1
 
 
 def argMinCore (cont : Cont ) : Idx × Elem :=
-  IdxType.reduceD
+  IndexType.reduceD
     .full
     (fun i => (i,get cont i))
     (fun (i,e) (i',e') => if e' < e then (i',e') else (i,e))
     (default, get cont default)
 
 def min (cont : Cont) : Elem :=
-  IdxType.reduceD
+  IndexType.reduceD
     .full
     (fun i => get cont i)
     (fun e e' => if e < e' then e' else e)

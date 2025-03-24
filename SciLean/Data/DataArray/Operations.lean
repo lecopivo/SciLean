@@ -10,7 +10,7 @@ import SciLean.Analysis.Scalar.FloatAsReal
 
 namespace SciLean.DataArrayN
 
-variable {X : Type*} [PlainDataType X] {I : Type*} {nI} [IdxType I nI] [IdxType.Fold' I]
+variable {X : Type*} [PlainDataType X] {I : Type*} {nI} [IndexType I nI] [IndexType.Fold' I]
 
 /-- Transform all elements of `xs^[I]` using `f : X → X`. -/
 abbrev mapMono (f : X → X) (xs : X^[I]) : X^[I] :=
@@ -25,14 +25,14 @@ abbrev mapIdxMono (f : I → X → X) (xs : X^[I]) : X^[I] :=
 It is just and abbreviation for a call to `IndexType.foldl` which runs a fold over the index
 type `I`. -/
 abbrev foldl (op : α → X → α) (init : α) (xs : X^[I]) : α :=
-  IdxType.fold .full (init:=init) (fun i a => op a xs[i])
+  IndexType.fold .full (init:=init) (fun i a => op a xs[i])
 
 /-- Reduce elements of `xs : X^[I]` using `op : X → X → X`.
 
 It is just and abbreviation for a call to `IndexType.reduce` which does reduction over the index
 type `I`. -/
 abbrev reduce [Inhabited X] (op : X → X → X) (xs : X^[I]) : X :=
-  IdxType.reduce .full (fun (i:I) => xs[i]) op
+  IndexType.reduce .full (fun (i:I) => xs[i]) op
 
 
 /-- Reshape array to one dimensional array of `n` elements. -/
@@ -54,8 +54,8 @@ section OverReals
 
 variable
   {R : Type*} [RealScalar R] [pd : PlainDataType R]
-  [IdxType.Fold' I]
-  {ι nι} [IdxType ι nι] [IdxType.Fold' ι]
+  [IndexType.Fold' I]
+  {ι nι} [IndexType ι nι] [IndexType.Fold' ι]
   [HasRnEquiv X ι R]
 
 

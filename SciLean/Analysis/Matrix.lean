@@ -9,7 +9,7 @@ attribute [instance] Matrix.normedAddCommGroup Matrix.normedSpace
 
 variable
     {R I J α : Type*} {nI nJ : ℕ}
-    [IdxType I nI] [IdxType J nJ] [IdxType.Fold' I] [IdxType.Fold' J]
+    [IndexType I nI] [IndexType J nJ] [IndexType.Fold' I] [IndexType.Fold' J]
 
 instance [AddCommMonoid R] [Inner R α] : Inner R (Matrix I J α) :=
   show Inner R (I → J → α) from inferInstance

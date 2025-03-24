@@ -4,15 +4,19 @@ namespace SciLean
 
 open IndexType
 
-
-structure IndexEquiv (I J : Type*) [IndexType I] [IndexType J]
+/--
+`IndexEquiv I J` is and equivalence between two index types that preserves the linear index.
+In other works, for `i : I` the linear index `toFin i`/`toIdx i` is equal to the linear index of
+`f i` for `f : IndexEquiv I J`.
+-/
+structure IndexEquiv (I J : Type*) {n} [IndexType I n] [IndexType J n]
   extends I ≃ J
   where
   toFin_toFun : ∀ i, (toFin (toFun i)).1 = (toFin i).1
 
 namespace IndexEquiv
 
-variable {I J : Type*} [IndexType I] [IndexType J]
+variable {I J : Type*} {n} [IndexType I n] [IndexType J n]
 
 section coe
 
@@ -76,7 +80,7 @@ section refl
 
 /-- The identity map is a multiplicative isomorphism. -/
 @[refl]
-def refl (I : Type*) [IndexType I] : IndexEquiv I I :=
+def refl (I : Type*) [IndexType I n] : IndexEquiv I I :=
   { Equiv.refl _ with toFin_toFun := by simp }
 
 instance : Inhabited (IndexEquiv I I) := ⟨refl I⟩
@@ -166,30 +170,3 @@ theorem symm_comp_eq {α : Type*} (e : IndexEquiv I J) (f : α → I) (g : α �
   e.toEquiv.symm_comp_eq f g
 
 end symm
-
-
-section map
-
-theorem size_eq (f : IndexEquiv I J) : size I = size J :=
-  Fin.equiv_iff_eq.1 <| .intro <| ((finEquiv I).symm.trans f.toEquiv |>.trans (finEquiv J))
-
-@[simp]
-theorem toFin_apply (f : IndexEquiv I J) (i : I) :
-    toFin (f i) = (toFin i).cast f.size_eq := by
-  ext; simp
-  exact toFin_toFun f i
-
-@[simp]
-theorem apply_fromFin (f : IndexEquiv I J) (i : Fin (size I)) :
-    f (fromFin i) = fromFin (i.cast f.size_eq) := by
-  have hf : Function.Surjective (toFin : I → Fin (size I)) := sorry_proof
-  have hf' : Function.Injective (toFin : J → Fin (size J)) := sorry_proof
-  let p := fun i => f (fromFin i) = fromFin (i.cast f.size_eq)
-  revert i
-  apply (Function.Surjective.forall hf (p:=p)).2
-  simp[p]
-  intro i
-  apply (hf')
-  simp
-
-end map

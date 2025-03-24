@@ -124,12 +124,12 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
   case is_linear => have := hg.is_linear; have := hf.is_linear; fun_prop
 
 
-theorem pi_rule {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I] [IdxType.Fold'.{_,u} I]
+theorem pi_rule {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I] [IndexType.Fold'.{_,u} I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasAdjointUpdate K (f · i) (f' i)) :
     HasAdjoint K
       (fun x i => f x i)
       (fun y =>
-        IdxType.fold .full (init:=(0:X)) fun i x =>
+        IndexType.fold .full (init:=(0:X)) fun i x =>
           let yi := y i
           let x := f' i yi x
           x) := by
@@ -216,12 +216,12 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
     simp[AdjointSpace.inner_prod_split]
   case is_linear => have := hg.is_linear; have := hf.is_linear; fun_prop
 
-theorem pi_rule {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I] [IdxType.Fold'.{_,u} I]
+theorem pi_rule {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I] [IndexType.Fold'.{_,u} I]
     (f : X → I → Y) {f' : I → _} (hf : ∀ i, HasAdjointUpdate K (f · i) (f' i)) :
     HasAdjointUpdate K
       (fun x i => f x i)
       (fun y x =>
-        IdxType.fold .full (init:=x) fun i x =>
+        IndexType.fold .full (init:=x) fun i x =>
           let yi := y i
           let x := f' i yi x
           x) := by
@@ -617,8 +617,8 @@ theorem HDiv.hDiv.arg_a0.HasAdjointUpdate_simp_rule (y : K) :
   case is_linear => sorry_proof
 
 @[data_synth]
-theorem SciLean.IdxType.sum.arg_f.HasAdjoint_simp_rule
-    {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I] [IdxType.Fold'.{_,u} I] :
+theorem SciLean.IndexType.sum.arg_f.HasAdjoint_simp_rule
+    {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I] [IndexType.Fold'.{_,u} I] :
     HasAdjoint K
       (fun f : I → X => ∑ᴵ i, f i)
       (fun k _ => k) := by
@@ -629,15 +629,15 @@ theorem SciLean.IdxType.sum.arg_f.HasAdjoint_simp_rule
 -- we have to formulate it this way too because some issue with RefinedDiscrTree
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
-theorem SciLean.IdxType.sum.arg_f.HasAdjoint_simp_rule'
-    {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I] [IdxType.Fold'.{_,u} I] :
+theorem SciLean.IndexType.sum.arg_f.HasAdjoint_simp_rule'
+    {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I] [IndexType.Fold'.{_,u} I] :
     HasAdjoint K
-      (fun f : I → X => IdxType.sum f)
-      (fun k _ => k) := SciLean.IdxType.sum.arg_f.HasAdjoint_simp_rule
+      (fun f : I → X => IndexType.sum f)
+      (fun k _ => k) := SciLean.IndexType.sum.arg_f.HasAdjoint_simp_rule
 
 @[data_synth]
-theorem SciLean.IdxType.sum.arg_f.HasAdjointUpdate_simp_rule
-    {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I] [IdxType.Fold'.{_,u} I] :
+theorem SciLean.IndexType.sum.arg_f.HasAdjointUpdate_simp_rule
+    {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I] [IndexType.Fold'.{_,u} I] :
     HasAdjointUpdate K
       (fun f : I → X => ∑ᴵ i, f i)
       (fun k f' i => f' i + k) := by
@@ -648,15 +648,15 @@ theorem SciLean.IdxType.sum.arg_f.HasAdjointUpdate_simp_rule
 -- we have to formulate it this way too because some issue with RefinedDiscrTree
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
-theorem SciLean.IdxType.sum.arg_f.HasAdjointUpdate_simp_rule'
-    {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I] [IdxType.Fold'.{_,u} I] :
+theorem SciLean.IndexType.sum.arg_f.HasAdjointUpdate_simp_rule'
+    {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I] [IndexType.Fold'.{_,u} I] :
     HasAdjointUpdate K
       (fun f : I → X => sum f)
-      (fun k f' i => f' i + k) := SciLean.IdxType.sum.arg_f.HasAdjointUpdate_simp_rule
+      (fun k f' i => f' i + k) := SciLean.IndexType.sum.arg_f.HasAdjointUpdate_simp_rule
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasAdjoint_simp_rule
-    {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I]
+    {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I]
     (A : Finset I) :
     HasAdjoint K
       (fun f : I → X => A.sum (fun i => f i))
@@ -669,7 +669,7 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem Finset.sum.arg_f.HasAdjoint_simp_rule'
-    {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I]
+    {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I]
     (A : Finset I) :
     HasAdjoint K
       (fun f : I → X => A.sum f)
@@ -680,7 +680,7 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule'
 
 @[data_synth]
 theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule
-    {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I]
+    {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I]
     (A : Finset I) :
     HasAdjointUpdate K
       (fun f : I → X => A.sum (fun i => f i))
@@ -693,7 +693,7 @@ theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule
 -- once mathlib PR #11968 is merges this should not be necessaryx
 @[data_synth]
 theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule'
-    {I : Type*} {n} [IdxType I n] [IdxType.Fold'.{_,u'} I]
+    {I : Type*} {n} [IndexType I n] [IndexType.Fold'.{_,u'} I]
     (A : Finset I) :
     HasAdjointUpdate K
       (fun f : I → X => A.sum f)

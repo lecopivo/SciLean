@@ -4,9 +4,9 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import SciLean.Util.SorryProof
 import SciLean.Meta.SimpAttr
 
-import SciLean.Data.IdxType.Basic
-import SciLean.Data.IdxType.Fold
-import SciLean.Data.IdxType.Operations
+import SciLean.Data.IndexType.Basic
+import SciLean.Data.IndexType.Fold
+import SciLean.Data.IndexType.Operations
 
 open ComplexConjugate RCLike
 /--
@@ -295,7 +295,7 @@ instance : AdjointSpace 𝕜 (X×Y) where
 
 
 variable
-  {ι : Type*} {n} [SciLean.IdxType ι n] [SciLean.IdxType.Fold' ι]
+  {ι : Type*} {n} [SciLean.IndexType ι n] [SciLean.IndexType.Fold' ι]
   {E : ι → Type*}
 
 instance {𝕜 : Type*} [AddCommMonoid 𝕜] [∀ i, Inner 𝕜 (E i)] :

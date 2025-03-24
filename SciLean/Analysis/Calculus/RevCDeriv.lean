@@ -16,14 +16,14 @@ variable
   {Y : Type _} [SemiInnerProductSpace K Y]
   {Z : Type _} [SemiInnerProductSpace K Z]
   {W : Type _} [SemiInnerProductSpace K W]
-  {ι : Type _} [IdxType ι nι] [DecidableEq ι]
-  {κ : Type _} [IdxType κ nκ] [DecidableEq κ]
+  {ι : Type _} [IndexType ι nι] [DecidableEq ι]
+  {κ : Type _} [IndexType κ nκ] [DecidableEq κ]
   {E : Type _} {EI : I → Type _}
-  [StructType E I EI] [IdxType I NI] [DecidableEq I]
+  [StructType E I EI] [IndexType I NI] [DecidableEq I]
   [SemiInnerProductSpace K E] [∀ i, SemiInnerProductSpace K (EI i)]
   [SemiInnerProductSpaceStruct K E I EI]
   {F J : Type _} {FJ : J → Type _}
-  [StructType F J FJ] [IdxType J NJ] [DecidableEq J]
+  [StructType F J FJ] [IndexType J NJ] [DecidableEq J]
   [SemiInnerProductSpace K F] [∀ j, SemiInnerProductSpace K (FJ j)]
   [SemiInnerProductSpaceStruct K F J FJ]
 
@@ -522,14 +522,14 @@ variable
   {X : Type} [SemiInnerProductSpace K X]
   {Y : Type} [SemiInnerProductSpace K Y]
   {Z : Type} [SemiInnerProductSpace K Z]
-  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IdxType X NXi] [DecidableEq Xi]
-  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IdxType Y NYi] [DecidableEq Yi]
-  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IdxType Z NZi] [DecidableEq Zi]
+  {X' Xi : Type} {XI : Xi → Type} [StructType X' Xi XI] [IndexType X NXi] [DecidableEq Xi]
+  {Y' Yi : Type} {YI : Yi → Type} [StructType Y' Yi YI] [IndexType Y NYi] [DecidableEq Yi]
+  {Z' Zi : Type} {ZI : Zi → Type} [StructType Z' Zi ZI] [IndexType Z NZi] [DecidableEq Zi]
   [SemiInnerProductSpace K X'] [∀ i, SemiInnerProductSpace K (XI i)] [SemiInnerProductSpaceStruct K X' Xi XI]
   [SemiInnerProductSpace K Y'] [∀ i, SemiInnerProductSpace K (YI i)] [SemiInnerProductSpaceStruct K Y' Yi YI]
   [SemiInnerProductSpace K Z'] [∀ i, SemiInnerProductSpace K (ZI i)] [SemiInnerProductSpaceStruct K Z' Zi ZI]
   {W : Type} [SemiInnerProductSpace K W]
-  {ι : Type} [IdxType ι nι]
+  {ι : Type} [IndexType ι nι]
 
 
 
@@ -977,7 +977,7 @@ theorem HMul.hMul.arg_a0a1.revCDerivProjUpdate_rule
 section SMulOnSemiHilbert
 
 variable
-  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IdxType Y NYi] [DecidableEq Yi]
+  {Y Yi : Type} {YI : Yi → Type} [StructType Y Yi YI] [IndexType Y NYi] [DecidableEq Yi]
   [SemiHilbert K Y] [∀ i, SemiHilbert K (YI i)] [SemiInnerProductSpaceStruct K Y Yi YI]
 
 @[fun_trans]
@@ -1181,7 +1181,7 @@ def HPow.hPow.arg_a0.revCDerivProjUpdate_rule
 
 section IndexTypeSum
 
-variable {ι : Type} [IdxType ι nι]
+variable {ι : Type} [IndexType ι nι]
 
 @[fun_trans]
 theorem sum.arg_f.revCDeriv_rule

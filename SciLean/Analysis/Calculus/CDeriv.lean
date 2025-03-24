@@ -20,7 +20,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [IdxType ι nι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι nι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 @[fun_trans]
@@ -188,7 +188,7 @@ variable
   {Y : Type _} [Vec K Y]
   {Z : Type _} [Vec K Z]
   {W : Type _} [Vec K W]
-  {ι : Type _} [IdxType ι nι] [DecidableEq ι]
+  {ι : Type _} [IndexType ι nι] [DecidableEq ι]
   {E : ι → Type _} [∀ i, Vec K (E i)]
 
 

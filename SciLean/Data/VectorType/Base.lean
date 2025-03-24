@@ -6,8 +6,8 @@ import Mathlib.Data.Matrix.Basic
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.Scalar
 import SciLean.Data.IndexType
-import SciLean.Data.IdxType.Basic
-import SciLean.Data.IdxType.Fold
+import SciLean.Data.IndexType.Basic
+import SciLean.Data.IndexType.Fold
 import SciLean.Data.ArrayOperations.Algebra
 
 namespace SciLean
@@ -19,7 +19,7 @@ open InnerProductSpace
 structure indexed by `I` with values in `K`
  -/
 class VectorType.Base (X : Type*) (I : outParam (Type*))
-    {nI : outParam ℕ} [IdxType I nI]
+    {nI : outParam ℕ} [IndexType I nI]
     {R : outParam Type*} (K : outParam Type*)
     [RealScalar R] [Scalar R K] [GetElem' X I K]
   where
@@ -120,7 +120,7 @@ class VectorType.Base (X : Type*) (I : outParam (Type*))
 -- open VectorType.Base in
 -- /-- Scalar multiplication by real number and dot product over real numbers for `VectorType` -/
 -- class VectorType.RealOp (X : Type*)
---     {n : outParam (Type*)} {nn : outParam ℕ} [IdxType n nn]
+--     {n : outParam (Type*)} {nn : outParam ℕ} [IndexType n nn]
 --     {R : outParam (Type*)} {K : outParam (Type*)}
 --     {_  : outParam (RealScalar R)} {_ : outParam (Scalar R K)} [VectorType.Base X n K]
 --     [ScalarSMul R K] [ScalarInner R K]  where
@@ -139,7 +139,7 @@ class VectorType.Base (X : Type*) (I : outParam (Type*))
 
 open Function VectorType.Base Classical in
 class VectorType.Dense (X : Type*) {I : outParam (Type*)}
-    {nI : outParam ℕ} [IdxType I nI]
+    {nI : outParam ℕ} [IndexType I nI]
     {R : outParam Type*} {K : outParam Type*}
     [RealScalar R] [Scalar R K] [GetElem' X I K]
     [VectorType.Base X I K]
@@ -300,7 +300,7 @@ section BasicOperations
 variable
   {X : Type*} {I : Type u} {R K :  Type*}
   {_ : RealScalar R} {_ : Scalar R K}
-  {nI : ℕ} {_ : IdxType I nI}
+  {nI : ℕ} {_ : IndexType I nI}
   [GetElem' X I K]
   [VectorType.Base X I K]
 
@@ -379,8 +379,8 @@ open VectorType
 --     ⟪(WithLp.equiv 2 (I → K)).symm (fun i : I => x[i]), (WithLp.equiv 2 (I → K)).symm (fun i : I => y[i])⟫_K := by
 --   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 
--- instance [IdxType.Fold' n] : IsInnerGetElem K X n where
---   inner_eq_sum_getElem := by simp[vector_to_spec, IdxType.sum_eq_finset_sum]
+-- instance [IndexType.Fold' n] : IsInnerGetElem K X n where
+--   inner_eq_sum_getElem := by simp[vector_to_spec, IndexType.sum_eq_finset_sum]
 
 -- @[vector_to_spec]
 -- theorem inner_spec_real [ScalarSMul R K] [ScalarInner R K] [RealOp X] (x y : X) :
@@ -390,8 +390,8 @@ open VectorType
 --   simp only [inner, dot_spec, WithLp.equiv_symm_pi_apply]
 --   sorry_proof
 
--- instance [IdxType.Fold' n] [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsInnerGetElem K X n where
---   inner_eq_sum_getElem := by simp[vector_to_spec, IdxType.sum_eq_finset_sum]
+-- instance [IndexType.Fold' n] [ScalarSMul R K] [ScalarInner R K] [RealOp X] : IsInnerGetElem K X n where
+--   inner_eq_sum_getElem := by simp[vector_to_spec, IndexType.sum_eq_finset_sum]
 
 -- @[vector_to_spec]
 -- theorem norm_spec (x : X) :
@@ -456,7 +456,7 @@ open VectorType
 
 -- variable
 --   {X : Type*} {n : Type*} {R K : Type*}
---   {_ : RealScalar R} {_ : Scalar R K} {nn} {_ : IdxType n nn} [VectorType.Base X n K] [InjectiveGetElem X n]
+--   {_ : RealScalar R} {_ : Scalar R K} {nn} {_ : IndexType n nn} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 -- open VectorType
 
@@ -600,7 +600,7 @@ open VectorType
 
 -- variable
 --   {X : Type*} {n : Type u} {R K :  Type*}
---   {_ : RealScalar R} {_ : Scalar R K} {nn} {_ : IdxType n nn} [VectorType.Base X n K] [InjectiveGetElem X n]
+--   {_ : RealScalar R} {_ : Scalar R K} {nn} {_ : IndexType n nn} [VectorType.Base X n K] [InjectiveGetElem X n]
 
 -- def toVecₗ : X →ₗ[K] (I → K) :=
 --   ⟨⟨fun (x : X) (i : I) => x[i],
@@ -662,18 +662,18 @@ open VectorType
 
 -- variable
 --   {X : Type*} {n : Type u} {R K :  Type*}
---   {_ : RealScalar R} {_ : Scalar R K} {nn : ℕ} {_ : IdxType n nn}
---   [VectorType.Base X n K] [VectorType.Dense X] [IdxType.Fold' n]
+--   {_ : RealScalar R} {_ : Scalar R K} {nn : ℕ} {_ : IndexType n nn}
+--   [VectorType.Base X n K] [VectorType.Dense X] [IndexType.Fold' n]
 
 -- @[inline]
 -- def mapIdx (f : I → K → K) (x : X) : X :=
---   IdxType.fold .full (init:=x) (fun (i : I) x =>
+--   IndexType.fold .full (init:=x) (fun (i : I) x =>
 --     let xi := x[i]
 --     setElem x i (f i xi) (by dsimp))
 
 -- @[inline]
 -- def mapIdx₂ (f : I → K → K → K×K) (x y : X) : X×X :=
---   IdxType.fold .full (init:=(x,y)) (fun (i : I) (x,y)  =>
+--   IndexType.fold .full (init:=(x,y)) (fun (i : I) (x,y)  =>
 --     let xi := x[i]
 --     let yi := y[i]
 --     let (xi',yi') := f i xi yi
@@ -686,7 +686,7 @@ open VectorType
 
 -- variable
 --   {X : Type*} {n : Type u} {R :  Type*}
---   {_ : RealScalar R} {nn : ℕ} {_ : IdxType n nn}
+--   {_ : RealScalar R} {nn : ℕ} {_ : IndexType n nn}
 --   [VectorType.Base X n R] [VectorType.Dense X]
 
 -- def amax (x : X) : R :=

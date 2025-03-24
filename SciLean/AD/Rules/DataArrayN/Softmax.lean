@@ -12,7 +12,7 @@
 
 -- variable
 --   {X : Type*} {I : Type u} {R :  Type*}
---   {_ : RealScalar R} {nI} {_ : IdxType I nI} [VectorType.Base X I R] [Dense X]
+--   {_ : RealScalar R} {nI} {_ : IndexType I nI} [VectorType.Base X I R] [Dense X]
 
 -- theorem VectorType.softmax_spec (x : X) :
 --   VectorType.softmax x

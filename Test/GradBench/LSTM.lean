@@ -69,7 +69,7 @@ def lstmPredict {slen d : ℕ}
   let state₀ : (Float^[d])^[slen,2] := 0
 
   let' (state',x') :=
-   IdxType.fold .full (init:=(state₀,x₀))
+   IndexType.fold .full (init:=(state₀,x₀))
     (fun (i : Idx slen) sx =>
       let' (s,x) := sx
       let' (h,c) := lstmModel mainParams[i,0] mainParams[i,1] state[i,0] state[i,1] x
@@ -108,7 +108,7 @@ def lstmObjective {slen lenSeq d : ℕ}
                   (state : (Float^[d])^[slen, 2])
                   (sequence : Float^[d]^[lenSeq]) : Float :=
   -- state : [stlen][2][d]f64
-  let' (_a, total) := IdxType.fold .full (init:=(state, (0:Float)))
+  let' (_a, total) := IndexType.fold .full (init:=(state, (0:Float)))
     fun (i : Idx (lenSeq - 1)) st  =>
       let' (oldState, oldTotal) := st
       let' (y_pred, newState) := lstmPredict mainParams extraParams oldState sequence[⟨i.1,sorry_proof⟩]
@@ -132,7 +132,7 @@ info: lstmObjective.arg_mainParamsextraParams.HasRevFDeriv_simple_rule {slen len
   (sequence : Float^[d]^[lenSeq]) :
   HasRevFDeriv Float (fun x => lstmObjective x.1 x.2 state sequence) fun x =>
     let x :=
-      IdxType.fold IndexType.Range.full ((state, 0), fun dx dw => (dx, dw)) fun i xdf =>
+      IndexType.fold IndexType.Range.full ((state, 0), fun dx dw => (dx, dw)) fun i xdf =>
         let x_1 := xdf.1;
         let x₁₁ := x_1.1;
         let x₁₂ := x_1.2;
@@ -159,7 +159,7 @@ info: lstmObjective.arg_mainParamsextraParams.HasRevFDeriv_simple_rule {slen len
           let dy₂ := dx.sum;
           let dy_1 := -dy₂ / x₁_2;
           let dw_1 :=
-            IdxType.fold IndexType.Range.full dx fun i dw =>
+            IndexType.fold IndexType.Range.full dx fun i dw =>
               let x₁ := x₁[i];
               let dy := dy_1 * exp x₁;
               let xi := dw[i];
