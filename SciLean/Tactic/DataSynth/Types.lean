@@ -456,7 +456,7 @@ def nontrivialAppDecomposition (fData : FunData) : MetaM (Option (FunData × Fun
   match fData.body with
   | .proj t i b => do
 
-    if b == .bvar 0 then return .none
+    if b == fData.xs[0]! then return .none
 
     let f : FunData := ← withLocalDeclD `x (← inferType b) fun x => do pure {
       lctx := ← getLCtx

@@ -597,10 +597,9 @@ def Goal.getInputFun? (g : Goal) : MetaM (Option Expr) := do
 
 
 /-- Given goal for composition `f∘g` and given `f` and `g` return corresponding goals for `f` and `g` -/
-def compGoals (fgGoal : Goal) (f g : Expr) : DataSynthM (Option (LambdaTheorem×Goal×Goal)) := do
+def compGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g : Expr) : DataSynthM (Option (LambdaTheorem×Goal×Goal)) := do
   withProfileTrace "compGoals" do
-  let thms ← getLambdaTheorems fgGoal.dataSynthDecl.name .comp
-  for thm in thms do
+  -- for thm in thms do
     let .comp gId fId hgId hfId := thm.data | throwError m!"invalid composition theorem {thm.thmName}"
     let info ← getConstInfo thm.thmName
     let (xs, _, statment) ← forallMetaTelescope (← inferType (← thm.getProof))
@@ -625,7 +624,7 @@ def compGoals (fgGoal : Goal) (f g : Expr) : DataSynthM (Option (LambdaTheorem×
     let some ggoal ← isDataSynthGoal? hg | return none
     let some fgoal ← isDataSynthGoal? hf | return none
     return .some (thm, fgoal, ggoal)
-  return none
+  -- return none
 
 
 /-- Given result for `f` and `g` return result for `f∘g` -/
@@ -757,31 +756,27 @@ def piResult (fGoal : Goal) (thm : LambdaTheorem) (f : Expr) (i : Expr) (hfi : R
     let (hintPre,hintPost) ← thm.getHint #[f,(← mkLambdaFVars #[i] hfi.proof)]
     fGoal.tryTheorem? thm.toTheorem hintPre hintPost
 
-def projGoals (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option (LambdaTheorem×Goal)) := do
+def projGoals (thm : LambdaTheorem) (fGoal : Goal) (f g p₁ p₂ q : Expr) : DataSynthM (Option (LambdaTheorem×Goal)) := do
   withProfileTrace "projGoals" do
 
-  let thms ← getLambdaTheorems fGoal.dataSynthDecl.name .proj
-  for thm in thms do
+  let .proj fId gId p₁Id p₂Id qId hgId := thm.data
+    | throwError m!"invalid proj theorem {thm.thmName}"
 
-    let .proj fId gId p₁Id p₂Id qId hgId := thm.data
-      | throwError m!"invalid proj theorem {thm.thmName}"
+  let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thm.thmName))
 
-    let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thm.thmName))
+  xs[fId]!.mvarId!.assignIfDefeq f
+  xs[gId]!.mvarId!.assignIfDefeq g
+  xs[p₁Id]!.mvarId!.assignIfDefeq p₁
+  xs[p₂Id]!.mvarId!.assignIfDefeq p₂
+  xs[qId]!.mvarId!.assignIfDefeq q
 
-    xs[fId]!.mvarId!.assignIfDefeq f
-    xs[gId]!.mvarId!.assignIfDefeq g
-    xs[p₁Id]!.mvarId!.assignIfDefeq p₁
-    xs[p₂Id]!.mvarId!.assignIfDefeq p₂
-    xs[qId]!.mvarId!.assignIfDefeq q
+  let (_,rhs) ← fGoal.mkFreshProofGoal
+  if ¬(← isDefEq statement rhs) then
+    return none
 
-    let (_,rhs) ← fGoal.mkFreshProofGoal
-    if ¬(← isDefEq statement rhs) then
-      return none
-
-    let hg ← inferType xs[hgId]! >>= instantiateMVars
-    let some ggoal ← isDataSynthGoal? hg | return none
-    return some (thm,ggoal)
-  return none
+  let hg ← inferType xs[hgId]! >>= instantiateMVars
+  let some ggoal ← isDataSynthGoal? hg | return none
+  return some (thm,ggoal)
 
 /-- Given result for `↿f` and `g` return result for `fun x => let y:=g x; f y x` -/
 def projResults (fGoal : Goal) (thm : LambdaTheorem) (f g p₁ p₂ q : Expr) (hg : Result) : DataSynthM (Option Result) := do
@@ -816,21 +811,34 @@ def decomposeDomain? (goal : Goal) (f : FunData) : DataSynthM (Option Result) :=
   let some (p₁,p₂,q,g) ← f.decomposeDomain? | return none
   withProfileTrace "decomposeDomain" do
   withMainTrace (fun r => pure m!"[{ExceptToEmoji.toEmoji r}] domain projection {p₁}") do
-    let some (thm,ggoal) ← projGoals goal (← f.toExpr) (← g.toExpr) p₁ p₂ q | return none
-    let some hg ← dataSynthFun ggoal g | return none
-    let some r ← projResults goal thm (← f.toExpr) (← g.toExpr) p₁ p₂ q hg | return none
-    let r ← r.normalize
-    return r
+
+  let thms ← getLambdaTheorems goal.dataSynthDecl.name .proj
+  for thm in thms do
+    try
+      let some (thm,ggoal) ← projGoals thm goal (← f.toExpr) (← g.toExpr) p₁ p₂ q | continue
+      let some hg ← dataSynthFun ggoal g | continue
+      let some r ← projResults goal thm (← f.toExpr) (← g.toExpr) p₁ p₂ q hg | continue
+      let r ← r.normalize
+      return r
+    catch _ =>
+      continue
+  return none
 
 
 def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
   withProfileTrace "comp case" do
-  let some (thm, fgoal, ggoal) ← compGoals goal (← f.toExpr) (← g.toExpr) | return none
-  let some hf ← dataSynthFun fgoal f | return none
-  let some hg ← dataSynthFun ggoal g | return none
-  let some r ← compResults goal thm (← f.toExpr) (← g.toExpr) hf hg | return none
-  let r ← r.normalize
-  return r
+  let thms ← getLambdaTheorems goal.dataSynthDecl.name .comp
+  for thm in thms do
+    try
+      let some (thm, fgoal, ggoal) ← compGoals thm goal (← f.toExpr) (← g.toExpr) | continue
+      let some hf ← dataSynthFun fgoal f | continue
+      let some hg ← dataSynthFun ggoal g | continue
+      let some r ← compResults goal thm (← f.toExpr) (← g.toExpr) hf hg | continue
+      let r ← r.normalize
+      return r
+    catch _ =>
+      continue
+  return none
 
 
 def letCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
@@ -906,6 +914,7 @@ def lamCase (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
 
 /-- Similar to `dataSynth` but driven by function. -/
 partial def mainFun (goal : Goal) (f : FunData) : DataSynthM (Option Result) := do
+  withIncRecDepth do
   withProfileTrace "mainFun" do
 
   -- spacial case for constant functions
