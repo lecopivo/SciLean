@@ -26,13 +26,13 @@ macro_rules
 | `(conv| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
   `(conv|
     ((try unfold deriv fgradient);
-     lsimp $cfg $[$disch]? only [simp_core, ↓revFDeriv_simproc, ↓fwdFDeriv_simproc, ↓fderivAt_simproc, ↓fderiv_simproc]))
+     lsimp $cfg $[$disch]? only [simp_core, revFDeriv_simproc, fwdFDeriv_simproc, fderivAt_simproc, fderiv_simproc]))
 
 macro_rules
 | `(tactic| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
   `(tactic|
      ((try unfold deriv fgradient);
-      lsimp $cfg  $[$disch]? only [simp_core, ↓revFDeriv_simproc, ↓fwdFDeriv_simproc, ↓fderivAt_simproc, ↓fderiv_simproc]))
+      lsimp $cfg  $[$disch]? only [simp_core, revFDeriv_simproc, fwdFDeriv_simproc, fderivAt_simproc, fderiv_simproc]))
 
   -- if a.isSome then
   --   `(tactic| ((try unfold deriv fgradient adjointFDeriv);

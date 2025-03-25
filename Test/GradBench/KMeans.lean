@@ -16,8 +16,7 @@ def direction {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Flo
   J.rmap2 (·/·) Hdiag)
 rewrite_by
   unfold objective
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc,getElem_ofFn_zetaDelta]
+  autodiff (disch:=unsafeAD)
 
 
 /--
@@ -52,7 +51,6 @@ fun {n k d} [NeZero k] points centroids =>
 #print direction
 
 
-
 def objective' {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
   ∑ᴵ (i : Idx n), minᴵ (j : Idx k), ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
 
@@ -65,8 +63,9 @@ def direction' {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Fl
   J.rmap2 (·/·) Hdiag)
 rewrite_by
   unfold objective'
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]
-  lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc,Function.HasUncurry.uncurry,id]
+  autodiff (disch:=unsafeAD)
+
+
 
 
 /--
@@ -108,7 +107,6 @@ fun {n k d} [NeZero k] points centroids =>
 
 
 
-
 -- def objective_v3 {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
 --   ∑ᴵ (i : Idx n),
 --     let dx := ⊞ (j : Idx k) => ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
@@ -117,11 +115,13 @@ fun {n k d} [NeZero k] points centroids =>
 -- set_option trace.Meta.Tactic.data_synth true in
 -- def direction_v3 {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
 --   (let' ((_a,J),(_b,Hdiag)) :=
---     ∂> (c:=centroids;VectorType.const 1),
+--     ∂> (c:=centroids;⊞ (i : Idx k) => ⊞ (j : Idx d) => (1:Float)),
 --       let' (y,df) := <∂ (objective_v3 points) c
 --       (y,df 1)
---   VectorType.div J Hdiag)
+--   J.rmap2 (·/·) Hdiag)
 -- rewrite_by
 --   unfold objective_v3
+--   autodiff (disch:=unsafeAD)
+--   lsimp [Equiv.arrowProdEquivProdArrow]
 --   lsimp -zeta (disch:=unsafeAD) only [simp_core,↓revFDeriv_simproc]
 --   lsimp -zeta (disch:=unsafeAD) only [simp_core,↓fwdFDeriv_simproc]

@@ -99,7 +99,7 @@ open Lean Elab Term in
 Evaluate meta-function
 -/
 elab "#eval_meta_fun" x:term : command => do
-  runTermElabM fun ctx => do
+  runTermElabM fun _ => do
   let x ← elabTerm x none
 
   let (fName, args) := x.getAppFnArgs
