@@ -1,4 +1,7 @@
-import SciLean.Analysis.Calculus.RevFDeriv
+import SciLean.AD.HasRevFDeriv
+import SciLean.AD.HasFwdFDeriv
+import SciLean.AD.HasVecFwdFDeriv
+import SciLean.AD.HasVecRevFDeriv
 
 import SciLean.Meta.SimpCore
 
@@ -21,21 +24,22 @@ syntax (name := lautodiffTacticStx) "autodiff" optConfig (discharger)?
 
 macro_rules
 | `(conv| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
-  if a.isSome then
-    `(conv| ((try unfold deriv fgradient adjointFDeriv); -- todo: investigate why simp sometimes does not unfold and remove this line
-             lfun_trans $cfg $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
-  else
-    `(conv| ((try unfold deriv fgradient adjointFDeriv);
-             lfun_trans $cfg $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
+  `(conv|
+    ((try unfold deriv fgradient);
+     lsimp $cfg $[$disch]? only [simp_core, ↓revFDeriv_simproc, ↓fwdFDeriv_simproc, ↓fderivAt_simproc, ↓fderiv_simproc]))
 
 macro_rules
 | `(tactic| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
-  if a.isSome then
-    `(tactic| ((try unfold deriv fgradient adjointFDeriv);
-               lfun_trans $cfg $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
-  else
-    `(tactic| ((try unfold deriv fgradient adjointFDeriv);
-               lfun_trans $cfg $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
+  `(tactic|
+     ((try unfold deriv fgradient);
+      lsimp $cfg  $[$disch]? only [simp_core, ↓revFDeriv_simproc, ↓fwdFDeriv_simproc, ↓fderivAt_simproc, ↓fderiv_simproc]))
+
+  -- if a.isSome then
+  --   `(tactic| ((try unfold deriv fgradient adjointFDeriv);
+  --              lfun_trans $cfg $[$disch]? only $[[deriv, fgradient, adjointFDeriv, simp_core, $a,*]]?))
+  -- else
+  --   `(tactic| ((try unfold deriv fgradient adjointFDeriv);
+  --              lfun_trans $cfg $[$disch]? only [deriv, fgradient, adjointFDeriv, simp_core]))
 
 -- open Lean Meta
 -- simproc_decl lift_lets_simproc (_) := fun e => do

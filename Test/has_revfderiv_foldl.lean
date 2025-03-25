@@ -4,7 +4,6 @@ open SciLean
 
 -- macro "Float^[" n:term "]" : term => `(FloatVector (Fin $n))
 
-open VectorType
 
 variable
   {R} [RealScalar R]

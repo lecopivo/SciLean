@@ -72,28 +72,29 @@ df (0, 0) : K
 #guard_msgs in
 #check ∂! (fun x : K => x^2)
 
-/--
-info: fun x =>
-  fun x =>L[K]
-    let dz := x + x;
-    dz : K × K → K × K →L[K] K × K
--/
+/-- info: fun x => (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K → K × K →L[K] K × K -/
 #guard_msgs in
-#check ∂! (fun x : K×K => x + x)
+#check (∂ (fun x : K×K => x + x)) rewrite_by
+  autodiff
+  simp only [ContinuousLinearMap.add_apply]
+
 
 /-- info: 1 + 1 : K -/
 #guard_msgs in
-#check ∂! (fun x => x*x) (1:K)
+#check (∂! (fun x => x*x) (1:K))
 
-/-- info: fun x =>L[K] x + x : K × K →L[K] K × K -/
+/-- info: (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K →L[K] K × K -/
 #guard_msgs in
-#check ∂! (x:=((1:K),(2:K))), (x + x)
+#check ((∂ (x:=((1:K),(2:K))), (x + x)))
+  rewrite_by
+    autodiff
+
 
 /-- info: 1 + 1 : K -/
 #guard_msgs in
 #check ∂! (x:=(1:K)), x*x
 
-/-- info: fun x =>L[K] x + x : K × K →L[K] K × K -/
+/-- info: (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K →L[K] K × K -/
 #guard_msgs in
 #check ∂! (x:=((1:K),(2:K))), (x + x)
 
@@ -155,9 +156,10 @@ variable (y : K × K)
 /-- info: ∇ (x:=(1.0, 2.0)), (x + x) : K × K → K × K -/
 #guard_msgs in
 #check ∇ (fun x => x + x) ((1.0,2.0) : K×K)
+
 /-- info: fun x => (1, 0) : K × K → K × K -/
 #guard_msgs in
-#check (∇! x : (K×K), ⟪x,(1,0)⟫)
+#check ((∇! x : (K×K), ⟪x,(1,0)⟫)) rewrite_by autodiff
 
 
 set_default_scalar Float
@@ -184,7 +186,7 @@ set_default_scalar Float
 
 set_default_scalar K
 
-/-- info: fun x dx => (x.1 + x.2 * x.1, dx.1 + (x.2 * dx.1 + dx.2 * x.1)) : K × K → K × K → K × K -/
+/-- info: fun x dx => (x.1 + x.2 * x.1, dx.1 + (x.2 * dx.1 + x.1 * dx.2)) : K × K → K × K → K × K -/
 #guard_msgs in
 #check (∂>! x : K×K, (x.1 + x.2*x.1)) rewrite_by dsimp
 /-- info: (1 + 1, 2 + (2 + 2)) : K × K -/
@@ -214,7 +216,7 @@ info: fun x => (x.1 + x.2 * x.1, fun dy => (dy + x.2 * dy, x.1 * dy)) : K × K �
 -/
 #guard_msgs in
 #check (<∂! x : K×K, (x.1 + x.2*x.1)) rewrite_by dsimp
-/-- info: (1 + 1, fun dy => dy + (dy + dy)) : K × (K → K) -/
+/-- info: (1 + 1, fun dy => dy + dy + dy) : K × (K → K) -/
 #guard_msgs in
 #check (<∂! x:=(1:K), (x + x*x)) rewrite_by dsimp
 

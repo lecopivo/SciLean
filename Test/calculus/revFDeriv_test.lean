@@ -125,7 +125,7 @@ example
         let dy_2 := Prod.snd zdf dy_1.snd;
         (dy.fst, dy_1.fst, dy_2)) :=
 by
-  conv => lhs; autodiff
+  conv => lhs; lfun_trans
 
 
 example
@@ -143,7 +143,7 @@ example
         let dy_3 := Prod.snd zdf dy_2.snd;
         (dy.fst, dy_1.fst, dy_2.fst, dy_3)) :=
 by
-  conv => lhs; autodiff
+  conv => lhs; lfun_trans
 
 
 
@@ -155,7 +155,7 @@ example
     =
     fun x => (x, fun dx => dx) :=
 by
-  conv => lhs; autodiff
+  conv => lhs; fun_trans
 
 #exit
 

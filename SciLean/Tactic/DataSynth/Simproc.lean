@@ -28,16 +28,18 @@ def mkDataSynthSimproc (simprocName : Name) (thm : Name) : Simp.Simproc := fun e
   -- extract data_synth goal, for now we expect it is the last argument of the theorem
   let hf := xs[xs.size-1]!
   let hfType ← inferType hf >>= instantiateMVars
-  let .some goal ← Tactic.DataSynth.isDataSynthGoal? hfType
+
+  forallTelescope hfType fun ys hfType' => do
+  let .some goal ← Tactic.DataSynth.isDataSynthGoal? hfType'
     | throwError m!"{simprocName} error: expected `data_synth` goal, got {hfType} instead!"
 
   -- run data_synth
   let .some r ← Tactic.DataSynth.dataSynth goal |>.runInSimpM
     | return .continue
 
-  unless ← isDefEq hfType r.getSolvedGoal do
+  unless ← isDefEq hfType (← mkForallFVars ys r.getSolvedGoal) do
     throwError m!"{simprocName} error: failed to assign data"
-  unless ← isDefEq hf r.proof do
+  unless ← isDefEq hf (← mkLambdaFVars ys r.proof) do
     throwError m!"{simprocName} error: failed to assign proof"
 
   let prf := thmExpr.beta xs

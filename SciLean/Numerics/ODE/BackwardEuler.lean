@@ -20,6 +20,7 @@ set_default_scalar R
 
 namespace backwardEuler
 
+
 theorem isOdeStepper (f : R → X → X)
   (hf : Differentiable R (fun tx : R×X => f tx.1 tx.2))
   (hf' : ∀ tₙ Δt, Diffeomorphism R (fun x : X => x - Δt • f (tₙ + Δt) x))
@@ -35,10 +36,10 @@ where
         conv in (_=_) =>
           move x' terms_to_lhs
       solve_as_inv
-      autodiff
+      fun_trans only [deriv, simp_core]
 
     -- to remove this sorry as is we probably need that the derivative of f is continuous
     rw[Filter.limit_of_continuous _ _ sorry_proof]
 
-    conv => autodiff
+    conv => fun_trans only [simp_core]
     simp

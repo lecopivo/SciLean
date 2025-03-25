@@ -1,6 +1,5 @@
 import SciLean.Data.DataArray.DataArray
 import SciLean.Data.DataArray.DataArrayEquiv
-import SciLean.Data.DataArray.VectorType
 import SciLean.Data.DataArray.Float
 import SciLean.Data.Instances.Sigma
 

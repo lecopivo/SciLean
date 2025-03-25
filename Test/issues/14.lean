@@ -26,5 +26,5 @@ example
 by
   simp[revFDeriv]
   funext x
-  autodiff
+  fun_trans
   simp[revFDeriv,smul_push]

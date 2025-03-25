@@ -54,7 +54,7 @@ example
         let dx_1 := dy.1;
         (dx, dx_1, dy_1)) :=
 by
-  conv => lhs; autodiff
+  conv => lhs; lfun_trans
 
 set_option synthInstance.maxHeartbeats 100000 in
 example
@@ -87,7 +87,7 @@ example
         let dx_2 := dy_1.1;
         (dx, dx_1, dx_2, dy_2)) :=
 by
-  conv => lhs; autodiff
+  conv => lhs; lfun_trans
 
 
 -- @[simp, simp_core]
@@ -133,7 +133,7 @@ example
     =
     fun x => (x, fun dx => dx) :=
 by
-  conv => lhs; autodiff
+  conv => lhs; fun_trans
 
 example
   : revFDeriv K (fun (x : Fin 10 → K) => ∑ᴵ i, x i)

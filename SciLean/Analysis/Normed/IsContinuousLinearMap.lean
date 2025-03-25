@@ -39,6 +39,12 @@ theorem ContinuousLinearMap.mk'_coe
   (f : X → Y) (hf : IsContinuousLinearMap R f)
   : mk' R f hf = f := by rfl
 
+attribute [simp_core, simp_core↓]
+  ContinuousLinearMap.add_apply
+  ContinuousLinearMap.sub_apply
+  ContinuousLinearMap.smul_apply
+
+
 @[simp]
 theorem ContinuousLinearMap.eta_reduce (f : X →L[R] Y)
   : (mk' R f ⟨⟨f.1.1.2,f.1.2⟩,f.2⟩) = f := by ext; simp

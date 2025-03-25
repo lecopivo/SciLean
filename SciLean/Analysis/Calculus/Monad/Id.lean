@@ -137,10 +137,3 @@ theorem Id'.run.arg_x.HasRevFDeriv_rule
           pure dx)) := sorry_proof
 
 end OnAdjointSpace
-
-
--- set_option trace.Meta.Tactic.data_synth true in
--- #check (HasRevFDeriv ℝ (fun x : ℝ => Id'.run do
---            let mut x := x
---            x := x * x
---            return x) _) rewrite_by data_synth -- bug in data_synth :(

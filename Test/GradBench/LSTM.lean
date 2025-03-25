@@ -28,8 +28,6 @@ abbrev_data_synth Scalar.tanh in x : HasRevFDeriv K by
     (y, fun dy => dy*(1 - y^2)))
   sorry_proof
 
-@[simp,simp_core]
-theorem VectorType.conj_real (x : Float^[n]) : VectorType.conj x = x := sorry_proof
 
 set_option synthInstance.maxSize 2000
 open ArrayOps in
@@ -91,7 +89,6 @@ def_data_synth lstmPredict in mainParams extraParams state : HasRevFDeriv Float 
 --   data_synth => enter[3]; lsimp only [simp_core]
 
 
-open VectorType in
 abbrev_data_synth Scalar.log in x : HasRevFDeriv K by
   conv => enter[3]; assign (fun x => (Scalar.log x, fun dx : K => dx/x))
   sorry_proof
@@ -101,7 +98,6 @@ abbrev_data_synth Scalar.log in x : HasRevFDerivUpdate K by
   sorry_proof
 
 
-open VectorType MatrixType in
 def lstmObjective {slen lenSeq d : ℕ}
                   (mainParams : (Float^[4,d])^[slen,2])
                   (extraParams : Float^[3,d])

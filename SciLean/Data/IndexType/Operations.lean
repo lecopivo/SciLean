@@ -50,7 +50,7 @@ def min [Min α] [Top α] (f : I → α) : α :=
 @[specialize, inline]
 def argMinVal {I α : Type*} {n}
     [IndexType I n] [Fold I]
-    [LE α] [DecidableLE α] [Inhabited I] [Top α]
+    [LE α] [DecidableLE α] [Top α] [Inhabited I]
     (f : I → α) : (I×α) :=
   IndexType.fold (IndexType.Range.full (I:=I))
     (init := (default, ⊤))
@@ -62,7 +62,7 @@ def argMinVal {I α : Type*} {n}
 @[specialize, inline]
 def argMin {I α : Type*} {n}
     [IndexType I n] [Fold I]
-    [LE α] [DecidableLE α] [Inhabited I] [Top α]
+    [LE α] [DecidableLE α] [Top α] [Inhabited I]
     (f : I → α) : I := (argMinVal f).1
 
 open Lean.Parser.Term in

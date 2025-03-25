@@ -8,7 +8,7 @@ set_option pp.proofs false
 
 set_default_scalar Float
 
-open VectorType in
+
 /-- unlack `logdiag` and `lt` to lower triangular matrix -/
 def unpackQ {d : Nat} (logdiag : Float^[d]) (lt : Float^[((d-1)*d/2)]) : Float^[d,d]  :=
   ⊞ (ij : Idx d × Idx d) =>
@@ -39,7 +39,7 @@ abbrev_data_synth logWishartPrior in Qs qsums : HasRevFDeriv Float by
   data_synth => enter[3]; lsimp
 
 
-open VectorType
+
 def gmmObjective {d k n : Nat}
       (alphas: Float^[k]) (means: Float^[k,d])
       (logdiag : Float^[k,d]) (lt : Float^[k,((d-1)*d)/2])
@@ -157,7 +157,7 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
                   let dxi := dxi[i];
                   let dx₁ := dx.1;
                   let dx₂ := dx.2;
-                  let dy := dxi * Scalar.exp x₁;
+                  let dy := dxi * exp x₁;
                   let xi := dx₁[i.1];
                   let x := setElem dx₁ i.1 (xi + dy) True.intro;
                   (x, dx₂)

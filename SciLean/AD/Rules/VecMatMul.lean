@@ -1,4 +1,4 @@
-import SciLean.Data.MatrixType.Basic
+import SciLean.Algebra.MatrixType.Basic
 import SciLean.Analysis.Calculus.HasRevFDeriv
 import SciLean.Analysis.Calculus.HasFwdFDeriv
 import SciLean.Tactic.DataSynth.DefDataSynth

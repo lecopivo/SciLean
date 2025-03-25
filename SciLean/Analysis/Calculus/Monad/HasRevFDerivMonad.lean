@@ -169,6 +169,25 @@ theorem HasRevFDerivUpdateM.let_rule
   sorry_proof
 
 
+open Lean Meta HasRevFDerivM in
+#eval show MetaM Unit from do
+   -- Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivM,``HasRevFDerivM.comp_rule⟩, .com⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivM, ``comp_rule⟩, .comp
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f)
+      (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivM,``let_rule⟩, .letE
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f)
+      (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf)⟩
+
+open Lean Meta HasRevFDerivUpdateM in
+#eval show MetaM Unit from do
+   -- Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivUpdateM,``HasRevFDerivUpdateM.comp_rule⟩, .com⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivUpdateM, ``comp_rule⟩, .comp
+      (← getConstArgId ``comp_rule `g) (← getConstArgId ``comp_rule `f)
+      (← getConstArgId ``comp_rule `hg) (← getConstArgId ``comp_rule `hf)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasRevFDerivUpdateM,``let_rule⟩, .letE
+      (← getConstArgId ``let_rule `g) (← getConstArgId ``let_rule `f)
+      (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf)⟩
 
 
 end SciLean

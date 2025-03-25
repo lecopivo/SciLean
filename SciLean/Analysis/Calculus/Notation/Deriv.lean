@@ -72,7 +72,7 @@ macro_rules
 -- in some cases it is still necessary to call fun_trans multiple times
 -- | `(∂! $f $xs*) => `((∂ $f $xs*) rewrite_by fun_trans; fun_trans; fun_trans)
 -- | `(∂! $f) => `((∂ $f) rewrite_by (try unfold scalarCDeriv); autodiff; autodiff)
-| `(∂! $f) => `((∂ $f) rewrite_by (try unfold deriv); autodiff; autodiff)
+| `(∂! $f) => `((∂ $f) rewrite_by autodiff)
 | `(∂! $x:term, $b) => `(∂! (fun $x => $b))
 | `(∂! $x:term := $val:term, $b) => `(∂! (fun $x => $b) $val)
 -- | `(∂! $x:term := $val:term;$dir:term, $b) => `(((∂ $x:term:=$val;$dir, $b) rewrite_by (try unfold scalarCDeriv);fun_trans))

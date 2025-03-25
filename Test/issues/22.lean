@@ -15,4 +15,4 @@ example (i : α)
     fun _ => fun dxy =>L[K]
       dxy.1 i :=
 by
-  conv => lhs; autodiff
+  conv => lhs; fun_trans

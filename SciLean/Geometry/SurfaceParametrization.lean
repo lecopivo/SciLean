@@ -4,7 +4,7 @@ import Mathlib.MeasureTheory.Integral.Bochner
 import Mathlib.MeasureTheory.Measure.Hausdorff
 
 import SciLean.Analysis.Scalar
-import SciLean.Analysis.Calculus.Jacobian
+-- import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Tactic.GTrans
 
 open MeasureTheory
@@ -40,14 +40,14 @@ variable
   {Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] [NormedSpace R Y] [CompleteSpace Y]
 
 
-variable (R)
-set_option linter.unusedVariables false in
-theorem surface_integral_parametrization_inter
-    (f : X → Y) (A B : Set X)
-    {U param} [NormedAddCommGroup U] [NormedSpace ℝ U]
-    (p : SurfaceParametrization A U param)
-    [MeasureSpace U] [AdjointSpace R U] :
-    (∫ x in A ∩ B, f x ∂μH[d])
-    =
-    param.foldl (init:=(0:Y))
-      fun s (dom,p) => s + ∫ u in dom ∩ p ⁻¹' B, let x := p u; jacobian R p u • f x := sorry_proof
+-- variable (R)
+-- set_option linter.unusedVariables false in
+-- theorem surface_integral_parametrization_inter
+--     (f : X → Y) (A B : Set X)
+--     {U param} [NormedAddCommGroup U] [NormedSpace ℝ U]
+--     (p : SurfaceParametrization A U param)
+--     [MeasureSpace U] [AdjointSpace R U] :
+--     (∫ x in A ∩ B, f x ∂μH[d])
+--     =
+--     param.foldl (init:=(0:Y))
+--       fun s (dom,p) => s + ∫ u in dom ∩ p ⁻¹' B, let x := p u; jacobian R p u • f x := sorry_proof

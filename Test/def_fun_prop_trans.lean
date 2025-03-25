@@ -74,7 +74,7 @@ example :
       let zdf := mul.arg_xy.revFDeriv (x, x);
       (zdf.1, fun dz =>
         let dy := zdf.2 dz;
-        dy.1 + dy.2)) := by autodiff; simp
+        dy.1 + dy.2)) := by fun_trans
 
 
 def add (x y : X) : X := x + y
@@ -97,8 +97,8 @@ info: DefFunPropTransTest.add.arg_xy.Differentiable_rule.{u_1} {X : Type} [Norme
 #check add.arg_xy.Differentiable_rule
 
 /--
-info: DefFunPropTransTest.add.arg_xy.revFDeriv_rule {X : Type} [NormedAddCommGroup X] {K : Type} [RCLike K] [AdjointSpace K X]
-  [CompleteSpace X] : <∂ xy, add xy.1 xy.2 = add.arg_xy.revFDeriv
+info: DefFunPropTransTest.add.arg_xy.revFDeriv_rule {X : Type} [NormedAddCommGroup X] {K : Type} [RCLike K]
+  [AdjointSpace K X] : <∂ xy, add xy.1 xy.2 = add.arg_xy.revFDeriv
 -/
 #guard_msgs in
 #check add.arg_xy.revFDeriv_rule
@@ -137,7 +137,7 @@ example :
       let dy := zdf.2 dy;
       dy.1 + dy.2) :=
 by
-  conv => lhs; autodiff
+  conv => lhs; lfun_trans
 
 example :
   (revFDeriv K fun (x : K) =>
@@ -172,6 +172,6 @@ example :
       let dy := zdf.2 dxdy_3;
       let dx := dy.1 + dy.2;
       dxdy + dx) := by
-  conv => lhs; autodiff
+  conv => lhs; lfun_trans
 
 end DefFunPropTransTest

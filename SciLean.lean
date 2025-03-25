@@ -56,7 +56,6 @@ import SciLean.Analysis.Calculus.HasFwdFDeriv
 import SciLean.Analysis.Calculus.HasRevFDeriv
 import SciLean.Analysis.Calculus.HasVecFwdFDeriv
 import SciLean.Analysis.Calculus.HasVecRevFDeriv
-import SciLean.Analysis.Calculus.Jacobian
 import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
 import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
 import SciLean.Analysis.Calculus.Monad.HasRevFDerivMonad
@@ -378,11 +377,9 @@ import SciLean.Data.DataArray.Operations.Uncurry
 -- import SciLean.Data.DataArray.Operations_old.Uncurry
 -- import SciLean.Data.DataArray.Operations_old.Vecmul
 import SciLean.Data.DataArray.PlainDataType
-import SciLean.Data.DataArray.RevDeriv
 import SciLean.Data.DataArray.RnEquiv
 import SciLean.Data.DataArray.TensorOperations
 import SciLean.Data.DataArray.TensorProduct
-import SciLean.Data.DataArray.VectorType
 import SciLean.Data.FinProd
 import SciLean.Data.Float
 import SciLean.Data.FloatArray
@@ -407,7 +404,7 @@ import SciLean.Data.IndexType.Operations
 -- import SciLean.Data.Instances.Sigma
 import SciLean.Data.Int64
 import SciLean.Data.ListN
-import SciLean.Data.MatrixType.Basic
+import SciLean.Algebra.MatrixType.Basic
 -- import SciLean.Data.MatrixType.MatrixType_old.Base
 -- import SciLean.Data.MatrixType.MatrixType_old.BlockMatrix
 -- import SciLean.Data.MatrixType.MatrixType_old.Dense
@@ -425,8 +422,8 @@ import SciLean.Data.MatrixType.Basic
 -- import SciLean.Data.MatrixType.MatrixType_old.Square
 -- import SciLean.Data.MatrixType.MatrixType_old.Symbolic
 -- import SciLean.Data.MatrixType.MatrixType_old.Transpose
-import SciLean.Data.MatrixType.Operations.MatVecMul
-import SciLean.Data.MatrixType.Operations.VecMatMul
+import SciLean.AD.Rules.MatVecMul
+import SciLean.AD.Rules.VecMatMul
 import SciLean.Data.Prod
 import SciLean.Data.Random
 import SciLean.Data.SparseMatrix.Basic
@@ -434,7 +431,6 @@ import SciLean.Data.StructType
 import SciLean.Data.StructType.Algebra
 import SciLean.Data.StructType.Basic
 import SciLean.Data.Vector
-import SciLean.Data.VectorType.Base
 -- import SciLean.Data.VectorType.VectorType_old.BaseSimps
 -- import SciLean.Data.VectorType.VectorType_old.Basic
 -- import SciLean.Data.VectorType.VectorType_old.BinOps

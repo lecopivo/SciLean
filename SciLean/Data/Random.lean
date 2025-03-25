@@ -1,5 +1,4 @@
 import SciLean.Data.DataArray.DataArray
-import SciLean.Data.DataArray.VectorType
 import SciLean.Data.Int64
 import Mathlib.Control.Random
 
