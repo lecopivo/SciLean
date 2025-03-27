@@ -13,7 +13,7 @@ class Norm2 (K X : Type _) where
 instance [Inner K X] : Norm2 K X where
   norm2 x := Inner.inner x x
 
-notation "‖" x "‖₂²[" K "]" => @Norm2.norm2 K _ _ x
+macro "‖" x:term "‖₂²[" K:term "]" : term => `(@Norm2.norm2 $K _ _ $x)
 macro "‖" x:term "‖₂²" : term => `(@Norm2.norm2 defaultScalar% _ _ $x)
 
 @[app_unexpander Norm2.norm2] def unexpandNorm2 : Lean.PrettyPrinter.Unexpander
@@ -25,11 +25,11 @@ theorem norm2_def [Inner K X] (x : X) : ‖x‖₂²[K] = Inner.inner x x := by 
 
 def norm₂ (K : Type _) {R X : Type _} [Scalar R K] [Norm2 K X] (x : X) : K := Scalar.sqrt (Norm2.norm2 x)
 
-notation "‖" x "‖₂[" K "]" => norm₂ K x
+macro "‖" x:term "‖₂[" K:term "]" : term => `(norm₂ $K $x)
 macro "‖" x:term "‖₂" : term => `(norm₂ defaultScalar% $x)
 
 @[app_unexpander norm₂] def unexpandNorm₂ : Lean.PrettyPrinter.Unexpander
-  | `($(_) K $x) => `(‖ $x ‖₂)
+  | `($(_) $_ $x) => `(‖ $x ‖₂)
   | _ => throw ()
 
 @[simp, simp_core]
@@ -45,7 +45,7 @@ theorem scalar_norm {R} [RealScalar R] (r : R) : ‖r‖₂[R] = Scalar.abs r :=
 
 section Inner
 
-notation "⟪" x ", " y "⟫[" K "]" => @Inner.inner K _ _ x y
+macro "⟪" x:term ", " y:term "⟫[" K:term "]" : term => `(@Inner.inner $K _ _ $x $y)
 macro "⟪" x:term ", " y:term "⟫" : term => `(@Inner.inner defaultScalar% _ _ $x $y)
 
 @[app_unexpander Inner.inner] def unexpandInner : Lean.PrettyPrinter.Unexpander

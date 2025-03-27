@@ -65,68 +65,95 @@ info: fun x =>
     lsimp -zeta only [simp_core, ↓vecFwdFDeriv_simproc]
 
 
-noncomputable
-def jac (R) [RCLike R]
-    {X} [NormedAddCommGroup X] [AdjointSpace R X]
-    {Y} [NormedAddCommGroup Y] [AdjointSpace R Y]
-    {YX} [NormedAddCommGroup YX] [AdjointSpace R YX]
-    {XX} [NormedAddCommGroup XX] [AdjointSpace R XX]
-    [TensorProductType R Y X YX] [TensorProductType R X X XX] [TensorProductSelf R X XX]
-    (f : X → Y) (x : X) : YX :=
-  (vecFwdFDeriv R X f x 𝐈[R,X]).2
+/--
+info: fun x =>
+  let yn := ‖x‖₂;
+  let iyn := yn⁻¹;
+  iyn • x : Float^[3] → Float^[3]
+-/
+#guard_msgs in
+#check (∇ (fun x : Float^[3] => ‖x‖₂))
+  rewrite_by
+    autodiff (disch:=unsafeAD)
+
+
+@[simp, simp_core]
+theorem tmap_fst_id
+  {𝕜 X Y Z : Type*} [RCLike 𝕜]
+  [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
+  [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
+  [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
+  -- [NormedAddCommGroup X'] [AdjointSpace 𝕜 X']
+  -- [NormedAddCommGroup Y'] [AdjointSpace 𝕜 Y']
+  {XZ : Type*} [NormedAddCommGroup XZ] [AdjointSpace 𝕜 XZ] [TensorProductType 𝕜 X Z XZ]
+  {YZ : Type*} [NormedAddCommGroup YZ] [AdjointSpace 𝕜 YZ] [TensorProductType 𝕜 Y Z YZ]
+  -- {XZ'} [NormedAddCommGroup XZ'] [AdjointSpace 𝕜 XZ'] [TensorProductType 𝕜 X' Z XZ']
+  -- {YZ'} [NormedAddCommGroup YZ'] [AdjointSpace 𝕜 YZ'] [TensorProductType 𝕜 Y' Z YZ']
+  -- (f : X →L[𝕜] X') (g : Y →L[𝕜] X')
+  (x : (X×Y)⊗[𝕜]Z) :
+  tmap (fun xy : X×Y =>L[𝕜] xy.1) (fun z : Z =>L[𝕜] z) x = x.1 := sorry_proof
+
+@[simp, simp_core]
+theorem tmap_snd_id
+  {𝕜 X Y Z : Type*} [RCLike 𝕜]
+  [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
+  [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
+  [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
+  -- [NormedAddCommGroup X'] [AdjointSpace 𝕜 X']
+  -- [NormedAddCommGroup Y'] [AdjointSpace 𝕜 Y']
+  {XZ : Type*} [NormedAddCommGroup XZ] [AdjointSpace 𝕜 XZ] [TensorProductType 𝕜 X Z XZ]
+  {YZ : Type*} [NormedAddCommGroup YZ] [AdjointSpace 𝕜 YZ] [TensorProductType 𝕜 Y Z YZ]
+  -- {XZ'} [NormedAddCommGroup XZ'] [AdjointSpace 𝕜 XZ'] [TensorProductType 𝕜 X' Z XZ']
+  -- {YZ'} [NormedAddCommGroup YZ'] [AdjointSpace 𝕜 YZ'] [TensorProductType 𝕜 Y' Z YZ']
+  -- (f : X →L[𝕜] X') (g : Y →L[𝕜] X')
+  (x : (X×Y)⊗[𝕜]Z) :
+  tmap (fun xy : X×Y =>L[𝕜] xy.2) (fun z : Z =>L[𝕜] z) x = x.2 := sorry_proof
+
+-- @[simp, simp_core]
+-- theorem tmap_snd_id
+--   {𝕜 X Y Z : Type*} [RCLike 𝕜]
+--   [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
+--   [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
+--   [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
+--   -- [NormedAddCommGroup X'] [AdjointSpace 𝕜 X']
+--   -- [NormedAddCommGroup Y'] [AdjointSpace 𝕜 Y']
+--   {XZ : Type*} [NormedAddCommGroup XZ] [AdjointSpace 𝕜 XZ] [TensorProductType 𝕜 X Z XZ]
+--   {YZ : Type*} [NormedAddCommGroup YZ] [AdjointSpace 𝕜 YZ] [TensorProductType 𝕜 Y Z YZ]
+--   -- {XZ'} [NormedAddCommGroup XZ'] [AdjointSpace 𝕜 XZ'] [TensorProductType 𝕜 X' Z XZ']
+--   -- {YZ'} [NormedAddCommGroup YZ'] [AdjointSpace 𝕜 YZ'] [TensorProductType 𝕜 Y' Z YZ']
+--   -- (f : X →L[𝕜] X') (g : Y →L[𝕜] X')
+--   (x : (X×Y)⊗[𝕜]Z) :
+--   tmap (fun xy : X×Y =>L[𝕜] xy.2) (fun z : Z =>L[𝕜] z) x = x.2 := sorry_proof
+attribute [vector_optimize] smul_smul smul_neg one_mul neg_mul
+attribute [vector_optimize ←] neg_smul pow_succ pow_succ'
+
+
+/-- info: fun x => -(‖x‖₂ ^ 3)⁻¹ • x ⊗ x + ‖x‖₂⁻¹ • 𝐈 : Float^[3] → Float^[3, 3] -/
+#guard_msgs in
+#check (∇ (∇ (fun x : Float^[3] => ‖x‖₂)))
+  rewrite_by
+    autodiff (disch:=unsafeAD)
+    simp only [vector_optimize]
+    norm_num
+    simp only [tmulAdd_spec]
+
+
 
 
 /--
 info: fun x =>
-  let yn := ‖x‖₂[Float];
-  yn⁻¹ • x : Float^[3] → Float^[3]
+  𝐈 ⊗ (-‖x‖₂⁻¹ ^ 2 • ‖x‖₂⁻¹ • x) +
+    ((x ⊗
+            (-‖x‖₂⁻¹ ^ 2 • (‖x‖₂⁻¹ • 𝐈 + x ⊗ (-‖x‖₂⁻¹ ^ 2 • ‖x‖₂⁻¹ • x)) +
+              (‖x‖₂⁻¹ • x) ⊗ (-(2 • ‖x‖₂⁻¹ • -‖x‖₂⁻¹ ^ 2 • ‖x‖₂⁻¹ • x)))).reshape
+        ((Idx 3 × Idx 3) × Idx 3) ⋯ +
+      (tswapRight ((𝐈 ⊗ (-‖x‖₂⁻¹ ^ 2 • ‖x‖₂⁻¹ • x)).reshape (Idx 3 × Idx 3 × Idx 3) ⋯)).reshape
+        ((Idx 3 × Idx 3) × Idx 3) ⋯) : Float^[3] → Float^[[3, 3], 3]
 -/
 #guard_msgs in
-#check (jac Float (fun x : Float^[3] => ‖x‖₂))
+#check (∇ (∇ (∇ (fun x : Float^[3] => ‖x‖₂))))
   rewrite_by
-    unfold jac
-    lsimp -zeta (disch:=unsafeAD) only [simp_core, ↓vecFwdFDeriv_simproc]
-
-
-
-/--
-info: fun x => ‖x‖₂[Float]⁻¹ • 𝐈 + x ⊗ (-(‖x‖₂²⁻¹ • ‖x‖₂[Float]⁻¹ • x)) : Float^[3] → Float^[3, 3]
--/
-#guard_msgs in
-#check (jac Float (jac Float (fun x : Float^[3] => ‖x‖₂)))
-  rewrite_by
-    unfold jac
-    conv in (occs := 2) (vecFwdFDeriv _ _ _) =>
-      lsimp -zeta (disch:=unsafeAD) only [simp_core, ↓vecFwdFDeriv_simproc]
-    conv in (occs := 1) (vecFwdFDeriv _ _ _) =>
-      enter [x]
-      simp -zeta
-      lsimp -zeta (disch:=unsafeAD) only [simp_core, ↓vecFwdFDeriv_simproc]
-    simp
-
-
-/--
-info: fun x =>
-  (vecFwdFDeriv Float (Float^[3]) (fun x => ‖x‖₂[Float]⁻¹ • 𝐈 + x ⊗ (-(‖x‖₂²⁻¹ • ‖x‖₂[Float]⁻¹ • x))) x
-      𝐈).2 : Float^[3] → Float^[[3, 3], 3]
--/
-#guard_msgs in
-#check (jac Float (jac Float (jac Float (fun x : Float^[3] => ‖x‖₂))))
-  rewrite_by
-    unfold jac
-    conv in (occs := 3) (vecFwdFDeriv _ _ _) =>
-      lsimp -zeta (disch:=unsafeAD) only [simp_core, ↓vecFwdFDeriv_simproc]
-    simp -zeta
-    conv in (occs := 2) (vecFwdFDeriv _ _ _) =>
-      enter [x]
-      lsimp -zeta (disch:=unsafeAD) only [simp_core, ↓vecFwdFDeriv_simproc]
-    simp
-
-    conv in (occs := 1) (vecFwdFDeriv _ _ _) =>
-      enter [x]
-      simp -zeta
-      lsimp -zeta (disch:=unsafeAD) only [simp_core, ↓vecFwdFDeriv_simproc]
-    simp
+    autodiff +zetaDelta (disch:=unsafeAD)
 
 
 
@@ -136,12 +163,11 @@ info: fun x =>
   let x₂ := 2 • x;
   let x₁_1 := x₁ • x;
   let x₂ := x₁ • 𝐈 + x ⊗ x₂;
-  let y_dz := tmulAssoc.symm (x ⊗ x₂);
-  let dy_z := tmulAssoc.symm (tswapRight (tmulAssoc (𝐈 ⊗ x₁_1)));
+  let y_dz := (x ⊗ x₂).reshape ((Idx 3 × Idx 3) × Idx 3) ⋯;
+  let dy_z := (tswapRight ((𝐈 ⊗ x₁_1).reshape (Idx 3 × Idx 3 × Idx 3) ⋯)).reshape ((Idx 3 × Idx 3) × Idx 3) ⋯;
   y_dz + dy_z : Float^[3] → Float^[[3, 3], 3]
 -/
 #guard_msgs in
-#check (jac Float (fun x : Float^[3] => x ⊗ (‖x‖₂²•x)))
+#check (∇ x : Float^[3], x ⊗ (‖x‖₂²•x))
   rewrite_by
-    unfold jac
-    lsimp -zeta (disch:=unsafeAD) only [simp_core, ↓vecFwdFDeriv_simproc]
+    autodiff

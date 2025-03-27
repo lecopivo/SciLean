@@ -89,6 +89,26 @@ theorem axpby_zero_b (a : R) (x y : X) :
 theorem axpby_zero_y (a b : R) (x : X) :
     axpby a x b 0 = a•x := by simp[axpby_spec]
 
+@[vector_optimize]
+theorem axpby_self (a b : R) (x : X) :
+    axpby a x b x = (a+b)•x := by simp[axpby_spec]; module
+
+@[vector_optimize]
+theorem axpby_self_y (a b c d : R) (x y : X) :
+    axpby a (axpby b x c y) d y = axpby (a*b) x (a*c+d) y := by simp[axpby_spec]; module
+
+@[vector_optimize]
+theorem axpby_self_y' (a b c d : R) (x y : X) :
+    axpby a (axpby b y c x) d y = axpby (a*c) x (a*b+d) y := by simp[axpby_spec]; module
+
+@[vector_optimize]
+theorem axpby_self_x (a b c d : R) (x y : X) :
+    axpby a x b (axpby c x d y) = axpby (a+b*c) x (b*d) y := by simp[axpby_spec]; module
+
+@[vector_optimize]
+theorem axpby_self_x' (a b c d : R) (x y : X) :
+    axpby a x b (axpby c y d x) = axpby (a+b*d) x (b*c) y := by simp[axpby_spec]; module
+
 end Axpby
 
 

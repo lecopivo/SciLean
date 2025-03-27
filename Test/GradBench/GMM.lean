@@ -154,10 +154,11 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
               else
                 if h : i.1 = i.2 then
                   let x₁ := x₁[i.1];
+                  let a := exp x₁;
                   let dxi := dxi[i];
                   let dx₁ := dx.1;
                   let dx₂ := dx.2;
-                  let dy := dxi * exp x₁;
+                  let dy := dxi * a;
                   let xi := dx₁[i.1];
                   let x := setElem dx₁ i.1 (xi + dy) True.intro;
                   (x, dx₂)

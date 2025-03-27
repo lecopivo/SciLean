@@ -34,6 +34,18 @@ variable
     [TensorProductType R X X XX]
     [ts : TensorProductSelf R X XX]
 
+instance : TensorProductSelf R R R where
+  identityMatrix := 1
+  identityMatrix_spec := sorry_proof
+  addIdentityMatrix r A := r + A
+  addIdentityMatrix_spec := sorry_proof
+
+
+@[simp, simp_core]
+theorem identityMatrix_scalar : identityMatrix R R = (1 :R) := by rfl
+
+@[simp, simp_core]
+theorem addIdentityMatrix_scalar (r A : R) : addIdentityMatrix R r A = r + A := by rfl
 
 theorem addIdentityMatrix_def (a : R) (A : XX) :
   ts.addIdentityMatrix a A = A + a•ts.identityMatrix := sorry_proof

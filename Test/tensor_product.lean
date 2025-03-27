@@ -47,9 +47,11 @@ info: ⊞[0.1, 1e-2] ⊗ (⊞[1.0, 2.0], ⊞[10.0, 100.0]) : ProdMatrixRow (Floa
 #check ⊞[0.1,0.01] ⊗ (⊞[1.0,2.0],⊞[10.0,100.0])
 
 
-set_option synthInstance.maxSize 1000
+set_option synthInstance.maxSize 5000
 
-/-- info: ProdMatrix (Float^[2, 2]) (Float^[2, 2]) (Float^[2, 2]) (Float^[2, 2]) : Type -/
+/--
+info: ProdMatrixCol (ProdMatrixRow (Float^[2, 2]) (Float^[2, 2])) (ProdMatrixRow (Float^[2, 2]) (Float^[2, 2])) : Type
+-/
 #guard_msgs in
 #check (Float^[2] × Float^[2]) ⊗ (Float^[2] × Float^[2])
 
@@ -58,20 +60,17 @@ set_option synthInstance.maxSize 1000
 info: (⊞[1.0, 2.0], ⊞[10.0, 100.0], ⊞[0.1, 1e-2]) ⊗
   (⊞[1.0, 2.0], ⊞[10.0, 100.0],
     ⊞[0.1,
-        1e-2]) : ProdMatrix (Float^[2, 2]) (ProdMatrixRow (Float^[2, 2]) (Float^[2, 2]))
-  (ProdMatrixCol (Float^[2, 2]) (Float^[2, 2])) (ProdMatrix (Float^[2, 2]) (Float^[2, 2]) (Float^[2, 2]) (Float^[2, 2]))
+        1e-2]) : ProdMatrixCol (ProdMatrixRow (Float^[2, 2]) (ProdMatrixRow (Float^[2, 2]) (Float^[2, 2])))
+  (ProdMatrixCol (ProdMatrixRow (Float^[2, 2]) (ProdMatrixRow (Float^[2, 2]) (Float^[2, 2])))
+    (ProdMatrixRow (Float^[2, 2]) (ProdMatrixRow (Float^[2, 2]) (Float^[2, 2]))))
 -/
 #guard_msgs in
 #check (⊞[1.0,2.0],⊞[10.0,100.0],⊞[0.1,0.01]) ⊗ (⊞[1.0,2.0],⊞[10.0,100.0],⊞[0.1,0.01])
 
 
-/-- info: instTensorProductTypeProdProdMatrix Float -/
+/--
+info: inferInstance : TensorProductType Float (Float^[2] × Float^[2]) (Float^[2] × Float^[2])
+  (ProdMatrixCol (ProdMatrixRow (Float^[2, 2]) (Float^[2, 2])) (ProdMatrixRow (Float^[2, 2]) (Float^[2, 2])))
+-/
 #guard_msgs in
-#synth TensorProductType Float (Float^[2] × Float^[2]) (Float^[2] × Float^[2])
-  (ProdMatrix (Float^[2,2]) (Float^[2,2]) (Float^[2,2]) (Float^[2,2]))
-
-
-/-- info: instTensorProductGetYXProdProdMatrix Float -/
-#guard_msgs in
-#synth TensorProductGetYX Float (Float^[2] × Float^[2]) (Float^[2] × Float^[2])
-  (ProdMatrix (Float^[2,2]) (Float^[2,2]) (Float^[2,2]) (Float^[2,2]))
+#check (by infer_instance : TensorProductType Float (Float^[2] × Float^[2]) (Float^[2] × Float^[2]) _)

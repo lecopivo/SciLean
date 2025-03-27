@@ -365,7 +365,7 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
       x.mvarId!.assignIfDefeq inst
       return true
     catch _ =>
-      return false
+      pure ()
 
   -- try auto param
   if X.isAppOfArity' ``autoParam 2 then
@@ -388,6 +388,7 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
         return true
 
   return false
+
 
 /- Apply theorem `thm` to solve `e`.
 
@@ -441,6 +442,7 @@ def tryTheorem? (e : Expr) (thm : Theorem) (hintPre hintPost : Array (Nat×Expr)
   for x in xs do
     let x ← instantiateMVars x
     if x.isMVar then
+      logError m!"failed to synthesize argument {← inferType x} when applying {(← ppOrigin (.decl thm.thmName))}"
       trace[Meta.Tactic.data_synth] "failed to synthesize argument {x} : {← inferType x}"
       return none
 
@@ -493,6 +495,7 @@ def tryTheorem?' (e : Expr) (thm : Theorem)
   for x in xs do
     let x ← instantiateMVars x
     if x.isMVar then
+      logError m!"failed to synthesize argument {← inferType x} when applying {(← ppOrigin (.decl thm.thmName))}"
       trace[Meta.Tactic.data_synth] "failed to synthesize argument {x} : {← inferType x}"
       return none
 
@@ -547,6 +550,8 @@ partial def main (goal : Goal) : DataSynthM (Option Result) := do
     goal.getCandidateTheorems
 
   trace[Meta.Tactic.data_synth] "candidates {thms.map (fun t => t.thmName)}"
+  if thms.size = 0 then
+    logError m!"no candidate theorems for {← goal.pp}"
 
   for thm in thms do
     if let .some r ← goal.tryTheorem? thm.toTheorem then

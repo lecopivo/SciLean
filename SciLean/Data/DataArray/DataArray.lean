@@ -392,6 +392,19 @@ theorem DataArrayN.getElem_row (x : X^[I,J]) (i : I) (j : J) :
 theorem DataArrayN.getElem_col (x : X^[I,J]) (i : I) (j : J) :
     (x.col j)[i] = x[i,j] := by sorry_proof
 
+
+def DataArrayN.transpose [Fold.{_,0} I] [Fold.{_,0} J] (x : X^[I,J]) : X^[J,I] := ⊞ j i => x[i,j]
+
+@[simp, simp_core]
+theorem DataArrayN.transpose_transpose [Fold.{_,0} I] [Fold.{_,0} J] (x : X^[I,J]) :
+    x.transpose.transpose = x := by
+  ext ⟨i,j⟩
+  simp[transpose,Function.HasUncurry.uncurry]
+  -- duh, why doesn't simp do this?
+  exact (getElem_ofFn (coll:=X^[I,J]) (f :=_) (i:=(i,j)))
+
+
+
 -- open IndexType in
 -- /-- This instance is for convenience and for other type classes realted to `VectorType`.
 

@@ -24,15 +24,17 @@ syntax (name := lautodiffTacticStx) "autodiff" optConfig (discharger)?
 
 macro_rules
 | `(conv| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
+  let a := a.getD ⟨#[]⟩
   `(conv|
-    ((try unfold deriv fgradient);
-     lsimp $cfg $[$disch]? only [simp_core, revFDeriv_simproc, fwdFDeriv_simproc, fderivAt_simproc, fderiv_simproc]))
+    ((try unfold deriv fgradient jacobianMat);
+     lsimp $cfg $[$disch]? only [simp_core, revFDeriv_simproc, fwdFDeriv_simproc, vecFwdFDeriv_simproc, vecRevFDeriv_simproc, fderivAt_simproc, fderiv_simproc, $a,*]))
 
 macro_rules
 | `(tactic| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
+  let a := a.getD ⟨#[]⟩
   `(tactic|
-     ((try unfold deriv fgradient);
-      lsimp $cfg  $[$disch]? only [simp_core, revFDeriv_simproc, fwdFDeriv_simproc, fderivAt_simproc, fderiv_simproc]))
+     ((try unfold deriv fgradient jacobianMat);
+      lsimp $cfg  $[$disch]? only [simp_core, revFDeriv_simproc, fwdFDeriv_simproc, vecFwdFDeriv_simproc, vecRevFDeriv_simproc, fderivAt_simproc, fderiv_simproc,$a,*]))
 
   -- if a.isSome then
   --   `(tactic| ((try unfold deriv fgradient adjointFDeriv);

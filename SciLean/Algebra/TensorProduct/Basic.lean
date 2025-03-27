@@ -3,8 +3,10 @@ import Mathlib.LinearAlgebra.TensorProduct.Basic
 import Mathlib.Data.Erased
 
 import SciLean.Analysis.AdjointSpace.Basic
+import SciLean.Analysis.AdjointSpace.CanonicalBasis
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Analysis.SpecialFunctions.Inner
+import SciLean.Algebra.TensorProduct.AbstractRowCol
 
 namespace SciLean
 
@@ -97,6 +99,11 @@ multiplication -/
 class TensorProductGetRXY (R Y X : outParam Type*) (YX : Type*)
 
 
+----------------------------------------------------------------------------------------------------
+-- TMul --------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
 open TensorProductType in
 /-- Outer/tensor product of two vectors. -/
 def tmul
@@ -152,18 +159,17 @@ variable {R : Type*} [RCLike R]
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
 
 
--- TODO: !!!Fix this for complex `R`!!! it is missing complex conjugates
 open ComplexConjugate
 instance tpScalarLeft : TensorProductType R R X X where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd a x y A := a•(x•y) + A
   matVecMulAdd a A x b y := a*⟪A,x⟫[R] + b*y
-  vecMatMulAdd a y A b x := a•(star y•A) + b • x
+  vecMatMulAdd a y A b x := a•(conj y•A) + b • x
   tmulAdd_eq_tmul := sorry_proof
 
--- this creates a diamond with the previous for `ttmul` on `R ⊗'[R] R`
--- what to do about this?
--- TODO: !!!Fix this for complex `R`!!! it is missing complex conjugates
+/-
+Note: `op y • x` is the way todo right scalar multiplication of `x : X` by `y : R`.
+-/
 open MulOpposite in
 instance (priority:=low) tpScalarRight
   [Module (Rᵐᵒᵖ) X] [Star X] :
@@ -177,6 +183,7 @@ instance (priority:=low) tpScalarRight
 instance {R} [RCLike R] : TensorProductGetYX R R X X := ⟨⟩
 instance {R} [RCLike R] : TensorProductGetYX R X R X := ⟨⟩
 
+-- This is crucual defeq that prevents potential TC diamond!
 example : (tpScalarLeft : TensorProductType R R R R)
           =
           (tpScalarRight : TensorProductType R R R R) := by rfl
@@ -194,7 +201,7 @@ end Identity
 
 
 ----------------------------------------------------------------------------------------------------
--- Simps -------------------------------------------------------------------------------------------
+-- Simps and theorems ------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
 section Simps
@@ -202,14 +209,32 @@ section Simps
 variable
   {R Y X YX : Type*} [RCLike R]
   [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedAddCommGroup X] [AdjointSpace R X]
-  [AddCommGroup YX] [Module R YX]
+  [NormedAddCommGroup YX] [AdjointSpace R YX]
   [TensorProductType R Y X YX]
+
+
+-- basic properties of `tmul`
 
 @[simp, simp_core]
 theorem tmul_zero (y : Y) : y ⊗[R] (0 : X) = 0 := by sorry_proof
 
 @[simp, simp_core]
 theorem zero_tmul (x : X) : (0 : Y) ⊗[R] x = 0 := by sorry_proof
+
+@[fun_prop]
+theorem tmul.arg_xy.Continuous_rule :
+  Continuous (fun yx : Y×X => yx.1⊗[R]yx.2) := sorry_proof
+
+@[fun_prop]
+theorem tmul.arg_x.IsContinuousLinearMap_rule (y : Y) :
+  IsContinuousLinearMap R (fun x : X => y⊗[R]x) := sorry_proof
+
+@[fun_prop]
+theorem tmul.arg_y.IsContinuousLinearMap_rule (x : X) :
+  IsContinuousLinearMap R (fun y : Y => y⊗[R]x) := sorry_proof
+
+
+-- basic properties of `matVecMulAdd`
 
 @[simp, simp_core]
 theorem matVecMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
@@ -223,6 +248,9 @@ theorem matVecMulAdd_zero_A (a b : R) (x : X) (y : Y) :
 theorem matVecMulAdd_zero_x (a b : R) (A : YX) (y : Y) :
     matVecMulAdd a A (0:X) b y = b•y := by sorry_proof
 
+
+-- basic properties of `vecMatMulAdd`
+
 @[simp, simp_core]
 theorem vecMatMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
     vecMatMulAdd 0 y A b x = b•x := by sorry_proof
@@ -234,3 +262,105 @@ theorem vecMatMulAdd_zero_A (a b : R) (x : X) (y : Y) :
 @[simp, simp_core]
 theorem vecMatMulAdd_zero_y (a b : R) (A : YX) (x : X) :
   vecMatMulAdd a (0:Y) A b x = b•x := by sorry_proof
+
+
+----------------------------------------------------------------------------------------------------
+-- Operations --------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
+
+variable
+    {𝕜 X Y Z W : Type*}
+    [RCLike 𝕜]
+    [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
+    [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
+    [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
+    [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
+    {XY : Type*} [NormedAddCommGroup XY] [AdjointSpace 𝕜 XY] [TensorProductType 𝕜 X Y XY]
+    {YX : Type*} [NormedAddCommGroup YX] [AdjointSpace 𝕜 YX] [TensorProductType 𝕜 Y X YX]
+    {ZW : Type*} [NormedAddCommGroup ZW] [AdjointSpace 𝕜 ZW] [TensorProductType 𝕜 Z W ZW]
+    {I} [Fintype I] [CanonicalBasis I 𝕜 X]
+    {J} [Fintype J] [CanonicalBasis J 𝕜 Y]
+
+set_default_scalar 𝕜
+
+def tcurry (f : X ⊗ Y → Z) (x : X) (y : Y) : Z := f (x⊗y)
+
+open Classical in
+/--
+Uncurry bilinear map `f : X → Y → Z` to a linear map over tensor product `X ⊗ Y`
+-/
+noncomputable
+def tuncurry (f : X →L[𝕜] Y →L[𝕜] Z) (xy : X⊗Y) : Z :=
+  if h : ∃ (g : X⊗Y → Z), ∀ x y, tcurry (𝕜:=𝕜) g x y = f x y then
+    choose h xy
+  else
+    0
+
+
+open Classical in
+
+/--
+Combine two linear maps to a single linear map over the tensor product of its domains and codomains.
+-/
+noncomputable
+def tmap (f : X →L[𝕜] Z) (g : Y →L[𝕜] W) (xy : X⊗Y) : Z⊗W :=
+  if h : ∃ (F : X⊗Y →L[𝕜] Z⊗W), ∀ (x:X) (y:Y), F (x⊗y) = f x ⊗ g y then
+    choose h xy
+  else
+    0
+
+@[fun_prop]
+theorem tmap.arg_xy.IsContinuousLinearMap_rule (f : X →L[𝕜] Z) (g : Y →L[𝕜] W) :
+    IsContinuousLinearMap 𝕜 (fun xy => tmap f g xy) := by unfold tmap; fun_prop
+
+open Classical in
+noncomputable
+def tswap [TensorProductGetRXY 𝕜 X Y XY] (xy : X⊗Y) : Y⊗X :=
+  if h : ∃ (F : X⊗Y →L[𝕜] Y⊗X), ∀ (x:X) (y:Y), F (x⊗y) = y⊗x then
+    choose h xy
+  else
+    0
+
+@[fun_prop]
+theorem tswap.arg_xy.IsContinuousLinearMap_rule [TensorProductGetRXY 𝕜 X Y XY] :
+    IsContinuousLinearMap 𝕜 (fun xy : X⊗Y => tswap xy) := by unfold tswap; fun_prop
+
+
+
+variable
+  {YZ : Type*} [NormedAddCommGroup YZ] [AdjointSpace 𝕜 YZ] [TensorProductType 𝕜 Y Z YZ]
+  {X_YZ : Type*} [NormedAddCommGroup X_YZ] [AdjointSpace 𝕜 X_YZ] [TensorProductType 𝕜 X YZ X_YZ]
+  {XY_Z : Type*} [NormedAddCommGroup XY_Z] [AdjointSpace 𝕜 XY_Z] [TensorProductType 𝕜 XY Z XY_Z]
+
+open Classical in
+/--
+Associate tensor product to the left.
+-/
+noncomputable
+def tassocl [TensorProductGetRXY 𝕜 X YZ X_YZ] [TensorProductGetRXY 𝕜 Y Z YZ] (x_yz : X⊗(Y⊗Z)) : (X⊗Y)⊗Z :=
+  if h : ∃ (F : X⊗(Y⊗Z) →L[𝕜] (X⊗Y)⊗Z), ∀ (x:X) (y:Y) (z:Z), F (x⊗(y⊗z)) = (x⊗y)⊗z then
+    choose h x_yz
+  else
+    0
+
+open Classical in
+/--
+Associate tensor product to the right.
+-/
+noncomputable
+def tassocr [TensorProductGetRXY 𝕜 XY Z XY_Z] [TensorProductGetRXY 𝕜 X Y XY] (xy_z : (X⊗Y)⊗Z) : X⊗(Y⊗Z) :=
+  if h : ∃ (F : (X⊗Y)⊗Z →L[𝕜] X⊗(Y⊗Z)), ∀ (x:X) (y:Y) (z:Z), F ((x⊗y)⊗z) = x⊗(y⊗z) then
+    choose h xy_z
+  else
+    0
+
+
+@[fun_prop]
+theorem tassocl.arg_x_yz.IsContinuousLinearMap_rule [TensorProductGetRXY 𝕜 X YZ X_YZ] [TensorProductGetRXY 𝕜 Y Z YZ] :
+    IsContinuousLinearMap 𝕜 (fun x_yz : X⊗(Y⊗Z) => tassocl x_yz) := by unfold tassocl; fun_prop
+
+@[fun_prop]
+theorem tassocr.arg_xy_z.IsContinuousLinearMap_rule [TensorProductGetRXY 𝕜 XY Z XY_Z] [TensorProductGetRXY 𝕜 X Y XY] :
+    IsContinuousLinearMap 𝕜 (fun xy_z : (X⊗Y)⊗Z => tassocr xy_z) := by unfold tassocr; fun_prop

@@ -3,7 +3,7 @@ import SciLean.Algebra.TensorProduct.Basic
 
 namespace SciLean
 
-
+#exit
 class TensorProductAssoc
     (R X Y Z : Type*) {XY YZ XY_Z X_YZ : Type*} [RCLike R]
     [NormedAddCommGroup X] [AdjointSpace R X]

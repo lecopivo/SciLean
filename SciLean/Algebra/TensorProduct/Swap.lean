@@ -2,6 +2,7 @@ import SciLean.Algebra.TensorProduct.Basic
 
 namespace SciLean
 
+#exit
 class TensorProductSwap (𝕜 X Y : Type*)
     [RCLike 𝕜]
     [NormedAddCommGroup X] [AdjointSpace 𝕜 X]

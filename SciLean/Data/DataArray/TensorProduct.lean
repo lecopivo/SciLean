@@ -1,9 +1,6 @@
 import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.Curry
 import SciLean.Algebra.TensorProduct.MatMul
 import SciLean.Algebra.TensorProduct.Self
-import SciLean.Algebra.TensorProduct.Swap
-import SciLean.Algebra.TensorProduct.Assoc
 import SciLean.Algebra.MatrixType.Basic
 import SciLean.Data.ArrayOperations.Operations.GetElem
 import SciLean.Data.ArrayOperations.Operations.OfFn
@@ -75,52 +72,16 @@ instance : TensorProductSelf R (R^[I]) (R^[I,I]) where
 
   addIdentityMatrix_spec := sorry_proof
 
-variable [Fold.{_,0} I] [Fold.{_,0} J]
-
-instance : TensorProductSwap R (R^[I]) (R^[J]) where
-
-  tswap := {
-    toFun  := fun A => ⊞ j i => A[i,j]
-    invFun := fun A => ⊞ j i => A[i,j]
-    left_inv  := by intro A; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]; sorry_proof
-    right_inv := by intro A; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]; sorry_proof
-    continuous_toFun := by fun_prop
-    continuous_invFun := by fun_prop
-    map_add' := by intro x y; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]; sorry_proof
-    map_smul' := by intro x y; ext ⟨i,j⟩; simp[Function.HasUncurry.uncurry]; sorry_proof
-  }
 
 
-instance : TensorProductAssoc R (R^[I]) (R^[J]) (R^[K]) where
+@[simp, simp_core]
+theorem DataArrayN.tassocr_eq_reshape (x : R^[[I,J],K]) :
+   tassocr x = x.reshape (I×J×K) (by ac_rfl) := sorry_proof
 
-  tmulAssoc := {
-    toFun := fun A => A.reshape (I×J×K) (by ac_rfl)
-    invFun := fun A => A.reshape ((I×J)×K) (by ac_rfl)
-    left_inv := by intro A; simp[DataArrayN.reshape]
-    right_inv := by intro A; simp[DataArrayN.reshape]
-    continuous_toFun := sorry_proof
-    continuous_invFun := sorry_proof
-    map_add' := sorry_proof
-    map_smul' := sorry_proof
-  }
+@[simp, simp_core]
+theorem DataArrayN.tassocl_eq_reshape (x : R^[I,J,K]) :
+   tassocl x = x.reshape ((I×J)×K) (by ac_rfl) := sorry_proof
 
-  assoc_tmul_tmul := by
-    intro x y z; ext ⟨i,j,k⟩
-    simp
-    sorry_proof
-
-
-instance {Y} [NormedAddCommGroup Y] [AdjointSpace R Y]
-    [DecidableEq I] [DecidableEq J] :
-    TensorProductCurry R (R^[I]) (R^[J]) Y where
-
-  tcurry := {
-    toFun := fun f => fun x =>L[R] fun y =>L[R] f (⊞ (ij : I×J) => x[ij.1]*y[ij.2])
-    invFun := fun f => fun A =>L[R] ∑ᴵ (i : I) (j : J), A[i,j] • f (ⅇ[R,_,i]) (ⅇ[R,_,j])
-    left_inv := by intro f; ext A; simp; sorry_proof
-    right_inv := by intro f; ext x y; simp; sorry_proof
-    continuous_toFun := sorry_proof
-    continuous_invFun := sorry_proof
-    map_add' := sorry_proof
-    map_smul' := sorry_proof
-  }
+@[simp, simp_core]
+theorem DataArrayN.tswap_eq_transpose [Fold I] [Fold J] (x : R^[I,J]) :
+   tswap x = x.transpose := sorry_proof

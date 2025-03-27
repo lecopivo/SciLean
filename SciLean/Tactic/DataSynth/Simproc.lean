@@ -33,9 +33,15 @@ def mkDataSynthSimproc (simprocName : Name) (thm : Name) : Simp.Simproc := fun e
   let .some goal ← Tactic.DataSynth.isDataSynthGoal? hfType'
     | throwError m!"{simprocName} error: expected `data_synth` goal, got {hfType} instead!"
 
+
+  let disch? := (← Simp.getMethods).discharge?
+  let state : IO.Ref Tactic.DataSynth.State ← ST.mkRef {}
   -- run data_synth
-  let .some r ← Tactic.DataSynth.dataSynth goal |>.runInSimpM
-    | return .continue
+  let .some r ← Tactic.DataSynth.dataSynth goal { discharge := disch? } (← ST.mkRef {}) state
+    | let msgs := (← state.get).msgLog
+      logError <| msgs.foldl (init:=m!"failed to transform {e}, potential issues are:")
+        (fun s msg => m!"{s}\n{msg}")
+      return .continue
 
   unless ← isDefEq hfType (← mkForallFVars ys r.getSolvedGoal) do
     throwError m!"{simprocName} error: failed to assign data"

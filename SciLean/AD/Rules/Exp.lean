@@ -22,9 +22,9 @@ abbrev_data_synth exp in x (x₀) : (HasFDerivAt (𝕜:=K) · · x₀) by
   case deriv => conv => rhs; fun_trans
   case diff => dsimp[autoParam]; fun_prop
 
-abbrev_data_synth exp in x : HasFwdFDeriv K by hasFwdFDeriv_from_def => simp
-abbrev_data_synth exp in x : HasRevFDeriv K by hasRevFDeriv_from_def => skip
-abbrev_data_synth exp in x : HasRevFDerivUpdate K by hasRevFDerivUpdate_from_def => skip
+abbrev_data_synth exp in x : HasFwdFDeriv K by hasFwdFDeriv_from_def => simp; to_ssa
+abbrev_data_synth exp in x : HasRevFDeriv K by hasRevFDeriv_from_def => simp; to_ssa
+abbrev_data_synth exp in x : HasRevFDerivUpdate K by hasRevFDerivUpdate_from_def => simp; to_ssa
 
 
 variable {R C} [RealScalar R] [Scalar R C]

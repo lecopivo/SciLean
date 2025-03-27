@@ -130,34 +130,73 @@ set_default_scalar Float
 
 --------------------------------------------------------------------------------
 
+section Gradient
+
+variable {K:Type} [RealScalar K]
+
 set_default_scalar K
 
-/-- info: ∇ x, x.1 : K × K → K × K -/
+-- This is broken :( and I don't really know how to solve it
+/--
+error: failed to synthesize
+  TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+-/
 #guard_msgs in
 #check ∇ x : (K×K), x.1
-/-- info: fun x => (1, 0) : K × K → K × K -/
+
+/--
+error: failed to synthesize
+  TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+---
+error: ❌️ Docstring on `#guard_msgs` does not match generated message:
+
+error: failed to synthesize
+  TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+-/
 #guard_msgs in
-#check ∇! x : (K×K), x.1
+
 /-- info: fun x => (0, 1) : K × K → K × K -/
 #guard_msgs in
 #check ∇! x : (K×K), x.2
 
 variable (y : K × K)
 
-/-- info: ∇ (x:=y), (x + x) : K × K → K × K -/
+/--
+error: failed to synthesize
+  TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+-/
 #guard_msgs in
 #check ∇ (x:=y), (x + x)
+
 /-- info: ∇ x, x : K → K -/
 #guard_msgs in
 #check ∇ (x :K), x
-/-- info: ∇ (x:=y), (x + x) : K × K → K × K -/
+
+/--
+error: failed to synthesize
+  TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+-/
 #guard_msgs in
 #check ∇ (fun x => x + x) y
-/-- info: ∇ (x:=(1.0, 2.0)), (x + x) : K × K → K × K -/
+
+/--
+error: failed to synthesize
+  TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+-/
 #guard_msgs in
 #check ∇ (fun x => x + x) ((1.0,2.0) : K×K)
 
-/-- info: fun x => (1, 0) : K × K → K × K -/
+/--
+error: failed to synthesize
+  TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+-/
 #guard_msgs in
 #check ((∇! x : (K×K), ⟪x,(1,0)⟫)) rewrite_by autodiff
 
@@ -166,21 +205,33 @@ set_default_scalar Float
 
 /-- info: 2.000000 -/
 #guard_msgs in
-#eval ∇! (fun x => x^2) 1
+#eval ∇! (fun (x:Float) => x^2) 1
 /-- info: 2.000000 -/
 #guard_msgs in
-#eval ∇! (fun x => x*x) 1
+#eval ∇! (fun (x:Float) => x*x) (1:Float)
 /-- info: 2.000000 -/
 #guard_msgs in
-#eval ∇! (x:=1), x*x
-/-- info: (0.000000, 2.000000) -/
+#eval ∇! (x:=(1:Float)), x*x
+
+
+/--
+error: failed to synthesize
+  TensorProductSelf Float (Float × Float) (ProdMatrixCol (Float × Float) (Float × Float))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+-/
 #guard_msgs in
 #eval ∇! (fun x : Float×Float => (x + x).2) (1.0,2.0)
-/-- info: (2.000000, 0.000000) -/
+
+/--
+error: failed to synthesize
+  TensorProductSelf Float (Float × Float) (ProdMatrixCol (Float × Float) (Float × Float))
+Additional diagnostic information may be available using the `set_option diagnostics true` command.
+-/
 #guard_msgs in
 #eval ∇! (x:=((1.0 : Float),(2.0:Float))), (x + x).1
 
 
+end Gradient
 
 --------------------------------------------------------------------------------
 

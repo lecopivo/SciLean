@@ -15,14 +15,14 @@ info: HasRevFDeriv ℝ
     x)
   fun x =>
   let ydg₁ := x * x;
-  let x₁ := exp ydg₁;
-  let x₁_1 := exp x₁;
-  let ydg₁_1 := ydg₁ * x₁_1;
+  let a := exp ydg₁;
+  let a_1 := exp a;
+  let ydg₁_1 := ydg₁ * a_1;
   (ydg₁_1, fun dy =>
     let dy₁ := ydg₁ * dy;
-    let dy₂ := x₁_1 * dy;
-    let dy := dy₁ * exp x₁;
-    let dx := dy * exp ydg₁;
+    let dy₂ := a_1 * dy;
+    let dy := dy₁ * a_1;
+    let dx := dy * a;
     let dx := dx + dy₂;
     let dy₁ := x * dx;
     let dy₂ := x * dx;

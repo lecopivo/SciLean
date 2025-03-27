@@ -55,6 +55,8 @@ variable
   {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X]
   {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y]
   {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace R Z]
+  {XX : Type _} [NormedAddCommGroup XX] [AdjointSpace R XX]
+  [TensorProductType R X X XX] [TensorProductSelf R X XX]
 
 
 /-- Symplectic Euler integrator
@@ -100,5 +102,5 @@ by
     solve_for p' from 1 := sorry_proof
     solve_as_inv
     solve_as_inv
-  conv => autodiff
+  conv => lfun_trans
   sorry_proof

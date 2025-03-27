@@ -26,7 +26,7 @@ let θ := - Real.pi * (1 - (1/2 : ℝ)^(P.dim-1))
 let s : ℝ := 1.5^(- (P.dim - 2 : Nat))
 match P, x with
 | .point, 0 => (0,0)
-| .cone _, (t,x) => 
+| .cone _, (t,x) =>
   x.project2d + s • rotate2d (t,0) θ
 | .prod _ _, (x, y) =>
   s • (rotate2d x.project2d θ) + y.project2d
@@ -41,15 +41,15 @@ def SciLean.Prism.toSvg (P : Prism) (shift := ((0,0) : ℝ×ℝ))  : Array (Svg.
     let edge' : Inclusion Prism.segment P := ⟨edge.1, sorry_proof, sorry_proof⟩
     let pt0 := edge'.comp Prism.segment.point0 |>.toFace |>.position' |>.project2d
     let pt1 := edge'.comp Prism.segment.point1 |>.toFace |>.position' |>.project2d
-    elems := elems.push <| 
+    elems := elems.push <|
       Svg.line (pt0 + shift) (pt1 + shift)
         |>.setStroke (0.3,0.3,0.3) (.px 1)
         |>.setId edge.repr.toString
 
   for point in P.faces (some 0) do
     let pt := point.position'.project2d
-    elems := elems.push <| 
-      Svg.circle (pt + shift) (.px 5) 
+    elems := elems.push <|
+      Svg.circle (pt + shift) (.px 5)
         |>.setStroke (0.2,0.2,0.2) (.px 1)
         |>.setFill (0.4,0.4,0.4)
         |>.setId point.repr.toString
@@ -72,7 +72,7 @@ def isvg : InteractiveSvg State where
 
         let mut elems : Array (Element frame) := #[]
 
-        elems := elems.push <| 
+        elems := elems.push <|
           Svg.polygon #[(.px 0 0), (.px frame.width 0), (.px frame.width frame.height), (.px 0 frame.height)]
             |>.setFill (1.0,1.0,1.0)
 
@@ -81,7 +81,7 @@ def isvg : InteractiveSvg State where
             let P := Prism.prismFromFin dim i
             let shift : ℝ×ℝ := (2*i.1, - 2*dim.1)
             elems := elems.append (P.toSvg shift)
-            
+
             let dim' := 2
             if dim' ≤ dim then
               let fId : Fin (P.faceCount dim') := ⟨(0.002*time).toUSize.toNat % (P.faceCount dim'), sorry_proof⟩
@@ -95,7 +95,7 @@ def isvg : InteractiveSvg State where
               if dim'=2 && pts.size=4 then
                 pts := pts.swap! 0 1
 
-              elems := elems.push <| 
+              elems := elems.push <|
                 Svg.polygon pts
                   |>.setFill (0.3,0.6,0.7)
                   |>.setStroke (0.2,0.8,0.8) (.px 2)

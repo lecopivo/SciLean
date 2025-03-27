@@ -1,5 +1,6 @@
 import SciLean.Data.DataArray.RnEquiv
 import SciLean.Data.ArrayOperations.Algebra
+import SciLean.Algebra.VectorOptimize.Basic
 
 /-! Algebraic structure in `X^[I]`
 
@@ -51,6 +52,14 @@ instance [HasRnEquiv X K R] : AddCommGroup (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : Module R (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : TopologicalSpace (X^[I]) := by infer_instance
 
+
+instance [HasRnEquiv X K R] : Axpby R (X^[I]) where
+  axpby a x b y :=
+    let data := BLAS.LevelOneDataExt.axpby nI a (toRn x).1 0 1 b (toRn y).1 0 1
+    fromRn ⟨data, sorry_proof⟩
+  axpby_spec := sorry_proof
+
+----------------------------------------------------------------------------------------------------
 
 example : Add (R^[I]) := by infer_instance
 example : Add (R^[I,J]) := by infer_instance

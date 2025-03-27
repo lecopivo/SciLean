@@ -22,7 +22,7 @@ ydf 0 : X →L[K] Y
 #check
   (let ydf := holdLet <| fun i => ∂ x':=x, f x' i; (ydf 0))
   rewrite_by
-    autodiff
+    lsimp
 
 /--
 info: let f := holdLet fun i => i;

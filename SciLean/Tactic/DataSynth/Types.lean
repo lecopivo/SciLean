@@ -122,6 +122,7 @@ structure Context where
   normalize : Expr → Simp.SimpM Simp.Result := fun e => return {expr := e}
   discharge : Expr → SimpM (Option Expr) := fun _ => return .none
 
+
 structure State where
   numSteps := 0
   /-- cachec for results  -/
@@ -130,6 +131,8 @@ structure State where
   failedCache : Std.HashSet Goal := {}
   -- /-- normalization cache -/
   -- normCache : Std.HashMap ExprStructEq Expr := {}
+  /-- Log failures messages that should be displayed to the user at the end. -/
+  msgLog : List MessageData := []
 
 
 abbrev DataSynthM := ReaderT Context $ MonadCacheT ExprStructEq Expr $ StateRefT State Simp.SimpM
@@ -148,6 +151,17 @@ def DataSynthM.runInMetaM (e : DataSynthM α) : MetaM α := do
        (← Simp.mkDefaultMethods).toMethodsRef
        (← Simp.mkContext)
        (← ST.mkRef {})
+
+
+/-- Log error message that will displayed to the user at the end. -/
+def logError (msg : MessageData) : DataSynthM Unit := do
+  modify fun s =>
+    {s with msgLog := msg :: s.msgLog }
+      -- if s.msgLog.contains msg then
+      --   s.msgLog
+      -- else
+      --   msg::s.msgLog}
+
 
 -----------
 -- forward declaration

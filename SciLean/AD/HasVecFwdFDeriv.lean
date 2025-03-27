@@ -1,8 +1,5 @@
 import SciLean.Algebra.TensorProduct.Prod
 import SciLean.Algebra.TensorProduct.Pi
-import SciLean.Algebra.TensorProduct.Assoc
-import SciLean.Algebra.TensorProduct.Curry
-import SciLean.Algebra.TensorProduct.Swap
 import SciLean.Algebra.TensorProduct.Self
 import SciLean.Algebra.TensorProduct.Util
 import SciLean.Analysis.Calculus.HasRevFDeriv
@@ -168,21 +165,21 @@ theorem pi_rule {I nI} [IndexType I nI] [Fold I] [Fold I]
   sorry_proof
 
 
-theorem proj_rule
-    {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace 𝕜 X₁]
-    {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace 𝕜 X₂]
-    {XW₁ : Type*} [NormedAddCommGroup XW₁] [AdjointSpace 𝕜 XW₁]
-    [TensorProductType 𝕜 X₁ W XW₁] [TensorProductCurry 𝕜 X W XW₁]
-    (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
-    (hg : HasVecFwdFDeriv 𝕜 W g g') (hf : f = fun x => g (p₁ x) := by rfl)
-    (hp₁ : IsContinuousLinearMap 𝕜 p₁ := by fun_prop) /- (hdec : Decomposition p₁ p₂ q) -/ :
-    HasVecFwdFDeriv 𝕜 W f
-      (fun x dx =>
-        let x₁ := p₁ x
-        let dx₁ := tmap (fun x =>L[𝕜] p₁ x) (fun w : W =>L[𝕜] w) dx
-        let ydy := g' x₁ dx₁
-        ydy) := by
-  sorry_proof
+-- theorem proj_rule
+--     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace 𝕜 X₁]
+--     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace 𝕜 X₂]
+--     {XW₁ : Type*} [NormedAddCommGroup XW₁] [AdjointSpace 𝕜 XW₁]
+--     [TensorProductType 𝕜 X₁ W XW₁]
+--     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
+--     (hg : HasVecFwdFDeriv 𝕜 W g g') (hf : f = fun x => g (p₁ x) := by rfl)
+--     (hp₁ : IsContinuousLinearMap 𝕜 p₁ := by fun_prop) /- (hdec : Decomposition p₁ p₂ q) -/ :
+--     HasVecFwdFDeriv 𝕜 W f
+--       (fun x dx =>
+--         let x₁ := p₁ x
+--         let dx₁ := tmap (fun x =>L[𝕜] p₁ x) (fun w : W =>L[𝕜] w) dx
+--         let ydy := g' x₁ dx₁
+--         ydy) := by
+--   sorry_proof
 
 -- set_option linter.unusedVariables false in
 -- theorem let_skip_rule
@@ -212,10 +209,10 @@ open Lean Meta
       (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf)⟩
    Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasVecFwdFDeriv,``pi_rule⟩, .pi
       (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf)⟩
-   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasVecFwdFDeriv,``proj_rule⟩, .proj
-      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g)
-      (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂)
-      (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
+   -- Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasVecFwdFDeriv,``proj_rule⟩, .proj
+   --    (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g)
+   --    (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂)
+   --    (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
    -- Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasVecFwdFDeriv,``let_skip_rule⟩, .letSkip
    --    (← getConstArgId ``let_skip_rule `g) (← getConstArgId ``let_skip_rule `f)
    --    (← getConstArgId ``let_skip_rule `hf)⟩
@@ -258,20 +255,26 @@ theorem Prod.mk.arg_a0a1.HasVecFwdFDeriv_comp_rule
   -- case simp => intros; simp_all
 
 @[data_synth]
-theorem Prod.fst.arg_self.HasVecFwdFDeriv_proj_rule :
+theorem Prod.fst.arg_self.HasVecFwdFDeriv_proj_rule
+    (f : X → Y×Z) (hf : HasVecFwdFDeriv 𝕜 W f f') :
     HasVecFwdFDeriv 𝕜 W
-      (fun xy : X×Y => xy.1)
-      (fun x dx => (x.1, dx.1)) := by
+      (fun x : X => (f x).1)
+      (fun x dx =>
+        let' ((y,z),(dy,dz)) := f' x dx
+        (y, dy)) := by
   sorry_proof
   -- apply HasVecFwdFDeriv_from_hasFDerivAt
   -- case deriv => intros; data_synth
   -- case simp => intros; simp_all
 
 @[data_synth]
-theorem Prod.snd.arg_self.HasVecFwdFDeriv_proj_rule :
+theorem Prod.snd.arg_self.HasVecFwdFDeriv_proj_rule
+    (f : X → Y×Z) (hf : HasVecFwdFDeriv 𝕜 W f f') :
     HasVecFwdFDeriv 𝕜 W
-      (fun xy : X×Y => xy.2)
-      (fun x dx => (x.2, dx.2)) := by
+      (fun x : X => (f x).2)
+      (fun x dx =>
+        let' ((y,z),(dy,dz)) := f' x dx
+        (z, dz)) := by
   sorry_proof
   -- apply HasVecFwdFDeriv_from_hasFDerivAt
   -- case deriv => intros; data_synth
@@ -384,11 +387,9 @@ theorem SciLean.tmul.arg_yx.HasVecFwdFDeriv_comp_rule
     {Y_ZW} [NormedAddCommGroup Y_ZW] [AdjointSpace 𝕜 Y_ZW] [TensorProductType 𝕜 Y ZW Y_ZW]
     {YW_Z} [NormedAddCommGroup YW_Z] [AdjointSpace 𝕜 YW_Z] [TensorProductType 𝕜 YW Z YW_Z]
     {Y_WZ} [NormedAddCommGroup Y_WZ] [AdjointSpace 𝕜 Y_WZ] [TensorProductType 𝕜 Y WZ Y_WZ]
-    [TensorProductAssoc 𝕜 Y W Z] [TensorProductAssoc 𝕜 Y Z W]
-    [TensorProductGetRXY 𝕜 YW Z YW_Z] [TensorProductGetRXY 𝕜 Y W YW]
-    [TensorProductGetRXY 𝕜 YZ W YZ_W] [TensorProductGetRXY 𝕜 Y Z YZ]
     [TensorProductGetRXY 𝕜 Y WZ Y_WZ] [TensorProductGetRXY 𝕜 W Z WZ]
-    [tc : TensorProductCurry 𝕜 Y WZ Y_ZW] [TensorProductSwap 𝕜 W Z]
+    [TensorProductGetRXY 𝕜 YW Z YW_Z] [TensorProductGetRXY 𝕜 Y W YW]
+    [TensorProductGetRXY 𝕜 Y ZW Y_ZW] [TensorProductGetRXY 𝕜 Z W ZW]
     {f : X → Y} {g : X → Z} {f' g'}
     (hf : HasVecFwdFDeriv 𝕜 W f f') (hg : HasVecFwdFDeriv 𝕜 W g g') :
     HasVecFwdFDeriv 𝕜 W
@@ -397,8 +398,9 @@ theorem SciLean.tmul.arg_yx.HasVecFwdFDeriv_comp_rule
         let' (y, dy) := f' x dx;
         let' (z, dz) := g' x dx;
         (y ⊗ z,
-          let y_dz : (Y ⊗ Z) ⊗ W := tmulAssoc.symm (y ⊗ dz)
-          let dy_z : (Y ⊗ Z) ⊗ W := tmulAssoc.symm (tswapRight (tmulAssoc (dy ⊗ z)))
+          let y_dz : (Y ⊗ Z) ⊗ W := tassocl (y ⊗ dz)
+          let asdf := dy ⊗ z
+          let dy_z : (Y ⊗ Z) ⊗ W := tassocl (tswapRight (tassocr (dy ⊗ z)))
           y_dz + dy_z)) := by
   sorry_proof
 
@@ -520,7 +522,8 @@ theorem SciLean.norm₂.arg_x.HasVecFwdFDeriv_comp_rule
     HasVecFwdFDeriv 𝕜 W (fun x => ‖f x‖₂[𝕜]) (fun x dx =>
       let' (y, dy) := f' x dx;
       let yn := ‖y‖₂[𝕜]
-      (yn, vecMatMulAdd (yn⁻¹) x dx (0:𝕜) 0)) := by
+      let iyn := yn⁻¹
+      (yn, vecMatMulAdd iyn x dx (0:𝕜) 0)) := by
   sorry_proof
 
 end OverReals

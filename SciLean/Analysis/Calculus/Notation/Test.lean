@@ -84,44 +84,34 @@ section Gradient
 variable (K) [RCLike K]
   {X} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
   {Y} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+  {XX} [NormedAddCommGroup XX] [AdjointSpace K XX] [TensorProductType K X X XX] [TensorProductSelf K X XX]
+  {YX} [NormedAddCommGroup YX] [AdjointSpace K YX] [TensorProductType K Y X YX]
   (f : X → Y) (g : X → K) (x dx : X) (y dy : Y) (k dk : K)
 
 set_default_scalar K
 
-/--
-info: ∇ f : X → Y → X
--/
+/-- info: ∇ f : X → YX -/
 #guard_msgs in
 #check ∇ f
 
-/--
-info: ∇ x', f x' : X → Y → X
--/
+/-- info: ∇ x', f x' : X → YX -/
 #guard_msgs in
 #check ∇ x', f x'
 
-/--
-info: ∇ (x':=x), f x' : Y → X
--/
+/-- info: ∇ (x':=x), f x' : YX -/
 #guard_msgs in
 #check ∇ x':=x, f x'
 
 
-/--
-info: ∇ g : X → X
--/
+/-- info: ∇ g : X → X -/
 #guard_msgs in
 #check ∇ g
 
-/--
-info: ∇ x', g x' : X → X
--/
+/-- info: ∇ x', g x' : X → X -/
 #guard_msgs in
 #check ∇ x', g x'
 
-/--
-info: ∇ (x':=x), g x' : X
--/
+/-- info: ∇ (x':=x), g x' : X -/
 #guard_msgs in
 #check ∇ x':=x, g x'
 
